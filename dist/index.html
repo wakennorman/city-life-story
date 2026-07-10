@@ -72747,6 +72747,452 @@ if (typeof window !== "undefined") {
     ],
   });
 
+  // ====================================================================
+  // v3.77 — 联动空白区填充（5个新事件）
+  // 设计理念：填补长期积累、天气×地点组合、NPC极致好感、道德分叉、多技能协同五大空白
+  // ====================================================================
+
+  // 联动1：长期行动积累 → 老手特遇
+  // 设计意图：玩家累计某种行动≥50次后，遇到"行家被认出来"的专属事件
+  // 联动系统：stats.actionFreq + phase + relationships
+  RANDOM_EVENTS.push({
+    id: "veteran_action_recognition",
+    phase: "street",
+    icon: "⭐",
+    title: "老手被认出来了",
+    story:
+      "你在常去的地点办事时，有人突然认出了你：「你就是那个……做了这么多年XX的老手吧？」\n\n对方眼里带着尊重——在这座城市里，长期积累的经验本身就是一笔财富。",
+    // [自洽修复] conditions 新增：actionFreq 检查，累计行动≥50次
+    conditions: function (st) {
+      if (st.player.day < 60) return false;
+      var freq = st.stats && st.stats.actionFreq ? st.stats.actionFreq : {};
+      var maxFreq = 0;
+      for (var k in freq) {
+        if (freq[k] > maxFreq) maxFreq = freq[k];
+      }
+      if (maxFreq < 50) return false;
+      var rel = st.relationships;
+      var hasAnyRel = false;
+      if (rel) {
+        for (var r in rel) {
+          if (rel[r] && rel[r].met) { hasAnyRel = true; break; }
+        }
+      }
+      return hasAnyRel;
+    },
+    probability: 0.04,
+    repeatable: false,
+    choices: [
+      {
+        text: "😊 谦虚回应，多聊几句",
+        hint: "好感+5，人脉扩展",
+        apply: function (st) {
+          st.flags._veteranRecognized = true;
+          var rel = st.relationships;
+          if (rel) {
+            for (var r in rel) {
+              if (rel[r] && rel[r].met) {
+                rel[r].affinity = Math.min(100, (rel[r].affinity || 0) + 3);
+              }
+            }
+          }
+          st.player.mental = Math.min(100, (st.player.mental || 0) + 3);
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 10);
+          StateManager.addMessage(
+            "😊 你笑了笑说「还行，做了几年而已。」对方也笑了：「几年都不容易。」你心里暖暖的。心智+3，心情+10。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "🤝 交换联系方式，积累人脉",
+        hint: "名气+3，解锁后续机会",
+        apply: function (st) {
+          st.flags._veteranRecognized = true;
+          st.flags._veteranNetwork = true;
+          st.player.fame = Math.min(100, (st.player.fame || 0) + 3);
+          st.player.mental = Math.min(100, (st.player.mental || 0) + 2);
+          StateManager.addMessage(
+            "🤝 你们互换了微信。对方说「以后有活儿互相介绍。」名气+3，心智+2，人脉网络+1。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "😐 淡淡一笑，继续忙自己的",
+        hint: "无变化",
+        apply: function (st) {
+          st.flags._veteranRecognized = true;
+          StateManager.addMessage(
+            "😐 你点点头没多说，继续忙自己的事。有些人不值得你停下脚步。",
+            "info",
+          );
+        },
+      },
+    ],
+  });
+
+  // 联动2：天气×地点组合情境事件
+  // 设计意图：同样的极端天气在不同地点产生完全不同的叙事体验
+  // 联动系统：weather + trade.currentLocation + phase
+  RANDOM_EVENTS.push({
+    id: "weather_location_typhoon",
+    phase: "street",
+    icon: "🌀",
+    title: "台风天的抉择",
+    story:
+      "台风预警拉响了——预计明天就有强风暴雨。你看了看自己所在的位置，心里盘算着接下来的安排。",
+    // [自洽修复] conditions 新增：台风天气 + 地点检查
+    conditions: function (st) {
+      if (st.weather && st.weather.current !== "typhoon") return false;
+      if (st.player.phase !== "street") return false;
+      var loc = st.trade && st.trade.currentLocation;
+      if (!loc || !["market", "construction", "slum"].includes(loc)) return false;
+      if (st.flags && st.flags._typhoonChoiceSeen) return false;
+      return true;
+    },
+    probability: 0.06,
+    repeatable: false,
+    choices: [
+      {
+        text: "🏠 赶紧回家躲台风",
+        hint: "安全，但可能损失今日收入",
+        apply: function (st) {
+          st.flags._typhoonChoiceSeen = true;
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 5);
+          st.status.health = Math.min(100, (st.status.health || 70) + 3);
+          var loc = st.trade && st.trade.currentLocation;
+          var lostIncome = 0;
+          if (loc === "construction") lostIncome = Random.int(80, 150);
+          else if (loc === "market") lostIncome = Random.int(50, 100);
+          else lostIncome = Random.int(30, 60);
+          StateManager.addMessage(
+            "🏠 你决定安全第一，赶紧往家赶。虽然今天少赚了¥" + lostIncome + "，但台风天在外面太危险了。心情+5，健康+3。",
+            "info",
+          );
+        },
+      },
+      {
+        text: "💪 留下来，抢在最后关头多干一票",
+        hint: "高风险高回报",
+        apply: function (st) {
+          st.flags._typhoonChoiceSeen = true;
+          if (Random.chance(0.4)) {
+            var earn = Random.int(200, 500);
+            st.resources.cash += earn;
+            st.resources.totalEarned = (st.resources.totalEarned || 0) + earn;
+            st.status.health = Math.max(0, (st.status.health || 70) - 10);
+            st.needs.fatigue = Math.min(100, (st.needs.fatigue || 0) + 25);
+            StateManager.addMessage(
+              "💪 你顶住了最后的风雨，多干了一票赚了¥" + earn + "。但浑身湿透，健康-10，疲劳+25。",
+              "success",
+            );
+          } else {
+            st.status.health = Math.max(0, (st.status.health || 70) - 15);
+            st.needs.fatigue = Math.min(100, (st.needs.fatigue || 0) + 30);
+            StateManager.addMessage(
+              "💪 台风比你想象的更猛——你被吹倒在了路边，浑身是伤。健康-15，疲劳+30。这票亏大了。",
+              "danger",
+            );
+          }
+        },
+      },
+      {
+        text: "📱 帮邻居们一起加固店铺",
+        hint: "社交+10，获得邻里好感",
+        apply: function (st) {
+          st.flags._typhoonChoiceSeen = true;
+          var rel = st.relationships;
+          if (rel) {
+            for (var r in rel) {
+              if (rel[r] && rel[r].met) {
+                rel[r].affinity = Math.min(100, (rel[r].affinity || 0) + 8);
+              }
+            }
+          }
+          st.player.mental = Math.min(100, (st.player.mental || 0) + 5);
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 8);
+          StateManager.addMessage(
+            "📱 你挨家挨户帮邻居加固棚子、搬东西。虽然没赚钱，但邻里关系更近了。心智+5，心情+8。",
+            "success",
+          );
+        },
+      },
+    ],
+  });
+
+  // 联动3：NPC极致好感（≥80）→ 意外发现
+  // 设计意图：与NPC关系极深后，对方会主动分享一个隐藏资源/机会
+  // 联动系统：relationships + affinity >= 80
+  RANDOM_EVENTS.push({
+    id: "deep_bond_secret_resource",
+    phase: "street",
+    icon: "🔑",
+    title: "知己的秘密",
+    story:
+      "你和一位相识已久的朋友深夜喝酒，对方突然压低声音说：「有件事我一直没告诉别人，但我觉得你应该知道。」\n\nTa 从口袋里掏出一张名片——那是一个你从未听说过的机会。",
+    // [自洽修复] conditions 新增：任意NPC affinity >= 80
+    conditions: function (st) {
+      if (st.player.day < 45) return false;
+      var rel = st.relationships;
+      if (!rel) return false;
+      for (var r in rel) {
+        if (rel[r] && rel[r].met && (rel[r].affinity || 0) >= 80) {
+          return true;
+        }
+      }
+      return false;
+    },
+    probability: 0.03,
+    repeatable: false,
+    choices: [
+      {
+        text: "🔑 接过资源，深表感谢",
+        hint: "获得隐藏机会",
+        apply: function (st) {
+          st.flags._deepBondResource = true;
+          var bestRel = null;
+          var bestAff = 0;
+          for (var r in st.relationships) {
+            if (st.relationships[r] && st.relationships[r].met) {
+              var a = st.relationships[r].affinity || 0;
+              if (a > bestAff) {
+                bestAff = a;
+                bestRel = r;
+              }
+            }
+          }
+          if (bestRel) {
+            st.relationships[bestRel].affinity = Math.min(
+              100,
+              (st.relationships[bestRel].affinity || 0) + 5,
+            );
+          }
+          var rewards = [
+            { type: "cash", value: Random.int(300, 800), msg: "现金" },
+            { type: "info", value: "market", msg: "市场情报" },
+            { type: "network", value: "contact", msg: "人脉" },
+          ];
+          var reward = rewards[Random.int(0, 2)];
+          if (reward.type === "cash") {
+            st.resources.cash += reward.value;
+            st.resources.totalEarned = (st.resources.totalEarned || 0) + reward.value;
+            StateManager.addMessage(
+              "🔑 「这是我的一点心意。」你收到了" + reward.msg + "，价值¥" + reward.value + "。",
+              "success",
+            );
+          } else if (reward.type === "info") {
+            st.player.intelligence = Math.min(100, (st.player.intelligence || 0) + 3);
+            StateManager.addMessage(
+              "🔑 对方告诉你一个行业内幕消息——某个批发市场下周会有大批低价货。智力+3，获得市场情报。",
+              "success",
+            );
+          } else {
+            st.flags._extendedNetwork = true;
+            st.player.fame = Math.min(100, (st.player.fame || 0) + 5);
+            StateManager.addMessage(
+              "🔑 对方把你介绍给了一个关键人物——「以后有事找他，说是我的朋友就行。」名气+5，人脉扩展。",
+              "success",
+            );
+          }
+        },
+      },
+      {
+        text: "🙏 婉拒，不想欠人情",
+        hint: "好感+3，保持纯粹",
+        apply: function (st) {
+          st.flags._deepBondResource = true;
+          st.player.morality = Math.min(100, (st.player.morality || 50) + 2);
+          StateManager.addMessage(
+            "🙏 「心意领了，但东西你拿回去。」对方愣了一下，然后笑了：「你这人，真是……」道德+2，好感+3。",
+            "info",
+          );
+        },
+      },
+    ],
+  });
+
+  // 联动4：道德极端 → 人设分叉事件
+  // 设计意图：同一个情境，高道德和低道德玩家面临完全不同的叙事分支
+  // 联动系统：morality + phase + flags
+  RANDOM_EVENTS.push({
+    id: "moral_extreme_choice_fork",
+    phase: "street",
+    icon: "⚖️",
+    title: "十字路口的人性",
+    story:
+      "你在街角看到一个老人摔倒在地，周围行人匆匆，没人停下来。\n\n你的手机刚好开着录像——这是一个拍视频博流量的好机会，也是一个伸出援手的时刻。",
+    // [自洽修复] conditions 新增：道德值极端检查（≤20 或 ≥80）
+    conditions: function (st) {
+      if (st.player.day < 30) return false;
+      var mor = st.player.morality || 50;
+      if (mor > 20 && mor < 80) return false;
+      if (st.flags && st.flags._moralForkSeen) return false;
+      return true;
+    },
+    probability: 0.04,
+    repeatable: false,
+    choices: [
+      {
+        text: "🤲 立刻扶起老人",
+        hint: "道德+5，健康-3",
+        apply: function (st) {
+          st.flags._moralForkSeen = true;
+          var mor = st.player.morality || 50;
+          if (mor >= 80) {
+            st.player.morality = Math.min(100, mor + 5);
+            st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 15);
+            st.player.mental = Math.min(100, (st.player.mental || 0) + 5);
+            StateManager.addMessage(
+              "🤲 你毫不犹豫地跑过去扶起老人。老人颤抖着说谢谢，你帮他打了120。虽然自己摔着了，但心里很踏实。心情+15，心智+5，道德+5。",
+              "success",
+            );
+          } else {
+            st.player.morality = Math.min(100, mor + 3);
+            st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 5);
+            StateManager.addMessage(
+              "🤲 你扶起老人，心里想着「做个样子也好。」老人谢谢你，你摆摆手走了。道德+3，心情+5。",
+              "info",
+            );
+          }
+        },
+      },
+      {
+        text: "📱 拍视频发抖音",
+        hint: "流量+10，道德-5",
+        apply: function (st) {
+          st.flags._moralForkSeen = true;
+          var mor = st.player.morality || 50;
+          if (mor <= 20) {
+            st.player.morality = Math.max(0, mor - 5);
+            st.player.fame = Math.min(100, (st.player.fame || 0) + 8);
+            var earn = Random.int(200, 500);
+            st.resources.cash += earn;
+            st.resources.totalEarned = (st.resources.totalEarned || 0) + earn;
+            st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 5);
+            StateManager.addMessage(
+              "📱 你举起手机录下了全过程，配文「街头冷漠」发了出去。视频火了，点赞破万，平台打赏¥" + earn + "。道德-5，名气+8。",
+              "warning",
+            );
+          } else {
+            st.player.morality = Math.max(0, mor - 3);
+            st.player.fame = Math.min(100, (st.player.fame || 0) + 5);
+            var earn = Random.int(100, 300);
+            st.resources.cash += earn;
+            st.resources.totalEarned = (st.resources.totalEarned || 0) + earn;
+            st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 3);
+            StateManager.addMessage(
+              "📱 你最终还是举起了手机——「至少有人看到这件事，可能会帮忙。」视频获得了¥" + earn + "打赏。道德-3，名气+5。",
+              "info",
+            );
+          }
+        },
+      },
+      {
+        text: "🚶 假装没看见走开",
+        hint: "无变化",
+        apply: function (st) {
+          st.flags._moralForkSeen = true;
+          var mor = st.player.morality || 50;
+          if (mor <= 20) {
+            st.player.morality = Math.max(0, mor - 2);
+            StateManager.addMessage("🚶 你快步走开了。道德-2。", "warning");
+          } else {
+            st.player.morality = Math.max(0, mor - 1);
+            StateManager.addMessage("🚶 你犹豫了一下，最终没敢停下来。道德-1。", "info");
+          }
+        },
+      },
+    ],
+  });
+
+  // 联动5：多技能协同 → 跨界机会
+  // 设计意图：拥有3+技能达到30级的玩家，遇到跨界整合机会
+  // 联动系统：skills level + phase
+  RANDOM_EVENTS.push({
+    id: "multi_skill_cross_domain",
+    phase: "street",
+    icon: "🔗",
+    title: "跨界的机会",
+    story:
+      "有人找到你，说听说你什么都会一点——「能不能帮我做一个组合方案？我一个人搞不定这么多东西。」\n\n你想了想，确实，你掌握的技能比大多数人都多。",
+    // [自洽修复] conditions 新增：多技能协同检查（≥3个技能达到30级以上）
+    conditions: function (st) {
+      if (st.player.day < 90) return false;
+      var skills = st.skills || {};
+      var qualified = 0;
+      for (var sk in skills) {
+        if (skills[sk] && (skills[sk].level || 0) >= 30) {
+          qualified++;
+        }
+      }
+      return qualified >= 3;
+    },
+    probability: 0.02,
+    repeatable: false,
+    choices: [
+      {
+        text: "🤝 接下这个综合项目",
+        hint: "多技能XP+20，收入¥300-800",
+        apply: function (st) {
+          st.flags._multiSkillProject = true;
+          var income = Random.int(300, 800);
+          st.resources.cash += income;
+          st.resources.totalEarned = (st.resources.totalEarned || 0) + income;
+          var skills = st.skills || {};
+          var topSkills = [];
+          for (var sk in skills) {
+            if (skills[sk] && (skills[sk].level || 0) >= 30) {
+              topSkills.push({ name: sk, level: skills[sk].level || 0 });
+            }
+          }
+          topSkills.sort(function (a, b) { return b.level - a.level; });
+          var xpText = "";
+          for (var i = 0; i < Math.min(3, topSkills.length); i++) {
+            skills[topSkills[i].name].xp = Math.min(1000, (skills[topSkills[i].name].xp || 0) + 20);
+            xpText += topSkills[i].name + "XP+20 ";
+          }
+          st.player.mental = Math.min(100, (st.player.mental || 0) + 5);
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 10);
+          StateManager.addMessage(
+            "🤝 你接下了这个综合项目，发挥了自己的多面手优势。赚了¥" + income + "。" + xpText.trim() + "，心智+5，心情+10。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "📋 推荐给别人，赚介绍费",
+        hint: "现金+150，人脉+3",
+        apply: function (st) {
+          st.flags._multiSkillProject = true;
+          st.resources.cash += 150;
+          st.resources.totalEarned = (st.resources.totalEarned || 0) + 150;
+          st.player.fame = Math.min(100, (st.player.fame || 0) + 3);
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 5);
+          StateManager.addMessage(
+            "📋 你把这个项目介绍给了更专业的人，自己赚了¥150的介绍费。名气+3，心情+5。",
+            "info",
+          );
+        },
+      },
+      {
+        text: "🚫 不感兴趣，专注本职",
+        hint: "无变化",
+        apply: function (st) {
+          st.flags._multiSkillProject = true;
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 3);
+          StateManager.addMessage(
+            "🚫 你婉拒了。觉得还是专注自己的主业比较好。心情+3。",
+            "info",
+          );
+        },
+      },
+    ],
+  });
+
+  // ====================================================================
+  // v3.77 新增事件注册完毕
+  // ====================================================================
   // ====== 注册结束 ======
 })();
 </script>

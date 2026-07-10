@@ -156,14 +156,14 @@ navHints: [
 
 > 每次收工前覆盖更新本节（只留最新状态，不要追加历史）；详细变更历史在 `src/DEVELOPMENT.md`，不需要每次都读。
 
-- **最新一次工作 (2026-07-10)**：v3.76(loop R31) — P2四方向填充(技能组合双高门槛×2/季节Spring×1/季节Autumn×1/装备品质里程碑×1)
-  - **设计意图**: 填补P2空白区(技能combo事件从0→2，季节叙事从2→4，装备品质里程碑从0→1)
-  - **① 技能组合双高门槛**: `skill_combo_big_client`(sales≥40+charm≥30→大客户招待)/`skill_combo_repair_shop`(repair≥30+management≥20→合伙开修理铺)
-  - **② 季节Spring叙事**: `spring_job_fair`(season=spring+day≥60→春季招聘会,一年一次)
-  - **③ 季节Autumn叙事**: `autumn_harvest_market`(season=autumn+day≥30→秋收集市,一年一次)
-  - **④ 装备品质里程碑**: `equipment_first_high_quality`(持有good/excellent/rare装备→仪式感叙事)
-  - **影响文件**: cross_system_events.js(+275行)/linkage-events-gdd.md(+65行)
-  - **验证**: node --check ✅ / build.py 6923.6KB ✅
+- **最新一次工作 (2026-07-10)**：v3.78(loop R32) — 新增3个NPC关系矩阵深度互动事件(王婶×张姐调解/百家宴/李工头×陈哥合作)
+  - **设计意图**: 填补NPC关系矩阵深度互动空白区(P2推荐方向⑦)，覆盖aunt_wang↔sister_zhang(紧张→调解)、boss_li↔chen_ge(中立→合作)
+  - **① npc_wang_zhang_mediation**: 王婶与张姐巷口摆摊矛盾，玩家可调解/站队/回避
+  - **② npc_community_gathering**: 老周牵头百家宴，5 NPC联动(老周/王婶/陈师傅/张姐/阿黄)
+  - **③ npc_li_chen_cooperation**: 李工头缺人手遇陈哥，玩家撮合合作/自己顶上/赚中介
+  - **附带: v3.77图书馆位置激活+借书行动/读者证/v3.76世界新闻面板重构/R20-R119 rebase超集**
+  - **影响文件**: cross_system_events.js(+488行)/world_news_intro.js(refactor)/locations.js(+图书馆)/actions_extra.js(+借书行动)/style.css(+悬停)
+  - **验证**: node --check ✅ / build.py 7646.4KB ✅
 
 - **上一轮工作 (2026-07-10)**：v3.73(loop R29) — 新增2个健康危机事件(健康红线/濒死边缘·损失厌恶驱动)
   - **设计意图**: 平衡大量正面成就事件，加入负面里程碑制造张力
