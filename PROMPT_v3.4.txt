@@ -1,0 +1,206 @@
+请严格按照以下设计执行 city-life-story 的 v3.4 内容关联度深化（C3D）开发。
+
+执行触发：v3.0 审查改进。先 Read memory/review-improve-v3.0.md 全文，再开始。
+工作目录：D:\Claude Code+DeepSeekV4\city-life-story\
+身份：游戏设计师 + 系统架构师 + 高级开发工程师
+
+=== 项目上下文（直接从 claude_code__hermes 审计结果）===
+- 93 个 JS 文件，~9 万行，5 层架构（core/data/phase1/phase2/ui）
+- 72 NPC、27 地点、93 工作（已经太多不新增工作）、63 物品、53 商品、160 成就、684 道德事件、79+ 新闻
+- events_street.js 9827 行（单文件巨型，本次不碰——只追加约定结构的新事件到 cross_system_events.js）
+- 11 个活跃地点：slum/wholesaleMarket/construction/factoryZone/school/commercialDist/techPark/hospital/bank/park/trainingCenter/suburb/gov_office/entertainment/temple
+- NPC及其好感阈值：aunt_wang/boss_li/sister_zhang/old_zhou/xiao_mei 各 30/60/80
+- 核心弱点（来自 REVIEW_RESULT 7.5/10）：NPC 无位置关联（locations.js 没有 NPC 字段）、仅 4 条跨系统事件、技能证书尚未完整
+
+=== 设计参考（基于 REVIEW_BRIEF 评审标准）===
+本波改进参考以下同类游戏的核心设计模式：
+- **Cart Life** — 角色每日移动轨迹决定能遇到谁，NPC 日程驱动偶遇
+- **Stardew Valley** — NPC 按时间出现在特定地点，可被找到
+- **This War of Mine** — 角色状态影响可用行动，情景连锁反应
+- **BitLife** — 事件选择分支长期影响，隐藏通路
+- **Capitalism Lab** — 系统之间跨反馈循环
+- **《大多数》** — 技能解锁特殊行动，地点有限定活动
+
+=== 硬约束 ===
+1) 禁止 cat 整文件。只用 grep -n 定位 + Read 读 ≤80 行/次。
+2) 每个 patch ≤20 行；新模块 ≤300 行。
+3) 全部改完后一次 `python build.py`。中间不 build。
+4) 每完成一个任务 git add -A && git commit -m "v3.4-Tn: 任务名"。不 push。
+5) 不写测试，不引入外部库，不改 script 加载顺序。不删文件。
+6) 新文件必须论证明为什么不能放进现有模块。
+
+=== T1: NPC 位置关联系统（新文件 ≤300行）===
+文件：src/js/core/npc_location_bridge.js（新建）
+
+功能：给每个核心 NPC 定义日常活动位置，玩家在特定时间/地点遇到他们有额外互动。
+
+结构 IIFE，暴露：
+- window.initNpcLocationData(state) — 初始化 NPC 日程
+- window.getNpcCurrentLocation(npcId, timeOfDay) — NPC 此刻在哪
+- window.tickNpcLocationRotation(state) — daily_pipeline 步：更新 NPC 位置
+
+5 个 NPC 日程设计（参考 Stardew Valley NPC 作息 + Cart Life 角色生活感）：
+
+aunt_wang（王大婶 — 热心邻居）：
+  morning: "commercialDist"（买菜采购）
+  afternoon: "park"（遛弯聊天）
+  evening: "slum"（回家做饭）
+  night: "slum"
+
+boss_li（李老板 — 小生意人）：
+  morning: "wholesaleMarket"（进货）
+  afternoon: "commercialDist"（守店）
+  evening: "entertainment"（应酬/放松）
+  night: "suburb"（回住处）
+
+sister_zhang（张姐 — 工厂女工）：
+  morning: "factoryZone"（上工）
+  afternoon: "factoryZone"
+  evening: "school"（接孩子/社区）
+  night: "slum"
+
+old_zhou（老周 — 拾荒老人）：
+  morning: "slum"（整理废品）
+  afternoon: "construction"（工地捡废料）  
+  evening: "wholesaleMarket"（卖废品）
+  night: "slum"
+
+xiao_mei（小美 — 餐厅服务员）：
+  morning: "trainingCenter"（上课/培训）
+  afternoon: "commercialDist"（打工）
+  evening: "commercialDist"（晚班）
+  night: "entertainment"（放松）
+
+实现细节：
+- NPC 数据在 npcs.js 已存在，日程数据嵌入 npcs.js 每个 NPC 的 `schedule` 字段（≤3行/NPC）
+- 读取 `npcRelations[npcId]` 中已建立的关系判断是否出现在玩家可见位置
+- 未发现该 NPC 时日程不暴露（null）
+- 集成到 `npc_event_bridge.js::rollLocationNpcInteraction()` 中：
+  - 在已有随机生成 NPC 的逻辑前，先检查是否有「本应在此」的 NPC
+  - 玩家在当前地点遇到已发现 NPC 时，额外显示一条 flavortext
+
+接线：
+1) npcs.js：每个 NPC 追加 `schedule` 对象，≤3 行/NPC
+2) daily_pipeline.js：新增 step `{name: "npc_location_tick", fn: tickNpcLocationRotation}`，放在 weather 步骤前
+3) index.html：注册 `<script src="js/core/npc_location_bridge.js"></script>`，放在 npc_event_bridge.js 之后
+4) npc_event_bridge.js：`rollLocationNpcInteraction` 中追加 ~10 行调用 `getNpcCurrentLocation` 做位置匹配
+
+=== T2: 跨系统联动事件 ×8（扩展 cross_system_events.js ~200行）===
+在已有 4 个事件后追加 8 个新事件（按现有 RANDOM_EVENTS 中 `{id, name, icon, phase, trigger, probability, text, options}` 格式）：
+
+1. id: "rain_opportunity" | 暴雨中的商机
+   - 触发：下雨天 + 在街头阶段 + cash<10000
+   - 选项：冒雨摆摊（收入×1.5但健康-5）/ 帮人送货（¥200+好感）/ 避雨发呆
+   - 联动：天气系统 + 健康 + 摆摊
+
+2. id: "wang_tip_rental" | 王大婶的租房信息
+   - 触发：aunt_wang 好感 ≥40 + 第 30-90 天
+   - 选项：去看看（¥500 押一付一城中村）/ 嫌贵不要（继续住桥洞）/ 问问有没有更便宜的
+   - 联动：NPC关系 + 住房 + 经济
+
+3. id: "park_skill_encounter" | 公园里的老师傅
+   - 触发：在 park 地点 + 有 1 项技能≥50
+   - 选项：虚心请教（技能+2%上限突破）/ 搭讪聊天（心情+10）/ 无视走过
+   - 联动：技能 + 地点 + 心情
+
+4. id: "factory_zhang_layoff" | 张姐工厂裁员
+   - 触发：sister_zhang 好感 ≥30 + 行业热度"制造"<0.9 + day>60
+   - 选项：安慰张姐（好感+15）/ 帮忙介绍工作（社交>=50 时成功，好感+30）/ 自顾不暇（什么也不做）
+   - 联动：NPC关系 + 行业热度 + 社交能力
+
+5. id: "market_clearance_tech" | 科技园地摊机会
+   - 触发：在 techPark 地点 + 行业热度"科技">1.15 + haveItem("smartphone")
+   - 选项：去卖手机配件（收入×1.8，但概率被城管抓）/ 发传单（¥80，稳定）/ 找园区工作机会
+   - 联动：行业热度 + 地点 + 物品 + 违法风险
+
+6. id: "seasonal_health_check" | 换季时节
+   - 触发：季节交替日（第 91/183/274/365 天） + 体质<60
+   - 选项：去医院体检（¥200，发现隐患）/ 自己扛着（健康-5）/ 买点保健品（¥50，健康+3%）
+   - 联动：季节 + 健康 + 支出
+
+7. id: "old_zhou_scrap_deal" | 老周的废品大单
+   - 触发：old_zhou 好感 ≥60 + day>120
+   - 选项：帮他一起干（体力活，收入¥500-800，技能「修理」+5）/ 介绍客户（社交能力检查）/ 婉拒
+   - 联动：NPC关系 + 体力 + 技能
+
+8. id: "xiao_mei_gig_economy" | 小美的副业机会
+   - 触发：xiao_mei 好感 ≥30 + day>45 + cash<50000
+   - 选项：一起接单（时薪¥15-20，和 xiao_mei 分享收入）/ 自己单干（¥25-30/时，不带她）/ 看不上这点钱
+   - 联动：NPC关系 + 经济 + 道德（选「不带她」道德-1）
+
+注意：事件通过 `(function(){ ... RANDOM_EVENTS.push(...) })()` IIFE 注入，无需修改 events_core.js
+
+=== T3: 位置×技能特色行动 ×10（扩展 actions_extra.js + skills.js ≤150行）===
+在 actions_extra.js 末尾追加 10 条地点限定行动（参考 Stardew Valley 地点特产 + Cart Life 地点功能）：
+
+1. name: "废品站淘货" — construction（¥50，概率发现值钱物件，需「修理」≥30）
+2. name: "工厂兼职" — factoryZone（¥80-120/天，体质≥40，疲劳+15）
+3. name: "夜校自习" — school（学习效率+30%，每晚 ¥10 电费）
+4. name: "商业区发传单" — commercialDist（¥60-80/天，心情-10）
+5. name: "科技园找机会" — techPark（概率触发创业/工作线索，需「智商」≥60）
+6. name: "医院献血" — hospital（¥200 + 健康+10，但需≥60 健康）
+7. name: "公园晨练" — park（体质+3，疲劳-10，免费）
+8. name: "图书馆啃书" — trainingCenter（技能 XP +15%，¥5 茶水）
+9. name: "寺庙静心" — temple（心情+20，道德+1，¥10 香火）
+10. name: "批发市场倒货" — wholesaleMarket（¥100-300/次，需「口才」≥40）
+
+格式：追加到 actions_extra.js 的 `EXTRA_ACTIONS` 数组中，每条 ≈ 8-15 行，包含 `id/name/location/condition/effect/desc/cost/income`
+
+接线：actions_extra.js 末尾追加（不修改 render.js，因为 render.js 通过 EXTRA_ACTIONS 对象遍历渲染）
+
+=== T4: NPC 好感×技能 联动效果（扩展 npc_event_bridge.js ≤100行 + npcs.js ≤30行）===
+4.1 npcs.js：每个 NPC 追加 `skillThresholds` 字段（好感+技能双门槛解锁的特殊互动）：
+
+aunt_wang（好感80 + 「烹饪」≥40 → 学做她的拿手菜）：效果=获得1个食谱
+boss_li（好感80 + 「口才」≥50 → 学做生意技巧）：效果=摆摊收入+10% 永久
+sister_zhang（好感80 + 「体质」≥60 → 一起做计件工）：效果=factoryZone 收入+15%
+old_zhou（好感80 + 「修理」≥30 → 得废品行家指点）：效果=construction 拾荒效率+20%
+xiao_mei（好感80 + 「颜值」≥70 → 介绍高端兼职）：效果=解锁「商业区模特」临时工作
+
+4.2 npc_event_bridge.js：在 `checkNpcAffinityUnlocks` 中追加技能检查逻辑：
+```js
+// 好感+技能 双门槛解锁检查 — 每次好感上升时检查
+// s.skillsLevels[sysName] >= threshold 且 npc.affinity >= target
+```
+
+=== 收尾 ===
+T1-T4 全部改完后跑一次 `python build.py`
+在 `src/DEVELOPMENT.md` 顶部追加 v3.4 段：
+```
+## 2026-06-24 — v3.4 内容关联度深化 C3D（游戏设计师+系统架构师+高级开发工程师）
+
+执行 SOP：`memory/review-improve-v3.0.md`（v3.0 审查改进）
+**设计参考**：Cart Life NPC 日程 / Stardew Valley 地点绑定 / This War of Mine 情景连锁 / Capitalism Lab 跨系统反馈
+
+- **T1 · NPC 位置关联系统** — `src/js/core/npc_location_bridge.js`（NNN 行）
+  - 5 个核心 NPC 各有每日作息日程（morning/afternoon/evening/night 映射到 15 个活跃地点）
+  - `getNpcCurrentLocation()` 时间+地点匹配
+  - `tickNpcLocationRotation()` 每日 pipeline 步
+  - 地点 NPC 偶遇 + flavortext
+
+- **T2 · 8 条跨系统联动事件** — `cross_system_events.js` +NNN 行
+  - 暴雨商机/王大婶租房/公园师傅/张姐裁员/科技园/换季/老周废品/小美副业
+  - 联动：天气+健康+NPC+行业+地点+季节+技能+道德
+
+- **T3 · 10 条地点限定行动** — `actions_extra.js` +NNN 行
+  - 每个活跃地点 1 条特色行动
+  - 条件=location+skill/attr threshold
+  - 效果=地点特色收入/成长
+
+- **T4 · NPC 好感×技能 联动** — `npcs.js` + `npc_event_bridge.js`
+  - 5 个 NPC 各 1 个双门槛特殊解锁
+  - 效果=永久增益/特殊行动/隐藏工作
+```
+最终 commit "v3.4 C3D: NPC位置+8联动事件+10地点行动+NPC×技能解锁"
+
+=== 输出格式 ===
+v3.4 C3D COMPLETE
+T1 ✅ npc_location_bridge.js: NNN行, grep ✓
+T2 ✅ cross_system_events.js: +NNN行, grep ✓
+T3 ✅ actions_extra.js: +NNN行, grep ✓
+T4 ✅ npcs.js+npc_event_bridge.js: +NNN行, grep ✓
+BUILD: dist/index.html = XXXX.X KB
+COMMITS: <hash1-4>
+RISKS: <列出>
+
+开始执行。

@@ -1,0 +1,76 @@
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/core/events.js:1149:  overlay.innerHTML = `
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/main.js:23:    valEl.textContent = Math.round(value);
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/main.js:96:      loadSection.innerHTML = `
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/main.js:1386:  content.innerHTML = messages
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/phase2/investment.js:347:    parent.innerHTML = "<p>投资系统加载中...</p>";
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/phase2/investment.js:371:  parent.innerHTML = "";
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/phase2/investment.js:373:  cont.innerHTML =
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/phase2/investment.js:402:    area.innerHTML = "";
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/phase2/investment.js:421:        card.innerHTML =
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/ui/corp_ui.js:8:  area.innerHTML = "";
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/ui/corp_ui.js:14:  qDiv.innerHTML = `
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/ui/corp_ui.js:32:    progDiv.innerHTML = `<div style="font-size:12px;color:var(--accent);margin-bottom:6px;">🎯 晋升进度 (→${progress.nextRank || "P10"})</div>`;
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/ui/corp_ui.js:37:        progDiv.innerHTML += `
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/ui/corp_ui.js:90:    card.innerHTML = `
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/ui/corp_ui.js:122:    teamDiv.innerHTML = `<h4 style="color:var(--text-muted);margin-bottom:8px;">👥 团队 (${state.corporate.team.length}人) | 产出系数: ${getTeamProductivity(state).toFixed(2)}x</h4>`;
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/ui/corp_ui.js:133:      card.innerHTML = `
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/ui/corp_ui.js:148:      hireDiv.innerHTML =
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/ui/corp_ui.js:158:        hCard.innerHTML = `
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/ui/modal.js:14:  box.innerHTML = `
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/ui/modal.js:24:    btnEl.textContent = btn.text;
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/ui/modal.js:164:          lastBtn.textContent = `存入 ¥${val.toLocaleString()}`;
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/ui/modal.js:322:          const oldHtml = slotEl.innerHTML;
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/ui/modal.js:323:          slotEl.innerHTML =
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/ui/modal.js:333:              slotEl.innerHTML = oldHtml;
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/ui/render.js:30:  document.getElementById("header-day").textContent = p.day;
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/ui/render.js:31:  document.getElementById("header-age").textContent = p.age;
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/ui/render.js:32:  document.getElementById("header-phase").textContent = phaseLabel;
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/ui/render.js:33:  document.getElementById("header-cash").textContent =
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/ui/render.js:89:    apVal.textContent = p.actionPoints + "/" + (p.maxActionPoints || 100);
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/ui/render.js:96:    document.getElementById("location-name").textContent = loc.name;
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/ui/render.js:97:    document.getElementById("location-desc").textContent = loc.desc;
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/ui/render.js:112:    locNameEl.innerHTML = `${loc.name} <span style="font-size:11px;color:var(--text-secondary);">${seasonDef.icon}${seasonDef.name} ${weatherDef.icon}${weatherDef.name} ${Math.round(weather.temperature || 22)}°C</span>`;
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/ui/render.js:119:    servicesEl.innerHTML = badges
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/ui/render.js:136:      nearbyEl.innerHTML = reachable
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/ui/render.js:174:      nearbyEl.innerHTML =
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/ui/render.js:189:    houseEl.innerHTML = `
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/ui/render.js:319:  area.innerHTML = "";
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/ui/render.js:350:        area.innerHTML =
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/ui/render.js:354:      area.innerHTML += '<p style="color:var(--text-muted)">开发中...</p>';
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/ui/render.js:369:  div.innerHTML = `
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/ui/render.js:388:      banner.innerHTML = `<span class="news-icon">📰</span> ${news.headline}`;
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/ui/render.js:414:    travelSection.innerHTML =
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/ui/render.js:464:      card.innerHTML = `
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/ui/render.js:491:    houseSection.innerHTML =
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/ui/render.js:509:    otherLabel.textContent = "⚡ 行动";
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/ui/render.js:528:  card.innerHTML = `
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/ui/render.js:563:  title.innerHTML = `
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/ui/render.js:577:    quick.innerHTML = `
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/ui/render.js:605:      quick.innerHTML += `
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/ui/render.js:624:    quick.innerHTML += "</div>";
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/ui/render.js:662:    svg.innerHTML = "";
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/ui/render.js:727:    node.innerHTML = `
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/ui/render.js:770:  legend.innerHTML = `
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/ui/render.js:782:  quickTable.innerHTML =
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/ui/render.js:800:    table.innerHTML += `
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/ui/render.js:850:  headerDiv.innerHTML = `
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/ui/render.js:859:    parent.innerHTML +=
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/ui/render.js:869:    ownedDiv.innerHTML =
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/ui/render.js:888:      card.innerHTML = `
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/ui/render.js:913:  marketLabel.textContent = isWholesale
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/ui/render.js:936:    card.innerHTML = `
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/ui/render.js:962:  compareDiv.innerHTML =
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/ui/render.js:991:  compareTable.innerHTML = tableHtml;
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/ui/render.js:1065:  parent.innerHTML = "";
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/ui/render.js:1067:  div.innerHTML = `
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/ui/render.js:1077:    div.innerHTML += '<p style="color:var(--text-muted)">背包空空如也</p>';
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/ui/render.js:1088:      el.innerHTML = `
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/ui/render.js:1102:  equipDiv.innerHTML =
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/ui/render.js:1122:    card.innerHTML = `
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/ui/render.js:1138:  parent.innerHTML = "";
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/ui/render.js:1140:  div.innerHTML =
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/ui/render.js:1166:    card.innerHTML = `
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/ui/render.js:1182:    certDiv.innerHTML =
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/ui/render.js:1191:      badge.textContent = certId;
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/ui/render.js:1205:    parent.innerHTML =
+D:/Claude Code+DeepSeekV4/city-life-story/src/js/ui/render.js:1212:  div.innerHTML = `

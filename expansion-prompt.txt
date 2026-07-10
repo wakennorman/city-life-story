@@ -1,0 +1,123 @@
+# 城市浮生记 v3.6 — 扩展实装任务
+
+## 项目位置
+D:/Claude Code+DeepSeekV4/city-life-story/
+
+## 已有完成状态（不要破坏）
+- v3.5 已稳定运行，9项P0/P1修复已提交（commit 9596623）
+- 构建命令：python build.py
+- 新文件必须在 index.html 中注册 script 标签
+- 修改后必须更新 src/DEVELOPMENT.md 顶部
+
+## 实装优先级顺序
+
+### 一、社交网络扩展「人情江湖」（P1，~825行）
+
+#### 1.1 新建文件：core/npc_relationships.js
+NPC关系链核心引擎：
+- 定义 NPC 之间关系矩阵（6+3=9个NPC，双向关系）
+- aunt_wang ↔ old_zhou：旧识（-10起始好感差）
+- boss_li ↔ sister_zhang：竞争关系
+- 赵姐 ↔ boss_li：业务关系
+- 陈哥 ↔ 老同学阿杰：老同学关系
+- butterfly effect：玩家帮A得罪B的连锁反应
+- 每天 tick 传播：npc_relationships_tick 触发蝴蝶效应扩散
+
+#### 1.2 修改 data/npcs.js 追加3个新NPC
+- 赵姐（中介）：位置 commercialDist/entertainment，好感≥50→提前知城市改造
+- 陈哥（情报贩子）：位置 nightMarket/entertainment，好感+金钱双门槛
+- 老同学阿杰：随机出现，借钱不还消失触发器
+
+#### 1.3 追加 cross_system_events.js 6-8个关系链事件
+- 三角关系选择（帮谁得罪谁）
+- 恩怨化解事件
+- 合作提议事件
+
+#### 1.4 修改 ui/social_tab.js
+渲染NPC关系网（列表+好感箭头）
+
+#### 1.5 接线
+- daily_pipeline.js 追加 step: npc_relationship_tick
+- index.html 注册新script
+
+### 二、时代变迁系统「岁月如梭」（P1，~718行）
+
+#### 2.1 新建 core/era_transform.js
+核心引擎：
+- inflationIndex：每年1月1日 1.0→1.08（房租/商品/工资）
+- 行业热度年度变迁（传统制造-5%/年, 互联网+8%/年, 新能源+12%/年）
+- 最低工资标准迭代
+- 房价指数随城市发展变化
+
+#### 2.2 新建 data/era_events.js
+8个时间锚点事件：
+- Day 90：地铁新线→沿线房价+10%
+- Day 180：年中经济报告→中产焦虑事件
+- Day 270：行业白皮书→随机行业骤升/骤降
+- Day 365：城市年鉴→年度结算展示
+- Day 450：旧改→aunt_wang城中村拆迁
+- Day 540：技术浪潮→编程/数据技能触发"第二曲线"
+- Day 720：经济周期拐点
+- Day 900：十年变迁总结
+
+#### 2.3 修改关联文件
+- data/news.js：追加8条时代变迁新闻
+- core/world_params.js：集成年度行业热度修正
+- phase1/pricing.js：通货膨胀基数修正
+- data/jobs.js：新增职业（直播等）
+- ui/daily_report.js：年度报告展示城市变化
+
+#### 2.4 接线
+- daily_pipeline.js 追加 step: era_tick（每年第1天执行）
+- index.html 注册2个新script
+
+### 三、副业系统「夜间经济」（P1，~725行）
+
+#### 3.1 新建 phase2/side_hustle.js
+6类副业定义+收入结算：
+- ①夜间摆摊（复用trade.js，18:00利润率+15%）
+- ②代驾/跑腿（消耗agility，触发夜生活事件）
+- ③知识付费/外包（需intelligence≥30或编程技能）
+- ④自媒体（累计粉丝→广告收入阶梯）
+- ⑤共享经济（有房/车后出租）
+- ⑥社区服务（好感+微薄收入）
+- 独立疲劳系数：副业做太多影响主职业效率
+- 天气影响：雨雪天副业收入减半
+
+#### 3.2 新建 data/side_hustle_events.js
+副业专属随机事件（夜生活/危险/机缘）
+
+#### 3.3 新建 ui/side_hustle_ui.js
+副业Tab界面渲染
+
+#### 3.4 接线
+- daily_pipeline.js step: side_hustle_tick
+- index.html 注册3个新script
+
+### 四、人生回忆录「这辈子」（P2，~422行，最后做）
+
+#### 4.1 新建 ui/life_memoir.js
+8章节回忆录生成引擎：
+- 序言/经济曲线/人生地图/社交圈/道德签名/成就墙/后悔的事/寄语
+- localStorage.__lifeMemoirs 跨周目保存（最多10条）
+- 主菜单入口按钮
+
+#### 4.2 修改关联文件
+- ui/victory.js：胜利时调用回忆录
+- main.js：失败时调用
+- ui/modal.js：主菜单加入口
+
+## 硬约束
+- 不删除任何已有.js/.html/.css文件
+- 不修改 build.py
+- 不修改 index.html 中 script 加载顺序（新script追加到末尾）
+- 不引入外部库/npm包
+- 每个功能点完成后立即 git add -A && git commit
+- 每次修改后更新 src/DEVELOPMENT.md 顶部
+- 所有改动完成后 python build.py
+
+## 风格
+- IIFE 模式注入事件和系统函数
+- 暴露 ≤4 个 window.xxx 函数/新模块
+- 每个新模块文件 ≤400 行
+- 代码中文注释

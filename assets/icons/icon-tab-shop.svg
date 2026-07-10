@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100" height="100">
+  <!-- 商城 - 购物袋 -->
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#6bbf7c"/>
+      <stop offset="100%" stop-color="#4a9e5c"/>
+    </linearGradient>
+  </defs>
+  <!-- 提手 -->
+  <path d="M35,28 C35,16 65,16 65,28" fill="none" stroke="url(#g)" stroke-width="5" stroke-linecap="round"/>
+  <!-- 袋身 -->
+  <path d="M28,32 L32,82 L68,82 L72,32 Z" fill="none" stroke="url(#g)" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- 袋上折线 -->
+  <line x1="28" y1="42" x2="72" y2="42" stroke="url(#g)" stroke-width="3" opacity="0.4"/>
+  <!-- ￥符号 -->
+  <text x="50" y="67" font-family="sans-serif" font-size="22" font-weight="bold" fill="url(#g)" text-anchor="middle" dominant-baseline="central">¥</text>
+</svg>

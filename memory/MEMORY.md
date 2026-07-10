@@ -1,0 +1,32 @@
+- [v3.1 NG+ 继承增强](v3.1-ng-plus-inheritance.md) — 继承摘要弹窗可视化 + 35岁路径/道德分/NPC巅峰好感展示 + 加成消费断链修复
+- [Career Milestone Events v3.22](career-milestone-events-v3.22.md) — 9个街头工作×3阶段里程碑叙事事件 + 带薪年假机制
+- [Review Improve v3.1](review-improve-v3.1.md) — 审查改进 v3.1 SOP（继承 v3.0 + 全剧本适配/峰终定律/留存机制）
+- [Location-Aware Action Category Ordering](location-aware-action-category-ordering.md) — 16个地点按功能优先级的行动分类重排系统
+- [Achievement System Audit 2026-07-03](achievement-system-audit-2026-07-03.md) — 成就系统全面审计：首日触发/逻辑错误/flag挂钩/技术债务
+- [Mobile Tab Debug Lesson 2026-07-04](mobile-tab-debug-lesson-2026-07-04.md) — 缺失`</aside>`导致移动端Tab栏消失的调试教训
+- [File Splitting v3.13](file-splitting-v3-13.md) — P1 超大文件按主题拆分（events_street×3 + startup×2 + render×3）
+- [Write vs Edit Lesson 2026-07-04](write-vs-edit-lesson-2026-07-04.md) — 误用 Write 覆盖整个文件导致 switchTab 丢失的教训
+- [P0/P1 Fix 2026-07-04](p0-p1-fix-2026-07-04.md) — v3.13e 全面修复：6项Bug+经济平衡调参
+- [v3.5 事件3条+天气内联](mobile-ui-v3.5-weather-log.md) — 事件记录默认3条+天气内联显示+预报交替闪烁
+- [v3.7 交易/事件/弹窗修复](v3.7-trade-event-modal-fix.md) — 交易系统全面优化（undefined/卖推荐单一/单一路径）+ 暴雨事件语境 + 移动端弹窗居中
+- [navigation-system-v1](navigation-system-v1.md) — 全游戏统一导航系统 (navigation.js)
+- [convention-over-configuration-methodology](convention-over-configuration-methodology.md) — 约定式自动归类核心方法论
+- [v3.24-daily-report-peak-end-rule](v3.24-daily-report-peak-end-rule.md) — v3.24 日终报告峰终定律增强：今日高光+明日展望+留存钩子
+- [v3.25-work-streak-system](v3.25-work-streak-system.md) — v3.25 连续工作系统：劳动节奏+禀赋效应+留存闭环
+- [Crossroads Card System v3.1](crossroads-card-system-v3.1.md) — 命运抉择卡机制设计 + 蒙特卡洛平衡验证（safe 68-72% / bold 12-56% 存活，依赖生活方式）
+- [tab-system-optimization-v3.31](tab-system-optimization-v3.31.md) — Tab切换系统全面优化（子Tab内容积累/社交返回/装备导航/全局审计）
+- [nav-button-binding-fix-v3.32](nav-button-binding-fix-v3.32.md) — 导航死按钮修复 + 交通AP按距离×方式动态计算
+- [commute-system-merge-v3.33](commute-system-merge-v3.33.md) — 通勤方式合并（快速出行+交通方式→通勤方式+步行）
+- [agnes-api-claude-code-integration](agnes-api-claude-code-integration.md) — Agnes API + Claude Code 踩坑记录：claude.exe 不认 env var，必须用 --settings JSON + bare 模式
+- [v3.5x-news-depth-rework](v3.5x-news-depth-rework.md) — 新闻系统深度影响链条全面修复（6大传导断层+8个叙事事件，2026-07-09，commit 65b06fc4）
+- [v3.52-cooking-npc-events-bak-cleanup](v3.52-cooking-npc-events-bak-cleanup.md) — 3个烹饪×NPC联动事件（cooking技能/林阿姨/陈师傅）+ 清理2个废弃bak文件（2026-07-09，commit d7e98f0d）
+- [v3.60-loop-sixth-round](v3.60-loop-sixth-round.md) — /loop 第6轮：15个options→choices P0修复 + 3个联动事件（多技能协同/银行VIP/熟客经济）
+- [v3.61-loop-seventh-round](v3.61-loop-seventh-round.md) — /loop 第7轮：corporate死代码修复 + 4个地点事件（工业区/医院/娱乐城/菜市场） + market引用清理
+- [v3.62-loop-eighth-round](v3.62-loop-eighth-round.md) — /loop 第8轮：填补最后3个零事件地点（郊区/政府办事大厅/培训中心） → 16个地点全部拥有事件覆盖
+- [v3.63-opening-news-deep-link](v3.63-opening-news-deep-link.md) — 开局新闻深度联动修复：新闻note实际生效/投资联动/AI新闻影响/选择面板/news_driven_events ID兼容（2026-07-09）
+- [v3.63b-multi-scenario-audit](v3.63b-multi-scenario-audit.md) — 多剧本适配审查：全剧本系统审计，修复getNextGoals 2个遗漏（midlife_crisis/fresh_grad）
+- [v3.20 叙事触发一致性审查+联动事件扩充](v3.20-narrative-trigger-consistency-audit.md) — 7个事件文件250+事件A类审查（0缺陷已修复）+ 4个新联动事件：修理铺合作/饥饿热汤/雨中同行/借债困境（2026-07-09，commit b15dc467）
+- [中文外显规则](chinese-only-display-rule.md) — 游戏外显内容只能是中文，英文需隐藏到代码中（2026-07-10）
+- [双图标禁止规则](double-icon-rule.md) — 行动/按钮不能同时有 name 中的 emoji 和 icon 字段（2026-07-10）
+- [v3.76 事件叙事-触发自洽性审查 R120](v3.76-narrative-trigger-consistency-r120.md) — 系统性审查5个事件文件250+事件，修复A类4个：bike_share_boom/live_stream_rush/shopping_fest/consumption_down（文本暗示特定职业经历但缺少conditions检查）（2026-07-10，commit 477d2237）
+- [R120 联动事件扩充](v3.77-linkage-events-r120.md) — 新增5个空白区联动事件：老手特遇(veteran_client)/专业技能视角(repair_expert_eye)/NPC暗线(old_zhou_secret_channel)/天气×位置(rain_market_vs_park)/饥饿积累(hunger_accumulation)（2026-07-10，commit ca9be7af）

@@ -1,0 +1,38 @@
+请严格按照 BRIEF_v3.3_W1.md 执行 v3.3 Wave-1A 部分任务（T1, T2, T3）。
+
+执行触发：v3.0 审查改进。先 Read memory/review-improve-v3.0.md 与 BRIEF_v3.3_W1.md 全文，再开始。
+
+工作目录：D:\Claude Code+DeepSeekV4\city-life-story\
+
+身份：游戏设计师 + 高级开发工程师。本次只做 T1、T2、T3 三个任务（35 岁路径延伸 + 体检异常二阶 + 坏账/好心回报）。T4-T6 留给后续 wave 不要做。
+
+硬约束：
+1) 禁止 cat 整文件。main.js 4087 / render.js 5944 / events_street.js 9800+ / moral_events.js 2000+。只用 grep -n 定位 + Read 工具读 ≤80 行/次。
+2) 每个 patch ≤20 行；新模块 ≤300 行。
+3) 三个任务做完后只跑一次 python build.py。中间禁止 build。
+4) 每完成一个任务做一次 git add -A && git commit -m "v3.3-W1A-Tn: ..."。禁止 git push。
+5) 不写测试，不引入外部库，不改 script 加载顺序，不删文件。
+6) 控制节奏，避免请求过快触发火山方舟 RPM 限流：单次工具调用之间不要刻意等待，但也不要并行发起多个 API 调用。
+
+任务（按 T1→T3 顺序）：
+- T1：35 岁三路径延伸事件链 — 新建 src/js/data/crisis35_followups.js（≤220 行），3 路径×2 事件=6 个 followup，IIFE 注入 window.RANDOM_EVENTS。同时给 review_improvements.js::check35Crisis 内 3 路径写 flag 时追加 s.flags._crisis35Day = s.day（≤3 行）。index.html 注册新 script，位置紧跟 moral_events.js 之后。
+- T2：体检异常二阶 — 在 review_improvements.js 末尾追加 2 个事件 wt_recheck_diagnosis + wt_chronic_disease_lifestyle（≤120 行追加），daily_pipeline.js review_improvements_tick 步骤中调用（≤3 行）。
+- T3：坏账/好心回报 — 在 crisis35_followups.js 同一 IIFE 数组末尾追加 bad_debt_chase + good_loan_return 两个事件。
+
+收尾：
+- 三任务完成后跑一次 python build.py
+- 在 src/DEVELOPMENT.md 顶部追加 v3.3 Wave-1A 段（紧贴 v3.2 段之上），列出 T1/T2/T3 改动和最终 dist KB
+- 最终 commit "v3.3 Wave-1A: 35岁链延伸+体检二阶+借款回响"
+
+输出格式（≤25 行，严格遵守）：
+```
+v3.3 Wave-1A COMPLETE
+T1 ✅ crisis35_followups.js: XXX 行, grep c35_exam_first_try ✓
+T2 ✅ review_improvements.js: +XX 行, grep wt_recheck_diagnosis ✓
+T3 ✅ crisis35_followups.js +追加, grep bad_debt_chase ✓
+BUILD: dist/index.html = XXXX.X KB
+COMMITS: <hash1> T1, <hash2> T2, <hash3> T3, <hash4> docs+build
+RISKS: <列遗留/绕过/降级，无则写"无">
+```
+
+开始执行。

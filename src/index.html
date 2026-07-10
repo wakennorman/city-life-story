@@ -1,0 +1,755 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>城市浮生记 — City Life Story</title>
+    <link rel="icon" type="image/png" sizes="16x16" href="favicon-16.png" />
+    <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png" />
+    <link rel="icon" type="image/png" sizes="64x64" href="favicon-64.png" />
+    <link rel="icon" type="image/png" sizes="128x128" href="favicon-128.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png" />
+    <meta name="msapplication-TileImage" content="favicon-128.png" />
+    <meta name="msapplication-TileColor" content="#1a1a2e" />
+    <meta name="theme-color" content="#1a1a2e" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta
+      name="apple-mobile-web-app-status-bar-style"
+      content="black-translucent"
+    />
+    <meta name="apple-mobile-web-app-title" content="城市浮生记" />
+    <link rel="stylesheet" href="css/style.css" />
+    <style>
+      /* 内联关键样式（防止FOUC） */
+      body {
+        background: #f5f1e8;
+        color: #3d3a35;
+      }
+      /* 默认显示欢迎界面，JS加载后由 showWelcome() 控制 */
+      .welcome-screen {
+        display: flex;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- ====== 模式选择界面 ====== -->
+    <div id="mode-select-screen" class="welcome-screen" style="display: none">
+      <div style="font-size: 48px; margin-bottom: 8px">🎮</div>
+      <div class="welcome-title">选择游戏模式</div>
+      <div class="welcome-subtitle" style="margin-bottom: 20px">
+        不同的开始，不同的故事
+      </div>
+      <div class="mode-grid">
+        <div class="mode-card" data-mode="classic" onclick="startClassicGame()">
+          <div class="mode-card-icon">🎯</div>
+          <div class="mode-card-title">经典模式</div>
+          <div class="mode-card-brief">原版开局，城中村起步</div>
+          <div class="mode-card-diff">难度：★★☆</div>
+        </div>
+        <div
+          class="mode-card"
+          data-mode="scenario"
+          onclick="showScenarioSelect()"
+        >
+          <div class="mode-card-icon">📜</div>
+          <div class="mode-card-title">剧本模式</div>
+          <div class="mode-card-brief">选择预设角色，体验不同人生</div>
+          <div class="mode-card-diff">6种剧本</div>
+        </div>
+        <div
+          class="mode-card"
+          data-mode="sandbox"
+          onclick="showSandboxConfig()"
+        >
+          <div class="mode-card-icon">⚙️</div>
+          <div class="mode-card-title">沙盒模式</div>
+          <div class="mode-card-brief">自由设定属性、资金、年龄</div>
+          <div class="mode-card-diff">完全自定义</div>
+        </div>
+      </div>
+      <button
+        class="btn btn-sm"
+        onclick="showWelcome()"
+        style="margin-top: 16px"
+      >
+        ← 返回
+      </button>
+    </div>
+
+    <!-- ====== 剧本选择界面 ====== -->
+    <div
+      id="scenario-select-screen"
+      class="welcome-screen"
+      style="display: none"
+    >
+      <div style="font-size: 48px; margin-bottom: 8px">📜</div>
+      <div class="welcome-title">剧本模式</div>
+      <div class="welcome-subtitle" style="margin-bottom: 16px">
+        选择一个角色，进入属于他/她的故事
+      </div>
+      <div
+        id="scenario-list"
+        class="scenario-grid"
+        style="max-height: 60vh; overflow-y: auto; padding: 0 8px"
+      >
+        <!-- 由 JS 动态生成 -->
+      </div>
+      <button
+        class="btn btn-sm"
+        onclick="showModeSelect()"
+        style="margin-top: 12px"
+      >
+        ← 返回模式选择
+      </button>
+    </div>
+
+    <!-- ====== 沙盒配置界面 ====== -->
+    <div id="sandbox-screen" class="welcome-screen" style="display: none">
+      <div style="font-size: 48px; margin-bottom: 4px">⚙️</div>
+      <div class="welcome-title">沙盒模式 — 自定义开局</div>
+      <div
+        class="welcome-subtitle"
+        style="margin-bottom: 12px; font-size: 13px"
+      >
+        自由分配你的起始条件。属性称号由总和决定。
+      </div>
+      <div
+        id="sandbox-config"
+        style="
+          max-height: 65vh;
+          overflow-y: auto;
+          text-align: left;
+          max-width: 500px;
+          margin: 0 auto;
+          padding: 0 12px;
+        "
+      >
+        <!-- 由 JS 动态生成 -->
+      </div>
+      <div style="margin-top: 10px">
+        <button
+          id="btn-start-sandbox"
+          class="btn btn-primary btn-lg"
+          onclick="startSandboxGame()"
+        >
+          🚀 开始游戏
+        </button>
+        <button
+          class="btn btn-sm"
+          onclick="showModeSelect()"
+          style="margin-left: 8px"
+        >
+          ← 返回
+        </button>
+      </div>
+    </div>
+
+    <!-- ====== 原有的欢迎界面（改为模式选择入口） ====== -->
+    <div id="welcome-screen" class="welcome-screen">
+      <div style="font-size: 64px; margin-bottom: 8px">🏙️</div>
+      <div class="welcome-title">城市浮生记</div>
+      <div class="welcome-subtitle">
+        七个剧本，七种人生，你的路你自己选<br />
+        <span class="goal-item">🏪 经商大亨</span> ·
+        <span class="goal-item">⭐ 城市名人</span> ·
+        <span class="goal-item">🎓 技能大师</span> ·
+        <span class="goal-item">💰 投资天才</span> ·
+        <span class="goal-item">🏢 职场巅峰</span> ·
+        <span class="goal-item">💵 财务自由</span><br />
+        六条路，每一种活法都能通往成功
+      </div>
+      <div class="welcome-buttons">
+        <button id="btn-new-game" class="btn btn-primary btn-lg">
+          🆕 开始新游戏
+        </button>
+        <button
+          id="btn-skip-tutorial"
+          class="btn btn-sm"
+          style="margin-top: 8px"
+        >
+          ⏭️ 跳过引导，直接开始
+        </button>
+        <button
+          class="btn btn-sm"
+          style="margin-top: 8px"
+          onclick="showHeritageStore && showHeritageStore()"
+        >
+          🏛 传承商店
+        </button>
+      </div>
+      <div id="load-section" style="display: none; margin-top: 8px"></div>
+      <div style="margin-top: 32px; font-size: 11px; color: var(--text-muted)">
+        灵感来源：北京浮生记 · 大多数 · 互联网大厂模拟器
+      </div>
+    </div>
+
+    <!-- ====== 游戏界面 ====== -->
+    <div id="app" style="display: none">
+      <!-- Header -->
+      <header id="header">
+        <div class="header-left">
+          <button
+            id="mobile-menu-btn"
+            aria-label="菜单"
+            onclick="toggleSidebar()"
+          >
+            ☰
+          </button>
+          <span class="header-logo">城市浮生记<span>v1.0</span></span>
+        </div>
+
+        <div class="header-stats">
+          <div class="header-stat">
+            <span class="label">📅 天</span>
+            <span class="value" id="header-day">1</span>
+          </div>
+          <div class="header-stat">
+            <span class="label" id="header-season-label">🌸 春</span>
+          </div>
+          <div
+            class="header-stat"
+            id="header-festival-stat"
+            style="display: none"
+          >
+            <span class="value festival-badge" id="header-festival"
+              >🧨 春节</span
+            >
+          </div>
+          <div class="header-stat">
+            <span class="label">🎂 年龄</span>
+            <span class="value age" id="header-age">20</span>
+          </div>
+          <div class="header-stat">
+            <span class="label">📍</span>
+            <span class="value" id="header-phase">🏘️ 街头</span>
+          </div>
+          <div class="header-stat" id="header-mode-stat" style="display: none">
+            <span class="label">🎮</span>
+            <span class="value" id="header-mode"></span>
+          </div>
+          <div
+            class="header-stat"
+            id="header-cash-area"
+            style="cursor: default; min-width: 100px"
+          >
+            <span class="label" id="header-cash-label">💰</span>
+            <span class="value cash" id="header-cash">¥2,000</span>
+          </div>
+          <!-- 债务展示区域（独立于现金） -->
+          <div
+            class="header-stat"
+            id="header-debt-area"
+            style="cursor: default; display: none"
+          >
+            <span class="label" id="header-debt-label">💸</span>
+            <span class="value debt" id="header-debt">¥0</span>
+          </div>
+        </div>
+
+        <div class="header-actions">
+          <button id="btn-help" class="btn btn-sm" title="帮助">❓ 帮助</button>
+          <button id="btn-save" class="btn btn-sm" title="保存游戏">
+            💾 存档
+          </button>
+          <button id="btn-load" class="btn btn-sm" title="读取存档">
+            📂 读档
+          </button>
+          <button id="btn-new-game-header" class="btn btn-sm" title="新游戏">
+            🆕
+          </button>
+        </div>
+      </header>
+
+      <!-- Sidebar -->
+      <aside id="sidebar">
+        <!-- 街头属性（Phase 1） -->
+        <div id="street-stats-section" class="sidebar-section">
+          <h3>💪 属性</h3>
+          <div class="stat-row" id="stat-physique">
+            <span class="stat-label">体质</span>
+            <div class="stat-bar-wrap">
+              <div class="stat-bar physique"></div>
+            </div>
+            <span class="stat-value">22</span>
+          </div>
+          <div class="stat-row" id="stat-intelligence">
+            <span class="stat-label">智力</span>
+            <div class="stat-bar-wrap">
+              <div class="stat-bar intelligence"></div>
+            </div>
+            <span class="stat-value">20</span>
+          </div>
+          <div class="stat-row" id="stat-agility">
+            <span class="stat-label">敏捷</span>
+            <div class="stat-bar-wrap">
+              <div class="stat-bar agility"></div>
+            </div>
+            <span class="stat-value">24</span>
+          </div>
+          <div class="stat-row" id="stat-mental">
+            <span class="stat-label">心智</span>
+            <div class="stat-bar-wrap">
+              <div class="stat-bar mental-bar"></div>
+            </div>
+            <span class="stat-value">26</span>
+          </div>
+          <div class="stat-row" id="stat-charm">
+            <span class="stat-label">魅力</span>
+            <div class="stat-bar-wrap">
+              <div class="stat-bar charm"></div>
+            </div>
+            <span class="stat-value">20</span>
+          </div>
+          <div class="stat-row" id="stat-morality">
+            <span class="stat-label">道德</span>
+            <div class="stat-bar-wrap">
+              <div class="stat-bar morality-bar"></div>
+            </div>
+            <span class="stat-value">50</span>
+          </div>
+        </div>
+
+        <!-- 职场属性（Phase 2，初始隐藏） -->
+        <div
+          id="corp-stats-section"
+          class="sidebar-section"
+          style="display: none"
+        >
+          <h3>🏢 职场属性</h3>
+          <div class="stat-row" id="stat-hair">
+            <span class="stat-label">发量</span>
+            <div class="stat-bar-wrap"><div class="stat-bar hair"></div></div>
+            <span class="stat-value">100</span>
+          </div>
+          <div class="stat-row" id="stat-dignity">
+            <span class="stat-label">尊严</span>
+            <div class="stat-bar-wrap">
+              <div class="stat-bar dignity"></div>
+            </div>
+            <span class="stat-value">60</span>
+          </div>
+          <div class="stat-row" id="stat-kpi">
+            <span class="stat-label">KPI</span>
+            <div class="stat-bar-wrap"><div class="stat-bar kpi"></div></div>
+            <span class="stat-value">20</span>
+          </div>
+          <div class="stat-row" id="stat-ability">
+            <span class="stat-label">能力</span>
+            <div class="stat-bar-wrap">
+              <div class="stat-bar intelligence"></div>
+            </div>
+            <span class="stat-value">30</span>
+          </div>
+          <div class="stat-row" id="stat-upward">
+            <span class="stat-label">向上管理</span>
+            <div class="stat-bar-wrap">
+              <div class="stat-bar physique"></div>
+            </div>
+            <span class="stat-value">20</span>
+          </div>
+          <div class="stat-row" id="stat-popularity">
+            <span class="stat-label">人缘</span>
+            <div class="stat-bar-wrap">
+              <div class="stat-bar happiness"></div>
+            </div>
+            <span class="stat-value">30</span>
+          </div>
+          <div class="stat-row" id="stat-risk">
+            <span class="stat-label">风险</span>
+            <div class="stat-bar-wrap"><div class="stat-bar risk"></div></div>
+            <span class="stat-value">0</span>
+          </div>
+        </div>
+
+        <!-- 基本需求 -->
+        <div class="sidebar-section">
+          <h3>📊 状态</h3>
+          <div class="stat-row" id="stat-hunger">
+            <span class="stat-label">饥饱</span>
+            <div class="stat-bar-wrap"><div class="stat-bar hunger"></div></div>
+            <span class="stat-value">70</span>
+          </div>
+          <div class="stat-row" id="stat-fatigue">
+            <span class="stat-label">疲劳</span>
+            <div class="stat-bar-wrap">
+              <div class="stat-bar fatigue"></div>
+            </div>
+            <span class="stat-value">15</span>
+          </div>
+          <div class="stat-row" id="stat-hygiene">
+            <span class="stat-label">卫生</span>
+            <div class="stat-bar-wrap">
+              <div class="stat-bar hygiene"></div>
+            </div>
+            <span class="stat-value">75</span>
+          </div>
+          <div class="stat-row" id="stat-happiness">
+            <span class="stat-label">心情</span>
+            <div class="stat-bar-wrap">
+              <div class="stat-bar happiness"></div>
+            </div>
+            <span class="stat-value">55</span>
+          </div>
+          <div class="stat-row" id="stat-health">
+            <span class="stat-label">健康</span>
+            <div class="stat-bar-wrap"><div class="stat-bar health"></div></div>
+            <span class="stat-value">100</span>
+          </div>
+          <div class="stat-row" id="stat-fame">
+            <span class="stat-label">名气</span>
+            <div class="stat-bar-wrap"><div class="stat-bar fame"></div></div>
+            <span class="stat-value">0</span>
+          </div>
+          <div class="stat-row" id="stat-ap">
+            <span class="stat-label">⚡行动力</span>
+            <div class="stat-bar-wrap"><div class="stat-bar ap-bar"></div></div>
+            <span class="stat-value">100/100</span>
+          </div>
+        </div>
+
+        <!-- 债务信息 -->
+        <div
+          id="debt-section"
+          class="sidebar-section"
+          style="display: none"
+        ></div>
+
+        <!-- 梦想追踪 -->
+        <div
+          id="dream-section"
+          class="sidebar-section"
+          style="display: none"
+        ></div>
+
+        <!-- 今日重点（动态生成） -->
+        <div
+          id="daily-focus-section"
+          class="sidebar-section"
+          style="display: none"
+        ></div>
+
+        <!-- 学历 -->
+        <div
+          id="edu-section"
+          class="sidebar-section"
+          style="display: none"
+        ></div>
+
+        <!-- 会计情报（技能门控） -->
+        <div
+          id="accounting-intel"
+          class="sidebar-section"
+          style="display: none"
+        ></div>
+
+        <!-- 当前位置 & 住所 -->
+        <div class="sidebar-section">
+          <h3>📍 当前位置</h3>
+          <div class="location-display">
+            <span class="location-name" id="location-name">城中村</span>
+          </div>
+          <div class="location-desc" id="location-desc">鱼龙混杂的城中村</div>
+          <div
+            class="location-services"
+            id="location-services"
+            style="margin-top: 6px; display: none; flex-wrap: wrap; gap: 4px"
+          ></div>
+          <div
+            id="weather-panel"
+            style="
+              margin-top: 6px;
+              padding: 6px 8px;
+              border-radius: 6px;
+              background: var(--bg-input);
+              font-size: 11px;
+              line-height: 1.5;
+              display: none;
+            "
+          ></div>
+          <div
+            id="housing-info"
+            style="
+              margin-top: 8px;
+              border-top: 1px solid var(--border);
+              padding-top: 8px;
+            "
+          ></div>
+        </div>
+      </aside>
+
+      <!-- Main Content -->
+      <main id="main">
+        <!-- Tab Bar — 5 大认知 Tab（v3.7 Tab 合并重构） -->
+        <div id="tab-bar">
+          <button class="tab-btn active" data-tab="actions">⚡ 行动</button>
+          <button class="tab-btn" data-tab="city">🗺️ 城市</button>
+          <button class="tab-btn" data-tab="me">👤 我</button>
+          <button class="tab-btn" data-tab="career">💼 事业</button>
+          <button class="tab-btn" data-tab="wiki">📖 百科</button>
+        </div>
+
+        <!-- Content Area (dynamically rendered) -->
+        <div id="content-area"></div>
+
+        <!-- Message Log -->
+        <div id="message-log">
+          <h3>📜 事件记录</h3>
+          <div
+            class="log-content"
+            style="max-height: 220px; overflow-y: auto"
+          ></div>
+        </div>
+      </main>
+    </div>
+
+    <!-- ====== Error Boundary ====== -->
+    <script>
+      window.__jsErrors = [];
+      window.addEventListener("error", function (e) {
+        if (e.target && e.target.tagName === "SCRIPT") {
+          var msg = "⚠️ 脚本加载失败: " + (e.target.src || "内联脚本");
+          window.__jsErrors.push(msg);
+          console.error(msg);
+        }
+      });
+      window.addEventListener("load", function () {
+        if (window.__jsErrors.length > 0) {
+          var app = document.getElementById("app");
+          if (app) {
+            app.style.display = "";
+            app.innerHTML =
+              '<div style="padding:40px;text-align:center;color:var(--danger);"><h2>⚠️ 部分脚本加载失败</h2><p style="margin-top:16px;color:var(--text-secondary);">请刷新页面重试。如果持续出现，检查浏览器是否支持现代JS或文件是否完整。</p><p style="margin-top:12px;font-size:11px;color:var(--text-muted);">' +
+              window.__jsErrors.join("<br>") +
+              "</p></div>";
+            return;
+          }
+        }
+        if (typeof StateManager === "undefined") {
+          document.getElementById("welcome-screen").style.display = "flex";
+          document.getElementById("welcome-screen").innerHTML =
+            '<div style="text-align:center;padding:40px;color:var(--danger);"><h2>⚠️ 核心脚本未加载</h2><p style="color:var(--text-secondary);margin-top:16px;">请检查 src/js/core/ 目录下的文件是否完整。</p></div>';
+        }
+      });
+    </script>
+
+    <!-- ====== Scripts (开发阶段独立加载) ====== -->
+    <!-- Random（必须最先加载，所有模块都可能使用 Random.* API） -->
+    <script src="js/core/random.js"></script>
+    <!-- Core -->
+    <script src="js/core/state.js"></script>
+    <script src="js/core/action_sort.js"></script>
+    <script src="js/core/sort_utils.js"></script>
+    <script src="js/core/finance.js"></script>
+    <script src="js/core/save.js"></script>
+    <script src="js/core/trigger_registry.js"></script>
+    <script src="js/core/events_core.js"></script>
+    <!-- v3.13: Street Random Events — split into 3 themed files -->
+    <script src="js/core/events_street_survival.js"></script>
+    <script src="js/core/events_street_wealth.js"></script>
+    <script src="js/core/events_street_life.js"></script>
+    <script src="js/core/events_corp.js"></script>
+    <script src="js/core/news_event_bridge.js"></script>
+    <script src="js/core/weather.js"></script>
+    <!-- v3.3 W2-T2: 气象预报系统 -->
+    <script src="js/core/weather_forecast.js"></script>
+    <script src="js/core/festivals.js"></script>
+    <script src="js/core/dreams.js"></script>
+    <script src="js/core/sound.js"></script>
+    <script src="js/core/achievements.js"></script>
+    <script src="js/core/equipment_quality.js"></script>
+    <script src="js/core/cooking.js"></script>
+    <script src="js/core/durability.js"></script>
+    <script src="js/core/review_improvements.js"></script>
+    <!-- v3.0 P2-B-2: Difficulty Tiers -->
+    <script src="js/core/difficulty_system.js"></script>
+    <!-- v3.0 P2-E-1: Heritage Coin (NG+ Meta Progression) -->
+    <script src="js/core/heritage_coin.js"></script>
+    <!-- v3.0 黑暗开局: Illegal Actions + Morality System -->
+    <script src="js/core/illegal_actions.js"></script>
+    <!-- v3.1: Life Ribbon System (BitLife-style ending classification) -->
+    <script src="js/core/life_ribbon.js"></script>
+    <!-- v3.1: Story Chapter System (3-chapter main story checkpoints) -->
+    <script src="js/core/story_chapters.js"></script>
+    <!-- v3.3 W2-T1: Route Effects (三章结局路线实际游戏效应) -->
+    <script src="js/core/route_effects.js"></script>
+    <!-- v3.1: Cross-System Events (NPC/sector/world state linkage) -->
+    <script src="js/core/cross_system_events.js"></script>
+    <!-- v3.21+v3.22 events merged into cross_system_events.js above -->
+    <!-- v3.10: 职业专属事件池（11条路径×35个叙事事件）-->
+    <script src="js/core/career_path_events.js"></script>
+    <!-- v3.6: 新闻驱动深度叙事事件（8个联动事件）-->
+    <script src="js/core/news_driven_events.js"></script>
+    <!-- v3.22: 家庭联动事件（接入 family 子系统）-->
+    <script src="js/core/family_events.js"></script>
+    <!-- v3.22: 城管联动事件（街头摊贩惊魂）-->
+    <script src="js/core/chengguan_events.js"></script>
+    <!-- v3.1: 社交网络系统（朋友圈/微博热搜/网红经济）-->
+    <script src="js/core/social_network.js"></script>
+    <!-- v3.23: 内幕交易事件（风声/监管/道德抉择）-->
+    <script src="js/core/insider_trading_events.js"></script>
+    <!-- v3.23: 个人成长事件（健康/心理/形象/目标危机）-->
+    <script src="js/core/personal_growth_events.js"></script>
+    <!-- v3.23: 职场社交事件（甩锅/导师/八卦/团建/抢功）-->
+    <script src="js/core/workplace_social_events.js"></script>
+    <script src="js/core/life_decisions.js"></script>
+    <!-- v3.7: Life Nodes System (Life Milestones) -->
+    <script src="js/core/life_nodes.js"></script>
+    <!-- v3.7: Medical System (Disease Treatment + Insurance) -->
+    <script src="js/core/medical.js"></script>
+    <!-- v3.7: Travel System (Domestic Destinations + Events) -->
+    <script src="js/core/travel.js"></script>
+    <!-- v3.7: Legal System (Lawsuits + Lawyers + Judgments) -->
+    <script src="js/core/legal.js"></script>
+    <!-- v3.13: Cross-System Integration (Life/Medical/Travel/Legal Deep Links) -->
+    <script src="js/core/cross_system_integration.js"></script>
+    <!-- v3.6: 时代变迁系统（通胀/物价/工资/行业热度）-->
+    <script src="js/core/era_transform.js"></script>
+    <!-- v3.1: 经济平衡调参（累进财富税/动态利率/难度收入曲线）-->
+    <script src="js/core/economy_v3.1.js"></script>
+    <!-- v3.6: 时代叙事事件（8个里程碑交互事件）-->
+    <script src="js/data/era_events.js"></script>
+    <!-- v3.1 第41轮：人生抉择系统 -->
+    <!-- core/news_system.js + bridges + world_params (core files interleaved into Data block) -->
+    <script src="js/core/news_system.js"></script>
+    <script src="js/core/news_investment_bridge.js"></script>
+    <script src="js/core/world_params.js"></script>
+    <!-- 开局世界新闻·氛围基调系统 -->
+    <script src="js/core/world_news_intro.js"></script>
+    <!-- core/skill_intel.js (core file interleaved into Phase1 block) -->
+    <script src="js/core/skill_intel.js"></script>
+    <!-- core/npc_bridge files (core files interleaved into Phase1 block) -->
+    <script src="js/core/npc_location_bridge.js"></script>
+    <script src="js/core/npc_relationships.js"></script>
+    <!-- core files interleaved into Phase2/Post-Phase2 block -->
+    <script src="js/core/enterprise_fate.js"></script>
+    <script src="js/core/multi_run_memory.js"></script>
+    <script src="js/core/company_spawner.js"></script>
+    <script src="js/core/inheritance_chain.js"></script>
+    <script src="js/core/skill_tree.js"></script>
+    <script src="js/core/equipment_suites.js"></script>
+    <script src="js/core/equipment_durability.js"></script>
+    <script src="js/core/skill_synergy.js"></script>
+    <!-- data files interleaved into Phase2 block -->
+    <script src="js/data/startup_events.js"></script>
+    <script src="js/data/startup_competition.js"></script>
+    <!-- data file after main.js -->
+    <script src="js/data/scenario_start_chains.js"></script>
+
+    <!-- Data -->
+    <script src="js/data/locations.js"></script>
+    <script src="js/data/location_flavor.js"></script>
+    <script src="js/data/jobs.js"></script>
+    <script src="js/data/goods.js"></script>
+    <script src="js/data/items.js"></script>
+    <script src="js/data/news.js"></script>
+    <script src="js/data/skills.js"></script>
+    <script src="js/data/npcs.js"></script>
+    <script src="js/data/scenarios.js"></script>
+    <script src="js/data/corp.js"></script>
+    <script src="js/data/amenities.js"></script>
+    <script src="js/data/illnesses.js"></script>
+    <script src="js/data/mechanics_registry.js"></script>
+    <script src="js/data/narratives_registry.js"></script>
+    <script src="js/data/victories_registry.js"></script>
+    <script src="js/data/moral_events.js"></script>
+    <script src="js/data/side_hustle_events.js"></script>
+    <script src="js/data/side_hustle_consequences.js"></script>
+    <!-- v3.3 W1-T1/T3: 35岁分水岭三路径延伸 + 坏账/好心回报 -->
+    <script src="js/data/crisis35_followups.js"></script>
+    <!-- v3.25: 打工人情境叙事 -->
+    <script src="js/data/work_flavor.js"></script>
+
+    <!-- Phase 1 -->
+    <script src="js/phase1/trade.js"></script>
+    <script src="js/phase1/trade_intel.js"></script>
+    <script src="js/phase1/needs.js"></script>
+    <script src="js/phase1/interactions.js"></script>
+    <script src="js/phase1/illness.js"></script>
+    <script src="js/phase1/critical.js"></script>
+    <script src="js/phase1/skill_bonuses.js"></script>
+    <script src="js/phase1/actions_extra.js"></script>
+    <script src="js/phase1/daily_pipeline.js"></script>
+    <script src="js/phase1/carry.js"></script>
+    <script src="js/phase1/pricing.js"></script>
+    <script src="js/phase1/reputation.js"></script>
+    <!-- v3.1 街坊声望系统 -->
+    <script src="js/phase1/npc_event_bridge.js"></script>
+    <!-- extra_events.js (phase1 file, moved from core block) -->
+    <script src="js/phase1/extra_events.js"></script>
+
+    <!-- Phase 2 -->
+    <script src="js/phase2/perf.js"></script>
+    <script src="js/phase2/promo.js"></script>
+    <script src="js/phase2/team.js"></script>
+    <script src="js/phase2/stock.js"></script>
+    <script src="js/phase2/corp_ops.js"></script>
+    <script src="js/phase2/investment.js"></script>
+    <script src="js/phase2/property_market.js"></script>
+    <script src="js/phase2/startup_data.js"></script>
+    <script src="js/phase2/startup.js"></script>
+    <script src="js/phase2/life_crossroads.js"></script>
+    <script src="js/phase2/side_hustle.js"></script>
+
+    <!-- Phase 2: Deep Interaction Modules -->
+    <script src="js/phase2/workplace_social.js"></script>
+    <script src="js/phase2/investment_analysis.js"></script>
+    <script src="js/phase2/startup_crisis.js"></script>
+    <script src="js/phase2/family_life.js"></script>
+    <script src="js/phase2/personal_growth.js"></script>
+
+    <!-- Company History Book Component (moved before UI block) -->
+    <script src="js/components/companyHistory.js"></script>
+
+    <!-- Data Visualization (必须在 render.js 之前加载，提供 renderGrowthTab 实现) -->
+    <script src="js/ui/data_viz.js"></script>
+    <!-- UI -->
+    <!-- v3.13: 渲染模块拆分为 Core/Infra/Tabs 三文件 -->
+    <script src="js/ui/render_core.js"></script>
+    <script src="js/ui/render_infra.js"></script>
+    <script src="js/ui/render.js"></script>
+    <script src="js/ui/corp_ui.js"></script>
+    <script src="js/ui/modal.js"></script>
+    <script src="js/ui/heritage_store.js"></script>
+    <script src="js/ui/tutorial.js"></script>
+    <script src="js/ui/navigation.js"></script>
+    <script src="js/ui/daily_focus.js"></script>
+    <!-- v3.6: 人生回忆录系统（跨周目持久化结局收藏）-->
+    <script src="js/ui/life_memoir.js"></script>
+    <script src="js/ui/victory.js"></script>
+    <script src="js/ui/wiki.js"></script>
+    <script src="js/ui/daily_report.js"></script>
+    <script src="js/ui/social_tab.js"></script>
+    <script src="js/ui/career_dev.js"></script>
+    <script src="js/ui/side_hustle_ui.js"></script>
+    <script src="js/ui/daily_quest.js"></script>
+    <!-- v3.21 职业里程碑叙事事件 -->
+    <script src="js/data/job_milestone_events.js"></script>
+
+    <!-- Main -->
+    <script src="js/main.js"></script>
+    <!-- v3.3 W2-T3: Scenario Start Chains (剧本专属开局事件链) -->
+    <script src="js/data/scenario_start_chains.js"></script>
+    <!-- Boot: 显示欢迎界面（所有脚本加载完毕后执行） -->
+    <script>
+      function toggleSidebar() {
+        var s = document.getElementById("sidebar");
+        if (s) s.classList.toggle("open");
+      }
+      // 点击侧栏外部关闭
+      document.addEventListener("click", function (e) {
+        var sidebar = document.getElementById("sidebar");
+        var btn = document.getElementById("mobile-menu-btn");
+        if (
+          sidebar &&
+          sidebar.classList.contains("open") &&
+          !sidebar.contains(e.target) &&
+          btn &&
+          !btn.contains(e.target)
+        ) {
+          sidebar.classList.remove("open");
+        }
+      });
+      showWelcome();
+    </script>
+  </body>
+</html>

@@ -1,0 +1,19 @@
+{
+  "statusLine": {
+    "type": "command",
+    "command": "bash D:/Claude Code+DeepSeekV4/.claude/statusline.sh"
+  },
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash D:/Claude Code+DeepSeekV4/city-life-story/.claude/sync-check.sh",
+            "timeout": 10
+          }
+        ]
+      }
+    ]
+  }
+}

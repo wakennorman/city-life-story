@@ -1,0 +1,144 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
+  <defs>
+    <!-- 夜空渐变 -->
+    <linearGradient id="skyGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#1a1a2e"/>
+      <stop offset="50%" stop-color="#16213e"/>
+      <stop offset="100%" stop-color="#0f3460"/>
+    </linearGradient>
+    <!-- 城市剪影渐变 -->
+    <linearGradient id="cityGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#2d3748"/>
+      <stop offset="100%" stop-color="#1a202c"/>
+    </linearGradient>
+    <!-- 月光光晕 -->
+    <radialGradient id="moonGlow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#fef3c7" stop-opacity="0.3"/>
+      <stop offset="60%" stop-color="#fef3c7" stop-opacity="0.08"/>
+      <stop offset="100%" stop-color="#fef3c7" stop-opacity="0"/>
+    </radialGradient>
+    <!-- 品牌绿强调 -->
+    <linearGradient id="accentGrad" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#4a9e5c"/>
+      <stop offset="100%" stop-color="#6bbf7c"/>
+    </linearGradient>
+    <!-- 窗户发光 -->
+    <filter id="windowGlow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="3" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <!-- 圆角背景 -->
+  <rect width="1024" height="1024" rx="180" fill="url(#skyGrad)"/>
+
+  <!-- 星光 -->
+  <circle cx="180" cy="160" r="3" fill="#fff" opacity="0.6"/>
+  <circle cx="350" cy="100" r="2" fill="#fff" opacity="0.4"/>
+  <circle cx="700" cy="140" r="2.5" fill="#fff" opacity="0.5"/>
+  <circle cx="850" cy="220" r="2" fill="#fff" opacity="0.3"/>
+  <circle cx="280" cy="280" r="1.5" fill="#fff" opacity="0.4"/>
+  <circle cx="620" cy="80" r="2" fill="#fff" opacity="0.5"/>
+  <circle cx="480" cy="200" r="1.8" fill="#fff" opacity="0.35"/>
+
+  <!-- 月亮光晕 -->
+  <circle cx="710" cy="250" r="160" fill="url(#moonGlow)"/>
+
+  <!-- 月亮 -->
+  <circle cx="710" cy="250" r="50" fill="#fef3c7" opacity="0.95"/>
+  <circle cx="728" cy="238" r="42" fill="url(#skyGrad)" opacity="0.3"/>
+
+  <!-- 城市天际线 - 后层（深色剪影） -->
+  <rect x="60" y="520" width="900" height="540" fill="#1a202c"/>
+
+  <!-- 远景建筑群 - 后排 -->
+  <rect x="70" y="420" width="60" height="280" fill="#2d3748" rx="3"/>
+  <rect x="140" y="380" width="45" height="320" fill="#2d3748" rx="3"/>
+  <rect x="200" y="440" width="55" height="260" fill="#2d3748" rx="3"/>
+  <rect x="265" y="370" width="40" height="330" fill="#2d3748" rx="3"/>
+  <rect x="320" y="430" width="65" height="270" fill="#2d3748" rx="3"/>
+  <rect x="400" y="390" width="50" height="310" fill="#2d3748" rx="3"/>
+  <rect x="465" y="450" width="60" height="250" fill="#2d3748" rx="3"/>
+  <rect x="540" y="400" width="45" height="300" fill="#2d3748" rx="3"/>
+  <rect x="600" y="360" width="55" height="340" fill="#2d3748" rx="3"/>
+  <rect x="670" y="410" width="50" height="290" fill="#2d3748" rx="3"/>
+  <rect x="740" y="450" width="60" height="250" fill="#2d3748" rx="3"/>
+  <rect x="815" y="390" width="45" height="310" fill="#2d3748" rx="3"/>
+  <rect x="870" y="440" width="60" height="260" fill="#2d3748" rx="3"/>
+
+  <!-- 中景建筑群 - 中排（品牌绿点缀） -->
+  <rect x="95" y="460" width="50" height="240" fill="#374151" rx="2"/>
+  <rect x="170" y="430" width="55" height="270" fill="#374151" rx="2"/>
+  <rect x="250" y="470" width="40" height="230" fill="#374151" rx="2"/>
+  <rect x="345" y="440" width="55" height="260" fill="#374151" rx="2"/>
+  <rect x="440" y="480" width="45" height="220" fill="#374151" rx="2"/>
+  <rect x="530" y="450" width="60" height="250" fill="#374151" rx="2"/>
+  <rect x="635" y="430" width="45" height="270" fill="#374151" rx="2"/>
+  <rect x="720" y="470" width="55" height="230" fill="#374151" rx="2"/>
+  <rect x="800" y="440" width="50" height="260" fill="#374151" rx="2"/>
+
+  <!-- 前排建筑 - 标志性高楼（品牌绿） -->
+  <rect x="120" y="490" width="70" height="210" fill="#2d3748" rx="2"/>
+  <!-- 高楼的窗户亮光 -->
+  <rect x="130" y="500" width="10" height="8" fill="#fef3c7" opacity="0.7" filter="url(#windowGlow)"/>
+  <rect x="150" y="520" width="10" height="8" fill="#fef3c7" opacity="0.5"/>
+  <rect x="130" y="540" width="10" height="8" fill="#fef3c7" opacity="0.6"/>
+  <rect x="170" y="510" width="10" height="8" fill="#fef3c7" opacity="0.4" filter="url(#windowGlow)"/>
+  <rect x="150" y="560" width="10" height="8" fill="#fef3c7" opacity="0.5"/>
+  <rect x="170" y="550" width="10" height="8" fill="#fef3c7" opacity="0.3"/>
+
+  <!-- 品牌绿主建筑 - 中央地标 -->
+  <rect x="380" y="410" width="90" height="290" fill="#4a9e5c" rx="3" opacity="0.85"/>
+  <rect x="395" y="425" width="14" height="10" fill="#fff" opacity="0.5" filter="url(#windowGlow)"/>
+  <rect x="420" y="425" width="14" height="10" fill="#fff" opacity="0.7" filter="url(#windowGlow)"/>
+  <rect x="440" y="425" width="14" height="10" fill="#fff" opacity="0.5" filter="url(#windowGlow)"/>
+  <rect x="395" y="455" width="14" height="10" fill="#fff" opacity="0.4"/>
+  <rect x="420" y="455" width="14" height="10" fill="#fff" opacity="0.6"/>
+  <rect x="440" y="455" width="14" height="10" fill="#fff" opacity="0.4"/>
+  <rect x="395" y="485" width="14" height="10" fill="#fff" opacity="0.5" filter="url(#windowGlow)"/>
+  <rect x="420" y="485" width="14" height="10" fill="#fff" opacity="0.3"/>
+  <rect x="440" y="485" width="14" height="10" fill="#fff" opacity="0.5"/>
+  <rect x="395" y="515" width="14" height="10" fill="#fff" opacity="0.4"/>
+  <rect x="420" y="515" width="14" height="10" fill="#fff" opacity="0.6" filter="url(#windowGlow)"/>
+  <rect x="440" y="515" width="14" height="10" fill="#fff" opacity="0.4"/>
+  <rect x="395" y="545" width="14" height="10" fill="#fff" opacity="0.3"/>
+  <rect x="420" y="545" width="14" height="10" fill="#fff" opacity="0.5"/>
+  <rect x="440" y="545" width="14" height="10" fill="#fff" opacity="0.3"/>
+
+  <!-- 品牌绿副楼 -->
+  <rect x="600" y="440" width="70" height="260" fill="#4a9e5c" rx="3" opacity="0.7"/>
+  <rect x="610" y="455" width="12" height="8" fill="#fff" opacity="0.5" filter="url(#windowGlow)"/>
+  <rect x="630" y="470" width="12" height="8" fill="#fff" opacity="0.4"/>
+  <rect x="648" y="455" width="12" height="8" fill="#fff" opacity="0.5" filter="url(#windowGlow)"/>
+  <rect x="610" y="490" width="12" height="8" fill="#fff" opacity="0.3"/>
+  <rect x="630" y="510" width="12" height="8" fill="#fff" opacity="0.5"/>
+  <rect x="648" y="490" width="12" height="8" fill="#fff" opacity="0.4"/>
+  <rect x="610" y="530" width="12" height="8" fill="#fff" opacity="0.5" filter="url(#windowGlow)"/>
+  <rect x="630" y="550" width="12" height="8" fill="#fff" opacity="0.3"/>
+  <rect x="648" y="530" width="12" height="8" fill="#fff" opacity="0.4"/>
+
+  <!-- 桥 - 连接城市元素 -->
+  <rect x="240" y="580" width="80" height="6" fill="#6bbf7c" rx="3" opacity="0.6"/>
+  <rect x="500" y="580" width="80" height="6" fill="#6bbf7c" rx="3" opacity="0.6"/>
+
+  <!-- 人物剪影（站在城市前） -->
+  <g transform="translate(512, 560)" opacity="0.9">
+    <!-- 头 -->
+    <circle cx="0" cy="-22" r="10" fill="#fff" opacity="0.7"/>
+    <!-- 身体 -->
+    <rect x="-7" y="-12" width="14" height="22" rx="4" fill="#fff" opacity="0.6"/>
+    <!-- 腿 -->
+    <rect x="-6" y="10" width="5" height="14" rx="2" fill="#fff" opacity="0.5"/>
+    <rect x="1" y="10" width="5" height="14" rx="2" fill="#fff" opacity="0.5"/>
+  </g>
+
+  <!-- 底部品牌绿渐变条 -->
+  <rect x="0" y="760" width="1024" height="264" rx="0" fill="url(#accentGrad)" opacity="0.15"/>
+  <rect x="0" y="760" width="1024" height="3" fill="url(#accentGrad)" opacity="0.3"/>
+
+  <!-- 游戏名 - 城市浮生记 (简洁竖向排布) -->
+  <!-- 使用白色半透明 -->
+</svg>

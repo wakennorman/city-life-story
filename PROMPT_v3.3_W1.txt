@@ -1,0 +1,25 @@
+请严格按照 BRIEF_v3.3_W1.md 执行 v3.3 Wave-1 关联度闭合任务。
+
+执行触发：v3.0 审查改进（请先 Read memory/review-improve-v3.0.md 与 BRIEF_v3.3_W1.md 全文，再开始）。
+
+工作目录：D:\Claude Code+DeepSeekV4\city-life-story\
+
+身份：你是项目的游戏设计师 + 高级开发工程师。你的目标是在已有内容基础上做深化和扩展，同时把已经埋下但没串完的关联通路全部接上，让玩家感觉每个选择都有 5~60 天后的回响。
+
+硬约束（违反任何一条都视为失败）：
+1) 禁止 cat 整文件（main.js 4087 / render.js 5944 / events_street.js 9800+ / moral_events.js 2000+）。只用 grep -n 定位 + Read 工具读 ≤80 行/次。
+2) 每个 patch ≤20 行；新模块 ≤300 行。
+3) 全部 6 个任务做完后只跑一次 python build.py。中间禁止重复 build。
+4) 每完成一个任务做一次 git add -A && git commit -m "v3.3-W1-Tn: ..."。禁止 git push。
+5) 不写测试（项目无测试框架）。
+6) 不修改 index.html 中 <script> 加载顺序，不删任何 .js/.css/.html 文件。
+7) 不引入任何 npm 包或外部库。
+
+任务顺序（严格按 T1→T6 执行）：见 BRIEF_v3.3_W1.md 第 3 节。
+
+收尾必做：
+- src/DEVELOPMENT.md 顶部追加 v3.3 Wave-1 段（格式见 BRIEF 第 4 节）
+- python build.py 一次
+- git commit 一次
+
+最终输出请严格按 BRIEF 第 5 节的 ≤30 行格式汇报，不要长篇说明，不要 markdown 标题，不要客套。开始执行。

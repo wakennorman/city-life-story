@@ -1,0 +1,18 @@
+<!-- 城市浮生记 — 首页 -->
+<view class="container">
+  <view class="hero">
+    <image class="hero-icon" src="/images/app-icon.png" mode="aspectFill" />
+    <text class="hero-title">{{gameTitle}}</text>
+    <text class="hero-subtitle">{{gameSubtitle}}</text>
+    <text class="hero-motto">{{motto}}</text>
+  </view>
+
+  <view class="actions">
+    <button class="btn-primary" bindtap="startGame">🎮 开始游戏</button>
+    <button class="btn-secondary" bindtap="goProfile">👤 我的档案</button>
+  </view>
+
+  <view class="footer">
+    <text class="footer-text">在这座城市里，活下去，活出样。</text>
+  </view>
+</view>

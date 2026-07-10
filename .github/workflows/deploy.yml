@@ -1,0 +1,57 @@
+# ──────────────────────────────────────────────────────────────────────────────
+# GitHub Pages 自动部署
+# 触发条件：push 到 main 分支
+# 流程：python build.py → dist/index.html → gh-pages 分支 → Pages 自动生效
+# ──────────────────────────────────────────────────────────────────────────────
+name: 🚀 Deploy to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch: # 允许手动触发
+
+# GitHub Pages 权限
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# 并发控制：同时只跑一个部署，不取消正在进行的部署
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  # ── 构建 ──────────────────────────────────────────────────────────────────
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v4
+
+      - name: 🐍 Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: 🔨 Build (python build.py → dist/index.html)
+        run: python build.py
+
+      - name: 📦 Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist # 单文件 dist/index.html
+
+  # ── 部署 ──────────────────────────────────────────────────────────────────
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+      - name: 🚀 Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

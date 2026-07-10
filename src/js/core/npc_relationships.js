@@ -1,0 +1,485 @@
+/**
+ * NPC 关系链核心引擎 — 「人情江湖」
+ *
+ * 设计目标：NPC 之间也有自己的关系网，玩家行为会触发蝴蝶效应。
+ * 参考：《Stardew Valley》岛民关系 / 《大多数》人情网络
+ *
+ * ┌─────────────────────────┐
+ * │ NPC关系矩阵（13×13双向）│
+ * │ aunt_wang ↔ old_zhou    │ ← 旧识（城中村老邻居）
+ * │ boss_li ↔ sister_zhang  │ ← 竞争关系（抢活源）
+ * │ 赵姐 ↔ boss_li          │ ← 业务关系
+ * │ 陈哥 ↔ 老同学阿杰       │ ← 老同学
+ * └───────────┬─────────────┘
+ *             ↓ 每日传播
+ * ┌─────────────────────────┐
+ * │ 蝴蝶效应：玩家帮A→得罪B │
+ * │ 关系链传导：A热→B升温   │
+ * └─────────────────────────┘
+ */
+
+// ====== 关系类型定义 ======
+const RELATION_TYPES = {
+  old_acquaintance: { label: "旧识", baseAffinityMod: -10, color: "#8B8050" },
+  competitor: { label: "竞争", baseAffinityMod: -15, color: "#C0392B" },
+  business: { label: "业务", baseAffinityMod: 5, color: "#2ECC71" },
+  classmate: { label: "老同学", baseAffinityMod: 10, color: "#3498DB" },
+  friendly: { label: "友善", baseAffinityMod: 5, color: "#F39C12" },
+  neutral: { label: "中立", baseAffinityMod: 0, color: "#95A5A6" },
+  strained: { label: "紧张", baseAffinityMod: -10, color: "#E74C3C" },
+};
+
+// ====== NPC关系矩阵 ======
+const NPC_RELATION_MATRIX = {
+  aunt_wang: {
+    old_zhou: "old_acquaintance",
+    boss_li: "neutral",
+    sister_zhang: "strained",
+    xiao_mei: "friendly",
+    chef_chen: "friendly",
+    auntie_lin: "friendly",
+    master_zhao: "neutral",
+    xiaoli: "neutral",
+    xiaochen: "friendly",
+    dr_wang: "neutral",
+    zhaojie: "neutral",
+    chen_ge: "neutral",
+    ajie: "neutral",
+  },
+  old_zhou: {
+    aunt_wang: "old_acquaintance",
+    boss_li: "neutral",
+    sister_zhang: "neutral",
+    xiao_mei: "friendly",
+    chef_chen: "neutral",
+    auntie_lin: "friendly",
+    master_zhao: "neutral",
+    xiaoli: "neutral",
+    xiaochen: "neutral",
+    dr_wang: "neutral",
+    zhaojie: "neutral",
+    chen_ge: "friendly",
+    ajie: "neutral",
+  },
+  boss_li: {
+    aunt_wang: "neutral",
+    old_zhou: "neutral",
+    sister_zhang: "competitor",
+    xiao_mei: "neutral",
+    chef_chen: "neutral",
+    auntie_lin: "neutral",
+    master_zhao: "neutral",
+    xiaoli: "neutral",
+    xiaochen: "neutral",
+    dr_wang: "neutral",
+    zhaojie: "business",
+    chen_ge: "neutral",
+    ajie: "neutral",
+  },
+  sister_zhang: {
+    aunt_wang: "strained",
+    old_zhou: "neutral",
+    boss_li: "competitor",
+    xiao_mei: "neutral",
+    chef_chen: "neutral",
+    auntie_lin: "neutral",
+    master_zhao: "neutral",
+    xiaoli: "neutral",
+    xiaochen: "neutral",
+    dr_wang: "neutral",
+    zhaojie: "business",
+    chen_ge: "neutral",
+    ajie: "neutral",
+  },
+  xiao_mei: {
+    aunt_wang: "friendly",
+    old_zhou: "friendly",
+    boss_li: "neutral",
+    sister_zhang: "neutral",
+    chef_chen: "neutral",
+    auntie_lin: "neutral",
+    master_zhao: "neutral",
+    xiaoli: "neutral",
+    xiaochen: "neutral",
+    dr_wang: "neutral",
+    zhaojie: "neutral",
+    chen_ge: "neutral",
+    ajie: "neutral",
+  },
+  chef_chen: {
+    aunt_wang: "friendly",
+    old_zhou: "neutral",
+    boss_li: "neutral",
+    sister_zhang: "neutral",
+    xiao_mei: "neutral",
+    auntie_lin: "friendly",
+    master_zhao: "neutral",
+    xiaoli: "neutral",
+    xiaochen: "neutral",
+    dr_wang: "neutral",
+    zhaojie: "neutral",
+    chen_ge: "neutral",
+    ajie: "neutral",
+  },
+  auntie_lin: {
+    aunt_wang: "friendly",
+    old_zhou: "friendly",
+    boss_li: "neutral",
+    sister_zhang: "neutral",
+    xiao_mei: "neutral",
+    chef_chen: "friendly",
+    master_zhao: "neutral",
+    xiaoli: "neutral",
+    xiaochen: "neutral",
+    dr_wang: "neutral",
+    zhaojie: "neutral",
+    chen_ge: "neutral",
+    ajie: "neutral",
+  },
+  master_zhao: {
+    aunt_wang: "neutral",
+    old_zhou: "neutral",
+    boss_li: "neutral",
+    sister_zhang: "neutral",
+    xiao_mei: "neutral",
+    chef_chen: "neutral",
+    auntie_lin: "neutral",
+    xiaoli: "neutral",
+    xiaochen: "neutral",
+    dr_wang: "neutral",
+    zhaojie: "neutral",
+    chen_ge: "neutral",
+    ajie: "neutral",
+  },
+  xiaoli: {
+    aunt_wang: "neutral",
+    old_zhou: "neutral",
+    boss_li: "neutral",
+    sister_zhang: "neutral",
+    xiao_mei: "neutral",
+    chef_chen: "neutral",
+    auntie_lin: "neutral",
+    master_zhao: "neutral",
+    xiaochen: "neutral",
+    dr_wang: "neutral",
+    zhaojie: "neutral",
+    chen_ge: "neutral",
+    ajie: "neutral",
+  },
+  dr_wang: {
+    aunt_wang: "neutral",
+    old_zhou: "neutral",
+    boss_li: "neutral",
+    sister_zhang: "neutral",
+    xiao_mei: "neutral",
+    chef_chen: "neutral",
+    auntie_lin: "neutral",
+    master_zhao: "neutral",
+    xiaoli: "neutral",
+    xiaochen: "neutral",
+    zhaojie: "neutral",
+    chen_ge: "neutral",
+    ajie: "neutral",
+  },
+  zhaojie: {
+    aunt_wang: "neutral",
+    old_zhou: "neutral",
+    boss_li: "business",
+    sister_zhang: "business",
+    xiao_mei: "neutral",
+    chef_chen: "neutral",
+    auntie_lin: "neutral",
+    master_zhao: "neutral",
+    xiaoli: "neutral",
+    xiaochen: "neutral",
+    dr_wang: "neutral",
+    chen_ge: "neutral",
+    ajie: "neutral",
+  },
+  chen_ge: {
+    aunt_wang: "neutral",
+    old_zhou: "friendly",
+    boss_li: "neutral",
+    sister_zhang: "neutral",
+    xiao_mei: "neutral",
+    chef_chen: "neutral",
+    auntie_lin: "neutral",
+    master_zhao: "neutral",
+    xiaoli: "neutral",
+    xiaochen: "neutral",
+    dr_wang: "neutral",
+    zhaojie: "neutral",
+    ajie: "neutral",
+  },
+  ajie: {
+    aunt_wang: "neutral",
+    old_zhou: "neutral",
+    boss_li: "neutral",
+    sister_zhang: "neutral",
+    xiao_mei: "neutral",
+    chef_chen: "neutral",
+    auntie_lin: "neutral",
+    master_zhao: "neutral",
+    xiaoli: "neutral",
+    xiaochen: "neutral",
+    dr_wang: "neutral",
+    zhaojie: "neutral",
+    chen_ge: "classmate",
+  },
+  xiaochen: {
+    aunt_wang: "friendly",
+    old_zhou: "neutral",
+    boss_li: "neutral",
+    sister_zhang: "neutral",
+    xiao_mei: "neutral",
+    chef_chen: "neutral",
+    auntie_lin: "neutral",
+    master_zhao: "neutral",
+    xiaoli: "neutral",
+    dr_wang: "neutral",
+    zhaojie: "neutral",
+    chen_ge: "neutral",
+    ajie: "neutral",
+  },
+};
+
+// ====== 关系传播矩阵 ======
+const RELATION_PROPAGATION = {
+  aunt_wang: {
+    old_zhou: 0.3,
+    xiao_mei: 0.15,
+    chef_chen: 0.1,
+    auntie_lin: 0.1,
+    xiaochen: 0.1,
+  },
+  old_zhou: {
+    aunt_wang: 0.3,
+    xiao_mei: 0.15,
+    auntie_lin: 0.1,
+    chen_ge: 0.15,
+    xiaochen: 0.05,
+  },
+  boss_li: { sister_zhang: -0.25, zhaojie: 0.15 },
+  sister_zhang: { boss_li: -0.25, zhaojie: 0.1 },
+  zhaojie: { boss_li: 0.15, sister_zhang: 0.1 },
+  xiaochen: { aunt_wang: 0.1 },
+  dr_wang: { aunt_wang: 0.08, auntie_lin: 0.08 },
+};
+
+/** 初始化NPC关系状态 */
+function initNpcRelationships(state) {
+  if (!state.relationships) state.relationships = {};
+  var npcIds = Object.keys(NPC_RELATION_MATRIX);
+  for (var i = 0; i < npcIds.length; i++) {
+    var npcId = npcIds[i];
+    if (!state.relationships[npcId]) {
+      state.relationships[npcId] = { affinity: 0, met: false };
+    }
+  }
+}
+
+/** 每日NPC关系tick — 蝴蝶效应传播 */
+function tickNpcRelationships(state) {
+  var day = state.player.day;
+  if (!state.npcRelationshipLog) state.npcRelationshipLog = {};
+  if (!state.npcRelationshipLog.lastPropagationDay) {
+    state.npcRelationshipLog.lastPropagationDay = 0;
+  }
+  if (state.npcRelationshipLog.lastPropagationDay >= day) return;
+  state.npcRelationshipLog.lastPropagationDay = day;
+
+  var todayInteractions = state.npcRelationshipLog.dailyInteractions || {};
+  var propagated = {};
+
+  for (var npcId in todayInteractions) {
+    var interaction = todayInteractions[npcId];
+    var relationTargets = RELATION_PROPAGATION[npcId];
+    if (!relationTargets) continue;
+
+    for (var targetId in relationTargets) {
+      if (propagated[targetId]) continue;
+      var coeff = relationTargets[targetId];
+      var change = interaction.change * coeff;
+      applyAffinityChange(state, targetId, change, "关系传导");
+      propagated[targetId] = true;
+    }
+  }
+  state.npcRelationshipLog.dailyInteractions = {};
+}
+
+/** 记录玩家与NPC的互动 */
+function recordNpcInteraction(npcId, change, reason) {
+  if (typeof StateManager === "undefined") return;
+  var state = StateManager.getState();
+  if (!state) return;
+  if (!state.npcRelationshipLog) state.npcRelationshipLog = {};
+  if (!state.npcRelationshipLog.dailyInteractions) {
+    state.npcRelationshipLog.dailyInteractions = {};
+  }
+  var existing = state.npcRelationshipLog.dailyInteractions[npcId];
+  if (existing) {
+    existing.change += change;
+  } else {
+    state.npcRelationshipLog.dailyInteractions[npcId] = {
+      change: change,
+      reason: reason,
+    };
+  }
+  applyAffinityChange(state, npcId, change, reason);
+}
+
+/** 应用NPC好感变化 */
+function applyAffinityChange(state, npcId, change, reason) {
+  if (!state.relationships) state.relationships = {};
+  if (!state.relationships[npcId]) {
+    state.relationships[npcId] = { affinity: 0, met: true };
+  }
+  var oldAffinity = state.relationships[npcId].affinity;
+  var newAffinity = Math.max(-100, Math.min(100, oldAffinity + change));
+  state.relationships[npcId].affinity = newAffinity;
+  state.relationships[npcId].met = true;
+
+  if (change !== 0) {
+    var oldLabel = getAffinityLabel(oldAffinity);
+    var newLabel = getAffinityLabel(newAffinity);
+    if (oldLabel !== newLabel) {
+      StateManager.addMessage(
+        "👥 " + npcId + " 与你的关系： " + oldLabel + " → " + newLabel,
+        "info",
+      );
+    }
+  }
+}
+
+/** 获取NPC好感度描述 */
+function getAffinityLabel(affinity) {
+  if (affinity >= 80) return "❤️ 挚友";
+  if (affinity >= 60) return "😊 好友";
+  if (affinity >= 30) return "🙂 熟人";
+  if (affinity >= 0) return "👤 初识";
+  if (affinity >= -30) return "😐 冷淡";
+  return "😠 厌恶";
+}
+
+/** 获取NPC之间的关系类型描述 */
+function getRelationDesc(npcA, npcB) {
+  var relations = NPC_RELATION_MATRIX[npcA];
+  if (!relations) return null;
+  var type = relations[npcB];
+  var relDef = RELATION_TYPES[type] || RELATION_TYPES.neutral;
+  return { type: type, label: relDef.label, color: relDef.color };
+}
+
+/** 获取NPC的关系网（用于社交Tab渲染） */
+function getNpcRelationshipNetwork(state) {
+  var network = [];
+  var npcIds = Object.keys(NPC_RELATION_MATRIX);
+
+  for (var i = 0; i < npcIds.length; i++) {
+    var npcId = npcIds[i];
+    var aff =
+      (state.relationships[npcId] && state.relationships[npcId].affinity) || 0;
+    var rel = state.relationships[npcId];
+    if (!rel || !rel.met) continue;
+
+    var connections = [];
+    var relations = NPC_RELATION_MATRIX[npcId];
+    for (var otherId in relations) {
+      var otherAff =
+        (state.relationships[otherId] &&
+          state.relationships[otherId].affinity) ||
+        0;
+      if (otherAff <= 0) continue;
+      var relDesc = getRelationDesc(npcId, otherId);
+      connections.push({
+        targetId: otherId,
+        relationType: relDesc.type,
+        relationLabel: relDesc.label,
+        relationColor: relDesc.color,
+        targetAffinity: otherAff,
+      });
+    }
+
+    network.push({
+      npcId: npcId,
+      affinity: aff,
+      affinityLabel: getAffinityLabel(aff),
+      connections: connections,
+    });
+  }
+
+  network.sort(function (a, b) {
+    return b.affinity - a.affinity;
+  });
+  return network;
+}
+
+/** 检查NPC关系链是否满足事件触发条件 */
+function checkNpcRelationEventTriggers(state) {
+  var triggers = [];
+  var npcIds = Object.keys(NPC_RELATION_MATRIX);
+
+  for (var i = 0; i < npcIds.length; i++) {
+    var npcA = npcIds[i];
+    var affA =
+      (state.relationships[npcA] && state.relationships[npcA].affinity) || 0;
+    if (affA < 30) continue;
+
+    var relations = NPC_RELATION_MATRIX[npcA];
+    for (var npcB in relations) {
+      var type = relations[npcB];
+      var affB =
+        (state.relationships[npcB] && state.relationships[npcB].affinity) || 0;
+
+      if (type === "competitor" && affA >= 50 && affB >= 30) {
+        triggers.push({
+          type: "triangular_choice",
+          npcA: npcA,
+          npcB: npcB,
+          relationType: type,
+          thresholdA: 50,
+          thresholdB: 30,
+        });
+      }
+      if (type === "old_acquaintance" && affA >= 60 && affB >= 20) {
+        triggers.push({
+          type: "old_friend_reaction",
+          npcA: npcA,
+          npcB: npcB,
+          relationType: type,
+          thresholdA: 60,
+          thresholdB: 20,
+        });
+      }
+    }
+  }
+  return triggers;
+}
+
+// ====== 百科自更新 ======
+if (typeof window !== "undefined") {
+  window.MECHANICS = window.MECHANICS || {};
+  window.MECHANICS.npc_relationships = {
+    id: "npc_relationships",
+    name: "NPC关系链",
+    icon: "🕸️",
+    brief: "NPC之间也有自己的关系网，玩家行为会触发蝴蝶效应",
+    version: "1.0.0",
+    related: ["mechanics:npc_affinity"],
+    sections: [
+      {
+        kind: "desc",
+        text: "NPC不是孤立的个体，他们之间有旧识、竞争、业务、同窗等各种关系。玩家帮助A的同时，可能会间接影响A的关系人B。",
+      },
+      { kind: "subhead", text: "🔄 关系传播机制" },
+      {
+        kind: "list",
+        items: [
+          "每日tick时，玩家与NPC的互动会向该NPC的关系网扩散（传导系数0.1~0.3）",
+          "竞争关系传导为负值：帮A→B好感下降",
+          "旧识/业务关系传导为正值：帮A→B好感上升",
+        ],
+      },
+    ],
+  };
+}

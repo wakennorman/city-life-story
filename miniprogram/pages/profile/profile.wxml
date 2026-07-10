@@ -1,0 +1,30 @@
+<!-- 城市浮生记 — 个人中心 -->
+<view class="container">
+  <!-- 用户信息 -->
+  <view class="profile-card">
+    <image class="avatar" src="{{avatarUrl}}" mode="aspectFill" />
+    <text class="nickname">{{nickName}}</text>
+    <text class="desc">在这座城市里，书写你的故事</text>
+  </view>
+
+  <!-- 统计数据 -->
+  <view class="stats-grid">
+    <view class="stat-item" wx:for="{{stats}}" wx:key="label">
+      <text class="stat-value">{{item.value}}</text>
+      <text class="stat-label">{{item.label}}</text>
+    </view>
+  </view>
+
+  <!-- 操作按钮 -->
+  <view class="actions">
+    <button class="action-btn" bindtap="clearData">
+      <text class="action-icon">🗑️</text>
+      <text class="action-text">清除本地数据</text>
+    </button>
+  </view>
+
+  <view class="footer">
+    <text class="version">城市浮生记 v1.0</text>
+    <text class="copyright">© 2026 City Life Story</text>
+  </view>
+</view>
