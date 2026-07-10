@@ -156,7 +156,17 @@ navHints: [
 
 > 每次收工前覆盖更新本节（只留最新状态，不要追加历史）；详细变更历史在 `src/DEVELOPMENT.md`，不需要每次都读。
 
-- **最新一次工作 (2026-07-11)**：v3.83(loop R39) — 四季叙事深化：4季各+1事件(倒春寒/夏夜纳凉/秋雨寄思/冬日围炉)
+- **最新一次工作 (2026-07-11)**：v3.84 — 事业Tab 5项Bug修复
+  - **Bug1 职业路径弹窗无响应**: showModal({buttons:undefined})→TypeError；修复：buttons默认=[]；showCareerPathPreviewModal改用buttons数组参数
+  - **Bug2 属性训练无地点检测**: 新增_TRAIN_LOCATION_MAP；__doTrain拆分为地点检查+弹窗→__doTrainCore；不在目标地点弹确认弹窗
+  - **Bug3 健康显示[object Object]**: pg.health.physical是对象；新增_healthScoreLabel()提取.score→"良好/一般/欠佳/较差(N/100)"彩色标签
+  - **Bug4 市场信息全量暴露**: 新增infoDepth(0/1/2)按intelligence/finance技能3档门控；新闻标题改为横向滚动
+  - **Bug5 副业碾压临时工**: 代购/网约车/外卖收益下调；网约车新增minSkill.driving≥5；自媒体粉丝爆发100粉×1.5→200粉×3.0
+  - **影响文件**: modal.js / career_dev.js / render.js / investment.js / side_hustle.js
+  - **验证**: build.py 7754.4KB ✅
+  - **commit**: `f2f7d4d9`（本地已提交，网络恢复后需push）
+
+- **上一轮工作 (2026-07-11)**：v3.83(loop R39) — 四季叙事深化：4季各+1事件(倒春寒/夏夜纳凉/秋雨寄思/冬日围炉)
   - **设计意图**: 填补"16种疾病5大类但康复叙事为零"的最大空白区
   - **① recovery_brink_relief**: 从危到安——health<30危机后恢复至≥55，一碗热粥重新活过来
   - **② recovery_warm_soup**: 康复后的那碗汤——病愈后王大婶端来鸡汤，社会支持的温度
