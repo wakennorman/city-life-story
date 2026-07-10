@@ -5,7 +5,7 @@
  */
 
 // ====== 模态对话框 ======
-function showModal({ title, body, buttons }) {
+function showModal({ title, body, buttons = [] }) {
   // 先清理旧的 modal-overlay，避免叠加
   const oldOverlay = document.querySelector(".modal-overlay");
   if (oldOverlay) {

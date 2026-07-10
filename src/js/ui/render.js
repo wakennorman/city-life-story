@@ -6764,8 +6764,67 @@ function renderPgStatTrain(state, content) {
   content.innerHTML = html;
 }
 
+/** v3.0 训练地点映射：训练ID → 所需地点 */
+var _TRAIN_LOCATION_MAP = {
+  train_physique: { location: "gym", label: "健身房", icon: "🏋️" },
+  train_intelligence: { location: "school", label: "自习室", icon: "📚" },
+  train_agility: { location: "park", label: "公园", icon: "🏃" },
+  train_ability: { location: null, label: null, icon: "🧘" }, // 冥想随处可做
+  train_charm_grooming: { location: "commercial", label: "商业区", icon: "💇" },
+  train_charm_surgery: { location: "hospital", label: "医院", icon: "💉" },
+};
+
 /** v3.0 训练执行（暴露给 onclick）*/
 window.__doTrain = function (trainId) {
+  var state = StateManager.getState();
+  var p = state.player;
+  var flags = state.flags || (state.flags = {});
+
+  // 地点检查：不在所需地点时弹出确认导航弹窗
+  var locReq = _TRAIN_LOCATION_MAP[trainId];
+  if (locReq && locReq.location) {
+    var curLoc = state.location || state.currentLocation || "slum";
+    if (curLoc !== locReq.location) {
+      var navFn = typeof navigateTo === "function" ? navigateTo : null;
+      showModal({
+        title: locReq.icon + " 需要前往" + locReq.label,
+        body:
+          '<div style="padding:8px 0;font-size:13px;">' +
+          "<p>你当前不在<strong>" +
+          locReq.label +
+          "</strong>，无法在此进行训练。</p>" +
+          '<p style="margin-top:8px;color:var(--text-muted);font-size:12px;">前往 ' +
+          locReq.icon +
+          " " +
+          locReq.label +
+          " 需要消耗行动力。</p></div>",
+        buttons: [
+          {
+            label: "🚶 前往" + locReq.label + "并训练",
+            primary: true,
+            onClick: function () {
+              if (navFn) {
+                navFn({ type: "location", locationId: locReq.location });
+                // 导航完成后延迟执行训练（等渲染刷新）
+                setTimeout(function () {
+                  window.__doTrainCore(trainId);
+                }, 300);
+              } else {
+                window.__doTrainCore(trainId);
+              }
+            },
+          },
+          { label: "取消", primary: false, onClick: function () {} },
+        ],
+      });
+      return;
+    }
+  }
+  window.__doTrainCore(trainId);
+};
+
+/** 训练核心逻辑（地点已验证）*/
+window.__doTrainCore = function (trainId) {
   var state = StateManager.getState();
   var p = state.player;
   var flags = state.flags || (state.flags = {});
@@ -6979,9 +7038,46 @@ function renderPgHealth(state, content, pg) {
   html += '<div class="section"><h3>🏥 健康指标</h3>';
   html += '<div class="card" style="padding:12px;font-size:12px;">';
   if (pg.health) {
-    html += "<p>💪 身体：" + (pg.health.physical || "?") + "</p>";
-    html += "<p>🧠 心理：" + (pg.health.mental || "?") + "</p>";
-    html += "<p>⚖️ 代谢：" + (pg.health.metabolic || "?") + "</p>";
+    // health的每个维度是对象{score,lastCheckup}，取score并转换为文字描述
+    function _healthScoreLabel(scoreObj, dim) {
+      var score =
+        typeof scoreObj === "object" && scoreObj !== null
+          ? scoreObj.score || 50
+          : scoreObj || 50;
+      var label =
+        score >= 80
+          ? "良好"
+          : score >= 60
+            ? "一般"
+            : score >= 40
+              ? "欠佳"
+              : "较差";
+      var color =
+        score >= 80
+          ? "var(--success)"
+          : score >= 60
+            ? "var(--text-secondary)"
+            : score >= 40
+              ? "var(--warning)"
+              : "var(--danger)";
+      return (
+        '<span style="color:' +
+        color +
+        ';">' +
+        label +
+        "（" +
+        Math.round(score) +
+        "/100）</span>"
+      );
+    }
+    html +=
+      "<p>💪 身体：" + _healthScoreLabel(pg.health.physical, "body") + "</p>";
+    html +=
+      "<p>🧠 心理：" + _healthScoreLabel(pg.health.mental, "mental") + "</p>";
+    html +=
+      "<p>⚖️ 代谢：" +
+      _healthScoreLabel(pg.health.metabolic, "metabolic") +
+      "</p>";
   } else {
     html += "<p>暂无数据</p>";
   }

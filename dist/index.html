@@ -168917,6 +168917,12 @@ function renderNewsInvestmentDrivers(state) {
       : [];
   var activeNews = state.activeNews || [];
 
+  // 智力门控：根据intelligence和finance技能决定信息披露深度
+  var intel = (state.player && state.player.intelligence) || 0;
+  var financeSkill = (state.skills && state.skills.finance && state.skills.finance.level) || 0;
+  // depth 0=只看趋势方向  1=看板块涨跌%  2=看具体标的+量化数据
+  var infoDepth = (intel >= 50 || financeSkill >= 20) ? 2 : (intel >= 30 || financeSkill >= 8) ? 1 : 0;
+
   drivers.sort(function (a, b) {
     return b.strength - a.strength;
   });
@@ -168924,9 +168930,17 @@ function renderNewsInvestmentDrivers(state) {
   var html =
     '<div style="margin-bottom:8px;padding:10px 12px;background:rgba(255,255,255,0.035);border:1px solid rgba(255,255,255,0.07);border-radius:6px;">' +
     '<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:6px;">' +
-    '<strong style="font-size:12px;color:var(--accent);">📊 今日市场驱动</strong>' +
-    '<span style="font-size:10px;color:var(--text-muted);">新闻会影响相关资产的每日价格波动</span>' +
-    "</div>";
+    '<strong style="font-size:12px;color:var(--accent);">📊 今日市场驱动</strong>';
+
+  // 门控提示：信息深度不足时显示解锁提示
+  if (infoDepth === 0) {
+    html += '<span style="font-size:9px;color:var(--text-muted);">智力≥30或金融技能≥8可解锁更多细节</span>';
+  } else if (infoDepth === 1) {
+    html += '<span style="font-size:9px;color:var(--text-muted);">智力≥50或金融技能≥20可解锁标的代码</span>';
+  } else {
+    html += '<span style="font-size:10px;color:var(--text-muted);">新闻会影响相关资产的每日价格波动</span>';
+  }
+  html += "</div>";
 
   if (drivers.length === 0) {
     return (
@@ -168946,7 +168960,7 @@ function renderNewsInvestmentDrivers(state) {
       }
     }
 
-    var tags = getInvestmentNewsTags(relatedNews);
+    var tags = (infoDepth >= 2) ? getInvestmentNewsTags(relatedNews) : [];
     var change = Math.round(((d.avgMul || 1) - 1) * 100);
     var color =
       change > 0
@@ -168954,26 +168968,25 @@ function renderNewsInvestmentDrivers(state) {
         : change < 0
           ? "var(--success)"
           : "var(--accent)";
-    var changeText = (change > 0 ? "+" : "") + change + "%";
-    var headline =
-      d.headline && d.headline.length > 34
-        ? d.headline.substring(0, 34) + "…"
-        : d.headline;
 
+    // depth=0: 只显示方向文字；depth=1: 加板块%；depth=2: 加具体标的代码
+    var changeText = infoDepth >= 1 ? ((change > 0 ? "+" : "") + change + "%") : (change > 0 ? "📈利好" : change < 0 ? "📉利空" : "稳定");
+
+    // 标题：不截断，改为横向滚动容器
     html +=
-      '<div style="display:flex;align-items:center;gap:8px;padding:5px 0;border-top:1px solid rgba(255,255,255,0.04);font-size:11px;">' +
-      '<span style="width:20px;text-align:center;">' +
+      '<div style="display:flex;align-items:center;gap:6px;padding:5px 0;border-top:1px solid rgba(255,255,255,0.04);font-size:11px;">' +
+      '<span style="width:20px;text-align:center;flex-shrink:0;">' +
       d.direction +
       "</span>" +
-      '<span style="flex:1;min-width:120px;color:var(--text-primary);">' +
-      escapeInvestmentHtml(headline) +
+      '<div style="flex:1;min-width:0;overflow-x:auto;white-space:nowrap;scrollbar-width:none;-ms-overflow-style:none;" class="inv-news-scroll">' +
+      '<span style="color:var(--text-primary);">' +
+      escapeInvestmentHtml(d.headline || "") +
       "</span>" +
-      '<span style="font-size:10px;color:var(--text-muted);">' +
-      escapeInvestmentHtml(tags.length ? tags.join("·") : "相关资产") +
-      "</span>" +
+      (infoDepth >= 2 && tags.length ? ' <span style="font-size:9px;color:var(--text-muted);">[' + escapeInvestmentHtml(tags.slice(0, 4).join("·")) + "]</span>" : "") +
+      "</div>" +
       '<strong style="min-width:44px;text-align:right;color:' +
       color +
-      ';">' +
+      ';flex-shrink:0;">' +
       changeText +
       "</strong>" +
       "</div>";
@@ -169076,7 +169089,7 @@ function renderMarketSentiment(state, inv) {
         : "";
 
     html +=
-      '<div style="font-size:10px;color:var(--text-light);padding:1px 0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">';
+      '<div style="font-size:10px;color:var(--text-light);padding:1px 0;overflow-x:auto;white-space:nowrap;scrollbar-width:none;-ms-overflow-style:none;" class="inv-news-scroll">';
     html +=
       news.headline +
       tagHtml +
@@ -186257,87 +186270,90 @@ function manageInventoryAction(state, inventoryType, action, amount) {
 
 (function () {
   // ====== 副业定义 ======
+  // 设计原则：低技能时副业收入约为同类临时工1.1~1.3x（门槛溢价），
+  // 技能成长后可达1.8~2.5x（激励长期经营），不应初期就碾压所有临时工。
   const SIDE_HUSTLES = {
-    // 代购
+    // 代购：agility门槛较低，收入适中，体现"需要跑腿"
     daigou: {
       id: "daigou",
       name: "代购",
       icon: "🛍️",
-      desc: "帮人代购商品，赚取差价",
-      minAttr: { agility: 30 },
-      baseIncome: 80,
-      incomeVar: [50, 150],
-      fatigueCost: 15,
+      desc: "帮人代购商品，赚取差价，需要熟悉各大商圈",
+      minAttr: { agility: 35 },
+      baseIncome: 50,       // 降：80→50，初始¥50+20~80=70~130（原130~230）
+      incomeVar: [20, 80],
+      fatigueCost: 18,      // 疲劳略升
       timeSlot: ["afternoon", "evening"],
-      specialBonus: { time: "evening", mod: 1.15 }, // 18:00后+15%
+      specialBonus: { time: "evening", mod: 1.2 }, // 晚上熟客+20%
       levelUp: { level: 1, xp: 0 },
     },
-    // 家教
+    // 家教：智力门槛，疲劳低，但初始收入不能比自学室训练强太多
     tutoring: {
       id: "tutoring",
       name: "家教",
       icon: "📚",
-      desc: "给学生补课，时薪可观",
-      minAttr: { intelligence: 30 },
-      baseIncome: 60,
-      incomeVar: [40, 100],
-      fatigueCost: 10,
+      desc: "给中小学生补课，需要一定知识储备",
+      minAttr: { intelligence: 35 }, // 提高：30→35
+      baseIncome: 55,       // 降：60→55
+      incomeVar: [25, 75],  // 缩窄：[40,100]→[25,75]
+      fatigueCost: 12,
       timeSlot: ["afternoon", "evening"],
       specialBonus: null,
       levelUp: { level: 1, xp: 0 },
     },
-    // 网约车
+    // 网约车：高agility门槛，疲劳高，收入有竞争力但不离谱
     rideHailing: {
       id: "ride_hailing",
       name: "网约车",
       icon: "🚗",
-      desc: "开网约车接单，自由灵活",
-      minAttr: { agility: 50 },
-      baseIncome: 120,
-      incomeVar: [80, 200],
-      fatigueCost: 25,
+      desc: "开网约车接单，需要驾照和高敏捷（体能要好）",
+      minAttr: { agility: 60 }, // 提高：50→60（需驾驶技能或高agility）
+      minSkill: { driving: 5 }, // 新增：需要驾驶技能≥5
+      baseIncome: 90,       // 降：120→90
+      incomeVar: [40, 120], // 缩窄：[80,200]→[40,120]
+      fatigueCost: 28,
       timeSlot: ["morning", "afternoon", "evening"],
       specialBonus: null,
       levelUp: { level: 1, xp: 0 },
     },
-    // 外卖
+    // 外卖：中等agility门槛，收入对应体力消耗
     foodDelivery: {
       id: "food_delivery",
       name: "外卖配送",
       icon: "🛵",
-      desc: "送外卖，多劳多得",
-      minAttr: { agility: 50 },
-      baseIncome: 100,
-      incomeVar: [60, 180],
-      fatigueCost: 30,
+      desc: "送外卖，多劳多得，但非常消耗体力",
+      minAttr: { agility: 55 }, // 提高：50→55
+      baseIncome: 70,       // 降：100→70
+      incomeVar: [30, 100], // 缩窄：[60,180]→[30,100]
+      fatigueCost: 35,      // 疲劳升：30→35（高强度体力活）
       timeSlot: ["morning", "afternoon", "evening"],
       specialBonus: null,
       levelUp: { level: 1, xp: 0 },
     },
-    // 自媒体
+    // 自媒体：高波动，初始极低但粉丝积累后暴增（正确体现"0→1破壁"）
     selfMedia: {
       id: "self_media",
       name: "自媒体",
       icon: "📱",
-      desc: "做短视频/写文章，积累粉丝",
+      desc: "做短视频/写文章，初期几乎没收入，靠粉丝积累起飞",
       minAttr: { intelligence: 40, charm: 30 },
-      baseIncome: 50,
-      incomeVar: [20, 300], // 波动大
+      baseIncome: 10,       // 降：50→10（初期冷启动）
+      incomeVar: [0, 100],  // 缩窄：[20,300]→[0,100]（高波动保留）
       fatigueCost: 20,
       timeSlot: ["evening", "night"],
-      specialBonus: { followers: 100, mod: 1.5 }, // 粉丝≥100时+50%
+      specialBonus: { followers: 200, mod: 3.0 }, // 粉丝≥200才有3x爆发（原100粉×1.5太早）
       levelUp: { level: 1, xp: 0, followers: 0 },
     },
-    // 投资理财
+    // 投资理财：几乎零疲劳，但初始收入极低，高智力高本金才有回报
     investment: {
       id: "investment_side",
       name: "投资理财",
       icon: "📈",
-      desc: "用闲钱投资，获得被动收入",
+      desc: "用闲钱投资，高风险高回报，需要财商积累",
       minAttr: { intelligence: 50 },
-      minCash: 500, // 资金门槛
-      baseIncome: 30,
-      incomeVar: [10, 200],
+      minCash: 1000,        // 提高资金门槛：500→1000
+      baseIncome: 10,       // 降：30→10
+      incomeVar: [0, 150],  // 缩窄：[10,200]→[0,150]（保留高波动）
       fatigueCost: 5,
       timeSlot: ["morning", "afternoon"],
       specialBonus: null,
@@ -186365,11 +186381,26 @@ function manageInventoryAction(state, inventoryType, action, amount) {
 
     // 属性检查
     if (hustle.minAttr) {
+      var attrLabelMap = { agility: "敏捷", intelligence: "智力", charm: "魅力", physique: "体质", mental: "能力" };
       for (let attr in hustle.minAttr) {
         if ((state.player[attr] || 0) < hustle.minAttr[attr]) {
           return {
             ok: false,
-            reason: `${attr}不足（需要${hustle.minAttr[attr]}）`,
+            reason: `${attrLabelMap[attr] || attr}不足（需要${hustle.minAttr[attr]}）`,
+          };
+        }
+      }
+    }
+
+    // 技能检查（新增 minSkill 字段支持）
+    if (hustle.minSkill) {
+      var skillLabelMap = { driving: "驾驶", coding: "编程", cooking: "厨艺", sales: "销售" };
+      for (let sk in hustle.minSkill) {
+        var curSkLv = (state.skills && state.skills[sk] && state.skills[sk].level) || 0;
+        if (curSkLv < hustle.minSkill[sk]) {
+          return {
+            ok: false,
+            reason: `${skillLabelMap[sk] || sk}技能不足（需要Lv.${hustle.minSkill[sk]}）`,
           };
         }
       }
@@ -202026,8 +202057,58 @@ function renderPgStatTrain(state, content) {
   content.innerHTML = html;
 }
 
+/** v3.0 训练地点映射：训练ID → 所需地点 */
+var _TRAIN_LOCATION_MAP = {
+  train_physique:       { location: "gym",        label: "健身房",   icon: "🏋️" },
+  train_intelligence:   { location: "school",     label: "自习室",   icon: "📚" },
+  train_agility:        { location: "park",        label: "公园",     icon: "🏃" },
+  train_ability:        { location: null,          label: null,       icon: "🧘" }, // 冥想随处可做
+  train_charm_grooming: { location: "commercial",  label: "商业区",   icon: "💇" },
+  train_charm_surgery:  { location: "hospital",    label: "医院",     icon: "💉" },
+};
+
 /** v3.0 训练执行（暴露给 onclick）*/
 window.__doTrain = function (trainId) {
+  var state = StateManager.getState();
+  var p = state.player;
+  var flags = state.flags || (state.flags = {});
+
+  // 地点检查：不在所需地点时弹出确认导航弹窗
+  var locReq = _TRAIN_LOCATION_MAP[trainId];
+  if (locReq && locReq.location) {
+    var curLoc = state.location || state.currentLocation || "slum";
+    if (curLoc !== locReq.location) {
+      var navFn = typeof navigateTo === "function" ? navigateTo : null;
+      showModal({
+        title: locReq.icon + " 需要前往" + locReq.label,
+        body: '<div style="padding:8px 0;font-size:13px;">' +
+          '<p>你当前不在<strong>' + locReq.label + '</strong>，无法在此进行训练。</p>' +
+          '<p style="margin-top:8px;color:var(--text-muted);font-size:12px;">前往 ' + locReq.icon + ' ' + locReq.label + ' 需要消耗行动力。</p></div>',
+        buttons: [
+          {
+            label: "🚶 前往" + locReq.label + "并训练",
+            primary: true,
+            onClick: function () {
+              if (navFn) {
+                navFn({ type: "location", locationId: locReq.location });
+                // 导航完成后延迟执行训练（等渲染刷新）
+                setTimeout(function () { window.__doTrainCore(trainId); }, 300);
+              } else {
+                window.__doTrainCore(trainId);
+              }
+            }
+          },
+          { label: "取消", primary: false, onClick: function () {} }
+        ]
+      });
+      return;
+    }
+  }
+  window.__doTrainCore(trainId);
+};
+
+/** 训练核心逻辑（地点已验证）*/
+window.__doTrainCore = function (trainId) {
   var state = StateManager.getState();
   var p = state.player;
   var flags = state.flags || (state.flags = {});
@@ -202241,9 +202322,16 @@ function renderPgHealth(state, content, pg) {
   html += '<div class="section"><h3>🏥 健康指标</h3>';
   html += '<div class="card" style="padding:12px;font-size:12px;">';
   if (pg.health) {
-    html += "<p>💪 身体：" + (pg.health.physical || "?") + "</p>";
-    html += "<p>🧠 心理：" + (pg.health.mental || "?") + "</p>";
-    html += "<p>⚖️ 代谢：" + (pg.health.metabolic || "?") + "</p>";
+    // health的每个维度是对象{score,lastCheckup}，取score并转换为文字描述
+    function _healthScoreLabel(scoreObj, dim) {
+      var score = (typeof scoreObj === "object" && scoreObj !== null) ? (scoreObj.score || 50) : (scoreObj || 50);
+      var label = score >= 80 ? "良好" : score >= 60 ? "一般" : score >= 40 ? "欠佳" : "较差";
+      var color = score >= 80 ? "var(--success)" : score >= 60 ? "var(--text-secondary)" : score >= 40 ? "var(--warning)" : "var(--danger)";
+      return '<span style="color:' + color + ';">' + label + "（" + Math.round(score) + "/100）</span>";
+    }
+    html += "<p>💪 身体：" + _healthScoreLabel(pg.health.physical, "body") + "</p>";
+    html += "<p>🧠 心理：" + _healthScoreLabel(pg.health.mental, "mental") + "</p>";
+    html += "<p>⚖️ 代谢：" + _healthScoreLabel(pg.health.metabolic, "metabolic") + "</p>";
   } else {
     html += "<p>暂无数据</p>";
   }
@@ -203444,7 +203532,7 @@ function buildNgPlusData(state) {
  */
 
 // ====== 模态对话框 ======
-function showModal({ title, body, buttons }) {
+function showModal({ title, body, buttons = [] }) {
   // 先清理旧的 modal-overlay，避免叠加
   const oldOverlay = document.querySelector(".modal-overlay");
   if (oldOverlay) {
@@ -219687,30 +219775,36 @@ function showCareerPathPreviewModal(pathKey) {
   }
   body += "</div>";
 
-  // 底部操作按钮
+  body += "</div>";
+
+  // 底部按钮通过 showModal 的 buttons 参数传入（body 里不写 inline 按钮）
   var entryLevel = path.levels[0];
   var canApply = checkCareerPromotion(st, pathKey, entryLevel);
-  body +=
-    '<div style="margin-top:14px;padding-top:10px;border-top:1px solid var(--border);display:flex;gap:8px;">';
+  var modalButtons = [];
   if (canApply) {
-    body +=
-      "<button class=\"btn btn-sm btn-primary\" style=\"flex:1;min-height:40px;\" onclick=\"this.closest('.modal-mask').querySelector('.modal-close')&&this.closest('.modal-mask').querySelector('.modal-close').click();setTimeout(function(){enhancedApplyCareerJob('" +
-      pathKey +
-      "','" +
-      entryLevel.id +
-      "')},100)\">📄 投递简历</button>";
+    modalButtons.push({
+      text: "📄 投递简历",
+      cls: "btn-primary",
+      callback: function () {
+        if (typeof enhancedApplyCareerJob === "function") {
+          enhancedApplyCareerJob(pathKey, entryLevel.id);
+        }
+      }
+    });
   } else {
-    body +=
-      '<button class="btn btn-sm" style="flex:1;min-height:40px;opacity:0.6;" disabled>🔒 条件不足</button>';
+    modalButtons.push({
+      text: "🔒 条件不足",
+      cls: "",
+      _disabled: true,
+      disabledReason: "不满足入职条件，查看上方需求"
+    });
   }
-  body +=
-    "<button class=\"btn btn-sm\" style=\"min-height:40px;\" onclick=\"this.closest('.modal-mask').querySelector('.modal-close')&&this.closest('.modal-mask').querySelector('.modal-close').click();\">取消</button>";
-  body += "</div></div>";
+  modalButtons.push({ text: "关闭", cls: "", callback: function () {} });
 
   showModal({
     title: path.icon + " " + path.name + " — 职业路线预览",
-    body: body,
-    wide: true,
+    body: "<div>" + body + "</div>",
+    buttons: modalButtons,
   });
 }
 

@@ -4604,30 +4604,36 @@ function showCareerPathPreviewModal(pathKey) {
   }
   body += "</div>";
 
-  // 底部操作按钮
+  body += "</div>";
+
+  // 底部按钮通过 showModal 的 buttons 参数传入（body 里不写 inline 按钮）
   var entryLevel = path.levels[0];
   var canApply = checkCareerPromotion(st, pathKey, entryLevel);
-  body +=
-    '<div style="margin-top:14px;padding-top:10px;border-top:1px solid var(--border);display:flex;gap:8px;">';
+  var modalButtons = [];
   if (canApply) {
-    body +=
-      "<button class=\"btn btn-sm btn-primary\" style=\"flex:1;min-height:40px;\" onclick=\"this.closest('.modal-mask').querySelector('.modal-close')&&this.closest('.modal-mask').querySelector('.modal-close').click();setTimeout(function(){enhancedApplyCareerJob('" +
-      pathKey +
-      "','" +
-      entryLevel.id +
-      "')},100)\">📄 投递简历</button>";
+    modalButtons.push({
+      text: "📄 投递简历",
+      cls: "btn-primary",
+      callback: function () {
+        if (typeof enhancedApplyCareerJob === "function") {
+          enhancedApplyCareerJob(pathKey, entryLevel.id);
+        }
+      },
+    });
   } else {
-    body +=
-      '<button class="btn btn-sm" style="flex:1;min-height:40px;opacity:0.6;" disabled>🔒 条件不足</button>';
+    modalButtons.push({
+      text: "🔒 条件不足",
+      cls: "",
+      _disabled: true,
+      disabledReason: "不满足入职条件，查看上方需求",
+    });
   }
-  body +=
-    "<button class=\"btn btn-sm\" style=\"min-height:40px;\" onclick=\"this.closest('.modal-mask').querySelector('.modal-close')&&this.closest('.modal-mask').querySelector('.modal-close').click();\">取消</button>";
-  body += "</div></div>";
+  modalButtons.push({ text: "关闭", cls: "", callback: function () {} });
 
   showModal({
     title: path.icon + " " + path.name + " — 职业路线预览",
-    body: body,
-    wide: true,
+    body: "<div>" + body + "</div>",
+    buttons: modalButtons,
   });
 }
 

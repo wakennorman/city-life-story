@@ -1759,6 +1759,18 @@ function renderNewsInvestmentDrivers(state) {
       : [];
   var activeNews = state.activeNews || [];
 
+  // 智力门控：根据intelligence和finance技能决定信息披露深度
+  var intel = (state.player && state.player.intelligence) || 0;
+  var financeSkill =
+    (state.skills && state.skills.finance && state.skills.finance.level) || 0;
+  // depth 0=只看趋势方向  1=看板块涨跌%  2=看具体标的+量化数据
+  var infoDepth =
+    intel >= 50 || financeSkill >= 20
+      ? 2
+      : intel >= 30 || financeSkill >= 8
+        ? 1
+        : 0;
+
   drivers.sort(function (a, b) {
     return b.strength - a.strength;
   });
@@ -1766,9 +1778,20 @@ function renderNewsInvestmentDrivers(state) {
   var html =
     '<div style="margin-bottom:8px;padding:10px 12px;background:rgba(255,255,255,0.035);border:1px solid rgba(255,255,255,0.07);border-radius:6px;">' +
     '<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:6px;">' +
-    '<strong style="font-size:12px;color:var(--accent);">📊 今日市场驱动</strong>' +
-    '<span style="font-size:10px;color:var(--text-muted);">新闻会影响相关资产的每日价格波动</span>' +
-    "</div>";
+    '<strong style="font-size:12px;color:var(--accent);">📊 今日市场驱动</strong>';
+
+  // 门控提示：信息深度不足时显示解锁提示
+  if (infoDepth === 0) {
+    html +=
+      '<span style="font-size:9px;color:var(--text-muted);">智力≥30或金融技能≥8可解锁更多细节</span>';
+  } else if (infoDepth === 1) {
+    html +=
+      '<span style="font-size:9px;color:var(--text-muted);">智力≥50或金融技能≥20可解锁标的代码</span>';
+  } else {
+    html +=
+      '<span style="font-size:10px;color:var(--text-muted);">新闻会影响相关资产的每日价格波动</span>';
+  }
+  html += "</div>";
 
   if (drivers.length === 0) {
     return (
@@ -1788,7 +1811,7 @@ function renderNewsInvestmentDrivers(state) {
       }
     }
 
-    var tags = getInvestmentNewsTags(relatedNews);
+    var tags = infoDepth >= 2 ? getInvestmentNewsTags(relatedNews) : [];
     var change = Math.round(((d.avgMul || 1) - 1) * 100);
     var color =
       change > 0
@@ -1796,26 +1819,36 @@ function renderNewsInvestmentDrivers(state) {
         : change < 0
           ? "var(--success)"
           : "var(--accent)";
-    var changeText = (change > 0 ? "+" : "") + change + "%";
-    var headline =
-      d.headline && d.headline.length > 34
-        ? d.headline.substring(0, 34) + "…"
-        : d.headline;
 
+    // depth=0: 只显示方向文字；depth=1: 加板块%；depth=2: 加具体标的代码
+    var changeText =
+      infoDepth >= 1
+        ? (change > 0 ? "+" : "") + change + "%"
+        : change > 0
+          ? "📈利好"
+          : change < 0
+            ? "📉利空"
+            : "稳定";
+
+    // 标题：不截断，改为横向滚动容器
     html +=
-      '<div style="display:flex;align-items:center;gap:8px;padding:5px 0;border-top:1px solid rgba(255,255,255,0.04);font-size:11px;">' +
-      '<span style="width:20px;text-align:center;">' +
+      '<div style="display:flex;align-items:center;gap:6px;padding:5px 0;border-top:1px solid rgba(255,255,255,0.04);font-size:11px;">' +
+      '<span style="width:20px;text-align:center;flex-shrink:0;">' +
       d.direction +
       "</span>" +
-      '<span style="flex:1;min-width:120px;color:var(--text-primary);">' +
-      escapeInvestmentHtml(headline) +
+      '<div style="flex:1;min-width:0;overflow-x:auto;white-space:nowrap;scrollbar-width:none;-ms-overflow-style:none;" class="inv-news-scroll">' +
+      '<span style="color:var(--text-primary);">' +
+      escapeInvestmentHtml(d.headline || "") +
       "</span>" +
-      '<span style="font-size:10px;color:var(--text-muted);">' +
-      escapeInvestmentHtml(tags.length ? tags.join("·") : "相关资产") +
-      "</span>" +
+      (infoDepth >= 2 && tags.length
+        ? ' <span style="font-size:9px;color:var(--text-muted);">[' +
+          escapeInvestmentHtml(tags.slice(0, 4).join("·")) +
+          "]</span>"
+        : "") +
+      "</div>" +
       '<strong style="min-width:44px;text-align:right;color:' +
       color +
-      ';">' +
+      ';flex-shrink:0;">' +
       changeText +
       "</strong>" +
       "</div>";
@@ -1918,7 +1951,7 @@ function renderMarketSentiment(state, inv) {
         : "";
 
     html +=
-      '<div style="font-size:10px;color:var(--text-light);padding:1px 0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">';
+      '<div style="font-size:10px;color:var(--text-light);padding:1px 0;overflow-x:auto;white-space:nowrap;scrollbar-width:none;-ms-overflow-style:none;" class="inv-news-scroll">';
     html +=
       news.headline +
       tagHtml +

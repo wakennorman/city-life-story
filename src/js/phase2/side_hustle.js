@@ -12,87 +12,90 @@
 
 (function () {
   // ====== 副业定义 ======
+  // 设计原则：低技能时副业收入约为同类临时工1.1~1.3x（门槛溢价），
+  // 技能成长后可达1.8~2.5x（激励长期经营），不应初期就碾压所有临时工。
   const SIDE_HUSTLES = {
-    // 代购
+    // 代购：agility门槛较低，收入适中，体现"需要跑腿"
     daigou: {
       id: "daigou",
       name: "代购",
       icon: "🛍️",
-      desc: "帮人代购商品，赚取差价",
-      minAttr: { agility: 30 },
-      baseIncome: 80,
-      incomeVar: [50, 150],
-      fatigueCost: 15,
+      desc: "帮人代购商品，赚取差价，需要熟悉各大商圈",
+      minAttr: { agility: 35 },
+      baseIncome: 50, // 降：80→50，初始¥50+20~80=70~130（原130~230）
+      incomeVar: [20, 80],
+      fatigueCost: 18, // 疲劳略升
       timeSlot: ["afternoon", "evening"],
-      specialBonus: { time: "evening", mod: 1.15 }, // 18:00后+15%
+      specialBonus: { time: "evening", mod: 1.2 }, // 晚上熟客+20%
       levelUp: { level: 1, xp: 0 },
     },
-    // 家教
+    // 家教：智力门槛，疲劳低，但初始收入不能比自学室训练强太多
     tutoring: {
       id: "tutoring",
       name: "家教",
       icon: "📚",
-      desc: "给学生补课，时薪可观",
-      minAttr: { intelligence: 30 },
-      baseIncome: 60,
-      incomeVar: [40, 100],
-      fatigueCost: 10,
+      desc: "给中小学生补课，需要一定知识储备",
+      minAttr: { intelligence: 35 }, // 提高：30→35
+      baseIncome: 55, // 降：60→55
+      incomeVar: [25, 75], // 缩窄：[40,100]→[25,75]
+      fatigueCost: 12,
       timeSlot: ["afternoon", "evening"],
       specialBonus: null,
       levelUp: { level: 1, xp: 0 },
     },
-    // 网约车
+    // 网约车：高agility门槛，疲劳高，收入有竞争力但不离谱
     rideHailing: {
       id: "ride_hailing",
       name: "网约车",
       icon: "🚗",
-      desc: "开网约车接单，自由灵活",
-      minAttr: { agility: 50 },
-      baseIncome: 120,
-      incomeVar: [80, 200],
-      fatigueCost: 25,
+      desc: "开网约车接单，需要驾照和高敏捷（体能要好）",
+      minAttr: { agility: 60 }, // 提高：50→60（需驾驶技能或高agility）
+      minSkill: { driving: 5 }, // 新增：需要驾驶技能≥5
+      baseIncome: 90, // 降：120→90
+      incomeVar: [40, 120], // 缩窄：[80,200]→[40,120]
+      fatigueCost: 28,
       timeSlot: ["morning", "afternoon", "evening"],
       specialBonus: null,
       levelUp: { level: 1, xp: 0 },
     },
-    // 外卖
+    // 外卖：中等agility门槛，收入对应体力消耗
     foodDelivery: {
       id: "food_delivery",
       name: "外卖配送",
       icon: "🛵",
-      desc: "送外卖，多劳多得",
-      minAttr: { agility: 50 },
-      baseIncome: 100,
-      incomeVar: [60, 180],
-      fatigueCost: 30,
+      desc: "送外卖，多劳多得，但非常消耗体力",
+      minAttr: { agility: 55 }, // 提高：50→55
+      baseIncome: 70, // 降：100→70
+      incomeVar: [30, 100], // 缩窄：[60,180]→[30,100]
+      fatigueCost: 35, // 疲劳升：30→35（高强度体力活）
       timeSlot: ["morning", "afternoon", "evening"],
       specialBonus: null,
       levelUp: { level: 1, xp: 0 },
     },
-    // 自媒体
+    // 自媒体：高波动，初始极低但粉丝积累后暴增（正确体现"0→1破壁"）
     selfMedia: {
       id: "self_media",
       name: "自媒体",
       icon: "📱",
-      desc: "做短视频/写文章，积累粉丝",
+      desc: "做短视频/写文章，初期几乎没收入，靠粉丝积累起飞",
       minAttr: { intelligence: 40, charm: 30 },
-      baseIncome: 50,
-      incomeVar: [20, 300], // 波动大
+      baseIncome: 10, // 降：50→10（初期冷启动）
+      incomeVar: [0, 100], // 缩窄：[20,300]→[0,100]（高波动保留）
       fatigueCost: 20,
       timeSlot: ["evening", "night"],
-      specialBonus: { followers: 100, mod: 1.5 }, // 粉丝≥100时+50%
+      specialBonus: { followers: 200, mod: 3.0 }, // 粉丝≥200才有3x爆发（原100粉×1.5太早）
       levelUp: { level: 1, xp: 0, followers: 0 },
     },
-    // 投资理财
+    // 投资理财：几乎零疲劳，但初始收入极低，高智力高本金才有回报
     investment: {
       id: "investment_side",
       name: "投资理财",
       icon: "📈",
-      desc: "用闲钱投资，获得被动收入",
+      desc: "用闲钱投资，高风险高回报，需要财商积累",
       minAttr: { intelligence: 50 },
-      minCash: 500, // 资金门槛
-      baseIncome: 30,
-      incomeVar: [10, 200],
+      minCash: 1000, // 提高资金门槛：500→1000
+      baseIncome: 10, // 降：30→10
+      incomeVar: [0, 150], // 缩窄：[10,200]→[0,150]（保留高波动）
       fatigueCost: 5,
       timeSlot: ["morning", "afternoon"],
       specialBonus: null,
@@ -120,11 +123,38 @@
 
     // 属性检查
     if (hustle.minAttr) {
+      var attrLabelMap = {
+        agility: "敏捷",
+        intelligence: "智力",
+        charm: "魅力",
+        physique: "体质",
+        mental: "能力",
+      };
       for (let attr in hustle.minAttr) {
         if ((state.player[attr] || 0) < hustle.minAttr[attr]) {
           return {
             ok: false,
-            reason: `${attr}不足（需要${hustle.minAttr[attr]}）`,
+            reason: `${attrLabelMap[attr] || attr}不足（需要${hustle.minAttr[attr]}）`,
+          };
+        }
+      }
+    }
+
+    // 技能检查（新增 minSkill 字段支持）
+    if (hustle.minSkill) {
+      var skillLabelMap = {
+        driving: "驾驶",
+        coding: "编程",
+        cooking: "厨艺",
+        sales: "销售",
+      };
+      for (let sk in hustle.minSkill) {
+        var curSkLv =
+          (state.skills && state.skills[sk] && state.skills[sk].level) || 0;
+        if (curSkLv < hustle.minSkill[sk]) {
+          return {
+            ok: false,
+            reason: `${skillLabelMap[sk] || sk}技能不足（需要Lv.${hustle.minSkill[sk]}）`,
           };
         }
       }
