@@ -2757,7 +2757,29 @@ function getDailyActionTips(state) {
     }
   }
 
-  return urgent.concat(tips);
+  // 保底建议：凑齐 8 条让面板内容充实
+  var combined = urgent.concat(tips);
+  var _BASELINE_TIPS = [
+    "⚡ 行动力最多100点，合理规划才能最大化每天收益，别浪费！",
+    "🏦 把闲置现金存进银行，每天自动生息，长期积累很可观。",
+    "📅 周末（7的倍数天）公园和商业区客流翻倍，是摆摊赚钱的好时机。",
+    "🎒 背包满了无法继续拾荒或进货，及时去市场出售减轻负重。",
+    "🤝 和NPC多打交道——好感提升后会解锁独家情报和特殊机会。",
+    "📚 技能越高，工作收入越高；技能接近升级时重点刷该技能工作。",
+    "🏠 住所越好，每日疲劳/卫生恢复越快，间接提高打工效率。",
+    "💊 保持健康！生病期间工作效率大幅下降，去诊所比硬撑划算。",
+    "🌤️ 天气决定客流——晴天摆摊/雨天做室内工作，顺势而为收益更高。",
+    "💡 存够¥5000后可以解锁进阶玩法，优先攒钱是最快的发展路径。",
+  ];
+  var needed = 8 - combined.length;
+  if (needed > 0) {
+    var _dayOffset =
+      ((state.player && state.player.day) || 0) % _BASELINE_TIPS.length;
+    for (var bi = 0; bi < needed && bi < _BASELINE_TIPS.length; bi++) {
+      combined.push(_BASELINE_TIPS[(_dayOffset + bi) % _BASELINE_TIPS.length]);
+    }
+  }
+  return combined;
 }
 
 // ── 引导面板：三格横排常驻（阶段 | 当前目标 | 今日建议），无需展开 ──────────────
@@ -2852,7 +2874,7 @@ function renderGuidanceBar(state, parent) {
 
   var questTitle = document.createElement("div");
   questTitle.className = "gb-cell-title";
-  questTitle.textContent = "🎯 当前目标";
+  questTitle.textContent = "当前目标"; // 🎯 已在 renderDailyQuestCard 内部显示，不重复
   c2.appendChild(questTitle);
 
   if (typeof window !== "undefined" && window.renderDailyQuestCard) {
@@ -7131,8 +7153,8 @@ function renderMessageLog(state) {
   }
 
   var msgs = (state && state.messageLog) || [];
-  // 只显示最近50条
-  var recent = msgs.slice(-50);
+  // 显示全部记录（state.js 自动限制在300条以内，不再额外截断）
+  var recent = msgs;
   var html = "";
   for (var i = recent.length - 1; i >= 0; i--) {
     var m = recent[i];

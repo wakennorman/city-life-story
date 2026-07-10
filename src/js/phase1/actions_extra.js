@@ -17,8 +17,8 @@ var LOCATION_ACTION_RULES = {
     hint: "去城中村或商业区的理发店",
   },
   self_study: {
-    locations: ["school", "trainingCenter"],
-    hint: "去大学城或培训中心的图书馆",
+    locations: ["school", "trainingCenter", "library"],
+    hint: "去大学城、培训中心或图书馆自习",
   },
   night_school: {
     locations: ["school", "trainingCenter"],
@@ -47,6 +47,15 @@ var LOCATION_ACTION_RULES = {
   clothing: {
     locations: ["commercialDist"],
     hint: "去商业区服装店",
+  },
+  // 图书馆专属行动
+  borrow_books: {
+    locations: ["library"],
+    hint: "在图书馆借书自学",
+  },
+  reading_club: {
+    locations: ["library"],
+    hint: "在图书馆参加读书会",
   },
 };
 
@@ -370,7 +379,10 @@ function addStreetExtras(state, actions) {
       const skills = Object.keys(st.skills);
       const key = Random.fromArray(skills);
       // 小美好感60解锁图书馆内部账号：学习效率+30%
-      var xpMult = st.flags.xiaomeiLibrary ? 1.3 : 1.0;
+      // 读者证加成：学习效率+15%
+      var xpMult = 1.0;
+      if (st.flags.xiaomeiLibrary) xpMult += 0.3;
+      if (st.flags._libraryCard) xpMult += 0.15;
       var xpGain = Math.floor((30 + Random.int(0, 19)) * xpMult);
       st.skills[key].xp += xpGain;
       st.player.intelligence = Math.min(100, st.player.intelligence + 0.2);
@@ -381,6 +393,108 @@ function addStreetExtras(state, actions) {
         `📖 在图书馆泡了一下午，${key} XP+${xpGain}${libTag}！`,
         "success",
       );
+      consumeAP(20);
+    },
+  });
+
+  // 图书馆·借书自学（专注提升指定技能）
+  actions.push({
+    id: "borrow_books",
+    name: "借书自学",
+    desc: "从图书馆借专业书籍回家学习。可以指定一门技能专精提升，效率比泛读高。",
+    icon: "📚",
+    category: "education",
+    apCost: 15,
+    payEstimate: "指定技能XP+40",
+    handler: () => {
+      const st = StateManager.getState();
+      // 弹窗让玩家选择要学的技能
+      if (typeof showSkillSelectionModal === "function") {
+        showSkillSelectionModal({
+          title: "📚 想借什么书？",
+          onSelect: function (skillId) {
+            const s = StateManager.getState();
+            if (!s.skills[skillId]) {
+              StateManager.addMessage("📚 没有找到相关的书籍。", "warning");
+              return;
+            }
+            var xpMult = s.flags.xiaomeiLibrary ? 1.3 : 1.0;
+            var xpGain = Math.floor((40 + Random.int(0, 15)) * xpMult);
+            s.skills[skillId].xp += xpGain;
+            s.player.intelligence = Math.min(100, s.player.intelligence + 0.3);
+            s.needs.fatigue = Math.min(100, s.needs.fatigue + 8);
+            var tag = s.flags.xiaomeiLibrary ? "（小美账号助力+30%）" : "";
+            StateManager.addMessage(
+              `📚 借了一本${skillId}专业书，认真研读后 XP+${xpGain}${tag}！`,
+              "success",
+            );
+            consumeAP(15);
+          },
+        });
+      } else {
+        // fallback: 随机提升（与自习类似但效率稍高）
+        const st2 = StateManager.getState();
+        const skills = Object.keys(st2.skills);
+        const key = Random.fromArray(skills);
+        var xpMult = st2.flags.xiaomeiLibrary ? 1.3 : 1.0;
+        var xpGain = Math.floor((40 + Random.int(0, 15)) * xpMult);
+        st2.skills[key].xp += xpGain;
+        st2.player.intelligence = Math.min(100, st2.player.intelligence + 0.3);
+        st2.needs.fatigue = Math.min(100, st2.needs.fatigue + 8);
+        var tag = st2.flags.xiaomeiLibrary ? "（小美账号助力+30%）" : "";
+        StateManager.addMessage(
+          `📚 借了一本${key}书，研读后 XP+${xpGain}${tag}！`,
+          "success",
+        );
+        consumeAP(15);
+      }
+    },
+  });
+
+  // 图书馆·读书会（社交+学习）
+  actions.push({
+    id: "reading_club",
+    name: "参加读书会",
+    desc: "参加图书馆周末读书会，与人交流读书心得。兼顾社交和学习，还能认识新朋友。",
+    icon: "👥",
+    category: "education",
+    apCost: 20,
+    payEstimate: "社交+技能+心情",
+    handler: () => {
+      const st = StateManager.getState();
+      st.needs.happiness = Math.min(100, st.needs.happiness + 8);
+      st.player.charm = Math.min(100, st.player.charm + 0.5);
+      st.player.intelligence = Math.min(100, st.player.intelligence + 0.5);
+      // 随机提升一项技能
+      const skills = Object.keys(st.skills);
+      const key = Random.fromArray(skills);
+      var xpGain = Math.floor(15 + Random.int(0, 10));
+      st.skills[key].xp += xpGain;
+      // 社交收获：随机认识一个NPC（好感微量提升）
+      var npcKeys = Object.keys(st.relationships);
+      if (npcKeys.length > 0) {
+        var npcKey = Random.fromArray(npcKeys);
+        if (st.relationships[npcKey].met) {
+          st.relationships[npcKey].affinity = Math.min(
+            100,
+            (st.relationships[npcKey].affinity || 50) + 2,
+          );
+          StateManager.addMessage(
+            `👥 读书会上遇到了一位同样喜欢${key}的书友，聊得很投机！好感+2。`,
+            "success",
+          );
+        } else {
+          StateManager.addMessage(
+            `👥 读书会氛围很好，交流了读书心得！${key} XP+${xpGain}，心情变好了。`,
+            "success",
+          );
+        }
+      } else {
+        StateManager.addMessage(
+          `👥 读书会氛围很好，交流了读书心得！${key} XP+${xpGain}，心情变好了。`,
+          "success",
+        );
+      }
       consumeAP(20);
     },
   });

@@ -1066,6 +1066,15 @@ function renderStatsStrip(state, parent) {
         return p.charm || 0;
       },
     },
+    {
+      label: "道德",
+      cls: "morality",
+      color: "#6ac49a",
+      threshold: 20,
+      getVal: function () {
+        return (p && p.morality) != null ? p.morality : 50;
+      },
+    },
   ];
 
   var needs = [

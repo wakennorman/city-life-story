@@ -394,22 +394,23 @@ const LOCATIONS = {
     },
     specialActions: ["祈福", "冥想", "捐香火钱", "求签"],
   },
-  // TODO: 待实现 - 图书馆（参考真实公共图书馆）
-  // {
-  //   id: "library",
-  //   name: "图书馆",
-  //   desc: "免费看书学习的地方。环境好，可以静心学习技能。",
-  //   type: "education",
-  //   wealthTier: 2,
-  //   footfall: 0.5,
-  //   vendingNote: "安静场所，禁止摆摊",
-  //   specialties: [],
-  //   dailyProbability: 0.2,
-  //   specialCategory: [],
-  //   jobs: [],
-  //   priceMod: {},
-  //   specialActions: ["借书学习", "自习", "参加读书会"],
-  // },
+  // 图书馆（免费学习空间，技能自主学习）
+  library: {
+    id: "library",
+    name: "图书馆",
+    icon: "📖",
+    desc: "免费的公共图书馆，藏书丰富环境安静。适合自学技能、查找资料、消磨时光。",
+    type: "education",
+    wealthTier: 2,
+    footfall: 0.5,
+    vendingNote: "安静场所，禁止摆摊",
+    specialties: [],
+    dailyProbability: 0.2,
+    specialCategory: [],
+    jobs: [],
+    priceMod: {},
+    specialActions: ["借书自学", "自习备考", "参加读书会"],
+  },
   // TODO: 待实现 - 体育馆/健身房（参考真实公共体育设施）
   // {
   //   id: "gym",
@@ -578,7 +579,7 @@ const TRAVEL_GRAPH = {
   construction: ["slum", "commercialDist"],
   // 工业区：在外围，连接批发市场/大学城/郊区（郊区回边）
   factoryZone: ["wholesaleMarket", "school", "suburb"],
-  // 大学城：教育集群，连接工业区/公园/培训/娱乐/医院/寺庙（双向补全）
+  // 大学城：教育集群，连接工业区/公园/培训/娱乐/医院/寺庙/图书馆（双向补全）
   school: [
     "factoryZone",
     "park",
@@ -586,6 +587,7 @@ const TRAVEL_GRAPH = {
     "entertainment",
     "hospital",
     "temple",
+    "library",
   ],
   // 科技园：靠近商业区和娱乐城
   techPark: ["commercialDist", "entertainment"],
@@ -593,10 +595,12 @@ const TRAVEL_GRAPH = {
   hospital: ["commercialDist", "school"],
   // 银行：金融中心，连接城中村/商业区/政府
   bank: ["slum", "commercialDist", "gov_office"],
-  // 公园：绿色过渡带，连接城中村/大学城/郊区/寺庙（寺庙回边）
-  park: ["slum", "school", "suburb", "temple"],
-  // 培训中心：紧邻大学城
-  trainingCenter: ["school"],
+  // 公园：绿色过渡带，连接城中村/大学城/郊区/寺庙/图书馆（图书馆回边）
+  park: ["slum", "school", "suburb", "temple", "library"],
+  // 培训中心：紧邻大学城和图书馆
+  trainingCenter: ["school", "library"],
+  // 图书馆：连接大学城、培训中心和公园
+  library: ["school", "trainingCenter", "park"],
   // 郊区：最外围，通过公园或工业区进入
   suburb: ["park", "factoryZone"],
   // 政府：靠近商业区和银行

@@ -4044,6 +4044,10 @@ function doStreetJob(job) {
       }
     }
   }
+  // 图书馆城市生存指南加成：来自旧书的知识永久提升街头收入
+  if (state.flags && state.flags._citySurvivalGuide) {
+    pay = Math.floor(pay * 1.08);
+  }
   // 玩家历史声誉加成（P2.9）：过去道德选择的持续影响
   if (typeof getHistoryModifiers === "function") {
     var histMods = getHistoryModifiers(state);

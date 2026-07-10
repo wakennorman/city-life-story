@@ -314,6 +314,11 @@ function travelToAmenityAndUse(amenityId) {
   // 执行 amenity
   applyAmenity(state, a);
   consumeAP(useAp);
+
+  // 传送完成后刷新 UI（modal 关闭后立即显示新位置）
+  setTimeout(function () {
+    if (typeof renderAll === "function") renderAll();
+  }, 80);
 }
 
 /**

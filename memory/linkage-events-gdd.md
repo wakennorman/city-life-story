@@ -2844,4 +2844,3 @@
 - **Purpose**: 英语达标且遇台风的玩家为外籍游客联络救援，强化 技能→天气 联动。
 - **Cross-system link**: 技能系统（skills.english.level≥10）∩ 天气系统（weather.current==='typhoon'）。
 - **Key guard**: `skills.english.level>=10 && weather.current==='typhoon' && !st.flags._r119EngTyphoon`。
-

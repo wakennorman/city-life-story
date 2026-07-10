@@ -5175,6 +5175,20 @@ body {
 .gb-cell-tips  { flex: 1.4 1 0; }
 .gb-tips-inner { overflow-y: auto; max-height: 80px; }
 
+/* 桌面端（>=769px）：目标/建议/阶段卡片 hover 微反馈 */
+@media (min-width: 769px) {
+  .gb-cell:hover {
+    background: var(--bg-card) !important;
+    border-color: rgba(102,126,234,0.30) !important;
+    box-shadow: 0 2px 8px rgba(102,126,234,0.08);
+    transition: background 0.2s, border-color 0.2s, box-shadow 0.2s;
+  }
+  .gb-cell-active:hover {
+    border-color: rgba(102,126,234,0.55) !important;
+    box-shadow: 0 2px 10px rgba(102,126,234,0.15);
+  }
+}
+
 /* 旅程弧在格1内紧凑显示 */
 .gb-arc-wrap #life-arc-wrap { margin-bottom: 0; }
 .gb-arc-wrap #life-arc-wrap > div:first-child {

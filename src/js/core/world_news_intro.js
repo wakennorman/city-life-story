@@ -2278,7 +2278,8 @@ function applyWorldNewsToParams(state, selectedNews) {
               0.5,
               Math.min(2.0, wp.sectorHeat[sec] + eff.sectorHeat[sec]),
             );
-            wp.initialSectorBias[sec] = wp.sectorHeat[sec];
+            // [v3.76 修复] 不覆盖 initialSectorBias — 保留原始基线，让 decayWorldParams 自然回归
+            // 开局新闻设置初始偏移，后续每日新闻叠加修改 + 每天2%向基线衰减
           }
         }
       }
@@ -2652,297 +2653,248 @@ var _worldNewsSelected = null; // 存储本局选中的新闻
 var _playerIntroChoice = null; // 存储玩家在开局的选择
 
 /**
- * v3.65 重构：构建开局选择面板
+ * v3.76 重构：构建开局选择面板
  * 原则：
- *   1. 只显示与当前新闻内容真正相关的建议，绝不堆砌固定模板选项
- *   2. 每条建议都是对新闻内容的自然回应，而非千篇一律的"找工作/学编程"
- *   3. 如果新闻不涉及特定方向，只给一个中性建议，不强行凑选项
- *   4. 选项数量 1-3 个，取决于新闻相关度
+ *   1. 每条新闻最多产生 1 个选项，避免无关选项堆砌
+ *   2. 每个选项直接引用该条新闻的具体内容，杜绝通用模板
+ *   3. 最多 3 个选项（认知负荷原则）
+ *   4. 如果新闻不涉及任何已知方向，只给中性建议，不强行凑
  */
 function buildIntroChoicePanel(scenarioId, newsItems) {
   if (!newsItems || newsItems.length === 0) return "";
 
   var choices = [];
+  var usedTypes = {}; // 防止同类选项重复
 
-  // ---- 根据新闻内容提取关键词和意图，动态生成建议 ----
-  var allNotes = "";
-  var allHeadlines = "";
-  var tags = [];
-  for (var ni = 0; ni < newsItems.length; ni++) {
-    var nw = newsItems[ni];
-    if (nw.worldEffect && nw.worldEffect.note) {
-      allNotes += nw.worldEffect.note + " ";
+  /**
+   * 取标题短摘要（用于选项文本中引用）
+   */
+  function _snip(headline, maxLen) {
+    maxLen = maxLen || 14;
+    if (!headline) return "";
+    if (headline.length <= maxLen) return headline;
+    return headline.slice(0, maxLen) + "…";
+  }
+
+  /**
+   * 判断一条新闻的主要主题，返回主题ID + 置信度
+   */
+  function _classify(news) {
+    var tag = news.tag || "";
+    var headline = news.headline || "";
+    var detail = news.detail || "";
+    var note = (news.worldEffect && news.worldEffect.note) || "";
+    var text = tag + " " + headline + " " + detail + " " + note;
+
+    // 按优先级检查（得分高的优先）
+    if (/裁员|失业|下岗|降薪/.test(text))
+      return { id: "start_side_hustle", theme: "layoff" };
+    if (/AI|编程|芯片|机器人|数字化|大模型|半导体/.test(text))
+      return { id: "study_tech", theme: "tech" };
+    if (/招聘|抢人|用工(荒|缺)|人力/.test(text))
+      return { id: "find_work", theme: "hiring" };
+    if (/房价|租房|租金|城中村|拆迁|保交楼|房产/.test(text))
+      return { id: "secure_housing", theme: "housing" };
+    if (/新能源|技工|焊工|电工|制造业|工厂/.test(text))
+      return { id: "learn_trade", theme: "manufacturing" };
+    if (/物价|通胀|涨价|降价|促销/.test(text))
+      return { id: "save_money", theme: "price" };
+    if (/股市|沪指|基金|理财|投资|牛市|加密/.test(text))
+      return { id: "watch_market", theme: "market" };
+    if (/补贴|扶持|政策|降准|降息/.test(text))
+      return { id: "grab_opportunity", theme: "policy" };
+    if (/养老|医疗|健康|心理|焦虑|抑郁/.test(text))
+      return { id: "build_network", theme: "social" };
+    if (/毕业|应届|高校|大学生/.test(text))
+      return { id: "upgrade_skills", theme: "graduation" };
+    if (/春节|618|双十一|黄金周|旺季|节日/.test(text))
+      return { id: "catch_season", theme: "seasonal" };
+    if (/寒潮|高温|暴雨|台风/.test(text))
+      return { id: "prepare_weather", theme: "weather" };
+
+    // 按 tag 兜底
+    if (tag === "科技") return { id: "study_tech", theme: "tech" };
+    if (tag === "就业") return { id: "find_work", theme: "hiring" };
+    if (tag === "消费") return { id: "save_money", theme: "price" };
+    if (tag === "房产") return { id: "secure_housing", theme: "housing" };
+    if (tag === "政策") return { id: "grab_opportunity", theme: "policy" };
+    if (tag === "社会") return { id: "build_network", theme: "social" };
+    if (tag === "季节" || tag === "节日")
+      return { id: "catch_season", theme: "seasonal" };
+    if (tag === "天气") return { id: "prepare_weather", theme: "weather" };
+
+    return null; // 无法归类
+  }
+
+  // ---- 逐条新闻分析，每条最多 1 个选项 ----
+  for (var i = 0; i < newsItems.length && choices.length < 3; i++) {
+    var news = newsItems[i];
+    var classified = _classify(news);
+    if (!classified) continue;
+    if (usedTypes[classified.id]) continue; // 同类不重复
+    usedTypes[classified.id] = true;
+
+    var snippet = _snip(news.headline, 14);
+    var choice = null;
+
+    switch (classified.id) {
+      case "study_tech":
+        choice = {
+          id: "study_tech",
+          text: "💻 关注" + (snippet || "科技") + "趋势，学技能",
+          hint: "技术迭代快，投资自己抗风险",
+          cost: 200,
+          effect: {
+            cash: -200,
+            skills: { coding: 10 },
+            needs: { intelligence: 5 },
+            flags: { _introStudyTech: true },
+          },
+        };
+        break;
+
+      case "start_side_hustle":
+        choice = {
+          id: "start_side_hustle",
+          text: "🛒 市场承压，" + (snippet || "先搞零钱"),
+          hint: "灵活就业快速入账，但体力消耗大",
+          effect: {
+            cash: 100,
+            needs: { fatigue: 5 },
+            flags: { _introSideHustle: true },
+          },
+        };
+        break;
+
+      case "find_work":
+        choice = {
+          id: "find_work",
+          text: "💼 " + (snippet || "招聘季") + "，趁热找工作",
+          hint: "岗位多的时候机会更好找",
+          effect: {
+            flags: { _introFoundWorkEarly: true },
+          },
+        };
+        break;
+
+      case "secure_housing":
+        choice = {
+          id: "secure_housing",
+          text: "🏠 " + (snippet || "租房市场变化") + "，先落脚",
+          hint: "稳定的住处是打工人的底气",
+          effect: {
+            flags: { _introSecureHousing: true },
+          },
+        };
+        break;
+
+      case "learn_trade":
+        choice = {
+          id: "learn_trade",
+          text: "🔧 " + (snippet || "制造业") + "缺人，学门手艺",
+          hint: "技术工越老越吃香，门槛低收入稳",
+          cost: 100,
+          effect: {
+            cash: -100,
+            flags: { _introLearnTrade: true },
+          },
+        };
+        break;
+
+      case "save_money":
+        choice = {
+          id: "save_money",
+          text: "🏦 物价波动，" + (snippet || "先守住钱包"),
+          hint: "把钱存定期，等形势明朗再动",
+          effect: {
+            cash: -50,
+            flags: { _introSavedMoney: true },
+          },
+        };
+        break;
+
+      case "watch_market":
+        choice = {
+          id: "watch_market",
+          text: "📊 市场有动静，" + (snippet || "先摸清行情"),
+          hint: "花时间研究投资方向，不花钱但费精力",
+          effect: {
+            needs: { fatigue: 3 },
+            flags: { _introWatchMarket: true },
+          },
+        };
+        break;
+
+      case "grab_opportunity":
+        choice = {
+          id: "grab_opportunity",
+          text: "🎯 政策有变，" + (snippet || "顺势而为"),
+          hint: "借着政策东风找出路",
+          effect: {
+            flags: { _introGrabOpportunity: true },
+          },
+        };
+        break;
+
+      case "build_network":
+        choice = {
+          id: "build_network",
+          text: "🤝 " + (snippet || "社会民生") + "，多交朋友",
+          hint: "在这座城市，人脉就是资源",
+          effect: {
+            needs: { happiness: 3 },
+            flags: { _introBuildNetwork: true },
+          },
+        };
+        break;
+
+      case "upgrade_skills":
+        choice = {
+          id: "upgrade_skills",
+          text: "📚 " + (snippet || "学历通胀") + "，给自己充电",
+          hint: "技能和证书是硬通货",
+          cost: 80,
+          effect: {
+            cash: -80,
+            needs: { intelligence: 3 },
+            flags: { _introUpgradeSkills: true },
+          },
+        };
+        break;
+
+      case "catch_season":
+        choice = {
+          id: "catch_season",
+          text: "🎉 " + (snippet || "旺季来了") + "，趁机赚一笔",
+          hint: "过了这个村就没这个店了",
+          effect: {
+            cash: 50,
+            needs: { fatigue: 8 },
+            flags: { _introCatchSeason: true },
+          },
+        };
+        break;
+
+      case "prepare_weather":
+        choice = {
+          id: "prepare_weather",
+          text: "🌂 天气预警，" + (snippet || "注意防护"),
+          hint: "安全第一，减少不必要外出",
+          effect: {
+            needs: { health: 3 },
+            flags: { _introPrepareWeather: true },
+          },
+        };
+        break;
+
+      default:
+        continue;
     }
-    if (nw.headline) allHeadlines += nw.headline + " ";
-    if (nw.tag) tags.push(nw.tag);
-  }
-  var allTags = tags.join(",");
 
-  // --- 规则1：AI/科技利好 → 建议学技术或投资 ---
-  if (
-    allTags.indexOf("科技") >= 0 ||
-    allNotes.indexOf("AI") >= 0 ||
-    allNotes.indexOf("编程") >= 0 ||
-    allNotes.indexOf("数字化") >= 0 ||
-    allNotes.indexOf("芯片") >= 0 ||
-    allNotes.indexOf("机器人") >= 0 ||
-    allHeadlines.indexOf("AI") >= 0 ||
-    allHeadlines.indexOf("编程") >= 0 ||
-    allHeadlines.indexOf("芯片") >= 0 ||
-    allHeadlines.indexOf("机器人") >= 0
-  ) {
-    choices.push({
-      id: "study_tech",
-      text: "💻 报名编程培训班",
-      hint: "顺应趋势投资自己——但前期要花 ¥200",
-      cost: 200,
-      effect: {
-        cash: -200,
-        skills: { coding: 10 },
-        needs: { intelligence: 5 },
-        flags: { _introStudyTech: true },
-      },
-    });
-  }
-
-  // --- 规则2：裁员/就业压力 → 建议灵活就业 ---
-  if (
-    allNotes.indexOf("裁员") >= 0 ||
-    allNotes.indexOf("降薪") >= 0 ||
-    allNotes.indexOf("零工") >= 0 ||
-    allNotes.indexOf("失业") >= 0 ||
-    allHeadlines.indexOf("裁员") >= 0 ||
-    allHeadlines.indexOf("失业") >= 0 ||
-    allHeadlines.indexOf("优化") >= 0 ||
-    allHeadlines.indexOf("下岗") >= 0
-  ) {
-    choices.push({
-      id: "start_side_hustle",
-      text: "🛒 先做零工过渡",
-      hint: "快速搞到钱，但身体会累一些",
-      effect: {
-        cash: 100,
-        needs: { fatigue: 5 },
-        flags: { _introSideHustle: true },
-      },
-    });
-  }
-
-  // --- 规则3：消费/物价 → 建议省钱/理财 ---
-  if (
-    allTags.indexOf("消费") >= 0 ||
-    allNotes.indexOf("物价") >= 0 ||
-    allNotes.indexOf("通胀") >= 0 ||
-    allNotes.indexOf("涨价") >= 0 ||
-    allHeadlines.indexOf("物价") >= 0 ||
-    allHeadlines.indexOf("消费") >= 0 ||
-    allHeadlines.indexOf("降价") >= 0 ||
-    allHeadlines.indexOf("促销") >= 0
-  ) {
-    choices.push({
-      id: "save_money",
-      text: "🏦 把钱存定期",
-      hint: "先保住本金，应对物价波动",
-      effect: {
-        cash: -50,
-        flags: { _introSavedMoney: true },
-      },
-    });
-  }
-
-  // --- 规则4：投资机会 → 建议关注市场 ---
-  if (
-    allNotes.indexOf("股市") >= 0 ||
-    allNotes.indexOf("投资") >= 0 ||
-    allNotes.indexOf("牛市") >= 0 ||
-    allNotes.indexOf("加密") >= 0 ||
-    allHeadlines.indexOf("股市") >= 0 ||
-    allHeadlines.indexOf("沪指") >= 0 ||
-    allHeadlines.indexOf("加密") >= 0 ||
-    allHeadlines.indexOf("基金") >= 0 ||
-    allHeadlines.indexOf("理财") >= 0
-  ) {
-    choices.push({
-      id: "watch_market",
-      text: "📊 先了解市场行情",
-      hint: "花时间研究投资方向，不花但费精力",
-      effect: {
-        needs: { fatigue: 3 },
-        flags: { _introWatchMarket: true },
-      },
-    });
-  }
-
-  // --- 规则5：政策利好 → 建议抓住机会 ---
-  if (
-    allNotes.indexOf("补贴") >= 0 ||
-    allNotes.indexOf("扶持") >= 0 ||
-    allNotes.indexOf("优惠") >= 0 ||
-    allTags.indexOf("政策") >= 0 ||
-    allHeadlines.indexOf("补贴") >= 0 ||
-    allHeadlines.indexOf("扶持") >= 0 ||
-    allHeadlines.indexOf("政策") >= 0 ||
-    allHeadlines.indexOf("降准") >= 0 ||
-    allHeadlines.indexOf("降息") >= 0
-  ) {
-    choices.push({
-      id: "grab_opportunity",
-      text: "🎯 抓住政策红利",
-      hint: "顺势而为，可能找到新出路",
-      effect: {
-        flags: { _introGrabOpportunity: true },
-      },
-    });
-  }
-
-  // --- 规则6：就业/招聘旺季 → 建议积极求职 ---
-  if (
-    allNotes.indexOf("招聘") >= 0 ||
-    allNotes.indexOf("抢人") >= 0 ||
-    allNotes.indexOf("用工荒") >= 0 ||
-    allHeadlines.indexOf("招聘") >= 0 ||
-    allHeadlines.indexOf("抢人") >= 0 ||
-    allHeadlines.indexOf("用工") >= 0 ||
-    allHeadlines.indexOf("金三银四") >= 0 ||
-    allTags.indexOf("招聘") >= 0
-  ) {
-    choices.push({
-      id: "find_work",
-      text: "💼 立刻找工作",
-      hint: "先站稳脚跟，边干边看",
-      effect: {
-        flags: { _introFoundWorkEarly: true },
-      },
-    });
-  }
-
-  // --- 规则7：房地产/租房 → 建议关注住所 ---
-  if (
-    allHeadlines.indexOf("房价") >= 0 ||
-    allHeadlines.indexOf("租房") >= 0 ||
-    allHeadlines.indexOf("租金") >= 0 ||
-    allHeadlines.indexOf("城中村") >= 0 ||
-    allHeadlines.indexOf("拆迁") >= 0 ||
-    allHeadlines.indexOf("保交楼") >= 0 ||
-    allTags.indexOf("房产") >= 0 ||
-    allTags.indexOf("租房") >= 0 ||
-    allTags.indexOf("城市") >= 0
-  ) {
-    choices.push({
-      id: "secure_housing",
-      text: "🏠 先安顿好住处",
-      hint: "在这个环境下，稳定的住所比什么都重要",
-      effect: {
-        flags: { _introSecureHousing: true },
-      },
-    });
-  }
-
-  // --- 规则8：新能源/制造业 → 建议学技术工种 ---
-  if (
-    allHeadlines.indexOf("新能源") >= 0 ||
-    allHeadlines.indexOf("技工") >= 0 ||
-    allHeadlines.indexOf("焊工") >= 0 ||
-    allHeadlines.indexOf("电工") >= 0 ||
-    allHeadlines.indexOf("制造业") >= 0 ||
-    allHeadlines.indexOf("工厂") >= 0 ||
-    allTags.indexOf("产业") >= 0
-  ) {
-    choices.push({
-      id: "learn_trade",
-      text: "🔧 学门手艺",
-      hint: "技工越老越吃香，门槛低但收入稳",
-      effect: {
-        cash: -100,
-        flags: { _introLearnTrade: true },
-      },
-    });
-  }
-
-  // --- 规则9：社会民生/养老/医疗 → 建议关注健康和人脉 ---
-  if (
-    allHeadlines.indexOf("养老") >= 0 ||
-    allHeadlines.indexOf("医疗") >= 0 ||
-    allHeadlines.indexOf("健康") >= 0 ||
-    allHeadlines.indexOf("心理") >= 0 ||
-    allHeadlines.indexOf("焦虑") >= 0 ||
-    allHeadlines.indexOf("抑郁") >= 0 ||
-    allTags.indexOf("社会") >= 0
-  ) {
-    choices.push({
-      id: "build_network",
-      text: "🤝 多结交人脉",
-      hint: "在这个城市，认识靠谱的人比什么都重要",
-      effect: {
-        needs: { happiness: 3 },
-        flags: { _introBuildNetwork: true },
-      },
-    });
-  }
-
-  // --- 规则10：毕业季/应届生 → 建议提升学历或技能 ---
-  if (
-    allHeadlines.indexOf("毕业") >= 0 ||
-    allHeadlines.indexOf("应届") >= 0 ||
-    allHeadlines.indexOf("高校") >= 0 ||
-    allHeadlines.indexOf("大学生") >= 0 ||
-    allTags.indexOf("毕业") >= 0
-  ) {
-    choices.push({
-      id: "upgrade_skills",
-      text: "📚 给自己充充电",
-      hint: "学历和技能是硬通货，投资自己最稳妥",
-      effect: {
-        cash: -80,
-        needs: { intelligence: 3 },
-        flags: { _introUpgradeSkills: true },
-      },
-    });
-  }
-
-  // --- 规则11：节日/旺季 → 建议抓住短期机会 ---
-  if (
-    allHeadlines.indexOf("春节") >= 0 ||
-    allHeadlines.indexOf("618") >= 0 ||
-    allHeadlines.indexOf("双十一") >= 0 ||
-    allHeadlines.indexOf("黄金周") >= 0 ||
-    allTags.indexOf("节日") >= 0 ||
-    allTags.indexOf("季节") >= 0
-  ) {
-    choices.push({
-      id: "catch_season",
-      text: "🎉 抓住旺季机会",
-      hint: "这段时间收入高，但过后就没了",
-      effect: {
-        cash: 50,
-        needs: { fatigue: 8 },
-        flags: { _introCatchSeason: true },
-      },
-    });
-  }
-
-  // --- 规则12：极端天气/寒潮 → 建议做好防护 ---
-  if (
-    allHeadlines.indexOf("寒潮") >= 0 ||
-    allHeadlines.indexOf("高温") >= 0 ||
-    allHeadlines.indexOf("暴雨") >= 0 ||
-    allHeadlines.indexOf("台风") >= 0 ||
-    allTags.indexOf("天气") >= 0
-  ) {
-    choices.push({
-      id: "prepare_weather",
-      text: "🌂 做好防护措施",
-      hint: "天气不好，安全第一，减少外出",
-      effect: {
-        needs: { health: 3 },
-        flags: { _introPrepareWeather: true },
-      },
-    });
+    if (choice) choices.push(choice);
   }
 
   // --- 保底逻辑 ---
-  // 如果生成了 0 个选项：说明新闻与所有已知方向都不匹配
-  // 此时只给一个最中性的建议，不再强行凑"找工作"
   if (choices.length === 0) {
     choices.push({
       id: "observe_world",
@@ -2953,11 +2905,6 @@ function buildIntroChoicePanel(scenarioId, newsItems) {
         flags: { _introObserveWorld: true },
       },
     });
-  }
-
-  // 最多显示 3 个选项（认知负荷原则）
-  if (choices.length > 3) {
-    choices = choices.slice(0, 3);
   }
 
   if (choices.length === 0) return "";
@@ -3556,12 +3503,12 @@ function applyNewsAndEnter(selectedNews, state, enterGame, scenarioId) {
       }
 
       // 如果没有可应用的 effects，仍然注入 headline
-      // v3.65: intro news 的 duration 设为 5 天（播报过期），但其世界参数效果已持久化
-      var introDuration = combinedEffects.duration || 5;
+      // v3.76: 改用完整 effects 对象，让 cleanupExpiredNews 能正确识别 jobMultiplier 并每日衰减
+      combinedEffects.duration = combinedEffects.duration || 15; // 开局新闻持久15天，线性衰减
       var entry = {
         id: nn.id, // 使用原始ID — 让 news_driven_events.js 能直接匹配
         headline: nn.icon + nn.headline,
-        effects: introDuration,
+        effects: combinedEffects, // 完整 effects 对象，供 cleanupExpiredNews 重建 _jobMultipliers
         _appliedDay: state.player ? state.player.day : 0,
         _isIntroNews: true,
         _originalId: nn.id,
@@ -3581,7 +3528,7 @@ function applyNewsAndEnter(selectedNews, state, enterGame, scenarioId) {
         state.activeNews.push({
           id: prefixedId,
           headline: "📌 " + nn.headline,
-          effects: 5,
+          effects: { duration: 15 },
           _appliedDay: state.player ? state.player.day : 0,
           _isIntroNews: true,
           _originalId: nn.id,
