@@ -8,3 +8,9 @@ dist-webapp/
 *.log
 .DS_Store
 Thumbs.db
+
+# temp/working files
+_extract_*.py
+_r10_fragment.js
+_tmp_*.js
+.workbuddy/
