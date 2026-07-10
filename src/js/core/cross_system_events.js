@@ -43928,6 +43928,256 @@
     ],
   });
 
+  // ==== R36 新联动事件 ====
+
+  // 1. 陈师傅厨艺比赛 — cooking技能+chef_chen NPC联动
+  // [自洽修复] conditions 校验：chef_chen已认识、好感≥30、cooking技能≥15
+  RANDOM_EVENTS.push({
+    id: "npc_chef_chen_competition",
+    phase: "street",
+    icon: "🍳",
+    title: "厨艺大赛帮手",
+    story:
+      "陈师傅拎着围裙急匆匆来找你：「街道办搞了个厨艺大赛，头奖¥2,000！我报了名，但一个人忙不过来——你来给我打下手，赢了分你一半！」\n\n他信心满满地拍了拍你的肩：「你的基本功我见过，够用。」",
+    conditions: function (st) {
+      var rel = st.relationships && st.relationships["chef_chen"];
+      if (!rel || !rel.met) return false;
+      if ((rel.affinity || 0) < 30) return false;
+      var cook = st.skills && st.skills.cooking;
+      if (!cook || (cook.level || 0) < 15) return false;
+      if (st.flags && st.flags._chefCompetitionSeen) return false;
+      return true;
+    },
+    probability: 0.025,
+    repeatable: false,
+    choices: [
+      {
+        text: "🔪 好！给他打下手",
+        hint: "厨艺xp+50，现金分¥1,000",
+        apply: function (st) {
+          st.flags._chefCompetitionSeen = true;
+          var skill = st.skills && st.skills.cooking;
+          if (skill) skill.xp = (skill.xp || 0) + 50;
+          st.resources.cash += 1000;
+          st.resources.totalEarned = (st.resources.totalEarned || 0) + 1000;
+          st.player.fame = Math.min(100, (st.player.fame || 0) + 3);
+          var rel = st.relationships && st.relationships["chef_chen"];
+          if (rel) rel.affinity = Math.min(100, (rel.affinity || 0) + 8);
+          StateManager.addMessage(
+            "🔪 你给陈师傅打了一整天下手，他拿了冠军！分了¥1,000，名声+3，陈师傅好感+8。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "🙋 让我来做主厨",
+        hint: "厨艺xp+80，名声+5，但可能砸锅",
+        apply: function (st) {
+          st.flags._chefCompetitionSeen = true;
+          var skill = st.skills && st.skills.cooking;
+          var level = skill ? skill.level || 0 : 0;
+          if (level >= 40) {
+            if (skill) skill.xp = (skill.xp || 0) + 80;
+            st.resources.cash += 1800;
+            st.resources.totalEarned = (st.resources.totalEarned || 0) + 1800;
+            st.player.fame = Math.min(100, (st.player.fame || 0) + 5);
+            StateManager.addMessage(
+              "🙋 你掌勺做了三道菜，评委赞不绝口！奖金¥1,800，名声+5。",
+              "success",
+            );
+          } else {
+            st.player.fame = Math.max(0, (st.player.fame || 0) - 2);
+            if (skill) skill.xp = (skill.xp || 0) + 20;
+            StateManager.addMessage(
+              "🙋 你高估了自己——菜做得一般，陈师傅只好救场。没拿奖，名声-2。",
+              "warning",
+            );
+          }
+        },
+      },
+      {
+        text: "⛔ 今天没空",
+        hint: "陈师傅失望，好感-5",
+        apply: function (st) {
+          st.flags._chefCompetitionSeen = true;
+          var rel = st.relationships && st.relationships["chef_chen"];
+          if (rel) rel.affinity = Math.max(0, (rel.affinity || 0) - 5);
+          StateManager.addMessage(
+            "⛔ 你婉拒了，陈师傅有点失望地自己去了。好感-5。",
+            "info",
+          );
+        },
+      },
+    ],
+  });
+
+  // 2. 早高峰奇遇 — 时间槽×NPC×地点事件
+  // [自洽修复] conditions 校验：timeSlot==="morning" 且 体力不过低
+  RANDOM_EVENTS.push({
+    id: "morning_rush_encounter",
+    phase: "street",
+    icon: "🚇",
+    title: "早高峰偶遇",
+    story:
+      "早高峰的地铁站人挤人。你被推着往前走的时候，忽然看见一个熟悉的身影——是之前打过交道的一位熟人，正被人群挤得东倒西歪，手里的早餐洒了一身。\n\n对方也看见了你，尴尬地笑了笑。",
+    conditions: function (st) {
+      if (st.player.timeSlot !== "morning") return false;
+      if ((st.needs.fatigue || 0) > 85) return false;
+      // 至少要认识一个NPC
+      var rel = st.relationships;
+      if (!rel) return false;
+      var known = Object.keys(rel).filter(function (k) {
+        return rel[k] && rel[k].met;
+      });
+      if (known.length < 1) return false;
+      if (st.flags && st.flags._morningRushSeen) return false;
+      return true;
+    },
+    probability: 0.03,
+    repeatable: true,
+    choices: [
+      {
+        text: "🤝 帮忙擦一下",
+        hint: "随机熟人好感+8",
+        apply: function (st) {
+          st.flags._morningRushSeen = true;
+          // 找一个已认识的NPC随机加好感
+          var rel = st.relationships;
+          var known = Object.keys(rel).filter(function (k) {
+            return rel[k] && rel[k].met;
+          });
+          if (known.length > 0) {
+            var chosen = known[Math.floor(Random.random() * known.length)];
+            rel[chosen].affinity = Math.min(
+              100,
+              (rel[chosen].affinity || 0) + 8,
+            );
+            StateManager.addMessage(
+              "🤝 你帮对方擦了衣服，聊了一路。对方挺感激的，好感+8。",
+              "success",
+            );
+          } else {
+            StateManager.addMessage(
+              "🤝 你帮陌生人擦了衣服，对方连声道谢。心情好了一些。",
+              "info",
+            );
+          }
+        },
+      },
+      {
+        text: "😅 假装没看见",
+        hint: "无变化",
+        apply: function (st) {
+          st.flags._morningRushSeen = true;
+          StateManager.addMessage(
+            "😅 你低下头假装看手机，被人群挤进了车厢。有些尴尬，但避免了麻烦。",
+            "info",
+          );
+        },
+      },
+      {
+        text: "☕ 请对方喝杯咖啡",
+        hint: "现金-15，好感+12",
+        cost: 15,
+        apply: function (st) {
+          st.flags._morningRushSeen = true;
+          st.resources.cash = Math.max(0, (st.resources.cash || 0) - 15);
+          var rel = st.relationships;
+          var known = Object.keys(rel).filter(function (k) {
+            return rel[k] && rel[k].met;
+          });
+          if (known.length > 0) {
+            var chosen = known[Math.floor(Random.random() * known.length)];
+            rel[chosen].affinity = Math.min(
+              100,
+              (rel[chosen].affinity || 0) + 12,
+            );
+          }
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 5);
+          StateManager.addMessage(
+            "☕ 你请对方喝了杯咖啡，聊了几句近况。人情世故就是这么攒起来的。好感+12。",
+            "success",
+          );
+        },
+      },
+    ],
+  });
+
+  // 3. 学历升级·导师引荐 — education+NPC联动
+  // [自洽修复] conditions 校验：education≥1且未满3、至少认识一个高好感NPC
+  RANDOM_EVENTS.push({
+    id: "education_npc_mentorship",
+    phase: "street",
+    icon: "🎓",
+    title: "有人推荐你深造",
+    story:
+      "一个你经常打交道的街坊找到你，说有个在职进修的机会——本市的成人教育学院开了个「城市管理与社会服务」专业，毕业发大专文凭，学费可以分期付。\n\n「我觉得你挺适合的，」对方认真地说，「你在这座城市混了这么久，差的不是能力，是那张纸。」",
+    conditions: function (st) {
+      if (!st.relationships) return false;
+      var edu = st.player.education;
+      if (typeof edu !== "number" || edu < 0 || edu >= 3) return false;
+      // 至少有一个NPC好感≥50
+      var rel = st.relationships;
+      var hasHighAffinity = Object.keys(rel).some(function (k) {
+        return rel[k] && rel[k].met && (rel[k].affinity || 0) >= 50;
+      });
+      if (!hasHighAffinity) return false;
+      if (st.player.day < 60) return false;
+      if (st.flags && st.flags._eduMentorshipSeen) return false;
+      return true;
+    },
+    probability: 0.025,
+    repeatable: false,
+    choices: [
+      {
+        text: "📚 报名进修（¥2,000分期）",
+        hint: "教育+1，智力+8，名声+5",
+        cost: 2000,
+        apply: function (st) {
+          st.flags._eduMentorshipSeen = true;
+          st.resources.cash = Math.max(0, (st.resources.cash || 0) - 2000);
+          st.player.education = Math.min(3, (st.player.education || 0) + 1);
+          st.player.intelligence = Math.min(
+            100,
+            (st.player.intelligence || 0) + 8,
+          );
+          st.player.fame = Math.min(100, (st.player.fame || 0) + 5);
+          st.flags._eduMentorEnrolled = true;
+          StateManager.addMessage(
+            "📚 你报名了在职进修，花了¥2,000。教育+1，智力+8，名声+5。那张纸，你要拿到手。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "🕒 先了解，以后再说",
+        hint: "了解信息，心智+3",
+        apply: function (st) {
+          st.flags._eduMentorshipSeen = true;
+          st.player.intelligence = Math.min(
+            100,
+            (st.player.intelligence || 0) + 3,
+          );
+          StateManager.addMessage(
+            "🕒 你要了招生简章，仔细看了看。心里有了数。心智+3。",
+            "info",
+          );
+        },
+      },
+      {
+        text: "😤 我不需要那张纸",
+        hint: "无变化",
+        apply: function (st) {
+          st.flags._eduMentorshipSeen = true;
+          StateManager.addMessage(
+            "😤 你谢绝了对方的好意。你觉得能力比学历重要——但心里还是有些不安。",
+            "info",
+          );
+        },
+      },
+    ],
+  });
+
   // ====================================================================
   // v3.77 新增事件注册完毕
   // ====================================================================
