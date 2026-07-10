@@ -29,3 +29,4 @@
 - [中文外显规则](chinese-only-display-rule.md) — 游戏外显内容只能是中文，英文需隐藏到代码中（2026-07-10）
 - [双图标禁止规则](double-icon-rule.md) — 行动/按钮不能同时有 name 中的 emoji 和 icon 字段（2026-07-10）
 - [v3.76 事件叙事-触发自洽性审查 R120](v3.76-narrative-trigger-consistency-r120.md) — 系统性审查5个事件文件250+事件，修复A类4个：bike_share_boom/live_stream_rush/shopping_fest/consumption_down（文本暗示特定职业经历但缺少conditions检查）（2026-07-10，commit 477d2237）
+- [R120 联动事件扩充](v3.77-linkage-events-r120.md) — 新增5个空白区联动事件：老手特遇(veteran_client)/专业技能视角(repair_expert_eye)/NPC暗线(old_zhou_secret_channel)/天气×位置(rain_market_vs_park)/饥饿积累(hunger_accumulation)（2026-07-10，commit ca9be7af）
