@@ -1108,7 +1108,8 @@ function renderCareerJobs(state, parent) {
       });
     }
     html += '<div class="section"><h3>📌 当前工作</h3>';
-    html += '<div class="card" style="padding:12px;">';
+    html +=
+      '<div class="card" style="padding:12px;border:2px solid var(--accent);border-radius:10px;background:rgba(74,158,92,0.04);">';
     html +=
       '<div style="font-size:13px;font-weight:bold;">' +
       (path ? path.icon : "💼") +
@@ -1162,7 +1163,7 @@ function renderCareerJobs(state, parent) {
     if (nextLevel) {
       var canPromote = checkCareerPromotion(state, currentJob.path, nextLevel);
       html +=
-        '<div style="margin-top:10px;padding:10px;background:var(--bg-secondary);border-radius:6px;">';
+        '<div style="margin-top:10px;padding:12px;background:var(--bg-secondary);border:2px solid var(--border);border-radius:8px;">';
       html +=
         '<div style="font-size:11px;font-weight:bold;margin-bottom:4px;">⬆️ 晋升条件：' +
         nextLevel.name +
@@ -1219,7 +1220,7 @@ function renderCareerJobs(state, parent) {
 
     // ---- 辞职按钮 ----
     html +=
-      '<div style="margin-top:12px;padding:8px;background:rgba(255,80,80,0.06);border:1px solid rgba(255,80,80,0.15);border-radius:6px;">';
+      '<div style="margin-top:12px;padding:10px;background:rgba(255,80,80,0.04);border:2px solid rgba(255,80,80,0.25);border-radius:8px;">';
     html +=
       '<div style="font-size:10px;color:var(--text-muted);margin-bottom:4px;">⚠️ 辞职后当前工作清零，需重新求职。职业倦怠归零，但行业资源-5。</div>';
     html +=
@@ -1277,7 +1278,7 @@ function renderCareerJobs(state, parent) {
       for (var oi = 0; oi < jobOffers.length; oi++) {
         var of = jobOffers[oi];
         html +=
-          '<div class="card" style="padding:8px;margin:4px 0;font-size:11px;">';
+          '<div class="card" style="padding:10px;margin:4px 0;font-size:11px;border:2px solid var(--border);border-radius:8px;">';
         html +=
           "<div><strong>" +
           of.levelName +
@@ -1310,7 +1311,7 @@ function renderCareerJobs(state, parent) {
       for (var ci = 0; ci < colleagues.length; ci++) {
         var co = colleagues[ci];
         html +=
-          '<div class="card" style="padding:6px 8px;margin:3px 0;font-size:11px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;">';
+          '<div class="card" style="padding:8px 10px;margin:3px 0;font-size:11px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;border:2px solid var(--border);border-radius:8px;">';
         html +=
           "<div><strong>" +
           (co.name || "同事") +
@@ -1349,7 +1350,7 @@ function renderCareerJobs(state, parent) {
   } else {
     // 没有工作，显示可选职业路径
     html +=
-      '<div class="card" style="padding:12px;background:var(--bg-warning);margin-bottom:12px;">';
+      '<div class="card" style="padding:12px;margin-bottom:12px;border-left-color:var(--warning);background:var(--bg-secondary);">';
     html +=
       '<p style="font-size:11px;">💡 你目前没有固定工作。选择一条职业路线投递简历，从基层做起。</p>';
     html += "</div>";
@@ -1405,7 +1406,7 @@ function renderCareerJobs(state, parent) {
     if (streetTotalDays > 0) {
       var skills = state.skills || {};
       html +=
-        '<div class="card" style="padding:10px;margin-bottom:10px;background:rgba(255,152,0,0.06);border:1px solid rgba(255,152,0,0.18);">';
+        '<div class="card" style="padding:10px;margin-bottom:10px;border-left-color:rgba(255,152,0,0.5);background:rgba(255,152,0,0.04);">';
       html +=
         '<div style="font-size:12px;font-weight:bold;margin-bottom:4px;">🌆 街边经历 → 职场准备</div>';
       html +=
@@ -1504,11 +1505,11 @@ function renderCareerJobs(state, parent) {
         var rMax = rp.path.levels[rp.path.levels.length - 1];
         var rMeet = checkCareerPromotion(state, rp.key, rEntry);
         html +=
-          '<div class="card" style="padding:8px;border:1px solid ' +
-          (rMeet ? "rgba(74,158,92,0.35)" : "var(--border)") +
+          '<div class="card" style="padding:8px;cursor:pointer;border-left:3px solid ' +
+          (rMeet ? "var(--success)" : "var(--text-muted)") +
           ";background:" +
-          (rMeet ? "rgba(74,158,92,0.06)" : "var(--bg-card)") +
-          ';cursor:pointer;" onclick="showCareerPathPreviewModal(\'' +
+          (rMeet ? "var(--bg-card)" : "var(--bg-card)") +
+          ';" onclick="showCareerPathPreviewModal(\'' +
           rp.key +
           "')\">";
         html +=
@@ -1559,7 +1560,7 @@ function renderCareerJobs(state, parent) {
         "条路径</span></span>" +
         '<span class="caret" style="font-size:10px;">▾</span></div>';
       html +=
-        '<div class="career-path-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:6px;">';
+        '<div class="career-path-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:8px;">';
 
       for (var pi = 0; pi < catPaths.length; pi++) {
         var pathKey = catPaths[pi];
@@ -1573,6 +1574,8 @@ function renderCareerJobs(state, parent) {
         html +=
           '<div class="card" style="padding:8px;cursor:pointer;opacity:' +
           (meetReqs ? "1" : "0.7") +
+          ";border-left-color:" +
+          (meetReqs ? "var(--success)" : "var(--text-muted)") +
           ';" onclick="showCareerPathPreviewModal(\'' +
           pathKey +
           "')\">";

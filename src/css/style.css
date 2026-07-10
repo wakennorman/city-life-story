@@ -615,6 +615,95 @@ body {
   box-shadow: none;
 }
 
+/* --- 通用卡片（职业路径/求职/副业等） --- */
+.card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--accent);
+  border-radius: var(--radius-md);
+  padding: 10px;
+  transition: all 0.15s ease;
+}
+.card:hover {
+  border-color: var(--accent);
+  border-left-color: var(--accent);
+}
+.card.disabled {
+  opacity: 0.6;
+  border-left-color: var(--text-muted);
+}
+
+/* --- 副业卡片网格 --- */
+.hustle-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 12px;
+  padding: 8px;
+}
+.hustle-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--accent);
+  border-radius: var(--radius-md);
+  padding: 14px;
+  transition: all 0.15s ease;
+  display: flex;
+  flex-direction: column;
+}
+.hustle-card:hover {
+  border-color: var(--accent);
+}
+.hustle-card.unavailable {
+  border-left-color: var(--text-muted);
+  opacity: 0.75;
+}
+.hustle-card .hustle-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+.hustle-card .hustle-icon {
+  font-size: 22px;
+}
+.hustle-card .hustle-name {
+  font-weight: 600;
+  font-size: 13px;
+}
+.hustle-card .hustle-desc {
+  font-size: 11px;
+  color: var(--text-secondary);
+  margin-bottom: 8px;
+  line-height: 1.4;
+}
+.hustle-card .hustle-meta {
+  font-size: 10px;
+  color: var(--text-muted);
+  margin-bottom: 8px;
+}
+.hustle-card .hustle-meta > div {
+  margin: 2px 0;
+}
+.hustle-card .hustle-reqs {
+  font-size: 10px;
+  color: var(--text-muted);
+  margin-bottom: 8px;
+}
+.hustle-card .hustle-btn {
+  margin-top: auto;
+  width: 100%;
+}
+@media (max-width: 480px) {
+  .hustle-grid {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+  .career-path-grid {
+    grid-template-columns: 1fr !important;
+    gap: 6px !important;
+  }
+}
+
 .action-card .card-icon {
   font-size: 22px;
   margin-bottom: 4px;

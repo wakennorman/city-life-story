@@ -6636,185 +6636,173 @@ function renderMergedPersonalGrowthTab(state, parent) {
   parent.appendChild(content);
 }
 
-/** v3.0 属性训练子面板（随机性+价格递增+难度大）*/
+/** v3.85 属性训练统一数据源（单一定义，render/logic 共享）*/
+var TRAIN_DATA = {
+  train_physique: {
+    id:"train_physique", name:"🏋️ 健身房训练", stat:"physique", statLabel:"体质",
+    basePrice:30, priceStep:15, gain:[2,4], apCost:6, location:"gym",
+    desc:"力量训练+有氧器械，提升身体素质和抗打击能力",
+    tip:"💡 体质影响搬运/工地等体力工作的效率和收入"
+  },
+  train_intelligence: {
+    id:"train_intelligence", name:"📚 自习充电", stat:"intelligence", statLabel:"智力",
+    basePrice:20, priceStep:12, gain:[1,3], apCost:6, location:"school",
+    desc:"图书馆/自习室系统学习，提升思维和分析能力",
+    tip:"💡 智力影响脑力工作表现、副业收入和事件成功率"
+  },
+  train_agility: {
+    id:"train_agility", name:"🏃 晨跑锻炼", stat:"agility", statLabel:"敏捷",
+    basePrice:0, priceStep:0, gain:[1,2], apCost:3, location:"park",
+    desc:"公园晨跑+拉伸，提升反应速度和身体协调性",
+    tip:"💡 敏捷影响快递/配送等灵活工作的效率"
+  },
+  train_mental: {
+    id:"train_mental", name:"🧘 冥想静心", stat:"mental", statLabel:"心智",
+    basePrice:0, priceStep:0, gain:[1,2], apCost:2, location:null,
+    desc:"深呼吸+正念冥想，提升精神力和情绪稳定性",
+    tip:"💡 心智影响情绪稳定、道德判断和高压下决策质量"
+  },
+  train_charm_grooming: {
+    id:"train_charm_grooming", name:"💇 形象打理", stat:"charm", statLabel:"魅力",
+    basePrice:50, priceStep:30, gain:[1,3], apCost:3, location:"commercial",
+    desc:"理发+护肤+穿搭建议，提升外在形象和气质",
+    tip:"💡 魅力影响社交效果、副业收入和人际关系"
+  },
+  train_charm_surgery: {
+    id:"train_charm_surgery", name:"💉 整容手术", stat:"charm", statLabel:"魅力",
+    basePrice:2000, priceStep:1500, gain:[5,15], apCost:8, location:"hospital",
+    risky:true,
+    desc:"高风险高回报，20%失败率（魅力-5/健康-15）",
+    tip:"⚠️ 仅建议魅力需求高的玩家尝试"
+  },
+};
+
+// 地点标签映射
+var _TRAIN_LOC_LABELS = {
+  gym:"🏋️ 健身房", school:"📚 学校/图书馆", park:"🌳 公园",
+  commercial:"🏬 商业区", hospital:"🏥 医院"
+};
+
+/** v3.85 属性训练子面板（数据来自 TRAIN_DATA 常量）*/
 function renderPgStatTrain(state, content) {
   var p = state.player;
   var flags = state.flags || (state.flags = {});
-
-  // 整容入口（医院/美容院）
-  var trainings = [
-    {
-      id: "train_physique",
-      name: "🏋️ 健身房",
-      stat: "physique",
-      statLabel: "体质",
-      basePrice: 50,
-      priceStep: 30,
-      gain: [1, 3],
-    },
-    {
-      id: "train_intelligence",
-      name: "📚 自习室",
-      stat: "intelligence",
-      statLabel: "智力",
-      basePrice: 60,
-      priceStep: 40,
-      gain: [1, 3],
-    },
-    {
-      id: "train_agility",
-      name: "🏃 跑步训练",
-      stat: "agility",
-      statLabel: "敏捷",
-      basePrice: 40,
-      priceStep: 25,
-      gain: [1, 3],
-    },
-    {
-      id: "train_ability",
-      name: "🧘 冥想训练",
-      stat: "mental",
-      statLabel: "能力",
-      basePrice: 70,
-      priceStep: 50,
-      gain: [1, 2],
-    },
-    {
-      id: "train_charm_grooming",
-      name: "💇 发型设计",
-      stat: "charm",
-      statLabel: "魅力",
-      basePrice: 100,
-      priceStep: 80,
-      gain: [1, 3],
-    },
-    {
-      id: "train_charm_surgery",
-      name: "💉 整容手术",
-      stat: "charm",
-      statLabel: "魅力",
-      basePrice: 2000,
-      priceStep: 1500,
-      gain: [5, 15],
-      risky: true,
-    },
-  ];
+  var trainKeys = Object.keys(TRAIN_DATA);
 
   var html =
-    '<h3 style="margin:0 0 12px;color:var(--text-primary);">🏋️ 属性训练</h3>';
-  html +=
-    '<p style="font-size:11px;color:var(--text-secondary);margin-bottom:12px;">每次训练随机提升 1-3 点（整容 5-15 点）。价格随次数递增，难度大。整容手术有失败风险。</p>';
-  html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">';
+    '<div style="margin-bottom:10px;">' +
+    '<h3 style="margin:0 0 4px;color:var(--text-primary);font-size:15px;">🏋️ 属性训练</h3>' +
+    '<p style="font-size:11px;color:var(--text-secondary);margin-bottom:6px;line-height:1.5;">属性是角色的根基，比状态更难提升，但每一点都永久有效。每次训练随机提升属性值，价格随训练次数递增。</p>' +
+    '<p style="font-size:10px;color:var(--text-muted);margin-bottom:0;">💡 属性 ≥70 开始收益递减（80→60%、90→40%）。冥想免费且随处可做，晨跑只需去公园。</p>' +
+    "</div>";
 
-  trainings.forEach(function (t) {
+  html += '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:10px;">';
+
+  for (var ti = 0; ti < trainKeys.length; ti++) {
+    var t = TRAIN_DATA[trainKeys[ti]];
     var count = flags["_trainCount_" + t.id] || 0;
     var price = t.basePrice + count * t.priceStep;
     var curVal = p[t.stat] || 0;
-    var canAfford = (state.resources.cash || 0) >= price;
+    var canAfford = t.basePrice === 0 || (state.resources.cash || 0) >= price;
+    var locLabel = t.location ? (_TRAIN_LOC_LABELS[t.location] || "📍 任意地点") : "📍 任意地点";
+    var dimMult = curVal >= 90 ? "0.4x" : curVal >= 80 ? "0.6x" : curVal >= 70 ? "0.8x" : "";
+
     html +=
-      '<div style="padding:10px;background:var(--bg-card);border:1px solid var(--border);border-radius:8px;">';
-    html += '<div style="font-weight:600;font-size:13px;">' + t.name + "</div>";
-    html +=
-      '<div style="font-size:11px;color:var(--text-muted);margin-top:2px;">当前' +
-      t.statLabel +
-      "：" +
-      curVal +
-      "</div>";
-    html +=
-      '<div style="font-size:11px;color:var(--text-muted);margin-top:2px;">已训练 ' +
-      count +
-      " 次</div>";
-    html +=
-      '<div style="font-size:12px;color:' +
-      (canAfford ? "var(--success)" : "var(--danger)") +
-      ';margin-top:4px;">价格：¥' +
-      price.toLocaleString() +
-      "</div>";
-    if (t.risky) {
-      html +=
-        '<div style="font-size:10px;color:var(--warning);margin-top:2px;">⚠ 手术有 20% 失败率（魅力-5/健康-15）</div>';
-    }
-    html +=
-      "<button onclick=\"window.__doTrain('" +
-      t.id +
-      "')\" " +
+      '<div style="padding:12px;background:var(--bg-card);border:2px solid var(--border);border-left:4px solid var(--accent);border-radius:10px;transition:all 0.2s;position:relative;">' +
+      '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">' +
+      '<span style="font-weight:700;font-size:14px;">' + t.name + "</span>" +
+      (t.risky ? '<span style="font-size:9px;padding:2px 6px;background:rgba(196,85,61,0.12);color:var(--danger);border-radius:10px;font-weight:bold;">⚠️ 有风险</span>' : "") +
+      "</div>" +
+      '<div style="font-size:11px;color:var(--text-secondary);margin-bottom:6px;line-height:1.5;">' + t.desc + "</div>" +
+      '<div style="display:flex;align-items:center;gap:8px;font-size:11px;color:var(--text-muted);margin-bottom:4px;">' +
+      '<span>' + locLabel + "</span>" +
+      '<span style="color:var(--text-muted);">·</span>' +
+      '<span>当前' + t.statLabel + '：<strong style="color:var(--text-primary);">' + curVal + '</strong>/100</span>' +
+      "</div>" +
+      '<div style="display:flex;align-items:center;gap:6px;font-size:11px;margin-bottom:4px;flex-wrap:wrap;">' +
+      (t.basePrice > 0
+        ? '<span style="color:' + (canAfford ? "var(--success)" : "var(--danger)") + ';font-weight:bold;">¥' + price + "</span>"
+        : '<span style="color:var(--success);font-weight:bold;">🆓 免费</span>') +
+      '<span style="color:var(--text-muted);">·</span>' +
+      '<span>⏱ AP ' + t.apCost + "</span>" +
+      '<span style="color:var(--text-muted);">·</span>' +
+      '<span style="color:var(--accent);">+' + t.gain[0] + "~" + t.gain[1] + t.statLabel + "</span>" +
+      (dimMult ? '<span style="color:var(--warning);font-size:10px;">(' + dimMult + ')</span>' : "") +
+      "</div>" +
+      '<div style="font-size:10px;color:var(--text-muted);margin-bottom:4px;">已训练 ' + count + " 次" +
+      (count > 0 ? "（下次价格 ¥" + (price + t.priceStep) + "）" : "") +
+      "</div>" +
+      '<div style="font-size:10px;color:var(--info);line-height:1.4;margin-bottom:6px;">' + t.tip + "</div>" +
+      "<button onclick=\"window.__doTrain('" + t.id + "')\" " +
       (canAfford ? "" : "disabled") +
-      ' style="' +
-      "margin-top:6px;padding:6px 10px;background:" +
-      (canAfford ? "var(--accent)" : "var(--bg-secondary)") +
-      ";" +
-      "color:" +
-      (canAfford ? "white" : "var(--text-muted)") +
-      ";border:none;border-radius:4px;cursor:" +
-      (canAfford ? "pointer" : "not-allowed") +
-      ';font-size:12px;">' +
-      (canAfford ? "训练" : "现金不足") +
-      "</button>";
-    html += "</div>";
-  });
+      ' style="width:100%;padding:8px 12px;background:' + (canAfford ? "var(--accent)" : "var(--bg-secondary)") +
+      ";color:#fff;" +
+      ";border:1px solid " + (canAfford ? "var(--accent)" : "var(--border)") +
+      ";border-radius:6px;cursor:" + (canAfford ? "pointer" : "not-allowed") +
+      ";font-size:13px;font-weight:600;transition:all 0.15s;\">" +
+      (canAfford ? "⚡ 开始训练" : "💸 现金不足") +
+      "</button></div>";
+  }
+
   html += "</div>";
 
-  // 整容说明
+  // 属性成长说明
   html +=
-    '<div style="margin-top:14px;padding:10px;background:rgba(196,85,61,0.06);border:1px solid rgba(196,85,61,0.2);border-radius:6px;font-size:11px;color:#c4553d;">';
-  html +=
-    "💉 <strong>整容说明</strong>：每次手术 20% 失败率，失败时魅力-5、健康-15、心情-10。发型设计是临时魅力维护，整容成功才是长期改变。";
-  html += "</div>";
+    '<div style="margin-top:14px;padding:12px;background:rgba(90,138,180,0.06);border:1px solid rgba(90,138,180,0.25);border-radius:8px;font-size:11px;color:var(--text-secondary);line-height:1.6;">' +
+    '<strong style="color:var(--text-primary);">📊 属性成长说明</strong><br>' +
+    "🏋️ 体质 → 体力工作 &nbsp;|&nbsp; " +
+    "📚 智力 → 脑力工作 &nbsp;|&nbsp; " +
+    "🏃 敏捷 → 灵活工作 &nbsp;|&nbsp; " +
+    "🧘 心智 → 决策质量 &nbsp;|&nbsp; " +
+    "💇 魅力 → 社交效果<br>" +
+    '<span style="color:var(--text-muted);font-size:10px;">💡 属性影响：工作绩效、副业收入、事件成功率、晋升条件。属性越高成长越慢，保持长期投入是关键。</span>' +
+    "</div>";
 
   content.innerHTML = html;
 }
 
-/** v3.0 训练地点映射：训练ID → 所需地点 */
-var _TRAIN_LOCATION_MAP = {
-  train_physique: { location: "gym", label: "健身房", icon: "🏋️" },
-  train_intelligence: { location: "school", label: "自习室", icon: "📚" },
-  train_agility: { location: "park", label: "公园", icon: "🏃" },
-  train_ability: { location: null, label: null, icon: "🧘" }, // 冥想随处可做
-  train_charm_grooming: { location: "commercial", label: "商业区", icon: "💇" },
-  train_charm_surgery: { location: "hospital", label: "医院", icon: "💉" },
-};
-
-/** v3.0 训练执行（暴露给 onclick）*/
+/** v3.85 训练执行（暴露给 onclick，数据源 TRAIN_DATA）*/
 window.__doTrain = function (trainId) {
   var state = StateManager.getState();
   var p = state.player;
   var flags = state.flags || (state.flags = {});
+  var t = TRAIN_DATA[trainId];
+  if (!t) return;
 
   // 地点检查：不在所需地点时弹出确认导航弹窗
-  var locReq = _TRAIN_LOCATION_MAP[trainId];
-  if (locReq && locReq.location) {
+  if (t.location) {
     var curLoc = state.location || state.currentLocation || "slum";
-    if (curLoc !== locReq.location) {
+    if (curLoc !== t.location) {
       var navFn = typeof navigateTo === "function" ? navigateTo : null;
+      var locLabel = _TRAIN_LOC_LABELS[t.location] || t.location;
+      // 从 TRAIN_DATA key 提取 emoji
+      var icon = trainId.substring(0, 2);
       showModal({
-        title: locReq.icon + " 需要前往" + locReq.label,
+        title: icon + " 需要前往" + locLabel.replace(/[^\u4e00-\u9fa5]/g, ""),
         body:
-          '<div style="padding:8px 0;font-size:13px;">' +
-          "<p>你当前不在<strong>" +
-          locReq.label +
-          "</strong>，无法在此进行训练。</p>" +
-          '<p style="margin-top:8px;color:var(--text-muted);font-size:12px;">前往 ' +
-          locReq.icon +
-          " " +
-          locReq.label +
-          " 需要消耗行动力。</p></div>",
+          '<div style="padding:8px 0;font-size:13px;line-height:1.7;">' +
+          "<p>你当前不在 <strong>" + locLabel + "</strong>，无法在此进行训练。</p>" +
+          '<p style="margin-top:6px;">前往 ' + locLabel +
+          " 需要消耗行动力和交通费。</p>" +
+          '<p style="margin-top:6px;color:var(--text-muted);font-size:12px;">💡 ' +
+          t.statLabel + " 当前值：" + (p[t.stat] || 0) +
+          "，训练可提升属性点。</p></div>",
         buttons: [
           {
-            label: "🚶 前往" + locReq.label + "并训练",
-            primary: true,
-            onClick: function () {
+            text: "🚶 前往" + locLabel + "并训练",
+            cls: "btn btn-primary",
+            callback: function () {
               if (navFn) {
-                navFn({ type: "location", locationId: locReq.location });
-                // 导航完成后延迟执行训练（等渲染刷新）
+                navFn(state, { type: "location", key: t.location });
                 setTimeout(function () {
                   window.__doTrainCore(trainId);
-                }, 300);
+                }, 400);
               } else {
                 window.__doTrainCore(trainId);
               }
             },
           },
-          { label: "取消", primary: false, onClick: function () {} },
+          { text: "取消", cls: "btn btn-secondary", callback: function () {} },
         ],
       });
       return;
@@ -6823,103 +6811,49 @@ window.__doTrain = function (trainId) {
   window.__doTrainCore(trainId);
 };
 
-/** 训练核心逻辑（地点已验证）*/
+/** v3.85 训练核心逻辑（地点已验证，数据源 TRAIN_DATA）*/
 window.__doTrainCore = function (trainId) {
   var state = StateManager.getState();
   var p = state.player;
   var flags = state.flags || (state.flags = {});
-  var trainings = {
-    train_physique: {
-      stat: "physique",
-      statLabel: "体质",
-      basePrice: 50,
-      priceStep: 30,
-      gain: [1, 3],
-      apCost: 6,
-    },
-    train_intelligence: {
-      stat: "intelligence",
-      statLabel: "智力",
-      basePrice: 60,
-      priceStep: 40,
-      gain: [1, 3],
-      apCost: 6,
-    },
-    train_agility: {
-      stat: "agility",
-      statLabel: "敏捷",
-      basePrice: 40,
-      priceStep: 25,
-      gain: [1, 3],
-      apCost: 5,
-    },
-    train_ability: {
-      stat: "mental",
-      statLabel: "能力",
-      basePrice: 70,
-      priceStep: 50,
-      gain: [1, 2],
-      apCost: 5,
-    },
-    train_charm_grooming: {
-      stat: "charm",
-      statLabel: "魅力",
-      basePrice: 100,
-      priceStep: 80,
-      gain: [1, 3],
-      apCost: 4,
-    },
-    train_charm_surgery: {
-      stat: "charm",
-      statLabel: "魅力",
-      basePrice: 2000,
-      priceStep: 1500,
-      gain: [5, 15],
-      apCost: 8,
-      risky: true,
-    },
-  };
-  var t = trainings[trainId];
+  var t = TRAIN_DATA[trainId];
   if (!t) return;
-  var count = flags["_trainCount_" + trainId] || 0;
+
+  // AP 检查
+  var ap = state.resources.actionPoints || 0;
+  if (ap < t.apCost) {
+    StateManager.addMessage("⏱ 行动力不足，需要 " + t.apCost + " AP", "warning");
+    return;
+  }
+
+  var count = flags["_trainCount_" + t.id] || 0;
   var price = t.basePrice + count * t.priceStep;
-  if ((state.resources.cash || 0) < price) {
+  if (t.basePrice > 0 && (state.resources.cash || 0) < price) {
     StateManager.addMessage("💸 现金不足，需要¥" + price, "warning");
     return;
   }
-  state.resources.cash -= price;
-  flags["_trainCount_" + trainId] = count + 1;
+  if (t.basePrice > 0) state.resources.cash -= price;
+  flags["_trainCount_" + t.id] = count + 1;
+
+  // 属性训练——基于当前值递减收益（参考《完美人生》难提升设计）
+  var curVal = p[t.stat] || 0;
+  var diminishingMult = curVal >= 90 ? 0.4 : curVal >= 80 ? 0.6 : curVal >= 70 ? 0.8 : 1.0;
 
   // 风险检查（整容）
   if (t.risky && Math.random() < 0.2) {
     p[t.stat] = Math.max(0, (p[t.stat] || 0) - 5);
     state.status.health = Math.max(20, (state.status.health || 100) - 15);
     state.needs.happiness = Math.max(0, (state.needs.happiness || 0) - 10);
-    StateManager.addMessage(
-      "💉 整容失败！魅力-5，健康-15，心情-10。医生技术不行...",
-      "error",
-    );
+    StateManager.addMessage("💉 整容失败！魅力-5，健康-15，心情-10。医生技术不行...", "error");
   } else {
-    // 随机提升（参考 Stardew 日 luck，加 10% 大爆击 4 点）
-    var baseGain =
-      t.gain[0] + Math.floor(Math.random() * (t.gain[1] - t.gain[0] + 1));
+    var baseGain = t.gain[0] + Math.floor(Math.random() * (t.gain[1] - t.gain[0] + 1));
     var crit = Math.random() < 0.1 ? 2 : 0;
+    baseGain = Math.max(1, Math.round(baseGain * diminishingMult));
     var totalGain = baseGain + crit;
     p[t.stat] = Math.min(100, (p[t.stat] || 0) + totalGain);
-    var msg =
-      "✨ " +
-      ({
-        physique: "🏋️ 健身房",
-        intelligence: "📚 自习室",
-        agility: "🏃 跑步训练",
-        mental: "🧘 冥想训练",
-        charm: "💇 发型设计/整容",
-      }[t.stat] || "训练") +
-      " " +
-      t.statLabel +
-      "+" +
-      totalGain;
+    var msg = "✨ " + (t.name || "训练") + " " + t.statLabel + "+" + totalGain;
     if (crit > 0) msg += "（爆击！）";
+    if (diminishingMult < 1.0) msg += "（高属性收益递减）";
     StateManager.addMessage(msg, "success");
   }
   if (typeof consumeAP === "function") consumeAP(t.apCost);

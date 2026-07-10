@@ -57,7 +57,7 @@ function renderSideHustleTab(state, parent) {
 
   // 副业列表
   const list = document.createElement("div");
-  list.style.cssText = "padding:8px;display:flex;flex-wrap:wrap;gap:12px;";
+  list.className = "hustle-grid";
 
   for (let hustleId in hustleList) {
     const hustle = hustleList[hustleId];
@@ -67,46 +67,55 @@ function renderSideHustleTab(state, parent) {
         : { ok: false, reason: "系统未加载" };
 
     const card = document.createElement("div");
-    card.style.cssText =
-      "flex:1;min-width:200px;max-width:280px;padding:12px;background:var(--bg-secondary);border-radius:8px;border:1px solid var(--border);";
+    card.className = "hustle-card" + (check.ok ? "" : " unavailable");
 
     // 检查是否可用
-    const available = check.ok;
-    const cardColor = available ? "var(--primary)" : "var(--text-muted)";
+    const availableColor = check.ok ? "var(--accent)" : "var(--text-muted)";
 
-    card.innerHTML = `
-      <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
-        <span style="font-size:20px;">${hustle.icon}</span>
-        <span style="font-weight:bold;color:${cardColor};">${hustle.name}</span>
-      </div>
-      <p style="font-size:12px;color:var(--text-muted);margin-bottom:8px;">${hustle.desc}</p>
-      <div style="font-size:11px;color:var(--text-muted);margin-bottom:8px;">
-        <div>💰 基础收入：¥${hustle.baseIncome}</div>
-        <div>💪 疲劳消耗：${hustle.fatigueCost}</div>
-        <div>⏰ 可接时间：${hustle.timeSlot.map((s) => (s === "morning" ? "上午" : s === "afternoon" ? "下午" : s === "evening" ? "晚上" : "深夜")).join("、")}</div>
-      </div>
+    const headerDiv = document.createElement("div");
+    headerDiv.className = "hustle-header";
+    headerDiv.innerHTML = `
+      <span class="hustle-icon">${hustle.icon}</span>
+      <span class="hustle-name" style="color:${availableColor};">${hustle.name}</span>
     `;
+    card.appendChild(headerDiv);
+
+    const descDiv = document.createElement("div");
+    descDiv.className = "hustle-desc";
+    descDiv.textContent = hustle.desc;
+    card.appendChild(descDiv);
+
+    const metaDiv = document.createElement("div");
+    metaDiv.className = "hustle-meta";
+    metaDiv.innerHTML = `
+      <div>💰 基础收入：¥${hustle.baseIncome}</div>
+      <div>💪 疲劳消耗：${hustle.fatigueCost}</div>
+      <div>⏰ ${hustle.timeSlot.map((s) => (s === "morning" ? "上午" : s === "afternoon" ? "下午" : s === "evening" ? "晚上" : "深夜")).join("、")}</div>
+    `;
+    card.appendChild(metaDiv);
 
     // 属性要求
     if (hustle.minAttr) {
+      const reqDiv = document.createElement("div");
+      reqDiv.className = "hustle-reqs";
       const reqText = Object.entries(hustle.minAttr)
         .map(([attr, val]) => {
           const current = state.player[attr] || 0;
           const met = current >= val;
           return `${met ? "✅" : "❌"} ${attr === "agility" ? "敏捷" : attr === "intelligence" ? "智力" : attr === "charm" ? "颜值" : attr} ${current}/${val}`;
         })
-        .join(", ");
-      card.innerHTML += `<div style="font-size:10px;color:var(--text-muted);margin-bottom:8px;">${reqText}</div>`;
+        .join(" · ");
+      reqDiv.textContent = reqText;
+      card.appendChild(reqDiv);
     }
 
     // 按钮
     const btn = document.createElement("button");
-    btn.className = "btn btn-sm";
-    btn.style.cssText = "width:100%;margin-top:8px;";
-    btn.textContent = available ? "开始副业" : "不可进行";
-    btn.disabled = !available;
+    btn.className = "btn btn-sm hustle-btn";
+    btn.textContent = check.ok ? "开始副业" : "不可进行";
+    btn.disabled = !check.ok;
 
-    if (available) {
+    if (check.ok) {
       btn.onclick = function () {
         performHustleAction(hustleId, state);
       };

@@ -29,6 +29,7 @@ function showModal({ title, body, buttons = [] }) {
 
   const bodyDiv = document.createElement("div");
   bodyDiv.className = "modal-body";
+  bodyDiv.style.cssText = "margin:12px 0;font-size:13px;line-height:1.7;color:var(--text-primary);";
   bodyDiv.innerHTML = body; // body 是纯 HTML 字符串，安全
   box.appendChild(bodyDiv);
 
@@ -38,6 +39,12 @@ function showModal({ title, body, buttons = [] }) {
     const btnEl = document.createElement("button");
     btnEl.className = "btn " + (btn.cls || "btn-primary");
     btnEl.textContent = btn.text;
+    // 确保按钮文字始终可见（防止 CSS 覆盖）
+    if (btn.cls && btn.cls.includes("btn-primary")) {
+      btnEl.style.color = "#fff";
+    } else if (btn.cls && btn.cls.includes("btn-secondary")) {
+      btnEl.style.color = "var(--text-primary)";
+    }
     if (btn._disabled) {
       btnEl.disabled = true;
       btnEl.setAttribute("aria-disabled", "true");
