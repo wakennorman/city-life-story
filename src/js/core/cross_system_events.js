@@ -43653,6 +43653,141 @@
     ],
   });
 
+  // ==== 财富里程碑叙事（P2空白区填充）====
+
+  // 财富50万里程碑
+  RANDOM_EVENTS.push({
+    id: "wealth_500k_milestone",
+    phase: "street",
+    icon: "💎",
+    title: "五十万里程碑",
+    story:
+      "你算了一笔账——银行卡里的、手头的现金、零零散散的投资，加起来竟然有五十万了。\n\n你盯着手机上的数字看了很久。三年前你刚来这座城市时兜里只有几百块，现在居然攒下了半百万。你想起城中村那个漏雨的隔间，想起在工地搬砖时磨出血的手掌。\n\n窗外的城市依旧车水马龙，但你知道，有些东西已经不一样了。",
+    conditions: function (st) {
+      if (st.player.day < 60) return false;
+      if (st.flags && st.flags._wealth500kSeen) return false;
+      var cash = st.resources && st.resources.cash;
+      if (typeof cash !== "number") cash = 0;
+      var bank = st.resources && st.resources.bankBalance;
+      if (typeof bank !== "number") bank = 0;
+      var total = cash + bank;
+      if (total < 500000) return false;
+      return true;
+    },
+    probability: 0.06,
+    repeatable: false,
+    choices: [
+      {
+        text: "🏦 存起来吃利息",
+        hint: "银行利息效率提升",
+        apply: function (st) {
+          st.flags._wealth500kSeen = true;
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 10);
+          StateManager.addMessage(
+            "💎 你把大部分钱存了定期。银行卡里的数字看起来很踏实。心情+10。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "📈 拿出来投资",
+        hint: "投资机会解锁",
+        apply: function (st) {
+          st.flags._wealth500kSeen = true;
+          st.flags._wealth500kInvestor = true;
+          st.needs.intelligence = Math.min(
+            100,
+            (st.needs.intelligence || 50) + 5,
+          );
+          StateManager.addMessage(
+            "📈 你开始认真研究理财和投资。五十万的本金，够做一些以前不敢想的事了。心智+5。",
+            "info",
+          );
+        },
+      },
+      {
+        text: "🏠 考虑付个首付",
+        hint: "购房思路解锁",
+        apply: function (st) {
+          st.flags._wealth500kSeen = true;
+          st.flags._wealth500kHomeBuyer = true;
+          StateManager.addMessage(
+            "🏠 你算了算首付——在这个城市够偏远一点的两居室了。你第一次觉得'在这座城市安家'不是梦。",
+            "info",
+          );
+        },
+      },
+    ],
+  });
+
+  // 财富100万里程碑
+  RANDOM_EVENTS.push({
+    id: "wealth_1m_milestone",
+    phase: "street",
+    icon: "👑",
+    title: "百万俱乐部",
+    story:
+      "你的个人资产突破了七位数。\n\n你坐在咖啡厅里，看着手机银行APP上的数字——1,000,000+。没有中彩票，没有继承遗产，纯粹是一块一块、一单一单攒出来的。\n\n服务员问你要不要续杯，你愣了一下。以前你从不敢在咖啡厅续杯。你说「好」。这一刻，你觉得自己真正在这座城市立住了脚跟。",
+    conditions: function (st) {
+      if (st.player.day < 120) return false;
+      if (st.flags && st.flags._wealth1mSeen) return false;
+      var cash = st.resources && st.resources.cash;
+      if (typeof cash !== "number") cash = 0;
+      var bank = st.resources && st.resources.bankBalance;
+      if (typeof bank !== "number") bank = 0;
+      var total = cash + bank;
+      if (total < 1000000) return false;
+      return true;
+    },
+    probability: 0.06,
+    repeatable: false,
+    choices: [
+      {
+        text: "💰 规划长远财务",
+        hint: "智力+5，理财效率提升",
+        apply: function (st) {
+          st.flags._wealth1mSeen = true;
+          st.flags._wealth1mFinanciallyPlanned = true;
+          st.player.intelligence = Math.min(
+            100,
+            (st.player.intelligence || 0) + 5,
+          );
+          StateManager.addMessage(
+            "💰 你找了一个理财顾问做规划。百万俱乐部门槛跨过了，下一步是让钱生钱。智力+5。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "🎯 继续拼一拼",
+        hint: "动力+5，设定更高目标",
+        apply: function (st) {
+          st.flags._wealth1mSeen = true;
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 15);
+          StateManager.addMessage(
+            "🎯 你给自己倒了杯水，对着窗外的城市说：'下一个目标，一千万。' 动力满满，心情+15。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "✈️ 奖励自己一趟旅行",
+        hint: "心情+20，花掉¥20,000",
+        cost: 20000,
+        apply: function (st) {
+          st.flags._wealth1mSeen = true;
+          st.resources.cash = Math.max(0, (st.resources.cash || 0) - 20000);
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 20);
+          st.needs.health = Math.min(100, (st.needs.health || 50) + 5);
+          StateManager.addMessage(
+            "✈️ 你请了一周假，去云南转了转。第一次不为省钱而旅行。回来时整个人都舒展了。心情+20，健康+5。",
+            "success",
+          );
+        },
+      },
+    ],
+  });
+
   // ====================================================================
   // v3.77 新增事件注册完毕
   // ====================================================================

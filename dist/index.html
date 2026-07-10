@@ -34997,6 +34997,7 @@ if (typeof window !== "undefined") {
     title: "失主找来了",
     story:
       "你刚出门，一个气喘吁吁的年轻人追上来：\n「是你前几天在派出所帮忙登记的那位吗？我终于找到你了！那个钱包是我的，里面有我妈妈的住院押金，谢谢你……」\n他眼眶有些红。",
+    // [B类修复] probability: 0.6→0.15 — 稀有回报事件不应高频触发
     conditions: function (st) {
       return (
         st.flags &&
@@ -35005,7 +35006,7 @@ if (typeof window !== "undefined") {
         st.player.day >= (st.flags._walletReturnDay || 0) + 3
       );
     },
-    probability: 0.6,
+    probability: 0.15, // [B类修复] moral_wallet_return_reward
     repeatable: false,
     choices: [
       {
@@ -35656,7 +35657,7 @@ if (typeof window !== "undefined") {
         st.player.day >= 730
       );
     },
-    probability: 0.5,
+    probability: 0.12, // [B类修复] era_startup_mentor_chance: 0.5→0.12
     repeatable: false,
     choices: [
       {
@@ -40414,7 +40415,7 @@ if (typeof window !== "undefined") {
       // 旧等级≤2 且 新等级≥3 → 显著跳跃
       return curTier >= 3 && prevTier <= 2;
     },
-    probability: 0.5, // 条件已精确，触发比例高
+    probability: 0.08, // [B类修复] housing_upgrade_milestone: 0.5→0.08，条件已精确不需高概率
     repeatable: false,
     choices: [
       {
@@ -72775,7 +72776,10 @@ if (typeof window !== "undefined") {
       var hasAnyRel = false;
       if (rel) {
         for (var r in rel) {
-          if (rel[r] && rel[r].met) { hasAnyRel = true; break; }
+          if (rel[r] && rel[r].met) {
+            hasAnyRel = true;
+            break;
+          }
         }
       }
       return hasAnyRel;
@@ -72847,7 +72851,8 @@ if (typeof window !== "undefined") {
       if (st.weather && st.weather.current !== "typhoon") return false;
       if (st.player.phase !== "street") return false;
       var loc = st.trade && st.trade.currentLocation;
-      if (!loc || !["market", "construction", "slum"].includes(loc)) return false;
+      if (!loc || !["market", "construction", "slum"].includes(loc))
+        return false;
       if (st.flags && st.flags._typhoonChoiceSeen) return false;
       return true;
     },
@@ -72867,7 +72872,9 @@ if (typeof window !== "undefined") {
           else if (loc === "market") lostIncome = Random.int(50, 100);
           else lostIncome = Random.int(30, 60);
           StateManager.addMessage(
-            "🏠 你决定安全第一，赶紧往家赶。虽然今天少赚了¥" + lostIncome + "，但台风天在外面太危险了。心情+5，健康+3。",
+            "🏠 你决定安全第一，赶紧往家赶。虽然今天少赚了¥" +
+              lostIncome +
+              "，但台风天在外面太危险了。心情+5，健康+3。",
             "info",
           );
         },
@@ -72884,7 +72891,9 @@ if (typeof window !== "undefined") {
             st.status.health = Math.max(0, (st.status.health || 70) - 10);
             st.needs.fatigue = Math.min(100, (st.needs.fatigue || 0) + 25);
             StateManager.addMessage(
-              "💪 你顶住了最后的风雨，多干了一票赚了¥" + earn + "。但浑身湿透，健康-10，疲劳+25。",
+              "💪 你顶住了最后的风雨，多干了一票赚了¥" +
+                earn +
+                "。但浑身湿透，健康-10，疲劳+25。",
               "success",
             );
           } else {
@@ -72976,13 +72985,21 @@ if (typeof window !== "undefined") {
           var reward = rewards[Random.int(0, 2)];
           if (reward.type === "cash") {
             st.resources.cash += reward.value;
-            st.resources.totalEarned = (st.resources.totalEarned || 0) + reward.value;
+            st.resources.totalEarned =
+              (st.resources.totalEarned || 0) + reward.value;
             StateManager.addMessage(
-              "🔑 「这是我的一点心意。」你收到了" + reward.msg + "，价值¥" + reward.value + "。",
+              "🔑 「这是我的一点心意。」你收到了" +
+                reward.msg +
+                "，价值¥" +
+                reward.value +
+                "。",
               "success",
             );
           } else if (reward.type === "info") {
-            st.player.intelligence = Math.min(100, (st.player.intelligence || 0) + 3);
+            st.player.intelligence = Math.min(
+              100,
+              (st.player.intelligence || 0) + 3,
+            );
             StateManager.addMessage(
               "🔑 对方告诉你一个行业内幕消息——某个批发市场下周会有大批低价货。智力+3，获得市场情报。",
               "success",
@@ -73071,7 +73088,9 @@ if (typeof window !== "undefined") {
             st.resources.totalEarned = (st.resources.totalEarned || 0) + earn;
             st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 5);
             StateManager.addMessage(
-              "📱 你举起手机录下了全过程，配文「街头冷漠」发了出去。视频火了，点赞破万，平台打赏¥" + earn + "。道德-5，名气+8。",
+              "📱 你举起手机录下了全过程，配文「街头冷漠」发了出去。视频火了，点赞破万，平台打赏¥" +
+                earn +
+                "。道德-5，名气+8。",
               "warning",
             );
           } else {
@@ -73082,7 +73101,9 @@ if (typeof window !== "undefined") {
             st.resources.totalEarned = (st.resources.totalEarned || 0) + earn;
             st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 3);
             StateManager.addMessage(
-              "📱 你最终还是举起了手机——「至少有人看到这件事，可能会帮忙。」视频获得了¥" + earn + "打赏。道德-3，名气+5。",
+              "📱 你最终还是举起了手机——「至少有人看到这件事，可能会帮忙。」视频获得了¥" +
+                earn +
+                "打赏。道德-3，名气+5。",
               "info",
             );
           }
@@ -73099,7 +73120,10 @@ if (typeof window !== "undefined") {
             StateManager.addMessage("🚶 你快步走开了。道德-2。", "warning");
           } else {
             st.player.morality = Math.max(0, mor - 1);
-            StateManager.addMessage("🚶 你犹豫了一下，最终没敢停下来。道德-1。", "info");
+            StateManager.addMessage(
+              "🚶 你犹豫了一下，最终没敢停下来。道德-1。",
+              "info",
+            );
           }
         },
       },
@@ -73146,16 +73170,25 @@ if (typeof window !== "undefined") {
               topSkills.push({ name: sk, level: skills[sk].level || 0 });
             }
           }
-          topSkills.sort(function (a, b) { return b.level - a.level; });
+          topSkills.sort(function (a, b) {
+            return b.level - a.level;
+          });
           var xpText = "";
           for (var i = 0; i < Math.min(3, topSkills.length); i++) {
-            skills[topSkills[i].name].xp = Math.min(1000, (skills[topSkills[i].name].xp || 0) + 20);
+            skills[topSkills[i].name].xp = Math.min(
+              1000,
+              (skills[topSkills[i].name].xp || 0) + 20,
+            );
             xpText += topSkills[i].name + "XP+20 ";
           }
           st.player.mental = Math.min(100, (st.player.mental || 0) + 5);
           st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 10);
           StateManager.addMessage(
-            "🤝 你接下了这个综合项目，发挥了自己的多面手优势。赚了¥" + income + "。" + xpText.trim() + "，心智+5，心情+10。",
+            "🤝 你接下了这个综合项目，发挥了自己的多面手优势。赚了¥" +
+              income +
+              "。" +
+              xpText.trim() +
+              "，心智+5，心情+10。",
             "success",
           );
         },
@@ -73184,6 +73217,141 @@ if (typeof window !== "undefined") {
           StateManager.addMessage(
             "🚫 你婉拒了。觉得还是专注自己的主业比较好。心情+3。",
             "info",
+          );
+        },
+      },
+    ],
+  });
+
+  // ==== 财富里程碑叙事（P2空白区填充）====
+
+  // 财富50万里程碑
+  RANDOM_EVENTS.push({
+    id: "wealth_500k_milestone",
+    phase: "street",
+    icon: "💎",
+    title: "五十万里程碑",
+    story:
+      "你算了一笔账——银行卡里的、手头的现金、零零散散的投资，加起来竟然有五十万了。\n\n你盯着手机上的数字看了很久。三年前你刚来这座城市时兜里只有几百块，现在居然攒下了半百万。你想起城中村那个漏雨的隔间，想起在工地搬砖时磨出血的手掌。\n\n窗外的城市依旧车水马龙，但你知道，有些东西已经不一样了。",
+    conditions: function (st) {
+      if (st.player.day < 60) return false;
+      if (st.flags && st.flags._wealth500kSeen) return false;
+      var cash = st.resources && st.resources.cash;
+      if (typeof cash !== "number") cash = 0;
+      var bank = st.resources && st.resources.bankBalance;
+      if (typeof bank !== "number") bank = 0;
+      var total = cash + bank;
+      if (total < 500000) return false;
+      return true;
+    },
+    probability: 0.06,
+    repeatable: false,
+    choices: [
+      {
+        text: "🏦 存起来吃利息",
+        hint: "银行利息效率提升",
+        apply: function (st) {
+          st.flags._wealth500kSeen = true;
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 10);
+          StateManager.addMessage(
+            "💎 你把大部分钱存了定期。银行卡里的数字看起来很踏实。心情+10。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "📈 拿出来投资",
+        hint: "投资机会解锁",
+        apply: function (st) {
+          st.flags._wealth500kSeen = true;
+          st.flags._wealth500kInvestor = true;
+          st.needs.intelligence = Math.min(
+            100,
+            (st.needs.intelligence || 50) + 5,
+          );
+          StateManager.addMessage(
+            "📈 你开始认真研究理财和投资。五十万的本金，够做一些以前不敢想的事了。心智+5。",
+            "info",
+          );
+        },
+      },
+      {
+        text: "🏠 考虑付个首付",
+        hint: "购房思路解锁",
+        apply: function (st) {
+          st.flags._wealth500kSeen = true;
+          st.flags._wealth500kHomeBuyer = true;
+          StateManager.addMessage(
+            "🏠 你算了算首付——在这个城市够偏远一点的两居室了。你第一次觉得'在这座城市安家'不是梦。",
+            "info",
+          );
+        },
+      },
+    ],
+  });
+
+  // 财富100万里程碑
+  RANDOM_EVENTS.push({
+    id: "wealth_1m_milestone",
+    phase: "street",
+    icon: "👑",
+    title: "百万俱乐部",
+    story:
+      "你的个人资产突破了七位数。\n\n你坐在咖啡厅里，看着手机银行APP上的数字——1,000,000+。没有中彩票，没有继承遗产，纯粹是一块一块、一单一单攒出来的。\n\n服务员问你要不要续杯，你愣了一下。以前你从不敢在咖啡厅续杯。你说「好」。这一刻，你觉得自己真正在这座城市立住了脚跟。",
+    conditions: function (st) {
+      if (st.player.day < 120) return false;
+      if (st.flags && st.flags._wealth1mSeen) return false;
+      var cash = st.resources && st.resources.cash;
+      if (typeof cash !== "number") cash = 0;
+      var bank = st.resources && st.resources.bankBalance;
+      if (typeof bank !== "number") bank = 0;
+      var total = cash + bank;
+      if (total < 1000000) return false;
+      return true;
+    },
+    probability: 0.06,
+    repeatable: false,
+    choices: [
+      {
+        text: "💰 规划长远财务",
+        hint: "智力+5，理财效率提升",
+        apply: function (st) {
+          st.flags._wealth1mSeen = true;
+          st.flags._wealth1mFinanciallyPlanned = true;
+          st.player.intelligence = Math.min(
+            100,
+            (st.player.intelligence || 0) + 5,
+          );
+          StateManager.addMessage(
+            "💰 你找了一个理财顾问做规划。百万俱乐部门槛跨过了，下一步是让钱生钱。智力+5。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "🎯 继续拼一拼",
+        hint: "动力+5，设定更高目标",
+        apply: function (st) {
+          st.flags._wealth1mSeen = true;
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 15);
+          StateManager.addMessage(
+            "🎯 你给自己倒了杯水，对着窗外的城市说：'下一个目标，一千万。' 动力满满，心情+15。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "✈️ 奖励自己一趟旅行",
+        hint: "心情+20，花掉¥20,000",
+        cost: 20000,
+        apply: function (st) {
+          st.flags._wealth1mSeen = true;
+          st.resources.cash = Math.max(0, (st.resources.cash || 0) - 20000);
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 20);
+          st.needs.health = Math.min(100, (st.needs.health || 50) + 5);
+          StateManager.addMessage(
+            "✈️ 你请了一周假，去云南转了转。第一次不为省钱而旅行。回来时整个人都舒展了。心情+20，健康+5。",
+            "success",
           );
         },
       },
