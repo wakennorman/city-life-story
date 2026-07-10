@@ -75124,6 +75124,320 @@ if (typeof window !== "undefined") {
     ],
   });
 
+  // ====================================================================
+  // v3.81 loop R40: 冬季叙事×2 + Corporate专属×2（填补最大空白区）
+  // ====================================================================
+
+  // R40-① 冬季寒潮生存 — 冬天的街头工作（winter季节×需求系统）
+  RANDOM_EVENTS.push({
+    id: "winter_cold_street_grind",
+    phase: "street",
+    icon: "❄️",
+    title: "冬天的苦活",
+    story:
+      "今天格外冷。手指冻得发麻，连拿工具都困难。路过的行人裹紧大衣匆匆而过，没人多看你一眼。\n\n你停下来对着手呵了口气。这座城市冬天不停歇，你也没有资格停歇。只是这一刻，你想起了老家灶台上的火，想起妈妈总说冬天不能饿着。\n\n你没有灶台。你有的，只有还剩下的行动力，和一整个冬天。",
+    conditions: function (st) {
+      if (st.flags._winterColdGrindSeen) return false;
+      if (!st.weather || st.weather.season !== "winter") return false;
+      if ((st.player.day || 0) < 10) return false;
+      return true;
+    },
+    probability: 0.06,
+    repeatable: false,
+    choices: [
+      {
+        text: "🔥 咬牙继续干，加一把劲",
+        hint: "当日收入+20%·疲劳+10·禀赋效应",
+        apply: function (st) {
+          st.flags._winterColdGrindSeen = true;
+          st.flags._winterWorkerBadge = true;
+          st.needs.energy = Math.max(0, (st.needs.energy || 50) - 10);
+          var bonus = Math.floor((st.player.cash || 0) * 0.0 + 50);
+          st.player.cash = (st.player.cash || 0) + bonus;
+          st.player.physique = Math.min(100, (st.player.physique || 0) + 2);
+          StateManager.addMessage(
+            "❄️ 你咬着牙把今天的活干完了。手指一整天都没暖过来，但账上多了¥" +
+              bonus +
+              "。体质+2，疲劳+10。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "🍵 去馆子喝碗热汤暖暖身",
+        hint: "花¥15·卫生+10·心情+10·恢复状态",
+        apply: function (st) {
+          st.flags._winterColdGrindSeen = true;
+          if ((st.player.cash || 0) >= 15) {
+            st.player.cash -= 15;
+            st.needs.hygiene = Math.min(100, (st.needs.hygiene || 50) + 10);
+            st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 10);
+            StateManager.addMessage(
+              "🍵 你花¥15喝了碗热汤面。从胃一路暖到心里去了。卫生+10，心情+10。",
+              "success",
+            );
+          } else {
+            StateManager.addMessage(
+              "🍵 摸了摸口袋——不够，只能继续熬着。",
+              "warning",
+            );
+          }
+        },
+      },
+      {
+        text: "🏠 今天少干一点，早点回家",
+        hint: "保存体力·疲劳-15·损失厌恶",
+        apply: function (st) {
+          st.flags._winterColdGrindSeen = true;
+          st.needs.energy = Math.min(100, (st.needs.energy || 50) + 15);
+          StateManager.addMessage(
+            "🏠 你早早收了摊，今天算了。有时候保存体力本身就是一种工作。疲劳-15。",
+            "info",
+          );
+        },
+      },
+    ],
+  });
+
+  // R40-② 年末倒计时 — 冬季×day≥330的年终反思
+  RANDOM_EVENTS.push({
+    id: "winter_year_end_reflection",
+    phase: "any",
+    icon: "🎆",
+    title: "又一年快过去了",
+    story:
+      "街上开始有人贴春联，超市里挂起了红灯笼。你算了一下——距离这一年结束，还有不到35天。\n\n你翻开自己的账本，对比年初的数字。有些东西变了，有些东西没变。城市在冬天里安静了一点，连街头巷尾的叫卖声都低了几分。\n\n你不知道明年会是什么样，但至少今年，你还在这里。",
+    conditions: function (st) {
+      if (st.flags._yearEndReflectionDone) return false;
+      if (!st.weather || st.weather.season !== "winter") return false;
+      var day = st.player.day || 0;
+      // 每年第330天后触发（330~365，365后重置年份）
+      var dayOfYear = ((day - 1) % 365) + 1;
+      if (dayOfYear < 330) return false;
+      return true;
+    },
+    probability: 0.15,
+    repeatable: true,
+    choices: [
+      {
+        text: "📊 仔细复盘这一年的得失",
+        hint: "智力+5·解锁年度总结感悟",
+        apply: function (st) {
+          st.flags._yearEndReflectionDone = true;
+          setTimeout(function () {
+            st.flags._yearEndReflectionDone = false;
+          }, 0);
+          st.player.intelligence = Math.min(
+            100,
+            (st.player.intelligence || 0) + 5,
+          );
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 8);
+          StateManager.addMessage(
+            "📊 你认真复盘了这一年。有遗憾，有收获，但整体在往前走。智力+5，心情+8。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "🍺 和朋友喝一杯，聊聊这一年",
+        hint: "消费¥30·心情+20·社交感",
+        apply: function (st) {
+          st.flags._yearEndReflectionDone = true;
+          setTimeout(function () {
+            st.flags._yearEndReflectionDone = false;
+          }, 0);
+          var cost = 30;
+          if ((st.player.cash || 0) >= cost) {
+            st.player.cash -= cost;
+            st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 20);
+            st.player.fame = Math.min(100, (st.player.fame || 0) + 2);
+            StateManager.addMessage(
+              "🍺 你们聊了很久，从今年说到小时候，喝了不少。花了¥30，但值了。心情+20，名声+2。",
+              "success",
+            );
+          } else {
+            StateManager.addMessage(
+              "🍺 口袋里钱不够请客，你一个人坐在路边发了会儿呆。",
+              "info",
+            );
+          }
+        },
+      },
+      {
+        text: "🌃 一个人走走，吹吹冬风",
+        hint: "清醒·心智+3·心情+5",
+        apply: function (st) {
+          st.flags._yearEndReflectionDone = true;
+          setTimeout(function () {
+            st.flags._yearEndReflectionDone = false;
+          }, 0);
+          st.player.mental = Math.min(100, (st.player.mental || 50) + 3);
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 5);
+          StateManager.addMessage(
+            "🌃 你一个人走了很久，冬风把思绪吹清醒了。心智+3，心情+5。",
+            "info",
+          );
+        },
+      },
+    ],
+  });
+
+  // R40-③ Corporate 年终述职困境 — corporate专属高张力事件
+  RANDOM_EVENTS.push({
+    id: "corporate_year_end_review",
+    phase: "corporate",
+    icon: "📋",
+    title: "年终述职",
+    story:
+      "今天是年终述职日。你坐在台下等着叫到你的名字，手心微微出汗。\n\n隔壁部门的王总监已经把PPT做了50页，据说去年绩效是S+。你只做了15页，里面有三项指标没完成——原因你知道，但解释起来很难听。\n\n主持人叫到你的名字。你深吸一口气，站起来。",
+    conditions: function (st) {
+      if (st.flags._corpYearReviewDone) return false;
+      if (!st.player || st.player.phase !== "corporate") return false;
+      if (!st.employment || !st.employment.currentJob) return false;
+      var day = st.player.day || 0;
+      var dayOfYear = ((day - 1) % 365) + 1;
+      if (dayOfYear < 300) return false;
+      return true;
+    },
+    probability: 0.25,
+    repeatable: true,
+    choices: [
+      {
+        text: "📊 如实汇报，诚信应对",
+        hint: "道德+8·概率晋升加分·上司好感+5",
+        apply: function (st) {
+          st.flags._corpYearReviewDone = true;
+          setTimeout(function () {
+            st.flags._corpYearReviewDone = false;
+          }, 0);
+          st.player.morality = Math.min(100, (st.player.morality || 50) + 8);
+          if (st.employment && st.employment.burnout !== undefined) {
+            st.employment.burnout = Math.max(
+              0,
+              (st.employment.burnout || 0) - 5,
+            );
+          }
+          if (st.flags) st.flags._reviewHonest = true;
+          StateManager.addMessage(
+            "📋 你如实汇报了，包括没完成的部分。上司点点头说：「诚实是最重要的品质。」道德+8，倦怠-5。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "💼 包装数据，只讲成功",
+        hint: "魅力+5·但道德-5·短期印象分+",
+        apply: function (st) {
+          st.flags._corpYearReviewDone = true;
+          setTimeout(function () {
+            st.flags._corpYearReviewDone = false;
+          }, 0);
+          st.player.charm = Math.min(100, (st.player.charm || 0) + 5);
+          st.player.morality = Math.max(0, (st.player.morality || 50) - 5);
+          StateManager.addMessage(
+            "💼 你把能说的都说了，不能说的跳过去。台下掌声比别人响。魅力+5，道德-5。",
+            "info",
+          );
+        },
+      },
+      {
+        text: "🎯 主动请缨明年更高指标",
+        hint: "勇气加分·心情-5（压力）·长期晋升概率+",
+        apply: function (st) {
+          st.flags._corpYearReviewDone = true;
+          setTimeout(function () {
+            st.flags._corpYearReviewDone = false;
+          }, 0);
+          st.flags._reviewAmbitious = true;
+          st.player.intelligence = Math.min(
+            100,
+            (st.player.intelligence || 0) + 3,
+          );
+          st.needs.happiness = Math.max(0, (st.needs.happiness || 50) - 5);
+          StateManager.addMessage(
+            "🎯 你当场提出明年目标再提30%。全场一静，然后上司眼睛亮了。智力+3，心情-5（压力增大）。",
+            "warning",
+          );
+        },
+      },
+    ],
+  });
+
+  // R40-④ Corporate 职场站队 — corporate×同事关系
+  RANDOM_EVENTS.push({
+    id: "corporate_office_politics",
+    phase: "corporate",
+    icon: "⚔️",
+    title: "站队时刻",
+    story:
+      "午饭时，市场部的陈经理把你叫到一边，压低声音说：「你知道技术部李总要被换掉的事吗？我这边正在整合资源，你跟着我走，好处少不了你的。」\n\n下午，技术部的老王也找到你：「陈那边的事你知道吧？别被他拉下水，他早晚出事。我这里稳得住，你安心跟着我。」\n\n两个人说的都头头是道，但你知道：只能站一边。",
+    conditions: function (st) {
+      if (st.flags._corpOfficePoliticsDone) return false;
+      if (!st.player || st.player.phase !== "corporate") return false;
+      if (!st.employment || !st.employment.currentJob) return false;
+      var tenure = st.employment.tenureDays || 0;
+      if (tenure < 30) return false;
+      return true;
+    },
+    probability: 0.04,
+    repeatable: false,
+    choices: [
+      {
+        text: "🤝 站陈经理那边",
+        hint: "魅力+5·道德-3·赌一把",
+        apply: function (st) {
+          st.flags._corpOfficePoliticsDone = true;
+          st.flags._sideWithChen = true;
+          st.player.charm = Math.min(100, (st.player.charm || 0) + 5);
+          st.player.morality = Math.max(0, (st.player.morality || 50) - 3);
+          StateManager.addMessage(
+            "⚔️ 你选择了陈经理。他满意地拍拍你的肩：「明智。」道德-3，魅力+5。后续影响待定。",
+            "info",
+          );
+        },
+      },
+      {
+        text: "🛡️ 站老王那边",
+        hint: "智力+5·道德+2·稳健选择",
+        apply: function (st) {
+          st.flags._corpOfficePoliticsDone = true;
+          st.flags._sideWithWang = true;
+          st.player.intelligence = Math.min(
+            100,
+            (st.player.intelligence || 0) + 5,
+          );
+          st.player.morality = Math.min(100, (st.player.morality || 50) + 2);
+          StateManager.addMessage(
+            "🛡️ 你选了老王。他点点头：「踏实。」智力+5，道德+2。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "😶 保持中立，两边都不得罪",
+        hint: "道德+5·但两边都对你冷淡",
+        apply: function (st) {
+          st.flags._corpOfficePoliticsDone = true;
+          st.flags._stayNeutral = true;
+          st.player.morality = Math.min(100, (st.player.morality || 50) + 5);
+          if (st.employment && st.employment.burnout !== undefined) {
+            st.employment.burnout = Math.min(
+              100,
+              (st.employment.burnout || 0) + 8,
+            );
+          }
+          StateManager.addMessage(
+            "😶 你两边都没站。两个人后来见到你，都只点头不说话。道德+5，倦怠+8（夹心饼的压力）。",
+            "warning",
+          );
+        },
+      },
+    ],
+  });
+
+  // ====================================================================
+  // v3.81 loop R40 注册完毕（4个：冬季寒潮/年末倒计时/年终述职/职场站队）
+  // ====================================================================
   // ====== 注册结束 ======
 })();
 </script>
