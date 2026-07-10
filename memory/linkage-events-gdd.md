@@ -2891,6 +2891,24 @@
 
 ## 387. ng_plus_heritage_gift — 说不清的好运（多周目遗产礼物·P2⑨）
 
-- **Purpose**: 上辈子积累道德声誉徽章在新周目第5天以神秘礼物形式回馈——情怀型彩蛋，让玩家感受"善有善报"的跨生命叙事。
+- **Purpose**: 上辈子积累道德声誉徽章在新周目第5天以神秘礼物形式回馈——情怀型彩蛋，让玩家感受"善有报"的跨生命叙事。
 - **Cross-system link**: 多周目继承系统（inheritanceBonuses.moralEventRate或npcInitialAffinity≥10）∩ 经济系统（¥200~¥800奖励）∩ 道德系统。
 - **Key guard**: `!st.flags._ngHeritageGiftDone && hadGoodBadges && day>=5`。
+
+## 388. habit_stomach_breakout — 老胃病又犯了（累积状态爆发）
+
+- **Purpose**: 填补 `_habits.stomach_inflammationCount` 被每日管线累积却无消费端的空白，让"长期饮食不规律"产生真实健康后果。
+- **Cross-system link**: 习惯追踪系统（flags._habits.stomach_inflammationCount≥3）∩ 健康系统（status.health）∩ 经济系统（就医现金支出）∩ 烹饪技能（食疗分支）。
+- **Key guard**: `day>=15 && flags._habits.stomach_inflammationCount>=3 && status.health<60 && !flags._habitStomachBreakoutSeen`。
+
+## 389. elec_mgmt_contract — 街道办的改造工程（电工+管理双技能协同）
+
+- **Purpose**: 扩展双技能协同矩阵——在 welding+sales、cooking+sales、accounting+sales 之外，新增 electrician+management 组合，连接技能系统到高客单工程承包。
+- **Cross-system link**: 技能系统（skills.electrician.level≥20 ∩ skills.management.level≥15）∩ 经济系统（现金）∩ 名声系统（fame）。
+- **Key guard**: `electrician.level>=20 && management.level>=15 && !flags._elecMgmtContractSeen`。
+
+## 390. weather_heatwave_market — 热浪里的生意（天气×地点×声望）
+
+- **Purpose**: 填补"天气×地点×声望"交叉空白，让高温天气与批发市场口碑共同决定可用事件，强化世界状态对街头收益的影响。
+- **Cross-system link**: 天气系统（weather.current==="heatwave"）∩ 声望系统（reputation.wholesaleMarket≥30，按地点key）∩ 经济/道德系统（倒卖获利 vs 邻里送水）。
+- **Key guard**: `weather.current==="heatwave" && reputation.wholesaleMarket>=30 && !flags._weatherHeatwaveMarketSeen`。

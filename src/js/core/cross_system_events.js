@@ -44526,11 +44526,7 @@
       if (st.flags && st.flags._fatigueBreakdownSeen) return false;
       // 连续3天高疲劳
       var habits = st.flags && st.flags._habits;
-      if (
-        !habits ||
-        (habits.highFatigueStreak || 0) < 3
-      )
-        return false;
+      if (!habits || (habits.highFatigueStreak || 0) < 3) return false;
       // 当前疲劳仍高
       if ((st.needs.fatigue || 0) < 80) return false;
       return true;
@@ -44629,10 +44625,7 @@
             apply: function (s) {
               s.flags._moralCityResonanceSeen = true;
               s.player.morality = Math.min(100, (s.player.morality || 50) + 5);
-              s.needs.happiness = Math.min(
-                100,
-                (s.needs.happiness || 50) + 15,
-              );
+              s.needs.happiness = Math.min(100, (s.needs.happiness || 50) + 15);
               // 小概率获得回报
               if (Random.chance(0.4)) {
                 var reward = Random.int(20, 80);
@@ -44661,10 +44654,7 @@
             apply: function (s) {
               s.flags._moralCityResonanceSeen = true;
               s.player.mental = Math.min(100, (s.player.mental || 0) + 3);
-              s.player.morality = Math.min(
-                100,
-                (s.player.morality || 50) + 2,
-              );
+              s.player.morality = Math.min(100, (s.player.morality || 50) + 2);
               StateManager.addMessage(
                 "📱 你蹲下来教小孩怎么够——先找根长棍子，再慢慢挑。小孩学会了，自己把气球弄了下来。心智+3，道德+2。",
                 "info",
@@ -44713,5 +44703,219 @@
   // ====================================================================
   // v3.81 loop R38 注册完毕（4个事件：学历毕业/住房一居室/过劳晕倒/道德分叉）
   // ====================================================================
+  // ====== v3.82 loop R39 注册：累积状态爆发 / 电工+管理双技能 / 高温×批发市场声望 ======
+
+  // 累积状态爆发：flags._habits.stomach_inflammationCount（由每日管线累积，>=3 触发）
+  RANDOM_EVENTS.push({
+    id: "habit_stomach_breakout",
+    phase: "street",
+    icon: "🤢",
+    title: "老胃病又犯了",
+    story:
+      "连日对付着吃、饥一顿饱一顿，你的胃终于抗议了。\n" +
+      "半夜里一阵绞痛把你惊醒，冷汗直冒，你蜷在床上想：这身子骨，到底还能撑多久？",
+    conditions: function (st) {
+      // 累积状态爆发：stomach_inflammationCount≥3（由每日管线累积）
+      if (st.player.day < 15) return false;
+      if (
+        !st.flags ||
+        !st.flags._habits ||
+        (st.flags._habits.stomach_inflammationCount || 0) < 3
+      )
+        return false;
+      if (!st.status || (st.status.health || 70) >= 60) return false;
+      if (st.flags._habitStomachBreakoutSeen) return false;
+      return true;
+    },
+    probability: 0.2,
+    repeatable: false,
+    choices: [
+      {
+        text: "🏥 挂号做个胃镜",
+        hint: "¥600-1000，健康恢复+12",
+        apply: function (st) {
+          st.flags._habitStomachBreakoutSeen = true;
+          var cost = Random.int(600, 1000);
+          st.resources.cash = Math.max(0, (st.resources.cash || 0) - cost);
+          st.status.health = Math.min(100, (st.status.health || 50) + 12);
+          st.needs.hunger = Math.min(100, (st.needs.hunger || 0) + 15);
+          if (st.flags && st.flags._habits) {
+            st.flags._habits.stomach_inflammationCount = 0;
+          }
+          StateManager.addMessage(
+            "🏥 胃镜做了，医生说是慢性胃炎，开了药。你花了¥" +
+              cost +
+              "，但至少知道该怎么养了。健康+12，饥饿+15。",
+            "info",
+          );
+        },
+      },
+      {
+        text: "💊 药店随便买点胃药硬扛",
+        hint: "¥80，健康+3，但炎症累积+1",
+        apply: function (st) {
+          st.flags._habitStomachBreakoutSeen = true;
+          st.resources.cash = Math.max(0, (st.resources.cash || 0) - 80);
+          st.status.health = Math.min(100, (st.status.health || 50) + 3);
+          st.player.mental = Math.max(0, (st.player.mental || 20) - 4);
+          if (st.flags && st.flags._habits) {
+            st.flags._habits.stomach_inflammationCount =
+              (st.flags._habits.stomach_inflammationCount || 0) + 1;
+          }
+          StateManager.addMessage(
+            "💊 你买了盒最便宜的胃药，权当心理安慰。疼是压下去了，可根子没除。健康+3，心智-4，炎症再累积。",
+            "warning",
+          );
+        },
+      },
+      {
+        text: "🍲 自己熬锅小米粥养胃",
+        hint: "¥40，健康+6（烹饪≥10则+10）",
+        apply: function (st) {
+          st.flags._habitStomachBreakoutSeen = true;
+          st.resources.cash = Math.max(0, (st.resources.cash || 0) - 40);
+          var cook =
+            (st.skills && st.skills.cooking && st.skills.cooking.level) || 0;
+          var gain = cook >= 10 ? 10 : 6;
+          st.status.health = Math.min(100, (st.status.health || 50) + gain);
+          st.needs.hunger = Math.min(100, (st.needs.hunger || 0) + 20);
+          if (cook >= 10 && st.skills.cooking) {
+            st.skills.cooking.xp = (st.skills.cooking.xp || 0) + 10;
+          }
+          StateManager.addMessage(
+            "🍲 你慢火熬了锅小米粥，一口一口喝下去，胃里总算有了暖意。" +
+              (cook >= 10 ? "手艺没白练，恢复得更好。" : "") +
+              "健康+" +
+              gain +
+              "，饥饿+20" +
+              (cook >= 10 ? "，烹饪经验+10。" : "。"),
+            "success",
+          );
+        },
+      },
+    ],
+  });
+
+  // 双技能协同：电工(electrician) + 管理(management)，连接技能系统 → 高客单工程承包
+  RANDOM_EVENTS.push({
+    id: "elec_mgmt_contract",
+    phase: "street",
+    icon: "🔧",
+    title: "街道办的改造工程",
+    story:
+      "街道办的老主任在小区里见过你干活——既会接线又会张罗。\n" +
+      "「老旧小区电路改造，正缺个既懂技术又能带人的。你干不干？带个小工程队，预算归你控。」",
+    conditions: function (st) {
+      var elec =
+        st.skills && st.skills.electrician && st.skills.electrician.level; // 电工技能等级
+      var mgmt =
+        st.skills && st.skills.management && st.skills.management.level; // 管理技能等级
+      return (
+        typeof elec === "number" &&
+        elec >= 20 &&
+        typeof mgmt === "number" &&
+        mgmt >= 15 &&
+        !st.flags._elecMgmtContractSeen
+      );
+    },
+    probability: 0.016,
+    repeatable: false,
+    choices: [
+      {
+        text: "🔧 接下工程队",
+        hint: "大额现金+，名声+",
+        apply: function (st) {
+          st.flags._elecMgmtContractSeen = true;
+          var fee = 4200;
+          st.resources.cash = (st.resources.cash || 0) + fee;
+          st.player.fame = Math.min(100, (st.player.fame || 0) + 9);
+          if (st.skills.electrician)
+            st.skills.electrician.xp = (st.skills.electrician.xp || 0) + 40;
+          if (st.skills.management)
+            st.skills.management.xp = (st.skills.management.xp || 0) + 35;
+          StateManager.addMessage(
+            "🔧 你带着三五个兄弟把整片老楼的线路理顺了，验收一次过。街道办挺满意，结了¥" +
+              fee +
+              "，名声+9，电工与管理经验双涨。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "📋 只当技术顾问",
+        hint: "现金+，风险更小",
+        apply: function (st) {
+          st.flags._elecMgmtContractSeen = true;
+          var fee = 1600;
+          st.resources.cash = (st.resources.cash || 0) + fee;
+          st.player.fame = Math.min(100, (st.player.fame || 0) + 3);
+          if (st.skills.electrician)
+            st.skills.electrician.xp = (st.skills.electrician.xp || 0) + 20;
+          StateManager.addMessage(
+            "📋 你嫌带队伍太操心，只做技术把关。拿了¥" +
+              fee +
+              "顾问费，名声+3，电工经验+20。",
+            "info",
+          );
+        },
+      },
+    ],
+  });
+
+  // 天气×地点×声望：heatwave（真实天气id） + reputation.wholesaleMarket（按地点key）联动
+  RANDOM_EVENTS.push({
+    id: "weather_heatwave_market",
+    phase: "street",
+    icon: "🌞",
+    title: "热浪里的生意",
+    story:
+      "气象台连发高温红色预警，整座城市像扣在蒸笼里。\n" +
+      "批发市场的冰饮、风扇、藿香正气水被抢空——而你因为平时守规矩、口碑好，档口老板特意给你留了货。",
+    conditions: function (st) {
+      if (!st.weather || st.weather.current !== "heatwave") return false;
+      if (!st.reputation || typeof st.reputation.wholesaleMarket !== "number")
+        return false;
+      if (st.reputation.wholesaleMarket < 30) return false;
+      if (st.flags._weatherHeatwaveMarketSeen) return false;
+      return true;
+    },
+    probability: 0.05,
+    repeatable: false,
+    choices: [
+      {
+        text: "🧊 囤一批冰饮倒卖",
+        hint: "现金+，但高温下健康-",
+        apply: function (st) {
+          st.flags._weatherHeatwaveMarketSeen = true;
+          var earn = Random.int(800, 1600);
+          st.resources.cash = (st.resources.cash || 0) + earn;
+          st.resources.totalEarned = (st.resources.totalEarned || 0) + earn;
+          st.status.health = Math.max(0, (st.status.health || 70) - 6);
+          StateManager.addMessage(
+            "🧊 你顶着烈日一趟趟搬货，冰饮半天售罄，净赚¥" +
+              earn +
+              "。钱是落袋了，人也被晒脱了层皮。健康-6。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "💧 给邻里免费送水",
+        hint: "名声+，心情+，现金小损",
+        apply: function (st) {
+          st.flags._weatherHeatwaveMarketSeen = true;
+          st.resources.cash = Math.max(0, (st.resources.cash || 0) - 200);
+          st.player.fame = Math.min(100, (st.player.fame || 0) + 6);
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 8);
+          StateManager.addMessage(
+            "💧 你把留的货分给楼下独居老人和小孩，没赚反贴了¥200。\n" +
+              "有人拍了照发到业主群，夸你是「这条街最暖的人」。名声+6，心情+8。",
+            "success",
+          );
+        },
+      },
+    ],
+  });
+
   // ====== 注册结束 ======
 })();

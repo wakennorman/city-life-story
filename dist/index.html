@@ -73945,6 +73945,548 @@ if (typeof window !== "undefined") {
   // ====================================================================
   // v3.80 loop R37 注册完毕（3个事件：¥1000万里程碑/多周目熟人/多周目遗产礼物）
   // ====================================================================
+
+  // ====================================================================
+  // v3.81 loop R38 学历里程碑 + 住房里程碑 + 连续疲劳爆发 + 道德极端分叉
+  // ====================================================================
+
+  // R38-① 学历里程碑 — 大专→本科毕业典礼
+  // 设计意图：学历升级是长期投入的回报，毕业典礼提供峰终记忆
+  // 联动系统：education + player.day + housing.tier
+  RANDOM_EVENTS.push({
+    id: "education_graduation_ceremony",
+    phase: "street",
+    icon: "🎓",
+    title: "毕业典礼",
+    story:
+      "成人教育学院发来短信：「尊敬的学员，您的毕业论文已通过答辩，请于本周六参加毕业典礼。」\n\n你盯着那条短信看了很久。三年前你还在城中村漏雨的隔间里刷夜刷题，今天你居然真的要毕业了。\n\n典礼很简单——一个简陋的会议室、几张塑料椅、院长念了半小时的致辞。但当校长把证书递到你手里时，你感觉到纸张的重量。",
+    conditions: function (st) {
+      if (st.player.day < 60) return false;
+      if (st.flags && st.flags._graduationCeremonySeen) return false;
+      // 检查education升级：从0→1或1→2
+      var edu = st.player.education || 0;
+      if (edu < 1) return false;
+      return true;
+    },
+    probability: 0.08,
+    repeatable: false,
+    choices: [
+      {
+        text: "📸 认真拍几张照片",
+        hint: "心情+15，智力+3",
+        apply: function (st) {
+          st.flags._graduationCeremonySeen = true;
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 15);
+          st.player.intelligence = Math.min(
+            100,
+            (st.player.intelligence || 0) + 3,
+          );
+          StateManager.addMessage(
+            "🎓 你在毕业典礼上拍了三张照片——一张和校长握手、一张和同学们的大合照、一张自己拿着证书的自拍。三年前的那个刷题少年，终于有了凭证。心情+15，智力+3。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "🍜 请同学吃顿饭",
+        hint: "现金-¥200，心情+10",
+        cost: 200,
+        apply: function (st) {
+          st.flags._graduationCeremonySeen = true;
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 10);
+          StateManager.addMessage(
+            "🍜 你请几个同学吃了顿火锅。大家聊起当年的苦日子，有人哭了，有人笑了。心情+10。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "🚶 悄悄走掉，不参加了",
+        hint: "错过仪式感",
+        apply: function (st) {
+          st.flags._graduationCeremonySeen = true;
+          st.needs.happiness = Math.max(0, (st.needs.happiness || 50) - 8);
+          StateManager.addMessage(
+            "🚶 你选了个借口溜了。证书收到了，但总觉得少了点什么。可能是一群人一起哭一起笑的冲动。心情-8。",
+            "warning",
+          );
+        },
+      },
+    ],
+  });
+
+  // R38-② 住房等级里程碑 — 首次搬入一居室（从合租到独立）
+  // 设计意图：住房升级是底层玩家的重要里程碑，需要情感叙事
+  // 联动系统：housing.tier + player.day + cash
+  RANDOM_EVENTS.push({
+    id: "housing_tier_one_room",
+    phase: "street",
+    icon: "🏠",
+    title: "自己的房间",
+    story:
+      "你终于签了一居室的合同——不再是合租的一个床位，也不再是隔断间里的一扇小门。\n\n钥匙插进锁孔的那一刻，你推开门。三十平米，一室一厅，卫生间能洗澡，厨房能煮面。虽然很小，但这是你在这座城市第一个完全属于自己的空间。\n\n你坐在地板上看了一会儿阳光从窗户照进来。",
+    conditions: function (st) {
+      if (st.player.day < 30) return false;
+      if (st.flags && st.flags._housingOneRoomSeen) return false;
+      // 检查是否刚搬入一居室（tier从<3升到3）
+      if (!st.housing) return false;
+      var tier = st.housing.tier || 0;
+      // 首次达到一居室
+      if (tier >= 3 && st.flags._housingTierReached < 3) {
+        st.flags._housingTierReached = 3;
+        return true;
+      }
+      // 或者tier刚升到3
+      if (tier === 3 && !st.flags._housingOneRoomSeen) {
+        return true;
+      }
+      return false;
+    },
+    probability: 0.06,
+    repeatable: false,
+    choices: [
+      {
+        text: "🛋️ 慢慢布置自己的小窝",
+        hint: "心情+15，卫生+10",
+        apply: function (st) {
+          st.flags._housingOneRoomSeen = true;
+          st.flags._housingTierReached = Math.max(
+            st.flags._housingTierReached || 0,
+            3,
+          );
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 15);
+          st.needs.hygiene = Math.min(100, (st.needs.hygiene || 0) + 10);
+          StateManager.addMessage(
+            "🏠 你花了两天时间布置这个小窝——一张桌子、一把椅子、一个书架。虽然简陋，但每一样东西都是你选的。心情+15，卫生+10。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "📦 先住下来再说，以后慢慢添",
+        hint: "先安顿，心情+5",
+        apply: function (st) {
+          st.flags._housingOneRoomSeen = true;
+          st.flags._housingTierReached = Math.max(
+            st.flags._housingTierReached || 0,
+            3,
+          );
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 5);
+          StateManager.addMessage(
+            "📦 你先把行李搬进来，铺了张床垫就睡了。明天再去买桌椅。心情+5。",
+            "info",
+          );
+        },
+      },
+    ],
+  });
+
+  // R38-③ 连续疲劳爆发 — 过劳晕倒
+  // 设计意图：高疲劳持续多天后强制触发健康危机，让疲劳系统有真实后果
+  // 联动系统：needs.fatigue + flags._habits.highFatigueStreak + housing.tier
+  RANDOM_EVENTS.push({
+    id: "fatigue_breakdown_collapse",
+    phase: "street",
+    icon: "💥",
+    title: "倒下的一瞬间",
+    story:
+      "你在搬东西的时候突然眼前一黑，整个人失去了知觉。\n\n醒来时发现自己躺在出租屋的床上，头痛欲裂。邻居说你已经晕了快两个小时了。你记不清自己连续多少天没好好休息了——大概是从上周开始的？\n\n身体在用最极端的方式告诉你：不能再这样了。",
+    conditions: function (st) {
+      if (st.player.day < 15) return false;
+      if (st.flags && st.flags._fatigueBreakdownSeen) return false;
+      // 连续3天高疲劳
+      var habits = st.flags && st.flags._habits;
+      if (!habits || (habits.highFatigueStreak || 0) < 3) return false;
+      // 当前疲劳仍高
+      if ((st.needs.fatigue || 0) < 80) return false;
+      return true;
+    },
+    probability: 0.05,
+    repeatable: false,
+    choices: [
+      {
+        text: "🏥 去医院检查",
+        hint: "¥300-500，健康+20，强制休息3天",
+        apply: function (st) {
+          st.flags._fatigueBreakdownSeen = true;
+          st.flags._forcedRestDays = 3;
+          st.flags._habits.highFatigueStreak = 0;
+          var cost = Random.int(300, 500);
+          if (st.resources.cash >= cost) {
+            st.resources.cash -= cost;
+          } else {
+            st.resources.debt =
+              (st.resources.debt || 0) + (cost - (st.resources.cash || 0));
+            st.resources.cash = 0;
+          }
+          st.status.health = Math.min(100, (st.status.health || 50) + 20);
+          st.needs.fatigue = Math.max(0, (st.needs.fatigue || 0) - 40);
+          st.player.mental = Math.min(100, (st.player.mental || 0) + 5);
+          StateManager.addMessage(
+            "🏥 医生说你这是严重过劳，再晚送来可能出大事。打了营养液，开了药，花了¥" +
+              cost +
+              "。强制休息了三天，健康+20，疲劳-40，心智+5。你发誓再也不这样了。",
+            "warning",
+          );
+        },
+      },
+      {
+        text: "😴 在家躺着休息",
+        hint: "免费，健康+10，疲劳-25",
+        apply: function (st) {
+          st.flags._fatigueBreakdownSeen = true;
+          st.flags._forcedRestDays = 2;
+          st.flags._habits.highFatigueStreak = 0;
+          st.status.health = Math.min(100, (st.status.health || 50) + 10);
+          st.needs.fatigue = Math.max(0, (st.needs.fatigue || 0) - 25);
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 5);
+          StateManager.addMessage(
+            "😴 你关了手机，拉上窗帘躺了两天。除了外卖没人打扰。醒来时虽然还没完全恢复，但至少知道该放慢节奏了。健康+10，疲劳-25，心情+5。",
+            "info",
+          );
+        },
+      },
+      {
+        text: "💪 休息一下继续干",
+        hint: "健康-15，疲劳-10，可能埋下疾病隐患",
+        apply: function (st) {
+          st.flags._fatigueBreakdownSeen = true;
+          st.status.health = Math.max(0, (st.status.health || 50) - 15);
+          st.needs.fatigue = Math.max(0, (st.needs.fatigue || 0) - 10);
+          st.needs.happiness = Math.max(0, (st.needs.happiness || 50) - 10);
+          st.player.mental = Math.max(0, (st.player.mental || 0) - 5);
+          StateManager.addMessage(
+            "💪 你睡了半天就起来了。身体还在抗议，但你告诉自己没事。健康-15，疲劳-10。你知道自己在透支，但有时候没有选择。",
+            "danger",
+          );
+        },
+      },
+    ],
+  });
+
+  // R38-④ 道德极端分叉 — 高道德者的城市共鸣 vs 低道德者的孤立
+  // 设计意图：同一个城市事件，高道德玩家获得善意回报，低道德玩家遭遇冷漠反噬
+  // 联动系统：morality + phase + housing.tier
+  RANDOM_EVENTS.push({
+    id: "moral_extreme_city_resonance",
+    phase: "street",
+    icon: "🌆",
+    title: "城市的温度",
+    story:
+      "今天下班回家的路上，你经过一条小巷。巷口有个小孩子在哭——他的气球被树枝卡住了，够不着。\n\n你停下脚步。周围有几个路人也在看，但没有人动。",
+    conditions: function (st) {
+      if (st.player.day < 10) return false;
+      if (st.flags && st.flags._moralCityResonanceSeen) return false;
+      // 道德极端值：≥80（高道德）或 ≤20（低道德）
+      var mor = st.player.morality || 50;
+      if (mor > 20 && mor < 80) return false;
+      return true;
+    },
+    probability: 0.03,
+    repeatable: false,
+    choices: function (st) {
+      var mor = st.player.morality || 50;
+      if (mor >= 80) {
+        // 高道德：主动帮助
+        return [
+          {
+            text: "🎈 帮小孩拿下气球",
+            hint: "道德+5，心情+15，可能获得意外回报",
+            apply: function (s) {
+              s.flags._moralCityResonanceSeen = true;
+              s.player.morality = Math.min(100, (s.player.morality || 50) + 5);
+              s.needs.happiness = Math.min(100, (s.needs.happiness || 50) + 15);
+              // 小概率获得回报
+              if (Random.chance(0.4)) {
+                var reward = Random.int(20, 80);
+                s.resources.cash += reward;
+                s.resources.totalEarned =
+                  (s.resources.totalEarned || 0) + reward;
+                StateManager.addMessage(
+                  "🎈 你踮起脚尖，好不容易把气球取了下来。小孩不哭了，笑得特别开心。他妈妈走过来塞给你¥" +
+                    reward +
+                    "：「谢谢你，今天是我儿子最开心的一天。」道德+5，心情+15，意外获得¥" +
+                    reward +
+                    "。这座城市偶尔也会给你温暖的回馈。",
+                  "success",
+                );
+              } else {
+                StateManager.addMessage(
+                  "🎈 你踮起脚尖，好不容易把气球取了下来。小孩不哭了，笑得特别开心。他妈妈连声道谢。道德+5，心情+15。有时候一件小事就足够了。",
+                  "success",
+                );
+              }
+            },
+          },
+          {
+            text: "📱 教小孩自己想办法",
+            hint: "心智+3，耐心教导",
+            apply: function (s) {
+              s.flags._moralCityResonanceSeen = true;
+              s.player.mental = Math.min(100, (s.player.mental || 0) + 3);
+              s.player.morality = Math.min(100, (s.player.morality || 50) + 2);
+              StateManager.addMessage(
+                "📱 你蹲下来教小孩怎么够——先找根长棍子，再慢慢挑。小孩学会了，自己把气球弄了下来。心智+3，道德+2。",
+                "info",
+              );
+            },
+          },
+        ];
+      }
+      // 低道德：冷漠旁观
+      return [
+        {
+          text: "🚶 走开，不关我事",
+          hint: "冷漠，心情-5",
+          apply: function (s) {
+            s.flags._moralCityResonanceSeen = true;
+            s.player.morality = Math.max(0, (s.player.morality || 50) - 2);
+            s.needs.happiness = Math.max(0, (s.needs.happiness || 50) - 5);
+            StateManager.addMessage(
+              "🚶 你走了过去。身后小孩的哭声越来越小——不知道是被妈妈抱走了，还是哭累了。道德-2，心情-5。",
+              "warning",
+            );
+          },
+        },
+        {
+          text: "📱 拍个视频发网上",
+          hint: "道德-3，但可能获得流量",
+          apply: function (s) {
+            s.flags._moralCityResonanceSeen = true;
+            s.player.morality = Math.max(0, (s.player.morality || 50) - 3);
+            s.player.fame = Math.min(100, (s.player.fame || 0) + 2);
+            var earn = Random.int(10, 50);
+            s.resources.cash += earn;
+            s.resources.totalEarned = (s.resources.totalEarned || 0) + earn;
+            StateManager.addMessage(
+              "📱 你拍了个视频发了出去：「街头冷漠——小孩够不到气球没人帮。」有人评论说「这城市太凉了」。赚了¥" +
+                earn +
+                "，但心里有点堵。名气+2，道德-3。",
+              "warning",
+            );
+          },
+        },
+      ];
+    },
+  });
+
+  // ====================================================================
+  // v3.81 loop R38 注册完毕（4个事件：学历毕业/住房一居室/过劳晕倒/道德分叉）
+  // ====================================================================
+  // ====== v3.82 loop R39 注册：累积状态爆发 / 电工+管理双技能 / 高温×批发市场声望 ======
+
+  // 累积状态爆发：flags._habits.stomach_inflammationCount（由每日管线累积，>=3 触发）
+  RANDOM_EVENTS.push({
+    id: "habit_stomach_breakout",
+    phase: "street",
+    icon: "🤢",
+    title: "老胃病又犯了",
+    story:
+      "连日对付着吃、饥一顿饱一顿，你的胃终于抗议了。\n" +
+      "半夜里一阵绞痛把你惊醒，冷汗直冒，你蜷在床上想：这身子骨，到底还能撑多久？",
+    conditions: function (st) {
+      // 累积状态爆发：stomach_inflammationCount≥3（由每日管线累积）
+      if (st.player.day < 15) return false;
+      if (
+        !st.flags ||
+        !st.flags._habits ||
+        (st.flags._habits.stomach_inflammationCount || 0) < 3
+      )
+        return false;
+      if (!st.status || (st.status.health || 70) >= 60) return false;
+      if (st.flags._habitStomachBreakoutSeen) return false;
+      return true;
+    },
+    probability: 0.2,
+    repeatable: false,
+    choices: [
+      {
+        text: "🏥 挂号做个胃镜",
+        hint: "¥600-1000，健康恢复+12",
+        apply: function (st) {
+          st.flags._habitStomachBreakoutSeen = true;
+          var cost = Random.int(600, 1000);
+          st.resources.cash = Math.max(0, (st.resources.cash || 0) - cost);
+          st.status.health = Math.min(100, (st.status.health || 50) + 12);
+          st.needs.hunger = Math.min(100, (st.needs.hunger || 0) + 15);
+          if (st.flags && st.flags._habits) {
+            st.flags._habits.stomach_inflammationCount = 0;
+          }
+          StateManager.addMessage(
+            "🏥 胃镜做了，医生说是慢性胃炎，开了药。你花了¥" +
+              cost +
+              "，但至少知道该怎么养了。健康+12，饥饿+15。",
+            "info",
+          );
+        },
+      },
+      {
+        text: "💊 药店随便买点胃药硬扛",
+        hint: "¥80，健康+3，但炎症累积+1",
+        apply: function (st) {
+          st.flags._habitStomachBreakoutSeen = true;
+          st.resources.cash = Math.max(0, (st.resources.cash || 0) - 80);
+          st.status.health = Math.min(100, (st.status.health || 50) + 3);
+          st.player.mental = Math.max(0, (st.player.mental || 20) - 4);
+          if (st.flags && st.flags._habits) {
+            st.flags._habits.stomach_inflammationCount =
+              (st.flags._habits.stomach_inflammationCount || 0) + 1;
+          }
+          StateManager.addMessage(
+            "💊 你买了盒最便宜的胃药，权当心理安慰。疼是压下去了，可根子没除。健康+3，心智-4，炎症再累积。",
+            "warning",
+          );
+        },
+      },
+      {
+        text: "🍲 自己熬锅小米粥养胃",
+        hint: "¥40，健康+6（烹饪≥10则+10）",
+        apply: function (st) {
+          st.flags._habitStomachBreakoutSeen = true;
+          st.resources.cash = Math.max(0, (st.resources.cash || 0) - 40);
+          var cook =
+            (st.skills && st.skills.cooking && st.skills.cooking.level) || 0;
+          var gain = cook >= 10 ? 10 : 6;
+          st.status.health = Math.min(100, (st.status.health || 50) + gain);
+          st.needs.hunger = Math.min(100, (st.needs.hunger || 0) + 20);
+          if (cook >= 10 && st.skills.cooking) {
+            st.skills.cooking.xp = (st.skills.cooking.xp || 0) + 10;
+          }
+          StateManager.addMessage(
+            "🍲 你慢火熬了锅小米粥，一口一口喝下去，胃里总算有了暖意。" +
+              (cook >= 10 ? "手艺没白练，恢复得更好。" : "") +
+              "健康+" +
+              gain +
+              "，饥饿+20" +
+              (cook >= 10 ? "，烹饪经验+10。" : "。"),
+            "success",
+          );
+        },
+      },
+    ],
+  });
+
+  // 双技能协同：电工(electrician) + 管理(management)，连接技能系统 → 高客单工程承包
+  RANDOM_EVENTS.push({
+    id: "elec_mgmt_contract",
+    phase: "street",
+    icon: "🔧",
+    title: "街道办的改造工程",
+    story:
+      "街道办的老主任在小区里见过你干活——既会接线又会张罗。\n" +
+      "「老旧小区电路改造，正缺个既懂技术又能带人的。你干不干？带个小工程队，预算归你控。」",
+    conditions: function (st) {
+      var elec =
+        st.skills && st.skills.electrician && st.skills.electrician.level; // 电工技能等级
+      var mgmt =
+        st.skills && st.skills.management && st.skills.management.level; // 管理技能等级
+      return (
+        typeof elec === "number" &&
+        elec >= 20 &&
+        typeof mgmt === "number" &&
+        mgmt >= 15 &&
+        !st.flags._elecMgmtContractSeen
+      );
+    },
+    probability: 0.016,
+    repeatable: false,
+    choices: [
+      {
+        text: "🔧 接下工程队",
+        hint: "大额现金+，名声+",
+        apply: function (st) {
+          st.flags._elecMgmtContractSeen = true;
+          var fee = 4200;
+          st.resources.cash = (st.resources.cash || 0) + fee;
+          st.player.fame = Math.min(100, (st.player.fame || 0) + 9);
+          if (st.skills.electrician)
+            st.skills.electrician.xp = (st.skills.electrician.xp || 0) + 40;
+          if (st.skills.management)
+            st.skills.management.xp = (st.skills.management.xp || 0) + 35;
+          StateManager.addMessage(
+            "🔧 你带着三五个兄弟把整片老楼的线路理顺了，验收一次过。街道办挺满意，结了¥" +
+              fee +
+              "，名声+9，电工与管理经验双涨。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "📋 只当技术顾问",
+        hint: "现金+，风险更小",
+        apply: function (st) {
+          st.flags._elecMgmtContractSeen = true;
+          var fee = 1600;
+          st.resources.cash = (st.resources.cash || 0) + fee;
+          st.player.fame = Math.min(100, (st.player.fame || 0) + 3);
+          if (st.skills.electrician)
+            st.skills.electrician.xp = (st.skills.electrician.xp || 0) + 20;
+          StateManager.addMessage(
+            "📋 你嫌带队伍太操心，只做技术把关。拿了¥" +
+              fee +
+              "顾问费，名声+3，电工经验+20。",
+            "info",
+          );
+        },
+      },
+    ],
+  });
+
+  // 天气×地点×声望：heatwave（真实天气id） + reputation.wholesaleMarket（按地点key）联动
+  RANDOM_EVENTS.push({
+    id: "weather_heatwave_market",
+    phase: "street",
+    icon: "🌞",
+    title: "热浪里的生意",
+    story:
+      "气象台连发高温红色预警，整座城市像扣在蒸笼里。\n" +
+      "批发市场的冰饮、风扇、藿香正气水被抢空——而你因为平时守规矩、口碑好，档口老板特意给你留了货。",
+    conditions: function (st) {
+      if (!st.weather || st.weather.current !== "heatwave") return false;
+      if (!st.reputation || typeof st.reputation.wholesaleMarket !== "number")
+        return false;
+      if (st.reputation.wholesaleMarket < 30) return false;
+      if (st.flags._weatherHeatwaveMarketSeen) return false;
+      return true;
+    },
+    probability: 0.05,
+    repeatable: false,
+    choices: [
+      {
+        text: "🧊 囤一批冰饮倒卖",
+        hint: "现金+，但高温下健康-",
+        apply: function (st) {
+          st.flags._weatherHeatwaveMarketSeen = true;
+          var earn = Random.int(800, 1600);
+          st.resources.cash = (st.resources.cash || 0) + earn;
+          st.resources.totalEarned = (st.resources.totalEarned || 0) + earn;
+          st.status.health = Math.max(0, (st.status.health || 70) - 6);
+          StateManager.addMessage(
+            "🧊 你顶着烈日一趟趟搬货，冰饮半天售罄，净赚¥" +
+              earn +
+              "。钱是落袋了，人也被晒脱了层皮。健康-6。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "💧 给邻里免费送水",
+        hint: "名声+，心情+，现金小损",
+        apply: function (st) {
+          st.flags._weatherHeatwaveMarketSeen = true;
+          st.resources.cash = Math.max(0, (st.resources.cash || 0) - 200);
+          st.player.fame = Math.min(100, (st.player.fame || 0) + 6);
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 8);
+          StateManager.addMessage(
+            "💧 你把留的货分给楼下独居老人和小孩，没赚反贴了¥200。\n" +
+              "有人拍了照发到业主群，夸你是「这条街最暖的人」。名声+6，心情+8。",
+            "success",
+          );
+        },
+      },
+    ],
+  });
+
   // ====== 注册结束 ======
 })();
 </script>
@@ -116270,399 +116812,6 @@ function applyIntroNewsDirectEffects(state, selectedNews) {
 // ============================================================
 
 var _worldNewsSelected = null; // 存储本局选中的新闻
-var _playerIntroChoice = null; // 存储玩家在开局的选择
-
-/**
- * v3.76 重构：构建开局选择面板
- * 原则：
- *   1. 每条新闻最多产生 1 个选项，避免无关选项堆砌
- *   2. 每个选项直接引用该条新闻的具体内容，杜绝通用模板
- *   3. 最多 3 个选项（认知负荷原则）
- *   4. 如果新闻不涉及任何已知方向，只给中性建议，不强行凑
- */
-function buildIntroChoicePanel(scenarioId, newsItems) {
-  if (!newsItems || newsItems.length === 0) return "";
-
-  var choices = [];
-  var usedTypes = {}; // 防止同类选项重复
-
-  /**
-   * 取标题短摘要（用于选项文本中引用）
-   */
-  function _snip(headline, maxLen) {
-    maxLen = maxLen || 14;
-    if (!headline) return "";
-    if (headline.length <= maxLen) return headline;
-    return headline.slice(0, maxLen) + "…";
-  }
-
-  /**
-   * 判断一条新闻的主要主题，返回主题ID + 置信度
-   */
-  function _classify(news) {
-    var tag = news.tag || "";
-    var headline = news.headline || "";
-    var detail = news.detail || "";
-    var note = (news.worldEffect && news.worldEffect.note) || "";
-    var text = tag + " " + headline + " " + detail + " " + note;
-
-    // 按优先级检查（得分高的优先）
-    if (/裁员|失业|下岗|降薪/.test(text))
-      return { id: "start_side_hustle", theme: "layoff" };
-    if (/AI|编程|芯片|机器人|数字化|大模型|半导体/.test(text))
-      return { id: "study_tech", theme: "tech" };
-    if (/招聘|抢人|用工(荒|缺)|人力/.test(text))
-      return { id: "find_work", theme: "hiring" };
-    if (/房价|租房|租金|城中村|拆迁|保交楼|房产/.test(text))
-      return { id: "secure_housing", theme: "housing" };
-    if (/新能源|技工|焊工|电工|制造业|工厂/.test(text))
-      return { id: "learn_trade", theme: "manufacturing" };
-    if (/物价|通胀|涨价|降价|促销/.test(text))
-      return { id: "save_money", theme: "price" };
-    if (/股市|沪指|基金|理财|投资|牛市|加密/.test(text))
-      return { id: "watch_market", theme: "market" };
-    if (/补贴|扶持|政策|降准|降息/.test(text))
-      return { id: "grab_opportunity", theme: "policy" };
-    if (/养老|医疗|健康|心理|焦虑|抑郁/.test(text))
-      return { id: "build_network", theme: "social" };
-    if (/毕业|应届|高校|大学生/.test(text))
-      return { id: "upgrade_skills", theme: "graduation" };
-    if (/春节|618|双十一|黄金周|旺季|节日/.test(text))
-      return { id: "catch_season", theme: "seasonal" };
-    if (/寒潮|高温|暴雨|台风/.test(text))
-      return { id: "prepare_weather", theme: "weather" };
-
-    // 按 tag 兜底
-    if (tag === "科技") return { id: "study_tech", theme: "tech" };
-    if (tag === "就业") return { id: "find_work", theme: "hiring" };
-    if (tag === "消费") return { id: "save_money", theme: "price" };
-    if (tag === "房产") return { id: "secure_housing", theme: "housing" };
-    if (tag === "政策") return { id: "grab_opportunity", theme: "policy" };
-    if (tag === "社会") return { id: "build_network", theme: "social" };
-    if (tag === "季节" || tag === "节日")
-      return { id: "catch_season", theme: "seasonal" };
-    if (tag === "天气") return { id: "prepare_weather", theme: "weather" };
-
-    return null; // 无法归类
-  }
-
-  // ---- 逐条新闻分析，每条最多 1 个选项 ----
-  for (var i = 0; i < newsItems.length && choices.length < 3; i++) {
-    var news = newsItems[i];
-    var classified = _classify(news);
-    if (!classified) continue;
-    if (usedTypes[classified.id]) continue; // 同类不重复
-    usedTypes[classified.id] = true;
-
-    var snippet = _snip(news.headline, 14);
-    var choice = null;
-
-    switch (classified.id) {
-      case "study_tech":
-        choice = {
-          id: "study_tech",
-          text: "💻 关注" + (snippet || "科技") + "趋势，学技能",
-          hint: "技术迭代快，投资自己抗风险",
-          cost: 200,
-          effect: {
-            cash: -200,
-            skills: { coding: 10 },
-            needs: { intelligence: 5 },
-            flags: { _introStudyTech: true },
-          },
-        };
-        break;
-
-      case "start_side_hustle":
-        choice = {
-          id: "start_side_hustle",
-          text: "🛒 市场承压，" + (snippet || "先搞零钱"),
-          hint: "灵活就业快速入账，但体力消耗大",
-          effect: {
-            cash: 100,
-            needs: { fatigue: 5 },
-            flags: { _introSideHustle: true },
-          },
-        };
-        break;
-
-      case "find_work":
-        choice = {
-          id: "find_work",
-          text: "💼 " + (snippet || "招聘季") + "，趁热找工作",
-          hint: "岗位多的时候机会更好找",
-          effect: {
-            flags: { _introFoundWorkEarly: true },
-          },
-        };
-        break;
-
-      case "secure_housing":
-        choice = {
-          id: "secure_housing",
-          text: "🏠 " + (snippet || "租房市场变化") + "，先落脚",
-          hint: "稳定的住处是打工人的底气",
-          effect: {
-            flags: { _introSecureHousing: true },
-          },
-        };
-        break;
-
-      case "learn_trade":
-        choice = {
-          id: "learn_trade",
-          text: "🔧 " + (snippet || "制造业") + "缺人，学门手艺",
-          hint: "技术工越老越吃香，门槛低收入稳",
-          cost: 100,
-          effect: {
-            cash: -100,
-            flags: { _introLearnTrade: true },
-          },
-        };
-        break;
-
-      case "save_money":
-        choice = {
-          id: "save_money",
-          text: "🏦 物价波动，" + (snippet || "先守住钱包"),
-          hint: "把钱存定期，等形势明朗再动",
-          effect: {
-            cash: -50,
-            flags: { _introSavedMoney: true },
-          },
-        };
-        break;
-
-      case "watch_market":
-        choice = {
-          id: "watch_market",
-          text: "📊 市场有动静，" + (snippet || "先摸清行情"),
-          hint: "花时间研究投资方向，不花钱但费精力",
-          effect: {
-            needs: { fatigue: 3 },
-            flags: { _introWatchMarket: true },
-          },
-        };
-        break;
-
-      case "grab_opportunity":
-        choice = {
-          id: "grab_opportunity",
-          text: "🎯 政策有变，" + (snippet || "顺势而为"),
-          hint: "借着政策东风找出路",
-          effect: {
-            flags: { _introGrabOpportunity: true },
-          },
-        };
-        break;
-
-      case "build_network":
-        choice = {
-          id: "build_network",
-          text: "🤝 " + (snippet || "社会民生") + "，多交朋友",
-          hint: "在这座城市，人脉就是资源",
-          effect: {
-            needs: { happiness: 3 },
-            flags: { _introBuildNetwork: true },
-          },
-        };
-        break;
-
-      case "upgrade_skills":
-        choice = {
-          id: "upgrade_skills",
-          text: "📚 " + (snippet || "学历通胀") + "，给自己充电",
-          hint: "技能和证书是硬通货",
-          cost: 80,
-          effect: {
-            cash: -80,
-            needs: { intelligence: 3 },
-            flags: { _introUpgradeSkills: true },
-          },
-        };
-        break;
-
-      case "catch_season":
-        choice = {
-          id: "catch_season",
-          text: "🎉 " + (snippet || "旺季来了") + "，趁机赚一笔",
-          hint: "过了这个村就没这个店了",
-          effect: {
-            cash: 50,
-            needs: { fatigue: 8 },
-            flags: { _introCatchSeason: true },
-          },
-        };
-        break;
-
-      case "prepare_weather":
-        choice = {
-          id: "prepare_weather",
-          text: "🌂 天气预警，" + (snippet || "注意防护"),
-          hint: "安全第一，减少不必要外出",
-          effect: {
-            needs: { health: 3 },
-            flags: { _introPrepareWeather: true },
-          },
-        };
-        break;
-
-      default:
-        continue;
-    }
-
-    if (choice) choices.push(choice);
-  }
-
-  // --- 保底逻辑 ---
-  if (choices.length === 0) {
-    choices.push({
-      id: "observe_world",
-      text: "👀 先观察一段时间",
-      hint: "不急，看看形势再行动",
-      effect: {
-        needs: { intelligence: 3 },
-        flags: { _introObserveWorld: true },
-      },
-    });
-  }
-
-  if (choices.length === 0) return "";
-
-  // 构建 HTML
-  var html =
-    '<div class="world-news-choice-section">' +
-    '<div class="world-news-choice-title">🤔 面对这个世界的变化，你决定：</div>';
-
-  for (var ci = 0; ci < choices.length; ci++) {
-    var ch = choices[ci];
-    html +=
-      '<div class="world-news-choice-option" data-choice="' +
-      ch.id +
-      '">' +
-      '<div class="world-news-choice-text">' +
-      ch.text +
-      "</div>" +
-      '<div class="world-news-choice-hint">' +
-      ch.hint +
-      (ch.cost ? "（需要¥" + ch.cost + "）" : "") +
-      "</div>" +
-      "</div>";
-  }
-
-  html += "</div>";
-  return html;
-}
-
-/**
- * 处理玩家在开局选择面板中的选择
- * @param {string} choiceId - 选择的 ID
- * @param {Object} state - 游戏状态
- */
-function applyIntroChoice(choiceId, state) {
-  if (!state || !choiceId) return;
-  _playerIntroChoice = choiceId;
-
-  var choicesMap = {
-    study_tech: {
-      apply: function (st) {
-        st.resources.cash = Math.max(0, (st.resources.cash || 0) - 200);
-        st.skills = st.skills || {};
-        st.skills.coding = st.skills.coding || { level: 1, xp: 0 };
-        st.skills.coding.xp = (st.skills.coding.xp || 0) + 10;
-        st.needs.intelligence = Math.min(100, (st.needs.intelligence || 0) + 5);
-        st.flags._introStudyTech = true;
-      },
-      msg: "💻 你报名了编程培训班，花了¥200。编码技能经验+10，智力需求+5。",
-    },
-    start_side_hustle: {
-      apply: function (st) {
-        st.resources.cash = (st.resources.cash || 0) + 100;
-        st.needs.fatigue = Math.min(100, (st.needs.fatigue || 0) + 5);
-        st.flags._introSideHustle = true;
-      },
-      msg: "🛒 你找了份零工过渡，赚了¥100。虽然辛苦，但先站稳脚跟。",
-    },
-    save_money: {
-      apply: function (st) {
-        st.resources.cash = Math.max(0, (st.resources.cash || 0) - 50);
-        st.flags._introSavedMoney = true;
-      },
-      msg: "🏦 你把¥50存进了定期。虽然收益不高，但心里踏实。",
-    },
-    find_work: {
-      apply: function (st) {
-        st.flags._introFoundWorkEarly = true;
-      },
-      msg: "💼 你决定立刻找工作。先站稳脚跟，再图发展。",
-    },
-    secure_housing: {
-      apply: function (st) {
-        st.flags._introSecureHousing = true;
-      },
-      msg: "🏠 你仔细研究了租房市场，找到了一个性价比不错的住处。在这个城市，稳定的住所就是底气。",
-    },
-    learn_trade: {
-      apply: function (st) {
-        st.resources.cash = Math.max(0, (st.resources.cash || 0) - 100);
-        st.flags._introLearnTrade = true;
-      },
-      msg: "🔧 你报了一个技工培训班，花了¥100。学一门手艺，走到哪里都不怕。",
-    },
-    build_network: {
-      apply: function (st) {
-        st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 3);
-        st.flags._introBuildNetwork = true;
-      },
-      msg: "🤝 你主动认识了几个老乡和新朋友。在这座城市，人脉就是资源。",
-    },
-    upgrade_skills: {
-      apply: function (st) {
-        st.resources.cash = Math.max(0, (st.resources.cash || 0) - 80);
-        st.needs.intelligence = Math.min(100, (st.needs.intelligence || 0) + 3);
-        st.flags._introUpgradeSkills = true;
-      },
-      msg: "📚 你买了一本技能教材，花了¥80。知识就是力量，慢慢学。",
-    },
-    catch_season: {
-      apply: function (st) {
-        st.resources.cash = (st.resources.cash || 0) + 50;
-        st.needs.fatigue = Math.min(100, (st.needs.fatigue || 0) + 8);
-        st.flags._introCatchSeason = true;
-      },
-      msg: "🎉 你抓住了旺季机会，虽然累了一些，但赚了¥50 extra。",
-    },
-    prepare_weather: {
-      apply: function (st) {
-        st.needs.health = Math.min(100, (st.needs.health || 0) + 3);
-        st.flags._introPrepareWeather = true;
-      },
-      msg: "🌂 你做好了防护措施。天气虽恶劣，但平安就是最大的财富。",
-    },
-    observe_world: {
-      apply: function (st) {
-        st.needs.intelligence = Math.min(100, (st.needs.intelligence || 0) + 3);
-        st.flags._introObserveWorld = true;
-      },
-      msg: "👀 你没有急着行动，而是花了一天时间观察这个世界。对形势有了更清晰的认识。",
-    },
-    explore_city: {
-      apply: function (st) {
-        st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 5);
-        st.flags._introExploredCity = true;
-      },
-      msg: "🚶 你花了半天逛了逛城市，心情好了不少。对这座城市有了初步了解。",
-    },
-  };
-
-  var ch = choicesMap[choiceId];
-  if (ch) {
-    ch.apply(state);
-    if (typeof StateManager !== "undefined" && StateManager.addMessage) {
-      StateManager.addMessage(ch.msg, "info");
-    }
-  }
-}
 
 /**
  * 显示开局世界新闻弹窗
@@ -116743,9 +116892,6 @@ function showWorldNewsIntro(scenarioId, onConfirm, externalNews) {
   // 剧本特色描述
   var scenarioIntro = getScenarioWorldContext(scenarioId);
 
-  // v2.0 新增：开局选择面板 — 让玩家对世界新闻做出反应，影响初始状态
-  var introChoicesHtml = buildIntroChoicePanel(scenarioId, _worldNewsSelected);
-
   // 构建完整HTML
   // 判断是否为实时新闻
   var isRealTime =
@@ -116775,11 +116921,9 @@ function showWorldNewsIntro(scenarioId, onConfirm, externalNews) {
     '<div class="world-news-list">' +
     newsHtml +
     "</div>" +
-    // v2.0 新增：开局选择面板
-    introChoicesHtml +
     // 底部说明
     '<div class="world-news-footer">' +
-    '<div class="world-news-footer-text">以上是你踏上这段旅程时，<strong>这个世界正在发生的事</strong>。<br>它将成为这局游戏世界的底色与初始基调。<br><em>做出你的第一个选择，改变这局游戏的起点。</em></div>' +
+    '<div class="world-news-footer-text">以上是你踏上这段旅程时，<strong>这个世界正在发生的事</strong>。<br>它将成为这局游戏世界的底色与初始基调。</div>' +
     '<button class="world-news-start-btn" id="world-news-start-btn">▶ 带着这个世界，出发</button>' +
     "</div>" +
     "</div>" +
@@ -116790,19 +116934,6 @@ function showWorldNewsIntro(scenarioId, onConfirm, externalNews) {
   container.id = "world-news-intro-container";
   container.innerHTML = html;
   document.body.appendChild(container);
-
-  // 绑定选择面板事件
-  var choiceOptions = container.querySelectorAll(".world-news-choice-option");
-  for (var co = 0; co < choiceOptions.length; co++) {
-    choiceOptions[co].addEventListener("click", function () {
-      // 清除之前的选中状态
-      for (var o = 0; o < choiceOptions.length; o++) {
-        choiceOptions[o].classList.remove("selected");
-      }
-      this.classList.add("selected");
-      _playerIntroChoice = this.getAttribute("data-choice");
-    });
-  }
 
   // 绑定按钮事件
   var startBtn = document.getElementById("world-news-start-btn");
@@ -117288,10 +117419,7 @@ function applyNewsAndEnter(selectedNews, state, enterGame, scenarioId) {
     }
   }
 
-  // Step 5: 应用玩家开局选择的影响
-  if (_playerIntroChoice && state) {
-    applyIntroChoice(_playerIntroChoice, state);
-  }
+  // Step 5: 应用玩家开局选择的影响（已移除，功能不完整）
 
   if (typeof enterGame === "function") {
     enterGame();
