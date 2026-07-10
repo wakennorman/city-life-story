@@ -5427,6 +5427,7 @@
     title: "失主找来了",
     story:
       "你刚出门，一个气喘吁吁的年轻人追上来：\n「是你前几天在派出所帮忙登记的那位吗？我终于找到你了！那个钱包是我的，里面有我妈妈的住院押金，谢谢你……」\n他眼眶有些红。",
+    // [B类修复] probability: 0.6→0.15 — 稀有回报事件不应高频触发
     conditions: function (st) {
       return (
         st.flags &&
@@ -5435,7 +5436,7 @@
         st.player.day >= (st.flags._walletReturnDay || 0) + 3
       );
     },
-    probability: 0.6,
+    probability: 0.15, // [B类修复] moral_wallet_return_reward
     repeatable: false,
     choices: [
       {
@@ -6086,7 +6087,7 @@
         st.player.day >= 730
       );
     },
-    probability: 0.5,
+    probability: 0.12, // [B类修复] era_startup_mentor_chance: 0.5→0.12
     repeatable: false,
     choices: [
       {
@@ -10844,7 +10845,7 @@
       // 旧等级≤2 且 新等级≥3 → 显著跳跃
       return curTier >= 3 && prevTier <= 2;
     },
-    probability: 0.5, // 条件已精确，触发比例高
+    probability: 0.08, // [B类修复] housing_upgrade_milestone: 0.5→0.08，条件已精确不需高概率
     repeatable: false,
     choices: [
       {
@@ -43205,7 +43206,10 @@
       var hasAnyRel = false;
       if (rel) {
         for (var r in rel) {
-          if (rel[r] && rel[r].met) { hasAnyRel = true; break; }
+          if (rel[r] && rel[r].met) {
+            hasAnyRel = true;
+            break;
+          }
         }
       }
       return hasAnyRel;
@@ -43277,7 +43281,8 @@
       if (st.weather && st.weather.current !== "typhoon") return false;
       if (st.player.phase !== "street") return false;
       var loc = st.trade && st.trade.currentLocation;
-      if (!loc || !["market", "construction", "slum"].includes(loc)) return false;
+      if (!loc || !["market", "construction", "slum"].includes(loc))
+        return false;
       if (st.flags && st.flags._typhoonChoiceSeen) return false;
       return true;
     },
@@ -43297,7 +43302,9 @@
           else if (loc === "market") lostIncome = Random.int(50, 100);
           else lostIncome = Random.int(30, 60);
           StateManager.addMessage(
-            "🏠 你决定安全第一，赶紧往家赶。虽然今天少赚了¥" + lostIncome + "，但台风天在外面太危险了。心情+5，健康+3。",
+            "🏠 你决定安全第一，赶紧往家赶。虽然今天少赚了¥" +
+              lostIncome +
+              "，但台风天在外面太危险了。心情+5，健康+3。",
             "info",
           );
         },
@@ -43314,7 +43321,9 @@
             st.status.health = Math.max(0, (st.status.health || 70) - 10);
             st.needs.fatigue = Math.min(100, (st.needs.fatigue || 0) + 25);
             StateManager.addMessage(
-              "💪 你顶住了最后的风雨，多干了一票赚了¥" + earn + "。但浑身湿透，健康-10，疲劳+25。",
+              "💪 你顶住了最后的风雨，多干了一票赚了¥" +
+                earn +
+                "。但浑身湿透，健康-10，疲劳+25。",
               "success",
             );
           } else {
@@ -43406,13 +43415,21 @@
           var reward = rewards[Random.int(0, 2)];
           if (reward.type === "cash") {
             st.resources.cash += reward.value;
-            st.resources.totalEarned = (st.resources.totalEarned || 0) + reward.value;
+            st.resources.totalEarned =
+              (st.resources.totalEarned || 0) + reward.value;
             StateManager.addMessage(
-              "🔑 「这是我的一点心意。」你收到了" + reward.msg + "，价值¥" + reward.value + "。",
+              "🔑 「这是我的一点心意。」你收到了" +
+                reward.msg +
+                "，价值¥" +
+                reward.value +
+                "。",
               "success",
             );
           } else if (reward.type === "info") {
-            st.player.intelligence = Math.min(100, (st.player.intelligence || 0) + 3);
+            st.player.intelligence = Math.min(
+              100,
+              (st.player.intelligence || 0) + 3,
+            );
             StateManager.addMessage(
               "🔑 对方告诉你一个行业内幕消息——某个批发市场下周会有大批低价货。智力+3，获得市场情报。",
               "success",
@@ -43501,7 +43518,9 @@
             st.resources.totalEarned = (st.resources.totalEarned || 0) + earn;
             st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 5);
             StateManager.addMessage(
-              "📱 你举起手机录下了全过程，配文「街头冷漠」发了出去。视频火了，点赞破万，平台打赏¥" + earn + "。道德-5，名气+8。",
+              "📱 你举起手机录下了全过程，配文「街头冷漠」发了出去。视频火了，点赞破万，平台打赏¥" +
+                earn +
+                "。道德-5，名气+8。",
               "warning",
             );
           } else {
@@ -43512,7 +43531,9 @@
             st.resources.totalEarned = (st.resources.totalEarned || 0) + earn;
             st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 3);
             StateManager.addMessage(
-              "📱 你最终还是举起了手机——「至少有人看到这件事，可能会帮忙。」视频获得了¥" + earn + "打赏。道德-3，名气+5。",
+              "📱 你最终还是举起了手机——「至少有人看到这件事，可能会帮忙。」视频获得了¥" +
+                earn +
+                "打赏。道德-3，名气+5。",
               "info",
             );
           }
@@ -43529,7 +43550,10 @@
             StateManager.addMessage("🚶 你快步走开了。道德-2。", "warning");
           } else {
             st.player.morality = Math.max(0, mor - 1);
-            StateManager.addMessage("🚶 你犹豫了一下，最终没敢停下来。道德-1。", "info");
+            StateManager.addMessage(
+              "🚶 你犹豫了一下，最终没敢停下来。道德-1。",
+              "info",
+            );
           }
         },
       },
@@ -43576,16 +43600,25 @@
               topSkills.push({ name: sk, level: skills[sk].level || 0 });
             }
           }
-          topSkills.sort(function (a, b) { return b.level - a.level; });
+          topSkills.sort(function (a, b) {
+            return b.level - a.level;
+          });
           var xpText = "";
           for (var i = 0; i < Math.min(3, topSkills.length); i++) {
-            skills[topSkills[i].name].xp = Math.min(1000, (skills[topSkills[i].name].xp || 0) + 20);
+            skills[topSkills[i].name].xp = Math.min(
+              1000,
+              (skills[topSkills[i].name].xp || 0) + 20,
+            );
             xpText += topSkills[i].name + "XP+20 ";
           }
           st.player.mental = Math.min(100, (st.player.mental || 0) + 5);
           st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 10);
           StateManager.addMessage(
-            "🤝 你接下了这个综合项目，发挥了自己的多面手优势。赚了¥" + income + "。" + xpText.trim() + "，心智+5，心情+10。",
+            "🤝 你接下了这个综合项目，发挥了自己的多面手优势。赚了¥" +
+              income +
+              "。" +
+              xpText.trim() +
+              "，心智+5，心情+10。",
             "success",
           );
         },
