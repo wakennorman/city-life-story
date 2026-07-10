@@ -862,55 +862,69 @@ function showNewsBriefingModal(news, state) {
 }
 
 function rollDailyNews(state) {
-  // 街头阶段：触发随机事件弹窗，同时小概率触发投资新闻
+  state.activeNews = state.activeNews || [];
+  state.flags.seenNewsToday = state.flags.seenNewsToday || [];
+
+  // 每日必出一条新闻（L1-L4 系统优先，fallback 旧池）
+  _rollOneDailyNews(state);
+
+  // 街头阶段额外触发事件弹窗
   if (state.player.phase === "street") {
     rollStreetEvent(state);
-    // 8%概率接到市场消息（影响投资市场，仅投资类新闻）
-    if (Random.chance(0.08) && typeof getRandomNewsEvent === "function") {
-      var investNews = null;
-      for (var _attempt = 0; _attempt < 5; _attempt++) {
-        var candidate = getRandomNewsEvent(state);
-        if (
-          candidate &&
-          candidate.type === "investment" &&
-          !(state.flags.seenNewsToday || []).includes(candidate.id)
-        ) {
-          investNews = candidate;
-          break;
-        }
-      }
-      if (investNews) {
-        investNews._appliedDay = state.player.day;
-        state.activeNews = state.activeNews || [];
-        state.activeNews.push(investNews);
-        state.flags.seenNewsToday = state.flags.seenNewsToday || [];
-        state.flags.seenNewsToday.push(investNews.id);
-        applyNewsEffect(investNews, state);
-        StateManager.addMessage("📰 " + investNews.headline, "event");
-        showNewsBriefingModal(investNews, state);
-      }
-    }
-    return;
+  } else {
+    // 职场阶段触发职场事件
+    rollCorporateEvent(state);
   }
-  // 职场阶段：保留少量市场新闻 + 事件弹窗
-  const newsChance = state.activeNews.length > 0 ? 0.05 : 0.12;
-  if (Random.chance(newsChance)) {
-    const news = getRandomNewsEvent(state);
-    if (news && !state.flags.seenNewsToday.includes(news.id)) {
-      news._appliedDay = state.player.day;
-      state.activeNews.push(news);
-      state.flags.seenNewsToday.push(news.id);
-      applyNewsEffect(news, state);
-      StateManager.addMessage(`📰 ${news.headline}`, "event");
-      showNewsBriefingModal(news, state);
-    }
-  }
-  // 职场事件
-  rollCorporateEvent(state);
-  // 清理今日已见新闻列表
+
+  // 每3天重置已见新闻列表，让新闻可以重复出现
   if (state.player.day % 3 === 0) {
     state.flags.seenNewsToday = [];
   }
+}
+
+/** 每日一条新闻核心函数：从 L1-L4 池中选取，避免当日重复 */
+function _rollOneDailyNews(state) {
+  var seen = state.flags.seenNewsToday || [];
+  var news = null;
+
+  // 优先从 L1-L4 新闻池取（已有 2660 条）
+  if (typeof getRandomNewsByLevel === "function") {
+    // 按天数选层级：早期多 L3/L4 接地气，后期 L1/L2 宏观影响加深
+    var day = state.player.day || 1;
+    var levelPool;
+    if (day < 30) levelPool = ["L3", "L4", "L4"];
+    else if (day < 90) levelPool = ["L2", "L3", "L4"];
+    else levelPool = ["L1", "L2", "L3", "L4"];
+    var targetLevel = Random.fromArray(levelPool);
+    for (var _a = 0; _a < 5; _a++) {
+      var candidate = getRandomNewsByLevel(targetLevel, state);
+      if (candidate && !seen.includes(candidate.id)) {
+        news = candidate;
+        break;
+      }
+    }
+  }
+
+  // fallback：旧新闻池
+  if (!news && typeof getRandomNewsEvent === "function") {
+    for (var _b = 0; _b < 5; _b++) {
+      var fb = getRandomNewsEvent(state);
+      if (fb && !seen.includes(fb.id)) {
+        news = fb;
+        break;
+      }
+    }
+  }
+
+  if (!news) return;
+
+  news._appliedDay = state.player.day;
+  state.activeNews.push(news);
+  seen.push(news.id);
+  state.flags.seenNewsToday = seen;
+  applyNewsEffect(news, state);
+  StateManager.addMessage("📰 " + news.headline, "event");
+  showNewsBriefingModal(news, state);
 }
 
 /** 每日结束时的清理 */

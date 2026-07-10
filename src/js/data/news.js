@@ -2058,37 +2058,61 @@ function checkNewsFollowUp(state) {
  *   - 但 sectorHeat/marketMood 等世界参数保持累积，不会回滚
  */
 function cleanupExpiredNews(state) {
+  var today = state.player.day;
   state.activeNews = (state.activeNews || []).filter(function (news) {
-    if (news._appliedDay === undefined) news._appliedDay = state.player.day;
+    if (news._appliedDay === undefined) news._appliedDay = today;
     var dur = news.effects;
-    // effects 可能是数字（天数）或对象（含 duration 字段）
-    var durationVal = typeof dur === "number" ? dur : dur.duration || 5;
-    var expired = state.player.day - news._appliedDay >= durationVal;
-    return !expired;
+    var durationVal =
+      typeof dur === "number" ? dur : (dur && dur.duration) || 5;
+    return today - news._appliedDay < durationVal;
   });
 
   if (state.flags && state.flags._activeIntel) {
     state.flags._activeIntel = state.flags._activeIntel.filter(
       function (intel) {
-        return intel.expireDay >= state.player.day;
+        return intel.expireDay >= today;
       },
     );
   }
   if (state.flags && state.flags._pendingIntelNews) {
     state.flags._pendingIntelNews = state.flags._pendingIntelNews.filter(
       function (intel) {
-        return intel.triggerDay >= state.player.day;
+        return intel.triggerDay >= today;
       },
     );
   }
 
-  // v3.65: 不再回滚 intro news 效果
-  // intro news 的世界参数影响（sectorHeat/marketMood）已通过 applyWorldNewsToParams 持久化
-  // 每日新闻会在此基础上持续叠加修改，世界状态自然演变
+  // 线性衰减：每日从 activeNews 重算工作倍率
+  // decay = max(0, 1 - elapsed/duration)，新闻第1天100%效果，到期时0%
+  state._jobMultipliers = {};
+  state._allJobsBonus = 1;
+  for (var i = 0; i < state.activeNews.length; i++) {
+    var n = state.activeNews[i];
+    var eff = n.effects;
+    if (!eff || typeof eff !== "object") continue;
+    var dur = eff.duration || 5;
+    var elapsed = today - (n._appliedDay || today);
+    var decay = Math.max(0, 1 - elapsed / dur);
+    if (decay <= 0) continue;
 
-  // 恢复工作倍率（非 intro news 的新闻也适用）
-  if (state.activeNews.length === 0) {
-    state._jobMultipliers = {};
-    state._allJobsBonus = 1;
+    if (eff.jobBonus && eff.jobMultiplier) {
+      var bonusMul = 1 + (eff.jobMultiplier - 1) * decay;
+      for (var j = 0; j < eff.jobBonus.length; j++) {
+        var jid = eff.jobBonus[j];
+        state._jobMultipliers[jid] =
+          (state._jobMultipliers[jid] || 1) * bonusMul;
+      }
+    }
+    if (eff.jobPenalty && eff.jobMultiplier) {
+      var penMul = 1 + (eff.jobMultiplier - 1) * decay;
+      for (var k = 0; k < eff.jobPenalty.length; k++) {
+        var pid = eff.jobPenalty[k];
+        state._jobMultipliers[pid] = (state._jobMultipliers[pid] || 1) * penMul;
+      }
+    }
+    if (eff.allJobsBonus) {
+      state._allJobsBonus =
+        (state._allJobsBonus || 1) * (1 + (eff.allJobsBonus - 1) * decay);
+    }
   }
 }
