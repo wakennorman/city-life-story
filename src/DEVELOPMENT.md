@@ -1,8 +1,47 @@
 # 城市浮生记 (City Life Story) — 开发文档
 
-> 最后更新: 2026-07-11（v3.85 事业Tab全面打磨）
+> 最后更新: 2026-07-11（v3.86 统一悬停动效）
 >
-> commit: c6efeb51（v3.77 相关修复已合并入主线）
+> commit: 468aec8a（v3.86 统一悬停动效）
+
+---
+
+## 2026-07-11 — v3.86 统一悬停动效（标准=action-card hover）
+
+### 统一标准
+
+以 `action-card:hover` 为标准，统一所有可点击卡片和按钮的悬停动效：
+
+```
+background: var(--bg-card-hover);
+border-color: var(--accent);
+transform: translateY(-1px);
+box-shadow: 0 4px 12px var(--accent-glow);
+```
+
+### CSS 类统一（9 类）
+
+| CSS 类                    | 原动效                     | 新动效                       |
+| ------------------------- | -------------------------- | ---------------------------- |
+| `.card`                   | 仅 border-color            | 完整标准                     |
+| `.hustle-card`            | 仅 border-color            | 完整标准                     |
+| `.btn`                    | bg + border-color, 无 lift | 完整标准(border→accent)      |
+| `.btn-primary`            | 仅 background              | 加 lift + shadow             |
+| `.world-news-item`        | bg + border, 无 lift       | 加 lift + shadow             |
+| `.world-news-skip-btn`    | 自定义三属性               | 完整标准                     |
+| `.marketing-channel`      | bg-secondary               | 完整标准                     |
+| `.team-management-action` | 仅 border-color            | 完整标准                     |
+| `.npc-visit-btn`          | 颜色互换                   | 保留颜色互换 + lift + shadow |
+
+### 内联 onmouseover 统一（9 处）
+
+所有 JS 中手动设置 `onmouseover` 的内联元素（main.js/dreams.js/actions_extra.js/render.js/startup.js ×5）从仅改 `borderColor` 升级为完整标准效果（bg + lift + shadow），`onmouseout` 同时复位。
+
+### 影响文件与验证
+
+- 影响: style.css(+31) / startup.js(+11) / render.js(+1) / main.js/dreams.js/actions_extra.js each +1
+- 验证: node --check ✅ / python build.py 7765.8KB ✅（已 commit 本地待推）
+- commit: `468aec8a`（submodule）· `a9e541b`（parent）✅ 本地已提交
 
 ---
 
