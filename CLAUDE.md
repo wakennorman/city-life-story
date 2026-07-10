@@ -156,7 +156,16 @@ navHints: [
 
 > 每次收工前覆盖更新本节（只留最新状态，不要追加历史）；详细变更历史在 `src/DEVELOPMENT.md`，不需要每次都读。
 
-- **最新一次工作 (2026-07-11)**：v3.85 — 事业Tab全面打磨：属性训练重平衡/求职框线/副业排列
+- **最新一次工作 (2026-07-11)**：v3.86 — 统一悬停动效 + 交通方式步行选项
+  - **🎯 统一悬停动效**：以 `action-card:hover` 为标准，统一9个CSS类( card/hustle-card/btn/btn-primary/world-news-item/world-news-skip-btn/marketing-channel/team-management-action/npc-visit-btn ) + 9处JS内联onmouseover
+  - **🚶 交通方式新增步行按钮**：步行免费全城可达，AP=6+跳数×4
+  - **🖱️ transit-btn悬停修复**：新增`.transit-btn:hover` CSS规则(标准hover)，移除所有内联style
+  - **适应walk模式**：价格=0/AP hops-based/消息特殊处理/模式映射全覆盖
+  - **影响文件**: style.css(+31 transit-btn+base) / render.js(~20行移除内联style+步行按钮+walk逻辑)
+  - **验证**: node --check ✅ / build.py 7766.6KB ✅
+  - **commit (submodule)**: `5499d9a3` · **parent**: `cfcdc86`
+
+- **上一轮工作 (2026-07-11)**：v3.85 — 事业Tab全面打磨：属性训练重平衡/求职框线/副业排列
   - **🏋️ 属性训练重平衡**：参考《完美人生》，晨跑免费(原¥40)、冥想免费(原¥70+50)、健身房¥30+15；递减收益(≥70→0.8x, ≥80→0.6x, ≥90→0.4x)；统一TRAIN_DATA数据源，显示AP消耗+收益范围+地点要求
   - **🐛 showModal空白按钮修复**：`{label,primary,onClick}`→`{text,cls,callback}`，按钮自动`color:#fff`防CSS覆盖
   - **💼 求职UI框线增强**：新增`.card`CSS类(3px左侧彩色accent条+hover)，可投递绿色/条件不足灰色区分
