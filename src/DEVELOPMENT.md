@@ -1,6 +1,6 @@
 # 城市浮生记 (City Life Story) — 开发文档
 
-> 最后更新: 2026-07-10（v3.77 8项UI/逻辑修复 + loop/r20-r119 rebase 超集合并）
+> 最后更新: 2026-07-11（v3.85 事业Tab全面打磨）
 >
 > commit: c6efeb51（v3.77 相关修复已合并入主线）
 
@@ -6297,3 +6297,36 @@ social 策略存活率 60% → 80%（+20pp），NPC互惠帮助社交策略获�
 - `node --check` ✅
 - `python build.py` 5887.5KB ✅
 - **commit**：`b15dc467`（本地待推）
+
+---
+
+## 2026-07-11 — v3.85 事业Tab全面打磨
+
+> **更新内容**：属性训练重平衡（晨跑/冥想免费+递减收益）、求职UI框线增强（.card CSS类+左侧accent条）、副业排列规整（flex→CSS Grid）、showModal空白按钮Bug修复
+
+### 影响文件
+
+| 文件                          | 变更                                                                                                 |
+| ----------------------------- | ---------------------------------------------------------------------------------------------------- |
+| `src/js/ui/render.js`         | 属性训练数据源TRAIN_DATA统一 + UI重写 + `__doTrain`按钮参数修复 + `__doTrainCore`递减收益(+393/-414) |
+| `src/css/style.css`           | 新增`.card` `.hustle-grid` `.hustle-card` CSS类(+89)                                                 |
+| `src/js/ui/career_dev.js`     | 求职卡片边框增强 + 推荐卡片样式(+27)                                                                 |
+| `src/js/ui/side_hustle_ui.js` | 副业列表flex→grid + CSS类化(+57)                                                                     |
+| `src/js/ui/modal.js`          | showModal按钮文字色彩防护 + body样式(+7)                                                             |
+
+### 变更详情
+
+**🏋️ 属性训练重平衡**：晨跑免费、冥想免费随处可做。递减收益（≥70→0.8x, ≥80→0.6x, ≥90→0.4x）。统一AP消耗。地点锚定弹窗确认。
+
+**🐛 showModal空白按钮修复**：`{label, primary, onClick}`→`{text, cls, callback}`，按钮color:#fff防CSS覆盖。
+
+**💼 求职UI框线增强**：新增`.card` CSS类（左侧3px彩色accent条），可投递→绿色，条件不足→浅灰。职业路径CSS Grid自适应。
+
+**🔄 副业UI规整**：CSS Grid卡片网格，统一header→desc→meta→reqs→btn结构。
+
+### 验证
+
+- node syntax check: ✅ 全部通过（修复render.js重复代码块SyntaxError）
+- `python build.py`: 7758.9KB ✅
+- 头浏览器无运行时错误 ✅
+- **commit**: `45b53556`(submodule) · `5ff7fba`(parent) ✅ 已push

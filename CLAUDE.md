@@ -156,7 +156,16 @@ navHints: [
 
 > 每次收工前覆盖更新本节（只留最新状态，不要追加历史）；详细变更历史在 `src/DEVELOPMENT.md`，不需要每次都读。
 
-- **最新一次工作 (2026-07-11)**：v3.84 — 事业Tab 5项Bug修复
+- **最新一次工作 (2026-07-11)**：v3.85 — 事业Tab全面打磨：属性训练重平衡/求职框线/副业排列
+  - **🏋️ 属性训练重平衡**：参考《完美人生》，晨跑免费(原¥40)、冥想免费(原¥70+50)、健身房¥30+15；递减收益(≥70→0.8x, ≥80→0.6x, ≥90→0.4x)；统一TRAIN_DATA数据源，显示AP消耗+收益范围+地点要求
+  - **🐛 showModal空白按钮修复**：`{label,primary,onClick}`→`{text,cls,callback}`，按钮自动`color:#fff`防CSS覆盖
+  - **💼 求职UI框线增强**：新增`.card`CSS类(3px左侧彩色accent条+hover)，可投递绿色/条件不足灰色区分
+  - **🔄 副业UI排列规整**：flex-wrap→CSS Grid(`.hustle-grid`)，统一卡片结构(header→desc→meta→reqs→btn)
+  - **影响文件**: render.js(+393/-414) / style.css(+89) / career_dev.js(+27) / side_hustle_ui.js(+57) / modal.js(+7)
+  - **验证**: node --check ✅(修复合并重复代码块SyntaxError) / build.py 7758.9KB ✅ / 头浏览器无运行时错误
+  - **commit**: `45b53556`(submodule) · `5ff7fba`(parent) ✅ 已push
+
+- **上一轮工作 (2026-07-11)**：v3.84 — 事业Tab 5项Bug修复
   - **Bug1 职业路径弹窗无响应**: showModal({buttons:undefined})→TypeError；修复：buttons默认=[]；showCareerPathPreviewModal改用buttons数组参数
   - **Bug2 属性训练无地点检测**: 新增_TRAIN_LOCATION_MAP；__doTrain拆分为地点检查+弹窗→__doTrainCore；不在目标地点弹确认弹窗
   - **Bug3 健康显示[object Object]**: pg.health.physical是对象；新增_healthScoreLabel()提取.score→"良好/一般/欠佳/较差(N/100)"彩色标签
