@@ -158,7 +158,13 @@ const STREET_JOBS = [
     icon: "🍢",
     location: "commercialDist",
     requirements: { minAge: 16, maxAge: 60 },
-    effects: { fatigue: 16, hygiene: -5, happiness: 3, cookingXp: 4 },
+    effects: {
+      fatigue: 16,
+      hygiene: -5,
+      happiness: 3,
+      cookingXp: 4,
+      socialXp: 2,
+    },
     payCalc(state) {
       const skillBonus = state.skills.cooking.level * 0.8;
       const base = Random.float(45 + skillBonus, 80 + skillBonus);
@@ -343,7 +349,7 @@ const STREET_JOBS = [
     icon: "🏥",
     location: "hospital",
     requirements: { mental: 25, minAge: 22, maxAge: 55 },
-    effects: { fatigue: 15, happiness: 5, caregiverXp: 2 },
+    effects: { fatigue: 15, happiness: 5, caregiverXp: 2, medicineXp: 1 },
     payCalc(state) {
       return Math.floor(80 + state.player.mental * 0.3 + Random.float(0, 80));
     },

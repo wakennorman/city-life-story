@@ -116,6 +116,8 @@ function createDefaultState() {
       accounting: { level: 0, xp: 0 },
       electrician: { level: 0, xp: 0 },
       welding: { level: 0, xp: 0 },
+      medicine: { level: 0, xp: 0 }, // 医疗技能，unlock medical/doctor 职业路径
+      social: { level: 0, xp: 0 }, // 社交技能，unlock wholesale_flip 行动 + 2 事件叙事
     },
     certificates: [],
     skillBranches: {}, // { cooking: "home_chef", ... } 技能→已选分支ID

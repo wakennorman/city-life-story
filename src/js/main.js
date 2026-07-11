@@ -1668,6 +1668,9 @@ function startNewGame() {
     initLifeDecisions(StateManager.getState());
   }
 
+  // v3.99 (loop R3)：技能注册表补全 — 旧存档兼容
+  ensureSkillRegistry(StateManager.getState());
+
   // v3.1: 初始化社交网络系统
   if (typeof ensureSocialNetworkState === "function") {
     ensureSocialNetworkState(StateManager.getState());
@@ -1844,6 +1847,8 @@ function loadExistingGame(slot) {
     if (typeof initReputation === "function") {
       initReputation(StateManager.getState());
     }
+    // v3.99 (loop R3)：技能注册表补全（旧存档无 medicine/social）
+    ensureSkillRegistry(StateManager.getState());
     StateManager.addMessage("📂 存档已加载，欢迎回来！", "info");
     document.getElementById("welcome-screen").style.display = "none";
     document.getElementById("app").style.display = "";
@@ -3782,6 +3787,8 @@ function getAvailableActions(state) {
                 state.player.physique + cert.effects.physique,
               );
             if (cert.effects.repair) addSkillXp("repair", cert.effects.repair);
+            if (cert.effects.medicineXp)
+              addSkillXp("medicine", cert.effects.medicineXp);
             StateManager.addMessage(
               `📜 恭喜！成功考取${cert.name}！`,
               "success",
@@ -4421,6 +4428,8 @@ function doStreetJob(job) {
     addSkillXp("intelligence", job.effects.intelligenceXp || 0);
     addSkillXp("english", job.effects.englishXp || 0);
     addSkillXp("welding", job.effects.weldingXp || 0);
+    addSkillXp("medicine", job.effects.medicineXp || 0);
+    addSkillXp("social", job.effects.socialXp || 0);
   }
 
   // 属性经验转化
@@ -4802,8 +4811,22 @@ function getSkillName(key) {
     accounting: "会计",
     electrician: "电工",
     welding: "焊接",
+    medicine: "医学",
+    social: "社交",
   };
   return names[key] || key;
+}
+
+/** v3.99 (loop R3)：技能注册表补全 — 旧存档/读档后缺失 medicine/social 时自动补 */
+function ensureSkillRegistry(state) {
+  if (!state || !state.skills) return;
+  var required = ["medicine", "social"];
+  for (var i = 0; i < required.length; i++) {
+    var key = required[i];
+    if (!state.skills[key]) {
+      state.skills[key] = { level: 0, xp: 0 };
+    }
+  }
 }
 
 /**

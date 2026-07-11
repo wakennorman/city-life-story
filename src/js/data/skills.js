@@ -115,7 +115,7 @@ const CERTIFICATES = [
     name: "护理员证",
     desc: "经过专业培训取得护理员资格，可以从事护工/养老院护理工作。老龄化社会需求旺盛，医院护工收入+30%。",
     requirements: { cash: 400, mental: 25, ageMin: 18, ageMax: 55 },
-    effects: { caregiverXp: 50, illnessRiskReduction: 0.1 },
+    effects: { medicineXp: 50, caregiverXp: 30, illnessRiskReduction: 0.1 },
     salaryBonus: { medical: 0.1 },
     examPassRate: 0.7,
     trainingDays: 7,
