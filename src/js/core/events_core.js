@@ -950,15 +950,3 @@ function dailyCleanup(state) {
     cleanupConduitQueue(state);
   }
 }
-
-/** 事件奖励动态缩放（P1-3: 事件奖励与财富等级匹配） */
-function scaleEventReward(baseReward, state) {
-  var wealthLevel = Math.floor(Math.log10(state.player.cash + 1));
-  var scale = 1 + wealthLevel * 0.5;
-  return Math.floor(baseReward * scale);
-}
-
-/** 季度结束时的职场清理 */
-function quarterlyCleanup(state) {
-  // 占位（兼容旧调用）
-}
