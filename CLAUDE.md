@@ -156,7 +156,21 @@ navHints: [
 
 > 每次收工前覆盖更新本节（只留最新状态，不要追加历史）；详细变更历史在 `src/DEVELOPMENT.md`，不需要每次都读。
 
-- **最新一次工作 (2026-07-11)**：v3.90(loop R43) — 新增4个联动事件(王婶张姐调解/第一桶金/李陈合作/周年归属感)
+- **最新一次工作 (2026-07-11)**：v3.88f(loop R43) — A/B类事件审查+新增5联动事件
+  - **指令一审查**：全量扫描4个事件文件(250+事件)，发现1处A类+1处B类
+    - A类修复: `ev_used_car_crash` 补充 chen_ge.met 门岗（story直呼陈哥但无条件）
+    - B类修复: `edu_graduation_ceremony` 恢复 story 字段（原为desc函数导致渲染空白+phase非法数组）
+    - 其余NPC/天气/职业事件均已通过累积133处[自洽修复]注释覆盖 ✅
+  - **指令二新增**：5个高影响联动事件(社工/补贴/城管/亲情/师徒)
+    - `social_worker_visit` — mental<30+housing≤级+漂泊≥14天 → 社工温情/精神成长/可选成为志愿者
+    - `gov_subsidy_window` — cash<200+苦力≥30天 → 低保救助+培训机会（损失厌恶：不食嗟来之食分支）
+    - `chengguan_encounter_interactive` — 摆摊经验+热度≥40 → 4种应对策略（逃跑/求情/示好/硬扛）
+    - `parents_phone_call` — day≥60+资金少 → 母亲电话/转钱/承诺回去/敷衍（愧疚感flag回声）
+    - `craftsman_apprentice` — 手艺≥60+day≥90 → 收徒仪式+30天后链式回报payoff
+  - **影响文件**：`events_street_life.js`(+10)/`cross_system_events.js`(~+340行 B类修复+新事件)
+  - **验证**：node --check ✅ / build.py 7883.2KB ✅ / commits: A类`4a631214`+B类修复+dist重建
+
+- **上一轮 (2026-07-11)**：v3.90(loop R43) — 新增4个联动事件(王婶张姐调解/第一桶金/李陈合作/周年归属感)
   - **指令一审查**：全量扫描15个事件文件，A类缺陷0个（已累积133处[自洽修复]注释覆盖所有NPC/天气/职业门控）
   - **指令二新增**：4个高影响联动事件填补空白区
     - `npc_mediate_aunt_wang_sister_zhang` — 双NPC好感≥30调解，魅力成长
