@@ -1165,14 +1165,26 @@ function renderCurrentTab_legacy(state, anchorGoodId) {
 
   area.innerHTML = "";
 
-  // 时间槽指示器（日期 + 时段 + AP）
-  renderTimeSlot(state, area);
-
-  // 移动端专属：背包 + 住所状态条（上移至标题行位置，标题行已移除）
-  renderLocationBar(state, area);
-
-  // 移动端专属：常驻状态条（10 个核心数值，2 行 × 5 条 — 直观显性化）
-  renderStatsStrip(state, area);
+  // [v3.88] 手机端固定 HUD：时间槽+位置条+状态条移至 #mobile-hud（flex-shrink:0 in #main）
+  // 与 #tab-bar 同级，不随内容滚动，玩家始终看到 AP 和状态
+  if (window.innerWidth <= 768) {
+    var _hudEl = document.getElementById("mobile-hud");
+    if (!_hudEl) {
+      _hudEl = document.createElement("div");
+      _hudEl.id = "mobile-hud";
+      area.parentNode.insertBefore(_hudEl, area);
+    }
+    _hudEl.innerHTML = "";
+    renderTimeSlot(state, _hudEl);
+    renderLocationBar(state, _hudEl);
+    renderStatsStrip(state, _hudEl);
+  } else {
+    // 桌面端：清空 HUD（若切换过来），时间槽仍放内容区
+    var _existHud = document.getElementById("mobile-hud");
+    if (_existHud) _existHud.innerHTML = "";
+    // 时间槽指示器（日期 + 时段 + AP）
+    renderTimeSlot(state, area);
+  }
 
   // 活跃新闻横幅已隐藏：新闻内容通过消息日志+弹窗传达，横幅占空间且玩家不看
 
@@ -4821,19 +4833,19 @@ function renderInventoryTab(state, parent) {
   equipTitle.style.cssText = "color:var(--text-muted);margin-bottom:4px;";
   equipTitle.textContent = "🛡️ 装备";
   equipDiv.appendChild(equipTitle);
-  // 购买地点引导提示
+  // 购买地点引导提示（仅含真实装备槽对应地点）
   var equipHint = document.createElement("div");
   equipHint.style.cssText =
     "font-size:10px;color:var(--text-muted);margin-bottom:8px;padding:4px 8px;background:rgba(255,255,255,0.03);border-radius:4px;";
   equipHint.textContent =
-    "购买地点：劳保/工具→批发市场 | 服装→商业区 | 电子→商业区/科技园 | 书本→大学城";
+    "购买地点：⛑️头部/🧤手部→批发市场/工地 | 👕身体/👟脚部→批发市场/商业区 | 📿配件→批发市场/商业区";
   equipDiv.appendChild(equipHint);
   const slots = [
-    { key: "head", name: "头部", icon: "⛑️" },
-    { key: "body", name: "身体", icon: "👕" },
-    { key: "feet", name: "脚部", icon: "👟" },
-    { key: "hand", name: "手部", icon: "🧤" },
-    { key: "accessory", name: "配件", icon: "📿" },
+    { key: "head", name: "头部", icon: "⛑️", buyLocs: ["wholesaleMarket", "construction", "slum"] },
+    { key: "body", name: "身体", icon: "👕", buyLocs: ["wholesaleMarket", "commercialDist"] },
+    { key: "feet", name: "脚部", icon: "👟", buyLocs: ["wholesaleMarket", "construction"] },
+    { key: "hand", name: "手部", icon: "🧤", buyLocs: ["wholesaleMarket", "construction"] },
+    { key: "accessory", name: "配件", icon: "📿", buyLocs: ["wholesaleMarket", "commercialDist", "techPark"] },
   ];
   const equipGrid = document.createElement("div");
   equipGrid.className = "action-cards";
@@ -4872,7 +4884,6 @@ function renderInventoryTab(state, parent) {
     }
     var qualityBadge = "";
     if (qualityInfo && displayItem && displayItem.actualPrice) {
-      // 品质标签同时标对应价格：贵即好货（普通不显示徽章）
       qualityBadge = `<span class="quality-badge quality-${qualityId}">${qualityInfo.icon} ${qualityInfo.name} ¥${displayItem.actualPrice}</span>`;
     }
     var priceDisplay = displayItem?.actualPrice
@@ -4882,11 +4893,61 @@ function renderInventoryTab(state, parent) {
     card.innerHTML = `
       <div style="font-size:11px;color:var(--text-muted)">${slot.icon} ${slot.name}</div>
       <div style="font-size:12px;color:${displayItem ? "var(--success)" : "var(--text-muted)"};display:flex;align-items:center;gap:4px;flex-wrap:wrap;">
-        ${displayItem ? displayItem.name : "(空)"} ${qualityBadge}
+        ${displayItem ? displayItem.name : "(空)"}  ${qualityBadge}
       </div>
       ${priceDisplay}
       ${repairHtml}
+      ${!displayItem ? '<div style="font-size:10px;color:var(--accent);margin-top:4px;">👆 点击查看购买</div>' : ''}
     `;
+
+    // 空槽：点击弹出导航弹窗
+    if (!displayItem) {
+      card.style.cursor = "pointer";
+      (function(s) {
+        card.addEventListener("click", function() {
+          var slotItems = typeof ITEMS !== "undefined"
+            ? ITEMS.filter(function(i) { return i.slot === s.key && !i.isIngredient; })
+            : [];
+          var itemLines = slotItems.map(function(i) {
+            var locNames = (i.buyLocations || []).map(function(l) {
+              return typeof getLocation === "function" ? (getLocation(l)||{}).name || l : l;
+            }).join("、");
+            return i.icon + " " + i.name + "（¥" + i.price + "）→ " + locNames;
+          }).join("\n");
+          // 推荐地点（出现次数最多的 buyLocation）
+          var locCount = {};
+          slotItems.forEach(function(i) {
+            (i.buyLocations || []).forEach(function(l) { locCount[l] = (locCount[l]||0)+1; });
+          });
+          var topLoc = s.buyLocs[0];
+          var topScore = 0;
+          Object.keys(locCount).forEach(function(l) {
+            if (locCount[l] > topScore) { topScore = locCount[l]; topLoc = l; }
+          });
+          var topLocName = typeof getLocation === "function" ? (getLocation(topLoc)||{}).name || "批发市场" : "批发市场";
+          showModal({
+            title: s.icon + " " + s.name + "装备购买指南",
+            message: "可购买的" + s.name + "装备：\n\n" + (itemLines || "暂无数据"),
+            buttons: [
+              {
+                text: "🗺️ 前往" + topLocName,
+                cls: "btn-primary",
+                callback: function() {
+                  if (typeof navigateTo === "function") {
+                    navigateTo({ type: "location", locationKey: topLoc });
+                  } else {
+                    state.location = topLoc;
+                    if (typeof renderAll === "function") renderAll(state);
+                  }
+                }
+              },
+              { text: "关闭", cls: "btn", callback: function() {} }
+            ]
+          });
+        });
+      })(slot);
+    }
+
     equipGrid.appendChild(card);
   }
   equipDiv.appendChild(equipGrid);

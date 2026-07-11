@@ -523,6 +523,14 @@ body {
   gap: 12px;
 }
 
+/* --- Mobile HUD (v3.88): 固定顶部状态区，不随内容滚动 --- */
+#mobile-hud {
+  flex-shrink: 0;
+  overflow: hidden;
+  background: var(--bg-secondary);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
 /* --- Time Slot Indicator --- */
 #time-slot-indicator {
   display: flex;
