@@ -48012,5 +48012,143 @@
     ],
   });
 
+  // ====== v3.90 联动事件（空白区填充·第二批） ======
+  // 全部 gate 在已验证 state 字段：player.phase / skills.*.level / flags._habits.lowHungerStreak
+  // / trade.currentLocation / weather.current / needs.* / day。叙事与闸门严格自洽。
+  RANDOM_EVENTS.push({
+    id: "coding_expert_review_pr",
+    phase: "street",
+    icon: "💻",
+    title: "代码里的江湖",
+    story:
+      "你修 bug 的手速被同行看到了。一位前辈私信你：「小子，你这异常处理写得比我们组 senior 还干净。」他扔来一个开源项目的 PR 邀请——「来，帮我 review 这坨山。」",
+    conditions: function (st) {
+      if (st.player.phase !== "street") return false; // 检查：仅街头阶段
+      if (!st.skills || !st.skills.coding) return false; // 检查：coding 技能存在
+      if ((st.skills.coding.level || 0) < 40) return false; // 检查：编程≥40（专业视角门槛）
+      if ((st.day || 0) < 30) return false; // 检查：day≥30
+      if (st.flags && st.flags._codingPrSeen) return false; // 检查：未触发过
+      return true;
+    },
+    probability: 0.05, // [PLACEHOLDER] 待 playtest 调参
+    repeatable: false,
+    choices: [
+      {
+        text: "🔍 接下 PR，认真 review",
+        hint: "coding.xp +30",
+        apply: function (st) {
+          st.flags._codingPrSeen = true; // 标记：防重复
+          if (st.skills.coding)
+            st.skills.coding.xp = (st.skills.coding.xp || 0) + 30; // 编程经验+
+          StateManager.addMessage(
+            "你花了一晚把那坨山理成了清爽的模块。前辈回了个「牛逼」。coding 经验+30。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "🙅 婉拒，怕坑",
+        hint: "无变化",
+        apply: function (st) {
+          st.flags._codingPrSeen = true; // 标记：防重复
+          StateManager.addMessage("你婉拒了。有些江湖，还没准备好闯。", "info");
+        },
+      },
+    ],
+  });
+
+  RANDOM_EVENTS.push({
+    id: "heatwave_market_faint",
+    phase: "street",
+    icon: "🥵",
+    title: "三伏天的商圈",
+    story:
+      "气温计爆表，商圈柏油路面烫得能煎蛋。你拎着东西走到一半，眼前一黑——旁边卖冰粉的阿姨一把扶住你：「崽啊，快进来吹会儿空调，这天气哪是人熬的。」",
+    conditions: function (st) {
+      if (st.player.phase !== "street") return false; // 检查：仅街头阶段
+      if (!st.weather || st.weather.current !== "heatwave") return false; // 检查：极端高温天气
+      if (!st.trade || st.trade.currentLocation !== "commercialDist")
+        return false; // 检查：身处商圈
+      if ((st.day || 0) < 15) return false; // 检查：day≥15
+      if (st.flags && st.flags._heatwaveFaintSeen) return false; // 检查：未触发过
+      return true;
+    },
+    probability: 0.04, // [PLACEHOLDER] 待 playtest 调参
+    repeatable: false,
+    choices: [
+      {
+        text: "🧊 进店歇脚，阿姨硬塞冰粉",
+        hint: "happiness+15，hunger+10",
+        apply: function (st) {
+          st.flags._heatwaveFaintSeen = true; // 标记：防重复
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 15); // 心情+
+          st.needs.hunger = Math.min(100, (st.needs.hunger || 0) + 10); // 饥饱+
+          StateManager.addMessage(
+            "阿姨的冰粉甜得发苦——是被人惦记的滋味。心情+15，饥饱+10。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "🚶 谢过阿姨，硬撑着走了",
+        hint: "fatigue+10（硬扛）",
+        apply: function (st) {
+          st.flags._heatwaveFaintSeen = true; // 标记：防重复
+          st.needs.fatigue = Math.min(100, (st.needs.fatigue || 0) + 10); // 疲惫+
+          StateManager.addMessage(
+            "你谢过阿姨，咬牙走进了热浪里。疲惫+10。",
+            "info",
+          );
+        },
+      },
+    ],
+  });
+
+  RANDOM_EVENTS.push({
+    id: "hunger_streak_neighbor_share",
+    phase: "street",
+    icon: "🍚",
+    title: "连着饿的日子里",
+    story:
+      "这已经是你记不清第几个胃里空空的早晨。隔壁的租客老周敲了敲门，递来半袋米和一罐咸菜：「我吃不完，你先拿着。人不能连饭都吃不上。」你这才发现，自己已经连着好些天没正经吃过饭了。",
+    conditions: function (st) {
+      if (st.player.phase !== "street") return false; // 检查：仅街头阶段
+      if (!st.flags || !st.flags._habits) return false; // 检查：习惯 flag 容器存在
+      if ((st.flags._habits.lowHungerStreak || 0) < 3) return false; // 检查：连续饥饿≥3天（真实累积状态）
+      if ((st.day || 0) < 10) return false; // 检查：day≥10
+      if (st.flags._hungerShareSeen) return false; // 检查：未触发过
+      return true;
+    },
+    probability: 0.06, // [PLACEHOLDER] 待 playtest 调参
+    repeatable: false,
+    choices: [
+      {
+        text: "🙏 收下，记下这份人情",
+        hint: "hunger+40，happiness+10",
+        apply: function (st) {
+          st.flags._hungerShareSeen = true; // 标记：防重复
+          st.needs.hunger = Math.min(100, (st.needs.hunger || 0) + 40); // 饥饱+
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 10); // 心情+
+          StateManager.addMessage(
+            "米下锅的那一刻，眼眶有点热。饥饱+40，心情+10。这份人情，你记下了。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "🙅 推回去，说自己能行",
+        hint: "happiness+5（倔强），hunger 不变",
+        apply: function (st) {
+          st.flags._hungerShareSeen = true; // 标记：防重复
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 5); // 心情微+
+          StateManager.addMessage(
+            "你把米推了回去，说自己能行。老周没再劝，只是留了句「门别锁死」。心情+5。",
+            "info",
+          );
+        },
+      },
+    ],
+  });
+
   // ====== 注册结束 ======
 })();
