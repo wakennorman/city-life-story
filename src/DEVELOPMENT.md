@@ -1,8 +1,40 @@
 # 城市浮生记 (City Life Story) — 开发文档
 
-> 最后更新: 2026-07-11（v3.88d 事件系统A类缺陷修复）
+> 最后更新: 2026-07-11（v3.89 新增5个联动事件（空白区填充））
 >
-> commit: 4c931c3（v3.88d 事件系统A类缺陷修复）
+> commit: 64659f7（v3.89 新增5个联动事件（空白区填充））
+
+---
+
+## 2026-07-11 — v3.89 新增5个联动事件（空白区填充）
+
+### 设计目标
+填补 5 个「联动空白区」。每个事件都以**可验证状态**做 `conditions` 闸门，叙事与闸门严格自洽（无 A 类叙事-触发断链），并通过 `_xxxSeen` flag 防重复触发。
+
+### 新增事件（`src/js/core/cross_system_events.js` 尾部 v3.89 块）
+
+| 事件id | 触发闸门（conditions） | 联动系统 | 空白区 |
+| --- | --- | --- | --- |
+| `vet_runner_regular_client` | 驾驶副业/驾驶≥35 + 街头 + day≥40 + 未触发 | 副业系统·技能系统·商圈NPC | 老手特遇 |
+| `repair_expert_spot_fake` | 修理≥40 + 街头 + day≥30 + 未触发 | 技能系统·道德系统 | 技能门槛=专业视角 |
+| `zhang_hidden_job_lead` | 张姐已结识+好感≥60 + 街头 + day≥40 + 未触发 | NPC关系·工作系统(内推flag) | NPC好感积累后的意外发现 |
+| `stormy_commercial_rider_down` | 暴雨/大雨 + 商业区 + 街头 + day≥15 + 未触发 | 天气系统·位置系统·道德系统 | 天气×位置组合情境 |
+| `moral_extreme_found_wallet` | 道德≥70或≤30(仅极端) + 街头 + day≥20 + 未触发 | 道德系统·分叉叙事 | 道德极端人设分叉 |
+
+### 设计要点
+- 全部 `repeatable:false` + `_xxxSeen` flag 防重复触发
+- 选项 `apply` 与 `StateManager.addMessage` 文案严格一致（玩家所见即所得）
+- `zhang_hidden_job_lead` 写入 `flags._zhangReferral`，为后续工作系统内推线预留接入口（暂未接消费逻辑，属「埋点待接」）
+- `moral_extreme_found_wallet` 同一事件按高/低道德走不同叙事与奖惩，强化人设粘性
+- 概率 `0.04~0.05`（[PLACEHOLDER]，待 playtest 调参）
+
+### 验证
+- `node --check src/js/core/cross_system_events.js` ✅
+- `python build.py` ✅ / `dist/index.html` 含全部 5 个新 id ✅
+
+### 影响文件
+- `src/js/core/cross_system_events.js`（+约 310 行，尾部 v3.89 块）
+- `dist/index.html`（重建）
 
 ---
 
