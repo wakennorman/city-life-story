@@ -1782,7 +1782,12 @@ body {
 }
 
 /* ====== Tutorial System ====== */
+/* 让 modal 遮罩透传点击，玩家可直接点击高亮区域推进教程 */
+.tutorial-overlay {
+  pointer-events: none;
+}
 .tutorial-overlay .modal-box {
+  pointer-events: auto;
   border: 2px solid var(--accent);
   box-shadow: 0 0 40px rgba(102, 126, 234, 0.3);
 }

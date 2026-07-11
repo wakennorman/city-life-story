@@ -95,7 +95,7 @@ var _CLASSIC_STEPS = [
   {
     title: "🏙️ 你来到这座城市",
     body: `
-        <p style="color:var(--text-muted);font-size:11px;margin-bottom:6px;">——2003年，春天。</p>
+        <p style="color:var(--text-muted);font-size:11px;margin-bottom:6px;">——初来乍到，举目无亲。</p>
         <p style="line-height:1.85;font-size:13px;color:var(--text-primary);">
           你背着一个蛇皮袋从绿皮火车上走下来。<br>
           站台的风夹着煤灰，眼睛发酸。
@@ -119,9 +119,10 @@ var _CLASSIC_STEPS = [
   {
     title: "📊 左侧是你的状态面板",
     body: `
-        <p><strong>4维属性</strong>：体质、智力、敏捷、心智 — 影响工作和学习效率</p>
-        <p><strong>4项需求</strong>：饥饱、疲劳、卫生、心情 — 低于30会触发危险提示</p>
-        <p style="color:var(--success);font-size:12px;">👉 请点击左侧 <strong>状态面板</strong> 任意位置继续</p>
+        <p><strong>5维属性</strong>：体质 · 智力 · 敏捷 · 心智 · 魅力 — 影响工作效率和事件结果</p>
+        <p><strong>5项需求</strong>：饥饱 · 疲劳 · 卫生 · 心情 · 健康 — 低于30触发危险提示</p>
+        <p style="color:var(--text-muted);font-size:11px;margin-top:4px;">💡 顶部常驻状态条实时显示全部10项数据</p>
+        <p style="color:var(--success);font-size:12px;margin-top:6px;">👆 点击左侧 <strong>状态面板</strong> 任意位置继续</p>
       `,
     highlight: "#sidebar",
     waitForClick: "#sidebar",
@@ -130,8 +131,9 @@ var _CLASSIC_STEPS = [
     title: "🏘️ 你在城中村，这是你的起点",
     body: `
         <p>每个地点有不同的 <strong>工作机会</strong> 和 <strong>商品价格</strong></p>
-        <p>点击行动卡片上的 <strong>"前往 XX"</strong> 可移动到其他地点</p>
-        <p style="color:var(--success);font-size:12px;">👉 请点击下方 <strong>行动区</strong> 任意位置继续</p>
+        <p>这里是你的主战场：<strong>点击行动卡片</strong>工作赚钱，或前往其他地点</p>
+        <p style="color:var(--text-muted);font-size:11px;margin-top:4px;">💡 行动力用完后当天结束，明天重置继续</p>
+        <p style="color:var(--success);font-size:12px;margin-top:6px;">👆 点击下方 <strong>行动区</strong> 任意位置继续</p>
       `,
     highlight: "#content-area",
     waitForClick: "#content-area",
@@ -139,10 +141,10 @@ var _CLASSIC_STEPS = [
   {
     title: "🗑️ 试试第一次赚钱",
     body: `
-        <p>点击下方的 <strong>"废品回收"</strong> 行动卡片开始工作</p>
-        <p>每次行动都会消耗行动力，耗尽后结束一天</p>
-        <p style="color:var(--success);font-size:12px;">👉 请点击 <strong>废品回收</strong> 行动卡片（高亮处）继续</p>
-        <p style="color:var(--text-secondary);font-size:11px;">💡 前15天废品回收有新人加成+¥5</p>
+        <p>找到 <strong>「废品回收」</strong> 卡片，点击它开始第一次工作</p>
+        <p style="color:var(--text-secondary);font-size:11px;">每次行动消耗行动力，耗尽后当天结束</p>
+        <p style="color:var(--accent);font-size:11px;margin-top:4px;">💡 前15天废品回收有新人加成+¥5，第一桶金就靠它</p>
+        <p style="color:var(--success);font-size:12px;margin-top:6px;">👆 直接点击高亮处的 <strong>废品回收</strong> 卡片继续</p>
       `,
     highlight: '[data-action-id="waste_recycling"]',
     waitForClick: '[data-action-id="waste_recycling"]',
@@ -151,10 +153,10 @@ var _CLASSIC_STEPS = [
   {
     title: "🍚 吃饱了才有力气干活",
     body: `
-        <p>赚到钱后点 <strong>"吃顿饭"</strong> 补充饥饱</p>
-        <p style="color:var(--success);font-size:11px;">💡 新人福利：前10天吃饭只要¥5（平时¥10）</p>
-        <p style="color:var(--success);font-size:12px;">👉 请点击 <strong>吃顿饭</strong> 行动卡片继续</p>
-        <p style="color:var(--text-secondary);font-size:11px;">每天结束会自动扣房租、算利息、更新天气</p>
+        <p>赚到钱后，点 <strong>「吃顿饭」</strong> 补充饥饱和精力</p>
+        <p style="color:var(--accent);font-size:11px;">💡 新人福利：前10天吃饭只要¥5（正常¥10）</p>
+        <p style="color:var(--text-secondary);font-size:11px;margin-top:4px;">饥饿低于30会拖累工作效率，及时补充</p>
+        <p style="color:var(--success);font-size:12px;margin-top:6px;">👆 直接点击高亮处的 <strong>吃顿饭</strong> 卡片继续</p>
       `,
     highlight: '[data-action-id="eat"]',
     waitForClick: '[data-action-id="eat"]',
@@ -163,22 +165,42 @@ var _CLASSIC_STEPS = [
   {
     title: "🗺️ 查看地图探索城市",
     body: `
-        <p>点击顶部 <strong>"🗺️ 城市"</strong> 标签查看城市全景</p>
-        <p>地图显示所有地点、旅行路线和当前所在位置</p>
-        <p style="color:var(--accent);font-size:11px;">💡 最快赚钱路线：批发市场进货 → 商业区卖出赚差价！</p>
-        <p style="color:var(--success);font-size:12px;">👉 请点击顶部 <strong>🗺️ 地图</strong> 标签按钮继续</p>
+        <p>点击顶部 <strong>「🗺️ 城市」</strong> 标签，查看城市全景地图</p>
+        <p>地图显示所有地点、旅行方式（步行/地铁/打车）和当前位置</p>
+        <p style="color:var(--accent);font-size:11px;margin-top:4px;">💡 最快差价路线：批发市场进货 → 商业区卖出赚差价</p>
+        <p style="color:var(--success);font-size:12px;margin-top:6px;">👆 直接点击顶部 <strong>🗺️ 地图</strong> 标签继续</p>
       `,
     highlight: '[data-tab="city"]',
     waitForClick: '[data-tab="city"]',
   },
+  // 步骤7：找住处（引导玩家用地图导航到城中村租床）
   {
-    title: "🎯 准备好了——出发！",
+    title: "🛏️ 找住处，别露宿街头",
     body: `
-        <p style="font-size:12px;font-weight:600;color:var(--accent);margin-bottom:8px;">🎯 今天先做这3件事：</p>
+        <p style="font-size:12px;line-height:1.7;margin-bottom:8px;">
+          露宿街头每天 <strong style="color:var(--danger);">损耗健康</strong>、拉低心情。<br>
+          <strong>租个床位</strong>是今天最值得花的钱。
+        </p>
+        <div style="background:rgba(74,158,92,0.08);border:1px solid rgba(74,158,92,0.2);border-radius:8px;padding:10px 12px;margin-bottom:10px;">
+          <div style="font-size:12px;padding:3px 0;">🏘️ 合租床位 ¥30/天 — 最便宜的起步选择</div>
+          <div style="font-size:12px;padding:3px 0;border-top:1px solid rgba(255,255,255,0.05);">🏠 单间出租 ¥80/天 — 攒够钱后再升级</div>
+          <div style="font-size:12px;padding:3px 0;border-top:1px solid rgba(255,255,255,0.05);">💤 入住后每晚自动恢复疲劳和健康</div>
+        </div>
+        <p style="font-size:11px;color:var(--text-muted);">用地图导航到城中村，找「出租屋」行动入住。</p>
+        <p style="color:var(--success);font-size:12px;margin-top:8px;">👆 点击顶部 <strong>🗺️ 地图</strong> 标签，去找住处吧</p>
+      `,
+    highlight: '[data-tab="city"]',
+    waitForClick: '[data-tab="city"]',
+  },
+  // 步骤8：出发！（收尾引导，放在最后）
+  {
+    title: "🎯 出发！——你的城市闯关开始了",
+    body: `
+        <p style="font-size:12px;font-weight:600;color:var(--accent);margin-bottom:8px;">🎯 今天先完成这3件事：</p>
         <div style="background:rgba(102,126,234,0.08);border:1px solid rgba(102,126,234,0.2);border-radius:8px;padding:10px 12px;margin-bottom:12px;">
-          <div style="font-size:12px;padding:3px 0;">💵 去捡废品赚到¥100</div>
-          <div style="font-size:12px;padding:3px 0;border-top:1px solid rgba(255,255,255,0.05);">🍚 吃顿饭（别饿坏了）</div>
-          <div style="font-size:12px;padding:3px 0;border-top:1px solid rgba(255,255,255,0.05);">🛏️ 租个床位睡个好觉</div>
+          <div style="font-size:12px;padding:3px 0;">💵 废品回收，赚到¥100</div>
+          <div style="font-size:12px;padding:3px 0;border-top:1px solid rgba(255,255,255,0.05);">🍚 吃顿饭，别让饥饿拖累效率</div>
+          <div style="font-size:12px;padding:3px 0;border-top:1px solid rgba(255,255,255,0.05);">🛏️ 在城中村租个床位过夜</div>
         </div>
         <p style="font-size:11px;color:var(--text-secondary);margin-bottom:6px;">
           💡 行动页顶部「🎯 当前目标」卡片会一直告诉你<strong>现在该做什么</strong>，随时看。
@@ -186,17 +208,10 @@ var _CLASSIC_STEPS = [
         <p style="font-size:11px;color:var(--text-secondary);">
           🗺️ 关键地点：城中村（出租/入住）· 批发市场（进货）· 商业区（卖货）· 培训中心（学技能）· 科技园（应聘职场）
         </p>
-        <p style="color:var(--success);font-size:12px;margin-top:8px;">祝你在这座城市混出名堂！🏆</p>
+        <p style="color:var(--success);font-size:12px;margin-top:8px;">这座城市里，肯拼的人终究能混出来。加油！🏆</p>
       `,
     highlight: null,
     waitForClick: null,
-  },
-  // v3.1：新增住宿引导步骤（填补引导流缺失）
-  {
-    title: "租个床位，好好休息",
-    body: '<p style="font-size:12px;margin-bottom:8px;">露宿街头会掉健康、降心情。<strong>租个床位</strong>是最划算的投资。</p><div style="background:rgba(74,158,92,0.08);border:1px solid rgba(74,158,92,0.2);border-radius:8px;padding:10px 12px;margin-bottom:10px;"><div style="font-size:12px;padding:2px 0;">打开地图，去城中村找到出租屋</div><div style="font-size:12px;padding:2px 0;">合租床位30/天，单间80/天</div><div style="font-size:12px;padding:2px 0;">入住后每晚自动恢复疲劳</div></div><p style="font-size:11px;color:var(--text-muted);">点下方地图按钮，去城中村租个床位吧！</p>',
-    highlight: '[data-tab="city"]',
-    waitForClick: '[data-tab="city"]',
   },
 ];
 
@@ -338,7 +353,7 @@ var SCENARIO_TUTORIAL_STEPS = {
       body: `
         <div style="background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.2);border-radius:8px;padding:8px 12px;font-size:12px;margin-bottom:8px;">
           <div>💸 欠款 ¥20,000，利息每天滚</div>
-          <div style="margin-top:3px;">🏠 还没有住处（housingTier=0）</div>
+          <div style="margin-top:3px;">🏠 还没有住处（今天必须找到落脚点）</div>
           <div style="margin-top:3px;">🍚 现金只有 ¥3,000，顶多撑1个月</div>
         </div>
         <p style="font-size:12px;"><strong>最快路径：</strong> 今天去培训中心提升智力→ 达到45→ 进科技园→ 月薪稳定收入→ 还债</p>
@@ -777,8 +792,8 @@ function showTutorialStep(steps, index) {
       },
     });
   } else if (step.waitForClick) {
-    // 中间步骤且需要点击目标：同时显示"下一步"按钮作为兜底
-    // 因为modal遮罩可能阻止点击高亮元素，需要提供备选推进方式
+    // 中间步骤且需要点击目标：主路径=直接点击高亮区域（overlay已设pointer-events:none可穿透）
+    // 备用按钮供找不到目标时使用
     buttons.push({
       text: "← 上一步",
       cls: "",
@@ -787,14 +802,14 @@ function showTutorialStep(steps, index) {
       },
     });
     buttons.push({
-      text: "跳过引导",
+      text: "跳过",
       cls: "",
       callback: () => {
         _confirmSkip(steps);
       },
     });
     buttons.push({
-      text: "下一步 →",
+      text: "找不到？直接继续 →",
       cls: "btn-primary",
       callback: () => {
         _clearWaitForClickListeners();
