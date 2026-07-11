@@ -18434,7 +18434,8 @@
             (st.sideHustle.reputation || 0) + 10,
           );
           st.sideHustle.type =
-            st.sideHustle.type || Random.fromArray(["stall", "driving", "freelance"]);
+            st.sideHustle.type ||
+            Random.fromArray(["stall", "driving", "freelance"]);
           // 根据副业类型给不同奖励
           if (st.sideHustle.type === "stall") {
             st.resources.cash += 300;
@@ -18481,10 +18482,7 @@
         hint: "不接陌生电话",
         apply: function (st) {
           st.flags._hustleRegularClientSeen = true;
-          st.player.mental = Math.min(
-            100,
-            (st.player.mental || 0) + 2,
-          );
+          st.player.mental = Math.min(100, (st.player.mental || 0) + 2);
           StateManager.addMessage(
             "📵 你没接。现在骗子确实多，宁可错杀。心智+2。",
             "info",
@@ -18523,10 +18521,7 @@
         apply: function (st) {
           st.flags._repairExpertIdentifySeen = true;
           st.player.fame = Math.min(100, (st.player.fame || 0) + 3);
-          st.player.morality = Math.min(
-            100,
-            (st.player.morality || 50) + 5,
-          );
+          st.player.morality = Math.min(100, (st.player.morality || 50) + 5);
           StateManager.addMessage(
             "🔍 你上前提醒了摊主。他恍然大悟，连声道谢。路人纷纷点赞，名声+3、道德+5。",
             "success",
@@ -18584,7 +18579,11 @@
       if (!rels) return false;
       var highAffinityNpc = null;
       for (var npcId in rels) {
-        if (rels[npcId] && rels[npcId].met && (rels[npcId].affinity || 0) >= 80) {
+        if (
+          rels[npcId] &&
+          rels[npcId].met &&
+          (rels[npcId].affinity || 0) >= 80
+        ) {
           highAffinityNpc = npcId;
           break;
         }
@@ -18619,10 +18618,7 @@
           }
           // 给一个实用的状态奖励
           st.resources.cash += 150;
-          st.needs.happiness = Math.min(
-            100,
-            (st.needs.happiness || 0) + 5,
-          );
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 5);
           StateManager.addMessage(
             "🤫 你听从了朋友的建议，果然第二天市场就被封了。避免了损失，还多赚了¥150的替代收入。好感+5、心情+5。",
             "success",
@@ -18708,11 +18704,7 @@
       // 检查当前所在位置是否为市场
       if (st.trade && st.trade.currentLocation !== "wholesale") return false;
       // 检查近期有交易行为（tradeFreq中有批发市场的交易记录）
-      if (
-        st.stats &&
-        st.stats.tradeFreq &&
-        st.stats.tradeFreq["wholesale"] < 3
-      )
+      if (st.stats && st.stats.tradeFreq && st.stats.tradeFreq["wholesale"] < 3)
         return false;
       // 检查未触发过
       if (st.flags && st.flags._weatherMarketStormSeen) return false;
@@ -18726,18 +18718,9 @@
         hint: "帮人帮己，名声+",
         apply: function (st) {
           st.flags._weatherMarketStormSeen = true;
-          st.player.fame = Math.min(
-            100,
-            (st.player.fame || 0) + 2,
-          );
-          st.needs.hygiene = Math.max(
-            0,
-            (st.needs.hygiene || 30) - 10,
-          );
-          st.needs.fatigue = Math.min(
-            100,
-            (st.needs.fatigue || 50) + 10,
-          );
+          st.player.fame = Math.min(100, (st.player.fame || 0) + 2);
+          st.needs.hygiene = Math.max(0, (st.needs.hygiene || 30) - 10);
+          st.needs.fatigue = Math.min(100, (st.needs.fatigue || 50) + 10);
           // 帮了忙之后摊主给优惠
           st.flags._marketStormDiscount = true;
           StateManager.addMessage(
@@ -18751,14 +18734,8 @@
         hint: "保命要紧",
         apply: function (st) {
           st.flags._weatherMarketStormSeen = true;
-          st.needs.fatigue = Math.min(
-            100,
-            (st.needs.fatigue || 50) + 15,
-          );
-          st.status.health = Math.max(
-            0,
-            (st.status.health || 70) - 5,
-          );
+          st.needs.fatigue = Math.min(100, (st.needs.fatigue || 50) + 15);
+          st.status.health = Math.max(0, (st.status.health || 70) - 5);
           StateManager.addMessage(
             "⛈️ 你冒着雨往家跑，到家时已经湿透了。第二天有点发烧，健康-5。",
             "warning",
@@ -18771,20 +18748,14 @@
         apply: function (st) {
           st.flags._weatherMarketStormSeen = true;
           if (Random.chance(0.3)) {
-            st.player.fame = Math.min(
-              100,
-              (st.player.fame || 0) + 8,
-            );
+            st.player.fame = Math.min(100, (st.player.fame || 0) + 8);
             st.resources.cash += 100;
             StateManager.addMessage(
               "⛈️ 暴雨中的批发市场上了同城热搜！粉丝涨了几百，平台给了¥100创作激励。名声+8。",
               "success",
             );
           } else {
-            st.player.fame = Math.min(
-              100,
-              (st.player.fame || 0) + 1,
-            );
+            st.player.fame = Math.min(100, (st.player.fame || 0) + 1);
             StateManager.addMessage(
               "⛈️ 拍了视频发了出去，没啥水花。但记录了这一刻也算有意义。名声+1。",
               "info",
@@ -18810,7 +18781,7 @@
       var habits = st.flags && st.flags._habits;
       if (!habits || (habits.lowHungerStreak || 0) < 3) return false;
       // 检查健康值已经开始下降
-      if ((st.status && st.status.health || 70) >= 60) return false;
+      if (((st.status && st.status.health) || 70) >= 60) return false;
       // 检查未触发过
       if (st.flags && st.flags._hungerCollapseSeen) return false;
       return true;
@@ -18825,27 +18796,15 @@
           st.flags._hungerCollapseSeen = true;
           if (st.resources.cash >= 20) {
             st.resources.cash -= 20;
-            st.needs.hunger = Math.min(
-              100,
-              (st.needs.hunger || 25) + 40,
-            );
-            st.status.health = Math.min(
-              100,
-              (st.status.health || 70) + 5,
-            );
-            st.player.mental = Math.min(
-              100,
-              (st.player.mental || 26) + 3,
-            );
+            st.needs.hunger = Math.min(100, (st.needs.hunger || 25) + 40);
+            st.status.health = Math.min(100, (st.status.health || 70) + 5);
+            st.player.mental = Math.min(100, (st.player.mental || 26) + 3);
             StateManager.addMessage(
               "🍜 你走进路边小店点了碗牛肉面。热汤下肚，整个人活过来了。健康+5、心情+3。",
               "success",
             );
           } else {
-            st.needs.hunger = Math.min(
-              100,
-              (st.needs.hunger || 25) + 15,
-            );
+            st.needs.hunger = Math.min(100, (st.needs.hunger || 25) + 15);
             StateManager.addMessage(
               "🍜 你想吃面但兜里没钱，啃了个馒头凑合。好歹压了压胃里难受。",
               "warning",
@@ -18860,19 +18819,13 @@
           st.flags._hungerCollapseSeen = true;
           if (st.resources.cash >= 10) {
             st.resources.cash -= 10;
-            st.status.health = Math.min(
-              100,
-              (st.status.health || 70) + 3,
-            );
+            st.status.health = Math.min(100, (st.status.health || 70) + 3);
             StateManager.addMessage(
               "💊 吃了片胃药，暂时不疼了。但身体在提醒你——不能再这样下去了。",
               "info",
             );
           } else {
-            st.status.health = Math.max(
-              0,
-              (st.status.health || 70) - 3,
-            );
+            st.status.health = Math.max(0, (st.status.health || 70) - 3);
             StateManager.addMessage(
               "💊 连药钱都没有了。你咬着牙撑了一天，健康-3。",
               "warning",
@@ -18885,14 +18838,8 @@
         hint: "倔强",
         apply: function (st) {
           st.flags._hungerCollapseSeen = true;
-          st.status.health = Math.max(
-            0,
-            (st.status.health || 70) - 10,
-          );
-          st.player.mental = Math.max(
-            0,
-            (st.player.mental || 26) - 5,
-          );
+          st.status.health = Math.max(0, (st.status.health || 70) - 10);
+          st.player.mental = Math.max(0, (st.player.mental || 26) - 5);
           StateManager.addMessage(
             "😤 你硬扛到了晚上，胃疼得直冒冷汗。第二天去医院花了¥80。健康-10、心智-5。",
             "warning",
