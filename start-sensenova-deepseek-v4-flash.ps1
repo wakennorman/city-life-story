@@ -22,13 +22,33 @@ $proxyScript = Join-Path $projectDir "proxy-sensenova.py"
 try {
     $existingProc = Get-NetTCPConnection -LocalPort $proxyPort -ErrorAction SilentlyContinue |
         Select-Object -ExpandProperty OwningProcess -Unique
-    if ($existingProc) { Stop-Process -Id $existingProc -Force -ErrorAction SilentlyContinue; Start-Sleep -Seconds 1 }
+    if ($existingProc) {
+        Stop-Process -Id $existingProc -Force -ErrorAction SilentlyContinue
+        Start-Sleep -Seconds 1
+    }
+    Get-Process python* -ErrorAction SilentlyContinue | Where-Object { $_.CommandLine -match "proxy-sensenova" } |
+        Stop-Process -Force -ErrorAction SilentlyContinue
+    Start-Sleep -Seconds 1
 } catch { /* ignore permission errors */ }
 
-# Start proxy in background
-$proxyProcess = Start-Process python "-u" $proxyScript $proxyPort -PassThru -WindowStyle Hidden
+# Start proxy in background (reliable method)
+$psi = New-Object System.Diagnostics.ProcessStartInfo
+$psi.FileName = "python"
+$psi.Arguments = "-u `"$proxyScript`" $proxyPort"
+$psi.UseShellExecute = $false
+$psi.CreateNoWindow = $true
+$psi.RedirectStandardOutput = $false
+$psi.RedirectStandardError = $false
+$proxyProcess = [System.Diagnostics.Process]::Start($psi)
 Write-Host "Proxy started (PID: $($proxyProcess.Id)) on port $proxyPort" -ForegroundColor Green
-Start-Sleep -Seconds 2
+
+# Wait for proxy to be ready (poll port)
+$maxWait = 10; $ready = $false
+for ($i = 0; $i -lt $maxWait; $i++) {
+    Start-Sleep -Seconds 1
+    try { $test = Get-NetTCPConnection -LocalPort $proxyPort -ErrorAction Stop; if ($test.State -eq "Listen") { $ready = $true; break } } catch { }
+}
+if (-not $ready) { throw "Proxy did not start on port $proxyPort within ${maxWait}s" }
 
 $model = "deepseek-v4-flash"
 $apiKey = "sk-OhjHsyX8dLoYru9zMjzZ7AvHe5EWf9XE"

@@ -476,11 +476,17 @@ function startProxy() {
       // 超时控制 + 错误防护：Cloudflare 从中国连接不稳定
       proxyReq.setTimeout(30000, () => {
         proxyReq.destroy();
-        try { res.writeHead(502); res.end("Upstream timeout"); } catch {}
+        try {
+          res.writeHead(502);
+          res.end("Upstream timeout");
+        } catch {}
       });
       proxyReq.on("error", (err) => {
         console.error("[proxy] Upstream error:", err.message);
-        try { res.writeHead(502); res.end("Bad Gateway"); } catch {}
+        try {
+          res.writeHead(502);
+          res.end("Bad Gateway");
+        } catch {}
       });
     });
   });
