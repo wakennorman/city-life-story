@@ -48150,5 +48150,103 @@
     ],
   });
 
+  // ====== v3.91 联动事件（空白区填充·第三批） ======
+  // 新增空白区：第二名 NPC 好感深挖（old_zhou）、雪天×位置情境（snowy）。
+  // 全部 gate 在已验证字段：relationships.* / weather.current / player.phase / day。
+  RANDOM_EVENTS.push({
+    id: "old_zhou_story_relic",
+    phase: "street",
+    icon: "📻",
+    title: "老周的老收音机",
+    story:
+      "你帮老周修了几次水管，他今儿破天荒拉你进屋，从床底拖出台蒙灰的收音机：「这是我爹留下的，文革那年他偷偷听外台，被带走前塞给我……你懂电路，能给它续口气不？」",
+    conditions: function (st) {
+      if (st.player.phase !== "street") return false; // 检查：仅街头阶段
+      var r = st.relationships && st.relationships.old_zhou; // 检查：old_zhou 关系对象
+      if (!r || !r.met) return false; // 检查：已结识
+      if ((r.affinity || 0) < 50) return false; // 检查：好感≥50（深挖门槛）
+      if ((st.day || 0) < 35) return false; // 检查：day≥35
+      if (st.flags && st.flags._oldZhouRelicSeen) return false; // 检查：未触发过
+      return true;
+    },
+    probability: 0.05, // [PLACEHOLDER] 待 playtest 调参
+    repeatable: false,
+    choices: [
+      {
+        text: "🔧 接过来，慢慢修",
+        hint: "repair.xp +25，老周好感+10",
+        apply: function (st) {
+          st.flags._oldZhouRelicSeen = true; // 标记：防重复
+          if (st.skills && st.skills.repair)
+            st.skills.repair.xp = (st.skills.repair.xp || 0) + 25; // 修理经验+
+          var r = st.relationships && st.relationships.old_zhou;
+          if (r) r.affinity = Math.min(100, (r.affinity || 0) + 10); // 好感+
+          StateManager.addMessage(
+            "你换上电容，电流声里飘出一段老戏。老周红了眼圈。repair 经验+25，老周好感+10。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "📦 劝他捐给纪念馆",
+        hint: "老周好感+5（价值观共鸣）",
+        apply: function (st) {
+          st.flags._oldZhouRelicSeen = true; // 标记：防重复
+          var r = st.relationships && st.relationships.old_zhou;
+          if (r) r.affinity = Math.min(100, (r.affinity || 0) + 5); // 好感+
+          StateManager.addMessage(
+            "你劝他：「这机器该被记住。」老周沉默良久，点了头。老周好感+5。",
+            "info",
+          );
+        },
+      },
+    ],
+  });
+
+  RANDOM_EVENTS.push({
+    id: "snowy_commute_warmth",
+    phase: "street",
+    icon: "❄️",
+    title: "雪天里的热豆浆",
+    story:
+      "入冬第一场雪，路滑得像抹了油。你趔趄着赶路，街角早餐铺的老板娘探出头：「哎哟摔着没有？进来暖和暖和，这杯豆浆算我请的。」她往杯子里多舀了一勺糖。",
+    conditions: function (st) {
+      if (st.player.phase !== "street") return false; // 检查：仅街头阶段
+      if (!st.weather || st.weather.current !== "snowy") return false; // 检查：雪天
+      if ((st.day || 0) < 15) return false; // 检查：day≥15
+      if (st.flags && st.flags._snowyWarmthSeen) return false; // 检查：未触发过
+      return true;
+    },
+    probability: 0.05, // [PLACEHOLDER] 待 playtest 调参
+    repeatable: false,
+    choices: [
+      {
+        text: "☕ 进店焐手，谢过老板娘",
+        hint: "happiness+15，hygiene+5",
+        apply: function (st) {
+          st.flags._snowyWarmthSeen = true; // 标记：防重复
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 15); // 心情+
+          st.needs.hygiene = Math.min(100, (st.needs.hygiene || 0) + 5); // 卫生+
+          StateManager.addMessage(
+            "热豆浆下肚，手也缓过来了。雪天里这点暖意，记很久。心情+15，卫生+5。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "🙏 接过豆浆，急着赶路",
+        hint: "happiness+8（暖意），hygiene 不变",
+        apply: function (st) {
+          st.flags._snowyWarmthSeen = true; // 标记：防重复
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 8); // 心情+
+          StateManager.addMessage(
+            "你接过豆浆揣进怀里，朝老板娘鞠了一躬就跑。心里是暖的。心情+8。",
+            "info",
+          );
+        },
+      },
+    ],
+  });
+
   // ====== 注册结束 ======
 })();

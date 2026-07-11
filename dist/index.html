@@ -77614,7 +77614,8 @@ if (typeof window !== "undefined") {
     phase: "street",
     icon: "💻",
     title: "代码里的江湖",
-    story: "你修 bug 的手速被同行看到了。一位前辈私信你：「小子，你这异常处理写得比我们组 senior 还干净。」他扔来一个开源项目的 PR 邀请——「来，帮我 review 这坨山。」",
+    story:
+      "你修 bug 的手速被同行看到了。一位前辈私信你：「小子，你这异常处理写得比我们组 senior 还干净。」他扔来一个开源项目的 PR 邀请——「来，帮我 review 这坨山。」",
     conditions: function (st) {
       if (st.player.phase !== "street") return false; // 检查：仅街头阶段
       if (!st.skills || !st.skills.coding) return false; // 检查：coding 技能存在
@@ -77631,9 +77632,13 @@ if (typeof window !== "undefined") {
         hint: "coding.xp +30",
         apply: function (st) {
           st.flags._codingPrSeen = true; // 标记：防重复
-          if (st.skills.coding) st.skills.coding.xp = (st.skills.coding.xp || 0) + 30; // 编程经验+
-          StateManager.addMessage("你花了一晚把那坨山理成了清爽的模块。前辈回了个「牛逼」。coding 经验+30。", "success");
-        }
+          if (st.skills.coding)
+            st.skills.coding.xp = (st.skills.coding.xp || 0) + 30; // 编程经验+
+          StateManager.addMessage(
+            "你花了一晚把那坨山理成了清爽的模块。前辈回了个「牛逼」。coding 经验+30。",
+            "success",
+          );
+        },
       },
       {
         text: "🙅 婉拒，怕坑",
@@ -77641,9 +77646,9 @@ if (typeof window !== "undefined") {
         apply: function (st) {
           st.flags._codingPrSeen = true; // 标记：防重复
           StateManager.addMessage("你婉拒了。有些江湖，还没准备好闯。", "info");
-        }
-      }
-    ]
+        },
+      },
+    ],
   });
 
   RANDOM_EVENTS.push({
@@ -77651,11 +77656,13 @@ if (typeof window !== "undefined") {
     phase: "street",
     icon: "🥵",
     title: "三伏天的商圈",
-    story: "气温计爆表，商圈柏油路面烫得能煎蛋。你拎着东西走到一半，眼前一黑——旁边卖冰粉的阿姨一把扶住你：「崽啊，快进来吹会儿空调，这天气哪是人熬的。」",
+    story:
+      "气温计爆表，商圈柏油路面烫得能煎蛋。你拎着东西走到一半，眼前一黑——旁边卖冰粉的阿姨一把扶住你：「崽啊，快进来吹会儿空调，这天气哪是人熬的。」",
     conditions: function (st) {
       if (st.player.phase !== "street") return false; // 检查：仅街头阶段
       if (!st.weather || st.weather.current !== "heatwave") return false; // 检查：极端高温天气
-      if (!st.trade || st.trade.currentLocation !== "commercialDist") return false; // 检查：身处商圈
+      if (!st.trade || st.trade.currentLocation !== "commercialDist")
+        return false; // 检查：身处商圈
       if ((st.day || 0) < 15) return false; // 检查：day≥15
       if (st.flags && st.flags._heatwaveFaintSeen) return false; // 检查：未触发过
       return true;
@@ -77670,8 +77677,11 @@ if (typeof window !== "undefined") {
           st.flags._heatwaveFaintSeen = true; // 标记：防重复
           st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 15); // 心情+
           st.needs.hunger = Math.min(100, (st.needs.hunger || 0) + 10); // 饥饱+
-          StateManager.addMessage("阿姨的冰粉甜得发苦——是被人惦记的滋味。心情+15，饥饱+10。", "success");
-        }
+          StateManager.addMessage(
+            "阿姨的冰粉甜得发苦——是被人惦记的滋味。心情+15，饥饱+10。",
+            "success",
+          );
+        },
       },
       {
         text: "🚶 谢过阿姨，硬撑着走了",
@@ -77679,10 +77689,13 @@ if (typeof window !== "undefined") {
         apply: function (st) {
           st.flags._heatwaveFaintSeen = true; // 标记：防重复
           st.needs.fatigue = Math.min(100, (st.needs.fatigue || 0) + 10); // 疲惫+
-          StateManager.addMessage("你谢过阿姨，咬牙走进了热浪里。疲惫+10。", "info");
-        }
-      }
-    ]
+          StateManager.addMessage(
+            "你谢过阿姨，咬牙走进了热浪里。疲惫+10。",
+            "info",
+          );
+        },
+      },
+    ],
   });
 
   RANDOM_EVENTS.push({
@@ -77690,7 +77703,8 @@ if (typeof window !== "undefined") {
     phase: "street",
     icon: "🍚",
     title: "连着饿的日子里",
-    story: "这已经是你记不清第几个胃里空空的早晨。隔壁的租客老周敲了敲门，递来半袋米和一罐咸菜：「我吃不完，你先拿着。人不能连饭都吃不上。」你这才发现，自己已经连着好些天没正经吃过饭了。",
+    story:
+      "这已经是你记不清第几个胃里空空的早晨。隔壁的租客老周敲了敲门，递来半袋米和一罐咸菜：「我吃不完，你先拿着。人不能连饭都吃不上。」你这才发现，自己已经连着好些天没正经吃过饭了。",
     conditions: function (st) {
       if (st.player.phase !== "street") return false; // 检查：仅街头阶段
       if (!st.flags || !st.flags._habits) return false; // 检查：习惯 flag 容器存在
@@ -77709,8 +77723,11 @@ if (typeof window !== "undefined") {
           st.flags._hungerShareSeen = true; // 标记：防重复
           st.needs.hunger = Math.min(100, (st.needs.hunger || 0) + 40); // 饥饱+
           st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 10); // 心情+
-          StateManager.addMessage("米下锅的那一刻，眼眶有点热。饥饱+40，心情+10。这份人情，你记下了。", "success");
-        }
+          StateManager.addMessage(
+            "米下锅的那一刻，眼眶有点热。饥饱+40，心情+10。这份人情，你记下了。",
+            "success",
+          );
+        },
       },
       {
         text: "🙅 推回去，说自己能行",
@@ -77718,10 +77735,111 @@ if (typeof window !== "undefined") {
         apply: function (st) {
           st.flags._hungerShareSeen = true; // 标记：防重复
           st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 5); // 心情微+
-          StateManager.addMessage("你把米推了回去，说自己能行。老周没再劝，只是留了句「门别锁死」。心情+5。", "info");
-        }
-      }
-    ]
+          StateManager.addMessage(
+            "你把米推了回去，说自己能行。老周没再劝，只是留了句「门别锁死」。心情+5。",
+            "info",
+          );
+        },
+      },
+    ],
+  });
+
+  // ====== v3.91 联动事件（空白区填充·第三批） ======
+  // 新增空白区：第二名 NPC 好感深挖（old_zhou）、雪天×位置情境（snowy）。
+  // 全部 gate 在已验证字段：relationships.* / weather.current / player.phase / day。
+  RANDOM_EVENTS.push({
+    id: "old_zhou_story_relic",
+    phase: "street",
+    icon: "📻",
+    title: "老周的老收音机",
+    story:
+      "你帮老周修了几次水管，他今儿破天荒拉你进屋，从床底拖出台蒙灰的收音机：「这是我爹留下的，文革那年他偷偷听外台，被带走前塞给我……你懂电路，能给它续口气不？」",
+    conditions: function (st) {
+      if (st.player.phase !== "street") return false; // 检查：仅街头阶段
+      var r = st.relationships && st.relationships.old_zhou; // 检查：old_zhou 关系对象
+      if (!r || !r.met) return false; // 检查：已结识
+      if ((r.affinity || 0) < 50) return false; // 检查：好感≥50（深挖门槛）
+      if ((st.day || 0) < 35) return false; // 检查：day≥35
+      if (st.flags && st.flags._oldZhouRelicSeen) return false; // 检查：未触发过
+      return true;
+    },
+    probability: 0.05, // [PLACEHOLDER] 待 playtest 调参
+    repeatable: false,
+    choices: [
+      {
+        text: "🔧 接过来，慢慢修",
+        hint: "repair.xp +25，老周好感+10",
+        apply: function (st) {
+          st.flags._oldZhouRelicSeen = true; // 标记：防重复
+          if (st.skills && st.skills.repair)
+            st.skills.repair.xp = (st.skills.repair.xp || 0) + 25; // 修理经验+
+          var r = st.relationships && st.relationships.old_zhou;
+          if (r) r.affinity = Math.min(100, (r.affinity || 0) + 10); // 好感+
+          StateManager.addMessage(
+            "你换上电容，电流声里飘出一段老戏。老周红了眼圈。repair 经验+25，老周好感+10。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "📦 劝他捐给纪念馆",
+        hint: "老周好感+5（价值观共鸣）",
+        apply: function (st) {
+          st.flags._oldZhouRelicSeen = true; // 标记：防重复
+          var r = st.relationships && st.relationships.old_zhou;
+          if (r) r.affinity = Math.min(100, (r.affinity || 0) + 5); // 好感+
+          StateManager.addMessage(
+            "你劝他：「这机器该被记住。」老周沉默良久，点了头。老周好感+5。",
+            "info",
+          );
+        },
+      },
+    ],
+  });
+
+  RANDOM_EVENTS.push({
+    id: "snowy_commute_warmth",
+    phase: "street",
+    icon: "❄️",
+    title: "雪天里的热豆浆",
+    story:
+      "入冬第一场雪，路滑得像抹了油。你趔趄着赶路，街角早餐铺的老板娘探出头：「哎哟摔着没有？进来暖和暖和，这杯豆浆算我请的。」她往杯子里多舀了一勺糖。",
+    conditions: function (st) {
+      if (st.player.phase !== "street") return false; // 检查：仅街头阶段
+      if (!st.weather || st.weather.current !== "snowy") return false; // 检查：雪天
+      if ((st.day || 0) < 15) return false; // 检查：day≥15
+      if (st.flags && st.flags._snowyWarmthSeen) return false; // 检查：未触发过
+      return true;
+    },
+    probability: 0.05, // [PLACEHOLDER] 待 playtest 调参
+    repeatable: false,
+    choices: [
+      {
+        text: "☕ 进店焐手，谢过老板娘",
+        hint: "happiness+15，hygiene+5",
+        apply: function (st) {
+          st.flags._snowyWarmthSeen = true; // 标记：防重复
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 15); // 心情+
+          st.needs.hygiene = Math.min(100, (st.needs.hygiene || 0) + 5); // 卫生+
+          StateManager.addMessage(
+            "热豆浆下肚，手也缓过来了。雪天里这点暖意，记很久。心情+15，卫生+5。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "🙏 接过豆浆，急着赶路",
+        hint: "happiness+8（暖意），hygiene 不变",
+        apply: function (st) {
+          st.flags._snowyWarmthSeen = true; // 标记：防重复
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 8); // 心情+
+          StateManager.addMessage(
+            "你接过豆浆揣进怀里，朝老板娘鞠了一躬就跑。心里是暖的。心情+8。",
+            "info",
+          );
+        },
+      },
+    ],
   });
 
   // ====== 注册结束 ======
@@ -201003,11 +201121,13 @@ function renderMapTab(state, parent) {
     commercialDist: { x: 50, y: 38 }, // 市中心
     bank: { x: 58, y: 22 }, // 金融区（市中心偏上）
     gov_office: { x: 42, y: 18 }, // 政务区（市中心偏上）
+    job_market: { x: 48, y: 14 }, // 人才市场（政务区附近）
     techPark: { x: 72, y: 22 }, // 科技园（东侧）
     entertainment: { x: 78, y: 42 }, // 娱乐城（东侧偏下）
     hospital: { x: 62, y: 52 }, // 医院（南侧偏右）
     slum: { x: 30, y: 48 }, // 城中村（西侧）
     wholesaleMarket: { x: 22, y: 32 }, // 批发市场（西北）
+    flea_market: { x: 20, y: 44 }, // 二手市场（批发市场南侧）
     construction: { x: 42, y: 58 }, // 建筑工地（南侧）
     park: { x: 35, y: 68 }, // 公园（南侧偏左）
     school: { x: 55, y: 72 }, // 大学城（南侧偏右）
