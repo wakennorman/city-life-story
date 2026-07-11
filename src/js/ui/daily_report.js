@@ -400,7 +400,21 @@ function generatePeakMomentHTML(state, incomes, expenses) {
 
   // 3. 累计收入里程碑
   var totalEarned = (state.resources && state.resources.totalEarned) || 0;
-  if (totalEarned >= 100000 && !state.flags._peakNoted100k) {
+  if (totalEarned >= 10000000 && !state.flags._peakNoted10m) {
+    highlights.push({
+      icon: "👑",
+      text: "累计收入突破 <strong>¥10,000,000</strong>！城市的传奇，你写下了自己的名字！",
+      type: "milestone",
+    });
+    state.flags._peakNoted10m = true;
+  } else if (totalEarned >= 1000000 && !state.flags._peakNoted1m) {
+    highlights.push({
+      icon: "💎",
+      text: "累计收入突破 <strong>¥1,000,000</strong>！百万不再是梦，而是起点！",
+      type: "milestone",
+    });
+    state.flags._peakNoted1m = true;
+  } else if (totalEarned >= 100000 && !state.flags._peakNoted100k) {
     highlights.push({
       icon: "🏆",
       text: "累计收入突破 <strong>¥100,000</strong>！真正的城市人了！",
