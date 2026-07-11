@@ -70,16 +70,29 @@ function renderCurrentTab(state, anchorGoodId) {
     }
   }
 
+  // ===== 移动端固定 HUD（position: sticky） =====
+  // 手机端：时间槽+位置条+状态条以 position:sticky 固定在 #content-area 顶部，
+  // 随页面滑动始终保持可见（如底部事件记录栏一样）
+  var _isMobile = window.innerWidth <= 768;
+  if (_isMobile) {
+    var _oldHud = document.getElementById("mobile-hud");
+    if (_oldHud) _oldHud.remove();
+  }
+
   area.innerHTML = "";
 
-  // 时间槽指示器（日期 + 时段 + AP）
-  renderTimeSlot(state, area);
-
-  // 移动端专属：背包 + 住所状态条（上移至标题行位置，标题行已移除）
-  renderLocationBar(state, area);
-
-  // 移动端专属：常驻状态条（10 个核心数值，2 行 × 5 条 — 直观显性化）
-  renderStatsStrip(state, area);
+  if (_isMobile) {
+    // 移动端：HUD 作为 #content-area 首个子节点，position:sticky 固定
+    var _hudEl = document.createElement("div");
+    _hudEl.id = "mobile-hud";
+    area.insertBefore(_hudEl, area.firstChild);
+    renderTimeSlot(state, _hudEl);
+    renderLocationBar(state, _hudEl);
+    renderStatsStrip(state, _hudEl);
+  } else {
+    // 桌面端：时间槽直放内容区
+    renderTimeSlot(state, area);
+  }
 
   // 人生目标（🌟 人生目标）跟随时间槽下方，紧凑显示
   renderGoalStrip(state, area);
