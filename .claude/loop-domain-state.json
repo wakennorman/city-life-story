@@ -1,0 +1,20 @@
+{
+  "currentRound": 1,
+  "currentDomain": "A",
+  "domainOrder": ["A", "B", "C", "D", "E", "F", "G", "H"],
+  "rotationIndex": 0,
+  "nextDomain": "B",
+  "lastCommit": "42528c0a",
+  "lastUpdated": "2026-07-12",
+  "history": [
+    {
+      "round": 1,
+      "domain": "A",
+      "date": "2026-07-12",
+      "aClassFixed": 0,
+      "linkageItems": 4,
+      "commit": "42528c0a",
+      "note": "economy_v3.1 + pricing 隐形经济数据首次叙事化；MC 10x500d 0 异常"
+    }
+  ]
+}

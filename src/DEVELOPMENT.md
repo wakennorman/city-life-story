@@ -1,10 +1,37 @@
 # 城市浮生记 (City Life Story) — 开发文档
 
-> 最后更新: 2026-07-12（v3.96 loop 全系统优化·声誉读档修复 + street→corporate 跨阶段桥接）
+> 最后更新: 2026-07-12（v3.97 loop R1 全系统优化·Domain A 联动增强）
 >
-> commit: cba9ea3b（feat(loop): 新增2个 street→corporate 跨阶段桥接事件）+ 698a66ac（fix: 读档流程补 initReputation）
+> commit: 42528c0a（feat(loop R1): [域A 数据/数值平衡] 联动增强4项）
 
 ---
+
+## 2026-07-12 — v3.97 loop R1 全系统优化·Domain A 联动增强（4项新事件）
+
+> 循环迭代表见 CLAUDE.md「全系统优化·循环迭代表」。本轮域 = **A 数据/数值平衡**。
+
+### 一、指令一审查（A类缺陷扫描）— 结论：0 A类
+
+- 跨文件 id 引用完整性：**job(37)/item(55)/goods(53)/illness(25)** 定义与引用 **0 孤儿、0 悬空引用**（Python 静态提取比对）。
+- 技能引用：事件 `st.skills.*` 全部落在基础 10 技能；`st.skills.social` 4 处均有 `st.skills && st.skills.social && ...` 防御（可选技能，非缺陷）。
+- 证书引用：消费者引用的 18 个 cert id **全部有效**（无悬空）。
+- 经济核心 `economy_v3.1.js`：除零/NaN 守卫完备（`cityWealth || 10000000`）；`pricing.js` 价格变动百分比 `fromPrice===0` 已守卫。
+- **判定**：Domain A 结构性健康，无 A 类缺陷，严守"不伪造修复"纪律，未做空提交。
+
+### 二、指令二联动增强（4项）— economy_v3.1 + pricing 隐形数据首次叙事化
+
+> 关键缺口：economy_v3.1（财富税/市场饱和/动态利率/连胜衰减）与 pricing.js 市场事件**均为"算而不显"**——grep 确认 0 个事件引用它们，玩家完全无感。
+
+| 事件 id                     | 阶段      | 触发闸门                                                                          | 联动域              | 设计意图                                     |
+| --------------------------- | --------- | --------------------------------------------------------------------------------- | ------------------- | -------------------------------------------- |
+| `econ_wealth_tax_tier`      | street    | 资产≥¥50万 且跨入更高税阶(未提示过)；day>20                                       | economy_v3.1 × 叙事 | 财富税阶梯首次呈现，决策：税务规划/置业/无视 |
+| `econ_wealth_tax_tier_corp` | corporate | 同上（职场玩家覆盖）                                                              | economy_v3.1 × 叙事 | 同上，覆盖职场阶段                           |
+| `econ_market_saturation`    | street    | 资产/城市财富比>20% 且 30 天内未提示                                              | economy_v3.1 × 叙事 | 市场饱和惩罚触发预警，决策：消费/观望/加仓   |
+| `price_market_event_alert`  | street    | `state.trade.marketEvents` 含民生商品(goodId∈water/fruits/veg/beer/cig/cloth)异动 | pricing × 叙事      | 物价市场事件首次叙事化播报                   |
+
+- 防御式字段访问：`st.resources.cash` / `st.savings||0` / `st.cityWealth||10000000` / `st.trade.marketEvents` 全部 `||` 守卫；`conditions` 全 false 时叙事仍合理（不触发）。
+- 数值标 `[PLACEHOLDER]`（阈值对齐 economy_v3.1 常量，待难度/通胀调参）。
+- **验证**：`node --check` ✅ / `python build.py` 7958.4KB ✅ / **MC 10×500d = 20000 次评估, 11367 触发, 0 异常** ✅ / dist 全量注入 ✅ / 事件总数 674, 0 重复 ID ✅。
 
 ## 2026-07-12 — v3.96 loop 全系统优化（声誉读档修复 + street→corporate 桥接）
 
@@ -31,10 +58,10 @@
 
 设计意图：把街头积累的资产（地点声望 / 硬技能）溢出到职场，治愈 655:10 孤岛。
 
-| 事件 id                   | 阶段        | 触发闸门                                                  | 跨系统桥              | 设计意图                         |
-| ------------------------- | ----------- | --------------------------------------------------------- | --------------------- | -------------------------------- |
-| `corp_reputation_headhunt`| corporate   | 阶段=corporate；商业区声望≥30 或 科技园≥25；工作≥60天     | reputation × corporate | 街头口碑→大厂猎头邀约（签字费）  |
-| `corp_skill_project_lead` | corporate   | 阶段=corporate；编程/管理/会计 任一项≥25；工作≥120天      | skills × corporate × reputation | 街头硬技能→职场项目牵头（奖金+科技园声望） |
+| 事件 id                    | 阶段      | 触发闸门                                              | 跨系统桥                        | 设计意图                                   |
+| -------------------------- | --------- | ----------------------------------------------------- | ------------------------------- | ------------------------------------------ |
+| `corp_reputation_headhunt` | corporate | 阶段=corporate；商业区声望≥30 或 科技园≥25；工作≥60天 | reputation × corporate          | 街头口碑→大厂猎头邀约（签字费）            |
+| `corp_skill_project_lead`  | corporate | 阶段=corporate；编程/管理/会计 任一项≥25；工作≥120天  | skills × corporate × reputation | 街头硬技能→职场项目牵头（奖金+科技园声望） |
 
 两个事件均用确认字段路径：`st.reputation.commercialDist/techPark`（含 `||0`）、`st.skills.<k>.level`、`st.player.corporate.upward/dignity`、`st.resources.cash`、`st.player.mental`、`st.needs.happiness`。奖金数值标 `[PLACEHOLDER]`，待难度/通胀调参。
 
