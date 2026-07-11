@@ -156,7 +156,21 @@ navHints: [
 
 > 每次收工前覆盖更新本节（只留最新状态，不要追加历史）；详细变更历史在 `src/DEVELOPMENT.md`，不需要每次都读。
 
-- **最新一次工作 (2026-07-12)**：v3.95(loop R44) — 全系统优化·纽带回响：6个新事件+日终里程碑封顶¥10M
+- **最新一次工作 (2026-07-12)**：v3.97(loop R2·域B) — 事件系统全量A类缺陷修复+联动增强
+  - **指令一审查**：全量扫描21个事件文件，发现并修复28个A类缺陷
+    - **events_core.js** (2): showEventModal空choices数组卡死 + checkChainEventQueue splice正向遍历跳元素
+    - **extra_events.js** (12): 6处扣款缺失(phone_stolen×2/crisis_debt_collector/old_friend_borrow×2/neighbor_gift) + 5个NPC断链 + 1个Random.int二次调用
+    - **era_events.js** (6): 6个NPC断链(era_180/270/450/540/720/900均缺met门控)
+    - **side_hustle_consequences.js** (2): chain事件缺_isChainEvent标志可被随机选取
+    - **npc_event_bridge.js** (3): chatWithNpc字段错误(npcRelationships→relationships)完全失效 + 2处EVENT_NPC_MAP重复键
+    - **events_corp.js** (1): insider_report ¥500k买入从未扣款
+    - **cross_system_events.js** (2): npc_rescue_aunt_wang/npc_synergy_old_zhou_deal缺met门控
+  - **指令二联动增强**：6项B类修复+2个新增事件
+    - **B类修复**: 3处模板字面量bug + 2个职业事件phase修正(street→corporate) + edu_graduation_ceremony冗余apply删除 + workplace_social_events 5处双随机门控清除
+    - **新增事件**: `corporate_first_quarter_reflection`(corporate≥180天职场回望·老周叙事闭环) + `npc_sister_zhang_corp_congrats`(张姐跨阶段祝贺)
+  - **验证**：node --check ✅ / build.py 7991.8KB ✅
+  - **影响文件**：events_core.js/extra_events.js/era_events.js/side_hustle_consequences.js/npc_event_bridge.js/events_corp.js/cross_system_events.js/startup_events.js/workplace_social_events.js(9文件)
+  - **commit**：待提交
   - **代码事实核查**：CLAUDE.md P2 三个推荐切入点（王婶调解/¥1M/多周目）经验证已大部分落地，本轮切真实缺口
   - **新增**：aunt_zhang_payoff(调解30天链) / ng_plus_ajie_return(阿杰跨周目彩蛋) / ng_plus_ajie_payoff(60天链) / npc_zhaojie_boss_li(business格) / npc_zhang_zhaojie_partner(business格) / npc_zhang_zhaojie_payoff(30天链)
   - **接线**：3个王婶调解事件中和解路径接 scheduleChainEvent；daily_report 日终里程碑封顶¥100k→¥10M（+¥1M/+¥10M档）
@@ -1011,7 +1025,8 @@ _详细任务清单：`IMPLEMENTATION_TASK.txt`（需重建，之前的只列到
 > 上下文不足时仅保留 `.claude/loop-domain-state.json` + 本轮文件 + 本表最新 5 行，丢弃旧轮对话。
 > 域定义：A 数据/数值平衡 · B 事件/叙事 · C 职业/成长 · D NPC/社交 · E 经济/投资 · F UI/UX · G 核心机制/生命周期 · H Phase2/公司
 
-| 轮次 | 日期       | 域              | 指令一 A类修复  | 指令二 联动增强                                                          | commit     | 备注                                                                                                                       |
-| ---- | ---------- | --------------- | --------------- | ------------------------------------------------------------------------ | ---------- | -------------------------------------------------------------------------------------------------------------------------- |
-| R1   | 2026-07-12 | A 数据/数值平衡 | 0（结构性健康） | 4项（财富税阶梯×2阶段/市场饱和/物价异动）                                | `42528c0a` | economy_v3.1+pricing 隐形数据首次叙事化；MC 10×500d 0异常；事件总数674/0重复ID                                             |
-| R2   | 2026-07-11 | B 事件/叙事     | 0（结构性健康） | 3项（corp_street_roots_letter/skill_advantage/npc_referral_from_street） | `[R2]`     | 审计 217 NPC引用全守卫、天气用season/forecast更精确；聚焦治愈"阶段孤岛"street→corporate桥接；MC 10×500d 0异常；事件总数677 |
+| 轮次 | 日期       | 域              | 指令一 A类修复                                                                         | 指令二 联动增强                                                          | commit                          | 备注                                                                                                                       |
+| ---- | ---------- | --------------- | -------------------------------------------------------------------------------------- | ------------------------------------------------------------------------ | ------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
+| R1   | 2026-07-12 | A 数据/数值平衡 | 0（结构性健康）                                                                        | 4项（财富税阶梯×2阶段/市场饱和/物价异动）                                | `42528c0a`                      | economy_v3.1+pricing 隐形数据首次叙事化；MC 10×500d 0异常；事件总数674/0重复ID                                             |
+| R2   | 2026-07-11 | B 事件/叙事     | 0（结构性健康）                                                                        | 3项（corp_street_roots_letter/skill_advantage/npc_referral_from_street） | `[R2]`                          | 审计 217 NPC引用全守卫、天气用season/forecast更精确；聚焦治愈"阶段孤岛"street→corporate桥接；MC 10×500d 0异常；事件总数677 |
+| R3   | 2026-07-12 | C 职业/成长     | 2（medicine技能缺失 unlock medical/doctor 路径；social技能悬空 unlock wholesale_flip） | 6项（博士毕业/驾驶老司机/管理班子危机 + design改稿/法律首庭/运营救火）   | `ef6f6ea`+`5e186eb0`+`e862ade0` | 解锁 2 条共9级的职业路径；填补博士毕业/技能视角/路径专属三大叙事空白；事件总数 689                                         |

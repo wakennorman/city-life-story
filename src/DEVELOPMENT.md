@@ -1,10 +1,48 @@
 # 城市浮生记 (City Life Story) — 开发文档
 
-> 最后更新: 2026-07-11（v3.98 loop R2 全系统优化·Domain B 事件/叙事）
+> 最后更新: 2026-07-12（v3.99 loop R3 全系统优化·Domain C 职业/成长）
 >
-> commit: [R2]（feat(loop R2): [域B 事件/叙事] 联动增强3项 street→corporate 桥接）
+> commits: `ef6f6ea`（A类修复）+ `5e186eb0`（联动增强3项）+ `e862ade0`（新增路径专属事件3项）
 
 ---
+
+## 2026-07-12 — v3.99 loop R3 全系统优化·Domain C 职业/成长（A类1项 + 联动增强6项新事件）
+
+> 循环迭代表见 CLAUDE.md「全系统优化·循环迭代表」。本轮域 = **C 职业/成长**。
+
+### 一、指令一审查（A类缺陷扫描）
+
+三路审计发现 **2 个 A类缺陷**（功能性）：
+
+1. **`medicine` 技能缺失**：medical 路径(4级) + doctor 路径(5级) 共 9 个级别全部以 `medicine` 技能为 reqSkills，但 state.js 10 技能表中**无 `medicine`**、全库无获取来源、无证书给予 medicineXp → checkCareerPromotion 对未知技能返回 false → **两条路径永久锁定不可达**。
+2. **`social` 技能悬空引用**：`wholesale_flip` 行动条件(st.skills.social.level>=40) 和 cross_system_events.js 的 2 处事件条件引用 `social`，但 state.js 无 `social` → wholesale_flip 行动永假（死亡内容）。
+
+**修复**（commit `ef6f6ea`）：
+
+- state.js skills 表新增 medicine/social 初始化
+- skills.js nursing_cert 给予 medicineXp 作为主获取通道
+- jobs.js hospital_companion 给予 medicineXp；street_vending_food 给予 socialXp
+- main.js 工作框架+证书框架双通道分发 medicineXp/socialXp；ensureSkillRegistry 双入口注册
+- getSkillName 加 medicine/social 中文映射
+
+### 二、指令二：联动增强（6项新事件）
+
+| 事件 id                        | 类型     | 触发条件                 | 设计心理学            |
+| ------------------------------ | -------- | ------------------------ | --------------------- |
+| `edu_phd_graduation`           | 学历仪式 | edu≥3 + day≥600          | 峰终定律·最高学历收尾 |
+| `skill_driving_road_sense`     | 技能视角 | driving≥40 + day≥90      | 禀赋效应·老司机世界观 |
+| `skill_management_team_crisis` | 技能视角 | mgmt≥40 + 在职≥60天      | 领导力抉择·民主vs权威 |
+| `design_client_revision`       | 路径专属 | design + workDays>60     | 甲方改稿现实·专业方法 |
+| `legal_first_trial`            | 路径专属 | legal + workDays>90      | 职场里程碑·第一次上庭 |
+| `ops_campaign_crisis`          | 路径专属 | operations + workDays>75 | 运营实战·救火vs复盘   |
+
+**填补空白**：
+
+- 博士毕业无仪式感收尾（本科/研究生已有事件）
+- 驾驶/管理技能无专属门槛叙事（仅蹭满级通用事件）
+- design/legal/operations 三条路径零专属事件（career_path_events 原仅覆盖10条）
+
+**验证**：node --check 全文件 ✅ / build.py 8007.2KB ✅ / dist 6 事件全注入 ✅
 
 ## 2026-07-11 — v3.98 loop R2 全系统优化·Domain B 事件/叙事（3项新事件）
 
