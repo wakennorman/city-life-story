@@ -1,8 +1,8 @@
-import Emitter from '../libs/tinyemitter';
-import { SCREEN_WIDTH, SCREEN_HEIGHT } from '../render';
+import Emitter from "../libs/tinyemitter";
+import { SCREEN_WIDTH, SCREEN_HEIGHT } from "../render";
 
 const atlas = wx.createImage();
-atlas.src = 'images/Common.png';
+atlas.src = "images/Common.png";
 
 export default class GameInfo extends Emitter {
   constructor() {
@@ -16,12 +16,12 @@ export default class GameInfo extends Emitter {
     };
 
     // 绑定触摸事件
-    wx.onTouchStart(this.touchEventHandler.bind(this))
+    wx.onTouchStart(this.touchEventHandler.bind(this));
   }
 
   setFont(ctx) {
-    ctx.fillStyle = '#ffffff';
-    ctx.font = '20px Arial';
+    ctx.fillStyle = "#ffffff";
+    ctx.font = "20px Arial";
   }
 
   render(ctx) {
@@ -54,21 +54,21 @@ export default class GameInfo extends Emitter {
       SCREEN_WIDTH / 2 - 150,
       SCREEN_HEIGHT / 2 - 100,
       300,
-      300
+      300,
     );
   }
 
   drawGameOverText(ctx, score) {
     this.setFont(ctx);
     ctx.fillText(
-      '游戏结束',
+      "游戏结束",
       SCREEN_WIDTH / 2 - 40,
-      SCREEN_HEIGHT / 2 - 100 + 50
+      SCREEN_HEIGHT / 2 - 100 + 50,
     );
     ctx.fillText(
       `得分: ${score}`,
       SCREEN_WIDTH / 2 - 40,
-      SCREEN_HEIGHT / 2 - 100 + 130
+      SCREEN_HEIGHT / 2 - 100 + 130,
     );
   }
 
@@ -82,12 +82,12 @@ export default class GameInfo extends Emitter {
       SCREEN_WIDTH / 2 - 60,
       SCREEN_HEIGHT / 2 - 100 + 180,
       120,
-      40
+      40,
     );
     ctx.fillText(
-      '重新开始',
+      "重新开始",
       SCREEN_WIDTH / 2 - 40,
-      SCREEN_HEIGHT / 2 - 100 + 205
+      SCREEN_HEIGHT / 2 - 100 + 205,
     );
   }
 
@@ -104,7 +104,7 @@ export default class GameInfo extends Emitter {
         clientY <= this.btnArea.endY
       ) {
         // 调用重启游戏的回调函数
-        this.emit('restart');
+        this.emit("restart");
       }
     }
   }

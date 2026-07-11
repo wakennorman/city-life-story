@@ -156,7 +156,27 @@ navHints: [
 
 > 每次收工前覆盖更新本节（只留最新状态，不要追加历史）；详细变更历史在 `src/DEVELOPMENT.md`，不需要每次都读。
 
-- **最新一次工作 (2026-07-11)**：v3.87 — 教程引导全面优化（pointer-events穿透+内容重写+步骤重排）
+- **最新一次工作 (2026-07-11)**：v3.88d — 事件系统A类缺陷修复（15个事件补phase+1个NPC断链+1个动态文本）
+  - **🚨 A类严重修复**：15个事件因缺`phase`字段被 queueRandomEvent 过滤，永不触发：
+    - personal_growth_events.js (5) — 健康危机/崩溃/形象/目标deadline/爱好突破
+    - workplace_social_events.js (5) — 甩锅/拜师/八卦/团建/抢功
+    - insider_trading_events.js (5) — 小道消息/财报泄露/审计警告/杀猪盘/同学网络
+  - **🐛 NPC断链修复**：events_street_life.js minimum_wage_hike — 叙事引用"王婶"但未验证 aunt_wang.met
+  - **🐛 动态文本修复**：cross_system_events.js career_promo_offer — text:function 渲染为 "[Function]"
+  - **审查范围**：212+事件地毯式扫描（events_street_*×3 + career_path_events + cross_system_events + 4个新事件文件）
+  - **验证**：node --check ✅ / build.py 7795KB ✅ / git push ✅
+  - **🐛 v3.88b 修复**：position:sticky 在 #content-area 内不生效 → 改用 flex-shrink:0 兄弟节点（与 #tab-bar / #message-log 同原理），HUD 作为 #content-area 同级节点，只有 #content-area 滚动
+  - **🛡️ 装备购买提示修正**：删除"电子→科技园/书本→大学城"（不属于任何装备槽），改为"⛑️头部/🧤手部→批发市场/工地 | 👕身体/👟脚部→批发市场/商业区 | 📿配件→批发市场/商业区"
+  - **🗺️ 空槽导航弹窗**：空装备槽点击弹出弹窗，列出该槽全部可购装备（含价格+购买地），底部"前往XX"按钮一键导航
+  - **📌 手机端固定 HUD**：时间槽+位置条+状态条从 `#content-area`（可滚动）提取到 `#mobile-hud`（`flex-shrink:0` in `#main`），与 tab-bar 同级，AP/状态不再随内容滚动消失
+  - **影响文件**：render_infra.js(+22/-16) / style.css(+6) / dist/index.html(重建)
+  - **验证**：node --check ✅ / build.py 7779.1KB ✅
+  - **commit**：`8ce657e5` ✅ 已 push
+
+- **上一轮工作 (2026-07-11)**：v3.88 — 装备栏 UI 修正 + 手机端固定状态 HUD（superceded by v3.88b）
+  - commit：`3156b8d7`（本地已提交，push 待网络恢复）
+
+- **上一轮工作 (2026-07-11)**：v3.87 — 教程引导全面优化（pointer-events穿透+内容重写+步骤重排）
   - **🖱️ CSS穿透修复**：`.tutorial-overlay { pointer-events: none; }` + `.modal-box { pointer-events: auto; }` — 玩家现在可以直接点击高亮区域推进教程（不再被遮罩拦截）
   - **📝 内容修复**：Step1去"2003年"年份写死 → "初来乍到"；Step2 4维/4项 → 5维属性+5项需求（与当前游戏一致）
   - **🔀 步骤重排**：Steps7&8互换 — "找住处"(step7)在前，"出发！"(finale, step8)在后，逻辑链更合理

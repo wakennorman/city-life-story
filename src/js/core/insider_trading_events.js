@@ -24,6 +24,7 @@
     // 联动：insiderTrading.activeRumor + investment + 道德 + 股票持仓
     {
       id: "rumor_stock_tip",
+      phase: "street",
       icon: "🤫",
       title: "深夜一条语音",
       story:
@@ -190,6 +191,7 @@
     // 联动：insiderTrading.activeRumor + investment + 道德
     {
       id: "rumor_earnings_leak",
+      phase: "street",
       icon: "📊",
       title: "一份没公开的财报",
       story:
@@ -332,6 +334,7 @@
     // 联动：insiderTrading.audits + currentPenalty + 投资持仓
     {
       id: "rumor_audit_suspicion",
+      phase: "street",
       icon: "🔍",
       title: "一封匿名邮件",
       story:
@@ -417,6 +420,7 @@
     // 联动：insiderTrading.rumorHistory + 道德 + 投资经验
     {
       id: "rumor_pump_dumpp",
+      phase: "street",
       icon: "🎣",
       title: "一个陌生人的好友申请",
       story:
@@ -488,6 +492,7 @@
     // 联动：insiderTrading.rumorHistory + 人脉 + 投资 + 道德
     {
       id: "rumor_insider_network",
+      phase: "street",
       icon: "🕸️",
       title: "一个做金融的老同学",
       story:

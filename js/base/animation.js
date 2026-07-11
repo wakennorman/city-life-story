@@ -1,7 +1,7 @@
-import Sprite from './sprite';
+import Sprite from "./sprite";
 
 const __ = {
-  timer: Symbol('timer'),
+  timer: Symbol("timer"),
 };
 
 /**
@@ -45,7 +45,7 @@ export default class Animation extends Sprite {
         this.x,
         this.y,
         this.width * 1.2,
-        this.height * 1.2
+        this.height * 1.2,
       );
     }
   }
@@ -69,7 +69,7 @@ export default class Animation extends Sprite {
     if (this[__.timer]) {
       clearInterval(this[__.timer]);
       this[__.timer] = null; // 清空定时器引用
-      this.emit('stopAnimation');
+      this.emit("stopAnimation");
     }
   }
 

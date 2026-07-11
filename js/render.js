@@ -1,6 +1,8 @@
 GameGlobal.canvas = wx.createCanvas();
 
-const windowInfo = wx.getWindowInfo ? wx.getWindowInfo() : wx.getSystemInfoSync();
+const windowInfo = wx.getWindowInfo
+  ? wx.getWindowInfo()
+  : wx.getSystemInfoSync();
 
 canvas.width = windowInfo.screenWidth;
 canvas.height = windowInfo.screenHeight;

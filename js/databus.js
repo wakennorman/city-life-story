@@ -1,4 +1,4 @@
-import Pool from './base/pool';
+import Pool from "./base/pool";
 
 let instance;
 
@@ -46,7 +46,7 @@ export default class DataBus {
   removeEnemy(enemy) {
     const temp = this.enemys.splice(this.enemys.indexOf(enemy), 1);
     if (temp) {
-      this.pool.recover('enemy', enemy); // 回收敌人到对象池
+      this.pool.recover("enemy", enemy); // 回收敌人到对象池
     }
   }
 
@@ -58,7 +58,7 @@ export default class DataBus {
   removeBullets(bullet) {
     const temp = this.bullets.splice(this.bullets.indexOf(bullet), 1);
     if (temp) {
-      this.pool.recover('bullet', bullet); // 回收子弹到对象池
+      this.pool.recover("bullet", bullet); // 回收子弹到对象池
     }
   }
 }

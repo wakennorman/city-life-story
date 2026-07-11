@@ -1,4 +1,4 @@
-import Emitter from '../libs/tinyemitter';
+import Emitter from "../libs/tinyemitter";
 
 /**
  * 游戏基础的精灵类
@@ -7,9 +7,9 @@ export default class Sprite extends Emitter {
   visible = true; // 是否可见
   isActive = true; // 是否可碰撞
 
-  constructor(imgSrc = '', width = 0, height = 0, x = 0, y = 0) {
+  constructor(imgSrc = "", width = 0, height = 0, x = 0, y = 0) {
     super();
-    
+
     this.img = wx.createImage();
     this.img.src = imgSrc;
 

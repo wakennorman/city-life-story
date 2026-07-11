@@ -25,6 +25,7 @@
     // 联动：workplaceSocial.colleagues + 项目失败 + 道德
     {
       id: "ws_blame_shifting",
+      phase: "corporate",
       icon: "🍠",
       title: "甩锅大会",
       story:
@@ -142,6 +143,7 @@
     // 联动：workplaceSocial.colleagues + mentorship + 人脉
     {
       id: "ws_mentor_request",
+      phase: "corporate",
       icon: "🙏",
       title: "一个年轻人的请求",
       story:
@@ -222,6 +224,7 @@
     // 联动：workplaceSocial.officePoliticsLog + 关系 + 声望
     {
       id: "ws_gossip_backlash",
+      phase: "corporate",
       icon: "👂",
       title: "八卦回锅",
       story:
@@ -297,6 +300,7 @@
     // 联动：workplaceSocial.colleagues + 现金 + 疲劳
     {
       id: "ws_team_building",
+      phase: "corporate",
       icon: "🎉",
       title: "今晚团建，你去吗？",
       story:
@@ -381,6 +385,7 @@
     // 联动：workplaceSocial.colleagues + 声望 + 智力
     {
       id: "ws_credit_stealing",
+      phase: "corporate",
       icon: "💼",
       title: "会议室里的「我的想法」",
       story:

@@ -15,9 +15,9 @@ export default class Music {
 
     this.bgmAudio.loop = true; // 背景音乐循环播放
     this.bgmAudio.autoplay = true; // 背景音乐自动播放
-    this.bgmAudio.src = 'audio/bgm.mp3';
-    this.shootAudio.src = 'audio/bullet.mp3';
-    this.boomAudio.src = 'audio/boom.mp3';
+    this.bgmAudio.src = "audio/bgm.mp3";
+    this.shootAudio.src = "audio/bullet.mp3";
+    this.boomAudio.src = "audio/boom.mp3";
   }
 
   playShoot() {

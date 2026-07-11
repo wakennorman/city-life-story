@@ -1,6 +1,6 @@
-import Sprite from '../base/sprite';
+import Sprite from "../base/sprite";
 
-const BULLET_IMG_SRC = 'images/bullet.png';
+const BULLET_IMG_SRC = "images/bullet.png";
 const BULLET_WIDTH = 16;
 const BULLET_HEIGHT = 30;
 
@@ -22,7 +22,7 @@ export default class Bullet extends Sprite {
     if (GameGlobal.databus.isGameOver) {
       return;
     }
-  
+
     this.y -= this.speed;
 
     // 超出屏幕外销毁

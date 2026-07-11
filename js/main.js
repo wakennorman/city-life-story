@@ -1,13 +1,13 @@
-import './render'; // 初始化Canvas
-import Player from './player/index'; // 导入玩家类
-import Enemy from './npc/enemy'; // 导入敌机类
-import BackGround from './runtime/background'; // 导入背景类
-import GameInfo from './runtime/gameinfo'; // 导入游戏UI类
-import Music from './runtime/music'; // 导入音乐类
-import DataBus from './databus'; // 导入数据类，用于管理游戏状态和数据
+import "./render"; // 初始化Canvas
+import Player from "./player/index"; // 导入玩家类
+import Enemy from "./npc/enemy"; // 导入敌机类
+import BackGround from "./runtime/background"; // 导入背景类
+import GameInfo from "./runtime/gameinfo"; // 导入游戏UI类
+import Music from "./runtime/music"; // 导入音乐类
+import DataBus from "./databus"; // 导入数据类，用于管理游戏状态和数据
 
 const ENEMY_GENERATE_INTERVAL = 30;
-const ctx = canvas.getContext('2d'); // 获取canvas的2D绘图上下文;
+const ctx = canvas.getContext("2d"); // 获取canvas的2D绘图上下文;
 
 GameGlobal.databus = new DataBus(); // 全局数据管理，用于管理游戏状态和数据
 GameGlobal.musicManager = new Music(); // 全局音乐管理实例
@@ -23,7 +23,7 @@ export default class Main {
 
   constructor() {
     // 当开始游戏被点击时，重新开始游戏
-    this.gameInfo.on('restart', this.start.bind(this));
+    this.gameInfo.on("restart", this.start.bind(this));
 
     // 开始游戏
     this.start();
@@ -46,7 +46,7 @@ export default class Main {
   enemyGenerate() {
     // 每30帧生成一个敌机
     if (GameGlobal.databus.frame % ENEMY_GENERATE_INTERVAL === 0) {
-      const enemy = GameGlobal.databus.pool.getItemByClass('enemy', Enemy); // 从对象池获取敌机实例
+      const enemy = GameGlobal.databus.pool.getItemByClass("enemy", Enemy); // 从对象池获取敌机实例
       enemy.init(); // 初始化敌机
       GameGlobal.databus.enemys.push(enemy); // 将敌机添加到敌机数组中
     }

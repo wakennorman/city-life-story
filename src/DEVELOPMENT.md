@@ -1,8 +1,32 @@
 # 城市浮生记 (City Life Story) — 开发文档
 
-> 最后更新: 2026-07-11（v3.86b 交通按钮悬停+步行选项）
+> 最后更新: 2026-07-11（v3.88d 事件系统A类缺陷修复）
 >
-> commit: 5499d9a3（v3.86b 交通按钮悬停+步行选项）
+> commit: 4c931c3（v3.88d 事件系统A类缺陷修复）
+
+---
+
+## 2026-07-11 — v3.88d 事件系统A类缺陷修复
+
+### 🚨 重大缺陷修复
+
+**1. 15个事件缺phase字段永不触发（A类严重）**
+
+| 文件                       | 事件数 | 补充phase   | 后果                                               |
+| -------------------------- | ------ | ----------- | -------------------------------------------------- |
+| personal_growth_events.js  | 5      | 'street'    | 健康危机/崩溃/形象/deadline/爱好突破全部无法触发   |
+| workplace_social_events.js | 5      | 'corporate' | 职场社交事件(甩锅/拜师/八卦/团建/抢功)全部无法触发 |
+| insider_trading_events.js  | 5      | 'street'    | 内幕交易事件链全部无法触发                         |
+
+根因: queueRandomEvent 的 phase 过滤器会过滤掉所有缺 phase 字段的事件
+
+**2. 叙事-触发NPC断链（1个）**
+
+- events_street_life.js minimum_wage_hike: 叙事引用"王婶"对话，但未验证 aunt_wang.met
+
+**3. 动态文本渲染错误（1个）**
+
+- cross_system_events.js career_promo_offer: text:function(st) 渲染为 "[Function]"
 
 ---
 

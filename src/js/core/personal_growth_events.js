@@ -24,6 +24,7 @@
     // 联动：personalGrowth.health.physical + 疾病 + 现金
     {
       id: "pg_health_crisis",
+      phase: "street",
       icon: "🏥",
       title: "医院急诊室",
       story:
@@ -117,6 +118,7 @@
     // 联动：personalGrowth.psychology + 心情 + 睡眠
     {
       id: "pg_burnout_warning",
+      phase: "street",
       icon: "😶‍🌫️",
       title: "凌晨三点的天花板",
       story:
@@ -191,6 +193,7 @@
     // 联动：personalGrowth.image + 魅力 + 面试/社交
     {
       id: "pg_image_crisis",
+      phase: "street",
       icon: "🪞",
       title: "镜子前的自己",
       story:
@@ -267,6 +270,7 @@
     // 联动：personalGrowth.lifeGoals + 时间压力 + 选择
     {
       id: "pg_goal_deadline",
+      phase: "street",
       icon: "⏰",
       title: "还有30天",
       story:
@@ -354,6 +358,7 @@
     // 联动：personalGrowth.hobbies + 技能 + 社交
     {
       id: "pg_hobby_breakthrough",
+      phase: "street",
       icon: "🎨",
       title: "那一刻你明白了",
       story:

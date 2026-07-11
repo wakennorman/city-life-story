@@ -1,7 +1,7 @@
-import Sprite from '../base/sprite';
-import { SCREEN_WIDTH, SCREEN_HEIGHT } from '../render';
+import Sprite from "../base/sprite";
+import { SCREEN_WIDTH, SCREEN_HEIGHT } from "../render";
 
-const BACKGROUND_IMAGE_SRC = 'images/bg.jpg';
+const BACKGROUND_IMAGE_SRC = "images/bg.jpg";
 const BACKGROUND_WIDTH = 512;
 const BACKGROUND_HEIGHT = 512;
 const BACKGROUND_SPEED = 2;
@@ -20,7 +20,7 @@ export default class BackGround extends Sprite {
     if (GameGlobal.databus.isGameOver) {
       return;
     }
-  
+
     this.top += BACKGROUND_SPEED;
 
     // 如果背景滚动超过屏幕高度，则重置
@@ -46,7 +46,7 @@ export default class BackGround extends Sprite {
       0,
       -SCREEN_HEIGHT + this.top,
       SCREEN_WIDTH,
-      SCREEN_HEIGHT
+      SCREEN_HEIGHT,
     );
 
     // 绘制第二张背景
@@ -59,7 +59,7 @@ export default class BackGround extends Sprite {
       0,
       this.top,
       SCREEN_WIDTH,
-      SCREEN_HEIGHT
+      SCREEN_HEIGHT,
     );
   }
 }

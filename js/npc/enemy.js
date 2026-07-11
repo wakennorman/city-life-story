@@ -1,10 +1,10 @@
-import Animation from '../base/animation';
-import { SCREEN_WIDTH, SCREEN_HEIGHT } from '../render';
+import Animation from "../base/animation";
+import { SCREEN_WIDTH, SCREEN_HEIGHT } from "../render";
 
-const ENEMY_IMG_SRC = 'images/enemy.png';
+const ENEMY_IMG_SRC = "images/enemy.png";
 const ENEMY_WIDTH = 60;
 const ENEMY_HEIGHT = 60;
-const EXPLO_IMG_PREFIX = 'images/explosion';
+const EXPLO_IMG_PREFIX = "images/explosion";
 
 export default class Enemy extends Animation {
   speed = Math.random() * 6 + 3; // 飞行速度
@@ -33,7 +33,7 @@ export default class Enemy extends Animation {
     const EXPLO_FRAME_COUNT = 19;
     const frames = Array.from(
       { length: EXPLO_FRAME_COUNT },
-      (_, i) => `${EXPLO_IMG_PREFIX}${i + 1}.png`
+      (_, i) => `${EXPLO_IMG_PREFIX}${i + 1}.png`,
     );
     this.initFrames(frames);
   }
@@ -58,9 +58,9 @@ export default class Enemy extends Animation {
     this.playAnimation();
     GameGlobal.musicManager.playExplosion(); // 播放爆炸音效
     wx.vibrateShort({
-      type: 'light'
+      type: "light",
     }); // 轻微震动
-    this.on('stopAnimation', () => this.remove.bind(this));
+    this.on("stopAnimation", () => this.remove.bind(this));
   }
 
   remove() {

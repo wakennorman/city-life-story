@@ -1,12 +1,12 @@
-import Animation from '../base/animation';
-import { SCREEN_WIDTH, SCREEN_HEIGHT } from '../render';
-import Bullet from './bullet';
+import Animation from "../base/animation";
+import { SCREEN_WIDTH, SCREEN_HEIGHT } from "../render";
+import Bullet from "./bullet";
 
 // 玩家相关常量设置
-const PLAYER_IMG_SRC = 'images/hero.png';
+const PLAYER_IMG_SRC = "images/hero.png";
 const PLAYER_WIDTH = 80;
 const PLAYER_HEIGHT = 80;
-const EXPLO_IMG_PREFIX = 'images/explosion';
+const EXPLO_IMG_PREFIX = "images/explosion";
 const PLAYER_SHOOT_INTERVAL = 20;
 
 export default class Player extends Animation {
@@ -40,7 +40,7 @@ export default class Player extends Animation {
     const EXPLO_FRAME_COUNT = 19;
     const frames = Array.from(
       { length: EXPLO_FRAME_COUNT },
-      (_, i) => `${EXPLO_IMG_PREFIX}${i + 1}.png`
+      (_, i) => `${EXPLO_IMG_PREFIX}${i + 1}.png`,
     );
     this.initFrames(frames);
   }
@@ -69,11 +69,11 @@ export default class Player extends Animation {
   setAirPosAcrossFingerPosZ(x, y) {
     const disX = Math.max(
       0,
-      Math.min(x - this.width / 2, SCREEN_WIDTH - this.width)
+      Math.min(x - this.width / 2, SCREEN_WIDTH - this.width),
     );
     const disY = Math.max(
       0,
-      Math.min(y - this.height / 2, SCREEN_HEIGHT - this.height)
+      Math.min(y - this.height / 2, SCREEN_HEIGHT - this.height),
     );
 
     this.x = disX;
@@ -122,7 +122,7 @@ export default class Player extends Animation {
    * 射击时机由外部决定
    */
   shoot() {
-    const bullet = GameGlobal.databus.pool.getItemByClass('bullet', Bullet);
+    const bullet = GameGlobal.databus.pool.getItemByClass("bullet", Bullet);
     bullet.init(this.x + this.width / 2 - bullet.width / 2, this.y - 10, 10);
     GameGlobal.databus.bullets.push(bullet);
     GameGlobal.musicManager.playShoot(); // 播放射击音效
@@ -144,7 +144,7 @@ export default class Player extends Animation {
     this.playAnimation();
     GameGlobal.musicManager.playExplosion(); // 播放爆炸音效
     wx.vibrateShort({
-      type: 'medium'
+      type: "medium",
     }); // 震动
   }
 }

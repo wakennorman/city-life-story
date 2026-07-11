@@ -2206,7 +2206,19 @@
       title: "最低工资上调",
       story:
         "市人社局发公告了：最低工资从¥2200调到¥2480。餐馆门口贴出了新菜单——「因人工成本上涨，部分菜品价格上调5%~10%」。王婶说：「涨工资是好事——但物价涨得比工资快。」",
-      triggers: { minDay: 30, excludeFlags: ["_minWageHikeSeen"] },
+      // [自洽修复] conditions 新增：王婶已结识检查（叙事直接引用王婶对话）
+      conditions: function (st) {
+        var hasAuntWang =
+          st.relationships &&
+          st.relationships.aunt_wang &&
+          st.relationships.aunt_wang.met === true;
+        return (
+          st.player.phase === "street" &&
+          st.player.day >= 30 &&
+          hasAuntWang &&
+          !st.flags._minWageHikeSeen
+        );
+      },
       choices: [
         {
           text: "💰 这是好事——你的收入会涨",

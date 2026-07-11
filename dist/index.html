@@ -15522,7 +15522,19 @@
             title: "最低工资上调",
             story:
               "市人社局发公告了：最低工资从¥2200调到¥2480。餐馆门口贴出了新菜单——「因人工成本上涨，部分菜品价格上调5%~10%」。王婶说：「涨工资是好事——但物价涨得比工资快。」",
-            triggers: { minDay: 30, excludeFlags: ["_minWageHikeSeen"] },
+            // [自洽修复] conditions 新增：王婶已结识检查（叙事直接引用王婶对话）
+            conditions: function (st) {
+              var hasAuntWang =
+                st.relationships &&
+                st.relationships.aunt_wang &&
+                st.relationships.aunt_wang.met === true;
+              return (
+                st.player.phase === "street" &&
+                st.player.day >= 30 &&
+                hasAuntWang &&
+                !st.flags._minWageHikeSeen
+              );
+            },
             choices: [
               {
                 text: "💰 这是好事——你的收入会涨",
@@ -32045,14 +32057,7 @@
             },
             probability: 0.03,
             repeatable: true,
-            text: function (st) {
-              var job = st.career.currentJob;
-              return (
-                "你在一家咖啡厅面试时，一个自称「某某科技」的猎头凑过来递名片。「以你的资历，在" +
-                (job.levelName || "这岗位") +
-                "上屈才了。来我们这，薪资翻倍+期权。」"
-              );
-            },
+            text: "你在一家咖啡厅面试时，一个自称「某某科技」的猎头凑过来递名片。「以你的资历，在现在的岗位上屈才了。来我们这，薪资翻倍+期权。」",
             choices: [
               {
                 text: "💼 接offer，跳槽！",
@@ -79655,6 +79660,378 @@
         // ====================================================================
         // v3.83 loop R41 注册完毕（4个：装备磨损/城管关系/教育认证/社区聚会）
         // ====================================================================
+
+        // ====================================================================
+        // v3.88d loop R42 — 4个高影响联动事件
+        // 空白区：社交深度(1→2) / 道德回响(4→5) / 装备品质(1→2) / 天气情境(3→4)
+        // ====================================================================
+
+        // 事件1：NPC人生故事 — 好感≥80触发深度对话
+        // [自洽修复] conditions 校验：NPC好感≥80 + met + day≥50
+        // 设计意图：NPC好感突破阈值后解锁"人生故事"对话，让NPC从功能提供者变成有血有肉的人
+        // 联动系统：NPC关系 + 属性成长（心智+5永久）+ 禀赋效应（珍视深度关系）
+        RANDOM_EVENTS.push({
+          id: "social_npc_life_story",
+          phase: "street",
+          icon: "📖",
+          title: "深夜的人生故事",
+          story:
+            "加完班回家，你在巷口碰见了熟悉的面孔。对方难得没在忙，一个人坐在台阶上抽烟/织毛衣。看到你，招了招手：\n\n「来，坐会儿。」\n\n也许是今晚太安静了，也许是你从来没问过——对方第一次讲起了自己的故事。那些年的不容易，那些没能实现的梦，那些放下又拿起来的执念。\n\n你听着，才发现这个每天跟你点头的人，原来也有一段人生。",
+          conditions: function (st) {
+            // [自洽修复] 检查是否有任意NPC好感≥80且已结识
+            if (!st.relationships) return false;
+            var hasDeepBond = false;
+            for (var nid in st.relationships) {
+              var rel = st.relationships[nid];
+              if (rel && rel.met && (rel.affinity || 0) >= 80) {
+                hasDeepBond = true;
+                break;
+              }
+            }
+            if (!hasDeepBond) return false;
+            if (st.player.day < 50) return false; // 中后期才触发
+            if (st.flags._npcLifeStorySeen) return false; // 一次性
+            return true;
+          },
+          probability: 0.025,
+          repeatable: false,
+          choices: [
+            {
+              text: "👂 安静听他说完",
+              hint: "心智+5，好感+10",
+              apply: function (st) {
+                st.flags._npcLifeStorySeen = true;
+                st.player.mental = Math.min(100, (st.player.mental || 50) + 5);
+                // 所有好感≥80的NPC好感+10
+                for (var nid in st.relationships) {
+                  var rel = st.relationships[nid];
+                  if (rel && rel.met && (rel.affinity || 0) >= 80) {
+                    rel.affinity = Math.min(100, (rel.affinity || 0) + 10);
+                  }
+                }
+                StateManager.addMessage(
+                  "📖 你安静地听完了他的故事。那些年的不容易，让你对自己的困境也有了新的看法。心智+5，你们的关系更深了一层。",
+                  "success",
+                );
+              },
+            },
+            {
+              text: "🤝 也分享自己的故事",
+              hint: "双向交心，心智+8",
+              apply: function (st) {
+                st.flags._npcLifeStorySeen = true;
+                st.player.mental = Math.min(100, (st.player.mental || 50) + 8);
+                st.needs.happiness = Math.min(
+                  100,
+                  (st.needs.happiness || 50) + 10,
+                );
+                for (var nid in st.relationships) {
+                  var rel = st.relationships[nid];
+                  if (rel && rel.met && (rel.affinity || 0) >= 80) {
+                    rel.affinity = Math.min(100, (rel.affinity || 0) + 15);
+                  }
+                }
+                StateManager.addMessage(
+                  "🤝 你也讲了自己的故事。两个在城市里漂泊的人，今晚靠得更近了。心智+8，心情+10，好感+15。",
+                  "success",
+                );
+              },
+            },
+            {
+              text: "😅 聊几句就回去休息",
+              hint: "礼貌但疏离",
+              apply: function (st) {
+                st.flags._npcLifeStorySeen = true;
+                st.needs.fatigue = Math.max(0, (st.needs.fatigue || 50) - 5);
+                StateManager.addMessage(
+                  "😅 你聊了几句就回去了。对方笑了笑说「早点休息」。有些故事，也许下次吧。疲劳-5。",
+                  "info",
+                );
+              },
+            },
+          ],
+        });
+
+        // 事件2：道德回响 — 曾经的选择在多年后回响
+        // [自洽修复] conditions 校验：之前做过道德选择（有相关flag）+ day≥40
+        // 设计意图：之前的道德选择产生长期回响，让玩家感受到"选择有后果"
+        // 联动系统：道德系统 + flag历史 + 损失厌恶 + 社会认同
+        RANDOM_EVENTS.push({
+          id: "moral_choice_long_echo",
+          phase: "street",
+          icon: "🔔",
+          title: "多年前的那个选择",
+          story:
+            "你在街上走着，突然被一个声音叫住。\n\n「哎——是你吗？！」\n\n你转过身，看着面前这张似曾相识的脸，一时没认出来。对方激动地走过来，一把抓住你的手：\n\n「你可能不记得了，前几年你捡到一个钱包交给了派出所——那里面有我母亲的救命钱！后来派出所找到我，我赶到医院时还好没耽误。我现在在城里站稳了脚跟，一直想找到你……」\n\n说着，对方从兜里掏出一个红包，硬往你手里塞。",
+          conditions: function (st) {
+            // [自洽修复] 检查玩家是否做过"归还钱包"的道德选择
+            if (!st.flags) return false;
+            var didGoodDeed =
+              st.flags._returnedWallet ||
+              st.flags._returnedFoundMoney ||
+              st.flags._helpedOldMan ||
+              st.flags._donatedToCharity ||
+              st.flags._volunteerWork;
+            if (!didGoodDeed) return false;
+            if (st.player.day < 40) return false; // 需要时间发酵
+            if (st.flags._moralEchoSeen) return false; // 一次性
+            return true;
+          },
+          probability: 0.02,
+          repeatable: false,
+          choices: [
+            {
+              text: "💰 收下红包",
+              hint: "¥500-1500，名气+5",
+              apply: function (st) {
+                st.flags._moralEchoSeen = true;
+                var reward = Random.int(500, 1500);
+                st.resources.cash += reward;
+                st.resources.totalEarned += reward;
+                st.player.fame = Math.min(100, (st.player.fame || 0) + 5);
+                StateManager.addMessage(
+                  "💰 你收下红包，对方连声道谢。好人有好报——这笔¥" +
+                    reward.toLocaleString() +
+                    "的意外之财让你相信，这座城市不会忘记善良的人。名气+5。",
+                  "success",
+                );
+              },
+            },
+            {
+              text: "🙏 红包拿走，转捐掉",
+              hint: "名气+10，道德+",
+              apply: function (st) {
+                st.flags._moralEchoSeen = true;
+                st.player.fame = Math.min(100, (st.player.fame || 0) + 10);
+                st.player.morality = Math.min(
+                  100,
+                  (st.player.morality || 50) + 8,
+                );
+                st.needs.happiness = Math.min(
+                  100,
+                  (st.needs.happiness || 50) + 15,
+                );
+                StateManager.addMessage(
+                  "🙏 你把红包转捐给了社区互助基金。对方看着你，眼里多了几分敬意。名气+10，道德+8，心情+15。",
+                  "success",
+                );
+              },
+            },
+            {
+              text: "🤝 请对方吃顿饭就好",
+              hint: "人情+，关系网扩展",
+              apply: function (st) {
+                st.flags._moralEchoSeen = true;
+                st.resources.cash -= 80;
+                st.needs.happiness = Math.min(
+                  100,
+                  (st.needs.happiness || 50) + 10,
+                );
+                st.player.fame = Math.min(100, (st.player.fame || 0) + 3);
+                // 解锁人脉网络标记
+                st.flags._moralNetworkUnlocked = true;
+                StateManager.addMessage(
+                  "🤝 你在路边小馆请对方吃了顿饭。两人聊了一晚上——他给你介绍了几个城里的朋友。名气+3，心情+10，人脉+1。",
+                  "success",
+                );
+              },
+            },
+          ],
+        });
+
+        // 事件3：废品站淘宝 — 装备品质深度联动
+        // [自洽修复] conditions 校验：repair技能≥25 + 在废品站/批发市场 + day≥20
+        // 设计意图：专业技能赋予"淘宝"能力，让玩家感受成长带来的世界观变化
+        // 联动系统：装备品质 + 技能门槛 + 位置 + 经济
+        RANDOM_EVENTS.push({
+          id: "equipment_scrap_treasure",
+          phase: "street",
+          icon: "🔍",
+          title: "废品堆里的宝贝",
+          story:
+            "你在废品站翻找能卖钱的东西，手碰到一个沉甸甸的金属盒子。擦掉灰尘一看——是一台老式电动工具，外壳有磕碰但齿轮咬合依然紧密。\n\n你试着通电转了转，马达声音平稳。这种老牌子现在都停产了，二手市场上有的是人抢着要。\n\n废品站老板瞥了一眼：「那个啊，¥500拿走。放这儿占地方。」",
+          conditions: function (st) {
+            // [自洽修复] 检查repair技能≥25（有专业眼光识别价值）
+            if (!st.skills || !st.skills.repair) return false;
+            if ((st.skills.repair.level || 0) < 25) return false;
+            // 检查当前位置是废品站或批发市场
+            var loc = st.trade && st.trade.currentLocation;
+            if (
+              loc !== "scrapStation" &&
+              loc !== "wholesaleMarket" &&
+              loc !== "slum"
+            )
+              return false;
+            if (st.player.day < 20) return false;
+            if (st.flags._scrapTreasureSeen) return false; // 一次性
+            return true;
+          },
+          probability: 0.03,
+          repeatable: false,
+          choices: [
+            {
+              text: "💰 ¥500拿下，转手卖高价",
+              hint: "净赚¥300-800",
+              apply: function (st) {
+                st.flags._scrapTreasureSeen = true;
+                if (st.resources.cash < 500) {
+                  StateManager.addMessage(
+                    "💰 翻遍口袋只有¥" +
+                      st.resources.cash +
+                      "。老板摇摇头：「下次带够钱再来。」",
+                    "warning",
+                  );
+                  return;
+                }
+                st.resources.cash -= 500;
+                var profit = Random.int(300, 800);
+                st.resources.cash += profit + 500; // 卖出价=成本+利润
+                st.resources.totalEarned += profit;
+                st.skills.repair.xp = (st.skills.repair.xp || 0) + 20;
+                StateManager.addMessage(
+                  "🔍 你花¥500拿下，转手卖了¥" +
+                    (profit + 500).toLocaleString() +
+                    "。净赚¥" +
+                    profit +
+                    "！专业眼光就是印钞机。修理XP+20。",
+                  "success",
+                );
+              },
+            },
+            {
+              text: "🔧 留着自己用",
+              hint: "修理XP+40，装备耐久恢复",
+              apply: function (st) {
+                st.flags._scrapTreasureSeen = true;
+                if (st.resources.cash < 500) {
+                  StateManager.addMessage(
+                    "🔧 钱不够，只能看着别人买走。",
+                    "warning",
+                  );
+                  return;
+                }
+                st.resources.cash -= 500;
+                st.skills.repair.xp = (st.skills.repair.xp || 0) + 40;
+                // 恢复一件装备的耐久
+                var eq = st.inventory && st.inventory.equipmentInstances;
+                if (eq) {
+                  for (var slot in eq) {
+                    if (eq[slot] && eq[slot].durability < 80) {
+                      eq[slot].durability = Math.min(
+                        100,
+                        (eq[slot].durability || 50) + 30,
+                      );
+                      break;
+                    }
+                  }
+                }
+                StateManager.addMessage(
+                  "🔧 你花¥500买下自己用。拆开研究了一晚上，修理技术又精进了不少。修理XP+40，一件装备耐久+30。",
+                  "success",
+                );
+              },
+            },
+            {
+              text: "🚶 不稀罕，继续翻别的",
+              hint: "保守选择",
+              apply: function (st) {
+                st.flags._scrapTreasureSeen = true;
+                StateManager.addMessage(
+                  "🚶 你放下工具继续翻别的。不是所有的机会都值得抓。",
+                  "info",
+                );
+              },
+            },
+          ],
+        });
+
+        // 事件4：大雾中的陌生人 — 天气+道德+位置联动
+        // [自洽修复] conditions 校验：weather=foggy/heavy_smog + day≥15 + 不在住所
+        // 设计意图：极端天气下遇到需要帮助的人，制造道德困境
+        // 联动系统：天气 + 道德 + 需求消耗 + 社会支持
+        RANDOM_EVENTS.push({
+          id: "weather_fog_stranger_lost",
+          phase: "street",
+          icon: "🌫️",
+          title: "大雾中的问路人",
+          story:
+            "今天的雾特别大，能见度不到十米。街灯在雾里晕成一团模糊的光。\n\n你裹紧衣服走在路上，突然听到旁边传来一个焦急的声音：\n\n「不好意思——请问XX路怎么走？我手机没电了，在这转了半小时了……」\n\n你顺着声音看过去，是一个背着大包的外地人，脸上写满了疲惫和迷茫。雾太大了，连路牌都看不清。",
+          conditions: function (st) {
+            // [自洽修复] 检查天气为雾霾或重度雾霾
+            var w = st.weather && st.weather.current;
+            if (w !== "foggy" && w !== "heavy_smog") return false;
+            if (st.player.day < 15) return false;
+            if (st.flags._fogStrangerSeen) return false; // 一次性
+            return true;
+          },
+          probability: 0.04,
+          repeatable: false,
+          choices: [
+            {
+              text: "🤝 带他走到大路上",
+              hint: "疲劳+10，道德+，名气+",
+              apply: function (st) {
+                st.flags._fogStrangerSeen = true;
+                st.needs.fatigue = Math.min(100, (st.needs.fatigue || 50) + 10);
+                st.player.morality = Math.min(
+                  100,
+                  (st.player.morality || 50) + 5,
+                );
+                st.player.fame = Math.min(100, (st.player.fame || 0) + 3);
+                // 15%概率获得意外回报
+                if (Random.chance(0.15)) {
+                  var tip = Random.int(50, 150);
+                  st.resources.cash += tip;
+                  StateManager.addMessage(
+                    "🤝 你带他走了二十分钟到大路。他千恩万谢，硬塞给你¥" +
+                      tip +
+                      "。好人有好报。疲劳+10，道德+5，名气+3。",
+                    "success",
+                  );
+                } else {
+                  StateManager.addMessage(
+                    "🤝 你带他走了二十分钟到大路。他连声道谢，消失在雾里。你转身继续赶路——能帮助一个人，今晚没白累。疲劳+10，道德+5，名气+3。",
+                    "success",
+                  );
+                }
+              },
+            },
+            {
+              text: "🗺️ 给他指个方向",
+              hint: "低成本帮助",
+              apply: function (st) {
+                st.flags._fogStrangerSeen = true;
+                st.player.morality = Math.min(
+                  100,
+                  (st.player.morality || 50) + 2,
+                );
+                StateManager.addMessage(
+                  "🗺️ 你指着雾里隐约可见的路牌方向：「往左拐，看到红绿灯右转。」他将信将疑地走了。你希望他没走错。道德+2。",
+                  "info",
+                );
+              },
+            },
+            {
+              text: "😰 雾太大，自顾不暇",
+              hint: "自保优先",
+              apply: function (st) {
+                st.flags._fogStrangerSeen = true;
+                st.needs.happiness = Math.max(
+                  0,
+                  (st.needs.happiness || 50) - 5,
+                );
+                StateManager.addMessage(
+                  "😰 你摆摆手快步走开。雾太大了，你自己都看不清路。心里有点过意不去，但自保要紧。心情-5。",
+                  "warning",
+                );
+              },
+            },
+          ],
+        });
+
+        // ====================================================================
+        // v3.88d loop R42 注册完毕（4个：NPC人生故事/道德回响/废品淘宝/雾中问路）
+        // ====================================================================
         // ====== 注册结束 ======
       })();
     </script>
@@ -83758,6 +84135,7 @@
           // 联动：insiderTrading.activeRumor + investment + 道德 + 股票持仓
           {
             id: "rumor_stock_tip",
+            phase: "street",
             icon: "🤫",
             title: "深夜一条语音",
             story:
@@ -83941,6 +84319,7 @@
           // 联动：insiderTrading.activeRumor + investment + 道德
           {
             id: "rumor_earnings_leak",
+            phase: "street",
             icon: "📊",
             title: "一份没公开的财报",
             story:
@@ -84104,6 +84483,7 @@
           // 联动：insiderTrading.audits + currentPenalty + 投资持仓
           {
             id: "rumor_audit_suspicion",
+            phase: "street",
             icon: "🔍",
             title: "一封匿名邮件",
             story:
@@ -84201,6 +84581,7 @@
           // 联动：insiderTrading.rumorHistory + 道德 + 投资经验
           {
             id: "rumor_pump_dumpp",
+            phase: "street",
             icon: "🎣",
             title: "一个陌生人的好友申请",
             story:
@@ -84278,6 +84659,7 @@
           // 联动：insiderTrading.rumorHistory + 人脉 + 投资 + 道德
           {
             id: "rumor_insider_network",
+            phase: "street",
             icon: "🕸️",
             title: "一个做金融的老同学",
             story:
@@ -84410,6 +84792,7 @@
           // 联动：personalGrowth.health.physical + 疾病 + 现金
           {
             id: "pg_health_crisis",
+            phase: "street",
             icon: "🏥",
             title: "医院急诊室",
             story:
@@ -84510,6 +84893,7 @@
           // 联动：personalGrowth.psychology + 心情 + 睡眠
           {
             id: "pg_burnout_warning",
+            phase: "street",
             icon: "😶‍🌫️",
             title: "凌晨三点的天花板",
             story:
@@ -84595,6 +84979,7 @@
           // 联动：personalGrowth.image + 魅力 + 面试/社交
           {
             id: "pg_image_crisis",
+            phase: "street",
             icon: "🪞",
             title: "镜子前的自己",
             story:
@@ -84680,6 +85065,7 @@
           // 联动：personalGrowth.lifeGoals + 时间压力 + 选择
           {
             id: "pg_goal_deadline",
+            phase: "street",
             icon: "⏰",
             title: "还有30天",
             story:
@@ -84785,6 +85171,7 @@
           // 联动：personalGrowth.hobbies + 技能 + 社交
           {
             id: "pg_hobby_breakthrough",
+            phase: "street",
             icon: "🎨",
             title: "那一刻你明白了",
             story:
@@ -84916,6 +85303,7 @@
           // 联动：workplaceSocial.colleagues + 项目失败 + 道德
           {
             id: "ws_blame_shifting",
+            phase: "corporate",
             icon: "🍠",
             title: "甩锅大会",
             story:
@@ -85044,6 +85432,7 @@
           // 联动：workplaceSocial.colleagues + mentorship + 人脉
           {
             id: "ws_mentor_request",
+            phase: "corporate",
             icon: "🙏",
             title: "一个年轻人的请求",
             story:
@@ -85124,6 +85513,7 @@
           // 联动：workplaceSocial.officePoliticsLog + 关系 + 声望
           {
             id: "ws_gossip_backlash",
+            phase: "corporate",
             icon: "👂",
             title: "八卦回锅",
             story:
@@ -85211,6 +85601,7 @@
           // 联动：workplaceSocial.colleagues + 现金 + 疲劳
           {
             id: "ws_team_building",
+            phase: "corporate",
             icon: "🎉",
             title: "今晚团建，你去吗？",
             story:
@@ -85310,6 +85701,7 @@
           // 联动：workplaceSocial.colleagues + 声望 + 智力
           {
             id: "ws_credit_stealing",
+            phase: "corporate",
             icon: "💼",
             title: "会议室里的「我的想法」",
             story:
