@@ -227657,6 +227657,10 @@ function loadExistingGame(slot) {
     if (typeof ensureSocialNetworkState === "function") {
       ensureSocialNetworkState(StateManager.getState());
     }
+    // 兼容旧存档：初始化地点声望系统（避免读档后 st.reputation 为 undefined 导致声誉事件崩溃）
+    if (typeof initReputation === "function") {
+      initReputation(StateManager.getState());
+    }
     StateManager.addMessage("📂 存档已加载，欢迎回来！", "info");
     document.getElementById("welcome-screen").style.display = "none";
     document.getElementById("app").style.display = "";
