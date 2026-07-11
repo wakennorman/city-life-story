@@ -48245,7 +48245,7 @@
       if (st.player.phase !== "street") return false; // 检查：仅街头阶段
       if (!st.skills || !st.skills.coding) return false; // 检查：coding 技能存在
       if ((st.skills.coding.level || 0) < 40) return false; // 检查：编程≥40（专业视角门槛）
-      if ((st.day || 0) < 30) return false; // 检查：day≥30
+      if ((st.player.day || 0) < 30) return false; // 检查：day≥30
       if (st.flags && st.flags._codingPrSeen) return false; // 检查：未触发过
       return true;
     },
@@ -48288,7 +48288,7 @@
       if (!st.weather || st.weather.current !== "heatwave") return false; // 检查：极端高温天气
       if (!st.trade || st.trade.currentLocation !== "commercialDist")
         return false; // 检查：身处商圈
-      if ((st.day || 0) < 15) return false; // 检查：day≥15
+      if ((st.player.day || 0) < 15) return false; // 检查：day≥15
       if (st.flags && st.flags._heatwaveFaintSeen) return false; // 检查：未触发过
       return true;
     },
@@ -48334,7 +48334,7 @@
       if (st.player.phase !== "street") return false; // 检查：仅街头阶段
       if (!st.flags || !st.flags._habits) return false; // 检查：习惯 flag 容器存在
       if ((st.flags._habits.lowHungerStreak || 0) < 3) return false; // 检查：连续饥饿≥3天（真实累积状态）
-      if ((st.day || 0) < 10) return false; // 检查：day≥10
+      if ((st.player.day || 0) < 10) return false; // 检查：day≥10
       if (st.flags._hungerShareSeen) return false; // 检查：未触发过
       return true;
     },
@@ -48384,7 +48384,7 @@
       var r = st.relationships && st.relationships.old_zhou; // 检查：old_zhou 关系对象
       if (!r || !r.met) return false; // 检查：已结识
       if ((r.affinity || 0) < 50) return false; // 检查：好感≥50（深挖门槛）
-      if ((st.day || 0) < 35) return false; // 检查：day≥35
+      if ((st.player.day || 0) < 35) return false; // 检查：day≥35
       if (st.flags && st.flags._oldZhouRelicSeen) return false; // 检查：未触发过
       return true;
     },
@@ -48432,7 +48432,7 @@
     conditions: function (st) {
       if (st.player.phase !== "street") return false; // 检查：仅街头阶段
       if (!st.weather || st.weather.current !== "snowy") return false; // 检查：雪天
-      if ((st.day || 0) < 15) return false; // 检查：day≥15
+      if ((st.player.day || 0) < 15) return false; // 检查：day≥15
       if (st.flags && st.flags._snowyWarmthSeen) return false; // 检查：未触发过
       return true;
     },
@@ -48491,7 +48491,7 @@
       // 检查 仅道德极端玩家（高道德或低道德），中间派不会遇到此两难
       if (!(st.player.morality >= 70 || st.player.morality <= 30)) return false;
       // 检查 游戏进程需足够长，职场关系已建立
-      if (st.day < 50) return false;
+      if (st.player.day < 50) return false;
       // 检查 一次性事件防刷
       if (st.flags._moralBribeSeen) return false;
       return true;
@@ -48548,7 +48548,7 @@
       var sk = st.skills && st.skills.cooking;
       if (!sk || sk.level < 40) return false;
       // 检查 游戏进程
-      if (st.day < 30) return false;
+      if (st.player.day < 30) return false;
       // 检查 一次性
       if (st.flags._cookingRecipeSeen) return false;
       return true;
@@ -48602,7 +48602,7 @@
       // 检查 心情处于深度低位（非 streak，用阈值）
       if (!st.needs || st.needs.happiness >= 18) return false;
       // 检查 游戏进程
-      if (st.day < 15) return false;
+      if (st.player.day < 15) return false;
       // 检查 一次性
       if (st.flags._lowMoodVisitSeen) return false;
       return true;
@@ -48668,7 +48668,7 @@
       // 检查 好感需达到‘熟络’门槛才触发深层互动
       if ((r.affinity || 0) < 55) return false;
       // 检查 游戏进程
-      if (st.day < 35) return false;
+      if (st.player.day < 35) return false;
       // 检查 一次性
       if (st.flags._xiaoMeiDiscoverySeen) return false;
       return true;
@@ -48723,7 +48723,7 @@
       // 检查 当前位于城中村/贫民窟
       if (!st.trade || st.trade.currentLocation !== "slum") return false;
       // 检查 游戏进程
-      if (st.day < 10) return false;
+      if (st.player.day < 10) return false;
       // 检查 一次性
       if (st.flags._typhoonShelterSeen) return false;
       return true;
@@ -48784,7 +48784,7 @@
       // 检查 必须已就业（职场场景）
       if (!st.employment || !st.employment.currentJob) return false;
       // 检查 游戏进程
-      if (st.day < 40) return false;
+      if (st.player.day < 40) return false;
       // 检查 一次性
       if (st.flags._mgmtConflictSeen) return false;
       return true;
@@ -48836,7 +48836,7 @@
       if (!st.trade || st.trade.currentLocation !== "commercialDist")
         return false;
       // 检查 游戏进程
-      if (st.day < 20) return false;
+      if (st.player.day < 20) return false;
       // 检查 一次性
       if (st.flags._foggyCommuteSeen) return false;
       return true;
@@ -49991,6 +49991,202 @@
           hint: "不采取行动",
           apply: function (st) {
             StateManager.addMessage("🤷 你觉得这点波动影响不到自己。", "info");
+          },
+        },
+      ],
+    },
+
+    // ====== [R2 域B 联动增强] 街头→职场桥接事件（治愈"阶段孤岛"：corporate 仅~10事件，street 655）======
+    // 设计意图：让街头期积累的社会资本/硬技能在职场期产生叙事回报，
+    // 打通 B(事件)↔C(职业)↔D(NPC社交) 三域，缓解跨阶段断档。
+
+    // B↔C↔D：街头导师的隔空寄语
+    {
+      id: "corp_street_roots_letter",
+      phase: "corporate",
+      icon: "✉️",
+      title: "来自街头的短信",
+      story:
+        "加班到深夜，手机一震。是当年在街头带你、给你第一个机会的那个人：\n「听说你进写字楼了，出息。别学那些弯弯绕绕的，当年怎么活下来的，就怎么做人。」\n\n你盯着屏幕，写字楼的冷气和当年城中村的汗味重叠了一瞬。",
+      // 守卫：必须在 corporate 阶段，且确实存在一位"已结识 + 好感≥40"的街头导师
+      conditions: function (st) {
+        if (!st.player || st.player.phase !== "corporate") return false;
+        if (st.flags && st.flags._corpRootsLetterSeen) return false;
+        var rels = st.relationships || {};
+        var hasMentor = ["old_zhou", "boss_li", "chef_chen", "aunt_wang"].some(
+          function (id) {
+            var r = rels[id];
+            return r && r.met && (r.affinity || 0) >= 40;
+          },
+        );
+        return hasMentor;
+      },
+      probability: 0.18, // [PLACEHOLDER] 职场期触发率待 playtest（参照 corp 池 0.22~0.4 基准）
+      repeatable: false,
+      choices: [
+        {
+          text: "💬 回条消息：记着呢",
+          hint: "心情+10，标记初心",
+          apply: function (st) {
+            st.flags = st.flags || {};
+            st.flags._corpRootsLetterSeen = true;
+            st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 10);
+            if (st.player.corporate) {
+              st.player.corporate.dignity = Math.min(
+                100,
+                (st.player.corporate.dignity || 60) + 4,
+              );
+            }
+            StateManager.addMessage(
+              "💬 你回了句「记着呢」，把手机扣在桌上。尊严+4，心情+10。",
+              "success",
+            );
+          },
+        },
+        {
+          text: "🗂️ 收下，继续赶报告",
+          hint: "轻量 心情+3",
+          apply: function (st) {
+            st.flags = st.flags || {};
+            st.flags._corpRootsLetterSeen = true;
+            st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 3);
+            StateManager.addMessage("🗂️ 你截了图，继续改PPT。心情+3。", "info");
+          },
+        },
+      ],
+    },
+
+    // B↔C：街头硬技能在职场意外立功
+    {
+      id: "corp_street_skill_advantage",
+      phase: "corporate",
+      icon: "🔧",
+      title: "你那手本事派上用场了",
+      story:
+        "会议室投影仪接口烧了，IT 半天搞不定，甲方脸色越来越难看。\n你蹲下来看了眼线路——这活儿跟你当年在街头修摊子、接电线一个道理。三下五除二，画面亮了。\n全场安静一秒，接着有人鼓掌。",
+      // 守卫：corporate 阶段 + 任意街头硬技能等级≥40（焊接/烹饪/维修/编程/会计/电工）
+      conditions: function (st) {
+        if (!st.player || st.player.phase !== "corporate") return false;
+        if (st.flags && st.flags._corpStreetSkillSeen) return false;
+        var sk = st.skills || {};
+        var handy = [
+          "welding",
+          "cooking",
+          "repair",
+          "coding",
+          "accounting",
+          "electrician",
+        ];
+        var hasHandy = handy.some(function (id) {
+          return (
+            sk[id] && typeof sk[id].level === "number" && sk[id].level >= 40
+          );
+        });
+        return hasHandy;
+      },
+      probability: 0.15, // [PLACEHOLDER] 待 playtest
+      repeatable: false,
+      choices: [
+        {
+          text: "🛠️ 低调收下掌声",
+          hint: "职场声誉+8，心情+8",
+          apply: function (st) {
+            st.flags = st.flags || {};
+            st.flags._corpStreetSkillSeen = true;
+            if (st.player.corporate) {
+              st.player.corporate.dignity = Math.min(
+                100,
+                (st.player.corporate.dignity || 60) + 8,
+              );
+            }
+            st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 8);
+            StateManager.addMessage(
+              "🛠️ 你摆摆手说「随手的事」。职场声誉+8，心情+8。",
+              "success",
+            );
+          },
+        },
+        {
+          text: "🤝 顺手教IT小哥两招",
+          hint: "人脉+，轻量声誉",
+          apply: function (st) {
+            st.flags = st.flags || {};
+            st.flags._corpStreetSkillSeen = true;
+            if (st.player.corporate) {
+              st.player.corporate.popularity = Math.min(
+                100,
+                (st.player.corporate.popularity || 50) + 5,
+              );
+            }
+            st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 5);
+            StateManager.addMessage(
+              "🤝 你顺手教了IT小哥，顺手攒了点好人缘。人气+5，心情+5。",
+              "info",
+            );
+          },
+        },
+      ],
+    },
+
+    // B↔D：街头挚友的人脉反哺职场
+    {
+      id: "corp_npc_referral_from_street",
+      phase: "corporate",
+      icon: "🤝",
+      title: "老关系的牵线",
+      story:
+        "微信弹出一条消息——是你在街头混时交下的一个朋友。\n「我表哥在你们行业做采购，前两天还问有没有靠谱的人。我把你微信推给他了，成不成看你本事。」\n\n你想起当年一起熬过的那些夜，忽然觉得这座城市没那么冷。",
+      // 守卫：corporate 阶段 + 存在"已结识 + 好感≥60"的街头挚友 + 确有职场身份
+      conditions: function (st) {
+        if (!st.player || st.player.phase !== "corporate") return false;
+        if (st.flags && st.flags._corpNpcReferralSeen) return false;
+        if (
+          !(st.career && st.career.currentJob) &&
+          !(st.player.corporate && st.player.corporate.company)
+        ) {
+          return false;
+        }
+        var rels = st.relationships || {};
+        var hasCloseFriend = Object.keys(rels).some(function (id) {
+          var r = rels[id];
+          return r && r.met && (r.affinity || 0) >= 60;
+        });
+        return hasCloseFriend;
+      },
+      probability: 0.12, // [PLACEHOLDER] 待 playtest
+      repeatable: false,
+      choices: [
+        {
+          text: "📞 主动加微信跟进",
+          hint: "标记人脉线索，职场上行+6",
+          apply: function (st) {
+            st.flags = st.flags || {};
+            st.flags._corpNpcReferralSeen = true;
+            st.flags._streetReferralActive = true;
+            if (st.player.corporate) {
+              st.player.corporate.upward = Math.min(
+                100,
+                (st.player.corporate.upward || 50) + 6,
+              );
+            }
+            st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 6);
+            StateManager.addMessage(
+              "📞 你加了微信，聊得投缘。人脉线索已记下，职场上行+6，心情+6。",
+              "success",
+            );
+          },
+        },
+        {
+          text: "🙏 先道谢，暂不打扰",
+          hint: "轻量 心情+3",
+          apply: function (st) {
+            st.flags = st.flags || {};
+            st.flags._corpNpcReferralSeen = true;
+            st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 3);
+            StateManager.addMessage(
+              "🙏 你道了谢，把这份情记在心里。心情+3。",
+              "info",
+            );
           },
         },
       ],
