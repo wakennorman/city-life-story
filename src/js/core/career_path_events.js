@@ -2206,6 +2206,168 @@
         },
       ],
     },
+
+    // ====================================================================
+    // v3.99 (loop R3) 联动增强：设计/法律/运营 三条路径首次专属事件
+    // 设计意图：career_path_events.js 原仅覆盖 10 条路径，design/legal/operations
+    //   三条路径零专属叙事。本轮各补 1 个路径专属事件。
+    // [自洽修复] 守卫：_path(st, "pathId") + workDays>N + seen flag
+    // ====================================================================
+
+    // ====== 设计路径：客户改稿危机 ======
+    {
+      id: "design_client_revision",
+      phase: "street",
+      icon: "🎨",
+      title: "客户改稿危机",
+      story:
+        "客户第 7 次把设计稿退回来：「感觉不对，再改改。」\n\n你盯着屏幕上的配色和排版，专业判断告诉你这稿已经达标了——但对方是甲方。\n\n「感觉不对」四个字，是每个设计师的噩梦。",
+      conditions: function (st) {
+        return (
+          _path(st, "design") &&
+          _workDays(st) > 60 &&
+          !st.flags._designRevisionSeen &&
+          _chance(0.04)
+        );
+      },
+      probability: 0.05,
+      repeatable: true,
+      choices: [
+        {
+          text: "🎨 引导客户说出具体需求",
+          hint: "专业方法化解，设计XP+10、声誉+5",
+          apply: function (st) {
+            if (typeof addSkillXp === "function") addSkillXp("coding", 10);
+            var cap = _cap(st);
+            if (cap) {
+              cap.reputation = Math.min(100, cap.reputation + 5);
+              _clamp(cap);
+            }
+            _msg(
+              "🎨 你用专业问卷引导客户表达了真实需求。三稿过！设计XP+10，声誉+5。",
+              "success",
+            );
+          },
+        },
+        {
+          text: "😤 照改，但要加钱",
+          hint: "加签补充协议，但关系-",
+          apply: function (st) {
+            st.resources.cash = (st.resources.cash || 0) + 800;
+            var cap = _cap(st);
+            if (cap) {
+              cap.reputation = Math.max(0, cap.reputation - 3);
+              _clamp(cap);
+            }
+            _msg(
+              "😤 你让客户加了¥800改动费。钱到账了，但电话里他的语气冷了。现金+¥800，声誉-3。",
+              "warning",
+            );
+          },
+        },
+      ],
+    },
+
+    // ====== 法律路径：庭审第一次 ======
+    {
+      id: "legal_first_trial",
+      phase: "street",
+      icon: "⚖️",
+      title: "第一次上庭",
+      story:
+        "师傅把案子卷宗推给你：「今天你主讲，我在旁边把关。」\n\n你握着装订了三天的证据册走进法庭，手心的汗把封面浸了一块深色。\n\n对面是执业十五年的老律师，法官的表情看不出倾向——但你已经准备了每一个可能被追问的角度。\n\n这是你职业生涯的第一个庭。",
+      conditions: function (st) {
+        return (
+          _path(st, "legal") &&
+          _workDays(st) > 90 &&
+          !st.flags._legalFirstTrialSeen &&
+          _chance(0.03)
+        );
+      },
+      probability: 0.04,
+      repeatable: false,
+      choices: [
+        {
+          text: "🎤 据理力争，打出气势",
+          hint: "庭审表现+，师傅认可",
+          apply: function (st) {
+            st.flags._legalFirstTrialSeen = true;
+            var cap = _cap(st);
+            if (cap) {
+              cap.reputation = Math.min(100, cap.reputation + 10);
+              _clamp(cap);
+            }
+            _msg(
+              "🎤 你顶住了对方律师的反击，法官三次点头。师傅在庭后说「这孩子能扛事」。声誉+10。",
+              "success",
+            );
+          },
+        },
+        {
+          text: "📋 申请调解，稳妥收场",
+          hint: "师傅失望，但案子平和结束",
+          apply: function (st) {
+            st.flags._legalFirstTrialSeen = true;
+            st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 8);
+            _msg(
+              "📸 你提议调解、促成和解。师傅说你不够拼，但当事人握手言和让你心里踏实。心情+8。",
+              "info",
+            );
+          },
+        },
+      ],
+    },
+
+    // ====== 运营路径：线上活动突发事件 ======
+    {
+      id: "ops_campaign_crisis",
+      phase: "street",
+      icon: "📦",
+      title: "线上活动突发崩了",
+      story:
+        "大促正进行时，服务器突然崩溃。\n\n老板在群里连发了五个问号，运营总监把所有组长拉到紧急会议室。\n\n你的 KPI 挂在这活动上——但备份策略半年前你提过，预算没批。\n\n要不要现在说「我早说过」？",
+      conditions: function (st) {
+        return (
+          _path(st, "operations") &&
+          _workDays(st) > 75 &&
+          !st.flags._opsCampaignCrisisSeen &&
+          _chance(0.04)
+        );
+      },
+      probability: 0.05,
+      repeatable: true,
+      choices: [
+        {
+          text: "🛠️ 先救火，不提旧账",
+          hint: "紧急修复+事后请功",
+          apply: function (st) {
+            st.flags._opsCampaignCrisisSeen = true;
+            var cap = _cap(st);
+            if (cap) {
+              cap.reputation = Math.min(100, cap.reputation + 8);
+              _clamp(cap);
+            }
+            _msg(
+              "🛠️ 你连夜抢修，活动数据在凌晨4点恢复。总监在晨会上当众表扬，避而不提旧事是高情商。声誉+8。",
+              "success",
+            );
+          },
+        },
+        {
+          text: "📝 救援 + 同时补交复盘报告",
+          hint: "专业但得罪人",
+          apply: function (st) {
+            st.flags._opsCampaignCrisisSeen = true;
+            if (typeof addSkillXp === "function") addSkillXp("management", 15);
+            st.needs.fatigue = Math.min(100, (st.needs.fatigue || 0) + 15);
+            _msg(
+              "📝 你修完bug又写了11页复盘报告，老板点头但老同事觉得你在刷存在感。管理XP+15，疲劳+15。",
+              "info",
+            );
+          },
+        },
+      ],
+    },
   ];
 
   // 推入全局随机事件池
