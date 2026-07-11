@@ -1,3 +1,5 @@
+- [v3.95-loop-R44-full-optimization](v3.95-loop-R44-session.md) — R44全系统优化：代码事实核查发现推荐方向已落地，改切6新事件(调解followUp链/阿杰多周目/NPC business格×2及payoff)+日终里程碑封顶¥10M（2026-07-12，commit 1710ec86）
+- [v3.88g-system-optimization](v3.88g-system-optimization.md) — 全系统优化：重复ID修复(2)/事件字段统一(18)/Emoji一致性(2)/孤儿注释清理/跨系统联动审计 (2026-07-11)
 - [v3.88e-dead-code-cleanup](v3.88e-dead-code-cleanup.md) — 删除4处死代码(renderCurrentTab_legacy/scrollMessageLogToBottom/scaleEventReward/quarterlyCleanup) -312行 (2026-07-11)
 - [v3.88d-loop-R42-events](v3.88d-loop-R42-events.md) — R42新增4个联动事件(社交/道德/装备/天气)+指令一A类0缺陷(2026-07-11)
 - [passmsg-eventlog-scroll-modal](passmsg-eventlog-scroll-modal.md) — v3.2a passMsg修复·工资分离·事件强制滚动·导航弹窗
@@ -47,3 +49,4 @@
 - [移动端 UI 打磨偏好](mobile-ui-polish-preferences.md) — 2026-07-10 用户确认：位置栏高度/☰菜单可靠性/事件记录自动滚动+折叠/框动效保持
 - [v3.79-loop-R34-session](v3.79-loop-R34-session.md) — R34: 修复3个B类概率+新增2财富里程碑事件(50万/100万)（2026-07-10）
 - [v3.85-career-tab-polish](v3.85-career-tab-polish.md) — 事业Tab全面打磨：属性训练重平衡(参考完美人生递减收益)/晨跑冥想免费/求职UI框线增强/副业网格化布局/showModal按钮Bug修复（2026-07-11）
+- [v3.88f-event-coherence-review](v3.88f-event-coherence-review.md) — loop R43: 叙事-触发自洽性审查250+事件，发现1处A类(ev_used_car_crash陈哥缺met门岗)+1处B类(edu_graduation_ceremony用desc非story导致渲染空白)，均修复+新增5个联动事件(社工/补贴/城管/亲情/师徒)（2026-07-11）
