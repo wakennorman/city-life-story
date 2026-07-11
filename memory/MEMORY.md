@@ -1,3 +1,4 @@
+- [v3.88d-loop-R42-events](v3.88d-loop-R42-events.md) — R42新增4个联动事件(社交/道德/装备/天气)+指令一A类0缺陷(2026-07-11)
 - [passmsg-eventlog-scroll-modal](passmsg-eventlog-scroll-modal.md) — v3.2a passMsg修复·工资分离·事件强制滚动·导航弹窗
 - [v3.88b-equip-ui-mobile-sticky-hud](v3.88b-equip-ui-mobile-sticky-hud.md) — v3.88b 装备UI修正+手机端HUD改为position:sticky（修复死代码问题）
 - [v3.86-hover-unification](v3.86-hover-unification.md) — 统一所有可点击按钮/卡片的悬停动效，以action-card hover为标准（2026-07-11，commit 468aec8a）
