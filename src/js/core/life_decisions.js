@@ -36,7 +36,8 @@ const LIFE_DECISIONS = [
         desc: "风险投资，可能翻倍也可能亏光",
         effect: function (state) {
           state.resources.cash = Math.max(0, state.resources.cash - 500);
-          var roll = Math.random();
+          var roll =
+            typeof Random !== "undefined" ? Random.float(0, 1) : Math.random();
           if (roll < 0.4) {
             // 40% 亏光
             StateManager.addMessage(
@@ -518,11 +519,13 @@ function checkLifeDecision(state) {
       // 标记已触发
       state.flags._lifeDecisionsTriggered[dec.id] = true;
 
-      // 构建事件对象
+      // 构建事件对象（desc→story，适配 showEventModal 的 story 字段）
       var decisionEvent = {
         id: "life_dec_" + dec.id,
+        icon: dec.icon || "📜",
         title: dec.title,
-        desc: typeof dec.desc === "function" ? dec.desc(state) : dec.desc,
+        story:
+          typeof dec.desc === "function" ? dec.desc(state) : dec.desc || "",
         choices: dec.choices.map(function (choice) {
           return {
             text: choice.text,
