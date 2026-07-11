@@ -14480,7 +14480,7 @@
   // 设计意图：寒冬天气下，不同住所条件的玩家体验完全不同
   // 露宿=生死考验，合租=勉强过关，独居以上=舒适享受
   RANDOM_EVENTS.push({
-    id: "cold_snap_winter_shelter",  // [自洽修复] 原 id 与规范事件 cold_snap_housing_crisis 重复, 重命名避免 id 冲突
+    id: "cold_snap_winter_shelter", // [自洽修复] 原 id 与规范事件 cold_snap_housing_crisis 重复, 重命名避免 id 冲突
     phase: "street",
     icon: "🥶",
     title: "寒潮来袭",
@@ -16539,10 +16539,7 @@
           st.resources.cash += earn;
           st.resources.totalEarned = (st.resources.totalEarned || 0) + earn;
           st.needs.fatigue = Math.min(100, (st.needs.fatigue || 0) + 20);
-          st.player.physique = Math.min(
-            100,
-            (st.player.physique || 22) + 1,
-          );
+          st.player.physique = Math.min(100, (st.player.physique || 22) + 1);
           StateManager.addMessage(
             "🤝 你帮那位熟客搬了一整天东西，赚了¥" +
               earn +
@@ -16557,14 +16554,8 @@
         apply: function (st) {
           st.flags._veteranClientSeen = true;
           st.flags._veteranReferral = true;
-          st.player.fame = Math.min(
-            100,
-            (st.player.fame || 0) + 3,
-          );
-          st.player.mental = Math.min(
-            100,
-            (st.player.mental || 26) + 2,
-          );
+          st.player.fame = Math.min(100, (st.player.fame || 0) + 3);
+          st.player.mental = Math.min(100, (st.player.mental || 26) + 2);
           StateManager.addMessage(
             "🤝 你问能不能介绍更多人搬家。对方想了想：「行啊，把你电话给我，有活我就找你。」人脉+3，心智+2。",
             "success",
@@ -16576,10 +16567,7 @@
         hint: "休息为主",
         apply: function (st) {
           st.flags._veteranClientSeen = true;
-          st.player.mental = Math.min(
-            100,
-            (st.player.mental || 26) + 2,
-          );
+          st.player.mental = Math.min(100, (st.player.mental || 26) + 2);
           StateManager.addMessage(
             "🤝 你说了声抱歉。对方摆摆手：「没事，你在这条街干得不错，以后有活我再找你。」心智+2。",
             "info",
@@ -16622,11 +16610,9 @@
             st.resources.cash -= 200;
             var profit = Random.int(400, 800);
             st.resources.cash += profit;
-            st.resources.totalEarned =
-              (st.resources.totalEarned || 0) + profit;
+            st.resources.totalEarned = (st.resources.totalEarned || 0) + profit;
             if (st.skills && st.skills.repair) {
-              st.skills.repair.xp =
-                (st.skills.repair.xp || 0) + 50;
+              st.skills.repair.xp = (st.skills.repair.xp || 0) + 50;
             }
             StateManager.addMessage(
               "🔍 你花¥200挑了三件旧家电，回去花了两天修好转手卖了¥" +
@@ -16651,10 +16637,7 @@
             100,
             (st.player.intelligence || 20) + 2,
           );
-          st.player.mental = Math.min(
-            100,
-            (st.player.mental || 26) + 3,
-          );
+          st.player.mental = Math.min(100, (st.player.mental || 26) + 3);
           StateManager.addMessage(
             "🔍 你在市场里转了一圈，光看就学到了不少辨别家电好坏的门道。智力+2，心智+3。行家之路，从观察开始。",
             "success",
@@ -16709,8 +16692,7 @@
             st.resources.cash -= 500;
             var profit = Random.int(800, 1500);
             st.resources.cash += profit;
-            st.resources.totalEarned =
-              (st.resources.totalEarned || 0) + profit;
+            st.resources.totalEarned = (st.resources.totalEarned || 0) + profit;
             st.relationships.old_zhou.affinity = Math.min(
               100,
               (st.relationships.old_zhou.affinity || 0) + 10,
@@ -16780,10 +16762,7 @@
       // [自洽修复] 检查暴雨天气 + 在批发市场或公园
       var w = st.weather && st.weather.current;
       var curLoc = st.trade && st.trade.currentLocation;
-      var isRainy =
-        w === "rainy" ||
-        w === "stormy" ||
-        w === "typhoon";
+      var isRainy = w === "rainy" || w === "stormy" || w === "typhoon";
       return (
         st.player.phase === "street" &&
         isRainy &&
@@ -16802,18 +16781,11 @@
           hint: "花行动力 保住货物",
           apply: function (s) {
             s.flags._rainMarketParkSeen = true;
-            s.needs.fatigue = Math.min(
-              100,
-              (s.needs.fatigue || 0) + 15,
-            );
-            s.needs.hygiene = Math.max(
-              0,
-              (s.needs.hygiene || 30) - 10,
-            );
+            s.needs.fatigue = Math.min(100, (s.needs.fatigue || 0) + 15);
+            s.needs.hygiene = Math.max(0, (s.needs.hygiene || 30) - 10);
             var saved = Random.int(100, 300);
             s.resources.cash += saved;
-            s.resources.totalEarned =
-              (s.resources.totalEarned || 0) + saved;
+            s.resources.totalEarned = (s.resources.totalEarned || 0) + saved;
             StateManager.addMessage(
               "🌧️ 你冒着雨把货全收了，虽然淋成了落汤鸡，但保住了约¥" +
                 saved +
@@ -16827,10 +16799,7 @@
           hint: "保人保命",
           apply: function (s) {
             s.flags._rainMarketParkSeen = true;
-            s.needs.happiness = Math.max(
-              0,
-              (s.needs.happiness || 20) - 10,
-            );
+            s.needs.happiness = Math.max(0, (s.needs.happiness || 20) - 10);
             StateManager.addMessage(
               "🌧️ 你转身就跑，把货留在了市场。损失了一些钱，但至少没淋雨生病。心情-10。",
               "warning",
@@ -16844,14 +16813,8 @@
           hint: "安全 心情+3",
           apply: function (s) {
             s.flags._rainMarketParkSeen = true;
-            s.needs.happiness = Math.min(
-              100,
-              (s.needs.happiness || 20) + 3,
-            );
-            s.player.mental = Math.min(
-              100,
-              (s.player.mental || 26) + 2,
-            );
+            s.needs.happiness = Math.min(100, (s.needs.happiness || 20) + 3);
+            s.player.mental = Math.min(100, (s.player.mental || 26) + 2);
             StateManager.addMessage(
               "🌧️ 你找到了公园里的凉亭，坐在里面听雨。雨声让人莫名平静。心情+3，心智+2。",
               "info",
@@ -16863,14 +16826,8 @@
           hint: "快但会感冒",
           apply: function (s) {
             s.flags._rainMarketParkSeen = true;
-            s.status.health = Math.max(
-              0,
-              (s.status.health || 70) - 5,
-            );
-            s.needs.fatigue = Math.min(
-              100,
-              (s.needs.fatigue || 0) + 10,
-            );
+            s.status.health = Math.max(0, (s.status.health || 70) - 5);
+            s.needs.fatigue = Math.min(100, (s.needs.fatigue || 0) + 10);
             StateManager.addMessage(
               "🌧️ 你冲进雨里拼命跑，到家时全身湿透。健康-5，疲劳+10。感冒风险增加。",
               "warning",
@@ -16884,10 +16841,7 @@
         cost: 5,
         apply: function (s) {
           s.flags._rainMarketParkSeen = true;
-          s.needs.happiness = Math.min(
-            100,
-            (s.needs.happiness || 20) + 5,
-          );
+          s.needs.happiness = Math.min(100, (s.needs.happiness || 20) + 5);
           StateManager.addMessage(
             "🌧️ 你躲进便利店买了杯热豆浆，看着外面的暴雨发呆。花¥5买了个清净。心情+5。",
             "info",
@@ -16927,18 +16881,9 @@
           st.flags._hungerAccumulationSeen = true;
           if (st.resources.cash >= 30) {
             st.resources.cash -= 30;
-            st.needs.hunger = Math.min(
-              100,
-              (st.needs.hunger || 0) + 35,
-            );
-            st.status.health = Math.min(
-              100,
-              (st.status.health || 70) + 5,
-            );
-            st.needs.happiness = Math.min(
-              100,
-              (st.needs.happiness || 20) + 10,
-            );
+            st.needs.hunger = Math.min(100, (st.needs.hunger || 0) + 35);
+            st.status.health = Math.min(100, (st.status.health || 70) + 5);
+            st.needs.happiness = Math.min(100, (st.needs.happiness || 20) + 10);
             StateManager.addMessage(
               "⚠️ 你走进一家小面馆，点了份最大的牛肉面。热气腾腾的面条下肚，整个人活过来了。饱腹+35，健康+5，心情+10，-¥30。",
               "success",
@@ -16958,19 +16903,13 @@
           st.flags._hungerAccumulationSeen = true;
           if (st.resources.cash >= 10) {
             st.resources.cash -= 10;
-            st.needs.hunger = Math.min(
-              100,
-              (st.needs.hunger || 0) + 20,
-            );
+            st.needs.hunger = Math.min(100, (st.needs.hunger || 0) + 20);
             StateManager.addMessage(
               "⚠️ 你回到住处煮了碗方便面。虽然简单，但好歹填饱了肚子。饱腹+20，-¥10。",
               "info",
             );
           } else {
-            st.needs.happiness = Math.max(
-              0,
-              (st.needs.happiness || 20) - 10,
-            );
+            st.needs.happiness = Math.max(0, (st.needs.happiness || 20) - 10);
             StateManager.addMessage(
               "⚠️ 你连煮面的钱都没有。只能喝了一口自来水对付。心情-10。",
               "warning",
@@ -16983,18 +16922,9 @@
         hint: "不花钱 但健康受损",
         apply: function (st) {
           st.flags._hungerAccumulationSeen = true;
-          st.status.health = Math.max(
-            0,
-            (st.status.health || 70) - 10,
-          );
-          st.needs.fatigue = Math.min(
-            100,
-            (st.needs.fatigue || 0) + 10,
-          );
-          st.player.mental = Math.min(
-            100,
-            (st.player.mental || 26) + 2,
-          );
+          st.status.health = Math.max(0, (st.status.health || 70) - 10);
+          st.needs.fatigue = Math.min(100, (st.needs.fatigue || 0) + 10);
+          st.player.mental = Math.min(100, (st.player.mental || 26) + 2);
           StateManager.addMessage(
             "⚠️ 你咬咬牙继续干活。意志力很强，但身体在抗议。健康-10，疲劳+10，心智+2。",
             "warning",
@@ -17005,7 +16935,7 @@
   });
 
   // ====== R10-R19 rebase 补入(30个r10-r19独有事件, 2026-07-10) ======
-RANDOM_EVENTS.push({
+  RANDOM_EVENTS.push({
     id: "account_mgmt_finance_director",
     phase: "street",
     icon: "💼",
@@ -17056,7 +16986,7 @@ RANDOM_EVENTS.push({
     ],
   });
 
-RANDOM_EVENTS.push({
+  RANDOM_EVENTS.push({
     id: "aunt_wang_elder_network",
     phase: "street",
     icon: "👵",
@@ -17107,7 +17037,7 @@ RANDOM_EVENTS.push({
     ],
   });
 
-RANDOM_EVENTS.push({
+  RANDOM_EVENTS.push({
     id: "boss_li_referral",
     phase: "street",
     icon: "👷",
@@ -17158,7 +17088,7 @@ RANDOM_EVENTS.push({
     ],
   });
 
-RANDOM_EVENTS.push({
+  RANDOM_EVENTS.push({
     id: "brother_huang_subcontract",
     phase: "street",
     icon: "🧱",
@@ -17208,7 +17138,7 @@ RANDOM_EVENTS.push({
     ],
   });
 
-RANDOM_EVENTS.push({
+  RANDOM_EVENTS.push({
     id: "cash_wealth_advisory",
     phase: "street",
     icon: "💰",
@@ -17255,7 +17185,7 @@ RANDOM_EVENTS.push({
     ],
   });
 
-RANDOM_EVENTS.push({
+  RANDOM_EVENTS.push({
     id: "chef_chen_partner",
     phase: "street",
     icon: "🍲",
@@ -17306,7 +17236,7 @@ RANDOM_EVENTS.push({
     ],
   });
 
-RANDOM_EVENTS.push({
+  RANDOM_EVENTS.push({
     id: "driving_coding_dispatch",
     phase: "street",
     icon: "🚚",
@@ -17353,7 +17283,7 @@ RANDOM_EVENTS.push({
     ],
   });
 
-RANDOM_EVENTS.push({
+  RANDOM_EVENTS.push({
     id: "driving_management_fleet",
     phase: "street",
     icon: "🚛",
@@ -17363,7 +17293,8 @@ RANDOM_EVENTS.push({
     // conditions：driving + management 双技能协同（技能系统空白区）
     conditions: function (st) {
       var drv = st.skills && st.skills.driving && st.skills.driving.level; // 检查 driving 等级
-      var mgmt = st.skills && st.skills.management && st.skills.management.level; // 检查 management 等级
+      var mgmt =
+        st.skills && st.skills.management && st.skills.management.level; // 检查 management 等级
       if (typeof drv !== "number" || drv < 15) return false; // 检查 driving>=15
       if (typeof mgmt !== "number" || mgmt < 15) return false; // 检查 management>=15
       if (st.player.phase !== "street") return false; // 检查 街头阶段
@@ -17402,7 +17333,7 @@ RANDOM_EVENTS.push({
     ],
   });
 
-RANDOM_EVENTS.push({
+  RANDOM_EVENTS.push({
     id: "driving_sales_auto_vendor",
     phase: "street",
     icon: "🚐",
@@ -17449,7 +17380,7 @@ RANDOM_EVENTS.push({
     ],
   });
 
-RANDOM_EVENTS.push({
+  RANDOM_EVENTS.push({
     id: "elec_mgmt_engineering_team",
     phase: "street",
     icon: "🔌",
@@ -17500,7 +17431,7 @@ RANDOM_EVENTS.push({
     ],
   });
 
-RANDOM_EVENTS.push({
+  RANDOM_EVENTS.push({
     id: "english_coding_localize",
     phase: "street",
     icon: "🌐",
@@ -17549,7 +17480,7 @@ RANDOM_EVENTS.push({
     ],
   });
 
-RANDOM_EVENTS.push({
+  RANDOM_EVENTS.push({
     id: "english_mgmt_foreign_manager",
     phase: "street",
     icon: "🌍",
@@ -17600,7 +17531,7 @@ RANDOM_EVENTS.push({
     ],
   });
 
-RANDOM_EVENTS.push({
+  RANDOM_EVENTS.push({
     id: "era_initial_oldtown",
     phase: "street",
     icon: "🏚️",
@@ -17648,7 +17579,7 @@ RANDOM_EVENTS.push({
     ],
   });
 
-RANDOM_EVENTS.push({
+  RANDOM_EVENTS.push({
     id: "morality_charity_hub",
     phase: "street",
     icon: "🤝",
@@ -17695,7 +17626,7 @@ RANDOM_EVENTS.push({
     ],
   });
 
-RANDOM_EVENTS.push({
+  RANDOM_EVENTS.push({
     id: "morality_community_entrust",
     phase: "street",
     icon: "🤲",
@@ -17742,7 +17673,7 @@ RANDOM_EVENTS.push({
     ],
   });
 
-RANDOM_EVENTS.push({
+  RANDOM_EVENTS.push({
     id: "needs_fatigue_rest_inn",
     phase: "street",
     icon: "🛏️",
@@ -17790,7 +17721,7 @@ RANDOM_EVENTS.push({
     ],
   });
 
-RANDOM_EVENTS.push({
+  RANDOM_EVENTS.push({
     id: "needs_hygiene_public_bath",
     phase: "street",
     icon: "🚿",
@@ -17838,7 +17769,7 @@ RANDOM_EVENTS.push({
     ],
   });
 
-RANDOM_EVENTS.push({
+  RANDOM_EVENTS.push({
     id: "repair_coding_smart_device",
     phase: "street",
     icon: "🔧",
@@ -17887,7 +17818,7 @@ RANDOM_EVENTS.push({
     ],
   });
 
-RANDOM_EVENTS.push({
+  RANDOM_EVENTS.push({
     id: "reputation_commercial_loan",
     phase: "street",
     icon: "🏦",
@@ -17934,7 +17865,7 @@ RANDOM_EVENTS.push({
     ],
   });
 
-RANDOM_EVENTS.push({
+  RANDOM_EVENTS.push({
     id: "sister_wu_resource",
     phase: "street",
     icon: "🔗",
@@ -17985,7 +17916,7 @@ RANDOM_EVENTS.push({
     ],
   });
 
-RANDOM_EVENTS.push({
+  RANDOM_EVENTS.push({
     id: "talent_backend_system",
     phase: "street",
     icon: "⚙️",
@@ -18031,7 +17962,7 @@ RANDOM_EVENTS.push({
     ],
   });
 
-RANDOM_EVENTS.push({
+  RANDOM_EVENTS.push({
     id: "talent_cook_mgmt_chain",
     phase: "street",
     icon: "🍜",
@@ -18078,7 +18009,7 @@ RANDOM_EVENTS.push({
     ],
   });
 
-RANDOM_EVENTS.push({
+  RANDOM_EVENTS.push({
     id: "talent_eng_global_overseas",
     phase: "street",
     icon: "🌍",
@@ -18124,7 +18055,7 @@ RANDOM_EVENTS.push({
     ],
   });
 
-RANDOM_EVENTS.push({
+  RANDOM_EVENTS.push({
     id: "talent_frontend_arch",
     phase: "street",
     icon: "🖥️",
@@ -18170,7 +18101,7 @@ RANDOM_EVENTS.push({
     ],
   });
 
-RANDOM_EVENTS.push({
+  RANDOM_EVENTS.push({
     id: "talent_mod_custom_gig",
     phase: "street",
     icon: "🔧",
@@ -18216,7 +18147,7 @@ RANDOM_EVENTS.push({
     ],
   });
 
-RANDOM_EVENTS.push({
+  RANDOM_EVENTS.push({
     id: "talent_sec_expert",
     phase: "street",
     icon: "🛡️",
@@ -18262,7 +18193,7 @@ RANDOM_EVENTS.push({
     ],
   });
 
-RANDOM_EVENTS.push({
+  RANDOM_EVENTS.push({
     id: "weather_heatwave_relief",
     phase: "street",
     icon: "🌞",
@@ -18275,7 +18206,12 @@ RANDOM_EVENTS.push({
       if (w !== "heatwave") return false; // 检查 高温热浪
       if (st.player.phase !== "street") return false; // 检查 街头阶段
       if (st.player.day < 10) return false; // 检查 开局后
-      if (st.flags && st.flags._heatwaveReliefDay && st.player.day - st.flags._heatwaveReliefDay < 7) return false; // 检查 7天冷却
+      if (
+        st.flags &&
+        st.flags._heatwaveReliefDay &&
+        st.player.day - st.flags._heatwaveReliefDay < 7
+      )
+        return false; // 检查 7天冷却
       return true;
     },
     probability: 0.03,
@@ -18309,7 +18245,7 @@ RANDOM_EVENTS.push({
     ],
   });
 
-RANDOM_EVENTS.push({
+  RANDOM_EVENTS.push({
     id: "weather_typhoon_mutual_aid",
     phase: "street",
     icon: "🌀",
@@ -18322,7 +18258,12 @@ RANDOM_EVENTS.push({
       if (w !== "typhoon") return false; // 检查 台风
       if (st.player.phase !== "street") return false; // 检查 街头阶段
       if (st.player.day < 10) return false; // 检查 开局后
-      if (st.flags && st.flags._typhoonAidDay && st.player.day - st.flags._typhoonAidDay < 14) return false; // 检查 14天冷却
+      if (
+        st.flags &&
+        st.flags._typhoonAidDay &&
+        st.player.day - st.flags._typhoonAidDay < 14
+      )
+        return false; // 检查 14天冷却
       return true;
     },
     probability: 0.03,
@@ -18356,7 +18297,7 @@ RANDOM_EVENTS.push({
     ],
   });
 
-RANDOM_EVENTS.push({
+  RANDOM_EVENTS.push({
     id: "weld_sales_private_job",
     phase: "street",
     icon: "🔩",
@@ -18403,7 +18344,7 @@ RANDOM_EVENTS.push({
     ],
   });
 
-RANDOM_EVENTS.push({
+  RANDOM_EVENTS.push({
     id: "xiaomei_roommate_secret",
     phase: "street",
     icon: "🏠",
@@ -18447,6 +18388,514 @@ RANDOM_EVENTS.push({
           StateManager.addMessage(
             "你谢谢小美想着你，说先考虑考虑。她笑说随时留着铺位。好感+8。",
             "info",
+          );
+        },
+      },
+    ],
+  });
+
+  // ================================================================
+  // 新增联动事件 v3.89a — 空白区填充（5个）
+  // 设计意图：加强各系统关联度，减少孤立事件
+  // ================================================================
+
+  // === 1. 老手特遇：副业长期积累 → 稳定客户 ===
+  // 设计意图：玩家长期做某类副业后获得回报，强化"积累-爆发"循环
+  RANDOM_EVENTS.push({
+    id: "hustle_regular_client",
+    phase: "street",
+    icon: "🤝",
+    title: "老客户的电话",
+    story:
+      "手机响了，是个陌生号码。对方说前几天在你这儿买的货不错，问能不能长期合作。你想了想——那是上周在批发市场碰巧做成的生意。",
+    // [自洽修复] conditions 新增：副业长期活跃检查（需副业活跃≥7天且有口碑积累）
+    conditions: function (st) {
+      // 检查副业是否活跃
+      if (!st.sideHustle || !st.sideHustle.active) return false;
+      // 检查副业口碑是否达到一定水平（至少15）
+      if ((st.sideHustle.reputation || 0) < 15) return false;
+      // 检查副业持续天数（lastActiveDay 存在且距离现在≥7天）
+      if (!st.sideHustle.lastActiveDay) return false;
+      if (st.player.day - st.sideHustle.lastActiveDay < 7) return false;
+      // 检查未触发过
+      if (st.flags && st.flags._hustleRegularClientSeen) return false;
+      return true;
+    },
+    probability: 0.04,
+    repeatable: false,
+    choices: [
+      {
+        text: "📞 接下长期单",
+        hint: "副业口碑+10，收入稳定",
+        apply: function (st) {
+          st.flags._hustleRegularClientSeen = true;
+          st.sideHustle.reputation = Math.min(
+            100,
+            (st.sideHustle.reputation || 0) + 10,
+          );
+          st.sideHustle.type =
+            st.sideHustle.type || Random.fromArray(["stall", "driving", "freelance"]);
+          // 根据副业类型给不同奖励
+          if (st.sideHustle.type === "stall") {
+            st.resources.cash += 300;
+            StateManager.addMessage(
+              "🤝 老客户成了长期饭票！每周固定订货，月增收约¥800。口碑+10。",
+              "success",
+            );
+          } else if (st.sideHustle.type === "driving") {
+            st.resources.cash += 200;
+            StateManager.addMessage(
+              "🤝 原来是之前送过的客户！他说公司有固定配送需求，问你接不接。月增收约¥600。口碑+10。",
+              "success",
+            );
+          } else {
+            st.resources.cash += 250;
+            StateManager.addMessage(
+              "🤝 老客户主动找上门，说愿意长期合作。口碑+10。",
+              "success",
+            );
+          }
+        },
+      },
+      {
+        text: "🤔 先报价看看",
+        hint: "稳妥起见",
+        apply: function (st) {
+          st.flags._hustleRegularClientSeen = true;
+          st.sideHustle.reputation = Math.min(
+            100,
+            (st.sideHustle.reputation || 0) + 5,
+          );
+          var quote = Random.int(500, 1500);
+          st.resources.cash += Math.round(quote * 0.3);
+          StateManager.addMessage(
+            "🤝 你报了个价，对方说考虑一下。三天后回了信——成了！首单预付¥" +
+              Math.round(quote * 0.3) +
+              "。口碑+5。",
+            "info",
+          );
+        },
+      },
+      {
+        text: "📵 可能是骗子",
+        hint: "不接陌生电话",
+        apply: function (st) {
+          st.flags._hustleRegularClientSeen = true;
+          st.player.mental = Math.min(
+            100,
+            (st.player.mental || 0) + 2,
+          );
+          StateManager.addMessage(
+            "📵 你没接。现在骗子确实多，宁可错杀。心智+2。",
+            "info",
+          );
+        },
+      },
+    ],
+  });
+
+  // === 2. 专业技能视角：修理技能≥40 → 识别假冒伪劣 ===
+  // 设计意图：技能到达门槛后解锁独特事件视角，让技能培养有叙事回报
+  RANDOM_EVENTS.push({
+    id: "repair_expert_identify",
+    phase: "street",
+    icon: "🔍",
+    title: "火眼识假货",
+    story:
+      "批发市场有个摊主在低价甩卖一批品牌电器，价格只有正常的六成。旁人都在抢，你却注意到包装上的字体有点偏——这是个仿品。",
+    // [自洽修复] conditions 新增：修理技能≥40检查（专业技能视角）
+    conditions: function (st) {
+      // 检查修理技能等级是否达到专业门槛
+      var repairDef = st.skills && st.skills.repair;
+      if (!repairDef || (repairDef.level || 0) < 40) return false;
+      // 检查处于街头阶段
+      if (st.player.phase !== "street") return false;
+      // 检查未触发过
+      if (st.flags && st.flags._repairExpertIdentifySeen) return false;
+      return true;
+    },
+    probability: 0.02,
+    repeatable: false,
+    choices: [
+      {
+        text: "🙅 提醒摊主别上当",
+        hint: "名声+3，道德+5",
+        apply: function (st) {
+          st.flags._repairExpertIdentifySeen = true;
+          st.player.fame = Math.min(100, (st.player.fame || 0) + 3);
+          st.player.morality = Math.min(
+            100,
+            (st.player.morality || 50) + 5,
+          );
+          StateManager.addMessage(
+            "🔍 你上前提醒了摊主。他恍然大悟，连声道谢。路人纷纷点赞，名声+3、道德+5。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "🛒 自己也买一台",
+        hint: "便宜但可能坏",
+        apply: function (st) {
+          st.flags._repairExpertIdentifySeen = true;
+          if (st.resources.cash >= 200) {
+            st.resources.cash -= 200;
+            // 因为会修，即使是假的也能修好
+            st.skills.repair.xp = (st.skills.repair.xp || 0) + 50;
+            StateManager.addMessage(
+              "🔍 你花了¥200买了台'名牌'。拆开一看果然是仿品，但对你来说小菜一碟——修好后当正品用，修理XP+50。",
+              "success",
+            );
+          } else {
+            StateManager.addMessage(
+              "🔍 你想买，但钱不够。算了，看看也罢。",
+              "info",
+            );
+          }
+        },
+      },
+      {
+        text: "🚶 关我什么事",
+        hint: "不插手",
+        apply: function (st) {
+          st.flags._repairExpertIdentifySeen = true;
+          StateManager.addMessage(
+            "🔍 你看了看就走了。别人的事，不插手。",
+            "info",
+          );
+        },
+      },
+    ],
+  });
+
+  // === 3. NPC好感积累 → 意外发现隐藏信息 ===
+  // 设计意图：好感≥80的NPC突然透露一个隐藏机会，奖励长期社交投资
+  RANDOM_EVENTS.push({
+    id: "npc_deep_secret_opportunity",
+    phase: "street",
+    icon: "🤫",
+    title: "深夜的秘密",
+    story:
+      "凌晨两点，你睡不着。手机震了一下——是之前认识的一个朋友发来的消息：「我刚听到一个消息，明天别去往常那个市场进货，那边要拆迁了。」",
+    // [自洽修复] conditions 新增：任一NPC好感≥80且已结识的检查
+    conditions: function (st) {
+      // 检查是否有任意NPC好感≥80
+      var rels = st.relationships;
+      if (!rels) return false;
+      var highAffinityNpc = null;
+      for (var npcId in rels) {
+        if (rels[npcId] && rels[npcId].met && (rels[npcId].affinity || 0) >= 80) {
+          highAffinityNpc = npcId;
+          break;
+        }
+      }
+      if (!highAffinityNpc) return false;
+      // 检查未触发过
+      if (st.flags && st.flags._npcDeepSecretSeen) return false;
+      return true;
+    },
+    probability: 0.02,
+    repeatable: false,
+    choices: [
+      {
+        text: "🙏 感谢提醒",
+        hint: "跟着朋友走",
+        apply: function (st) {
+          st.flags._npcDeepSecretSeen = true;
+          // 找到触发事件的NPC并增加好感
+          var rels = st.relationships;
+          for (var npcId in rels) {
+            if (
+              rels[npcId] &&
+              rels[npcId].met &&
+              (rels[npcId].affinity || 0) >= 80
+            ) {
+              rels[npcId].affinity = Math.min(
+                100,
+                (rels[npcId].affinity || 0) + 5,
+              );
+              break;
+            }
+          }
+          // 给一个实用的状态奖励
+          st.resources.cash += 150;
+          st.needs.happiness = Math.min(
+            100,
+            (st.needs.happiness || 0) + 5,
+          );
+          StateManager.addMessage(
+            "🤫 你听从了朋友的建议，果然第二天市场就被封了。避免了损失，还多赚了¥150的替代收入。好感+5、心情+5。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "🤨 半信半疑",
+        hint: "自己判断",
+        apply: function (st) {
+          st.flags._npcDeepSecretSeen = true;
+          var rels = st.relationships;
+          for (var npcId in rels) {
+            if (
+              rels[npcId] &&
+              rels[npcId].met &&
+              (rels[npcId].affinity || 0) >= 80
+            ) {
+              rels[npcId].affinity = Math.min(
+                100,
+                (rels[npcId].affinity || 0) + 2,
+              );
+              break;
+            }
+          }
+          // 50%概率真的有用
+          if (Random.chance(0.5)) {
+            st.resources.cash += 100;
+            StateManager.addMessage(
+              "🤫 你半信半疑去了别的地方进货，结果那边真被封了。朋友的消息确实靠谱。好感+2。",
+              "info",
+            );
+          } else {
+            StateManager.addMessage(
+              "🤫 你去了市场，啥事没有。虚惊一场。不过朋友的好意还是领了。",
+              "info",
+            );
+          }
+        },
+      },
+      {
+        text: "📵 不回消息",
+        hint: "各凭本事",
+        apply: function (st) {
+          st.flags._npcDeepSecretSeen = true;
+          var rels = st.relationships;
+          for (var npcId in rels) {
+            if (
+              rels[npcId] &&
+              rels[npcId].met &&
+              (rels[npcId].affinity || 0) >= 80
+            ) {
+              rels[npcId].affinity = Math.max(
+                -100,
+                (rels[npcId].affinity || 0) - 3,
+              );
+              break;
+            }
+          }
+          StateManager.addMessage(
+            "📵 你没回消息。第二天市场照常营业，但你总觉得错过了什么。好感-3。",
+            "warning",
+          );
+        },
+      },
+    ],
+  });
+
+  // === 4. 天气×位置组合：暴雨时在市场 vs 暴雨时在桥洞 ===
+  // 设计意图：同样的天气在不同位置触发不同事件，增强世界的沉浸感
+  RANDOM_EVENTS.push({
+    id: "weather_market_storm",
+    phase: "street",
+    icon: "⛈️",
+    title: "暴雨困市场",
+    story:
+      "突然下起了暴雨，你正好在批发市场附近。雨水顺着棚顶灌进来，好几家的货都被淋湿了。摊主们手忙脚乱地盖塑料布。",
+    // [自洽修复] conditions 新增：暴雨天气 + 当前在市场位置 + 近期有交易行为
+    conditions: function (st) {
+      // 检查当前是否为暴雨天气
+      var w = st.weather && st.weather.current;
+      if (w !== "stormy" && w !== "rainy") return false;
+      // 检查当前所在位置是否为市场
+      if (st.trade && st.trade.currentLocation !== "wholesale") return false;
+      // 检查近期有交易行为（tradeFreq中有批发市场的交易记录）
+      if (
+        st.stats &&
+        st.stats.tradeFreq &&
+        st.stats.tradeFreq["wholesale"] < 3
+      )
+        return false;
+      // 检查未触发过
+      if (st.flags && st.flags._weatherMarketStormSeen) return false;
+      return true;
+    },
+    probability: 0.05,
+    repeatable: false,
+    choices: [
+      {
+        text: "📦 帮忙盖货",
+        hint: "帮人帮己，名声+",
+        apply: function (st) {
+          st.flags._weatherMarketStormSeen = true;
+          st.player.fame = Math.min(
+            100,
+            (st.player.fame || 0) + 2,
+          );
+          st.needs.hygiene = Math.max(
+            0,
+            (st.needs.hygiene || 30) - 10,
+          );
+          st.needs.fatigue = Math.min(
+            100,
+            (st.needs.fatigue || 50) + 10,
+          );
+          // 帮了忙之后摊主给优惠
+          st.flags._marketStormDiscount = true;
+          StateManager.addMessage(
+            "⛈️ 你帮摊主们盖货忙活了一个小时，浑身湿透。作为感谢，以后来你这儿进货打九折。名声+2。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "🏃 赶紧跑回家",
+        hint: "保命要紧",
+        apply: function (st) {
+          st.flags._weatherMarketStormSeen = true;
+          st.needs.fatigue = Math.min(
+            100,
+            (st.needs.fatigue || 50) + 15,
+          );
+          st.status.health = Math.max(
+            0,
+            (st.status.health || 70) - 5,
+          );
+          StateManager.addMessage(
+            "⛈️ 你冒着雨往家跑，到家时已经湿透了。第二天有点发烧，健康-5。",
+            "warning",
+          );
+        },
+      },
+      {
+        text: "📸 拍段视频发网上",
+        hint: "流量就是钱",
+        apply: function (st) {
+          st.flags._weatherMarketStormSeen = true;
+          if (Random.chance(0.3)) {
+            st.player.fame = Math.min(
+              100,
+              (st.player.fame || 0) + 8,
+            );
+            st.resources.cash += 100;
+            StateManager.addMessage(
+              "⛈️ 暴雨中的批发市场上了同城热搜！粉丝涨了几百，平台给了¥100创作激励。名声+8。",
+              "success",
+            );
+          } else {
+            st.player.fame = Math.min(
+              100,
+              (st.player.fame || 0) + 1,
+            );
+            StateManager.addMessage(
+              "⛈️ 拍了视频发了出去，没啥水花。但记录了这一刻也算有意义。名声+1。",
+              "info",
+            );
+          }
+        },
+      },
+    ],
+  });
+
+  // === 5. 连续饥饿爆发：多天饥饿值低 → 健康问题 ===
+  // 设计意图：连续低状态积累到阈值后触发后果，体现"欠债总是要还"的游戏哲学
+  RANDOM_EVENTS.push({
+    id: "hunger_streak_collapse",
+    phase: "street",
+    icon: "🤢",
+    title: "饿过头了",
+    story:
+      "连续几天都没好好吃饭，胃里像有只手在拧。你扶着墙站起来，眼前一黑——差点栽倒在地。身体在向你抗议了。",
+    // [自洽修复] conditions 新增：连续饥饿天数≥3的检查
+    conditions: function (st) {
+      // 检查连续饥饿天数（flags._habits.lowHungerStreak）
+      var habits = st.flags && st.flags._habits;
+      if (!habits || (habits.lowHungerStreak || 0) < 3) return false;
+      // 检查健康值已经开始下降
+      if ((st.status && st.status.health || 70) >= 60) return false;
+      // 检查未触发过
+      if (st.flags && st.flags._hungerCollapseSeen) return false;
+      return true;
+    },
+    probability: 0.06,
+    repeatable: false,
+    choices: [
+      {
+        text: "🍜 去吃碗热面",
+        hint: "花¥20，快速恢复",
+        apply: function (st) {
+          st.flags._hungerCollapseSeen = true;
+          if (st.resources.cash >= 20) {
+            st.resources.cash -= 20;
+            st.needs.hunger = Math.min(
+              100,
+              (st.needs.hunger || 25) + 40,
+            );
+            st.status.health = Math.min(
+              100,
+              (st.status.health || 70) + 5,
+            );
+            st.player.mental = Math.min(
+              100,
+              (st.player.mental || 26) + 3,
+            );
+            StateManager.addMessage(
+              "🍜 你走进路边小店点了碗牛肉面。热汤下肚，整个人活过来了。健康+5、心情+3。",
+              "success",
+            );
+          } else {
+            st.needs.hunger = Math.min(
+              100,
+              (st.needs.hunger || 25) + 15,
+            );
+            StateManager.addMessage(
+              "🍜 你想吃面但兜里没钱，啃了个馒头凑合。好歹压了压胃里难受。",
+              "warning",
+            );
+          }
+        },
+      },
+      {
+        text: "💊 吃片胃药硬扛",
+        hint: "花¥10，效果一般",
+        apply: function (st) {
+          st.flags._hungerCollapseSeen = true;
+          if (st.resources.cash >= 10) {
+            st.resources.cash -= 10;
+            st.status.health = Math.min(
+              100,
+              (st.status.health || 70) + 3,
+            );
+            StateManager.addMessage(
+              "💊 吃了片胃药，暂时不疼了。但身体在提醒你——不能再这样下去了。",
+              "info",
+            );
+          } else {
+            st.status.health = Math.max(
+              0,
+              (st.status.health || 70) - 3,
+            );
+            StateManager.addMessage(
+              "💊 连药钱都没有了。你咬着牙撑了一天，健康-3。",
+              "warning",
+            );
+          }
+        },
+      },
+      {
+        text: "😤 不饿了就没事",
+        hint: "倔强",
+        apply: function (st) {
+          st.flags._hungerCollapseSeen = true;
+          st.status.health = Math.max(
+            0,
+            (st.status.health || 70) - 10,
+          );
+          st.player.mental = Math.max(
+            0,
+            (st.player.mental || 26) - 5,
+          );
+          StateManager.addMessage(
+            "😤 你硬扛到了晚上，胃疼得直冒冷汗。第二天去医院花了¥80。健康-10、心智-5。",
+            "warning",
           );
         },
       },
