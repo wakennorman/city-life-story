@@ -1,8 +1,37 @@
 # 城市浮生记 (City Life Story) — 开发文档
 
-> 最后更新: 2026-07-12（v3.97 loop R1 全系统优化·Domain A 联动增强）
+> 最后更新: 2026-07-11（v3.98 loop R2 全系统优化·Domain B 事件/叙事）
 >
-> commit: 42528c0a（feat(loop R1): [域A 数据/数值平衡] 联动增强4项）
+> commit: [R2]（feat(loop R2): [域B 事件/叙事] 联动增强3项 street→corporate 桥接）
+
+---
+
+## 2026-07-11 — v3.98 loop R2 全系统优化·Domain B 事件/叙事（3项新事件）
+
+> 循环迭代表见 CLAUDE.md「全系统优化·循环迭代表」。本轮域 = **B 事件/叙事**。
+
+### 一、指令一审查（A类缺陷扫描）— 结论：0 A类（结构性健康）
+
+- **A类规则**：①NPC名叙事事件无 `met` 检查 ②天气事件无 `weather` 检查 ③职业事件无 `path/job` 检查 ④有 `trigger` 但引擎只跑 `conditions` 过滤。
+- **机械审计**：Python 静态提取全部事件对象（cross_system_events + events_street_* + events_corp + career_path + family + festivals），对 4 类规则逐一比对：
+  - T1 NPC `met` 守卫：217 处 `relationships["X"]` 引用中，裸访问均被 `if (st.relationships && st.relationships["X"])` 守卫；`boss_li_bonus` 等携带 `[自洽修复] met` 检查。审计初报的 4 个候选（old_man_help / coworker_injured / weather_heatwave_water_hustle / weather_typhoon_supply_shortage）经逐条核对——叙事均**不直呼活跃 NPC 名**（老大爷/老刘/工头为泛化角色），且 affinity 触碰均带存在守卫 → **均为误报，非缺陷**。
+  - T2 天气守卫：`boss_li_typhoon_warning` 用 `weather._nextDayForecast.weatherId`（更精确的"预警"语义）；`spring_chill_snap`/`summer_night_cooling` 用 `weather.season`（倒春寒/夏夜本就是季节现象）——比 `weather.current` 更正确，非缺陷。
+  - T3/T4：职场词大量出现于 flavor 文本（非玩家 employment 状态），且引擎 `queueRandomEvent` 同时支持 `triggers`(对象) 与 `trigger`(函数)，无"丢弃"问题。
+- **判定**：Domain B 经历史 `[自洽修复]` 轮次已高度自洽，本轮 **0 A 类缺陷**，严守"不伪造修复"纪律，未做空提交。
+
+### 二、指令二联动增强（3项）— 治愈"阶段孤岛" street→corporate 桥接
+
+> 真实缺口（v3.96 审计确认）：事件库 **street 655 / corporate 仅 10**，两系统近乎孤岛。R1 已补 economy/pricing 叙事化；本轮聚焦**跨阶段叙事桥接**，让街头积累的社会资本与硬技能在职场期产生回报。
+
+| 事件 id                         | 阶段      | 触发闸门（防御式）                                                                              | 联动域              | 设计意图                                         |
+| ------------------------------- | --------- | ----------------------------------------------------------------------------------------------- | ------------------- | ------------------------------------------------ |
+| `corp_street_roots_letter`      | corporate | 存在"已结识 + 好感≥40"的街头导师(old_zhou/boss_li/chef_chen/aunt_wang) 且未触发过               | B×C×D 事件↔职业↔NPC | 街头导师隔空寄语，初心净值+尊严                  |
+| `corp_street_skill_advantage`   | corporate | 任意街头硬技能(welding/cooking/repair/coding/accounting/electrician) 等级≥40 且未触发过         | B×C 事件↔职业       | 街头硬技能在职场意外立功，声誉+人气              |
+| `corp_npc_referral_from_street` | corporate | 存在"已结识 + 好感≥60"的街头挚友 且确有职场身份(career.currentJob/corporate.company) 且未触发过 | B×D 事件↔NPC        | 街头挚友人脉反哺职场，上行+（社会资本→职业资本） |
+
+- 防御式字段访问：`st.relationships||{}` / `st.skills||{}` / `st.player.corporate` 全部 `||` 守卫；`conditions` 全 false（如纯街头玩家）时叙事不触发，无崩溃。
+- 数值标 `[PLACEHOLDER]`（触发率 0.12~~0.18 参照 corp 池 0.22~~0.4 基准，待 playtest）。
+- **验证**：`node --check` ✅ / `python build.py` ✅ / **MC 10×500d = 15000 次评估, 899 触发, 1798 apply, 0 异常** ✅ / 事件总数 677, 0 重复 ID ✅。
 
 ---
 
