@@ -1,4 +1,5 @@
 - [passmsg-eventlog-scroll-modal](passmsg-eventlog-scroll-modal.md) — v3.2a passMsg修复·工资分离·事件强制滚动·导航弹窗
+- [v3.88b-equip-ui-mobile-sticky-hud](v3.88b-equip-ui-mobile-sticky-hud.md) — v3.88b 装备UI修正+手机端HUD改为position:sticky（修复死代码问题）
 - [v3.86-hover-unification](v3.86-hover-unification.md) — 统一所有可点击按钮/卡片的悬停动效，以action-card hover为标准（2026-07-11，commit 468aec8a）
 - [全中文 UI 原则](全中文UI原则.md) — 游戏中所有玩家可见文本必须是纯中文，禁止任何英文/其他语言
 - [JS 字符串内嵌引号转义规则](js-string-escaping.md) — 中文引号也会破坏 JS 字符串边界
