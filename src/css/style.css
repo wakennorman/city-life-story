@@ -4229,6 +4229,22 @@ body {
     border: 1px solid var(--border-light);
     transition: all 0.2s ease;
   }
+  /* 无色带属性行：更紧凑，数值有空位显示 */
+  .mss-cell-no-track {
+    gap: 1px;
+    padding: 3px 2px;
+    justify-content: center;
+  }
+  .mss-cell-no-track .mss-icon {
+    font-size: 11px;
+  }
+  .mss-cell-no-track .mss-label {
+    font-size: 9px;
+  }
+  .mss-cell-no-track .mss-val {
+    font-size: 10px;
+    min-width: 14px;
+  }
   /* 警告态：着底色 + 高亮边框 */
   .mss-cell.mss-warn {
     background: rgba(196,85,61,0.07);
@@ -4326,6 +4342,16 @@ body {
     }
     .mss-icon {
       font-size: 10px;
+    }
+    .mss-cell-no-track .mss-icon {
+      font-size: 9px;
+    }
+    .mss-cell-no-track .mss-label {
+      font-size: 8px;
+    }
+    .mss-cell-no-track .mss-val {
+      font-size: 9px;
+      min-width: 12px;
     }
     .mss-label {
       font-size: 9px;

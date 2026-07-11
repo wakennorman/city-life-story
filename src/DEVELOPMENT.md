@@ -1,8 +1,56 @@
 # 城市浮生记 (City Life Story) — 开发文档
 
-> 最后更新: 2026-07-11（v3.91–v3.94 新增9个联动事件空白区填充 + v3.94修复空头提交；v3.89/v3.90见下）
+> 最后更新: 2026-07-12（v3.95 loop R44 全系统优化·纽带回响：6个新事件+日终里程碑封顶）
 >
-> commit: 2a928007（fix: 补全v3.94两个事件）
+> commit: 1710ec86（feat(loop R44): 新增6个纽带回响事件+日终¥1M/¥10M里程碑）
+
+---
+
+## 2026-07-12 — v3.95 loop R44 全系统优化·纽带回响（6个新事件+日终里程碑封顶）
+
+### 代码事实核查结论（本轮前置）
+
+经并行 agent 代码事实核查，CLAUDE.md P2 推荐的三个切入点**已大部分落地**：
+
+| 原推荐方向     | 实际状态                                                      | 本轮动作                                                               |
+| -------------- | ------------------------------------------------------------- | ---------------------------------------------------------------------- |
+| 王婶↔张姐调解  | ✅ 已有 `npc_auntwang_zhang_mediation` 等 3 个调解事件        | **新增 followUp 链** `aunt_zhang_payoff`（30天和解宴）                 |
+| 阿杰多周目彩蛋 | ✅ 已有通用 `ng_plus_heritage_gift` / `ng_plus_familiar_face` | **新增阿杰专属** `ng_plus_ajie_return` + `ng_plus_ajie_payoff`         |
+| ¥1M 财富里程碑 | ✅ 已有 `wealth_1m_milestone` / `wealth_10m_milestone`        | **补全日终庆祝** — daily_report 封顶从 ¥100k → ¥10M（+¥1M / +¥10M 档） |
+
+真实剩余空白：NPC_RELATION_MATRIX 中 2 个 `business` 格（赵姐×李工头、赵姐×张姐）→ 本轮全部消费。
+
+### 新增事件（`src/js/core/cross_system_events.js` 尾部）
+
+| 事件 id                     | 类型                | 触发闸门                                  | 联动       | 设计意图                   |
+| --------------------------- | ------------------- | ----------------------------------------- | ---------- | -------------------------- |
+| `aunt_zhang_payoff`         | 后续链（30天）      | `_auntZhangMediated=true`、双 NPC 好感≥30 | 王婶×张姐  | 调解的第二峰（峰终定律）   |
+| `ng_plus_ajie_return`       | 多周目彩蛋          | ajie 已遇到 + (NG+继承 / 深交) + day≤30   | 阿杰跨周目 | 兑现"老朋友又遇见"情怀彩蛋 |
+| `ng_plus_ajie_payoff`       | 后续链（60天）      | `_ngPlusAjieSeen=true` + ajie 已遇到      | 阿杰       | 工作线索解锁+好感+15       |
+| `npc_zhaojie_boss_li`       | NPC关系（business） | 赵姐+李工头好感≥25、day≥40                | business格 | 房产经纪×工地牵线          |
+| `npc_zhang_zhaojie_partner` | NPC关系（business） | 赵姐+张姐好感≥25、day≥50                  | business格 | 合伙摆摊分租               |
+| `npc_zhang_zhaojie_payoff`  | 后续链（30天）      | `_zhangZhaojiePartnerSeen=true`           | 赵姐×张姐  | 分租回报¥380               |
+
+### 日终里程碑扩展（`src/js/ui/daily_report.js`）
+
+累计收入里程碑封顶从 ¥100k → ¥10M，新增 `_peakNoted1m` / `_peakNoted10m` 档。
+
+### 接线（4 个调解入口 → 1 个 payoff）
+
+3 个已有王婶×张姐调解事件（`npc_wang_zhang_mediation`、`npc_auntwang_zhang_mediation`、`npc_mediate_aunt_wang_sister_zhang`）的所有**中性和解路径**均新增 `scheduleChainEvent("aunt_zhang_payoff", 30)` + `_auntZhangMediated=true` 标记。
+
+### 验证
+
+- `node --check src/js/core/cross_system_events.js` ✅
+- `node --check src/js/ui/daily_report.js` ✅
+- `python build.py` 7927.8 KB ✅ / dist 新事件全量注入 ✅
+
+### 影响文件
+
+- `src/js/core/cross_system_events.js`（+5 事件 + 4 处接线）
+- `src/js/ui/daily_report.js`（+2 档日终里程碑）
+- `dist/index.html`（重建）
+- `.claude/last_known_head`（基线同步）
 
 ---
 

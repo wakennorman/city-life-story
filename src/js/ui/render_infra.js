@@ -971,19 +971,15 @@ function renderStatsStrip(state, parent) {
   var n = state.needs || {};
   var s = state.status || {};
 
-  // 行级别背景色配置：属性行暖灰、状态行浅灰绿
-  var ROW_BG_ATTR = "var(--bg-card)";
-  var ROW_BG_NEEDS = "var(--bg-secondary)";
-
   var container = document.createElement("div");
   container.className = "mobile-stats-strip";
 
   /**
    * 构建一行状态单元格
    * @param {Array} items - 配置数组
-   * @param {string} rowBg - 行背景色
+   * @param {boolean} showTrack - 是否显示色带（第1行6属性不显示，第2行5需求显示）
    */
-  function buildRow(items, rowBg) {
+  function buildRow(items, showTrack) {
     var row = document.createElement("div");
     row.className = "mss-row";
 
@@ -1000,6 +996,7 @@ function renderStatsStrip(state, parent) {
       var cell = document.createElement("div");
       cell.className =
         "mss-cell" +
+        (showTrack ? " mss-cell-has-track" : " mss-cell-no-track") +
         (isBad ? " mss-warn" : "") +
         (isSevere ? " mss-severe" : "");
 
@@ -1017,21 +1014,23 @@ function renderStatsStrip(state, parent) {
       label.textContent = cfg.label;
       cell.appendChild(label);
 
-      // 粗色带（高度 8px，预警态闪烁）
-      var track = document.createElement("div");
-      track.className = "mss-track" + (isBad ? " mss-track-warn" : "");
-      var fill = document.createElement("div");
-      fill.className = "mss-fill " + cfg.cls;
-      fill.style.width = valClamped + "%";
-      if (isBad) {
-        fill.style.background = cfg.color;
-        fill.style.animation = "ap-blink 1.2s infinite";
+      // 色带（仅第2行5需求显示；第1行6属性无色带，节省空间）
+      if (showTrack) {
+        var track = document.createElement("div");
+        track.className = "mss-track" + (isBad ? " mss-track-warn" : "");
+        var fill = document.createElement("div");
+        fill.className = "mss-fill " + cfg.cls;
+        fill.style.width = valClamped + "%";
+        if (isBad) {
+          fill.style.background = cfg.color;
+          fill.style.animation = "ap-blink 1.2s infinite";
+        }
+        if (isSevere) {
+          fill.style.animation = "ap-blink 0.6s infinite";
+        }
+        track.appendChild(fill);
+        cell.appendChild(track);
       }
-      if (isSevere) {
-        fill.style.animation = "ap-blink 0.6s infinite";
-      }
-      track.appendChild(fill);
-      cell.appendChild(track);
 
       // 数值（坏值变色 + 加粗）
       var num = document.createElement("span");
@@ -1167,8 +1166,8 @@ function renderStatsStrip(state, parent) {
     },
   ];
 
-  container.appendChild(buildRow(attrs, ROW_BG_ATTR));
-  container.appendChild(buildRow(needs, ROW_BG_NEEDS));
+  container.appendChild(buildRow(attrs, false)); // 第1行6属性：无色带，节省空间
+  container.appendChild(buildRow(needs, true)); // 第2行5需求：有色带
 
   // 疾病行：有疾病时在第2行之后追加
   if (s.illnesses && s.illnesses.length > 0) {

@@ -46,28 +46,75 @@
    */
   var TRIGGER_TEMPLATES = {
     has_debt: function (state) {
-      return state.debt && state.debt > 0;
+      return (
+        (state.resources && state.resources.debt && state.resources.debt > 0) ||
+        false
+      );
     },
     cash_above_100: function (state) {
-      return state.cash >= 100;
+      return (state.resources && state.resources.cash) >= 100;
     },
     day_above_7: function (state) {
-      return state.day >= 7;
+      return (state.player && state.player.day) >= 7;
     },
     day_above_30: function (state) {
-      return state.day >= 30;
+      return (state.player && state.player.day) >= 30;
+    },
+    day_above_60: function (state) {
+      return (state.player && state.player.day) >= 60;
+    },
+    day_above_100: function (state) {
+      return (state.player && state.player.day) >= 100;
+    },
+    day_above_200: function (state) {
+      return (state.player && state.player.day) >= 200;
+    },
+    day_above_365: function (state) {
+      return (state.player && state.player.day) >= 365;
     },
     has_health_issue: function (state) {
-      return state.health < 50;
+      return (state.status && state.status.health) < 50;
+    },
+    has_high_health: function (state) {
+      return (state.status && state.status.health) >= 80;
     },
     has_debt_urgent: function (state) {
-      return state.debt && state.debt > 5000;
+      var d = (state.resources && state.resources.debt) || 0;
+      return d > 5000;
     },
-    in_company: function (state) {
-      return state.phase && state.phase > 1;
+    in_corporate: function (state) {
+      return state.player && state.player.phase === "corporate";
     },
     low_cash: function (state) {
-      return state.cash < 500;
+      return (state.resources && state.resources.cash) < 500;
+    },
+    very_low_cash: function (state) {
+      return (state.resources && state.resources.cash) < 100;
+    },
+    has_skill: function (state) {
+      return state.skills && Object.keys(state.skills).length > 0;
+    },
+    has_relationship: function (state) {
+      return state.relationships && Object.keys(state.relationships).length > 0;
+    },
+    has_job: function (state) {
+      return state.employment && state.employment.currentJob;
+    },
+    unemployed: function (state) {
+      return state.employment && !state.employment.currentJob;
+    },
+    has_company: function (state) {
+      return (
+        state.startup &&
+        state.startup.companies &&
+        state.startup.companies.length > 0
+      );
+    },
+    night_phase: function (state) {
+      return state.player && state.player.timeSlot === "night";
+    },
+    morning_phase: function (state) {
+      return state.player && state.player.timeSlot === "morning";
     },
   };
 
@@ -138,7 +185,8 @@
     if (!event) return false;
 
     // 最小天数检查
-    if (eventDef.minDay && state.day < eventDef.minDay) return false;
+    if (eventDef.minDay && (state.player && state.player.day) < eventDef.minDay)
+      return false;
 
     // 自定义 conditions（向后兼容）
     if (typeof event.conditions === "function") {
@@ -178,14 +226,15 @@
   var _eventCooldowns = {};
   function getCooldownRemaining(eventId, state) {
     if (!state._eventCooldowns) state._eventCooldowns = {};
-    var day = state.day || 0;
+    var day = (state.player && state.player.day) || 0;
     var lastFire = state._eventCooldowns[eventId];
     if (!lastFire) return 0;
     return Math.max(0, lastFire - day);
   }
   function setCooldown(eventId, state, days) {
     if (!state._eventCooldowns) state._eventCooldowns = {};
-    state._eventCooldowns[eventId] = (state.day || 0) + days;
+    state._eventCooldowns[eventId] =
+      ((state.player && state.player.day) || 0) + days;
   }
   function canTrigger(eventId, state, defaultCooldown) {
     if (!state._eventCooldowns) return true;
