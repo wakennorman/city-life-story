@@ -47237,5 +47237,742 @@
     ],
   });
 
-  // ====== 注册结束 ======
-})();
+  // ====== 空白区⑥：NPC关系矩阵深度互动——王婶×张姐紧张调解 ======
+  // 设计意图：NPC_RELATION_MATRIX有14×14关系，但只有少数被事件消费。
+  // 王婶和张姐的"紧张"关系是经典邻里冲突——玩家作为中间人调解
+  RANDOM_EVENTS.push({
+    id: "npc_mediate_aunt_wang_sister_zhang",
+    phase: "street",
+    icon: "🤝",
+    title: "屋檐下的战火",
+    story:
+      "你刚走到城中村口就听见王大婶扯着嗓门说话：「我晾的被子被她浇花淋湿三回了！」\n\n对方也不甘示弱——是张姐的声音。\n\n两个平时对你还不错的女人正站在楼道里对峙。看见你走过来，两人同时看向你——「你来评评理！」",
+    conditions: function (st) {
+      var aw = st.relationships && st.relationships.aunt_wang;
+      var sz = st.relationships && st.relationships.sister_zhang;
+      if (!aw || !aw.met || !sz || !sz.met) return false;
+      if ((aw.affinity || 0) < 30) return false;
+      if ((sz.affinity || 0) < 30) return false;
+      if (st.player.phase !== "street") return false;
+      if (st.player.day < 30) return false;
+      if (st.flags && st.flags._npcMediationSeen) return false;
+      return true;
+    },
+    probability: 0.03,
+    repeatable: false,
+    choices: [
+      {
+        text: "🤲 两边说好话，当和事佬",
+        hint: "好感各+5",
+        apply: function (st) {
+          st.flags._npcMediationSeen = true;
+          st.relationships.aunt_wang.affinity = Math.min(
+            100,
+            (st.relationships.aunt_wang.affinity || 0) + 5,
+          );
+          st.relationships.sister_zhang.affinity = Math.min(
+            100,
+            (st.relationships.sister_zhang.affinity || 0) + 5,
+          );
+          st.player.charm = Math.min(100, (st.player.charm || 0) + 1);
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 8);
+          StateManager.addMessage(
+            "🤲 你耐着性子两头说和，说得口干舌燥，两人终于各哼一声各自散了。魅力+1，好感各+5，心情+8。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "🔍 指出晾衣架位置问题是根源",
+        hint: "讲道理，好感各+3",
+        apply: function (st) {
+          st.flags._npcMediationSeen = true;
+          st.relationships.aunt_wang.affinity = Math.min(
+            100,
+            (st.relationships.aunt_wang.affinity || 0) + 3,
+          );
+          st.relationships.sister_zhang.affinity = Math.min(
+            100,
+            (st.relationships.sister_zhang.affinity || 0) + 3,
+          );
+          st.player.intelligence = Math.min(
+            100,
+            (st.player.intelligence || 0) + 1,
+          );
+          StateManager.addMessage(
+            "🔍 你没站任何一方，直接动手把晾衣架往旁边挪了两米。两人愣了一下，都没再说话。智力+1，好感各+3。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "🚶 不掺和，绕道走",
+        hint: "明哲保身",
+        apply: function (st) {
+          st.flags._npcMediationSeen = true;
+          StateManager.addMessage(
+            "🚶 你低头从旁边绕过去了。身后两人的声音更大了些。",
+            "info",
+          );
+        },
+      },
+    ],
+  });
+
+  // ====== 空白区⑦：财富里程碑——人生第一桶金 ======
+  // 设计意图：wealth到达¥1M/¥10M无叙事事件。取¥200,000为门槛覆盖更多玩家
+  RANDOM_EVENTS.push({
+    id: "wealth_first_bucket_milestone",
+    phase: "street",
+    icon: "💰",
+    title: "第一个二十万",
+    story:
+      "你盯着银行APP上的余额反复数了三遍——¥200,000。\n\n你从刚进城时的¥300开始攒到现在。记得第一次吃盒饭¥12都要犹豫半天，记得发着高烧还去工地搬砖。\n\n二十万。这是你的第一桶金。",
+    conditions: function (st) {
+      if (st.player.phase !== "street") return false;
+      if (st.player.day < 60) return false;
+      var total = (st.resources.cash || 0) + (st.resources.bankBalance || 0);
+      if (total < 200000) return false;
+      if (st.flags && st.flags._firstBucketSeen) return false;
+      return true;
+    },
+    probability: 0.08,
+    repeatable: false,
+    choices: [
+      {
+        text: "📈 了解理财，钱生钱",
+        hint: "投资思维开启",
+        apply: function (st) {
+          st.flags._firstBucketSeen = true;
+          st.flags._firstBucketInvestor = true;
+          st.player.intelligence = Math.min(
+            100,
+            (st.player.intelligence || 0) + 4,
+          );
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 18);
+          StateManager.addMessage(
+            "📈 你约了理财顾问下周聊。挂了电话站在窗边看夜景——第一次觉得这座城市不再只是打工的地方。智力+4，心情+18。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "🏦 继续存着，攒首付",
+        hint: "稳扎稳打",
+        apply: function (st) {
+          st.flags._firstBucketSeen = true;
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 12);
+          st.player.mental = Math.min(100, (st.player.mental || 0) + 3);
+          StateManager.addMessage(
+            "🏦 你把手机收起继续干活。二十万还差得远——但你已经不是那个交不起房租的人了。心智+3，心情+12。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "🎉 犒劳自己，吃顿好的",
+        hint: "情绪释放",
+        apply: function (st) {
+          st.flags._firstBucketSeen = true;
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 20);
+          st.needs.fatigue = Math.max(0, (st.needs.fatigue || 0) - 15);
+          StateManager.addMessage(
+            "🎉 你关了手机去吃了一顿好的。¥68的酸菜鱼，吃得满头大汗——原来对自己好一点是这种感觉。心情+20，疲劳-15。",
+            "success",
+          );
+        },
+      },
+    ],
+  });
+
+  // ====== 空白区⑧：NPC关系矩阵——李工头×陈哥合作 ======
+  // 设计意图：boss_li和chen_ge的关系矩阵是"中立"——两个不同类型的人合作
+  RANDOM_EVENTS.push({
+    id: "npc_boss_li_chen_ge_coop",
+    phase: "street",
+    icon: "⚙️",
+    title: "石头碰上齿轮",
+    story:
+      "你正吃面，李工头突然坐过来：「你认识陈哥对吧？我有个工程需要提前知道城西拆迁时间——早一个月知道，光废品就能多赚三万。你要是能搭个线，佣金三成分你。」",
+    conditions: function (st) {
+      var bl = st.relationships && st.relationships.boss_li;
+      var cg = st.relationships && st.relationships.chen_ge;
+      if (!bl || !bl.met || !cg || !cg.met) return false;
+      if ((bl.affinity || 0) < 40) return false;
+      if ((cg.affinity || 0) < 40) return false;
+      if (st.player.phase !== "street") return false;
+      if (st.player.day < 50) return false;
+      if (st.flags && st.flags._bossChenCoopSeen) return false;
+      return true;
+    },
+    probability: 0.025,
+    repeatable: false,
+    choices: [
+      {
+        text: "🤝 牵线搭桥促成合作",
+        hint: "佣金+好感",
+        apply: function (st) {
+          st.flags._bossChenCoopSeen = true;
+          st.flags._bossChenCooperation = true;
+          var commission = 500 + Random.int(0, 300);
+          st.resources.cash += commission;
+          st.resources.totalEarned += commission;
+          st.relationships.boss_li.affinity = Math.min(
+            100,
+            (st.relationships.boss_li.affinity || 0) + 8,
+          );
+          st.relationships.chen_ge.affinity = Math.min(
+            100,
+            (st.relationships.chen_ge.affinity || 0) + 8,
+          );
+          st.player.fame = Math.min(100, (st.player.fame || 0) + 5);
+          StateManager.addMessage(
+            "🤝 你组了个酒局。三杯下肚两人发现对方挺实在。半个月后消息拿到，你分得¥" +
+              commission +
+              "。好感各+8。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "🔗 只传话不分钱",
+        hint: "纯帮忙，好感更多",
+        apply: function (st) {
+          st.flags._bossChenCoopSeen = true;
+          st.relationships.boss_li.affinity = Math.min(
+            100,
+            (st.relationships.boss_li.affinity || 0) + 12,
+          );
+          st.relationships.chen_ge.affinity = Math.min(
+            100,
+            (st.relationships.chen_ge.affinity || 0) + 10,
+          );
+          st.player.morality = Math.min(100, (st.player.morality || 50) + 3);
+          st.player.fame = Math.min(100, (st.player.fame || 0) + 5);
+          StateManager.addMessage(
+            "🔗 你摆摆手说不用分成。一个月后两人都欠你人情——在这座城市，人情比钱值钱。道德+3。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "🙅 不掺和",
+        hint: "明哲保身",
+        apply: function (st) {
+          st.flags._bossChenCoopSeen = true;
+          StateManager.addMessage("🙅 你婉拒了。李工头有些失望。", "info");
+        },
+      },
+    ],
+  });
+
+  // ====== 空白区⑨：长期居住归属感——城市融入时刻 ======
+  // 设计意图：玩家在同一座城市生活满一年——从"漂泊者"到"居住者"的身份转变
+  RANDOM_EVENTS.push({
+    id: "city_one_year_anniversary",
+    phase: "street",
+    icon: "🏙️",
+    title: "这座城市的第365天",
+    story:
+      "你像往常一样走出门，卖早点的阿姨笑着问你「今天吃啥？老样子？」菜市场林阿姨老远就挥手。修车的赵师傅点头说了声「早」。\n\n你突然意识到——你在这座城市已经住了一年。365天。你不再是一个陌生人了。",
+    conditions: function (st) {
+      if (st.player.day < 365) return false;
+      if (st.player.phase !== "street") return false;
+      if (st.flags && st.flags._cityYearSeen) return false;
+      return true;
+    },
+    probability: 0.09,
+    repeatable: false,
+    choices: [
+      {
+        text: "🌟 给认识的NPC送小礼物",
+        hint: "全城NPC好感+3",
+        apply: function (st) {
+          st.flags._cityYearSeen = true;
+          var rels = st.relationships || {};
+          for (var nid in rels) {
+            if (rels[nid] && rels[nid].met) {
+              rels[nid].affinity = Math.min(100, (rels[nid].affinity || 0) + 3);
+            }
+          }
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 20);
+          st.player.mental = Math.min(100, (st.player.mental || 0) + 5);
+          StateManager.addMessage(
+            "🌟 你花了一天给每个认识的人送了小礼物。晚上门口挂了袋东西——纸条上写：「欢迎留下来。」全城NPC好感+3，心情+20。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "📸 去观景台看日落",
+        hint: "内心沉淀",
+        apply: function (st) {
+          st.flags._cityYearSeen = true;
+          st.player.mental = Math.min(100, (st.player.mental || 0) + 8);
+          st.player.intelligence = Math.min(
+            100,
+            (st.player.intelligence || 0) + 3,
+          );
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 15);
+          var cost = 50;
+          st.resources.cash = Math.max(0, (st.resources.cash || 0) - cost);
+          StateManager.addMessage(
+            "📸 站在观景台顶，整个城市铺在脚下。夕阳把一切都染成金色。心智+8，心情+15。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "📝 写日记记录这一年",
+        hint: "心智+5，解锁回忆",
+        apply: function (st) {
+          st.flags._cityYearSeen = true;
+          st.flags._cityJournalWritten = true;
+          st.player.mental = Math.min(100, (st.player.mental || 0) + 5);
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 10);
+          if (!st.flags._narrativeLog) st.flags._narrativeLog = [];
+          st.flags._narrativeLog.push("city_year_" + st.player.day);
+          StateManager.addMessage(
+            "📝 你写了一个晚上——从第一天走出火车站的迷茫到现在的所有经历。写完最后一个字，有什么东西终于落定了。心智+5，心情+10。",
+            "success",
+          );
+        },
+      },
+    ],
+  });
+
+  // ====================================================================
+  // v3.88f (loop R43) 新增5个联动事件：社工温情/市场波动/城管体验/孝心抉择/师徒传承
+  // ====================================================================
+
+  // ====== 空白区⑩：社工走访——无家者的心灵陪伴 ======
+  // 设计意图：露宿玩家(housing.tier≤1)在精神低谷(mental<30)时被社工打动
+  RANDOM_EVENTS.push({
+    id: "social_worker_visit",
+    phase: "street",
+    icon: "💌",
+    title: "雨夜里的社工",
+    story:
+      '一个穿红马甲的年轻社工蹲到你的面前，没有同情和施舍的眼神，只是轻声说："下这么大雨，收容所还有空位，要不要来看看？不登记不住也行，至少喝口热的再走。"\n\n她把自己的伞递过来，自己顶着文件袋跑向下一处避雨点。',
+    conditions: function (st) {
+      if (st.player.phase !== "street") return false;
+      if (st.player.day < 14) return false; // 检查：至少经历两周漂泊
+      if ((st.player.mental || 50) > 30) return false; // 检查：精神<30才触发
+      if (((st.housing && st.housing.tier) || 0) > 1) return false; // 检查：住所≤1级(露宿/合租床位)
+      if (st.flags && st.flags._socialWorkerSeen) return false;
+      return true;
+    },
+    probability: 0.08,
+    repeatable: false,
+    choices: [
+      {
+        text: "🍜 跟着去收容所喝口热的",
+        hint: "精神+15",
+        apply: function (st) {
+          st.flags._socialWorkerSeen = true;
+          st.flags._shelterVisited = true;
+          st.player.mental = Math.min(100, (st.player.mental || 30) + 15);
+          st.needs.fatigue = Math.max(0, (st.needs.fatigue || 0) - 10);
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 8);
+          StateManager.addMessage(
+            "🍜 一碗热粥下肚，你的眼眶湿了。原来还有人记得这座城市里像你这样的人。心智+15，疲劳-10。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "🚶 谢绝好意，继续赶路",
+        hint: "独立",
+        apply: function (st) {
+          st.flags._socialWorkerSeen = true;
+          st.player.mental = Math.min(100, (st.player.mental || 30) + 5);
+          StateManager.addMessage(
+            "🚶 你道了谢走开。雨停后偶尔会想起那把没还的伞。",
+            "info",
+          );
+        },
+      },
+      {
+        text: "📋 问社工是否需要帮忙",
+        hint: "助人自助",
+        apply: function (st) {
+          st.flags._socialWorkerSeen = true;
+          st.flags._volunteerSocial = true;
+          st.player.mental = Math.min(100, (st.player.mental || 30) + 10);
+          st.player.morality = Math.min(100, (st.player.morality || 50) + 5);
+          st.player.fame = Math.min(100, (st.player.fame || 0) + 3);
+          StateManager.addMessage(
+            "📋 你帮她整理了三天受助者档案。从被人帮到帮别人，你找回了些力气。心智+10，道德+5，名气+3。",
+            "success",
+          );
+        },
+      },
+    ],
+  });
+
+  // ====== 空白区⑪：政策补贴窗口——低保/临时救助申请 ======
+  // 设计意图：极端困境(cash<200+连续工作≥30天)触发政策帮扶事件
+  RANDOM_EVENTS.push({
+    id: "gov_subsidy_window",
+    phase: "street",
+    icon: "🏛️",
+    title: "社区来了政策宣讲队",
+    story:
+      "社区服务中心门口支起了桌子——「临时困难救助+就业帮扶政策宣讲」。\n\n工作人员忙得脚不沾地，但看到你之后说了句：「你这种情况符合临时救助条件，三个月每月¥800补贴，还能免费参加就业培训——带身份证了吗？」",
+    conditions: function (st) {
+      if (st.player.phase !== "street") return false;
+      if (st.player.day < 30) return false; // 检查：至少满一个月
+      if ((st.resources.cash || 0) >= 200) return false; // 检查：现金不足¥200才需救助
+      var workedLong =
+        st.stats &&
+        st.stats.actionFreq &&
+        (st.stats.actionFreq["manual_labor_construction"] > 30 ||
+          st.stats.actionFreq["haul_goods"] > 30 ||
+          st.stats.actionFreq["food_stall"] > 30);
+      if (!workedLong) return false; // 检查：长期苦力劳动者的尊严
+      if (st.flags && st.flags._subsidySeen) return false;
+      return true;
+    },
+    probability: 0.1,
+    repeatable: false,
+    choices: [
+      {
+        text: "📋 排队申请救助",
+        hint: "三个月¥2400",
+        apply: function (st) {
+          st.flags._subsidySeen = true;
+          st.flags._subsidyActive = true;
+          st.flags._subsidyEndDay = st.player.day + 90;
+          var bonus = 800;
+          st.resources.cash += bonus;
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 5);
+          StateManager.addMessage(
+            "📋 申请通过了！首月¥800当场到账。工作人员说「下月按时来签收。」心情+5，三个月补贴激活。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "💼 问就业培训有什么",
+        hint: "技能提升",
+        apply: function (st) {
+          st.flags._subsidySeen = true;
+          st.flags._freeTrainingSeen = true;
+          var skillKey = Random.fromArray([
+            "repair",
+            "sales",
+            "cooking",
+            "coding",
+          ]);
+          if (st.skills && st.skills[skillKey]) {
+            st.skills[skillKey].xp = (st.skills[skillKey].xp || 0) + 60;
+          }
+          st.player.intelligence = Math.min(
+            100,
+            (st.player.intelligence || 0) + 2,
+          );
+          StateManager.addMessage(
+            "💼 登记了免费" +
+              {
+                repair: "维修",
+                sales: "销售",
+                cooking: "烹饪",
+                coding: "编程",
+              }[skillKey] +
+              "培训班。下周开班，智力+2，技能XP+60。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "😤 不食嗟来之食",
+        hint: "骨气",
+        apply: function (st) {
+          st.flags._subsidySeen = true;
+          st.player.mental = Math.min(100, (st.player.mental || 50) + 8);
+          st.player.fame = Math.min(100, (st.player.fame || 0) + 2);
+          StateManager.addMessage(
+            "😤 你扭头走了。靠自己的手吃饭，不丢人。回去的路上步子比来时沉了些，但也稳了些。心智+8，名气+2。",
+            "info",
+          );
+        },
+      },
+    ],
+  });
+
+  // ====== 空白区⑫：城管来查——互动体验版 ======
+  // 设计意图：摆摊玩家(chengguan.heat≥40)在高热度时触发有选择的城管遭遇
+  RANDOM_EVENTS.push({
+    id: "chengguan_encounter_interactive",
+    phase: "street",
+    icon: "🚓",
+    title: "城管来了",
+    story:
+      "「城管来了！」不知道谁喊了一声。\n\n整条街顿时像被按了快进键——折叠桌「咔咔」往三轮车上扔，锅碗瓢盆叮当作响。\n\n你对面走来两个穿制服的城管，其中一个看了你一眼：「此处禁止占道经营，请配合立即撤离。」\n\n旁边已经有摊贩被拦下在登记……",
+    conditions: function (st) {
+      if (st.player.phase !== "street") return false;
+      if (st.player.day < 20) return false; // 检查：经营至少20天
+      var hasStallExp =
+        (st.stats &&
+          st.stats.actionFreq &&
+          (st.stats.actionFreq["food_stall"] > 5 ||
+            st.stats.actionFreq["night_stall"] > 5 ||
+            st.stats.actionFreq["morning_stall"] > 5 ||
+            st.stats.actionFreq["weekend_market"] > 5 ||
+            st.stats.actionFreq["sell_goods"] > 5)) ||
+        (st.sideHustle && st.sideHustle.type === "stall");
+      if (!hasStallExp) return false; // 检查：有摆摊经验才遇到城管
+      var heat = (st.chengguan && st.chengguan.heat) || 0;
+      if (heat < 40) return false; // 检查：城管热度≥40
+      if (st.flags && st.flags._chengguanEncounter) return false;
+      return true;
+    },
+    probability: 0.04,
+    repeatable: false,
+    choices: [
+      {
+        text: "🏃 收摊就跑",
+        hint: "敏捷考验",
+        apply: function (st) {
+          st.flags._chengguanEncounter = true;
+          if (Random.chance(0.5 + (st.player.agility - 25) * 0.01)) {
+            st.needs.fatigue = Math.min(100, (st.needs.fatigue || 0) + 8);
+            StateManager.addMessage(
+              "🏃 你蹬着三轮车跑了三条街才停下来。没追上。虽然后怕，但货保住了。疲劳+8。",
+              "success",
+            );
+          } else {
+            st.resources.cash = Math.max(0, (st.resources.cash || 0) - 50);
+            StateManager.addMessage(
+              "🏃 没跑出几步就被堵住了，罚了¥50。下次得跑快点。",
+              "warning",
+            );
+          }
+        },
+      },
+      {
+        text: "🙏 求情说好话",
+        hint: "心智考验",
+        apply: function (st) {
+          st.flags._chengguanEncounter = true;
+          if (Random.chance(0.4)) {
+            st.chengguan.relationship = (st.chengguan.relationship || 0) + 5;
+            StateManager.addMessage(
+              "🙏 城管摆摆手：「下不为例，赶紧收了走吧。」给了一次机会。城管关系+5。",
+              "success",
+            );
+          } else {
+            st.resources.cash = Math.max(0, (st.resources.cash || 0) - 100);
+            StateManager.addMessage(
+              "🙏 城管摇头：「每个都这么说，罚¥100,下回直接扣货。」",
+              "warning",
+            );
+          }
+        },
+      },
+      {
+        text: "🤝 主动帮城管搬障碍物换好感",
+        hint: "出奇招",
+        apply: function (st) {
+          st.flags._chengguanEncounter = true;
+          st.chengguan = st.chengguan || {
+            heat: 0,
+            warnings: 0,
+            relationship: 0,
+          };
+          st.chengguan.heat = Math.max(0, (st.chengguan.heat || 0) - 15);
+          st.chengguan.relationship = (st.chengguan.relationship || 0) + 10;
+          st.player.charm = Math.min(100, (st.player.charm || 0) + 2);
+          StateManager.addMessage(
+            "🤝 你帮城管把路边一个废弃石墩子搬到皮卡上。他们走时说了句「你这小伙子，行。」热度-15，关系+10，魅力+2。",
+            "success",
+          );
+        },
+      },
+    ],
+  });
+
+  // ====== 空白区⑬：父母的一通电话——亲情与愧疚 ======
+  // 设计意图：玩家漂泊≥60天+极少回家触发，引发情感共鸣
+  RANDOM_EVENTS.push({
+    id: "parents_phone_call",
+    phase: "street",
+    icon: "📞",
+    title: "母亲来电话了",
+    story:
+      "晚饭时手机响了——「妈」。\n\n那头先是沉默了几秒，然后说：「没什么事，就是想问问你今天吃了吗。」\n\n你听见电话里爸在旁边说「别耽误他上班」。\n\n妈又说：「今年中秋能回来吗？也不用啥时候，你爸他……你回来就好。」",
+    conditions: function (st) {
+      if (st.player.phase !== "street") return false;
+      if (st.player.day < 60) return false; // 检查：至少漂泊2个月
+      var total = (st.resources.cash || 0) + (st.resources.bankBalance || 0);
+      if (total < 1000) return false; // 检查：钱不多才触发愧疚感(有钱就不愧疚了)
+      var littleFamily = st.family && st.family.parents ? true : false;
+      if (!littleFamily) return false;
+      if (st.flags && st.flags._parentsPhoneSeen) return false;
+      return true;
+    },
+    probability: 0.07,
+    repeatable: false,
+    choices: [
+      {
+        text: "💸 转¥500回家",
+        hint: "尽孝",
+        cost: 500,
+        apply: function (st) {
+          st.flags._parentsPhoneSeen = true;
+          if (st.resources.cash >= 500) {
+            st.resources.cash -= 500;
+            if (st.family && st.family.parents) {
+              st.family.parents.father.companionship = Math.min(
+                100,
+                (st.family.parents.father.companionship || 0) + 15,
+              );
+              st.family.parents.mother.companionship = Math.min(
+                100,
+                (st.family.parents.mother.companionship || 0) + 15,
+              );
+            }
+            st.player.morality = Math.min(100, (st.player.morality || 50) + 3);
+            st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 10);
+            StateManager.addMessage(
+              "💸 钱转过去了。妈打电话过来哭着说「你自己都没吃好」。你的心揪了一下。心情+10，道德+3，父母陪伴感+15。",
+              "success",
+            );
+          } else {
+            StateManager.addMessage(
+              "💸 卡上余额不够——这¥500你还拿不出来。握着手机的手在抖。心里愧疚极了。",
+              "warning",
+            );
+            st.player.mental = Math.max(0, (st.player.mental || 50) - 8);
+          }
+        },
+      },
+      {
+        text: "📱 答应中秋一定回去",
+        hint: "承诺",
+        apply: function (st) {
+          st.flags._parentsPhoneSeen = true;
+          st.flags._promisedHome = true;
+          if (st.family && st.family.parents) {
+            st.family.parents.mother.companionship = Math.min(
+              100,
+              (st.family.parents.mother.companionship || 0) + 8,
+            );
+          }
+          st.player.mental = Math.min(100, (st.player.mental || 50) + 5);
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 8);
+          StateManager.addMessage(
+            "📱 妈那头笑着跟你爸说「他说回来！」。挂了电话你在街边坐了好一会。心智+5，心情+8，承诺回家flag已设置。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "😶 敷衍两句挂断",
+        hint: "愧疚",
+        apply: function (st) {
+          st.flags._parentsPhoneSeen = true;
+          st.needs.happiness = Math.max(0, (st.needs.happiness || 0) - 12);
+          st.player.mental = Math.max(0, (st.player.mental || 50) - 5);
+          st.flags._ignoredParentsCall = true;
+          StateManager.addMessage(
+            "😶 你说「忙，先挂了」。整晚翻来覆去睡不着。心情-12，心智-5。今天你欠了自己一个答案。",
+            "warning",
+          );
+        },
+      },
+    ],
+  });
+
+  // ====== 空白区⑭：师徒传承——工匠手艺的仪式 ======
+  // 设计意图：工匠技能(welding/electrician/repair)≥60时触发"带徒弟"事件
+  RANDOM_EVENTS.push({
+    id: "craftsman_apprentice",
+    phase: "street",
+    icon: "🔨",
+    title: "有人想跟你学手艺",
+    story:
+      "你正干着活，一个二十出头的小伙子在旁边看了半天，最后鼓起勇气开口：「师傅，我想跟你学这个，不要钱也行，能吃饱饭就行。」\n\n他眼睛亮亮的，让你想起十年前的自己。\n\n但你知道——带徒弟意味着分担自己的时间，也意味着……你在这行的经验要传下去了。",
+    conditions: function (st) {
+      if (st.player.phase !== "street") return false;
+      if (st.player.day < 90) return false; // 检查：至少从业3个月
+      var craftHigh =
+        st.skills &&
+        ((st.skills.welding && st.skills.welding.level >= 60) ||
+          (st.skills.electrician && st.skills.electrician.level >= 60) ||
+          (st.skills.repair && st.skills.repair.level >= 70));
+      if (!craftHigh) return false; // 检查：任一手艺达门槛
+      if (st.flags && st.flags._apprenticeSeen) return false;
+      return true;
+    },
+    probability: 0.035,
+    repeatable: false,
+    choices: [
+      {
+        text: "👨‍🏫 收他为徒，传承手艺",
+        hint: "长远回报",
+        apply: function (st) {
+          st.flags._apprenticeSeen = true;
+          st.flags._hasApprentice = true;
+          st.player.fame = Math.min(100, (st.player.fame || 0) + 8);
+          st.player.mental = Math.min(100, (st.player.mental || 50) + 8);
+          st.player.charm = Math.min(100, (st.player.charm || 0) + 3);
+          if (typeof scheduleChainEvent === "function") {
+            scheduleChainEvent(st, "craftsman_apprentice_payoff", 30, "street");
+          }
+          StateManager.addMessage(
+            "👨‍🏫 你收下了他。第二天他开始跟着你出工。你知道这条路不好走——但你当年的师傅也是这么把你带出来的。名气+8，心智+8，魅力+3。30天后回报触发。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "💰 介绍他去同行那边干",
+        hint: "人情债",
+        apply: function (st) {
+          st.flags._apprenticeSeen = true;
+          var recFriend = Random.fromArray(["boss_li", "old_zhou", "chen_ge"]);
+          if (
+            st.relationships &&
+            st.relationships[recFriend] &&
+            st.relationships[recFriend].met
+          ) {
+            st.relationships[recFriend].affinity = Math.min(
+              100,
+              (st.relationships[recFriend].affinity || 0) + 10,
+            );
+          }
+          StateManager.addMessage(
+            "💰 你写了条微信把他推荐给一个老朋友。对方回了句「你介绍的人我放心」。朋友好感+10。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "🙏 婉拒——自己还泥菩萨过江",
+        hint: "诚实",
+        apply: function (st) {
+          st.flags._apprenticeSeen = true;
+          st.player.morality = Math.min(100, (st.player.morality || 50) + 3);
+          StateManager.addMessage(
+            "🙏 你诚实地说自己也还在挣扎。小伙子点点头没说什么——但你看出他眼里没怪你。道德+3。",
+            "info",
+          );
+        },
+      },
+    ],
+  });
+
+  // ====== 链式后续：师徒回报 ======
+  // 带徒弟30天后的回报——学徒出师带来意外收益
+  RANDOM_EVENTS.push({
+    id: "craftsman_apprentice_payoff",
+    phase: "street",
+    _isChainEvent: true,
+    icon: "🎓",
+    title: "徒弟出师了",
+    story:
+      "那天你收下的徒弟今天跑来跟你说：「师傅，我这周独立接到第一单了——一个饭店后厨电路改造，人家给了¥1500。」\n\n他拿出个信封要塞给你：「你教我的，我不能白学。」\n\n你看着他的手，粗糙、有力——就像你当年。",
+    conditions: function (st) {
+      if (st.player.phase !== "street") return false;
+      if (!st.flags || !st.flags._hasAppr
