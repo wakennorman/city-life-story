@@ -44934,8 +44934,7 @@
       "巷口新开的小饭馆生意不差，老板却总算不清是赚是赔。\n" +
       "他听人夸你「菜做得好，账也算得清」，特意来问：「能不能既帮我掌两勺、再把这堆单子对一对？」",
     conditions: function (st) {
-      var cook =
-        st.skills && st.skills.cooking && st.skills.cooking.level; // 厨艺等级
+      var cook = st.skills && st.skills.cooking && st.skills.cooking.level; // 厨艺等级
       var acct =
         st.skills && st.skills.accounting && st.skills.accounting.level; // 会计等级
       return (
@@ -44963,7 +44962,9 @@
             st.skills.accounting.xp = (st.skills.accounting.xp || 0) + 30;
           StateManager.addMessage(
             "🍳 你白天颠勺、晚上对账，把三个月的糊涂账理成了清清爽爽的报表。\n" +
-              "老板拍板留你长期合作，结了¥" + fee + "，厨艺与会计经验双涨。",
+              "老板拍板留你长期合作，结了¥" +
+              fee +
+              "，厨艺与会计经验双涨。",
             "success",
           );
         },
@@ -44980,7 +44981,9 @@
             st.skills.accounting.xp = (st.skills.accounting.xp || 0) + 20;
           StateManager.addMessage(
             "📒 你嫌守着灶台太累，只帮他把成本结构算清楚。\n" +
-              "拿了¥" + fee + "顾问费，老板连说「原来肉价一涨就亏在这」，会计经验+20。",
+              "拿了¥" +
+              fee +
+              "顾问费，老板连说「原来肉价一涨就亏在这」，会计经验+20。",
             "info",
           );
         },
@@ -44998,8 +45001,7 @@
       "一家做同城急送的小公司最近单子暴涨，却总在排班上乱套——车跑空趟、客户催爆。\n" +
       "老板翻了翻你的简历：「又会开车、又懂带人排活，这活儿你最合适。来帮我管管车队？」",
     conditions: function (st) {
-      var drv =
-        st.skills && st.skills.driving && st.skills.driving.level; // 驾驶等级
+      var drv = st.skills && st.skills.driving && st.skills.driving.level; // 驾驶等级
       var mgmt =
         st.skills && st.skills.management && st.skills.management.level; // 管理等级
       return (
@@ -45027,7 +45029,9 @@
             st.skills.management.xp = (st.skills.management.xp || 0) + 30;
           StateManager.addMessage(
             "🚚 你把空趟率压到最低，客户投诉少了一大半。\n" +
-              "老板爽快结了¥" + fee + "，驾驶与管理经验双涨。",
+              "老板爽快结了¥" +
+              fee +
+              "，驾驶与管理经验双涨。",
             "success",
           );
         },
@@ -45045,7 +45049,9 @@
             st.skills.driving.xp = (st.skills.driving.xp || 0) + 20;
           StateManager.addMessage(
             "🛣️ 你嫌管人麻烦，只接了全职司机的活儿，天天跑城西到城东。\n" +
-              "落了¥" + fee + "，人累得够呛（疲劳+12），驾驶经验+20。",
+              "落了¥" +
+              fee +
+              "，人累得够呛（疲劳+12），驾驶经验+20。",
             "info",
           );
         },
@@ -45101,7 +45107,9 @@
             st.skills.electrician.xp = (st.skills.electrician.xp || 0) + 35;
           StateManager.addMessage(
             "🔧 老板二话不说把整改包给你。你重排了线路、换了端子，隐患彻底清零。\n" +
-              "结了¥" + fee + "，电工经验+35，街坊都记住了你这号技术人。",
+              "结了¥" +
+              fee +
+              "，电工经验+35，街坊都记住了你这号技术人。",
             "success",
           );
         },
@@ -49499,7 +49507,9 @@
       var repTech = (st.reputation && st.reputation.techPark) || 0;
       if (repComm < 30 && repTech < 25) return false;
       // 检查 已在职场扎根（工作天数）
-      var wd = (st.career && st.career.currentJob && st.career.currentJob.workDays) || 0;
+      var wd =
+        (st.career && st.career.currentJob && st.career.currentJob.workDays) ||
+        0;
       if (wd < 60) return false;
       // 检查 未触发过
       return !(st.flags && st.flags._corpRepHeadhunt);
@@ -49554,81 +49564,438 @@
   });
 
   // F2：街头硬技能 → 职场项目牵头（跨系统：skills × corporate × reputation）
-  RANDOM_EVENTS.push({
-    id: "corp_skill_project_lead",
-    phase: "corporate",
-    icon: "🛠️",
-    title: "「这个你熟，你来带」",
-    story:
-      "部门接了个跨业务的硬骨头项目，会上主管扫了一圈，目光停在你身上：\n「你在 X 上的底子，公司里没几个比得上——这活儿你来牵头，行不行？」\n你心里清楚，这门本事不是在公司学的，是那些年在外面接活、啃书、踩坑一点点磨出来的。职场终于看见了你身上那块街头的钢。",
-    conditions: function (st) {
-      if (!(st.player && st.player.phase === "corporate")) return false;
-      // 检查 某项硬技能达专家门槛（编程/管理/会计，街头可积累）
-      var coding = (st.skills && st.skills.coding && st.skills.coding.level) || 0;
-      var mgmt = (st.skills && st.skills.management && st.skills.management.level) || 0;
-      var acc = (st.skills && st.skills.accounting && st.skills.accounting.level) || 0;
-      if (coding < 25 && mgmt < 25 && acc < 25) return false;
-      // 检查 已在职场扎根
-      var wd = (st.career && st.career.currentJob && st.career.currentJob.workDays) || 0;
-      if (wd < 120) return false;
-      return !(st.flags && st.flags._corpSkillLead);
+  RANDOM_EVENTS.push(
+    {
+      id: "corp_skill_project_lead",
+      phase: "corporate",
+      icon: "🛠️",
+      title: "「这个你熟，你来带」",
+      story:
+        "部门接了个跨业务的硬骨头项目，会上主管扫了一圈，目光停在你身上：\n「你在 X 上的底子，公司里没几个比得上——这活儿你来牵头，行不行？」\n你心里清楚，这门本事不是在公司学的，是那些年在外面接活、啃书、踩坑一点点磨出来的。职场终于看见了你身上那块街头的钢。",
+      conditions: function (st) {
+        if (!(st.player && st.player.phase === "corporate")) return false;
+        // 检查 某项硬技能达专家门槛（编程/管理/会计，街头可积累）
+        var coding =
+          (st.skills && st.skills.coding && st.skills.coding.level) || 0;
+        var mgmt =
+          (st.skills && st.skills.management && st.skills.management.level) ||
+          0;
+        var acc =
+          (st.skills && st.skills.accounting && st.skills.accounting.level) ||
+          0;
+        if (coding < 25 && mgmt < 25 && acc < 25) return false;
+        // 检查 已在职场扎根
+        var wd =
+          (st.career &&
+            st.career.currentJob &&
+            st.career.currentJob.workDays) ||
+          0;
+        if (wd < 120) return false;
+        return !(st.flags && st.flags._corpSkillLead);
+      },
+      probability: 0.32,
+      repeatable: false,
+      choices: [
+        {
+          text: "💪 「我来。」",
+          hint: "晋升意向+12，项目奖金 [PLACEHOLDER]，科技园声望+3，压力+",
+          apply: function (st) {
+            st.flags = st.flags || {};
+            st.flags._corpSkillLead = true;
+            if (st.player.corporate) {
+              st.player.corporate.upward = Math.min(
+                100,
+                (st.player.corporate.upward || 50) + 12,
+              );
+            }
+            var bonus = Random.int(1500, 4000); // [PLACEHOLDER] 依难度/通胀调整
+            st.resources.cash = (st.resources.cash || 0) + bonus;
+            if (st.reputation) {
+              st.reputation.techPark = Math.min(
+                100,
+                (st.reputation.techPark || 0) + 3,
+              );
+            }
+            st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 6);
+            st.player.mental = Math.max(0, (st.player.mental || 0) - 5); // 牵头压力
+            StateManager.addMessage(
+              "💪 你接下了。三个月后项目交付，庆功宴上主管拍你肩膀。¥" +
+                bonus +
+                " 项目奖到账，科技园声望+3。晋升意向+12，心情+6，但那段时间你瘦了一圈。",
+              "success",
+            );
+          },
+        },
+        {
+          text: "🤝 「我推荐组里的小张，他更合适」",
+          hint: "团队好感+，轻量回报，压力小",
+          apply: function (st) {
+            st.flags = st.flags || {};
+            st.flags._corpSkillLead = true;
+            st.flags._teamGoodwill = (st.flags._teamGoodwill || 0) + 1;
+            if (st.player.corporate) {
+              st.player.corporate.upward = Math.min(
+                100,
+                (st.player.corporate.upward || 50) + 4,
+              );
+            }
+            st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 5);
+            st.player.mental = Math.min(100, (st.player.mental || 0) + 2); // 让贤的轻松
+            StateManager.addMessage(
+              "🤝 你把机会让给了年轻同事。后来他真扛下来了，还专门来谢你。团队里你的口碑悄悄涨了。晋升意向+4，心情+5。",
+              "info",
+            );
+          },
+        },
+      ],
     },
-    probability: 0.32,
-    repeatable: false,
-    choices: [
-      {
-        text: "💪 「我来。」",
-        hint: "晋升意向+12，项目奖金 [PLACEHOLDER]，科技园声望+3，压力+",
-        apply: function (st) {
-          st.flags = st.flags || {};
-          st.flags._corpSkillLead = true;
-          if (st.player.corporate) {
-            st.player.corporate.upward = Math.min(
-              100,
-              (st.player.corporate.upward || 50) + 12,
-            );
-          }
-          var bonus = Random.int(1500, 4000); // [PLACEHOLDER] 依难度/通胀调整
-          st.resources.cash = (st.resources.cash || 0) + bonus;
-          if (st.reputation) {
-            st.reputation.techPark = Math.min(
-              100,
-              (st.reputation.techPark || 0) + 3,
-            );
-          }
-          st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 6);
-          st.player.mental = Math.max(0, (st.player.mental || 0) - 5); // 牵头压力
-          StateManager.addMessage(
-            "💪 你接下了。三个月后项目交付，庆功宴上主管拍你肩膀。¥" +
-              bonus +
-              " 项目奖到账，科技园声望+3。晋升意向+12，心情+6，但那段时间你瘦了一圈。",
-            "success",
-          );
-        },
-      },
-      {
-        text: "🤝 「我推荐组里的小张，他更合适」",
-        hint: "团队好感+，轻量回报，压力小",
-        apply: function (st) {
-          st.flags = st.flags || {};
-          st.flags._corpSkillLead = true;
-          st.flags._teamGoodwill = (st.flags._teamGoodwill || 0) + 1;
-          if (st.player.corporate) {
-            st.player.corporate.upward = Math.min(
-              100,
-              (st.player.corporate.upward || 50) + 4,
-            );
-          }
-          st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 5);
-          st.player.mental = Math.min(100, (st.player.mental || 0) + 2); // 让贤的轻松
-          StateManager.addMessage(
-            "🤝 你把机会让给了年轻同事。后来他真扛下来了，还专门来谢你。团队里你的口碑悄悄涨了。晋升意向+4，心情+5。",
-            "info",
-          );
-        },
-      },
-    ],
-  });
 
-  // ====== 注册结束 ======
+    // ====== 全系统优化·Domain A 联动增强 (v3.97 循环R1) ======
+    // 联动空白: economy_v3.1(财富税/市场饱和/动态利率)与 pricing.js(市场事件)
+    // 均为"算而不显"——核心数值从未被任何事件引用或呈现给玩家。
+    // 以下事件把隐形经济数据包装为玩家可感知的叙事决策。
+
+    {
+      id: "econ_wealth_tax_tier",
+      phase: "street",
+      icon: "⚖️",
+      title: "财富税阶梯提示",
+      story: `你盘了盘账：手头现金加上积蓄，已悄悄踏进更高的税阶。\n城市对高额资产征收累进财富税，每天从总资产里默默抽走一小笔。\n这不是惩罚，而是提醒你——钱"躺着"也会缩水，是时候考虑资产配置了。`,
+      conditions: function (st) {
+        var cash = (st.resources && st.resources.cash) || 0;
+        var savings = st.savings || 0;
+        var assets = cash + savings;
+        var F = st.flags || {};
+        // [PLACEHOLDER] 阈值对齐 economy_v3.1.WEALTH_TAX_THRESHOLDS，待调参
+        var tier =
+          assets >= 10000000
+            ? 4
+            : assets >= 2000000
+              ? 3
+              : assets >= 500000
+                ? 2
+                : assets >= 200000
+                  ? 1
+                  : 0;
+        return (
+          tier >= 2 && tier > (F._econTaxTier || 0) && (st.player.day || 0) > 20
+        );
+      },
+      probability: 0.05, // [PLACEHOLDER] 触发权重待调参
+      repeatable: true,
+      choices: [
+        {
+          text: "📊 研究税务规划",
+          hint: "标记税务意识，幸福感小幅+",
+          apply: function (st) {
+            var F = st.flags || {};
+            st.flags = F;
+            var cash = (st.resources && st.resources.cash) || 0;
+            var savings = st.savings || 0;
+            F._econTaxTier =
+              cash + savings >= 10000000
+                ? 4
+                : cash + savings >= 2000000
+                  ? 3
+                  : cash + savings >= 500000
+                    ? 2
+                    : 1;
+            F._taxPlanning = true;
+            if (st.needs && st.needs.happiness !== undefined)
+              st.needs.happiness = Math.min(100, st.needs.happiness + 3);
+            StateManager.addMessage(
+              "📊 你开始研究累进财富税，意识到资产结构需调整。税务意识+。",
+              "info",
+            );
+          },
+        },
+        {
+          text: "🏠 留意置业分散资产",
+          hint: "标记置业意向",
+          apply: function (st) {
+            var F = st.flags || {};
+            st.flags = F;
+            var cash = (st.resources && st.resources.cash) || 0;
+            var savings = st.savings || 0;
+            F._econTaxTier =
+              cash + savings >= 10000000
+                ? 4
+                : cash + savings >= 2000000
+                  ? 3
+                  : cash + savings >= 500000
+                    ? 2
+                    : 1;
+            F._planProperty = true;
+            StateManager.addMessage(
+              "🏠 你留意起房价，打算把部分现金转成固定资产以摊薄税基。",
+              "info",
+            );
+          },
+        },
+        {
+          text: "💪 无所谓，继续赚钱",
+          hint: "小幅掉幸福感",
+          apply: function (st) {
+            var F = st.flags || {};
+            st.flags = F;
+            var cash = (st.resources && st.resources.cash) || 0;
+            var savings = st.savings || 0;
+            F._econTaxTier =
+              cash + savings >= 10000000
+                ? 4
+                : cash + savings >= 2000000
+                  ? 3
+                  : cash + savings >= 500000
+                    ? 2
+                    : 1;
+            if (st.needs && st.needs.happiness !== undefined)
+              st.needs.happiness = Math.max(0, st.needs.happiness - 2);
+            StateManager.addMessage("💪 你决定先不管税，赚钱要紧。", "info");
+          },
+        },
+      ],
+    },
+
+    {
+      id: "econ_wealth_tax_tier_corp",
+      phase: "corporate",
+      icon: "⚖️",
+      title: "财富税阶梯提示",
+      story: `薪水虽稳，但总资产已悄然跨入更高税阶。\nHR系统不会提醒你，城市的累进财富税却每天默默抽走一笔。\n职场人最容易忽视"睡着的钱"在交税——这正是对资产配置的温柔警告。`,
+      conditions: function (st) {
+        var cash = (st.resources && st.resources.cash) || 0;
+        var savings = st.savings || 0;
+        var assets = cash + savings;
+        var F = st.flags || {};
+        var tier =
+          assets >= 10000000
+            ? 4
+            : assets >= 2000000
+              ? 3
+              : assets >= 500000
+                ? 2
+                : assets >= 200000
+                  ? 1
+                  : 0;
+        return (
+          tier >= 2 && tier > (F._econTaxTier || 0) && (st.player.day || 0) > 20
+        );
+      },
+      probability: 0.05,
+      repeatable: true,
+      choices: [
+        {
+          text: "📊 研究税务规划",
+          hint: "标记税务意识",
+          apply: function (st) {
+            var F = st.flags || {};
+            st.flags = F;
+            var cash = (st.resources && st.resources.cash) || 0;
+            var savings = st.savings || 0;
+            F._econTaxTier =
+              cash + savings >= 10000000
+                ? 4
+                : cash + savings >= 2000000
+                  ? 3
+                  : cash + savings >= 500000
+                    ? 2
+                    : 1;
+            F._taxPlanning = true;
+            if (st.needs && st.needs.happiness !== undefined)
+              st.needs.happiness = Math.min(100, st.needs.happiness + 3);
+            StateManager.addMessage(
+              "📊 你开始研究累进财富税与资产配置。税务意识+。",
+              "info",
+            );
+          },
+        },
+        {
+          text: "🏠 留意置业分散资产",
+          hint: "标记置业意向",
+          apply: function (st) {
+            var F = st.flags || {};
+            st.flags = F;
+            var cash = (st.resources && st.resources.cash) || 0;
+            var savings = st.savings || 0;
+            F._econTaxTier =
+              cash + savings >= 10000000
+                ? 4
+                : cash + savings >= 2000000
+                  ? 3
+                  : cash + savings >= 500000
+                    ? 2
+                    : 1;
+            F._planProperty = true;
+            StateManager.addMessage(
+              "🏠 你留意起房价，打算把部分现金转成固定资产。",
+              "info",
+            );
+          },
+        },
+        {
+          text: "💪 无所谓，继续搬砖",
+          hint: "小幅掉幸福感",
+          apply: function (st) {
+            var F = st.flags || {};
+            st.flags = F;
+            var cash = (st.resources && st.resources.cash) || 0;
+            var savings = st.savings || 0;
+            F._econTaxTier =
+              cash + savings >= 10000000
+                ? 4
+                : cash + savings >= 2000000
+                  ? 3
+                  : cash + savings >= 500000
+                    ? 2
+                    : 1;
+            if (st.needs && st.needs.happiness !== undefined)
+              st.needs.happiness = Math.max(0, st.needs.happiness - 2);
+            StateManager.addMessage("💪 你决定先不管税，搞钱要紧。", "info");
+          },
+        },
+      ],
+    },
+
+    {
+      id: "econ_market_saturation",
+      phase: "street",
+      icon: "📉",
+      title: "市场饱和预警",
+      story: `你发现自己占这座城市财富的比重越来越高。\n常识告诉你：当个人资产占城市总财富比例过高，投资收益会边际递减——市场开始"消化"你的存在。\n这不是bug，是反膨胀设计的温柔刹车。`,
+      conditions: function (st) {
+        var cash = (st.resources && st.resources.cash) || 0;
+        var savings = st.savings || 0;
+        var assets = cash + savings;
+        var cityWealth = st.cityWealth || 10000000; // 对齐 economy_v3.1 默认
+        var ratio = assets / cityWealth;
+        var F = st.flags || {};
+        // [PLACEHOLDER] 阈值对齐 economy_v3.1.getMarketSaturationPenalty(normal=0.2)
+        return ratio > 0.2 && (st.player.day || 0) - (F._satLastDay || 0) > 30;
+      },
+      probability: 0.05,
+      repeatable: true,
+      choices: [
+        {
+          text: "🛒 加大消费（购车置业）",
+          hint: "花掉部分现金以降低占比",
+          apply: function (st) {
+            var F = st.flags || {};
+            st.flags = F;
+            F._satLastDay = st.player.day || 0;
+            var cash = (st.resources && st.resources.cash) || 0;
+            var spend = Math.min(cash, 100000);
+            if (spend > 0) {
+              st.resources.cash -= spend;
+              StateManager.addMessage(
+                "🛒 你花掉¥" + spend + "改善生活，资产占比回落，收益有望恢复。",
+                "info",
+              );
+            } else {
+              StateManager.addMessage("🛒 你本想消费，但现金不足。", "info");
+            }
+          },
+        },
+        {
+          text: "📉 暂停扩张观望",
+          hint: "标记观望，幸福感+",
+          apply: function (st) {
+            var F = st.flags || {};
+            st.flags = F;
+            F._satLastDay = st.player.day || 0;
+            F._marketWatch = true;
+            if (st.needs && st.needs.happiness !== undefined)
+              st.needs.happiness = Math.min(100, st.needs.happiness + 2);
+            StateManager.addMessage(
+              "📉 你决定暂停激进投资，观望市场。",
+              "info",
+            );
+          },
+        },
+        {
+          text: "🚀 逆势加仓",
+          hint: "赌一把，幸福感-",
+          apply: function (st) {
+            var F = st.flags || {};
+            st.flags = F;
+            F._satLastDay = st.player.day || 0;
+            if (st.needs && st.needs.happiness !== undefined)
+              st.needs.happiness = Math.max(0, st.needs.happiness - 3);
+            StateManager.addMessage(
+              "🚀 你不信邪，逆势加仓。市场沉默以对。",
+              "info",
+            );
+          },
+        },
+      ],
+    },
+
+    {
+      id: "price_market_event_alert",
+      phase: "street",
+      icon: "📰",
+      title: "物价异动播报",
+      story: `街坊都在议论：最近市场上某种民生商品的价格不太对劲。\n有人在囤货，有人在抛售，信息就是钱。\n你决定留意一下这波行情。`,
+      conditions: function (st) {
+        if (
+          !st.trade ||
+          !st.trade.marketEvents ||
+          !st.trade.marketEvents.length
+        )
+          return false;
+        // [PLACEHOLDER] 民生商品白名单，对齐 pricing.js MARKET_EVENTS.goodId
+        var staples = {
+          water: 1,
+          fruits: 1,
+          vegetables: 1,
+          beer: 1,
+          cigarettes: 1,
+          clothing: 1,
+        };
+        var F = st.flags || {};
+        for (var i = 0; i < st.trade.marketEvents.length; i++) {
+          var ev = st.trade.marketEvents[i];
+          if (staples[ev.goodId] && ev.id !== (F._priceAlertId || ""))
+            return true;
+        }
+        return false;
+      },
+      probability: 0.06,
+      repeatable: true,
+      choices: [
+        {
+          text: "🔍 关注并调整采购",
+          hint: "标记关注该行情",
+          apply: function (st) {
+            var F = st.flags || {};
+            st.flags = F;
+            if (
+              st.trade &&
+              st.trade.marketEvents &&
+              st.trade.marketEvents.length
+            ) {
+              var ev = st.trade.marketEvents[0];
+              F._priceAlertId = ev.id;
+              StateManager.addMessage(
+                "🔍 你记下「" +
+                  (ev.name || "某商品") +
+                  "」的行情异动，打算顺势调整买卖。",
+                "info",
+              );
+            } else {
+              StateManager.addMessage("🔍 你留意起市场行情。", "info");
+            }
+          },
+        },
+        {
+          text: "🤷 与我无关",
+          hint: "不采取行动",
+          apply: function (st) {
+            StateManager.addMessage("🤷 你觉得这点波动影响不到自己。", "info");
+          },
+        },
+      ],
+    },
+
+    // ====== 注册结束 ======
+  );
 })();
