@@ -389,6 +389,16 @@
       title: "新能源二手崩了",
       story:
         "去年¥120,000的新能源车，二手¥48,000。做二手车的陈哥仓库压了十几台。",
+      // [自洽修复] conditions 新增：chen_ge 关系 met 检查 + day≥50 检查（story 直呼"陈哥"，需已结识）
+      conditions: function (st) {
+        return (
+          st.player.phase === "street" &&
+          st.player.day >= 50 &&
+          st.relationships &&
+          st.relationships.chen_ge &&
+          st.relationships.chen_ge.met === true
+        );
+      },
       triggers: { minDay: 50, excludeFlags: ["_evUsedCarSeen"] },
       choices: [
         {
