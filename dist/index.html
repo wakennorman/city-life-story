@@ -79122,6 +79122,157 @@ if (typeof window !== "undefined") {
   // 满足条件时写入 _auntZhangMediated=true，供 payoff 事件门控
   // ====================================================================
 
+  // ========== 主题F：跨阶段桥接补强 (street → corporate) ==========
+  // 设计意图：corporate 阶段仅 10 事件、street 655 事件，两系统几乎孤岛。
+  // 以下事件把"街头积累的资产"（地点声望 / 硬技能）溢出到职场，形成双向桥。
+
+  // F1：街头地点声望 → 职场猎头邀约（跨系统：reputation × corporate）
+  RANDOM_EVENTS.push({
+    id: "corp_reputation_headhunt",
+    phase: "corporate",
+    icon: "📞",
+    title: "一个陌生来电",
+    story:
+      "下班路上手机响了，是个你没存号的号码。\n对方自称某大厂招聘负责人：「我们在行业里注意到你了——你在商业区/科技园区的口碑很好，有人向我们推荐。想不想聊聊？」\n你愣了一下。你从没投过这家公司。原来你在街坊间攒下的那点名声，自己不当回事，别人却记着。",
+    conditions: function (st) {
+      // 检查 处于职场阶段
+      if (!(st.player && st.player.phase === "corporate")) return false;
+      // 检查 街头积累的地点声望达门槛（商业区≥30 或 科技园≥25）
+      var repComm = (st.reputation && st.reputation.commercialDist) || 0;
+      var repTech = (st.reputation && st.reputation.techPark) || 0;
+      if (repComm < 30 && repTech < 25) return false;
+      // 检查 已在职场扎根（工作天数）
+      var wd = (st.career && st.career.currentJob && st.career.currentJob.workDays) || 0;
+      if (wd < 60) return false;
+      // 检查 未触发过
+      return !(st.flags && st.flags._corpRepHeadhunt);
+    },
+    probability: 0.3,
+    repeatable: false,
+    choices: [
+      {
+        text: "🤝 「我有兴趣，约个时间」",
+        hint: "晋升意向+15，职场尊严+10，签约奖金 [PLACEHOLDER]",
+        apply: function (st) {
+          st.flags = st.flags || {};
+          st.flags._corpRepHeadhunt = true;
+          if (st.player.corporate) {
+            st.player.corporate.upward = Math.min(
+              100,
+              (st.player.corporate.upward || 50) + 15,
+            );
+            st.player.corporate.dignity = Math.min(
+              100,
+              (st.player.corporate.dignity || 60) + 10,
+            );
+          }
+          // 签约奖金：跨系统经济反馈
+          var bonus = Random.int(2000, 6000); // [PLACEHOLDER] 依难度/通胀调整
+          st.resources.cash = (st.resources.cash || 0) + bonus;
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 8);
+          st.player.mental = Math.max(0, (st.player.mental || 0) - 3); // 变动的轻微压力
+          StateManager.addMessage(
+            "🤝 三周后你拿到了 offer，含 ¥" +
+              bonus +
+              " 签字费。街坊口中的好名声，第一次变成了真金白银。晋升意向+15，职场尊严+10，心情+8。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "🙅 「谢谢，我现在挺稳定的」",
+        hint: "维持现状，但机会窗口关闭",
+        apply: function (st) {
+          st.flags = st.flags || {};
+          st.flags._corpRepHeadhunt = true;
+          st.needs.happiness = Math.max(0, (st.needs.happiness || 50) - 4);
+          st.player.mental = Math.min(100, (st.player.mental || 0) + 2); // 拒绝后的松口气
+          StateManager.addMessage(
+            "🙅 你婉拒了。挂掉电话那一刻有点可惜，但你也知道，现在不是冒险的时候。心情-4。",
+            "info",
+          );
+        },
+      },
+    ],
+  });
+
+  // F2：街头硬技能 → 职场项目牵头（跨系统：skills × corporate × reputation）
+  RANDOM_EVENTS.push({
+    id: "corp_skill_project_lead",
+    phase: "corporate",
+    icon: "🛠️",
+    title: "「这个你熟，你来带」",
+    story:
+      "部门接了个跨业务的硬骨头项目，会上主管扫了一圈，目光停在你身上：\n「你在 X 上的底子，公司里没几个比得上——这活儿你来牵头，行不行？」\n你心里清楚，这门本事不是在公司学的，是那些年在外面接活、啃书、踩坑一点点磨出来的。职场终于看见了你身上那块街头的钢。",
+    conditions: function (st) {
+      if (!(st.player && st.player.phase === "corporate")) return false;
+      // 检查 某项硬技能达专家门槛（编程/管理/会计，街头可积累）
+      var coding = (st.skills && st.skills.coding && st.skills.coding.level) || 0;
+      var mgmt = (st.skills && st.skills.management && st.skills.management.level) || 0;
+      var acc = (st.skills && st.skills.accounting && st.skills.accounting.level) || 0;
+      if (coding < 25 && mgmt < 25 && acc < 25) return false;
+      // 检查 已在职场扎根
+      var wd = (st.career && st.career.currentJob && st.career.currentJob.workDays) || 0;
+      if (wd < 120) return false;
+      return !(st.flags && st.flags._corpSkillLead);
+    },
+    probability: 0.32,
+    repeatable: false,
+    choices: [
+      {
+        text: "💪 「我来。」",
+        hint: "晋升意向+12，项目奖金 [PLACEHOLDER]，科技园声望+3，压力+",
+        apply: function (st) {
+          st.flags = st.flags || {};
+          st.flags._corpSkillLead = true;
+          if (st.player.corporate) {
+            st.player.corporate.upward = Math.min(
+              100,
+              (st.player.corporate.upward || 50) + 12,
+            );
+          }
+          var bonus = Random.int(1500, 4000); // [PLACEHOLDER] 依难度/通胀调整
+          st.resources.cash = (st.resources.cash || 0) + bonus;
+          if (st.reputation) {
+            st.reputation.techPark = Math.min(
+              100,
+              (st.reputation.techPark || 0) + 3,
+            );
+          }
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 6);
+          st.player.mental = Math.max(0, (st.player.mental || 0) - 5); // 牵头压力
+          StateManager.addMessage(
+            "💪 你接下了。三个月后项目交付，庆功宴上主管拍你肩膀。¥" +
+              bonus +
+              " 项目奖到账，科技园声望+3。晋升意向+12，心情+6，但那段时间你瘦了一圈。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "🤝 「我推荐组里的小张，他更合适」",
+        hint: "团队好感+，轻量回报，压力小",
+        apply: function (st) {
+          st.flags = st.flags || {};
+          st.flags._corpSkillLead = true;
+          st.flags._teamGoodwill = (st.flags._teamGoodwill || 0) + 1;
+          if (st.player.corporate) {
+            st.player.corporate.upward = Math.min(
+              100,
+              (st.player.corporate.upward || 50) + 4,
+            );
+          }
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 5);
+          st.player.mental = Math.min(100, (st.player.mental || 0) + 2); // 让贤的轻松
+          StateManager.addMessage(
+            "🤝 你把机会让给了年轻同事。后来他真扛下来了，还专门来谢你。团队里你的口碑悄悄涨了。晋升意向+4，心情+5。",
+            "info",
+          );
+        },
+      },
+    ],
+  });
+
   // ====== 注册结束 ======
 })();
 </script>
