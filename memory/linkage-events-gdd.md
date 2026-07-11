@@ -2936,3 +2936,21 @@
 - **Purpose**: 职场政治是 corporate 阶段核心叙事，玩家在两个派系间选边站，触发 _sideWithChen/_sideWithWang flag 供后续链式事件使用。
 - **Cross-system link**: 职业系统（phase=corporate）∩ 道德系统∩ 心理（倦怠）。
 - **Key guard**: `phase==='corporate' && tenureDays>=30 && !_corpOfficePoliticsDone`，probability=0.04。
+
+## 395. cook_account_consult — 饭馆老板的糊涂账（双技能协同:cooking+accounting）
+
+- **Purpose**: 补齐双技能矩阵空白（cooking+accounting），让「既会做菜又懂记账」的复合技能产生专属机遇，强化技能投资的交叉回报。
+- **Cross-system link**: 技能系统（cooking.level≥20 ∩ accounting.level≥15）∩ 经济系统（现金/终身收入）∩ 技能成长（双经验）。
+- **Key guard**: `cooking.level>=20 && accounting.level>=15 && !flags._cookAccountConsultSeen`，probability=0.014。
+
+## 396. drive_mgmt_fleet — 同城货运的调度缺口（双技能协同:driving+management）
+
+- **Purpose**: 补齐双技能矩阵空白（driving+management），让「会开车又会排班」的复合能力解锁车队调度机遇。
+- **Cross-system link**: 技能系统（driving.level≥20 ∩ management.level≥15）∩ 经济系统∩ 需求系统（疲劳+12 仅司机路线）。
+- **Key guard**: `driving.level>=20 && management.level>=15 && !flags._driveMgmtFleetSeen`，probability=0.014。
+
+## 397. pro_view_electrician — 老化的电线（技能门槛专业视角:electrician≥30）
+
+- **Purpose**: 填补"技能门槛专业视角"类事件空白——只有电工技能达到专业门槛（≥30）才会触发内行视角叙事，体现高技能带来的世界洞察差异。
+- **Cross-system link**: 技能系统（electrician.level≥30，硬门槛）∩ 声望系统（免费提醒→名声+）∩ 经济系统（整改→现金+）∩ 情感（心情+）。
+- **Key guard**: `electrician.level>=30 && !flags._proViewElectricianSeen`，probability=0.018。

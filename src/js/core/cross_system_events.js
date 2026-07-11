@@ -44920,6 +44920,195 @@
     ],
   });
 
+  // ====== v3.1 联动扩充（空白区：双技能协同 / 技能门槛专业视角） ======
+  // 设计意图：补齐双技能矩阵（cooking+accounting / driving+management）与
+  // 「技能门槛专业视角」类事件——只有技能达到专业门槛才会触发的内行视角叙事。
+
+  // ① 双技能协同：cooking ≥20 ∩ accounting ≥15 → 餐饮核算（掌勺+对账）
+  RANDOM_EVENTS.push({
+    id: "cook_account_consult",
+    phase: "street",
+    icon: "🍳",
+    title: "饭馆老板的糊涂账",
+    story:
+      "巷口新开的小饭馆生意不差，老板却总算不清是赚是赔。\n" +
+      "他听人夸你「菜做得好，账也算得清」，特意来问：「能不能既帮我掌两勺、再把这堆单子对一对？」",
+    conditions: function (st) {
+      var cook =
+        st.skills && st.skills.cooking && st.skills.cooking.level; // 厨艺等级
+      var acct =
+        st.skills && st.skills.accounting && st.skills.accounting.level; // 会计等级
+      return (
+        typeof cook === "number" &&
+        cook >= 20 &&
+        typeof acct === "number" &&
+        acct >= 15 &&
+        !st.flags._cookAccountConsultSeen
+      );
+    },
+    probability: 0.014,
+    repeatable: false,
+    choices: [
+      {
+        text: "🍳 掌勺又对账",
+        hint: "现金+，厨艺/会计双经验+",
+        apply: function (st) {
+          st.flags._cookAccountConsultSeen = true;
+          var fee = 1900;
+          st.resources.cash = (st.resources.cash || 0) + fee;
+          st.resources.totalEarned = (st.resources.totalEarned || 0) + fee;
+          if (st.skills.cooking)
+            st.skills.cooking.xp = (st.skills.cooking.xp || 0) + 30;
+          if (st.skills.accounting)
+            st.skills.accounting.xp = (st.skills.accounting.xp || 0) + 30;
+          StateManager.addMessage(
+            "🍳 你白天颠勺、晚上对账，把三个月的糊涂账理成了清清爽爽的报表。\n" +
+              "老板拍板留你长期合作，结了¥" + fee + "，厨艺与会计经验双涨。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "📒 只做成本核算顾问",
+        hint: "现金+，风险更小",
+        apply: function (st) {
+          st.flags._cookAccountConsultSeen = true;
+          var fee = 900;
+          st.resources.cash = (st.resources.cash || 0) + fee;
+          st.resources.totalEarned = (st.resources.totalEarned || 0) + fee;
+          if (st.skills.accounting)
+            st.skills.accounting.xp = (st.skills.accounting.xp || 0) + 20;
+          StateManager.addMessage(
+            "📒 你嫌守着灶台太累，只帮他把成本结构算清楚。\n" +
+              "拿了¥" + fee + "顾问费，老板连说「原来肉价一涨就亏在这」，会计经验+20。",
+            "info",
+          );
+        },
+      },
+    ],
+  });
+
+  // ② 双技能协同：driving ≥20 ∩ management ≥15 → 车队调度（开车+排班）
+  RANDOM_EVENTS.push({
+    id: "drive_mgmt_fleet",
+    phase: "street",
+    icon: "🚚",
+    title: "同城货运的调度缺口",
+    story:
+      "一家做同城急送的小公司最近单子暴涨，却总在排班上乱套——车跑空趟、客户催爆。\n" +
+      "老板翻了翻你的简历：「又会开车、又懂带人排活，这活儿你最合适。来帮我管管车队？」",
+    conditions: function (st) {
+      var drv =
+        st.skills && st.skills.driving && st.skills.driving.level; // 驾驶等级
+      var mgmt =
+        st.skills && st.skills.management && st.skills.management.level; // 管理等级
+      return (
+        typeof drv === "number" &&
+        drv >= 20 &&
+        typeof mgmt === "number" &&
+        mgmt >= 15 &&
+        !st.flags._driveMgmtFleetSeen
+      );
+    },
+    probability: 0.014,
+    repeatable: false,
+    choices: [
+      {
+        text: "🚚 接下车队调度",
+        hint: "现金+，驾驶/管理双经验+",
+        apply: function (st) {
+          st.flags._driveMgmtFleetSeen = true;
+          var fee = 2600;
+          st.resources.cash = (st.resources.cash || 0) + fee;
+          st.resources.totalEarned = (st.resources.totalEarned || 0) + fee;
+          if (st.skills.driving)
+            st.skills.driving.xp = (st.skills.driving.xp || 0) + 30;
+          if (st.skills.management)
+            st.skills.management.xp = (st.skills.management.xp || 0) + 30;
+          StateManager.addMessage(
+            "🚚 你把空趟率压到最低，客户投诉少了一大半。\n" +
+              "老板爽快结了¥" + fee + "，驾驶与管理经验双涨。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "🛣️ 只当全职司机",
+        hint: "现金+，体力消耗大",
+        apply: function (st) {
+          st.flags._driveMgmtFleetSeen = true;
+          var fee = 1400;
+          st.resources.cash = (st.resources.cash || 0) + fee;
+          st.resources.totalEarned = (st.resources.totalEarned || 0) + fee;
+          st.needs.fatigue = Math.min(100, (st.needs.fatigue || 0) + 12);
+          if (st.skills.driving)
+            st.skills.driving.xp = (st.skills.driving.xp || 0) + 20;
+          StateManager.addMessage(
+            "🛣️ 你嫌管人麻烦，只接了全职司机的活儿，天天跑城西到城东。\n" +
+              "落了¥" + fee + "，人累得够呛（疲劳+12），驾驶经验+20。",
+            "info",
+          );
+        },
+      },
+    ],
+  });
+
+  // ③ 技能门槛专业视角：electrician ≥30 → 一眼看穿电路隐患（内行视角叙事）
+  RANDOM_EVENTS.push({
+    id: "pro_view_electrician",
+    phase: "street",
+    icon: "💡",
+    title: "老化的电线",
+    story:
+      "路过一家老商铺，你下意识抬头扫了眼配电箱——铝线接铜端子、绝缘层发脆、负载明显超了。\n" +
+      "这在行内人眼里就是颗定时炸弹：再这么用下去，夏天一高负荷准出事。\n" +
+      "老板正埋头理货，浑然不觉头顶的风险。",
+    conditions: function (st) {
+      var elec =
+        st.skills && st.skills.electrician && st.skills.electrician.level; // 电工等级
+      return (
+        typeof elec === "number" &&
+        elec >= 30 &&
+        !st.flags._proViewElectricianSeen
+      );
+    },
+    probability: 0.018,
+    repeatable: false,
+    choices: [
+      {
+        text: "🆓 免费提醒，防患未然",
+        hint: "名声+，心情+，无现金",
+        apply: function (st) {
+          st.flags._proViewElectricianSeen = true;
+          st.player.fame = Math.min(100, (st.player.fame || 0) + 5);
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 6);
+          StateManager.addMessage(
+            "💡 你拉住老板把隐患一条条说清，他当场冒了冷汗，连夜找人整改。\n" +
+              "后来整条街都在传「那个懂电的小伙子救了一铺子」。名声+5，心情+6。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "🔧 接下整改工程",
+        hint: "现金+，电工经验+",
+        apply: function (st) {
+          st.flags._proViewElectricianSeen = true;
+          var fee = 1500;
+          st.resources.cash = (st.resources.cash || 0) + fee;
+          st.resources.totalEarned = (st.resources.totalEarned || 0) + fee;
+          if (st.skills.electrician)
+            st.skills.electrician.xp = (st.skills.electrician.xp || 0) + 35;
+          StateManager.addMessage(
+            "🔧 老板二话不说把整改包给你。你重排了线路、换了端子，隐患彻底清零。\n" +
+              "结了¥" + fee + "，电工经验+35，街坊都记住了你这号技术人。",
+            "success",
+          );
+        },
+      },
+    ],
+  });
+
   // ====== 健康康复叙事事件（R37 新增） ======
   // 设计意图：填补"16种疾病5大类但康复叙事为零"的空白
   // 核心逻辑：每个事件检测「曾经病过/濒危 + 现已康复」的双态条件
