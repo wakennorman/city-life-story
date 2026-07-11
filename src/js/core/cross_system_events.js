@@ -46922,5 +46922,320 @@
   // ====================================================================
   // v3.88d 注册完毕（5个：NPC调解/百日匠人/百万财富/三技能跨界/无债一身轻）
   // ====================================================================
+  // ====================================================================
+  // v3.89 联动空白区填充（5个：老手特遇/专业视角/NPC意外发现/天气×位置/道德分叉）
+  // 设计原则：每个事件都用「可验证状态」做 conditions 闸门，叙事与闸门严格自洽
+  // ====================================================================
+
+  // ----- 空白区①：老手特遇（长期跑腿/驾驶后遇到熟人客户）-----
+  RANDOM_EVENTS.push({
+    id: "vet_runner_regular_client",
+    phase: "street",
+    icon: "🛵",
+    title: "片区熟客的请柬",
+    story:
+      "你跑单跑得久了，这片商圈的老板娘们都认得你。今天「便民超市」的阿姨拦住你，塞来一张红帖：「我侄女下周结婚，你一定来凑个热闹——你每次送货最稳当。」她又压低声音：「这条巷子你平时绕远了，从后门穿过去能省十分钟。」",
+    // conditions：长期跑腿（驾驶副业或驾驶技能达标）+ 街头阶段 + 中后期 + 未触发
+    conditions: function (st) {
+      var isRunner =
+        (st.sideHustle && st.sideHustle.type === "driving") || // 检查 正在做驾驶/跑腿副业
+        (st.skills &&
+          st.skills.driving &&
+          (st.skills.driving.level || 0) >= 35); // 检查 驾驶技能≥35（老手）
+      if (!isRunner) return false;
+      if (st.player.phase !== "street") return false; // 检查 街头阶段
+      if (st.player.day < 40) return false; // 检查 中后期
+      if (st.flags && st.flags._vetRunnerClientSeen) return false; // 检查 未触发过
+      return true;
+    },
+    probability: 0.04,
+    repeatable: false,
+    choices: [
+      {
+        text: "🎉 去喝喜酒",
+        hint: "现金-，驾驶经验+",
+        apply: function (st) {
+          st.flags._vetRunnerClientSeen = true;
+          st.resources.cash = Math.max(0, (st.resources.cash || 0) - 80);
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 10);
+          if (st.skills && st.skills.driving)
+            st.skills.driving.xp = (st.skills.driving.xp || 0) + 40; // 抄近道→驾驶经验
+          StateManager.addMessage(
+            "🎉 你去了婚礼，老板娘把你介绍给不少商圈朋友。花¥80随了份子，但学到了抄近道的路线，驾驶经验+40，心情+10。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "📦 送份厚礼就好",
+        hint: "省力，少量经验",
+        apply: function (st) {
+          st.flags._vetRunnerClientSeen = true;
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 5);
+          if (st.skills && st.skills.driving)
+            st.skills.driving.xp = (st.skills.driving.xp || 0) + 15;
+          StateManager.addMessage(
+            "📦 你忙没空去，托人带了份礼物。老板娘很领情，之后送货总给你留瓶水。驾驶经验+15，心情+5。",
+            "info",
+          );
+        },
+      },
+    ],
+  });
+
+  // ----- 空白区②：技能门槛解锁「专业人士视角」（修理≥40 识别翻新机）-----
+  RANDOM_EVENTS.push({
+    id: "repair_expert_spot_fake",
+    phase: "street",
+    icon: "🔧",
+    title: "老师傅的眼力",
+    story:
+      "旧货市场里，摊主热情推销一台「九成新」的二手空调，价格低得离谱。你蹲下敲了敲外机，又看了眼焊点——这是翻新机，压缩机随时可能炸。旁边一位大姐正犹豫要不要买。",
+    // conditions：修理技能达标（专业视角门槛）+ 街头 + 中后期 + 未触发
+    conditions: function (st) {
+      var rep = st.skills && st.skills.repair && st.skills.repair.level; // 检查 修理等级
+      if (typeof rep !== "number" || rep < 40) return false; // 检查 repair>=40
+      if (st.player.phase !== "street") return false; // 检查 街头阶段
+      if (st.player.day < 30) return false; // 检查 中后期
+      if (st.flags && st.flags._repairFakeSeen) return false; // 检查 未触发过
+      return true;
+    },
+    probability: 0.04,
+    repeatable: false,
+    choices: [
+      {
+        text: "🗣️ 悄悄提醒大姐",
+        hint: "助人+道德，维修经验+",
+        apply: function (st) {
+          st.flags._repairFakeSeen = true;
+          st.player.morality = Math.min(100, (st.player.morality || 50) + 3);
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 5);
+          if (st.skills && st.skills.repair)
+            st.skills.repair.xp = (st.skills.repair.xp || 0) + 20;
+          StateManager.addMessage(
+            "🗣️ 你压低声音把翻新机的破绽说了。大姐惊出一身汗，连连道谢走了。你这身手艺，关键时刻真能护人。道德+3，心情+5，维修经验+20。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "⚠️ 当众揭穿摊主",
+        hint: "名气+，但得罪人",
+        apply: function (st) {
+          st.flags._repairFakeSeen = true;
+          st.player.fame = Math.min(100, (st.player.fame || 0) + 5);
+          st.player.morality = Math.min(100, (st.player.morality || 50) + 2);
+          StateManager.addMessage(
+            "⚠️ 你当着围观的人点破了翻新手法。摊主脸绿了，周围人纷纷散开。名气+5，道德+2——这市场你短期怕是混不进去了。",
+            "event",
+          );
+        },
+      },
+      {
+        text: "🤐 装没看见",
+        hint: "少惹事，心里过意不去",
+        apply: function (st) {
+          st.flags._repairFakeSeen = true;
+          st.needs.happiness = Math.max(0, (st.needs.happiness || 0) - 2);
+          StateManager.addMessage(
+            "🤐 你犹豫了一下，还是没出声。摊主卖出去了，你心里有点不是滋味。",
+            "info",
+          );
+        },
+      },
+    ],
+  });
+
+  // ----- 空白区③：NPC好感积累后的「意外发现」（张姐好感≥60 透露内推岗）-----
+  RANDOM_EVENTS.push({
+    id: "zhang_hidden_job_lead",
+    phase: "street",
+    icon: "💡",
+    title: "张姐的私下消息",
+    story:
+      "张姐把你拉到工厂后巷，四下看看才开口：「我表弟在开发区管招工，有个不对外放的夜班质检岗，活儿轻、补贴高。我想着你人踏实，问你要不要。」",
+    // conditions：已结识张姐 + 好感≥60（好感积累后的意外发现）+ 中后期 + 未触发
+    conditions: function (st) {
+      var rel = st.relationships && st.relationships.sister_zhang; // 检查 张姐关系
+      if (!rel || !rel.met) return false; // 检查 已结识
+      if ((rel.affinity || 0) < 60) return false; // 检查 好感≥60
+      if (st.player.phase !== "street") return false;
+      if (st.player.day < 40) return false;
+      if (st.flags && st.flags._zhangJobLeadSeen) return false;
+      return true;
+    },
+    probability: 0.04,
+    repeatable: false,
+    choices: [
+      {
+        text: "✅ 拜托张姐引荐",
+        hint: "开启新工作线",
+        apply: function (st) {
+          st.flags._zhangJobLeadSeen = true;
+          st.flags._zhangReferral = true; // 内推标记，供后续工作系统接住
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 8);
+          StateManager.addMessage(
+            "✅ 你一口答应。张姐拍胸脯保证，过两天带你去面试。多了一条稳当的活路，心里踏实。心情+8（标记「张姐内推」）。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "🤔 先打听清楚",
+        hint: "谨慎，留人情",
+        apply: function (st) {
+          st.flags._zhangJobLeadSeen = true;
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 3);
+          var rel = st.relationships && st.relationships.sister_zhang;
+          if (rel) rel.affinity = Math.min(100, (rel.affinity || 0) + 3);
+          StateManager.addMessage(
+            "🤔 你说先了解下再定。张姐把厂名和待遇都写了条子给你。这份情，你记下了。好感+3，心情+3。",
+            "info",
+          );
+        },
+      },
+    ],
+  });
+
+  // ----- 空白区④：天气×位置组合情境（暴雨/大雨 + 商业区，与雾天批发市场事件区分）-----
+  RANDOM_EVENTS.push({
+    id: "stormy_commercial_rider_down",
+    phase: "street",
+    icon: "🌧️",
+    title: "暴雨里的摔车",
+    story:
+      "商业区暴雨如注，你看见一个外卖骑手在积水的路口连人带车摔了出去，餐箱滚进下水道。他爬起来第一件事是去捞餐盒，浑身湿透，膝盖渗血。",
+    // conditions：暴雨/大雨天气 + 当前在商业区（天气×位置情境）+ 街头 + 中后期 + 未触发
+    conditions: function (st) {
+      var w = st.weather && st.weather.current; // 检查 天气
+      if (w !== "stormy" && w !== "rainy") return false; // 检查 暴雨或大雨
+      var loc = st.trade && st.trade.currentLocation; // 检查 位置
+      if (loc !== "commercialDist") return false; // 检查 在商业区
+      if (st.player.phase !== "street") return false;
+      if (st.player.day < 15) return false;
+      if (st.flags && st.flags._stormRiderSeen) return false;
+      return true;
+    },
+    probability: 0.05,
+    repeatable: false,
+    choices: [
+      {
+        text: "🚑 扶他并帮忙捡餐",
+        hint: "助人+道德，疲惫+",
+        apply: function (st) {
+          st.flags._stormRiderSeen = true;
+          st.player.morality = Math.min(100, (st.player.morality || 50) + 3);
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 4);
+          st.needs.fatigue = Math.min(100, (st.needs.fatigue || 0) + 10);
+          StateManager.addMessage(
+            "🚑 你冲过去帮他捞起餐盒、扶到屋檐下。他连声道谢，把手机号留给你：「以后这片区，找我帮衬。」道德+3，心情+4，疲惫+10。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "📱 拍下发给媒体",
+        hint: "名气+，但消费苦难",
+        apply: function (st) {
+          st.flags._stormRiderSeen = true;
+          st.player.fame = Math.min(100, (st.player.fame || 0) + 4);
+          st.player.morality = Math.max(0, (st.player.morality || 50) - 2);
+          StateManager.addMessage(
+            "📱 你拍了视频发网上，配文「暴雨中的骑手」。一夜小爆，名气+4，可你盯着屏幕有点心虚——这算消费别人的难吗？道德-2。",
+            "event",
+          );
+        },
+      },
+      {
+        text: "☔ 自顾躲雨",
+        hint: "明哲保身",
+        apply: function (st) {
+          st.flags._stormRiderSeen = true;
+          st.needs.happiness = Math.max(0, (st.needs.happiness || 0) - 1);
+          StateManager.addMessage(
+            "☔ 你缩在便利店屋檐下，没敢上前。骑手自己爬起来走了。你告诉自己「帮不了所有人」，可那道身影一直晃。",
+            "info",
+          );
+        },
+      },
+    ],
+  });
+
+  // ----- 空白区⑤：道德极端「人设分叉」（高道德/低道德遇到同一情境反应不同）-----
+  RANDOM_EVENTS.push({
+    id: "moral_extreme_found_wallet",
+    phase: "street",
+    icon: "👛",
+    title: "ATM旁的鼓囊钱包",
+    story:
+      "你在ATM旁捡到一个鼓鼓囊囊的钱包，现金、证件、一张写满待办事项的纸条都在。四周没人看见——这一刻，你是什么人，就怎么选。",
+    // conditions：道德极端（仅≥70或≤30触发人设分叉）+ 街头 + 中后期 + 未触发
+    conditions: function (st) {
+      var m = st.player.morality || 50; // 检查 道德值
+      if (m < 70 && m > 30) return false; // 检查 仅极端值触发分叉
+      if (st.player.phase !== "street") return false;
+      if (st.player.day < 20) return false;
+      if (st.flags && st.flags._moralWalletSeen) return false;
+      return true;
+    },
+    probability: 0.04,
+    repeatable: false,
+    choices: [
+      {
+        text: "🏢 交到派出所",
+        hint: "物归原主，名声大涨",
+        apply: function (st) {
+          st.flags._moralWalletSeen = true;
+          var m = st.player.morality || 50;
+          if (m >= 70) {
+            st.player.fame = Math.min(100, (st.player.fame || 0) + 8);
+            st.player.morality = Math.min(100, m + 4);
+            st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 10);
+            StateManager.addMessage(
+              "🏢 你冒雨把钱包送进派出所。民警登记时多看了你一眼：「现在这样的人不多了。」名气+8，道德+4，心情+10——你这样的人，自有福报。",
+              "success",
+            );
+          } else {
+            st.player.fame = Math.min(100, (st.player.fame || 0) + 3);
+            st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 4);
+            StateManager.addMessage(
+              "🏢 你到底还是把钱包送去了派出所。手在门把上停了很久——曾走过弯路的人，更懂物归原主的分量。名气+3，心情+4。",
+              "info",
+            );
+          }
+        },
+      },
+      {
+        text: "💰 拿走现金",
+        hint: "短期获利，道德受损",
+        apply: function (st) {
+          st.flags._moralWalletSeen = true;
+          var m = st.player.morality || 50;
+          var take = Random.int(50, 300);
+          st.resources.cash += take;
+          if (m <= 30) {
+            st.player.morality = Math.max(0, m - 6);
+            st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 3);
+            StateManager.addMessage(
+              "💰 你抽走现金，把空钱包连同证件甩进垃圾桶。手头宽裕了几天，可每次路过派出所都下意识绕路。现金+" +
+                take +
+                "，道德-6。",
+              "warning",
+            );
+          } else {
+            st.player.morality = Math.max(0, m - 10);
+            st.needs.happiness = Math.max(0, (st.needs.happiness || 0) - 4);
+            StateManager.addMessage(
+              "💰 你终究没忍住拿走了现金——可那一晚你翻来覆去。空钱包你放回了原地。现金+" +
+                take +
+                "，道德-10，心里空落落的。",
+              "warning",
+            );
+          }
+        },
+      },
+    ],
+  });
+
   // ====== 注册结束 ======
 })();
