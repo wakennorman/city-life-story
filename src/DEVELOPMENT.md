@@ -1,10 +1,42 @@
 # 城市浮生记 (City Life Story) — 开发文档
 
-> 最后更新: 2026-07-12（v3.95 loop R44 全系统优化·纽带回响：6个新事件+日终里程碑封顶）
+> 最后更新: 2026-07-12（v3.96 loop 全系统优化·声誉读档修复 + street→corporate 跨阶段桥接）
 >
-> commit: 1710ec86（feat(loop R44): 新增6个纽带回响事件+日终¥1M/¥10M里程碑）
+> commit: cba9ea3b（feat(loop): 新增2个 street→corporate 跨阶段桥接事件）+ 698a66ac（fix: 读档流程补 initReputation）
 
 ---
+
+## 2026-07-12 — v3.96 loop 全系统优化（声誉读档修复 + street→corporate 桥接）
+
+> 注：commit `cba9ea3b` 的 subject 误标为 `[v3.95]`，其实际内容即本 v3.96；版本号笔误，以本段为准。
+
+### 一、修复：读档流程漏调 `initReputation`（commit `698a66ac`）
+
+- **缺陷**：`main.js::loadExistingGame` 读档后只调 `initEnterpriseFate / initEquipmentDurability / ensureSocialNetworkState`，漏调 `initReputation`。旧存档读档后 `st.reputation` 为 `undefined` → 所有读取 `st.reputation.*` 的声誉事件抛 `TypeError` 崩溃。
+- **修复**：在读档流程（`ensureSocialNetworkState` 之后、加载提示之前）加入兼容守卫：
+  ```js
+  if (typeof initReputation === "function") {
+    initReputation(StateManager.getState());
+  }
+  ```
+- **影响**：全 210 处 `st.reputation.*` 引用现在在旧存档读档后均安全（惰性 `{}` + `||0` 已就绪）。这是本轮全系统审计发现的**最高级系统性缺陷**。
+
+### 二、结构性审计结论（前置，避免盲改）
+
+- 事件库 **670 个事件**，**0 个重复 ID**（无致命覆盖 bug）。
+- 阶段分布严重失衡：**street 655 / corporate 仅 10** —— 两系统近乎孤岛，这是确认的真实缺口。
+- 误判纠正：用 `relationships["X"]` 正则代理统计 NPC 覆盖时，`xiaochen`/`zhaojie` 显示 0；实查二者**已有事件**（`xiaochen_night_market`、`zhaojie_shop_tip` + 3 事件链），故**未**盲加，避免重复。
+
+### 三、新增 2 个 street→corporate 跨阶段桥接事件（commit `cba9ea3b`）
+
+设计意图：把街头积累的资产（地点声望 / 硬技能）溢出到职场，治愈 655:10 孤岛。
+
+| 事件 id                   | 阶段        | 触发闸门                                                  | 跨系统桥              | 设计意图                         |
+| ------------------------- | ----------- | --------------------------------------------------------- | --------------------- | -------------------------------- |
+| `corp_reputation_headhunt`| corporate   | 阶段=corporate；商业区声望≥30 或 科技园≥25；工作≥60天     | reputation × corporate | 街头口碑→大厂猎头邀约（签字费）  |
+| `corp_skill_project_lead` | corporate   | 阶段=corporate；编程/管理/会计 任一项≥25；工作≥120天      | skills × corporate × reputation | 街头硬技能→职场项目牵头（奖金+科技园声望） |
+
+两个事件均用确认字段路径：`st.reputation.commercialDist/techPark`（含 `||0`）、`st.skills.<k>.level`、`st.player.corporate.upward/dignity`、`st.resources.cash`、`st.player.mental`、`st.needs.happiness`。奖金数值标 `[PLACEHOLDER]`，待难度/通胀调参。
 
 ## 2026-07-12 — v3.95 loop R44 全系统优化·纽带回响（6个新事件+日终里程碑封顶）
 
