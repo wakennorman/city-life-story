@@ -48274,8 +48274,11 @@
           st.player.morality = Math.min(100, st.player.morality + 3);
           var r = st.relationships.boss_li;
           if (r) r.affinity = Math.min(100, (r.affinity || 0) + 5);
-          StateManager.addMessage("你把信封推了回去。李总看了你一眼，没再说什么——但此后他交任务时更放心了。", "good");
-        }
+          StateManager.addMessage(
+            "你把信封推了回去。李总看了你一眼，没再说什么——但此后他交任务时更放心了。",
+            "good",
+          );
+        },
       },
       {
         text: "💰 收下信封（＋现金，−道德，−老板长期信任）",
@@ -48288,10 +48291,13 @@
           st.player.morality = Math.max(0, st.player.morality - 8);
           var r = st.relationships.boss_li;
           if (r) r.affinity = Math.max(-100, (r.affinity || 0) - 10);
-          StateManager.addMessage("你收下了。钱进了口袋，可那晚你睡得不太踏实。", "bad");
-        }
-      }
-    ]
+          StateManager.addMessage(
+            "你收下了。钱进了口袋，可那晚你睡得不太踏实。",
+            "bad",
+          );
+        },
+      },
+    ],
   });
 
   // 空白区：技能里程碑=专业人士视角（烹饪）
@@ -48326,8 +48332,11 @@
           sk.xp = (sk.xp || 0) + 40;
           var r = st.relationships && st.relationships.chef_chen;
           if (r && r.met) r.affinity = Math.min(100, (r.affinity || 0) + 8);
-          StateManager.addMessage("你随手提了两句，老板娘眼睛亮了：‘您是内行！’ 烹饪手感又精进了些。", "good");
-        }
+          StateManager.addMessage(
+            "你随手提了两句，老板娘眼睛亮了：‘您是内行！’ 烹饪手感又精进了些。",
+            "good",
+          );
+        },
       },
       {
         text: "🤫 默默记下心法（＋烹饪xp，自用）",
@@ -48336,10 +48345,13 @@
           st.flags._cookingRecipeSeen = true;
           var sk = st.skills.cooking;
           sk.xp = (sk.xp || 0) + 25;
-          StateManager.addMessage("你没多说，只在心里记下了那处火候。手艺，是自己的。", "normal");
-        }
-      }
-    ]
+          StateManager.addMessage(
+            "你没多说，只在心里记下了那处火候。手艺，是自己的。",
+            "normal",
+          );
+        },
+      },
+    ],
   });
 
   // 空白区：连续/深度低心情的邻里关怀
@@ -48372,21 +48384,156 @@
           st.flags._lowMoodVisitSeen = true;
           st.needs.happiness = Math.min(100, st.needs.happiness + 15);
           var r = st.relationships && st.relationships.aunt_wang;
-          if (!r) { st.relationships = st.relationships || {}; r = st.relationships.aunt_wang = { met: true, affinity: 0, discovered: {} }; }
-          else { r.met = true; }
+          if (!r) {
+            st.relationships = st.relationships || {};
+            r = st.relationships.aunt_wang = {
+              met: true,
+              affinity: 0,
+              discovered: {},
+            };
+          } else {
+            r.met = true;
+          }
           r.affinity = Math.min(100, (r.affinity || 0) + 6);
-          StateManager.addMessage("你开了门，热气腾腾的汤下肚，心里也松了松。", "good");
-        }
+          StateManager.addMessage(
+            "你开了门，热气腾腾的汤下肚，心里也松了松。",
+            "good",
+          );
+        },
       },
       {
         text: "🚪 婉拒，说自己没事（无变化）",
         hint: "习惯独处，但错过一次连接",
         apply: function (st) {
           st.flags._lowMoodVisitSeen = true;
-          StateManager.addMessage("你谢过阿姨，关上门。屋子里又安静下来。", "normal");
-        }
-      }
-    ]
+          StateManager.addMessage(
+            "你谢过阿姨，关上门。屋子里又安静下来。",
+            "normal",
+          );
+        },
+      },
+    ],
+  });
+
+  // ====== v3.93 空白区第五批（NPC好感深挖-小梅 / 天气×位置-台风避险）======
+  // 设计原则：门控于已验证 state 字段，零 A 类缺陷风险。
+
+  // 空白区：NPC 好感深挖（第二名女性线 — 小梅）
+  // 联动：NPC(xiao_mei)·情感·技能(english)·职业
+  // 设计心理学：关系破冰·隐藏面·互助契约
+  RANDOM_EVENTS.push({
+    id: "xiao_mei_affinity_discovery",
+    icon: "🌸",
+    title: "小梅的另一个样子",
+    phase: "street",
+    probability: 0.05,
+    repeatable: false,
+    story:
+      "你常去的便利店，收银的小梅今天没怎么笑。趁没人的时候她低声说：「其实我晚上在准备自考……怕考不过。」\n\n你这才知道，这个总说‘欢迎光临’的姑娘，也有自己的硬仗。",
+    conditions: function (st) {
+      // 检查 必须已认识小梅
+      var r = st.relationships && st.relationships.xiao_mei;
+      if (!r || !r.met) return false;
+      // 检查 好感需达到‘熟络’门槛才触发深层互动
+      if ((r.affinity || 0) < 55) return false;
+      // 检查 游戏进程
+      if (st.day < 35) return false;
+      // 检查 一次性
+      if (st.flags._xiaoMeiDiscoverySeen) return false;
+      return true;
+    },
+    choices: [
+      {
+        text: "📚 用自己的经验帮她捋复习思路（＋小梅好感，若英文高额外加成）",
+        hint: "以过来人身份互助，关系升温",
+        apply: function (st) {
+          st.flags._xiaoMeiDiscoverySeen = true;
+          var r = st.relationships.xiao_mei;
+          var sk = st.skills && st.skills.english;
+          var bonus = sk && sk.level >= 30 ? 10 : 0;
+          r.affinity = Math.min(100, (r.affinity || 0) + 8 + bonus);
+          StateManager.addMessage(
+            "你把自己啃书的笨办法讲给她听。小梅眼睛弯起来：‘原来你也是这么熬过来的。’ 你们的距离近了些。",
+            "good",
+          );
+        },
+      },
+      {
+        text: "🤝 鼓励她就好，不多问（＋小梅好感，轻量）",
+        hint: "保持分寸的温柔",
+        apply: function (st) {
+          st.flags._xiaoMeiDiscoverySeen = true;
+          var r = st.relationships.xiao_mei;
+          r.affinity = Math.min(100, (r.affinity || 0) + 4);
+          StateManager.addMessage(
+            "你只说‘肯定行，你这么拼’。小梅点点头，嘴角有了点笑意。",
+            "normal",
+          );
+        },
+      },
+    ],
+  });
+
+  // 空白区：天气×位置（台风 + 城中村/贫民窟）
+  // 联动：天气(typhoon)·位置(slum)·需求(safety)·社区
+  // 设计心理学：极端情境下的互助·脆弱暴露·社会资本
+  RANDOM_EVENTS.push({
+    id: "typhoon_shelter_community",
+    icon: "🌀",
+    title: "台风夜的屋檐",
+    phase: "street",
+    probability: 0.06,
+    repeatable: false,
+    story:
+      "台风预警拉响，你住在城中村的隔断房，窗户吱呀作响。楼下的房东阿姨挨家敲门：‘都到堂屋来，别在里头待着！’\n\n雨砸在铁皮上，像有人在擂鼓。",
+    conditions: function (st) {
+      // 检查 当前天气为台风
+      if (!st.weather || st.weather.current !== "typhoon") return false;
+      // 检查 当前位于城中村/贫民窟
+      if (!st.trade || st.trade.currentLocation !== "slum") return false;
+      // 检查 游戏进程
+      if (st.day < 10) return false;
+      // 检查 一次性
+      if (st.flags._typhoonShelterSeen) return false;
+      return true;
+    },
+    choices: [
+      {
+        text: "🏠 下楼和大家挤一屋（＋安全感，＋社区好感，−少许体力）",
+        hint: "危难中抱团，积累社区资本",
+        apply: function (st) {
+          st.flags._typhoonShelterSeen = true;
+          st.needs.fatigue = Math.max(0, st.needs.fatigue + 8);
+          var r = st.relationships && st.relationships.aunt_wang;
+          if (!r) {
+            st.relationships = st.relationships || {};
+            r = st.relationships.aunt_wang = {
+              met: true,
+              affinity: 0,
+              discovered: {},
+            };
+          } else {
+            r.met = true;
+          }
+          r.affinity = Math.min(100, (r.affinity || 0) + 7);
+          StateManager.addMessage(
+            "一屋子人挤着，有人讲笑话，有人分橘子。风雨再大，屋里是暖的。",
+            "good",
+          );
+        },
+      },
+      {
+        text: "😶 锁门硬扛（无变化，但错过社区联结）",
+        hint: "独立但也孤立",
+        apply: function (st) {
+          st.flags._typhoonShelterSeen = true;
+          StateManager.addMessage(
+            "你没动。整夜听着风声，直到天亮。窗户没碎，但你有点后悔没下去。",
+            "normal",
+          );
+        },
+      },
+    ],
   });
 
   // ====== 注册结束 ======
