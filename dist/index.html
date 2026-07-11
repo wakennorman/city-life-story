@@ -78168,18 +78168,24 @@ if (typeof window !== "undefined") {
           var r = st.relationships.boss_li;
           if (r) r.affinity = Math.min(100, (r.affinity || 0) + 6);
           st.needs.happiness = Math.min(100, st.needs.happiness + 6);
-          StateManager.addMessage("你三两下把乱麻捋顺。李总挑眉：‘可以啊。’ 那种‘被需要’的感觉，挺好。", "good");
-        }
+          StateManager.addMessage(
+            "你三两下把乱麻捋顺。李总挑眉：‘可以啊。’ 那种‘被需要’的感觉，挺好。",
+            "good",
+          );
+        },
       },
       {
         text: "🤐 和稀泥各打五十大板（轻量，无成长）",
         hint: "稳妥但错失立威机会",
         apply: function (st) {
           st.flags._mgmtConflictSeen = true;
-          StateManager.addMessage("你打了个圆场，两人不吵了，但问题还在。李总没说什么。", "normal");
-        }
-      }
-    ]
+          StateManager.addMessage(
+            "你打了个圆场，两人不吵了，但问题还在。李总没说什么。",
+            "normal",
+          );
+        },
+      },
+    ],
   });
 
   // 空白区：天气×位置（大雾 + 商圈）
@@ -78198,7 +78204,8 @@ if (typeof window !== "undefined") {
       // 检查 当前天气为大雾
       if (!st.weather || st.weather.current !== "foggy") return false;
       // 检查 当前位于商圈
-      if (!st.trade || st.trade.currentLocation !== "commercialDist") return false;
+      if (!st.trade || st.trade.currentLocation !== "commercialDist")
+        return false;
       // 检查 游戏进程
       if (st.day < 20) return false;
       // 检查 一次性
@@ -78213,21 +78220,35 @@ if (typeof window !== "undefined") {
           st.flags._foggyCommuteSeen = true;
           st.needs.happiness = Math.min(100, st.needs.happiness + 5);
           var r = st.relationships && st.relationships.old_zhou;
-          if (!r) { st.relationships = st.relationships || {}; r = st.relationships.old_zhou = { met: true, affinity: 0, discovered: {} }; }
-          else { r.met = true; }
+          if (!r) {
+            st.relationships = st.relationships || {};
+            r = st.relationships.old_zhou = {
+              met: true,
+              affinity: 0,
+              discovered: {},
+            };
+          } else {
+            r.met = true;
+          }
           r.affinity = Math.min(100, (r.affinity || 0) + 4);
-          StateManager.addMessage("你谢过大爷，顺着墙根真的摸到了路口。雾还没散，但心里亮了点。", "good");
-        }
+          StateManager.addMessage(
+            "你谢过大爷，顺着墙根真的摸到了路口。雾还没散，但心里亮了点。",
+            "good",
+          );
+        },
       },
       {
         text: "🤳 低头开导航自己找（无变化）",
         hint: "独立解决",
         apply: function (st) {
           st.flags._foggyCommuteSeen = true;
-          StateManager.addMessage("你没多说，低头戳着手机绕了十分钟，总算上了地铁。", "normal");
-        }
-      }
-    ]
+          StateManager.addMessage(
+            "你没多说，低头戳着手机绕了十分钟，总算上了地铁。",
+            "normal",
+          );
+        },
+      },
+    ],
   });
 
   // ====== 注册结束 ======
