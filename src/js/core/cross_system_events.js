@@ -48536,5 +48536,97 @@
     ],
   });
 
+  // ====== v3.94 恢复块（2026-07-11 从 18f6f7f9 的 dist 取回，先前 v3.94 提交漏提 cross_system_events.js，本次补全）======
+  RANDOM_EVENTS.push({
+    id: "management_expert_team_conflict",
+    icon: "🧭",
+    title: "你一眼看出的症结",
+    phase: "corporate",
+    probability: 0.05,
+    repeatable: false,
+    story:
+      "两个组员为排期吵得面红耳赤，老板李总头疼地看你：‘你来说说？’\n\n你没急着站队，而是把两人的任务拆开一看——冲突根本不在人，在接口定义不清。",
+    conditions: function (st) {
+      // 检查 管理技能达到行家门槛
+      var sk = st.skills && st.skills.management;
+      if (!sk || sk.level < 40) return false;
+      // 检查 必须已就业（职场场景）
+      if (!st.employment || !st.employment.currentJob) return false;
+      // 检查 游戏进程
+      if (st.day < 40) return false;
+      // 检查 一次性
+      if (st.flags._mgmtConflictSeen) return false;
+      return true;
+    },
+    choices: [
+      {
+        text: "🗂️ 用框架重新拆解任务（＋管理xp，＋老板信任，＋心情）",
+        hint: "以专业度立威，巩固协调者身份",
+        apply: function (st) {
+          st.flags._mgmtConflictSeen = true;
+          var sk = st.skills.management;
+          sk.xp = (sk.xp || 0) + 45;
+          var r = st.relationships.boss_li;
+          if (r) r.affinity = Math.min(100, (r.affinity || 0) + 6);
+          st.needs.happiness = Math.min(100, st.needs.happiness + 6);
+          StateManager.addMessage("你三两下把乱麻捋顺。李总挑眉：‘可以啊。’ 那种‘被需要’的感觉，挺好。", "good");
+        }
+      },
+      {
+        text: "🤐 和稀泥各打五十大板（轻量，无成长）",
+        hint: "稳妥但错失立威机会",
+        apply: function (st) {
+          st.flags._mgmtConflictSeen = true;
+          StateManager.addMessage("你打了个圆场，两人不吵了，但问题还在。李总没说什么。", "normal");
+        }
+      }
+    ]
+  });
+
+  RANDOM_EVENTS.push({
+    id: "foggy_commute_misdirection",
+    icon: "🌫️",
+    title: "雾里撞见的热心人",
+    phase: "street",
+    probability: 0.05,
+    repeatable: false,
+    story:
+      "大雾把整条街糊成了牛奶色，你在商圈转了三圈没找着地铁路口。正发懵，一个遛狗的大爷停住：‘小伙子，去地铁啊？顺着这墙根走就到了。’",
+    conditions: function (st) {
+      // 检查 当前天气为大雾
+      if (!st.weather || st.weather.current !== "foggy") return false;
+      // 检查 当前位于商圈
+      if (!st.trade || st.trade.currentLocation !== "commercialDist") return false;
+      // 检查 游戏进程
+      if (st.day < 20) return false;
+      // 检查 一次性
+      if (st.flags._foggyCommuteSeen) return false;
+      return true;
+    },
+    choices: [
+      {
+        text: "🙏 道谢并聊两句（＋心情，＋社区好感）",
+        hint: "接受陌生善意，城市变温柔",
+        apply: function (st) {
+          st.flags._foggyCommuteSeen = true;
+          st.needs.happiness = Math.min(100, st.needs.happiness + 5);
+          var r = st.relationships && st.relationships.old_zhou;
+          if (!r) { st.relationships = st.relationships || {}; r = st.relationships.old_zhou = { met: true, affinity: 0, discovered: {} }; }
+          else { r.met = true; }
+          r.affinity = Math.min(100, (r.affinity || 0) + 4);
+          StateManager.addMessage("你谢过大爷，顺着墙根真的摸到了路口。雾还没散，但心里亮了点。", "good");
+        }
+      },
+      {
+        text: "🤳 低头开导航自己找（无变化）",
+        hint: "独立解决",
+        apply: function (st) {
+          st.flags._foggyCommuteSeen = true;
+          StateManager.addMessage("你没多说，低头戳着手机绕了十分钟，总算上了地铁。", "normal");
+        }
+      }
+    ]
+  });
+
   // ====== 注册结束 ======
 })();
