@@ -10317,29 +10317,17 @@
   // 联动：education 从 0 升级到 1 后首次触发（一次性）
   // 设计心理学：峰终定律·人生里程碑·仪式感奖励
   // 触发方式：在 edu_cert 动作完成后由 daily_pipeline 手动检查触发
+  // [自洽修复] story 字段缺失修复 + phase 取值修正（原为 desc 函数 + 非法数组 phase）
   RANDOM_EVENTS.push({
     id: "edu_graduation_ceremony",
     icon: "🎓",
     title: "毕业典礼",
-    phase: ["street", "office", "corporate"],
-    priority: 99,
+    phase: "street",
     conditions: function (state) {
       return state.player.education >= 1 && !state.flags._eduGraduationShown;
     },
-    desc: function (state) {
-      var school =
-        state.player.education === 1
-          ? "夜大"
-          : state.player.education === 2
-            ? "本科"
-            : "硕士";
-      return (
-        "四年（或两年）的寒窗苦读终于结束了。今天，你站在" +
-        school +
-        "的礼堂里，接过那张薄薄的证书。台下坐着几个同样熬过来的同学，有人已经30多岁，有人带着孩子。" +
-        "\n\n看着手里的文凭，你想起刚进城时连公交车都坐不起的日子。这张纸，或许不能立刻改变什么，但至少——它是你给自己的一份交代。\n\n班主任老周说：「拿了证，记住：路是自己走的。」"
-      );
-    },
+    story:
+      "数年寒窗终于结束了。今天你站在教室里，接过那张薄薄的学历证书。一起拿证的人里有三十多岁的老哥，有带着孩子的家长——大家都熬过来了。\n\n你想起刚进城时连公交车都坐不起的日子。这张纸不能立刻改变什么，但它是你给自己的一份交代。\n\n老师说：「拿了证，记住——路是自己走的。」",
     choices: [
       {
         text: "📸 合影留念（+2 心情，+1 智力）",
@@ -48246,6 +48234,159 @@
         },
       },
     ],
+  });
+
+  // ====== v3.92 空白区第四批（道德极端-boss贿赂 / 技能里程碑-烹饪 / 低心情邻居探访）======
+  // 设计原则：全部门控于已验证 state 字段，零 A 类缺陷风险。
+
+  // 空白区：道德极端分叉（职场线）
+  // 联动：道德·职业·NPC(boss_li)·经济
+  // 设计心理学：道德两难·沉没成本·身份认同
+  RANDOM_EVENTS.push({
+    id: "moral_extreme_boss_bribe",
+    icon: "💼",
+    title: "老板的“小信封”",
+    phase: "corporate",
+    probability: 0.05,
+    repeatable: false,
+    story:
+      "加班到十点，老板李总把信封推到你面前：「这个月账上有点‘灵活空间’，你懂的。签了字，有你一份。」\n\n你看着那叠钞票，想起刚入职时立过的规矩。",
+    conditions: function (st) {
+      // 检查 必须已就业（才能遇到老板贿赂场景）
+      if (!st.employment || !st.employment.currentJob) return false;
+      // 检查 必须已认识老板李总
+      var rel = st.relationships && st.relationships.boss_li;
+      if (!rel || !rel.met) return false;
+      // 检查 仅道德极端玩家（高道德或低道德），中间派不会遇到此两难
+      if (!(st.player.morality >= 70 || st.player.morality <= 30)) return false;
+      // 检查 游戏进程需足够长，职场关系已建立
+      if (st.day < 50) return false;
+      // 检查 一次性事件防刷
+      if (st.flags._moralBribeSeen) return false;
+      return true;
+    },
+    choices: [
+      {
+        text: "🙅 拒绝并提醒合规（+道德，+老板尊重，无现金）",
+        hint: "高道德路线：守住底线，长期口碑更稳",
+        apply: function (st) {
+          st.flags._moralBribeSeen = true;
+          st.player.morality = Math.min(100, st.player.morality + 3);
+          var r = st.relationships.boss_li;
+          if (r) r.affinity = Math.min(100, (r.affinity || 0) + 5);
+          StateManager.addMessage("你把信封推了回去。李总看了你一眼，没再说什么——但此后他交任务时更放心了。", "good");
+        }
+      },
+      {
+        text: "💰 收下信封（＋现金，−道德，−老板长期信任）",
+        hint: "低道德路线：短期收益，但埋下隐患",
+        apply: function (st) {
+          st.flags._moralBribeSeen = true;
+          var cash = 800;
+          st.finance = st.finance || {};
+          st.finance.cash = (st.finance.cash || 0) + cash;
+          st.player.morality = Math.max(0, st.player.morality - 8);
+          var r = st.relationships.boss_li;
+          if (r) r.affinity = Math.max(-100, (r.affinity || 0) - 10);
+          StateManager.addMessage("你收下了。钱进了口袋，可那晚你睡得不太踏实。", "bad");
+        }
+      }
+    ]
+  });
+
+  // 空白区：技能里程碑=专业人士视角（烹饪）
+  // 联动：技能(cooking)·NPC(chef_chen)·经济
+  // 设计心理学： mastery 反馈·身份转变（从学徒到行家）
+  RANDOM_EVENTS.push({
+    id: "cooking_expert_secret_recipe",
+    icon: "🍳",
+    title: "行家一眼看穿的配方",
+    phase: "street",
+    probability: 0.05,
+    repeatable: false,
+    story:
+      "巷口新开的私房菜，你尝了一口就皱起眉——火候过了，酱油也放早了。老板娘还在得意地介绍‘秘方’。\n\n你忽然意识到：自己已经能尝出别人尝不出的门道了。",
+    conditions: function (st) {
+      // 检查 烹饪技能达到行家门槛
+      var sk = st.skills && st.skills.cooking;
+      if (!sk || sk.level < 40) return false;
+      // 检查 游戏进程
+      if (st.day < 30) return false;
+      // 检查 一次性
+      if (st.flags._cookingRecipeSeen) return false;
+      return true;
+    },
+    choices: [
+      {
+        text: "👨‍🍳 主动指点老板娘（＋烹饪xp，＋与陈厨好感）",
+        hint: "利他回馈，巩固行家身份",
+        apply: function (st) {
+          st.flags._cookingRecipeSeen = true;
+          var sk = st.skills.cooking;
+          sk.xp = (sk.xp || 0) + 40;
+          var r = st.relationships && st.relationships.chef_chen;
+          if (r && r.met) r.affinity = Math.min(100, (r.affinity || 0) + 8);
+          StateManager.addMessage("你随手提了两句，老板娘眼睛亮了：‘您是内行！’ 烹饪手感又精进了些。", "good");
+        }
+      },
+      {
+        text: "🤫 默默记下心法（＋烹饪xp，自用）",
+        hint: "低调打磨自身",
+        apply: function (st) {
+          st.flags._cookingRecipeSeen = true;
+          var sk = st.skills.cooking;
+          sk.xp = (sk.xp || 0) + 25;
+          StateManager.addMessage("你没多说，只在心里记下了那处火候。手艺，是自己的。", "normal");
+        }
+      }
+    ]
+  });
+
+  // 空白区：连续/深度低心情的邻里关怀
+  // 联动：需求(happiness)·NPC·心理健康
+  // 设计心理学：低谷被看见·社会资本缓冲·求助去污名
+  // 说明：state 无 lowMoodStreak，改用 needs.happiness 阈值触发一次性关怀事件
+  RANDOM_EVENTS.push({
+    id: "low_mood_neighbor_visit",
+    icon: "🫂",
+    title: "隔壁的敲门声",
+    phase: "street",
+    probability: 0.05,
+    repeatable: false,
+    story:
+      "你已经好几天没怎么出门了。傍晚，隔壁阿姨敲了敲门，端着一碗热汤：「小同志，一个人别总凑合。」\n\n你才发现自己最近确实闷得厉害。",
+    conditions: function (st) {
+      // 检查 心情处于深度低位（非 streak，用阈值）
+      if (!st.needs || st.needs.happiness >= 18) return false;
+      // 检查 游戏进程
+      if (st.day < 15) return false;
+      // 检查 一次性
+      if (st.flags._lowMoodVisitSeen) return false;
+      return true;
+    },
+    choices: [
+      {
+        text: "🗣️ 开门聊聊（＋心情，＋邻里好感）",
+        hint: "接受关怀，缓解低谷",
+        apply: function (st) {
+          st.flags._lowMoodVisitSeen = true;
+          st.needs.happiness = Math.min(100, st.needs.happiness + 15);
+          var r = st.relationships && st.relationships.aunt_wang;
+          if (!r) { st.relationships = st.relationships || {}; r = st.relationships.aunt_wang = { met: true, affinity: 0, discovered: {} }; }
+          else { r.met = true; }
+          r.affinity = Math.min(100, (r.affinity || 0) + 6);
+          StateManager.addMessage("你开了门，热气腾腾的汤下肚，心里也松了松。", "good");
+        }
+      },
+      {
+        text: "🚪 婉拒，说自己没事（无变化）",
+        hint: "习惯独处，但错过一次连接",
+        apply: function (st) {
+          st.flags._lowMoodVisitSeen = true;
+          StateManager.addMessage("你谢过阿姨，关上门。屋子里又安静下来。", "normal");
+        }
+      }
+    ]
   });
 
   // ====== 注册结束 ======
