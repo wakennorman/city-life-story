@@ -1516,9 +1516,9 @@
               for (var i = inv.stockHoldings.length - 1; i >= 0; i--) {
                 var h = inv.stockHoldings[i];
                 var curPrice =
-                  inv.stockPrices && inv.stockPrices[h.symbol]
-                    ? inv.stockPrices[h.symbol].price
-                    : h.buyPrice || 0;
+                  inv.stockMarket && inv.stockMarket[h.symbol]
+                    ? inv.stockMarket[h.symbol].price
+                    : h.avgPrice || 0;
                 totalCashBack += Math.round(curPrice * (h.shares || 1) * 0.7);
               }
               var soldCount = inv.stockHoldings.length;
@@ -48569,18 +48569,24 @@
           var r = st.relationships.boss_li;
           if (r) r.affinity = Math.min(100, (r.affinity || 0) + 6);
           st.needs.happiness = Math.min(100, st.needs.happiness + 6);
-          StateManager.addMessage("你三两下把乱麻捋顺。李总挑眉：‘可以啊。’ 那种‘被需要’的感觉，挺好。", "good");
-        }
+          StateManager.addMessage(
+            "你三两下把乱麻捋顺。李总挑眉：‘可以啊。’ 那种‘被需要’的感觉，挺好。",
+            "good",
+          );
+        },
       },
       {
         text: "🤐 和稀泥各打五十大板（轻量，无成长）",
         hint: "稳妥但错失立威机会",
         apply: function (st) {
           st.flags._mgmtConflictSeen = true;
-          StateManager.addMessage("你打了个圆场，两人不吵了，但问题还在。李总没说什么。", "normal");
-        }
-      }
-    ]
+          StateManager.addMessage(
+            "你打了个圆场，两人不吵了，但问题还在。李总没说什么。",
+            "normal",
+          );
+        },
+      },
+    ],
   });
 
   RANDOM_EVENTS.push({
@@ -48596,7 +48602,8 @@
       // 检查 当前天气为大雾
       if (!st.weather || st.weather.current !== "foggy") return false;
       // 检查 当前位于商圈
-      if (!st.trade || st.trade.currentLocation !== "commercialDist") return false;
+      if (!st.trade || st.trade.currentLocation !== "commercialDist")
+        return false;
       // 检查 游戏进程
       if (st.day < 20) return false;
       // 检查 一次性
@@ -48611,21 +48618,151 @@
           st.flags._foggyCommuteSeen = true;
           st.needs.happiness = Math.min(100, st.needs.happiness + 5);
           var r = st.relationships && st.relationships.old_zhou;
-          if (!r) { st.relationships = st.relationships || {}; r = st.relationships.old_zhou = { met: true, affinity: 0, discovered: {} }; }
-          else { r.met = true; }
+          if (!r) {
+            st.relationships = st.relationships || {};
+            r = st.relationships.old_zhou = {
+              met: true,
+              affinity: 0,
+              discovered: {},
+            };
+          } else {
+            r.met = true;
+          }
           r.affinity = Math.min(100, (r.affinity || 0) + 4);
-          StateManager.addMessage("你谢过大爷，顺着墙根真的摸到了路口。雾还没散，但心里亮了点。", "good");
-        }
+          StateManager.addMessage(
+            "你谢过大爷，顺着墙根真的摸到了路口。雾还没散，但心里亮了点。",
+            "good",
+          );
+        },
       },
       {
         text: "🤳 低头开导航自己找（无变化）",
         hint: "独立解决",
         apply: function (st) {
           st.flags._foggyCommuteSeen = true;
-          StateManager.addMessage("你没多说，低头戳着手机绕了十分钟，总算上了地铁。", "normal");
-        }
-      }
-    ]
+          StateManager.addMessage(
+            "你没多说，低头戳着手机绕了十分钟，总算上了地铁。",
+            "normal",
+          );
+        },
+      },
+    ],
+  });
+
+  // ====== 旅行后续事件（after_travel 触发槽） ======
+  // 【事件 A】旅行归来·新的视角
+  RANDOM_EVENTS.push({
+    id: "travel_perspective_shift",
+    phase: "street",
+    icon: "✈️",
+    title: "旅行归来的感想",
+    story:
+      "回到熟悉的城市，你发现街道变得不太一样了。可能是旅行的后劲——那些在旅途中见过的风景、遇过的人，悄悄地改变了你。\n\n你站在车站出口，深吸一口气。这座城市似乎不再那么令你窒息了。",
+    triggers: ["after_travel"],
+    conditions: function (st) {
+      return st.player.day > 30 && !st.flags._travelPerspectiveSeen;
+    },
+    probability: 1.0,
+    repeatable: false,
+    choices: [
+      {
+        text: "📝 把旅行感悟写进日记",
+        hint: "心智+3，心情+5",
+        apply: function (st) {
+          st.player.mental = Math.min(100, (st.player.mental || 0) + 3);
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 5);
+          st.flags._travelPerspectiveSeen = true;
+          StateManager.addMessage(
+            "📝 你坐在住处把这次的经历写了下来。有些路，走过才会懂。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "💪 化旅行的动力为行动力",
+        hint: "体质+2",
+        apply: function (st) {
+          st.player.physique = Math.min(100, (st.player.physique || 0) + 2);
+          st.flags._travelPerspectiveSeen = true;
+          StateManager.addMessage(
+            "💪 旅途中看到别人活得那么用力，你觉得自己也不能松懈。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "🛌 躺平休息，回味旅行",
+        hint: "疲劳-20，心情+3",
+        apply: function (st) {
+          st.needs.fatigue = Math.max(0, (st.needs.fatigue || 0) - 20);
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 3);
+          st.flags._travelPerspectiveSeen = true;
+          StateManager.addMessage(
+            "😌 你躺在床上，翻看着旅行时拍的照片。美好的回忆本身就是力量。",
+            "info",
+          );
+        },
+      },
+    ],
+  });
+
+  // 【事件 B】旅行中认识的新朋友
+  RANDOM_EVENTS.push({
+    id: "travel_new_friend",
+    phase: "street",
+    icon: "🤝",
+    title: "旅行中认识的新朋友",
+    story:
+      "旅行的最后一天，你在青旅的公共区域遇到了一个很有意思的人。你们聊了一整晚——从旅行聊到人生，从工作聊到梦想。\n\n分别时，他/她说：「加个微信吧，以后去我那儿玩。」",
+    triggers: ["after_travel"],
+    conditions: function (st) {
+      return (
+        st.player.day > 60 &&
+        (st.player.charm || 0) >= 25 &&
+        !st.flags._travelNewFriendSeen
+      );
+    },
+    probability: 0.8,
+    repeatable: false,
+    choices: [
+      {
+        text: "📱 加微信保持联系",
+        hint: "人脉+2，名气+1",
+        apply: function (st) {
+          st.player.fame = Math.min(100, (st.player.fame || 0) + 1);
+          st.player.charm = Math.min(100, (st.player.charm || 0) + 1);
+          st.flags._travelNewFriendSeen = true;
+          st.flags._travelFriendAdded = true;
+          StateManager.addMessage(
+            "📱 你们加了微信。朋友圈里又多了一个在不同城市生活的人——世界变大了。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "🤗 合个影留念就好",
+        hint: "心情+8",
+        apply: function (st) {
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 8);
+          st.flags._travelNewFriendSeen = true;
+          StateManager.addMessage(
+            "📸 你们在青旅的留言墙前合了影。有些人注定只会出现在一段旅途中，但那份温暖是真实的。",
+            "info",
+          );
+        },
+      },
+      {
+        text: "😅 社恐发作，匆匆告别",
+        hint: "无事发生",
+        apply: function (st) {
+          st.flags._travelNewFriendSeen = true;
+          StateManager.addMessage(
+            "你说了声「有缘再见」，然后低头快步走开了。有些人注定只是过客。",
+            "normal",
+          );
+        },
+      },
+    ],
   });
 
   // ====== 注册结束 ======

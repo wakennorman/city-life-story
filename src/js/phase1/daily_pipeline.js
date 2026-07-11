@@ -1317,6 +1317,38 @@ const DAILY_PIPELINE = [
     },
   },
 
+  // === 装备耐久预警（耐久<20%时发送警告）===
+  {
+    name: "durability_warning",
+    fn: function (state) {
+      if (!state.inventory || !state.inventory.equipment) return;
+      if (typeof getEquippedInstance !== "function") return;
+      var warned = false;
+      var slots = ["head", "body", "feet", "hand", "accessory"];
+      for (var si = 0; si < slots.length; si++) {
+        var slot = slots[si];
+        var inst = getEquippedInstance(state, slot);
+        if (!inst || inst.durability === undefined || inst.isBroken) continue;
+        var pct = inst.durability / (inst.maxDurability || 100);
+        if (pct < 0.2) {
+          if (!warned) {
+            StateManager.addMessage(
+              "⚠️ 你的部分装备耐久已不足20%，尽快修理！",
+              "warning",
+            );
+            warned = true;
+          }
+        }
+        if (inst.isBroken) {
+          StateManager.addMessage(
+            "🔧 " + (inst.name || slot) + " 已损坏，需要修理才能使用。",
+            "danger",
+          );
+        }
+      }
+    },
+  },
+
   // === 每日收支报告（阻塞弹窗）===
   {
     name: "daily_report",

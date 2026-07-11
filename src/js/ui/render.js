@@ -1832,194 +1832,6 @@ function renderLocationBar(state, parent) {
  *  第1行：体/智/敏/心/魅  5基础属性
  *  第2行：饿/疲/卫/情/健  5状态
  * 与侧栏 #stat-* 采用同一 CSS 色梯度类、同一预警阈值
- */
-function renderStatsStrip(state, parent) {
-  var p = state.player;
-  var n = state.needs || {};
-  var s = state.status || {};
-
-  var container = document.createElement("div");
-  container.className = "mobile-stats-strip";
-
-  // 单行 5 条紧凑型细色带
-  function buildRow(items) {
-    var row = document.createElement("div");
-    row.className = "mss-row";
-    items.forEach(function (cfg) {
-      var val = cfg.getVal();
-      var cell = document.createElement("div");
-      cell.className = "mss-cell";
-
-      // 预警：低数值（或高即坏如疲劳）时用该要素本身色值予以薄边+数值变色
-      var isBad = cfg.inverted ? val >= cfg.threshold : val <= cfg.threshold;
-      var warnStyle = isBad ? "border-bottom:2px solid " + cfg.color + ";" : "";
-
-      cell.style.cssText =
-        "flex:1;min-width:0;display:flex;align-items:center;gap:3px;padding:2px 3px;border-radius:4px;background:rgba(0,0,0,0.02);" +
-        warnStyle;
-
-      // 细标签（1~2 中文字）
-      var label = document.createElement("span");
-      label.className = "mss-label";
-      label.textContent = cfg.label;
-      cell.appendChild(label);
-
-      // 细色带（复用侧栏同名 CSS 渐变色，不重新定义）
-      var track = document.createElement("div");
-      track.className = "mss-track";
-      var fill = document.createElement("div");
-      fill.className = "mss-fill " + cfg.cls;
-      fill.style.width = Math.max(0, Math.min(100, val)) + "%";
-      track.appendChild(fill);
-      cell.appendChild(track);
-
-      // 数值（坏值时变色）
-      var num = document.createElement("span");
-      num.className = "mss-val";
-      num.textContent = Math.round(val);
-      if (isBad) {
-        num.style.color = cfg.color;
-        num.style.fontWeight = "700";
-      }
-      cell.appendChild(num);
-
-      row.appendChild(cell);
-    });
-    return row;
-  }
-
-  var attrs = [
-    {
-      label: "体质",
-      cls: "physique",
-      color: "#c4803a",
-      threshold: 10,
-      getVal: function () {
-        return p.physique || 0;
-      },
-    },
-    {
-      label: "智力",
-      cls: "intelligence",
-      color: "#5a8ab4",
-      threshold: 10,
-      getVal: function () {
-        return p.intelligence || 0;
-      },
-    },
-    {
-      label: "敏捷",
-      cls: "agility",
-      color: "#5aaa5a",
-      threshold: 10,
-      getVal: function () {
-        return p.agility || 0;
-      },
-    },
-    {
-      label: "心智",
-      cls: "mental-bar",
-      color: "#9b74b8",
-      threshold: 10,
-      getVal: function () {
-        return p.mental || 0;
-      },
-    },
-    {
-      label: "魅力",
-      cls: "charm",
-      color: "#d9789e",
-      threshold: 10,
-      getVal: function () {
-        return p.charm || 0;
-      },
-    },
-    {
-      label: "道德",
-      cls: "morality-bar",
-      color: "#6ac49a",
-      threshold: 20,
-      getVal: function () {
-        return p.morality != null ? p.morality : 50;
-      },
-    },
-  ];
-
-  var needs = [
-    {
-      label: "饥饿",
-      cls: "hunger",
-      color: "#c9a838",
-      threshold: 15,
-      getVal: function () {
-        return n.hunger != null ? n.hunger : 100;
-      },
-    },
-    {
-      label: "疲劳",
-      cls: "fatigue",
-      color: "#8a9080",
-      threshold: 85,
-      inverted: true,
-      getVal: function () {
-        return n.fatigue != null ? n.fatigue : 0;
-      },
-    },
-    {
-      label: "卫生",
-      cls: "hygiene",
-      color: "#4a9490",
-      threshold: 15,
-      getVal: function () {
-        return n.hygiene != null ? n.hygiene : 100;
-      },
-    },
-    {
-      label: "心情",
-      cls: "happiness",
-      color: "#cc7868",
-      threshold: 10,
-      getVal: function () {
-        return n.happiness != null ? n.happiness : 100;
-      },
-    },
-    {
-      label: "健康",
-      cls: "health",
-      color: "#cc7868",
-      threshold: 20,
-      getVal: function () {
-        return s.health != null ? s.health : 100;
-      },
-    },
-  ];
-
-  container.appendChild(buildRow(attrs));
-  container.appendChild(buildRow(needs));
-
-  // 疾病行：有疾病时在第2行之后追加（保持 5+急性病的紧凑信息）
-  if (s.illnesses && s.illnesses.length > 0) {
-    var illnessDiv = document.createElement("div");
-    illnessDiv.className = "mss-illness";
-    var names = s.illnesses
-      .map(function (d) {
-        var id = typeof d === "string" ? d : d.id || "";
-        var nm =
-          (typeof ILLNESSES !== "undefined" &&
-            ILLNESSES[id] &&
-            ILLNESSES[id].name) ||
-          (typeof d === "object" && d.name) ||
-          id;
-        return nm;
-      })
-      .filter(Boolean);
-    illnessDiv.textContent = "🤒 " + names.join("、");
-    container.appendChild(illnessDiv);
-  }
-
-  parent.appendChild(container);
-}
-
 function renderTimeSlot(state, parent) {
   const slotNames = {
     morning: "☀️ 上午",
@@ -3826,6 +3638,44 @@ function renderTradeTab(state, parent) {
         parent.appendChild(seasonBanner);
       }
     }
+  }
+
+  // [v3.9] 市场情报条：显示当前地点的特产（便宜）和稀缺（贵）商品
+  var priceTags =
+    typeof LOCATION_GOODS_TAGS !== "undefined" && LOCATION_GOODS_TAGS[locKey];
+  if (priceTags) {
+    var miDiv = document.createElement("div");
+    miDiv.style.cssText =
+      "display:flex;align-items:center;gap:8px;font-size:11px;padding:4px 10px;margin-bottom:10px;" +
+      "background:var(--bg-card);border-radius:6px;border:1px solid var(--border-light);flex-wrap:wrap;";
+    var miHtml =
+      '<span style="font-weight:600;color:var(--text-muted);">📊 市场情报</span>';
+    if (priceTags.specialties && priceTags.specialties.length > 0) {
+      var cheapGoods = priceTags.specialties
+        .map(function (gid) {
+          var g = typeof getGoodById === "function" ? getGoodById(gid) : null;
+          return g ? g.name : gid;
+        })
+        .filter(Boolean);
+      miHtml +=
+        '<span style="color:var(--success);font-weight:500;">✅ 便宜: ' +
+        cheapGoods.join("、") +
+        "</span>";
+    }
+    if (priceTags.scarce && priceTags.scarce.length > 0) {
+      var expensiveGoods = priceTags.scarce
+        .map(function (gid) {
+          var g = typeof getGoodById === "function" ? getGoodById(gid) : null;
+          return g ? g.name : gid;
+        })
+        .filter(Boolean);
+      miHtml +=
+        '<span style="color:var(--danger);font-weight:500;">❌ 贵: ' +
+        expensiveGoods.join("、") +
+        "</span>";
+    }
+    miDiv.innerHTML = miHtml;
+    parent.appendChild(miDiv);
   }
 
   // 记录今日已访问地点（用于价格对比记忆）

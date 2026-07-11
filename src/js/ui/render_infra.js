@@ -961,68 +961,85 @@ function renderLocationBar(state, parent) {
 
 /**
  * 移动端常驻状态条（位置/背包 与 人生目标 之间）
- * 结构：2 行 × 5 条，每条「细标签 + 细色带 + 数值」
- *  第1行：体/智/敏/心/魅  5基础属性
+ * v3.9 全面重设计：加图标 + 更粗色条 + 更大字号 + 更醒目的警告态 + 卡片化
+ * 结构：2 行 × 5~6 条，每条「图标 + 标签 + 粗色带 + 数值」
+ *  第1行：体/智/敏/心/魅/德  6基础属性
  *  第2行：饿/疲/卫/情/健  5状态
- * 与侧栏 #stat-* 采用同一 CSS 色梯度类、同一预警阈值
  */
 function renderStatsStrip(state, parent) {
   var p = state.player;
   var n = state.needs || {};
   var s = state.status || {};
 
+  // 行级别背景色配置：属性行暖灰、状态行浅灰绿
+  var ROW_BG_ATTR = "var(--bg-card)";
+  var ROW_BG_NEEDS = "var(--bg-secondary)";
+
   var container = document.createElement("div");
   container.className = "mobile-stats-strip";
 
-  // 单行 5 条紧凑型细色带
-  function buildRow(items) {
+  /**
+   * 构建一行状态单元格
+   * @param {Array} items - 配置数组
+   * @param {string} rowBg - 行背景色
+   */
+  function buildRow(items, rowBg) {
     var row = document.createElement("div");
     row.className = "mss-row";
+
     items.forEach(function (cfg) {
       var val = cfg.getVal();
-      var cell = document.createElement("div");
-      cell.className = "mss-cell";
+      var valClamped = Math.max(0, Math.min(100, val));
 
-      // 预警：低数值（或高即坏如疲劳）时用该要素本身色值予以薄边+数值变色
+      // 预警判定（高即坏的如疲劳用 inverted）
       var isBad = cfg.inverted ? val >= cfg.threshold : val <= cfg.threshold;
-      var warnStyle = isBad ? "border-bottom:2px solid " + cfg.color + ";" : "";
+      var isSevere = cfg.inverted
+        ? val >= cfg.threshold * 1.4
+        : val <= cfg.threshold * 0.6;
 
-      var isMobile = window.innerWidth <= 480;
-      cell.style.cssText =
-        "flex:1;min-width:0;display:flex;align-items:center;gap:" +
-        (isMobile ? "2px" : "3px") +
-        ";padding:" +
-        (isMobile ? "2px 2px" : "2px 3px") +
-        ";border-radius:4px;background:rgba(0,0,0,0.02);" +
-        warnStyle;
+      var cell = document.createElement("div");
+      cell.className =
+        "mss-cell" +
+        (isBad ? " mss-warn" : "") +
+        (isSevere ? " mss-severe" : "");
 
-      // 细标签（1~2 中文字）
+      // emoji 图标
+      if (cfg.icon) {
+        var iconSpan = document.createElement("span");
+        iconSpan.className = "mss-icon";
+        iconSpan.textContent = cfg.icon;
+        cell.appendChild(iconSpan);
+      }
+
+      // 标签（2 中文字）
       var label = document.createElement("span");
       label.className = "mss-label";
       label.textContent = cfg.label;
       cell.appendChild(label);
 
-      // 细色带（复用侧栏同名 CSS 渐变色，不重新定义）
+      // 粗色带（高度 8px，预警态闪烁）
       var track = document.createElement("div");
-      track.className = "mss-track";
+      track.className = "mss-track" + (isBad ? " mss-track-warn" : "");
       var fill = document.createElement("div");
       fill.className = "mss-fill " + cfg.cls;
-      fill.style.width = Math.max(0, Math.min(100, val)) + "%";
-      // v3.53：预警态用实心主题色替换渐变，信号更醒目
+      fill.style.width = valClamped + "%";
       if (isBad) {
         fill.style.background = cfg.color;
-        fill.style.animation = "ap-blink 0.9s infinite";
+        fill.style.animation = "ap-blink 1.2s infinite";
+      }
+      if (isSevere) {
+        fill.style.animation = "ap-blink 0.6s infinite";
       }
       track.appendChild(fill);
       cell.appendChild(track);
 
-      // 数值（坏值时变色）
+      // 数值（坏值变色 + 加粗）
       var num = document.createElement("span");
       num.className = "mss-val";
       num.textContent = Math.round(val);
       if (isBad) {
         num.style.color = cfg.color;
-        num.style.fontWeight = "700";
+        num.style.fontWeight = "800";
       }
       cell.appendChild(num);
 
@@ -1031,11 +1048,13 @@ function renderStatsStrip(state, parent) {
     return row;
   }
 
+  // ---- 第1行：6 基础属性 ----
   var attrs = [
     {
       label: "体质",
+      icon: "💪",
       cls: "physique",
-      color: "#c4803a",
+      color: "#e07a30",
       threshold: 10,
       getVal: function () {
         return p.physique || 0;
@@ -1043,8 +1062,9 @@ function renderStatsStrip(state, parent) {
     },
     {
       label: "智力",
+      icon: "🧠",
       cls: "intelligence",
-      color: "#5a8ab4",
+      color: "#4a8ee6",
       threshold: 10,
       getVal: function () {
         return p.intelligence || 0;
@@ -1052,8 +1072,9 @@ function renderStatsStrip(state, parent) {
     },
     {
       label: "敏捷",
+      icon: "🏃",
       cls: "agility",
-      color: "#5aaa5a",
+      color: "#4cb84a",
       threshold: 10,
       getVal: function () {
         return p.agility || 0;
@@ -1061,8 +1082,9 @@ function renderStatsStrip(state, parent) {
     },
     {
       label: "心智",
+      icon: "💭",
       cls: "mental-bar",
-      color: "#9b74b8",
+      color: "#9a6cd0",
       threshold: 10,
       getVal: function () {
         return p.mental || 0;
@@ -1070,8 +1092,9 @@ function renderStatsStrip(state, parent) {
     },
     {
       label: "魅力",
+      icon: "💋",
       cls: "charm",
-      color: "#d9789e",
+      color: "#e06a92",
       threshold: 10,
       getVal: function () {
         return p.charm || 0;
@@ -1079,8 +1102,9 @@ function renderStatsStrip(state, parent) {
     },
     {
       label: "道德",
+      icon: "⚖️",
       cls: "morality-bar",
-      color: "#6ac49a",
+      color: "#5ab480",
       threshold: 20,
       getVal: function () {
         return (p && p.morality) != null ? p.morality : 50;
@@ -1088,11 +1112,13 @@ function renderStatsStrip(state, parent) {
     },
   ];
 
+  // ---- 第2行：5 需求状态 ----
   var needs = [
     {
       label: "饥饿",
+      icon: "🍚",
       cls: "hunger",
-      color: "#c9a838",
+      color: "#d4b030",
       threshold: 15,
       getVal: function () {
         return n.hunger != null ? n.hunger : 100;
@@ -1100,8 +1126,9 @@ function renderStatsStrip(state, parent) {
     },
     {
       label: "疲劳",
+      icon: "😰",
       cls: "fatigue",
-      color: "#8a9080",
+      color: "#8a9a6a",
       threshold: 85,
       inverted: true,
       getVal: function () {
@@ -1110,8 +1137,9 @@ function renderStatsStrip(state, parent) {
     },
     {
       label: "卫生",
+      icon: "🚿",
       cls: "hygiene",
-      color: "#4a9490",
+      color: "#3aa89e",
       threshold: 15,
       getVal: function () {
         return n.hygiene != null ? n.hygiene : 100;
@@ -1119,8 +1147,9 @@ function renderStatsStrip(state, parent) {
     },
     {
       label: "心情",
+      icon: "😊",
       cls: "happiness",
-      color: "#cc7868",
+      color: "#d07a5a",
       threshold: 10,
       getVal: function () {
         return n.happiness != null ? n.happiness : 100;
@@ -1128,8 +1157,9 @@ function renderStatsStrip(state, parent) {
     },
     {
       label: "健康",
+      icon: "❤️",
       cls: "health",
-      color: "#cc7868",
+      color: "#d45050",
       threshold: 20,
       getVal: function () {
         return s.health != null ? s.health : 100;
@@ -1137,10 +1167,10 @@ function renderStatsStrip(state, parent) {
     },
   ];
 
-  container.appendChild(buildRow(attrs));
-  container.appendChild(buildRow(needs));
+  container.appendChild(buildRow(attrs, ROW_BG_ATTR));
+  container.appendChild(buildRow(needs, ROW_BG_NEEDS));
 
-  // 疾病行：有疾病时在第2行之后追加（保持 5+急性病的紧凑信息）
+  // 疾病行：有疾病时在第2行之后追加
   if (s.illnesses && s.illnesses.length > 0) {
     var illnessDiv = document.createElement("div");
     illnessDiv.className = "mss-illness";

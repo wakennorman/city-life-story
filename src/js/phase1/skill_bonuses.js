@@ -292,7 +292,7 @@ var CITY_PULSE_RULES = [
     test: /流感|发热门诊|医院|护工紧缺|口罩/,
     footfall: { hospital: 1.45, commercialDist: 0.95 },
     jobs: {
-      hospital_caregiver: 1.35,
+      hospital_companion: 1.35,
       delivery_rider: 1.08,
       street_vending_food: 0.92,
     },
@@ -413,7 +413,7 @@ function grantJobSkillXp(jobId, state) {
     tutoring: { skill: "english", min: 2, max: 4 },
     // 驾驶相关工作 → driving XP
     delivery_rider: { skill: "driving", min: 3, max: 6 },
-    hospital_caregiver: { skill: "sales", min: 2, max: 5 },
+    hospital_companion: { skill: "sales", min: 2, max: 5 },
     // 电工相关工作 → electrician XP
     factory_work_assembly: { skill: "electrician", min: 2, max: 4 },
     factory_overtime: { skill: "electrician", min: 3, max: 6 },

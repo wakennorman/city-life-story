@@ -1208,13 +1208,13 @@ const NPCS = [
       {
         minAffinity: 30,
         // [自洽修复] kitchen_helper 不存在 → restaurant_assistant
-        jobs: ["food_stall", "street_vending_food", "restaurant_assistant"],
+        jobs: ["street_vending_food", "restaurant_assistant"],
         multiplier: 1.18,
       },
       {
         minAffinity: 60,
         // [自洽修复] kitchen_helper 不存在 → restaurant_assistant
-        jobs: ["food_stall", "street_vending_food", "restaurant_assistant"],
+        jobs: ["street_vending_food", "restaurant_assistant"],
         multiplier: 1.1,
       },
     ],

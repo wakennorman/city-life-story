@@ -293,6 +293,7 @@ function getAvailableCertificates(state) {
       return false;
     if (req.sales && state.skills.sales && state.skills.sales.level < req.sales)
       return false;
+    if (req.mental && p.mental < req.mental) return false;
     return true;
   });
 }

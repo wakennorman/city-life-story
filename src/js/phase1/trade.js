@@ -16,9 +16,12 @@ function buyGood(goodId, qty) {
   const locKey = state.trade.currentLocation;
   const price = getCurrentPrice(locKey, goodId);
 
-  // 销售技能折扣（最高18%）
-  const salesLvl = state.skills.sales.level || 0;
-  var salesDiscount = Math.min(0.18, salesLvl * 0.003);
+  // 销售技能折扣（统一使用 pricing.js 函数，最高30% @Lv.100）
+  const buyDiscount =
+    typeof getSkillBuyDiscount === "function"
+      ? 1 - getSkillBuyDiscount(state)
+      : Math.min(0.18, (state.skills.sales.level || 0) * 0.003);
+  var salesDiscount = buyDiscount;
   // 历史声誉折扣（P2.9：诚信经营者/拒绝假货获得进货优惠）
   var histDiscount = 0;
   if (typeof getHistoryModifiers === "function") {
@@ -144,9 +147,11 @@ function sellGood(goodId, qty) {
     sameLocationPenalty = true;
   }
 
-  // 销售技能溢价（最高20%）
-  const salesLvl = state.skills.sales.level || 0;
-  const premium = Math.min(0.2, salesLvl * 0.003);
+  // 销售技能溢价（统一使用 pricing.js 函数，最高30% @Lv.100）
+  const premium =
+    typeof getSkillSellBonus === "function"
+      ? getSkillSellBonus(state) - 1
+      : Math.min(0.2, (state.skills.sales.level || 0) * 0.003);
   // 交易税5%（市场手续费，透明收取）
   const TAX = 0.05;
   const totalEarned =
@@ -208,7 +213,7 @@ function sellGood(goodId, qty) {
     newPrice !== price ? ` 当地价格调整至 ¥${newPrice.toFixed(1)}` : "";
 
   StateManager.addMessage(
-    `💰 卖出 ${qty}${good.unit}${good.name}，市场价 ¥${price.toFixed(1)}，扣10%税后实收 ¥${totalEarned.toFixed(1)}。${profitMsg}${priceMsg}`,
+    `💰 卖出 ${qty}${good.unit}${good.name}，市场价 ¥${price.toFixed(1)}，扣5%交易税后实收 ¥${totalEarned.toFixed(1)}。${profitMsg}${priceMsg}`,
     "success",
   );
   if (typeof playSound === "function") playSound("sell");
@@ -255,7 +260,7 @@ function buyWholesale(goodId, qty) {
   const locKey = state.trade.currentLocation;
   const price = getCurrentPrice(locKey, goodId);
 
-  // 批发折扣：批发市场的价格 × 0.9（批量价，现实批发仅10%折扣）
+  // 批发折扣：批发市场的价格 × 0.95（批量价，5%折扣）
   const wholesalePrice = Math.round(price * 0.95 * 100) / 100;
   const totalCost = Math.round(wholesalePrice * qty * 100) / 100;
 

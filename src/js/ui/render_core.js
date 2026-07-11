@@ -74,31 +74,30 @@ function warnStatRow(id, value, threshold, warnColor, inverted) {
   var row = document.getElementById(id);
   if (!row) return;
   var isBad = inverted ? value >= threshold : value <= threshold;
+  var isSevere = inverted ? value >= threshold * 1.4 : value <= threshold * 0.6;
+  // 清理旧状态
+  row.classList.remove("stat-warn", "stat-severe");
+  row.style.cssText = "";
+  var valEl = row.querySelector(".stat-value");
+  if (valEl) {
+    valEl.style.color = "";
+    valEl.style.fontWeight = "";
+    valEl.style.animation = "";
+  }
   if (isBad) {
-    // 紧凑预警：薄左边框 + 极淡背景 + 无额外 padding
-    row.style.cssText =
-      "border-left:3px solid " +
-      warnColor +
-      ";" +
-      "background:linear-gradient(90deg, " +
-      warnColor +
-      "15, transparent 40%);" +
-      "padding-left:6px;margin:1px 0;border-radius:0 4px 4px 0;" +
-      "transition:all 0.3s;";
-    // 数值变色
-    var valEl = row.querySelector(".stat-value");
+    if (isSevere) {
+      row.classList.add("stat-severe");
+    } else {
+      row.classList.add("stat-warn");
+    }
+    // 数值变色（CSS class 已处理着色，这里额外留闪烁）
     if (valEl) {
       valEl.style.color = warnColor;
-      valEl.style.fontWeight = "bold";
-      valEl.style.animation = "ap-blink 0.7s infinite";
-    }
-  } else {
-    row.style.cssText = "";
-    var valEl2 = row.querySelector(".stat-value");
-    if (valEl2) {
-      valEl2.style.color = "";
-      valEl2.style.fontWeight = "";
-      valEl2.style.animation = "";
+      if (isSevere) {
+        valEl.style.animation = "ap-blink 0.6s infinite";
+      } else {
+        valEl.style.animation = "ap-blink 1s infinite";
+      }
     }
   }
 }

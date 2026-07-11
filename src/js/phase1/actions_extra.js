@@ -2511,7 +2511,7 @@ var LOCATION_EXTRA_ACTIONS = [
     },
   },
   {
-    id: "night_school",
+    id: "night_school_study",
     name: "夜校自习",
     desc: "在大学城找个自习室学习，效率比在住处高得多。需要交电费。",
     icon: "📚",
@@ -2662,7 +2662,7 @@ var LOCATION_EXTRA_ACTIONS = [
     },
   },
   {
-    id: "temple_meditate",
+    id: "temple_meditate_extra",
     name: "寺庙静心",
     desc: "在寺庙里打坐冥想，净化心灵。烧点香火，求个心安。",
     icon: "🧘",

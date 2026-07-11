@@ -254,7 +254,7 @@ const NEWS_EVENTS = [
     headline: "🤒 流感高峰提前到来！医院陪诊护工紧缺，口罩和日用品走俏",
     effects: {
       priceMod: { daily_use: 1.3, water: 1.1, noodles: 1.08 },
-      jobBonus: ["hospital_caregiver"],
+      jobBonus: ["hospital_companion"],
       jobMultiplier: 1.6,
       investmentEffect: [
         { industry: "医药", mul: 1.14 },

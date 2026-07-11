@@ -372,6 +372,30 @@ body {
   position: relative;
 }
 
+/* 侧栏低数值警告：发光边框 */
+.stat-row.stat-warn .stat-bar-wrap {
+  box-shadow: 0 0 6px rgba(196, 85, 61, 0.25);
+  border: 1px solid rgba(196, 85, 61, 0.3);
+}
+.stat-row.stat-warn .stat-value {
+  color: var(--danger) !important;
+  font-weight: 800 !important;
+}
+
+/* 侧栏严重警告：闪烁 */
+.stat-row.stat-severe .stat-bar-wrap {
+  animation: stat-warn-glow 1s infinite;
+  border: 1px solid var(--danger);
+}
+.stat-row.stat-severe .stat-value {
+  color: var(--danger) !important;
+  font-weight: 900 !important;
+}
+@keyframes stat-warn-glow {
+  0%, 100% { box-shadow: 0 0 6px rgba(196, 85, 61, 0.25); }
+  50% { box-shadow: 0 0 14px rgba(196, 85, 61, 0.5); }
+}
+
 /* 数值变化闪烁动画 */
 .stat-bar.flash {
   animation: statFlash 0.6s ease;
@@ -402,37 +426,37 @@ body {
   background: linear-gradient(90deg, #c87062, var(--risk-color));
 }
 .stat-bar.physique {
-  background: linear-gradient(90deg, #c48e4a, var(--physique-color));
+  background: linear-gradient(90deg, #e07a30, var(--physique-color, #c4803a));
 }
 .stat-bar.intelligence {
-  background: linear-gradient(90deg, #5a94ba, var(--intelligence-color));
+  background: linear-gradient(90deg, #4a8ee6, var(--intelligence-color, #5a8ab4));
 }
 .stat-bar.agility {
-  background: linear-gradient(90deg, #56a64e, var(--agility-color));
+  background: linear-gradient(90deg, #4cb84a, var(--agility-color, #5aaa5a));
 }
 .stat-bar.mental-bar {
-  background: linear-gradient(90deg, #9672b4, var(--mental-attrs-color));
+  background: linear-gradient(90deg, #9a6cd0, var(--mental-attrs-color, #9b74b8));
 }
 .stat-bar.charm {
-  background: linear-gradient(90deg, #d9789e, #b95f87);
+  background: linear-gradient(90deg, #e06a92, #b95f87);
 }
 .stat-bar.morality-bar {
-  background: linear-gradient(90deg, #4a9e6a, #6ac49a);
+  background: linear-gradient(90deg, #5ab480, #6ac49a);
 }
 .stat-bar.hunger {
-  background: linear-gradient(90deg, #c9a838, #dec054);
+  background: linear-gradient(90deg, #d4b030, #dec054);
 }
 .stat-bar.fatigue {
-  background: linear-gradient(90deg, #949a88, #b4baa2);
+  background: linear-gradient(90deg, #8a9a6a, #b4baa2);
 }
 .stat-bar.hygiene {
-  background: linear-gradient(90deg, #4a9490, #5ebeb2);
+  background: linear-gradient(90deg, #3aa89e, #5ebeb2);
 }
 .stat-bar.happiness {
-  background: linear-gradient(90deg, #cc7868, #e09080);
+  background: linear-gradient(90deg, #d07a5a, #e09080);
 }
 .stat-bar.health {
-  background: linear-gradient(90deg, #d47058, #56b468);
+  background: linear-gradient(90deg, #d45050, #56b468);
 }
 .stat-bar.fame {
   background: linear-gradient(90deg, #9672b4, #c9a442);
@@ -4176,96 +4200,136 @@ body {
     font-size: 11px;
   }
 
-  /* ====== 移动端常驻状态条（属性 + 需求 2 行 × 5 细色带） ====== */
+  /* ====== [v3.9] 移动端常驻状态条 — 全面重设计 ====== */
+  /* 更粗色条 + 图标 + 卡片化单元格 + 醒目警告态 */
   .mobile-stats-strip {
     display: flex;
     flex-direction: column;
-    gap: 3px;
-    padding: 5px 6px;
-    margin-bottom: 5px;
+    gap: 5px;
+    padding: 8px 8px;
+    margin-bottom: 6px;
     background: var(--bg-secondary);
-    border: 1px solid var(--border-light);
-    border-radius: 8px;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.06);
   }
   .mss-row {
     display: flex;
-    gap: 2px;
+    gap: 3px;
   }
   .mss-cell {
     flex: 1;
     min-width: 0;
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    padding: 4px 4px;
+    border-radius: 6px;
+    background: var(--bg-card);
+    border: 1px solid var(--border-light);
+    transition: all 0.2s ease;
+  }
+  /* 警告态：着底色 + 高亮边框 */
+  .mss-cell.mss-warn {
+    background: rgba(196,85,61,0.07);
+    border-color: rgba(196,85,61,0.25);
+  }
+  .mss-cell.mss-severe {
+    background: rgba(196,85,61,0.14);
+    border-color: rgba(196,85,61,0.45);
+    box-shadow: inset 0 0 8px rgba(196,85,61,0.10);
+  }
+  /* emoji 图标 */
+  .mss-icon {
+    font-size: 12px;
+    line-height: 1;
+    flex-shrink: 0;
+    margin-right: 1px;
   }
   .mss-label {
-    display: inline-block;
-    width: 20px;
-    font-size: 9px;
+    font-size: 10px;
+    font-weight: 600;
     line-height: 1.2;
     color: var(--text-secondary);
     flex-shrink: 0;
+    white-space: nowrap;
   }
+  /* 粗色带：高 8px */
   .mss-track {
     flex: 1;
-    height: 4px;
+    height: 8px;
     background: var(--bg-input);
-    border-radius: 3px;
+    border-radius: 4px;
     overflow: hidden;
-    min-width: 10px;
+    min-width: 12px;
+  }
+  .mss-track-warn {
+    box-shadow: 0 0 4px rgba(196,85,61,0.20);
   }
   .mss-fill {
     height: 100%;
-    border-radius: 2px;
+    border-radius: 3px;
     transition: width 0.35s ease;
-    /* 默认回退色（无颜色类时） */
     background: var(--text-muted);
   }
-  /* 基础属性色带（与侧栏 #stat-* 同名 class 保持一致的渐变配色） */
+  /* 基础属性色带（更鲜亮配色） */
   .mss-fill.physique {
-    background: linear-gradient(90deg, #c48e4a, var(--physique-color, #c4803a));
+    background: linear-gradient(90deg, #e07a30, #e8934a);
   }
   .mss-fill.intelligence {
-    background: linear-gradient(
-      90deg,
-      #5a94ba,
-      var(--intelligence-color, #5a8ab4)
-    );
+    background: linear-gradient(90deg, #4a8ee6, #6aaaf0);
   }
   .mss-fill.agility {
-    background: linear-gradient(90deg, #56a64e, var(--agility-color, #5aaa5a));
+    background: linear-gradient(90deg, #4cb84a, #6ad068);
   }
   .mss-fill.mental-bar {
-    background: linear-gradient(
-      90deg,
-      #9672b4,
-      var(--mental-attrs-color, #9b74b8)
-    );
+    background: linear-gradient(90deg, #9a6cd0, #b48adc);
   }
   .mss-fill.charm {
-    background: linear-gradient(90deg, #d9789e, #b95f87);
+    background: linear-gradient(90deg, #e06a92, #e888aa);
   }
-  /* 状态色带（与侧栏 #stat-* 同名 class 保持一致的渐变配色） */
+  /* 状态色带 */
   .mss-fill.hunger {
-    background: linear-gradient(90deg, #c9a838, #dec054);
+    background: linear-gradient(90deg, #d4b030, #e0c44a);
   }
   .mss-fill.fatigue {
-    background: linear-gradient(90deg, #949a88, #b4baa2);
+    background: linear-gradient(90deg, #8a9a6a, #a4b488);
   }
   .mss-fill.hygiene {
-    background: linear-gradient(90deg, #4a9490, #5ebeb2);
+    background: linear-gradient(90deg, #3aa89e, #5ac0b6);
   }
   .mss-fill.happiness {
-    background: linear-gradient(90deg, #cc7868, #e09080);
+    background: linear-gradient(90deg, #d07a5a, #dc9272);
   }
   .mss-fill.health {
-    background: linear-gradient(90deg, #d47058, #56b468);
+    background: linear-gradient(90deg, #d45050, #e8685e);
   }
   .mss-fill.morality-bar {
-    background: linear-gradient(90deg, #4a9e6a, #6ac49a);
+    background: linear-gradient(90deg, #5ab480, #78c898);
   }
-  /* 窄屏（<=360px）进一步压字号、去空白 */
+  .mss-val {
+    display: inline-block;
+    min-width: 16px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 700;
+    line-height: 1.2;
+    color: var(--text-primary);
+    text-align: right;
+    flex-shrink: 0;
+  }
+  /* 窄屏（<=360px）适当压缩间距 */
   @media (max-width: 360px) {
+    .mss-cell {
+      padding: 3px 3px;
+      gap: 1px;
+    }
+    .mss-icon {
+      font-size: 10px;
+    }
     .mss-label {
       font-size: 9px;
-      width: 22px;
+      width: 18px;
     }
     .mobile-stats-strip {
       gap: 3px;
@@ -4291,19 +4355,23 @@ body {
   }
   .mss-val {
     display: inline-block;
-    min-width: 14px;
+    min-width: 16px;
     font-family: var(--font-mono);
-    font-size: 9px;
+    font-size: 11px;
     line-height: 1.2;
-    color: var(--text-secondary); /* v3.1：muted→secondary，提升数值对比度 */
-    font-weight: 600;
+    color: var(--text-primary);
+    font-weight: 700;
     text-align: right;
     flex-shrink: 0;
   }
   .mss-illness {
-    margin-top: 2px;
-    font-size: 10px;
+    margin-top: 3px;
+    padding: 4px 8px;
+    font-size: 11px;
+    font-weight: 600;
     color: var(--danger);
+    background: rgba(196,85,61,0.08);
+    border-radius: 6px;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -5464,10 +5532,10 @@ body {
 
 /* 道德色带（绿色） */
 .mss-fill.morality-bar {
-  background: linear-gradient(90deg, #4a9e6a, #6ac49a);
+  background: linear-gradient(90deg, #5ab480, #78c898);
 }
 
-/* 手机端 6 属性自适应：字体缩小，不换行 */
+/* 手机端状态条自适应 */
 .mobile-stats-strip .mss-row {
   flex-wrap: nowrap;
 }
@@ -5475,7 +5543,7 @@ body {
   min-width: 0;
 }
 .mobile-stats-strip .mss-label {
-  font-size: 9px;
+  font-size: 10px;
   white-space: nowrap;
 }
 

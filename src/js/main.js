@@ -2799,11 +2799,228 @@ function getAvailableActions(state) {
           });
         }
       } else if (edu === 1) {
+        // 研究生路径（edu=1→2，需day≥180+智力≥30）
+        if (state.player.day >= 180 && (state.player.intelligence || 0) >= 30) {
+          var gradEp = ep;
+          var gradStudyReady = gradEp.examsPassed < gradEp.totalExams;
+          if (gradStudyReady) {
+            actions.push({
+              id: "edu_grad_study",
+              category: "education",
+              name: "📚 研究生备考",
+              desc:
+                "消耗25AP，+6学习点（当前" +
+                gradEp.studyPoints +
+                "点，本门需200点）。需智力≥30。",
+              ap: 25,
+              handler: function () {
+                if (!state.player.eduProgress)
+                  state.player.eduProgress = {
+                    studyPoints: 0,
+                    examsPassed: 0,
+                    totalExams: 6,
+                  };
+                state.player.eduProgress.studyPoints =
+                  (state.player.eduProgress.studyPoints || 0) + 6;
+                consumeAP(25);
+                if (Random.chance(0.08)) {
+                  state.player.intelligence = Math.min(
+                    100,
+                    (state.player.intelligence || 0) + 1,
+                  );
+                  StateManager.addMessage(
+                    "📚 研究生备考中的顿悟！智力+1。",
+                    "success",
+                  );
+                } else {
+                  StateManager.addMessage(
+                    "📖 研究生备考中…学习点+6（" +
+                      state.player.eduProgress.studyPoints +
+                      "/200）",
+                    "info",
+                  );
+                }
+              },
+            });
+          }
+          var gradCanExam =
+            (gradEp.studyPoints || 0) >= 200 &&
+            gradEp.examsPassed < gradEp.totalExams;
+          var gradPassRate = Math.min(
+            70,
+            30 +
+              (state.player.mental || 0) * 0.3 +
+              (state.player.intelligence || 0) * 0.15,
+          );
+          actions.push({
+            id: "edu_grad_exam",
+            category: "education",
+            name: "参加研究生考试",
+            desc:
+              "消耗30AP，需学习点≥200（当前" +
+              (gradEp.studyPoints || 0) +
+              "）。通过率" +
+              gradPassRate.toFixed(0) +
+              "%（第" +
+              (gradEp.examsPassed + 1) +
+              "/6门）。",
+            ap: 30,
+            reqFail: !gradCanExam
+              ? gradEp.studyPoints < 200
+                ? "学习点不足（" + (gradEp.studyPoints || 0) + "/200）"
+                : "全部考试已通过"
+              : null,
+            handler: function () {
+              if (!state.player.eduProgress)
+                state.player.eduProgress = {
+                  studyPoints: 0,
+                  examsPassed: 0,
+                  totalExams: 6,
+                };
+              consumeAP(30);
+              if (Random.chance(gradPassRate / 100)) {
+                state.player.eduProgress.examsPassed =
+                  (state.player.eduProgress.examsPassed || 0) + 1;
+                state.player.eduProgress.studyPoints = 0;
+                StateManager.addMessage(
+                  "🎉 研究生考试第" +
+                    state.player.eduProgress.examsPassed +
+                    "门通过！还差" +
+                    (6 - state.player.eduProgress.examsPassed) +
+                    "门。",
+                  "success",
+                );
+              } else {
+                StateManager.addMessage(
+                  "😞 研究生考试未通过，继续备考再战！",
+                  "danger",
+                );
+              }
+            },
+          });
+          if (gradEp.examsPassed >= gradEp.totalExams) {
+            actions.push({
+              id: "edu_grad_cert",
+              category: "education",
+              name: "🎓 申请研究生学历认证",
+              desc: "6门科目全部通过！提交认证，获得研究生学历，解锁高级职位和高薪机会。",
+              ap: 0,
+              handler: function () {
+                state.player.education = 2;
+                state.education = 2;
+                StateManager.addMessage(
+                  "🎓 恭喜！你已取得研究生学历！知识改变命运！",
+                  "success",
+                );
+                renderAll();
+              },
+            });
+          }
+        } else {
+          actions.push({
+            id: "edu_grad_requirement",
+            category: "education",
+            name: "🔒 研究生（未满足条件）",
+            desc:
+              "需day≥180、智力≥30才能开始研究生课程。当前day=" +
+              state.player.day +
+              "、智力=" +
+              (state.player.intelligence || 0),
+            disabled: true,
+          });
+        }
+      } else if (edu === 2) {
+        // 博士路径（edu=2→3，需day≥540+智力≥50+发表研究论文）
+        if (state.player.day >= 540 && (state.player.intelligence || 0) >= 50) {
+          var currResearch = state.player.research || 0;
+          actions.push({
+            id: "edu_phd_research",
+            category: "education",
+            name: "🔬 博士研究",
+            desc:
+              "消耗20AP，推进研究工作。已发表论文" +
+              currResearch +
+              "篇（需≥3篇毕业）。",
+            ap: 20,
+            handler: function () {
+              consumeAP(20);
+              var progress = Random.int(5, 15);
+              if (!state.flags._phdResearchProgress)
+                state.flags._phdResearchProgress = 0;
+              state.flags._phdResearchProgress =
+                (state.flags._phdResearchProgress || 0) + progress;
+              StateManager.addMessage(
+                "🔬 博士研究推进+" +
+                  progress +
+                  "%（总" +
+                  (state.flags._phdResearchProgress || 0) +
+                  "%）。",
+                "info",
+              );
+              if ((state.flags._phdResearchProgress || 0) >= 100) {
+                state.player.research = (state.player.research || 0) + 1;
+                state.flags._phdResearchProgress = 0;
+                StateManager.addMessage(
+                  "🎉 论文发表！已发表" + state.player.research + "篇论文。",
+                  "success",
+                );
+              }
+              if (Random.chance(0.05)) {
+                state.player.intelligence = Math.min(
+                  100,
+                  (state.player.intelligence || 0) + 1,
+                );
+                StateManager.addMessage(
+                  "💡 研究中的突破性发现！智力+1。",
+                  "success",
+                );
+              }
+            },
+          });
+          if (currResearch >= 3) {
+            actions.push({
+              id: "edu_phd_graduate",
+              category: "education",
+              name: "🎓 申请博士学位",
+              desc:
+                "已发表" +
+                currResearch +
+                "篇论文！提交博士论文答辩，获得博士学位。解锁学术路线。",
+              ap: 10,
+              handler: function () {
+                state.player.education = 3;
+                state.education = 3;
+                state.player.intelligence = Math.min(
+                  100,
+                  (state.player.intelligence || 0) + 5,
+                );
+                StateManager.addMessage(
+                  "🎉 恭喜博士毕业！智力永久+5，学术之路就此开启！",
+                  "success",
+                );
+                renderAll();
+              },
+            });
+          }
+        } else {
+          actions.push({
+            id: "edu_phd_requirement",
+            category: "education",
+            name: "🔒 博士（未满足条件）",
+            desc:
+              "需day≥540、智力≥50才能开始博士研究。当前day=" +
+              state.player.day +
+              "、智力=" +
+              (state.player.intelligence || 0),
+            disabled: true,
+          });
+        }
+      } else if (edu >= 3) {
         actions.push({
-          id: "edu_done",
+          id: "edu_phd_done",
           category: "education",
-          name: "本科学历持有者",
-          desc: "你已是本科学历，享受更多工作和技能解锁。研究生课程敬请期待。",
+          name: "🎓 博士学历持有者",
+          desc: "你已是最高学历！学术路线完全解锁，智力永久加成已生效。",
           disabled: true,
         });
       }

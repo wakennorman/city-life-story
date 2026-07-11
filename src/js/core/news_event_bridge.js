@@ -174,10 +174,10 @@ function getNewsJobBoost(jobId, state) {
       factory_boom: ["factory_work_assembly", "factory_overtime"],
       back_to_school: ["package_delivery", "tutoring"],
       platform_subsidy_war: ["delivery_rider"],
-      heatwave: ["delivery_rider", "hospital_caregiver"],
-      cold_wave: ["hospital_caregiver", "cleaning_service"],
+      heatwave: ["delivery_rider", "hospital_companion"],
+      cold_wave: ["hospital_companion", "cleaning_service"],
       urban_renewal_pilot: ["manual_labor_construction", "repair_service"],
-      flu_surge: ["hospital_caregiver"],
+      flu_surge: ["hospital_companion"],
     };
 
     var boosted = newsLocationBoost[news.id];

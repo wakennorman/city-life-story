@@ -3334,8 +3334,8 @@ const INVENTORY_TYPES = {
     decayDays: 180,
     criticalLevel: 100,
   },
-  component: {
-    id: "component",
+  component_stock: {
+    id: "component_stock",
     name: "元器件库存",
     icon: "🔌",
     decayDays: 365,

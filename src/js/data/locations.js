@@ -183,7 +183,7 @@ const LOCATIONS = {
     specialties: ["fruits", "water", "snacks"],
     dailyProbability: 0.3,
     specialCategory: ["food"],
-    jobs: ["hospital_caregiver", "hospital_companion"],
+    jobs: ["hospital_companion", "hospital_companion"],
     priceMod: {},
   },
   bank: {
@@ -442,26 +442,7 @@ const LOCATIONS = {
   //   jobs: ["data_entry"],
   //   priceMod: { snacks: 1.0, beverages: 1.0 },
   // },
-  // 菜市场（市场下沿，食材供应链终端）
-  // vegetable_market: {
-  //   id: "vegetable_market",
-  //   name: "菜市场",
-  //   desc: "买菜的地方。新鲜食材最便宜，但环境嘈杂。",
-  //   type: "commercial",
-  //   wealthTier: 2,
-  //   footfall: 1.2,
-  //   vendingNote: "买菜人多，但消费力有限",
-  //   specialties: ["vegetables", "fruits", "meat", "seafood"],
-  //   dailyProbability: 0.8,
-  //   specialCategory: ["food"],
-  //   jobs: ["street_vending_food"],
-  //   priceMod: {
-  //     vegetables: 0.7,
-  //     fruits: 0.75,
-  //     meat: 0.85,
-  //     seafood: 0.8,
-  //   },
-  // },
+  // 菜市场（市场下沿，食材供应链终端）— 待激活，参考食材库存联动系统
   // TODO: 待实现 - 物流园区（参考真实物流集散中心）
   // {
   //   id: "logistics_park",

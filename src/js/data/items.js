@@ -418,9 +418,9 @@ const ITEMS = [
     icon: "🎒",
     slot: "accessory",
     effects: { capacity: 5 },
-    price: 50,
-    desc: "背包容量+5kg",
-    buyLocations: ["wholesaleMarket"],
+    price: 20,
+    desc: "背包容量+5kg（入门款，比大背包便宜但容量小）",
+    buyLocations: ["slum", "wholesaleMarket"],
   },
   {
     id: "backpack_large",

@@ -565,7 +565,7 @@ function registerStartup(state, name, industry, description) {
     abTestHistory: [], // A/B测试历史
     // ====== P2-15: 供应链系统 ======
     suppliers: [], // 供应商列表 [{id, type, name, focus, quality, price, leadTime, reliability, joinedDay, status, contractExpiryDay, lastDeliveryDay, qualityHistory[]}]
-    inventory: {}, // 库存 {raw_material: {quantity, value}, component: {...}, ...}
+    inventory: {}, // 库存 {raw_material: {quantity, value}, component_stock: {...}, ...}
     supplyChainRisk: 0, // 供应链风险等级 0-100
     supplyChainHistory: [], // 供应链历史 [{action, supplierId, supplierName, type, day, ...}]
     leadTime: 30, // 平均交期（天）

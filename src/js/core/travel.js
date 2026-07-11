@@ -33,6 +33,44 @@ const TRAVEL_DESTINATIONS = {
     ],
     localSpecials: ["烤鸭", "糖葫芦", "豆汁儿"],
     incomeMod: 0, // 旅行中无收入
+    decisionEvents: [
+      {
+        title: "胡同里的选择",
+        story:
+          "你钻进了一条老北京的胡同，深处有一位大爷在拉二胡。琴声苍凉，你想——",
+        choices: [
+          {
+            text: "坐下来听一曲",
+            hint: "心情+8，听懂大爷的故事",
+            apply: function (st) {
+              st.needs.happiness = Math.min(
+                100,
+                (st.needs.happiness || 50) + 8,
+              );
+              st.player.mental = Math.min(100, (st.player.mental || 0) + 2);
+            },
+            cost: 10,
+          },
+          {
+            text: "给大爷捐点钱",
+            hint: "道德+2，名气+1",
+            apply: function (st) {
+              st.player.morality = Math.min(100, (st.player.morality || 0) + 2);
+              st.player.fame = Math.min(100, (st.player.fame || 0) + 1);
+            },
+            cost: 50,
+          },
+          {
+            text: "拍个短视频发网上",
+            hint: "名气+3",
+            apply: function (st) {
+              st.player.fame = Math.min(100, (st.player.fame || 0) + 3);
+            },
+            cost: 0,
+          },
+        ],
+      },
+    ],
   },
   shanghai: {
     id: "shanghai",
@@ -52,6 +90,59 @@ const TRAVEL_DESTINATIONS = {
     ],
     localSpecials: ["生煎", "小笼包", "葱油拌面"],
     incomeMod: 0,
+    decisionEvents: [
+      {
+        title: "陆家嘴的诱惑",
+        story:
+          "你在陆家嘴的高楼大厦间穿行，一个西装革履的人递给你一张名片：「小伙子，想赚大钱吗？」——",
+        choices: [
+          {
+            text: "接下名片聊聊",
+            hint: "也许是个机会",
+            apply: function (st) {
+              st.player.fame = Math.min(100, (st.player.fame || 0) + 2);
+              StateManager.addMessage(
+                "📇 你收下了名片——上面写着某投资顾问公司的名字。不管真假，多认识个人总没错。",
+                "info",
+              );
+            },
+            cost: 0,
+          },
+          {
+            text: "婉言谢绝",
+            hint: "安全第一",
+            apply: function (st) {
+              st.player.mental = Math.min(100, (st.player.mental || 0) + 1);
+              StateManager.addMessage(
+                "🛡️ 你礼貌地拒绝了。这座城市到处都是机会，也到处都是陷阱。",
+                "info",
+              );
+            },
+            cost: 0,
+          },
+          {
+            text: "跟他去公司看看",
+            hint: "冒险探索，可能有收获",
+            apply: function (st) {
+              var r = Random.int(0, 2);
+              if (r === 0) {
+                st.resources.cash = (st.resources.cash || 0) + 200;
+                StateManager.addMessage(
+                  "💰 原来是正规的理财公司，听了半天的投资讲座，赚了¥200出场费。",
+                  "success",
+                );
+              } else {
+                StateManager.addMessage(
+                  "📉 是个坑。你找了个借口溜了，还好没损失。",
+                  "warning",
+                );
+              }
+            },
+            cost: 0,
+          },
+        ],
+      },
+    ],
   },
   chengdu: {
     id: "chengdu",
@@ -74,6 +165,40 @@ const TRAVEL_DESTINATIONS = {
     ],
     localSpecials: ["火锅", "串串", "担担面"],
     incomeMod: 0,
+    decisionEvents: [
+      {
+        title: "火锅店的奇遇",
+        story:
+          "你在成都找了一家苍蝇馆子吃火锅。老板看你一个人，端了盘毛肚过来说——「小伙子，一个人来成都？」——",
+        choices: [
+          {
+            text: "跟老板聊聊天",
+            hint: "了解成都生活，心情+5",
+            apply: function (st) {
+              st.needs.happiness = Math.min(
+                100,
+                (st.needs.happiness || 50) + 5,
+              );
+              st.player.fame = Math.min(100, (st.player.fame || 0) + 1);
+            },
+            cost: 0,
+          },
+          {
+            text: "请老板喝瓶酒",
+            hint: "打好关系，可能有惊喜",
+            apply: function (st) {
+              st.resources.cash = (st.resources.cash || 0) - 20;
+              st.player.charm = Math.min(100, (st.player.charm || 0) + 1);
+              StateManager.addMessage(
+                "🍶 老板高兴了，给你加了份脑花——免费的。",
+                "success",
+              );
+            },
+            cost: 20,
+          },
+        ],
+      },
+    ],
   },
   xian: {
     id: "xian",
@@ -96,6 +221,47 @@ const TRAVEL_DESTINATIONS = {
     ],
     localSpecials: ["肉夹馍", "凉皮", "羊肉泡馍"],
     incomeMod: 0,
+    decisionEvents: [
+      {
+        title: "古城墙上的对话",
+        story:
+          "你在古城墙上骑车时遇到一个外国背包客，他用蹩脚的中文问路。你想——",
+        choices: [
+          {
+            text: "热情指路，还带他去目的地",
+            hint: "魅力+2，英语技能提升",
+            apply: function (st) {
+              st.player.charm = Math.min(100, (st.player.charm || 0) + 2);
+              if (st.skills && st.skills.english)
+                st.skills.english.level = Math.min(
+                  100,
+                  (st.skills.english.level || 0) + 1,
+                );
+            },
+            cost: 0,
+          },
+          {
+            text: "用手机翻译软件帮他",
+            hint: "智力+1",
+            apply: function (st) {
+              st.player.intelligence = Math.min(
+                100,
+                (st.player.intelligence || 0) + 1,
+              );
+            },
+            cost: 0,
+          },
+          {
+            text: "说自己也是游客，不太清楚",
+            hint: "安全",
+            apply: function (st) {
+              st.player.mental = Math.min(100, (st.player.mental || 0) + 1);
+            },
+            cost: 0,
+          },
+        ],
+      },
+    ],
   },
   dali: {
     id: "dali",
@@ -115,6 +281,50 @@ const TRAVEL_DESTINATIONS = {
     ],
     localSpecials: ["过桥米线", "乳扇", "鲜花饼"],
     incomeMod: 0,
+    decisionEvents: [
+      {
+        title: "洱海边的选择",
+        story:
+          "你租了一辆自行车环洱海骑行。路边有个老奶奶在卖手工扎染，旁边还有个小伙子举着GoPro拍vlog。你停下脚步——",
+        choices: [
+          {
+            text: "买一块扎染布做纪念",
+            hint: "心情+5，道德+1",
+            apply: function (st) {
+              st.needs.happiness = Math.min(
+                100,
+                (st.needs.happiness || 50) + 5,
+              );
+              st.player.morality = Math.min(100, (st.player.morality || 0) + 1);
+            },
+            cost: 60,
+          },
+          {
+            text: "跟拍vlog的小哥聊聊天",
+            hint: "魅力+2，社交积累",
+            apply: function (st) {
+              st.player.charm = Math.min(100, (st.player.charm || 0) + 2);
+              StateManager.addMessage(
+                "🎬 原来他是个旅游博主，正在做一期大理攻略。他说你的建议很有帮助。",
+                "info",
+              );
+            },
+            cost: 0,
+          },
+          {
+            text: "继续骑行，不想被打扰",
+            hint: "心情+8，安静享受",
+            apply: function (st) {
+              st.needs.happiness = Math.min(
+                100,
+                (st.needs.happiness || 50) + 8,
+              );
+            },
+            cost: 0,
+          },
+        ],
+      },
+    ],
   },
 };
 
@@ -187,21 +397,92 @@ function tickTravel(state) {
           ? Random.int(0, dest.events.length - 1)
           : Math.floor(Math.random() * dest.events.length);
       var evt = dest.events[evtIdx];
-      // 简单效果
-      if (evt.effect.indexOf("心情+") !== -1) {
-        var match = evt.effect.match(/心情\+(\d+)/);
-        if (match)
-          state.needs.happiness = Math.min(
-            100,
-            (state.needs.happiness || 50) + parseInt(match[1]),
-          );
+      // 简单效果解析（支持心情/智力/体质/道德/名气/疲劳）
+      if (evt.effect) {
+        [
+          ["心情+", "needs.happiness", 100, 0],
+          ["智力+", "player.intelligence", 100, 0],
+          ["体质+", "player.physique", 100, 0],
+          ["疲劳-", "needs.fatigue", 100, 1],
+          ["道德+", "player.morality", 100, 0],
+          ["名气+", "player.fame", 100, 0],
+        ].forEach(function (rule) {
+          var key = rule[0],
+            path = rule[1],
+            max = rule[2],
+            isNeg = rule[3];
+          if (evt.effect.indexOf(key) !== -1) {
+            var m = evt.effect.match(
+              new RegExp(
+                key.replace("+", "\\+").replace("-", "\\-") + "(\\d+)",
+              ),
+            );
+            if (m) {
+              var parts = path.split(".");
+              var target = state;
+              for (var pi = 0; pi < parts.length; pi++)
+                target = target[parts[pi]];
+              var val = target || 0;
+              var delta = parseInt(m[1]);
+              if (isNeg) {
+                // 疲劳-：取最大值与减量之间的较小值
+                target = Math.max(0, val - delta);
+              } else {
+                target = Math.min(max, val + delta);
+              }
+              // 写回
+              var parent = state;
+              for (var pi2 = 0; pi2 < parts.length - 1; pi2++)
+                parent = parent[parts[pi2]];
+              parent[parts[parts.length - 1]] = target;
+            }
+          }
+        });
       }
       state._lastTravelEvent = evt.desc;
       if (typeof StateManager !== "undefined") {
         StateManager.addMessage(
-          "✈️ " + evt.desc + "（" + evt.effect + "）",
+          "✈️ " + evt.desc + (evt.effect ? "（" + evt.effect + "）" : ""),
           "info",
         );
+      }
+    }
+
+    // 带选择的大事件（每次旅行最多触发一次，50%概率）
+    if (
+      dest.decisionEvents &&
+      dest.decisionEvents.length > 0 &&
+      !state.flags._travelDecisionShown &&
+      (typeof Random !== "undefined" ? Random.chance(0.5) : Math.random() < 0.5)
+    ) {
+      var decIdx =
+        typeof Random !== "undefined"
+          ? Random.int(0, dest.decisionEvents.length - 1)
+          : Math.floor(Math.random() * dest.decisionEvents.length);
+      var dec = dest.decisionEvents[decIdx];
+      state.flags._travelDecisionShown = true;
+      if (
+        typeof dec.choices !== "undefined" &&
+        typeof showEventModal === "function"
+      ) {
+        setTimeout(function () {
+          showEventModal({
+            icon: "✈️",
+            title: dest.icon + " " + dest.name + "：" + dec.title,
+            story: dec.story,
+            choices: dec.choices.map(function (c) {
+              return {
+                text: c.text,
+                hint: c.hint || "",
+                cost: c.cost || 0,
+                apply: function (st) {
+                  c.apply(st);
+                  st._lastTravelEvent = dec.title + " — " + c.text;
+                },
+              };
+            }),
+          });
+        }, 50);
       }
     }
   }
@@ -413,6 +694,44 @@ if (typeof window !== "undefined") {
       return (
         "你去过 " + names.join("、") + "，见过不同的风景，也见过不同的自己。"
       );
+    },
+    version: "v1",
+  };
+
+  window.NARRATIVES.travel_souvenirs = {
+    id: "travel_souvenirs",
+    name: "旅行纪念品",
+    category: "人生故事",
+    title: "🎁 旅行纪念品收藏",
+    brief: "每一件纪念品都是一段旅行的回忆。",
+    content: function () {
+      var s = typeof StateManager !== "undefined" && StateManager.getState();
+      if (
+        !s ||
+        !s.travel ||
+        !s.travel.souvenirs ||
+        s.travel.souvenirs.length === 0
+      )
+        return "🔒 你还没有收集过任何旅行纪念品。";
+      var allSouvenirs = [];
+      for (var key in TRAVEL_DESTINATIONS) {
+        var d = TRAVEL_DESTINATIONS[key];
+        if (d.souvenirs) {
+          d.souvenirs.forEach(function (item) {
+            allSouvenirs.push(item);
+          });
+        }
+      }
+      var collected = s.travel.souvenirs;
+      var lines = ["🧳 你已经收集了 " + collected.length + " 件纪念品："];
+      collected.forEach(function (item) {
+        lines.push("  • " + item);
+      });
+      lines.push("");
+      lines.push(
+        "📊 收集进度：" + collected.length + "/" + allSouvenirs.length,
+      );
+      return lines.join("<br>");
     },
     version: "v1",
   };
