@@ -47975,4 +47975,42 @@
       "那天你收下的徒弟今天跑来跟你说：「师傅，我这周独立接到第一单了——一个饭店后厨电路改造，人家给了¥1500。」\n\n他拿出个信封要塞给你：「你教我的，我不能白学。」\n\n你看着他的手，粗糙、有力——就像你当年。",
     conditions: function (st) {
       if (st.player.phase !== "street") return false;
-      if (!st.flags || !st.flags._hasAppr
+      if (!st.flags || !st.flags._hasApprentice) return false; // 检查：必须有徒弟flag
+      return true;
+    },
+    probability: 0.5,
+    repeatable: false,
+    choices: [
+      {
+        text: "💰 收下信封",
+        hint: "¥1500",
+        apply: function (st) {
+          st.flags._apprenticePaidOff = true;
+          var pay = 1500;
+          st.resources.cash += pay;
+          st.resources.totalEarned += pay;
+          StateManager.addMessage(
+            "💰 你收下信封但没有全拿——抽了一半又塞回去。「剩下的买点工具。」传承不只是钱。收入¥750。",
+            "success",
+          );
+          st.resources.cash -= 750;
+        },
+      },
+      {
+        text: "🙏 让他全留着当工具费",
+        hint: "师徒关系升级",
+        apply: function (st) {
+          st.flags._apprenticePaidOff = true;
+          st.player.fame = Math.min(100, (st.player.fame || 0) + 5);
+          st.player.mental = Math.min(100, (st.player.mental || 50) + 5);
+          StateManager.addMessage(
+            "🙏 你摆摆手：「买点好的工具，别用破东西出事。」他使劲点了点头。你突然觉得一身轻——有人接班了。名气+5，心智+5。",
+            "success",
+          );
+        },
+      },
+    ],
+  });
+
+  // ====== 注册结束 ======
+})();

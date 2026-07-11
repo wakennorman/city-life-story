@@ -337,22 +337,23 @@ const LOCATIONS = {
   //   priceMod: {},
   //   specialActions: ["起诉欠债", "劳动仲裁", "法律咨询"],
   // },
-  // TODO: 待实现 - 人才市场（参考真实人才交流中心）
-  // {
-  //   id: "job_market",
-  //   name: "人才市场",
-  //   desc: "找工作、招聘的地方。每周有招聘会，可以投简历。",
-  //   type: "service",
-  //   wealthTier: 2,
-  //   footfall: 0.8,
-  //   vendingNote: "求职者多，但消费力弱",
-  //   specialties: ["daily_use"],
-  //   dailyProbability: 0.3,
-  //   specialCategory: ["daily"],
-  //   jobs: [],
-  //   priceMod: { daily_use: 0.9 },
-  //   specialActions: ["投简历", "参加招聘会", "职业咨询"],
-  // },
+  // 人才市场：连接职业系统，无工作但有特殊行动
+  job_market: {
+    id: "job_market",
+    name: "人才市场",
+    icon: "🏢",
+    desc: "找工作、招聘的地方。每周有招聘会，可以投简历。",
+    type: "service",
+    wealthTier: 2,
+    footfall: 0.8,
+    vendingNote: "求职者多，但消费力弱",
+    specialties: ["daily_use"],
+    dailyProbability: 0.3,
+    specialCategory: ["daily"],
+    jobs: [],
+    priceMod: { daily_use: 0.9 },
+    specialActions: ["投简历", "参加招聘会", "职业咨询"],
+  },
   //
   // === 娱乐休闲区 ===
   entertainment: {
