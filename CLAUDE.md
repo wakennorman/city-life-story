@@ -156,7 +156,16 @@ navHints: [
 
 > 每次收工前覆盖更新本节（只留最新状态，不要追加历史）；详细变更历史在 `src/DEVELOPMENT.md`，不需要每次都读。
 
-- **最新一次工作 (2026-07-11)**：v3.86 — 统一悬停动效 + 交通方式步行选项
+- **最新一次工作 (2026-07-11)**：v3.87 — 教程引导全面优化（pointer-events穿透+内容重写+步骤重排）
+  - **🖱️ CSS穿透修复**：`.tutorial-overlay { pointer-events: none; }` + `.modal-box { pointer-events: auto; }` — 玩家现在可以直接点击高亮区域推进教程（不再被遮罩拦截）
+  - **📝 内容修复**：Step1去"2003年"年份写死 → "初来乍到"；Step2 4维/4项 → 5维属性+5项需求（与当前游戏一致）
+  - **🔀 步骤重排**：Steps7&8互换 — "找住处"(step7)在前，"出发！"(finale, step8)在后，逻辑链更合理
+  - **🧹 代码泄漏**：small_town_grinder step3 `housingTier=0` → "今天必须找到落脚点"
+  - **💬 全步骤文案**：统一"👆 直接点击高亮区域"，按钮改为"找不到？直接继续 →"明确主/备路径
+  - **验证**：node --check ✅ / build.py 7775.9KB ✅
+  - **commit**：`c36e2619`（本地待推，网络问题）
+
+- **上一轮工作 (2026-07-11)**：v3.86 — 统一悬停动效 + 交通方式步行选项
   - **🎯 统一悬停动效**：以 `action-card:hover` 为标准，统一9个CSS类( card/hustle-card/btn/btn-primary/world-news-item/world-news-skip-btn/marketing-channel/team-management-action/npc-visit-btn ) + 9处JS内联onmouseover
   - **🚶 交通方式新增步行按钮**：步行免费全城可达，AP=6+跳数×4
   - **🖱️ transit-btn悬停修复**：新增`.transit-btn:hover` CSS规则(标准hover)，移除所有内联style
