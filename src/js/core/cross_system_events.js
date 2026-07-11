@@ -18849,5 +18849,574 @@
     ],
   });
 
+  // ================================================================
+  // 新增联动事件 v3.89b — 系统覆盖度填充（5个）
+  // 填补 legal/investment/family/illness/social_media 五大空白区
+  // ================================================================
+
+  // === 1. 城管执法联动：城管heat + 摆摊副业 → 突击检查 ===
+  // 设计意图：城管系统与街头摆摊/副业首次联动，制造紧张感和策略选择
+  RANDOM_EVENTS.push({
+    id: "chengguan_raid_stall",
+    phase: "street",
+    icon: "🚔",
+    title: "城管突击检查",
+    story:
+      "早上出摊才发现，昨天还在的那个摊位被贴了封条。旁边大爷说城管今天突击检查，没收了好几家的货。你低头看了看自己的货——都是正规进货的。",
+    // [自洽修复] conditions 新增：城管heat≥50 + 摆摊/副业活跃 + 批发市场交易记录
+    conditions: function (st) {
+      // 检查城管heat是否达到警戒线
+      var cg = st.chengguan;
+      if (!cg || (cg.heat || 0) < 50) return false;
+      // 检查玩家是否有摆摊/副业活动
+      var hasStallActivity =
+        (st.sideHustle && st.sideHustle.type === "stall") ||
+        (st.stats &&
+          st.stats.actionFreq &&
+          (st.stats.actionFreq["food_stall"] > 0 ||
+            st.stats.actionFreq["start_business"] > 0));
+      if (!hasStallActivity) return false;
+      // 检查未触发过
+      if (st.flags && st.flags._chengguanRaidSeen) return false;
+      return true;
+    },
+    probability: 0.05,
+    repeatable: false,
+    choices: [
+      {
+        text: "📋 拿出进货单据自证",
+        hint: "证明正规进货",
+        apply: function (st) {
+          st.flags._chengguanRaidSeen = true;
+          // 有进货记录则减免处罚
+          if (
+            st.stats &&
+            st.stats.tradeFreq &&
+            st.stats.tradeFreq["wholesale"] >= 3
+          ) {
+            st.chengguan.heat = Math.max(
+              0,
+              (st.chengguan.heat || 0) - 10,
+            );
+            st.chengguan.warnings = (st.chengguan.warnings || 0) + 1;
+            StateManager.addMessage(
+              "🚔 你翻出进货单据，城管看了说没问题就走了。但警告了一次，城管heat-10。",
+              "info",
+            );
+          } else {
+            st.resources.cash = Math.max(
+              0,
+              (st.resources.cash || 0) - 100,
+            );
+            StateManager.addMessage(
+              "🚔 你没有进货凭证，被收了¥100的罚款。城管heat-5。",
+              "warning",
+            );
+            st.chengguan.heat = Math.max(
+              0,
+              (st.chengguan.heat || 0) - 5,
+            );
+          }
+        },
+      },
+      {
+        text: "🏃 赶紧收摊跑路",
+        hint: "保货要紧",
+        apply: function (st) {
+          st.flags._chengguanRaidSeen = true;
+          st.needs.fatigue = Math.min(
+            100,
+            (st.needs.fatigue || 50) + 15,
+          );
+          st.needs.happiness = Math.max(
+            0,
+            (st.needs.happiness || 20) - 8,
+          );
+          StateManager.addMessage(
+            "🚔 你慌忙收拾东西跑了。货保住了但狼狈不堪，疲劳+15、心情-8。",
+            "warning",
+          );
+        },
+      },
+      {
+        text: "📱 拍视频发到网上",
+        hint: "流量+曝光",
+        apply: function (st) {
+          st.flags._chengguanRaidSeen = true;
+          if (Random.chance(0.4)) {
+            st.player.fame = Math.min(
+              100,
+              (st.player.fame || 0) + 5,
+            );
+            st.needs.happiness = Math.min(
+              100,
+              (st.needs.happiness || 20) + 3,
+            );
+            StateManager.addMessage(
+              "📱 视频火了！同城热搜第三条，大家同情你的遭遇。名声+5。",
+              "success",
+            );
+          } else {
+            st.player.fame = Math.min(
+              100,
+              (st.player.fame || 0) + 1,
+            );
+            StateManager.addMessage(
+              "📱 发了视频但没啥水花。不过至少记录了这件事。名声+1。",
+              "info",
+            );
+          }
+        },
+      },
+    ],
+  });
+
+  // === 2. 股市暴跌联动：stockHoldings + 市场情绪 → 恐慌抛售 ===
+  // 设计意图：投资系统与新闻/市场情绪联动，制造"割肉还是坚守"的道德抉择
+  RANDOM_EVENTS.push({
+    id: "stock_crash_panic",
+    phase: "street",
+    icon: "📉",
+    title: "股市暴跌",
+    story:
+      '开盘不到半小时，大盘跌了4%。你持仓的那只科技股更是跌停——昨天还在新闻里被夸得天花乱坠，今天就爆雷了。群里大家都在喊"割肉"。',
+    // [自洽修复] conditions 新增：持有股票 + 投资系统活跃
+    conditions: function (st) {
+      // 检查是否持有股票
+      var holdings = st.investment && st.investment.stockHoldings;
+      if (!holdings || holdings.length === 0) return false;
+      // 检查投资交易次数
+      if (
+        st.stats &&
+        st.stats.investFreq &&
+        st.stats.investFreq["stock_buy"] < 2
+      )
+        return false;
+      // 检查未触发过
+      if (st.flags && st.flags._stockCrashPanicSeen) return false;
+      return true;
+    },
+    probability: 0.04,
+    repeatable: false,
+    choices: [
+      {
+        text: "🔪 全部割肉止损",
+        hint: "保住剩余本金",
+        apply: function (st) {
+          st.flags._stockCrashPanicSeen = true;
+          // 割肉实际损失
+          var totalValue = 0;
+          var holdings = st.investment.stockHoldings;
+          for (var i = 0; i < holdings.length; i++) {
+            totalValue += holdings[i].shares * (holdings[i].avgPrice || 10);
+            holdings[i].shares = 0;
+          }
+          st.investment.stockHoldings = holdings.filter(function (h) {
+            return h.shares > 0;
+          });
+          st.needs.happiness = Math.max(
+            0,
+            (st.needs.happiness || 20) - 10,
+          );
+          st.player.mental = Math.max(
+            0,
+            (st.player.mental || 26) - 5,
+          );
+          StateManager.addMessage(
+            "📉 你忍痛割肉，虽然亏了但保住了剩余本金。心情-10、心智-5，但不用再盯着盘面煎熬了。",
+            "warning",
+          );
+        },
+      },
+      {
+        text: "💪 坚守，等反弹",
+        hint: "长期主义",
+        apply: function (st) {
+          st.flags._stockCrashPanicSeen = true;
+          // 坚守可能更好也可能更差
+          if (Random.chance(0.5)) {
+            st.needs.happiness = Math.min(
+              100,
+              (st.needs.happiness || 20) + 5,
+            );
+            StateManager.addMessage(
+              "📉 你选择了坚守。一周后确实反弹了，证明你的判断没错。心情+5。",
+              "success",
+            );
+          } else {
+            st.needs.happiness = Math.max(
+              0,
+              (st.needs.happiness || 20) - 15,
+            );
+            st.player.mental = Math.max(
+              0,
+              (st.player.mental || 26) - 8,
+            );
+            StateManager.addMessage(
+              "📉 你选择了坚守。结果又跌了10%……心态崩了。心情-15、心智-8。",
+              "warning",
+            );
+          }
+        },
+      },
+      {
+        text: "📊 分批减仓，不赌全部",
+        hint: "折中方案",
+        apply: function (st) {
+          st.flags._stockCrashPanicSeen = true;
+          // 分批减仓：卖掉一半
+          var holdings = st.investment.stockHoldings;
+          for (var i = 0; i < holdings.length; i++) {
+            holdings[i].shares = Math.ceil(holdings[i].shares / 2);
+          }
+          st.investment.stockHoldings = holdings;
+          st.player.mental = Math.min(
+            100,
+            (st.player.mental || 26) + 3,
+          );
+          StateManager.addMessage(
+            "📉 你卖了一半留了一半。不管涨跌都不会太后悔。这种策略最稳妥。心智+3。",
+            "info",
+          );
+        },
+      },
+    ],
+  });
+
+  // === 3. 父母生病联动：family.parents + 存款 → 孝道与经济压力 ===
+  // 设计意图：家庭系统与存款/健康系统联动，制造"尽孝vs生存"的抉择
+  RANDOM_EVENTS.push({
+    id: "parent_sickness_call",
+    phase: "street",
+    icon: "📞",
+    title: "老家来电",
+    story:
+      "晚上接到老家电话，妈妈感冒发烧住院了。爸爸声音很急：「你妈这次挺严重的，医生说可能要住院观察几天，医药费大概要¥2000。」",
+    // [自洽修复] conditions 新增：family系统存在 + 父母健康非完美
+    conditions: function (st) {
+      // 检查家庭系统是否存在
+      if (!st.family) return false;
+      // 检查父母健康状态（不是完全健康）
+      var fatherHealth =
+        (st.family.parents && st.family.parents.father && st.family.parents.father.health) ||
+        "healthy";
+      var motherHealth =
+        (st.family.parents && st.family.parents.mother && st.family.parents.mother.health) ||
+        "healthy";
+      if (fatherHealth === "healthy" && motherHealth === "healthy")
+        return false;
+      // 检查未触发过
+      if (st.flags && st.flags._parentSicknessSeen) return false;
+      return true;
+    },
+    probability: 0.03,
+    repeatable: false,
+    choices: [
+      {
+        text: "💰 汇¥2000回去",
+        hint: "尽孝，现金-2000",
+        apply: function (st) {
+          st.flags._parentSicknessSeen = true;
+          if (st.resources.cash >= 2000) {
+            st.resources.cash -= 2000;
+            st.needs.happiness = Math.min(
+              100,
+              (st.needs.happiness || 20) + 8,
+            );
+            st.player.mental = Math.min(
+              100,
+              (st.player.mental || 26) + 3,
+            );
+            if (st.family && st.family.parents && st.family.parents.father) {
+              st.family.parents.father.companionship = Math.min(
+                100,
+                (st.family.parents.father.companionship || 10) + 5,
+              );
+            }
+            StateManager.addMessage(
+              "📞 你把¥2000汇了回去。妈妈说谢谢你，语气里满是欣慰。心情+8、心智+3。",
+              "success",
+            );
+          } else {
+            st.needs.happiness = Math.max(
+              0,
+              (st.needs.happiness || 20) - 10,
+            );
+            st.player.mental = Math.max(
+              0,
+              (st.player.mental || 26) - 5,
+            );
+            StateManager.addMessage(
+              "📞 你钱不够，只能先汇了¥500。心里很不是滋味。心情-10、心智-5。",
+              "warning",
+            );
+          }
+        },
+      },
+      {
+        text: "🏥 请假回去照顾",
+        hint: "花时间+花路费",
+        apply: function (st) {
+          st.flags._parentSicknessSeen = true;
+          st.resources.cash -= 300; // 路费
+          st.needs.fatigue = Math.min(
+            100,
+            (st.needs.fatigue || 50) + 20,
+          );
+          st.needs.happiness = Math.min(
+            100,
+            (st.needs.happiness || 20) + 10,
+          );
+          StateManager.addMessage(
+            "📞 你请了两天假回老家照顾妈妈。虽然累但心里踏实。疲劳+20、心情+10。",
+            "info",
+          );
+        },
+      },
+      {
+        text: "😔 最近太难了……",
+        hint: "放弃，内疚",
+        apply: function (st) {
+          st.flags._parentSicknessSeen = true;
+          st.player.mental = Math.max(
+            0,
+            (st.player.mental || 26) - 10,
+          );
+          st.player.morality = Math.max(
+            0,
+            (st.player.morality || 50) - 5,
+          );
+          StateManager.addMessage(
+            "📞 你说自己也没钱，挂了电话。但心里一直过不去。心智-10、道德-5。",
+            "warning",
+          );
+        },
+      },
+    ],
+  });
+
+  // === 4. 慢性病爆发：illnesses数组 + 连续低健康 → 职业病 ===
+  // 设计意图：疾病系统与长期低健康联动，体现"积劳成疾"的真实感
+  RANDOM_EVENTS.push({
+    id: "chronic_illness_onset",
+    phase: "street",
+    icon: "🏥",
+    title: "慢性炎症发作",
+    story:
+      "连续几个月没好好看过医生，你的胃病越来越严重。昨晚疼得睡不着，今天上班时差点晕倒在工位上。同事说你可能需要去做个检查。",
+    // [自洽修复] conditions 新增：illnesses数组非空 + health持续偏低 + 无治疗记录
+    conditions: function (st) {
+      // 检查健康值低于阈值
+      if ((st.status && st.status.health || 70) >= 50) return false;
+      // 检查是否有慢性疾病记录
+      var illnesses = st.status && st.status.illnesses;
+      if (!illnesses || illnesses.length === 0) return false;
+      // 检查是否已经有慢性炎症
+      var hasChronic = illnesses.some(function (ill) {
+        return ill && (ill.id === "gastritis" || ill.id === "chronic_pain");
+      });
+      if (hasChronic) return false;
+      // 检查未触发过
+      if (st.flags && st.flags._chronicIllnessOnsetSeen) return false;
+      return true;
+    },
+    probability: 0.04,
+    repeatable: false,
+    choices: [
+      {
+        text: "🏥 马上去医院检查",
+        hint: "花¥500，彻底治疗",
+        apply: function (st) {
+          st.flags._chronicIllnessOnsetSeen = true;
+          if (st.resources.cash >= 500) {
+            st.resources.cash -= 500;
+            st.status.health = Math.min(
+              100,
+              (st.status.health || 70) + 15,
+            );
+            // 添加慢性炎症记录
+            if (!st.status.illnesses) st.status.illnesses = [];
+            st.status.illnesses.push({
+              id: "gastritis",
+              contractedDay: st.player.day,
+              severity: 2,
+              treated: true,
+            });
+            st.player.mental = Math.min(
+              100,
+              (st.player.mental || 26) + 5,
+            );
+            StateManager.addMessage(
+              "🏥 你做了全面检查，医生说是慢性胃炎。开了药，按时吃能控制。健康+15、心智+5。",
+              "success",
+            );
+          } else {
+            st.needs.happiness = Math.max(
+              0,
+              (st.needs.happiness || 20) - 5,
+            );
+            StateManager.addMessage(
+              "🏥 你想去检查但钱不够，只能先去药店买了点药应付。心情-5。",
+              "warning",
+            );
+          }
+        },
+      },
+      {
+        text: "💊 去药店买药",
+        hint: "花¥100，暂时缓解",
+        apply: function (st) {
+          st.flags._chronicIllnessOnsetSeen = true;
+          if (st.resources.cash >= 100) {
+            st.resources.cash -= 100;
+            st.status.health = Math.min(
+              100,
+              (st.status.health || 70) + 5,
+            );
+            StateManager.addMessage(
+              "💊 你买了点胃药，暂时好了一些。但知道这不是长久之计。健康+5。",
+              "info",
+            );
+          } else {
+            st.status.health = Math.max(
+              0,
+              (st.status.health || 70) - 5,
+            );
+            StateManager.addMessage(
+              "💊 连药钱都没有了。你硬扛了一天，健康-5。",
+              "warning",
+            );
+          }
+        },
+      },
+      {
+        text: "😤 没事，扛扛就过去了",
+        hint: "不花钱但伤身",
+        apply: function (st) {
+          st.flags._chronicIllnessOnsetSeen = true;
+          st.status.health = Math.max(
+            0,
+            (st.status.health || 70) - 10,
+          );
+          st.player.mental = Math.max(
+            0,
+            (st.player.mental || 26) - 5,
+          );
+          StateManager.addMessage(
+            "😤 你选择硬扛。结果晚上疼得更厉害了，第二天请假在家。健康-10、心智-5。",
+            "warning",
+          );
+        },
+      },
+    ],
+  });
+
+  // === 5. 网红黑粉联动：fame + 道德值极端 → 网络暴力 ===
+  // 设计意图：名声系统与道德值联动，高道德玩家和低道德玩家面对同一事件的不同反应
+  RANDOM_EVENTS.push({
+    id: "internet_troll_backlash",
+    phase: "street",
+    icon: "😤",
+    title: "网上被骂了",
+    story:
+      "你刷到一条帖子——有人拍了你在批发市场讨价还价的视频，配上文字「这就是底层人的格局」。评论区一片嘲讽，转发量已经过了万。",
+    // [自洽修复] conditions 新增：fame≥15 + 名声系统活跃
+    conditions: function (st) {
+      // 检查名声是否达到被关注的门槛
+      if ((st.player.fame || 0) < 15) return false;
+      // 检查未触发过
+      if (st.flags && st.flags._internetTrollBacklashSeen) return false;
+      return true;
+    },
+    probability: 0.03,
+    repeatable: false,
+    choices: [
+      {
+        text: "😊 一笑置之，专注自己",
+        hint: "高道德应对",
+        apply: function (st) {
+          st.flags._internetTrollBacklashSeen = true;
+          // 高道德玩家获得心智奖励
+          if ((st.player.morality || 50) >= 60) {
+            st.player.mental = Math.min(
+              100,
+              (st.player.mental || 26) + 5,
+            );
+            st.player.morality = Math.min(
+              100,
+              (st.player.morality || 50) + 3,
+            );
+            StateManager.addMessage(
+              "😊 你笑了笑关掉页面。真正的生活不在网上。心智+5、道德+3。",
+              "success",
+            );
+          } else {
+            st.needs.happiness = Math.min(
+              100,
+              (st.needs.happiness || 20) + 2,
+            );
+            StateManager.addMessage(
+              "😊 你懒得理会。心情+2。",
+              "info",
+            );
+          }
+        },
+      },
+      {
+        text: "📢 发声明反击",
+        hint: "名声+ 但可能激化",
+        apply: function (st) {
+          st.flags._internetTrollBacklashSeen = true;
+          if (Random.chance(0.4)) {
+            st.player.fame = Math.min(
+              100,
+              (st.player.fame || 0) + 8,
+            );
+            st.player.mental = Math.min(
+              100,
+              (st.player.mental || 26) + 3,
+            );
+            StateManager.addMessage(
+              "📢 你的声明得到了大量支持，反而让更多人了解了真相。名声+8、心智+3。",
+              "success",
+            );
+          } else {
+            st.player.fame = Math.max(
+              0,
+              (st.player.fame || 0) - 3,
+            );
+            st.needs.happiness = Math.max(
+              0,
+              (st.needs.happiness || 20) - 5,
+            );
+            StateManager.addMessage(
+              "📢 越描越黑，更多人开始骂你。名声-3、心情-5。",
+              "warning",
+            );
+          }
+        },
+      },
+      {
+        text: "😡 举报封号",
+        hint: "发泄但可能适得其反",
+        apply: function (st) {
+          st.flags._internetTrollBacklashSeen = true;
+          st.player.morality = Math.max(
+            0,
+            (st.player.morality || 50) - 3,
+          );
+          st.needs.happiness = Math.min(
+            100,
+            (st.needs.happiness || 20) + 3,
+          );
+          StateManager.addMessage(
+            "😡 你一气之下举报了对方。虽然解气了，但总觉得不太光彩。道德-3、心情+3。",
+            "info",
+          );
+        },
+      },
+    ],
+  });
+
   // ====== 注册结束 ======
 })();
