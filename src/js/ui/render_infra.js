@@ -70,29 +70,27 @@ function renderCurrentTab(state, anchorGoodId) {
     }
   }
 
-  // ===== 移动端固定 HUD（position: sticky） =====
-  // 手机端：时间槽+位置条+状态条以 position:sticky 固定在 #content-area 顶部，
-  // 随页面滑动始终保持可见（如底部事件记录栏一样）
+  // ===== 移动端固定 HUD（flex-shrink:0 兄弟节点） =====
+  // 创建 #mobile-hud 作为 #content-area 的兄弟节点（与 #tab-bar 同级），
+  // 利用 flex 布局让其固定不动，只有 #content-area 滚动，AP/状态始终可见
   var _isMobile = window.innerWidth <= 768;
   if (_isMobile) {
+    var _hudEl = document.getElementById("mobile-hud");
+    if (!_hudEl) {
+      _hudEl = document.createElement("div");
+      _hudEl.id = "mobile-hud";
+      area.parentNode.insertBefore(_hudEl, area);
+    }
+    _hudEl.innerHTML = "";
+    renderTimeSlot(state, _hudEl);
+    renderLocationBar(state, _hudEl);
+    renderStatsStrip(state, _hudEl);
+  } else {
     var _oldHud = document.getElementById("mobile-hud");
     if (_oldHud) _oldHud.remove();
   }
 
   area.innerHTML = "";
-
-  if (_isMobile) {
-    // 移动端：HUD 作为 #content-area 首个子节点，position:sticky 固定
-    var _hudEl = document.createElement("div");
-    _hudEl.id = "mobile-hud";
-    area.insertBefore(_hudEl, area.firstChild);
-    renderTimeSlot(state, _hudEl);
-    renderLocationBar(state, _hudEl);
-    renderStatsStrip(state, _hudEl);
-  } else {
-    // 桌面端：时间槽直放内容区
-    renderTimeSlot(state, area);
-  }
 
   // 人生目标（🌟 人生目标）跟随时间槽下方，紧凑显示
   renderGoalStrip(state, area);

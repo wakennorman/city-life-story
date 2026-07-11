@@ -523,13 +523,11 @@ body {
   gap: 12px;
 }
 
-/* --- Mobile HUD (v3.88): 固定顶部状态区，不随内容滚动 --- */
+/* --- Mobile HUD (v3.88b): 与 #tab-bar 同级，flex-shrink:0 固定顶部 --- */
 #mobile-hud {
-  position: sticky;
-  top: 0;
-  z-index: 5;
-  background: var(--bg-primary);
+  flex-shrink: 0;
   overflow: hidden;
+  background: var(--bg-primary);
   border-bottom: 1px solid rgba(255, 255, 255, 0.06);
 }
 
