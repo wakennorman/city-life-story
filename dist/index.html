@@ -77137,12 +77137,12 @@ if (typeof window !== "undefined") {
     icon: "💌",
     title: "雨夜里的社工",
     story:
-      "一个穿红马甲的年轻社工蹲到你的面前，没有同情和施舍的眼神，只是轻声说：\"下这么大雨，收容所还有空位，要不要来看看？不登记不住也行，至少喝口热的再走。\"\n\n她把自己的伞递过来，自己顶着文件袋跑向下一处避雨点。",
+      '一个穿红马甲的年轻社工蹲到你的面前，没有同情和施舍的眼神，只是轻声说："下这么大雨，收容所还有空位，要不要来看看？不登记不住也行，至少喝口热的再走。"\n\n她把自己的伞递过来，自己顶着文件袋跑向下一处避雨点。',
     conditions: function (st) {
       if (st.player.phase !== "street") return false;
       if (st.player.day < 14) return false; // 检查：至少经历两周漂泊
       if ((st.player.mental || 50) > 30) return false; // 检查：精神<30才触发
-      if ((st.housing && st.housing.tier || 0) > 1) return false; // 检查：住所≤1级(露宿/合租床位)
+      if (((st.housing && st.housing.tier) || 0) > 1) return false; // 检查：住所≤1级(露宿/合租床位)
       if (st.flags && st.flags._socialWorkerSeen) return false;
       return true;
     },
@@ -77158,7 +77158,10 @@ if (typeof window !== "undefined") {
           st.player.mental = Math.min(100, (st.player.mental || 30) + 15);
           st.needs.fatigue = Math.max(0, (st.needs.fatigue || 0) - 10);
           st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 8);
-          StateManager.addMessage("🍜 一碗热粥下肚，你的眼眶湿了。原来还有人记得这座城市里像你这样的人。心智+15，疲劳-10。", "success");
+          StateManager.addMessage(
+            "🍜 一碗热粥下肚，你的眼眶湿了。原来还有人记得这座城市里像你这样的人。心智+15，疲劳-10。",
+            "success",
+          );
         },
       },
       {
@@ -77167,7 +77170,10 @@ if (typeof window !== "undefined") {
         apply: function (st) {
           st.flags._socialWorkerSeen = true;
           st.player.mental = Math.min(100, (st.player.mental || 30) + 5);
-          StateManager.addMessage("🚶 你道了谢走开。雨停后偶尔会想起那把没还的伞。", "info");
+          StateManager.addMessage(
+            "🚶 你道了谢走开。雨停后偶尔会想起那把没还的伞。",
+            "info",
+          );
         },
       },
       {
@@ -77179,7 +77185,10 @@ if (typeof window !== "undefined") {
           st.player.mental = Math.min(100, (st.player.mental || 30) + 10);
           st.player.morality = Math.min(100, (st.player.morality || 50) + 5);
           st.player.fame = Math.min(100, (st.player.fame || 0) + 3);
-          StateManager.addMessage("📋 你帮她整理了三天受助者档案。从被人帮到帮别人，你找回了些力气。心智+10，道德+5，名气+3。", "success");
+          StateManager.addMessage(
+            "📋 你帮她整理了三天受助者档案。从被人帮到帮别人，你找回了些力气。心智+10，道德+5，名气+3。",
+            "success",
+          );
         },
       },
     ],
@@ -77198,7 +77207,8 @@ if (typeof window !== "undefined") {
       if (st.player.phase !== "street") return false;
       if (st.player.day < 30) return false; // 检查：至少满一个月
       if ((st.resources.cash || 0) >= 200) return false; // 检查：现金不足¥200才需救助
-      var workedLong = st.stats &&
+      var workedLong =
+        st.stats &&
         st.stats.actionFreq &&
         (st.stats.actionFreq["manual_labor_construction"] > 30 ||
           st.stats.actionFreq["haul_goods"] > 30 ||
@@ -77207,7 +77217,7 @@ if (typeof window !== "undefined") {
       if (st.flags && st.flags._subsidySeen) return false;
       return true;
     },
-    probability: 0.10,
+    probability: 0.1,
     repeatable: false,
     choices: [
       {
@@ -77220,7 +77230,10 @@ if (typeof window !== "undefined") {
           var bonus = 800;
           st.resources.cash += bonus;
           st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 5);
-          StateManager.addMessage("📋 申请通过了！首月¥800当场到账。工作人员说「下月按时来签收。」心情+5，三个月补贴激活。", "success");
+          StateManager.addMessage(
+            "📋 申请通过了！首月¥800当场到账。工作人员说「下月按时来签收。」心情+5，三个月补贴激活。",
+            "success",
+          );
         },
       },
       {
@@ -77229,12 +77242,30 @@ if (typeof window !== "undefined") {
         apply: function (st) {
           st.flags._subsidySeen = true;
           st.flags._freeTrainingSeen = true;
-          var skillKey = Random.fromArray(["repair", "sales", "cooking", "coding"]);
+          var skillKey = Random.fromArray([
+            "repair",
+            "sales",
+            "cooking",
+            "coding",
+          ]);
           if (st.skills && st.skills[skillKey]) {
             st.skills[skillKey].xp = (st.skills[skillKey].xp || 0) + 60;
           }
-          st.player.intelligence = Math.min(100, (st.player.intelligence || 0) + 2);
-          StateManager.addMessage("💼 登记了免费" + ({repair:"维修",sales:"销售",cooking:"烹饪",coding:"编程"})[skillKey] + "培训班。下周开班，智力+2，技能XP+60。", "success");
+          st.player.intelligence = Math.min(
+            100,
+            (st.player.intelligence || 0) + 2,
+          );
+          StateManager.addMessage(
+            "💼 登记了免费" +
+              {
+                repair: "维修",
+                sales: "销售",
+                cooking: "烹饪",
+                coding: "编程",
+              }[skillKey] +
+              "培训班。下周开班，智力+2，技能XP+60。",
+            "success",
+          );
         },
       },
       {
@@ -77244,7 +77275,10 @@ if (typeof window !== "undefined") {
           st.flags._subsidySeen = true;
           st.player.mental = Math.min(100, (st.player.mental || 50) + 8);
           st.player.fame = Math.min(100, (st.player.fame || 0) + 2);
-          StateManager.addMessage("😤 你扭头走了。靠自己的手吃饭，不丢人。回去的路上步子比来时沉了些，但也稳了些。心智+8，名气+2。", "info");
+          StateManager.addMessage(
+            "😤 你扭头走了。靠自己的手吃饭，不丢人。回去的路上步子比来时沉了些，但也稳了些。心智+8，名气+2。",
+            "info",
+          );
         },
       },
     ],
@@ -77263,7 +77297,8 @@ if (typeof window !== "undefined") {
       if (st.player.phase !== "street") return false;
       if (st.player.day < 20) return false; // 检查：经营至少20天
       var hasStallExp =
-        (st.stats && st.stats.actionFreq &&
+        (st.stats &&
+          st.stats.actionFreq &&
           (st.stats.actionFreq["food_stall"] > 5 ||
             st.stats.actionFreq["night_stall"] > 5 ||
             st.stats.actionFreq["morning_stall"] > 5 ||
@@ -77271,7 +77306,7 @@ if (typeof window !== "undefined") {
             st.stats.actionFreq["sell_goods"] > 5)) ||
         (st.sideHustle && st.sideHustle.type === "stall");
       if (!hasStallExp) return false; // 检查：有摆摊经验才遇到城管
-      var heat = st.chengguan && st.chengguan.heat || 0;
+      var heat = (st.chengguan && st.chengguan.heat) || 0;
       if (heat < 40) return false; // 检查：城管热度≥40
       if (st.flags && st.flags._chengguanEncounter) return false;
       return true;
@@ -77286,10 +77321,16 @@ if (typeof window !== "undefined") {
           st.flags._chengguanEncounter = true;
           if (Random.chance(0.5 + (st.player.agility - 25) * 0.01)) {
             st.needs.fatigue = Math.min(100, (st.needs.fatigue || 0) + 8);
-            StateManager.addMessage("🏃 你蹬着三轮车跑了三条街才停下来。没追上。虽然后怕，但货保住了。疲劳+8。", "success");
+            StateManager.addMessage(
+              "🏃 你蹬着三轮车跑了三条街才停下来。没追上。虽然后怕，但货保住了。疲劳+8。",
+              "success",
+            );
           } else {
             st.resources.cash = Math.max(0, (st.resources.cash || 0) - 50);
-            StateManager.addMessage("🏃 没跑出几步就被堵住了，罚了¥50。下次得跑快点。", "warning");
+            StateManager.addMessage(
+              "🏃 没跑出几步就被堵住了，罚了¥50。下次得跑快点。",
+              "warning",
+            );
           }
         },
       },
@@ -77300,10 +77341,16 @@ if (typeof window !== "undefined") {
           st.flags._chengguanEncounter = true;
           if (Random.chance(0.4)) {
             st.chengguan.relationship = (st.chengguan.relationship || 0) + 5;
-            StateManager.addMessage("🙏 城管摆摆手：「下不为例，赶紧收了走吧。」给了一次机会。城管关系+5。", "success");
+            StateManager.addMessage(
+              "🙏 城管摆摆手：「下不为例，赶紧收了走吧。」给了一次机会。城管关系+5。",
+              "success",
+            );
           } else {
             st.resources.cash = Math.max(0, (st.resources.cash || 0) - 100);
-            StateManager.addMessage("🙏 城管摇头：「每个都这么说，罚¥100,下回直接扣货。」", "warning");
+            StateManager.addMessage(
+              "🙏 城管摇头：「每个都这么说，罚¥100,下回直接扣货。」",
+              "warning",
+            );
           }
         },
       },
@@ -77312,11 +77359,18 @@ if (typeof window !== "undefined") {
         hint: "出奇招",
         apply: function (st) {
           st.flags._chengguanEncounter = true;
-          st.chengguan = st.chengguan || {heat:0,warnings:0,relationship:0};
+          st.chengguan = st.chengguan || {
+            heat: 0,
+            warnings: 0,
+            relationship: 0,
+          };
           st.chengguan.heat = Math.max(0, (st.chengguan.heat || 0) - 15);
           st.chengguan.relationship = (st.chengguan.relationship || 0) + 10;
           st.player.charm = Math.min(100, (st.player.charm || 0) + 2);
-          StateManager.addMessage("🤝 你帮城管把路边一个废弃石墩子搬到皮卡上。他们走时说了句「你这小伙子，行。」热度-15，关系+10，魅力+2。", "success");
+          StateManager.addMessage(
+            "🤝 你帮城管把路边一个废弃石墩子搬到皮卡上。他们走时说了句「你这小伙子，行。」热度-15，关系+10，魅力+2。",
+            "success",
+          );
         },
       },
     ],
@@ -77336,7 +77390,7 @@ if (typeof window !== "undefined") {
       if (st.player.day < 60) return false; // 检查：至少漂泊2个月
       var total = (st.resources.cash || 0) + (st.resources.bankBalance || 0);
       if (total < 1000) return false; // 检查：钱不多才触发愧疚感(有钱就不愧疚了)
-      var littleFamily = (st.family && st.family.parents) ? true : false;
+      var littleFamily = st.family && st.family.parents ? true : false;
       if (!littleFamily) return false;
       if (st.flags && st.flags._parentsPhoneSeen) return false;
       return true;
@@ -77353,14 +77407,26 @@ if (typeof window !== "undefined") {
           if (st.resources.cash >= 500) {
             st.resources.cash -= 500;
             if (st.family && st.family.parents) {
-              st.family.parents.father.companionship = Math.min(100, (st.family.parents.father.companionship || 0) + 15);
-              st.family.parents.mother.companionship = Math.min(100, (st.family.parents.mother.companionship || 0) + 15);
+              st.family.parents.father.companionship = Math.min(
+                100,
+                (st.family.parents.father.companionship || 0) + 15,
+              );
+              st.family.parents.mother.companionship = Math.min(
+                100,
+                (st.family.parents.mother.companionship || 0) + 15,
+              );
             }
             st.player.morality = Math.min(100, (st.player.morality || 50) + 3);
             st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 10);
-            StateManager.addMessage("💸 钱转过去了。妈打电话过来哭着说「你自己都没吃好」。你的心揪了一下。心情+10，道德+3，父母陪伴感+15。", "success");
+            StateManager.addMessage(
+              "💸 钱转过去了。妈打电话过来哭着说「你自己都没吃好」。你的心揪了一下。心情+10，道德+3，父母陪伴感+15。",
+              "success",
+            );
           } else {
-            StateManager.addMessage("💸 卡上余额不够——这¥500你还拿不出来。握着手机的手在抖。心里愧疚极了。", "warning");
+            StateManager.addMessage(
+              "💸 卡上余额不够——这¥500你还拿不出来。握着手机的手在抖。心里愧疚极了。",
+              "warning",
+            );
             st.player.mental = Math.max(0, (st.player.mental || 50) - 8);
           }
         },
@@ -77372,11 +77438,17 @@ if (typeof window !== "undefined") {
           st.flags._parentsPhoneSeen = true;
           st.flags._promisedHome = true;
           if (st.family && st.family.parents) {
-            st.family.parents.mother.companionship = Math.min(100, (st.family.parents.mother.companionship || 0) + 8);
+            st.family.parents.mother.companionship = Math.min(
+              100,
+              (st.family.parents.mother.companionship || 0) + 8,
+            );
           }
           st.player.mental = Math.min(100, (st.player.mental || 50) + 5);
           st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 8);
-          StateManager.addMessage("📱 妈那头笑着跟你爸说「他说回来！」。挂了电话你在街边坐了好一会。心智+5，心情+8，承诺回家flag已设置。", "success");
+          StateManager.addMessage(
+            "📱 妈那头笑着跟你爸说「他说回来！」。挂了电话你在街边坐了好一会。心智+5，心情+8，承诺回家flag已设置。",
+            "success",
+          );
         },
       },
       {
@@ -77387,7 +77459,10 @@ if (typeof window !== "undefined") {
           st.needs.happiness = Math.max(0, (st.needs.happiness || 0) - 12);
           st.player.mental = Math.max(0, (st.player.mental || 50) - 5);
           st.flags._ignoredParentsCall = true;
-          StateManager.addMessage("😶 你说「忙，先挂了」。整晚翻来覆去睡不着。心情-12，心智-5。今天你欠了自己一个答案。", "warning");
+          StateManager.addMessage(
+            "😶 你说「忙，先挂了」。整晚翻来覆去睡不着。心情-12，心智-5。今天你欠了自己一个答案。",
+            "warning",
+          );
         },
       },
     ],
@@ -77405,10 +77480,11 @@ if (typeof window !== "undefined") {
     conditions: function (st) {
       if (st.player.phase !== "street") return false;
       if (st.player.day < 90) return false; // 检查：至少从业3个月
-      var craftHigh = st.skills &&
+      var craftHigh =
+        st.skills &&
         ((st.skills.welding && st.skills.welding.level >= 60) ||
-         (st.skills.electrician && st.skills.electrician.level >= 60) ||
-         (st.skills.repair && st.skills.repair.level >= 70));
+          (st.skills.electrician && st.skills.electrician.level >= 60) ||
+          (st.skills.repair && st.skills.repair.level >= 70));
       if (!craftHigh) return false; // 检查：任一手艺达门槛
       if (st.flags && st.flags._apprenticeSeen) return false;
       return true;
@@ -77428,7 +77504,10 @@ if (typeof window !== "undefined") {
           if (typeof scheduleChainEvent === "function") {
             scheduleChainEvent(st, "craftsman_apprentice_payoff", 30, "street");
           }
-          StateManager.addMessage("👨‍🏫 你收下了他。第二天他开始跟着你出工。你知道这条路不好走——但你当年的师傅也是这么把你带出来的。名气+8，心智+8，魅力+3。30天后回报触发。", "success");
+          StateManager.addMessage(
+            "👨‍🏫 你收下了他。第二天他开始跟着你出工。你知道这条路不好走——但你当年的师傅也是这么把你带出来的。名气+8，心智+8，魅力+3。30天后回报触发。",
+            "success",
+          );
         },
       },
       {
@@ -77436,11 +77515,21 @@ if (typeof window !== "undefined") {
         hint: "人情债",
         apply: function (st) {
           st.flags._apprenticeSeen = true;
-          var recFriend = Random.fromArray(["boss_li","old_zhou","chen_ge"]);
-          if (st.relationships && st.relationships[recFriend] && st.relationships[recFriend].met) {
-            st.relationships[recFriend].affinity = Math.min(100, (st.relationships[recFriend].affinity || 0) + 10);
+          var recFriend = Random.fromArray(["boss_li", "old_zhou", "chen_ge"]);
+          if (
+            st.relationships &&
+            st.relationships[recFriend] &&
+            st.relationships[recFriend].met
+          ) {
+            st.relationships[recFriend].affinity = Math.min(
+              100,
+              (st.relationships[recFriend].affinity || 0) + 10,
+            );
           }
-          StateManager.addMessage("💰 你写了条微信把他推荐给一个老朋友。对方回了句「你介绍的人我放心」。朋友好感+10。", "success");
+          StateManager.addMessage(
+            "💰 你写了条微信把他推荐给一个老朋友。对方回了句「你介绍的人我放心」。朋友好感+10。",
+            "success",
+          );
         },
       },
       {
@@ -77449,7 +77538,10 @@ if (typeof window !== "undefined") {
         apply: function (st) {
           st.flags._apprenticeSeen = true;
           st.player.morality = Math.min(100, (st.player.morality || 50) + 3);
-          StateManager.addMessage("🙏 你诚实地说自己也还在挣扎。小伙子点点头没说什么——但你看出他眼里没怪你。道德+3。", "info");
+          StateManager.addMessage(
+            "🙏 你诚实地说自己也还在挣扎。小伙子点点头没说什么——但你看出他眼里没怪你。道德+3。",
+            "info",
+          );
         },
       },
     ],
@@ -77481,7 +77573,10 @@ if (typeof window !== "undefined") {
           var pay = 1500;
           st.resources.cash += pay;
           st.resources.totalEarned += pay;
-          StateManager.addMessage("💰 你收下信封但没有全拿——抽了一半又塞回去。「剩下的买点工具。」传承不只是钱。收入¥750。", "success");
+          StateManager.addMessage(
+            "💰 你收下信封但没有全拿——抽了一半又塞回去。「剩下的买点工具。」传承不只是钱。收入¥750。",
+            "success",
+          );
           st.resources.cash -= 750;
         },
       },
@@ -77492,7 +77587,10 @@ if (typeof window !== "undefined") {
           st.flags._apprenticePaidOff = true;
           st.player.fame = Math.min(100, (st.player.fame || 0) + 5);
           st.player.mental = Math.min(100, (st.player.mental || 50) + 5);
-          StateManager.addMessage("🙏 你摆摆手：「买点好的工具，别用破东西出事。」他使劲点了点头。你突然觉得一身轻——有人接班了。名气+5，心智+5。", "success");
+          StateManager.addMessage(
+            "🙏 你摆摆手：「买点好的工具，别用破东西出事。」他使劲点了点头。你突然觉得一身轻——有人接班了。名气+5，心智+5。",
+            "success",
+          );
         },
       },
     ],
@@ -135365,22 +135463,23 @@ const LOCATIONS = {
   //   priceMod: {},
   //   specialActions: ["起诉欠债", "劳动仲裁", "法律咨询"],
   // },
-  // TODO: 待实现 - 人才市场（参考真实人才交流中心）
-  // {
-  //   id: "job_market",
-  //   name: "人才市场",
-  //   desc: "找工作、招聘的地方。每周有招聘会，可以投简历。",
-  //   type: "service",
-  //   wealthTier: 2,
-  //   footfall: 0.8,
-  //   vendingNote: "求职者多，但消费力弱",
-  //   specialties: ["daily_use"],
-  //   dailyProbability: 0.3,
-  //   specialCategory: ["daily"],
-  //   jobs: [],
-  //   priceMod: { daily_use: 0.9 },
-  //   specialActions: ["投简历", "参加招聘会", "职业咨询"],
-  // },
+  // 人才市场：连接职业系统，无工作但有特殊行动
+  job_market: {
+    id: "job_market",
+    name: "人才市场",
+    icon: "🏢",
+    desc: "找工作、招聘的地方。每周有招聘会，可以投简历。",
+    type: "service",
+    wealthTier: 2,
+    footfall: 0.8,
+    vendingNote: "求职者多，但消费力弱",
+    specialties: ["daily_use"],
+    dailyProbability: 0.3,
+    specialCategory: ["daily"],
+    jobs: [],
+    priceMod: { daily_use: 0.9 },
+    specialActions: ["投简历", "参加招聘会", "职业咨询"],
+  },
   //
   // === 娱乐休闲区 ===
   entertainment: {
@@ -135534,25 +135633,26 @@ const LOCATIONS = {
   //   jobs: ["pet_sitter"],
   //   priceMod: {},
   // },
-  // TODO: 待实现 - 二手市场/跳蚤市场（参考真实二手交易市场）
-  // {
-  //   id: "flea_market",
-  //   name: "二手市场",
-  //   desc: "淘二手货的地方。可以低价买入高价卖出，考验眼光。",
-  //   type: "commercial",
-  //   wealthTier: 2,
-  //   footfall: 0.8,
-  //   vendingNote: "淘货人多，消费力参差不齐",
-  //   specialties: ["clothing", "electronics", "books"],
-  //   dailyProbability: 0.5,
-  //   specialCategory: ["clothing", "electronics"],
-  //   jobs: ["street_vending_goods"],
-  //   priceMod: {
-  //     clothing: 0.7,
-  //     electronics: 0.75,
-  //     books: 0.6,
-  //   },
-  // },
+  // 二手市场：跳蚤市场，淘宝捡漏
+  flea_market: {
+    id: "flea_market",
+    name: "二手市场",
+    icon: "🏴",
+    desc: "淘二手货的地方。可以低价买入高价卖出，考验眼光。",
+    type: "commercial",
+    wealthTier: 2,
+    footfall: 0.8,
+    vendingNote: "淘货人多，消费力参差不齐",
+    specialties: ["clothing", "electronics", "books"],
+    dailyProbability: 0.5,
+    specialCategory: ["clothing", "electronics"],
+    jobs: [],
+    priceMod: {
+      clothing: 0.7,
+      electronics: 0.75,
+      books: 0.6,
+    },
+  },
   vegetable_market: {
     id: "vegetable_market",
     name: "菜市场",
@@ -135591,15 +135691,17 @@ const TRAVEL_GRAPH = {
     "entertainment",
     "construction",
     "vegetable_market",
+    "job_market",
   ],
   // 内城区：城中村位于核心区边缘
-  slum: ["wholesaleMarket", "construction", "park", "bank", "vegetable_market"],
+  slum: ["wholesaleMarket", "construction", "park", "bank", "vegetable_market", "flea_market"],
   // 商业物流：批发市场连接工业区和中心区
   wholesaleMarket: [
     "slum",
     "commercialDist",
     "factoryZone",
     "vegetable_market",
+    "flea_market",
   ],
   // 菜市场：紧邻批发市场，买菜人流密集
   vegetable_market: ["wholesaleMarket", "slum", "commercialDist", "park"],
@@ -135632,11 +135734,15 @@ const TRAVEL_GRAPH = {
   // 郊区：最外围，通过公园或工业区进入
   suburb: ["park", "factoryZone"],
   // 政府：靠近商业区和银行
-  gov_office: ["commercialDist", "bank"],
+  gov_office: ["commercialDist", "bank", "job_market"],
+  // 人才市场：连接政府、银行和商业区
+  job_market: ["gov_office", "bank", "commercialDist"],
   // 娱乐城：连接商业区/科技园/大学城
   entertainment: ["commercialDist", "techPark", "school"],
   // 寺庙：位于公园旁/大学城周边；park和school均已添加回边
   temple: ["park", "school"],
+  // 二手市场：连接批发市场、城中村和公园
+  flea_market: ["wholesaleMarket", "slum", "park"],
 };
 
 /** 获取地点信息 */
