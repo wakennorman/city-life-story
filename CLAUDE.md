@@ -435,7 +435,14 @@ navHints: [
   - **UI 修复**：职业路径 `name` 改为纯文本，彻底修复“💻 💻 IT技术”等重复图标；创业页注册费展示改为实际计算值
   - **验证**：`npm run check:js`、`npm run typecheck`、`npm run check:ts-data`、`python build.py`（4217.3 KB）、`npm run build` 全部通过；Chrome Headless + CDP 冒烟未捕获运行时错误
 
-- **上一轮工作**：v3.0 审查改进与UI修复（2026-06-26）
+- **最新一轮工作**：v3.89a /loop 事件系统审查+新增5联动事件（2026-07-11）
+  - **A类审查**：系统性扫描5个事件文件250+事件，0个A类缺陷（之前R120已全部修复）
+  - **B类/C类**：16个高probability事件为设计意图（道德/副业可重复），9个背景NPC提及无需relationship检查
+  - **新增5个联动事件**：`hustle_regular_client`(副业口碑→稳定客户)、`repair_expert_identify`(修理≥40→识假货)、`npc_deep_secret_opportunity`(NPC好感≥80→深夜预警)、`weather_market_storm`(暴雨×批发市场)、`hunger_streak_collapse`(连续3天饥饿→健康崩溃)
+  - **产出文档**：`memory/v3.89a-loop-events-audit-new-events.md`
+  - **验证**：`node --check` 全通过，`python build.py`（7015.3 KB），git push `loop/r10-r19`
+
+- **上一轮工作**：v3.77 R120 联动事件扩充（2026-07-10）
   - **P0全中文化**：修复17个文件中15+处”AP”英文→”行动力”，NPC英文ID→中文名（新增`getNpcChineseName`兜底映射）；学历从侧边栏移入个人成长Tab新增”🎓 学历”子Tab
   - **P1 UI去重复**：header-context精简仅保留住所（移除位置/天气/背包容量）；”附近可前往”移到sidebar靠前位置首屏可见
   - **P1 社交网络增强**：热搜话题池30条+联动新闻系统；围脖热搜全中文；网红等级中文映射（none→无等）；粉丝多因子增长模型（内容长度+配图+名气→粉丝→名气反哺）
