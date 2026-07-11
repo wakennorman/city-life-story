@@ -156,7 +156,16 @@ navHints: [
 
 > 每次收工前覆盖更新本节（只留最新状态，不要追加历史）；详细变更历史在 `src/DEVELOPMENT.md`，不需要每次都读。
 
-- **最新一次工作 (2026-07-10)**：v3.76(loop R31) — P2四方向填充(技能组合双高门槛×2/季节Spring×1/季节Autumn×1/装备品质里程碑×1)
+- **最新一次工作 (2026-07-11)**：v3.89b(loop R44) — 跨系统联动扩充：填补legal/investment/family/illness/social_media五大空白区
+  - **① 城管执法联动** `chengguan_raid_stall`：chengguan.heat≥50 + 摆摊副业活跃 → 突击检查（自证/跑路/拍视频）
+  - **② 股市暴跌联动** `stock_crash_panic`：stockHoldings非空 + investFreq≥2 → 割肉/坚守/分批减仓
+  - **③ 父母生病联动** `parent_sickness_call`：family.parents健康非perfect → 汇款/请假回家/放弃
+  - **④ 慢性病爆发** `chronic_illness_onset`：health<50 + illnesses非空 → 医院/药店/硬扛
+  - **⑤ 网红黑粉** `internet_troll_backlash`：fame≥15 + 道德值极端 → 一笑置之/发声明/举报封号（道德值影响选项效果）
+  - **影响文件**: cross_system_events.js(+1138行)
+  - **验证**: node --check ✅ / build.py 7035.4KB ✅
+
+- **上一轮工作 (2026-07-11)**：v3.89a(loop R43) — 事件系统审查+新增5联动（老手特遇/专业技能视角/NPC深交/天气×位置/饥饿积累）
   - **设计意图**: 填补P2空白区(技能combo事件从0→2，季节叙事从2→4，装备品质里程碑从0→1)
   - **① 技能组合双高门槛**: `skill_combo_big_client`(sales≥40+charm≥30→大客户招待)/`skill_combo_repair_shop`(repair≥30+management≥20→合伙开修理铺)
   - **② 季节Spring叙事**: `spring_job_fair`(season=spring+day≥60→春季招聘会,一年一次)
