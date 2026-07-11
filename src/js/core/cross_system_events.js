@@ -46529,5 +46529,398 @@
   // ====================================================================
   // v3.88d loop R42 注册完毕（4个：NPC人生故事/道德回响/废品淘宝/雾中问路）
   // ====================================================================
+
+  // ====== 事件1：NPC关系调解——王婶×张姐的紧张关系 ======
+  // 设计意图：NPC_RELATION_MATRIX 中 aunt_wang↔sister_zhang 为"strained"，
+  // 玩家首次同时认识两人后，有机会调解城中村最棘手的邻里矛盾
+  RANDOM_EVENTS.push({
+    id: "npc_auntwang_zhang_mediation",
+    phase: "street",
+    icon: "🤝",
+    title: "婆婆和中介",
+    story:
+      "你刚走进巷子，就听见王大婶扯着嗓子在骂人——对面站着的竟是张姐，脸涨得通红。\\n\\n「你还有脸来？上次你给我介绍的那个租客，住了三个月跑了，押金还不够修水管的！」王大婶叉着腰。\\n\\n张姐也不甘示弱：「那租客背景我查过了，是你自己没签合同！我中介费都没收齐呢！」\\n\\n两人同时看到了你，同时开口：「你来得正好，你来评评理！」",
+    conditions: function (st) {
+      if (!st.relationships) return false;
+      var aw = st.relationships.aunt_wang;
+      var sz = st.relationships.sister_zhang;
+      if (!aw || !aw.met || !sz || !sz.met) return false;
+      if ((aw.affinity || 0) < 40 || (sz.affinity || 0) < 40) return false;
+      if (st.player.day < 60) return false;
+      if (st.flags._auntZhangMediationSeen) return false;
+      return true;
+    },
+    probability: 0.025,
+    repeatable: false,
+    choices: [
+      {
+        text: "🧠 当和事佬，各打五十大板",
+        hint: "需心智≥35，同时提升两人好感",
+        apply: function (st) {
+          st.flags._auntZhangMediationSeen = true;
+          if ((st.player.mental || 0) >= 35) {
+            st.relationships.aunt_wang.affinity = Math.min(
+              100,
+              (st.relationships.aunt_wang.affinity || 40) + 8,
+            );
+            st.relationships.sister_zhang.affinity = Math.min(
+              100,
+              (st.relationships.sister_zhang.affinity || 40) + 8,
+            );
+            st.player.mental = Math.min(100, (st.player.mental || 0) + 3);
+            st.player.fame = Math.min(100, (st.player.fame || 0) + 3);
+            st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 10);
+            StateManager.addMessage(
+              "🧠 你分别听两人说完，不急不慢地分析：「大婶，合同的事不能怪张姐；张姐，你也没提醒人家签合同。各退一步，这顿我请。」两人面面相觑，最后都笑了。王大婶好感+8，张姐好感+8，心智+3，名气+3。",
+              "success",
+            );
+          } else {
+            st.relationships.aunt_wang.affinity = Math.max(
+              0,
+              (st.relationships.aunt_wang.affinity || 40) - 3,
+            );
+            st.relationships.sister_zhang.affinity = Math.max(
+              0,
+              (st.relationships.sister_zhang.affinity || 40) - 3,
+            );
+            StateManager.addMessage(
+              "🧠 你想劝架，但说出来的话两边都不爱听。两人都甩手走了。好感各-3。",
+              "warning",
+            );
+          }
+        },
+      },
+      {
+        text: "👩 帮王大婶说话",
+        hint: "王婶好感+10，张姐好感-15",
+        apply: function (st) {
+          st.flags._auntZhangMediationSeen = true;
+          st.relationships.aunt_wang.affinity = Math.min(
+            100,
+            (st.relationships.aunt_wang.affinity || 40) + 10,
+          );
+          st.relationships.sister_zhang.affinity = Math.max(
+            0,
+            (st.relationships.sister_zhang.affinity || 40) - 15,
+          );
+          st.needs.happiness = Math.max(0, (st.needs.happiness || 50) - 5);
+          StateManager.addMessage(
+            "👩 你站在王大婶这边。张姐脸一沉，转身走了。王婶好感+10，张姐好感-15。",
+            "warning",
+          );
+        },
+      },
+      {
+        text: "👩‍💼 帮张姐说话",
+        hint: "张姐好感+10，王婶好感-15",
+        apply: function (st) {
+          st.flags._auntZhangMediationSeen = true;
+          st.relationships.sister_zhang.affinity = Math.min(
+            100,
+            (st.relationships.sister_zhang.affinity || 40) + 10,
+          );
+          st.relationships.aunt_wang.affinity = Math.max(
+            0,
+            (st.relationships.aunt_wang.affinity || 40) - 15,
+          );
+          st.needs.happiness = Math.max(0, (st.needs.happiness || 50) - 5);
+          StateManager.addMessage(
+            "👩‍💼 你帮张姐说了几句话。王大婶气得摔门进屋。张姐好感+10，王婶好感-15。",
+            "warning",
+          );
+        },
+      },
+    ],
+  });
+
+  // ====== 事件2：百日匠人——同一工作坚持100天 ======
+  RANDOM_EVENTS.push({
+    id: "career_hundred_day_master",
+    phase: "street",
+    icon: "🏅",
+    title: "百日匠人",
+    story:
+      "今天是你在这份工作上干的第一百天。\\n\\n没人给你庆祝，没人发奖金——但你自己知道，这一百天里你学会了什么。\\n\\n刚来的时候，你连工具都拿不稳。现在闭上眼睛都能把活干完。老板开始让你带新人，客户开始指定要你。\\n\\n你站在工作的位置上，忽然觉得——这座城市，开始认可你了。",
+    conditions: function (st) {
+      if (!st.career || !st.career.currentJob) return false;
+      if ((st.career.currentJob.workDays || 0) < 100) return false;
+      if (st.flags._hundredDayMasterSeen) return false;
+      return true;
+    },
+    probability: 0.05,
+    repeatable: false,
+    choices: [
+      {
+        text: "📝 默默记下这个里程碑",
+        hint: "心智+5，获得'百日匠人'flag",
+        apply: function (st) {
+          st.flags._hundredDayMasterSeen = true;
+          st.flags._hundredDayMaster = true;
+          st.player.mental = Math.min(100, (st.player.mental || 0) + 5);
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 15);
+          StateManager.addMessage(
+            "📝 你在手机备忘录里记下：「第100天。」你看着窗外，这座城市有千万个打工的人——你是其中之一，但你坚持了一百天。心智+5，心情+15。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "📸 发个朋友圈记录",
+        hint: "名气+5，可能收到问候",
+        apply: function (st) {
+          st.flags._hundredDayMasterSeen = true;
+          st.flags._hundredDayMaster = true;
+          st.player.fame = Math.min(100, (st.player.fame || 0) + 5);
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 12);
+          StateManager.addMessage(
+            "📸 你发了条朋友圈，收获了二十几个赞。名气+5，心情+12。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "🍜 给自己加个菜庆祝",
+        hint: "花费¥30，心情+20",
+        apply: function (st) {
+          st.flags._hundredDayMasterSeen = true;
+          st.flags._hundredDayMaster = true;
+          var cost = Math.min(30, st.resources.cash || 0);
+          st.resources.cash -= cost;
+          st.needs.hunger = Math.min(100, (st.needs.hunger || 50) + 20);
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 20);
+          StateManager.addMessage(
+            "🍜 你去了常去的那家面馆，点了一碗最贵的牛肉面。老板娘认得你，给你多加了一块肉。心情+20，饥饿+20。",
+            "success",
+          );
+        },
+      },
+    ],
+  });
+
+  // ====== 事件3：百万财富里程碑——人生第一个100万 ======
+  RANDOM_EVENTS.push({
+    id: "wealth_million_milestone",
+    phase: "street",
+    icon: "💎",
+    title: "百万时刻",
+    story:
+      "你坐在出租屋里，算了一笔账。\\n\\n从第一天来到这座城市起，你搬过砖、送过外卖、摆过摊、熬过夜、吃过亏、也赚过钱。\\n\\n那些¥20、¥50、¥100攒起来的数字，今天终于跨过了一个门槛——你在这座城市里，赚到了第一个一百万。\\n\\n不是存款，是流水。但这一百万，每一分都是你亲手挣的。",
+    conditions: function (st) {
+      if (!st.resources) return false;
+      var totalEarned = st.resources.totalEarned || 0;
+      if (totalEarned < 1000000) return false;
+      if (st.flags._millionMilestoneSeen) return false;
+      if (st.player.day < 100) return false;
+      return true;
+    },
+    probability: 0.04,
+    repeatable: false,
+    choices: [
+      {
+        text: "🙏 安静地感恩这一刻",
+        hint: "心智+5，心情+20",
+        apply: function (st) {
+          st.flags._millionMilestoneSeen = true;
+          st.player.mental = Math.min(100, (st.player.mental || 0) + 5);
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 20);
+          StateManager.addMessage(
+            "🙏 你放下手机，静静地坐了一会儿。窗外是万家灯火——你想起刚到的那天，口袋里只有¥300。心智+5，心情+20。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "📊 规划下一个目标",
+        hint: "心智+3，获得'百万雄心'buff",
+        apply: function (st) {
+          st.flags._millionMilestoneSeen = true;
+          st.flags._millionAmbition = true;
+          st.player.mental = Math.min(100, (st.player.mental || 0) + 3);
+          st.player.intelligence = Math.min(
+            100,
+            (st.player.intelligence || 20) + 2,
+          );
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 10);
+          StateManager.addMessage(
+            "📊 你打开记账本，写下新的目标：下一个一百万，要攒下来。心智+3，智力+2。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "📞 给家里打个电话",
+        hint: "情感·家庭关系",
+        apply: function (st) {
+          st.flags._millionMilestoneSeen = true;
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 25);
+          st.player.morality = Math.min(100, (st.player.morality || 50) + 3);
+          if (st.family && st.family.parents) {
+            if (st.family.parents.father)
+              st.family.parents.father.companionship = Math.min(
+                100,
+                (st.family.parents.father.companionship || 0) + 5,
+              );
+            if (st.family.parents.mother)
+              st.family.parents.mother.companionship = Math.min(
+                100,
+                (st.family.parents.mother.companionship || 0) + 5,
+              );
+          }
+          StateManager.addMessage(
+            "📞 你给家里打了个电话。妈妈问你在外面好不好。你说挺好的。心情+25，道德+3，家庭关系提升。",
+            "success",
+          );
+        },
+      },
+    ],
+  });
+
+  // ====== 事件4：三技能跨界 ======
+  RANDOM_EVENTS.push({
+    id: "skill_triple_threshold",
+    phase: "street",
+    icon: "🌟",
+    title: "三栖能手",
+    story:
+      "你最近发现自己越来越「全能」了。\\n\\n以前只会干一样活，现在——你既能修东西，又能跟客户谈价钱，还能自己做点小账。\\n\\n今天在批发市场，一个老板上下打量了你一番：「你什么都会一点？我正缺一个你这样能管技术又能管业务的人。」\\n\\n他递来一张名片。",
+    conditions: function (st) {
+      if (!st.skills || st.player.day < 60) return false;
+      var highSkills = 0;
+      for (var sk in st.skills) {
+        if (st.skills[sk] && st.skills[sk].level >= 60) {
+          highSkills++;
+          if (highSkills >= 3) break;
+        }
+      }
+      if (highSkills < 3) return false;
+      if (st.flags._tripleSkillSeen) return false;
+      return true;
+    },
+    probability: 0.02,
+    repeatable: false,
+    choices: [
+      {
+        text: "📋 接下名片，考虑合作",
+        hint: "解锁新职业路线可能性",
+        apply: function (st) {
+          st.flags._tripleSkillSeen = true;
+          st.flags._tripleSkillContact = true;
+          st.player.fame = Math.min(100, (st.player.fame || 0) + 5);
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 15);
+          StateManager.addMessage(
+            "🌟 你收下名片，心里清楚——不是运气好，是你把几样技能都练到了能拿出手的程度。名气+5，心情+15。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "💪 继续磨练，还不够好",
+        hint: "心智+5，保持专注",
+        apply: function (st) {
+          st.flags._tripleSkillSeen = true;
+          st.player.mental = Math.min(100, (st.player.mental || 0) + 5);
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 8);
+          StateManager.addMessage(
+            "💪 你婉拒了，说还要再练练。三项技能只是开始，你想看看自己到底能走多远。心智+5。",
+            "info",
+          );
+        },
+      },
+      {
+        text: "📱 发朋友圈炫耀一下",
+        hint: "名气+3",
+        apply: function (st) {
+          st.flags._tripleSkillSeen = true;
+          st.player.fame = Math.min(100, (st.player.fame || 0) + 3);
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 10);
+          StateManager.addMessage(
+            "📱 你发了条朋友圈：「今天被人夸全能了。」名气+3，心情+10。",
+            "success",
+          );
+        },
+      },
+    ],
+  });
+
+  // ====== 事件5：无债一身轻 ======
+  RANDOM_EVENTS.push({
+    id: "debt_free_liberation",
+    phase: "street",
+    icon: "🕊️",
+    title: "终于自由了",
+    story:
+      "你看着手机银行上的余额——¥0。\\n\\n不对，应该是——你看着「已还清」三个字。\\n\\n最后一个还款日，你把最后一笔钱转了出去。信用卡还清了，借的钱还清了，甚至连城中村小卖部赊的账都结了。\\n\\n你站了一会儿，不知道该做什么。\\n\\n来这座城市几年了，第一次——你谁的钱都不欠了。",
+    conditions: function (st) {
+      if (!st.flags || !st.resources) return false;
+      if (!st.flags._everHadDebt) return false;
+      var totalDebt =
+        (st.resources.debt || 0) + (st.resources.villageDebt || 0);
+      if (totalDebt > 0) return false;
+      if (st.player.day < 30) return false;
+      if (st.flags._debtFreeSeen) return false;
+      return true;
+    },
+    probability: 0.03,
+    repeatable: false,
+    choices: [
+      {
+        text: "🍜 去吃顿好的庆祝",
+        hint: "¥50，心情+25",
+        apply: function (st) {
+          st.flags._debtFreeSeen = true;
+          var cost = Math.min(50, st.resources.cash || 0);
+          st.resources.cash -= cost;
+          st.needs.hunger = Math.min(100, (st.needs.hunger || 50) + 25);
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 25);
+          st.player.mental = Math.min(100, (st.player.mental || 0) + 3);
+          StateManager.addMessage(
+            "🍜 你去了那家以前总路过但舍不得进的小馆子。老板问是不是有喜事。你说：「还清债了。」老板给你加了瓶啤酒：「这顿算我的，恭喜。」心情+25，饥饿+25，心智+3。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "📝 写下这段经历，提醒自己",
+        hint: "心智+5，获得'无债'buff",
+        apply: function (st) {
+          st.flags._debtFreeSeen = true;
+          st.flags._debtFreeExperience = true;
+          st.player.mental = Math.min(100, (st.player.mental || 0) + 5);
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 15);
+          StateManager.addMessage(
+            "📝 你在笔记本上画了一条线，写了三个字：「还清了」。那些熬夜加班的日子、那些借钱时难以启齿的时刻——都过去了。心智+5，心情+15。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "🤝 去感谢借过钱给你的人",
+        hint: "道德+5，修复关系",
+        apply: function (st) {
+          st.flags._debtFreeSeen = true;
+          st.player.morality = Math.min(100, (st.player.morality || 50) + 5);
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 20);
+          if (st.relationships) {
+            for (var r in st.relationships) {
+              if (st.relationships[r] && st.relationships[r].met) {
+                st.relationships[r].affinity = Math.min(
+                  100,
+                  (st.relationships[r].affinity || 0) + 3,
+                );
+              }
+            }
+          }
+          StateManager.addMessage(
+            "🤝 你一个个找到那些曾经借过钱给你的人——每一句谢谢，都是真心的。道德+5，心情+20，所有NPC好感+3。",
+            "success",
+          );
+        },
+      },
+    ],
+  });
+
+  // ====================================================================
+  // v3.88d 注册完毕（5个：NPC调解/百日匠人/百万财富/三技能跨界/无债一身轻）
+  // ====================================================================
   // ====== 注册结束 ======
 })();
