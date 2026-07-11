@@ -77868,8 +77868,11 @@ if (typeof window !== "undefined") {
           st.player.morality = Math.min(100, st.player.morality + 3);
           var r = st.relationships.boss_li;
           if (r) r.affinity = Math.min(100, (r.affinity || 0) + 5);
-          StateManager.addMessage("你把信封推了回去。李总看了你一眼，没再说什么——但此后他交任务时更放心了。", "good");
-        }
+          StateManager.addMessage(
+            "你把信封推了回去。李总看了你一眼，没再说什么——但此后他交任务时更放心了。",
+            "good",
+          );
+        },
       },
       {
         text: "💰 收下信封（＋现金，−道德，−老板长期信任）",
@@ -77882,10 +77885,13 @@ if (typeof window !== "undefined") {
           st.player.morality = Math.max(0, st.player.morality - 8);
           var r = st.relationships.boss_li;
           if (r) r.affinity = Math.max(-100, (r.affinity || 0) - 10);
-          StateManager.addMessage("你收下了。钱进了口袋，可那晚你睡得不太踏实。", "bad");
-        }
-      }
-    ]
+          StateManager.addMessage(
+            "你收下了。钱进了口袋，可那晚你睡得不太踏实。",
+            "bad",
+          );
+        },
+      },
+    ],
   });
 
   // 空白区：技能里程碑=专业人士视角（烹饪）
@@ -77920,8 +77926,11 @@ if (typeof window !== "undefined") {
           sk.xp = (sk.xp || 0) + 40;
           var r = st.relationships && st.relationships.chef_chen;
           if (r && r.met) r.affinity = Math.min(100, (r.affinity || 0) + 8);
-          StateManager.addMessage("你随手提了两句，老板娘眼睛亮了：‘您是内行！’ 烹饪手感又精进了些。", "good");
-        }
+          StateManager.addMessage(
+            "你随手提了两句，老板娘眼睛亮了：‘您是内行！’ 烹饪手感又精进了些。",
+            "good",
+          );
+        },
       },
       {
         text: "🤫 默默记下心法（＋烹饪xp，自用）",
@@ -77930,10 +77939,13 @@ if (typeof window !== "undefined") {
           st.flags._cookingRecipeSeen = true;
           var sk = st.skills.cooking;
           sk.xp = (sk.xp || 0) + 25;
-          StateManager.addMessage("你没多说，只在心里记下了那处火候。手艺，是自己的。", "normal");
-        }
-      }
-    ]
+          StateManager.addMessage(
+            "你没多说，只在心里记下了那处火候。手艺，是自己的。",
+            "normal",
+          );
+        },
+      },
+    ],
   });
 
   // 空白区：连续/深度低心情的邻里关怀
@@ -77966,21 +77978,35 @@ if (typeof window !== "undefined") {
           st.flags._lowMoodVisitSeen = true;
           st.needs.happiness = Math.min(100, st.needs.happiness + 15);
           var r = st.relationships && st.relationships.aunt_wang;
-          if (!r) { st.relationships = st.relationships || {}; r = st.relationships.aunt_wang = { met: true, affinity: 0, discovered: {} }; }
-          else { r.met = true; }
+          if (!r) {
+            st.relationships = st.relationships || {};
+            r = st.relationships.aunt_wang = {
+              met: true,
+              affinity: 0,
+              discovered: {},
+            };
+          } else {
+            r.met = true;
+          }
           r.affinity = Math.min(100, (r.affinity || 0) + 6);
-          StateManager.addMessage("你开了门，热气腾腾的汤下肚，心里也松了松。", "good");
-        }
+          StateManager.addMessage(
+            "你开了门，热气腾腾的汤下肚，心里也松了松。",
+            "good",
+          );
+        },
       },
       {
         text: "🚪 婉拒，说自己没事（无变化）",
         hint: "习惯独处，但错过一次连接",
         apply: function (st) {
           st.flags._lowMoodVisitSeen = true;
-          StateManager.addMessage("你谢过阿姨，关上门。屋子里又安静下来。", "normal");
-        }
-      }
-    ]
+          StateManager.addMessage(
+            "你谢过阿姨，关上门。屋子里又安静下来。",
+            "normal",
+          );
+        },
+      },
+    ],
   });
 
   // ====== v3.93 空白区第五批（NPC好感深挖-小梅 / 天气×位置-台风避险）======
@@ -78020,8 +78046,11 @@ if (typeof window !== "undefined") {
           var sk = st.skills && st.skills.english;
           var bonus = sk && sk.level >= 30 ? 10 : 0;
           r.affinity = Math.min(100, (r.affinity || 0) + 8 + bonus);
-          StateManager.addMessage("你把自己啃书的笨办法讲给她听。小梅眼睛弯起来：‘原来你也是这么熬过来的。’ 你们的距离近了些。", "good");
-        }
+          StateManager.addMessage(
+            "你把自己啃书的笨办法讲给她听。小梅眼睛弯起来：‘原来你也是这么熬过来的。’ 你们的距离近了些。",
+            "good",
+          );
+        },
       },
       {
         text: "🤝 鼓励她就好，不多问（＋小梅好感，轻量）",
@@ -78030,10 +78059,13 @@ if (typeof window !== "undefined") {
           st.flags._xiaoMeiDiscoverySeen = true;
           var r = st.relationships.xiao_mei;
           r.affinity = Math.min(100, (r.affinity || 0) + 4);
-          StateManager.addMessage("你只说‘肯定行，你这么拼’。小梅点点头，嘴角有了点笑意。", "normal");
-        }
-      }
-    ]
+          StateManager.addMessage(
+            "你只说‘肯定行，你这么拼’。小梅点点头，嘴角有了点笑意。",
+            "normal",
+          );
+        },
+      },
+    ],
   });
 
   // 空白区：天气×位置（台风 + 城中村/贫民窟）
@@ -78067,18 +78099,132 @@ if (typeof window !== "undefined") {
           st.flags._typhoonShelterSeen = true;
           st.needs.fatigue = Math.max(0, st.needs.fatigue + 8);
           var r = st.relationships && st.relationships.aunt_wang;
-          if (!r) { st.relationships = st.relationships || {}; r = st.relationships.aunt_wang = { met: true, affinity: 0, discovered: {} }; }
-          else { r.met = true; }
+          if (!r) {
+            st.relationships = st.relationships || {};
+            r = st.relationships.aunt_wang = {
+              met: true,
+              affinity: 0,
+              discovered: {},
+            };
+          } else {
+            r.met = true;
+          }
           r.affinity = Math.min(100, (r.affinity || 0) + 7);
-          StateManager.addMessage("一屋子人挤着，有人讲笑话，有人分橘子。风雨再大，屋里是暖的。", "good");
-        }
+          StateManager.addMessage(
+            "一屋子人挤着，有人讲笑话，有人分橘子。风雨再大，屋里是暖的。",
+            "good",
+          );
+        },
       },
       {
         text: "😶 锁门硬扛（无变化，但错过社区联结）",
         hint: "独立但也孤立",
         apply: function (st) {
           st.flags._typhoonShelterSeen = true;
-          StateManager.addMessage("你没动。整夜听着风声，直到天亮。窗户没碎，但你有点后悔没下去。", "normal");
+          StateManager.addMessage(
+            "你没动。整夜听着风声，直到天亮。窗户没碎，但你有点后悔没下去。",
+            "normal",
+          );
+        },
+      },
+    ],
+  });
+
+  // ====== v3.94 空白区第六批（技能里程碑-管理 / 天气×位置-大雾）======
+  // 设计原则：门控于已验证 state 字段，零 A 类缺陷风险。
+
+  // 空白区：技能里程碑=专业人士视角（管理，职场线）
+  // 联动：技能(management)·职业·NPC(boss_li/同事)·情绪
+  // 设计心理学： mastery 反馈·从执行者到协调者·权威感
+  RANDOM_EVENTS.push({
+    id: "management_expert_team_conflict",
+    icon: "🧭",
+    title: "你一眼看出的症结",
+    phase: "corporate",
+    probability: 0.05,
+    repeatable: false,
+    story:
+      "两个组员为排期吵得面红耳赤，老板李总头疼地看你：‘你来说说？’\n\n你没急着站队，而是把两人的任务拆开一看——冲突根本不在人，在接口定义不清。",
+    conditions: function (st) {
+      // 检查 管理技能达到行家门槛
+      var sk = st.skills && st.skills.management;
+      if (!sk || sk.level < 40) return false;
+      // 检查 必须已就业（职场场景）
+      if (!st.employment || !st.employment.currentJob) return false;
+      // 检查 游戏进程
+      if (st.day < 40) return false;
+      // 检查 一次性
+      if (st.flags._mgmtConflictSeen) return false;
+      return true;
+    },
+    choices: [
+      {
+        text: "🗂️ 用框架重新拆解任务（＋管理xp，＋老板信任，＋心情）",
+        hint: "以专业度立威，巩固协调者身份",
+        apply: function (st) {
+          st.flags._mgmtConflictSeen = true;
+          var sk = st.skills.management;
+          sk.xp = (sk.xp || 0) + 45;
+          var r = st.relationships.boss_li;
+          if (r) r.affinity = Math.min(100, (r.affinity || 0) + 6);
+          st.needs.happiness = Math.min(100, st.needs.happiness + 6);
+          StateManager.addMessage("你三两下把乱麻捋顺。李总挑眉：‘可以啊。’ 那种‘被需要’的感觉，挺好。", "good");
+        }
+      },
+      {
+        text: "🤐 和稀泥各打五十大板（轻量，无成长）",
+        hint: "稳妥但错失立威机会",
+        apply: function (st) {
+          st.flags._mgmtConflictSeen = true;
+          StateManager.addMessage("你打了个圆场，两人不吵了，但问题还在。李总没说什么。", "normal");
+        }
+      }
+    ]
+  });
+
+  // 空白区：天气×位置（大雾 + 商圈）
+  // 联动：天气(foggy)·位置(commercialDist)·通勤·安全
+  // 设计心理学：感官失真·迷路焦虑·陌生人善意
+  RANDOM_EVENTS.push({
+    id: "foggy_commute_misdirection",
+    icon: "🌫️",
+    title: "雾里撞见的热心人",
+    phase: "street",
+    probability: 0.05,
+    repeatable: false,
+    story:
+      "大雾把整条街糊成了牛奶色，你在商圈转了三圈没找着地铁路口。正发懵，一个遛狗的大爷停住：‘小伙子，去地铁啊？顺着这墙根走就到了。’",
+    conditions: function (st) {
+      // 检查 当前天气为大雾
+      if (!st.weather || st.weather.current !== "foggy") return false;
+      // 检查 当前位于商圈
+      if (!st.trade || st.trade.currentLocation !== "commercialDist") return false;
+      // 检查 游戏进程
+      if (st.day < 20) return false;
+      // 检查 一次性
+      if (st.flags._foggyCommuteSeen) return false;
+      return true;
+    },
+    choices: [
+      {
+        text: "🙏 道谢并聊两句（＋心情，＋社区好感）",
+        hint: "接受陌生善意，城市变温柔",
+        apply: function (st) {
+          st.flags._foggyCommuteSeen = true;
+          st.needs.happiness = Math.min(100, st.needs.happiness + 5);
+          var r = st.relationships && st.relationships.old_zhou;
+          if (!r) { st.relationships = st.relationships || {}; r = st.relationships.old_zhou = { met: true, affinity: 0, discovered: {} }; }
+          else { r.met = true; }
+          r.affinity = Math.min(100, (r.affinity || 0) + 4);
+          StateManager.addMessage("你谢过大爷，顺着墙根真的摸到了路口。雾还没散，但心里亮了点。", "good");
+        }
+      },
+      {
+        text: "🤳 低头开导航自己找（无变化）",
+        hint: "独立解决",
+        apply: function (st) {
+          st.flags._foggyCommuteSeen = true;
+          StateManager.addMessage("你没多说，低头戳着手机绕了十分钟，总算上了地铁。", "normal");
         }
       }
     ]
@@ -160437,7 +160583,14 @@ function addStreetExtras(state, actions) {
     handler: () => {
       const st = StateManager.getState();
       st.player.intelligence = Math.min(100, st.player.intelligence + 0.3);
-      var sectors = ["科技/IT", "金融/会计", "制造业", "服务业", "教育培训", "物流运输"];
+      var sectors = [
+        "科技/IT",
+        "金融/会计",
+        "制造业",
+        "服务业",
+        "教育培训",
+        "物流运输",
+      ];
       var sector = Random.fromArray(sectors);
       var demand = Random.int(1, 5);
       var demandDesc = ["饱和", "平稳", "略缺", "紧缺", "大量急招"][demand - 1];
@@ -160471,13 +160624,19 @@ function addStreetExtras(state, actions) {
       var bestLvl = 0;
       for (var sk in st.skills) {
         var lvl = st.skills[sk].level || 0;
-        if (lvl > bestLvl) { bestLvl = lvl; bestSkill = sk; }
+        if (lvl > bestLvl) {
+          bestLvl = lvl;
+          bestSkill = sk;
+        }
       }
       var advice = "多积累经验，未来可以考虑管理岗位";
       if (bestLvl < 20) advice = "建议先专注提升一项核心技能再考虑职业规划";
-      else if (bestSkill === "cooking" || bestSkill === "sales") advice = "你的实操技能不错，可以考虑走技术+业务路线";
-      else if (bestSkill === "repair" || bestSkill === "electrician") advice = "你的技术功底扎实，未来可以向技师方向发展";
-      else if (bestSkill === "driving") advice = "你的驾驶/物流经验丰富，可以考虑考取更高等级驾照";
+      else if (bestSkill === "cooking" || bestSkill === "sales")
+        advice = "你的实操技能不错，可以考虑走技术+业务路线";
+      else if (bestSkill === "repair" || bestSkill === "electrician")
+        advice = "你的技术功底扎实，未来可以向技师方向发展";
+      else if (bestSkill === "driving")
+        advice = "你的驾驶/物流经验丰富，可以考虑考取更高等级驾照";
       StateManager.addMessage(
         `🎯 你花了¥30做了一次职业咨询。规划师看了你的履历：你最擅长「${bestSkill}」(Lv.${bestLvl})。建议：${advice}。智力+1，心情+5。`,
         "success",
@@ -160540,7 +160699,8 @@ function addStreetExtras(state, actions) {
     handler: () => {
       const st = StateManager.getState();
       st.resources.cash -= Math.min(20, st.resources.cash);
-      var skillLvl = (st.skills && st.skills.sales && st.skills.sales.level) || 0;
+      var skillLvl =
+        (st.skills && st.skills.sales && st.skills.sales.level) || 0;
       var income = 40 + Random.int(0, 60) + skillLvl * 3;
       st.resources.cash += income;
       st.needs.fatigue = Math.min(100, st.needs.fatigue + 12);
