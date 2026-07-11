@@ -156,27 +156,18 @@ navHints: [
 
 > 每次收工前覆盖更新本节（只留最新状态，不要追加历史）；详细变更历史在 `src/DEVELOPMENT.md`，不需要每次都读。
 
-- **最新一次工作 (2026-07-11)**：v3.88e — 死代码清理（删除4处冗余函数，-312行）
-  - **🧹 renderCurrentTab_legacy**（render.js:1115-1247）：v3.13文件拆分遗留的132行旧版，从未被调用
-  - **🧹 scrollMessageLogToBottom**（render.js:7472）：工具函数，全代码库无调用
-  - **🧹 scaleEventReward**（events_core.js:955）：事件奖励动态缩放，设计了但从未被消费
-  - **🧹 quarterlyCleanup**（events_core.js:962）：空占位函数，已无旧调用
-  - **净效果**：-312行代码，构建体积7806.6KB
-  - **验证**：node --check ✅ / build.py ✅
-  - **commit**：`481db1d7`(submodule) · `6f6af42`(parent)
-
-- **上一轮工作 (2026-07-11)**：v3.88d(loop R42) — 新增4个联动事件(多窗口协作)
-  - **指令一审查**：全量扫描5个事件文件(250+事件)，A类缺陷0个(所有职业/天气/NPC事件均已通过[自洽修复]完成检查)
+- **最新一次工作 (2026-07-11)**：v3.90(loop R43) — 新增4个联动事件(王婶张姐调解/第一桶金/李陈合作/周年归属感)
+  - **指令一审查**：全量扫描15个事件文件，A类缺陷0个（已累积133处[自洽修复]注释覆盖所有NPC/天气/职业门控）
   - **指令二新增**：4个高影响联动事件填补空白区
-    - `social_npc_life_story` — NPC好感≥80触发深度对话(社交深度+属性成长+禀赋效应)
-    - `moral_choice_long_echo` — 之前做好事后失主多年后来感谢(道德回响+经济回报)
-    - `equipment_scrap_treasure` — repair≥25在废品站淘宝(装备品质+技能门槛+位置)
-    - `weather_fog_stranger_lost` — 大雾天遇到迷路陌生人(天气+道德+需求消耗)
-  - **覆盖矩阵更新**：社交1→2 / 道德4→5 / 装备1→2 / 天气3→4
-  - **影响文件**：cross_system_events.js(+341行) / dist/index.html(重建)
-  - **验证**：node --check ✅ / build.py 7794.6KB ✅
-  - **⚠️ 多窗口碰撞**：4个事件与另一窗口(16:08提交)内容完全相同，git diff为空(已是相同内容)
-  - **commit**：ff5104d2(本地待推，网络问题)
+    - `npc_mediate_aunt_wang_sister_zhang` — 双NPC好感≥30调解，魅力成长
+    - `wealth_first_bucket_milestone` — 总资产≥200,000第一桶金里程碑
+    - `npc_boss_li_chen_ge_coop` — 双NPC好感≥40中立→合作桥接
+    - `city_one_year_anniversary` — Day≥365城市归属感仪式，全NPC好感
+  - **覆盖矩阵更新**：NPC关系11→13 / 财富23→24 / 住房3→4
+  - **验证**：node --check ✅ / build.py 7832.8KB ✅ / git push ✅
+  - **commit**：`d844bb15`(submodule) · `e98a1e2`(parent)
+
+- **上一轮工作 (2026-07-11)**：v3.89 — 新增5个联动事件(老手特遇/专业视角/NPC线索/暴雨骑手/道德分叉)
 
 - **上一轮工作 (2026-07-11)**：v3.88c — 事件系统A类缺陷修复（15个事件补phase+1个NPC断链+1个动态文本）
   - **🚨 A类严重修复**：15个事件因缺`phase`字段被 queueRandomEvent 过滤，永不触发：

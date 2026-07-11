@@ -266,7 +266,7 @@ const LOCATIONS = {
       snow: { footfallMod: 0.3 },
     },
   },
-  // TODO: 待实现 - 高档小区（参考真实高档小区，富人有保安门禁）
+  // TODO(v3.89+): 待实现 - 高档小区（参考真实高档小区，富人有保安门禁）
   // {
   //   id: "luxury_community",
   //   name: "高档小区",
@@ -285,7 +285,7 @@ const LOCATIONS = {
   //     luxury: 1.4,
   //   },
   // },
-  // TODO: 待实现 - 老旧小区（参考真实老旧小区，设施陈旧但生活便利）
+  // TODO(v3.89+): 待实现 - 老旧小区（参考真实老旧小区，设施陈旧但生活便利）
   // {
   //   id: "old_community",
   //   name: "老旧小区",
@@ -507,25 +507,26 @@ const LOCATIONS = {
   //   jobs: ["pet_sitter"],
   //   priceMod: {},
   // },
-  // TODO: 待实现 - 二手市场/跳蚤市场（参考真实二手交易市场）
-  // {
-  //   id: "flea_market",
-  //   name: "二手市场",
-  //   desc: "淘二手货的地方。可以低价买入高价卖出，考验眼光。",
-  //   type: "commercial",
-  //   wealthTier: 2,
-  //   footfall: 0.8,
-  //   vendingNote: "淘货人多，消费力参差不齐",
-  //   specialties: ["clothing", "electronics", "books"],
-  //   dailyProbability: 0.5,
-  //   specialCategory: ["clothing", "electronics"],
-  //   jobs: ["street_vending_goods"],
-  //   priceMod: {
-  //     clothing: 0.7,
-  //     electronics: 0.75,
-  //     books: 0.6,
-  //   },
-  // },
+  // 二手市场：跳蚤市场，淘宝捡漏
+  flea_market: {
+    id: "flea_market",
+    name: "二手市场",
+    icon: "🏴",
+    desc: "淘二手货的地方。可以低价买入高价卖出，考验眼光。",
+    type: "commercial",
+    wealthTier: 2,
+    footfall: 0.8,
+    vendingNote: "淘货人多，消费力参差不齐",
+    specialties: ["clothing", "electronics", "books"],
+    dailyProbability: 0.5,
+    specialCategory: ["clothing", "electronics"],
+    jobs: [],
+    priceMod: {
+      clothing: 0.7,
+      electronics: 0.75,
+      books: 0.6,
+    },
+  },
   vegetable_market: {
     id: "vegetable_market",
     name: "菜市场",
@@ -564,15 +565,24 @@ const TRAVEL_GRAPH = {
     "entertainment",
     "construction",
     "vegetable_market",
+    "job_market",
   ],
   // 内城区：城中村位于核心区边缘
-  slum: ["wholesaleMarket", "construction", "park", "bank", "vegetable_market"],
+  slum: [
+    "wholesaleMarket",
+    "construction",
+    "park",
+    "bank",
+    "vegetable_market",
+    "flea_market",
+  ],
   // 商业物流：批发市场连接工业区和中心区
   wholesaleMarket: [
     "slum",
     "commercialDist",
     "factoryZone",
     "vegetable_market",
+    "flea_market",
   ],
   // 菜市场：紧邻批发市场，买菜人流密集
   vegetable_market: ["wholesaleMarket", "slum", "commercialDist", "park"],
@@ -594,10 +604,10 @@ const TRAVEL_GRAPH = {
   techPark: ["commercialDist", "entertainment"],
   // 医院：医疗集群，连接商业区和大学城
   hospital: ["commercialDist", "school"],
-  // 银行：金融中心，连接城中村/商业区/政府
-  bank: ["slum", "commercialDist", "gov_office"],
-  // 公园：绿色过渡带，连接城中村/大学城/郊区/寺庙/图书馆（图书馆回边）
-  park: ["slum", "school", "suburb", "temple", "library"],
+  // 银行：金融中心，连接城中村/商业区/政府/人才市场
+  bank: ["slum", "commercialDist", "gov_office", "job_market"],
+  // 公园：绿色过渡带，连接城中村/大学城/郊区/寺庙/图书馆/二手市场（图书馆回边）
+  park: ["slum", "school", "suburb", "temple", "library", "flea_market"],
   // 培训中心：紧邻大学城和图书馆
   trainingCenter: ["school", "library"],
   // 图书馆：连接大学城、培训中心和公园
@@ -605,11 +615,15 @@ const TRAVEL_GRAPH = {
   // 郊区：最外围，通过公园或工业区进入
   suburb: ["park", "factoryZone"],
   // 政府：靠近商业区和银行
-  gov_office: ["commercialDist", "bank"],
+  gov_office: ["commercialDist", "bank", "job_market"],
+  // 人才市场：连接政府、银行和商业区
+  job_market: ["gov_office", "bank", "commercialDist"],
   // 娱乐城：连接商业区/科技园/大学城
   entertainment: ["commercialDist", "techPark", "school"],
   // 寺庙：位于公园旁/大学城周边；park和school均已添加回边
   temple: ["park", "school"],
+  // 二手市场：连接批发市场、城中村和公园
+  flea_market: ["wholesaleMarket", "slum", "park"],
 };
 
 /** 获取地点信息 */

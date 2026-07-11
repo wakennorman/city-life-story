@@ -3532,11 +3532,13 @@ function renderMapTab(state, parent) {
     commercialDist: { x: 50, y: 38 }, // 市中心
     bank: { x: 58, y: 22 }, // 金融区（市中心偏上）
     gov_office: { x: 42, y: 18 }, // 政务区（市中心偏上）
+    job_market: { x: 48, y: 14 }, // 人才市场（政务区附近）
     techPark: { x: 72, y: 22 }, // 科技园（东侧）
     entertainment: { x: 78, y: 42 }, // 娱乐城（东侧偏下）
     hospital: { x: 62, y: 52 }, // 医院（南侧偏右）
     slum: { x: 30, y: 48 }, // 城中村（西侧）
     wholesaleMarket: { x: 22, y: 32 }, // 批发市场（西北）
+    flea_market: { x: 20, y: 44 }, // 二手市场（批发市场南侧）
     construction: { x: 42, y: 58 }, // 建筑工地（南侧）
     park: { x: 35, y: 68 }, // 公园（南侧偏左）
     school: { x: 55, y: 72 }, // 大学城（南侧偏右）

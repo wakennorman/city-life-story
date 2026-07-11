@@ -1,27 +1,63 @@
 # 城市浮生记 (City Life Story) — 开发文档
 
-> 最后更新: 2026-07-11（v3.89 新增5个联动事件（空白区填充））
+> 最后更新: 2026-07-11（v3.90 新增4个联动事件（NPC调解/第一桶金/李陈合作/周年归属感）+ 审查确认0 A类缺陷）
 >
-> commit: 64659f7（v3.89 新增5个联动事件（空白区填充））
+> commit: e98a1e2（v3.90 新增4个联动事件（NPC调解/第一桶金/李陈合作/周年归属感））
+
+---
+
+## 2026-07-11 — v3.90 新增4个联动事件（NPC调解/第一桶金/李陈合作/周年归属感）
+
+### 审查结论
+
+**指令一·审查结果**：全量扫描15个事件文件（events_street_survival/life/wealth + career_path_events + cross_system_events + personal_growth_events + workplace_social_events + insider_trading_events + family_events + chengguan_events + 其他），A类缺陷0个真实、B类0个、C类0个。此前多轮审查（v3.20/v3.34/v3.65）已修复29个A类缺陷并标注133处`[自洽修复]`注释，所有NPC引用均已加`.met`门控、所有天气事件均校验`weather.current`、所有职业事件均校验`_path()`或`stats.actionFreq`。
+
+### 新增事件（`src/js/core/cross_system_events.js` 尾部 v3.90 块）
+
+| 事件id                               | 触发闸门（conditions）                               | 联动系统                    | 空白区              |
+| ------------------------------------ | ---------------------------------------------------- | --------------------------- | ------------------- |
+| `npc_mediate_aunt_wang_sister_zhang` | 王婶/张姐已结识+双好感≥30 + 街头 + day≥30 + 未触发   | NPC关系矩阵·魅力系统        | NPC关系矩阵深度互动 |
+| `wealth_first_bucket_milestone`      | cash+bankBalance≥200,000 + 街头 + day≥60 + 未触发    | 经济系统·心智系统           | 财富天花板叙事      |
+| `npc_boss_li_chen_ge_coop`           | 李工头/陈哥已结识+双好感≥40 + 街头 + day≥50 + 未触发 | NPC关系矩阵·佣金系统        | 中立→合作桥接       |
+| `city_one_year_anniversary`          | day≥365 + 街头 + 未触发                              | 全NPC关系·心智系统·回忆系统 | 长期居住归属感      |
+
+### 设计心理学
+
+- **损失厌恶**：第一桶金事件中"犒劳自己"选项消耗现金但大幅提升心情疲劳——让玩家权衡短期快乐与长期积累
+- **峰终定律**：365天归属感事件作为长期玩家的峰值记忆锚点，全城NPC好感提升形成社会支持闭环
+- **禀赋效应**：调解事件中玩家投入"好感资本"换取关系改善——前期的情感投资在中后期兑现
+- **社会比较**：调解事件让玩家感受到"被需要"的社交价值
+
+### 验证
+
+- `node --check src/js/core/cross_system_events.js` ✅
+- `python build.py` ✅ / `dist/index.html` 7832.8KB ✅
+- `git push origin master` ✅
+
+### 影响文件
+
+- `src/js/core/cross_system_events.js`（+~400行，尾部v3.90块）
 
 ---
 
 ## 2026-07-11 — v3.89 新增5个联动事件（空白区填充）
 
 ### 设计目标
+
 填补 5 个「联动空白区」。每个事件都以**可验证状态**做 `conditions` 闸门，叙事与闸门严格自洽（无 A 类叙事-触发断链），并通过 `_xxxSeen` flag 防重复触发。
 
 ### 新增事件（`src/js/core/cross_system_events.js` 尾部 v3.89 块）
 
-| 事件id | 触发闸门（conditions） | 联动系统 | 空白区 |
-| --- | --- | --- | --- |
-| `vet_runner_regular_client` | 驾驶副业/驾驶≥35 + 街头 + day≥40 + 未触发 | 副业系统·技能系统·商圈NPC | 老手特遇 |
-| `repair_expert_spot_fake` | 修理≥40 + 街头 + day≥30 + 未触发 | 技能系统·道德系统 | 技能门槛=专业视角 |
-| `zhang_hidden_job_lead` | 张姐已结识+好感≥60 + 街头 + day≥40 + 未触发 | NPC关系·工作系统(内推flag) | NPC好感积累后的意外发现 |
-| `stormy_commercial_rider_down` | 暴雨/大雨 + 商业区 + 街头 + day≥15 + 未触发 | 天气系统·位置系统·道德系统 | 天气×位置组合情境 |
-| `moral_extreme_found_wallet` | 道德≥70或≤30(仅极端) + 街头 + day≥20 + 未触发 | 道德系统·分叉叙事 | 道德极端人设分叉 |
+| 事件id                         | 触发闸门（conditions）                        | 联动系统                   | 空白区                  |
+| ------------------------------ | --------------------------------------------- | -------------------------- | ----------------------- |
+| `vet_runner_regular_client`    | 驾驶副业/驾驶≥35 + 街头 + day≥40 + 未触发     | 副业系统·技能系统·商圈NPC  | 老手特遇                |
+| `repair_expert_spot_fake`      | 修理≥40 + 街头 + day≥30 + 未触发              | 技能系统·道德系统          | 技能门槛=专业视角       |
+| `zhang_hidden_job_lead`        | 张姐已结识+好感≥60 + 街头 + day≥40 + 未触发   | NPC关系·工作系统(内推flag) | NPC好感积累后的意外发现 |
+| `stormy_commercial_rider_down` | 暴雨/大雨 + 商业区 + 街头 + day≥15 + 未触发   | 天气系统·位置系统·道德系统 | 天气×位置组合情境       |
+| `moral_extreme_found_wallet`   | 道德≥70或≤30(仅极端) + 街头 + day≥20 + 未触发 | 道德系统·分叉叙事          | 道德极端人设分叉        |
 
 ### 设计要点
+
 - 全部 `repeatable:false` + `_xxxSeen` flag 防重复触发
 - 选项 `apply` 与 `StateManager.addMessage` 文案严格一致（玩家所见即所得）
 - `zhang_hidden_job_lead` 写入 `flags._zhangReferral`，为后续工作系统内推线预留接入口（暂未接消费逻辑，属「埋点待接」）
@@ -29,10 +65,12 @@
 - 概率 `0.04~0.05`（[PLACEHOLDER]，待 playtest 调参）
 
 ### 验证
+
 - `node --check src/js/core/cross_system_events.js` ✅
 - `python build.py` ✅ / `dist/index.html` 含全部 5 个新 id ✅
 
 ### 影响文件
+
 - `src/js/core/cross_system_events.js`（+约 310 行，尾部 v3.89 块）
 - `dist/index.html`（重建）
 

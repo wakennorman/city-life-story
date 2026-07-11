@@ -1042,6 +1042,15 @@ function getLocationServiceBadges(locKey) {
       color: "#4a9e5c",
     });
   }
+  // 人才市场
+  if (locKey === "job_market") {
+    badges.push({
+      icon: "📋",
+      label: "求职招聘",
+      bg: "rgba(74,158,92,0.1)",
+      color: "#4a9e5c",
+    });
+  }
   // 商业区
   if (locKey === "commercialDist") {
     badges.push({
@@ -1049,6 +1058,15 @@ function getLocationServiceBadges(locKey) {
       label: "购物+摆摊",
       bg: "rgba(74,158,92,0.1)",
       color: "#4a9e5c",
+    });
+  }
+  // 二手市场
+  if (locKey === "flea_market") {
+    badges.push({
+      icon: "🏴",
+      label: "淘宝",
+      bg: "rgba(196,154,58,0.1)",
+      color: "#c49a3a",
     });
   }
   // 工作数量
