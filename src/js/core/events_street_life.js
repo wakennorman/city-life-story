@@ -28,6 +28,13 @@
           text: "💰 趁低价囤菜等涨价",
           hint: "投机",
           apply: function (st) {
+            if (st.resources.cash < 2000) {
+              StateManager.addMessage(
+                "💰 资金不足2000，囤不了这么多。",
+                "warning",
+              );
+              return;
+            }
             st.flags._communityGroupBuySeen = true;
             st.resources.cash -= 2000;
             StateManager.addMessage("💰 你囤了一批土豆白菜。", "event");
@@ -134,6 +141,13 @@
           text: "📱 试播三天",
           hint: "低成本",
           apply: function (st) {
+            if (st.resources.cash < 200) {
+              StateManager.addMessage(
+                "📱 启动资金不够200，先攒着。",
+                "warning",
+              );
+              return;
+            }
             st.flags._liveStreamSeen = true;
             st.resources.cash -= 200;
             if (Random.chance(0.3)) {
@@ -457,6 +471,13 @@
           text: "🤝 长期合作",
           hint: "做大",
           apply: function (st) {
+            if (st.resources.cash < 5000) {
+              StateManager.addMessage(
+                "🤝 资金不足5000，做不了长期合作。",
+                "warning",
+              );
+              return;
+            }
             st.flags._nearExpirySeen = true;
             st.resources.cash -= 5000;
             st.player.fame = Math.min(100, (st.player.fame || 0) + 3);

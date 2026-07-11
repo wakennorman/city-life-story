@@ -264,9 +264,9 @@
           text: "👀 在边上旁听",
           hint: "白嫖知识",
           apply: function (st) {
-            st.needs.intelligence = Math.min(
+            st.player.intelligence = Math.min(
               100,
-              (st.needs.intelligence || 0) + 2,
+              (st.player.intelligence || 0) + 2,
             );
             st.flags._codingInterestPiqued = true;
             StateManager.addMessage(
@@ -356,9 +356,9 @@
           text: "📝 默默记下教训",
           hint: "长个心眼",
           apply: function (st) {
-            st.needs.intelligence = Math.min(
+            st.player.intelligence = Math.min(
               100,
-              (st.needs.intelligence || 0) + 2,
+              (st.player.intelligence || 0) + 2,
             );
             StateManager.addMessage(
               "📝 摆摊的生意，得看天看地看城管。",

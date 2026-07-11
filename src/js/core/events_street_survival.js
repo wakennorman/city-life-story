@@ -776,7 +776,8 @@
               for (var i = 0; i < inv.stockHoldings.length; i++) {
                 var h = inv.stockHoldings[i];
                 var m = inv.stockMarket[h.symbol];
-                if (m) total += (m.price * h.shares * h.shares) / h.shares;
+                if (m && h.shares > 0) total += m.price * h.shares;
+                // [全系统自洽修复] 域B 修复:market_crash_news 清仓时 h.shares=0 导致 NaN 除零崩溃
               }
               st.resources.cash += total * 0.7;
               inv.stockHoldings = [];
@@ -2083,8 +2084,21 @@
       title: "城管大规模清理行动",
       story:
         '政府最近出通知要"整治市容"，街头管得更严了。据说明天会有大规模清查，抓到无证经营的罚款¥1000起。',
+      // [全系统自洽修复] 域B 修复:城管清理事件无摆摊/职业条件检查→任何街头玩家都会触发，与叙事不符。添加摆摊/贸易相关条件。
       conditions: function (st) {
-        return st.player.phase === "street";
+        var hasTrade =
+          (st.trade &&
+            st.trade.currentLocation &&
+            st.trade.currentLocation !== "home") ||
+          (st.sideHustle && st.sideHustle.active) ||
+          (st.employment &&
+            st.employment.currentJob &&
+            [
+              "food_stall",
+              "street_vending_food",
+              "street_vending_goods",
+            ].includes(st.employment.currentJob.id));
+        return st.player.phase === "street" && hasTrade;
       },
       choices: [
         {
@@ -2720,14 +2734,14 @@
       title: "社区招募志愿者",
       story:
         "街道办在门口贴了公告，招募周末社区义务清扫志愿者，完成可获荣誉证书，在本地求职有加分。",
-      conditions: function (st) {
-        return st.player.phase === "street" && st.player.day % 7 === 0;
-      },
+      // [自洽修复] 添加 excludeFlags 防止无限重复触发（原代码每7天永久触发）
+      triggers: { excludeFlags: ["_volunteerEventSeen"] },
       choices: [
         {
           text: "🧹 参加！积累社会形象",
           hint: "名气+幸福感",
           apply: function (st) {
+            st.flags._volunteerEventSeen = true;
             st.needs.fatigue = Math.min(100, st.needs.fatigue + 10);
             st.needs.happiness = Math.min(100, st.needs.happiness + 18);
             st.player.fame = Math.min(100, st.player.fame + 10);
@@ -3635,6 +3649,178 @@
             st.flags._walletLateReward = true;
             StateManager.addMessage(
               "👋 你低着头快步走开了。他不理解，但你有你的活要干。善意不图回报，也不等人情绑架。",
+              "info",
+            );
+          },
+        },
+      ],
+    },
+    // ====== 联动增强1: 雾天生存事件（天气系统交叉引用） ======
+    // 设计意图：原天气系统只有 rainy/stormy 被事件引用，foggy 和 sunny 完全无人问津
+    // 联动域：核心机制(weather) ↔ 事件系统(narrative)
+    {
+      id: "foggy_morning_market",
+      phase: "street",
+      icon: "🌫️",
+      title: "浓雾中的早市",
+      story:
+        "清晨起来，城市被浓雾笼罩。能见度不到十米。你走到平时摆摊的街口，发现早市比往常人多——雾天大家不爱出门，集中在市场里买东西。",
+      // [全系统自洽联动] 域B 联动增强: 新增 foggy 天气事件，填补天气系统空白
+      triggers: {
+        weather: "foggy",
+        excludeFlags: ["_foggyMorningMarketSeen"],
+      },
+      choices: [
+        {
+          text: "📦 多备些货去摆摊",
+          hint: "雾天客流集中",
+          apply: function (st) {
+            st.flags._foggyMorningMarketSeen = true;
+            var extra = Random.int(100, 300);
+            st.resources.cash += extra;
+            st.resources.totalEarned += extra;
+            st.needs.fatigue = Math.min(100, (st.needs.fatigue || 0) + 10);
+            StateManager.addMessage(
+              "📦 雾天生意出奇的好！多备的货全卖完了，多赚了¥" +
+                extra +
+                "。但雾天走路费劲，疲劳+10。",
+              "success",
+            );
+          },
+        },
+        {
+          text: "🏠 雾太大，今天不出摊",
+          hint: "安全第一",
+          apply: function (st) {
+            st.flags._foggyMorningMarketSeen = true;
+            st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 3);
+            st.player.mental = Math.min(100, (st.player.mental || 0) + 1);
+            StateManager.addMessage(
+              "🏠 雾天不出摊，在家歇了一天。明智的选择，心智+1。",
+              "info",
+            );
+          },
+        },
+      ],
+    },
+    // ====== 联动增强2: 晴天户外事件 ======
+    {
+      id: "sunny_rooftop_rest",
+      phase: "street",
+      icon: "☀️",
+      title: "难得的晴天",
+      story:
+        "连续阴雨后终于放晴了。阳光洒在身上暖洋洋的。你站在楼顶，看着这座城市的天际线，突然觉得今天应该做点什么不一样的。",
+      // [全系统自洽联动] 域B 联动增强: 新增 sunny 天气事件
+      triggers: {
+        weather: "sunny",
+        excludeFlags: ["_sunnyRooftopSeen"],
+      },
+      choices: [
+        {
+          text: "📖 去图书馆晒太阳看书",
+          hint: "提升智力",
+          apply: function (st) {
+            st.flags._sunnyRooftopSeen = true;
+            st.player.intelligence = Math.min(
+              100,
+              (st.player.intelligence || 0) + 3,
+            );
+            st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 10);
+            st.needs.fatigue = Math.min(100, (st.needs.fatigue || 0) + 5);
+            StateManager.addMessage(
+              "📖 在图书馆坐了一下午，看了本关于城市经济的书。智力+3，心情+10。",
+              "success",
+            );
+          },
+        },
+        {
+          text: "🏃 出去跑步锻炼",
+          hint: "提升体质",
+          apply: function (st) {
+            st.flags._sunnyRooftopSeen = true;
+            st.player.physique = Math.min(100, (st.player.physique || 0) + 2);
+            st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 8);
+            st.needs.fatigue = Math.min(100, (st.needs.fatigue || 0) + 15);
+            StateManager.addMessage(
+              "🏃 跑了5公里，汗流浃背但神清气爽。体质+2，心情+8。",
+              "success",
+            );
+          },
+        },
+        {
+          text: "😴 在家睡个懒觉",
+          hint: "恢复疲劳",
+          apply: function (st) {
+            st.flags._sunnyRooftopSeen = true;
+            st.needs.fatigue = Math.max(0, (st.needs.fatigue || 0) - 20);
+            st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 5);
+            StateManager.addMessage(
+              "😴 拉上窗帘睡到自然醒。久违的放松，疲劳-20。",
+              "info",
+            );
+          },
+        },
+      ],
+    },
+    // ====== 联动增强3: Phase1→Phase2 叙事继承桥接 ======
+    // 设计意图：街头阶段的道德选择/人脉积累在进入职场阶段后应有叙事回响
+    // 联动域：事件(events) ↔ 核心机制(lifecycle/phase transition)
+    {
+      id: "street_phase_transition_memory",
+      phase: "street",
+      icon: "🌅",
+      title: "告别街头",
+      story:
+        "你收到了第一份正式工作的录用通知。收拾东西的时候，你翻出了这几个月攒下的各种小物件——一张旧名片、一个社区志愿者的徽章、还有那张还没寄出的感谢信。这座城市的第一章，快要翻过去了。",
+      // [全系统自洽联动] 域B 联动增强: Phase1→Phase2 过渡叙事桥接
+      triggers: {
+        minDay: 120,
+        excludeFlags: ["_phase1TransitionSeen"],
+      },
+      choices: [
+        {
+          text: "📝 写一封感谢信给帮过你的人",
+          hint: "感谢过去的贵人",
+          apply: function (st) {
+            st.flags._phase1TransitionSeen = true;
+            st.flags._gratitudeLetterSent = true;
+            // 感谢过的NPC会获得额外好感
+            var gratefulNpcs = ["aunt_wang", "boss_li", "old_zhou"];
+            for (var i = 0; i < gratefulNpcs.length; i++) {
+              if (
+                st.relationships &&
+                st.relationships[gratefulNpcs[i]] &&
+                st.relationships[gratefulNpcs[i]].met
+              ) {
+                st.relationships[gratefulNpcs[i]].affinity = Math.min(
+                  100,
+                  (st.relationships[gratefulNpcs[i]].affinity || 0) + 10,
+                );
+              }
+            }
+            st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 15);
+            st.player.mental = Math.min(100, (st.player.mental || 0) + 5);
+            st.player.morality = Math.min(100, (st.player.morality || 50) + 5);
+            StateManager.addMessage(
+              "📝 你给每个帮过你的人写了信。收到回信的那天，你眼眶湿了。心情+15，心智+5，道德+5。",
+              "success",
+            );
+          },
+        },
+        {
+          text: "💼 向前看，新的开始",
+          hint: "放下过去",
+          apply: function (st) {
+            st.flags._phase1TransitionSeen = true;
+            st.flags._forwardLooking = true;
+            st.player.intelligence = Math.min(
+              100,
+              (st.player.intelligence || 0) + 3,
+            );
+            st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 5);
+            StateManager.addMessage(
+              "💼 你把这些东西收进箱子最底层。过去的事教会了你很多，但未来更重要。智力+3。",
               "info",
             );
           },

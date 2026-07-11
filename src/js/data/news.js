@@ -541,10 +541,11 @@ const NEWS_EVENTS = [
         text: "👀 先看看再说",
         hint: "不花钱",
         apply: (st) => {
-          st.needs.intelligence = Math.min(
+          st.player.intelligence = Math.min(
             100,
-            (st.needs.intelligence || 0) + 2,
+            (st.player.intelligence || 0) + 2,
           );
+          // [全系统自洽修复] 域B 修复:st.needs.intelligence→st.player.intelligence（needs系统无intelligence字段）
           StateManager.addMessage("👀 翻了翻书，觉得还行，但先不买。", "info");
         },
       },

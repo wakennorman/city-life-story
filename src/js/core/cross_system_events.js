@@ -30,6 +30,7 @@
         return (
           st.relationships &&
           st.relationships.aunt_wang &&
+          st.relationships.aunt_wang.met === true &&
           (st.relationships.aunt_wang.affinity || 0) >= 30 &&
           st.player.day > 10
         );
@@ -354,7 +355,7 @@
               var profit = Random.int(100, 500);
               st.resources.cash += profit;
               StateManager.addMessage(
-                `💰 抄底成功！你低买高卖赚了¥" + profit + "！`,
+                `💰 抄底成功！你低买高卖赚了¥${profit}！`,
                 "success",
               );
             } else if (result === 1) {
@@ -422,7 +423,7 @@
             st.flags._moralScore = (st.flags._moralScore || 0) - 3;
             st.flags._keptFoundMoney = true;
             StateManager.addMessage(
-              `💸 你捡起钱快步走了。¥" + amount + "到手，但心里有点虚...`,
+              `💸 你捡起钱快步走了。¥${amount}到手，但心里有点虚...`,
               "warning",
             );
             // 后续埋点：10天后可能遇到失主
@@ -471,6 +472,7 @@
         return (
           st.relationships &&
           st.relationships.old_zhou &&
+          st.relationships.old_zhou.met === true &&
           (st.relationships.old_zhou.affinity || 0) >= 40 &&
           st.player.day > 15
         );
@@ -511,7 +513,7 @@
               (st.relationships.old_zhou.affinity || 0) + 5,
             );
             StateManager.addMessage(
-              `💰 你出了¥100入伙费，分到¥" + profit + "。老周拍了拍你的肩。`,
+              `💰 你出了¥100入伙费，分到¥${profit}。老周拍了拍你的肩。`,
               "success",
             );
           },
@@ -1329,7 +1331,7 @@
       id: "career_promo_offer",
       name: "猎头挖角",
       icon: "📞",
-      phase: "street",
+      phase: "corporate",
       conditions: function (st) {
         return (
           st.career &&
@@ -1416,7 +1418,7 @@
       id: "career_layoff",
       name: "公司裁员风波",
       icon: "📉",
-      phase: "street",
+      phase: "corporate",
       conditions: function (st) {
         return st.career && st.career.currentJob && st.player.day > 90;
       },
@@ -10379,9 +10381,6 @@
         },
       },
     ],
-    apply: function (state) {
-      state.flags._eduGraduationShown = true;
-    },
   });
 
   // ----- 事件51：学历完成后×白领世界的"入世门槛" -----
@@ -43698,10 +43697,11 @@
         apply: function (st) {
           st.flags._wealth500kSeen = true;
           st.flags._wealth500kInvestor = true;
-          st.needs.intelligence = Math.min(
+          st.player.intelligence = Math.min(
             100,
-            (st.needs.intelligence || 50) + 5,
+            (st.player.intelligence || 50) + 5,
           );
+          // [全系统自洽修复] 域B 修复:st.needs.intelligence→st.player.intelligence（needs系统无intelligence字段）
           StateManager.addMessage(
             "📈 你开始认真研究理财和投资。五十万的本金，够做一些以前不敢想的事了。心智+5。",
             "info",
@@ -50186,6 +50186,174 @@
             StateManager.addMessage(
               "🙏 你道了谢，把这份情记在心里。心情+3。",
               "info",
+            );
+          },
+        },
+      ],
+    },
+
+    // ====== [R2 域B 联动增强] 3个新事件填充已验证空白区 ======
+
+    // ① NPC 社区聚会（填充 friendly格 8个空白）
+    {
+      id: "npc_community_gathering",
+      phase: "street",
+      icon: "🎉",
+      title: "街坊邻居的聚会",
+      story:
+        "傍晚收工，你发现巷子里比平时热闹。王大婶搬出了桌椅，老周拎了几瓶啤酒，陈师傅端着一盘花生米——他们招呼你：「愣着干嘛，今天街坊聚会，就差你了！」\\n\\n你在城市里第一次感受到——原来「邻居」不只是住得近的人。",
+      conditions: function (st) {
+        if (st.player.phase !== "street") return false;
+        // 检查至少3个NPC好感≥50（真正融入社区）
+        var count = 0;
+        var rels = st.relationships || {};
+        for (var key in rels) {
+          if (rels[key].met && rels[key].affinity >= 50) count++;
+        }
+        if (count < 3) return false;
+        if ((st.player.day || 0) < 30) return false;
+        if (st.flags && st.flags._communityGatheringSeen) return false;
+        return true;
+      },
+      probability: 0.04,
+      repeatable: false,
+      choices: [
+        {
+          text: "🍺 坐下来，一起喝一杯",
+          hint: "融入社区，好感群体+3，心情+12",
+          apply: function (st) {
+            st.flags._communityGatheringSeen = true;
+            st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 12);
+            // 群体好感+3
+            var rels = st.relationships || {};
+            for (var key in rels) {
+              if (rels[key].met) {
+                rels[key].affinity = Math.min(
+                  100,
+                  (rels[key].affinity || 0) + 3,
+                );
+              }
+            }
+            StateManager.addMessage(
+              "🎉 你坐下和大家碰了杯。老周讲了个笑话，王大婶又给你夹了菜。全NPC好感+3，心情+12。",
+              "success",
+            );
+          },
+        },
+        {
+          text: "🙏 打个招呼，先回去休息",
+          hint: "礼貌但保持距离，心情+5",
+          apply: function (st) {
+            st.flags._communityGatheringSeen = true;
+            st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 5);
+            StateManager.addMessage(
+              "🙏 你说累了想先休息，大家表示理解。回屋后还能听到外面的笑声，心里暖暖的。心情+5。",
+              "info",
+            );
+          },
+        },
+      ],
+    },
+
+    // ② 春日生机（季节叙事：春天只有 job_fair 一个事件）
+    {
+      id: "weather_spring_awakening",
+      phase: "street",
+      icon: "🌱",
+      title: "春天来了",
+      story:
+        "你推开窗，发现楼下那棵枯了一冬的梧桐树冒出了新芽。空气里有股潮湿的泥土味，混着远处早餐摊的蒸汽。\\n\\n王大婶在楼下喊：「今天太阳好，把被子拿出来晒晒！」巷子里突然有了生气，连流浪猫都伸了个懒腰。",
+      conditions: function (st) {
+        if (st.player.phase !== "street") return false;
+        if (!st.weather || st.weather.season !== "spring") return false;
+        if ((st.player.day || 0) < 15) return false;
+        if (st.flags && st.flags._springAwakeningSeen) return false;
+        return true;
+      },
+      probability: 0.05,
+      repeatable: false,
+      choices: [
+        {
+          text: "🌞 出门晒晒太阳，感受春天",
+          hint: "心情+10，疲劳-10，精神+3",
+          apply: function (st) {
+            st.flags._springAwakeningSeen = true;
+            st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 10);
+            st.needs.fatigue = Math.max(0, (st.needs.fatigue || 0) - 10);
+            st.player.mental = Math.min(100, (st.player.mental || 10) + 3);
+            StateManager.addMessage(
+              "🌞 你在阳光下走了一圈，感觉整个人都活过来了。心情+10，疲劳-10，精神+3。",
+              "success",
+            );
+          },
+        },
+        {
+          text: "📋 趁着春天，好好规划一下",
+          hint: "精神+5，获得「春日规划」buff",
+          apply: function (st) {
+            st.flags._springAwakeningSeen = true;
+            st.player.mental = Math.min(100, (st.player.mental || 10) + 5);
+            st.flags._springPlanBuff = true;
+            StateManager.addMessage(
+              "📋 你坐在窗前，听着鸟叫，把接下来的计划写了下来。精神+5，获得规划buff。",
+              "hint",
+            );
+          },
+        },
+      ],
+    },
+
+    // ③ 乔迁之喜（高端住房叙事 gap）
+    {
+      id: "housing_mansion_celebration",
+      phase: "street",
+      icon: "🏠",
+      title: "乔迁新居",
+      story:
+        "你终于搬进了像样的房子。不再是城中村的隔断间，不是地下室，而是一个有阳光、有厨房、有自己桌子的地方。\\n\\n你站在空荡荡的新房间里，突然不知道该做什么——这些年漂泊惯了，突然有了「家」，竟有些不习惯。",
+      conditions: function (st) {
+        if (st.player.phase !== "street") return false;
+        // 住房等级≥4（有品质的住所）
+        var tier = st.housing && st.housing.tier;
+        if (!tier || tier < 4) return false;
+        if ((st.player.day || 0) < 60) return false;
+        if (st.flags && st.flags._housingMansionSeen) return false;
+        return true;
+      },
+      probability: 0.06,
+      repeatable: false,
+      choices: [
+        {
+          text: "🎊 简单办个暖房派对，请朋友来",
+          hint: "NPC好感+5，心情+15，友情升温",
+          apply: function (st) {
+            st.flags._housingMansionSeen = true;
+            st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 15);
+            var rels = st.relationships || {};
+            for (var key in rels) {
+              if (rels[key].met) {
+                rels[key].affinity = Math.min(
+                  100,
+                  (rels[key].affinity || 0) + 5,
+                );
+              }
+            }
+            StateManager.addMessage(
+              "🎊 你请了几个朋友来家里吃饭。老周带了酒，王大婶包了饺子，他们说你「终于像个人样了」。全NPC好感+5，心情+15。",
+              "success",
+            );
+          },
+        },
+        {
+          text: "🕯️ 安静地待着，享受属于自己的空间",
+          hint: "精神+8，心情+8",
+          apply: function (st) {
+            st.flags._housingMansionSeen = true;
+            st.player.mental = Math.min(100, (st.player.mental || 10) + 8);
+            st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 8);
+            StateManager.addMessage(
+              "🕯️ 你坐在窗边，看着城市的灯火。第一次觉得，这座城市也有一盏灯是属于你的。精神+8，心情+8。",
+              "success",
             );
           },
         },
