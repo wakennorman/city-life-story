@@ -50360,6 +50360,327 @@
       ],
     },
 
+    // ====== 事件N+1：职场新人回望（corporation 阶段叙事锚点）======
+    // 联动：corporate 阶段 + day≥180 → 回望街头岁月的成长
+    // 设计心理学：峰终定律·成长弧光·社会比较（和过去的自己对比）
+    {
+      id: "corporate_first_quarter_reflection",
+      phase: "corporate",
+      icon: "🪞",
+      title: "三个月后的回望",
+      story:
+        "你已经在这家公司待了三个月。今天加班到晚上九点，你站在写字楼的落地窗前，看着楼下的街道。\\n\\n街灯下，一个年轻人正蹲在路边吃炒面——就像你半年前的样子。\\n\\n手机震了一下，是老周发来的语音：「你小子现在混写字楼了？有空回来坐坐，废品站新收了台好收音机。」\\n\\n你笑了笑，没有立刻回复。\\n\\n这座城市还是那座城市。但你好像已经不是那个你了。",
+      conditions: function (st) {
+        return (
+          st.player &&
+          st.player.phase === "corporate" &&
+          st.player.day >= 180 &&
+          st.career &&
+          st.career.currentJob &&
+          !st.flags._corpQuarterReflectionSeen
+        );
+      },
+      probability: 0.05,
+      repeatable: false,
+      choices: [
+        {
+          text: "📝 给老周回条消息：周末回去",
+          hint: "老周好感+5",
+          apply: function (st) {
+            st.flags._corpQuarterReflectionSeen = true;
+            if (st.relationships && st.relationships.old_zhou) {
+              st.relationships.old_zhou.affinity = Math.min(
+                100,
+                (st.relationships.old_zhou.affinity || 50) + 5,
+              );
+            }
+            st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 8);
+            st.player.mental = Math.min(100, (st.player.mental || 50) + 3);
+            StateManager.addMessage(
+              "📝 你给老周回了个消息：「这周末回去，帮我留一碗炒面。」老周回了一个笑脸。心情+8，心智+3。",
+              "success",
+            );
+          },
+        },
+        {
+          text: "📸 拍张夜景发朋友圈",
+          hint: "心情+5",
+          apply: function (st) {
+            st.flags._corpQuarterReflectionSeen = true;
+            st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 5);
+            st.player.fame = Math.min(100, (st.player.fame || 0) + 2);
+            StateManager.addMessage(
+              "📸 你拍了张窗外的夜景，配上文字：「走了很远的路，还有更远的路。」朋友圈一片点赞。心情+5，名气+2。",
+              "success",
+            );
+          },
+        },
+        {
+          text: "😌 继续干活，别矫情",
+          hint: "效率+3",
+          apply: function (st) {
+            st.flags._corpQuarterReflectionSeen = true;
+            st.player.mental = Math.min(100, (st.player.mental || 50) + 5);
+            st.needs.fatigue = Math.min(100, (st.needs.fatigue || 0) + 5);
+            StateManager.addMessage(
+              "😌 你回过神来，继续改方案。这座城市不会等你感慨。心智+5。",
+              "hint",
+            );
+          },
+        },
+      ],
+    },
+
+    // ====== 事件N+2：张姐的祝贺（street→corporate 跨阶段 NPC 回响）======
+    // 联动：corporate 阶段 + 张姐已认识 + day≥150 → 跨阶段 NPC 叙事闭环
+    // 设计心理学：社会认同·峰终定律·禀赋效应（被看见的成就）
+    {
+      id: "npc_sister_zhang_corp_congrats",
+      phase: "corporate",
+      icon: "🎯",
+      title: "张姐的祝贺",
+      story:
+        "你在写字楼电梯里刷手机时，看到了张姐发来的微信。\\n\\n「听说你现在在科技园上班了？可以啊！」\\n\\n后面跟了一条语音，你按开听筒：张姐的声音还是那么爽朗，「从当初在批发市场扛货到现在坐办公室，姐没看错你。周末有空没？我请你吃顿饭。」\\n\\n你站在电梯里，看着楼层数字跳到了 28。\\n\\n心里有点热。",
+      conditions: function (st) {
+        return (
+          st.player &&
+          st.player.phase === "corporate" &&
+          st.player.day >= 150 &&
+          st.relationships &&
+          st.relationships.sister_zhang &&
+          st.relationships.sister_zhang.met === true &&
+          (st.relationships.sister_zhang.affinity || 0) >= 20 &&
+          !st.flags._zhangCorpCongratsSeen
+        );
+      },
+      probability: 0.04,
+      repeatable: false,
+      choices: [
+        {
+          text: "🍜 去！姐你请客我买单",
+          hint: "张姐好感+8",
+          apply: function (st) {
+            st.flags._zhangCorpCongratsSeen = true;
+            if (st.relationships && st.relationships.sister_zhang) {
+              st.relationships.sister_zhang.affinity = Math.min(
+                100,
+                (st.relationships.sister_zhang.affinity || 50) + 8,
+              );
+            }
+            st.resources.cash = Math.max(0, (st.resources.cash || 0) - 80);
+            st.needs.hunger = Math.min(100, (st.needs.hunger || 50) + 20);
+            st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 10);
+            StateManager.addMessage(
+              "🍜 你们约在了一家老字号面馆。张姐讲了很多你走后批发市场的变化。你请了客，花了¥80，但心里很暖。心情+10，张姐好感大增。",
+              "success",
+            );
+          },
+        },
+        {
+          text: "🙏 谢谢姐，但我最近太忙了",
+          hint: "张姐好感+3",
+          apply: function (st) {
+            st.flags._zhangCorpCongratsSeen = true;
+            if (st.relationships && st.relationships.sister_zhang) {
+              st.relationships.sister_zhang.affinity = Math.min(
+                100,
+                (st.relationships.sister_zhang.affinity || 50) + 3,
+              );
+            }
+            st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 5);
+            StateManager.addMessage(
+              "🙏 你说最近项目赶。张姐说：「行，那你先忙。改天也行，姐又不跑。」心情+5。",
+              "info",
+            );
+          },
+        },
+      ],
+    },
+
+    // ====================================================================
+    // v3.99 (loop R3) 联动增强：博士毕业仪式
+    // 设计意图：学历系统 edu=0/1/2/3，本科(edu_graduation_ceremony)和研究生
+    //   (edu_white_collar_threshold)已有叙事，博士毕业智力+5但零事件回响。
+    //   博士是最高学历档，应仪式感收尾（峰终定律）。
+    // ====================================================================
+    {
+      id: "edu_phd_graduation",
+      phase: "street",
+      icon: "🎓",
+      title: "博士毕业典礼",
+      story:
+        "五年寒窗，今天终于穿上红色的博士服。\n\n导师在你胸前拨穗那一刻，你突然想起第一天来大学城报到的自己——连图书馆的门朝哪边开都分不清。\n\n母亲在电话那头哭得说不出话，父亲只说了一句：「咱家第一个博士。」\n\n你的论文获评优秀，导师建议你留校或去研究所。但这么多年在外，你开始想家了。",
+      conditions: function (st) {
+        return (
+          st.player &&
+          st.player.education >= 3 &&
+          !(st.flags && st.flags._phdGradSeen) &&
+          st.player.day >= 600
+        );
+      },
+      probability: 0.4,
+      repeatable: false,
+      choices: [
+        {
+          text: "🏛️ 接受研究所 offer，走学术路",
+          hint: "智力+3，研究进度+2",
+          apply: function (st) {
+            st.flags._phdGradSeen = true;
+            st.player.intelligence = Math.min(
+              100,
+              (st.player.intelligence || 50) + 3,
+            );
+            st.player.research = (st.player.research || 0) + 2;
+            st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 15);
+            StateManager.addMessage(
+              "🏛️ 你选择了学术道路。研究所的Offer象征着多年钻研的回报，论文是新的起点。智力+3，研究+2。",
+              "success",
+            );
+          },
+        },
+        {
+          text: "💼 带着学位回商界",
+          hint: "白领路径预备、薪资谈判+10%",
+          apply: function (st) {
+            st.flags._phdGradSeen = true;
+            st.flags._phdNegotiateBonus = true;
+            st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 10);
+            StateManager.addMessage(
+              "💼 你决定把学问变现。博士学位在职场是硬通货——未来的薪资谈判有了底气。谈判加成已解锁。",
+              "info",
+            );
+          },
+        },
+        {
+          text: "🚄 回家乡，照顾父母",
+          hint: "道德+15、开启回乡抉择",
+          apply: function (st) {
+            st.flags._phdGradSeen = true;
+            st.flags._homeboundAfterPhd = true;
+            st.player.morality = Math.min(100, (st.player.morality || 50) + 15);
+            StateManager.addMessage(
+              "🚄 你买了回家的票。学历拿到了，但这些年缺席的家庭时光再也补不回来。父母老了，该陪着他们了。道德+15。",
+              "success",
+            );
+          },
+        },
+      ],
+    },
+
+    // ====================================================================
+    // v3.99 (loop R3) 联动增强：驾驶专业技能视角
+    // 设计意图：driving 技能达到 Lv.40（熟练司机），触发「老司机」视角事件，
+    //   让玩家感知技能成长的世界观变化（禀赋效应·专业视角解锁）。
+    //   driving 技能目前无任何门槛叙事，仅通用满级事件。
+    // ====================================================================
+    {
+      id: "skill_driving_road_sense",
+      phase: "street",
+      icon: "🚗",
+      title: "老司机的路感",
+      story:
+        "深夜送完最后一批货，你抄小路往回开。\n\n导航显示前方有主路可走，但你凭直觉打了方向盘拐进一条黑漆漆的窄巷——果然，五分钟后远处传来主路交通事故的警笛声。\n\n这不是运气。跑了五年车，城市的每条路都刻在你脑子里。哪里有近道、哪个路口有摄像头、雨天哪段路会积水——身体自己就记住了。\n\n副座的年轻同事看呆了：「师父你怎么知道要绕路？」",
+      conditions: function (st) {
+        return (
+          st.skills &&
+          st.skills.driving &&
+          st.skills.driving.level >= 40 &&
+          !(st.flags && st.flags._drivingRoadSenseSeen) &&
+          st.player &&
+          st.player.day >= 90
+        );
+      },
+      probability: 0.15,
+      repeatable: false,
+      choices: [
+        {
+          text: "🧭 教他看路、认灯、听声",
+          hint: "驾驶XP+20，道德+5（传承）",
+          apply: function (st) {
+            st.flags._drivingRoadSenseSeen = true;
+            if (typeof addSkillXp === "function") addSkillXp("driving", 20);
+            st.player.morality = Math.min(100, (st.player.morality || 50) + 5);
+            StateManager.addMessage(
+              "🧭 你把五年跑车的经验倾囊相授。小伙子眼睛亮了——这就是老师傅的传承。驾驶XP+20，道德+5。",
+              "success",
+            );
+          },
+        },
+        {
+          text: "🤫 留一手，只教三成",
+          hint: "驾驶XP+10，现金+800（日后收徒费）",
+          apply: function (st) {
+            st.flags._drivingRoadSenseSeen = true;
+            if (typeof addSkillXp === "function") addSkillXp("driving", 10);
+            st.resources.cash = (st.resources.cash || 0) + 800;
+            StateManager.addMessage(
+              "🤫 老话说「教会徒弟饿死师傅」。你藏了两手，等他求你的时候再慢慢教。驾驶XP+10，现金+800。",
+              "info",
+            );
+          },
+        },
+      ],
+    },
+
+    // ====================================================================
+    // v3.99 (loop R3) 联动增强：管理专业技能视角
+    // 设计意图：management 技能达到 Lv.40（团队管理入门），触发「班子危机」
+    //   视角事件。管理技能目前无专属门槛叙事。
+    // ====================================================================
+    {
+      id: "skill_management_team_crisis",
+      phase: "street",
+      icon: "👥",
+      title: "班子危机",
+      story:
+        "你带着的三人小团队里，老李和小张因为分工不公吵起来了。\n\n老李把手里的工具往地上一扔：「凭什么脏活儿都我干？」\n\n小张回嘴：「你跑得慢还怪我？」\n\n你当了半年小头目，第一次遇到这种局面。上头催着交工期，下面两个人瞪着对方不说话，等你的态度。\n\n你知道这时候说什么比做什么更重要。",
+      conditions: function (st) {
+        return (
+          st.skills &&
+          st.skills.management &&
+          st.skills.management.level >= 40 &&
+          st.player &&
+          st.player.day >= 120 &&
+          ((st.career &&
+            st.career.currentJob &&
+            st.career.currentJob.workDays) ||
+            0) >= 60
+        );
+      },
+      probability: 0.12,
+      repeatable: false,
+      choices: [
+        {
+          text: "🔍 先听两边再定方案",
+          hint: "管理XP+25，团队稳定性+",
+          apply: function (st) {
+            st.flags = st.flags || {};
+            st.flags._mgmtCrisisResolved = true;
+            if (typeof addSkillXp === "function") addSkillXp("management", 25);
+            st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 8);
+            StateManager.addMessage(
+              "🔍 你各打了五十大板又各给了台阶：重新分工、透明化派活。两个人虽然还有点拧巴，但都服气。管理XP+25。",
+              "success",
+            );
+          },
+        },
+        {
+          text: "⚡ 当场拍板，不许再说",
+          hint: "管理XP+10，但留隐患",
+          apply: function (st) {
+            st.flags = st.flags || {};
+            st.flags._mgmtCrisisResolved = true;
+            st.flags._mgmtCrisisHiddenRisk = true;
+            if (typeof addSkillXp === "function") addSkillXp("management", 10);
+            StateManager.addMessage(
+              "⚡ 你强制执行了新分工，工期保住了。但老李阴阳怪气的眼神告诉你——这事没完。管理XP+10。",
+              "warning",
+            );
+          },
+        },
+      ],
+    },
+
     // ====== 注册结束 ======
   );
 })();
