@@ -1,3 +1,4 @@
+- [v3.99c-loop-R8-domain-E-optimization](v3.99c-loop-R8-domain-E-optimization.md) — 全系统优化R8 域E: 4个A类NaN修复(investment.js) + 训练系统skill对象兼容(train_social/medicine) + 每日NaN防御（2026-07-13）
 - [domain-optimization-round-2](domain-optimization-round-2.md) — 全系统优化 域B(事件/叙事) — 28个A类缺陷修复 + 6项B类修复 + 2新增联动事件 (2026-07-12)
 - [v3.95-loop-R44-full-optimization](v3.95-loop-R44-session.md) — R44全系统优化：代码事实核查发现推荐方向已落地，改切6新事件(调解followUp链/阿杰多周目/NPC business格×2及payoff)+日终里程碑封顶¥10M（2026-07-12，commit 1710ec86）
 - [v3.88g-system-optimization-final](v3.88g-system-optimization-final.md) — R44全系统优化最终报告：修复13处缺陷(trigger_registry路径/重复ID/事件字段/Emoji/孤儿注释/命名冲突)+扩充22个触发模板+蒙特卡洛经济平衡分析
