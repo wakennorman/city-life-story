@@ -1,10 +1,10 @@
 {
-  "currentRound": 5,
-  "currentDomain": "B",
+  "currentRound": 6,
+  "currentDomain": "C",
   "domainOrder": ["A", "B", "C", "D", "E", "F", "G", "H"],
-  "rotationIndex": 1,
+  "rotationIndex": 2,
   "nextDomain": "D",
-  "lastCommit": "42cd4e12",
+  "lastCommit": "aac091e5",
   "lastUpdated": "2026-07-12",
   "history": [
     {
@@ -42,6 +42,15 @@
       "linkageItems": 3,
       "commit": "42cd4e12",
       "note": "A类修复(events_corp::insider_report扣款¥500k无建仓→补实际股票买入+cost字段)；联动增强3个职场道德事件(背锅抉择/晋升贿赂/裁员名单)填补corporate阶段道德事件空白；事件总数692"
+    },
+    {
+      "round": 6,
+      "domain": "C",
+      "date": "2026-07-12",
+      "aClassFixed": 2,
+      "linkageItems": 3,
+      "commit": "aac091e5",
+      "note": "A类修复(2)：train_medicine训练入口+train_social训练入口→解锁medical/doctor路径9职+wholesale_flip行动；social阈值50→30/40→25；联动增强3个职业满级里程碑事件(庆祝/收徒/行业项目)"
     }
   ]
 }
