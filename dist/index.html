@@ -143563,6 +143563,34 @@ const NEWS_EVENTS = [
     },
     type: "price",
   },
+  {
+    id: "scrap_price_surge",
+    headline: "♻️ 废品回收价格全线上涨！纸皮金属一天一个价",
+    desc: "环保督查趋严加上原材料紧缺，废品站收货价连续上调。收废品的老张说，最近纸皮和废铁特别抢手，一天一个价。",
+    effects: {
+      priceMod: { scrap_metal: 1.6, scrap_plastic: 1.4 },
+      investmentEffect: [
+        { category: "贵金属", mul: 1.12 },
+        { symbols: ["COPPER", "ALUM"], mul: 1.1 },
+      ],
+      duration: 6,
+    },
+    type: "price",
+    followUpId: "scrap_price_surge_echo",
+    followUpDelay: 5,
+  },
+  {
+    id: "night_market_revival",
+    headline: "🌃 夜间经济回暖！夜市摊位招兼职，日结工钱涨了",
+    desc: "城市重启夜间经济，夜市、地摊、大排档重新热闹起来。不少摊主贴出招兼职的纸牌，日结工资比上月高了三成。",
+    effects: {
+      jobMultiplier: 1.25,
+      investmentEffect: [{ industry: "消费", mul: 1.06 }],
+      duration: 8,
+    },
+    type: "job",
+    seasons: ["spring", "summer", "autumn"],
+  },
 ];
 
 // ============================================================
@@ -155211,6 +155239,45 @@ const MORAL_EVENTS = [
       },
     ],
   },
+  {
+    id: "moral_elder_assist",
+    title: "🧓 独居老人搬重物下楼",
+    desc: "楼道里一位独居老人正吃力地往下搬一袋米和一箱旧书，电梯坏了。他喘着粗气，额头上全是汗，走两步就要歇一下。",
+    minDay: 5,
+    dailyChance: 0.025,
+    choices: [
+      {
+        text: "🤝 上前帮他把东西搬下楼",
+        flag: "moral_elder_helped",
+        score: 10,
+        immediate: function (s) {
+          if (!s.relationships) s.relationships = {};
+          var r = s.relationships.elderNeighbor;
+          if (!r) r = s.relationships.elderNeighbor = {};
+          r.met = true;
+          r.affinity = Math.min(100, (r.affinity || 0) + 18);
+          s.needs.happiness = Math.min(100, (s.needs.happiness || 0) + 6);
+          s.player.fame = Math.min(100, (s.player.fame || 0) + 3);
+          StateManager.addMessage(
+            "🧓 老人连声道谢，硬塞给你两个橘子。你们成了点头之交。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "⏩ 赶时间，绕开走了",
+        flag: "moral_elder_ignored",
+        score: -4,
+        immediate: function (s) {
+          s.needs.happiness = Math.max(0, (s.needs.happiness || 0) - 2);
+          StateManager.addMessage(
+            "你快步走开，身后传来重物落地的闷响和一声闷哼。",
+            "warning",
+          );
+        },
+      },
+    ],
+  },
 ];
 
 // v3.22: 修复 after_work 道德事件死代码
@@ -155927,6 +155994,27 @@ for (var emi = 0; emi < EXTREME_MORAL_EVENTS.length; emi++) {
 }
 
 const MORAL_CONSEQUENCES = {
+  moral_elder_helped: {
+    id: "consequence_elder_helped",
+    title: "🍊 老人带来的消息",
+    delay: [4, 10],
+    desc: function (s) {
+      return "前些天你帮过的独居老人敲开门，说小区门口那家面馆在招夜班帮工，时薪比别处高两块，问你要不要去。";
+    },
+    apply: function (s) {
+      if (!s.relationships) s.relationships = {};
+      var r = s.relationships.elderNeighbor;
+      if (!r) r = s.relationships.elderNeighbor = {};
+      r.met = true;
+      r.affinity = Math.min(100, (r.affinity || 0) + 6);
+      s.flags._elderJobLead = true; // [联动flag] 求职/职业系统可消费（B→C 桥接）
+      s.needs.happiness = Math.min(100, (s.needs.happiness || 0) + 4);
+      StateManager.addMessage(
+        "🍜 老人递来一张写着面馆地址的纸条。多了一条兼职线索。",
+        "success",
+      );
+    },
+  },
   moral_wallet_return: {
     id: "consequence_wallet_return",
     title: "📬 收到一封感谢信",

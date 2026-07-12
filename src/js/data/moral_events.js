@@ -1470,6 +1470,45 @@ const MORAL_EVENTS = [
       },
     ],
   },
+  {
+    id: "moral_elder_assist",
+    title: "🧓 独居老人搬重物下楼",
+    desc: "楼道里一位独居老人正吃力地往下搬一袋米和一箱旧书，电梯坏了。他喘着粗气，额头上全是汗，走两步就要歇一下。",
+    minDay: 5,
+    dailyChance: 0.025,
+    choices: [
+      {
+        text: "🤝 上前帮他把东西搬下楼",
+        flag: "moral_elder_helped",
+        score: 10,
+        immediate: function (s) {
+          if (!s.relationships) s.relationships = {};
+          var r = s.relationships.elderNeighbor;
+          if (!r) r = s.relationships.elderNeighbor = {};
+          r.met = true;
+          r.affinity = Math.min(100, (r.affinity || 0) + 18);
+          s.needs.happiness = Math.min(100, (s.needs.happiness || 0) + 6);
+          s.player.fame = Math.min(100, (s.player.fame || 0) + 3);
+          StateManager.addMessage(
+            "🧓 老人连声道谢，硬塞给你两个橘子。你们成了点头之交。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "⏩ 赶时间，绕开走了",
+        flag: "moral_elder_ignored",
+        score: -4,
+        immediate: function (s) {
+          s.needs.happiness = Math.max(0, (s.needs.happiness || 0) - 2);
+          StateManager.addMessage(
+            "你快步走开，身后传来重物落地的闷响和一声闷哼。",
+            "warning",
+          );
+        },
+      },
+    ],
+  },
 ];
 
 // v3.22: 修复 after_work 道德事件死代码
@@ -2186,6 +2225,27 @@ for (var emi = 0; emi < EXTREME_MORAL_EVENTS.length; emi++) {
 }
 
 const MORAL_CONSEQUENCES = {
+  moral_elder_helped: {
+    id: "consequence_elder_helped",
+    title: "🍊 老人带来的消息",
+    delay: [4, 10],
+    desc: function (s) {
+      return "前些天你帮过的独居老人敲开门，说小区门口那家面馆在招夜班帮工，时薪比别处高两块，问你要不要去。";
+    },
+    apply: function (s) {
+      if (!s.relationships) s.relationships = {};
+      var r = s.relationships.elderNeighbor;
+      if (!r) r = s.relationships.elderNeighbor = {};
+      r.met = true;
+      r.affinity = Math.min(100, (r.affinity || 0) + 6);
+      s.flags._elderJobLead = true; // [联动flag] 求职/职业系统可消费（B→C 桥接）
+      s.needs.happiness = Math.min(100, (s.needs.happiness || 0) + 4);
+      StateManager.addMessage(
+        "🍜 老人递来一张写着面馆地址的纸条。多了一条兼职线索。",
+        "success",
+      );
+    },
+  },
   moral_wallet_return: {
     id: "consequence_wallet_return",
     title: "📬 收到一封感谢信",

@@ -969,6 +969,34 @@ const NEWS_EVENTS = [
     },
     type: "price",
   },
+  {
+    id: "scrap_price_surge",
+    headline: "♻️ 废品回收价格全线上涨！纸皮金属一天一个价",
+    desc: "环保督查趋严加上原材料紧缺，废品站收货价连续上调。收废品的老张说，最近纸皮和废铁特别抢手，一天一个价。",
+    effects: {
+      priceMod: { scrap_metal: 1.6, scrap_plastic: 1.4 },
+      investmentEffect: [
+        { category: "贵金属", mul: 1.12 },
+        { symbols: ["COPPER", "ALUM"], mul: 1.1 },
+      ],
+      duration: 6,
+    },
+    type: "price",
+    followUpId: "scrap_price_surge_echo",
+    followUpDelay: 5,
+  },
+  {
+    id: "night_market_revival",
+    headline: "🌃 夜间经济回暖！夜市摊位招兼职，日结工钱涨了",
+    desc: "城市重启夜间经济，夜市、地摊、大排档重新热闹起来。不少摊主贴出招兼职的纸牌，日结工资比上月高了三成。",
+    effects: {
+      jobMultiplier: 1.25,
+      investmentEffect: [{ industry: "消费", mul: 1.06 }],
+      duration: 8,
+    },
+    type: "job",
+    seasons: ["spring", "summer", "autumn"],
+  },
 ];
 
 // ============================================================
