@@ -4798,7 +4798,8 @@ if (typeof document !== "undefined") {
       conditions: function (st) {
         var career = st.career || {};
         var currentJob = career.currentJob;
-        if (!currentJob || !currentJob.path || !currentJob.levelId) return false;
+        if (!currentJob || !currentJob.path || !currentJob.levelId)
+          return false;
         var pathId = currentJob.path;
         var levelId = currentJob.levelId;
         var pData = CAREER_PATHS && CAREER_PATHS[pathId];
@@ -4846,7 +4847,10 @@ if (typeof document !== "undefined") {
             st.flags._careerMaxLevelCelebrated = true;
             st.flags._startupFromMaxLevel = true;
             st.player.corporate = st.player.corporate || {};
-            st.player.corporate.kpi = Math.min(150, (st.player.corporate.kpi || 0) + 20);
+            st.player.corporate.kpi = Math.min(
+              150,
+              (st.player.corporate.kpi || 0) + 20,
+            );
             StateManager.addMessage(
               "🏆 你决定把职业积累的经验带到创业中去。KPI+20，解锁创业资本加成。",
               "event",
@@ -4866,7 +4870,8 @@ if (typeof document !== "undefined") {
       conditions: function (st) {
         var career = st.career || {};
         var currentJob = career.currentJob;
-        if (!currentJob || !currentJob.path || !currentJob.levelId) return false;
+        if (!currentJob || !currentJob.path || !currentJob.levelId)
+          return false;
         var pathId = currentJob.path;
         var levelId = currentJob.levelId;
         var pData = CAREER_PATHS && CAREER_PATHS[pathId];
@@ -4928,7 +4933,8 @@ if (typeof document !== "undefined") {
       conditions: function (st) {
         var career = st.career || {};
         var currentJob = career.currentJob;
-        if (!currentJob || !currentJob.path || !currentJob.levelId) return false;
+        if (!currentJob || !currentJob.path || !currentJob.levelId)
+          return false;
         var pathId = currentJob.path;
         var levelId = currentJob.levelId;
         var pData = CAREER_PATHS && CAREER_PATHS[pathId];
