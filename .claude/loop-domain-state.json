@@ -1,10 +1,10 @@
 {
-  "currentRound": 3,
-  "currentDomain": "C",
+  "currentRound": 5,
+  "currentDomain": "B",
   "domainOrder": ["A", "B", "C", "D", "E", "F", "G", "H"],
-  "rotationIndex": 2,
+  "rotationIndex": 1,
   "nextDomain": "D",
-  "lastCommit": "40098353",
+  "lastCommit": "42cd4e12",
   "lastUpdated": "2026-07-12",
   "history": [
     {
@@ -33,6 +33,15 @@
       "linkageItems": 6,
       "commit": "e862ade0",
       "note": "由旧版 automation 提前完成(域C 职业/成长)：A类修复(unlock medicine/social 技能定义+medical/doctor 路径+wholesale_flip 行动) + 联动增强6项(博士毕业/驾驶老司机/管理班子危机/design/legal/operations路径)"
+    },
+    {
+      "round": 5,
+      "domain": "B",
+      "date": "2026-07-12",
+      "aClassFixed": 1,
+      "linkageItems": 3,
+      "commit": "42cd4e12",
+      "note": "A类修复(events_corp::insider_report扣款¥500k无建仓→补实际股票买入+cost字段)；联动增强3个职场道德事件(背锅抉择/晋升贿赂/裁员名单)填补corporate阶段道德事件空白；事件总数692"
     }
   ]
 }
