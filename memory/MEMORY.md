@@ -1,5 +1,8 @@
+- [domain-optimization-round-2](domain-optimization-round-2.md) — 全系统优化 域B(事件/叙事) — 28个A类缺陷修复 + 6项B类修复 + 2新增联动事件 (2026-07-12)
 - [v3.95-loop-R44-full-optimization](v3.95-loop-R44-session.md) — R44全系统优化：代码事实核查发现推荐方向已落地，改切6新事件(调解followUp链/阿杰多周目/NPC business格×2及payoff)+日终里程碑封顶¥10M（2026-07-12，commit 1710ec86）
-- [v3.88g-system-optimization](v3.88g-system-optimization.md) — 全系统优化：重复ID修复(2)/事件字段统一(18)/Emoji一致性(2)/孤儿注释清理/跨系统联动审计 (2026-07-11)
+- [v3.88g-system-optimization-final](v3.88g-system-optimization-final.md) — R44全系统优化最终报告：修复13处缺陷(trigger_registry路径/重复ID/事件字段/Emoji/孤儿注释/命名冲突)+扩充22个触发模板+蒙特卡洛经济平衡分析
+- [v3.88g-economic-balance-analysis](v3.88g-economic-balance-analysis.md) — 蒙特卡洛经济平衡分析：5000次×9组合×1000天，三层财富税系统评估
+- [v3.88g-system-optimization](v3.88g-system-optimization.md) — 全系统优化原始报告（含跨系统联动审计）
 - [v3.88e-dead-code-cleanup](v3.88e-dead-code-cleanup.md) — 删除4处死代码(renderCurrentTab_legacy/scrollMessageLogToBottom/scaleEventReward/quarterlyCleanup) -312行 (2026-07-11)
 - [v3.88d-loop-R42-events](v3.88d-loop-R42-events.md) — R42新增4个联动事件(社交/道德/装备/天气)+指令一A类0缺陷(2026-07-11)
 - [passmsg-eventlog-scroll-modal](passmsg-eventlog-scroll-modal.md) — v3.2a passMsg修复·工资分离·事件强制滚动·导航弹窗

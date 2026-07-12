@@ -52,6 +52,7 @@ try {
     $env:USERPROFILE = $claudeHome
     $env:CLAUDE_CONFIG_DIR = $claudeConfigDir
     $env:ANTHROPIC_API_KEY = ""
+    $env:CLAUDE_CODE_EFFORT_LEVEL = "max"
 
     $rtkPath = Join-Path $env:USERPROFILE ".local\bin"
     if (Test-Path (Join-Path $rtkPath "rtk.exe")) {

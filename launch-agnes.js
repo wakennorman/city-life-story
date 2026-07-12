@@ -594,7 +594,15 @@ function startClaudeCode() {
 
   const child = spawn(
     claudeExe,
-    ["--settings", settingsPayload, "--model", "agnes-2.0-flash", "--bare"],
+    [
+      "--settings",
+      settingsPayload,
+      "--model",
+      "agnes-2.0-flash",
+      "--bare",
+      "--effort",
+      "max",
+    ],
     {
       stdio: "inherit",
       shell: false,

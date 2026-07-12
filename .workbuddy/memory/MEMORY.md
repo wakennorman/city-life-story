@@ -54,11 +54,11 @@
 写 `cross_system_events.js` / `events_street_*.js` 事件条件前，**先核 `src/js/core/state.js`**：
 
 - **`st.skills` 仅有**：cooking / repair / coding / english / driving / sales / management / accounting / electrician / welding。**没有 `writing`、`content`、`art` 等**——曾误用 `skills.writing` 导致整条事件永不触发（已改为 `skills.english`）。
-- **`st.reputation` 是按地点 key 的对象**：`{ slum:0-100, commercialDist:0-100, bank:0-100, ... }`，**不是标量**。判断口碑应写 `st.reputation && (st.reputation.slum||0) >= X`。
+- **`st.reputation` 是按地点 key 的对象**：`{ slum:0-100, commercialDist:0-100, bank:0-100, techPark:0-100, ... }`，**不是标量**。判断口碑应写 `st.reputation && (st.reputation.slum||0) >= X`。它由 `phase1/reputation.js::initReputation` 在启动时初始化为 `{}`（+`slum:2`），**读档后必须再次调用 `initReputation`**（main.js 读档流程已补，仿 `兼容旧存档` 模式），否则旧存档读档后 `st.reputation` 为 undefined → 声誉事件崩溃。
 - **NPC 关系**：`st.relationships[npcId] = { affinity:-100~100, met:bool, discovered:{} }`。活跃 NPC：aunt_wang/boss_li/sister_zhang/old_zhou/xiao_mei/chef_chen/uncle_chen_bank/sister_wu/brother_huang。**注意 `xiaoli`/`auntie_lin`/`master_zhao` 在 npcs.js 仍是 TODO 注释状态（未激活）**——引用它们的事件目前永不触发。
-- **习惯 streak**：`st.flags._habits` 仅有 `lowHungerStreak`（连续 hunger<25 天数）。无 `lowMoodStreak`/`lowSleepStreak`——需要"连续低心情/低睡眠"事件时改用 `st.needs.*` 阈值而非 streak flag。
+- **习惯 streak**：`st.flags._habits` 含 `lowHungerStreak`（连续 hunger<25）、`lowHygieneStreak`（连续 hygiene<30）、`lowHappinessStreak`（连续 happiness<20）、`highFatigueStreak`（连续 fatigue>80）。**注意**：没有 `lowMoodStreak`/`lowSleepStreak`——"连续低心情"事件应改用 `st.flags._habits.lowHappinessStreak`，"连续低睡眠"无对应 flag 改用 `st.needs.*` 阈值。
 - **天气**：`st.weather.current` ∈ sunny/cloudy/rainy/stormy/heatwave/typhoon。天气叙述事件必须校验此字段（A类）。
-- **压力/心理**：`stress` 在 **`st.player.health.mental.stress`**（0-100），**不是** `st.player.stress`。`emotionalState` 在 `st.status.emotionalState`（stable|happy|sad|angry|stressed|depressed）。低心情阈值用 `st.needs.happiness < X`（needs: hunger/fatigue/hygiene/happiness 均在 0-100）。R8 曾误以为 `st.player.stress` 实则不存在 → 死事件，已核实路径后修正。
+- **压力/心理**：`stress` 在 **`st.personalGrowth.health.mental.stress`**（0-100），**不是** `st.player.stress`/`st.player.health.mental.stress`（前缀是 `personalGrowth` 不是 `player`）。`emotionalState` 在 `st.status.emotionalState`（stable|happy|sad|angry|stressed|depressed）。低心情阈值用 `st.needs.happiness < X` 或 `st.flags._habits.lowHappinessStreak`。
 - **自洽守卫惯例**：NPC 名事件条件须 `rel && rel.met && (rel.affinity||0) >= N`；职业叙述须查 `st.employment.currentJob`/`st.sideHustle.type`/`st.stats.actionFreq`；已有修复加 `// [自洽修复]` 注释。
 
 ## 设计参考库（已用过的同类游戏）
@@ -93,3 +93,39 @@
 3. **循环任务流程**：指令一审计（快速扫描，有缺陷则修复，无则一行记录）→ 指令二新增事件（3-5个）→ node --check → build.py → commit → 更新 memory → 结尾标注继续信号。
 4. **遇到并行窗口提交漂移**：先 `git diff <old>..<new>` 核对，若 identical 则放弃重复 + 同步 last_known_head（不强行合并）。
 5. **不主动 push**：由用户统一安排推送时机。
+
+## 循环调度实测（2026-07-12 调查修正）
+
+- **桌面 Claude Code `/cron` 配置实际不存在**：排查用户级 `~/.claude/settings.json`、项目级 `D:\Claude Code+DeepSeekV4\.claude\settings.json` 与 `settings.local.json`、`~/.claude.json`，**均无 cron/schedule/recurring 字段**。故早前"双10分钟策略含桌面 /cron 一路"的描述本轮已证伪——当前只有 WorkBuddy automation 一路在跑。
+- **10分钟节奏来源**：即 `automation-1783592608308`（城市浮生记·日常开发循环）。其 `rrule` 字段显示 `FREQ=DAILY;BYHOUR=0;BYMINUTE=0`，但实际约每10分钟触发——**真实触发由 WorkBuddy 平台后台心跳驱动，rrule 字段不控制实际节奏**。
+- **自动化接口不支持分钟级**：`automation_update` 设 `FREQ=MINUTELY;INTERVAL=3` 被后端拒绝（仅支持 DAILY/HOURLY/WEEKLY/MONTHLY/YEARLY）。故**无法把循环改成3分钟**；API 允许的最快可控粒度是 `HOURLY`（每小时），但 rrule 是否生效未知且会变慢，不推荐。
+- **结论**：维持约10分钟现状为最优。每轮需读 ~48k 行事件 + node --check + python build.py（构建 7-8MB），10分钟间隔可避免上轮 build 未完成导致的截断事故（参考 52222a8）。用户想加速时直接下指令即可，不必等心跳。
+
+## 已知设计缺口（2026-07-12 全系统优化审计）
+
+- **阶段孤岛**：`cross_system_events.js` 共 670 事件，但 **corporate 阶段仅 10 个**（street 655）。两系统近乎无桥接，是确认的真实缺口。后续优化优先补 corporate 阶段 + street→corporate 跨阶段桥接事件（v3.96 已新增 `corp_reputation_headhunt` / `corp_skill_project_lead` 两个桥）。
+- **NPC 覆盖误判陷阱**：用 `relationships["X"]` 正则代理统计 NPC 联动密度会漏报——`xiaochen`/`zhaojie` 实际已有事件（`xiaochen_night_market`、`zhaojie_shop_tip` + 3 事件链），只是不走 `relationships[]` 对象。统计 NPC 覆盖需结合 `grep -rn "id:"` + npc_relationships.js 综合判断，勿盲加。
+
+## 全系统优化·域轮换循环（2026-07-12 新提示词生效）
+
+用户更新 `/loop` 提示词：每10分钟一轮、无限循环、无结束目标；每轮从 **8 域** 选一个薄弱域，做完轮换下一域。
+
+- **8 域**：A 数据/数值平衡(jobs/skills/items/goods/illnesses/pricing/trade/economy_v3.1) · B 事件/叙事 · C 职业/成长 · D NPC/社交 · E 经济/投资 · F UI/UX · G 核心机制/生命周期 · H Phase2/公司。
+- **指令一**：审查+修 A类缺陷（数据域：引用id不存在/>3倍差价无解释/极端值崩溃；各域有专属判定）。每修加 `// [全系统自洽修复] 域X 修复:xxx`。
+- **指令二**：联动增强 2-4 项（该域数据从未被引用→新事件 / 关键数值UI无展示→新UI / 跨阶段无继承→桥接 等）。需 `MC 10×500d` 冒烟测试。
+- **每轮交付**：①修复清单 ②增强清单 ③更新 CLAUDE.md 迭代表 ④写 `domain-optimization-round-N.md`+更新 MEMORY.md ⑤更新 `.claude/loop-domain-state.json`（域+轮次）。
+- **状态追踪文件**：`.claude/loop-domain-state.json`（currentRound/currentDomain/domainOrder/history）。
+
+### R1 (2026-07-12, 域A) 关键结论
+
+- **Domain A 结构性健康，0 A类缺陷**（job/item/goods/illness id 完整性 100%；economy_v3.1 守卫完备）。
+- **隐形数据缺口已治愈**：economy_v3.1（财富税/市场饱和）与 pricing.js 市场事件此前"算而不显"（0 事件引用）。R1 新增 4 事件叙事化：`econ_wealth_tax_tier`(street+corporate) / `econ_market_saturation`(street) / `price_market_event_alert`(street)。commit `42528c0a`。
+- **MC 10×500d 测试方法**（可复用）：Python 括号匹配提取目标事件对象 → 写入 `/tmp/_extracted_evts.js`（`module.exports=[...]`）→ node `.cjs` 脚本将 `StateManager`/`Random` 挂 `global` 后 `require` 并跑 10种子×500天随机 state。注意：项目 `package.json` 有 `"type":"module"`，node 脚本须用 `.cjs` 扩展名。
+- **CROSS_EVENTS 结构陷阱**：文件实际为 `var CROSS_EVENTS = ([ ... ]);` —— 数组被**括号包裹**，尾部 `  });` 的 `)` 是包裹括号闭合（非 IIFE）。插入新事件时：上一事件 `  });` → `  },`（加逗号），并在 `// 注册结束` 与末尾 `})();`(IIFE) 之间补回 `  );`（数组包裹括号闭合）。漏逗号或丢 `)` 都会语法崩。
+- **尾部事件须用裸 `{...},` 数组元素**（非 `RANDOM_EVENTS.push(...)`）：cross_system_events.js 末尾（line ~49997 之后）的事件是 `CROSS_EVENTS` 数组的字面量元素，由 line 5355 `for` 循环统一 `RANDOM_EVENTS.push(CROSS_EVENTS[i])` 注册。R2 初版误用 `RANDOM_EVENTS.push({...})` 致 `SyntaxError: missing )`，改为裸对象元素后通过。
+
+### R2 (2026-07-11, 域B) 关键结论
+
+- **Domain B 结构性健康，0 A类缺陷**。NPC `met` 守卫完备（217 处 `relationships[]` 引用全守卫，泛化角色叙事不算缺陷）；天气事件用 `weather.season`/`_nextDayForecast` 比 `weather.current` 更精确（非缺陷）；引擎 `queueRandomEvent` 同时支持 `triggers`(对象) 与 `trigger`(函数)，无"丢弃"。
+- **联动增强 3 项 street→corporate 桥接**（治愈"阶段孤岛 655:10"）：`corp_street_roots_letter`(B×C×D 导师寄语) / `corp_street_skill_advantage`(B×C 硬技能立功) / `corp_npc_referral_from_street`(B×D 挚友人脉反哺)。code `edcb4bbf` + docs `ef90b87d`，事件总数 674→677，MC 10×500d 0 异常。
+- **R2 新踩坑**：①尾部裸对象元素非 push；②build 后须立即 commit 避免 dist 新鲜度拦截；③commit 前 `echo <HEAD> > .claude/last_known_head` 同步。详见 `domain-optimization-round-2.md`。
