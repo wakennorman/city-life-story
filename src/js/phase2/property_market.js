@@ -137,7 +137,12 @@ function tickPropertyMarket(state) {
     }
   }
 
-  // 3. 为每套已持有房产计算当天的价格变化
+  // 3. 从活跃新闻提取政策趋紧度影响（仅一次，不在属性循环内重复调用）
+  if (typeof applyNewsToPropertyPolicy === "function") {
+    applyNewsToPropertyPolicy(state);
+  }
+
+  // 4. 为每套已持有房产计算当天的价格变化
   var props = inv.properties || [];
   for (var i = 0; i < props.length; i++) {
     var prop = props[i];

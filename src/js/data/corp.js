@@ -389,6 +389,38 @@ const CORP_ACTIONS = [
     effects: { cash: 300, fatigue: 20, kpi: -8 },
     requirements: { coding: 30 },
   },
+  // === 全栈人生线 v1：开发者职场行动 ===
+  {
+    id: "code_review",
+    name: "代码评审",
+    icon: "🔎",
+    desc: "review 同事的 PR，把坑拦在合并前。降低技术债，稳步提升能力。",
+    effects: { kpi: 5, ability: 4, risk: -8, fatigue: 8, hair: -1 },
+    requirements: { coding: 30 },
+  },
+  {
+    id: "on_call_firefight",
+    name: "线上救火",
+    icon: "🚨",
+    desc: "半夜被报警叫醒，紧急修复线上故障。疲劳爆炸，但保住了 KPI 和技术债。",
+    effects: {
+      kpi: 10,
+      fatigue: 22,
+      hair: -3,
+      risk: -6,
+      happiness: -5,
+      ability: 2,
+    },
+    requirements: { coding: 35 },
+  },
+  {
+    id: "agile_sprint",
+    name: "迭代冲刺",
+    icon: "🏃",
+    desc: "带小组冲一波 sprint，集中交付需求。KPI 大涨，但技术债和疲劳也涨。",
+    effects: { kpi: 18, ability: 3, fatigue: 16, risk: 6, hair: -4 },
+    requiresRank: "P6",
+  },
 ];
 
 /**

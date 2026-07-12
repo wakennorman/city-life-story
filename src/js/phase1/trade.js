@@ -7,6 +7,10 @@
 /** 玩家购买商品 */
 function buyGood(goodId, qty) {
   const state = StateManager.getState();
+  if (typeof qty !== "number" || !isFinite(qty) || qty <= 0) {
+    StateManager.addMessage("⚠️ 无效的购买数量。", "danger");
+    return false;
+  }
   const good = getGoodById(goodId);
   if (!good) {
     StateManager.addMessage("⚠️ 不存在的商品。", "danger");
@@ -124,6 +128,10 @@ function buyGood(goodId, qty) {
 /** 玩家卖出商品 */
 function sellGood(goodId, qty) {
   const state = StateManager.getState();
+  if (typeof qty !== "number" || !isFinite(qty) || qty <= 0) {
+    StateManager.addMessage("⚠️ 无效的卖出数量。", "danger");
+    return false;
+  }
   const good = getGoodById(goodId);
   if (!good) {
     StateManager.addMessage("⚠️ 不存在的商品。", "danger");
@@ -251,6 +259,10 @@ function sellGood(goodId, qty) {
 /** 批发进货（批发市场专属） */
 function buyWholesale(goodId, qty) {
   const state = StateManager.getState();
+  if (typeof qty !== "number" || !isFinite(qty) || qty <= 0) {
+    StateManager.addMessage("⚠️ 无效的批发数量。", "danger");
+    return false;
+  }
   const good = getGoodById(goodId);
   if (!good) {
     StateManager.addMessage("⚠️ 不存在的商品。", "danger");

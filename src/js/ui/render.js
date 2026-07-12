@@ -6512,6 +6512,23 @@ var _TRAIN_LOC_LABELS = {
   hospital: "🏥 医院",
 };
 
+/** 获取训练属性值（兼容数字属性和 skill 对象 { level, xp }） */
+function _getTrainStatVal(p, stat) {
+  var v = p[stat];
+  if (v && typeof v === "object" && typeof v.level === "number") return v.level;
+  return typeof v === "number" ? v : 0;
+}
+/** 设置训练属性值（兼容数字属性和 skill 对象 { level, xp }） */
+function _setTrainStatVal(p, stat, val) {
+  var v = p[stat];
+  val = Math.min(100, Math.max(0, Math.round(val)));
+  if (v && typeof v === "object" && "level" in v) {
+    v.level = val;
+  } else {
+    p[stat] = val;
+  }
+}
+
 /** v3.85 属性训练子面板（数据来自 TRAIN_DATA 常量）*/
 function renderPgStatTrain(state, content) {
   var p = state.player;
@@ -6532,7 +6549,7 @@ function renderPgStatTrain(state, content) {
     var t = TRAIN_DATA[trainKeys[ti]];
     var count = flags["_trainCount_" + t.id] || 0;
     var price = t.basePrice + count * t.priceStep;
-    var curVal = p[t.stat] || 0;
+    var curVal = _getTrainStatVal(p, t.stat);
     var canAfford = t.basePrice === 0 || (state.resources.cash || 0) >= price;
     var locLabel = t.location
       ? _TRAIN_LOC_LABELS[t.location] || "📍 任意地点"
@@ -6665,7 +6682,7 @@ window.__doTrain = function (trainId) {
           '<p style="margin-top:6px;color:var(--text-muted);font-size:12px;">💡 ' +
           t.statLabel +
           " 当前值：" +
-          (p[t.stat] || 0) +
+          _getTrainStatVal(p, t.stat) +
           "，训练可提升属性点。</p></div>",
         buttons: [
           {
@@ -6719,13 +6736,14 @@ window.__doTrainCore = function (trainId) {
   flags["_trainCount_" + t.id] = count + 1;
 
   // 属性训练——基于当前值递减收益（参考《完美人生》难提升设计）
-  var curVal = p[t.stat] || 0;
+  var curVal = _getTrainStatVal(p, t.stat);
   var diminishingMult =
     curVal >= 90 ? 0.4 : curVal >= 80 ? 0.6 : curVal >= 70 ? 0.8 : 1.0;
 
   // 风险检查（整容）
   if (t.risky && Math.random() < 0.2) {
-    p[t.stat] = Math.max(0, (p[t.stat] || 0) - 5);
+    var oldVal = _getTrainStatVal(p, t.stat);
+    _setTrainStatVal(p, t.stat, oldVal - 5);
     state.status.health = Math.max(20, (state.status.health || 100) - 15);
     state.needs.happiness = Math.max(0, (state.needs.happiness || 0) - 10);
     StateManager.addMessage(
@@ -6738,7 +6756,7 @@ window.__doTrainCore = function (trainId) {
     var crit = Math.random() < 0.1 ? 2 : 0;
     baseGain = Math.max(1, Math.round(baseGain * diminishingMult));
     var totalGain = baseGain + crit;
-    p[t.stat] = Math.min(100, (p[t.stat] || 0) + totalGain);
+    _setTrainStatVal(p, t.stat, _getTrainStatVal(p, t.stat) + totalGain);
     var msg = "✨ " + (t.name || "训练") + " " + t.statLabel + "+" + totalGain;
     if (crit > 0) msg += "（爆击！）";
     if (diminishingMult < 1.0) msg += "（高属性收益递减）";

@@ -250,7 +250,7 @@ function buyStock(symbol, shares) {
   }
 
   shares = Math.floor(shares);
-  if (shares <= 0) {
+  if (shares <= 0 || !isFinite(shares)) {
     StateManager.addMessage("⚠️ 至少买入1股。", "warning");
     return false;
   }
@@ -316,14 +316,19 @@ function buyStock(symbol, shares) {
 function sellStock(symbol, shares) {
   const state = StateManager.getState();
   const holding = state.corporate.stocks.find((s) => s.symbol === symbol);
-  if (!holding || holding.shares < shares) {
+  if (!holding || holding.shares < shares || !isFinite(shares) || shares <= 0) {
     StateManager.addMessage("⚠️ 持仓不足。", "danger");
     return false;
   }
 
   const market = state.corporate.stockMarket[symbol];
+  if (!market) {
+    StateManager.addMessage("⚠️ 该股票已退市，无法交易。", "danger");
+    return false;
+  }
+
   const revenue = Math.round(market.price * shares * 100) / 100;
-  const profit = revenue - holding.avgPrice * shares;
+  const profit = revenue - (holding.avgPrice || 0) * shares;
 
   state.resources.cash += revenue;
   state.resources.totalEarned += Math.max(0, profit);

@@ -44,14 +44,11 @@ function getNewsEffectForInvestment(symbol, industry, category, state) {
         if (eff.symbols.indexOf(symbol) >= 0) continue;
       }
 
-      // 按行业匹配
+      // 按行业或类别匹配（互斥：同一 effect 不重复乘算）
       if (eff.industry && industry && eff.industry === industry) {
         combinedMul *= eff.mul;
         hasEffect = true;
-      }
-
-      // 按类别匹配
-      if (eff.category && category && eff.category === category) {
+      } else if (eff.category && category && eff.category === category) {
         combinedMul *= eff.mul;
         hasEffect = true;
       }
@@ -82,15 +79,18 @@ function getNewsEffectForBtc(state) {
   return combinedMul;
 }
 
-/** 获取活跃新闻对房产的综合乘数（通过匹配 industry="房地产" 或 symbol="ESTATE"） */
+/** 获取活跃新闻对房产的综合乘数（纯函数，不修改 state） */
 function getNewsEffectForProperty(state) {
   // 原有逻辑：通过 getNewsEffectForInvestment 匹配
   var baseMul = getNewsEffectForInvestment("ESTATE", "房地产", "股票", state);
+  return baseMul;
+}
 
-  // 新增：从活跃新闻中提取政策趋紧度影响
+/** 从活跃新闻提取政策趋紧度影响（每周期仅调用一次，勿循环调用） */
+function applyNewsToPropertyPolicy(state) {
   var activeNews = state.activeNews || [];
   var inv = state.investment;
-  if (!inv) return baseMul;
+  if (!inv) return;
 
   for (var ni = 0; ni < activeNews.length; ni++) {
     var n = activeNews[ni];
@@ -122,8 +122,6 @@ function getNewsEffectForProperty(state) {
       );
     }
   }
-
-  return baseMul;
 }
 
 /** 生成今日市场驱动摘要文本（用于投资Tab展示） */

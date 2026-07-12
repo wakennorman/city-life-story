@@ -1238,6 +1238,9 @@ function tickInvestmentDaily(state) {
     tickPropertyMarket(state);
   } else {
     // 降级：维持旧逻辑（防止 property_market.js 未加载时崩溃）
+    if (typeof applyNewsToPropertyPolicy === "function") {
+      applyNewsToPropertyPolicy(state);
+    }
     var propertyNewsMulFallback =
       typeof getNewsEffectForProperty === "function"
         ? getNewsEffectForProperty(state)
@@ -1246,7 +1249,9 @@ function tickInvestmentDaily(state) {
       var prop = inv.properties[p];
       prop.currentPrice = Math.round(
         (prop.currentPrice || prop.buyPrice) *
-          (1 + (prop.appreciation || 0.0001) + Random.float(-0.001, 0.001)) *
+          (1 +
+            (prop.baseAppreciation || 0.0001) +
+            Random.float(-0.001, 0.001)) *
           propertyNewsMulFallback,
       );
       var isSelfLived = inv.selfLivePropertyId === prop.id;
@@ -1297,6 +1302,70 @@ function tickInvestmentDaily(state) {
       );
     }
   }
+
+  // ================================================================
+  // 投资里程碑检查（仅在有持仓时触发，每日最多一次）
+  // ================================================================
+  if (
+    inv.stockHoldings &&
+    inv.stockHoldings.length > 0 &&
+    (!state.flags._invMilestoneDay ||
+      state.flags._invMilestoneDay < state.player.day)
+  ) {
+    checkInvestmentMilestones(state, inv);
+  }
+}
+
+function checkInvestmentMilestones(state, inv) {
+  // 计算总持仓市值
+  var totalValue = 0;
+  var holdings = inv.stockHoldings || [];
+  for (var hi = 0; hi < holdings.length; hi++) {
+    var h = holdings[hi];
+    var m = inv.stockMarket && inv.stockMarket[h.symbol];
+    if (m) totalValue += m.price * h.shares;
+  }
+  // 含房产
+  var props = inv.properties || [];
+  for (var pi = 0; pi < props.length; pi++) {
+    totalValue += props[pi].currentPrice || props[pi].buyPrice || 0;
+  }
+  // 含 BTC
+  if (inv.btcHoldings && inv.btcHoldings > 0) {
+    var btcPrice = inv.btcPrice || 0;
+    totalValue += btcPrice * inv.btcHoldings;
+  }
+
+  var prevMilestone = state.flags._invLastMilestone || 0;
+  var milestone = null;
+  if (totalValue >= 1000000 && prevMilestone < 1000000) {
+    milestone = { level: 1000000, label: "百万持仓", icon: "👑" };
+  } else if (totalValue >= 500000 && prevMilestone < 500000) {
+    milestone = { level: 500000, label: "半百万持仓", icon: "💎" };
+  } else if (totalValue >= 100000 && prevMilestone < 100000) {
+    milestone = { level: 100000, label: "六位数持仓", icon: "💰" };
+  } else if (totalValue >= 10000 && prevMilestone < 10000) {
+    milestone = { level: 10000, label: "万元持仓", icon: "🪙" };
+  }
+
+  if (milestone) {
+    state.flags._invLastMilestone = milestone.level;
+    state.flags._invMilestoneDay = state.player.day;
+    StateManager.addMessage(
+      milestone.icon +
+        " 投资里程碑：持仓市值突破 ¥" +
+        milestone.level.toLocaleString() +
+        "！" +
+        (milestone.level >= 1000000
+          ? " 你已经是这座城市真正的投资者了。"
+          : milestone.level >= 500000
+            ? " 距离财务自由又近了一步。"
+            : milestone.level >= 100000
+              ? " 投资初见成效，继续保持。"
+              : " 好的开始是成功的一半。"),
+      "success",
+    );
+  }
 }
 
 function buyInvStock(symbol, shares) {
@@ -1320,6 +1389,10 @@ function buyInvStock(symbol, shares) {
     return;
   }
   var cost = Math.round(m.price * shares * 100) / 100;
+  if (isNaN(cost) || !isFinite(cost)) {
+    StateManager.addMessage("⚠️ 价格异常，买入取消", "danger");
+    return;
+  }
   if (state.resources.cash < cost) {
     StateManager.addMessage("现金不足", "danger");
     return;
@@ -1355,6 +1428,16 @@ function buyInvStock(symbol, shares) {
       (isStockCat ? "股" : " " + (def?.unit || "")),
     "success",
   );
+
+  // 首次买入股票里程碑
+  if (isStockCat && !state.flags._firstStockBought) {
+    state.flags._firstStockBought = true;
+    state.flags._firstStockDay = state.player.day;
+    StateManager.addMessage(
+      "📈 第一次买入股票！你正式踏入了投资理财的大门。",
+      "event",
+    );
+  }
 }
 
 function sellInvStock(symbol, shares) {
@@ -1383,6 +1466,10 @@ function sellInvStock(symbol, shares) {
   }
   var m = inv.stockMarket[symbol];
   var revenue = Math.round(m.price * shares * 100) / 100;
+  if (isNaN(revenue) || !isFinite(revenue)) {
+    StateManager.addMessage("⚠️ 价格异常，卖出取消", "danger");
+    return;
+  }
   state.resources.cash += revenue;
   h.shares -= shares;
   if (h.shares <= 0)
@@ -1411,6 +1498,10 @@ function buyBtc(amount) {
   var state = StateManager.getState();
   var inv = state.investment;
   var cost = Math.round(inv.btcPrice * amount * 100) / 100;
+  if (isNaN(cost) || !isFinite(cost)) {
+    StateManager.addMessage("⚠️ 价格异常，买入取消", "danger");
+    return;
+  }
   if (state.resources.cash < cost) {
     StateManager.addMessage("现金不足", "danger");
     return;
@@ -1419,7 +1510,8 @@ function buyBtc(amount) {
   // 追踪加权平均成本
   var oldTotal = (inv.btcAvgCost || 0) * (inv.btcHoldings || 0);
   var newTotal = oldTotal + cost;
-  inv.btcHoldings = Math.round((inv.btcHoldings + amount) * 10000) / 10000;
+  inv.btcHoldings =
+    Math.round(((inv.btcHoldings || 0) + amount) * 10000) / 10000;
   inv.btcAvgCost =
     inv.btcHoldings > 0
       ? Math.round((newTotal / inv.btcHoldings) * 100) / 100
@@ -1526,6 +1618,9 @@ function sellProperty(propId) {
     StateManager.addMessage("🏠 你卖掉了自住房，搬回合租床位。", "warning");
   }
 
+  // NaN 防御：旧存档或未初始化时 currentPrice 可能缺失
+  if (prop.currentPrice == null || isNaN(prop.currentPrice))
+    prop.currentPrice = prop.buyPrice || 0;
   var net = prop.currentPrice - Math.round(prop.currentPrice * 0.05);
   state.resources.cash += net;
   inv.properties.splice(idx, 1);
@@ -2090,15 +2185,44 @@ function getInvestmentAssetSnapshot(state) {
   }
 
   // 兼容旧存档或旧事件直接写入的 BTC 持仓。
+  // 同时持有 legacy + unified BTC 时合并显示，避免数据丢失 see [v3.99e A3]
   if (inv.btcHoldings && inv.btcHoldings > 0) {
-    var hasUnifiedBtc = false;
+    var unifiedBtcRow = null;
     for (var b = 0; b < holdings.length; b++) {
       if (holdings[b].symbol === "BTC") {
-        hasUnifiedBtc = true;
+        unifiedBtcRow = holdings[b];
         break;
       }
     }
-    if (!hasUnifiedBtc) {
+    if (unifiedBtcRow) {
+      // 合并 legacy BTC 到 unified 行
+      var btcPrice =
+        (inv.stockMarket && inv.stockMarket.BTC && inv.stockMarket.BTC.price) ||
+        inv.btcPrice ||
+        0;
+      var legacyQty = Number(inv.btcHoldings) || 0;
+      var legacyCost = (inv.btcAvgCost || 0) * legacyQty;
+      var unifiedValue = (unifiedBtcRow.avgPrice || 0) * unifiedBtcRow.shares;
+      var mergedShares = unifiedBtcRow.shares + legacyQty;
+      var mergedCost = unifiedValue + legacyCost;
+      var mergedAvgPrice = mergedShares > 0 ? mergedCost / mergedShares : 0;
+      var mergedValue = btcPrice * mergedShares;
+      addInvestmentRowToGroup(groups.crypto, {
+        symbol: "BTC",
+        name: "比特币(含旧版)",
+        category: "虚拟币",
+        unit: "个",
+        quantity: mergedShares,
+        quantityText: formatInvestmentQuantity(mergedShares, "个", 4),
+        avgPrice: mergedAvgPrice,
+        price: btcPrice,
+        value: mergedValue,
+        cost: mergedCost,
+        pl: mergedValue - mergedCost,
+        plPct:
+          mergedCost > 0 ? ((mergedValue - mergedCost) / mergedCost) * 100 : 0,
+      });
+    } else {
       var btcPrice =
         (inv.stockMarket && inv.stockMarket.BTC && inv.stockMarket.BTC.price) ||
         inv.btcPrice ||

@@ -32,7 +32,12 @@ const EconomySystem = (function () {
   };
 
   function calculateProgressiveWealthTax(totalAssets, difficulty) {
-    if (totalAssets <= 0) return 0;
+    if (
+      typeof totalAssets !== "number" ||
+      !isFinite(totalAssets) ||
+      totalAssets <= 0
+    )
+      return 0;
     const mult = DIFFICULTY_TAX_MULTIPLIER[difficulty] || 1.0;
     let totalTax = 0;
     let remaining = totalAssets;
@@ -137,30 +142,28 @@ const EconomySystem = (function () {
   // 5. 综合每日经济结算
   // ============================================================
   function dailyEconomicSettlement(state) {
-    const {
-      totalAssets,
-      cash,
-      savings,
-      difficulty,
-      investmentCountToday,
-      consecutiveWins,
-      cityWealth,
-    } = state;
+    if (!state || !state.resources) {
+      return { wealthTax: 0, loanInterest: 0, netDailyChange: 0 };
+    }
+
+    const cash = state.resources.cash || 0;
+    const bankBalance = state.resources.bankBalance || 0;
+    const totalAssets = cash + bankBalance;
+    const difficulty = state._difficulty || "normal";
 
     // 1. 财富税
     const wealthTax = calculateProgressiveWealthTax(totalAssets, difficulty);
 
-    // 2. 动态村长债收益
+    // 2. 动态村长债利率（返回日利率）
     const loanRate = getDynamicLoanRate(totalAssets);
-    const loanInterest = Math.round(savings * loanRate);
 
     // 3. 投资衰减
-    const winDecay = getConsecutiveWinDecay(consecutiveWins);
+    const winDecay = getConsecutiveWinDecay(state.stats?.consecutiveWins || 0);
 
     // 4. 市场饱和惩罚
     const saturationPenalty = getMarketSaturationPenalty(
       totalAssets,
-      cityWealth || 10000000,
+      10000000,
       difficulty,
     );
 
@@ -174,14 +177,13 @@ const EconomySystem = (function () {
 
     return {
       wealthTax,
-      loanInterest,
+      loanRate,
       consecutiveWinDecay: winDecay,
       marketSaturationPenalty: saturationPenalty,
       incomeMultiplier: incomeMult,
       effectiveCash,
       activeTaxTier: getActiveTaxTier(totalAssets),
-      loanRate,
-      netDailyChange: loanInterest - wealthTax,
+      netDailyChange: -wealthTax,
     };
   }
 

@@ -2328,12 +2328,24 @@ function tickStartup(state, tickType) {
         STARTUP_INDUSTRIES[company.industry]?.avgBurnRate / 50000 || 1;
       const growthMod = 1 + (company.revenue > 0 ? DAILY_GROWTH_BONUS : 0);
 
+      // 行业热度联动：sectorHeat 偏离 1.0 的每 10% 转化 ±5% 收入调整
+      var sectorHeat = 1.0;
+      if (typeof getSectorHeat === "function") {
+        try {
+          sectorHeat = getSectorHeat(company.industry);
+        } catch (e) {
+          /* ignore */
+        }
+      }
+      var heatMod = 1 + (sectorHeat - 1.0) * 0.5; // 50% 传导系数
+
       product.revenue = Math.round(
         baseRevenue *
           techMod *
           marketMod *
           industryMod *
           growthMod *
+          heatMod *
           Random.float(0.9, 1.2),
       );
       totalRevenue += product.revenue;
@@ -2923,7 +2935,7 @@ function _processPendingLegalEvent(state, company) {
   if (daysRemaining <= 14 && company.legalRiskLevel < 4) {
     company.legalRiskLevel = Math.min(4, company.legalRiskLevel + 1);
     StateManager.addMessage(
-      `⚖️ 法律事件倒计时：${daysRemaining}天内必须处理「${legalEvent.event.name}」！`,
+      `⚖️ 法律事件倒计时：${daysRemaining}天内必须处理「${legalEvent.name || legalEvent.eventName || "未知"}」！`,
       "warning",
     );
   }
@@ -4047,7 +4059,13 @@ function _evolveProductLifecycle(state, product, timeMult) {
     if (product.userGrowthRate < 1 && product.marketShare > 15) {
       product.lifecycleStage = "maturity";
     }
-    // 也可能直接跌入衰退期（被竞品打击）
+    // 追踪连续下降天数（用于触发衰退期）
+    if (product.userGrowthRate < 0) {
+      product.consecutiveDeclineDays =
+        (product.consecutiveDeclineDays || 0) + 1;
+    } else {
+      product.consecutiveDeclineDays = 0;
+    }
     if (product.userGrowthRate < -3 && product.consecutiveDeclineDays >= 14) {
       product.lifecycleStage = "decline";
     }
@@ -4055,6 +4073,13 @@ function _evolveProductLifecycle(state, product, timeMult) {
 
   // 成熟期 → 衰退期：流失率 > 3%/天 持续14天 或 被新技术替代
   else if (stage === "maturity") {
+    // 追踪连续下降天数（用于触发衰退期）
+    if (product.churnRate > 3) {
+      product.consecutiveDeclineDays =
+        (product.consecutiveDeclineDays || 0) + 1;
+    } else {
+      product.consecutiveDeclineDays = 0;
+    }
     if (product.churnRate > 3 && product.consecutiveDeclineDays >= 14) {
       product.lifecycleStage = "decline";
     }
@@ -8914,10 +8939,18 @@ function executeStartupAction(state, actionId, params) {
       return regulatoryCommunication(state, params.actionType);
 
     case "legal_event":
-      return executeLegalEvent(state, params.eventId);
+      if (typeof executeLegalEventActionFromModal === "function") {
+        return executeLegalEventActionFromModal(params.eventId);
+      }
+      StateManager.addMessage("⚠️ 法律事件模块未就绪。", "warning");
+      return false;
 
     case "legal_response":
-      return resolveLegalEvent(state, params.optionIndex);
+      if (typeof resolveLegalActionFromModal === "function") {
+        return resolveLegalActionFromModal(params.optionIndex);
+      }
+      StateManager.addMessage("⚠️ 法律处理模块未就绪。", "warning");
+      return false;
 
     // P1-9: 竞争对手策略应对
     case "competitor_defense":
@@ -8943,7 +8976,7 @@ function executeStartupAction(state, actionId, params) {
     case "crisis_management":
       return showCrisisManagementModal(state);
 
-    case "crisis_response":
+    case "crisis_execute_response":
       return executeCrisisResponseFromAction(
         state,
         params.crisisIndex,

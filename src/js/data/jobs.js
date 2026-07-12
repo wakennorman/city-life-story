@@ -521,6 +521,85 @@ const STREET_JOBS = [
       },
       risk: {},
     },
+    // === 全栈人生线 v1：自由接单开发工作 ===
+    {
+      id: "fullstack_project",
+      name: "全栈项目外包",
+      desc: "独立承接中小型网站/小程序的端到端开发，前端后端一把梭。全栈本事这时候最值钱。",
+      icon: "🧩",
+      location: "techPark",
+      requirements: { coding: 45, intelligence: 30, minAge: 18 },
+      branchRequirement: { skill: "coding", branch: "fullstack_dev" },
+      effects: { fatigue: 14, codingXp: 12, happiness: 10, intelligenceXp: 3 },
+      payCalc(state) {
+        var base =
+          160 + (state.skills.coding.level || 0) * 2.6 + Random.float(0, 80);
+        return Math.floor(
+          base *
+            (typeof getBranchJobBonus === "function"
+              ? getBranchJobBonus("fullstack_project", "coding", state)
+              : 1.0),
+        );
+      },
+      risk: {},
+    },
+    {
+      id: "data_analysis_gig",
+      name: "数据分析接单",
+      desc: "帮企业做数据清洗、可视化和简单建模。AI 时代，会玩数据的人很吃香。",
+      icon: "🤖",
+      location: "techPark",
+      requirements: { coding: 40, intelligence: 35, minAge: 18 },
+      branchRequirement: { skill: "coding", branch: "data_ai" },
+      effects: { fatigue: 10, codingXp: 9, happiness: 8, intelligenceXp: 4 },
+      payCalc(state) {
+        var base =
+          140 + (state.skills.coding.level || 0) * 2.4 + Random.float(0, 70);
+        return Math.floor(
+          base *
+            (typeof getBranchJobBonus === "function"
+              ? getBranchJobBonus("data_analysis_gig", "coding", state)
+              : 1.0),
+        );
+      },
+      risk: {},
+    },
+    {
+      id: "app_dev",
+      name: "App 开发接单",
+      desc: "接单做 iOS/Android 应用，从原型到上架。移动端需求稳，单价不低。",
+      icon: "📱",
+      location: "techPark",
+      requirements: { coding: 42, intelligence: 28, minAge: 18 },
+      branchRequirement: { skill: "coding", branch: "mobile_dev" },
+      effects: { fatigue: 12, codingXp: 10, happiness: 9, intelligenceXp: 2 },
+      payCalc(state) {
+        var base =
+          150 + (state.skills.coding.level || 0) * 2.5 + Random.float(0, 75);
+        return Math.floor(
+          base *
+            (typeof getBranchJobBonus === "function"
+              ? getBranchJobBonus("app_dev", "coding", state)
+              : 1.0),
+        );
+      },
+      risk: {},
+    },
+    {
+      id: "open_source_bounty",
+      name: "开源赏金任务",
+      desc: "在开源社区认领 issue / bug bounty，按合并计费。自由、涨见识，还能攒个人品牌。",
+      icon: "🌟",
+      location: "techPark",
+      requirements: { coding: 25, minAge: 16 },
+      effects: { fatigue: 8, codingXp: 6, happiness: 14, intelligenceXp: 2 },
+      payCalc(state) {
+        var base =
+          60 + (state.skills.coding.level || 0) * 1.5 + Random.float(0, 50);
+        return Math.floor(base);
+      },
+      risk: {},
+    },
     // === english → 商务英语 ===
     {
       id: "foreign_trade_assistant",

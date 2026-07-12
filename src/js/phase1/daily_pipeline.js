@@ -25,6 +25,11 @@ const DAILY_PIPELINE = [
       // v3.2 修复: 在日递增时记录现金作为日初值（正确基准）
       // 注意: 新游戏第1日需要在 startNewGame 等初始化函数中额外设置
       state.flags._dayStartCash = state.resources.cash || 0;
+      // [全系统自洽修复] 域E 修复: 每日现金NaN防御（防止旧存档/投资异常导致现金永久损坏）
+      if (isNaN(state.resources.cash) || !isFinite(state.resources.cash)) {
+        state.resources.cash = 0;
+        console.error("现金异常已重置为0");
+      }
     },
   },
 
@@ -1409,8 +1414,19 @@ const DAILY_PIPELINE = [
         }
       }
       // 中后期财富税（仅当总资产≥¥20万且不是休闲模式）
+      // 总资产 = 现金 + 银行存款 + 投资持仓市值（股票/BTC/贵金属/房产等）
       var totalAssets =
         (state.resources.cash || 0) + (state.resources.bankBalance || 0);
+      if (typeof getInvestmentAssetSnapshot === "function") {
+        try {
+          var snap = getInvestmentAssetSnapshot(state);
+          if (snap && snap.investmentValue) {
+            totalAssets += snap.investmentValue;
+          }
+        } catch (e) {
+          // 投资快照不可用时忽略
+        }
+      }
       if (
         totalAssets >= 200000 &&
         state._difficulty !== "casual" &&
