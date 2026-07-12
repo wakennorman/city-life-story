@@ -2692,7 +2692,7 @@ var LOCATION_EXTRA_ACTIONS = [
     location: "wholesaleMarket",
     apCost: 20,
     condition: function (st) {
-      return st.skills && st.skills.social && st.skills.social.level >= 40;
+      return st.skills && st.skills.social && st.skills.social.level >= 20;
     },
     payEstimate: "100~300",
     handler: function (st) {

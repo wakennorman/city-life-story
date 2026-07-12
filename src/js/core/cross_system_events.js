@@ -1931,7 +1931,7 @@
           apply: function (st) {
             var social =
               (st.skills && st.skills.social && st.skills.social.level) || 0;
-            if (social >= 50) {
+            if (social >= 30) {
               if (!st.relationships.sister_zhang) {
                 st.relationships.sister_zhang = { affinity: 0, met: true };
               }
@@ -2179,7 +2179,7 @@
           apply: function (st) {
             var social =
               (st.skills && st.skills.social && st.skills.social.level) || 0;
-            if (social >= 40) {
+            if (social >= 25) {
               st.resources.cash += 200;
               if (!st.relationships.old_zhou) {
                 st.relationships.old_zhou = { affinity: 0, met: true };

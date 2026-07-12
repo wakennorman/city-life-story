@@ -4777,3 +4777,214 @@ if (typeof document !== "undefined") {
     }
   });
 }
+
+// ====== 联动增强：职业满级里程碑事件（3个新增） ======
+// 填补"满级无叙事回报"空白——玩家达到职业路径最高级后触发专属事件
+// 设计心理学：峰终定律（满级成为记忆锚点）/ 禀赋效应（珍惜职业成就）
+(function () {
+  if (typeof RANDOM_EVENTS === "undefined") return;
+  if (RANDOM_EVENTS._careerMaxLevelLoaded) return;
+  RANDOM_EVENTS._careerMaxLevelLoaded = true;
+
+  var MAX_LEVEL_EVENTS = [
+    {
+      id: "career_max_level_celebration",
+      phase: "street",
+      icon: "🏆",
+      title: "你做到了！",
+      story:
+        "你在 '{pathName}' 路径已经达到了最高职级 '{levelName}'。回头看这一路，从最初的不适应到现在的游刃有余，你已经走了很远。",
+      triggers: { minDay: 180 },
+      conditions: function (st) {
+        var career = st.career || {};
+        var currentJob = career.currentJob;
+        if (!currentJob || !currentJob.path || !currentJob.levelId) return false;
+        var pathId = currentJob.path;
+        var levelId = currentJob.levelId;
+        var pData = CAREER_PATHS && CAREER_PATHS[pathId];
+        if (!pData || !pData.levels) return false;
+        var maxLevelId = pData.levels[pData.levels.length - 1].id;
+        if (levelId !== maxLevelId) return false;
+        if (st.flags._careerMaxLevelCelebrated) return false;
+        return true;
+      },
+      choices: [
+        {
+          text: "🎉 为自己骄傲，出去吃顿好的",
+          hint: "庆祝成就，花¥500",
+          cost: 500,
+          apply: function (st) {
+            st.flags._careerMaxLevelCelebrated = true;
+            st.resources.cash -= 500;
+            st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 20);
+            st.player.mental = Math.min(100, (st.player.mental || 50) + 10);
+            StateManager.addMessage(
+              "🏆 你达到了「" +
+                (st.career.currentJob.pathName || "职业") +
+                "」的最高职级！花¥500庆祝一下，你值得。心情+20，心智+10。",
+              "success",
+            );
+          },
+        },
+        {
+          text: "📖 写经验分享帖",
+          hint: "帮助后来者，名气+10",
+          apply: function (st) {
+            st.flags._careerMaxLevelCelebrated = true;
+            st.player.fame = Math.min(100, (st.player.fame || 50) + 10);
+            st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 8);
+            StateManager.addMessage(
+              "🏆 你把经验写成了帖子发在网上，获得了很多点赞。名气+10，心情+8。",
+              "success",
+            );
+          },
+        },
+        {
+          text: "🎯 下一站：创业",
+          hint: "职业资本转化为创业优势",
+          apply: function (st) {
+            st.flags._careerMaxLevelCelebrated = true;
+            st.flags._startupFromMaxLevel = true;
+            st.player.corporate = st.player.corporate || {};
+            st.player.corporate.kpi = Math.min(150, (st.player.corporate.kpi || 0) + 20);
+            StateManager.addMessage(
+              "🏆 你决定把职业积累的经验带到创业中去。KPI+20，解锁创业资本加成。",
+              "event",
+            );
+          },
+        },
+      ],
+    },
+    {
+      id: "career_mentor_request",
+      phase: "street",
+      icon: "👨‍🏫",
+      title: "有人想拜你为师",
+      story:
+        "你在 '{pathName}' 达到了最高职级后，开始有人注意到你了。今天一个刚入行的年轻人找到你，说想跟你学习经验。",
+      triggers: { minDay: 200 },
+      conditions: function (st) {
+        var career = st.career || {};
+        var currentJob = career.currentJob;
+        if (!currentJob || !currentJob.path || !currentJob.levelId) return false;
+        var pathId = currentJob.path;
+        var levelId = currentJob.levelId;
+        var pData = CAREER_PATHS && CAREER_PATHS[pathId];
+        if (!pData || !pData.levels) return false;
+        var maxLevelId = pData.levels[pData.levels.length - 1].id;
+        return levelId === maxLevelId && !st.flags._careerMentorSeen;
+      },
+      choices: [
+        {
+          text: "🤝 收下这个徒弟",
+          hint: "花时间教导，获得忠诚助手",
+          apply: function (st) {
+            st.flags._careerMentorSeen = true;
+            st.flags._hasApprentice = true;
+            st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 10);
+            st.player.mental = Math.min(100, (st.player.mental || 50) + 5);
+            st.player.charm = Math.min(100, (st.player.charm || 50) + 3);
+            StateManager.addMessage(
+              "👨‍🏫 你收下了徒弟。看着他认真记笔记的样子，你想起了当初的自己。心情+10，心智+5，魅力+3。",
+              "success",
+            );
+          },
+        },
+        {
+          text: "📝 给他一份学习清单",
+          hint: "低成本帮助，获得尊重",
+          apply: function (st) {
+            st.flags._careerMentorSeen = true;
+            st.flags._apprenticeList = true;
+            st.player.fame = Math.min(100, (st.player.fame || 50) + 5);
+            StateManager.addMessage(
+              "👨‍🏫 你整理了一份学习清单给他。虽然没有直接教导，但他还是很感激。名气+5。",
+              "info",
+            );
+          },
+        },
+        {
+          text: "🙅 没时间教人",
+          hint: "专注自己",
+          apply: function (st) {
+            st.flags._careerMentorSeen = true;
+            st.player.mental = Math.max(0, (st.player.mental || 50) - 3);
+            StateManager.addMessage(
+              "👨‍🏫 你婉拒了。每个人都有各自的路要走。但心里有一点愧疚。心智-3。",
+              "warning",
+            );
+          },
+        },
+      ],
+    },
+    {
+      id: "career_legacy_project",
+      phase: "street",
+      icon: "🏗️",
+      title: "一个改变行业的项目",
+      story:
+        "你在 '{pathName}' 达到了最高职级后，行业内出现了一个重大机会——一个需要你这种资深人士才能主导的项目。但它有风险：要么大获成功，要么一败涂地。",
+      triggers: { minDay: 300 },
+      conditions: function (st) {
+        var career = st.career || {};
+        var currentJob = career.currentJob;
+        if (!currentJob || !currentJob.path || !currentJob.levelId) return false;
+        var pathId = currentJob.path;
+        var levelId = currentJob.levelId;
+        var pData = CAREER_PATHS && CAREER_PATHS[pathId];
+        if (!pData || !pData.levels) return false;
+        var maxLevelId = pData.levels[pData.levels.length - 1].id;
+        return (
+          levelId === maxLevelId &&
+          !st.flags._careerLegacySeen &&
+          st.player.day >= 300
+        );
+      },
+      choices: [
+        {
+          text: "🚀 全力投入！",
+          hint: "高风险高回报，可能获得行业声誉",
+          apply: function (st) {
+            st.flags._careerLegacySeen = true;
+            st.flags._legacyProjectStarted = true;
+            st.flags._legacyProjectDay = st.player.day;
+            st.needs.fatigue = Math.min(100, (st.needs.fatigue || 50) + 20);
+            st.player.corporate = st.player.corporate || {};
+            st.player.corporate.risk = Math.min(
+              100,
+              (st.player.corporate.risk || 0) + 15,
+            );
+            StateManager.addMessage(
+              "🏗️ 你接下了这个项目。虽然风险很大，但这是你职业生涯最重要的挑战。疲劳+20，风险+15。",
+              "event",
+            );
+            // 90天后结算
+            if (typeof scheduleChainEvent === "function") {
+              scheduleChainEvent(st, "career_legacy_result", 90, "street");
+            }
+          },
+        },
+        {
+          text: "🤔 先观望一段时间",
+          hint: "保守选择，不冒险",
+          apply: function (st) {
+            st.flags._careerLegacySeen = true;
+            st.flags._legacyWatched = true;
+            st.player.intelligence = Math.min(
+              100,
+              (st.player.intelligence || 50) + 2,
+            );
+            StateManager.addMessage(
+              "🏗️ 你决定先观望。有时候耐心比勇气更重要。智力+2。",
+              "info",
+            );
+          },
+        },
+      ],
+    },
+  ];
+
+  for (var mle = 0; mle < MAX_LEVEL_EVENTS.length; mle++) {
+    RANDOM_EVENTS.push(MAX_LEVEL_EVENTS[mle]);
+  }
+})();

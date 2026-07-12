@@ -6475,6 +6475,32 @@ var TRAIN_DATA = {
     desc: "高风险高回报，20%失败率（魅力-5/健康-15）",
     tip: "⚠️ 仅建议魅力需求高的玩家尝试",
   },
+  train_medicine: {
+    id: "train_medicine",
+    name: "🏥 医学培训",
+    stat: "medicine",
+    statLabel: "医学",
+    basePrice: 200,
+    priceStep: 100,
+    gain: [3, 6],
+    apCost: 8,
+    location: "hospital",
+    desc: "在医院参加护理培训和医学讲座，积累专业知识",
+    tip: "💡 医学技能是医疗护理/医师路径的门槛，需配合nursing_cert/medical_license证书",
+  },
+  train_social: {
+    id: "train_social",
+    name: "🤝 社交拓展",
+    stat: "social",
+    statLabel: "社交",
+    basePrice: 100,
+    priceStep: 50,
+    gain: [2, 5],
+    apCost: 5,
+    location: null,
+    desc: "参加行业交流会/商会活动，建立人脉网络",
+    tip: "💡 社交技能影响批发倒卖、商务谈判和NPC关系深度",
+  },
 };
 
 // 地点标签映射
