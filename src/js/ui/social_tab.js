@@ -150,6 +150,47 @@ function renderNpcRelationships(state, content) {
 
   html += "</div>";
 
+  // [域D 联动增强] NPC关系矩阵显示
+  html += '<div class="section" style="margin-top:16px;"><h4>🔗 NPC关系网</h4>';
+  html += '<div style="font-size:11px;display:flex;flex-wrap:wrap;gap:4px;">';
+  var _MATRIX =
+    typeof NPC_RELATION_MATRIX !== "undefined" ? NPC_RELATION_MATRIX : null;
+  if (_MATRIX) {
+    var _shownPairs = [];
+    var _pairId = 0;
+    for (var _n1 in _MATRIX) {
+      for (var _n2 in _MATRIX[_n1]) {
+        var _pairKey = [_n1, _n2].sort().join("|");
+        if (_shownPairs.indexOf(_pairKey) >= 0) continue;
+        _shownPairs.push(_pairKey);
+        var _relType = _MATRIX[_n1][_n2];
+        if (_relType === "neutral") continue;
+        var _relColor = "#95A5A6";
+        if (_relType === "friendly") _relColor = "#F39C12";
+        else if (_relType === "old_acquaintance") _relColor = "#8B8050";
+        else if (_relType === "business") _relColor = "#2ECC71";
+        else if (_relType === "competitor" || _relType === "strained")
+          _relColor = "#E74C3C";
+        else if (_relType === "classmate") _relColor = "#3498DB";
+        var _n1name = _n1.replace(/_/g, " ");
+        var _n2name = _n2.replace(/_/g, " ");
+        html +=
+          '<span style="padding:3px 8px;border-radius:4px;border:1px solid ' +
+          _relColor +
+          ";color:" +
+          _relColor +
+          ';">' +
+          _n1name +
+          " ↔ " +
+          _n2name +
+          ' <span style="font-size:9px;">' +
+          _relType +
+          "</span></span>";
+      }
+    }
+  }
+  html += "</div></div>";
+
   // 关系传导详情
   html +=
     '<div class="section" style="margin-top:16px;"><h4>📜 关系传导日志</h4>';

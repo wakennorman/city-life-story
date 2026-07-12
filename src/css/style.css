@@ -3874,6 +3874,41 @@ body {
   #message-log:not(.collapsed) #message-log-preview {
     display: none;
   }
+
+  /* [域F 移动端UI] Tab栏横向滚动 */
+  #tab-bar {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    gap: 2px;
+    padding: 0 4px;
+  }
+  #tab-bar::-webkit-scrollbar { display: none; }
+  #tab-bar .tab-btn {
+    flex-shrink: 0;
+    font-size: 12px;
+    padding: 6px 10px;
+    min-height: 38px;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+  }
+  #tab-bar .tab-btn:active {
+    transform: scale(0.95);
+    background: var(--bg-hover, rgba(74, 158, 92, 0.15));
+  }
+
+  /* [域F 移动端UI] 事件选择按钮大触控区 */
+  .event-choice {
+    padding: 14px 16px;
+    font-size: 14px;
+    min-height: 52px;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+  }
+  .event-choice:active:not(.disabled) {
+    transform: scale(0.98);
+    background: var(--bg-card-hover, rgba(74, 158, 92, 0.12));
+  }
 }
 
 @media (max-width: 360px) {

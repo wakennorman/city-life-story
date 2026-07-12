@@ -50734,6 +50734,232 @@
       ],
     },
 
+    // ====== 域D NPC友好关系事件（v3.99b）======
+    // 设计意图：消费 NPC_RELATION_MATRIX 中 8 个 friendly 未使用关系
+    {
+      id: "npc_friendly_wang_xiao_shopping",
+      phase: "street",
+      icon: "🛍️",
+      title: "王大婶和小美约你逛街",
+      story:
+        "你路过商业街，远远看见王大婶和小美正站在一家服装店门口比划着什么。\n\n王大婶先看见你：「嘿！来得正好！小美说这家店打折，我说质量一般，你来看看这布料值不值这个价？」\n\n小美笑着说：「王姐非说我是个冤大头，你给评评理！」\n\n两人都看着你，等你表态。",
+      conditions: function (st) {
+        if (!st.relationships) return false;
+        var aw = st.relationships.aunt_wang;
+        var xm = st.relationships.xiao_mei;
+        return (
+          aw &&
+          aw.met &&
+          aw.affinity >= 20 &&
+          xm &&
+          xm.met &&
+          xm.affinity >= 20 &&
+          !st.flags._npcFriendlyWangXiaoSeen &&
+          st.player.day >= 30
+        );
+      },
+      probability: 0.025,
+      repeatable: false,
+      choices: [
+        {
+          text: "🛒 帮小美说话，说这料子值",
+          hint: "小美好感+5，王大婶好感+2",
+          apply: function (st) {
+            st.flags._npcFriendlyWangXiaoSeen = true;
+            if (st.relationships.aunt_wang)
+              st.relationships.aunt_wang.affinity = Math.min(
+                100,
+                (st.relationships.aunt_wang.affinity || 0) + 2,
+              );
+            if (st.relationships.xiao_mei)
+              st.relationships.xiao_mei.affinity = Math.min(
+                100,
+                (st.relationships.xiao_mei.affinity || 0) + 5,
+              );
+            st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 5);
+            StateManager.addMessage(
+              "🛍️ 你仔细看了看料子，说这做工确实值这个价。小美得意地朝王大婶一扬下巴。王大婶笑着摇头：「你们年轻人啊，花钱不眨眼。」王大婶好感+2，小美好感+5。",
+              "success",
+            );
+          },
+        },
+        {
+          text: "🧐 站王大婶这边，说划不来",
+          hint: "王大婶好感+5，小美好感+2",
+          apply: function (st) {
+            st.flags._npcFriendlyWangXiaoSeen = true;
+            if (st.relationships.aunt_wang)
+              st.relationships.aunt_wang.affinity = Math.min(
+                100,
+                (st.relationships.aunt_wang.affinity || 0) + 5,
+              );
+            if (st.relationships.xiao_mei)
+              st.relationships.xiao_mei.affinity = Math.min(
+                100,
+                (st.relationships.xiao_mei.affinity || 0) + 2,
+              );
+            st.player.intelligence = Math.min(
+              100,
+              (st.player.intelligence || 10) + 1,
+            );
+            StateManager.addMessage(
+              "🧐 你摸着料子摇了摇头：「这面料洗几次就起球，不值这个价。」王大婶满意地点头：「还是你会过日子。」小美嘟着嘴：「好吧，听你的。」王大婶好感+5，小美好感+2，智力+1。",
+              "info",
+            );
+          },
+        },
+        {
+          text: "😅 你们聊，我先走了",
+          hint: "不参与",
+          apply: function (st) {
+            st.flags._npcFriendlyWangXiaoSeen = true;
+            StateManager.addMessage(
+              "😅 你摆摆手说还有事要忙。两人继续争论着，你听到身后传来王大婶的大嗓门和小美的笑声。",
+              "info",
+            );
+          },
+        },
+      ],
+    },
+    {
+      id: "npc_friendly_zhou_chen_teahouse",
+      phase: "street",
+      icon: "🍵",
+      title: "老周和陈哥的茶局",
+      story:
+        "你路过老城区的一家小茶馆，透过玻璃窗看到老周和陈哥正坐在靠窗的位置下棋。\n\n老周先看见你，隔着玻璃招手让你进来。陈哥回头看了一眼：「哟，来得正好！老周这棋臭得没法看，你来指点两招？」\n\n老周啐了一口：「少来！你上把输我三目的事忘了？」\n\n两个人都在笑，看得出来是老交情了。",
+      conditions: function (st) {
+        if (!st.relationships) return false;
+        var oz = st.relationships.old_zhou;
+        var cg = st.relationships.chen_ge;
+        return (
+          oz &&
+          oz.met &&
+          oz.affinity >= 20 &&
+          cg &&
+          cg.met &&
+          cg.affinity >= 20 &&
+          !st.flags._npcFriendlyZhouChenSeen &&
+          st.player.day >= 45
+        );
+      },
+      probability: 0.02,
+      repeatable: false,
+      choices: [
+        {
+          text: "♟️ 坐下来指点两招",
+          hint: "智力+2，老周+陈哥好感各+3",
+          apply: function (st) {
+            st.flags._npcFriendlyZhouChenSeen = true;
+            if (st.relationships.old_zhou)
+              st.relationships.old_zhou.affinity = Math.min(
+                100,
+                (st.relationships.old_zhou.affinity || 0) + 3,
+              );
+            if (st.relationships.chen_ge)
+              st.relationships.chen_ge.affinity = Math.min(
+                100,
+                (st.relationships.chen_ge.affinity || 0) + 3,
+              );
+            st.player.intelligence = Math.min(
+              100,
+              (st.player.intelligence || 10) + 2,
+            );
+            st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 5);
+            StateManager.addMessage(
+              "♟️ 你坐下来，看了一会儿盘面，指出老周的一步妙手。陈哥拍桌：「我说什么来着！你小子就是藏了一手！」老周咧嘴笑，给你倒了杯茶。智力+2，老周+陈哥好感各+3。",
+              "success",
+            );
+          },
+        },
+        {
+          text: "☕ 坐下来喝茶聊天",
+          hint: "心情+8，老周好感+2",
+          apply: function (st) {
+            st.flags._npcFriendlyZhouChenSeen = true;
+            if (st.relationships.old_zhou)
+              st.relationships.old_zhou.affinity = Math.min(
+                100,
+                (st.relationships.old_zhou.affinity || 0) + 2,
+              );
+            st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 8);
+            st.needs.fatigue = Math.max(0, (st.needs.fatigue || 0) - 10);
+            StateManager.addMessage(
+              "☕ 你坐下端起茶杯，听两人聊最近的行情。老周说废品价格要涨，陈哥说工地缺人。你喝着茶听着，觉得城市里能有几个说得上话的人，也挺好。心情+8，疲劳-10。",
+              "success",
+            );
+          },
+        },
+      ],
+    },
+    {
+      id: "npc_friendly_lin_zhou_market_tip",
+      phase: "street",
+      icon: "🧺",
+      title: "林阿姨和老周的菜场密语",
+      story:
+        "你在批发市场碰到林阿姨在挑菜，旁边老周居然也在，正帮林阿姨拎着袋子。\n\n林阿姨看到你：「小X！来得正好！我和老周刚说这季的菜价要涨，你囤点干货准没错——老周你觉得呢？」\n\n老周点头：「嗯，我废品站那边最近纸箱和铜管回收价也在涨，经济有动静了。」\n\n两人都是这条街的老江湖，同时给你建议，这可不常见。",
+      conditions: function (st) {
+        if (!st.relationships) return false;
+        var al = st.relationships.auntie_lin;
+        var oz = st.relationships.old_zhou;
+        return (
+          al &&
+          al.met &&
+          al.affinity >= 20 &&
+          oz &&
+          oz.met &&
+          oz.affinity >= 20 &&
+          !st.flags._npcFriendlyLinZhouSeen &&
+          st.player.day >= 60
+        );
+      },
+      probability: 0.02,
+      repeatable: false,
+      choices: [
+        {
+          text: "📦 囤干货等涨价",
+          hint: "花¥200，收益+50%",
+          apply: function (st) {
+            st.flags._npcFriendlyLinZhouSeen = true;
+            st.flags._dryGoodsInvest = true;
+            st.flags._dryGoodsDay = st.player.day;
+            st.resources.cash = Math.max(0, (st.resources.cash || 0) - 200);
+            st.player.intelligence = Math.min(
+              100,
+              (st.player.intelligence || 10) + 1,
+            );
+            StateManager.addMessage(
+              "📦 你听了两人的建议，花¥200囤了一批干货。林阿姨帮你挑的货，说放两个月没问题。智力+1。",
+              "info",
+            );
+          },
+        },
+        {
+          text: "🙏 谢谢两位，记下了",
+          hint: "老周+林阿姨好感各+2",
+          apply: function (st) {
+            st.flags._npcFriendlyLinZhouSeen = true;
+            if (st.relationships.old_zhou)
+              st.relationships.old_zhou.affinity = Math.min(
+                100,
+                (st.relationships.old_zhou.affinity || 0) + 2,
+              );
+            if (st.relationships.auntie_lin)
+              st.relationships.auntie_lin.affinity = Math.min(
+                100,
+                (st.relationships.auntie_lin.affinity || 0) + 2,
+              );
+            st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 3);
+            StateManager.addMessage(
+              "🙏 你认真记下了两人的建议。老周拍拍你肩膀：「年轻人肯听老人言，日子不会差。」林阿姨笑着塞了个苹果给你。",
+              "success",
+            );
+          },
+        },
+      ],
+    },
+
     // ====== 注册结束 ======
   );
 })();
