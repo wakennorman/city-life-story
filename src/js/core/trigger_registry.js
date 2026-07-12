@@ -264,7 +264,10 @@
     for (var j = 0; j < available.length; j++) {
       totalWeight += available[j].weight;
     }
-    var r = Math.random() * totalWeight;
+    var r =
+      typeof Random !== "undefined"
+        ? Random.float(0, totalWeight)
+        : Math.random() * totalWeight;
     var acc = 0;
     for (var k = 0; k < available.length; k++) {
       acc += available[k].weight;

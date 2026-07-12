@@ -2229,13 +2229,29 @@
         {
           text: "📈 悄悄买入公司股票",
           hint: "利用内幕信息",
+          cost: 500000,
           apply: function (st) {
             st.flags._insiderReportSeen = true;
             st.flags._insiderTraded = st.player.day;
             st.player.mental = Math.max(0, (st.player.mental || 50) - 5);
-            st.resources.cash = Math.max(0, (st.resources.cash || 0) - 500000);
+            // [全系统自洽修复] 域B 修复:insider_report 扣款¥500k后无实际建仓逻辑→改为先检查现金+实际买入股票
+            var inv = st.investment || {};
+            inv.stockHoldings = inv.stockHoldings || [];
+            var existing = inv.stockHoldings.find(function (x) {
+              return x.symbol === "CORP_INSIDER";
+            });
+            if (existing) {
+              existing.shares += 100;
+            } else {
+              inv.stockHoldings.push({
+                symbol: "CORP_INSIDER",
+                shares: 100,
+                avgPrice: 5000,
+              });
+            }
+            st.resources.cash -= 500000;
             StateManager.addMessage(
-              "📈 你下单买了¥500,000自己公司的股票。手在抖——你知道这是违法的。",
+              "📈 你下单买了50万自己公司股票（100股）。手在抖——你知道这是违法的。",
               "warning",
             );
             scheduleChainEvent(st, "insider_cashout", 3, "corporate");
@@ -3017,4 +3033,261 @@
   for (var i = 0; i < EVENTS.length; i++) {
     RANDOM_EVENTS.push(EVENTS[i]);
   }
+
+  // ====== 联动增强：职场道德事件（3个新增） ======
+  // 填补 corporate 阶段道德事件空白（moral_events.js 仅覆盖街头阶段）
+  // 设计心理学：损失厌恶（每次选择都有代价）/ 峰终定律（道德抉择成为记忆锚点）
+  (function () {
+    if (typeof RANDOM_EVENTS === "undefined") return;
+    if (RANDOM_EVENTS._corpMoralLoaded) return;
+    RANDOM_EVENTS._corpMoralLoaded = true;
+
+    // 事件1：职场背锅——同事让你替他承担项目失败责任
+    var CORP_MORAL_EVENTS = [
+      {
+        id: "corp_blame_game",
+        phase: "corporate",
+        icon: "🎯",
+        title: "项目失败了，谁背锅？",
+        story:
+          "公司重点项目上线失败，客户投诉到了 CEO 那里。开会时大家都在沉默——直到领导看向你：「你是这个项目的第一负责人，你先说说。」但你知道，真正的问题出在技术总监给的架构方案上。他之前暗示过你「有问题我兜着」，现在却在会上装无辜。",
+        triggers: { minDay: 90, phase: "corporate" },
+        choices: [
+          {
+            text: "📋 如实陈述，指出技术总监的方案问题",
+            hint: "诚实但得罪人",
+            apply: function (st) {
+              st.flags._blameGameHonest = true;
+              st.player.corporate.dignity = Math.min(
+                100,
+                (st.player.corporate.dignity || 50) + 10,
+              );
+              st.player.corporate.popularity = Math.max(
+                0,
+                (st.player.corporate.popularity || 50) - 15,
+              );
+              st.player.corporate.risk = Math.min(
+                100,
+                (st.player.corporate.risk || 0) + 10,
+              );
+              StateManager.addMessage(
+                "📋 你说了实话。技术总监的脸色很难看。你的专业度得到了认可（尊严+10），但同事开始疏远你（人缘-15），风险也上升了（+10）。",
+                "warning",
+              );
+            },
+          },
+          {
+            text: "🤐 自己认了，不牵连别人",
+            hint: "牺牲自己，保全团队",
+            apply: function (st) {
+              st.flags._blameGameTookIt = true;
+              st.player.corporate.dignity = Math.max(
+                0,
+                (st.player.corporate.dignity || 50) - 20,
+              );
+              st.player.corporate.popularity = Math.min(
+                100,
+                (st.player.corporate.popularity || 50) + 10,
+              );
+              st.player.mental = Math.max(0, (st.player.mental || 50) - 8);
+              st.needs.happiness = Math.max(0, (st.needs.happiness || 50) - 10);
+              StateManager.addMessage(
+                "🤐 你默默认了。同事们松了一口气，但你知道这不公平。尊严-20，人缘+10，心智-8，心情-10。",
+                "danger",
+              );
+            },
+          },
+          {
+            text: "🔄 把球踢回去——建议成立调查组",
+            hint: "各方不得罪，但显得没有担当",
+            apply: function (st) {
+              st.flags._blameGameNeutral = true;
+              st.player.corporate.upwardMgmt = Math.max(
+                0,
+                (st.player.corporate.upwardMgmt || 50) - 5,
+              );
+              st.player.corporate.dignity = Math.max(
+                0,
+                (st.player.corporate.dignity || 50) - 5,
+              );
+              st.needs.happiness = Math.min(
+                100,
+                (st.needs.happiness || 50) + 3,
+              );
+              StateManager.addMessage(
+                "🔄 你提议成立调查组。领导觉得你不够果断（向上管理-5），但至少你没把自己搭进去（心情+3）。",
+                "info",
+              );
+            },
+          },
+        ],
+      },
+      {
+        id: "corp_promotion_bribe",
+        phase: "corporate",
+        icon: "🎁",
+        title: "升职前的「心意」",
+        story:
+          "你距离下一个职级只差一步。HR 私下告诉你：「最近公司有个传统，晋升前需要表示一下——不是明面上的东西，就是请领导吃顿饭、送点土特产之类的。」你明白了，这是潜规则。",
+        triggers: { minDay: 120, phase: "corporate" },
+        choices: [
+          {
+            text: "🎁 随大流，准备一份礼物",
+            hint: "花¥2000，晋升概率大幅提升",
+            cost: 2000,
+            apply: function (st) {
+              st.flags._promotionGiftGiven = true;
+              st.resources.cash -= 2000;
+              st.player.corporate.popularity = Math.min(
+                100,
+                (st.player.corporate.popularity || 50) + 8,
+              );
+              st.needs.happiness = Math.max(0, (st.needs.happiness || 50) - 5);
+              StateManager.addMessage(
+                "🎁 你送了份礼物。领导很开心，人缘+8。但事后想想，这事做得不太光明正大（心情-5）。",
+                "warning",
+              );
+            },
+          },
+          {
+            text: "📊 用业绩说话，不玩这套",
+            hint: "不花钱，但晋升概率不变",
+            apply: function (st) {
+              st.flags._promotionNoGift = true;
+              st.player.corporate.dignity = Math.min(
+                100,
+                (st.player.corporate.dignity || 50) + 8,
+              );
+              st.player.mental = Math.min(100, (st.player.mental || 50) + 5);
+              StateManager.addMessage(
+                "📊 你决定靠实力。尊严+8，心智+5。至于晋升？到时候看吧。",
+                "success",
+              );
+            },
+          },
+          {
+            text: "🤫 匿名举报这个潜规则",
+            hint: "高风险高回报",
+            apply: function (st) {
+              st.flags._promotionReported = true;
+              st.player.corporate.risk = Math.min(
+                100,
+                (st.player.corporate.risk || 0) + 20,
+              );
+              st.player.corporate.dignity = Math.min(
+                100,
+                (st.player.corporate.dignity || 50) + 15,
+              );
+              if (Random.chance(0.4)) {
+                st.player.corporate.popularity = Math.min(
+                  100,
+                  (st.player.corporate.popularity || 50) + 10,
+                );
+                st.needs.happiness = Math.min(
+                  100,
+                  (st.needs.happiness || 50) + 12,
+                );
+                StateManager.addMessage(
+                  "🤫 举报奏效了！公司取消了潜规则，大家都感谢你（人缘+10，心情+12）。但你可能也被盯上了（风险+20）。",
+                  "success",
+                );
+              } else {
+                st.player.corporate.popularity = Math.max(
+                  0,
+                  (st.player.corporate.popularity || 50) - 10,
+                );
+                st.needs.happiness = Math.max(
+                  0,
+                  (st.needs.happiness || 50) - 15,
+                );
+                StateManager.addMessage(
+                  "🤫 举报没起到作用，反而有人认出了你。同事开始躲着你（人缘-10，心情-15），风险+20。",
+                  "danger",
+                );
+              }
+            },
+          },
+        ],
+      },
+      {
+        id: "corp_layoff_choice",
+        phase: "corporate",
+        icon: "📉",
+        title: "裁员名单上的名字",
+        story:
+          "公司宣布优化 10% 的员工。你的 Leader 把你叫到办公室：「你手下有两个人，老赵和小林。老赵快退休了，家里有个生病的妻子。小林刚结婚，房贷压力大。我只能留一个，另一个……你自己跟他们说吧。」",
+        triggers: { minDay: 150, phase: "corporate" },
+        choices: [
+          {
+            text: "👴 保老赵，让他提前退休",
+            hint: "人道主义，但小林可能怀恨",
+            apply: function (st) {
+              st.flags._layoffChoseOldZhao = true;
+              st.player.corporate.dignity = Math.min(
+                100,
+                (st.player.corporate.dignity || 50) + 10,
+              );
+              st.player.mental = Math.min(100, (st.player.mental || 50) + 5);
+              st.needs.happiness = Math.min(
+                100,
+                (st.needs.happiness || 50) + 8,
+              );
+              st.player.corporate.popularity = Math.max(
+                0,
+                (st.player.corporate.popularity || 50) - 8,
+              );
+              StateManager.addMessage(
+                "👴 你选择了老赵。他红着眼眶跟你握手。小林没说什么，但之后看你的眼神变了。尊严+10，心智+5，心情+8，小林人缘-8。",
+                "warning",
+              );
+            },
+          },
+          {
+            text: "👶 保小林，他更需要这份工作",
+            hint: "现实考量，但老赵会失望",
+            apply: function (st) {
+              st.flags._layoffChoseXiaoLin = true;
+              st.player.corporate.dignity = Math.max(
+                0,
+                (st.player.corporate.dignity || 50) - 5,
+              );
+              st.player.corporate.popularity = Math.min(
+                100,
+                (st.player.corporate.popularity || 50) + 5,
+              );
+              st.player.mental = Math.max(0, (st.player.mental || 50) - 8);
+              StateManager.addMessage(
+                "👶 你选了小林。他感激涕零（人缘+5），但老赵那天在工位上坐了很久没说话。尊严-5，心智-8。",
+                "info",
+              );
+            },
+          },
+          {
+            text: "🎲 让两人自己决定谁走",
+            hint: "不干涉，把选择权还给当事人",
+            apply: function (st) {
+              st.flags._layoffLetThemDecide = true;
+              st.player.corporate.upwardMgmt = Math.min(
+                100,
+                (st.player.corporate.upwardMgmt || 50) + 5,
+              );
+              st.player.mental = Math.min(100, (st.player.mental || 50) + 3);
+              st.needs.happiness = Math.min(
+                100,
+                (st.needs.happiness || 50) + 5,
+              );
+              StateManager.addMessage(
+                "🎲 你把选择权交给了他们。老赵主动提出离职——他说自己早就想退了。小林很意外，但接受了。向上管理+5，心智+3，心情+5。",
+                "success",
+              );
+            },
+          },
+        ],
+      },
+    ];
+
+    for (var cm = 0; cm < CORP_MORAL_EVENTS.length; cm++) {
+      RANDOM_EVENTS.push(CORP_MORAL_EVENTS[cm]);
+    }
+  })();
 })();

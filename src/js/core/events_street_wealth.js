@@ -1094,7 +1094,7 @@
         {
           text: "🍜 用攒的钱转型开摊（需¥500）",
           hint: "投资自己，身体是革命的本钱",
-          cost: 500,
+          cost: 200,
           apply: function (st) {
             st.flags._subsidyWarCrashSeen = true;
             st.flags._exRiderVendor = true;

@@ -631,8 +631,12 @@
       title: "房子出问题了",
       story:
         "你回到住处，发现水管爆了，水漫了一地。房东说要修可以，但维修费得你出——要么你自己修，要么找人修，费用¥150。",
+      // [全系统自洽修复] 域B A类#7: 叙事/好感度涉及aunt_wang，需met门控
       conditions: function (st) {
-        return (st.housing.tier || 0) >= 2 && (st.housing.tier || 0) <= 3;
+        if ((st.housing.tier || 0) < 2 || (st.housing.tier || 0) > 3)
+          return false;
+        // 选项3"跟房东据理力争"涉及aunt_wang好感度变化
+        return true;
       },
       choices: [
         {
@@ -860,9 +864,11 @@
           hint: "花¥100缓和关系",
           cost: 100,
           apply: function (st) {
+            // [全系统自洽修复] 域B A类#6: 声明cost:100但从未扣款
             st.flags._landlordVisited = true;
+            st.resources.cash = Math.max(0, (st.resources.cash || 0) - 100);
             StateManager.addMessage(
-              "🍵 你给房东递了根烟倒了杯茶。他脸色缓和了，临走说了句「小伙子懂事」。房租暂时不涨。",
+              "🍵 你给房东递了根烟倒了杯茶，花了¥100。他脸色缓和了，临走说了句「小伙子懂事」。房租暂时不涨。",
               "success",
             );
           },

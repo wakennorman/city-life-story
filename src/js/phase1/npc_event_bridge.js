@@ -611,7 +611,7 @@ const LOCATION_NPC_MESSAGES = {
       "医院碰到王医生，他正跟家属交代注意事项。",
     ],
   },
-  // [全系统自洽修复] 域D A类#4: 补全 LOCATION_NPC_MESSAGES 缺失条目
+  // [全系统自洽修复] 域B A类#2: 删除重复键(merged from duplicate block, 避免覆盖)
   bank: {
     npcId: "uncle_chen_bank",
     chance: 0.2,
@@ -621,33 +621,24 @@ const LOCATION_NPC_MESSAGES = {
       "老陈在银行柜台后整理文件，抬头看了你一眼。",
     ],
   },
-  commercialDist: {
+  // [全系统自洽修复] 域B A类#3: slum 额外NPC（与 aunt_wang 共存，rollLocationNpcInteraction 会随机选中）
+  slumExtra: {
+    npcId: "brother_huang",
+    chance: 0.15,
+    minAffinity: 0,
+    msgs: [
+      "阿黄在城中村收发快递，看到你帮忙搬箱子。",
+      "阿黄坐在快递站门口抽烟，跟你闲聊了几句。",
+    ],
+  },
+  // [全系统自洽修复] 域B A类#3: commercialDist 额外NPC（与 sister_zhang 共存）
+  commercialDistExtra: {
     npcId: "sister_wu",
     chance: 0.15,
     minAffinity: 0,
     msgs: [
       "吴姐在美容院门口晒太阳，看到你招手。",
       "吴姐提着购物袋从商场出来，跟你打了声招呼。",
-    ],
-  },
-  wholesaleMarket: {
-    npcId: "auntie_lin",
-    chance: 0.25,
-    minAffinity: 0,
-    msgs: [
-      "林阿姨正在整理菜摊，看到你招手：'今天菜新鲜！'",
-      "林阿姨在称重，抽空抬头：'要买点什么？'",
-      "菜市场碰到林阿姨，她正跟顾客讲价。",
-    ],
-  },
-  factoryZone: {
-    npcId: "master_zhao",
-    chance: 0.2,
-    minAffinity: 0,
-    msgs: [
-      "赵师傅在修车，满身油污地抬头：'车有问题？'",
-      "赵师傅擦着手：'午休了，来喝口水。'",
-      "工业区路过赵师傅的铺子，听到里面传来工具声。",
     ],
   },
   entertainment: {
@@ -657,15 +648,6 @@ const LOCATION_NPC_MESSAGES = {
     msgs: [
       "小丽在咖啡厅直播，看到你挥手：'来当我的观众！'",
       "小丽刚结束直播，笑着问：'今天拍什么内容好？'",
-    ],
-  },
-  slum: {
-    npcId: "brother_huang",
-    chance: 0.15,
-    minAffinity: 0,
-    msgs: [
-      "阿黄在城中村收发快递，看到你帮忙搬箱子。",
-      "阿黄坐在快递站门口抽烟，跟你闲聊了几句。",
     ],
   },
 };
@@ -705,6 +687,19 @@ function rollLocationNpcInteraction(state, locationKey) {
   }
   var locData = LOCATION_NPC_MESSAGES[locationKey];
   if (!locData) return;
+  // [全系统自洽修复] 域B A类#3: 支持 Extra 后缀条目（双NPC共存）
+  var extraKey = locationKey + "Extra";
+  var extraLocData = LOCATION_NPC_MESSAGES[extraKey];
+  if (extraLocData && Random.chance(extraLocData.chance)) {
+    var extraRel = state.relationships[extraLocData.npcId];
+    if (
+      extraRel &&
+      extraRel.met &&
+      extraRel.affinity >= extraLocData.minAffinity
+    ) {
+      locData = extraLocData;
+    }
+  }
   if (!Random.chance(locData.chance)) return;
   var rel = state.relationships[locData.npcId];
   if (!rel || !rel.met || rel.affinity < locData.minAffinity) return;
@@ -1053,17 +1048,17 @@ function chatWithNpc(npcId, state) {
   }
   state.player.actionPoints = ap - 2;
 
-  // 好感变化（±1~3，好感高的更可能正面）
-  var affinity = rel.affinity || 0;
-  var delta = 0;
-  var chatType = "neutral";
-  var message = "";
-  var rollVal = Math.random();
+  // [全系统自洽修复] 域B A类#1: Math.random→Random.float 种子化RNG
+  var rollVal =
+    typeof Random !== "undefined" ? Random.float(0, 1) : Math.random();
 
   if (affinity >= 50) {
     // 好感高：大概率正面
     if (rollVal < 0.6) {
-      delta = 2 + Math.floor(Math.random() * 2); // +2~3
+      delta =
+        typeof Random !== "undefined"
+          ? Random.int(2, 3)
+          : 2 + Math.floor(Math.random() * 2); // +2~3
       chatType = "positive";
       message = "你们聊得很开心";
     } else if (rollVal < 0.85) {
@@ -1078,7 +1073,10 @@ function chatWithNpc(npcId, state) {
   } else if (affinity >= 10) {
     // 好感中等：中性为主
     if (rollVal < 0.4) {
-      delta = 1 + Math.floor(Math.random() * 2); // +1~2
+      delta =
+        typeof Random !== "undefined"
+          ? Random.int(1, 2)
+          : 1 + Math.floor(Math.random() * 2); // +1~2
       chatType = "positive";
       message = "你们聊得挺投缘";
     } else if (rollVal < 0.7) {
@@ -1105,7 +1103,10 @@ function chatWithNpc(npcId, state) {
       chatType = "neutral";
       message = "礼节性寒暄几句";
     } else {
-      delta = -1 - Math.floor(Math.random() * 3); // -1~-3
+      delta =
+        typeof Random !== "undefined"
+          ? Random.int(-3, -1)
+          : -1 - Math.floor(Math.random() * 3); // -1~-3
       chatType = "negative";
       message = "对方不太想搭理你";
     }

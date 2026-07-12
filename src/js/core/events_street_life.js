@@ -187,6 +187,7 @@
           hint: "投资未来",
           cost: 1000,
           apply: function (st) {
+            st.resources.cash = Math.max(0, (st.resources.cash || 0) - 1000);
             st.flags._aiReplaceSeen = true;
             if (st.skills && st.skills.coding)
               st.skills.coding.xp = (st.skills.coding.xp || 0) + 80;
@@ -220,6 +221,7 @@
           hint: "先下手为强",
           cost: 3000,
           apply: function (st) {
+            st.resources.cash = Math.max(0, (st.resources.cash || 0) - 3000);
             st.flags._stallLocationSeen = true;
             var earn = Random.int(3000, 4999);
             st.resources.cash += earn;
@@ -262,6 +264,7 @@
           hint: "高毛利",
           cost: 800,
           apply: function (st) {
+            st.resources.cash = Math.max(0, (st.resources.cash || 0) - 800);
             st.flags._templeEconomySeen = true;
             var earn = Random.int(1200, 1999);
             st.resources.cash += earn;
@@ -458,6 +461,7 @@
           hint: "小本生意",
           cost: 1000,
           apply: function (st) {
+            st.resources.cash = Math.max(0, (st.resources.cash || 0) - 1000);
             st.flags._nearExpirySeen = true;
             var earn = Random.int(1500, 2299);
             st.resources.cash += earn;
@@ -544,6 +548,7 @@
           cost: 9999,
           apply: function (st) {
             st.flags._knowledgePaySeen = true;
+            st.resources.cash = Math.max(0, (st.resources.cash || 0) - 9999);
             if (Random.chance(0.15)) {
               st.resources.cash += 30000;
               st.player.intelligence = Math.min(

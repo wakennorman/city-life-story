@@ -6950,7 +6950,8 @@
     phase: "street",
     icon: "🤫",
     title: "密友的秘密情报",
-    story: "",
+    story:
+      "常去的那家小卖部门口，老板今天神神秘秘地招呼你过去。「我跟你说个事——你是我老主顾我才告诉你。隔壁那条街要修路了，一修三个月，那边几家的租金要跌。」\n\n他压低声音又补了一句：「这事我就跟你说了，你心里有个数。」",
     conditions: function (st) {
       // 检查是否有任何NPC好感≥70且已解锁deepTask
       if (!st.relationships) return false;
@@ -7054,7 +7055,8 @@
     phase: "street",
     icon: "⚖️",
     title: "城市记住了你的样子",
-    story: "",
+    story:
+      "这座城市有你不知道的眼睛。\n\n楼下保安今天多看了你一眼，没说话，但点了点头。卖早餐的大妈照常递给你豆浆，但这次多加了个茶叶蛋，「吃吧，不要钱。」\n\n你做的事，有人记得。",
     conditions: function (st) {
       var mor = st.player.morality || 50;
       return (
@@ -8330,6 +8332,7 @@
       name: "科技园官宣了！",
       icon: "🏗️",
       phase: "street",
+      _isChainEvent: true,
       // [自洽修复] conditions 新增：链式事件触发条件检查
       conditions: function (st) {
         return (
@@ -9727,6 +9730,62 @@
     ],
   });
 
+  // 链式后续：HR联系面试（delivery_regular 2天后触发）
+  RANDOM_EVENTS.push({
+    id: "hr_call_delivery",
+    phase: "street",
+    _isChainEvent: true,
+    icon: "📞",
+    title: "HR来电",
+    story:
+      "两天后，你的电话响了——是那家本地生活平台的HR。「你好，我是昨天联系你的张经理的同事。我们看了你发过来的个人情况，想约你当面聊聊，看看有没有适合你的岗位。」\n\n你没想到他们真的会打电话来。从骑手到坐办公室——你知道这是个机会。",
+    conditions: function (st) {
+      return (
+        !!st.flags._deliveryRegularReferred &&
+        !st.flags._hrCallDeliverySeen &&
+        st.player.day <= (st.flags._deliveryRegularReferred || 999) + 5
+      );
+    },
+    choices: [
+      {
+        text: "✅ 答应去面试",
+        hint: "可能开启物流管理路径",
+        apply: function (st) {
+          st.flags._hrCallDeliverySeen = true;
+          st.flags._deliveryHrInterview = true;
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 10);
+          StateManager.addMessage(
+            "📞 你答应了面试时间。挂掉电话后你深吸一口气——人生第一次正经面试。心情+10。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "🤔 先问问待遇再决定",
+        hint: "谨慎行事",
+        apply: function (st) {
+          st.flags._hrCallDeliverySeen = true;
+          st.flags._deliveryHrPending = true;
+          StateManager.addMessage(
+            "📞 你在电话里问了些基本情况。HR说详情面谈，但你心里有点底了。",
+            "info",
+          );
+        },
+      },
+      {
+        text: "❌ 婉拒",
+        hint: "还是喜欢自由",
+        apply: function (st) {
+          st.flags._hrCallDeliverySeen = true;
+          StateManager.addMessage(
+            "📞 你谢绝了邀约。不是不领情，只是还没准备好走出舒适区。",
+            "info",
+          );
+        },
+      },
+    ],
+  });
+
   // ====== 联动事件45：专业人士视角——识别假冒伪劣电动工具 ======
   // 设计意图：修理技能到达门槛后解锁"专业人士视角"事件，体现技能积累的价值
   // [自洽修复] CROSS_EVENTS → RANDOM_EVENTS 直推（原为死代码）
@@ -9805,7 +9864,8 @@
     phase: "street",
     icon: "🤫",
     title: "无心之言藏玄机",
-    story: "",
+    story:
+      "几个工友一起吃饭，有人聊起最近的拆迁消息。老张喝多了两杯，压低声音：「其实我知道内幕消息——那一片的补偿方案已经定了，有人提前拿到了通知。」\n\n他意识到说漏了嘴，赶紧转移话题，但你心里已经记下了。",
     // [自洽新增] conditions：任意NPC好感≥60时触发
     conditions: function (st) {
       if (!st.relationships) return false;
@@ -9821,9 +9881,8 @@
     },
     probability: 0.02,
     repeatable: true,
-    choices: [], // 动态生成
-    // [自洽新增] 动态生成选项：基于最高好感NPC
-    dynamicApply: function (st) {
+    // [全系统自洽修复] 域B A类#8: choices:[] → choices函数（dynamicApply从未被引擎调用）
+    choices: function (st) {
       // 找到最高好感NPC
       var bestNid = null;
       var bestAff = -200;
@@ -9834,7 +9893,7 @@
           bestNid = nid;
         }
       }
-      if (!bestNid) return null;
+      if (!bestNid) return [];
 
       var npcDef = null;
       if (typeof NPCS !== "undefined") {
@@ -9845,9 +9904,7 @@
           }
         }
       }
-      if (!npcDef) return null;
-
-      st.flags["_npcInfoLeaked_" + bestNid] = true;
+      if (!npcDef) return [];
 
       // 根据NPC角色提供不同类型的信息
       var infoType = "";
@@ -9900,93 +9957,86 @@
           reward = { locationHint: npcDef.location };
       }
 
-      return {
-        story:
-          "你正在和" +
-          npcDef.name +
-          "闲聊，" +
-          infoText +
-          "\n\n你心里一动——这可能是个机会。",
-        choices: [
-          {
-            text: "📝 记下来，以后留意",
-            hint: "获得情报价值",
-            apply: function (s) {
-              if (reward.rentWarning) {
-                s.flags.zhaojieRentInfo = true;
-                StateManager.addMessage(
-                  "📝 你把王大婶的提醒记在了手机备忘录里。下个月如果房东真要涨租，你就有准备了。",
-                  "success",
-                );
-              }
-              if (reward.tempJobChance) {
-                s.flags._npcTempJobReferral = bestNid;
-                s.flags._npcTempJobDay = s.player.day;
-                StateManager.addMessage(
-                  "📝 你记住了这个信息。" +
-                    npcDef.name +
-                    "的推荐比海投简历靠谱多了。",
-                  "success",
-                );
-              }
-              if (reward.priceWarning) {
-                s.flags._priceWarning = reward.priceWarning;
-                s.flags._priceWarningDay = s.player.day;
-                StateManager.addMessage(
-                  "📝 你记下了" +
-                    npcDef.name +
-                    "的提醒。如果" +
-                    reward.priceWarning +
-                    "真的要涨价，你提前囤货就能赚差价。",
-                  "info",
-                );
-              }
-              if (reward.scrapBonus) {
-                s.flags._scrapPriceAlert = reward.scrapBonus;
-                s.flags._scrapAlertDay = s.player.day;
-                StateManager.addMessage(
-                  "📝 你赶紧回家翻了翻——还真有一些旧铜线！明天拿去卖能多赚不少。",
-                  "success",
-                );
-              }
-              if (reward.courseOpportunity) {
-                s.flags._freeCourseLink = true;
-                s.flags._courseLinkDay = s.player.day;
-                s.player.intelligence = Math.min(
-                  100,
-                  (s.player.intelligence || 10) + 1,
-                );
-                StateManager.addMessage(
-                  "📝 你让小美把链接发你了。免费课程+证书，这对找工作确实有帮助。智力+1。",
-                  "info",
-                );
-              }
-              if (reward.locationHint) {
-                s.flags._locationHint = reward.locationHint;
-                s.flags._locationHintDay = s.player.day;
-                StateManager.addMessage(
-                  "📝 你记下了" +
-                    npcDef.name +
-                    "的话。" +
-                    reward.locationHint +
-                    "——也许那里真的有好事。",
-                  "info",
-                );
-              }
-            },
-          },
-          {
-            text: "🤷 随口一说，不算数",
-            hint: "忽略情报",
-            apply: function (s) {
+      return [
+        {
+          text: "📝 记下来，以后留意",
+          hint: "获得" + infoType,
+          apply: function (s) {
+            s.flags["_npcInfoLeaked_" + bestNid] = true;
+            if (reward.rentWarning) {
+              s.flags.zhaojieRentInfo = true;
               StateManager.addMessage(
-                "🤷 你笑了笑没当真。城市里每天流传各种消息，真正有用的没几个。",
+                "📝 你把王大婶的提醒记在了手机备忘录里。下个月如果房东真要涨租，你就有准备了。",
+                "success",
+              );
+            }
+            if (reward.tempJobChance) {
+              s.flags._npcTempJobReferral = bestNid;
+              s.flags._npcTempJobDay = s.player.day;
+              StateManager.addMessage(
+                "📝 你记住了这个信息。" +
+                  npcDef.name +
+                  "的推荐比海投简历靠谱多了。",
+                "success",
+              );
+            }
+            if (reward.priceWarning) {
+              s.flags._priceWarning = reward.priceWarning;
+              s.flags._priceWarningDay = s.player.day;
+              StateManager.addMessage(
+                "📝 你记下了" +
+                  npcDef.name +
+                  "的提醒。如果" +
+                  reward.priceWarning +
+                  "真的要涨价，你提前囤货就能赚差价。",
                 "info",
               );
-            },
+            }
+            if (reward.scrapBonus) {
+              s.flags._scrapPriceAlert = reward.scrapBonus;
+              s.flags._scrapAlertDay = s.player.day;
+              StateManager.addMessage(
+                "📝 你赶紧回家翻了翻——还真有一些旧铜线！明天拿去卖能多赚不少。",
+                "success",
+              );
+            }
+            if (reward.courseOpportunity) {
+              s.flags._freeCourseLink = true;
+              s.flags._courseLinkDay = s.player.day;
+              s.player.intelligence = Math.min(
+                100,
+                (s.player.intelligence || 10) + 1,
+              );
+              StateManager.addMessage(
+                "📝 你让小美把链接发你了。免费课程+证书，这对找工作确实有帮助。智力+1。",
+                "info",
+              );
+            }
+            if (reward.locationHint) {
+              s.flags._locationHint = reward.locationHint;
+              s.flags._locationHintDay = s.player.day;
+              StateManager.addMessage(
+                "📝 你记下了" +
+                  npcDef.name +
+                  "的话。" +
+                  reward.locationHint +
+                  "——也许那里真的有好事。",
+                "info",
+              );
+            }
           },
-        ],
-      };
+        },
+        {
+          text: "🤷 随口一说，不算数",
+          hint: "忽略情报",
+          apply: function (s) {
+            StateManager.addMessage(
+              "🤷 你笑了笑没当真。城市里每天流传各种消息，真正有用的没几个。",
+              "info",
+            );
+          },
+        },
+      ];
     },
   });
 
@@ -49140,6 +49190,7 @@
   RANDOM_EVENTS.push({
     id: "aunt_zhang_payoff",
     phase: "street",
+    _isChainEvent: true,
     icon: "🍶",
     title: "和解宴",
     story:
@@ -49262,6 +49313,7 @@
   RANDOM_EVENTS.push({
     id: "ng_plus_ajie_payoff",
     phase: "street",
+    _isChainEvent: true,
     icon: "🔑",
     title: "老朋友的礼物",
     story:
@@ -49452,6 +49504,7 @@
   RANDOM_EVENTS.push({
     id: "npc_zhang_zhaojie_payoff",
     phase: "street",
+    _isChainEvent: true,
     icon: "🛍️",
     title: "分租的回报",
     story:
@@ -50196,7 +50249,7 @@
 
     // ① NPC 社区聚会（填充 friendly格 8个空白）
     {
-      id: "npc_community_gathering",
+      id: "npc_neighborhood_gathering_v2",
       phase: "street",
       icon: "🎉",
       title: "街坊邻居的聚会",

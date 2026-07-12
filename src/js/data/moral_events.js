@@ -239,8 +239,13 @@ const MORAL_EVENTS = [
         flag: "moral_rig_scale",
         score: -12,
         immediate: function (s) {
+          // [全系统自洽修复] 域B A类#5: 叙事说"多赚了"但从未加钱
+          var rigProfit = Random.int(30, 80);
+          s.resources.cash = (s.resources.cash || 0) + rigProfit;
           StateManager.addMessage(
-            "🔧 你调了秤...今天确实多赚了，但总觉得有人在盯着你。",
+            "🔧 你调了秤...今天确实多赚了¥" +
+              rigProfit +
+              "，但总觉得有人在盯着你。",
             "warning",
           );
         },
