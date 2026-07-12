@@ -592,6 +592,9 @@ function startClaudeCode() {
     autoMemoryEnabled: true,
   });
 
+  // 获取bat传入的额外参数（如任务提示词）
+  const extraArgs = process.argv.slice(2);
+
   const child = spawn(
     claudeExe,
     [
@@ -602,6 +605,7 @@ function startClaudeCode() {
       "--bare",
       "--effort",
       "max",
+      ...extraArgs, // 添加bat传入的参数
     ],
     {
       stdio: "inherit",
