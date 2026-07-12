@@ -1225,6 +1225,49 @@ function renderCareerJobs(state, parent) {
     html +=
       '<button class="btn btn-sm" style="background:rgba(255,80,80,0.15);color:var(--danger);border:1px solid rgba(255,80,80,0.3);" onclick="resignCareerJob()">🚪 辞职</button>';
     html += "</div>";
+    // v3.99 [全系统自洽修复] 域C 增强#2: 技能分支推荐
+    if (currentJob && currentJob.path) {
+      var _pathSkills = [];
+      var _pathDef = CAREER_PATHS[currentJob.path];
+      if (_pathDef) {
+        for (var _li = 0; _li < _pathDef.levels.length; _li++) {
+          var _lv = _pathDef.levels[_li];
+          if (_lv.reqSkills) {
+            for (var _sk in _lv.reqSkills) {
+              if (_pathSkills.indexOf(_sk) === -1) _pathSkills.push(_sk);
+            }
+          }
+        }
+      }
+      if (_pathSkills.length > 0) {
+        html += '<div class="section" style="margin-top:8px;">';
+        html +=
+          '<h4 style="font-size:12px;margin:0 0 6px;">🔗 推荐技能分支</h4>';
+        html +=
+          '<div style="font-size:10px;color:var(--text-muted);margin-bottom:6px;">该路径依赖以下技能，建议在培训中心解锁对应分支以加速晋升</div>';
+        for (var _si = 0; _si < _pathSkills.length; _si++) {
+          var _sb = getSkillBranches(_pathSkills[_si]);
+          if (_sb && _sb.length > 0) {
+            html +=
+              '<div style="font-size:11px;margin:4px 0;display:flex;flex-wrap:wrap;gap:4px;align-items:center;">';
+            html +=
+              '<span style="font-weight:bold;min-width:70px;">' +
+              _pathSkills[_si] +
+              ":</span>";
+            for (var _bi = 0; _bi < _sb.length; _bi++) {
+              html +=
+                '<span style="background:var(--bg-secondary);padding:2px 8px;border-radius:10px;font-size:10px;">' +
+                _sb[_bi].icon +
+                " " +
+                _sb[_bi].name +
+                "</span>";
+            }
+            html += "</div>";
+          }
+        }
+        html += "</div>";
+      }
+    }
 
     // ---- 工作行动（v3.48：分组展示 — 业绩提升 vs 压力缓解）----
     html +=
@@ -3124,6 +3167,40 @@ function tickCareerJobDaily(state) {
 
   // 每月1日发薪
   if (state.player.day % 30 === 1) {
+    // v3.99 [全系统自洽修复] 域C 增强#3: 行业热度影响薪资
+    var _sectorMap = {
+      tech: "科技",
+      finance: "金融",
+      sales: "消费",
+      operations: "服务业",
+      design: "科技",
+      legal: "服务业",
+      education: "教育",
+      logistics: "物流",
+      catering: "餐饮",
+      medical: "医疗",
+      doctor: "医疗",
+      public_institution: "公共服务",
+      civil: "公共服务",
+    };
+    var _sector = _sectorMap[job.path] || null;
+    if (
+      _sector &&
+      state._worldParams &&
+      state._worldParams.sectorHeat &&
+      state._worldParams.sectorHeat[_sector]
+    ) {
+      var _heat = state._worldParams.sectorHeat[_sector];
+      if (_heat > 1.2) {
+        salary = Math.round(salary * 1.15);
+      } else if (_heat < 0.8) {
+        salary = Math.round(salary * 0.9);
+      } else if (_heat > 1.0) {
+        salary = Math.round(salary * (1 + (_heat - 1) * 0.3));
+      } else if (_heat < 1.0) {
+        salary = Math.round(salary * (1 - (1 - _heat) * 0.2));
+      }
+    }
     var salary = calcActualSalary(state);
     if (typeof applyDreamIncomeBonus === "function") {
       salary = applyDreamIncomeBonus(state, salary, "salary");
@@ -3188,7 +3265,10 @@ function tickCareerJobDaily(state) {
   }
 
   // ----- burnout 过劳后果（P0-5） -----
-  if (cap.burnout >= 80 && Math.random() < 0.15) {
+  if (
+    cap.burnout >= 80 &&
+    (typeof Random !== "undefined" ? Random.chance(0.15) : Math.random() < 0.15)
+  ) {
     // 强制过劳病假
     state.status = state.status || {};
     state.status.health = Math.max(0, (state.status.health || 100) - 10);
@@ -3521,12 +3601,10 @@ function tickCareerOccupationalRisk(state) {
 
   var attrKey = profile.attrKey;
   var attrDmg = profile.attrDmg[levelIdx] || 0;
-  if (attrDmg > 0 && state.player.attributes) {
-    state.player.attributes[attrKey] = Math.max(
-      0,
-      (state.player.attributes[attrKey] || 0) - attrDmg,
-    );
+  if (attrDmg > 0 && typeof state.player[attrKey] === "number") {
+    state.player[attrKey] = Math.max(0, (state.player[attrKey] || 0) - attrDmg);
   }
+  // [全系统自洽修复] 域C 修复#1: 属性扁平化
 
   StateManager.addMessage(profile.msgs[levelIdx], "warning");
 
@@ -3593,14 +3671,19 @@ function tickCareerHealthBonus(state) {
     var medicineLevel =
       (state.skills && state.skills.medicine && state.skills.medicine.level) ||
       0;
-    if (medicineLevel >= 20 && Math.random() < 0.3) {
+    if (
+      medicineLevel >= 20 &&
+      (typeof Random !== "undefined" ? Random.chance(0.3) : Math.random() < 0.3)
+    ) {
       state.status = state.status || {};
       state.status.health = Math.min(100, (state.status.health || 100) + 0.5);
     }
   }
   // 🏥 护理：医疗环境工作，疾病抵抗力更强
   if (job.path === "medical") {
-    if (Math.random() < 0.2) {
+    if (
+      typeof Random !== "undefined" ? Random.chance(0.2) : Math.random() < 0.2
+    ) {
       state.status = state.status || {};
       state.status.health = Math.min(100, (state.status.health || 100) + 0.3);
     }
@@ -4749,6 +4832,67 @@ if (typeof window !== "undefined") {
         text: "💡 提示：创业启动资金按剧本+职业资本动态计算（职业资本越高减免越多，最低¥2万，最高减免15%）；固定工作提供稳定收入但晋升需要技能+人脉；高级职位需维护好同事关系才能顺利晋升；倦怠过高会过劳病假，记得调休。",
       },
     ],
+    // 运营管理：久坐综合征+压力性胃病 — [全系统自洽修复] 域C 修复#3a
+    operations: {
+      dailyProb: [0.003, 0.005, 0.007, 0.008],
+      msgs: [
+        "📊 运营助理整天对着表格，颈椎开始僵硬",
+        "📋 运营专员长时间久坐，腰椎和胃部都在抗议",
+        "💼 主管的会议连轴转，慢性疲劳正在积累",
+        "📈 经理级别的运营决策压力，焦虑如影随形",
+      ],
+      healthDmg: [1, 2, 3, 3],
+      attrKey: "mental",
+      attrDmg: [0.5, 1, 1, 1.5],
+      flagKey: "_careerDiseased_operations",
+      diseaseMsg: "久坐综合征/压力性胃病",
+    },
+    // 法律服务：焦虑症+视力疲劳 — [全系统自洽修复] 域C 修复#3b
+    legal: {
+      dailyProb: [0.002, 0.004, 0.006, 0.008],
+      msgs: [
+        "📜 法务助理整日翻阅卷宗，眼睛酸胀难忍",
+        "⚖️ 法务专员长时间审阅合同，精神高度紧绷",
+        "📚 高级法务的大脑一刻不停，焦虑在暗处生长",
+        "🏛️ 法务总监的决策压力关乎企业生死，长期处于应激状态",
+      ],
+      healthDmg: [1, 2, 3, 4],
+      attrKey: "mental",
+      attrDmg: [0.5, 1, 1.5, 2],
+      flagKey: "_careerDiseased_legal",
+      diseaseMsg: "焦虑症/视力疲劳综合征",
+    },
+    // 事业单位：久坐+慢性疲劳 — [全系统自洽修复] 域C 修复#3c
+    public_institution: {
+      dailyProb: [0.002, 0.003, 0.005, 0.006, 0.007],
+      msgs: [
+        "📋 办事员整天坐窗口，腰背开始酸痛",
+        "📑 科员的文件处理量让颈椎承受了不该承受的压力",
+        "📊 副科长级的工作节奏导致慢性疲劳累积",
+        "📈 科长级的统筹压力让身体状况悄然下滑",
+        "🏛️ 副处长级长期高强度行政工作，身心俱疲",
+      ],
+      healthDmg: [1, 1, 2, 3, 4],
+      attrKey: "mental",
+      attrDmg: [0, 0.5, 1, 1, 1.5],
+      flagKey: "_careerDiseased_pi",
+      diseaseMsg: "久坐综合征/慢性疲劳",
+    },
+    // 公务员：久坐+高精神压力 — [全系统自洽修复] 域C 修复#3d
+    civil: {
+      dailyProb: [0.002, 0.004, 0.006, 0.008],
+      msgs: [
+        "📋 基层公务员面对群众事务，精神压力不小",
+        "📑 科员的工作量逐年递增，腰椎开始发出警告",
+        "📊 副科级的双重压力——对上对下都要负责",
+        "🏛️ 科长级的决策责任，长期处于心理应激状态",
+      ],
+      healthDmg: [1, 2, 3, 4],
+      attrKey: "mental",
+      attrDmg: [0.5, 1, 1.5, 2],
+      flagKey: "_careerDiseased_civil",
+      diseaseMsg: "职业性焦虑/久坐综合征",
+    },
   };
   if (typeof window !== "undefined") {
     window.careerSocialAction = careerSocialAction;

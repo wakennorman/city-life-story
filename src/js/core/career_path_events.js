@@ -2206,6 +2206,242 @@
         },
       ],
     },
+    // ================================================================
+    // 运营管理路径（operations）— [全系统自洽修复] 域C 增强#1a
+    // ================================================================
+    {
+      id: "ops_data_crisis",
+      phase: "street",
+      icon: "📊",
+      title: "数据异常危机",
+      story:
+        "你日常汇总的运营数据突然出现严重异常——某个关键指标一夜之间暴跌40%。部门群里已经炸锅了，大家都在@你。",
+      probability: 0.04,
+      repeatable: true,
+      conditions: function (st) {
+        return _path(st, "operations") && _workDays(st) > 90;
+      },
+      choices: [
+        {
+          text: "🔍 逐层拆解数据，找出根因",
+          hint: "加班但解决问题",
+          apply: function (st) {
+            var cap = _cap(st);
+            if (cap) {
+              cap.reputation = Math.min(100, cap.reputation + 10);
+              _clamp(cap);
+            }
+            st.needs.fatigue = Math.min(100, (st.needs.fatigue || 0) + 20);
+            st.player.intelligence = Math.min(
+              100,
+              (st.player.intelligence || 10) + 2,
+            );
+            _msg(
+              "🔍 你花了三个小时锁定问题：数据接口昨天升级后字段偏移。修复后指标回升，总监在群里公开表扬了你。声誉+10，智力+2，疲劳+20。",
+              "success",
+            );
+          },
+        },
+        {
+          text: "📞 立刻上报给经理处理",
+          hint: "风险转移但减印象分",
+          apply: function (st) {
+            var cap = _cap(st);
+            if (cap) {
+              cap.reputation = Math.max(0, cap.reputation - 3);
+              _clamp(cap);
+            }
+            _msg(
+              "📞 经理接手后半小时解决了问题——同样的方法，但你没能自己完成。声誉-3。",
+              "warning",
+            );
+          },
+        },
+      ],
+    },
+    {
+      id: "ops_process_optimization",
+      phase: "street",
+      icon: "⚙️",
+      title: "流程优化机会",
+      story:
+        "你发现每天要花大量时间手动整理一份跨部门报表——Excel里的数据源要从三个系统分别导出再合并。",
+      probability: 0.05,
+      repeatable: true,
+      conditions: function (st) {
+        return _path(st, "operations") && _workDays(st) > 180;
+      },
+      choices: [
+        {
+          text: "💡 用Python写个自动化脚本",
+          hint: "效率大幅提升（需coding≥20）",
+          apply: function (st) {
+            var codingLv =
+              st.skills && st.skills.coding ? st.skills.coding.level || 0 : 0;
+            if (codingLv >= 20) {
+              var cap = _cap(st);
+              if (cap) {
+                cap.reputation = Math.min(100, cap.reputation + 12);
+                cap.industryResources = Math.min(
+                  100,
+                  cap.industryResources + 5,
+                );
+                _clamp(cap);
+              }
+              st.player.intelligence = Math.min(
+                100,
+                (st.player.intelligence || 10) + 3,
+              );
+              _msg(
+                "⚡ 脚本跑通了！原本3小时的工作20分钟完成。总监说「这效率提升至少值一个A绩效」。声誉+12，行业资源+5，智力+3。",
+                "success",
+              );
+            } else {
+              _msg(
+                "😅 你试了一下发现自己编程基础不够，脚本报错无数。看来得先学编程。",
+                "warning",
+              );
+            }
+          },
+        },
+        {
+          text: "📝 写一份优化建议报告提交",
+          hint: "留下专业印象",
+          apply: function (st) {
+            var cap = _cap(st);
+            if (cap) {
+              cap.reputation = Math.min(100, cap.reputation + 5);
+              _clamp(cap);
+            }
+            _msg(
+              "📝 报告提交后，经理批复「建议收到，转IT部门评估」。虽然没有立竿见影，但你的名字开始出现在跨部门邮件里。声誉+5。",
+              "info",
+            );
+          },
+        },
+      ],
+    },
+
+    // ================================================================
+    // 设计创意路径（design）— [全系统自洽修复] 域C 增强#1b
+    // ================================================================
+    {
+      id: "des_client_revision_hell",
+      phase: "street",
+      icon: "🎨",
+      title: "客户修改地狱",
+      story:
+        "你花了三天做的方案，客户看了一眼：「感觉不对。换个风格，今天能出吗？」你看了看表——下午4点。",
+      probability: 0.05,
+      repeatable: true,
+      conditions: function (st) {
+        return _path(st, "design") && _workDays(st) > 60;
+      },
+      choices: [
+        {
+          text: "😤 加班改，今晚出图",
+          hint: "客户满意但体力透支",
+          apply: function (st) {
+            var cap = _cap(st);
+            if (cap) {
+              cap.reputation = Math.min(100, cap.reputation + 6);
+              _clamp(cap);
+            }
+            st.needs.fatigue = Math.min(100, (st.needs.fatigue || 0) + 25);
+            st.needs.happiness = Math.max(0, (st.needs.happiness || 50) - 10);
+            _msg(
+              "🎨 你熬到凌晨2点出了三个版本。客户选了第二个。声誉+6，疲劳+25，心情-10。",
+              "success",
+            );
+          },
+        },
+        {
+          text: "🤝 约客户当面聊，精准定位需求",
+          hint: "用沟通减少无效劳动",
+          apply: function (st) {
+            if ((st.player.charm || 0) >= 30) {
+              var cap = _cap(st);
+              if (cap) {
+                cap.reputation = Math.min(100, cap.reputation + 8);
+                _clamp(cap);
+              }
+              _msg(
+                "💬 你约客户喝了杯咖啡，聊了半小时终于挖出真实需求——不是风格问题，是配色不符合品牌调性。改色后一次过稿。声誉+8。",
+                "success",
+              );
+            } else {
+              st.needs.fatigue = Math.min(100, (st.needs.fatigue || 0) + 15);
+              _msg(
+                "😶 你试着沟通，但客户自己也说不清想要什么。最后还是改了三版。沟通技巧还得练。疲劳+15。",
+                "warning",
+              );
+            }
+          },
+        },
+      ],
+    },
+
+    // ================================================================
+    // 法律服务路径（legal）— [全系统自洽修复] 域C 增强#1b
+    // ================================================================
+    {
+      id: "leg_urgent_contract_review",
+      phase: "street",
+      icon: "⚖️",
+      title: "紧急合同审核",
+      story:
+        "业务部发来一份紧急合同——对方已经在会议室等着签字了。五六十页的协议，你只有两小时审完。",
+      probability: 0.04,
+      repeatable: true,
+      conditions: function (st) {
+        return _path(st, "legal") && _workDays(st) > 90;
+      },
+      choices: [
+        {
+          text: "📋 逐条审阅，争取加时间",
+          hint: "严谨但可能得罪业务",
+          apply: function (st) {
+            var cap = _cap(st);
+            if (cap) {
+              cap.reputation = Math.min(100, cap.reputation + 8);
+              _clamp(cap);
+            }
+            st.needs.fatigue = Math.min(100, (st.needs.fatigue || 0) + 18);
+            _msg(
+              "📋 你坚持延到明天上午交报告，发现了一条隐藏的无限续约条款——避免了公司潜在数百万损失。声誉+8。",
+              "success",
+            );
+          },
+        },
+        {
+          text: "⏩ 快速过一遍，核心风险点标注",
+          hint: "平衡效率与风险",
+          apply: function (st) {
+            if (_chance(0.65)) {
+              var cap = _cap(st);
+              if (cap) {
+                cap.reputation = Math.min(100, cap.reputation + 4);
+                _clamp(cap);
+              }
+              _msg(
+                "✅ 你火速标注了三个风险点，业务部修改后顺利签约。声誉+4。",
+                "info",
+              );
+            } else {
+              var cap = _cap(st);
+              if (cap) {
+                cap.reputation = Math.max(0, cap.reputation - 5);
+                _clamp(cap);
+              }
+              _msg(
+                "⚠️ 合同签完后你才发现漏看了一条自动续期条款。法务总监要求你以后加强复核。声誉-5。",
+                "warning",
+              );
+            }
+          },
+        },
+      ],
+    },
   ];
 
   // 推入全局随机事件池
