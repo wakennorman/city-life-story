@@ -3,6 +3,7 @@
 - [v3.88g-system-optimization-final](v3.88g-system-optimization-final.md) — R44全系统优化最终报告：修复13处缺陷(trigger_registry路径/重复ID/事件字段/Emoji/孤儿注释/命名冲突)+扩充22个触发模板+蒙特卡洛经济平衡分析
 - [v3.88g-economic-balance-analysis](v3.88g-economic-balance-analysis.md) — 蒙特卡洛经济平衡分析：5000次×9组合×1000天，三层财富税系统评估
 - [v3.88g-system-optimization](v3.88g-system-optimization.md) — 全系统优化原始报告（含跨系统联动审计）
+- [uncommitted-change-loss-prevention](uncommitted-change-loss-prevention.md) — 未commit改动分支切换丢失的教训 + 5条防护措施 + 恢复步骤（2026-07-12）
 - [v3.88e-dead-code-cleanup](v3.88e-dead-code-cleanup.md) — 删除4处死代码(renderCurrentTab_legacy/scrollMessageLogToBottom/scaleEventReward/quarterlyCleanup) -312行 (2026-07-11)
 - [v3.88d-loop-R42-events](v3.88d-loop-R42-events.md) — R42新增4个联动事件(社交/道德/装备/天气)+指令一A类0缺陷(2026-07-11)
 - [passmsg-eventlog-scroll-modal](passmsg-eventlog-scroll-modal.md) — v3.2a passMsg修复·工资分离·事件强制滚动·导航弹窗
@@ -53,3 +54,4 @@
 - [v3.79-loop-R34-session](v3.79-loop-R34-session.md) — R34: 修复3个B类概率+新增2财富里程碑事件(50万/100万)（2026-07-10）
 - [v3.85-career-tab-polish](v3.85-career-tab-polish.md) — 事业Tab全面打磨：属性训练重平衡(参考完美人生递减收益)/晨跑冥想免费/求职UI框线增强/副业网格化布局/showModal按钮Bug修复（2026-07-11）
 - [v3.88f-event-coherence-review](v3.88f-event-coherence-review.md) — loop R43: 叙事-触发自洽性审查250+事件，发现1处A类(ev_used_car_crash陈哥缺met门岗)+1处B类(edu_graduation_ceremony用desc非story导致渲染空白)，均修复+新增5个联动事件(社工/补贴/城管/亲情/师徒)（2026-07-11）
+- [全系统优化/loop提示词整合版（含游戏设计权威角色设定）](loop-prompt-game-design-authority.md) — 2026-07-12 整合：将"深耕八十年+具体游戏名"长版角色设定替换原简短版本，保留8域轮换/A类修复/联动增强/每轮交付结构
