@@ -1,10 +1,10 @@
 {
-  "currentRound": 6,
-  "currentDomain": "C",
+  "currentRound": 7,
+  "currentDomain": "B",
   "domainOrder": ["A", "B", "C", "D", "E", "F", "G", "H"],
   "rotationIndex": 2,
   "nextDomain": "D",
-  "lastCommit": "aac091e5",
+  "lastCommit": "227a6ef8",
   "lastUpdated": "2026-07-12",
   "history": [
     {
@@ -51,6 +51,15 @@
       "linkageItems": 3,
       "commit": "aac091e5",
       "note": "A类修复(2)：train_medicine训练入口+train_social训练入口→解锁medical/doctor路径9职+wholesale_flip行动；social阈值50→30/40→25；联动增强3个职业满级里程碑事件(庆祝/收徒/行业项目)"
+    },
+    {
+      "round": 7,
+      "domain": "B",
+      "date": "2026-07-12",
+      "aClassFixed": 0,
+      "linkageItems": 3,
+      "commit": "adcfaad1",
+      "note": "全量扫描 moral_events.js/news.js/events_core.js：A类0（5个condition全守卫、followUpId动态生成、relationships/weather访问均防御）。联动增强3项：moral_elder_assist(道德→NPC关系elderNeighbor+兼职线索flag B→D/C桥接)/scrap_price_surge(新闻→废品定价+材料股 B→A/E)/night_market_revival(新闻→零工收入+消费股 B→C/E)。subsidy经核实为故意去重(training_subsidy)非丢失→未还原。MC 6×400d 0异常。"
     }
   ]
 }

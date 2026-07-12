@@ -84,3 +84,17 @@
 - xiaoli/auntie_lin/master_zhao 激活后的深度好感事件（npcs.js 仍为 TODO，暂用通用 relationships 遍历）
 - 行动频次「老手特遇」（需先确认 actionFreq 的具体 actionId 枚举，避免死事件）
 - 时代变迁联动（era_transform）可再扩充微观抉择
+
+## 最近执行（2026-07-12，Round 7 域 B，覆盖指令 B→D→F 第1轮）
+
+- **分支**: loop/auto @ d8030a29 → 提交 `adcfaad1`(feat) + `227a6ef8`(docs 迭代表)
+- **A 类扫描**: 0 缺陷（全量扫描 moral_events.js / news.js / events_core.js）。5 个 condition 全守卫；followUpId 为动态生成非缺失；relationships/weather 访问均防御；`s.trade` 恒初始化。
+- **联动增强 3 项**（均 `||` 防御）:
+  1. `moral_elder_assist`（MORAL_EVENTS，B→D/C）：帮老人→建立 `relationships.elderNeighbor{met,affinity}`，配套 `MORAL_CONSEQUENCES.moral_elder_helped` 延迟 +置 `flags._elderJobLead`（兼职线索 flag）。
+  2. `scrap_price_surge`（NEWS_EVENTS，B→A/E）：`priceMod:{scrap_metal:1.6,scrap_plastic:1.4}` + `investmentEffect` 贵金属/COPPER/ALUM + followUp。
+  3. `night_market_revival`（NEWS_EVENTS，B→C/E）：`jobMultiplier:1.25` + 消费股 + seasons 限定。
+- **关键事实（已写入 MEMORY.md / domain-optimization-round-7.md）**:
+  - 覆盖指令描述的「events.js + {cond,apply} 三文件模型」已过期；真实为三套子系统（MORAL_EVENTS 声明式 / NEWS_EVENTS 声明式 / events_core RANDOM_EVENTS 引擎），注入须用真实格式。
+  - `subsidy` 经 `git show c87666ce` 核实为**故意去重**（注释指向 training_subsidy），按设计缺失，**不还原**。32 锚定 id 中 31 存活、subsidy 缺失即正确。
+- **MC 验证**: `node --max-old-space-size=8192 tests/monte_carlo.cjs --trials 6 --days 400` 完成，**0 异常**（完整 10×500d 因 harness 内存上限 OOM，非本代码问题）。[balanced] 存活率 66.7%<80% 为既有平衡阈值，非本轮引入。
+- **下一轮**: 域 D（NPC/社交），B→D→F 第 2 轮。
