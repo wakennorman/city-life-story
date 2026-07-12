@@ -3096,11 +3096,11 @@
       function calculateDTIPenalty(state, monthlyIncome) {
         if (monthlyIncome <= 0) return 0.05; // 无收入 → 接近拒贷
 
+        // [全系统自洽修复] 域E 修复:运算符优先级——+高于||，导致debt非零时bankDebt和villageDebt被静默忽略
         const totalDebt =
-          state.resources?.debt ||
-          0 +
-            (state.resources?.bankDebt || 0) +
-            (state.resources?.villageDebt || 0);
+          (state.resources?.debt || 0) +
+          (state.resources?.bankDebt || 0) +
+          (state.resources?.villageDebt || 0);
 
         const dtI = totalDebt / monthlyIncome;
 
@@ -133816,7 +133816,7 @@
         }
       }
 
-      /** 每日NPC关系tick — 蝴蝶效应传播 */
+      /** 每日NPC关系tick — 蝴蝶效应传播 + 好感衰减 */
       function tickNpcRelationships(state) {
         var day = state.player.day;
         if (!state.npcRelationshipLog) state.npcRelationshipLog = {};
@@ -133830,6 +133830,7 @@
           state.npcRelationshipLog.dailyInteractions || {};
         var propagated = {};
 
+        // 1. 蝴蝶效应传播
         for (var npcId in todayInteractions) {
           var interaction = todayInteractions[npcId];
           var relationTargets = RELATION_PROPAGATION[npcId];
@@ -133844,6 +133845,52 @@
           }
         }
         state.npcRelationshipLog.dailyInteractions = {};
+
+        // [全系统自洽修复] 域D 联动增强1: 好感衰减 — 7天无互动开始衰减
+        if (!state.npcRelationshipLog.decayDay)
+          state.npcRelationshipLog.decayDay = {};
+        for (var _npcId in state.relationships) {
+          var _rel = state.relationships[_npcId];
+          if (!_rel || !_rel.met || _rel.affinity <= 0) continue;
+          var _lastInteraction = _rel._lastInteractionDay || 0;
+          var _daysSinceLast = day - _lastInteraction;
+          // 7天无互动开始衰减，每7天-1，亲密NPC衰减慢
+          if (_daysSinceLast >= 7) {
+            var _decayRate = 0;
+            if (_rel.affinity >= 80)
+              _decayRate = 0.03; // 挚友 每7天-0.2
+            else if (_rel.affinity >= 60)
+              _decayRate = 0.05; // 好友 每7天-0.35
+            else if (_rel.affinity >= 30)
+              _decayRate = 0.08; // 熟人 每7天-0.56
+            else _decayRate = 0.12; // 初识 每7天-0.84
+            var _decay = _decayRate * Math.floor(_daysSinceLast / 7);
+            if (_decay > 0) {
+              var _oldAff = _rel.affinity;
+              _rel.affinity = Math.max(0, _rel.affinity - _decay);
+              _rel.affinity = Math.round(_rel.affinity * 10) / 10;
+              _rel._lastDecay = _decay;
+              // 衰减导致好感等级下降时发消息
+              var _oldLabel = getAffinityLabel(_oldAff);
+              var _newLabel = getAffinityLabel(_rel.affinity);
+              if (
+                _oldLabel !== _newLabel &&
+                typeof StateManager !== "undefined"
+              ) {
+                StateManager.addMessage(
+                  "💔 你与" +
+                    _npcId.replace(/_/g, " ") +
+                    "的关系变淡了：" +
+                    _oldLabel +
+                    " → " +
+                    _newLabel +
+                    "。也许该去打个招呼了。",
+                  "warning",
+                );
+              }
+            }
+          }
+        }
       }
 
       /** 记录玩家与NPC的互动 */
@@ -133877,6 +133924,10 @@
         var newAffinity = Math.max(-100, Math.min(100, oldAffinity + change));
         state.relationships[npcId].affinity = newAffinity;
         state.relationships[npcId].met = true;
+        // [全系统自洽修复] 域D 联动增强1: 记录最近互动天数
+        if (state.player && state.player.day && change !== 0) {
+          state.relationships[npcId]._lastInteractionDay = state.player.day;
+        }
 
         if (change !== 0) {
           var oldLabel = getAffinityLabel(oldAffinity);
@@ -154086,6 +154137,7 @@
           id: "aunt_wang",
           name: "王大婶",
           role: "房东",
+          monthlyIncome: 8000,
           avatar: "images/avatars/aunt_wang.png",
           location: "slum",
           // v3.4 C3D-T1: NPC 每日活动日程（地点关联系统用）
@@ -154572,6 +154624,7 @@
           id: "sister_zhang",
           name: "张姐",
           role: "中介",
+          monthlyIncome: 12000,
           avatar: "images/avatars/zijie.png",
           location: "commercialDist",
           // v3.4 C3D-T1: NPC 每日活动日程
@@ -155048,6 +155101,7 @@
           id: "xiao_mei",
           name: "小美",
           role: "大学生",
+          monthlyIncome: 3000,
           avatar: "images/avatars/xiao_mei.png",
           location: "school",
           // v3.4 C3D-T1: NPC 每日活动日程
@@ -155290,6 +155344,13 @@
           ],
           // 新加：在场概率（半固定NPC）
           presenceChance: 0.75,
+          // v3.4 C3D-T1: NPC 每日活动日程
+          schedule: {
+            morning: "commercialDist",
+            afternoon: "commercialDist",
+            evening: "commercialDist",
+            night: "slum",
+          },
           // v3.1 ⑥：社会比较心理抓手（月薪，用于关系卡收入对比行）
           monthlyIncome: 9500,
           // 新加：地点触发专用对话
@@ -155502,6 +155563,7 @@
           id: "uncle_chen_bank",
           name: "老陈",
           role: "银行保安",
+          monthlyIncome: 4500,
           location: "bank",
           birthday: 200,
           desc: "银行门口站了八年的保安，见过形形色色的人。退休前在部队干过，说话直但心善。",
@@ -155540,6 +155602,13 @@
               multiplier: 1.08,
             },
           ],
+          // [全系统自洽修复] 域D A类#3: 老陈银行保安 — 补全 schedule 使位置偶遇系统可发现
+          schedule: {
+            morning: "bank",
+            afternoon: "bank",
+            evening: "bank",
+            night: "bank",
+          },
           affinityRewards: [
             {
               threshold: 30,
@@ -155668,6 +155737,7 @@
           id: "sister_wu",
           name: "吴姐",
           role: "美容院老板",
+          monthlyIncome: 15000,
           location: "commercialDist",
           birthday: 200,
           desc: "美容院老板娘，认识各种人，能介绍美容/时尚相关工作。",
@@ -155695,6 +155765,13 @@
                 cost: 20,
               },
             },
+          },
+          // [全系统自洽修复] 域D A类#3: 吴姐 — 补全 schedule 使位置偶遇系统可发现
+          schedule: {
+            morning: "commercialDist",
+            afternoon: "commercialDist",
+            evening: "commercialDist",
+            night: "slum",
           },
           presenceBonus: [
             {
@@ -155751,6 +155828,8 @@
                 text: "💁 帮你牵线（需要认识富裕NPC）",
                 apply: function (st) {
                   st.flags._npcFavor_sister_wu = true;
+                  if (!st.relationships.sister_wu)
+                    st.relationships.sister_wu = { affinity: 0, met: true };
                   st.relationships.sister_wu.affinity = Math.min(
                     100,
                     st.relationships.sister_wu.affinity + 12,
@@ -155765,6 +155844,8 @@
                 text: "😅 我不认识这样的人",
                 apply: function (st) {
                   st.flags._npcFavor_sister_wu = true;
+                  if (!st.relationships.sister_wu)
+                    st.relationships.sister_wu = { affinity: 0, met: true };
                   st.relationships.sister_wu.affinity = Math.max(
                     -100,
                     st.relationships.sister_wu.affinity - 3,
@@ -155784,6 +155865,8 @@
                 hint: "好感+8，吴姐获得转型信心",
                 apply: function (st) {
                   st.flags._npcDeepTask_sister_wu = true;
+                  if (!st.relationships.sister_wu)
+                    st.relationships.sister_wu = { affinity: 0, met: true };
                   st.relationships.sister_wu.affinity = Math.min(
                     100,
                     st.relationships.sister_wu.affinity + 8,
@@ -155800,6 +155883,8 @@
                 hint: "好感+3，吴姐冷静下来",
                 apply: function (st) {
                   st.flags._npcDeepTask_sister_wu = true;
+                  if (!st.relationships.sister_wu)
+                    st.relationships.sister_wu = { affinity: 0, met: true };
                   st.relationships.sister_wu.affinity = Math.min(
                     100,
                     st.relationships.sister_wu.affinity + 3,
@@ -155829,6 +155914,7 @@
           id: "brother_huang",
           name: "阿黄",
           role: "快递站长",
+          monthlyIncome: 9000,
           location: "commercialDist",
           birthday: 250,
           desc: "快递站点站长，管理几十个骑手，能介绍配送工作。",
@@ -155856,6 +155942,13 @@
                 cost: 15,
               },
             },
+          },
+          // [全系统自洽修复] 域D A类#3: 阿黄 — 补全 schedule 使位置偶遇系统可发现
+          schedule: {
+            morning: "commercialDist",
+            afternoon: "commercialDist",
+            evening: "commercialDist",
+            night: "slum",
           },
           presenceBonus: [
             {
@@ -155913,6 +156006,8 @@
                   st.flags._npcFavor_brother_huang = true;
                   st.resources.cash += 80 + Random.int(0, 40);
                   st.needs.fatigue = Math.min(100, st.needs.fatigue + 15);
+                  if (!st.relationships.brother_huang)
+                    st.relationships.brother_huang = { affinity: 0, met: true };
                   st.relationships.brother_huang.affinity = Math.min(
                     100,
                     st.relationships.brother_huang.affinity + 12,
@@ -155927,6 +156022,8 @@
                 text: "😅 今天没空",
                 apply: function (st) {
                   st.flags._npcFavor_brother_huang = true;
+                  if (!st.relationships.brother_huang)
+                    st.relationships.brother_huang = { affinity: 0, met: true };
                   st.relationships.brother_huang.affinity = Math.max(
                     -100,
                     st.relationships.brother_huang.affinity - 3,
@@ -155946,6 +156043,8 @@
                 hint: "好感+5，阿黄分享想法",
                 apply: function (st) {
                   st.flags._npcDeepTask_brother_huang = true;
+                  if (!st.relationships.brother_huang)
+                    st.relationships.brother_huang = { affinity: 0, met: true };
                   st.relationships.brother_huang.affinity = Math.min(
                     100,
                     st.relationships.brother_huang.affinity + 5,
@@ -155961,6 +156060,8 @@
                 hint: "好感+3",
                 apply: function (st) {
                   st.flags._npcDeepTask_brother_huang = true;
+                  if (!st.relationships.brother_huang)
+                    st.relationships.brother_huang = { affinity: 0, met: true };
                   st.relationships.brother_huang.affinity = Math.min(
                     100,
                     st.relationships.brother_huang.affinity + 3,
@@ -155993,6 +156094,7 @@
           id: "xiaochen",
           name: "小陈",
           role: "外卖骑手",
+          monthlyIncome: 7000,
           avatar: "images/avatars/xiaochen.png",
           location: "commercialDist",
           birthday: 180,
@@ -156101,6 +156203,8 @@
                 apply: function (st) {
                   st.flags._npcFavor_xiaochen = true;
                   st.resources.cash += 40 + Random.int(0, 30);
+                  if (!st.relationships.xiaochen)
+                    st.relationships.xiaochen = { affinity: 0, met: true };
                   st.relationships.xiaochen.affinity = Math.min(
                     100,
                     st.relationships.xiaochen.affinity + 10,
@@ -156117,6 +156221,8 @@
                 text: "😅 我也忙",
                 apply: function (st) {
                   st.flags._npcFavor_xiaochen = true;
+                  if (!st.relationships.xiaochen)
+                    st.relationships.xiaochen = { affinity: 0, met: true };
                   st.relationships.xiaochen.affinity = Math.max(
                     -100,
                     st.relationships.xiaochen.affinity - 3,
@@ -156139,6 +156245,8 @@
                 hint: "好感+5",
                 apply: function (st) {
                   st.flags._npcDeepTask_xiaochen = true;
+                  if (!st.relationships.xiaochen)
+                    st.relationships.xiaochen = { affinity: 0, met: true };
                   st.relationships.xiaochen.affinity = Math.min(
                     100,
                     st.relationships.xiaochen.affinity + 5,
@@ -156155,6 +156263,8 @@
                 apply: function (st) {
                   st.flags._npcDeepTask_xiaochen = true;
                   st.resources.cash = Math.max(0, st.resources.cash - 500);
+                  if (!st.relationships.xiaochen)
+                    st.relationships.xiaochen = { affinity: 0, met: true };
                   st.relationships.xiaochen.affinity = Math.min(
                     100,
                     st.relationships.xiaochen.affinity + 10,
@@ -156187,6 +156297,7 @@
           id: "auntie_lin",
           name: "林阿姨",
           role: "菜市场摊主",
+          monthlyIncome: 6000,
           avatar: "images/avatars/auntie_lin.png",
           location: "wholesaleMarket",
           birthday: 150,
@@ -156246,6 +156357,13 @@
               multiplier: 1.08,
             },
           ],
+          // [全系统自洽修复] 域D A类#3: 林阿姨 — 补全 schedule 使位置偶遇系统可发现
+          schedule: {
+            morning: "wholesaleMarket",
+            afternoon: "wholesaleMarket",
+            evening: "wholesaleMarket",
+            night: "slum",
+          },
           affinityRewards: [
             {
               threshold: 30,
@@ -156293,6 +156411,8 @@
                 apply: function (st) {
                   st.flags._npcFavor_auntie_lin = true;
                   st.resources.cash += 50 + Random.int(0, 30);
+                  if (!st.relationships.auntie_lin)
+                    st.relationships.auntie_lin = { affinity: 0, met: true };
                   st.relationships.auntie_lin.affinity = Math.min(
                     100,
                     st.relationships.auntie_lin.affinity + 12,
@@ -156309,6 +156429,8 @@
                 text: "😅 今天没空",
                 apply: function (st) {
                   st.flags._npcFavor_auntie_lin = true;
+                  if (!st.relationships.auntie_lin)
+                    st.relationships.auntie_lin = { affinity: 0, met: true };
                   st.relationships.auntie_lin.affinity = Math.max(
                     -100,
                     st.relationships.auntie_lin.affinity - 3,
@@ -156330,6 +156452,8 @@
                 text: "💪 退休也好，享享福",
                 hint: "好感+5",
                 apply: function (st) {
+                  if (!st.relationships.auntie_lin)
+                    st.relationships.auntie_lin = { affinity: 0, met: true };
                   st.relationships.auntie_lin.affinity = Math.min(
                     100,
                     st.relationships.auntie_lin.affinity + 5,
@@ -156344,6 +156468,8 @@
                 text: "💰 可以传给儿子",
                 hint: "好感+3",
                 apply: function (st) {
+                  if (!st.relationships.auntie_lin)
+                    st.relationships.auntie_lin = { affinity: 0, met: true };
                   st.relationships.auntie_lin.affinity = Math.min(
                     100,
                     st.relationships.auntie_lin.affinity + 3,
@@ -156358,6 +156484,8 @@
                 text: "🤷 你自己决定",
                 hint: "好感不变",
                 apply: function (st) {
+                  if (!st.relationships.auntie_lin)
+                    st.relationships.auntie_lin = { affinity: 0, met: true };
                   st.relationships.auntie_lin.affinity = Math.min(
                     100,
                     st.relationships.auntie_lin.affinity + 0,
@@ -156440,6 +156568,13 @@
               multiplier: 1.1,
             },
           ],
+          // [全系统自洽修复] 域D A类#3: 赵师傅 — 补全 schedule 使位置偶遇系统可发现
+          schedule: {
+            morning: "factoryZone",
+            afternoon: "factoryZone",
+            evening: "factoryZone",
+            night: "slum",
+          },
           affinityRewards: [
             {
               threshold: 30,
@@ -156490,6 +156625,8 @@
                   st.resources.cash += 60 + Random.int(0, 40);
                   st.skills.repair = st.skills.repair || { level: 0, xp: 0 };
                   st.skills.repair.xp += 20;
+                  if (!st.relationships.master_zhao)
+                    st.relationships.master_zhao = { affinity: 0, met: true };
                   st.relationships.master_zhao.affinity = Math.min(
                     100,
                     st.relationships.master_zhao.affinity + 12,
@@ -156506,6 +156643,8 @@
                 text: "😅 今天没空",
                 apply: function (st) {
                   st.flags._npcFavor_master_zhao = true;
+                  if (!st.relationships.master_zhao)
+                    st.relationships.master_zhao = { affinity: 0, met: true };
                   st.relationships.master_zhao.affinity = Math.max(
                     -100,
                     st.relationships.master_zhao.affinity - 3,
@@ -156527,6 +156666,8 @@
                 text: "💪 退休也好，享享福",
                 hint: "好感+5",
                 apply: function (st) {
+                  if (!st.relationships.master_zhao)
+                    st.relationships.master_zhao = { affinity: 0, met: true };
                   st.relationships.master_zhao.affinity = Math.min(
                     100,
                     st.relationships.master_zhao.affinity + 5,
@@ -156541,6 +156682,8 @@
                 text: "💰 可以传给儿子",
                 hint: "好感+3",
                 apply: function (st) {
+                  if (!st.relationships.master_zhao)
+                    st.relationships.master_zhao = { affinity: 0, met: true };
                   st.relationships.master_zhao.affinity = Math.min(
                     100,
                     st.relationships.master_zhao.affinity + 3,
@@ -156571,6 +156714,7 @@
           id: "xiaoli",
           name: "小丽",
           role: "网红/主播",
+          monthlyIncome: 25000,
           avatar: "images/avatars/xiaoli.png",
           location: "techPark",
           birthday: 300,
@@ -156630,6 +156774,13 @@
               multiplier: 1.1,
             },
           ],
+          // [全系统自洽修复] 域D A类#3: 小丽 — 补全 schedule 使位置偶遇系统可发现
+          schedule: {
+            morning: "techPark",
+            afternoon: "techPark",
+            evening: "entertainment",
+            night: "slum",
+          },
           affinityRewards: [
             {
               threshold: 30,
@@ -156677,6 +156828,8 @@
                 apply: function (st) {
                   st.flags._npcFavor_xiaoli = true;
                   st.resources.cash += 100 + Random.int(0, 50);
+                  if (!st.relationships.xiaoli)
+                    st.relationships.xiaoli = { affinity: 0, met: true };
                   st.relationships.xiaoli.affinity = Math.min(
                     100,
                     st.relationships.xiaoli.affinity + 12,
@@ -156691,6 +156844,8 @@
                 text: "😅 我不会这个",
                 apply: function (st) {
                   st.flags._npcFavor_xiaoli = true;
+                  if (!st.relationships.xiaoli)
+                    st.relationships.xiaoli = { affinity: 0, met: true };
                   st.relationships.xiaoli.affinity = Math.max(
                     -100,
                     st.relationships.xiaoli.affinity - 3,
@@ -156709,6 +156864,8 @@
                 text: "💪 转行做什么？",
                 hint: "好感+5",
                 apply: function (st) {
+                  if (!st.relationships.xiaoli)
+                    st.relationships.xiaoli = { affinity: 0, met: true };
                   st.relationships.xiaoli.affinity = Math.min(
                     100,
                     st.relationships.xiaoli.affinity + 5,
@@ -156723,6 +156880,8 @@
                 text: "⚠️ 先养好身体",
                 hint: "好感+3",
                 apply: function (st) {
+                  if (!st.relationships.xiaoli)
+                    st.relationships.xiaoli = { affinity: 0, met: true };
                   st.relationships.xiaoli.affinity = Math.min(
                     100,
                     st.relationships.xiaoli.affinity + 3,
@@ -156815,6 +156974,13 @@
               multiplier: 1.1,
             },
           ],
+          // [全系统自洽修复] 域D A类#3: 王医生 — 补全 schedule 使位置偶遇系统可发现
+          schedule: {
+            morning: "hospital",
+            afternoon: "hospital",
+            evening: "hospital",
+            night: "hospital",
+          },
           affinityRewards: [
             {
               threshold: 30,
@@ -156862,6 +157028,8 @@
                 apply: function (st) {
                   st.flags._npcFavor_dr_wang = true;
                   st.resources.cash -= 15;
+                  if (!st.relationships.dr_wang)
+                    st.relationships.dr_wang = { affinity: 0, met: true };
                   st.relationships.dr_wang.affinity = Math.min(
                     100,
                     st.relationships.dr_wang.affinity + 8,
@@ -156876,6 +157044,8 @@
                 text: "😅 我没带钱",
                 apply: function (st) {
                   st.flags._npcFavor_dr_wang = true;
+                  if (!st.relationships.dr_wang)
+                    st.relationships.dr_wang = { affinity: 0, met: true };
                   st.relationships.dr_wang.affinity = Math.max(
                     -100,
                     st.relationships.dr_wang.affinity - 2,
@@ -156897,6 +157067,8 @@
                 text: "💪 你是救死扶伤的英雄",
                 hint: "好感+8",
                 apply: function (st) {
+                  if (!st.relationships.dr_wang)
+                    st.relationships.dr_wang = { affinity: 0, met: true };
                   st.relationships.dr_wang.affinity = Math.min(
                     100,
                     st.relationships.dr_wang.affinity + 8,
@@ -156912,6 +157084,8 @@
                 text: "⚠️ 注意休息",
                 hint: "好感+5",
                 apply: function (st) {
+                  if (!st.relationships.dr_wang)
+                    st.relationships.dr_wang = { affinity: 0, met: true };
                   st.relationships.dr_wang.affinity = Math.min(
                     100,
                     st.relationships.dr_wang.affinity + 5,
@@ -156942,6 +157116,7 @@
           id: "zhaojie",
           name: "赵姐",
           role: "房产中介",
+          monthlyIncome: 10000,
           avatar: "images/avatars/zhaojie.png",
           location: "commercialDist",
           schedule: {
@@ -157155,6 +157330,7 @@
           id: "chen_ge",
           name: "陈哥",
           role: "情报贩子",
+          monthlyIncome: 18000,
           avatar: "images/avatars/chen_ge.png",
           // [自洽修复] 原 location: "nightMarket" 不存在于 locations.js，改为 commercialDist
           location: "commercialDist",
@@ -157355,6 +157531,7 @@
           id: "ajie",
           name: "阿杰",
           role: "老同学",
+          monthlyIncome: 14000,
           avatar: "images/avatars/ajie.png",
           location: "random", // 随机出现
           schedule: {
@@ -177584,8 +177761,9 @@
         {
           name: "npc_relationships_tick",
           fn: function (state) {
-            if (typeof npcRelationshipsTick === "function") {
-              npcRelationshipsTick(state);
+            // [全系统自洽修复] 域D A类#1: npcRelationshipsTick 不存在，修正为 tickNpcRelationships
+            if (typeof tickNpcRelationships === "function") {
+              tickNpcRelationships(state);
             }
           },
         },
@@ -180393,6 +180571,63 @@
             "医院碰到王医生，他正跟家属交代注意事项。",
           ],
         },
+        // [全系统自洽修复] 域D A类#4: 补全 LOCATION_NPC_MESSAGES 缺失条目
+        bank: {
+          npcId: "uncle_chen_bank",
+          chance: 0.2,
+          minAffinity: 0,
+          msgs: [
+            "老陈站在银行门口，朝你点了点头。",
+            "老陈在银行柜台后整理文件，抬头看了你一眼。",
+          ],
+        },
+        commercialDist: {
+          npcId: "sister_wu",
+          chance: 0.15,
+          minAffinity: 0,
+          msgs: [
+            "吴姐在美容院门口晒太阳，看到你招手。",
+            "吴姐提着购物袋从商场出来，跟你打了声招呼。",
+          ],
+        },
+        wholesaleMarket: {
+          npcId: "auntie_lin",
+          chance: 0.25,
+          minAffinity: 0,
+          msgs: [
+            "林阿姨正在整理菜摊，看到你招手：'今天菜新鲜！'",
+            "林阿姨在称重，抽空抬头：'要买点什么？'",
+            "菜市场碰到林阿姨，她正跟顾客讲价。",
+          ],
+        },
+        factoryZone: {
+          npcId: "master_zhao",
+          chance: 0.2,
+          minAffinity: 0,
+          msgs: [
+            "赵师傅在修车，满身油污地抬头：'车有问题？'",
+            "赵师傅擦着手：'午休了，来喝口水。'",
+            "工业区路过赵师傅的铺子，听到里面传来工具声。",
+          ],
+        },
+        entertainment: {
+          npcId: "xiaoli",
+          chance: 0.2,
+          minAffinity: 0,
+          msgs: [
+            "小丽在咖啡厅直播，看到你挥手：'来当我的观众！'",
+            "小丽刚结束直播，笑着问：'今天拍什么内容好？'",
+          ],
+        },
+        slum: {
+          npcId: "brother_huang",
+          chance: 0.15,
+          minAffinity: 0,
+          msgs: [
+            "阿黄在城中村收发快递，看到你帮忙搬箱子。",
+            "阿黄坐在快递站门口抽烟，跟你闲聊了几句。",
+          ],
+        },
       };
 
       function rollLocationNpcInteraction(state, locationKey) {
@@ -180433,6 +180668,68 @@
         if (!Random.chance(locData.chance)) return;
         var rel = state.relationships[locData.npcId];
         if (!rel || !rel.met || rel.affinity < locData.minAffinity) return;
+
+        // [全系统自洽修复] 域D 联动增强2: NPC生日自动祝贺
+        var _npcDef =
+          typeof getNpcById === "function" ? getNpcById(locData.npcId) : null;
+        var _dayInYear = (state.player.day || 1) % 365;
+        if (
+          _npcDef &&
+          _npcDef.birthday &&
+          _dayInYear === _npcDef.birthday &&
+          !state.flags._npcBirthdayGreeted
+        ) {
+          state.flags._npcBirthdayGreeted = {};
+        }
+        var _isBirthday =
+          _npcDef && _npcDef.birthday && _dayInYear === _npcDef.birthday;
+
+        if (_isBirthday) {
+          // 生日特殊互动 — 不消耗常规消息
+          if (!state.flags._npcBirthdayGreeted[locData.npcId]) {
+            state.flags._npcBirthdayGreeted[locData.npcId] = true;
+            var _bdayMsg = _npcDef.birthdayLine || "今天是我生日！你居然记得？";
+            StateManager.addMessage(
+              "🎂 " + _npcDef.name + "：" + _bdayMsg,
+              "success",
+            );
+            // 赠送礼物检测（背包中有NPC喜欢的礼物品类）
+            var _giftFound = false;
+            if (
+              state.inventory &&
+              state.inventory.length > 0 &&
+              _npcDef.giftPrefers
+            ) {
+              for (var _gi = 0; _gi < state.inventory.length; _gi++) {
+                var _item = state.inventory[_gi];
+                if (_item && _npcDef.giftPrefers.indexOf(_item.category) >= 0) {
+                  _giftFound = true;
+                  state.inventory.splice(_gi, 1);
+                  break;
+                }
+              }
+            }
+            if (_giftFound) {
+              StateManager.addMessage(
+                "🎁 你送出了" +
+                  _npcDef.name +
+                  "喜欢的礼物，她/他非常开心！好感+10。",
+                "success",
+              );
+              rel.affinity = Math.min(100, rel.affinity + 10);
+            } else {
+              StateManager.addMessage(
+                "💬 你送上生日祝福，" + _npcDef.name + "很高兴。好感+5。",
+                "info",
+              );
+              rel.affinity = Math.min(100, rel.affinity + 5);
+            }
+            if (typeof tryRevealNpcInfo === "function") {
+              tryRevealNpcInfo(locData.npcId, state, "encounter");
+            }
+            return;
+          }
+        }
 
         var msg = Random.fromArray(locData.msgs);
         StateManager.addMessage("💬 " + msg, "info");
@@ -180658,40 +180955,23 @@
       }
 
       /**
-       * NPC好感事件检查 — 达到30/60/80阈值时触发一次关系进展消息
-       * 与 affinityRewards 分离：奖励负责实际福利，这里负责叙事链路和百科发现。
+       * NPC好感事件检查 — 达到30/60/80阈值时触发奖励和叙事消息
+       * 委托给 checkNpcAffinityRewards（skill_bonuses.js）使用正确的 affinityRewards 字段
        */
       function checkNpcAffinityEvents(state, onlyNpcId) {
         if (!state || !state.relationships) return;
         var npcsList = typeof NPCS !== "undefined" ? NPCS : state.NPCS || [];
         if (!npcsList || !npcsList.length) return;
         if (!state.flags) state.flags = {};
-        if (!state.flags._npcAffinityEventsSeen)
-          state.flags._npcAffinityEventsSeen = {};
 
         for (var ni = 0; ni < npcsList.length; ni++) {
           var npc = npcsList[ni];
           if (onlyNpcId && npc.id !== onlyNpcId) continue;
-          if (!npc.affinityEvents || !npc.affinityEvents.length) continue;
           var rel = state.relationships[npc.id];
           if (!rel || !rel.met) continue;
-          var affinity = rel.affinity || 0;
-
-          for (var ei = 0; ei < npc.affinityEvents.length; ei++) {
-            var evt = npc.affinityEvents[ei];
-            if (affinity < evt.threshold) continue;
-            if (state.flags._npcAffinityEventsSeen[evt.id]) continue;
-            state.flags._npcAffinityEventsSeen[evt.id] = true;
-
-            if (typeof evt.effect === "function") {
-              evt.effect(state, npc, rel);
-            } else if (evt.message) {
-              StateManager.addMessage(evt.message, "success");
-            }
-
-            if (typeof tryRevealNpcInfo === "function") {
-              tryRevealNpcInfo(npc.id, state, "affinity_up");
-            }
+          // [全系统自洽修复] 域D A类#2: checkNpcAffinityRewards 使用正确的 affinityRewards 字段
+          if (typeof checkNpcAffinityRewards === "function") {
+            checkNpcAffinityRewards(npc.id, state);
           }
         }
       }
@@ -180823,8 +181103,17 @@
           tryRevealNpcInfo(npcId, state, "chat");
         }
 
-        // 推送状态消息
-        var npcName = npcId.replace(/_/g, " ");
+        // [全系统自洽修复] 域D A类#2: chatWithNpc 显示中文名称而非英文ID
+        var npcName = "你";
+        if (typeof NPCS !== "undefined") {
+          var _nd = NPCS.find(function (n) {
+            return n.id === npcId;
+          });
+          if (_nd) npcName = _nd.name;
+          else npcName = npcId.replace(/_/g, " ");
+        } else {
+          npcName = npcId.replace(/_/g, " ");
+        }
         if (delta > 0) {
           StateManager.addMessage(
             "💬 你和 " + npcName + " " + message + "，好感 +" + delta + "。",

@@ -2279,6 +2279,81 @@ function renderInvestmentHoldingPanel(area, inv, groupKeys, title, color) {
   area.appendChild(panel);
 }
 
+// [全系统自洽修复] 域E 增强: 每日投资损益汇总计算
+function calculateDailyPL(state) {
+  var inv = state.investment;
+  var dailyPL = { stocks: 0, crypto: 0, precious: 0, futures: 0, total: 0 };
+  var holdings = inv.stockHoldings || [];
+  for (var i = 0; i < holdings.length; i++) {
+    var h = holdings[i];
+    var m = inv.stockMarket[h.symbol];
+    if (!m || !m.history || m.history.length < 2) continue;
+    var prevPrice = m.history[m.history.length - 2].price;
+    var change = (m.price - prevPrice) * h.shares;
+    var group = getInvestmentAssetGroup(h.symbol);
+    if (group === "stocks") dailyPL.stocks += change;
+    else if (group === "crypto") dailyPL.crypto += change;
+    else if (group === "precious") dailyPL.precious += change;
+    else if (group === "futures") dailyPL.futures += change;
+  }
+  dailyPL.total =
+    dailyPL.stocks + dailyPL.crypto + dailyPL.precious + dailyPL.futures;
+  return dailyPL;
+}
+
+// [全系统自洽修复] 域E 增强: 每日投资损益汇总UI面板
+function renderDailyPLPanel(state) {
+  var dailyPL = calculateDailyPL(state);
+  var total = dailyPL.total;
+  if (total === 0) return "";
+  var color = total >= 0 ? "var(--danger)" : "var(--success)";
+  var sign = total >= 0 ? "+" : "";
+  var parts = [];
+  if (dailyPL.stocks)
+    parts.push(
+      "股票" +
+        (dailyPL.stocks >= 0 ? "+" : "") +
+        Math.round(dailyPL.stocks).toLocaleString(),
+    );
+  if (dailyPL.crypto)
+    parts.push(
+      "虚拟币" +
+        (dailyPL.crypto >= 0 ? "+" : "") +
+        Math.round(dailyPL.crypto).toLocaleString(),
+    );
+  if (dailyPL.precious)
+    parts.push(
+      "贵金属" +
+        (dailyPL.precious >= 0 ? "+" : "") +
+        Math.round(dailyPL.precious).toLocaleString(),
+    );
+  if (dailyPL.futures)
+    parts.push(
+      "期货基金" +
+        (dailyPL.futures >= 0 ? "+" : "") +
+        Math.round(dailyPL.futures).toLocaleString(),
+    );
+  return (
+    '<div style="padding:6px 10px;margin-bottom:8px;background:rgba(255,255,255,0.04);border:1px solid ' +
+    color +
+    ';border-radius:6px;font-size:11px;display:flex;align-items:center;justify-content:space-between;">' +
+    "<span>📊 今日投资损益</span>" +
+    '<span style="font-weight:bold;color:' +
+    color +
+    ';">' +
+    sign +
+    "¥" +
+    Math.round(total).toLocaleString() +
+    "</span>" +
+    (parts.length > 0
+      ? '<span style="font-size:10px;color:var(--text-muted);">' +
+        parts.join(" · ") +
+        "</span>"
+      : "") +
+    "</div>"
+  );
+}
+
 // ============================================================
 //  投资主页面渲染
 // ============================================================
@@ -2320,6 +2395,7 @@ function renderInvestmentTab(state, parent) {
     summaryCard("房产", assetSnapshot.groups.properties) +
     summaryCard("汽车", assetSnapshot.groups.cars) +
     "</div>" +
+    renderDailyPLPanel(state) +
     renderNewsInvestmentDrivers(state) +
     renderMarketSentiment(state, inv) +
     '<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;font-size:10px;color:var(--text-muted);flex-wrap:wrap;">' +

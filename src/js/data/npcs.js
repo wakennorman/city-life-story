@@ -1172,6 +1172,13 @@ const NPCS = [
     ],
     // 新加：在场概率（半固定NPC）
     presenceChance: 0.75,
+    // v3.4 C3D-T1: NPC 每日活动日程
+    schedule: {
+      morning: "commercialDist",
+      afternoon: "commercialDist",
+      evening: "commercialDist",
+      night: "slum",
+    },
     // v3.1 ⑥：社会比较心理抓手（月薪，用于关系卡收入对比行）
     monthlyIncome: 9500,
     // 新加：地点触发专用对话
@@ -1411,6 +1418,13 @@ const NPCS = [
         multiplier: 1.08,
       },
     ],
+    // [全系统自洽修复] 域D A类#3: 老陈银行保安 — 补全 schedule 使位置偶遇系统可发现
+    schedule: {
+      morning: "bank",
+      afternoon: "bank",
+      evening: "bank",
+      night: "bank",
+    },
     affinityRewards: [
       {
         threshold: 30,
@@ -1554,6 +1568,13 @@ const NPCS = [
         price_level: { label: "服装价格水平", threshold: 30, cost: 40 },
         category_highest: { label: "哪买衣服最贵", threshold: 60, cost: 20 },
       },
+    },
+    // [全系统自洽修复] 域D A类#3: 吴姐 — 补全 schedule 使位置偶遇系统可发现
+    schedule: {
+      morning: "commercialDist",
+      afternoon: "commercialDist",
+      evening: "commercialDist",
+      night: "slum",
     },
     presenceBonus: [
       {
@@ -1713,6 +1734,13 @@ const NPCS = [
         price_level: { label: "配送员消费水平", threshold: 30, cost: 30 },
         category_lowest: { label: "哪吃饭最便宜", threshold: 60, cost: 15 },
       },
+    },
+    // [全系统自洽修复] 域D A类#3: 阿黄 — 补全 schedule 使位置偶遇系统可发现
+    schedule: {
+      morning: "commercialDist",
+      afternoon: "commercialDist",
+      evening: "commercialDist",
+      night: "slum",
     },
     presenceBonus: [
       {
@@ -2100,6 +2128,13 @@ const NPCS = [
         multiplier: 1.08,
       },
     ],
+    // [全系统自洽修复] 域D A类#3: 林阿姨 — 补全 schedule 使位置偶遇系统可发现
+    schedule: {
+      morning: "wholesaleMarket",
+      afternoon: "wholesaleMarket",
+      evening: "wholesaleMarket",
+      night: "slum",
+    },
     affinityRewards: [
       {
         threshold: 30,
@@ -2287,6 +2322,13 @@ const NPCS = [
         multiplier: 1.1,
       },
     ],
+    // [全系统自洽修复] 域D A类#3: 赵师傅 — 补全 schedule 使位置偶遇系统可发现
+    schedule: {
+      morning: "factoryZone",
+      afternoon: "factoryZone",
+      evening: "factoryZone",
+      night: "slum",
+    },
     affinityRewards: [
       {
         threshold: 30,
@@ -2473,6 +2515,13 @@ const NPCS = [
         multiplier: 1.1,
       },
     ],
+    // [全系统自洽修复] 域D A类#3: 小丽 — 补全 schedule 使位置偶遇系统可发现
+    schedule: {
+      morning: "techPark",
+      afternoon: "techPark",
+      evening: "entertainment",
+      night: "slum",
+    },
     affinityRewards: [
       {
         threshold: 30,
@@ -2653,6 +2702,13 @@ const NPCS = [
         multiplier: 1.1,
       },
     ],
+    // [全系统自洽修复] 域D A类#3: 王医生 — 补全 schedule 使位置偶遇系统可发现
+    schedule: {
+      morning: "hospital",
+      afternoon: "hospital",
+      evening: "hospital",
+      night: "hospital",
+    },
     affinityRewards: [
       {
         threshold: 30,

@@ -611,6 +611,63 @@ const LOCATION_NPC_MESSAGES = {
       "医院碰到王医生，他正跟家属交代注意事项。",
     ],
   },
+  // [全系统自洽修复] 域D A类#4: 补全 LOCATION_NPC_MESSAGES 缺失条目
+  bank: {
+    npcId: "uncle_chen_bank",
+    chance: 0.2,
+    minAffinity: 0,
+    msgs: [
+      "老陈站在银行门口，朝你点了点头。",
+      "老陈在银行柜台后整理文件，抬头看了你一眼。",
+    ],
+  },
+  commercialDist: {
+    npcId: "sister_wu",
+    chance: 0.15,
+    minAffinity: 0,
+    msgs: [
+      "吴姐在美容院门口晒太阳，看到你招手。",
+      "吴姐提着购物袋从商场出来，跟你打了声招呼。",
+    ],
+  },
+  wholesaleMarket: {
+    npcId: "auntie_lin",
+    chance: 0.25,
+    minAffinity: 0,
+    msgs: [
+      "林阿姨正在整理菜摊，看到你招手：'今天菜新鲜！'",
+      "林阿姨在称重，抽空抬头：'要买点什么？'",
+      "菜市场碰到林阿姨，她正跟顾客讲价。",
+    ],
+  },
+  factoryZone: {
+    npcId: "master_zhao",
+    chance: 0.2,
+    minAffinity: 0,
+    msgs: [
+      "赵师傅在修车，满身油污地抬头：'车有问题？'",
+      "赵师傅擦着手：'午休了，来喝口水。'",
+      "工业区路过赵师傅的铺子，听到里面传来工具声。",
+    ],
+  },
+  entertainment: {
+    npcId: "xiaoli",
+    chance: 0.2,
+    minAffinity: 0,
+    msgs: [
+      "小丽在咖啡厅直播，看到你挥手：'来当我的观众！'",
+      "小丽刚结束直播，笑着问：'今天拍什么内容好？'",
+    ],
+  },
+  slum: {
+    npcId: "brother_huang",
+    chance: 0.15,
+    minAffinity: 0,
+    msgs: [
+      "阿黄在城中村收发快递，看到你帮忙搬箱子。",
+      "阿黄坐在快递站门口抽烟，跟你闲聊了几句。",
+    ],
+  },
 };
 
 function rollLocationNpcInteraction(state, locationKey) {
@@ -1074,8 +1131,17 @@ function chatWithNpc(npcId, state) {
     tryRevealNpcInfo(npcId, state, "chat");
   }
 
-  // 推送状态消息
-  var npcName = npcId.replace(/_/g, " ");
+  // [全系统自洽修复] 域D A类#2: chatWithNpc 显示中文名称而非英文ID
+  var npcName = "你";
+  if (typeof NPCS !== "undefined") {
+    var _nd = NPCS.find(function (n) {
+      return n.id === npcId;
+    });
+    if (_nd) npcName = _nd.name;
+    else npcName = npcId.replace(/_/g, " ");
+  } else {
+    npcName = npcId.replace(/_/g, " ");
+  }
   if (delta > 0) {
     StateManager.addMessage(
       "💬 你和 " + npcName + " " + message + "，好感 +" + delta + "。",

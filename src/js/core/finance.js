@@ -120,9 +120,11 @@ function calculateStabilityMultiplier(state) {
 function calculateDTIPenalty(state, monthlyIncome) {
   if (monthlyIncome <= 0) return 0.05; // 无收入 → 接近拒贷
 
+  // [全系统自洽修复] 域E 修复:运算符优先级——+高于||，导致debt非零时bankDebt和villageDebt被静默忽略
   const totalDebt =
-    state.resources?.debt ||
-    0 + (state.resources?.bankDebt || 0) + (state.resources?.villageDebt || 0);
+    (state.resources?.debt || 0) +
+    (state.resources?.bankDebt || 0) +
+    (state.resources?.villageDebt || 0);
 
   const dtI = totalDebt / monthlyIncome;
 
