@@ -2764,110 +2764,16 @@ function renderActionsTab(state, parent) {
     }
   }
 
-  // 分离出行和其他行动
-  const travelActions = actions.filter((a) => a.id.startsWith("travel_"));
+  // 分离住所/仓储（出行已整合到城市地图）
   const housingActions = actions.filter(
     (a) => a.id.startsWith("housing_") || a.id.startsWith("storage_"),
   );
-  const otherActions = actions.filter(
+  const nonTravelActions = actions.filter(
     (a) =>
       !a.id.startsWith("travel_") &&
       !a.id.startsWith("housing_") &&
       !a.id.startsWith("storage_"),
   );
-
-  // === 🌍 出行区域（置顶，醒目） ===
-  if (travelActions.length > 0) {
-    const travelSection = document.createElement("div");
-    travelSection.style.cssText = "margin-bottom:16px;";
-    travelSection.innerHTML =
-      '<h3 style="color:var(--accent);margin-bottom:8px;font-size:14px;">🌍 出行 — 点击前往其他地点</h3>';
-
-    const travelGrid = document.createElement("div");
-    travelGrid.className = "action-cards";
-    travelGrid.style.gridTemplateColumns =
-      "repeat(auto-fill, minmax(180px, 1fr))";
-
-    for (const action of travelActions) {
-      const destKey = action.id.replace("travel_", "");
-      const dest =
-        typeof getLocation === "function" ? getLocation(destKey) : null;
-      const jobCount = dest ? (dest.jobs || []).length : 0;
-
-      // 服务标签
-      const badges =
-        typeof getLocationServiceBadges === "function"
-          ? getLocationServiceBadges(destKey)
-          : [];
-      const badgeStr =
-        badges.length > 0
-          ? badges
-              .map(
-                (b) =>
-                  '<span style="font-size:9px;padding:2px 5px;border-radius:3px;background:' +
-                  b.bg +
-                  ";color:" +
-                  b.color +
-                  ";border:1px solid " +
-                  b.color +
-                  ';">' +
-                  b.icon +
-                  " " +
-                  b.label +
-                  "</span>",
-              )
-              .join(" ")
-          : "";
-
-      // 检查该地点的最佳买卖机会
-      let tradeHint = "";
-      if (typeof GOODS !== "undefined" && state.trade.goodsPrices[destKey]) {
-        const opportunities = [];
-        for (const good of GOODS) {
-          const destPrice = state.trade.goodsPrices[destKey]?.[good.id];
-          const curPrice =
-            state.trade.goodsPrices[state.trade.currentLocation]?.[good.id];
-          if (destPrice && curPrice && destPrice > curPrice * 1.3) {
-            opportunities.push(good.name + "📈");
-          }
-        }
-        if (opportunities.length > 0)
-          tradeHint = "<br>🪩 可卖: " + opportunities.slice(0, 2).join(" ");
-      }
-
-      const card = document.createElement("div");
-      card.className = "action-card";
-      card.style.borderColor = "var(--accent)";
-      card.style.background =
-        "linear-gradient(135deg, var(--bg-card), rgba(0,180,216,0.05))";
-      card.innerHTML =
-        '<div style="display:flex;justify-content:space-between;align-items:center;">' +
-        '<div class="card-title" style="font-size:15px;color:var(--accent);">' +
-        (dest ? dest.name : destKey) +
-        "</div>" +
-        '<span style="font-size:10px;color:var(--text-muted);">🚶 前往 ⚡' +
-        (dest && dest.apCost ? dest.apCost : 1) +
-        "</span>" +
-        "</div>" +
-        '<div class="card-desc" style="font-size:11px;margin:4px 0;">' +
-        (dest ? dest.desc : "") +
-        (jobCount > 0 ? "<br>💼 " + jobCount + "种工作机会" : "") +
-        tradeHint +
-        "</div>" +
-        (badgeStr
-          ? '<div style="margin-top:6px;display:flex;flex-wrap:wrap;gap:3px;">' +
-            badgeStr +
-            "</div>"
-          : "");
-      card.addEventListener("click", () => {
-        action.handler();
-        renderAll();
-      });
-      travelGrid.appendChild(card);
-    }
-    travelSection.appendChild(travelGrid);
-    parent.appendChild(travelSection);
-  }
 
   // === 🏠 住所/仓储区域（醒目） ===
   if (housingActions.length > 0) {
@@ -2888,8 +2794,8 @@ function renderActionsTab(state, parent) {
   }
 
   // === 分类行动（地点感知重排） ===
-  if (otherActions.length > 0 && typeof ActionSort !== "undefined") {
-    var groups = ActionSort.groupActionsByCategory(otherActions, state);
+  if (nonTravelActions.length > 0 && typeof ActionSort !== "undefined") {
+    var groups = ActionSort.groupActionsByCategory(nonTravelActions, state);
     var locKey_cat = state.trade && state.trade.currentLocation;
     var cats =
       typeof ActionSort.getLocationCategories === "function"
@@ -2937,7 +2843,7 @@ function renderActionsTab(state, parent) {
       }
       parent.appendChild(catGrid);
     }
-  } else if (otherActions.length > 0) {
+  } else if (nonTravelActions.length > 0) {
     // 兜底：如果 ActionSort 未加载，保持旧平铺模式
     var fallbackLabel = document.createElement("h3");
     fallbackLabel.style.cssText =
@@ -2947,8 +2853,8 @@ function renderActionsTab(state, parent) {
 
     var fallbackCards = document.createElement("div");
     fallbackCards.className = "action-cards";
-    for (var _ak = 0; _ak < otherActions.length; _ak++) {
-      fallbackCards.appendChild(createActionCard(otherActions[_ak], state));
+    for (var _ak = 0; _ak < nonTravelActions.length; _ak++) {
+      fallbackCards.appendChild(createActionCard(nonTravelActions[_ak], state));
     }
     parent.appendChild(fallbackCards);
   }
