@@ -13,6 +13,7 @@ const NPCS = [
     id: "aunt_wang",
     name: "王大婶",
     role: "房东",
+    monthlyIncome: 8000,
     avatar: "images/avatars/aunt_wang.png",
     location: "slum",
     // v3.4 C3D-T1: NPC 每日活动日程（地点关联系统用）
@@ -481,6 +482,7 @@ const NPCS = [
     id: "sister_zhang",
     name: "张姐",
     role: "中介",
+    monthlyIncome: 12000,
     avatar: "images/avatars/zijie.png",
     location: "commercialDist",
     // v3.4 C3D-T1: NPC 每日活动日程
@@ -934,6 +936,7 @@ const NPCS = [
     id: "xiao_mei",
     name: "小美",
     role: "大学生",
+    monthlyIncome: 3000,
     avatar: "images/avatars/xiao_mei.png",
     location: "school",
     // v3.4 C3D-T1: NPC 每日活动日程
@@ -1377,6 +1380,7 @@ const NPCS = [
     id: "uncle_chen_bank",
     name: "老陈",
     role: "银行保安",
+    monthlyIncome: 4500,
     location: "bank",
     birthday: 200,
     desc: "银行门口站了八年的保安，见过形形色色的人。退休前在部队干过，说话直但心善。",
@@ -1526,6 +1530,7 @@ const NPCS = [
     id: "sister_wu",
     name: "吴姐",
     role: "美容院老板",
+    monthlyIncome: 15000,
     location: "commercialDist",
     birthday: 200,
     desc: "美容院老板娘，认识各种人，能介绍美容/时尚相关工作。",
@@ -1605,6 +1610,8 @@ const NPCS = [
           text: "💁 帮你牵线（需要认识富裕NPC）",
           apply: function (st) {
             st.flags._npcFavor_sister_wu = true;
+            if (!st.relationships.sister_wu)
+              st.relationships.sister_wu = { affinity: 0, met: true };
             st.relationships.sister_wu.affinity = Math.min(
               100,
               st.relationships.sister_wu.affinity + 12,
@@ -1616,6 +1623,8 @@ const NPCS = [
           text: "😅 我不认识这样的人",
           apply: function (st) {
             st.flags._npcFavor_sister_wu = true;
+            if (!st.relationships.sister_wu)
+              st.relationships.sister_wu = { affinity: 0, met: true };
             st.relationships.sister_wu.affinity = Math.max(
               -100,
               st.relationships.sister_wu.affinity - 3,
@@ -1635,6 +1644,8 @@ const NPCS = [
           hint: "好感+8，吴姐获得转型信心",
           apply: function (st) {
             st.flags._npcDeepTask_sister_wu = true;
+            if (!st.relationships.sister_wu)
+              st.relationships.sister_wu = { affinity: 0, met: true };
             st.relationships.sister_wu.affinity = Math.min(
               100,
               st.relationships.sister_wu.affinity + 8,
@@ -1648,6 +1659,8 @@ const NPCS = [
           hint: "好感+3，吴姐冷静下来",
           apply: function (st) {
             st.flags._npcDeepTask_sister_wu = true;
+            if (!st.relationships.sister_wu)
+              st.relationships.sister_wu = { affinity: 0, met: true };
             st.relationships.sister_wu.affinity = Math.min(
               100,
               st.relationships.sister_wu.affinity + 3,
@@ -1677,6 +1690,7 @@ const NPCS = [
     id: "brother_huang",
     name: "阿黄",
     role: "快递站长",
+    monthlyIncome: 9000,
     location: "commercialDist",
     birthday: 250,
     desc: "快递站点站长，管理几十个骑手，能介绍配送工作。",
@@ -1753,6 +1767,8 @@ const NPCS = [
             st.flags._npcFavor_brother_huang = true;
             st.resources.cash += 80 + Random.int(0, 40);
             st.needs.fatigue = Math.min(100, st.needs.fatigue + 15);
+            if (!st.relationships.brother_huang)
+              st.relationships.brother_huang = { affinity: 0, met: true };
             st.relationships.brother_huang.affinity = Math.min(
               100,
               st.relationships.brother_huang.affinity + 12,
@@ -1767,6 +1783,8 @@ const NPCS = [
           text: "😅 今天没空",
           apply: function (st) {
             st.flags._npcFavor_brother_huang = true;
+            if (!st.relationships.brother_huang)
+              st.relationships.brother_huang = { affinity: 0, met: true };
             st.relationships.brother_huang.affinity = Math.max(
               -100,
               st.relationships.brother_huang.affinity - 3,
@@ -1786,6 +1804,8 @@ const NPCS = [
           hint: "好感+5，阿黄分享想法",
           apply: function (st) {
             st.flags._npcDeepTask_brother_huang = true;
+            if (!st.relationships.brother_huang)
+              st.relationships.brother_huang = { affinity: 0, met: true };
             st.relationships.brother_huang.affinity = Math.min(
               100,
               st.relationships.brother_huang.affinity + 5,
@@ -1798,6 +1818,8 @@ const NPCS = [
           hint: "好感+3",
           apply: function (st) {
             st.flags._npcDeepTask_brother_huang = true;
+            if (!st.relationships.brother_huang)
+              st.relationships.brother_huang = { affinity: 0, met: true };
             st.relationships.brother_huang.affinity = Math.min(
               100,
               st.relationships.brother_huang.affinity + 3,
@@ -1827,6 +1849,7 @@ const NPCS = [
     id: "xiaochen",
     name: "小陈",
     role: "外卖骑手",
+    monthlyIncome: 7000,
     avatar: "images/avatars/xiaochen.png",
     location: "commercialDist",
     birthday: 180,
@@ -1931,6 +1954,8 @@ const NPCS = [
           apply: function (st) {
             st.flags._npcFavor_xiaochen = true;
             st.resources.cash += 40 + Random.int(0, 30);
+            if (!st.relationships.xiaochen)
+              st.relationships.xiaochen = { affinity: 0, met: true };
             st.relationships.xiaochen.affinity = Math.min(
               100,
               st.relationships.xiaochen.affinity + 10,
@@ -1947,6 +1972,8 @@ const NPCS = [
           text: "😅 我也忙",
           apply: function (st) {
             st.flags._npcFavor_xiaochen = true;
+            if (!st.relationships.xiaochen)
+              st.relationships.xiaochen = { affinity: 0, met: true };
             st.relationships.xiaochen.affinity = Math.max(
               -100,
               st.relationships.xiaochen.affinity - 3,
@@ -1969,6 +1996,8 @@ const NPCS = [
           hint: "好感+5",
           apply: function (st) {
             st.flags._npcDeepTask_xiaochen = true;
+            if (!st.relationships.xiaochen)
+              st.relationships.xiaochen = { affinity: 0, met: true };
             st.relationships.xiaochen.affinity = Math.min(
               100,
               st.relationships.xiaochen.affinity + 5,
@@ -1985,6 +2014,8 @@ const NPCS = [
           apply: function (st) {
             st.flags._npcDeepTask_xiaochen = true;
             st.resources.cash = Math.max(0, st.resources.cash - 500);
+            if (!st.relationships.xiaochen)
+              st.relationships.xiaochen = { affinity: 0, met: true };
             st.relationships.xiaochen.affinity = Math.min(
               100,
               st.relationships.xiaochen.affinity + 10,
@@ -2014,6 +2045,7 @@ const NPCS = [
     id: "auntie_lin",
     name: "林阿姨",
     role: "菜市场摊主",
+    monthlyIncome: 6000,
     avatar: "images/avatars/auntie_lin.png",
     location: "wholesaleMarket",
     birthday: 150,
@@ -2111,6 +2143,8 @@ const NPCS = [
           apply: function (st) {
             st.flags._npcFavor_auntie_lin = true;
             st.resources.cash += 50 + Random.int(0, 30);
+            if (!st.relationships.auntie_lin)
+              st.relationships.auntie_lin = { affinity: 0, met: true };
             st.relationships.auntie_lin.affinity = Math.min(
               100,
               st.relationships.auntie_lin.affinity + 12,
@@ -2125,6 +2159,8 @@ const NPCS = [
           text: "😅 今天没空",
           apply: function (st) {
             st.flags._npcFavor_auntie_lin = true;
+            if (!st.relationships.auntie_lin)
+              st.relationships.auntie_lin = { affinity: 0, met: true };
             st.relationships.auntie_lin.affinity = Math.max(
               -100,
               st.relationships.auntie_lin.affinity - 3,
@@ -2143,6 +2179,8 @@ const NPCS = [
           text: "💪 退休也好，享享福",
           hint: "好感+5",
           apply: function (st) {
+            if (!st.relationships.auntie_lin)
+              st.relationships.auntie_lin = { affinity: 0, met: true };
             st.relationships.auntie_lin.affinity = Math.min(
               100,
               st.relationships.auntie_lin.affinity + 5,
@@ -2157,6 +2195,8 @@ const NPCS = [
           text: "💰 可以传给儿子",
           hint: "好感+3",
           apply: function (st) {
+            if (!st.relationships.auntie_lin)
+              st.relationships.auntie_lin = { affinity: 0, met: true };
             st.relationships.auntie_lin.affinity = Math.min(
               100,
               st.relationships.auntie_lin.affinity + 3,
@@ -2171,6 +2211,8 @@ const NPCS = [
           text: "🤷 你自己决定",
           hint: "好感不变",
           apply: function (st) {
+            if (!st.relationships.auntie_lin)
+              st.relationships.auntie_lin = { affinity: 0, met: true };
             st.relationships.auntie_lin.affinity = Math.min(
               100,
               st.relationships.auntie_lin.affinity + 0,
@@ -2295,6 +2337,8 @@ const NPCS = [
             st.resources.cash += 60 + Random.int(0, 40);
             st.skills.repair = st.skills.repair || { level: 0, xp: 0 };
             st.skills.repair.xp += 20;
+            if (!st.relationships.master_zhao)
+              st.relationships.master_zhao = { affinity: 0, met: true };
             st.relationships.master_zhao.affinity = Math.min(
               100,
               st.relationships.master_zhao.affinity + 12,
@@ -2309,6 +2353,8 @@ const NPCS = [
           text: "😅 今天没空",
           apply: function (st) {
             st.flags._npcFavor_master_zhao = true;
+            if (!st.relationships.master_zhao)
+              st.relationships.master_zhao = { affinity: 0, met: true };
             st.relationships.master_zhao.affinity = Math.max(
               -100,
               st.relationships.master_zhao.affinity - 3,
@@ -2327,6 +2373,8 @@ const NPCS = [
           text: "💪 退休也好，享享福",
           hint: "好感+5",
           apply: function (st) {
+            if (!st.relationships.master_zhao)
+              st.relationships.master_zhao = { affinity: 0, met: true };
             st.relationships.master_zhao.affinity = Math.min(
               100,
               st.relationships.master_zhao.affinity + 5,
@@ -2341,6 +2389,8 @@ const NPCS = [
           text: "💰 可以传给儿子",
           hint: "好感+3",
           apply: function (st) {
+            if (!st.relationships.master_zhao)
+              st.relationships.master_zhao = { affinity: 0, met: true };
             st.relationships.master_zhao.affinity = Math.min(
               100,
               st.relationships.master_zhao.affinity + 3,
@@ -2368,6 +2418,7 @@ const NPCS = [
     id: "xiaoli",
     name: "小丽",
     role: "网红/主播",
+    monthlyIncome: 25000,
     avatar: "images/avatars/xiaoli.png",
     location: "techPark",
     birthday: 300,
@@ -2469,6 +2520,8 @@ const NPCS = [
           apply: function (st) {
             st.flags._npcFavor_xiaoli = true;
             st.resources.cash += 100 + Random.int(0, 50);
+            if (!st.relationships.xiaoli)
+              st.relationships.xiaoli = { affinity: 0, met: true };
             st.relationships.xiaoli.affinity = Math.min(
               100,
               st.relationships.xiaoli.affinity + 12,
@@ -2483,6 +2536,8 @@ const NPCS = [
           text: "😅 我不会这个",
           apply: function (st) {
             st.flags._npcFavor_xiaoli = true;
+            if (!st.relationships.xiaoli)
+              st.relationships.xiaoli = { affinity: 0, met: true };
             st.relationships.xiaoli.affinity = Math.max(
               -100,
               st.relationships.xiaoli.affinity - 3,
@@ -2501,6 +2556,8 @@ const NPCS = [
           text: "💪 转行做什么？",
           hint: "好感+5",
           apply: function (st) {
+            if (!st.relationships.xiaoli)
+              st.relationships.xiaoli = { affinity: 0, met: true };
             st.relationships.xiaoli.affinity = Math.min(
               100,
               st.relationships.xiaoli.affinity + 5,
@@ -2512,6 +2569,8 @@ const NPCS = [
           text: "⚠️ 先养好身体",
           hint: "好感+3",
           apply: function (st) {
+            if (!st.relationships.xiaoli)
+              st.relationships.xiaoli = { affinity: 0, met: true };
             st.relationships.xiaoli.affinity = Math.min(
               100,
               st.relationships.xiaoli.affinity + 3,
@@ -2641,6 +2700,8 @@ const NPCS = [
           apply: function (st) {
             st.flags._npcFavor_dr_wang = true;
             st.resources.cash -= 15;
+            if (!st.relationships.dr_wang)
+              st.relationships.dr_wang = { affinity: 0, met: true };
             st.relationships.dr_wang.affinity = Math.min(
               100,
               st.relationships.dr_wang.affinity + 8,
@@ -2655,6 +2716,8 @@ const NPCS = [
           text: "😅 我没带钱",
           apply: function (st) {
             st.flags._npcFavor_dr_wang = true;
+            if (!st.relationships.dr_wang)
+              st.relationships.dr_wang = { affinity: 0, met: true };
             st.relationships.dr_wang.affinity = Math.max(
               -100,
               st.relationships.dr_wang.affinity - 2,
@@ -2673,6 +2736,8 @@ const NPCS = [
           text: "💪 你是救死扶伤的英雄",
           hint: "好感+8",
           apply: function (st) {
+            if (!st.relationships.dr_wang)
+              st.relationships.dr_wang = { affinity: 0, met: true };
             st.relationships.dr_wang.affinity = Math.min(
               100,
               st.relationships.dr_wang.affinity + 8,
@@ -2685,6 +2750,8 @@ const NPCS = [
           text: "⚠️ 注意休息",
           hint: "好感+5",
           apply: function (st) {
+            if (!st.relationships.dr_wang)
+              st.relationships.dr_wang = { affinity: 0, met: true };
             st.relationships.dr_wang.affinity = Math.min(
               100,
               st.relationships.dr_wang.affinity + 5,
@@ -2712,6 +2779,7 @@ const NPCS = [
     id: "zhaojie",
     name: "赵姐",
     role: "房产中介",
+    monthlyIncome: 10000,
     avatar: "images/avatars/zhaojie.png",
     location: "commercialDist",
     schedule: {
@@ -2923,6 +2991,7 @@ const NPCS = [
     id: "chen_ge",
     name: "陈哥",
     role: "情报贩子",
+    monthlyIncome: 18000,
     avatar: "images/avatars/chen_ge.png",
     // [自洽修复] 原 location: "nightMarket" 不存在于 locations.js，改为 commercialDist
     location: "commercialDist",
@@ -3123,6 +3192,7 @@ const NPCS = [
     id: "ajie",
     name: "阿杰",
     role: "老同学",
+    monthlyIncome: 14000,
     avatar: "images/avatars/ajie.png",
     location: "random", // 随机出现
     schedule: {

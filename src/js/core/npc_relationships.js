@@ -278,7 +278,7 @@ function initNpcRelationships(state) {
   }
 }
 
-/** 每日NPC关系tick — 蝴蝶效应传播 */
+/** 每日NPC关系tick — 蝴蝶效应传播 + 好感衰减 */
 function tickNpcRelationships(state) {
   var day = state.player.day;
   if (!state.npcRelationshipLog) state.npcRelationshipLog = {};
@@ -291,6 +291,7 @@ function tickNpcRelationships(state) {
   var todayInteractions = state.npcRelationshipLog.dailyInteractions || {};
   var propagated = {};
 
+  // 1. 蝴蝶效应传播
   for (var npcId in todayInteractions) {
     var interaction = todayInteractions[npcId];
     var relationTargets = RELATION_PROPAGATION[npcId];
@@ -305,6 +306,49 @@ function tickNpcRelationships(state) {
     }
   }
   state.npcRelationshipLog.dailyInteractions = {};
+
+  // [全系统自洽修复] 域D 联动增强1: 好感衰减 — 7天无互动开始衰减
+  if (!state.npcRelationshipLog.decayDay)
+    state.npcRelationshipLog.decayDay = {};
+  for (var _npcId in state.relationships) {
+    var _rel = state.relationships[_npcId];
+    if (!_rel || !_rel.met || _rel.affinity <= 0) continue;
+    var _lastInteraction = _rel._lastInteractionDay || 0;
+    var _daysSinceLast = day - _lastInteraction;
+    // 7天无互动开始衰减，每7天-1，亲密NPC衰减慢
+    if (_daysSinceLast >= 7) {
+      var _decayRate = 0;
+      if (_rel.affinity >= 80)
+        _decayRate = 0.03; // 挚友 每7天-0.2
+      else if (_rel.affinity >= 60)
+        _decayRate = 0.05; // 好友 每7天-0.35
+      else if (_rel.affinity >= 30)
+        _decayRate = 0.08; // 熟人 每7天-0.56
+      else _decayRate = 0.12; // 初识 每7天-0.84
+      var _decay = _decayRate * Math.floor(_daysSinceLast / 7);
+      if (_decay > 0) {
+        var _oldAff = _rel.affinity;
+        _rel.affinity = Math.max(0, _rel.affinity - _decay);
+        _rel.affinity = Math.round(_rel.affinity * 10) / 10;
+        _rel._lastDecay = _decay;
+        // 衰减导致好感等级下降时发消息
+        var _oldLabel = getAffinityLabel(_oldAff);
+        var _newLabel = getAffinityLabel(_rel.affinity);
+        if (_oldLabel !== _newLabel && typeof StateManager !== "undefined") {
+          StateManager.addMessage(
+            "💔 你与" +
+              _npcId.replace(/_/g, " ") +
+              "的关系变淡了：" +
+              _oldLabel +
+              " → " +
+              _newLabel +
+              "。也许该去打个招呼了。",
+            "warning",
+          );
+        }
+      }
+    }
+  }
 }
 
 /** 记录玩家与NPC的互动 */
@@ -338,6 +382,10 @@ function applyAffinityChange(state, npcId, change, reason) {
   var newAffinity = Math.max(-100, Math.min(100, oldAffinity + change));
   state.relationships[npcId].affinity = newAffinity;
   state.relationships[npcId].met = true;
+  // [全系统自洽修复] 域D 联动增强1: 记录最近互动天数
+  if (state.player && state.player.day && change !== 0) {
+    state.relationships[npcId]._lastInteractionDay = state.player.day;
+  }
 
   if (change !== 0) {
     var oldLabel = getAffinityLabel(oldAffinity);

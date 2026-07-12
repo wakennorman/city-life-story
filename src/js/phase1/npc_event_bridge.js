@@ -652,6 +652,66 @@ function rollLocationNpcInteraction(state, locationKey) {
   var rel = state.relationships[locData.npcId];
   if (!rel || !rel.met || rel.affinity < locData.minAffinity) return;
 
+  // [全系统自洽修复] 域D 联动增强2: NPC生日自动祝贺
+  var _npcDef =
+    typeof getNpcById === "function" ? getNpcById(locData.npcId) : null;
+  var _dayInYear = (state.player.day || 1) % 365;
+  if (
+    _npcDef &&
+    _npcDef.birthday &&
+    _dayInYear === _npcDef.birthday &&
+    !state.flags._npcBirthdayGreeted
+  ) {
+    state.flags._npcBirthdayGreeted = {};
+  }
+  var _isBirthday =
+    _npcDef && _npcDef.birthday && _dayInYear === _npcDef.birthday;
+
+  if (_isBirthday) {
+    // 生日特殊互动 — 不消耗常规消息
+    if (!state.flags._npcBirthdayGreeted[locData.npcId]) {
+      state.flags._npcBirthdayGreeted[locData.npcId] = true;
+      var _bdayMsg = _npcDef.birthdayLine || "今天是我生日！你居然记得？";
+      StateManager.addMessage(
+        "🎂 " + _npcDef.name + "：" + _bdayMsg,
+        "success",
+      );
+      // 赠送礼物检测（背包中有NPC喜欢的礼物品类）
+      var _giftFound = false;
+      if (
+        state.inventory &&
+        state.inventory.length > 0 &&
+        _npcDef.giftPrefers
+      ) {
+        for (var _gi = 0; _gi < state.inventory.length; _gi++) {
+          var _item = state.inventory[_gi];
+          if (_item && _npcDef.giftPrefers.indexOf(_item.category) >= 0) {
+            _giftFound = true;
+            state.inventory.splice(_gi, 1);
+            break;
+          }
+        }
+      }
+      if (_giftFound) {
+        StateManager.addMessage(
+          "🎁 你送出了" + _npcDef.name + "喜欢的礼物，她/他非常开心！好感+10。",
+          "success",
+        );
+        rel.affinity = Math.min(100, rel.affinity + 10);
+      } else {
+        StateManager.addMessage(
+          "💬 你送上生日祝福，" + _npcDef.name + "很高兴。好感+5。",
+          "info",
+        );
+        rel.affinity = Math.min(100, rel.affinity + 5);
+      }
+      if (typeof tryRevealNpcInfo === "function") {
+        tryRevealNpcInfo(locData.npcId, state, "encounter");
+      }
+      return;
+    }
+  }
+
   var msg = Random.fromArray(locData.msgs);
   StateManager.addMessage("💬 " + msg, "info");
   // 每次偶遇好感+1（自动社交）
@@ -866,40 +926,23 @@ function checkNpcSkillUnlocks(state) {
 }
 
 /**
- * NPC好感事件检查 — 达到30/60/80阈值时触发一次关系进展消息
- * 与 affinityRewards 分离：奖励负责实际福利，这里负责叙事链路和百科发现。
+ * NPC好感事件检查 — 达到30/60/80阈值时触发奖励和叙事消息
+ * 委托给 checkNpcAffinityRewards（skill_bonuses.js）使用正确的 affinityRewards 字段
  */
 function checkNpcAffinityEvents(state, onlyNpcId) {
   if (!state || !state.relationships) return;
   var npcsList = typeof NPCS !== "undefined" ? NPCS : state.NPCS || [];
   if (!npcsList || !npcsList.length) return;
   if (!state.flags) state.flags = {};
-  if (!state.flags._npcAffinityEventsSeen)
-    state.flags._npcAffinityEventsSeen = {};
 
   for (var ni = 0; ni < npcsList.length; ni++) {
     var npc = npcsList[ni];
     if (onlyNpcId && npc.id !== onlyNpcId) continue;
-    if (!npc.affinityEvents || !npc.affinityEvents.length) continue;
     var rel = state.relationships[npc.id];
     if (!rel || !rel.met) continue;
-    var affinity = rel.affinity || 0;
-
-    for (var ei = 0; ei < npc.affinityEvents.length; ei++) {
-      var evt = npc.affinityEvents[ei];
-      if (affinity < evt.threshold) continue;
-      if (state.flags._npcAffinityEventsSeen[evt.id]) continue;
-      state.flags._npcAffinityEventsSeen[evt.id] = true;
-
-      if (typeof evt.effect === "function") {
-        evt.effect(state, npc, rel);
-      } else if (evt.message) {
-        StateManager.addMessage(evt.message, "success");
-      }
-
-      if (typeof tryRevealNpcInfo === "function") {
-        tryRevealNpcInfo(npc.id, state, "affinity_up");
-      }
+    // [全系统自洽修复] 域D A类#2: checkNpcAffinityRewards 使用正确的 affinityRewards 字段
+    if (typeof checkNpcAffinityRewards === "function") {
+      checkNpcAffinityRewards(npc.id, state);
     }
   }
 }

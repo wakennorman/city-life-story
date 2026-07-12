@@ -1373,8 +1373,9 @@ const DAILY_PIPELINE = [
   {
     name: "npc_relationships_tick",
     fn: function (state) {
-      if (typeof npcRelationshipsTick === "function") {
-        npcRelationshipsTick(state);
+      // [全系统自洽修复] 域D A类#1: npcRelationshipsTick 不存在，修正为 tickNpcRelationships
+      if (typeof tickNpcRelationships === "function") {
+        tickNpcRelationships(state);
       }
     },
   },
