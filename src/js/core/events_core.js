@@ -422,7 +422,12 @@ function showEventModal(evt) {
   document.querySelector(".modal-overlay")?.remove();
 
   // 保护：evt 为 null/undefined 时静默返回
-  if (!evt || !evt.choices) {
+  // 防御空 choices 数组（否则弹窗无按钮，游戏永久卡死）
+  if (
+    !evt ||
+    !evt.choices ||
+    (Array.isArray(evt.choices) && evt.choices.length === 0)
+  ) {
     var s = StateManager.getState();
     s._pendingEvent = null;
     s._pendingEventId = null;
@@ -693,8 +698,9 @@ function checkChainEventQueue(state, phase) {
     if (entry.phase !== phase) continue;
     if (state.player.day < entry.triggerDay) continue;
 
-    // 从队列移除该事件
+    // 从队列移除该事件，i-- 防止跳过下一个元素
     queue.splice(i, 1);
+    i--;
 
     // 在 RANDOM_EVENTS 中查找对应事件
     for (var j = 0; j < RANDOM_EVENTS.length; j++) {

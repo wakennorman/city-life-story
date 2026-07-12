@@ -1061,7 +1061,7 @@ function triggerStartupEvent(state) {
   // 筛选可用事件
   const candidates = ALL_STARTUP_EVENTS.filter((evt) => {
     // 阶段匹配
-    if (evt.stage !== stage && evt.stage !== "seed") return false;
+    if (evt.stage !== stage) return false;
     // 行业匹配
     if (evt.industries[0] !== "*" && !evt.industries.includes(industry))
       return false;

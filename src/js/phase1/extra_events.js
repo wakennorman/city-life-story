@@ -256,6 +256,7 @@
         return (
           st.relationships &&
           st.relationships.aunt_wang &&
+          st.relationships.aunt_wang.met === true &&
           st.relationships.aunt_wang.affinity >= 30 &&
           (st.housing.tier || 0) >= 1
         );
@@ -313,6 +314,7 @@
         return (
           st.relationships &&
           st.relationships.boss_li &&
+          st.relationships.boss_li.met === true &&
           st.relationships.boss_li.affinity >= 40 &&
           st.trade &&
           st.trade.currentLocation === "construction"
@@ -323,7 +325,8 @@
           text: "💪 干！私活赚钱多",
           hint: "收入高但无保障",
           apply: function (st) {
-            st.resources.cash += Random.int(300, 399);
+            var pay = Random.int(300, 399);
+            st.resources.cash += pay;
             st.needs.fatigue = Math.min(100, st.needs.fatigue + 25);
             if (Random.chance(0.1)) {
               st.flags._everInjured = true;
@@ -333,9 +336,7 @@
               );
             } else {
               StateManager.addMessage(
-                "🔨 你和李工头干了两天私活，分到了¥" +
-                  Random.int(300, 399) +
-                  "！",
+                "🔨 你和李工头干了两天私活，分到了¥" + pay + "！",
                 "success",
               );
             }
@@ -369,6 +370,7 @@
         return (
           st.relationships &&
           st.relationships.sister_zhang &&
+          st.relationships.sister_zhang.met === true &&
           st.relationships.sister_zhang.affinity >= 35 &&
           st.trade &&
           st.trade.currentLocation === "commercialDist"
@@ -417,6 +419,7 @@
         return (
           st.relationships &&
           st.relationships.old_zhou &&
+          st.relationships.old_zhou.met === true &&
           st.relationships.old_zhou.affinity >= 30 &&
           st.trade &&
           st.trade.currentLocation === "slum"
@@ -468,6 +471,7 @@
         return (
           st.relationships &&
           st.relationships.chef_chen &&
+          st.relationships.chef_chen.met === true &&
           st.relationships.chef_chen.affinity >= 30
         );
       },
@@ -589,6 +593,7 @@
           cost: 500,
           apply: function (st) {
             st.resources.debt = Math.max(0, (st.resources.debt || 0) - 500);
+            st.resources.cash -= 500;
             StateManager.addMessage(
               "💸 你给了¥500先缓一缓，催债人暂时离开了。",
               "info",
@@ -804,6 +809,7 @@
               "🚓 警察备了案，但找回希望渺茫。你赶紧补办了手机卡，花了¥200。",
               "info",
             );
+            st.resources.cash -= 200;
           },
         },
         {
@@ -833,6 +839,7 @@
               "💸 你在二手市场淘了个同款手机。虽然心疼钱，但好歹有手机用了。",
               "info",
             );
+            st.resources.cash -= 500;
           },
         },
       ],
@@ -1054,6 +1061,7 @@
           hint: "做好人，可能收不回",
           cost: 500,
           apply: function (st) {
+            st.resources.cash -= 500;
             var repaid = Random.chance(0.4);
             if (repaid) {
               st.resources.cash += 600;
@@ -1074,6 +1082,7 @@
           hint: "大数目，高风险",
           cost: 2000,
           apply: function (st) {
+            st.resources.cash -= 2000;
             var repaid = Random.chance(0.25);
             if (repaid) {
               st.resources.cash += 2500;
@@ -1131,6 +1140,7 @@
           apply: function (st) {
             st.needs.hunger = Math.min(100, (st.needs.hunger || 0) + 15);
             st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 8);
+            st.resources.cash -= 50;
             StateManager.addMessage(
               "🍖 你送了阿姨一箱牛奶。她笑得合不拢嘴：「这孩子懂事！」",
               "success",

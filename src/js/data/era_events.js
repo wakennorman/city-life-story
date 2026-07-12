@@ -80,7 +80,14 @@ const ERA_EVENTS = [
       "某个新兴行业突然火爆——短视频/直播/新能源。新闻里全是「风口」「蓝海」「十万加」。\n张姐来找你：「听说你在找工作？我这边有个风口行业的活，日薪¥300，要不要试试？」",
     phase: "street",
     conditions: function (st) {
-      return st.player && st.player.day >= 180 && !st.flags._eraEvent_180;
+      return (
+        st.player &&
+        st.player.day >= 180 &&
+        !st.flags._eraEvent_180 &&
+        st.relationships &&
+        st.relationships.sister_zhang &&
+        st.relationships.sister_zhang.met === true
+      );
     },
     choices: [
       {
@@ -134,7 +141,14 @@ const ERA_EVENTS = [
       "通胀开始显现。房租涨了10%，菜价涨了8%。\n王大婶来找你：「孩子，房租得涨涨了，这年头啥都贵。下个月开始¥350一天，行不？」",
     phase: "street",
     conditions: function (st) {
-      return st.player && st.player.day >= 270 && !st.flags._eraEvent_270;
+      return (
+        st.player &&
+        st.player.day >= 270 &&
+        !st.flags._eraEvent_270 &&
+        st.relationships &&
+        st.relationships.aunt_wang &&
+        st.relationships.aunt_wang.met === true
+      );
     },
     choices: [
       {
@@ -261,7 +275,14 @@ const ERA_EVENTS = [
       "某些行业开始整合。小公司倒闭，大公司收购。\n李工头告诉你：「工地那边活少了，老板说项目被大公司接走了。你最近有别的活吗？」",
     phase: "street",
     conditions: function (st) {
-      return st.player && st.player.day >= 450 && !st.flags._eraEvent_450;
+      return (
+        st.player &&
+        st.player.day >= 450 &&
+        !st.flags._eraEvent_450 &&
+        st.relationships &&
+        st.relationships.boss_li &&
+        st.relationships.boss_li.met === true
+      );
     },
     choices: [
       {
@@ -312,7 +333,14 @@ const ERA_EVENTS = [
       "城里人开始追求品质生活。高端消费场所增多，但普通人的日子也没变差。\n小美兴奋地说：「我学姐开了家精品咖啡馆，说是要打造城市生活新体验！」",
     phase: "street",
     conditions: function (st) {
-      return st.player && st.player.day >= 540 && !st.flags._eraEvent_540;
+      return (
+        st.player &&
+        st.player.day >= 540 &&
+        !st.flags._eraEvent_540 &&
+        st.relationships &&
+        st.relationships.xiao_mei &&
+        st.relationships.xiao_mei.met === true
+      );
     },
     choices: [
       {
@@ -368,7 +396,14 @@ const ERA_EVENTS = [
       "两年了。你开始思考：是继续打工，还是自己单干？\n城市给了你机会，也给了你压力。老周说：「我干了这么多年，攒了点钱。你说，我是不是也该自己干点什么？」",
     phase: "street",
     conditions: function (st) {
-      return st.player && st.player.day >= 720 && !st.flags._eraEvent_720;
+      return (
+        st.player &&
+        st.player.day >= 720 &&
+        !st.flags._eraEvent_720 &&
+        st.relationships &&
+        st.relationships.old_zhou &&
+        st.relationships.old_zhou.met === true
+      );
     },
     choices: [
       {
@@ -427,7 +462,14 @@ const ERA_EVENTS = [
       "三年。这座城市已经把你塑造成了另一个人。\n你开始有能力影响周围的人。张姐说：「你这两年变化真大，现在好多人都找你咨询怎么在这座城市立足。」",
     phase: "street",
     conditions: function (st) {
-      return st.player && st.player.day >= 900 && !st.flags._eraEvent_900;
+      return (
+        st.player &&
+        st.player.day >= 900 &&
+        !st.flags._eraEvent_900 &&
+        st.relationships &&
+        st.relationships.sister_zhang &&
+        st.relationships.sister_zhang.met === true
+      );
     },
     choices: [
       {
@@ -475,3 +517,28 @@ const ERA_EVENTS = [
 if (typeof window !== "undefined") {
   window.ERA_EVENTS = ERA_EVENTS;
 }
+
+// [全系统自洽修复] 域B 修复: 将时代事件注入 RANDOM_EVENTS
+// era_transform.js 使用 scheduleChainEvent 调度这些事件，但 checkChainEventQueue
+// 只在 RANDOM_EVENTS 中查找 → 如果不注入，8个时代事件永远找不到，成为死代码
+// 标记 _isChainEvent:true 防止被 queueRandomEvent 随机抽取（仅通过链式触发）
+(function () {
+  if (typeof RANDOM_EVENTS === "undefined") return;
+  if (RANDOM_EVENTS._eraEventsLoaded) return;
+  RANDOM_EVENTS._eraEventsLoaded = true;
+  for (var i = 0; i < ERA_EVENTS.length; i++) {
+    var e = ERA_EVENTS[i];
+    RANDOM_EVENTS.push({
+      id: e.id,
+      phase: e.phase || "street",
+      icon: e.icon || "📈",
+      title: e.title,
+      story: e.story,
+      conditions: e.conditions,
+      choices: e.choices,
+      probability: 0,
+      repeatable: false,
+      _isChainEvent: true,
+    });
+  }
+})();

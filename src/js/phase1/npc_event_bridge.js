@@ -124,6 +124,10 @@ const EVENT_NPC_MAP = {
     npcs: {
       old_zhou: { change: 1, msg: "老周听说你进到便宜货：'会过日子！'" },
       sister_zhang: { change: 1, msg: "张姐点头：'进价低就是赚，有眼光。'" },
+      auntie_lin: {
+        change: 2,
+        msg: "林阿姨笑着说：'会砍价是好习惯，买菜也得有技巧。'",
+      },
     },
   },
   sick_desperate: {
@@ -169,18 +173,14 @@ const EVENT_NPC_MAP = {
         change: 3,
         msg: "陈师傅拉你坐下：'心里有事就说出来，别憋着。'",
       },
+      dr_wang: {
+        change: 3,
+        msg: "王医生严肃地说：'身体是革命的本钱，别硬撑。'",
+      },
     },
   },
   // === 新 NPC 事件桥接（v2.1）===
   // 林阿姨相关事件
-  wholesale_bargain: {
-    npcs: {
-      auntie_lin: {
-        change: 2,
-        msg: "林阿姨笑着说：'会砍价是好习惯，买菜也得有技巧。'",
-      },
-    },
-  },
   veggie_fresh_find: {
     npcs: {
       auntie_lin: {
@@ -237,14 +237,6 @@ const EVENT_NPC_MAP = {
       dr_wang: {
         change: 3,
         msg: "王医生欣慰地说：'恢复得不错，按时吃药记得。'",
-      },
-    },
-  },
-  mental_breakdown_edge: {
-    npcs: {
-      dr_wang: {
-        change: 3,
-        msg: "王医生严肃地说：'身体是革命的本钱，别硬撑。'",
       },
     },
   },
@@ -944,8 +936,8 @@ function runDailyNpcBridge(state) {
  */
 function chatWithNpc(npcId, state) {
   if (!state || !npcId) return;
-  if (!state.npcRelationships) state.npcRelationships = {};
-  var rel = state.npcRelationships[npcId];
+  if (!state.relationships) state.relationships = {};
+  var rel = state.relationships[npcId];
   if (!rel) {
     StateManager.addMessage("你还不认识这个人。", "warning");
     return;

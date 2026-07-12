@@ -40,8 +40,7 @@
           st.player.phase === "corporate" &&
           cols.length > 0 &&
           st.player.day >= 60 &&
-          !st.flags._blameSeen &&
-          Random.chance(0.02)
+          !st.flags._blameSeen
         );
       },
       probability: 0.03,
@@ -158,8 +157,7 @@
           st.player.phase === "corporate" &&
           cols.length > 0 &&
           st.player.day >= 120 &&
-          !st.flags._mentorRequestSeen &&
-          Random.chance(0.015)
+          !st.flags._mentorRequestSeen
         );
       },
       probability: 0.02,
@@ -239,8 +237,7 @@
           st.player.phase === "corporate" &&
           st.player.day >= 150 &&
           (logs.length > 0 || st.player.day >= 200) &&
-          !st.flags._gossipBacklashSeen &&
-          Random.chance(0.015)
+          !st.flags._gossipBacklashSeen
         );
       },
       probability: 0.02,
@@ -315,8 +312,7 @@
           st.player.phase === "corporate" &&
           cols.length > 0 &&
           st.player.day >= 90 &&
-          !st.flags._teamBuildingSeen &&
-          Random.chance(0.02)
+          !st.flags._teamBuildingSeen
         );
       },
       probability: 0.02,
@@ -400,8 +396,7 @@
           st.player.phase === "corporate" &&
           cols.length > 0 &&
           st.player.day >= 120 &&
-          !st.flags._creditStealingSeen &&
-          Random.chance(0.015)
+          !st.flags._creditStealingSeen
         );
       },
       probability: 0.02,

@@ -27,6 +27,7 @@
     id: "side_daigou_referral",
     phase: "street",
     icon: "🤝",
+    _isChainEvent: true,
     title: "老客户推荐了新客",
     story:
       "一周前你全额退款的那位客户，今天发来微信：\n「我朋友也想代购，我把你推荐给她了，说你靠谱。」\n新客户直接发来了购物清单，金额还不小。",
@@ -73,6 +74,7 @@
     id: "side_tutor_recruit",
     phase: "street",
     icon: "🎓",
+    _isChainEvent: true,
     title: "教育机构找上门",
     story:
       "那个学生的家长是某培训机构的主管。她托话过来：\n「你的游戏教法很新颖，我们暑期班缺老师，一节课¥200，每周 3 节，来试试吗？」\n这比家教收入低一点，但胜在稳定、体面。",

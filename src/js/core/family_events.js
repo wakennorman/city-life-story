@@ -430,7 +430,7 @@
               id: "family_dividend",
               name: "回报家人",
               desc: "公司盈利后给家人发第一笔分红",
-              date: st.day,
+              date: st.player.day,
             });
             StateManager.addMessage(
               "💰 你给老家转了¥20,000，给父母买了辆五菱宏光。爸在电话那头声音有点抖：你小子，终于熬出来了。心情+10，道德+5。",

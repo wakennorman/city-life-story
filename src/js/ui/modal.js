@@ -4,8 +4,27 @@
  * 从 main.js 提取，管理所有弹窗：showModal、存档菜单、银行操作、面试等。
  */
 
-// ====== 模态对话框 ======
-function showModal({ title, body, buttons = [] }) {
+// ====== 兼容旧式 showModal(title, desc, buttons) 签名 ======
+function showModal() {
+  var args = arguments;
+  // 旧式: showModal(title, desc, buttons) — 3个字符串/数组参数
+  if (
+    args.length >= 2 &&
+    typeof args[0] === "string" &&
+    typeof args[1] === "string"
+  ) {
+    return showModalImpl({
+      title: args[0],
+      body: '<p style="line-height:1.7;">' + args[1] + "</p>",
+      buttons: Array.isArray(args[2]) ? args[2] : [],
+    });
+  }
+  // 新式: showModal({ title, body, buttons })
+  return showModalImpl(args[0] || {});
+}
+
+// ====== 模态对话框实现 ======
+function showModalImpl({ title, body, buttons = [] }) {
   // 先清理旧的 modal-overlay，避免叠加
   const oldOverlay = document.querySelector(".modal-overlay");
   if (oldOverlay) {

@@ -2233,6 +2233,7 @@
             st.flags._insiderReportSeen = true;
             st.flags._insiderTraded = st.player.day;
             st.player.mental = Math.max(0, (st.player.mental || 50) - 5);
+            st.resources.cash = Math.max(0, (st.resources.cash || 0) - 500000);
             StateManager.addMessage(
               "📈 你下单买了¥500,000自己公司的股票。手在抖——你知道这是违法的。",
               "warning",
