@@ -116,8 +116,10 @@ body {
   grid-template-areas:
     "header header"
     "sidebar main";
-  height: 100vh;
+  height: 100vh; /* 回退：旧浏览器 */
+  height: 100dvh; /* [全系统自洽修复] 域F 修复:移动端地址栏/底栏遮挡致底部截断→动态视口高度 */
   max-height: 100vh;
+  max-height: 100dvh;
 }
 
 /* ====== Header ====== */
@@ -553,6 +555,14 @@ body {
   overflow: hidden;
   background: var(--bg-primary);
   border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+/* [全系统自洽修复] 域F 修复:刘海/状态栏安全区→顶部导航不被遮挡(移动端不可达/截断) */
+#tab-bar {
+  padding-top: max(0px, env(safe-area-inset-top));
+}
+#mobile-hud {
+  padding-top: max(0px, env(safe-area-inset-top));
 }
 
 /* --- Time Slot Indicator --- */
@@ -5392,6 +5402,7 @@ body {
     position: fixed;
     bottom: 0;
     left: 0;
+    padding-bottom: max(12px, env(safe-area-inset-bottom)); /* [全系统自洽修复] 域F 修复:底部Home指示条安全区 */
   }
   .world-news-overlay {
     align-items: flex-end;

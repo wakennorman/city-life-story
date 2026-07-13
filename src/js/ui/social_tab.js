@@ -23,6 +23,21 @@ function renderNpcRelationships(state, content) {
     "💡 对某个NPC的好感变化会通过关系网传导给其他人。关系越紧密，传导越强。";
   html += "</p>";
 
+  // [全系统自洽修复] 域F 联动:圈子归属感概览(桥接R8 D域机制→UI化,全守卫)
+  var _met = 0, _close = 0, _sum = 0;
+  for (var _k = 0; _k < npcIds.length; _k++) {
+    var _rel = state.relationships[npcIds[_k]];
+    if (_rel && _rel.met && (_rel.affinity || 0) >= 0) {
+      _met++; _sum += (_rel.affinity || 0);
+      if ((_rel.affinity || 0) >= 30) _close++;
+    }
+  }
+  var _avg = _met ? Math.round(_sum / _met) : 0;
+  html += '<p style="font-size:12px;color:var(--accent);margin:2px 0 12px;">🏘️ 已结识 ' + _met + ' 位 · 熟络 ' + _close + ' 位(好感≥30) · 平均好感 ' + _avg;
+  if (_close >= 3) html += ' · 圈子归属感已激活✨(每日+心情)';
+  else html += ' · 再熟络 ' + (3 - _close) + ' 位即可激活圈子归属感';
+  html += '</p>';
+
   // NPC关系卡片
   html += '<div style="display:flex;flex-wrap:wrap;gap:8px;">';
 
