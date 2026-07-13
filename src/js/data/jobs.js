@@ -836,8 +836,10 @@ const STREET_JOBS = [
       requirements: { hygiene: 30, minAge: 20, maxAge: 55 },
       effects: { fatigue: 18, hygiene: 5, happiness: 3, physiqueXp: 1 },
       payCalc(state) {
+        // [域A 修复] hygiene 真实路径为 state.needs.hygiene (非 state.player.hygiene)，
+        // 原写法恒为 undefined → ||0 吸收 → 清洁度加成永远为 0。
         return Math.floor(
-          80 + Random.float(0, 40) + (state.player.hygiene || 0) * 0.3,
+          80 + Random.float(0, 40) + (state.needs.hygiene || 0) * 0.3,
         );
       },
       risk: {},

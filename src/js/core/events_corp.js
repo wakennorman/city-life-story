@@ -430,7 +430,7 @@
           text: "💬 提议平摊工作量",
           hint: "考验管理能力",
           apply: (st) => {
-            if (st.corporate.team.length > 0) {
+            if (st.corporateorate.team.length > 0) {
               st.player.corporate.popularity = Math.min(
                 100,
                 st.player.corporate.popularity + 4,
@@ -646,7 +646,7 @@
                   Math.max(1, st.player.corpYear * 4)) *
                   1.5,
               );
-              st.corporate.jobOffer = { salary: offer, company: "新公司" };
+              st.corporateorate.jobOffer = { salary: offer, company: "新公司" };
               st.needs.happiness = Math.min(100, st.needs.happiness + 10);
               st.player.corporate.upwardMgmt = Math.max(
                 0,
@@ -1403,13 +1403,13 @@
       conditions: function (st) {
         var lvOk =
           st.player.phase === "corporate" &&
-          st.corp &&
-          st.corp.level &&
-          st.corp.level >= 7;
+          st.corporate &&
+          st.corporate.level &&
+          st.corporate.level >= 7;
         // 模拟"接受过 VC 投资"：玩家有公司股份或高 KPI 期间发生
         var vcCond =
           !!st.flags._acceptedVCFunding ||
-          (st.corp &&
+          (st.corporate &&
             (st.player.corporate.kpi || 0) > 70 &&
             st.player.day > 200);
         return lvOk && vcCond && !st.flags._founderOustSeen;
@@ -1686,9 +1686,9 @@
       story:
         "公司上下弥漫着不安的气氛。茶水间的讨论从'Q3目标'变成了'要不要开始刷简历'。你收到了HR的约谈通知——公司现金流紧张，正在评估各部门的去留。你在这里干了这么久，现在走还是留？",
       conditions: function (st) {
-        if (st.player.phase !== "corporate" || !st.corporate.company)
+        if (st.player.phase !== "corporate" || !st.corporateorate.company)
           return false;
-        var cid = st.corporate.company.id;
+        var cid = st.corporateorate.company.id;
         var co =
           st.enterpriseFate &&
           st.enterpriseFate.companies &&
@@ -2105,9 +2105,9 @@
               "🚀 你跳槽了！新公司薪资高40%，职位也提升了。但一切从零开始，风险也不小。",
               "success",
             );
-            if (st.corporate) {
-              st.corporate.team = [];
-              st.corporate.jobOffer = null;
+            if (st.corporateorate) {
+              st.corporateorate.team = [];
+              st.corporateorate.jobOffer = null;
             }
           },
         },
@@ -2176,8 +2176,8 @@
             );
             st.needs.happiness = Math.min(100, st.needs.happiness + 8);
             st.player.corporate.risk = 15;
-            if (st.corporate) {
-              st.corporate.team = [];
+            if (st.corporateorate) {
+              st.corporateorate.team = [];
             }
             StateManager.addMessage(
               "🚀 你接受了猎头offer！高薪新起点，但一切从零开始。",
@@ -2219,8 +2219,8 @@
       conditions: function (st) {
         return (
           st.player.phase === "corporate" &&
-          st.corp &&
-          st.corp.level >= 6 &&
+          st.corporate &&
+          st.corporate.level >= 6 &&
           !st.flags._insiderReportSeen
         );
       },
@@ -2390,8 +2390,8 @@
       conditions: function (st) {
         return (
           st.player.phase === "corporate" &&
-          st.corp &&
-          st.corp.level >= 5 &&
+          st.corporate &&
+          st.corporate.level >= 5 &&
           !st.flags._careerSetupSeen
         );
       },
@@ -2584,7 +2584,7 @@
           hint: "升职机会",
           apply: function (st) {
             st.flags._careerEvidencePayoffSeen = true;
-            st.corp.level = Math.min(10, (st.corp.level || 5) + 1);
+            st.corporate.level = Math.min(10, (st.corporate.level || 5) + 1);
             st.player.corporate.kpi = Math.min(
               100,
               (st.player.corporate.kpi || 50) + 10,

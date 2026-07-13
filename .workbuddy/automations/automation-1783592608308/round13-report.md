@@ -6,10 +6,10 @@
 
 均为「对可能为空对象未函数内判空的直接解引用」——`startup.company` 在 `status==="none"` 时为 `null`，若被独立入口调用即抛 TypeError。
 
-| 文件 | 位置 | 修复 |
-|---|---|---|
-| `src/js/phase2/startup_crisis.js` | `showCrisisModal` (397) | `const company = state.startup.company;` 后补 `if (!company) return;` |
-| `src/js/phase2/startup_crisis.js` | `applyCrisisChoice` (474-475) | `const company = startup.company;` 后补 `if (!company) return;` |
+| 文件                              | 位置                          | 修复                                                                  |
+| --------------------------------- | ----------------------------- | --------------------------------------------------------------------- |
+| `src/js/phase2/startup_crisis.js` | `showCrisisModal` (397)       | `const company = state.startup.company;` 后补 `if (!company) return;` |
+| `src/js/phase2/startup_crisis.js` | `applyCrisisChoice` (474-475) | `const company = startup.company;` 后补 `if (!company) return;`       |
 
 > 用 `guard_check.py` 对 phase2/* + company_spawner/enterprise_fate/events_corp 共 **18 文件**批量扫描，确认域内其余 `startup.company.X` 直接解引用**均已由上游短路守卫**；此 2 处为「本函数内未判空、依赖调用链上游守卫」的仅存隐患，已补自防御。
 
@@ -17,11 +17,11 @@
 
 IIFE 注入全局 `RANDOM_EVENTS`，全字段 `||` 防御，数值标 `[PLACEHOLDER]`，统一 `phase:"corporate"`（创业子系统在 `corporate` 阶段被创立，`startup.js:89` 要求 `player.phase==="corporate"`），并以 `conditions` 守卫 `st.startup.company` 存在：
 
-| 事件 | 桥接 | 触发条件 | 效果 |
-|---|---|---|---|
-| `startup_friend_support` | H→D（社交/NPC） | 公司存续 + 已结识好感≥20 的 NPC + 冷却 flag | 约挚友倾诉 `safeAffinity`+5·心智+6·心情+4 / 独自硬扛 心智-2 |
-| `startup_wealth_milestone` | H→E（经济/投资） | 估值首破 [PLACEHOLDER]¥100万 + 未触发 | 划 [PLACEHOLDER]¥5万入投资银行户·置 `_startupInvestorMindset` / 再投回估值×1.05 |
-| `startup_career_legacy` | H→C（职业/成长） | 公司存续 + 职场声誉 `upward`≥[PLACEHOLDER]40 + 未触发 | 前同事人脉拉客户 估值×1.08·`upward`+5 / 独立开拓 |
+| 事件                       | 桥接             | 触发条件                                              | 效果                                                                            |
+| -------------------------- | ---------------- | ----------------------------------------------------- | ------------------------------------------------------------------------------- |
+| `startup_friend_support`   | H→D（社交/NPC）  | 公司存续 + 已结识好感≥20 的 NPC + 冷却 flag           | 约挚友倾诉 `safeAffinity`+5·心智+6·心情+4 / 独自硬扛 心智-2                     |
+| `startup_wealth_milestone` | H→E（经济/投资） | 估值首破 [PLACEHOLDER]¥100万 + 未触发                 | 划 [PLACEHOLDER]¥5万入投资银行户·置 `_startupInvestorMindset` / 再投回估值×1.05 |
+| `startup_career_legacy`    | H→C（职业/成长） | 公司存续 + 职场声誉 `upward`≥[PLACEHOLDER]40 + 未触发 | 前同事人脉拉客户 估值×1.08·`upward`+5 / 独立开拓                                |
 
 ## 验证
 

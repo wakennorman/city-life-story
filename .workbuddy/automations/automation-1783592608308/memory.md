@@ -116,6 +116,7 @@
 - **下一轮**: 域 D（NPC/社交），B→D→F 第 2 轮。
 
 ## 最近执行（2026-07-14 凌晨，Round 12 域 G — 已提交 b4fe5180）
+
 - 域G 在本分支 loop/auto 正式落地并提交 `b4fe5180`（11文件/622增/29删，未push）。此前深夜轮因并行窗口并发竞态未提交、仅验证+解除漂移；本轮树稳定后重新实现并提交。
 - A类4（MC 0异常）：events_core stats.health→status.health×3 / life_ribbon illness→illnesses / world_params enterprise→startup / tutorial illness→illnesses。
 - 联动3（lifecycle_linkage_events.js IIFE→RANDOM_EVENTS）：life_city_anniversary(G→D)/life_work_anniversary(G→C)/life_estate_planning(G→E)，全||防御，数值[PLACEHOLDER]。
@@ -123,6 +124,7 @@
 - 下轮：域H(Phase2/公司)，正常轮换第4轮(自动化R13)。
 
 ## 最近执行（2026-07-14 凌晨，Round 13 域 H — 已提交 1ded2071）
+
 - 域H(Phase2/公司) 在本分支 loop/auto 正式落地并提交 `1ded2071`（7文件/492增/102删，未push）。
 - A类2（防御式空值守卫）：startup_crisis.js showCrisisModal(397)/applyCrisisChoice(474) 对可能为null的 startup.company 补 if(!company)return。批量扫描(guard_check.py 对 phase2/* + company_spawner/enterprise_fate/events_corp 共18文件)确认域内其余 startup.company 解引用均有上游短路守卫，此2处为仅存隐患。
 - 联动3（新建 company_linkage_events.js IIFE→RANDOM_EVENTS，phase:"corporate"因创业在corporate阶段创立，全||防御，数值[PLACEHOLDER]）：startup_friend_support(H→D)/startup_wealth_milestone(H→E)/startup_career_legacy(H→C)。

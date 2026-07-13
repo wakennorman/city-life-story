@@ -1,6 +1,6 @@
 # 城市浮生记 (City Life Story) — 开发文档
 
-> 最后更新: 2026-07-14（v3.105 loop R13 全系统优化·Domain H 公司/Phase2——A类修复2项(防御式空值守卫) + 联动增强3项：H→D创业低谷挚友 / H→E估值里程碑财富观 / H→C职场积累反哺创业）
+> 最后更新: 2026-07-14（v3.106 loop R14 全系统优化·Domain A 数据/数值平衡——A类修复2项(难度键名对齐 easy/hell + 工资清洁度字段修正) + 联动增强3项：A→D状态均衡社交 / A→C技能曲线职业 / A→E资产里程碑投资）
 >
 > commits: `feat: [域H] A类修复2项+联动增强3项` + `（docs）loop状态/迭代表`
 
@@ -19,7 +19,6 @@
   2. `startup_wealth_milestone`（H→E）：公司估值首破 [PLACEHOLDER]¥100万 + 未触发过 → 划 [PLACEHOLDER]¥5万入可投资银行户 + 投资心态 flag(_startupInvestorMindset) / 再投回公司估值×1.05（创业资本↔经济/投资）。
   3. `startup_career_legacy`（H→C）：公司存续 + 职场声誉 upward≥[PLACEHOLDER]40 + 未触发过 → 前同事人脉拉客户 估值×1.08 + upward+5 / 独立开拓（职场积累资本↔创业助力）。
 - **验证**: `node --check` 文件全过；`python build.py` 重建 dist/index.html（新事件随 bundle 生效）；MC 6×400d 计划校验 0 代码异常。
-
 
 > 循环迭代表见 CLAUDE.md「全系统优化·循环迭代表」。本轮域 = **G 核心机制/生命周期**。
 

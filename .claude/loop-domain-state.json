@@ -1,13 +1,22 @@
 {
-  "currentRound": 13,
-  "currentDomain": "H",
+  "currentRound": 14,
+  "currentDomain": "A",
   "domainOrder": ["A", "B", "C", "D", "E", "F", "G", "H"],
-  "rotationIndex": 7,
-  "nextDomain": "A",
-  "overrideSequence": "B→D→F已完成(2026-07-14),恢复C→E→G→H→A",
-  "lastCommit": "feat: [域H] A类修复2项+联动增强3项",
+  "rotationIndex": 0,
+  "nextDomain": "C",
+  "overrideSequence": "B→D→F已完成; C→E→G→H→A 单轮覆盖完成(2026-07-14); 下轮重启该序列于C",
+  "lastCommit": "feat: [域A] A类修复2项+联动增强3项",
   "lastUpdated": "2026-07-14",
   "history": [
+    {
+      "round": 14,
+      "domain": "A",
+      "date": "2026-07-14",
+      "aClassFixed": 2,
+      "linkageItems": 3,
+      "commit": "feat: [域A] A类修复2项+联动增强3项",
+      "note": "正常轮换第5轮(A)，本8域优化循环首轮覆盖A。A类修复2项：(1)economy_v3.1.js 难度键名 casual→easy 并补 hell(DIFFICULTY_TAX_MULTIPLIER/DIFFICULTY_INCOME_CURVE/getMarketSaturationPenalty)，与 difficulty_system.js 写入 state._difficulty 的真实取值(easy/normal/hard/hell)对齐，修复休闲/地狱档经济结算恒回落默认值的平衡性bug；(2)jobs.js premium_housekeeper payCalc state.player.hygiene→state.needs.hygiene，修复清洁度加成永远为0。联动增强3项(data_balanced_living A→D / data_skill_efficiency A→C / data_savings_milestone A→E)，新建 data_linkage_events.js IIFE 注入 RANDOM_EVENTS，2 street+1 corporate，全||防御，数值[PLACEHOLDER]。MC 6×400d 0异常。下轮→C(重启覆盖序列)。"
+    },
     {
       "round": 13,
       "domain": "H",
@@ -16,15 +25,6 @@
       "linkageItems": 3,
       "commit": "feat: [域H] A类修复2项+联动增强3项",
       "note": "正常轮换第4轮(H)。A类修复2项(startup_crisis.js showCrisisModal/applyCrisisChoice 对 null 的 startup.company 补 if(!company)return 防御式守卫)。联动增强3项(startup_friend_support H→D / startup_wealth_milestone H→E / startup_career_legacy H→C)，新建 company_linkage_events.js IIFE 注入 RANDOM_EVENTS，phase:corporate，全||防御，数值[PLACEHOLDER]。MC 6×400d 0异常。下轮→A。"
-    },
-    {
-      "round": 12,
-      "domain": "G",
-      "date": "2026-07-14",
-      "aClassFixed": 4,
-      "linkageItems": 3,
-      "commit": "feat: [域G] A类修复4项+联动增强3项",
-      "note": "正常轮换第3轮(G)。A类修复4项(events_core stats.health→status.health×3 / life_ribbon illness→illnesses / world_params enterprise→startup / tutorial illness→illnesses)。联动增强3项(life_city_anniversary G→D / life_work_anniversary G→C / life_estate_planning G→E)，新建 lifecycle_linkage_events.js IIFE 注入 RANDOM_EVENTS，全||防御，数值[PLACEHOLDER]。MC 6×400d 0异常。下轮→H。"
     }
   ]
 }

@@ -2257,8 +2257,9 @@
               -100,
               st.relationships.xiao_mei.affinity - 5,
             );
-            if (st.morality !== undefined) {
-              st.morality = Math.max(-100, st.morality - 1);
+            // [全系统自洽修复] 域B 修复: st.morality 应为 st.player.morality（裸根导致道德-1失效）
+            if (st.player.morality !== undefined) {
+              st.player.morality = Math.max(-100, st.player.morality - 1);
             }
             StateManager.addMessage(
               "💪 你自己研究了一下APP，开始接单。小美看你没带她，有点失落。你赚了¥" +
@@ -46371,7 +46372,8 @@
         hint: "名气+·心情+·社交圈+",
         apply: function (st) {
           st.flags._communityGatheringSeen = true;
-          st.fame = Math.min(100, (st.fame || 0) + 3);
+          // [全系统自洽修复] 域B 修复: st.fame 应为 st.player.fame（裸根导致名气+3失效）
+          st.player.fame = Math.min(100, (st.player.fame || 0) + 3);
           st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 12);
           st.needs.hunger = Math.max(0, (st.needs.hunger || 50) - 15);
           // 所有已认识NPC好感+2
@@ -51263,5 +51265,246 @@
     },
 
     // ====== 注册结束 ======
+  );
+
+  // ====== v3.99e 联动增强（R15 域B）=====
+  // 3个新增事件填补：新闻×事件联动 / 极端天气消费 / 道德flag→NPC反应 空白
+  CROSS_EVENTS.push(
+    // ===== 事件1：新闻×消费联动 — 新闻提到的涨价你正好要买 =====
+    {
+      id: "news_price_shock_personal",
+      phase: "street",
+      icon: "📰",
+      title: "新闻里的涨价，今天就来",
+      story:
+        "早上刷到新闻说「近期蔬菜价格大幅上涨，部分品类涨幅超20%」。\n\n你正要去菜市场买菜——看来今天的菜篮子又要重了。\n\n旁边几个大妈也在议论纷纷，有人说要囤货，有人说改吃便宜的。",
+      // [conditions→triggers] 部分迁移：phase+day 移入 triggers，新闻+位置保留
+      triggers: {
+        phase: "street",
+        minDay: 15,
+      },
+      conditions: function (st) {
+        // 检查是否有活跃新闻中包含价格上涨相关
+        if (!st.activeNews || st.activeNews.length === 0) return false;
+        for (var i = 0; i < st.activeNews.length; i++) {
+          var n = st.activeNews[i];
+          if (
+            n.headline &&
+            (n.headline.indexOf("涨") >= 0 || n.headline.indexOf("物价") >= 0)
+          ) {
+            return true;
+          }
+        }
+        return false;
+      },
+      probability: 0.08,
+      repeatable: true,
+      choices: [
+        {
+          text: "🛒 去批发市场批量采购",
+          hint: "批发价更低，但需要跑远路",
+          apply: function (st) {
+            var saved = Random.int(10, 30);
+            st.resources.cash -= saved; // 交通费
+            st.needs.hunger = Math.min(100, (st.needs.hunger || 0) + 20);
+            st.needs.fatigue = Math.min(100, (st.needs.fatigue || 0) + 8);
+            StateManager.addMessage(
+              "🛒 你跑到批发市场批了一堆菜，虽然路费花了¥" +
+                saved +
+                "，但单价便宜了不少。冰箱塞得满满当当。",
+              "success",
+            );
+          },
+        },
+        {
+          text: "🥬 改吃便宜替代品",
+          hint: "省钱，营养一般",
+          apply: function (st) {
+            var cheap = Random.int(3, 8);
+            st.resources.cash -= cheap;
+            st.needs.hunger = Math.min(100, (st.needs.hunger || 0) + 12);
+            st.needs.happiness = Math.max(0, (st.needs.happiness || 50) - 3);
+            StateManager.addMessage(
+              "🥬 白菜豆腐对付一顿了。花了¥" +
+                cheap +
+                "，肚子是饱了，但味道一般。心情-3。",
+              "info",
+            );
+          },
+        },
+        {
+          text: "📊 趁机囤点耐储存的",
+          hint: "心智+2，长期省钱",
+          apply: function (st) {
+            var spend = Random.int(50, 150);
+            st.resources.cash -= spend;
+            st.flags._hoardedFood = (st.flags._hoardedFood || 0) + spend;
+            st.player.mental = Math.min(100, (st.player.mental || 0) + 2);
+            StateManager.addMessage(
+              "📊 你趁现在多囤了些米面油。花了¥" +
+                spend +
+                "，但接下来几天买菜钱能省下来。心智+2。",
+              "hint",
+            );
+          },
+        },
+      ],
+    },
+
+    // ===== 事件2：极端天气×消费行为 — 暴雨天外卖vs自己煮 =====
+    {
+      id: "heavy_rain_cooking_dilemma",
+      phase: "street",
+      icon: "🌧️",
+      title: "暴雨天的晚餐",
+      story:
+        "暴雨倾盆，你被困在了写字楼里。下班时间到了，但雨大到根本出不去。\n\n手机弹出一条消息：「暴雨橙色预警，部分路段积水严重。」\n\n外卖配送费涨到了¥15，而且预计送达时间40分钟起步。你自己带了泡面在包里。",
+      // [conditions→triggers] 全量迁移
+      triggers: {
+        phase: "street",
+        weather: ["heavy_rain", "stormy", "typhoon"],
+        minDay: 5,
+      },
+      probability: 0.1,
+      repeatable: true,
+      choices: [
+        {
+          text: "🍜 吃自带泡面，省钱又踏实",
+          hint: "疲劳+5，心情-2，但省¥20+",
+          apply: function (st) {
+            st.needs.fatigue = Math.min(100, (st.needs.fatigue || 0) + 5);
+            st.needs.happiness = Math.max(0, (st.needs.happiness || 50) - 2);
+            StateManager.addMessage(
+              "🍜 泡面泡了3分钟，虽然简单但热乎。雨天能安稳吃口热的就不错了。",
+              "info",
+            );
+          },
+        },
+        {
+          text: "📱 点外卖，贵就贵吧",
+          hint: "心情+5，花¥25-40（含配送费）",
+          apply: function (st) {
+            var foodCost = Random.int(15, 25);
+            var deliveryCost = Random.int(10, 20);
+            var total = foodCost + deliveryCost;
+            if (st.resources.cash >= total) {
+              st.resources.cash -= total;
+              st.needs.hunger = Math.min(100, (st.needs.hunger || 0) + 35);
+              st.needs.happiness = Math.min(
+                100,
+                (st.needs.happiness || 50) + 5,
+              );
+              StateManager.addMessage(
+                "📱 热腾腾的外卖到了！花了¥" +
+                  total +
+                  "，但暴雨天能坐在工位上吃口热饭，值了。心情+5。",
+                "success",
+              );
+            } else {
+              st.needs.hunger = Math.max(0, (st.needs.hunger || 0) - 10);
+              StateManager.addMessage(
+                "😅 钱不够点外卖，只能饿着肚子等雨小。饥饿+10。",
+                "warning",
+              );
+            }
+          },
+        },
+        {
+          text: "🏪 冒雨去买楼下便利店",
+          hint: "省钱但有健康风险",
+          apply: function (st) {
+            if (Random.chance(0.4)) {
+              st.status.health = Math.max(0, (st.status.health || 80) - 5);
+              st.needs.hunger = Math.min(100, (st.needs.hunger || 0) + 20);
+              StateManager.addMessage(
+                "🏪 你冲进雨里买了关东煮。花了¥12，但淋了暴雨，健康-5。有点得不偿失。",
+                "warning",
+              );
+            } else {
+              st.needs.hunger = Math.min(100, (st.needs.hunger || 0) + 20);
+              st.needs.fatigue = Math.min(100, (st.needs.fatigue || 0) + 10);
+              StateManager.addMessage(
+                "🏪 你冒雨跑到了便利店，买了碗热汤面。虽然累但没生病。疲劳+10。",
+                "info",
+              );
+            }
+          },
+        },
+      ],
+    },
+
+    // ===== 事件3：道德flag→NPC反应 — 你的善行/恶行被NPC知道了 =====
+    {
+      id: "moral_flag_npc_reaction",
+      phase: "street",
+      icon: "👀",
+      title: "你做的事，有人看在眼里",
+      story: "",
+      // 动态 story：根据道德 flag 生成不同叙事
+      storyFn: function (st) {
+        var parts = [];
+        if (st.flags && st.flags.moralStoppedThiefPublic) {
+          parts.push(
+            "你在街上抓小偷的事传开了，现在好几个人见到你都点头打招呼。",
+          );
+        }
+        if (st.flags && st.flags.moralFedDog) {
+          parts.push(
+            "那只雨天的流浪狗居然跟了你两条街，最后蹭了蹭你的裤腿跑了。",
+          );
+        }
+        if (st.flags && st.flags._keptWallet) {
+          parts.push("你捡钱包的事不知道被谁看见了，看你的眼神有些微妙。");
+        }
+        if (parts.length === 0) {
+          parts.push("城市很大，但你做的每一件事都可能被人看见。");
+        }
+        return parts.join("\\n\\n");
+      },
+      triggers: {
+        phase: "street",
+        minDay: 10,
+      },
+      conditions: function (st) {
+        // 至少有一个道德flag
+        var flags = st.flags || {};
+        return (
+          flags.moralStoppedThiefPublic ||
+          flags.moralFedDog ||
+          flags.moralFedBeggar ||
+          flags._keptWallet ||
+          flags.moralHelpedElder ||
+          flags.moral_returnedFoundMoney ||
+          flags._foundATMCash
+        );
+      },
+      probability: 0.06,
+      repeatable: false,
+      choices: [
+        {
+          text: "😊 继续做自己认为对的事",
+          hint: "心情+5，道德flag回声",
+          apply: function (st) {
+            st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 5);
+            st.player.mental = Math.min(100, (st.player.mental || 50) + 2);
+            StateManager.addMessage(
+              "😊 你笑了笑，继续往前走。不管别人怎么看，你知道自己做对了。心情+5，心智+2。",
+              "success",
+            );
+          },
+        },
+        {
+          text: "🤔 想想刚才的事，有点后怕",
+          hint: "心智+3，可能触发自我反省",
+          apply: function (st) {
+            st.player.mental = Math.min(100, (st.player.mental || 50) + 3);
+            StateManager.addMessage(
+              "🤔 你停下来想了想刚才的事。有些选择看起来很小，但定义了你是什么样的人。心智+3。",
+              "hint",
+            );
+          },
+        },
+      ],
+    },
   );
 })();

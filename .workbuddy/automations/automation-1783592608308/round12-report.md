@@ -9,14 +9,16 @@
 ## 1. 本轮域G 产出（已实现并验证）
 
 ### A类缺陷修复 4 项（均为「写错字段名致功能永假」的真实 bug）
-| # | 文件 | 问题 | 修复 |
-|---|------|------|------|
-| A1 | `events_core.js` | 事件负向健康惩罚读/写 `state.stats.health`（无此字段，真实为 `state.status.health`）→ `_preEvtHealth` 恒 0 → `dHealth=NaN` → 惩罚分支 `NaN<0` 永假，**事件健康惩罚从未生效** | 3 处改读/写 `state.status.health` |
-| A2 | `life_ribbon.js` | 「病困交加」缎带判定 `status.illness`（应为 `illnesses` 复数） | → `status.illnesses` |
-| A3 | `world_params.js` | CEO 公司行业热度读 `state.enterprise`（应为 `state.startup`）→ 行业热度永不计算 | → `state.startup` |
-| A4 | `tutorial.js` | 首病提示读 `status.illness` → 提示永不触发 | → `status.illnesses && .length > 0` |
+
+| #   | 文件              | 问题                                                                                                                                                                         | 修复                                |
+| --- | ----------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------- |
+| A1  | `events_core.js`  | 事件负向健康惩罚读/写 `state.stats.health`（无此字段，真实为 `state.status.health`）→ `_preEvtHealth` 恒 0 → `dHealth=NaN` → 惩罚分支 `NaN<0` 永假，**事件健康惩罚从未生效** | 3 处改读/写 `state.status.health`   |
+| A2  | `life_ribbon.js`  | 「病困交加」缎带判定 `status.illness`（应为 `illnesses` 复数）                                                                                                               | → `status.illnesses`                |
+| A3  | `world_params.js` | CEO 公司行业热度读 `state.enterprise`（应为 `state.startup`）→ 行业热度永不计算                                                                                              | → `state.startup`                   |
+| A4  | `tutorial.js`     | 首病提示读 `status.illness` → 提示永不触发                                                                                                                                   | → `status.illnesses && .length > 0` |
 
 ### 联动增强 3 项（新建 `lifecycle_linkage_events.js`，IIFE 注入 `RANDOM_EVENTS`）
+
 - `life_city_anniversary` (G→D)：城中周年，约最好熟人 / 独处
 - `life_work_anniversary` (G→C)：职场周年，组局 / 复盘
 - `life_estate_planning` (G→E)：世代资产规划，立继承安排 / 公益捐赠
@@ -24,6 +26,7 @@
 > 全状态访问 `||` 防御，数值标 `[PLACEHOLDER]`。
 
 ### 验证
+
 - `node --check` 5 文件全过。
 - **Monte Carlo `monte_carlo.cjs --trials 6 --days 400` → EXIT=0，0 代码异常**（86.2s）。
   - 仅余 trader/social 存活率 66.7% < 80% 为**既有平衡阈值**（非本轮引入）；离线新闻拉取失败为沙箱无网络（自动降级），均非代码异常。

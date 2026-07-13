@@ -24,11 +24,15 @@ const EconomySystem = (function () {
     { min: 10000000, max: Infinity, rate: 0.0012, label: "富豪税" }, // 日 0.12%
   ];
 
-  // 难度系数: 休闲/标准/困难 → 税率乘数
+  // 难度系数: 休闲/标准/困难/地狱 → 税率乘数
+  // [域A 修复] 原键名 casual 与 difficulty_system.js 写入 state._difficulty 的
+  //   真实取值 (easy/normal/hard/hell) 不匹配 → easy/hell 档税率乘数恒回落 1.0。
+  //   改为 easy/normal/hard/hell 与难度系统对齐，并补地狱档。
   const DIFFICULTY_TAX_MULTIPLIER = {
-    casual: 0.7, // 休闲模式减 30%
+    easy: 0.7, // 休闲模式减 30%
     normal: 1.0, // 标准模式
     hard: 1.4, // 困难模式增 40%
+    hell: 1.6, // 地狱模式增 60%
   };
 
   function calculateProgressiveWealthTax(totalAssets, difficulty) {
@@ -113,7 +117,13 @@ const EconomySystem = (function () {
   function getMarketSaturationPenalty(playerAssets, cityWealth, difficulty) {
     const ratio = playerAssets / cityWealth;
     const threshold =
-      difficulty === "hard" ? 0.15 : difficulty === "casual" ? 0.25 : 0.2;
+      difficulty === "hard"
+        ? 0.15
+        : difficulty === "easy"
+          ? 0.25
+          : difficulty === "hell"
+            ? 0.1
+            : 0.2;
     if (ratio <= threshold) return 1.0;
     // 超过阈值后每 1% 额外比例衰减 2%
     const excess = (ratio - threshold) * 100;
@@ -126,10 +136,13 @@ const EconomySystem = (function () {
   // v3.0 问题: 困难模式只加惩罚, 熟练玩家可沿用相同策略
   // v3.1 改进: 困难模式收益曲线更陡, 需要更高效率才能达标
 
+  // [域A 修复] 同上：原 casual 键名无法命中 easy 档，导致休闲档收益曲线恒用 normal。
+  //   改为 easy/normal/hard/hell 对齐，并补地狱档更陡曲线。
   const DIFFICULTY_INCOME_CURVE = {
-    casual: { baseSalaryMult: 1.0, jobOpportunity: 1.2, promotionSpeed: 0.8 },
+    easy: { baseSalaryMult: 1.0, jobOpportunity: 1.2, promotionSpeed: 0.8 },
     normal: { baseSalaryMult: 1.0, jobOpportunity: 1.0, promotionSpeed: 1.0 },
     hard: { baseSalaryMult: 0.9, jobOpportunity: 0.7, promotionSpeed: 1.3 },
+    hell: { baseSalaryMult: 0.8, jobOpportunity: 0.5, promotionSpeed: 1.5 },
   };
 
   function getDifficultyIncomeMultiplier(difficulty, category) {
