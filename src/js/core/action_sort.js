@@ -13,6 +13,23 @@
  *
  * 用法：ActionSort.sortActions(actions, state) → sorted[]
  *       ActionSort.groupActionsByCategory(actions, state) → { catId: [actions] }
+ *
+ * ====== [v3.99] UI 统一标准（约定式自动归类扩展） ======
+ * 所有"可点击"元素采用统一 CSS 交互语言：
+ *
+ *   .interactive       — 标准可点击元素（hover → 高亮边框+抬升+阴影）
+ *   .interactive:active — 触摸反馈（scale 0.97）
+ *   .disabled          — 不可交互态（opacity 0.45 + cursor not-allowed）
+ *
+ * 行动对象约定字段：
+ *   category (string)  → 所属分类（约定式优先）
+ *   priority (number)  → 同类内排序（约定式优先）
+ *   disabled (boolean) → true 时自动套用 .disabled 样式
+ *
+ * 渲染时惯例（由 renderActionsTab 执行）：
+ *   1. 每个 action-card 自动获得 .action-card + .interactive（非 disabled）
+ *   2. disabled = true 时自动增加 .disabled 类 + cursor not-allowed
+ *   3. 无 category 字段 → 走 action_sort 的精确/前缀/兜底匹配
  */
 
 (function () {

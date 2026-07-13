@@ -2126,6 +2126,9 @@ body {
   border-color: var(--danger);
   color: var(--danger);
 }
+.wiki-clear:active {
+  transform: scale(0.95);
+}
 
 .wiki-layout {
   display: grid;
@@ -2231,6 +2234,9 @@ body {
   transform: translateY(-1px);
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
 }
+.wiki-card:active {
+  transform: scale(0.96);
+}
 .wiki-card-head {
   display: flex;
   align-items: center;
@@ -2301,6 +2307,9 @@ body {
 .wiki-back:hover {
   border-color: var(--accent);
   color: var(--accent);
+}
+.wiki-back:active {
+  transform: scale(0.95);
 }
 .wiki-detail-body h2 {
   font-size: 18px;
@@ -5924,6 +5933,9 @@ body {
   color: var(--bg-primary);
   transform: translateY(-1px);
   box-shadow: 0 4px 12px var(--accent-glow);
+}
+.npc-visit-btn:active {
+  transform: scale(0.95);
 }
 
 /* [v3.86] 交通方式选择按钮（步行/共享单车/地铁/打车/自驾） */

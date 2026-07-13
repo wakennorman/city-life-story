@@ -24,11 +24,11 @@ const TRAVEL_DESTINATIONS = {
     events: [
       {
         desc: "在故宫里逛了一整天，被历史的厚重感击中",
-        effect: "心情+10，智力+2",
+        effects: { happiness: 10, intelligence: 2 },
       },
       {
         desc: "钻进胡同吃了碗炸酱面，老板跟你聊了半天",
-        effect: "心情+8，名气+1",
+        effects: { happiness: 8, fame: 1 },
       },
     ],
     localSpecials: ["烤鸭", "糖葫芦", "豆汁儿"],
@@ -84,9 +84,12 @@ const TRAVEL_DESTINATIONS = {
     events: [
       {
         desc: "在外滩看陆家嘴天际线，感觉自己很渺小",
-        effect: "心情+12，智力+3",
+        effects: { happiness: 12, intelligence: 3 },
       },
-      { desc: "在弄堂里迷路，被老奶奶请吃了碗馄饨", effect: "心情+10，道德+1" },
+      {
+        desc: "在弄堂里迷路，被老奶奶请吃了碗馄饨",
+        effects: { happiness: 10, morality: 1 },
+      },
     ],
     localSpecials: ["生煎", "小笼包", "葱油拌面"],
     incomeMod: 0,
@@ -156,11 +159,11 @@ const TRAVEL_DESTINATIONS = {
     events: [
       {
         desc: "在熊猫基地看熊猫吃竹子，看了一下午",
-        effect: "心情+15，疲劳-10",
+        effects: { happiness: 15, fatigue: -10 },
       },
       {
         desc: "吃了一顿正宗火锅，辣到流泪但停不下来",
-        effect: "心情+8，体质+1",
+        effects: { happiness: 8, physique: 1 },
       },
     ],
     localSpecials: ["火锅", "串串", "担担面"],
@@ -212,11 +215,11 @@ const TRAVEL_DESTINATIONS = {
     events: [
       {
         desc: "站在兵马俑坑前，两千年的沉默压了下来",
-        effect: "心情+10，能力+2",
+        effects: { happiness: 10, mental: 2 },
       },
       {
         desc: "骑自行车在古城墙上转了一圈，风吹得很舒服",
-        effect: "心情+8，体质+2",
+        effects: { happiness: 8, physique: 2 },
       },
     ],
     localSpecials: ["肉夹馍", "凉皮", "羊肉泡馍"],
@@ -275,9 +278,12 @@ const TRAVEL_DESTINATIONS = {
     events: [
       {
         desc: "在洱海边骑了一天自行车，仿佛时间静止了",
-        effect: "心情+20，疲劳-15",
+        effects: { happiness: 20, fatigue: -15 },
       },
-      { desc: "在古城小酒馆里听了一晚上民谣", effect: "心情+12，名气+2" },
+      {
+        desc: "在古城小酒馆里听了一晚上民谣",
+        effects: { happiness: 12, fame: 2 },
+      },
     ],
     localSpecials: ["过桥米线", "乳扇", "鲜花饼"],
     incomeMod: 0,
@@ -418,8 +424,46 @@ function tickTravel(state) {
           ? Random.int(0, dest.events.length - 1)
           : Math.floor(Math.random() * dest.events.length);
       var evt = dest.events[evtIdx];
-      // 简单效果解析（支持心情/智力/体质/道德/名气/疲劳）
-      if (evt.effect) {
+      // [CoC] 声明式 effects 对象优先（如 {happiness:10, intelligence:2}），向后兼容旧字符串
+      if (evt.effects) {
+        // 约定式效果路径映射 — 新增效果字段只需在此加一行，零代码修改
+        var EFFECT_PATH_MAP = {
+          happiness: { path: "needs.happiness", max: 100, invert: false },
+          intelligence: {
+            path: "player.intelligence",
+            max: 100,
+            invert: false,
+          },
+          physique: { path: "player.physique", max: 100, invert: false },
+          fatigue: { path: "needs.fatigue", max: 100, invert: true },
+          morality: { path: "player.morality", max: 100, invert: false },
+          fame: { path: "player.fame", max: 100, invert: false },
+          mental: { path: "player.mental", max: 100, invert: false },
+        };
+        for (var ek in evt.effects) {
+          if (!evt.effects.hasOwnProperty(ek)) continue;
+          var erule = EFFECT_PATH_MAP[ek];
+          if (!erule) continue;
+          var edelta = evt.effects[ek];
+          var eparts = erule.path.split(".");
+          var etarget = state;
+          for (var epi = 0; epi < eparts.length - 1; epi++)
+            etarget = etarget[eparts[epi]];
+          var ecur = etarget[eparts[eparts.length - 1]] || 0;
+          if (erule.invert) {
+            etarget[eparts[eparts.length - 1]] = Math.max(
+              0,
+              Math.min(erule.max, ecur - edelta),
+            );
+          } else {
+            etarget[eparts[eparts.length - 1]] = Math.max(
+              0,
+              Math.min(erule.max, ecur + edelta),
+            );
+          }
+        }
+      } else if (evt.effect) {
+        // 向后兼容：旧字符串格式
         [
           ["心情+", "needs.happiness", 100, 0],
           ["智力+", "player.intelligence", 100, 0],
@@ -446,12 +490,10 @@ function tickTravel(state) {
               var val = target || 0;
               var delta = parseInt(m[1]);
               if (isNeg) {
-                // 疲劳-：取最大值与减量之间的较小值
                 target = Math.max(0, val - delta);
               } else {
                 target = Math.min(max, val + delta);
               }
-              // 写回
               var parent = state;
               for (var pi2 = 0; pi2 < parts.length - 1; pi2++)
                 parent = parent[parts[pi2]];
@@ -462,10 +504,20 @@ function tickTravel(state) {
       }
       state._lastTravelEvent = evt.desc;
       if (typeof StateManager !== "undefined") {
-        StateManager.addMessage(
-          "✈️ " + evt.desc + (evt.effect ? "（" + evt.effect + "）" : ""),
-          "info",
-        );
+        // [CoC] 支持声明式 effects 和旧 effect 字符串两种格式
+        var effLabel = "";
+        if (evt.effects) {
+          var parts = [];
+          for (var ek in evt.effects) {
+            if (!evt.effects.hasOwnProperty(ek)) continue;
+            var v = evt.effects[ek];
+            parts.push((v >= 0 ? "+" : "") + v + ek);
+          }
+          effLabel = "（" + parts.join("，") + "）";
+        } else if (evt.effect) {
+          effLabel = "（" + evt.effect + "）";
+        }
+        StateManager.addMessage("✈️ " + evt.desc + effLabel, "info");
       }
     }
 
