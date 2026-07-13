@@ -831,6 +831,47 @@ const DAILY_PIPELINE = [
     },
   },
 
+  // === R15: 副业副手 — 每日副业收入 + 倦怠累积 ===
+  {
+    name: "side_skill_daily",
+    fn: function (state) {
+      if (!state.flags || !state.flags._sideSkillActive) return;
+      var startDay = state.flags._sideSkillDay || 0;
+      if (state.player.day - startDay < 1) return;
+      // 每日副业固定收益
+      var earn = Random.int(60, 120);
+      state.resources.cash = (state.resources.cash || 0) + earn;
+      // 倦怠累积
+      state.needs.fatigue = Math.min(100, (state.needs.fatigue || 0) + 2);
+      // 每5天提醒一次（避免消息刷屏）
+      if ((state.player.day - startDay) % 5 === 0) {
+        if (typeof StateManager !== "undefined" && StateManager.addMessage) {
+          StateManager.addMessage(
+            "💼 副业副手第" +
+              (state.player.day - startDay) +
+              "天。今天赚了¥" +
+              earn +
+              "，但身体在记账。注意倦怠值，适度休息。",
+            "info",
+          );
+        }
+      }
+    },
+  },
+
+  // === R15: 合法摊位经营许可证 — 城管热度上限提升 ===
+  {
+    name: "legal_vendor_heat_cap",
+    fn: function (state) {
+      if (!state.flags || !state.flags._legalVendor) return;
+      if (!state.chengguan) return;
+      // 合法摊位热度上限 60（原本无经营许可 100 满值巡逻）
+      if (state.chengguan.heat > 60) {
+        state.chengguan.heat = 60;
+      }
+    },
+  },
+
   // === 清理 ===
   {
     name: "cleanup",

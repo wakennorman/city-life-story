@@ -50949,6 +50949,319 @@
       ],
     },
 
+    // ====================================================================
+    // R15 联动增强①：半夜做噩梦惊醒 — 高债务+低心情 → 心理回响
+    // 联动域：债务 × 心理 × 道德
+    // 设计意图：债务高压下的心理状态从未被叙事化，玩家只有数值没有情感体验
+    // ====================================================================
+    {
+      id: "debt_nightmare_wake",
+      phase: "street",
+      icon: "😰",
+      title: "半夜惊醒",
+      story:
+        "你从噩梦里猛地坐起来，后背全是冷汗。\n\n梦里的场景还历历在目：还款日到了，你翻遍口袋也凑不出那笔钱。电话一个接一个，催收的声音像钝刀子在割。你张了张嘴想解释，对方已经挂了。\n\n窗外天还黑着。你看了眼手机：凌晨3:47。\n\n离天亮还有几个小时，但你知道自己再也睡不着了。",
+      conditions: function (st) {
+        if (st.flags._debtNightmareSeen) return false;
+        var debt = (st.resources && st.resources.debt) || 0;
+        var cash = (st.resources && st.resources.cash) || 0;
+        if (debt < 3000) return false;
+        if (debt <= cash * 2) return false; // 还得起就不焦虑
+        return st.player.day >= 15 && Random.chance(0.04);
+      },
+      probability: 0.03,
+      repeatable: false,
+      choices: [
+        {
+          text: "💨 起身去便利店夜班 — 多赚一分是一分",
+          hint: "疲劳+25 现金+¥150 心情-5",
+          apply: function (st) {
+            st.flags._debtNightmareSeen = true;
+            st.needs.fatigue = Math.min(100, (st.needs.fatigue || 0) + 25);
+            st.needs.happiness = Math.max(0, (st.needs.happiness || 0) - 5);
+            st.resources.cash = (st.resources.cash || 0) + 150;
+            StateManager.addMessage(
+              "💨 你凌晨四点去了便利店搬货。天亮了结¥150。手在抖,但心里踏实一分是一分。疲劳+25，现金+¥150。",
+              "warning",
+            );
+          },
+        },
+        {
+          text: "📱 打电话给朋友借钱",
+          hint: "有概率成功，好感-10",
+          apply: function (st) {
+            st.flags._debtNightmareSeen = true;
+            if (Random.chance(0.4)) {
+              var lendAmt = Random.int(500, 2000);
+              st.resources.cash = (st.resources.cash || 0) + lendAmt;
+              StateManager.addMessage(
+                '📱 电话响了三声就接了。朋友说："转你了，不急还。"\n你看着到账通知§' +
+                  lendAmt +
+                  "，眼眶一热。有些人，借钱时才看得清。",
+                "success",
+              );
+            } else {
+              st.needs.happiness = Math.max(0, (st.needs.happiness || 0) - 8);
+              StateManager.addMessage(
+                "📱 电话响了很久。接起来那头说：「最近也紧张。」然后是一阵沉默，接着是忙音。你坐回床边,把脸埋进手里。",
+                "warning",
+              );
+            }
+          },
+        },
+        {
+          text: "🌧️ 去阳台坐一会儿 — 等天亮",
+          hint: "心情+10（接受现实的力量）",
+          apply: function (st) {
+            st.flags._debtNightmareSeen = true;
+            st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 10);
+            StateManager.addMessage(
+              "🌧️ 你去阳台坐着,看这座城市的天际线一点点亮起来。债务还在,但你还在。新的一天,总有新办法。心情+10。",
+              "info",
+            );
+          },
+        },
+      ],
+    },
+
+    // ====================================================================
+    // R15 联动增强②：城管关系积累到一定程度 → 城管主动递烟"提醒"
+    // 联动域：城管 × 社交 × 街头工作
+    // 设计意图：chengguan.relationship 自 v3.22 引入以来，只有负面互动（逃跑/塞钱），
+    //   没有"积累到一定关系后得到正面回馈"。关系≥25 时给一次正向反馈。
+    // ====================================================================
+    {
+      id: "chengguan_relationship_tip",
+      phase: "street",
+      icon: "🚬",
+      title: "城管老张递了根烟",
+      story:
+        "收摊时，那个每次来巡逻的城管老张居然没催你走，反而凑过来递了一根烟。\n\n「你小子，最近挺老实。」他点燃自己的那根，深吸一口。「告诉你个消息——下周这条路要搞文明示范街，所有临时摊位统一整顿。你要是想继续在这儿摆，后天去所里登个记，一个月¥200管理费，合法摆摊。」\n\n他弹了弹烟灰：「别人我不告诉，你这人还行，不给我添乱。」",
+      conditions: function (st) {
+        if (st.flags._chengguanTipSeen) return false;
+        var cg = st.chengguan;
+        if (!cg || !cg.relationship || cg.relationship < 25) return false;
+        return st.player.day >= 45 && Random.chance(0.04);
+      },
+      probability: 0.03,
+      repeatable: false,
+      choices: [
+        {
+          text: "📝 后天去所里登记",
+          hint: "¥200管理费 → 永久合法摆摊 热度上限-30",
+          apply: function (st) {
+            st.flags._chengguanTipSeen = true;
+            st.flags._legalVendor = true;
+            var cg = st.chengguan;
+            if (cg) {
+              cg.relationship = Math.min(100, (cg.relationship || 0) + 5);
+              cg.heat += 30; // 热度上限提升（能承受更多热度才触发巡逻）
+            }
+            st.resources.cash = Math.max(0, (st.resources.cash || 0) - 200);
+            StateManager.addMessage(
+              "📝 你第三天去城管所登了记，交了¥200管理费。从此你在这条街合法摆摊，城管来了点个头就走。城里混，关系也是路。",
+              "success",
+            );
+          },
+        },
+        {
+          text: "💰 塞¥50给老张 — 不登记了",
+          hint: "保持灰色地带，好感+3",
+          apply: function (st) {
+            st.flags._chengguanTipSeen = true;
+            st.resources.cash = Math.max(0, (st.resources.cash || 0) - 50);
+            var cg = st.chengguan;
+            if (cg) cg.relationship = Math.min(100, (cg.relationship || 0) + 3);
+            StateManager.addMessage(
+              '💰 你笑嘻嘻塞了¥50到老张手里："小弟请你抽烟。"老张捏着钱哼了一声，没再说什么。',
+              "info",
+            );
+          },
+        },
+        {
+          text: "🙏 谢谢老张，我再想想",
+          hint: "好感+2 无损失",
+          apply: function (st) {
+            st.flags._chengguanTipSeen = true;
+            var cg = st.chengguan;
+            if (cg) cg.relationship = Math.min(100, (cg.relationship || 0) + 2);
+            st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 3);
+            StateManager.addMessage(
+              "🙏 你认真道了谢。老张摆摆手走了。有些路，要自己选。心情+3。",
+              "info",
+            );
+          },
+        },
+      ],
+    },
+
+    // ====================================================================
+    // R15 联动增强③：街头工作 × 技能协同 → "手艺升级"叙事事件
+    // 联动域：工作 × 技能 × 经济收益
+    // 设计意图：skill_work_synergy 子系统存在但从未通过随机事件呈现。
+    //   当任一技能 level≥20 时，触发"手艺变现"抉择 — 是把技能当副业还是深耕主业。
+    // ====================================================================
+    {
+      id: "skill_monetization_choice",
+      phase: "street",
+      icon: "🔧",
+      title: "手艺与饭碗",
+      story:
+        "你在街头干活时，有人注意到你的手艺。\n\n「你这[手艺]做得不错啊，接不接私活？一单¥200~¥500，时间自由。」\n\n你知道这是条赚钱的路。但分心做私活，主业业绩会不会受影响？\n\n每个人都会面对这个选择：是把一门手艺当副业变现，还是全部精力砸在一条路上赌一把？",
+      conditions: function (st) {
+        if (st.flags._skillMonetizeSeen) return false;
+        var skills = st.skills || {};
+        var highSkill = Object.keys(skills).filter(function (k) {
+          return skills[k] && (skills[k].level || 0) >= 20;
+        });
+        var hasJob = !!(st.employment && st.employment.currentJob);
+        return (
+          st.player.day >= 30 &&
+          hasJob &&
+          highSkill.length > 0 &&
+          Random.chance(0.03)
+        );
+      },
+      probability: 0.025,
+      repeatable: false,
+      choices: [
+        {
+          text: "💼 接副业 — 月多赚¥2000，倦怠+2/天",
+          hint: "收入增加 倦怠累积",
+          apply: function (st) {
+            st.flags._skillMonetizeSeen = true;
+            st.flags._sideSkillActive = true;
+            st.flags._sideSkillDay = st.player.day;
+            var skills = st.skills || {};
+            var highSkill = Object.keys(skills).filter(function (k) {
+              return skills[k] && (skills[k].level || 0) >= 20;
+            });
+            var sk = highSkill[Random.int(0, highSkill.length - 1)];
+            st.player.charm = Math.min(100, (st.player.charm || 50) + 2);
+            StateManager.addMessage(
+              "💼 你接了副业。每天下班后多干两小时，月多赚¥2000。\n你的" +
+                sk +
+                "技能，成了第二收入来源。\n但你知道，这条路走到头，身体会先抗议。",
+              "success",
+            );
+          },
+        },
+        {
+          text: "🎯 不接 — 把主业做到极致",
+          hint: "技能XP+50 绩效+10",
+          apply: function (st) {
+            st.flags._skillMonetizeSeen = true;
+            var skills = st.skills || {};
+            var highSkill = Object.keys(skills).filter(function (k) {
+              return skills[k] && (skills[k].level || 0) >= 20;
+            });
+            var sk = highSkill[Random.int(0, highSkill.length - 1)];
+            st.skills[sk].xp = (st.skills[sk].xp || 0) + 50;
+            if (st.employment && st.employment.performance !== undefined) {
+              st.employment.performance = Math.min(
+                100,
+                (st.employment.performance || 50) + 10,
+              );
+            }
+            StateManager.addMessage(
+              "🎯 你婉拒了私活。\n「先把一件事做好。」你这样告诉自己。\n接下来的日子里，你把时间都砸在了" +
+                sk +
+                "上。\n技能经验+50，业绩+10。极致，是另一种路线。",
+              "info",
+            );
+          },
+        },
+        {
+          text: "🤔 先观望 — 看三个月后再决定",
+          hint: "好感无变化 信息+",
+          apply: function (st) {
+            st.flags._skillMonetizeSeen = true;
+            st.player.intelligence = Math.min(
+              100,
+              (st.player.intelligence || 10) + 1,
+            );
+            st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 3);
+            StateManager.addMessage(
+              '🤔 你说"考虑考虑"。回去的路上你想了很多：到底哪条路才是对的？\n没人知道答案,但至少你开始想了。智力+1，心情+3。',
+              "info",
+            );
+          },
+        },
+      ],
+    },
+
+    // ====================================================================
+    // R15 联动增强④：天气 × 健康 × 心情 × 道德 — "雨中让伞"
+    // 联动域：天气 × 健康状况 × 道德系统
+    // 设计意图：下雨天事件rainy_umbrella/moral_pickpocket_extreme只考虑了"避雨"和"捡钱包"，
+    //   从未涉及雨中帮助陌生人的道德抉择。而下雨天恰恰是城市最有人情味的时刻。
+    // ====================================================================
+    {
+      id: "rainy_umbrella_stranger",
+      phase: "street",
+      icon: "☂️",
+      title: "雨中的老人",
+      story:
+        "暴雨如注。你撑着伞匆匆赶路，突然看见路边一个老人没有伞，蹲在商店檐下瑟瑟发抖。\n\n他脚边散落着几个塑料袋——刚买的菜。雨水顺着他的头发往下淌。\n\n你想起来今天下班还有一个重要的活要赶过去。但如果淋这场雨，你昨天才刚好一点的感冒怕是要复发。\n\n老人抬起头看了你一眼。那一眼里没有哀求，只有一种认命的平静。",
+      conditions: function (st) {
+        if (st.flags._rainyUmbrellaSeen) return false;
+        if (
+          !st.weather ||
+          (st.weather.current !== "rainy" && st.weather.current !== "stormy")
+        )
+          return false;
+        if (st.player.health && st.player.health < 60) return false; // 健康太差自己走路都难
+        return st.player.day >= 10 && Random.chance(0.05);
+      },
+      probability: 0.04,
+      repeatable: false,
+      choices: [
+        {
+          text: "🤝 把伞让给他 — 自己淋雨",
+          hint: "健康-8 道德+8 心情+15",
+          apply: function (st) {
+            st.flags._rainyUmbrellaSeen = true;
+            st.player.health = Math.max(0, (st.player.health || 70) - 8);
+            st.player.morality = Math.min(100, (st.player.morality || 50) + 8);
+            st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 15);
+            st.flags._gaveUmbrella = true; // 供后续回响事件消费
+            StateManager.addMessage(
+              "🤝 你走过去把伞塞到老人手里。「你用，我年轻，没事。」\n老人握着伞，嘴张了张。\n你转身走进雨里，水流进脖子，凉得打了个哆嗦。\n但心里暖的。健康-8，道德+8，心情+15。",
+              "success",
+            );
+          },
+        },
+        {
+          text: "🏃 心里过意不去，但还是赶路了",
+          hint: "道德-6 心情-10",
+          apply: function (st) {
+            st.flags._rainyUmbrellaSeen = true;
+            st.player.morality = Math.max(0, (st.player.morality || 50) - 6);
+            st.needs.happiness = Math.max(0, (st.needs.happiness || 50) - 10);
+            StateManager.addMessage(
+              "🏃 你低头快步走过去了。\n每走一步都觉得身后有道目光。\n你知道你做了合理的选择，但那个画面会在你脑子里停很久。道德-6，心情-10。",
+              "warning",
+            );
+          },
+        },
+        {
+          text: "📱 帮老人叫个网约车",
+          hint: "¥30 道德+3 老人平安到家",
+          apply: function (st) {
+            st.flags._rainyUmbrellaSeen = true;
+            st.resources.cash = Math.max(0, (st.resources.cash || 0) - 30);
+            st.player.morality = Math.min(100, (st.player.morality || 50) + 3);
+            st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 8);
+            st.flags._helpedElderTaxi = true;
+            StateManager.addMessage(
+              "📱 你帮老人叫了辆网约车，付了¥30。\n老人连声谢你。车来了，老人坐进去，雨被隔在了窗外。\n¥30，两不相欠。道德+3，心情+8。",
+              "info",
+            );
+          },
+        },
+      ],
+    },
+
     // ====== 注册结束 ======
   );
 })();

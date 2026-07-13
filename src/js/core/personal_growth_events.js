@@ -34,12 +34,15 @@
         minDay: 40,
         excludeFlags: ["_healthCrisisSeen"],
       },
+      // [全系统自洽修复] 域B 修复: personalGrowth.health.physical 是对象{score,lastCheckup}而非数字，原代码 object<50 恒为false → 事件永不触发
       conditions: function (st) {
-        var health =
+        var phys =
           st.personalGrowth && st.personalGrowth.health
             ? st.personalGrowth.health.physical
-            : 80;
-        return health < 50 && Random.chance(0.02);
+            : null;
+        var healthVal =
+          phys && typeof phys === "object" ? phys.score : phys || 80;
+        return healthVal < 50 && Random.chance(0.02);
       },
       probability: 0.03,
       repeatable: false,
@@ -122,16 +125,24 @@
       title: "凌晨三点的天花板",
       story:
         "你睁着眼睛盯着天花板。这是今晚第三次爬起来数羊了。\\n\\n手机屏幕上是凌晨3:14。窗外黑漆漆的，你脑子里却在过今天——不，是这一周、这一个月的所有事：房租、工作、家人的电话、还不完的债。\\n\\n胸口像压了块石头。你不确定自己还能撑多久。",
+      // [全系统自洽修复] 域B 修复: ①原路径 psychology 不存在(应为 health.mental) ②原阈值 stress>=75 等在 gameplay 中几乎不可达 → 事件永不触发。改为读取 health.mental + 心情/疲劳双维度兜底
       conditions: function (st) {
-        var psy =
-          st.personalGrowth && st.personalGrowth.psychology
-            ? st.personalGrowth.psychology
-            : { stress: 70, anxiety: 50, depression: 40 };
+        var mental =
+          st.personalGrowth && st.personalGrowth.health
+            ? st.personalGrowth.health.mental
+            : null;
+        var stressVal = mental ? mental.stress || 0 : 0;
+        var anxietyVal = mental ? mental.anxiety || 0 : 0;
+        var lowHappy = (st.needs && st.needs.happiness) || 50;
+        var highFatigue = (st.needs && st.needs.fatigue) || 0;
         return (
           st.player.day >= 30 &&
-          (psy.stress >= 75 || psy.anxiety >= 70 || psy.depression >= 65) &&
+          (stressVal >= 60 ||
+            anxietyVal >= 55 ||
+            lowHappy < 25 ||
+            highFatigue >= 80) &&
           !st.flags._burnoutSeen &&
-          Random.chance(0.03)
+          Random.chance(0.04)
         );
       },
       probability: 0.03,
@@ -144,11 +155,21 @@
             st.flags._burnoutSeen = true;
             var cost = Math.min(500, st.resources.cash);
             st.resources.cash -= cost;
-            var psy = st.personalGrowth.psychology;
-            psy.stress = Math.max(0, psy.stress - 25);
-            psy.anxiety = Math.max(0, psy.anxiety - 20);
-            psy.depression = Math.max(0, psy.depression - 15);
-            psy.mood = Math.min(100, psy.mood + 15);
+            if (!st.personalGrowth) st.personalGrowth = {};
+            if (!st.personalGrowth.health) st.personalGrowth.health = {};
+            if (!st.personalGrowth.health.mental)
+              st.personalGrowth.health.mental = {
+                score: 50,
+                stress: 0,
+                anxiety: 0,
+                depression: 0,
+                lastTherapy: 0,
+              };
+            var psy = st.personalGrowth.health.mental;
+            psy.stress = Math.max(0, (psy.stress || 0) - 25);
+            psy.anxiety = Math.max(0, (psy.anxiety || 0) - 20);
+            psy.depression = Math.max(0, (psy.depression || 0) - 15);
+            psy.score = Math.min(100, (psy.score || 50) + 10);
             st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 10);
             StateManager.addMessage(
               "📱 医生听你说了半小时。他说：「你不是一个人在战斗。」挂了电话后你哭了一会儿，然后睡了久违的觉。压力-25，焦虑-20，抑郁-15。",
@@ -161,10 +182,20 @@
           hint: "运动释放压力",
           apply: function (st) {
             st.flags._burnoutSeen = true;
-            var psy = st.personalGrowth.psychology;
-            psy.stress = Math.max(0, psy.stress - 15);
-            psy.anxiety = Math.max(0, psy.anxiety - 10);
-            psy.mood = Math.min(100, psy.mood + 8);
+            if (!st.personalGrowth) st.personalGrowth = {};
+            if (!st.personalGrowth.health) st.personalGrowth.health = {};
+            if (!st.personalGrowth.health.mental)
+              st.personalGrowth.health.mental = {
+                score: 50,
+                stress: 0,
+                anxiety: 0,
+                depression: 0,
+                lastTherapy: 0,
+              };
+            var psy = st.personalGrowth.health.mental;
+            psy.stress = Math.max(0, (psy.stress || 0) - 15);
+            psy.anxiety = Math.max(0, (psy.anxiety || 0) - 10);
+            psy.score = Math.min(100, (psy.score || 50) + 8);
             st.needs.fatigue = Math.max(0, (st.needs.fatigue || 0) - 10);
             st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 5);
             StateManager.addMessage(
@@ -197,12 +228,16 @@
       title: "镜子前的自己",
       story:
         "你面试回来站在镜子前。头发油腻腻地贴在额头上，衬衫皱了皱，领口还有一点没擦干净的咖啡渍。\\n\\n你不确定自己是不是变丑了。不，应该说——你确定自己已经很久没认真打扮过了。\\n\\n手机相册里翻到半年前的照片，你都不认识那个人了。",
+      // [全系统自洽修复] 域B 修复: personalGrowth.image 实际字段为{style,skincare,fitness,plastic}，原代码引用 appearance/grooming(不存在)→ NaN → 事件永不触发
       conditions: function (st) {
         var img =
           st.personalGrowth && st.personalGrowth.image
             ? st.personalGrowth.image
-            : { appearance: 60, style: 50, grooming: 65 };
-        var avgImg = (img.appearance + img.style + img.grooming) / 3;
+            : { style: 30, skincare: 30, fitness: 30, plastic: 0 };
+        var s = img.style || 0;
+        var sk = img.skincare || 0;
+        var fit = img.fitness || 0;
+        var avgImg = (s + sk + fit) / 3;
         return (
           st.player.day >= 60 &&
           avgImg < 45 &&
@@ -218,16 +253,24 @@
           hint: "¥300+AP，全面升级",
           apply: function (st) {
             st.flags._imageCrisisSeen = true;
+            if (!st.personalGrowth) st.personalGrowth = {};
+            if (!st.personalGrowth.image)
+              st.personalGrowth.image = {
+                style: 30,
+                skincare: 30,
+                fitness: 30,
+                plastic: 0,
+              };
             var cost = Math.min(300, st.resources.cash);
             st.resources.cash -= cost;
             var img = st.personalGrowth.image;
-            img.appearance = Math.min(100, img.appearance + 10);
-            img.style = Math.min(100, img.style + 8);
-            img.grooming = Math.min(100, img.grooming + 12);
+            img.style = Math.min(100, (img.style || 0) + 8);
+            img.skincare = Math.min(100, (img.skincare || 0) + 10);
+            img.fitness = Math.min(100, (img.fitness || 0) + 12);
             st.player.charm = Math.min(100, (st.player.charm || 50) + 3);
             st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 10);
             StateManager.addMessage(
-              "💇 你推掉了一下午的活，从头到脚重新收拾了一遍。出来时路过镜子，连自己都愣了一下——这还是我吗？外貌+10，仪容+12，魅力+3。",
+              "💇 你推掉了一下午的活，从头到脚重新收拾了一遍。出来时路过镜子，连自己都愣了一下——这还是我吗？护肤+10，体型+12，魅力+3。",
               "success",
             );
           },
@@ -237,13 +280,21 @@
           hint: "¥50，小幅改善",
           apply: function (st) {
             st.flags._imageCrisisSeen = true;
+            if (!st.personalGrowth) st.personalGrowth = {};
+            if (!st.personalGrowth.image)
+              st.personalGrowth.image = {
+                style: 30,
+                skincare: 30,
+                fitness: 30,
+                plastic: 0,
+              };
             var cost = Math.min(50, st.resources.cash);
             st.resources.cash -= cost;
             var img = st.personalGrowth.image;
-            img.grooming = Math.min(100, img.grooming + 5);
+            img.skincare = Math.min(100, (img.skincare || 0) + 5);
             st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 2);
             StateManager.addMessage(
-              "🛒 你买了瓶洗发水、一包湿巾。出门时头发至少不油了。仪容+5。小钱办小事。",
+              "🛒 你买了瓶洗发水、一包湿巾。出门时头发至少不油了。护肤+5。小钱办小事。",
               "info",
             );
           },
@@ -253,11 +304,19 @@
           hint: "自暴自弃，形象继续下滑",
           apply: function (st) {
             st.flags._imageCrisisSeen = true;
+            if (!st.personalGrowth) st.personalGrowth = {};
+            if (!st.personalGrowth.image)
+              st.personalGrowth.image = {
+                style: 30,
+                skincare: 30,
+                fitness: 30,
+                plastic: 0,
+              };
             var img = st.personalGrowth.image;
-            img.grooming = Math.max(0, img.grooming - 3);
+            img.style = Math.max(0, (img.style || 0) - 3);
             st.needs.happiness = Math.max(0, (st.needs.happiness || 0) - 3);
             StateManager.addMessage(
-              "🙄 你看了镜子一眼，关上了门。无所谓了。仪容-3，心情-3。有些改变永远不会发生，除非你开始。",
+              "🙄 你看了镜子一眼，关上了门。无所谓了。风格-3，心情-3。有些改变永远不会发生，除非你开始。",
               "warning",
             );
           },
@@ -266,7 +325,8 @@
     },
 
     // ===== 事件4：人生目标deadline逼近=====
-    // 联动：personalGrowth.lifeGoals + 时间压力 + 选择
+    // [全系统自洽修复] 域B 修复: 原路径 lifeGoals.active 不存在(state.js 仅有 goals:[])，事件永不触发。改为读取 goals + 梦想目标兜底
+    // 联动：personalGrowth.goals + 梦想目标(dreamId) + 时间压力 + 选择
     {
       id: "pg_goal_deadline",
       phase: "street",
@@ -275,13 +335,12 @@
       story:
         '手机日历上有个标记——你的一个目标，deadline是30天后。\\n\\n你点开看："30岁前存款¥50,000"。\\n\\n你查了查余额：¥12,300。还有30天。\\n\\n你想了想自己现在的节奏，按这个速度，大概率完不成。\\n\\n但你又不甘心。',
       conditions: function (st) {
-        var goals =
-          st.personalGrowth && st.personalGrowth.lifeGoals
-            ? st.personalGrowth.lifeGoals.active
-            : [];
+        // 任何已激活目标：personalGrowth.goals 或已选梦想(_dreamId)即为"有目标"
+        var goals = (st.personalGrowth && st.personalGrowth.goals) || [];
+        var hasDream = !!(st.flags && st.flags._dreamId);
         return (
           st.player.day >= 90 &&
-          goals.length > 0 &&
+          (goals.length > 0 || hasDream) &&
           !st.flags._goalDeadlineSeen &&
           Random.chance(0.02)
         );
@@ -326,10 +385,12 @@
           hint: "更现实的选择",
           apply: function (st) {
             st.flags._goalDeadlineSeen = true;
-            var goals = st.personalGrowth.lifeGoals.active;
-            if (goals.length > 0) {
-              goals[0].deadline = goals[0].deadline + 60;
+            var goals = (st.personalGrowth && st.personalGrowth.goals) || [];
+            if (goals.length > 0 && goals[0]) {
+              goals[0].deadline = (goals[0].deadline || 30) + 60;
               st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 5);
+            } else {
+              st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 3);
             }
             StateManager.addMessage(
               "📝 你把deadline往后推了60天。不是放弃，是给自己多一点时间。心情+5。有些目标值得等。",
@@ -353,8 +414,8 @@
       ],
     },
 
-    // ===== 事件5：爱好练习突破（长期投入的回报）=====
-    // 联动：personalGrowth.hobbies + 技能 + 社交
+    // [全系统自洽修复] 域B 修复: personalGrowth.hobbies 在 legacy 流程中始终为{}，事件永不触发。改为爱好+技能双通道：有爱好高level→爱好突破；否则高等级技能(level>=8)→技能突破
+    // ===== 事件5：长期投入的突破（爱好+技能双通道）=====
     {
       id: "pg_hobby_breakthrough",
       phase: "street",
@@ -363,22 +424,33 @@
       story:
         "你练了这件事已经很久了。\\n\\n也许是练了三个月的吉他，也许是练了一年的书法，也许是跑了半年马拉松。\\n\\n今天突然，某个瞬间——你和它之间的隔阂消失了。你不再是在「学」它，你就是在「做」它。\\n\\n这种感觉很奇妙。你突然觉得，之前所有的辛苦都值得了。",
       conditions: function (st) {
-        // 有爱好且等级较高 + 天数足够
         var hobbies =
           st.personalGrowth && st.personalGrowth.hobbies
             ? st.personalGrowth.hobbies
             : {};
-        var hobbyLevels = Object.keys(hobbies).filter(function (k) {
-          return hobbies[k].level >= 3;
+        var hobbyHigh = Object.keys(hobbies).filter(function (k) {
+          return hobbies[k] && (hobbies[k].level || 0) >= 3;
+        });
+        if (hobbyHigh.length > 0) {
+          return (
+            st.player.day >= 80 &&
+            !st.flags._hobbyBreakthrough &&
+            Random.chance(0.04)
+          );
+        }
+        // 爱好为空时回退到技能通道：任一技能 level>=8 即"长期投入"
+        var skills = st.skills || {};
+        var skillHigh = Object.keys(skills).filter(function (k) {
+          return skills[k] && (skills[k].level || 0) >= 8;
         });
         return (
           st.player.day >= 80 &&
-          hobbyLevels.length > 0 &&
+          skillHigh.length > 0 &&
           !st.flags._hobbyBreakthrough &&
-          Random.chance(0.01)
+          Random.chance(0.03)
         );
       },
-      probability: 0.01,
+      probability: 0.03,
       repeatable: false,
       choices: [
         {
@@ -386,19 +458,35 @@
           hint: "长期投入，回报丰厚",
           apply: function (st) {
             st.flags._hobbyBreakthrough = true;
-            var hobbyLevels = Object.keys(st.personalGrowth.hobbies).filter(
-              function (k) {
-                return st.personalGrowth.hobbies[k].level >= 3;
-              },
-            );
-            var hobbyId = hobbyLevels[Random.int(0, hobbyLevels.length - 1)];
-            st.personalGrowth.hobbies[hobbyId].level += 1;
+            var hobbies =
+              st.personalGrowth && st.personalGrowth.hobbies
+                ? st.personalGrowth.hobbies
+                : {};
+            var hobbyHigh = Object.keys(hobbies).filter(function (k) {
+              return hobbies[k] && (hobbies[k].level || 0) >= 3;
+            });
+            var label = "坚持";
+            if (hobbyHigh.length > 0) {
+              var hk = hobbyHigh[Random.int(0, hobbyHigh.length - 1)];
+              hobbies[hk].level = (hobbies[hk].level || 0) + 1;
+              label = hk;
+            } else {
+              var skills = st.skills || {};
+              var skillHigh = Object.keys(skills).filter(function (k) {
+                return skills[k] && (skills[k].level || 0) >= 8;
+              });
+              if (skillHigh.length > 0) {
+                var sk = skillHigh[Random.int(0, skillHigh.length - 1)];
+                st.skills[sk].xp = (st.skills[sk].xp || 0) + 80;
+                label = sk;
+              }
+            }
             st.player.fame = Math.min(100, (st.player.fame || 0) + 3);
             st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 15);
             StateManager.addMessage(
-              "🏆 你决定继续精进。一年后，朋友说你的" +
-                hobbyId +
-                "水平已经超出他们所有人了。名气+3，心情+15。坚持是最朴素的力量。",
+              "🏆 你决定继续精进" +
+                label +
+                "。那种「突破」的感觉,让你觉得之前所有的辛苦都值了。名气+3，心情+15。坚持是最朴素的力量。",
               "success",
             );
           },
@@ -408,13 +496,6 @@
           hint: "社交+技能",
           apply: function (st) {
             st.flags._hobbyBreakthrough = true;
-            var hobbyLevels = Object.keys(st.personalGrowth.hobbies).filter(
-              function (k) {
-                return st.personalGrowth.hobbies[k].level >= 3;
-              },
-            );
-            var hobbyId = hobbyLevels[Random.int(0, hobbyLevels.length - 1)];
-            st.personalGrowth.hobbies[hobbyId].level += 1;
             st.player.charm = Math.min(100, (st.player.charm || 0) + 3);
             st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 10);
             StateManager.addMessage(
