@@ -1087,9 +1087,33 @@ function triggerStartupEvent(state) {
   showStartupEventModal(state, event);
 }
 
-/**
- * 显示创业事件弹窗
- */
+// [CoC] 声明式效果映射 — 新增公司效果字段只需在此加一行，零代码修改
+function _applyStartupEffects(company, effects) {
+  if (!effects) return;
+  var STARTUP_FIELD_MAP = {
+    cashReserve: { clamp: true, min: -Infinity, max: Infinity },
+    reputation: { clamp: true, min: 0, max: 100 },
+    marketScore: { clamp: true, min: 0, max: 100 },
+    technologyScore: { clamp: true, min: 0, max: 100 },
+  };
+  for (var key in effects) {
+    if (!effects.hasOwnProperty(key) || key === "additionalEffect") continue;
+    var rule = STARTUP_FIELD_MAP[key];
+    if (!rule) continue;
+    var delta = effects[key];
+    if (!delta) continue;
+    if (rule.clamp) {
+      company[key] = Math.max(
+        rule.min,
+        Math.min(rule.max, (company[key] || 0) + delta),
+      );
+    } else {
+      company[key] = (company[key] || 0) + delta;
+    }
+  }
+}
+
+/** 显示创业事件弹窗 */
 function showStartupEventModal(state, event) {
   if (typeof showModal !== "function") return;
 
@@ -1151,38 +1175,11 @@ function showStartupEventModal(state, event) {
       .forEach(function (el, idx) {
         el.addEventListener("click", function () {
           const opt = event.options[idx];
-          // 应用效果
+          // [CoC] 声明式效果自动应用 — 取代手写 if-else 链
           if (opt.effect) {
-            const eff = opt.effect;
-            if (eff.cashReserve) company.cashReserve += eff.cashReserve;
-            if (eff.reputation)
-              company.reputation = Math.max(
-                0,
-                Math.min(100, company.reputation + eff.reputation),
-              );
-            if (eff.marketScore)
-              company.marketScore = Math.max(
-                0,
-                Math.min(100, company.marketScore + eff.marketScore),
-              );
-            if (eff.technologyScore)
-              company.technologyScore = Math.max(
-                0,
-                Math.min(100, company.technologyScore + eff.technologyScore),
-              );
-            if (eff.additionalEffect) {
-              const addEff = eff.additionalEffect();
-              if (addEff.cashReserve) company.cashReserve += addEff.cashReserve;
-              if (addEff.reputation)
-                company.reputation = Math.max(
-                  0,
-                  Math.min(100, company.reputation + addEff.reputation),
-                );
-              if (addEff.marketScore)
-                company.marketScore = Math.max(
-                  0,
-                  Math.min(100, company.marketScore + addEff.marketScore),
-                );
+            _applyStartupEffects(company, opt.effect);
+            if (opt.effect.additionalEffect) {
+              _applyStartupEffects(company, opt.effect.additionalEffect());
             }
           }
           StateManager.addMessage(opt.msg, "event");
