@@ -1,8 +1,8 @@
 {
-  "currentRound": 9,
+  "currentRound": 11,
   "currentDomain": "F",
   "nextDomain": "G",
-  "rotationIndex": 6,
+  "rotationIndex": 5,
   "domainOrder": ["A", "B", "C", "D", "E", "F", "G", "H"],
   "history": [
     { "round": 1, "domain": "A" },
@@ -13,10 +13,13 @@
     { "round": 6, "domain": "D" },
     { "round": 7, "domain": "F" },
     { "round": 8, "domain": "E" },
-    { "round": 9, "domain": "F" }
+    { "round": 9, "domain": "F" },
+    { "round": 10, "domain": "G" },
+    { "round": 11, "domain": "F" }
   ],
   "lastDomain": "F",
-  "lastRound": 9,
-  "lastCommit": "fa166eeb",
-  "lastDate": "2026-07-13"
+  "lastRound": 11,
+  "lastDate": "2026-07-13",
+  "completedDomains": ["A", "B", "C", "D", "E", "F", "G"],
+  "description": "R11: 域F(UI/UX续) — 4个A类修复(位置栏ID→中文名/CSS断点480→768/重复renderLocationBar覆盖/GameOver debt空值崩溃) + 100行CSS移动端状态条修补"
 }
