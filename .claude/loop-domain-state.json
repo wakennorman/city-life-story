@@ -1,11 +1,11 @@
 {
-  "currentRound": 9,
-  "currentDomain": "F",
+  "currentRound": 10,
+  "currentDomain": "C",
   "domainOrder": ["A", "B", "C", "D", "E", "F", "G", "H"],
-  "rotationIndex": 4,
-  "nextDomain": "C",
+  "rotationIndex": 5,
+  "nextDomain": "E",
   "overrideSequence": "B→D→F已完成(2026-07-14),恢复C→E→G→H→A",
-  "lastCommit": "d9381e65",
+  "lastCommit": "0e8600cf",
   "lastUpdated": "2026-07-14",
   "history": [
     {
@@ -79,6 +79,15 @@
       "linkageItems": 2,
       "commit": "d9381e65",
       "note": "B→D→F覆盖第3轮(最后一轮)。A类修复(4,移动端不可达/截断)：viewport-fit=cover解锁安全区/#app 100vh→100dvh地址栏遮挡/#tab-bar+#mobile-hud刘海安全区/.world-news-panel底部Home指示条安全区。联动增强(2,F→D)：社交Tab关系网圈子归属感概览(已结识/熟络/平均好感+激活态)+激活进度引导(桥接R8 D域机制)。全部||防御。MC 6×400d 0异常(社交存活率66.7%为既有平衡阈值非本轮引入)。覆盖序列完成,下轮恢复C→E→G→H→A。"
+    },
+    {
+      "round": 10,
+      "domain": "C",
+      "date": "2026-07-14",
+      "aClassFixed": 0,
+      "linkageItems": 3,
+      "commit": "0e8600cf",
+      "note": "覆盖序列完成后恢复正常轮换第1轮(C)。A类扫描0缺陷(逐项核验:reqSkills 7键全有效/reqEducation经state.player.education生效/SKILL_BRANCHES 10键全有效/career_path_events引用4个job id全存在于CAREER_PATHS/reqSocial与performance均经玩法可达)。联动增强3项(career_apex_peak满级有收益C→G/career_senior_bonus年终奖C→E/career_industry_dinner饭局C→D+E社会比较),全||防御,数值标[PLACEHOLDER]。MC 6×400d 0代码异常(存活率阈值为既有平衡非本轮引入)。下轮→E。"
     }
   ]
 }
