@@ -59,7 +59,7 @@ try {
         $env:PATH = "$rtkPath;$env:PATH"
     }
 
-    Set-Location -LiteralPath ([string]$projectDir)
+    Set-Location -LiteralPath ([string](Join-Path $projectDir "sensenova-exp"))
 
     & $claude --model deepseek-v4-flash @args
 }
