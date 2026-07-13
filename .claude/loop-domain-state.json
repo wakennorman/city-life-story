@@ -1,11 +1,11 @@
 {
-  "currentRound": 11,
-  "currentDomain": "E",
+  "currentRound": 12,
+  "currentDomain": "G",
   "domainOrder": ["A", "B", "C", "D", "E", "F", "G", "H"],
   "rotationIndex": 6,
-  "nextDomain": "G",
+  "nextDomain": "H",
   "overrideSequence": "B→D→F已完成(2026-07-14),恢复C→E→G→H→A",
-  "lastCommit": "（feat）economy_linkage_events.js",
+  "lastCommit": "feat: [域G] A类修复4项+联动增强3项",
   "lastUpdated": "2026-07-14",
   "history": [
     {
@@ -97,6 +97,15 @@
       "linkageItems": 3,
       "commit": "（feat）economy_linkage_events.js",
       "note": "正常轮换第2轮(E)。A类0(详尽核验7个E域文件)。联动增强3项(bull_market_tea_party E→D / asset_milestone_reflection E→G / colleague_invest_club E→C)，新建 economy_linkage_events.js IIFE 注入 RANDOM_EVENTS，全||防御，数值标[PLACEHOLDER]。MC 6×400d 0异常。下轮→G。"
+    },
+    {
+      "round": 12,
+      "domain": "G",
+      "date": "2026-07-14",
+      "aClassFixed": 4,
+      "linkageItems": 3,
+      "commit": "feat: [域G] A类修复4项+联动增强3项",
+      "note": "正常轮换第3轮(G)。A类修复4项(events_core stats.health→status.health×3 / life_ribbon illness→illnesses / world_params enterprise→startup / tutorial illness→illnesses)。联动增强3项(life_city_anniversary G→D / life_work_anniversary G→C / life_estate_planning G→E)，新建 lifecycle_linkage_events.js IIFE 注入 RANDOM_EVENTS，全||防御，数值标[PLACEHOLDER]。MC 6×400d 0异常。下轮→H。"
     }
   ]
 }

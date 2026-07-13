@@ -157,7 +157,7 @@ var LIFE_RIBBONS = [
       return (
         !stats.victoryType &&
         (stats.finalHealth <= 20 ||
-          (st.status && st.status.illness && st.status.illness.length >= 3))
+          (st.status && st.status.illnesses && st.status.illnesses.length >= 3))
       );
     },
   },

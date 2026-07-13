@@ -1,8 +1,25 @@
 # 城市浮生记 (City Life Story) — 开发文档
 
-> 最后更新: 2026-07-14（v3.103 loop R11 全系统优化·Domain E 经济/投资——联动增强3项：E→D牛市茶话会 / E→G资产里程碑 / E→C同事理财饭局）
+> 最后更新: 2026-07-14（v3.104 loop R12 全系统优化·Domain G 核心机制/生命周期——A类修复4项 + 联动增强3项：G→D城中周年 / G→C职场周年 / G→E世代资产）
 >
-> commits: `（feat）economy_linkage_events.js 新增3跨域事件` + `（docs）loop状态/迭代表`
+> commits: `feat: [域G] A类修复4项+联动增强3项` + `（docs）loop状态/迭代表`
+
+---
+
+## 2026-07-14 — v3.104 loop R12 全系统优化·Domain G 核心机制/生命周期（A类修复4项 + 联动增强3项新事件）
+
+> 循环迭代表见 CLAUDE.md「全系统优化·循环迭代表」。本轮域 = **G 核心机制/生命周期**。
+
+- **A类修复 4 项**（均为「写错字段名/读错对象致功能永假」的真实缺陷）：
+  1. `src/js/core/events_core.js`（3处 624/653/655）：事件难度健康惩罚读/写 `state.stats.health`（无此字段，真实路径 `state.status.health`）→ 原 `_preEvtHealth` 恒 0、`dHealth=NaN`、`NaN<0` 永假，**负向健康惩罚从未生效** → 改为读/写 `state.status.health`。
+  2. `src/js/core/life_ribbon.js`（160）：「病困交加」缎带判定 `st.status.illness`（应为复数 `illnesses`）→ 患病≥3 分支永假。
+  3. `src/js/core/world_params.js`（556-560）：CEO 公司行业热度读 `state.enterprise`（应为 `state.startup`）→ 行业热度计算永不触发。
+  4. `src/js/ui/tutorial.js`（1063）：首病提示 `st.status.illness`（应为 `illnesses`）→ 提示永不触发。
+- **联动增强 3 项**（新建 `src/js/core/lifecycle_linkage_events.js`，IIFE 注入 RANDOM_EVENTS，全 `||` 防御，数值标 `[PLACEHOLDER]`）：
+  1. `life_city_anniversary`（G→D）：每满一整年 + 已结识NPC → 约最好熟人 `safeAffinity`+6、心情+8（人生节点→社交回响）。
+  2. `life_work_anniversary`（G→C）：职场期每满一入职年 → 组局职场声誉(upward)+5、心情+6（人生节点→职业仪式感）。
+  3. `life_estate_planning`（G→E）：年龄≥40[PLACEHOLDER] & 资产≥¥50万[PLACEHOLDER] → 立继承安排(标记 family._estatePlanned)/公益捐赠(道德+5)（人生节点→经济传承）。
+- **验证**: `node --check` 5 文件全过；`python build.py` 重建 dist/index.html（新事件随 bundle 生效）。MC 6×400d 计划校验 0 代码异常。
 
 ---
 

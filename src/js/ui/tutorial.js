@@ -1060,7 +1060,12 @@ var DYNAMIC_HINTS = [
   {
     id: "first_sick",
     trigger: function (st) {
-      return st.status && st.status.illness && !st.flags._hint_first_sick;
+      return (
+        st.status &&
+        st.status.illnesses &&
+        st.status.illnesses.length > 0 &&
+        !st.flags._hint_first_sick
+      );
     },
     message:
       "🤒 你生病了！生病期间工作效率会降低，快去🏥医院治疗，或者在家休息几天。",

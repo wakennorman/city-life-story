@@ -621,7 +621,7 @@ function showEventModal(evt) {
         }
         // v3.1 ⑤ 事件惩罚倍率：快照关键数值，结算后对负向 delta 乘算难度系数
         var _preEvtCash = state.resources.cash;
-        var _preEvtHealth = state.stats ? state.stats.health : 0;
+        var _preEvtHealth = (state.status && state.status.health) || 100;
         var _preEvtMental = state.player ? state.player.mental : 0;
         if (typeof choice.apply === "function") {
           choice.apply(state);
@@ -650,9 +650,10 @@ function showEventModal(evt) {
             if (dCash < 0)
               state.resources.cash = _preEvtCash + Math.round(dCash * epMult);
             if (state.stats) {
-              var dHealth = state.stats.health - _preEvtHealth;
+              var dHealth =
+                (state.status ? state.status.health : 100) - _preEvtHealth;
               if (dHealth < 0)
-                state.stats.health =
+                state.status.health =
                   _preEvtHealth + Math.round(dHealth * epMult);
             }
             if (state.player) {

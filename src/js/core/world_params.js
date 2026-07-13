@@ -553,11 +553,11 @@ function applySectorFeedback(state) {
   // 公司影响力取决于市场份额（市场占有率越高，行业影响力越大）。
   // 设计参考：Capitalism Lab 中巨头公司改变行业格局。
   if (
-    state.enterprise &&
-    state.enterprise.company &&
-    state.enterprise.company.industry
+    state.startup &&
+    state.startup.company &&
+    state.startup.company.industry
   ) {
-    var company = state.enterprise.company;
+    var company = state.startup.company;
     var ceoEffect = 0;
 
     if (company.marketShare && company.marketShare > 30) {
