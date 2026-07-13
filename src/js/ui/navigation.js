@@ -440,7 +440,7 @@ function _doNavigate(state, target, options) {
       var curLoc = state.trade && state.trade.currentLocation;
       if (curLoc === locKey) {
         // 已在该地点，切换到指定Tab或地图Tab
-        var alreadyHereTab = target.navTab || "map";
+        var alreadyHereTab = target.navTab || "city";
         if (typeof switchTab === "function") switchTab(alreadyHereTab);
         StateManager.addMessage(
           "📍 已在" + (LOCATIONS[locKey] ? LOCATIONS[locKey].name : locKey),

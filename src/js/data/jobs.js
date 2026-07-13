@@ -772,29 +772,22 @@ const STREET_JOBS = [
     },
 
     // ============================================================
-    // 待完成：新增地点专属工作 — 参考《大多数》工作系统《北京浮生记》
-    // 实现提示：在 BRANCH_JOBS 数组中追加，注意 location 字段对应 locations.js 中的 ID
-    // 参考来源：
-    //   - 《大多数》工作系统：游戏化工作设计思路
-    //   - 《北京浮生记》街头工作：真实北京街头工作类型
-    //   - 真实中国零工经济数据（2024年）
+    // 公园地点工作 — 街头表演
+    // 联动：locations.js park 地点 jobs: ["busking"]
     // ============================================================
-    //
-    // === 公园地点工作 ===
-    // TODO: 待实现 - 公园街头表演（参考真实街头艺人收入¥50-500/天）
-    // {
-    //   id: "busking",
-    //   name: "街头表演",
-    //   desc: "在天桥或广场表演才艺。脸皮要厚，观众打赏全看心情。",
-    //   icon: "🎸",
-    //   location: "park",
-    //   requirements: { mental: 30, minAge: 16, maxAge: 60 },
-    //   effects: { fatigue: 12, happiness: 18, mental: 2, fame: 3 },
-    //   payCalc(state) {
-    //     return Math.floor(18 + state.player.mental * 0.2 + state.player.fame * 0.3 + Random.float(0, 42));
-    //   },
-    //   risk: {},
-    // },
+    {
+      id: "busking",
+      name: "街头表演",
+      desc: "在天桥或广场表演才艺。脸皮要厚，观众打赏全看心情。",
+      icon: "🎸",
+      location: "park",
+      requirements: { mental: 30, minAge: 16, maxAge: 60 },
+      effects: { fatigue: 12, happiness: 18, mental: 2, fame: 3 },
+      payCalc(state) {
+        return Math.floor(18 + state.player.mental * 0.2 + state.player.fame * 0.3 + Random.float(0, 42));
+      },
+      risk: {},
+    },
     // ============================================================
     // 批发市场地点工作（正式实现 — 参考真实批发行业就业）
     // 联动：wholesaleMarket 地点 jobs 数组需更新

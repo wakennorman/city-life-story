@@ -1732,6 +1732,24 @@ function generateDailySummary(state, startCash, startHealth, startHappiness) {
   delete state.flags._todayDebtEvent;
   delete state.flags._todayMentalEvent;
 
+  // 债务状态追踪（成就：还清欠债）
+  if (
+    (state.resources.villageDebt || 0) <= 0 &&
+    (state.resources.bankDebt || 0) <= 0
+  ) {
+    state.flags._debtFree = true;
+  }
+
+  // 成就要件：清白之身（满30天+无违法记录）
+  if (
+    (state.player.day || 0) >= 30 &&
+    !state.flags._didGamble &&
+    !state.flags._didGrayWork &&
+    !state.flags._didSmuggling
+  ) {
+    state.flags._cleanRecord = true;
+  }
+
   if (!highlights.length) highlights.push("平凡的一天，活着就是赢了");
 
   var summary = highlights.slice(0, 2).join("，") + "。";

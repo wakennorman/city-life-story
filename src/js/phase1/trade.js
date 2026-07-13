@@ -182,6 +182,7 @@ function sellGood(goodId, qty) {
     if (unitProfit > 0) {
       state.trade.totalProfit =
         (state.trade.totalProfit || 0) + unitProfit * qty;
+      state.flags._firstTradeDone = true; // 成就：第一次倒买倒卖
     }
   }
 

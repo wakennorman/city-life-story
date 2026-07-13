@@ -1045,11 +1045,6 @@ const HOUSING_TIERS = [
   },
 ];
 
-// ====== 装备掉落系统已移除 ======
-// 旧 rollEquipmentDrop / getEquipmentPoolBySource / rollEquipmentQuality / rollEnchantment
-// 为死代码（零调用，引用不存在的 eq_* 假 id）。装备获取改走
-// createEquipmentInstance（equipment_quality.js），按 slot 键存储实例。
-
 /** 获取当前住所信息 */
 function getCurrentHousing(state) {
   return HOUSING_TIERS[state.housing?.tier || 0] || HOUSING_TIERS[0];

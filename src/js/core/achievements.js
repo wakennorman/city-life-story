@@ -29,13 +29,7 @@ const ACHIEVEMENTS = [
     icon: "👷",
     category: "人生第一次",
     hidden: false,
-    check: function (st) {
-      return (
-        st.employment &&
-        st.employment.completedShifts &&
-        Object.keys(st.employment.completedShifts).length > 0
-      );
-    },
+    triggers: { minCounter: { flag: "_completedShiftCount", min: 1 } },
   },
   {
     id: "first_trade",
@@ -45,14 +39,7 @@ const ACHIEVEMENTS = [
     icon: "🛒",
     category: "人生第一次",
     hidden: false,
-    check: function (st) {
-      return (
-        (st.trade &&
-          st.trade.totalProfit !== undefined &&
-          st.trade.totalProfit > 0) ||
-        (st.flags && st.flags._firstTradeDone)
-      );
-    },
+    triggers: { flagMet: "_firstTradeDone" },
   },
   {
     id: "first_bank",
@@ -93,12 +80,7 @@ const ACHIEVEMENTS = [
     icon: "⭐",
     category: "人生第一次",
     hidden: false,
-    check: function (st) {
-      if ((st.player.day || 0) < 3) return false;
-      return Object.values(st.skills).some(function (s) {
-        return s.level >= 1;
-      });
-    },
+    triggers: { flagMet: "_firstSkillUpgraded" },
   },
 
   // === 里程碑 ===
@@ -150,13 +132,7 @@ const ACHIEVEMENTS = [
     icon: "🎉",
     category: "里程碑",
     hidden: false,
-    check: function (st) {
-      if ((st.player.day || 0) < 15) return false;
-      return (
-        (st.resources.villageDebt || 0) <= 0 &&
-        (st.resources.bankDebt || 0) <= 0
-      );
-    },
+    triggers: { minDay: 15, flagMet: "_debtFree" },
   },
   {
     id: "enter_corporate",
@@ -626,9 +602,7 @@ const ACHIEVEMENTS = [
     icon: "🎯",
     category: "隐藏",
     hidden: true,
-    check: function (st) {
-      return (st.flags._unlockedAchievements || []).length >= 25;
-    },
+    triggers: { flagMet: "_achievementHunterUnlocked" },
   },
 
   // === 节日成就 ===
@@ -778,15 +752,7 @@ const ACHIEVEMENTS = [
     icon: "🎭",
     category: "节日",
     hidden: false,
-    check: function (st) {
-      var count = 0;
-      if (st.flags && st.flags._springFestivalAchieveHome) count++;
-      if (st.flags && st.flags._laborDayAchieveWork) count++;
-      if (st.flags && st.flags._midAutumnAchieveGift) count++;
-      if (st.flags && st.flags._nationalDayAchieveWork) count++;
-      if (st.flags && st.flags._shoppingFestAchieveStockup) count++;
-      return count >= 3;
-    },
+    triggers: { flagMet: "_festivalMasterDone" },
   },
 
   // ====== 创业成就 ======
@@ -820,13 +786,7 @@ const ACHIEVEMENTS = [
     icon: "💰",
     category: "创业",
     hidden: false,
-    check: function (st) {
-      if (!st.startup || !st.startup.company) return false;
-      return (
-        st.startup.company.fundingRounds &&
-        st.startup.company.fundingRounds.length >= 1
-      );
-    },
+    triggers: { flagMet: "_gotFirstFunding" },
   },
   {
     id: "startup_series_a",
@@ -1057,9 +1017,7 @@ const ACHIEVEMENTS = [
     icon: "🛏️",
     category: "里程碑",
     hidden: false,
-    check: function (st) {
-      return (st.housing.tier || 0) >= 1 && (st.flags._everHomeless || 0);
-    },
+    triggers: { flagMet: "_everHomeless", minHousingTier: 1 },
   },
   {
     id: "market_hawk",
@@ -1184,12 +1142,7 @@ const ACHIEVEMENTS = [
     icon: "📈",
     category: "里程碑",
     hidden: false,
-    check: function (st) {
-      return (
-        (st.corporate && st.corporate.rank) === "P6" &&
-        !(st.flags && st.flags._everAtP7)
-      );
-    },
+    triggers: { rankAtLeast: "P6", flagNotMet: "_everAtP7" },
   },
   {
     id: "team_leader",
@@ -1200,12 +1153,7 @@ const ACHIEVEMENTS = [
     icon: "👥",
     category: "里程碑",
     hidden: false,
-    check: function (st) {
-      return (
-        (st.corporate && st.corporate.rank) === "P7" &&
-        ((st.corporate && st.corporate.teamSize) || 0) >= 2
-      );
-    },
+    triggers: { flagMet: "_teamLeaderAchieved" },
   },
   {
     id: "expert_path",
@@ -1235,9 +1183,7 @@ const ACHIEVEMENTS = [
     icon: "🌙",
     category: "隐藏",
     hidden: true,
-    check: function (st) {
-      return ((st.corporate && st.corporate.totalOvertimeHours) || 0) >= 100;
-    },
+    triggers: { flagMet: "_overtimeWarriorAchieved" },
   },
   {
     id: "kpi_king",
@@ -1505,22 +1451,7 @@ const ACHIEVEMENTS = [
     icon: "👥",
     category: "社交线",
     hidden: false,
-    check: function (st) {
-      if (!st.relationships) return false;
-      var count = 0;
-      [
-        "aunt_wang",
-        "boss_li",
-        "sister_zhang",
-        "old_zhou",
-        "xiao_mei",
-        "chef_chen",
-      ].forEach(function (id) {
-        if (st.relationships[id] && st.relationships[id].affinity >= 30)
-          count++;
-      });
-      return count >= 3;
-    },
+    triggers: { flagMet: "_friendCircleAchieved" },
   },
   {
     id: "best_friend",
@@ -1530,19 +1461,7 @@ const ACHIEVEMENTS = [
     icon: "❤️",
     category: "社交线",
     hidden: false,
-    check: function (st) {
-      if (!st.relationships) return false;
-      return [
-        "aunt_wang",
-        "boss_li",
-        "sister_zhang",
-        "old_zhou",
-        "xiao_mei",
-        "chef_chen",
-      ].some(function (id) {
-        return st.relationships[id] && st.relationships[id].affinity >= 80;
-      });
-    },
+    triggers: { flagMet: "_bestFriendAchieved" },
   },
   {
     id: "gift_giver",
@@ -1614,15 +1533,7 @@ const ACHIEVEMENTS = [
     icon: "👩‍🏫",
     category: "社交线",
     hidden: false,
-    check: function (st) {
-      return !!(
-        st.relationships &&
-        st.relationships.xiao_mei &&
-        st.relationships.xiao_mei.affinity >= 80 &&
-        st.flags &&
-        st.flags._xiaomeiVolunteerDone
-      );
-    },
+    triggers: { minNpcAffinity: { id: "xiao_mei", min: 80 }, flagMet: "_xiaomeiVolunteerDone" },
   },
   {
     id: "first_meal",
@@ -1666,13 +1577,7 @@ const ACHIEVEMENTS = [
     icon: "💊",
     category: "人生第一次",
     hidden: true,
-    check: function (st) {
-      return !!(
-        st.flags &&
-        st.flags._everHadIllness &&
-        st.flags._everCuredIllness
-      );
-    },
+    triggers: { flagMet: "_everCuredIllness" },
   },
   {
     id: "fitness_freak",
@@ -1790,13 +1695,7 @@ const ACHIEVEMENTS = [
     icon: "⚖️",
     category: "道德档案",
     hidden: true,
-    check: function (st) {
-      if ((st.player.day || 0) < 30) return false;
-      return !(
-        st.flags &&
-        (st.flags._didGamble || st.flags._didGrayWork || st.flags._didSmuggling)
-      );
-    },
+    triggers: { flagMet: "_cleanRecord" },
   },
   {
     id: "perfect_timing",
@@ -1817,14 +1716,7 @@ const ACHIEVEMENTS = [
     icon: "🤝",
     category: "道德档案",
     hidden: true,
-    check: function (st) {
-      return !!(
-        st.startup &&
-        st.startup.flags &&
-        st.startup.flags.registered &&
-        !(st.flags && st.flags._everFiredEmployee)
-      );
-    },
+    triggers: { startupFlag: "registered", flagNotMet: "_everFiredEmployee" },
   },
   {
     id: "hidden_friend_all_npc",
@@ -1834,27 +1726,7 @@ const ACHIEVEMENTS = [
     icon: "🤝",
     category: "隐藏",
     hidden: true,
-    check: function (st) {
-      if (!st.relationships) return false;
-      if (!st.player || st.player.day < 30) return false;
-      var rels = st.relationships;
-      var metAny = false;
-      var allHigh = true;
-      var metNpcs = Object.keys(rels).filter(function (k) {
-        return rels[k] && typeof rels[k].affinity === "number" && rels[k].met;
-      });
-      for (var i = 0; i < metNpcs.length; i++) {
-        var r = rels[metNpcs[i]];
-        if (r && typeof r.affinity === "number" && r.affinity > 0) {
-          metAny = true;
-          if (r.affinity < 60) {
-            allHigh = false;
-            break;
-          }
-        }
-      }
-      return metAny && allHigh;
-    },
+    triggers: { flagMet: "_allFriends60" },
   },
   {
     id: "last_money_donation",
@@ -1902,13 +1774,7 @@ const ACHIEVEMENTS = [
     icon: "💼",
     category: "里程碑",
     hidden: false,
-    check: function (st) {
-      return !!(
-        st.career &&
-        st.career.currentJob &&
-        (st.career.currentJob.workDays || 0) >= 100
-      );
-    },
+    triggers: { flagMet: "_career100Days" },
   },
   {
     id: "career_cross_path",
@@ -1930,14 +1796,7 @@ const ACHIEVEMENTS = [
     icon: "🏔️",
     category: "里程碑",
     hidden: false,
-    check: function (st) {
-      if (!st.career || !st.career.currentJob) return false;
-      var job = st.career.currentJob;
-      if (typeof CAREER_PATHS === "undefined" || !CAREER_PATHS[job.path])
-        return false;
-      var levels = CAREER_PATHS[job.path].levels;
-      return levels.length > 0 && job.levelId === levels[levels.length - 1].id;
-    },
+    triggers: { flagMet: "_careerMaxLevel" },
   },
   {
     id: "career_multipath",
@@ -1948,10 +1807,7 @@ const ACHIEVEMENTS = [
     icon: "🗺️",
     category: "隐藏",
     hidden: true,
-    check: function (st) {
-      if (!st.flags || !st.flags._careerPathsWorked) return false;
-      return Object.keys(st.flags._careerPathsWorked).length >= 3;
-    },
+    triggers: { flagMet: "_careerMultiPath" },
   },
   {
     id: "career_burnout_survivor",
@@ -1973,14 +1829,7 @@ const ACHIEVEMENTS = [
     icon: "🏆",
     category: "隐藏",
     hidden: true,
-    check: function (st) {
-      return !!(
-        st.career &&
-        st.career.currentJob &&
-        (st.career.currentJob.performance || 0) >= 90 &&
-        (st.career.currentJob.workDays || 0) >= 30
-      );
-    },
+    triggers: { flagMet: "_careerTopPerformer" },
   },
   {
     id: "career_occupational_disease",
@@ -2206,6 +2055,104 @@ function checkAchievements(state) {
     state.flags._unlockedAchievements = [];
   var unlocked = state.flags._unlockedAchievements;
   var newlyUnlocked = [];
+  // ── CoC 前提条件标志统一更新（在成就遍历前计算） ──
+  // 里程碑：从街头到屋顶（housing.tier>=1 + _everHomeless）
+  // 此项恰好在 triggers 中直接组合，无需额外 flag
+  // 成就猎人（25个成就）
+  if ((state.flags._unlockedAchievements || []).length >= 25) {
+    state.flags._achievementHunterUnlocked = true;
+  }
+  // 节日达人（至少3个节日参与）
+  var festCount = 0;
+  if (state.flags._springFestivalAchieveHome) festCount++;
+  if (state.flags._laborDayAchieveWork) festCount++;
+  if (state.flags._midAutumnAchieveGift) festCount++;
+  if (state.flags._nationalDayAchieveWork) festCount++;
+  if (state.flags._shoppingFestAchieveStockup) festCount++;
+  if (festCount >= 3) state.flags._festivalMasterDone = true;
+  // 首次融资
+  if (
+    state.startup &&
+    state.startup.company &&
+    state.startup.company.fundingRounds &&
+    state.startup.company.fundingRounds.length >= 1
+  ) {
+    state.flags._gotFirstFunding = true;
+  }
+  // 加班战神（累计加班100小时）
+  if ((state.corporate && state.corporate.totalOvertimeHours) || 0 >= 100) {
+    state.flags._overtimeWarriorAchieved = true;
+  }
+  // 团队领袖（P7 + teamSize>=2）
+  if (
+    state.corporate &&
+    state.corporate.rank === "P7" &&
+    (state.corporate.teamSize || 0) >= 2
+  ) {
+    state.flags._teamLeaderAchieved = true;
+  }
+  // 朋友圈（6个NPC中>=3个好感>=30）
+  if (state.relationships) {
+    var friendCount = 0;
+    var bestFriendCount = 0;
+    ["aunt_wang","boss_li","sister_zhang","old_zhou","xiao_mei","chef_chen"].forEach(function(id) {
+      if (state.relationships[id] && state.relationships[id].affinity >= 30) friendCount++;
+      if (state.relationships[id] && state.relationships[id].affinity >= 80) bestFriendCount++;
+    });
+    if (friendCount >= 3) state.flags._friendCircleAchieved = true;
+    if (bestFriendCount >= 1) state.flags._bestFriendAchieved = true;
+  }
+  // 人缘极好（所有已认识NPC好感>=60）
+  if (state.relationships && (state.player.day || 0) >= 30) {
+    var rels = state.relationships;
+    var metAny = false;
+    var allHigh = true;
+    var metNpcs = Object.keys(rels).filter(function(k) {
+      return rels[k] && typeof rels[k].affinity === "number" && rels[k].met;
+    });
+    for (var fi = 0; fi < metNpcs.length; fi++) {
+      var r = rels[metNpcs[fi]];
+      if (r && typeof r.affinity === "number" && r.affinity > 0) {
+        metAny = true;
+        if (r.affinity < 60) { allHigh = false; break; }
+      }
+    }
+    if (metAny && allHigh) state.flags._allFriends60 = true;
+  }
+  // 百日职场人（workDays>=100）
+  if (
+    state.career &&
+    state.career.currentJob &&
+    (state.career.currentJob.workDays || 0) >= 100
+  ) {
+    state.flags._career100Days = true;
+  }
+  // 路径巅峰（最高级别）
+  if (
+    state.career &&
+    state.career.currentJob &&
+    typeof CAREER_PATHS !== "undefined"
+  ) {
+    var cJob = state.career.currentJob;
+    var cPath = CAREER_PATHS[cJob.path];
+    if (cPath && cPath.levels && cPath.levels.length > 0 && cJob.levelId === cPath.levels[cPath.levels.length - 1].id) {
+      state.flags._careerMaxLevel = true;
+    }
+  }
+  // 职场探险家（>=3条不同路径）
+  if (state.flags && state.flags._careerPathsWorked && Object.keys(state.flags._careerPathsWorked).length >= 3) {
+    state.flags._careerMultiPath = true;
+  }
+  // 绩效之王（perf>=90 && workDays>=30）
+  if (
+    state.career &&
+    state.career.currentJob &&
+    (state.career.currentJob.performance || 0) >= 90 &&
+    (state.career.currentJob.workDays || 0) >= 30
+  ) {
+    state.flags._careerTopPerformer = true;
+  }
+  // ── 成就遍历 ──
   ACHIEVEMENTS.forEach(function (ach) {
     if (unlocked.indexOf(ach.id) !== -1) return; // 已解锁
     try {

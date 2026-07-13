@@ -3479,6 +3479,7 @@ function getAvailableActions(state) {
           if (skill.xp >= xpNeeded && skill.level < 100) {
             skill.level++;
             skill.xp -= xpNeeded;
+            st.flags._firstSkillUpgraded = true; // 成就：第一次技能升级
             StateManager.addMessage(
               `📚 你的${getSkillName(key)}提升到了等级 ${skill.level}！`,
               "success",
@@ -4299,6 +4300,7 @@ function doStreetJob(job) {
   }
   state.employment.completedShifts[job.id] =
     (state.employment.completedShifts[job.id] || 0) + 1;
+  state.flags._completedShiftCount = (state.flags._completedShiftCount || 0) + 1; // 成就：第一份工作
 
   // 职业称号系统：同一工作累计天数解锁称号加成
   if (!state.flags._jobTitles) state.flags._jobTitles = {};
@@ -4736,6 +4738,7 @@ function addSkillXp(skillKey, amount) {
   while (skill.xp >= xpNeeded && skill.level < 100) {
     skill.level++;
     skill.xp -= xpNeeded;
+    state.flags._firstSkillUpgraded = true; // 成就：第一次技能升级
     xpNeeded = Math.floor(
       (skill.level + 1) * 120 * Math.pow(1.01, skill.level),
     );

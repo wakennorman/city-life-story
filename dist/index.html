@@ -23433,13 +23433,7 @@ const ACHIEVEMENTS = [
     icon: "👷",
     category: "人生第一次",
     hidden: false,
-    check: function (st) {
-      return (
-        st.employment &&
-        st.employment.completedShifts &&
-        Object.keys(st.employment.completedShifts).length > 0
-      );
-    },
+    triggers: { minCounter: { flag: "_completedShiftCount", min: 1 } },
   },
   {
     id: "first_trade",
@@ -23449,14 +23443,7 @@ const ACHIEVEMENTS = [
     icon: "🛒",
     category: "人生第一次",
     hidden: false,
-    check: function (st) {
-      return (
-        (st.trade &&
-          st.trade.totalProfit !== undefined &&
-          st.trade.totalProfit > 0) ||
-        (st.flags && st.flags._firstTradeDone)
-      );
-    },
+    triggers: { flagMet: "_firstTradeDone" },
   },
   {
     id: "first_bank",
@@ -23497,12 +23484,7 @@ const ACHIEVEMENTS = [
     icon: "⭐",
     category: "人生第一次",
     hidden: false,
-    check: function (st) {
-      if ((st.player.day || 0) < 3) return false;
-      return Object.values(st.skills).some(function (s) {
-        return s.level >= 1;
-      });
-    },
+    triggers: { flagMet: "_firstSkillUpgraded" },
   },
 
   // === 里程碑 ===
@@ -23554,13 +23536,7 @@ const ACHIEVEMENTS = [
     icon: "🎉",
     category: "里程碑",
     hidden: false,
-    check: function (st) {
-      if ((st.player.day || 0) < 15) return false;
-      return (
-        (st.resources.villageDebt || 0) <= 0 &&
-        (st.resources.bankDebt || 0) <= 0
-      );
-    },
+    triggers: { minDay: 15, flagMet: "_debtFree" },
   },
   {
     id: "enter_corporate",
@@ -24030,9 +24006,7 @@ const ACHIEVEMENTS = [
     icon: "🎯",
     category: "隐藏",
     hidden: true,
-    check: function (st) {
-      return (st.flags._unlockedAchievements || []).length >= 25;
-    },
+    triggers: { flagMet: "_achievementHunterUnlocked" },
   },
 
   // === 节日成就 ===
@@ -24182,15 +24156,7 @@ const ACHIEVEMENTS = [
     icon: "🎭",
     category: "节日",
     hidden: false,
-    check: function (st) {
-      var count = 0;
-      if (st.flags && st.flags._springFestivalAchieveHome) count++;
-      if (st.flags && st.flags._laborDayAchieveWork) count++;
-      if (st.flags && st.flags._midAutumnAchieveGift) count++;
-      if (st.flags && st.flags._nationalDayAchieveWork) count++;
-      if (st.flags && st.flags._shoppingFestAchieveStockup) count++;
-      return count >= 3;
-    },
+    triggers: { flagMet: "_festivalMasterDone" },
   },
 
   // ====== 创业成就 ======
@@ -24224,13 +24190,7 @@ const ACHIEVEMENTS = [
     icon: "💰",
     category: "创业",
     hidden: false,
-    check: function (st) {
-      if (!st.startup || !st.startup.company) return false;
-      return (
-        st.startup.company.fundingRounds &&
-        st.startup.company.fundingRounds.length >= 1
-      );
-    },
+    triggers: { flagMet: "_gotFirstFunding" },
   },
   {
     id: "startup_series_a",
@@ -24461,9 +24421,7 @@ const ACHIEVEMENTS = [
     icon: "🛏️",
     category: "里程碑",
     hidden: false,
-    check: function (st) {
-      return (st.housing.tier || 0) >= 1 && (st.flags._everHomeless || 0);
-    },
+    triggers: { flagMet: "_everHomeless", minHousingTier: 1 },
   },
   {
     id: "market_hawk",
@@ -24588,12 +24546,7 @@ const ACHIEVEMENTS = [
     icon: "📈",
     category: "里程碑",
     hidden: false,
-    check: function (st) {
-      return (
-        (st.corporate && st.corporate.rank) === "P6" &&
-        !(st.flags && st.flags._everAtP7)
-      );
-    },
+    triggers: { rankAtLeast: "P6", flagNotMet: "_everAtP7" },
   },
   {
     id: "team_leader",
@@ -24604,12 +24557,7 @@ const ACHIEVEMENTS = [
     icon: "👥",
     category: "里程碑",
     hidden: false,
-    check: function (st) {
-      return (
-        (st.corporate && st.corporate.rank) === "P7" &&
-        ((st.corporate && st.corporate.teamSize) || 0) >= 2
-      );
-    },
+    triggers: { flagMet: "_teamLeaderAchieved" },
   },
   {
     id: "expert_path",
@@ -24639,9 +24587,7 @@ const ACHIEVEMENTS = [
     icon: "🌙",
     category: "隐藏",
     hidden: true,
-    check: function (st) {
-      return ((st.corporate && st.corporate.totalOvertimeHours) || 0) >= 100;
-    },
+    triggers: { flagMet: "_overtimeWarriorAchieved" },
   },
   {
     id: "kpi_king",
@@ -24909,22 +24855,7 @@ const ACHIEVEMENTS = [
     icon: "👥",
     category: "社交线",
     hidden: false,
-    check: function (st) {
-      if (!st.relationships) return false;
-      var count = 0;
-      [
-        "aunt_wang",
-        "boss_li",
-        "sister_zhang",
-        "old_zhou",
-        "xiao_mei",
-        "chef_chen",
-      ].forEach(function (id) {
-        if (st.relationships[id] && st.relationships[id].affinity >= 30)
-          count++;
-      });
-      return count >= 3;
-    },
+    triggers: { flagMet: "_friendCircleAchieved" },
   },
   {
     id: "best_friend",
@@ -24934,19 +24865,7 @@ const ACHIEVEMENTS = [
     icon: "❤️",
     category: "社交线",
     hidden: false,
-    check: function (st) {
-      if (!st.relationships) return false;
-      return [
-        "aunt_wang",
-        "boss_li",
-        "sister_zhang",
-        "old_zhou",
-        "xiao_mei",
-        "chef_chen",
-      ].some(function (id) {
-        return st.relationships[id] && st.relationships[id].affinity >= 80;
-      });
-    },
+    triggers: { flagMet: "_bestFriendAchieved" },
   },
   {
     id: "gift_giver",
@@ -25018,15 +24937,7 @@ const ACHIEVEMENTS = [
     icon: "👩‍🏫",
     category: "社交线",
     hidden: false,
-    check: function (st) {
-      return !!(
-        st.relationships &&
-        st.relationships.xiao_mei &&
-        st.relationships.xiao_mei.affinity >= 80 &&
-        st.flags &&
-        st.flags._xiaomeiVolunteerDone
-      );
-    },
+    triggers: { minNpcAffinity: { id: "xiao_mei", min: 80 }, flagMet: "_xiaomeiVolunteerDone" },
   },
   {
     id: "first_meal",
@@ -25070,13 +24981,7 @@ const ACHIEVEMENTS = [
     icon: "💊",
     category: "人生第一次",
     hidden: true,
-    check: function (st) {
-      return !!(
-        st.flags &&
-        st.flags._everHadIllness &&
-        st.flags._everCuredIllness
-      );
-    },
+    triggers: { flagMet: "_everCuredIllness" },
   },
   {
     id: "fitness_freak",
@@ -25194,13 +25099,7 @@ const ACHIEVEMENTS = [
     icon: "⚖️",
     category: "道德档案",
     hidden: true,
-    check: function (st) {
-      if ((st.player.day || 0) < 30) return false;
-      return !(
-        st.flags &&
-        (st.flags._didGamble || st.flags._didGrayWork || st.flags._didSmuggling)
-      );
-    },
+    triggers: { flagMet: "_cleanRecord" },
   },
   {
     id: "perfect_timing",
@@ -25221,14 +25120,7 @@ const ACHIEVEMENTS = [
     icon: "🤝",
     category: "道德档案",
     hidden: true,
-    check: function (st) {
-      return !!(
-        st.startup &&
-        st.startup.flags &&
-        st.startup.flags.registered &&
-        !(st.flags && st.flags._everFiredEmployee)
-      );
-    },
+    triggers: { startupFlag: "registered", flagNotMet: "_everFiredEmployee" },
   },
   {
     id: "hidden_friend_all_npc",
@@ -25238,27 +25130,7 @@ const ACHIEVEMENTS = [
     icon: "🤝",
     category: "隐藏",
     hidden: true,
-    check: function (st) {
-      if (!st.relationships) return false;
-      if (!st.player || st.player.day < 30) return false;
-      var rels = st.relationships;
-      var metAny = false;
-      var allHigh = true;
-      var metNpcs = Object.keys(rels).filter(function (k) {
-        return rels[k] && typeof rels[k].affinity === "number" && rels[k].met;
-      });
-      for (var i = 0; i < metNpcs.length; i++) {
-        var r = rels[metNpcs[i]];
-        if (r && typeof r.affinity === "number" && r.affinity > 0) {
-          metAny = true;
-          if (r.affinity < 60) {
-            allHigh = false;
-            break;
-          }
-        }
-      }
-      return metAny && allHigh;
-    },
+    triggers: { flagMet: "_allFriends60" },
   },
   {
     id: "last_money_donation",
@@ -25306,13 +25178,7 @@ const ACHIEVEMENTS = [
     icon: "💼",
     category: "里程碑",
     hidden: false,
-    check: function (st) {
-      return !!(
-        st.career &&
-        st.career.currentJob &&
-        (st.career.currentJob.workDays || 0) >= 100
-      );
-    },
+    triggers: { flagMet: "_career100Days" },
   },
   {
     id: "career_cross_path",
@@ -25334,14 +25200,7 @@ const ACHIEVEMENTS = [
     icon: "🏔️",
     category: "里程碑",
     hidden: false,
-    check: function (st) {
-      if (!st.career || !st.career.currentJob) return false;
-      var job = st.career.currentJob;
-      if (typeof CAREER_PATHS === "undefined" || !CAREER_PATHS[job.path])
-        return false;
-      var levels = CAREER_PATHS[job.path].levels;
-      return levels.length > 0 && job.levelId === levels[levels.length - 1].id;
-    },
+    triggers: { flagMet: "_careerMaxLevel" },
   },
   {
     id: "career_multipath",
@@ -25352,10 +25211,7 @@ const ACHIEVEMENTS = [
     icon: "🗺️",
     category: "隐藏",
     hidden: true,
-    check: function (st) {
-      if (!st.flags || !st.flags._careerPathsWorked) return false;
-      return Object.keys(st.flags._careerPathsWorked).length >= 3;
-    },
+    triggers: { flagMet: "_careerMultiPath" },
   },
   {
     id: "career_burnout_survivor",
@@ -25377,14 +25233,7 @@ const ACHIEVEMENTS = [
     icon: "🏆",
     category: "隐藏",
     hidden: true,
-    check: function (st) {
-      return !!(
-        st.career &&
-        st.career.currentJob &&
-        (st.career.currentJob.performance || 0) >= 90 &&
-        (st.career.currentJob.workDays || 0) >= 30
-      );
-    },
+    triggers: { flagMet: "_careerTopPerformer" },
   },
   {
     id: "career_occupational_disease",
@@ -25610,6 +25459,104 @@ function checkAchievements(state) {
     state.flags._unlockedAchievements = [];
   var unlocked = state.flags._unlockedAchievements;
   var newlyUnlocked = [];
+  // ── CoC 前提条件标志统一更新（在成就遍历前计算） ──
+  // 里程碑：从街头到屋顶（housing.tier>=1 + _everHomeless）
+  // 此项恰好在 triggers 中直接组合，无需额外 flag
+  // 成就猎人（25个成就）
+  if ((state.flags._unlockedAchievements || []).length >= 25) {
+    state.flags._achievementHunterUnlocked = true;
+  }
+  // 节日达人（至少3个节日参与）
+  var festCount = 0;
+  if (state.flags._springFestivalAchieveHome) festCount++;
+  if (state.flags._laborDayAchieveWork) festCount++;
+  if (state.flags._midAutumnAchieveGift) festCount++;
+  if (state.flags._nationalDayAchieveWork) festCount++;
+  if (state.flags._shoppingFestAchieveStockup) festCount++;
+  if (festCount >= 3) state.flags._festivalMasterDone = true;
+  // 首次融资
+  if (
+    state.startup &&
+    state.startup.company &&
+    state.startup.company.fundingRounds &&
+    state.startup.company.fundingRounds.length >= 1
+  ) {
+    state.flags._gotFirstFunding = true;
+  }
+  // 加班战神（累计加班100小时）
+  if ((state.corporate && state.corporate.totalOvertimeHours) || 0 >= 100) {
+    state.flags._overtimeWarriorAchieved = true;
+  }
+  // 团队领袖（P7 + teamSize>=2）
+  if (
+    state.corporate &&
+    state.corporate.rank === "P7" &&
+    (state.corporate.teamSize || 0) >= 2
+  ) {
+    state.flags._teamLeaderAchieved = true;
+  }
+  // 朋友圈（6个NPC中>=3个好感>=30）
+  if (state.relationships) {
+    var friendCount = 0;
+    var bestFriendCount = 0;
+    ["aunt_wang","boss_li","sister_zhang","old_zhou","xiao_mei","chef_chen"].forEach(function(id) {
+      if (state.relationships[id] && state.relationships[id].affinity >= 30) friendCount++;
+      if (state.relationships[id] && state.relationships[id].affinity >= 80) bestFriendCount++;
+    });
+    if (friendCount >= 3) state.flags._friendCircleAchieved = true;
+    if (bestFriendCount >= 1) state.flags._bestFriendAchieved = true;
+  }
+  // 人缘极好（所有已认识NPC好感>=60）
+  if (state.relationships && (state.player.day || 0) >= 30) {
+    var rels = state.relationships;
+    var metAny = false;
+    var allHigh = true;
+    var metNpcs = Object.keys(rels).filter(function(k) {
+      return rels[k] && typeof rels[k].affinity === "number" && rels[k].met;
+    });
+    for (var fi = 0; fi < metNpcs.length; fi++) {
+      var r = rels[metNpcs[fi]];
+      if (r && typeof r.affinity === "number" && r.affinity > 0) {
+        metAny = true;
+        if (r.affinity < 60) { allHigh = false; break; }
+      }
+    }
+    if (metAny && allHigh) state.flags._allFriends60 = true;
+  }
+  // 百日职场人（workDays>=100）
+  if (
+    state.career &&
+    state.career.currentJob &&
+    (state.career.currentJob.workDays || 0) >= 100
+  ) {
+    state.flags._career100Days = true;
+  }
+  // 路径巅峰（最高级别）
+  if (
+    state.career &&
+    state.career.currentJob &&
+    typeof CAREER_PATHS !== "undefined"
+  ) {
+    var cJob = state.career.currentJob;
+    var cPath = CAREER_PATHS[cJob.path];
+    if (cPath && cPath.levels && cPath.levels.length > 0 && cJob.levelId === cPath.levels[cPath.levels.length - 1].id) {
+      state.flags._careerMaxLevel = true;
+    }
+  }
+  // 职场探险家（>=3条不同路径）
+  if (state.flags && state.flags._careerPathsWorked && Object.keys(state.flags._careerPathsWorked).length >= 3) {
+    state.flags._careerMultiPath = true;
+  }
+  // 绩效之王（perf>=90 && workDays>=30）
+  if (
+    state.career &&
+    state.career.currentJob &&
+    (state.career.currentJob.performance || 0) >= 90 &&
+    (state.career.currentJob.workDays || 0) >= 30
+  ) {
+    state.flags._careerTopPerformer = true;
+  }
+  // ── 成就遍历 ──
   ACHIEVEMENTS.forEach(function (ach) {
     if (unlocked.indexOf(ach.id) !== -1) return; // 已解锁
     try {
@@ -26290,6 +26237,332 @@ const COOKING_RECIPES = [
     },
     duration: { days: 1, effect: "allStatsBoost", value: 3 },
     desc: "传说中的满汉全席！全属性+3，持续1天。需要大量食材和极高的烹饪技巧。",
+  },
+
+  // --- Lv.1 扩展食谱 ---
+  {
+    id: "corn_porridge",
+    name: "玉米粥",
+    icon: "🥣",
+    level: 1,
+    ingredients: [
+      { itemId: "corn", amount: 1 },
+      { itemId: "rice", amount: 1 },
+      { itemId: "salt", amount: 1 },
+    ],
+    hungerRestore: 35,
+    effects: { happiness: 1 },
+    duration: null,
+    desc: "清甜的玉米粥，暖胃醒神。",
+  },
+  {
+    id: "stir_fry_lettuce",
+    name: "清炒生菜",
+    icon: "🥬",
+    level: 1,
+    ingredients: [
+      { itemId: "lettuce", amount: 1 },
+      { itemId: "salt", amount: 1 },
+      { itemId: "cooking_oil", amount: 1 },
+    ],
+    hungerRestore: 25,
+    effects: { hygiene: 2, happiness: 1 },
+    duration: null,
+    desc: "脆嫩爽口的清炒生菜。",
+  },
+  {
+    id: "corn_steamed",
+    name: "蒸玉米",
+    icon: "🌽",
+    level: 1,
+    ingredients: [{ itemId: "corn", amount: 1 }],
+    hungerRestore: 25,
+    effects: { physique: 1 },
+    duration: null,
+    desc: "原汁原味的蒸玉米，粗粮健康。",
+  },
+  {
+    id: "simple_rice_porridge",
+    name: "白粥",
+    icon: "🥣",
+    level: 1,
+    ingredients: [
+      { itemId: "rice", amount: 1 },
+      { itemId: "salt", amount: 1 },
+    ],
+    hungerRestore: 20,
+    effects: { fatigue: -3, happiness: 1 },
+    duration: null,
+    desc: "最简单的一碗粥，生病时吃最好。",
+  },
+
+  // --- Lv.2 扩展食谱 ---
+  {
+    id: "mushroom_soup",
+    name: "蘑菇汤",
+    icon: "🍄",
+    level: 2,
+    ingredients: [
+      { itemId: "mushroom", amount: 1 },
+      { itemId: "salt", amount: 1 },
+      { itemId: "egg", amount: 1 },
+    ],
+    hungerRestore: 40,
+    effects: { physique: 1, happiness: 2 },
+    duration: null,
+    desc: "鲜美的蘑菇蛋花汤。",
+  },
+  {
+    id: "lettuce_wrap",
+    name: "生菜包肉",
+    icon: "🥗",
+    level: 2,
+    ingredients: [
+      { itemId: "lettuce", amount: 1 },
+      { itemId: "pork", amount: 1 },
+      { itemId: "salt", amount: 1 },
+      { itemId: "soy_sauce", amount: 1 },
+    ],
+    hungerRestore: 50,
+    effects: { physique: 2, happiness: 2 },
+    duration: null,
+    desc: "生菜包裹着香嫩的肉片，清爽不腻。",
+  },
+  {
+    id: "vinegar_cucumber",
+    name: "醋溜黄瓜",
+    icon: "🥒",
+    level: 2,
+    ingredients: [
+      { itemId: "cucumber", amount: 1 },
+      { itemId: "vinegar", amount: 1 },
+      { itemId: "salt", amount: 1 },
+      { itemId: "sugar", amount: 1 },
+    ],
+    hungerRestore: 20,
+    effects: { hygiene: 3, happiness: 2 },
+    duration: null,
+    desc: "酸甜爽脆的凉拌黄瓜。",
+  },
+  {
+    id: "lettuce_pork_soup",
+    name: "生菜肉片汤",
+    icon: "🥩",
+    level: 2,
+    ingredients: [
+      { itemId: "lettuce", amount: 1 },
+      { itemId: "pork", amount: 1 },
+      { itemId: "salt", amount: 1 },
+      { itemId: "ginger", amount: 1 },
+    ],
+    hungerRestore: 45,
+    effects: { health: 1, fatigue: -3 },
+    duration: null,
+    desc: "清淡滋补的肉片汤，生病时来一碗。",
+  },
+  {
+    id: "stir_fry_mushroom",
+    name: "炒蘑菇",
+    icon: "🍄",
+    level: 2,
+    ingredients: [
+      { itemId: "mushroom", amount: 1 },
+      { itemId: "salt", amount: 1 },
+      { itemId: "cooking_oil", amount: 1 },
+    ],
+    hungerRestore: 30,
+    effects: { physique: 1, intelligence: 1 },
+    duration: null,
+    desc: "简单快手的素炒蘑菇，鲜美下饭。",
+  },
+
+  // --- Lv.3 扩展食谱 ---
+  {
+    id: "mapo_tofu",
+    name: "麻婆豆腐",
+    icon: "🥘",
+    level: 3,
+    ingredients: [
+      { itemId: "tofu", amount: 1 },
+      { itemId: "pork", amount: 1 },
+      { itemId: "chili", amount: 1 },
+      { itemId: "salt", amount: 1 },
+      { itemId: "cooking_oil", amount: 1 },
+      { itemId: "soy_sauce", amount: 1 },
+    ],
+    hungerRestore: 60,
+    effects: { happiness: 5, physique: 1 },
+    duration: null,
+    desc: "麻辣鲜香的经典川菜，超级下饭。",
+  },
+  {
+    id: "stir_fry_bamboo",
+    name: "竹笋炒肉",
+    icon: "🥬",
+    level: 3,
+    ingredients: [
+      { itemId: "bamboo_shoot", amount: 1 },
+      { itemId: "pork", amount: 1 },
+      { itemId: "salt", amount: 1 },
+      { itemId: "cooking_oil", amount: 1 },
+    ],
+    hungerRestore: 55,
+    effects: { physique: 2, happiness: 3 },
+    duration: null,
+    desc: "鲜嫩的竹笋搭配肉片，春意盎然。",
+  },
+  {
+    id: "garlic_pork",
+    name: "蒜蓉猪肉",
+    icon: "🥩",
+    level: 3,
+    ingredients: [
+      { itemId: "pork", amount: 1 },
+      { itemId: "garlic", amount: 1 },
+      { itemId: "salt", amount: 1 },
+      { itemId: "cooking_oil", amount: 1 },
+    ],
+    hungerRestore: 55,
+    effects: { physique: 2, happiness: 3, fatigue: -3 },
+    duration: null,
+    desc: "蒜香浓郁的家常肉菜，吃了精神百倍。",
+  },
+  {
+    id: "mushroom_tofu_soup",
+    name: "蘑菇豆腐汤",
+    icon: "🥣",
+    level: 3,
+    ingredients: [
+      { itemId: "mushroom", amount: 1 },
+      { itemId: "tofu", amount: 1 },
+      { itemId: "salt", amount: 1 },
+      { itemId: "ginger", amount: 1 },
+    ],
+    hungerRestore: 40,
+    effects: { health: 1, physique: 2 },
+    duration: null,
+    desc: "菌菇和豆腐的完美搭配，清淡养胃。",
+  },
+
+  // --- Lv.4 扩展食谱 ---
+  {
+    id: "onion_beef",
+    name: "洋葱炒牛肉",
+    icon: "🥩",
+    level: 4,
+    ingredients: [
+      { itemId: "onion", amount: 1 },
+      { itemId: "beef", amount: 1 },
+      { itemId: "salt", amount: 1 },
+      { itemId: "cooking_oil", amount: 1 },
+      { itemId: "soy_sauce", amount: 1 },
+    ],
+    hungerRestore: 70,
+    effects: { physique: 3, happiness: 3 },
+    duration: { hours: 4 },
+    desc: "洋葱的甜配合牛肉的嫩，补铁益气。",
+  },
+  {
+    id: "starch_meatballs",
+    name: "淀粉肉丸",
+    icon: "🧆",
+    level: 4,
+    ingredients: [
+      { itemId: "pork", amount: 1 },
+      { itemId: "starch", amount: 1 },
+      { itemId: "egg", amount: 1 },
+      { itemId: "salt", amount: 1 },
+      { itemId: "cooking_oil", amount: 1 },
+    ],
+    hungerRestore: 65,
+    effects: { physique: 2, happiness: 4 },
+    duration: { hours: 4 },
+    desc: "外酥里嫩的肉丸，一口一个满足。",
+  },
+  {
+    id: "corn_chicken_soup",
+    name: "玉米鸡汤",
+    icon: "🍲",
+    level: 4,
+    ingredients: [
+      { itemId: "corn", amount: 1 },
+      { itemId: "chicken", amount: 1 },
+      { itemId: "salt", amount: 1 },
+      { itemId: "ginger", amount: 1 },
+    ],
+    hungerRestore: 60,
+    effects: { health: 2, physique: 2, fatigue: -5 },
+    duration: { hours: 4 },
+    desc: "鲜甜的玉米鸡汤，暖心暖胃。",
+  },
+
+  // --- Lv.5 扩展食谱 ---
+  {
+    id: "steamed_shrimp",
+    name: "清蒸虾",
+    icon: "🦐",
+    level: 5,
+    ingredients: [
+      { itemId: "shrimp", amount: 1 },
+      { itemId: "salt", amount: 1 },
+      { itemId: "ginger", amount: 1 },
+      { itemId: "garlic", amount: 1 },
+    ],
+    hungerRestore: 65,
+    effects: { physique: 3, agility: 2 },
+    duration: { hours: 4 },
+    desc: "鲜甜弹牙的清蒸虾，高蛋白低脂肪。",
+  },
+  {
+    id: "ginger_duck_soup",
+    name: "姜炖鸭汤",
+    icon: "🍲",
+    level: 5,
+    ingredients: [
+      { itemId: "duck", amount: 1 },
+      { itemId: "ginger", amount: 1 },
+      { itemId: "salt", amount: 1 },
+      { itemId: "cooking_oil", amount: 1 },
+    ],
+    hungerRestore: 75,
+    effects: { health: 3, fatigue: -8, physique: 2 },
+    duration: { hours: 6 },
+    desc: "姜香浓郁的鸭汤，驱寒补身。",
+  },
+
+  // --- Lv.6 扩展食谱 ---
+  {
+    id: "roast_duck",
+    name: "烤鸭",
+    icon: "🦆",
+    level: 6,
+    ingredients: [
+      { itemId: "duck", amount: 1 },
+      { itemId: "sugar", amount: 1 },
+      { itemId: "soy_sauce", amount: 1 },
+      { itemId: "salt", amount: 1 },
+      { itemId: "cooking_oil", amount: 1 },
+    ],
+    hungerRestore: 85,
+    effects: { happiness: 8, physique: 3 },
+    duration: { hours: 6 },
+    desc: "金黄酥脆的烤鸭，城市的味道。",
+  },
+  {
+    id: "bamboo_shrimp",
+    name: "竹笋炒虾",
+    icon: "🦐",
+    level: 6,
+    ingredients: [
+      { itemId: "bamboo_shoot", amount: 1 },
+      { itemId: "shrimp", amount: 1 },
+      { itemId: "salt", amount: 1 },
+      { itemId: "cooking_oil", amount: 1 },
+    ],
+    hungerRestore: 70,
+    effects: { physique: 3, agility: 3, happiness: 3 },
+    duration: { hours: 4 },
+    desc: "脆嫩竹笋配弹牙鲜虾，宴客佳品。",
   },
 
   // --- Lv.10 终极食谱 ---
@@ -141479,29 +141752,22 @@ const STREET_JOBS = [
     },
 
     // ============================================================
-    // 待完成：新增地点专属工作 — 参考《大多数》工作系统《北京浮生记》
-    // 实现提示：在 BRANCH_JOBS 数组中追加，注意 location 字段对应 locations.js 中的 ID
-    // 参考来源：
-    //   - 《大多数》工作系统：游戏化工作设计思路
-    //   - 《北京浮生记》街头工作：真实北京街头工作类型
-    //   - 真实中国零工经济数据（2024年）
+    // 公园地点工作 — 街头表演
+    // 联动：locations.js park 地点 jobs: ["busking"]
     // ============================================================
-    //
-    // === 公园地点工作 ===
-    // TODO: 待实现 - 公园街头表演（参考真实街头艺人收入¥50-500/天）
-    // {
-    //   id: "busking",
-    //   name: "街头表演",
-    //   desc: "在天桥或广场表演才艺。脸皮要厚，观众打赏全看心情。",
-    //   icon: "🎸",
-    //   location: "park",
-    //   requirements: { mental: 30, minAge: 16, maxAge: 60 },
-    //   effects: { fatigue: 12, happiness: 18, mental: 2, fame: 3 },
-    //   payCalc(state) {
-    //     return Math.floor(18 + state.player.mental * 0.2 + state.player.fame * 0.3 + Random.float(0, 42));
-    //   },
-    //   risk: {},
-    // },
+    {
+      id: "busking",
+      name: "街头表演",
+      desc: "在天桥或广场表演才艺。脸皮要厚，观众打赏全看心情。",
+      icon: "🎸",
+      location: "park",
+      requirements: { mental: 30, minAge: 16, maxAge: 60 },
+      effects: { fatigue: 12, happiness: 18, mental: 2, fame: 3 },
+      payCalc(state) {
+        return Math.floor(18 + state.player.mental * 0.2 + state.player.fame * 0.3 + Random.float(0, 42));
+      },
+      risk: {},
+    },
     // ============================================================
     // 批发市场地点工作（正式实现 — 参考真实批发行业就业）
     // 联动：wholesaleMarket 地点 jobs 数组需更新
@@ -143186,11 +143452,6 @@ const HOUSING_TIERS = [
     },
   },
 ];
-
-// ====== 装备掉落系统已移除 ======
-// 旧 rollEquipmentDrop / getEquipmentPoolBySource / rollEquipmentQuality / rollEnchantment
-// 为死代码（零调用，引用不存在的 eq_* 假 id）。装备获取改走
-// createEquipmentInstance（equipment_quality.js），按 slot 键存储实例。
 
 /** 获取当前住所信息 */
 function getCurrentHousing(state) {
@@ -159218,6 +159479,7 @@ function sellGood(goodId, qty) {
     if (unitProfit > 0) {
       state.trade.totalProfit =
         (state.trade.totalProfit || 0) + unitProfit * qty;
+      state.flags._firstTradeDone = true; // 成就：第一次倒买倒卖
     }
   }
 
@@ -169080,6 +169342,24 @@ function generateDailySummary(state, startCash, startHealth, startHappiness) {
   delete state.flags._todayDeepTaskDone;
   delete state.flags._todayDebtEvent;
   delete state.flags._todayMentalEvent;
+
+  // 债务状态追踪（成就：还清欠债）
+  if (
+    (state.resources.villageDebt || 0) <= 0 &&
+    (state.resources.bankDebt || 0) <= 0
+  ) {
+    state.flags._debtFree = true;
+  }
+
+  // 成就要件：清白之身（满30天+无违法记录）
+  if (
+    (state.player.day || 0) >= 30 &&
+    !state.flags._didGamble &&
+    !state.flags._didGrayWork &&
+    !state.flags._didSmuggling
+  ) {
+    state.flags._cleanRecord = true;
+  }
 
   if (!highlights.length) highlights.push("平凡的一天，活着就是赢了");
 
@@ -233756,6 +234036,7 @@ function getAvailableActions(state) {
           if (skill.xp >= xpNeeded && skill.level < 100) {
             skill.level++;
             skill.xp -= xpNeeded;
+            st.flags._firstSkillUpgraded = true; // 成就：第一次技能升级
             StateManager.addMessage(
               `📚 你的${getSkillName(key)}提升到了等级 ${skill.level}！`,
               "success",
@@ -234576,6 +234857,7 @@ function doStreetJob(job) {
   }
   state.employment.completedShifts[job.id] =
     (state.employment.completedShifts[job.id] || 0) + 1;
+  state.flags._completedShiftCount = (state.flags._completedShiftCount || 0) + 1; // 成就：第一份工作
 
   // 职业称号系统：同一工作累计天数解锁称号加成
   if (!state.flags._jobTitles) state.flags._jobTitles = {};
@@ -235013,6 +235295,7 @@ function addSkillXp(skillKey, amount) {
   while (skill.xp >= xpNeeded && skill.level < 100) {
     skill.level++;
     skill.xp -= xpNeeded;
+    state.flags._firstSkillUpgraded = true; // 成就：第一次技能升级
     xpNeeded = Math.floor(
       (skill.level + 1) * 120 * Math.pow(1.01, skill.level),
     );
