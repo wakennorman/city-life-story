@@ -181,6 +181,102 @@
   }
 
   /**
+   * 详细检查副业条件 — 返回所有条件的 ✅/❌ 状态
+   * @returns {Array<{label:string, ok:boolean, current:*, required:*}>}
+   */
+  function checkHustleConditionsDetailed(hustleId, state) {
+    const hustle = SIDE_HUSTLES[hustleId];
+    if (!hustle)
+      return [
+        { label: "副业存在", ok: false, current: "不存在", required: "存在" },
+      ];
+    var results = [];
+    var attrLabelMap = {
+      agility: "敏捷",
+      intelligence: "智力",
+      charm: "魅力",
+      physique: "体质",
+      mental: "能力",
+    };
+    var skillLabelMap = {
+      driving: "驾驶",
+      coding: "编程",
+      cooking: "厨艺",
+      sales: "销售",
+    };
+
+    // 属性检查
+    if (hustle.minAttr) {
+      for (let attr in hustle.minAttr) {
+        var required = hustle.minAttr[attr];
+        var current = state.player[attr] || 0;
+        results.push({
+          label: (attrLabelMap[attr] || attr) + "≥" + required,
+          ok: current >= required,
+          current: current,
+          required: required,
+        });
+      }
+    }
+
+    // 技能检查
+    if (hustle.minSkill) {
+      for (let sk in hustle.minSkill) {
+        var skillRequired = hustle.minSkill[sk];
+        var skillCurrent =
+          (state.skills && state.skills[sk] && state.skills[sk].level) || 0;
+        results.push({
+          label: (skillLabelMap[sk] || sk) + "≥Lv." + skillRequired,
+          ok: skillCurrent >= skillRequired,
+          current: "Lv." + skillCurrent,
+          required: "Lv." + skillRequired,
+        });
+      }
+    }
+
+    // 现金检查
+    if (hustle.minCash) {
+      var cash = state.resources.cash || 0;
+      results.push({
+        label: "资金≥¥" + hustle.minCash,
+        ok: cash >= hustle.minCash,
+        current: "¥" + cash,
+        required: "¥" + hustle.minCash,
+      });
+    }
+
+    // 时间槽检查
+    const currentSlot = state.player.timeSlot;
+    var slotNames = {
+      morning: "上午",
+      afternoon: "下午",
+      evening: "晚上",
+      night: "深夜",
+    };
+    results.push({
+      label:
+        "当前时间段可进行（" +
+        hustle.timeSlot
+          .map(function (s) {
+            return slotNames[s] || s;
+          })
+          .join("、") +
+        "）",
+      ok: hustle.timeSlot.includes(currentSlot),
+      current: slotNames[currentSlot] || currentSlot,
+      required:
+        "需要" +
+        hustle.timeSlot
+          .map(function (s) {
+            return slotNames[s] || s;
+          })
+          .join("或"),
+    });
+
+    return results;
+  }
+
+  /**
    * 执行副业
    * @param {string} hustleId - 副业ID
    * @param {Object} state - 游戏状态
@@ -358,6 +454,7 @@
       init: initSideHustle,
       tick: sideHustleTick,
       check: checkHustleConditions,
+      checkDetailed: checkHustleConditionsDetailed,
       perform: performHustle,
       getFatigue: getFatigueStatus,
       getList: () => SIDE_HUSTLES,

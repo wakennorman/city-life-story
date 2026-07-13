@@ -318,6 +318,81 @@ function canStartStartup(state) {
   return { ok: reasons.length === 0, reasons: reasons };
 }
 
+/**
+ * 详细的创业条件检查 — 返回每条条件的 ✅/❌ 状态
+ * @returns {Array<{label:string, ok:boolean, current:*, required:*}>}
+ */
+function canStartStartupDetailed(state) {
+  var results = [];
+
+  // 1. 技能门槛：至少 2 项技能达到 12 级
+  var skillCount = 0;
+  var skills = state.skills || {};
+  for (var k in skills) {
+    if (skills[k] && skills[k].level >= 12) skillCount++;
+  }
+  results.push({
+    label: "至少2项技能≥12级",
+    ok: skillCount >= 2,
+    current: skillCount + "项达标",
+    required: "2项",
+  });
+
+  // 2. 社会关系：至少 2 个 NPC 好感 ≥ 40
+  var highAffNpcs = 0;
+  var rels = state.relationships || {};
+  for (var nid in rels) {
+    if (rels[nid] && (rels[nid].affinity || 0) >= 40) highAffNpcs++;
+  }
+  results.push({
+    label: "至少2位NPC好感≥40",
+    ok: highAffNpcs >= 2,
+    current: highAffNpcs + "位达标",
+    required: "2位",
+  });
+
+  // 3. 天数门槛：Day 60+
+  results.push({
+    label: "游戏天数≥60天",
+    ok: (state.player.day || 0) >= 60,
+    current: "第" + (state.player.day || 0) + "天",
+    required: "第60天",
+  });
+
+  return results;
+}
+
+/** 渲染创业条件 HTML（✅/❌ + 当前值） */
+function renderStartupConditionRows(results) {
+  if (typeof ConditionSystem !== "undefined" && ConditionSystem.renderRows) {
+    return ConditionSystem.renderRows(results);
+  }
+  // fallback（旧版兼容）
+  var html = "";
+  for (var i = 0; i < results.length; i++) {
+    var r = results[i];
+    html +=
+      '<div style="display:flex;justify-content:space-between;align-items:center;padding:3px 4px;border-radius:3px;' +
+      (r.ok
+        ? "background:rgba(46,204,113,0.06);"
+        : "background:rgba(231,76,60,0.06);") +
+      '">' +
+      '<span style="font-size:12px;">' +
+      (r.ok ? "✅" : "❌") +
+      ' <span style="color:' +
+      (r.ok ? "var(--success)" : "var(--danger)") +
+      ';">' +
+      r.label +
+      "</span></span>" +
+      '<span style="font-size:11px;color:' +
+      (r.ok ? "var(--success)" : "var(--danger)") +
+      ';">当前' +
+      r.current +
+      "</span></div>";
+  }
+  return html;
+}
+
 /** 注册新公司 */
 function _ensureStartupProductDefaults(product, day) {
   if (!product) return product;
@@ -404,12 +479,15 @@ function _ensureStartupProductDefaults(product, day) {
 
 function registerStartup(state, name, industry, description) {
   // 检查触发条件
-  // 前置条件：3技能15级+2NPC好感40+Day60
+  // 前置条件：2技能12级+2NPC好感40+Day60
   var prereq = canStartStartup(state);
   if (!prereq.ok) {
     return {
       success: false,
-      message: "创业条件不足：" + prereq.reasons.join("；"),
+      message:
+        "创业条件不足：" +
+        prereq.reasons.join("；") +
+        "。请在创业Tab查看详细条件。",
     };
   }
   const cash = state.resources.cash;
@@ -7571,6 +7649,34 @@ function showPRManagementModal(state) {
           event.id +
           "')\" onmouseover=\"this.style.borderColor='var(--accent)';this.style.background='var(--bg-card-hover)';this.style.transform='translateY(-1px)';this.style.boxShadow='0 4px 12px var(--accent-glow)';\" onmouseout=\"this.style.borderColor='var(--border)';this.style.background='var(--bg-card)';this.style.transform='none';this.style.boxShadow='none';\"";
 
+      // 构建条件详情
+      var condDetails = "";
+      if (event.triggerConditions && event.triggerConditions.minRevenue) {
+        var revOk = company.revenue >= event.triggerConditions.minRevenue;
+        condDetails +=
+          '<div style="font-size:9px;padding:2px 4px;border-radius:2px;margin-top:2px;background:' +
+          (revOk ? "rgba(46,204,113,0.06);" : "rgba(231,76,60,0.06);") +
+          '">' +
+          '<span style="color:' +
+          (revOk ? "var(--success)" : "var(--danger)") +
+          ';">' +
+          (revOk ? "✅" : "❌") +
+          " 月收入≥¥" +
+          event.triggerConditions.minRevenue.toLocaleString() +
+          "（当前¥" +
+          company.revenue.toLocaleString() +
+          "）</span></div>";
+      }
+      if (!canAfford) {
+        condDetails +=
+          '<div style="font-size:9px;padding:2px 4px;border-radius:2px;margin-top:2px;background:rgba(231,76,60,0.06);">' +
+          '<span style="color:var(--danger);">❌ 现金≥¥' +
+          event.cost.toLocaleString() +
+          "（当前¥" +
+          (company.cashReserve || 0).toLocaleString() +
+          "）</span></div>";
+      }
+
       prActionsHtml += `
         <div style="padding:10px;background:${disabled ? "rgba(0,0,0,0.05)" : "var(--bg-card)"};border-radius:6px;border:1px solid ${disabled ? "var(--border)" : "transparent"};opacity:${disabled ? 0.5 : 1};${disabled ? "" : "cursor:pointer;transition:all 0.2s;"}">
           <div style="display:flex;justify-content:space-between;align-items:center;">
@@ -7578,6 +7684,7 @@ function showPRManagementModal(state) {
               <div style="font-size:12px;font-weight:bold;">${event.icon} ${event.name}</div>
               <div style="font-size:10px;color:var(--text-secondary);margin-top:2px;">${event.desc}</div>
               <div style="font-size:9px;color:var(--text-muted);margin-top:2px;">成功率: ${Math.round(event.successChance * 100)}% | 持续时间: ${event.duration}天</div>
+              ${condDetails}
             </div>
             <div style="text-align:right;">
               <div style="font-size:12px;font-weight:bold;color:${canAfford ? "var(--accent)" : "var(--danger)"};">¥${event.cost.toLocaleString()}</div>
@@ -9354,13 +9461,12 @@ function renderStartupTab(state, parent) {
       '<div style="padding:30px 20px;text-align:center;color:var(--text-muted);">' +
       "<h3>🚀 创业系统</h3>" +
       '<p style="font-size:13px;color:var(--text-secondary);">你还没有注册公司。注册后可以招聘、融资、做产品。</p>' +
-      '<div style="margin:16px auto;padding:14px;max-width:360px;background:var(--bg-card);border-radius:8px;border:1px solid var(--border);text-align:left;font-size:12px;">' +
+      '<div style="margin:16px auto;padding:14px;max-width:380px;background:var(--bg-card);border-radius:8px;border:1px solid var(--border);text-align:left;font-size:12px;">' +
       '<div style="font-weight:600;margin-bottom:10px;color:var(--text-primary);">📋 ' +
       (stc.label || "注册条件") +
       "</div>" +
-      '<div style="display:flex;justify-content:space-between;padding:3px 0;"><span>阶段</span><span>' +
-      phaseLabel +
-      "</span></div>" +
+      renderStartupConditionRows(canStartStartupDetailed(state)) +
+      '<div style="margin-top:6px;">' +
       '<div style="display:flex;justify-content:space-between;padding:3px 0;"><span>💰 最低现金</span><span style="color:' +
       cashColor +
       ';">' +

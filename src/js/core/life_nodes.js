@@ -180,6 +180,68 @@ function checkLifeNodeRequirement(state, choice) {
   return { ok: true };
 }
 
+/** 详细检查人生节点条件 — 返回每条条件状态 */
+function checkLifeNodeRequirementDetailed(state, choice) {
+  var req = choice.attrReq;
+  if (!req) return [];
+  var results = [];
+  for (var key in req) {
+    var need = req[key];
+    var actual = 0;
+    if (key === "cash") {
+      actual = (state.resources.cash || 0) + (state.resources.bankBalance || 0);
+    } else if (key === "skill") {
+      actual = getHighestLifeNodeSkill(state);
+    } else {
+      actual = (state.player && state.player[key]) || 0;
+    }
+    var labelMap = {
+      intelligence: "智力",
+      mental: "能力",
+      physique: "体质",
+      agility: "敏捷",
+      charm: "魅力",
+      cash: "现金",
+      skill: "技能等级",
+    };
+    results.push({
+      label: (labelMap[key] || key) + "≥" + need,
+      ok: actual >= need,
+      current: actual,
+      required: need,
+    });
+  }
+  return results;
+}
+
+/** 渲染生活节点条件行（✅/❌） */
+function _renderLifeCondRows(results) {
+  if (typeof ConditionSystem !== "undefined" && ConditionSystem.renderRows) {
+    return ConditionSystem.renderRows(results);
+  }
+  // fallback（旧版兼容）
+  if (!results || results.length === 0) return "";
+  var html =
+    '<div style="font-size:11px;display:flex;flex-direction:column;gap:2px;margin-top:6px;padding:6px;background:rgba(0,0,0,0.08);border-radius:4px;">';
+  for (var i = 0; i < results.length; i++) {
+    var r = results[i];
+    html +=
+      '<div style="display:flex;justify-content:space-between;align-items:center;padding:1px 4px;">' +
+      "<span>" +
+      (r.ok ? "✅" : "❌") +
+      " " +
+      r.label +
+      "</span>" +
+      '<span style="font-size:10px;color:' +
+      (r.ok ? "var(--success)" : "var(--danger)") +
+      ';">当前' +
+      r.current +
+      "</span></div>";
+  }
+  html += "</div>";
+  return html;
+}
+
 function showLifeNodeModal(node) {
   if (!node || typeof showModal !== "function") return;
   var state = StateManager.getState();
@@ -188,12 +250,20 @@ function showLifeNodeModal(node) {
     "<p>人生走到一个关键节点。这个选择会留下长期影响。</p>" +
     '<ul style="margin-left:16px;color:var(--text-secondary);">';
   for (var i = 0; i < node.choices.length; i++) {
+    var choice = node.choices[i];
+    var canChoose = checkLifeNodeRequirement(state, choice).ok;
+    var choiceDetails = checkLifeNodeRequirementDetailed(state, choice);
     body +=
       "<li><strong>" +
-      node.choices[i].text +
+      (canChoose ? "✅ " : "🔒 ") +
+      choice.text +
       "</strong><br><span>" +
-      (node.choices[i].hint || "") +
-      "</span></li>";
+      (choice.hint || "") +
+      "</span>";
+    if (choiceDetails.length > 0) {
+      body += _renderLifeCondRows(choiceDetails);
+    }
+    body += "</li>";
   }
   body += "</ul></div>";
 
@@ -206,7 +276,59 @@ function showLifeNodeModal(node) {
         var fresh = StateManager.getState();
         var check = checkLifeNodeRequirement(fresh, choice);
         if (!check.ok) {
-          StateManager.addMessage("⚠️ " + check.reason, "warning");
+          // 显示详细条件弹窗 — 使用约定式条件系统
+          var detail = checkLifeNodeRequirementDetailed(fresh, choice);
+          if (
+            detail.length > 0 &&
+            typeof ConditionSystem !== "undefined" &&
+            ConditionSystem.showModal
+          ) {
+            ConditionSystem.showModal(detail, {
+              title: "❌ 条件不足",
+              failText: "提升对应属性后再来尝试",
+            });
+          } else if (detail.length > 0 && typeof showModal === "function") {
+            var detailHtml =
+              '<div style="text-align:left;font-size:13px;">' +
+              '<p style="margin-bottom:8px;font-weight:bold;">该选项需要以下条件：</p>' +
+              '<div style="display:flex;flex-direction:column;gap:2px;">';
+            for (var di = 0; di < detail.length; di++) {
+              var d = detail[di];
+              detailHtml +=
+                '<div style="display:flex;justify-content:space-between;padding:3px 4px;border-radius:3px;background:' +
+                (d.ok ? "rgba(46,204,113,0.06);" : "rgba(231,76,60,0.06);") +
+                '">' +
+                "<span>" +
+                (d.ok ? "✅" : "❌") +
+                " " +
+                d.label +
+                "</span>" +
+                '<span style="color:' +
+                (d.ok ? "var(--success)" : "var(--danger)") +
+                ';">当前' +
+                d.current +
+                "</span></div>";
+            }
+            detailHtml += "</div></div>";
+            showModal({
+              title: "❌ 条件不足",
+              body: detailHtml,
+              buttons: [
+                {
+                  text: "知道了",
+                  cls: "btn-primary",
+                  callback: function () {
+                    return true;
+                  },
+                },
+              ],
+            });
+          } else {
+            StateManager.addMessage(
+              "⚠️ " + (check.reason || "条件不足"),
+              "warning",
+            );
+          }
           return false;
         }
         applyNodeChoice(fresh, node.id, choice.apply);

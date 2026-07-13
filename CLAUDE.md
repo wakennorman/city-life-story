@@ -156,32 +156,17 @@ navHints: [
 
 > 每次收工前覆盖更新本节（只留最新状态，不要追加历史）；详细变更历史在 `src/DEVELOPMENT.md`，不需要每次都读。
 
-- **最新一次工作 (2026-07-12)**：v3.97(loop R2·域B) — 事件系统全量A类缺陷修复+联动增强
-  - **指令一审查**：全量扫描21个事件文件，发现并修复28个A类缺陷
-    - **events_core.js** (2): showEventModal空choices数组卡死 + checkChainEventQueue splice正向遍历跳元素
-    - **extra_events.js** (12): 6处扣款缺失(phone_stolen×2/crisis_debt_collector/old_friend_borrow×2/neighbor_gift) + 5个NPC断链 + 1个Random.int二次调用
-    - **era_events.js** (6): 6个NPC断链(era_180/270/450/540/720/900均缺met门控)
-    - **side_hustle_consequences.js** (2): chain事件缺_isChainEvent标志可被随机选取
-    - **npc_event_bridge.js** (3): chatWithNpc字段错误(npcRelationships→relationships)完全失效 + 2处EVENT_NPC_MAP重复键
-    - **events_corp.js** (1): insider_report ¥500k买入从未扣款
-    - **cross_system_events.js** (2): npc_rescue_aunt_wang/npc_synergy_old_zhou_deal缺met门控
-  - **指令二联动增强**：6项B类修复+2个新增事件
-    - **B类修复**: 3处模板字面量bug + 2个职业事件phase修正(street→corporate) + edu_graduation_ceremony冗余apply删除 + workplace_social_events 5处双随机门控清除
-    - **新增事件**: `corporate_first_quarter_reflection`(corporate≥180天职场回望·老周叙事闭环) + `npc_sister_zhang_corp_congrats`(张姐跨阶段祝贺)
-  - **验证**：node --check ✅ / build.py 7991.8KB ✅
-  - **影响文件**：events_core.js/extra_events.js/era_events.js/side_hustle_consequences.js/npc_event_bridge.js/events_corp.js/cross_system_events.js/startup_events.js/workplace_social_events.js(9文件)
-  - **commit**：待提交
-  - **代码事实核查**：CLAUDE.md P2 三个推荐切入点（王婶调解/¥1M/多周目）经验证已大部分落地，本轮切真实缺口
-  - **新增**：aunt_zhang_payoff(调解30天链) / ng_plus_ajie_return(阿杰跨周目彩蛋) / ng_plus_ajie_payoff(60天链) / npc_zhaojie_boss_li(business格) / npc_zhang_zhaojie_partner(business格) / npc_zhang_zhaojie_payoff(30天链)
-  - **接线**：3个王婶调解事件中和解路径接 scheduleChainEvent；daily_report 日终里程碑封顶¥100k→¥10M（+¥1M/+¥10M档）
-  - **验证**：node --check ✅ / build.py 7927.8KB ✅ / dist事件全量注入 ✅
-  - **commit**：`1710ec86`(submodule) — R44 全部本地提交
-  - **CLAUDE.md P2 同步**：⑧⑨项已勾✅，⑦项收窄为"friendly 格8个待做"
-  - **指令一审查**：全量扫描4个事件文件(250+事件)，发现1处A类+1处B类
-    - A类修复: `ev_used_car_crash` 补充 chen_ge.met 门岗（story直呼陈哥但无条件）
-    - B类修复: `edu_graduation_ceremony` 恢复 story 字段（原为desc函数导致渲染空白+phase非法数组）
-    - 其余NPC/天气/职业事件均已通过累积133处[自洽修复]注释覆盖 ✅
-  - **指令二新增**：5个高影响联动事件(社工/补贴/城管/亲情/师徒)
+- **最新一次工作 (2026-07-13)**：R12(域G 核心机制/生命周期) — 5项A类缺陷修复+wiki搜索框焦点窃取修复
+  - **指令一审查**：域G文件扫描发现5个A类候选+wiki搜索框焦点窃取修复
+    - **daily_pipeline.js** (6): 所有 trigger_slot 守卫 `state.day`→`state.player.day`，TriggerRegistry 事件系统6年从未触发
+    - **main.js** (2): `state.chengguan` 直接访问无守卫→TypeError死锁 + `state.inventory.items` 无守卫→旧存档崩溃
+    - **illness.js** (1): 疾病进化弹窗 `onClick`→`callback`，"立即治疗"按钮6年无效
+    - **weather.js** (1): `getWeatherIllnessAdjustedProb` 读 `state.status.physique`→`state.player.physique`，体质越高疾病越低效果完全失效
+    - **wiki.js** (1): 搜索框焦点窃取——每次输入渲染全页重建DOM，焦点丢失到子Tab按钮。修复：只更新`.wiki-content`区域+恢复输入框焦点
+  - **指令二联动增强**：尚未执行（见下轮提示）
+  - **验证**：node --check ✅ / build.py 8080.8KB ✅
+  - **影响文件**：wiki.js/daily_pipeline.js(6处)/main.js(2处)/illness.js/weather.js(5文件)
+  - **commit**：`050738fe`(submodule) · `c2d4cf18`(parent)
     - `social_worker_visit` — mental<30+housing≤级+漂泊≥14天 → 社工温情/精神成长/可选成为志愿者
     - `gov_subsidy_window` — cash<200+苦力≥30天 → 低保救助+培训机会（损失厌恶：不食嗟来之食分支）
     - `chengguan_encounter_interactive` — 摆摊经验+热度≥40 → 4种应对策略（逃跑/求情/示好/硬扛）
@@ -1025,11 +1010,12 @@ _详细任务清单：`IMPLEMENTATION_TASK.txt`（需重建，之前的只列到
 > 上下文不足时仅保留 `.claude/loop-domain-state.json` + 本轮文件 + 本表最新 5 行，丢弃旧轮对话。
 > 域定义：A 数据/数值平衡 · B 事件/叙事 · C 职业/成长 · D NPC/社交 · E 经济/投资 · F UI/UX · G 核心机制/生命周期 · H Phase2/公司
 
-| 轮次 | 日期       | 域              | 指令一 A类修复                                                                                                                                               | 指令二 联动增强                                                                                                                                         | commit                          | 备注                                                                                                                                  |
-| ---- | ---------- | --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
-| R1   | 2026-07-12 | A 数据/数值平衡 | 0（结构性健康）                                                                                                                                              | 4项（财富税阶梯×2阶段/市场饱和/物价异动）                                                                                                               | `42528c0a`                      | economy_v3.1+pricing 隐形数据首次叙事化；MC 10×500d 0异常；事件总数674/0重复ID                                                        |
-| R2   | 2026-07-12 | B 事件/叙事     | 28（events_core×2/extra×12/era×6/side_hustle_consequences×2/npc_event_bridge×3/events_corp×1/cross_system×2）                                                | 6项B类修复（模板字面量×3/职业phase×2/edu冗余apply/双随机门控×5）+2新事件（corp回望/张姐祝贺）                                                           | 待提交                          | 全量21事件文件扫描；修复6处扣款缺失+16个NPC断链+3个引擎缺陷+1个免费金钱+1个Random.int                                                 |
-| R3   | 2026-07-12 | C 职业/成长     | 2（medicine技能缺失 unlock medical/doctor 路径；social技能悬空 unlock wholesale_flip）                                                                       | 6项（博士毕业/驾驶老司机/管理班子危机 + design改稿/法律首庭/运营救火）                                                                                  | `ef6f6ea`+`5e186eb0`+`e862ade0` | 解锁 2 条共9级的职业路径；填补博士毕业/技能视角/路径专属三大叙事空白；事件总数 689                                                    |
-| R5   | 2026-07-12 | B 事件/叙事     | 1（events_corp::insider_report 扣款¥500k无建仓逻辑→补实际股票买入+cost字段）                                                                                 | 3个职场道德事件（背锅抉择/晋升贿赂/裁员名单）——填补corporate阶段道德事件空白                                                                            | `42cd4e12`                      | 全量6文件node --check + build.py 8033.2KB；事件总数692                                                                                |
-| R7   | 2026-07-12 | B 事件/叙事     | 0（全量扫描 moral_events.js/news.js/events_core.js：5个condition全守卫、followUpId动态生成、relationships/weather访问均防御；subsidy经核实为故意去重非丢失） | 3项：moral_elder_assist(道德→NPC关系+兼职线索 B→D/C桥接)/scrap_price_surge(新闻→废品定价+材料股 B→A/E)/night_market_revival(新闻→零工收入+消费股 B→C/E) | `adcfaad1`                      | 架构现实：事件系统为三套子系统(MORAL_EVENTS声明式/NEWS_EVENTS声明式/events_core RANDOM_EVENTS引擎)，已按真实格式注入；MC 6×400d 0异常 |
-| R9   | 2026-07-13 | F UI/UX         | 3（render.js renderActiveNews headline XSS→_esc()/移动端新闻限制+render_infra.js renderActiveNews headline XSS→createElement+createTextNode）                | 3项：ESC键关闭弹窗(modal.js)/引导面板aria-live(render.js)/tab按钮aria-current(render_core.js)                                                           | `fa166eeb`+`6f3b42f6`           | 构建 8074.2KB；XSS防御+桌面端ESC+屏幕阅读器无障碍                                                                                     |
+| 轮次 | 日期       | 域                  | 指令一 A类修复                                                                                                                                                           | 指令二 联动增强                                                                                                                                         | commit                                   | 备注                                                                                                                                  |
+| ---- | ---------- | ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| R1   | 2026-07-12 | A 数据/数值平衡     | 0（结构性健康）                                                                                                                                                          | 4项（财富税阶梯×2阶段/市场饱和/物价异动）                                                                                                               | `42528c0a`                               | economy_v3.1+pricing 隐形数据首次叙事化；MC 10×500d 0异常；事件总数674/0重复ID                                                        |
+| R2   | 2026-07-12 | B 事件/叙事         | 28（events_core×2/extra×12/era×6/side_hustle_consequences×2/npc_event_bridge×3/events_corp×1/cross_system×2）                                                            | 6项B类修复（模板字面量×3/职业phase×2/edu冗余apply/双随机门控×5）+2新事件（corp回望/张姐祝贺）                                                           | 待提交                                   | 全量21事件文件扫描；修复6处扣款缺失+16个NPC断链+3个引擎缺陷+1个免费金钱+1个Random.int                                                 |
+| R3   | 2026-07-12 | C 职业/成长         | 2（medicine技能缺失 unlock medical/doctor 路径；social技能悬空 unlock wholesale_flip）                                                                                   | 6项（博士毕业/驾驶老司机/管理班子危机 + design改稿/法律首庭/运营救火）                                                                                  | `ef6f6ea`+`5e186eb0`+`e862ade0`          | 解锁 2 条共9级的职业路径；填补博士毕业/技能视角/路径专属三大叙事空白；事件总数 689                                                    |
+| R5   | 2026-07-12 | B 事件/叙事         | 1（events_corp::insider_report 扣款¥500k无建仓逻辑→补实际股票买入+cost字段）                                                                                             | 3个职场道德事件（背锅抉择/晋升贿赂/裁员名单）——填补corporate阶段道德事件空白                                                                            | `42cd4e12`                               | 全量6文件node --check + build.py 8033.2KB；事件总数692                                                                                |
+| R7   | 2026-07-12 | B 事件/叙事         | 0（全量扫描 moral_events.js/news.js/events_core.js：5个condition全守卫、followUpId动态生成、relationships/weather访问均防御；subsidy经核实为故意去重非丢失）             | 3项：moral_elder_assist(道德→NPC关系+兼职线索 B→D/C桥接)/scrap_price_surge(新闻→废品定价+材料股 B→A/E)/night_market_revival(新闻→零工收入+消费股 B→C/E) | `adcfaad1`                               | 架构现实：事件系统为三套子系统(MORAL_EVENTS声明式/NEWS_EVENTS声明式/events_core RANDOM_EVENTS引擎)，已按真实格式注入；MC 6×400d 0异常 |
+| R9   | 2026-07-13 | F UI/UX             | 3（render.js renderActiveNews headline XSS→_esc()/移动端新闻限制+render_infra.js renderActiveNews headline XSS→createElement+createTextNode）                            | 3项：ESC键关闭弹窗(modal.js)/引导面板aria-live(render.js)/tab按钮aria-current(render_core.js)                                                           | `fa166eeb`+`6f3b42f6`                    | 构建 8074.2KB；XSS防御+桌面端ESC+屏幕阅读器无障碍                                                                                     |
+| R12  | 2026-07-13 | G 核心机制/生命周期 | 5（daily_pipeline trigger_slot state.day×6 / main.js chengguan无守卫+inventory无守卫 / illness.js onClick→callback / weather.js physique路径错 / wiki.js搜索框焦点窃取） | 0（待下轮联动增强）                                                                                                                                     | `050738fe`(submodule)·`c2d4cf18`(parent) | TriggerRegistry事件系统6年静默失效修复；构建8080.8KB                                                                                  |

@@ -1229,6 +1229,157 @@ body {
   cursor: not-allowed;
 }
 
+/* ====== 约定式自动归类条件系统 (Condition v1) ====== */
+.cond-rows {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1px 4px;
+}
+.cond-row {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 1px 2px;
+  border-radius: 2px;
+  font-size: 11px;
+  line-height: 1.6;
+  white-space: nowrap;
+  width: auto;
+}
+.cond-row.cond-ok {
+  background: rgba(46, 204, 113, 0.07);
+}
+.cond-row.cond-fail {
+  background: rgba(231, 76, 60, 0.07);
+}
+.cond-icon {
+  flex-shrink: 0;
+  width: 14px;
+  text-align: center;
+  font-size: 10px;
+}
+.cond-label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.cond-row.cond-ok .cond-label {
+  color: var(--success);
+  font-weight: bold;
+}
+.cond-row.cond-fail .cond-label {
+  color: var(--danger);
+}
+.cond-value {
+  flex-shrink: 0;
+  font-size: 9px;
+  white-space: nowrap;
+  padding-left: 2px;
+}
+.cond-row.cond-ok .cond-value {
+  color: var(--success);
+}
+.cond-row.cond-fail .cond-value {
+  color: var(--danger);
+}
+
+/* 条件弹窗专用 */
+.cond-modal-body {
+  text-align: left;
+  font-size: 13px;
+}
+.cond-modal-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 8px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--border);
+}
+.cond-modal-icon {
+  font-size: 20px;
+  flex-shrink: 0;
+}
+.cond-modal-title {
+  font-weight: bold;
+  font-size: 14px;
+}
+.cond-modal-meta {
+  font-size: 10px;
+  color: var(--text-muted);
+}
+.cond-modal-allmet {
+  margin-top: 8px;
+  padding: 4px 6px;
+  background: rgba(46, 204, 113, 0.1);
+  border-radius: 4px;
+  text-align: center;
+  font-size: 11px;
+  color: var(--success);
+  font-weight: bold;
+}
+.cond-modal-hint {
+  margin-top: 8px;
+  font-size: 10px;
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+/* ====== 移动端条件系统紧凑化 ====== */
+@media (max-width: 768px) {
+  .cond-row {
+    padding: 0 1px;
+    font-size: 10px;
+    gap: 1px;
+  }
+  .cond-icon {
+    width: 11px;
+    font-size: 8px;
+  }
+  .cond-value {
+    font-size: 8px;
+    padding-left: 1px;
+  }
+  .cond-modal-body {
+    font-size: 12px;
+  }
+  .cond-modal-header {
+    gap: 4px;
+    margin-bottom: 6px;
+    padding-bottom: 4px;
+  }
+  .cond-modal-title {
+    font-size: 13px;
+  }
+  .cond-modal-allmet,
+  .cond-modal-hint {
+    margin-top: 6px;
+    padding: 3px 4px;
+    font-size: 10px;
+  }
+
+  /* 卡片紧凑化 */
+  .card,
+  .hustle-card {
+    padding: 6px !important;
+  }
+  .hustle-grid {
+    gap: 6px;
+    padding: 4px;
+  }
+
+  /* 职业路径卡片2列网格 */
+  .career-path-grid {
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)) !important;
+    gap: 6px !important;
+  }
+  /* 推荐路径2列 */
+  div[style*="grid-template-columns:1fr 1fr"] {
+    gap: 6px !important;
+  }
+}
+
 .critical-choice-box {
   max-width: 560px;
 }

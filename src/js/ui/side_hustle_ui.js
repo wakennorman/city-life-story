@@ -65,6 +65,11 @@ function renderSideHustleTab(state, parent) {
       typeof sideHustle !== "undefined"
         ? sideHustle.check(hustleId, state)
         : { ok: false, reason: "系统未加载" };
+    const details =
+      typeof sideHustle !== "undefined" &&
+      typeof sideHustle.checkDetailed === "function"
+        ? sideHustle.checkDetailed(hustleId, state)
+        : [];
 
     const card = document.createElement("div");
     card.className = "hustle-card" + (check.ok ? "" : " unavailable");
@@ -94,18 +99,37 @@ function renderSideHustleTab(state, parent) {
     `;
     card.appendChild(metaDiv);
 
-    // 属性要求
-    if (hustle.minAttr) {
+    // 详细条件（所有条件 ✅/❌）— 使用约定式条件系统
+    if (details.length > 0) {
       const reqDiv = document.createElement("div");
       reqDiv.className = "hustle-reqs";
-      const reqText = Object.entries(hustle.minAttr)
-        .map(([attr, val]) => {
-          const current = state.player[attr] || 0;
-          const met = current >= val;
-          return `${met ? "✅" : "❌"} ${attr === "agility" ? "敏捷" : attr === "intelligence" ? "智力" : attr === "charm" ? "颜值" : attr} ${current}/${val}`;
-        })
-        .join(" · ");
-      reqDiv.textContent = reqText;
+      var reqHtml =
+        typeof ConditionSystem !== "undefined" && ConditionSystem.renderRows
+          ? ConditionSystem.renderRows(details)
+          : (function () {
+              var html =
+                '<div style="font-size:10px;display:flex;flex-direction:column;gap:2px;padding:4px 0;">';
+              for (var di = 0; di < details.length; di++) {
+                var d = details[di];
+                html +=
+                  '<div style="display:flex;justify-content:space-between;align-items:center;padding:1px 4px;border-radius:2px;background:' +
+                  (d.ok ? "rgba(46,204,113,0.06);" : "rgba(231,76,60,0.06);") +
+                  '">' +
+                  "<span>" +
+                  (d.ok ? "✅" : "❌") +
+                  " " +
+                  d.label +
+                  "</span>" +
+                  '<span style="font-size:9px;color:' +
+                  (d.ok ? "var(--success)" : "var(--danger)") +
+                  ';">当前' +
+                  d.current +
+                  "</span></div>";
+              }
+              html += "</div>";
+              return html;
+            })();
+      reqDiv.innerHTML = reqHtml;
       card.appendChild(reqDiv);
     }
 

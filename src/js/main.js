@@ -1637,6 +1637,11 @@ function startNewGame() {
   StateManager.newGame();
   initializePrices();
 
+  // v3.99 初始化约定式条件系统（自动注册所有检查函数）
+  if (typeof ConditionSystem !== "undefined" && ConditionSystem.init) {
+    ConditionSystem.init();
+  }
+
   // v3.2 修复: 记录第1天日初现金（后续日由 day_increment 管线步骤管理）
   StateManager.getState().flags._dayStartCash =
     StateManager.getState().resources.cash || 0;
