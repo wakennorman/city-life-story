@@ -1,12 +1,21 @@
 {
-  "currentRound": 21,
-  "currentDomain": "H",
+  "currentRound": 22,
+  "currentDomain": "A",
   "domainOrder": ["A", "B", "C", "D", "E", "F", "G", "H"],
-  "rotationIndex": 7,
-  "nextDomain": "A",
-  "lastCommit": "aaad3603",
+  "rotationIndex": 0,
+  "nextDomain": "B",
+  "lastCommit": "2554033d",
   "lastUpdated": "2026-07-14",
   "history": [
+    {
+      "round": 22,
+      "domain": "A",
+      "date": "2026-07-14",
+      "aClassFixed": 3,
+      "linkageItems": 3,
+      "commit": "2554033d",
+      "note": "R22 域A(数据/数值平衡)第二轮: A类修复3项（已提交，MC 6×400d 待验证）。(1)finance.js calculateMonthlyIncome 街头阶段聚合 state.resources?.dailyTransactions(不存在字段)→state.flags._dailyTransactions，月收入恒为0、贷款几乎必拒。(2)finance.js 职场阶段取当前公司用 state.corporate?.companyId / state.startup?.companies(均不存在)→state.corporate.company(公司对象含.id) 查 state.enterpriseFate.companies[company.id]，salaryMod 恒1.0(公司薪资修正失效)。(3)data_linkage_events.js:102 写 st.player.happiness(死字段)→st.needs.happiness，'分享安稳'幸福感加成静默丢失。联动增强3项: data_linkage_events_r22.js IIFE→RANDOM_EVENTS，2 street+1 corporate，id 前缀 data2_* 与 R14 data_* 不冲突，全||防御,[PLACEHOLDER]：data2_lean_budget(A→D现金缓冲聚会)/data2_skill_ledger(A→C技能复盘落真实技能)/data2_capital_reserve(A→E资本储备腾本金·复用_dataInvestorMindset)。"
+    },
     {
       "round": 21,
       "domain": "H",
@@ -14,7 +23,7 @@
       "aClassFixed": 3,
       "linkageItems": 3,
       "commit": "aaad3603",
-      "note": "R21 域H(创业/公司)第二轮: A类修复3项（已提交 aaad3603，MC 6×400d exit=0·0代码异常，存活率 balanced 100%/grinder 33.3%≥30%/skiller 83.3%/trader 83.3%/social 83.3%/corporate 100% 全达标）。(1)events_corp.js 9处 corporateorate 拼写错误→顶层 state.corporate(.team/.jobOffer/.company 真实字段)，指未初始化对象→读 team.length/写 jobOffer/读 company.id 全 TypeError 崩溃+重置守卫永假死代码，已全改 corporate。(2)startup.js improveEmployeeSatisfaction 空团队先扣现金再 0/0=NaN，循环前加员工数守卫。(3)startup_crisis.js 死代码接入 tickStartup 季度分支(typeof+try/catch)。联动增强3项: company_linkage_events_r21.js IIFE→RANDOM_EVENTS，2 street+1 corporate，id 前缀 company_h_* 与 R12 startup_* 不冲突，全||防御,[PLACEHOLDER]。"
+      "note": "R21 域H(创业/公司)第二轮: A类修复3项（events_corp corporateorate拼写→顶层 state.corporate / startup 空团队除零NaN / startup_crisis 死代码接入tickStartup季度分支）+ 公司联动增强3项(H→A创业纪律/H→D带队温度/H→C经营眼界)。MC 6×400d exit=0·0代码异常。"
     },
     {
       "round": 20,
@@ -23,7 +32,7 @@
       "aClassFixed": 1,
       "linkageItems": 3,
       "commit": "66a72947",
-      "note": "R20 域G(核心机制/生命周期): A类修复1项—critical.js 强制临界'延期'惩罚整套阶梯机制死代码。根因：(1)defer 回调写 _deferred[need]=纯数字day，而 applyDeferredCriticalPunishments 期望 {count,lastDay} 对象并递增；(2)该函数末尾 _deferred={} 每晚清空。二者叠加致 count 永停1、第2/3/4+次(得病/饿晕/送医负债/强制住院)全不可达。修复：defer 回调改累积 count；applyDeferredCriticalPunishments 删每晚清空+删同日跳过守卫+加 lastPunishedDay 同日防重罚+临界解除即删标记+旧数字兼容；findCriticalNeed 同日跳过兼容对象格式。联动增强3项: 新建 core_mechanics_linkage_events.js IIFE→RANDOM_EVENTS，2 street+1 corporate：core_habit_foundation(G→A 习惯地基→mental+5·happiness+4)/core_wisdom_share(G→D 人生体悟→applyAffinityChange 好感+6 守 rel.met 铁律)/core_exec_resilience(G→C 掌舵定力→addSkillXp('management',8))。全||防御,[PLACEHOLDER]。MC 6×400d exit=0·0代码异常。"
+      "note": "R20 域G(核心机制/生命周期): A类修复1项—critical.js 延期临界惩罚死代码(阶梯惩罚不可达)，改为累积计数+消除每晚清空+同日防重罚。联动增强3项: core_mechanics_linkage_events.js。"
     },
     {
       "round": 19,
@@ -32,7 +41,7 @@
       "aClassFixed": 1,
       "linkageItems": 3,
       "commit": "465df2ba",
-      "note": "R19 域F(界面/体验): A类修复1项—daily_focus.js:118 今日重点面板生成装备耐久提示时引用从未声明的变量 itemId，当任意已装备装备耐久跌破20%即抛 ReferenceError 崩溃；修复为 (inst.itemId||slot)。联动增强3项: 新建 ui_linkage_events.js IIFE→RANDOM_EVENTS，2 street+1 corporate：ui_daily_clarity(F→A)/ui_social_presence(F→D)/ui_career_portfolio(F→C)。全||防御,[PLACEHOLDER]。MC 6×400d exit=0·0代码异常。"
+      "note": "R19 域F(界面/体验): A类修复1项—daily_focus.js:118 未声明变量 itemId ReferenceError。联动增强3项: ui_linkage_events.js。"
     },
     {
       "round": 18,
@@ -41,7 +50,7 @@
       "aClassFixed": 3,
       "linkageItems": 3,
       "commit": "3d0b792",
-      "note": "R18 域E(经济/投资): A类修复3项—(1)连续盈利衰减读取未初始化字段;(2)新闻房产乘数误匹配;(3)房产汽车持仓盈亏除零守卫。联动增强3项: 新建 economy_invest_linkage_events.js IIFE→RANDOM_EVENTS。MC 6×400d 0代码异常。"
+      "note": "R18 域E(经济/投资): A类修复3项—连续盈利衰减读取未初始化字段/新闻房产乘数误匹配/房产汽车持仓盈亏除零守卫。联动增强3项: economy_invest_linkage_events.js。"
     },
     {
       "round": 17,
@@ -50,7 +59,7 @@
       "aClassFixed": 4,
       "linkageItems": 3,
       "commit": "1dd59f6d",
-      "note": "R17 域D(NPC/社交): A类修复4项—social_tab.js npcIds 声明前置; chatWithNpc 未声明变量 affinity; applyEventNpcEcho 跨NPC好感绕过 applyAffinityChange。联动增强3项: 新建 npc_social_linkage_events.js IIFE→RANDOM_EVENTS。MC 6×400d 0代码异常。"
+      "note": "R17 域D(NPC/社交): A类修复4项—social_tab npcIds声明前置/chatWithNpc未声明变量affinity/applyEventNpcEcho跨NPC好感绕过applyAffinityChange。联动增强3项: npc_social_linkage_events.js。"
     }
   ],
   "completedDomains": ["A", "B", "C", "D", "E", "F", "G", "H"]

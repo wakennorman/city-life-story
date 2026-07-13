@@ -1,9 +1,9 @@
 # 城市浮生记 (City Life Story) — 开发文档
 
-> 最后更新: 2026-07-14（v3.112 loop R21 全系统优化·Domain H 创业/公司（第二轮）——A类修复3项：(1)events_corp.js 9处 corporateorate 拼写错误→应为顶层 state.corporate（.team/.jobOffer/.company 均为真实字段，被 team.js/main.js/events_core.js/enterprise_fate.js 使用），指未初始化对象→读 team.length/写 jobOffer/读 company.id 全 TypeError 崩溃、且 jobOffer/team 重置守卫永假(死代码)；(2)startup.js improveEmployeeSatisfaction 空 employees 时先扣现金再 0/0=NaN→"平均NaN分"，加员工数守卫；(3)startup_crisis.js 整子系统死代码(checkStartupCrises 无调用方→创业危机永不触发)，接入 tickStartup 季度分支(typeof 守卫+try/catch，headless 下 showModal 抛错被吞不中断结算)） + 联动增强3项：H→A创业纪律感 / H→D带队温度好感(守域D铁律) / H→C经营眼界管理技能）
-> 上一版: v3.110 loop R19 Domain F 界面/体验（今日重点面板装备耐久提示引用未声明变量 itemId→ReferenceError 崩溃 + F→A/F→D/F→C 联动）
+> 最后更新: 2026-07-14（v3.113 loop R22 全系统优化·Domain A 数据/数值平衡（第二轮）——A类修复3项：(1)finance.js calculateMonthlyIncome 街头阶段聚合 state.resources?.dailyTransactions（不存在字段）→应为 state.flags._dailyTransactions，致月收入恒为0、贷款几乎必拒；(2)finance.js 职场阶段取当前公司用 state.corporate?.companyId / state.startup?.companies（均不存在）→应为 state.corporate.company（公司对象含.id）查 state.enterpriseFate.companies[company.id]，致 salaryMod 恒为1.0（公司薪资修正失效）；(3)data_linkage_events.js:102 写 st.player.happiness（死字段）→应为 st.needs.happiness，致"分享安稳"幸福感加成静默丢失） + 联动增强3项（data2_* 新角度，2 street+1 corporate：A→D现金缓冲聚会 / A→C技能复盘落真实技能 / A→E资本储备腾本金，复用 _dataInvestorMindset））
+> 上一版: v3.112 loop R21 全系统优化·Domain H 创业/公司（第二轮）（A类修复3项：events_corp corporateorate拼写→state.corporate / startup 空团队除零NaN / startup_crisis 死代码接入tickStartup + H→A/H→D/H→C 联动）
 >
-> commits: `feat: [域H] A类修复2项+联动增强3项` + `（docs）loop状态/迭代表`
+> commits: `feat: [域A] A类修复3项+联动增强3项` + `（docs）loop状态/迭代表`
 
 ---
 

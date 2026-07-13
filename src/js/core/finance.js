@@ -27,13 +27,13 @@ function calculateMonthlyIncome(state) {
     const rank = CORP_RANKS[player.corporate?.rank || "P5"];
     if (!rank) return 0;
 
-    // 找到当前公司
-    const companyId = state.corporate?.companyId;
+    // 找到当前公司（state.corporate.company 为 COMPANIES 中的公司对象，含 .id）
+    const company = state.corporate && state.corporate.company;
     let salaryMod = 1.0;
-    if (companyId && state.startup?.companies) {
-      const company = state.startup.companies.find((c) => c.id === companyId);
-      if (company) {
-        salaryMod = company.salaryMod || 1.0;
+    if (company && state.enterpriseFate && state.enterpriseFate.companies) {
+      const co = state.enterpriseFate.companies[company.id];
+      if (co) {
+        salaryMod = co.salaryMod || 1.0;
       }
     }
 
@@ -46,7 +46,7 @@ function calculateMonthlyIncome(state) {
     // === 街头阶段 ===
     // 街头收入来源：拾荒、摆摊、街头工作等
     // 计算方式：最近 7 天的日均收入 × 22 个工作日
-    const transactions = state.resources?.dailyTransactions || [];
+    const transactions = state.flags._dailyTransactions || [];
     const recentDays = {};
 
     // 聚合最近 7 天的收入

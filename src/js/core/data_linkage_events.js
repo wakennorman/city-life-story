@@ -99,7 +99,7 @@
             var npc = pickClosestMetNpcA(st, 10);
             if (npc) safeAffinityA(st, npc.id, 5, "状态均衡的感染力");
             if (st.player) {
-              st.player.happiness = (st.player.happiness || 50) + 3;
+              st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 3);
               st.player.mental = (st.player.mental || 50) + 2;
             }
             if (st.flags) st.flags._dataBalancedLivingCooldown = true;
