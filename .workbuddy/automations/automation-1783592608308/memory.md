@@ -180,10 +180,10 @@
 - 提交计划：仅 git add 域F文件(daily_focus.js/ui_linkage_events.js/src/index.html/DEVELOPMENT.md/dist/index.html/loop-domain-state.json/last_known_head)，不 -A、不 push；DEVELOPMENT.md=v3.110；loop-state=round19/F/nextDomain=G。下轮→G（核心机制/生命周期）。
 - ✅ 最终结果：MC 6×400d exit=0·**0代码异常**（social 66.7%<80% 为既有平衡阈值 RNG 波动，历轮一致，非本轮引入；trader/corporate 83.3%、skiller 66.7%≥30% 均通过）。dist 8263.3KB 比 src 新。**已提交 465df2ba**（10文件/449增/21删，未 push，pre-commit 三守卫全过），无并行窗口污染。last_known_head 已同步至 465df2ba。下轮→G（核心机制/生命周期）。
 
-## 最近执行（2026-07-14，Round 20 域G 核心机制/生命周期 — 待提交）
+## 最近执行（2026-07-14，Round 20 域G 核心机制/生命周期 — 已提交 66a72947）
 - 起始状态：loop-domain-state.json=round19/F/next=G，故本窗口执行 R20=域G（核心机制/生命周期）。HEAD=465df2ba（R19 已提交，树干净）；先同步 last_known_head=465df2ba 过漂移检查。
 - 域G 真实文件：Explore 扫描 events_core/life_ribbon/state/world_params/era_transform/daily_pipeline/needs/interactions/phase1/critical(+corp_ops)/phase2(property_market/trade_intel/actions_extra)。lifecycle/game_state/time/init/turn/age_events/life_events 经核不存在已跳过。
 - A类1（确证，核心生存机制缺陷）：critical.js 强制临界"延期"惩罚整套阶梯机制死代码。根因：(1)defer 回调写 `_deferred[need]=st.player.day`（纯数字），而 applyDeferredCriticalPunishments 期望 {count,lastDay} 对象并递增；(2)该函数末尾 `state.flags._deferred={}` 每晚清空。二者叠加致 count 永停1、_punishByNeed阶梯式 第2/3/4+次（得病/饿晕/送医负债/强制住院）全不可达。修复：defer 回调改累积 count（首建对象、后续 count+1 更新 lastDay）；applyDeferredCriticalPunishments 删每晚清空+删同日跳过守卫+加 lastPunishedDay 同日防重罚+临界解除即删标记+旧数字兼容；findCriticalNeed 同日跳过兼容对象格式。_punishByNeed阶梯式 阶梯逻辑本身完好（已核 addDailyTransaction typeof 守卫/bankDebt||0/fame||0/_contractIllness 已定义），激活后不崩。
 - 联动3（新建 `src/js/core/core_mechanics_linkage_events.js` IIFE→RANDOM_EVENTS，2 street+1 corporate，全||防御，[PLACEHOLDER]）：core_habit_foundation(G→A 习惯地基→mental+5·happiness+4)/core_wisdom_share(G→D 人生体悟→applyAffinityChange 好感+6 守 rel.met 铁律)/core_exec_resilience(G→C 掌舵定力→addSkillXp("management",8))。src/index.html 注册在 ui_linkage_events.js 之后。id 与 R12 lifecycle_linkage_events.js 不冲突。
-- 验证：node --check 2文件通过；build.py→dist 8272.5KB；MC 6×400d 待执行（须 0代码异常）。
-- 提交计划：仅 git add 域G文件(critical.js/core_mechanics_linkage_events.js/src/index.html/DEVELOPMENT.md/dist/index.html/loop-domain-state.json/last_known_head)，不 -A、不 push；DEVELOPMENT.md=v3.111；loop-state=round20/G/nextDomain=H。下轮→H（Phase2/公司）。
+- 验证：node --check 2文件通过；build.py→dist 8272.5KB；MC 6×400d exit=0·0代码异常（balanced 83.3%/skiller 100%/social 83.3%/corporate 83.3% 均≥80%；grinder 33.3%≥30% 高风险路径阈值；trader 50.0%<80% 为既有平衡阈值 RNG 波动，非代码回归）。
+- 已提交 66a72947（10文件/547增/38删，未 push，pre-commit 三守卫全过）；last_known_head 已同步至 66a72947。下轮→H（Phase2/公司）。
