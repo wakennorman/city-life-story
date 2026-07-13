@@ -1490,7 +1490,7 @@ function startSandboxGame() {
       StateManager.addMessage(
         "⚙️ 沙盒模式开始" +
           (cfg.villageDebt > 0
-            ? "，欠村长¥" + cfg.villageDebt.toLocaleString() + "，日息0.35%。"
+            ? "，欠村长¥" + cfg.villageDebt.toLocaleString() + "，日息" + ((cfg.difficulty === 'casual' ? 0.2 : cfg.difficulty === 'hard' ? 0.5 : cfg.difficulty === 'nightmare' ? 0.7 : 0.35).toFixed(2)) + "%。"
             : "，自由探索。"),
         "event",
       );

@@ -2616,7 +2616,7 @@ function renderGuidanceBar(state, parent) {
       dotRow.querySelectorAll(".gb-tip-dot").forEach(function (d, i) {
         d.classList.toggle("active", i === _tipIdx);
       });
-    }, 2500);
+    }, 4500);
   } else {
     var noTip = document.createElement("div");
     noTip.style.cssText = "font-size:11px;color:var(--text-muted);";

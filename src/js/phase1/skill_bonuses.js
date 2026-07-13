@@ -753,13 +753,27 @@ function settleDailyFinance(state) {
 
   // === v3.0 BUG 修复：村长债复利从未生效 — 现补回 ===
   // 旧版 dailyInterest 字段被 4 个 UI 文件读取但从未被应用，导致利息始终为 0。
-  // 现在按当前难度的 dailyInterestBase 计算复利并累加到 villageDebt。
+  // 现在按当前难度的 dailyInterestBase + 动态利率系统计算复利并累加到 villageDebt。
+  // [全系统自洽修复] 域A 修复: 接入 economy_v3.1.getDynamicLoanRate 使利率随资产动态增长
   var vd = state.resources.villageDebt || 0;
   if (vd > 0) {
-    var vdRate =
+    var difficultyRate =
       typeof getDifficultyMultiplier === "function"
         ? getDifficultyMultiplier(state, "dailyInterest")
         : state.resources.dailyInterest || 0.0035;
+    // 动态利率：基于总资产阶梯递增，困难模式利率为最低保底
+    var totalAssets =
+      (state.resources.cash || 0) + (state.resources.bankBalance || 0);
+    var dynamicRate = difficultyRate;
+    if (
+      typeof window !== "undefined" &&
+      window.EconomySystem &&
+      typeof window.EconomySystem.getDynamicLoanRate === "function"
+    ) {
+      dynamicRate = window.EconomySystem.getDynamicLoanRate(totalAssets);
+    }
+    // 取最大值：动态不低于难度保底利率
+    var vdRate = Math.max(difficultyRate, dynamicRate);
     var vdInterest = Math.max(1, Math.floor(vd * vdRate));
     state.resources.villageDebt = vd + vdInterest;
     state.resources.villageDebtInterest =

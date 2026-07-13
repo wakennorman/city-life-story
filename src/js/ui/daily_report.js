@@ -461,10 +461,21 @@ function generatePeakMomentHTML(state, incomes, expenses) {
   }
   var debt = state.resources.villageDebt || 0;
   if (debt > 0 && day % 10 === 0) {
+    // [全系统自洽修复] 域A 联动增强: 动态利率显示
+    var ratePct = 0.35;
+    if (
+      typeof window !== "undefined" &&
+      window.EconomySystem &&
+      typeof window.EconomySystem.getDynamicLoanRate === "function"
+    ) {
+      var ta = (state.resources.cash || 0) + (state.resources.bankBalance || 0);
+      ratePct = window.EconomySystem.getDynamicLoanRate(ta) * 100;
+    }
     highlights.push({
       icon: "📝",
       text:
-        "村长那 <strong>¥" + debt.toLocaleString() + "</strong> 的债还在...",
+        "村长那 <strong>¥" + debt.toLocaleString() + "</strong> 的债还在" +
+        (ratePct > 0.5 ? " 💸日息" + ratePct.toFixed(2) + "%" : "…"),
       type: "neutral",
     });
   }

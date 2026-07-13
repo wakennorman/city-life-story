@@ -73,11 +73,20 @@
     if (vd > 0) {
       var vi = r.villageDebtInterest || 0;
       if (vi > 0 && vd > 3000 && p.day && p.day > 30) {
+        var rateHint = "利息复利越滚越大";
+        if (
+          typeof window !== "undefined" &&
+          window.EconomySystem
+        ) {
+          var _ta = (r.cash || 0) + (r.bankBalance || 0);
+          var _dr = window.EconomySystem.getDynamicLoanRate(_ta) * 100;
+          rateHint = "日息" + _dr.toFixed(2) + "%复利，尽快还清";
+        }
         out.push({
           w: 90,
           icon: "🏘️",
           text: "尽快还村长一些钱",
-          hint: "利息复利越滚越大",
+          hint: rateHint,
         });
       } else if (vd > 0 && p.day && p.day > 80) {
         out.push({

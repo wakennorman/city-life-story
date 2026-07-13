@@ -619,11 +619,8 @@ if (typeof window !== "undefined") {
     if (typeof getWeatherGoodPriceMod === "function") {
       weatherMod = getWeatherGoodPriceMod(state, goodId);
     }
-    // 叠加节日价格修正（春节食物×1.25、劳动节电子×0.88 等）
+    // 叠加节日价格修正（原始 getCurrentPrice 已处理，此处不重复）
     var festivalMod = 1.0;
-    if (typeof getFestivalPriceMod === "function" && good) {
-      festivalMod = getFestivalPriceMod(state, good.category);
-    }
     var finalPrice =
       basePrice * supplyMod * eventMod * weatherMod * festivalMod;
     // 限制在合理范围

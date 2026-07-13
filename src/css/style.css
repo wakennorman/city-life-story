@@ -5798,7 +5798,7 @@ body {
 
 /* 今日建议轮播区 */
 @keyframes gb-tip-fadein {
-  from { opacity: 0; transform: translateY(4px); }
+  from { opacity: 0; transform: translateY(2px); }
   to   { opacity: 1; transform: translateY(0); }
 }
 .gb-tip-display {
@@ -5806,7 +5806,7 @@ body {
   color: var(--text-secondary);
   line-height: 1.5;
   min-height: 32px;
-  animation: gb-tip-fadein 0.4s ease;
+  animation: gb-tip-fadein 0.2s ease;
 }
 .gb-tip-dot {
   width: 5px; height: 5px;
@@ -6007,4 +6007,40 @@ body {
 }
 .transit-go-btn:active {
   transform: scale(0.96);
+}
+
+/* ====== [v3.99c] 手机端动效冲突修复 ======
+ * 问题：今日建议轮播(2.5s→4.5s)+gb-active-pulse 持续动画
+ *      抢走 action-card :active 反馈视觉注意力
+ * 修复：
+ *   ① 手机端弱化 gb-active-pulse（降低脉冲幅度）
+ *   ② action-card:active 加背景变色 + 过渡延长
+ *   ③ gb-tip-fadein 已缩为 0.2s/2px/4.5s
+ *   ④ hover：触屏禁用伪类，避免伪悬停干扰
+ */
+@media (max-width: 768px) {
+  /* 弱化脉冲：减少透明度干扰 */
+  .gb-cell-active {
+    animation: none !important;
+    border-color: rgba(102,126,234,0.20) !important;
+  }
+  /* 强化点击反馈：action-card 按下变色 + 稍长过渡 */
+  .action-card:active:not(.disabled) {
+    transform: scale(0.95);
+    background: var(--bg-card-hover) !important;
+    transition: transform 0.12s ease, background 0.12s ease !important;
+    box-shadow: none;
+  }
+  /* tab 按钮点击反馈 */
+  .tab-btn:active {
+    transform: scale(0.92);
+    background: var(--bg-card-hover) !important;
+    transition: transform 0.12s ease, background 0.12s ease !important;
+  }
+  /* 触屏设备不应有悬停残留（防止 click→hover 粘滞） */
+  .action-card:hover:not(:active) {
+    border-color: var(--border) !important;
+    transform: none !important;
+    box-shadow: none !important;
+  }
 }
