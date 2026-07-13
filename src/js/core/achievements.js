@@ -556,7 +556,27 @@ const ACHIEVEMENTS = [
     icon: "👥",
     category: "里程碑",
     hidden: true,
-    triggers: { minAllNpcAffinity: { min: 80, ids: ["aunt_wang","old_zhou","boss_li","sister_zhang","xiao_mei","chef_chen","auntie_lin","master_zhao","xiaoli","zhaojie","chen_ge","ajie","xiaochen","dr_wang"] } },
+    triggers: {
+      minAllNpcAffinity: {
+        min: 80,
+        ids: [
+          "aunt_wang",
+          "old_zhou",
+          "boss_li",
+          "sister_zhang",
+          "xiao_mei",
+          "chef_chen",
+          "auntie_lin",
+          "master_zhao",
+          "xiaoli",
+          "zhaojie",
+          "chen_ge",
+          "ajie",
+          "xiaochen",
+          "dr_wang",
+        ],
+      },
+    },
   },
   {
     id: "all_npc_hated",
@@ -567,7 +587,24 @@ const ACHIEVEMENTS = [
     icon: "👻",
     category: "隐藏",
     hidden: true,
-    triggers: { minAllNpcHated: ["aunt_wang","old_zhou","boss_li","sister_zhang","xiao_mei","chef_chen","auntie_lin","master_zhao","xiaoli","zhaojie","chen_ge","ajie","xiaochen","dr_wang"] },
+    triggers: {
+      minAllNpcHated: [
+        "aunt_wang",
+        "old_zhou",
+        "boss_li",
+        "sister_zhang",
+        "xiao_mei",
+        "chef_chen",
+        "auntie_lin",
+        "master_zhao",
+        "xiaoli",
+        "zhaojie",
+        "chen_ge",
+        "ajie",
+        "xiaochen",
+        "dr_wang",
+      ],
+    },
   },
   {
     id: "visit_all_locations",
@@ -1471,8 +1508,16 @@ const ACHIEVEMENTS = [
     check: function (st) {
       if (!st.relationships) return false;
       var count = 0;
-      ["aunt_wang","boss_li","sister_zhang","old_zhou","xiao_mei","chef_chen"].forEach(function (id) {
-        if (st.relationships[id] && st.relationships[id].affinity >= 30) count++;
+      [
+        "aunt_wang",
+        "boss_li",
+        "sister_zhang",
+        "old_zhou",
+        "xiao_mei",
+        "chef_chen",
+      ].forEach(function (id) {
+        if (st.relationships[id] && st.relationships[id].affinity >= 30)
+          count++;
       });
       return count >= 3;
     },
@@ -1487,7 +1532,14 @@ const ACHIEVEMENTS = [
     hidden: false,
     check: function (st) {
       if (!st.relationships) return false;
-      return ["aunt_wang","boss_li","sister_zhang","old_zhou","xiao_mei","chef_chen"].some(function (id) {
+      return [
+        "aunt_wang",
+        "boss_li",
+        "sister_zhang",
+        "old_zhou",
+        "xiao_mei",
+        "chef_chen",
+      ].some(function (id) {
         return st.relationships[id] && st.relationships[id].affinity >= 80;
       });
     },
@@ -1540,7 +1592,19 @@ const ACHIEVEMENTS = [
     icon: "🦋",
     category: "隐藏",
     hidden: true,
-    triggers: { minAllNpcAffinity: { min: 60, ids: ["aunt_wang","boss_li","sister_zhang","old_zhou","xiao_mei","chef_chen"] } },
+    triggers: {
+      minAllNpcAffinity: {
+        min: 60,
+        ids: [
+          "aunt_wang",
+          "boss_li",
+          "sister_zhang",
+          "old_zhou",
+          "xiao_mei",
+          "chef_chen",
+        ],
+      },
+    },
   },
   {
     id: "mentor_student",
@@ -1603,7 +1667,11 @@ const ACHIEVEMENTS = [
     category: "人生第一次",
     hidden: true,
     check: function (st) {
-      return !!(st.flags && st.flags._everHadIllness && st.flags._everCuredIllness);
+      return !!(
+        st.flags &&
+        st.flags._everHadIllness &&
+        st.flags._everCuredIllness
+      );
     },
   },
   {
@@ -1724,7 +1792,10 @@ const ACHIEVEMENTS = [
     hidden: true,
     check: function (st) {
       if ((st.player.day || 0) < 30) return false;
-      return !(st.flags && (st.flags._didGamble || st.flags._didGrayWork || st.flags._didSmuggling));
+      return !(
+        st.flags &&
+        (st.flags._didGamble || st.flags._didGrayWork || st.flags._didSmuggling)
+      );
     },
   },
   {
@@ -1747,7 +1818,12 @@ const ACHIEVEMENTS = [
     category: "道德档案",
     hidden: true,
     check: function (st) {
-      return !!(st.startup && st.startup.flags && st.startup.flags.registered && !(st.flags && st.flags._everFiredEmployee));
+      return !!(
+        st.startup &&
+        st.startup.flags &&
+        st.startup.flags.registered &&
+        !(st.flags && st.flags._everFiredEmployee)
+      );
     },
   },
   {
@@ -1764,12 +1840,17 @@ const ACHIEVEMENTS = [
       var rels = st.relationships;
       var metAny = false;
       var allHigh = true;
-      var metNpcs = Object.keys(rels).filter(function (k) { return rels[k] && typeof rels[k].affinity === "number" && rels[k].met; });
+      var metNpcs = Object.keys(rels).filter(function (k) {
+        return rels[k] && typeof rels[k].affinity === "number" && rels[k].met;
+      });
       for (var i = 0; i < metNpcs.length; i++) {
         var r = rels[metNpcs[i]];
         if (r && typeof r.affinity === "number" && r.affinity > 0) {
           metAny = true;
-          if (r.affinity < 60) { allHigh = false; break; }
+          if (r.affinity < 60) {
+            allHigh = false;
+            break;
+          }
         }
       }
       return metAny && allHigh;
@@ -1822,7 +1903,11 @@ const ACHIEVEMENTS = [
     category: "里程碑",
     hidden: false,
     check: function (st) {
-      return !!(st.career && st.career.currentJob && (st.career.currentJob.workDays || 0) >= 100);
+      return !!(
+        st.career &&
+        st.career.currentJob &&
+        (st.career.currentJob.workDays || 0) >= 100
+      );
     },
   },
   {
@@ -1848,7 +1933,8 @@ const ACHIEVEMENTS = [
     check: function (st) {
       if (!st.career || !st.career.currentJob) return false;
       var job = st.career.currentJob;
-      if (typeof CAREER_PATHS === "undefined" || !CAREER_PATHS[job.path]) return false;
+      if (typeof CAREER_PATHS === "undefined" || !CAREER_PATHS[job.path])
+        return false;
       var levels = CAREER_PATHS[job.path].levels;
       return levels.length > 0 && job.levelId === levels[levels.length - 1].id;
     },
@@ -1888,7 +1974,12 @@ const ACHIEVEMENTS = [
     category: "隐藏",
     hidden: true,
     check: function (st) {
-      return !!(st.career && st.career.currentJob && (st.career.currentJob.performance || 0) >= 90 && (st.career.currentJob.workDays || 0) >= 30);
+      return !!(
+        st.career &&
+        st.career.currentJob &&
+        (st.career.currentJob.performance || 0) >= 90 &&
+        (st.career.currentJob.workDays || 0) >= 30
+      );
     },
   },
   {
@@ -1910,120 +2001,190 @@ const ACHIEVEMENTS = [
 
 var TRIGGER_DISPATCH = {
   // 简单flag检查
-  flagMet: function(st, val) { return !!(st.flags && st.flags[val]); },
-  flagNotMet: function(st, val) { return !(st.flags && st.flags[val]); },
+  flagMet: function (st, val) {
+    return !!(st.flags && st.flags[val]);
+  },
+  flagNotMet: function (st, val) {
+    return !(st.flags && st.flags[val]);
+  },
   // 累计收入阈值
-  minTotalEarned: function(st, val) { return (st.resources.totalEarned || 0) >= val; },
+  minTotalEarned: function (st, val) {
+    return (st.resources.totalEarned || 0) >= val;
+  },
   // 天数阈值
-  minDay: function(st, val) { return (st.player.day || 0) >= val; },
+  minDay: function (st, val) {
+    return (st.player.day || 0) >= val;
+  },
   // 银行存款阈值
-  minBankBalance: function(st, val) { return (st.resources.bankBalance || 0) >= val; },
+  minBankBalance: function (st, val) {
+    return (st.resources.bankBalance || 0) >= val;
+  },
   // 全部技能达到指定等级
-  minAllSkillLevel: function(st, val) {
-    return Object.values(st.skills).every(function(s) { return s.level >= val; });
+  minAllSkillLevel: function (st, val) {
+    return Object.values(st.skills).every(function (s) {
+      return s.level >= val;
+    });
   },
   // 名气阈值
-  minFame: function(st, val) { return (st.player.fame || 0) >= val; },
+  minFame: function (st, val) {
+    return (st.player.fame || 0) >= val;
+  },
   // 体质阈值
-  minPhysique: function(st, val) { return (st.player.physique || 0) >= val; },
+  minPhysique: function (st, val) {
+    return (st.player.physique || 0) >= val;
+  },
   // 心智阈值
-  minMental: function(st, val) { return (st.player.mental || 0) >= val; },
+  minMental: function (st, val) {
+    return (st.player.mental || 0) >= val;
+  },
   // 住所等级阈值
-  minHousingTier: function(st, val) { return (st.housing && st.housing.tier || 0) >= val; },
+  minHousingTier: function (st, val) {
+    return ((st.housing && st.housing.tier) || 0) >= val;
+  },
   // 游戏阶段检查
-  phaseEquals: function(st, val) { return st.player.phase === val; },
+  phaseEquals: function (st, val) {
+    return st.player.phase === val;
+  },
   // 公司职级检查
-  rankAtLeast: function(st, val) { return st.corporate && st.corporate.rank === val; },
+  rankAtLeast: function (st, val) {
+    return st.corporate && st.corporate.rank === val;
+  },
   // 计数器阈值（st.flags 中的数字字段）
-  minCounter: function(st, val) { return (st.flags && st.flags[val.flag] || 0) >= val.min; },
+  minCounter: function (st, val) {
+    return ((st.flags && st.flags[val.flag]) || 0) >= val.min;
+  },
   // 单个NPC好感阈值
-  minNpcAffinity: function(st, val) {
-    return st.relationships && st.relationships[val.id] && st.relationships[val.id].affinity >= val.min;
+  minNpcAffinity: function (st, val) {
+    return (
+      st.relationships &&
+      st.relationships[val.id] &&
+      st.relationships[val.id].affinity >= val.min
+    );
   },
   // 所有NPC好感阈值
-  minAllNpcAffinity: function(st, val) {
+  minAllNpcAffinity: function (st, val) {
     if (!st.relationships) return false;
-    return val.ids.every(function(id) {
+    return val.ids.every(function (id) {
       return st.relationships[id] && st.relationships[id].affinity >= val.min;
     });
   },
   // 所有NPC好感负数
-  minAllNpcHated: function(st, val) {
+  minAllNpcHated: function (st, val) {
     if (!st.relationships) return false;
-    return val.every(function(id) {
+    return val.every(function (id) {
       return st.relationships[id] && st.relationships[id].affinity < 0;
     });
   },
   // 创业flag检查
-  startupFlag: function(st, val) { return !!(st.startup && st.startup.flags && st.startup.flags[val]); },
+  startupFlag: function (st, val) {
+    return !!(st.startup && st.startup.flags && st.startup.flags[val]);
+  },
   // 创业退出类型
-  startupExitType: function(st, val) { return st.startup && st.startup.flags && st.startup.flags.exitType === val; },
+  startupExitType: function (st, val) {
+    return st.startup && st.startup.flags && st.startup.flags.exitType === val;
+  },
   // 创业融资轮次
-  startupFundingRound: function(st, val) {
-    if (!st.startup || !st.startup.company || !st.startup.company.fundingRounds) return false;
-    return st.startup.company.fundingRounds.some(function(r) { return r.round === val; });
+  startupFundingRound: function (st, val) {
+    if (!st.startup || !st.startup.company || !st.startup.company.fundingRounds)
+      return false;
+    return st.startup.company.fundingRounds.some(function (r) {
+      return r.round === val;
+    });
   },
   // 创业团队人数
-  startupMinEmployees: function(st, val) {
-    if (!st.startup || !st.startup.company || !st.startup.company.employees) return false;
+  startupMinEmployees: function (st, val) {
+    if (!st.startup || !st.startup.company || !st.startup.company.employees)
+      return false;
     return st.startup.company.employees.length >= val;
   },
   // 创业估值
-  startupMinValuation: function(st, val) {
-    return st.startup && st.startup.company && (st.startup.company.valuation || 0) >= val;
+  startupMinValuation: function (st, val) {
+    return (
+      st.startup &&
+      st.startup.company &&
+      (st.startup.company.valuation || 0) >= val
+    );
   },
   // 创业月收入
-  startupMinRevenue: function(st, val) {
-    return st.startup && st.startup.company && (st.startup.company.revenue || 0) >= val;
+  startupMinRevenue: function (st, val) {
+    return (
+      st.startup &&
+      st.startup.company &&
+      (st.startup.company.revenue || 0) >= val
+    );
   },
   // 创业盈利检查
-  startupProfitable: function(st, val) {
+  startupProfitable: function (st, val) {
     if (!st.startup || !st.startup.company) return false;
     return st.startup.company.revenue > st.startup.company.expenses;
   },
   // 慢性病检查
-  chronicIllness: function(st, val) {
-    return st.status && st.status.illnesses && st.status.illnesses.some(function(i) { return i.chronic; });
+  chronicIllness: function (st, val) {
+    return (
+      st.status &&
+      st.status.illnesses &&
+      st.status.illnesses.some(function (i) {
+        return i.chronic;
+      })
+    );
   },
   // 企业命运倒闭检查
-  enterpriseFateDeath: function(st, val) {
+  enterpriseFateDeath: function (st, val) {
     if (!st.enterpriseFate || !st.enterpriseFate.companies) return false;
     for (var cid in st.enterpriseFate.companies) {
       var h = st.enterpriseFate.companies[cid].fateEventHistory || [];
       for (var i = 0; i < h.length; i++) {
-        if (h[i].eventType === "company_death" || h[i].eventType === "merger_acquire") return true;
+        if (
+          h[i].eventType === "company_death" ||
+          h[i].eventType === "merger_acquire"
+        )
+          return true;
       }
     }
     return false;
   },
   // 企业命运市场份额
-  enterpriseFateMarketShare: function(st, val) {
+  enterpriseFateMarketShare: function (st, val) {
     if (!st.enterpriseFate || !st.enterpriseFate.companies) return false;
     for (var cid in st.enterpriseFate.companies) {
-      if (st.enterpriseFate.companies[cid].knownToPlayer && st.enterpriseFate.companies[cid].marketShare >= val) return true;
+      if (
+        st.enterpriseFate.companies[cid].knownToPlayer &&
+        st.enterpriseFate.companies[cid].marketShare >= val
+      )
+        return true;
     }
     return false;
   },
   // 技能单技能等级检查
-  minSkillLevel: function(st, val) {
+  minSkillLevel: function (st, val) {
     for (var key in val) {
-      if (!st.skills || !st.skills[key] || (st.skills[key].level || 0) < val[key]) return false;
+      if (
+        !st.skills ||
+        !st.skills[key] ||
+        (st.skills[key].level || 0) < val[key]
+      )
+        return false;
     }
     return true;
   },
   // 产品用户数
-  startupMinUsers: function(st, val) {
-    if (!st.startup || !st.startup.company || !st.startup.company.products) return false;
+  startupMinUsers: function (st, val) {
+    if (!st.startup || !st.startup.company || !st.startup.company.products)
+      return false;
     for (var i = 0; i < st.startup.company.products.length; i++) {
       if ((st.startup.company.products[i].users || 0) >= val) return true;
     }
     return false;
   },
   // 已访问所有地点
-  visitedAllLocations: function(st, val) { return !!(st.flags && st.flags._visitedAllLocations); },
+  visitedAllLocations: function (st, val) {
+    return !!(st.flags && st.flags._visitedAllLocations);
+  },
   // 成功退出（创业获得现金回报）
-  startupExitValue: function(st, val) {
-    return st.startup && st.startup.flags && (st.startup.flags.exitValue || 0) >= val;
+  startupExitValue: function (st, val) {
+    return (
+      st.startup && st.startup.flags && (st.startup.flags.exitValue || 0) >= val
+    );
   },
 };
 

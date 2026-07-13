@@ -161,7 +161,7 @@ navHints: [
   - **修复**：新增3个`*FromModal`包装函数+btnClass注入模板+addKrInput移出innerHTML
   - **防御**：createActionCard增加`console.warn`幽灵按钮运行时检测
   - **验证**：node --check ✅ / build.py 8104.9KB ✅
-  - **commit**：`<待提交>`
+  - **commit**：`84aab82b`（⚠️ 未推送，网络不可达）
   - **记忆文件**：`memory/v3.99d-ghost-button-fix.md`
 
 - **之前工作 (2026-07-13)**：R13(域CoC全量分析+部分P0实现) — 约定式自动归类全面审计，2个新增CoC系统

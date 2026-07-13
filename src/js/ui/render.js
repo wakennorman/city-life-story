@@ -2859,7 +2859,11 @@ function createActionCard(action, state) {
         renderAll();
       } else {
         // [约定式自动归类] 幽灵按钮检测：正常卡牌无 handler = 幽灵按钮
-        console.warn("⚠️ [幽灵按钮] 行动", action.id || "(无ID)", "未禁用但无 handler — 请检查 action 定义");
+        console.warn(
+          "⚠️ [幽灵按钮] 行动",
+          action.id || "(无ID)",
+          "未禁用但无 handler — 请检查 action 定义",
+        );
       }
     });
   }

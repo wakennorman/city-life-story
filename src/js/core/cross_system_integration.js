@@ -19,55 +19,7 @@
  * 在每日管线 life_node_check 之后调用
  */
 function checkLifeNodeMedicalEvents(state) {
-  if (!state || !state.flags) return;
-
-  // 35岁危机 → 健康风险增加
-  // [全系统自洽修复] 域G A类修复: life_nodes中35岁危机节点ID为career35，
-  // 交叉引用时需用_lifeNode_career35_done而非_lifeNode_midlife_crisis_done
-  if (
-    state.flags._lifeNode_career35_done &&
-    !state.flags._midlifeHealthWarning
-  ) {
-    var health = state.status && state.status.health;
-    if (health !== undefined && health < 60) {
-      state.flags._midlifeHealthWarning = true;
-      if (typeof StateManager !== "undefined") {
-        StateManager.addMessage(
-          "⚠️ 35岁之后身体大不如前，健康仅" + health + "，建议体检和买医保！",
-          "warning",
-        );
-      }
-    }
-  }
-
-  // 退休节点 → 强制健康检查
-  if (
-    state.flags._lifeNode_retirement_done &&
-    !state.flags._retirementHealthCheck
-  ) {
-    state.flags._retirementHealthCheck = true;
-    var h = state.status && state.status.health;
-    if (h !== undefined && h < 50) {
-      if (typeof StateManager !== "undefined") {
-        StateManager.addMessage(
-          "🏥 退休了，但身体已透支（健康仅" +
-            h +
-            "）。好好休养，别让晚年都在医院度过。",
-          "danger",
-        );
-      }
-    }
-  }
-
-  // 高考/大学毕业 → 压力释放（健康微调）
-  if (state.flags._lifeNode_gaokao_done && !state.flags._gaokaoRecovery) {
-    state.flags._gaokaoRecovery = true;
-    state.status = state.status || {};
-    state.status.health = Math.min(100, (state.status.health || 100) + 5);
-    if (typeof StateManager !== "undefined") {
-      StateManager.addMessage("🍃 高考结束，如释重负，健康+5。", "success");
-    }
-  }
+  processLinkageRules(state);
 }
 
 // ====== 2. 旅行 → 医疗联动 ======
@@ -77,47 +29,7 @@ function checkLifeNodeMedicalEvents(state) {
  * 在 tickTravel 中调用
  */
 function checkTravelMedicalEvents(state) {
-  if (!state || !state.travel || !state.travel.active) return;
-  if (typeof Random === "undefined") return;
-
-  // 每3天一次健康风险判定
-  var day = state.player && state.player.day;
-  if (day && day % 3 === 0 && Random.chance(0.2)) {
-    var travelIllnesses = [
-      {
-        name: "水土不服",
-        effect: "health-3",
-        msg: "🥴 水土不服，上吐下泻，健康-3。",
-      },
-      {
-        name: "食物中毒",
-        effect: "health-5",
-        msg: "🤢 吃了不干净的路边摊，食物中毒，健康-5！",
-      },
-      {
-        name: "旅途感冒",
-        effect: "health-2",
-        msg: "🤧 气候变化感冒了，健康-2。",
-      },
-    ];
-    var evt = travelIllnesses[Random.int(0, travelIllnesses.length - 1)];
-    state.status = state.status || {};
-    state.status.health = Math.max(
-      0,
-      (state.status.health || 100) -
-        parseInt(evt.effect.replace("health-", "")),
-    );
-
-    // 有医保时减轻伤害
-    if (state.medical && state.medical.insurance) {
-      state.status.health = Math.min(100, state.status.health + 2);
-      evt.msg += "（医保报销了部分药费，伤害-2）";
-    }
-
-    if (typeof StateManager !== "undefined") {
-      StateManager.addMessage(evt.msg, "warning");
-    }
-  }
+  processLinkageRules(state);
 }
 
 // ====== 3. 医疗 → 法律联动 ======
@@ -127,44 +39,7 @@ function checkTravelMedicalEvents(state) {
  * 在每日医疗tick后调用
  */
 function checkMedicalLegalEvents(state) {
-  if (!state || !state.medical) return;
-  if (typeof Random === "undefined") return;
-
-  // 医疗总花费超过¥10,000且未购买保险 → 可能寻求法律援助
-  var totalSpent = state.medical.totalMedicalSpent || 0;
-  if (
-    totalSpent > 10000 &&
-    !state.medical.insurance &&
-    !state.flags._medicalLegalAdvice
-  ) {
-    state.flags._medicalLegalAdvice = true;
-    if (typeof StateManager !== "undefined") {
-      StateManager.addMessage(
-        "⚖️ 医疗费用已累计¥" +
-          totalSpent +
-          "！没有医保的情况下，建议去「法律咨询」了解是否有减免政策。",
-        "warning",
-      );
-    }
-  }
-
-  // 大病后（健康<30）触发医疗费用焦虑
-  var health = state.status && state.status.health;
-  if (
-    health !== undefined &&
-    health < 30 &&
-    !state.flags._criticalHealthWarning
-  ) {
-    state.flags._criticalHealthWarning = true;
-    if (typeof StateManager !== "undefined") {
-      StateManager.addMessage(
-        "💀 健康已跌至" +
-          health +
-          "！若再恶化可能需要法律援助——生前预嘱/医疗授权。",
-        "danger",
-      );
-    }
-  }
+  processLinkageRules(state);
 }
 
 // ====== 4. 旅行 → 法律联动 ======
@@ -174,33 +49,7 @@ function checkMedicalLegalEvents(state) {
  * 在 tickTravel 中调用
  */
 function checkTravelLegalEvents(state) {
-  if (!state || !state.travel || !state.travel.active) return;
-  if (typeof Random === "undefined") return;
-
-  // 每5天一次法律风险判定
-  var day = state.player && state.player.day;
-  if (day && day % 5 === 0 && Random.chance(0.1)) {
-    var travelLegalEvents = [
-      { msg: "🚔 在异地因不熟悉交通规则被罚款¥200。", fine: 200 },
-      { msg: "📋 住宿纠纷：旅馆多收了费用，维权成功，退还¥150。", fine: -150 },
-      { msg: "🗑️ 随地扔垃圾被市容处罚¥50。", fine: 50 },
-    ];
-    var evt = travelLegalEvents[Random.int(0, travelLegalEvents.length - 1)];
-    if (evt.fine > 0) {
-      state.resources.cash = Math.max(
-        0,
-        (state.resources.cash || 0) - evt.fine,
-      );
-      if (typeof StateManager !== "undefined") {
-        StateManager.addMessage(evt.msg, "warning");
-      }
-    } else {
-      state.resources.cash = (state.resources.cash || 0) + Math.abs(evt.fine);
-      if (typeof StateManager !== "undefined") {
-        StateManager.addMessage(evt.msg, "success");
-      }
-    }
-  }
+  processLinkageRules(state);
 }
 
 // ====== 5. 人生节点 → 旅行联动 ======
@@ -210,32 +59,7 @@ function checkTravelLegalEvents(state) {
  * 在 checkLifeNodes 后调用
  */
 function checkLifeNodeTravelEvents(state) {
-  if (!state || !state.flags) return;
-
-  // 退休后解锁旅行机会
-  if (
-    state.flags._lifeNode_retirement_done &&
-    !state.flags._retirementTravelTip
-  ) {
-    state.flags._retirementTravelTip = true;
-    if (typeof StateManager !== "undefined") {
-      StateManager.addMessage(
-        "🌅 退休了！终于有时间去看看这个世界。去「人生事务」Tab规划一次长途旅行吧！",
-        "info",
-      );
-    }
-  }
-
-  // 大学毕业后（如果玩家有大学节点），解锁更多旅行目的地
-  if (state.flags._lifeNode_university_done && !state.flags._gradTravelTip) {
-    state.flags._gradTravelTip = true;
-    if (typeof StateManager !== "undefined") {
-      StateManager.addMessage(
-        "🎓 毕业旅行是青春的一部分！去「人生事务」Tab看看旅行目的地吧。",
-        "info",
-      );
-    }
-  }
+  processLinkageRules(state);
 }
 
 // ====== 5.5 人生节点 → 叙事反馈（消费 _career35Path / _retirementType 死flag） ======
@@ -245,50 +69,7 @@ function checkLifeNodeTravelEvents(state) {
  * 提供叙事反馈（这些标志只被写入不被读取）
  */
 function checkLifeNodeNarrativeFeedback(state) {
-  if (!state || !state.flags) return;
-
-  // 35岁危机路径叙事（仅在刚选择后触发一次）
-  if (state.flags._career35Path && !state.flags._career35PathNarrated) {
-    state.flags._career35PathNarrated = true;
-    var pathMsg = "";
-    switch (state.flags._career35Path) {
-      case "transform":
-        pathMsg = "你选择了充电转型，开始学习新技能。这条路不容易，但值得。";
-        break;
-      case "hold":
-        pathMsg = "你选择咬牙硬扛，靠资历撑过去。身体是革命的本钱。";
-        break;
-      case "newpath":
-        pathMsg = "你决定寻找新赛道，人脉带来了新的机会。";
-        break;
-      case "lieflat":
-        pathMsg = "躺平亦是一种选择。降低期望后，反而轻松了一些。";
-        break;
-    }
-    if (pathMsg && typeof StateManager !== "undefined") {
-      StateManager.addMessage("⚡ " + pathMsg, "story");
-    }
-  }
-
-  // 退休类型叙事（仅在刚选择后触发一次）
-  if (state.flags._retirementType && !state.flags._retirementTypeNarrated) {
-    state.flags._retirementTypeNarrated = true;
-    var retireMsg = "";
-    switch (state.flags._retirementType) {
-      case "wealthy":
-        retireMsg = "体面退休，手有余粮，心中不慌。";
-        break;
-      case "advisor":
-        retireMsg = "退而不休，用自己的经验继续发光发热。";
-        break;
-      case "continue":
-        retireMsg = "你还在继续工作，人生没有真正的退休。";
-        break;
-    }
-    if (retireMsg && typeof StateManager !== "undefined") {
-      StateManager.addMessage("🏖️ " + retireMsg, "story");
-    }
-  }
+  processLinkageRules(state);
 }
 
 // ====== 约定式联动规则表（v3.99c 约定式自动归类） ======
@@ -300,32 +81,48 @@ var LINKAGE_RULES = [
   {
     id: "midlife_health_warning",
     desc: "35岁危机后健康<60时发出预警",
-    trigger: { flag: "_lifeNode_career35_done", notFlag: "_midlifeHealthWarning" },
+    trigger: {
+      flag: "_lifeNode_career35_done",
+      notFlag: "_midlifeHealthWarning",
+    },
     condition: { stat: "health", op: "<", value: 60 },
     action: {
       type: "message",
       level: "warning",
-      textFn: function(st) {
+      textFn: function (st) {
         var health = st.status && st.status.health;
-        return "⚠️ 35岁之后身体大不如前，健康仅" + health + "，建议体检和买医保！";
+        return (
+          "⚠️ 35岁之后身体大不如前，健康仅" + health + "，建议体检和买医保！"
+        );
       },
     },
-    onActivate: function(st) { st.flags._midlifeHealthWarning = true; },
+    onActivate: function (st) {
+      st.flags._midlifeHealthWarning = true;
+    },
   },
   {
     id: "retirement_health_check",
     desc: "退休节点强制健康检查",
-    trigger: { flag: "_lifeNode_retirement_done", notFlag: "_retirementHealthCheck" },
+    trigger: {
+      flag: "_lifeNode_retirement_done",
+      notFlag: "_retirementHealthCheck",
+    },
     condition: { stat: "health", op: "<", value: 50 },
     action: {
       type: "message",
       level: "danger",
-      textFn: function(st) {
+      textFn: function (st) {
         var h = st.status && st.status.health;
-        return "🏥 退休了，但身体已透支（健康仅" + h + "）。好好休养，别让晚年都在医院度过。";
+        return (
+          "🏥 退休了，但身体已透支（健康仅" +
+          h +
+          "）。好好休养，别让晚年都在医院度过。"
+        );
       },
     },
-    onActivate: function(st) { st.flags._retirementHealthCheck = true; },
+    onActivate: function (st) {
+      st.flags._retirementHealthCheck = true;
+    },
   },
   {
     id: "gaokao_recovery",
@@ -336,7 +133,7 @@ var LINKAGE_RULES = [
       level: "success",
       text: "🍃 高考结束，如释重负，健康+5。",
     },
-    onActivate: function(st) {
+    onActivate: function (st) {
       st.flags._gaokaoRecovery = true;
       st.status = st.status || {};
       st.status.health = Math.min(100, (st.status.health || 100) + 5);
@@ -346,13 +143,18 @@ var LINKAGE_RULES = [
   {
     id: "retirement_travel_tip",
     desc: "退休后解锁旅行建议",
-    trigger: { flag: "_lifeNode_retirement_done", notFlag: "_retirementTravelTip" },
+    trigger: {
+      flag: "_lifeNode_retirement_done",
+      notFlag: "_retirementTravelTip",
+    },
     action: {
       type: "message",
       level: "info",
       text: "🌅 退休了！终于有时间去看看这个世界。去「人生事务」Tab规划一次长途旅行吧！",
     },
-    onActivate: function(st) { st.flags._retirementTravelTip = true; },
+    onActivate: function (st) {
+      st.flags._retirementTravelTip = true;
+    },
   },
   {
     id: "grad_travel_tip",
@@ -363,36 +165,60 @@ var LINKAGE_RULES = [
       level: "info",
       text: "🎓 毕业旅行是青春的一部分！去「人生事务」Tab看看旅行目的地吧。",
     },
-    onActivate: function(st) { st.flags._gradTravelTip = true; },
+    onActivate: function (st) {
+      st.flags._gradTravelTip = true;
+    },
   },
   // === 3. 医疗 → 法律联动 ===
   {
     id: "medical_legal_advice",
     desc: "医疗花费超¥10000且未购保险→法律援助建议",
-    trigger: { stat: "totalMedicalSpent", op: ">", value: 10000, notFlag: "_medicalLegalAdvice" },
+    trigger: {
+      stat: "totalMedicalSpent",
+      op: ">",
+      value: 10000,
+      notFlag: "_medicalLegalAdvice",
+    },
     condition: { flagNot: "_hasInsurance" },
     action: {
       type: "message",
       level: "warning",
-      textFn: function(st) {
-        return "⚖️ 医疗费用已累计¥" + (st.medical.totalMedicalSpent || 0) + "！没有医保的情况下，建议去「法律咨询」了解是否有减免政策。";
+      textFn: function (st) {
+        return (
+          "⚖️ 医疗费用已累计¥" +
+          (st.medical.totalMedicalSpent || 0) +
+          "！没有医保的情况下，建议去「法律咨询」了解是否有减免政策。"
+        );
       },
     },
-    onActivate: function(st) { st.flags._medicalLegalAdvice = true; },
+    onActivate: function (st) {
+      st.flags._medicalLegalAdvice = true;
+    },
   },
   {
     id: "critical_health_warning",
     desc: "健康<30时发出危机预警",
-    trigger: { stat: "health", op: "<", value: 30, notFlag: "_criticalHealthWarning" },
+    trigger: {
+      stat: "health",
+      op: "<",
+      value: 30,
+      notFlag: "_criticalHealthWarning",
+    },
     action: {
       type: "message",
       level: "danger",
-      textFn: function(st) {
+      textFn: function (st) {
         var health = st.status && st.status.health;
-        return "💀 健康已跌至" + health + "！若再恶化可能需要法律援助——生前预嘱/医疗授权。";
+        return (
+          "💀 健康已跌至" +
+          health +
+          "！若再恶化可能需要法律援助——生前预嘱/医疗授权。"
+        );
       },
     },
-    onActivate: function(st) { st.flags._criticalHealthWarning = true; },
+    onActivate: function (st) {
+      st.flags._criticalHealthWarning = true;
+    },
   },
   // === 4. 人生节点 → 叙事反馈 ===
   {
@@ -402,7 +228,7 @@ var LINKAGE_RULES = [
     action: {
       type: "message",
       level: "story",
-      textFn: function(st) {
+      textFn: function (st) {
         var map = {
           transform: "你选择了充电转型，开始学习新技能。这条路不容易，但值得。",
           hold: "你选择咬牙硬扛，靠资历撑过去。身体是革命的本钱。",
@@ -412,7 +238,9 @@ var LINKAGE_RULES = [
         return "⚡ " + (map[st.flags._career35Path] || "");
       },
     },
-    onActivate: function(st) { st.flags._career35PathNarrated = true; },
+    onActivate: function (st) {
+      st.flags._career35PathNarrated = true;
+    },
   },
   {
     id: "retirement_narrative",
@@ -421,7 +249,7 @@ var LINKAGE_RULES = [
     action: {
       type: "message",
       level: "story",
-      textFn: function(st) {
+      textFn: function (st) {
         var map = {
           wealthy: "体面退休，手有余粮，心中不慌。",
           advisor: "退而不休，用自己的经验继续发光发热。",
@@ -430,7 +258,9 @@ var LINKAGE_RULES = [
         return "🏖️ " + (map[st.flags._retirementType] || "");
       },
     },
-    onActivate: function(st) { st.flags._retirementTypeNarrated = true; },
+    onActivate: function (st) {
+      st.flags._retirementTypeNarrated = true;
+    },
   },
   // === 5. 旅行 → 医疗联动（带随机） ===
   {
@@ -442,10 +272,18 @@ var LINKAGE_RULES = [
     action: {
       type: "message",
       level: "warning",
-      textFn: function(st) {
+      textFn: function (st) {
         var illnesses = [
-          { name: "水土不服", effect: -3, msg: "🥴 水土不服，上吐下泻，健康-3。" },
-          { name: "食物中毒", effect: -5, msg: "🤢 吃了不干净的路边摊，食物中毒，健康-5！" },
+          {
+            name: "水土不服",
+            effect: -3,
+            msg: "🥴 水土不服，上吐下泻，健康-3。",
+          },
+          {
+            name: "食物中毒",
+            effect: -5,
+            msg: "🤢 吃了不干净的路边摊，食物中毒，健康-5！",
+          },
           { name: "旅途感冒", effect: -2, msg: "🤧 气候变化感冒了，健康-2。" },
         ];
         var evt = illnesses[Random.int(0, illnesses.length - 1)];
@@ -469,10 +307,13 @@ var LINKAGE_RULES = [
     action: {
       type: "message",
       level: "warning",
-      textFn: function(st) {
+      textFn: function (st) {
         var events = [
           { msg: "🚔 在异地因不熟悉交通规则被罚款¥200。", fine: 200 },
-          { msg: "📋 住宿纠纷：旅馆多收了费用，维权成功，退还¥150。", fine: -150 },
+          {
+            msg: "📋 住宿纠纷：旅馆多收了费用，维权成功，退还¥150。",
+            fine: -150,
+          },
           { msg: "🗑️ 随地扔垃圾被市容处罚¥50。", fine: 50 },
         ];
         var evt = events[Random.int(0, events.length - 1)];
@@ -503,7 +344,8 @@ function _checkLinkageTrigger(st, rule) {
       if (tr.op === ">" && !(h > tr.value)) return false;
     }
     if (tr.stat === "totalMedicalSpent") {
-      if (!(st.medical && st.medical.totalMedicalSpent > tr.value)) return false;
+      if (!(st.medical && st.medical.totalMedicalSpent > tr.value))
+        return false;
     }
   }
   if (rule.condition) {
@@ -513,9 +355,11 @@ function _checkLinkageTrigger(st, rule) {
       }
     }
     if (rule.condition.stat) {
-      var cv = rule.condition.stat === "health" ? (st.status && st.status.health) : 0;
+      var cv =
+        rule.condition.stat === "health" ? st.status && st.status.health : 0;
       if (cv === undefined) return false;
-      if (rule.condition.op === "<" && !(cv < rule.condition.value)) return false;
+      if (rule.condition.op === "<" && !(cv < rule.condition.value))
+        return false;
     }
   }
   if (tr.travelActive && !(st.travel && st.travel.active)) return false;
@@ -535,12 +379,20 @@ function processLinkageRules(st) {
       if (rule.chancePerDay !== undefined) {
         var day = st.player && st.player.day;
         if (!day || day % rule.dayInterval !== 0) continue;
-        if (typeof Random === "undefined" || !Random.chance(rule.chancePerDay)) continue;
+        if (typeof Random === "undefined" || !Random.chance(rule.chancePerDay))
+          continue;
       }
       if (rule.onActivate) rule.onActivate(st);
-      if (rule.action && rule.action.type === "message" && typeof StateManager !== "undefined") {
-        var msgText = rule.action.text || (rule.action.textFn ? rule.action.textFn(st) : "");
-        if (msgText) StateManager.addMessage(msgText, rule.action.level || "info");
+      if (
+        rule.action &&
+        rule.action.type === "message" &&
+        typeof StateManager !== "undefined"
+      ) {
+        var msgText =
+          rule.action.text ||
+          (rule.action.textFn ? rule.action.textFn(st) : "");
+        if (msgText)
+          StateManager.addMessage(msgText, rule.action.level || "info");
       }
     } catch (e) {
       console.warn("LINKAGE_RULE error:", rule.id, e);
@@ -551,21 +403,17 @@ function processLinkageRules(st) {
 // ====== 旧函数兼容包装（委托到 LINKAGE_RULES，保持外部调用不变） ======
 
 /**
- * 四大系统综合每日检查
- * 在每日管线中统一调用，避免每个系统独立遍历
+ * 四大系统综合每日检查 — 在每日管线中统一调用
  */
 function checkCrossSystemEvents(state) {
   if (!state) return;
-  checkLifeNodeMedicalEvents(state);
-  checkLifeNodeNarrativeFeedback(state);
-  checkTravelMedicalEvents(state);
-  checkMedicalLegalEvents(state);
-  checkTravelLegalEvents(state);
-  checkLifeNodeTravelEvents(state);
+  processLinkageRules(state);
 }
 
 // ====== 全局挂载 ======
 if (typeof window !== "undefined") {
+  window.LINKAGE_RULES = LINKAGE_RULES;
+  window.processLinkageRules = processLinkageRules;
   window.checkLifeNodeMedicalEvents = checkLifeNodeMedicalEvents;
   window.checkLifeNodeNarrativeFeedback = checkLifeNodeNarrativeFeedback;
   window.checkTravelMedicalEvents = checkTravelMedicalEvents;

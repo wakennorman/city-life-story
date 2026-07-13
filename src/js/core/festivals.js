@@ -148,7 +148,10 @@ var SPRING_FESTIVAL_EVENTS = [
         hint: "恢复疲劳",
         effects: { fatigue: -15, happiness: 3 },
         effect: function (st) {
-          return { ok: true, msg: "大年初一睡懒觉，疲劳-15。过年嘛，休息最重要。" };
+          return {
+            ok: true,
+            msg: "大年初一睡懒觉，疲劳-15。过年嘛，休息最重要。",
+          };
         },
       },
       {
@@ -223,7 +226,10 @@ var SPRING_FESTIVAL_EVENTS = [
         hint: "远程拜年",
         effects: { happiness: 8, mental: 2 },
         effect: function (st) {
-          return { ok: true, msg: "给爸妈打了视频电话，聊了半小时。虽然没回家，但心里暖洋洋的。" };
+          return {
+            ok: true,
+            msg: "给爸妈打了视频电话，聊了半小时。虽然没回家，但心里暖洋洋的。",
+          };
         },
       },
       {
@@ -235,7 +241,10 @@ var SPRING_FESTIVAL_EVENTS = [
           st.resources.cash -= 60;
           st.needs.hunger = Math.min(100, st.needs.hunger + 25);
           st.needs.happiness = Math.min(100, st.needs.happiness + 8);
-          return { ok: true, msg: "去馆子吃了顿好的，花¥60。过年嘛，犒劳一下自己。" };
+          return {
+            ok: true,
+            msg: "去馆子吃了顿好的，花¥60。过年嘛，犒劳一下自己。",
+          };
         },
       },
     ],
@@ -270,7 +279,10 @@ var SPRING_FESTIVAL_EVENTS = [
         hint: "恢复疲劳",
         effects: { fatigue: -20, happiness: 3 },
         effect: function (st) {
-          return { ok: true, msg: "赤狗日睡懒觉，疲劳-20。这天气不宜外出，休息正好。" };
+          return {
+            ok: true,
+            msg: "赤狗日睡懒觉，疲劳-20。这天气不宜外出，休息正好。",
+          };
         },
       },
       {
@@ -278,7 +290,10 @@ var SPRING_FESTIVAL_EVENTS = [
         hint: "提升卫生",
         effects: { hygiene: 15, happiness: 2 },
         effect: function (st) {
-          return { ok: true, msg: "花了一下午整理出租屋，卫生+15。干干净净过个年。" };
+          return {
+            ok: true,
+            msg: "花了一下午整理出租屋，卫生+15。干干净净过个年。",
+          };
         },
       },
     ],
@@ -323,8 +338,14 @@ var SPRING_FESTIVAL_EVENTS = [
         effects: { mental: 2, happiness: 2 },
         effect: function (st) {
           st.investment = st.investment || {};
-          st.investment.knowledge = Math.min(100, (st.investment.knowledge || 0) + 5);
-          return { ok: true, msg: "研究了一下午投资市场，投资知识+5。迎财神不如学理财。" };
+          st.investment.knowledge = Math.min(
+            100,
+            (st.investment.knowledge || 0) + 5,
+          );
+          return {
+            ok: true,
+            msg: "研究了一下午投资市场，投资知识+5。迎财神不如学理财。",
+          };
         },
       },
       {
@@ -332,7 +353,10 @@ var SPRING_FESTIVAL_EVENTS = [
         hint: "放松心情",
         effects: { happiness: 8, fatigue: -5 },
         effect: function (st) {
-          return { ok: true, msg: "去公园散了散步，心情+8。迎财神不如迎好心情。" };
+          return {
+            ok: true,
+            msg: "去公园散了散步，心情+8。迎财神不如迎好心情。",
+          };
         },
       },
       {
@@ -422,7 +446,10 @@ var SPRING_FESTIVAL_EVENTS = [
         hint: "不打工",
         effects: { fatigue: -10, happiness: 2 },
         effect: function (st) {
-          return { ok: true, msg: "选择继续休息。破五开工是别人的事，你慢慢来。" };
+          return {
+            ok: true,
+            msg: "选择继续休息。破五开工是别人的事，你慢慢来。",
+          };
         },
       },
       {

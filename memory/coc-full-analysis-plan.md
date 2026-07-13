@@ -47,9 +47,9 @@
 
 ## 二、下一步可 CoC 化的领域（10 个，按优先级排列）
 
-### P0 — 高影响，可立即开始
+### P0 — 高影响，可立即开始 ✅ 已全部完成（2026-07-13）
 
-#### 领域 1：成就触发条件声明化 `achievements.js`
+#### 领域 1：成就触发条件声明化 `achievements.js` ✅
 
 **现状**：每个成就有 `check: function(st)` 函数，40+个独立函数。
 
@@ -70,7 +70,7 @@
 
 ---
 
-#### 领域 2：节日事件数据声明化 `festivals.js`
+#### 领域 2：节日事件数据声明化 `festivals.js` ✅
 
 **现状**：SPRING_FESTIVAL_EVENTS 7天事件链手写 choice.effect 函数，无统一schema。
 
@@ -91,7 +91,7 @@
 
 ---
 
-#### 领域 3：跨系统联动规则声明化 `cross_system_integration.js`
+#### 领域 3：跨系统联动规则声明化 `cross_system_integration.js` ✅
 
 **现状**：6个硬编码函数（`checkLifeNodeMedicalEvents` 等），每个内含特定 if-else 检查特定 flag + 触发特定消息。
 
@@ -277,6 +277,29 @@ for (var key in synergy.effects) {
    - `applyNodeChoice()` 优先检测内联effect，旧switch-case兜底
    - 影响文件：`life_nodes.js`(+~120行)
    - 效果：新增节点choice只需添加 `effect` 字段，无需维护switch-case
+
+3. **成就触发条件声明化** ✅（P0，2026-07-13）
+   - 新增 `TRIGGER_DISPATCH` 调度表（20种触发器类型：flagMet, minTotalEarned, minDay, minCounter, minAllSkillLevel, startupFlag 等）
+   - 新增 `evaluateTriggersDispatch()` 通用判定函数
+   - `checkAchievements()` 支持 `triggers` 优先，`check` 函数兜底
+   - 迁移 60+ 成就为声明式 triggers，保留 ~20 个复杂成就的 check 函数
+   - 影响文件：`achievements.js`（+TRIGGER_DISPATCH ~120行，60+ 成就迁移）
+   - 效果：新增简单成就只需声明 triggers 字段，无需写 check 函数
+
+4. **节日事件数据声明化** ✅（P0，2026-07-13）
+   - `events_core.js` 新增声明式 `effects`/`flags` 自动应用逻辑
+   - 10+ 节日 choice 添加 `effects`（需求/属性变化）和 `flags`（持久标记）字段
+   - effect 函数专注随机逻辑和消息返回，声明式数据接管状态变更
+   - 影响文件：`events_core.js`（+~25行）、`festivals.js`（+~15行）
+   - 效果：新增节日 choice 只需声明 effects/flags，无需手写完整 effect 函数
+
+5. **跨系统联动规则声明化** ✅（P0，2026-07-13）
+   - 新增 `LINKAGE_RULES` 声明式规则数组（12条规则覆盖全部6个旧函数）
+   - 新增 `_checkLinkageTrigger()` + `processLinkageRules()` 通用引擎
+   - 6个旧函数保留为兼容包装（委托到 processLinkageRules）
+   - 支持 flag检查/状态阈值/旅行活跃度/随机概率/天数间隔等多种触发条件
+   - 影响文件：`cross_system_integration.js`（+~200行 LINKAGE_RULES / ~-180行旧代码）
+   - 效果：新增联动只需在 LINKAGE_RULES 中添加一条声明，无需手写函数
 
 ### 📋 待后续轮次实施
 

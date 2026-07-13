@@ -5175,7 +5175,8 @@ function showKpiDashboard(state) {
 function addKrInput() {
   const container = document.getElementById("okrKeyResults");
   if (!container) return;
-  var state = typeof StateManager !== "undefined" ? StateManager.getState() : null;
+  var state =
+    typeof StateManager !== "undefined" ? StateManager.getState() : null;
   container.insertAdjacentHTML("beforeend", _renderKrInput(""));
 }
 
@@ -11593,10 +11594,7 @@ function executePRActionFromModal(eventId) {
     StateManager.addMessage(result.message || "公关活动执行成功", "success");
     renderAll();
   } else {
-    StateManager.addMessage(
-      result?.message || "公关活动执行失败",
-      "warning",
-    );
+    StateManager.addMessage(result?.message || "公关活动执行失败", "warning");
   }
 }
 
@@ -11633,10 +11631,7 @@ function resolveCrisisActionFromModal(optionIndex) {
     StateManager.addMessage(result.message || "危机应对成功", "success");
     renderAll();
   } else {
-    StateManager.addMessage(
-      result?.message || "危机应对失败",
-      "warning",
-    );
+    StateManager.addMessage(result?.message || "危机应对失败", "warning");
   }
 }
 

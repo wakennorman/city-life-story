@@ -543,11 +543,25 @@ function showEventModal(evt) {
         // v3.99c 约定式自动归类：声明式 effects/flags 自动应用（节日事件等）
         if (choice.effects && typeof choice.effects === "object") {
           for (var efKey in choice.effects) {
-            if (efKey === "happiness" || efKey === "fatigue" || efKey === "hunger" || efKey === "hygiene") {
-              state.needs[efKey] = Math.min(100, Math.max(0, (state.needs[efKey] || 50) + choice.effects[efKey]));
+            if (
+              efKey === "happiness" ||
+              efKey === "fatigue" ||
+              efKey === "hunger" ||
+              efKey === "hygiene"
+            ) {
+              state.needs[efKey] = Math.min(
+                100,
+                Math.max(0, (state.needs[efKey] || 50) + choice.effects[efKey]),
+              );
             } else if (efKey === "health") {
               state.status = state.status || {};
-              state.status.health = Math.min(100, Math.max(0, (state.status.health || 100) + choice.effects[efKey]));
+              state.status.health = Math.min(
+                100,
+                Math.max(
+                  0,
+                  (state.status.health || 100) + choice.effects[efKey],
+                ),
+              );
             }
           }
         }
