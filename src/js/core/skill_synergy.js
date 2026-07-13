@@ -629,78 +629,45 @@ function getSkillSynergyBonus(jobId, state) {
   var synergyResults = state.skillSynergies;
   var totalBonus = 0;
 
+  /**
+   * 约定式自动归类：扫描 effects 对象中所有 IncomeBonus/RepairBonus 字段 +
+   * 工作特定 incomeMultiplier，无需维护 if-else 列表
+   * 新增收入加成字段 → 自动发现，零代码修改
+   */
+  function _calcEffectsIncomeBonus(effects, withJobId) {
+    if (!effects) return 0;
+    var bonus = 0;
+    for (var key in effects) {
+      var val = effects[key];
+      if (typeof val !== "number") continue;
+      // 匹配 *IncomeBonus / *RepairBonus 等收入加成字段
+      if (key.indexOf("IncomeBonus") >= 0 || key.indexOf("RepairBonus") >= 0) {
+        bonus += val;
+      }
+    }
+    // 工作特定加成（如 street_vending_food: { incomeMultiplier: 1.3 }）
+    if (withJobId && effects[jobId] && effects[jobId].incomeMultiplier) {
+      bonus += effects[jobId].incomeMultiplier - 1;
+    }
+    return bonus;
+  }
+
   // 检查双技能连携
   for (var synergyId in synergyResults.dual) {
     var synergy = synergyResults.dual[synergyId];
-    if (synergy.effects && synergy.effects[jobId]) {
-      var jobEffect = synergy.effects[jobId];
-      if (jobEffect.incomeMultiplier) {
-        totalBonus += jobEffect.incomeMultiplier - 1;
-      }
-    }
-    // 检查通用加成
-    if (synergy.effects) {
-      if (synergy.effects.streetIncomeBonus)
-        totalBonus += synergy.effects.streetIncomeBonus;
-      if (synergy.effects.deliveryIncomeBonus)
-        totalBonus += synergy.effects.deliveryIncomeBonus;
-      if (synergy.effects.constructionIncomeBonus)
-        totalBonus += synergy.effects.constructionIncomeBonus;
-      if (synergy.effects.techIncomeBonus)
-        totalBonus += synergy.effects.techIncomeBonus;
-      if (synergy.effects.logisticsIncomeBonus)
-        totalBonus += synergy.effects.logisticsIncomeBonus;
-      if (synergy.effects.businessIncomeBonus)
-        totalBonus += synergy.effects.businessIncomeBonus;
-      if (synergy.effects.serviceIncomeBonus)
-        totalBonus += synergy.effects.serviceIncomeBonus;
-      if (synergy.effects.restaurantIncomeBonus)
-        totalBonus += synergy.effects.restaurantIncomeBonus;
-      if (synergy.effects.comprehensiveRepairBonus)
-        totalBonus += synergy.effects.comprehensiveRepairBonus;
-      if (synergy.effects.financeIncomeBonus)
-        totalBonus += synergy.effects.financeIncomeBonus;
-    }
+    totalBonus += _calcEffectsIncomeBonus(synergy.effects, true);
   }
 
   // 检查三技能连携
   for (var synergyId in synergyResults.triple) {
     var synergy = synergyResults.triple[synergyId];
-    if (synergy.effects) {
-      if (synergy.effects.streetIncomeBonus)
-        totalBonus += synergy.effects.streetIncomeBonus;
-      if (synergy.effects.deliveryIncomeBonus)
-        totalBonus += synergy.effects.deliveryIncomeBonus;
-      if (synergy.effects.constructionIncomeBonus)
-        totalBonus += synergy.effects.constructionIncomeBonus;
-      if (synergy.effects.techIncomeBonus)
-        totalBonus += synergy.effects.techIncomeBonus;
-      if (synergy.effects.logisticsIncomeBonus)
-        totalBonus += synergy.effects.logisticsIncomeBonus;
-      if (synergy.effects.businessIncomeBonus)
-        totalBonus += synergy.effects.businessIncomeBonus;
-      if (synergy.effects.serviceIncomeBonus)
-        totalBonus += synergy.effects.serviceIncomeBonus;
-      if (synergy.effects.restaurantIncomeBonus)
-        totalBonus += synergy.effects.restaurantIncomeBonus;
-      if (synergy.effects.comprehensiveRepairBonus)
-        totalBonus += synergy.effects.comprehensiveRepairBonus;
-      if (synergy.effects.financeIncomeBonus)
-        totalBonus += synergy.effects.financeIncomeBonus;
-    }
+    totalBonus += _calcEffectsIncomeBonus(synergy.effects);
   }
 
   // 检查主题连携
   for (var themeId in synergyResults.theme) {
     var theme = synergyResults.theme[themeId];
-    if (theme.effects) {
-      if (theme.effects.techIncomeBonus)
-        totalBonus += theme.effects.techIncomeBonus;
-      if (theme.effects.businessIncomeBonus)
-        totalBonus += theme.effects.businessIncomeBonus;
-      if (theme.effects.serviceIncomeBonus)
-        totalBonus += theme.effects.serviceIncomeBonus;
-    }
+    totalBonus += _calcEffectsIncomeBonus(theme.effects);
   }
 
   return totalBonus;

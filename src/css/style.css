@@ -5636,6 +5636,69 @@ body {
   transition: transform 0.08s ease;
   box-shadow: none;
 }
+
+/* ====== [v3.99] 全系统可点击/不可点击统一标准 ====== */
+/*
+ * 所有可交互元素使用 .interactive 类（或同等级行为）：
+ *   hover  →  边框高亮 + 微抬升 + 阴影
+ *   active →  微压缩 (scale 0.95~0.97)
+ *   移动端 →  靠 active 反馈（无 hover）
+ *
+ * 所有不可交互元素：
+ *   opacity 0.4~0.6 + cursor not-allowed + 无 hover 变化
+ */
+.interactive {
+  cursor: pointer;
+  transition: all var(--transition);
+}
+.interactive:hover {
+  border-color: var(--accent);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px var(--accent-glow);
+}
+.interactive:active {
+  transform: scale(0.97);
+}
+/* 触摸设备 300ms 延迟消除 */
+.interactive {
+  touch-action: manipulation;
+}
+
+/* 不可交互状态（通用） */
+.non-interactive,
+.disabled,
+.non-interactive *,
+.disabled * {
+  opacity: 0.45;
+  cursor: not-allowed !important;
+  pointer-events: none;
+}
+.non-interactive:hover,
+.disabled:hover,
+[disabled]:hover {
+  transform: none !important;
+  box-shadow: none !important;
+  border-color: var(--border) !important;
+}
+
+/* 统一禁用态覆盖 — 移除所有 hover 特效 */
+.btn:disabled,
+.action-card.disabled:hover,
+.card.disabled:hover,
+.hustle-card.unavailable:hover,
+.btn:disabled:hover,
+.transit-btn[disabled]:hover,
+.quick-travel-btn[disabled]:hover {
+  transform: none !important;
+  box-shadow: none !important;
+  border-color: var(--border-light) !important;
+  background: inherit !important;
+}
+.action-card:active:not(.disabled) {
+  transform: scale(0.95);
+  transition: transform 0.08s ease;
+  box-shadow: none;
+}
 .tab-btn:active {
   transform: scale(0.92);
   transition: transform 0.08s ease;
@@ -5909,5 +5972,27 @@ body {
   box-shadow: 0 4px 8px var(--accent-glow);
 }
 .quick-travel-btn:active {
+  transform: scale(0.96);
+}
+
+/* 交通方式出行按钮（选择交通方式后出现的地点列表） */
+.transit-go-btn {
+  padding: 8px;
+  background: var(--bg-input);
+  border: 1px solid var(--border-light);
+  border-radius: 6px;
+  cursor: pointer;
+  text-align: left;
+  font-size: 11px;
+  color: var(--text-primary);
+  transition: all var(--transition);
+}
+.transit-go-btn:hover {
+  border-color: var(--accent);
+  background: var(--bg-card-hover);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px var(--accent-glow);
+}
+.transit-go-btn:active {
   transform: scale(0.96);
 }

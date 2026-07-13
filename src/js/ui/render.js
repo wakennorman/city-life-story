@@ -2902,10 +2902,10 @@ function renderMapTab(state, parent) {
       "padding:14px;background:linear-gradient(135deg, var(--bg-card), rgba(0,180,216,0.08));border:1px solid var(--accent);border-radius:var(--radius-md);";
     quick.innerHTML = `
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
-        <h4 style="color:var(--accent);margin:0;font-size:14px;">🚶 快速出行</h4>
+        <h4 style="color:var(--accent);margin:0;font-size:13px;">🚶 快速出行</h4>
         <span style="font-size:10px;color:var(--text-muted);">从 ${loc ? loc.name : "当前位置"} 出发</span>
       </div>
-      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px;">
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:6px;">
     `;
     for (const destKey of reachableList) {
       const dest = getLocation(destKey);
@@ -3123,7 +3123,7 @@ function renderMapTab(state, parent) {
                 ap +
                 '" data-mode="' +
                 mode +
-                '" style="padding:8px;background:var(--bg-input);border:1px solid var(--border-light);border-radius:6px;cursor:pointer;text-align:left;font-size:11px;color:var(--text-primary);">' +
+                '" style="padding:8px;font-size:11px;">' +
                 '<div style="font-weight:600;">' +
                 d.name +
                 "</div>" +
