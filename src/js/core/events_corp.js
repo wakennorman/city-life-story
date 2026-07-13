@@ -430,7 +430,7 @@
           text: "💬 提议平摊工作量",
           hint: "考验管理能力",
           apply: (st) => {
-            if (st.corporateorate.team.length > 0) {
+            if (st.corporate.team.length > 0) {
               st.player.corporate.popularity = Math.min(
                 100,
                 st.player.corporate.popularity + 4,
@@ -646,7 +646,7 @@
                   Math.max(1, st.player.corpYear * 4)) *
                   1.5,
               );
-              st.corporateorate.jobOffer = { salary: offer, company: "新公司" };
+              st.corporate.jobOffer = { salary: offer, company: "新公司" };
               st.needs.happiness = Math.min(100, st.needs.happiness + 10);
               st.player.corporate.upwardMgmt = Math.max(
                 0,
@@ -1686,9 +1686,9 @@
       story:
         "公司上下弥漫着不安的气氛。茶水间的讨论从'Q3目标'变成了'要不要开始刷简历'。你收到了HR的约谈通知——公司现金流紧张，正在评估各部门的去留。你在这里干了这么久，现在走还是留？",
       conditions: function (st) {
-        if (st.player.phase !== "corporate" || !st.corporateorate.company)
+        if (st.player.phase !== "corporate" || !st.corporate.company)
           return false;
-        var cid = st.corporateorate.company.id;
+        var cid = st.corporate.company.id;
         var co =
           st.enterpriseFate &&
           st.enterpriseFate.companies &&
@@ -2105,9 +2105,9 @@
               "🚀 你跳槽了！新公司薪资高40%，职位也提升了。但一切从零开始，风险也不小。",
               "success",
             );
-            if (st.corporateorate) {
-              st.corporateorate.team = [];
-              st.corporateorate.jobOffer = null;
+            if (st.corporate) {
+              st.corporate.team = [];
+              st.corporate.jobOffer = null;
             }
           },
         },
@@ -2176,8 +2176,8 @@
             );
             st.needs.happiness = Math.min(100, st.needs.happiness + 8);
             st.player.corporate.risk = 15;
-            if (st.corporateorate) {
-              st.corporateorate.team = [];
+            if (st.corporate) {
+              st.corporate.team = [];
             }
             StateManager.addMessage(
               "🚀 你接受了猎头offer！高薪新起点，但一切从零开始。",

@@ -2401,6 +2401,18 @@ function tickStartup(state, tickType) {
   const company = startup.company;
   if (!company) return;
 
+  // 创业危机子系统接入（原死代码：checkStartupCrises 此前无任何调用方，危机永不触发）
+  if (tickType === "quarterly" && typeof checkStartupCrises === "function") {
+    try {
+      const _crisis = checkStartupCrises(state);
+      if (_crisis && typeof showCrisisModal === "function") {
+        showCrisisModal(state, _crisis.crisisId, _crisis.crisis);
+      }
+    } catch (e) {
+      /* 危机检查/展示失败不应中断每日结算 */
+    }
+  }
+
   const day = state.player.day;
 
   // 时间倍率：daily=1, quarterly=90（天）
@@ -4584,6 +4596,9 @@ function improveEmployeeSatisfaction(state, action, params) {
 
   const act = actions[action];
   if (!act) return { success: false, message: "无效的操作" };
+  if (!company.employees || company.employees.length === 0) {
+    return { success: false, message: "团队还没有成员，无法开展团队活动" };
+  }
 
   if (company.cashReserve < act.cost) {
     return {

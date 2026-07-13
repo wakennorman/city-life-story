@@ -1,6 +1,6 @@
 # 城市浮生记 (City Life Story) — 开发文档
 
-> 最后更新: 2026-07-14（v3.111 loop R20 全系统优化·Domain G 核心机制/生命周期——A类修复1项(强制临界"延期"惩罚整套阶梯机制死代码：玩家点"后续自己再去"写 _deferred[need]=纯数字day，而 applyDeferredCriticalPunishments 期望 {count,lastDay} 对象并递增；且每晚 _deferred={} 清空，致 count 永停1、第2/3/4+次得病/饿晕/送医等升级惩罚全不可达；修为延期时递增count、结算按累计次数施加阶梯惩罚、消除每晚清空与同日跳过冲突、同日不重复弹窗、临界解除即清标记) + 联动增强3项：G→A习惯地基心智回馈 / G→D人生体悟好感(守域D铁律 rel.met+applyAffinityChange) / G→C掌舵定力管理技能）
+> 最后更新: 2026-07-14（v3.112 loop R21 全系统优化·Domain H 创业/公司（第二轮）——A类修复3项：(1)events_corp.js 9处 corporateorate 拼写错误→应为顶层 state.corporate（.team/.jobOffer/.company 均为真实字段，被 team.js/main.js/events_core.js/enterprise_fate.js 使用），指未初始化对象→读 team.length/写 jobOffer/读 company.id 全 TypeError 崩溃、且 jobOffer/team 重置守卫永假(死代码)；(2)startup.js improveEmployeeSatisfaction 空 employees 时先扣现金再 0/0=NaN→"平均NaN分"，加员工数守卫；(3)startup_crisis.js 整子系统死代码(checkStartupCrises 无调用方→创业危机永不触发)，接入 tickStartup 季度分支(typeof 守卫+try/catch，headless 下 showModal 抛错被吞不中断结算)） + 联动增强3项：H→A创业纪律感 / H→D带队温度好感(守域D铁律) / H→C经营眼界管理技能）
 > 上一版: v3.110 loop R19 Domain F 界面/体验（今日重点面板装备耐久提示引用未声明变量 itemId→ReferenceError 崩溃 + F→A/F→D/F→C 联动）
 >
 > commits: `feat: [域H] A类修复2项+联动增强3项` + `（docs）loop状态/迭代表`

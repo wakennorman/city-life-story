@@ -1,12 +1,21 @@
 {
-  "currentRound": 20,
-  "currentDomain": "G",
+  "currentRound": 21,
+  "currentDomain": "H",
   "domainOrder": ["A", "B", "C", "D", "E", "F", "G", "H"],
-  "rotationIndex": 6,
-  "nextDomain": "H",
-  "lastCommit": "R20 域G: A类修复1项+联动增强3项 (66a72947)",
+  "rotationIndex": 7,
+  "nextDomain": "A",
+  "lastCommit": "R21 域H: A类修复3项+联动增强3项 (pending)",
   "lastUpdated": "2026-07-14",
   "history": [
+    {
+      "round": 21,
+      "domain": "H",
+      "date": "2026-07-14",
+      "aClassFixed": 3,
+      "linkageItems": 3,
+      "commit": "pending",
+      "note": "R21 域H(创业/公司)第二轮: A类修复3项—(1)events_corp.js 9处 corporateorate 拼写错误→应为顶层 state.corporate(.team/.jobOffer/.company 均为真实字段，被 team.js/main.js/perf.js/events_core.js/enterprise_fate.js 使用)；指未初始化对象→读 team.length(433)/写 jobOffer(649)/读 company.id(1689/1691) 全 TypeError 崩溃，且 2108/2179 的 jobOffer/team 重置守卫因 st.corporateorate 恒 undefined 而永假(死代码)。已全改 corporate。(2)startup.js improveEmployeeSatisfaction(4542) 空 employees 时先扣现金(4595)再 0/0=NaN→"平均NaN分"(4634/4639)，循环前加员工数守卫防白扣钱+NaN。(3)startup_crisis.js 整子系统死代码(checkStartupCrises/showCrisisModal/handleCrisisChoice/applyCrisisChoice 全库无外部调用方→创业危机永不触发)，接入 tickStartup(2396) 季度分支(typeof 守卫+try/catch，headless 下 showModal 抛错被吞、不中断每日结算；checkStartupCrises 设 lastCrisisDay 冷却+返回危机对象、showCrisisModal 仅展示)。联动增强3项: 新建 company_linkage_events_r21.js IIFE→RANDOM_EVENTS，2 street+1 corporate，id 前缀 company_h_* 与 R12 startup_* 不冲突：company_h_foundation_discipline(H→A 创业纪律感→mental+5·心情+4)/company_h_team_warmth(H→D 带队温度→applyAffinityChange 好感+6 守 rel.met 铁律)/company_h_business_acumen(H→C 经营眼界→addSkillXp('management',8))。全||防御,[PLACEHOLDER]。MC 验证待执行。"
+    },
     {
       "round": 20,
       "domain": "G",
@@ -14,7 +23,7 @@
       "aClassFixed": 1,
       "linkageItems": 3,
       "commit": "66a72947",
-      "note": "R20 域G(核心机制/生命周期): A类修复1项—critical.js 强制临界'延期'惩罚整套阶梯机制死代码。根因：(1)玩家点'后续自己再去'在 defer 回调写 _deferred[need]=纯数字day（st.player.day），而 applyDeferredCriticalPunishments 期望 {count,lastDay} 对象并在结算时递增 count；(2)该函数每晚 state.flags._deferred={} 清空。二者叠加致 deferInfo.count 永停1、_punishByNeed阶梯式 第2/3/4+次（得病/饿晕/过劳住院/送医负债等）全不可达→核心生存玩法对'无限延期'零后果。修复：defer 回调改累积 count（首次建对象{count:1,lastDay}，后续 count+1 并更新 lastDay）；applyDeferredCriticalPunishments 删每晚清空、删同日跳过守卫、加 lastPunishedDay 同日防重罚+临界解除即删标记+旧数字格式兼容转换；findCriticalNeed 同日跳过兼容对象格式。联动增强3项: 新建 core_mechanics_linkage_events.js IIFE→RANDOM_EVENTS，2 street+1 corporate：core_habit_foundation(G→A 习惯地基→mental+5·happiness+4)/core_wisdom_share(G→D 人生体悟→applyAffinityChange 好感+6，守域D铁律 rel.met 守卫)/core_exec_resilience(G→C 掌舵定力→addSkillXp('management',8))。全||防御,[PLACEHOLDER]。MC 6×400d exit=0·0代码异常(balanced 83.3%/skiller 100%/social 83.3%/corporate 83.3% 均≥80%; grinder 33.3%≥30% 高风险路径阈值; trader 50.0%<80% 为既有平衡阈值 RNG 波动，非代码回归)。"
+      "note": "R20 域G(核心机制/生命周期): A类修复1项—critical.js 强制临界'延期'惩罚整套阶梯机制死代码。根因：(1)defer 回调写 _deferred[need]=纯数字day，而 applyDeferredCriticalPunishments 期望 {count,lastDay} 对象并递增；(2)该函数末尾 _deferred={} 每晚清空。二者叠加致 count 永停1、第2/3/4+次(得病/饿晕/送医负债/强制住院)全不可达。修复：defer 回调改累积 count；applyDeferredCriticalPunishments 删每晚清空+删同日跳过守卫+加 lastPunishedDay 同日防重罚+临界解除即删标记+旧数字兼容；findCriticalNeed 同日跳过兼容对象格式。联动增强3项: 新建 core_mechanics_linkage_events.js IIFE→RANDOM_EVENTS，2 street+1 corporate：core_habit_foundation(G→A 习惯地基→mental+5·happiness+4)/core_wisdom_share(G→D 人生体悟→applyAffinityChange 好感+6 守 rel.met 铁律)/core_exec_resilience(G→C 掌舵定力→addSkillXp('management',8))。全||防御,[PLACEHOLDER]。MC 6×400d exit=0·0代码异常。"
     },
     {
       "round": 19,
@@ -23,7 +32,7 @@
       "aClassFixed": 1,
       "linkageItems": 3,
       "commit": "465df2ba",
-      "note": "R19 域F(界面/体验): A类修复1项—daily_focus.js:118 今日重点面板生成装备耐久提示时引用从未声明的变量 itemId（仅出现于该行，全仓库无任何声明），当任意已装备装备耐久跌破20%即抛 ReferenceError 崩溃（硬 TypeError，装备耐久随使用递减、修装备为核心循环，高概率触发）；修复为 (inst.itemId||slot)，与同文件 render.js:1992 等效实现一致（inst.itemId 为装备实例真实属性）。联动增强3项: 新建 ui_linkage_events.js IIFE→RANDOM_EVENTS，2 street+1 corporate：ui_daily_clarity(F→A 生活清晰感→mental+5·happiness+4)/ui_social_presence(F→D 社交形象→applyAffinityChange 好感+5，守域D铁律 rel.met 守卫)/ui_career_portfolio(F→C 成果呈现→addSkillXp('coding',8))。全||防御,[PLACEHOLDER]。MC 验证待执行。"
+      "note": "R19 域F(界面/体验): A类修复1项—daily_focus.js:118 今日重点面板生成装备耐久提示时引用从未声明的变量 itemId，当任意已装备装备耐久跌破20%即抛 ReferenceError 崩溃；修复为 (inst.itemId||slot)。联动增强3项: 新建 ui_linkage_events.js IIFE→RANDOM_EVENTS，2 street+1 corporate：ui_daily_clarity(F→A)/ui_social_presence(F→D)/ui_career_portfolio(F→C)。全||防御,[PLACEHOLDER]。MC 6×400d exit=0·0代码异常。"
     },
     {
       "round": 18,
@@ -32,7 +41,7 @@
       "aClassFixed": 3,
       "linkageItems": 3,
       "commit": "3d0b792",
-      "note": "R18 域E(经济/投资): A类修复3项—(1)连续盈利衰减 getConsecutiveWinDecay 读取从未写入的 state.stats.consecutiveWins(恒0→衰减恒1.0机制失效)，改读 state.investment._consecutiveWins 并在 sellInvStock(用 h.avgPrice 算 pl)/sellBtc(已有 pl) 维护计数器(盈利+1/亏损归零)，机制真正生效;(2) getNewsEffectForProperty 误传 category:'股票'→任何股票类新闻错误驱动房价，改 null 仅按行业(房地产)/全市场/symbol 匹配;(3) 房产/汽车持仓盈亏百分比 diff/buyPrice 未守卫(buyPrice=0/undefined→Infinity%)，加 buyP>0 守卫。联动增强3项: 新建 economy_invest_linkage_events.js IIFE→RANDOM_EVENTS，2 street+1 corporate：invest_milestone_mindset(E→A 心智/心情+复用 _dataInvestorMindset)/invest_acumen_career(E→C addSkillXp('accounting'))/invest_treat_friend(E→D 请客致谢 applyAffinityChange+扣现金)。全||防御,[PLACEHOLDER]。MC 6×400d 0代码异常。"
+      "note": "R18 域E(经济/投资): A类修复3项—(1)连续盈利衰减读取未初始化字段;(2)新闻房产乘数误匹配;(3)房产汽车持仓盈亏除零守卫。联动增强3项: 新建 economy_invest_linkage_events.js IIFE→RANDOM_EVENTS。MC 6×400d 0代码异常。"
     },
     {
       "round": 17,
@@ -41,7 +50,7 @@
       "aClassFixed": 4,
       "linkageItems": 3,
       "commit": "1dd59f6d",
-      "note": "R17 域D(NPC/社交): A类修复4项—social_tab.js npcIds 声明前置(声明移函数开头,修复渲染崩溃); chatWithNpc 未声明变量 affinity(崩溃+写NaN)→补 var affinity/delta/chatType/message+补 rel.met 守卫+好感写入改 applyAffinityChange; applyEventNpcEcho 跨NPC好感绕过 applyAffinityChange(缺 _lastInteractionDay/升级播报)→改走 applyAffinityChange。联动增强3项: 新建 npc_social_linkage_events.js IIFE→RANDOM_EVENTS，2 street+1 corporate：social_deep_talk(D→A)/social_job_referral(D→C)/social_market_tip(D→E)。全||防御,[PLACEHOLDER]。MC 6×400d 0代码异常。"
+      "note": "R17 域D(NPC/社交): A类修复4项—social_tab.js npcIds 声明前置; chatWithNpc 未声明变量 affinity; applyEventNpcEcho 跨NPC好感绕过 applyAffinityChange。联动增强3项: 新建 npc_social_linkage_events.js IIFE→RANDOM_EVENTS。MC 6×400d 0代码异常。"
     }
   ],
   "completedDomains": ["A", "B", "C", "D", "E", "F", "G", "H"]

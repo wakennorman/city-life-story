@@ -187,3 +187,14 @@
 - 联动3（新建 `src/js/core/core_mechanics_linkage_events.js` IIFE→RANDOM_EVENTS，2 street+1 corporate，全||防御，[PLACEHOLDER]）：core_habit_foundation(G→A 习惯地基→mental+5·happiness+4)/core_wisdom_share(G→D 人生体悟→applyAffinityChange 好感+6 守 rel.met 铁律)/core_exec_resilience(G→C 掌舵定力→addSkillXp("management",8))。src/index.html 注册在 ui_linkage_events.js 之后。id 与 R12 lifecycle_linkage_events.js 不冲突。
 - 验证：node --check 2文件通过；build.py→dist 8272.5KB；MC 6×400d exit=0·0代码异常（balanced 83.3%/skiller 100%/social 83.3%/corporate 83.3% 均≥80%；grinder 33.3%≥30% 高风险路径阈值；trader 50.0%<80% 为既有平衡阈值 RNG 波动，非代码回归）。
 - 已提交 66a72947（10文件/547增/38删，未 push，pre-commit 三守卫全过）；last_known_head 已同步至 66a72947。下轮→H（Phase2/公司）。
+
+## 最近执行（2026-07-14，Round 21 域H 创业/公司第二轮 — 待提交）
+- 起始状态：loop-domain-state.json=round20/G/next=H，故本窗口执行 R21=域H（创业/公司），即 8 域完整循环后的第二轮起点。HEAD=85963181（R20 账本已提交，树干净）；先确认 last_known_head=85963181 过漂移检查。
+- 域H 真实文件：Explore 扫描 startup.js/startup_crisis.js/startup_data.js/corp_ops.js/team.js/promo.js/perf.js/workplace_social.js/side_hustle.js/personal_growth.js/life_crossroads.js/family_life.js/company_spawner.js/events_corp.js/data(corp/startup_competition/startup_events)；investment/property_market/stock 轻扫（R18 已审）。
+- A类3（全确证）：
+  - (1) events_corp.js 9处 `corporateorate` 拼写错误→应为顶层 `state.corporate`（state.js:189 含 .team:.teamSize/.company/.jobOffer，被 team.js/main.js/perf.js/events_core.js:690/718/enterprise_fate.js:832/1110/1800 使用）。指未初始化对象→L433 读 team.length / L649 写 jobOffer / L1689-1691 读 company.id 全 TypeError 崩溃；L2108/2179 的 jobOffer/team 重置守卫因 st.corporateorate 恒 undefined 而永假（死代码）。已全改 `corporate`。（核实：曾疑漏 player. 前缀，但 grep 证实顶层 state.corporate.team/jobOffer/company 均为真实字段→确认是顶层 corporate。）
+  - (2) startup.js improveEmployeeSatisfaction(4542) 空 employees 时 L4595 先扣现金再 L4634 0/0=NaN→"平均NaN分"(L4639)，循环前加员工数守卫防白扣钱+NaN。
+  - (3) startup_crisis.js 整子系统死代码（checkStartupCrises/showCrisisModal/handleCrisisChoice/applyCrisisChoice 全库无外部调用方→创业危机永不触发），接入 tickStartup(2396) 季度分支(typeof 守卫+try/catch，headless 下 showModal 抛错被吞不中断结算；checkStartupCrises 设 lastCrisisDay 冷却+返回危机对象、showCrisisModal 仅展示)。
+- 联动3（新建 `src/js/core/company_linkage_events_r21.js` IIFE→RANDOM_EVENTS，2 street+1 corporate，全||防御，[PLACEHOLDER]）：company_h_foundation_discipline(H→A 创业纪律感→mental+5·心情+4)/company_h_team_warmth(H→D 带队温度→applyAffinityChange 好感+6 守 rel.met 铁律)/company_h_business_acumen(H→C 经营眼界→addSkillXp("management",8))。src/index.html 注册在 core_mechanics_linkage_events.js 之后。id 前缀 company_h_* 与 R12 company_linkage_events.js 的 startup_* 不冲突。
+- 验证：node --check 3文件通过；build.py→dist 8281.8KB；MC 6×400d 待执行（须 0代码异常）。
+- 提交计划：仅 git add 域H文件(events_corp.js/startup.js/company_linkage_events_r21.js/src/index.html/DEVELOPMENT.md/dist/index.html/loop-domain-state.json/last_known_head)，不 -A、不 push；DEVELOPMENT.md=v3.112；loop-state=round21/H/nextDomain=A（第二轮循环起点）。下轮→A（数据/数值平衡）。
