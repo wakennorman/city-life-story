@@ -41,94 +41,33 @@ function describeItemEffects(itemDef) {
 }
 
 /**
- * 投资持仓→NPC态度语境对话（P1.6）
- * 根据玩家当前的财富/投资状况，为特定NPC生成对应的台词。
- * 返回string时替换随机talkLine；返回null时使用默认台词。
+ * 约定式语境对话 — 从NPC数据的contextDialogue数组中读取语境台词
+ * 替代getInvestmentContextLine硬编码if-else链
+ * 规则：从上到下匹配第一个条件满足的条目，返回其line；无匹配返回null
  */
-function getInvestmentContextLine(npcId, state) {
-  var inv = state.investment || {};
-  var cash = (state.resources && state.resources.cash) || 0;
-  var bank = (state.resources && state.resources.bankBalance) || 0;
-  var holdings = inv.stockHoldings || [];
-  var props = inv.properties || [];
-  var btc = inv.btcHoldings || 0;
-  var totalStockValue = 0;
-  if (holdings.length && inv.stockMarket) {
-    holdings.forEach(function (h) {
-      var m = inv.stockMarket[h.symbol];
-      totalStockValue += (m ? m.price : 0) * h.shares;
-    });
-  }
-
-  if (npcId === "aunt_wang") {
-    // 王大婶关注租房/房产
-    if (props.length > 0)
-      return "哎哟，你还买了房子出租啊！现在年轻人真厉害，比我家那口子强多了。";
-    if (cash + bank > 50000)
-      return "看你最近出手大方，是不是发财了？别光顾着存钱，也要注意身体！";
-    if (cash < 500)
-      return "小伙子，这个月房租先缓缓？看你最近有点难，王大婶不是那种人。";
-    return null;
-  }
-
-  if (npcId === "old_zhou") {
-    // 老周关注废品/金属市场
-    var hasMetals =
-      inv.stockMarket &&
-      (inv.stockMarket["COPPER"] || inv.stockMarket["NICKEL"]);
-    if (
-      hasMetals &&
-      inv.stockMarket["COPPER"] &&
-      inv.stockMarket["COPPER"].price > 0.07
-    ) {
-      return "铜价最近涨了不少！你知道不？废铜现在比废铁值钱，多留意！";
+function getNpcContextDialogue(npcId, state) {
+  if (!state || !npcId) return null;
+  var npc = null;
+  if (typeof NPCS !== "undefined") {
+    for (var i = 0; i < NPCS.length; i++) {
+      if (NPCS[i].id === npcId) {
+        npc = NPCS[i];
+        break;
+      }
     }
-    if (totalStockValue > 10000)
-      return "哟，你也玩股票？比我聪明多了，我那些钱都压在废品站了。";
-    return null;
   }
-
-  if (npcId === "sister_zhang") {
-    // 张姐关注职业发展/收入
-    if (totalStockValue > 50000)
-      return "我听说你在股市里赚了不少？早点财务自由，别浪费你这个脑子。";
-    if (bank > 20000)
-      return "有存款在银行，说明你有规划！这样的人进职场肯定吃香，我帮你留意着呢。";
-    if (props.length > 0)
-      return "有房有产，还来这里打工？你是想体验生活还是真需要这份收入？";
+  if (!npc || !npc.contextDialogue || !Array.isArray(npc.contextDialogue))
     return null;
-  }
-
-  if (npcId === "boss_li") {
-    // 李工头关注体力/施工
-    if (cash + bank > 100000)
-      return "你现在有钱了，怎么还来工地干活？闲不住还是真喜欢？";
-    if (props.length > 0)
-      return "买了房子？现在工地上买房的工人可少了，你算一个有出息的！";
-    return null;
-  }
-
-  if (npcId === "xiao_mei") {
-    // 小美关注科技/编程/学习
-    if (inv.stockMarket && inv.stockMarket["NVDA"]) {
-      var nvdaPrice = inv.stockMarket["NVDA"].price;
-      if (nvdaPrice > 1000)
-        return "恩威达又创新高了！搞AI的都赚翻了，我都后悔没早买股票。";
+  for (var j = 0; j < npc.contextDialogue.length; j++) {
+    var entry = npc.contextDialogue[j];
+    if (typeof entry.condition === "function") {
+      try {
+        if (entry.condition(state)) return entry.line;
+      } catch (e) {
+        continue;
+      }
     }
-    if (btc > 0.01) return "你也持有比特币？！跌的时候心态好吗，我看着就害怕……";
-    if (bank > 30000)
-      return "哇你存款好多！我毕业两年了才存了不到两万，差距好大……";
-    return null;
   }
-
-  if (npcId === "chef_chen") {
-    // 陈师傅关注饮食/餐饮行业
-    if (props.length > 0)
-      return "有房产出租？以后考虑开个餐厅，比租房子利润高多了！";
-    if (cash > 30000) return "你手里有钱，有没有想过投资餐饮？我这里有个店面……";
-    return null;
-  }
-
   return null;
 }
 
@@ -3849,15 +3788,15 @@ function getAvailableActions(state) {
             var candidate = getFestivalNpcLine(npc.id, state);
             if (candidate && Random.chance(0.65)) festLine = candidate;
           }
-          // 投资持仓态度变化（P1.6）：非节日/生日时35%概率触发
-          var investLine = null;
+          // 约定式语境对话：非节日/生日时35%概率触发（数据在NPC的contextDialogue字段）
+          var contextLine = null;
           if (!isBirthday && !festLine && Random.chance(0.35)) {
-            investLine = getInvestmentContextLine(npc.id, state);
+            contextLine = getNpcContextDialogue(npc.id, state);
           }
           const line =
             isBirthday && npc.birthdayLine
               ? npc.birthdayLine
-              : festLine || investLine || Random.fromArray(npc.talkLines);
+              : festLine || contextLine || Random.fromArray(npc.talkLines);
           const bdTag = isBirthday ? " 🎂" : "";
           StateManager.addMessage(
             `💬${bdTag} ${npc.name}：${line} (好感+${affinityGain})`,

@@ -26,17 +26,35 @@ const LIFE_NODES = {
         hint: "智力≥60，改变命运的机会",
         apply: "gaokao_excellent",
         attrReq: { intelligence: 60 },
+        // 约定式效果：直接内联，替代switch-case
+        effect: function (st) {
+          st.player.intelligence = Math.min(
+            100,
+            (st.player.intelligence || 0) + 5,
+          );
+          st.flags._gaokaoResult = "excellent";
+        },
       },
       {
         text: "正常发挥",
         hint: "智力≥40，平平淡淡也是真",
         apply: "gaokao_normal",
         attrReq: { intelligence: 40 },
+        effect: function (st) {
+          st.player.intelligence = Math.min(
+            100,
+            (st.player.intelligence || 0) + 2,
+          );
+          st.flags._gaokaoResult = "normal";
+        },
       },
       {
         text: "直接步入社会",
         hint: "放弃高考，提前闯荡",
         apply: "gaokao_skip",
+        effect: function (st) {
+          st.flags._gaokaoResult = "skip";
+        },
       },
     ],
   },
@@ -58,20 +76,38 @@ const LIFE_NODES = {
         hint: "智力≥65，技能加成：编程+10 会计+10",
         apply: "uni_tech",
         attrReq: { intelligence: 65 },
+        effect: function (st) {
+          grantLifeNodeSkillXp(st, "coding", 120);
+          grantLifeNodeSkillXp(st, "accounting", 120);
+        },
       },
       {
         text: "读医学/工程",
         hint: "智力≥55，技能加成：医疗知识+10 维修+10",
         apply: "uni_engineering",
         attrReq: { intelligence: 55 },
+        effect: function (st) {
+          grantLifeNodeSkillXp(st, "repair", 120);
+        },
       },
       {
         text: "读文科/艺术",
         hint: "智力≥45，技能加成：魅力+10 口才+10",
         apply: "uni_arts",
         attrReq: { intelligence: 45 },
+        effect: function (st) {
+          st.player.charm = Math.min(100, (st.player.charm || 0) + 5);
+          grantLifeNodeSkillXp(st, "sales", 80);
+        },
       },
-      { text: "放弃大学", hint: "直接工作，节省4年时间", apply: "uni_skip" },
+      {
+        text: "放弃大学",
+        hint: "直接工作，节省4年时间",
+        apply: "uni_skip",
+        effect: function (st) {
+          st.resources.cash = (st.resources.cash || 0) + 5000;
+        },
+      },
     ],
   },
   career35: {
@@ -92,15 +128,42 @@ const LIFE_NODES = {
         hint: "智力≥50，学习新技能迎接变化",
         apply: "c35_transform",
         attrReq: { intelligence: 50 },
+        effect: function (st) {
+          st.player.intelligence = Math.min(
+            100,
+            (st.player.intelligence || 0) + 3,
+          );
+          grantLifeNodeSkillXp(st, "management", 80);
+          st.flags._career35Path = "transform";
+        },
       },
       {
         text: "咬牙硬扛",
         hint: "体质≥50，靠资历和经验撑过去",
         apply: "c35_hold",
         attrReq: { physique: 50 },
+        effect: function (st) {
+          st.status.health = Math.min(100, (st.status.health || 100) + 5);
+          st.flags._career35Path = "hold";
+        },
       },
-      { text: "寻找新赛道", hint: "人脉打开新机会", apply: "c35_newpath" },
-      { text: "躺平接受", hint: "降低期望，守住现有", apply: "c35_lieflat" },
+      {
+        text: "寻找新赛道",
+        hint: "人脉打开新机会",
+        apply: "c35_newpath",
+        effect: function (st) {
+          st.flags._career35Path = "newpath";
+        },
+      },
+      {
+        text: "躺平接受",
+        hint: "降低期望，守住现有",
+        apply: "c35_lieflat",
+        effect: function (st) {
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 10);
+          st.flags._career35Path = "lieflat";
+        },
+      },
     ],
   },
   retirement: {
@@ -120,17 +183,52 @@ const LIFE_NODES = {
         hint: "存款≥¥500K，安心养老",
         apply: "retire_wealthy",
         attrReq: { cash: 500000 },
+        effect: function (st) {
+          st.flags._retirementType = "wealthy";
+          st.flags._retired = true;
+          if (st.career && st.career.currentJob) {
+            st.career.pensionBase = st.career.currentJob.salary || 5000;
+          } else {
+            st.career = st.career || {};
+            st.career.pensionBase = 5000;
+          }
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 20);
+        },
       },
       {
         text: "发挥余热",
         hint: "技能≥60，返聘做顾问",
         apply: "retire_advisor",
         attrReq: { skill: 60 },
+        effect: function (st) {
+          st.flags._retirementType = "advisor";
+          st.flags._retired = true;
+          var skillXp = Math.min(
+            500,
+            (st.status && Math.max(0, st.status.health - 30)) * 5 || 200,
+          );
+          if (st.skills) {
+            var bestSkill = Object.keys(st.skills).reduce(function (a, b) {
+              return ((st.skills[a] && st.skills[a].level) || 0) >
+                ((st.skills[b] && st.skills[b].level) || 0)
+                ? a
+                : b;
+            });
+            if (st.skills[bestSkill])
+              st.skills[bestSkill].xp =
+                (st.skills[bestSkill].xp || 0) + skillXp;
+          }
+        },
       },
       {
         text: "退而不休",
         hint: "继续工作直到干不动",
         apply: "retire_continue",
+        effect: function (st) {
+          st.flags._retirementType = "continue";
+          st.flags._retired = true;
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 5);
+        },
       },
     ],
   },
@@ -353,6 +451,25 @@ function applyNodeChoice(state, nodeId, choiceKey) {
   if (!state.flags) state.flags = {};
   state.flags._lifeNode_choice = choiceKey;
 
+  // 约定式效果：优先使用choice内联的effect函数（无需维护switch-case）
+  if (LIFE_NODES[nodeId]) {
+    var nodeChoices = LIFE_NODES[nodeId].choices || [];
+    for (var ci = 0; ci < nodeChoices.length; ci++) {
+      if (
+        nodeChoices[ci].apply === choiceKey &&
+        typeof nodeChoices[ci].effect === "function"
+      ) {
+        try {
+          nodeChoices[ci].effect(state);
+        } catch (e) {
+          console.warn("lifeNode effect error:", e);
+        }
+        return; // 内联effect执行完毕，跳过旧switch-case
+      }
+    }
+  }
+
+  // 旧switch-case兜底（兼容未迁移的老choice）
   switch (choiceKey) {
     case "gaokao_excellent":
       state.player.intelligence = Math.min(

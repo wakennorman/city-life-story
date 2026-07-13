@@ -18,6 +18,7 @@
 - [nav-button-binding-fix-v3.32](nav-button-binding-fix-v3.32.md) — 导航死按钮修复 + 交通AP按距离×方式动态计算
 - [commute-system-merge-v3.33](commute-system-merge-v3.33.md) — 通勤方式合并（快速出行+交通方式→通勤方式+步行）
 - [agnes-api-claude-code-integration](agnes-api-claude-code-integration.md) — Agnes API + Claude Code 踩坑记录：claude.exe 不认 env var，必须用 --settings JSON + bare 模式
+- [CoC 全量分析及实施计划](coc-full-analysis-plan.md) — 约定式自动归类(CoC)全面审计：22个已落地系统 + 10个待实施领域(P0/P1/P2) + 本轮实现(NPC语境对话数据化+人生节点效果内联化)
 - [v3.5x-news-depth-rework](v3.5x-news-depth-rework.md) — 新闻系统深度影响链条全面修复（6大传导断层+8个叙事事件，2026-07-09，commit 65b06fc4）
 - [v3.52-cooking-npc-events-bak-cleanup](v3.52-cooking-npc-events-bak-cleanup.md) — 3个烹饪×NPC联动事件（cooking技能/林阿姨/陈师傅）+ 清理2个废弃bak文件（2026-07-09，commit d7e98f0d）
 - [v3.60-loop-sixth-round](v3.60-loop-sixth-round.md) — /loop 第6轮：15个options→choices P0修复 + 3个联动事件（多技能协同/银行VIP/熟客经济）

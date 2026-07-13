@@ -102,6 +102,31 @@ const NPCS = [
         },
       },
     },
+    // 约定式语境对话：根据玩家状态动态生成NPC台词（替代getInvestmentContextLine硬编码）
+    contextDialogue: [
+      {
+        condition: function (st) {
+          return ((st.investment && st.investment.properties) || []).length > 0;
+        },
+        line: "哎哟，你还买了房子出租啊！现在年轻人真厉害，比我家那口子强多了。",
+      },
+      {
+        condition: function (st) {
+          return (
+            ((st.resources && st.resources.cash) || 0) +
+              ((st.resources && st.resources.bankBalance) || 0) >
+            50000
+          );
+        },
+        line: "看你最近出手大方，是不是发财了？别光顾着存钱，也要注意身体！",
+      },
+      {
+        condition: function (st) {
+          return (st.resources && st.resources.cash) < 500;
+        },
+        line: "小伙子，这个月房租先缓缓？看你最近有点难，王大婶不是那种人。",
+      },
+    ],
     // 在场加成：王大婶在城中村时，废品回收/送餐/跑腿效率提升
     presenceBonus: [
       {
@@ -331,6 +356,25 @@ const NPCS = [
         good_highest: { label: "哪收废品价最高", threshold: 60, cost: 30 },
       },
     },
+    // 约定式语境对话：根据玩家财富/投资状态自动生成NPC台词
+    contextDialogue: [
+      {
+        condition: function (st) {
+          return (
+            ((st.resources && st.resources.cash) || 0) +
+              ((st.resources && st.resources.bankBalance) || 0) >
+            100000
+          );
+        },
+        line: "你现在有钱了，怎么还来工地干活？闲不住还是真喜欢？",
+      },
+      {
+        condition: function (st) {
+          return ((st.investment && st.investment.properties) || []).length > 0;
+        },
+        line: "买了房子？现在工地上买房的工人可少了，你算一个有出息的！",
+      },
+    ],
     // 在场加成：李工头在工地时，建筑类工作工资提升
     presenceBonus: [
       {
@@ -564,6 +608,36 @@ const NPCS = [
         },
       },
     },
+    // 约定式语境对话
+    contextDialogue: [
+      {
+        condition: function (st) {
+          var inv = st.investment || {};
+          var holdings = inv.stockHoldings || [];
+          var totalStockValue = 0;
+          if (holdings.length && inv.stockMarket) {
+            holdings.forEach(function (h) {
+              var m = inv.stockMarket[h.symbol];
+              totalStockValue += (m ? m.price : 0) * h.shares;
+            });
+          }
+          return totalStockValue > 50000;
+        },
+        line: "我听说你在股市里赚了不少？早点财务自由，别浪费你这个脑子。",
+      },
+      {
+        condition: function (st) {
+          return (st.resources && (st.resources.bankBalance || 0)) > 20000;
+        },
+        line: "有存款在银行，说明你有规划！这样的人进职场肯定吃香，我帮你留意着呢。",
+      },
+      {
+        condition: function (st) {
+          return ((st.investment && st.investment.properties) || []).length > 0;
+        },
+        line: "有房有产，还来这里打工？你是想体验生活还是真需要这份收入？",
+      },
+    ],
     // 在场加成：张姐在商业区时，摆摊和销售类收入提升
     presenceBonus: [
       {
@@ -783,6 +857,32 @@ const NPCS = [
         category_lowest: { label: "全城废品回收比价", threshold: 60, cost: 20 },
       },
     },
+    // 约定式语境对话：根据市场状况自动生成台词
+    contextDialogue: [
+      {
+        condition: function (st) {
+          var sm = st.investment && st.investment.stockMarket;
+          var hasMetals = sm && (sm["COPPER"] || sm["NICKEL"]);
+          return hasMetals && sm["COPPER"] && sm["COPPER"].price > 0.07;
+        },
+        line: "铜价最近涨了不少！你知道不？废铜现在比废铁值钱，多留意！",
+      },
+      {
+        condition: function (st) {
+          var inv = st.investment || {};
+          var holdings = inv.stockHoldings || [];
+          var totalStockValue = 0;
+          if (holdings.length && inv.stockMarket) {
+            holdings.forEach(function (h) {
+              var m = inv.stockMarket[h.symbol];
+              totalStockValue += (m ? m.price : 0) * h.shares;
+            });
+          }
+          return totalStockValue > 10000;
+        },
+        line: "哟，你也玩股票？比我聪明多了，我那些钱都压在废品站了。",
+      },
+    ],
     // 在场加成：老周分享经验，废品回收效率大幅提升
     presenceBonus: [
       {
@@ -1014,6 +1114,28 @@ const NPCS = [
         category_lowest: { label: "哪买东西最便宜", threshold: 60, cost: 10 },
       },
     },
+    // 约定式语境对话：关注科技/投资动态
+    contextDialogue: [
+      {
+        condition: function (st) {
+          var sm = st.investment && st.investment.stockMarket;
+          return sm && sm["NVDA"] && sm["NVDA"].price > 1000;
+        },
+        line: "恩威达又创新高了！搞AI的都赚翻了，我都后悔没早买股票。",
+      },
+      {
+        condition: function (st) {
+          return (st.investment && (st.investment.btcHoldings || 0)) > 0.01;
+        },
+        line: "你也持有比特币？！跌的时候心态好吗，我看着就害怕……",
+      },
+      {
+        condition: function (st) {
+          return (st.resources && (st.resources.bankBalance || 0)) > 30000;
+        },
+        line: "哇你存款好多！我毕业两年了才存了不到两万，差距好大……",
+      },
+    ],
     // 在场加成：小美在大学城时，学习效率提升（通过studyBonus标志）
     presenceBonus: [
       {
@@ -1213,6 +1335,21 @@ const NPCS = [
         category_lowest: { label: "哪买菜最便宜", threshold: 60, cost: 15 },
       },
     },
+    // 约定式语境对话：关注餐饮行业/资金状况
+    contextDialogue: [
+      {
+        condition: function (st) {
+          return ((st.investment && st.investment.properties) || []).length > 0;
+        },
+        line: "有房产出租？以后考虑开个餐厅，比租房子利润高多了！",
+      },
+      {
+        condition: function (st) {
+          return (st.resources && (st.resources.cash || 0)) > 30000;
+        },
+        line: "你手里有钱，有没有想过投资餐饮？我这里有个店面……",
+      },
+    ],
     // 在场加成：陈师傅在场时，餐饮/食品摊位收入提升
     presenceBonus: [
       {
