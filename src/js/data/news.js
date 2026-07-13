@@ -24,8 +24,18 @@ const NEWS_EVENTS = [
       duration: 5,
     },
     type: "price",
-    followUpId: "metal_boom_echo",
-    followUpDelay: 4,
+    // 约定式内联后续：4天后触发金属续涨新闻
+    followUp: {
+      delay: 4,
+      headline: "🔩 大宗商品续涨！贵金属期货多头逼空，钢铁期货涨停",
+      effects: {
+        investmentEffect: [
+          { category: "贵金属", mul: 1.06 },
+          { symbols: ["COPPER", "NICKEL"], mul: 1.08 },
+        ],
+        duration: 3,
+      },
+    },
     // 无季节限制，全年可能发生
   },
   {
@@ -1990,18 +2000,39 @@ function applyNewsEffect(news, state) {
     }
   }
 
-  // 级联后续新闻调度（L1→L2）
-  if (news.followUpId && NEWS_FOLLOWUP[news.followUpId] && !news._isFollowUp) {
-    var delay = news.followUpDelay || 3;
-    state.flags._pendingFollowUpNews = state.flags._pendingFollowUpNews || [];
-    var alreadyPending = state.flags._pendingFollowUpNews.some(function (p) {
-      return p.id === news.followUpId;
-    });
-    if (!alreadyPending) {
-      state.flags._pendingFollowUpNews.push({
-        id: news.followUpId,
-        triggerDay: state.player.day + delay,
+  // 级联后续新闻调度（L1→L2）— 支持内联 followUp 对象（v3.99d 约定式自动归类）
+  if (!news._isFollowUp) {
+    if (news.followUp && typeof news.followUp === "object") {
+      // 内联 followUp 对象（约定式）：news.followUp = { delay, headline, effects }
+      var delay = news.followUp.delay || 3;
+      state.flags._pendingFollowUpNews = state.flags._pendingFollowUpNews || [];
+      var fuId = news.id + "_followup";
+      var alreadyPending = state.flags._pendingFollowUpNews.some(function (p) {
+        return p.id === fuId;
       });
+      if (!alreadyPending) {
+        state.flags._pendingFollowUpNews.push({
+          id: fuId,
+          triggerDay: state.player.day + delay,
+          followUpData: {
+            headline: news.followUp.headline,
+            effects: news.followUp.effects,
+          },
+        });
+      }
+    } else if (news.followUpId && NEWS_FOLLOWUP[news.followUpId]) {
+      // 旧式 followUpId 引用（向后兼容）
+      var delay = news.followUpDelay || 3;
+      state.flags._pendingFollowUpNews = state.flags._pendingFollowUpNews || [];
+      var alreadyPending = state.flags._pendingFollowUpNews.some(function (p) {
+        return p.id === news.followUpId;
+      });
+      if (!alreadyPending) {
+        state.flags._pendingFollowUpNews.push({
+          id: news.followUpId,
+          triggerDay: state.player.day + delay,
+        });
+      }
     }
   }
 
@@ -2058,7 +2089,8 @@ function checkNewsFollowUp(state) {
   for (var i = 0; i < pending.length; i++) {
     var item = pending[i];
     if (today >= item.triggerDay) {
-      var followup = NEWS_FOLLOWUP[item.id];
+      // 支持内联 followUpData（约定式）和旧式 NEWS_FOLLOWUP 查找
+      var followup = item.followUpData || NEWS_FOLLOWUP[item.id];
       if (followup) {
         var newsEntry = {
           id: item.id,

@@ -2065,7 +2065,11 @@ function renderMarketSentiment(state, inv) {
     var shownPend = 0;
     for (var m = 0; m < pending.length && shownPend < 2; m++) {
       var pitem = pending[m];
-      var fu = fuRef[pitem.id];
+      // 支持内联 followUpData（约定式）和旧式 NEWS_FOLLOWUP 查找
+      var fu =
+        pitem.followUpData && pitem.followUpData.headline
+          ? pitem.followUpData
+          : fuRef[pitem.id];
       if (!fu) continue;
       var daysUntil = pitem.triggerDay - state.player.day;
       html +=
