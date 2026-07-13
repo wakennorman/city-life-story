@@ -221,6 +221,7 @@ function addStreetExtras(state, actions) {
     icon: "📞",
     category: "social",
     costEstimate: 2,
+    effectEstimate: "心情+15, 30%概率收到¥200",
     handler: () => {
       const st = StateManager.getState();
       if (st.resources.cash < 2) {
@@ -761,6 +762,7 @@ function addStreetExtras(state, actions) {
     icon: "🛡️",
     category: "finance",
     costEstimate: 200,
+    effectEstimate: "保险30天, 伤病赔¥500",
     handler: () => {
       const st = StateManager.getState();
       if (st.resources.cash < 200) {
@@ -785,6 +787,7 @@ function addStreetExtras(state, actions) {
     desc: "记录今天的心情。回顾一下，反思成长。",
     icon: "📓",
     category: "social",
+    effectEstimate: "心情+8, 心智+0.5, 疲劳-5",
     handler: () => {
       const st = StateManager.getState();
       st.needs.happiness = Math.min(100, st.needs.happiness + 8);
@@ -804,6 +807,7 @@ function addStreetExtras(state, actions) {
     desc: "在公园/家里静坐 15 分钟。恢复心智、缓解疲劳。",
     icon: "🧘",
     category: "social",
+    effectEstimate: "心智+1, 疲劳-12, 心情+6",
     handler: () => {
       const st = StateManager.getState();
       st.player.mental = Math.min(100, st.player.mental + 1);
@@ -1031,6 +1035,7 @@ function addStreetExtras(state, actions) {
       icon: "💰",
       category: "social",
       apCost: 5,
+      effectEstimate: "道德+1/¥100",
       handler: function () {
         var st = StateManager.getState();
         var maxDonate = Math.min(st.resources.cash, 1000);
@@ -1086,6 +1091,7 @@ function addStreetExtras(state, actions) {
       icon: "🤝",
       category: "social",
       apCost: 15,
+      effectEstimate: "道德+3~5, 心情+8~20",
       handler: function () {
         var st = StateManager.getState();
         var moralGain = 3 + Math.floor(Random.float(0, 3));
@@ -1139,6 +1145,7 @@ function addStreetExtras(state, actions) {
       icon: "🏪",
       category: "work",
       apCost: 25,
+      payEstimate: "180~329",
       handler: function () {
         var st = StateManager.getState();
         var dk = "_weekendMarket_" + Math.floor(st.player.day / 7);
@@ -1184,6 +1191,7 @@ function addStreetExtras(state, actions) {
       icon: "📋",
       category: "work",
       apCost: 10,
+      payEstimate: "0~249",
       handler: function () {
         var st = StateManager.getState();
         var mk = "_mondayInfo_" + Math.floor(st.player.day / 7);

@@ -29,18 +29,17 @@
       title: "医院急诊室",
       story:
         "你蹲下去捡掉在地上的水杯，再站起来时眼前一黑，直直往后倒去。\\n\\n醒来时你已经躺在医院急诊室里，护士说你是低血糖加严重疲劳送来的。\\n\\n医生看了你的报告：「你这身体，再这么熬下去会出大事。住院观察三天，费用¥2800。」",
+      // [conditions→triggers]
+      triggers: {
+        minDay: 40,
+        excludeFlags: ["_healthCrisisSeen"],
+      },
       conditions: function (st) {
-        // 健康状况低 + 天数足够 + 非冷却期
         var health =
           st.personalGrowth && st.personalGrowth.health
             ? st.personalGrowth.health.physical
             : 80;
-        return (
-          st.player.day >= 40 &&
-          health < 50 &&
-          !st.flags._healthCrisisSeen &&
-          Random.chance(0.02)
-        );
+        return health < 50 && Random.chance(0.02);
       },
       probability: 0.03,
       repeatable: false,

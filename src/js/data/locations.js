@@ -266,43 +266,43 @@ const LOCATIONS = {
       snow: { footfallMod: 0.3 },
     },
   },
-  // TODO(v3.89+): 待实现 - 高档小区（参考真实高档小区，富人有保安门禁）
-  // {
-  //   id: "luxury_community",
-  //   name: "高档小区",
-  //   desc: "高档封闭式小区，有物业和保安。普通摆摊进不去，但可以提供上门服务。",
-  //   type: "residential",
-  //   wealthTier: 3,
-  //   footfall: 0.3,
-  //   vendingNote: "门禁严格，需要预约才能进入",
-  //   specialties: ["luxury", "electronics"],
-  //   dailyProbability: 0.2,
-  //   specialCategory: ["luxury"],
-  //   jobs: ["premium_housekeeper", "chauffeur"],
-  //   priceMod: {
-  //     clothing: 1.3,
-  //     electronics: 1.2,
-  //     luxury: 1.4,
-  //   },
-  // },
-  // TODO(v3.89+): 待实现 - 老旧小区（参考真实老旧小区，设施陈旧但生活便利）
-  // {
-  //   id: "old_community",
-  //   name: "老旧小区",
-  //   desc: "90年代建的老小区，设施陈旧但生活便利。居民多为本地老住户。",
-  //   type: "residential",
-  //   wealthTier: 2,
-  //   footfall: 0.7,
-  //   vendingNote: "老年居民多，消费习惯保守",
-  //   specialties: ["daily_use", "food"],
-  //   dailyProbability: 0.4,
-  //   specialCategory: ["daily", "food"],
-  //   jobs: ["cleaning_service", "repair_service"],
-  //   priceMod: {
-  //     daily_use: 0.9,
-  //     food: 0.85,
-  //   },
-  // },
+  luxury_community: {
+    id: "luxury_community",
+    name: "高档小区",
+    icon: "🏘️",
+    desc: "高档封闭式小区，有物业和保安。普通摆摊进不去，但可以提供上门服务。",
+    type: "residential",
+    wealthTier: 3,
+    footfall: 0.3,
+    vendingNote: "门禁严格，需要预约才能进入",
+    specialties: ["luxury", "electronics"],
+    dailyProbability: 0.2,
+    specialCategory: ["luxury"],
+    jobs: ["premium_housekeeper", "chauffeur"],
+    priceMod: {
+      clothing: 1.3,
+      electronics: 1.2,
+      luxury: 1.4,
+    },
+  },
+  old_community: {
+    id: "old_community",
+    name: "老旧小区",
+    icon: "🏘️",
+    desc: "90年代建的老小区，设施陈旧但生活便利。居民多为本地老住户。",
+    type: "residential",
+    wealthTier: 2,
+    footfall: 0.7,
+    vendingNote: "老年居民多，消费习惯保守",
+    specialties: ["daily_use", "food"],
+    dailyProbability: 0.4,
+    specialCategory: ["daily", "food"],
+    jobs: ["cleaning_service", "repair_service"],
+    priceMod: {
+      daily_use: 0.9,
+      food: 0.85,
+    },
+  },
   //
   // === 公共服务区 ===
   gov_office: {
@@ -321,22 +321,22 @@ const LOCATIONS = {
     priceMod: {},
     specialActions: ["办身份证", "办护照", "办社保卡", "申请低保", "办理贷款"],
   },
-  // TODO: 待实现 - 法院/司法局（参考真实司法机构）
-  // {
-  //   id: "court",
-  //   name: "法院",
-  //   desc: "打官司的地方。可以起诉欠债不还、劳动纠纷等。",
-  //   type: "service",
-  //   wealthTier: 2,
-  //   footfall: 0.3,
-  //   vendingNote: "严肃场所，不适合摆摊",
-  //   specialties: [],
-  //   dailyProbability: 0.1,
-  //   specialCategory: [],
-  //   jobs: [],
-  //   priceMod: {},
-  //   specialActions: ["起诉欠债", "劳动仲裁", "法律咨询"],
-  // },
+  court: {
+    id: "court",
+    name: "法院",
+    icon: "⚖️",
+    desc: "打官司的地方。可以起诉欠债不还、劳动纠纷等。",
+    type: "service",
+    wealthTier: 2,
+    footfall: 0.3,
+    vendingNote: "严肃场所，不适合摆摊",
+    specialties: [],
+    dailyProbability: 0.1,
+    specialCategory: [],
+    jobs: [],
+    priceMod: {},
+    specialActions: ["起诉欠债", "劳动仲裁", "法律咨询"],
+  },
   // 人才市场：连接职业系统，无工作但有特殊行动
   job_market: {
     id: "job_market",
@@ -412,82 +412,81 @@ const LOCATIONS = {
     priceMod: {},
     specialActions: ["借书自学", "自习备考", "参加读书会"],
   },
-  // TODO: 待实现 - 体育馆/健身房（参考真实公共体育设施）
-  // {
-  //   id: "gym",
-  //   name: "体育馆",
-  //   desc: "可以健身/打球/游泳的地方。增强体质的好去处。",
-  //   type: "recreation",
-  //   wealthTier: 2,
-  //   footfall: 0.8,
-  //   vendingNote: "运动人群多，消费力中等",
-  //   specialties: ["sports_equipment", "snacks"],
-  //   dailyProbability: 0.4,
-  //   specialCategory: ["daily"],
-  //   jobs: ["gym_coach"],
-  //   priceMod: { snacks: 1.1, sports_equipment: 1.0 },
-  // },
-  // TODO: 待实现 - 网吧（参考真实网吧/电竞馆）
-  // {
-  //   id: "internet_cafe",
-  //   name: "网吧",
-  //   desc: "上网/打游戏的地方。可以接线上任务，也可以消磨时间。",
-  //   type: "recreation",
-  //   wealthTier: 2,
-  //   footfall: 0.7,
-  //   vendingNote: "年轻人多，零食饮料消费旺盛",
-  //   specialties: ["snacks", "beverages"],
-  //   dailyProbability: 0.5,
-  //   specialCategory: ["food"],
-  //   jobs: ["data_entry"],
-  //   priceMod: { snacks: 1.0, beverages: 1.0 },
-  // },
-  // 菜市场（市场下沿，食材供应链终端）— 待激活，参考食材库存联动系统
-  // TODO: 待实现 - 物流园区（参考真实物流集散中心）
-  // {
-  //   id: "logistics_park",
-  //   name: "物流园区",
-  //   desc: "快递/物流集散中心。工作机会多，但环境嘈杂。",
-  //   type: "industrial",
-  //   wealthTier: 2,
-  //   footfall: 1.0,
-  //   vendingNote: "快递员和司机是主力消费群体",
-  //   specialties: ["food", "daily_use"],
-  //   dailyProbability: 0.5,
-  //   specialCategory: ["food", "daily"],
-  //   jobs: ["package_delivery", "warehouse_worker", "logistics_sorting"],
-  //   priceMod: { food: 0.9, daily_use: 0.85 },
-  // },
-  // TODO: 待实现 - 汽车城/4S店集群（参考真实汽车商圈）
-  // {
-  //   id: "auto_city",
-  //   name: "汽车城",
-  //   desc: "4S店和二手车市场聚集地。可以买车/修车/找工作。",
-  //   type: "commercial",
-  //   wealthTier: 3,
-  //   footfall: 0.6,
-  //   vendingNote: "看车人多，但买车人少",
-  //   specialties: ["electronics", "luxury"],
-  //   dailyProbability: 0.3,
-  //   specialCategory: ["electronics"],
-  //   jobs: ["auto_repair", "car_sales"],
-  //   priceMod: { electronics: 1.1 },
-  // },
-  // TODO: 待实现 - 花鸟市场（参考真实花鸟鱼虫市场）
-  // {
-  //   id: "flower_bird_market",
-  //   name: "花鸟市场",
-  //   desc: "卖花/宠物/观赏鱼的地方。喜欢动植物的天堂。",
-  //   type: "recreation",
-  //   wealthTier: 2,
-  //   footfall: 0.5,
-  //   vendingNote: "爱好者多，消费力中等",
-  //   specialties: ["flowers", "pets"],
-  //   dailyProbability: 0.3,
-  //   specialCategory: [],
-  //   jobs: ["pet_sitter"],
-  //   priceMod: {},
-  // },
+  gym: {
+    id: "gym",
+    name: "体育馆",
+    icon: "🏋️",
+    desc: "可以健身/打球/游泳的地方。增强体质的好去处。",
+    type: "recreation",
+    wealthTier: 2,
+    footfall: 0.8,
+    vendingNote: "运动人群多，消费力中等",
+    specialties: ["sports_equipment", "snacks"],
+    dailyProbability: 0.4,
+    specialCategory: ["daily"],
+    jobs: ["gym_coach"],
+    priceMod: { snacks: 1.1, sports_equipment: 1.0 },
+  },
+  internet_cafe: {
+    id: "internet_cafe",
+    name: "网吧",
+    icon: "🖥️",
+    desc: "上网/打游戏的地方。可以接线上任务，也可以消磨时间。",
+    type: "recreation",
+    wealthTier: 2,
+    footfall: 0.7,
+    vendingNote: "年轻人多，零食饮料消费旺盛",
+    specialties: ["snacks", "beverages"],
+    dailyProbability: 0.5,
+    specialCategory: ["food"],
+    jobs: ["data_entry"],
+    priceMod: { snacks: 1.0, beverages: 1.0 },
+  },
+  logistics_park: {
+    id: "logistics_park",
+    name: "物流园区",
+    icon: "🚚",
+    desc: "快递/物流集散中心。工作机会多，但环境嘈杂。",
+    type: "industrial",
+    wealthTier: 2,
+    footfall: 1.0,
+    vendingNote: "快递员和司机是主力消费群体",
+    specialties: ["food", "daily_use"],
+    dailyProbability: 0.5,
+    specialCategory: ["food", "daily"],
+    jobs: ["package_delivery", "warehouse_worker", "logistics_sorting"],
+    priceMod: { food: 0.9, daily_use: 0.85 },
+  },
+  auto_city: {
+    id: "auto_city",
+    name: "汽车城",
+    icon: "🚗",
+    desc: "4S店和二手车市场聚集地。可以买车/修车/找工作。",
+    type: "commercial",
+    wealthTier: 3,
+    footfall: 0.6,
+    vendingNote: "看车人多，但买车人少",
+    specialties: ["electronics", "luxury"],
+    dailyProbability: 0.3,
+    specialCategory: ["electronics"],
+    jobs: ["auto_repair", "car_sales"],
+    priceMod: { electronics: 1.1 },
+  },
+  flower_bird_market: {
+    id: "flower_bird_market",
+    name: "花鸟市场",
+    icon: "🌸",
+    desc: "卖花/宠物/观赏鱼的地方。喜欢动植物的天堂。",
+    type: "recreation",
+    wealthTier: 2,
+    footfall: 0.5,
+    vendingNote: "爱好者多，消费力中等",
+    specialties: ["flowers", "pets"],
+    dailyProbability: 0.3,
+    specialCategory: [],
+    jobs: ["pet_sitter"],
+    priceMod: {},
+  },
   // 二手市场：跳蚤市场，淘宝捡漏
   flea_market: {
     id: "flea_market",
@@ -547,6 +546,10 @@ const TRAVEL_GRAPH = {
     "construction",
     "vegetable_market",
     "job_market",
+    "luxury_community",
+    "court",
+    "gym",
+    "auto_city",
   ],
   // 内城区：城中村位于核心区边缘
   slum: [
@@ -556,6 +559,8 @@ const TRAVEL_GRAPH = {
     "bank",
     "vegetable_market",
     "flea_market",
+    "old_community",
+    "internet_cafe",
   ],
   // 商业物流：批发市场连接工业区和中心区
   wholesaleMarket: [
@@ -564,13 +569,21 @@ const TRAVEL_GRAPH = {
     "factoryZone",
     "vegetable_market",
     "flea_market",
+    "logistics_park",
+    "flower_bird_market",
   ],
   // 菜市场：紧邻批发市场，买菜人流密集
   vegetable_market: ["wholesaleMarket", "slum", "commercialDist", "park"],
   // 建设区：工地连接城中村和商业区
   construction: ["slum", "commercialDist"],
   // 工业区：在外围，连接批发市场/大学城/郊区（郊区回边）
-  factoryZone: ["wholesaleMarket", "school", "suburb"],
+  factoryZone: [
+    "wholesaleMarket",
+    "school",
+    "suburb",
+    "logistics_park",
+    "auto_city",
+  ],
   // 大学城：教育集群，连接工业区/公园/培训/娱乐/医院/寺庙/图书馆（双向补全）
   school: [
     "factoryZone",
@@ -580,15 +593,34 @@ const TRAVEL_GRAPH = {
     "hospital",
     "temple",
     "library",
+    "gym",
+    "internet_cafe",
   ],
   // 科技园：靠近商业区和娱乐城
   techPark: ["commercialDist", "entertainment"],
   // 医院：医疗集群，连接商业区和大学城
   hospital: ["commercialDist", "school"],
   // 银行：金融中心，连接城中村/商业区/政府/人才市场
-  bank: ["slum", "commercialDist", "gov_office", "job_market"],
+  bank: [
+    "slum",
+    "commercialDist",
+    "gov_office",
+    "job_market",
+    "luxury_community",
+    "court",
+  ],
   // 公园：绿色过渡带，连接城中村/大学城/郊区/寺庙/图书馆/二手市场（图书馆回边）
-  park: ["slum", "school", "suburb", "temple", "library", "flea_market"],
+  park: [
+    "slum",
+    "school",
+    "suburb",
+    "temple",
+    "library",
+    "flea_market",
+    "old_community",
+    "gym",
+    "flower_bird_market",
+  ],
   // 培训中心：紧邻大学城和图书馆
   trainingCenter: ["school", "library"],
   // 图书馆：连接大学城、培训中心和公园
@@ -596,15 +628,32 @@ const TRAVEL_GRAPH = {
   // 郊区：最外围，通过公园或工业区进入
   suburb: ["park", "factoryZone"],
   // 政府：靠近商业区和银行
-  gov_office: ["commercialDist", "bank", "job_market"],
+  gov_office: ["commercialDist", "bank", "job_market", "court"],
   // 人才市场：连接政府、银行和商业区
   job_market: ["gov_office", "bank", "commercialDist"],
   // 娱乐城：连接商业区/科技园/大学城
-  entertainment: ["commercialDist", "techPark", "school"],
+  entertainment: ["commercialDist", "techPark", "school", "internet_cafe"],
   // 寺庙：位于公园旁/大学城周边；park和school均已添加回边
   temple: ["park", "school"],
   // 二手市场：连接批发市场、城中村和公园
   flea_market: ["wholesaleMarket", "slum", "park"],
+  // ====== 新激活的8个地点 ======
+  // 高档小区：靠近商业区和科技园（富人区）
+  luxury_community: ["commercialDist", "techPark", "bank"],
+  // 老旧小区：靠近城中村和公园（老城区）
+  old_community: ["slum", "park", "flea_market"],
+  // 法院：靠近政府和银行（政务区）
+  court: ["gov_office", "bank", "commercialDist"],
+  // 体育馆：靠近大学城和公园（运动区）
+  gym: ["school", "park", "commercialDist"],
+  // 网吧：靠近大学城和娱乐城（年轻人聚集）
+  internet_cafe: ["school", "entertainment", "slum"],
+  // 物流园区：靠近工业区和批发市场（物流枢纽）
+  logistics_park: ["factoryZone", "wholesaleMarket", "suburb"],
+  // 汽车城：靠近商业区和工业区（汽车商圈）
+  auto_city: ["commercialDist", "factoryZone", "suburb"],
+  // 花鸟市场：靠近公园和批发市场（休闲区）
+  flower_bird_market: ["park", "wholesaleMarket", "flea_market"],
 };
 
 /** 获取地点信息 */

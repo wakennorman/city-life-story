@@ -784,7 +784,12 @@ const STREET_JOBS = [
       requirements: { mental: 30, minAge: 16, maxAge: 60 },
       effects: { fatigue: 12, happiness: 18, mental: 2, fame: 3 },
       payCalc(state) {
-        return Math.floor(18 + state.player.mental * 0.2 + state.player.fame * 0.3 + Random.float(0, 42));
+        return Math.floor(
+          18 +
+            state.player.mental * 0.2 +
+            state.player.fame * 0.3 +
+            Random.float(0, 42),
+        );
       },
       risk: {},
     },
@@ -818,6 +823,201 @@ const STREET_JOBS = [
         return Math.floor(Random.float(40, 70));
       },
       risk: { injury: 0.03 },
+    },
+    // ──────── 新激活地点的工作（8个地点，12个工作）────────
+    // 联动：locations.js 8个TODO地点激活
+    // ====== 高档小区 ======
+    {
+      id: "premium_housekeeper",
+      name: "高档家政",
+      desc: "在高档小区做家政服务。环境好、收入高，但需要细致耐心。",
+      icon: "🧹",
+      location: "luxury_community",
+      requirements: { hygiene: 30, minAge: 20, maxAge: 55 },
+      effects: { fatigue: 18, hygiene: 5, happiness: 3, physiqueXp: 1 },
+      payCalc(state) {
+        return Math.floor(
+          80 + Random.float(0, 40) + (state.player.hygiene || 0) * 0.3,
+        );
+      },
+      risk: {},
+    },
+    {
+      id: "chauffeur",
+      name: "私人司机",
+      desc: "给富人当专职司机。需要驾驶技术好、穿着得体、守时。",
+      icon: "🚗",
+      location: "luxury_community",
+      requirements: { driving: 15, minAge: 22, maxAge: 50 },
+      effects: { fatigue: 15, hygiene: 3, drivingXp: 3 },
+      payCalc(state) {
+        var base =
+          90 + (state.skills.driving?.level || 0) * 1.2 + Random.float(0, 30);
+        return Math.floor(base);
+      },
+      risk: { injury: 0.01 },
+    },
+    // ====== 老旧小区 ======
+    {
+      id: "cleaning_service",
+      name: "清洁工",
+      desc: "在老小区做清洁，楼道扫地、清运垃圾。辛苦但稳定。",
+      icon: "🧹",
+      location: "old_community",
+      requirements: { physique: 15, minAge: 18, maxAge: 60 },
+      effects: { fatigue: 28, hygiene: -5, physiqueXp: 3 },
+      payCalc(state) {
+        return Math.floor(
+          40 + state.player.physique * 0.2 + Random.float(0, 20),
+        );
+      },
+      risk: { injury: 0.02 },
+    },
+    {
+      id: "repair_service",
+      name: "维修工",
+      desc: "帮小区居民修水管、通马桶、换灯泡。手艺活，邻里街坊都找你。",
+      icon: "🔧",
+      location: "old_community",
+      requirements: { repair: 15, minAge: 18, maxAge: 60 },
+      effects: { fatigue: 20, repairXp: 5, physiqueXp: 2 },
+      payCalc(state) {
+        var base =
+          50 + (state.skills.repair?.level || 0) * 1.5 + Random.float(0, 40);
+        return Math.floor(base);
+      },
+      risk: { injury: 0.03 },
+    },
+    // ====== 体育馆 ======
+    {
+      id: "gym_coach",
+      name: "健身教练",
+      desc: "在体育馆做私人教练。需要好身材+专业指导能力。",
+      icon: "💪",
+      location: "gym",
+      requirements: { physique: 35, mental: 20, minAge: 20, maxAge: 50 },
+      effects: { fatigue: 20, physiqueXp: 8, happiness: 5, fame: 2 },
+      payCalc(state) {
+        var base =
+          70 +
+          state.player.physique * 0.5 +
+          (state.player.fame || 0) * 0.2 +
+          Random.float(0, 30);
+        return Math.floor(base);
+      },
+      risk: { injury: 0.02 },
+    },
+    // ====== 网吧 ======
+    {
+      id: "data_entry",
+      name: "数据录入",
+      desc: "在网吧接线上数据录入任务，打字快就赚得多。",
+      icon: "⌨️",
+      location: "internet_cafe",
+      requirements: { intelligence: 20, minAge: 16, maxAge: 50 },
+      effects: { fatigue: 10, intelligenceXp: 2, happiness: 2 },
+      payCalc(state) {
+        var base = 30 + state.player.intelligence * 0.5 + Random.float(0, 25);
+        return Math.floor(base);
+      },
+      risk: {},
+    },
+    // ====== 物流园区 ======
+    {
+      id: "package_delivery",
+      name: "快递配送",
+      desc: "在物流园接单送快递，跑得勤就赚得多。有电动车更高效。",
+      icon: "📦",
+      location: "logistics_park",
+      requirements: { driving: 10, agility: 20, minAge: 18, maxAge: 45 },
+      effects: { fatigue: 30, agilityXp: 4, physiqueXp: 2 },
+      payCalc(state) {
+        var base =
+          55 +
+          state.player.agility * 0.3 +
+          (state.skills.driving?.level || 0) * 0.8 +
+          Random.float(0, 35);
+        return Math.floor(base);
+      },
+      risk: { injury: 0.03 },
+    },
+    {
+      id: "warehouse_worker",
+      name: "仓库管理员",
+      desc: "在物流园仓库做管理，货物入库出库登记。稳定但枯燥。",
+      icon: "📋",
+      location: "logistics_park",
+      requirements: { intelligence: 20, physique: 20, minAge: 20, maxAge: 55 },
+      effects: { fatigue: 16, intelligenceXp: 2, physiqueXp: 2 },
+      payCalc(state) {
+        return Math.floor(
+          50 + state.player.intelligence * 0.2 + Random.float(0, 25),
+        );
+      },
+      risk: { injury: 0.01 },
+    },
+    {
+      id: "logistics_sorting",
+      name: "物流分拣",
+      desc: "在物流园流水线分拣包裹。不需要技术，体力活计件算钱。",
+      icon: "📦",
+      location: "logistics_park",
+      requirements: { agility: 15, minAge: 18, maxAge: 50 },
+      effects: { fatigue: 25, agilityXp: 2 },
+      payCalc(state) {
+        return Math.floor(
+          35 + state.player.agility * 0.2 + Random.float(0, 25),
+        );
+      },
+      risk: { injury: 0.02 },
+    },
+    // ====== 汽车城 ======
+    {
+      id: "auto_repair",
+      name: "汽车维修",
+      desc: "在4S店或汽修厂修车。技术活，车子越修越值钱。",
+      icon: "🔧",
+      location: "auto_city",
+      requirements: { repair: 25, physique: 20, minAge: 20, maxAge: 55 },
+      effects: { fatigue: 28, repairXp: 6, physiqueXp: 2 },
+      payCalc(state) {
+        var base =
+          70 + (state.skills.repair?.level || 0) * 2.0 + Random.float(0, 50);
+        return Math.floor(base);
+      },
+      risk: { injury: 0.04 },
+    },
+    {
+      id: "car_sales",
+      name: "汽车销售",
+      desc: "在4S店卖车。口才好+懂车，提成高但压力大。",
+      icon: "🚗",
+      location: "auto_city",
+      requirements: { sales: 20, mental: 25, minAge: 22, maxAge: 45 },
+      effects: { fatigue: 14, happiness: 8, salesXp: 5, fame: 2 },
+      payCalc(state) {
+        var base =
+          45 +
+          (state.skills.sales?.level || 0) * 2.5 +
+          (state.player.fame || 0) * 0.3 +
+          Random.float(0, 80);
+        return Math.floor(base);
+      },
+      risk: {},
+    },
+    // ====== 花鸟市场 ======
+    {
+      id: "pet_sitter",
+      name: "宠物护理",
+      desc: "在花鸟市场帮人照看宠物，洗澡剪毛遛狗。喜欢动物的人会开心。",
+      icon: "🐾",
+      location: "flower_bird_market",
+      requirements: { mental: 20, minAge: 18, maxAge: 55 },
+      effects: { fatigue: 12, happiness: 10, mental: 2 },
+      payCalc(state) {
+        return Math.floor(40 + state.player.mental * 0.3 + Random.float(0, 30));
+      },
+      risk: { injury: 0.01 },
     },
     // ──────── 注释掉的占位符工作已全部移除（v3.1 审查，约 500 行死代码） ────────
   ];

@@ -25,15 +25,13 @@
       title: "城管来了！",
       story:
         "你正低头给客人找余钱，旁边卖水果的老李突然脸色一变，朝你使了个眼色。\\n\\n你顺着他的目光看过去——一辆城管的执法车正缓缓从街角拐过来。\\n\\n周围的小贩开始手忙脚乱地收摊。你心跳加速，脑子里飞速盘算。",
+      // [conditions→triggers]
+      triggers: {
+        minDay: 20,
+        excludeFlags: ["_chengguanRaidPanicSeen"],
+      },
       conditions: function (st) {
-        // 热度 ≥ 60 才触发（高张力阈值），且不在冷却期
-        return (
-          st.player.phase === "street" &&
-          st.chengguan &&
-          (st.chengguan.heat || 0) >= 60 &&
-          st.player.day >= 20 &&
-          !st.flags._chengguanRaidPanicSeen
-        );
+        return st.chengguan && (st.chengguan.heat || 0) >= 60;
       },
       probability: 0.15,
       repeatable: false,

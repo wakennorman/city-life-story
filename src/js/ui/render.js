@@ -2838,14 +2838,36 @@ function createActionCard(action, state) {
     isNew = ActionSort.isActionNew(action.id, state);
   }
 
+  // ====== 效果描述字段：智能区分"金钱收益"和"属性效果" ======
+  function isMoneyValue(v) {
+    if (!v) return false;
+    // 以数字开头、含 ¥、或形如 "0~100" "0或50万" 视为金钱
+    return /^[\d¥\-]/.test(v) || /^\d+(~|或)/.test(v);
+  }
+
+  var payHtml = "";
+  if (action.payEstimate) {
+    if (isMoneyValue(action.payEstimate)) {
+      payHtml = `<span class="pay-estimate">💰 ¥${action.payEstimate}</span>`;
+    } else {
+      payHtml = `<span class="effect-estimate">📈 ${action.payEstimate}</span>`;
+    }
+  }
+
+  // effectEstimate 新字段：纯属性效果（优先于 payEstimate 中的属性描述）
+  var effectHtml = "";
+  if (action.effectEstimate) {
+    effectHtml = `<span class="effect-estimate">📈 ${action.effectEstimate}</span>`;
+  }
+
   card.innerHTML = `
     <div class="card-icon">${action.icon}</div>
     <div class="card-title">${action.name}${isNew ? ' <span class="badge-new">✨新</span>' : ""}</div>
     <div class="card-desc">${action.desc}</div>
     <div class="card-meta">
       ${action.apCost ? `<span class="ap-cost">⚡${action.apCost}</span>` : ""}
-      ${action.payEstimate ? `<span class="pay-estimate">💰 ¥${action.payEstimate}</span>` : ""}
       ${action.costEstimate ? `<span class="cost-estimate">💸 ¥${action.costEstimate}</span>` : ""}
+      ${effectHtml}${payHtml}
       ${action.reqFail ? `<span class="req-fail">⚠ ${action.reqFail}</span>` : ""}
     </div>
     ${action.pricePreview ? `<div class="price-preview">${action.pricePreview}</div>` : ""}

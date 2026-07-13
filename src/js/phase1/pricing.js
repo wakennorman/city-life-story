@@ -81,6 +81,47 @@ const LOCATION_GOODS_TAGS = {
     scarce: ["electronics", "clothing", "cigarettes"],
     desc: "食材批发价，日用品偏贵",
   },
+  // ====== 新激活8个地点 ======
+  luxury_community: {
+    specialties: ["clothing", "electronics", "cigarettes"],
+    scarce: ["daily_use", "fruits", "vegetables"],
+    desc: "高档商品好卖，生活必需品稀缺",
+  },
+  old_community: {
+    specialties: ["daily_use", "vegetables", "instant_noodles"],
+    scarce: ["electronics", "clothing", "cigarettes"],
+    desc: "日用品便宜，高档商品不好卖",
+  },
+  court: {
+    specialties: [],
+    scarce: [],
+    desc: "司法场所，商品交易有限",
+  },
+  gym: {
+    specialties: ["water", "snacks"],
+    scarce: ["electronics", "clothing", "cigarettes"],
+    desc: "运动饮料和水好卖，适合摆摊",
+  },
+  internet_cafe: {
+    specialties: ["snacks", "instant_noodles", "water"],
+    scarce: ["vegetables", "fruits", "clothing"],
+    desc: "零食泡面好卖，健康食品稀缺",
+  },
+  logistics_park: {
+    specialties: ["scrap_paper", "water", "instant_noodles"],
+    scarce: ["fruits", "vegetables", "electronics"],
+    desc: "快递纸箱废料多，食品稀缺",
+  },
+  auto_city: {
+    specialties: ["electronics", "clothing"],
+    scarce: ["scrap_metal", "vegetables", "fruits"],
+    desc: "汽车城消费力强，电子产品好卖",
+  },
+  flower_bird_market: {
+    specialties: ["vegetables", "fruits", "snacks"],
+    scarce: ["electronics", "cigarettes", "scrap_metal"],
+    desc: "花鸟市场休闲人群多，食品好卖",
+  },
 };
 
 /** 获取商品在某地的供需标签 (specialty/scarce/normal) */

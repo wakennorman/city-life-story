@@ -68,7 +68,8 @@ var LOCATION_EXTRA_ACTIONS = [
     condition: function (st) {
       return st.resources.cash >= 10;
     },
-    payEstimate: "-10",
+    costEstimate: 10,
+    effectEstimate: "技能XP+19",
     handler: function (st) {
       st.resources.cash -= 10;
       if (st.skills) {
@@ -96,6 +97,7 @@ var LOCATION_EXTRA_ACTIONS = [
       return true;
     },
     payEstimate: "60~80",
+    effectEstimate: "心情-10",
     handler: function (st) {
       var earn = 60 + Random.int(0, 20);
       st.resources.cash += earn;
@@ -119,6 +121,7 @@ var LOCATION_EXTRA_ACTIONS = [
       return st.player.intel >= 60;
     },
     payEstimate: "0~∞",
+    effectEstimate: "25%工作机会, 40%小费¥50",
     handler: function (st) {
       if (Random.chance(0.25)) {
         st.flags._techParkLead = true;
@@ -151,6 +154,7 @@ var LOCATION_EXTRA_ACTIONS = [
       return st.status && st.status.health >= 60;
     },
     payEstimate: "200",
+    effectEstimate: "健康+10, 疲劳+5",
     handler: function (st) {
       st.resources.cash += 200;
       st.status.health = Math.min(100, (st.status.health || 80) + 10);
@@ -172,6 +176,7 @@ var LOCATION_EXTRA_ACTIONS = [
       return true;
     },
     payEstimate: "0",
+    effectEstimate: "体质+3, 疲劳-10",
     handler: function (st) {
       st.player.physique = Math.min(100, (st.player.physique || 50) + 3);
       st.needs.fatigue = Math.max(0, (st.needs.fatigue || 0) - 10);
@@ -191,7 +196,8 @@ var LOCATION_EXTRA_ACTIONS = [
     condition: function (st) {
       return st.resources.cash >= 5;
     },
-    payEstimate: "-5",
+    costEstimate: 5,
+    effectEstimate: "技能XP+9~20",
     handler: function (st) {
       st.resources.cash -= 5;
       var xpGain = Math.round(Random.int(8, 18) * 1.15);
@@ -219,7 +225,8 @@ var LOCATION_EXTRA_ACTIONS = [
     condition: function (st) {
       return st.resources.cash >= 10;
     },
-    payEstimate: "-10",
+    costEstimate: 10,
+    effectEstimate: "心情+20, 道德+1",
     handler: function (st) {
       st.resources.cash -= 10;
       st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 20);
@@ -243,6 +250,7 @@ var LOCATION_EXTRA_ACTIONS = [
       return st.skills && st.skills.social && st.skills.social.level >= 20;
     },
     payEstimate: "100~300",
+    effectEstimate: "社交XP+5",
     handler: function (st) {
       var earn = 100 + Random.int(0, 200);
       st.resources.cash += earn;

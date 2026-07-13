@@ -26,11 +26,10 @@
       title: "老家的电话",
       story:
         "深夜手机震了三下，是爸爸打来的。他的声音很哑：「你妈晕倒了，县医院查出来是胆结石，医生说要做手术……至少要准备两万块。」\\n\\n电话那头沉默了几秒：「家里能凑八千，剩下的……你看看能不能想想办法。」",
+      // [已审查] 含 OR 逻辑（motherIll || firstTime），保留 conditions
       conditions: function (st) {
-        // 家庭系统已初始化 + 母亲健康非"健康"状态 + 玩家有足够天数发展
         if (!st.family || !st.family.parents || !st.family.parents.mother)
           return false;
-        // 母亲已患病 或 随机在长期存活后触发（首次发现病情）
         var motherIll = st.family.parents.mother.health !== "healthy";
         var firstTime =
           st.player.day >= 60 &&
@@ -109,16 +108,17 @@
       title: "房贷催收短信",
       story:
         "手机弹出一条短信：「您的住房贷款已逾期15天，剩余本金+罚息合计¥86,420。请尽快还款以免影响征信。如有困难请联系客户经理协商。」\\n\\n你盯着那个数字，想起这是爸妈掏了首付、你一直在供的那套房子。",
+      // [conditions→triggers]
+      triggers: {
+        minDay: 90,
+        excludeFlags: ["_mortgageOverdueSeen"],
+      },
       conditions: function (st) {
-        // 有房贷 + 现金不足以覆盖（触发困境感）+ 天数足够
         return (
-          st.player.phase === "street" &&
           st.family &&
           st.family.mortgage &&
           st.family.mortgage.remainingDays > 0 &&
-          st.resources.cash < (st.family.mortgage.monthlyPayment || 5000) &&
-          st.player.day >= 90 &&
-          !st.flags._mortgageOverdueSeen
+          st.resources.cash < (st.family.mortgage.monthlyPayment || 5000)
         );
       },
       probability: 0.07,
@@ -194,15 +194,17 @@
       title: "爸爸的六十大寿",
       story:
         "家族群里沸腾了。大伯发了语音：「你爸六十大寿，今年无论如何要回来！」姑姑晒出了饭店定好的照片。\\n\\n你在群里打了几个字又删掉。回一趟家，路费加礼品至少三千，请三天假还要少赚好几百。但不回去……你不敢想隔壁邻居会怎么说。",
+      // [conditions→triggers]
+      triggers: {
+        minDay: 120,
+        excludeFlags: ["_fatherBirthdaySeen"],
+      },
       conditions: function (st) {
         return (
-          st.player.phase === "street" &&
           st.family &&
           st.family.parents &&
           st.family.parents.father &&
-          st.family.parents.father.age >= 58 &&
-          st.player.day >= 120 &&
-          !st.flags._fatherBirthdaySeen
+          st.family.parents.father.age >= 58
         );
       },
       probability: 0.06,
@@ -291,13 +293,13 @@
       title: "母亲需要手术",
       story:
         "你接到老家电话，母亲血压持续升高，医生建议住院观察一周，费用大约¥5,000。\\n\\n你现在的公司手头比较宽裕，但你正在准备下一次市场推广，这笔钱如果拿去，营销计划就得延后。\\n\\n你犹豫了。公司是你的事业，母亲是你的根。",
+      // [conditions→triggers]
+      triggers: {
+        minAge: 25,
+        excludeFlags: ["_corpMotherSurgeryDone"],
+      },
       conditions: function (st) {
-        return (
-          st.corporate &&
-          st.corporate.funds >= 10000 &&
-          st.player.age >= 25 &&
-          !st.flags._corpMotherSurgeryDone
-        );
+        return st.corporate && st.corporate.funds >= 10000;
       },
       probability: 0.05,
       repeatable: false,
@@ -354,12 +356,15 @@
       title: "全家搬来城市",
       story:
         "公司发展到第五人，你终于觉得自己有能力了。爸妈主动打来电话：我们不想再拖累你，但如果你愿意，我们想搬来城市帮你带孩子、做家务。\\n\\n搬来城市意味着你要给他们租一套房，月租大约¥1,200。这是一笔固定开销，但有人分担家务，你每天可以多挣两个小时。\\n\\n这是一道关于家与成本的选择题。",
+      // [conditions→triggers]
+      triggers: {
+        excludeFlags: ["_corpFamilyRelocated"],
+      },
       conditions: function (st) {
         return (
           st.corporate &&
           (st.corporate.employees || 0) >= 5 &&
-          (st.corporate.level || 1) >= 2 &&
-          !st.flags._corpFamilyRelocated
+          (st.corporate.level || 1) >= 2
         );
       },
       probability: 0.04,
@@ -406,12 +411,15 @@
       title: "公司第一次分红",
       story:
         "公司月利润突破¥20,000，你可以开始给自己发分红了。但在此之前，你决定先给家里人打一笔钱。\\n\\n爸：你挣了这么多，给我们也分点。\\n\\n妈：你存着吧，买房用。\\n\\n你站在公司的办公室里，看着窗外的城市，突然意识到——你终于能让家人不再吃苦了。",
+      // [conditions→triggers]
+      triggers: {
+        excludeFlags: ["_corpFamilyDividend"],
+      },
       conditions: function (st) {
         return (
           st.corporate &&
           (st.corporate.level || 1) >= 3 &&
-          (st.corporate.monthlyProfit || 0) >= 20000 &&
-          !st.flags._corpFamilyDividend
+          (st.corporate.monthlyProfit || 0) >= 20000
         );
       },
       probability: 0.06,

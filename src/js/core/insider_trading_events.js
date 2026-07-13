@@ -29,19 +29,19 @@
       title: "深夜一条语音",
       story:
         "凌晨1点，手机亮了。是一个做投行朋友发的语音，声音压得极低：「明天某科技股开盘前会有个大消息……你看着办，我什么都没说。」\\n\\n你没有回复。翻开了股票账户，盯着那几只熟悉的代码。",
+      // [conditions→triggers]
+      triggers: {
+        minDay: 60,
+        excludeFlags: ["_stockTipActive"],
+      },
       conditions: function (st) {
-        // 有投资行为 + 天数足够 + 非冷却期
         if (
           !st.investment ||
           !st.investment.stockHoldings ||
           st.investment.stockHoldings.length === 0
         )
           return false;
-        return (
-          st.player.day >= 60 &&
-          !st.flags._stockTipActive &&
-          Random.chance(0.025)
-        );
+        return Random.chance(0.025);
       },
       probability: 0.03,
       repeatable: true,
@@ -196,20 +196,19 @@
       title: "一份没公开的财报",
       story:
         "你在一家咖啡馆等朋友，旁边坐着一个西装革履的中年人，低声讲电话：「……对，这次业绩比预期好了三倍，但还没公告……」\\n\\n你端着咖啡的手停住了。他说的代码你正好持有——是一家新能源公司。\\n\\n距离正式公告还有三天。",
+      // [conditions→triggers]
+      triggers: {
+        minDay: 150,
+        excludeFlags: ["_earningsLeakActive"],
+      },
       conditions: function (st) {
-        // 持有新能源/科技股 + 天数足够 + 非冷却期
         if (!st.investment || !st.investment.stockHoldings) return false;
         var hasRelevant = st.investment.stockHoldings.some(function (h) {
           return (
             ["TSLA", "BYD", "CATL", "NIO", "XPEV", "LI"].indexOf(h.symbol) >= 0
           );
         });
-        return (
-          hasRelevant &&
-          st.player.day >= 150 &&
-          !st.flags._earningsLeakActive &&
-          Random.chance(0.015)
-        );
+        return hasRelevant && Random.chance(0.015);
       },
       probability: 0.02,
       repeatable: true,
@@ -339,17 +338,19 @@
       title: "一封匿名邮件",
       story:
         "电脑里收到一封没有发件人的邮件，标题只有两个字：「警告」。\\n\\n内容是一段你的交易记录截图——最近三天，你买入的三只股票在交易后全部大涨，买入时机精准得不像巧合。\\n\\n最后一行字：「我们知道你在玩什么。收手。」",
+      // [conditions→triggers]
+      triggers: {
+        minDay: 200,
+        excludeFlags: ["_auditWarned"],
+      },
       conditions: function (st) {
-        // 有过内幕交易记录 + 总盈利较高
         if (
           !st.insiderTrading ||
           !st.insiderTrading.tradeLog ||
           st.insiderTrading.tradeLog.length === 0
         )
           return false;
-        return (
-          st.player.day >= 200 && !st.flags._auditWarned && Random.chance(0.02)
-        );
+        return Random.chance(0.02);
       },
       probability: 0.02,
       repeatable: false,
@@ -425,14 +426,16 @@
       title: "一个陌生人的好友申请",
       story:
         "微信弹出一条新的好友申请：「兄弟，我这里有独家消息群，每天推荐几只股，跟着赚。」\\n\\n你点了通过。对方立刻发了一个群链接，附言：「先交¥500进群费，群里有老师带路，一个月回本。」\\n\\n你看了看群简介：「XX投资交流群（仅限内部人士）」",
+      // [conditions→triggers]
+      triggers: {
+        minDay: 100,
+        excludeFlags: ["_joinedInsiderGroup"],
+      },
       conditions: function (st) {
-        // 有投资经验 + 天数足够 + 非已加入过
         return (
-          st.player.day >= 100 &&
           st.investment &&
           st.investment.stockHoldings &&
           st.investment.stockHoldings.length > 0 &&
-          !st.flags._joinedInsiderGroup &&
           Random.chance(0.015)
         );
       },
@@ -497,20 +500,19 @@
       title: "一个做金融的老同学",
       story:
         "初中同学群里突然热闹了。一个叫王浩的同学晒了张合照——背景是陆家嘴某栋写字楼。\\n\\n他私聊你：「好久不见了。我现在做投行，手上有些项目提前知道。我们可以合作——我提供信息，你负责操作。」\\n\\n「当然，有风险，也有规矩。分成按四六来。」",
+      // [conditions→triggers]
+      triggers: {
+        minDay: 200,
+        excludeFlags: ["_insiderNetwork"],
+      },
       conditions: function (st) {
-        // 有投资经验 + 有持仓 + 总盈利超过一定阈值 + 天数足够
         if (
           !st.investment ||
           !st.investment.stockHoldings ||
           st.investment.stockHoldings.length === 0
         )
           return false;
-        return (
-          st.player.day >= 200 &&
-          (st.resources.totalEarned || 0) >= 20000 &&
-          !st.flags._insiderNetwork &&
-          Random.chance(0.01)
-        );
+        return (st.resources.totalEarned || 0) >= 20000 && Random.chance(0.01);
       },
       probability: 0.01,
       repeatable: false,

@@ -37,11 +37,13 @@ const ILLNESSES = {
     icon: "🤧",
     severity: 1,
     naturalCureDays: [3, 5],
-    triggerHabit: { lowHygieneStreak: 7, highFatigueStreak: 3 },
-    triggerChance: 0.5,
-    symptom: { health: -1, fatigue: 5 },
-    treatCost: { pharmacy: 80, hospital: 300 },
-    desc: "鼻塞咳嗽，没力气干活。卫生不好+疲劳就容易着凉。",
+    triggerHabit: { lowHygieneStreak: 5, highFatigueStreak: 3 },
+    triggerChance: 0.45,
+    // 细化：增加季节倾向（冬春多发）
+    seasonInfluence: { spring: 1.3, summer: 0.6, autumn: 0.9, winter: 1.5 },
+    symptom: { health: -1, fatigue: 5, appetiteDown: true },
+    treatCost: { pharmacy: 60, hospital: 200 },
+    desc: "鼻塞咳嗽流鼻涕，浑身没劲。换季着凉+卫生不好就容易中招。多喝热水，药店买点药就好。",
     evolvesTo: ["pneumonia"],
   },
   stomach_inflammation: {
@@ -54,7 +56,7 @@ const ILLNESSES = {
     triggerChance: 0.45,
     symptom: { health: -2, hunger: -3 },
     treatCost: { pharmacy: 150, hospital: 600 },
-    desc: "肚子绞痛、拉肚子，吃啥都没胃口。垃圾食品吃多了。",
+    desc: "肚子绞痛、拉肚子，吃啥都没胃口。垃圾食品吃多了，反复发作会拖成慢性胃炎。",
     evolvesTo: ["gastritis"],
   },
   malnutrition: {
@@ -76,12 +78,27 @@ const ILLNESSES = {
     name: "失眠症",
     icon: "🌙",
     severity: 2,
-    naturalCureDays: [10, 20],
-    triggerHabit: { lateNightActions: 15, lowHappinessStreak: 5 },
+    naturalCureDays: [7, 14],
+    triggerHabit: {
+      lateNightActions: 10,
+      lowHappinessStreak: 5,
+      highFatigueStreak: 5,
+    },
     triggerChance: 0.4,
-    symptom: { fatigueRecoveryMult: 0.6, mentalDebuff: 5 },
-    treatCost: { pharmacy: 100, hospital: 400 },
-    desc: "翻来覆去睡不着，第二天精神涣散。夜生活太多+心情差。",
+    // 细化：渐变触发——连续熬夜越多概率越大
+    graduatedTrigger: {
+      baseChance: 0.15,
+      perUnit: { lateNightActions: 0.02, highFatigueStreak: 0.03 },
+      maxChance: 0.6,
+    },
+    symptom: {
+      fatigueRecoveryMult: 0.65,
+      mentalDebuff: 4,
+      fatigue: 3,
+      concentrationDown: true,
+    },
+    treatCost: { pharmacy: 80, hospital: 350, herbal: 50 },
+    desc: "翻来覆去睡不着，第二天头晕脑胀。夜生活太多+压力大，身体想休息脑子却停不下来。安神茶+规律作息可缓解。",
     evolvesTo: ["severe_insomnia"],
   },
   skin_infection: {
@@ -128,15 +145,36 @@ const ILLNESSES = {
   // ========== 慢性进阶疾病 ==========
   gastritis: {
     id: "gastritis",
+    name: "胃炎",
+    icon: "🩸",
+    severity: 3,
+    naturalCureDays: [10, 20],
+    triggerHabit: { stomach_inflammationCount: 2 },
+    triggerChance: 0.4,
+    symptom: { health: -2, hunger: -3, physiqueDebuff: 2, stomachPain: true },
+    treatCost: { pharmacy: 150, hospital: 600 },
+    desc: "肠胃炎反复发作拖出来的慢性胃炎。胃酸过多、烧心、饭后胀气。要注意饮食调理。",
+    evolvesTo: ["gastric_ulcer"],
+  },
+  gastric_ulcer: {
+    id: "gastric_ulcer",
     name: "胃溃疡",
     icon: "🩸",
     severity: 4,
     naturalCureDays: [20, 40],
-    triggerHabit: { stomach_inflammationCount: 3 },
-    triggerChance: 0.45,
-    symptom: { health: -3, hunger: -5, physiqueDebuff: 4 },
+    triggerHabit: { gastritisCount: 2 },
+    triggerChance: 0.4,
+    symptom: {
+      health: -4,
+      hunger: -6,
+      physiqueDebuff: 5,
+      stomachBleedingCh: 0.05,
+      bloodInStool: true,
+    },
     treatCost: { hospital: 3000 },
-    desc: "肠胃炎反复拖出来的慢性病。烧心反酸不停。",
+    desc: "慢性胃炎长期未愈发展为胃溃疡。胃壁破了口子，吃饭像受刑。偶发胃出血，需要住院治疗。",
+    isEvolution: true,
+    evolvesFrom: ["gastritis"],
     evolvesTo: ["stomach_cancer"],
   },
   hypertension: {
@@ -172,7 +210,7 @@ const ILLNESSES = {
     treatCost: { hospital: 15000 },
     desc: "胃溃疡长期未治愈演化成的恶性肿瘤。健康持续暴跌，食欲严重下降，偶有吐血。手术是唯一根治手段，费用高昂。",
     isEvolution: true,
-    evolvesFrom: ["gastritis"],
+    evolvesFrom: ["gastric_ulcer"],
   },
 
   // 抑郁 → 重度抑郁 → 自杀风险
@@ -295,12 +333,25 @@ const ILLNESSES = {
     icon: "🦴",
     severity: 3,
     naturalCureDays: [30, 60],
-    triggerHabit: { officeWorkDays: 100 },
-    triggerChance: 0.5,
-    symptom: { intelligenceDebuff: 2, fatigue: 2, neckPain: true },
-    treatCost: { pharmacy: 100, hospital: 300 },
-    desc: "长期办公室工作导致的职业病。智力轻微下降，每日疲劳增加。理疗可缓解。",
+    triggerHabit: { officeWorkDays: 80, lowHygieneStreak: 10 },
+    triggerChance: 0.45,
+    // 细化：分级症状，久坐累积伤害
+    graduatedTrigger: {
+      baseChance: 0.1,
+      perUnit: { officeWorkDays: 0.004 },
+      maxChance: 0.6,
+    },
+    symptom: {
+      intelligenceDebuff: 3,
+      fatigue: 3,
+      neckPain: true,
+      dizzinessCh: 0.03,
+      typingSpeedDown: true,
+    },
+    treatCost: { pharmacy: 80, hospital: 250, physiotherapy: 200 },
+    desc: "长期伏案工作导致的颈椎劳损。脖子僵硬、头晕手麻，严重时转头都疼。做颈椎操+理疗可缓解，但根治难。",
     isOccupational: true,
+    preventionHint: "每工作45分钟起来活动5分钟，做颈椎操",
   },
 
   // 糖尿病（新增慢性病）
@@ -318,10 +369,9 @@ const ILLNESSES = {
   },
 
   // ============================================================
-  // 待完成：新增疾病 — 参考《大多数》疾病系统 + 真实医学知识
-  // 实现提示：在 ILLNESSES 对象中追加，注意 triggerHabit 和 symptom 字段
+  // 流感（感冒演化链）
+  // 已细化：cold(感冒) → flu(流感) → pneumonia(肺炎)→ organ_failure(器官衰竭)
   // ============================================================
-  // TODO: 待实现 - 普通感冒（已有 cold，可细化）
 
   flu: {
     id: "flu",
@@ -337,7 +387,9 @@ const ILLNESSES = {
     evolvesTo: ["pneumonia"],
   },
 
-  // TODO: 待实现 - 失眠症（已有 insomnia，可细化）
+  // 焦虑症（失眠相关精神类疾病）
+  // 已细化：insomnia(失眠症) → severe_insomnia(重度失眠)
+  //         lowHappinessStreak → anxiety(焦虑症) → depression(抑郁)
 
   anxiety: {
     id: "anxiety",
@@ -367,7 +419,8 @@ const ILLNESSES = {
     evolvesTo: ["liver_cirrhosis"],
   },
 
-  // TODO: 待实现 - 颈椎病（已有 cervical_spondylosis）
+  // 腰椎间盘突出（职业病演化链）
+  // 已细化：cervical_spondylosis(颈椎病·伏案职业病) + herniated_disc(腰椎·体力劳动职业病)
 
   herniated_disc: {
     id: "herniated_disc",
@@ -387,7 +440,9 @@ const ILLNESSES = {
     desc: "长期体力劳动+年龄增长导致的腰椎间盘突出。走路变慢，弯腰困难。理疗+手术可选。",
   },
 
-  // TODO: 待实现 - 胃炎（已有 gastritis）
+  // 肾病（慢性病演化链）
+  // 已细化：gastritis(胃炎) → gastric_ulcer(胃溃疡) → stomach_cancer(胃癌)
+  //         hypertension(高血压) → kidney_disease(肾病)
 
   kidney_disease: {
     id: "kidney_disease",

@@ -26,15 +26,13 @@
       icon: "🏠",
       title: "王大婶的救急",
       story: `收工时王大婶急匆匆跑来："孩子，我家水管爆了，满屋子水！你能不能帮忙修修？"\n你看了看她焦急的样子，想起她平日里对你的照顾。`,
-      conditions: function (st) {
-        return (
-          st.relationships &&
-          st.relationships.aunt_wang &&
-          st.relationships.aunt_wang.met === true &&
-          (st.relationships.aunt_wang.affinity || 0) >= 30 &&
-          st.player.day > 10
-        );
+      // [conditions→triggers]
+      triggers: {
+        relationshipMet: "aunt_wang",
+        relationshipAffinityMin: [{ id: "aunt_wang", min: 30 }],
+        minDay: 11,
       },
+      // conditions removed — fully migrated to triggers
       choices: [
         {
           text: "🔧 帮她修水管",
@@ -334,12 +332,13 @@
       title: "暴跌中的机会",
       story:
         "股市暴跌的新闻铺天盖地。你路过证券营业部，看到大爷大妈们一脸愁容。\n但你想起来有人说过：'别人恐惧时我贪婪'。",
+      // [conditions→triggers] 部分迁移：day 移入 triggers，_worldParams/location 保留
+      triggers: { minDay: 21 },
       conditions: function (st) {
         if (!st._worldParams) return false;
         if (!st.trade) return false;
         return (
           st._worldParams.marketMood === "bearish" &&
-          st.player.day > 20 &&
           st.trade.currentLocation === "commercialDist"
         );
       },
@@ -403,13 +402,10 @@
       title: "地上有一沓钱",
       story:
         "路过ATM机时，你注意到地上有一沓现金——目测至少¥500。四下无人，监控似乎也坏了。\n你心跳加速。",
+      // [conditions→triggers] 部分迁移：day+flag 移入 triggers，location 检查保留
+      triggers: { minDay: 6, excludeFlags: ["_foundATMCash"] },
       conditions: function (st) {
-        return (
-          st.player.day > 5 &&
-          !st.flags._foundATMCash &&
-          st.trade &&
-          st.trade.currentLocation === "commercialDist"
-        );
+        return st.trade && st.trade.currentLocation === "commercialDist";
       },
       choices: [
         {
@@ -468,15 +464,13 @@
       icon: "🤝",
       title: "老周的废品渠道",
       story: `老周神秘兮兮地拉你到一边："我有个门路，一个工地的废铜废铁没人收。你要是能拉走，咱俩分。"\n你看了看老周认真的表情，这不像是开玩笑。`,
-      conditions: function (st) {
-        return (
-          st.relationships &&
-          st.relationships.old_zhou &&
-          st.relationships.old_zhou.met === true &&
-          (st.relationships.old_zhou.affinity || 0) >= 40 &&
-          st.player.day > 15
-        );
+      // [conditions→triggers] 全量迁移
+      triggers: {
+        relationshipMet: "old_zhou",
+        relationshipAffinityMin: [{ id: "old_zhou", min: 40 }],
+        minDay: 16,
       },
+      // [删除] conditions 全量迁移至 triggers
       choices: [
         {
           text: "🚶 去工地拉废品",
@@ -547,15 +541,15 @@
       title: "雾里的价签",
       story:
         "今早雾霾特别重，批发市场的电子价牌都看不清。你走近才发现好几家的标价还停留在昨天的低价——商户自己也看不清新价格该挂多少。\n\n四下里来进货的人不多，机会窗口可能只有这一小会儿。",
+      // [conditions→triggers] 部分迁移：phase+weather+day 移入 triggers，location 保留
+      triggers: {
+        phase: "street",
+        weather: ["foggy", "heavy_smog"],
+        minDay: 20,
+      },
       conditions: function (st) {
         var curLoc = st.trade && st.trade.currentLocation;
-        var w = st.weather && st.weather.current;
-        return (
-          st.player.phase === "street" &&
-          curLoc === "wholesaleMarket" &&
-          (w === "foggy" || w === "heavy_smog") &&
-          st.player.day >= 20
-        );
+        return curLoc === "wholesaleMarket";
       },
       probability: 0.06,
       repeatable: true,
@@ -697,17 +691,16 @@
       title: "王大婶的账本",
       story:
         "你帮王大婶搬柜子时，她那个黑皮账本不小心散开了——里面不仅记着每家的房租，还密密麻麻记着这些年每个商户给她的「推荐费」和「茶水钱」。\n\n她慌忙收起来，脸色不太自然：「这个……你看错了。」",
+      // [conditions→triggers] 部分迁移：phase+relationship+day 移入 triggers，discovered 保留
+      triggers: {
+        phase: "street",
+        relationshipMet: "aunt_wang",
+        relationshipAffinityMin: [{ id: "aunt_wang", min: 50 }],
+        minDay: 60,
+      },
       conditions: function (st) {
         var rel = st.relationships && st.relationships.aunt_wang;
-        return (
-          st.player.phase === "street" &&
-          rel &&
-          rel.met &&
-          (rel.affinity || 0) >= 50 &&
-          rel.discovered &&
-          !rel.discovered._ledgerSecret &&
-          st.player.day >= 60
-        );
+        return rel && rel.discovered && !rel.discovered._ledgerSecret;
       },
       probability: 0.04,
       repeatable: false,
@@ -770,14 +763,14 @@
       title: "城里的老面孔",
       story:
         "你在常去的早餐摊排队，老板笑着多给你加了一勺：「老熟人了吧？我看你从这条街摆到那边，挺不容易的。」\n\n旁边新来的打工仔打量着你，那种眼神你很熟悉——两年前你也是这样看别人的。\n\n这座城市开始记住你了。",
+      // [conditions→triggers] 部分迁移：phase+day+flag 移入 triggers，totalEarned/fame 保留
+      triggers: {
+        phase: "street",
+        minDay: 100,
+        excludeFlags: ["_veteranWelcomeSeen"],
+      },
       conditions: function (st) {
-        return (
-          st.player.phase === "street" &&
-          (st.resources.totalEarned || 0) >= 20000 &&
-          st.player.day >= 100 &&
-          st.player.fame >= 15 &&
-          !st.flags._veteranWelcomeSeen
-        );
+        return (st.resources.totalEarned || 0) >= 20000 && st.player.fame >= 15;
       },
       probability: 0.05,
       repeatable: false,
@@ -918,8 +911,9 @@
         "气象台发出高温红色预警，室外温度超过40度。\\n" +
         "工地的工友说：「今天这天气，干一小时累得跟驴一样。」\\n" +
         "但包工头说工期紧，今天必须赶进度。",
+      // [conditions→triggers] 部分迁移：phase+weather+day 移入 triggers，employment 检查保留
+      triggers: { phase: "street", weather: "heatwave", minDay: 30 },
       conditions: function (st) {
-        var w = st.weather && st.weather.current;
         var isOutdoor =
           st.employment &&
           st.employment.currentJob &&
@@ -930,12 +924,7 @@
             "street_vending_food",
             "sister_zhang_vending",
           ].includes(st.employment.currentJob.id);
-        return (
-          st.player.phase === "street" &&
-          w === "heatwave" &&
-          isOutdoor &&
-          st.player.day >= 30
-        );
+        return isOutdoor;
       },
       probability: 0.1,
       repeatable: false,
@@ -1419,8 +1408,10 @@
       name: "公司裁员风波",
       icon: "📉",
       phase: "corporate",
+      // [conditions→triggers] 部分迁移：day 移入 triggers，career 检查保留
+      triggers: { minDay: 91 },
       conditions: function (st) {
-        return st.career && st.career.currentJob && st.player.day > 90;
+        return st.career && st.career.currentJob;
       },
       probability: 0.015,
       repeatable: true,
@@ -1503,9 +1494,9 @@
       name: "经济下行周期",
       icon: "📉",
       phase: "street",
-      conditions: function (st) {
-        return st.player.day > 200 && st.resources.cash > 50000;
-      },
+      // [conditions→triggers] 全量迁移
+      triggers: { minDay: 201, minCash: 50001 },
+      // [删除] conditions 全量迁移至 triggers
       probability: 0.02,
       repeatable: false,
       story:
@@ -1585,12 +1576,9 @@
       name: "资产核查通知",
       icon: "🏛️",
       phase: "street",
-      conditions: function (st) {
-        return (
-          st.player.day > 300 &&
-          st.resources.cash + (st.resources.bankBalance || 0) > 500000
-        );
-      },
+      // [conditions→triggers] 全量迁移
+      triggers: { minDay: 301, minCash: 500001 },
+      // [删除] conditions 全量迁移至 triggers
       probability: 0.04,
       repeatable: true,
       story:
@@ -1729,16 +1717,14 @@
       name: "王大婶的租房信息",
       icon: "🏠",
       phase: "street",
-      conditions: function (st) {
-        var rel = st.relationships && st.relationships.aunt_wang;
-        return (
-          rel &&
-          rel.met &&
-          rel.affinity >= 40 &&
-          st.player.day >= 30 &&
-          st.player.day <= 90
-        );
+      // [conditions→triggers] 全量迁移
+      triggers: {
+        relationshipMet: "aunt_wang",
+        relationshipAffinityMin: [{ id: "aunt_wang", min: 40 }],
+        minDay: 30,
+        maxDay: 90,
       },
+      // [删除] conditions 全量迁移至 triggers
       probability: 0.03,
       repeatable: false,
       story:
@@ -2136,10 +2122,13 @@
       name: "老周的废品大单",
       icon: "♻️",
       phase: "street",
-      conditions: function (st) {
-        var rel = st.relationships && st.relationships.old_zhou;
-        return rel && rel.met && rel.affinity >= 60 && st.player.day > 120;
+      // [conditions→triggers] 全量迁移
+      triggers: {
+        relationshipMet: "old_zhou",
+        relationshipAffinityMin: [{ id: "old_zhou", min: 60 }],
+        minDay: 121,
       },
+      // [删除] conditions 全量迁移至 triggers
       probability: 0.03,
       repeatable: false,
       story:

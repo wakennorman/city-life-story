@@ -18,14 +18,11 @@
       title: "投资圈风声",
       story:
         "公司茶水间里，几个同事在低声讨论一家叫'智远科技'的创业公司，说他们拿到了一家大机构的战略投资，估值翻了五倍。有人暗示说这个消息还没公开，但内部人士已经在悄悄买入。",
+      // [conditions→triggers]
+      triggers: { minDay: 30, excludeFlags: ["_insiderRumorSeen"] },
       conditions: function (st) {
-        return (
-          st.player.phase === "corporate" &&
-          st.player.day >= 30 &&
-          st.player.corporate &&
-          st.player.corporate.kpi >= 20 &&
-          !st.flags._insiderRumorSeen
-        );
+        // [已审查] 部分保留：corporate.kpi 无 trigger 等价字段
+        return st.player.corporate && st.player.corporate.kpi >= 20;
       },
       choices: [
         {
@@ -362,17 +359,18 @@
     {
       id: "corp_overtime",
       _isChainEvent: false,
-      conditions: function (st) {
-        // [自洽修复] st.needs.health 不存在（state.needs 无 health 字段），改为 st.status.health
-        return (
-          st.player.day >= 20 && ((st.status && st.status.health) || 100) >= 25
-        );
-      },
       phase: "corporate",
       icon: "🌙",
       title: "老板要求周末加班",
       story:
         "领导突然在群里说：项目紧急，周末全员加班！完成有奖励，但确实很累。",
+      // [conditions→triggers]
+      triggers: { minDay: 20 },
+      conditions: function (st) {
+        // [自洽修复] st.needs.health 不存在（state.needs 无 health 字段），改为 st.status.health
+        // [已审查] 部分保留：health >= 25 无 trigger 等价字段
+        return ((st.status && st.status.health) || 100) >= 25;
+      },
       choices: [
         {
           text: "💪 咬牙加班",
@@ -463,16 +461,17 @@
     {
       id: "corp_credit",
       _isChainEvent: false,
-      conditions: function (st) {
-        return (
-          st.player.day >= 30 && (st.player.corporate.popularity || 0) >= 20
-        );
-      },
       phase: "corporate",
       icon: "🏆",
       title: "同事让你挂名项目",
       story:
         "一个关系不错的同事私下找你：他的项目快黄了，想把你的名字加进去当共同负责人，救他一命。",
+      // [conditions→triggers]
+      triggers: { minDay: 30 },
+      conditions: function (st) {
+        // [已审查] 部分保留：corporate.popularity 无 trigger 等价字段
+        return (st.player.corporate.popularity || 0) >= 20;
+      },
       choices: [
         {
           text: "🤝 帮一把",
@@ -545,14 +544,13 @@
     {
       id: "corp_complaint",
       _isChainEvent: false,
-      conditions: function (st) {
-        return st.player.day >= 15;
-      },
       phase: "corporate",
       icon: "😡",
       title: "客户无理投诉",
       story:
         "客户打电话过来骂了 20 分钟，其实根本不是你的错，但他指名要投诉到你头上。",
+      // [conditions→triggers]
+      triggers: { minDay: 15 },
       choices: [
         {
           text: "🙏 忍气吞声道歉",
@@ -625,17 +623,18 @@
     {
       id: "corp_headhunter",
       _isChainEvent: false,
-      conditions: function (st) {
-        return (
-          st.player.day >= 60 &&
-          ((st.player.fame || 0) >= 5 ||
-            (st.player.corporate.ability || 0) >= 30)
-        );
-      },
       phase: "corporate",
       icon: "📞",
       title: "猎头联系你",
       story: "一个猎头打电话来：另一家公司开出 50% 涨幅挖你，让你去面试。",
+      // [conditions→triggers]
+      triggers: { minDay: 60 },
+      conditions: function (st) {
+        // [已审查] 含 OR 逻辑，保留 conditions
+        return (
+          (st.player.fame || 0) >= 5 || (st.player.corporate.ability || 0) >= 30
+        );
+      },
       choices: [
         {
           text: "💼 去面试看看",
@@ -705,14 +704,13 @@
     {
       id: "corp_ppt",
       _isChainEvent: false,
-      conditions: function (st) {
-        return st.player.day >= 10;
-      },
       phase: "corporate",
       icon: "📊",
       title: "紧急汇报PPT",
       story:
         "VP明天要来部门听汇报，Leader让你今晚赶一份PPT出来。这东西做好了能加分，做砸了就尴尬了。",
+      // [conditions→triggers]
+      triggers: { minDay: 10 },
       choices: [
         {
           text: "🌙 熬夜做好",
@@ -790,14 +788,17 @@
     {
       id: "corp_leak",
       _isChainEvent: false,
-      conditions: function (st) {
-        return st.player.day >= 45 && (st.player.corporate.ability || 0) >= 15;
-      },
       phase: "corporate",
       icon: "💧",
       title: "线上事故追责",
       story:
         "生产环境出了个P0故障，影响了几万用户。现在在排查责任人...结果发现是你三个月前提交的代码导致的。",
+      // [conditions→triggers]
+      triggers: { minDay: 45 },
+      conditions: function (st) {
+        // [已审查] 部分保留：corporate.ability 无 trigger 等价字段
+        return (st.player.corporate.ability || 0) >= 15;
+      },
       choices: [
         {
           text: "🛠️ 主动认错并修复",
@@ -896,14 +897,13 @@
     {
       id: "corp_year_end",
       _isChainEvent: false,
-      conditions: function (st) {
-        return st.player.day >= 60;
-      },
       phase: "corporate",
       icon: "🎉",
       title: "公司年会",
       story:
         "又到了公司年会。今年抽奖环节据说有大奖，但更重要的是和同事领导社交的机会。",
+      // [conditions→triggers]
+      triggers: { minDay: 60 },
       choices: [
         {
           text: "🍻 主动社交敬酒",
@@ -973,18 +973,20 @@
     {
       id: "corp_mentor",
       _isChainEvent: false,
-      conditions: function (st) {
-        return (
-          st.player.day >= 60 &&
-          (st.player.corporate.ability || 0) >= 25 &&
-          (st.player.corporate.popularity || 0) >= 20
-        );
-      },
       phase: "corporate",
       icon: "🧑‍🏫",
       title: "新人请你当导师",
       story:
         "部门来了个实习生，Leader安排你当他 mentor。带新人费时间，但也是培养领导力的机会。",
+      // [conditions→triggers]
+      triggers: { minDay: 60 },
+      conditions: function (st) {
+        // [已审查] 部分保留：ability/popularity 无 trigger 等价字段
+        return (
+          (st.player.corporate.ability || 0) >= 25 &&
+          (st.player.corporate.popularity || 0) >= 20
+        );
+      },
       choices: [
         {
           text: "📖 认真带教",
@@ -1046,14 +1048,13 @@
     {
       id: "crypto_fomo",
       _isChainEvent: false,
-      conditions: function (st) {
-        return st.player.day >= 30 && (st.resources.cash || 0) >= 2000;
-      },
       phase: "corporate",
       icon: "🚀",
       title: "同事都在聊虚拟币",
       story:
         "茶水间里同事热火朝天：隔壁组的张三投了5万买狗狗币，上个月赚了20万！要不要也试试？",
+      // [conditions→triggers]
+      triggers: { minDay: 30, minCash: 2000 },
       choices: [
         {
           text: "🚀 跟风买(¥5000)",
@@ -1112,14 +1113,13 @@
     {
       id: "corp_stock_ipo",
       _isChainEvent: false,
-      conditions: function (st) {
-        return st.player.day >= 90 && (st.resources.cash || 0) >= 5000;
-      },
       phase: "corporate",
       icon: "🔔",
       title: "公司发内部股",
       story:
         "HR发全员邮件：公司即将IPO！老员工可按内部价认购员工股，每人最多认购500股。",
+      // [conditions→triggers]
+      triggers: { minDay: 90, minCash: 5000 },
       choices: [
         {
           text: "🔔 认购500股(¥4000)",
@@ -1180,14 +1180,13 @@
     {
       id: "trade_war_news",
       _isChainEvent: false,
-      conditions: function (st) {
-        return st.player.day >= 60;
-      },
       phase: "corporate",
       icon: "⚔️",
       title: "贸易摩擦升级",
       story:
         "新闻：贸易摩擦升级，芯片出口管制加码。芯原半导体和华威电子暴跌，但国产替代概念可能要起飞。",
+      // [conditions→triggers]
+      triggers: { minDay: 60 },
       choices: [
         {
           text: "📉 赶紧卖掉科技股",

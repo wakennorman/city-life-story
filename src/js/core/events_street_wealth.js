@@ -14,13 +14,11 @@
       title: "欠薪包工头的报复",
       story:
         "你维权的事传开了，但有人告诉你，那个被举报的包工头在外面放话，说要「收拾你」。今天你注意到有人一直跟着你转，不远不近。",
-      conditions: function (st) {
-        return (
-          st.player.phase === "street" &&
-          st.flags._foughtWageTheft &&
-          st.player.day >= 35 &&
-          !st.flags._wageThiefRevenge
-        );
+      // [conditions→triggers]
+      triggers: {
+        requireFlags: ["_foughtWageTheft"],
+        minDay: 35,
+        excludeFlags: ["_wageThiefRevenge"],
       },
       choices: [
         {
@@ -71,15 +69,12 @@
       title: "诚信声誉的叠加效应",
       story:
         "同时拒绝了假货、还帮工友维权，你的名声在这片地界出奇地好。今天一个在工商局上班的人主动找到你，说想帮你做点正规生意的注册手续……",
-      conditions: function (st) {
-        return (
-          st.player.phase === "street" &&
-          st.flags._refusedFakeGoods &&
-          st.flags._foughtWageTheft &&
-          st.player.fame >= 30 &&
-          st.player.day >= 40 &&
-          !st.flags._honestyCompound
-        );
+      // [conditions→triggers]
+      triggers: {
+        requireFlags: ["_refusedFakeGoods", "_foughtWageTheft"],
+        minFame: 30,
+        minDay: 40,
+        excludeFlags: ["_honestyCompound"],
       },
       choices: [
         {
@@ -120,13 +115,11 @@
       title: "诚实带来的意外机缘",
       story:
         "那个失主后来找到你，说上次你主动还钱这事她一直记着。她的丈夫在一家正规工厂做人事，正好在招熟练工……",
-      conditions: function (st) {
-        return (
-          st.player.phase === "street" &&
-          st.flags._returnedWallet &&
-          st.player.day >= 22 &&
-          !st.flags._walletKarmaGood
-        );
+      // [conditions→triggers]
+      triggers: {
+        requireFlags: ["_returnedWallet"],
+        minDay: 22,
+        excludeFlags: ["_walletKarmaGood"],
       },
       choices: [
         {
@@ -167,16 +160,12 @@
       title: "你成了打工人的主心骨",
       story:
         "帮了老刘、维过权、也替工友出过头。一群外来务工者聚在你常去的工地角落，说你是这里说话最算数的人，想推你做「工友互助小组」的组长。",
-      conditions: function (st) {
-        return (
-          st.player.phase === "street" &&
-          st.trade &&
-          st.trade.currentLocation === "construction" &&
-          st.flags._helpedCoworker &&
-          st.flags._foughtWageTheft &&
-          st.player.day >= 55 &&
-          !st.flags._laborNetworkGrown
-        );
+      // [conditions→triggers]
+      triggers: {
+        requireFlags: ["_helpedCoworker", "_foughtWageTheft"],
+        minDay: 55,
+        excludeFlags: ["_laborNetworkGrown"],
+        location: "construction",
       },
       choices: [
         {
@@ -215,14 +204,13 @@
       title: "撑不住了",
       story:
         "不知道是第几天了，你呆坐在出租屋的地板上，脑子一片空白。窗外霓虹还在闪，但什么声音都不像是给你的。那一刻你突然意识到：再这样下去，你真的会垮掉。",
+      // [conditions→triggers]
+      triggers: {
+        minDay: 10,
+        excludeFlags: ["_hadMentalCrisis"],
+      },
       conditions: function (st) {
-        return (
-          st.player.phase === "street" &&
-          (st.player.mental || 0) < 20 &&
-          st.player.day >= 10 &&
-          (st.housing.tier || 0) >= 1 &&
-          !st.flags._hadMentalCrisis
-        );
+        return (st.player.mental || 0) < 20 && (st.housing.tier || 0) >= 1;
       },
       choices: [
         {
@@ -276,13 +264,13 @@
       title: "社区心理援助",
       story:
         "路边一个小摊前贴着「免费心理援助，限今日」的纸条，旁边坐着个看起来很平和的中年人。你站住了，不知道该不该过去。",
+      // [conditions→triggers]
+      triggers: {
+        minDay: 5,
+        excludeFlags: ["_hadTherapy"],
+      },
       conditions: function (st) {
-        return (
-          st.player.phase === "street" &&
-          (st.player.mental || 0) < 35 &&
-          st.player.day >= 5 &&
-          !st.flags._hadTherapy
-        );
+        return (st.player.mental || 0) < 35;
       },
       choices: [
         {
@@ -318,13 +306,11 @@
       title: "那个早晨不一样",
       story:
         "不知道是某天的阳光太好，还是因为最近手头松了点，还是因为你真的适应了这座城市的节奏——你发现今天醒来，没有那种沉甸甸的东西压在胸口了。",
-      conditions: function (st) {
-        return (
-          st.player.phase === "street" &&
-          (st.player.mental || 0) >= 60 &&
-          st.flags._hadMentalCrisis &&
-          !st.flags._mentalRecoveryDone
-        );
+      // [conditions→triggers]
+      triggers: {
+        requireFlags: ["_hadMentalCrisis"],
+        minStat: { mental: 60 },
+        excludeFlags: ["_mentalRecoveryDone"],
       },
       choices: [
         {
@@ -350,14 +336,11 @@
       title: "巷子里的孩子",
       story:
         "你从批发市场回来，路过一条小巷，一个八九岁的孩子蹲在地上，脏兮兮的，手里攥着一个空饭盒。他抬头看见你，没有开口，只是盯着你的眼睛。",
-      conditions: function (st) {
-        return (
-          st.player.phase === "street" &&
-          st.trade &&
-          st.trade.currentLocation === "wholesaleMarket" &&
-          st.player.day >= 5 &&
-          !st.flags._childBeggaredSeen
-        );
+      // [conditions→triggers]
+      triggers: {
+        minDay: 5,
+        excludeFlags: ["_childBeggaredSeen"],
+        location: "wholesaleMarket",
       },
       choices: [
         {
@@ -409,12 +392,10 @@
       title: "工厂火警",
       story:
         "你在路边等人，突然听到旁边一栋老厂房里「嗡」的一声，浓烟冒了出来。厂里有工人，保安已经往外跑，但里面还有几个没出来。你手里没有工具，只有双手。",
-      conditions: function (st) {
-        return (
-          st.player.phase === "street" &&
-          st.player.day >= 10 &&
-          !st.flags._factoryFireSeen
-        );
+      // [conditions→triggers]
+      triggers: {
+        minDay: 10,
+        excludeFlags: ["_factoryFireSeen"],
       },
       choices: [
         {
@@ -465,14 +446,11 @@
       title: "工友的秘密",
       story:
         "你在工地休息时，无意间看到工友老马桌上的一份文件——是他被包工头拖欠工资的记录，金额不小，足够证明违法。他不知道你看见了，但你可以帮他，也可以不说。",
-      conditions: function (st) {
-        return (
-          st.player.phase === "street" &&
-          st.trade &&
-          st.trade.currentLocation === "construction" &&
-          st.player.day >= 15 &&
-          !st.flags._coworkerDocSeen
-        );
+      // [conditions→triggers]
+      triggers: {
+        minDay: 15,
+        excludeFlags: ["_coworkerDocSeen"],
+        location: "construction",
       },
       choices: [
         {
@@ -529,8 +507,9 @@
       title: "迷路的老人",
       story:
         "路口，一位老人站在那里，手里拿着一张纸条，四处张望。你走近一看，纸条上是一个地址——距离这里大概两公里，不算远。他的眼神有点茫然。",
-      conditions: function (st) {
-        return st.player.phase === "street" && !st.flags._helpedElderlyLost;
+      // [conditions→triggers]
+      triggers: {
+        excludeFlags: ["_helpedElderlyLost"],
       },
       choices: [
         {
@@ -579,14 +558,11 @@
       title: "地上的彩票",
       story:
         "你在公园散步，脚边踩到一张皱巴巴的彩票。拣起来一看——号码和今天的公示完全对上了。¥3800。你环顾四周，没人注意你，这地方人也不多。",
-      conditions: function (st) {
-        return (
-          st.player.phase === "street" &&
-          st.trade &&
-          st.trade.currentLocation === "park" &&
-          st.player.day >= 7 &&
-          !st.flags._foundLotteryTicket
-        );
+      // [conditions→triggers]
+      triggers: {
+        minDay: 7,
+        excludeFlags: ["_foundLotteryTicket"],
+        location: "park",
       },
       choices: [
         {
@@ -627,13 +603,13 @@
       title: "村长来电",
       story:
         "你的手机响了，屏幕上显示「村长」两个字。你在出租屋里接起来，对方开门见山：「你那5000多块钱，都欠了这么多天了。你现在在城里混得怎么样？什么时候还？」",
+      // [conditions→triggers]
+      triggers: {
+        minDay: 15,
+        excludeFlags: ["_debtWarningGiven"],
+      },
       conditions: function (st) {
-        return (
-          st.player.phase === "street" &&
-          (st.resources.villageDebt || 0) > 2000 &&
-          st.player.day >= 15 &&
-          !st.flags._debtWarningGiven
-        );
+        return (st.resources.villageDebt || 0) > 2000;
       },
       choices: [
         {

@@ -1490,7 +1490,18 @@ function startSandboxGame() {
       StateManager.addMessage(
         "⚙️ 沙盒模式开始" +
           (cfg.villageDebt > 0
-            ? "，欠村长¥" + cfg.villageDebt.toLocaleString() + "，日息" + ((cfg.difficulty === 'casual' ? 0.2 : cfg.difficulty === 'hard' ? 0.5 : cfg.difficulty === 'nightmare' ? 0.7 : 0.35).toFixed(2)) + "%。"
+            ? "，欠村长¥" +
+              cfg.villageDebt.toLocaleString() +
+              "，日息" +
+              (cfg.difficulty === "casual"
+                ? 0.2
+                : cfg.difficulty === "hard"
+                  ? 0.5
+                  : cfg.difficulty === "nightmare"
+                    ? 0.7
+                    : 0.35
+              ).toFixed(2) +
+              "%。"
             : "，自由探索。"),
         "event",
       );
@@ -3273,6 +3284,7 @@ function getAvailableActions(state) {
       desc: "找个地方坐坐，恢复一些疲劳。",
       icon: "😴",
       apCost: 15,
+      effectEstimate: "疲劳-18~33, 心情+5",
       handler: () => {
         const state = StateManager.getState();
         const isNewbie = state.player.day <= 10;
@@ -3309,6 +3321,7 @@ function getAvailableActions(state) {
       icon: "🍚",
       apCost: 10,
       costEstimate: 15,
+      effectEstimate: "饥饱+35, 心情+8",
       disabled: state.resources.cash < 8 ? true : false,
       handler: () => {
         const st = StateManager.getState();
@@ -3363,10 +3376,11 @@ function getAvailableActions(state) {
       id: "shower",
       category: "survival",
       name: "洗澡",
-      desc: "花8元去公共澡堂洗个澡。",
+      desc: "花8元去公共澡堂洗个澡，卫生+40。",
       apCost: 10,
       icon: "🚿",
       costEstimate: 8,
+      effectEstimate: "卫生+40",
       disabled: state.resources.cash < 8 ? true : false,
       handler: () => {
         const st = StateManager.getState();
@@ -3441,6 +3455,7 @@ function getAvailableActions(state) {
         icon: "🏥",
         apCost: 20,
         costEstimate: 50,
+        effectEstimate: "健康+40, 伤病清除",
         disabled: state.resources.cash < 50 ? true : false,
         handler: () => {
           const st = StateManager.getState();
@@ -3467,6 +3482,7 @@ function getAvailableActions(state) {
         desc: "花时间看书学习，提升技能等级。",
         icon: "📚",
         apCost: 15,
+        effectEstimate: "技能XP+20~49, 10%智力+1",
         handler: () => {
           const st = StateManager.getState();
           // 随机提升一个技能
@@ -3508,8 +3524,9 @@ function getAvailableActions(state) {
         id: "relax_park",
         category: "survival",
         name: "公园放松",
-        desc: "在公园散步、看风景，放松身心。",
+        desc: "在公园散步、看风景，放松身心。心情+20，疲劳-10。",
         icon: "🌳",
+        effectEstimate: "心情+20, 疲劳-10",
         handler: () => {
           const st = StateManager.getState();
           st.needs.happiness = Math.min(100, st.needs.happiness + 20);
@@ -4300,7 +4317,8 @@ function doStreetJob(job) {
   }
   state.employment.completedShifts[job.id] =
     (state.employment.completedShifts[job.id] || 0) + 1;
-  state.flags._completedShiftCount = (state.flags._completedShiftCount || 0) + 1; // 成就：第一份工作
+  state.flags._completedShiftCount =
+    (state.flags._completedShiftCount || 0) + 1; // 成就：第一份工作
 
   // 职业称号系统：同一工作累计天数解锁称号加成
   if (!state.flags._jobTitles) state.flags._jobTitles = {};

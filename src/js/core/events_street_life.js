@@ -14,15 +14,12 @@
       title: "团购大军杀到",
       story:
         "菜市场冷清了很多。王婶的菜被社区团购冲击——美团优选土豆¥0.99，进货价都不止。批发菜价跌了20%。等平台烧完钱会涨回来的。",
-      // [自洽修复] conditions 新增：王婶关系检查
-      conditions: function (st) {
-        return (
-          st.relationships &&
-          st.relationships.aunt_wang &&
-          st.relationships.aunt_wang.met
-        );
+      // [conditions→triggers]
+      triggers: {
+        minDay: 25,
+        excludeFlags: ["_communityGroupBuySeen"],
+        relationshipMet: "aunt_wang",
       },
-      triggers: { minDay: 25, excludeFlags: ["_communityGroupBuySeen"] },
       choices: [
         {
           text: "💰 趁低价囤菜等涨价",
@@ -76,6 +73,8 @@
       title: "满街的共享单车",
       story:
         "一夜之间三家共享公司投了上万辆车。运维员¥200/天，把乱停的车搬回去。",
+      // [conditions→triggers]
+      triggers: { minDay: 20, excludeFlags: ["_bikeShareSeen"] },
       // [自洽修复] conditions 新增：共享单车运维暗示体力工作，需有相关行动频次
       conditions: function (st) {
         var hasManualWork =
@@ -86,11 +85,8 @@
               st.stats.actionFreq["start_business"] > 0 ||
               st.stats.actionFreq["night_shift"] > 0)) ||
           (st.sideHustle && st.sideHustle.active);
-        return (
-          st.player.phase === "street" && st.player.day >= 20 && hasManualWork
-        );
+        return hasManualWork;
       },
-      triggers: { excludeFlags: ["_bikeShareSeen"] },
       choices: [
         {
           text: "🚲 去做运维赚快钱",
@@ -122,6 +118,8 @@
       title: "直播带货风口",
       story:
         "隔壁小哥一个月流水几十万——批发市场¥20的衣直播卖¥99。你知道这是风口。",
+      // [conditions→triggers]
+      triggers: { minDay: 35, excludeFlags: ["_liveStreamSeen"] },
       // [自洽修复] conditions 新增：直播风口事件需有 content/live 相关行动经历
       conditions: function (st) {
         var hasContentExp =
@@ -131,11 +129,8 @@
               st.stats.actionFreq["content_creation"] > 0 ||
               st.stats.actionFreq["short_video"] > 0)) ||
           (st.sideHustle && st.sideHustle.type === "content");
-        return (
-          st.player.phase === "street" && st.player.day >= 35 && hasContentExp
-        );
+        return hasContentExp;
       },
-      triggers: { excludeFlags: ["_liveStreamSeen"] },
       choices: [
         {
           text: "📱 试播三天",
@@ -296,6 +291,8 @@
       title: "一条视频惹的祸",
       story:
         "送外卖时被网红蹭到，她直播说你撞人想跑。3万人围观，你的照片被贴了出来。",
+      // [conditions→triggers]
+      triggers: { minDay: 30, excludeFlags: ["_viralHarassmentSeen"] },
       // [自洽修复] conditions 新增：送外卖职业检查（story 明确"送外卖时"，需 sideHustle driving 或 logistics 路径）
       conditions: function (st) {
         var isDelivery =
@@ -303,12 +300,7 @@
           (st.career &&
             st.career.currentJob &&
             st.career.currentJob.path === "logistics");
-        return (
-          st.player.phase === "street" &&
-          st.player.day >= 30 &&
-          isDelivery &&
-          !st.flags._viralHarassmentSeen
-        );
+        return isDelivery;
       },
       choices: [
         {
@@ -348,6 +340,8 @@
       icon: "🛵",
       title: "配送费又降了",
       story: "单价从¥7.5降到¥5.8。有人号召罢工——但总有人愿意跑。",
+      // [conditions→triggers]
+      triggers: { minDay: 30, excludeFlags: ["_deliveryPriceSeen"] },
       // [自洽修复] conditions 新增：送外卖职业检查（story/options 提及骑手服，需 sideHustle driving 或 logistics 路径）
       conditions: function (st) {
         var isDelivery =
@@ -355,12 +349,7 @@
           (st.career &&
             st.career.currentJob &&
             st.career.currentJob.path === "logistics");
-        return (
-          st.player.phase === "street" &&
-          st.player.day >= 30 &&
-          isDelivery &&
-          !st.flags._deliveryPriceSeen
-        );
+        return isDelivery;
       },
       choices: [
         {
@@ -406,17 +395,12 @@
       title: "新能源二手崩了",
       story:
         "去年¥120,000的新能源车，二手¥48,000。做二手车的陈哥仓库压了十几台。",
-      // [自洽修复] conditions 新增：chen_ge 关系 met 检查 + day≥50 检查（story 直呼"陈哥"，需已结识）
-      conditions: function (st) {
-        return (
-          st.player.phase === "street" &&
-          st.player.day >= 50 &&
-          st.relationships &&
-          st.relationships.chen_ge &&
-          st.relationships.chen_ge.met === true
-        );
+      // [conditions→triggers]
+      triggers: {
+        minDay: 50,
+        excludeFlags: ["_evUsedCarSeen"],
+        relationshipMet: "chen_ge",
       },
-      triggers: { minDay: 50, excludeFlags: ["_evUsedCarSeen"] },
       choices: [
         {
           text: "💰 抄底收一台",
@@ -497,15 +481,12 @@
       title: "社保交还是不交",
       story:
         "灵活就业社保每月¥900。一个月才赚¥4,000~¥6,000。隔壁老周胆囊炎花了¥30,000全自费。",
-      // [自洽修复] conditions 新增：老周关系检查
-      conditions: function (st) {
-        return (
-          st.relationships &&
-          st.relationships.old_zhou &&
-          st.relationships.old_zhou.met
-        );
+      // [conditions→triggers]
+      triggers: {
+        minDay: 45,
+        excludeFlags: ["_gigSocialSeen"],
+        relationshipMet: "old_zhou",
       },
-      triggers: { minDay: 45, excludeFlags: ["_gigSocialSeen"] },
       choices: [
         {
           text: "\u2705 交",
@@ -598,6 +579,8 @@
       title: "购物狂欢节来了",
       story:
         "铺天盖地的广告：「双11狂欢，全场五折！」批发市场里进货的人跟不要钱一样疯抢。但快递站贴出了急招临时工的大字报——日结¥280，干到凌晨两点。",
+      // [conditions→triggers]
+      triggers: { minDay: 10, excludeFlags: ["_shoppingFestSeen"] },
       // [自洽修复] conditions 新增：选项"去快递站做临时工"暗示物流/快递经历
       conditions: function (st) {
         var hasLogistics =
@@ -610,12 +593,7 @@
             (st.stats.actionFreq["express_delivery"] > 0 ||
               st.stats.actionFreq["package_sorting"] > 0));
         return (
-          st.player.phase === "street" &&
-          st.player.day >= 10 &&
-          !st.flags._shoppingFestSeen &&
-          st.player.day % 30 >= 8 &&
-          st.player.day % 30 <= 12 &&
-          hasLogistics
+          st.player.day % 30 >= 8 && st.player.day % 30 <= 12 && hasLogistics
         );
       },
       choices: [
@@ -1005,19 +983,11 @@
       title: "烂尾楼前",
       story:
         "一栋封顶的大楼矗立在雨中——脚手架还在，但工地上已经没人了。开发商资金链断裂，300多户业主交了首付却拿不到房。有人在楼顶拉横幅，有人在售楼处门口搭了帐篷。七个业主凑钱请了律师，每人摊¥3000。",
-      // [自洽修复] conditions 新增：雨天检查（story 明确"矗立在雨中"，需天气为 rainy/stormy/foggy）
-      conditions: function (st) {
-        var isRainy =
-          st.weather &&
-          (st.weather.current === "rainy" ||
-            st.weather.current === "stormy" ||
-            st.weather.current === "foggy");
-        return (
-          st.player.phase === "street" &&
-          st.player.day >= 45 &&
-          !st.flags._unfinishedSeen &&
-          isRainy
-        );
+      // [conditions→triggers]
+      triggers: {
+        minDay: 45,
+        excludeFlags: ["_unfinishedSeen"],
+        weather: ["rainy", "stormy", "foggy"],
       },
       choices: [
         {
@@ -1878,18 +1848,11 @@
       title: "预制菜入侵",
       story:
         "那条街上的三家小饭馆有两家换上了「预制菜」的招牌——料理包加热3分钟，成本¥3.5，卖¥18。王婶的面馆还在坚持手工拉面——但客人少了四成。冷冻批发市场多了好多卖料理包的摊位。",
-      // [自洽修复] conditions 新增：王婶关系检查（story 明确提到"王婶的面馆"，需已结识）
-      conditions: function (st) {
-        var hasAuntWang =
-          st.relationships &&
-          st.relationships.aunt_wang &&
-          st.relationships.aunt_wang.met === true;
-        return (
-          st.player.phase === "street" &&
-          st.player.day >= 20 &&
-          hasAuntWang &&
-          !st.flags._preMadeFoodSeen
-        );
+      // [conditions→triggers]
+      triggers: {
+        minDay: 20,
+        excludeFlags: ["_preMadeFoodSeen"],
+        relationshipMet: "aunt_wang",
       },
       choices: [
         {
@@ -1945,6 +1908,8 @@
       title: "平替风暴",
       story:
         "拼多多的市值超过了阿里。街头到处都是「9.9包邮」的广告——隔壁小张在拼多多上进了一样的货，价格只有你的一半。品牌店的老板说：「现在的人只买对的，不买贵的——但对的是指最便宜的。」",
+      // [conditions→triggers]
+      triggers: { minDay: 25, excludeFlags: ["_consumptionDownSeen"] },
       // [自洽修复] conditions 新增：选项"帮拼多多商家送货"暗示跑腿/配送经历
       conditions: function (st) {
         var hasDelivery =
@@ -1954,11 +1919,8 @@
             (st.stats.actionFreq["delivery"] > 0 ||
               st.stats.actionFreq["errand"] > 0 ||
               st.stats.actionFreq["running_message"] > 0));
-        return (
-          st.player.phase === "street" && st.player.day >= 25 && hasDelivery
-        );
+        return hasDelivery;
       },
-      triggers: { excludeFlags: ["_consumptionDownSeen"] },
       choices: [
         {
           text: "📦 调整进货策略——走低价路线",
@@ -2242,18 +2204,11 @@
       title: "最低工资上调",
       story:
         "市人社局发公告了：最低工资从¥2200调到¥2480。餐馆门口贴出了新菜单——「因人工成本上涨，部分菜品价格上调5%~10%」。王婶说：「涨工资是好事——但物价涨得比工资快。」",
-      // [自洽修复] conditions 新增：王婶已结识检查（叙事直接引用王婶对话）
-      conditions: function (st) {
-        var hasAuntWang =
-          st.relationships &&
-          st.relationships.aunt_wang &&
-          st.relationships.aunt_wang.met === true;
-        return (
-          st.player.phase === "street" &&
-          st.player.day >= 30 &&
-          hasAuntWang &&
-          !st.flags._minWageHikeSeen
-        );
+      // [conditions→triggers]
+      triggers: {
+        minDay: 30,
+        excludeFlags: ["_minWageHikeSeen"],
+        relationshipMet: "aunt_wang",
       },
       choices: [
         {
@@ -2484,13 +2439,11 @@
       title: "考公大军",
       story:
         "大学城旁边的书店里，考研和考公的资料占了整整两面墙。今年国考报名人数突破300万——一个岗位招1个，17000人报名。辅导班的广告说：「不过全退。」但学费¥49800。有人在大学城旁边开了钟点房——考试那周暴涨到¥500一晚。",
-      conditions: function (st) {
-        return (
-          st.player.phase === "street" &&
-          st.player.day >= 35 &&
-          !st.flags._examCompetitionSeen &&
-          (st.player.intelligence || 0) >= 20
-        );
+      // [conditions→triggers]
+      triggers: {
+        minDay: 35,
+        excludeFlags: ["_examCompetitionSeen"],
+        minStat: { intelligence: 20 },
       },
       choices: [
         {
@@ -2812,6 +2765,7 @@
       title: "从天而降",
       story:
         "你中彩票了——或者拆迁款到账了——反正一夜之间有了¥200万。你搬进高档公寓，请工友吃了¥5000的饭。三个月后，钱花了一半。没有新的收入来源。",
+      // [已审查] 含 OR 逻辑，保留 conditions
       conditions: function (st) {
         return (
           st.player.phase === "street" &&
@@ -2943,13 +2897,11 @@
       title: "偶遇热心老师傅",
       story:
         "你在街角修自行车的摊位前看了一会儿，修车师傅看出你对机械有兴趣，说小伙子想不想学点手艺？不收学费，有空来搭把手就行。",
-      conditions: function (st) {
-        return (
-          st.player.phase === "street" &&
-          st.player.day >= 10 &&
-          !st.flags._skillMentorSeen &&
-          (st.player.mental || 50) >= 20
-        );
+      // [conditions→triggers]
+      triggers: {
+        minDay: 10,
+        excludeFlags: ["_skillMentorSeen"],
+        minStat: { mental: 20 },
       },
       choices: [
         {
@@ -3166,15 +3118,8 @@
       title: "三十而立？",
       story:
         '你今天过了30岁生日。站在镜子前，看着自己——发际线后移了，眼角有了细纹。你在这座城市已经待了这么多年，但说不上来自己到底有没有"站稳脚跟"。\\n\\n手机响了，是老家打来的。你犹豫了一下，接了。',
-      // [自洽修复] v3.20 原始提交缺 conditions/apply → 补全
-      conditions: function (st) {
-        return (
-          st.player.phase === "street" &&
-          st.player.age >= 30 &&
-          st.player.day >= 365 &&
-          !st.flags._age30Reflection
-        );
-      },
+      // [conditions→triggers]
+      triggers: { minAge: 30, minDay: 365, excludeFlags: ["_age30Reflection"] },
       probability: 0.05,
       repeatable: false,
       choices: [
@@ -3238,15 +3183,11 @@
       title: "室友的奔驰梦",
       story:
         '你最近发现室友小杨最近变了。他频繁借钱，朋友圈全是豪车和美女，但你从未见过他开什么好车。今天他找你开口："借我五千吧，下个月发工资就还。"',
+      // [conditions→triggers]
+      triggers: { minDay: 45, excludeFlags: ["_mercedesRoommate"] },
       // [自洽修复] v3.20 原始提交缺 conditions/apply → 补全
       conditions: function (st) {
-        return (
-          st.player.phase === "street" &&
-          st.housing &&
-          st.housing.tier >= 1 &&
-          st.player.day >= 45 &&
-          !st.flags._mercedesRoommate
-        );
+        return st.housing && st.housing.tier >= 1;
       },
       probability: 0.05,
       repeatable: false,

@@ -1533,7 +1533,10 @@ const ACHIEVEMENTS = [
     icon: "👩‍🏫",
     category: "社交线",
     hidden: false,
-    triggers: { minNpcAffinity: { id: "xiao_mei", min: 80 }, flagMet: "_xiaomeiVolunteerDone" },
+    triggers: {
+      minNpcAffinity: { id: "xiao_mei", min: 80 },
+      flagMet: "_xiaomeiVolunteerDone",
+    },
   },
   {
     id: "first_meal",
@@ -2095,9 +2098,18 @@ function checkAchievements(state) {
   if (state.relationships) {
     var friendCount = 0;
     var bestFriendCount = 0;
-    ["aunt_wang","boss_li","sister_zhang","old_zhou","xiao_mei","chef_chen"].forEach(function(id) {
-      if (state.relationships[id] && state.relationships[id].affinity >= 30) friendCount++;
-      if (state.relationships[id] && state.relationships[id].affinity >= 80) bestFriendCount++;
+    [
+      "aunt_wang",
+      "boss_li",
+      "sister_zhang",
+      "old_zhou",
+      "xiao_mei",
+      "chef_chen",
+    ].forEach(function (id) {
+      if (state.relationships[id] && state.relationships[id].affinity >= 30)
+        friendCount++;
+      if (state.relationships[id] && state.relationships[id].affinity >= 80)
+        bestFriendCount++;
     });
     if (friendCount >= 3) state.flags._friendCircleAchieved = true;
     if (bestFriendCount >= 1) state.flags._bestFriendAchieved = true;
@@ -2107,14 +2119,17 @@ function checkAchievements(state) {
     var rels = state.relationships;
     var metAny = false;
     var allHigh = true;
-    var metNpcs = Object.keys(rels).filter(function(k) {
+    var metNpcs = Object.keys(rels).filter(function (k) {
       return rels[k] && typeof rels[k].affinity === "number" && rels[k].met;
     });
     for (var fi = 0; fi < metNpcs.length; fi++) {
       var r = rels[metNpcs[fi]];
       if (r && typeof r.affinity === "number" && r.affinity > 0) {
         metAny = true;
-        if (r.affinity < 60) { allHigh = false; break; }
+        if (r.affinity < 60) {
+          allHigh = false;
+          break;
+        }
       }
     }
     if (metAny && allHigh) state.flags._allFriends60 = true;
@@ -2135,12 +2150,21 @@ function checkAchievements(state) {
   ) {
     var cJob = state.career.currentJob;
     var cPath = CAREER_PATHS[cJob.path];
-    if (cPath && cPath.levels && cPath.levels.length > 0 && cJob.levelId === cPath.levels[cPath.levels.length - 1].id) {
+    if (
+      cPath &&
+      cPath.levels &&
+      cPath.levels.length > 0 &&
+      cJob.levelId === cPath.levels[cPath.levels.length - 1].id
+    ) {
       state.flags._careerMaxLevel = true;
     }
   }
   // 职场探险家（>=3条不同路径）
-  if (state.flags && state.flags._careerPathsWorked && Object.keys(state.flags._careerPathsWorked).length >= 3) {
+  if (
+    state.flags &&
+    state.flags._careerPathsWorked &&
+    Object.keys(state.flags._careerPathsWorked).length >= 3
+  ) {
     state.flags._careerMultiPath = true;
   }
   // 绩效之王（perf>=90 && workDays>=30）

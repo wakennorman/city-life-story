@@ -10,9 +10,8 @@
     {
       id: "found_wallet_street",
       _isChainEvent: false,
-      conditions: function (st) {
-        return st.player.day >= 5;
-      },
+      // [conditions→triggers]
+      triggers: { minDay: 5 },
       phase: "street",
       icon: "👛",
       title: "捡到了一个钱包",
@@ -66,7 +65,8 @@
       title: "遇到小混混敲诈",
       story:
         "几个小混混拦住你，说最近手头紧，要借点钱花花。对方有 3 个人，你孤身一人。",
-      conditions: (st) => st.resources.cash >= 50,
+      // [conditions→triggers]
+      triggers: { minCash: 50 },
       choices: [
         {
           text: "💸 破财消灾 (¥80)",
@@ -126,9 +126,8 @@
     {
       id: "stranger_invest",
       _isChainEvent: false,
-      conditions: function (st) {
-        return st.player.day >= 15 && (st.resources.cash || 0) >= 300;
-      },
+      // [conditions→triggers]
+      triggers: { minDay: 15, minCash: 300 },
       phase: "street",
       icon: "💹",
       title: "陌生人推荐「内部消息」",
@@ -190,9 +189,8 @@
     {
       id: "old_man_help",
       _isChainEvent: false,
-      conditions: function (st) {
-        return st.player.day >= 3;
-      },
+      // [conditions→triggers]
+      triggers: { minDay: 3 },
       phase: "street",
       icon: "👴",
       title: "老大爷需要帮助",
@@ -242,6 +240,7 @@
     {
       id: "free_clinic_street",
       _isChainEvent: false,
+      // [已审查] 含 OR 逻辑（day≥10 || health≤70），保留 conditions 不变
       conditions: function (st) {
         // [自洽修复] st.needs.health 不存在（state.needs 无 health 字段），改为 st.status.health
         return (
@@ -295,9 +294,8 @@
     {
       id: "thrift_find",
       _isChainEvent: false,
-      conditions: function (st) {
-        return st.player.day >= 20 && (st.resources.cash || 0) >= 100;
-      },
+      // [conditions→triggers]
+      triggers: { minDay: 20, minCash: 100 },
       phase: "street",
       icon: "🛍️",
       title: "二手店捡漏",
@@ -353,6 +351,7 @@
     {
       id: "neighbor_fight",
       _isChainEvent: false,
+      // [已审查] 含 OR 逻辑（fame>=3 || corporate.popularity>=10），保留 conditions 不变
       conditions: function (st) {
         return (
           st.player.day >= 10 &&
@@ -409,9 +408,8 @@
     {
       id: "lost_pet",
       _isChainEvent: false,
-      conditions: function (st) {
-        return st.player.day >= 5;
-      },
+      // [conditions→triggers]
+      triggers: { minDay: 5 },
       phase: "street",
       icon: "🐕",
       title: "走失的小狗",
@@ -761,6 +759,7 @@
       title: "突发利空！股市暴跌",
       story:
         "手机上弹出新闻：受国际局势影响，全球股市暴跌7%！所有人都在恐慌性抛售。你现在持有投资资产吗？",
+      // [conditions→triggers] 已审查：复杂条件（inv.stockHoldings.length>0）保留
       conditions: function (st) {
         var inv = st.investment || {};
         return inv.stockHoldings && inv.stockHoldings.length > 0;
@@ -832,13 +831,8 @@
       title: "批发老板甩货",
       story:
         "相熟的批发市场老板说有一批货急着清仓，低价卖给你：5折！但得一下子全部吃下。",
-      conditions: function (st) {
-        return (
-          st.resources.cash >= 1000 &&
-          st.trade &&
-          st.trade.currentLocation === "wholesaleMarket"
-        );
-      },
+      // [conditions→triggers]
+      triggers: { minCash: 1000, location: "wholesaleMarket" },
       choices: [
         {
           text: "📦 全部吃下(¥800)",
@@ -880,9 +874,8 @@
     {
       id: "lottery_scratch",
       _isChainEvent: false,
-      conditions: function (st) {
-        return st.player.day >= 15 && (st.resources.cash || 0) >= 20;
-      },
+      // [conditions→triggers]
+      triggers: { minDay: 15, minCash: 20 },
       phase: "street",
       icon: "🎫",
       title: "刮刮乐诱惑",
@@ -958,9 +951,8 @@
     {
       id: "gold_surge",
       _isChainEvent: false,
-      conditions: function (st) {
-        return st.player.day >= 30;
-      },
+      // [conditions→triggers]
+      triggers: { minDay: 30 },
       phase: "street",
       icon: "🥇",
       title: "黄金暴涨！",

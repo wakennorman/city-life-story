@@ -474,7 +474,9 @@ function generatePeakMomentHTML(state, incomes, expenses) {
     highlights.push({
       icon: "📝",
       text:
-        "村长那 <strong>¥" + debt.toLocaleString() + "</strong> 的债还在" +
+        "村长那 <strong>¥" +
+        debt.toLocaleString() +
+        "</strong> 的债还在" +
         (ratePct > 0.5 ? " 💸日息" + ratePct.toFixed(2) + "%" : "…"),
       type: "neutral",
     });
