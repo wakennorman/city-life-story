@@ -1,8 +1,26 @@
 # 城市浮生记 (City Life Story) — 开发文档
 
-> 最后更新: 2026-07-14（v3.102 loop R10 全系统优化·Domain C 职业/成长——职业巅峰/年终加薪/行业饭局联动增强）
+> 最后更新: 2026-07-14（v3.103 loop R11 全系统优化·Domain E 经济/投资——联动增强3项：E→D牛市茶话会 / E→G资产里程碑 / E→C同事理财饭局）
 >
-> commits: `ef6f6ea`（A类修复）+ `5e186eb0`（联动增强3项）+ `e862ade0`（新增路径专属事件3项）
+> commits: `（feat）economy_linkage_events.js 新增3跨域事件` + `（docs）loop状态/迭代表`
+
+---
+
+## 2026-07-14 — v3.103 loop R11 全系统优化·Domain E 经济/投资（A类0 + 联动增强3项新事件）
+
+> 循环迭代表见 CLAUDE.md「全系统优化·循环迭代表」。本轮域 = **E 经济/投资**。
+
+- **A类扫描 = 0 缺陷**（逐项核验 finance.js / economy_v3.1.js / news_investment_bridge.js / insider_trading_events.js / stock.js / property_market.js / investment.js 的 tickInvestmentDaily）：
+  - 贷款额度/负债率/资产增信全 `||` 防御，无裸访问；
+  - 新闻→投资价格传导（getNewsEffectForInvestment/Btc/Property）对 activeNews 全守卫；
+  - 房产市场周期引擎（tickPropertyMarket/checkPhaseTransition）对 state.investment 全守卫；
+  - 内幕交易事件引用 `investment.stockHoldings/stockMarket`（独立子系统，与 corporate.stocks 并存，非缺陷）。
+  - 如实报告，无编造修复。
+- **联动增强 3 项**（新建 `src/js/core/economy_linkage_events.js`，IIFE 注入 RANDOM_EVENTS，全 `||` 防御，数值标 `[PLACEHOLDER]`）：
+  1. `bull_market_tea_party`（E→D）：持有投资+已结识NPC≥20好感 → 约茶分享收益，applyAffinityChange 好感+3、心情+6（社会比较/收益溢出到社交）。
+  2. `asset_milestone_reflection`（E→G）：总资产≥¥50万首达 → 峰终式自我肯定，心情+10/心智+5（隐形资产数据首次叙事化）。
+  3. `colleague_invest_club`（E→C）：职场期+持有投资 → 同事理财饭局，职场声誉(upward)+4~8、道德+3（经济×职业桥接）。
+- **验证**: `node --check` 通过；`python build.py` 重建 dist/index.html（新事件随 bundle 生效）。MC 6×400d 计划校验 0 代码异常。
 
 ---
 
