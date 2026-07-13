@@ -2237,14 +2237,17 @@
           text: "🎨 引导客户说出具体需求",
           hint: "专业方法化解，设计XP+10、声誉+5",
           apply: function (st) {
-            if (typeof addSkillXp === "function") addSkillXp("design", 10);
+            // [A类修复 loop R16] "design" 非真实技能键(state.skills 无 design)，
+            //   addSkillXp 内部 state.skills[key] 未命中即静默丢弃 → 奖励永远无效。
+            //   设计路径在 CAREER_PATHS 中以 coding 为门槛技能(reqSkills.coding)，改用 coding。
+            if (typeof addSkillXp === "function") addSkillXp("coding", 10);
             var cap = _cap(st);
             if (cap) {
               cap.reputation = Math.min(100, cap.reputation + 5);
               _clamp(cap);
             }
             _msg(
-              "🎨 你用专业问卷引导客户表达了真实需求。三稿过！设计XP+10，声誉+5。",
+              "🎨 你用专业问卷引导客户表达了真实需求。三稿过！设计功底(编程/工具)XP+10，声誉+5。",
               "success",
             );
           },

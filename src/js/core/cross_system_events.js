@@ -1023,6 +1023,7 @@
           hint: "台风前废品价格涨，但需资本",
           cost: 50,
           apply: function (st) {
+            st.resources.cash = Math.max(0, (st.resources.cash || 0) - 50); // [全系统自洽修复] 域B 修复:cost扣款缺失
             var profit = Random.int(80, 180);
             st.resources.cash += profit;
             st.resources.totalEarned = (st.resources.totalEarned || 0) + profit;
@@ -8065,6 +8066,7 @@
           hint: "¥2000定金，赌扩建",
           cost: 2000,
           apply: function (st) {
+            st.resources.cash = Math.max(0, (st.resources.cash || 0) - 2000); // [全系统自洽修复] 域B 修复:cost扣款缺失
             st.flags._xiaoMeiTechparkTipSeen = true;
             st.flags._xiaoMeiTipActed = st.player.day;
             st.player.mental = Math.min(100, (st.player.mental || 0) + 3);
@@ -8087,6 +8089,7 @@
           hint: "温和布局，¥1000",
           cost: 1000,
           apply: function (st) {
+            st.resources.cash = Math.max(0, (st.resources.cash || 0) - 1000); // [全系统自洽修复] 域B 修复:cost扣款缺失
             st.flags._xiaoMeiTechparkTipSeen = true;
             st.flags._xiaoMeiTipModerate = st.player.day;
             st.flags._xiaoMeiTipInvest =
@@ -9819,6 +9822,7 @@
         hint: "花¥80验证，修理XP+20",
         cost: 80,
         apply: function (st) {
+          st.resources.cash = Math.max(0, (st.resources.cash || 0) - 80); // [全系统自洽修复] 域B 修复:cost扣款缺失
           st.flags._proIdentifyFakeSeen = true;
           st.skills.repair.xp = Math.min(1000, (st.skills.repair.xp || 0) + 20);
           st.player.intelligence = Math.min(
@@ -15335,6 +15339,7 @@
         hint: "来路不明但赚",
         cost: 800,
         apply: function (st) {
+          st.resources.cash = Math.max(0, (st.resources.cash || 0) - 800); // [全系统自洽修复] 域B 修复:cost扣款缺失
           st.flags._snowNightScrapSeen = true;
           var profit = Random.int(400, 1200);
           st.resources.cash += profit;
@@ -15356,6 +15361,7 @@
         hint: "谨慎试水",
         cost: 300,
         apply: function (st) {
+          st.resources.cash = Math.max(0, (st.resources.cash || 0) - 300); // [全系统自洽修复] 域B 修复:cost扣款缺失
           st.flags._snowNightScrapSeen = true;
           var smallProfit = Random.int(100, 450);
           st.resources.cash += smallProfit;
@@ -15588,6 +15594,7 @@
         hint: "利用信息差套利",
         cost: 200,
         apply: function (st) {
+          st.resources.cash = Math.max(0, (st.resources.cash || 0) - 200); // [全系统自洽修复] 域B 修复:cost扣款缺失
           st.flags._supplyDemandSeen = true;
           var profit = Random.int(150, 500);
           st.resources.cash += profit;
@@ -15923,6 +15930,7 @@
         hint: "心情++ 好感+",
         cost: 150,
         apply: function (st) {
+          st.resources.cash = Math.max(0, (st.resources.cash || 0) - 150); // [全系统自洽修复] 域B 修复:cost扣款缺失
           st.flags._summerNightMarketSeen = true;
           st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 15);
           st.needs.hunger = Math.max(0, (st.needs.hunger || 0) - 30);
@@ -16215,6 +16223,7 @@
         hint: "健康+ 花钱止损",
         cost: 300,
         apply: function (st) {
+          st.resources.cash = Math.max(0, (st.resources.cash || 0) - 300); // [全系统自洽修复] 域B 修复:cost扣款缺失
           st.flags._healthCrisisSeen = true;
           st.status.health = Math.min(100, (st.status.health || 0) + 12);
           st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 5);
@@ -16229,6 +16238,7 @@
         hint: "稍有缓解 便宜",
         cost: 50,
         apply: function (st) {
+          st.resources.cash = Math.max(0, (st.resources.cash || 0) - 50); // [全系统自洽修复] 域B 修复:cost扣款缺失
           st.flags._healthCrisisSeen = true;
           st.status.health = Math.min(100, (st.status.health || 0) + 5);
           StateManager.addMessage(
@@ -16599,6 +16609,7 @@
         hint: "赚差价 需要本钱",
         cost: 200,
         apply: function (st) {
+          st.resources.cash = Math.max(0, (st.resources.cash || 0) - 200); // [全系统自洽修复] 域B 修复:cost扣款缺失
           st.flags._autumnHarvestDone = true;
           var profit = Random.int(300, 600);
           st.resources.cash += profit;
@@ -16619,6 +16630,7 @@
         hint: "心情+ 健康+",
         cost: 50,
         apply: function (st) {
+          st.resources.cash = Math.max(0, (st.resources.cash || 0) - 50); // [全系统自洽修复] 域B 修复:cost扣款缺失
           st.flags._autumnHarvestDone = true;
           st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 15);
           st.status.health = Math.min(100, (st.status.health || 70) + 3);
@@ -45674,6 +45686,7 @@
         hint: "花¥5话费，心情+ 道德+",
         cost: 5,
         apply: function (st) {
+          st.resources.cash = Math.max(0, (st.resources.cash || 0) - 5); // [全系统自洽修复] 域B 修复:cost扣款缺失
           st.flags._autumnRainHomesickSeen = true;
           st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 8);
           st.player.morality = Math.min(100, (st.player.morality || 50) + 3);
