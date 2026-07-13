@@ -1,102 +1,21 @@
 {
-  "currentRound": 12,
-  "currentDomain": "G",
+  "currentRound": 13,
+  "currentDomain": "H",
   "domainOrder": ["A", "B", "C", "D", "E", "F", "G", "H"],
-  "rotationIndex": 6,
-  "nextDomain": "H",
+  "rotationIndex": 7,
+  "nextDomain": "A",
   "overrideSequence": "B→D→F已完成(2026-07-14),恢复C→E→G→H→A",
-  "lastCommit": "feat: [域G] A类修复4项+联动增强3项",
+  "lastCommit": "feat: [域H] A类修复2项+联动增强3项",
   "lastUpdated": "2026-07-14",
   "history": [
     {
-      "round": 1,
-      "domain": "A",
-      "date": "2026-07-12",
-      "aClassFixed": 0,
-      "linkageItems": 4,
-      "commit": "42528c0a",
-      "note": "economy_v3.1 + pricing 隐形经济数据首次叙事化；MC 10x500d 0 异常"
-    },
-    {
-      "round": 2,
-      "domain": "B",
-      "date": "2026-07-11",
-      "aClassFixed": 0,
-      "linkageItems": 3,
-      "commit": "edcb4bbf",
-      "note": "街头→职场桥接事件（治愈阶段孤岛 655:10）；A类审计0缺陷；MC 10x500d 0 异常"
-    },
-    {
-      "round": 3,
-      "domain": "C",
-      "date": "2026-07-12",
-      "aClassFixed": 1,
-      "linkageItems": 6,
-      "commit": "e862ade0",
-      "note": "由旧版 automation 提前完成(域C 职业/成长)：A类修复(unlock medicine/social 技能定义+medical/doctor 路径+wholesale_flip 行动) + 联动增强6项(博士毕业/驾驶老司机/管理班子危机/design/legal/operations路径)"
-    },
-    {
-      "round": 5,
-      "domain": "B",
-      "date": "2026-07-12",
-      "aClassFixed": 1,
-      "linkageItems": 3,
-      "commit": "42cd4e12",
-      "note": "A类修复(events_corp::insider_report扣款¥500k无建仓→补实际股票买入+cost字段)；联动增强3个职场道德事件(背锅抉择/晋升贿赂/裁员名单)填补corporate阶段道德事件空白；事件总数692"
-    },
-    {
-      "round": 6,
-      "domain": "C",
-      "date": "2026-07-12",
-      "aClassFixed": 2,
-      "linkageItems": 3,
-      "commit": "aac091e5",
-      "note": "A类修复(2)：train_medicine训练入口+train_social训练入口→解锁medical/doctor路径9职+wholesale_flip行动；social阈值50→30/40→25；联动增强3个职业满级里程碑事件(庆祝/收徒/行业项目)"
-    },
-    {
-      "round": 7,
-      "domain": "B",
-      "date": "2026-07-12",
-      "aClassFixed": 0,
-      "linkageItems": 3,
-      "commit": "adcfaad1",
-      "note": "全量扫描 moral_events.js/news.js/events_core.js：A类0（5个condition全守卫、followUpId动态生成、relationships/weather访问均防御）。联动增强3项：moral_elder_assist/scrap_price_surge/night_market_revival。subsidy经核实故意去重非丢失。MC 6×400d 0异常。"
-    },
-    {
-      "round": 8,
-      "domain": "D",
+      "round": 13,
+      "domain": "H",
       "date": "2026-07-14",
       "aClassFixed": 2,
       "linkageItems": 3,
-      "commit": "e2e86e47",
-      "note": "B→D→F覆盖第2轮。A类修复(2)：关系事件链无消费者/中文名。联动增强(3)：triangular_choice/old_friend_reaction/圈子归属感。MC 6×400d 0异常。"
-    },
-    {
-      "round": 9,
-      "domain": "F",
-      "date": "2026-07-14",
-      "aClassFixed": 4,
-      "linkageItems": 2,
-      "commit": "d9381e65",
-      "note": "B→D→F覆盖第3轮(最后一轮)。A类修复(4,移动端安全区/100dvh)。联动增强(2,F→D)。MC 6×400d 0异常。覆盖序列完成,下轮恢复C→E→G→H→A。"
-    },
-    {
-      "round": 10,
-      "domain": "C",
-      "date": "2026-07-14",
-      "aClassFixed": 0,
-      "linkageItems": 3,
-      "commit": "0e8600cf",
-      "note": "覆盖序列完成后恢复正常轮换第1轮(C)。A类0。联动增强3项(career_apex_peak/career_senior_bonus/career_industry_dinner)。MC 6×400d 0异常。下轮→E。"
-    },
-    {
-      "round": 11,
-      "domain": "E",
-      "date": "2026-07-14",
-      "aClassFixed": 0,
-      "linkageItems": 3,
-      "commit": "（feat）economy_linkage_events.js",
-      "note": "正常轮换第2轮(E)。A类0(详尽核验7个E域文件)。联动增强3项(bull_market_tea_party E→D / asset_milestone_reflection E→G / colleague_invest_club E→C)，新建 economy_linkage_events.js IIFE 注入 RANDOM_EVENTS，全||防御，数值标[PLACEHOLDER]。MC 6×400d 0异常。下轮→G。"
+      "commit": "feat: [域H] A类修复2项+联动增强3项",
+      "note": "正常轮换第4轮(H)。A类修复2项(startup_crisis.js showCrisisModal/applyCrisisChoice 对 null 的 startup.company 补 if(!company)return 防御式守卫)。联动增强3项(startup_friend_support H→D / startup_wealth_milestone H→E / startup_career_legacy H→C)，新建 company_linkage_events.js IIFE 注入 RANDOM_EVENTS，phase:corporate，全||防御，数值[PLACEHOLDER]。MC 6×400d 0异常。下轮→A。"
     },
     {
       "round": 12,
@@ -105,7 +24,7 @@
       "aClassFixed": 4,
       "linkageItems": 3,
       "commit": "feat: [域G] A类修复4项+联动增强3项",
-      "note": "正常轮换第3轮(G)。A类修复4项(events_core stats.health→status.health×3 / life_ribbon illness→illnesses / world_params enterprise→startup / tutorial illness→illnesses)。联动增强3项(life_city_anniversary G→D / life_work_anniversary G→C / life_estate_planning G→E)，新建 lifecycle_linkage_events.js IIFE 注入 RANDOM_EVENTS，全||防御，数值标[PLACEHOLDER]。MC 6×400d 0异常。下轮→H。"
+      "note": "正常轮换第3轮(G)。A类修复4项(events_core stats.health→status.health×3 / life_ribbon illness→illnesses / world_params enterprise→startup / tutorial illness→illnesses)。联动增强3项(life_city_anniversary G→D / life_work_anniversary G→C / life_estate_planning G→E)，新建 lifecycle_linkage_events.js IIFE 注入 RANDOM_EVENTS，全||防御，数值[PLACEHOLDER]。MC 6×400d 0异常。下轮→H。"
     }
   ]
 }

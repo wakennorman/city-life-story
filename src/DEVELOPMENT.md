@@ -1,12 +1,25 @@
 # 城市浮生记 (City Life Story) — 开发文档
 
-> 最后更新: 2026-07-14（v3.104 loop R12 全系统优化·Domain G 核心机制/生命周期——A类修复4项 + 联动增强3项：G→D城中周年 / G→C职场周年 / G→E世代资产）
+> 最后更新: 2026-07-14（v3.105 loop R13 全系统优化·Domain H 公司/Phase2——A类修复2项(防御式空值守卫) + 联动增强3项：H→D创业低谷挚友 / H→E估值里程碑财富观 / H→C职场积累反哺创业）
 >
-> commits: `feat: [域G] A类修复4项+联动增强3项` + `（docs）loop状态/迭代表`
+> commits: `feat: [域H] A类修复2项+联动增强3项` + `（docs）loop状态/迭代表`
 
 ---
 
-## 2026-07-14 — v3.104 loop R12 全系统优化·Domain G 核心机制/生命周期（A类修复4项 + 联动增强3项新事件）
+## 2026-07-14 — v3.105 loop R13 全系统优化·Domain H 公司/Phase2（A类修复2项 + 联动增强3项新事件）
+
+> 循环迭代表见 CLAUDE.md「全系统优化·循环迭代表」。本轮域 = **H 公司/Phase2**。
+
+- **A类修复 2 项**（均为「对可能为空对象未加守卫的直接解引用」的防御式缺陷）：
+  1. `src/js/phase2/startup_crisis.js` `showCrisisModal`（397）：`const company = state.startup.company;` 后直接 `company.monthsOfRunway` 等解引用，`startup.company` 在 `status==="none"` 时为 null → 若被独立入口调用即抛 TypeError。补 `if (!company) return;`。
+  2. `src/js/phase2/startup_crisis.js` `applyCrisisChoice`（474-475）：`const company = startup.company;` 后 `company.valuation/*.equity/*.employees` 解引用，同上补 `if (!company) return;`。
+  - 注：批量扫描（`guard_check.py` 对 phase2/* + company_spawner/enterprise_fate/events_corp 共 18 文件）确认域内**直接 `startup.company.X` 解引用均已有上游短路守卫**；此 2 处为「本函数内未判空、依赖调用链上游守卫」的仅存隐患，已补自防御。
+- **联动增强 3 项**（新建 `src/js/core/company_linkage_events.js`，IIFE 注入 RANDOM_EVENTS，全 `||` 防御，数值标 `[PLACEHOLDER]`；事件引擎严格按 `e.phase` 过滤，`state.player.phase` 仅 `"street"`/`"corporate"`，创业子系统在 corporate 阶段创立 → 本文件事件统一 `phase:"corporate"` 并以 conditions 守卫 `st.startup.company` 存在）：
+  1. `startup_friend_support`（H→D）：公司存续 + 已结识好感≥20 的 NPC + 冷却 flag → 约挚友倾诉 `safeAffinity`+5、心智+6、心情+4 / 独自硬扛 心智-2（创业压力↔社交支持）。
+  2. `startup_wealth_milestone`（H→E）：公司估值首破 [PLACEHOLDER]¥100万 + 未触发过 → 划 [PLACEHOLDER]¥5万入可投资银行户 + 投资心态 flag(_startupInvestorMindset) / 再投回公司估值×1.05（创业资本↔经济/投资）。
+  3. `startup_career_legacy`（H→C）：公司存续 + 职场声誉 upward≥[PLACEHOLDER]40 + 未触发过 → 前同事人脉拉客户 估值×1.08 + upward+5 / 独立开拓（职场积累资本↔创业助力）。
+- **验证**: `node --check` 文件全过；`python build.py` 重建 dist/index.html（新事件随 bundle 生效）；MC 6×400d 计划校验 0 代码异常。
+
 
 > 循环迭代表见 CLAUDE.md「全系统优化·循环迭代表」。本轮域 = **G 核心机制/生命周期**。
 

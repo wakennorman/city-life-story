@@ -395,6 +395,7 @@ function checkCrisisTriggerConditions(crisis, company) {
  */
 function showCrisisModal(state, crisisId, crisis) {
   const company = state.startup.company;
+  if (!company) return;
 
   // 确定严重程度
   let severityIndex = 0;
@@ -473,6 +474,7 @@ function handleCrisisChoice(crisisId, optionIndex) {
 function applyCrisisChoice(state, crisisId, option) {
   const startup = state.startup;
   const company = startup.company;
+  if (!company) return;
 
   // 计算成功率
   const success = Random.chance(option.successChance);
