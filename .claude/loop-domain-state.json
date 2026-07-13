@@ -1,11 +1,12 @@
 {
-  "currentRound": 7,
-  "currentDomain": "B",
+  "currentRound": 8,
+  "currentDomain": "D",
   "domainOrder": ["A", "B", "C", "D", "E", "F", "G", "H"],
-  "rotationIndex": 2,
-  "nextDomain": "D",
-  "lastCommit": "227a6ef8",
-  "lastUpdated": "2026-07-12",
+  "rotationIndex": 3,
+  "nextDomain": "F",
+  "overrideSequence": "B→D→F(第3轮F待做)后恢复C→E→G→H→A",
+  "lastCommit": "e2e86e47",
+  "lastUpdated": "2026-07-14",
   "history": [
     {
       "round": 1,
@@ -60,6 +61,15 @@
       "linkageItems": 3,
       "commit": "adcfaad1",
       "note": "全量扫描 moral_events.js/news.js/events_core.js：A类0（5个condition全守卫、followUpId动态生成、relationships/weather访问均防御）。联动增强3项：moral_elder_assist(道德→NPC关系elderNeighbor+兼职线索flag B→D/C桥接)/scrap_price_surge(新闻→废品定价+材料股 B→A/E)/night_market_revival(新闻→零工收入+消费股 B→C/E)。subsidy经核实为故意去重(training_subsidy)非丢失→未还原。MC 6×400d 0异常。"
+    },
+    {
+      "round": 8,
+      "domain": "D",
+      "date": "2026-07-14",
+      "aClassFixed": 2,
+      "linkageItems": 3,
+      "commit": "e2e86e47",
+      "note": "B→D→F覆盖第2轮。A类修复(2)：checkNpcRelationEventTriggers 输出(triangular_choice/old_friend_reaction)无任何消费者→关系事件链永不触发,接入 tickNpcRelationships 每日tick；好感衰减+升降级消息显示原始id(如'aunt wang')→新增 getNpcDisplayName(读NPCS)中文名。联动增强(3)：triangular_choice阵营张力(跨NPC负向好感各-1,14天冷却)/old_friend_reaction圈子效应(跨NPC正向各+1)/圈子归属感(D→G,≥3熟人affinity≥30每7天心情+2)。全部||防御,数值标[PLACEHOLDER]。MC 6×400d all pass 0异常。"
     }
   ]
 }
