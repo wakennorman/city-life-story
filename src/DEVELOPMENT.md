@@ -1,6 +1,6 @@
 # 城市浮生记 (City Life Story) — 开发文档
 
-> 最后更新: 2026-07-14（v3.107 loop R16 全系统优化·Domain C 职业/成长——A类修复1项(career_path_events.js 设计事件 addSkillXp("design")→"coding"，design 非真实技能键致XP静默丢弃；design 路径以 coding 为门槛技能) + 联动增强3项：C→D前辈提携社交 / C→A技能里程碑属性 / C→E晋升奖金投资）
+> 最后更新: 2026-07-14（v3.108 loop R17 全系统优化·Domain D NPC/社交——A类修复4项(社交Tab关系网 npcIds 声明前置崩溃修复 / chatWithNpc 未声明变量 affinity→崩溃+NaN 污染+补 rel.met 守卫 / 好感写入统一走 applyAffinityChange 记 _lastInteractionDay / applyEventNpcEcho 跨NPC好感绕过 applyAffinityChange 修正) + 联动增强3项：D→A深度交谈心智 / D→C圈内牵线社交技能 / D→E朋友消息投资心态）
 > 上一版: v3.106 loop R14 Domain A 数据/数值平衡（难度键名对齐 + 工资清洁度字段 + A→D/A→C/A→E 联动）
 >
 > commits: `feat: [域H] A类修复2项+联动增强3项` + `（docs）loop状态/迭代表`

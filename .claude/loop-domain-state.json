@@ -1,12 +1,21 @@
 {
-  "currentRound": 16,
-  "currentDomain": "C",
+  "currentRound": 17,
+  "currentDomain": "D",
   "domainOrder": ["A", "B", "C", "D", "E", "F", "G", "H"],
-  "rotationIndex": 3,
-  "nextDomain": "D",
-  "lastCommit": "R16 域C: A类修复1项+联动增强3项(随并行窗口commit f4b39a8e 落地)",
+  "rotationIndex": 4,
+  "nextDomain": "E",
+  "lastCommit": "R17 域D: A类修复4项+联动增强3项",
   "lastUpdated": "2026-07-14",
   "history": [
+    {
+      "round": 17,
+      "domain": "D",
+      "date": "2026-07-14",
+      "aClassFixed": 4,
+      "linkageItems": 3,
+      "commit": "pending",
+      "note": "R17 域D(NPC/社交): A类修复4项—social_tab.js npcIds 声明前置(声明移函数开头,修复渲染崩溃); chatWithNpc 未声明变量 affinity(崩溃+写NaN)→补 var affinity/delta/chatType/message+补 rel.met 守卫+好感写入改 applyAffinityChange; applyEventNpcEcho 跨NPC好感绕过 applyAffinityChange(缺 _lastInteractionDay/升级播报)→改走 applyAffinityChange。联动增强3项: 新建 npc_social_linkage_events.js IIFE→RANDOM_EVENTS，2 street+1 corporate：social_deep_talk(D→A)/social_job_referral(D→C)/social_market_tip(D→E)。全||防御,[PLACEHOLDER]。MC 6×400d 验证待执行。"
+    },
     {
       "round": 16,
       "domain": "C",
@@ -24,15 +33,6 @@
       "linkageItems": 3,
       "commit": "04b99545+c00d48f0",
       "note": "R15 域B(事件/叙事): A类修复6项 + 联动增强3项"
-    },
-    {
-      "round": 14,
-      "domain": "A",
-      "date": "2026-07-14",
-      "aClassFixed": 2,
-      "linkageItems": 3,
-      "commit": "c00d48f0",
-      "note": "域A(数据/数值平衡): 2A类修复+3联动增强"
     }
   ],
   "completedDomains": ["A", "B", "C", "D", "E", "F", "G", "H"]

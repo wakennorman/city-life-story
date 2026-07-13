@@ -266,19 +266,12 @@ function applyEventNpcEcho(eventId, state) {
         // flag检查（有则要求对应flag为true）
         if (rule.flag && !state.flags[rule.flag]) return;
       }
-      if (!state.relationships[id.replace("_flag_alt", "")]) {
-        state.relationships[id.replace("_flag_alt", "")] = {
-          affinity: 0,
-          met: true,
-        };
-      }
-      state.relationships[id.replace("_flag_alt", "")].affinity = Math.min(
-        100,
-        Math.max(
-          -100,
-          state.relationships[id.replace("_flag_alt", "")].affinity +
-            rule.change,
-        ),
+      // [全系统自洽修复] 域D A类#3: 跨NPC好感变更统一走 applyAffinityChange(钳制 + _lastInteractionDay + 升级播报)
+      applyAffinityChange(
+        state,
+        id.replace("_flag_alt", ""),
+        rule.change,
+        rule.msg,
       );
       StateManager.addMessage("💬 " + rule.msg, "info");
     })(npcId, npcs[npcId]);
@@ -1033,10 +1026,15 @@ function chatWithNpc(npcId, state) {
   if (!state || !npcId) return;
   if (!state.relationships) state.relationships = {};
   var rel = state.relationships[npcId];
-  if (!rel) {
+  if (!rel || !rel.met) {
     StateManager.addMessage("你还不认识这个人。", "warning");
     return;
   }
+  // [全系统自洽修复] 域D A类#2: affinity/delta/chatType/message 显式声明，避免未声明变量崩溃 + NaN 污染
+  var affinity = rel.affinity || 0;
+  var delta = 0,
+    chatType = "neutral",
+    message = "";
 
   var ap = state.player.actionPoints || 0;
   if (ap < 2) {
@@ -1112,7 +1110,8 @@ function chatWithNpc(npcId, state) {
     }
   }
 
-  rel.affinity = Math.max(-100, Math.min(100, affinity + delta));
+  // [全系统自洽修复] 域D A类#2: 好感写入统一走 applyAffinityChange(钳制 + _lastInteractionDay + 升级播报)
+  applyAffinityChange(state, npcId, delta, message);
 
   // 记录对话历史
   if (!rel.interactionHistory) rel.interactionHistory = [];

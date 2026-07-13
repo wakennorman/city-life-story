@@ -16,6 +16,8 @@ function renderNpcRelationships(state, content) {
     return;
   }
 
+  var npcIds = Object.keys(state.relationships);
+
   var html = '<div class="section"><h3>👥 NPC关系网</h3>';
   html +=
     '<p style="font-size:11px;color:var(--text-muted);margin-bottom:12px;">';
@@ -50,7 +52,7 @@ function renderNpcRelationships(state, content) {
   // NPC关系卡片
   html += '<div style="display:flex;flex-wrap:wrap;gap:8px;">';
 
-  var npcIds = Object.keys(state.relationships);
+  npcIds = Object.keys(state.relationships);
   for (var i = 0; i < npcIds.length; i++) {
     var npcId = npcIds[i];
     var rel = state.relationships[npcId];

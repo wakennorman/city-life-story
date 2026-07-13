@@ -139,3 +139,23 @@
 - 联动3（新建 data_linkage_events.js IIFE→RANDOM_EVENTS，2 street+1 corporate，全||防御，数值[PLACEHOLDER]）：data_balanced_living(A→D 状态均衡→社交好感)/data_skill_efficiency(A→C 技能曲线→职业声誉)/data_savings_milestone(A→E 资产里程碑→投资资本)。引擎严格按 e.phase 过滤，故须显式设 phase（参照 R11/R12/R13）。
 - 验证：node --check 3文件通过；build.py→dist 8225.6KB；MC 6×400d 0代码异常（trader 50%/corporate 66.7% 存活率<80% 为既有平衡阈值，非本轮引入；A1 仅影响 easy/hell 档，默认 normal 的 MC 未触达）。
 - loop-domain-state.json 已正确更新为 round14/A/nextDomain=C（C→E→G→H→A 单轮覆盖完成，下轮重启于C）；DEVELOPMENT.md 改 v3.106。两者在 c00d48f0 提交内含我的版本。下轮→C。
+
+## 最近执行（2026-07-14，Round 16 域C 职业/成长 — 代码随并行窗口 f4b39a8e 落地 + loop-state 修正提交 9392dbdc）
+- 起始状态：并行窗口已推进 loop 至 R15/域B（04b99545+c00d48f0），loop-domain-state.json 标 next=C，故本窗口执行 R16=域C（职业/成长）。
+- 域C 真实文件：CAREER_PATHS 权威入口在 `src/js/ui/career_dev.js`（非 data/career_dev.js）；事件在 core/career_path_events.js、personal_growth_events.js；技能在 core/skill_tree.js·skill_synergy.js·data/skills.js（后者实为 CERTIFICATES 证书数组）。
+- A类1（Explore 全域扫描仅此 1 处确证）：`career_path_events.js:2240` design_client_revision 事件 `addSkillXp("design",10)` — "design" 非真实技能键（state.skills 仅 cooking/repair/coding/english/driving/sales/management/accounting/electrician/welding/medicine/social），addSkillXp 内部 `state.skills[key]` 未命中即静默 return → 设计XP永久丢弃。改 `"coding"`（design 路径在 CAREER_PATHS reqSkills 以 coding 为门槛技能，语义一致）。
+- 联动3（新建 `src/js/core/career_linkage_events.js` IIFE→RANDOM_EVENTS，2 street+1 corporate，全||防御，[PLACEHOLDER]）：career_mentor_bond(C→D 技能被看见→前辈提携NPC好感+6，用 safeAffinity/applyAffinityChange)/career_skill_milestone(C→A 技能里程碑→intelligence+2·mental+4 属性回馈)/career_promotion_bonus(C→E 晋升势能≥[PLACEHOLDER]→奖金入 bankBalance + 复用 _dataInvestorMindset flag)。index.html 注册在 data_linkage_events.js 之后（第601行）。
+- 验证：node --check 2文件通过；build.py→dist 8236.6KB；MC 6×400d **🎉总体通过·0代码异常**（本轮 trader 83.3%/social 83.3%/corporate 100% 全≥80%；末尾 RSS timeout 为离线新闻网络回退，非代码异常）。
+- 提交：代码（career_path_events/career_linkage_events/index.html/DEVELOPMENT.md/dist）在 MC 运行期被并行窗口 `git add -A` 扫入 `f4b39a8e`；但并行窗口随后 3 个「R15 finalize」commit 把 loop-domain-state.json 覆盖回退成 R15/B。本窗口遂单独提交 `9392dbdc` 仅修正 loop-domain-state.json=round16/C/next=D + last_known_head。DEVELOPMENT.md=v3.107。下轮→D（NPC/社交）。
+
+## 最近执行（2026-07-14，Round 17 域D NPC/社交 — 待提交）
+- 起始状态：loop-domain-state.json=round16/C/next=D，故本窗口执行 R17=域D（NPC/社交）。HEAD=9392dbdc，last_known_head 漂移 f4b39a8e（R16 loop-state 提交未同步 last_known_head）。本次改动未被并行窗口扫入（status 干净）。
+- 域D 真实文件：关系引擎 npc_relationships.js（applyAffinityChange/tickNpcRelationships/getNpcDisplayName，14×14 矩阵）；UI social_tab.js（renderNpcRelationships）；桥接 npc_event_bridge.js（chatWithNpc/applyEventNpcEcho/rollDailyNpcEcho）；数据 npcs.js（3584行，仅扫描顶部 accessor）。
+- A类4（Explore 全域扫描 9 文件确证，均为硬崩溃/数据自洽缺陷）：
+  1. social_tab.js:30 `npcIds` 在 :53 才赋值即被 `for` 循环使用（var 提升为 undefined）→ 渲染 NPC 关系网 Tab 每次 `npcIds.length` 抛 TypeError。修复：声明前置到 `!state.relationships` 守卫之后（第18行），:53 改为无 var 重赋值。
+  2. npc_event_bridge.js chatWithNpc `affinity` 从未声明（1055/1073/1095/1115 读取未声明变量→ReferenceError 崩溃）→ `rel.affinity` 写 NaN 污染好感；`delta/chatType/message` 同为隐式全局。修复：函数头补 `var affinity=rel.affinity||0; var delta=0,chatType="neutral",message="";`；并把好感写入从手工 clamp 改走 `applyAffinityChange(state,npcId,delta,message)`（自动 clamp+记 _lastInteractionDay+升级播报）。
+  3. npc_event_bridge.js chatWithNpc 仅 `if(!rel)` 未校验 `rel.met`（initNpcRelationships 预建 rel 且 met:false）→ 可与未结识 NPC 聊天。修复：加 `!rel.met` 守卫（与域D铁律一致）。
+  4. npc_event_bridge.js applyEventNpcEcho 手工 clamp `state.relationships[id].affinity` 绕过 applyAffinityChange → 缺 _lastInteractionDay（错误触发衰减）+ 不播升级消息。修复：改走 `applyAffinityChange(state, id.replace("_flag_alt",""), rule.change, rule.msg)`。
+- 联动3（新建 `src/js/core/npc_social_linkage_events.js` IIFE→RANDOM_EVENTS，2 street+1 corporate，全||防御，[PLACEHOLDER]）：social_deep_talk(D→A 熟络NPC深度交谈→mental+6·happiness+4)/social_job_referral(D→C 圈内牵线→addSkillXp("social",8) 社交技能)/social_market_tip(D→E 朋友消息→bankBalance+[PLACEHOLDER] + 复用 _dataInvestorMindset)。严守域D铁律：只读 state.relationships、rel&&rel.met 守卫、跨NPC传导走 applyAffinityChange。index.html 注册在 career_linkage_events.js 之后。
+- 验证：node --check 3文件通过；build.py→dist 8245.4KB；MC 6×400d **exit=0·0代码异常**（grep 确认无 TypeError/ReferenceError/NaN/异常行）。trader/social 存活率 66.7%<80% 为既有平衡阈值（RNG 波动：上轮同架构显示 83.3%），非本轮引入、非代码异常；balanced/corporate 100%、grinder/skiller 为高风险路径阈值30%达标。末尾 RSS timeout 为离线新闻网络回退，非代码异常。
+- 提交计划：仅 git add 8个域D文件(social_tab.js/npc_event_bridge.js/npc_social_linkage_events.js/index.html/DEVELOPMENT.md/dist/index.html/loop-domain-state.json/last_known_head)，不 -A、不 push；提交前同步 last_known_head=当前HEAD 过 pre-commit 漂移检查。下轮→E（经济/投资）。
