@@ -792,17 +792,11 @@ function getRecommendedCareerPaths(state) {
     var score = 0;
     var maxScore = 0;
 
-    // 技能匹配：玩家当前技能 / 技能要求
+    // [CoC] 技能匹配：玩家当前技能 / 技能要求
     if (entry.reqSkills) {
       for (var s in entry.reqSkills) {
         maxScore += 30;
-        var sActual = 0;
-        if (s === "intelligence") sActual = p.intelligence || 0;
-        else if (s === "mental") sActual = p.mental || 0;
-        else if (s === "physique") sActual = p.physique || 0;
-        else if (s === "agility") sActual = p.agility || 0;
-        else if (s === "charm") sActual = p.charm || 0;
-        else if (skills[s]) sActual = skills[s].level || 0;
+        var sActual = _getSkillValue(state, s);
         var ratio = Math.min(1, sActual / Math.max(1, entry.reqSkills[s]));
         score += ratio * 30;
       }
@@ -2729,6 +2723,30 @@ function getNextCareerLevel(pathId, currentLevelId) {
   return null;
 }
 
+// [CoC] 约定式技能/属性路径映射 — 新增属性只需在此加一行，零代码修改
+var _SKILL_PATH_MAP = {
+  intelligence: "player.intelligence",
+  mental: "player.mental",
+  physique: "player.physique",
+  agility: "player.agility",
+  charm: "player.charm",
+  fame: "player.fame",
+  morality: "player.morality",
+};
+function _getSkillValue(state, skill) {
+  var path = _SKILL_PATH_MAP[skill];
+  if (path) {
+    var parts = path.split(".");
+    var val = state;
+    for (var i = 0; i < parts.length; i++) val = val[parts[i]];
+    return val || 0;
+  }
+  // 非属性技能（如编程/英语/会计等）
+  if (state.skills && state.skills[skill])
+    return state.skills[skill].level || 0;
+  return 0;
+}
+
 /** 检查晋升条件（v3.2 新增：属性+颜值+社交检查） */
 function checkCareerPromotion(state, pathId, level) {
   var p = state.player;
@@ -2739,36 +2757,20 @@ function checkCareerPromotion(state, pathId, level) {
   // 学历检查
   if (level.reqEducation && !p.education) return false;
 
-  // 技能检查
+  // [CoC] 技能检查 — 声明式映射取代 if-else 链
   if (level.reqSkills) {
     for (var skill in level.reqSkills) {
       var required = level.reqSkills[skill];
-      var actual = 0;
-      if (skill === "intelligence") actual = p.intelligence || 0;
-      else if (skill === "mental") actual = p.mental || 0;
-      else if (skill === "physique") actual = p.physique || 0;
-      else if (skill === "agility") actual = p.agility || 0;
-      else if (skill === "charm") actual = p.charm || 0;
-      else if (state.skills && state.skills[skill])
-        actual = state.skills[skill].level || 0;
-      else return false;
+      var actual = _getSkillValue(state, skill);
       if (actual < required) return false;
     }
   }
 
-  // v3.2 属性要求检查（reqAttrs：体质/智力/敏捷/能力/颜值）
+  // [CoC] 属性要求检查 — 声明式映射取代 if-else 链
   if (level.reqAttrs) {
     for (var attr in level.reqAttrs) {
       var attrReq = level.reqAttrs[attr];
-      var attrVal = 0;
-      if (attr === "physique") attrVal = p.physique || 0;
-      else if (attr === "intelligence") attrVal = p.intelligence || 0;
-      else if (attr === "agility") attrVal = p.agility || 0;
-      else if (attr === "mental") attrVal = p.mental || 0;
-      else if (attr === "charm") attrVal = p.charm || 0;
-      else if (attr === "fame") attrVal = p.fame || 0;
-      else if (attr === "morality") attrVal = p.morality || 0;
-      else return false;
+      var attrVal = _getSkillValue(state, attr);
       if (attrVal < attrReq) return false;
     }
   }
