@@ -41,6 +41,15 @@
 - 扩展职业内容应接入 `CAREER_PATHS` 体系，而非造第二套。
 - 公司行为若复用 `corp.risk` 作 tech debt，须确认它落在 CAREER_PATHS 的公司职业链内。
 
+## NPC/社交系统真实架构（2026-07-14 R8 域D，重要）
+
+- 关系引擎入口 `src/js/core/npc_relationships.js`：`tickNpcRelationships` 由 `daily_pipeline.js` npc_relationships_tick slot 每日调用。含 14×14 关系矩阵 + 传播矩阵 + 好感衰减（7天无互动）。
+- **R8 已修死代码**：`checkNpcRelationEventTriggers`（triangular_choice/old_friend_reaction 触发）此前无任何消费者→关系事件链永不触发，已接入 `runNpcRelationChainEvents`（tick 末尾，14天冷却）。
+- **仍为死代码**：`getNpcRelationshipNetwork(state)`（社交 Tab 关系网渲染）无 caller，属域 F UI。R9 未接入此函数，而是直接在 `renderNpcRelationships` 追加「圈子归属感概览+激活进度」桥接 R8 机制（F→D）。该函数仍待接。
+- **UI 安全区/动态视口（R9 域F，重要）**：根 `#app` 已 `100vh`→`100dvh`（地址栏遮挡修复）；`index.html` viewport 已加 `viewport-fit=cover`；`#tab-bar`/`#mobile-hud` 有 `padding-top: env(safe-area-inset-top)`；`.world-news-panel` 移动端有 `padding-bottom: env(safe-area-inset-bottom)`。改移动端 UI 勿回退这些。
+- NPC id→中文名 helper：R8 新增 `getNpcDisplayName(npcId)`（读全局 `NPCS`）。禁止再用 `id.replace(/_/g," ")` 直显（输出 "aunt wang" 之类）。
+- 守卫铁律：引用 NPC 须 `rel && rel.met && (rel.affinity||0)>=N`；只读 `state.relationships`，绝不读 `state.npcRelationships`。跨 NPC 传导用 `applyAffinityChange`（自动 clamp + 记 _lastInteractionDay）；message 需 `typeof StateManager !== "undefined"` 守卫。
+
 ## 「日常开发」/ scene#15 不是真实游戏内容（2026-07-13）
 
 - 全代码库（含设计文档）搜不到「日常开发」一词；它是对 `@scene#15:"日常开发"` 指令的**误读**，并非游戏内场景或职业。

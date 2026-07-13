@@ -85,7 +85,23 @@
 - 行动频次「老手特遇」（需先确认 actionFreq 的具体 actionId 枚举，避免死事件）
 - 时代变迁联动（era_transform）可再扩充微观抉择
 
-## 最近执行（2026-07-12，Round 7 域 B，覆盖指令 B→D→F 第1轮）
+## 最近执行（2026-07-14，域 F UI/UX，B→D→F 覆盖第3轮·最后一轮）
+
+- **分支**: loop/auto @ 父 89295378(并行窗口R15 B域) → `d9381e65`(feat 修复4+增强2) + `d3bfc4b5`(docs R13迭代表+loop状态)。未 push（SOP）。
+- **A类4**: viewport-fit=cover 解锁安全区 / #app 100vh→100dvh 地址栏遮挡 / #tab-bar+#mobile-hud 刘海安全区 / .world-news-panel 底部Home指示条安全区（移动端不可达/截断）。
+- **增强2(F→D)**: 社交Tab关系网圈子归属感概览(已结识/熟络/平均好感+激活态)+激活进度引导(再熟络N位)，桥接R8 D域机制，全守卫。
+- **验证**: build 8166.0KB；MC 6×400d 0异常（社交存活率66.7%为既有平衡阈值非本轮引入）。
+- **覆盖序列完成** → nextDomain=**C**，恢复轮换 C→E→G→H→A。CLAUDE.md 用 R13（R9 已被并行窗口占用）。
+
+## 最近执行（2026-07-14，Round 8 域 D，覆盖指令 B→D→F 第2轮）
+
+- **分支**: loop/auto @ 父 a61c9c28 → `e2e86e47`(feat 修复2+增强3) + `300d859c`(docs 迭代表+状态)。未 push（SOP）。
+- **A类2**: checkNpcRelationEventTriggers 死代码（关系事件链无消费者→永不触发）接入 tick；NPC 消息原始 id→getNpcDisplayName 中文名。
+- **增强3**: triangular_choice 阵营张力 / old_friend_reaction 圈子效应（跨NPC双向好感传导）/ 圈子归属感（D→G）。
+- **验证**: build 8144.0KB；MC 6×400d all pass 0异常。核心事件 id 未受影响（未改事件文件）。
+- **下轮**: 域 F（UI/UX），覆盖第3轮。候选：接入死代码 getNpcRelationshipNetwork 到社交Tab。
+
+## 历史执行（2026-07-12，Round 7 域 B，覆盖指令 B→D→F 第1轮）
 
 - **分支**: loop/auto @ d8030a29 → 提交 `adcfaad1`(feat) + `227a6ef8`(docs 迭代表)
 - **A 类扫描**: 0 缺陷（全量扫描 moral_events.js / news.js / events_core.js）。5 个 condition 全守卫；followUpId 为动态生成非缺失；relationships/weather 访问均防御；`s.trade` 恒初始化。
