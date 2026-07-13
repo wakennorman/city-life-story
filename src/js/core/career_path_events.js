@@ -2368,6 +2368,145 @@
         },
       ],
     },
+
+    // ====== 联动增强（Domain C 轮次）：职业成长 → 核心/经济/社交 桥接 ======
+    // [全系统自洽修复] 域C 联动:职业巅峰(满级有收益 C→G) + 年终加薪(C→E) + 行业饭局(C→D/E 社会比较)
+    {
+      id: "career_apex_peak",
+      icon: "🏔️",
+      title: "职业巅峰",
+      story:
+        "你站在了这条职业路径的顶端。窗外城市灯火通明，你想起当年刚入行时连报销单都不会填。\n\n这一路，有人提携，也有人使绊。如今你成了后来者眼中的「那个前辈」。",
+      probability: 0.5,
+      repeatable: false,
+      conditions: function (st) {
+        var job = _job(st);
+        if (!job || !job.path) return false;
+        var path =
+          typeof CAREER_PATHS !== "undefined" ? CAREER_PATHS[job.path] : null;
+        if (!path || !path.levels || !path.levels.length) return false;
+        var top = path.levels[path.levels.length - 1];
+        if (!top || job.id !== top.id) return false;
+        st.flags._careerApexSeen = st.flags._careerApexSeen || {};
+        return !st.flags._careerApexSeen[job.path];
+      },
+      choices: [
+        {
+          text: "🌅 享受这一刻",
+          hint: "声望+5，心情+12（峰终时刻）",
+          apply: function (st) {
+            st.flags._careerApexSeen = st.flags._careerApexSeen || {};
+            st.flags._careerApexSeen[st.career.currentJob.path] = true;
+            var cap = _cap(st);
+            if (cap) {
+              cap.reputation = Math.min(100, cap.reputation + 5);
+              _clamp(cap);
+            }
+            st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 12);
+            _msg(
+              "🏔️ 你登上了职业巅峰，行业声望+5，久违的满足感涌上心头。心情+12。",
+              "success",
+            );
+          },
+        },
+        {
+          text: "🎯 巅峰也是新起点",
+          hint: "声望+3，管理XP+20",
+          apply: function (st) {
+            st.flags._careerApexSeen = st.flags._careerApexSeen || {};
+            st.flags._careerApexSeen[st.career.currentJob.path] = true;
+            var cap = _cap(st);
+            if (cap) {
+              cap.reputation = Math.min(100, cap.reputation + 3);
+              _clamp(cap);
+            }
+            if (typeof addSkillXp === "function") addSkillXp("management", 20);
+            _msg("🎯 你把巅峰当作新起点，钻研更深的领域。管理XP+20。", "info");
+          },
+        },
+      ],
+    },
+    {
+      id: "career_senior_bonus",
+      icon: "🧧",
+      title: "年终加薪",
+      story:
+        "HR 找你谈年度评定。\n\n「你今年的绩效在组里排前 20%。按制度，给你上调一档薪资，外加一笔年终奖。」\n\n具体的数字，取决于你的级别。",
+      probability: 0.35,
+      repeatable: true,
+      conditions: function (st) {
+        var job = _job(st);
+        if (!job) return false;
+        return _workDays(st) > 365;
+      },
+      choices: [
+        {
+          text: "💰 收下，犒劳自己",
+          hint: "现金+[PLACEHOLDER 倍数待playtest]，设高级收入档",
+          apply: function (st) {
+            var job = _job(st);
+            var salary = (job && job.salary) || 8000;
+            var mult = 1.5; // [PLACEHOLDER] 年终奖倍数待 playtest 标定（建议 1~2 倍月薪）
+            var cash = Math.round(salary * mult);
+            st.resources.cash = (st.resources.cash || 0) + cash;
+            st.flags._seniorIncomeTier = true;
+            _msg("🧧 年终奖到手 ¥" + cash + "！你给自己加了顿好的。", "success");
+          },
+        },
+        {
+          text: "📈 全部存起来",
+          hint: "现金+同上，转投资本金",
+          apply: function (st) {
+            var job = _job(st);
+            var salary = (job && job.salary) || 8000;
+            var mult = 1.5; // [PLACEHOLDER] 同上
+            var cash = Math.round(salary * mult);
+            st.resources.cash = (st.resources.cash || 0) + cash;
+            st.flags._seniorInvestReady = true;
+            _msg("📈 年终奖 ¥" + cash + " 转入投资账户，静待复利。", "info");
+          },
+        },
+      ],
+    },
+    {
+      id: "career_industry_dinner",
+      icon: "🍷",
+      title: "行业饭局",
+      story:
+        "同行群里有人组局，据说是圈内大佬做东。去的话得自费打车加份子钱，但不去可能错过人脉。\n\n以你现在的级别，去不去？",
+      probability: 0.3,
+      repeatable: true,
+      conditions: function (st) {
+        return _workDays(st) > 180 && _workDays(st) < 2000;
+      },
+      choices: [
+        {
+          text: "🍷 去，混个脸熟",
+          hint: "花费¥[PLACEHOLDER]，声望+4（社会比较/禀赋）",
+          apply: function (st) {
+            var cost = 500; // [PLACEHOLDER] 饭局花费待 playtest 标定
+            st.resources.cash = Math.max(0, (st.resources.cash || 0) - cost);
+            var cap = _cap(st);
+            if (cap) {
+              cap.reputation = Math.min(100, cap.reputation + 4);
+              _clamp(cap);
+            }
+            st.flags._industryDinnerCount = (st.flags._industryDinnerCount || 0) + 1;
+            _msg(
+              "🍷 饭局上你认识了几个同行，交换了微信。声望+4，花了¥" + cost + "。",
+              "success",
+            );
+          },
+        },
+        {
+          text: "🏠 不去，攒钱要紧",
+          hint: "守住现金，错过人脉",
+          apply: function (st) {
+            _msg("🏠 你婉拒了饭局。钱袋子保住了，但少了一层人脉。", "hint");
+          },
+        },
+      ],
+    },
   ];
 
   // 推入全局随机事件池
