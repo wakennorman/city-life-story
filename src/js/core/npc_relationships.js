@@ -336,8 +336,9 @@ function tickNpcRelationships(state) {
         var _newLabel = getAffinityLabel(_rel.affinity);
         if (_oldLabel !== _newLabel && typeof StateManager !== "undefined") {
           StateManager.addMessage(
+            // [全系统自洽修复] 域D 修复:好感衰减消息显示原始id(如"aunt wang")→改用中文名
             "💔 你与" +
-              _npcId.replace(/_/g, " ") +
+              getNpcDisplayName(_npcId) +
               "的关系变淡了：" +
               _oldLabel +
               " → " +
@@ -348,6 +349,96 @@ function tickNpcRelationships(state) {
         }
       }
     }
+  }
+
+  // [全系统自洽修复] 域D 修复:checkNpcRelationEventTriggers 输出无任何消费者→关系事件链永不触发。此处接入每日tick。
+  runNpcRelationChainEvents(state, day);
+  // [全系统自洽修复] 域D 联动增强3:圈子归属感（D→G，社会比较/归属感→needs.happiness）
+  runNpcCircleBelonging(state, day);
+}
+
+/** [全系统自洽修复] 域D 修复:NPC id→中文名，替代 replace(/_/g," ") 展示的原始 id */
+function getNpcDisplayName(npcId) {
+  if (typeof NPCS !== "undefined" && NPCS && NPCS.length) {
+    for (var i = 0; i < NPCS.length; i++) {
+      if (NPCS[i] && NPCS[i].id === npcId) return NPCS[i].name || npcId;
+    }
+  }
+  return npcId ? String(npcId).replace(/_/g, " ") : "某人";
+}
+
+/**
+ * [全系统自洽修复] 域D 联动增强1&2:关系事件链
+ * 消费 checkNpcRelationEventTriggers，产生跨NPC好感传导 + 阵营/圈子叙事。
+ * 每对 14 天冷却，避免刷屏；全部字段 || 防御。
+ */
+function runNpcRelationChainEvents(state, day) {
+  if (typeof checkNpcRelationEventTriggers !== "function") return;
+  var triggers = checkNpcRelationEventTriggers(state) || [];
+  if (!triggers.length || typeof StateManager === "undefined") return;
+  if (!state.npcRelationshipLog) state.npcRelationshipLog = {};
+  var cd = state.npcRelationshipLog.chainCooldown || {};
+  state.npcRelationshipLog.chainCooldown = cd;
+  for (var i = 0; i < triggers.length; i++) {
+    var t = triggers[i] || {};
+    var key = (t.type || "") + ":" + (t.npcA || "") + ":" + (t.npcB || "");
+    if ((cd[key] || 0) > day) continue;
+    var nA = getNpcDisplayName(t.npcA),
+      nB = getNpcDisplayName(t.npcB);
+    if (t.type === "triangular_choice") {
+      // 阵营张力:同时讨好竞争双方→双方各降[PLACEHOLDER]，逼玩家站队（跨NPC负向传导）
+      applyAffinityChange(state, t.npcA, -1, "阵营张力");
+      applyAffinityChange(state, t.npcB, -1, "阵营张力");
+      StateManager.addMessage(
+        "⚖️ " +
+          nA +
+          "和" +
+          nB +
+          "是死对头，你俩都熟。有人半开玩笑：\u201c你到底站哪边？\u201d两头讨好，两头都凉了一点（好感各-1）",
+        "warning",
+      );
+      cd[key] = day + 14;
+    } else if (t.type === "old_friend_reaction") {
+      // 圈子效应:老邻居互相提起你→双方各升[PLACEHOLDER]（跨NPC正向传导）
+      applyAffinityChange(state, t.npcA, 1, "圈子效应");
+      applyAffinityChange(state, t.npcB, 1, "圈子效应");
+      StateManager.addMessage(
+        "🤝 " +
+          nA +
+          "在" +
+          nB +
+          "面前提起你，都说你是个实在人。老邻居的圈子把你越围越近（好感各+1）",
+        "info",
+      );
+      cd[key] = day + 14;
+    }
+  }
+}
+
+/**
+ * [全系统自洽修复] 域D 联动增强3:圈子归属感
+ * 拥有≥3个熟人(affinity≥30)时，每7天一次小幅心情+[PLACEHOLDER]，附归属感叙事。
+ */
+function runNpcCircleBelonging(state, day) {
+  if (!state.relationships || !state.needs) return;
+  var circle = 0;
+  for (var id in state.relationships) {
+    var rel = state.relationships[id];
+    if (rel && rel.met && (rel.affinity || 0) >= 30) circle++;
+  }
+  if (circle < 3) return;
+  if (!state.npcRelationshipLog) state.npcRelationshipLog = {};
+  var last = state.npcRelationshipLog.lastBelongingDay || 0;
+  if (day - last < 7) return;
+  state.npcRelationshipLog.lastBelongingDay = day;
+  state.needs.happiness = Math.min(100, (state.needs.happiness || 0) + 2);
+  if (typeof StateManager !== "undefined") {
+    StateManager.addMessage(
+      "🫂 这座城市里，你已经有了 " +
+        circle +
+        " 个说得上话的人。夜里回到出租屋，不再觉得那么孤单（心情+2）",
+      "info",
+    );
   }
 }
 
@@ -392,7 +483,13 @@ function applyAffinityChange(state, npcId, change, reason) {
     var newLabel = getAffinityLabel(newAffinity);
     if (oldLabel !== newLabel) {
       StateManager.addMessage(
-        "👥 " + npcId + " 与你的关系： " + oldLabel + " → " + newLabel,
+        // [全系统自洽修复] 域D 修复:关系升降级消息显示原始id→改用中文名
+        "👥 " +
+          getNpcDisplayName(npcId) +
+          " 与你的关系： " +
+          oldLabel +
+          " → " +
+          newLabel,
         "info",
       );
     }

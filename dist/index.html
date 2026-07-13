@@ -9560,7 +9560,7 @@ function dailyCleanup(state) {
       triggers: {
         requireFlags: ["_foughtWageTheft"],
         minDay: 35,
-        excludeFlags: ["_wageThiefRevenge"]
+        excludeFlags: ["_wageThiefRevenge"],
       },
       choices: [
         {
@@ -9616,7 +9616,7 @@ function dailyCleanup(state) {
         requireFlags: ["_refusedFakeGoods", "_foughtWageTheft"],
         minFame: 30,
         minDay: 40,
-        excludeFlags: ["_honestyCompound"]
+        excludeFlags: ["_honestyCompound"],
       },
       choices: [
         {
@@ -9661,7 +9661,7 @@ function dailyCleanup(state) {
       triggers: {
         requireFlags: ["_returnedWallet"],
         minDay: 22,
-        excludeFlags: ["_walletKarmaGood"]
+        excludeFlags: ["_walletKarmaGood"],
       },
       choices: [
         {
@@ -9707,7 +9707,7 @@ function dailyCleanup(state) {
         requireFlags: ["_helpedCoworker", "_foughtWageTheft"],
         minDay: 55,
         excludeFlags: ["_laborNetworkGrown"],
-        location: "construction"
+        location: "construction",
       },
       choices: [
         {
@@ -9749,13 +9749,10 @@ function dailyCleanup(state) {
       // [conditions→triggers]
       triggers: {
         minDay: 10,
-        excludeFlags: ["_hadMentalCrisis"]
+        excludeFlags: ["_hadMentalCrisis"],
       },
       conditions: function (st) {
-        return (
-          (st.player.mental || 0) < 20 &&
-          (st.housing.tier || 0) >= 1
-        );
+        return (st.player.mental || 0) < 20 && (st.housing.tier || 0) >= 1;
       },
       choices: [
         {
@@ -9812,7 +9809,7 @@ function dailyCleanup(state) {
       // [conditions→triggers]
       triggers: {
         minDay: 5,
-        excludeFlags: ["_hadTherapy"]
+        excludeFlags: ["_hadTherapy"],
       },
       conditions: function (st) {
         return (st.player.mental || 0) < 35;
@@ -9854,8 +9851,8 @@ function dailyCleanup(state) {
       // [conditions→triggers]
       triggers: {
         requireFlags: ["_hadMentalCrisis"],
-        minStat: {mental: 60},
-        excludeFlags: ["_mentalRecoveryDone"]
+        minStat: { mental: 60 },
+        excludeFlags: ["_mentalRecoveryDone"],
       },
       choices: [
         {
@@ -9885,7 +9882,7 @@ function dailyCleanup(state) {
       triggers: {
         minDay: 5,
         excludeFlags: ["_childBeggaredSeen"],
-        location: "wholesaleMarket"
+        location: "wholesaleMarket",
       },
       choices: [
         {
@@ -9940,7 +9937,7 @@ function dailyCleanup(state) {
       // [conditions→triggers]
       triggers: {
         minDay: 10,
-        excludeFlags: ["_factoryFireSeen"]
+        excludeFlags: ["_factoryFireSeen"],
       },
       choices: [
         {
@@ -9995,7 +9992,7 @@ function dailyCleanup(state) {
       triggers: {
         minDay: 15,
         excludeFlags: ["_coworkerDocSeen"],
-        location: "construction"
+        location: "construction",
       },
       choices: [
         {
@@ -10054,7 +10051,7 @@ function dailyCleanup(state) {
         "路口，一位老人站在那里，手里拿着一张纸条，四处张望。你走近一看，纸条上是一个地址——距离这里大概两公里，不算远。他的眼神有点茫然。",
       // [conditions→triggers]
       triggers: {
-        excludeFlags: ["_helpedElderlyLost"]
+        excludeFlags: ["_helpedElderlyLost"],
       },
       choices: [
         {
@@ -10107,7 +10104,7 @@ function dailyCleanup(state) {
       triggers: {
         minDay: 7,
         excludeFlags: ["_foundLotteryTicket"],
-        location: "park"
+        location: "park",
       },
       choices: [
         {
@@ -10151,7 +10148,7 @@ function dailyCleanup(state) {
       // [conditions→triggers]
       triggers: {
         minDay: 15,
-        excludeFlags: ["_debtWarningGiven"]
+        excludeFlags: ["_debtWarningGiven"],
       },
       conditions: function (st) {
         return (st.resources.villageDebt || 0) > 2000;
@@ -13146,7 +13143,11 @@ function dailyCleanup(state) {
       story:
         "菜市场冷清了很多。王婶的菜被社区团购冲击——美团优选土豆¥0.99，进货价都不止。批发菜价跌了20%。等平台烧完钱会涨回来的。",
       // [conditions→triggers]
-      triggers: { minDay: 25, excludeFlags: ["_communityGroupBuySeen"], relationshipMet: "aunt_wang" },
+      triggers: {
+        minDay: 25,
+        excludeFlags: ["_communityGroupBuySeen"],
+        relationshipMet: "aunt_wang",
+      },
       choices: [
         {
           text: "💰 趁低价囤菜等涨价",
@@ -13523,7 +13524,11 @@ function dailyCleanup(state) {
       story:
         "去年¥120,000的新能源车，二手¥48,000。做二手车的陈哥仓库压了十几台。",
       // [conditions→triggers]
-      triggers: { minDay: 50, excludeFlags: ["_evUsedCarSeen"], relationshipMet: "chen_ge" },
+      triggers: {
+        minDay: 50,
+        excludeFlags: ["_evUsedCarSeen"],
+        relationshipMet: "chen_ge",
+      },
       choices: [
         {
           text: "💰 抄底收一台",
@@ -13605,7 +13610,11 @@ function dailyCleanup(state) {
       story:
         "灵活就业社保每月¥900。一个月才赚¥4,000~¥6,000。隔壁老周胆囊炎花了¥30,000全自费。",
       // [conditions→triggers]
-      triggers: { minDay: 45, excludeFlags: ["_gigSocialSeen"], relationshipMet: "old_zhou" },
+      triggers: {
+        minDay: 45,
+        excludeFlags: ["_gigSocialSeen"],
+        relationshipMet: "old_zhou",
+      },
       choices: [
         {
           text: "\u2705 交",
@@ -13712,9 +13721,7 @@ function dailyCleanup(state) {
             (st.stats.actionFreq["express_delivery"] > 0 ||
               st.stats.actionFreq["package_sorting"] > 0));
         return (
-          st.player.day % 30 >= 8 &&
-          st.player.day % 30 <= 12 &&
-          hasLogistics
+          st.player.day % 30 >= 8 && st.player.day % 30 <= 12 && hasLogistics
         );
       },
       choices: [
@@ -14105,7 +14112,11 @@ function dailyCleanup(state) {
       story:
         "一栋封顶的大楼矗立在雨中——脚手架还在，但工地上已经没人了。开发商资金链断裂，300多户业主交了首付却拿不到房。有人在楼顶拉横幅，有人在售楼处门口搭了帐篷。七个业主凑钱请了律师，每人摊¥3000。",
       // [conditions→triggers]
-      triggers: { minDay: 45, excludeFlags: ["_unfinishedSeen"], weather: ["rainy", "stormy", "foggy"] },
+      triggers: {
+        minDay: 45,
+        excludeFlags: ["_unfinishedSeen"],
+        weather: ["rainy", "stormy", "foggy"],
+      },
       choices: [
         {
           text: "⚖️ 捐¥300支持业主打官司",
@@ -14966,7 +14977,11 @@ function dailyCleanup(state) {
       story:
         "那条街上的三家小饭馆有两家换上了「预制菜」的招牌——料理包加热3分钟，成本¥3.5，卖¥18。王婶的面馆还在坚持手工拉面——但客人少了四成。冷冻批发市场多了好多卖料理包的摊位。",
       // [conditions→triggers]
-      triggers: { minDay: 20, excludeFlags: ["_preMadeFoodSeen"], relationshipMet: "aunt_wang" },
+      triggers: {
+        minDay: 20,
+        excludeFlags: ["_preMadeFoodSeen"],
+        relationshipMet: "aunt_wang",
+      },
       choices: [
         {
           text: "📦 批发料理包来卖",
@@ -15318,7 +15333,11 @@ function dailyCleanup(state) {
       story:
         "市人社局发公告了：最低工资从¥2200调到¥2480。餐馆门口贴出了新菜单——「因人工成本上涨，部分菜品价格上调5%~10%」。王婶说：「涨工资是好事——但物价涨得比工资快。」",
       // [conditions→triggers]
-      triggers: { minDay: 30, excludeFlags: ["_minWageHikeSeen"], relationshipMet: "aunt_wang" },
+      triggers: {
+        minDay: 30,
+        excludeFlags: ["_minWageHikeSeen"],
+        relationshipMet: "aunt_wang",
+      },
       choices: [
         {
           text: "💰 这是好事——你的收入会涨",
@@ -15549,7 +15568,11 @@ function dailyCleanup(state) {
       story:
         "大学城旁边的书店里，考研和考公的资料占了整整两面墙。今年国考报名人数突破300万——一个岗位招1个，17000人报名。辅导班的广告说：「不过全退。」但学费¥49800。有人在大学城旁边开了钟点房——考试那周暴涨到¥500一晚。",
       // [conditions→triggers]
-      triggers: { minDay: 35, excludeFlags: ["_examCompetitionSeen"], minStat: {intelligence: 20} },
+      triggers: {
+        minDay: 35,
+        excludeFlags: ["_examCompetitionSeen"],
+        minStat: { intelligence: 20 },
+      },
       choices: [
         {
           text: "📚 买套考公资料自己学",
@@ -16003,7 +16026,11 @@ function dailyCleanup(state) {
       story:
         "你在街角修自行车的摊位前看了一会儿，修车师傅看出你对机械有兴趣，说小伙子想不想学点手艺？不收学费，有空来搭把手就行。",
       // [conditions→triggers]
-      triggers: { minDay: 10, excludeFlags: ["_skillMentorSeen"], minStat: {mental: 20} },
+      triggers: {
+        minDay: 10,
+        excludeFlags: ["_skillMentorSeen"],
+        minStat: { mental: 20 },
+      },
       choices: [
         {
           text: "🙏 答应跟师傅学手艺",
@@ -16288,10 +16315,7 @@ function dailyCleanup(state) {
       triggers: { minDay: 45, excludeFlags: ["_mercedesRoommate"] },
       // [自洽修复] v3.20 原始提交缺 conditions/apply → 补全
       conditions: function (st) {
-        return (
-          st.housing &&
-          st.housing.tier >= 1
-        );
+        return st.housing && st.housing.tier >= 1;
       },
       probability: 0.05,
       repeatable: false,
@@ -17001,8 +17025,7 @@ function dailyCleanup(state) {
       conditions: function (st) {
         // [已审查] 含 OR 逻辑，保留 conditions
         return (
-          ((st.player.fame || 0) >= 5 ||
-            (st.player.corporate.ability || 0) >= 30)
+          (st.player.fame || 0) >= 5 || (st.player.corporate.ability || 0) >= 30
         );
       },
       choices: [
@@ -24822,7 +24845,10 @@ const ACHIEVEMENTS = [
     icon: "👩‍🏫",
     category: "社交线",
     hidden: false,
-    triggers: { minNpcAffinity: { id: "xiao_mei", min: 80 }, flagMet: "_xiaomeiVolunteerDone" },
+    triggers: {
+      minNpcAffinity: { id: "xiao_mei", min: 80 },
+      flagMet: "_xiaomeiVolunteerDone",
+    },
   },
   {
     id: "first_meal",
@@ -25384,9 +25410,18 @@ function checkAchievements(state) {
   if (state.relationships) {
     var friendCount = 0;
     var bestFriendCount = 0;
-    ["aunt_wang","boss_li","sister_zhang","old_zhou","xiao_mei","chef_chen"].forEach(function(id) {
-      if (state.relationships[id] && state.relationships[id].affinity >= 30) friendCount++;
-      if (state.relationships[id] && state.relationships[id].affinity >= 80) bestFriendCount++;
+    [
+      "aunt_wang",
+      "boss_li",
+      "sister_zhang",
+      "old_zhou",
+      "xiao_mei",
+      "chef_chen",
+    ].forEach(function (id) {
+      if (state.relationships[id] && state.relationships[id].affinity >= 30)
+        friendCount++;
+      if (state.relationships[id] && state.relationships[id].affinity >= 80)
+        bestFriendCount++;
     });
     if (friendCount >= 3) state.flags._friendCircleAchieved = true;
     if (bestFriendCount >= 1) state.flags._bestFriendAchieved = true;
@@ -25396,14 +25431,17 @@ function checkAchievements(state) {
     var rels = state.relationships;
     var metAny = false;
     var allHigh = true;
-    var metNpcs = Object.keys(rels).filter(function(k) {
+    var metNpcs = Object.keys(rels).filter(function (k) {
       return rels[k] && typeof rels[k].affinity === "number" && rels[k].met;
     });
     for (var fi = 0; fi < metNpcs.length; fi++) {
       var r = rels[metNpcs[fi]];
       if (r && typeof r.affinity === "number" && r.affinity > 0) {
         metAny = true;
-        if (r.affinity < 60) { allHigh = false; break; }
+        if (r.affinity < 60) {
+          allHigh = false;
+          break;
+        }
       }
     }
     if (metAny && allHigh) state.flags._allFriends60 = true;
@@ -25424,12 +25462,21 @@ function checkAchievements(state) {
   ) {
     var cJob = state.career.currentJob;
     var cPath = CAREER_PATHS[cJob.path];
-    if (cPath && cPath.levels && cPath.levels.length > 0 && cJob.levelId === cPath.levels[cPath.levels.length - 1].id) {
+    if (
+      cPath &&
+      cPath.levels &&
+      cPath.levels.length > 0 &&
+      cJob.levelId === cPath.levels[cPath.levels.length - 1].id
+    ) {
       state.flags._careerMaxLevel = true;
     }
   }
   // 职场探险家（>=3条不同路径）
-  if (state.flags && state.flags._careerPathsWorked && Object.keys(state.flags._careerPathsWorked).length >= 3) {
+  if (
+    state.flags &&
+    state.flags._careerPathsWorked &&
+    Object.keys(state.flags._careerPathsWorked).length >= 3
+  ) {
     state.flags._careerMultiPath = true;
   }
   // 绩效之王（perf>=90 && workDays>=30）
@@ -30259,7 +30306,7 @@ if (typeof window !== "undefined") {
       triggers: {
         relationshipMet: "aunt_wang",
         relationshipAffinityMin: [{ id: "aunt_wang", min: 30 }],
-        minDay: 11
+        minDay: 11,
       },
       // conditions removed — fully migrated to triggers
       choices: [
@@ -30634,10 +30681,7 @@ if (typeof window !== "undefined") {
       // [conditions→triggers] 部分迁移：day+flag 移入 triggers，location 检查保留
       triggers: { minDay: 6, excludeFlags: ["_foundATMCash"] },
       conditions: function (st) {
-        return (
-          st.trade &&
-          st.trade.currentLocation === "commercialDist"
-        );
+        return st.trade && st.trade.currentLocation === "commercialDist";
       },
       choices: [
         {
@@ -30700,7 +30744,7 @@ if (typeof window !== "undefined") {
       triggers: {
         relationshipMet: "old_zhou",
         relationshipAffinityMin: [{ id: "old_zhou", min: 40 }],
-        minDay: 16
+        minDay: 16,
       },
       // [删除] conditions 全量迁移至 triggers
       choices: [
@@ -30774,7 +30818,11 @@ if (typeof window !== "undefined") {
       story:
         "今早雾霾特别重，批发市场的电子价牌都看不清。你走近才发现好几家的标价还停留在昨天的低价——商户自己也看不清新价格该挂多少。\n\n四下里来进货的人不多，机会窗口可能只有这一小会儿。",
       // [conditions→triggers] 部分迁移：phase+weather+day 移入 triggers，location 保留
-      triggers: { phase: "street", weather: ["foggy", "heavy_smog"], minDay: 20 },
+      triggers: {
+        phase: "street",
+        weather: ["foggy", "heavy_smog"],
+        minDay: 20,
+      },
       conditions: function (st) {
         var curLoc = st.trade && st.trade.currentLocation;
         return curLoc === "wholesaleMarket";
@@ -30920,7 +30968,12 @@ if (typeof window !== "undefined") {
       story:
         "你帮王大婶搬柜子时，她那个黑皮账本不小心散开了——里面不仅记着每家的房租，还密密麻麻记着这些年每个商户给她的「推荐费」和「茶水钱」。\n\n她慌忙收起来，脸色不太自然：「这个……你看错了。」",
       // [conditions→triggers] 部分迁移：phase+relationship+day 移入 triggers，discovered 保留
-      triggers: { phase: "street", relationshipMet: "aunt_wang", relationshipAffinityMin: [{ id: "aunt_wang", min: 50 }], minDay: 60 },
+      triggers: {
+        phase: "street",
+        relationshipMet: "aunt_wang",
+        relationshipAffinityMin: [{ id: "aunt_wang", min: 50 }],
+        minDay: 60,
+      },
       conditions: function (st) {
         var rel = st.relationships && st.relationships.aunt_wang;
         return rel && rel.discovered && !rel.discovered._ledgerSecret;
@@ -30987,12 +31040,13 @@ if (typeof window !== "undefined") {
       story:
         "你在常去的早餐摊排队，老板笑着多给你加了一勺：「老熟人了吧？我看你从这条街摆到那边，挺不容易的。」\n\n旁边新来的打工仔打量着你，那种眼神你很熟悉——两年前你也是这样看别人的。\n\n这座城市开始记住你了。",
       // [conditions→triggers] 部分迁移：phase+day+flag 移入 triggers，totalEarned/fame 保留
-      triggers: { phase: "street", minDay: 100, excludeFlags: ["_veteranWelcomeSeen"] },
+      triggers: {
+        phase: "street",
+        minDay: 100,
+        excludeFlags: ["_veteranWelcomeSeen"],
+      },
       conditions: function (st) {
-        return (
-          (st.resources.totalEarned || 0) >= 20000 &&
-          st.player.fame >= 15
-        );
+        return (st.resources.totalEarned || 0) >= 20000 && st.player.fame >= 15;
       },
       probability: 0.05,
       repeatable: false,
@@ -31944,7 +31998,7 @@ if (typeof window !== "undefined") {
         relationshipMet: "aunt_wang",
         relationshipAffinityMin: [{ id: "aunt_wang", min: 40 }],
         minDay: 30,
-        maxDay: 90
+        maxDay: 90,
       },
       // [删除] conditions 全量迁移至 triggers
       probability: 0.03,
@@ -32345,7 +32399,11 @@ if (typeof window !== "undefined") {
       icon: "♻️",
       phase: "street",
       // [conditions→triggers] 全量迁移
-      triggers: { relationshipMet: "old_zhou", relationshipAffinityMin: [{ id: "old_zhou", min: 60 }], minDay: 121 },
+      triggers: {
+        relationshipMet: "old_zhou",
+        relationshipAffinityMin: [{ id: "old_zhou", min: 60 }],
+        minDay: 121,
+      },
       // [删除] conditions 全量迁移至 triggers
       probability: 0.03,
       repeatable: false,
@@ -84264,7 +84322,7 @@ if (typeof window !== "undefined") {
       // [conditions→triggers]
       triggers: {
         minDay: 90,
-        excludeFlags: ["_mortgageOverdueSeen"]
+        excludeFlags: ["_mortgageOverdueSeen"],
       },
       conditions: function (st) {
         return (
@@ -84350,7 +84408,7 @@ if (typeof window !== "undefined") {
       // [conditions→triggers]
       triggers: {
         minDay: 120,
-        excludeFlags: ["_fatherBirthdaySeen"]
+        excludeFlags: ["_fatherBirthdaySeen"],
       },
       conditions: function (st) {
         return (
@@ -84449,13 +84507,10 @@ if (typeof window !== "undefined") {
       // [conditions→triggers]
       triggers: {
         minAge: 25,
-        excludeFlags: ["_corpMotherSurgeryDone"]
+        excludeFlags: ["_corpMotherSurgeryDone"],
       },
       conditions: function (st) {
-        return (
-          st.corporate &&
-          st.corporate.funds >= 10000
-        );
+        return st.corporate && st.corporate.funds >= 10000;
       },
       probability: 0.05,
       repeatable: false,
@@ -84514,7 +84569,7 @@ if (typeof window !== "undefined") {
         "公司发展到第五人，你终于觉得自己有能力了。爸妈主动打来电话：我们不想再拖累你，但如果你愿意，我们想搬来城市帮你带孩子、做家务。\\n\\n搬来城市意味着你要给他们租一套房，月租大约¥1,200。这是一笔固定开销，但有人分担家务，你每天可以多挣两个小时。\\n\\n这是一道关于家与成本的选择题。",
       // [conditions→triggers]
       triggers: {
-        excludeFlags: ["_corpFamilyRelocated"]
+        excludeFlags: ["_corpFamilyRelocated"],
       },
       conditions: function (st) {
         return (
@@ -84569,7 +84624,7 @@ if (typeof window !== "undefined") {
         "公司月利润突破¥20,000，你可以开始给自己发分红了。但在此之前，你决定先给家里人打一笔钱。\\n\\n爸：你挣了这么多，给我们也分点。\\n\\n妈：你存着吧，买房用。\\n\\n你站在公司的办公室里，看着窗外的城市，突然意识到——你终于能让家人不再吃苦了。",
       // [conditions→triggers]
       triggers: {
-        excludeFlags: ["_corpFamilyDividend"]
+        excludeFlags: ["_corpFamilyDividend"],
       },
       conditions: function (st) {
         return (
@@ -84656,7 +84711,7 @@ if (typeof window !== "undefined") {
       // [conditions→triggers]
       triggers: {
         minDay: 20,
-        excludeFlags: ["_chengguanRaidPanicSeen"]
+        excludeFlags: ["_chengguanRaidPanicSeen"],
       },
       conditions: function (st) {
         return st.chengguan && (st.chengguan.heat || 0) >= 60;
@@ -85139,7 +85194,7 @@ if (typeof window !== "undefined") {
       // [conditions→triggers]
       triggers: {
         minDay: 60,
-        excludeFlags: ["_stockTipActive"]
+        excludeFlags: ["_stockTipActive"],
       },
       conditions: function (st) {
         if (
@@ -85306,7 +85361,7 @@ if (typeof window !== "undefined") {
       // [conditions→triggers]
       triggers: {
         minDay: 150,
-        excludeFlags: ["_earningsLeakActive"]
+        excludeFlags: ["_earningsLeakActive"],
       },
       conditions: function (st) {
         if (!st.investment || !st.investment.stockHoldings) return false;
@@ -85448,7 +85503,7 @@ if (typeof window !== "undefined") {
       // [conditions→triggers]
       triggers: {
         minDay: 200,
-        excludeFlags: ["_auditWarned"]
+        excludeFlags: ["_auditWarned"],
       },
       conditions: function (st) {
         if (
@@ -85536,7 +85591,7 @@ if (typeof window !== "undefined") {
       // [conditions→triggers]
       triggers: {
         minDay: 100,
-        excludeFlags: ["_joinedInsiderGroup"]
+        excludeFlags: ["_joinedInsiderGroup"],
       },
       conditions: function (st) {
         return (
@@ -85610,7 +85665,7 @@ if (typeof window !== "undefined") {
       // [conditions→triggers]
       triggers: {
         minDay: 200,
-        excludeFlags: ["_insiderNetwork"]
+        excludeFlags: ["_insiderNetwork"],
       },
       conditions: function (st) {
         if (
@@ -85619,10 +85674,7 @@ if (typeof window !== "undefined") {
           st.investment.stockHoldings.length === 0
         )
           return false;
-        return (
-          (st.resources.totalEarned || 0) >= 20000 &&
-          Random.chance(0.01)
-        );
+        return (st.resources.totalEarned || 0) >= 20000 && Random.chance(0.01);
       },
       probability: 0.01,
       repeatable: false,
@@ -85735,7 +85787,7 @@ if (typeof window !== "undefined") {
       // [conditions→triggers]
       triggers: {
         minDay: 40,
-        excludeFlags: ["_healthCrisisSeen"]
+        excludeFlags: ["_healthCrisisSeen"],
       },
       conditions: function (st) {
         var health =
@@ -126366,8 +126418,9 @@ function tickNpcRelationships(state) {
         var _newLabel = getAffinityLabel(_rel.affinity);
         if (_oldLabel !== _newLabel && typeof StateManager !== "undefined") {
           StateManager.addMessage(
+            // [全系统自洽修复] 域D 修复:好感衰减消息显示原始id(如"aunt wang")→改用中文名
             "💔 你与" +
-              _npcId.replace(/_/g, " ") +
+              getNpcDisplayName(_npcId) +
               "的关系变淡了：" +
               _oldLabel +
               " → " +
@@ -126378,6 +126431,96 @@ function tickNpcRelationships(state) {
         }
       }
     }
+  }
+
+  // [全系统自洽修复] 域D 修复:checkNpcRelationEventTriggers 输出无任何消费者→关系事件链永不触发。此处接入每日tick。
+  runNpcRelationChainEvents(state, day);
+  // [全系统自洽修复] 域D 联动增强3:圈子归属感（D→G，社会比较/归属感→needs.happiness）
+  runNpcCircleBelonging(state, day);
+}
+
+/** [全系统自洽修复] 域D 修复:NPC id→中文名，替代 replace(/_/g," ") 展示的原始 id */
+function getNpcDisplayName(npcId) {
+  if (typeof NPCS !== "undefined" && NPCS && NPCS.length) {
+    for (var i = 0; i < NPCS.length; i++) {
+      if (NPCS[i] && NPCS[i].id === npcId) return NPCS[i].name || npcId;
+    }
+  }
+  return npcId ? String(npcId).replace(/_/g, " ") : "某人";
+}
+
+/**
+ * [全系统自洽修复] 域D 联动增强1&2:关系事件链
+ * 消费 checkNpcRelationEventTriggers，产生跨NPC好感传导 + 阵营/圈子叙事。
+ * 每对 14 天冷却，避免刷屏；全部字段 || 防御。
+ */
+function runNpcRelationChainEvents(state, day) {
+  if (typeof checkNpcRelationEventTriggers !== "function") return;
+  var triggers = checkNpcRelationEventTriggers(state) || [];
+  if (!triggers.length || typeof StateManager === "undefined") return;
+  if (!state.npcRelationshipLog) state.npcRelationshipLog = {};
+  var cd = state.npcRelationshipLog.chainCooldown || {};
+  state.npcRelationshipLog.chainCooldown = cd;
+  for (var i = 0; i < triggers.length; i++) {
+    var t = triggers[i] || {};
+    var key = (t.type || "") + ":" + (t.npcA || "") + ":" + (t.npcB || "");
+    if ((cd[key] || 0) > day) continue;
+    var nA = getNpcDisplayName(t.npcA),
+      nB = getNpcDisplayName(t.npcB);
+    if (t.type === "triangular_choice") {
+      // 阵营张力:同时讨好竞争双方→双方各降[PLACEHOLDER]，逼玩家站队（跨NPC负向传导）
+      applyAffinityChange(state, t.npcA, -1, "阵营张力");
+      applyAffinityChange(state, t.npcB, -1, "阵营张力");
+      StateManager.addMessage(
+        "⚖️ " +
+          nA +
+          "和" +
+          nB +
+          "是死对头，你俩都熟。有人半开玩笑：\u201c你到底站哪边？\u201d两头讨好，两头都凉了一点（好感各-1）",
+        "warning",
+      );
+      cd[key] = day + 14;
+    } else if (t.type === "old_friend_reaction") {
+      // 圈子效应:老邻居互相提起你→双方各升[PLACEHOLDER]（跨NPC正向传导）
+      applyAffinityChange(state, t.npcA, 1, "圈子效应");
+      applyAffinityChange(state, t.npcB, 1, "圈子效应");
+      StateManager.addMessage(
+        "🤝 " +
+          nA +
+          "在" +
+          nB +
+          "面前提起你，都说你是个实在人。老邻居的圈子把你越围越近（好感各+1）",
+        "info",
+      );
+      cd[key] = day + 14;
+    }
+  }
+}
+
+/**
+ * [全系统自洽修复] 域D 联动增强3:圈子归属感
+ * 拥有≥3个熟人(affinity≥30)时，每7天一次小幅心情+[PLACEHOLDER]，附归属感叙事。
+ */
+function runNpcCircleBelonging(state, day) {
+  if (!state.relationships || !state.needs) return;
+  var circle = 0;
+  for (var id in state.relationships) {
+    var rel = state.relationships[id];
+    if (rel && rel.met && (rel.affinity || 0) >= 30) circle++;
+  }
+  if (circle < 3) return;
+  if (!state.npcRelationshipLog) state.npcRelationshipLog = {};
+  var last = state.npcRelationshipLog.lastBelongingDay || 0;
+  if (day - last < 7) return;
+  state.npcRelationshipLog.lastBelongingDay = day;
+  state.needs.happiness = Math.min(100, (state.needs.happiness || 0) + 2);
+  if (typeof StateManager !== "undefined") {
+    StateManager.addMessage(
+      "🫂 这座城市里，你已经有了 " +
+        circle +
+        " 个说得上话的人。夜里回到出租屋，不再觉得那么孤单（心情+2）",
+      "info",
+    );
   }
 }
 
@@ -126422,7 +126565,13 @@ function applyAffinityChange(state, npcId, change, reason) {
     var newLabel = getAffinityLabel(newAffinity);
     if (oldLabel !== newLabel) {
       StateManager.addMessage(
-        "👥 " + npcId + " 与你的关系： " + oldLabel + " → " + newLabel,
+        // [全系统自洽修复] 域D 修复:关系升降级消息显示原始id→改用中文名
+        "👥 " +
+          getNpcDisplayName(npcId) +
+          " 与你的关系： " +
+          oldLabel +
+          " → " +
+          newLabel,
         "info",
       );
     }
@@ -140555,7 +140704,13 @@ const TRAVEL_GRAPH = {
   // 建设区：工地连接城中村和商业区
   construction: ["slum", "commercialDist"],
   // 工业区：在外围，连接批发市场/大学城/郊区（郊区回边）
-  factoryZone: ["wholesaleMarket", "school", "suburb", "logistics_park", "auto_city"],
+  factoryZone: [
+    "wholesaleMarket",
+    "school",
+    "suburb",
+    "logistics_park",
+    "auto_city",
+  ],
   // 大学城：教育集群，连接工业区/公园/培训/娱乐/医院/寺庙/图书馆（双向补全）
   school: [
     "factoryZone",
@@ -140573,11 +140728,25 @@ const TRAVEL_GRAPH = {
   // 医院：医疗集群，连接商业区和大学城
   hospital: ["commercialDist", "school"],
   // 银行：金融中心，连接城中村/商业区/政府/人才市场
-  bank: ["slum", "commercialDist", "gov_office", "job_market", "luxury_community", "court"],
+  bank: [
+    "slum",
+    "commercialDist",
+    "gov_office",
+    "job_market",
+    "luxury_community",
+    "court",
+  ],
   // 公园：绿色过渡带，连接城中村/大学城/郊区/寺庙/图书馆/二手市场（图书馆回边）
   park: [
-    "slum", "school", "suburb", "temple", "library", "flea_market",
-    "old_community", "gym", "flower_bird_market",
+    "slum",
+    "school",
+    "suburb",
+    "temple",
+    "library",
+    "flea_market",
+    "old_community",
+    "gym",
+    "flower_bird_market",
   ],
   // 培训中心：紧邻大学城和图书馆
   trainingCenter: ["school", "library"],
@@ -141669,7 +141838,12 @@ const STREET_JOBS = [
       requirements: { mental: 30, minAge: 16, maxAge: 60 },
       effects: { fatigue: 12, happiness: 18, mental: 2, fame: 3 },
       payCalc(state) {
-        return Math.floor(18 + state.player.mental * 0.2 + state.player.fame * 0.3 + Random.float(0, 42));
+        return Math.floor(
+          18 +
+            state.player.mental * 0.2 +
+            state.player.fame * 0.3 +
+            Random.float(0, 42),
+        );
       },
       risk: {},
     },
@@ -141716,7 +141890,9 @@ const STREET_JOBS = [
       requirements: { hygiene: 30, minAge: 20, maxAge: 55 },
       effects: { fatigue: 18, hygiene: 5, happiness: 3, physiqueXp: 1 },
       payCalc(state) {
-        return Math.floor(80 + Random.float(0, 40) + (state.player.hygiene || 0) * 0.3);
+        return Math.floor(
+          80 + Random.float(0, 40) + (state.player.hygiene || 0) * 0.3,
+        );
       },
       risk: {},
     },
@@ -141729,7 +141905,8 @@ const STREET_JOBS = [
       requirements: { driving: 15, minAge: 22, maxAge: 50 },
       effects: { fatigue: 15, hygiene: 3, drivingXp: 3 },
       payCalc(state) {
-        var base = 90 + (state.skills.driving?.level || 0) * 1.2 + Random.float(0, 30);
+        var base =
+          90 + (state.skills.driving?.level || 0) * 1.2 + Random.float(0, 30);
         return Math.floor(base);
       },
       risk: { injury: 0.01 },
@@ -141744,7 +141921,9 @@ const STREET_JOBS = [
       requirements: { physique: 15, minAge: 18, maxAge: 60 },
       effects: { fatigue: 28, hygiene: -5, physiqueXp: 3 },
       payCalc(state) {
-        return Math.floor(40 + state.player.physique * 0.2 + Random.float(0, 20));
+        return Math.floor(
+          40 + state.player.physique * 0.2 + Random.float(0, 20),
+        );
       },
       risk: { injury: 0.02 },
     },
@@ -141757,7 +141936,8 @@ const STREET_JOBS = [
       requirements: { repair: 15, minAge: 18, maxAge: 60 },
       effects: { fatigue: 20, repairXp: 5, physiqueXp: 2 },
       payCalc(state) {
-        var base = 50 + (state.skills.repair?.level || 0) * 1.5 + Random.float(0, 40);
+        var base =
+          50 + (state.skills.repair?.level || 0) * 1.5 + Random.float(0, 40);
         return Math.floor(base);
       },
       risk: { injury: 0.03 },
@@ -141772,7 +141952,11 @@ const STREET_JOBS = [
       requirements: { physique: 35, mental: 20, minAge: 20, maxAge: 50 },
       effects: { fatigue: 20, physiqueXp: 8, happiness: 5, fame: 2 },
       payCalc(state) {
-        var base = 70 + state.player.physique * 0.5 + (state.player.fame || 0) * 0.2 + Random.float(0, 30);
+        var base =
+          70 +
+          state.player.physique * 0.5 +
+          (state.player.fame || 0) * 0.2 +
+          Random.float(0, 30);
         return Math.floor(base);
       },
       risk: { injury: 0.02 },
@@ -141802,7 +141986,11 @@ const STREET_JOBS = [
       requirements: { driving: 10, agility: 20, minAge: 18, maxAge: 45 },
       effects: { fatigue: 30, agilityXp: 4, physiqueXp: 2 },
       payCalc(state) {
-        var base = 55 + state.player.agility * 0.3 + (state.skills.driving?.level || 0) * 0.8 + Random.float(0, 35);
+        var base =
+          55 +
+          state.player.agility * 0.3 +
+          (state.skills.driving?.level || 0) * 0.8 +
+          Random.float(0, 35);
         return Math.floor(base);
       },
       risk: { injury: 0.03 },
@@ -141816,7 +142004,9 @@ const STREET_JOBS = [
       requirements: { intelligence: 20, physique: 20, minAge: 20, maxAge: 55 },
       effects: { fatigue: 16, intelligenceXp: 2, physiqueXp: 2 },
       payCalc(state) {
-        return Math.floor(50 + state.player.intelligence * 0.2 + Random.float(0, 25));
+        return Math.floor(
+          50 + state.player.intelligence * 0.2 + Random.float(0, 25),
+        );
       },
       risk: { injury: 0.01 },
     },
@@ -141829,7 +142019,9 @@ const STREET_JOBS = [
       requirements: { agility: 15, minAge: 18, maxAge: 50 },
       effects: { fatigue: 25, agilityXp: 2 },
       payCalc(state) {
-        return Math.floor(35 + state.player.agility * 0.2 + Random.float(0, 25));
+        return Math.floor(
+          35 + state.player.agility * 0.2 + Random.float(0, 25),
+        );
       },
       risk: { injury: 0.02 },
     },
@@ -141843,7 +142035,8 @@ const STREET_JOBS = [
       requirements: { repair: 25, physique: 20, minAge: 20, maxAge: 55 },
       effects: { fatigue: 28, repairXp: 6, physiqueXp: 2 },
       payCalc(state) {
-        var base = 70 + (state.skills.repair?.level || 0) * 2.0 + Random.float(0, 50);
+        var base =
+          70 + (state.skills.repair?.level || 0) * 2.0 + Random.float(0, 50);
         return Math.floor(base);
       },
       risk: { injury: 0.04 },
@@ -141857,7 +142050,11 @@ const STREET_JOBS = [
       requirements: { sales: 20, mental: 25, minAge: 22, maxAge: 45 },
       effects: { fatigue: 14, happiness: 8, salesXp: 5, fame: 2 },
       payCalc(state) {
-        var base = 45 + (state.skills.sales?.level || 0) * 2.5 + (state.player.fame || 0) * 0.3 + Random.float(0, 80);
+        var base =
+          45 +
+          (state.skills.sales?.level || 0) * 2.5 +
+          (state.player.fame || 0) * 0.3 +
+          Random.float(0, 80);
         return Math.floor(base);
       },
       risk: {},
@@ -151786,11 +151983,24 @@ const ILLNESSES = {
     icon: "🌙",
     severity: 2,
     naturalCureDays: [7, 14],
-    triggerHabit: { lateNightActions: 10, lowHappinessStreak: 5, highFatigueStreak: 5 },
+    triggerHabit: {
+      lateNightActions: 10,
+      lowHappinessStreak: 5,
+      highFatigueStreak: 5,
+    },
     triggerChance: 0.4,
     // 细化：渐变触发——连续熬夜越多概率越大
-    graduatedTrigger: { baseChance: 0.15, perUnit: { lateNightActions: 0.02, highFatigueStreak: 0.03 }, maxChance: 0.6 },
-    symptom: { fatigueRecoveryMult: 0.65, mentalDebuff: 4, fatigue: 3, concentrationDown: true },
+    graduatedTrigger: {
+      baseChance: 0.15,
+      perUnit: { lateNightActions: 0.02, highFatigueStreak: 0.03 },
+      maxChance: 0.6,
+    },
+    symptom: {
+      fatigueRecoveryMult: 0.65,
+      mentalDebuff: 4,
+      fatigue: 3,
+      concentrationDown: true,
+    },
     treatCost: { pharmacy: 80, hospital: 350, herbal: 50 },
     desc: "翻来覆去睡不着，第二天头晕脑胀。夜生活太多+压力大，身体想休息脑子却停不下来。安神茶+规律作息可缓解。",
     evolvesTo: ["severe_insomnia"],
@@ -151858,7 +152068,13 @@ const ILLNESSES = {
     naturalCureDays: [20, 40],
     triggerHabit: { gastritisCount: 2 },
     triggerChance: 0.4,
-    symptom: { health: -4, hunger: -6, physiqueDebuff: 5, stomachBleedingCh: 0.05, bloodInStool: true },
+    symptom: {
+      health: -4,
+      hunger: -6,
+      physiqueDebuff: 5,
+      stomachBleedingCh: 0.05,
+      bloodInStool: true,
+    },
     treatCost: { hospital: 3000 },
     desc: "慢性胃炎长期未愈发展为胃溃疡。胃壁破了口子，吃饭像受刑。偶发胃出血，需要住院治疗。",
     isEvolution: true,
@@ -152024,8 +152240,18 @@ const ILLNESSES = {
     triggerHabit: { officeWorkDays: 80, lowHygieneStreak: 10 },
     triggerChance: 0.45,
     // 细化：分级症状，久坐累积伤害
-    graduatedTrigger: { baseChance: 0.1, perUnit: { officeWorkDays: 0.004 }, maxChance: 0.6 },
-    symptom: { intelligenceDebuff: 3, fatigue: 3, neckPain: true, dizzinessCh: 0.03, typingSpeedDown: true },
+    graduatedTrigger: {
+      baseChance: 0.1,
+      perUnit: { officeWorkDays: 0.004 },
+      maxChance: 0.6,
+    },
+    symptom: {
+      intelligenceDebuff: 3,
+      fatigue: 3,
+      neckPain: true,
+      dizzinessCh: 0.03,
+      typingSpeedDown: true,
+    },
     treatCost: { pharmacy: 80, hospital: 250, physiotherapy: 200 },
     desc: "长期伏案工作导致的颈椎劳损。脖子僵硬、头晕手麻，严重时转头都疼。做颈椎操+理疗可缓解，但根治难。",
     isOccupational: true,
@@ -217197,10 +217423,7 @@ window._navEnsureInit = function () {
       var vi = r.villageDebtInterest || 0;
       if (vi > 0 && vd > 3000 && p.day && p.day > 30) {
         var rateHint = "利息复利越滚越大";
-        if (
-          typeof window !== "undefined" &&
-          window.EconomySystem
-        ) {
+        if (typeof window !== "undefined" && window.EconomySystem) {
           var _ta = (r.cash || 0) + (r.bankBalance || 0);
           var _dr = window.EconomySystem.getDynamicLoanRate(_ta) * 100;
           rateHint = "日息" + _dr.toFixed(2) + "%复利，尽快还清";
@@ -222750,7 +222973,9 @@ function generatePeakMomentHTML(state, incomes, expenses) {
     highlights.push({
       icon: "📝",
       text:
-        "村长那 <strong>¥" + debt.toLocaleString() + "</strong> 的债还在" +
+        "村长那 <strong>¥" +
+        debt.toLocaleString() +
+        "</strong> 的债还在" +
         (ratePct > 0.5 ? " 💸日息" + ratePct.toFixed(2) + "%" : "…"),
       type: "neutral",
     });
