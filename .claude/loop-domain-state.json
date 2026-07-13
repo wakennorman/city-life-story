@@ -1,29 +1,38 @@
 {
-  "currentRound": 15,
-  "currentDomain": "B",
+  "currentRound": 16,
+  "currentDomain": "C",
   "domainOrder": ["A", "B", "C", "D", "E", "F", "G", "H"],
-  "rotationIndex": 1,
-  "nextDomain": "C",
-  "lastCommit": "chore: R15 memory file",
+  "rotationIndex": 3,
+  "nextDomain": "D",
+  "lastCommit": "R16 域C: A类修复1项+联动增强3项(随并行窗口commit f4b39a8e 落地)",
   "lastUpdated": "2026-07-14",
   "history": [
+    {
+      "round": 16,
+      "domain": "C",
+      "date": "2026-07-14",
+      "aClassFixed": 1,
+      "linkageItems": 3,
+      "commit": "f4b39a8e",
+      "note": "R16 域C(职业/成长): A类修复1项—career_path_events.js design_client_revision 事件 addSkillXp(\"design\",10) 假技能键致设计XP静默丢弃，改 \"coding\"(design 路径 CAREER_PATHS reqSkills 门槛技能)。联动增强3项: 新建 career_linkage_events.js IIFE→RANDOM_EVENTS，2 street+1 corporate：career_mentor_bond(C→D)/career_skill_milestone(C→A)/career_promotion_bonus(C→E)。全||防御,[PLACEHOLDER]。MC 6×400d 总体通过·0异常。代码随并行窗口 git add -A 提交入 f4b39a8e。"
+    },
     {
       "round": 15,
       "domain": "B",
       "date": "2026-07-14",
       "aClassFixed": 6,
       "linkageItems": 3,
-      "commit": "04b99545+c00d48f0+c88a1b44",
-      "note": "R15 域B(事件/叙事): 6A类修复(phase缺失×3/seasonal_health_check条件矛盾/personalGrowth.physical对象NaN/player.mood不存在×6/design技能引用错误)+3联动增强(新闻×消费/暴雨晚餐/道德flag→NPC反应)。node--check✅/build 8225.3KB✅/push网络不可达"
+      "commit": "04b99545+c00d48f0",
+      "note": "R15 域B(事件/叙事): A类修复6项 + 联动增强3项"
     },
     {
       "round": 14,
       "domain": "A",
       "date": "2026-07-14",
-      "aClassFixed": 3,
-      "linkageItems": 2,
-      "commit": "be4b28a6",
-      "note": "域A(数据/数值平衡): 3A类修复+2联动增强(债务利率显示/还款文案动态化)"
+      "aClassFixed": 2,
+      "linkageItems": 3,
+      "commit": "c00d48f0",
+      "note": "域A(数据/数值平衡): 2A类修复+3联动增强"
     }
   ],
   "completedDomains": ["A", "B", "C", "D", "E", "F", "G", "H"]
