@@ -48347,7 +48347,7 @@
     choices: [
       {
         text: "🧊 进店歇脚，阿姨硬塞冰粉",
-        hint: "happiness+15，hunger+10",
+        hint: "心情+15，饥饱+10",
         apply: function (st) {
           st.flags._heatwaveFaintSeen = true; // 标记：防重复
           st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 15); // 心情+
@@ -48393,7 +48393,7 @@
     choices: [
       {
         text: "🙏 收下，记下这份人情",
-        hint: "hunger+40，happiness+10",
+        hint: "饥饱+40，心情+10",
         apply: function (st) {
           st.flags._hungerShareSeen = true; // 标记：防重复
           st.needs.hunger = Math.min(100, (st.needs.hunger || 0) + 40); // 饥饱+
@@ -48406,7 +48406,7 @@
       },
       {
         text: "🙅 推回去，说自己能行",
-        hint: "happiness+5（倔强），hunger 不变",
+        hint: "心情+5（倔强），饥饱不变",
         apply: function (st) {
           st.flags._hungerShareSeen = true; // 标记：防重复
           st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 5); // 心情微+
@@ -48491,7 +48491,7 @@
     choices: [
       {
         text: "☕ 进店焐手，谢过老板娘",
-        hint: "happiness+15，hygiene+5",
+        hint: "心情+15，卫生+5",
         apply: function (st) {
           st.flags._snowyWarmthSeen = true; // 标记：防重复
           st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 15); // 心情+
@@ -48504,7 +48504,7 @@
       },
       {
         text: "🙏 接过豆浆，急着赶路",
-        hint: "happiness+8（暖意），hygiene 不变",
+        hint: "心情+8（暖意），卫生不变",
         apply: function (st) {
           st.flags._snowyWarmthSeen = true; // 标记：防重复
           st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 8); // 心情+

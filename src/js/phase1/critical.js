@@ -416,7 +416,14 @@ function applyAmenity(state, a) {
         }
         msgParts.push(
           "✨ " +
-            (b.stat === "fame" ? "名气" : _attrLabel(b.stat)) +
+            (b.stat === "fame"
+              ? "名气"
+              : b.stat === "hunger" ||
+                  b.stat === "fatigue" ||
+                  b.stat === "hygiene" ||
+                  b.stat === "happiness"
+                ? _needLabel(b.stat)
+                : _attrLabel(b.stat)) +
             "+" +
             b.amt,
         );

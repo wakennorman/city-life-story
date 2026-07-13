@@ -78691,7 +78691,7 @@ if (typeof window !== "undefined") {
     choices: [
       {
         text: "🧊 进店歇脚，阿姨硬塞冰粉",
-        hint: "happiness+15，hunger+10",
+        hint: "心情+15，饥饱+10",
         apply: function (st) {
           st.flags._heatwaveFaintSeen = true; // 标记：防重复
           st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 15); // 心情+
@@ -78737,7 +78737,7 @@ if (typeof window !== "undefined") {
     choices: [
       {
         text: "🙏 收下，记下这份人情",
-        hint: "hunger+40，happiness+10",
+        hint: "饥饱+40，心情+10",
         apply: function (st) {
           st.flags._hungerShareSeen = true; // 标记：防重复
           st.needs.hunger = Math.min(100, (st.needs.hunger || 0) + 40); // 饥饱+
@@ -78750,7 +78750,7 @@ if (typeof window !== "undefined") {
       },
       {
         text: "🙅 推回去，说自己能行",
-        hint: "happiness+5（倔强），hunger 不变",
+        hint: "心情+5（倔强），饥饱不变",
         apply: function (st) {
           st.flags._hungerShareSeen = true; // 标记：防重复
           st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 5); // 心情微+
@@ -78835,7 +78835,7 @@ if (typeof window !== "undefined") {
     choices: [
       {
         text: "☕ 进店焐手，谢过老板娘",
-        hint: "happiness+15，hygiene+5",
+        hint: "心情+15，卫生+5",
         apply: function (st) {
           st.flags._snowyWarmthSeen = true; // 标记：防重复
           st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 15); // 心情+
@@ -78848,7 +78848,7 @@ if (typeof window !== "undefined") {
       },
       {
         text: "🙏 接过豆浆，急着赶路",
-        hint: "happiness+8（暖意），hygiene 不变",
+        hint: "心情+8（暖意），卫生不变",
         apply: function (st) {
           st.flags._snowyWarmthSeen = true; // 标记：防重复
           st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 8); // 心情+
@@ -162903,7 +162903,14 @@ function applyAmenity(state, a) {
         }
         msgParts.push(
           "✨ " +
-            (b.stat === "fame" ? "名气" : _attrLabel(b.stat)) +
+            (b.stat === "fame"
+              ? "名气"
+              : b.stat === "hunger" ||
+                  b.stat === "fatigue" ||
+                  b.stat === "hygiene" ||
+                  b.stat === "happiness"
+                ? _needLabel(b.stat)
+                : _attrLabel(b.stat)) +
             "+" +
             b.amt,
         );
@@ -216352,7 +216359,7 @@ function _doNavigate(state, target, options) {
       var curLoc = state.trade && state.trade.currentLocation;
       if (curLoc === locKey) {
         // 已在该地点，切换到指定Tab或地图Tab
-        var alreadyHereTab = target.navTab || "map";
+        var alreadyHereTab = target.navTab || "city";
         if (typeof switchTab === "function") switchTab(alreadyHereTab);
         StateManager.addMessage(
           "📍 已在" + (LOCATIONS[locKey] ? LOCATIONS[locKey].name : locKey),
