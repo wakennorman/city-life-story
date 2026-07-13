@@ -10,21 +10,21 @@ metadata:
 
 ## 指令一：A类缺陷全量扫描（5个bug修复，5文件）
 
-| # | 文件 | 缺陷 | 修复 |
-|---|------|------|------|
-| 1 | `corp_ops.js:69` | doCorporateAction 未处理 effects.cash → "接私活"不给钱 | 新增 `if (effects.cash)` 现金效果处理，与其它效果一致的 Math.max 守卫 |
-| 2 | `startup_competition.js:3012` | getPartnerSummary 用 `new Date().getDate()`（真实日期）而非游戏天 | 改为 `StateManager.getState()` 获取 `state.player.day` |
-| 3 | `company_spawner.js:394` | generateCeoBio 固定 aggressive 数组，4/5 特质数组死代码 | 随机从5个特质键中选一个 |
-| 4 | `startup_competition.js:2520` | improveCultureAdoption conflictReduced 恒 false | 新增 `oldConflict` 缓存，比较 decrement 前后值 |
-| 5 | `startup_competition.js:2510` | cultureConflictLevel decrement 后缺失 oldValue 比较（与A4同根因） | 同上 |
+| #   | 文件                          | 缺陷                                                              | 修复                                                                  |
+| --- | ----------------------------- | ----------------------------------------------------------------- | --------------------------------------------------------------------- |
+| 1   | `corp_ops.js:69`              | doCorporateAction 未处理 effects.cash → "接私活"不给钱            | 新增 `if (effects.cash)` 现金效果处理，与其它效果一致的 Math.max 守卫 |
+| 2   | `startup_competition.js:3012` | getPartnerSummary 用 `new Date().getDate()`（真实日期）而非游戏天 | 改为 `StateManager.getState()` 获取 `state.player.day`                |
+| 3   | `company_spawner.js:394`      | generateCeoBio 固定 aggressive 数组，4/5 特质数组死代码           | 随机从5个特质键中选一个                                               |
+| 4   | `startup_competition.js:2520` | improveCultureAdoption conflictReduced 恒 false                   | 新增 `oldConflict` 缓存，比较 decrement 前后值                        |
+| 5   | `startup_competition.js:2510` | cultureConflictLevel decrement 后缺失 oldValue 比较（与A4同根因） | 同上                                                                  |
 
 ## 指令二：联动增强（3项，3文件）
 
-| # | 文件 | 增强 | 说明 |
-|---|------|------|------|
-| 1 | `corp_ops.js:254` | Phase1→2过渡叙事闭环 | 入职公司时追加"从街头到写字楼，用了N天，攒下¥X"叙事消息 |
-| 2 | `startup.js:521` | 街头技能→创业初始属性联动 | coding→technologyScore, sales→marketScore, mgmt→reputation, accounting→burnRate折扣 |
-| 3 | `corp_ui.js:277` | 职场降级叙事增强 | 被开除回街头时显示"职场N年，完成M个项目"历练总结 |
+| #   | 文件              | 增强                      | 说明                                                                                |
+| --- | ----------------- | ------------------------- | ----------------------------------------------------------------------------------- |
+| 1   | `corp_ops.js:254` | Phase1→2过渡叙事闭环      | 入职公司时追加"从街头到写字楼，用了N天，攒下¥X"叙事消息                             |
+| 2   | `startup.js:521`  | 街头技能→创业初始属性联动 | coding→technologyScore, sales→marketScore, mgmt→reputation, accounting→burnRate折扣 |
+| 3   | `corp_ui.js:277`  | 职场降级叙事增强          | 被开除回街头时显示"职场N年，完成M个项目"历练总结                                    |
 
 ## 指令三：约定式自动归类(CoC)适用性检查
 
