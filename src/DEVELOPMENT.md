@@ -1,7 +1,7 @@
 # 城市浮生记 (City Life Story) — 开发文档
 
-> 最后更新: 2026-07-14（v3.109 loop R18 全系统优化·Domain E 经济/投资——A类修复3项(连续盈利衰减读取未初始化字段 state.stats.consecutiveWins→改读 state.investment._consecutiveWins 并在 sellInvStock/sellBtc 维护计数器使衰减机制真正生效 / 房产新闻乘数误按"股票"类别匹配→改 null 仅按行业匹配 / 房产汽车持仓盈亏百分比 buyPrice 除零→Infinity% 守卫) + 联动增强3项：E→A投资里程碑心智 / E→C金融盘感会计技能 / E→D落袋请友人情）
-> 上一版: v3.106 loop R14 Domain A 数据/数值平衡（难度键名对齐 + 工资清洁度字段 + A→D/A→C/A→E 联动）
+> 最后更新: 2026-07-14（v3.110 loop R19 全系统优化·Domain F 界面/体验——A类修复1项(今日重点面板装备耐久提示引用未声明变量 itemId→ReferenceError 崩溃，改 inst.itemId||slot 与 render.js:1992 等效实现一致) + 联动增强3项：F→A生活清晰感心智回馈 / F→D社交形象好感(守域D铁律 rel.met+applyAffinityChange) / F→C成果呈现表达技能）
+> 上一版: v3.109 loop R18 Domain E 经济/投资（连续盈利衰减机制修复 / 新闻房产乘数误匹配 / 持仓盈亏除零守卫 + E→A/E→C/E→D 联动）
 >
 > commits: `feat: [域H] A类修复2项+联动增强3项` + `（docs）loop状态/迭代表`
 

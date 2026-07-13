@@ -115,7 +115,7 @@
           w: 70,
           icon: "🔧",
           text: "修一下装备别报废",
-          hint: itemId + " 耐久仅 " + Math.round(pct * 100) + "%",
+          hint: (inst.itemId || slot) + " 耐久仅 " + Math.round(pct * 100) + "%",
         });
       }
     });
