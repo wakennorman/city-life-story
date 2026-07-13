@@ -1765,66 +1765,9 @@ function _growthStat(label, value, color) {
  * 移动端位置+背包状态行（时间指示器下方）
  * 结构：🎒 X/Y · 🌃 住所名  （常显，一目了然）
  */
-function renderLocationBar(state, parent) {
-  var div = document.createElement("div");
-  div.className = "mobile-location-strip";
-  div.style.cssText =
-    "display:flex;align-items:center;gap:4px;padding:6px 10px;min-height:32px;background:rgba(74,158,92,0.04);border:1px solid rgba(74,158,92,0.18);border-radius:8px;margin-bottom:4px;font-size:12px;";
-
-  // 背包容量
-  var itemCount = 0;
-  if (state.inventory && state.inventory.items) {
-    itemCount = state.inventory.items.reduce(function (sum, item) {
-      return sum + (item.qty || 0);
-    }, 0);
-  }
-  var totalCap = state.inventory ? state.inventory.capacity || 0 : 0;
-  var hasStorage = state.housing && state.housing.storageRented ? " 📦仓" : "";
-
-  var bagSpan = document.createElement("span");
-  bagSpan.style.cssText = "white-space:nowrap;font-weight:600;";
-  bagSpan.textContent = "🎒" + itemCount + "/" + totalCap + hasStorage;
-  div.appendChild(bagSpan);
-
-  // 分隔符
-  var sep = document.createElement("span");
-  sep.style.cssText = "color:var(--text-muted);font-size:10px;";
-  sep.textContent = "·";
-  div.appendChild(sep);
-
-  // 住所 + 住所名紧贴升级提示（均与住所名紧邻，右对齐组）
-  var houseData =
-    (typeof HOUSING_TIERS !== "undefined" &&
-      HOUSING_TIERS[state.housing?.tier || 0]) ||
-    null;
-  var houseName = houseData ? houseData.name : "露宿街头";
-  var houseIcon = houseData ? houseData.icon || "🏠" : "🌃";
-
-  // 右侧组（住所名 + 升级提示 紧贴，作为整体右对齐）
-  var rightGroup = document.createElement("span");
-  rightGroup.style.cssText =
-    "display:flex;align-items:center;gap:2px;margin-left:auto;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;";
-
-  var houseSpan = document.createElement("span");
-  houseSpan.style.cssText = "color:var(--text-secondary);";
-  houseSpan.textContent = houseIcon + houseName;
-  rightGroup.appendChild(houseSpan);
-
-  var currentTier = state.housing ? state.housing.tier || 0 : 0;
-  // 升级提示：露宿时引导升级（提示随住所变化而变化）
-  if (currentTier === 0) {
-    var tipSpan = document.createElement("span");
-    tipSpan.style.cssText =
-      "font-size:10px;color:var(--warning);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:110px;";
-    tipSpan.title = "去城中村可升级为合租床位";
-    tipSpan.textContent = "💡升级住所";
-    rightGroup.appendChild(tipSpan);
-  }
-
-  div.appendChild(rightGroup);
-
-  parent.appendChild(div);
-}
+// [全系统自洽修复] 域F 修复: renderLocationBar 已迁移至 render_infra.js（含位置名+天气预报），
+// 此处旧版本删除避免覆盖（render.js 后加载）
+// 如需修改移动端位置栏，请改 render_infra.js 中的版本
 
 /**
  * 移动端常驻状态条（位置/背包 与 人生目标 之间）

@@ -194,11 +194,11 @@ function _lifeSystemsLocationNames(ids) {
   if (!Array.isArray(ids) || ids.length === 0) return "当前地点";
   return ids
     .map(function (id) {
+      // LOCATIONS 是对象字典 { id: {name, ...} }，不是数组
       var loc =
-        Array.isArray(window.LOCATIONS) &&
-        window.LOCATIONS.find(function (item) {
-          return item && item.id === id;
-        });
+        window.LOCATIONS && typeof window.LOCATIONS === "object"
+          ? window.LOCATIONS[id]
+          : null;
       return (loc && (loc.name || loc.title)) || id;
     })
     .join(" / ");
