@@ -170,8 +170,10 @@ const EconomySystem = (function () {
     // 2. 动态村长债利率（返回日利率）
     const loanRate = getDynamicLoanRate(totalAssets);
 
-    // 3. 投资衰减
-    const winDecay = getConsecutiveWinDecay(state.stats?.consecutiveWins || 0);
+    // 3. 投资衰减（连续盈利衰减：第4次后每次-8%，最多-50%）
+    const winDecay = getConsecutiveWinDecay(
+      (state.investment && state.investment._consecutiveWins) || 0,
+    );
 
     // 4. 市场饱和惩罚
     const saturationPenalty = getMarketSaturationPenalty(

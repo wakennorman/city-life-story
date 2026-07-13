@@ -1,6 +1,6 @@
 # 城市浮生记 (City Life Story) — 开发文档
 
-> 最后更新: 2026-07-14（v3.108 loop R17 全系统优化·Domain D NPC/社交——A类修复4项(社交Tab关系网 npcIds 声明前置崩溃修复 / chatWithNpc 未声明变量 affinity→崩溃+NaN 污染+补 rel.met 守卫 / 好感写入统一走 applyAffinityChange 记 _lastInteractionDay / applyEventNpcEcho 跨NPC好感绕过 applyAffinityChange 修正) + 联动增强3项：D→A深度交谈心智 / D→C圈内牵线社交技能 / D→E朋友消息投资心态）
+> 最后更新: 2026-07-14（v3.109 loop R18 全系统优化·Domain E 经济/投资——A类修复3项(连续盈利衰减读取未初始化字段 state.stats.consecutiveWins→改读 state.investment._consecutiveWins 并在 sellInvStock/sellBtc 维护计数器使衰减机制真正生效 / 房产新闻乘数误按"股票"类别匹配→改 null 仅按行业匹配 / 房产汽车持仓盈亏百分比 buyPrice 除零→Infinity% 守卫) + 联动增强3项：E→A投资里程碑心智 / E→C金融盘感会计技能 / E→D落袋请友人情）
 > 上一版: v3.106 loop R14 Domain A 数据/数值平衡（难度键名对齐 + 工资清洁度字段 + A→D/A→C/A→E 联动）
 >
 > commits: `feat: [域H] A类修复2项+联动增强3项` + `（docs）loop状态/迭代表`

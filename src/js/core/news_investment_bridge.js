@@ -81,8 +81,9 @@ function getNewsEffectForBtc(state) {
 
 /** 获取活跃新闻对房产的综合乘数（纯函数，不修改 state） */
 function getNewsEffectForProperty(state) {
-  // 原有逻辑：通过 getNewsEffectForInvestment 匹配
-  var baseMul = getNewsEffectForInvestment("ESTATE", "房地产", "股票", state);
+  // 房产只按 行业(房地产) / 全市场 / 具体 symbol 匹配，不按「股票」类别匹配，
+  // 否则任何 category:"股票" 的新闻会错误驱动房价。
+  var baseMul = getNewsEffectForInvestment("ESTATE", "房地产", null, state);
   return baseMul;
 }
 

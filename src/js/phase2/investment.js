@@ -1470,6 +1470,13 @@ function sellInvStock(symbol, shares) {
     StateManager.addMessage("⚠️ 价格异常，卖出取消", "danger");
     return;
   }
+  // 连续盈利计数（供 dailyEconomicSettlement 的 getConsecutiveWinDecay 使用）
+  var pl = (m.price - (h.avgPrice || 0)) * shares;
+  if (pl > 0) {
+    inv._consecutiveWins = (inv._consecutiveWins || 0) + 1;
+  } else {
+    inv._consecutiveWins = 0;
+  }
   state.resources.cash += revenue;
   h.shares -= shares;
   if (h.shares <= 0)
@@ -1534,6 +1541,12 @@ function sellBtc(amount) {
   var avgCost = inv.btcAvgCost || 0;
   var pl = avgCost > 0 ? Math.round((curPrice - avgCost) * amount) : 0;
   var plStr = pl !== 0 ? (pl > 0 ? " 📈+" : " 📉") + pl : "";
+  // 连续盈利计数（供 getConsecutiveWinDecay 使用）
+  if (pl > 0) {
+    inv._consecutiveWins = (inv._consecutiveWins || 0) + 1;
+  } else {
+    inv._consecutiveWins = 0;
+  }
   state.resources.cash += revenue;
   inv.btcHoldings = Math.round((inv.btcHoldings - amount) * 10000) / 10000;
   // 清仓时重置成本
@@ -3727,7 +3740,7 @@ function renderProperties(area, inv, state, parent) {
       var cur = p.currentPrice || p.buyPrice;
       var buyP = p.buyPrice;
       var diff = cur - buyP;
-      var pct = ((diff / buyP) * 100).toFixed(1);
+      var pct = buyP > 0 ? ((diff / buyP) * 100).toFixed(1) : "0.0";
       var clr = diff >= 0 ? "var(--danger)" : "var(--success)";
       var sign = diff >= 0 ? "+" : "";
       totalPropVal += cur;
@@ -3900,7 +3913,7 @@ function renderCars(area, inv, state, parent) {
       var cur = c.currentPrice || c.buyPrice;
       var buyP = c.buyPrice;
       var diff = cur - buyP;
-      var pct = ((diff / buyP) * 100).toFixed(1);
+      var pct = buyP > 0 ? ((diff / buyP) * 100).toFixed(1) : "0.0";
       var clr = diff >= 0 ? "var(--danger)" : "var(--success)";
       var sign = diff >= 0 ? "+" : "";
       totalCarVal += cur;
