@@ -704,9 +704,8 @@ const DAILY_PIPELINE = [
           // 超过90天未保养，魅力缓慢衰减（每10天-1）
           var decayTotal = Math.floor((daysSinceSurgery - 90) / 10);
           if (decayTotal > 0) {
-            p = state.player || {};
+            var p = state.player || {};
             if (p.charm) {
-              var originalCharm = p.charm;
               p.charm = Math.min(100, Math.max(0, p.charm - decayTotal));
             }
           }
@@ -1401,16 +1400,23 @@ const DAILY_PIPELINE = [
     fn: function (state) {
       if (typeof window === "undefined" || !window.EconomySystem) return;
       var eco = window.EconomySystem;
-      // 应用难度收入乘数到工作收入（如果已有 jobMultipliers）
+      // [全系统自洽修复] 域G A类修复: _allJobsBonus 每日乘法累积导致指数衰减/增长。
+      // 改为只在首次或乘数变化时设置一次，避免逐日复合（例如困难模式0.9^30≈0.042）。
+      // 用 _allJobsBonusBaseDay 标记已设置的轮次，防止每日重复覆写
       if (state._difficulty && state._difficulty !== "normal") {
         var incomeMult = eco.getDifficultyIncomeMultiplier(
           state._difficulty,
           "baseSalaryMult",
         );
         if (incomeMult !== 1.0) {
-          // 通过全局乘数影响所有收入
-          state._allJobsBonus = state._allJobsBonus || 1.0;
-          state._allJobsBonus *= incomeMult;
+          var optimal = incomeMult;
+          // 仅在首次设置当前值，不做每日复合
+          if (state._allJobsBonusBase !== state._difficulty) {
+            state._allJobsBonus = state._allJobsBonus || 1.0;
+            // 用目标值覆写，而非乘法累积
+            state._allJobsBonus = optimal;
+            state._allJobsBonusBase = state._difficulty;
+          }
         }
       }
       // 中后期财富税（仅当总资产≥¥20万且不是休闲模式）
@@ -1586,15 +1592,9 @@ const DAILY_PIPELINE = [
     },
   },
 
-  // === v3.6 NPC关系链每日tick（蝴蝶效应传播）===
-  {
-    name: "npc_relationships_tick",
-    fn: function (state) {
-      if (typeof tickNpcRelationships === "function") {
-        tickNpcRelationships(state);
-      }
-    },
-  },
+  // === 删除重复的 npc_relationships_tick 步骤 ===
+  // [全系统自洽修复] 域G A类修复: 该步骤在第1382行已存在，此副本为冗余代码。
+  // 已在上方保留唯一的 npc_relationships_tick 步骤。
 
   // === v3.13 人生节点每日检查 ===
   {

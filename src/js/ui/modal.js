@@ -4,6 +4,15 @@
  * 从 main.js 提取，管理所有弹窗：showModal、存档菜单、银行操作、面试等。
  */
 
+// [全系统自洽修复] 域F modal.js 独立 _esc 辅助
+function _esc(s) {
+  return String(s)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+
 // ====== 兼容旧式 showModal(title, desc, buttons) 签名 ======
 function showModal() {
   var args = arguments;
@@ -98,10 +107,23 @@ function showModalImpl({ title, body, buttons = [] }) {
   box.appendChild(actionsDiv);
 
   overlay.appendChild(box);
-  // ponytail: 所有弹窗必须点击按钮关闭，不允许点击外部关闭
+  // 所有弹窗必须点击按钮关闭，不允许点击外部关闭
   overlay.addEventListener("click", (e) => {
     if (e.target === overlay) {
       // 不做任何事——玩家必须点击按钮
+    }
+  });
+  // [全系统自洽修复] 域F 修复:ESC键关闭弹窗，提升桌面端可用性
+  document.addEventListener("keydown", function _modalEscHandler(e) {
+    if (e.key === "Escape" && document.body.contains(overlay)) {
+      try {
+        if (overlay.parentNode) {
+          overlay.parentNode.removeChild(overlay);
+        }
+      } catch (err) {
+        // ignore
+      }
+      document.removeEventListener("keydown", _modalEscHandler);
     }
   });
   document.body.appendChild(overlay);
@@ -298,13 +320,13 @@ function showGameOverModal() {
   showModal({
     title: "💀 游戏结束",
     body: `
-      <p>${state.flags.gameOverReason}</p>
+      <p>${_esc(state.flags?.gameOverReason || "人生走到了尽头")}</p>
       <table class="stats-summary">
         <tr><td>存活天数</td><td>${state.player.day} 天</td></tr>
         <tr><td>年龄</td><td>${state.player.age} 岁</td></tr>
-        <tr><td>现金</td><td>¥${state.resources.cash.toLocaleString()}</td></tr>
-        <tr><td>总收入</td><td>¥${state.resources.totalEarned.toLocaleString()}</td></tr>
-        <tr><td>债务</td><td>¥${state.resources.debt.toLocaleString()}</td></tr>
+        <tr><td>现金</td><td>¥${(state.resources.cash || 0).toLocaleString()}</td></tr>
+        <tr><td>总收入</td><td>¥${(state.resources.totalEarned || 0).toLocaleString()}</td></tr>
+        <tr><td>债务</td><td>¥${(state.resources.debt || 0).toLocaleString()}</td></tr>
       </table>
       ${badges.length > 0 ? '<p style="margin-top:10px;color:var(--text-secondary);font-size:13px;">🏅 获得 ' + badges.length + " 枚声誉徽章，下局可继承加成</p>" : ""}
       ${heritageResult && heritageResult.earned > 0 ? '<p style="margin-top:8px;color:var(--success);font-size:13px;">🪙 本局获得 <strong>' + heritageResult.earned + "</strong> 枚传承币（累计余额 " + heritageResult.after + "），可在主菜单→传承商店消费解锁下局福利</p>" : ""}

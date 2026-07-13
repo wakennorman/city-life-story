@@ -2379,7 +2379,9 @@ function renderInvestmentHoldingPanel(area, inv, groupKeys, title, color) {
     })
     .join("");
 
+  // [全系统自洽修复] 域F 投资持仓表格 加滚动容器（min-width:680px在小屏溢出）
   panel.innerHTML =
+    '<div class="investment-holding-scroll">' +
     '<div class="investment-holding-head">' +
     '<h4 style="margin:0;font-size:13px;color:' +
     color +
@@ -2399,7 +2401,8 @@ function renderInvestmentHoldingPanel(area, inv, groupKeys, title, color) {
     '<div class="investment-holding-row investment-holding-row-head">' +
     '<span class="inv-h-symbol">代码</span><span class="inv-h-name">名称</span><span class="inv-h-qty">数量</span><span class="inv-h-price">均价</span><span class="inv-h-price">现价</span><span class="inv-h-value">市值</span><span class="inv-h-pl">盈亏</span>' +
     "</div>" +
-    rowsHtml;
+    rowsHtml +
+    "</div>";
   area.appendChild(panel);
 }
 

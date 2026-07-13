@@ -1188,7 +1188,7 @@ body {
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
   padding: 24px;
-  min-width: 360px;
+  min-width: 280px;
   width: min(520px, calc(100vw - 28px));
   max-width: calc(100vw - 28px);
   max-height: 80vh;
@@ -3659,7 +3659,6 @@ body {
   }
 
   .city-map > div {
-    min-width: 620px !important;
     min-height: 360px !important;
   }
 
@@ -3953,6 +3952,13 @@ body {
   align-items: center;
   gap: 8px;
   min-width: 680px;
+}
+
+/* [全系统自洽修复] 域F 投资持仓min-width 680px 无移动端溢出兜底 */
+.investment-holding-scroll {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 .investment-holding-head {
@@ -4476,7 +4482,6 @@ body {
     padding: 8px !important;
   }
   .city-map > div {
-    min-width: 480px !important;
     min-height: 240px !important;
   }
   .city-map .map-node,

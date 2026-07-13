@@ -211,7 +211,7 @@ var STORY_CHAPTERS = [
  */
 function checkStoryChapter(state) {
   if (!state.player || !state.player.day) return false;
-  if (state.flags.gameOver || state.flags.victory) return false;
+  if (!state.flags || state.flags.gameOver || state.flags.victory) return false;
 
   for (var i = 0; i < STORY_CHAPTERS.length; i++) {
     var ch = STORY_CHAPTERS[i];
@@ -263,9 +263,9 @@ function _triggerChapter(state, ch) {
     stats.highSkills +
     "项达标";
 
-  // 使用现有的弹窗系统
+  // 使用现有的弹窗系统 — 遵循标准 _pendingEvent/_pendingEventId 模式
   if (typeof showEventModal === "function") {
-    state._pendingEvent = {
+    var evt = {
       id: ch.id,
       icon: ch.icon,
       title: ch.title,
@@ -288,8 +288,13 @@ function _triggerChapter(state, ch) {
         },
       ],
     };
+    state._pendingEvent = evt;
+    state._pendingEventId = ch.id;
     setTimeout(function () {
-      showEventModal();
+      var s = StateManager.getState();
+      if (s._pendingEvent && s._pendingEventId === ch.id) {
+        showEventModal(s._pendingEvent);
+      }
     }, 100);
   } else {
     StateManager.addMessage(

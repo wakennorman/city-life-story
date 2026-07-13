@@ -4472,7 +4472,7 @@ function showCareerRequirementsModal(state, pathKey, level) {
 function showCareerPathPreviewModal(pathKey) {
   var st = StateManager.getState();
   var path = CAREER_PATHS[pathKey];
-  if (!path) return;
+  if (!path || !Array.isArray(path.levels) || path.levels.length === 0) return; // [全系统自洽修复] 域F 职业路径 levels 数组守卫
   var p = st.player;
   var skills = st.skills || {};
 

@@ -1322,7 +1322,12 @@ function renderActiveNews(state, parent) {
       if (_shown >= _maxN) break;
       const banner = document.createElement("div");
       banner.className = "news-banner";
-      banner.innerHTML = `<span class="news-icon">📰</span> ${news.headline}`;
+      var newsIcon = document.createElement("span");
+      newsIcon.className = "news-icon";
+      newsIcon.textContent = "📰";
+      banner.appendChild(newsIcon);
+      var newsText = document.createTextNode(news.headline || "");
+      banner.appendChild(newsText);
       parent.appendChild(banner);
       _shown++;
     }

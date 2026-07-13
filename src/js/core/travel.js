@@ -356,9 +356,30 @@ function startTravel(state, destId) {
   var currentAp = (state.player && state.player.actionPoints) || 0;
   if (currentAp < dest.apCost)
     return { ok: false, msg: "行动力不足，需要" + dest.apCost + "行动力" };
+  // [全系统自洽修复] 域G 联动增强: 极端天气阻断出行
+  if (
+    typeof isWeatherTravelBlocked === "function" &&
+    isWeatherTravelBlocked(state)
+  ) {
+    return { ok: false, msg: "极端天气，不适合出行！" };
+  }
 
   state.resources.cash -= dest.cost;
-  state.player.actionPoints = Math.max(0, currentAp - dest.apCost);
+  // [全系统自洽修复] 域G 联动增强: 天气影响旅行AP消耗（暴雨/台风/暴雪增加出行成本）
+  var weatherApMod =
+    typeof getWeatherTravelApMod === "function"
+      ? getWeatherTravelApMod(state)
+      : 1.0;
+  var actualApCost = Math.round(dest.apCost * weatherApMod);
+  state.player.actionPoints = Math.max(0, currentAp - actualApCost);
+  if (weatherApMod > 1.0) {
+    StateManager.addMessage(
+      "🌧️ 受天气影响，出行成本增加了" +
+        Math.round((weatherApMod - 1.0) * 100) +
+        "%。",
+      "warning",
+    );
+  }
   state.travel.active = true;
   state.travel.destination = destId;
   state.travel.daysRemaining = dest.days;
@@ -452,6 +473,7 @@ function tickTravel(state) {
     if (
       dest.decisionEvents &&
       dest.decisionEvents.length > 0 &&
+      state.flags &&
       !state.flags._travelDecisionShown &&
       (typeof Random !== "undefined" ? Random.chance(0.5) : Math.random() < 0.5)
     ) {
@@ -518,6 +540,8 @@ function tickTravel(state) {
     state.needs.happiness = Math.min(100, (state.needs.happiness || 50) + 10);
     state.travel.active = false;
     state.travel.destination = null;
+    state.travel.daysRemaining = 0;
+    if (state.flags) state.flags._travelDecisionShown = false;
     // === v3.23: 触发槽 — after_travel ===
     if (typeof window.TriggerRegistry !== "undefined") {
       try {

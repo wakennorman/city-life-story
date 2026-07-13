@@ -1906,12 +1906,20 @@ function renderGoalStrip(state, parent) {
 }
 
 function renderActiveNews(state, parent) {
+  // v3.97: 移动端最多展示 1 条新闻，避免把「🎯 当前目标」和行动卡片挤出首屏
+  const _isMob = typeof window !== "undefined" && window.innerWidth <= 768;
+  let _shown = 0;
+  const _maxN = _isMob ? 1 : 99;
   if (state.activeNews && state.activeNews.length > 0) {
     for (const news of state.activeNews) {
+      if (news._isIntroNews) continue;
+      if (_shown >= _maxN) break;
       const banner = document.createElement("div");
       banner.className = "news-banner";
-      banner.innerHTML = `<span class="news-icon">📰</span> ${news.headline}`;
+      banner.innerHTML =
+        '<span class="news-icon">📰</span> ' + _esc(news.headline);
       parent.appendChild(banner);
+      _shown++;
     }
   }
 
@@ -2602,6 +2610,8 @@ function renderGuidanceBar(state, parent) {
     tipInner.className = "gb-tips-inner gb-tips-cycle";
     var tipDisplay = document.createElement("div");
     tipDisplay.className = "gb-tip-display";
+    tipDisplay.setAttribute("aria-live", "polite");
+    tipDisplay.setAttribute("role", "status");
     tipDisplay.textContent = tips[0];
     tipInner.appendChild(tipDisplay);
 
@@ -5778,17 +5788,18 @@ function showAchievementUnlockedPopup(ach) {
     "animation:achSlideIn 0.5s ease-out;" +
     "display:flex;gap:12px;align-items:flex-start;";
 
+  // [全系统自洽修复] 域F 成就弹窗 innerHTML 加 _esc 防 XSS/文字截断
   popup.innerHTML =
     '<div style="font-size:32px;flex-shrink:0;">' +
-    (ach.icon || "🏅") +
+    _esc(ach.icon || "🏅") +
     "</div>" +
     '<div style="flex:1;min-width:0;">' +
     '<div style="font-size:10px;color:var(--accent);font-weight:bold;margin-bottom:2px;">🏆 成就解锁</div>' +
     '<div style="font-size:14px;font-weight:bold;color:var(--text-primary);margin-bottom:2px;">' +
-    ach.name +
+    _esc(ach.name) +
     "</div>" +
     '<div style="font-size:11px;color:var(--text-secondary);">' +
-    (ach.desc || "") +
+    _esc(ach.desc || "") +
     "</div>" +
     "</div>";
 

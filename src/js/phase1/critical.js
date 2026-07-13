@@ -731,6 +731,33 @@ function _contractIllness(state, illnessId) {
   }
 }
 
+/** 失败条件判定 — [全系统自洽修复] 域G A类修复: 原调用 checkLoseConditions 未定义导致每日管线崩溃 */
+function checkLoseConditions(state) {
+  if (!state || !state.player || !state.flags) return;
+  // 已在游戏结束状态，跳过
+  if (state.flags.gameOver || state.flags.victory) return;
+
+  // 健康归零 → 游戏结束
+  var health = state.status && state.status.health;
+  if (health !== undefined && health <= 0) {
+    state.flags.gameOver = true;
+    state.flags.gameOverReason =
+      "你的身体终于撑不住了。在这座城市里，你耗尽了最后一口气。";
+    return;
+  }
+
+  // 极端负债（现金和存款双负且无收入途径）→ 轻度失败叙事
+  var cash = (state.resources && state.resources.cash) || 0;
+  var bank = (state.resources && state.resources.bankBalance) || 0;
+  var totalCash = cash + bank;
+  if (totalCash < -100000 && state.player.day > 180) {
+    state.flags.gameOver = true;
+    state.flags.gameOverReason =
+      "债务压垮了你。在这座城市里，你再也找不到立足之地。";
+    return;
+  }
+}
+
 // ================================================================
 //  百科自更新：参数从 CRITICAL_THRESHOLDS 自动派生
 //  调阈值时无需手动改 wiki.js

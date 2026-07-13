@@ -34,6 +34,18 @@
 - 有效 investment：industry ∈ {科技,新能源,消费,金融,房地产,医药}；category ∈ {股票,贵金属,期货,虚拟币}；symbols 含 COPPER/NICKEL/ALUM/CL/NG。
 - 有效 seasons：spring/summer/autumn/winter。
 
+## 职业系统真实架构（2026-07-13 重要，防脱钩）
+
+- 玩家职业线的**真实入口**是 `src/js/data/career_dev.js` 的 `CAREER_PATHS`（10 路径 × 42 职位，已含互联网/IT 线，终极目标 P5→P10）。
+- **不要另起平行职业系统**：往 `SKILL_BRANCHES`(coding) 加职业分支、往 `STREET_JOBS` 加自由工作、往 `CORP_ACTIONS` 加公司行为、往 `cross_system_events.js` 加职业事件——这些会和 CAREER_PATHS 脱钩，变成孤儿内容（已踩过一次坑，见 2026-07-13 回滚）。
+- 扩展职业内容应接入 `CAREER_PATHS` 体系，而非造第二套。
+- 公司行为若复用 `corp.risk` 作 tech debt，须确认它落在 CAREER_PATHS 的公司职业链内。
+
+## 「日常开发」/ scene#15 不是真实游戏内容（2026-07-13）
+
+- 全代码库（含设计文档）搜不到「日常开发」一词；它是对 `@scene#15:"日常开发"` 指令的**误读**，并非游戏内场景或职业。
+- 收到模糊 scene/主题指令时，**先 grep 确认它是否真实存在**，再动手；用户一句「无关」即最高优先级终止信号，立刻停手确认方向，不要辩解或继续。
+
 ## 提交纪律（v3.0 SOP）
 
 - 只动 `loop/auto`：`git checkout -B loop/auto`（基于当前 HEAD）；绝不向 main 提交/推送。

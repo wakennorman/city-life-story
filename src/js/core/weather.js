@@ -633,14 +633,16 @@ function applyWeatherDailyEffects(state) {
     WEATHER_TYPES.find(function (w) {
       return w.id === state.weather.current;
     }) || WEATHER_TYPES[0];
-  var tempEffect = getTempEffect(state.weather.temperature || 22);
+  var tempEffect = getTempEffect(
+    state.weather.temperature != null ? state.weather.temperature : 22,
+  );
 
-  // 天气对心情
+  // [全系统自洽修复] 域G A类修复: 防止 NaN 传播 — 用 (x || 0) 替代裸 x 以免 NaN 永久固化
   state.needs.happiness = Math.max(
     0,
     Math.min(
       100,
-      state.needs.happiness +
+      (state.needs.happiness || 0) +
         (wDef.happinessBonus || 0) +
         (tempEffect.moodMod || 0),
     ),
@@ -650,16 +652,17 @@ function applyWeatherDailyEffects(state) {
     0,
     Math.min(
       100,
-      state.needs.fatigue +
+      (state.needs.fatigue || 0) +
         (wDef.fatigueBonus || 0) +
         (tempEffect.fatigueMod || 0),
     ),
   );
-  // 天气对健康
+  // 天气对健康 — [全系统自洽修复] 域G 联动增强: 接入 getNetWeatherHealthImpact 使防寒/防暑装备生效
   if (state.status && state.status.health !== undefined) {
+    var netHealthImpact = getNetWeatherHealthImpact(state);
     state.status.health = Math.max(
       0,
-      Math.min(100, state.status.health + (tempEffect.healthMod || 0)),
+      Math.min(100, state.status.health + netHealthImpact),
     );
   }
 
@@ -907,11 +910,13 @@ function getWeatherEnhancedDesc(state) {
     WEATHER_TYPES.find(function (w) {
       return w.id === state.weather.current;
     }) || WEATHER_TYPES[0];
-  var tempEffect = getTempEffect(state.weather.temperature || 22);
+  var tempEffect = getTempEffect(
+    state.weather.temperature != null ? state.weather.temperature : 22,
+  );
   var parts = [
     wDef.icon + " " + wDef.name,
     "🌡️ " +
-      (state.weather.temperature || "?") +
+      (state.weather.temperature != null ? state.weather.temperature : "?") +
       "°C（" +
       tempEffect.name +
       "）",

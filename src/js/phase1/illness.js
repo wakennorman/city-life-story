@@ -150,6 +150,8 @@ function rollDailyIllness(state) {
 function _addIllness(state, illnessId) {
   var ill = ILLNESSES[illnessId];
   if (!ill) return;
+  // [全系统自洽修复] 域G A类修复: 确保 state.status 存在（管线边界场景）
+  if (!state.status) state.status = {};
   state.status.illnesses = state.status.illnesses || [];
   state.status.illnesses.push({
     id: illnessId,
@@ -1076,15 +1078,17 @@ function triggerIllness(state, illnessId, source) {
   // 初始化
   if (!state.status) state.status = {};
   if (!state.status.illnesses) state.status.illnesses = [];
-  // 加入疾病
+  // [全系统自洽修复] 域G A类修复: triggerIllness 使用 daysRemaining 而非 contractedDay 导致
+  // tickIllnessDecay 无法计算康复（daysSince = NaN），疾病永不康复。
+  // 改为与 _addIllness 一致的数据结构：contractedDay + treated + severity
+  // 同时修复慢性病（无 naturalCureDays）访问崩溃
+  var ill = ILLNESSES[illnessId];
   state.status.illnesses.push({
     id: illnessId,
-    daysRemaining:
-      Random.int(
-        ILLNESSES[illnessId].naturalCureDays[0],
-        ILLNESSES[illnessId].naturalCureDays[1],
-      ) || 5,
-    severity: ILLNESSES[illnessId].severity || 1,
+    contractedDay: state.player.day,
+    severity: ill.severity || 1,
+    treated: false,
   });
+  state.status.sick = true;
   return true;
 }

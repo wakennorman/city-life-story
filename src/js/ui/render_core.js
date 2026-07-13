@@ -1085,7 +1085,10 @@ function getLocationServiceBadges(locKey) {
 function renderTabBar(state) {
   const tabs = document.querySelectorAll("#tab-bar .tab-btn");
   tabs.forEach((btn) => {
-    btn.classList.toggle("active", btn.dataset.tab === currentTab);
+    var isActive = btn.dataset.tab === currentTab;
+    btn.classList.toggle("active", isActive);
+    // [全系统自洽修复] 域F 增强:tab按钮aria-current无障碍标记
+    btn.setAttribute("aria-current", isActive ? "page" : "false");
     // 5 个 Tab 全部常驻显示，没有阶段隐藏逻辑
     btn.style.display = "";
   });

@@ -22,8 +22,10 @@ function checkLifeNodeMedicalEvents(state) {
   if (!state || !state.flags) return;
 
   // 35岁危机 → 健康风险增加
+  // [全系统自洽修复] 域G A类修复: life_nodes中35岁危机节点ID为career35，
+  // 交叉引用时需用_lifeNode_career35_done而非_lifeNode_midlife_crisis_done
   if (
-    state.flags._lifeNode_midlife_crisis_done &&
+    state.flags._lifeNode_career35_done &&
     !state.flags._midlifeHealthWarning
   ) {
     var health = state.status && state.status.health;
@@ -236,6 +238,59 @@ function checkLifeNodeTravelEvents(state) {
   }
 }
 
+// ====== 5.5 人生节点 → 叙事反馈（消费 _career35Path / _retirementType 死flag） ======
+
+/**
+ * 消费 life_nodes.js 设置的 _career35Path 和 _retirementType 标志，
+ * 提供叙事反馈（这些标志只被写入不被读取）
+ */
+function checkLifeNodeNarrativeFeedback(state) {
+  if (!state || !state.flags) return;
+
+  // 35岁危机路径叙事（仅在刚选择后触发一次）
+  if (state.flags._career35Path && !state.flags._career35PathNarrated) {
+    state.flags._career35PathNarrated = true;
+    var pathMsg = "";
+    switch (state.flags._career35Path) {
+      case "transform":
+        pathMsg = "你选择了充电转型，开始学习新技能。这条路不容易，但值得。";
+        break;
+      case "hold":
+        pathMsg = "你选择咬牙硬扛，靠资历撑过去。身体是革命的本钱。";
+        break;
+      case "newpath":
+        pathMsg = "你决定寻找新赛道，人脉带来了新的机会。";
+        break;
+      case "lieflat":
+        pathMsg = "躺平亦是一种选择。降低期望后，反而轻松了一些。";
+        break;
+    }
+    if (pathMsg && typeof StateManager !== "undefined") {
+      StateManager.addMessage("⚡ " + pathMsg, "story");
+    }
+  }
+
+  // 退休类型叙事（仅在刚选择后触发一次）
+  if (state.flags._retirementType && !state.flags._retirementTypeNarrated) {
+    state.flags._retirementTypeNarrated = true;
+    var retireMsg = "";
+    switch (state.flags._retirementType) {
+      case "wealthy":
+        retireMsg = "体面退休，手有余粮，心中不慌。";
+        break;
+      case "advisor":
+        retireMsg = "退而不休，用自己的经验继续发光发热。";
+        break;
+      case "continue":
+        retireMsg = "你还在继续工作，人生没有真正的退休。";
+        break;
+    }
+    if (retireMsg && typeof StateManager !== "undefined") {
+      StateManager.addMessage("🏖️ " + retireMsg, "story");
+    }
+  }
+}
+
 // ====== 6. 综合每日检查 ======
 
 /**
@@ -245,6 +300,7 @@ function checkLifeNodeTravelEvents(state) {
 function checkCrossSystemEvents(state) {
   if (!state) return;
   checkLifeNodeMedicalEvents(state);
+  checkLifeNodeNarrativeFeedback(state);
   checkTravelMedicalEvents(state);
   checkMedicalLegalEvents(state);
   checkTravelLegalEvents(state);
@@ -254,6 +310,7 @@ function checkCrossSystemEvents(state) {
 // ====== 全局挂载 ======
 if (typeof window !== "undefined") {
   window.checkLifeNodeMedicalEvents = checkLifeNodeMedicalEvents;
+  window.checkLifeNodeNarrativeFeedback = checkLifeNodeNarrativeFeedback;
   window.checkTravelMedicalEvents = checkTravelMedicalEvents;
   window.checkMedicalLegalEvents = checkMedicalLegalEvents;
   window.checkTravelLegalEvents = checkTravelLegalEvents;

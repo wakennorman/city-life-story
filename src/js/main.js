@@ -4896,6 +4896,10 @@ function consumeAP(cost) {
   if (typeof getApCostMultiplier === "function") {
     actualCost = Math.round(cost * getApCostMultiplier(state));
   }
+  // [全系统自洽修复] 域G B类修复: 防止NaN传播导致游戏软锁（AP=NaN → endDay永不触发）
+  if (isNaN(actualCost) || !isFinite(actualCost) || actualCost < 0) {
+    actualCost = cost;
+  }
   state.player.actionPoints = Math.max(
     0,
     state.player.actionPoints - actualCost,

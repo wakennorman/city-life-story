@@ -350,6 +350,8 @@ function checkLifeNodes(state) {
 function getLifeNodeStatus(state) {
   var completed = [];
   var pending = null;
+  // [全系统自洽修复] 域G A类修复: 确保 flags 存在避免 node.condition 中直接访问 state.flags 崩溃
+  if (!state.flags) state.flags = {};
 
   for (var key in LIFE_NODES) {
     var node = LIFE_NODES[key];
