@@ -540,6 +540,22 @@ function showEventModal(evt) {
       if (!choice) return;
       const state = StateManager.getState();
       try {
+        // v3.99c 约定式自动归类：声明式 effects/flags 自动应用（节日事件等）
+        if (choice.effects && typeof choice.effects === "object") {
+          for (var efKey in choice.effects) {
+            if (efKey === "happiness" || efKey === "fatigue" || efKey === "hunger" || efKey === "hygiene") {
+              state.needs[efKey] = Math.min(100, Math.max(0, (state.needs[efKey] || 50) + choice.effects[efKey]));
+            } else if (efKey === "health") {
+              state.status = state.status || {};
+              state.status.health = Math.min(100, Math.max(0, (state.status.health || 100) + choice.effects[efKey]));
+            }
+          }
+        }
+        if (choice.flags && typeof choice.flags === "object") {
+          for (var flKey in choice.flags) {
+            state.flags[flKey] = choice.flags[flKey];
+          }
+        }
         // v3.1 ⑤ 事件惩罚倍率：快照关键数值，结算后对负向 delta 乘算难度系数
         var _preEvtCash = state.resources.cash;
         var _preEvtHealth = state.stats ? state.stats.health : 0;

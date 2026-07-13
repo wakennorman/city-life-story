@@ -19,9 +19,7 @@ const ACHIEVEMENTS = [
     icon: "💰",
     category: "人生第一次",
     hidden: false,
-    check: function (st) {
-      return (st.resources.totalEarned || 0) > 0;
-    },
+    triggers: { minTotalEarned: 1 },
   },
   {
     id: "first_job",
@@ -65,11 +63,7 @@ const ACHIEVEMENTS = [
     icon: "🏦",
     category: "人生第一次",
     hidden: false,
-    check: function (st) {
-      // 生存满3天再判定：部分剧本（二代创业者/中年危机）开局自带银行存款
-      if ((st.player.day || 0) < 3) return false;
-      return (st.resources.bankBalance || 0) > 0;
-    },
+    triggers: { minDay: 3, minBankBalance: 1 },
   },
   {
     id: "first_injury",
@@ -79,9 +73,7 @@ const ACHIEVEMENTS = [
     icon: "🩹",
     category: "人生第一次",
     hidden: true,
-    check: function (st) {
-      return st.flags && st.flags._everInjured;
-    },
+    triggers: { flagMet: "_everInjured" },
   },
   {
     id: "first_upgrade_housing",
@@ -91,11 +83,7 @@ const ACHIEVEMENTS = [
     icon: "🏠",
     category: "人生第一次",
     hidden: false,
-    check: function (st) {
-      // 生存满5天再判定：部分剧本（下岗/二代创业者/中年危机）开局住所tier≥1
-      if ((st.player.day || 0) < 5) return false;
-      return (st.housing.tier || 0) >= 1;
-    },
+    triggers: { minDay: 5, minHousingTier: 1 },
   },
   {
     id: "first_skill_level",
@@ -106,7 +94,6 @@ const ACHIEVEMENTS = [
     category: "人生第一次",
     hidden: false,
     check: function (st) {
-      // 生存满3天再判定：6/7剧本开局自带至少一项技能≥1级
       if ((st.player.day || 0) < 3) return false;
       return Object.values(st.skills).some(function (s) {
         return s.level >= 1;
@@ -123,9 +110,7 @@ const ACHIEVEMENTS = [
     icon: "💵",
     category: "里程碑",
     hidden: false,
-    check: function (st) {
-      return (st.resources.totalEarned || 0) >= 10000;
-    },
+    triggers: { minTotalEarned: 10000 },
   },
   {
     id: "earn_100k",
@@ -135,9 +120,7 @@ const ACHIEVEMENTS = [
     icon: "💵",
     category: "里程碑",
     hidden: false,
-    check: function (st) {
-      return (st.resources.totalEarned || 0) >= 100000;
-    },
+    triggers: { minTotalEarned: 100000 },
   },
   {
     id: "survive_30_days",
@@ -147,9 +130,7 @@ const ACHIEVEMENTS = [
     icon: "📅",
     category: "里程碑",
     hidden: false,
-    check: function (st) {
-      return (st.player.day || 0) >= 30;
-    },
+    triggers: { minDay: 30 },
   },
   {
     id: "survive_100_days",
@@ -159,9 +140,7 @@ const ACHIEVEMENTS = [
     icon: "📅",
     category: "里程碑",
     hidden: false,
-    check: function (st) {
-      return (st.player.day || 0) >= 100;
-    },
+    triggers: { minDay: 100 },
   },
   {
     id: "repay_debt",
@@ -172,7 +151,6 @@ const ACHIEVEMENTS = [
     category: "里程碑",
     hidden: false,
     check: function (st) {
-      // 生存满15天再判定：部分剧本（经典/二代创业者）开局无债
       if ((st.player.day || 0) < 15) return false;
       return (
         (st.resources.villageDebt || 0) <= 0 &&
@@ -188,9 +166,7 @@ const ACHIEVEMENTS = [
     icon: "🏢",
     category: "里程碑",
     hidden: false,
-    check: function (st) {
-      return st.player.phase === "corporate";
-    },
+    triggers: { phaseEquals: "corporate" },
   },
   {
     id: "reach_p8",
@@ -200,10 +176,7 @@ const ACHIEVEMENTS = [
     icon: "🚀",
     category: "里程碑",
     hidden: false,
-    check: function (st) {
-      var rank = st.corporate && st.corporate.rank;
-      return rank === "P8" || rank === "P9" || rank === "P10";
-    },
+    triggers: { rankAtLeast: "P8" },
   },
   {
     id: "all_skills_10",
@@ -214,11 +187,7 @@ const ACHIEVEMENTS = [
     icon: "🌟",
     category: "里程碑",
     hidden: false,
-    check: function (st) {
-      return Object.values(st.skills).every(function (s) {
-        return s.level >= 10;
-      });
-    },
+    triggers: { minAllSkillLevel: 10 },
   },
 
   // === 道德档案（隐藏，记录重大道德选择）===
@@ -230,9 +199,7 @@ const ACHIEVEMENTS = [
     icon: "👛",
     category: "道德档案",
     hidden: true,
-    check: function (st) {
-      return st.flags && st.flags._keptWallet;
-    },
+    triggers: { flagMet: "_keptWallet" },
   },
   {
     id: "moral_helped_coworker",
@@ -243,9 +210,7 @@ const ACHIEVEMENTS = [
     icon: "🚑",
     category: "道德档案",
     hidden: true,
-    check: function (st) {
-      return st.flags && st.flags._helpedCoworker;
-    },
+    triggers: { flagMet: "_helpedCoworker" },
   },
   {
     id: "moral_refused_fake",
@@ -256,9 +221,7 @@ const ACHIEVEMENTS = [
     icon: "🗑️",
     category: "道德档案",
     hidden: true,
-    check: function (st) {
-      return st.flags && st.flags._refusedFakeGoods;
-    },
+    triggers: { flagMet: "_refusedFakeGoods" },
   },
   {
     id: "moral_fought_wage_theft",
@@ -269,9 +232,7 @@ const ACHIEVEMENTS = [
     icon: "🏛️",
     category: "道德档案",
     hidden: true,
-    check: function (st) {
-      return st.flags && st.flags._foughtWageTheft;
-    },
+    triggers: { flagMet: "_foughtWageTheft" },
   },
 
   // === 隐藏成就 ===
@@ -283,9 +244,7 @@ const ACHIEVEMENTS = [
     icon: "💸",
     category: "隐藏",
     hidden: true,
-    check: function (st) {
-      return st.flags && st.flags._everBroke;
-    },
+    triggers: { flagMet: "_everBroke" },
   },
   {
     id: "hidden_starved",
@@ -295,9 +254,7 @@ const ACHIEVEMENTS = [
     icon: "🍞",
     category: "隐藏",
     hidden: true,
-    check: function (st) {
-      return st.flags && st.flags._everStarved;
-    },
+    triggers: { flagMet: "_everStarved" },
   },
   {
     id: "hidden_no_beg",
@@ -308,9 +265,7 @@ const ACHIEVEMENTS = [
     icon: "💪",
     category: "隐藏",
     hidden: true,
-    check: function (st) {
-      return st.player.day >= 100 && !(st.flags && st.flags._everBegged);
-    },
+    triggers: { minDay: 100, flagNotMet: "_everBegged" },
   },
 
   // === 企业命运成就（P2#11）===
@@ -323,21 +278,7 @@ const ACHIEVEMENTS = [
     icon: "💀",
     category: "隐藏",
     hidden: true,
-    check: function (st) {
-      if (!st.enterpriseFate || !st.enterpriseFate.companies) return false;
-      for (var cid in st.enterpriseFate.companies) {
-        var h = st.enterpriseFate.companies[cid].fateEventHistory || [];
-        for (var i = 0; i < h.length; i++) {
-          // 公司倒闭事件：company_death（正式倒闭事件）或 merger_acquire（濒死收购）
-          if (
-            h[i].eventType === "company_death" ||
-            h[i].eventType === "merger_acquire"
-          )
-            return true;
-        }
-      }
-      return false;
-    },
+    triggers: { enterpriseFateDeath: true },
   },
   {
     id: "investor_eye",
@@ -348,14 +289,7 @@ const ACHIEVEMENTS = [
     icon: "🔮",
     category: "隐藏",
     hidden: true,
-    check: function (st) {
-      if (!st.enterpriseFate || !st.enterpriseFate.companies) return false;
-      for (var cid in st.enterpriseFate.companies) {
-        var co = st.enterpriseFate.companies[cid];
-        if (co && co.knownToPlayer && co.marketShare >= 30) return true;
-      }
-      return false;
-    },
+    triggers: { enterpriseFateMarketShare: 30 },
   },
   {
     id: "corp_killer",
@@ -366,9 +300,7 @@ const ACHIEVEMENTS = [
     icon: "⚡",
     category: "隐藏",
     hidden: true,
-    check: function (st) {
-      return !!(st.flags && st.flags._formerCompanyCollapsed);
-    },
+    triggers: { flagMet: "_formerCompanyCollapsed" },
   },
 
   // ============================================================
@@ -383,14 +315,7 @@ const ACHIEVEMENTS = [
     icon: "🏗️",
     category: "里程碑",
     hidden: true,
-    check: function (st) {
-      return !!(
-        st.flags &&
-        (st.flags._reAccepted ||
-          st.flags._reCoalitionAccepted ||
-          st.flags._reFinalSettled)
-      );
-    },
+    triggers: { flagMet: "_reFinalSettled" },
   },
   {
     id: "chain_startup_win",
@@ -401,9 +326,7 @@ const ACHIEVEMENTS = [
     icon: "💎",
     category: "里程碑",
     hidden: true,
-    check: function (st) {
-      return !!(st.flags && st.flags._startupWin);
-    },
+    triggers: { flagMet: "_startupWin" },
   },
   {
     id: "chain_startup_lose",
@@ -414,9 +337,7 @@ const ACHIEVEMENTS = [
     icon: "🔥",
     category: "隐藏",
     hidden: true,
-    check: function (st) {
-      return !!(st.flags && st.flags._startupLose);
-    },
+    triggers: { flagMet: "_startupLose" },
   },
   {
     id: "chain_gray_testified",
@@ -426,9 +347,7 @@ const ACHIEVEMENTS = [
     icon: "⚖️",
     category: "道德档案",
     hidden: true,
-    check: function (st) {
-      return !!(st.flags && st.flags._grayTestified);
-    },
+    triggers: { flagMet: "_grayTestified" },
   },
   {
     id: "chain_gray_reported",
@@ -438,9 +357,7 @@ const ACHIEVEMENTS = [
     icon: "📢",
     category: "道德档案",
     hidden: true,
-    check: function (st) {
-      return !!(st.flags && st.flags._grayReported);
-    },
+    triggers: { flagMet: "_grayReported" },
   },
   {
     id: "chain_insider_caught",
@@ -450,12 +367,7 @@ const ACHIEVEMENTS = [
     icon: "🔒",
     category: "道德档案",
     hidden: true,
-    check: function (st) {
-      return !!(
-        st.flags &&
-        (st.flags._insiderCaught || st.flags._insiderConfessed)
-      );
-    },
+    triggers: { flagMet: "_insiderCaught" },
   },
   {
     id: "chain_insider_resisted",
@@ -466,9 +378,7 @@ const ACHIEVEMENTS = [
     icon: "🚪",
     category: "道德档案",
     hidden: true,
-    check: function (st) {
-      return !!(st.flags && st.flags._insiderResisted);
-    },
+    triggers: { flagMet: "_insiderResisted" },
   },
   {
     id: "chain_edu_arbitrage",
@@ -479,14 +389,7 @@ const ACHIEVEMENTS = [
     icon: "📚",
     category: "里程碑",
     hidden: true,
-    check: function (st) {
-      return !!(
-        st.flags &&
-        (st.flags._eduBoughtAssets ||
-          st.flags._eduStudyRoom ||
-          st.flags._eduMiddleman)
-      );
-    },
+    triggers: { flagMet: "_eduBoughtAssets" },
   },
   {
     id: "chain_ev_recovery",
@@ -497,9 +400,7 @@ const ACHIEVEMENTS = [
     icon: "📈",
     category: "里程碑",
     hidden: true,
-    check: function (st) {
-      return !!(st.flags && st.flags._evRecoverySeen);
-    },
+    triggers: { flagMet: "_evRecoverySeen" },
   },
   {
     id: "chain_career_evidence",
@@ -510,12 +411,7 @@ const ACHIEVEMENTS = [
     icon: "♟️",
     category: "里程碑",
     hidden: true,
-    check: function (st) {
-      return !!(
-        st.flags &&
-        (st.flags._careerNailed || st.flags._careerEvidencePayoffSeen)
-      );
-    },
+    triggers: { flagMet: "_careerNailed" },
   },
   {
     id: "chain_career_took_blame",
@@ -525,9 +421,7 @@ const ACHIEVEMENTS = [
     icon: "😶",
     category: "隐藏",
     hidden: true,
-    check: function (st) {
-      return !!(st.flags && st.flags._careerTookBlame);
-    },
+    triggers: { flagMet: "_careerTookBlame" },
   },
 
   // ============================================================
@@ -542,9 +436,7 @@ const ACHIEVEMENTS = [
     icon: "🤒",
     category: "人生第一次",
     hidden: true,
-    check: function (st) {
-      return !!(st.flags && st.flags._everGotSick);
-    },
+    triggers: { flagMet: "_everGotSick" },
   },
   {
     id: "survive_chronic",
@@ -555,15 +447,7 @@ const ACHIEVEMENTS = [
     icon: "💊",
     category: "隐藏",
     hidden: true,
-    check: function (st) {
-      return !!(
-        st.status &&
-        st.status.illnesses &&
-        st.status.illnesses.some(function (i) {
-          return i.chronic;
-        })
-      );
-    },
+    triggers: { chronicIllness: true },
   },
   {
     id: "survive_hospitalized",
@@ -573,9 +457,7 @@ const ACHIEVEMENTS = [
     icon: "🏥",
     category: "人生第一次",
     hidden: true,
-    check: function (st) {
-      return !!(st.flags && st.flags._everHospitalized);
-    },
+    triggers: { flagMet: "_everHospitalized" },
   },
   {
     id: "survive_collapsed",
@@ -586,9 +468,7 @@ const ACHIEVEMENTS = [
     icon: "😵",
     category: "隐藏",
     hidden: true,
-    check: function (st) {
-      return !!(st.flags && st.flags._everCollapsed);
-    },
+    triggers: { flagMet: "_everCollapsed" },
   },
 
   // ============================================================
@@ -603,9 +483,7 @@ const ACHIEVEMENTS = [
     icon: "🎂",
     category: "里程碑",
     hidden: false,
-    check: function (st) {
-      return (st.player.day || 0) >= 365;
-    },
+    triggers: { minDay: 365 },
   },
   {
     id: "earn_1m",
@@ -616,9 +494,7 @@ const ACHIEVEMENTS = [
     icon: "💰",
     category: "里程碑",
     hidden: false,
-    check: function (st) {
-      return (st.resources.totalEarned || 0) >= 1000000;
-    },
+    triggers: { minTotalEarned: 1000000 },
   },
   {
     id: "all_skills_30",
@@ -629,11 +505,7 @@ const ACHIEVEMENTS = [
     icon: "📖",
     category: "里程碑",
     hidden: true,
-    check: function (st) {
-      return Object.values(st.skills).every(function (s) {
-        return s.level >= 30;
-      });
-    },
+    triggers: { minAllSkillLevel: 30 },
   },
   {
     id: "all_skills_50",
@@ -644,11 +516,7 @@ const ACHIEVEMENTS = [
     icon: "🏆",
     category: "里程碑",
     hidden: true,
-    check: function (st) {
-      return Object.values(st.skills).every(function (s) {
-        return s.level >= 50;
-      });
-    },
+    triggers: { minAllSkillLevel: 50 },
   },
   {
     id: "max_fame",
@@ -658,9 +526,7 @@ const ACHIEVEMENTS = [
     icon: "⭐",
     category: "里程碑",
     hidden: true,
-    check: function (st) {
-      return (st.player.fame || 0) >= 100;
-    },
+    triggers: { minFame: 100 },
   },
   {
     id: "first_gamble_win",
@@ -670,9 +536,7 @@ const ACHIEVEMENTS = [
     icon: "🎲",
     category: "隐藏",
     hidden: true,
-    check: function (st) {
-      return !!(st.flags && st.flags._everWonGamble);
-    },
+    triggers: { flagMet: "_everWonGamble" },
   },
   {
     id: "all_housing_max",
@@ -682,9 +546,7 @@ const ACHIEVEMENTS = [
     icon: "🏡",
     category: "里程碑",
     hidden: true,
-    check: function (st) {
-      return (st.housing && st.housing.tier) >= 5;
-    },
+    triggers: { minHousingTier: 5 },
   },
   {
     id: "all_npc_80",
@@ -694,28 +556,7 @@ const ACHIEVEMENTS = [
     icon: "👥",
     category: "里程碑",
     hidden: true,
-    check: function (st) {
-      if (!st.relationships) return false;
-      var npcIds = [
-        "aunt_wang",
-        "old_zhou",
-        "boss_li",
-        "sister_zhang",
-        "xiao_mei",
-        "chef_chen",
-        "auntie_lin",
-        "master_zhao",
-        "xiaoli",
-        "zhaojie",
-        "chen_ge",
-        "ajie",
-        "xiaochen",
-        "dr_wang",
-      ];
-      return npcIds.every(function (id) {
-        return st.relationships[id] && st.relationships[id].affinity >= 80;
-      });
-    },
+    triggers: { minAllNpcAffinity: { min: 80, ids: ["aunt_wang","old_zhou","boss_li","sister_zhang","xiao_mei","chef_chen","auntie_lin","master_zhao","xiaoli","zhaojie","chen_ge","ajie","xiaochen","dr_wang"] } },
   },
   {
     id: "all_npc_hated",
@@ -726,28 +567,7 @@ const ACHIEVEMENTS = [
     icon: "👻",
     category: "隐藏",
     hidden: true,
-    check: function (st) {
-      if (!st.relationships) return false;
-      var npcIds = [
-        "aunt_wang",
-        "old_zhou",
-        "boss_li",
-        "sister_zhang",
-        "xiao_mei",
-        "chef_chen",
-        "auntie_lin",
-        "master_zhao",
-        "xiaoli",
-        "zhaojie",
-        "chen_ge",
-        "ajie",
-        "xiaochen",
-        "dr_wang",
-      ];
-      return npcIds.every(function (id) {
-        return st.relationships[id] && st.relationships[id].affinity < 0;
-      });
-    },
+    triggers: { minAllNpcHated: ["aunt_wang","old_zhou","boss_li","sister_zhang","xiao_mei","chef_chen","auntie_lin","master_zhao","xiaoli","zhaojie","chen_ge","ajie","xiaochen","dr_wang"] },
   },
   {
     id: "visit_all_locations",
@@ -758,9 +578,7 @@ const ACHIEVEMENTS = [
     icon: "🗺️",
     category: "里程碑",
     hidden: true,
-    check: function (st) {
-      return !!(st.flags && st.flags._visitedAllLocations);
-    },
+    triggers: { visitedAllLocations: true },
   },
   {
     id: "achievement_hunter_25",
@@ -787,9 +605,7 @@ const ACHIEVEMENTS = [
     icon: "🏠",
     category: "节日",
     hidden: false,
-    check: function (st) {
-      return !!(st.flags && st.flags._springFestivalAchieveHome);
-    },
+    triggers: { flagMet: "_springFestivalAchieveHome" },
   },
   {
     id: "spring_fest_redpacket",
@@ -799,9 +615,7 @@ const ACHIEVEMENTS = [
     icon: "🧧",
     category: "节日",
     hidden: false,
-    check: function (st) {
-      return !!(st.flags && st.flags._springFestivalAchieveRedPacket);
-    },
+    triggers: { flagMet: "_springFestivalAchieveRedPacket" },
   },
   {
     id: "spring_fest_study",
@@ -812,9 +626,7 @@ const ACHIEVEMENTS = [
     icon: "📚",
     category: "节日",
     hidden: false,
-    check: function (st) {
-      return !!(st.flags && st.flags._springFestivalAchieveStudy);
-    },
+    triggers: { flagMet: "_springFestivalAchieveStudy" },
   },
   {
     id: "spring_fest_worship",
@@ -824,9 +636,7 @@ const ACHIEVEMENTS = [
     icon: "💰",
     category: "节日",
     hidden: false,
-    check: function (st) {
-      return !!(st.flags && st.flags._springFestivalAchieveWorship);
-    },
+    triggers: { flagMet: "_springFestivalAchieveWorship" },
   },
   {
     id: "spring_fest_work",
@@ -836,9 +646,7 @@ const ACHIEVEMENTS = [
     icon: "🔨",
     category: "节日",
     hidden: false,
-    check: function (st) {
-      return !!(st.flags && st.flags._springFestivalAchieveWork);
-    },
+    triggers: { flagMet: "_springFestivalAchieveWork" },
   },
   {
     id: "spring_fest_paydebt",
@@ -848,9 +656,7 @@ const ACHIEVEMENTS = [
     icon: "🗑️",
     category: "节日",
     hidden: false,
-    check: function (st) {
-      return !!(st.flags && st.flags._springFestivalAchievePayDebt);
-    },
+    triggers: { flagMet: "_springFestivalAchievePayDebt" },
   },
   {
     id: "spring_fest_full",
@@ -861,9 +667,7 @@ const ACHIEVEMENTS = [
     icon: "🧨",
     category: "节日",
     hidden: false,
-    check: function (st) {
-      return !!(st.flags && st.flags._springFestivalAchieveFullAttendance);
-    },
+    triggers: { flagMet: "_springFestivalAchieveFullAttendance" },
   },
 
   // --- 剁手节 ---
@@ -876,9 +680,7 @@ const ACHIEVEMENTS = [
     icon: "📦",
     category: "节日",
     hidden: false,
-    check: function (st) {
-      return !!(st.flags && st.flags._shoppingFestAchieveStockup);
-    },
+    triggers: { flagMet: "_shoppingFestAchieveStockup" },
   },
   {
     id: "shopping_fest_profit",
@@ -889,9 +691,7 @@ const ACHIEVEMENTS = [
     icon: "🛒",
     category: "节日",
     hidden: false,
-    check: function (st) {
-      return !!(st.flags && st.flags._shoppingFestAchieveProfit);
-    },
+    triggers: { flagMet: "_shoppingFestAchieveProfit" },
   },
 
   // --- 劳动节 ---
@@ -904,9 +704,7 @@ const ACHIEVEMENTS = [
     icon: "🔨",
     category: "节日",
     hidden: false,
-    check: function (st) {
-      return !!(st.flags && st.flags._laborDayAchieveWork);
-    },
+    triggers: { flagMet: "_laborDayAchieveWork" },
   },
 
   // --- 中秋节 ---
@@ -918,9 +716,7 @@ const ACHIEVEMENTS = [
     icon: "🥮",
     category: "节日",
     hidden: false,
-    check: function (st) {
-      return !!(st.flags && st.flags._midAutumnAchieveGift);
-    },
+    triggers: { flagMet: "_midAutumnAchieveGift" },
   },
 
   // --- 国庆节 ---
@@ -932,9 +728,7 @@ const ACHIEVEMENTS = [
     icon: "🎉",
     category: "节日",
     hidden: false,
-    check: function (st) {
-      return !!(st.flags && st.flags._nationalDayAchieveWork);
-    },
+    triggers: { flagMet: "_nationalDayAchieveWork" },
   },
 
   // --- 节日综合 ---
@@ -968,9 +762,7 @@ const ACHIEVEMENTS = [
     icon: "🚀",
     category: "创业",
     hidden: false,
-    check: function (st) {
-      return !!(st.startup && st.startup.flags && st.startup.flags.registered);
-    },
+    triggers: { startupFlag: "registered" },
   },
   {
     id: "startup_first_product",
@@ -981,10 +773,7 @@ const ACHIEVEMENTS = [
     icon: "📱",
     category: "创业",
     hidden: false,
-    check: function (st) {
-      if (!st.startup || !st.startup.flags) return false;
-      return !!st.startup.flags.firstProductLaunched;
-    },
+    triggers: { startupFlag: "firstProductLaunched" },
   },
   {
     id: "startup_first_funding",
@@ -1010,13 +799,7 @@ const ACHIEVEMENTS = [
     icon: "📈",
     category: "创业",
     hidden: false,
-    check: function (st) {
-      if (!st.startup || !st.startup.company) return false;
-      return (
-        st.startup.company.fundingRounds &&
-        st.startup.company.fundingRounds.some((r) => r.round === "A")
-      );
-    },
+    triggers: { startupFundingRound: "A" },
   },
   {
     id: "startup_series_b",
@@ -1027,13 +810,7 @@ const ACHIEVEMENTS = [
     icon: "🚀",
     category: "创业",
     hidden: false,
-    check: function (st) {
-      if (!st.startup || !st.startup.company) return false;
-      return (
-        st.startup.company.fundingRounds &&
-        st.startup.company.fundingRounds.some((r) => r.round === "B")
-      );
-    },
+    triggers: { startupFundingRound: "B" },
   },
   {
     id: "startup_team_10",
@@ -1043,13 +820,7 @@ const ACHIEVEMENTS = [
     icon: "👥",
     category: "创业",
     hidden: false,
-    check: function (st) {
-      if (!st.startup || !st.startup.company) return false;
-      return (
-        st.startup.company.employees &&
-        st.startup.company.employees.length >= 10
-      );
-    },
+    triggers: { startupMinEmployees: 10 },
   },
   {
     id: "startup_team_50",
@@ -1059,13 +830,7 @@ const ACHIEVEMENTS = [
     icon: "🏢",
     category: "创业",
     hidden: false,
-    check: function (st) {
-      if (!st.startup || !st.startup.company) return false;
-      return (
-        st.startup.company.employees &&
-        st.startup.company.employees.length >= 50
-      );
-    },
+    triggers: { startupMinEmployees: 50 },
   },
   {
     id: "startup_profitable",
@@ -1075,10 +840,7 @@ const ACHIEVEMENTS = [
     icon: "💵",
     category: "创业",
     hidden: false,
-    check: function (st) {
-      if (!st.startup || !st.startup.company) return false;
-      return st.startup.company.revenue > st.startup.company.expenses;
-    },
+    triggers: { startupProfitable: true },
   },
   {
     id: "startup_valuation_1m",
@@ -1088,10 +850,7 @@ const ACHIEVEMENTS = [
     icon: "📊",
     category: "创业",
     hidden: false,
-    check: function (st) {
-      if (!st.startup || !st.startup.company) return false;
-      return st.startup.company.valuation >= 1000000;
-    },
+    triggers: { startupMinValuation: 1000000 },
   },
   {
     id: "startup_valuation_10m",
@@ -1101,10 +860,7 @@ const ACHIEVEMENTS = [
     icon: "🏆",
     category: "创业",
     hidden: false,
-    check: function (st) {
-      if (!st.startup || !st.startup.company) return false;
-      return st.startup.company.valuation >= 10000000;
-    },
+    triggers: { startupMinValuation: 10000000 },
   },
   {
     id: "startup_valuation_100m",
@@ -1114,10 +870,7 @@ const ACHIEVEMENTS = [
     icon: "🦄",
     category: "创业",
     hidden: false,
-    check: function (st) {
-      if (!st.startup || !st.startup.company) return false;
-      return st.startup.company.valuation >= 100000000;
-    },
+    triggers: { startupMinValuation: 100000000 },
   },
   {
     id: "startup_ipo",
@@ -1128,10 +881,7 @@ const ACHIEVEMENTS = [
     icon: "🔔",
     category: "创业",
     hidden: false,
-    check: function (st) {
-      if (!st.startup || !st.startup.flags) return false;
-      return st.startup.flags.exitType === "ipo";
-    },
+    triggers: { startupExitType: "ipo" },
   },
   {
     id: "startup_acquired",
@@ -1142,10 +892,7 @@ const ACHIEVEMENTS = [
     icon: "🤝",
     category: "创业",
     hidden: false,
-    check: function (st) {
-      if (!st.startup || !st.startup.flags) return false;
-      return st.startup.flags.exitType === "acquired";
-    },
+    triggers: { startupExitType: "acquired" },
   },
   {
     id: "startup_bankrupt",
@@ -1156,10 +903,7 @@ const ACHIEVEMENTS = [
     icon: "💀",
     category: "创业",
     hidden: true,
-    check: function (st) {
-      if (!st.startup || !st.startup.flags) return false;
-      return st.startup.flags.exitType === "bankrupt";
-    },
+    triggers: { startupExitType: "bankrupt" },
   },
   {
     id: "startup_revenue_1m",
@@ -1169,10 +913,7 @@ const ACHIEVEMENTS = [
     icon: "💎",
     category: "创业",
     hidden: false,
-    check: function (st) {
-      if (!st.startup || !st.startup.company) return false;
-      return st.startup.company.revenue >= 1000000;
-    },
+    triggers: { startupMinRevenue: 1000000 },
   },
   {
     id: "startup_user_1m",
@@ -1182,13 +923,7 @@ const ACHIEVEMENTS = [
     icon: "👥",
     category: "创业",
     hidden: false,
-    check: function (st) {
-      if (!st.startup || !st.startup.company) return false;
-      for (const p of st.startup.company.products) {
-        if ((p.users || 0) >= 1000000) return true;
-      }
-      return false;
-    },
+    triggers: { startupMinUsers: 1000000 },
   },
   {
     id: "startup_exit_success",
@@ -1198,10 +933,7 @@ const ACHIEVEMENTS = [
     icon: "🎯",
     category: "创业",
     hidden: false,
-    check: function (st) {
-      if (!st.startup || !st.startup.flags) return false;
-      return (st.startup.flags.exitValue || 0) >= 1000000;
-    },
+    triggers: { startupExitValue: 1000000 },
   },
   {
     id: "news_intel_collector",
@@ -1212,9 +944,7 @@ const ACHIEVEMENTS = [
     icon: "📡",
     category: "新闻",
     hidden: false,
-    check: function (st) {
-      return (st.flags._intelReceivedCount || 0) >= 10;
-    },
+    triggers: { minCounter: { flag: "_intelReceivedCount", min: 10 } },
   },
   {
     id: "news_prophet",
@@ -1225,9 +955,7 @@ const ACHIEVEMENTS = [
     icon: "🔮",
     category: "新闻",
     hidden: true,
-    check: function (st) {
-      return (st.flags._intelProfit || 0) >= 100000;
-    },
+    triggers: { minCounter: { flag: "_intelProfit", min: 100000 } },
   },
   {
     id: "news_commentator",
@@ -1237,9 +965,7 @@ const ACHIEVEMENTS = [
     icon: "🎙️",
     category: "新闻",
     hidden: false,
-    check: function (st) {
-      return (st.flags._npcNewsComments || 0) >= 20;
-    },
+    triggers: { minCounter: { flag: "_npcNewsComments", min: 20 } },
   },
 
   // ============================================================
@@ -1254,9 +980,7 @@ const ACHIEVEMENTS = [
     icon: "♻️",
     category: "里程碑",
     hidden: false,
-    check: function (st) {
-      return (st.flags._scrapTotalIncome || 0) >= 10000;
-    },
+    triggers: { minCounter: { flag: "_scrapTotalIncome", min: 10000 } },
   },
   {
     id: "street_vendor",
@@ -1266,9 +990,7 @@ const ACHIEVEMENTS = [
     icon: "🍢",
     category: "里程碑",
     hidden: false,
-    check: function (st) {
-      return (st.flags._vendingTotalIncome || 0) >= 5000;
-    },
+    triggers: { minCounter: { flag: "_vendingTotalIncome", min: 5000 } },
   },
   {
     id: "survival_30_healthy",
@@ -1278,9 +1000,7 @@ const ACHIEVEMENTS = [
     icon: "💪",
     category: "健康/生活线",
     hidden: true,
-    check: function (st) {
-      return (st.player.day || 0) >= 30 && !(st.flags && st.flags._everGotSick);
-    },
+    triggers: { minDay: 30, flagNotMet: "_everGotSick" },
   },
   {
     id: "no_home_7days",
@@ -1290,9 +1010,7 @@ const ACHIEVEMENTS = [
     icon: "🌃",
     category: "人生第一次",
     hidden: true,
-    check: function (st) {
-      return (st.flags._homelessDays || 0) >= 7;
-    },
+    triggers: { minCounter: { flag: "_homelessDays", min: 7 } },
   },
   {
     id: "homeless_to_roof",
@@ -1314,9 +1032,7 @@ const ACHIEVEMENTS = [
     icon: "📈",
     category: "里程碑",
     hidden: false,
-    check: function (st) {
-      return (st.flags._maxSingleTradeProfit || 0) >= 500;
-    },
+    triggers: { minCounter: { flag: "_maxSingleTradeProfit", min: 500 } },
   },
   {
     id: "scavenge_king",
@@ -1326,9 +1042,7 @@ const ACHIEVEMENTS = [
     icon: "🔍",
     category: "隐藏",
     hidden: true,
-    check: function (st) {
-      return (st.flags._maxSingleScavengeValue || 0) >= 200;
-    },
+    triggers: { minCounter: { flag: "_maxSingleScavengeValue", min: 200 } },
   },
   {
     id: "rain_walker",
@@ -1338,9 +1052,7 @@ const ACHIEVEMENTS = [
     icon: "🌧️",
     category: "隐藏",
     hidden: true,
-    check: function (st) {
-      return (st.flags._rainyWorkCount || 0) >= 3;
-    },
+    triggers: { minCounter: { flag: "_rainyWorkCount", min: 3 } },
   },
   {
     id: "thrift_master",
@@ -1350,9 +1062,7 @@ const ACHIEVEMENTS = [
     icon: "💰",
     category: "隐藏",
     hidden: true,
-    check: function (st) {
-      return (st.flags._maxThriftDays || 0) >= 7;
-    },
+    triggers: { minCounter: { flag: "_maxThriftDays", min: 7 } },
   },
   {
     id: "neighborly",
@@ -1362,13 +1072,7 @@ const ACHIEVEMENTS = [
     icon: "👵",
     category: "社交线",
     hidden: false,
-    check: function (st) {
-      return (
-        st.relationships &&
-        st.relationships.aunt_wang &&
-        st.relationships.aunt_wang.affinity >= 30
-      );
-    },
+    triggers: { minNpcAffinity: { id: "aunt_wang", min: 30 } },
   },
   {
     id: "night_owl",
@@ -1378,9 +1082,7 @@ const ACHIEVEMENTS = [
     icon: "🌙",
     category: "隐藏",
     hidden: true,
-    check: function (st) {
-      return (st.flags._nightWorkCount || 0) >= 5;
-    },
+    triggers: { minCounter: { flag: "_nightWorkCount", min: 5 } },
   },
   {
     id: "early_bird",
@@ -1390,9 +1092,7 @@ const ACHIEVEMENTS = [
     icon: "🌅",
     category: "隐藏",
     hidden: true,
-    check: function (st) {
-      return (st.flags._earlyWorkCount || 0) >= 5;
-    },
+    triggers: { minCounter: { flag: "_earlyWorkCount", min: 5 } },
   },
   {
     id: "hustle_7days",
@@ -1402,9 +1102,7 @@ const ACHIEVEMENTS = [
     icon: "⚡",
     category: "隐藏",
     hidden: true,
-    check: function (st) {
-      return (st.flags._maxHustleDays || 0) >= 7;
-    },
+    triggers: { minCounter: { flag: "_maxHustleDays", min: 7 } },
   },
   {
     id: "first_1k",
@@ -1414,9 +1112,7 @@ const ACHIEVEMENTS = [
     icon: "💵",
     category: "人生第一次",
     hidden: false,
-    check: function (st) {
-      return (st.resources.totalEarned || 0) >= 1000;
-    },
+    triggers: { minTotalEarned: 1000 },
   },
   {
     id: "first_homebuyer",
@@ -1426,9 +1122,7 @@ const ACHIEVEMENTS = [
     icon: "🏠",
     category: "里程碑",
     hidden: false,
-    check: function (st) {
-      return !!(st.flags && st.flags._ownedHome);
-    },
+    triggers: { flagMet: "_ownedHome" },
   },
 
   // ============================================================
@@ -1442,9 +1136,7 @@ const ACHIEVEMENTS = [
     icon: "💻",
     category: "人生第一次",
     hidden: false,
-    check: function (st) {
-      return !!(st.flags && st.flags._firstWeekProjectDone);
-    },
+    triggers: { flagMet: "_firstWeekProjectDone" },
   },
   {
     id: "first_promotion",
@@ -1486,9 +1178,7 @@ const ACHIEVEMENTS = [
     icon: "🚀",
     category: "里程碑",
     hidden: false,
-    check: function (st) {
-      return (st.corporate && st.corporate.rank) === "P8";
-    },
+    triggers: { rankAtLeast: "P8" },
   },
   {
     id: "partner",
@@ -1498,9 +1188,7 @@ const ACHIEVEMENTS = [
     icon: "👑",
     category: "里程碑",
     hidden: false,
-    check: function (st) {
-      return (st.corporate && st.corporate.rank) === "P10";
-    },
+    triggers: { rankAtLeast: "P10" },
   },
   {
     id: "overtime_warrior",
@@ -1522,9 +1210,7 @@ const ACHIEVEMENTS = [
     icon: "🏆",
     category: "隐藏",
     hidden: true,
-    check: function (st) {
-      return ((st.flags && st.flags._consecutiveSCount) || 0) >= 5;
-    },
+    triggers: { minCounter: { flag: "_consecutiveSCount", min: 5 } },
   },
   {
     id: "networker",
@@ -1534,9 +1220,7 @@ const ACHIEVEMENTS = [
     icon: "🤝",
     category: "隐藏",
     hidden: true,
-    check: function (st) {
-      return ((st.flags && st.flags._upwardSocialCount) || 0) >= 10;
-    },
+    triggers: { minCounter: { flag: "_upwardSocialCount", min: 10 } },
   },
   {
     id: "tech_geek",
@@ -1546,9 +1230,7 @@ const ACHIEVEMENTS = [
     icon: "📚",
     category: "隐藏",
     hidden: true,
-    check: function (st) {
-      return ((st.flags && st.flags._techLearnCount) || 0) >= 20;
-    },
+    triggers: { minCounter: { flag: "_techLearnCount", min: 20 } },
   },
   {
     id: "work_life",
@@ -1558,9 +1240,7 @@ const ACHIEVEMENTS = [
     icon: "🎮",
     category: "隐藏",
     hidden: true,
-    check: function (st) {
-      return ((st.flags && st.flags._restActionCount) || 0) >= 30;
-    },
+    triggers: { minCounter: { flag: "_restActionCount", min: 30 } },
   },
   {
     id: "stock_wizard",
@@ -1570,9 +1250,7 @@ const ACHIEVEMENTS = [
     icon: "📈",
     category: "隐藏",
     hidden: true,
-    check: function (st) {
-      return ((st.flags && st.flags._stockTotalProfit) || 0) >= 50000;
-    },
+    triggers: { minCounter: { flag: "_stockTotalProfit", min: 50000 } },
   },
   {
     id: "risk_taker",
@@ -1582,9 +1260,7 @@ const ACHIEVEMENTS = [
     icon: "💣",
     category: "隐藏",
     hidden: true,
-    check: function (st) {
-      return ((st.flags && st.flags._shortcutCount) || 0) >= 10;
-    },
+    triggers: { minCounter: { flag: "_shortcutCount", min: 10 } },
   },
   {
     id: "risk_defuser",
@@ -1594,9 +1270,7 @@ const ACHIEVEMENTS = [
     icon: "🔍",
     category: "隐藏",
     hidden: true,
-    check: function (st) {
-      return ((st.flags && st.flags._riskDefuseCount) || 0) >= 10;
-    },
+    triggers: { minCounter: { flag: "_riskDefuseCount", min: 10 } },
   },
   {
     id: "company_founder",
@@ -1606,9 +1280,7 @@ const ACHIEVEMENTS = [
     icon: "🚀",
     category: "里程碑",
     hidden: false,
-    check: function (st) {
-      return !!(st.startup && st.startup.flags && st.startup.flags.registered);
-    },
+    triggers: { startupFlag: "registered" },
   },
   {
     id: "ipo_dream",
@@ -1618,13 +1290,7 @@ const ACHIEVEMENTS = [
     icon: "🔔",
     category: "里程碑",
     hidden: false,
-    check: function (st) {
-      return !!(
-        st.startup &&
-        st.startup.flags &&
-        st.startup.flags.exitType === "ipo"
-      );
-    },
+    triggers: { startupExitType: "ipo" },
   },
   {
     id: "first_praise",
@@ -1634,9 +1300,7 @@ const ACHIEVEMENTS = [
     icon: "🌟",
     category: "人生第一次",
     hidden: true,
-    check: function (st) {
-      return !!(st.flags && st.flags._firstPraise);
-    },
+    triggers: { flagMet: "_firstPraise" },
   },
   {
     id: "first_criticism",
@@ -1646,9 +1310,7 @@ const ACHIEVEMENTS = [
     icon: "😓",
     category: "人生第一次",
     hidden: true,
-    check: function (st) {
-      return !!(st.flags && st.flags._firstCriticism);
-    },
+    triggers: { flagMet: "_firstCriticism" },
   },
   {
     id: "first_mentor",
@@ -1658,9 +1320,7 @@ const ACHIEVEMENTS = [
     icon: "👨‍🏫",
     category: "隐藏",
     hidden: true,
-    check: function (st) {
-      return !!(st.flags && st.flags._firstMentored);
-    },
+    triggers: { flagMet: "_firstMentored" },
   },
   {
     id: "first_no_overtime",
@@ -1670,9 +1330,7 @@ const ACHIEVEMENTS = [
     icon: "✋",
     category: "隐藏",
     hidden: true,
-    check: function (st) {
-      return !!(st.flags && st.flags._firstRefusedOvertime);
-    },
+    triggers: { flagMet: "_firstRefusedOvertime" },
   },
 
   // ============================================================
@@ -1686,9 +1344,7 @@ const ACHIEVEMENTS = [
     icon: "📈",
     category: "人生第一次",
     hidden: false,
-    check: function (st) {
-      return !!(st.flags && st.flags._firstStockBought);
-    },
+    triggers: { flagMet: "_firstStockBought" },
   },
   {
     id: "bull_runner",
@@ -1698,9 +1354,7 @@ const ACHIEVEMENTS = [
     icon: "🐂",
     category: "里程碑",
     hidden: false,
-    check: function (st) {
-      return ((st.flags && st.flags._bullMarketProfit) || 0) >= 100000;
-    },
+    triggers: { minCounter: { flag: "_bullMarketProfit", min: 100000 } },
   },
   {
     id: "bear_survivor",
@@ -1710,9 +1364,7 @@ const ACHIEVEMENTS = [
     icon: "🐻",
     category: "隐藏",
     hidden: true,
-    check: function (st) {
-      return ((st.flags && st.flags._bearSurvivalDays) || 0) >= 30;
-    },
+    triggers: { minCounter: { flag: "_bearSurvivalDays", min: 30 } },
   },
   {
     id: "btc_early",
@@ -1722,9 +1374,7 @@ const ACHIEVEMENTS = [
     icon: "₿",
     category: "隐藏",
     hidden: true,
-    check: function (st) {
-      return !!(st.flags && st.flags._btcEarlyBuy);
-    },
+    triggers: { flagMet: "_btcEarlyBuy" },
   },
   {
     id: "real_estate_baron",
@@ -1734,9 +1384,7 @@ const ACHIEVEMENTS = [
     icon: "🏠",
     category: "里程碑",
     hidden: false,
-    check: function (st) {
-      return ((st.flags && st.flags._propertyTotalProfit) || 0) >= 500000;
-    },
+    triggers: { minCounter: { flag: "_propertyTotalProfit", min: 500000 } },
   },
   {
     id: "diversified",
@@ -1746,9 +1394,7 @@ const ACHIEVEMENTS = [
     icon: "📊",
     category: "隐藏",
     hidden: true,
-    check: function (st) {
-      return !!(st.flags && st.flags._hasAllAssetTypes);
-    },
+    triggers: { flagMet: "_hasAllAssetTypes" },
   },
   {
     id: "timing_master",
@@ -1758,9 +1404,7 @@ const ACHIEVEMENTS = [
     icon: "⏰",
     category: "隐藏",
     hidden: true,
-    check: function (st) {
-      return ((st.flags && st.flags._maxSingleInvestProfit) || 0) >= 50000;
-    },
+    triggers: { minCounter: { flag: "_maxSingleInvestProfit", min: 50000 } },
   },
   {
     id: "long_term",
@@ -1770,9 +1414,7 @@ const ACHIEVEMENTS = [
     icon: "⏳",
     category: "隐藏",
     hidden: true,
-    check: function (st) {
-      return ((st.flags && st.flags._maxHoldingDays) || 0) >= 180;
-    },
+    triggers: { minCounter: { flag: "_maxHoldingDays", min: 180 } },
   },
   {
     id: "panic_seller_fixed",
@@ -1782,9 +1424,7 @@ const ACHIEVEMENTS = [
     icon: "💪",
     category: "隐藏",
     hidden: true,
-    check: function (st) {
-      return !!(st.flags && st.flags._boughtInPanic);
-    },
+    triggers: { flagMet: "_boughtInPanic" },
   },
   {
     id: "millionaire_investor",
@@ -1794,9 +1434,7 @@ const ACHIEVEMENTS = [
     icon: "💰",
     category: "里程碑",
     hidden: false,
-    check: function (st) {
-      return ((st.flags && st.flags._totalInvestProfit) || 0) >= 1000000;
-    },
+    triggers: { minCounter: { flag: "_totalInvestProfit", min: 1000000 } },
   },
   {
     id: "first_big_loss",
@@ -1806,9 +1444,7 @@ const ACHIEVEMENTS = [
     icon: "💸",
     category: "人生第一次",
     hidden: true,
-    check: function (st) {
-      return ((st.flags && st.flags._maxSingleInvestLoss) || 0) >= 10000;
-    },
+    triggers: { minCounter: { flag: "_maxSingleInvestLoss", min: 10000 } },
   },
   {
     id: "all_in_sell",
@@ -1818,9 +1454,7 @@ const ACHIEVEMENTS = [
     icon: "📉",
     category: "隐藏",
     hidden: true,
-    check: function (st) {
-      return !!(st.flags && st.flags._didFullSell);
-    },
+    triggers: { flagMet: "_didFullSell" },
   },
 
   // ============================================================
@@ -1837,16 +1471,8 @@ const ACHIEVEMENTS = [
     check: function (st) {
       if (!st.relationships) return false;
       var count = 0;
-      [
-        "aunt_wang",
-        "boss_li",
-        "sister_zhang",
-        "old_zhou",
-        "xiao_mei",
-        "chef_chen",
-      ].forEach(function (id) {
-        if (st.relationships[id] && st.relationships[id].affinity >= 30)
-          count++;
+      ["aunt_wang","boss_li","sister_zhang","old_zhou","xiao_mei","chef_chen"].forEach(function (id) {
+        if (st.relationships[id] && st.relationships[id].affinity >= 30) count++;
       });
       return count >= 3;
     },
@@ -1861,14 +1487,7 @@ const ACHIEVEMENTS = [
     hidden: false,
     check: function (st) {
       if (!st.relationships) return false;
-      return [
-        "aunt_wang",
-        "boss_li",
-        "sister_zhang",
-        "old_zhou",
-        "xiao_mei",
-        "chef_chen",
-      ].some(function (id) {
+      return ["aunt_wang","boss_li","sister_zhang","old_zhou","xiao_mei","chef_chen"].some(function (id) {
         return st.relationships[id] && st.relationships[id].affinity >= 80;
       });
     },
@@ -1881,9 +1500,7 @@ const ACHIEVEMENTS = [
     icon: "🎁",
     category: "隐藏",
     hidden: true,
-    check: function (st) {
-      return ((st.flags && st.flags._giftCount) || 0) >= 10;
-    },
+    triggers: { minCounter: { flag: "_giftCount", min: 10 } },
   },
   {
     id: "birthday_celebration",
@@ -1893,9 +1510,7 @@ const ACHIEVEMENTS = [
     icon: "🎂",
     category: "隐藏",
     hidden: true,
-    check: function (st) {
-      return ((st.flags && st.flags._birthdayCelebrateCount) || 0) >= 3;
-    },
+    triggers: { minCounter: { flag: "_birthdayCelebrateCount", min: 3 } },
   },
   {
     id: "favor_return",
@@ -1905,9 +1520,7 @@ const ACHIEVEMENTS = [
     icon: "🤝",
     category: "隐藏",
     hidden: true,
-    check: function (st) {
-      return ((st.flags && st.flags._favorHelpCount) || 0) >= 5;
-    },
+    triggers: { minCounter: { flag: "_favorHelpCount", min: 5 } },
   },
   {
     id: "deep_connection",
@@ -1917,9 +1530,7 @@ const ACHIEVEMENTS = [
     icon: "💬",
     category: "隐藏",
     hidden: true,
-    check: function (st) {
-      return ((st.flags && st.flags._deepTaskCompleteCount) || 0) >= 3;
-    },
+    triggers: { minCounter: { flag: "_deepTaskCompleteCount", min: 3 } },
   },
   {
     id: "social_butterfly",
@@ -1929,19 +1540,7 @@ const ACHIEVEMENTS = [
     icon: "🦋",
     category: "隐藏",
     hidden: true,
-    check: function (st) {
-      if (!st.relationships) return false;
-      return [
-        "aunt_wang",
-        "boss_li",
-        "sister_zhang",
-        "old_zhou",
-        "xiao_mei",
-        "chef_chen",
-      ].every(function (id) {
-        return st.relationships[id] && st.relationships[id].affinity >= 60;
-      });
-    },
+    triggers: { minAllNpcAffinity: { min: 60, ids: ["aunt_wang","boss_li","sister_zhang","old_zhou","xiao_mei","chef_chen"] } },
   },
   {
     id: "mentor_student",
@@ -1969,9 +1568,7 @@ const ACHIEVEMENTS = [
     icon: "🍜",
     category: "人生第一次",
     hidden: true,
-    check: function (st) {
-      return !!(st.flags && st.flags._firstMealWithNPC);
-    },
+    triggers: { flagMet: "_firstMealWithNPC" },
   },
   {
     id: "first_gift_received",
@@ -1981,9 +1578,7 @@ const ACHIEVEMENTS = [
     icon: "🎁",
     category: "人生第一次",
     hidden: true,
-    check: function (st) {
-      return !!(st.flags && st.flags._firstGiftReceived);
-    },
+    triggers: { flagMet: "_firstGiftReceived" },
   },
 
   // ============================================================
@@ -1997,9 +1592,7 @@ const ACHIEVEMENTS = [
     icon: "💪",
     category: "健康/生活线",
     hidden: false,
-    check: function (st) {
-      return ((st.flags && st.flags._healthyDaysStreak) || 0) >= 30;
-    },
+    triggers: { minCounter: { flag: "_healthyDaysStreak", min: 30 } },
   },
   {
     id: "disease_survivor",
@@ -2010,12 +1603,7 @@ const ACHIEVEMENTS = [
     category: "人生第一次",
     hidden: true,
     check: function (st) {
-      return !!(
-        st.flags &&
-        st.flags._everHadIllness &&
-        st.flags &&
-        st.flags._everCuredIllness
-      );
+      return !!(st.flags && st.flags._everHadIllness && st.flags._everCuredIllness);
     },
   },
   {
@@ -2026,9 +1614,7 @@ const ACHIEVEMENTS = [
     icon: "💪",
     category: "隐藏",
     hidden: true,
-    check: function (st) {
-      return (st.player && st.player.physique) >= 80;
-    },
+    triggers: { minPhysique: 80 },
   },
   {
     id: "mindful",
@@ -2038,9 +1624,7 @@ const ACHIEVEMENTS = [
     icon: "🧘",
     category: "隐藏",
     hidden: true,
-    check: function (st) {
-      return (st.player && st.player.mental) >= 80;
-    },
+    triggers: { minMental: 80 },
   },
   {
     id: "cooking_master",
@@ -2050,9 +1634,7 @@ const ACHIEVEMENTS = [
     icon: "🍳",
     category: "隐藏",
     hidden: true,
-    check: function (st) {
-      return (st.skills && st.skills.cooking && st.skills.cooking.level) >= 50;
-    },
+    triggers: { minSkillLevel: { cooking: 50 } },
   },
   {
     id: "perfect_diet",
@@ -2062,9 +1644,7 @@ const ACHIEVEMENTS = [
     icon: "🍲",
     category: "隐藏",
     hidden: true,
-    check: function (st) {
-      return ((st.flags && st.flags._maxCookingStreak) || 0) >= 7;
-    },
+    triggers: { minCounter: { flag: "_maxCookingStreak", min: 7 } },
   },
   {
     id: "no_illness_100days",
@@ -2074,9 +1654,7 @@ const ACHIEVEMENTS = [
     icon: "🛡️",
     category: "健康/生活线",
     hidden: true,
-    check: function (st) {
-      return ((st.flags && st.flags._maxIllnessFreeDays) || 0) >= 100;
-    },
+    triggers: { minCounter: { flag: "_maxIllnessFreeDays", min: 100 } },
   },
   {
     id: "first_checkup",
@@ -2086,9 +1664,7 @@ const ACHIEVEMENTS = [
     icon: "🩺",
     category: "人生第一次",
     hidden: true,
-    check: function (st) {
-      return !!(st.flags && st.flags._firstCheckup);
-    },
+    triggers: { flagMet: "_firstCheckup" },
   },
   {
     id: "gym_member",
@@ -2098,9 +1674,7 @@ const ACHIEVEMENTS = [
     icon: "🏋️",
     category: "隐藏",
     hidden: true,
-    check: function (st) {
-      return !!(st.flags && st.flags._gymMembership);
-    },
+    triggers: { flagMet: "_gymMembership" },
   },
 
   // ============================================================
@@ -2115,9 +1689,7 @@ const ACHIEVEMENTS = [
     icon: "❤️",
     category: "道德档案",
     hidden: true,
-    check: function (st) {
-      return !!(st.flags && st.flags._sharedFoodWhenPoor);
-    },
+    triggers: { flagMet: "_sharedFoodWhenPoor" },
   },
   {
     id: "persistent_giver",
@@ -2128,9 +1700,7 @@ const ACHIEVEMENTS = [
     icon: "📅",
     category: "隐藏",
     hidden: true,
-    check: function (st) {
-      return ((st.flags && st.flags._maxGiftStreak) || 0) >= 30;
-    },
+    triggers: { minCounter: { flag: "_maxGiftStreak", min: 30 } },
   },
   {
     id: "help_when_hated",
@@ -2141,9 +1711,7 @@ const ACHIEVEMENTS = [
     icon: "🕊️",
     category: "道德档案",
     hidden: true,
-    check: function (st) {
-      return !!(st.flags && st.flags._helpedHatedNPC);
-    },
+    triggers: { flagMet: "_helpedHatedNPC" },
   },
   {
     id: "clean_record",
@@ -2155,12 +1723,8 @@ const ACHIEVEMENTS = [
     category: "道德档案",
     hidden: true,
     check: function (st) {
-      // 必须生存满30天，确保玩家有足够机会接触到违法工作，再判断是否从未做过
       if ((st.player.day || 0) < 30) return false;
-      return !(
-        st.flags &&
-        (st.flags._didGamble || st.flags._didGrayWork || st.flags._didSmuggling)
-      );
+      return !(st.flags && (st.flags._didGamble || st.flags._didGrayWork || st.flags._didSmuggling));
     },
   },
   {
@@ -2172,9 +1736,7 @@ const ACHIEVEMENTS = [
     icon: "🎯",
     category: "隐藏",
     hidden: true,
-    check: function (st) {
-      return !!(st.flags && st.flags._perfectMarketTiming);
-    },
+    triggers: { flagMet: "_perfectMarketTiming" },
   },
   {
     id: "never_fired",
@@ -2185,12 +1747,7 @@ const ACHIEVEMENTS = [
     category: "道德档案",
     hidden: true,
     check: function (st) {
-      return !!(
-        st.startup &&
-        st.startup.flags &&
-        st.startup.flags.registered &&
-        !(st.flags && st.flags._everFiredEmployee)
-      );
+      return !!(st.startup && st.startup.flags && st.startup.flags.registered && !(st.flags && st.flags._everFiredEmployee));
     },
   },
   {
@@ -2207,17 +1764,12 @@ const ACHIEVEMENTS = [
       var rels = st.relationships;
       var metAny = false;
       var allHigh = true;
-      var metNpcs = Object.keys(rels).filter(function (k) {
-        return rels[k] && typeof rels[k].affinity === "number" && rels[k].met;
-      });
+      var metNpcs = Object.keys(rels).filter(function (k) { return rels[k] && typeof rels[k].affinity === "number" && rels[k].met; });
       for (var i = 0; i < metNpcs.length; i++) {
         var r = rels[metNpcs[i]];
         if (r && typeof r.affinity === "number" && r.affinity > 0) {
           metAny = true;
-          if (r.affinity < 60) {
-            allHigh = false;
-            break;
-          }
+          if (r.affinity < 60) { allHigh = false; break; }
         }
       }
       return metAny && allHigh;
@@ -2232,9 +1784,7 @@ const ACHIEVEMENTS = [
     icon: "🙏",
     category: "道德档案",
     hidden: true,
-    check: function (st) {
-      return !!(st.flags && st.flags._donatedLastMoney);
-    },
+    triggers: { flagMet: "_donatedLastMoney" },
   },
   {
     id: "refused_illegal_job",
@@ -2244,9 +1794,7 @@ const ACHIEVEMENTS = [
     icon: "✋",
     category: "道德档案",
     hidden: true,
-    check: function (st) {
-      return !!(st.flags && st.flags._refusedIllegalJob);
-    },
+    triggers: { flagMet: "_refusedIllegalJob" },
   },
 
   // ============================================================
@@ -2262,9 +1810,7 @@ const ACHIEVEMENTS = [
     icon: "📈",
     category: "里程碑",
     hidden: false,
-    check: function (st) {
-      return !!(st.flags && st.flags._careerFirstPromotion);
-    },
+    triggers: { flagMet: "_careerFirstPromotion" },
   },
   {
     id: "career_hundred_days",
@@ -2276,11 +1822,7 @@ const ACHIEVEMENTS = [
     category: "里程碑",
     hidden: false,
     check: function (st) {
-      return !!(
-        st.career &&
-        st.career.currentJob &&
-        (st.career.currentJob.workDays || 0) >= 100
-      );
+      return !!(st.career && st.career.currentJob && (st.career.currentJob.workDays || 0) >= 100);
     },
   },
   {
@@ -2292,9 +1834,7 @@ const ACHIEVEMENTS = [
     icon: "🦎",
     category: "隐藏",
     hidden: true,
-    check: function (st) {
-      return !!(st.flags && st.flags._crossPathJobhop);
-    },
+    triggers: { flagMet: "_crossPathJobhop" },
   },
   {
     id: "career_max_level",
@@ -2308,8 +1848,7 @@ const ACHIEVEMENTS = [
     check: function (st) {
       if (!st.career || !st.career.currentJob) return false;
       var job = st.career.currentJob;
-      if (typeof CAREER_PATHS === "undefined" || !CAREER_PATHS[job.path])
-        return false;
+      if (typeof CAREER_PATHS === "undefined" || !CAREER_PATHS[job.path]) return false;
       var levels = CAREER_PATHS[job.path].levels;
       return levels.length > 0 && job.levelId === levels[levels.length - 1].id;
     },
@@ -2337,9 +1876,7 @@ const ACHIEVEMENTS = [
     icon: "🔥",
     category: "隐藏",
     hidden: true,
-    check: function (st) {
-      return !!(st.flags && st.flags._burnoutSurvivor);
-    },
+    triggers: { flagMet: "_burnoutSurvivor" },
   },
   {
     id: "career_top_performer",
@@ -2351,12 +1888,7 @@ const ACHIEVEMENTS = [
     category: "隐藏",
     hidden: true,
     check: function (st) {
-      return !!(
-        st.career &&
-        st.career.currentJob &&
-        (st.career.currentJob.performance || 0) >= 90 &&
-        (st.career.currentJob.workDays || 0) >= 30
-      );
+      return !!(st.career && st.career.currentJob && (st.career.currentJob.performance || 0) >= 90 && (st.career.currentJob.workDays || 0) >= 30);
     },
   },
   {
@@ -2368,14 +1900,145 @@ const ACHIEVEMENTS = [
     icon: "⚕️",
     category: "隐藏",
     hidden: true,
-    check: function (st) {
-      return !!(st.flags && st.flags._hasOccupationalDisease);
-    },
+    triggers: { flagMet: "_hasOccupationalDisease" },
   },
 ];
 
+// ====== 成就触发调度表（约定式自动归类 v3.99c） ======
+// 新增成就只需声明 triggers 字段，系统自动判定，无需手写 check 函数
+// 复杂成就仍保留 check 函数作为兜底
+
+var TRIGGER_DISPATCH = {
+  // 简单flag检查
+  flagMet: function(st, val) { return !!(st.flags && st.flags[val]); },
+  flagNotMet: function(st, val) { return !(st.flags && st.flags[val]); },
+  // 累计收入阈值
+  minTotalEarned: function(st, val) { return (st.resources.totalEarned || 0) >= val; },
+  // 天数阈值
+  minDay: function(st, val) { return (st.player.day || 0) >= val; },
+  // 银行存款阈值
+  minBankBalance: function(st, val) { return (st.resources.bankBalance || 0) >= val; },
+  // 全部技能达到指定等级
+  minAllSkillLevel: function(st, val) {
+    return Object.values(st.skills).every(function(s) { return s.level >= val; });
+  },
+  // 名气阈值
+  minFame: function(st, val) { return (st.player.fame || 0) >= val; },
+  // 体质阈值
+  minPhysique: function(st, val) { return (st.player.physique || 0) >= val; },
+  // 心智阈值
+  minMental: function(st, val) { return (st.player.mental || 0) >= val; },
+  // 住所等级阈值
+  minHousingTier: function(st, val) { return (st.housing && st.housing.tier || 0) >= val; },
+  // 游戏阶段检查
+  phaseEquals: function(st, val) { return st.player.phase === val; },
+  // 公司职级检查
+  rankAtLeast: function(st, val) { return st.corporate && st.corporate.rank === val; },
+  // 计数器阈值（st.flags 中的数字字段）
+  minCounter: function(st, val) { return (st.flags && st.flags[val.flag] || 0) >= val.min; },
+  // 单个NPC好感阈值
+  minNpcAffinity: function(st, val) {
+    return st.relationships && st.relationships[val.id] && st.relationships[val.id].affinity >= val.min;
+  },
+  // 所有NPC好感阈值
+  minAllNpcAffinity: function(st, val) {
+    if (!st.relationships) return false;
+    return val.ids.every(function(id) {
+      return st.relationships[id] && st.relationships[id].affinity >= val.min;
+    });
+  },
+  // 所有NPC好感负数
+  minAllNpcHated: function(st, val) {
+    if (!st.relationships) return false;
+    return val.every(function(id) {
+      return st.relationships[id] && st.relationships[id].affinity < 0;
+    });
+  },
+  // 创业flag检查
+  startupFlag: function(st, val) { return !!(st.startup && st.startup.flags && st.startup.flags[val]); },
+  // 创业退出类型
+  startupExitType: function(st, val) { return st.startup && st.startup.flags && st.startup.flags.exitType === val; },
+  // 创业融资轮次
+  startupFundingRound: function(st, val) {
+    if (!st.startup || !st.startup.company || !st.startup.company.fundingRounds) return false;
+    return st.startup.company.fundingRounds.some(function(r) { return r.round === val; });
+  },
+  // 创业团队人数
+  startupMinEmployees: function(st, val) {
+    if (!st.startup || !st.startup.company || !st.startup.company.employees) return false;
+    return st.startup.company.employees.length >= val;
+  },
+  // 创业估值
+  startupMinValuation: function(st, val) {
+    return st.startup && st.startup.company && (st.startup.company.valuation || 0) >= val;
+  },
+  // 创业月收入
+  startupMinRevenue: function(st, val) {
+    return st.startup && st.startup.company && (st.startup.company.revenue || 0) >= val;
+  },
+  // 创业盈利检查
+  startupProfitable: function(st, val) {
+    if (!st.startup || !st.startup.company) return false;
+    return st.startup.company.revenue > st.startup.company.expenses;
+  },
+  // 慢性病检查
+  chronicIllness: function(st, val) {
+    return st.status && st.status.illnesses && st.status.illnesses.some(function(i) { return i.chronic; });
+  },
+  // 企业命运倒闭检查
+  enterpriseFateDeath: function(st, val) {
+    if (!st.enterpriseFate || !st.enterpriseFate.companies) return false;
+    for (var cid in st.enterpriseFate.companies) {
+      var h = st.enterpriseFate.companies[cid].fateEventHistory || [];
+      for (var i = 0; i < h.length; i++) {
+        if (h[i].eventType === "company_death" || h[i].eventType === "merger_acquire") return true;
+      }
+    }
+    return false;
+  },
+  // 企业命运市场份额
+  enterpriseFateMarketShare: function(st, val) {
+    if (!st.enterpriseFate || !st.enterpriseFate.companies) return false;
+    for (var cid in st.enterpriseFate.companies) {
+      if (st.enterpriseFate.companies[cid].knownToPlayer && st.enterpriseFate.companies[cid].marketShare >= val) return true;
+    }
+    return false;
+  },
+  // 技能单技能等级检查
+  minSkillLevel: function(st, val) {
+    for (var key in val) {
+      if (!st.skills || !st.skills[key] || (st.skills[key].level || 0) < val[key]) return false;
+    }
+    return true;
+  },
+  // 产品用户数
+  startupMinUsers: function(st, val) {
+    if (!st.startup || !st.startup.company || !st.startup.company.products) return false;
+    for (var i = 0; i < st.startup.company.products.length; i++) {
+      if ((st.startup.company.products[i].users || 0) >= val) return true;
+    }
+    return false;
+  },
+  // 已访问所有地点
+  visitedAllLocations: function(st, val) { return !!(st.flags && st.flags._visitedAllLocations); },
+  // 成功退出（创业获得现金回报）
+  startupExitValue: function(st, val) {
+    return st.startup && st.startup.flags && (st.startup.flags.exitValue || 0) >= val;
+  },
+};
+
+function evaluateTriggersDispatch(triggers, state) {
+  for (var key in triggers) {
+    var handler = TRIGGER_DISPATCH[key];
+    if (!handler) continue;
+    if (!handler(state, triggers[key])) return false;
+  }
+  return true;
+}
+
 /**
  * 检查并解锁新成就，返回本次新解锁的成就列表
+ * 支持约定式 triggers: 字段自动判定 + check 函数兜底
  */
 function checkAchievements(state) {
   if (!state.flags._unlockedAchievements)
@@ -2385,7 +2048,13 @@ function checkAchievements(state) {
   ACHIEVEMENTS.forEach(function (ach) {
     if (unlocked.indexOf(ach.id) !== -1) return; // 已解锁
     try {
-      if (ach.check(state)) {
+      var met = false;
+      if (ach.triggers) {
+        met = evaluateTriggersDispatch(ach.triggers, state);
+      } else if (typeof ach.check === "function") {
+        met = ach.check(state);
+      }
+      if (met) {
         unlocked.push(ach.id);
         newlyUnlocked.push(ach);
       }

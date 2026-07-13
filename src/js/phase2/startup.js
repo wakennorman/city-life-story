@@ -5171,6 +5171,14 @@ function showKpiDashboard(state) {
   });
 }
 
+/** 全局 key result 输入框添加函数（供 inline onclick 调用）— 修复幽灵按钮：原定义在 innerHTML <script> 中永不执行 */
+function addKrInput() {
+  const container = document.getElementById("okrKeyResults");
+  if (!container) return;
+  var state = typeof StateManager !== "undefined" ? StateManager.getState() : null;
+  container.insertAdjacentHTML("beforeend", _renderKrInput(""));
+}
+
 /** 显示设定 OKR 弹窗 */
 function showSetOkrModal() {
   const state = StateManager.getState();
@@ -5191,15 +5199,6 @@ function showSetOkrModal() {
     "</div>" +
     '<button class="btn btn-sm btn-secondary" onclick="addKrInput()" style="margin-top:6px;font-size:11px;">+ 添加关键结果</button>' +
     "</div>" +
-    "<script>" +
-    "function addKrInput() {" +
-    '  const container = document.getElementById("okrKeyResults");' +
-    '  container.insertAdjacentHTML("beforeend", ' +
-    _esc(_renderKrInput("")).replace(/'/g, "\\'") +
-    ");" +
-    "}" +
-    "</scr" +
-    "ipt>" +
     "</div>";
 
   if (typeof showModal !== "function") return;
@@ -7678,7 +7677,7 @@ function showPRManagementModal(state) {
       }
 
       prActionsHtml += `
-        <div style="padding:10px;background:${disabled ? "rgba(0,0,0,0.05)" : "var(--bg-card)"};border-radius:6px;border:1px solid ${disabled ? "var(--border)" : "transparent"};opacity:${disabled ? 0.5 : 1};${disabled ? "" : "cursor:pointer;transition:all 0.2s;"}">
+        <div style="padding:10px;background:${disabled ? "rgba(0,0,0,0.05)" : "var(--bg-card)"};border-radius:6px;border:1px solid ${disabled ? "var(--border)" : "transparent"};opacity:${disabled ? 0.5 : 1};${disabled ? "" : "cursor:pointer;transition:all 0.2s;"}" ${btnClass}>
           <div style="display:flex;justify-content:space-between;align-items:center;">
             <div>
               <div style="font-size:12px;font-weight:bold;">${event.icon} ${event.name}</div>
@@ -7728,7 +7727,7 @@ function showPRManagementModal(state) {
           "')\" onmouseover=\"this.style.borderColor='var(--accent)';this.style.background='var(--bg-card-hover)';this.style.transform='translateY(-1px)';this.style.boxShadow='0 4px 12px var(--accent-glow)';\" onmouseout=\"this.style.borderColor='var(--border)';this.style.background='var(--bg-card)';this.style.transform='none';this.style.boxShadow='none';\"";
 
       mediaActionsHtml += `
-        <div style="padding:10px;background:${disabled ? "rgba(0,0,0,0.05)" : "var(--bg-card)"};border-radius:6px;border:1px solid ${disabled ? "var(--border)" : "transparent"};opacity:${disabled ? 0.5 : 1};${disabled ? "" : "cursor:pointer;transition:all 0.2s;"}">
+        <div style="padding:10px;background:${disabled ? "rgba(0,0,0,0.05)" : "var(--bg-card)"};border-radius:6px;border:1px solid ${disabled ? "var(--border)" : "transparent"};opacity:${disabled ? 0.5 : 1};${disabled ? "" : "cursor:pointer;transition:all 0.2s;"}" ${btnClass}>
           <div style="display:flex;justify-content:space-between;align-items:center;">
             <div>
               <div style="font-size:12px;font-weight:bold;">${action.icon} ${action.name}</div>
@@ -11583,6 +11582,63 @@ function showAdBudgetModal(productId, channel) {
 }
 
 // ====== P1-8: 模态框内联 action 包装函数 ======
+
+function executePRActionFromModal(eventId) {
+  const state = StateManager.getState();
+  if (!state) return;
+  const company = state.startup.company;
+  if (!company) return;
+  const result = executePREvent(state, eventId);
+  if (result && result.success) {
+    StateManager.addMessage(result.message || "公关活动执行成功", "success");
+    renderAll();
+  } else {
+    StateManager.addMessage(
+      result?.message || "公关活动执行失败",
+      "warning",
+    );
+  }
+}
+
+function executeMediaRelationActionFromModal(actionId) {
+  const state = StateManager.getState();
+  if (!state) return;
+  const company = state.startup.company;
+  if (!company) return;
+  const result = executeMediaRelationAction(state, actionId);
+  if (result && result.success) {
+    StateManager.addMessage(
+      result.message || "媒体关系行动执行成功",
+      "success",
+    );
+    renderAll();
+  } else {
+    StateManager.addMessage(
+      result?.message || "媒体关系行动执行失败",
+      "warning",
+    );
+  }
+}
+
+function resolveCrisisActionFromModal(optionIndex) {
+  const state = StateManager.getState();
+  if (!state) return;
+  const company = state.startup.company;
+  if (!company || !company.pendingCrisisEvent) {
+    StateManager.addMessage("没有待处理的危机事件", "warning");
+    return;
+  }
+  const result = resolveCrisisEvent(state, optionIndex);
+  if (result && result.success) {
+    StateManager.addMessage(result.message || "危机应对成功", "success");
+    renderAll();
+  } else {
+    StateManager.addMessage(
+      result?.message || "危机应对失败",
+      "warning",
+    );
+  }
+}
 
 function executeLegalChecklistActionFromModal(checklistId) {
   const state = StateManager.getState();

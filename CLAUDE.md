@@ -156,7 +156,21 @@ navHints: [
 
 > 每次收工前覆盖更新本节（只留最新状态，不要追加历史）；详细变更历史在 `src/DEVELOPMENT.md`，不需要每次都读。
 
-- **最新一次工作 (2026-07-13)**：R12(域G 核心机制/生命周期) — 5项A类缺陷修复+wiki搜索框焦点窃取修复
+- **最新一次工作 (2026-07-13)**：R14(幽灵按钮全量审计+修复) — 域F/域H 4个实际幽灵按钮修复 + 约定式自动归类防御
+  - **审计发现**：startup.js 中4个幽灵按钮(PR卡片/媒体卡片/crisis卡片/OKR添加关键结果)
+  - **修复**：新增3个`*FromModal`包装函数+btnClass注入模板+addKrInput移出innerHTML
+  - **防御**：createActionCard增加`console.warn`幽灵按钮运行时检测
+  - **验证**：node --check ✅ / build.py 8104.9KB ✅
+  - **commit**：`<待提交>`
+  - **记忆文件**：`memory/v3.99d-ghost-button-fix.md`
+
+- **之前工作 (2026-07-13)**：R13(域CoC全量分析+部分P0实现) — 约定式自动归类全面审计，2个新增CoC系统
+  - **审计产出**：`memory/coc-full-analysis-plan.md` — 22个已落地CoC系统 + 10个待实施领域(P0×3/P1×3/P2×4)
+  - **P0 实现1: NPC语境对话数据化** — 6个NPC(aunt_wang/boss_li/sister_zhang/old_zhou/xiao_mei/chef_chen)新增`contextDialogue`声明式字段，每NPC声明条件→台词映射；`getNpcContextDialogue()`自动匹配；新增NPC只需加数据，无需改main.js
+  - **P0 实现2: 人生节点效果内联化** — 12个choice新增`effect: function(st)`内联效果；`applyNodeChoice()`自动优先调用内联effect，旧switch-case兜底；新增节点choice不再需要维护switch-case
+  - **10个待实施领域**：成就触发声明化/节日事件数据化/跨系统联动规则化(P0) + 行动数据源/事件条件迁移/新闻后续链统一(P1) + 技能协同计算/职业路径条件/旅行效果/创业事件触发(P2)
+  - **验证**：node --check ✅ / build.py 8107.5KB ✅
+  - **commit**：`02a2175`
   - **指令一审查**：域G文件扫描发现5个A类候选+wiki搜索框焦点窃取修复
     - **daily_pipeline.js** (6): 所有 trigger_slot 守卫 `state.day`→`state.player.day`，TriggerRegistry 事件系统6年从未触发
     - **main.js** (2): `state.chengguan` 直接访问无守卫→TypeError死锁 + `state.inventory.items` 无守卫→旧存档崩溃
