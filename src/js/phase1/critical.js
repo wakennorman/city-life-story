@@ -65,8 +65,10 @@ function findCriticalNeed(state) {
   for (var i = 0; i < order.length; i++) {
     var k = order[i];
     if (!isCriticalNeed(state, k)) continue;
-    // 当日已延期则跳过（避免反复弹同一个）
-    if (state.flags._deferred[k] === state.player.day) continue;
+    // 当日已延期则跳过（避免反复弹同一个）；兼容 {count,lastDay} 对象与旧数字格式
+    var _dw = state.flags._deferred[k];
+    var _deferDay = (typeof _dw === "object" && _dw) ? _dw.lastDay : _dw;
+    if (_deferDay === state.player.day) continue;
     return k;
   }
   return null;
@@ -163,7 +165,15 @@ function showCriticalChoiceModal(state, need) {
     callback: function () {
       var st = StateManager.getState();
       st.flags._deferred = st.flags._deferred || {};
-      st.flags._deferred[need] = st.player.day;
+      // 每次延期累积次数（count 在延期时递增，结算时按累计次数施加阶梯惩罚）
+      var _curDefer = st.flags._deferred[need];
+      if (typeof _curDefer === "object" && _curDefer) {
+        _curDefer.count = (_curDefer.count || 0) + 1;
+      } else {
+        _curDefer = { count: 1, lastDay: st.player.day };
+        st.flags._deferred[need] = _curDefer;
+      }
+      _curDefer.lastDay = st.player.day; // 更新最近延期日（同日不重复弹窗）
       StateManager.addMessage(
         "⏳ 你决定" + cfg.label + "的事后续自己处理...小心后果。",
         "warning",
@@ -499,27 +509,29 @@ function applyDeferredCriticalPunishments(state) {
     var need = keys[i];
     var deferInfo = state.flags._deferred[need];
 
-    // 兼容旧格式：{ hunger: day } → 转为新格式
+    // 兼容旧格式：{ hunger: day } → 转为新格式（count 从1起步）
     if (typeof deferInfo === "number") {
       deferInfo = { count: 1, lastDay: deferInfo };
       state.flags._deferred[need] = deferInfo;
+    } else if (typeof deferInfo !== "object" || !deferInfo) {
+      delete state.flags._deferred[need];
+      continue;
     }
 
-    // 检查是否是连续延期（同一天内不重复罚）
-    if (deferInfo.lastDay === state.player.day) continue;
+    // 临界已解除（回血）→ 清除延期标记，不再惩罚
+    if (!isCriticalNeed(state, need)) {
+      delete state.flags._deferred[need];
+      continue;
+    }
 
-    if (!isCriticalNeed(state, need)) continue; // 已经回血了不用罚
+    // 同日已惩罚过则跳过（避免重复惩罚）
+    if (deferInfo.lastPunishedDay === state.player.day) continue;
 
-    // 递增延期次数
-    deferInfo.count = (deferInfo.count || 0) + 1;
-    deferInfo.lastDay = state.player.day;
-
-    var result = _punishByNeed阶梯式(state, need, deferInfo.count);
+    // 按累计延期次数施加阶梯式惩罚（count 在延期时递增）
+    var result = _punishByNeed阶梯式(state, need, deferInfo.count || 1);
+    deferInfo.lastPunishedDay = state.player.day;
     if (result === "skip_day") skipDay = true;
   }
-
-  // 清空当日延期标记（无论是否处罚）
-  state.flags._deferred = {};
 
   return skipDay ? "skip_day" : null;
 }

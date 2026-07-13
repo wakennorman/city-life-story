@@ -1,7 +1,7 @@
 # 城市浮生记 (City Life Story) — 开发文档
 
-> 最后更新: 2026-07-14（v3.110 loop R19 全系统优化·Domain F 界面/体验——A类修复1项(今日重点面板装备耐久提示引用未声明变量 itemId→ReferenceError 崩溃，改 inst.itemId||slot 与 render.js:1992 等效实现一致) + 联动增强3项：F→A生活清晰感心智回馈 / F→D社交形象好感(守域D铁律 rel.met+applyAffinityChange) / F→C成果呈现表达技能）
-> 上一版: v3.109 loop R18 Domain E 经济/投资（连续盈利衰减机制修复 / 新闻房产乘数误匹配 / 持仓盈亏除零守卫 + E→A/E→C/E→D 联动）
+> 最后更新: 2026-07-14（v3.111 loop R20 全系统优化·Domain G 核心机制/生命周期——A类修复1项(强制临界"延期"惩罚整套阶梯机制死代码：玩家点"后续自己再去"写 _deferred[need]=纯数字day，而 applyDeferredCriticalPunishments 期望 {count,lastDay} 对象并递增；且每晚 _deferred={} 清空，致 count 永停1、第2/3/4+次得病/饿晕/送医等升级惩罚全不可达；修为延期时递增count、结算按累计次数施加阶梯惩罚、消除每晚清空与同日跳过冲突、同日不重复弹窗、临界解除即清标记) + 联动增强3项：G→A习惯地基心智回馈 / G→D人生体悟好感(守域D铁律 rel.met+applyAffinityChange) / G→C掌舵定力管理技能）
+> 上一版: v3.110 loop R19 Domain F 界面/体验（今日重点面板装备耐久提示引用未声明变量 itemId→ReferenceError 崩溃 + F→A/F→D/F→C 联动）
 >
 > commits: `feat: [域H] A类修复2项+联动增强3项` + `（docs）loop状态/迭代表`
 
