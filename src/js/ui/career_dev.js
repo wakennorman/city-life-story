@@ -1528,7 +1528,13 @@ function renderCareerJobs(state, parent) {
           "</div>";
         html +=
           '<div style="font-size:9px;margin-top:2px;">' +
-          (rMeet ? "✅ 可投递 · 点击预览" : "⚠️ 条件不足 · 点击查看") +
+          (rMeet
+            ? "✅ 可投递 · 点击预览"
+            : "⚠️ " +
+              (_renderMissingSummary(
+                checkCareerPromotionDetailed(state, rp.key, rEntry),
+              ) || "条件不足") +
+              " · 点击查看") +
           "</div>";
         html += "</div>";
       }
@@ -2785,6 +2791,184 @@ function checkCareerPromotion(state, pathId, level) {
   return true;
 }
 
+/** 补充属性标签（🟢/🔴 条件构建用） */
+var _careerLabelMap = {
+  coding: "编程",
+  english: "英语",
+  accounting: "财务",
+  management: "管理",
+  sales: "销售",
+  cooking: "烹饪",
+  medicine: "医学",
+  driving: "驾驶",
+  repair: "维修",
+  electrician: "电工",
+  welding: "焊工",
+  caregiving: "护理",
+  intelligence: "智力",
+  mental: "能力",
+  physique: "体质",
+  agility: "敏捷",
+  charm: "颜值",
+  fame: "名气",
+  morality: "道德",
+};
+
+/**
+ * 获取技能/属性当前值（与 checkCareerPromotion 一致）
+ */
+function _getCareerReqValue(state, key) {
+  var p = state.player;
+  if (key === "intelligence") return p.intelligence || 0;
+  if (key === "mental") return p.mental || 0;
+  if (key === "physique") return p.physique || 0;
+  if (key === "agility") return p.agility || 0;
+  if (key === "charm") return p.charm || 0;
+  if (key === "fame") return p.fame || 0;
+  if (key === "morality") return p.morality || 0;
+  if (state.skills && state.skills[key]) return state.skills[key].level || 0;
+  return 0;
+}
+
+/**
+ * 检查晋升条件并返回详细结果
+ * @returns {Array<{label:string, ok:boolean, current:number, required:(number|string)}>}
+ */
+function checkCareerPromotionDetailed(state, pathId, level) {
+  var p = state.player;
+  var results = [];
+
+  // 年龄
+  if (level.minAge) {
+    var curAge = p.age || 20;
+    results.push({
+      label: "年龄≥" + level.minAge,
+      ok: curAge >= level.minAge,
+      current: curAge,
+      required: level.minAge,
+    });
+  }
+
+  // 学历
+  if (level.reqEducation) {
+    results.push({
+      label: "大专以上学历",
+      ok: !!p.education,
+      current: p.education ? "有" : "无",
+      required: "有",
+    });
+  }
+
+  // 技能/属性 (reqSkills)
+  if (level.reqSkills) {
+    for (var s in level.reqSkills) {
+      var reqv = level.reqSkills[s];
+      var cur = _getCareerReqValue(state, s);
+      results.push({
+        label: (_careerLabelMap[s] || s) + "≥" + reqv,
+        ok: cur >= reqv,
+        current: cur,
+        required: reqv,
+      });
+    }
+  }
+
+  // 属性要求 (reqAttrs)
+  if (level.reqAttrs) {
+    for (var a in level.reqAttrs) {
+      var reqa = level.reqAttrs[a];
+      var cura = _getCareerReqValue(state, a);
+      results.push({
+        label: (_careerLabelMap[a] || a) + "≥" + reqa,
+        ok: cura >= reqa,
+        current: cura,
+        required: reqa,
+      });
+    }
+  }
+
+  // 工作天数
+  var career = state.career || {};
+  var workDays = career.currentJob ? career.currentJob.workDays || 0 : 0;
+  if (level.reqWorkDays) {
+    results.push({
+      label: "在职≥" + Math.floor(level.reqWorkDays / 365) + "年",
+      ok: workDays >= level.reqWorkDays,
+      current: Math.floor(workDays / 30) + "个月",
+      required: Math.floor(level.reqWorkDays / 365) + "年",
+    });
+  }
+
+  // 业绩
+  var performanceReq = getCareerPerformanceRequirement(level);
+  if (performanceReq) {
+    var perfScore = getCareerPerformanceScore(state);
+    results.push({
+      label: "业绩≥" + performanceReq,
+      ok: perfScore >= performanceReq,
+      current: perfScore,
+      required: performanceReq,
+    });
+  }
+
+  // 社交关系
+  if (level.reqSocial) {
+    var networkCount = getCareerTrustedNetworkCount(state);
+    var requiredNet = Math.floor(level.reqSocial / 20);
+    results.push({
+      label: "人脉≥" + requiredNet + "人",
+      ok: networkCount >= requiredNet,
+      current: networkCount,
+      required: requiredNet,
+    });
+  }
+
+  return results;
+}
+
+/**
+ * 渲染一条条件 HTML（✅ green / ❌ red + 当前值）
+ */
+function _renderCondRow(label, ok, currentStr) {
+  return (
+    '<div style="display:flex;justify-content:space-between;align-items:center;padding:2px 4px;border-radius:3px;' +
+    (ok
+      ? "background:rgba(46,204,113,0.06);"
+      : "background:rgba(231,76,60,0.06);") +
+    '"><span>' +
+    (ok
+      ? '✅ <span style="color:var(--success);font-weight:bold;">'
+      : '❌ <span style="color:var(--danger);">') +
+    label +
+    "</span></span>" +
+    '<span style="font-size:11px;' +
+    (ok ? "color:var(--success);" : "color:var(--danger);") +
+    '">' +
+    (ok ? "✔ 当前 " : "✘ 当前 ") +
+    currentStr +
+    "</span></div>"
+  );
+}
+
+/**
+ * 从 checkCareerPromotionDetailed 结果批量渲染 HTML
+ */
+function _renderCondRows(results) {
+  return results
+    .map(function (r) {
+      return _renderCondRow(r.label, r.ok, String(r.current));
+    })
+    .join("");
+}
+
+/** 从详细结果判断是否全部通过 */
+function _allMet(results) {
+  for (var i = 0; i < results.length; i++) {
+    if (!results[i].ok) return false;
+  }
+  return true;
+}
+
 function getCareerPerformanceRequirement(level) {
   if (level.reqPerformance) return level.reqPerformance;
   if (!level.reqWorkDays) return 0;
@@ -2828,50 +3012,43 @@ function getCareerTrustedNetworkCount(state) {
   }).length;
 }
 
-/** 渲染晋升条件文字（v3.2 更新：显示属性+颜值要求） */
+/** 从 checkCareerPromotionDetailed 结果生成紧凑缺失摘要（供卡片状态行用） */
+function _renderMissingSummary(results) {
+  var missing = [];
+  for (var i = 0; i < results.length; i++) {
+    if (!results[i].ok) missing.push(results[i].label.replace("≥", ""));
+  }
+  if (missing.length === 0) return "";
+  return (
+    "缺" +
+    missing.slice(0, 3).join(" ") +
+    (missing.length > 3 ? " 等" + missing.length + "项" : "")
+  );
+}
+
+/** 渲染晋升条件文字（v3.97+ overhaul: ✅/❌ 每项带当前值） */
 function renderPromotionReqs(state, pathId, level) {
-  var parts = [];
-  if (level.reqSkills) {
-    for (var s in level.reqSkills) {
-      var labels = {
-        coding: "编程",
-        english: "英语",
-        accounting: "财务",
-        management: "管理",
-        sales: "销售",
-        intelligence: "智力",
-        mental: "能力",
-        physique: "体质",
-        agility: "敏捷",
-        charm: "颜值",
-      };
-      parts.push((labels[s] || s) + "≥" + level.reqSkills[s]);
-    }
+  var results = checkCareerPromotionDetailed(state, pathId, level);
+  if (results.length === 0) return "";
+  var html = '<div style="font-size:10px;line-height:1.8;">';
+  for (var i = 0; i < results.length; i++) {
+    var r = results[i];
+    html +=
+      '<div style="display:flex;justify-content:space-between;align-items:center;">' +
+      "<span>" +
+      (r.ok ? "✅" : "❌") +
+      " " +
+      r.label +
+      "</span>" +
+      '<span style="color:' +
+      (r.ok ? "var(--success)" : "var(--danger)") +
+      ';font-size:9px;">' +
+      "当前" +
+      r.current +
+      "</span></div>";
   }
-  // v3.2 属性要求显示
-  if (level.reqAttrs) {
-    for (var a in level.reqAttrs) {
-      var attrLabels = {
-        physique: "体质",
-        intelligence: "智力",
-        agility: "敏捷",
-        mental: "能力",
-        charm: "颜值",
-        fame: "名气",
-        morality: "道德",
-      };
-      parts.push((attrLabels[a] || a) + "≥" + level.reqAttrs[a]);
-    }
-  }
-  if (level.minAge) parts.push("年龄≥" + level.minAge);
-  if (level.reqEducation) parts.push("大专以上学历");
-  if (level.reqWorkDays)
-    parts.push("在职≥" + Math.floor(level.reqWorkDays / 365) + "年");
-  var performanceReq = getCareerPerformanceRequirement(level);
-  if (performanceReq) parts.push("业绩≥" + performanceReq);
-  if (level.reqSocial)
-    parts.push("职场人脉≥" + Math.floor(level.reqSocial / 20) + "人");
-  return "要求：" + parts.join(" · ");
+  html += "</div>";
+  return html;
 }
 
 /** 投递简历（申请初级职位） */

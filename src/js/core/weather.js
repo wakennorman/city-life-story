@@ -841,7 +841,7 @@ function getWeatherIllnessAdjustedProb(baseProb, state) {
   var health =
     state.status && state.status.health != null ? state.status.health : 100;
   var physique =
-    state.status && state.status.physique != null ? state.status.physique : 50;
+    state.player && state.player.physique != null ? state.player.physique : 50;
   // 健康乘数：越健康概率越低
   var healthMul =
     health <= 30 ? 3.0 : health <= 50 ? 2.0 : health <= 70 ? 1.3 : 1.0;

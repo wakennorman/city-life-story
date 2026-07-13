@@ -789,7 +789,7 @@ function _showEvolutionWarningModal(
         {
           text: "立即治疗",
           cls: "btn-danger",
-          onClick: function () {
+          callback: function () {
             if (typeof openClinicModal === "function") {
               openClinicModal();
             }

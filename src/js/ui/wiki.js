@@ -859,23 +859,85 @@ function renderWikiTab(state, parent) {
   box.appendChild(layout);
   parent.appendChild(box);
 
-  // 绑定搜索输入框（debounce 简易实现）
+  // 绑定搜索输入框 — 只更新内容区，不触发 renderAll()（防焦点窃取）
   var input = box.querySelector("#wiki-search-input");
   if (input) {
     var timer = null;
     input.addEventListener("input", function (e) {
       var v = e.target.value;
+      var cursorPos = this.selectionStart || 0;
       if (timer) clearTimeout(timer);
       timer = setTimeout(function () {
-        _wikiSetQuery(v);
+        // 直接更新 query，不调 _wikiSetQuery（避免 renderAll 全量重建）
+        _wikiState.query = v;
+        _wikiState.entryId = null;
+
+        // 只更新 .wiki-content 区域
+        var contentEl = box.querySelector(".wiki-content");
+        if (contentEl) {
+          contentEl.innerHTML = "";
+          if (v) {
+            _wikiRenderSearchResults(state, contentEl);
+          } else {
+            _wikiRenderEntryList(state, contentEl);
+          }
+          // 重新绑定 wiki-link 点击跳转
+          var links = contentEl.querySelectorAll(".wiki-link");
+          for (var li = 0; li < links.length; li++) {
+            links[li].addEventListener("click", function (ev) {
+              ev.preventDefault();
+              var a = ev.currentTarget;
+              wikiNavigate(a.dataset.cat, a.dataset.id);
+            });
+          }
+          // 重新绑定导航按钮
+          if (typeof bindAllNavButtons === "function") {
+            bindAllNavButtons();
+          }
+        }
+
+        // 恢复焦点到搜索框
+        var inp = box.querySelector("#wiki-search-input");
+        if (inp && inp !== document.activeElement) {
+          inp.focus();
+          inp.setSelectionRange(cursorPos, cursorPos);
+        }
       }, 250);
     });
   }
   var clr = box.querySelector(".wiki-clear");
-  if (clr)
+  if (clr) {
     clr.addEventListener("click", function () {
-      _wikiSetQuery("");
+      _wikiState.query = "";
+      _wikiState.entryId = null;
+
+      // 只更新内容区
+      var contentEl = box.querySelector(".wiki-content");
+      if (contentEl) {
+        contentEl.innerHTML = "";
+        _wikiRenderEntryList(state, contentEl);
+        // 重新绑定 wiki-link
+        var links = contentEl.querySelectorAll(".wiki-link");
+        for (var li = 0; li < links.length; li++) {
+          links[li].addEventListener("click", function (ev) {
+            ev.preventDefault();
+            var a = ev.currentTarget;
+            wikiNavigate(a.dataset.cat, a.dataset.id);
+          });
+        }
+        if (typeof bindAllNavButtons === "function") {
+          bindAllNavButtons();
+        }
+      }
+
+      // 清空输入框值 + 恢复焦点
+      var inp = box.querySelector("#wiki-search-input");
+      if (inp) {
+        inp.value = "";
+        inp.focus();
+      }
     });
+  }
 }
 
 function _wikiOnNavClick(e) {

@@ -2620,9 +2620,10 @@ function getAvailableActions(state) {
         },
       ];
       // 只显示未购买的
-      const ownedPacks = state.inventory.items.filter((i) =>
-        i.id.startsWith("backpack_"),
-      );
+      const ownedPacks = (
+        (state.inventory && state.inventory.items) ||
+        []
+      ).filter((i) => i.id.startsWith("backpack_"));
       for (const pack of BACKPACKS) {
         if (ownedPacks.find((p) => p.id === pack.id)) continue;
         const canAfford = state.resources.cash >= pack.cost;
@@ -4605,6 +4606,12 @@ function doStreetJob(job) {
     }
 
     // 城管检查
+    state.chengguan = state.chengguan || {
+      heat: 0,
+      warnings: 0,
+      relationship: 0,
+      lastRaid: 0,
+    };
     state.chengguan.heat = Math.min(
       100,
       state.chengguan.heat + 3 + Random.int(0, 4),
@@ -4719,7 +4726,7 @@ function doStreetJob(job) {
   gainRepFromWork(state, job);
 
   // v3.6: 约定式触发槽（after_work 时机）
-  if (window.TriggerRegistry && state.day >= 7) {
+  if (window.TriggerRegistry && state.player && state.player.day >= 7) {
     try {
       var workEvent = window.TriggerRegistry.triggerRandom("after_work", state);
       if (workEvent) {

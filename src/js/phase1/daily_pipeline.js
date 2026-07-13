@@ -48,8 +48,8 @@ const DAILY_PIPELINE = [
     name: "trigger_slot_daily_start",
     fn: function (state) {
       if (!window.TriggerRegistry) return;
-      if (!state || !state.day) return;
-      if (state.day < 4) return;
+      if (!state || !state.player) return;
+      if (state.player.day < 4) return;
       try {
         var event = window.TriggerRegistry.triggerRandom("daily_start", state);
         if (event) {
@@ -76,8 +76,8 @@ const DAILY_PIPELINE = [
     name: "trigger_slot_random_encounter",
     fn: function (state) {
       if (!window.TriggerRegistry) return;
-      if (!state || !state.day) return;
-      if (state.day < 10) return;
+      if (!state || !state.player) return;
+      if (state.player.day < 10) return;
       try {
         var event = window.TriggerRegistry.triggerRandom(
           "random_encounter",
@@ -284,8 +284,8 @@ const DAILY_PIPELINE = [
     name: "trigger_slot_weekly",
     fn: function (state) {
       if (!window.TriggerRegistry) return;
-      if (!state || !state.day) return;
-      if (state.day % 7 !== 0) return;
+      if (!state || !state.player) return;
+      if (state.player.day % 7 !== 0) return;
       try {
         var event = window.TriggerRegistry.triggerRandom("weekly", state);
         if (event) {
@@ -588,8 +588,8 @@ const DAILY_PIPELINE = [
     name: "trigger_slot_monthly",
     fn: function (state) {
       if (!window.TriggerRegistry) return;
-      if (!state || !state.day) return;
-      if (state.day % 30 !== 0) return;
+      if (!state || !state.player) return;
+      if (state.player.day % 30 !== 0) return;
       try {
         var event = window.TriggerRegistry.triggerRandom("monthly", state);
         if (event) {
@@ -931,7 +931,7 @@ const DAILY_PIPELINE = [
     name: "trigger_slot_daily_mid",
     fn: function (state) {
       if (!window.TriggerRegistry) return;
-      if (!state || !state.day) return;
+      if (!state || !state.player) return;
       try {
         var event = window.TriggerRegistry.triggerRandom("daily_mid", state);
         if (event) {
@@ -1045,8 +1045,8 @@ const DAILY_PIPELINE = [
     name: "trigger_slot_daily_end",
     fn: function (state) {
       if (!window.TriggerRegistry) return;
-      if (!state || !state.day) return;
-      if (state.day < 7) return;
+      if (!state || !state.player) return;
+      if (state.player.day < 7) return;
       try {
         var event = window.TriggerRegistry.triggerRandom("daily_end", state);
         if (event) {
