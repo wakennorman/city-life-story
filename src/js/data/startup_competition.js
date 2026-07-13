@@ -2996,7 +2996,8 @@ function improvePartnerTrust(company, partnerId, day, amount, cost) {
 /** 获取合作伙伴摘要 */
 function getPartnerSummary(partner) {
   const typeInfo = PARTNER_TYPES[partner.type];
-  const state = typeof StateManager !== "undefined" ? StateManager.getState() : null;
+  const state =
+    typeof StateManager !== "undefined" ? StateManager.getState() : null;
   const gameDay = state && state.player ? state.player.day : 0;
   return {
     id: partner.id,
@@ -3010,10 +3011,7 @@ function getPartnerSummary(partner) {
     cooperationLevel: partner.cooperationLevel,
     revenueShare: partner.revenueShare,
     status: partner.status,
-    daysRemaining: Math.max(
-      0,
-      partner.contractExpiryDay - gameDay,
-    ),
+    daysRemaining: Math.max(0, partner.contractExpiryDay - gameDay),
   };
 }
 

@@ -1166,7 +1166,7 @@ function renderStatsStrip(state, parent) {
     },
   ];
 
-  container.appendChild(buildRow(attrs, false)); // 第1行6属性：无色带，节省空间
+  container.appendChild(buildRow(attrs, true)); // 第1行6属性：统一色带（v3.99 全统一）
   container.appendChild(buildRow(needs, true)); // 第2行5需求：有色带
 
   // 疾病行：有疾病时在第2行之后追加

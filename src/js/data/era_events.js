@@ -15,9 +15,8 @@ const ERA_EVENTS = [
     story:
       "你在这座城市已经待了三个月。物价开始有了微妙的变化——菜价涨了5%，但你也学会了怎么挑便宜货。\n老周告诉你：「这年头，钱越来越不值钱了。得想办法多赚点。」",
     phase: "street",
-    conditions: function (st) {
-      return st.player && st.player.day >= 90 && !st.flags._eraEvent_90;
-    },
+    // v3.99d 约定式触发：第90天，仅触发一次
+    triggers: { minDay: 90, excludeFlags: ["_eraEvent_90"] },
     choices: [
       {
         text: "💡 学老周，多囤点耐用品",
@@ -79,15 +78,11 @@ const ERA_EVENTS = [
     story:
       "某个新兴行业突然火爆——短视频/直播/新能源。新闻里全是「风口」「蓝海」「十万加」。\n张姐来找你：「听说你在找工作？我这边有个风口行业的活，日薪¥300，要不要试试？」",
     phase: "street",
-    conditions: function (st) {
-      return (
-        st.player &&
-        st.player.day >= 180 &&
-        !st.flags._eraEvent_180 &&
-        st.relationships &&
-        st.relationships.sister_zhang &&
-        st.relationships.sister_zhang.met === true
-      );
+    // v3.99d 约定式触发：第180天，需结识张姐，仅触发一次
+    triggers: {
+      minDay: 180,
+      excludeFlags: ["_eraEvent_180"],
+      relationshipMet: "sister_zhang",
     },
     choices: [
       {
@@ -140,15 +135,11 @@ const ERA_EVENTS = [
     story:
       "通胀开始显现。房租涨了10%，菜价涨了8%。\n王大婶来找你：「孩子，房租得涨涨了，这年头啥都贵。下个月开始¥350一天，行不？」",
     phase: "street",
-    conditions: function (st) {
-      return (
-        st.player &&
-        st.player.day >= 270 &&
-        !st.flags._eraEvent_270 &&
-        st.relationships &&
-        st.relationships.aunt_wang &&
-        st.relationships.aunt_wang.met === true
-      );
+    // v3.99d 约定式触发：第270天，需结识王大婶，仅触发一次
+    triggers: {
+      minDay: 270,
+      excludeFlags: ["_eraEvent_270"],
+      relationshipMet: "aunt_wang",
     },
     choices: [
       {
@@ -219,9 +210,8 @@ const ERA_EVENTS = [
     story:
       "一年过去了。你回头看刚来这座城市时的自己，感慨万千。\n这一年，你经历了什么？失去了什么？又得到了什么？",
     phase: "street",
-    conditions: function (st) {
-      return st.player && st.player.day >= 365 && !st.flags._eraEvent_365;
-    },
+    // v3.99d 约定式触发：第365天，仅触发一次
+    triggers: { minDay: 365, excludeFlags: ["_eraEvent_365"] },
     choices: [
       {
         text: "📝 写一封给自己的信",
@@ -274,15 +264,11 @@ const ERA_EVENTS = [
     story:
       "某些行业开始整合。小公司倒闭，大公司收购。\n李工头告诉你：「工地那边活少了，老板说项目被大公司接走了。你最近有别的活吗？」",
     phase: "street",
-    conditions: function (st) {
-      return (
-        st.player &&
-        st.player.day >= 450 &&
-        !st.flags._eraEvent_450 &&
-        st.relationships &&
-        st.relationships.boss_li &&
-        st.relationships.boss_li.met === true
-      );
+    // v3.99d 约定式触发：第450天，需结识李工头，仅触发一次
+    triggers: {
+      minDay: 450,
+      excludeFlags: ["_eraEvent_450"],
+      relationshipMet: "boss_li",
     },
     choices: [
       {
@@ -332,15 +318,11 @@ const ERA_EVENTS = [
     story:
       "城里人开始追求品质生活。高端消费场所增多，但普通人的日子也没变差。\n小美兴奋地说：「我学姐开了家精品咖啡馆，说是要打造城市生活新体验！」",
     phase: "street",
-    conditions: function (st) {
-      return (
-        st.player &&
-        st.player.day >= 540 &&
-        !st.flags._eraEvent_540 &&
-        st.relationships &&
-        st.relationships.xiao_mei &&
-        st.relationships.xiao_mei.met === true
-      );
+    // v3.99d 约定式触发：第540天，需结识小美，仅触发一次
+    triggers: {
+      minDay: 540,
+      excludeFlags: ["_eraEvent_540"],
+      relationshipMet: "xiao_mei",
     },
     choices: [
       {
@@ -395,15 +377,11 @@ const ERA_EVENTS = [
     story:
       "两年了。你开始思考：是继续打工，还是自己单干？\n城市给了你机会，也给了你压力。老周说：「我干了这么多年，攒了点钱。你说，我是不是也该自己干点什么？」",
     phase: "street",
-    conditions: function (st) {
-      return (
-        st.player &&
-        st.player.day >= 720 &&
-        !st.flags._eraEvent_720 &&
-        st.relationships &&
-        st.relationships.old_zhou &&
-        st.relationships.old_zhou.met === true
-      );
+    // v3.99d 约定式触发：第720天，需结识老周，仅触发一次
+    triggers: {
+      minDay: 720,
+      excludeFlags: ["_eraEvent_720"],
+      relationshipMet: "old_zhou",
     },
     choices: [
       {
@@ -461,15 +439,11 @@ const ERA_EVENTS = [
     story:
       "三年。这座城市已经把你塑造成了另一个人。\n你开始有能力影响周围的人。张姐说：「你这两年变化真大，现在好多人都找你咨询怎么在这座城市立足。」",
     phase: "street",
-    conditions: function (st) {
-      return (
-        st.player &&
-        st.player.day >= 900 &&
-        !st.flags._eraEvent_900 &&
-        st.relationships &&
-        st.relationships.sister_zhang &&
-        st.relationships.sister_zhang.met === true
-      );
+    // v3.99d 约定式触发：第900天，需结识张姐，仅触发一次
+    triggers: {
+      minDay: 900,
+      excludeFlags: ["_eraEvent_900"],
+      relationshipMet: "sister_zhang",
     },
     choices: [
       {
@@ -534,7 +508,7 @@ if (typeof window !== "undefined") {
       icon: e.icon || "📈",
       title: e.title,
       story: e.story,
-      conditions: e.conditions,
+      triggers: e.triggers,
       choices: e.choices,
       probability: 0,
       repeatable: false,

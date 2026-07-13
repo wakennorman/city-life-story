@@ -323,6 +323,55 @@ function evaluateTriggers(triggers, state) {
     if (weatherArr.indexOf(curWeather) < 0) return false;
   }
 
+  // NPC 关系·已结识（v3.99d 约定式自动归类）
+  if (triggers.relationshipMet !== undefined) {
+    var relMetArr = Array.isArray(triggers.relationshipMet)
+      ? triggers.relationshipMet
+      : [triggers.relationshipMet];
+    var rels = state.relationships || {};
+    for (var rmi = 0; rmi < relMetArr.length; rmi++) {
+      var npcRel = rels[relMetArr[rmi]];
+      if (!npcRel || !npcRel.met) return false;
+    }
+  }
+
+  // NPC 好感下限（v3.99d 约定式自动归类）
+  if (triggers.relationshipAffinityMin !== undefined) {
+    var affReqs = Array.isArray(triggers.relationshipAffinityMin)
+      ? triggers.relationshipAffinityMin
+      : [triggers.relationshipAffinityMin];
+    var rels2 = state.relationships || {};
+    for (var afi = 0; afi < affReqs.length; afi++) {
+      var req = affReqs[afi];
+      var npcRel2 = rels2[req.id];
+      if (!npcRel2 || (npcRel2.affinity || 0) < req.min) return false;
+    }
+  }
+
+  // 季节过滤（v3.99d 约定式）
+  if (triggers.season !== undefined) {
+    var curSeason = state.weather && state.weather.season;
+    var seasonArr = Array.isArray(triggers.season)
+      ? triggers.season
+      : [triggers.season];
+    if (seasonArr.indexOf(curSeason) < 0) return false;
+  }
+
+  // 就业状态过滤（v3.99d 约定式）
+  // "any"=有工作, "none"=无工作, 字符串=具体路径ID
+  if (triggers.employment !== undefined) {
+    var hasJob = !!(state.employment && state.employment.currentJob);
+    var jobPath =
+      state.employment &&
+      state.employment.currentJob &&
+      state.employment.currentJob.path;
+    if (triggers.employment === "any" && !hasJob) return false;
+    if (triggers.employment === "none" && hasJob) return false;
+    if (triggers.employment !== "any" && triggers.employment !== "none") {
+      if (!hasJob || jobPath !== triggers.employment) return false;
+    }
+  }
+
   return true;
 }
 

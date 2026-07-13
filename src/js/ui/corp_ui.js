@@ -325,9 +325,10 @@ function downgradeToStreet(state, reason) {
   var projectsDone = (state.corporate.completedProjects || []).length;
   if (yearsServed > 0 || projectsDone > 0) {
     StateManager.addMessage(
-      "📊 职场" + (yearsServed > 0 ? yearsServed + "年" : "") +
-      (projectsDone > 0 ? "，完成" + projectsDone + "个项目" : "") +
-      "——这段经历不会白费。",
+      "📊 职场" +
+        (yearsServed > 0 ? yearsServed + "年" : "") +
+        (projectsDone > 0 ? "，完成" + projectsDone + "个项目" : "") +
+        "——这段经历不会白费。",
       "info",
     );
   }

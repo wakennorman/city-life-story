@@ -2929,21 +2929,12 @@ function renderMapTab(state, parent) {
                         ? "🏫机构"
                         : "📍其他";
       quick.innerHTML += `
-        <button class="quick-travel-btn" data-dest="${destKey}" style="
-          padding:10px 12px;
-          background:var(--bg-secondary);
-          border:1px solid var(--border);
-          border-radius:6px;
-          cursor:pointer;
-          text-align:left;
-          color:var(--text-primary);
-          font-size:12px;
-          transition:all 0.15s;
-        " onmouseover="this.style.borderColor='var(--accent)';this.style.background='var(--bg-card-hover)';this.style.transform='translateY(-1px)';this.style.boxShadow='0 4px 12px var(--accent-glow)';"
-           onmouseout="this.style.borderColor='var(--border)';this.style.background='var(--bg-card)';this.style.transform='none';this.style.boxShadow='none';">
-          <div style="font-weight:600;color:var(--accent);">📍 ${dest.name}</div>
-          <div style="font-size:10px;color:var(--text-muted);margin-top:2px;">${destType}</div>
-          <div style="font-size:10px;color:var(--text-secondary);margin-top:2px;line-height:1.3;">${dest.desc}</div><div style="font-size:9px;color:var(--text-muted);margin-top:2px;">🚶 ${getLocationHops(locKey, destKey) > 0 ? getLocationHops(locKey, destKey) + "跳" : "同在"}</div>
+        <button class="quick-travel-btn" data-dest="${destKey}">
+          <div style="font-weight:600;color:var(--accent);font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">📍 ${dest.name}</div>
+          <div style="display:flex;gap:4px;align-items:center;margin-top:2px;">
+            <span style="font-size:9px;padding:0 4px;border-radius:2px;background:var(--bg-input);color:var(--text-muted);white-space:nowrap;">${destType}</span>
+            <span style="font-size:9px;color:var(--text-muted);white-space:nowrap;">🚶 ${getLocationHops(locKey, destKey) > 0 ? getLocationHops(locKey, destKey) + "跳" : "同在"}</span>
+          </div>
         </button>
       `;
     }
@@ -3132,8 +3123,7 @@ function renderMapTab(state, parent) {
                 ap +
                 '" data-mode="' +
                 mode +
-                '" style="' +
-                'padding:8px;background:var(--bg-input);border:1px solid var(--border);border-radius:6px;cursor:pointer;text-align:left;font-size:11px;color:var(--text-primary);">' +
+                '" style="padding:8px;background:var(--bg-input);border:1px solid var(--border-light);border-radius:6px;cursor:pointer;text-align:left;font-size:11px;color:var(--text-primary);">' +
                 '<div style="font-weight:600;">' +
                 d.name +
                 "</div>" +

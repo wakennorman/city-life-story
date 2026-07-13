@@ -343,9 +343,13 @@ function enterCorporatePhase(companyId) {
   var streetDays = p.day;
   var totalEarned = state.resources.totalEarned || 0;
   StateManager.addMessage(
-    "📜 从街头到写字楼，你用了" + streetDays + "天。" +
-    (totalEarned > 0 ? "街头打拼攒下¥" + totalEarned.toLocaleString() + "。" : "") +
-    "新的战场，准备好了。",
+    "📜 从街头到写字楼，你用了" +
+      streetDays +
+      "天。" +
+      (totalEarned > 0
+        ? "街头打拼攒下¥" + totalEarned.toLocaleString() + "。"
+        : "") +
+      "新的战场，准备好了。",
     "info",
   );
   StateManager.addMessage(

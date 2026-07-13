@@ -688,13 +688,26 @@ function registerStartup(state, name, industry, description) {
   var codingLvl = state.skills.coding ? state.skills.coding.level : 0;
   var salesLvl = state.skills.sales ? state.skills.sales.level : 0;
   var mgmtLvl = state.skills.management ? state.skills.management.level : 0;
-  var accountingLvl = state.skills.accounting ? state.skills.accounting.level : 0;
-  company.technologyScore = Math.min(80, Math.max(10, company.technologyScore + Math.floor(codingLvl * 0.3)));
-  company.marketScore = Math.min(80, Math.max(5, company.marketScore + Math.floor(salesLvl * 0.3)));
-  company.reputation = Math.min(80, Math.max(10, company.reputation + Math.floor((salesLvl + mgmtLvl) * 0.2)));
+  var accountingLvl = state.skills.accounting
+    ? state.skills.accounting.level
+    : 0;
+  company.technologyScore = Math.min(
+    80,
+    Math.max(10, company.technologyScore + Math.floor(codingLvl * 0.3)),
+  );
+  company.marketScore = Math.min(
+    80,
+    Math.max(5, company.marketScore + Math.floor(salesLvl * 0.3)),
+  );
+  company.reputation = Math.min(
+    80,
+    Math.max(10, company.reputation + Math.floor((salesLvl + mgmtLvl) * 0.2)),
+  );
   // 会计技能降低初始烧钱率
   if (accountingLvl >= 20) {
-    company.burnRate = Math.round(company.burnRate * (1 - Math.min(0.15, accountingLvl * 0.002)));
+    company.burnRate = Math.round(
+      company.burnRate * (1 - Math.min(0.15, accountingLvl * 0.002)),
+    );
   }
 
   // ====== P2-12: 初始化企业文化（默认工程师文化） ======

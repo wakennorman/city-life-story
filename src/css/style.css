@@ -4421,21 +4421,24 @@ body {
     border: 1px solid var(--border-light);
     transition: all 0.2s ease;
   }
-  /* 无色带属性行：更紧凑，数值有空位显示 */
-  .mss-cell-no-track {
-    gap: 1px;
-    padding: 3px 2px;
-    justify-content: center;
+  /* 有色带单元格：统一紧凑间距 */
+  .mss-cell-has-track {
+    gap: 2px;
+    padding: 3px 4px;
   }
-  .mss-cell-no-track .mss-icon {
+  .mss-cell-has-track .mss-icon {
     font-size: 11px;
   }
-  .mss-cell-no-track .mss-label {
+  .mss-cell-has-track .mss-label {
     font-size: 9px;
   }
-  .mss-cell-no-track .mss-val {
+  .mss-cell-has-track .mss-val {
     font-size: 10px;
     min-width: 14px;
+  }
+  /* 色带在属性行更细，给数值留空间 */
+  .mss-cell-has-track .mss-track {
+    height: 5px;
   }
   /* 警告态：着底色 + 高亮边框 */
   .mss-cell.mss-warn {
@@ -4535,15 +4538,18 @@ body {
     .mss-icon {
       font-size: 10px;
     }
-    .mss-cell-no-track .mss-icon {
+    .mss-cell-has-track .mss-icon {
       font-size: 9px;
     }
-    .mss-cell-no-track .mss-label {
+    .mss-cell-has-track .mss-label {
       font-size: 8px;
     }
-    .mss-cell-no-track .mss-val {
+    .mss-cell-has-track .mss-val {
       font-size: 9px;
       min-width: 12px;
+    }
+    .mss-cell-has-track .mss-track {
+      height: 4px;
     }
     .mss-label {
       font-size: 9px;
@@ -5861,7 +5867,7 @@ body {
 .transit-btn {
   padding: 10px 6px;
   background: var(--bg-secondary);
-  border: 1px solid var(--border);
+  border: 1px solid var(--border-light);
   border-radius: 6px;
   cursor: pointer;
   text-align: left;
@@ -5874,4 +5880,34 @@ body {
   border-color: var(--accent);
   transform: translateY(-1px);
   box-shadow: 0 4px 12px var(--accent-glow);
+}
+.transit-btn:active {
+  transform: scale(0.96);
+}
+
+/* 统一快捷出行按钮 — 紧凑卡片，统一高度 */
+.quick-travel-btn {
+  padding: 8px 10px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  cursor: pointer;
+  text-align: left;
+  color: var(--text-primary);
+  font-size: 12px;
+  transition: all var(--transition);
+  min-height: 52px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  overflow: hidden;
+}
+.quick-travel-btn:hover {
+  background: var(--bg-card-hover);
+  border-color: var(--accent);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px var(--accent-glow);
+}
+.quick-travel-btn:active {
+  transform: scale(0.96);
 }
