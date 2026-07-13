@@ -1886,8 +1886,11 @@
       title: "遇到了老乡",
       story:
         "菜场里，有人叫你名字——是你们县的老周头的儿子小周，在城里打拼了三年，看起来过得还行。",
+      // [全系统自洽修复] 域B 修复:叙事直呼"老周头"(old_zhou),conditions需校验已结识
       conditions: function (st) {
-        return st.player.phase === "street";
+        if (st.player.phase !== "street") return false;
+        if (!st.relationships || !st.relationships.old_zhou || !st.relationships.old_zhou.met) return false;
+        return true;
       },
       choices: [
         {

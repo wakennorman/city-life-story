@@ -130,3 +130,12 @@
 - 联动3（新建 company_linkage_events.js IIFE→RANDOM_EVENTS，phase:"corporate"因创业在corporate阶段创立，全||防御，数值[PLACEHOLDER]）：startup_friend_support(H→D)/startup_wealth_milestone(H→E)/startup_career_legacy(H→C)。
 - 关键发现：state.player.corporate.upward(默认||50) 是真实懒惰字段(多事件共用)，非 upwardMgmt；state.player.day 是引擎 minDay 读取的规范日字段。
 - 提交流程严格遵守SOP：仅 git add 7个域H文件+dist+loop状态+last_known_head；排除并行窗口进行中改动(career_path_events/economy_linkage_events/family_events/personal_growth_events/social_tab)。CLAUDE.md 迭代表 R17 行因并行窗口持续重写该文件(2081行差异)无法干净暂存，本轮跳过(权威轮次记录已在 loop-domain-state.json + DEVELOPMENT.md)。下轮→A。
+
+## 最近执行（2026-07-14 凌晨，Round 14 域 A — 已随并行窗口提交 c00d48f0）
+- 域A(数据/数值平衡) 在本分支 loop/auto 落地（被并行窗口 `git add -A` 一并提交为 `c00d48f0`「feat: [域B] 联动增强3项」——内容含本轮回合A改动）。
+- A类2：
+  - economy_v3.1.js 难度键名 `casual`→`easy` 并补 `hell`（DIFFICULTY_TAX_MULTIPLIER / DIFFICULTY_INCOME_CURVE / getMarketSaturationPenalty 三元表达式）。原 `casual` 与 difficulty_system.js 写入 `state._difficulty` 的真实取值(easy/normal/hard/hell)不匹配 → 休闲/地狱档经济结算(税率乘数/收益曲线)恒回落默认值，属必现平衡性bug。
+  - jobs.js `premium_housekeeper` payCalc `state.player.hygiene`→`state.needs.hygiene`，修复清洁度加成永远为0。
+- 联动3（新建 data_linkage_events.js IIFE→RANDOM_EVENTS，2 street+1 corporate，全||防御，数值[PLACEHOLDER]）：data_balanced_living(A→D 状态均衡→社交好感)/data_skill_efficiency(A→C 技能曲线→职业声誉)/data_savings_milestone(A→E 资产里程碑→投资资本)。引擎严格按 e.phase 过滤，故须显式设 phase（参照 R11/R12/R13）。
+- 验证：node --check 3文件通过；build.py→dist 8225.6KB；MC 6×400d 0代码异常（trader 50%/corporate 66.7% 存活率<80% 为既有平衡阈值，非本轮引入；A1 仅影响 easy/hell 档，默认 normal 的 MC 未触达）。
+- loop-domain-state.json 已正确更新为 round14/A/nextDomain=C（C→E→G→H→A 单轮覆盖完成，下轮重启于C）；DEVELOPMENT.md 改 v3.106。两者在 c00d48f0 提交内含我的版本。下轮→C。
