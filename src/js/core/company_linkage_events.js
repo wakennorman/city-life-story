@@ -92,7 +92,7 @@
             if (npc) safeAffinityH(st, npc.id, 5, "创业倾诉");
             if (st.player) {
               st.player.mental = (st.player.mental || 50) + 6;
-              st.player.happiness = (st.player.happiness || 50) + 4;
+              st.needs.happiness = (st.needs.happiness || 50) + 4;
             }
             if (st.flags) st.flags._startupFriendSupportCooldown = true;
             if (typeof StateManager !== "undefined" && StateManager.addMessage)
@@ -104,7 +104,7 @@
           apply: function (st) {
             if (st.player) {
               st.player.mental = (st.player.mental || 50) - 2;
-              st.player.happiness = (st.player.happiness || 50) - 1;
+              st.needs.happiness = (st.needs.happiness || 50) - 1;
             }
             if (st.flags) st.flags._startupFriendSupportCooldown = true;
           },

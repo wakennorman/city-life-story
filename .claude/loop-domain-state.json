@@ -1,10 +1,10 @@
 {
-  "currentRound": 22,
-  "currentDomain": "A",
+  "currentRound": 23,
+  "currentDomain": "B",
   "domainOrder": ["A", "B", "C", "D", "E", "F", "G", "H"],
   "rotationIndex": 0,
-  "nextDomain": "B",
-  "lastCommit": "2554033d",
+  "nextDomain": "C",
+  "lastCommit": "06cb3f8c",
   "lastUpdated": "2026-07-14",
   "history": [
     {
@@ -13,7 +13,7 @@
       "date": "2026-07-14",
       "aClassFixed": 3,
       "linkageItems": 3,
-      "commit": "2554033d",
+      "commit": "06cb3f8c",
       "note": "R22 域A(数据/数值平衡)第二轮: A类修复3项（已提交，MC 6×400d 待验证）。(1)finance.js calculateMonthlyIncome 街头阶段聚合 state.resources?.dailyTransactions(不存在字段)→state.flags._dailyTransactions，月收入恒为0、贷款几乎必拒。(2)finance.js 职场阶段取当前公司用 state.corporate?.companyId / state.startup?.companies(均不存在)→state.corporate.company(公司对象含.id) 查 state.enterpriseFate.companies[company.id]，salaryMod 恒1.0(公司薪资修正失效)。(3)data_linkage_events.js:102 写 st.player.happiness(死字段)→st.needs.happiness，'分享安稳'幸福感加成静默丢失。联动增强3项: data_linkage_events_r22.js IIFE→RANDOM_EVENTS，2 street+1 corporate，id 前缀 data2_* 与 R14 data_* 不冲突，全||防御,[PLACEHOLDER]：data2_lean_budget(A→D现金缓冲聚会)/data2_skill_ledger(A→C技能复盘落真实技能)/data2_capital_reserve(A→E资本储备腾本金·复用_dataInvestorMindset)。"
     },
     {

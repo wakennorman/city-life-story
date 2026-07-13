@@ -1,9 +1,9 @@
 # 城市浮生记 (City Life Story) — 开发文档
 
-> 最后更新: 2026-07-14（v3.113 loop R22 全系统优化·Domain A 数据/数值平衡（第二轮）——A类修复3项：(1)finance.js calculateMonthlyIncome 街头阶段聚合 state.resources?.dailyTransactions（不存在字段）→应为 state.flags._dailyTransactions，致月收入恒为0、贷款几乎必拒；(2)finance.js 职场阶段取当前公司用 state.corporate?.companyId / state.startup?.companies（均不存在）→应为 state.corporate.company（公司对象含.id）查 state.enterpriseFate.companies[company.id]，致 salaryMod 恒为1.0（公司薪资修正失效）；(3)data_linkage_events.js:102 写 st.player.happiness（死字段）→应为 st.needs.happiness，致"分享安稳"幸福感加成静默丢失） + 联动增强3项（data2_* 新角度，2 street+1 corporate：A→D现金缓冲聚会 / A→C技能复盘落真实技能 / A→E资本储备腾本金，复用 _dataInvestorMindset））
-> 上一版: v3.112 loop R21 全系统优化·Domain H 创业/公司（第二轮）（A类修复3项：events_corp corporateorate拼写→state.corporate / startup 空团队除零NaN / startup_crisis 死代码接入tickStartup + H→A/H→D/H→C 联动）
+> 最后更新: 2026-07-14（v3.114 loop R23 全系统优化·Domain B 事件/叙事（第二轮）——A类修复1项：(1)company_linkage_events.js:95/107 写 st.player.happiness（死字段，游戏唯一读取的幸福感字段为 st.needs.happiness，见 TS 事件系统 index.ts / webapp_runtime_bridge.js）→应为 st.needs.happiness，致"创业倾诉/自己扛"幸福感加成静默丢失） + 联动增强3项（narr_* 新角度，2 street+1 corporate：B→D市井旧事听故事涨好感 / B→C匠人传记启发 repair 技能 / B→E茶馆传闻腾投资本金·复用 _dataInvestorMindset））
+> 上一版: v3.113 loop R22 全系统优化·Domain A 数据/数值平衡（第二轮）（A类修复3项：finance dailyTransactions→flags._dailyTransactions / finance 公司取用 companyId→corporate.company 查 enterpriseFate / data_linkage 写 player.happiness→needs.happiness + A→D/A→C/A→E 联动）
 >
-> commits: `feat: [域A] A类修复3项+联动增强3项` + `（docs）loop状态/迭代表`
+> commits: `feat: [域B] A类修复1项+联动增强3项` + `（docs）loop状态/迭代表`
 
 ---
 
