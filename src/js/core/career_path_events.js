@@ -2237,7 +2237,7 @@
           text: "🎨 引导客户说出具体需求",
           hint: "专业方法化解，设计XP+10、声誉+5",
           apply: function (st) {
-            if (typeof addSkillXp === "function") addSkillXp("coding", 10);
+            if (typeof addSkillXp === "function") addSkillXp("design", 10);
             var cap = _cap(st);
             if (cap) {
               cap.reputation = Math.min(100, cap.reputation + 5);
@@ -2373,6 +2373,8 @@
     // [全系统自洽修复] 域C 联动:职业巅峰(满级有收益 C→G) + 年终加薪(C→E) + 行业饭局(C→D/E 社会比较)
     {
       id: "career_apex_peak",
+      phase: "street",
+      // [全系统自洽修复] 域B 修复: 缺失 phase 字段 → 注入 queueRandomEvent 时被过滤永不触发
       icon: "🏔️",
       title: "职业巅峰",
       story:
@@ -2428,6 +2430,8 @@
     },
     {
       id: "career_senior_bonus",
+      phase: "street",
+      // [全系统自洽修复] 域B 修复: 缺失 phase 字段 → 注入 queueRandomEvent 时被过滤永不触发
       icon: "🧧",
       title: "年终加薪",
       story:
@@ -2450,7 +2454,10 @@
             var cash = Math.round(salary * mult);
             st.resources.cash = (st.resources.cash || 0) + cash;
             st.flags._seniorIncomeTier = true;
-            _msg("🧧 年终奖到手 ¥" + cash + "！你给自己加了顿好的。", "success");
+            _msg(
+              "🧧 年终奖到手 ¥" + cash + "！你给自己加了顿好的。",
+              "success",
+            );
           },
         },
         {
@@ -2470,6 +2477,8 @@
     },
     {
       id: "career_industry_dinner",
+      phase: "street",
+      // [全系统自洽修复] 域B 修复: 缺失 phase 字段 → 注入 queueRandomEvent 时被过滤永不触发
       icon: "🍷",
       title: "行业饭局",
       story:
@@ -2491,9 +2500,12 @@
               cap.reputation = Math.min(100, cap.reputation + 4);
               _clamp(cap);
             }
-            st.flags._industryDinnerCount = (st.flags._industryDinnerCount || 0) + 1;
+            st.flags._industryDinnerCount =
+              (st.flags._industryDinnerCount || 0) + 1;
             _msg(
-              "🍷 饭局上你认识了几个同行，交换了微信。声望+4，花了¥" + cost + "。",
+              "🍷 饭局上你认识了几个同行，交换了微信。声望+4，花了¥" +
+                cost +
+                "。",
               "success",
             );
           },

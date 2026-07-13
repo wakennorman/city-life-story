@@ -98,7 +98,12 @@
             st.flags._bullTeaParty = true;
             var npcId = pickClosestMetNpc(st);
             if (npcId && typeof applyAffinityChange === "function") {
-              applyAffinityChange(st, npcId, 3 /*[PLACEHOLDER] 好感增益*/, "牛市茶话会");
+              applyAffinityChange(
+                st,
+                npcId,
+                3 /*[PLACEHOLDER] 好感增益*/,
+                "牛市茶话会",
+              );
             }
             st.needs.happiness = Math.min(
               100,
@@ -152,7 +157,10 @@
       conditions: function (st) {
         var total = estimateTotalAssets(st);
         // [PLACEHOLDER] 阈值对齐 economy_v3.1 富豪税档（¥1000万），此处取"小有积蓄"档，待调参
-        return total >= 500000 /*[PLACEHOLDER] 资产里程碑阈值*/ && (st.player.day || 0) > 60;
+        return (
+          total >= 500000 /*[PLACEHOLDER] 资产里程碑阈值*/ &&
+          (st.player.day || 0) > 60
+        );
       },
       probability: 0.06, // [PLACEHOLDER] 触发率待 playtest
       repeatable: false,
@@ -232,7 +240,8 @@
             if (st.player.corporate) {
               st.player.corporate.upward = Math.min(
                 100,
-                (st.player.corporate.upward || 50) + 4 /*[PLACEHOLDER] 职场声誉增益*/,
+                (st.player.corporate.upward || 50) +
+                  4 /*[PLACEHOLDER] 职场声誉增益*/,
               );
             }
             st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 5);
@@ -265,7 +274,8 @@
             if (st.player.corporate) {
               st.player.corporate.upward = Math.min(
                 100,
-                (st.player.corporate.upward || 50) + 8 /*[PLACEHOLDER] 职场声誉增益（深）*/,
+                (st.player.corporate.upward || 50) +
+                  8 /*[PLACEHOLDER] 职场声誉增益（深）*/,
               );
             }
             st.flags._equityTalkActive = true;

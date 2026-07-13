@@ -58,7 +58,9 @@
             if (!st.personalGrowth.health) st.personalGrowth.health = {};
             st.personalGrowth.health.physical = Math.min(
               100,
-              st.personalGrowth.health.physical + 25,
+              (typeof st.personalGrowth.health.physical === "object"
+                ? st.personalGrowth.health.physical.score || 30
+                : st.personalGrowth.health.physical || 30) + 25,
             );
             st.needs.fatigue = Math.max(0, (st.needs.fatigue || 0) - 30);
             st.needs.happiness = Math.max(0, (st.needs.happiness || 0) - 5);
@@ -81,7 +83,9 @@
             if (!st.personalGrowth.health) st.personalGrowth.health = {};
             st.personalGrowth.health.physical = Math.min(
               100,
-              st.personalGrowth.health.physical + 8,
+              (typeof st.personalGrowth.health.physical === "object"
+                ? st.personalGrowth.health.physical.score || 30
+                : st.personalGrowth.health.physical || 30) + 8,
             );
             StateManager.addMessage(
               "🚪 你当天办了手续出院。医生劝你至少观察一天，你没听。健康+8。有些便宜以后要加倍还。",
@@ -100,7 +104,9 @@
             if (!st.personalGrowth.health) st.personalGrowth.health = {};
             st.personalGrowth.health.physical = Math.min(
               100,
-              st.personalGrowth.health.physical + 15,
+              (typeof st.personalGrowth.health.physical === "object"
+                ? st.personalGrowth.health.physical.score || 30
+                : st.personalGrowth.health.physical || 30) + 15,
             );
             if (!st.personalGrowth.hobbies) st.personalGrowth.hobbies = {};
             if (!st.personalGrowth.hobbies.running)

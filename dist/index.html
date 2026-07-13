@@ -85069,7 +85069,7 @@ if (typeof window !== "undefined") {
             st.flags._corpFamilyRelocated = true;
             st.flags._familyStayedHometown = true;
             st.corporate.funds = Math.max(0, (st.corporate.funds || 0) - 8000);
-            st.player.mood = Math.min(100, (st.player.mood || 50) + 2);
+            st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 2);
             StateManager.addMessage(
               "📞 你汇了¥8,000回老家，让父亲把房子翻修一下。妈说：你别太累，我们在老家挺好的。",
               "info",
@@ -85107,7 +85107,7 @@ if (typeof window !== "undefined") {
           apply: function (st) {
             st.flags._corpFamilyDividend = true;
             st.corporate.funds = Math.max(0, (st.corporate.funds || 0) - 20000);
-            st.player.mood = Math.min(100, (st.player.mood || 50) + 10);
+            st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 10);
             st.player.morality = Math.min(100, (st.player.morality || 50) + 5);
             st.achievements = st.achievements || [];
             st.achievements.push({
@@ -85128,7 +85128,7 @@ if (typeof window !== "undefined") {
           apply: function (st) {
             st.flags._corpFamilyDividend = true;
             st.corporate.funds = Math.max(0, (st.corporate.funds || 0) - 10000);
-            st.player.mood = Math.min(100, (st.player.mood || 50) + 5);
+            st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 5);
             StateManager.addMessage(
               "💼 你给家里打了¥10,000，自己留了大部分准备买房。妈说：你心里有数就好。心情+5。",
               "info",

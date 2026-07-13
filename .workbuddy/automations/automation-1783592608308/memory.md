@@ -114,3 +114,17 @@
   - `subsidy` 经 `git show c87666ce` 核实为**故意去重**（注释指向 training_subsidy），按设计缺失，**不还原**。32 锚定 id 中 31 存活、subsidy 缺失即正确。
 - **MC 验证**: `node --max-old-space-size=8192 tests/monte_carlo.cjs --trials 6 --days 400` 完成，**0 异常**（完整 10×500d 因 harness 内存上限 OOM，非本代码问题）。[balanced] 存活率 66.7%<80% 为既有平衡阈值，非本轮引入。
 - **下一轮**: 域 D（NPC/社交），B→D→F 第 2 轮。
+
+## 最近执行（2026-07-14 凌晨，Round 12 域 G — 已提交 b4fe5180）
+- 域G 在本分支 loop/auto 正式落地并提交 `b4fe5180`（11文件/622增/29删，未push）。此前深夜轮因并行窗口并发竞态未提交、仅验证+解除漂移；本轮树稳定后重新实现并提交。
+- A类4（MC 0异常）：events_core stats.health→status.health×3 / life_ribbon illness→illnesses / world_params enterprise→startup / tutorial illness→illnesses。
+- 联动3（lifecycle_linkage_events.js IIFE→RANDOM_EVENTS）：life_city_anniversary(G→D)/life_work_anniversary(G→C)/life_estate_planning(G→E)，全||防御，数值[PLACEHOLDER]。
+- 提交纪律：仅 git add 11个域G文件+dist+loop-domain-state.json+last_known_head；排除并行窗口进行中改动(career_path_events/economy_linkage_events/social_tab/personal_growth_events)。CLAUDE.md 补 R16 行；loop-domain-state 更新 round12/G/nextDomain=H。last_known_head 同步新HEAD=b4fe5180。
+- 下轮：域H(Phase2/公司)，正常轮换第4轮(自动化R13)。
+
+## 最近执行（2026-07-14 凌晨，Round 13 域 H — 已提交 1ded2071）
+- 域H(Phase2/公司) 在本分支 loop/auto 正式落地并提交 `1ded2071`（7文件/492增/102删，未push）。
+- A类2（防御式空值守卫）：startup_crisis.js showCrisisModal(397)/applyCrisisChoice(474) 对可能为null的 startup.company 补 if(!company)return。批量扫描(guard_check.py 对 phase2/* + company_spawner/enterprise_fate/events_corp 共18文件)确认域内其余 startup.company 解引用均有上游短路守卫，此2处为仅存隐患。
+- 联动3（新建 company_linkage_events.js IIFE→RANDOM_EVENTS，phase:"corporate"因创业在corporate阶段创立，全||防御，数值[PLACEHOLDER]）：startup_friend_support(H→D)/startup_wealth_milestone(H→E)/startup_career_legacy(H→C)。
+- 关键发现：state.player.corporate.upward(默认||50) 是真实懒惰字段(多事件共用)，非 upwardMgmt；state.player.day 是引擎 minDay 读取的规范日字段。
+- 提交流程严格遵守SOP：仅 git add 7个域H文件+dist+loop状态+last_known_head；排除并行窗口进行中改动(career_path_events/economy_linkage_events/family_events/personal_growth_events/social_tab)。CLAUDE.md 迭代表 R17 行因并行窗口持续重写该文件(2081行差异)无法干净暂存，本轮跳过(权威轮次记录已在 loop-domain-state.json + DEVELOPMENT.md)。下轮→A。
