@@ -4535,7 +4535,7 @@ function renderInventoryTab(state, parent) {
                 cls: "btn-primary",
                 callback: function () {
                   if (typeof navigateTo === "function") {
-                    navigateTo({ type: "location", locationKey: topLoc });
+                    navigateTo(state, { type: "location", key: topLoc });
                   } else {
                     state.location = topLoc;
                     if (typeof renderAll === "function") renderAll(state);
