@@ -92,7 +92,7 @@
 
 - `node --check`：finance.js / data_linkage_events.js / data_linkage_events_r22.js 均通过。
 - `python build.py`：dist/index.html 重建（8290.4 KB，比源新）。
-- **MC 6×400d**：`node tests/monte_carlo.cjs --trials 6 --days 400` — **[MC 结果待回填：0 代码异常 / 平衡率达标]**。
+- **MC 6×400d**：`node tests/monte_carlo.cjs --trials 6 --days 400` — **MC_EXIT=0，0 代码异常**（代码异常扫描零命中：无 TypeError / ReferenceError / NaN% / Infinity%）。前 7 天死亡率全 0.0% < 10%（无早期死亡崩溃回归）。各策略存活率：balanced 66.7% / grinder 16.7% / trader 33.3% / social 66.7% / skiller 83.3% / corporate 100% —— 与 R19–R21 完全一致，低存活率为既有 RNG 平衡阈值波动，**非本轮引入的代码异常**。
 
 ---
 

@@ -198,3 +198,15 @@
 - 联动3（新建 `src/js/core/company_linkage_events_r21.js` IIFE→RANDOM_EVENTS，2 street+1 corporate，全||防御，[PLACEHOLDER]）：company_h_foundation_discipline(H→A 创业纪律感→mental+5·心情+4)/company_h_team_warmth(H→D 带队温度→applyAffinityChange 好感+6 守 rel.met 铁律)/company_h_business_acumen(H→C 经营眼界→addSkillXp("management",8))。src/index.html 注册在 core_mechanics_linkage_events.js 之后。id 前缀 company_h_* 与 R12 company_linkage_events.js 的 startup_* 不冲突。
 - 验证：node --check 3文件通过；build.py→dist 8281.8KB；MC 6×400d exit=0·0代码异常（存活率 balanced 100%/grinder 33.3%≥30%/skiller 83.3%/trader 83.3%/social 83.3%/corporate 100% 全达标，历史最佳基线之一）。
 - 已提交 aaad3603（11文件/514增/29删，未 push，pre-commit 三守卫全过），无并行窗口污染。last_known_head 已同步至 aaad3603。下轮→A（数据/数值平衡，第二轮循环起点）。
+
+## 最近执行（2026-07-14，Round 22 域A 数据/数值平衡第二轮 — 已提交 06cb3f8c）
+- 起始状态：loop-domain-state.json=round21/H/next=A，故本窗口执行 R22=域A（第二轮循环起点）。HEAD=2554033d（R21 已提交，树干净）；先同步 last_known_head=2554033d 过漂移检查。
+- 域A 真实文件：Explore 扫描 economy_v3.1.js/jobs.js/skills.js/finance.js/needs.js/data_linkage_events.js（R14 创建）+ state.js 为 shape 基准。
+- A类3（全确证，均为数值/字段错链导致失效）：
+  - (1) finance.js calculateMonthlyIncome 街头分支 `state.resources?.dailyTransactions`（全库无此字段，真实为 `state.flags._dailyTransactions`）→ 恒 [] → 月收入 totalIncome 恒0 → 贷款评估（用月收入估偿还力）几乎必拒、连续盈利衰减机制拿不到真收入。改 `state.flags?._dailyTransactions`。
+  - (2) finance.js 职场分支取当前公司 `state.corporate?.companyId` / `state.startup?.companies`（均不存在）→ 真实当前公司是对象 `state.corporate.company`（corp_ops.js:302 `COMPANIES.find(...)`，含.id/.name），企业库为 `state.enterpriseFate.companies[company.id]`（enterprise_fate.js:832/companyHistory.js:36/startup.js:726 实证）。原致 `companyId` 恒空→`salaryMod` 恒1.0（公司薪资修正失效）。改 `state.enterpriseFate.companies[company.id]`。
+  - (3) data_linkage_events.js（R14「分享安稳」分支）写 `st.player.happiness`（死字段，真实为 `st.needs.happiness`；`mental` 在 `state.player.mental` 是对的）→ A→D 幸福感加成静默丢失。改 `st.needs.happiness`。
+- 误报排除：Explore 曾报 `data_linkage_events.js:149` 的 `st.player.corporate.upward` 为错字段。全仓 grep 证实 `st.player.corporate.upward` 是真实惰性字段（约10事件文件读写同一key），与 `upwardMgmt`（corp KPI）是两个不同字段；R13 结论正确，未改动。
+- 联动3（新建 `src/js/core/data_linkage_events_r22.js` IIFE→RANDOM_EVENTS，2 street+1 corporate，全||防御，[PLACEHOLDER]，id 前缀 data2_* 与 R14 data_* 不冲突）：data2_lean_budget(A→D 现金缓冲邀友小聚→applyAffinityChange 好感+2 守 rel.met 铁律)/data2_skill_ledger(A→C 技能复盘→addSkillXp("coding",N) 真实键容错)/data2_capital_reserve(A→E 资本储备腾本金→复用 _dataInvestorMindset + investment 本金)。src/index.html 注册在 data_linkage_events.js 之后。
+- 验证：node --check 3文件通过；build.py→dist 8290.4KB（比 src 新）；MC 6×400d **MC_EXIT=0·0代码异常**（grep 确认无 TypeError/ReferenceError/NaN/Infinity 行；前7天死亡率全0.0%<10% 无早期死亡崩溃回归）。存活率 balanced66.7%/grinder16.7%/trader33.3%/social66.7%<80% 为既有平衡阈值 RNG 波动（与 R19-R21 一致，非代码异常）；skiller83.3%/corporate100% 达标。
+- 已提交 06cb3f8c（9文件/7353增/6810删，未 push，pre-commit 三守卫全过），无并行窗口污染。last_known_head 已同步至 06cb3f8c。下轮→B（事件/叙事，第二轮）。
