@@ -1,8 +1,8 @@
 {
-  "currentRound": 11,
-  "currentDomain": "F",
-  "nextDomain": "G",
-  "rotationIndex": 5,
+  "currentRound": 12,
+  "currentDomain": "G",
+  "nextDomain": "H",
+  "rotationIndex": 6,
   "domainOrder": ["A", "B", "C", "D", "E", "F", "G", "H"],
   "history": [
     { "round": 1, "domain": "A" },
@@ -15,11 +15,12 @@
     { "round": 8, "domain": "E" },
     { "round": 9, "domain": "F" },
     { "round": 10, "domain": "G" },
-    { "round": 11, "domain": "F" }
+    { "round": 11, "domain": "F" },
+    { "round": 12, "domain": "G" }
   ],
-  "lastDomain": "F",
-  "lastRound": 11,
+  "lastDomain": "G",
+  "lastRound": 12,
   "lastDate": "2026-07-13",
   "completedDomains": ["A", "B", "C", "D", "E", "F", "G"],
-  "description": "R11: 域F(UI/UX续) — 4个A类修复(位置栏ID→中文名/CSS断点480→768/重复renderLocationBar覆盖/GameOver debt空值崩溃) + 100行CSS移动端状态条修补"
+  "description": "R12: 域G(核心机制/生命周期) — wiki搜索框焦点窃取修复(域F补充) + A类缺陷扫描+联动增强"
 }
