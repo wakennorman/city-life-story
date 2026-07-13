@@ -1,8 +1,8 @@
 {
-  "currentRound": 13,
-  "currentDomain": "H",
-  "nextDomain": "A",
-  "rotationIndex": 7,
+  "currentRound": 14,
+  "currentDomain": "A",
+  "nextDomain": "B",
+  "rotationIndex": 0,
   "domainOrder": ["A", "B", "C", "D", "E", "F", "G", "H"],
   "history": [
     { "round": 1, "domain": "A" },
@@ -17,11 +17,12 @@
     { "round": 10, "domain": "G" },
     { "round": 11, "domain": "F" },
     { "round": 12, "domain": "G" },
-    { "round": 13, "domain": "H" }
+    { "round": 13, "domain": "H" },
+    { "round": 14, "domain": "A", "date": "2026-07-14", "aClassFixed": 3, "linkageItems": 2, "commit": "be4b28a6", "note": "域A(数据/数值平衡): 3A类修复(动态利率接入/沙盒利率/定价变量声明bug)+2联动增强(债务利率显示/还款文案动态化)" }
   ],
-  "lastDomain": "H",
-  "lastRound": 13,
-  "lastDate": "2026-07-13",
+  "lastDomain": "A",
+  "lastRound": 14,
+  "lastDate": "2026-07-14",
   "completedDomains": ["A", "B", "C", "D", "E", "F", "G", "H"],
-  "description": "R13: 域H(Phase2/公司) — 5A类修复+3联动增强+CoC检查"
+  "description": "R14: 域A(数据/数值平衡) — 3A类修复+2联动增强"
 }

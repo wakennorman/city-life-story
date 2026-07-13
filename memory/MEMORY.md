@@ -1,3 +1,5 @@
+- [domain-a-optimization-round-14](domain-a-optimization-round-14.md) — 全系统优化R14 域A: 3A类修复(动态利率接入/沙盒利率/定价变量声明bug)+2联动增强(2026-07-14, commit be4b28a6)
+- [v3.99c-equip-nav-bugfix](v3.99c-equip-nav-bugfix.md) — 装备购买导航bug修复：navigateTo(state)缺少state参数导致点击无反应(2026-07-13, commit b8e04f7c)
 - [domain-h-optimization-round-13](domain-h-optimization-round-13.md) — 全系统优化R13 域H: 5A类修复(接私活不给钱/真实日期/CEO特质硬编码/conflictReduced恒false) + 3联动增强 + CoC检查(2026-07-13)
 - [convention-check-habit](convention-check-habit.md) — 每次游戏项目互动后检查是否可归入约定式自动归类(CoC)系统（2026-07-13）
 - [v3.99d-ghost-button-fix](v3.99d-ghost-button-fix.md) — 全系统幽灵按钮审查与修复: 4个实际幽灵按钮修复(btnClass未插入模板/FromModal函数缺失/innerHTML脚本陷阱) + 约定式自动归类防御(2026-07-13)
