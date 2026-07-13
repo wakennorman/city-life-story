@@ -1,8 +1,8 @@
 {
-  "currentRound": 12,
-  "currentDomain": "G",
-  "nextDomain": "H",
-  "rotationIndex": 6,
+  "currentRound": 13,
+  "currentDomain": "H",
+  "nextDomain": "A",
+  "rotationIndex": 7,
   "domainOrder": ["A", "B", "C", "D", "E", "F", "G", "H"],
   "history": [
     { "round": 1, "domain": "A" },
@@ -16,11 +16,12 @@
     { "round": 9, "domain": "F" },
     { "round": 10, "domain": "G" },
     { "round": 11, "domain": "F" },
-    { "round": 12, "domain": "G" }
+    { "round": 12, "domain": "G" },
+    { "round": 13, "domain": "H" }
   ],
-  "lastDomain": "G",
-  "lastRound": 12,
+  "lastDomain": "H",
+  "lastRound": 13,
   "lastDate": "2026-07-13",
-  "completedDomains": ["A", "B", "C", "D", "E", "F", "G"],
-  "description": "R12: 域G(核心机制/生命周期) — wiki搜索框焦点窃取修复(域F补充) + A类缺陷扫描+联动增强"
+  "completedDomains": ["A", "B", "C", "D", "E", "F", "G", "H"],
+  "description": "R13: 域H(Phase2/公司) — 5A类修复+3联动增强+CoC检查"
 }

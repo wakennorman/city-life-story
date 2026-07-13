@@ -1,3 +1,6 @@
+- [domain-h-optimization-round-13](domain-h-optimization-round-13.md) — 全系统优化R13 域H: 5A类修复(接私活不给钱/真实日期/CEO特质硬编码/conflictReduced恒false) + 3联动增强 + CoC检查(2026-07-13)
+- [convention-check-habit](convention-check-habit.md) — 每次游戏项目互动后检查是否可归入约定式自动归类(CoC)系统（2026-07-13）
+- [v3.99d-ghost-button-fix](v3.99d-ghost-button-fix.md) — 全系统幽灵按钮审查与修复: 4个实际幽灵按钮修复(btnClass未插入模板/FromModal函数缺失/innerHTML脚本陷阱) + 约定式自动归类防御(2026-07-13)
 - [v3.99c-loop-R8-domain-E-optimization](v3.99c-loop-R8-domain-E-optimization.md) — 全系统优化R8 域E: 4个A类NaN修复(investment.js) + 训练系统skill对象兼容(train_social/medicine) + 每日NaN防御（2026-07-13）
 - [domain-optimization-round-2](domain-optimization-round-2.md) — 全系统优化 域B(事件/叙事) — 28个A类缺陷修复 + 6项B类修复 + 2新增联动事件 (2026-07-12)
 - [v3.95-loop-R44-full-optimization](v3.95-loop-R44-session.md) — R44全系统优化：代码事实核查发现推荐方向已落地，改切6新事件(调解followUp链/阿杰多周目/NPC business格×2及payoff)+日终里程碑封顶¥10M（2026-07-12，commit 1710ec86）
