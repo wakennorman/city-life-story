@@ -77,6 +77,9 @@ function doCorporateAction(actionId) {
       0,
       Math.min(100, state.needs.happiness + effects.happiness),
     );
+  // 现金效果
+  if (effects.cash)
+    state.resources.cash = Math.max(0, state.resources.cash + effects.cash);
   if (effects.intelligence)
     state.player.intelligence = Math.min(
       100,
@@ -335,6 +338,15 @@ function enterCorporatePhase(companyId) {
   StateManager.addMessage(
     `🏢 入职 ${company.name}！从P5开始职场生涯。${company.culture}。`,
     "success",
+  );
+  // [全系统自洽修复] 域H 联动增强: Phase1→2过渡叙事闭环
+  var streetDays = p.day;
+  var totalEarned = state.resources.totalEarned || 0;
+  StateManager.addMessage(
+    "📜 从街头到写字楼，你用了" + streetDays + "天。" +
+    (totalEarned > 0 ? "街头打拼攒下¥" + totalEarned.toLocaleString() + "。" : "") +
+    "新的战场，准备好了。",
+    "info",
   );
   StateManager.addMessage(
     "💡 做项目提升KPI，向上社交获取信任。每季度有行动次数限制。Q3有晋升答辩。",

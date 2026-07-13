@@ -391,8 +391,9 @@ function generateCeoBio() {
     finance_oriented: ["财务高手", "利润优先", "精于算计", "资本玩家"],
     visionary: ["愿景驱动", "长期主义", "改变世界", "理想主义者"],
   };
-  var traitDescs = traits["aggressive"]; // 默认
-  // 随机选一个
+  var traitKeys = Object.keys(traits);
+  var chosenTrait = traitKeys[Random.int(0, traitKeys.length - 1)];
+  var traitDescs = traits[chosenTrait];
   var idx = Random.int(0, traitDescs.length - 1);
   return traitDescs[idx];
 }

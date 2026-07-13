@@ -2503,23 +2503,24 @@ function improveCultureAdoption(company, day, amount) {
   );
 
   // 适应度提升降低文化冲突
+  var conflictReduced = false;
   if (
     company.cultureAdoptionProgress >= 100 &&
     company.cultureConflictLevel > 0
   ) {
+    var oldConflict = company.cultureConflictLevel;
     company.cultureConflictLevel = Math.max(
       0,
       company.cultureConflictLevel - 1,
     );
+    conflictReduced = oldConflict > company.cultureConflictLevel;
   }
 
   return {
     success: true,
     oldProgress: oldProgress,
     newProgress: company.cultureAdoptionProgress,
-    conflictReduced:
-      company.cultureAdoptionProgress >= 100 &&
-      company.cultureConflictLevel < company.cultureConflictLevel,
+    conflictReduced: conflictReduced,
   };
 }
 
@@ -2995,6 +2996,8 @@ function improvePartnerTrust(company, partnerId, day, amount, cost) {
 /** 获取合作伙伴摘要 */
 function getPartnerSummary(partner) {
   const typeInfo = PARTNER_TYPES[partner.type];
+  const state = typeof StateManager !== "undefined" ? StateManager.getState() : null;
+  const gameDay = state && state.player ? state.player.day : 0;
   return {
     id: partner.id,
     name: partner.name,
@@ -3009,7 +3012,7 @@ function getPartnerSummary(partner) {
     status: partner.status,
     daysRemaining: Math.max(
       0,
-      partner.contractExpiryDay - new Date().getDate(),
+      partner.contractExpiryDay - gameDay,
     ),
   };
 }

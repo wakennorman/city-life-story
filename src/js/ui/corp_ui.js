@@ -320,6 +320,17 @@ function downgradeToStreet(state, reason) {
     "warning",
   );
   StateManager.addMessage(`📋 ${reason}`, "danger");
+  // 职场历练总结
+  var yearsServed = state.player.corpYear || 0;
+  var projectsDone = (state.corporate.completedProjects || []).length;
+  if (yearsServed > 0 || projectsDone > 0) {
+    StateManager.addMessage(
+      "📊 职场" + (yearsServed > 0 ? yearsServed + "年" : "") +
+      (projectsDone > 0 ? "，完成" + projectsDone + "个项目" : "") +
+      "——这段经历不会白费。",
+      "info",
+    );
+  }
   StateManager.addMessage(
     "💡 但你在职场积累的技能和部分金钱还在。可以从街头商机中寻找新机会，或休整后再战职场。",
     "info",
