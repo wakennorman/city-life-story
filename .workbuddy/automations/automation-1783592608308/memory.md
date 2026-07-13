@@ -196,5 +196,5 @@
   - (2) startup.js improveEmployeeSatisfaction(4542) 空 employees 时 L4595 先扣现金再 L4634 0/0=NaN→"平均NaN分"(L4639)，循环前加员工数守卫防白扣钱+NaN。
   - (3) startup_crisis.js 整子系统死代码（checkStartupCrises/showCrisisModal/handleCrisisChoice/applyCrisisChoice 全库无外部调用方→创业危机永不触发），接入 tickStartup(2396) 季度分支(typeof 守卫+try/catch，headless 下 showModal 抛错被吞不中断结算；checkStartupCrises 设 lastCrisisDay 冷却+返回危机对象、showCrisisModal 仅展示)。
 - 联动3（新建 `src/js/core/company_linkage_events_r21.js` IIFE→RANDOM_EVENTS，2 street+1 corporate，全||防御，[PLACEHOLDER]）：company_h_foundation_discipline(H→A 创业纪律感→mental+5·心情+4)/company_h_team_warmth(H→D 带队温度→applyAffinityChange 好感+6 守 rel.met 铁律)/company_h_business_acumen(H→C 经营眼界→addSkillXp("management",8))。src/index.html 注册在 core_mechanics_linkage_events.js 之后。id 前缀 company_h_* 与 R12 company_linkage_events.js 的 startup_* 不冲突。
-- 验证：node --check 3文件通过；build.py→dist 8281.8KB；MC 6×400d 待执行（须 0代码异常）。
-- 提交计划：仅 git add 域H文件(events_corp.js/startup.js/company_linkage_events_r21.js/src/index.html/DEVELOPMENT.md/dist/index.html/loop-domain-state.json/last_known_head)，不 -A、不 push；DEVELOPMENT.md=v3.112；loop-state=round21/H/nextDomain=A（第二轮循环起点）。下轮→A（数据/数值平衡）。
+- 验证：node --check 3文件通过；build.py→dist 8281.8KB；MC 6×400d exit=0·0代码异常（存活率 balanced 100%/grinder 33.3%≥30%/skiller 83.3%/trader 83.3%/social 83.3%/corporate 100% 全达标，历史最佳基线之一）。
+- 已提交 aaad3603（11文件/514增/29删，未 push，pre-commit 三守卫全过），无并行窗口污染。last_known_head 已同步至 aaad3603。下轮→A（数据/数值平衡，第二轮循环起点）。

@@ -4,7 +4,7 @@
   "domainOrder": ["A", "B", "C", "D", "E", "F", "G", "H"],
   "rotationIndex": 7,
   "nextDomain": "A",
-  "lastCommit": "R21 域H: A类修复3项+联动增强3项 (pending)",
+  "lastCommit": "aaad3603",
   "lastUpdated": "2026-07-14",
   "history": [
     {
@@ -13,8 +13,8 @@
       "date": "2026-07-14",
       "aClassFixed": 3,
       "linkageItems": 3,
-      "commit": "pending",
-      "note": "R21 域H(创业/公司)第二轮: A类修复3项—(1)events_corp.js 9处 corporateorate 拼写错误→应为顶层 state.corporate(.team/.jobOffer/.company 均为真实字段，被 team.js/main.js/perf.js/events_core.js/enterprise_fate.js 使用)；指未初始化对象→读 team.length(433)/写 jobOffer(649)/读 company.id(1689/1691) 全 TypeError 崩溃，且 2108/2179 的 jobOffer/team 重置守卫因 st.corporateorate 恒 undefined 而永假(死代码)。已全改 corporate。(2)startup.js improveEmployeeSatisfaction(4542) 空 employees 时先扣现金(4595)再 0/0=NaN→"平均NaN分"(4634/4639)，循环前加员工数守卫防白扣钱+NaN。(3)startup_crisis.js 整子系统死代码(checkStartupCrises/showCrisisModal/handleCrisisChoice/applyCrisisChoice 全库无外部调用方→创业危机永不触发)，接入 tickStartup(2396) 季度分支(typeof 守卫+try/catch，headless 下 showModal 抛错被吞、不中断每日结算；checkStartupCrises 设 lastCrisisDay 冷却+返回危机对象、showCrisisModal 仅展示)。联动增强3项: 新建 company_linkage_events_r21.js IIFE→RANDOM_EVENTS，2 street+1 corporate，id 前缀 company_h_* 与 R12 startup_* 不冲突：company_h_foundation_discipline(H→A 创业纪律感→mental+5·心情+4)/company_h_team_warmth(H→D 带队温度→applyAffinityChange 好感+6 守 rel.met 铁律)/company_h_business_acumen(H→C 经营眼界→addSkillXp('management',8))。全||防御,[PLACEHOLDER]。MC 验证待执行。"
+      "commit": "aaad3603",
+      "note": "R21 域H(创业/公司)第二轮: A类修复3项（已提交 aaad3603，MC 6×400d exit=0·0代码异常，存活率 balanced 100%/grinder 33.3%≥30%/skiller 83.3%/trader 83.3%/social 83.3%/corporate 100% 全达标）。(1)events_corp.js 9处 corporateorate 拼写错误→顶层 state.corporate(.team/.jobOffer/.company 真实字段)，指未初始化对象→读 team.length/写 jobOffer/读 company.id 全 TypeError 崩溃+重置守卫永假死代码，已全改 corporate。(2)startup.js improveEmployeeSatisfaction 空团队先扣现金再 0/0=NaN，循环前加员工数守卫。(3)startup_crisis.js 死代码接入 tickStartup 季度分支(typeof+try/catch)。联动增强3项: company_linkage_events_r21.js IIFE→RANDOM_EVENTS，2 street+1 corporate，id 前缀 company_h_* 与 R12 startup_* 不冲突，全||防御,[PLACEHOLDER]。"
     },
     {
       "round": 20,
