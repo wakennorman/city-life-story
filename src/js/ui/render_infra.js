@@ -1035,7 +1035,7 @@ function renderStatsStrip(state, parent) {
       // 数值（坏值变色 + 加粗）
       var num = document.createElement("span");
       num.className = "mss-val";
-      num.textContent = Math.round(val);
+      num.textContent = (isSevere && !showTrack ? "⚠" : "") + Math.round(val);
       if (isBad) {
         num.style.color = cfg.color;
         num.style.fontWeight = "800";
