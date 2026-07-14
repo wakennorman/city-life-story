@@ -1,4 +1,4 @@
-- [domain-optimization-round-15](domain-optimization-round-15.md) — R15全域覆盖：域B(5A类+3联动)/域E/域G/域H(多窗口协作, 2026-07-14)
+- [domain-b-optimization-round-15](domain-b-optimization-round-15.md) — R15域B: 19A类修复(18cost扣款+1NPC met+1注册修复)+2联动增强(绝境回望/熊市阴影) (2026-07-14, commit 48990235)
 - [domain-a-optimization-round-14](domain-a-optimization-round-14.md) — 全系统优化R14 域A: 3A类修复(动态利率接入/沙盒利率/定价变量声明bug)+2联动增强(2026-07-14, commit be4b28a6)
 - [v3.99c-equip-nav-bugfix](v3.99c-equip-nav-bugfix.md) — 装备购买导航bug修复：navigateTo(state)缺少state参数导致点击无反应(2026-07-13, commit b8e04f7c)
 - [domain-h-optimization-round-13](domain-h-optimization-round-13.md) — 全系统优化R13 域H: 5A类修复(接私活不给钱/真实日期/CEO特质硬编码/conflictReduced恒false) + 3联动增强 + CoC检查(2026-07-13)

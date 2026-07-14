@@ -308,6 +308,14 @@ powershell.exe -NoLogo -ExecutionPolicy Bypass -File "<ps1 完整路径>" %*
   - 影响：`daily_pipeline.js`(+48/-8) / `main.js`(+12)
   - 验证：node --check / build.py 5080.2KB / MC 10×500d ✅
 
+- **R15 域B A类修复(19项)+联动增强(2项)**（commit `48990235`，⚠️ 网络不可用待推）：
+  - 🔧 18处cost定义但apply未扣款(台风/内幕/科技园/鉴定/雪夜/供需/夜市/健康/秋收/毕业/四季事件)
+  - 🔧 events_street_survival.js: township_buddy缺old_zhou.met检查
+  - 🔧 CROSS_EVENTS.push在注册循环后执行导致3事件死代码→新增注册循环
+  - 🆕 hard_mode_survival_reflection: 高难度生存压力绝境回望事件
+  - 🆕 investment_loss_anxiety: 投资亏损心理事件（超¥10000触发）
+  - 验证：node --check / build.py 8307.8KB ✅
+
 > ```
 > for (var i = 0; i < 30; i++) mc.run(1000);
 > mc.report();            // 聚合首末+资产区间

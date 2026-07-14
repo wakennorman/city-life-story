@@ -19,8 +19,8 @@
     { "round": 12, "domain": "G" },
     { "round": 13, "domain": "H" },
     { "round": 14, "domain": "A", "date": "2026-07-14", "aClassFixed": 3, "linkageItems": 2, "commit": "be4b28a6", "note": "域A(数据/数值平衡): 3A类修复+2联动增强" },
-    { "round": 15, "domain": "B", "date": "2026-07-14", "aClassFixed": 6, "linkageItems": 3, "commit": "c00d48f0", "note": "域B: 5A类修复+3联动增强(family_events语法/st.morality裸根/st.fame裸根/st.corp→corporate/phase+联动)" }
-  ],
+    { "round": 15, "domain": "B", "date": "2026-07-14", "aClassFixed": 19, "linkageItems": 2, "commit": "48990235", "note": "[窗口2] 域B: 18cost扣款修复+1NPC met+1注册修复+2联动增强(绝境回望/熊市阴影)" },
+    { "round": 16, "domain": "C", "note": "另一窗口已开始域C工作" }
   "lastDomain": "B",
   "lastRound": 15,
   "lastDate": "2026-07-14",
