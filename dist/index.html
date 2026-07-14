@@ -5045,6 +5045,28 @@ function evaluateTriggers(triggers, state) {
     }
   }
 
+  // 名气范围（v3.99d 约定式·联动增强）
+  if (triggers.minFame !== undefined) {
+    var fame = state.player.fame || 0;
+    if (fame < triggers.minFame) return false;
+  }
+  if (triggers.maxFame !== undefined) {
+    var fame2 = state.player.fame || 0;
+    if (fame2 > triggers.maxFame) return false;
+  }
+
+  // 位置过滤（v3.99d 约定式—state.trade.currentLocation / state.player.location）
+  if (triggers.location !== undefined) {
+    var curLoc =
+      (state.trade && state.trade.currentLocation) ||
+      (state.player && state.player.location) ||
+      "";
+    var locArr = Array.isArray(triggers.location)
+      ? triggers.location
+      : [triggers.location];
+    if (locArr.indexOf(curLoc) < 0) return false;
+  }
+
   return true;
 }
 
@@ -81972,6 +81994,76 @@ if (typeof window !== "undefined") {
       },
     ],
   });
+
+  // ==== [域B 联动增强 R15] 技能复合→跨界机会（B→C→E 桥接）====
+  // 联动：coding≥20 + english≥15 触发跨境远程工作线索
+  // 设计意图：技能组合创造新机会——填补"复合技能→职业跃迁"的叙事空白
+  {
+    var _skillBridgeEvent = {
+      id: "skill_bridge_remote_opp",
+      phase: "street",
+      icon: "🌐",
+      title: "远程工作的邀请",
+      story:
+        "你在技术论坛上收到一条私信：\\n\\n「你好，我在Upwork上看到你的作品集。我们是一家新加坡的科技公司，正在找一个能独立完成全栈开发的远程工程师。\\n\\n要求英语读写流利，能参加英文会议。\\n\\n如果你感兴趣，我们可以先做一个付费测试项目，工时按U.S.时薪结算。」\\n\\n你盯着屏幕——这是一条通往海外市场的路。",
+      triggers: {
+        minDay: 60,
+        excludeFlags: ["_skillBridgeRemoteSeen"],
+      },
+      conditions: function (st) {
+        var coding = st.skills && st.skills.coding ? (st.skills.coding.level || 0) : 0;
+        var english = st.skills && st.skills.english ? (st.skills.english.level || 0) : 0;
+        return coding >= 20 && english >= 15;
+      },
+      probability: 0.035,
+      repeatable: false,
+      choices: [
+        {
+          text: "🌐 接受测试项目，拼一把",
+          hint: "需要熬夜完成，但收入+¥5000，解锁海外接单通道",
+          apply: function (st) {
+            st.flags._skillBridgeRemoteSeen = true;
+            st.flags._remoteWorkUnlocked = true;
+            st.resources.cash = (st.resources.cash || 0) + 5000;
+            st.needs.fatigue = Math.min(100, (st.needs.fatigue || 0) + 25);
+            st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 12);
+            st.player.mental = Math.min(100, (st.player.mental || 0) + 5);
+            if (st.skills && st.skills.coding) st.skills.coding.xp = (st.skills.coding.xp || 0) + 50;
+            if (st.skills && st.skills.english) st.skills.english.xp = (st.skills.english.xp || 0) + 30;
+            StateManager.addMessage(
+              "🌐 你熬夜三天完成了测试项目！新加坡那边很满意，付了¥5,000测试费，说下个月有正式项目会再联系。\n海外远程通道已解锁！编程XP+50，英语XP+30，心情+12。技能终于变成了跨越国界的门票。",
+              "success",
+            );
+          },
+        },
+        {
+          text: "📋 先收藏，等准备好了再联系",
+          hint: "保留机会，不急于一时",
+          apply: function (st) {
+            st.flags._skillBridgeRemoteSeen = true;
+            st.flags._remoteWorkDeferred = true;
+            st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 3);
+            StateManager.addMessage(
+              "📋 你收藏了那条私信，准备等英语再好一些再回复。机会在那里，不会自己跑掉。心情+3。",
+              "info",
+            );
+          },
+        },
+        {
+          text: "😅 水平还不够，再练练",
+          hint: "自知之明，无变化",
+          apply: function (st) {
+            st.flags._skillBridgeRemoteSeen = true;
+            StateManager.addMessage(
+              "😅 你诚实评估了自己的水平——英语开会有时还是会卡壳。先踏踏实实把基本功打牢，机会以后还会有的。",
+              "info",
+            );
+          },
+        },
+      ],
+    };
+    RANDOM_EVENTS.push(_skillBridgeEvent);
+  }
 })();
 </script>
     <!-- v3.21+v3.22 events merged into cross_system_events.js above -->
