@@ -4445,6 +4445,10 @@ body {
     border: 1px solid var(--border-light);
     transition: all 0.2s ease;
   }
+  /* 无track单元格：数值右对齐，与有track行视觉一致 */
+  .mss-cell-no-track {
+    justify-content: space-between;
+  }
   /* 有色带单元格：统一紧凑间距 */
   .mss-cell-has-track {
     gap: 2px;
@@ -5886,6 +5890,9 @@ body {
     padding: 2px 4px;
     border: 1px solid var(--border);
     overflow: hidden;
+  }
+  .mss-cell-no-track {
+    justify-content: space-between;
   }
   .mss-track {
     flex: 1;
