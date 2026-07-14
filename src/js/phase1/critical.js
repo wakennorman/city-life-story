@@ -765,10 +765,11 @@ function checkLoseConditions(state) {
     return;
   }
 
-  // 极端负债（现金和存款双负且无收入途径）→ 轻度失败叙事
+  // [全系统自洽修复] 域G 修复:极端负债检查包含银行债务(原公式现金+存款永远≥0)
   var cash = (state.resources && state.resources.cash) || 0;
   var bank = (state.resources && state.resources.bankBalance) || 0;
-  var totalCash = cash + bank;
+  var bankDebt = (state.resources && state.resources.bankDebt) || 0;
+  var totalCash = cash + bank - bankDebt;
   if (totalCash < -100000 && state.player.day > 180) {
     state.flags.gameOver = true;
     state.flags.gameOverReason =

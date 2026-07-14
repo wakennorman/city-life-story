@@ -67,6 +67,9 @@ function checkPromotion(state) {
 function applyPromotion(state, newRank) {
   const oldRank = state.corporate.rank;
   state.corporate.rank = newRank;
+  // [全系统自洽修复] 域H 修复:晋升时同步更新corporate.level(P5→1, P6→2, ...)
+  var _rankMatch = newRank && newRank.match(/P(\d+)/);
+  state.corporate.level = _rankMatch ? parseInt(_rankMatch[1], 10) - 4 : 1;
   const rankData = CORP_RANKS[newRank];
 
   // 晋升奖励

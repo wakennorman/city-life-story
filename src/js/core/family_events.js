@@ -299,7 +299,7 @@
         excludeFlags: ["_corpMotherSurgeryDone"],
       },
       conditions: function (st) {
-        return st.corporate && st.corporate.funds >= 10000;
+        return st.corporate && st.resources.cash >= 10000;
       },
       probability: 0.05,
       repeatable: false,
@@ -309,7 +309,7 @@
           hint: "亲情最大化",
           apply: function (st) {
             st.flags._corpMotherSurgeryDone = true;
-            st.corporate.funds = Math.max(0, st.corporate.funds - 5000);
+            st.resources.cash = Math.max(0, st.resources.cash - 5000);
             st.player.morality = Math.min(100, (st.player.morality || 50) + 3);
             st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 5);
             StateManager.addMessage(
@@ -323,7 +323,7 @@
           hint: "折中方案",
           apply: function (st) {
             st.flags._corpMotherSurgeryDone = true;
-            st.corporate.funds = Math.max(0, st.corporate.funds - 2000);
+            st.resources.cash = Math.max(0, st.resources.cash - 2000);
             st.player.morality = Math.min(100, (st.player.morality || 50) + 1);
             StateManager.addMessage(
               "🏦 你转了¥2,000，让父亲和弟弟凑剩下的。电话那头沉默了一会儿：行吧，我们想辦法。",
@@ -392,7 +392,7 @@
           apply: function (st) {
             st.flags._corpFamilyRelocated = true;
             st.flags._familyStayedHometown = true;
-            st.corporate.funds = Math.max(0, (st.corporate.funds || 0) - 8000);
+            st.resources.cash = Math.max(0, (st.resources.cash || 0) - 8000);
             st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 2);
             StateManager.addMessage(
               "📞 你汇了¥8,000回老家，让父亲把房子翻修一下。妈说：你别太累，我们在老家挺好的。",
@@ -430,7 +430,7 @@
           hint: "回报最大化",
           apply: function (st) {
             st.flags._corpFamilyDividend = true;
-            st.corporate.funds = Math.max(0, (st.corporate.funds || 0) - 20000);
+            st.resources.cash = Math.max(0, (st.resources.cash || 0) - 20000);
             st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 10);
             st.player.morality = Math.min(100, (st.player.morality || 50) + 5);
             st.achievements = st.achievements || [];
@@ -451,7 +451,7 @@
           hint: "兼顾事业与亲情",
           apply: function (st) {
             st.flags._corpFamilyDividend = true;
-            st.corporate.funds = Math.max(0, (st.corporate.funds || 0) - 10000);
+            st.resources.cash = Math.max(0, (st.resources.cash || 0) - 10000);
             st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 5);
             StateManager.addMessage(
               "💼 你给家里打了¥10,000，自己留了大部分准备买房。妈说：你心里有数就好。心情+5。",

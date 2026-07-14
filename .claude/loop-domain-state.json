@@ -1,1 +1,1 @@
-{"domain":"F","round":17,"lastCommit":"820ab939","lastDomain":"F","status":"completed","note":"CSS属性值溢出修复(mss-cell-no-track justify-content:space-between)"}
+{"domain":"F","round":17,"lastCommit":"d91eb252","lastDomain":"F","status":"completed","note":"属性行无track警告态强化(⚠前缀+底部红条+脉冲动画)"}

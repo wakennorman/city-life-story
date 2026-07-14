@@ -24,7 +24,7 @@ function calculateMonthlyIncome(state) {
 
   if (phase === "corporate") {
     // === 职场阶段 ===
-    const rank = CORP_RANKS[player.corporate?.rank || "P5"];
+    const rank = CORP_RANKS[(state.corporate && state.corporate.rank) || "P5"];
     if (!rank) return 0;
 
     // 找到当前公司（state.corporate.company 为 COMPANIES 中的公司对象，含 .id）
@@ -95,7 +95,7 @@ function calculateStabilityMultiplier(state) {
   if (phase === "corporate") {
     // 职场阶段：入职时长 + 职级
     const corpYear = player.corpYear || 0;
-    const rank = player.corporate?.rank || "P5";
+    const rank = (state.corporate && state.corporate.rank) || "P5";
 
     let stability = 0.6; // 默认：刚入职
     if (corpYear >= 2) {

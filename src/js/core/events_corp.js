@@ -2090,7 +2090,7 @@
           text: "🚀 接受猎头offer跳槽",
           hint: "高薪但高风险",
           apply: (st) => {
-            st.player.corporate.rank = "P6";
+            st.corporate.rank = "P6";
             st.player.corporate.kpi = 30;
             st.player.corporate.upwardMgmt = 10;
             st.player.corporate.popularity = 20;
@@ -2115,7 +2115,7 @@
           text: "💼 接受晋升，留下",
           hint: "稳定但委屈",
           apply: (st) => {
-            st.player.corporate.rank = "P6";
+            st.corporate.rank = "P6";
             st.player.corporate.kpi = 50;
             st.player.corporate.upwardMgmt = Math.min(
               100,
@@ -2166,7 +2166,7 @@
           text: "🚀 接受猎头offer",
           hint: "搏一把",
           apply: (st) => {
-            st.player.corporate.rank = "P6";
+            st.corporate.rank = "P6";
             st.player.corporate.kpi = 30;
             st.player.corporate.upwardMgmt = 10;
             st.player.corporate.popularity = 20;
@@ -2189,7 +2189,7 @@
           text: "💼 留下接受晋升",
           hint: "求稳",
           apply: (st) => {
-            st.player.corporate.rank = "P6";
+            st.corporate.rank = "P6";
             st.player.corporate.kpi = 50;
             st.player.corporate.upwardMgmt = Math.min(
               100,

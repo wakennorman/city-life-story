@@ -299,6 +299,8 @@ function enterCorporatePhase(companyId) {
   );
 
   state.corporate.rank = "P5";
+  // [全系统自洽修复] 域H 修复:初始化corporate.level(P5→1)，供events_corp/family_events事件条件使用
+  state.corporate.level = 1;
   state.corporate.company = company;
   state.corporate.joinedDay = p.day;
   state.corporate.actionsUsed = 0;

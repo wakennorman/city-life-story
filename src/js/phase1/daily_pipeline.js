@@ -1516,7 +1516,7 @@ const DAILY_PIPELINE = [
       // 家教90天奖金
       if (state.flags._pendingGaokaoBonus && day >= state.flags._pendingGaokaoBonus) {
         state.flags._pendingGaokaoBonus = 0;
-        state.player.cash = (state.player.cash || 0) + 24000;
+        state.resources.cash = (state.resources.cash || 0) + 24000;
         if (typeof StateManager !== "undefined") {
           StateManager.addMessage("🎓 家教学员的家长打来了尾款！高考辅导费¥24000到账！", "success");
         }
@@ -1524,7 +1524,7 @@ const DAILY_PIPELINE = [
       // 摆摊30天还款
       if (state.flags._loanToLaoGuan && day >= state.flags._loanToLaoGuan) {
         state.flags._loanToLaoGuan = 0;
-        state.player.cash = (state.player.cash || 0) + 1000;
+        state.resources.cash = (state.resources.cash || 0) + 1000;
         if (typeof StateManager !== "undefined") {
           StateManager.addMessage("💰 老关把当初借的¥800还了，还多给了¥200利息！", "success");
         }
@@ -1542,7 +1542,7 @@ const DAILY_PIPELINE = [
         state.flags._careerLegacyDueDay = 0;
         var _legacySuccess = typeof Random !== "undefined" ? Random.chance(0.6) : Math.random() < 0.6;
         if (_legacySuccess) {
-          state.player.cash = (state.player.cash || 0) + 100000;
+          state.resources.cash = (state.resources.cash || 0) + 100000;
           state.player.fame = Math.min(100, (state.player.fame || 0) + 20);
           if (typeof StateManager !== "undefined") {
             StateManager.addMessage("🏆 你主导的行业里程碑项目大获成功！声誉+20，奖金¥100000到账！", "success");
