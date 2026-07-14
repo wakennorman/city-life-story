@@ -316,6 +316,12 @@ powershell.exe -NoLogo -ExecutionPolicy Bypass -File "<ps1 完整路径>" %*
   - 🆕 investment_loss_anxiety: 投资亏损心理事件（超¥10000触发）
   - 验证：node --check / build.py 8307.8KB ✅
 
+- **R17 域F UI属性值数字溢出修复**（commits `820ab939`+`ce120d13`，⏳ 网络不可用待推）：
+  - 🔧 手机端6属性值(体质/智力/敏捷/心智/魅力/道德)在属性行溢出白框
+  - 🔧 **根因**：v3.99给属性行加了track bar(showTrack:true)试图统一，但6个单元格+track→格子太窄，数值被挤出
+  - 🔧 **最终修复**：属性行改回`showTrack:false`，`.mss-cell-no-track .mss-label { flex: 1; }` — label吃剩余空间，数值推到右边缘，视觉效果与有track行一致
+  - 验证：node --check / build.py 8323.8KB ✅
+
 > ```
 > for (var i = 0; i < 30; i++) mc.run(1000);
 > mc.report();            // 聚合首末+资产区间

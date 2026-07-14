@@ -62,3 +62,6 @@
 - [v3.85-career-tab-polish](v3.85-career-tab-polish.md) — 事业Tab全面打磨：属性训练重平衡(参考完美人生递减收益)/晨跑冥想免费/求职UI框线增强/副业网格化布局/showModal按钮Bug修复（2026-07-11）
 - [v3.88f-event-coherence-review](v3.88f-event-coherence-review.md) — loop R43: 叙事-触发自洽性审查250+事件，发现1处A类(ev_used_car_crash陈哥缺met门岗)+1处B类(edu_graduation_ceremony用desc非story导致渲染空白)，均修复+新增5个联动事件(社工/补贴/城管/亲情/师徒)（2026-07-11）
 - [全系统优化/loop提示词整合版（含游戏设计权威角色设定）](loop-prompt-game-design-authority.md) — 2026-07-12 整合：将"深耕八十年+具体游戏名"长版角色设定替换原简短版本，保留8域轮换/A类修复/联动增强/每轮交付结构
+- [domain-optimization-round-16](domain-optimization-round-16.md) — R16 域D: 5A类修复(NPC关系网中译/拜访按钮事件/衰减速率/深度任务标记/拜访绕过applyAffinityChange)+3联动增强(矩阵补齐/衰减倒计时/NPC动态中文名) (2026-07-14, commit edeb101b/9a2659ea)
+- [v3.99f-domain-F-css-overflow-fix](v3.99f-domain-F-css-overflow-fix.md) — R17 域F: 手机端属性值数字溢出CSS修复(mss-cell-no-track justify-content:space-between) (2026-07-14, commit 820ab939)
+- [container-content-no-overflow-rule](container-content-no-overflow-rule.md) — UI设计铁律：所有容器内的内容不得溢出容器边界 (2026-07-14)

@@ -1,29 +1,100 @@
 {
-  "currentRound": 16,
-  "currentDomain": "C",
-  "nextDomain": "D",
-  "rotationIndex": 2,
-  "domainOrder": ["A", "B", "C", "D", "E", "F", "G", "H"],
+  "currentRound": 17,
+  "currentDomain": "F",
+  "nextDomain": "G",
+  "rotationIndex": 5,
+  "domainOrder": [
+    "A",
+    "B",
+    "C",
+    "D",
+    "E",
+    "F",
+    "G",
+    "H"
+  ],
   "history": [
-    { "round": 1, "domain": "A" },
-    { "round": 2, "domain": "B" },
-    { "round": 3, "domain": "C" },
-    { "round": 4, "domain": "D" },
-    { "round": 5, "domain": "B" },
-    { "round": 6, "domain": "D" },
-    { "round": 7, "domain": "F" },
-    { "round": 8, "domain": "E" },
-    { "round": 9, "domain": "F" },
-    { "round": 10, "domain": "G" },
-    { "round": 11, "domain": "F" },
-    { "round": 12, "domain": "G" },
-    { "round": 13, "domain": "H" },
-    { "round": 14, "domain": "A", "date": "2026-07-14", "aClassFixed": 3, "linkageItems": 2, "commit": "be4b28a6", "note": "域A(数据/数值平衡): 3A类修复+2联动增强" },
-    { "round": 15, "domain": "B", "date": "2026-07-14", "aClassFixed": 19, "linkageItems": 2, "commit": "48990235", "note": "[窗口2] 域B: 18cost扣款修复+1NPC met+1注册修复+2联动增强(绝境回望/熊市阴影)" },
-    { "round": 16, "domain": "C", "note": "另一窗口已开始域C工作" }
-  "lastDomain": "B",
-  "lastRound": 15,
+    {
+      "round": 1,
+      "domain": "A"
+    },
+    {
+      "round": 2,
+      "domain": "B"
+    },
+    {
+      "round": 3,
+      "domain": "C"
+    },
+    {
+      "round": 4,
+      "domain": "D"
+    },
+    {
+      "round": 5,
+      "domain": "B"
+    },
+    {
+      "round": 6,
+      "domain": "D"
+    },
+    {
+      "round": 7,
+      "domain": "F"
+    },
+    {
+      "round": 8,
+      "domain": "E"
+    },
+    {
+      "round": 9,
+      "domain": "F"
+    },
+    {
+      "round": 10,
+      "domain": "G"
+    },
+    {
+      "round": 11,
+      "domain": "F"
+    },
+    {
+      "round": 12,
+      "domain": "G"
+    },
+    {
+      "round": 13,
+      "domain": "H"
+    },
+    {
+      "round": 14,
+      "domain": "A"
+    },
+    {
+      "round": 15,
+      "domain": "B"
+    },
+    {
+      "round": 16,
+      "domain": "D"
+    },
+    {
+      "round": 17,
+      "domain": "F"
+    }
+  ],
+  "lastDomain": "F",
+  "lastRound": 17,
   "lastDate": "2026-07-14",
-  "completedDomains": ["A", "B", "C", "D", "E", "F", "G", "H"],
-  "description": "R15: 域B完成(多窗口协作) — 进入R16 域C(职业/成长)"
+  "completedDomains": [
+    "A",
+    "B",
+    "C",
+    "D",
+    "E",
+    "F",
+    "G",
+    "H"
+  ],
+  "description": "R17: 域F(UI) CSS属性值溢出修复 — mss-cell-no-track justify-content:space-between"
 }
