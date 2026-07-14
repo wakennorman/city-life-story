@@ -192,6 +192,7 @@ function bindHeaderButtons() {
     if (el) {
       el.onclick = pair.fn;
       el.style.cursor = "pointer";
+      el.dataset.bound = "1"; // 标记已被方案A绑定，避免方案B双击
     }
   });
 
@@ -201,6 +202,8 @@ function bindHeaderButtons() {
     header.addEventListener("click", function (e) {
       var target = e.target.closest("button");
       if (!target) return;
+      // 已被方案A直接绑定onclick的按钮，跳过事件委托避免双击
+      if (target.dataset.bound) return;
       var id = target.id;
       var pair = btnPairs.find(function (p) {
         return p.id === id;
