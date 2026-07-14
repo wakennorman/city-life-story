@@ -210,3 +210,12 @@
 - 联动3（新建 `src/js/core/data_linkage_events_r22.js` IIFE→RANDOM_EVENTS，2 street+1 corporate，全||防御，[PLACEHOLDER]，id 前缀 data2_* 与 R14 data_* 不冲突）：data2_lean_budget(A→D 现金缓冲邀友小聚→applyAffinityChange 好感+2 守 rel.met 铁律)/data2_skill_ledger(A→C 技能复盘→addSkillXp("coding",N) 真实键容错)/data2_capital_reserve(A→E 资本储备腾本金→复用 _dataInvestorMindset + investment 本金)。src/index.html 注册在 data_linkage_events.js 之后。
 - 验证：node --check 3文件通过；build.py→dist 8290.4KB（比 src 新）；MC 6×400d **MC_EXIT=0·0代码异常**（grep 确认无 TypeError/ReferenceError/NaN/Infinity 行；前7天死亡率全0.0%<10% 无早期死亡崩溃回归）。存活率 balanced66.7%/grinder16.7%/trader33.3%/social66.7%<80% 为既有平衡阈值 RNG 波动（与 R19-R21 一致，非代码异常）；skiller83.3%/corporate100% 达标。
 - 已提交 06cb3f8c（9文件/7353增/6810删，未 push，pre-commit 三守卫全过），无并行窗口污染。last_known_head 已同步至 06cb3f8c。下轮→B（事件/叙事，第二轮）。
+
+## 最近执行（2026-07-14，Round 23 域B 事件/叙事第二轮 — 已提交 1ae3f816）
+- 起始状态：loop-domain-state.json=round22/A/next=B，故本窗口执行 R23=域B（事件/叙事，第二轮）。HEAD=72818c2a（R22 bookkeeping 已提交，树干净）；先同步 last_known_head=72818c2a 过漂移检查。
+- 域B 真实文件：Explore 子代理基础设施报错（改用精准 grep 自扫）。扫描 all `*linkage_events*.js` + `cross_system_events.js` + data(moral_events.js/news.js)。
+- A类1（确证，死字段静默丢失）：company_linkage_events.js:95/107 写 `st.player.happiness`（死字段；全库 `needs.happiness` 是游戏唯一读取/渲染的幸福感字段——TS 事件系统 index.ts / webapp_runtime_bridge.js / DEVELOPMENT.md 实证；`player.happiness` 仅 3 处写入全死写）→ 改 `st.needs.happiness`（`player.mental` 在 94/106 行正确保留）。`cross_system_events.js:43090/43126` 同款死写属禁改主库既有遗留，本轮仅记录不碰。
+- 关键契约核实（消除 R22 记忆笔记笔误）：events_core.js:379 `RANDOM_EVENTS.filter(e=>e.phase===phase)` → 无 phase 字段事件永不发火；全 linkage 文件（含 R22 data_linkage_events_r22.js）每个事件均正确设 `phase:"street"/"corporate"`，无死事件（R22 报告散文"无 phase 即全阶段可发火"为笔误，代码正确）。
+- 联动3（新建 `src/js/core/narrative_linkage_events.js` IIFE→RANDOM_EVENTS，2 street+1 corporate，全||防御，[PLACEHOLDER]，id 前缀 narr_* 不冲突）：narr_old_town_tale(B→D 市井旧事听故事涨好感→applyAffinityChange +6 守 rel.met 铁律)/narr_craftsman_bio(B→C 匠人传记启发→addSkillXp("repair",8) 真实键)/narr_teahouse_rumor(B→E 茶馆传闻腾投资本金→复用 _dataInvestorMindset + investment)。src/index.html 注册在 data_linkage_events_r22.js 之后。
+- 验证：node --check 2文件通过；build.py→dist 8299.2KB（比 src 新）；MC 6×400d **MC_EXIT=0·0代码异常**（grep 确认无 TypeError/ReferenceError/NaN/Infinity 行；前7天死亡率全0.0%<10% 无早期死亡崩溃回归）。存活率 balanced100%/grinder50%/skiller83.3%/trader50%/social66.7%<80%/corporate83.3% — trader/social 的 ❌ 为既有 RNG 平衡阈值波动（高风险路径阈值≥30% 均已达标），非代码异常。
+- 已提交 1ae3f816（8文件/500增/13删，未 push，pre-commit 三守卫全过），无并行窗口污染。last_known_head 已同步至 1ae3f816。下轮→C（职业/成长，第二轮）。

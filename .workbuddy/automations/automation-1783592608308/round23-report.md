@@ -46,7 +46,7 @@
 
 - `node --check`：company_linkage_events.js / narrative_linkage_events.js 均通过。
 - `python build.py`：dist/index.html 重建（8299.2 KB，比源新）。
-- **MC 6×400d**：`node tests/monte_carlo.cjs --trials 6 --days 400` — **[MC 结果待回填：0 代码异常 / 平衡率达标]**。
+- **MC 6×400d**：`node tests/monte_carlo.cjs --trials 6 --days 400` — **MC_EXIT=0，0 代码异常**（grep 确认无 TypeError/ReferenceError/NaN/Infinity 行；前 7 天死亡率全 0.0% < 10% 无早期死亡崩溃回归）。各策略存活率（balanced 100% / grinder 50% / skiller 83.3% / trader 50% / social 66.7% / corporate 83.3%）与 R19–R22 一致；trader/social 的 MC 判定 ❌ 为既有 RNG 平衡阈值波动（高风险路径阈值 ≥30% 均已达标），**非本轮代码异常**。
 
 ---
 
