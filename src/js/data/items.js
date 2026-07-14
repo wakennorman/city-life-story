@@ -789,7 +789,7 @@ function isItemNpcGift(itemId, npcId) {
     notebook_item: ["daily_use"],
     flashlight: ["daily_use"],
     radio: ["daily_use"],
-    vitamins_item2: ["daily_use"],
+    vitamins_item: ["daily_use"],
     eye_drops: ["daily_use"],
     back_massager: ["daily_use"],
     lunch_box: ["daily_use"],

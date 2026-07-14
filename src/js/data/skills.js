@@ -68,7 +68,7 @@ const CERTIFICATES = [
     id: "electrician_cert",
     name: "电工证",
     desc: "家电维修和工业电工的必备证书",
-    requirements: { cash: 500, repair: 20, intelligence: 25 },
+    requirements: { cash: 500, electrician: 20, intelligence: 25 },
     effects: { electricianXp: 50, repair: 3 },
     salaryBonus: { civil: 0.08 },
     examPassRate: 0.7,

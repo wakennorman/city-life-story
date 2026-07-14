@@ -798,6 +798,11 @@ function cookRecipe(state, recipeId) {
     effectsApplied.duration = recipe.duration;
   }
 
+  // [全系统自洽修复] 域A 修复:烹饪后记录经验值(调用onCookingCompleted)
+  if (typeof onCookingCompleted === "function") {
+    onCookingCompleted(state, recipe);
+  }
+
   StateManager.addMessage(
     recipe.icon +
       " 你烹饪了「" +

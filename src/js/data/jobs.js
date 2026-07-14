@@ -298,29 +298,12 @@ const STREET_JOBS = [
     risk: {},
   },
 
-  // ====== 其他地点（3个）=====
-  {
-    id: "busking",
-    name: "街头表演",
-    desc: "在天桥或广场表演才艺。脸皮要厚，观众打赏全看心情。",
-    icon: "🎸",
-    location: "park",
-    requirements: { mental: 30, minAge: 16, maxAge: 60 },
-    effects: { fatigue: 12, happiness: 18, mental: 2, fame: 3 },
-    payCalc(state) {
-      return Math.floor(
-        18 +
-          state.player.mental * 0.2 +
-          state.player.fame * 0.3 +
-          Random.float(0, 42),
-      );
-    },
-    risk: {},
-  },
+  // ====== 其他地点（2个）=====
   {
     id: "bank_security",
     name: "银行保安",
     icon: "👮",
+    desc: "在银行大厅维持秩序，站一天挺累的，但胜在稳定。偶尔能遇上运钞车押运的额外任务。",
     location: "bank",
     requirements: { minAge: 20, maxAge: 50 },
     effects: { fatigue: 8, happiness: -2, physiqueXp: 0 },
