@@ -3748,13 +3748,32 @@ body {
     top: var(--header-height);
     bottom: 0;
     width: var(--sidebar-width);
-    z-index: 240;
+    z-index: 300;
     transition: left 0.28s ease;
     box-shadow: 2px 0 18px rgba(0, 0, 0, 0.16);
+    /* 双保险: 同时用 visibility 确保隐藏 */
+    visibility: hidden;
   }
 
   #sidebar.open {
-    left: 0;
+    left: 0 !important;
+    visibility: visible !important;
+    /* 调试: 侧栏打开时可见红色边框 */
+    outline: 3px solid red !important;
+    outline-offset: -3px;
+  }
+
+  /* 侧栏遮罩层 */
+  #sidebar-backdrop {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 290;
+    background: rgba(0,0,0,0.35);
+    -webkit-tap-highlight-color: transparent;
+  }
+  #sidebar-backdrop.visible {
+    display: block !important;
   }
 
   #tab-bar {
@@ -4308,10 +4327,10 @@ body {
   /* ====== 侧栏 ====== */
   #sidebar {
     position: fixed !important;
-    left: 0 !important;
+    left: -100%;
     right: 0;
     top: var(--header-height) !important;
-    bottom: auto;
+    bottom: 0;
     width: 100vw;
     height: calc(100vh - var(--header-height));
     max-height: calc(100vh - var(--header-height));
@@ -4320,11 +4339,11 @@ body {
     border-top: 1px solid var(--border);
     border-radius: 0;
     box-shadow: 8px 0 28px rgba(0, 0, 0, 0.18);
-    transform: translateX(-100%);
-    transition: transform 0.28s ease;
-    z-index: 240;
+    transition: left 0.28s ease;
+    z-index: 300;
     gap: 10px;
     overscroll-behavior: contain;
+    visibility: hidden;
   }
   #sidebar::before {
     content: "状态与位置";
@@ -4340,7 +4359,9 @@ body {
   }
   #sidebar.open {
     left: 0 !important;
-    transform: translateX(0);
+    visibility: visible !important;
+    outline: 3px solid red !important;
+    outline-offset: -3px;
   }
   #sidebar .sidebar-section {
     padding: 10px;

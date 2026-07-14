@@ -480,6 +480,9 @@
         </div>
       </aside>
 
+      <!-- 手机端侧栏遮罩层 -->
+      <div id="sidebar-backdrop"></div>
+
       <!-- Main Content -->
       <main id="main">
         <!-- Tab Bar — 5 大认知 Tab（v3.7 Tab 合并重构） -->
@@ -764,12 +767,21 @@
     <script>
       function toggleSidebar() {
         var s = document.getElementById("sidebar");
-        if (s) s.classList.toggle("open");
+        var b = document.getElementById("sidebar-backdrop");
+        if (s) {
+          var opened = !s.classList.contains("open");
+          s.classList.toggle("open");
+          // 双保险: 同时用 inline style 确保可见
+          s.style.left = opened ? "0" : "";
+          s.style.visibility = opened ? "visible" : "";
+          if (b) b.classList.toggle("visible", opened);
+        }
       }
-      // 点击侧栏外部关闭
+      // 点击侧栏外部或遮罩层关闭
       document.addEventListener("click", function (e) {
         var sidebar = document.getElementById("sidebar");
         var btn = document.getElementById("mobile-menu-btn");
+        var backdrop = document.getElementById("sidebar-backdrop");
         if (
           sidebar &&
           sidebar.classList.contains("open") &&
@@ -778,6 +790,9 @@
           !btn.contains(e.target)
         ) {
           sidebar.classList.remove("open");
+          sidebar.style.left = "";
+          sidebar.style.visibility = "";
+          if (backdrop) backdrop.classList.remove("visible");
         }
       });
       showWelcome();

@@ -176,7 +176,14 @@ function bindHeaderButtons() {
       id: "mobile-menu-btn",
       fn: function () {
         var sidebar = document.getElementById("sidebar");
-        if (sidebar) sidebar.classList.toggle("open");
+        var backdrop = document.getElementById("sidebar-backdrop");
+        if (sidebar) {
+          var opened = !sidebar.classList.contains("open");
+          sidebar.classList.toggle("open");
+          sidebar.style.left = opened ? "0" : "";
+          sidebar.style.visibility = opened ? "visible" : "";
+          if (backdrop) backdrop.classList.toggle("visible", opened);
+        }
       },
     },
   ];
