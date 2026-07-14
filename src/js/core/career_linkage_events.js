@@ -205,6 +205,143 @@
       ],
       probability: 0.04,
     },
+
+    // ===== C→H：职业硬技能 ↔ Phase2/公司（创业阶段价值兑现） =====
+    {
+      id: "career_enterprise_readiness",
+      title: "把职场经验带进了公司",
+      desc: "当年在职场里摸爬滚打练出的那套方法论，如今在你自己的公司里派上了用场——招人、谈客户、控成本，你比谁都门儿清。",
+      phase: "corporate",
+      triggers: { minDay: 120 },
+      conditions: function (st) {
+        if (!st || !st.player) return false;
+        if (st.flags && st.flags._careerEnterpriseReadyDone) return false;
+        var hasCo =
+          (st.corporate && st.corporate.company) ||
+          (st.startup && st.startup.companies && st.startup.companies.length);
+        if (!hasCo) return false;
+        if (topSkillLevelC(st) < 30) return false; // [PLACEHOLDER] 技能兑现门槛
+        return true;
+      },
+      choices: [
+        {
+          text: "把经验系统化，赋能团队",
+          apply: function (st) {
+            // H域桥接：职业硬技能转化为公司 KPI（upward，惰性字段，全 || 防御）
+            st.player.corporate = st.player.corporate || {};
+            st.player.corporate.upward =
+              (st.player.corporate.upward || 0) + 8; // [PLACEHOLDER] 价值兑现
+            if (st.player) st.player.mental = (st.player.mental || 50) + 4;
+            if (st.flags) st.flags._careerEnterpriseReadyDone = true;
+            if (typeof StateManager !== "undefined" && StateManager.addMessage)
+              StateManager.addMessage(
+                "职场沉淀的方法论，成了你公司里最值钱的东西。",
+                "good",
+              );
+          },
+        },
+        {
+          text: "低调沿用，不声张",
+          apply: function (st) {
+            st.player.corporate = st.player.corporate || {};
+            st.player.corporate.upward =
+              (st.player.corporate.upward || 0) + 4; // [PLACEHOLDER]
+            if (st.player) st.player.mental = (st.player.mental || 50) + 2;
+            if (st.flags) st.flags._careerEnterpriseReadyDone = true;
+          },
+        },
+      ],
+      probability: 0.04,
+    },
+
+    // ===== C→B：职业成就 ↔ 事件/叙事（城里流传起你的故事） =====
+    {
+      id: "career_legacy_tale",
+      title: "城里开始有人讲你的故事",
+      desc: "不知从哪天起，行业里开始流传起你的名字——有人拿你当年的坚持当励志样本，也有人酸一句「运气好」。但你自己知道，每一步都不是白走的。",
+      phase: "street",
+      triggers: { minDay: 150 },
+      conditions: function (st) {
+        if (!st || !st.player) return false;
+        if (st.flags && st.flags._careerLegacyTaleDone) return false;
+        if (!(st.career && st.career.currentJob)) return false;
+        if (topSkillLevelC(st) < 35) return false; // [PLACEHOLDER] 故事传播门槛
+        return true;
+      },
+      choices: [
+        {
+          text: "把故事讲给后来人听",
+          apply: function (st) {
+            if (st.player) {
+              st.player.mental = (st.player.mental || 50) + 6;
+              st.player.fame = Math.min(100, (st.player.fame || 0) + 3);
+            }
+            if (st.needs)
+              st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 5);
+            if (st.flags) {
+              st.flags._careerLegacyTaleDone = true;
+              st.flags._careerNarrativeSeen = true; // 供 B域叙事回调复用
+            }
+            if (typeof StateManager !== "undefined" && StateManager.addMessage)
+              StateManager.addMessage(
+                "你的经历成了别人故事里的光，这感觉，比涨薪踏实。",
+                "good",
+              );
+          },
+        },
+        {
+          text: "一笑置之，继续赶路",
+          apply: function (st) {
+            if (st.player) st.player.mental = (st.player.mental || 50) + 3;
+            if (st.flags) st.flags._careerLegacyTaleDone = true;
+          },
+        },
+      ],
+      probability: 0.035,
+    },
+
+    // ===== C→A：职业熟练度 ↔ 数据/数值（单位时间收入效率） =====
+    {
+      id: "career_resource_mastery",
+      title: "熟练，是最实在的复利",
+      desc: "同一件事你做得比新人快三倍，出错还少。省下的时间和精力，被你拿去学了新东西、接了私活——钱和本事，就这么滚了起来。",
+      phase: "street",
+      triggers: { minDay: 90 },
+      conditions: function (st) {
+        if (!st || !st.player) return false;
+        if (st.flags && st.flags._careerResourceMasteryDone) return false;
+        if (!(st.career && st.career.currentJob)) return false;
+        if (topSkillLevelC(st) < 25) return false; // [PLACEHOLDER] 熟练度门槛
+        return true;
+      },
+      choices: [
+        {
+          text: "把效率换成真金白银",
+          apply: function (st) {
+            // A域桥接：技能熟练带来效率红利（现金 + 智力回馈）
+            if (st.resources)
+              st.resources.cash = (st.resources.cash || 0) + 3000; // [PLACEHOLDER] 效率红利
+            if (st.player)
+              st.player.intelligence = (st.player.intelligence || 20) + 2;
+            if (st.flags) st.flags._careerResourceMasteryDone = true;
+            if (typeof StateManager !== "undefined" && StateManager.addMessage)
+              StateManager.addMessage(
+                "熟练带来的不只是轻松，还有看得见摸得着的增长。",
+                "good",
+              );
+          },
+        },
+        {
+          text: "把时间投资回自己",
+          apply: function (st) {
+            if (st.player)
+              st.player.intelligence = (st.player.intelligence || 20) + 3;
+            if (st.flags) st.flags._careerResourceMasteryDone = true;
+          },
+        },
+      ],
+      probability: 0.045,
+    },
   ];
 
   for (var i = 0; i < CAREER_EVENTS.length; i++) {

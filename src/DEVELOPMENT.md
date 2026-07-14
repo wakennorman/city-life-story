@@ -1,7 +1,7 @@
 # 城市浮生记 (City Life Story) — 开发文档
 
-> 最后更新: 2026-07-14（v3.114 loop R23 全系统优化·Domain B 事件/叙事（第二轮）——A类修复1项：(1)company_linkage_events.js:95/107 写 st.player.happiness（死字段，游戏唯一读取的幸福感字段为 st.needs.happiness，见 TS 事件系统 index.ts / webapp_runtime_bridge.js）→应为 st.needs.happiness，致"创业倾诉/自己扛"幸福感加成静默丢失） + 联动增强3项（narr_* 新角度，2 street+1 corporate：B→D市井旧事听故事涨好感 / B→C匠人传记启发 repair 技能 / B→E茶馆传闻腾投资本金·复用 _dataInvestorMindset））
-> 上一版: v3.113 loop R22 全系统优化·Domain A 数据/数值平衡（第二轮）（A类修复3项：finance dailyTransactions→flags._dailyTransactions / finance 公司取用 companyId→corporate.company 查 enterpriseFate / data_linkage 写 player.happiness→needs.happiness + A→D/A→C/A→E 联动）
+> 最后更新: 2026-07-15（v3.115 loop R24 全系统优化·Domain C 职业/成长（第二轮）——A类修复0项（全量扫描 career_path_events/personal_growth_events/skill_tree/skill_synergy/career_dev/career_linkage_events：技能键/职业path id/CAREER_PATHS 引用全部有效，career.currentJob 裸访问均经 _job/_path/if 守卫，无死职业·死技能·不可达触发） + 联动增强3项（career_enterprise_readiness C→H 职业硬技能兑现公司KPI / career_legacy_tale C→B 职业成就成城内叙事·置 _careerNarrativeSeen / career_resource_mastery C→A 熟练度换效率红利·智力回馈））
+> 上一版: v3.114 loop R23 全系统优化·Domain B 事件/叙事（第二轮）（A类修复1项：company_linkage_events.js 写 st.player.happiness→st.needs.happiness + 联动增强3项 narr_*）
 >
 > commits: `feat: [域B] A类修复1项+联动增强3项` + `（docs）loop状态/迭代表`
 

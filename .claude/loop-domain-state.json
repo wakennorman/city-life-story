@@ -1,1 +1,1 @@
-{"domain":"F","round":17,"lastCommit":"d91eb252","lastDomain":"F","status":"completed","note":"属性行无track警告态强化(⚠前缀+底部红条+脉冲动画)"}
+{"domain":"C","round":24,"lastCommit":"11717cb3059c59bdfc3dda83b075d7a1f837c0f1","lastDomain":"B","status":"completed","note":"职业成长第二轮：A类0(全量扫描6文件·技能键/职业path id/CAREER_PATHS引用全有效·career.currentJob裸访问均经_guard) + 联动增强3项(career_enterprise_readiness C→H / career_legacy_tale C→B / career_resource_mastery C→A)"}
