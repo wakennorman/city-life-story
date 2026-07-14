@@ -8,6 +8,7 @@
 全量扫描域 A 文件：skills.js / jobs.js / items.js / goods.js / illnesses.js / pricing.js / trade.js / economy_v3.1.js
 
 核查项与结论：
+
 - **jobs.location** 全部命中 `locations.js` 已定义 id（auto_city/bank/commercialDist/construction/factoryZone/flower_bird_market/gym/hospital/internet_cafe/logistics_park/luxury_community/old_community/park/school/slum/techPark/trainingCenter/wholesaleMarket 均存在）→ 无引用 id 不存在
 - **jobs.payCalc** 引用的 `state.skills.X.level` 键（sales/welding/repair/electrician/cooking/english/coding/driving/management/accounting）均属 10 核心技能，运行期必存在 → 无极端值崩溃
 - **pricing.js:513** `((toPrice-fromPrice)/fromPrice)` 已有 `if (fromPrice === 0) return 0` 守卫 → 无除零
@@ -19,14 +20,17 @@
 ## 指令二：联动增强（2 项，均为域 A 此前未覆盖的「隐形平衡数据」）
 
 R14/R22 已覆盖 A→D/C/E（净资产的「量」），但 **economy_v3.1.js 真正计算的两套隐形机制从未叙事化**：
+
 1. **累进财富税梯度** `WEALTH_TAX_THRESHOLDS`（玩家不知为何扣税、扣多少）
 2. **市场饱和度惩罚** `getMarketSaturationPenalty`（玩家倒卖利润变薄却不知原因）
 
 新增 `src/js/core/data_linkage_events_r23.js`（IIFE 注入 RANDOM_EVENTS，与 R14/R22 同模式，id 前缀 `data3_*` 不冲突）：
+
 - `data3_wealth_tax_intro` (A→G)：首次进入中产税档(netWorth≥¥50万)时叙事化累进税制，选项给税务规划心智 `_dataTaxAware`
 - `data3_market_saturation` (A→E)：饱和度惩罚首次生效(玩家/城市财富比>阈值)时叙事化「体量搅动市场」，选项给分散投资心智 `_dataDiversifyMindset`
 
 关键实现细节：
+
 - `EconomySystem` 在 index.html 中于 linkage 文件**之后**加载 → 所有访问惰性置于事件函数体内 + `typeof` 守卫，运行期必就绪
 - phase 均 `corporate`（税/饱和均为后期经济机制，符合真实触发点）
 - 全字段 `||` 防御，数值标 `[PLACEHOLDER]` 待数值组校准

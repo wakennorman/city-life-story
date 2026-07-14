@@ -10416,7 +10416,10 @@
           state.flags._eduGraduationShown = true;
           state.flags._eduGraduationJobHunt = true;
           // [全系统自洽修复] 域B A类#5: state.player.mood→needs.happiness
-          state.needs.happiness = Math.min(100, (state.needs.happiness || 50) + 1);
+          state.needs.happiness = Math.min(
+            100,
+            (state.needs.happiness || 50) + 1,
+          );
           return "你当场打开手机，把简历投给了三家本地公司。学历是敲门砖，但门后的路还得自己跑。";
         },
       },
@@ -51539,7 +51542,9 @@
     var _ce = CROSS_EVENTS[_ci];
     if (_ce && !_ce._registered) {
       if (!_ce.conditions && !_ce.triggers) {
-        _ce.conditions = function () { return true; };
+        _ce.conditions = function () {
+          return true;
+        };
       }
       _ce._registered = true;
       RANDOM_EVENTS.push(_ce);
@@ -51582,7 +51587,10 @@
           st.player.mental = Math.min(100, (st.player.mental || 0) + 8);
           st.needs.fatigue = Math.min(100, (st.needs.fatigue || 0) + 10);
           st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 5);
-          StateManager.addMessage("🌆 你站起来拍了拍裤子上的灰。旁边卖烤红薯的大爷看了你一眼，递过来一个：「拿着，不要钱。年轻人，别轻易说不信了。」你鼻子一酸，咬了口红薯，甜的。\n心智+8，疲劳+10，心情+5。", "success");
+          StateManager.addMessage(
+            "🌆 你站起来拍了拍裤子上的灰。旁边卖烤红薯的大爷看了你一眼，递过来一个：「拿着，不要钱。年轻人，别轻易说不信了。」你鼻子一酸，咬了口红薯，甜的。\n心智+8，疲劳+10，心情+5。",
+            "success",
+          );
         },
       },
       {
@@ -51593,7 +51601,10 @@
           st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 15);
           st.player.mental = Math.min(100, (st.player.mental || 0) + 3);
           st.resources.cash = Math.max(0, (st.resources.cash || 0) - 10);
-          StateManager.addMessage("📞 电话通了，妈妈的声音传过来：「吃饭了吗？钱够不够？别太累。」你说都挺好的，挂了电话发了会儿呆。¥10话费换来的这两句唠叨，比什么都管用。\n心情+15，心智+3。", "info");
+          StateManager.addMessage(
+            "📞 电话通了，妈妈的声音传过来：「吃饭了吗？钱够不够？别太累。」你说都挺好的，挂了电话发了会儿呆。¥10话费换来的这两句唠叨，比什么都管用。\n心情+15，心智+3。",
+            "info",
+          );
         },
       },
       {
@@ -51603,7 +51614,10 @@
           st.flags._hardModeSurvivalReflectionSeen = true;
           st.needs.fatigue = Math.max(0, (st.needs.fatigue || 0) - 20);
           st.player.mental = Math.max(0, (st.player.mental || 0) - 5);
-          StateManager.addMessage("😞 你找了个桥洞下面的避风处，把外套裹紧了些。今晚先活过去，明天的事明天想。\n疲劳-20，心智-5。活着才有翻盘的机会。", "warning");
+          StateManager.addMessage(
+            "😞 你找了个桥洞下面的避风处，把外套裹紧了些。今晚先活过去，明天的事明天想。\n疲劳-20，心智-5。活着才有翻盘的机会。",
+            "warning",
+          );
         },
       },
     ],
@@ -51651,9 +51665,15 @@
         apply: function (st) {
           st.flags._investmentLossAnxietySeen = true;
           st.resources.cash = Math.max(0, (st.resources.cash || 0) - 200);
-          st.player.intelligence = Math.min(100, (st.player.intelligence || 0) + 5);
+          st.player.intelligence = Math.min(
+            100,
+            (st.player.intelligence || 0) + 5,
+          );
           st.player.mental = Math.min(100, (st.player.mental || 0) + 3);
-          StateManager.addMessage("📚 你买了《聪明的投资者》和《周期》，连着几个晚上认真看完了。虽然亏了钱，但学到了东西——下次不会再犯同样的错误了。\n智力+5，心智+3。花了¥200买书。", "success");
+          StateManager.addMessage(
+            "📚 你买了《聪明的投资者》和《周期》，连着几个晚上认真看完了。虽然亏了钱，但学到了东西——下次不会再犯同样的错误了。\n智力+5，心智+3。花了¥200买书。",
+            "success",
+          );
         },
       },
       {
@@ -51664,7 +51684,10 @@
           st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 15);
           st.player.mental = Math.min(100, (st.player.mental || 0) + 5);
           st.needs.fatigue = Math.min(100, (st.needs.fatigue || 0) + 5);
-          StateManager.addMessage("🧘 你沿着江边走了两个小时。风吹在脸上，慢慢把脑子里的K线吹散了。想明白一件事：只要人还在，钱可以再赚。\n心情+15，心智+5，疲劳+5。", "info");
+          StateManager.addMessage(
+            "🧘 你沿着江边走了两个小时。风吹在脸上，慢慢把脑子里的K线吹散了。想明白一件事：只要人还在，钱可以再赚。\n心情+15，心智+5，疲劳+5。",
+            "info",
+          );
         },
       },
       {
@@ -51674,7 +51697,10 @@
           st.flags._investmentLossAnxietySeen = true;
           st.player.mental = Math.max(0, (st.player.mental || 0) - 5);
           st.flags._gamblerMode = true;
-          StateManager.addMessage("😤 你盯着账户余额，牙咬得咯咯响。「我就不信了。」你知道这种心态很危险，但你控制不住。\n心智-5，下次投资收益+20%（但风险更高）。", "warning");
+          StateManager.addMessage(
+            "😤 你盯着账户余额，牙咬得咯咯响。「我就不信了。」你知道这种心态很危险，但你控制不住。\n心智-5，下次投资收益+20%（但风险更高）。",
+            "warning",
+          );
         },
       },
     ],
@@ -51696,8 +51722,10 @@
         excludeFlags: ["_skillBridgeRemoteSeen"],
       },
       conditions: function (st) {
-        var coding = st.skills && st.skills.coding ? (st.skills.coding.level || 0) : 0;
-        var english = st.skills && st.skills.english ? (st.skills.english.level || 0) : 0;
+        var coding =
+          st.skills && st.skills.coding ? st.skills.coding.level || 0 : 0;
+        var english =
+          st.skills && st.skills.english ? st.skills.english.level || 0 : 0;
         return coding >= 20 && english >= 15;
       },
       probability: 0.035,
@@ -51713,8 +51741,10 @@
             st.needs.fatigue = Math.min(100, (st.needs.fatigue || 0) + 25);
             st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 12);
             st.player.mental = Math.min(100, (st.player.mental || 0) + 5);
-            if (st.skills && st.skills.coding) st.skills.coding.xp = (st.skills.coding.xp || 0) + 50;
-            if (st.skills && st.skills.english) st.skills.english.xp = (st.skills.english.xp || 0) + 30;
+            if (st.skills && st.skills.coding)
+              st.skills.coding.xp = (st.skills.coding.xp || 0) + 50;
+            if (st.skills && st.skills.english)
+              st.skills.english.xp = (st.skills.english.xp || 0) + 30;
             StateManager.addMessage(
               "🌐 你熬夜三天完成了测试项目！新加坡那边很满意，付了¥5,000测试费，说下个月有正式项目会再联系。\n海外远程通道已解锁！编程XP+50，英语XP+30，心情+12。技能终于变成了跨越国界的门票。",
               "success",

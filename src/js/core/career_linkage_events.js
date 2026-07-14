@@ -229,8 +229,7 @@
           apply: function (st) {
             // H域桥接：职业硬技能转化为公司 KPI（upward，惰性字段，全 || 防御）
             st.player.corporate = st.player.corporate || {};
-            st.player.corporate.upward =
-              (st.player.corporate.upward || 0) + 8; // [PLACEHOLDER] 价值兑现
+            st.player.corporate.upward = (st.player.corporate.upward || 0) + 8; // [PLACEHOLDER] 价值兑现
             if (st.player) st.player.mental = (st.player.mental || 50) + 4;
             if (st.flags) st.flags._careerEnterpriseReadyDone = true;
             if (typeof StateManager !== "undefined" && StateManager.addMessage)
@@ -244,8 +243,7 @@
           text: "低调沿用，不声张",
           apply: function (st) {
             st.player.corporate = st.player.corporate || {};
-            st.player.corporate.upward =
-              (st.player.corporate.upward || 0) + 4; // [PLACEHOLDER]
+            st.player.corporate.upward = (st.player.corporate.upward || 0) + 4; // [PLACEHOLDER]
             if (st.player) st.player.mental = (st.player.mental || 50) + 2;
             if (st.flags) st.flags._careerEnterpriseReadyDone = true;
           },
@@ -277,7 +275,10 @@
               st.player.fame = Math.min(100, (st.player.fame || 0) + 3);
             }
             if (st.needs)
-              st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 5);
+              st.needs.happiness = Math.min(
+                100,
+                (st.needs.happiness || 50) + 5,
+              );
             if (st.flags) {
               st.flags._careerLegacyTaleDone = true;
               st.flags._careerNarrativeSeen = true; // 供 B域叙事回调复用
