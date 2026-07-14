@@ -227272,7 +227272,7 @@ function renderNpcRelationships(state, content) {
         '<div style="font-size:10px;color:var(--text-muted);margin-top:4px;">';
       html +=
         "传导: " +
-        lastProp.from.replace(/_/g, " ") +
+        (_npcDef ? _npcDef.name : lastProp.from.replace(/_/g, " ")) +
         " (" +
         (lastProp.change > 0 ? "+" : "") +
         lastProp.change.toFixed(1) +
@@ -227330,8 +227330,18 @@ function renderNpcRelationships(state, content) {
         else if (_relType === "competitor" || _relType === "strained")
           _relColor = "#E74C3C";
         else if (_relType === "classmate") _relColor = "#3498DB";
-        var _n1name = _n1.replace(/_/g, " ");
-        var _n2name = _n2.replace(/_/g, " ");
+        var _n1Def = typeof NPCS !== "undefined" && NPCS.find(function(n){ return n.id === _n1; });
+        var _n2Def = typeof NPCS !== "undefined" && NPCS.find(function(n){ return n.id === _n2; });
+        var _n1name = _n1Def ? _n1Def.name : _n1.replace(/_/g, " ");
+        var _n2name = _n2Def ? _n2Def.name : _n2.replace(/_/g, " ");
+        // 关系类型中文翻译
+        var _relLabel = _relType;
+        var _relLabelMap = {
+          neutral: "中立", friendly: "友好", old_acquaintance: "老相识",
+          business: "商业合作", competitor: "竞争对手", strained: "紧张",
+          classmate: "同学"
+        };
+        if (_relLabelMap[_relType]) _relLabel = _relLabelMap[_relType];
         html +=
           '<span style="padding:3px 8px;border-radius:4px;border:1px solid ' +
           _relColor +
@@ -227342,7 +227352,7 @@ function renderNpcRelationships(state, content) {
           " ↔ " +
           _n2name +
           ' <span style="font-size:9px;">' +
-          _relType +
+          _relLabel +
           "</span></span>";
       }
     }
@@ -227359,11 +227369,20 @@ function renderNpcRelationships(state, content) {
     var r = state.relationships[key];
     if (r._propagationLog && r._propagationLog.length > 0) {
       hasLog = true;
+      var _npDef = typeof NPCS !== "undefined" && NPCS.find(function(n){ return n.id === key; });
+      var _npName = _npDef ? _npDef.name : key.replace(/_/g, " ");
       html +=
         '<div style="padding:6px 8px;margin-bottom:4px;background:var(--bg-secondary);border-radius:4px;">';
-      html += "<strong>" + key.replace(/_/g, " ") + "</strong>: ";
+      html += "<strong>" + _npName + "</strong>: ";
       for (var j = 0; j < r._propagationLog.length; j++) {
         var log = r._propagationLog[j];
+        // 传导类型中文翻译
+        var _logTypeLabel = log.type;
+        var _logTypeMap = {
+          propagation: "传导", decay: "衰减", interaction: "互动",
+          gift: "赠送", conflict: "冲突", help: "帮助"
+        };
+        if (_logTypeMap[log.type]) _logTypeLabel = _logTypeMap[log.type];
         html +=
           '<span style="color:' +
           (log.change > 0 ? "var(--success)" : "var(--danger)") +
@@ -227371,7 +227390,7 @@ function renderNpcRelationships(state, content) {
         html += log.change > 0 ? "+" : "" + log.change.toFixed(1) + "</span> ";
         html +=
           '<span style="color:var(--text-muted);font-size:10px;">(' +
-          log.type +
+          _logTypeLabel +
           ")</span> ";
       }
       html += "</div>";
