@@ -148,12 +148,25 @@ function renderNpcRelationships(state, content) {
       html += "</div>";
     }
 
-    // 衰减信息
-    if (rel._lastDecay) {
-      html +=
-        '<div style="font-size:10px;color:var(--text-warning);margin-top:2px;">';
-      html += "⚠ 衰减" + rel._lastDecay.toFixed(1);
-      html += "</div>";
+    // [全系统自洽修复] 域D 联动增强: 衰减倒计时+引导
+    if (rel.met && rel.affinity > 0) {
+      var _lastInt = rel._lastInteractionDay || 0;
+      var _daysSinceInt = state.player.day - _lastInt;
+      if (_daysSinceInt >= 7) {
+        // 已进入衰减区间，显示衰减量
+        var _decayed = rel._lastDecay || 0;
+        html +=
+          '<div style="font-size:10px;color:var(--danger);margin-top:2px;">';
+        html += "⚠ 已衰减" + _decayed.toFixed(1) + "，快去互动！";
+        html += "</div>";
+      } else if (_daysSinceInt >= 4) {
+        // 即将衰减，倒计时
+        var _daysLeftDecay = 7 - _daysSinceInt;
+        html +=
+          '<div style="font-size:10px;color:var(--warning);margin-top:2px;">';
+        html += "⏳ " + _daysLeftDecay + "天后好感将衰减";
+        html += "</div>";
+      }
     }
 
     // [R30] NPC 拜访按钮 — 点击前往 NPC 当前所在地点并触发互动
@@ -511,8 +524,14 @@ function renderSocialNetworkTab(state, parent) {
     html += '<div class="card" style="padding:8px;">';
     for (var fi = 0; fi < Math.min(3, sn.npcFeeds.length); fi++) {
       var feed = sn.npcFeeds[fi];
+      // [全系统自洽修复] 域D 联动增强: NPC动态显示中文名
+      var _feedNpcName = "";
+      if (feed.npcId && typeof NPCS !== "undefined") {
+        var _feedDef = NPCS.find(function (n) { return n.id === feed.npcId; });
+        _feedNpcName = _feedDef ? _feedDef.name + ": " : "";
+      }
       html += '<div style="padding:4px 0;font-size:11px;">';
-      html += '<p style="margin:0;">' + (feed.content || "") + "</p>";
+      html += '<p style="margin:0;">' + _feedNpcName + (feed.content || "") + "</p>";
       html += "</div>";
     }
     html += "</div>";

@@ -243,7 +243,7 @@
           st.player.phase === "corporate" &&
           st.player.day >= 150 &&
           (logs.length > 0 || st.player.day >= 200) &&
-          !st.flags._gossipBacklashSeen
+          (!st.flags || !st.flags._gossipBacklashSeen) // [R16 域C修复]
         );
       },
       probability: 0.02,
@@ -253,6 +253,7 @@
           text: "😤 找源头对质",
           hint: "可能成功，也可能更糟",
           apply: function (st) {
+            st.flags = st.flags || {}; // [R16 域C修复]
             st.flags._gossipBacklashSeen = true;
             if ((st.player.charm || 0) >= 30) {
               st.player.fame = Math.min(100, (st.player.fame || 0) + 3);
@@ -274,6 +275,7 @@
           text: "🧘 冷处理，时间会证明",
           hint: "等待，需要耐心",
           apply: function (st) {
+            st.flags = st.flags || {}; // [R16 域C修复]
             st.flags._gossipBacklashSeen = true;
             st.needs.happiness = Math.max(0, (st.needs.happiness || 0) - 5);
             st.player.morality = Math.min(100, (st.player.morality || 50) + 3);
@@ -287,6 +289,7 @@
           text: "🔥 以牙还牙，散布对方的八卦",
           hint: "报复，道德-5",
           apply: function (st) {
+            st.flags = st.flags || {}; // [R16 域C修复]
             st.flags._gossipBacklashSeen = true;
             st.player.morality = Math.max(0, (st.player.morality || 50) - 5);
             st.player.fame = Math.max(0, (st.player.fame || 0) - 5);
@@ -318,7 +321,7 @@
           st.player.phase === "corporate" &&
           cols.length > 0 &&
           st.player.day >= 90 &&
-          !st.flags._teamBuildingSeen
+          (!st.flags || !st.flags._teamBuildingSeen) // [R16 域C修复]
         );
       },
       probability: 0.02,
@@ -328,6 +331,7 @@
           text: "🍻 去，和所有人好好喝一杯",
           hint: "关系+5，但花钱+累",
           apply: function (st) {
+            st.flags = st.flags || {}; // [R16 域C修复]
             st.flags._teamBuildingSeen = true;
             var cost = Math.min(300, st.resources.cash);
             st.resources.cash -= cost;
@@ -349,6 +353,7 @@
           text: "🙏 找借口推掉",
           hint: "省事但关系-5",
           apply: function (st) {
+            st.flags = st.flags || {}; // [R16 域C修复]
             st.flags._teamBuildingSeen = true;
             st.needs.fatigue = Math.min(100, (st.needs.fatigue || 0) + 5);
             var cols = st.corporate.colleagues.network;
@@ -365,6 +370,7 @@
           text: "😌 只去一会儿，点个卯就走",
           hint: "折中",
           apply: function (st) {
+            st.flags = st.flags || {}; // [R16 域C修复]
             st.flags._teamBuildingSeen = true;
             var cost = Math.min(50, st.resources.cash);
             st.resources.cash -= cost;
@@ -402,7 +408,7 @@
           st.player.phase === "corporate" &&
           cols.length > 0 &&
           st.player.day >= 120 &&
-          !st.flags._creditStealingSeen
+          (!st.flags || !st.flags._creditStealingSeen) // [R16 域C修复]
         );
       },
       probability: 0.02,
@@ -412,6 +418,7 @@
           text: "📧 当场拿出邮件记录",
           hint: "需要证据链，智力≥40",
           apply: function (st) {
+            st.flags = st.flags || {}; // [R16 域C修复]
             st.flags._creditStealingSeen = true;
             if ((st.player.intelligence || 0) >= 40) {
               var cols = st.corporate.colleagues.network;
@@ -436,6 +443,7 @@
           text: "😌 算了，不争了",
           hint: "短期吃亏，长期观察",
           apply: function (st) {
+            st.flags = st.flags || {}; // [R16 域C修复]
             st.flags._creditStealingSeen = true;
             var cols = st.corporate.colleagues.network;
             var target = cols[Random.int(0, cols.length - 1)];
@@ -451,6 +459,7 @@
           text: "🤔 下次提前留痕",
           hint: "学习经验，长期有益",
           apply: function (st) {
+            st.flags = st.flags || {}; // [R16 域C修复]
             st.flags._creditStealingSeen = true;
             st.player.intelligence = Math.min(
               100,

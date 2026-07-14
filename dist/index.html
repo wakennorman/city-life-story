@@ -90121,7 +90121,7 @@ if (typeof window !== "undefined") {
           st.player.phase === "corporate" &&
           st.player.day >= 150 &&
           (logs.length > 0 || st.player.day >= 200) &&
-          !st.flags._gossipBacklashSeen
+          (!st.flags || !st.flags._gossipBacklashSeen) // [R16 域C修复]
         );
       },
       probability: 0.02,
@@ -90131,6 +90131,7 @@ if (typeof window !== "undefined") {
           text: "😤 找源头对质",
           hint: "可能成功，也可能更糟",
           apply: function (st) {
+            st.flags = st.flags || {}; // [R16 域C修复]
             st.flags._gossipBacklashSeen = true;
             if ((st.player.charm || 0) >= 30) {
               st.player.fame = Math.min(100, (st.player.fame || 0) + 3);
@@ -90152,6 +90153,7 @@ if (typeof window !== "undefined") {
           text: "🧘 冷处理，时间会证明",
           hint: "等待，需要耐心",
           apply: function (st) {
+            st.flags = st.flags || {}; // [R16 域C修复]
             st.flags._gossipBacklashSeen = true;
             st.needs.happiness = Math.max(0, (st.needs.happiness || 0) - 5);
             st.player.morality = Math.min(100, (st.player.morality || 50) + 3);
@@ -90165,6 +90167,7 @@ if (typeof window !== "undefined") {
           text: "🔥 以牙还牙，散布对方的八卦",
           hint: "报复，道德-5",
           apply: function (st) {
+            st.flags = st.flags || {}; // [R16 域C修复]
             st.flags._gossipBacklashSeen = true;
             st.player.morality = Math.max(0, (st.player.morality || 50) - 5);
             st.player.fame = Math.max(0, (st.player.fame || 0) - 5);
@@ -90196,7 +90199,7 @@ if (typeof window !== "undefined") {
           st.player.phase === "corporate" &&
           cols.length > 0 &&
           st.player.day >= 90 &&
-          !st.flags._teamBuildingSeen
+          (!st.flags || !st.flags._teamBuildingSeen) // [R16 域C修复]
         );
       },
       probability: 0.02,
@@ -90206,6 +90209,7 @@ if (typeof window !== "undefined") {
           text: "🍻 去，和所有人好好喝一杯",
           hint: "关系+5，但花钱+累",
           apply: function (st) {
+            st.flags = st.flags || {}; // [R16 域C修复]
             st.flags._teamBuildingSeen = true;
             var cost = Math.min(300, st.resources.cash);
             st.resources.cash -= cost;
@@ -90227,6 +90231,7 @@ if (typeof window !== "undefined") {
           text: "🙏 找借口推掉",
           hint: "省事但关系-5",
           apply: function (st) {
+            st.flags = st.flags || {}; // [R16 域C修复]
             st.flags._teamBuildingSeen = true;
             st.needs.fatigue = Math.min(100, (st.needs.fatigue || 0) + 5);
             var cols = st.corporate.colleagues.network;
@@ -90243,6 +90248,7 @@ if (typeof window !== "undefined") {
           text: "😌 只去一会儿，点个卯就走",
           hint: "折中",
           apply: function (st) {
+            st.flags = st.flags || {}; // [R16 域C修复]
             st.flags._teamBuildingSeen = true;
             var cost = Math.min(50, st.resources.cash);
             st.resources.cash -= cost;
@@ -90280,7 +90286,7 @@ if (typeof window !== "undefined") {
           st.player.phase === "corporate" &&
           cols.length > 0 &&
           st.player.day >= 120 &&
-          !st.flags._creditStealingSeen
+          (!st.flags || !st.flags._creditStealingSeen) // [R16 域C修复]
         );
       },
       probability: 0.02,
@@ -90290,6 +90296,7 @@ if (typeof window !== "undefined") {
           text: "📧 当场拿出邮件记录",
           hint: "需要证据链，智力≥40",
           apply: function (st) {
+            st.flags = st.flags || {}; // [R16 域C修复]
             st.flags._creditStealingSeen = true;
             if ((st.player.intelligence || 0) >= 40) {
               var cols = st.corporate.colleagues.network;
@@ -90314,6 +90321,7 @@ if (typeof window !== "undefined") {
           text: "😌 算了，不争了",
           hint: "短期吃亏，长期观察",
           apply: function (st) {
+            st.flags = st.flags || {}; // [R16 域C修复]
             st.flags._creditStealingSeen = true;
             var cols = st.corporate.colleagues.network;
             var target = cols[Random.int(0, cols.length - 1)];
@@ -90329,6 +90337,7 @@ if (typeof window !== "undefined") {
           text: "🤔 下次提前留痕",
           hint: "学习经验，长期有益",
           apply: function (st) {
+            st.flags = st.flags || {}; // [R16 域C修复]
             st.flags._creditStealingSeen = true;
             st.player.intelligence = Math.min(
               100,
@@ -130015,6 +130024,64 @@ const NPC_RELATION_MATRIX = {
     zhaojie: "neutral",
     chen_ge: "neutral",
     ajie: "neutral",
+    uncle_chen_bank: "friendly",
+    sister_wu: "neutral",
+    brother_huang: "friendly",
+  },
+  // [全系统自洽修复] 域D 联动增强: 3个之前缺失的NPC加入关系矩阵
+  uncle_chen_bank: {
+    dr_wang: "friendly",
+    xiaochen: "friendly",
+    boss_li: "neutral",
+    aunt_wang: "neutral",
+    old_zhou: "neutral",
+    sister_zhang: "neutral",
+    xiao_mei: "neutral",
+    chef_chen: "neutral",
+    auntie_lin: "neutral",
+    master_zhao: "neutral",
+    xiaoli: "neutral",
+    zhaojie: "neutral",
+    chen_ge: "neutral",
+    ajie: "neutral",
+    sister_wu: "neutral",
+    brother_huang: "neutral",
+  },
+  sister_wu: {
+    xiaoli: "business",
+    sister_zhang: "friendly",
+    chef_chen: "neutral",
+    aunt_wang: "neutral",
+    old_zhou: "neutral",
+    boss_li: "neutral",
+    xiao_mei: "neutral",
+    auntie_lin: "neutral",
+    master_zhao: "neutral",
+    xiaochen: "neutral",
+    dr_wang: "neutral",
+    zhaojie: "neutral",
+    chen_ge: "neutral",
+    ajie: "neutral",
+    uncle_chen_bank: "neutral",
+    brother_huang: "neutral",
+  },
+  brother_huang: {
+    xiaochen: "friendly",
+    aunt_wang: "friendly",
+    chen_ge: "neutral",
+    old_zhou: "neutral",
+    boss_li: "neutral",
+    sister_zhang: "neutral",
+    xiao_mei: "neutral",
+    chef_chen: "neutral",
+    auntie_lin: "neutral",
+    master_zhao: "neutral",
+    xiaoli: "neutral",
+    dr_wang: "neutral",
+    zhaojie: "neutral",
+    ajie: "neutral",
+    uncle_chen_bank: "neutral",
+    sister_wu: "neutral",
   },
 };
 
@@ -130037,8 +130104,12 @@ const RELATION_PROPAGATION = {
   boss_li: { sister_zhang: -0.25, zhaojie: 0.15 },
   sister_zhang: { boss_li: -0.25, zhaojie: 0.1 },
   zhaojie: { boss_li: 0.15, sister_zhang: 0.1 },
-  xiaochen: { aunt_wang: 0.1 },
-  dr_wang: { aunt_wang: 0.08, auntie_lin: 0.08 },
+  xiaochen: { aunt_wang: 0.1, uncle_chen_bank: 0.15, brother_huang: 0.15 },
+  dr_wang: { aunt_wang: 0.08, auntie_lin: 0.08, uncle_chen_bank: 0.12 },
+  // [全系统自洽修复] 域D 联动增强: 新增NPC传播条目
+  uncle_chen_bank: { dr_wang: 0.12, xiaochen: 0.15 },
+  sister_wu: { xiaoli: 0.15, sister_zhang: 0.1 },
+  brother_huang: { xiaochen: 0.15, aunt_wang: 0.1 },
 };
 
 /** 初始化NPC关系状态 */
@@ -227302,12 +227373,25 @@ function renderNpcRelationships(state, content) {
       html += "</div>";
     }
 
-    // 衰减信息
-    if (rel._lastDecay) {
-      html +=
-        '<div style="font-size:10px;color:var(--text-warning);margin-top:2px;">';
-      html += "⚠ 衰减" + rel._lastDecay.toFixed(1);
-      html += "</div>";
+    // [全系统自洽修复] 域D 联动增强: 衰减倒计时+引导
+    if (rel.met && rel.affinity > 0) {
+      var _lastInt = rel._lastInteractionDay || 0;
+      var _daysSinceInt = state.player.day - _lastInt;
+      if (_daysSinceInt >= 7) {
+        // 已进入衰减区间，显示衰减量
+        var _decayed = rel._lastDecay || 0;
+        html +=
+          '<div style="font-size:10px;color:var(--danger);margin-top:2px;">';
+        html += "⚠ 已衰减" + _decayed.toFixed(1) + "，快去互动！";
+        html += "</div>";
+      } else if (_daysSinceInt >= 4) {
+        // 即将衰减，倒计时
+        var _daysLeftDecay = 7 - _daysSinceInt;
+        html +=
+          '<div style="font-size:10px;color:var(--warning);margin-top:2px;">';
+        html += "⏳ " + _daysLeftDecay + "天后好感将衰减";
+        html += "</div>";
+      }
     }
 
     // [R30] NPC 拜访按钮 — 点击前往 NPC 当前所在地点并触发互动
@@ -227665,8 +227749,14 @@ function renderSocialNetworkTab(state, parent) {
     html += '<div class="card" style="padding:8px;">';
     for (var fi = 0; fi < Math.min(3, sn.npcFeeds.length); fi++) {
       var feed = sn.npcFeeds[fi];
+      // [全系统自洽修复] 域D 联动增强: NPC动态显示中文名
+      var _feedNpcName = "";
+      if (feed.npcId && typeof NPCS !== "undefined") {
+        var _feedDef = NPCS.find(function (n) { return n.id === feed.npcId; });
+        _feedNpcName = _feedDef ? _feedDef.name + ": " : "";
+      }
       html += '<div style="padding:4px 0;font-size:11px;">';
-      html += '<p style="margin:0;">' + (feed.content || "") + "</p>";
+      html += '<p style="margin:0;">' + _feedNpcName + (feed.content || "") + "</p>";
       html += "</div>";
     }
     html += "</div>";
