@@ -10,6 +10,7 @@
 ## 一、A 类缺陷审查与修复（1 项，经 grep 实证）
 
 ### 修复 1 — `company_linkage_events.js:95/107` 写死字段 `player.happiness`
+
 - **原状**:
   ```js
   // 约挚友小聚倾诉（apply）
@@ -34,11 +35,11 @@
 - **契约合规**: 每个事件显式设 `phase`（"street"/"corporate"），引擎 `e.phase===phase` 过滤可发火；权重用 `probability`；无 `onResolved` 钩子。
 - **防御**: 所有数值/字段读取均 `||` 兜底；占位数值标 `[PLACEHOLDER]`。
 
-| id | 桥接 | 角度 | 关键效果 |
-|----|------|------|----------|
+| id                    | 桥接  | 角度                           | 关键效果                                                                                    |
+| --------------------- | ----- | ------------------------------ | ------------------------------------------------------------------------------------------- |
 | `narr_old_town_story` | B → D | 市井旧事（听老街坊讲城市旧事） | 取偶遇已结识 NPC，`applyAffinityChange(npcId, +5)`（rel.met 守卫铁律）+ `needs.happiness+3` |
-| `narr_craft_saga` | B → C | 匠人传记（读传记被匠心触动） | `addSkillXp("repair", 6)`（"repair" 为真实技能键，叙事语义一致）+ `needs.happiness+2` |
-| `narr_market_whisper` | B → E | 茶馆传闻（职场阶段听行业风声） | `bankBalance+[PLACEHOLDER]` + 复用 `_dataInvestorMindset` flag（跨轮投资者心态） |
+| `narr_craft_saga`     | B → C | 匠人传记（读传记被匠心触动）   | `addSkillXp("repair", 6)`（"repair" 为真实技能键，叙事语义一致）+ `needs.happiness+2`       |
+| `narr_market_whisper` | B → E | 茶馆传闻（职场阶段听行业风声） | `bankBalance+[PLACEHOLDER]` + 复用 `_dataInvestorMindset` flag（跨轮投资者心态）            |
 
 ---
 

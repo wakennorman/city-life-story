@@ -65,7 +65,12 @@
         if (!st || !st.player) return false;
         if (st.flags && st.flags._coreHabitFoundationCooldown) return false;
         // 至少撑过一段时间、且基础需求不崩
-        if (st.needs && typeof st.needs.hygiene === "number" && st.needs.hygiene < 20) return false;
+        if (
+          st.needs &&
+          typeof st.needs.hygiene === "number" &&
+          st.needs.hygiene < 20
+        )
+          return false;
         return true;
       },
       choices: [
@@ -73,8 +78,7 @@
           text: "把这套节奏坚持下来",
           apply: function (st) {
             if (st.player) st.player.mental = (st.player.mental || 50) + 5; // [PLACEHOLDER] 心智回馈
-            if (st.needs)
-              st.needs.happiness = (st.needs.happiness || 50) + 4; // [PLACEHOLDER] 心情
+            if (st.needs) st.needs.happiness = (st.needs.happiness || 50) + 4; // [PLACEHOLDER] 心情
             if (st.flags) st.flags._coreHabitFoundationCooldown = true;
             if (typeof StateManager !== "undefined" && StateManager.addMessage)
               StateManager.addMessage(
@@ -115,8 +119,7 @@
             // D域桥接：人生体悟转化为社交好感（守域D铁律：rel.met + applyAffinityChange）
             var npc = getMetNpcsG(st, 30)[0];
             if (npc) safeAffinityG(st, npc.id, 6, "人生体悟·彼此托底"); // [PLACEHOLDER] 好感增量
-            if (st.needs)
-              st.needs.happiness = (st.needs.happiness || 50) + 3;
+            if (st.needs) st.needs.happiness = (st.needs.happiness || 50) + 3;
             if (st.flags) st.flags._coreWisdomShareCooldown = true;
             if (typeof StateManager !== "undefined" && StateManager.addMessage)
               StateManager.addMessage(
@@ -128,8 +131,7 @@
         {
           text: "点到为止，不深聊",
           apply: function (st) {
-            if (st.needs)
-              st.needs.happiness = (st.needs.happiness || 50) + 1;
+            if (st.needs) st.needs.happiness = (st.needs.happiness || 50) + 1;
             if (st.flags) st.flags._coreWisdomShareCooldown = true;
           },
         },
@@ -156,8 +158,7 @@
             // C域桥接：生命周期里的掌舵定力转化为真实管理技能
             if (typeof addSkillXp === "function") addSkillXp("management", 8); // [PLACEHOLDER] 管理XP
             if (st.player) st.player.mental = (st.player.mental || 50) + 3;
-            if (st.needs)
-              st.needs.happiness = (st.needs.happiness || 50) + 2;
+            if (st.needs) st.needs.happiness = (st.needs.happiness || 50) + 2;
             if (st.flags) st.flags._coreExecResilienceCooldown = true;
             if (typeof StateManager !== "undefined" && StateManager.addMessage)
               StateManager.addMessage(

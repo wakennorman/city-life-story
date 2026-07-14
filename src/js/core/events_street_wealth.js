@@ -69,12 +69,14 @@
       title: "诚信声誉的叠加效应",
       story:
         "同时拒绝了假货、还帮工友维权，你的名声在这片地界出奇地好。今天一个在工商局上班的人主动找到你，说想帮你做点正规生意的注册手续……",
-      // [conditions→triggers]
+      // [conditions→triggers] + [全系统自洽修复] 域B A类#3: minFame 非 evaluateTriggers 支持字段，改 conditions 函数
       triggers: {
         requireFlags: ["_refusedFakeGoods", "_foughtWageTheft"],
-        minFame: 30,
         minDay: 40,
         excludeFlags: ["_honestyCompound"],
+      },
+      conditions: function (st) {
+        return (st.player.fame || 0) >= 30;
       },
       choices: [
         {

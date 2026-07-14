@@ -10396,10 +10396,14 @@
       {
         text: "📸 合影留念（+2 心情，+1 智力）",
         apply: function (state) {
-          state.player.mood = Math.min(100, (state.player.mood || 50) + 2);
-          state.player.intellect = Math.min(
+          // [全系统自洽修复] 域B A类#5: state.player.intellect→intelligence, player.mood→needs.happiness
+          state.needs.happiness = Math.min(
             100,
-            (state.player.intellect || 30) + 1,
+            (state.needs.happiness || 50) + 2,
+          );
+          state.player.intelligence = Math.min(
+            100,
+            (state.player.intelligence || 30) + 1,
           );
           state.flags._eduGraduationShown = true;
           state.flags._eduGraduationPhoto = true;
@@ -10411,7 +10415,8 @@
         apply: function (state) {
           state.flags._eduGraduationShown = true;
           state.flags._eduGraduationJobHunt = true;
-          state.player.mood = Math.min(100, (state.player.mood || 50) + 1);
+          // [全系统自洽修复] 域B A类#5: state.player.mood→needs.happiness
+          state.needs.happiness = Math.min(100, (state.needs.happiness || 50) + 1);
           return "你当场打开手机，把简历投给了三家本地公司。学历是敲门砖，但门后的路还得自己跑。";
         },
       },
@@ -10420,7 +10425,8 @@
         apply: function (state) {
           state.flags._eduGraduationShown = true;
           state.flags._eduGraduationHome = true;
-          state.player.hunger = Math.min(100, (state.player.hunger || 50) + 5);
+          // [全系统自洽修复] 域B A类#5: state.player.hunger→needs.hunger
+          state.needs.hunger = Math.min(100, (state.needs.hunger || 50) + 5);
           return "你买了瓶二锅头，回家炖了个白菜豆腐。妈在电话那头说：「回来吃饭就行，别省钱。」";
         },
       },
@@ -17093,6 +17099,7 @@
         hint: "花¥5 买杯热饮",
         cost: 5,
         apply: function (s) {
+          s.resources.cash = Math.max(0, (s.resources.cash || 0) - 5); // [全系统自洽修复] 域B 修复:cost扣款缺失
           s.flags._rainMarketParkSeen = true;
           s.needs.happiness = Math.min(100, (s.needs.happiness || 20) + 5);
           StateManager.addMessage(
@@ -44477,6 +44484,7 @@
         hint: "现金-¥200，心情+10",
         cost: 200,
         apply: function (st) {
+          st.resources.cash = Math.max(0, (st.resources.cash || 0) - 200); // [全系统自洽修复] 域B 修复:cost扣款缺失
           st.flags._graduationCeremonySeen = true;
           st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 10);
           StateManager.addMessage(
@@ -45553,6 +45561,7 @@
         hint: "花¥50，健康+5",
         cost: 50,
         apply: function (st) {
+          st.resources.cash = Math.max(0, (st.resources.cash || 0) - 50); // [全系统自洽修复] 域B 修复:cost扣款缺失
           st.flags._springChillSeen = true;
           st.status.health = Math.min(100, (st.status.health || 50) + 5);
           StateManager.addMessage(
@@ -45566,6 +45575,7 @@
         hint: "花¥15，饱腹+ 心情+",
         cost: 15,
         apply: function (st) {
+          st.resources.cash = Math.max(0, (st.resources.cash || 0) - 15); // [全系统自洽修复] 域B 修复:cost扣款缺失
           st.flags._springChillSeen = true;
           st.needs.hunger = Math.max(0, (st.needs.hunger || 50) - 15);
           st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 5);
@@ -45777,6 +45787,7 @@
         hint: "花¥10，饱腹+ 健康+",
         cost: 10,
         apply: function (st) {
+          st.resources.cash = Math.max(0, (st.resources.cash || 0) - 10); // [全系统自洽修复] 域B 修复:cost扣款缺失
           st.flags._winterHearthSeen = true;
           st.needs.hunger = Math.max(0, (st.needs.hunger || 50) - 20);
           st.status.health = Math.min(100, (st.status.health || 50) + 2);
@@ -49003,6 +49014,7 @@
         hint: "道德+3，花¥200",
         cost: 200,
         apply: function (st) {
+          st.resources.cash = Math.max(0, (st.resources.cash || 0) - 200); // [全系统自洽修复] 域B 修复:cost扣款缺失
           st.flags._equipmentQualityRewardShown = true;
           st.player.morality = Math.min(100, (st.player.morality || 0) + 3);
           StateManager.addMessage(
@@ -51520,4 +51532,221 @@
       ],
     },
   );
+
+  // ====== 注册 CROSS_EVENTS 遗漏条目 ======
+  // [全系统自洽修复] 域B 修复: CROSS_EVENTS.push在注册循环(5348行)之后执行导致事件未注册到RANDOM_EVENTS
+  for (var _ci = 0; _ci < CROSS_EVENTS.length; _ci++) {
+    var _ce = CROSS_EVENTS[_ci];
+    if (_ce && !_ce._registered) {
+      if (!_ce.conditions && !_ce.triggers) {
+        _ce.conditions = function () { return true; };
+      }
+      _ce._registered = true;
+      RANDOM_EVENTS.push(_ce);
+    }
+  }
+
+  // ====== 联动增强：高难度生存压力「绝境回望」 ======
+  // 【设计意图】与v3.1 difficulty系统联动，困难/地狱模式下健康+金钱双低时触发
+  RANDOM_EVENTS.push({
+    id: "hard_mode_survival_reflection",
+    phase: "street",
+    icon: "🌆",
+    title: "绝境回望",
+    story:
+      "你蹲在路边的台阶上，兜里只剩不到一百块，身体也快扛不住了。" +
+      "旁边商场的大屏幕放着城市宣传片——'梦想之城，等你来闯'。" +
+      "你记得刚来那天也是这么个傍晚，天也是这种颜色。" +
+      "那时候你觉得，凭着一双手总能活下去。" +
+      "现在你还信这个吗？",
+    conditions: function (st) {
+      if (st.player.phase !== "street") return false;
+      if (st.flags._hardModeSurvivalReflectionSeen) return false;
+      var diff = st.flags && st.flags._difficulty;
+      if (diff !== "hard" && diff !== "hell") return false;
+      var health = st.status && st.status.health;
+      if (typeof health !== "number" || health >= 30) return false;
+      var cash = st.resources && st.resources.cash;
+      if (typeof cash !== "number" || cash >= 100) return false;
+      if (!st.player || st.player.day < 30) return false;
+      return true;
+    },
+    probability: 0.06,
+    repeatable: false,
+    choices: [
+      {
+        text: "💪 信。走到今天不是为了倒在这里",
+        hint: "心智+8，疲劳+10，咬牙坚持",
+        apply: function (st) {
+          st.flags._hardModeSurvivalReflectionSeen = true;
+          st.player.mental = Math.min(100, (st.player.mental || 0) + 8);
+          st.needs.fatigue = Math.min(100, (st.needs.fatigue || 0) + 10);
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 5);
+          StateManager.addMessage("🌆 你站起来拍了拍裤子上的灰。旁边卖烤红薯的大爷看了你一眼，递过来一个：「拿着，不要钱。年轻人，别轻易说不信了。」你鼻子一酸，咬了口红薯，甜的。\n心智+8，疲劳+10，心情+5。", "success");
+        },
+      },
+      {
+        text: "📞 给家里打个电话",
+        hint: "亲情回血，心情+15",
+        apply: function (st) {
+          st.flags._hardModeSurvivalReflectionSeen = true;
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 15);
+          st.player.mental = Math.min(100, (st.player.mental || 0) + 3);
+          st.resources.cash = Math.max(0, (st.resources.cash || 0) - 10);
+          StateManager.addMessage("📞 电话通了，妈妈的声音传过来：「吃饭了吗？钱够不够？别太累。」你说都挺好的，挂了电话发了会儿呆。¥10话费换来的这两句唠叨，比什么都管用。\n心情+15，心智+3。", "info");
+        },
+      },
+      {
+        text: "😞 先找地方睡一觉，明天再说",
+        hint: "疲劳-20，心智-5，先活下来",
+        apply: function (st) {
+          st.flags._hardModeSurvivalReflectionSeen = true;
+          st.needs.fatigue = Math.max(0, (st.needs.fatigue || 0) - 20);
+          st.player.mental = Math.max(0, (st.player.mental || 0) - 5);
+          StateManager.addMessage("😞 你找了个桥洞下面的避风处，把外套裹紧了些。今晚先活过去，明天的事明天想。\n疲劳-20，心智-5。活着才有翻盘的机会。", "warning");
+        },
+      },
+    ],
+  });
+
+  // ====== 联动增强：投资亏损心理「熊市阴影」 ======
+  // 【设计意图】与investment系统联动，当玩家累计投资亏损超¥10000时触发心理事件
+  RANDOM_EVENTS.push({
+    id: "investment_loss_anxiety",
+    phase: "street",
+    icon: "📉",
+    title: "熊市阴影",
+    story:
+      "你算了一下账，这段时间在股市里亏进去的钱已经超过一万了。" +
+      "夜里翻来覆去睡不着，闭上眼就是K线图。" +
+      "你开始怀疑自己——是不是根本不适合搞投资？" +
+      "还是说，只是运气不好？",
+    conditions: function (st) {
+      if (st.flags._investmentLossAnxietySeen) return false;
+      if (!st.player || st.player.day < 60) return false;
+      var totalLoss = 0;
+      var tradeLog = st.flags && st.flags._tradeLog;
+      if (Array.isArray(tradeLog)) {
+        for (var i = 0; i < tradeLog.length; i++) {
+          var entry = tradeLog[i];
+          if (entry && entry.profit < 0) {
+            totalLoss += Math.abs(entry.profit);
+          }
+        }
+      }
+      var inv = st.investment;
+      if (inv && typeof inv.totalLoss === "number") {
+        totalLoss += inv.totalLoss;
+      }
+      if (totalLoss < 10000) return false;
+      return true;
+    },
+    probability: 0.05,
+    repeatable: false,
+    choices: [
+      {
+        text: "📚 买几本书系统学习投资知识",
+        hint: "智力+5，但花¥200",
+        cost: 200,
+        apply: function (st) {
+          st.flags._investmentLossAnxietySeen = true;
+          st.resources.cash = Math.max(0, (st.resources.cash || 0) - 200);
+          st.player.intelligence = Math.min(100, (st.player.intelligence || 0) + 5);
+          st.player.mental = Math.min(100, (st.player.mental || 0) + 3);
+          StateManager.addMessage("📚 你买了《聪明的投资者》和《周期》，连着几个晚上认真看完了。虽然亏了钱，但学到了东西——下次不会再犯同样的错误了。\n智力+5，心智+3。花了¥200买书。", "success");
+        },
+      },
+      {
+        text: "🧘 出去走走，放空自己",
+        hint: "心情+15，心智+5",
+        apply: function (st) {
+          st.flags._investmentLossAnxietySeen = true;
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 15);
+          st.player.mental = Math.min(100, (st.player.mental || 0) + 5);
+          st.needs.fatigue = Math.min(100, (st.needs.fatigue || 0) + 5);
+          StateManager.addMessage("🧘 你沿着江边走了两个小时。风吹在脸上，慢慢把脑子里的K线吹散了。想明白一件事：只要人还在，钱可以再赚。\n心情+15，心智+5，疲劳+5。", "info");
+        },
+      },
+      {
+        text: "😤 不甘心！下次加倍押注翻本",
+        hint: "心智-5，但下次投资回报+20%",
+        apply: function (st) {
+          st.flags._investmentLossAnxietySeen = true;
+          st.player.mental = Math.max(0, (st.player.mental || 0) - 5);
+          st.flags._gamblerMode = true;
+          StateManager.addMessage("😤 你盯着账户余额，牙咬得咯咯响。「我就不信了。」你知道这种心态很危险，但你控制不住。\n心智-5，下次投资收益+20%（但风险更高）。", "warning");
+        },
+      },
+    ],
+  });
+
+  // ==== [域B 联动增强 R15] 技能复合→跨界机会（B→C→E 桥接）====
+  // 联动：coding≥20 + english≥15 触发跨境远程工作线索
+  // 设计意图：技能组合创造新机会——填补"复合技能→职业跃迁"的叙事空白
+  {
+    var _skillBridgeEvent = {
+      id: "skill_bridge_remote_opp",
+      phase: "street",
+      icon: "🌐",
+      title: "远程工作的邀请",
+      story:
+        "你在技术论坛上收到一条私信：\\n\\n「你好，我在Upwork上看到你的作品集。我们是一家新加坡的科技公司，正在找一个能独立完成全栈开发的远程工程师。\\n\\n要求英语读写流利，能参加英文会议。\\n\\n如果你感兴趣，我们可以先做一个付费测试项目，工时按U.S.时薪结算。」\\n\\n你盯着屏幕——这是一条通往海外市场的路。",
+      triggers: {
+        minDay: 60,
+        excludeFlags: ["_skillBridgeRemoteSeen"],
+      },
+      conditions: function (st) {
+        var coding = st.skills && st.skills.coding ? (st.skills.coding.level || 0) : 0;
+        var english = st.skills && st.skills.english ? (st.skills.english.level || 0) : 0;
+        return coding >= 20 && english >= 15;
+      },
+      probability: 0.035,
+      repeatable: false,
+      choices: [
+        {
+          text: "🌐 接受测试项目，拼一把",
+          hint: "需要熬夜完成，但收入+¥5000，解锁海外接单通道",
+          apply: function (st) {
+            st.flags._skillBridgeRemoteSeen = true;
+            st.flags._remoteWorkUnlocked = true;
+            st.resources.cash = (st.resources.cash || 0) + 5000;
+            st.needs.fatigue = Math.min(100, (st.needs.fatigue || 0) + 25);
+            st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 12);
+            st.player.mental = Math.min(100, (st.player.mental || 0) + 5);
+            if (st.skills && st.skills.coding) st.skills.coding.xp = (st.skills.coding.xp || 0) + 50;
+            if (st.skills && st.skills.english) st.skills.english.xp = (st.skills.english.xp || 0) + 30;
+            StateManager.addMessage(
+              "🌐 你熬夜三天完成了测试项目！新加坡那边很满意，付了¥5,000测试费，说下个月有正式项目会再联系。\n海外远程通道已解锁！编程XP+50，英语XP+30，心情+12。技能终于变成了跨越国界的门票。",
+              "success",
+            );
+          },
+        },
+        {
+          text: "📋 先收藏，等准备好了再联系",
+          hint: "保留机会，不急于一时",
+          apply: function (st) {
+            st.flags._skillBridgeRemoteSeen = true;
+            st.flags._remoteWorkDeferred = true;
+            st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 3);
+            StateManager.addMessage(
+              "📋 你收藏了那条私信，准备等英语再好一些再回复。机会在那里，不会自己跑掉。心情+3。",
+              "info",
+            );
+          },
+        },
+        {
+          text: "😅 水平还不够，再练练",
+          hint: "自知之明，无变化",
+          apply: function (st) {
+            st.flags._skillBridgeRemoteSeen = true;
+            StateManager.addMessage(
+              "😅 你诚实评估了自己的水平——英语开会有时还是会卡壳。先踏踏实实把基本功打牢，机会以后还会有的。",
+              "info",
+            );
+          },
+        },
+      ],
+    };
+    RANDOM_EVENTS.push(_skillBridgeEvent);
+  }
 })();

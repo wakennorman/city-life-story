@@ -831,8 +831,11 @@
       title: "批发老板甩货",
       story:
         "相熟的批发市场老板说有一批货急着清仓，低价卖给你：5折！但得一下子全部吃下。",
-      // [conditions→triggers]
-      triggers: { minCash: 1000, location: "wholesaleMarket" },
+      // [conditions→triggers] + [全系统自洽修复] 域B A类#4: location 非 evaluateTriggers 支持字段，改 conditions 函数
+      triggers: { minCash: 1000 },
+      conditions: function (st) {
+        return st.trade && st.trade.currentLocation === "wholesaleMarket";
+      },
       choices: [
         {
           text: "📦 全部吃下(¥800)",
@@ -1889,7 +1892,12 @@
       // [全系统自洽修复] 域B 修复:叙事直呼"老周头"(old_zhou),conditions需校验已结识
       conditions: function (st) {
         if (st.player.phase !== "street") return false;
-        if (!st.relationships || !st.relationships.old_zhou || !st.relationships.old_zhou.met) return false;
+        if (
+          !st.relationships ||
+          !st.relationships.old_zhou ||
+          !st.relationships.old_zhou.met
+        )
+          return false;
         return true;
       },
       choices: [

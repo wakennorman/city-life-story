@@ -372,6 +372,28 @@ function evaluateTriggers(triggers, state) {
     }
   }
 
+  // 名气范围（v3.99d 约定式·联动增强）
+  if (triggers.minFame !== undefined) {
+    var fame = state.player.fame || 0;
+    if (fame < triggers.minFame) return false;
+  }
+  if (triggers.maxFame !== undefined) {
+    var fame2 = state.player.fame || 0;
+    if (fame2 > triggers.maxFame) return false;
+  }
+
+  // 位置过滤（v3.99d 约定式—state.trade.currentLocation / state.player.location）
+  if (triggers.location !== undefined) {
+    var curLoc =
+      (state.trade && state.trade.currentLocation) ||
+      (state.player && state.player.location) ||
+      "";
+    var locArr = Array.isArray(triggers.location)
+      ? triggers.location
+      : [triggers.location];
+    if (locArr.indexOf(curLoc) < 0) return false;
+  }
+
   return true;
 }
 

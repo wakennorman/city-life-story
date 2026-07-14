@@ -10,6 +10,7 @@
 ## 一、A 类缺陷审查与修复（3 项，均经 grep 实证）
 
 ### 修复 1 — `finance.js` 街头阶段月收入误读不存在字段
+
 - **位置**: `src/js/core/finance.js` `calculateMonthlyIncome()`
 - **原状**:
   ```js
@@ -23,6 +24,7 @@
   ```
 
 ### 修复 2 — `finance.js` 职场阶段取当前公司用错字段（薪资修正恒失效）
+
 - **位置**: `src/js/core/finance.js` `calculateMonthlyIncome()`（职场分支）
 - **原状**:
   ```js
@@ -49,6 +51,7 @@
   ```
 
 ### 修复 3 — `data_linkage_events.js` 写死字段 `player.happiness`
+
 - **位置**: `src/js/core/data_linkage_events.js`（R14 "分享安稳" 分支）
 - **原状**:
   ```js
@@ -80,11 +83,11 @@
 - **契约合规**: 无 `phase` 字段（引擎 `e.phase===phase` 过滤——无 phase 即全阶段可发火，符合联动事件定位）；权重用 `probability`；无 `onResolved` 钩子。
 - **防御**: 所有数值/字段读取均 `||` 兜底；占位数值标 `[PLACEHOLDER]`。
 
-| id | 桥接 | 角度 | 关键效果 |
-|----|------|------|----------|
-| `data2_lean_budget` | A → D | 现金缓冲→邀好友小聚 | 现金≥`[PLACEHOLDER]` 时 `applyAffinityChange(state, nid, +2)`（NPC 须 `rel.met` 守卫） |
-| `data2_skill_ledger` | A → C | 技能复盘落真实技能 | `addSkillXp("coding", [PLACEHOLDER])`（key 真实，静默容错） |
-| `data2_capital_reserve` | A → E | 资本储备腾出投资本金 | 复用私有 `_dataInvestorMindset` 标志位；`state.investment` 本金 +`[PLACEHOLDER]` |
+| id                      | 桥接  | 角度                 | 关键效果                                                                               |
+| ----------------------- | ----- | -------------------- | -------------------------------------------------------------------------------------- |
+| `data2_lean_budget`     | A → D | 现金缓冲→邀好友小聚  | 现金≥`[PLACEHOLDER]` 时 `applyAffinityChange(state, nid, +2)`（NPC 须 `rel.met` 守卫） |
+| `data2_skill_ledger`    | A → C | 技能复盘落真实技能   | `addSkillXp("coding", [PLACEHOLDER])`（key 真实，静默容错）                            |
+| `data2_capital_reserve` | A → E | 资本储备腾出投资本金 | 复用私有 `_dataInvestorMindset` 标志位；`state.investment` 本金 +`[PLACEHOLDER]`       |
 
 ---
 

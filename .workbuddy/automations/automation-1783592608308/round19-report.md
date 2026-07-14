@@ -18,11 +18,11 @@
 
 新建 `src/js/core/ui_linkage_events.js`（IIFE 注入全局 `RANDOM_EVENTS`，沿用 R11~R18 已验证契约）：2 street + 1 corporate，全部 `||` 防御，数值标 `[PLACEHOLDER]`。
 
-| 事件 id | 阶段 | 桥接 | 效果（占位符待数值组校准） |
-|---|---|---|---|
-| `ui_daily_clarity` | street | F→A 数值/心智 | mental+5 · happiness+4（生活清晰感回馈） |
-| `ui_social_presence` | street | F→D 社交 | 已结识 NPC 好感 +5（`applyAffinityChange`，守域D铁律 `rel.met` 守卫） |
-| `ui_career_portfolio` | corporate | F→C 职业 | `addSkillXp("coding", 8)`（成果呈现力转化为职场技能） |
+| 事件 id               | 阶段      | 桥接          | 效果（占位符待数值组校准）                                            |
+| --------------------- | --------- | ------------- | --------------------------------------------------------------------- |
+| `ui_daily_clarity`    | street    | F→A 数值/心智 | mental+5 · happiness+4（生活清晰感回馈）                              |
+| `ui_social_presence`  | street    | F→D 社交      | 已结识 NPC 好感 +5（`applyAffinityChange`，守域D铁律 `rel.met` 守卫） |
+| `ui_career_portfolio` | corporate | F→C 职业      | `addSkillXp("coding", 8)`（成果呈现力转化为职场技能）                 |
 
 - 社交桥接严格遵守域D架构铁律：只读 `state.relationships`；引用 NPC 须 `rel && rel.met`；跨 NPC 好感一律走 `applyAffinityChange`（自动 clamp + 记 `_lastInteractionDay` + 升级播报）。
 - 里程碑/冷却用 `st.flags._uiXxxCooldown` 去重，不依赖引擎 `onResolved`。

@@ -73,8 +73,7 @@
           text: "把这份节奏守住",
           apply: function (st) {
             if (st.player) st.player.mental = (st.player.mental || 50) + 5; // [PLACEHOLDER] 心智回馈
-            if (st.needs)
-              st.needs.happiness = (st.needs.happiness || 50) + 4; // [PLACEHOLDER] 心情
+            if (st.needs) st.needs.happiness = (st.needs.happiness || 50) + 4; // [PLACEHOLDER] 心情
             if (st.flags) st.flags._companyHLDisciplineCooldown = true;
             if (typeof StateManager !== "undefined" && StateManager.addMessage)
               StateManager.addMessage(
@@ -116,8 +115,7 @@
             // D域桥接：管理温度转化为社交好感（守域D铁律：rel.met + applyAffinityChange）
             var npc = getMetNpcsH(st, 30)[0];
             if (npc) safeAffinityH(st, npc.id, 6, "带人温度·圈内好感"); // [PLACEHOLDER] 好感增量
-            if (st.needs)
-              st.needs.happiness = (st.needs.happiness || 50) + 3;
+            if (st.needs) st.needs.happiness = (st.needs.happiness || 50) + 3;
             if (st.flags) st.flags._companyHLTeamWarmthCooldown = true;
             if (typeof StateManager !== "undefined" && StateManager.addMessage)
               StateManager.addMessage(
@@ -129,8 +127,7 @@
         {
           text: "公是公私是私，分清楚",
           apply: function (st) {
-            if (st.needs)
-              st.needs.happiness = (st.needs.happiness || 50) + 1;
+            if (st.needs) st.needs.happiness = (st.needs.happiness || 50) + 1;
             if (st.flags) st.flags._companyHLTeamWarmthCooldown = true;
           },
         },
@@ -157,8 +154,7 @@
             // C域桥接：经营眼界转化为真实职业技能（management 为通用管理门槛技能，语义一致）
             if (typeof addSkillXp === "function") addSkillXp("management", 8); // [PLACEHOLDER] 经营/管理 XP
             if (st.player) st.player.mental = (st.player.mental || 50) + 3;
-            if (st.needs)
-              st.needs.happiness = (st.needs.happiness || 50) + 2;
+            if (st.needs) st.needs.happiness = (st.needs.happiness || 50) + 2;
             if (st.flags) st.flags._companyHLBusinessAcumenCooldown = true;
             if (typeof StateManager !== "undefined" && StateManager.addMessage)
               StateManager.addMessage(

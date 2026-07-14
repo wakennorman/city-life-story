@@ -59,11 +59,15 @@
   // 取等级最高的技能 key（用于 A→C 复盘加成落到真实技能上）
   function topSkillKeyR22(st) {
     if (!st || !st.skills) return null;
-    var best = null, bestLv = 0;
+    var best = null,
+      bestLv = 0;
     for (var k in st.skills) {
       if (!Object.prototype.hasOwnProperty.call(st.skills, k)) continue;
       var lv = (st.skills[k] && st.skills[k].level) || 0;
-      if (lv > bestLv) { bestLv = lv; best = k; }
+      if (lv > bestLv) {
+        bestLv = lv;
+        best = k;
+      }
     }
     return best;
   }
@@ -181,8 +185,7 @@
         text: "把腾出的本金划入长期投资账户",
         apply: function (st) {
           if (st.resources)
-            st.resources.bankBalance =
-              (st.resources.bankBalance || 0) + 1500; // [PLACEHOLDER] 腾出本金
+            st.resources.bankBalance = (st.resources.bankBalance || 0) + 1500; // [PLACEHOLDER] 腾出本金
           if (st.flags) st.flags._dataInvestorMindset = true; // 复用跨轮投资者心态标记
           if (st.player) st.player.mental = (st.player.mental || 50) + 3;
           if (st.flags) st.flags._data2CapitalReserveDone = true;

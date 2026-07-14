@@ -73,8 +73,7 @@
             var npc = getMetNpcsD(st, 40)[0];
             if (npc) safeAffinityD(st, npc.id, 4, "深度交谈·彼此信任");
             if (st.player) st.player.mental = (st.player.mental || 50) + 6; // [PLACEHOLDER] 心智回馈
-            if (st.needs)
-              st.needs.happiness = (st.needs.happiness || 50) + 4; // [PLACEHOLDER] 心情
+            if (st.needs) st.needs.happiness = (st.needs.happiness || 50) + 4; // [PLACEHOLDER] 心情
             if (st.flags) st.flags._socialDeepTalkCooldown = true;
             if (typeof StateManager !== "undefined" && StateManager.addMessage)
               StateManager.addMessage(
@@ -115,8 +114,7 @@
             // C域桥接：人脉转化为社交技能经验（networking 在职业体系里是真实技能 social）
             if (typeof addSkillXp === "function") addSkillXp("social", 8); // [PLACEHOLDER] 社交技能XP
             if (st.player) st.player.mental = (st.player.mental || 50) + 3;
-            if (st.needs)
-              st.needs.happiness = (st.needs.happiness || 50) + 2;
+            if (st.needs) st.needs.happiness = (st.needs.happiness || 50) + 2;
             if (st.flags) st.flags._socialJobReferralCooldown = true;
             if (typeof StateManager !== "undefined" && StateManager.addMessage)
               StateManager.addMessage(

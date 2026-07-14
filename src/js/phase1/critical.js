@@ -67,7 +67,7 @@ function findCriticalNeed(state) {
     if (!isCriticalNeed(state, k)) continue;
     // 当日已延期则跳过（避免反复弹同一个）；兼容 {count,lastDay} 对象与旧数字格式
     var _dw = state.flags._deferred[k];
-    var _deferDay = (typeof _dw === "object" && _dw) ? _dw.lastDay : _dw;
+    var _deferDay = typeof _dw === "object" && _dw ? _dw.lastDay : _dw;
     if (_deferDay === state.player.day) continue;
     return k;
   }

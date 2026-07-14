@@ -10,7 +10,7 @@ const CERTIFICATES = [
     desc: "进入建筑工地的必要条件，减少受伤风险50%",
     requirements: { cash: 300, intelligence: 20 },
     effects: { injuryReduction: 0.5 },
-    salaryBonus: { construction: 0.1 },
+    salaryBonus: { civil: 0.1 },
     examPassRate: 0.85,
   },
   {
@@ -37,7 +37,7 @@ const CERTIFICATES = [
     desc: "特种作业证书，焊工工资高",
     requirements: { cash: 600, physique: 35 },
     effects: { weldingXp: 50, physique: 2 },
-    salaryBonus: { construction: 0.1 },
+    salaryBonus: { civil: 0.1 },
     examPassRate: 0.75,
   },
   {
@@ -70,7 +70,7 @@ const CERTIFICATES = [
     desc: "家电维修和工业电工的必备证书",
     requirements: { cash: 500, repair: 20, intelligence: 25 },
     effects: { electricianXp: 50, repair: 3 },
-    salaryBonus: { construction: 0.08 },
+    salaryBonus: { civil: 0.08 },
     examPassRate: 0.7,
   },
   {
@@ -186,7 +186,7 @@ const CERTIFICATES = [
       repairJobIncomeBonus: 0.25,
       repairJobUnlock: true,
     },
-    salaryBonus: { construction: 0.08 },
+    salaryBonus: { civil: 0.08 },
     examPassRate: 0.7,
     trainingDays: 10,
   },

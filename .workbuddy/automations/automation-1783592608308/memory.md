@@ -132,6 +132,7 @@
 - 提交流程严格遵守SOP：仅 git add 7个域H文件+dist+loop状态+last_known_head；排除并行窗口进行中改动(career_path_events/economy_linkage_events/family_events/personal_growth_events/social_tab)。CLAUDE.md 迭代表 R17 行因并行窗口持续重写该文件(2081行差异)无法干净暂存，本轮跳过(权威轮次记录已在 loop-domain-state.json + DEVELOPMENT.md)。下轮→A。
 
 ## 最近执行（2026-07-14 凌晨，Round 14 域 A — 已随并行窗口提交 c00d48f0）
+
 - 域A(数据/数值平衡) 在本分支 loop/auto 落地（被并行窗口 `git add -A` 一并提交为 `c00d48f0`「feat: [域B] 联动增强3项」——内容含本轮回合A改动）。
 - A类2：
   - economy_v3.1.js 难度键名 `casual`→`easy` 并补 `hell`（DIFFICULTY_TAX_MULTIPLIER / DIFFICULTY_INCOME_CURVE / getMarketSaturationPenalty 三元表达式）。原 `casual` 与 difficulty_system.js 写入 `state._difficulty` 的真实取值(easy/normal/hard/hell)不匹配 → 休闲/地狱档经济结算(税率乘数/收益曲线)恒回落默认值，属必现平衡性bug。
@@ -141,6 +142,7 @@
 - loop-domain-state.json 已正确更新为 round14/A/nextDomain=C（C→E→G→H→A 单轮覆盖完成，下轮重启于C）；DEVELOPMENT.md 改 v3.106。两者在 c00d48f0 提交内含我的版本。下轮→C。
 
 ## 最近执行（2026-07-14，Round 16 域C 职业/成长 — 代码随并行窗口 f4b39a8e 落地 + loop-state 修正提交 9392dbdc）
+
 - 起始状态：并行窗口已推进 loop 至 R15/域B（04b99545+c00d48f0），loop-domain-state.json 标 next=C，故本窗口执行 R16=域C（职业/成长）。
 - 域C 真实文件：CAREER_PATHS 权威入口在 `src/js/ui/career_dev.js`（非 data/career_dev.js）；事件在 core/career_path_events.js、personal_growth_events.js；技能在 core/skill_tree.js·skill_synergy.js·data/skills.js（后者实为 CERTIFICATES 证书数组）。
 - A类1（Explore 全域扫描仅此 1 处确证）：`career_path_events.js:2240` design_client_revision 事件 `addSkillXp("design",10)` — "design" 非真实技能键（state.skills 仅 cooking/repair/coding/english/driving/sales/management/accounting/electrician/welding/medicine/social），addSkillXp 内部 `state.skills[key]` 未命中即静默 return → 设计XP永久丢弃。改 `"coding"`（design 路径在 CAREER_PATHS reqSkills 以 coding 为门槛技能，语义一致）。
@@ -149,6 +151,7 @@
 - 提交：代码（career_path_events/career_linkage_events/index.html/DEVELOPMENT.md/dist）在 MC 运行期被并行窗口 `git add -A` 扫入 `f4b39a8e`；但并行窗口随后 3 个「R15 finalize」commit 把 loop-domain-state.json 覆盖回退成 R15/B。本窗口遂单独提交 `9392dbdc` 仅修正 loop-domain-state.json=round16/C/next=D + last_known_head。DEVELOPMENT.md=v3.107。下轮→D（NPC/社交）。
 
 ## 最近执行（2026-07-14，Round 17 域D NPC/社交 — 待提交）
+
 - 起始状态：loop-domain-state.json=round16/C/next=D，故本窗口执行 R17=域D（NPC/社交）。HEAD=9392dbdc，last_known_head 漂移 f4b39a8e（R16 loop-state 提交未同步 last_known_head）。本次改动未被并行窗口扫入（status 干净）。
 - 域D 真实文件：关系引擎 npc_relationships.js（applyAffinityChange/tickNpcRelationships/getNpcDisplayName，14×14 矩阵）；UI social_tab.js（renderNpcRelationships）；桥接 npc_event_bridge.js（chatWithNpc/applyEventNpcEcho/rollDailyNpcEcho）；数据 npcs.js（3584行，仅扫描顶部 accessor）。
 - A类4（Explore 全域扫描 9 文件确证，均为硬崩溃/数据自洽缺陷）：
@@ -161,6 +164,7 @@
 - 提交计划：仅 git add 8个域D文件(social_tab.js/npc_event_bridge.js/npc_social_linkage_events.js/index.html/DEVELOPMENT.md/dist/index.html/loop-domain-state.json/last_known_head)，不 -A、不 push；提交前同步 last_known_head=当前HEAD 过 pre-commit 漂移检查。下轮→E（经济/投资）。
 
 ## 最近执行（2026-07-14，Round 18 域E 经济/投资 — 待提交）
+
 - 起始状态：loop-domain-state.json=round17/D/next=E，故本窗口执行 R18=域E（经济/投资）。HEAD=1dd59f6d，last_known_head 漂移 9392dbdc（R17 提交未同步 last_known_head）。本次改动未被并行窗口扫入（status 干净，仅 7 个域E文件）。
 - 域E 真实文件：economy_v3.1.js(经济结算/财富税/连续盈利衰减) / finance.js(资金数学) / news_investment_bridge.js(新闻→投资乘数桥) / phase2/investment.js(3941行投资引擎：buyInvStock/sellInvStock/buyBtc/sellBtc 维护 h.avgPrice) / investment_analysis.js / property_market.js / stock.js。真实持仓容器 `state.investment.stockHoldings`（非 `state.portfolio`，全代码零引用）；现金 `state.resources.cash`；银行存款 `state.resources.bankBalance` 独立字段。
 - A类3（Explore 全域扫描 7 文件确证）：
@@ -172,6 +176,7 @@
 - 提交计划：仅 git add 域E文件(economy_v3.1.js/news_investment_bridge.js/investment.js/economy_invest_linkage_events.js/index.html/DEVELOPMENT.md/dist/index.html/loop-domain-state.json/last_known_head)+memory 文件，不 -A、不 push；提交前同步 last_known_head=当前HEAD。下轮→F（UI/UX）。
 
 ## 最近执行（2026-07-14，Round 19 域 F UI/UX — 待提交）
+
 - 起始状态：loop-domain-state.json=round18/E/next=F，故本窗口执行 R19=域F（界面/体验）。HEAD=3d0b792（R18 已提交，树干净）；发现 last_known_head 文件陈旧(1dd59f6d)、loop-state 仍标 R18 pending → 先同步 last_known_head=3d0b792 过漂移检查。
 - 域F 真实文件（17个UI文件）：render.js/render_core.js/render_infra.js/daily_quest.js/daily_focus.js/daily_report.js/data_viz.js/modal.js/navigation.js/tutorial.js/victory.js/life_memoir.js/heritage_store.js/wiki.js/side_hustle_ui.js/corp_ui.js/career_dev.js（social_tab 上轮已修）。入口为 src/index.html（根 index.html 仅 TS redirect shell），linkage IIFE 注册在 src/index.html:606 之后。
 - A类1（Explore 17文件逐处确证）：daily_focus.js:118 今日重点面板生成装备耐久提示时引用从未声明的变量 `itemId`（全仓库仅此1处、无任何声明）→ 任意装备耐久<20% 即抛 ReferenceError 崩溃（硬TypeError，高概率必现）。修复：`itemId`→`(inst.itemId||slot)`，与同源 render.js:1992 等效实现一致（inst.itemId 为装备实例真实属性）。
@@ -181,6 +186,7 @@
 - ✅ 最终结果：MC 6×400d exit=0·**0代码异常**（social 66.7%<80% 为既有平衡阈值 RNG 波动，历轮一致，非本轮引入；trader/corporate 83.3%、skiller 66.7%≥30% 均通过）。dist 8263.3KB 比 src 新。**已提交 465df2ba**（10文件/449增/21删，未 push，pre-commit 三守卫全过），无并行窗口污染。last_known_head 已同步至 465df2ba。下轮→G（核心机制/生命周期）。
 
 ## 最近执行（2026-07-14，Round 20 域G 核心机制/生命周期 — 已提交 66a72947）
+
 - 起始状态：loop-domain-state.json=round19/F/next=G，故本窗口执行 R20=域G（核心机制/生命周期）。HEAD=465df2ba（R19 已提交，树干净）；先同步 last_known_head=465df2ba 过漂移检查。
 - 域G 真实文件：Explore 扫描 events_core/life_ribbon/state/world_params/era_transform/daily_pipeline/needs/interactions/phase1/critical(+corp_ops)/phase2(property_market/trade_intel/actions_extra)。lifecycle/game_state/time/init/turn/age_events/life_events 经核不存在已跳过。
 - A类1（确证，核心生存机制缺陷）：critical.js 强制临界"延期"惩罚整套阶梯机制死代码。根因：(1)defer 回调写 `_deferred[need]=st.player.day`（纯数字），而 applyDeferredCriticalPunishments 期望 {count,lastDay} 对象并递增；(2)该函数末尾 `state.flags._deferred={}` 每晚清空。二者叠加致 count 永停1、_punishByNeed阶梯式 第2/3/4+次（得病/饿晕/送医负债/强制住院）全不可达。修复：defer 回调改累积 count（首建对象、后续 count+1 更新 lastDay）；applyDeferredCriticalPunishments 删每晚清空+删同日跳过守卫+加 lastPunishedDay 同日防重罚+临界解除即删标记+旧数字兼容；findCriticalNeed 同日跳过兼容对象格式。_punishByNeed阶梯式 阶梯逻辑本身完好（已核 addDailyTransaction typeof 守卫/bankDebt||0/fame||0/_contractIllness 已定义），激活后不崩。
@@ -189,6 +195,7 @@
 - 已提交 66a72947（10文件/547增/38删，未 push，pre-commit 三守卫全过）；last_known_head 已同步至 66a72947。下轮→H（Phase2/公司）。
 
 ## 最近执行（2026-07-14，Round 21 域H 创业/公司第二轮 — 待提交）
+
 - 起始状态：loop-domain-state.json=round20/G/next=H，故本窗口执行 R21=域H（创业/公司），即 8 域完整循环后的第二轮起点。HEAD=85963181（R20 账本已提交，树干净）；先确认 last_known_head=85963181 过漂移检查。
 - 域H 真实文件：Explore 扫描 startup.js/startup_crisis.js/startup_data.js/corp_ops.js/team.js/promo.js/perf.js/workplace_social.js/side_hustle.js/personal_growth.js/life_crossroads.js/family_life.js/company_spawner.js/events_corp.js/data(corp/startup_competition/startup_events)；investment/property_market/stock 轻扫（R18 已审）。
 - A类3（全确证）：
@@ -200,6 +207,7 @@
 - 已提交 aaad3603（11文件/514增/29删，未 push，pre-commit 三守卫全过），无并行窗口污染。last_known_head 已同步至 aaad3603。下轮→A（数据/数值平衡，第二轮循环起点）。
 
 ## 最近执行（2026-07-14，Round 22 域A 数据/数值平衡第二轮 — 已提交 06cb3f8c）
+
 - 起始状态：loop-domain-state.json=round21/H/next=A，故本窗口执行 R22=域A（第二轮循环起点）。HEAD=2554033d（R21 已提交，树干净）；先同步 last_known_head=2554033d 过漂移检查。
 - 域A 真实文件：Explore 扫描 economy_v3.1.js/jobs.js/skills.js/finance.js/needs.js/data_linkage_events.js（R14 创建）+ state.js 为 shape 基准。
 - A类3（全确证，均为数值/字段错链导致失效）：
@@ -212,6 +220,7 @@
 - 已提交 06cb3f8c（9文件/7353增/6810删，未 push，pre-commit 三守卫全过），无并行窗口污染。last_known_head 已同步至 06cb3f8c。下轮→B（事件/叙事，第二轮）。
 
 ## 最近执行（2026-07-14，Round 23 域B 事件/叙事第二轮 — 已提交 1ae3f816）
+
 - 起始状态：loop-domain-state.json=round22/A/next=B，故本窗口执行 R23=域B（事件/叙事，第二轮）。HEAD=72818c2a（R22 bookkeeping 已提交，树干净）；先同步 last_known_head=72818c2a 过漂移检查。
 - 域B 真实文件：Explore 子代理基础设施报错（改用精准 grep 自扫）。扫描 all `*linkage_events*.js` + `cross_system_events.js` + data(moral_events.js/news.js)。
 - A类1（确证，死字段静默丢失）：company_linkage_events.js:95/107 写 `st.player.happiness`（死字段；全库 `needs.happiness` 是游戏唯一读取/渲染的幸福感字段——TS 事件系统 index.ts / webapp_runtime_bridge.js / DEVELOPMENT.md 实证；`player.happiness` 仅 3 处写入全死写）→ 改 `st.needs.happiness`（`player.mental` 在 94/106 行正确保留）。`cross_system_events.js:43090/43126` 同款死写属禁改主库既有遗留，本轮仅记录不碰。

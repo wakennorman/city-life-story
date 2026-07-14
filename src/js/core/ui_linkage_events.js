@@ -71,8 +71,7 @@
           text: "保持这个节奏",
           apply: function (st) {
             if (st.player) st.player.mental = (st.player.mental || 50) + 5; // [PLACEHOLDER] 心智回馈
-            if (st.needs)
-              st.needs.happiness = (st.needs.happiness || 50) + 4; // [PLACEHOLDER] 心情
+            if (st.needs) st.needs.happiness = (st.needs.happiness || 50) + 4; // [PLACEHOLDER] 心情
             if (st.flags) st.flags._uiDailyClarityCooldown = true;
             if (typeof StateManager !== "undefined" && StateManager.addMessage)
               StateManager.addMessage(
@@ -113,8 +112,7 @@
             // D域桥接：形象经营转化为社交好感（守域D铁律：rel.met + applyAffinityChange）
             var npc = getMetNpcsF(st, 30)[0];
             if (npc) safeAffinityF(st, npc.id, 5, "形象得体·圈内好感"); // [PLACEHOLDER] 好感增量
-            if (st.needs)
-              st.needs.happiness = (st.needs.happiness || 50) + 3;
+            if (st.needs) st.needs.happiness = (st.needs.happiness || 50) + 3;
             if (st.flags) st.flags._uiSocialPresenceCooldown = true;
             if (typeof StateManager !== "undefined" && StateManager.addMessage)
               StateManager.addMessage(
@@ -126,8 +124,7 @@
         {
           text: "虚一下就够了，不勉强",
           apply: function (st) {
-            if (st.needs)
-              st.needs.happiness = (st.needs.happiness || 50) + 1;
+            if (st.needs) st.needs.happiness = (st.needs.happiness || 50) + 1;
             if (st.flags) st.flags._uiSocialPresenceCooldown = true;
           },
         },
@@ -154,8 +151,7 @@
             // C域桥接：清晰表达转化为真实职业技能（coding 为职场通用门槛技能，语义一致）
             if (typeof addSkillXp === "function") addSkillXp("coding", 8); // [PLACEHOLDER] 表达/技能XP
             if (st.player) st.player.mental = (st.player.mental || 50) + 3;
-            if (st.needs)
-              st.needs.happiness = (st.needs.happiness || 50) + 2;
+            if (st.needs) st.needs.happiness = (st.needs.happiness || 50) + 2;
             if (st.flags) st.flags._uiCareerPortfolioCooldown = true;
             if (typeof StateManager !== "undefined" && StateManager.addMessage)
               StateManager.addMessage(

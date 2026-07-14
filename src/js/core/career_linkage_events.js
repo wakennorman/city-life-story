@@ -134,8 +134,7 @@
           apply: function (st) {
             // A域桥接：技能里程碑回馈基础属性（智力/心智）
             if (st.player) {
-              st.player.intelligence =
-                (st.player.intelligence || 20) + 2; // [PLACEHOLDER] 属性回馈
+              st.player.intelligence = (st.player.intelligence || 20) + 2; // [PLACEHOLDER] 属性回馈
               st.player.mental = (st.player.mental || 50) + 4;
             }
             if (st.flags) st.flags._careerSkillMilestoneDone = true;
@@ -167,8 +166,7 @@
       conditions: function (st) {
         if (!st || !st.player) return false;
         if (st.flags && st.flags._careerPromotionBonusDone) return false;
-        var upward =
-          (st.player.corporate && st.player.corporate.upward) || 0;
+        var upward = (st.player.corporate && st.player.corporate.upward) || 0;
         if (upward < 60) return false; // [PLACEHOLDER] 晋升势能门槛
         return true;
       },

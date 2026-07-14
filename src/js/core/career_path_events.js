@@ -471,7 +471,8 @@
           text: "🍻 年底请领导吃顿饭",
           hint: "社交资本换绩效",
           apply: function (st) {
-            var socialScore = (st.social && st.social.score) || 0;
+            var socialScore =
+              (st.skills && st.skills.social && st.skills.social.level) || 0;
             if (socialScore >= 50 || _chance(0.5)) {
               st.resources.cash = Math.max(0, st.resources.cash - 800);
               var cap = _cap(st);

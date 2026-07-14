@@ -77,8 +77,7 @@
           text: "把这份踏实感记在心里，继续稳健",
           apply: function (st) {
             if (st.player) st.player.mental = (st.player.mental || 50) + 5; // [PLACEHOLDER] 心智回馈
-            if (st.needs)
-              st.needs.happiness = (st.needs.happiness || 50) + 4; // [PLACEHOLDER] 心情
+            if (st.needs) st.needs.happiness = (st.needs.happiness || 50) + 4; // [PLACEHOLDER] 心情
             if (st.flags) {
               st.flags._investMilestoneCooldown = true;
               st.flags._dataInvestorMindset = true; // 复用 R14 data_savings_milestone 投资者心态 flag
@@ -169,14 +168,10 @@
                 (st.resources.cash || 0) - 800, // [PLACEHOLDER] 一顿饭的成本
               );
             if (st.player) st.player.mental = (st.player.mental || 50) + 3;
-            if (st.needs)
-              st.needs.happiness = (st.needs.happiness || 50) + 3;
+            if (st.needs) st.needs.happiness = (st.needs.happiness || 50) + 3;
             if (st.flags) st.flags._investTreatCooldown = true;
             if (typeof StateManager !== "undefined" && StateManager.addMessage)
-              StateManager.addMessage(
-                "钱赚到了，情谊也更近了一步。",
-                "good",
-              );
+              StateManager.addMessage("钱赚到了，情谊也更近了一步。", "good");
           },
         },
         {
