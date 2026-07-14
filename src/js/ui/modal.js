@@ -629,7 +629,8 @@ function showRepayModal() {
   if (bankDebt > 0 && state.resources.bankDebtDay > 0) {
     loanDays = state.player.day - state.resources.bankDebtDay;
     // 复利计算：本金 × (1 + 日息)^天数 - 本金
-    const dailyRate = 0.003;
+    // [全系统自洽修复] 域E 修复:贷款利率与skill_bonuses.js实际扣款0.00012对齐(旧值0.003偏差25倍)
+    const dailyRate = 0.00012;
     accumulatedInterest =
       Math.round(bankDebt * (Math.pow(1 + dailyRate, loanDays) - 1) * 100) /
       100;

@@ -1553,6 +1553,16 @@ const DAILY_PIPELINE = [
           }
         }
       }
+      // [全系统自洽修复] 域E 修复:贷款逾期90天警告
+      if ((state.resources.bankDebt || 0) > 0 && state.resources.bankDebtDay > 0) {
+        var _loanDays = day - state.resources.bankDebtDay;
+        if (_loanDays > 90 && state.flags._lastLoanWarningDay !== day) {
+          state.flags._lastLoanWarningDay = day;
+          if (typeof StateManager !== "undefined") {
+            StateManager.addMessage("⚠️ 你的银行贷款已逾期超过90天，建议尽快还清以免影响信用。欠款: ¥" + state.resources.bankDebt.toLocaleString(), "warning");
+          }
+        }
+      }
     },
   },
 

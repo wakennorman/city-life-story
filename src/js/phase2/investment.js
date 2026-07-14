@@ -1634,7 +1634,8 @@ function sellProperty(propId) {
   // NaN 防御：旧存档或未初始化时 currentPrice 可能缺失
   if (prop.currentPrice == null || isNaN(prop.currentPrice))
     prop.currentPrice = prop.buyPrice || 0;
-  var net = prop.currentPrice - Math.round(prop.currentPrice * 0.05);
+  // [全系统自洽修复] 域E 修复:房产手续费5%→2%，降低买入即亏幅度
+  var net = prop.currentPrice - Math.round(prop.currentPrice * 0.02);
   state.resources.cash += net;
   inv.properties.splice(idx, 1);
   StateManager.addMessage(

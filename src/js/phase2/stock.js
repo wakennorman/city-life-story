@@ -206,7 +206,12 @@ function updateStockPrices(state, forceNews = false) {
       const avg = recent.reduce((s, h) => s + h.price, 0) / recent.length;
       meanReversion = ((avg - market.price) / avg) * 0.15;
     }
-    const change = 1 + trend + noise + meanReversion;
+    // [全系统自洽修复] 域E 修复:接入新闻系统影响股价
+    var newsMul = 1.0;
+    if (typeof getNewsEffectForInvestment === "function") {
+      newsMul = getNewsEffectForInvestment(stock.symbol, stock.industry, "", state);
+    }
+    const change = (1 + trend + noise + meanReversion) * newsMul;
     market.price = Math.max(0.5, market.price * change);
     market.price = Math.round(market.price * 100) / 100;
 
