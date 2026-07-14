@@ -319,12 +319,12 @@ function tickNpcRelationships(state) {
     if (_daysSinceLast >= 7) {
       var _decayRate = 0;
       if (_rel.affinity >= 80)
-        _decayRate = 0.03; // 挚友 每7天-0.2
+        _decayRate = 0.2; // [全系统自洽修复] 域D 修复:衰减速率对齐注释值(0.03→0.2, 挚友每7天-0.2)
       else if (_rel.affinity >= 60)
-        _decayRate = 0.05; // 好友 每7天-0.35
+        _decayRate = 0.35; // 好友 每7天-0.35
       else if (_rel.affinity >= 30)
-        _decayRate = 0.08; // 熟人 每7天-0.56
-      else _decayRate = 0.12; // 初识 每7天-0.84
+        _decayRate = 0.56; // 熟人 每7天-0.56
+      else _decayRate = 0.84; // 初识 每7天-0.84
       var _decay = _decayRate * Math.floor(_daysSinceLast / 7);
       if (_decay > 0) {
         var _oldAff = _rel.affinity;

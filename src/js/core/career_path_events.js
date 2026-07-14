@@ -2224,11 +2224,11 @@
       story:
         "客户第 7 次把设计稿退回来：「感觉不对，再改改。」\n\n你盯着屏幕上的配色和排版，专业判断告诉你这稿已经达标了——但对方是甲方。\n\n「感觉不对」四个字，是每个设计师的噩梦。",
       conditions: function (st) {
+        // [R16 域C修复] 移除冗余 _chance (已由 probability 控制); 加 st.flags 守卫
         return (
           _path(st, "design") &&
           _workDays(st) > 60 &&
-          !st.flags._designRevisionSeen &&
-          _chance(0.04)
+          (!st.flags || !st.flags._designRevisionSeen)
         );
       },
       probability: 0.05,
@@ -2284,8 +2284,7 @@
         return (
           _path(st, "legal") &&
           _workDays(st) > 90 &&
-          !st.flags._legalFirstTrialSeen &&
-          _chance(0.03)
+          (!st.flags || !st.flags._legalFirstTrialSeen)
         );
       },
       probability: 0.04,
@@ -2295,6 +2294,7 @@
           text: "🎤 据理力争，打出气势",
           hint: "庭审表现+，师傅认可",
           apply: function (st) {
+            st.flags = st.flags || {}; // [R16 域C修复]
             st.flags._legalFirstTrialSeen = true;
             var cap = _cap(st);
             if (cap) {
@@ -2311,6 +2311,7 @@
           text: "📋 申请调解，稳妥收场",
           hint: "师傅失望，但案子平和结束",
           apply: function (st) {
+            st.flags = st.flags || {}; // [R16 域C修复]
             st.flags._legalFirstTrialSeen = true;
             st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 8);
             _msg(
@@ -2334,8 +2335,7 @@
         return (
           _path(st, "operations") &&
           _workDays(st) > 75 &&
-          !st.flags._opsCampaignCrisisSeen &&
-          _chance(0.04)
+          (!st.flags || !st.flags._opsCampaignCrisisSeen)
         );
       },
       probability: 0.05,
@@ -2345,6 +2345,7 @@
           text: "🛠️ 先救火，不提旧账",
           hint: "紧急修复+事后请功",
           apply: function (st) {
+            st.flags = st.flags || {}; // [R16 域C修复]
             st.flags._opsCampaignCrisisSeen = true;
             var cap = _cap(st);
             if (cap) {
@@ -2361,6 +2362,7 @@
           text: "📝 救援 + 同时补交复盘报告",
           hint: "专业但得罪人",
           apply: function (st) {
+            st.flags = st.flags || {}; // [R16 域C修复]
             st.flags._opsCampaignCrisisSeen = true;
             if (typeof addSkillXp === "function") addSkillXp("management", 15);
             st.needs.fatigue = Math.min(100, (st.needs.fatigue || 0) + 15);
@@ -2386,6 +2388,7 @@
       probability: 0.5,
       repeatable: false,
       conditions: function (st) {
+        // [R16 域C修复] 移除副作用(st.flags写入)，加 st.flags 守卫
         var job = _job(st);
         if (!job || !job.path) return false;
         var path =
@@ -2393,8 +2396,7 @@
         if (!path || !path.levels || !path.levels.length) return false;
         var top = path.levels[path.levels.length - 1];
         if (!top || job.id !== top.id) return false;
-        st.flags._careerApexSeen = st.flags._careerApexSeen || {};
-        return !st.flags._careerApexSeen[job.path];
+        return !st.flags || !(st.flags._careerApexSeen && st.flags._careerApexSeen[job.path]);
       },
       choices: [
         {
@@ -2457,6 +2459,7 @@
             var mult = 1.5; // [PLACEHOLDER] 年终奖倍数待 playtest 标定（建议 1~2 倍月薪）
             var cash = Math.round(salary * mult);
             st.resources.cash = (st.resources.cash || 0) + cash;
+            st.flags = st.flags || {}; // [R16 域C修复]
             st.flags._seniorIncomeTier = true;
             _msg(
               "🧧 年终奖到手 ¥" + cash + "！你给自己加了顿好的。",
@@ -2473,6 +2476,7 @@
             var mult = 1.5; // [PLACEHOLDER] 同上
             var cash = Math.round(salary * mult);
             st.resources.cash = (st.resources.cash || 0) + cash;
+            st.flags = st.flags || {}; // [R16 域C修复]
             st.flags._seniorInvestReady = true;
             _msg("📈 年终奖 ¥" + cash + " 转入投资账户，静待复利。", "info");
           },
@@ -2504,6 +2508,7 @@
               cap.reputation = Math.min(100, cap.reputation + 4);
               _clamp(cap);
             }
+            st.flags = st.flags || {}; // [R16 域C修复]
             st.flags._industryDinnerCount =
               (st.flags._industryDinnerCount || 0) + 1;
             _msg(

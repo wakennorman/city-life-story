@@ -40,7 +40,7 @@
           st.player.phase === "corporate" &&
           cols.length > 0 &&
           st.player.day >= 60 &&
-          !st.flags._blameSeen
+          (!st.flags || !st.flags._blameSeen) // [R16 域C修复]
         );
       },
       probability: 0.03,
@@ -50,6 +50,7 @@
           text: "🛡️ 直接指出：是小赵负责的",
           hint: "得罪同事，但保住自己",
           apply: function (st) {
+            st.flags = st.flags || {}; // [R16 域C修复]
             st.flags._blameSeen = true;
             var cols = st.corporate.colleagues.network;
             var target = cols[Random.int(0, cols.length - 1)];
@@ -77,6 +78,7 @@
           text: "🤐 沉默不语，自己扛下来",
           hint: "关系维护，但背锅",
           apply: function (st) {
+            st.flags = st.flags || {}; // [R16 域C修复]
             st.flags._blameSeen = true;
             var cols = st.corporate.colleagues.network;
             var target = cols[Random.int(0, cols.length - 1)];
@@ -102,6 +104,7 @@
           text: "🧠 反将一军：提出解决方案",
           hint: "需要智力≥50",
           apply: function (st) {
+            st.flags = st.flags || {}; // [R16 域C修复]
             st.flags._blameSeen = true;
             if ((st.player.intelligence || 0) >= 50) {
               var cols = st.corporate.colleagues.network;
@@ -157,7 +160,7 @@
           st.player.phase === "corporate" &&
           cols.length > 0 &&
           st.player.day >= 120 &&
-          !st.flags._mentorRequestSeen
+          (!st.flags || !st.flags._mentorRequestSeen) // [R16 域C修复]
         );
       },
       probability: 0.02,
@@ -167,6 +170,7 @@
           text: "👨‍🏫 收他为徒",
           hint: "长期投资，但消耗时间",
           apply: function (st) {
+            st.flags = st.flags || {}; // [R16 域C修复]
             st.flags._mentorRequestSeen = true;
             var cols = st.corporate.colleagues.network;
             var mentee = cols[Random.int(0, cols.length - 1)];
@@ -191,6 +195,7 @@
           text: "🙂 口头指导，不当正式导师",
           hint: "轻投入，关系稳定",
           apply: function (st) {
+            st.flags = st.flags || {}; // [R16 域C修复]
             st.flags._mentorRequestSeen = true;
             var cols = st.corporate.colleagues.network;
             var mentee = cols[Random.int(0, cols.length - 1)];
@@ -205,6 +210,7 @@
           text: "🚫 拒绝：我没空",
           hint: "省事但关系破裂",
           apply: function (st) {
+            st.flags = st.flags || {}; // [R16 域C修复]
             st.flags._mentorRequestSeen = true;
             var cols = st.corporate.colleagues.network;
             var mentee = cols[Random.int(0, cols.length - 1)];

@@ -318,6 +318,8 @@ function renderSocialTab(state, parent) {
       break;
     case "social_npc":
       renderNpcRelationships(state, content);
+      // [全系统自洽修复] 域D 修复:social_npc 子Tab触发拜访按钮事件绑定
+      setTimeout(function () { _bindVisitBtns(state, content); }, 0);
       break;
     case "social_network":
       renderSocialNetworkTab(state, content);
@@ -523,64 +525,68 @@ function renderSocialNetworkTab(state, parent) {
   html += "</div>";
   parent.innerHTML = html;
 
-  // [R30] NPC 拜访按钮事件委托 — 点击后触发拜访互动 + 导航到 NPC 地点
-  var _bindVisitBtns = function () {
-    var btns = parent.querySelectorAll(".npc-visit-btn");
-    for (var bi = 0; bi < btns.length; bi++) {
-      (function (btn) {
-        btn.addEventListener("click", function (e) {
-          e.preventDefault();
-          e.stopPropagation();
-          var npcId = btn.dataset.npcId;
-          if (!npcId || !state.relationships || !state.relationships[npcId])
-            return;
-          var rel = state.relationships[npcId];
-          // 检查是否已拜访过（冷却 7 天）
-          if (rel._lastVisit && state.day - rel._lastVisit < 7) {
-            var daysLeft = 7 - (state.day - rel._lastVisit);
-            if (typeof StateManager !== "undefined") {
-              StateManager.addMessage(
-                "⏳ 你刚拜访过" + npcId + "，再等" + daysLeft + "天吧。",
-                "info",
-              );
-            }
-            return;
-          }
-          // 触发拜访互动（好感+2~5）
-          var gain = Random ? (Random.chance(0.5) ? 3 : 5) : 4;
-          rel.affinity = Math.min(100, (rel.affinity || 0) + gain);
-          rel._lastVisit = state.day;
-          var _npcName = "";
-          if (typeof NPCS !== "undefined") {
-            var _def = NPCS.find(function (n) {
-              return n.id === npcId;
-            });
-            _npcName = _def ? _def.name : npcId;
-          } else {
-            _npcName = npcId;
-          }
+// ====== 公共：NPC 拜访按钮事件绑定（所有子Tab共享） ======
+/** [全系统自洽修复] 域D 修复:将拜访按钮事件绑定提升为公共函数，供 social_npc / social_network 等子Tab共用 */
+function _bindVisitBtns(state, parent) {
+  var btns = parent.querySelectorAll(".npc-visit-btn");
+  for (var bi = 0; bi < btns.length; bi++) {
+    (function (btn) {
+      btn.addEventListener("click", function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        var npcId = btn.dataset.npcId;
+        if (!npcId || !state.relationships || !state.relationships[npcId])
+          return;
+        var rel = state.relationships[npcId];
+        // 获取NPC中文名（先查，供后续所有消息使用）
+        var _npcName = "";
+        if (typeof NPCS !== "undefined") {
+          var _def = NPCS.find(function (n) { return n.id === npcId; });
+          _npcName = _def ? _def.name : npcId;
+        } else {
+          _npcName = npcId;
+        }
+        // 检查冷却（7天）
+        if (rel._lastVisit && state.day - rel._lastVisit < 7) {
+          var daysLeft = 7 - (state.day - rel._lastVisit);
           if (typeof StateManager !== "undefined") {
             StateManager.addMessage(
-              "🤝 你找到了" + _npcName + "，聊了一会儿天。好感+" + gain + "。",
-              "success",
+              "⏳ 你刚拜访过" + _npcName + "，再等" + daysLeft + "天吧。",
+              "info",
             );
           }
-          // 导航到 NPC 所在地点
-          if (typeof navigateTo === "function") {
-            var _loc = btn.dataset.navTarget;
-            try {
-              var target = JSON.parse(_loc);
-              target.type = "location";
-              navigateTo(state, target);
-            } catch (err) {
-              if (typeof StateManager !== "undefined") {
-                StateManager.addMessage("⚠️ 导航失败", "warning");
-              }
+          return;
+        }
+        // 触发拜访互动（通过 applyAffinityChange 确保衰减系统识别）
+        var gain = typeof Random !== "undefined" ? (Random.chance(0.5) ? 3 : 5) : 4;
+        if (typeof applyAffinityChange === "function") {
+          applyAffinityChange(state, npcId, gain, "拜访");
+        } else {
+          rel.affinity = Math.min(100, (rel.affinity || 0) + gain);
+        }
+        rel._lastVisit = state.day;
+        if (typeof StateManager !== "undefined") {
+          StateManager.addMessage(
+            "🤝 你找到了" + _npcName + "，聊了一会儿天。好感+" + gain + "。",
+            "success",
+          );
+        }
+        // 导航到 NPC 所在地点
+        if (typeof navigateTo === "function") {
+          var _loc = btn.dataset.navTarget;
+          try {
+            var target = JSON.parse(_loc);
+            target.type = "location";
+            navigateTo(state, target);
+          } catch (err) {
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("⚠️ 导航失败", "warning");
             }
           }
-        });
-      })(btns[bi]);
-    }
-  };
-  _bindVisitBtns();
+        }
+      });
+    })(btns[bi]);
+  }
+}
+  _bindVisitBtns(state, parent);
 }

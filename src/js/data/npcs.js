@@ -2357,6 +2357,7 @@ const NPCS = [
               100,
               st.relationships.auntie_lin.affinity + 5,
             );
+            st.flags._npcDeepTask_auntie_lin = true;
             StateManager.addMessage(
               "💕 林阿姨说「你说得对，我也该歇歇了。」",
               "info",
@@ -2373,6 +2374,7 @@ const NPCS = [
               100,
               st.relationships.auntie_lin.affinity + 3,
             );
+            st.flags._npcDeepTask_auntie_lin = true;
             StateManager.addMessage(
               "💰 林阿姨说「儿子不愿意干这个……」",
               "info",
@@ -2389,6 +2391,7 @@ const NPCS = [
               100,
               st.relationships.auntie_lin.affinity + 0,
             );
+            st.flags._npcDeepTask_auntie_lin = true;
             StateManager.addMessage("🤷 林阿姨点点头：「我再想想。」", "info");
           },
         },
@@ -2558,6 +2561,7 @@ const NPCS = [
               100,
               st.relationships.master_zhao.affinity + 5,
             );
+            st.flags._npcDeepTask_master_zhao = true;
             StateManager.addMessage(
               "💕 赵师傅说「你说得对，我也该歇歇了。」",
               "info",
@@ -2574,6 +2578,7 @@ const NPCS = [
               100,
               st.relationships.master_zhao.affinity + 3,
             );
+            st.flags._npcDeepTask_master_zhao = true;
             StateManager.addMessage(
               "💰 赵师傅说「儿子不愿意干这个……」",
               "info",
@@ -2584,6 +2589,7 @@ const NPCS = [
           text: "🤷 你自己决定",
           hint: "好感不变",
           apply: function (st) {
+            st.flags._npcDeepTask_master_zhao = true;
             StateManager.addMessage("🤷 赵师傅点点头：「我再想想。」", "info");
           },
         },
@@ -2748,6 +2754,7 @@ const NPCS = [
               100,
               st.relationships.xiaoli.affinity + 5,
             );
+            st.flags._npcDeepTask_xiaoli = true;
             StateManager.addMessage("💕 小丽说「我想做美妆博主。」", "info");
           },
         },
@@ -2761,6 +2768,7 @@ const NPCS = [
               100,
               st.relationships.xiaoli.affinity + 3,
             );
+            st.flags._npcDeepTask_xiaoli = true;
             StateManager.addMessage("⚠️ 小丽点点头：「你说得对。」", "info");
           },
         },
@@ -2768,6 +2776,7 @@ const NPCS = [
           text: "🤷 你自己决定",
           hint: "好感不变",
           apply: function (st) {
+            st.flags._npcDeepTask_xiaoli = true;
             StateManager.addMessage("🤷 小丽叹了口气：「我再想想。」", "info");
           },
         },
@@ -2949,6 +2958,7 @@ const NPCS = [
               100,
               st.relationships.dr_wang.affinity + 5,
             );
+            st.flags._npcDeepTask_dr_wang = true;
             StateManager.addMessage(
               "⚠️ 王医生点点头：「我会注意的。」",
               "info",
@@ -2959,6 +2969,7 @@ const NPCS = [
           text: "🤷 你自己决定",
           hint: "好感不变",
           apply: function (st) {
+            st.flags._npcDeepTask_dr_wang = true;
             StateManager.addMessage("🤷 王医生点点头：「我再想想。」", "info");
           },
         },

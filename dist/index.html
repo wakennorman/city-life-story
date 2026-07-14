@@ -84294,11 +84294,11 @@ if (typeof window !== "undefined") {
       story:
         "客户第 7 次把设计稿退回来：「感觉不对，再改改。」\n\n你盯着屏幕上的配色和排版，专业判断告诉你这稿已经达标了——但对方是甲方。\n\n「感觉不对」四个字，是每个设计师的噩梦。",
       conditions: function (st) {
+        // [R16 域C修复] 移除冗余 _chance (已由 probability 控制); 加 st.flags 守卫
         return (
           _path(st, "design") &&
           _workDays(st) > 60 &&
-          !st.flags._designRevisionSeen &&
-          _chance(0.04)
+          (!st.flags || !st.flags._designRevisionSeen)
         );
       },
       probability: 0.05,
@@ -84354,8 +84354,7 @@ if (typeof window !== "undefined") {
         return (
           _path(st, "legal") &&
           _workDays(st) > 90 &&
-          !st.flags._legalFirstTrialSeen &&
-          _chance(0.03)
+          (!st.flags || !st.flags._legalFirstTrialSeen)
         );
       },
       probability: 0.04,
@@ -84365,6 +84364,7 @@ if (typeof window !== "undefined") {
           text: "🎤 据理力争，打出气势",
           hint: "庭审表现+，师傅认可",
           apply: function (st) {
+            st.flags = st.flags || {}; // [R16 域C修复]
             st.flags._legalFirstTrialSeen = true;
             var cap = _cap(st);
             if (cap) {
@@ -84381,6 +84381,7 @@ if (typeof window !== "undefined") {
           text: "📋 申请调解，稳妥收场",
           hint: "师傅失望，但案子平和结束",
           apply: function (st) {
+            st.flags = st.flags || {}; // [R16 域C修复]
             st.flags._legalFirstTrialSeen = true;
             st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 8);
             _msg(
@@ -84404,8 +84405,7 @@ if (typeof window !== "undefined") {
         return (
           _path(st, "operations") &&
           _workDays(st) > 75 &&
-          !st.flags._opsCampaignCrisisSeen &&
-          _chance(0.04)
+          (!st.flags || !st.flags._opsCampaignCrisisSeen)
         );
       },
       probability: 0.05,
@@ -84415,6 +84415,7 @@ if (typeof window !== "undefined") {
           text: "🛠️ 先救火，不提旧账",
           hint: "紧急修复+事后请功",
           apply: function (st) {
+            st.flags = st.flags || {}; // [R16 域C修复]
             st.flags._opsCampaignCrisisSeen = true;
             var cap = _cap(st);
             if (cap) {
@@ -84431,6 +84432,7 @@ if (typeof window !== "undefined") {
           text: "📝 救援 + 同时补交复盘报告",
           hint: "专业但得罪人",
           apply: function (st) {
+            st.flags = st.flags || {}; // [R16 域C修复]
             st.flags._opsCampaignCrisisSeen = true;
             if (typeof addSkillXp === "function") addSkillXp("management", 15);
             st.needs.fatigue = Math.min(100, (st.needs.fatigue || 0) + 15);
@@ -84456,6 +84458,7 @@ if (typeof window !== "undefined") {
       probability: 0.5,
       repeatable: false,
       conditions: function (st) {
+        // [R16 域C修复] 移除副作用(st.flags写入)，加 st.flags 守卫
         var job = _job(st);
         if (!job || !job.path) return false;
         var path =
@@ -84463,8 +84466,7 @@ if (typeof window !== "undefined") {
         if (!path || !path.levels || !path.levels.length) return false;
         var top = path.levels[path.levels.length - 1];
         if (!top || job.id !== top.id) return false;
-        st.flags._careerApexSeen = st.flags._careerApexSeen || {};
-        return !st.flags._careerApexSeen[job.path];
+        return !st.flags || !(st.flags._careerApexSeen && st.flags._careerApexSeen[job.path]);
       },
       choices: [
         {
@@ -84527,6 +84529,7 @@ if (typeof window !== "undefined") {
             var mult = 1.5; // [PLACEHOLDER] 年终奖倍数待 playtest 标定（建议 1~2 倍月薪）
             var cash = Math.round(salary * mult);
             st.resources.cash = (st.resources.cash || 0) + cash;
+            st.flags = st.flags || {}; // [R16 域C修复]
             st.flags._seniorIncomeTier = true;
             _msg(
               "🧧 年终奖到手 ¥" + cash + "！你给自己加了顿好的。",
@@ -84543,6 +84546,7 @@ if (typeof window !== "undefined") {
             var mult = 1.5; // [PLACEHOLDER] 同上
             var cash = Math.round(salary * mult);
             st.resources.cash = (st.resources.cash || 0) + cash;
+            st.flags = st.flags || {}; // [R16 域C修复]
             st.flags._seniorInvestReady = true;
             _msg("📈 年终奖 ¥" + cash + " 转入投资账户，静待复利。", "info");
           },
@@ -84574,6 +84578,7 @@ if (typeof window !== "undefined") {
               cap.reputation = Math.min(100, cap.reputation + 4);
               _clamp(cap);
             }
+            st.flags = st.flags || {}; // [R16 域C修复]
             st.flags._industryDinnerCount =
               (st.flags._industryDinnerCount || 0) + 1;
             _msg(
@@ -89913,7 +89918,7 @@ if (typeof window !== "undefined") {
           st.player.phase === "corporate" &&
           cols.length > 0 &&
           st.player.day >= 60 &&
-          !st.flags._blameSeen
+          (!st.flags || !st.flags._blameSeen) // [R16 域C修复]
         );
       },
       probability: 0.03,
@@ -89923,6 +89928,7 @@ if (typeof window !== "undefined") {
           text: "🛡️ 直接指出：是小赵负责的",
           hint: "得罪同事，但保住自己",
           apply: function (st) {
+            st.flags = st.flags || {}; // [R16 域C修复]
             st.flags._blameSeen = true;
             var cols = st.corporate.colleagues.network;
             var target = cols[Random.int(0, cols.length - 1)];
@@ -89950,6 +89956,7 @@ if (typeof window !== "undefined") {
           text: "🤐 沉默不语，自己扛下来",
           hint: "关系维护，但背锅",
           apply: function (st) {
+            st.flags = st.flags || {}; // [R16 域C修复]
             st.flags._blameSeen = true;
             var cols = st.corporate.colleagues.network;
             var target = cols[Random.int(0, cols.length - 1)];
@@ -89975,6 +89982,7 @@ if (typeof window !== "undefined") {
           text: "🧠 反将一军：提出解决方案",
           hint: "需要智力≥50",
           apply: function (st) {
+            st.flags = st.flags || {}; // [R16 域C修复]
             st.flags._blameSeen = true;
             if ((st.player.intelligence || 0) >= 50) {
               var cols = st.corporate.colleagues.network;
@@ -90030,7 +90038,7 @@ if (typeof window !== "undefined") {
           st.player.phase === "corporate" &&
           cols.length > 0 &&
           st.player.day >= 120 &&
-          !st.flags._mentorRequestSeen
+          (!st.flags || !st.flags._mentorRequestSeen) // [R16 域C修复]
         );
       },
       probability: 0.02,
@@ -90040,6 +90048,7 @@ if (typeof window !== "undefined") {
           text: "👨‍🏫 收他为徒",
           hint: "长期投资，但消耗时间",
           apply: function (st) {
+            st.flags = st.flags || {}; // [R16 域C修复]
             st.flags._mentorRequestSeen = true;
             var cols = st.corporate.colleagues.network;
             var mentee = cols[Random.int(0, cols.length - 1)];
@@ -90064,6 +90073,7 @@ if (typeof window !== "undefined") {
           text: "🙂 口头指导，不当正式导师",
           hint: "轻投入，关系稳定",
           apply: function (st) {
+            st.flags = st.flags || {}; // [R16 域C修复]
             st.flags._mentorRequestSeen = true;
             var cols = st.corporate.colleagues.network;
             var mentee = cols[Random.int(0, cols.length - 1)];
@@ -90078,6 +90088,7 @@ if (typeof window !== "undefined") {
           text: "🚫 拒绝：我没空",
           hint: "省事但关系破裂",
           apply: function (st) {
+            st.flags = st.flags || {}; // [R16 域C修复]
             st.flags._mentorRequestSeen = true;
             var cols = st.corporate.colleagues.network;
             var mentee = cols[Random.int(0, cols.length - 1)];
@@ -130083,12 +130094,12 @@ function tickNpcRelationships(state) {
     if (_daysSinceLast >= 7) {
       var _decayRate = 0;
       if (_rel.affinity >= 80)
-        _decayRate = 0.03; // 挚友 每7天-0.2
+        _decayRate = 0.2; // [全系统自洽修复] 域D 修复:衰减速率对齐注释值(0.03→0.2, 挚友每7天-0.2)
       else if (_rel.affinity >= 60)
-        _decayRate = 0.05; // 好友 每7天-0.35
+        _decayRate = 0.35; // 好友 每7天-0.35
       else if (_rel.affinity >= 30)
-        _decayRate = 0.08; // 熟人 每7天-0.56
-      else _decayRate = 0.12; // 初识 每7天-0.84
+        _decayRate = 0.56; // 熟人 每7天-0.56
+      else _decayRate = 0.84; // 初识 每7天-0.84
       var _decay = _decayRate * Math.floor(_daysSinceLast / 7);
       if (_decay > 0) {
         var _oldAff = _rel.affinity;
@@ -152255,6 +152266,7 @@ const NPCS = [
               100,
               st.relationships.auntie_lin.affinity + 5,
             );
+            st.flags._npcDeepTask_auntie_lin = true;
             StateManager.addMessage(
               "💕 林阿姨说「你说得对，我也该歇歇了。」",
               "info",
@@ -152271,6 +152283,7 @@ const NPCS = [
               100,
               st.relationships.auntie_lin.affinity + 3,
             );
+            st.flags._npcDeepTask_auntie_lin = true;
             StateManager.addMessage(
               "💰 林阿姨说「儿子不愿意干这个……」",
               "info",
@@ -152287,6 +152300,7 @@ const NPCS = [
               100,
               st.relationships.auntie_lin.affinity + 0,
             );
+            st.flags._npcDeepTask_auntie_lin = true;
             StateManager.addMessage("🤷 林阿姨点点头：「我再想想。」", "info");
           },
         },
@@ -152456,6 +152470,7 @@ const NPCS = [
               100,
               st.relationships.master_zhao.affinity + 5,
             );
+            st.flags._npcDeepTask_master_zhao = true;
             StateManager.addMessage(
               "💕 赵师傅说「你说得对，我也该歇歇了。」",
               "info",
@@ -152472,6 +152487,7 @@ const NPCS = [
               100,
               st.relationships.master_zhao.affinity + 3,
             );
+            st.flags._npcDeepTask_master_zhao = true;
             StateManager.addMessage(
               "💰 赵师傅说「儿子不愿意干这个……」",
               "info",
@@ -152482,6 +152498,7 @@ const NPCS = [
           text: "🤷 你自己决定",
           hint: "好感不变",
           apply: function (st) {
+            st.flags._npcDeepTask_master_zhao = true;
             StateManager.addMessage("🤷 赵师傅点点头：「我再想想。」", "info");
           },
         },
@@ -152646,6 +152663,7 @@ const NPCS = [
               100,
               st.relationships.xiaoli.affinity + 5,
             );
+            st.flags._npcDeepTask_xiaoli = true;
             StateManager.addMessage("💕 小丽说「我想做美妆博主。」", "info");
           },
         },
@@ -152659,6 +152677,7 @@ const NPCS = [
               100,
               st.relationships.xiaoli.affinity + 3,
             );
+            st.flags._npcDeepTask_xiaoli = true;
             StateManager.addMessage("⚠️ 小丽点点头：「你说得对。」", "info");
           },
         },
@@ -152666,6 +152685,7 @@ const NPCS = [
           text: "🤷 你自己决定",
           hint: "好感不变",
           apply: function (st) {
+            st.flags._npcDeepTask_xiaoli = true;
             StateManager.addMessage("🤷 小丽叹了口气：「我再想想。」", "info");
           },
         },
@@ -152847,6 +152867,7 @@ const NPCS = [
               100,
               st.relationships.dr_wang.affinity + 5,
             );
+            st.flags._npcDeepTask_dr_wang = true;
             StateManager.addMessage(
               "⚠️ 王医生点点头：「我会注意的。」",
               "info",
@@ -152857,6 +152878,7 @@ const NPCS = [
           text: "🤷 你自己决定",
           hint: "好感不变",
           apply: function (st) {
+            st.flags._npcDeepTask_dr_wang = true;
             StateManager.addMessage("🤷 王医生点点头：「我再想想。」", "info");
           },
         },
@@ -227450,6 +227472,8 @@ function renderSocialTab(state, parent) {
       break;
     case "social_npc":
       renderNpcRelationships(state, content);
+      // [全系统自洽修复] 域D 修复:social_npc 子Tab触发拜访按钮事件绑定
+      setTimeout(function () { _bindVisitBtns(state, content); }, 0);
       break;
     case "social_network":
       renderSocialNetworkTab(state, content);
@@ -227655,66 +227679,70 @@ function renderSocialNetworkTab(state, parent) {
   html += "</div>";
   parent.innerHTML = html;
 
-  // [R30] NPC 拜访按钮事件委托 — 点击后触发拜访互动 + 导航到 NPC 地点
-  var _bindVisitBtns = function () {
-    var btns = parent.querySelectorAll(".npc-visit-btn");
-    for (var bi = 0; bi < btns.length; bi++) {
-      (function (btn) {
-        btn.addEventListener("click", function (e) {
-          e.preventDefault();
-          e.stopPropagation();
-          var npcId = btn.dataset.npcId;
-          if (!npcId || !state.relationships || !state.relationships[npcId])
-            return;
-          var rel = state.relationships[npcId];
-          // 检查是否已拜访过（冷却 7 天）
-          if (rel._lastVisit && state.day - rel._lastVisit < 7) {
-            var daysLeft = 7 - (state.day - rel._lastVisit);
-            if (typeof StateManager !== "undefined") {
-              StateManager.addMessage(
-                "⏳ 你刚拜访过" + npcId + "，再等" + daysLeft + "天吧。",
-                "info",
-              );
-            }
-            return;
-          }
-          // 触发拜访互动（好感+2~5）
-          var gain = Random ? (Random.chance(0.5) ? 3 : 5) : 4;
-          rel.affinity = Math.min(100, (rel.affinity || 0) + gain);
-          rel._lastVisit = state.day;
-          var _npcName = "";
-          if (typeof NPCS !== "undefined") {
-            var _def = NPCS.find(function (n) {
-              return n.id === npcId;
-            });
-            _npcName = _def ? _def.name : npcId;
-          } else {
-            _npcName = npcId;
-          }
+// ====== 公共：NPC 拜访按钮事件绑定（所有子Tab共享） ======
+/** [全系统自洽修复] 域D 修复:将拜访按钮事件绑定提升为公共函数，供 social_npc / social_network 等子Tab共用 */
+function _bindVisitBtns(state, parent) {
+  var btns = parent.querySelectorAll(".npc-visit-btn");
+  for (var bi = 0; bi < btns.length; bi++) {
+    (function (btn) {
+      btn.addEventListener("click", function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        var npcId = btn.dataset.npcId;
+        if (!npcId || !state.relationships || !state.relationships[npcId])
+          return;
+        var rel = state.relationships[npcId];
+        // 获取NPC中文名（先查，供后续所有消息使用）
+        var _npcName = "";
+        if (typeof NPCS !== "undefined") {
+          var _def = NPCS.find(function (n) { return n.id === npcId; });
+          _npcName = _def ? _def.name : npcId;
+        } else {
+          _npcName = npcId;
+        }
+        // 检查冷却（7天）
+        if (rel._lastVisit && state.day - rel._lastVisit < 7) {
+          var daysLeft = 7 - (state.day - rel._lastVisit);
           if (typeof StateManager !== "undefined") {
             StateManager.addMessage(
-              "🤝 你找到了" + _npcName + "，聊了一会儿天。好感+" + gain + "。",
-              "success",
+              "⏳ 你刚拜访过" + _npcName + "，再等" + daysLeft + "天吧。",
+              "info",
             );
           }
-          // 导航到 NPC 所在地点
-          if (typeof navigateTo === "function") {
-            var _loc = btn.dataset.navTarget;
-            try {
-              var target = JSON.parse(_loc);
-              target.type = "location";
-              navigateTo(state, target);
-            } catch (err) {
-              if (typeof StateManager !== "undefined") {
-                StateManager.addMessage("⚠️ 导航失败", "warning");
-              }
+          return;
+        }
+        // 触发拜访互动（通过 applyAffinityChange 确保衰减系统识别）
+        var gain = typeof Random !== "undefined" ? (Random.chance(0.5) ? 3 : 5) : 4;
+        if (typeof applyAffinityChange === "function") {
+          applyAffinityChange(state, npcId, gain, "拜访");
+        } else {
+          rel.affinity = Math.min(100, (rel.affinity || 0) + gain);
+        }
+        rel._lastVisit = state.day;
+        if (typeof StateManager !== "undefined") {
+          StateManager.addMessage(
+            "🤝 你找到了" + _npcName + "，聊了一会儿天。好感+" + gain + "。",
+            "success",
+          );
+        }
+        // 导航到 NPC 所在地点
+        if (typeof navigateTo === "function") {
+          var _loc = btn.dataset.navTarget;
+          try {
+            var target = JSON.parse(_loc);
+            target.type = "location";
+            navigateTo(state, target);
+          } catch (err) {
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("⚠️ 导航失败", "warning");
             }
           }
-        });
-      })(btns[bi]);
-    }
-  };
-  _bindVisitBtns();
+        }
+      });
+    })(btns[bi]);
+  }
+}
+  _bindVisitBtns(state, parent);
 }
 </script>
     <script>﻿/**
