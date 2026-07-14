@@ -1428,7 +1428,7 @@ function renderCareerJobs(state, parent) {
           skill: "english",
           level: 10,
           path: "design",
-          tip: "英语+创意→设计创意",
+          tip: "英语+创意→设计创意（设计需同时提升coding技能）",
         },
         { skill: "english", level: 12, path: "legal", tip: "英语→法律服务" },
         { skill: "medicine", level: 5, path: "medical", tip: "医学→医疗护理" },
@@ -3685,6 +3685,67 @@ var _CAREER_RISK_PROFILES = {
     flagKey: "_careerDiseased_design",
     diseaseMsg: "视力退化/过劳综合征",
   },
+  // [全系统自洽修复] 域C 修复:新增4条缺失职业路径
+  // 运营管理：长期加班+久坐腰椎负担
+  operations: {
+    dailyProb: [0.003, 0.005, 0.007, 0.009],
+    msgs: [
+      "📋 运营报表堆成山，腰椎开始抗议久坐",
+      "📊 季度运营复盘连续加班，精力明显下滑",
+      "😤 运营主管被夹在高层和一线之间，情绪压力骤增",
+      "⚡ 运营总监长期跨部门协调，精神和体力双重透支",
+    ],
+    healthDmg: [1, 2, 3, 4],
+    attrKey: "mental",
+    attrDmg: [0.5, 1, 1.5, 2],
+    flagKey: "_careerDiseased_operations",
+    diseaseMsg: "腰椎过劳/高压焦虑症",
+  },
+  // 法律服务：久坐+用眼过度
+  legal: {
+    dailyProb: [0.002, 0.004, 0.006, 0.008],
+    msgs: [
+      "📜 翻阅卷宗的第三个小时，脖子已经僵硬",
+      "⚖️ 案件堆积如山，连续熬夜导致精神疲惫",
+      "📑 资深律师长期伏案工作，颈椎开始发出警报",
+      "🏛️ 合伙人级别的案头工作让你身心俱疲",
+    ],
+    healthDmg: [1, 2, 3, 4],
+    attrKey: "mental",
+    attrDmg: [0.5, 1, 1, 1.5],
+    flagKey: "_careerDiseased_legal",
+    diseaseMsg: "颈椎病/慢性疲劳",
+  },
+  // 事业单位：久坐+慢性疲劳
+  public_institution: {
+    dailyProb: [0.002, 0.003, 0.005, 0.007],
+    msgs: [
+      "🏢 坐了一整天等下班，腰酸背痛",
+      "📋 文山会海让你的眼睛和腰椎都在抗议",
+      "😴 年复一年的案头工作让你精力走下坡",
+      "📑 长期伏案让你的身体亮起黄灯",
+    ],
+    healthDmg: [1, 1, 2, 3],
+    attrKey: "physique",
+    attrDmg: [0, 0.5, 1, 1],
+    flagKey: "_careerDiseased_public",
+    diseaseMsg: "久坐综合征/腰椎退化",
+  },
+  // 公务员：应酬+久坐
+  civil: {
+    dailyProb: [0.002, 0.003, 0.004, 0.006],
+    msgs: [
+      "🍺 今晚又有应酬，喝酒躲不掉",
+      "📋 年底考核材料堆积，加班写材料写到头晕",
+      "😮‍💨 长期应酬+伏案双重消耗，身体被掏空",
+      "🏛️ 高级别岗位的政务压力开始侵蚀你的健康",
+    ],
+    healthDmg: [1, 2, 3, 4],
+    attrKey: "physique",
+    attrDmg: [0.5, 1, 1.5, 2],
+    flagKey: "_careerDiseased_civil",
+    diseaseMsg: "应酬病/久坐综合征",
+  },
 };
 
 function tickCareerOccupationalRisk(state) {
@@ -3715,11 +3776,10 @@ function tickCareerOccupationalRisk(state) {
 
   var attrKey = profile.attrKey;
   var attrDmg = profile.attrDmg[levelIdx] || 0;
-  if (attrDmg > 0 && state.player.attributes) {
-    state.player.attributes[attrKey] = Math.max(
-      0,
-      (state.player.attributes[attrKey] || 0) - attrDmg,
-    );
+  if (attrDmg > 0) {
+    // [全系统自洽修复] 域C 修复:state.player.attributes不存在，改用state.player[attrKey]直接访问
+    var _attrVal = state.player[attrKey] || 0;
+    state.player[attrKey] = Math.max(0, _attrVal - attrDmg);
   }
 
   StateManager.addMessage(profile.msgs[levelIdx], "warning");
@@ -4178,11 +4238,11 @@ function enhancedApplyCareerJob(pathId, levelId) {
       penaltyLines.push("😴 疲劳 -6%");
       interviewChance -= 0.06;
     }
-    if ((p.health || 100) < 50) {
+    if ((state.status.health || 100) < 50) {
       statePenaltyMessages.push("健康状况差");
       penaltyLines.push("🏥 健康状况差 -12%");
       interviewChance -= 0.12;
-    } else if ((p.health || 100) < 75) {
+    } else if ((state.status.health || 100) < 75) {
       statePenaltyMessages.push("亚健康");
       penaltyLines.push("🏥 亚健康 -4%");
       interviewChance -= 0.04;
@@ -5096,10 +5156,8 @@ if (typeof document !== "undefined") {
               "🏗️ 你接下了这个项目。虽然风险很大，但这是你职业生涯最重要的挑战。疲劳+20，风险+15。",
               "event",
             );
-            // 90天后结算
-            if (typeof scheduleChainEvent === "function") {
-              scheduleChainEvent(st, "career_legacy_result", 90, "street");
-            }
+            // [全系统自洽修复] 域C 修复:scheduled chain event→改用daily check flag
+            st.flags._careerLegacyDueDay = st.player.day + 90;
           },
         },
         {

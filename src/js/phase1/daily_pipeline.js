@@ -1508,6 +1508,54 @@ const DAILY_PIPELINE = [
     },
   },
 
+  // === [全系统自洽修复] 域C/域A: 职业里程碑延迟兑现检查 ===
+  {
+    name: "career_milestone_deferred_rewards",
+    fn: function (state) {
+      var day = state.player.day;
+      // 家教90天奖金
+      if (state.flags._pendingGaokaoBonus && day >= state.flags._pendingGaokaoBonus) {
+        state.flags._pendingGaokaoBonus = 0;
+        state.player.cash = (state.player.cash || 0) + 24000;
+        if (typeof StateManager !== "undefined") {
+          StateManager.addMessage("🎓 家教学员的家长打来了尾款！高考辅导费¥24000到账！", "success");
+        }
+      }
+      // 摆摊30天还款
+      if (state.flags._loanToLaoGuan && day >= state.flags._loanToLaoGuan) {
+        state.flags._loanToLaoGuan = 0;
+        state.player.cash = (state.player.cash || 0) + 1000;
+        if (typeof StateManager !== "undefined") {
+          StateManager.addMessage("💰 老关把当初借的¥800还了，还多给了¥200利息！", "success");
+        }
+      }
+      // 废品回收重新报价
+      if (state.flags._wasteRecyclingOffer && day >= state.flags._wasteRecyclingOffer) {
+        state.flags._wasteRecyclingOffer = 0;
+        state.flags._wasteRecyclingReady = true;
+        if (typeof StateManager !== "undefined") {
+          StateManager.addMessage("♻️ 老张的废品承包权又开放了——带上¥3000去找他吧。", "info");
+        }
+      }
+      // 职业遗产项目90天结算
+      if (state.flags._careerLegacyDueDay && day >= state.flags._careerLegacyDueDay) {
+        state.flags._careerLegacyDueDay = 0;
+        var _legacySuccess = typeof Random !== "undefined" ? Random.chance(0.6) : Math.random() < 0.6;
+        if (_legacySuccess) {
+          state.player.cash = (state.player.cash || 0) + 100000;
+          state.player.fame = Math.min(100, (state.player.fame || 0) + 20);
+          if (typeof StateManager !== "undefined") {
+            StateManager.addMessage("🏆 你主导的行业里程碑项目大获成功！声誉+20，奖金¥100000到账！", "success");
+          }
+        } else {
+          if (typeof StateManager !== "undefined") {
+            StateManager.addMessage("😔 你主导的项目最终没有达到预期。虽然没有达成目标，但这段经历让你成长了不少。", "info");
+          }
+        }
+      }
+    },
+  },
+
   // === Review P0-4：中产税事件 + P1-1：35岁危机 ===
   {
     name: "review_improvements_tick",
