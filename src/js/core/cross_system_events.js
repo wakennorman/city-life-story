@@ -51464,8 +51464,8 @@
       phase: "street",
       icon: "👀",
       title: "你做的事，有人看在眼里",
-      story: "",
-      // 动态 story：根据道德 flag 生成不同叙事
+      story: "你的行为在邻里间传开了——有人议论纷纷，有人默默记在心里。",
+      // [全系统自洽修复] 域B 修复:storyFn不被events_core支持→改为静态缺省story
       storyFn: function (st) {
         var parts = [];
         if (st.flags && st.flags.moralStoppedThiefPublic) {

@@ -13,7 +13,7 @@
     {
       id: "insider_rumor_start",
       phase: "corporate",
-      _isChainEvent: true,
+      _isChainEvent: false, // [全系统自洽修复] 域B,
       icon: "👂",
       title: "投资圈风声",
       story:
@@ -1743,7 +1743,7 @@
     },
     {
       id: "workplace_scapegoat",
-      _isChainEvent: true,
+      _isChainEvent: false, // [全系统自洽修复] 域B,
       phase: "corporate",
       conditions: function (st) {
         return (
@@ -2210,7 +2210,7 @@
     },
     {
       id: "insider_report",
-      _isChainEvent: true,
+      _isChainEvent: false, // [全系统自洽修复] 域B,
       phase: "corporate",
       icon: "📋",
       title: "你不该看到的那份报告",
@@ -2381,7 +2381,7 @@
     },
     {
       id: "career_setup",
-      _isChainEvent: true,
+      _isChainEvent: false, // [全系统自洽修复] 域B,
       phase: "corporate",
       icon: "🪤",
       title: "这份报告你签个字",
@@ -2779,7 +2779,7 @@
     // ====== 新链：职场派系斗争（3步链） ======
     {
       id: "office_faction_approach",
-      _isChainEvent: true,
+      _isChainEvent: false, // [全系统自洽修复] 域B,
       phase: "corporate",
       icon: "🤝",
       title: "公司里的派系",

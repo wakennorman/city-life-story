@@ -6198,7 +6198,8 @@ function dailyCleanup(state) {
     {
       id: "real_estate_rumour",
       phase: "street",
-      _isChainEvent: true,
+      // [全系统自洽修复] 域B 修复:链式根事件不应有_isChainEvent(否则永不被随机选中)
+      _isChainEvent: false,
       icon: "🏗️",
       title: "楼盘烂尾传闻",
       story:
@@ -12000,7 +12001,8 @@ function dailyCleanup(state) {
     },
     {
       id: "re_gamble",
-      _isChainEvent: true,
+      // [全系统自洽修复] 域B 修复:链式根事件不应有_isChainEvent(否则永不被随机选中)
+      _isChainEvent: false,
       phase: "street",
       icon: "🏗️",
       title: "拆迁规划图流出",
@@ -16448,7 +16450,7 @@ function dailyCleanup(state) {
     {
       id: "insider_rumor_start",
       phase: "corporate",
-      _isChainEvent: true,
+      _isChainEvent: false, // [全系统自洽修复] 域B,
       icon: "👂",
       title: "投资圈风声",
       story:
@@ -18178,7 +18180,7 @@ function dailyCleanup(state) {
     },
     {
       id: "workplace_scapegoat",
-      _isChainEvent: true,
+      _isChainEvent: false, // [全系统自洽修复] 域B,
       phase: "corporate",
       conditions: function (st) {
         return (
@@ -18645,7 +18647,7 @@ function dailyCleanup(state) {
     },
     {
       id: "insider_report",
-      _isChainEvent: true,
+      _isChainEvent: false, // [全系统自洽修复] 域B,
       phase: "corporate",
       icon: "📋",
       title: "你不该看到的那份报告",
@@ -18816,7 +18818,7 @@ function dailyCleanup(state) {
     },
     {
       id: "career_setup",
-      _isChainEvent: true,
+      _isChainEvent: false, // [全系统自洽修复] 域B,
       phase: "corporate",
       icon: "🪤",
       title: "这份报告你签个字",
@@ -19214,7 +19216,7 @@ function dailyCleanup(state) {
     // ====== 新链：职场派系斗争（3步链） ======
     {
       id: "office_faction_approach",
-      _isChainEvent: true,
+      _isChainEvent: false, // [全系统自洽修复] 域B,
       phase: "corporate",
       icon: "🤝",
       title: "公司里的派系",
@@ -81787,8 +81789,8 @@ if (typeof window !== "undefined") {
       phase: "street",
       icon: "👀",
       title: "你做的事，有人看在眼里",
-      story: "",
-      // 动态 story：根据道德 flag 生成不同叙事
+      story: "你的行为在邻里间传开了——有人议论纷纷，有人默默记在心里。",
+      // [全系统自洽修复] 域B 修复:storyFn不被events_core支持→改为静态缺省story
       storyFn: function (st) {
         var parts = [];
         if (st.flags && st.flags.moralStoppedThiefPublic) {

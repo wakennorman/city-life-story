@@ -2418,7 +2418,8 @@
     },
     {
       id: "re_gamble",
-      _isChainEvent: true,
+      // [全系统自洽修复] 域B 修复:链式根事件不应有_isChainEvent(否则永不被随机选中)
+      _isChainEvent: false,
       phase: "street",
       icon: "🏗️",
       title: "拆迁规划图流出",
