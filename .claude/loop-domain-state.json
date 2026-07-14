@@ -1,1 +1,8 @@
-{"domain":"C","round":24,"lastCommit":"1893072e28936b69c47505f310d5d94f56e411bb","lastDomain":"B","status":"completed","nextDomain":"A","note":"职业成长第二轮：A类0(全量扫描6文件·技能键/职业path id/CAREER_PATHS引用全有效·career.currentJob裸访问均经_guard) + 联动增强3项(career_enterprise_readiness C→H / career_legacy_tale C→B / career_resource_mastery C→A)。8域第二轮全部完成→第三轮重启于A"}
+{
+  "domain": "A",
+  "round": 25,
+  "lastCommit": "38da9e52",
+  "lastDomain": "A",
+  "status": "completed",
+  "note": "域A第三轮联动增强：隐形经济平衡数据叙事化(data3_wealth_tax_intro 累进财富税梯度 A→G / data3_market_saturation 市场饱和度惩罚 A→E)；A类0缺陷；另补提交R18 F域遗漏改动(0cb5f277)。tracker漂移已对账：R18-R24由自动化执行(见DEVELOPMENT.md v3.112-v3.115)，本表续至R17已失效。"
+}
