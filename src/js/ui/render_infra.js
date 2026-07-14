@@ -1208,6 +1208,18 @@ function renderTimeSlot(state, parent) {
     ap > 50 ? "var(--success)" : ap > 20 ? "var(--warning)" : "var(--danger)";
   // 底部独立行：🎒 背包 / 🌃 已提取到 renderLocationBar，此处仅保留日期 + 时段 + AP
   div.style.cssText = `display:flex;align-items:center;gap:6px;padding:6px 12px;background:var(--bg-card);border-radius:8px;margin-bottom:6px;${lowAp ? "border:2px solid var(--warning);box-shadow:0 0 12px rgba(196,154,58,0.35);animation:ap-blink-border 1.5s infinite;" : "border:1px solid var(--border);"}`;
+  // 移动端：现金放在最前（防头栏挤到不可见），然后才是日期
+  var moneyHTML = "";
+  if (window.innerWidth <= 768) {
+    var cash = (state.resources && state.resources.cash) || 0;
+    var cashColor = cash >= 0 ? "var(--success)" : "var(--danger)";
+    moneyHTML =
+      '<span style="white-space:nowrap;font-weight:700;font-size:13px;color:' +
+      cashColor +
+      ';">💰 ¥' +
+      cash.toLocaleString() +
+      '</span><span style="color:var(--text-muted);margin:0 2px;">|</span>';
+  }
   // 移动端：在时段和AP之间插入天气简况
   var weatherHTML = "";
   if (window.innerWidth <= 768 && state.weather && state.weather.current) {
@@ -1259,6 +1271,7 @@ function renderTimeSlot(state, parent) {
   }
 
   div.innerHTML = `
+    ${moneyHTML}
     <span style="white-space:nowrap;">📅 第 <strong>${state.player.day}</strong> 天</span>
     <span style="color:var(--text-muted);">|</span>
     <span class="time-slot-badge ${slot}">${slotNames[slot]}</span>

@@ -730,15 +730,20 @@ var SCENARIO_TUTORIAL_STEPS = {
   ],
 };
 
-/** 逐步展示引导 — v3.0 重写支持 waitForClick 模式 */
+/** 逐步展示引导 — v5.0 两阶段流程
+ *
+ *  有 waitForClick 的步骤 = 两阶段：
+ *    Phase 1: 弹窗说明 + "好的，我知道了" 按钮
+ *    Phase 2: 关闭弹窗 → 高亮目标 → 玩家必须点击目标才能继续
+ *
+ *  无 waitForClick 的步骤（首尾介绍/纯信息）= 传统单弹窗
+ */
 function showTutorialStep(steps, index) {
-  // 任何步骤切换前都先清理高亮，避免残留
   cleanupHighlight();
-  // 同时清理旧的 waitForClick 监听
   _clearWaitForClickListeners();
+  _removeSkipHint();
 
   if (index >= steps.length) {
-    // 全部完成
     cleanupHighlight();
     markTutorialDone();
     StateManager.addMessage(
@@ -754,13 +759,68 @@ function showTutorialStep(steps, index) {
   _currentTutorialSteps = steps;
   _currentTutorialIndex = index;
 
-  // 高亮目标区域
+  // ===== 两阶段流程：有 waitForClick 的步骤 =====
+  // Phase 1: 弹窗说明 → "好的，我知道了"
+  // Phase 2: 关闭弹窗 → 高亮目标 → 等待玩家点击目标
+  if (step.waitForClick) {
+    const buttons = [];
+
+    // 上一步（只要不是第一步）
+    if (index > 0) {
+      buttons.push({
+        text: "← 上一步",
+        cls: "",
+        callback: () => {
+          showTutorialStep(steps, index - 1);
+        },
+      });
+    }
+
+    buttons.push({
+      text: "跳过引导",
+      cls: "",
+      callback: () => {
+        _confirmSkip(steps);
+      },
+    });
+
+    buttons.push({
+      text: "好的，我知道了 👆",
+      cls: "btn-primary",
+      callback: () => {
+        // 弹窗关闭后进入 Phase 2：高亮目标 + 等待点击
+        setTimeout(() => {
+          if (step.highlight) {
+            highlightElement(step.highlight);
+          }
+          _attachWaitForClick(step.waitForClick, steps, index, step.hint);
+          _showSkipHint(steps, index);
+        }, 150);
+      },
+    });
+
+    showModal({
+      title: `${index + 1}/${steps.length} ${step.title}`,
+      body: step.body,
+      buttons,
+    });
+
+    setTimeout(() => {
+      const overlay = document.querySelector(".modal-overlay");
+      if (overlay) {
+        overlay.classList.add("tutorial-overlay");
+        const box = overlay.querySelector(".modal-box");
+        if (box) box.classList.add("tutorial-box");
+      }
+    }, 10);
+    return;
+  }
+
+  // ===== 传统单弹窗流程：无 waitForClick 的步骤 =====
   if (step.highlight) {
     highlightElement(step.highlight);
   }
 
-  // 决定按钮：如果 step.waitForClick 存在，不显示"下一步"按钮
-  // 改为在目标元素上挂监听，点击后推进
   const buttons = [];
   if (isFirst) {
     buttons.push({
@@ -774,7 +834,6 @@ function showTutorialStep(steps, index) {
       text: "开始引导 →",
       cls: "btn-primary",
       callback: () => {
-        // 第一步无 waitForClick，直接推进
         showTutorialStep(steps, index + 1);
       },
     });
@@ -791,33 +850,7 @@ function showTutorialStep(steps, index) {
         );
       },
     });
-  } else if (step.waitForClick) {
-    // 中间步骤且需要点击目标：主路径=直接点击高亮区域（overlay已设pointer-events:none可穿透）
-    // 备用按钮供找不到目标时使用
-    buttons.push({
-      text: "← 上一步",
-      cls: "",
-      callback: () => {
-        showTutorialStep(steps, index - 1);
-      },
-    });
-    buttons.push({
-      text: "跳过",
-      cls: "",
-      callback: () => {
-        _confirmSkip(steps);
-      },
-    });
-    buttons.push({
-      text: "找不到？直接继续 →",
-      cls: "btn-primary",
-      callback: () => {
-        _clearWaitForClickListeners();
-        showTutorialStep(steps, index + 1);
-      },
-    });
   } else {
-    // 中间步骤但不需点击目标：保留"下一步"按钮
     buttons.push({
       text: "← 上一步",
       cls: "",
@@ -840,7 +873,6 @@ function showTutorialStep(steps, index) {
     buttons,
   });
 
-  // 为引导弹窗添加特殊样式
   setTimeout(() => {
     const overlay = document.querySelector(".modal-overlay");
     if (overlay) {
@@ -849,11 +881,6 @@ function showTutorialStep(steps, index) {
       if (box) box.classList.add("tutorial-box");
     }
   }, 10);
-
-  // 如果该步骤需要等玩家点击目标，挂监听
-  if (step.waitForClick) {
-    _attachWaitForClick(step.waitForClick, steps, index, step.hint);
-  }
 }
 
 /** v3.0 新增：等待玩家点击目标元素才推进 */
@@ -879,6 +906,7 @@ function _attachWaitForClick(selector, steps, index, hint) {
         // 移除所有监听
         _clearWaitForClickListeners();
         cleanupHighlight();
+        _removeSkipHint(); // v5.0: 关闭跳过浮标
         // 关闭当前 tutorial modal（如果有）
         const overlay = document.querySelector(".tutorial-overlay");
         if (overlay) {
@@ -896,6 +924,33 @@ function _attachWaitForClick(selector, steps, index, hint) {
       _waitForClickListeners.push({ target, handler });
     });
   }, 100);
+}
+
+/** Phase 2 浮动"跳过此步"按钮 — 防止玩家卡住 */
+function _showSkipHint(steps, index) {
+  _removeSkipHint();
+  var hint = document.createElement("div");
+  hint.id = "tutorial-skip-hint";
+  hint.textContent = "❓ 找不到目标？点击跳过此步 →";
+  hint.style.cssText =
+    "position:fixed;bottom:20px;left:50%;transform:translateX(-50%);" +
+    "z-index:1001;background:var(--bg-secondary,#2a2a3a);" +
+    "border:1px solid var(--border,#444);border-radius:8px;" +
+    "padding:8px 16px;font-size:12px;color:var(--text-secondary,#aaa);" +
+    "cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,0.4);" +
+    "transition:opacity 0.2s;";
+  hint.addEventListener("click", function () {
+    _removeSkipHint();
+    _clearWaitForClickListeners();
+    cleanupHighlight();
+    showTutorialStep(steps, index + 1);
+  });
+  document.body.appendChild(hint);
+}
+
+function _removeSkipHint() {
+  var existing = document.getElementById("tutorial-skip-hint");
+  if (existing) existing.remove();
 }
 
 function _clearWaitForClickListeners() {
@@ -988,7 +1043,7 @@ function highlightElement(selector) {
   }
 }
 
-/** 清除高亮 — v3.0 增强：同时移除 resize 监听 */
+/** 清除高亮 — v5.0 增强：同时移除 resize 监听 + 跳过浮标 */
 function cleanupHighlight() {
   const existing = document.getElementById("tutorial-highlight");
   if (existing) existing.remove();
@@ -999,6 +1054,8 @@ function cleanupHighlight() {
     window.removeEventListener("resize", window._tutorialResizeHandler);
     window._tutorialResizeHandler = null;
   }
+  // v5.0: 清理跳过浮标
+  _removeSkipHint();
 }
 
 // ====== 动态教程提示系统 ======

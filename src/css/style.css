@@ -3673,8 +3673,8 @@ body {
 
   #header-cash-area,
   #header-debt-area {
-    min-width: 0 !important;
-    flex: 0 1 auto;
+    min-width: auto !important;
+    flex: 0 0 auto;
     max-width: 50vw;
     min-height: 36px;
     padding: 0 10px !important;

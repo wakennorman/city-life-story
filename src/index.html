@@ -202,6 +202,24 @@
         </div>
 
         <div class="header-stats">
+          <!-- 现金和债务放在最前（移动端紧接汉堡菜单，防被挤到不可见） -->
+          <div
+            class="header-stat"
+            id="header-cash-area"
+            style="cursor: default; min-width: 100px"
+          >
+            <span class="label" id="header-cash-label">💰</span>
+            <span class="value cash" id="header-cash">¥2,000</span>
+          </div>
+          <!-- 债务展示区域（独立于现金） -->
+          <div
+            class="header-stat"
+            id="header-debt-area"
+            style="cursor: default; display: none"
+          >
+            <span class="label" id="header-debt-label">💸</span>
+            <span class="value debt" id="header-debt">¥0</span>
+          </div>
           <div class="header-stat">
             <span class="label">📅 天</span>
             <span class="value" id="header-day">1</span>
@@ -222,30 +240,13 @@
             <span class="label">🎂 年龄</span>
             <span class="value age" id="header-age">20</span>
           </div>
-          <div class="header-stat">
+          <div class="header-stat" id="header-phase-stat">
             <span class="label">📍</span>
             <span class="value" id="header-phase">🏘️ 街头</span>
           </div>
           <div class="header-stat" id="header-mode-stat" style="display: none">
             <span class="label">🎮</span>
             <span class="value" id="header-mode"></span>
-          </div>
-          <div
-            class="header-stat"
-            id="header-cash-area"
-            style="cursor: default; min-width: 100px"
-          >
-            <span class="label" id="header-cash-label">💰</span>
-            <span class="value cash" id="header-cash">¥2,000</span>
-          </div>
-          <!-- 债务展示区域（独立于现金） -->
-          <div
-            class="header-stat"
-            id="header-debt-area"
-            style="cursor: default; display: none"
-          >
-            <span class="label" id="header-debt-label">💸</span>
-            <span class="value debt" id="header-debt">¥0</span>
           </div>
         </div>
 
