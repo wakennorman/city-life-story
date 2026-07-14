@@ -280,6 +280,7 @@ const NEWS_EVENTS = [
   {
     id: "found_money",
     headline: "🍀 在路边捡到了一个钱包",
+    desc: "路边捡到的钱包，怎么处理全看你自己了。",
     story:
       "路边有个黑色钱包，打开一看里面有¥50现金和一张身份证。失主看起来住在附近。",
     choices: [
@@ -322,6 +323,7 @@ const NEWS_EVENTS = [
   {
     id: "pickpocket",
     headline: "👛 在公交车上被偷了",
+    desc: "公交车上人挤人，一不留神钱包就没了。",
     story:
       "挤公交车时感觉有人在摸你的口袋。下车一摸，钱包不见了！里面大概有¥100。",
     choices: [
@@ -357,6 +359,7 @@ const NEWS_EVENTS = [
   {
     id: "free_meal",
     headline: "🍱 社区免费午餐活动",
+    desc: "社区里的免费午餐，排队半小时但能省一顿饭钱。",
     story:
       "社区在广场办免费午餐活动，志愿者说今天有米饭和菜，免费吃。但你得排队半小时。",
     choices: [
@@ -386,6 +389,7 @@ const NEWS_EVENTS = [
   {
     id: "rain_storm",
     headline: "🌧️ 暴雨来袭",
+    desc: "暴雨天出行不便，但也可能带来不一样的机遇。",
     story: "天气预报说今天有暴雨。你本来计划去户外工作，但现在得重新考虑了。",
     choices: [
       {
@@ -419,6 +423,7 @@ const NEWS_EVENTS = [
   {
     id: "good_sleep",
     headline: "😴 昨晚睡得特别好",
+    desc: "难得睡了个好觉，整个人都精神了。",
     story: "昨晚睡得特别香，今天醒来精神焕发。你决定好好利用这一天。",
     choices: [
       {
@@ -450,6 +455,7 @@ const NEWS_EVENTS = [
   {
     id: "friendly_neighbor",
     headline: "👋 邻居送了些水果",
+    desc: "邻里之间的小温暖，让生活多了几分人情味。",
     story:
       "楼上的王大婶给你送了些自家种的水果，说是一点心意。你最近和她关系还不错。",
     choices: [
@@ -517,6 +523,7 @@ const NEWS_EVENTS = [
   {
     id: "skill_book",
     headline: "📖 二手书店淘到教材",
+    desc: "花小钱学本事，值不值得你来判断。",
     story:
       "在城中村二手书店，老板说有一本技能教材便宜卖。你看了看，内容还挺有用。",
     choices: [

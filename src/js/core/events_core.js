@@ -835,6 +835,90 @@ function checkChainEventQueue(state, phase) {
  * ========================================================= */
 
 /** 每日新闻判定（旧 API，保持兼容） */
+
+/**
+ * 约定式自动归类 — 新闻效果描述生成器 v1.0
+ *
+ * 根据 news 的 type/level/effects 字段自动生成合适的 desc（效果描述），
+ * 无需手动为每条新闻编写 desc。遵循"约定优于配置"原则：
+ *
+ * 约定规则：
+ *   1. L4/personal/neighborhood → 邻里见闻风格（温暖轻量、生活化）
+ *   2. L1/L2/L3 → 新闻快报风格（简洁客观、信息性）
+ *   3. effects 字段决定具体描述方向（正向/负向/中性）
+ *   4. 手动设置的 news.desc 优先级最高（跳过此函数）
+ *
+ * 新增一条新闻时，只需保证 type/level/effects 字段完整，
+ * 系统自动为其生成合适的 desc，零配置。
+ */
+function autoGenerateNewsDesc(news) {
+  if (!news) return "";
+  if (!news.effects) {
+    return "这件事在街头巷尾传开了。";
+  }
+
+  var eff = news.effects;
+  var isNeighborhood =
+    news.level === "L4" ||
+    news.type === "personal" ||
+    news.type === "neighborhood";
+
+  // ——— 邻里见闻风格（温暖、轻量、生活化） ———
+  if (isNeighborhood) {
+    // 正向效果
+    if (eff.happinessBonus > 0 || eff.hungerBonus > 0 || eff.fatigueBonus > 0) {
+      return "今天心情不错，日子平平淡淡也是福。";
+    }
+    // 负向效果（轻度）
+    if (eff.happinessPenalty > 0 || eff.fatiguePenalty > 0) {
+      return "一点小插曲，不影响明天的太阳照常升起。";
+    }
+    // 花钱消息
+    if (eff.cashLoss > 0) {
+      return "花点小钱，给生活添点滋味。";
+    }
+    // 赚钱/省钱消息
+    if (eff.cashBonus > 0) {
+      return "省了一笔，日子能过得宽松点。";
+    }
+    // 工作机会
+    if (eff.jobBonus || eff.jobPenalty) {
+      return "街坊们都在议论这事，跟生计有关的总让人上心。";
+    }
+    // 物价
+    if (eff.priceMod) {
+      return "柴米油盐的事，人人都关心。";
+    }
+    // 投资
+    if (eff.investmentEffect) {
+      return "有头脑的人已经开始盘算了。";
+    }
+    // 兜底
+    return "小小的新闻，在街坊邻里间漾开了一圈涟漪。";
+  }
+
+  // ——— 新闻快报风格（简洁客观、信息性） ———
+  if (eff.investmentEffect && eff.jobBonus) {
+    return "市场和就业都在变化，值得留意。";
+  }
+  if (eff.investmentEffect) {
+    return "市场正在消化这条消息，留意后续变化。";
+  }
+  if (eff.jobBonus || eff.jobPenalty || eff.allJobsBonus) {
+    return "就业市场正在发生变化，有人欢喜有人愁。";
+  }
+  if (eff.priceMod) {
+    return "物价有所调整，精打细算的人已经注意到了。";
+  }
+  if (eff.cashBonus || eff.cashLoss) {
+    return "这条消息对你的钱包有一定影响。";
+  }
+  if (eff.sectorHeat) {
+    return "行业格局正在调整，机会与风险并存。";
+  }
+  return "这条新闻值得关注，可能会影响你的选择。";
+}
+
 function showNewsBriefingModal(news, state) {
   if (!news || typeof document === "undefined") return;
   state.flags._newsPopupSeen = state.flags._newsPopupSeen || {};
@@ -964,7 +1048,7 @@ function showNewsBriefingModal(news, state) {
         duration +
         "</div>" +
         '<div style="padding:8px 10px;background:var(--bg-card);border:1px solid var(--border);border-radius:6px;color:var(--text-secondary);">' +
-        (news.desc || "这条新闻正在影响城市里的价格、工作和人心。") +
+        (news.desc || autoGenerateNewsDesc(news)) +
         "</div>" +
         insightHtml +
         "</div>",

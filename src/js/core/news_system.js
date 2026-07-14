@@ -305,6 +305,7 @@ const NEWS_L1_L4 = [
   {
     id: "neighbor_dispute",
     headline: "🗣️ 楼下住户因为漏水问题跟楼上吵了一整夜",
+    desc: "邻里之间的小摩擦，吵完也就过去了。",
     level: "L4",
     type: "personal",
     effects: {
@@ -315,6 +316,7 @@ const NEWS_L1_L4 = [
   {
     id: "street_rumor",
     headline: "👂 听说城中村要整体改造，房东们都在讨论补偿方案",
+    desc: "小道消息传得飞快，真假难辨。",
     level: "L4",
     type: "personal",
     effects: {
@@ -324,6 +326,7 @@ const NEWS_L1_L4 = [
   {
     id: "auntie_matchmaking",
     headline: "👵 房东王婶在给你张罗相亲——「姑娘在老家当老师，可好了」",
+    desc: "热心肠的王婶，总惦记着你的终身大事。",
     level: "L4",
     type: "personal",
     effects: {
@@ -334,6 +337,7 @@ const NEWS_L1_L4 = [
   {
     id: "street_cat_rescue",
     headline: "🐱 楼下便利店收养了一窝流浪猫，居民们凑钱做绝育",
+    desc: "小小的善举，让社区多了几分暖意。",
     level: "L4",
     type: "personal",
     effects: {
@@ -344,6 +348,7 @@ const NEWS_L1_L4 = [
   {
     id: "workmate_quits",
     headline: "👷 工友老赵不干了——他说老家宅基地要拆迁，回去盖房",
+    desc: "身边人的选择，让人忍不住想想自己的路。",
     level: "L4",
     type: "personal",
     effects: {
