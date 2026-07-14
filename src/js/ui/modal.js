@@ -108,9 +108,14 @@ function showModalImpl({ title, body, buttons = [] }) {
 
   overlay.appendChild(box);
   // 所有弹窗必须点击按钮关闭，不允许点击外部关闭
+  // [全系统自洽修复] 域F 修复:点击遮罩时给抖动反馈，避免用户以为按钮死了
   overlay.addEventListener("click", (e) => {
     if (e.target === overlay) {
-      // 不做任何事——玩家必须点击按钮
+      overlay.style.transition = "background 0.15s";
+      overlay.style.background = "rgba(0,0,0,0.55)";
+      setTimeout(function () {
+        overlay.style.background = "";
+      }, 200);
     }
   });
   // [全系统自洽修复] 域F 修复:ESC键关闭弹窗，提升桌面端可用性

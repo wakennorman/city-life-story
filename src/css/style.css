@@ -1502,6 +1502,15 @@ body {
   white-space: nowrap;
   font-size: 12px;
 }
+/* [全系统自洽修复] 域F 修复:日终报告长描述可hover查看全文 */
+.daily-report-item-desc:hover {
+  overflow: visible;
+  white-space: normal;
+  word-break: break-all;
+  background: var(--bg-secondary);
+  position: relative;
+  z-index: 1;
+}
 
 .daily-report-item-amount {
   font-weight: 700;
@@ -3660,14 +3669,14 @@ body {
   #header-debt-area {
     min-width: 0 !important;
     flex: 0 1 auto;
-    max-width: 40vw;
+    max-width: 50vw;
     min-height: 36px;
     padding: 0 10px !important;
     border: 1px solid var(--border);
     border-radius: var(--radius-sm);
     background: var(--bg-card);
     font-weight: 700;
-    font-size: 14px;
+    font-size: 13px;
   }
 
   #header-cash-area {

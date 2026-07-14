@@ -436,7 +436,7 @@ function renderSidebar(state) {
 function renderReputationBadge(state) {
   if (typeof getHistoryModifiers !== "function") return;
   var mods = getHistoryModifiers(state);
-  if (!mods.reputationLabel) {
+  if (!mods || !mods.reputationLabel) {
     var el = document.getElementById("reputation-badge");
     if (el) el.style.display = "none";
     return;
@@ -476,6 +476,7 @@ function renderReputationBadge(state) {
 
 /** 道德状态显示 */
 function renderMoralStatus(state) {
+  if (!state || !state.flags) return;
   var moral = state.flags.moral;
   if (!moral || !moral.actions || moral.actions.length === 0) return;
   var score = moral.score || 0;
@@ -709,6 +710,7 @@ function renderNeedsBars(state) {
 }
 
 function renderLocation(state) {
+  if (!state.trade) return;
   const locKey = state.trade.currentLocation;
   const loc = getLocation(locKey);
   if (loc) {
