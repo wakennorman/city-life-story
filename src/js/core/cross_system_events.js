@@ -52068,4 +52068,266 @@
     ],
     probability: 0.04,
   });
+
+  // ============================================================
+  // [全系统自洽修复] 域C 联动增强: 技能天赋树叙事事件
+  // 填补空白: SKILL_BRANCHES 选择/激活/满级零事件覆盖
+  // 联动: C(职业/成长)→D(社交)/G(核心机制) — 天赋树首次被事件消费
+  // ============================================================
+  (function () {
+    // 事件1: 天赋树选择 — 技能Lv.30时选择发展方向
+    var ev_branch_choice = {
+      id: "skill_branch_choice_moment",
+      phase: "street",
+      icon: "🌳",
+      title: "技能发展方向",
+      story: function (st) {
+        var skillName =
+          typeof getSkillChineseName === "function"
+            ? getSkillChineseName(st._branchSkillKey)
+            : st._branchSkillKey;
+        return (
+          "你的" +
+          skillName +
+          "终于练到了Lv.30，是时候选择发展方向了。\n" +
+          "一个老前辈拍了拍你：\"这行水深，选对了路能少走很多弯路。\""
+        );
+      },
+      triggers: {
+        minDay: 15,
+      },
+      conditions: function (st) {
+        if (st.flags && st.flags._skillBranchChoiceDone) return false;
+        if (!st.skills) return false;
+        for (var sk in st.skills) {
+          if (st.skills[sk] && st.skills[sk].level >= 30) {
+            if (
+              typeof getSkillBranchDef === "function" &&
+              getSkillBranchDef(sk).length > 0
+            ) {
+              if (!st.skillBranches || !st.skillBranches[sk]) {
+                st._branchSkillKey = sk;
+                return true;
+              }
+            }
+          }
+        }
+        return false;
+      },
+      apply: function (st) {
+        st.flags._skillBranchChoiceDone = true;
+      },
+      probability: 0.12,
+      choices: [
+        {
+          text: function (st) {
+            return "🌳 选择" + (st._branchSkillKey || "该技能") + "发展方向";
+          },
+          hint: "开启天赋树系统",
+          callback: function (st) {
+            if (typeof showModal === "function") {
+              showModal({
+                title: "🌳 选择发展方向",
+                body:
+                  '<div style="padding:8px 12px;"><p style="font-size:14px;font-weight:bold;margin-bottom:8px;">' +
+                  (typeof getSkillChineseName === "function"
+                    ? getSkillChineseName(st._branchSkillKey)
+                    : st._branchSkillKey) +
+                  ' 已达到Lv.30，请选择发展方向</p><p style="font-size:12px;color:var(--text-muted);">天赋树将在技能Tab中显示，选择后不可逆（切换需消耗30AP+¥500）。</p></div>',
+                buttons: [
+                  {
+                    text: "去技能Tab选择",
+                    cls: "btn-primary",
+                    callback: function () {
+                      if (typeof switchTab === "function")
+                        switchTab("skills");
+                      return true;
+                    },
+                  },
+                ],
+              });
+            }
+          },
+        },
+        {
+          text: "💤 先放着，不急",
+          hint: "暂时不选，下次触发",
+          apply: function (st) {
+            StateManager.addMessage(
+              "💤 你决定先放着，等攒够了经验再说。",
+              "hint",
+            );
+          },
+        },
+      ],
+    };
+
+    // 事件2: 天赋节点激活 — 首个天赋点亮
+    var ev_talent_light = {
+      id: "skill_talent_first_light",
+      phase: "street",
+      icon: "⭐",
+      title: "天赋点亮",
+      story: function (st) {
+        return (
+          "你终于攒够了资源，激活了天赋节点。\n" +
+          "一股力量涌入体内——不，是技能感悟加深了。"
+        );
+      },
+      triggers: {
+        minDay: 30,
+      },
+      conditions: function (st) {
+        if (st.flags && st.flags._skillTalentFirstLightDone) return false;
+        if (!st.talentNodes) return false;
+        var activatedCount = 0;
+        for (var k in st.talentNodes) {
+          if (st.talentNodes[k]) activatedCount++;
+        }
+        return activatedCount >= 1;
+      },
+      apply: function (st) {
+        st.flags._skillTalentFirstLightDone = true;
+        st.player.happiness = Math.min(
+          100,
+          (st.player.happiness || 50) + 5,
+        );
+        st.player.mental = Math.min(
+          100,
+          (st.player.mental || 30) + 3,
+        );
+        StateManager.addMessage(
+          "⭐ 天赋节点点亮！你的技能树又多了一层力量。心情+5，心智+3。",
+          "success",
+        );
+      },
+      probability: 0.06,
+      choices: [
+        {
+          text: "🌟 继续挖掘潜能",
+          hint: "前往技能Tab查看可激活节点",
+          callback: function (st) {
+            if (typeof switchTab === "function") switchTab("skills");
+          },
+        },
+      ],
+    };
+
+    // 事件3: 技能树满级 — 100级里程碑
+    var ev_mastery = {
+      id: "skill_tree_mastery_celebration",
+      phase: "street",
+      icon: "🏆",
+      title: "技能大成",
+      story: function (st) {
+        var skillName =
+          typeof getSkillChineseName === "function"
+            ? getSkillChineseName(st._masterSkillKey)
+            : st._masterSkillKey;
+        return (
+          "你的" +
+          skillName +
+          "终于达到了Lv.100！\n" +
+          "街上的人都传开了——你是这条街上最有本事的人。"
+        );
+      },
+      triggers: {
+        minDay: 100,
+      },
+      conditions: function (st) {
+        if (st.flags && st.flags._skillMasteryDone) return false;
+        if (!st.skills) return false;
+        for (var sk in st.skills) {
+          if (st.skills[sk] && st.skills[sk].level >= 100) {
+            st._masterSkillKey = sk;
+            return true;
+          }
+        }
+        return false;
+      },
+      apply: function (st) {
+        st.flags._skillMasteryDone = true;
+        st.player.fame = (st.player.fame || 0) + 10;
+        st.player.happiness = Math.min(
+          100,
+          (st.player.happiness || 50) + 15,
+        );
+        st.player.mental = Math.min(
+          100,
+          (st.player.mental || 30) + 10,
+        );
+        StateManager.addMessage(
+          "🏆 " +
+            (typeof getSkillChineseName === "function"
+              ? getSkillChineseName(st._masterSkillKey)
+              : st._masterSkillKey) +
+            " 达到Lv.100！你已成为这条街的传奇！名气+10，心情+15，心智+10。",
+          "success",
+        );
+      },
+      probability: 0.02,
+      choices: [
+        {
+          text: "🎉 请全街吃饭庆祝",
+          hint: "花费¥500，所有NPC好感+3",
+          apply: function (st) {
+            if (st.resources.cash >= 500) {
+              st.resources.cash -= 500;
+              var rels = st.relationships || {};
+              for (var rid in rels) {
+                if (rels[rid] && rels[rid].met) {
+                  rels[rid].affinity = Math.min(
+                    100,
+                    (rels[rid].affinity || 0) + 3,
+                  );
+                }
+              }
+              StateManager.addMessage(
+                "🎉 你请全街吃了顿大餐！大家伙都高兴坏了，所有已结识NPC好感+3。",
+                "success",
+              );
+            }
+          },
+        },
+        {
+          text: "📚 把钱投到学习中",
+          hint: "现金-¥300，所有技能+100XP",
+          apply: function (st) {
+            if (st.resources.cash >= 300) {
+              st.resources.cash -= 300;
+              if (st.skills) {
+                for (var s in st.skills) {
+                  if (st.skills[s]) {
+                    st.skills[s].xp = (st.skills[s].xp || 0) + 100;
+                  }
+                }
+              }
+              StateManager.addMessage(
+                "📚 你用庆祝的钱报了个进修班，所有技能各获得100XP！",
+                "success",
+              );
+            }
+          },
+        },
+      ],
+    };
+
+    CROSS_EVENTS.push(ev_branch_choice);
+    CROSS_EVENTS.push(ev_talent_light);
+    CROSS_EVENTS.push(ev_mastery);
+  })();
+
+  // 注册CROSS_EVENTS到RANDOM_EVENTS
+  for (var ce_i = 0; ce_i < CROSS_EVENTS.length; ce_i++) {
+    try {
+      RANDOM_EVENTS.push(CROSS_EVENTS[ce_i]);
+    } catch (e) {
+      console.warn(
+        "[cross_system_events] 注册事件 " +
+          (CROSS_EVENTS[ce_i] && CROSS_EVENTS[ce_i].id) +
+          " 失败:",
+        e,
+      );
+    }
+  }
 })();
