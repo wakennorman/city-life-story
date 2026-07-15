@@ -1698,11 +1698,13 @@ function renderCareerOverview(state, parent) {
       '<div style="font-size:15px;color:var(--accent);font-weight:bold;">¥' +
       (job.salary || 0).toLocaleString() +
       "/月</div>";
-    if (certBonus > 0)
+    if (certBonus > 0) {
+      var bonusRate = Math.round((certBonus / (job.salary || 1)) * 100);
       html +=
         '<div style="font-size:10px;color:var(--success);">+ 证书加成 ¥' +
         certBonus.toLocaleString() +
-        "</div>";
+        ' <span style="font-size:9px;">(+' + bonusRate + '%)</span></div>';
+    }
     html += "</div>";
     html += "</div>";
 

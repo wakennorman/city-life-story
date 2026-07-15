@@ -3459,7 +3459,20 @@ function renderTradeTab(state, parent) {
       </h3>
       ${skillTag}
     </div>
-    <span style="font-size:11px;color:var(--text-muted);">现金: <strong style="color:var(--success)">¥${state.resources.cash.toLocaleString()}</strong></span>
+    <div style="text-align:right;">
+      <span style="font-size:11px;color:var(--text-muted);">现金: <strong style="color:var(--success)">¥${state.resources.cash.toLocaleString()}</strong></span>
+      ${(function(){
+        var activeEvents = 0;
+        if (state.trade && state.trade.marketEvents) {
+          for (var _ei = 0; _ei < state.trade.marketEvents.length; _ei++) {
+            if (state.trade.marketEvents[_ei].remaining > 0) activeEvents++;
+          }
+        }
+        return activeEvents > 0
+          ? '<div style="font-size:10px;color:#e8a838;margin-top:2px;">📊 ' + activeEvents + '个市场活动</div>'
+          : '';
+      })()}
+    </div>
   `;
   parent.appendChild(headerDiv);
 
@@ -3807,13 +3820,26 @@ function renderTradeTab(state, parent) {
       }
     }
 
+    // [全系统自洽修复] 域A 增强: 市场事件标签 — 当有活跃市场事件影响该商品时显示标记
+    var marketEventTag = "";
+    if (state.trade && state.trade.marketEvents) {
+      for (var mei = 0; mei < state.trade.marketEvents.length; mei++) {
+        if (state.trade.marketEvents[mei].goodId === good.id && state.trade.marketEvents[mei].remaining > 0) {
+          marketEventTag = state.trade.marketEvents[mei].priceMod > 1
+            ? '<span style="color:var(--danger);font-size:10px;margin-left:8px;">🔥 行情看涨</span>'
+            : '<span style="color:var(--success);font-size:10px;margin-left:8px;">💥 行情看跌</span>';
+          break;
+        }
+      }
+    }
+
     const card = document.createElement("div");
     card.className = "action-card";
     card.innerHTML = `
       <div style="display:flex;justify-content:space-between;align-items:center;">
         <div class="card-title" style="margin:0;">${good.name}</div>
         <span class="slot-tag">${{ daily: "日用品", luxury: "奢侈品", food: "食品", clothing: "服装", electronics: "电子", scrap: "废品" }[good.category] || good.category}</span>
-        ${seasonTag}
+        ${seasonTag}${marketEventTag}
       </div>
       <div class="card-desc" style="margin:4px 0;">
         基准: ¥${good.basePrice}/${good.unit}
