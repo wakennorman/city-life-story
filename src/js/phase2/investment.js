@@ -1314,15 +1314,18 @@ function tickInvestmentDaily(state) {
     for (var _hi = 0; _hi < _holdings.length; _hi++) {
       var _h = _holdings[_hi];
       var _m = _sm[_h.symbol];
-      if (_m && isFinite(_m.price) && isFinite(_h.shares)) _pv += _m.price * _h.shares;
+      if (_m && isFinite(_m.price) && isFinite(_h.shares))
+        _pv += _m.price * _h.shares;
     }
     var _props = inv.properties || [];
     for (var _pi = 0; _pi < _props.length; _pi++) {
       _pv += _props[_pi].currentPrice || _props[_pi].buyPrice || 0;
     }
-    if ((inv.btcHoldings || 0) > 0) _pv += (inv.btcPrice || 0) * inv.btcHoldings;
+    if ((inv.btcHoldings || 0) > 0)
+      _pv += (inv.btcPrice || 0) * inv.btcHoldings;
     if (_pv > 0) {
-      if (!(inv._portfolioPeak > 0) || _pv > inv._portfolioPeak) inv._portfolioPeak = _pv;
+      if (!(inv._portfolioPeak > 0) || _pv > inv._portfolioPeak)
+        inv._portfolioPeak = _pv;
     }
   } catch (e) {
     // 静默：峰值追踪失败不影响主流程

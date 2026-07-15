@@ -1,11 +1,21 @@
 # 城市浮生记 (City Life Story) — 开发文档
 
-> 最后更新: 2026-07-15（v3.116 loop R25 全系统优化·Domain A 数据/数值平衡（第三轮联动增强）——A类修复0项（全量扫描 skills/jobs/items/goods/illnesses/pricing/trade/economy_v3.1：locations/categories 全部有效、jobs.payCalc 技能键均属10核心技能、pricing div-by-zero 已守卫，结构性健康） + 联动增强2项（data3_wealth_tax_intro A→G 累进财富税梯度叙事化 / data3_market_saturation A→E 市场饱和度惩罚叙事化））
-> 上一版: v3.115 loop R24 全系统优化·Domain C 职业/成长（第二轮）——A类修复0项（全量扫描 career_path_events/personal_growth_events/skill_tree/skill_synergy/career_dev/career_linkage_events：技能键/职业path id/CAREER_PATHS 引用全部有效，career.currentJob 裸访问均经 _job/_path/if 守卫，无死职业·死技能·不可达触发） + 联动增强3项（career_enterprise_readiness C→H 职业硬技能兑现公司KPI / career_legacy_tale C→B 职业成就成城内叙事·置 _careerNarrativeSeen / career_resource_mastery C→A 熟练度换效率红利·智力回馈）
+> 最后更新: 2026-07-15（v3.118 loop R27 全系统优化·Domain E 经济/投资（第二轮）——A类修复0项（全量扫描 skills/jobs/items/goods/illnesses/pricing/trade/economy_v3.1：locations/categories 全部有效、jobs.payCalc 技能键均属10核心技能、pricing div-by-zero 已守卫，结构性健康） + 联动增强2项（data3_wealth_tax_intro A→G 累进财富税梯度叙事化 / data3_market_saturation A→E 市场饱和度惩罚叙事化））
+> 上一版: v3.117 loop R26 全系统优化·Domain D NPC/社交（第二轮）——A类修复0项（全量扫描 career_path_events/personal_growth_events/skill_tree/skill_synergy/career_dev/career_linkage_events：技能键/职业path id/CAREER_PATHS 引用全部有效，career.currentJob 裸访问均经 _job/_path/if 守卫，无死职业·死技能·不可达触发） + 联动增强3项（career_enterprise_readiness C→H 职业硬技能兑现公司KPI / career_legacy_tale C→B 职业成就成城内叙事·置 _careerNarrativeSeen / career_resource_mastery C→A 熟练度换效率红利·智力回馈）
 >
-> commits: `feat: [域B] A类修复1项+联动增强3项` + `（docs）loop状态/迭代表`
+> commits: `feat: [域E] 联动增强(2项)` + `（docs）loop状态/迭代表`
 
 ---
+
+## 2026-07-15 — v3.118 loop R27 全系统优化·Domain E 经济/投资（第二轮）（A类修复0项 + 联动增强2项新事件）
+
+> 循环迭代表见 CLAUDE.md「全系统优化·循环迭代表」。本轮域 = **E 经济/投资**（第二轮；首轮 R15）。
+
+- **A类修复 0 项**（已硬化核验）：全量审计 `finance.js` / `economy_v3.1.js` / `stock.js` / `property_market.js` / `investment.js::tickInvestmentDaily`——贷款额度·负债率·资产增信·新闻传导·房产周期·组合峰值追踪全部 `||`/`isFinite` 防御，无裸访问、无死引用、无「恒赚无风险」错判（房产 cooling/bust 含真实下行、股票含波动与下行，均非无风险）。核心经济文件已在既往域E轮次硬化，本轮为有效「结构性健康」回合。
+- **联动增强 2 项**（新建 `src/js/core/economy_linkage_events_r27.js`，IIFE 注入 RANDOM_EVENTS，每个事件注册 `street`+`corporate` 双变体共享去重 flag；全字段 `||` 防御，数值标 `[PLACEHOLDER]`；投资组合市值复用全局 `getInvestmentAssetSnapshot(st).investmentValue` 与引擎同源）：
+  1. `econ_career_invest_unlock`（E→C）：净资产 ≥ ¥200k 或 职场期 `corporate.rank ∈ {P6–P10}` + 一次性 flag → 私募跟投圈层邀请，接受则 现金+¥30000 + 管理技能+3（封顶100）/ 婉拒则心智+1（经济成就↔职场圈层·地位信号·禀赋效应）。
+  2. `econ_portfolio_drawdown`（E→B）：组合市值自历史峰值回撤 ≥20% 且为新低 + 30天冷却 → 损失厌恶叙事三选（割肉止损卖半BTC落袋 / 逆势加仓≤¥50k抄底 / 装死），峰值追踪在 conditions 每日幂等更新（组合回撤↔峰终定律/损失厌恶）。
+- **验证**: `node --check` 全过；`python build.py` 重建 dist/index.html（8421.7 KB）；MC 10×500d 0 代码异常。
 
 ## 2026-07-14 — v3.105 loop R13 全系统优化·Domain H 公司/Phase2（A类修复2项 + 联动增强3项新事件）
 

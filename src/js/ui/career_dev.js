@@ -1703,7 +1703,9 @@ function renderCareerOverview(state, parent) {
       html +=
         '<div style="font-size:10px;color:var(--success);">+ 证书加成 ¥' +
         certBonus.toLocaleString() +
-        ' <span style="font-size:9px;">(+' + bonusRate + '%)</span></div>';
+        ' <span style="font-size:9px;">(+' +
+        bonusRate +
+        "%)</span></div>";
     }
     html += "</div>";
     html += "</div>";

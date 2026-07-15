@@ -1,1 +1,8 @@
-{"domain":"E","round":27,"lastCommit":"eb4a6ae4","lastDomain":"E","status":"completed","note":"域E 经济/投资 A类2项修复(renderKLine防御/千元里程碑)+联动增强3项(亏损心理/NPC推荐/公司期权)"}
+{
+  "domain": "A",
+  "round": 19,
+  "lastCommit": "53efab63",
+  "lastDomain": "A",
+  "status": "completed",
+  "note": "域A 数据/数值平衡 1项A类修复(items.js vitamins_item→vitamins_item2 礼物映射对齐)+3项联动增强(市场事件标签/市场活动计数/证书加成百分比)"
+}

@@ -3461,7 +3461,7 @@ function renderTradeTab(state, parent) {
     </div>
     <div style="text-align:right;">
       <span style="font-size:11px;color:var(--text-muted);">现金: <strong style="color:var(--success)">¥${state.resources.cash.toLocaleString()}</strong></span>
-      ${(function(){
+      ${(function () {
         var activeEvents = 0;
         if (state.trade && state.trade.marketEvents) {
           for (var _ei = 0; _ei < state.trade.marketEvents.length; _ei++) {
@@ -3469,8 +3469,10 @@ function renderTradeTab(state, parent) {
           }
         }
         return activeEvents > 0
-          ? '<div style="font-size:10px;color:#e8a838;margin-top:2px;">📊 ' + activeEvents + '个市场活动</div>'
-          : '';
+          ? '<div style="font-size:10px;color:#e8a838;margin-top:2px;">📊 ' +
+              activeEvents +
+              "个市场活动</div>"
+          : "";
       })()}
     </div>
   `;
@@ -3824,10 +3826,14 @@ function renderTradeTab(state, parent) {
     var marketEventTag = "";
     if (state.trade && state.trade.marketEvents) {
       for (var mei = 0; mei < state.trade.marketEvents.length; mei++) {
-        if (state.trade.marketEvents[mei].goodId === good.id && state.trade.marketEvents[mei].remaining > 0) {
-          marketEventTag = state.trade.marketEvents[mei].priceMod > 1
-            ? '<span style="color:var(--danger);font-size:10px;margin-left:8px;">🔥 行情看涨</span>'
-            : '<span style="color:var(--success);font-size:10px;margin-left:8px;">💥 行情看跌</span>';
+        if (
+          state.trade.marketEvents[mei].goodId === good.id &&
+          state.trade.marketEvents[mei].remaining > 0
+        ) {
+          marketEventTag =
+            state.trade.marketEvents[mei].priceMod > 1
+              ? '<span style="color:var(--danger);font-size:10px;margin-left:8px;">🔥 行情看涨</span>'
+              : '<span style="color:var(--success);font-size:10px;margin-left:8px;">💥 行情看跌</span>';
           break;
         }
       }

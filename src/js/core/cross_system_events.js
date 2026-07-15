@@ -51790,9 +51790,14 @@
     phase: "street",
     icon: "😰",
     title: "债务压得喘不过气",
-    story: "夜深了，你翻来覆去睡不着。手机屏幕上银行的还款提醒数字格外刺眼。你算了一笔账——按现在的收入，不吃不喝也要好几个月才能还清。窗外灯火通明，你却觉得这座城市的夜晚格外冷。",
+    story:
+      "夜深了，你翻来覆去睡不着。手机屏幕上银行的还款提醒数字格外刺眼。你算了一笔账——按现在的收入，不吃不喝也要好几个月才能还清。窗外灯火通明，你却觉得这座城市的夜晚格外冷。",
     conditions: function (st) {
-      return st.player.phase === "street" && st.player.day >= 15 && (st.resources.debt || 0) >= 10000;
+      return (
+        st.player.phase === "street" &&
+        st.player.day >= 15 &&
+        (st.resources.debt || 0) >= 10000
+      );
     },
     excludeFlags: ["_debtAnxietyDone"],
     choices: [
@@ -51804,7 +51809,10 @@
           st.skills.mental = st.skills.mental || { level: 0, xp: 0 };
           st.skills.mental.xp = (st.skills.mental.xp || 0) + 20;
           st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 5);
-          StateManager.addMessage("📝 你打开Excel，把债务拆分成12期。虽然数字还是那么大，但至少有了方向。心情+5，心智经验+20。", "success");
+          StateManager.addMessage(
+            "📝 你打开Excel，把债务拆分成12期。虽然数字还是那么大，但至少有了方向。心情+5，心智经验+20。",
+            "success",
+          );
         },
       },
       {
@@ -51814,7 +51822,10 @@
           st.flags._debtAnxietyDone = true;
           st.needs.fatigue = Math.min(100, (st.needs.fatigue || 0) + 10);
           st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 3);
-          StateManager.addMessage("💪 你咬着牙关掉手机，定了个五点的闹钟。多干一份活，就多还一份钱。疲劳+10，心情+3。", "info");
+          StateManager.addMessage(
+            "💪 你咬着牙关掉手机，定了个五点的闹钟。多干一份活，就多还一份钱。疲劳+10，心情+3。",
+            "info",
+          );
         },
       },
       {
@@ -51824,7 +51835,10 @@
           st.flags._debtAnxietyDone = true;
           st.status.health = Math.max(0, (st.status.health || 100) - 3);
           st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 2);
-          StateManager.addMessage("🍺 你买了瓶啤酒坐在路边喝。酒劲上来时，那些数字暂时模糊了。但明天醒来，它们还在。健康-3，心情+2。", "warning");
+          StateManager.addMessage(
+            "🍺 你买了瓶啤酒坐在路边喝。酒劲上来时，那些数字暂时模糊了。但明天醒来，它们还在。健康-3，心情+2。",
+            "warning",
+          );
         },
       },
     ],
@@ -51834,20 +51848,32 @@
 // ===== 联动增强2：连续3天恶劣天气情绪事件 =====
 (function () {
   if (typeof RANDOM_EVENTS === "undefined") return;
-  var CONSECUTIVE_BAD_WEATHER = ["rainy", "heavy_rain", "stormy", "snowy", "heavy_snow", "foggy", "heavy_smog"];
+  var CONSECUTIVE_BAD_WEATHER = [
+    "rainy",
+    "heavy_rain",
+    "stormy",
+    "snowy",
+    "heavy_snow",
+    "foggy",
+    "heavy_smog",
+  ];
   RANDOM_EVENTS.push({
     id: "bad_weather_blues",
     _isChainEvent: false,
     phase: "street",
     icon: "🌧️",
     title: "连绵阴雨让人沮丧",
-    story: "雨已经连续下了好几天。空气里全是潮湿的霉味，衣服晾不干，鞋子进水了，连床单都带着一股潮气。你站在窗前，看着灰蒙蒙的天，感觉自己也快发霉了。",
+    story:
+      "雨已经连续下了好几天。空气里全是潮湿的霉味，衣服晾不干，鞋子进水了，连床单都带着一股潮气。你站在窗前，看着灰蒙蒙的天，感觉自己也快发霉了。",
     conditions: function (st) {
       if (st.player.phase !== "street" || st.player.day < 7) return false;
       if (!st.weather || !st.weather.current) return false;
       var isBad = false;
       for (var i = 0; i < CONSECUTIVE_BAD_WEATHER.length; i++) {
-        if (st.weather.current === CONSECUTIVE_BAD_WEATHER[i]) { isBad = true; break; }
+        if (st.weather.current === CONSECUTIVE_BAD_WEATHER[i]) {
+          isBad = true;
+          break;
+        }
       }
       if (!isBad) return false;
       // 检查连续天数（需要weatherHistory或类似机制，降级为简单门槛）
@@ -51862,7 +51888,10 @@
           st.flags._badWeatherBluesDone = true;
           st.resources.cash = (st.resources.cash || 0) - 10;
           st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 5);
-          StateManager.addMessage("☕ 便利店的暖光灯下，一杯热奶茶下肚，整个人都活过来了。花费¥10，心情+5。", "success");
+          StateManager.addMessage(
+            "☕ 便利店的暖光灯下，一杯热奶茶下肚，整个人都活过来了。花费¥10，心情+5。",
+            "success",
+          );
         },
       },
       {
@@ -51871,7 +51900,10 @@
         apply: function (st) {
           st.flags._badWeatherBluesDone = true;
           st.flags._rainMarketUmbrellaDay = st.player.day;
-          StateManager.addMessage("🏪 你想起老周说过——雨天批发市场雨具和防潮用品卖得特别好。你披上雨衣出了门。", "info");
+          StateManager.addMessage(
+            "🏪 你想起老周说过——雨天批发市场雨具和防潮用品卖得特别好。你披上雨衣出了门。",
+            "info",
+          );
         },
       },
       {
@@ -51881,7 +51913,10 @@
           st.flags._badWeatherBluesDone = true;
           st.needs.fatigue = Math.max(0, (st.needs.fatigue || 0) - 5);
           st.needs.happiness = Math.max(0, (st.needs.happiness || 50) - 3);
-          StateManager.addMessage("😴 你裹着被子听着雨声发呆。虽然状态恢复了一些，但心里总觉得在浪费时间。", "info");
+          StateManager.addMessage(
+            "😴 你裹着被子听着雨声发呆。虽然状态恢复了一些，但心里总觉得在浪费时间。",
+            "info",
+          );
         },
       },
     ],

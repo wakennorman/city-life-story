@@ -29551,6 +29551,20 @@ var STORY_CHAPTERS = [
         hint: "是时候想想更长远的事了。",
       },
       {
+        id: "survive_emotion",
+        condition: function (st) {
+          // [全系统自洽修复] 域G 联动增强: 情绪状态影响叙事走向（G→G 深度包装）
+          return (
+            st.status &&
+            st.status.emotionalState &&
+            (st.status.emotionalState === "depressed" ||
+              st.status.emotionalState === "sad")
+          );
+        },
+        text: "三十天过去了，你发现这座城市不只冷在风里，也冷在心里。但你还在走，这比什么都重要。",
+        hint: "找人说说话、吃点好吃的，心情好起来脚步才会轻。",
+      },
+      {
         id: "survive_default",
         condition: function () {
           return true;
@@ -29613,6 +29627,28 @@ var STORY_CHAPTERS = [
         },
         text: "你在这座城市交到了真正的朋友。有人脉的城市，才不是异乡。",
         hint: "维系好这些关系，它们会在关键时刻帮你。",
+      },
+      {
+        id: "foothold_health_crisis",
+        condition: function (st) {
+          // [全系统自洽修复] 域G 联动增强: 健康危机改变立足叙事（G→G，健康子系统联动）
+          return ((st.status && st.status.health) || 100) < 30;
+        },
+        text: "半年了，身体却在报警。你开始懂得：攒的钱再多，身体垮了都是别人的。这座城市教会你的第一件事，是健康。",
+        hint: "停下来看看身体，别等它把你逼停。",
+      },
+      {
+        id: "foothold_emotion",
+        condition: function (st) {
+          // [全系统自洽修复] 域G 联动增强: 快乐状态给立足章节加温度
+          return (
+            st.status &&
+            st.status.emotionalState === "happy" &&
+            ((st.needs && st.needs.happiness) || 0) >= 70
+          );
+        },
+        text: "半年了，你发现自己开始笑。不是那种硬撑的笑，是真正觉得日子有盼头的笑。",
+        hint: "快乐是一种能力，你已经学会了。",
       },
       {
         id: "foothold_default",
@@ -89822,217 +89858,308 @@ if (typeof window !== "undefined") {
 })();
 </script>
     <!-- v3.118: 域E 联动增强(R27)·职业立足→私募圈层(E→C) / 组合回撤叙事化(E→B)-->
-    <script>// ============================================================
-// economy_linkage_events_r27.js — 域E(经济/投资) 联动增强 (R27)
-// ============================================================
-// 设计意图（指令二·通用联动方向）：
-//   LE1  econ_career_invest_unlock  → E→C 职业/事业积累 → 经济高阶机会
-//        让"财务立足 / 职场资深"在游戏里有经济延续回报，缝合职业收益与经济脱钩的空白区。
-//   LE2  econ_portfolio_drawdown    → E→B 经济波动 → 叙事包装
-//        把无形的组合回撤变成有重量的叙事时刻（损失厌恶 / 峰终定律），让玩家"记得"那次暴跌。
-//
-// 实现约定：
-//   - RANDOM_EVENTS 按 phase 严格过滤（events_core.js:401），故每个事件 street/corporate 各推一份。
-//   - 共享 seen/cooldown 标记，避免双阶段重复触发。
-//   - 全部数值 || 防御；apply 只改已存在字段，不引入死字段（避免 死字段→死事件）。
-//   - 组合峰值由 investment.js 的 tickInvestmentDaily 每日维护 inv._portfolioPeak（域E联动启用）。
-// ============================================================
-
+    <script>/*
+ * 城市浮生记 — 域E（经济/投资）联动增强事件 · R27（第二轮）
+ * v3.118 · loop 全系统优化·Domain E 经济/投资 → 跨域桥接
+ *
+ * 设计约束（与 R11/R15/R18/R23/R26 一致）：
+ *  - IIFE 注入全局 RANDOM_EVENTS 数组（非 ES import），避免改 cross_system_events.js。
+ *  - 所有 state 访问均 || / isFinite 防御；数值一律标 [PLACEHOLDER] 待数值组校准。
+ *  - 事件引擎严格按 e.phase 过滤（state.player.phase 仅 "street"/"corporate"），
+ *    故本文件每个事件显式注册 street + corporate 两个变体（共享去重 flag，不会跨阶段双发）。
+ *  - 投资组合市值复用全局 getInvestmentAssetSnapshot(st).investmentValue（与引擎/UI 同源，
+ *    避免重算导致口径漂移）；净值镜像 data_linkage_events.js 的 netWorthA（现金+存款+投资市值）。
+ *  - 本次聚焦「经济成就 ↔ 职场圈层」(E→C) 与「组合回撤 ↔ 损失厌恶叙事」(E→B) 两段此前空白。
+ *
+ * 与既有 E 域事件不重复说明：
+ *  - invest_acumen_career(E→C) 是「盘感→会计技能 XP」；本 R27 的 econ_career_invest_unlock(E→C)
+ *    是「净值/职级达门槛→被私募圈层邀请跟投，给真实现金+管理技能」，触发前提与收益均不同。
+ *  - invest_drawdown_moral(E→B) 是「单只持仓浮亏>10%」；本 R27 的 econ_portfolio_drawdown(E→B)
+ *    是「组合市值自历史峰值回撤≥20%」（峰终定律/损失厌恶），是更宏观的回撤叙事，互不构成冗余。
+ */
 (function () {
   if (typeof RANDOM_EVENTS === "undefined" || !RANDOM_EVENTS) return;
-  if (RANDOM_EVENTS._econLinkR27Loaded) return;
-  RANDOM_EVENTS._econLinkR27Loaded = true;
+  if (RANDOM_EVENTS._econLinkageR27Loaded) return;
+  RANDOM_EVENTS._econLinkageR27Loaded = true;
 
-  // 计算当前投资组合市值（股票+房产+比特币），全程 || 防御
-  function _portfolioValue(inv) {
-    if (!inv) return 0;
-    var total = 0;
-    var sm = inv.stockMarket || {};
-    var holdings = inv.stockHoldings || [];
-    for (var i = 0; i < holdings.length; i++) {
-      var h = holdings[i];
-      var m = sm[h.symbol];
-      if (m && isFinite(m.price) && isFinite(h.shares)) total += m.price * h.shares;
+  // ---- 本地助手（IIFE 作用域，避免与同模式文件命名冲突） ----
+
+  // 投资组合市值（现金等价物以外的投资仓位），复用引擎全局快照，口径一致
+  function portfolioValueR27(st) {
+    try {
+      if (typeof getInvestmentAssetSnapshot === "function") {
+        var snap = getInvestmentAssetSnapshot(st);
+        if (snap && isFinite(snap.investmentValue)) return snap.investmentValue;
+      }
+    } catch (e) {
+      /* 忽略 */
     }
-    var props = inv.properties || [];
-    for (var j = 0; j < props.length; j++) {
-      var p = props[j];
-      total += p.currentPrice || p.buyPrice || 0;
+    return 0;
+  }
+
+  // 净资产（镜像 netWorthA：现金 + 银行存款 + 投资市值）
+  function netWorthR27(st) {
+    try {
+      var nw = (st.resources.cash || 0) + (st.resources.bankBalance || 0);
+      return nw + portfolioValueR27(st);
+    } catch (e) {
+      return 0;
     }
-    if ((inv.btcHoldings || 0) > 0) total += (inv.btcPrice || 0) * inv.btcHoldings;
-    return total;
   }
 
-  // ---------- LE1：职业/事业立足 → 私募跟投圈层 ----------
-  function makeCareerInvestEvent(phase) {
-    return {
-      id: "econ_career_invest_unlock_" + phase,
-      title: "💼 圈层敲门：私募跟投",
-      icon: "🤝",
-      phase: phase,
-      probability: 0.03, // 稀有·一次性机会
-      story:
-        "一个许久没联系的老同学突然约你喝咖啡。他这两年跟着前司老板做一级市场，今天半开玩笑半认真地说：" +
-        "「你现在也算站稳了，有个跟投额度，门槛不高，但圈子里才传。要不要了解下？」",
-      conditions: function (st) {
-        if (st.flags && st.flags._careerInvestUnlocked) return false;
-        var cash =
-          (st.resources.cash || 0) + (st.resources.bankBalance || 0);
-        // 财务立足 或 职场资深（职业→经济联动的两种兑现路径）
-        var senior =
-          st.corporate &&
-          ["P6", "P7", "P8", "P9", "P10"].indexOf(st.corporate.rank) >= 0;
-        return cash >= 200000 || !!senior; // [PLACEHOLDER] 阈值待调参
-      },
-      choices: [
-        {
-          text: "🚀 接受跟投邀请",
-          hint: "圈层资源 + 管理眼界 +",
-          apply: function (st) {
-            st.flags._careerInvestUnlocked = true;
-            var gain = 30000; // [PLACEHOLDER] 早期份额成熟落袋，叙事合理化
-            st.resources.cash = (st.resources.cash || 0) + gain;
-            if (st.skills) {
-              st.skills.management = Math.min(
-                100,
-                (st.skills.management || 0) + 3,
-              );
-            }
-            StateManager.addMessage(
-              "你早年跟投的老同学创业项目今天退出，分到 ¥" +
-                gain.toLocaleString() +
-                "。私募圈层向你敞开了门，管理眼界也开阔了。",
-              "success",
-            );
-          },
-        },
-        {
-          text: "🙅 婉拒，先观望",
-          hint: "人脉已记下",
-          apply: function (st) {
-            st.flags._careerInvestUnlocked = true;
-            StateManager.addMessage(
-              "你婉拒了邀约，但记住了这条人脉——说不定下次用得上。",
-              "info",
-            );
-          },
-        },
-      ],
-    };
+  // 是否已踏入投资门槛（持有一个以上投资标的）——作为经济域联动的触发闸门
+  function isInvestorR27(st) {
+    if (!st || !st.investment) return false;
+    var h = st.investment.stockHoldings;
+    return Array.isArray(h) && h.length >= 1;
   }
 
-  // ---------- LE2：组合回撤 → 叙事化（损失厌恶 / 峰终定律） ----------
-  function makeDrawdownEvent(phase) {
-    return {
-      id: "econ_portfolio_drawdown_" + phase,
-      title: "📉 资产回撤：那次暴跌",
-      icon: "💸",
-      phase: phase,
-      probability: 0.04,
-      story:
-        "你盯着持仓界面，数字一片刺眼的红。从高点算，组合已经回撤了不止两成。" +
-        "手机弹窗还在推送「恐慌情绪蔓延」，你忽然意识到——这座城市从不保证谁一定能赢。",
-      conditions: function (st) {
-        var inv = st.investment;
-        if (!inv) return false;
-        if (!(inv._portfolioPeak > 0)) return false; // 峰值由每日 tick 维护
-        var cur = _portfolioValue(inv);
-        if (!(cur > 0)) return false;
-        var dd = (inv._portfolioPeak - cur) / inv._portfolioPeak;
-        if (dd < 0.2) return false; // 回撤超 20% 才触发 [PLACEHOLDER]
-        // 30 天冷却，避免熊市里天天弹窗
-        if (
-          st.flags._econDrawdownSeenDay &&
-          st.player.day - st.flags._econDrawdownSeenDay < 30
-        )
-          return false;
-        return true;
-      },
-      choices: [
-        {
-          text: "🩹 割肉止损（卖掉一半）",
-          hint: "落袋为安 · 现金 +",
-          apply: function (st) {
-            st.flags._econDrawdownSeenDay = st.player.day;
-            var inv = st.investment;
-            var h = inv.btcHoldings || 0;
-            // 优先减比特币（波动最大），其余资产等比减半
-            var sold = Math.floor(h * 0.5);
-            if (sold > 0) {
-              var px = inv.btcPrice || 0;
-              var cash = Math.round(sold * px);
-              inv.btcHoldings = h - sold;
-              st.resources.cash = (st.resources.cash || 0) + cash;
-              StateManager.addMessage(
-                "你割肉卖出 " +
-                  sold +
-                  " 枚比特币，回笼 ¥" +
-                  cash.toLocaleString() +
-                  "。",
-                "info",
-              );
-            }
-            if (st.needs)
-              st.needs.happiness = Math.max(
-                0,
-                (st.needs.happiness || 50) - 4,
-              );
-          },
-        },
-        {
-          text: "💪 逆势加仓",
-          hint: "赌反弹 · 需现金",
-          apply: function (st) {
-            st.flags._econDrawdownSeenDay = st.player.day;
-            var inv = st.investment;
-            var px = inv.btcPrice || 0;
-            var budget = Math.min(st.resources.cash || 0, 50000); // [PLACEHOLDER]
-            if (budget > px && px > 0) {
-              var bought = Math.floor(budget / px);
-              inv.btcHoldings = (inv.btcHoldings || 0) + bought;
-              st.resources.cash = (st.resources.cash || 0) - bought * px;
-              StateManager.addMessage(
-                "你逆势加仓 " + bought + " 枚，赌一波反弹。",
-                "warning",
-              );
-            } else {
-              StateManager.addMessage(
-                "你想加仓，但现金不够撬动仓位。",
-                "info",
-              );
-            }
-          },
-        },
-        {
-          text: "😶 装死，等回本",
-          hint: "无操作 · 心情 -",
-          apply: function (st) {
-            st.flags._econDrawdownSeenDay = st.player.day;
-            if (st.needs)
-              st.needs.happiness = Math.max(
-                0,
-                (st.needs.happiness || 50) - 6,
-              );
-            StateManager.addMessage(
-              "你把手机一扔，决定装死等回本。",
-              "info",
-            );
-          },
-        },
-      ],
-    };
-  }
-
-  // 每个事件按阶段各推一份（events_core.js 严格按 phase 过滤）
-  RANDOM_EVENTS.push(makeCareerInvestEvent("street"));
-  RANDOM_EVENTS.push(makeCareerInvestEvent("corporate"));
-  RANDOM_EVENTS.push(makeDrawdownEvent("street"));
-  RANDOM_EVENTS.push(makeDrawdownEvent("corporate"));
-
-  if (typeof console !== "undefined") {
-    console.log(
-      "[域E联动R27] 已注入 2 个经济联动事件（职业→经济 / 组合回撤叙事），各 street+corporate 双阶段。",
+  // 安全改心情（兜底直写，避免依赖可能不存在的全局助手）
+  function moodR27(st, delta) {
+    if (!st || !st.needs) return;
+    st.needs.happiness = Math.max(
+      0,
+      Math.min(100, (st.needs.happiness || 50) + delta),
     );
+  }
+
+  // ---- 事件定义 ----
+
+  // ===== E→C：财富/职级立足 → 私募跟投圈层（经济成就反哺职场圈层）=====
+  function careerUnlockCond(st) {
+    if (!st || !st.player || !st.resources) return false;
+    if (st.flags && st.flags._careerInvestUnlocked) return false; // 一次性
+    if (netWorthR27(st) >= 200000) return true; // [PLACEHOLDER] 净值门槛
+    // 职场期：职级达 P6 及以上（中层）也被圈层注意到
+    if (
+      st.player.phase === "corporate" &&
+      st.corporate &&
+      ["P6", "P7", "P8", "P9", "P10"].indexOf(st.corporate.rank) >= 0
+    )
+      return true;
+    return false;
+  }
+
+  function careerUnlockApply(st, accept) {
+    try {
+      if (st.flags) st.flags._careerInvestUnlocked = true; // 无论接受与否都锁定一次性
+      if (accept) {
+        // 真实收益：圈层跟投首笔分红（现金）+ 管理技能（职场硬技能）兑现
+        if (st.resources) st.resources.cash = (st.resources.cash || 0) + 30000; // [PLACEHOLDER] 跟投首笔分红
+        if (st.skills)
+          st.skills.management = Math.min(
+            100,
+            (st.skills.management || 0) + 3, // [PLACEHOLDER] 管理技能加成
+          );
+        if (st.player) st.player.mental = (st.player.mental || 50) + 4;
+        moodR27(st, 3);
+        if (typeof StateManager !== "undefined" && StateManager.addMessage)
+          StateManager.addMessage(
+            "圈层递来跟投的橄榄枝——钱生钱之外，你也成了「被看见」的人。现金+¥30000，管理+3。",
+            "success",
+          );
+      } else {
+        if (st.player) st.player.mental = (st.player.mental || 50) + 1;
+        if (typeof StateManager !== "undefined" && StateManager.addMessage)
+          StateManager.addMessage(
+            "你婉拒了圈层邀请，先把眼前的事做扎实。心智+1。",
+            "info",
+          );
+      }
+    } catch (e) {
+      /* 静默：任一奖励失败都不应阻断每日管线 */
+    }
+  }
+
+  // ===== E→B：组合市值自峰值回撤 ≥20% → 损失厌恶叙事化（峰终定律）=====
+  function drawdownCond(st) {
+    if (!st || !st.player) return false;
+    if (!isInvestorR27(st)) return false;
+    var inv = st.investment || {};
+    var cur = portfolioValueR27(st);
+    if (!(cur > 0)) return false;
+    // 峰值追踪（每日更新，幂等）：创新高当天不触发，等回撤
+    if (!(inv._portfolioPeak > 0) || cur > inv._portfolioPeak) {
+      inv._portfolioPeak = cur;
+      return false;
+    }
+    if (cur > inv._portfolioPeak * 0.8) return false; // [PLACEHOLDER] 回撤阈值 20%
+    // 仅在新低时触发（避免同一轮下跌反复敲击）
+    var lastLow = (st.flags && st.flags._econLastDrawdownValue) || Infinity;
+    if (!(cur < lastLow)) return false;
+    // 30 天冷却
+    if (
+      st.flags &&
+      typeof st.flags._econPeakDrawdownDay === "number" &&
+      st.player.day - st.flags._econPeakDrawdownDay < 30 // [PLACEHOLDER] 冷却天数
+    )
+      return false;
+    return true;
+  }
+
+  function drawdownApply(st, action) {
+    try {
+      var inv = st.investment || {};
+      if (st.flags) {
+        st.flags._econPeakDrawdownDay = st.player.day;
+        st.flags._econLastDrawdownValue = portfolioValueR27(st);
+      }
+      if (action === "cut") {
+        // 割肉止损：卖掉一半 BTC，落袋为安，但心情受挫
+        if ((inv.btcHoldings || 0) > 0 && (inv.btcPrice || 0) > 0) {
+          var half = inv.btcHoldings / 2;
+          var proceeds = half * inv.btcPrice;
+          inv.btcHoldings = inv.btcHoldings - half;
+          if (!isFinite(inv.btcHoldings)) inv.btcHoldings = 0;
+          if (st.resources)
+            st.resources.cash = (st.resources.cash || 0) + proceeds;
+        }
+        moodR27(st, -4); // [PLACEHOLDER] 割肉心情惩罚
+        if (typeof StateManager !== "undefined" && StateManager.addMessage)
+          StateManager.addMessage(
+            "你按下卖出键，账户不再滴血——但那种抽离感，半天没缓过来。心情-4。",
+            "warning",
+          );
+      } else if (action === "add") {
+        // 逆势加仓：用 ≤¥50000 预算抄底 BTC
+        var budget = Math.min(50000, st.resources ? st.resources.cash || 0 : 0); // [PLACEHOLDER] 加仓预算
+        if (budget > 0 && (inv.btcPrice || 0) > 0) {
+          if (st.resources)
+            st.resources.cash = (st.resources.cash || 0) - budget;
+          inv.btcHoldings = (inv.btcHoldings || 0) + budget / inv.btcPrice;
+        }
+        moodR27(st, -2); // [PLACEHOLDER] 抄底焦虑
+        if (typeof StateManager !== "undefined" && StateManager.addMessage)
+          StateManager.addMessage(
+            "别人恐惧你贪婪——你又补了点仓，赌的是反转，押上的是神经。心情-2。",
+            "info",
+          );
+      } else {
+        // 装死：什么也不做，但账户绿得发慌
+        moodR27(st, -6); // [PLACEHOLDER] 躺平心情惩罚
+        if (typeof StateManager !== "undefined" && StateManager.addMessage)
+          StateManager.addMessage(
+            "你关掉软件，假装什么都没发生。可夜里翻来覆去，全是绿油油的数字。心情-6。",
+            "warning",
+          );
+      }
+    } catch (e) {
+      /* 静默 */
+    }
+  }
+
+  var ECON_R27_EVENTS = [
+    // ---- E→C：财富/职级立足 → 私募跟投圈层 ----
+    {
+      id: "econ_career_invest_unlock_street",
+      title: "圈层递来的橄榄枝",
+      desc: "你资产摸到某个 invisible 门槛后，忽然有人引荐你进一个「低调却精明」的私募饭局。席间没人谈股票代码，谈的是谁拿到了哪轮份额。\n\n你意识到：钱到了一定量级，机会会自己找上门。",
+      phase: "street",
+      triggers: { minDay: 120 },
+      conditions: careerUnlockCond,
+      probability: 0.05,
+      choices: [
+        {
+          text: "接住这层关系，跟投一笔",
+          apply: function (st) {
+            careerUnlockApply(st, true);
+          },
+        },
+        {
+          text: "先观望，不急着入场",
+          apply: function (st) {
+            careerUnlockApply(st, false);
+          },
+        },
+      ],
+    },
+    {
+      id: "econ_career_invest_unlock_corporate",
+      title: "中层之后的「隐形人脉」",
+      desc: "升到 P6 这道坎，你发现周报之外另有圈子——饭局、内推、跟投名额，都悄悄流向「已被认可」的人。\n\n一位前辈拍拍你肩：「下次有好项目，带你一个。」",
+      phase: "corporate",
+      triggers: { minDay: 120 },
+      conditions: careerUnlockCond,
+      probability: 0.05,
+      choices: [
+        {
+          text: "跟紧这层关系，接下跟投",
+          apply: function (st) {
+            careerUnlockApply(st, true);
+          },
+        },
+        {
+          text: "先把手头业务做扎实",
+          apply: function (st) {
+            careerUnlockApply(st, false);
+          },
+        },
+      ],
+    },
+
+    // ---- E→B：组合市值自峰值回撤 ≥20% → 损失厌恶叙事化 ----
+    {
+      id: "econ_portfolio_drawdown_street",
+      title: "账户从最高点摔下来的那天",
+      desc: "你曾盯着账户笑过。如今它从峰值跌去两成，绿得刺眼。手指悬在键盘上——割肉、加仓、还是装死？\n\n这一刻你才懂，真正考验人的从来不是上涨。",
+      phase: "street",
+      triggers: { minDay: 90 },
+      conditions: drawdownCond,
+      probability: 0.04,
+      choices: [
+        {
+          text: "🔪 割肉止损，落袋为安",
+          apply: function (st) {
+            drawdownApply(st, "cut");
+          },
+        },
+        {
+          text: "📈 逆势加仓，赌个反转",
+          apply: function (st) {
+            drawdownApply(st, "add");
+          },
+        },
+        {
+          text: "😶 关掉软件，装死",
+          apply: function (st) {
+            drawdownApply(st, "hold");
+          },
+        },
+      ],
+    },
+    {
+      id: "econ_portfolio_drawdown_corporate",
+      title: "职场顺风顺水，账户却在褪色",
+      desc: "职级往上走，工资涨了，可你那笔悄悄布局的投资正从高位滑落两成。白天你在会议室谈笑，夜里却盯着绿油油的曲线发呆。\n\n割肉、加仓、还是装死？",
+      phase: "corporate",
+      triggers: { minDay: 90 },
+      conditions: drawdownCond,
+      probability: 0.04,
+      choices: [
+        {
+          text: "🔪 割肉止损，落袋为安",
+          apply: function (st) {
+            drawdownApply(st, "cut");
+          },
+        },
+        {
+          text: "📈 逆势加仓，赌个反转",
+          apply: function (st) {
+            drawdownApply(st, "add");
+          },
+        },
+        {
+          text: "😶 关掉软件，装死",
+          apply: function (st) {
+            drawdownApply(st, "hold");
+          },
+        },
+      ],
+    },
+  ];
+
+  for (var i = 0; i < ECON_R27_EVENTS.length; i++) {
+    RANDOM_EVENTS.push(ECON_R27_EVENTS[i]);
   }
 })();
 </script>
@@ -90228,7 +90355,7 @@ if (typeof window !== "undefined") {
     {
       id: "invest_drawdown_moral",
       title: "账户绿得发慌的那一周",
-      desc: "连续三天跌，持仓浮亏超过¥3000。你盯着屏幕，手指悬在\"全部卖出\"按钮上——要么割肉认栽，要么死扛到底。\n\n这种时候你才真正理解什么叫\"市场有风险\"。",
+      desc: '连续三天跌，持仓浮亏超过¥3000。你盯着屏幕，手指悬在"全部卖出"按钮上——要么割肉认栽，要么死扛到底。\n\n这种时候你才真正理解什么叫"市场有风险"。',
       phase: "street",
       triggers: { minDay: 90 },
       conditions: function (st) {
@@ -90270,13 +90397,21 @@ if (typeof window !== "undefined") {
                 }
               }
               if (worstSym && typeof sellInvStock === "function") {
-                var shares = (inv.stockHoldings.find(function(h){return h.symbol===worstSym;})||{}).shares || 0;
+                var shares =
+                  (
+                    inv.stockHoldings.find(function (h) {
+                      return h.symbol === worstSym;
+                    }) || {}
+                  ).shares || 0;
                 sellInvStock(worstSym, shares);
               }
             }
             if (st.player) st.player.mental = (st.player.mental || 50) + 3;
             if (typeof StateManager !== "undefined" && StateManager.addMessage)
-              StateManager.addMessage("止损虽痛，但活下来才有下一次机会。心智+3。", "warning");
+              StateManager.addMessage(
+                "止损虽痛，但活下来才有下一次机会。心智+3。",
+                "warning",
+              );
           },
         },
         {
@@ -90284,9 +90419,13 @@ if (typeof window !== "undefined") {
           apply: function (st) {
             if (st.flags) st.flags._drawdownMoralCooldown = true;
             if (st.player) st.player.mental = (st.player.mental || 50) + 5;
-            if (st.needs) st.needs.happiness = Math.max(0, (st.needs.happiness || 50) - 5);
+            if (st.needs)
+              st.needs.happiness = Math.max(0, (st.needs.happiness || 50) - 5);
             if (typeof StateManager !== "undefined" && StateManager.addMessage)
-              StateManager.addMessage("你选择了相信自己的判断，暂时不动。心情-5，但心智+5——坚持也是一种能力。", "info");
+              StateManager.addMessage(
+                "你选择了相信自己的判断，暂时不动。心情-5，但心智+5——坚持也是一种能力。",
+                "info",
+              );
           },
         },
         {
@@ -90296,7 +90435,10 @@ if (typeof window !== "undefined") {
             if (typeof addSkillXp === "function") addSkillXp("finance", 10);
             if (st.player) st.player.mental = (st.player.mental || 50) + 4;
             if (typeof StateManager !== "undefined" && StateManager.addMessage)
-              StateManager.addMessage("亏损是最好的老师。你翻开《股票作手回忆录》， finance+10。", "good");
+              StateManager.addMessage(
+                "亏损是最好的老师。你翻开《股票作手回忆录》， finance+10。",
+                "good",
+              );
           },
         },
       ],
@@ -90306,7 +90448,7 @@ if (typeof window !== "undefined") {
     // ===== E→D：NPC推荐投资机会（社交反哺经济）=====
     {
       id: "npc_invest_tip",
-      title: "朋友推荐的\"内部消息\"",
+      title: '朋友推荐的"内部消息"',
       desc: "你常联系的某个朋友突然发消息：「我这边有个靠谱的项目，据说近期有大动作，要不要一起看看？」\n\n投资机会往往来自人脉——但也可能来自陷阱。",
       phase: "street",
       triggers: { minDay: 100 },
@@ -90317,7 +90459,8 @@ if (typeof window !== "undefined") {
         // 至少一个已结识NPC（好感≥15）
         var rels = st.relationships || {};
         for (var id in rels) {
-          if (rels[id] && rels[id].met && (rels[id].affinity || 0) >= 15) return true;
+          if (rels[id] && rels[id].met && (rels[id].affinity || 0) >= 15)
+            return true;
         }
         return false;
       },
@@ -90347,13 +90490,38 @@ if (typeof window !== "undefined") {
             if (isGood) {
               if (typeof addSkillXp === "function") addSkillXp("finance", 5);
               if (st.player) st.player.mental = (st.player.mental || 50) + 3;
-              if (typeof StateManager !== "undefined" && StateManager.addMessage)
-                StateManager.addMessage("朋友的推荐确实有价值！finance+5，心智+3。" + (npcId ? " [" + (npcId.charAt(0).toUpperCase()+npcId.slice(1)) + "] " : ""), "good");
+              if (
+                typeof StateManager !== "undefined" &&
+                StateManager.addMessage
+              )
+                StateManager.addMessage(
+                  "朋友的推荐确实有价值！finance+5，心智+3。" +
+                    (npcId
+                      ? " [" +
+                        (npcId.charAt(0).toUpperCase() + npcId.slice(1)) +
+                        "] "
+                      : ""),
+                  "good",
+                );
             } else {
-              if (st.player) st.player.morality = Math.max(0, (st.player.morality || 50) - 3);
-              if (st.needs) st.needs.happiness = Math.max(0, (st.needs.happiness || 50) - 8);
-              if (typeof StateManager !== "undefined" && StateManager.addMessage)
-                StateManager.addMessage("这次推荐不太靠谱…你意识到不能盲目听信。道德-3，心情-8。", "warning");
+              if (st.player)
+                st.player.morality = Math.max(
+                  0,
+                  (st.player.morality || 50) - 3,
+                );
+              if (st.needs)
+                st.needs.happiness = Math.max(
+                  0,
+                  (st.needs.happiness || 50) - 8,
+                );
+              if (
+                typeof StateManager !== "undefined" &&
+                StateManager.addMessage
+              )
+                StateManager.addMessage(
+                  "这次推荐不太靠谱…你意识到不能盲目听信。道德-3，心情-8。",
+                  "warning",
+                );
             }
           },
         },
@@ -90361,9 +90529,16 @@ if (typeof window !== "undefined") {
           text: "🙏 礼貌感谢，婉拒机会",
           apply: function (st) {
             if (st.flags) st.flags._npcInvestTipCooldown = true;
-            if (st.player) st.player.morality = Math.min(100, (st.player.morality || 50) + 2);
+            if (st.player)
+              st.player.morality = Math.min(
+                100,
+                (st.player.morality || 50) + 2,
+              );
             if (typeof StateManager !== "undefined" && StateManager.addMessage)
-              StateManager.addMessage("你保持了理性，没有盲目跟风。道德+2。", "info");
+              StateManager.addMessage(
+                "你保持了理性，没有盲目跟风。道德+2。",
+                "info",
+              );
           },
         },
         {
@@ -90373,7 +90548,10 @@ if (typeof window !== "undefined") {
             if (typeof addSkillXp === "function") addSkillXp("finance", 8);
             if (st.player) st.player.mental = (st.player.mental || 50) + 2;
             if (typeof StateManager !== "undefined" && StateManager.addMessage)
-              StateManager.addMessage("你花了几天研究相关行业的财报，finance+8。", "good");
+              StateManager.addMessage(
+                "你花了几天研究相关行业的财报，finance+8。",
+                "good",
+              );
           },
         },
       ],
@@ -90410,11 +90588,17 @@ if (typeof window !== "undefined") {
               st.resources.cash = Math.max(0, (st.resources.cash || 0) - 5000); // [PLACEHOLDER] 行权费
             }
             if (st.player.corporate) {
-              st.player.corporate.upward = Math.min(100, (st.player.corporate.upward || 50) + 8);
+              st.player.corporate.upward = Math.min(
+                100,
+                (st.player.corporate.upward || 50) + 8,
+              );
             }
             if (st.player) st.player.mental = (st.player.mental || 50) + 5;
             if (typeof StateManager !== "undefined" && StateManager.addMessage)
-              StateManager.addMessage("你签了期权协议，和公司成了利益共同体。职场声誉+8，心智+5。", "success");
+              StateManager.addMessage(
+                "你签了期权协议，和公司成了利益共同体。职场声誉+8，心智+5。",
+                "success",
+              );
           },
         },
         {
@@ -90423,16 +90607,26 @@ if (typeof window !== "undefined") {
             if (st.flags) st.flags._corpEquityCooldown = true;
             if (st.player) st.player.mental = (st.player.mental || 50) + 2;
             if (typeof StateManager !== "undefined" && StateManager.addMessage)
-              StateManager.addMessage("你决定先研究透条款再签字。心智+2。", "info");
+              StateManager.addMessage(
+                "你决定先研究透条款再签字。心智+2。",
+                "info",
+              );
           },
         },
         {
           text: "❌ 拒绝，工资就够了",
           apply: function (st) {
             if (st.flags) st.flags._corpEquityCooldown = true;
-            if (st.player) st.player.morality = Math.min(100, (st.player.morality || 50) + 2);
+            if (st.player)
+              st.player.morality = Math.min(
+                100,
+                (st.player.morality || 50) + 2,
+              );
             if (typeof StateManager !== "undefined" && StateManager.addMessage)
-              StateManager.addMessage("你选择了简单直接——拿工资走人，不绑期权。道德+2。", "info");
+              StateManager.addMessage(
+                "你选择了简单直接——拿工资走人，不绑期权。道德+2。",
+                "info",
+              );
           },
         },
       ],
@@ -149122,7 +149316,7 @@ function isItemNpcGift(itemId, npcId) {
     notebook_item: ["daily_use"],
     flashlight: ["daily_use"],
     radio: ["daily_use"],
-    vitamins_item: ["daily_use"],
+    vitamins_item2: ["daily_use"], // [全系统自洽修复] 域A 修复: vitamins_item2 → 礼物映射ID与实际物品ID对齐
     eye_drops: ["daily_use"],
     back_massager: ["daily_use"],
     lunch_box: ["daily_use"],
@@ -182375,15 +182569,18 @@ function tickInvestmentDaily(state) {
     for (var _hi = 0; _hi < _holdings.length; _hi++) {
       var _h = _holdings[_hi];
       var _m = _sm[_h.symbol];
-      if (_m && isFinite(_m.price) && isFinite(_h.shares)) _pv += _m.price * _h.shares;
+      if (_m && isFinite(_m.price) && isFinite(_h.shares))
+        _pv += _m.price * _h.shares;
     }
     var _props = inv.properties || [];
     for (var _pi = 0; _pi < _props.length; _pi++) {
       _pv += _props[_pi].currentPrice || _props[_pi].buyPrice || 0;
     }
-    if ((inv.btcHoldings || 0) > 0) _pv += (inv.btcPrice || 0) * inv.btcHoldings;
+    if ((inv.btcHoldings || 0) > 0)
+      _pv += (inv.btcPrice || 0) * inv.btcHoldings;
     if (_pv > 0) {
-      if (!(inv._portfolioPeak > 0) || _pv > inv._portfolioPeak) inv._portfolioPeak = _pv;
+      if (!(inv._portfolioPeak > 0) || _pv > inv._portfolioPeak)
+        inv._portfolioPeak = _pv;
     }
   } catch (e) {
     // 静默：峰值追踪失败不影响主流程
@@ -213352,7 +213549,22 @@ function renderTradeTab(state, parent) {
       </h3>
       ${skillTag}
     </div>
-    <span style="font-size:11px;color:var(--text-muted);">现金: <strong style="color:var(--success)">¥${state.resources.cash.toLocaleString()}</strong></span>
+    <div style="text-align:right;">
+      <span style="font-size:11px;color:var(--text-muted);">现金: <strong style="color:var(--success)">¥${state.resources.cash.toLocaleString()}</strong></span>
+      ${(function () {
+        var activeEvents = 0;
+        if (state.trade && state.trade.marketEvents) {
+          for (var _ei = 0; _ei < state.trade.marketEvents.length; _ei++) {
+            if (state.trade.marketEvents[_ei].remaining > 0) activeEvents++;
+          }
+        }
+        return activeEvents > 0
+          ? '<div style="font-size:10px;color:#e8a838;margin-top:2px;">📊 ' +
+              activeEvents +
+              "个市场活动</div>"
+          : "";
+      })()}
+    </div>
   `;
   parent.appendChild(headerDiv);
 
@@ -213700,13 +213912,30 @@ function renderTradeTab(state, parent) {
       }
     }
 
+    // [全系统自洽修复] 域A 增强: 市场事件标签 — 当有活跃市场事件影响该商品时显示标记
+    var marketEventTag = "";
+    if (state.trade && state.trade.marketEvents) {
+      for (var mei = 0; mei < state.trade.marketEvents.length; mei++) {
+        if (
+          state.trade.marketEvents[mei].goodId === good.id &&
+          state.trade.marketEvents[mei].remaining > 0
+        ) {
+          marketEventTag =
+            state.trade.marketEvents[mei].priceMod > 1
+              ? '<span style="color:var(--danger);font-size:10px;margin-left:8px;">🔥 行情看涨</span>'
+              : '<span style="color:var(--success);font-size:10px;margin-left:8px;">💥 行情看跌</span>';
+          break;
+        }
+      }
+    }
+
     const card = document.createElement("div");
     card.className = "action-card";
     card.innerHTML = `
       <div style="display:flex;justify-content:space-between;align-items:center;">
         <div class="card-title" style="margin:0;">${good.name}</div>
         <span class="slot-tag">${{ daily: "日用品", luxury: "奢侈品", food: "食品", clothing: "服装", electronics: "电子", scrap: "废品" }[good.category] || good.category}</span>
-        ${seasonTag}
+        ${seasonTag}${marketEventTag}
       </div>
       <div class="card-desc" style="margin:4px 0;">
         基准: ¥${good.basePrice}/${good.unit}
@@ -220562,8 +220791,9 @@ function startTutorial() {
 
 // ====== 沙盒/经典模式 经典步骤（v3.0 原版） ======
 // 保留在此供 SCENARIO_TUTORIAL_STEPS["classic"] 引用
-var _CLASSIC_STEPS = [
+var _DEFAULT_TUTORIAL_STEPS = [
   {
+    stepId: "intro",
     title: "🏙️ 你来到这座城市",
     body: `
         <p style="color:var(--text-muted);font-size:11px;margin-bottom:6px;">——初来乍到，举目无亲。</p>
@@ -220588,6 +220818,7 @@ var _CLASSIC_STEPS = [
     waitForClick: null,
   },
   {
+    stepId: "stats",
     title: "📊 查看你的状态",
     body: `
         <p style="margin-bottom:6px;"><strong>电脑端</strong>：点击左侧 <strong>状态面板</strong> 查看完整属性</p>
@@ -220603,6 +220834,7 @@ var _CLASSIC_STEPS = [
     waitForClick: "#sidebar, #mobile-menu-btn",
   },
   {
+    stepId: "action_area",
     title: "🏘️ 你在城中村，这是你的起点",
     body: `
         <p>每个地点有不同的 <strong>工作机会</strong> 和 <strong>商品价格</strong></p>
@@ -220614,6 +220846,7 @@ var _CLASSIC_STEPS = [
     waitForClick: "#content-area",
   },
   {
+    stepId: "first_income",
     title: "🗑️ 试试第一次赚钱",
     body: `
         <p>找到 <strong>「废品回收」</strong> 卡片，点击它开始第一次工作</p>
@@ -220626,6 +220859,7 @@ var _CLASSIC_STEPS = [
     hint: "找不到？废品回收是街头的入门工作，应该在行动卡片列表里。",
   },
   {
+    stepId: "eat",
     title: "🍚 吃饱了才有力气干活",
     body: `
         <p>赚到钱后，点 <strong>「吃顿饭」</strong> 补充饥饱和精力</p>
@@ -220638,6 +220872,7 @@ var _CLASSIC_STEPS = [
     hint: "吃顿饭通常和废品回收一样在行动卡片列表里。",
   },
   {
+    stepId: "map",
     title: "🗺️ 查看地图探索城市",
     body: `
         <p>点击顶部 <strong>「🗺️ 城市」</strong> 标签，查看城市全景地图</p>
@@ -220650,6 +220885,7 @@ var _CLASSIC_STEPS = [
   },
   // 步骤7：找住处（了解城市地图上的住宿点，但不强制入住）
   {
+    stepId: "housing",
     title: "🛏️ 了解住处——城市里的落脚点",
     body: `
         <p style="font-size:12px;line-height:1.7;margin-bottom:8px;">
@@ -220672,6 +220908,7 @@ var _CLASSIC_STEPS = [
   },
   // 步骤8：出发！（收尾引导，放在最后）
   {
+    stepId: "outro",
     title: "🎯 出发！——你的城市闯关开始了",
     body: `
         <p style="font-size:12px;font-weight:600;color:var(--accent);margin-bottom:8px;">🎯 今天先完成这3件事：</p>
@@ -220693,16 +220930,30 @@ var _CLASSIC_STEPS = [
   },
 ];
 
-// ====== 所有剧本的专属新手引导步骤 v4.0 ======
-// 设计参考：BitLife即时钩子 / Papers Please第一天压力任务 / Stardew Valley目标锚定
-// 每个剧本：开场钩子→你的处境→你的优势→今天的行动→3天目标→出发
-var SCENARIO_TUTORIAL_STEPS = {
-  // ── 经典：城市务工者 ──────────────────────────────────────────────
-  classic: _CLASSIC_STEPS,
+// ====== 约定式剧本新手引导系统 v5.2 ======
+//
+// 核心思想：
+//   1. 8 步标准流程（stepId），所有模式/剧本共用
+//   2. 每个剧本只需覆盖自己独特的步骤，其余从默认继承
+//   3. first_income 步按 _RECOMMENDED_FIRST_JOB 约定自动解析 action 选择器
+//   4. 新加剧本只需在 _SCENARIO_STEP_OVERRIDES 加条目即可
 
-  // ── 下岗再就业者 ──────────────────────────────────────────────────
-  laid_off: [
-    {
+/** 各剧本推荐首份工作（约定：教程自动用此 ID 生成 first_income 步的选择器） */
+var _RECOMMENDED_FIRST_JOB = {
+  classic: "waste_recycling",
+  laid_off: "repair_gig",
+  small_town_grinder: "data_entry",
+  foreign_worker: "factory_assembly_line",
+  second_gen: "market_research",
+  midlife_crisis: "freelance_dev",
+  fresh_grad: "data_entry",
+};
+
+/** 各剧本的步骤覆写（只写与默认不同的步骤，按 stepId 索引） */
+var _SCENARIO_STEP_OVERRIDES = {
+  // ── 下岗再就业者 ──
+  laid_off: {
+    intro: {
       title: "🏭 十五年，一纸通知",
       body: `
         <p style="color:var(--text-muted);font-size:11px;margin-bottom:6px;">——你不是第一个，也不会是最后一个。</p>
@@ -220721,7 +220972,7 @@ var SCENARIO_TUTORIAL_STEPS = {
       highlight: null,
       waitForClick: null,
     },
-    {
+    stats: {
       title: "💪 你的底牌——不是学历，是手艺",
       body: `
         <p><strong>左侧状态面板</strong>显示你的当前属性：</p>
@@ -220731,12 +220982,12 @@ var SCENARIO_TUTORIAL_STEPS = {
           <div style="margin-top:4px;">🔥 <strong>焊接技能 Lv.25</strong> — 工厂外包、装修收入</div>
           <div style="margin-top:4px;">💪 <strong>体质 45</strong> — 体力活效率最高</div>
         </div>
-        <p style="color:var(--success);font-size:12px;">👉 请点击左侧 <strong>状态面板</strong> 确认你的当前状态</p>
+        <p style="color:var(--success);font-size:12px;">👉 请点击左侧 <strong>状态面板</strong>（电脑端）或 ☰ 菜单（手机端）查看完整属性</p>
       `,
-      highlight: "#sidebar",
-      waitForClick: "#sidebar",
+      highlight: "#sidebar, #mobile-menu-btn",
+      waitForClick: "#sidebar, #mobile-menu-btn",
     },
-    {
+    action_area: {
       title: "⚠️ 时间就是钱——你的月度压力",
       body: `
         <p style="font-size:12px;color:var(--text-secondary);margin-bottom:8px;">算一笔账：</p>
@@ -220754,7 +221005,7 @@ var SCENARIO_TUTORIAL_STEPS = {
       highlight: "#content-area",
       waitForClick: "#content-area",
     },
-    {
+    map: {
       title: "🗺️ 你能做什么——找到出路",
       body: `
         <p style="font-size:12px;font-weight:600;color:var(--accent);">适合你的收入来源：</p>
@@ -220770,28 +221021,36 @@ var SCENARIO_TUTORIAL_STEPS = {
       highlight: '[data-tab="city"]',
       waitForClick: '[data-tab="city"]',
     },
-    {
+    first_income: {
+      title: "🔧 试试技能变现",
+      body: `
+        <p>找到 <strong>「家电维修」</strong> 或 <strong>「体力搬运」</strong> 卡片，点击开始第一次工作</p>
+        <p style="color:var(--text-secondary);font-size:11px;">你有修理 Lv.25+焊接 Lv.25，技能单价远高于纯体力活。</p>
+        <p style="color:var(--success);font-size:12px;margin-top:6px;">👆 直接点击高亮处的 <strong>工作卡片</strong> 继续</p>
+      `,
+      highlight: "#content-area .action-cards:first-child",
+      waitForClick: "#content-area .action-cards a, #content-area .action-card",
+      hint: "行动卡片列表里的第一项就是你的第一个工作机会。",
+    },
+    outro: {
       title: "🎯 3天目标——先活着，再转型",
       body: `
-        <p style="font-size:12px;font-weight:600;color:var(--accent);margin-bottom:8px;">接下来3天的任务：</p>
         <div style="background:rgba(102,126,234,0.08);border:1px solid rgba(102,126,234,0.2);border-radius:8px;padding:10px 12px;margin-bottom:10px;">
           <div style="font-size:12px;padding:3px 0;">💰 今天：找到第一笔收入（体力活或技能接单）</div>
-          <div style="font-size:12px;padding:3px 0;border-top:1px solid rgba(255,255,255,0.05);">🏠 明天：确认住所稳定（不能露宿）</div>
-          <div style="font-size:12px;padding:3px 0;border-top:1px solid rgba(255,255,255,0.05);">📋 第3天：制定转型方向（摆摊/自营/跳槽）</div>
+          <div style="font-size:12px;padding:3px 0;border-top:1px solid rgba(255,255,255,0.05);">🏠 明天：确认住所稳定</div>
+          <div style="font-size:12px;padding:3px 0;border-top:1px solid rgba(255,255,255,0.05);">📋 第3天：制定转型方向</div>
         </div>
-        <p style="font-size:11px;color:var(--text-secondary);">
-          🏆 长期目标：用双手磨出来的本事，在这座城市再立一次脚。
-        </p>
+        <p style="font-size:11px;color:var(--text-secondary);">🏆 长期目标：用双手磨出来的本事，在这座城市再立一次脚。</p>
         <p style="color:var(--success);font-size:12px;margin-top:6px;">加油！你在工厂熬了十五年都熬过来了。🔥</p>
       `,
       highlight: null,
       waitForClick: null,
     },
-  ],
+  },
 
-  // ── 小镇做题家 ────────────────────────────────────────────────────
-  small_town_grinder: [
-    {
+  // ── 小镇做题家 ──
+  small_town_grinder: {
+    intro: {
       title: "📚 全村第一个大学生",
       body: `
         <p style="color:var(--text-muted);font-size:11px;margin-bottom:6px;">——但这座城市里，本科文凭只是入场券。</p>
@@ -220811,7 +221070,7 @@ var SCENARIO_TUTORIAL_STEPS = {
       highlight: null,
       waitForClick: null,
     },
-    {
+    stats: {
       title: "🧠 你的资本——头脑比体力值钱",
       body: `
         <p>左侧面板显示你的当前属性：</p>
@@ -220821,12 +221080,12 @@ var SCENARIO_TUTORIAL_STEPS = {
           <div style="margin-top:4px;">🌐 <strong>英语 Lv.18</strong> — 外资/互联网优势</div>
           <div style="margin-top:4px;">💻 <strong>编程 Lv.10</strong> — IT路径基础已打好</div>
         </div>
-        <p style="color:var(--success);font-size:12px;">👉 点击左侧 <strong>状态面板</strong> 看你的完整属性</p>
+        <p style="color:var(--success);font-size:12px;">👉 点击状态面板或 ☰ 菜单查看完整属性</p>
       `,
-      highlight: "#sidebar",
-      waitForClick: "#sidebar",
+      highlight: "#sidebar, #mobile-menu-btn",
+      waitForClick: "#sidebar, #mobile-menu-btn",
     },
-    {
+    action_area: {
       title: "⏰ 债务在跑，你也要跑",
       body: `
         <div style="background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.2);border-radius:8px;padding:8px 12px;font-size:12px;margin-bottom:8px;">
@@ -220834,19 +221093,19 @@ var SCENARIO_TUTORIAL_STEPS = {
           <div style="margin-top:3px;">🏠 还没有住处（今天必须找到落脚点）</div>
           <div style="margin-top:3px;">🍚 现金只有 ¥3,000，顶多撑1个月</div>
         </div>
-        <p style="font-size:12px;"><strong>最快路径：</strong> 今天去培训中心提升智力→ 达到45→ 进科技园→ 月薪稳定收入→ 还债</p>
+        <p style="font-size:12px;"><strong>最快路径：</strong> 去培训中心提升智力→达到45→进科技园→月薪稳定收入→还债</p>
         <p style="color:var(--success);font-size:12px;margin-top:6px;">👉 点击下方 <strong>行动区</strong> 继续</p>
       `,
       highlight: "#content-area",
       waitForClick: "#content-area",
     },
-    {
+    map: {
       title: "🗺️ 你的起点在科技园",
       body: `
         <p style="font-size:12px;font-weight:600;color:var(--accent);">离互联网职场只差一步：</p>
         <div style="font-size:12px;padding:4px 0;">
           <div>📖 <strong>培训中心</strong> — 学课程提升智力到45（当前42）</div>
-          <div style="margin-top:4px;">🏢 <strong>科技园</strong> — 智力45后可应聘入职（你已经在这里了）</div>
+          <div style="margin-top:4px;">🏢 <strong>科技园</strong> — 智力45后可应聘入职</div>
           <div style="margin-top:4px;">📦 <strong>批发市场</strong> — 倒卖差价快速积累资金</div>
         </div>
         <p style="font-size:11px;color:var(--text-muted);margin-top:6px;">先看地图，规划今天要去哪儿。</p>
@@ -220855,7 +221114,18 @@ var SCENARIO_TUTORIAL_STEPS = {
       highlight: '[data-tab="city"]',
       waitForClick: '[data-tab="city"]',
     },
-    {
+    first_income: {
+      title: "💻 第一份收入",
+      body: `
+        <p>找到 <strong>「数据录入」</strong> 或 <strong>「家教」</strong> 卡片，先赚到今天的饭钱</p>
+        <p style="color:var(--text-secondary);font-size:11px;">你有编程 Lv.10+英语 Lv.18，灵活运用这些技能。</p>
+        <p style="color:var(--success);font-size:12px;margin-top:6px;">👆 点击高亮处的 <strong>工作卡片</strong> 开始</p>
+      `,
+      highlight: "#content-area .action-cards:first-child",
+      waitForClick: "#content-area .action-cards a, #content-area .action-card",
+      hint: "行动卡片列表里能看到当前地点所有可做的工作。",
+    },
+    outro: {
       title: "🎯 3天目标——从学生到打工人",
       body: `
         <div style="background:rgba(102,126,234,0.08);border:1px solid rgba(102,126,234,0.2);border-radius:8px;padding:10px 12px;margin-bottom:10px;">
@@ -220863,19 +221133,17 @@ var SCENARIO_TUTORIAL_STEPS = {
           <div style="font-size:12px;padding:3px 0;border-top:1px solid rgba(255,255,255,0.05);">🏢 明天：去科技园投简历，拿到第一份职场工作</div>
           <div style="font-size:12px;padding:3px 0;border-top:1px solid rgba(255,255,255,0.05);">💰 第3天：稳定收入，开始还债计划</div>
         </div>
-        <p style="font-size:11px;color:var(--text-secondary);">
-          🏆 弧线：数据录入 → IT初级 → 晋升 → 还清学贷 → 让老家人骄傲
-        </p>
+        <p style="font-size:11px;color:var(--text-secondary);">🏆 弧线：数据录入 → IT初级 → 晋升 → 还清学贷 → 让老家人骄傲</p>
         <p style="color:var(--success);font-size:12px;margin-top:6px;">你是全村的希望。别辜负他们。📚</p>
       `,
       highlight: null,
       waitForClick: null,
     },
-  ],
+  },
 
-  // ── 外来打工者 ────────────────────────────────────────────────────
-  foreign_worker: [
-    {
+  // ── 外来打工者 ──
+  foreign_worker: {
+    intro: {
       title: "🌏 离家千里，为了那点工资差价",
       body: `
         <p style="color:var(--text-muted);font-size:11px;margin-bottom:6px;">——这里的日薪，够妈妈买一个月的菜。</p>
@@ -220895,7 +221163,7 @@ var SCENARIO_TUTORIAL_STEPS = {
       highlight: null,
       waitForClick: null,
     },
-    {
+    stats: {
       title: "💪 你的生存武器——身板和韧性",
       body: `
         <div style="background:rgba(102,126,234,0.08);border-radius:8px;padding:8px 12px;margin:8px 0;font-size:12px;">
@@ -220906,15 +221174,15 @@ var SCENARIO_TUTORIAL_STEPS = {
         </div>
         <p style="color:var(--success);font-size:12px;">👉 点击 <strong>状态面板</strong> 看你的完整属性</p>
       `,
-      highlight: "#sidebar",
-      waitForClick: "#sidebar",
+      highlight: "#sidebar, #mobile-menu-btn",
+      waitForClick: "#sidebar, #mobile-menu-btn",
     },
-    {
+    action_area: {
       title: "⚠️ ¥500 只够撑3天，要快",
       body: `
         <div style="background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.2);border-radius:8px;padding:8px 12px;font-size:12px;margin-bottom:8px;">
           <div>🍚 吃饭 ¥10/天，三餐保证</div>
-          <div style="margin-top:3px;">🛏️ 宿舍 ¥15/天（工厂提供可能更便宜）</div>
+          <div style="margin-top:3px;">🛏️ 宿舍 ¥15/天</div>
           <div style="margin-top:3px;">💸 路费借款 ¥10,000 日息 0.3%</div>
         </div>
         <p style="font-size:12px;"><strong>今天就要开工</strong>，流水线或建筑体力活是最快的钱。</p>
@@ -220923,14 +221191,14 @@ var SCENARIO_TUTORIAL_STEPS = {
       highlight: "#content-area",
       waitForClick: "#content-area",
     },
-    {
+    map: {
       title: "🗺️ 工厂区就是你的根据地",
       body: `
         <p style="font-size:12px;font-weight:600;color:var(--accent);">你在工厂区，周边有：</p>
         <div style="font-size:12px;padding:4px 0;">
           <div>🏭 <strong>流水线工作</strong> — 日薪¥120-180，稳定</div>
           <div style="margin-top:4px;">🔨 <strong>建筑体力活</strong> — 不稳定但日薪更高</div>
-          <div style="margin-top:4px;">🌙 <strong>夜间加班</strong> — 额外收入，工厂最常见</div>
+          <div style="margin-top:4px;">🌙 <strong>夜间加班</strong> — 额外收入</div>
         </div>
         <p style="font-size:11px;color:var(--text-muted);margin-top:6px;">等攒到 ¥3000+，可以开始考虑转去批发/零售。</p>
         <p style="color:var(--success);font-size:12px;">👉 点击 <strong>🗺️ 地图</strong> 看城市布局</p>
@@ -220938,7 +221206,18 @@ var SCENARIO_TUTORIAL_STEPS = {
       highlight: '[data-tab="city"]',
       waitForClick: '[data-tab="city"]',
     },
-    {
+    first_income: {
+      title: "🏭 开工第一天",
+      body: `
+        <p>找到 <strong>「流水线操作」</strong> 或 <strong>「体力搬运」</strong> 卡片</p>
+        <p style="color:var(--text-secondary);font-size:11px;">工厂流水线稳定可靠，日结现金，适合起步。</p>
+        <p style="color:var(--success);font-size:12px;margin-top:6px;">👆 点击高亮处的 <strong>工作卡片</strong> 开始</p>
+      `,
+      highlight: "#content-area .action-cards:first-child",
+      waitForClick: "#content-area .action-cards a, #content-area .action-card",
+      hint: "行动卡片列表第一项就是你能做的工作。",
+    },
+    outro: {
       title: "🎯 3天目标——先存钱，再汇款",
       body: `
         <div style="background:rgba(102,126,234,0.08);border:1px solid rgba(102,126,234,0.2);border-radius:8px;padding:10px 12px;margin-bottom:10px;">
@@ -220946,19 +221225,17 @@ var SCENARIO_TUTORIAL_STEPS = {
           <div style="font-size:12px;padding:3px 0;border-top:1px solid rgba(255,255,255,0.05);">💰 3天内：积累 ¥500，偿还路费第一笔</div>
           <div style="font-size:12px;padding:3px 0;border-top:1px solid rgba(255,255,255,0.05);">🌙 第一个月：攒到能汇回家的数目</div>
         </div>
-        <p style="font-size:11px;color:var(--text-secondary);">
-          🏆 弧线：流水线 → 技能外包 → 存钱 → 带着本事回家
-        </p>
+        <p style="font-size:11px;color:var(--text-secondary);">🏆 弧线：流水线 → 技能外包 → 存钱 → 带着本事回家</p>
         <p style="color:var(--success);font-size:12px;margin-top:6px;">妈妈在等你的汇款。坚持住。🌏</p>
       `,
       highlight: null,
       waitForClick: null,
     },
-  ],
+  },
 
-  // ── 二代创业者 ────────────────────────────────────────────────────
-  second_gen: [
-    {
+  // ── 二代创业者 ──
+  second_gen: {
+    intro: {
       title: "💎 有钱，但不知道怎么用",
       body: `
         <p style="color:var(--text-muted);font-size:11px;margin-bottom:6px;">——钱和能力，是两回事。</p>
@@ -220978,7 +221255,7 @@ var SCENARIO_TUTORIAL_STEPS = {
       highlight: null,
       waitForClick: null,
     },
-    {
+    stats: {
       title: "💎 你的起点——钱多，但技能几乎为零",
       body: `
         <div style="background:rgba(102,126,234,0.08);border-radius:8px;padding:8px 12px;margin:8px 0;font-size:12px;">
@@ -220990,10 +221267,10 @@ var SCENARIO_TUTORIAL_STEPS = {
         <p style="font-size:11px;color:var(--danger);">❌ 不要今天就去注册公司！先学，先看，再做。</p>
         <p style="color:var(--success);font-size:12px;">👉 点击 <strong>状态面板</strong> 看你的属性</p>
       `,
-      highlight: "#sidebar",
-      waitForClick: "#sidebar",
+      highlight: "#sidebar, #mobile-menu-btn",
+      waitForClick: "#sidebar, #mobile-menu-btn",
     },
-    {
+    action_area: {
       title: "📊 ¥150,000 能撑多久？",
       body: `
         <div style="background:rgba(234,179,8,0.08);border:1px solid rgba(234,179,8,0.3);border-radius:8px;padding:8px 12px;font-size:12px;margin-bottom:8px;">
@@ -221007,7 +221284,7 @@ var SCENARIO_TUTORIAL_STEPS = {
       highlight: "#content-area",
       waitForClick: "#content-area",
     },
-    {
+    map: {
       title: "🗺️ 你在商业区——观察，再出手",
       body: `
         <p style="font-size:12px;font-weight:600;color:var(--accent);">先去看看这些地方：</p>
@@ -221023,27 +221300,36 @@ var SCENARIO_TUTORIAL_STEPS = {
       highlight: '[data-tab="city"]',
       waitForClick: '[data-tab="city"]',
     },
-    {
+    first_income: {
+      title: "🔍 先跑市场，再想创业",
+      body: `
+        <p>找到 <strong>「市场调研」</strong> 或 <strong>「培训学习」</strong> 卡片</p>
+        <p style="color:var(--text-secondary);font-size:11px;">第一周不赚钱也没关系，你的任务是学习市场。</p>
+        <p style="color:var(--success);font-size:12px;margin-top:6px;">👆 点击高亮处的 <strong>行动卡片</strong> 开始了解市场</p>
+      `,
+      highlight: "#content-area .action-cards:first-child",
+      waitForClick: "#content-area .action-cards a, #content-area .action-card",
+      hint: "行动卡片列表里能找到当前可做的事。",
+    },
+    outro: {
       title: "🎯 3天目标——定方向，不乱花",
       body: `
         <div style="background:rgba(102,126,234,0.08);border:1px solid rgba(102,126,234,0.2);border-radius:8px;padding:10px 12px;margin-bottom:10px;">
           <div style="font-size:12px;padding:3px 0;">🔍 今天：走访市场，找3个你感兴趣的方向</div>
           <div style="font-size:12px;padding:3px 0;border-top:1px solid rgba(255,255,255,0.05);">📚 明天：去培训中心学一项核心技能</div>
-          <div style="font-size:12px;padding:3px 0;border-top:1px solid rgba(255,255,255,0.05);">🎯 第3天：锁定方向（科技/消费/金融），制定预算</div>
+          <div style="font-size:12px;padding:3px 0;border-top:1px solid rgba(255,255,255,0.05);">🎯 第3天：锁定方向，制定预算</div>
         </div>
-        <p style="font-size:11px;color:var(--text-secondary);">
-          🏆 弧线：有钱但无能 → 学技能+找人脉 → 真正创业 → 证明给父亲看
-        </p>
+        <p style="font-size:11px;color:var(--text-secondary);">🏆 弧线：有钱但无能 → 学技能+找人脉 → 真正创业 → 证明给父亲看</p>
         <p style="color:var(--success);font-size:12px;margin-top:6px;">有钱不是优势，把钱变成能力才是。💎</p>
       `,
       highlight: null,
       waitForClick: null,
     },
-  ],
+  },
 
-  // ── 中年危机职场人 ────────────────────────────────────────────────
-  midlife_crisis: [
-    {
+  // ── 中年危机职场人 ──
+  midlife_crisis: {
+    intro: {
       title: "👔 35岁，被裁那天",
       body: `
         <p style="color:var(--text-muted);font-size:11px;margin-bottom:6px;">——你不觉得委屈，你只觉得怕。</p>
@@ -221062,21 +221348,21 @@ var SCENARIO_TUTORIAL_STEPS = {
       highlight: null,
       waitForClick: null,
     },
-    {
+    stats: {
       title: "🃏 你的底牌——经验是最贵的资产",
       body: `
         <div style="background:rgba(102,126,234,0.08);border-radius:8px;padding:8px 12px;margin:8px 0;font-size:12px;">
           <div>💻 <strong>编程 Lv.30</strong> — 可接外包，月入 ¥8,000-25,000</div>
           <div style="margin-top:4px;">🧑‍💼 <strong>管理 Lv.25</strong> — 中层管理岗的天然优势</div>
           <div style="margin-top:4px;">📢 <strong>销售 Lv.15</strong> — 创业最需要的技能</div>
-          <div style="margin-top:4px;">📊 <strong>会计 Lv.10</strong> — 自己会算账，创业不被坑</div>
+          <div style="margin-top:4px;">📊 <strong>会计 Lv.10</strong> — 自己会算账</div>
         </div>
         <p style="color:var(--success);font-size:12px;">👉 点击 <strong>状态面板</strong> 看完整属性</p>
       `,
-      highlight: "#sidebar",
-      waitForClick: "#sidebar",
+      highlight: "#sidebar, #mobile-menu-btn",
+      waitForClick: "#sidebar, #mobile-menu-btn",
     },
-    {
+    action_area: {
       title: "⏰ 你每月必须赚多少？",
       body: `
         <div style="background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.2);border-radius:8px;padding:8px 12px;font-size:12px;margin-bottom:8px;">
@@ -221091,7 +221377,7 @@ var SCENARIO_TUTORIAL_STEPS = {
       highlight: "#content-area",
       waitForClick: "#content-area",
     },
-    {
+    map: {
       title: "🗺️ 你在科技园——机会就在这里",
       body: `
         <p style="font-size:12px;font-weight:600;color:var(--accent);">三条路，选一条：</p>
@@ -221100,13 +221386,24 @@ var SCENARIO_TUTORIAL_STEPS = {
           <div style="margin-top:4px;">💻 <strong>接编程/管理外包</strong> — 用技能直接赚钱，最快</div>
           <div style="margin-top:4px;">🚀 <strong>拿存款创业</strong> — 高风险高回报，慎重</div>
         </div>
-        <p style="font-size:11px;color:var(--text-muted);margin-top:6px;">建议先去事业发展Tab看看职业路径，想好方向。</p>
+        <p style="font-size:11px;color:var(--text-muted);margin-top:6px;">建议先去事业发展Tab看看职业路径。</p>
         <p style="color:var(--success);font-size:12px;">👉 点击 <strong>🗺️ 地图</strong> 熟悉城市布局</p>
       `,
       highlight: '[data-tab="city"]',
       waitForClick: '[data-tab="city"]',
     },
-    {
+    first_income: {
+      title: "💻 用经验赚钱",
+      body: `
+        <p>找到 <strong>「编程外包」</strong> 或 <strong>「管理咨询」</strong> 卡片</p>
+        <p style="color:var(--text-secondary);font-size:11px;">编程 Lv.30+管理 Lv.25 可以直接接单变现，不等入职。</p>
+        <p style="color:var(--success);font-size:12px;margin-top:6px;">👆 点击高亮处的 <strong>工作卡片</strong> 开始</p>
+      `,
+      highlight: "#content-area .action-cards:first-child",
+      waitForClick: "#content-area .action-cards a, #content-area .action-card",
+      hint: "你目前所在地点的行动卡片就在下方。",
+    },
+    outro: {
       title: "🎯 3天目标——算清楚，再出手",
       body: `
         <div style="background:rgba(102,126,234,0.08);border:1px solid rgba(102,126,234,0.2);border-radius:8px;padding:10px 12px;margin-bottom:10px;">
@@ -221114,19 +221411,17 @@ var SCENARIO_TUTORIAL_STEPS = {
           <div style="font-size:12px;padding:3px 0;border-top:1px solid rgba(255,255,255,0.05);">💼 明天：发出第一份简历，或接第一单外包</div>
           <div style="font-size:12px;padding:3px 0;border-top:1px solid rgba(255,255,255,0.05);">🎯 第3天：锁定路线（打工/创业/自由职业）</div>
         </div>
-        <p style="font-size:11px;color:var(--text-secondary);">
-          🏆 弧线：被裁 → 用经验接单/再就业 → 稳住家庭 → 中年逆袭
-        </p>
-        <p style="color:var(--success);font-size:12px;margin-top:6px;">六年磨的刀，不会白磨。你比年轻人有一样东西：经历。👔</p>
+        <p style="font-size:11px;color:var(--text-secondary);">🏆 弧线：被裁 → 用经验接单/再就业 → 稳住家庭 → 中年逆袭</p>
+        <p style="color:var(--success);font-size:12px;margin-top:6px;">六年磨的刀，不会白磨。👔</p>
       `,
       highlight: null,
       waitForClick: null,
     },
-  ],
+  },
 
-  // ── 应届毕业生 ────────────────────────────────────────────────────
-  fresh_grad: [
-    {
+  // ── 应届毕业生 ──
+  fresh_grad: {
+    intro: {
       title: "🎓 第一次靠自己",
       body: `
         <p style="color:var(--text-muted);font-size:11px;margin-bottom:6px;">——没有人再托底了。</p>
@@ -221146,21 +221441,21 @@ var SCENARIO_TUTORIAL_STEPS = {
       highlight: null,
       waitForClick: null,
     },
-    {
+    stats: {
       title: "🌱 你的资本——年轻 + 学历 + 潜力",
       body: `
         <div style="background:rgba(102,126,234,0.08);border-radius:8px;padding:8px 12px;margin:8px 0;font-size:12px;">
           <div>🎓 <strong>本科学历</strong> — 应聘门槛已过</div>
-          <div style="margin-top:4px;">🧠 <strong>智力 32</strong> — 还差13点进职场（门槛45，学习能提升）</div>
+          <div style="margin-top:4px;">🧠 <strong>智力 32</strong> — 还差13点进职场（门槛45）</div>
           <div style="margin-top:4px;">💻 <strong>编程 Lv.15</strong> — IT初级岗的基础</div>
           <div style="margin-top:4px;">🌐 <strong>英语 Lv.20</strong> — 外资/互联网优势</div>
         </div>
         <p style="color:var(--success);font-size:12px;">👉 点击 <strong>状态面板</strong> 看你的完整数据</p>
       `,
-      highlight: "#sidebar",
-      waitForClick: "#sidebar",
+      highlight: "#sidebar, #mobile-menu-btn",
+      waitForClick: "#sidebar, #mobile-menu-btn",
     },
-    {
+    action_area: {
       title: "⚠️ ¥2,000 只够撑半个月",
       body: `
         <div style="background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.2);border-radius:8px;padding:8px 12px;font-size:12px;margin-bottom:8px;">
@@ -221174,7 +221469,7 @@ var SCENARIO_TUTORIAL_STEPS = {
       highlight: "#content-area",
       waitForClick: "#content-area",
     },
-    {
+    map: {
       title: "🗺️ 你在学校附近——离职场很近",
       body: `
         <p style="font-size:12px;font-weight:600;color:var(--accent);">新手最适合的路线：</p>
@@ -221189,7 +221484,18 @@ var SCENARIO_TUTORIAL_STEPS = {
       highlight: '[data-tab="city"]',
       waitForClick: '[data-tab="city"]',
     },
-    {
+    first_income: {
+      title: "💼 第一份工",
+      body: `
+        <p>找到 <strong>「数据录入」</strong> 或 <strong>「兼职」</strong> 卡片，开始赚第一笔钱</p>
+        <p style="color:var(--text-secondary);font-size:11px;">有编程基础，可以优先找与IT相关的入门工作。</p>
+        <p style="color:var(--success);font-size:12px;margin-top:6px;">👆 点击高亮处的 <strong>工作卡片</strong> 开始</p>
+      `,
+      highlight: "#content-area .action-cards:first-child",
+      waitForClick: "#content-area .action-cards a, #content-area .action-card",
+      hint: "行动卡片就在下方，选择你能做的工作。",
+    },
+    outro: {
       title: "🎯 3天目标——从学生到打工人",
       body: `
         <div style="background:rgba(102,126,234,0.08);border:1px solid rgba(102,126,234,0.2);border-radius:8px;padding:10px 12px;margin-bottom:10px;">
@@ -221197,16 +221503,45 @@ var SCENARIO_TUTORIAL_STEPS = {
           <div style="font-size:12px;padding:3px 0;border-top:1px solid rgba(255,255,255,0.05);">💰 明天：接第一单小活/去培训中心提升</div>
           <div style="font-size:12px;padding:3px 0;border-top:1px solid rgba(255,255,255,0.05);">🏢 第3天：达到入职条件，找第一份正式工作</div>
         </div>
-        <p style="font-size:11px;color:var(--text-secondary);">
-          🏆 弧线：应届生 → 职场新人 → 晋升 → 还清助学贷款 → 在这座城市立足
-        </p>
+        <p style="font-size:11px;color:var(--text-secondary);">🏆 弧线：应届生 → 职场新人 → 晋升 → 还清助学贷款 → 在这座城市立足</p>
         <p style="color:var(--success);font-size:12px;margin-top:6px;">你才22岁，错了还能重来。但要快。🎓</p>
       `,
       highlight: null,
       waitForClick: null,
     },
-  ],
+  },
 };
+
+/** 按 stepId 合并默认步骤与剧本覆写 */
+function _buildSteps(scenarioId) {
+  var overrides = _SCENARIO_STEP_OVERRIDES[scenarioId] || {};
+  return _DEFAULT_TUTORIAL_STEPS.map(function (step) {
+    var override = overrides[step.stepId];
+    return override ? override : step;
+  });
+}
+
+// ====== SCENARIO_TUTORIAL_STEPS ======
+// 自动生成：所有模式/剧本共用 8 步两阶段流程
+// 沙盒/经典用默认，各剧本用 _buildSteps 合并覆写
+var SCENARIO_TUTORIAL_STEPS = {};
+var _ALL_SCENARIO_IDS = [
+  "classic",
+  "laid_off",
+  "small_town_grinder",
+  "foreign_worker",
+  "second_gen",
+  "midlife_crisis",
+  "fresh_grad",
+];
+for (var _si = 0; _si < _ALL_SCENARIO_IDS.length; _si++) {
+  SCENARIO_TUTORIAL_STEPS[_ALL_SCENARIO_IDS[_si]] = _buildSteps(
+    _ALL_SCENARIO_IDS[_si],
+  );
+}
+
+// 向后兼容：旧引用 _CLASSIC_STEPS 现在指向默认步骤
+var _CLASSIC_STEPS = _DEFAULT_TUTORIAL_STEPS;
 
 /** 逐步展示引导 — v5.0 两阶段流程
  *
@@ -221470,13 +221805,10 @@ function highlightElement(selector) {
   for (var ci = 0; ci < candidates.length; ci++) {
     var cand = document.querySelector(candidates[ci]);
     if (cand) {
-      // 检查元素是否可见（offsetParent != null 且宽高 > 0）
-      var candRect = cand.getBoundingClientRect();
-      if (
-        cand.offsetParent !== null ||
-        candRect.width > 0 ||
-        candRect.height > 0
-      ) {
+      // 用 computed style 精确检测可见性（visibility/display）
+      // 不能用 offsetParent（position:fixed 返回 null）和宽度（hidden 元素也有 width）
+      var candStyle = window.getComputedStyle(cand);
+      if (candStyle.display !== "none" && candStyle.visibility !== "hidden") {
         el = cand;
         break;
       }
@@ -221528,12 +221860,12 @@ function highlightElement(selector) {
     var targetEl = null;
     for (var ci = 0; ci < cands.length; ci++) {
       var c = document.querySelector(cands[ci]);
-      if (
-        c &&
-        (c.offsetParent !== null || c.getBoundingClientRect().width > 0)
-      ) {
-        targetEl = c;
-        break;
+      if (c) {
+        var style = window.getComputedStyle(c);
+        if (style.display !== "none" && style.visibility !== "hidden") {
+          targetEl = c;
+          break;
+        }
       }
     }
     if (!targetEl) targetEl = document.querySelector(cands[0]);
@@ -231795,11 +232127,15 @@ function renderCareerOverview(state, parent) {
       '<div style="font-size:15px;color:var(--accent);font-weight:bold;">¥' +
       (job.salary || 0).toLocaleString() +
       "/月</div>";
-    if (certBonus > 0)
+    if (certBonus > 0) {
+      var bonusRate = Math.round((certBonus / (job.salary || 1)) * 100);
       html +=
         '<div style="font-size:10px;color:var(--success);">+ 证书加成 ¥' +
         certBonus.toLocaleString() +
-        "</div>";
+        ' <span style="font-size:9px;">(+' +
+        bonusRate +
+        "%)</span></div>";
+    }
     html += "</div>";
     html += "</div>";
 

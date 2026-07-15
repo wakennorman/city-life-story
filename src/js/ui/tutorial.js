@@ -91,8 +91,9 @@ function startTutorial() {
 
 // ====== 沙盒/经典模式 经典步骤（v3.0 原版） ======
 // 保留在此供 SCENARIO_TUTORIAL_STEPS["classic"] 引用
-var _CLASSIC_STEPS = [
+var _DEFAULT_TUTORIAL_STEPS = [
   {
+    stepId: "intro",
     title: "🏙️ 你来到这座城市",
     body: `
         <p style="color:var(--text-muted);font-size:11px;margin-bottom:6px;">——初来乍到，举目无亲。</p>
@@ -117,6 +118,7 @@ var _CLASSIC_STEPS = [
     waitForClick: null,
   },
   {
+    stepId: "stats",
     title: "📊 查看你的状态",
     body: `
         <p style="margin-bottom:6px;"><strong>电脑端</strong>：点击左侧 <strong>状态面板</strong> 查看完整属性</p>
@@ -126,12 +128,13 @@ var _CLASSIC_STEPS = [
           <div style="margin-top:4px;">📊 <strong>5项需求</strong>：饥饿 · 疲劳 · 卫生 · 心情 · 健康</div>
         </div>
         <p style="font-size:11px;color:var(--text-muted);margin-top:4px;">💡 属性影响工作效率和事件结果；需求低于30触发危险提示</p>
-        <p style="color:var(--success);font-size:12px;margin-top:6px;">👆 点击左侧 <strong>状态面板</strong>（电脑端）或顶部 <strong>状态条</strong>（手机端）继续</p>
+        <p style="color:var(--success);font-size:12px;margin-top:6px;">👆 点击左侧 <strong>状态面板</strong>（电脑端）或顶部 <strong>☰ 菜单按钮</strong>（手机端）继续</p>
       `,
-    highlight: "#sidebar",
+    highlight: "#sidebar, #mobile-menu-btn",
     waitForClick: "#sidebar, #mobile-menu-btn",
   },
   {
+    stepId: "action_area",
     title: "🏘️ 你在城中村，这是你的起点",
     body: `
         <p>每个地点有不同的 <strong>工作机会</strong> 和 <strong>商品价格</strong></p>
@@ -143,6 +146,7 @@ var _CLASSIC_STEPS = [
     waitForClick: "#content-area",
   },
   {
+    stepId: "first_income",
     title: "🗑️ 试试第一次赚钱",
     body: `
         <p>找到 <strong>「废品回收」</strong> 卡片，点击它开始第一次工作</p>
@@ -155,6 +159,7 @@ var _CLASSIC_STEPS = [
     hint: "找不到？废品回收是街头的入门工作，应该在行动卡片列表里。",
   },
   {
+    stepId: "eat",
     title: "🍚 吃饱了才有力气干活",
     body: `
         <p>赚到钱后，点 <strong>「吃顿饭」</strong> 补充饥饱和精力</p>
@@ -167,6 +172,7 @@ var _CLASSIC_STEPS = [
     hint: "吃顿饭通常和废品回收一样在行动卡片列表里。",
   },
   {
+    stepId: "map",
     title: "🗺️ 查看地图探索城市",
     body: `
         <p>点击顶部 <strong>「🗺️ 城市」</strong> 标签，查看城市全景地图</p>
@@ -177,27 +183,32 @@ var _CLASSIC_STEPS = [
     highlight: '[data-tab="city"]',
     waitForClick: '[data-tab="city"]',
   },
-  // 步骤7：找住处（引导玩家用地图导航到城中村租床）
+  // 步骤7：找住处（了解城市地图上的住宿点，但不强制入住）
   {
-    title: "🛏️ 找住处，别露宿街头",
+    stepId: "housing",
+    title: "🛏️ 了解住处——城市里的落脚点",
     body: `
         <p style="font-size:12px;line-height:1.7;margin-bottom:8px;">
           露宿街头每天 <strong style="color:var(--danger);">损耗健康</strong>、拉低心情。<br>
-          <strong>租个床位</strong>是今天最值得花的钱。
+          但露宿也有露宿的经历——这座城市深夜的街头，有它的故事。
         </p>
         <div style="background:rgba(74,158,92,0.08);border:1px solid rgba(74,158,92,0.2);border-radius:8px;padding:10px 12px;margin-bottom:10px;">
           <div style="font-size:12px;padding:3px 0;">🏘️ 合租床位 ¥30/天 — 最便宜的起步选择</div>
           <div style="font-size:12px;padding:3px 0;border-top:1px solid rgba(255,255,255,0.05);">🏠 单间出租 ¥80/天 — 攒够钱后再升级</div>
           <div style="font-size:12px;padding:3px 0;border-top:1px solid rgba(255,255,255,0.05);">💤 入住后每晚自动恢复疲劳和健康</div>
         </div>
-        <p style="font-size:11px;color:var(--text-muted);">用地图导航到城中村，找「出租屋」行动入住。</p>
-        <p style="color:var(--success);font-size:12px;margin-top:8px;">👆 点击顶部 <strong>🗺️ 地图</strong> 标签，去找住处吧</p>
+        <p style="font-size:11px;color:var(--text-secondary);">
+          💡 手头紧时先睡街头也没关系，攒够钱再租床位更从容。<br>
+          城中村的「出租屋」可以租床位，最低¥30/天。
+        </p>
+        <p style="color:var(--success);font-size:12px;margin-top:8px;">👆 点击顶部 <strong>🗺️ 地图</strong> 了解城市布局</p>
       `,
     highlight: '[data-tab="city"]',
     waitForClick: '[data-tab="city"]',
   },
   // 步骤8：出发！（收尾引导，放在最后）
   {
+    stepId: "outro",
     title: "🎯 出发！——你的城市闯关开始了",
     body: `
         <p style="font-size:12px;font-weight:600;color:var(--accent);margin-bottom:8px;">🎯 今天先完成这3件事：</p>
@@ -219,16 +230,30 @@ var _CLASSIC_STEPS = [
   },
 ];
 
-// ====== 所有剧本的专属新手引导步骤 v4.0 ======
-// 设计参考：BitLife即时钩子 / Papers Please第一天压力任务 / Stardew Valley目标锚定
-// 每个剧本：开场钩子→你的处境→你的优势→今天的行动→3天目标→出发
-var SCENARIO_TUTORIAL_STEPS = {
-  // ── 经典：城市务工者 ──────────────────────────────────────────────
-  classic: _CLASSIC_STEPS,
+// ====== 约定式剧本新手引导系统 v5.2 ======
+//
+// 核心思想：
+//   1. 8 步标准流程（stepId），所有模式/剧本共用
+//   2. 每个剧本只需覆盖自己独特的步骤，其余从默认继承
+//   3. first_income 步按 _RECOMMENDED_FIRST_JOB 约定自动解析 action 选择器
+//   4. 新加剧本只需在 _SCENARIO_STEP_OVERRIDES 加条目即可
 
-  // ── 下岗再就业者 ──────────────────────────────────────────────────
-  laid_off: [
-    {
+/** 各剧本推荐首份工作（约定：教程自动用此 ID 生成 first_income 步的选择器） */
+var _RECOMMENDED_FIRST_JOB = {
+  classic: "waste_recycling",
+  laid_off: "repair_gig",
+  small_town_grinder: "data_entry",
+  foreign_worker: "factory_assembly_line",
+  second_gen: "market_research",
+  midlife_crisis: "freelance_dev",
+  fresh_grad: "data_entry",
+};
+
+/** 各剧本的步骤覆写（只写与默认不同的步骤，按 stepId 索引） */
+var _SCENARIO_STEP_OVERRIDES = {
+  // ── 下岗再就业者 ──
+  laid_off: {
+    intro: {
       title: "🏭 十五年，一纸通知",
       body: `
         <p style="color:var(--text-muted);font-size:11px;margin-bottom:6px;">——你不是第一个，也不会是最后一个。</p>
@@ -247,7 +272,7 @@ var SCENARIO_TUTORIAL_STEPS = {
       highlight: null,
       waitForClick: null,
     },
-    {
+    stats: {
       title: "💪 你的底牌——不是学历，是手艺",
       body: `
         <p><strong>左侧状态面板</strong>显示你的当前属性：</p>
@@ -257,12 +282,12 @@ var SCENARIO_TUTORIAL_STEPS = {
           <div style="margin-top:4px;">🔥 <strong>焊接技能 Lv.25</strong> — 工厂外包、装修收入</div>
           <div style="margin-top:4px;">💪 <strong>体质 45</strong> — 体力活效率最高</div>
         </div>
-        <p style="color:var(--success);font-size:12px;">👉 请点击左侧 <strong>状态面板</strong> 确认你的当前状态</p>
+        <p style="color:var(--success);font-size:12px;">👉 请点击左侧 <strong>状态面板</strong>（电脑端）或 ☰ 菜单（手机端）查看完整属性</p>
       `,
-      highlight: "#sidebar",
-      waitForClick: "#sidebar",
+      highlight: "#sidebar, #mobile-menu-btn",
+      waitForClick: "#sidebar, #mobile-menu-btn",
     },
-    {
+    action_area: {
       title: "⚠️ 时间就是钱——你的月度压力",
       body: `
         <p style="font-size:12px;color:var(--text-secondary);margin-bottom:8px;">算一笔账：</p>
@@ -280,7 +305,7 @@ var SCENARIO_TUTORIAL_STEPS = {
       highlight: "#content-area",
       waitForClick: "#content-area",
     },
-    {
+    map: {
       title: "🗺️ 你能做什么——找到出路",
       body: `
         <p style="font-size:12px;font-weight:600;color:var(--accent);">适合你的收入来源：</p>
@@ -296,28 +321,36 @@ var SCENARIO_TUTORIAL_STEPS = {
       highlight: '[data-tab="city"]',
       waitForClick: '[data-tab="city"]',
     },
-    {
+    first_income: {
+      title: "🔧 试试技能变现",
+      body: `
+        <p>找到 <strong>「家电维修」</strong> 或 <strong>「体力搬运」</strong> 卡片，点击开始第一次工作</p>
+        <p style="color:var(--text-secondary);font-size:11px;">你有修理 Lv.25+焊接 Lv.25，技能单价远高于纯体力活。</p>
+        <p style="color:var(--success);font-size:12px;margin-top:6px;">👆 直接点击高亮处的 <strong>工作卡片</strong> 继续</p>
+      `,
+      highlight: "#content-area .action-cards:first-child",
+      waitForClick: "#content-area .action-cards a, #content-area .action-card",
+      hint: "行动卡片列表里的第一项就是你的第一个工作机会。",
+    },
+    outro: {
       title: "🎯 3天目标——先活着，再转型",
       body: `
-        <p style="font-size:12px;font-weight:600;color:var(--accent);margin-bottom:8px;">接下来3天的任务：</p>
         <div style="background:rgba(102,126,234,0.08);border:1px solid rgba(102,126,234,0.2);border-radius:8px;padding:10px 12px;margin-bottom:10px;">
           <div style="font-size:12px;padding:3px 0;">💰 今天：找到第一笔收入（体力活或技能接单）</div>
-          <div style="font-size:12px;padding:3px 0;border-top:1px solid rgba(255,255,255,0.05);">🏠 明天：确认住所稳定（不能露宿）</div>
-          <div style="font-size:12px;padding:3px 0;border-top:1px solid rgba(255,255,255,0.05);">📋 第3天：制定转型方向（摆摊/自营/跳槽）</div>
+          <div style="font-size:12px;padding:3px 0;border-top:1px solid rgba(255,255,255,0.05);">🏠 明天：确认住所稳定</div>
+          <div style="font-size:12px;padding:3px 0;border-top:1px solid rgba(255,255,255,0.05);">📋 第3天：制定转型方向</div>
         </div>
-        <p style="font-size:11px;color:var(--text-secondary);">
-          🏆 长期目标：用双手磨出来的本事，在这座城市再立一次脚。
-        </p>
+        <p style="font-size:11px;color:var(--text-secondary);">🏆 长期目标：用双手磨出来的本事，在这座城市再立一次脚。</p>
         <p style="color:var(--success);font-size:12px;margin-top:6px;">加油！你在工厂熬了十五年都熬过来了。🔥</p>
       `,
       highlight: null,
       waitForClick: null,
     },
-  ],
+  },
 
-  // ── 小镇做题家 ────────────────────────────────────────────────────
-  small_town_grinder: [
-    {
+  // ── 小镇做题家 ──
+  small_town_grinder: {
+    intro: {
       title: "📚 全村第一个大学生",
       body: `
         <p style="color:var(--text-muted);font-size:11px;margin-bottom:6px;">——但这座城市里，本科文凭只是入场券。</p>
@@ -337,7 +370,7 @@ var SCENARIO_TUTORIAL_STEPS = {
       highlight: null,
       waitForClick: null,
     },
-    {
+    stats: {
       title: "🧠 你的资本——头脑比体力值钱",
       body: `
         <p>左侧面板显示你的当前属性：</p>
@@ -347,12 +380,12 @@ var SCENARIO_TUTORIAL_STEPS = {
           <div style="margin-top:4px;">🌐 <strong>英语 Lv.18</strong> — 外资/互联网优势</div>
           <div style="margin-top:4px;">💻 <strong>编程 Lv.10</strong> — IT路径基础已打好</div>
         </div>
-        <p style="color:var(--success);font-size:12px;">👉 点击左侧 <strong>状态面板</strong> 看你的完整属性</p>
+        <p style="color:var(--success);font-size:12px;">👉 点击状态面板或 ☰ 菜单查看完整属性</p>
       `,
-      highlight: "#sidebar",
-      waitForClick: "#sidebar",
+      highlight: "#sidebar, #mobile-menu-btn",
+      waitForClick: "#sidebar, #mobile-menu-btn",
     },
-    {
+    action_area: {
       title: "⏰ 债务在跑，你也要跑",
       body: `
         <div style="background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.2);border-radius:8px;padding:8px 12px;font-size:12px;margin-bottom:8px;">
@@ -360,19 +393,19 @@ var SCENARIO_TUTORIAL_STEPS = {
           <div style="margin-top:3px;">🏠 还没有住处（今天必须找到落脚点）</div>
           <div style="margin-top:3px;">🍚 现金只有 ¥3,000，顶多撑1个月</div>
         </div>
-        <p style="font-size:12px;"><strong>最快路径：</strong> 今天去培训中心提升智力→ 达到45→ 进科技园→ 月薪稳定收入→ 还债</p>
+        <p style="font-size:12px;"><strong>最快路径：</strong> 去培训中心提升智力→达到45→进科技园→月薪稳定收入→还债</p>
         <p style="color:var(--success);font-size:12px;margin-top:6px;">👉 点击下方 <strong>行动区</strong> 继续</p>
       `,
       highlight: "#content-area",
       waitForClick: "#content-area",
     },
-    {
+    map: {
       title: "🗺️ 你的起点在科技园",
       body: `
         <p style="font-size:12px;font-weight:600;color:var(--accent);">离互联网职场只差一步：</p>
         <div style="font-size:12px;padding:4px 0;">
           <div>📖 <strong>培训中心</strong> — 学课程提升智力到45（当前42）</div>
-          <div style="margin-top:4px;">🏢 <strong>科技园</strong> — 智力45后可应聘入职（你已经在这里了）</div>
+          <div style="margin-top:4px;">🏢 <strong>科技园</strong> — 智力45后可应聘入职</div>
           <div style="margin-top:4px;">📦 <strong>批发市场</strong> — 倒卖差价快速积累资金</div>
         </div>
         <p style="font-size:11px;color:var(--text-muted);margin-top:6px;">先看地图，规划今天要去哪儿。</p>
@@ -381,7 +414,18 @@ var SCENARIO_TUTORIAL_STEPS = {
       highlight: '[data-tab="city"]',
       waitForClick: '[data-tab="city"]',
     },
-    {
+    first_income: {
+      title: "💻 第一份收入",
+      body: `
+        <p>找到 <strong>「数据录入」</strong> 或 <strong>「家教」</strong> 卡片，先赚到今天的饭钱</p>
+        <p style="color:var(--text-secondary);font-size:11px;">你有编程 Lv.10+英语 Lv.18，灵活运用这些技能。</p>
+        <p style="color:var(--success);font-size:12px;margin-top:6px;">👆 点击高亮处的 <strong>工作卡片</strong> 开始</p>
+      `,
+      highlight: "#content-area .action-cards:first-child",
+      waitForClick: "#content-area .action-cards a, #content-area .action-card",
+      hint: "行动卡片列表里能看到当前地点所有可做的工作。",
+    },
+    outro: {
       title: "🎯 3天目标——从学生到打工人",
       body: `
         <div style="background:rgba(102,126,234,0.08);border:1px solid rgba(102,126,234,0.2);border-radius:8px;padding:10px 12px;margin-bottom:10px;">
@@ -389,19 +433,17 @@ var SCENARIO_TUTORIAL_STEPS = {
           <div style="font-size:12px;padding:3px 0;border-top:1px solid rgba(255,255,255,0.05);">🏢 明天：去科技园投简历，拿到第一份职场工作</div>
           <div style="font-size:12px;padding:3px 0;border-top:1px solid rgba(255,255,255,0.05);">💰 第3天：稳定收入，开始还债计划</div>
         </div>
-        <p style="font-size:11px;color:var(--text-secondary);">
-          🏆 弧线：数据录入 → IT初级 → 晋升 → 还清学贷 → 让老家人骄傲
-        </p>
+        <p style="font-size:11px;color:var(--text-secondary);">🏆 弧线：数据录入 → IT初级 → 晋升 → 还清学贷 → 让老家人骄傲</p>
         <p style="color:var(--success);font-size:12px;margin-top:6px;">你是全村的希望。别辜负他们。📚</p>
       `,
       highlight: null,
       waitForClick: null,
     },
-  ],
+  },
 
-  // ── 外来打工者 ────────────────────────────────────────────────────
-  foreign_worker: [
-    {
+  // ── 外来打工者 ──
+  foreign_worker: {
+    intro: {
       title: "🌏 离家千里，为了那点工资差价",
       body: `
         <p style="color:var(--text-muted);font-size:11px;margin-bottom:6px;">——这里的日薪，够妈妈买一个月的菜。</p>
@@ -421,7 +463,7 @@ var SCENARIO_TUTORIAL_STEPS = {
       highlight: null,
       waitForClick: null,
     },
-    {
+    stats: {
       title: "💪 你的生存武器——身板和韧性",
       body: `
         <div style="background:rgba(102,126,234,0.08);border-radius:8px;padding:8px 12px;margin:8px 0;font-size:12px;">
@@ -432,15 +474,15 @@ var SCENARIO_TUTORIAL_STEPS = {
         </div>
         <p style="color:var(--success);font-size:12px;">👉 点击 <strong>状态面板</strong> 看你的完整属性</p>
       `,
-      highlight: "#sidebar",
-      waitForClick: "#sidebar",
+      highlight: "#sidebar, #mobile-menu-btn",
+      waitForClick: "#sidebar, #mobile-menu-btn",
     },
-    {
+    action_area: {
       title: "⚠️ ¥500 只够撑3天，要快",
       body: `
         <div style="background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.2);border-radius:8px;padding:8px 12px;font-size:12px;margin-bottom:8px;">
           <div>🍚 吃饭 ¥10/天，三餐保证</div>
-          <div style="margin-top:3px;">🛏️ 宿舍 ¥15/天（工厂提供可能更便宜）</div>
+          <div style="margin-top:3px;">🛏️ 宿舍 ¥15/天</div>
           <div style="margin-top:3px;">💸 路费借款 ¥10,000 日息 0.3%</div>
         </div>
         <p style="font-size:12px;"><strong>今天就要开工</strong>，流水线或建筑体力活是最快的钱。</p>
@@ -449,14 +491,14 @@ var SCENARIO_TUTORIAL_STEPS = {
       highlight: "#content-area",
       waitForClick: "#content-area",
     },
-    {
+    map: {
       title: "🗺️ 工厂区就是你的根据地",
       body: `
         <p style="font-size:12px;font-weight:600;color:var(--accent);">你在工厂区，周边有：</p>
         <div style="font-size:12px;padding:4px 0;">
           <div>🏭 <strong>流水线工作</strong> — 日薪¥120-180，稳定</div>
           <div style="margin-top:4px;">🔨 <strong>建筑体力活</strong> — 不稳定但日薪更高</div>
-          <div style="margin-top:4px;">🌙 <strong>夜间加班</strong> — 额外收入，工厂最常见</div>
+          <div style="margin-top:4px;">🌙 <strong>夜间加班</strong> — 额外收入</div>
         </div>
         <p style="font-size:11px;color:var(--text-muted);margin-top:6px;">等攒到 ¥3000+，可以开始考虑转去批发/零售。</p>
         <p style="color:var(--success);font-size:12px;">👉 点击 <strong>🗺️ 地图</strong> 看城市布局</p>
@@ -464,7 +506,18 @@ var SCENARIO_TUTORIAL_STEPS = {
       highlight: '[data-tab="city"]',
       waitForClick: '[data-tab="city"]',
     },
-    {
+    first_income: {
+      title: "🏭 开工第一天",
+      body: `
+        <p>找到 <strong>「流水线操作」</strong> 或 <strong>「体力搬运」</strong> 卡片</p>
+        <p style="color:var(--text-secondary);font-size:11px;">工厂流水线稳定可靠，日结现金，适合起步。</p>
+        <p style="color:var(--success);font-size:12px;margin-top:6px;">👆 点击高亮处的 <strong>工作卡片</strong> 开始</p>
+      `,
+      highlight: "#content-area .action-cards:first-child",
+      waitForClick: "#content-area .action-cards a, #content-area .action-card",
+      hint: "行动卡片列表第一项就是你能做的工作。",
+    },
+    outro: {
       title: "🎯 3天目标——先存钱，再汇款",
       body: `
         <div style="background:rgba(102,126,234,0.08);border:1px solid rgba(102,126,234,0.2);border-radius:8px;padding:10px 12px;margin-bottom:10px;">
@@ -472,19 +525,17 @@ var SCENARIO_TUTORIAL_STEPS = {
           <div style="font-size:12px;padding:3px 0;border-top:1px solid rgba(255,255,255,0.05);">💰 3天内：积累 ¥500，偿还路费第一笔</div>
           <div style="font-size:12px;padding:3px 0;border-top:1px solid rgba(255,255,255,0.05);">🌙 第一个月：攒到能汇回家的数目</div>
         </div>
-        <p style="font-size:11px;color:var(--text-secondary);">
-          🏆 弧线：流水线 → 技能外包 → 存钱 → 带着本事回家
-        </p>
+        <p style="font-size:11px;color:var(--text-secondary);">🏆 弧线：流水线 → 技能外包 → 存钱 → 带着本事回家</p>
         <p style="color:var(--success);font-size:12px;margin-top:6px;">妈妈在等你的汇款。坚持住。🌏</p>
       `,
       highlight: null,
       waitForClick: null,
     },
-  ],
+  },
 
-  // ── 二代创业者 ────────────────────────────────────────────────────
-  second_gen: [
-    {
+  // ── 二代创业者 ──
+  second_gen: {
+    intro: {
       title: "💎 有钱，但不知道怎么用",
       body: `
         <p style="color:var(--text-muted);font-size:11px;margin-bottom:6px;">——钱和能力，是两回事。</p>
@@ -504,7 +555,7 @@ var SCENARIO_TUTORIAL_STEPS = {
       highlight: null,
       waitForClick: null,
     },
-    {
+    stats: {
       title: "💎 你的起点——钱多，但技能几乎为零",
       body: `
         <div style="background:rgba(102,126,234,0.08);border-radius:8px;padding:8px 12px;margin:8px 0;font-size:12px;">
@@ -516,10 +567,10 @@ var SCENARIO_TUTORIAL_STEPS = {
         <p style="font-size:11px;color:var(--danger);">❌ 不要今天就去注册公司！先学，先看，再做。</p>
         <p style="color:var(--success);font-size:12px;">👉 点击 <strong>状态面板</strong> 看你的属性</p>
       `,
-      highlight: "#sidebar",
-      waitForClick: "#sidebar",
+      highlight: "#sidebar, #mobile-menu-btn",
+      waitForClick: "#sidebar, #mobile-menu-btn",
     },
-    {
+    action_area: {
       title: "📊 ¥150,000 能撑多久？",
       body: `
         <div style="background:rgba(234,179,8,0.08);border:1px solid rgba(234,179,8,0.3);border-radius:8px;padding:8px 12px;font-size:12px;margin-bottom:8px;">
@@ -533,7 +584,7 @@ var SCENARIO_TUTORIAL_STEPS = {
       highlight: "#content-area",
       waitForClick: "#content-area",
     },
-    {
+    map: {
       title: "🗺️ 你在商业区——观察，再出手",
       body: `
         <p style="font-size:12px;font-weight:600;color:var(--accent);">先去看看这些地方：</p>
@@ -549,27 +600,36 @@ var SCENARIO_TUTORIAL_STEPS = {
       highlight: '[data-tab="city"]',
       waitForClick: '[data-tab="city"]',
     },
-    {
+    first_income: {
+      title: "🔍 先跑市场，再想创业",
+      body: `
+        <p>找到 <strong>「市场调研」</strong> 或 <strong>「培训学习」</strong> 卡片</p>
+        <p style="color:var(--text-secondary);font-size:11px;">第一周不赚钱也没关系，你的任务是学习市场。</p>
+        <p style="color:var(--success);font-size:12px;margin-top:6px;">👆 点击高亮处的 <strong>行动卡片</strong> 开始了解市场</p>
+      `,
+      highlight: "#content-area .action-cards:first-child",
+      waitForClick: "#content-area .action-cards a, #content-area .action-card",
+      hint: "行动卡片列表里能找到当前可做的事。",
+    },
+    outro: {
       title: "🎯 3天目标——定方向，不乱花",
       body: `
         <div style="background:rgba(102,126,234,0.08);border:1px solid rgba(102,126,234,0.2);border-radius:8px;padding:10px 12px;margin-bottom:10px;">
           <div style="font-size:12px;padding:3px 0;">🔍 今天：走访市场，找3个你感兴趣的方向</div>
           <div style="font-size:12px;padding:3px 0;border-top:1px solid rgba(255,255,255,0.05);">📚 明天：去培训中心学一项核心技能</div>
-          <div style="font-size:12px;padding:3px 0;border-top:1px solid rgba(255,255,255,0.05);">🎯 第3天：锁定方向（科技/消费/金融），制定预算</div>
+          <div style="font-size:12px;padding:3px 0;border-top:1px solid rgba(255,255,255,0.05);">🎯 第3天：锁定方向，制定预算</div>
         </div>
-        <p style="font-size:11px;color:var(--text-secondary);">
-          🏆 弧线：有钱但无能 → 学技能+找人脉 → 真正创业 → 证明给父亲看
-        </p>
+        <p style="font-size:11px;color:var(--text-secondary);">🏆 弧线：有钱但无能 → 学技能+找人脉 → 真正创业 → 证明给父亲看</p>
         <p style="color:var(--success);font-size:12px;margin-top:6px;">有钱不是优势，把钱变成能力才是。💎</p>
       `,
       highlight: null,
       waitForClick: null,
     },
-  ],
+  },
 
-  // ── 中年危机职场人 ────────────────────────────────────────────────
-  midlife_crisis: [
-    {
+  // ── 中年危机职场人 ──
+  midlife_crisis: {
+    intro: {
       title: "👔 35岁，被裁那天",
       body: `
         <p style="color:var(--text-muted);font-size:11px;margin-bottom:6px;">——你不觉得委屈，你只觉得怕。</p>
@@ -588,21 +648,21 @@ var SCENARIO_TUTORIAL_STEPS = {
       highlight: null,
       waitForClick: null,
     },
-    {
+    stats: {
       title: "🃏 你的底牌——经验是最贵的资产",
       body: `
         <div style="background:rgba(102,126,234,0.08);border-radius:8px;padding:8px 12px;margin:8px 0;font-size:12px;">
           <div>💻 <strong>编程 Lv.30</strong> — 可接外包，月入 ¥8,000-25,000</div>
           <div style="margin-top:4px;">🧑‍💼 <strong>管理 Lv.25</strong> — 中层管理岗的天然优势</div>
           <div style="margin-top:4px;">📢 <strong>销售 Lv.15</strong> — 创业最需要的技能</div>
-          <div style="margin-top:4px;">📊 <strong>会计 Lv.10</strong> — 自己会算账，创业不被坑</div>
+          <div style="margin-top:4px;">📊 <strong>会计 Lv.10</strong> — 自己会算账</div>
         </div>
         <p style="color:var(--success);font-size:12px;">👉 点击 <strong>状态面板</strong> 看完整属性</p>
       `,
-      highlight: "#sidebar",
-      waitForClick: "#sidebar",
+      highlight: "#sidebar, #mobile-menu-btn",
+      waitForClick: "#sidebar, #mobile-menu-btn",
     },
-    {
+    action_area: {
       title: "⏰ 你每月必须赚多少？",
       body: `
         <div style="background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.2);border-radius:8px;padding:8px 12px;font-size:12px;margin-bottom:8px;">
@@ -617,7 +677,7 @@ var SCENARIO_TUTORIAL_STEPS = {
       highlight: "#content-area",
       waitForClick: "#content-area",
     },
-    {
+    map: {
       title: "🗺️ 你在科技园——机会就在这里",
       body: `
         <p style="font-size:12px;font-weight:600;color:var(--accent);">三条路，选一条：</p>
@@ -626,13 +686,24 @@ var SCENARIO_TUTORIAL_STEPS = {
           <div style="margin-top:4px;">💻 <strong>接编程/管理外包</strong> — 用技能直接赚钱，最快</div>
           <div style="margin-top:4px;">🚀 <strong>拿存款创业</strong> — 高风险高回报，慎重</div>
         </div>
-        <p style="font-size:11px;color:var(--text-muted);margin-top:6px;">建议先去事业发展Tab看看职业路径，想好方向。</p>
+        <p style="font-size:11px;color:var(--text-muted);margin-top:6px;">建议先去事业发展Tab看看职业路径。</p>
         <p style="color:var(--success);font-size:12px;">👉 点击 <strong>🗺️ 地图</strong> 熟悉城市布局</p>
       `,
       highlight: '[data-tab="city"]',
       waitForClick: '[data-tab="city"]',
     },
-    {
+    first_income: {
+      title: "💻 用经验赚钱",
+      body: `
+        <p>找到 <strong>「编程外包」</strong> 或 <strong>「管理咨询」</strong> 卡片</p>
+        <p style="color:var(--text-secondary);font-size:11px;">编程 Lv.30+管理 Lv.25 可以直接接单变现，不等入职。</p>
+        <p style="color:var(--success);font-size:12px;margin-top:6px;">👆 点击高亮处的 <strong>工作卡片</strong> 开始</p>
+      `,
+      highlight: "#content-area .action-cards:first-child",
+      waitForClick: "#content-area .action-cards a, #content-area .action-card",
+      hint: "你目前所在地点的行动卡片就在下方。",
+    },
+    outro: {
       title: "🎯 3天目标——算清楚，再出手",
       body: `
         <div style="background:rgba(102,126,234,0.08);border:1px solid rgba(102,126,234,0.2);border-radius:8px;padding:10px 12px;margin-bottom:10px;">
@@ -640,19 +711,17 @@ var SCENARIO_TUTORIAL_STEPS = {
           <div style="font-size:12px;padding:3px 0;border-top:1px solid rgba(255,255,255,0.05);">💼 明天：发出第一份简历，或接第一单外包</div>
           <div style="font-size:12px;padding:3px 0;border-top:1px solid rgba(255,255,255,0.05);">🎯 第3天：锁定路线（打工/创业/自由职业）</div>
         </div>
-        <p style="font-size:11px;color:var(--text-secondary);">
-          🏆 弧线：被裁 → 用经验接单/再就业 → 稳住家庭 → 中年逆袭
-        </p>
-        <p style="color:var(--success);font-size:12px;margin-top:6px;">六年磨的刀，不会白磨。你比年轻人有一样东西：经历。👔</p>
+        <p style="font-size:11px;color:var(--text-secondary);">🏆 弧线：被裁 → 用经验接单/再就业 → 稳住家庭 → 中年逆袭</p>
+        <p style="color:var(--success);font-size:12px;margin-top:6px;">六年磨的刀，不会白磨。👔</p>
       `,
       highlight: null,
       waitForClick: null,
     },
-  ],
+  },
 
-  // ── 应届毕业生 ────────────────────────────────────────────────────
-  fresh_grad: [
-    {
+  // ── 应届毕业生 ──
+  fresh_grad: {
+    intro: {
       title: "🎓 第一次靠自己",
       body: `
         <p style="color:var(--text-muted);font-size:11px;margin-bottom:6px;">——没有人再托底了。</p>
@@ -672,21 +741,21 @@ var SCENARIO_TUTORIAL_STEPS = {
       highlight: null,
       waitForClick: null,
     },
-    {
+    stats: {
       title: "🌱 你的资本——年轻 + 学历 + 潜力",
       body: `
         <div style="background:rgba(102,126,234,0.08);border-radius:8px;padding:8px 12px;margin:8px 0;font-size:12px;">
           <div>🎓 <strong>本科学历</strong> — 应聘门槛已过</div>
-          <div style="margin-top:4px;">🧠 <strong>智力 32</strong> — 还差13点进职场（门槛45，学习能提升）</div>
+          <div style="margin-top:4px;">🧠 <strong>智力 32</strong> — 还差13点进职场（门槛45）</div>
           <div style="margin-top:4px;">💻 <strong>编程 Lv.15</strong> — IT初级岗的基础</div>
           <div style="margin-top:4px;">🌐 <strong>英语 Lv.20</strong> — 外资/互联网优势</div>
         </div>
         <p style="color:var(--success);font-size:12px;">👉 点击 <strong>状态面板</strong> 看你的完整数据</p>
       `,
-      highlight: "#sidebar",
-      waitForClick: "#sidebar",
+      highlight: "#sidebar, #mobile-menu-btn",
+      waitForClick: "#sidebar, #mobile-menu-btn",
     },
-    {
+    action_area: {
       title: "⚠️ ¥2,000 只够撑半个月",
       body: `
         <div style="background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.2);border-radius:8px;padding:8px 12px;font-size:12px;margin-bottom:8px;">
@@ -700,7 +769,7 @@ var SCENARIO_TUTORIAL_STEPS = {
       highlight: "#content-area",
       waitForClick: "#content-area",
     },
-    {
+    map: {
       title: "🗺️ 你在学校附近——离职场很近",
       body: `
         <p style="font-size:12px;font-weight:600;color:var(--accent);">新手最适合的路线：</p>
@@ -715,7 +784,18 @@ var SCENARIO_TUTORIAL_STEPS = {
       highlight: '[data-tab="city"]',
       waitForClick: '[data-tab="city"]',
     },
-    {
+    first_income: {
+      title: "💼 第一份工",
+      body: `
+        <p>找到 <strong>「数据录入」</strong> 或 <strong>「兼职」</strong> 卡片，开始赚第一笔钱</p>
+        <p style="color:var(--text-secondary);font-size:11px;">有编程基础，可以优先找与IT相关的入门工作。</p>
+        <p style="color:var(--success);font-size:12px;margin-top:6px;">👆 点击高亮处的 <strong>工作卡片</strong> 开始</p>
+      `,
+      highlight: "#content-area .action-cards:first-child",
+      waitForClick: "#content-area .action-cards a, #content-area .action-card",
+      hint: "行动卡片就在下方，选择你能做的工作。",
+    },
+    outro: {
       title: "🎯 3天目标——从学生到打工人",
       body: `
         <div style="background:rgba(102,126,234,0.08);border:1px solid rgba(102,126,234,0.2);border-radius:8px;padding:10px 12px;margin-bottom:10px;">
@@ -723,16 +803,45 @@ var SCENARIO_TUTORIAL_STEPS = {
           <div style="font-size:12px;padding:3px 0;border-top:1px solid rgba(255,255,255,0.05);">💰 明天：接第一单小活/去培训中心提升</div>
           <div style="font-size:12px;padding:3px 0;border-top:1px solid rgba(255,255,255,0.05);">🏢 第3天：达到入职条件，找第一份正式工作</div>
         </div>
-        <p style="font-size:11px;color:var(--text-secondary);">
-          🏆 弧线：应届生 → 职场新人 → 晋升 → 还清助学贷款 → 在这座城市立足
-        </p>
+        <p style="font-size:11px;color:var(--text-secondary);">🏆 弧线：应届生 → 职场新人 → 晋升 → 还清助学贷款 → 在这座城市立足</p>
         <p style="color:var(--success);font-size:12px;margin-top:6px;">你才22岁，错了还能重来。但要快。🎓</p>
       `,
       highlight: null,
       waitForClick: null,
     },
-  ],
+  },
 };
+
+/** 按 stepId 合并默认步骤与剧本覆写 */
+function _buildSteps(scenarioId) {
+  var overrides = _SCENARIO_STEP_OVERRIDES[scenarioId] || {};
+  return _DEFAULT_TUTORIAL_STEPS.map(function (step) {
+    var override = overrides[step.stepId];
+    return override ? override : step;
+  });
+}
+
+// ====== SCENARIO_TUTORIAL_STEPS ======
+// 自动生成：所有模式/剧本共用 8 步两阶段流程
+// 沙盒/经典用默认，各剧本用 _buildSteps 合并覆写
+var SCENARIO_TUTORIAL_STEPS = {};
+var _ALL_SCENARIO_IDS = [
+  "classic",
+  "laid_off",
+  "small_town_grinder",
+  "foreign_worker",
+  "second_gen",
+  "midlife_crisis",
+  "fresh_grad",
+];
+for (var _si = 0; _si < _ALL_SCENARIO_IDS.length; _si++) {
+  SCENARIO_TUTORIAL_STEPS[_ALL_SCENARIO_IDS[_si]] = _buildSteps(
+    _ALL_SCENARIO_IDS[_si],
+  );
+}
+
+// 向后兼容：旧引用 _CLASSIC_STEPS 现在指向默认步骤
+var _CLASSIC_STEPS = _DEFAULT_TUTORIAL_STEPS;
 
 /** 逐步展示引导 — v5.0 两阶段流程
  *
@@ -987,7 +1096,34 @@ function _confirmSkip(steps) {
 /** 高亮页面元素 — v5.1 增强：滚动到可视区域 + 滚动/切换自动重定位 */
 function highlightElement(selector) {
   cleanupHighlight();
-  const el = document.querySelector(selector);
+  // 从逗号分隔的复合选择器中选取第一个可见的元素
+  // 用途：桌面端高亮 #sidebar，手机端自动切换到 #mobile-menu-btn
+  var candidates = selector.split(",").map(function (s) {
+    return s.trim();
+  });
+  var el = null;
+  for (var ci = 0; ci < candidates.length; ci++) {
+    var cand = document.querySelector(candidates[ci]);
+    if (cand) {
+      // 用 computed style 精确检测可见性（visibility/display）
+      // 不能用 offsetParent（position:fixed 返回 null）和宽度（hidden 元素也有 width）
+      var candStyle = window.getComputedStyle(cand);
+      if (candStyle.display !== "none" && candStyle.visibility !== "hidden") {
+        el = cand;
+        break;
+      }
+    }
+  }
+  // 兜底：用第一个存在的元素
+  if (!el) {
+    for (var ci2 = 0; ci2 < candidates.length; ci2++) {
+      var c2 = document.querySelector(candidates[ci2]);
+      if (c2) {
+        el = c2;
+        break;
+      }
+    }
+  }
   if (!el) return;
 
   // 将元素滚动到可视区域（平滑滚动到中央）
@@ -1017,7 +1153,22 @@ function highlightElement(selector) {
   function _repositionHighlight() {
     var cur = document.getElementById("tutorial-highlight");
     if (!cur) return;
-    var targetEl = document.querySelector(selector);
+    // 选中第一个可见的候选元素
+    var cands = selector.split(",").map(function (s) {
+      return s.trim();
+    });
+    var targetEl = null;
+    for (var ci = 0; ci < cands.length; ci++) {
+      var c = document.querySelector(cands[ci]);
+      if (c) {
+        var style = window.getComputedStyle(c);
+        if (style.display !== "none" && style.visibility !== "hidden") {
+          targetEl = c;
+          break;
+        }
+      }
+    }
+    if (!targetEl) targetEl = document.querySelector(cands[0]);
     if (!targetEl) return;
     var r = targetEl.getBoundingClientRect();
     cur.style.top = r.top - 6 + "px";
@@ -1035,25 +1186,38 @@ function highlightElement(selector) {
   // v5.1: 监听 #content-area 滚动（tab 内容切换、滚动时重定位高亮）
   if (!window._tutorialScrollHandler) {
     window._tutorialScrollHandler = function () {
-      if (window._tutorialScrollRaf) cancelAnimationFrame(window._tutorialScrollRaf);
+      if (window._tutorialScrollRaf)
+        cancelAnimationFrame(window._tutorialScrollRaf);
       window._tutorialScrollRaf = requestAnimationFrame(_repositionHighlight);
     };
-    var scrollEl = document.getElementById("content-area") || document.querySelector(".main-content");
+    var scrollEl =
+      document.getElementById("content-area") ||
+      document.querySelector(".main-content");
     if (scrollEl) {
-      scrollEl.addEventListener("scroll", window._tutorialScrollHandler, { passive: true });
+      scrollEl.addEventListener("scroll", window._tutorialScrollHandler, {
+        passive: true,
+      });
     }
-    window.addEventListener("scroll", window._tutorialScrollHandler, { passive: true });
+    window.addEventListener("scroll", window._tutorialScrollHandler, {
+      passive: true,
+    });
   }
 
   // v5.1: MutationObserver 监听 #content-area 内容变化（Tab切换时重定位高亮）
   if (!window._tutorialMutationObserver) {
-    var observeTarget = document.getElementById("content-area") || document.querySelector(".main-content");
+    var observeTarget =
+      document.getElementById("content-area") ||
+      document.querySelector(".main-content");
     if (observeTarget) {
       window._tutorialMutationObserver = new MutationObserver(function () {
-        if (window._tutorialMutationTimeout) clearTimeout(window._tutorialMutationTimeout);
+        if (window._tutorialMutationTimeout)
+          clearTimeout(window._tutorialMutationTimeout);
         window._tutorialMutationTimeout = setTimeout(_repositionHighlight, 200);
       });
-      window._tutorialMutationObserver.observe(observeTarget, { childList: true, subtree: true });
+      window._tutorialMutationObserver.observe(observeTarget, {
+        childList: true,
+        subtree: true,
+      });
     }
   }
 }
@@ -1070,7 +1234,9 @@ function cleanupHighlight() {
   }
   // v5.1: 清理 scroll 监听 + MutationObserver
   if (window._tutorialScrollHandler) {
-    var scrollEl = document.getElementById("content-area") || document.querySelector(".main-content");
+    var scrollEl =
+      document.getElementById("content-area") ||
+      document.querySelector(".main-content");
     if (scrollEl) {
       scrollEl.removeEventListener("scroll", window._tutorialScrollHandler);
     }
