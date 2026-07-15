@@ -35827,6 +35827,1038 @@ if (typeof window !== "undefined") {
 
   // ====== 链式后续事件（仅通过 queueChainEvent 触发）======
   // 链式事件1：老周渠道首单高价回收（Event 3 后续）
+  CROSS_EVENTS.push(
+    // ===== 事件1：新闻×消费联动 — 新闻提到的涨价你正好要买 =====
+    {
+      id: "news_price_shock_personal",
+      phase: "street",
+      icon: "📰",
+      title: "新闻里的涨价，今天就来",
+      story:
+        "早上刷到新闻说「近期蔬菜价格大幅上涨，部分品类涨幅超20%」。\n\n你正要去菜市场买菜——看来今天的菜篮子又要重了。\n\n旁边几个大妈也在议论纷纷，有人说要囤货，有人说改吃便宜的。",
+      // [conditions→triggers] 部分迁移：phase+day 移入 triggers，新闻+位置保留
+      triggers: {
+        phase: "street",
+        minDay: 15,
+      },
+      conditions: function (st) {
+        // 检查是否有活跃新闻中包含价格上涨相关
+        if (!st.activeNews || st.activeNews.length === 0) return false;
+        for (var i = 0; i < st.activeNews.length; i++) {
+          var n = st.activeNews[i];
+          if (
+            n.headline &&
+            (n.headline.indexOf("涨") >= 0 || n.headline.indexOf("物价") >= 0)
+          ) {
+            return true;
+          }
+        }
+        return false;
+      },
+      probability: 0.08,
+      repeatable: true,
+      choices: [
+        {
+          text: "🛒 去批发市场批量采购",
+          hint: "批发价更低，但需要跑远路",
+          apply: function (st) {
+            var saved = Random.int(10, 30);
+            st.resources.cash -= saved; // 交通费
+            st.needs.hunger = Math.min(100, (st.needs.hunger || 0) + 20);
+            st.needs.fatigue = Math.min(100, (st.needs.fatigue || 0) + 8);
+            StateManager.addMessage(
+              "🛒 你跑到批发市场批了一堆菜，虽然路费花了¥" +
+                saved +
+                "，但单价便宜了不少。冰箱塞得满满当当。",
+              "success",
+            );
+          },
+        },
+        {
+          text: "🥬 改吃便宜替代品",
+          hint: "省钱，营养一般",
+          apply: function (st) {
+            var cheap = Random.int(3, 8);
+            st.resources.cash -= cheap;
+            st.needs.hunger = Math.min(100, (st.needs.hunger || 0) + 12);
+            st.needs.happiness = Math.max(0, (st.needs.happiness || 50) - 3);
+            StateManager.addMessage(
+              "🥬 白菜豆腐对付一顿了。花了¥" +
+                cheap +
+                "，肚子是饱了，但味道一般。心情-3。",
+              "info",
+            );
+          },
+        },
+        {
+          text: "📊 趁机囤点耐储存的",
+          hint: "心智+2，长期省钱",
+          apply: function (st) {
+            var spend = Random.int(50, 150);
+            st.resources.cash -= spend;
+            st.flags._hoardedFood = (st.flags._hoardedFood || 0) + spend;
+            st.player.mental = Math.min(100, (st.player.mental || 0) + 2);
+            StateManager.addMessage(
+              "📊 你趁现在多囤了些米面油。花了¥" +
+                spend +
+                "，但接下来几天买菜钱能省下来。心智+2。",
+              "hint",
+            );
+          },
+        },
+      ],
+    },
+
+    // ===== 事件2：极端天气×消费行为 — 暴雨天外卖vs自己煮 =====
+    {
+      id: "heavy_rain_cooking_dilemma",
+      phase: "street",
+      icon: "🌧️",
+      title: "暴雨天的晚餐",
+      story:
+        "暴雨倾盆，你被困在了写字楼里。下班时间到了，但雨大到根本出不去。\n\n手机弹出一条消息：「暴雨橙色预警，部分路段积水严重。」\n\n外卖配送费涨到了¥15，而且预计送达时间40分钟起步。你自己带了泡面在包里。",
+      // [conditions→triggers] 全量迁移
+      triggers: {
+        phase: "street",
+        weather: ["heavy_rain", "stormy", "typhoon"],
+        minDay: 5,
+      },
+      probability: 0.1,
+      repeatable: true,
+      choices: [
+        {
+          text: "🍜 吃自带泡面，省钱又踏实",
+          hint: "疲劳+5，心情-2，但省¥20+",
+          apply: function (st) {
+            st.needs.fatigue = Math.min(100, (st.needs.fatigue || 0) + 5);
+            st.needs.happiness = Math.max(0, (st.needs.happiness || 50) - 2);
+            StateManager.addMessage(
+              "🍜 泡面泡了3分钟，虽然简单但热乎。雨天能安稳吃口热的就不错了。",
+              "info",
+            );
+          },
+        },
+        {
+          text: "📱 点外卖，贵就贵吧",
+          hint: "心情+5，花¥25-40（含配送费）",
+          apply: function (st) {
+            var foodCost = Random.int(15, 25);
+            var deliveryCost = Random.int(10, 20);
+            var total = foodCost + deliveryCost;
+            if (st.resources.cash >= total) {
+              st.resources.cash -= total;
+              st.needs.hunger = Math.min(100, (st.needs.hunger || 0) + 35);
+              st.needs.happiness = Math.min(
+                100,
+                (st.needs.happiness || 50) + 5,
+              );
+              StateManager.addMessage(
+                "📱 热腾腾的外卖到了！花了¥" +
+                  total +
+                  "，但暴雨天能坐在工位上吃口热饭，值了。心情+5。",
+                "success",
+              );
+            } else {
+              st.needs.hunger = Math.max(0, (st.needs.hunger || 0) - 10);
+              StateManager.addMessage(
+                "😅 钱不够点外卖，只能饿着肚子等雨小。饥饿+10。",
+                "warning",
+              );
+            }
+          },
+        },
+        {
+          text: "🏪 冒雨去买楼下便利店",
+          hint: "省钱但有健康风险",
+          apply: function (st) {
+            if (Random.chance(0.4)) {
+              st.status.health = Math.max(0, (st.status.health || 80) - 5);
+              st.needs.hunger = Math.min(100, (st.needs.hunger || 0) + 20);
+              StateManager.addMessage(
+                "🏪 你冲进雨里买了关东煮。花了¥12，但淋了暴雨，健康-5。有点得不偿失。",
+                "warning",
+              );
+            } else {
+              st.needs.hunger = Math.min(100, (st.needs.hunger || 0) + 20);
+              st.needs.fatigue = Math.min(100, (st.needs.fatigue || 0) + 10);
+              StateManager.addMessage(
+                "🏪 你冒雨跑到了便利店，买了碗热汤面。虽然累但没生病。疲劳+10。",
+                "info",
+              );
+            }
+          },
+        },
+      ],
+    },
+
+    // ===== 事件3：道德flag→NPC反应 — 你的善行/恶行被NPC知道了 =====
+    {
+      id: "moral_flag_npc_reaction",
+      phase: "street",
+      icon: "👀",
+      title: "你做的事，有人看在眼里",
+      story: "你的行为在邻里间传开了——有人议论纷纷，有人默默记在心里。",
+      // [全系统自洽修复] 域B 修复:storyFn不被events_core支持→改为静态缺省story
+      storyFn: function (st) {
+        var parts = [];
+        if (st.flags && st.flags.moralStoppedThiefPublic) {
+          parts.push(
+            "你在街上抓小偷的事传开了，现在好几个人见到你都点头打招呼。",
+          );
+        }
+        if (st.flags && st.flags.moralFedDog) {
+          parts.push(
+            "那只雨天的流浪狗居然跟了你两条街，最后蹭了蹭你的裤腿跑了。",
+          );
+        }
+        if (st.flags && st.flags._keptWallet) {
+          parts.push("你捡钱包的事不知道被谁看见了，看你的眼神有些微妙。");
+        }
+        if (parts.length === 0) {
+          parts.push("城市很大，但你做的每一件事都可能被人看见。");
+        }
+        return parts.join("\\n\\n");
+      },
+      triggers: {
+        phase: "street",
+        minDay: 10,
+      },
+      conditions: function (st) {
+        // 至少有一个道德flag
+        var flags = st.flags || {};
+        return (
+          flags.moralStoppedThiefPublic ||
+          flags.moralFedDog ||
+          flags.moralFedBeggar ||
+          flags._keptWallet ||
+          flags.moralHelpedElder ||
+          flags.moral_returnedFoundMoney ||
+          flags._foundATMCash
+        );
+      },
+      probability: 0.06,
+      repeatable: false,
+      choices: [
+        {
+          text: "😊 继续做自己认为对的事",
+          hint: "心情+5，道德flag回声",
+          apply: function (st) {
+            st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 5);
+            st.player.mental = Math.min(100, (st.player.mental || 50) + 2);
+            StateManager.addMessage(
+              "😊 你笑了笑，继续往前走。不管别人怎么看，你知道自己做对了。心情+5，心智+2。",
+              "success",
+            );
+          },
+        },
+        {
+          text: "🤔 想想刚才的事，有点后怕",
+          hint: "心智+3，可能触发自我反省",
+          apply: function (st) {
+            st.player.mental = Math.min(100, (st.player.mental || 50) + 3);
+            StateManager.addMessage(
+              "🤔 你停下来想了想刚才的事。有些选择看起来很小，但定义了你是什么样的人。心智+3。",
+              "hint",
+            );
+          },
+        },
+      ],
+    },
+  );
+
+  // ====== 注册 CROSS_EVENTS 遗漏条目 ======
+  // [全系统自洽修复] 域B 修复: CROSS_EVENTS.push在注册循环(5348行)之后执行导致事件未注册到RANDOM_EVENTS
+  for (var _ci = 0; _ci < CROSS_EVENTS.length; _ci++) {
+    var _ce = CROSS_EVENTS[_ci];
+    if (_ce && !_ce._registered) {
+      if (!_ce.conditions && !_ce.triggers) {
+        _ce.conditions = function () {
+          return true;
+        };
+      }
+      _ce._registered = true;
+      RANDOM_EVENTS.push(_ce);
+    }
+  }
+
+  // ====== 联动增强：高难度生存压力「绝境回望」 ======
+  // 【设计意图】与v3.1 difficulty系统联动，困难/地狱模式下健康+金钱双低时触发
+  RANDOM_EVENTS.push({
+    id: "hard_mode_survival_reflection",
+    phase: "street",
+    icon: "🌆",
+    title: "绝境回望",
+    story:
+      "你蹲在路边的台阶上，兜里只剩不到一百块，身体也快扛不住了。" +
+      "旁边商场的大屏幕放着城市宣传片——'梦想之城，等你来闯'。" +
+      "你记得刚来那天也是这么个傍晚，天也是这种颜色。" +
+      "那时候你觉得，凭着一双手总能活下去。" +
+      "现在你还信这个吗？",
+    conditions: function (st) {
+      if (st.player.phase !== "street") return false;
+      if (st.flags._hardModeSurvivalReflectionSeen) return false;
+      var diff = st.flags && st.flags._difficulty;
+      if (diff !== "hard" && diff !== "hell") return false;
+      var health = st.status && st.status.health;
+      if (typeof health !== "number" || health >= 30) return false;
+      var cash = st.resources && st.resources.cash;
+      if (typeof cash !== "number" || cash >= 100) return false;
+      if (!st.player || st.player.day < 30) return false;
+      return true;
+    },
+    probability: 0.06,
+    repeatable: false,
+    choices: [
+      {
+        text: "💪 信。走到今天不是为了倒在这里",
+        hint: "心智+8，疲劳+10，咬牙坚持",
+        apply: function (st) {
+          st.flags._hardModeSurvivalReflectionSeen = true;
+          st.player.mental = Math.min(100, (st.player.mental || 0) + 8);
+          st.needs.fatigue = Math.min(100, (st.needs.fatigue || 0) + 10);
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 5);
+          StateManager.addMessage(
+            "🌆 你站起来拍了拍裤子上的灰。旁边卖烤红薯的大爷看了你一眼，递过来一个：「拿着，不要钱。年轻人，别轻易说不信了。」你鼻子一酸，咬了口红薯，甜的。\n心智+8，疲劳+10，心情+5。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "📞 给家里打个电话",
+        hint: "亲情回血，心情+15",
+        apply: function (st) {
+          st.flags._hardModeSurvivalReflectionSeen = true;
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 15);
+          st.player.mental = Math.min(100, (st.player.mental || 0) + 3);
+          st.resources.cash = Math.max(0, (st.resources.cash || 0) - 10);
+          StateManager.addMessage(
+            "📞 电话通了，妈妈的声音传过来：「吃饭了吗？钱够不够？别太累。」你说都挺好的，挂了电话发了会儿呆。¥10话费换来的这两句唠叨，比什么都管用。\n心情+15，心智+3。",
+            "info",
+          );
+        },
+      },
+      {
+        text: "😞 先找地方睡一觉，明天再说",
+        hint: "疲劳-20，心智-5，先活下来",
+        apply: function (st) {
+          st.flags._hardModeSurvivalReflectionSeen = true;
+          st.needs.fatigue = Math.max(0, (st.needs.fatigue || 0) - 20);
+          st.player.mental = Math.max(0, (st.player.mental || 0) - 5);
+          StateManager.addMessage(
+            "😞 你找了个桥洞下面的避风处，把外套裹紧了些。今晚先活过去，明天的事明天想。\n疲劳-20，心智-5。活着才有翻盘的机会。",
+            "warning",
+          );
+        },
+      },
+    ],
+  });
+
+  // ====== 联动增强：投资亏损心理「熊市阴影」 ======
+  // 【设计意图】与investment系统联动，当玩家累计投资亏损超¥10000时触发心理事件
+  RANDOM_EVENTS.push({
+    id: "investment_loss_anxiety",
+    phase: "street",
+    icon: "📉",
+    title: "熊市阴影",
+    story:
+      "你算了一下账，这段时间在股市里亏进去的钱已经超过一万了。" +
+      "夜里翻来覆去睡不着，闭上眼就是K线图。" +
+      "你开始怀疑自己——是不是根本不适合搞投资？" +
+      "还是说，只是运气不好？",
+    conditions: function (st) {
+      if (st.flags._investmentLossAnxietySeen) return false;
+      if (!st.player || st.player.day < 60) return false;
+      var totalLoss = 0;
+      var tradeLog = st.flags && st.flags._tradeLog;
+      if (Array.isArray(tradeLog)) {
+        for (var i = 0; i < tradeLog.length; i++) {
+          var entry = tradeLog[i];
+          if (entry && entry.profit < 0) {
+            totalLoss += Math.abs(entry.profit);
+          }
+        }
+      }
+      var inv = st.investment;
+      if (inv && typeof inv.totalLoss === "number") {
+        totalLoss += inv.totalLoss;
+      }
+      if (totalLoss < 10000) return false;
+      return true;
+    },
+    probability: 0.05,
+    repeatable: false,
+    choices: [
+      {
+        text: "📚 买几本书系统学习投资知识",
+        hint: "智力+5，但花¥200",
+        cost: 200,
+        apply: function (st) {
+          st.flags._investmentLossAnxietySeen = true;
+          st.resources.cash = Math.max(0, (st.resources.cash || 0) - 200);
+          st.player.intelligence = Math.min(
+            100,
+            (st.player.intelligence || 0) + 5,
+          );
+          st.player.mental = Math.min(100, (st.player.mental || 0) + 3);
+          StateManager.addMessage(
+            "📚 你买了《聪明的投资者》和《周期》，连着几个晚上认真看完了。虽然亏了钱，但学到了东西——下次不会再犯同样的错误了。\n智力+5，心智+3。花了¥200买书。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "🧘 出去走走，放空自己",
+        hint: "心情+15，心智+5",
+        apply: function (st) {
+          st.flags._investmentLossAnxietySeen = true;
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 15);
+          st.player.mental = Math.min(100, (st.player.mental || 0) + 5);
+          st.needs.fatigue = Math.min(100, (st.needs.fatigue || 0) + 5);
+          StateManager.addMessage(
+            "🧘 你沿着江边走了两个小时。风吹在脸上，慢慢把脑子里的K线吹散了。想明白一件事：只要人还在，钱可以再赚。\n心情+15，心智+5，疲劳+5。",
+            "info",
+          );
+        },
+      },
+      {
+        text: "😤 不甘心！下次加倍押注翻本",
+        hint: "心智-5，但下次投资回报+20%",
+        apply: function (st) {
+          st.flags._investmentLossAnxietySeen = true;
+          st.player.mental = Math.max(0, (st.player.mental || 0) - 5);
+          st.flags._gamblerMode = true;
+          StateManager.addMessage(
+            "😤 你盯着账户余额，牙咬得咯咯响。「我就不信了。」你知道这种心态很危险，但你控制不住。\n心智-5，下次投资收益+20%（但风险更高）。",
+            "warning",
+          );
+        },
+      },
+    ],
+  });
+
+  // ==== [域B 联动增强 R15] 技能复合→跨界机会（B→C→E 桥接）====
+  // 联动：coding≥20 + english≥15 触发跨境远程工作线索
+  // 设计意图：技能组合创造新机会——填补"复合技能→职业跃迁"的叙事空白
+  {
+    var _skillBridgeEvent = {
+      id: "skill_bridge_remote_opp",
+      phase: "street",
+      icon: "🌐",
+      title: "远程工作的邀请",
+      story:
+        "你在技术论坛上收到一条私信：\\n\\n「你好，我在Upwork上看到你的作品集。我们是一家新加坡的科技公司，正在找一个能独立完成全栈开发的远程工程师。\\n\\n要求英语读写流利，能参加英文会议。\\n\\n如果你感兴趣，我们可以先做一个付费测试项目，工时按U.S.时薪结算。」\\n\\n你盯着屏幕——这是一条通往海外市场的路。",
+      triggers: {
+        minDay: 60,
+        excludeFlags: ["_skillBridgeRemoteSeen"],
+      },
+      conditions: function (st) {
+        var coding =
+          st.skills && st.skills.coding ? st.skills.coding.level || 0 : 0;
+        var english =
+          st.skills && st.skills.english ? st.skills.english.level || 0 : 0;
+        return coding >= 20 && english >= 15;
+      },
+      probability: 0.035,
+      repeatable: false,
+      choices: [
+        {
+          text: "🌐 接受测试项目，拼一把",
+          hint: "需要熬夜完成，但收入+¥5000，解锁海外接单通道",
+          apply: function (st) {
+            st.flags._skillBridgeRemoteSeen = true;
+            st.flags._remoteWorkUnlocked = true;
+            st.resources.cash = (st.resources.cash || 0) + 5000;
+            st.needs.fatigue = Math.min(100, (st.needs.fatigue || 0) + 25);
+            st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 12);
+            st.player.mental = Math.min(100, (st.player.mental || 0) + 5);
+            if (st.skills && st.skills.coding)
+              st.skills.coding.xp = (st.skills.coding.xp || 0) + 50;
+            if (st.skills && st.skills.english)
+              st.skills.english.xp = (st.skills.english.xp || 0) + 30;
+            StateManager.addMessage(
+              "🌐 你熬夜三天完成了测试项目！新加坡那边很满意，付了¥5,000测试费，说下个月有正式项目会再联系。\n海外远程通道已解锁！编程XP+50，英语XP+30，心情+12。技能终于变成了跨越国界的门票。",
+              "success",
+            );
+          },
+        },
+        {
+          text: "📋 先收藏，等准备好了再联系",
+          hint: "保留机会，不急于一时",
+          apply: function (st) {
+            st.flags._skillBridgeRemoteSeen = true;
+            st.flags._remoteWorkDeferred = true;
+            st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 3);
+            StateManager.addMessage(
+              "📋 你收藏了那条私信，准备等英语再好一些再回复。机会在那里，不会自己跑掉。心情+3。",
+              "info",
+            );
+          },
+        },
+        {
+          text: "😅 水平还不够，再练练",
+          hint: "自知之明，无变化",
+          apply: function (st) {
+            st.flags._skillBridgeRemoteSeen = true;
+            StateManager.addMessage(
+              "😅 你诚实评估了自己的水平——英语开会有时还是会卡壳。先踏踏实实把基本功打牢，机会以后还会有的。",
+              "info",
+            );
+          },
+        },
+      ],
+    };
+    RANDOM_EVENTS.push(_skillBridgeEvent);
+  }
+})();
+
+// ===== 联动增强1：高负债心理压力事件（负债≥¥10,000触发）=====
+(function () {
+  if (typeof RANDOM_EVENTS === "undefined") return;
+  RANDOM_EVENTS.push({
+    id: "debt_anxiety_night",
+    _isChainEvent: false,
+    phase: "street",
+    icon: "😰",
+    title: "债务压得喘不过气",
+    story:
+      "夜深了，你翻来覆去睡不着。手机屏幕上银行的还款提醒数字格外刺眼。你算了一笔账——按现在的收入，不吃不喝也要好几个月才能还清。窗外灯火通明，你却觉得这座城市的夜晚格外冷。",
+    conditions: function (st) {
+      return (
+        st.player.phase === "street" &&
+        st.player.day >= 15 &&
+        (st.resources.debt || 0) >= 10000
+      );
+    },
+    excludeFlags: ["_debtAnxietyDone"],
+    choices: [
+      {
+        text: "📝 制定还款计划，分期还",
+        hint: "心智+2，压力-5",
+        apply: function (st) {
+          st.flags._debtAnxietyDone = true;
+          st.skills.mental = st.skills.mental || { level: 0, xp: 0 };
+          st.skills.mental.xp = (st.skills.mental.xp || 0) + 20;
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 5);
+          StateManager.addMessage(
+            "📝 你打开Excel，把债务拆分成12期。虽然数字还是那么大，但至少有了方向。心情+5，心智经验+20。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "💪 明天开始多打一份工",
+        hint: "疲劳+10，决心+3",
+        apply: function (st) {
+          st.flags._debtAnxietyDone = true;
+          st.needs.fatigue = Math.min(100, (st.needs.fatigue || 0) + 10);
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 3);
+          StateManager.addMessage(
+            "💪 你咬着牙关掉手机，定了个五点的闹钟。多干一份活，就多还一份钱。疲劳+10，心情+3。",
+            "info",
+          );
+        },
+      },
+      {
+        text: "🍺 借酒消愁，不想了",
+        hint: "健康-3，心情短暂+2",
+        apply: function (st) {
+          st.flags._debtAnxietyDone = true;
+          st.status.health = Math.max(0, (st.status.health || 100) - 3);
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 2);
+          StateManager.addMessage(
+            "🍺 你买了瓶啤酒坐在路边喝。酒劲上来时，那些数字暂时模糊了。但明天醒来，它们还在。健康-3，心情+2。",
+            "warning",
+          );
+        },
+      },
+    ],
+  });
+})();
+
+// ===== 联动增强2：连续3天恶劣天气情绪事件 =====
+(function () {
+  if (typeof RANDOM_EVENTS === "undefined") return;
+  var CONSECUTIVE_BAD_WEATHER = [
+    "rainy",
+    "heavy_rain",
+    "stormy",
+    "snowy",
+    "heavy_snow",
+    "foggy",
+    "heavy_smog",
+  ];
+  RANDOM_EVENTS.push({
+    id: "bad_weather_blues",
+    _isChainEvent: false,
+    phase: "street",
+    icon: "🌧️",
+    title: "连绵阴雨让人沮丧",
+    story:
+      "雨已经连续下了好几天。空气里全是潮湿的霉味，衣服晾不干，鞋子进水了，连床单都带着一股潮气。你站在窗前，看着灰蒙蒙的天，感觉自己也快发霉了。",
+    conditions: function (st) {
+      if (st.player.phase !== "street" || st.player.day < 7) return false;
+      if (!st.weather || !st.weather.current) return false;
+      var isBad = false;
+      for (var i = 0; i < CONSECUTIVE_BAD_WEATHER.length; i++) {
+        if (st.weather.current === CONSECUTIVE_BAD_WEATHER[i]) {
+          isBad = true;
+          break;
+        }
+      }
+      if (!isBad) return false;
+      // 检查连续天数（需要weatherHistory或类似机制，降级为简单门槛）
+      return st.player.day >= 7;
+    },
+    excludeFlags: ["_badWeatherBluesDone"],
+    choices: [
+      {
+        text: "☕ 去便利店买杯热饮暖暖身子",
+        hint: "花费¥10，心情+5",
+        apply: function (st) {
+          st.flags._badWeatherBluesDone = true;
+          st.resources.cash = (st.resources.cash || 0) - 10;
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 5);
+          StateManager.addMessage(
+            "☕ 便利店的暖光灯下，一杯热奶茶下肚，整个人都活过来了。花费¥10，心情+5。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "🏪 去批发市场囤点货，雨天生意好做",
+        hint: "利用雨天商机",
+        apply: function (st) {
+          st.flags._badWeatherBluesDone = true;
+          st.flags._rainMarketUmbrellaDay = st.player.day;
+          StateManager.addMessage(
+            "🏪 你想起老周说过——雨天批发市场雨具和防潮用品卖得特别好。你披上雨衣出了门。",
+            "info",
+          );
+        },
+      },
+      {
+        text: "😴 躺平，等天气好转",
+        hint: "疲劳-5，心情-3",
+        apply: function (st) {
+          st.flags._badWeatherBluesDone = true;
+          st.needs.fatigue = Math.max(0, (st.needs.fatigue || 0) - 5);
+          st.needs.happiness = Math.max(0, (st.needs.happiness || 50) - 3);
+          StateManager.addMessage(
+            "😴 你裹着被子听着雨声发呆。虽然状态恢复了一些，但心里总觉得在浪费时间。",
+            "info",
+          );
+        },
+      },
+    ],
+  });
+})();
+
+// ===== 联动增强3：恶劣天气通勤（职场人暴风雨通勤）B→G/H =====
+(function () {
+  if (typeof RANDOM_EVENTS === "undefined") return;
+  var BAD_COMMUTE_WEATHER = ["stormy", "heavy_rain", "heavy_snow", "snowy"];
+  RANDOM_EVENTS.push({
+    id: "stormy_corp_commute",
+    _isChainEvent: false,
+    icon: "🌊",
+    title: "暴雨中的通勤路",
+    story:
+      "窗外的雨泼得像天漏了一样。你站在公司附近的十字路口，伞被风吹得翻了过去，裤腿湿到大腿。还有十分钟打卡，但面前这条积水已经漫过脚踝的路让你犹豫了——冲过去，还是一身湿透地进办公室？\n\n这场暴雨似乎在提醒你：这座城市从不因为你的狼狈而放缓它的节奏。",
+    conditions: function (st) {
+      if (!st || !st.player || !st.weather || !st.weather.current) return false;
+      if (st.player.phase !== "corporate" || st.player.day < 30) return false;
+      if (st.flags && st.flags._stormyCommuteDone) return false;
+      var w = st.weather.current;
+      var isBad = false;
+      for (var i = 0; i < BAD_COMMUTE_WEATHER.length; i++) {
+        if (w === BAD_COMMUTE_WEATHER[i]) {
+          isBad = true;
+          break;
+        }
+      }
+      return isBad;
+    },
+    excludeFlags: ["_stormyCommuteDone"],
+    choices: [
+      {
+        text: "💼 咬牙冲过去，不能迟到",
+        hint: "健康-，全勤+",
+        apply: function (st) {
+          st.flags._stormyCommuteDone = true;
+          st.status.health = Math.max(0, (st.status.health || 100) - 5);
+          if (st.player && st.player.corporate) {
+            st.player.corporate.kpi = Math.min(
+              100,
+              (st.player.corporate.kpi || 20) + 2,
+            );
+          }
+          st.player.mental = Math.min(100, (st.player.mental || 50) + 3);
+          StateManager.addMessage(
+            "💼 你踩着积水冲进公司，刚好赶上打卡。同事递来一条干毛巾，主管看在眼里。KPI+2，心智+3，健康-5。",
+            "info",
+          );
+        },
+      },
+      {
+        text: "☕ 进便利店躲雨，等小了再走",
+        hint: "心情+，但会迟到",
+        apply: function (st) {
+          st.flags._stormyCommuteDone = true;
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 5);
+          st.resources.cash = (st.resources.cash || 0) - 8;
+          StateManager.addMessage(
+            "☕ 你在便利店买了杯热咖啡，看着窗外雨幕发呆。迟到了十五分钟，但至少人是干的。心情+5，花费¥8。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "🏠 请半天假，远程办公",
+        hint: "健康不减，但职场存在感-",
+        apply: function (st) {
+          st.flags._stormyCommuteDone = true;
+          if (st.player && st.player.corporate) {
+            st.player.corporate.popularity = Math.max(
+              0,
+              (st.player.corporate.popularity || 30) - 3,
+            );
+          }
+          StateManager.addMessage(
+            "🏠 你发消息请了半天假。虽然人在家，但总觉得少了点什么。职场存在感-3。",
+            "warning",
+          );
+        },
+      },
+    ],
+    probability: 0.06,
+  });
+})();
+
+// ===== 联动增强4：长期露宿生存危机（街头韧性考验）B→A/G =====
+(function () {
+  if (typeof RANDOM_EVENTS === "undefined") return;
+  RANDOM_EVENTS.push({
+    id: "homeless_endurance_crisis",
+    _isChainEvent: false,
+    icon: "🏚️",
+    title: "天桥下的第N个夜晚",
+    story:
+      "你把硬纸板铺得再平整一些，裹紧身上那件已经看不出颜色的外套。天桥上车流轰鸣，震得骨头发麻。你已经记不清在这座城市睡了多久露宿了——只知道身体的每一声咳嗽都在提醒你，这样撑不了太久。\n\n风声里，你隐约听到远处传来夜市的喧闹。这座城市有千万种活法，而你正卡在最硬的那一种里。",
+    conditions: function (st) {
+      if (!st || !st.player || !st.housing) return false;
+      if (st.player.day < 45) return false;
+      if (st.housing.tier >= 1) return false; // 只要有住处就触发不了
+      if (st.flags && st.flags._homelessCrisisDone) return false;
+      if ((st.status.health || 100) < 40) return true;
+      if ((st.needs.happiness || 50) < 15) return true;
+      if ((st.player.mental || 50) < 15) return true;
+      return false;
+    },
+    excludeFlags: ["_homelessCrisisDone"],
+    choices: [
+      {
+        text: "💪 振作起来，今天多干几份活",
+        hint: "决心+，疲劳+",
+        apply: function (st) {
+          st.flags._homelessCrisisDone = true;
+          st.player.mental = Math.min(100, (st.player.mental || 50) + 5);
+          st.needs.fatigue = Math.min(100, (st.needs.fatigue || 50) + 15);
+          StateManager.addMessage(
+            "💪 你使劲搓了搓脸，迎着晨光走向劳务市场。不能再这样下去了——今天必须多赚点。心智+5，疲劳+15。",
+            "info",
+          );
+        },
+      },
+      {
+        text: "🏪 去救助站看看有没有临时工",
+        hint: "有机会获得物资或工作",
+        apply: function (st) {
+          st.flags._homelessCrisisDone = true;
+          st.needs.hunger = Math.min(100, (st.needs.hunger || 50) + 20);
+          st.resources.cash = (st.resources.cash || 0) + 30;
+          StateManager.addMessage(
+            "🏪 救助站发了一碗热粥和两个馒头，还贴着一张小广告：招夜班保安，包住。你小心地把号码存进手机。饥饿+20，现金+30。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "😞 在墙角缩成一团，熬过这一晚",
+        hint: "健康-，情绪触底",
+        apply: function (st) {
+          st.flags._homelessCrisisDone = true;
+          st.status.health = Math.max(0, (st.status.health || 100) - 8);
+          st.needs.happiness = Math.max(0, (st.needs.happiness || 50) - 10);
+          StateManager.addMessage(
+            "😞 你把报纸盖在脸上，假装什么都感觉不到。半夜被冻醒了一次，雨从桥缝漏下来打在脸上。天亮了，你还活着，但好像也没完全活着。健康-8，心情-10。",
+            "danger",
+          );
+        },
+      },
+    ],
+    probability: 0.04,
+  });
+
+  // ============================================================
+  // [全系统自洽修复] 域C 联动增强: 技能天赋树叙事事件
+  // 填补空白: SKILL_BRANCHES 选择/激活/满级零事件覆盖
+  // 联动: C(职业/成长)→D(社交)/G(核心机制) — 天赋树首次被事件消费
+  // ============================================================
+  (function () {
+    // 事件1: 天赋树选择 — 技能Lv.30时选择发展方向
+    var ev_branch_choice = {
+      id: "skill_branch_choice_moment",
+      phase: "street",
+      icon: "🌳",
+      title: "技能发展方向",
+      story: function (st) {
+        var skillName =
+          typeof getSkillChineseName === "function"
+            ? getSkillChineseName(st._branchSkillKey)
+            : st._branchSkillKey;
+        return (
+          "你的" +
+          skillName +
+          "终于练到了Lv.30，是时候选择发展方向了。\n" +
+          "一个老前辈拍了拍你：\"这行水深，选对了路能少走很多弯路。\""
+        );
+      },
+      triggers: {
+        minDay: 15,
+      },
+      conditions: function (st) {
+        if (st.flags && st.flags._skillBranchChoiceDone) return false;
+        if (!st.skills) return false;
+        for (var sk in st.skills) {
+          if (st.skills[sk] && st.skills[sk].level >= 30) {
+            if (
+              typeof getSkillBranchDef === "function" &&
+              getSkillBranchDef(sk).length > 0
+            ) {
+              if (!st.skillBranches || !st.skillBranches[sk]) {
+                st._branchSkillKey = sk;
+                return true;
+              }
+            }
+          }
+        }
+        return false;
+      },
+      apply: function (st) {
+        st.flags._skillBranchChoiceDone = true;
+      },
+      probability: 0.12,
+      choices: [
+        {
+          text: function (st) {
+            return "🌳 选择" + (st._branchSkillKey || "该技能") + "发展方向";
+          },
+          hint: "开启天赋树系统",
+          callback: function (st) {
+            if (typeof showModal === "function") {
+              showModal({
+                title: "🌳 选择发展方向",
+                body:
+                  '<div style="padding:8px 12px;"><p style="font-size:14px;font-weight:bold;margin-bottom:8px;">' +
+                  (typeof getSkillChineseName === "function"
+                    ? getSkillChineseName(st._branchSkillKey)
+                    : st._branchSkillKey) +
+                  ' 已达到Lv.30，请选择发展方向</p><p style="font-size:12px;color:var(--text-muted);">天赋树将在技能Tab中显示，选择后不可逆（切换需消耗30AP+¥500）。</p></div>',
+                buttons: [
+                  {
+                    text: "去技能Tab选择",
+                    cls: "btn-primary",
+                    callback: function () {
+                      if (typeof switchTab === "function")
+                        switchTab("skills");
+                      return true;
+                    },
+                  },
+                ],
+              });
+            }
+          },
+        },
+        {
+          text: "💤 先放着，不急",
+          hint: "暂时不选，下次触发",
+          apply: function (st) {
+            StateManager.addMessage(
+              "💤 你决定先放着，等攒够了经验再说。",
+              "hint",
+            );
+          },
+        },
+      ],
+    };
+
+    // 事件2: 天赋节点激活 — 首个天赋点亮
+    var ev_talent_light = {
+      id: "skill_talent_first_light",
+      phase: "street",
+      icon: "⭐",
+      title: "天赋点亮",
+      story: function (st) {
+        return (
+          "你终于攒够了资源，激活了天赋节点。\n" +
+          "一股力量涌入体内——不，是技能感悟加深了。"
+        );
+      },
+      triggers: {
+        minDay: 30,
+      },
+      conditions: function (st) {
+        if (st.flags && st.flags._skillTalentFirstLightDone) return false;
+        if (!st.talentNodes) return false;
+        var activatedCount = 0;
+        for (var k in st.talentNodes) {
+          if (st.talentNodes[k]) activatedCount++;
+        }
+        return activatedCount >= 1;
+      },
+      apply: function (st) {
+        st.flags._skillTalentFirstLightDone = true;
+        st.player.happiness = Math.min(
+          100,
+          (st.player.happiness || 50) + 5,
+        );
+        st.player.mental = Math.min(
+          100,
+          (st.player.mental || 30) + 3,
+        );
+        StateManager.addMessage(
+          "⭐ 天赋节点点亮！你的技能树又多了一层力量。心情+5，心智+3。",
+          "success",
+        );
+      },
+      probability: 0.06,
+      choices: [
+        {
+          text: "🌟 继续挖掘潜能",
+          hint: "前往技能Tab查看可激活节点",
+          callback: function (st) {
+            if (typeof switchTab === "function") switchTab("skills");
+          },
+        },
+      ],
+    };
+
+    // 事件3: 技能树满级 — 100级里程碑
+    var ev_mastery = {
+      id: "skill_tree_mastery_celebration",
+      phase: "street",
+      icon: "🏆",
+      title: "技能大成",
+      story: function (st) {
+        var skillName =
+          typeof getSkillChineseName === "function"
+            ? getSkillChineseName(st._masterSkillKey)
+            : st._masterSkillKey;
+        return (
+          "你的" +
+          skillName +
+          "终于达到了Lv.100！\n" +
+          "街上的人都传开了——你是这条街上最有本事的人。"
+        );
+      },
+      triggers: {
+        minDay: 100,
+      },
+      conditions: function (st) {
+        if (st.flags && st.flags._skillMasteryDone) return false;
+        if (!st.skills) return false;
+        for (var sk in st.skills) {
+          if (st.skills[sk] && st.skills[sk].level >= 100) {
+            st._masterSkillKey = sk;
+            return true;
+          }
+        }
+        return false;
+      },
+      apply: function (st) {
+        st.flags._skillMasteryDone = true;
+        st.player.fame = (st.player.fame || 0) + 10;
+        st.player.happiness = Math.min(
+          100,
+          (st.player.happiness || 50) + 15,
+        );
+        st.player.mental = Math.min(
+          100,
+          (st.player.mental || 30) + 10,
+        );
+        StateManager.addMessage(
+          "🏆 " +
+            (typeof getSkillChineseName === "function"
+              ? getSkillChineseName(st._masterSkillKey)
+              : st._masterSkillKey) +
+            " 达到Lv.100！你已成为这条街的传奇！名气+10，心情+15，心智+10。",
+          "success",
+        );
+      },
+      probability: 0.02,
+      choices: [
+        {
+          text: "🎉 请全街吃饭庆祝",
+          hint: "花费¥500，所有NPC好感+3",
+          apply: function (st) {
+            if (st.resources.cash >= 500) {
+              st.resources.cash -= 500;
+              var rels = st.relationships || {};
+              for (var rid in rels) {
+                if (rels[rid] && rels[rid].met) {
+                  rels[rid].affinity = Math.min(
+                    100,
+                    (rels[rid].affinity || 0) + 3,
+                  );
+                }
+              }
+              StateManager.addMessage(
+                "🎉 你请全街吃了顿大餐！大家伙都高兴坏了，所有已结识NPC好感+3。",
+                "success",
+              );
+            }
+          },
+        },
+        {
+          text: "📚 把钱投到学习中",
+          hint: "现金-¥300，所有技能+100XP",
+          apply: function (st) {
+            if (st.resources.cash >= 300) {
+              st.resources.cash -= 300;
+              if (st.skills) {
+                for (var s in st.skills) {
+                  if (st.skills[s]) {
+                    st.skills[s].xp = (st.skills[s].xp || 0) + 100;
+                  }
+                }
+              }
+              StateManager.addMessage(
+                "📚 你用庆祝的钱报了个进修班，所有技能各获得100XP！",
+                "success",
+              );
+            }
+          },
+        },
+      ],
+    };
+
+    RANDOM_EVENTS.push(ev_branch_choice);
+    RANDOM_EVENTS.push(ev_talent_light);
+    RANDOM_EVENTS.push(ev_mastery);
+  })();
+})();
+</script>
+    <!-- v3.21+v3.22 events merged into cross_system_events.js above -->
+    <!-- 2026-07-16 P0-2: cross_system_events.js 巨型文件机械拆分（R-zone A 纯 push，顺序无关） -->
+    <script>/**
+ * 跨系统联动事件 — 拆分片段 1/8（原 cross_system_events.js 机械拆分，行为不变）
+ * 仅含自包含的 RANDOM_EVENTS.push 语句；顺序无关（事件选择走 phase 过滤+概率）。
+ */
+(function () {
+  if (typeof RANDOM_EVENTS === "undefined") return;
+  if (RANDOM_EVENTS._crossPart1Loaded) return;
+  RANDOM_EVENTS._crossPart1Loaded = true;
+
   RANDOM_EVENTS.push({
     id: "zhou_channel_first_deal",
     _isChainEvent: true,
@@ -41639,6 +42671,17 @@ if (typeof window !== "undefined") {
 
   // ----- 事件57：吴姐的理发店邀约（商业区相遇）-----
   // 设计意图：在商业区触发，建立吴姐「美容时尚人脉」的人设
+})();
+</script>
+    <script>/**
+ * 跨系统联动事件 — 拆分片段 2/8（原 cross_system_events.js 机械拆分，行为不变）
+ * 仅含自包含的 RANDOM_EVENTS.push 语句；顺序无关（事件选择走 phase 过滤+概率）。
+ */
+(function () {
+  if (typeof RANDOM_EVENTS === "undefined") return;
+  if (RANDOM_EVENTS._crossPart2Loaded) return;
+  RANDOM_EVENTS._crossPart2Loaded = true;
+
   RANDOM_EVENTS.push({
     id: "npc_sister_wu_first_meet",
     phase: "street",
@@ -47463,6 +48506,17 @@ if (typeof window !== "undefined") {
 
   // ④ 天气×位置组合：暴雨时在市场 vs 暴雨时在公园
   // 设计意图：填补"天气与当前位置组合的情境事件"空白区
+})();
+</script>
+    <script>/**
+ * 跨系统联动事件 — 拆分片段 3/8（原 cross_system_events.js 机械拆分，行为不变）
+ * 仅含自包含的 RANDOM_EVENTS.push 语句；顺序无关（事件选择走 phase 过滤+概率）。
+ */
+(function () {
+  if (typeof RANDOM_EVENTS === "undefined") return;
+  if (RANDOM_EVENTS._crossPart3Loaded) return;
+  RANDOM_EVENTS._crossPart3Loaded = true;
+
   RANDOM_EVENTS.push({
     id: "r120_rain_market_vs_park",
     phase: "street",
@@ -53276,6 +54330,17 @@ if (typeof window !== "undefined") {
       },
     ],
   });
+})();
+</script>
+    <script>/**
+ * 跨系统联动事件 — 拆分片段 4/8（原 cross_system_events.js 机械拆分，行为不变）
+ * 仅含自包含的 RANDOM_EVENTS.push 语句；顺序无关（事件选择走 phase 过滤+概率）。
+ */
+(function () {
+  if (typeof RANDOM_EVENTS === "undefined") return;
+  if (RANDOM_EVENTS._crossPart4Loaded) return;
+  RANDOM_EVENTS._crossPart4Loaded = true;
+
   RANDOM_EVENTS.push({
     id: "hygiene_low_sister_wu_remind",
 
@@ -59061,6 +60126,17 @@ if (typeof window !== "undefined") {
       },
     ],
   });
+})();
+</script>
+    <script>/**
+ * 跨系统联动事件 — 拆分片段 5/8（原 cross_system_events.js 机械拆分，行为不变）
+ * 仅含自包含的 RANDOM_EVENTS.push 语句；顺序无关（事件选择走 phase 过滤+概率）。
+ */
+(function () {
+  if (typeof RANDOM_EVENTS === "undefined") return;
+  if (RANDOM_EVENTS._crossPart5Loaded) return;
+  RANDOM_EVENTS._crossPart5Loaded = true;
+
   RANDOM_EVENTS.push({
     id: "l20_r82_skill_english_job",
 
@@ -64830,6 +65906,17 @@ if (typeof window !== "undefined") {
       },
     ],
   });
+})();
+</script>
+    <script>/**
+ * 跨系统联动事件 — 拆分片段 6/8（原 cross_system_events.js 机械拆分，行为不变）
+ * 仅含自包含的 RANDOM_EVENTS.push 语句；顺序无关（事件选择走 phase 过滤+概率）。
+ */
+(function () {
+  if (typeof RANDOM_EVENTS === "undefined") return;
+  if (RANDOM_EVENTS._crossPart6Loaded) return;
+  RANDOM_EVENTS._crossPart6Loaded = true;
+
   RANDOM_EVENTS.push({
     id: "l21_r109_hygiene_low_npc",
 
@@ -70577,6 +71664,17 @@ if (typeof window !== "undefined") {
       },
     ],
   });
+})();
+</script>
+    <script>/**
+ * 跨系统联动事件 — 拆分片段 7/8（原 cross_system_events.js 机械拆分，行为不变）
+ * 仅含自包含的 RANDOM_EVENTS.push 语句；顺序无关（事件选择走 phase 过滤+概率）。
+ */
+(function () {
+  if (typeof RANDOM_EVENTS === "undefined") return;
+  if (RANDOM_EVENTS._crossPart7Loaded) return;
+  RANDOM_EVENTS._crossPart7Loaded = true;
+
   RANDOM_EVENTS.push({
     id: "sister_zhang_electrician_favor",
 
@@ -76342,6 +77440,17 @@ if (typeof window !== "undefined") {
   });
 
   // R40-② 年末倒计时 — 冬季×day≥330的年终反思
+})();
+</script>
+    <script>/**
+ * 跨系统联动事件 — 拆分片段 8/8（原 cross_system_events.js 机械拆分，行为不变）
+ * 仅含自包含的 RANDOM_EVENTS.push 语句；顺序无关（事件选择走 phase 过滤+概率）。
+ */
+(function () {
+  if (typeof RANDOM_EVENTS === "undefined") return;
+  if (RANDOM_EVENTS._crossPart8Loaded) return;
+  RANDOM_EVENTS._crossPart8Loaded = true;
+
   RANDOM_EVENTS.push({
     id: "winter_year_end_reflection",
     phase: "any",
@@ -81747,1042 +82856,8 @@ if (typeof window !== "undefined") {
 
   // ====== v3.99e 联动增强（R15 域B）=====
   // 3个新增事件填补：新闻×事件联动 / 极端天气消费 / 道德flag→NPC反应 空白
-  CROSS_EVENTS.push(
-    // ===== 事件1：新闻×消费联动 — 新闻提到的涨价你正好要买 =====
-    {
-      id: "news_price_shock_personal",
-      phase: "street",
-      icon: "📰",
-      title: "新闻里的涨价，今天就来",
-      story:
-        "早上刷到新闻说「近期蔬菜价格大幅上涨，部分品类涨幅超20%」。\n\n你正要去菜市场买菜——看来今天的菜篮子又要重了。\n\n旁边几个大妈也在议论纷纷，有人说要囤货，有人说改吃便宜的。",
-      // [conditions→triggers] 部分迁移：phase+day 移入 triggers，新闻+位置保留
-      triggers: {
-        phase: "street",
-        minDay: 15,
-      },
-      conditions: function (st) {
-        // 检查是否有活跃新闻中包含价格上涨相关
-        if (!st.activeNews || st.activeNews.length === 0) return false;
-        for (var i = 0; i < st.activeNews.length; i++) {
-          var n = st.activeNews[i];
-          if (
-            n.headline &&
-            (n.headline.indexOf("涨") >= 0 || n.headline.indexOf("物价") >= 0)
-          ) {
-            return true;
-          }
-        }
-        return false;
-      },
-      probability: 0.08,
-      repeatable: true,
-      choices: [
-        {
-          text: "🛒 去批发市场批量采购",
-          hint: "批发价更低，但需要跑远路",
-          apply: function (st) {
-            var saved = Random.int(10, 30);
-            st.resources.cash -= saved; // 交通费
-            st.needs.hunger = Math.min(100, (st.needs.hunger || 0) + 20);
-            st.needs.fatigue = Math.min(100, (st.needs.fatigue || 0) + 8);
-            StateManager.addMessage(
-              "🛒 你跑到批发市场批了一堆菜，虽然路费花了¥" +
-                saved +
-                "，但单价便宜了不少。冰箱塞得满满当当。",
-              "success",
-            );
-          },
-        },
-        {
-          text: "🥬 改吃便宜替代品",
-          hint: "省钱，营养一般",
-          apply: function (st) {
-            var cheap = Random.int(3, 8);
-            st.resources.cash -= cheap;
-            st.needs.hunger = Math.min(100, (st.needs.hunger || 0) + 12);
-            st.needs.happiness = Math.max(0, (st.needs.happiness || 50) - 3);
-            StateManager.addMessage(
-              "🥬 白菜豆腐对付一顿了。花了¥" +
-                cheap +
-                "，肚子是饱了，但味道一般。心情-3。",
-              "info",
-            );
-          },
-        },
-        {
-          text: "📊 趁机囤点耐储存的",
-          hint: "心智+2，长期省钱",
-          apply: function (st) {
-            var spend = Random.int(50, 150);
-            st.resources.cash -= spend;
-            st.flags._hoardedFood = (st.flags._hoardedFood || 0) + spend;
-            st.player.mental = Math.min(100, (st.player.mental || 0) + 2);
-            StateManager.addMessage(
-              "📊 你趁现在多囤了些米面油。花了¥" +
-                spend +
-                "，但接下来几天买菜钱能省下来。心智+2。",
-              "hint",
-            );
-          },
-        },
-      ],
-    },
-
-    // ===== 事件2：极端天气×消费行为 — 暴雨天外卖vs自己煮 =====
-    {
-      id: "heavy_rain_cooking_dilemma",
-      phase: "street",
-      icon: "🌧️",
-      title: "暴雨天的晚餐",
-      story:
-        "暴雨倾盆，你被困在了写字楼里。下班时间到了，但雨大到根本出不去。\n\n手机弹出一条消息：「暴雨橙色预警，部分路段积水严重。」\n\n外卖配送费涨到了¥15，而且预计送达时间40分钟起步。你自己带了泡面在包里。",
-      // [conditions→triggers] 全量迁移
-      triggers: {
-        phase: "street",
-        weather: ["heavy_rain", "stormy", "typhoon"],
-        minDay: 5,
-      },
-      probability: 0.1,
-      repeatable: true,
-      choices: [
-        {
-          text: "🍜 吃自带泡面，省钱又踏实",
-          hint: "疲劳+5，心情-2，但省¥20+",
-          apply: function (st) {
-            st.needs.fatigue = Math.min(100, (st.needs.fatigue || 0) + 5);
-            st.needs.happiness = Math.max(0, (st.needs.happiness || 50) - 2);
-            StateManager.addMessage(
-              "🍜 泡面泡了3分钟，虽然简单但热乎。雨天能安稳吃口热的就不错了。",
-              "info",
-            );
-          },
-        },
-        {
-          text: "📱 点外卖，贵就贵吧",
-          hint: "心情+5，花¥25-40（含配送费）",
-          apply: function (st) {
-            var foodCost = Random.int(15, 25);
-            var deliveryCost = Random.int(10, 20);
-            var total = foodCost + deliveryCost;
-            if (st.resources.cash >= total) {
-              st.resources.cash -= total;
-              st.needs.hunger = Math.min(100, (st.needs.hunger || 0) + 35);
-              st.needs.happiness = Math.min(
-                100,
-                (st.needs.happiness || 50) + 5,
-              );
-              StateManager.addMessage(
-                "📱 热腾腾的外卖到了！花了¥" +
-                  total +
-                  "，但暴雨天能坐在工位上吃口热饭，值了。心情+5。",
-                "success",
-              );
-            } else {
-              st.needs.hunger = Math.max(0, (st.needs.hunger || 0) - 10);
-              StateManager.addMessage(
-                "😅 钱不够点外卖，只能饿着肚子等雨小。饥饿+10。",
-                "warning",
-              );
-            }
-          },
-        },
-        {
-          text: "🏪 冒雨去买楼下便利店",
-          hint: "省钱但有健康风险",
-          apply: function (st) {
-            if (Random.chance(0.4)) {
-              st.status.health = Math.max(0, (st.status.health || 80) - 5);
-              st.needs.hunger = Math.min(100, (st.needs.hunger || 0) + 20);
-              StateManager.addMessage(
-                "🏪 你冲进雨里买了关东煮。花了¥12，但淋了暴雨，健康-5。有点得不偿失。",
-                "warning",
-              );
-            } else {
-              st.needs.hunger = Math.min(100, (st.needs.hunger || 0) + 20);
-              st.needs.fatigue = Math.min(100, (st.needs.fatigue || 0) + 10);
-              StateManager.addMessage(
-                "🏪 你冒雨跑到了便利店，买了碗热汤面。虽然累但没生病。疲劳+10。",
-                "info",
-              );
-            }
-          },
-        },
-      ],
-    },
-
-    // ===== 事件3：道德flag→NPC反应 — 你的善行/恶行被NPC知道了 =====
-    {
-      id: "moral_flag_npc_reaction",
-      phase: "street",
-      icon: "👀",
-      title: "你做的事，有人看在眼里",
-      story: "你的行为在邻里间传开了——有人议论纷纷，有人默默记在心里。",
-      // [全系统自洽修复] 域B 修复:storyFn不被events_core支持→改为静态缺省story
-      storyFn: function (st) {
-        var parts = [];
-        if (st.flags && st.flags.moralStoppedThiefPublic) {
-          parts.push(
-            "你在街上抓小偷的事传开了，现在好几个人见到你都点头打招呼。",
-          );
-        }
-        if (st.flags && st.flags.moralFedDog) {
-          parts.push(
-            "那只雨天的流浪狗居然跟了你两条街，最后蹭了蹭你的裤腿跑了。",
-          );
-        }
-        if (st.flags && st.flags._keptWallet) {
-          parts.push("你捡钱包的事不知道被谁看见了，看你的眼神有些微妙。");
-        }
-        if (parts.length === 0) {
-          parts.push("城市很大，但你做的每一件事都可能被人看见。");
-        }
-        return parts.join("\\n\\n");
-      },
-      triggers: {
-        phase: "street",
-        minDay: 10,
-      },
-      conditions: function (st) {
-        // 至少有一个道德flag
-        var flags = st.flags || {};
-        return (
-          flags.moralStoppedThiefPublic ||
-          flags.moralFedDog ||
-          flags.moralFedBeggar ||
-          flags._keptWallet ||
-          flags.moralHelpedElder ||
-          flags.moral_returnedFoundMoney ||
-          flags._foundATMCash
-        );
-      },
-      probability: 0.06,
-      repeatable: false,
-      choices: [
-        {
-          text: "😊 继续做自己认为对的事",
-          hint: "心情+5，道德flag回声",
-          apply: function (st) {
-            st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 5);
-            st.player.mental = Math.min(100, (st.player.mental || 50) + 2);
-            StateManager.addMessage(
-              "😊 你笑了笑，继续往前走。不管别人怎么看，你知道自己做对了。心情+5，心智+2。",
-              "success",
-            );
-          },
-        },
-        {
-          text: "🤔 想想刚才的事，有点后怕",
-          hint: "心智+3，可能触发自我反省",
-          apply: function (st) {
-            st.player.mental = Math.min(100, (st.player.mental || 50) + 3);
-            StateManager.addMessage(
-              "🤔 你停下来想了想刚才的事。有些选择看起来很小，但定义了你是什么样的人。心智+3。",
-              "hint",
-            );
-          },
-        },
-      ],
-    },
-  );
-
-  // ====== 注册 CROSS_EVENTS 遗漏条目 ======
-  // [全系统自洽修复] 域B 修复: CROSS_EVENTS.push在注册循环(5348行)之后执行导致事件未注册到RANDOM_EVENTS
-  for (var _ci = 0; _ci < CROSS_EVENTS.length; _ci++) {
-    var _ce = CROSS_EVENTS[_ci];
-    if (_ce && !_ce._registered) {
-      if (!_ce.conditions && !_ce.triggers) {
-        _ce.conditions = function () {
-          return true;
-        };
-      }
-      _ce._registered = true;
-      RANDOM_EVENTS.push(_ce);
-    }
-  }
-
-  // ====== 联动增强：高难度生存压力「绝境回望」 ======
-  // 【设计意图】与v3.1 difficulty系统联动，困难/地狱模式下健康+金钱双低时触发
-  RANDOM_EVENTS.push({
-    id: "hard_mode_survival_reflection",
-    phase: "street",
-    icon: "🌆",
-    title: "绝境回望",
-    story:
-      "你蹲在路边的台阶上，兜里只剩不到一百块，身体也快扛不住了。" +
-      "旁边商场的大屏幕放着城市宣传片——'梦想之城，等你来闯'。" +
-      "你记得刚来那天也是这么个傍晚，天也是这种颜色。" +
-      "那时候你觉得，凭着一双手总能活下去。" +
-      "现在你还信这个吗？",
-    conditions: function (st) {
-      if (st.player.phase !== "street") return false;
-      if (st.flags._hardModeSurvivalReflectionSeen) return false;
-      var diff = st.flags && st.flags._difficulty;
-      if (diff !== "hard" && diff !== "hell") return false;
-      var health = st.status && st.status.health;
-      if (typeof health !== "number" || health >= 30) return false;
-      var cash = st.resources && st.resources.cash;
-      if (typeof cash !== "number" || cash >= 100) return false;
-      if (!st.player || st.player.day < 30) return false;
-      return true;
-    },
-    probability: 0.06,
-    repeatable: false,
-    choices: [
-      {
-        text: "💪 信。走到今天不是为了倒在这里",
-        hint: "心智+8，疲劳+10，咬牙坚持",
-        apply: function (st) {
-          st.flags._hardModeSurvivalReflectionSeen = true;
-          st.player.mental = Math.min(100, (st.player.mental || 0) + 8);
-          st.needs.fatigue = Math.min(100, (st.needs.fatigue || 0) + 10);
-          st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 5);
-          StateManager.addMessage(
-            "🌆 你站起来拍了拍裤子上的灰。旁边卖烤红薯的大爷看了你一眼，递过来一个：「拿着，不要钱。年轻人，别轻易说不信了。」你鼻子一酸，咬了口红薯，甜的。\n心智+8，疲劳+10，心情+5。",
-            "success",
-          );
-        },
-      },
-      {
-        text: "📞 给家里打个电话",
-        hint: "亲情回血，心情+15",
-        apply: function (st) {
-          st.flags._hardModeSurvivalReflectionSeen = true;
-          st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 15);
-          st.player.mental = Math.min(100, (st.player.mental || 0) + 3);
-          st.resources.cash = Math.max(0, (st.resources.cash || 0) - 10);
-          StateManager.addMessage(
-            "📞 电话通了，妈妈的声音传过来：「吃饭了吗？钱够不够？别太累。」你说都挺好的，挂了电话发了会儿呆。¥10话费换来的这两句唠叨，比什么都管用。\n心情+15，心智+3。",
-            "info",
-          );
-        },
-      },
-      {
-        text: "😞 先找地方睡一觉，明天再说",
-        hint: "疲劳-20，心智-5，先活下来",
-        apply: function (st) {
-          st.flags._hardModeSurvivalReflectionSeen = true;
-          st.needs.fatigue = Math.max(0, (st.needs.fatigue || 0) - 20);
-          st.player.mental = Math.max(0, (st.player.mental || 0) - 5);
-          StateManager.addMessage(
-            "😞 你找了个桥洞下面的避风处，把外套裹紧了些。今晚先活过去，明天的事明天想。\n疲劳-20，心智-5。活着才有翻盘的机会。",
-            "warning",
-          );
-        },
-      },
-    ],
-  });
-
-  // ====== 联动增强：投资亏损心理「熊市阴影」 ======
-  // 【设计意图】与investment系统联动，当玩家累计投资亏损超¥10000时触发心理事件
-  RANDOM_EVENTS.push({
-    id: "investment_loss_anxiety",
-    phase: "street",
-    icon: "📉",
-    title: "熊市阴影",
-    story:
-      "你算了一下账，这段时间在股市里亏进去的钱已经超过一万了。" +
-      "夜里翻来覆去睡不着，闭上眼就是K线图。" +
-      "你开始怀疑自己——是不是根本不适合搞投资？" +
-      "还是说，只是运气不好？",
-    conditions: function (st) {
-      if (st.flags._investmentLossAnxietySeen) return false;
-      if (!st.player || st.player.day < 60) return false;
-      var totalLoss = 0;
-      var tradeLog = st.flags && st.flags._tradeLog;
-      if (Array.isArray(tradeLog)) {
-        for (var i = 0; i < tradeLog.length; i++) {
-          var entry = tradeLog[i];
-          if (entry && entry.profit < 0) {
-            totalLoss += Math.abs(entry.profit);
-          }
-        }
-      }
-      var inv = st.investment;
-      if (inv && typeof inv.totalLoss === "number") {
-        totalLoss += inv.totalLoss;
-      }
-      if (totalLoss < 10000) return false;
-      return true;
-    },
-    probability: 0.05,
-    repeatable: false,
-    choices: [
-      {
-        text: "📚 买几本书系统学习投资知识",
-        hint: "智力+5，但花¥200",
-        cost: 200,
-        apply: function (st) {
-          st.flags._investmentLossAnxietySeen = true;
-          st.resources.cash = Math.max(0, (st.resources.cash || 0) - 200);
-          st.player.intelligence = Math.min(
-            100,
-            (st.player.intelligence || 0) + 5,
-          );
-          st.player.mental = Math.min(100, (st.player.mental || 0) + 3);
-          StateManager.addMessage(
-            "📚 你买了《聪明的投资者》和《周期》，连着几个晚上认真看完了。虽然亏了钱，但学到了东西——下次不会再犯同样的错误了。\n智力+5，心智+3。花了¥200买书。",
-            "success",
-          );
-        },
-      },
-      {
-        text: "🧘 出去走走，放空自己",
-        hint: "心情+15，心智+5",
-        apply: function (st) {
-          st.flags._investmentLossAnxietySeen = true;
-          st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 15);
-          st.player.mental = Math.min(100, (st.player.mental || 0) + 5);
-          st.needs.fatigue = Math.min(100, (st.needs.fatigue || 0) + 5);
-          StateManager.addMessage(
-            "🧘 你沿着江边走了两个小时。风吹在脸上，慢慢把脑子里的K线吹散了。想明白一件事：只要人还在，钱可以再赚。\n心情+15，心智+5，疲劳+5。",
-            "info",
-          );
-        },
-      },
-      {
-        text: "😤 不甘心！下次加倍押注翻本",
-        hint: "心智-5，但下次投资回报+20%",
-        apply: function (st) {
-          st.flags._investmentLossAnxietySeen = true;
-          st.player.mental = Math.max(0, (st.player.mental || 0) - 5);
-          st.flags._gamblerMode = true;
-          StateManager.addMessage(
-            "😤 你盯着账户余额，牙咬得咯咯响。「我就不信了。」你知道这种心态很危险，但你控制不住。\n心智-5，下次投资收益+20%（但风险更高）。",
-            "warning",
-          );
-        },
-      },
-    ],
-  });
-
-  // ==== [域B 联动增强 R15] 技能复合→跨界机会（B→C→E 桥接）====
-  // 联动：coding≥20 + english≥15 触发跨境远程工作线索
-  // 设计意图：技能组合创造新机会——填补"复合技能→职业跃迁"的叙事空白
-  {
-    var _skillBridgeEvent = {
-      id: "skill_bridge_remote_opp",
-      phase: "street",
-      icon: "🌐",
-      title: "远程工作的邀请",
-      story:
-        "你在技术论坛上收到一条私信：\\n\\n「你好，我在Upwork上看到你的作品集。我们是一家新加坡的科技公司，正在找一个能独立完成全栈开发的远程工程师。\\n\\n要求英语读写流利，能参加英文会议。\\n\\n如果你感兴趣，我们可以先做一个付费测试项目，工时按U.S.时薪结算。」\\n\\n你盯着屏幕——这是一条通往海外市场的路。",
-      triggers: {
-        minDay: 60,
-        excludeFlags: ["_skillBridgeRemoteSeen"],
-      },
-      conditions: function (st) {
-        var coding =
-          st.skills && st.skills.coding ? st.skills.coding.level || 0 : 0;
-        var english =
-          st.skills && st.skills.english ? st.skills.english.level || 0 : 0;
-        return coding >= 20 && english >= 15;
-      },
-      probability: 0.035,
-      repeatable: false,
-      choices: [
-        {
-          text: "🌐 接受测试项目，拼一把",
-          hint: "需要熬夜完成，但收入+¥5000，解锁海外接单通道",
-          apply: function (st) {
-            st.flags._skillBridgeRemoteSeen = true;
-            st.flags._remoteWorkUnlocked = true;
-            st.resources.cash = (st.resources.cash || 0) + 5000;
-            st.needs.fatigue = Math.min(100, (st.needs.fatigue || 0) + 25);
-            st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 12);
-            st.player.mental = Math.min(100, (st.player.mental || 0) + 5);
-            if (st.skills && st.skills.coding)
-              st.skills.coding.xp = (st.skills.coding.xp || 0) + 50;
-            if (st.skills && st.skills.english)
-              st.skills.english.xp = (st.skills.english.xp || 0) + 30;
-            StateManager.addMessage(
-              "🌐 你熬夜三天完成了测试项目！新加坡那边很满意，付了¥5,000测试费，说下个月有正式项目会再联系。\n海外远程通道已解锁！编程XP+50，英语XP+30，心情+12。技能终于变成了跨越国界的门票。",
-              "success",
-            );
-          },
-        },
-        {
-          text: "📋 先收藏，等准备好了再联系",
-          hint: "保留机会，不急于一时",
-          apply: function (st) {
-            st.flags._skillBridgeRemoteSeen = true;
-            st.flags._remoteWorkDeferred = true;
-            st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 3);
-            StateManager.addMessage(
-              "📋 你收藏了那条私信，准备等英语再好一些再回复。机会在那里，不会自己跑掉。心情+3。",
-              "info",
-            );
-          },
-        },
-        {
-          text: "😅 水平还不够，再练练",
-          hint: "自知之明，无变化",
-          apply: function (st) {
-            st.flags._skillBridgeRemoteSeen = true;
-            StateManager.addMessage(
-              "😅 你诚实评估了自己的水平——英语开会有时还是会卡壳。先踏踏实实把基本功打牢，机会以后还会有的。",
-              "info",
-            );
-          },
-        },
-      ],
-    };
-    RANDOM_EVENTS.push(_skillBridgeEvent);
-  }
-})();
-
-// ===== 联动增强1：高负债心理压力事件（负债≥¥10,000触发）=====
-(function () {
-  if (typeof RANDOM_EVENTS === "undefined") return;
-  RANDOM_EVENTS.push({
-    id: "debt_anxiety_night",
-    _isChainEvent: false,
-    phase: "street",
-    icon: "😰",
-    title: "债务压得喘不过气",
-    story:
-      "夜深了，你翻来覆去睡不着。手机屏幕上银行的还款提醒数字格外刺眼。你算了一笔账——按现在的收入，不吃不喝也要好几个月才能还清。窗外灯火通明，你却觉得这座城市的夜晚格外冷。",
-    conditions: function (st) {
-      return (
-        st.player.phase === "street" &&
-        st.player.day >= 15 &&
-        (st.resources.debt || 0) >= 10000
-      );
-    },
-    excludeFlags: ["_debtAnxietyDone"],
-    choices: [
-      {
-        text: "📝 制定还款计划，分期还",
-        hint: "心智+2，压力-5",
-        apply: function (st) {
-          st.flags._debtAnxietyDone = true;
-          st.skills.mental = st.skills.mental || { level: 0, xp: 0 };
-          st.skills.mental.xp = (st.skills.mental.xp || 0) + 20;
-          st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 5);
-          StateManager.addMessage(
-            "📝 你打开Excel，把债务拆分成12期。虽然数字还是那么大，但至少有了方向。心情+5，心智经验+20。",
-            "success",
-          );
-        },
-      },
-      {
-        text: "💪 明天开始多打一份工",
-        hint: "疲劳+10，决心+3",
-        apply: function (st) {
-          st.flags._debtAnxietyDone = true;
-          st.needs.fatigue = Math.min(100, (st.needs.fatigue || 0) + 10);
-          st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 3);
-          StateManager.addMessage(
-            "💪 你咬着牙关掉手机，定了个五点的闹钟。多干一份活，就多还一份钱。疲劳+10，心情+3。",
-            "info",
-          );
-        },
-      },
-      {
-        text: "🍺 借酒消愁，不想了",
-        hint: "健康-3，心情短暂+2",
-        apply: function (st) {
-          st.flags._debtAnxietyDone = true;
-          st.status.health = Math.max(0, (st.status.health || 100) - 3);
-          st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 2);
-          StateManager.addMessage(
-            "🍺 你买了瓶啤酒坐在路边喝。酒劲上来时，那些数字暂时模糊了。但明天醒来，它们还在。健康-3，心情+2。",
-            "warning",
-          );
-        },
-      },
-    ],
-  });
-})();
-
-// ===== 联动增强2：连续3天恶劣天气情绪事件 =====
-(function () {
-  if (typeof RANDOM_EVENTS === "undefined") return;
-  var CONSECUTIVE_BAD_WEATHER = [
-    "rainy",
-    "heavy_rain",
-    "stormy",
-    "snowy",
-    "heavy_snow",
-    "foggy",
-    "heavy_smog",
-  ];
-  RANDOM_EVENTS.push({
-    id: "bad_weather_blues",
-    _isChainEvent: false,
-    phase: "street",
-    icon: "🌧️",
-    title: "连绵阴雨让人沮丧",
-    story:
-      "雨已经连续下了好几天。空气里全是潮湿的霉味，衣服晾不干，鞋子进水了，连床单都带着一股潮气。你站在窗前，看着灰蒙蒙的天，感觉自己也快发霉了。",
-    conditions: function (st) {
-      if (st.player.phase !== "street" || st.player.day < 7) return false;
-      if (!st.weather || !st.weather.current) return false;
-      var isBad = false;
-      for (var i = 0; i < CONSECUTIVE_BAD_WEATHER.length; i++) {
-        if (st.weather.current === CONSECUTIVE_BAD_WEATHER[i]) {
-          isBad = true;
-          break;
-        }
-      }
-      if (!isBad) return false;
-      // 检查连续天数（需要weatherHistory或类似机制，降级为简单门槛）
-      return st.player.day >= 7;
-    },
-    excludeFlags: ["_badWeatherBluesDone"],
-    choices: [
-      {
-        text: "☕ 去便利店买杯热饮暖暖身子",
-        hint: "花费¥10，心情+5",
-        apply: function (st) {
-          st.flags._badWeatherBluesDone = true;
-          st.resources.cash = (st.resources.cash || 0) - 10;
-          st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 5);
-          StateManager.addMessage(
-            "☕ 便利店的暖光灯下，一杯热奶茶下肚，整个人都活过来了。花费¥10，心情+5。",
-            "success",
-          );
-        },
-      },
-      {
-        text: "🏪 去批发市场囤点货，雨天生意好做",
-        hint: "利用雨天商机",
-        apply: function (st) {
-          st.flags._badWeatherBluesDone = true;
-          st.flags._rainMarketUmbrellaDay = st.player.day;
-          StateManager.addMessage(
-            "🏪 你想起老周说过——雨天批发市场雨具和防潮用品卖得特别好。你披上雨衣出了门。",
-            "info",
-          );
-        },
-      },
-      {
-        text: "😴 躺平，等天气好转",
-        hint: "疲劳-5，心情-3",
-        apply: function (st) {
-          st.flags._badWeatherBluesDone = true;
-          st.needs.fatigue = Math.max(0, (st.needs.fatigue || 0) - 5);
-          st.needs.happiness = Math.max(0, (st.needs.happiness || 50) - 3);
-          StateManager.addMessage(
-            "😴 你裹着被子听着雨声发呆。虽然状态恢复了一些，但心里总觉得在浪费时间。",
-            "info",
-          );
-        },
-      },
-    ],
-  });
-})();
-
-// ===== 联动增强3：恶劣天气通勤（职场人暴风雨通勤）B→G/H =====
-(function () {
-  if (typeof RANDOM_EVENTS === "undefined") return;
-  var BAD_COMMUTE_WEATHER = ["stormy", "heavy_rain", "heavy_snow", "snowy"];
-  RANDOM_EVENTS.push({
-    id: "stormy_corp_commute",
-    _isChainEvent: false,
-    icon: "🌊",
-    title: "暴雨中的通勤路",
-    story:
-      "窗外的雨泼得像天漏了一样。你站在公司附近的十字路口，伞被风吹得翻了过去，裤腿湿到大腿。还有十分钟打卡，但面前这条积水已经漫过脚踝的路让你犹豫了——冲过去，还是一身湿透地进办公室？\n\n这场暴雨似乎在提醒你：这座城市从不因为你的狼狈而放缓它的节奏。",
-    conditions: function (st) {
-      if (!st || !st.player || !st.weather || !st.weather.current) return false;
-      if (st.player.phase !== "corporate" || st.player.day < 30) return false;
-      if (st.flags && st.flags._stormyCommuteDone) return false;
-      var w = st.weather.current;
-      var isBad = false;
-      for (var i = 0; i < BAD_COMMUTE_WEATHER.length; i++) {
-        if (w === BAD_COMMUTE_WEATHER[i]) {
-          isBad = true;
-          break;
-        }
-      }
-      return isBad;
-    },
-    excludeFlags: ["_stormyCommuteDone"],
-    choices: [
-      {
-        text: "💼 咬牙冲过去，不能迟到",
-        hint: "健康-，全勤+",
-        apply: function (st) {
-          st.flags._stormyCommuteDone = true;
-          st.status.health = Math.max(0, (st.status.health || 100) - 5);
-          if (st.player && st.player.corporate) {
-            st.player.corporate.kpi = Math.min(
-              100,
-              (st.player.corporate.kpi || 20) + 2,
-            );
-          }
-          st.player.mental = Math.min(100, (st.player.mental || 50) + 3);
-          StateManager.addMessage(
-            "💼 你踩着积水冲进公司，刚好赶上打卡。同事递来一条干毛巾，主管看在眼里。KPI+2，心智+3，健康-5。",
-            "info",
-          );
-        },
-      },
-      {
-        text: "☕ 进便利店躲雨，等小了再走",
-        hint: "心情+，但会迟到",
-        apply: function (st) {
-          st.flags._stormyCommuteDone = true;
-          st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 5);
-          st.resources.cash = (st.resources.cash || 0) - 8;
-          StateManager.addMessage(
-            "☕ 你在便利店买了杯热咖啡，看着窗外雨幕发呆。迟到了十五分钟，但至少人是干的。心情+5，花费¥8。",
-            "success",
-          );
-        },
-      },
-      {
-        text: "🏠 请半天假，远程办公",
-        hint: "健康不减，但职场存在感-",
-        apply: function (st) {
-          st.flags._stormyCommuteDone = true;
-          if (st.player && st.player.corporate) {
-            st.player.corporate.popularity = Math.max(
-              0,
-              (st.player.corporate.popularity || 30) - 3,
-            );
-          }
-          StateManager.addMessage(
-            "🏠 你发消息请了半天假。虽然人在家，但总觉得少了点什么。职场存在感-3。",
-            "warning",
-          );
-        },
-      },
-    ],
-    probability: 0.06,
-  });
-})();
-
-// ===== 联动增强4：长期露宿生存危机（街头韧性考验）B→A/G =====
-(function () {
-  if (typeof RANDOM_EVENTS === "undefined") return;
-  RANDOM_EVENTS.push({
-    id: "homeless_endurance_crisis",
-    _isChainEvent: false,
-    icon: "🏚️",
-    title: "天桥下的第N个夜晚",
-    story:
-      "你把硬纸板铺得再平整一些，裹紧身上那件已经看不出颜色的外套。天桥上车流轰鸣，震得骨头发麻。你已经记不清在这座城市睡了多久露宿了——只知道身体的每一声咳嗽都在提醒你，这样撑不了太久。\n\n风声里，你隐约听到远处传来夜市的喧闹。这座城市有千万种活法，而你正卡在最硬的那一种里。",
-    conditions: function (st) {
-      if (!st || !st.player || !st.housing) return false;
-      if (st.player.day < 45) return false;
-      if (st.housing.tier >= 1) return false; // 只要有住处就触发不了
-      if (st.flags && st.flags._homelessCrisisDone) return false;
-      if ((st.status.health || 100) < 40) return true;
-      if ((st.needs.happiness || 50) < 15) return true;
-      if ((st.player.mental || 50) < 15) return true;
-      return false;
-    },
-    excludeFlags: ["_homelessCrisisDone"],
-    choices: [
-      {
-        text: "💪 振作起来，今天多干几份活",
-        hint: "决心+，疲劳+",
-        apply: function (st) {
-          st.flags._homelessCrisisDone = true;
-          st.player.mental = Math.min(100, (st.player.mental || 50) + 5);
-          st.needs.fatigue = Math.min(100, (st.needs.fatigue || 50) + 15);
-          StateManager.addMessage(
-            "💪 你使劲搓了搓脸，迎着晨光走向劳务市场。不能再这样下去了——今天必须多赚点。心智+5，疲劳+15。",
-            "info",
-          );
-        },
-      },
-      {
-        text: "🏪 去救助站看看有没有临时工",
-        hint: "有机会获得物资或工作",
-        apply: function (st) {
-          st.flags._homelessCrisisDone = true;
-          st.needs.hunger = Math.min(100, (st.needs.hunger || 50) + 20);
-          st.resources.cash = (st.resources.cash || 0) + 30;
-          StateManager.addMessage(
-            "🏪 救助站发了一碗热粥和两个馒头，还贴着一张小广告：招夜班保安，包住。你小心地把号码存进手机。饥饿+20，现金+30。",
-            "success",
-          );
-        },
-      },
-      {
-        text: "😞 在墙角缩成一团，熬过这一晚",
-        hint: "健康-，情绪触底",
-        apply: function (st) {
-          st.flags._homelessCrisisDone = true;
-          st.status.health = Math.max(0, (st.status.health || 100) - 8);
-          st.needs.happiness = Math.max(0, (st.needs.happiness || 50) - 10);
-          StateManager.addMessage(
-            "😞 你把报纸盖在脸上，假装什么都感觉不到。半夜被冻醒了一次，雨从桥缝漏下来打在脸上。天亮了，你还活着，但好像也没完全活着。健康-8，心情-10。",
-            "danger",
-          );
-        },
-      },
-    ],
-    probability: 0.04,
-  });
-
-  // ============================================================
-  // [全系统自洽修复] 域C 联动增强: 技能天赋树叙事事件
-  // 填补空白: SKILL_BRANCHES 选择/激活/满级零事件覆盖
-  // 联动: C(职业/成长)→D(社交)/G(核心机制) — 天赋树首次被事件消费
-  // ============================================================
-  (function () {
-    // 事件1: 天赋树选择 — 技能Lv.30时选择发展方向
-    var ev_branch_choice = {
-      id: "skill_branch_choice_moment",
-      phase: "street",
-      icon: "🌳",
-      title: "技能发展方向",
-      story: function (st) {
-        var skillName =
-          typeof getSkillChineseName === "function"
-            ? getSkillChineseName(st._branchSkillKey)
-            : st._branchSkillKey;
-        return (
-          "你的" +
-          skillName +
-          "终于练到了Lv.30，是时候选择发展方向了。\n" +
-          "一个老前辈拍了拍你：\"这行水深，选对了路能少走很多弯路。\""
-        );
-      },
-      triggers: {
-        minDay: 15,
-      },
-      conditions: function (st) {
-        if (st.flags && st.flags._skillBranchChoiceDone) return false;
-        if (!st.skills) return false;
-        for (var sk in st.skills) {
-          if (st.skills[sk] && st.skills[sk].level >= 30) {
-            if (
-              typeof getSkillBranchDef === "function" &&
-              getSkillBranchDef(sk).length > 0
-            ) {
-              if (!st.skillBranches || !st.skillBranches[sk]) {
-                st._branchSkillKey = sk;
-                return true;
-              }
-            }
-          }
-        }
-        return false;
-      },
-      apply: function (st) {
-        st.flags._skillBranchChoiceDone = true;
-      },
-      probability: 0.12,
-      choices: [
-        {
-          text: function (st) {
-            return "🌳 选择" + (st._branchSkillKey || "该技能") + "发展方向";
-          },
-          hint: "开启天赋树系统",
-          callback: function (st) {
-            if (typeof showModal === "function") {
-              showModal({
-                title: "🌳 选择发展方向",
-                body:
-                  '<div style="padding:8px 12px;"><p style="font-size:14px;font-weight:bold;margin-bottom:8px;">' +
-                  (typeof getSkillChineseName === "function"
-                    ? getSkillChineseName(st._branchSkillKey)
-                    : st._branchSkillKey) +
-                  ' 已达到Lv.30，请选择发展方向</p><p style="font-size:12px;color:var(--text-muted);">天赋树将在技能Tab中显示，选择后不可逆（切换需消耗30AP+¥500）。</p></div>',
-                buttons: [
-                  {
-                    text: "去技能Tab选择",
-                    cls: "btn-primary",
-                    callback: function () {
-                      if (typeof switchTab === "function")
-                        switchTab("skills");
-                      return true;
-                    },
-                  },
-                ],
-              });
-            }
-          },
-        },
-        {
-          text: "💤 先放着，不急",
-          hint: "暂时不选，下次触发",
-          apply: function (st) {
-            StateManager.addMessage(
-              "💤 你决定先放着，等攒够了经验再说。",
-              "hint",
-            );
-          },
-        },
-      ],
-    };
-
-    // 事件2: 天赋节点激活 — 首个天赋点亮
-    var ev_talent_light = {
-      id: "skill_talent_first_light",
-      phase: "street",
-      icon: "⭐",
-      title: "天赋点亮",
-      story: function (st) {
-        return (
-          "你终于攒够了资源，激活了天赋节点。\n" +
-          "一股力量涌入体内——不，是技能感悟加深了。"
-        );
-      },
-      triggers: {
-        minDay: 30,
-      },
-      conditions: function (st) {
-        if (st.flags && st.flags._skillTalentFirstLightDone) return false;
-        if (!st.talentNodes) return false;
-        var activatedCount = 0;
-        for (var k in st.talentNodes) {
-          if (st.talentNodes[k]) activatedCount++;
-        }
-        return activatedCount >= 1;
-      },
-      apply: function (st) {
-        st.flags._skillTalentFirstLightDone = true;
-        st.player.happiness = Math.min(
-          100,
-          (st.player.happiness || 50) + 5,
-        );
-        st.player.mental = Math.min(
-          100,
-          (st.player.mental || 30) + 3,
-        );
-        StateManager.addMessage(
-          "⭐ 天赋节点点亮！你的技能树又多了一层力量。心情+5，心智+3。",
-          "success",
-        );
-      },
-      probability: 0.06,
-      choices: [
-        {
-          text: "🌟 继续挖掘潜能",
-          hint: "前往技能Tab查看可激活节点",
-          callback: function (st) {
-            if (typeof switchTab === "function") switchTab("skills");
-          },
-        },
-      ],
-    };
-
-    // 事件3: 技能树满级 — 100级里程碑
-    var ev_mastery = {
-      id: "skill_tree_mastery_celebration",
-      phase: "street",
-      icon: "🏆",
-      title: "技能大成",
-      story: function (st) {
-        var skillName =
-          typeof getSkillChineseName === "function"
-            ? getSkillChineseName(st._masterSkillKey)
-            : st._masterSkillKey;
-        return (
-          "你的" +
-          skillName +
-          "终于达到了Lv.100！\n" +
-          "街上的人都传开了——你是这条街上最有本事的人。"
-        );
-      },
-      triggers: {
-        minDay: 100,
-      },
-      conditions: function (st) {
-        if (st.flags && st.flags._skillMasteryDone) return false;
-        if (!st.skills) return false;
-        for (var sk in st.skills) {
-          if (st.skills[sk] && st.skills[sk].level >= 100) {
-            st._masterSkillKey = sk;
-            return true;
-          }
-        }
-        return false;
-      },
-      apply: function (st) {
-        st.flags._skillMasteryDone = true;
-        st.player.fame = (st.player.fame || 0) + 10;
-        st.player.happiness = Math.min(
-          100,
-          (st.player.happiness || 50) + 15,
-        );
-        st.player.mental = Math.min(
-          100,
-          (st.player.mental || 30) + 10,
-        );
-        StateManager.addMessage(
-          "🏆 " +
-            (typeof getSkillChineseName === "function"
-              ? getSkillChineseName(st._masterSkillKey)
-              : st._masterSkillKey) +
-            " 达到Lv.100！你已成为这条街的传奇！名气+10，心情+15，心智+10。",
-          "success",
-        );
-      },
-      probability: 0.02,
-      choices: [
-        {
-          text: "🎉 请全街吃饭庆祝",
-          hint: "花费¥500，所有NPC好感+3",
-          apply: function (st) {
-            if (st.resources.cash >= 500) {
-              st.resources.cash -= 500;
-              var rels = st.relationships || {};
-              for (var rid in rels) {
-                if (rels[rid] && rels[rid].met) {
-                  rels[rid].affinity = Math.min(
-                    100,
-                    (rels[rid].affinity || 0) + 3,
-                  );
-                }
-              }
-              StateManager.addMessage(
-                "🎉 你请全街吃了顿大餐！大家伙都高兴坏了，所有已结识NPC好感+3。",
-                "success",
-              );
-            }
-          },
-        },
-        {
-          text: "📚 把钱投到学习中",
-          hint: "现金-¥300，所有技能+100XP",
-          apply: function (st) {
-            if (st.resources.cash >= 300) {
-              st.resources.cash -= 300;
-              if (st.skills) {
-                for (var s in st.skills) {
-                  if (st.skills[s]) {
-                    st.skills[s].xp = (st.skills[s].xp || 0) + 100;
-                  }
-                }
-              }
-              StateManager.addMessage(
-                "📚 你用庆祝的钱报了个进修班，所有技能各获得100XP！",
-                "success",
-              );
-            }
-          },
-        },
-      ],
-    };
-
-    CROSS_EVENTS.push(ev_branch_choice);
-    CROSS_EVENTS.push(ev_talent_light);
-    CROSS_EVENTS.push(ev_mastery);
-  })();
-
-  // 注册CROSS_EVENTS到RANDOM_EVENTS
-  for (var ce_i = 0; ce_i < CROSS_EVENTS.length; ce_i++) {
-    try {
-      RANDOM_EVENTS.push(CROSS_EVENTS[ce_i]);
-    } catch (e) {
-      console.warn(
-        "[cross_system_events] 注册事件 " +
-          (CROSS_EVENTS[ce_i] && CROSS_EVENTS[ce_i].id) +
-          " 失败:",
-        e,
-      );
-    }
-  }
 })();
 </script>
-    <!-- v3.21+v3.22 events merged into cross_system_events.js above -->
     <!-- v3.10: 职业专属事件池（11条路径×35个叙事事件）-->
     <script>/**
  * 职业专属随机事件池 — v3.10
