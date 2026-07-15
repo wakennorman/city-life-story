@@ -4069,7 +4069,7 @@ function enhancedApplyCareerJob(pathId, levelId) {
         // 技能检测
         if (level.reqSkills) {
           for (var rs in level.reqSkills) {
-            var curSkill = (p.skills && p.skills[rs]) || 0;
+            var curSkill = (state.skills && state.skills[rs] && state.skills[rs].level) || 0; // [全系统自洽修复] 域C 修复:p.skills不存在→改用state.skills[rs].level
             var reqSkill = level.reqSkills[rs];
             var skillOk = curSkill >= reqSkill;
             var skillLabelMap = {
@@ -4109,7 +4109,7 @@ function enhancedApplyCareerJob(pathId, levelId) {
         }
 
         // 教育检测
-        var eduReqs = level.education || 0;
+        var eduReqs = level.reqEducation || 0; // [全系统自洽修复] 域C 修复:level.education→level.reqEducation（字段名对齐checkCareerPromotion）
         var pEdu = p.education || 0;
         var eduOk = pEdu >= eduReqs;
         var eduNameMap = [

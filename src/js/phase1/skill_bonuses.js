@@ -986,8 +986,10 @@ function getSkillSynergies(state) {
   return active;
 }
 
-/** 返回特定工作的协同收入加成（叠加比例，如 0.22 = 22%） */
-function getSkillSynergyBonus(jobId, state) {
+/** 返回特定工作的协同收入加成（叠加比例，如 0.22 = 22%）
+ *  [全系统自洽修复] 域C 修复:重命名避免与 skill_synergy.js 的 getSkillSynergyBonus 冲突
+ */
+function getJobSkillSynergyBonus(jobId, state) {
   var active = getSkillSynergies(state);
   var total = 0;
   for (var i = 0; i < active.length; i++) {

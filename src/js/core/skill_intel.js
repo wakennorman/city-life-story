@@ -131,14 +131,18 @@ function buildAccountingPreview(state, context) {
   if (lvl >= SKILL_INTEL_THRESHOLDS.accounting.TAX_TIP) {
     if (state.resources && state.resources.cash > 5000) {
       var nonEarningCash =
-        state.resources.cash -
-        (state.finance && state.finance.deposits ? state.finance.deposits : 0);
+        (state.resources.cash || 0) -
+        ((state.finance && state.finance.deposits) ? state.finance.deposits : 0);
       if (nonEarningCash > 3000) {
+        // [全系统自洽修复] 域C 修复:独立获取bankRate，不受ROI上下文限制
+        var _bankRate = typeof getBankInterestRate === "function"
+          ? getBankInterestRate(state)
+          : 0.02;
         parts.push(
           "💡 闲钱¥" +
             nonEarningCash +
             "建议存银行，每月多赚¥" +
-            Math.round((nonEarningCash * bankRate) / 12),
+            Math.round((nonEarningCash * _bankRate) / 12),
         );
       }
     }
