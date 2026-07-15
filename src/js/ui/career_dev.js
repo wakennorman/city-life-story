@@ -4698,6 +4698,23 @@ function showCareerPathPreviewModal(pathKey) {
     "</div>";
   body += "</div>";
 
+    // [全系统自洽修复] 域C 增强:证书加成展示
+  var _certs2 = st.certificates || [];
+  if (_certs2.length > 0) {
+    var _pathCertBonus = [];
+    for (var _ci2 = 0; _ci2 < _certs2.length; _ci2++) {
+      var _cd2 = getCertificateById(_certs2[_ci2]);
+      if (_cd2 && _cd2.salaryBonus && _cd2.salaryBonus[pathKey]) {
+        _pathCertBonus.push(_cd2.name + ' +' + Math.round(_cd2.salaryBonus[pathKey] * 100) + '%');
+      }
+    }
+    if (_pathCertBonus.length > 0) {
+      body += '<div style="font-size:10px;color:var(--success);padding:6px 8px;margin-bottom:8px;background:rgba(74,158,92,0.06);border-radius:6px;">';
+      body += '🎓 你的证书加成本路径：' + _pathCertBonus.join(' · ');
+      body += '</div>';
+    }
+  }
+
   // 晋升阶梯图
   body +=
     '<div style="font-size:12px;font-weight:bold;margin-bottom:8px;">📈 晋升路线</div>';

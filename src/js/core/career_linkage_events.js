@@ -346,6 +346,132 @@
       ],
       probability: 0.045,
     },
+
+    // ===== C→B/核心：技能Lv.50里程碑—技能达到半百(专家级) =====
+    {
+      id: "career_skill_halfcentury",
+      title: "半百之技——你成了这门手艺的专家",
+      desc: "经历了无数次练习与实践，你的一项核心技能突破了50级大关。从生疏到熟练，从熟练到精通——现在，你已经是这一行的专家了。\n\n走在街头，你看待世界的方式都不一样了——同样的工作，你一眼就能看出最省力的做法；同样的挑战，你胸有成竹。",
+      phase: "street",
+      triggers: { minDay: 60 },
+      conditions: function (st) {
+        if (!st || !st.skills) return false;
+        if (st.flags && st.flags._careerSkillHalfCenturyDone) return false;
+        for (var k in st.skills) {
+          if (!Object.prototype.hasOwnProperty.call(st.skills, k)) continue;
+          if ((st.skills[k] && st.skills[k].level) >= 50) return true;
+        }
+        return false;
+      },
+      choices: [
+        {
+          text: "🎓 报名更高级的培训，冲击满级",
+          hint: "智力+5，技能XP额外+100",
+          apply: function (st) {
+            st.flags._careerSkillHalfCenturyDone = true;
+            if (st.player) st.player.intelligence = Math.min(100, (st.player.intelligence || 20) + 5);
+            var topSkill = null, topLv = 0;
+            for (var k in st.skills) {
+              if (!Object.prototype.hasOwnProperty.call(st.skills, k)) continue;
+              var lv = (st.skills[k] && st.skills[k].level) || 0;
+              if (lv > topLv) { topLv = lv; topSkill = st.skills[k]; }
+            }
+            if (topSkill) topSkill.xp = (topSkill.xp || 0) + 100;
+            if (typeof StateManager !== "undefined" && StateManager.addMessage)
+              StateManager.addMessage("🎓 你决定继续深造！智力+5，最高技能XP+100。向Lv.100前进！", "success");
+          },
+        },
+        {
+          text: "🏆 用专家级技能接更赚钱的活",
+          hint: "名声+5，现金+¥2000",
+          apply: function (st) {
+            st.flags._careerSkillHalfCenturyDone = true;
+            if (st.player) st.player.fame = Math.min(100, (st.player.fame || 0) + 5);
+            if (st.resources) st.resources.cash = (st.resources.cash || 0) + 2000;
+            if (typeof StateManager !== "undefined" && StateManager.addMessage)
+              StateManager.addMessage("🏆 你的专家名声传开了！名气+5，接了个大单赚了¥2000。", "success");
+          },
+        },
+        {
+          text: "📝 把经验写成教程，分享给新人",
+          hint: "心智+5，道德+3",
+          apply: function (st) {
+            st.flags._careerSkillHalfCenturyDone = true;
+            if (st.player) {
+              st.player.mental = Math.min(100, (st.player.mental || 50) + 5);
+              st.player.morality = Math.min(100, (st.player.morality || 50) + 3);
+            }
+            if (typeof StateManager !== "undefined" && StateManager.addMessage)
+              StateManager.addMessage("📝 你的教程帮到了很多人，心里暖暖的。心智+5，道德+3。", "good");
+          },
+        },
+      ],
+      probability: 0.08,
+    },
+
+    // ===== C→B/核心：技能Lv.100里程碑—登峰造极 =====
+    {
+      id: "career_skill_century",
+      title: "登峰造极——你是活着的传奇",
+      desc: "一项技能达到了100级满级！这意味着你已经站在了这个领域的最前沿。\n\n整个行业里，能达到这个水平的人屈指可数。你的名字开始在更广泛的圈子里流传，有人称你为「大师」，有人想拜你为师。\n\n这条路，你走了很久。但现在，你站在了山顶。",
+      phase: "street",
+      triggers: { minDay: 200 },
+      conditions: function (st) {
+        if (!st || !st.skills) return false;
+        if (st.flags && st.flags._careerSkillCenturyDone) return false;
+        for (var k in st.skills) {
+          if (!Object.prototype.hasOwnProperty.call(st.skills, k)) continue;
+          if ((st.skills[k] && st.skills[k].level) >= 100) return true;
+        }
+        return false;
+      },
+      choices: [
+        {
+          text: "👑 开山收徒，将技艺传承下去",
+          hint: "魅力+10，名声+15，获得学徒",
+          apply: function (st) {
+            st.flags._careerSkillCenturyDone = true;
+            st.flags._skillMasterHasApprentice = true;
+            if (st.player) {
+              st.player.charm = Math.min(100, (st.player.charm || 50) + 10);
+              st.player.fame = Math.min(100, (st.player.fame || 0) + 15);
+              st.player.mental = Math.min(100, (st.player.mental || 50) + 10);
+            }
+            if (typeof StateManager !== "undefined" && StateManager.addMessage)
+              StateManager.addMessage("👑 你开始收徒传承技艺。魅力+10，名声+15，心智+10。你的传奇刚刚开始。", "success");
+          },
+        },
+        {
+          text: "💎 用满级技能创业，打造自己的品牌",
+          hint: "解锁创业加成，启动资金减免",
+          apply: function (st) {
+            st.flags._careerSkillCenturyDone = true;
+            st.flags._skillMasterStartupBonus = true;
+            if (st.player) {
+              st.player.fame = Math.min(100, (st.player.fame || 0) + 10);
+            }
+            if (typeof StateManager !== "undefined" && StateManager.addMessage)
+              StateManager.addMessage("💎 满级技能就是你最好的名片！创业启动资金减免20%，名声+10。", "success");
+          },
+        },
+        {
+          text: "📖 写一本行业专著，留下你的思想",
+          hint: "智力+10，名声+20，获得被动收入",
+          apply: function (st) {
+            st.flags._careerSkillCenturyDone = true;
+            st.flags._skillMasterBookPublished = true;
+            if (st.player) {
+              st.player.intelligence = Math.min(100, (st.player.intelligence || 20) + 10);
+              st.player.fame = Math.min(100, (st.player.fame || 0) + 20);
+            }
+            st.resources._passiveBookRoyalty = (st.resources._passiveBookRoyalty || 0) + 500;
+            if (typeof StateManager !== "undefined" && StateManager.addMessage)
+              StateManager.addMessage("📖 你的专著出版！智力+10，名声+20，每月版税¥500。后世会记得你的名字。", "success");
+          },
+        },
+      ],
+      probability: 0.12,
+    },
   ];
 
   for (var i = 0; i < CAREER_EVENTS.length; i++) {
