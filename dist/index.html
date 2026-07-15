@@ -89411,6 +89411,388 @@ if (typeof window !== "undefined") {
   }
 })();
 </script>
+    <!-- v3.117: 域D A类修复·沉睡NPC激活（林阿姨/陈哥/阿杰 三首项登场事件，解锁各自下游内容）-->
+    <script>/*
+ * 城市浮生记 — 域D（NPC/社交）A类缺陷修复·沉睡NPC激活
+ * v3.117 · loop R26 全系统优化·Domain D（NPC/社交）主审第二轮
+ *
+ * 【A类缺陷】auntie_lin(林阿姨) / chen_ge(陈哥) / ajie(阿杰) 三人在 npcs.js 有定义、
+ * 在 NPC_RELATION_MATRIX 有条目、且各自有下游事件(secret_recipe / connections / side_project)
+ * 强依赖 st.relationships.X.met，但全代码无任何路径把 met 设 true
+ * （cross_system_events.js 的 NPC 登场系列只覆盖了 uncle_chen_bank/sister_wu/brother_huang/
+ *  dr_wang/master_zhao/xiaoli 六人）。结果：三人永久 dormant，其下游内容永不触发 →
+ * 典型的「定义存在但永远不会出场」A类缺陷。
+ *
+ * 【修复】为三人各补一个 npc_X_first_meet 登场事件，严格沿用 cross_system_events.js 中
+ * 已验证的 6 个登场事件样板（RANDOM_EVENTS.push + phase:"street" + conditions 要求 !met
+ *  + 选项 apply 内 met=true + 好感 clamp + 人设 flag + StateManager 播报）。
+ * 激活后，三人的下游事件（met+好感阈值）即可正常触发。
+ *
+ * 设计约束（与 R11–R17 loop 各 IIFE linkage 文件一致）：
+ *  - IIFE 注入全局 RANDOM_EVENTS，避免改动 9800+ 行的 cross_system_events.js。
+ *  - 所有 state 访问均 || 防御；数值标 [PLACEHOLDER] 待数值组校准。
+ *  - 事件引擎按 e.phase 过滤（street/corporate），三人均 street 阶段角色，故 phase:"street"。
+ *  - conditions 仅靠 !met 拦截（不锁地点），确保玩家渡过 day 阈值后必能结识，真正解除 dormant。
+ *  - repeatable:false + !met 双保险，结识后不再重复触发。
+ */
+(function () {
+  if (typeof RANDOM_EVENTS === "undefined" || !RANDOM_EVENTS) return;
+  if (RANDOM_EVENTS._npcActivationLoaded) return;
+  RANDOM_EVENTS._npcActivationLoaded = true;
+
+  // ===== 林阿姨（auntie_lin）菜市场摊主 — 唤醒 secret_recipe 下游 =====
+  RANDOM_EVENTS.push({
+    id: "npc_auntie_lin_first_meet",
+    phase: "street",
+    icon: "🥬",
+    title: "菜市场的林阿姨",
+    story:
+      "你在菜市场挑菜，一个嗓门洪亮的摊主大姐冲你招手：「小伙子/姑娘，来看看我这几把青菜，今早刚到的，水灵得很！\n\n" +
+      "她利落地捆菜、过秤，顺口问你：「刚来城里吧？住哪儿啊？菜市场这地方，门道多着呢。」",
+    conditions: function (st) {
+      // [全系统自洽修复] 域D 修复:林阿姨从未被任何路径 met → 本条补登场闸门(!met)
+      return (
+        st &&
+        st.player &&
+        st.player.day >= 10 &&
+        (!st.relationships ||
+          !st.relationships.auntie_lin ||
+          !st.relationships.auntie_lin.met)
+      );
+    },
+    probability: 0.035,
+    repeatable: false,
+    choices: [
+      {
+        text: "🥬 帮她搬两筐菜再走",
+        hint: "结识林阿姨，好感+10",
+        apply: function (st) {
+          if (!st.relationships) st.relationships = {};
+          if (!st.relationships.auntie_lin) {
+            st.relationships.auntie_lin = { affinity: 0, met: true };
+          }
+          st.relationships.auntie_lin.met = true;
+          st.relationships.auntie_lin.affinity = Math.min(
+            100,
+            (st.relationships.auntie_lin.affinity || 0) + 10,
+          );
+          if (st.needs)
+            st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 3); // [PLACEHOLDER] 心情
+          if (st.flags) st.flags._auntieLinMetDay = st.player.day;
+          if (typeof StateManager !== "undefined" && StateManager.addMessage)
+            StateManager.addMessage(
+              "🥬 林阿姨塞给你一把小葱：「拿去！年轻人接地气，以后买菜找我，给你留好的。」结识林阿姨，好感+10，心情+3。",
+              "success",
+            );
+        },
+      },
+      {
+        text: "🛒 买把菜，聊两句",
+        hint: "结识林阿姨，好感+5",
+        apply: function (st) {
+          if (!st.relationships) st.relationships = {};
+          if (!st.relationships.auntie_lin) {
+            st.relationships.auntie_lin = { affinity: 0, met: true };
+          }
+          st.relationships.auntie_lin.met = true;
+          st.relationships.auntie_lin.affinity = Math.min(
+            100,
+            (st.relationships.auntie_lin.affinity || 0) + 5,
+          );
+          if (st.flags) st.flags._auntieLinMetDay = st.player.day;
+          if (typeof StateManager !== "undefined" && StateManager.addMessage)
+            StateManager.addMessage(
+              "🛒 林阿姨笑着多抓了把香菜：「算你福利。常来啊！」结识林阿姨，好感+5。",
+              "info",
+            );
+        },
+      },
+    ],
+  });
+
+  // ===== 陈哥（chen_ge）情报贩子 — 唤醒 connections 下游 =====
+  RANDOM_EVENTS.push({
+    id: "npc_chen_ge_first_meet",
+    phase: "street",
+    icon: "🕶️",
+    title: "商业区的陈哥",
+    story:
+      "商业区天桥下，一个穿得利落的中年男人斜倚栏杆，朝你递来一张没有抬头只有电话的名片：\n\n" +
+      "「陈哥。这城里什么事我都略知一二。找工作、找门路、避坑——记住这个人脉，说不定哪天用得上。」\n\n" +
+      "他笑得意味深长，不像摊主那般热络，却莫名让人记住。",
+    conditions: function (st) {
+      // [全系统自洽修复] 域D 修复:陈哥从未被任何路径 met → 本条补登场闸门(!met)
+      return (
+        st &&
+        st.player &&
+        st.player.day >= 15 &&
+        (!st.relationships ||
+          !st.relationships.chen_ge ||
+          !st.relationships.chen_ge.met)
+      );
+    },
+    probability: 0.03,
+    repeatable: false,
+    choices: [
+      {
+        text: "🤝 接下名片，听听门道",
+        hint: "结识陈哥，好感+8",
+        apply: function (st) {
+          if (!st.relationships) st.relationships = {};
+          if (!st.relationships.chen_ge) {
+            st.relationships.chen_ge = { affinity: 0, met: true };
+          }
+          st.relationships.chen_ge.met = true;
+          st.relationships.chen_ge.affinity = Math.min(
+            100,
+            (st.relationships.chen_ge.affinity || 0) + 8,
+          );
+          if (st.player)
+            st.player.intelligence = Math.min(
+              100,
+              (st.player.intelligence || 10) + 1,
+            ); // [PLACEHOLDER] 心智
+          if (st.flags) st.flags._chenGeMetDay = st.player.day;
+          if (typeof StateManager !== "undefined" && StateManager.addMessage)
+            StateManager.addMessage(
+              "🤝 陈哥压低声音：「城里水浑，多个明白人总没错。」结识陈哥，好感+8，智力+1。",
+              "success",
+            );
+        },
+      },
+      {
+        text: "🙂 婉拒，不多纠缠",
+        hint: "结识陈哥，好感+3",
+        apply: function (st) {
+          if (!st.relationships) st.relationships = {};
+          if (!st.relationships.chen_ge) {
+            st.relationships.chen_ge = { affinity: 0, met: true };
+          }
+          st.relationships.chen_ge.met = true;
+          st.relationships.chen_ge.affinity = Math.min(
+            100,
+            (st.relationships.chen_ge.affinity || 0) + 3,
+          );
+          if (st.flags) st.flags._chenGeMetDay = st.player.day;
+          if (typeof StateManager !== "undefined" && StateManager.addMessage)
+            StateManager.addMessage(
+              "🙂 你摆摆手。陈哥也不恼，把名片收回：「随缘。」结识陈哥，好感+3。",
+              "info",
+            );
+        },
+      },
+    ],
+  });
+
+  // ===== 阿杰（ajie）老同学 — 唤醒 side_project 下游 =====
+  RANDOM_EVENTS.push({
+    id: "npc_ajie_first_meet",
+    phase: "street",
+    icon: "📱",
+    title: "街头偶遇的老同学阿杰",
+    story:
+      "你在街头等人，一个身影凑上来，盯着你看了两秒突然乐了：\n\n" +
+      "「哎——我没认错吧？咱俩小学同过桌啊！我是阿杰！这么多年没联系，你也在城里混？」\n\n" +
+      "他比你精神些，手机壳亮得反光，话里带着点说不清的兴奋。",
+    conditions: function (st) {
+      // [全系统自洽修复] 域D 修复:阿杰从未被任何路径 met → 本条补登场闸门(!met)
+      return (
+        st &&
+        st.player &&
+        st.player.day >= 20 &&
+        (!st.relationships ||
+          !st.relationships.ajie ||
+          !st.relationships.ajie.met)
+      );
+    },
+    probability: 0.03,
+    repeatable: false,
+    choices: [
+      {
+        text: "📱 叙旧，加回联系方式",
+        hint: "结识阿杰，好感+10",
+        apply: function (st) {
+          if (!st.relationships) st.relationships = {};
+          if (!st.relationships.ajie) {
+            st.relationships.ajie = { affinity: 0, met: true };
+          }
+          st.relationships.ajie.met = true;
+          st.relationships.ajie.affinity = Math.min(
+            100,
+            (st.relationships.ajie.affinity || 0) + 10,
+          );
+          if (st.flags) st.flags._ajieMetDay = st.player.day;
+          if (typeof StateManager !== "undefined" && StateManager.addMessage)
+            StateManager.addMessage(
+              "📱 你和阿杰加了微信。他拍着你肩膀：「改天聚！我最近搞的买卖，说不定能带你赚一笔。」结识阿杰，好感+10。",
+              "success",
+            );
+        },
+      },
+      {
+        text: "👋 匆匆打个招呼",
+        hint: "结识阿杰，好感+4",
+        apply: function (st) {
+          if (!st.relationships) st.relationships = {};
+          if (!st.relationships.ajie) {
+            st.relationships.ajie = { affinity: 0, met: true };
+          }
+          st.relationships.ajie.met = true;
+          st.relationships.ajie.affinity = Math.min(
+            100,
+            (st.relationships.ajie.affinity || 0) + 4,
+          );
+          if (st.flags) st.flags._ajieMetDay = st.player.day;
+          if (typeof StateManager !== "undefined" && StateManager.addMessage)
+            StateManager.addMessage(
+              "👋 你急着走，和阿杰草草寒暄。他笑着挥手：「行，回头聊！」结识阿杰，好感+4。",
+              "info",
+            );
+        },
+      },
+    ],
+  });
+})();
+</script>
+    <!-- v3.117: 域D 联动增强（陈哥→经济门路耳语 / 林阿姨→菜价门道），让激活NPC常态活起来-->
+    <script>/*
+ * 城市浮生记 — 域D（NPC/社交）联动增强·常态NPC互动
+ * v3.117 · loop R26 全系统优化·Domain D（NPC/社交）主审第二轮
+ *
+ * 【联动意图】R26 指令一刚激活 auntie_lin(林阿姨)/chen_ge(陈哥)/ajie(阿杰) 三名沉睡NPC，
+ * 但激活只是"能结识"。要让 NPC 真正"活"在系统里，需给信息型 NPC 接一条常态化互动：
+ *  - chen_ge(情报贩子) → E 经济/投资：周期性透漏市场/门路消息（NPC→经济，逆向桥接，未覆盖）
+ *  - auntie_lin(菜市场摊主) → A 数据/数值：周期性透漏菜价门道（NPC→物价/烹饪，未覆盖）
+ * 这样 NPC 不只是关系条上的数字，而是持续产出跨域价值的"活人"。
+ *
+ * 设计约束（与 npc_social_linkage_events.js 一致）：
+ *  - IIFE 注入 RANDOM_EVENTS，不改动 cross_system_events.js。
+ *  - 域D铁律：只读 state.relationships；引用 NPC 须 rel && rel.met。
+ *  - 冷却用 st.flags._xxxCooldown(存 day) 去重，conditions 与 apply 双重拦截。
+ *  - 所有 state 访问 || 防御；数值标 [PLACEHOLDER]。
+ *  - phase:"street"（三人均 street 阶段角色）。
+ */
+(function () {
+  if (typeof RANDOM_EVENTS === "undefined" || !RANDOM_EVENTS) return;
+  if (RANDOM_EVENTS._npcLinkageR26Loaded) return;
+  RANDOM_EVENTS._npcLinkageR26Loaded = true;
+
+  // ===== D→E：陈哥的市场耳语（NPC→经济/投资） =====
+  RANDOM_EVENTS.push({
+    id: "npc_chen_ge_market_whisper",
+    phase: "street",
+    icon: "🕶️",
+    title: "陈哥递来的耳语",
+    desc:
+      "陈哥在商业区角落冲你招手，压低声音：「有个消息，别外传——下礼拜城东要开个新商圈，周边铺面租金得涨。你手头要有闲钱，早点布阵。」\n\n" +
+      "他没说具体投什么，但眼神里那股「你懂的」意味，让你心里一动。",
+    triggers: { minDay: 30 },
+    conditions: function (st) {
+      if (!st || !st.player || !st.relationships) return false;
+      var r = st.relationships.chen_ge;
+      if (!r || !r.met || (r.affinity || 0) < 25) return false; // 域D铁律：须 rel && rel.met
+      if (st.flags && st.flags._chenGeWhisperCooldown) {
+        if (st.player.day - st.flags._chenGeWhisperCooldown < 30) return false; // [PLACEHOLDER] 冷却30天
+      }
+      return true;
+    },
+    choices: [
+      {
+        text: "📈 顺藤摸瓜，小试一笔",
+        hint: "激活投资心态 + 小额试水",
+        apply: function (st) {
+          if (st.resources) {
+            st.resources.bankBalance =
+              (st.resources.bankBalance || 0) + 8000; // [PLACEHOLDER] 试水本金
+          }
+          if (st.player) st.player.mental = (st.player.mental || 50) + 2;
+          if (st.flags) {
+            st.flags._chenGeWhisperCooldown = st.player.day;
+            st.flags._dataInvestorMindset = true; // 复用 R14/R16 同一投资心态 flag
+          }
+          if (typeof StateManager !== "undefined" && StateManager.addMessage)
+            StateManager.addMessage(
+              "📈 陈哥的一句话，让你第一次认真盘算「让钱生钱」。银行户头多了¥8000试水金。",
+              "good",
+            );
+        },
+      },
+      {
+        text: "🤔 听听就好，不冒险",
+        hint: "记下人脉，不投钱",
+        apply: function (st) {
+          if (st.player) st.player.mental = (st.player.mental || 50) + 1;
+          if (st.flags) st.flags._chenGeWhisperCooldown = st.player.day;
+          if (typeof StateManager !== "undefined" && StateManager.addMessage)
+            StateManager.addMessage(
+              "🤔 你笑着点头，没掏钱。陈哥摆摆手：「谨慎点好。」",
+              "info",
+            );
+        },
+      },
+    ],
+    probability: 0.04,
+  });
+
+  // ===== D→A：林阿姨的菜价门道（NPC→数据/数值·物价/烹饪） =====
+  RANDOM_EVENTS.push({
+    id: "npc_auntie_lin_fresh_deal",
+    phase: "street",
+    icon: "🥬",
+    title: "林阿姨的批发价",
+    desc:
+      "你在菜市场，林阿姨神秘兮兮地把你拉到摊位后头：「丫头/小子，今天批发价到了一批好货，外面卖¥8的青菜，我这儿¥3拿走。\n\n" +
+      "「做饭的，懂食材才是真省钱。这周你来我这儿拿，算你成本价。」",
+    triggers: { minDay: 25 },
+    conditions: function (st) {
+      if (!st || !st.player || !st.relationships) return false;
+      var r = st.relationships.auntie_lin;
+      if (!r || !r.met) return false; // 域D铁律：须 rel && rel.met
+      if (!(st.skills && st.skills.cooking && (st.skills.cooking.level || 0) >= 5))
+        return false; // 需有点烹饪底子才懂门道
+      if (st.flags && st.flags._auntieLinDealCooldown) {
+        if (st.player.day - st.flags._auntieLinDealCooldown < 21) return false; // [PLACEHOLDER] 冷却21天
+      }
+      return true;
+    },
+    choices: [
+      {
+        text: "🥬 按批发价囤一波",
+        hint: "省一笔伙食费 + 烹饪经验",
+        apply: function (st) {
+          var save = 60; // [PLACEHOLDER] 批发省下的伙食费
+          if (st.resources) {
+            st.resources.cash = (st.resources.cash || 0) + save;
+            st.resources.totalEarned = (st.resources.totalEarned || 0) + save;
+          }
+          if (st.skills && st.skills.cooking && st.skills.cooking.xp !== undefined) {
+            st.skills.cooking.xp = (st.skills.cooking.xp || 0) + 15; // [PLACEHOLDER] 烹饪经验
+          }
+          if (st.flags) st.flags._auntieLinDealCooldown = st.player.day;
+          if (typeof StateManager !== "undefined" && StateManager.addMessage)
+            StateManager.addMessage(
+              "🥬 你按批发价囤了菜，省下¥" + save + "，顺手跟林阿姨学了两手刀工（烹饪经验+15）。",
+              "good",
+            );
+        },
+      },
+      {
+        text: "🙂 先拿一把尝尝",
+        hint: "少量实惠",
+        apply: function (st) {
+          if (st.flags) st.flags._auntieLinDealCooldown = st.player.day;
+          if (typeof StateManager !== "undefined" && StateManager.addMessage)
+            StateManager.addMessage(
+              "🙂 你只拿了一把葱。林阿姨笑：「慢慢来，常来就行。」",
+              "info",
+            );
+        },
+      },
+    ],
+    probability: 0.04,
+  });
+})();
+</script>
     <!-- v3.108: 经济/投资域联动增强事件（E→A投资心态 / E→C金融盘感职业 / E→D落袋请友）-->
     <script>/*
  * 城市浮生记 — 域E（经济/投资）联动增强事件
@@ -219693,15 +220075,19 @@ var _CLASSIC_STEPS = [
     waitForClick: null,
   },
   {
-    title: "📊 左侧是你的状态面板",
+    title: "📊 查看你的状态",
     body: `
-        <p><strong>5维属性</strong>：体质 · 智力 · 敏捷 · 心智 · 魅力 — 影响工作效率和事件结果</p>
-        <p><strong>5项需求</strong>：饥饱 · 疲劳 · 卫生 · 心情 · 健康 — 低于30触发危险提示</p>
-        <p style="color:var(--text-muted);font-size:11px;margin-top:4px;">💡 顶部常驻状态条实时显示全部10项数据</p>
-        <p style="color:var(--success);font-size:12px;margin-top:6px;">👆 点击左侧 <strong>状态面板</strong> 任意位置继续</p>
+        <p style="margin-bottom:6px;"><strong>电脑端</strong>：点击左侧 <strong>状态面板</strong> 查看完整属性</p>
+        <p style="margin-bottom:6px;"><strong>手机端</strong>：顶部常驻条已显示 <strong>全部11项</strong> 数据，点击状态条区域确认</p>
+        <div style="background:rgba(102,126,234,0.08);border-radius:8px;padding:8px 12px;margin:8px 0;font-size:12px;">
+          <div>📊 <strong>6维属性</strong>：体质 · 智力 · 敏捷 · 心智 · 魅力 · 道德</div>
+          <div style="margin-top:4px;">📊 <strong>5项需求</strong>：饥饿 · 疲劳 · 卫生 · 心情 · 健康</div>
+        </div>
+        <p style="font-size:11px;color:var(--text-muted);margin-top:4px;">💡 属性影响工作效率和事件结果；需求低于30触发危险提示</p>
+        <p style="color:var(--success);font-size:12px;margin-top:6px;">👆 点击左侧 <strong>状态面板</strong>（电脑端）或顶部 <strong>状态条</strong>（手机端）继续</p>
       `,
-    highlight: "#sidebar",
-    waitForClick: "#sidebar",
+    highlight: "#sidebar, #mobile-hud .mobile-stats-strip",
+    waitForClick: "#sidebar, #mobile-hud .mobile-stats-strip",
   },
   {
     title: "🏘️ 你在城中村，这是你的起点",
@@ -220465,41 +220851,23 @@ var _currentTutorialIndex = 0;
 var _waitForClickListeners = []; // 记录所有监听以便清理
 
 function _attachWaitForClick(selector, steps, index, hint) {
-  // 等待 DOM 渲染完成（renderAll 是同步的，但保险起见用 setTimeout）
-  setTimeout(() => {
-    const targets = document.querySelectorAll(selector);
-    if (targets.length === 0) {
-      // 目标不在 DOM 中（例如行动卡片还没渲染），5 秒后重试一次
-      console.warn("[tutorial] 目标未找到:", selector, "5 秒后重试");
-      setTimeout(() => _attachWaitForClick(selector, steps, index, hint), 5000);
-      return;
+  // v5.1: 改用 document 级 bubble-phase 监听器 — 更鲁棒
+  // 优点：① DOM 重建后仍能捕获 ② 不阻止游戏正常操作（stopPropagation 已移除）
+  // ③ 兼容 card re-render 后的新元素 ④ 用 closest 匹配子元素点击
+  var handler = function (e) {
+    var target = e.target;
+    if (target.matches(selector) || target.closest(selector)) {
+      _clearWaitForClickListeners();
+      cleanupHighlight();
+      _removeSkipHint();
+      // 延迟推进：让游戏 action 先执行完 + renderAll 完成
+      setTimeout(function () {
+        showTutorialStep(steps, index + 1);
+      }, 400);
     }
-    targets.forEach((target) => {
-      const handler = function (e) {
-        // 阻止冒泡，避免触发原 handler 之前先推进引导
-        // 实际上我们让原 handler 继续执行，引导推进是异步的
-        e.stopPropagation();
-        // 移除所有监听
-        _clearWaitForClickListeners();
-        cleanupHighlight();
-        _removeSkipHint(); // v5.0: 关闭跳过浮标
-        // 关闭当前 tutorial modal（如果有）
-        const overlay = document.querySelector(".tutorial-overlay");
-        if (overlay) {
-          try {
-            overlay.parentNode.removeChild(overlay);
-          } catch (err) {}
-        }
-        // 推进下一步
-        setTimeout(() => {
-          showTutorialStep(steps, index + 1);
-        }, 100);
-      };
-      // 使用 capture 阶段，确保在原 handler 之前捕获
-      target.addEventListener("click", handler, { capture: true, once: true });
-      _waitForClickListeners.push({ target, handler });
-    });
-  }, 100);
+  };
+  document.addEventListener("click", handler);
+  _waitForClickListeners.push({ target: document, handler: handler });
 }
 
 /** Phase 2 浮动"跳过此步"按钮 — 防止玩家卡住 */
@@ -220532,7 +220900,7 @@ function _removeSkipHint() {
 function _clearWaitForClickListeners() {
   _waitForClickListeners.forEach(({ target, handler }) => {
     try {
-      target.removeEventListener("click", handler, { capture: true });
+      target.removeEventListener("click", handler);
     } catch (e) {}
   });
   _waitForClickListeners = [];
@@ -220574,11 +220942,14 @@ function _confirmSkip(steps) {
   });
 }
 
-/** 高亮页面元素 — v3.0 增强：让高亮框本身可点击穿透 */
+/** 高亮页面元素 — v5.1 增强：滚动到可视区域 + 滚动/切换自动重定位 */
 function highlightElement(selector) {
   cleanupHighlight();
   const el = document.querySelector(selector);
   if (!el) return;
+
+  // 将元素滚动到可视区域（平滑滚动到中央）
+  el.scrollIntoView({ behavior: "smooth", block: "center" });
 
   const hl = document.createElement("div");
   hl.className = "tutorial-highlight";
@@ -220600,22 +220971,48 @@ function highlightElement(selector) {
   `;
   document.body.appendChild(hl);
 
-  // 监听窗口大小变化，重新定位高亮框
+  // 共享的 reposition 函数
+  function _repositionHighlight() {
+    var cur = document.getElementById("tutorial-highlight");
+    if (!cur) return;
+    var targetEl = document.querySelector(selector);
+    if (!targetEl) return;
+    var r = targetEl.getBoundingClientRect();
+    cur.style.top = r.top - 6 + "px";
+    cur.style.left = r.left - 6 + "px";
+    cur.style.width = r.width + 12 + "px";
+    cur.style.height = r.height + 12 + "px";
+  }
+
+  // 监听 resize
   if (!window._tutorialResizeHandler) {
-    window._tutorialResizeHandler = () => {
-      const cur = document.getElementById("tutorial-highlight");
-      if (cur) {
-        const targetEl = document.querySelector(selector);
-        if (targetEl) {
-          const r = targetEl.getBoundingClientRect();
-          cur.style.top = r.top - 6 + "px";
-          cur.style.left = r.left - 6 + "px";
-          cur.style.width = r.width + 12 + "px";
-          cur.style.height = r.height + 12 + "px";
-        }
-      }
-    };
+    window._tutorialResizeHandler = _repositionHighlight;
     window.addEventListener("resize", window._tutorialResizeHandler);
+  }
+
+  // v5.1: 监听 #content-area 滚动（tab 内容切换、滚动时重定位高亮）
+  if (!window._tutorialScrollHandler) {
+    window._tutorialScrollHandler = function () {
+      if (window._tutorialScrollRaf) cancelAnimationFrame(window._tutorialScrollRaf);
+      window._tutorialScrollRaf = requestAnimationFrame(_repositionHighlight);
+    };
+    var scrollEl = document.getElementById("content-area") || document.querySelector(".main-content");
+    if (scrollEl) {
+      scrollEl.addEventListener("scroll", window._tutorialScrollHandler, { passive: true });
+    }
+    window.addEventListener("scroll", window._tutorialScrollHandler, { passive: true });
+  }
+
+  // v5.1: MutationObserver 监听 #content-area 内容变化（Tab切换时重定位高亮）
+  if (!window._tutorialMutationObserver) {
+    var observeTarget = document.getElementById("content-area") || document.querySelector(".main-content");
+    if (observeTarget) {
+      window._tutorialMutationObserver = new MutationObserver(function () {
+        if (window._tutorialMutationTimeout) clearTimeout(window._tutorialMutationTimeout);
+        window._tutorialMutationTimeout = setTimeout(_repositionHighlight, 200);
+      });
+      window._tutorialMutationObserver.observe(observeTarget, { childList: true, subtree: true });
+    }
   }
 }
 
@@ -220623,12 +221020,32 @@ function highlightElement(selector) {
 function cleanupHighlight() {
   const existing = document.getElementById("tutorial-highlight");
   if (existing) existing.remove();
-  // 同时清除其他可能的残留
   document.querySelectorAll(".tutorial-highlight").forEach((e) => e.remove());
   // 清理 resize 监听
   if (window._tutorialResizeHandler) {
     window.removeEventListener("resize", window._tutorialResizeHandler);
     window._tutorialResizeHandler = null;
+  }
+  // v5.1: 清理 scroll 监听 + MutationObserver
+  if (window._tutorialScrollHandler) {
+    var scrollEl = document.getElementById("content-area") || document.querySelector(".main-content");
+    if (scrollEl) {
+      scrollEl.removeEventListener("scroll", window._tutorialScrollHandler);
+    }
+    window.removeEventListener("scroll", window._tutorialScrollHandler);
+    window._tutorialScrollHandler = null;
+    if (window._tutorialScrollRaf) {
+      cancelAnimationFrame(window._tutorialScrollRaf);
+      window._tutorialScrollRaf = null;
+    }
+  }
+  if (window._tutorialMutationObserver) {
+    window._tutorialMutationObserver.disconnect();
+    window._tutorialMutationObserver = null;
+  }
+  if (window._tutorialMutationTimeout) {
+    clearTimeout(window._tutorialMutationTimeout);
+    window._tutorialMutationTimeout = null;
   }
   // v5.0: 清理跳过浮标
   _removeSkipHint();
