@@ -91532,11 +91532,13 @@ if (typeof window !== "undefined") {
                 100,
                 (st.corporate.popularity || 30) + 4,
               );
-              st.corporate.upward = Math.min(
-                100,
-                (st.corporate.upward || 20) + 3,
-              );
             }
+            if (st.player && st.player.corporate) {
+              st.player.corporate.upwardMgmt = Math.min(
+                100,
+                (st.player.corporate.upwardMgmt || 20) + 3,
+              );
+            } // [全系统自洽修复] 域B 修复: upward→upwardMgmt
             if (typeof StateManager !== "undefined" && StateManager.addMessage)
               StateManager.addMessage(
                 "🎤 跨部门协作中，人们记住了你的名字和方案。你的'名气'在公司内部开始有实质价值。",
