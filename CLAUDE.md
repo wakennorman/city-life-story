@@ -536,3 +536,32 @@ python -m http.server 8080  # http://localhost:8080
 □ 完成后更新版本记忆文件 + MEMORY.md 索引
 □ git push origin master
 ```
+
+---
+
+## ⚠️ Git Force Push 恢复流程（2026-07-15 新增）
+
+> **远程 `git push` 被拒 + 无共同祖先（force push 重写历史）时的无损恢复流程。**
+> 详见 `memory/force-push-recovery.md`
+
+### 六步流程
+
+```
+① 备份远程 → git branch backup-remote origin/master
+② 诊断差异 → 对比两边文件结构 & md5sum
+③ 选定版本 → 哪边内容更先进就推哪边
+④ 强制推送 → git push --force origin master
+⑤ 内容合并 → git diff backup-remote:file.js 子模块/file.js 确认已包含
+⑥ 子模块同步 → cd 子模块 && git push origin master --force
+```
+
+### 六条预防措施
+
+| # | 做法 | 说明 |
+|---|------|------|
+| 1 | **禁止对 `master` 用 `--force`** | 除非是故意的架构调整且团队已知 |
+| 2 | 开工前 `git fetch && git status` | 发现远程有变化再决定策略 |
+| 3 | 用 `--force-with-lease` 替代裸 `--force` | 会检查远程是否被其他人更新过 |
+| 4 | 多窗口协作签出独立分支 | 每人用自己的 feature 分支，合入 master 走 PR |
+| 5 | 子模块 URL 统一使用 HTTPS | SSH 可能因密钥问题不可达 |
+| 6 | 远程出现 force push 时先 `git branch backup-remote origin/master` | 防止远程内容丢失 |
