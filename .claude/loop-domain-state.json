@@ -1,8 +1,7 @@
 {
-  "domain": "F",
-  "round": 28,
-  "lastCommit": "ff27b10c",
-  "lastDomain": "F",
-  "status": "completed",
-  "note": "域F UI/UX 第三轮：A类0项(结构性健康) + 联动增强3项(heritage传承币/inheritance多周目继承链/social_net社交网络 wiki条目, MECHANICS注册表扩展)。碰撞：并行窗口(域C)同改共享树，pre-commit拦截本会话提交；R28内容由并行窗口 e72da430 经 git add -A 碰撞捕获提交，ff27b10c 为其后续；本会话原 9813e497(仅dist)为冗余分叉本地提交，push不带走。下一轮应为 G 核心机制/生命周期。"
+  "lastDomain": "C",
+  "lastRound": 21,
+  "lastDate": "2026-07-15",
+  "completedDomains": ["A", "B", "C"],
+  "lastCommit": "e4e4e171"
 }

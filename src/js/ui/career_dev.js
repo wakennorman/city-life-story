@@ -3174,6 +3174,16 @@ function applyCareerPromotion(pathId, levelId) {
   cap.partnerTrust = (cap.partnerTrust || 0) + 2;
   clampCareerCapital(cap);
 
+  // [全系统自洽修复] 域C 增强:晋升时同事好感提升(C→D)
+  var _promoNet = state.corporate && state.corporate.colleagues && state.corporate.colleagues.network;
+  if (_promoNet && _promoNet.length > 0) {
+    var _promoAffGain = 3 + Math.floor((level.salary || 0) / 10000);
+    for (var _pi = 0; _pi < _promoNet.length; _pi++) {
+      _promoNet[_pi].relationship = Math.min(100, (_promoNet[_pi].relationship || 0) + _promoAffGain);
+      _promoNet[_pi].trust = Math.min(100, (_promoNet[_pi].trust || 0) + 2);
+    }
+  }
+
   StateManager.addMessage(
     "🎉 晋升成功！你成为了" +
       level.name +
@@ -3386,7 +3396,8 @@ function tickCareerJobDaily(state) {
   }
 
   // ----- burnout 过劳后果（P0-5） -----
-  if (cap.burnout >= 80 && Math.random() < 0.15) {
+  // [全系统自洽修复] 域C 修复:Math.random→Random.chance 统一随机系统
+  if (cap.burnout >= 80 && (typeof Random !== 'undefined' ? Random.chance(0.15) : Math.random() < 0.15)) {
     // 强制过劳病假
     state.status = state.status || {};
     state.status.health = Math.max(0, (state.status.health || 100) - 10);
@@ -3402,7 +3413,7 @@ function tickCareerJobDaily(state) {
     job.performance = Math.max(0, (job.performance || 50) - 1);
     state.status = state.status || {};
     state.status.health = Math.max(0, (state.status.health || 100) - 0.5);
-    if (Math.random() < 0.05) {
+    if (typeof Random !== 'undefined' ? Random.chance(0.05) : Math.random() < 0.05) {
       StateManager.addMessage(
         "⚠️ 身体发出警告：长期高压工作正在消耗你的健康",
         "warning",
@@ -3851,14 +3862,14 @@ function tickCareerHealthBonus(state) {
     var medicineLevel =
       (state.skills && state.skills.medicine && state.skills.medicine.level) ||
       0;
-    if (medicineLevel >= 20 && Math.random() < 0.3) {
+    if (medicineLevel >= 20 && (typeof Random !== 'undefined' ? Random.chance(0.3) : Math.random() < 0.3)) {
       state.status = state.status || {};
       state.status.health = Math.min(100, (state.status.health || 100) + 0.5);
     }
   }
   // 🏥 护理：医疗环境工作，疾病抵抗力更强
   if (job.path === "medical") {
-    if (Math.random() < 0.2) {
+    if (typeof Random !== 'undefined' ? Random.chance(0.2) : Math.random() < 0.2) {
       state.status = state.status || {};
       state.status.health = Math.min(100, (state.status.health || 100) + 0.3);
     }
@@ -4715,6 +4726,31 @@ function showCareerPathPreviewModal(pathKey) {
     }
   }
 
+  // [全系统自洽修复] 域C 增强:技能树分支推荐(职业路径→最佳技能分支)
+  var _branchRecMap = {
+    tech: { skill: 'coding', branches: ['frontend_dev', 'backend_arch', 'security'], tip: '编程技能树分支直接提升IT职场能力' },
+    finance: { skill: 'accounting', branches: ['tax_accounting', 'audit_risk'], tip: '会计税务/审计分支提升财务类收入' },
+    sales: { skill: 'sales', branches: ['store_sales', 'biz_negotiation'], tip: '门店销售/商务谈判分支提升销售业绩' },
+    operations: { skill: 'management', branches: ['team_mgmt', 'strategy_planning'], tip: '团队管理/战略规划分支提升运营能力' },
+    design: { skill: 'coding', branches: ['frontend_dev'], tip: '前端开发分支提升设计创意类收入' },
+    legal: { skill: 'english', branches: ['translation', 'business_english'], tip: '翻译/商务英语分支累积法律语言优势' },
+    education: { skill: 'english', branches: ['business_english'], tip: '商务英语分支有助于教育培训沟通' },
+    logistics: { skill: 'driving', branches: ['passenger_transport', 'freight'], tip: '客运/货运驾驶分支提升物流效率' },
+    catering: { skill: 'cooking', branches: ['home_chef', 'street_foodie'], tip: '家常大厨/街头美食家分支提升餐饮收入' },
+    public_institution: { skill: 'management', branches: ['team_mgmt', 'strategy_planning'], tip: '管理分支有助于体制内晋升' },
+    civil: { skill: 'management', branches: ['team_mgmt', 'strategy_planning'], tip: '管理分支有助于公务员晋升' },
+  };
+  var _rec = _branchRecMap[pathKey];
+  if (_rec) {
+    var _skBranch = state.skillBranches && state.skillBranches[_rec.skill];
+    var _hasBranch = _skBranch && _rec.branches.indexOf(_skBranch) >= 0;
+    var _skLv = (state.skills[_rec.skill] && state.skills[_rec.skill].level) || 0;
+    body += '<div style="font-size:10px;color:var(--text-muted);padding:6px 8px;margin-bottom:8px;background:rgba(255,183,77,0.06);border:1px solid rgba(255,183,77,0.2);border-radius:6px;">';
+    body += '🌳 推荐技能分支：<strong>' + getSkillChineseName(_rec.skill) + '</strong>（当前Lv.' + _skLv + '）→ ';
+    body += _hasBranch ? '✅ 已选择「' + getSkillBranchLabel(_rec.skill, state) + '」' : '推荐' + _rec.tip;
+    body += '</div>';
+  }
+
   // 晋升阶梯图
   body +=
     '<div style="font-size:12px;font-weight:bold;margin-bottom:8px;">📈 晋升路线</div>';
@@ -5203,5 +5239,121 @@ if (typeof document !== "undefined") {
 
   for (var mle = 0; mle < MAX_LEVEL_EVENTS.length; mle++) {
     RANDOM_EVENTS.push(MAX_LEVEL_EVENTS[mle]);
+  }
+})();
+
+// ====== 联动增强：技能Lv.100满级叙事事件（C→B） ======
+// 填补"技能满级无叙事回报"空白——任何技能达到Lv.100触发专属成就事件
+// 设计心理学：峰终定律（满级锚点）/ 禀赋效应（珍惜技能成就）
+(function () {
+  if (typeof RANDOM_EVENTS === "undefined") return;
+  if (RANDOM_EVENTS._skillMaxLevelLoaded) return;
+  RANDOM_EVENTS._skillMaxLevelLoaded = true;
+
+  var SKILL_MAX_EVENTS = [
+    {
+      id: "skill_max_level_mastery",
+      phase: "street",
+      icon: "👑",
+      title: "登峰造极！",
+      story: "经过日复一日的练习和实战，你的'{skillName}'技能终于达到了Lv.100——人类所能达到的极限！\n\n你在这个领域已经是大师级别的人物了。消息传开后，有人慕名而来想请你指点，也有人想挖你去他们公司。",
+      triggers: { minDay: 60 },
+      conditions: function (st) {
+        if (st.flags && st.flags._skillMaxLevelTriggered) return false;
+        if (!st.skills) return false;
+        for (var k in st.skills) {
+          if (st.skills[k] && st.skills[k].level >= 100) return true;
+        }
+        return false;
+      },
+      choices: [
+        {
+          text: "🏆 接受采访，分享经验",
+          hint: "名气+15，魅力+5",
+          apply: function (st) {
+            st.flags._skillMaxLevelTriggered = true;
+            st.player.fame = Math.min(100, (st.player.fame || 0) + 15);
+            st.player.charm = Math.min(100, (st.player.charm || 0) + 5);
+            StateManager.addMessage(
+              "👑 你的故事被媒体报道，一夜之间成了业内知名人物！名气+15，魅力+5。",
+              "success",
+            );
+          },
+        },
+        {
+          text: "🤫 低调，继续精进",
+          hint: "智力+8，心智+5",
+          apply: function (st) {
+            st.flags._skillMaxLevelTriggered = true;
+            st.player.intelligence = Math.min(100, (st.player.intelligence || 0) + 8);
+            st.player.mental = Math.min(100, (st.player.mental || 0) + 5);
+            StateManager.addMessage(
+              "👑 你选择保持低调。真正的强者从不炫耀，但求内心充实。智力+8，心智+5。",
+              "success",
+            );
+          },
+        },
+        {
+          text: "💼 考虑开培训班",
+          hint: "解锁被动收入+¥150/天",
+          apply: function (st) {
+            st.flags._skillMaxLevelTriggered = true;
+            st.flags._skillMasterTrainer = true;
+            StateManager.addMessage(
+              "👑 你决定用你的技能开办培训班。虽然前期投入大，但这是一条可持续的被动收入来源。",
+              "event",
+            );
+          },
+        },
+      ],
+    },
+    {
+      id: "skill_master_student",
+      phase: "street",
+      icon: "🎓",
+      title: "慕名而来的学徒",
+      story: "你在'{skillName}'上的造诣已经传遍了大街小巷。今天一个年轻人找到你，说想拜你为师，愿意免费给你打下手，只求学到真本事。",
+      triggers: { minDay: 90 },
+      conditions: function (st) {
+        if (st.flags && st.flags._skillMasterStudentSeen) return false;
+        if (!st.skills) return false;
+        for (var k in st.skills) {
+          if (st.skills[k] && st.skills[k].level >= 100) return true;
+        }
+        return false;
+      },
+      choices: [
+        {
+          text: "👨‍🏫 收下，倾囊相授",
+          hint: "心智+10，名气+5，获得助手",
+          apply: function (st) {
+            st.flags._skillMasterStudentSeen = true;
+            st.flags._hasSkillApprentice = true;
+            st.player.mental = Math.min(100, (st.player.mental || 0) + 10);
+            st.player.fame = Math.min(100, (st.player.fame || 0) + 5);
+            StateManager.addMessage(
+              "🎓 你收下了这个学徒。看着他认真记笔记的样子，你想起了当初的自己。心智+10，名气+5。",
+              "success",
+            );
+          },
+        },
+        {
+          text: "📝 推荐他去培训机构",
+          hint: "心智+3，不增加负担",
+          apply: function (st) {
+            st.flags._skillMasterStudentSeen = true;
+            st.player.mental = Math.min(100, (st.player.mental || 0) + 3);
+            StateManager.addMessage(
+              "🎓 你推荐了几家靠谱的培训机构。虽然没收徒，但他还是很感激你的指点。心智+3。",
+              "info",
+            );
+          },
+        },
+      ],
+    },
+  ];
+
+  for (var sme = 0; sme < SKILL_MAX_EVENTS.length; sme++) {
+    RANDOM_EVENTS.push(SKILL_MAX_EVENTS[sme]);
   }
 })();
