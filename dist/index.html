@@ -166325,14 +166325,16 @@ if (typeof window !== "undefined") {
 function applyNeedsDecay(state) {
   const n = state.needs;
   // v3.1: 接入难度乘数 — 休闲档衰减慢，困难/地狱档衰减快
-  const decayMul =
+  var decayMul =
     typeof getDifficultyMultiplier === "function"
       ? getDifficultyMultiplier(state, "needsDecay")
       : 1.0;
-  // [全系统自洽修复] 域G B类修复: 防止 NaN 传播（用 (x || 0) 兜底）
-  n.hunger = Math.max(0, (n.hunger || 0) - Math.round(13 * decayMul));
-  n.hygiene = Math.max(0, (n.hygiene || 0) - Math.round(7 * decayMul));
-  n.happiness = Math.max(0, (n.happiness || 0) - Math.round(4 * decayMul));
+  // [全系统自洽修复] 域G A类修复: 原 `(x||0)` 仅兜底首参，未覆盖 `Math.round(13*decayMul)` 中间值 NaN（Math.max(0,NaN)=NaN 非 0，需求阈值判定全面失灵）
+  if (!isFinite(decayMul) || isNaN(decayMul)) decayMul = 1.0;
+  decayMul = Math.max(0.1, Math.min(5.0, decayMul));
+  n.hunger = Math.max(0, Math.min(100, (n.hunger || 0) - Math.round(13 * decayMul)));
+  n.hygiene = Math.max(0, Math.min(100, (n.hygiene || 0) - Math.round(7 * decayMul)));
+  n.happiness = Math.max(0, Math.min(100, (n.happiness || 0) - Math.round(4 * decayMul)));
   // fatigue 在 endDay 中通过睡眠恢复单独处理
 }
 
@@ -167251,7 +167253,8 @@ function tickIllnessDecay(state) {
 
       // 头晕（贫血）
       if (ill.symptom.dizzinessCh && Random.chance(ill.symptom.dizzinessCh)) {
-        state.needs.fatigue += 5;
+        // [全系统自洽修复] 域G A类修复: fatigue 未 clamp 至 100（其他症状均用 Math.min(100,...) 限幅）
+        state.needs.fatigue = Math.min(100, state.needs.fatigue + 5);
         StateManager.addMessage(
           "😵 " + ill.name + "让你头晕目眩，疲劳+5。",
           "warning",
@@ -220108,8 +220111,8 @@ var _CLASSIC_STEPS = [
         <p style="color:var(--accent);font-size:11px;margin-top:4px;">💡 前15天废品回收有新人加成+¥5，第一桶金就靠它</p>
         <p style="color:var(--success);font-size:12px;margin-top:6px;">👆 直接点击高亮处的 <strong>废品回收</strong> 卡片继续</p>
       `,
-    highlight: '[data-action-id="waste_recycling"]',
-    waitForClick: '[data-action-id="waste_recycling"]',
+    highlight: '[data-action-id="job_waste_recycling"]',
+    waitForClick: '[data-action-id="job_waste_recycling"]',
     hint: "找不到？废品回收是街头的入门工作，应该在行动卡片列表里。",
   },
   {
@@ -237531,7 +237534,8 @@ function startScenarioGame(scenarioId) {
   // --- 住所 ---
   state.housing.tier = scenario.housingTier || 0;
   state.housing.rentedDay = state.player.day;
-  state.inventory.capacity = [20, 50, 100, 200][state.housing.tier || 0];
+  // [全系统自洽修复] 域G A类修复: housing.tier 支持 0-6（详见 state.js:145），原数组仅 4 元素导致 tier≥4 时 capacity=undefined → 物品容量检查永久失效
+  state.inventory.capacity = [20, 50, 100, 200, 500, 1000, 2000][state.housing.tier] || 20;
 
   // --- 起始地点 ---
   if (scenario.startLocation) {
@@ -238145,7 +238149,8 @@ function startSandboxGame() {
     // --- 住所 ---
     state.housing.tier = Math.max(0, Math.min(3, cfg.housingTier || 0));
     state.housing.rentedDay = state.player.day;
-    state.inventory.capacity = [20, 50, 100, 200][state.housing.tier || 0];
+    // [全系统自洽修复] 域G A类修复: housing.tier 上限扩容至 6（与 state.js:145 一致，tier≥4 时 capacity 不再为 undefined）
+    state.inventory.capacity = [20, 50, 100, 200, 500, 1000, 2000][state.housing.tier] || 20;
 
     // --- 起始地点 ---
     if (cfg.startLocation) {
@@ -239226,7 +239231,8 @@ function getAvailableActions(state) {
               state.resources.cash -= opt.cost;
               state.housing.storageRented = true;
               state.housing.storageCapacity = opt.capacity;
-              const baseCap = [20, 50, 100, 200][state.housing.tier || 0];
+              // [全系统自洽修复] 域G A类修复: housing.tier 上限扩容至 6
+              const baseCap = [20, 50, 100, 200, 500, 1000, 2000][state.housing.tier] || 20;
               state.inventory.capacity = baseCap + opt.capacity;
               StateManager.addMessage(
                 `📦 租下了${opt.name}！总容量提升至${state.inventory.capacity}。`,

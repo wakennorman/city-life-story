@@ -117,15 +117,19 @@ var _CLASSIC_STEPS = [
     waitForClick: null,
   },
   {
-    title: "📊 左侧是你的状态面板",
+    title: "📊 查看你的状态",
     body: `
-        <p><strong>5维属性</strong>：体质 · 智力 · 敏捷 · 心智 · 魅力 — 影响工作效率和事件结果</p>
-        <p><strong>5项需求</strong>：饥饱 · 疲劳 · 卫生 · 心情 · 健康 — 低于30触发危险提示</p>
-        <p style="color:var(--text-muted);font-size:11px;margin-top:4px;">💡 顶部常驻状态条实时显示全部10项数据</p>
-        <p style="color:var(--success);font-size:12px;margin-top:6px;">👆 点击左侧 <strong>状态面板</strong> 任意位置继续</p>
+        <p style="margin-bottom:6px;"><strong>电脑端</strong>：点击左侧 <strong>状态面板</strong> 查看完整属性</p>
+        <p style="margin-bottom:6px;"><strong>手机端</strong>：顶部常驻条已显示 <strong>全部11项</strong> 数据，点击状态条区域确认</p>
+        <div style="background:rgba(102,126,234,0.08);border-radius:8px;padding:8px 12px;margin:8px 0;font-size:12px;">
+          <div>📊 <strong>6维属性</strong>：体质 · 智力 · 敏捷 · 心智 · 魅力 · 道德</div>
+          <div style="margin-top:4px;">📊 <strong>5项需求</strong>：饥饿 · 疲劳 · 卫生 · 心情 · 健康</div>
+        </div>
+        <p style="font-size:11px;color:var(--text-muted);margin-top:4px;">💡 属性影响工作效率和事件结果；需求低于30触发危险提示</p>
+        <p style="color:var(--success);font-size:12px;margin-top:6px;">👆 点击左侧 <strong>状态面板</strong>（电脑端）或顶部 <strong>状态条</strong>（手机端）继续</p>
       `,
-    highlight: "#sidebar",
-    waitForClick: "#sidebar",
+    highlight: "#sidebar, #mobile-hud .mobile-stats-strip",
+    waitForClick: "#sidebar, #mobile-hud .mobile-stats-strip",
   },
   {
     title: "🏘️ 你在城中村，这是你的起点",
@@ -889,41 +893,23 @@ var _currentTutorialIndex = 0;
 var _waitForClickListeners = []; // 记录所有监听以便清理
 
 function _attachWaitForClick(selector, steps, index, hint) {
-  // 等待 DOM 渲染完成（renderAll 是同步的，但保险起见用 setTimeout）
-  setTimeout(() => {
-    const targets = document.querySelectorAll(selector);
-    if (targets.length === 0) {
-      // 目标不在 DOM 中（例如行动卡片还没渲染），5 秒后重试一次
-      console.warn("[tutorial] 目标未找到:", selector, "5 秒后重试");
-      setTimeout(() => _attachWaitForClick(selector, steps, index, hint), 5000);
-      return;
+  // v5.1: 改用 document 级 bubble-phase 监听器 — 更鲁棒
+  // 优点：① DOM 重建后仍能捕获 ② 不阻止游戏正常操作（stopPropagation 已移除）
+  // ③ 兼容 card re-render 后的新元素 ④ 用 closest 匹配子元素点击
+  var handler = function (e) {
+    var target = e.target;
+    if (target.matches(selector) || target.closest(selector)) {
+      _clearWaitForClickListeners();
+      cleanupHighlight();
+      _removeSkipHint();
+      // 延迟推进：让游戏 action 先执行完 + renderAll 完成
+      setTimeout(function () {
+        showTutorialStep(steps, index + 1);
+      }, 400);
     }
-    targets.forEach((target) => {
-      const handler = function (e) {
-        // 阻止冒泡，避免触发原 handler 之前先推进引导
-        // 实际上我们让原 handler 继续执行，引导推进是异步的
-        e.stopPropagation();
-        // 移除所有监听
-        _clearWaitForClickListeners();
-        cleanupHighlight();
-        _removeSkipHint(); // v5.0: 关闭跳过浮标
-        // 关闭当前 tutorial modal（如果有）
-        const overlay = document.querySelector(".tutorial-overlay");
-        if (overlay) {
-          try {
-            overlay.parentNode.removeChild(overlay);
-          } catch (err) {}
-        }
-        // 推进下一步
-        setTimeout(() => {
-          showTutorialStep(steps, index + 1);
-        }, 100);
-      };
-      // 使用 capture 阶段，确保在原 handler 之前捕获
-      target.addEventListener("click", handler, { capture: true, once: true });
-      _waitForClickListeners.push({ target, handler });
-    });
-  }, 100);
+  };
+  document.addEventListener("click", handler);
+  _waitForClickListeners.push({ target: document, handler: handler });
 }
 
 /** Phase 2 浮动"跳过此步"按钮 — 防止玩家卡住 */
@@ -956,7 +942,7 @@ function _removeSkipHint() {
 function _clearWaitForClickListeners() {
   _waitForClickListeners.forEach(({ target, handler }) => {
     try {
-      target.removeEventListener("click", handler, { capture: true });
+      target.removeEventListener("click", handler);
     } catch (e) {}
   });
   _waitForClickListeners = [];
@@ -998,11 +984,14 @@ function _confirmSkip(steps) {
   });
 }
 
-/** 高亮页面元素 — v3.0 增强：让高亮框本身可点击穿透 */
+/** 高亮页面元素 — v5.1 增强：滚动到可视区域 + 滚动/切换自动重定位 */
 function highlightElement(selector) {
   cleanupHighlight();
   const el = document.querySelector(selector);
   if (!el) return;
+
+  // 将元素滚动到可视区域（平滑滚动到中央）
+  el.scrollIntoView({ behavior: "smooth", block: "center" });
 
   const hl = document.createElement("div");
   hl.className = "tutorial-highlight";
@@ -1024,22 +1013,48 @@ function highlightElement(selector) {
   `;
   document.body.appendChild(hl);
 
-  // 监听窗口大小变化，重新定位高亮框
+  // 共享的 reposition 函数
+  function _repositionHighlight() {
+    var cur = document.getElementById("tutorial-highlight");
+    if (!cur) return;
+    var targetEl = document.querySelector(selector);
+    if (!targetEl) return;
+    var r = targetEl.getBoundingClientRect();
+    cur.style.top = r.top - 6 + "px";
+    cur.style.left = r.left - 6 + "px";
+    cur.style.width = r.width + 12 + "px";
+    cur.style.height = r.height + 12 + "px";
+  }
+
+  // 监听 resize
   if (!window._tutorialResizeHandler) {
-    window._tutorialResizeHandler = () => {
-      const cur = document.getElementById("tutorial-highlight");
-      if (cur) {
-        const targetEl = document.querySelector(selector);
-        if (targetEl) {
-          const r = targetEl.getBoundingClientRect();
-          cur.style.top = r.top - 6 + "px";
-          cur.style.left = r.left - 6 + "px";
-          cur.style.width = r.width + 12 + "px";
-          cur.style.height = r.height + 12 + "px";
-        }
-      }
-    };
+    window._tutorialResizeHandler = _repositionHighlight;
     window.addEventListener("resize", window._tutorialResizeHandler);
+  }
+
+  // v5.1: 监听 #content-area 滚动（tab 内容切换、滚动时重定位高亮）
+  if (!window._tutorialScrollHandler) {
+    window._tutorialScrollHandler = function () {
+      if (window._tutorialScrollRaf) cancelAnimationFrame(window._tutorialScrollRaf);
+      window._tutorialScrollRaf = requestAnimationFrame(_repositionHighlight);
+    };
+    var scrollEl = document.getElementById("content-area") || document.querySelector(".main-content");
+    if (scrollEl) {
+      scrollEl.addEventListener("scroll", window._tutorialScrollHandler, { passive: true });
+    }
+    window.addEventListener("scroll", window._tutorialScrollHandler, { passive: true });
+  }
+
+  // v5.1: MutationObserver 监听 #content-area 内容变化（Tab切换时重定位高亮）
+  if (!window._tutorialMutationObserver) {
+    var observeTarget = document.getElementById("content-area") || document.querySelector(".main-content");
+    if (observeTarget) {
+      window._tutorialMutationObserver = new MutationObserver(function () {
+        if (window._tutorialMutationTimeout) clearTimeout(window._tutorialMutationTimeout);
+        window._tutorialMutationTimeout = setTimeout(_repositionHighlight, 200);
+      });
+      window._tutorialMutationObserver.observe(observeTarget, { childList: true, subtree: true });
+    }
   }
 }
 
@@ -1047,12 +1062,32 @@ function highlightElement(selector) {
 function cleanupHighlight() {
   const existing = document.getElementById("tutorial-highlight");
   if (existing) existing.remove();
-  // 同时清除其他可能的残留
   document.querySelectorAll(".tutorial-highlight").forEach((e) => e.remove());
   // 清理 resize 监听
   if (window._tutorialResizeHandler) {
     window.removeEventListener("resize", window._tutorialResizeHandler);
     window._tutorialResizeHandler = null;
+  }
+  // v5.1: 清理 scroll 监听 + MutationObserver
+  if (window._tutorialScrollHandler) {
+    var scrollEl = document.getElementById("content-area") || document.querySelector(".main-content");
+    if (scrollEl) {
+      scrollEl.removeEventListener("scroll", window._tutorialScrollHandler);
+    }
+    window.removeEventListener("scroll", window._tutorialScrollHandler);
+    window._tutorialScrollHandler = null;
+    if (window._tutorialScrollRaf) {
+      cancelAnimationFrame(window._tutorialScrollRaf);
+      window._tutorialScrollRaf = null;
+    }
+  }
+  if (window._tutorialMutationObserver) {
+    window._tutorialMutationObserver.disconnect();
+    window._tutorialMutationObserver = null;
+  }
+  if (window._tutorialMutationTimeout) {
+    clearTimeout(window._tutorialMutationTimeout);
+    window._tutorialMutationTimeout = null;
   }
   // v5.0: 清理跳过浮标
   _removeSkipHint();
