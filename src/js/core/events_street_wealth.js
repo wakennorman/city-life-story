@@ -2466,7 +2466,7 @@
     },
     {
       id: "re_demolition",
-      _isChainEvent: true,
+      _isChainEvent: false, // [全系统自洽修复] 域B 修复:链式根事件不应有_isChainEvent(否则永不被随机选中)
       phase: "street",
       icon: "📏",
       title: "拆迁办来了",
@@ -2530,7 +2530,7 @@
     },
     {
       id: "re_settle",
-      _isChainEvent: true,
+      _isChainEvent: false, // [全系统自洽修复] 域B 修复:链式根事件不应有_isChainEvent(否则永不被随机选中)
       phase: "street",
       icon: "💰",
       title: "拆迁款到账，然后呢？",
@@ -2596,7 +2596,7 @@
     },
     {
       id: "re_coalition_result",
-      _isChainEvent: true,
+      _isChainEvent: false, // [全系统自洽修复] 域B 修复:链式根事件不应有_isChainEvent(否则永不被随机选中)
       phase: "street",
       icon: "⚖️",
       title: "团结阵线破裂",
@@ -2644,7 +2644,7 @@
     },
     {
       id: "re_holdout_end",
-      _isChainEvent: true,
+      _isChainEvent: false, // [全系统自洽修复] 域B 修复:链式根事件不应有_isChainEvent(否则永不被随机选中)
       phase: "street",
       icon: "🏚️",
       title: "钉子户的结局",
@@ -2692,7 +2692,7 @@
     },
     {
       id: "startup_meet_coder",
-      _isChainEvent: true,
+      _isChainEvent: false, // [全系统自洽修复] 域B 修复:链式根事件不应有_isChainEvent(否则永不被随机选中)
       phase: "street",
       icon: "💻",
       title: "咖啡馆里的创业梦",
@@ -2761,7 +2761,7 @@
     },
     {
       id: "startup_progress",
-      _isChainEvent: true,
+      _isChainEvent: false, // [全系统自洽修复] 域B 修复:链式根事件不应有_isChainEvent(否则永不被随机选中)
       phase: "street",
       icon: "📊",
       title: "App数据出来了",
@@ -2819,7 +2819,7 @@
     },
     {
       id: "startup_exit",
-      _isChainEvent: true,
+      _isChainEvent: false, // [全系统自洽修复] 域B 修复:链式根事件不应有_isChainEvent(否则永不被随机选中)
       phase: "street",
       icon: "🎢",
       title: "创业的终点",
@@ -2875,7 +2875,7 @@
     },
     {
       id: "gray_offer",
-      _isChainEvent: true,
+      _isChainEvent: false, // [全系统自洽修复] 域B 修复:链式根事件不应有_isChainEvent(否则永不被随机选中)
       phase: "street",
       icon: "😈",
       title: "老张的「路子」",
@@ -2936,7 +2936,7 @@
     },
     {
       id: "gray_collect",
-      _isChainEvent: true,
+      _isChainEvent: false, // [全系统自洽修复] 域B 修复:链式根事件不应有_isChainEvent(否则永不被随机选中)
       phase: "street",
       icon: "📸",
       title: "第一次收钱",
@@ -2977,7 +2977,7 @@
     },
     {
       id: "gray_cleanup",
-      _isChainEvent: true,
+      _isChainEvent: false, // [全系统自洽修复] 域B 修复:链式根事件不应有_isChainEvent(否则永不被随机选中)
       phase: "street",
       icon: "🚔",
       title: "警察回访调查",
@@ -3019,7 +3019,7 @@
     },
     {
       id: "gray_aftermath_reported",
-      _isChainEvent: true,
+      _isChainEvent: false, // [全系统自洽修复] 域B 修复:链式根事件不应有_isChainEvent(否则永不被随机选中)
       phase: "street",
       icon: "⚖️",
       title: "老张被抓了",
@@ -3058,7 +3058,7 @@
     },
     {
       id: "edu_rumor",
-      _isChainEvent: true,
+      _isChainEvent: false, // [全系统自洽修复] 域B 修复:链式根事件不应有_isChainEvent(否则永不被随机选中)
       phase: "street",
       icon: "📰",
       title: "教育行业要变天了",
@@ -3110,7 +3110,7 @@
     },
     {
       id: "edu_crash",
-      _isChainEvent: true,
+      _isChainEvent: false, // [全系统自洽修复] 域B 修复:链式根事件不应有_isChainEvent(否则永不被随机选中)
       phase: "street",
       icon: "💥",
       title: "「双减」真的来了",
@@ -3172,7 +3172,7 @@
     },
     {
       id: "edu_aftermath",
-      _isChainEvent: true,
+      _isChainEvent: false, // [全系统自洽修复] 域B 修复:链式根事件不应有_isChainEvent(否则永不被随机选中)
       phase: "street",
       icon: "♻️",
       title: "风暴过后",
@@ -3231,7 +3231,7 @@
     },
     {
       id: "ev_frenzy",
-      _isChainEvent: true,
+      _isChainEvent: false, // [全系统自洽修复] 域B 修复:链式根事件不应有_isChainEvent(否则永不被随机选中)
       phase: "street",
       icon: "⚡",
       title: "新能源车补贴退坡",
@@ -3286,7 +3286,7 @@
     },
     {
       id: "ev_shakeout",
-      _isChainEvent: true,
+      _isChainEvent: false, // [全系统自洽修复] 域B 修复:链式根事件不应有_isChainEvent(否则永不被随机选中)
       phase: "street",
       icon: "🏭",
       title: "行业洗牌开始了",
@@ -3340,7 +3340,7 @@
     },
     {
       id: "ev_recovery",
-      _isChainEvent: true,
+      _isChainEvent: false, // [全系统自洽修复] 域B 修复:链式根事件不应有_isChainEvent(否则永不被随机选中)
       phase: "street",
       icon: "📈",
       title: "时间的答案",
@@ -3389,7 +3389,7 @@
     // ====== 新链：黄金投机泡沫（3步链） ======
     {
       id: "gold_rush_start",
-      _isChainEvent: true,
+      _isChainEvent: false, // [全系统自洽修复] 域B 修复:链式根事件不应有_isChainEvent(否则永不被随机选中)
       phase: "street",
       icon: "🥇",
       title: "黄金暴涨！",
@@ -3453,7 +3453,7 @@
     },
     {
       id: "gold_rush_peak",
-      _isChainEvent: true,
+      _isChainEvent: false, // [全系统自洽修复] 域B 修复:链式根事件不应有_isChainEvent(否则永不被随机选中)
       phase: "street",
       icon: "📈",
       title: "金价冲到顶了",
@@ -3496,7 +3496,7 @@
     },
     {
       id: "gold_rush_crash",
-      _isChainEvent: true,
+      _isChainEvent: false, // [全系统自洽修复] 域B 修复:链式根事件不应有_isChainEvent(否则永不被随机选中)
       phase: "street",
       icon: "📉",
       title: "金价暴跌！",
@@ -3542,7 +3542,7 @@
     },
     {
       id: "gold_rush_rebound",
-      _isChainEvent: true,
+      _isChainEvent: false, // [全系统自洽修复] 域B 修复:链式根事件不应有_isChainEvent(否则永不被随机选中)
       phase: "street",
       icon: "🔄",
       title: "金价反弹",

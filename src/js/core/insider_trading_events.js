@@ -85,7 +85,7 @@
               return;
             }
             var shares = Math.floor(buyAmount / m.price);
-            st.resources.cash -= buyAmount;
+            st.resources.cash -= shares * m.price; // [全系统自洽修复] 域B: 用实际成交价而非buyAmount(避免多扣款)
             var h = st.investment.stockHoldings.find(function (s) {
               return s.symbol === sym;
             });
@@ -234,7 +234,7 @@
               return;
             }
             var shares = Math.floor(buyAmount / m.price);
-            st.resources.cash -= buyAmount;
+            st.resources.cash -= shares * m.price; // [全系统自洽修复] 域B: 用实际成交价而非buyAmount(避免多扣款)
             var h = st.investment.stockHoldings.find(function (s) {
               return s.symbol === target;
             });
