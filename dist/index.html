@@ -1438,7 +1438,7 @@ function createDefaultState() {
       },
       _deferred: {}, // { hunger: day, fatigue: day, ... } 当日延后过的临界维度
       _amenityHabitCount: {}, // { amenityId: count } 同一 amenity 累计使用次数（用于规律 buff）
-      _hypertensionMonthlyPaid: 0, // 高血压月费上次缴费日
+      // [全系统自洽修复] 域G A类修复: 删除 `_hypertensionMonthlyPaid` 死字段（illness.js 读写的是通用 `_chronicMonthlyPaid`，此字段从未被任何代码读取）
       _chainEventQueue: [], // 链式事件调度队列 [{ eventId, triggerDay, phase }]
 
       // --- 道德系统 ---
@@ -6067,7 +6067,8 @@ function dailyCleanup(state) {
       conditions: function (st) {
         // [自洽修复] st.needs.health 不存在（state.needs 无 health 字段），改为 st.status.health
         return (
-          st.player.day >= 10 || (st.status && st.status.health != null && st.status.health <= 70)
+          st.player.day >= 10 ||
+          (st.status && st.status.health != null && st.status.health <= 70)
         );
       },
       phase: "street",
@@ -29847,7 +29848,8 @@ function getStoryChapterChecklist(state) {
   var stats = _collectChapterStats(state);
   var day = p.day || 1;
   var totalAssets = (r.cash || 0) + (r.bankBalance || 0);
-  var debt = (r.villageDebt || 0) + (r.bankLoan || 0);
+  // [全系统自洽修复] 域G A类修复: state 中银行贷款字段为 `bankDebt`（见 state.js:66），原字段名 `bankLoan` 不存在→银行债务永不被计入 checklist
+  var debt = (r.villageDebt || 0) + (r.bankDebt || 0);
   var items = [];
 
   function add(label, done, hint, weight) {
@@ -82202,9 +82204,14 @@ if (typeof window !== "undefined") {
     phase: "street",
     icon: "😰",
     title: "债务压得喘不过气",
-    story: "夜深了，你翻来覆去睡不着。手机屏幕上银行的还款提醒数字格外刺眼。你算了一笔账——按现在的收入，不吃不喝也要好几个月才能还清。窗外灯火通明，你却觉得这座城市的夜晚格外冷。",
+    story:
+      "夜深了，你翻来覆去睡不着。手机屏幕上银行的还款提醒数字格外刺眼。你算了一笔账——按现在的收入，不吃不喝也要好几个月才能还清。窗外灯火通明，你却觉得这座城市的夜晚格外冷。",
     conditions: function (st) {
-      return st.player.phase === "street" && st.player.day >= 15 && (st.resources.debt || 0) >= 10000;
+      return (
+        st.player.phase === "street" &&
+        st.player.day >= 15 &&
+        (st.resources.debt || 0) >= 10000
+      );
     },
     excludeFlags: ["_debtAnxietyDone"],
     choices: [
@@ -82216,7 +82223,10 @@ if (typeof window !== "undefined") {
           st.skills.mental = st.skills.mental || { level: 0, xp: 0 };
           st.skills.mental.xp = (st.skills.mental.xp || 0) + 20;
           st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 5);
-          StateManager.addMessage("📝 你打开Excel，把债务拆分成12期。虽然数字还是那么大，但至少有了方向。心情+5，心智经验+20。", "success");
+          StateManager.addMessage(
+            "📝 你打开Excel，把债务拆分成12期。虽然数字还是那么大，但至少有了方向。心情+5，心智经验+20。",
+            "success",
+          );
         },
       },
       {
@@ -82226,7 +82236,10 @@ if (typeof window !== "undefined") {
           st.flags._debtAnxietyDone = true;
           st.needs.fatigue = Math.min(100, (st.needs.fatigue || 0) + 10);
           st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 3);
-          StateManager.addMessage("💪 你咬着牙关掉手机，定了个五点的闹钟。多干一份活，就多还一份钱。疲劳+10，心情+3。", "info");
+          StateManager.addMessage(
+            "💪 你咬着牙关掉手机，定了个五点的闹钟。多干一份活，就多还一份钱。疲劳+10，心情+3。",
+            "info",
+          );
         },
       },
       {
@@ -82236,7 +82249,10 @@ if (typeof window !== "undefined") {
           st.flags._debtAnxietyDone = true;
           st.status.health = Math.max(0, (st.status.health || 100) - 3);
           st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 2);
-          StateManager.addMessage("🍺 你买了瓶啤酒坐在路边喝。酒劲上来时，那些数字暂时模糊了。但明天醒来，它们还在。健康-3，心情+2。", "warning");
+          StateManager.addMessage(
+            "🍺 你买了瓶啤酒坐在路边喝。酒劲上来时，那些数字暂时模糊了。但明天醒来，它们还在。健康-3，心情+2。",
+            "warning",
+          );
         },
       },
     ],
@@ -82246,20 +82262,32 @@ if (typeof window !== "undefined") {
 // ===== 联动增强2：连续3天恶劣天气情绪事件 =====
 (function () {
   if (typeof RANDOM_EVENTS === "undefined") return;
-  var CONSECUTIVE_BAD_WEATHER = ["rainy", "heavy_rain", "stormy", "snowy", "heavy_snow", "foggy", "heavy_smog"];
+  var CONSECUTIVE_BAD_WEATHER = [
+    "rainy",
+    "heavy_rain",
+    "stormy",
+    "snowy",
+    "heavy_snow",
+    "foggy",
+    "heavy_smog",
+  ];
   RANDOM_EVENTS.push({
     id: "bad_weather_blues",
     _isChainEvent: false,
     phase: "street",
     icon: "🌧️",
     title: "连绵阴雨让人沮丧",
-    story: "雨已经连续下了好几天。空气里全是潮湿的霉味，衣服晾不干，鞋子进水了，连床单都带着一股潮气。你站在窗前，看着灰蒙蒙的天，感觉自己也快发霉了。",
+    story:
+      "雨已经连续下了好几天。空气里全是潮湿的霉味，衣服晾不干，鞋子进水了，连床单都带着一股潮气。你站在窗前，看着灰蒙蒙的天，感觉自己也快发霉了。",
     conditions: function (st) {
       if (st.player.phase !== "street" || st.player.day < 7) return false;
       if (!st.weather || !st.weather.current) return false;
       var isBad = false;
       for (var i = 0; i < CONSECUTIVE_BAD_WEATHER.length; i++) {
-        if (st.weather.current === CONSECUTIVE_BAD_WEATHER[i]) { isBad = true; break; }
+        if (st.weather.current === CONSECUTIVE_BAD_WEATHER[i]) {
+          isBad = true;
+          break;
+        }
       }
       if (!isBad) return false;
       // 检查连续天数（需要weatherHistory或类似机制，降级为简单门槛）
@@ -82274,7 +82302,10 @@ if (typeof window !== "undefined") {
           st.flags._badWeatherBluesDone = true;
           st.resources.cash = (st.resources.cash || 0) - 10;
           st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 5);
-          StateManager.addMessage("☕ 便利店的暖光灯下，一杯热奶茶下肚，整个人都活过来了。花费¥10，心情+5。", "success");
+          StateManager.addMessage(
+            "☕ 便利店的暖光灯下，一杯热奶茶下肚，整个人都活过来了。花费¥10，心情+5。",
+            "success",
+          );
         },
       },
       {
@@ -82283,7 +82314,10 @@ if (typeof window !== "undefined") {
         apply: function (st) {
           st.flags._badWeatherBluesDone = true;
           st.flags._rainMarketUmbrellaDay = st.player.day;
-          StateManager.addMessage("🏪 你想起老周说过——雨天批发市场雨具和防潮用品卖得特别好。你披上雨衣出了门。", "info");
+          StateManager.addMessage(
+            "🏪 你想起老周说过——雨天批发市场雨具和防潮用品卖得特别好。你披上雨衣出了门。",
+            "info",
+          );
         },
       },
       {
@@ -82293,7 +82327,10 @@ if (typeof window !== "undefined") {
           st.flags._badWeatherBluesDone = true;
           st.needs.fatigue = Math.max(0, (st.needs.fatigue || 0) - 5);
           st.needs.happiness = Math.max(0, (st.needs.happiness || 50) - 3);
-          StateManager.addMessage("😴 你裹着被子听着雨声发呆。虽然状态恢复了一些，但心里总觉得在浪费时间。", "info");
+          StateManager.addMessage(
+            "😴 你裹着被子听着雨声发呆。虽然状态恢复了一些，但心里总觉得在浪费时间。",
+            "info",
+          );
         },
       },
     ],
@@ -87571,57 +87608,52 @@ if (typeof window !== "undefined") {
       );
     },
     apply: function (st) {
-      var lastDest = st.travel.visitedDestinations[
-        st.travel.visitedDestinations.length - 1
-      ];
+      var lastDest =
+        st.travel.visitedDestinations[st.travel.visitedDestinations.length - 1];
       var destName = "";
       if (typeof TRAVEL_DESTINATIONS !== "undefined") {
         var d = TRAVEL_DESTINATIONS[lastDest];
         destName = d ? d.name : lastDest;
       }
       var weatherId = (st.weather && st.weather.current) || "sunny";
-      var weatherIcon = {
-        sunny: "☀️",
-        cloudy: "⛅",
-        rainy: "🌧️",
-        stormy: "⛈️",
-        snowy: "❄️",
-        foggy: "🌫️",
-        heatwave: "🥵",
-        cold_snap: "🥶",
-        heavy_smog: "😷",
-        typhoon: "🌀",
-        sandstorm: "🌪️",
-        plum_rain: "🌧️",
-      }[weatherId] || "☀️";
-      var weatherName = {
-        sunny: "晴朗",
-        cloudy: "多云",
-        rainy: "小雨",
-        stormy: "暴雨",
-        snowy: "下雪",
-        foggy: "大雾",
-        heatwave: "高温",
-        cold_snap: "寒潮",
-        heavy_smog: "重度雾霾",
-        typhoon: "台风",
-        sandstorm: "沙尘暴",
-        plum_rain: "梅雨",
-      }[weatherId] || "未知";
+      var weatherIcon =
+        {
+          sunny: "☀️",
+          cloudy: "⛅",
+          rainy: "🌧️",
+          stormy: "⛈️",
+          snowy: "❄️",
+          foggy: "🌫️",
+          heatwave: "🥵",
+          cold_snap: "🥶",
+          heavy_smog: "😷",
+          typhoon: "🌀",
+          sandstorm: "🌪️",
+          plum_rain: "🌧️",
+        }[weatherId] || "☀️";
+      var weatherName =
+        {
+          sunny: "晴朗",
+          cloudy: "多云",
+          rainy: "小雨",
+          stormy: "暴雨",
+          snowy: "下雪",
+          foggy: "大雾",
+          heatwave: "高温",
+          cold_snap: "寒潮",
+          heavy_smog: "重度雾霾",
+          typhoon: "台风",
+          sandstorm: "沙尘暴",
+          plum_rain: "梅雨",
+        }[weatherId] || "未知";
 
       // 好天气→旅行记忆延续；坏天气→落差感
       if (
         ["sunny", "cloudy"].indexOf(weatherId) >= 0 ||
         weatherId === "windy"
       ) {
-        st.needs.happiness = Math.min(
-          100,
-          (st.needs.happiness || 50) + 5,
-        );
-        st.player.mental = Math.min(
-          100,
-          (st.player.mental || 50) + 2,
-        );
+        st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 5);
+        st.player.mental = Math.min(100, (st.player.mental || 50) + 2);
         StateManager.addMessage(
           "🌤️ 从" +
             destName +
@@ -87629,10 +87661,7 @@ if (typeof window !== "undefined") {
           "success",
         );
       } else {
-        st.needs.happiness = Math.max(
-          0,
-          (st.needs.happiness || 50) - 3,
-        );
+        st.needs.happiness = Math.max(0, (st.needs.happiness || 50) - 3);
         StateManager.addMessage(
           "🌧️ 从" +
             destName +
@@ -87723,10 +87752,7 @@ if (typeof window !== "undefined") {
           (st.player.mental || 50) + bonus.mental,
         );
       if (bonus.charm)
-        st.player.charm = Math.min(
-          100,
-          (st.player.charm || 0) + bonus.charm,
-        );
+        st.player.charm = Math.min(100, (st.player.charm || 0) + bonus.charm);
       if (bonus.happiness)
         st.needs.happiness = Math.min(
           100,
@@ -87814,8 +87840,7 @@ if (typeof window !== "undefined") {
         "季节在变，行业在变，唯一不变的是你在这座城市里一天天走下去的决心。";
 
       if (hottestHeat < 1.0) {
-        narrative =
-          (seasonNarratives[season] || {}).low || narrative;
+        narrative = (seasonNarratives[season] || {}).low || narrative;
       }
 
       StateManager.addMessage(
@@ -87830,14 +87855,8 @@ if (typeof window !== "undefined") {
       );
 
       // 轻微 buff：季节与行业共振时给一点点心情/心智
-      st.needs.happiness = Math.min(
-        100,
-        (st.needs.happiness || 50) + 2,
-      );
-      st.player.mental = Math.min(
-        100,
-        (st.player.mental || 50) + 1,
-      );
+      st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 2);
+      st.player.mental = Math.min(100, (st.player.mental || 50) + 1);
 
       if (st.flags) st.flags._seasonSectorNarrativeDone = true;
     },
@@ -89702,8 +89721,7 @@ if (typeof window !== "undefined") {
         hint: "激活投资心态 + 小额试水",
         apply: function (st) {
           if (st.resources) {
-            st.resources.bankBalance =
-              (st.resources.bankBalance || 0) + 8000; // [PLACEHOLDER] 试水本金
+            st.resources.bankBalance = (st.resources.bankBalance || 0) + 8000; // [PLACEHOLDER] 试水本金
           }
           if (st.player) st.player.mental = (st.player.mental || 50) + 2;
           if (st.flags) {
@@ -89748,7 +89766,11 @@ if (typeof window !== "undefined") {
       if (!st || !st.player || !st.relationships) return false;
       var r = st.relationships.auntie_lin;
       if (!r || !r.met) return false; // 域D铁律：须 rel && rel.met
-      if (!(st.skills && st.skills.cooking && (st.skills.cooking.level || 0) >= 5))
+      if (!(
+        st.skills &&
+        st.skills.cooking &&
+        (st.skills.cooking.level || 0) >= 5
+      ))
         return false; // 需有点烹饪底子才懂门道
       if (st.flags && st.flags._auntieLinDealCooldown) {
         if (st.player.day - st.flags._auntieLinDealCooldown < 21) return false; // [PLACEHOLDER] 冷却21天
@@ -89765,13 +89787,19 @@ if (typeof window !== "undefined") {
             st.resources.cash = (st.resources.cash || 0) + save;
             st.resources.totalEarned = (st.resources.totalEarned || 0) + save;
           }
-          if (st.skills && st.skills.cooking && st.skills.cooking.xp !== undefined) {
+          if (
+            st.skills &&
+            st.skills.cooking &&
+            st.skills.cooking.xp !== undefined
+          ) {
             st.skills.cooking.xp = (st.skills.cooking.xp || 0) + 15; // [PLACEHOLDER] 烹饪经验
           }
           if (st.flags) st.flags._auntieLinDealCooldown = st.player.day;
           if (typeof StateManager !== "undefined" && StateManager.addMessage)
             StateManager.addMessage(
-              "🥬 你按批发价囤了菜，省下¥" + save + "，顺手跟林阿姨学了两手刀工（烹饪经验+15）。",
+              "🥬 你按批发价囤了菜，省下¥" +
+                save +
+                "，顺手跟林阿姨学了两手刀工（烹饪经验+15）。",
               "good",
             );
         },
@@ -89791,6 +89819,221 @@ if (typeof window !== "undefined") {
     ],
     probability: 0.04,
   });
+})();
+</script>
+    <!-- v3.118: 域E 联动增强(R27)·职业立足→私募圈层(E→C) / 组合回撤叙事化(E→B)-->
+    <script>// ============================================================
+// economy_linkage_events_r27.js — 域E(经济/投资) 联动增强 (R27)
+// ============================================================
+// 设计意图（指令二·通用联动方向）：
+//   LE1  econ_career_invest_unlock  → E→C 职业/事业积累 → 经济高阶机会
+//        让"财务立足 / 职场资深"在游戏里有经济延续回报，缝合职业收益与经济脱钩的空白区。
+//   LE2  econ_portfolio_drawdown    → E→B 经济波动 → 叙事包装
+//        把无形的组合回撤变成有重量的叙事时刻（损失厌恶 / 峰终定律），让玩家"记得"那次暴跌。
+//
+// 实现约定：
+//   - RANDOM_EVENTS 按 phase 严格过滤（events_core.js:401），故每个事件 street/corporate 各推一份。
+//   - 共享 seen/cooldown 标记，避免双阶段重复触发。
+//   - 全部数值 || 防御；apply 只改已存在字段，不引入死字段（避免 死字段→死事件）。
+//   - 组合峰值由 investment.js 的 tickInvestmentDaily 每日维护 inv._portfolioPeak（域E联动启用）。
+// ============================================================
+
+(function () {
+  if (typeof RANDOM_EVENTS === "undefined" || !RANDOM_EVENTS) return;
+  if (RANDOM_EVENTS._econLinkR27Loaded) return;
+  RANDOM_EVENTS._econLinkR27Loaded = true;
+
+  // 计算当前投资组合市值（股票+房产+比特币），全程 || 防御
+  function _portfolioValue(inv) {
+    if (!inv) return 0;
+    var total = 0;
+    var sm = inv.stockMarket || {};
+    var holdings = inv.stockHoldings || [];
+    for (var i = 0; i < holdings.length; i++) {
+      var h = holdings[i];
+      var m = sm[h.symbol];
+      if (m && isFinite(m.price) && isFinite(h.shares)) total += m.price * h.shares;
+    }
+    var props = inv.properties || [];
+    for (var j = 0; j < props.length; j++) {
+      var p = props[j];
+      total += p.currentPrice || p.buyPrice || 0;
+    }
+    if ((inv.btcHoldings || 0) > 0) total += (inv.btcPrice || 0) * inv.btcHoldings;
+    return total;
+  }
+
+  // ---------- LE1：职业/事业立足 → 私募跟投圈层 ----------
+  function makeCareerInvestEvent(phase) {
+    return {
+      id: "econ_career_invest_unlock_" + phase,
+      title: "💼 圈层敲门：私募跟投",
+      icon: "🤝",
+      phase: phase,
+      probability: 0.03, // 稀有·一次性机会
+      story:
+        "一个许久没联系的老同学突然约你喝咖啡。他这两年跟着前司老板做一级市场，今天半开玩笑半认真地说：" +
+        "「你现在也算站稳了，有个跟投额度，门槛不高，但圈子里才传。要不要了解下？」",
+      conditions: function (st) {
+        if (st.flags && st.flags._careerInvestUnlocked) return false;
+        var cash =
+          (st.resources.cash || 0) + (st.resources.bankBalance || 0);
+        // 财务立足 或 职场资深（职业→经济联动的两种兑现路径）
+        var senior =
+          st.corporate &&
+          ["P6", "P7", "P8", "P9", "P10"].indexOf(st.corporate.rank) >= 0;
+        return cash >= 200000 || !!senior; // [PLACEHOLDER] 阈值待调参
+      },
+      choices: [
+        {
+          text: "🚀 接受跟投邀请",
+          hint: "圈层资源 + 管理眼界 +",
+          apply: function (st) {
+            st.flags._careerInvestUnlocked = true;
+            var gain = 30000; // [PLACEHOLDER] 早期份额成熟落袋，叙事合理化
+            st.resources.cash = (st.resources.cash || 0) + gain;
+            if (st.skills) {
+              st.skills.management = Math.min(
+                100,
+                (st.skills.management || 0) + 3,
+              );
+            }
+            StateManager.addMessage(
+              "你早年跟投的老同学创业项目今天退出，分到 ¥" +
+                gain.toLocaleString() +
+                "。私募圈层向你敞开了门，管理眼界也开阔了。",
+              "success",
+            );
+          },
+        },
+        {
+          text: "🙅 婉拒，先观望",
+          hint: "人脉已记下",
+          apply: function (st) {
+            st.flags._careerInvestUnlocked = true;
+            StateManager.addMessage(
+              "你婉拒了邀约，但记住了这条人脉——说不定下次用得上。",
+              "info",
+            );
+          },
+        },
+      ],
+    };
+  }
+
+  // ---------- LE2：组合回撤 → 叙事化（损失厌恶 / 峰终定律） ----------
+  function makeDrawdownEvent(phase) {
+    return {
+      id: "econ_portfolio_drawdown_" + phase,
+      title: "📉 资产回撤：那次暴跌",
+      icon: "💸",
+      phase: phase,
+      probability: 0.04,
+      story:
+        "你盯着持仓界面，数字一片刺眼的红。从高点算，组合已经回撤了不止两成。" +
+        "手机弹窗还在推送「恐慌情绪蔓延」，你忽然意识到——这座城市从不保证谁一定能赢。",
+      conditions: function (st) {
+        var inv = st.investment;
+        if (!inv) return false;
+        if (!(inv._portfolioPeak > 0)) return false; // 峰值由每日 tick 维护
+        var cur = _portfolioValue(inv);
+        if (!(cur > 0)) return false;
+        var dd = (inv._portfolioPeak - cur) / inv._portfolioPeak;
+        if (dd < 0.2) return false; // 回撤超 20% 才触发 [PLACEHOLDER]
+        // 30 天冷却，避免熊市里天天弹窗
+        if (
+          st.flags._econDrawdownSeenDay &&
+          st.player.day - st.flags._econDrawdownSeenDay < 30
+        )
+          return false;
+        return true;
+      },
+      choices: [
+        {
+          text: "🩹 割肉止损（卖掉一半）",
+          hint: "落袋为安 · 现金 +",
+          apply: function (st) {
+            st.flags._econDrawdownSeenDay = st.player.day;
+            var inv = st.investment;
+            var h = inv.btcHoldings || 0;
+            // 优先减比特币（波动最大），其余资产等比减半
+            var sold = Math.floor(h * 0.5);
+            if (sold > 0) {
+              var px = inv.btcPrice || 0;
+              var cash = Math.round(sold * px);
+              inv.btcHoldings = h - sold;
+              st.resources.cash = (st.resources.cash || 0) + cash;
+              StateManager.addMessage(
+                "你割肉卖出 " +
+                  sold +
+                  " 枚比特币，回笼 ¥" +
+                  cash.toLocaleString() +
+                  "。",
+                "info",
+              );
+            }
+            if (st.needs)
+              st.needs.happiness = Math.max(
+                0,
+                (st.needs.happiness || 50) - 4,
+              );
+          },
+        },
+        {
+          text: "💪 逆势加仓",
+          hint: "赌反弹 · 需现金",
+          apply: function (st) {
+            st.flags._econDrawdownSeenDay = st.player.day;
+            var inv = st.investment;
+            var px = inv.btcPrice || 0;
+            var budget = Math.min(st.resources.cash || 0, 50000); // [PLACEHOLDER]
+            if (budget > px && px > 0) {
+              var bought = Math.floor(budget / px);
+              inv.btcHoldings = (inv.btcHoldings || 0) + bought;
+              st.resources.cash = (st.resources.cash || 0) - bought * px;
+              StateManager.addMessage(
+                "你逆势加仓 " + bought + " 枚，赌一波反弹。",
+                "warning",
+              );
+            } else {
+              StateManager.addMessage(
+                "你想加仓，但现金不够撬动仓位。",
+                "info",
+              );
+            }
+          },
+        },
+        {
+          text: "😶 装死，等回本",
+          hint: "无操作 · 心情 -",
+          apply: function (st) {
+            st.flags._econDrawdownSeenDay = st.player.day;
+            if (st.needs)
+              st.needs.happiness = Math.max(
+                0,
+                (st.needs.happiness || 50) - 6,
+              );
+            StateManager.addMessage(
+              "你把手机一扔，决定装死等回本。",
+              "info",
+            );
+          },
+        },
+      ],
+    };
+  }
+
+  // 每个事件按阶段各推一份（events_core.js 严格按 phase 过滤）
+  RANDOM_EVENTS.push(makeCareerInvestEvent("street"));
+  RANDOM_EVENTS.push(makeCareerInvestEvent("corporate"));
+  RANDOM_EVENTS.push(makeDrawdownEvent("street"));
+  RANDOM_EVENTS.push(makeDrawdownEvent("corporate"));
+
+  if (typeof console !== "undefined") {
+    console.log(
+      "[域E联动R27] 已注入 2 个经济联动事件（职业→经济 / 组合回撤叙事），各 street+corporate 双阶段。",
+    );
+  }
 })();
 </script>
     <!-- v3.108: 经济/投资域联动增强事件（E→A投资心态 / E→C金融盘感职业 / E→D落袋请友）-->
@@ -89979,6 +90222,220 @@ if (typeof window !== "undefined") {
         },
       ],
       probability: 0.04,
+    },
+
+    // ===== E→B：投资亏损后的心理事件（损失厌恶叙事化）=====
+    {
+      id: "invest_drawdown_moral",
+      title: "账户绿得发慌的那一周",
+      desc: "连续三天跌，持仓浮亏超过¥3000。你盯着屏幕，手指悬在\"全部卖出\"按钮上——要么割肉认栽，要么死扛到底。\n\n这种时候你才真正理解什么叫\"市场有风险\"。",
+      phase: "street",
+      triggers: { minDay: 90 },
+      conditions: function (st) {
+        if (!st || !st.player) return false;
+        if (st.flags && st.flags._drawdownMoralCooldown) return false;
+        if (!isInvestorE(st)) return false;
+        // 检查是否有持仓亏损（浮亏>10%）
+        var inv = st.investment;
+        if (!inv || !inv.stockHoldings) return false;
+        for (var i = 0; i < inv.stockHoldings.length; i++) {
+          var h = inv.stockHoldings[i];
+          var m = inv.stockMarket && inv.stockMarket[h.symbol];
+          if (m && m.price && h.avgPrice) {
+            var pnl = (m.price - h.avgPrice) / h.avgPrice;
+            if (pnl < -0.1) return true; // 浮亏>10%
+          }
+        }
+        return false;
+      },
+      choices: [
+        {
+          text: "🔪 割肉止损，保住本金",
+          apply: function (st) {
+            if (st.flags) st.flags._drawdownMoralCooldown = true;
+            // 卖出亏损最多的持仓
+            var inv = st.investment;
+            if (inv && inv.stockHoldings) {
+              var worstSym = null;
+              var worstPnl = 0;
+              for (var i = 0; i < inv.stockHoldings.length; i++) {
+                var h = inv.stockHoldings[i];
+                var m = inv.stockMarket && inv.stockMarket[h.symbol];
+                if (m && m.price && h.avgPrice && h.shares > 0) {
+                  var pnl = (m.price - h.avgPrice) / h.avgPrice;
+                  if (pnl < worstPnl) {
+                    worstPnl = pnl;
+                    worstSym = h.symbol;
+                  }
+                }
+              }
+              if (worstSym && typeof sellInvStock === "function") {
+                var shares = (inv.stockHoldings.find(function(h){return h.symbol===worstSym;})||{}).shares || 0;
+                sellInvStock(worstSym, shares);
+              }
+            }
+            if (st.player) st.player.mental = (st.player.mental || 50) + 3;
+            if (typeof StateManager !== "undefined" && StateManager.addMessage)
+              StateManager.addMessage("止损虽痛，但活下来才有下一次机会。心智+3。", "warning");
+          },
+        },
+        {
+          text: "💪 死扛到底，相信基本面",
+          apply: function (st) {
+            if (st.flags) st.flags._drawdownMoralCooldown = true;
+            if (st.player) st.player.mental = (st.player.mental || 50) + 5;
+            if (st.needs) st.needs.happiness = Math.max(0, (st.needs.happiness || 50) - 5);
+            if (typeof StateManager !== "undefined" && StateManager.addMessage)
+              StateManager.addMessage("你选择了相信自己的判断，暂时不动。心情-5，但心智+5——坚持也是一种能力。", "info");
+          },
+        },
+        {
+          text: "📚 趁此机会学习投资知识",
+          apply: function (st) {
+            if (st.flags) st.flags._drawdownMoralCooldown = true;
+            if (typeof addSkillXp === "function") addSkillXp("finance", 10);
+            if (st.player) st.player.mental = (st.player.mental || 50) + 4;
+            if (typeof StateManager !== "undefined" && StateManager.addMessage)
+              StateManager.addMessage("亏损是最好的老师。你翻开《股票作手回忆录》， finance+10。", "good");
+          },
+        },
+      ],
+      probability: 0.03,
+    },
+
+    // ===== E→D：NPC推荐投资机会（社交反哺经济）=====
+    {
+      id: "npc_invest_tip",
+      title: "朋友推荐的\"内部消息\"",
+      desc: "你常联系的某个朋友突然发消息：「我这边有个靠谱的项目，据说近期有大动作，要不要一起看看？」\n\n投资机会往往来自人脉——但也可能来自陷阱。",
+      phase: "street",
+      triggers: { minDay: 100 },
+      conditions: function (st) {
+        if (!st || !st.player) return false;
+        if (st.flags && st.flags._npcInvestTipCooldown) return false;
+        if (!isInvestorE(st)) return false;
+        // 至少一个已结识NPC（好感≥15）
+        var rels = st.relationships || {};
+        for (var id in rels) {
+          if (rels[id] && rels[id].met && (rels[id].affinity || 0) >= 15) return true;
+        }
+        return false;
+      },
+      probability: 0.03,
+      choices: [
+        {
+          text: "🤝 认真了解这个机会",
+          apply: function (st) {
+            if (st.flags) st.flags._npcInvestTipCooldown = true;
+            // 随机选择一个已结识NPC
+            var npcId = null;
+            var rels = st.relationships || {};
+            var candidates = [];
+            for (var id in rels) {
+              if (rels[id] && rels[id].met && (rels[id].affinity || 0) >= 15) {
+                candidates.push(id);
+              }
+            }
+            if (candidates.length > 0) {
+              npcId = candidates[Math.floor(Math.random() * candidates.length)];
+              if (typeof applyAffinityChange === "function") {
+                applyAffinityChange(st, npcId, 2, "投资机会分享");
+              }
+            }
+            // 机会分好坏：70%正面/30%陷阱
+            var isGood = Math.random() > 0.3;
+            if (isGood) {
+              if (typeof addSkillXp === "function") addSkillXp("finance", 5);
+              if (st.player) st.player.mental = (st.player.mental || 50) + 3;
+              if (typeof StateManager !== "undefined" && StateManager.addMessage)
+                StateManager.addMessage("朋友的推荐确实有价值！finance+5，心智+3。" + (npcId ? " [" + (npcId.charAt(0).toUpperCase()+npcId.slice(1)) + "] " : ""), "good");
+            } else {
+              if (st.player) st.player.morality = Math.max(0, (st.player.morality || 50) - 3);
+              if (st.needs) st.needs.happiness = Math.max(0, (st.needs.happiness || 50) - 8);
+              if (typeof StateManager !== "undefined" && StateManager.addMessage)
+                StateManager.addMessage("这次推荐不太靠谱…你意识到不能盲目听信。道德-3，心情-8。", "warning");
+            }
+          },
+        },
+        {
+          text: "🙏 礼貌感谢，婉拒机会",
+          apply: function (st) {
+            if (st.flags) st.flags._npcInvestTipCooldown = true;
+            if (st.player) st.player.morality = Math.min(100, (st.player.morality || 50) + 2);
+            if (typeof StateManager !== "undefined" && StateManager.addMessage)
+              StateManager.addMessage("你保持了理性，没有盲目跟风。道德+2。", "info");
+          },
+        },
+        {
+          text: "📊 先做功课再决定",
+          apply: function (st) {
+            if (st.flags) st.flags._npcInvestTipCooldown = true;
+            if (typeof addSkillXp === "function") addSkillXp("finance", 8);
+            if (st.player) st.player.mental = (st.player.mental || 50) + 2;
+            if (typeof StateManager !== "undefined" && StateManager.addMessage)
+              StateManager.addMessage("你花了几天研究相关行业的财报，finance+8。", "good");
+          },
+        },
+      ],
+    },
+
+    // ===== E→H：公司股权/期权事件（经济×Phase2）=====
+    {
+      id: "corp_equity_decision",
+      title: "公司给了你期权选择",
+      desc: "你在公司干得不错，主管找你谈话：「公司最近在推股权激励计划，你有资格参与。行权价 ¥[PLACEHOLDER]，分四年归属。」\n\n这是把双刃剑——涨了大赚，跌了白干。",
+      phase: "corporate",
+      triggers: { minDay: 200 },
+      conditions: function (st) {
+        if (!st || !st.player) return false;
+        if (st.flags && st.flags._corpEquityCooldown) return false;
+        if (st.player.phase !== "corporate") return false;
+        // 必须有公司
+        if (!st.corporate || !st.corporate.company) return false;
+        // 投资系统有持仓（说明玩家已经在关注投资）
+        return isInvestorE(st);
+      },
+      probability: 0.02,
+      choices: [
+        {
+          text: "✅ 接受期权，和公司绑在一起",
+          apply: function (st) {
+            if (st.flags) {
+              st.flags._corpEquityCooldown = true;
+              st.flags._hasCorpEquity = true;
+              st.flags._equityGrantDay = st.player.day;
+            }
+            // 消耗现金购买（象征性行权）
+            if (st.resources) {
+              st.resources.cash = Math.max(0, (st.resources.cash || 0) - 5000); // [PLACEHOLDER] 行权费
+            }
+            if (st.player.corporate) {
+              st.player.corporate.upward = Math.min(100, (st.player.corporate.upward || 50) + 8);
+            }
+            if (st.player) st.player.mental = (st.player.mental || 50) + 5;
+            if (typeof StateManager !== "undefined" && StateManager.addMessage)
+              StateManager.addMessage("你签了期权协议，和公司成了利益共同体。职场声誉+8，心智+5。", "success");
+          },
+        },
+        {
+          text: "📝 先拿纸质offer，再决定",
+          apply: function (st) {
+            if (st.flags) st.flags._corpEquityCooldown = true;
+            if (st.player) st.player.mental = (st.player.mental || 50) + 2;
+            if (typeof StateManager !== "undefined" && StateManager.addMessage)
+              StateManager.addMessage("你决定先研究透条款再签字。心智+2。", "info");
+          },
+        },
+        {
+          text: "❌ 拒绝，工资就够了",
+          apply: function (st) {
+            if (st.flags) st.flags._corpEquityCooldown = true;
+            if (st.player) st.player.morality = Math.min(100, (st.player.morality || 50) + 2);
+            if (typeof StateManager !== "undefined" && StateManager.addMessage)
+              StateManager.addMessage("你选择了简单直接——拿工资走人，不绑期权。道德+2。", "info");
+          },
+        },
+      ],
     },
   ];
 
@@ -96149,7 +96606,11 @@ const ERA_EVENTS = [
       "你在这座城市已经待了三个月。物价开始有了微妙的变化——菜价涨了5%，但你也学会了怎么挑便宜货。\n老周告诉你：「这年头，钱越来越不值钱了。得想办法多赚点。」",
     phase: "street",
     // v3.99d 约定式触发：第90天，仅触发一次
-    triggers: { minDay: 90, excludeFlags: ["_eraEvent_90"], relationshipMet: "old_zhou" }, // [全系统自洽修复] 域B: 加old_zhou met检查(叙事直呼老周)
+    triggers: {
+      minDay: 90,
+      excludeFlags: ["_eraEvent_90"],
+      relationshipMet: "old_zhou",
+    }, // [全系统自洽修复] 域B: 加old_zhou met检查(叙事直呼老周)
     choices: [
       {
         text: "💡 学老周，多囤点耐用品",
@@ -166332,9 +166793,18 @@ function applyNeedsDecay(state) {
   // [全系统自洽修复] 域G A类修复: 原 `(x||0)` 仅兜底首参，未覆盖 `Math.round(13*decayMul)` 中间值 NaN（Math.max(0,NaN)=NaN 非 0，需求阈值判定全面失灵）
   if (!isFinite(decayMul) || isNaN(decayMul)) decayMul = 1.0;
   decayMul = Math.max(0.1, Math.min(5.0, decayMul));
-  n.hunger = Math.max(0, Math.min(100, (n.hunger || 0) - Math.round(13 * decayMul)));
-  n.hygiene = Math.max(0, Math.min(100, (n.hygiene || 0) - Math.round(7 * decayMul)));
-  n.happiness = Math.max(0, Math.min(100, (n.happiness || 0) - Math.round(4 * decayMul)));
+  n.hunger = Math.max(
+    0,
+    Math.min(100, (n.hunger || 0) - Math.round(13 * decayMul)),
+  );
+  n.hygiene = Math.max(
+    0,
+    Math.min(100, (n.hygiene || 0) - Math.round(7 * decayMul)),
+  );
+  n.happiness = Math.max(
+    0,
+    Math.min(100, (n.happiness || 0) - Math.round(4 * decayMul)),
+  );
   // fatigue 在 endDay 中通过睡眠恢复单独处理
 }
 
@@ -179975,10 +180445,20 @@ function calcMaxBuyShares(symbol) {
 
 /** 渲染简易 K 线（折线图 + 颜色块） */
 function renderKLine(history, currentPrice) {
-  if (!history || history.length < 2) {
+  if (!history || !Array.isArray(history) || history.length < 2) {
     return '<div style="color:var(--text-muted);font-size:10px;">无历史数据</div>';
   }
-  const prices = history.map((h) => h.price);
+  // [全系统自洽修复] 域E 修复:history中可能有undefined项导致map崩溃
+  var prices = history
+    .filter(function (h) {
+      return h && isFinite(h.price);
+    })
+    .map(function (h) {
+      return h.price;
+    });
+  if (prices.length < 2) {
+    return '<div style="color:var(--text-muted);font-size:10px;">无历史数据</div>';
+  }
   const max = Math.max(...prices, currentPrice);
   const min = Math.min(...prices, currentPrice);
   const range = max - min || 1;
@@ -181885,6 +182365,31 @@ function tickInvestmentDaily(state) {
   }
 
   // ================================================================
+  // [域E联动] 组合市值峰值追踪（供 econ_portfolio_drawdown 事件判定回撤）
+  // 每日一次，无副作用；try/catch 隔离，绝不拖垮主 tick
+  // ================================================================
+  try {
+    var _pv = 0;
+    var _sm = inv.stockMarket || {};
+    var _holdings = inv.stockHoldings || [];
+    for (var _hi = 0; _hi < _holdings.length; _hi++) {
+      var _h = _holdings[_hi];
+      var _m = _sm[_h.symbol];
+      if (_m && isFinite(_m.price) && isFinite(_h.shares)) _pv += _m.price * _h.shares;
+    }
+    var _props = inv.properties || [];
+    for (var _pi = 0; _pi < _props.length; _pi++) {
+      _pv += _props[_pi].currentPrice || _props[_pi].buyPrice || 0;
+    }
+    if ((inv.btcHoldings || 0) > 0) _pv += (inv.btcPrice || 0) * inv.btcHoldings;
+    if (_pv > 0) {
+      if (!(inv._portfolioPeak > 0) || _pv > inv._portfolioPeak) inv._portfolioPeak = _pv;
+    }
+  } catch (e) {
+    // 静默：峰值追踪失败不影响主流程
+  }
+
+  // ================================================================
   // 投资里程碑检查（仅在有持仓时触发，每日最多一次）
   // ================================================================
   if (
@@ -181927,6 +182432,9 @@ function checkInvestmentMilestones(state, inv) {
     milestone = { level: 100000, label: "六位数持仓", icon: "💰" };
   } else if (totalValue >= 10000 && prevMilestone < 10000) {
     milestone = { level: 10000, label: "万元持仓", icon: "🪙" };
+  } else if (totalValue >= 1000 && prevMilestone < 1000) {
+    // [全系统自洽修复] 域E 修复:新增¥1000起步档，早期投资成就感
+    milestone = { level: 1000, label: "千元持仓", icon: "🌱" };
   }
 
   if (milestone) {
@@ -181943,7 +182451,9 @@ function checkInvestmentMilestones(state, inv) {
             ? " 距离财务自由又近了一步。"
             : milestone.level >= 100000
               ? " 投资初见成效，继续保持。"
-              : " 好的开始是成功的一半。"),
+              : milestone.level >= 10000
+                ? " 好的开始是成功的一半。"
+                : " 投资的第一步，永远是最难的。"),
       "success",
     );
   }
@@ -220087,10 +220597,10 @@ var _CLASSIC_STEPS = [
           <div style="margin-top:4px;">📊 <strong>5项需求</strong>：饥饿 · 疲劳 · 卫生 · 心情 · 健康</div>
         </div>
         <p style="font-size:11px;color:var(--text-muted);margin-top:4px;">💡 属性影响工作效率和事件结果；需求低于30触发危险提示</p>
-        <p style="color:var(--success);font-size:12px;margin-top:6px;">👆 点击左侧 <strong>状态面板</strong>（电脑端）或顶部 <strong>状态条</strong>（手机端）继续</p>
+        <p style="color:var(--success);font-size:12px;margin-top:6px;">👆 点击左侧 <strong>状态面板</strong>（电脑端）或顶部 <strong>☰ 菜单按钮</strong>（手机端）继续</p>
       `,
-    highlight: "#sidebar, #mobile-hud .mobile-stats-strip",
-    waitForClick: "#sidebar, #mobile-hud .mobile-stats-strip",
+    highlight: "#sidebar, #mobile-menu-btn",
+    waitForClick: "#sidebar, #mobile-menu-btn",
   },
   {
     title: "🏘️ 你在城中村，这是你的起点",
@@ -220138,21 +220648,24 @@ var _CLASSIC_STEPS = [
     highlight: '[data-tab="city"]',
     waitForClick: '[data-tab="city"]',
   },
-  // 步骤7：找住处（引导玩家用地图导航到城中村租床）
+  // 步骤7：找住处（了解城市地图上的住宿点，但不强制入住）
   {
-    title: "🛏️ 找住处，别露宿街头",
+    title: "🛏️ 了解住处——城市里的落脚点",
     body: `
         <p style="font-size:12px;line-height:1.7;margin-bottom:8px;">
           露宿街头每天 <strong style="color:var(--danger);">损耗健康</strong>、拉低心情。<br>
-          <strong>租个床位</strong>是今天最值得花的钱。
+          但露宿也有露宿的经历——这座城市深夜的街头，有它的故事。
         </p>
         <div style="background:rgba(74,158,92,0.08);border:1px solid rgba(74,158,92,0.2);border-radius:8px;padding:10px 12px;margin-bottom:10px;">
           <div style="font-size:12px;padding:3px 0;">🏘️ 合租床位 ¥30/天 — 最便宜的起步选择</div>
           <div style="font-size:12px;padding:3px 0;border-top:1px solid rgba(255,255,255,0.05);">🏠 单间出租 ¥80/天 — 攒够钱后再升级</div>
           <div style="font-size:12px;padding:3px 0;border-top:1px solid rgba(255,255,255,0.05);">💤 入住后每晚自动恢复疲劳和健康</div>
         </div>
-        <p style="font-size:11px;color:var(--text-muted);">用地图导航到城中村，找「出租屋」行动入住。</p>
-        <p style="color:var(--success);font-size:12px;margin-top:8px;">👆 点击顶部 <strong>🗺️ 地图</strong> 标签，去找住处吧</p>
+        <p style="font-size:11px;color:var(--text-secondary);">
+          💡 手头紧时先睡街头也没关系，攒够钱再租床位更从容。<br>
+          城中村的「出租屋」可以租床位，最低¥30/天。
+        </p>
+        <p style="color:var(--success);font-size:12px;margin-top:8px;">👆 点击顶部 <strong>🗺️ 地图</strong> 了解城市布局</p>
       `,
     highlight: '[data-tab="city"]',
     waitForClick: '[data-tab="city"]',
@@ -220948,7 +221461,37 @@ function _confirmSkip(steps) {
 /** 高亮页面元素 — v5.1 增强：滚动到可视区域 + 滚动/切换自动重定位 */
 function highlightElement(selector) {
   cleanupHighlight();
-  const el = document.querySelector(selector);
+  // 从逗号分隔的复合选择器中选取第一个可见的元素
+  // 用途：桌面端高亮 #sidebar，手机端自动切换到 #mobile-menu-btn
+  var candidates = selector.split(",").map(function (s) {
+    return s.trim();
+  });
+  var el = null;
+  for (var ci = 0; ci < candidates.length; ci++) {
+    var cand = document.querySelector(candidates[ci]);
+    if (cand) {
+      // 检查元素是否可见（offsetParent != null 且宽高 > 0）
+      var candRect = cand.getBoundingClientRect();
+      if (
+        cand.offsetParent !== null ||
+        candRect.width > 0 ||
+        candRect.height > 0
+      ) {
+        el = cand;
+        break;
+      }
+    }
+  }
+  // 兜底：用第一个存在的元素
+  if (!el) {
+    for (var ci2 = 0; ci2 < candidates.length; ci2++) {
+      var c2 = document.querySelector(candidates[ci2]);
+      if (c2) {
+        el = c2;
+        break;
+      }
+    }
+  }
   if (!el) return;
 
   // 将元素滚动到可视区域（平滑滚动到中央）
@@ -220978,7 +221521,22 @@ function highlightElement(selector) {
   function _repositionHighlight() {
     var cur = document.getElementById("tutorial-highlight");
     if (!cur) return;
-    var targetEl = document.querySelector(selector);
+    // 选中第一个可见的候选元素
+    var cands = selector.split(",").map(function (s) {
+      return s.trim();
+    });
+    var targetEl = null;
+    for (var ci = 0; ci < cands.length; ci++) {
+      var c = document.querySelector(cands[ci]);
+      if (
+        c &&
+        (c.offsetParent !== null || c.getBoundingClientRect().width > 0)
+      ) {
+        targetEl = c;
+        break;
+      }
+    }
+    if (!targetEl) targetEl = document.querySelector(cands[0]);
     if (!targetEl) return;
     var r = targetEl.getBoundingClientRect();
     cur.style.top = r.top - 6 + "px";
@@ -220996,25 +221554,38 @@ function highlightElement(selector) {
   // v5.1: 监听 #content-area 滚动（tab 内容切换、滚动时重定位高亮）
   if (!window._tutorialScrollHandler) {
     window._tutorialScrollHandler = function () {
-      if (window._tutorialScrollRaf) cancelAnimationFrame(window._tutorialScrollRaf);
+      if (window._tutorialScrollRaf)
+        cancelAnimationFrame(window._tutorialScrollRaf);
       window._tutorialScrollRaf = requestAnimationFrame(_repositionHighlight);
     };
-    var scrollEl = document.getElementById("content-area") || document.querySelector(".main-content");
+    var scrollEl =
+      document.getElementById("content-area") ||
+      document.querySelector(".main-content");
     if (scrollEl) {
-      scrollEl.addEventListener("scroll", window._tutorialScrollHandler, { passive: true });
+      scrollEl.addEventListener("scroll", window._tutorialScrollHandler, {
+        passive: true,
+      });
     }
-    window.addEventListener("scroll", window._tutorialScrollHandler, { passive: true });
+    window.addEventListener("scroll", window._tutorialScrollHandler, {
+      passive: true,
+    });
   }
 
   // v5.1: MutationObserver 监听 #content-area 内容变化（Tab切换时重定位高亮）
   if (!window._tutorialMutationObserver) {
-    var observeTarget = document.getElementById("content-area") || document.querySelector(".main-content");
+    var observeTarget =
+      document.getElementById("content-area") ||
+      document.querySelector(".main-content");
     if (observeTarget) {
       window._tutorialMutationObserver = new MutationObserver(function () {
-        if (window._tutorialMutationTimeout) clearTimeout(window._tutorialMutationTimeout);
+        if (window._tutorialMutationTimeout)
+          clearTimeout(window._tutorialMutationTimeout);
         window._tutorialMutationTimeout = setTimeout(_repositionHighlight, 200);
       });
-      window._tutorialMutationObserver.observe(observeTarget, { childList: true, subtree: true });
+      window._tutorialMutationObserver.observe(observeTarget, {
+        childList: true,
+        subtree: true,
+      });
     }
   }
 }
@@ -221031,7 +221602,9 @@ function cleanupHighlight() {
   }
   // v5.1: 清理 scroll 监听 + MutationObserver
   if (window._tutorialScrollHandler) {
-    var scrollEl = document.getElementById("content-area") || document.querySelector(".main-content");
+    var scrollEl =
+      document.getElementById("content-area") ||
+      document.querySelector(".main-content");
     if (scrollEl) {
       scrollEl.removeEventListener("scroll", window._tutorialScrollHandler);
     }
@@ -237535,7 +238108,8 @@ function startScenarioGame(scenarioId) {
   state.housing.tier = scenario.housingTier || 0;
   state.housing.rentedDay = state.player.day;
   // [全系统自洽修复] 域G A类修复: housing.tier 支持 0-6（详见 state.js:145），原数组仅 4 元素导致 tier≥4 时 capacity=undefined → 物品容量检查永久失效
-  state.inventory.capacity = [20, 50, 100, 200, 500, 1000, 2000][state.housing.tier] || 20;
+  state.inventory.capacity =
+    [20, 50, 100, 200, 500, 1000, 2000][state.housing.tier] || 20;
 
   // --- 起始地点 ---
   if (scenario.startLocation) {
@@ -238150,7 +238724,8 @@ function startSandboxGame() {
     state.housing.tier = Math.max(0, Math.min(3, cfg.housingTier || 0));
     state.housing.rentedDay = state.player.day;
     // [全系统自洽修复] 域G A类修复: housing.tier 上限扩容至 6（与 state.js:145 一致，tier≥4 时 capacity 不再为 undefined）
-    state.inventory.capacity = [20, 50, 100, 200, 500, 1000, 2000][state.housing.tier] || 20;
+    state.inventory.capacity =
+      [20, 50, 100, 200, 500, 1000, 2000][state.housing.tier] || 20;
 
     // --- 起始地点 ---
     if (cfg.startLocation) {
@@ -239232,7 +239807,8 @@ function getAvailableActions(state) {
               state.housing.storageRented = true;
               state.housing.storageCapacity = opt.capacity;
               // [全系统自洽修复] 域G A类修复: housing.tier 上限扩容至 6
-              const baseCap = [20, 50, 100, 200, 500, 1000, 2000][state.housing.tier] || 20;
+              const baseCap =
+                [20, 50, 100, 200, 500, 1000, 2000][state.housing.tier] || 20;
               state.inventory.capacity = baseCap + opt.capacity;
               StateManager.addMessage(
                 `📦 租下了${opt.name}！总容量提升至${state.inventory.capacity}。`,
@@ -241706,7 +242282,8 @@ function getNextGoals(state) {
         priority: 70,
       });
     }
-    if (cash + r.bankBalance >= 30000 && !s.status && s.status !== "none") {
+    // [全系统自洽修复] 域G A类修复: 原条件 `!s.status && s.status !== "none"` 逻辑矛盾（createDefaultState 默认值 "none" 永假）→ 创业目标从未触发
+    if (cash + r.bankBalance >= 30000 && (!s.status || s.status === "none")) {
       goals.push({ title: "🚀 考虑创业", desc: "去科技园注册", priority: 60 });
     }
   }

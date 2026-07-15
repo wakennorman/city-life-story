@@ -1304,6 +1304,31 @@ function tickInvestmentDaily(state) {
   }
 
   // ================================================================
+  // [域E联动] 组合市值峰值追踪（供 econ_portfolio_drawdown 事件判定回撤）
+  // 每日一次，无副作用；try/catch 隔离，绝不拖垮主 tick
+  // ================================================================
+  try {
+    var _pv = 0;
+    var _sm = inv.stockMarket || {};
+    var _holdings = inv.stockHoldings || [];
+    for (var _hi = 0; _hi < _holdings.length; _hi++) {
+      var _h = _holdings[_hi];
+      var _m = _sm[_h.symbol];
+      if (_m && isFinite(_m.price) && isFinite(_h.shares)) _pv += _m.price * _h.shares;
+    }
+    var _props = inv.properties || [];
+    for (var _pi = 0; _pi < _props.length; _pi++) {
+      _pv += _props[_pi].currentPrice || _props[_pi].buyPrice || 0;
+    }
+    if ((inv.btcHoldings || 0) > 0) _pv += (inv.btcPrice || 0) * inv.btcHoldings;
+    if (_pv > 0) {
+      if (!(inv._portfolioPeak > 0) || _pv > inv._portfolioPeak) inv._portfolioPeak = _pv;
+    }
+  } catch (e) {
+    // 静默：峰值追踪失败不影响主流程
+  }
+
+  // ================================================================
   // 投资里程碑检查（仅在有持仓时触发，每日最多一次）
   // ================================================================
   if (
@@ -1346,6 +1371,9 @@ function checkInvestmentMilestones(state, inv) {
     milestone = { level: 100000, label: "六位数持仓", icon: "💰" };
   } else if (totalValue >= 10000 && prevMilestone < 10000) {
     milestone = { level: 10000, label: "万元持仓", icon: "🪙" };
+  } else if (totalValue >= 1000 && prevMilestone < 1000) {
+    // [全系统自洽修复] 域E 修复:新增¥1000起步档，早期投资成就感
+    milestone = { level: 1000, label: "千元持仓", icon: "🌱" };
   }
 
   if (milestone) {
@@ -1362,7 +1390,9 @@ function checkInvestmentMilestones(state, inv) {
             ? " 距离财务自由又近了一步。"
             : milestone.level >= 100000
               ? " 投资初见成效，继续保持。"
-              : " 好的开始是成功的一半。"),
+              : milestone.level >= 10000
+                ? " 好的开始是成功的一半。"
+                : " 投资的第一步，永远是最难的。"),
       "success",
     );
   }

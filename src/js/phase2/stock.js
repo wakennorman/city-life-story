@@ -398,10 +398,20 @@ function calcMaxBuyShares(symbol) {
 
 /** 渲染简易 K 线（折线图 + 颜色块） */
 function renderKLine(history, currentPrice) {
-  if (!history || history.length < 2) {
+  if (!history || !Array.isArray(history) || history.length < 2) {
     return '<div style="color:var(--text-muted);font-size:10px;">无历史数据</div>';
   }
-  const prices = history.map((h) => h.price);
+  // [全系统自洽修复] 域E 修复:history中可能有undefined项导致map崩溃
+  var prices = history
+    .filter(function (h) {
+      return h && isFinite(h.price);
+    })
+    .map(function (h) {
+      return h.price;
+    });
+  if (prices.length < 2) {
+    return '<div style="color:var(--text-muted);font-size:10px;">无历史数据</div>';
+  }
   const max = Math.max(...prices, currentPrice);
   const min = Math.min(...prices, currentPrice);
   const range = max - min || 1;
