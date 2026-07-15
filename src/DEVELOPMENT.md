@@ -1,12 +1,24 @@
 # 城市浮生记 (City Life Story) — 开发文档
 
-> 最后更新: 2026-07-15（v3.118 loop R27 全系统优化·Domain E 经济/投资（第二轮）——A类修复0项（全量扫描 finance.js/economy_v3.1.js/stock.js/property_market.js/investment.js::tickInvestmentDaily：贷款额度·负债率·资产增信·新闻传导·房产周期·组合峰值全部 `||`/isFinite 守卫，结构性健康） + 联动增强2项（econ_career_invest_unlock E→C 私募跟投圈层 / econ_portfolio_drawdown E→B 组合峰值回撤损失厌恶叙事））
+> 最后更新: 2026-07-15（v3.119 loop R28 全系统优化·Domain F UI/UX（第三轮）——A类修复0项（结构性健康：wiki.js mechanics列表20条目全覆盖+_wikiDetailMechanic.pages字典完整、daily_report.js溢出ellipsis+键盘可达、modal.js关闭健全、navigation.js仅5 tab无移动端溢出、style.css 760px适配已覆盖、无死按钮） + 联动增强3项（heritage 传承币 / inheritance 多周目继承链 / social_net 社交网络 wiki 条目））
 > 上一版: v3.117 loop R26 全系统优化·Domain D NPC/社交（第二轮）——A类修复0项（全量扫描 career_path_events/personal_growth_events/skill_tree/skill_synergy/career_dev/career_linkage_events：技能键/职业path id/CAREER_PATHS 引用全部有效，career.currentJob 裸访问均经 _job/_path/if 守卫，无死职业·死技能·不可达触发） + 联动增强3项（career_enterprise_readiness C→H 职业硬技能兑现公司KPI / career_legacy_tale C→B 职业成就成城内叙事·置 _careerNarrativeSeen / career_resource_mastery C→A 熟练度换效率红利·智力回馈）
 >
 > commits: `feat: [域E] 联动增强(2项)` + `（docs）loop状态/迭代表`
 
 ---
 
+## 2026-07-15 — v3.119 loop R28 全系统优化·Domain F UI/UX（第三轮）（A类修复0项 + 联动增强3项 wiki 条目）
+
+> 循环迭代表见 CLAUDE.md「全系统优化·循环迭代表」。本轮域 = **F UI/UX**（第三轮；首轮 R9 / 次轮 R13）。
+
+- **A类修复 0 项**（结构性健康回合）：全量审计 UI 系统——`wiki.js`（mechanics 列表 20 条目全覆盖、`_wikiDetailMechanic.pages` 字典完整覆盖所有 20 条目、无空白详情死按钮）/ `mechanics_registry.js`（MECHANICS schema 自洽）/ `daily_report.js`（条目描述 `text-overflow:ellipsis` + 继续按钮焦点+回车/空格可达）/ `modal.js`（Esc+遮罩点击关闭健全）/ `navigation.js`（主导航仅 5 顶层 tab 无移动端溢出）/ `style.css`（多处 `@media (max-width:760px)` 移动端适配已覆盖）。所有“暂无”为空状态合法文案，非死按钮。本届判为「结构性健康」，与 R9/R13 同。
+- **联动增强 3 项**（为缺失 wiki 页的核心 Meta 机制补 `MECHANICS` 注册表条目，自动进百科列表并经 `_renderMechanicEntry` 渲染；均含 `related` 互链、防御性检查、移动端+桌面适配）：
+  1. `heritage`（传承币）：多周目累积 Meta 货币，4 维结算（成就×2 / 总资产对数×3 / 道德分×1可负 / 存活天数÷50）+ 6 项解锁（红绿互斥：祖传秘方↔祖辈教诲 / 人脉引荐↔启动资金 / 命格护佑·命运骰子可叠加）。
+  2. `inheritance`（多周目继承链）：6 类继承（声誉徽章 / NPC 关系 / 特殊物品 / 梦想进度 / 技能树 / 现金加成），与 heritage 配合：传承币买解锁、继承链保留关系与物品。
+  3. `social_net`（社交网络）：关系传导（帮助/得罪按关系网影响关联 NPC）+ 朋友圈/热搜（名气高则被提及扩大社交影响力），与 heritage 互链。
+  - 设计意图（玩家心理学）：传承币/继承链是跨周目留存核心钩子（峰终定律+禀赋效应），让每次重开都比上一次更强；社交网络把孤立好感升级为关系网（社会比较+网络效应）。三者 `related` 互链形成 Meta 系统文档闭环。
+- **碰撞说明（重要）**：本轮与并行窗口（同源 loop，域C）在同一共享工作树并发。pre-commit 钩子因 HEAD 漂移拦截本会话提交；本会话原提交 `9813e497`（仅 dist）为冗余分叉本地提交（push 不带走，可 `git gc` 清理）。R28 的 3 个 `MECHANICS` 条目最终由并行窗口在 `e72da430`（`feat: [域C] 联动增强(3项)—天赋树叙事事件`）经 `git add -A` 碰撞捕获、一并提交（含本会话 3 条目 + 其域C 事件），`ff27b10c` 为其后续。内容已落库，无需重做。
+- **验证**: `node --check` 全过（3 条目 schema 自洽）；纯静态文案条目，未跑 MC；构建由并行窗口完成（dist 含 3 条目）。
 ## 2026-07-15 — v3.118 loop R27 全系统优化·Domain E 经济/投资（第二轮）（A类修复0项 + 联动增强2项新事件）
 
 > 循环迭代表见 CLAUDE.md「全系统优化·循环迭代表」。本轮域 = **E 经济/投资**（第二轮；首轮 R15）。

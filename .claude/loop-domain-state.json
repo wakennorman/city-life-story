@@ -1,8 +1,8 @@
 {
-  "domain": "E",
-  "round": 27,
-  "lastCommit": "7278a344",
-  "lastDomain": "E",
+  "domain": "F",
+  "round": 28,
+  "lastCommit": "ff27b10c",
+  "lastDomain": "F",
   "status": "completed",
-  "note": "域E 经济/投资 第二轮：A类0项(结构性健康) + 联动增强2项(econ_career_invest_unlock E→C 私募跟投圈层 / econ_portfolio_drawdown E→B 组合峰值回撤损失厌恶叙事)；新建 economy_linkage_events_r27.js IIFE注入 RANDOM_EVENTS(street+corporate双变体)；MC 6×400d(4GB堆) 0代码异常；本地commit未push(代理127.0.0.1:3067不可用)；注：DEVELOPMENT.md v3.118头部将R27联动事件误标为data3_wealth_tax_intro/data3_market_saturation，与CLAUDE.md迭代表及round memo不一致，待单独核对"
+  "note": "域F UI/UX 第三轮：A类0项(结构性健康) + 联动增强3项(heritage传承币/inheritance多周目继承链/social_net社交网络 wiki条目, MECHANICS注册表扩展)。碰撞：并行窗口(域C)同改共享树，pre-commit拦截本会话提交；R28内容由并行窗口 e72da430 经 git add -A 碰撞捕获提交，ff27b10c 为其后续；本会话原 9813e497(仅dist)为冗余分叉本地提交，push不带走。下一轮应为 G 核心机制/生命周期。"
 }
