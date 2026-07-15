@@ -1,8 +1,1 @@
-{
-  "domain": "A",
-  "round": 25,
-  "lastCommit": "38da9e52",
-  "lastDomain": "A",
-  "status": "completed",
-  "note": "域A第三轮联动增强：隐形经济平衡数据叙事化(data3_wealth_tax_intro 累进财富税梯度 A→G / data3_market_saturation 市场饱和度惩罚 A→E)；A类0缺陷；另补提交R18 F域遗漏改动(0cb5f277)。tracker漂移已对账：R18-R24由自动化执行(见DEVELOPMENT.md v3.112-v3.115)，本表续至R17已失效。"
-}
+{"domain":"B","round":18,"lastCommit":"5ccc504e","lastDomain":"B","status":"completed","note":"域B 事件/叙事 A类11项修复+联动增强2项(高负债焦虑+恶劣天气情绪)"}
