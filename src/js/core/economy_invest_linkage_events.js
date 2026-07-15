@@ -422,9 +422,9 @@
               st.resources.cash = Math.max(0, (st.resources.cash || 0) - 5000); // [PLACEHOLDER] 行权费
             }
             if (st.player.corporate) {
-              st.player.corporate.upward = Math.min(
+              st.player.corporate.upwardMgmt = Math.min(
                 100,
-                (st.player.corporate.upward || 50) + 8,
+                (st.player.corporate.upwardMgmt || 50) + 8,
               );
             }
             if (st.player) st.player.mental = (st.player.mental || 50) + 5;

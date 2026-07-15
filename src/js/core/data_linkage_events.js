@@ -149,8 +149,8 @@
           text: "把这份专长转化为职场口碑",
           apply: function (st) {
             if (st.player && st.player.corporate)
-              st.player.corporate.upward = Math.min(
-                (st.player.corporate.upward || 50) + 5,
+              st.player.corporate.upwardMgmt = Math.min(
+                (st.player.corporate.upwardMgmt || 50) + 5,
                 100,
               ); // [PLACEHOLDER] 职场声誉回馈
             if (st.player) st.player.mental = (st.player.mental || 50) + 3;

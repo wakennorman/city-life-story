@@ -6343,9 +6343,9 @@
               100,
               (st.player.corporate.dignity || 60) + 15,
             );
-            st.player.corporate.upward = Math.min(
+            st.player.corporate.upwardMgmt = Math.min(
               100,
-              (st.player.corporate.upward || 50) + 10,
+              (st.player.corporate.upwardMgmt || 50) + 10,
             );
           }
           st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 12);
@@ -49596,9 +49596,9 @@
           st.flags = st.flags || {};
           st.flags._corpRepHeadhunt = true;
           if (st.player.corporate) {
-            st.player.corporate.upward = Math.min(
+            st.player.corporate.upwardMgmt = Math.min(
               100,
-              (st.player.corporate.upward || 50) + 15,
+              (st.player.corporate.upwardMgmt || 50) + 15,
             );
             st.player.corporate.dignity = Math.min(
               100,
@@ -49675,9 +49675,9 @@
             st.flags = st.flags || {};
             st.flags._corpSkillLead = true;
             if (st.player.corporate) {
-              st.player.corporate.upward = Math.min(
+              st.player.corporate.upwardMgmt = Math.min(
                 100,
-                (st.player.corporate.upward || 50) + 12,
+                (st.player.corporate.upwardMgmt || 50) + 12,
               );
             }
             var bonus = Random.int(1500, 4000); // [PLACEHOLDER] 依难度/通胀调整
@@ -49706,9 +49706,9 @@
             st.flags._corpSkillLead = true;
             st.flags._teamGoodwill = (st.flags._teamGoodwill || 0) + 1;
             if (st.player.corporate) {
-              st.player.corporate.upward = Math.min(
+              st.player.corporate.upwardMgmt = Math.min(
                 100,
-                (st.player.corporate.upward || 50) + 4,
+                (st.player.corporate.upwardMgmt || 50) + 4,
               );
             }
             st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 5);
@@ -50236,9 +50236,9 @@
             st.flags._corpNpcReferralSeen = true;
             st.flags._streetReferralActive = true;
             if (st.player.corporate) {
-              st.player.corporate.upward = Math.min(
+              st.player.corporate.upwardMgmt = Math.min(
                 100,
-                (st.player.corporate.upward || 50) + 6,
+                (st.player.corporate.upwardMgmt || 50) + 6,
               );
             }
             st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 6);
@@ -51920,5 +51920,152 @@
         },
       },
     ],
+  });
+})();
+
+// ===== 联动增强3：恶劣天气通勤（职场人暴风雨通勤）B→G/H =====
+(function () {
+  if (typeof RANDOM_EVENTS === "undefined") return;
+  var BAD_COMMUTE_WEATHER = ["stormy", "heavy_rain", "heavy_snow", "snowy"];
+  RANDOM_EVENTS.push({
+    id: "stormy_corp_commute",
+    _isChainEvent: false,
+    icon: "🌊",
+    title: "暴雨中的通勤路",
+    story:
+      "窗外的雨泼得像天漏了一样。你站在公司附近的十字路口，伞被风吹得翻了过去，裤腿湿到大腿。还有十分钟打卡，但面前这条积水已经漫过脚踝的路让你犹豫了——冲过去，还是一身湿透地进办公室？\n\n这场暴雨似乎在提醒你：这座城市从不因为你的狼狈而放缓它的节奏。",
+    conditions: function (st) {
+      if (!st || !st.player || !st.weather || !st.weather.current) return false;
+      if (st.player.phase !== "corporate" || st.player.day < 30) return false;
+      if (st.flags && st.flags._stormyCommuteDone) return false;
+      var w = st.weather.current;
+      var isBad = false;
+      for (var i = 0; i < BAD_COMMUTE_WEATHER.length; i++) {
+        if (w === BAD_COMMUTE_WEATHER[i]) {
+          isBad = true;
+          break;
+        }
+      }
+      return isBad;
+    },
+    excludeFlags: ["_stormyCommuteDone"],
+    choices: [
+      {
+        text: "💼 咬牙冲过去，不能迟到",
+        hint: "健康-，全勤+",
+        apply: function (st) {
+          st.flags._stormyCommuteDone = true;
+          st.status.health = Math.max(0, (st.status.health || 100) - 5);
+          if (st.player && st.player.corporate) {
+            st.player.corporate.kpi = Math.min(
+              100,
+              (st.player.corporate.kpi || 20) + 2,
+            );
+          }
+          st.player.mental = Math.min(100, (st.player.mental || 50) + 3);
+          StateManager.addMessage(
+            "💼 你踩着积水冲进公司，刚好赶上打卡。同事递来一条干毛巾，主管看在眼里。KPI+2，心智+3，健康-5。",
+            "info",
+          );
+        },
+      },
+      {
+        text: "☕ 进便利店躲雨，等小了再走",
+        hint: "心情+，但会迟到",
+        apply: function (st) {
+          st.flags._stormyCommuteDone = true;
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 5);
+          st.resources.cash = (st.resources.cash || 0) - 8;
+          StateManager.addMessage(
+            "☕ 你在便利店买了杯热咖啡，看着窗外雨幕发呆。迟到了十五分钟，但至少人是干的。心情+5，花费¥8。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "🏠 请半天假，远程办公",
+        hint: "健康不减，但职场存在感-",
+        apply: function (st) {
+          st.flags._stormyCommuteDone = true;
+          if (st.player && st.player.corporate) {
+            st.player.corporate.popularity = Math.max(
+              0,
+              (st.player.corporate.popularity || 30) - 3,
+            );
+          }
+          StateManager.addMessage(
+            "🏠 你发消息请了半天假。虽然人在家，但总觉得少了点什么。职场存在感-3。",
+            "warning",
+          );
+        },
+      },
+    ],
+    probability: 0.06,
+  });
+})();
+
+// ===== 联动增强4：长期露宿生存危机（街头韧性考验）B→A/G =====
+(function () {
+  if (typeof RANDOM_EVENTS === "undefined") return;
+  RANDOM_EVENTS.push({
+    id: "homeless_endurance_crisis",
+    _isChainEvent: false,
+    icon: "🏚️",
+    title: "天桥下的第N个夜晚",
+    story:
+      "你把硬纸板铺得再平整一些，裹紧身上那件已经看不出颜色的外套。天桥上车流轰鸣，震得骨头发麻。你已经记不清在这座城市睡了多久露宿了——只知道身体的每一声咳嗽都在提醒你，这样撑不了太久。\n\n风声里，你隐约听到远处传来夜市的喧闹。这座城市有千万种活法，而你正卡在最硬的那一种里。",
+    conditions: function (st) {
+      if (!st || !st.player || !st.housing) return false;
+      if (st.player.day < 45) return false;
+      if (st.housing.tier >= 1) return false; // 只要有住处就触发不了
+      if (st.flags && st.flags._homelessCrisisDone) return false;
+      if ((st.status.health || 100) < 40) return true;
+      if ((st.needs.happiness || 50) < 15) return true;
+      if ((st.player.mental || 50) < 15) return true;
+      return false;
+    },
+    excludeFlags: ["_homelessCrisisDone"],
+    choices: [
+      {
+        text: "💪 振作起来，今天多干几份活",
+        hint: "决心+，疲劳+",
+        apply: function (st) {
+          st.flags._homelessCrisisDone = true;
+          st.player.mental = Math.min(100, (st.player.mental || 50) + 5);
+          st.needs.fatigue = Math.min(100, (st.needs.fatigue || 50) + 15);
+          StateManager.addMessage(
+            "💪 你使劲搓了搓脸，迎着晨光走向劳务市场。不能再这样下去了——今天必须多赚点。心智+5，疲劳+15。",
+            "info",
+          );
+        },
+      },
+      {
+        text: "🏪 去救助站看看有没有临时工",
+        hint: "有机会获得物资或工作",
+        apply: function (st) {
+          st.flags._homelessCrisisDone = true;
+          st.needs.hunger = Math.min(100, (st.needs.hunger || 50) + 20);
+          st.resources.cash = (st.resources.cash || 0) + 30;
+          StateManager.addMessage(
+            "🏪 救助站发了一碗热粥和两个馒头，还贴着一张小广告：招夜班保安，包住。你小心地把号码存进手机。饥饿+20，现金+30。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "😞 在墙角缩成一团，熬过这一晚",
+        hint: "健康-，情绪触底",
+        apply: function (st) {
+          st.flags._homelessCrisisDone = true;
+          st.status.health = Math.max(0, (st.status.health || 100) - 8);
+          st.needs.happiness = Math.max(0, (st.needs.happiness || 50) - 10);
+          StateManager.addMessage(
+            "😞 你把报纸盖在脸上，假装什么都感觉不到。半夜被冻醒了一次，雨从桥缝漏下来打在脸上。天亮了，你还活着，但好像也没完全活着。健康-8，心情-10。",
+            "danger",
+          );
+        },
+      },
+    ],
+    probability: 0.04,
   });
 })();

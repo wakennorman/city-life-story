@@ -230,8 +230,11 @@ var LOCATION_EXTRA_ACTIONS = [
     handler: function (st) {
       st.resources.cash -= 10;
       st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 20);
-      if (st.morality !== undefined) {
-        st.morality = Math.max(-100, Math.min(100, st.morality + 1));
+      if (st.player.morality !== undefined) {
+        st.player.morality = Math.max(
+          -100,
+          Math.min(100, st.player.morality + 1),
+        );
       }
       StateManager.addMessage(
         "🧘 你在寺庙里打坐了一个小时。听着钟声，心静了下来，感觉整个人都轻松了。",

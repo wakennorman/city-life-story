@@ -166,7 +166,8 @@
       conditions: function (st) {
         if (!st || !st.player) return false;
         if (st.flags && st.flags._careerPromotionBonusDone) return false;
-        var upward = (st.player.corporate && st.player.corporate.upward) || 0;
+        var upward =
+          (st.player.corporate && st.player.corporate.upwardMgmt) || 0;
         if (upward < 60) return false; // [PLACEHOLDER] 晋升势能门槛
         return true;
       },
@@ -229,7 +230,8 @@
           apply: function (st) {
             // H域桥接：职业硬技能转化为公司 KPI（upward，惰性字段，全 || 防御）
             st.player.corporate = st.player.corporate || {};
-            st.player.corporate.upward = (st.player.corporate.upward || 0) + 8; // [PLACEHOLDER] 价值兑现
+            st.player.corporate.upwardMgmt =
+              (st.player.corporate.upwardMgmt || 0) + 8; // [PLACEHOLDER] 价值兑现
             if (st.player) st.player.mental = (st.player.mental || 50) + 4;
             if (st.flags) st.flags._careerEnterpriseReadyDone = true;
             if (typeof StateManager !== "undefined" && StateManager.addMessage)
@@ -243,7 +245,8 @@
           text: "低调沿用，不声张",
           apply: function (st) {
             st.player.corporate = st.player.corporate || {};
-            st.player.corporate.upward = (st.player.corporate.upward || 0) + 4; // [PLACEHOLDER]
+            st.player.corporate.upwardMgmt =
+              (st.player.corporate.upwardMgmt || 0) + 4; // [PLACEHOLDER]
             if (st.player) st.player.mental = (st.player.mental || 50) + 2;
             if (st.flags) st.flags._careerEnterpriseReadyDone = true;
           },

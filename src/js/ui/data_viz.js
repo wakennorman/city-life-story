@@ -423,13 +423,13 @@ function drawRadarChart(ctx, state, x, y, w, h, mode, overlayAttrs) {
       { label: "名气", value: p.fame || 0, color: "#d4a017" },
     ];
   } else {
-    const c = state.corporate || {};
+    const c = state.player.corporate || {};
     attrs = [
       { label: "发量", value: c.hair || 0, color: "#6b9cbe" },
       { label: "尊严", value: c.dignity || 0, color: "#a48aca" },
       { label: "KPI", value: Math.min(100, c.kpi || 0), color: "#c9a442" },
       { label: "能力", value: c.ability || 0, color: "#5a94ba" },
-      { label: "向上", value: c.upward || 0, color: "#c48e4a" },
+      { label: "向上", value: c.upwardMgmt || 0, color: "#c48e4a" },
       { label: "人缘", value: c.popularity || 0, color: "#cc7868" },
       { label: "风险", value: Math.min(100, c.risk || 0), color: "#c87062" },
     ];
@@ -775,13 +775,13 @@ function renderGrowthTab(state, container) {
 
   var stats = [];
   if (isCorporate) {
-    var c = state.corporate || {};
+    var c = state.player.corporate || {};
     stats = [
       { label: "发量", value: c.hair || 0, color: "#6b9cbe" },
       { label: "尊严", value: c.dignity || 0, color: "#a48aca" },
       { label: "KPI", value: Math.min(100, c.kpi || 0), color: "#c9a442" },
       { label: "能力", value: c.ability || 0, color: "#5a94ba" },
-      { label: "向上", value: c.upward || 0, color: "#c48e4a" },
+      { label: "向上", value: c.upwardMgmt || 0, color: "#c48e4a" },
       { label: "人缘", value: c.popularity || 0, color: "#cc7868" },
       { label: "风险", value: Math.min(100, c.risk || 0), color: "#c87062" },
     ];

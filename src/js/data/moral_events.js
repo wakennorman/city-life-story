@@ -734,10 +734,10 @@ const MORAL_EVENTS = [
         flag: "moral_colleague_snitch",
         score: -10,
         immediate: function (s) {
-          s.player.corporate.upward = Math.min(
+          s.player.corporate.upwardMgmt = Math.min(
             100,
-            (s.player.corporate.upward || 0) + 3,
-          );
+            (s.player.corporate.upwardMgmt || 0) + 3,
+          ); // [全系统自洽修复] 域B 修复: upward→upwardMgmt
           s.needs.happiness = Math.max(0, s.needs.happiness - 5);
           s.flags._colleagueFavor = (s.flags._colleagueFavor || 0) - 2;
           StateManager.addMessage(

@@ -175,7 +175,7 @@
         var upward =
           (st.player &&
             st.player.corporate &&
-            (st.player.corporate.upward || 50)) ||
+            (st.player.corporate.upwardMgmt || 50)) ||
           50;
         if (upward < 40) return false; // [PLACEHOLDER] 职场声誉门槛
         if (st.flags && st.flags._startupCareerLegacyDone) return false;
@@ -190,8 +190,8 @@
                 (st.startup.company.valuation || 0) * 1.08,
               ); // [PLACEHOLDER] 客户带来估值提升
             if (st.player && st.player.corporate)
-              st.player.corporate.upward = Math.min(
-                (st.player.corporate.upward || 50) + 5,
+              st.player.corporate.upwardMgmt = Math.min(
+                (st.player.corporate.upwardMgmt || 50) + 5,
                 100,
               ); // [PLACEHOLDER] 职场声誉回馈
             if (st.player) st.player.mental = (st.player.mental || 50) + 4;

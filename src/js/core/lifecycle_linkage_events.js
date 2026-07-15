@@ -178,9 +178,9 @@
           apply: function (st) {
             if (st.flags) st.flags._lastWorkAnnivYear = st.player.corpYear || 0;
             if (st.player.corporate) {
-              st.player.corporate.upward = Math.min(
+              st.player.corporate.upwardMgmt = Math.min(
                 100,
-                (st.player.corporate.upward || 50) +
+                (st.player.corporate.upwardMgmt || 50) +
                   5 /*[PLACEHOLDER] 职场声誉增益*/,
               );
             }
@@ -244,16 +244,27 @@
         },
         {
           text: "🤝 划拨一笔做公益捐赠",
-          hint: "道德+[PLACEHOLDER]，心智+[PLACEHOLDER]",
+          hint: "¥15%现金(≤¥20k)，道德+5，心智+3",
           apply: function (st) {
             if (st.flags) st.flags._estatePlanDone = true;
+            // [全系统自洽修复] 域B 修复: 叙事描述"捐一笔"但apply未扣款，按现金15%比例扣(封顶¥20k)
+            var donation = Math.min(
+              20000,
+              Math.max(5000, Math.floor((st.resources.cash || 0) * 0.15)),
+            );
+            st.resources.cash = Math.max(
+              0,
+              (st.resources.cash || 0) - donation,
+            );
             st.player.morality = Math.min(
               100,
               (st.player.morality || 50) + 5 /*[PLACEHOLDER] 道德增益*/,
             );
             st.player.mental = Math.min(100, (st.player.mental || 50) + 3);
             StateManager.addMessage(
-              "🤝 你决定划拨一笔，留给更需要的陌生人。钱离开了手，意义却留了下来。道德+5，心智+3。",
+              "🤝 你捐出¥" +
+                donation.toLocaleString() +
+                "委托给公益信托。钱离开了手，意义却留了下来。道德+5，心智+3。",
               "info",
             );
           },
@@ -440,7 +451,175 @@
     },
   });
 
-  /** ③ 世界参数×季节叙事 — 季节变化+行业热度触发专属事件（G×E 联动） */
+  /** ④ 季节初体验 — 第一场雪/第一场雨的人生标记（G→B 联动） */
+  // 设计心理学：峰终定律·季节转换的第一次总是最深刻
+  RANDOM_EVENTS.push({
+    id: "season_first_weather_echo",
+    icon: "🌨️",
+    title: "季节的第一场",
+    phase: "street",
+    probability: 0.05,
+    conditions: function (st) {
+      if (!st.weather || !st.weather.current || !st.weather.season)
+        return false;
+      if (st.flags && st.flags._seasonFirstWeatherSeen) return false;
+      if (st.player && st.player.day < 7) return false;
+      // 只有在出现对应季节的特征天气时才触发
+      var w = st.weather.current;
+      var s = st.weather.season;
+      var match = false;
+      // 冬→雪 春→雨/梅雨 夏→高温/暴雨 秋→雾/凉爽
+      if (
+        s === "winter" &&
+        (w === "snowy" || w === "heavy_snow" || w === "cold_snap")
+      )
+        match = true;
+      if (s === "spring" && (w === "rainy" || w === "plum_rain")) match = true;
+      if (
+        s === "summer" &&
+        (w === "heatwave" || w === "stormy" || w === "typhoon")
+      )
+        match = true;
+      if (s === "autumn" && (w === "foggy" || w === "heavy_smog")) match = true;
+      return match;
+    },
+    apply: function (st) {
+      if (st.flags) st.flags._seasonFirstWeatherSeen = true;
+      var seasonName = (st.weather && st.weather.season) || "未知";
+      var weatherId = (st.weather && st.weather.current) || "sunny";
+      var weatherLabel =
+        {
+          snowy: "雪",
+          heavy_snow: "大雪",
+          cold_snap: "寒潮",
+          rainy: "雨",
+          plum_rain: "梅雨",
+          heatwave: "高温",
+          stormy: "暴雨",
+          typhoon: "台风",
+          foggy: "雾",
+          heavy_smog: "雾霾",
+        }[weatherId] || weatherId;
+      var seasonLabel =
+        { spring: "春", summer: "夏", autumn: "秋", winter: "冬" }[
+          seasonName
+        ] || seasonName;
+
+      var housed = st.housing && st.housing.tier >= 1;
+      var poor =
+        (st.resources && (st.resources.cash || 0) < 500) ||
+        (st.housing && st.housing.tier === 0);
+
+      var narrative = "";
+      if (
+        weatherId === "snowy" ||
+        weatherId === "heavy_snow" ||
+        weatherId === "cold_snap"
+      ) {
+        if (poor) {
+          narrative =
+            seasonLabel +
+            "天的第一场" +
+            weatherLabel +
+            "落下来了。你裹紧衣服，看着雪花落在城市的屋顶上。冷，但这座城市安静下来的时候，有一种说不出的温柔。";
+        } else if (housed) {
+          narrative =
+            seasonLabel +
+            "天的第一场" +
+            weatherLabel +
+            "来了。你站在窗边看了一会儿——这座城市换上了银装，连平时嘈杂的街道都安静了许多。";
+        } else {
+          narrative =
+            seasonLabel +
+            "天的第一场" +
+            weatherLabel +
+            "不期而至。你停下脚步，抬头看了一眼飘落的白色——这座城市在告诉你，又过了一季。";
+        }
+      } else if (weatherId === "plum_rain" || weatherId === "rainy") {
+        narrative =
+          seasonLabel +
+          "天的第一场" +
+          weatherLabel +
+          "淅淅沥沥地下起来了。空气里有泥土和青草的味道——这座城市被洗过一遍，干净得让人想深呼吸。";
+      } else if (weatherId === "heatwave") {
+        narrative =
+          seasonLabel +
+          "天第一个高温日来了。阳光白晃晃地打在柏油路上，知了开始叫了——这座城市进入了最热烈的季节。";
+      } else if (weatherId === "typhoon" || weatherId === "stormy") {
+        narrative =
+          seasonLabel +
+          "天的第一场暴风雨。风很大，树被吹得东倒西歪——这座城市在经历它的脾气。";
+      } else {
+        narrative =
+          seasonLabel +
+          "天的第一场" +
+          weatherLabel +
+          "。这座城市换了一副面孔，你也是。";
+      }
+
+      st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 4);
+      st.player.mental = Math.min(100, (st.player.mental || 50) + 2);
+      StateManager.addMessage("🌨️ " + narrative + " 心情+4，心智+2。", "info");
+    },
+  });
+
+  /** ⑤ 失业空窗期 — 失去工作后的身份重构时刻（G→C 联动） */
+  // 设计心理学：损失厌恶·失去工作不仅是收入归零，更是社会坐标的迷失
+  RANDOM_EVENTS.push({
+    id: "jobless_identity_moment",
+    icon: "🚪",
+    title: "失业后的第一个早晨",
+    phase: "street",
+    probability: 0.05,
+    conditions: function (st) {
+      if (st.flags && st.flags._joblessIdentitySeen) return false;
+      if (st.player && st.player.day < 15) return false;
+      // 曾经有过工作，但现在失业了
+      var hadJob = st.flags && st.flags._everHadJob;
+      var currentlyJobless = !st.employment || !st.employment.currentJob;
+      return hadJob && currentlyJobless;
+    },
+    apply: function (st) {
+      if (st.flags) st.flags._joblessIdentitySeen = true;
+      var prevJobLabel = (st.flags && st.flags._lastJobLabel) || "之前的工作";
+      var cash = (st.resources && st.resources.cash) || 0;
+      var savings = cash + ((st.resources && st.resources.bankBalance) || 0);
+      var mentalDelta = 0;
+
+      var narrative = "";
+      if (savings < 1000) {
+        narrative =
+          prevJobLabel +
+          "没有了。你站在出租屋门口，银行卡里只剩¥" +
+          savings +
+          "。今天没有打卡，没有工位，没有要去的地方。但你清楚——这座城市不会等你缓过来。你得自己走出去。";
+        mentalDelta = 5;
+        st.flags._joblessMotivation = true;
+      } else if (savings < 10000) {
+        narrative =
+          prevJobLabel +
+          "成了过去式。你盘点了一下——积蓄还能撑一阵。但「闲」这件事比想象中更磨人。你决定给自己三天时间想清楚下一步，然后重新出发。";
+        mentalDelta = 3;
+      } else {
+        narrative =
+          prevJobLabel +
+          "结束了。你看着积蓄——不算多，但够你从容地找下一份工作。你忽然意识到，工作不只是收入，更是一种日常的锚。现在锚没了，你得重新找。";
+        mentalDelta = 2;
+      }
+
+      st.player.mental = Math.min(
+        100,
+        Math.max(0, (st.player.mental || 50) + mentalDelta),
+      );
+      st.needs.happiness = Math.max(0, (st.needs.happiness || 50) - 3);
+      StateManager.addMessage(
+        "🚪 " + narrative + " 心智+" + mentalDelta + "，心情-3。",
+        "warning",
+      );
+    },
+  });
+
+  /** ⑥ 世界参数×季节叙事 — 季节变化+行业热度触发专属事件（G×E 联动） */
   RANDOM_EVENTS.push({
     id: "season_sector_narrative",
     icon: "🍂",

@@ -238,9 +238,9 @@
           apply: function (st) {
             st.flags._colleagueInvestClub = true;
             if (st.player.corporate) {
-              st.player.corporate.upward = Math.min(
+              st.player.corporate.upwardMgmt = Math.min(
                 100,
-                (st.player.corporate.upward || 50) +
+                (st.player.corporate.upwardMgmt || 50) +
                   4 /*[PLACEHOLDER] 职场声誉增益*/,
               );
             }
@@ -272,9 +272,9 @@
           apply: function (st) {
             st.flags._colleagueInvestClub = true;
             if (st.player.corporate) {
-              st.player.corporate.upward = Math.min(
+              st.player.corporate.upwardMgmt = Math.min(
                 100,
-                (st.player.corporate.upward || 50) +
+                (st.player.corporate.upwardMgmt || 50) +
                   8 /*[PLACEHOLDER] 职场声誉增益（深）*/,
               );
             }
