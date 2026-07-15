@@ -322,6 +322,13 @@ powershell.exe -NoLogo -ExecutionPolicy Bypass -File "<ps1 完整路径>" %*
   - 🔧 **最终修复**：属性行改回`showTrack:false`，`.mss-cell-no-track .mss-label { flex: 1; }` — label吃剩余空间，数值推到右边缘，视觉效果与有track行一致
   - 验证：node --check / build.py 8323.8KB ✅
 
+- **R19 域A 数据/数值平衡 修复+增强**（commit `53efab63`，⚠️ 网络不可用待推）：
+  - 🔧 items.js: vitamins_item→vitamins_item2 礼物映射ID对齐（NPC送礼检测修复）
+  - 🆕 交易Tab市场事件标签（🔥行情看涨/💥行情看跌）
+  - 🆕 交易Tab头部活跃市场事件计数
+  - 🆕 职业Tab证书加成百分比展示
+  - 验证：node --check / build.py 8423.1KB ✅
+
 > ```
 > for (var i = 0; i < 30; i++) mc.run(1000);
 > mc.report();            // 聚合首末+资产区间

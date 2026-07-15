@@ -1,100 +1,42 @@
 {
-  "currentRound": 17,
-  "currentDomain": "F",
-  "nextDomain": "G",
-  "rotationIndex": 5,
-  "domainOrder": [
-    "A",
-    "B",
-    "C",
-    "D",
-    "E",
-    "F",
-    "G",
-    "H"
-  ],
-  "history": [
-    {
-      "round": 1,
-      "domain": "A"
-    },
-    {
-      "round": 2,
-      "domain": "B"
-    },
-    {
-      "round": 3,
-      "domain": "C"
-    },
-    {
-      "round": 4,
-      "domain": "D"
-    },
-    {
-      "round": 5,
-      "domain": "B"
-    },
-    {
-      "round": 6,
-      "domain": "D"
-    },
-    {
-      "round": 7,
-      "domain": "F"
-    },
-    {
-      "round": 8,
-      "domain": "E"
-    },
-    {
-      "round": 9,
-      "domain": "F"
-    },
-    {
-      "round": 10,
-      "domain": "G"
-    },
-    {
-      "round": 11,
-      "domain": "F"
-    },
-    {
-      "round": 12,
-      "domain": "G"
-    },
-    {
-      "round": 13,
-      "domain": "H"
-    },
-    {
-      "round": 14,
-      "domain": "A"
-    },
-    {
-      "round": 15,
-      "domain": "B"
-    },
-    {
-      "round": 16,
-      "domain": "D"
-    },
-    {
-      "round": 17,
-      "domain": "F"
-    }
-  ],
-  "lastDomain": "F",
-  "lastRound": 17,
-  "lastDate": "2026-07-14",
-  "completedDomains": [
-    "A",
-    "B",
-    "C",
-    "D",
-    "E",
-    "F",
-    "G",
-    "H"
-  ],
-  "description": "R17: 域F(UI) CSS属性值溢出修复 — mss-cell-no-track justify-content:space-between"
+    "currentRound": 19,
+    "currentDomain": "A",
+    "nextDomain": "B",
+    "rotationIndex": 0,
+    "domainOrder": [
+        "A",
+        "B",
+        "C",
+        "D",
+        "E",
+        "F",
+        "G",
+        "H"
+    ],
+    "history": [
+        {"round": 1, "domain": "A"},
+        {"round": 2, "domain": "B"},
+        {"round": 3, "domain": "C"},
+        {"round": 4, "domain": "D"},
+        {"round": 5, "domain": "B"},
+        {"round": 6, "domain": "D"},
+        {"round": 7, "domain": "F"},
+        {"round": 8, "domain": "E"},
+        {"round": 9, "domain": "F"},
+        {"round": 10, "domain": "G"},
+        {"round": 11, "domain": "F"},
+        {"round": 12, "domain": "G"},
+        {"round": 13, "domain": "H"},
+        {"round": 14, "domain": "A"},
+        {"round": 15, "domain": "B"},
+        {"round": 16, "domain": "D"},
+        {"round": 17, "domain": "F"},
+        {"round": 18, "domain": "G"},
+        {"round": 19, "domain": "A"}
+    ],
+    "lastDomain": "A",
+    "lastRound": 19,
+    "lastDate": "2026-07-15",
+    "completedDomains": ["A", "B", "C", "D", "E", "F", "G", "H"],
+    "description": "R19: 域A(数据/数值平衡) — 1项A类修复(items.js礼物映射ID对齐)+3项联动增强(市场事件标签/市场活动计数/证书加成百分比)"
 }

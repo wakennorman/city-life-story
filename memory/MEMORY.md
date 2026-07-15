@@ -1,3 +1,4 @@
+- [domain-a-optimization-round-19](domain-a-optimization-round-19.md) — R19域A: 1A类修复(礼物映射ID对齐)+3联动增强(市场事件标签/活动计数/证书加成百分比) (2026-07-15, commit 53efab63)
 - [domain-b-optimization-round-15](domain-b-optimization-round-15.md) — R15域B: 19A类修复(18cost扣款+1NPC met+1注册修复)+2联动增强(绝境回望/熊市阴影) (2026-07-14, commit 48990235)
 - [domain-a-optimization-round-14](domain-a-optimization-round-14.md) — 全系统优化R14 域A: 3A类修复(动态利率接入/沙盒利率/定价变量声明bug)+2联动增强(2026-07-14, commit be4b28a6)
 - [v3.99c-equip-nav-bugfix](v3.99c-equip-nav-bugfix.md) — 装备购买导航bug修复：navigateTo(state)缺少state参数导致点击无反应(2026-07-13, commit b8e04f7c)
@@ -65,3 +66,4 @@
 - [domain-optimization-round-16](domain-optimization-round-16.md) — R16 域D: 5A类修复(NPC关系网中译/拜访按钮事件/衰减速率/深度任务标记/拜访绕过applyAffinityChange)+3联动增强(矩阵补齐/衰减倒计时/NPC动态中文名) (2026-07-14, commit edeb101b/9a2659ea)
 - [v3.99f-domain-F-css-overflow-fix](v3.99f-domain-F-css-overflow-fix.md) — R17 域F: 手机端属性值数字溢出CSS修复(mss-cell-no-track justify-content:space-between) (2026-07-14, commit 820ab939)
 - [container-content-no-overflow-rule](container-content-no-overflow-rule.md) — UI设计铁律：所有容器内的内容不得溢出容器边界 (2026-07-14)
+- [v3.112-loop-R18-domain-G-optimization](domain-optimization-round-20.md) — R18 域G第四轮(核心机制/生命周期): 6 A类修复(illness fatigue/创业目标逻辑/capacity数组/needs NaN/死字段/字段名)+4联动(G→D名气社交/C职场/A情绪健康叙事/G→B季节初体验)（2026-07-15，commits 320bd11a+5f221cfa+7278a344）
