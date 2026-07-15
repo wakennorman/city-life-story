@@ -189,7 +189,7 @@
     {
       id: "invest_drawdown_moral",
       title: "账户绿得发慌的那一周",
-      desc: "连续三天跌，持仓浮亏超过¥3000。你盯着屏幕，手指悬在\"全部卖出\"按钮上——要么割肉认栽，要么死扛到底。\n\n这种时候你才真正理解什么叫\"市场有风险\"。",
+      desc: '连续三天跌，持仓浮亏超过¥3000。你盯着屏幕，手指悬在"全部卖出"按钮上——要么割肉认栽，要么死扛到底。\n\n这种时候你才真正理解什么叫"市场有风险"。',
       phase: "street",
       triggers: { minDay: 90 },
       conditions: function (st) {
@@ -231,13 +231,21 @@
                 }
               }
               if (worstSym && typeof sellInvStock === "function") {
-                var shares = (inv.stockHoldings.find(function(h){return h.symbol===worstSym;})||{}).shares || 0;
+                var shares =
+                  (
+                    inv.stockHoldings.find(function (h) {
+                      return h.symbol === worstSym;
+                    }) || {}
+                  ).shares || 0;
                 sellInvStock(worstSym, shares);
               }
             }
             if (st.player) st.player.mental = (st.player.mental || 50) + 3;
             if (typeof StateManager !== "undefined" && StateManager.addMessage)
-              StateManager.addMessage("止损虽痛，但活下来才有下一次机会。心智+3。", "warning");
+              StateManager.addMessage(
+                "止损虽痛，但活下来才有下一次机会。心智+3。",
+                "warning",
+              );
           },
         },
         {
@@ -245,9 +253,13 @@
           apply: function (st) {
             if (st.flags) st.flags._drawdownMoralCooldown = true;
             if (st.player) st.player.mental = (st.player.mental || 50) + 5;
-            if (st.needs) st.needs.happiness = Math.max(0, (st.needs.happiness || 50) - 5);
+            if (st.needs)
+              st.needs.happiness = Math.max(0, (st.needs.happiness || 50) - 5);
             if (typeof StateManager !== "undefined" && StateManager.addMessage)
-              StateManager.addMessage("你选择了相信自己的判断，暂时不动。心情-5，但心智+5——坚持也是一种能力。", "info");
+              StateManager.addMessage(
+                "你选择了相信自己的判断，暂时不动。心情-5，但心智+5——坚持也是一种能力。",
+                "info",
+              );
           },
         },
         {
@@ -257,7 +269,10 @@
             if (typeof addSkillXp === "function") addSkillXp("finance", 10);
             if (st.player) st.player.mental = (st.player.mental || 50) + 4;
             if (typeof StateManager !== "undefined" && StateManager.addMessage)
-              StateManager.addMessage("亏损是最好的老师。你翻开《股票作手回忆录》， finance+10。", "good");
+              StateManager.addMessage(
+                "亏损是最好的老师。你翻开《股票作手回忆录》， finance+10。",
+                "good",
+              );
           },
         },
       ],
@@ -267,7 +282,7 @@
     // ===== E→D：NPC推荐投资机会（社交反哺经济）=====
     {
       id: "npc_invest_tip",
-      title: "朋友推荐的\"内部消息\"",
+      title: '朋友推荐的"内部消息"',
       desc: "你常联系的某个朋友突然发消息：「我这边有个靠谱的项目，据说近期有大动作，要不要一起看看？」\n\n投资机会往往来自人脉——但也可能来自陷阱。",
       phase: "street",
       triggers: { minDay: 100 },
@@ -278,7 +293,8 @@
         // 至少一个已结识NPC（好感≥15）
         var rels = st.relationships || {};
         for (var id in rels) {
-          if (rels[id] && rels[id].met && (rels[id].affinity || 0) >= 15) return true;
+          if (rels[id] && rels[id].met && (rels[id].affinity || 0) >= 15)
+            return true;
         }
         return false;
       },
@@ -308,13 +324,38 @@
             if (isGood) {
               if (typeof addSkillXp === "function") addSkillXp("finance", 5);
               if (st.player) st.player.mental = (st.player.mental || 50) + 3;
-              if (typeof StateManager !== "undefined" && StateManager.addMessage)
-                StateManager.addMessage("朋友的推荐确实有价值！finance+5，心智+3。" + (npcId ? " [" + (npcId.charAt(0).toUpperCase()+npcId.slice(1)) + "] " : ""), "good");
+              if (
+                typeof StateManager !== "undefined" &&
+                StateManager.addMessage
+              )
+                StateManager.addMessage(
+                  "朋友的推荐确实有价值！finance+5，心智+3。" +
+                    (npcId
+                      ? " [" +
+                        (npcId.charAt(0).toUpperCase() + npcId.slice(1)) +
+                        "] "
+                      : ""),
+                  "good",
+                );
             } else {
-              if (st.player) st.player.morality = Math.max(0, (st.player.morality || 50) - 3);
-              if (st.needs) st.needs.happiness = Math.max(0, (st.needs.happiness || 50) - 8);
-              if (typeof StateManager !== "undefined" && StateManager.addMessage)
-                StateManager.addMessage("这次推荐不太靠谱…你意识到不能盲目听信。道德-3，心情-8。", "warning");
+              if (st.player)
+                st.player.morality = Math.max(
+                  0,
+                  (st.player.morality || 50) - 3,
+                );
+              if (st.needs)
+                st.needs.happiness = Math.max(
+                  0,
+                  (st.needs.happiness || 50) - 8,
+                );
+              if (
+                typeof StateManager !== "undefined" &&
+                StateManager.addMessage
+              )
+                StateManager.addMessage(
+                  "这次推荐不太靠谱…你意识到不能盲目听信。道德-3，心情-8。",
+                  "warning",
+                );
             }
           },
         },
@@ -322,9 +363,16 @@
           text: "🙏 礼貌感谢，婉拒机会",
           apply: function (st) {
             if (st.flags) st.flags._npcInvestTipCooldown = true;
-            if (st.player) st.player.morality = Math.min(100, (st.player.morality || 50) + 2);
+            if (st.player)
+              st.player.morality = Math.min(
+                100,
+                (st.player.morality || 50) + 2,
+              );
             if (typeof StateManager !== "undefined" && StateManager.addMessage)
-              StateManager.addMessage("你保持了理性，没有盲目跟风。道德+2。", "info");
+              StateManager.addMessage(
+                "你保持了理性，没有盲目跟风。道德+2。",
+                "info",
+              );
           },
         },
         {
@@ -334,7 +382,10 @@
             if (typeof addSkillXp === "function") addSkillXp("finance", 8);
             if (st.player) st.player.mental = (st.player.mental || 50) + 2;
             if (typeof StateManager !== "undefined" && StateManager.addMessage)
-              StateManager.addMessage("你花了几天研究相关行业的财报，finance+8。", "good");
+              StateManager.addMessage(
+                "你花了几天研究相关行业的财报，finance+8。",
+                "good",
+              );
           },
         },
       ],
@@ -371,11 +422,17 @@
               st.resources.cash = Math.max(0, (st.resources.cash || 0) - 5000); // [PLACEHOLDER] 行权费
             }
             if (st.player.corporate) {
-              st.player.corporate.upward = Math.min(100, (st.player.corporate.upward || 50) + 8);
+              st.player.corporate.upward = Math.min(
+                100,
+                (st.player.corporate.upward || 50) + 8,
+              );
             }
             if (st.player) st.player.mental = (st.player.mental || 50) + 5;
             if (typeof StateManager !== "undefined" && StateManager.addMessage)
-              StateManager.addMessage("你签了期权协议，和公司成了利益共同体。职场声誉+8，心智+5。", "success");
+              StateManager.addMessage(
+                "你签了期权协议，和公司成了利益共同体。职场声誉+8，心智+5。",
+                "success",
+              );
           },
         },
         {
@@ -384,16 +441,26 @@
             if (st.flags) st.flags._corpEquityCooldown = true;
             if (st.player) st.player.mental = (st.player.mental || 50) + 2;
             if (typeof StateManager !== "undefined" && StateManager.addMessage)
-              StateManager.addMessage("你决定先研究透条款再签字。心智+2。", "info");
+              StateManager.addMessage(
+                "你决定先研究透条款再签字。心智+2。",
+                "info",
+              );
           },
         },
         {
           text: "❌ 拒绝，工资就够了",
           apply: function (st) {
             if (st.flags) st.flags._corpEquityCooldown = true;
-            if (st.player) st.player.morality = Math.min(100, (st.player.morality || 50) + 2);
+            if (st.player)
+              st.player.morality = Math.min(
+                100,
+                (st.player.morality || 50) + 2,
+              );
             if (typeof StateManager !== "undefined" && StateManager.addMessage)
-              StateManager.addMessage("你选择了简单直接——拿工资走人，不绑期权。道德+2。", "info");
+              StateManager.addMessage(
+                "你选择了简单直接——拿工资走人，不绑期权。道德+2。",
+                "info",
+              );
           },
         },
       ],

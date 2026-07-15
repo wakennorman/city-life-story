@@ -45,8 +45,7 @@
         hint: "激活投资心态 + 小额试水",
         apply: function (st) {
           if (st.resources) {
-            st.resources.bankBalance =
-              (st.resources.bankBalance || 0) + 8000; // [PLACEHOLDER] 试水本金
+            st.resources.bankBalance = (st.resources.bankBalance || 0) + 8000; // [PLACEHOLDER] 试水本金
           }
           if (st.player) st.player.mental = (st.player.mental || 50) + 2;
           if (st.flags) {
@@ -91,7 +90,11 @@
       if (!st || !st.player || !st.relationships) return false;
       var r = st.relationships.auntie_lin;
       if (!r || !r.met) return false; // 域D铁律：须 rel && rel.met
-      if (!(st.skills && st.skills.cooking && (st.skills.cooking.level || 0) >= 5))
+      if (!(
+        st.skills &&
+        st.skills.cooking &&
+        (st.skills.cooking.level || 0) >= 5
+      ))
         return false; // 需有点烹饪底子才懂门道
       if (st.flags && st.flags._auntieLinDealCooldown) {
         if (st.player.day - st.flags._auntieLinDealCooldown < 21) return false; // [PLACEHOLDER] 冷却21天
@@ -108,13 +111,19 @@
             st.resources.cash = (st.resources.cash || 0) + save;
             st.resources.totalEarned = (st.resources.totalEarned || 0) + save;
           }
-          if (st.skills && st.skills.cooking && st.skills.cooking.xp !== undefined) {
+          if (
+            st.skills &&
+            st.skills.cooking &&
+            st.skills.cooking.xp !== undefined
+          ) {
             st.skills.cooking.xp = (st.skills.cooking.xp || 0) + 15; // [PLACEHOLDER] 烹饪经验
           }
           if (st.flags) st.flags._auntieLinDealCooldown = st.player.day;
           if (typeof StateManager !== "undefined" && StateManager.addMessage)
             StateManager.addMessage(
-              "🥬 你按批发价囤了菜，省下¥" + save + "，顺手跟林阿姨学了两手刀工（烹饪经验+15）。",
+              "🥬 你按批发价囤了菜，省下¥" +
+                save +
+                "，顺手跟林阿姨学了两手刀工（烹饪经验+15）。",
               "good",
             );
         },
