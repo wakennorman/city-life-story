@@ -100,7 +100,7 @@
 - **指令一**：审查+修 A类缺陷（引用不存在id/裸访问崩溃/conditions应守未守），每修加 `// [全系统自洽修复] 域X 修复:xxx`
 - **指令二**：联动增强 2-4 项，MC 10×500d 冒烟
 - **每轮交付**：①修复清单 ②增强清单 ③CLAUDE.md 迭代表 ④`domain-optimization-round-N.md`+MEMORY ⑤`.claude/loop-domain-state.json`
-- **状态**：`.claude/loop-domain-state.json`（currentRound/currentDomain/domainOrder/history）。2026-07-12 真实进度：A/B/C 已完成，下轮 D（见该 JSON）
+- **状态**：`.claude/loop-domain-state.json`（currentRound/currentDomain/domainOrder/history）。2026-07-15 实测进度：自动化已跑至 **R24**（R23=B事件/叙事·R24=C职业，见 `src/DEVELOPMENT.md` v3.115）；本回合手动补 R18(F UI遗漏提交 `0cb5f277`)+R25(A数据 `38da9e52`，A类0缺陷+2联动：隐形财富税/市场饱和叙事化)。**Tracker 曾严重漂移**（loop-state 记 R17、CLAUDE.md 表续至 R17、DEVELOPMENT.md 却到 v3.115）→ 已对账，R18-R24 细节以 DEVELOPMENT.md 为准。⚠️ **git push 因本地代理 127.0.0.1:3067 未起全部失败**，本地 commit 正常，需用户起代理后协调推送。本回合(D域第二轮) **R26**：A类3项(`auntie_lin`/`chen_ge`/`ajie` 永久 dormant 激活，补齐 met 路径)+联动2项(`npc_chen_ge_market_whisper` D→E 经济门路边语 / `npc_auntie_lin_fresh_deal` D→A 菜价门道)，MC 6×400d 0 代码异常。用户指示：**先不 push，本地 commit 干净即可**。
 
 ### 关键陷阱（R1/R2 实测，详见 domain-optimization-round-1/2.md）
 

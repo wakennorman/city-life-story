@@ -68,3 +68,4 @@
 - [v3.99f-domain-F-css-overflow-fix](v3.99f-domain-F-css-overflow-fix.md) — R17 域F: 手机端属性值数字溢出CSS修复(mss-cell-no-track justify-content:space-between) (2026-07-14, commit 820ab939)
 - [container-content-no-overflow-rule](container-content-no-overflow-rule.md) — UI设计铁律：所有容器内的内容不得溢出容器边界 (2026-07-14)
 - [v3.112-loop-R18-domain-G-optimization](domain-optimization-round-20.md) — R18 域G第四轮(核心机制/生命周期): 6 A类修复(illness fatigue/创业目标逻辑/capacity数组/needs NaN/死字段/字段名)+4联动(G→D名气社交/C职场/A情绪健康叙事/G→B季节初体验)（2026-07-15，commits 320bd11a+5f221cfa+7278a344）
+- [domain-optimization-round-20](domain-optimization-round-20.md) — R20 域B: 跨文件A类修复(upward→upwardMgmt 10文件+actions.js morality裸根+data_viz路径)+2联动增强(暴雨通勤+露宿危机) (2026-07-15, commit 962aa45e)

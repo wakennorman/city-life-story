@@ -329,12 +329,14 @@ powershell.exe -NoLogo -ExecutionPolicy Bypass -File "<ps1 完整路径>" %*
   - 🆕 职业Tab证书加成百分比展示
   - 验证：node --check / build.py 8423.1KB ✅
 
-- **R20 域B 事件/叙事 修复+增强**（commit `7278a344`）：
-  - 🔧 lifecycle_linkage_events.js: life_estate_planning公益捐赠choice缺现金扣款（A类·TYPE 4）
-  - 🔧 events_street_wealth.js: subsidy_war_crash 文本"需¥500"与实际cost=200不符（B类）
-  - 🆕 season_first_weather_echo：季节初体验叙事（G→B联动·峰终定律）
-  - 🆕 jobless_identity_moment：失业空窗期身份重构叙事（G→C联动·损失厌恶）
-  - 验证：node --check / build.py 8444.2KB ✅
+- **R20 域B 事件/叙事 修复+增强**（commit `7278a344`+`962aa45e`）：
+  - 🔧 跨文件A类修复：upward→upwardMgmt（10文件，游戏引擎读upwardMgmt但事件写upward导致效果全无效）
+  - 🔧 actions.js: st.morality→st.player.morality（寺庙静心道德+1从未生效）
+  - 🔧 data_viz.js: 雷达图state.corporate→state.player.corporate + upward→upwardMgmt（7项属性全是0）
+  - 🔧 lifecycle_milestone_events: st.corporate.upward→st.player.corporate.upwardMgmt+守卫拆分
+  - 🆕 stormy_corp_commute：恶劣天气×职场通勤叙事（B→G/H）
+  - 🆕 homeless_endurance_crisis：长期露宿生存危机（B→A/G）
+  - 验证：node --check / build.py 8445.2KB ✅
 
 > ```
 > for (var i = 0; i < 30; i++) mc.run(1000);

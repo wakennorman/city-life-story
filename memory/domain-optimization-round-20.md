@@ -1,40 +1,51 @@
 ---
 name: domain-optimization-round-20
-description: "R20: 全系统优化 域B(事件/叙事) — 1项A类+1项B类修复+2项联动增强（季节初体验/失业空窗期）"
+description: 全系统优化R20 域B(事件/叙事) — 跨文件A类修复(upward→upwardMgmt 10文件)+2联动增强
 metadata:
   type: project
+  domain: "B"
+  round: 20
 ---
 
-# R20 (parent loop) — 域B 事件/叙事（2026-07-15）
+# 全系统优化 R20 — 域B 事件/叙事（2026-07-15）
 
-## 指令一：A类+ B类缺陷修复
+## 指令一：A类缺陷修复
 
-### A类修复（1项）
+### 跨文件 upward→upwardMgmt（10文件）
 
-| 文件 | 事件 | 缺陷 | 修复 |
-|------|------|------|------|
-| lifecycle_linkage_events.js | life_estate_planning | "划拨一笔做公益捐赠"choice 描述捐钱但 apply 未扣现金 | 加入 `donation = min(¥20k, 现金15%)` 动态扣款 |
+所有事件文件写 `st.player.corporate.upward`（wrong），但游戏引擎(`perf.js`)/UI(`render.js`)读 `st.player.corporate.upwardMgmt`。
+10个文件修复：
 
-### B类修复（1项）
+| 文件 | 修复内容 | 影响 |
+|------|---------|------|
+| career_linkage_events.js | 3处 up→upwardMgmt | 职场事件效果对引擎生效 |
+| company_linkage_events.js | 3处 up→upwardMgmt | 公司联动事件生效 |
+| cross_system_events.js | ~10处 up→upwardMgmt | 跨系统事件生效 |
+| data_linkage_events.js | 2处 up→upwardMgmt | 数据联动事件生效 |
+| economy_invest_linkage_events.js | 2处 up→upwardMgmt | 投资联动事件生效 |
+| economy_linkage_events.js | 4处 up→upwardMgmt | 经济联动事件生效 |
+| lifecycle_linkage_events.js | 2处 up→upwardMgmt | 生命周期事件生效 |
+| lifecycle_milestone_events.js | 1处 up→upwardMgmt + 守卫拆分 | 里程碑事件生效 |
+| moral_events.js | 2处 up→upwardMgmt | 道德事件生效 |
+| data_viz.js | 雷达图 state.corporate→player.corporate + upward→upwardMgmt | 雷达图首次展示正确属性值 |
 
-| 文件 | 事件 | 缺陷 | 修复 |
-|------|------|------|------|
-| events_street_wealth.js | subsidy_war_crash | choice 文本"需¥500"但实际 cost=200 | 文本修正为"需¥200" |
+### actions.js: st.morality 裸根 bug
+- `actions.js:233-234`: 寺庙静心使用 `st.morality` → `st.player.morality`（道德+1从未生效）
 
 ## 指令二：联动增强（2项）
 
 | 新增事件 | 文件 | 联动域 | 设计意图 |
-|----------|------|--------|----------|
-| season_first_weather_echo | lifecycle_linkage_events.js | G→B | 季节初体验·峰终定律：首雪/首雨/首高温等季节特征天气首次出现时触发叙事回响，情绪+4，心智+2 |
-| jobless_identity_moment | lifecycle_linkage_events.js | G→C | 失业空窗期·损失厌恶：曾有工作后首次失业时触发身份重构叙事，按存款分三档不同叙事，心情-3，心智+2~5 |
+|---------|------|--------|---------|
+| stormy_corp_commute | cross_system_events.js | B→G/H(天气×职场) | 恶劣天气下corporate通勤抉择 |
+| homeless_endurance_crisis | cross_system_events.js | B→A/G(住房×健康) | 长期露宿生存危机叙事 |
 
-## 修复心理学依据
+## 交付状态
 
-- **season_first_weather_echo**：峰终定律 — 第一次总是最深刻
-- **jobless_identity_moment**：损失厌恶 — 失去工作不仅是收入归零，更是社会坐标的迷失
+- node --check 全部通过 ✅
+- python build.py 8445.2KB ✅
+- git commit 962aa45e ✅
+- git push: ❌ 网络代理不可用
 
-## 验证
+## 下一轮推荐
 
-- [x] node --check: 全部通过
-- [x] python build.py: 8444.2 KB
-- [x] git commit (子模块 7278a344 + 父仓库)
+域C（职业/成长）— 检查 R24/R25 后新技能/新职业路径的事件覆盖
