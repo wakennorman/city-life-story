@@ -1,7 +1,7 @@
 {
-    "currentRound": 19,
-    "currentDomain": "A",
-    "nextDomain": "B",
+    "currentRound": 20,
+    "currentDomain": "B",
+    "nextDomain": "C",
     "rotationIndex": 0,
     "domainOrder": [
         "A",
@@ -32,11 +32,12 @@
         {"round": 16, "domain": "D"},
         {"round": 17, "domain": "F"},
         {"round": 18, "domain": "G"},
-        {"round": 19, "domain": "A"}
+        {"round": 19, "domain": "A"},
+        {"round": 20, "domain": "B"}
     ],
-    "lastDomain": "A",
-    "lastRound": 19,
+    "lastDomain": "B",
+    "lastRound": 20,
     "lastDate": "2026-07-15",
     "completedDomains": ["A", "B", "C", "D", "E", "F", "G", "H"],
-    "description": "R19: 域A(数据/数值平衡) — 1项A类修复(items.js礼物映射ID对齐)+3项联动增强(市场事件标签/市场活动计数/证书加成百分比)"
+    "description": "R20: 域B(事件/叙事) — 跨文件A类修复(upward→upwardMgmt 10文件+actions.js morality裸根+data_viz path修正+lifecycle_milestone_events)+2联动增强(暴雨通勤B→G/H+露宿危机B→A/G)"
 }

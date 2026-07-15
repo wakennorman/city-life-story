@@ -1,3 +1,4 @@
+- [domain-optimization-round-20](domain-optimization-round-20.md) — R20域B: 1A类修复(公益捐赠扣款)+1B类(文本价¥500→¥200)+2联动增强(季节初体验/失业空窗期) (2026-07-15, commit 7278a344)
 - [domain-a-optimization-round-19](domain-a-optimization-round-19.md) — R19域A: 1A类修复(礼物映射ID对齐)+3联动增强(市场事件标签/活动计数/证书加成百分比) (2026-07-15, commit 53efab63)
 - [domain-b-optimization-round-15](domain-b-optimization-round-15.md) — R15域B: 19A类修复(18cost扣款+1NPC met+1注册修复)+2联动增强(绝境回望/熊市阴影) (2026-07-14, commit 48990235)
 - [domain-a-optimization-round-14](domain-a-optimization-round-14.md) — 全系统优化R14 域A: 3A类修复(动态利率接入/沙盒利率/定价变量声明bug)+2联动增强(2026-07-14, commit be4b28a6)
