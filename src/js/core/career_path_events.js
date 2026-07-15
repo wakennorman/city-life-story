@@ -2396,7 +2396,10 @@
         if (!path || !path.levels || !path.levels.length) return false;
         var top = path.levels[path.levels.length - 1];
         if (!top || job.id !== top.id) return false;
-        return !st.flags || !(st.flags._careerApexSeen && st.flags._careerApexSeen[job.path]);
+        return (
+          !st.flags ||
+          !(st.flags._careerApexSeen && st.flags._careerApexSeen[job.path])
+        );
       },
       choices: [
         {

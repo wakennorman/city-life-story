@@ -265,4 +265,295 @@
   for (var i = 0; i < LIFE_EVENTS.length; i++) {
     RANDOM_EVENTS.push(LIFE_EVENTS[i]);
   }
+
+  // ====== 联动增强 3 项：天气×旅行 / 人生节点×缎带 / 世界参数×季节 ======
+
+  /** ① 旅行归来天气事件 — 旅行放松效果受归来后天气影响（G×F 联动） */
+  RANDOM_EVENTS.push({
+    id: "travel_return_weather_echo",
+    icon: "🌤️",
+    title: "旅行归来",
+    phase: "street",
+    probability: 0.03,
+    // [自洽修复] 域G: 旅行flag + 天气系统双重门控
+    conditions: function (st) {
+      return (
+        st.travel &&
+        st.travel.visitedDestinations &&
+        st.travel.visitedDestinations.length > 0 &&
+        !st.flags._travelReturnWeatherEchoDone
+      );
+    },
+    apply: function (st) {
+      var lastDest = st.travel.visitedDestinations[
+        st.travel.visitedDestinations.length - 1
+      ];
+      var destName = "";
+      if (typeof TRAVEL_DESTINATIONS !== "undefined") {
+        var d = TRAVEL_DESTINATIONS[lastDest];
+        destName = d ? d.name : lastDest;
+      }
+      var weatherId = (st.weather && st.weather.current) || "sunny";
+      var weatherIcon = {
+        sunny: "☀️",
+        cloudy: "⛅",
+        rainy: "🌧️",
+        stormy: "⛈️",
+        snowy: "❄️",
+        foggy: "🌫️",
+        heatwave: "🥵",
+        cold_snap: "🥶",
+        heavy_smog: "😷",
+        typhoon: "🌀",
+        sandstorm: "🌪️",
+        plum_rain: "🌧️",
+      }[weatherId] || "☀️";
+      var weatherName = {
+        sunny: "晴朗",
+        cloudy: "多云",
+        rainy: "小雨",
+        stormy: "暴雨",
+        snowy: "下雪",
+        foggy: "大雾",
+        heatwave: "高温",
+        cold_snap: "寒潮",
+        heavy_smog: "重度雾霾",
+        typhoon: "台风",
+        sandstorm: "沙尘暴",
+        plum_rain: "梅雨",
+      }[weatherId] || "未知";
+
+      // 好天气→旅行记忆延续；坏天气→落差感
+      if (
+        ["sunny", "cloudy"].indexOf(weatherId) >= 0 ||
+        weatherId === "windy"
+      ) {
+        st.needs.happiness = Math.min(
+          100,
+          (st.needs.happiness || 50) + 5,
+        );
+        st.player.mental = Math.min(
+          100,
+          (st.player.mental || 50) + 2,
+        );
+        StateManager.addMessage(
+          "🌤️ 从" +
+            destName +
+            "回来后，今天天气正好。旅途的美好回忆在这一刻达到了顶峰。心情+5，心智+2。",
+          "success",
+        );
+      } else {
+        st.needs.happiness = Math.max(
+          0,
+          (st.needs.happiness || 50) - 3,
+        );
+        StateManager.addMessage(
+          "🌧️ 从" +
+            destName +
+            "回来后，迎接你的是" +
+            weatherIcon +
+            weatherName +
+            "。旅途的轻松感瞬间被现实浇灭。心情-3。",
+          "warning",
+        );
+      }
+      if (st.flags) st.flags._travelReturnWeatherEchoDone = true;
+    },
+  });
+
+  /** ② 人生节点×缎带继承 — 人生节点选择影响多周目继承加成（G×H 联动） */
+  RANDOM_EVENTS.push({
+    id: "life_node_legacy_bonus",
+    icon: "🎯",
+    title: "人生回响",
+    phase: "street",
+    probability: 0.02,
+    // [自洽修复] 域G: 人生节点flag + 多周目继承系统双重门控
+    conditions: function (st) {
+      return (
+        st.flags &&
+        (st.flags._gaokaoResult || st.flags._crisis35Path) &&
+        !st.flags._lifeNodeLegacyDone &&
+        st.player.day >= 60
+      );
+    },
+    apply: function (st) {
+      var narrative = "";
+      var bonus = {};
+
+      if (st.flags._gaokaoResult === "skip") {
+        narrative =
+          "你当年放弃了高考，直接闯社会。如今回头看，那份胆识让你在街头摸爬滚打时比别人多一分韧性。";
+        bonus.physique = 3;
+        bonus.agility = 2;
+      } else if (st.flags._gaokaoResult === "excellent") {
+        narrative =
+          "高考那年你全力以赴，学到的知识和养成的思维习惯，至今仍在暗中帮你做出更好的判断。";
+        bonus.intelligence = 3;
+        bonus.mental = 2;
+      } else if (st.flags._crisis35Path === "transform") {
+        narrative =
+          "35岁那年你选择充电转型，那段埋头学习的日子，让你在后来无数次关键时刻都能抓住机会。";
+        bonus.intelligence = 2;
+        bonus.charm = 2;
+      } else if (st.flags._crisis35Path === "lieflat") {
+        narrative =
+          "你选择了不那么拼的人生。这份豁达让你在压力面前比别人更能稳住心态。";
+        bonus.mental = 3;
+        bonus.happiness = 5;
+      } else {
+        narrative =
+          "人生的每一个选择都在暗中塑造着你。那些看似微不足道的决定，累积起来就是你独特的人生轨迹。";
+        bonus.mental = 2;
+        bonus.charm = 1;
+      }
+
+      StateManager.addMessage(
+        "🎯 " +
+          narrative +
+          " 你感受到了一种跨越时间的力量——你的人生选择，正在成为你的遗产。",
+        "info",
+      );
+
+      // 应用属性加成
+      if (bonus.physique)
+        st.player.physique = Math.min(
+          100,
+          (st.player.physique || 0) + bonus.physique,
+        );
+      if (bonus.agility)
+        st.player.agility = Math.min(
+          100,
+          (st.player.agility || 0) + bonus.agility,
+        );
+      if (bonus.intelligence)
+        st.player.intelligence = Math.min(
+          100,
+          (st.player.intelligence || 0) + bonus.intelligence,
+        );
+      if (bonus.mental)
+        st.player.mental = Math.min(
+          100,
+          (st.player.mental || 50) + bonus.mental,
+        );
+      if (bonus.charm)
+        st.player.charm = Math.min(
+          100,
+          (st.player.charm || 0) + bonus.charm,
+        );
+      if (bonus.happiness)
+        st.needs.happiness = Math.min(
+          100,
+          (st.needs.happiness || 50) + bonus.happiness,
+        );
+
+      if (st.flags) st.flags._lifeNodeLegacyDone = true;
+    },
+  });
+
+  /** ③ 世界参数×季节叙事 — 季节变化+行业热度触发专属事件（G×E 联动） */
+  RANDOM_EVENTS.push({
+    id: "season_sector_narrative",
+    icon: "🍂",
+    title: "季节与时代",
+    phase: "street",
+    probability: 0.025,
+    // [自洽修复] 域G: 世界参数 + 季节系统双重门控
+    conditions: function (st) {
+      return (
+        st._worldParams &&
+        st._worldParams.sectorHeat &&
+        st.weather &&
+        st.weather.season &&
+        !st.flags._seasonSectorNarrativeDone
+      );
+    },
+    apply: function (st) {
+      var season = st.weather.season;
+      var params = st._worldParams;
+      var hottestSector = "";
+      var hottestHeat = 0;
+      for (var s in params.sectorHeat) {
+        if (params.sectorHeat[s] > hottestHeat) {
+          hottestHeat = params.sectorHeat[s];
+          hottestSector = s;
+        }
+      }
+
+      var seasonNarratives = {
+        spring: {
+          high:
+            "春天来了，" +
+            hottestSector +
+            "行业的火热像这季节一样生机勃勃。街头多了许多带着梦想来找机会的人。",
+          low:
+            "春风拂面，" +
+            hottestSector +
+            "的热度却渐渐消退。也许是时候换个方向了。",
+        },
+        summer: {
+          high:
+            "酷暑难耐，但" +
+            hottestSector +
+            "行业的热情比天气更炽烈。有人在夏天抓住了翻身机会。",
+          low:
+            "烈日当空，" +
+            hottestSector +
+            "行业却像被晒蔫了的花。市场在降温，但冬天过后总有春天。",
+        },
+        autumn: {
+          high:
+            "秋高气爽，" +
+            hottestSector +
+            "行业的丰收季到了。汗水终于有了回报。",
+          low:
+            "落叶纷飞，" +
+            hottestSector +
+            "行业也进入了淡季。学会在低谷期蓄力，也是一种本事。",
+        },
+        winter: {
+          high:
+            "寒冬腊月，" +
+            hottestSector +
+            "行业却依然火热。逆周期操作的人，往往能捡到别人看不到的机会。",
+          low:
+            "大雪封门，" +
+            hottestSector +
+            "行业也进入了冰点。但你知道，最冷的时候，春天就不远了。",
+        },
+      };
+
+      var narrative =
+        (seasonNarratives[season] || {}).high ||
+        "季节在变，行业在变，唯一不变的是你在这座城市里一天天走下去的决心。";
+
+      if (hottestHeat < 1.0) {
+        narrative =
+          (seasonNarratives[season] || {}).low || narrative;
+      }
+
+      StateManager.addMessage(
+        "🍂 " +
+          narrative +
+          "（当前最热行业：" +
+          hottestSector +
+          " · " +
+          (hottestHeat * 100).toFixed(0) +
+          "%）",
+        "info",
+      );
+
+      // 轻微 buff：季节与行业共振时给一点点心情/心智
+      st.needs.happiness = Math.min(
+        100,
+        (st.needs.happiness || 50) + 2,
+      );
+      st.player.mental = Math.min(
+        100,
+        (st.player.mental || 50) + 1,
+      );
+
+      if (st.flags) st.flags._seasonSectorNarrativeDone = true;
+    },
+  });
 })();

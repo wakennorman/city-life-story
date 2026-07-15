@@ -202,6 +202,24 @@
         </div>
 
         <div class="header-stats">
+          <!-- 现金和债务放在最前（移动端紧接汉堡菜单，防被挤到不可见） -->
+          <div
+            class="header-stat"
+            id="header-cash-area"
+            style="cursor: default; min-width: 100px"
+          >
+            <span class="label" id="header-cash-label">💰</span>
+            <span class="value cash" id="header-cash">¥2,000</span>
+          </div>
+          <!-- 债务展示区域（独立于现金） -->
+          <div
+            class="header-stat"
+            id="header-debt-area"
+            style="cursor: default; display: none"
+          >
+            <span class="label" id="header-debt-label">💸</span>
+            <span class="value debt" id="header-debt">¥0</span>
+          </div>
           <div class="header-stat">
             <span class="label">📅 天</span>
             <span class="value" id="header-day">1</span>
@@ -222,30 +240,13 @@
             <span class="label">🎂 年龄</span>
             <span class="value age" id="header-age">20</span>
           </div>
-          <div class="header-stat">
+          <div class="header-stat" id="header-phase-stat">
             <span class="label">📍</span>
             <span class="value" id="header-phase">🏘️ 街头</span>
           </div>
           <div class="header-stat" id="header-mode-stat" style="display: none">
             <span class="label">🎮</span>
             <span class="value" id="header-mode"></span>
-          </div>
-          <div
-            class="header-stat"
-            id="header-cash-area"
-            style="cursor: default; min-width: 100px"
-          >
-            <span class="label" id="header-cash-label">💰</span>
-            <span class="value cash" id="header-cash">¥2,000</span>
-          </div>
-          <!-- 债务展示区域（独立于现金） -->
-          <div
-            class="header-stat"
-            id="header-debt-area"
-            style="cursor: default; display: none"
-          >
-            <span class="label" id="header-debt-label">💸</span>
-            <span class="value debt" id="header-debt">¥0</span>
           </div>
         </div>
 
@@ -603,6 +604,8 @@
     <script src="js/core/data_linkage_events.js"></script>
     <!-- v3.113: 数据/数值平衡域联动增强事件·第二轮（data2_* 新角度 A→D/A→C/A→E，不与 R14 冲突）-->
     <script src="js/core/data_linkage_events_r22.js"></script>
+    <!-- v3.120: 数据/数值平衡域联动增强事件·第三轮（data3_* 隐形经济数据叙事化：累进财富税梯度 A→G / 市场饱和度惩罚 A→E，不与 R14/R22 冲突）-->
+    <script src="js/core/data_linkage_events_r23.js"></script>
     <!-- v3.114: 事件/叙事域联动增强事件·第二轮（narr_* 新角度 B→D市井叙事 / B→C匠人叙事 / B→E茶馆传闻，不与各域冲突）-->
     <script src="js/core/narrative_linkage_events.js"></script>
     <!-- v3.107: 职业/成长域联动增强事件（C→D前辈提携 / C→A技能里程碑 / C→E晋升奖金）-->
@@ -615,6 +618,8 @@
     <script src="js/core/ui_linkage_events.js"></script>
     <!-- v3.111: 核心机制/生命周期域联动增强事件（G→A习惯地基 / G→D人生体悟 / G→C掌舵定力）-->
     <script src="js/core/core_mechanics_linkage_events.js"></script>
+    <!-- v3.112: 核心机制/生命周期域联动增强事件·R20第三轮（G→D名气社交桥接 / G→G情绪/健康叙事深度）-->
+    <script src="js/core/lifecycle_milestone_events.js"></script>
     <!-- v3.112: 创业/公司域联动增强事件·R21第二轮（H→A创业纪律感 / H→D带队温度 / H→C经营眼界）-->
     <script src="js/core/company_linkage_events_r21.js"></script>
     <!-- v3.23: 个人成长事件（健康/心理/形象/目标危机）-->

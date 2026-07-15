@@ -293,7 +293,9 @@ function buildItemRow(tx, type) {
     '<span class="daily-report-item-cat" style="font-size:10px;color:var(--text-muted);min-width:32px;text-align:center;flex-shrink:0;background:var(--bg-card);padding:1px 4px;border-radius:3px;margin:0 6px;">' +
     label +
     "</span>" +
-    '<span class="daily-report-item-desc" title="' + escapeHtml(tx.description) + '" style="flex:1;color:var(--text-primary);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px;">' +
+    '<span class="daily-report-item-desc" title="' +
+    escapeHtml(tx.description) +
+    '" style="flex:1;color:var(--text-primary);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px;">' +
     escapeHtml(tx.description) +
     "</span>" +
     '<span class="daily-report-item-amount" style="font-weight:700;white-space:nowrap;text-align:right;min-width:70px;color:' +

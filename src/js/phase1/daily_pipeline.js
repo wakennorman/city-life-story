@@ -1514,11 +1514,17 @@ const DAILY_PIPELINE = [
     fn: function (state) {
       var day = state.player.day;
       // 家教90天奖金
-      if (state.flags._pendingGaokaoBonus && day >= state.flags._pendingGaokaoBonus) {
+      if (
+        state.flags._pendingGaokaoBonus &&
+        day >= state.flags._pendingGaokaoBonus
+      ) {
         state.flags._pendingGaokaoBonus = 0;
         state.resources.cash = (state.resources.cash || 0) + 24000;
         if (typeof StateManager !== "undefined") {
-          StateManager.addMessage("🎓 家教学员的家长打来了尾款！高考辅导费¥24000到账！", "success");
+          StateManager.addMessage(
+            "🎓 家教学员的家长打来了尾款！高考辅导费¥24000到账！",
+            "success",
+          );
         }
       }
       // 摆摊30天还款
@@ -1526,40 +1532,68 @@ const DAILY_PIPELINE = [
         state.flags._loanToLaoGuan = 0;
         state.resources.cash = (state.resources.cash || 0) + 1000;
         if (typeof StateManager !== "undefined") {
-          StateManager.addMessage("💰 老关把当初借的¥800还了，还多给了¥200利息！", "success");
+          StateManager.addMessage(
+            "💰 老关把当初借的¥800还了，还多给了¥200利息！",
+            "success",
+          );
         }
       }
       // 废品回收重新报价
-      if (state.flags._wasteRecyclingOffer && day >= state.flags._wasteRecyclingOffer) {
+      if (
+        state.flags._wasteRecyclingOffer &&
+        day >= state.flags._wasteRecyclingOffer
+      ) {
         state.flags._wasteRecyclingOffer = 0;
         state.flags._wasteRecyclingReady = true;
         if (typeof StateManager !== "undefined") {
-          StateManager.addMessage("♻️ 老张的废品承包权又开放了——带上¥3000去找他吧。", "info");
+          StateManager.addMessage(
+            "♻️ 老张的废品承包权又开放了——带上¥3000去找他吧。",
+            "info",
+          );
         }
       }
       // 职业遗产项目90天结算
-      if (state.flags._careerLegacyDueDay && day >= state.flags._careerLegacyDueDay) {
+      if (
+        state.flags._careerLegacyDueDay &&
+        day >= state.flags._careerLegacyDueDay
+      ) {
         state.flags._careerLegacyDueDay = 0;
-        var _legacySuccess = typeof Random !== "undefined" ? Random.chance(0.6) : Math.random() < 0.6;
+        var _legacySuccess =
+          typeof Random !== "undefined"
+            ? Random.chance(0.6)
+            : Math.random() < 0.6;
         if (_legacySuccess) {
           state.resources.cash = (state.resources.cash || 0) + 100000;
           state.player.fame = Math.min(100, (state.player.fame || 0) + 20);
           if (typeof StateManager !== "undefined") {
-            StateManager.addMessage("🏆 你主导的行业里程碑项目大获成功！声誉+20，奖金¥100000到账！", "success");
+            StateManager.addMessage(
+              "🏆 你主导的行业里程碑项目大获成功！声誉+20，奖金¥100000到账！",
+              "success",
+            );
           }
         } else {
           if (typeof StateManager !== "undefined") {
-            StateManager.addMessage("😔 你主导的项目最终没有达到预期。虽然没有达成目标，但这段经历让你成长了不少。", "info");
+            StateManager.addMessage(
+              "😔 你主导的项目最终没有达到预期。虽然没有达成目标，但这段经历让你成长了不少。",
+              "info",
+            );
           }
         }
       }
       // [全系统自洽修复] 域E 修复:贷款逾期90天警告
-      if ((state.resources.bankDebt || 0) > 0 && state.resources.bankDebtDay > 0) {
+      if (
+        (state.resources.bankDebt || 0) > 0 &&
+        state.resources.bankDebtDay > 0
+      ) {
         var _loanDays = day - state.resources.bankDebtDay;
         if (_loanDays > 90 && state.flags._lastLoanWarningDay !== day) {
           state.flags._lastLoanWarningDay = day;
           if (typeof StateManager !== "undefined") {
-            StateManager.addMessage("⚠️ 你的银行贷款已逾期超过90天，建议尽快还清以免影响信用。欠款: ¥" + state.resources.bankDebt.toLocaleString(), "warning");
+            StateManager.addMessage(
+              "⚠️ 你的银行贷款已逾期超过90天，建议尽快还清以免影响信用。欠款: ¥" +
+                state.resources.bankDebt.toLocaleString(),
+              "warning",
+            );
           }
         }
       }

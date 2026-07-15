@@ -402,7 +402,9 @@
         choices: evt.choices,
       };
       setTimeout(function () {
-        showEventModal();
+        if (typeof showEventModal === "function") {
+          showEventModal(state._pendingEvent);
+        }
       }, 100);
     } else {
       StateManager.addMessage(

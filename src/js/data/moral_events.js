@@ -701,7 +701,7 @@ const MORAL_EVENTS = [
   {
     id: "colleague_slack",
     title: "👔 同事在摸鱼被你看到",
-    desc: "你路过茶水间，看到同事老张正躲在角落里刷短视频。最近公司业绩不好，总监正在抓典型。他看到你，尴尬地笑了笑。你", // 后续在desc中
+    desc: "你路过茶水间，看到同事老张正躲在角落里刷短视频。最近公司业绩不好，总监正在抓典型。他看到你，尴尬地笑了笑。你点头示意，继续走自己的路。",
     minDay: 60,
     dailyChance: 0.03,
     condition: function (s) {
@@ -821,10 +821,11 @@ const MORAL_EVENTS = [
         flag: "moral_help_charge",
         score: -2,
         immediate: function (s) {
-          s.resources.cash += Random.int(10, 20);
+          var earned = Random.int(10, 20);
+          s.resources.cash += earned;
           s.needs.fatigue = Math.min(100, s.needs.fatigue + 3);
           StateManager.addMessage(
-            "💰 他犹豫了一下，给了你¥" + ((s.resources.cash % 20) + 10) + "。",
+            "💰 他犹豫了一下，给了你¥" + earned + "。",
             "info",
           );
         },
@@ -2983,7 +2984,7 @@ const MORAL_CONSEQUENCES = {
     title: "🙏 被救者上门致谢",
     delay: [6, 12],
     desc: function (s) {
-      return "你在ATM拦下的那位阿姨，差点被骗走毕生积蓄。她带着两盒水果找到你，说要请你吃顿饭。";
+      return "你发的那条朋友圈被转发了上百次，有人私信感谢你说她母亲差点被骗，多亏看到提醒才没转账。";
     },
     apply: function (s) {
       s.resources.cash += 100;

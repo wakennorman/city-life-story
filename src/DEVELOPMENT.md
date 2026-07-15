@@ -1,7 +1,7 @@
 # 城市浮生记 (City Life Story) — 开发文档
 
-> 最后更新: 2026-07-14（v3.114 loop R23 全系统优化·Domain B 事件/叙事（第二轮）——A类修复1项：(1)company_linkage_events.js:95/107 写 st.player.happiness（死字段，游戏唯一读取的幸福感字段为 st.needs.happiness，见 TS 事件系统 index.ts / webapp_runtime_bridge.js）→应为 st.needs.happiness，致"创业倾诉/自己扛"幸福感加成静默丢失） + 联动增强3项（narr_* 新角度，2 street+1 corporate：B→D市井旧事听故事涨好感 / B→C匠人传记启发 repair 技能 / B→E茶馆传闻腾投资本金·复用 _dataInvestorMindset））
-> 上一版: v3.113 loop R22 全系统优化·Domain A 数据/数值平衡（第二轮）（A类修复3项：finance dailyTransactions→flags._dailyTransactions / finance 公司取用 companyId→corporate.company 查 enterpriseFate / data_linkage 写 player.happiness→needs.happiness + A→D/A→C/A→E 联动）
+> 最后更新: 2026-07-15（v3.116 loop R25 全系统优化·Domain A 数据/数值平衡（第三轮联动增强）——A类修复0项（全量扫描 skills/jobs/items/goods/illnesses/pricing/trade/economy_v3.1：locations/categories 全部有效、jobs.payCalc 技能键均属10核心技能、pricing div-by-zero 已守卫，结构性健康） + 联动增强2项（data3_wealth_tax_intro A→G 累进财富税梯度叙事化 / data3_market_saturation A→E 市场饱和度惩罚叙事化））
+> 上一版: v3.115 loop R24 全系统优化·Domain C 职业/成长（第二轮）——A类修复0项（全量扫描 career_path_events/personal_growth_events/skill_tree/skill_synergy/career_dev/career_linkage_events：技能键/职业path id/CAREER_PATHS 引用全部有效，career.currentJob 裸访问均经 _job/_path/if 守卫，无死职业·死技能·不可达触发） + 联动增强3项（career_enterprise_readiness C→H 职业硬技能兑现公司KPI / career_legacy_tale C→B 职业成就成城内叙事·置 _careerNarrativeSeen / career_resource_mastery C→A 熟练度换效率红利·智力回馈）
 >
 > commits: `feat: [域B] A类修复1项+联动增强3项` + `（docs）loop状态/迭代表`
 
@@ -6781,3 +6781,31 @@ social 策略存活率 60% → 80%（+20pp），NPC互惠帮助社交策略获�
 - `python build.py`: 7758.9KB ✅
 - 头浏览器无运行时错误 ✅
 - **commit**: `45b53556`(submodule) · `5ff7fba`(parent) ✅ 已push
+
+## R20 — 域G A类修复(5项)+联动增强(3项) — 2026-07-15
+
+### 指令一：A类缺陷修复（5项）
+
+| 文件                       | 缺陷                                                                                | 修复                                              |
+| -------------------------- | ----------------------------------------------------------------------------------- | ------------------------------------------------- |
+| phase1/illness.js:324      | `state.needs.fatigue += 5` 未 clamp 至 100                                          | 加 `Math.min(100, ...)` 限幅                      |
+| main.js:5024               | 创业目标条件 `!s.status && s.status !== "none"` 逻辑矛盾（永假）                    | 改为 `(!s.status \|\| s.status === "none")`       |
+| main.js:855/1469/2550      | `inventory.capacity = [20,50,100,200][tier]` 数组越界（housing.tier 支持 0-6）      | 扩建为 7 元素数组 `[20,50,100,200,500,1000,2000]` |
+| phase1/needs.js:14-16      | `getDifficultyMultiplier` 返回 NaN 时 `Math.max(0, NaN)=NaN` → 需求阈值判定全面失灵 | decayMul 加 isFinite/NaN 守卫 + clamp             |
+| core/state.js:441          | `_hypertensionMonthlyPaid` 死字段（illness.js 读写的是 `_chronicMonthlyPaid`）      | 删除死字段                                        |
+| core/story_chapters.js:364 | `getStoryChapterChecklist` 中 `bankLoan` 字段名不存在（应为 `bankDebt`）            | 改为 `bankDebt`                                   |
+
+### 指令二：联动增强（3项）
+
+| 联动事件                     | 文件                                | 联动域 | 设计意图                                      |
+| ---------------------------- | ----------------------------------- | ------ | --------------------------------------------- |
+| fame_npc_gossip              | lifecycle_milestone_events.js（新） | G→D    | fame 子系统首次被 NPC 事件消费，名气+社交桥接 |
+| fame_npc_personal            | lifecycle_milestone_events.js（新） | G→D    | 名气+好感双门槛解锁深度互动                   |
+| fame_corporate_recognition   | lifecycle_milestone_events.js（新） | G→C    | 名气影响 corporate 阶段人气/评价              |
+| story_chapters 情绪/健康感知 | story_chapters.js（改）             | G→G    | 情绪状态和健康子系统深度影响叙事走向          |
+
+### 验证
+
+- node --check 6 文件全部 PASS
+- build.py 8356.4KB PASS
+- mc_verify_v3.6.cjs trigger_registry ✅

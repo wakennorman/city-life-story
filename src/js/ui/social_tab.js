@@ -211,16 +211,28 @@ function renderNpcRelationships(state, content) {
         else if (_relType === "competitor" || _relType === "strained")
           _relColor = "#E74C3C";
         else if (_relType === "classmate") _relColor = "#3498DB";
-        var _n1Def = typeof NPCS !== "undefined" && NPCS.find(function(n){ return n.id === _n1; });
-        var _n2Def = typeof NPCS !== "undefined" && NPCS.find(function(n){ return n.id === _n2; });
+        var _n1Def =
+          typeof NPCS !== "undefined" &&
+          NPCS.find(function (n) {
+            return n.id === _n1;
+          });
+        var _n2Def =
+          typeof NPCS !== "undefined" &&
+          NPCS.find(function (n) {
+            return n.id === _n2;
+          });
         var _n1name = _n1Def ? _n1Def.name : _n1.replace(/_/g, " ");
         var _n2name = _n2Def ? _n2Def.name : _n2.replace(/_/g, " ");
         // 关系类型中文翻译
         var _relLabel = _relType;
         var _relLabelMap = {
-          neutral: "中立", friendly: "友好", old_acquaintance: "老相识",
-          business: "商业合作", competitor: "竞争对手", strained: "紧张",
-          classmate: "同学"
+          neutral: "中立",
+          friendly: "友好",
+          old_acquaintance: "老相识",
+          business: "商业合作",
+          competitor: "竞争对手",
+          strained: "紧张",
+          classmate: "同学",
         };
         if (_relLabelMap[_relType]) _relLabel = _relLabelMap[_relType];
         html +=
@@ -250,7 +262,11 @@ function renderNpcRelationships(state, content) {
     var r = state.relationships[key];
     if (r._propagationLog && r._propagationLog.length > 0) {
       hasLog = true;
-      var _npDef = typeof NPCS !== "undefined" && NPCS.find(function(n){ return n.id === key; });
+      var _npDef =
+        typeof NPCS !== "undefined" &&
+        NPCS.find(function (n) {
+          return n.id === key;
+        });
       var _npName = _npDef ? _npDef.name : key.replace(/_/g, " ");
       html +=
         '<div style="padding:6px 8px;margin-bottom:4px;background:var(--bg-secondary);border-radius:4px;">';
@@ -260,8 +276,12 @@ function renderNpcRelationships(state, content) {
         // 传导类型中文翻译
         var _logTypeLabel = log.type;
         var _logTypeMap = {
-          propagation: "传导", decay: "衰减", interaction: "互动",
-          gift: "赠送", conflict: "冲突", help: "帮助"
+          propagation: "传导",
+          decay: "衰减",
+          interaction: "互动",
+          gift: "赠送",
+          conflict: "冲突",
+          help: "帮助",
         };
         if (_logTypeMap[log.type]) _logTypeLabel = _logTypeMap[log.type];
         html +=
@@ -332,7 +352,9 @@ function renderSocialTab(state, parent) {
     case "social_npc":
       renderNpcRelationships(state, content);
       // [全系统自洽修复] 域D 修复:social_npc 子Tab触发拜访按钮事件绑定
-      setTimeout(function () { _bindVisitBtns(state, content); }, 0);
+      setTimeout(function () {
+        _bindVisitBtns(state, content);
+      }, 0);
       break;
     case "social_network":
       renderSocialNetworkTab(state, content);
@@ -527,11 +549,14 @@ function renderSocialNetworkTab(state, parent) {
       // [全系统自洽修复] 域D 联动增强: NPC动态显示中文名
       var _feedNpcName = "";
       if (feed.npcId && typeof NPCS !== "undefined") {
-        var _feedDef = NPCS.find(function (n) { return n.id === feed.npcId; });
+        var _feedDef = NPCS.find(function (n) {
+          return n.id === feed.npcId;
+        });
         _feedNpcName = _feedDef ? _feedDef.name + ": " : "";
       }
       html += '<div style="padding:4px 0;font-size:11px;">';
-      html += '<p style="margin:0;">' + _feedNpcName + (feed.content || "") + "</p>";
+      html +=
+        '<p style="margin:0;">' + _feedNpcName + (feed.content || "") + "</p>";
       html += "</div>";
     }
     html += "</div>";
@@ -544,68 +569,71 @@ function renderSocialNetworkTab(state, parent) {
   html += "</div>";
   parent.innerHTML = html;
 
-// ====== 公共：NPC 拜访按钮事件绑定（所有子Tab共享） ======
-/** [全系统自洽修复] 域D 修复:将拜访按钮事件绑定提升为公共函数，供 social_npc / social_network 等子Tab共用 */
-function _bindVisitBtns(state, parent) {
-  var btns = parent.querySelectorAll(".npc-visit-btn");
-  for (var bi = 0; bi < btns.length; bi++) {
-    (function (btn) {
-      btn.addEventListener("click", function (e) {
-        e.preventDefault();
-        e.stopPropagation();
-        var npcId = btn.dataset.npcId;
-        if (!npcId || !state.relationships || !state.relationships[npcId])
-          return;
-        var rel = state.relationships[npcId];
-        // 获取NPC中文名（先查，供后续所有消息使用）
-        var _npcName = "";
-        if (typeof NPCS !== "undefined") {
-          var _def = NPCS.find(function (n) { return n.id === npcId; });
-          _npcName = _def ? _def.name : npcId;
-        } else {
-          _npcName = npcId;
-        }
-        // 检查冷却（7天）
-        if (rel._lastVisit && state.day - rel._lastVisit < 7) {
-          var daysLeft = 7 - (state.day - rel._lastVisit);
+  // ====== 公共：NPC 拜访按钮事件绑定（所有子Tab共享） ======
+  /** [全系统自洽修复] 域D 修复:将拜访按钮事件绑定提升为公共函数，供 social_npc / social_network 等子Tab共用 */
+  function _bindVisitBtns(state, parent) {
+    var btns = parent.querySelectorAll(".npc-visit-btn");
+    for (var bi = 0; bi < btns.length; bi++) {
+      (function (btn) {
+        btn.addEventListener("click", function (e) {
+          e.preventDefault();
+          e.stopPropagation();
+          var npcId = btn.dataset.npcId;
+          if (!npcId || !state.relationships || !state.relationships[npcId])
+            return;
+          var rel = state.relationships[npcId];
+          // 获取NPC中文名（先查，供后续所有消息使用）
+          var _npcName = "";
+          if (typeof NPCS !== "undefined") {
+            var _def = NPCS.find(function (n) {
+              return n.id === npcId;
+            });
+            _npcName = _def ? _def.name : npcId;
+          } else {
+            _npcName = npcId;
+          }
+          // 检查冷却（7天）
+          if (rel._lastVisit && state.day - rel._lastVisit < 7) {
+            var daysLeft = 7 - (state.day - rel._lastVisit);
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage(
+                "⏳ 你刚拜访过" + _npcName + "，再等" + daysLeft + "天吧。",
+                "info",
+              );
+            }
+            return;
+          }
+          // 触发拜访互动（通过 applyAffinityChange 确保衰减系统识别）
+          var gain =
+            typeof Random !== "undefined" ? (Random.chance(0.5) ? 3 : 5) : 4;
+          if (typeof applyAffinityChange === "function") {
+            applyAffinityChange(state, npcId, gain, "拜访");
+          } else {
+            rel.affinity = Math.min(100, (rel.affinity || 0) + gain);
+          }
+          rel._lastVisit = state.day;
           if (typeof StateManager !== "undefined") {
             StateManager.addMessage(
-              "⏳ 你刚拜访过" + _npcName + "，再等" + daysLeft + "天吧。",
-              "info",
+              "🤝 你找到了" + _npcName + "，聊了一会儿天。好感+" + gain + "。",
+              "success",
             );
           }
-          return;
-        }
-        // 触发拜访互动（通过 applyAffinityChange 确保衰减系统识别）
-        var gain = typeof Random !== "undefined" ? (Random.chance(0.5) ? 3 : 5) : 4;
-        if (typeof applyAffinityChange === "function") {
-          applyAffinityChange(state, npcId, gain, "拜访");
-        } else {
-          rel.affinity = Math.min(100, (rel.affinity || 0) + gain);
-        }
-        rel._lastVisit = state.day;
-        if (typeof StateManager !== "undefined") {
-          StateManager.addMessage(
-            "🤝 你找到了" + _npcName + "，聊了一会儿天。好感+" + gain + "。",
-            "success",
-          );
-        }
-        // 导航到 NPC 所在地点
-        if (typeof navigateTo === "function") {
-          var _loc = btn.dataset.navTarget;
-          try {
-            var target = JSON.parse(_loc);
-            target.type = "location";
-            navigateTo(state, target);
-          } catch (err) {
-            if (typeof StateManager !== "undefined") {
-              StateManager.addMessage("⚠️ 导航失败", "warning");
+          // 导航到 NPC 所在地点
+          if (typeof navigateTo === "function") {
+            var _loc = btn.dataset.navTarget;
+            try {
+              var target = JSON.parse(_loc);
+              target.type = "location";
+              navigateTo(state, target);
+            } catch (err) {
+              if (typeof StateManager !== "undefined") {
+                StateManager.addMessage("⚠️ 导航失败", "warning");
+              }
             }
           }
-        }
-      });
-    })(btns[bi]);
+        });
+      })(btns[bi]);
+    }
   }
-}
   _bindVisitBtns(state, parent);
 }
