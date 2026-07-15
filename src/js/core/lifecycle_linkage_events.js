@@ -285,57 +285,52 @@
       );
     },
     apply: function (st) {
-      var lastDest = st.travel.visitedDestinations[
-        st.travel.visitedDestinations.length - 1
-      ];
+      var lastDest =
+        st.travel.visitedDestinations[st.travel.visitedDestinations.length - 1];
       var destName = "";
       if (typeof TRAVEL_DESTINATIONS !== "undefined") {
         var d = TRAVEL_DESTINATIONS[lastDest];
         destName = d ? d.name : lastDest;
       }
       var weatherId = (st.weather && st.weather.current) || "sunny";
-      var weatherIcon = {
-        sunny: "☀️",
-        cloudy: "⛅",
-        rainy: "🌧️",
-        stormy: "⛈️",
-        snowy: "❄️",
-        foggy: "🌫️",
-        heatwave: "🥵",
-        cold_snap: "🥶",
-        heavy_smog: "😷",
-        typhoon: "🌀",
-        sandstorm: "🌪️",
-        plum_rain: "🌧️",
-      }[weatherId] || "☀️";
-      var weatherName = {
-        sunny: "晴朗",
-        cloudy: "多云",
-        rainy: "小雨",
-        stormy: "暴雨",
-        snowy: "下雪",
-        foggy: "大雾",
-        heatwave: "高温",
-        cold_snap: "寒潮",
-        heavy_smog: "重度雾霾",
-        typhoon: "台风",
-        sandstorm: "沙尘暴",
-        plum_rain: "梅雨",
-      }[weatherId] || "未知";
+      var weatherIcon =
+        {
+          sunny: "☀️",
+          cloudy: "⛅",
+          rainy: "🌧️",
+          stormy: "⛈️",
+          snowy: "❄️",
+          foggy: "🌫️",
+          heatwave: "🥵",
+          cold_snap: "🥶",
+          heavy_smog: "😷",
+          typhoon: "🌀",
+          sandstorm: "🌪️",
+          plum_rain: "🌧️",
+        }[weatherId] || "☀️";
+      var weatherName =
+        {
+          sunny: "晴朗",
+          cloudy: "多云",
+          rainy: "小雨",
+          stormy: "暴雨",
+          snowy: "下雪",
+          foggy: "大雾",
+          heatwave: "高温",
+          cold_snap: "寒潮",
+          heavy_smog: "重度雾霾",
+          typhoon: "台风",
+          sandstorm: "沙尘暴",
+          plum_rain: "梅雨",
+        }[weatherId] || "未知";
 
       // 好天气→旅行记忆延续；坏天气→落差感
       if (
         ["sunny", "cloudy"].indexOf(weatherId) >= 0 ||
         weatherId === "windy"
       ) {
-        st.needs.happiness = Math.min(
-          100,
-          (st.needs.happiness || 50) + 5,
-        );
-        st.player.mental = Math.min(
-          100,
-          (st.player.mental || 50) + 2,
-        );
+        st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 5);
+        st.player.mental = Math.min(100, (st.player.mental || 50) + 2);
         StateManager.addMessage(
           "🌤️ 从" +
             destName +
@@ -343,10 +338,7 @@
           "success",
         );
       } else {
-        st.needs.happiness = Math.max(
-          0,
-          (st.needs.happiness || 50) - 3,
-        );
+        st.needs.happiness = Math.max(0, (st.needs.happiness || 50) - 3);
         StateManager.addMessage(
           "🌧️ 从" +
             destName +
@@ -437,10 +429,7 @@
           (st.player.mental || 50) + bonus.mental,
         );
       if (bonus.charm)
-        st.player.charm = Math.min(
-          100,
-          (st.player.charm || 0) + bonus.charm,
-        );
+        st.player.charm = Math.min(100, (st.player.charm || 0) + bonus.charm);
       if (bonus.happiness)
         st.needs.happiness = Math.min(
           100,
@@ -528,8 +517,7 @@
         "季节在变，行业在变，唯一不变的是你在这座城市里一天天走下去的决心。";
 
       if (hottestHeat < 1.0) {
-        narrative =
-          (seasonNarratives[season] || {}).low || narrative;
+        narrative = (seasonNarratives[season] || {}).low || narrative;
       }
 
       StateManager.addMessage(
@@ -544,14 +532,8 @@
       );
 
       // 轻微 buff：季节与行业共振时给一点点心情/心智
-      st.needs.happiness = Math.min(
-        100,
-        (st.needs.happiness || 50) + 2,
-      );
-      st.player.mental = Math.min(
-        100,
-        (st.player.mental || 50) + 1,
-      );
+      st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 2);
+      st.player.mental = Math.min(100, (st.player.mental || 50) + 1);
 
       if (st.flags) st.flags._seasonSectorNarrativeDone = true;
     },

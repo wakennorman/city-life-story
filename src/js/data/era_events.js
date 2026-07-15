@@ -16,7 +16,11 @@ const ERA_EVENTS = [
       "你在这座城市已经待了三个月。物价开始有了微妙的变化——菜价涨了5%，但你也学会了怎么挑便宜货。\n老周告诉你：「这年头，钱越来越不值钱了。得想办法多赚点。」",
     phase: "street",
     // v3.99d 约定式触发：第90天，仅触发一次
-    triggers: { minDay: 90, excludeFlags: ["_eraEvent_90"], relationshipMet: "old_zhou" }, // [全系统自洽修复] 域B: 加old_zhou met检查(叙事直呼老周)
+    triggers: {
+      minDay: 90,
+      excludeFlags: ["_eraEvent_90"],
+      relationshipMet: "old_zhou",
+    }, // [全系统自洽修复] 域B: 加old_zhou met检查(叙事直呼老周)
     choices: [
       {
         text: "💡 学老周，多囤点耐用品",

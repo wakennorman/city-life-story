@@ -244,7 +244,8 @@
       conditions: function (st) {
         // [自洽修复] st.needs.health 不存在（state.needs 无 health 字段），改为 st.status.health
         return (
-          st.player.day >= 10 || (st.status && st.status.health != null && st.status.health <= 70)
+          st.player.day >= 10 ||
+          (st.status && st.status.health != null && st.status.health <= 70)
         );
       },
       phase: "street",

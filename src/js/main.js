@@ -853,7 +853,8 @@ function startScenarioGame(scenarioId) {
   state.housing.tier = scenario.housingTier || 0;
   state.housing.rentedDay = state.player.day;
   // [全系统自洽修复] 域G A类修复: housing.tier 支持 0-6（详见 state.js:145），原数组仅 4 元素导致 tier≥4 时 capacity=undefined → 物品容量检查永久失效
-  state.inventory.capacity = [20, 50, 100, 200, 500, 1000, 2000][state.housing.tier] || 20;
+  state.inventory.capacity =
+    [20, 50, 100, 200, 500, 1000, 2000][state.housing.tier] || 20;
 
   // --- 起始地点 ---
   if (scenario.startLocation) {
@@ -1468,7 +1469,8 @@ function startSandboxGame() {
     state.housing.tier = Math.max(0, Math.min(3, cfg.housingTier || 0));
     state.housing.rentedDay = state.player.day;
     // [全系统自洽修复] 域G A类修复: housing.tier 上限扩容至 6（与 state.js:145 一致，tier≥4 时 capacity 不再为 undefined）
-    state.inventory.capacity = [20, 50, 100, 200, 500, 1000, 2000][state.housing.tier] || 20;
+    state.inventory.capacity =
+      [20, 50, 100, 200, 500, 1000, 2000][state.housing.tier] || 20;
 
     // --- 起始地点 ---
     if (cfg.startLocation) {
@@ -2550,7 +2552,8 @@ function getAvailableActions(state) {
               state.housing.storageRented = true;
               state.housing.storageCapacity = opt.capacity;
               // [全系统自洽修复] 域G A类修复: housing.tier 上限扩容至 6
-              const baseCap = [20, 50, 100, 200, 500, 1000, 2000][state.housing.tier] || 20;
+              const baseCap =
+                [20, 50, 100, 200, 500, 1000, 2000][state.housing.tier] || 20;
               state.inventory.capacity = baseCap + opt.capacity;
               StateManager.addMessage(
                 `📦 租下了${opt.name}！总容量提升至${state.inventory.capacity}。`,
