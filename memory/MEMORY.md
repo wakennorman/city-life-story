@@ -28,6 +28,7 @@
 - [食材库存联动已实现](ingredient-system-done.md) — ✅ 2026/6/20 完成，23种食材16个配方，保质期+烹饪系统
 - [平衡调参已完成](balance-tuning-done.md) — ✅ 2026/6/20 完成，装备价格/illness阈值/新闻事件调整
 - [版本全景地图](版本全景地图.md) — ✅ 城市浮生记双版本迁移完成记录
+- [force-push-recovery](force-push-recovery.md) — 远程 force push 后无损恢复流程（备份→推送→比对）+ 子模块同步（2026-07-15）
 - [版本一致性铁律](版本一致性铁律.md) — ✅ 版本问题已解决，保留为教训记录
 - [待迁移内容清单](待迁移内容清单.md) — ✅ 全部迁移完成（carry.js/pricing.js/weather增强）
 - [房产市场波动系统 v2](property-market-v2-fluctuation.md) — 房产不再固定增值，改用市场周期波动+新闻/政策/行业热度联动
