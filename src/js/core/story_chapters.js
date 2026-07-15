@@ -64,6 +64,20 @@ var STORY_CHAPTERS = [
         hint: "是时候想想更长远的事了。",
       },
       {
+        id: "survive_emotion",
+        condition: function (st) {
+          // [全系统自洽修复] 域G 联动增强: 情绪状态影响叙事走向（G→G 深度包装）
+          return (
+            st.status &&
+            st.status.emotionalState &&
+            (st.status.emotionalState === "depressed" ||
+              st.status.emotionalState === "sad")
+          );
+        },
+        text: "三十天过去了，你发现这座城市不只冷在风里，也冷在心里。但你还在走，这比什么都重要。",
+        hint: "找人说说话、吃点好吃的，心情好起来脚步才会轻。",
+      },
+      {
         id: "survive_default",
         condition: function () {
           return true;
@@ -126,6 +140,28 @@ var STORY_CHAPTERS = [
         },
         text: "你在这座城市交到了真正的朋友。有人脉的城市，才不是异乡。",
         hint: "维系好这些关系，它们会在关键时刻帮你。",
+      },
+      {
+        id: "foothold_health_crisis",
+        condition: function (st) {
+          // [全系统自洽修复] 域G 联动增强: 健康危机改变立足叙事（G→G，健康子系统联动）
+          return ((st.status && st.status.health) || 100) < 30;
+        },
+        text: "半年了，身体却在报警。你开始懂得：攒的钱再多，身体垮了都是别人的。这座城市教会你的第一件事，是健康。",
+        hint: "停下来看看身体，别等它把你逼停。",
+      },
+      {
+        id: "foothold_emotion",
+        condition: function (st) {
+          // [全系统自洽修复] 域G 联动增强: 快乐状态给立足章节加温度
+          return (
+            st.status &&
+            st.status.emotionalState === "happy" &&
+            ((st.needs && st.needs.happiness) || 0) >= 70
+          );
+        },
+        text: "半年了，你发现自己开始笑。不是那种硬撑的笑，是真正觉得日子有盼头的笑。",
+        hint: "快乐是一种能力，你已经学会了。",
       },
       {
         id: "foothold_default",
