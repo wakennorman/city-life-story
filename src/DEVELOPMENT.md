@@ -1,6 +1,6 @@
 # 城市浮生记 (City Life Story) — 开发文档
 
-> 最后更新: 2026-07-15（v3.118 loop R27 全系统优化·Domain E 经济/投资（第二轮）——A类修复0项（全量扫描 skills/jobs/items/goods/illnesses/pricing/trade/economy_v3.1：locations/categories 全部有效、jobs.payCalc 技能键均属10核心技能、pricing div-by-zero 已守卫，结构性健康） + 联动增强2项（data3_wealth_tax_intro A→G 累进财富税梯度叙事化 / data3_market_saturation A→E 市场饱和度惩罚叙事化））
+> 最后更新: 2026-07-15（v3.118 loop R27 全系统优化·Domain E 经济/投资（第二轮）——A类修复0项（全量扫描 finance.js/economy_v3.1.js/stock.js/property_market.js/investment.js::tickInvestmentDaily：贷款额度·负债率·资产增信·新闻传导·房产周期·组合峰值全部 `||`/isFinite 守卫，结构性健康） + 联动增强2项（econ_career_invest_unlock E→C 私募跟投圈层 / econ_portfolio_drawdown E→B 组合峰值回撤损失厌恶叙事））
 > 上一版: v3.117 loop R26 全系统优化·Domain D NPC/社交（第二轮）——A类修复0项（全量扫描 career_path_events/personal_growth_events/skill_tree/skill_synergy/career_dev/career_linkage_events：技能键/职业path id/CAREER_PATHS 引用全部有效，career.currentJob 裸访问均经 _job/_path/if 守卫，无死职业·死技能·不可达触发） + 联动增强3项（career_enterprise_readiness C→H 职业硬技能兑现公司KPI / career_legacy_tale C→B 职业成就成城内叙事·置 _careerNarrativeSeen / career_resource_mastery C→A 熟练度换效率红利·智力回馈）
 >
 > commits: `feat: [域E] 联动增强(2项)` + `（docs）loop状态/迭代表`
