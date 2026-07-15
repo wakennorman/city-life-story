@@ -32,3 +32,4 @@
 - [v3.76 事件叙事-触发自洽性审查 R120](v3.76-narrative-trigger-consistency-r120.md) — 系统性审查5个事件文件250+事件，修复A类4个：bike_share_boom/live_stream_rush/shopping_fest/consumption_down（文本暗示特定职业经历但缺少conditions检查）（2026-07-10，commit 477d2237）
 - [R120 联动事件扩充](v3.77-linkage-events-r120.md) — 新增5个空白区联动事件：老手特遇(veteran_client)/专业技能视角(repair_expert_eye)/NPC暗线(old_zhou_secret_channel)/天气×位置(rain_market_vs_park)/饥饿积累(hunger_accumulation)（2026-07-10，commit ca9be7af）
 - [v3.118 域E 联动增强 R27](../.claude/domain-optimization-round-27.md) — 域E(经济/投资)第二轮：A类0项 + 联动增强2项（econ_career_invest_unlock E→C 私募跟投圈层 / econ_portfolio_drawdown E→B 组合峰值回撤损失厌恶叙事）（2026-07-15，本地commit，未push）
+- [仓库结构重构 2026-07-15](repo-structure-2026-07-15.md) — 双仓库分离(根→claude-config.git/master，子模块→city-life-story.git/**main**)；🚨铁律:子模块origin≠根origin，游戏推main/配置推master，绝不让子模块远程指回claude-config
