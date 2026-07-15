@@ -361,7 +361,8 @@ function getStoryChapterChecklist(state) {
   var stats = _collectChapterStats(state);
   var day = p.day || 1;
   var totalAssets = (r.cash || 0) + (r.bankBalance || 0);
-  var debt = (r.villageDebt || 0) + (r.bankLoan || 0);
+  // [全系统自洽修复] 域G A类修复: state 中银行贷款字段为 `bankDebt`（见 state.js:66），原字段名 `bankLoan` 不存在→银行债务永不被计入 checklist
+  var debt = (r.villageDebt || 0) + (r.bankDebt || 0);
   var items = [];
 
   function add(label, done, hint, weight) {

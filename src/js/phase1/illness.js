@@ -321,7 +321,8 @@ function tickIllnessDecay(state) {
 
       // 头晕（贫血）
       if (ill.symptom.dizzinessCh && Random.chance(ill.symptom.dizzinessCh)) {
-        state.needs.fatigue += 5;
+        // [全系统自洽修复] 域G A类修复: fatigue 未 clamp 至 100（其他症状均用 Math.min(100,...) 限幅）
+        state.needs.fatigue = Math.min(100, state.needs.fatigue + 5);
         StateManager.addMessage(
           "😵 " + ill.name + "让你头晕目眩，疲劳+5。",
           "warning",

@@ -128,8 +128,8 @@ var _CLASSIC_STEPS = [
         <p style="font-size:11px;color:var(--text-muted);margin-top:4px;">💡 属性影响工作效率和事件结果；需求低于30触发危险提示</p>
         <p style="color:var(--success);font-size:12px;margin-top:6px;">👆 点击左侧 <strong>状态面板</strong>（电脑端）或顶部 <strong>状态条</strong>（手机端）继续</p>
       `,
-    highlight: "#sidebar, #mobile-hud .mobile-stats-strip",
-    waitForClick: "#sidebar, #mobile-hud .mobile-stats-strip",
+    highlight: "#sidebar",
+    waitForClick: "#sidebar, #mobile-menu-btn",
   },
   {
     title: "🏘️ 你在城中村，这是你的起点",
@@ -150,8 +150,8 @@ var _CLASSIC_STEPS = [
         <p style="color:var(--accent);font-size:11px;margin-top:4px;">💡 前15天废品回收有新人加成+¥5，第一桶金就靠它</p>
         <p style="color:var(--success);font-size:12px;margin-top:6px;">👆 直接点击高亮处的 <strong>废品回收</strong> 卡片继续</p>
       `,
-    highlight: '[data-action-id="waste_recycling"]',
-    waitForClick: '[data-action-id="waste_recycling"]',
+    highlight: '[data-action-id="job_waste_recycling"]',
+    waitForClick: '[data-action-id="job_waste_recycling"]',
     hint: "找不到？废品回收是街头的入门工作，应该在行动卡片列表里。",
   },
   {

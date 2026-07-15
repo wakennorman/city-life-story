@@ -6,14 +6,16 @@
 function applyNeedsDecay(state) {
   const n = state.needs;
   // v3.1: 接入难度乘数 — 休闲档衰减慢，困难/地狱档衰减快
-  const decayMul =
+  var decayMul =
     typeof getDifficultyMultiplier === "function"
       ? getDifficultyMultiplier(state, "needsDecay")
       : 1.0;
-  // [全系统自洽修复] 域G B类修复: 防止 NaN 传播（用 (x || 0) 兜底）
-  n.hunger = Math.max(0, (n.hunger || 0) - Math.round(13 * decayMul));
-  n.hygiene = Math.max(0, (n.hygiene || 0) - Math.round(7 * decayMul));
-  n.happiness = Math.max(0, (n.happiness || 0) - Math.round(4 * decayMul));
+  // [全系统自洽修复] 域G A类修复: 原 `(x||0)` 仅兜底首参，未覆盖 `Math.round(13*decayMul)` 中间值 NaN（Math.max(0,NaN)=NaN 非 0，需求阈值判定全面失灵）
+  if (!isFinite(decayMul) || isNaN(decayMul)) decayMul = 1.0;
+  decayMul = Math.max(0.1, Math.min(5.0, decayMul));
+  n.hunger = Math.max(0, Math.min(100, (n.hunger || 0) - Math.round(13 * decayMul)));
+  n.hygiene = Math.max(0, Math.min(100, (n.hygiene || 0) - Math.round(7 * decayMul)));
+  n.happiness = Math.max(0, Math.min(100, (n.happiness || 0) - Math.round(4 * decayMul)));
   // fatigue 在 endDay 中通过睡眠恢复单独处理
 }
 

@@ -438,7 +438,7 @@ function createDefaultState() {
       },
       _deferred: {}, // { hunger: day, fatigue: day, ... } 当日延后过的临界维度
       _amenityHabitCount: {}, // { amenityId: count } 同一 amenity 累计使用次数（用于规律 buff）
-      _hypertensionMonthlyPaid: 0, // 高血压月费上次缴费日
+      // [全系统自洽修复] 域G A类修复: 删除 `_hypertensionMonthlyPaid` 死字段（illness.js 读写的是通用 `_chronicMonthlyPaid`，此字段从未被任何代码读取）
       _chainEventQueue: [], // 链式事件调度队列 [{ eventId, triggerDay, phase }]
 
       // --- 道德系统 ---
