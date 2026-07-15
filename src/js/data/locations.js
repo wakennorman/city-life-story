@@ -64,7 +64,11 @@ const LOCATIONS = {
     specialties: ["water", "beer", "cigarettes", "instant_noodles"],
     dailyProbability: 0.3,
     specialCategory: ["luxury", "food"],
-    jobs: ["manual_labor_construction", "premium_engineering"],
+    jobs: [
+      "manual_labor_construction",
+      "premium_engineering",
+      "steel_worker", // [全系统自洽修复] 域C 修复:A1 钢结构工人(焊接分支)加入工地
+    ],
     priceMod: {},
   },
   factoryZone: {
@@ -86,7 +90,12 @@ const LOCATIONS = {
       cigarettes: 1.2,
       beer: 1.2,
     },
-    jobs: ["factory_work_assembly", "factory_overtime"],
+    jobs: [
+      "factory_work_assembly",
+      "factory_overtime",
+      "factory_electrician", // [全系统自洽修复] 域C 修复:A1 工厂电工(电工分支)加入工业区
+      "truck_assistant", // [全系统自洽修复] 域C 修复:A1 跟车助理(驾驶分支)加入工业区
+    ],
   },
   school: {
     id: "school",
@@ -100,7 +109,11 @@ const LOCATIONS = {
     specialties: ["fruits", "vegetables", "snacks"],
     dailyProbability: 0.5,
     specialCategory: ["food", "clothing"],
-    jobs: ["tutoring", "xiao_mei_tutoring"],
+    jobs: [
+      "tutoring",
+      "xiao_mei_tutoring",
+      "document_translator", // [全系统自洽修复] 域C 修复:A1 文档翻译(英语分支)加入大学城
+    ],
     // navHints 演示：百科条目会自动读取此字段生成额外导航按钮
     navHints: [
       {
@@ -143,6 +156,13 @@ const LOCATIONS = {
       "sister_zhang_vending",
       "delivery_rider",
       "restaurant_assistant",
+      "cafeteria_worker", // [全系统自洽修复] 域C 修复:A1 食堂帮厨(烹饪分支)加入商业区
+      "phone_modding", // [全系统自洽修复] 域C 修复:A1 手机改装(维修分支)加入商业区
+      "foreign_trade_assistant", // [全系统自洽修复] 域C 修复:A1 外贸助理(英语分支)加入商业区
+      "taxi_driver", // [全系统自洽修复] 域C 修复:A1 出租车司机(驾驶分支)加入商业区
+      "shop_assistant", // [全系统自洽修复] 域C 修复:A1 导购员(销售分支)加入商业区
+      "procurement_clerk", // [全系统自洽修复] 域C 修复:A1 采购员(销售分支)加入商业区
+      "courier_gig", // [全系统自洽修复] 域C 修复:A1 跑腿零工加入商业区
     ],
     priceMod: {
       water: 1.1,
@@ -168,7 +188,16 @@ const LOCATIONS = {
     specialties: ["electronics", "daily_use", "snacks"],
     dailyProbability: 0.4,
     specialCategory: ["electronics"],
-    jobs: ["content_writing", "junior_analyst"],
+    jobs: [
+      "content_writing",
+      "junior_analyst",
+      "instrument_repair", // [全系统自洽修复] 域C 修复:A1 仪器仪表维修(维修分支)加入科技园
+      "web_designer", // [全系统自洽修复] 域C 修复:A1 网页设计师(编程分支)加入科技园
+      "server_ops", // [全系统自洽修复] 域C 修复:A1 服务器运维(编程分支)加入科技园
+      "network_monitor", // [全系统自洽修复] 域C 修复:A1 网络安全监控(编程分支)加入科技园
+      "project_coordinator", // [全系统自洽修复] 域C 修复:A1 项目协调员(管理分支)加入科技园
+      "audit_assistant", // [全系统自洽修复] 域C 修复:A1 审计助理(会计分支)加入科技园
+    ],
     priceMod: {},
   },
   hospital: {

@@ -3768,6 +3768,15 @@ function getAvailableActions(state) {
             if (cert.effects.repair) addSkillXp("repair", cert.effects.repair);
             if (cert.effects.medicineXp)
               addSkillXp("medicine", cert.effects.medicineXp);
+            // [全系统自洽修复] 域C 修复:A2 证书技能XP孤儿key映射到真实技能分支
+            if (cert.effects.caregiverXp)
+              addSkillXp("medicine", cert.effects.caregiverXp); // 护理→医学
+            if (cert.effects.physiotherapyXp)
+              addSkillXp("medicine", cert.effects.physiotherapyXp); // 康复→医学
+            if (cert.effects.foodHandlingXp)
+              addSkillXp("cooking", cert.effects.foodHandlingXp); // 食安→烹饪
+            if (cert.effects.psychologyXp)
+              addSkillXp("social", cert.effects.psychologyXp); // 心理→社交
             StateManager.addMessage(
               `📜 恭喜！成功考取${cert.name}！`,
               "success",
@@ -4411,6 +4420,15 @@ function doStreetJob(job) {
     addSkillXp("welding", job.effects.weldingXp || 0);
     addSkillXp("medicine", job.effects.medicineXp || 0);
     addSkillXp("social", job.effects.socialXp || 0);
+    // [全系统自洽修复] 域C 修复:A2 street-job skill XP单key别名统一(codingXp→coding等已在别处)
+    if (job.effects.codingXp) addSkillXp("coding", job.effects.codingXp);
+    if (job.effects.managementXp)
+      addSkillXp("management", job.effects.managementXp);
+    if (job.effects.accountingXp)
+      addSkillXp("accounting", job.effects.accountingXp);
+    if (job.effects.electricianXp)
+      addSkillXp("electrician", job.effects.electricianXp);
+    if (job.effects.drivingXp) addSkillXp("driving", job.effects.drivingXp);
   }
 
   // 属性经验转化
