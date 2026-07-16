@@ -646,8 +646,24 @@
   }
 
   // ====== 获取脚本加载顺序 ======
-  // 与 city-life-story/src/index.html 保持同步
-  function getScriptOrder() {
+  // P0-4：单一真相源——直接解析 src/index.html 的 <script src>，根除手抄漂移。
+  // 解析失败（如 index.html 缺失）才回退到下方内置副本（尽量维护但不再权威）。
+  function getScriptOrder(srcDir) {
+    try {
+      var manifest = require("./lib/script_manifest.cjs");
+      var list = manifest.getScriptManifest(srcDir);
+      if (list && list.length > 0) return list;
+    } catch (e) {
+      console.warn(
+        "[HEADLESS] script_manifest 解析失败，回退内置列表:",
+        e.message,
+      );
+    }
+    return getScriptOrderFallback();
+  }
+
+  // 内置回退列表（历史手抄副本；仅在无法解析 index.html 时使用）
+  function getScriptOrderFallback() {
     return [
       "js/core/random.js",
       "js/core/state.js",
@@ -834,7 +850,7 @@
     stubUiFunctions();
 
     // 2. 获取脚本顺序
-    var scripts = getScriptOrder();
+    var scripts = getScriptOrder(srcDir);
 
     // 3. 逐一加载
     var success = 0;

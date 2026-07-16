@@ -824,7 +824,9 @@ function exportSave(slot) {
 function importSave(jsonStr) {
   try {
     const data = JSON.parse(jsonStr);
-    if (!data.version || !data.player) {
+    // P0-3：版本缺失不再硬拒——importState 会把无版本存档视为 v0 跑全套迁移。
+    // 仍要求 player 存在（缺 player 是结构性损坏，无法安全迁移）。
+    if (!data.player) {
       throw new Error("无效的存档格式");
     }
     StateManager.importState(data);

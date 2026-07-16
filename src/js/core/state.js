@@ -10,7 +10,7 @@ function createDefaultState() {
   const now = Date.now();
   return {
     // --- 元数据 ---
-    version: "1.1.0",
+    version: typeof SAVE_VERSION !== "undefined" ? SAVE_VERSION : "2.0.0",
     createdAt: now,
     lastPlayedAt: now,
     playTime: 0,
@@ -239,6 +239,10 @@ function createDefaultState() {
           fateEventHistory: [],
           ceasedExistence: false,
           ceasedAt: null,
+          ipoed: false,
+          ipoDay: null,
+          absorbedBy: null,
+          absorbedName: null,
         },
         byte_dragon: {
           phase: "growth",
@@ -252,6 +256,10 @@ function createDefaultState() {
           fateEventHistory: [],
           ceasedExistence: false,
           ceasedAt: null,
+          ipoed: false,
+          ipoDay: null,
+          absorbedBy: null,
+          absorbedName: null,
         },
         cloud_giant: {
           phase: "mature",
@@ -265,6 +273,10 @@ function createDefaultState() {
           fateEventHistory: [],
           ceasedExistence: false,
           ceasedAt: null,
+          ipoed: false,
+          ipoDay: null,
+          absorbedBy: null,
+          absorbedName: null,
         },
         game_fun: {
           phase: "growth",
@@ -278,6 +290,10 @@ function createDefaultState() {
           fateEventHistory: [],
           ceasedExistence: false,
           ceasedAt: null,
+          ipoed: false,
+          ipoDay: null,
+          absorbedBy: null,
+          absorbedName: null,
         },
         safe_fin: {
           phase: "mature",
@@ -291,6 +307,10 @@ function createDefaultState() {
           fateEventHistory: [],
           ceasedExistence: false,
           ceasedAt: null,
+          ipoed: false,
+          ipoDay: null,
+          absorbedBy: null,
+          absorbedName: null,
         },
       },
       fateEventCooldown: {},
@@ -440,6 +460,7 @@ function createDefaultState() {
       _amenityHabitCount: {}, // { amenityId: count } 同一 amenity 累计使用次数（用于规律 buff）
       // [全系统自洽修复] 域G A类修复: 删除 `_hypertensionMonthlyPaid` 死字段（illness.js 读写的是通用 `_chronicMonthlyPaid`，此字段从未被任何代码读取）
       _chainEventQueue: [], // 链式事件调度队列 [{ eventId, triggerDay, phase }]
+      _experiencedNarratives: [], // 已体验的叙事事件 id（防重复；旧存档经迁移回填）
 
       // --- 道德系统 ---
       moral: {
@@ -458,6 +479,273 @@ function createDefaultState() {
     messageLog: [], // [{ day, text, type }]
   };
 }
+
+// ====== P0-3 存档版本迁移基础设施 ======
+// 当前存档格式版本。任何新增/重命名/删除 state 字段都应：
+//   ① 若为纯新增容器 → createDefaultState 加默认值即可（deepMergeDefaults 自动回填）
+//   ② 若为改名/搬移/派生等变换 → 在 SAVE_MIGRATIONS 追加一步并 bump 此常量
+var SAVE_VERSION = "2.0.0";
+
+/**
+ * 深合并默认值：以 createDefaultState() 为底，把老存档的值盖上去。
+ * 规则（逐条对齐 P0-3 决策，防稀疏字段污染）：
+ *   - saved 存在的键（含值为 null）一律保留（尊重 startup.company=null 等有意稀疏）
+ *   - 仅回填 saved 缺失的键（新版新增字段的安全网）
+ *   - 双方皆为普通对象 → 递归合并
+ *   - 数组整体替换（不逐元素合并，避免把默认元素混进玩家数据）
+ *   - 类型不一致时 saved 胜
+ *   - 跳过 __proto__ / constructor / prototype 防原型污染
+ */
+function deepMergeDefaults(defaults, saved) {
+  // saved 为数组 / 原始值 / null → 直接取 saved（undefined 才回落默认）
+  if (Array.isArray(saved)) return saved;
+  if (saved === null || typeof saved !== "object") {
+    return saved === undefined ? defaults : saved;
+  }
+  var out = {};
+  // 1) 先铺入 defaults 的所有自有键（缺失字段的回填来源）
+  if (defaults && typeof defaults === "object" && !Array.isArray(defaults)) {
+    for (var dk in defaults) {
+      if (!Object.prototype.hasOwnProperty.call(defaults, dk)) continue;
+      if (dk === "__proto__" || dk === "constructor" || dk === "prototype")
+        continue;
+      out[dk] = defaults[dk];
+    }
+  }
+  // 2) 再用 saved 覆盖 / 递归合并（保留 saved-only 键，如老存档的 npcRelations）
+  for (var sk in saved) {
+    if (!Object.prototype.hasOwnProperty.call(saved, sk)) continue;
+    if (sk === "__proto__" || sk === "constructor" || sk === "prototype")
+      continue;
+    var sv = saved[sk];
+    var dv = out[sk];
+    if (
+      sv &&
+      typeof sv === "object" &&
+      !Array.isArray(sv) &&
+      dv &&
+      typeof dv === "object" &&
+      !Array.isArray(dv)
+    ) {
+      out[sk] = deepMergeDefaults(dv, sv); // 双方皆对象 → 递归
+    } else {
+      out[sk] = sv; // 数组 / null / 原始值 / 类型不一致 → saved 胜
+    }
+  }
+  return out;
+}
+
+/** 语义化版本比较：a<b→-1，a==b→0，a>b→1（缺段按 0 补齐） */
+function _compareSaveVersions(a, b) {
+  var pa = String(a || "0")
+    .split(".")
+    .map(function (n) {
+      return parseInt(n, 10) || 0;
+    });
+  var pb = String(b || "0")
+    .split(".")
+    .map(function (n) {
+      return parseInt(n, 10) || 0;
+    });
+  var len = Math.max(pa.length, pb.length);
+  for (var i = 0; i < len; i++) {
+    var x = pa[i] || 0;
+    var y = pb[i] || 0;
+    if (x !== y) return x < y ? -1 : 1;
+  }
+  return 0;
+}
+
+/**
+ * 有序迁移注册表：每步 { to, migrate(s) }，仅当 to > 存档版本时执行。
+ * 历史迁移梯（v1.0→v1.9 的全部变换/派生/改名）整体归入 to:"2.0.0" 这一步——
+ * 因为线上所有老存档版本必 < 2.0.0，此步对它们「无条件执行」，与 P0-3 之前
+ * importState 每次加载都跑全套迁移的行为逐字一致（零行为漂移）；而 2.0.0+
+ * 新存档已结构完整，自动跳过。deepMergeDefaults 已在此步之前回填结构性字段，
+ * 故此处只保留 deep-merge 无法替代的「变换类」逻辑（改名/搬移/派生）与历史
+ * 纯回填（保留以防默认结构与历史迁移意图偏移；对已回填字段自然成 no-op）。
+ */
+var SAVE_MIGRATIONS = [
+  {
+    to: "2.0.0",
+    migrate: function (s) {
+      // === v1.0 → v1.1 迁移：fame 从 status 移到 player + 新增疾病/习惯容器 ===
+      if (!s.relationships) s.relationships = {};
+      if (s.npcRelations) {
+        for (var legacyNpcId in s.npcRelations) {
+          if (!s.relationships[legacyNpcId]) {
+            s.relationships[legacyNpcId] = s.npcRelations[legacyNpcId];
+          }
+        }
+        delete s.npcRelations;
+      }
+      if (s.status && typeof s.status.fame === "number") {
+        if (s.player) s.player.fame = s.status.fame;
+        delete s.status.fame;
+      }
+      if (s.player && typeof s.player.fame !== "number") {
+        s.player.fame = 0;
+      }
+      if (s.status && !s.status.illnesses) s.status.illnesses = [];
+      if (s.flags && !s.flags._habits) {
+        s.flags._habits = {
+          junkFoodMeals: 0,
+          lowHungerStreak: 0,
+          lowHygieneStreak: 0,
+          lowHappinessStreak: 0,
+          highFatigueStreak: 0,
+          lateNightActions: 0,
+          stomach_inflammationCount: 0,
+        };
+      }
+      if (s.flags && !s.flags._deferred) s.flags._deferred = {};
+      if (s.flags && !s.flags._amenityHabitCount)
+        s.flags._amenityHabitCount = {};
+      // v1.1 → v1.2 迁移：skillBranches + talentNodes
+      if (!s.skillBranches) s.skillBranches = {};
+      if (!s.talentNodes) s.talentNodes = {};
+      // v1.2 → v1.3 迁移：企业命运 ceasedExistence
+      if (s.enterpriseFate && s.enterpriseFate.companies) {
+        for (var _cid in s.enterpriseFate.companies) {
+          var _co = s.enterpriseFate.companies[_cid];
+          if (_co && typeof _co.ceasedExistence === "undefined") {
+            _co.ceasedExistence = false;
+            _co.ceasedAt = null;
+          }
+        }
+      }
+      // v1.3 → v1.4 迁移：企业命运 Phase 1 新字段
+      if (s.enterpriseFate) {
+        if (!s.enterpriseFate.mergedCompaniesMap)
+          s.enterpriseFate.mergedCompaniesMap = {};
+        if (!s.enterpriseFate.industryIndex) s.enterpriseFate.industryIndex = {};
+        if (!s.enterpriseFate.quarterlyReports)
+          s.enterpriseFate.quarterlyReports = [];
+        // 为每家公司添加新字段（兼容旧存档）
+        for (var _cid2 in s.enterpriseFate.companies) {
+          var _co2 = s.enterpriseFate.companies[_cid2];
+          if (_co2) {
+            if (typeof _co2.ipoed === "undefined") _co2.ipoed = false;
+            if (typeof _co2.ipoDay === "undefined") _co2.ipoDay = null;
+            if (typeof _co2.absorbedBy === "undefined") _co2.absorbedBy = null;
+            if (typeof _co2.absorbedName === "undefined")
+              _co2.absorbedName = null;
+          }
+        }
+      }
+      // v1.4 → v1.5 迁移：创业系统 + 内幕交易系统
+      if (!s.startup) {
+        s.startup = {
+          status: "none",
+          company: null,
+          flags: {
+            registered: false,
+            firstProductLaunched: false,
+            hasInvestors: false,
+            ipoFiled: false,
+            exited: false,
+            exitType: null,
+            exitDay: null,
+            exitValue: 0,
+          },
+          history: {
+            foundedDay: null,
+            exitedDay: null,
+            exitType: null,
+            exitValue: 0,
+            peakValuation: 0,
+            totalRevenue: 0,
+            employeesHired: 0,
+          },
+        };
+      }
+      if (!s.insiderTrading) {
+        s.insiderTrading = {
+          activeRumor: null,
+          rumorHistory: [],
+          tradeLog: [],
+          audits: [],
+          currentPenalty: {
+            tradingBanned: false,
+            tradingBanEndDay: 0,
+            fine: 0,
+            reputationDamage: 0,
+          },
+        };
+      }
+      // enterpriseFate pendingEvents 字段
+      if (s.enterpriseFate && !s.enterpriseFate.pendingEvents) {
+        s.enterpriseFate.pendingEvents = [];
+      }
+      // v1.5 → v1.6 迁移：链式事件队列
+      if (s.flags && !s.flags._chainEventQueue) {
+        s.flags._chainEventQueue = [];
+      }
+      // v1.5 → v1.6 迁移：世界参数反馈环
+      if (!s._worldParams) {
+        if (typeof createDefaultWorldParams === "function") {
+          s._worldParams = createDefaultWorldParams();
+        } else {
+          s._worldParams = null;
+        }
+      }
+      // v1.6 → v1.7 迁移：行动频次统计
+      if (!s.stats) {
+        s.stats = {
+          actionFreq: {},
+          actionFirstUse: {},
+          tradeFreq: {},
+          trainFreq: {},
+          investFreq: {},
+        };
+      }
+      // v1.8 → v1.9 迁移：频次追踪扩展（交易/技能/投资）
+      if (!s.stats.tradeFreq) s.stats.tradeFreq = {};
+      if (!s.stats.trainFreq) s.stats.trainFreq = {};
+      if (!s.stats.investFreq) s.stats.investFreq = {};
+      // v1.7 → v1.8 迁移：交易情报系统
+      if (!s.trade) s.trade = {};
+      if (!s.trade.visitedToday) s.trade.visitedToday = {};
+      if (typeof s.trade._visitedDay === "undefined") s.trade._visitedDay = null;
+      if (!s.trade.priceMemory) s.trade.priceMemory = [];
+      if (typeof s.trade._todayTradeXp === "undefined")
+        s.trade._todayTradeXp = 0;
+      if (typeof s.trade._xpResetDay === "undefined") s.trade._xpResetDay = null;
+      // v1.8 → v1.9 迁移：NPC信息发现系统
+      if (s.relationships) {
+        for (var _nid in s.relationships) {
+          var _rel = s.relationships[_nid];
+          if (_rel && !_rel.discovered) {
+            var _aff = _rel.affinity || 0;
+            _rel.discovered = {
+              birthday: false,
+              giftPrefers: false,
+              favor: _aff >= 30,
+              deepTask: _aff >= 70,
+              presenceBonus: [],
+              affinityRewards: [],
+            };
+            if (_aff >= 30) _rel.discovered.presenceBonus.push(30);
+            if (_aff >= 60) _rel.discovered.presenceBonus.push(60);
+            if (_aff >= 80) _rel.discovered.presenceBonus.push(80);
+            if (_aff >= 30) _rel.discovered.affinityRewards.push(30);
+            if (_aff >= 60) _rel.discovered.affinityRewards.push(60);
+            if (_aff >= 80) _rel.discovered.affinityRewards.push(80);
+          }
+        }
+      }
+      // 叙事体验追踪
+      if (s.flags && !s.flags._experiencedNarratives) {
+        s.flags._experiencedNarratives = [];
+      }
+      // v1.9 → v2.0 迁移：装备实例按 slot 键统一（修复品质系统存储格式不一致）
+      // 旧键（itemId_时间戳 / itemId_instance）统一迁到 slot 键；找不到旧品质降为 common
+      if (typeof migrateEquipmentInstances === "function") {
+        migrateEquipmentInstances(s);
+      }
+    },
+  },
+];
 
 // ====== 顶层命名空间白名单（防止路径 typo 静默创建新顶层字段）======
 var _VALID_TOP_KEYS = null;
@@ -580,186 +868,31 @@ class GameStateManager {
     this._notify();
   }
 
-  /** 导入存档 */
+  /** 导入存档（P0-3：深合并默认值 → 版本化迁移 → 盖版本戳） */
   importState(savedState) {
-    this._state = savedState;
-    this._state.lastPlayedAt = Date.now();
-    // === v1.0 → v1.1 迁移：fame 从 status 移到 player + 新增疾病/习惯容器 ===
+    var savedVer = (savedState && savedState.version) || "0.0.0";
+    // ① 深合并：以最新默认结构为底回填所有缺失字段（新版新增字段的安全网）
+    //    —— saved 存在的键（含 null / 数组）一律保留，杜绝老玩家更新即存档报废
+    this._state = deepMergeDefaults(createDefaultState(), savedState);
     var s = this._state;
-    if (!s.relationships) s.relationships = {};
-    if (s.npcRelations) {
-      for (var legacyNpcId in s.npcRelations) {
-        if (!s.relationships[legacyNpcId]) {
-          s.relationships[legacyNpcId] = s.npcRelations[legacyNpcId];
-        }
-      }
-      delete s.npcRelations;
-    }
-    if (s.status && typeof s.status.fame === "number") {
-      if (s.player) s.player.fame = s.status.fame;
-      delete s.status.fame;
-    }
-    if (s.player && typeof s.player.fame !== "number") {
-      s.player.fame = 0;
-    }
-    if (s.status && !s.status.illnesses) s.status.illnesses = [];
-    if (s.flags && !s.flags._habits) {
-      s.flags._habits = {
-        junkFoodMeals: 0,
-        lowHungerStreak: 0,
-        lowHygieneStreak: 0,
-        lowHappinessStreak: 0,
-        highFatigueStreak: 0,
-        lateNightActions: 0,
-        stomach_inflammationCount: 0,
-      };
-    }
-    if (s.flags && !s.flags._deferred) s.flags._deferred = {};
-    if (s.flags && !s.flags._amenityHabitCount) s.flags._amenityHabitCount = {};
-    // v1.1 → v1.2 迁移：skillBranches + talentNodes
-    if (!s.skillBranches) s.skillBranches = {};
-    if (!s.talentNodes) s.talentNodes = {};
-    // v1.2 → v1.3 迁移：企业命运 ceasedExistence
-    if (s.enterpriseFate && s.enterpriseFate.companies) {
-      for (var _cid in s.enterpriseFate.companies) {
-        var _co = s.enterpriseFate.companies[_cid];
-        if (_co && typeof _co.ceasedExistence === "undefined") {
-          _co.ceasedExistence = false;
-          _co.ceasedAt = null;
+    // ② 版本化迁移：仅跑 to > savedVer 的变换步（改名/搬移/派生，deep-merge 无法替代）
+    //    次序不可与 ① 颠倒：先 migrate 再 merge 会把迁移删掉的旧容器补回 / 覆盖派生值
+    for (var i = 0; i < SAVE_MIGRATIONS.length; i++) {
+      var step = SAVE_MIGRATIONS[i];
+      if (_compareSaveVersions(step.to, savedVer) > 0) {
+        try {
+          step.migrate(s);
+        } catch (e) {
+          console.error(
+            "[StateManager] 存档迁移步骤 →" + step.to + " 失败:",
+            e,
+          );
         }
       }
     }
-    // v1.3 → v1.4 迁移：企业命运 Phase 1 新字段
-    if (s.enterpriseFate) {
-      if (!s.enterpriseFate.mergedCompaniesMap)
-        s.enterpriseFate.mergedCompaniesMap = {};
-      if (!s.enterpriseFate.industryIndex) s.enterpriseFate.industryIndex = {};
-      if (!s.enterpriseFate.quarterlyReports)
-        s.enterpriseFate.quarterlyReports = [];
-      // 为每家公司添加新字段（兼容旧存档）
-      for (var _cid2 in s.enterpriseFate.companies) {
-        var _co2 = s.enterpriseFate.companies[_cid2];
-        if (_co2) {
-          if (typeof _co2.ipoed === "undefined") _co2.ipoed = false;
-          if (typeof _co2.ipoDay === "undefined") _co2.ipoDay = null;
-          if (typeof _co2.absorbedBy === "undefined") _co2.absorbedBy = null;
-          if (typeof _co2.absorbedName === "undefined")
-            _co2.absorbedName = null;
-        }
-      }
-    }
-    // v1.4 → v1.5 迁移：创业系统 + 内幕交易系统
-    if (!s.startup) {
-      s.startup = {
-        status: "none",
-        company: null,
-        flags: {
-          registered: false,
-          firstProductLaunched: false,
-          hasInvestors: false,
-          ipoFiled: false,
-          exited: false,
-          exitType: null,
-          exitDay: null,
-          exitValue: 0,
-        },
-        history: {
-          foundedDay: null,
-          exitedDay: null,
-          exitType: null,
-          exitValue: 0,
-          peakValuation: 0,
-          totalRevenue: 0,
-          employeesHired: 0,
-        },
-      };
-    }
-    if (!s.insiderTrading) {
-      s.insiderTrading = {
-        activeRumor: null,
-        rumorHistory: [],
-        tradeLog: [],
-        audits: [],
-        currentPenalty: {
-          tradingBanned: false,
-          tradingBanEndDay: 0,
-          fine: 0,
-          reputationDamage: 0,
-        },
-      };
-    }
-    // enterpriseFate pendingEvents 字段
-    if (s.enterpriseFate && !s.enterpriseFate.pendingEvents) {
-      s.enterpriseFate.pendingEvents = [];
-    }
-    // v1.5 → v1.6 迁移：链式事件队列
-    if (s.flags && !s.flags._chainEventQueue) {
-      s.flags._chainEventQueue = [];
-    }
-    // v1.5 → v1.6 迁移：世界参数反馈环
-    if (!s._worldParams) {
-      if (typeof createDefaultWorldParams === "function") {
-        s._worldParams = createDefaultWorldParams();
-      } else {
-        s._worldParams = null;
-      }
-    }
-    // v1.6 → v1.7 迁移：行动频次统计
-    if (!s.stats) {
-      s.stats = {
-        actionFreq: {},
-        actionFirstUse: {},
-        tradeFreq: {},
-        trainFreq: {},
-        investFreq: {},
-      };
-    }
-    // v1.8 → v1.9 迁移：频次追踪扩展（交易/技能/投资）
-    if (!s.stats.tradeFreq) s.stats.tradeFreq = {};
-    if (!s.stats.trainFreq) s.stats.trainFreq = {};
-    if (!s.stats.investFreq) s.stats.investFreq = {};
-    // v1.7 → v1.8 迁移：交易情报系统
-    if (!s.trade) s.trade = {};
-    if (!s.trade.visitedToday) s.trade.visitedToday = {};
-    if (typeof s.trade._visitedDay === "undefined") s.trade._visitedDay = null;
-    if (!s.trade.priceMemory) s.trade.priceMemory = [];
-    if (typeof s.trade._todayTradeXp === "undefined") s.trade._todayTradeXp = 0;
-    if (typeof s.trade._xpResetDay === "undefined") s.trade._xpResetDay = null;
-    // v1.8 → v1.9 迁移：NPC信息发现系统
-    if (s.relationships) {
-      for (var _nid in s.relationships) {
-        var _rel = s.relationships[_nid];
-        if (_rel && !_rel.discovered) {
-          var _aff = _rel.affinity || 0;
-          _rel.discovered = {
-            birthday: false,
-            giftPrefers: false,
-            favor: _aff >= 30,
-            deepTask: _aff >= 70,
-            presenceBonus: [],
-            affinityRewards: [],
-          };
-          if (_aff >= 30) _rel.discovered.presenceBonus.push(30);
-          if (_aff >= 60) _rel.discovered.presenceBonus.push(60);
-          if (_aff >= 80) _rel.discovered.presenceBonus.push(80);
-          if (_aff >= 30) _rel.discovered.affinityRewards.push(30);
-          if (_aff >= 60) _rel.discovered.affinityRewards.push(60);
-          if (_aff >= 80) _rel.discovered.affinityRewards.push(80);
-        }
-      }
-    }
-    // 叙事体验追踪
-    if (s.flags && !s.flags._experiencedNarratives) {
-      s.flags._experiencedNarratives = [];
-    }
-    // v1.9 → v2.0 迁移：装备实例按 slot 键统一（修复品质系统存储格式不一致）
-    // 旧键（itemId_时间戳 / itemId_instance）统一迁到 slot 键；找不到旧品质降为 common
-    if (typeof migrateEquipmentInstances === "function") {
-      migrateEquipmentInstances(s);
-    }
-    // 版本升级标记
-    if (!s.version) s.version = "1.0.0";
-    s.version = "1.9.0";
+    // ③ 盖版本戳 + 记录最近游玩时间
+    s.version = SAVE_VERSION;
+    s.lastPlayedAt = Date.now();
     this._markAllDirty();
     this._notify();
   }

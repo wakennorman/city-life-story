@@ -58,7 +58,10 @@ check(
 );
 
 // ── 3. 构建产物必须存在且合理 ────────────────────────────────────
+// P0-1 起：游戏逻辑外部化到 dist/app.js（defer 加载），index.html 仅为
+// 瘦身壳。故渲染标记 / 体积断言目标从 index.html 迁到 app.js。
 const distIndexAbs = join(ROOT, "dist", "index.html");
+const distAppAbs = join(ROOT, "dist", "app.js");
 
 check(
   "dist/index.html 存在",
@@ -68,24 +71,43 @@ check(
     : `${distIndexAbs} 不存在 — 运行 npm run build:legacy`,
 );
 
+check(
+  "dist/app.js 存在",
+  existsSync(distAppAbs),
+  existsSync(distAppAbs)
+    ? `${(statSync(distAppAbs).size / 1024 / 1024).toFixed(2)} MB`
+    : `${distAppAbs} 不存在 — 运行 npm run build:legacy`,
+);
+
 if (existsSync(distIndexAbs)) {
   const html = readFileSync(distIndexAbs, "utf8");
-  const sizeMB = (html.length / 1024 / 1024).toFixed(2);
   check("index.html 非空", html.length > 100, `${html.length} 字节`);
   check(
-    "文件大小合理（> 1MB）",
-    html.length > 1024 * 1024,
+    "index.html 引用 defer app.js",
+    /<script[^>]+defer[^>]+src="app\.js"|<script[^>]+src="app\.js"[^>]+defer/i.test(
+      html,
+    ),
+    "未找到 <script defer src=\"app.js\"> — 外部化可能异常",
+  );
+}
+
+if (existsSync(distAppAbs)) {
+  const app = readFileSync(distAppAbs, "utf8");
+  const sizeMB = (app.length / 1024 / 1024).toFixed(2);
+  check(
+    "app.js 大小合理（> 1MB）",
+    app.length > 1024 * 1024,
     `${sizeMB} MB — 过小可能打包失败`,
     `${sizeMB} MB`,
   );
   check(
     "包含游戏入口标志",
-    /renderTimeSlot|initGame|_gameState|城市浮生记/i.test(html),
+    /renderTimeSlot|initGame|_gameState|城市浮生记/i.test(app),
     "未找到游戏入口标志 — 构建可能异常",
   );
   check(
     "包含移动端顶栏代码",
-    /renderTitleBar|renderStatsStrip/i.test(html),
+    /renderTitleBar|renderStatsStrip/i.test(app),
     "未找到移动端代码 — 可能未在 build 前提交 src/ 改动",
   );
 }

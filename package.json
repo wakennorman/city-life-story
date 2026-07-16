@@ -11,6 +11,8 @@
     "typecheck": "npx -y -p typescript@6.0.3 tsc --noEmit",
     "check:ts-data": "node scripts/audit-ts-data.mjs",
     "check:js": "node scripts/check-js-syntax.mjs",
+    "check:events": "node tests/events_integrity.cjs && node tests/smoke_sim.cjs",
+    "test": "npm run check:js && npm run check:events",
     "verify:deploy": "node scripts/verify-deploy.mjs",
     "build:legacy": "python build.py",
     "deploy": "npm run build:legacy && npm run verify:deploy && netlify deploy --dir=dist --prod",

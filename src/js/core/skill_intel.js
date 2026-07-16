@@ -341,13 +341,13 @@ function getWearLevelText(wearPct) {
 }
 
 /**
- * 构建维修预览（用于装备/物品 action card）
+ * 构建维修技能情报（用于装备/物品 action card，与 durability.js 的 buildRepairPreview 区分）
  * @param {object} state - 游戏状态
  * @param {object} itemDef - ITEMS 中的装备定义
  * @param {number} [wearPct] - 耐久百分比 0-100，未提供时默认100
  * @returns {string} 预览文本
  */
-function buildRepairPreview(state, itemDef, wearPct) {
+function buildSkillItemInfo(state, itemDef, wearPct) {
   if (!itemDef) return "";
   var parts = [];
   var lvl =

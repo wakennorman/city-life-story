@@ -3035,8 +3035,8 @@
 
     conditions: function (st) {
       if (
-        typeof st.reputation.commercialDist !== "number" ||
-        st.reputation.commercialDist < 30
+        typeof (st.reputation && st.reputation.commercialDist) !== "number" ||
+        (st.reputation.commercialDist || 0) < 30
       )
         return false; // 检查 商业区声望
 

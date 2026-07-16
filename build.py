@@ -33,8 +33,22 @@ def inline_css(html):
 
     return re.sub(r'<link\s+rel="stylesheet"\s+href="([^"]+)"[^>]*>', replace_css, html)
 
-def inline_js(html):
-    """内联 <script src="..."> """
+def bundle_js(html):
+    """
+    P0-1 首屏外部化：把所有 <script src="..."> 按出现顺序串接进单个外部
+    dist/app.js（而非逐个内联），HTML 中首个 src 标签替换为
+    <script defer src="app.js">，其余删除。
+
+    这样浏览器可先解析并渲染欢迎壳（内联关键 CSS），app.js 走 defer 在
+    解析后加载，不再阻塞首屏；GitHub Pages 对 app.js 自动 gzip。
+
+    返回 (new_html, bundle_code)。串接必须严格按 index.html 出现序——
+    全局加载序敏感（288 个 window.* 顶层声明依赖顺序）。
+    行内 <script>（错误边界 / boot）无 src 属性，不被匹配，保持内联。
+    """
+    chunks = []      # 串接后的 JS 片段
+    state = {'first': True}
+
     def replace_js(match):
         attrs = match.group(0)
         src_match = re.search(r'src="([^"]+)"', attrs)
@@ -42,24 +56,32 @@ def inline_js(html):
             return match.group(0)
         src = src_match.group(1)
         path = os.path.join(SRC_DIR, src)
-        if os.path.exists(path):
-            # JS语法检查
-            try:
-                subprocess.run(
-                    ['node', '--check', path],
-                    capture_output=True, text=True, check=True
-                )
-            except subprocess.CalledProcessError as e:
-                err_msg = e.stderr.strip() if e.stderr else '语法错误'
-                # 避免GBK终端炸emoji
-                print('\n[JS语法错误] %s' % path)
-                print(err_msg)
-                sys.exit(1)
-            js = read_file(path)
-            return f'<script>{js}</script>'
-        return match.group(0)
+        if not os.path.exists(path):
+            # 缺失文件：保持原标签（与旧行为一致，暴露问题）
+            return match.group(0)
+        # JS语法检查（保留原有构建期门禁）
+        try:
+            subprocess.run(
+                ['node', '--check', path],
+                capture_output=True, text=True, check=True
+            )
+        except subprocess.CalledProcessError as e:
+            err_msg = e.stderr.strip() if e.stderr else '语法错误'
+            # 避免GBK终端炸emoji
+            print('\n[JS语法错误] %s' % path)
+            print(err_msg)
+            sys.exit(1)
+        js = read_file(path)
+        # 文件间用 \n;\n 分隔防 ASI 粘连；注释标出源路径便于线上排错
+        chunks.append('\n;\n// ==== %s ====\n%s' % (src, js))
+        if state['first']:
+            state['first'] = False
+            return '<script defer src="app.js"></script>'
+        return ''  # 其余 src 标签删除，全部并入 app.js
 
-    return re.sub(r'<script\s+src="([^"]+)"[^>]*></script>', replace_js, html)
+    new_html = re.sub(r'<script\s+src="([^"]+)"[^>]*></script>', replace_js, html)
+    bundle_code = ''.join(chunks)
+    return new_html, bundle_code
 
 def main():
     os.makedirs(DIST_DIR, exist_ok=True)
@@ -72,8 +94,8 @@ def main():
     # 内联 CSS
     html = inline_css(html)
 
-    # 内联 JS（按顺序）
-    html = inline_js(html)
+    # P0-1: JS 外部化（defer bundle）
+    html, bundle_code = bundle_js(html)
 
     # 复制静态资源（images/）
     src_images = os.path.join(SRC_DIR, 'images')
@@ -101,12 +123,18 @@ def main():
                 shutil.copy2(src_file, os.path.join(DIST_DIR, fname))
                 print(f"  📦 favicon: {fname}")
 
-    # 写入
+    # 写入 index.html（瘦壳，只含内联 CSS + boot 脚本 + defer app.js）
     with open(OUTPUT_FILE, 'w', encoding='utf-8') as f:
         f.write(html)
 
-    size_kb = os.path.getsize(OUTPUT_FILE) / 1024
-    print(f'Build complete: {OUTPUT_FILE} ({size_kb:.1f} KB)')
+    # 写入外部 JS bundle（app.js）
+    app_js_path = os.path.join(DIST_DIR, 'app.js')
+    with open(app_js_path, 'w', encoding='utf-8') as f:
+        f.write(bundle_code)
+
+    html_kb = os.path.getsize(OUTPUT_FILE) / 1024
+    app_kb = os.path.getsize(app_js_path) / 1024
+    print(f'Build complete: {OUTPUT_FILE} ({html_kb:.1f} KB) + app.js ({app_kb:.1f} KB)')
 
 if __name__ == '__main__':
     main()

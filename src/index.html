@@ -815,7 +815,11 @@
           if (backdrop) backdrop.classList.remove("visible");
         }
       });
-      showWelcome();
+      // Boot: app.js 走 defer，解析后才执行；用 DOMContentLoaded 确保
+      // showWelcome 等全局已定义（dev 同步加载与 prod defer 两端都安全）。
+      document.addEventListener("DOMContentLoaded", function () {
+        if (typeof showWelcome === "function") showWelcome();
+      });
     </script>
   </body>
 </html>

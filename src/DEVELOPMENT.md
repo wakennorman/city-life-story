@@ -54,6 +54,42 @@
 
 ---
 
+# 🛠️ P0 根治 + P1–P3 落地路线（2026-07-16）
+
+> 本节把上方体检报告转成**可执行路线**。P0 四项本轮全部落地（各独立 commit、可独立回滚）；P1–P3 逐项给出建议方案与验收口径，后续按项认领。
+
+## P0 落地状态（本轮全做）
+
+| # | 方案 | 关键改动 | 验收口径 | 状态 |
+| - | ---- | ---- | ---- | ---- |
+| P0-1 | 首屏 **defer 外部化 bundle** | `build.py` 的 `inline_js`→`bundle_js`：所有 `<script src>` 按 index.html 出现序串接进单个外部 `dist/app.js`，首标签替换为 `<script defer src="app.js">`，其余删除；两段内联脚本（错误边界 / boot）保留内联；boot 的 `showWelcome()` 包进 `DOMContentLoaded`（defer 时序安全）；`verify-deploy.mjs` 渲染标记/体积断言迁到 app.js | `python build.py` 生成瘦身 index.html（~126 KB）+ app.js（~8.3 MB，GitHub Pages 自动 gzip）；`verify:deploy` 全绿；浏览器双端（src 直开 / dist 起 http-server）无 ReferenceError、欢迎屏先渲染 | ✅ 已实现 |
+| P0-2 | 巨型文件**物理拆分**（前置完成） | `cross_system_events.js` 52,319→6,399 行，析出 `cross_system_events_part1..8.js`（各含 guard-IIFE，字节级重构验证一致，运行时 `RANDOM_EVENTS.length` 前后相等） | node --check 全过 + push 数与 runtime length 双验证 | ✅ commit `16d07dc8` |
+| P0-3 | 存档**深合并默认值 + SAVE_VERSION + 迁移注册表** | `state.js`：新增 `deepMergeDefaults`（saved 覆盖 defaults、数组整替、含 null 保留、跳过原型键）+ `SAVE_VERSION="2.0.0"` + 有序 `SAVE_MIGRATIONS`（历史 30+ 条 `if(!s.x)` 整体归入 to:"2.0.0" 步）；`importState` 重写为三段式 merge→migrate→stamp（次序不可反）；migration-only 容器（企业 Phase1 字段 / `_experiencedNarratives`）补入 createDefaultState 使各存档形态统一；`save.js` 放宽 `importSave` 无版本硬拒 | 缺字段被回填、`version==="2.0.0"`、fame/npcRelations 搬移正确、有效存档数值不变 | ✅ 已实现 |
+| P0-4 | 行为测试**断言层**（复用 headless runner） | `tests/lib/script_manifest.cjs`（解析 index.html 根除 `getScriptOrder` 漂移，runner 改为调用它、留内置回退）；`tests/events_integrity.cjs`（id 唯一 / 可达性 phase∈{street,corporate}∨`_isChainEvent`∨`triggers` / 可施效 / 类型正确 / TriggerRegistry 槽注册>0）；`tests/smoke_sim.cjs`（seed×300 天，断言无异常/health∈[0,100]/cash·needs 非 NaN/day 单调）；`package.json` 加 `check:events` + `test` | 三 cjs 逐一跑通；events_integrity 首跑若红=揪出存量死事件（单列 P1，不放宽不变式） | ✅ 已实现 |
+
+### P0-4 首跑已发现的存量疑点（转 P1 修复项，不阻塞框架）
+
+- **`TriggerRegistry.loadAll()` 读 `window.RANDOM_EVENTS`**（`trigger_registry.js:167`），而 `RANDOM_EVENTS` 是顶层 `const`，浏览器中**不挂 `window`**。`main.js:5171` 的初始化 IIFE 也走 `window.TriggerRegistry.loadAll()`。若 `RANDOM_EVENTS` 未被显式桥接到 `window`，约定式 `triggers` 事件将**全部注册失败**（正是 P0-4 要抓的"静默失效"类）。→ 建议 P1 核实并加一行 `window.RANDOM_EVENTS = RANDOM_EVENTS` 桥接或改读顶层引用。events_integrity 已内置桥接后再断言以避免误报。
+
+## P1 落地路线（近期）
+
+- **P1-1 事件四套格式收敛**：MORAL_EVENTS / NEWS_EVENTS / RANDOM_EVENTS / TriggerRegistry 统一到「数据对象 schema + 中央 loader + 单一触发层」。迁移正确性由 P0-4 的 `events_integrity` 守门（每步迁移后跑，不变式不许放宽）。验收：四套注册路径归一，`events_integrity` 保持全绿，事件总数不减。
+- **P1-2 `window.*` 命名空间收口**：先给全局对象加 `CLS.` 单一命名空间（`CLS.RANDOM_EVENTS` 等），分批把裸全局迁入；中期接 Vite/TS 通道。验收：`window.*` 顶层数显著下降，加载顺序不再脆弱（P0-4 smoke 全绿）。
+- **P1-3 `_r21~_r27` 碎片文件按领域合并**：`economy_linkage_events{,_r27}.js` 等按领域并入主题文件，去轮次编号。纯移动 + IIFE 注入不变。验收：文件数减少、`events_integrity` id 唯一性不破、runtime 事件数不变。
+- **P1-4 内容深度（长线因果链）**：重心从"加事件数"转向"加事件链"。建 3~5 条贯穿全周目主线因果树（选择 A→N 天后果→再分叉），复用现有 `_chainEventQueue` / `scheduleChainEvent`。验收：主线链可端到端跑通（smoke 加一条链完成断言）。
+- **P1-5 新手认知过载**：渐进式揭示——开局只露 3 个核心指标（钱/健康/今日目标），其余随进度解锁。验收：首日可见指标数 ≤3，后续按里程碑解锁。
+
+## P2 / P3 落地路线（中长期）
+
+- **P2-2 build 压缩**：P0-1 外部化后，`dist/app.js` 可选接 esbuild/terser minify（省 30%+）。验收：app.js 体积下降且 `verify:deploy` + smoke 全绿。
+- **P2-3 双架构终局**：明确 legacy 全局 JS 与 Vite/TS 壳的合并终点与时间表，避免每个新功能都要"进哪套"的决策成本。
+- **P2-4 文档 token 治理**：DEVELOPMENT.md 历史流水账归档到 `docs/changelog/`，主文档只留活文档。
+- **P2-5 MC 存活率 66.7% 根因**：把"既有阈值"当缺陷正视，设计"必有一条稳定通关路径"，corporate 策略补到 ≥80%。
+- **P3-1 周目收束仪式**：升级 life_ribbon/life_memoir 为周目结束自动生成"你的城市故事"图文长图（分享物料兼拉新）。
+- **P3-2 社会比较显性化**：NPC `monthlyIncome` 做常驻"同龄人进度"锚点。
+- **P3-3 差异化记忆点**：确立一个别家没有的独占核心机制。
+
+
 ## 2026-07-15 — v3.119 loop R28 全系统优化·Domain F UI/UX（第三轮）（A类修复0项 + 联动增强3项 wiki 条目）
 
 > 循环迭代表见 CLAUDE.md「全系统优化·循环迭代表」。本轮域 = **F UI/UX**（第三轮；首轮 R9 / 次轮 R13）。

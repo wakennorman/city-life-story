@@ -3736,7 +3736,7 @@
 
       if (typeof rel.affinity !== "number" || rel.affinity < 25) return false; // 检查 好感>=25
 
-      if (typeof st.reputation.slum !== "number" || st.reputation.slum < 25)
+      if (typeof (st.reputation && st.reputation.slum) !== "number" || st.reputation.slum < 25)
         return false; // 检查 贫民区声望
 
       var rep = st.skills && st.skills.repair && st.skills.repair.level; // 检查 repair 等级
@@ -5285,7 +5285,7 @@
     // conditions：bank 声望 + 有银行贷款 + uncle_chen_bank 已结识（声望 ∩ 经济 ∩ NPC）
 
     conditions: function (st) {
-      if (typeof st.reputation.bank !== "number" || st.reputation.bank < 30)
+      if (typeof (st.reputation && st.reputation.bank) !== "number" || st.reputation.bank < 30)
         return false; // 检查 银行声望
 
       if (
@@ -5613,7 +5613,7 @@
       if (typeof ck !== "number" || ck < 15) return false; // 检查 cooking>=15
 
       if (
-        typeof st.reputation.commercialDist !== "number" ||
+        typeof (st.reputation && st.reputation.commercialDist) !== "number" ||
         st.reputation.commercialDist < 25
       )
         return false; // 检查 商业区声望
