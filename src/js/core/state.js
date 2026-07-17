@@ -461,6 +461,9 @@ function createDefaultState() {
       // [全系统自洽修复] 域G A类修复: 删除 `_hypertensionMonthlyPaid` 死字段（illness.js 读写的是通用 `_chronicMonthlyPaid`，此字段从未被任何代码读取）
       _chainEventQueue: [], // 链式事件调度队列 [{ eventId, triggerDay, phase }]
       _experiencedNarratives: [], // 已体验的叙事事件 id（防重复；旧存档经迁移回填）
+      // P1-5 渐进式揭示：按天数里程碑解锁的 UI 指标列表
+      // 默认 Day 1 解锁 cash/health/dailyGoal，后续由 daily_pipeline 追加
+      _unlockedHints: ["cash", "health", "dailyGoal"],
 
       // --- 道德系统 ---
       moral: {

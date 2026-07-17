@@ -922,6 +922,9 @@ function createDefaultState() {
       // [全系统自洽修复] 域G A类修复: 删除 `_hypertensionMonthlyPaid` 死字段（illness.js 读写的是通用 `_chronicMonthlyPaid`，此字段从未被任何代码读取）
       _chainEventQueue: [], // 链式事件调度队列 [{ eventId, triggerDay, phase }]
       _experiencedNarratives: [], // 已体验的叙事事件 id（防重复；旧存档经迁移回填）
+      // P1-5 渐进式揭示：按天数里程碑解锁的 UI 指标列表
+      // 默认 Day 1 解锁 cash/health/dailyGoal，后续由 daily_pipeline 追加
+      _unlockedHints: ["cash", "health", "dailyGoal"],
 
       // --- 道德系统 ---
       moral: {
@@ -174793,6 +174796,53 @@ const DAILY_PIPELINE = [
     },
   },
 
+  // === P1-5 渐进式揭示：按天数里程碑解锁 UI 指标 ===
+  {
+    name: "progressive_unlock",
+    fn: function (state) {
+      var day = state.player.day;
+      var hints = state.flags._unlockedHints;
+      if (!hints) { state.flags._unlockedHints = hints = ["cash", "health", "dailyGoal"]; }
+      function unlockAll(arr) {
+        var newUnlocks = [];
+        for (var ui = 0; ui < arr.length; ui++) {
+          if (hints.indexOf(arr[ui]) === -1) { hints.push(arr[ui]); newUnlocks.push(arr[ui]); }
+        }
+        return newUnlocks;
+      }
+      if (day === 3) {
+        var u = unlockAll(["hunger","fatigue","happiness"]);
+        if (u.length > 0 && typeof StateManager !== "undefined") {
+          StateManager.addMessage("🔓 新指标解锁：你可以查看饥饿、疲劳和心情状态了。", "info");
+        }
+      }
+      if (day === 5) {
+        var u = unlockAll(["physique","intelligence","agility","mental","charm"]);
+        if (u.length > 0 && typeof StateManager !== "undefined") {
+          StateManager.addMessage("🔓 新指标解锁：属性面板（体质/智力/敏捷/心智/魅力）已开放。", "info");
+        }
+      }
+      if (day === 7) {
+        var u = unlockAll(["hygiene","morality","fame"]);
+        if (u.length > 0 && typeof StateManager !== "undefined") {
+          StateManager.addMessage("🔓 新指标解锁：卫生、道德和名气状态已开放。", "info");
+        }
+      }
+      if (day === 10) {
+        var u = unlockAll(["accountingIntel","reputationBadge","moralStatus"]);
+        if (u.length > 0 && typeof StateManager !== "undefined") {
+          StateManager.addMessage("🔓 新指标解锁：会计情报、声誉徽章和道德状态已开放。", "info");
+        }
+      }
+      if (day === 15) {
+        var u = unlockAll(["debtInfo"]);
+        if (u.length > 0 && typeof StateManager !== "undefined") {
+          StateManager.addMessage("🔓 新指标解锁：债务信息面板已开放。", "info");
+        }
+      }
+    },
+  },
+
   // === v3.3 W2-T3: 剧本专属开局链（在需求衰减之前触发）===
   {
     name: "scenario_start_chain",
@@ -208617,6 +208667,51 @@ function renderSidebar(state) {
   renderMoralStatus(state);
   renderAccountingIntel(state);
   renderLocation(state);
+
+  // P1-5 渐进式揭示：根据 _unlockedHints 隐藏未解锁元素
+  applyProgressiveDisclosure(state);
+}
+
+/**
+ * P1-5 渐进式揭示：根据 state.flags._unlockedHints 隐藏未解锁的 UI 元素。
+ * 每日管线 progressive_unlock 步在 day_increment 后追加新 hint，
+ * renderSidebar 末尾调用此函数隐藏尚不可见的指标。
+ */
+function applyProgressiveDisclosure(state) {
+  var hints = state.flags && state.flags._unlockedHints;
+  if (!hints || !Array.isArray(hints)) return;
+
+  // 辅助：解锁集合快速查找
+  var hintSet = {};
+  for (var hi = 0; hi < hints.length; hi++) { hintSet[hints[hi]] = true; }
+
+  // 隐藏规则映射：{ hint: [elementId1, elementId2, ...] }
+  var rules = {
+    physique:    ["stat-physique"],
+    intelligence:["stat-intelligence"],
+    agility:     ["stat-agility"],
+    mental:      ["stat-mental"],
+    charm:       ["stat-charm"],
+    morality:    ["stat-morality"],
+    hunger:      ["stat-hunger"],
+    fatigue:     ["stat-fatigue"],
+    hygiene:     ["stat-hygiene"],
+    happiness:   ["stat-happiness"],
+    fame:        ["stat-fame"],
+    accountingIntel: ["accounting-intel"],
+    reputationBadge: ["reputation-badge"],
+    moralStatus:     ["moral-status"],
+    debtInfo:        ["debt-section"],
+  };
+
+  for (var hint in rules) {
+    if (hintSet[hint]) continue; // 已解锁 → 跳过
+    var ids = rules[hint];
+    for (var ri = 0; ri < ids.length; ri++) {
+      var el = document.getElementById(ids[ri]);
+      if (el) el.style.display = "none";
+    }
+  }
 }
 
 /** 历史声誉徽章（P2.9）—— 道德抉择积累后的身份标签 */

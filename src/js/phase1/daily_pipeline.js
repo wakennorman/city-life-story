@@ -33,6 +33,53 @@ const DAILY_PIPELINE = [
     },
   },
 
+  // === P1-5 渐进式揭示：按天数里程碑解锁 UI 指标 ===
+  {
+    name: "progressive_unlock",
+    fn: function (state) {
+      var day = state.player.day;
+      var hints = state.flags._unlockedHints;
+      if (!hints) { state.flags._unlockedHints = hints = ["cash", "health", "dailyGoal"]; }
+      function unlockAll(arr) {
+        var newUnlocks = [];
+        for (var ui = 0; ui < arr.length; ui++) {
+          if (hints.indexOf(arr[ui]) === -1) { hints.push(arr[ui]); newUnlocks.push(arr[ui]); }
+        }
+        return newUnlocks;
+      }
+      if (day === 3) {
+        var u = unlockAll(["hunger","fatigue","happiness"]);
+        if (u.length > 0 && typeof StateManager !== "undefined") {
+          StateManager.addMessage("🔓 新指标解锁：你可以查看饥饿、疲劳和心情状态了。", "info");
+        }
+      }
+      if (day === 5) {
+        var u = unlockAll(["physique","intelligence","agility","mental","charm"]);
+        if (u.length > 0 && typeof StateManager !== "undefined") {
+          StateManager.addMessage("🔓 新指标解锁：属性面板（体质/智力/敏捷/心智/魅力）已开放。", "info");
+        }
+      }
+      if (day === 7) {
+        var u = unlockAll(["hygiene","morality","fame"]);
+        if (u.length > 0 && typeof StateManager !== "undefined") {
+          StateManager.addMessage("🔓 新指标解锁：卫生、道德和名气状态已开放。", "info");
+        }
+      }
+      if (day === 10) {
+        var u = unlockAll(["accountingIntel","reputationBadge","moralStatus"]);
+        if (u.length > 0 && typeof StateManager !== "undefined") {
+          StateManager.addMessage("🔓 新指标解锁：会计情报、声誉徽章和道德状态已开放。", "info");
+        }
+      }
+      if (day === 15) {
+        var u = unlockAll(["debtInfo"]);
+        if (u.length > 0 && typeof StateManager !== "undefined") {
+          StateManager.addMessage("🔓 新指标解锁：债务信息面板已开放。", "info");
+        }
+      }
+    },
+  },
+
   // === v3.3 W2-T3: 剧本专属开局链（在需求衰减之前触发）===
   {
     name: "scenario_start_chain",

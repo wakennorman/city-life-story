@@ -449,6 +449,51 @@ function renderSidebar(state) {
   renderMoralStatus(state);
   renderAccountingIntel(state);
   renderLocation(state);
+
+  // P1-5 渐进式揭示：根据 _unlockedHints 隐藏未解锁元素
+  applyProgressiveDisclosure(state);
+}
+
+/**
+ * P1-5 渐进式揭示：根据 state.flags._unlockedHints 隐藏未解锁的 UI 元素。
+ * 每日管线 progressive_unlock 步在 day_increment 后追加新 hint，
+ * renderSidebar 末尾调用此函数隐藏尚不可见的指标。
+ */
+function applyProgressiveDisclosure(state) {
+  var hints = state.flags && state.flags._unlockedHints;
+  if (!hints || !Array.isArray(hints)) return;
+
+  // 辅助：解锁集合快速查找
+  var hintSet = {};
+  for (var hi = 0; hi < hints.length; hi++) { hintSet[hints[hi]] = true; }
+
+  // 隐藏规则映射：{ hint: [elementId1, elementId2, ...] }
+  var rules = {
+    physique:    ["stat-physique"],
+    intelligence:["stat-intelligence"],
+    agility:     ["stat-agility"],
+    mental:      ["stat-mental"],
+    charm:       ["stat-charm"],
+    morality:    ["stat-morality"],
+    hunger:      ["stat-hunger"],
+    fatigue:     ["stat-fatigue"],
+    hygiene:     ["stat-hygiene"],
+    happiness:   ["stat-happiness"],
+    fame:        ["stat-fame"],
+    accountingIntel: ["accounting-intel"],
+    reputationBadge: ["reputation-badge"],
+    moralStatus:     ["moral-status"],
+    debtInfo:        ["debt-section"],
+  };
+
+  for (var hint in rules) {
+    if (hintSet[hint]) continue; // 已解锁 → 跳过
+    var ids = rules[hint];
+    for (var ri = 0; ri < ids.length; ri++) {
+      var el = document.getElementById(ids[ri]);
+      if (el) el.style.display = "none";
+    }
+  }
 }
 
 /** 历史声誉徽章（P2.9）—— 道德抉择积累后的身份标签 */
