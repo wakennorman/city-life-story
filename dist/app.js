@@ -135725,9 +135725,11 @@ function isCompanyDeceased(cid) {
 }
 
 /** 获取所有已倒闭公司列表 */
+if (typeof getDeceasedCompanies === "undefined") {
 function getDeceasedCompanies() {
   var memory = getMultiRunMemory();
   return Object.keys(memory.deceasedCompanies);
+}
 }
 
 /** 获取所有仍存活的原始公司ID（过滤掉已倒闭的） */
@@ -156213,14 +156215,7 @@ function getNpcsAtLocation(locKey) {
 }
 
 /** 获取好感度描述 */
-function getAffinityLabel(affinity) {
-  if (affinity >= 80) return "❤️ 挚友";
-  if (affinity >= 60) return "😊 好友";
-  if (affinity >= 30) return "🙂 熟人";
-  if (affinity >= 0) return "👤 初识";
-  if (affinity >= -30) return "😐 冷淡";
-  return "😠 厌恶";
-}
+
 
 ;
 // ==== js/data/scenarios.js ====
@@ -171234,21 +171229,7 @@ function grantActionStatGain(actionId, state) {
 }
 
 /** 获取技能中文名 */
-function getSkillChineseName(skillKey) {
-  var names = {
-    cooking: "烹饪",
-    repair: "维修",
-    coding: "编程",
-    english: "英语",
-    driving: "驾驶",
-    sales: "销售",
-    management: "管理",
-    accounting: "会计",
-    electrician: "电工",
-    welding: "焊接",
-  };
-  return names[skillKey] || skillKey;
-}
+
 
 /**
  * 摆摊客流量综合修正（位置 × 天气 × 节日 × 周末）
@@ -204288,6 +204269,7 @@ function applyCrisisChoice(state, crisisId, option) {
 /**
  * 获取危机摘要
  */
+if (typeof getCrisisSummary === "undefined") {
 function getCrisisSummary(company) {
   if (!company.crisisHistory || company.crisisHistory.length === 0) {
     return { total: 0, survived: 0, failed: 0 };
@@ -204303,6 +204285,7 @@ function getCrisisSummary(company) {
     failed,
     survivalRate: Math.round((survived / total) * 100),
   };
+}
 }
 
 /**
@@ -208072,6 +208055,7 @@ function getUiDisplayName(id, fallback) {
  * @param warnColor - 预警边框和闪烁颜色（匹配该要素本身的颜色）
  * @param inverted - true 表示"高于阈值"触发预警（用于疲劳、风险）
  */
+if(typeof warnStatRow==="undefined"){
 function warnStatRow(id, value, threshold, warnColor, inverted) {
   var row = document.getElementById(id);
   if (!row) return;
@@ -208102,6 +208086,7 @@ function warnStatRow(id, value, threshold, warnColor, inverted) {
       }
     }
   }
+}
 }
 
 // ====== 主渲染入口 ======
@@ -208452,6 +208437,7 @@ function renderSidebar(state) {
 }
 
 /** 历史声誉徽章（P2.9）—— 道德抉择积累后的身份标签 */
+if(typeof renderReputationBadge==="undefined"){
 function renderReputationBadge(state) {
   if (typeof getHistoryModifiers !== "function") return;
   var mods = getHistoryModifiers(state);
@@ -208492,8 +208478,10 @@ function renderReputationBadge(state) {
         "</div>"
       : "");
 }
+}
 
 /** 道德状态显示 */
+if(typeof renderMoralStatus==="undefined"){
 function renderMoralStatus(state) {
   var moral = state.flags.moral;
   if (!moral || !moral.actions || moral.actions.length === 0) return;
@@ -208531,6 +208519,7 @@ function renderMoralStatus(state) {
     (score > 0 ? "+" : "") +
     score +
     ")</span>";
+}
 }
 
 /** 会计情报（技能门控，Lv.20+侧边栏显示） */
@@ -208654,6 +208643,7 @@ function renderDebtInfo(state) {
   debtSection.style.display = bankDebt > 0 ? "block" : "none";
 }
 
+if(typeof renderStreetStats==="undefined"){
 function renderStreetStats(state) {
   const p = state.player;
   setStatBar("stat-physique", p.physique, "physique");
@@ -208678,6 +208668,7 @@ function renderStreetStats(state) {
     15,
     "#6ac49a",
   );
+}
 }
 
 function renderCorporateStats(state) {
@@ -208738,6 +208729,7 @@ function renderNeedsBars(state) {
   warnStatRow("stat-ap", p.actionPoints, 20, "#d49a3a");
 }
 
+if(typeof renderLocation==="undefined"){
 function renderLocation(state) {
   const locKey = state.trade.currentLocation;
   const loc = getLocation(locKey);
@@ -208778,6 +208770,7 @@ function renderLocation(state) {
 
   // 天气面板（天气深化系统）
   renderWeatherPanel(state);
+}
 }
 
 function renderHeaderContext(state, loc, weatherDef, seasonDef) {
@@ -208837,6 +208830,7 @@ function getHousingUpgradeTip(state) {
  * 渲染天气面板（天气深化系统）
  * 显示：当前天气详情、舒适度、持续期、天气预报
  */
+if(typeof renderWeatherPanel==="undefined"){
 function renderWeatherPanel(state) {
   var panel = document.getElementById("weather-panel");
   if (!panel) return;
@@ -208973,8 +208967,10 @@ function renderWeatherPanel(state) {
 
   panel.innerHTML = html;
 }
+}
 
 /** 获取地点服务标签 */
+if(typeof getLocationServiceBadges==="undefined"){
 function getLocationServiceBadges(locKey) {
   const badges = [];
   const loc = getLocation(locKey);
@@ -209081,6 +209077,7 @@ function getLocationServiceBadges(locKey) {
   }
 
   return badges;
+}
 }
 
 // ====== Tab Bar（v3.7 Tab 合并重构：5 大认知 Tab）=====
@@ -210880,46 +210877,9 @@ var DISPLAY_NAME_ALIASES = {
   scrap: "废品",
 };
 
-function formatIdAsDisplayName(id) {
-  if (id === undefined || id === null || id === "") return "未知项目";
-  return String(id)
-    .replace(/_item$/g, "")
-    .split(/[_-]+/)
-    .filter(Boolean)
-    .map(function (part) {
-      return DISPLAY_NAME_ALIASES[part] || part;
-    })
-    .join(" ");
-}
 
-function getUiDisplayName(id, fallback) {
-  if (fallback && fallback !== "undefined") return fallback;
-  if (id === undefined || id === null || id === "") return "未知项目";
-  var key = String(id);
-  if (DISPLAY_NAME_ALIASES[key]) return DISPLAY_NAME_ALIASES[key];
-  if (typeof getItemById === "function") {
-    var item = getItemById(key);
-    if (item && item.name) return item.name;
-  }
-  if (typeof getGoodById === "function") {
-    var good = getGoodById(key);
-    if (good && good.name) return good.name;
-  }
-  if (
-    typeof LOCATIONS !== "undefined" &&
-    LOCATIONS[key] &&
-    LOCATIONS[key].name
-  ) {
-    return LOCATIONS[key].name;
-  }
-  if (typeof STREET_JOBS !== "undefined" && Array.isArray(STREET_JOBS)) {
-    var job = STREET_JOBS.find(function (j) {
-      return j && j.id === key;
-    });
-    if (job && job.name) return job.name;
-  }
-  return formatIdAsDisplayName(key);
-}
+
+
 
 // ====== 紧凑型低数值预警 ======
 /**
@@ -210964,72 +210924,7 @@ function warnStatRow(id, value, threshold, warnColor, inverted) {
 }
 
 // ====== Header 渲染 ======
-function renderHeader(state) {
-  const p = state.player;
-  const r = state.resources;
-  const phaseLabel = p.phase === "corporate" ? "🏢 职场" : "🏘️ 街头";
 
-  document.getElementById("header-day").textContent = p.day;
-  document.getElementById("header-age").textContent = p.age;
-  var phaseEl = document.getElementById("header-phase");
-  if (phaseEl) phaseEl.textContent = phaseLabel;
-
-  // 模式指示器
-  var modeEl = document.getElementById("header-mode");
-  var modeStat = document.getElementById("header-mode-stat");
-  if (modeEl && modeStat) {
-    var modeLabel = "";
-    if (state.flags && state.flags._isScenarioMode) {
-      modeLabel = "📜 " + (state.flags._scenarioName || "剧本模式");
-    } else if (state.flags && state.flags._isSandboxMode) {
-      modeLabel = "⚙️ 沙盒模式";
-    }
-    if (modeLabel) {
-      modeEl.textContent = modeLabel;
-      modeStat.style.display = "";
-      modeStat.classList.add("has-mode");
-    } else {
-      modeStat.style.display = "none";
-      modeStat.classList.remove("has-mode");
-    }
-  }
-
-  // ===== 资金（cash-label区域）：展示现金+储蓄，单资金静态/多资金温和轮播 =====
-  renderFundsHeader(state);
-
-  // ===== 债务：独立区域，单债务闪烁/多债务轮播闪烁 =====
-  renderDebtHeader(state);
-
-  // 季节显示
-  var seasonEl = document.getElementById("header-season-label");
-  if (seasonEl && typeof getSeason === "function") {
-    var season = getSeason(p.day);
-    seasonEl.textContent = season.icon + " " + season.name;
-  }
-
-  // 节日显示
-  var festStat = document.getElementById("header-festival-stat");
-  var festEl = document.getElementById("header-festival");
-  if (festStat && festEl && typeof getCurrentFestival === "function") {
-    var festival = getCurrentFestival(p.day);
-    if (festival) {
-      var doy = p.day % 365;
-      var daysLeft = festival.startDay + festival.duration - doy;
-      festEl.textContent =
-        festival.icon + " " + festival.name + "（" + daysLeft + "天）";
-      festStat.style.display = "";
-    } else {
-      festStat.style.display = "none";
-    }
-  }
-
-  // 季节显示（在 header-season-label 旁边添加季节描述）
-  var seasonLabel = document.getElementById("header-season-label");
-  if (seasonLabel && typeof getSeasonDesc === "function") {
-    var seasonDesc = getSeasonDesc(p.day);
-    seasonLabel.title = seasonDesc; // 鼠标悬停显示季节描述
-  }
-}
 
 /**
  * 资金头部渲染 — 展示现金+储蓄，温和滚动
@@ -211044,92 +210939,7 @@ function renderHeader(state) {
  * - 现金+储蓄 → 温和轮播（4s切换，纯文本更新，无闪烁）
  * - 展示风格比债务低调（无闪烁、无脉冲背景）
  */
-function renderFundsHeader(state) {
-  var labelEl = document.getElementById("header-cash-label");
-  var valueEl = document.getElementById("header-cash");
-  if (!labelEl || !valueEl) return;
 
-  var r = state.resources;
-  var cash = r.cash || 0;
-  var bankBalance = r.bankBalance || 0;
-
-  // 收集资金条目
-  var fundItems = [];
-  fundItems.push({
-    label: "💰",
-    value: "¥" + cash.toLocaleString(),
-    color: "var(--success)",
-  });
-  if (bankBalance > 0) {
-    fundItems.push({
-      label: "🏦",
-      value: "¥" + bankBalance.toLocaleString(),
-      color: "#4fc3f7",
-    });
-  }
-
-  if (fundItems.length === 1) {
-    // === 只有现金：静态展示（无动画） ===
-    if (window._fundsCarouselTimer) {
-      clearInterval(window._fundsCarouselTimer);
-      window._fundsCarouselTimer = null;
-    }
-    labelEl.textContent = fundItems[0].label;
-    valueEl.textContent = fundItems[0].value;
-    valueEl.style.color = fundItems[0].color;
-    valueEl.style.animation = "";
-    valueEl.className = "value cash";
-  } else {
-    // === 现金+储蓄：温和轮播（每4s，纯文字切换，无闪烁） ===
-    var areaEl = document.getElementById("header-cash-area");
-    if (areaEl) {
-      areaEl.className = "header-stat";
-      areaEl.style.cssText = "cursor: default; min-width: 100px;";
-    }
-
-    var fundCarouselData = fundItems.map(function (f) {
-      return { label: f.label, value: f.value, color: f.color };
-    });
-
-    if (!window._fundsCarouselTimer) {
-      // 首次启动
-      window._fundsCarouselIdx = 0;
-      var f0 = fundCarouselData[0];
-      labelEl.textContent = f0.label;
-      valueEl.textContent = f0.value;
-      valueEl.style.color = f0.color;
-      valueEl.className = "value cash";
-
-      window._fundsCarouselData = fundCarouselData;
-      window._fundsCarouselTimer = setInterval(function () {
-        var fdata = window._fundsCarouselData;
-        if (!fdata || fdata.length <= 1) return;
-        window._fundsCarouselIdx =
-          (window._fundsCarouselIdx + 1) % fdata.length;
-        var fnext = fdata[window._fundsCarouselIdx];
-        var fl = document.getElementById("header-cash-label");
-        var fv = document.getElementById("header-cash");
-        if (fl) fl.textContent = fnext.label;
-        if (fv) {
-          fv.textContent = fnext.value;
-          fv.style.color = fnext.color;
-          fv.className = "value cash";
-        }
-      }, 4000);
-    } else {
-      // 定时器已存在，刷新当前项（金额可能变化）
-      var idx2 = window._fundsCarouselIdx || 0;
-      if (fundCarouselData[idx2]) {
-        var fcur = fundCarouselData[idx2];
-        labelEl.textContent = fcur.label;
-        valueEl.textContent = fcur.value;
-        valueEl.style.color = fcur.color;
-        valueEl.className = "value cash";
-      }
-      window._fundsCarouselData = fundCarouselData;
-    }
-  }
-}
 
 /**
  * 债务头部渲染 — 现金和债务彻底分离，独立槽位
@@ -211145,152 +210955,17 @@ function renderFundsHeader(state) {
  * - 单种债务 → 静态闪烁（debt-blink）
  * - 多种债务 → 轮播（3s切换）+ 每项闪烁
  */
-function renderDebtHeader(state) {
-  var debtArea = document.getElementById("header-debt-area");
-  var debtLabel = document.getElementById("header-debt-label");
-  var debtValue = document.getElementById("header-debt");
-  if (!debtArea || !debtLabel || !debtValue) return;
 
-  var r = state.resources;
-  var villageDebt = r.villageDebt || 0;
-  var bankDebt = r.bankDebt || 0;
-
-  // 收集非零债务
-  var debtItems = [];
-  if (villageDebt > 0) {
-    debtItems.push({
-      label: "🏘️ 欠村长",
-      value: "¥" + villageDebt.toLocaleString(),
-      color: "var(--danger)",
-    });
-  }
-  if (bankDebt > 0) {
-    debtItems.push({
-      label: "🏦 欠银行",
-      value: "¥" + bankDebt.toLocaleString(),
-      color: "var(--warning)",
-    });
-  }
-
-  if (debtItems.length === 0) {
-    // 无债务 → 隐藏区块，清除计时器
-    debtArea.style.display = "none";
-    if (window._debtCarouselTimer) {
-      clearInterval(window._debtCarouselTimer);
-      window._debtCarouselTimer = null;
-    }
-    debtArea.className = "header-stat";
-    return;
-  }
-
-  // 有债务 → 显示
-  debtArea.style.display = "";
-
-  if (debtItems.length === 1) {
-    // === 只有一种债务：静态显示 + 闪烁 ===
-    if (window._debtCarouselTimer) {
-      clearInterval(window._debtCarouselTimer);
-      window._debtCarouselTimer = null;
-    }
-    var item = debtItems[0];
-    debtLabel.textContent = item.label;
-    debtValue.textContent = item.value;
-    debtValue.style.color = item.color;
-    debtValue.className = "value debt single-debt-blink";
-    debtArea.className = "header-stat header-debt-active";
-  } else {
-    // === 多种债务：轮播（3s 切换）+ 每项闪烁 ===
-    debtArea.className = "header-stat header-debt-carousel-active";
-    var debtCarouselData = debtItems.map(function (d) {
-      return { label: d.label, value: d.value, color: d.color };
-    });
-
-    if (!window._debtCarouselTimer) {
-      // 首次启动
-      window._debtCarouselIdx = 0;
-      var first = debtCarouselData[0];
-      debtLabel.textContent = first.label;
-      debtValue.textContent = first.value;
-      debtValue.style.color = first.color;
-      debtValue.className = "value debt carousel-debt-blink debt-fade-in";
-      setTimeout(function () {
-        var dv = document.getElementById("header-debt");
-        if (dv) dv.className = "value debt carousel-debt-blink";
-      }, 400);
-
-      window._debtCarouselData = debtCarouselData;
-      window._debtCarouselTimer = setInterval(function () {
-        var data = window._debtCarouselData;
-        if (!data || data.length <= 1) return;
-        window._debtCarouselIdx = (window._debtCarouselIdx + 1) % data.length;
-        var next = data[window._debtCarouselIdx];
-        var dl = document.getElementById("header-debt-label");
-        var dv = document.getElementById("header-debt");
-        if (dl) dl.textContent = next.label;
-        if (dv) {
-          dv.textContent = next.value;
-          dv.style.color = next.color;
-          dv.className = "value debt carousel-debt-blink debt-fade-in";
-          setTimeout(function () {
-            var dv2 = document.getElementById("header-debt");
-            if (dv2) dv2.className = "value debt carousel-debt-blink";
-          }, 400);
-        }
-      }, 3000);
-    } else {
-      // 定时器已存在，刷新当前显示项（金额可能变化）
-      var idx = window._debtCarouselIdx || 0;
-      if (debtCarouselData[idx]) {
-        var cur = debtCarouselData[idx];
-        debtLabel.textContent = cur.label;
-        debtValue.textContent = cur.value;
-        debtValue.style.color = cur.color;
-        debtValue.className = "value debt carousel-debt-blink";
-      }
-      window._debtCarouselData = debtCarouselData;
-    }
-  }
-}
 
 /**
  * 资金展示初始化（原现金轮播 → 现资金展示）
  * 由 renderHeader → renderFundsHeader / renderDebtHeader 自动处理；
  * 此函数保留仅用于向后兼容 main.js 的调用。
  */
-function initCashCarousel() {
-  // 债务展示已在 renderDebtHeader 中自动初始化，无需额外操作
-}
+
 
 // ====== Sidebar 渲染 ======
-function renderSidebar(state) {
-  const p = state.player;
-  var sidebar = document.getElementById("sidebar");
-  if (sidebar) {
-    sidebar.classList.toggle("phase-street", p.phase === "street");
-    sidebar.classList.toggle("phase-corporate", p.phase !== "street");
-  }
 
-  if (p.phase === "street") {
-    renderStreetStats(state);
-  } else {
-    renderCorporateStats(state);
-  }
-
-  renderNeedsBars(state);
-  renderDebtInfo(state);
-  // 人生目标已移到内容区时间槽下方（renderCurrentTab 中渲染）
-  // renderDreamSection(state);
-  // 今日重点已整合到行动页的"今日智能建议"中
-  // if (typeof renderDailyFocusSection === "function") {
-  //   renderDailyFocusSection(state);
-  // }
-  // 学历已移到个人成长Tab的"🎓 学历"子Tab中
-  // renderEduSection(state);
-  renderReputationBadge(state);
-  renderMoralStatus(state);
-  renderAccountingIntel(state);
-  renderLocation(state);
-}
 
 /** 历史声誉徽章（P2.9）—— 道德抉择积累后的身份标签 */
 function renderReputationBadge(state) {
@@ -211376,125 +211051,15 @@ function renderMoralStatus(state) {
 }
 
 /** 会计情报（技能门控，Lv.20+侧边栏显示） */
-function renderAccountingIntel(state) {
-  var el = document.getElementById("accounting-intel");
-  if (!el) return;
-  var lvl =
-    (state.skills &&
-      state.skills.accounting &&
-      state.skills.accounting.level) ||
-    0;
-  if (lvl < 20) {
-    el.style.display = "none";
-    return;
-  }
-  el.style.display = "block";
-  var html = '<h3 style="font-size:12px;margin-bottom:4px;">🧾 财务情报</h3>';
-  var preview = buildAccountingPreview(state, "bank");
-  if (preview) {
-    html +=
-      '<div style="font-size:11px;color:var(--text-secondary);line-height:1.5;">' +
-      preview +
-      "</div>";
-  }
-  html +=
-    '<div style="font-size:9px;color:var(--text-muted);margin-top:3px;">📊 会计 Lv.' +
-    lvl +
-    "</div>";
-  el.innerHTML = html;
-}
 
-function renderEduSection(state) {
-  var el = document.getElementById("edu-section");
-  if (!el) return;
-  var p = state.player;
-  var edu = p.education ?? state.education ?? 0;
-  var ep = p.eduProgress ||
-    state.eduProgress || { studyPoints: 0, examsPassed: 0, totalExams: 6 };
-  var eduNames = ["大专", "本科", "研究生"];
-  var eduIcons = ["🎓", "📜", "🏛️"];
-  el.style.display = "block";
-  var label = (eduIcons[edu] || "🎓") + " " + (eduNames[edu] || "大专");
-  var progressHtml = "";
-  if (edu === 0) {
-    var pct = Math.round((ep.examsPassed / (ep.totalExams || 6)) * 100);
-    progressHtml =
-      '<div style="background:var(--bg-input);border-radius:3px;height:5px;overflow:hidden;margin:4px 0;">' +
-      '<div style="width:' +
-      pct +
-      '%;height:100%;background:var(--accent);border-radius:3px;"></div></div>' +
-      '<div style="font-size:10px;color:var(--text-muted);">' +
-      "备考进度：" +
-      ep.examsPassed +
-      "/" +
-      (ep.totalExams || 6) +
-      "门（学习点" +
-      ep.studyPoints +
-      "/150）</div>";
-  }
-  el.innerHTML =
-    "<h3>🎓 学历</h3>" +
-    '<div style="font-size:12px;font-weight:600;">' +
-    label +
-    "</div>" +
-    progressHtml;
-}
+
+
 
 /** 梦想追踪侧边栏区块 */
-function renderDreamSection(state) {
-  var dreamEl = document.getElementById("dream-section");
-  if (!dreamEl) return;
-  if (typeof getCurrentDream !== "function") {
-    dreamEl.style.display = "none";
-    return;
-  }
-  var dream = getCurrentDream(state);
-  if (!dream) {
-    dreamEl.style.display = "none";
-    return;
-  }
-  var progress =
-    typeof getDreamProgress === "function" ? getDreamProgress(state) : 0;
-  var curTitle =
-    typeof getDreamCurrentTitle === "function"
-      ? getDreamCurrentTitle(state)
-      : "";
-  dreamEl.style.display = "";
-  dreamEl.innerHTML =
-    "<h3>🌟 人生目标</h3>" +
-    '<div style="display:flex;align-items:center;gap:6px;margin-bottom:6px;">' +
-    '<span style="font-size:18px;">' +
-    dream.icon +
-    "</span>" +
-    '<span style="font-size:12px;font-weight:600;color:var(--text-primary);">' +
-    dream.name +
-    "</span></div>" +
-    '<div style="background:var(--bg-input);border-radius:4px;height:6px;overflow:hidden;margin-bottom:4px;">' +
-    '<div style="width:' +
-    progress +
-    '%;height:100%;background:var(--accent);border-radius:4px;"></div>' +
-    "</div>" +
-    '<div style="font-size:10px;color:var(--text-muted);">' +
-    progress +
-    "% · " +
-    curTitle +
-    "</div>";
-}
+
 
 /** 侧边栏显示村长/银行债务 */
-function renderDebtInfo(state) {
-  const debtSection = document.getElementById("debt-section");
-  if (!debtSection) return;
-  const bankDebt = state.resources.bankDebt || 0;
-  let html = "";
-  if (bankDebt > 0) {
-    html += `<div style="padding:6px 10px;margin:2px 0;background:rgba(243,156,18,0.08);border-radius:4px;font-size:11px;">
-      🏦 欠银行: <strong style="color:var(--warning);">¥${bankDebt.toLocaleString()}</strong>
-    </div>`;
-  }
-  debtSection.innerHTML = html;
-  debtSection.style.display = bankDebt > 0 ? "block" : "none";
-}
+
 
 function renderStreetStats(state) {
   const p = state.player;
@@ -211511,63 +211076,9 @@ function renderStreetStats(state) {
   warnStatRow("stat-charm", p.charm || 0, 10, "#d9789e");
 }
 
-function renderCorporateStats(state) {
-  const c = state.player.corporate;
-  // 切换侧边栏区域显示
-  document.getElementById("street-stats-section").style.display = "none";
-  document.getElementById("corp-stats-section").style.display = "block";
 
-  setStatBar("stat-hair", c.hair, "hair");
-  setStatBar("stat-dignity", c.dignity, "dignity");
-  setStatBar("stat-kpi", c.kpi, "kpi");
-  setStatBar("stat-ability", c.ability, "intelligence");
-  setStatBar("stat-upward", c.upwardMgmt, "physique");
-  setStatBar("stat-popularity", c.popularity, "happiness");
-  setStatBar("stat-risk", c.risk, "risk");
 
-  // 职场属性预警：发量≤25 尊严≤15 KPI≤15 能力≤15 向上管理≤10 人缘≤15 风险≥70
-  warnStatRow("stat-hair", c.hair, 25, "#7ab8d8");
-  warnStatRow("stat-dignity", c.dignity, 15, "#9b74b8");
-  warnStatRow("stat-kpi", c.kpi, 15, "#c9a440");
-  warnStatRow("stat-ability", c.ability, 15, "#5a8ab4");
-  warnStatRow("stat-upward", c.upwardMgmt, 10, "#c4803a");
-  warnStatRow("stat-popularity", c.popularity, 15, "#5aaa5a");
-  warnStatRow("stat-risk", c.risk, 70, "#c4553d", true); // 风险高是坏事
-}
 
-function renderNeedsBars(state) {
-  var statusSection = document.getElementById("location-section");
-  if (statusSection) statusSection.style.display = "block";
-  const n = state.needs;
-  const s = state.status;
-  const p = state.player;
-  setStatBar("stat-hunger", n.hunger, "hunger");
-  setStatBar("stat-fatigue", n.fatigue, "fatigue");
-  setStatBar("stat-hygiene", n.hygiene, "hygiene");
-  setStatBar("stat-happiness", n.happiness, "happiness");
-  setStatBar("stat-health", s.health, "health");
-  // 名气：v1.1 起统一读 player.fame
-  setStatBar("stat-fame", (p && p.fame) || 0, "fame");
-  // 疾病列表（动态渲染到 stat-fame 之后）
-  renderIllnessRow(state);
-  // 行动力
-  const apPct = (p.actionPoints / (p.maxActionPoints || 100)) * 100;
-  setStatBar("stat-ap", apPct, "ap-bar");
-  const apVal = document.querySelector("#stat-ap .stat-value");
-  if (apVal)
-    apVal.textContent = p.actionPoints + "/" + (p.maxActionPoints || 100);
-
-  // === 紧凑型低数值预警 ===
-  // 状态：饥饿≤15 疲劳≥85 卫生≤15 心情≤10 健康≤20 名气≤5
-  warnStatRow("stat-hunger", n.hunger, 15, "#c9a838");
-  warnStatRow("stat-fatigue", n.fatigue, 85, "#8a9080", true); // 疲劳高是坏事
-  warnStatRow("stat-hygiene", n.hygiene, 15, "#4a9490");
-  warnStatRow("stat-happiness", n.happiness, 10, "#cc7868");
-  warnStatRow("stat-health", s.health, 20, "#cc7868");
-  warnStatRow("stat-fame", (p && p.fame) || 0, 5, "#9b74b8");
-  // AP≤20
-  warnStatRow("stat-ap", p.actionPoints, 20, "#d49a3a");
-}
 
 function renderLocation(state) {
   if (!state.trade) return;
@@ -211612,58 +211123,9 @@ function renderLocation(state) {
   renderWeatherPanel(state);
 }
 
-function renderHeaderContext(state, loc, weatherDef, seasonDef) {
-  var el = document.getElementById("header-context");
-  if (!el) return;
-  var houseData =
-    (typeof HOUSING_TIERS !== "undefined" &&
-      HOUSING_TIERS[state.housing?.tier || 0]) ||
-    null;
-  var houseName = houseData ? houseData.name : "露宿街头";
-  var houseIcon = houseData ? houseData.icon || "🏠" : "🌃";
-  // 住所和背包信息已移到时间槽下方展示，此处只做简洁展示
-  el.innerHTML =
-    '<span class="context-chip" style="font-size:11px;">' +
-    houseIcon +
-    " " +
-    houseName +
-    "</span>";
-  el.title = "当前住所：" + houseName;
-}
 
-function getHousingUpgradeTip(state) {
-  if (typeof HOUSING_TIERS === "undefined" || !Array.isArray(HOUSING_TIERS)) {
-    return "";
-  }
-  if (typeof getAvailableHousingTiersAtLocation !== "function") return "";
-  var locKey = state.trade ? state.trade.currentLocation : "slum";
-  var availableTiers = getAvailableHousingTiersAtLocation(locKey);
-  var currentTier = state.housing ? state.housing.tier || 0 : 0;
-  // 找到当前地点可选的、比当前高的最低档
-  var nextTier = null;
-  for (var i = 0; i < availableTiers.length; i++) {
-    if (availableTiers[i] > currentTier) {
-      nextTier = HOUSING_TIERS[availableTiers[i]];
-      break;
-    }
-  }
-  if (!nextTier) return "";
-  var locName = getLocationChineseName(locKey);
-  var actualRent =
-    typeof getHousingRentAtLocation === "function"
-      ? getHousingRentAtLocation(locKey, nextTier.tier)
-      : nextTier.rent;
-  return (
-    "在" +
-    locName +
-    "可升级为" +
-    (nextTier.icon || "🏠") +
-    nextTier.name +
-    "（¥" +
-    actualRent +
-    "/天）"
-  );
-}
+
+
 
 /**
  * 渲染天气面板（天气深化系统）
@@ -211904,75 +211366,7 @@ function getLocationServiceBadges(locKey) {
  * - 街坊声望：⭐⭐ + 进度条 + 下一档称号
  * 移入地图 Tab 后桌面/移动端均可见（替代原 sidebar 位置）
  */
-function appendLocationServicesStrip(container, state, locKey) {
-  if (!container || !locKey) return;
-  const loc = getLocation(locKey);
-  if (!loc) return;
 
-  const strip = document.createElement("div");
-  strip.className = "map-location-services-strip";
-  strip.style.cssText =
-    "display:flex;flex-direction:column;gap:4px;padding:6px 8px;" +
-    "background:var(--bg-card);border:1px solid var(--border-light);border-radius:6px;" +
-    "font-size:11px;margin-bottom:4px;";
-
-  const badges = getLocationServiceBadges(locKey);
-  let badgeHtml = `<div style="display:flex;flex-wrap:wrap;gap:4px;">`;
-  badges.forEach((b) => {
-    badgeHtml += `<span style="font-size:10px;padding:1px 6px;border-radius:3px;background:${b.bg};color:${b.color};border:1px solid ${b.color};">${b.icon} ${b.label}</span>`;
-  });
-  if (
-    typeof getVendingFootfallMod === "function" &&
-    typeof getFootfallStars === "function" &&
-    loc.footfall
-  ) {
-    const footfall = getVendingFootfallMod(locKey, state);
-    const stars = getFootfallStars(footfall);
-    const note = loc.vendingNote || "";
-    badgeHtml +=
-      `<span style="font-size:10px;padding:1px 6px;border-radius:3px;` +
-      `background:rgba(74,158,92,0.1);color:var(--accent);border:1px solid rgba(74,158,92,0.3);" ` +
-      `title="${note}">🧑‍🤝‍🧑 ${stars}</span>`;
-  }
-  if (typeof getLocationNewsBadges === "function") {
-    const pulseBadges = getLocationNewsBadges(locKey, state);
-    pulseBadges.forEach((b) => {
-      const color = b.positive ? "var(--success)" : "var(--warning)";
-      const bg = b.positive ? "rgba(46,204,113,0.10)" : "rgba(243,156,18,0.10)";
-      badgeHtml +=
-        `<span style="font-size:10px;padding:1px 6px;border-radius:3px;` +
-        `background:${bg};color:${color};border:1px solid ${color};" ` +
-        `title="${_esc(b.tip || "")}">📰 ${_esc(b.label)}</span>`;
-    });
-  }
-  badgeHtml += `</div>`;
-  strip.innerHTML = badgeHtml;
-
-  // 街坊声望
-  if (typeof getReputationUIData === "function") {
-    const repData = getReputationUIData(state, locKey);
-    let stars = "";
-    for (let i = 0; i < repData.level; i++) stars += "⭐";
-    if (repData.level === 0) stars = "〇";
-    const bonusText =
-      repData.bonus > 0 ? ` +${Math.round(repData.bonus * 100)}%收入` : "";
-    const progressBar =
-      repData.level < 5
-        ? `<span style="display:inline-block;width:40px;height:4px;background:rgba(0,0,0,0.1);border-radius:2px;vertical-align:middle;margin-left:3px;"><span style="display:block;height:100%;width:${repData.progress}%;background:var(--accent);border-radius:2px;"></span></span>`
-        : "✨MAX";
-    const nextText = repData.nextTitle ? ` → ${repData.nextTitle}` : "";
-    const repEl = document.createElement("div");
-    repEl.style.cssText =
-      "display:flex;align-items:center;justify-content:space-between;" +
-      "padding:3px 6px;background:rgba(243,156,18,0.06);border:1px solid rgba(243,156,18,0.2);border-radius:4px;";
-    repEl.innerHTML =
-      `<span><span style="font-weight:600;">👥 ${_esc(repData.title)}</span>${bonusText}</span>` +
-      `<span style="font-size:10px;color:var(--text-secondary);">${stars}${progressBar}${nextText}</span>`;
-    strip.appendChild(repEl);
-  }
-
-  container.appendChild(strip);
-}
 
 // ====== Life Systems Tab: 人生节点 / 医疗 / 旅行 / 法律 ======
 function _lifeSystemsEscape(value) {
@@ -218015,6 +217409,7 @@ function scrollMessageLogToTop() {
 /**
  * 获取公司行业（从COMPANIES数组或行业映射）
  */
+if (typeof getCompanyIndustryById === "undefined") {
 function getCompanyIndustryById(cid) {
   if (typeof COMPANIES !== "undefined") {
     for (var i = 0; i < COMPANIES.length; i++) {
@@ -218022,6 +217417,7 @@ function getCompanyIndustryById(cid) {
     }
   }
   return null;
+}
 }
 
 /** 渲染职场面板（替代街头行动面板） */
@@ -229791,8 +229187,10 @@ var CATEGORY_ICONS = {
 };
 
 /** 获取分类的中文标签 */
+if (typeof getCategoryLabel === "undefined") {
 function getCategoryLabel(category) {
   return CATEGORY_LABELS[category] || category;
+}
 }
 
 /** 获取分类的图标 */

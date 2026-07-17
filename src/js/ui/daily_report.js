@@ -76,8 +76,10 @@ var CATEGORY_ICONS = {
 };
 
 /** 获取分类的中文标签 */
+if (typeof getCategoryLabel === "undefined") {
 function getCategoryLabel(category) {
   return CATEGORY_LABELS[category] || category;
+}
 }
 
 /** 获取分类的图标 */

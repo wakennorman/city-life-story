@@ -540,21 +540,7 @@ function grantActionStatGain(actionId, state) {
 }
 
 /** 获取技能中文名 */
-function getSkillChineseName(skillKey) {
-  var names = {
-    cooking: "烹饪",
-    repair: "维修",
-    coding: "编程",
-    english: "英语",
-    driving: "驾驶",
-    sales: "销售",
-    management: "管理",
-    accounting: "会计",
-    electrician: "电工",
-    welding: "焊接",
-  };
-  return names[skillKey] || skillKey;
-}
+
 
 /**
  * 摆摊客流量综合修正（位置 × 天气 × 节日 × 周末）

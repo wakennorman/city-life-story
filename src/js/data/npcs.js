@@ -3585,11 +3585,4 @@ function getNpcsAtLocation(locKey) {
 }
 
 /** 获取好感度描述 */
-function getAffinityLabel(affinity) {
-  if (affinity >= 80) return "❤️ 挚友";
-  if (affinity >= 60) return "😊 好友";
-  if (affinity >= 30) return "🙂 熟人";
-  if (affinity >= 0) return "👤 初识";
-  if (affinity >= -30) return "😐 冷淡";
-  return "😠 厌恶";
-}
+

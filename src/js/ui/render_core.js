@@ -70,6 +70,7 @@ function getUiDisplayName(id, fallback) {
  * @param warnColor - 预警边框和闪烁颜色（匹配该要素本身的颜色）
  * @param inverted - true 表示"高于阈值"触发预警（用于疲劳、风险）
  */
+if(typeof warnStatRow==="undefined"){
 function warnStatRow(id, value, threshold, warnColor, inverted) {
   var row = document.getElementById(id);
   if (!row) return;
@@ -100,6 +101,7 @@ function warnStatRow(id, value, threshold, warnColor, inverted) {
       }
     }
   }
+}
 }
 
 // ====== 主渲染入口 ======
@@ -450,6 +452,7 @@ function renderSidebar(state) {
 }
 
 /** 历史声誉徽章（P2.9）—— 道德抉择积累后的身份标签 */
+if(typeof renderReputationBadge==="undefined"){
 function renderReputationBadge(state) {
   if (typeof getHistoryModifiers !== "function") return;
   var mods = getHistoryModifiers(state);
@@ -490,8 +493,10 @@ function renderReputationBadge(state) {
         "</div>"
       : "");
 }
+}
 
 /** 道德状态显示 */
+if(typeof renderMoralStatus==="undefined"){
 function renderMoralStatus(state) {
   var moral = state.flags.moral;
   if (!moral || !moral.actions || moral.actions.length === 0) return;
@@ -529,6 +534,7 @@ function renderMoralStatus(state) {
     (score > 0 ? "+" : "") +
     score +
     ")</span>";
+}
 }
 
 /** 会计情报（技能门控，Lv.20+侧边栏显示） */
@@ -652,6 +658,7 @@ function renderDebtInfo(state) {
   debtSection.style.display = bankDebt > 0 ? "block" : "none";
 }
 
+if(typeof renderStreetStats==="undefined"){
 function renderStreetStats(state) {
   const p = state.player;
   setStatBar("stat-physique", p.physique, "physique");
@@ -676,6 +683,7 @@ function renderStreetStats(state) {
     15,
     "#6ac49a",
   );
+}
 }
 
 function renderCorporateStats(state) {
@@ -736,6 +744,7 @@ function renderNeedsBars(state) {
   warnStatRow("stat-ap", p.actionPoints, 20, "#d49a3a");
 }
 
+if(typeof renderLocation==="undefined"){
 function renderLocation(state) {
   const locKey = state.trade.currentLocation;
   const loc = getLocation(locKey);
@@ -776,6 +785,7 @@ function renderLocation(state) {
 
   // 天气面板（天气深化系统）
   renderWeatherPanel(state);
+}
 }
 
 function renderHeaderContext(state, loc, weatherDef, seasonDef) {
@@ -835,6 +845,7 @@ function getHousingUpgradeTip(state) {
  * 渲染天气面板（天气深化系统）
  * 显示：当前天气详情、舒适度、持续期、天气预报
  */
+if(typeof renderWeatherPanel==="undefined"){
 function renderWeatherPanel(state) {
   var panel = document.getElementById("weather-panel");
   if (!panel) return;
@@ -971,8 +982,10 @@ function renderWeatherPanel(state) {
 
   panel.innerHTML = html;
 }
+}
 
 /** 获取地点服务标签 */
+if(typeof getLocationServiceBadges==="undefined"){
 function getLocationServiceBadges(locKey) {
   const badges = [];
   const loc = getLocation(locKey);
@@ -1079,6 +1092,7 @@ function getLocationServiceBadges(locKey) {
   }
 
   return badges;
+}
 }
 
 // ====== Tab Bar（v3.7 Tab 合并重构：5 大认知 Tab）=====

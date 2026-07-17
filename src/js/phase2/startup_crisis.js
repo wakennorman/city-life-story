@@ -607,6 +607,7 @@ function applyCrisisChoice(state, crisisId, option) {
 /**
  * 获取危机摘要
  */
+if (typeof getCrisisSummary === "undefined") {
 function getCrisisSummary(company) {
   if (!company.crisisHistory || company.crisisHistory.length === 0) {
     return { total: 0, survived: 0, failed: 0 };
@@ -622,6 +623,7 @@ function getCrisisSummary(company) {
     failed,
     survivalRate: Math.round((survived / total) * 100),
   };
+}
 }
 
 /**

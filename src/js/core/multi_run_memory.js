@@ -82,9 +82,11 @@ function isCompanyDeceased(cid) {
 }
 
 /** 获取所有已倒闭公司列表 */
+if (typeof getDeceasedCompanies === "undefined") {
 function getDeceasedCompanies() {
   var memory = getMultiRunMemory();
   return Object.keys(memory.deceasedCompanies);
+}
 }
 
 /** 获取所有仍存活的原始公司ID（过滤掉已倒闭的） */

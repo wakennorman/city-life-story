@@ -7,6 +7,7 @@
 /**
  * 获取公司行业（从COMPANIES数组或行业映射）
  */
+if (typeof getCompanyIndustryById === "undefined") {
 function getCompanyIndustryById(cid) {
   if (typeof COMPANIES !== "undefined") {
     for (var i = 0; i < COMPANIES.length; i++) {
@@ -14,6 +15,7 @@ function getCompanyIndustryById(cid) {
     }
   }
   return null;
+}
 }
 
 /** 渲染职场面板（替代街头行动面板） */
