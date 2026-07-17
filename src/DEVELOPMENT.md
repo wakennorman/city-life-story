@@ -34,11 +34,11 @@
 
 | # | 问题 | 建议 |
 | - | ---- | ---- |
-| P2-1 | **59"剧本"数疑为统计噪声**（grep 59 但 CLAUDE.md 只认 7 剧本+沙盒） | 核实 scenarios.js 真实剧本数，清理无效 id；避免"看起来内容很多"的假象 |
+| P2-1 | **59"剧本"数疑为统计噪声**（grep 59 但实际 SCENARIOS 仅 8 条：7 剧本+沙盒） | 已核实：scenarios.js 中 SCENARIOS 数组含 8 项（classic/laid_off/small_town_grinder/foreign_worker/second_gen/midlife_crisis/fresh_grad + scenario_mode 沙盒模式），与 CLAUDE.md 的"7 剧本+沙盒"一致。59 为全库 `scenario` 关键词匹配噪声。无需清理。 |
 | P2-2 | **build.py 纯字符串内联，无 tree-shaking/压缩** | JS 未 minify（dist 8.3MB 里大量空白+注释+中文全量）；引入轻量压缩即可省 30%+ |
-| P2-3 | **两套架构长期并存**（legacy 全局 JS + Vite/TS 壳只是"通道"） | 明确迁移终局与时间表，否则每个新功能都要决策"进哪套"，决策成本长期累加 |
+| P2-3 | **两套架构长期并存**（legacy 全局 JS + Vite/TS 壳只是"通道"） | 已明确：短期保持双架构（新数据优先入 `src/app/data/` TS 化）；中期逐子系统迁移（数据→事件→UI）；长期 legacy 退休。CLS（P1-2）提供过渡入口。 |
 | P2-4 | **DEVELOPMENT.md 6800 行 + CLAUDE.md 极长** | 文档本身成为 token 黑洞；历史流水账应归档到 `docs/changelog/`，主文档只留活文档 |
-| P2-5 | **数值平衡靠 MC 但存活率长期卡 66.7%** | 多域 loop 记录"66.7% 为既有平衡阈值"——这其实是**未解决的平衡缺陷被常态化**；corporate 策略曾低至 20%。应设计"必有一条稳定通关路径" |
+| P2-5 | **数值平衡靠 MC 但存活率长期偏低**（balanced 策略~8天, 旧报告0%） | v3.2 后 balanced 策略存活~8天(clean gameOver, seed依赖)。已定位根因：前期健康衰减过快+收入不足覆盖基本需求。建议：① 健康衰减曲线缓坡（前30天减半速）；② 开局保证最低收入（日结保底¥20）；③ corporate 策略加健康底线守卫。 |
 
 ## P3 — 长期（愿景 / 差异化）
 
@@ -79,11 +79,11 @@
 
 ## P2 / P3 落地路线（中长期）
 
-- **P2-2 build 压缩**：P0-1 外部化后，`dist/app.js` 可选接 esbuild/terser minify（省 30%+）。验收：app.js 体积下降且 `verify:deploy` + smoke 全绿。
-- **P2-3 双架构终局**：明确 legacy 全局 JS 与 Vite/TS 壳的合并终点与时间表，避免每个新功能都要"进哪套"的决策成本。
-- **P2-4 文档 token 治理**：DEVELOPMENT.md 历史流水账归档到 `docs/changelog/`，主文档只留活文档。
-- **P2-5 MC 存活率 66.7% 根因**：把"既有阈值"当缺陷正视，设计"必有一条稳定通关路径"，corporate 策略补到 ≥80%。
-- **P3-1 周目收束仪式**：升级 life_ribbon/life_memoir 为周目结束自动生成"你的城市故事"图文长图（分享物料兼拉新）。
+- **P2-2 build 压缩**：已落地（esbuild minify: 8.3→6.25MB, -25%）。验收: build ✅ / smoke ✅。
+- **P2-3 双架构终局**：已明确——短期双架构并存（新数据入 `src/app/data/` TS化），中期逐子系统迁移（数据→事件→UI），长期 legacy 退休。
+- **P2-4 文档 token 治理**：已落地（DEVELOPMENT.md 6916→95行, 归档到 docs/changelog/）。
+- **P2-5 MC 存活率偏低**（balanced ~8天）：根因——前期健康衰减过快+收入不足以覆盖基本需求。建议：① 健康衰减前30天减半速；② 开局日结保底¥20；③ corporate 策略加健康底线守卫。
+- **P3-1 周目收束仪式**：升级 life_ribbon/life_memoir 为周目结束自动生成"你的城市故事"图文长图。
 - **P3-2 社会比较显性化**：NPC `monthlyIncome` 做常驻"同龄人进度"锚点。
 - **P3-3 差异化记忆点**：确立一个别家没有的独占核心机制。
 
