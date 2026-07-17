@@ -713,6 +713,7 @@ function drawSkillGrowthChart(ctx, state, x, y, w, h, skillKey) {
  * @param {object} state - 游戏状态
  * @param {HTMLElement} container - 容器元素
  */
+if(typeof renderGrowthTab==="undefined"){
 function renderGrowthTab(state, container) {
   container.innerHTML = "";
   var p = state.player || {};
@@ -1059,6 +1060,7 @@ function renderGrowthTab(state, container) {
       console.warn("[data_viz] 图表绘制错误（不影响游戏）:", e);
     }
   });
+}
 }
 
 // 全局挂载

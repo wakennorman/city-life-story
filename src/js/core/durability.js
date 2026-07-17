@@ -273,6 +273,7 @@ function applyDailyWear(state) {
  * @param {string} itemId - 装备ID
  * @returns {boolean} 是否成功维修
  */
+if(typeof repairEquipment==="undefined"){
 function repairEquipment(state, itemId) {
   var repairLevel =
     (state.skills && state.skills.repair && state.skills.repair.level) || 0;
@@ -398,6 +399,7 @@ function repairEquipment(state, itemId) {
   }
 
   return true;
+}
 }
 
 /**

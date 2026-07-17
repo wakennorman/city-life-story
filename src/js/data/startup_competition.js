@@ -11,6 +11,7 @@
  */
 
 // ====== 工具函数 ======
+if(typeof _esc==="undefined"){
 function _esc(str) {
   if (!str) return "";
   return String(str)
@@ -2078,6 +2079,7 @@ function applyCrisisEffects(state, company, crisis) {
 /**
  * 获取危机应对方案
  */
+if(typeof getAvailableCrisisResponses==="undefined"){
 function getAvailableCrisisResponses(crisisId) {
   const template = OPERATIONAL_CRISIS_TEMPLATES[crisisId];
   if (!template || !template.responseOptions) return {};
@@ -2089,6 +2091,7 @@ function getAvailableCrisisResponses(crisisId) {
     }
   }
   return responses;
+}
 }
 
 /**
@@ -3594,4 +3597,6 @@ function tickSupplyChain(state, company) {
   // 更新供应链风险
   const risk = getSupplyChainRisk(company);
   company.supplyChainRisk = risk.risk;
+}
+
 }

@@ -6299,6 +6299,7 @@ function getAcquisitionOffer(state) {
 }
 
 /** 显示收购要约弹窗 */
+if(typeof showAcquisitionModal==="undefined"){
 function showAcquisitionModal(state, offer) {
   if (!offer) return;
 
@@ -6450,6 +6451,7 @@ function showAcquisitionModal(state, offer) {
       },
     ],
   });
+}
 }
 
 function acceptAcquisition(state, offer) {

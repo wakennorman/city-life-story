@@ -234,6 +234,7 @@ function showCompanyHistory(companyId, state) {
 }
 
 /** 转义 HTML 特殊字符 */
+if(typeof _esc==="undefined"){
 function _esc(str) {
   if (!str) return "";
   return String(str)
@@ -242,4 +243,6 @@ function _esc(str) {
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;")
     .replace(/'/g, "&#39;");
+}
+
 }

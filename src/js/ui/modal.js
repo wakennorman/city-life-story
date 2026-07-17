@@ -5,6 +5,7 @@
  */
 
 // [全系统自洽修复] 域F modal.js 独立 _esc 辅助
+if(typeof _esc==="undefined"){
 function _esc(s) {
   return String(s)
     .replace(/&/g, "&amp;")
@@ -2327,4 +2328,6 @@ function showInheritanceSummaryModal(inheritanceData) {
       },
     ],
   });
+}
+
 }

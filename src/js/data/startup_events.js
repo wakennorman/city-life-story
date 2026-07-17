@@ -7,6 +7,7 @@
  */
 
 // ====== 工具函数 ======
+if(typeof _esc==="undefined"){
 function _esc(str) {
   if (!str) return "";
   return String(str)
@@ -1206,4 +1207,6 @@ if (typeof module !== "undefined" && module.exports) {
     triggerStartupEvent,
     showStartupEventModal,
   };
+}
+
 }
