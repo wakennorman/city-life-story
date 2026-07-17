@@ -1263,8 +1263,10 @@ function tickInvestmentDaily(state) {
   // 汽车（不受新闻直接影响，维持原状）
   for (var c = 0; c < (inv.cars || []).length; c++) {
     var car = inv.cars[c];
+    // [全系统自洽修复] 域E A类#3: car.depreciation 可能未定义（旧存档），导致 price×NaN→NaN 传播
+    var _depr = (typeof car.depreciation === "number" && isFinite(car.depreciation)) ? car.depreciation : 0.01;
     car.currentPrice = Math.round(
-      (car.currentPrice || car.buyPrice) * (1 - car.depreciation),
+      (car.currentPrice || car.buyPrice) * (1 - _depr),
     );
     if (state.player.day % 30 === 0 && state.resources.cash >= car.maintenance)
       state.resources.cash -= car.maintenance;
@@ -1498,6 +1500,11 @@ function sellInvStock(symbol, shares) {
     return;
   }
   var m = inv.stockMarket[symbol];
+  // [全系统自洽修复] 域E A类#1: m 可能为空（旧存档/市场数据重置），防御性兜底
+  if (!m || !isFinite(m.price)) {
+    StateManager.addMessage("⚠️ 该标的市场数据异常，无法卖出", "danger");
+    return;
+  }
   var revenue = Math.round(m.price * shares * 100) / 100;
   if (isNaN(revenue) || !isFinite(revenue)) {
     StateManager.addMessage("⚠️ 价格异常，卖出取消", "danger");
@@ -1507,8 +1514,18 @@ function sellInvStock(symbol, shares) {
   var pl = (m.price - (h.avgPrice || 0)) * shares;
   if (pl > 0) {
     inv._consecutiveWins = (inv._consecutiveWins || 0) + 1;
+    // [全系统自洽修复] 域E 联动增强1: 投资盈利→小幅心情+1（财务安全感）
+    if (state.needs) state.needs.happiness = Math.min(100, (state.needs.happiness || 0) + 1);
   } else {
     inv._consecutiveWins = 0;
+    // [全系统自洽修复] 域E 联动增强2: 投资亏损叙事（E→B）— 亏损情感回响
+    if (pl < 0 && state.needs) {
+      state.needs.happiness = Math.max(0, (state.needs.happiness || 0) - 1);
+      if (!state.flags._invLossNarrativeDay || state.flags._invLossNarrativeDay < state.player.day) {
+        state.flags._invLossNarrativeDay = state.player.day;
+        StateManager.addMessage("📉 投资亏损让心情有些低落。投资有风险，入市需谨慎。", "warning");
+      }
+    }
   }
   state.resources.cash += revenue;
   h.shares -= shares;

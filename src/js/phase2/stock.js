@@ -154,6 +154,10 @@ const STOCK_NEWS_TEMPLATES = [
 
 /** 初始化股市 */
 function initStockMarket(state) {
+  // [全系统自洽修复] 域E A类#2: state.corporate.stockMarket 可能未初始化（旧存档降级）
+  if (!state.corporate) state.corporate = {};
+  if (!state.corporate.stockMarket) state.corporate.stockMarket = {};
+  if (!state.corporate.stocks) state.corporate.stocks = [];
   for (const stock of STOCK_LIST) {
     state.corporate.stockMarket[stock.symbol] = {
       price: stock.basePrice * Random.float(0.85, 1.15),
