@@ -87504,6 +87504,311 @@ if (typeof window !== "undefined") {
   }
 })();
 
+/*
+ * 城市浮生记 — 域E（经济/投资）联动增强事件 · R27（第二轮）
+ * v3.118 · loop 全系统优化·Domain E 经济/投资 → 跨域桥接
+ *
+ * 设计约束（与 R11/R15/R18/R23/R26 一致）：
+ *  - IIFE 注入全局 RANDOM_EVENTS 数组（非 ES import），避免改 cross_system_events.js。
+ *  - 所有 state 访问均 || / isFinite 防御；数值一律标 [PLACEHOLDER] 待数值组校准。
+ *  - 事件引擎严格按 e.phase 过滤（state.player.phase 仅 "street"/"corporate"），
+ *    故本文件每个事件显式注册 street + corporate 两个变体（共享去重 flag，不会跨阶段双发）。
+ *  - 投资组合市值复用全局 getInvestmentAssetSnapshot(st).investmentValue（与引擎/UI 同源，
+ *    避免重算导致口径漂移）；净值镜像 data_linkage_events.js 的 netWorthA（现金+存款+投资市值）。
+ *  - 本次聚焦「经济成就 ↔ 职场圈层」(E→C) 与「组合回撤 ↔ 损失厌恶叙事」(E→B) 两段此前空白。
+ *
+ * 与既有 E 域事件不重复说明：
+ *  - invest_acumen_career(E→C) 是「盘感→会计技能 XP」；本 R27 的 econ_career_invest_unlock(E→C)
+ *    是「净值/职级达门槛→被私募圈层邀请跟投，给真实现金+管理技能」，触发前提与收益均不同。
+ *  - invest_drawdown_moral(E→B) 是「单只持仓浮亏>10%」；本 R27 的 econ_portfolio_drawdown(E→B)
+ *    是「组合市值自历史峰值回撤≥20%」（峰终定律/损失厌恶），是更宏观的回撤叙事，互不构成冗余。
+ */
+(function () {
+  if (typeof RANDOM_EVENTS === "undefined" || !RANDOM_EVENTS) return;
+  if (RANDOM_EVENTS._econLinkageR27Loaded) return;
+  RANDOM_EVENTS._econLinkageR27Loaded = true;
+
+  // ---- 本地助手（IIFE 作用域，避免与同模式文件命名冲突） ----
+
+  // 投资组合市值（现金等价物以外的投资仓位），复用引擎全局快照，口径一致
+  function portfolioValueR27(st) {
+    try {
+      if (typeof getInvestmentAssetSnapshot === "function") {
+        var snap = getInvestmentAssetSnapshot(st);
+        if (snap && isFinite(snap.investmentValue)) return snap.investmentValue;
+      }
+    } catch (e) {
+      /* 忽略 */
+    }
+    return 0;
+  }
+
+  // 净资产（镜像 netWorthA：现金 + 银行存款 + 投资市值）
+  function netWorthR27(st) {
+    try {
+      var nw = (st.resources.cash || 0) + (st.resources.bankBalance || 0);
+      return nw + portfolioValueR27(st);
+    } catch (e) {
+      return 0;
+    }
+  }
+
+  // 是否已踏入投资门槛（持有一个以上投资标的）——作为经济域联动的触发闸门
+  function isInvestorR27(st) {
+    if (!st || !st.investment) return false;
+    var h = st.investment.stockHoldings;
+    return Array.isArray(h) && h.length >= 1;
+  }
+
+  // 安全改心情（兜底直写，避免依赖可能不存在的全局助手）
+  function moodR27(st, delta) {
+    if (!st || !st.needs) return;
+    st.needs.happiness = Math.max(
+      0,
+      Math.min(100, (st.needs.happiness || 50) + delta),
+    );
+  }
+
+  // ---- 事件定义 ----
+
+  // ===== E→C：财富/职级立足 → 私募跟投圈层（经济成就反哺职场圈层）=====
+  function careerUnlockCond(st) {
+    if (!st || !st.player || !st.resources) return false;
+    if (st.flags && st.flags._careerInvestUnlocked) return false; // 一次性
+    if (netWorthR27(st) >= 200000) return true; // [PLACEHOLDER] 净值门槛
+    // 职场期：职级达 P6 及以上（中层）也被圈层注意到
+    if (
+      st.player.phase === "corporate" &&
+      st.corporate &&
+      ["P6", "P7", "P8", "P9", "P10"].indexOf(st.corporate.rank) >= 0
+    )
+      return true;
+    return false;
+  }
+
+  function careerUnlockApply(st, accept) {
+    try {
+      if (st.flags) st.flags._careerInvestUnlocked = true; // 无论接受与否都锁定一次性
+      if (accept) {
+        // 真实收益：圈层跟投首笔分红（现金）+ 管理技能（职场硬技能）兑现
+        if (st.resources) st.resources.cash = (st.resources.cash || 0) + 30000; // [PLACEHOLDER] 跟投首笔分红
+        if (st.skills)
+          st.skills.management = Math.min(
+            100,
+            (st.skills.management || 0) + 3, // [PLACEHOLDER] 管理技能加成
+          );
+        if (st.player) st.player.mental = (st.player.mental || 50) + 4;
+        moodR27(st, 3);
+        if (typeof StateManager !== "undefined" && StateManager.addMessage)
+          StateManager.addMessage(
+            "圈层递来跟投的橄榄枝——钱生钱之外，你也成了「被看见」的人。现金+¥30000，管理+3。",
+            "success",
+          );
+      } else {
+        if (st.player) st.player.mental = (st.player.mental || 50) + 1;
+        if (typeof StateManager !== "undefined" && StateManager.addMessage)
+          StateManager.addMessage(
+            "你婉拒了圈层邀请，先把眼前的事做扎实。心智+1。",
+            "info",
+          );
+      }
+    } catch (e) {
+      /* 静默：任一奖励失败都不应阻断每日管线 */
+    }
+  }
+
+  // ===== E→B：组合市值自峰值回撤 ≥20% → 损失厌恶叙事化（峰终定律）=====
+  function drawdownCond(st) {
+    if (!st || !st.player) return false;
+    if (!isInvestorR27(st)) return false;
+    var inv = st.investment || {};
+    var cur = portfolioValueR27(st);
+    if (!(cur > 0)) return false;
+    // 峰值追踪（每日更新，幂等）：创新高当天不触发，等回撤
+    if (!(inv._portfolioPeak > 0) || cur > inv._portfolioPeak) {
+      inv._portfolioPeak = cur;
+      return false;
+    }
+    if (cur > inv._portfolioPeak * 0.8) return false; // [PLACEHOLDER] 回撤阈值 20%
+    // 仅在新低时触发（避免同一轮下跌反复敲击）
+    var lastLow = (st.flags && st.flags._econLastDrawdownValue) || Infinity;
+    if (!(cur < lastLow)) return false;
+    // 30 天冷却
+    if (
+      st.flags &&
+      typeof st.flags._econPeakDrawdownDay === "number" &&
+      st.player.day - st.flags._econPeakDrawdownDay < 30 // [PLACEHOLDER] 冷却天数
+    )
+      return false;
+    return true;
+  }
+
+  function drawdownApply(st, action) {
+    try {
+      var inv = st.investment || {};
+      if (st.flags) {
+        st.flags._econPeakDrawdownDay = st.player.day;
+        st.flags._econLastDrawdownValue = portfolioValueR27(st);
+      }
+      if (action === "cut") {
+        // 割肉止损：卖掉一半 BTC，落袋为安，但心情受挫
+        if ((inv.btcHoldings || 0) > 0 && (inv.btcPrice || 0) > 0) {
+          var half = inv.btcHoldings / 2;
+          var proceeds = half * inv.btcPrice;
+          inv.btcHoldings = inv.btcHoldings - half;
+          if (!isFinite(inv.btcHoldings)) inv.btcHoldings = 0;
+          if (st.resources)
+            st.resources.cash = (st.resources.cash || 0) + proceeds;
+        }
+        moodR27(st, -4); // [PLACEHOLDER] 割肉心情惩罚
+        if (typeof StateManager !== "undefined" && StateManager.addMessage)
+          StateManager.addMessage(
+            "你按下卖出键，账户不再滴血——但那种抽离感，半天没缓过来。心情-4。",
+            "warning",
+          );
+      } else if (action === "add") {
+        // 逆势加仓：用 ≤¥50000 预算抄底 BTC
+        var budget = Math.min(50000, st.resources ? st.resources.cash || 0 : 0); // [PLACEHOLDER] 加仓预算
+        if (budget > 0 && (inv.btcPrice || 0) > 0) {
+          if (st.resources)
+            st.resources.cash = (st.resources.cash || 0) - budget;
+          inv.btcHoldings = (inv.btcHoldings || 0) + budget / inv.btcPrice;
+        }
+        moodR27(st, -2); // [PLACEHOLDER] 抄底焦虑
+        if (typeof StateManager !== "undefined" && StateManager.addMessage)
+          StateManager.addMessage(
+            "别人恐惧你贪婪——你又补了点仓，赌的是反转，押上的是神经。心情-2。",
+            "info",
+          );
+      } else {
+        // 装死：什么也不做，但账户绿得发慌
+        moodR27(st, -6); // [PLACEHOLDER] 躺平心情惩罚
+        if (typeof StateManager !== "undefined" && StateManager.addMessage)
+          StateManager.addMessage(
+            "你关掉软件，假装什么都没发生。可夜里翻来覆去，全是绿油油的数字。心情-6。",
+            "warning",
+          );
+      }
+    } catch (e) {
+      /* 静默 */
+    }
+  }
+
+  var ECON_R27_EVENTS = [
+    // ---- E→C：财富/职级立足 → 私募跟投圈层 ----
+    {
+      id: "econ_career_invest_unlock_street",
+      title: "圈层递来的橄榄枝",
+      desc: "你资产摸到某个 invisible 门槛后，忽然有人引荐你进一个「低调却精明」的私募饭局。席间没人谈股票代码，谈的是谁拿到了哪轮份额。\n\n你意识到：钱到了一定量级，机会会自己找上门。",
+      phase: "street",
+      triggers: { minDay: 120 },
+      conditions: careerUnlockCond,
+      probability: 0.05,
+      choices: [
+        {
+          text: "接住这层关系，跟投一笔",
+          apply: function (st) {
+            careerUnlockApply(st, true);
+          },
+        },
+        {
+          text: "先观望，不急着入场",
+          apply: function (st) {
+            careerUnlockApply(st, false);
+          },
+        },
+      ],
+    },
+    {
+      id: "econ_career_invest_unlock_corporate",
+      title: "中层之后的「隐形人脉」",
+      desc: "升到 P6 这道坎，你发现周报之外另有圈子——饭局、内推、跟投名额，都悄悄流向「已被认可」的人。\n\n一位前辈拍拍你肩：「下次有好项目，带你一个。」",
+      phase: "corporate",
+      triggers: { minDay: 120 },
+      conditions: careerUnlockCond,
+      probability: 0.05,
+      choices: [
+        {
+          text: "跟紧这层关系，接下跟投",
+          apply: function (st) {
+            careerUnlockApply(st, true);
+          },
+        },
+        {
+          text: "先把手头业务做扎实",
+          apply: function (st) {
+            careerUnlockApply(st, false);
+          },
+        },
+      ],
+    },
+
+    // ---- E→B：组合市值自峰值回撤 ≥20% → 损失厌恶叙事化 ----
+    {
+      id: "econ_portfolio_drawdown_street",
+      title: "账户从最高点摔下来的那天",
+      desc: "你曾盯着账户笑过。如今它从峰值跌去两成，绿得刺眼。手指悬在键盘上——割肉、加仓、还是装死？\n\n这一刻你才懂，真正考验人的从来不是上涨。",
+      phase: "street",
+      triggers: { minDay: 90 },
+      conditions: drawdownCond,
+      probability: 0.04,
+      choices: [
+        {
+          text: "🔪 割肉止损，落袋为安",
+          apply: function (st) {
+            drawdownApply(st, "cut");
+          },
+        },
+        {
+          text: "📈 逆势加仓，赌个反转",
+          apply: function (st) {
+            drawdownApply(st, "add");
+          },
+        },
+        {
+          text: "😶 关掉软件，装死",
+          apply: function (st) {
+            drawdownApply(st, "hold");
+          },
+        },
+      ],
+    },
+    {
+      id: "econ_portfolio_drawdown_corporate",
+      title: "职场顺风顺水，账户却在褪色",
+      desc: "职级往上走，工资涨了，可你那笔悄悄布局的投资正从高位滑落两成。白天你在会议室谈笑，夜里却盯着绿油油的曲线发呆。\n\n割肉、加仓、还是装死？",
+      phase: "corporate",
+      triggers: { minDay: 90 },
+      conditions: drawdownCond,
+      probability: 0.04,
+      choices: [
+        {
+          text: "🔪 割肉止损，落袋为安",
+          apply: function (st) {
+            drawdownApply(st, "cut");
+          },
+        },
+        {
+          text: "📈 逆势加仓，赌个反转",
+          apply: function (st) {
+            drawdownApply(st, "add");
+          },
+        },
+        {
+          text: "😶 关掉软件，装死",
+          apply: function (st) {
+            drawdownApply(st, "hold");
+          },
+        },
+      ],
+    },
+  ];
+
+  for (var i = 0; i < ECON_R27_EVENTS.length; i++) {
+    RANDOM_EVENTS.push(ECON_R27_EVENTS[i]);
+  }
+})();
+
 ;
 // ==== js/core/lifecycle_linkage_events.js ====
 /**
@@ -88451,6 +88756,188 @@ if (typeof window !== "undefined") {
   }
 })();
 
+/*
+ * 城市浮生记 — 域H（Phase2/公司）联动增强事件（R21 第二轮）
+ * v3.112 · loop R21 全系统优化·Domain H 创业/公司 → 跨域桥接
+ *
+ * 设计约束（与 R11~R20 各域 linkage 文件一致）：
+ *  - 以 IIFE 注入全局 RANDOM_EVENTS 数组（非 ES import），避免改 cross_system_events.js。
+ *  - 所有 state 访问均 || 防御；数值一律标 [PLACEHOLDER] 待数值组校准。
+ *  - 事件引擎严格按 e.phase 过滤（state.player.phase 仅 "street"/"corporate"），
+ *    故本文件事件须显式设置 phase；这里 2 street + 1 corporate 覆盖两种人生阶段。
+ *  - 社交桥接严格遵守域D架构铁律：只读 state.relationships；引用 NPC 须 rel && rel.met；
+ *    跨 NPC 好感传导一律走 applyAffinityChange（自动 clamp + 记 _lastInteractionDay + 升级播报）。
+ *  - 里程碑/冷却用 st.flags._companyHL* 去重（conditions 与 apply 双重拦截），不依赖引擎 onResolved。
+ *  - 域D 仅做跨域桥接，不新建平行 NPC 系统、不依赖 npcs.js 中仍处 TODO 的 xiaoli/auntie_lin/master_zhao，
+ *    一律用通用 state.relationships 遍历。
+ *  - 主题：创业/公司层面的「纪律感、带队温度、经营眼界」反哺到数值(A)、社交(D)、职业(C)。
+ *  - 注意：本文件 id 前缀 company_h_* 与 R12 company_linkage_events.js 的 startup_* 不冲突。
+ */
+(function () {
+  if (typeof RANDOM_EVENTS === "undefined" || !RANDOM_EVENTS) return;
+  if (RANDOM_EVENTS._companyLinkageR21Loaded) return;
+  RANDOM_EVENTS._companyLinkageR21Loaded = true;
+
+  // ---- 本地助手（IIFE 作用域，避免与同模式文件命名冲突） ----
+
+  // 取已结识且好感达阈值的 NPC 列表（域D铁律：须 rel && rel.met）
+  function getMetNpcsH(st, minAff) {
+    minAff = minAff || 0;
+    var out = [];
+    if (!st || !st.relationships) return out;
+    for (var id in st.relationships) {
+      if (!Object.prototype.hasOwnProperty.call(st.relationships, id)) continue;
+      var r = st.relationships[id];
+      if (r && r.met && (r.affinity || 0) >= minAff)
+        out.push({ id: id, rel: r });
+    }
+    return out;
+  }
+
+  // 安全改好感：优先全局 applyAffinityChange，否则兜底直写（域D铁律：跨NPC传导走 applyAffinityChange）
+  function safeAffinityH(st, npcId, change, reason) {
+    if (!st || !npcId) return;
+    if (typeof applyAffinityChange === "function") {
+      applyAffinityChange(st, npcId, change, reason || "域H联动");
+      return;
+    }
+    if (!st.relationships) st.relationships = {};
+    if (!st.relationships[npcId])
+      st.relationships[npcId] = { met: true, affinity: 0 };
+    st.relationships[npcId].affinity =
+      (st.relationships[npcId].affinity || 0) + change;
+    st.relationships[npcId].met = true;
+  }
+
+  // ---- 域H 联动事件 ----
+
+  var COMPANY_EVENTS = [
+    // ===== H→A：把创业的纪律感带回日常 ↔ 数值/心智（状态回馈） =====
+    {
+      id: "company_h_foundation_discipline",
+      title: "创业磨出来的那点纪律感",
+      desc: "连着几个月盯现金流、排优先级，你发现自己不再熬夜刷手机了。那种'今天的事今天毕'的劲头，悄悄渗进了柴米油盐的日子。",
+      phase: "street",
+      triggers: { minDay: 60 },
+      conditions: function (st) {
+        if (!st || !st.player) return false;
+        if (st.flags && st.flags._companyHLDisciplineCooldown) return false;
+        // 仅在已创立公司后，纪律感才有来源
+        if (!(st.startup && st.startup.company)) return false;
+        return true;
+      },
+      choices: [
+        {
+          text: "把这份节奏守住",
+          apply: function (st) {
+            if (st.player) st.player.mental = (st.player.mental || 50) + 5; // [PLACEHOLDER] 心智回馈
+            if (st.needs) st.needs.happiness = (st.needs.happiness || 50) + 4; // [PLACEHOLDER] 心情
+            if (st.flags) st.flags._companyHLDisciplineCooldown = true;
+            if (typeof StateManager !== "undefined" && StateManager.addMessage)
+              StateManager.addMessage(
+                "创业逼出来的自律，反手把日常生活也理顺了几分。",
+                "good",
+              );
+          },
+        },
+        {
+          text: "松一口气也不错",
+          apply: function (st) {
+            if (st.player) st.player.mental = (st.player.mental || 50) + 2;
+            if (st.flags) st.flags._companyHLDisciplineCooldown = true;
+          },
+        },
+      ],
+      probability: 0.05,
+    },
+
+    // ===== H→D：把带队的温度带到人际 ↔ NPC/社交（管理风格转化为好感） =====
+    {
+      id: "company_h_team_warmth",
+      title: "你对人好，圈子也暖了你",
+      desc: "公司里你习惯先听再说、遇事扛一句'我的锅'。后来才发现，这种带人的温度，让你在圈子里也多了几个真肯帮忙的朋友。",
+      phase: "street",
+      triggers: { minDay: 90 },
+      conditions: function (st) {
+        if (!st || !st.player) return false;
+        if (st.flags && st.flags._companyHLTeamWarmthCooldown) return false;
+        if (!(st.startup && st.startup.company)) return false;
+        // 至少一个"信得过"(好感≥30)的已结识 NPC
+        if (!getMetNpcsH(st, 30).length) return false;
+        return true;
+      },
+      choices: [
+        {
+          text: "把这份温度继续传下去",
+          apply: function (st) {
+            // D域桥接：管理温度转化为社交好感（守域D铁律：rel.met + applyAffinityChange）
+            var npc = getMetNpcsH(st, 30)[0];
+            if (npc) safeAffinityH(st, npc.id, 6, "带人温度·圈内好感"); // [PLACEHOLDER] 好感增量
+            if (st.needs) st.needs.happiness = (st.needs.happiness || 50) + 3;
+            if (st.flags) st.flags._companyHLTeamWarmthCooldown = true;
+            if (typeof StateManager !== "undefined" && StateManager.addMessage)
+              StateManager.addMessage(
+                "肯扛事的人，关系里总不缺搭把手的朋友。",
+                "good",
+              );
+          },
+        },
+        {
+          text: "公是公私是私，分清楚",
+          apply: function (st) {
+            if (st.needs) st.needs.happiness = (st.needs.happiness || 50) + 1;
+            if (st.flags) st.flags._companyHLTeamWarmthCooldown = true;
+          },
+        },
+      ],
+      probability: 0.04,
+    },
+
+    // ===== H→C：把经营公司的眼界带回职场 ↔ 职业/成长（经营眼界转化为职场技能） =====
+    {
+      id: "company_h_business_acumen",
+      title: "一次被合伙人记住的判断",
+      desc: "董事会要你讲清下个季度的打法。你没堆 PPT，而是用一组数字把'为什么赢、输在哪'说透了。散会后，带你的前辈私下说：这小子，看事的格局比以前高了。",
+      phase: "corporate",
+      triggers: { minDay: 150 },
+      conditions: function (st) {
+        if (!st || !st.player) return false;
+        if (st.flags && st.flags._companyHLBusinessAcumenCooldown) return false;
+        return true;
+      },
+      choices: [
+        {
+          text: "把这套经营打法沉淀下来",
+          apply: function (st) {
+            // C域桥接：经营眼界转化为真实职业技能（management 为通用管理门槛技能，语义一致）
+            if (typeof addSkillXp === "function") addSkillXp("management", 8); // [PLACEHOLDER] 经营/管理 XP
+            if (st.player) st.player.mental = (st.player.mental || 50) + 3;
+            if (st.needs) st.needs.happiness = (st.needs.happiness || 50) + 2;
+            if (st.flags) st.flags._companyHLBusinessAcumenCooldown = true;
+            if (typeof StateManager !== "undefined" && StateManager.addMessage)
+              StateManager.addMessage(
+                "把公司当沙盘练出来的眼界，回到职场也是一种降维。",
+                "good",
+              );
+          },
+        },
+        {
+          text: "讲完拉倒，下不为例",
+          apply: function (st) {
+            if (st.player) st.player.mental = (st.player.mental || 50) + 1;
+            if (st.flags) st.flags._companyHLBusinessAcumenCooldown = true;
+          },
+        },
+      ],
+      probability: 0.04,
+    },
+  ];
+
+  for (var i = 0; i < COMPANY_EVENTS.length; i++) {
+    RANDOM_EVENTS.push(COMPANY_EVENTS[i]);
+  }
+})();
+
 ;
 // ==== js/core/data_linkage_events.js ====
 /*
@@ -88679,8 +89166,6 @@ if (typeof window !== "undefined") {
   }
 })();
 
-;
-// ==== js/core/data_linkage_events_r22.js ====
 /*
  * 城市浮生记 — 域A（数据/数值平衡）联动增强事件 · 第二轮
  * v3.113 · loop R22 全系统优化·Domain A 数值平衡→跨域桥接（R14 之后补充新角度）
@@ -88891,8 +89376,6 @@ if (typeof window !== "undefined") {
   });
 })();
 
-;
-// ==== js/core/data_linkage_events_r23.js ====
 /*
  * 城市浮生记 — 域A（数据/数值平衡）联动增强事件 · 第三轮
  * v3.120 · loop 全系统优化·Domain A 数值平衡→核心机制叙事化
@@ -89740,6 +90223,199 @@ if (typeof window !== "undefined") {
   }
 })();
 
+/*
+ * 城市浮生记 — 域C（职业/成长）联动增强事件 · 第二轮
+ * v3.115 · loop R24 全系统优化·Domain C 职业成长→跨域桥接
+ *
+ * 设计约束（与 R11–R23 各域 linkage 文件一致）：
+ *  - 以 IIFE 注入全局 RANDOM_EVENTS 数组（非 ES import），避免改 cross_system_events.js。
+ *  - 所有 state 访问均 || 防御；数值一律标 [PLACEHOLDER] 待数值组校准。
+ *  - 事件引擎严格按 e.phase 过滤（state.player.phase 仅 "street"/"corporate"），
+ *    故本文件事件须显式设置 phase；这里 2 street + 1 corporate 以覆盖两种人生阶段。
+ *  - 里程碑类事件用 st.flags._xxxDone 去重（conditions 与 apply 双重拦截），不依赖引擎 onResolved。
+ *  - 域D 桥接严守铁律：只读 state.relationships、rel&&rel.met 守卫、跨NPC传导走 applyAffinityChange。
+ *  - 本文件事件 id 统一前缀 career2_*，与 R16 career_linkage_events.js 的 career_* 不冲突。
+ */
+(function () {
+  if (typeof RANDOM_EVENTS === "undefined" || !RANDOM_EVENTS) return;
+  if (RANDOM_EVENTS._career2LinkageR24Loaded) return;
+  RANDOM_EVENTS._career2LinkageR24Loaded = true;
+
+  // ---- 本地助手（IIFE 作用域，避免与同模式文件命名冲突） ----
+
+  // 取已结识且好感达阈值的 NPC 列表
+  function getMetNpcsR24(st, minAff) {
+    minAff = minAff || 0;
+    var out = [];
+    if (!st || !st.relationships) return out;
+    for (var id in st.relationships) {
+      if (!Object.prototype.hasOwnProperty.call(st.relationships, id)) continue;
+      var r = st.relationships[id];
+      if (r && r.met && (r.affinity || 0) >= minAff)
+        out.push({ id: id, rel: r });
+    }
+    return out;
+  }
+
+  // 取好感最高的已结识 NPC
+  function pickClosestMetNpcR24(st, minAff) {
+    var met = getMetNpcsR24(st, minAff || 0);
+    if (!met.length) return null;
+    met.sort(function (a, b) {
+      return (b.rel.affinity || 0) - (a.rel.affinity || 0);
+    });
+    return met[0];
+  }
+
+  // 安全改好感：优先全局 applyAffinityChange（自动 clamp + 记 _lastInteractionDay），否则兜底直写
+  function safeAffinityR24(st, npcId, change, reason) {
+    if (!st || !npcId) return;
+    if (typeof applyAffinityChange === "function") {
+      applyAffinityChange(st, npcId, change, reason || "域C联动");
+      return;
+    }
+    if (!st.relationships) st.relationships = {};
+    if (!st.relationships[npcId])
+      st.relationships[npcId] = { met: true, affinity: 0 };
+    st.relationships[npcId].affinity =
+      (st.relationships[npcId].affinity || 0) + change;
+    st.relationships[npcId].met = true;
+  }
+
+  // ============ 事件定义 ============
+
+  // ===== C→D：职业被看见 ↔ 社交亲近（旧同事辗转找到你，重连一段旧缘） =====
+  RANDOM_EVENTS.push({
+    id: "career2_peer_reconnect",
+    title: "一位老同事辗转找到了你",
+    desc: "多年没联系的前同事忽然发来消息，说你当年带他入行时那股认真劲，他一直记着。聊起来，你们竟在同一个城市。",
+    phase: "street",
+    triggers: { minDay: 30 },
+    conditions: function (st) {
+      if (!st || !st.relationships) return false;
+      if (st.flags && st.flags._career2PeerReconnectDone) return false;
+      if (!getMetNpcsR24(st, 0).length) return false;
+      return true;
+    },
+    choices: [
+      {
+        text: "约他出来，好好叙叙旧",
+        apply: function (st) {
+          var npc = pickClosestMetNpcR24(st, 0);
+          if (npc) safeAffinityR24(st, npc.id, 6, "职场旧缘被重新看见");
+          if (st.player) st.player.mental = (st.player.mental || 50) + 3;
+          if (st.needs) st.needs.happiness = (st.needs.happiness || 50) + 3;
+          if (st.flags) st.flags._career2PeerReconnectDone = true;
+          if (typeof StateManager !== "undefined" && StateManager.addMessage)
+            StateManager.addMessage(
+              "一份被记住的认真，让你对这座城市又近了一分。",
+              "good",
+            );
+        },
+      },
+      {
+        text: "客套几句，没多约",
+        apply: function (st) {
+          if (st.player) st.player.mental = (st.player.mental || 50) + 1;
+          if (st.flags) st.flags._career2PeerReconnectDone = true;
+        },
+      },
+    ],
+    probability: 0.05,
+  });
+
+  // ===== C→A：稳定就业 ↔ 生活底气（有活干、有进账，慢慢攒出一点缓冲） =====
+  RANDOM_EVENTS.push({
+    id: "career2_steady_grounding",
+    title: "连续上班的日子，让你心里有了底",
+    desc: "不知不觉已经在这个岗位上待了一阵。每月固定的进账，让你第一次觉得'明天'不是悬着的。你开始给未来留一点余量。",
+    phase: "street",
+    triggers: { minDay: 60 },
+    conditions: function (st) {
+      if (!st || !st.player || st.player.phase !== "street") return false;
+      if (!st.resources) return false;
+      if (st.flags && st.flags._career2SteadyGroundingDone) return false;
+      // [PLACEHOLDER] 触发所需的连续在职天数门槛
+      if ((st.player.day || 0) < 60) return false;
+      // 有一份稳定工作（employment 或 career 任一存在即视为在职）
+      var employed =
+        (st.employment && st.employment.currentJob) ||
+        (st.career && st.career.currentJob);
+      if (!employed) return false;
+      return true;
+    },
+    choices: [
+      {
+        text: "把每月结余划出一小笔，攒应急金",
+        apply: function (st) {
+          // 稳定就业带来生活底气：属性稳定 + 储蓄缓冲（域A 数值平衡）
+          if (st.player) st.player.mental = (st.player.mental || 50) + 4;
+          if (st.needs) st.needs.happiness = (st.needs.happiness || 50) + 2;
+          if (st.resources)
+            st.resources.bankBalance = (st.resources.bankBalance || 0) + 800; // [PLACEHOLDER] 应急储蓄缓冲
+          if (st.flags) st.flags._career2SteadyGroundingDone = true;
+          if (typeof StateManager !== "undefined" && StateManager.addMessage)
+            StateManager.addMessage(
+              "有活干、有进账，你对日子的掌控感悄悄回来了。",
+              "good",
+            );
+        },
+      },
+      {
+        text: "还是先顾眼前开销",
+        apply: function (st) {
+          if (st.player) st.player.mental = (st.player.mental || 50) + 1;
+          if (st.flags) st.flags._career2SteadyGroundingDone = true;
+        },
+      },
+    ],
+    probability: 0.05,
+  });
+
+  // ===== C→E：项目分红 ↔ 投资嗅觉（职场阶段，分红到账，第一次认真想钱生钱） =====
+  RANDOM_EVENTS.push({
+    id: "career2_bonus_to_capital",
+    title: "一笔项目分红，让你动了理财的念头",
+    desc: "年底项目结项，你拿到一笔意料之外的分红。钱躺在卡里几天后，你第一次认真想：能不能让它别只是躺着。",
+    phase: "corporate",
+    triggers: { minDay: 120 },
+    conditions: function (st) {
+      if (!st || !st.player || st.player.phase !== "corporate") return false;
+      if (!st.resources) return false;
+      if (st.flags && st.flags._career2BonusToCapitalDone) return false;
+      // [PLACEHOLDER] 触发所需的现金/存款储备阈值
+      if ((st.resources.bankBalance || 0) < 8000) return false;
+      if ((st.resources.cash || 0) < 3000) return false;
+      return true;
+    },
+    choices: [
+      {
+        text: "拿分红的小头，开始留意理财",
+        apply: function (st) {
+          if (st.resources)
+            st.resources.bankBalance = (st.resources.bankBalance || 0) + 2000; // [PLACEHOLDER] 腾出可投资本金
+          if (st.flags) st.flags._dataInvestorMindset = true; // 复用跨轮投资者心态标记
+          if (st.player) st.player.mental = (st.player.mental || 50) + 3;
+          if (st.flags) st.flags._career2BonusToCapitalDone = true;
+          if (typeof StateManager !== "undefined" && StateManager.addMessage)
+            StateManager.addMessage(
+              "一笔分红，让你对'钱怎么生钱'第一次上了心。",
+              "good",
+            );
+        },
+      },
+      {
+        text: "分红先还了账单，没多想",
+        apply: function (st) {
+          if (st.player) st.player.mental = (st.player.mental || 50) + 1;
+          if (st.flags) st.flags._career2BonusToCapitalDone = true;
+        },
+      },
+    ],
+    probability: 0.05,
+  });
+})();
+
 ;
 // ==== js/core/npc_social_linkage_events.js ====
 /*
@@ -89928,6 +90604,153 @@ if (typeof window !== "undefined") {
   for (var i = 0; i < SOCIAL_EVENTS.length; i++) {
     RANDOM_EVENTS.push(SOCIAL_EVENTS[i]);
   }
+})();
+
+/*
+ * 城市浮生记 — 域D（NPC/社交）联动增强·常态NPC互动
+ * v3.117 · loop R26 全系统优化·Domain D（NPC/社交）主审第二轮
+ *
+ * 【联动意图】R26 指令一刚激活 auntie_lin(林阿姨)/chen_ge(陈哥)/ajie(阿杰) 三名沉睡NPC，
+ * 但激活只是"能结识"。要让 NPC 真正"活"在系统里，需给信息型 NPC 接一条常态化互动：
+ *  - chen_ge(情报贩子) → E 经济/投资：周期性透漏市场/门路消息（NPC→经济，逆向桥接，未覆盖）
+ *  - auntie_lin(菜市场摊主) → A 数据/数值：周期性透漏菜价门道（NPC→物价/烹饪，未覆盖）
+ * 这样 NPC 不只是关系条上的数字，而是持续产出跨域价值的"活人"。
+ *
+ * 设计约束（与 npc_social_linkage_events.js 一致）：
+ *  - IIFE 注入 RANDOM_EVENTS，不改动 cross_system_events.js。
+ *  - 域D铁律：只读 state.relationships；引用 NPC 须 rel && rel.met。
+ *  - 冷却用 st.flags._xxxCooldown(存 day) 去重，conditions 与 apply 双重拦截。
+ *  - 所有 state 访问 || 防御；数值标 [PLACEHOLDER]。
+ *  - phase:"street"（三人均 street 阶段角色）。
+ */
+(function () {
+  if (typeof RANDOM_EVENTS === "undefined" || !RANDOM_EVENTS) return;
+  if (RANDOM_EVENTS._npcLinkageR26Loaded) return;
+  RANDOM_EVENTS._npcLinkageR26Loaded = true;
+
+  // ===== D→E：陈哥的市场耳语（NPC→经济/投资） =====
+  RANDOM_EVENTS.push({
+    id: "npc_chen_ge_market_whisper",
+    phase: "street",
+    icon: "🕶️",
+    title: "陈哥递来的耳语",
+    desc:
+      "陈哥在商业区角落冲你招手，压低声音：「有个消息，别外传——下礼拜城东要开个新商圈，周边铺面租金得涨。你手头要有闲钱，早点布阵。」\n\n" +
+      "他没说具体投什么，但眼神里那股「你懂的」意味，让你心里一动。",
+    triggers: { minDay: 30 },
+    conditions: function (st) {
+      if (!st || !st.player || !st.relationships) return false;
+      var r = st.relationships.chen_ge;
+      if (!r || !r.met || (r.affinity || 0) < 25) return false; // 域D铁律：须 rel && rel.met
+      if (st.flags && st.flags._chenGeWhisperCooldown) {
+        if (st.player.day - st.flags._chenGeWhisperCooldown < 30) return false; // [PLACEHOLDER] 冷却30天
+      }
+      return true;
+    },
+    choices: [
+      {
+        text: "📈 顺藤摸瓜，小试一笔",
+        hint: "激活投资心态 + 小额试水",
+        apply: function (st) {
+          if (st.resources) {
+            st.resources.bankBalance = (st.resources.bankBalance || 0) + 8000; // [PLACEHOLDER] 试水本金
+          }
+          if (st.player) st.player.mental = (st.player.mental || 50) + 2;
+          if (st.flags) {
+            st.flags._chenGeWhisperCooldown = st.player.day;
+            st.flags._dataInvestorMindset = true; // 复用 R14/R16 同一投资心态 flag
+          }
+          if (typeof StateManager !== "undefined" && StateManager.addMessage)
+            StateManager.addMessage(
+              "📈 陈哥的一句话，让你第一次认真盘算「让钱生钱」。银行户头多了¥8000试水金。",
+              "good",
+            );
+        },
+      },
+      {
+        text: "🤔 听听就好，不冒险",
+        hint: "记下人脉，不投钱",
+        apply: function (st) {
+          if (st.player) st.player.mental = (st.player.mental || 50) + 1;
+          if (st.flags) st.flags._chenGeWhisperCooldown = st.player.day;
+          if (typeof StateManager !== "undefined" && StateManager.addMessage)
+            StateManager.addMessage(
+              "🤔 你笑着点头，没掏钱。陈哥摆摆手：「谨慎点好。」",
+              "info",
+            );
+        },
+      },
+    ],
+    probability: 0.04,
+  });
+
+  // ===== D→A：林阿姨的菜价门道（NPC→数据/数值·物价/烹饪） =====
+  RANDOM_EVENTS.push({
+    id: "npc_auntie_lin_fresh_deal",
+    phase: "street",
+    icon: "🥬",
+    title: "林阿姨的批发价",
+    desc:
+      "你在菜市场，林阿姨神秘兮兮地把你拉到摊位后头：「丫头/小子，今天批发价到了一批好货，外面卖¥8的青菜，我这儿¥3拿走。\n\n" +
+      "「做饭的，懂食材才是真省钱。这周你来我这儿拿，算你成本价。」",
+    triggers: { minDay: 25 },
+    conditions: function (st) {
+      if (!st || !st.player || !st.relationships) return false;
+      var r = st.relationships.auntie_lin;
+      if (!r || !r.met) return false; // 域D铁律：须 rel && rel.met
+      if (!(
+        st.skills &&
+        st.skills.cooking &&
+        (st.skills.cooking.level || 0) >= 5
+      ))
+        return false; // 需有点烹饪底子才懂门道
+      if (st.flags && st.flags._auntieLinDealCooldown) {
+        if (st.player.day - st.flags._auntieLinDealCooldown < 21) return false; // [PLACEHOLDER] 冷却21天
+      }
+      return true;
+    },
+    choices: [
+      {
+        text: "🥬 按批发价囤一波",
+        hint: "省一笔伙食费 + 烹饪经验",
+        apply: function (st) {
+          var save = 60; // [PLACEHOLDER] 批发省下的伙食费
+          if (st.resources) {
+            st.resources.cash = (st.resources.cash || 0) + save;
+            st.resources.totalEarned = (st.resources.totalEarned || 0) + save;
+          }
+          if (
+            st.skills &&
+            st.skills.cooking &&
+            st.skills.cooking.xp !== undefined
+          ) {
+            st.skills.cooking.xp = (st.skills.cooking.xp || 0) + 15; // [PLACEHOLDER] 烹饪经验
+          }
+          if (st.flags) st.flags._auntieLinDealCooldown = st.player.day;
+          if (typeof StateManager !== "undefined" && StateManager.addMessage)
+            StateManager.addMessage(
+              "🥬 你按批发价囤了菜，省下¥" +
+                save +
+                "，顺手跟林阿姨学了两手刀工（烹饪经验+15）。",
+              "good",
+            );
+        },
+      },
+      {
+        text: "🙂 先拿一把尝尝",
+        hint: "少量实惠",
+        apply: function (st) {
+          if (st.flags) st.flags._auntieLinDealCooldown = st.player.day;
+          if (typeof StateManager !== "undefined" && StateManager.addMessage)
+            StateManager.addMessage(
+              "🙂 你只拿了一把葱。林阿姨笑：「慢慢来，常来就行。」",
+              "info",
+            );
+        },
+      },
+    ],
+    probability: 0.04,
+  });
 })();
 
 ;
@@ -90172,462 +90995,6 @@ if (typeof window !== "undefined") {
       },
     ],
   });
-})();
-
-;
-// ==== js/core/npc_linkage_events_r26.js ====
-/*
- * 城市浮生记 — 域D（NPC/社交）联动增强·常态NPC互动
- * v3.117 · loop R26 全系统优化·Domain D（NPC/社交）主审第二轮
- *
- * 【联动意图】R26 指令一刚激活 auntie_lin(林阿姨)/chen_ge(陈哥)/ajie(阿杰) 三名沉睡NPC，
- * 但激活只是"能结识"。要让 NPC 真正"活"在系统里，需给信息型 NPC 接一条常态化互动：
- *  - chen_ge(情报贩子) → E 经济/投资：周期性透漏市场/门路消息（NPC→经济，逆向桥接，未覆盖）
- *  - auntie_lin(菜市场摊主) → A 数据/数值：周期性透漏菜价门道（NPC→物价/烹饪，未覆盖）
- * 这样 NPC 不只是关系条上的数字，而是持续产出跨域价值的"活人"。
- *
- * 设计约束（与 npc_social_linkage_events.js 一致）：
- *  - IIFE 注入 RANDOM_EVENTS，不改动 cross_system_events.js。
- *  - 域D铁律：只读 state.relationships；引用 NPC 须 rel && rel.met。
- *  - 冷却用 st.flags._xxxCooldown(存 day) 去重，conditions 与 apply 双重拦截。
- *  - 所有 state 访问 || 防御；数值标 [PLACEHOLDER]。
- *  - phase:"street"（三人均 street 阶段角色）。
- */
-(function () {
-  if (typeof RANDOM_EVENTS === "undefined" || !RANDOM_EVENTS) return;
-  if (RANDOM_EVENTS._npcLinkageR26Loaded) return;
-  RANDOM_EVENTS._npcLinkageR26Loaded = true;
-
-  // ===== D→E：陈哥的市场耳语（NPC→经济/投资） =====
-  RANDOM_EVENTS.push({
-    id: "npc_chen_ge_market_whisper",
-    phase: "street",
-    icon: "🕶️",
-    title: "陈哥递来的耳语",
-    desc:
-      "陈哥在商业区角落冲你招手，压低声音：「有个消息，别外传——下礼拜城东要开个新商圈，周边铺面租金得涨。你手头要有闲钱，早点布阵。」\n\n" +
-      "他没说具体投什么，但眼神里那股「你懂的」意味，让你心里一动。",
-    triggers: { minDay: 30 },
-    conditions: function (st) {
-      if (!st || !st.player || !st.relationships) return false;
-      var r = st.relationships.chen_ge;
-      if (!r || !r.met || (r.affinity || 0) < 25) return false; // 域D铁律：须 rel && rel.met
-      if (st.flags && st.flags._chenGeWhisperCooldown) {
-        if (st.player.day - st.flags._chenGeWhisperCooldown < 30) return false; // [PLACEHOLDER] 冷却30天
-      }
-      return true;
-    },
-    choices: [
-      {
-        text: "📈 顺藤摸瓜，小试一笔",
-        hint: "激活投资心态 + 小额试水",
-        apply: function (st) {
-          if (st.resources) {
-            st.resources.bankBalance = (st.resources.bankBalance || 0) + 8000; // [PLACEHOLDER] 试水本金
-          }
-          if (st.player) st.player.mental = (st.player.mental || 50) + 2;
-          if (st.flags) {
-            st.flags._chenGeWhisperCooldown = st.player.day;
-            st.flags._dataInvestorMindset = true; // 复用 R14/R16 同一投资心态 flag
-          }
-          if (typeof StateManager !== "undefined" && StateManager.addMessage)
-            StateManager.addMessage(
-              "📈 陈哥的一句话，让你第一次认真盘算「让钱生钱」。银行户头多了¥8000试水金。",
-              "good",
-            );
-        },
-      },
-      {
-        text: "🤔 听听就好，不冒险",
-        hint: "记下人脉，不投钱",
-        apply: function (st) {
-          if (st.player) st.player.mental = (st.player.mental || 50) + 1;
-          if (st.flags) st.flags._chenGeWhisperCooldown = st.player.day;
-          if (typeof StateManager !== "undefined" && StateManager.addMessage)
-            StateManager.addMessage(
-              "🤔 你笑着点头，没掏钱。陈哥摆摆手：「谨慎点好。」",
-              "info",
-            );
-        },
-      },
-    ],
-    probability: 0.04,
-  });
-
-  // ===== D→A：林阿姨的菜价门道（NPC→数据/数值·物价/烹饪） =====
-  RANDOM_EVENTS.push({
-    id: "npc_auntie_lin_fresh_deal",
-    phase: "street",
-    icon: "🥬",
-    title: "林阿姨的批发价",
-    desc:
-      "你在菜市场，林阿姨神秘兮兮地把你拉到摊位后头：「丫头/小子，今天批发价到了一批好货，外面卖¥8的青菜，我这儿¥3拿走。\n\n" +
-      "「做饭的，懂食材才是真省钱。这周你来我这儿拿，算你成本价。」",
-    triggers: { minDay: 25 },
-    conditions: function (st) {
-      if (!st || !st.player || !st.relationships) return false;
-      var r = st.relationships.auntie_lin;
-      if (!r || !r.met) return false; // 域D铁律：须 rel && rel.met
-      if (!(
-        st.skills &&
-        st.skills.cooking &&
-        (st.skills.cooking.level || 0) >= 5
-      ))
-        return false; // 需有点烹饪底子才懂门道
-      if (st.flags && st.flags._auntieLinDealCooldown) {
-        if (st.player.day - st.flags._auntieLinDealCooldown < 21) return false; // [PLACEHOLDER] 冷却21天
-      }
-      return true;
-    },
-    choices: [
-      {
-        text: "🥬 按批发价囤一波",
-        hint: "省一笔伙食费 + 烹饪经验",
-        apply: function (st) {
-          var save = 60; // [PLACEHOLDER] 批发省下的伙食费
-          if (st.resources) {
-            st.resources.cash = (st.resources.cash || 0) + save;
-            st.resources.totalEarned = (st.resources.totalEarned || 0) + save;
-          }
-          if (
-            st.skills &&
-            st.skills.cooking &&
-            st.skills.cooking.xp !== undefined
-          ) {
-            st.skills.cooking.xp = (st.skills.cooking.xp || 0) + 15; // [PLACEHOLDER] 烹饪经验
-          }
-          if (st.flags) st.flags._auntieLinDealCooldown = st.player.day;
-          if (typeof StateManager !== "undefined" && StateManager.addMessage)
-            StateManager.addMessage(
-              "🥬 你按批发价囤了菜，省下¥" +
-                save +
-                "，顺手跟林阿姨学了两手刀工（烹饪经验+15）。",
-              "good",
-            );
-        },
-      },
-      {
-        text: "🙂 先拿一把尝尝",
-        hint: "少量实惠",
-        apply: function (st) {
-          if (st.flags) st.flags._auntieLinDealCooldown = st.player.day;
-          if (typeof StateManager !== "undefined" && StateManager.addMessage)
-            StateManager.addMessage(
-              "🙂 你只拿了一把葱。林阿姨笑：「慢慢来，常来就行。」",
-              "info",
-            );
-        },
-      },
-    ],
-    probability: 0.04,
-  });
-})();
-
-;
-// ==== js/core/economy_linkage_events_r27.js ====
-/*
- * 城市浮生记 — 域E（经济/投资）联动增强事件 · R27（第二轮）
- * v3.118 · loop 全系统优化·Domain E 经济/投资 → 跨域桥接
- *
- * 设计约束（与 R11/R15/R18/R23/R26 一致）：
- *  - IIFE 注入全局 RANDOM_EVENTS 数组（非 ES import），避免改 cross_system_events.js。
- *  - 所有 state 访问均 || / isFinite 防御；数值一律标 [PLACEHOLDER] 待数值组校准。
- *  - 事件引擎严格按 e.phase 过滤（state.player.phase 仅 "street"/"corporate"），
- *    故本文件每个事件显式注册 street + corporate 两个变体（共享去重 flag，不会跨阶段双发）。
- *  - 投资组合市值复用全局 getInvestmentAssetSnapshot(st).investmentValue（与引擎/UI 同源，
- *    避免重算导致口径漂移）；净值镜像 data_linkage_events.js 的 netWorthA（现金+存款+投资市值）。
- *  - 本次聚焦「经济成就 ↔ 职场圈层」(E→C) 与「组合回撤 ↔ 损失厌恶叙事」(E→B) 两段此前空白。
- *
- * 与既有 E 域事件不重复说明：
- *  - invest_acumen_career(E→C) 是「盘感→会计技能 XP」；本 R27 的 econ_career_invest_unlock(E→C)
- *    是「净值/职级达门槛→被私募圈层邀请跟投，给真实现金+管理技能」，触发前提与收益均不同。
- *  - invest_drawdown_moral(E→B) 是「单只持仓浮亏>10%」；本 R27 的 econ_portfolio_drawdown(E→B)
- *    是「组合市值自历史峰值回撤≥20%」（峰终定律/损失厌恶），是更宏观的回撤叙事，互不构成冗余。
- */
-(function () {
-  if (typeof RANDOM_EVENTS === "undefined" || !RANDOM_EVENTS) return;
-  if (RANDOM_EVENTS._econLinkageR27Loaded) return;
-  RANDOM_EVENTS._econLinkageR27Loaded = true;
-
-  // ---- 本地助手（IIFE 作用域，避免与同模式文件命名冲突） ----
-
-  // 投资组合市值（现金等价物以外的投资仓位），复用引擎全局快照，口径一致
-  function portfolioValueR27(st) {
-    try {
-      if (typeof getInvestmentAssetSnapshot === "function") {
-        var snap = getInvestmentAssetSnapshot(st);
-        if (snap && isFinite(snap.investmentValue)) return snap.investmentValue;
-      }
-    } catch (e) {
-      /* 忽略 */
-    }
-    return 0;
-  }
-
-  // 净资产（镜像 netWorthA：现金 + 银行存款 + 投资市值）
-  function netWorthR27(st) {
-    try {
-      var nw = (st.resources.cash || 0) + (st.resources.bankBalance || 0);
-      return nw + portfolioValueR27(st);
-    } catch (e) {
-      return 0;
-    }
-  }
-
-  // 是否已踏入投资门槛（持有一个以上投资标的）——作为经济域联动的触发闸门
-  function isInvestorR27(st) {
-    if (!st || !st.investment) return false;
-    var h = st.investment.stockHoldings;
-    return Array.isArray(h) && h.length >= 1;
-  }
-
-  // 安全改心情（兜底直写，避免依赖可能不存在的全局助手）
-  function moodR27(st, delta) {
-    if (!st || !st.needs) return;
-    st.needs.happiness = Math.max(
-      0,
-      Math.min(100, (st.needs.happiness || 50) + delta),
-    );
-  }
-
-  // ---- 事件定义 ----
-
-  // ===== E→C：财富/职级立足 → 私募跟投圈层（经济成就反哺职场圈层）=====
-  function careerUnlockCond(st) {
-    if (!st || !st.player || !st.resources) return false;
-    if (st.flags && st.flags._careerInvestUnlocked) return false; // 一次性
-    if (netWorthR27(st) >= 200000) return true; // [PLACEHOLDER] 净值门槛
-    // 职场期：职级达 P6 及以上（中层）也被圈层注意到
-    if (
-      st.player.phase === "corporate" &&
-      st.corporate &&
-      ["P6", "P7", "P8", "P9", "P10"].indexOf(st.corporate.rank) >= 0
-    )
-      return true;
-    return false;
-  }
-
-  function careerUnlockApply(st, accept) {
-    try {
-      if (st.flags) st.flags._careerInvestUnlocked = true; // 无论接受与否都锁定一次性
-      if (accept) {
-        // 真实收益：圈层跟投首笔分红（现金）+ 管理技能（职场硬技能）兑现
-        if (st.resources) st.resources.cash = (st.resources.cash || 0) + 30000; // [PLACEHOLDER] 跟投首笔分红
-        if (st.skills)
-          st.skills.management = Math.min(
-            100,
-            (st.skills.management || 0) + 3, // [PLACEHOLDER] 管理技能加成
-          );
-        if (st.player) st.player.mental = (st.player.mental || 50) + 4;
-        moodR27(st, 3);
-        if (typeof StateManager !== "undefined" && StateManager.addMessage)
-          StateManager.addMessage(
-            "圈层递来跟投的橄榄枝——钱生钱之外，你也成了「被看见」的人。现金+¥30000，管理+3。",
-            "success",
-          );
-      } else {
-        if (st.player) st.player.mental = (st.player.mental || 50) + 1;
-        if (typeof StateManager !== "undefined" && StateManager.addMessage)
-          StateManager.addMessage(
-            "你婉拒了圈层邀请，先把眼前的事做扎实。心智+1。",
-            "info",
-          );
-      }
-    } catch (e) {
-      /* 静默：任一奖励失败都不应阻断每日管线 */
-    }
-  }
-
-  // ===== E→B：组合市值自峰值回撤 ≥20% → 损失厌恶叙事化（峰终定律）=====
-  function drawdownCond(st) {
-    if (!st || !st.player) return false;
-    if (!isInvestorR27(st)) return false;
-    var inv = st.investment || {};
-    var cur = portfolioValueR27(st);
-    if (!(cur > 0)) return false;
-    // 峰值追踪（每日更新，幂等）：创新高当天不触发，等回撤
-    if (!(inv._portfolioPeak > 0) || cur > inv._portfolioPeak) {
-      inv._portfolioPeak = cur;
-      return false;
-    }
-    if (cur > inv._portfolioPeak * 0.8) return false; // [PLACEHOLDER] 回撤阈值 20%
-    // 仅在新低时触发（避免同一轮下跌反复敲击）
-    var lastLow = (st.flags && st.flags._econLastDrawdownValue) || Infinity;
-    if (!(cur < lastLow)) return false;
-    // 30 天冷却
-    if (
-      st.flags &&
-      typeof st.flags._econPeakDrawdownDay === "number" &&
-      st.player.day - st.flags._econPeakDrawdownDay < 30 // [PLACEHOLDER] 冷却天数
-    )
-      return false;
-    return true;
-  }
-
-  function drawdownApply(st, action) {
-    try {
-      var inv = st.investment || {};
-      if (st.flags) {
-        st.flags._econPeakDrawdownDay = st.player.day;
-        st.flags._econLastDrawdownValue = portfolioValueR27(st);
-      }
-      if (action === "cut") {
-        // 割肉止损：卖掉一半 BTC，落袋为安，但心情受挫
-        if ((inv.btcHoldings || 0) > 0 && (inv.btcPrice || 0) > 0) {
-          var half = inv.btcHoldings / 2;
-          var proceeds = half * inv.btcPrice;
-          inv.btcHoldings = inv.btcHoldings - half;
-          if (!isFinite(inv.btcHoldings)) inv.btcHoldings = 0;
-          if (st.resources)
-            st.resources.cash = (st.resources.cash || 0) + proceeds;
-        }
-        moodR27(st, -4); // [PLACEHOLDER] 割肉心情惩罚
-        if (typeof StateManager !== "undefined" && StateManager.addMessage)
-          StateManager.addMessage(
-            "你按下卖出键，账户不再滴血——但那种抽离感，半天没缓过来。心情-4。",
-            "warning",
-          );
-      } else if (action === "add") {
-        // 逆势加仓：用 ≤¥50000 预算抄底 BTC
-        var budget = Math.min(50000, st.resources ? st.resources.cash || 0 : 0); // [PLACEHOLDER] 加仓预算
-        if (budget > 0 && (inv.btcPrice || 0) > 0) {
-          if (st.resources)
-            st.resources.cash = (st.resources.cash || 0) - budget;
-          inv.btcHoldings = (inv.btcHoldings || 0) + budget / inv.btcPrice;
-        }
-        moodR27(st, -2); // [PLACEHOLDER] 抄底焦虑
-        if (typeof StateManager !== "undefined" && StateManager.addMessage)
-          StateManager.addMessage(
-            "别人恐惧你贪婪——你又补了点仓，赌的是反转，押上的是神经。心情-2。",
-            "info",
-          );
-      } else {
-        // 装死：什么也不做，但账户绿得发慌
-        moodR27(st, -6); // [PLACEHOLDER] 躺平心情惩罚
-        if (typeof StateManager !== "undefined" && StateManager.addMessage)
-          StateManager.addMessage(
-            "你关掉软件，假装什么都没发生。可夜里翻来覆去，全是绿油油的数字。心情-6。",
-            "warning",
-          );
-      }
-    } catch (e) {
-      /* 静默 */
-    }
-  }
-
-  var ECON_R27_EVENTS = [
-    // ---- E→C：财富/职级立足 → 私募跟投圈层 ----
-    {
-      id: "econ_career_invest_unlock_street",
-      title: "圈层递来的橄榄枝",
-      desc: "你资产摸到某个 invisible 门槛后，忽然有人引荐你进一个「低调却精明」的私募饭局。席间没人谈股票代码，谈的是谁拿到了哪轮份额。\n\n你意识到：钱到了一定量级，机会会自己找上门。",
-      phase: "street",
-      triggers: { minDay: 120 },
-      conditions: careerUnlockCond,
-      probability: 0.05,
-      choices: [
-        {
-          text: "接住这层关系，跟投一笔",
-          apply: function (st) {
-            careerUnlockApply(st, true);
-          },
-        },
-        {
-          text: "先观望，不急着入场",
-          apply: function (st) {
-            careerUnlockApply(st, false);
-          },
-        },
-      ],
-    },
-    {
-      id: "econ_career_invest_unlock_corporate",
-      title: "中层之后的「隐形人脉」",
-      desc: "升到 P6 这道坎，你发现周报之外另有圈子——饭局、内推、跟投名额，都悄悄流向「已被认可」的人。\n\n一位前辈拍拍你肩：「下次有好项目，带你一个。」",
-      phase: "corporate",
-      triggers: { minDay: 120 },
-      conditions: careerUnlockCond,
-      probability: 0.05,
-      choices: [
-        {
-          text: "跟紧这层关系，接下跟投",
-          apply: function (st) {
-            careerUnlockApply(st, true);
-          },
-        },
-        {
-          text: "先把手头业务做扎实",
-          apply: function (st) {
-            careerUnlockApply(st, false);
-          },
-        },
-      ],
-    },
-
-    // ---- E→B：组合市值自峰值回撤 ≥20% → 损失厌恶叙事化 ----
-    {
-      id: "econ_portfolio_drawdown_street",
-      title: "账户从最高点摔下来的那天",
-      desc: "你曾盯着账户笑过。如今它从峰值跌去两成，绿得刺眼。手指悬在键盘上——割肉、加仓、还是装死？\n\n这一刻你才懂，真正考验人的从来不是上涨。",
-      phase: "street",
-      triggers: { minDay: 90 },
-      conditions: drawdownCond,
-      probability: 0.04,
-      choices: [
-        {
-          text: "🔪 割肉止损，落袋为安",
-          apply: function (st) {
-            drawdownApply(st, "cut");
-          },
-        },
-        {
-          text: "📈 逆势加仓，赌个反转",
-          apply: function (st) {
-            drawdownApply(st, "add");
-          },
-        },
-        {
-          text: "😶 关掉软件，装死",
-          apply: function (st) {
-            drawdownApply(st, "hold");
-          },
-        },
-      ],
-    },
-    {
-      id: "econ_portfolio_drawdown_corporate",
-      title: "职场顺风顺水，账户却在褪色",
-      desc: "职级往上走，工资涨了，可你那笔悄悄布局的投资正从高位滑落两成。白天你在会议室谈笑，夜里却盯着绿油油的曲线发呆。\n\n割肉、加仓、还是装死？",
-      phase: "corporate",
-      triggers: { minDay: 90 },
-      conditions: drawdownCond,
-      probability: 0.04,
-      choices: [
-        {
-          text: "🔪 割肉止损，落袋为安",
-          apply: function (st) {
-            drawdownApply(st, "cut");
-          },
-        },
-        {
-          text: "📈 逆势加仓，赌个反转",
-          apply: function (st) {
-            drawdownApply(st, "add");
-          },
-        },
-        {
-          text: "😶 关掉软件，装死",
-          apply: function (st) {
-            drawdownApply(st, "hold");
-          },
-        },
-      ],
-    },
-  ];
-
-  for (var i = 0; i < ECON_R27_EVENTS.length; i++) {
-    RANDOM_EVENTS.push(ECON_R27_EVENTS[i]);
-  }
 })();
 
 ;
@@ -91710,190 +92077,6 @@ if (typeof window !== "undefined") {
 
   for (var i = 0; i < LIFE_MILESTONE_EVENTS.length; i++) {
     RANDOM_EVENTS.push(LIFE_MILESTONE_EVENTS[i]);
-  }
-})();
-
-;
-// ==== js/core/company_linkage_events_r21.js ====
-/*
- * 城市浮生记 — 域H（Phase2/公司）联动增强事件（R21 第二轮）
- * v3.112 · loop R21 全系统优化·Domain H 创业/公司 → 跨域桥接
- *
- * 设计约束（与 R11~R20 各域 linkage 文件一致）：
- *  - 以 IIFE 注入全局 RANDOM_EVENTS 数组（非 ES import），避免改 cross_system_events.js。
- *  - 所有 state 访问均 || 防御；数值一律标 [PLACEHOLDER] 待数值组校准。
- *  - 事件引擎严格按 e.phase 过滤（state.player.phase 仅 "street"/"corporate"），
- *    故本文件事件须显式设置 phase；这里 2 street + 1 corporate 覆盖两种人生阶段。
- *  - 社交桥接严格遵守域D架构铁律：只读 state.relationships；引用 NPC 须 rel && rel.met；
- *    跨 NPC 好感传导一律走 applyAffinityChange（自动 clamp + 记 _lastInteractionDay + 升级播报）。
- *  - 里程碑/冷却用 st.flags._companyHL* 去重（conditions 与 apply 双重拦截），不依赖引擎 onResolved。
- *  - 域D 仅做跨域桥接，不新建平行 NPC 系统、不依赖 npcs.js 中仍处 TODO 的 xiaoli/auntie_lin/master_zhao，
- *    一律用通用 state.relationships 遍历。
- *  - 主题：创业/公司层面的「纪律感、带队温度、经营眼界」反哺到数值(A)、社交(D)、职业(C)。
- *  - 注意：本文件 id 前缀 company_h_* 与 R12 company_linkage_events.js 的 startup_* 不冲突。
- */
-(function () {
-  if (typeof RANDOM_EVENTS === "undefined" || !RANDOM_EVENTS) return;
-  if (RANDOM_EVENTS._companyLinkageR21Loaded) return;
-  RANDOM_EVENTS._companyLinkageR21Loaded = true;
-
-  // ---- 本地助手（IIFE 作用域，避免与同模式文件命名冲突） ----
-
-  // 取已结识且好感达阈值的 NPC 列表（域D铁律：须 rel && rel.met）
-  function getMetNpcsH(st, minAff) {
-    minAff = minAff || 0;
-    var out = [];
-    if (!st || !st.relationships) return out;
-    for (var id in st.relationships) {
-      if (!Object.prototype.hasOwnProperty.call(st.relationships, id)) continue;
-      var r = st.relationships[id];
-      if (r && r.met && (r.affinity || 0) >= minAff)
-        out.push({ id: id, rel: r });
-    }
-    return out;
-  }
-
-  // 安全改好感：优先全局 applyAffinityChange，否则兜底直写（域D铁律：跨NPC传导走 applyAffinityChange）
-  function safeAffinityH(st, npcId, change, reason) {
-    if (!st || !npcId) return;
-    if (typeof applyAffinityChange === "function") {
-      applyAffinityChange(st, npcId, change, reason || "域H联动");
-      return;
-    }
-    if (!st.relationships) st.relationships = {};
-    if (!st.relationships[npcId])
-      st.relationships[npcId] = { met: true, affinity: 0 };
-    st.relationships[npcId].affinity =
-      (st.relationships[npcId].affinity || 0) + change;
-    st.relationships[npcId].met = true;
-  }
-
-  // ---- 域H 联动事件 ----
-
-  var COMPANY_EVENTS = [
-    // ===== H→A：把创业的纪律感带回日常 ↔ 数值/心智（状态回馈） =====
-    {
-      id: "company_h_foundation_discipline",
-      title: "创业磨出来的那点纪律感",
-      desc: "连着几个月盯现金流、排优先级，你发现自己不再熬夜刷手机了。那种'今天的事今天毕'的劲头，悄悄渗进了柴米油盐的日子。",
-      phase: "street",
-      triggers: { minDay: 60 },
-      conditions: function (st) {
-        if (!st || !st.player) return false;
-        if (st.flags && st.flags._companyHLDisciplineCooldown) return false;
-        // 仅在已创立公司后，纪律感才有来源
-        if (!(st.startup && st.startup.company)) return false;
-        return true;
-      },
-      choices: [
-        {
-          text: "把这份节奏守住",
-          apply: function (st) {
-            if (st.player) st.player.mental = (st.player.mental || 50) + 5; // [PLACEHOLDER] 心智回馈
-            if (st.needs) st.needs.happiness = (st.needs.happiness || 50) + 4; // [PLACEHOLDER] 心情
-            if (st.flags) st.flags._companyHLDisciplineCooldown = true;
-            if (typeof StateManager !== "undefined" && StateManager.addMessage)
-              StateManager.addMessage(
-                "创业逼出来的自律，反手把日常生活也理顺了几分。",
-                "good",
-              );
-          },
-        },
-        {
-          text: "松一口气也不错",
-          apply: function (st) {
-            if (st.player) st.player.mental = (st.player.mental || 50) + 2;
-            if (st.flags) st.flags._companyHLDisciplineCooldown = true;
-          },
-        },
-      ],
-      probability: 0.05,
-    },
-
-    // ===== H→D：把带队的温度带到人际 ↔ NPC/社交（管理风格转化为好感） =====
-    {
-      id: "company_h_team_warmth",
-      title: "你对人好，圈子也暖了你",
-      desc: "公司里你习惯先听再说、遇事扛一句'我的锅'。后来才发现，这种带人的温度，让你在圈子里也多了几个真肯帮忙的朋友。",
-      phase: "street",
-      triggers: { minDay: 90 },
-      conditions: function (st) {
-        if (!st || !st.player) return false;
-        if (st.flags && st.flags._companyHLTeamWarmthCooldown) return false;
-        if (!(st.startup && st.startup.company)) return false;
-        // 至少一个"信得过"(好感≥30)的已结识 NPC
-        if (!getMetNpcsH(st, 30).length) return false;
-        return true;
-      },
-      choices: [
-        {
-          text: "把这份温度继续传下去",
-          apply: function (st) {
-            // D域桥接：管理温度转化为社交好感（守域D铁律：rel.met + applyAffinityChange）
-            var npc = getMetNpcsH(st, 30)[0];
-            if (npc) safeAffinityH(st, npc.id, 6, "带人温度·圈内好感"); // [PLACEHOLDER] 好感增量
-            if (st.needs) st.needs.happiness = (st.needs.happiness || 50) + 3;
-            if (st.flags) st.flags._companyHLTeamWarmthCooldown = true;
-            if (typeof StateManager !== "undefined" && StateManager.addMessage)
-              StateManager.addMessage(
-                "肯扛事的人，关系里总不缺搭把手的朋友。",
-                "good",
-              );
-          },
-        },
-        {
-          text: "公是公私是私，分清楚",
-          apply: function (st) {
-            if (st.needs) st.needs.happiness = (st.needs.happiness || 50) + 1;
-            if (st.flags) st.flags._companyHLTeamWarmthCooldown = true;
-          },
-        },
-      ],
-      probability: 0.04,
-    },
-
-    // ===== H→C：把经营公司的眼界带回职场 ↔ 职业/成长（经营眼界转化为职场技能） =====
-    {
-      id: "company_h_business_acumen",
-      title: "一次被合伙人记住的判断",
-      desc: "董事会要你讲清下个季度的打法。你没堆 PPT，而是用一组数字把'为什么赢、输在哪'说透了。散会后，带你的前辈私下说：这小子，看事的格局比以前高了。",
-      phase: "corporate",
-      triggers: { minDay: 150 },
-      conditions: function (st) {
-        if (!st || !st.player) return false;
-        if (st.flags && st.flags._companyHLBusinessAcumenCooldown) return false;
-        return true;
-      },
-      choices: [
-        {
-          text: "把这套经营打法沉淀下来",
-          apply: function (st) {
-            // C域桥接：经营眼界转化为真实职业技能（management 为通用管理门槛技能，语义一致）
-            if (typeof addSkillXp === "function") addSkillXp("management", 8); // [PLACEHOLDER] 经营/管理 XP
-            if (st.player) st.player.mental = (st.player.mental || 50) + 3;
-            if (st.needs) st.needs.happiness = (st.needs.happiness || 50) + 2;
-            if (st.flags) st.flags._companyHLBusinessAcumenCooldown = true;
-            if (typeof StateManager !== "undefined" && StateManager.addMessage)
-              StateManager.addMessage(
-                "把公司当沙盘练出来的眼界，回到职场也是一种降维。",
-                "good",
-              );
-          },
-        },
-        {
-          text: "讲完拉倒，下不为例",
-          apply: function (st) {
-            if (st.player) st.player.mental = (st.player.mental || 50) + 1;
-            if (st.flags) st.flags._companyHLBusinessAcumenCooldown = true;
-          },
-        },
-      ],
-      probability: 0.04,
-    },
-  ];
-
-  for (var i = 0; i < COMPANY_EVENTS.length; i++) {
-    RANDOM_EVENTS.push(COMPANY_EVENTS[i]);
   }
 })();
 
