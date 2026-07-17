@@ -211,12 +211,15 @@ function renderStreetStats(state) {
   setStatBar("stat-agility", p.agility, "agility");
   setStatBar("stat-mental", p.mental, "mental-bar");
   setStatBar("stat-charm", p.charm || 0, "charm");
+  // [全系统自洽修复] 域F A类#1: render_core.js 的 renderStreetStats 含道德 bar 但被 render.js 覆盖→补上
+  setStatBar("stat-morality", p.morality != null ? p.morality : 50, "morality-bar");
   // 低数值预警（基础属性阈值=10）
   warnStatRow("stat-physique", p.physique, 10, "#c4803a");
   warnStatRow("stat-intelligence", p.intelligence, 10, "#5a8ab4");
   warnStatRow("stat-agility", p.agility, 10, "#5aaa5a");
   warnStatRow("stat-mental", p.mental, 10, "#9b74b8");
   warnStatRow("stat-charm", p.charm || 0, 10, "#d9789e");
+  warnStatRow("stat-morality", p.morality != null ? p.morality : 50, 15, "#6ac49a");
 }
 
 
@@ -1174,6 +1177,7 @@ function _growthStat(label, value, color) {
  *  第1行：体/智/敏/心/魅  5基础属性
  *  第2行：饿/疲/卫/情/健  5状态
  * 与侧栏 #stat-* 采用同一 CSS 色梯度类、同一预警阈值
+ */
 function renderTimeSlot(state, parent) {
   const slotNames = {
     morning: "☀️ 上午",
@@ -1214,8 +1218,9 @@ function renderGoalStrip(state, parent) {
   if (typeof getCurrentDream !== "function") return;
   var dream = getCurrentDream(state);
   if (!dream) return;
-  var progress =
-    typeof getDreamProgress === "function" ? getDreamProgress(state) : 0;
+  var progress = (typeof getDreamProgress === "function" ? getDreamProgress(state) : 0) || 0;
+  // [全系统自洽修复] 域F A类#2: 确保 progress 是有效数字，NaN/null→0
+  if (typeof progress !== "number" || !isFinite(progress)) progress = 0;
   var curTitle =
     typeof getDreamCurrentTitle === "function"
       ? getDreamCurrentTitle(state)

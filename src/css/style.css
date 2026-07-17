@@ -6018,6 +6018,22 @@ body {
   transform: scale(0.95);
 }
 
+/* [全系统自洽修复] 域F A类#3: NPC关系卡片 — 移动端防溢出+色标 */
+.npc-rel-card {
+  min-width: 100px;
+  max-width: 200px;
+  word-break: break-all;
+}
+.npc-rel-high { border-left: 3px solid #e74c3c; }
+.npc-rel-good { border-left: 3px solid #e67e22; }
+.npc-rel-friendly { border-left: 3px solid #f1c40f; }
+.npc-rel-neutral { border-left: 3px solid #95a5a6; }
+.npc-rel-cold { border-left: 3px solid #5dade2; }
+.npc-rel-bad { border-left: 3px solid #8e44ad; }
+@media (max-width: 480px) {
+  .npc-rel-card { max-width: calc(50vw - 24px); min-width: 80px; }
+}
+
 /* [v3.86] 交通方式选择按钮（步行/共享单车/地铁/打车/自驾） */
 .transit-btn {
   padding: 10px 6px;

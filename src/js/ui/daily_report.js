@@ -178,6 +178,28 @@ function buildReportHTML(txs, state, reconcileInfo) {
     '<div style="font-size:12px;color:var(--text-muted);margin-top:4px;">● 收入 绿 · 支出 红 · 点击“继续”进入下一天</div>';
   bodyHtml += "</div>";
 
+  // [全系统自洽修复] 域F 联动增强2: 日报中显示NPC生日提醒
+  (function () {
+    try {
+      if (typeof NPCS === "undefined" || !state.relationships || !state.player) return;
+      var _doy = ((state.player.day - 1) % 365) + 1;
+      var _bdNpcs = [];
+      for (var _i = 0; _i < NPCS.length; _i++) {
+        var _n = NPCS[_i];
+        if (_n && _n.birthday && _n.id && state.relationships[_n.id] && state.relationships[_n.id].met && _n.birthday === _doy)
+          _bdNpcs.push(_n);
+      }
+      if (_bdNpcs.length > 0) {
+        bodyHtml += '<div style="padding:8px 12px;margin:8px 0;background:rgba(255,193,7,0.08);border:1px solid rgba(255,193,7,0.2);border-radius:8px;font-size:12px;text-align:center;">🎂 ';
+        for (var _j = 0; _j < _bdNpcs.length; _j++) {
+          bodyHtml += _bdNpcs[_j].name + "（" + (_bdNpcs[_j].role || "") + "）";
+          if (_j < _bdNpcs.length - 1) bodyHtml += " · ";
+        }
+        bodyHtml += ' 今天生日！去拜访TA会有惊喜🎁</div>';
+      }
+    } catch (e) { /* 静默：生日提醒不影响主流程 */ }
+  })();
+
   // 收入区域
   bodyHtml += '<div class="daily-report-section" style="margin-bottom:14px;">';
   bodyHtml +=

@@ -47,6 +47,16 @@ function renderNpcRelationships(state, content) {
     _avg;
   if (_close >= 3) html += " · 圈子归属感已激活✨(每日+心情)";
   else html += " · 再熟络 " + (3 - _close) + " 位即可激活圈子归属感";
+  // [全系统自洽修复] 域F 联动增强1: 显示今日可拜访NPC数
+  (function () {
+    var _today = state.player.day;
+    var _visitables = 0;
+    for (var _ki = 0; _ki < npcIds.length; _ki++) {
+      var _rel2 = state.relationships[npcIds[_ki]];
+      if (_rel2 && _rel2.met && (_rel2._lastVisit || 0) + 7 <= _today) _visitables++;
+    }
+    if (_visitables > 0) html += ' · 🚶 ' + _visitables + '位可拜访';
+  })();
   html += "</p>";
 
   // [全系统自洽修复] 域D 联动增强: NPC生日提醒
