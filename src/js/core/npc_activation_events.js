@@ -238,4 +238,219 @@
       },
     ],
   });
+
+  // ===== 小陈（xiaochen）外卖骑手 — 首次登场 =====
+  RANDOM_EVENTS.push({
+    id: "npc_xiaochen_first_meet",
+    phase: "street",
+    icon: "🏍️",
+    title: "暴雨中送餐的小陈",
+    story: "暴雨如注，你钻到便利店门口躲雨。一个穿荧光绿冲锋衣的年轻人也冲进来，手里拎着外卖袋，一边甩头盔上的水一边叹气：\n\n「哎，这天气，还有六个单要送……」\n\n他嘴上是抱怨，手上却没停，麻利地翻看手机规划路线。他自我介绍了下，说自己叫小陈，干这行三年了。",
+    conditions: function (st) {
+      return (st && st.player && st.player.day >= 8 && (!st.relationships || !st.relationships.xiaochen || !st.relationships.xiaochen.met));
+    },
+    probability: 0.035,
+    repeatable: false,
+    choices: [
+      {
+        text: "🏍️ 帮他跑一单，推着车一起出发",
+        hint: "结识小陈，好感+10",
+        apply: function (st) {
+          if (!st.relationships) st.relationships = {};
+          if (!st.relationships.xiaochen) st.relationships.xiaochen = { affinity: 0, met: true };
+          st.relationships.xiaochen.met = true;
+          st.relationships.xiaochen.affinity = Math.min(100, (st.relationships.xiaochen.affinity || 0) + 10);
+          if (st.resources) st.resources.cash += 30;
+          if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 3);
+          if (st.flags) st.flags._xiaochenMetDay = st.player.day;
+          if (typeof StateManager !== "undefined" && StateManager.addMessage)
+            StateManager.addMessage("🏍️ 你套上雨衣，跟小陈在暴雨里跑了一单。他请你喝了杯热奶茶，还分了¥30跑腿费。结识小陈，好感+10。", "success");
+        },
+      },
+      {
+        text: "🙂 天冷，请他喝了杯热饮",
+        hint: "结识小陈，好感+6",
+        apply: function (st) {
+          if (!st.relationships) st.relationships = {};
+          if (!st.relationships.xiaochen) st.relationships.xiaochen = { affinity: 0, met: true };
+          st.relationships.xiaochen.met = true;
+          st.relationships.xiaochen.affinity = Math.min(100, (st.relationships.xiaochen.affinity || 0) + 6);
+          if (st.flags) st.flags._xiaochenMetDay = st.player.day;
+          if (typeof StateManager !== "undefined" && StateManager.addMessage)
+            StateManager.addMessage("🙂 小陈接过热饮，咧嘴笑了：「暖和了！兄弟，我叫小陈，这片区跑外卖的，有需要找我就行。」结识小陈，好感+6。", "info");
+        },
+      },
+    ],
+  });
+
+  // ===== 赵师傅（master_zhao）修车师傅 — 首次登场 =====
+  RANDOM_EVENTS.push({
+    id: "npc_master_zhao_first_meet",
+    phase: "street",
+    icon: "🔧",
+    title: "工业区修车铺的赵师傅",
+    story: "你路过工业区一家修车铺，一个满手油污的中年男人正对着一辆破面包车皱眉。看到你走近，他抬头喊了一声：\n\n「小伙子，搭把手？帮我扶一下这个发动机盖，一个人真费劲。」\n\n他一边干活一边聊起来，说自己是赵师傅，干这行二十年了。",
+    conditions: function (st) {
+      return (st && st.player && st.player.day >= 12 && (!st.relationships || !st.relationships.master_zhao || !st.relationships.master_zhao.met));
+    },
+    probability: 0.03,
+    repeatable: false,
+    choices: [
+      {
+        text: "🔧 搭把手帮他扶一下",
+        hint: "结识赵师傅，好感+10",
+        apply: function (st) {
+          if (!st.relationships) st.relationships = {};
+          if (!st.relationships.master_zhao) st.relationships.master_zhao = { affinity: 0, met: true };
+          st.relationships.master_zhao.met = true;
+          st.relationships.master_zhao.affinity = Math.min(100, (st.relationships.master_zhao.affinity || 0) + 10);
+          if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 4);
+          if (st.flags) st.flags._masterZhaoMetDay = st.player.day;
+          if (typeof StateManager !== "undefined" && StateManager.addMessage)
+            StateManager.addMessage("🔧 你帮着扶了十几分钟，赵师傅麻利地修好了。他拍拍你的肩膀：「小伙子不错，以后修车找我，给你打折。」结识赵师傅，好感+10，心情+4。", "success");
+        },
+      },
+      {
+        text: "🙂 在旁边看了一会儿，聊了几句",
+        hint: "结识赵师傅，好感+5",
+        apply: function (st) {
+          if (!st.relationships) st.relationships = {};
+          if (!st.relationships.master_zhao) st.relationships.master_zhao = { affinity: 0, met: true };
+          st.relationships.master_zhao.met = true;
+          st.relationships.master_zhao.affinity = Math.min(100, (st.relationships.master_zhao.affinity || 0) + 5);
+          if (st.flags) st.flags._masterZhaoMetDay = st.player.day;
+          if (typeof StateManager !== "undefined" && StateManager.addMessage)
+            StateManager.addMessage("🙂 赵师傅边修车边跟你唠了几句，说现在的车跟二十年前完全不一样了。结识赵师傅，好感+5。", "info");
+        },
+      },
+    ],
+  });
+
+  // ===== 小丽（xiaoli）网红主播 — 首次登场 =====
+  RANDOM_EVENTS.push({
+    id: "npc_xiaoli_first_meet",
+    phase: "street",
+    icon: "📱",
+    title: "科技园的小丽主播",
+    story: "科技园咖啡厅里，一个妆容精致的女孩正在自拍直播，手机支架、补光灯一应俱全。她关掉直播后，疲惫地趴在桌上，看到你坐旁边，苦笑了一下：\n\n「做主播好累啊……今天嗓子都哑了。你是附近上班的？」\n\n她自我介绍了下，说自己叫小丽，在这边做短视频和直播。",
+    conditions: function (st) {
+      return (st && st.player && st.player.day >= 15 && (!st.relationships || !st.relationships.xiaoli || !st.relationships.xiaoli.met));
+    },
+    probability: 0.03,
+    repeatable: false,
+    choices: [
+      {
+        text: "☕ 请她喝杯咖啡，聊聊直播行业",
+        hint: "结识小丽，好感+8",
+        apply: function (st) {
+          if (!st.relationships) st.relationships = {};
+          if (!st.relationships.xiaoli) st.relationships.xiaoli = { affinity: 0, met: true };
+          st.relationships.xiaoli.met = true;
+          st.relationships.xiaoli.affinity = Math.min(100, (st.relationships.xiaoli.affinity || 0) + 8);
+          if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 3);
+          if (st.flags) st.flags._xiaoliMetDay = st.player.day;
+          if (typeof StateManager !== "undefined" && StateManager.addMessage)
+            StateManager.addMessage("☕ 你们聊了一个小时，小丽讲了做内容的各种门道。结识小丽，好感+8，心情+3。", "success");
+        },
+      },
+      {
+        text: "🙂 简单打了个招呼",
+        hint: "结识小丽，好感+4",
+        apply: function (st) {
+          if (!st.relationships) st.relationships = {};
+          if (!st.relationships.xiaoli) st.relationships.xiaoli = { affinity: 0, met: true };
+          st.relationships.xiaoli.met = true;
+          st.relationships.xiaoli.affinity = Math.min(100, (st.relationships.xiaoli.affinity || 0) + 4);
+          if (st.flags) st.flags._xiaoliMetDay = st.player.day;
+          if (typeof StateManager !== "undefined" && StateManager.addMessage)
+            StateManager.addMessage("🙂 小丽点点头，继续看自己的数据后台。结识小丽，好感+4。", "info");
+        },
+      },
+    ],
+  });
+
+  // ===== 王医生（dr_wang）医院医生 — 首次登场 =====
+  RANDOM_EVENTS.push({
+    id: "npc_dr_wang_first_meet",
+    phase: "street",
+    icon: "🩺",
+    title: "医院里的王医生",
+    story: "你因为身体不适去医院挂了个号。坐诊的是位五十出头的医生，白大褂洗得发白，胸前口袋插着两支笔和一个旧听诊器。他看完你的检查单，抬头看了你一眼：\n\n「年轻人，你这个指标不太好看啊。长期熬夜还是饮食不规律？」\n\n他语气不算严厉，但带着不容敷衍的认真。胸牌上写着：王建国，内科。",
+    conditions: function (st) {
+      return (st && st.player && st.player.day >= 5 && (!st.relationships || !st.relationships.dr_wang || !st.relationships.dr_wang.met));
+    },
+    probability: 0.04,
+    repeatable: false,
+    choices: [
+      {
+        text: "🩺 认真回答，感谢医生的关心",
+        hint: "结识王医生，好感+12",
+        apply: function (st) {
+          if (!st.relationships) st.relationships = {};
+          if (!st.relationships.dr_wang) st.relationships.dr_wang = { affinity: 0, met: true };
+          st.relationships.dr_wang.met = true;
+          st.relationships.dr_wang.affinity = Math.min(100, (st.relationships.dr_wang.affinity || 0) + 12);
+          if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 3);
+          if (st.flags) st.flags._drWangMetDay = st.player.day;
+          if (typeof StateManager !== "undefined" && StateManager.addMessage)
+            StateManager.addMessage("🩺 王医生认真听了你的情况，给你开了药，还列了一张作息表。你感觉被认真对待了。结识王医生，好感+12，心情+3。", "success");
+        },
+      },
+      {
+        text: "🙂 礼貌回应，拿了药方就走",
+        hint: "结识王医生，好感+5",
+        apply: function (st) {
+          if (!st.relationships) st.relationships = {};
+          if (!st.relationships.dr_wang) st.relationships.dr_wang = { affinity: 0, met: true };
+          st.relationships.dr_wang.met = true;
+          st.relationships.dr_wang.affinity = Math.min(100, (st.relationships.dr_wang.affinity || 0) + 5);
+          if (st.flags) st.flags._drWangMetDay = st.player.day;
+          if (typeof StateManager !== "undefined" && StateManager.addMessage)
+            StateManager.addMessage("🙂 王医生点点头，继续写下一份病历。结识王医生，好感+5。", "info");
+        },
+      },
+    ],
+  });
+
+  // ===== 赵姐（zhaojie）房产中介 — 首次登场 =====
+  RANDOM_EVENTS.push({
+    id: "npc_zhaojie_first_meet",
+    phase: "street",
+    icon: "🏠",
+    title: "商业区的赵姐中介",
+    story: "你经过商业区一家房产中介门店，一个穿职业装的干练女人正站在店门口打电话，语气利落：\n\n「对，那套两居室今天下午就可以看……租金还能谈，我跟房东熟。」\n\n她挂了电话，看到你站在门口打量，笑着说：「租房还是买房？来找赵姐就对了，这一片我熟。」",
+    conditions: function (st) {
+      return (st && st.player && st.player.day >= 10 && (!st.relationships || !st.relationships.zhaojie || !st.relationships.zhaojie.met));
+    },
+    probability: 0.035,
+    repeatable: false,
+    choices: [
+      {
+        text: "🏠 进去聊聊，问问租房行情",
+        hint: "结识赵姐，好感+8",
+        apply: function (st) {
+          if (!st.relationships) st.relationships = {};
+          if (!st.relationships.zhaojie) st.relationships.zhaojie = { affinity: 0, met: true };
+          st.relationships.zhaojie.met = true;
+          st.relationships.zhaojie.affinity = Math.min(100, (st.relationships.zhaojie.affinity || 0) + 8);
+          if (st.flags) st.flags._zhaojieMetDay = st.player.day;
+          if (typeof StateManager !== "undefined" && StateManager.addMessage)
+            StateManager.addMessage("🏠 赵姐给你倒了一杯茶，详细讲了这片区的房租行情。认识了一个靠谱的中介，以后租房不抓瞎了。结识赵姐，好感+8。", "success");
+        },
+      },
+      {
+        text: "📱 先加个微信，改天再聊",
+        hint: "结识赵姐，好感+4",
+        apply: function (st) {
+          if (!st.relationships) st.relationships = {};
+          if (!st.relationships.zhaojie) st.relationships.zhaojie = { affinity: 0, met: true };
+          st.relationships.zhaojie.met = true;
+          st.relationships.zhaojie.affinity = Math.min(100, (st.relationships.zhaojie.affinity || 0) + 4);
+          if (st.flags) st.flags._zhaojieMetDay = st.player.day;
+          if (typeof StateManager !== "undefined" && StateManager.addMessage)
+            StateManager.addMessage("📱 赵姐笑着加了你的微信：「有需要随时找我，姐给你最实在的报价。」结识赵姐，好感+4。", "info");
+        },
+      },
+    ],
+  });
 })();

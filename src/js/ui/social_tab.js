@@ -49,6 +49,30 @@ function renderNpcRelationships(state, content) {
   else html += " · 再熟络 " + (3 - _close) + " 位即可激活圈子归属感";
   html += "</p>";
 
+  // [全系统自洽修复] 域D 联动增强: NPC生日提醒
+  (function () {
+    if (!state.player || !state.player.day || typeof NPCS === "undefined") return;
+    var _today = state.player.day;
+    var _birthdayNpcs = [];
+    for (var _bi = 0; _bi < NPCS.length; _bi++) {
+      var _n = NPCS[_bi];
+      if (_n && _n.birthday && _n.id && state.relationships && state.relationships[_n.id] && state.relationships[_n.id].met) {
+        if (_n.birthday === _today) _birthdayNpcs.push(_n);
+      }
+    }
+    if (_birthdayNpcs.length > 0) {
+      html += '<div style="background:var(--bg-warning, #fff3cd);border:1px solid var(--border-warning, #ffc107);border-radius:8px;padding:8px 12px;margin:8px 0;font-size:12px;">';
+      html += "🎂 <strong>今日寿星：</strong>";
+      for (var _bni = 0; _bni < _birthdayNpcs.length; _bni++) {
+        var _bn = _birthdayNpcs[_bni];
+        html += '<span style="margin:0 6px;">' + _bn.name + "（" + _bn.role + "）</span>";
+        if (_bni < _birthdayNpcs.length - 1) html += " · ";
+      }
+      html += '<span style="display:block;font-size:11px;color:var(--text-muted);margin-top:4px;">💡 去拜访TA，会有特别的生日对话哦！</span>';
+      html += "</div>";
+    }
+  })();
+
   // NPC关系卡片
   html += '<div style="display:flex;flex-wrap:wrap;gap:8px;">';
 
@@ -629,8 +653,8 @@ function renderSocialNetworkTab(state, parent) {
             _npcName = npcId;
           }
           // 检查冷却（7天）
-          if (rel._lastVisit && state.day - rel._lastVisit < 7) {
-            var daysLeft = 7 - (state.day - rel._lastVisit);
+          if (rel._lastVisit && state.player.day - rel._lastVisit < 7) {
+            var daysLeft = 7 - (state.player.day - rel._lastVisit);
             if (typeof StateManager !== "undefined") {
               StateManager.addMessage(
                 "⏳ 你刚拜访过" + _npcName + "，再等" + daysLeft + "天吧。",
@@ -647,7 +671,33 @@ function renderSocialNetworkTab(state, parent) {
           } else {
             rel.affinity = Math.min(100, (rel.affinity || 0) + gain);
           }
-          rel._lastVisit = state.day;
+          rel._lastVisit = state.player.day;
+          // [全系统自洽修复] 域D 联动增强: NPC拜访状态加成（根据角色类型给予不同加成）
+          (function () {
+            if (!state.needs && !state.player) return;
+            var _npcRole = "";
+            if (typeof NPCS !== "undefined") {
+              var _def = NPCS.find(function (n) { return n.id === npcId; });
+              if (_def) _npcRole = _def.role || "";
+            }
+            var _bonusMsg = "";
+            if (_npcRole.indexOf("医生") >= 0 || _npcRole.indexOf("健康") >= 0) {
+              if (state.status) { state.status.health = Math.min(100, (state.status.health || 50) + 1); _bonusMsg = "健康+1"; }
+            } else if (_npcRole.indexOf("厨师") >= 0 || _npcRole.indexOf("菜") >= 0 || _npcRole.indexOf("外卖") >= 0) {
+              if (state.needs) { state.needs.hunger = Math.min(100, (state.needs.hunger || 50) + 2); _bonusMsg = "饥饿+2"; }
+            } else if (_npcRole.indexOf("中介") >= 0 || _npcRole.indexOf("主播") >= 0 || _npcRole.indexOf("网红") >= 0) {
+              if (state.player) { state.player.mental = Math.min(100, (state.player.mental || 50) + 1); _bonusMsg = "心智+1"; }
+            } else if (_npcRole.indexOf("工头") >= 0 || _npcRole.indexOf("修车") >= 0 || _npcRole.indexOf("保安") >= 0) {
+              if (state.player) { state.player.physique = Math.min(100, (state.player.physique || 50) + 1); _bonusMsg = "体质+1"; }
+            } else if (_npcRole.indexOf("情报") >= 0 || _npcRole.indexOf("同学") >= 0) {
+              if (state.player) { state.player.intelligence = Math.min(100, (state.player.intelligence || 50) + 1); _bonusMsg = "智力+1"; }
+            } else {
+              if (state.needs) { state.needs.happiness = Math.min(100, (state.needs.happiness || 50) + 1); _bonusMsg = "心情+1"; }
+            }
+            if (_bonusMsg && typeof StateManager !== "undefined") {
+              StateManager.addMessage("✨ 与" + _npcName + "的会面让你感到充实，" + _bonusMsg + "。", "info");
+            }
+          })();
           if (typeof StateManager !== "undefined") {
             StateManager.addMessage(
               "🤝 你找到了" + _npcName + "，聊了一会儿天。好感+" + gain + "。",

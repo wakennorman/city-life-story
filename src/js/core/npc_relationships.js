@@ -369,7 +369,9 @@ function tickNpcRelationships(state) {
   }
   state.npcRelationshipLog.dailyInteractions = {};
 
-  // [全系统自洽修复] 域D 联动增强1: 好感衰减 — 7天无互动开始衰减
+  // [全系统自洽修复] 域D 修复:好感衰减 — 7天无互动开始衰减
+  // 原bug：_lastInteractionDay不随衰减更新→每天重复扣（指数级衰减）
+  // 修复：用_lastDecayDay追踪上次衰减日，每7天只扣一次
   if (!state.npcRelationshipLog.decayDay)
     state.npcRelationshipLog.decayDay = {};
   for (var _npcId in state.relationships) {
@@ -377,28 +379,28 @@ function tickNpcRelationships(state) {
     if (!_rel || !_rel.met || _rel.affinity <= 0) continue;
     var _lastInteraction = _rel._lastInteractionDay || 0;
     var _daysSinceLast = day - _lastInteraction;
-    // 7天无互动开始衰减，每7天-1，亲密NPC衰减慢
     if (_daysSinceLast >= 7) {
       var _decayRate = 0;
-      if (_rel.affinity >= 80)
-        _decayRate = 0.2; // [全系统自洽修复] 域D 修复:衰减速率对齐注释值(0.03→0.2, 挚友每7天-0.2)
-      else if (_rel.affinity >= 60)
-        _decayRate = 0.35; // 好友 每7天-0.35
-      else if (_rel.affinity >= 30)
-        _decayRate = 0.56; // 熟人 每7天-0.56
-      else _decayRate = 0.84; // 初识 每7天-0.84
-      var _decay = _decayRate * Math.floor(_daysSinceLast / 7);
-      if (_decay > 0) {
+      if (_rel.affinity >= 80) _decayRate = 0.2;
+      else if (_rel.affinity >= 60) _decayRate = 0.35;
+      else if (_rel.affinity >= 30) _decayRate = 0.56;
+      else _decayRate = 0.84;
+      // 计算自上次衰减后新增的完整7天周期数
+      var _lastDecayDay = _rel._lastDecayDay || _lastInteraction;
+      var _daysSinceDecay = day - _lastDecayDay;
+      var _newPeriods = Math.floor(_daysSinceDecay / 7);
+      if (_newPeriods > 0) {
+        var _decay = _decayRate * _newPeriods;
         var _oldAff = _rel.affinity;
         _rel.affinity = Math.max(0, _rel.affinity - _decay);
         _rel.affinity = Math.round(_rel.affinity * 10) / 10;
+        _rel._lastDecayDay = _lastDecayDay + _newPeriods * 7;
         _rel._lastDecay = _decay;
         // 衰减导致好感等级下降时发消息
         var _oldLabel = getAffinityLabel(_oldAff);
         var _newLabel = getAffinityLabel(_rel.affinity);
         if (_oldLabel !== _newLabel && typeof StateManager !== "undefined") {
           StateManager.addMessage(
-            // [全系统自洽修复] 域D 修复:好感衰减消息显示原始id(如"aunt wang")→改用中文名
             "💔 你与" +
               getNpcDisplayName(_npcId) +
               "的关系变淡了：" +
