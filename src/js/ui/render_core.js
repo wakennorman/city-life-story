@@ -450,8 +450,34 @@ function renderSidebar(state) {
   renderAccountingIntel(state);
   renderLocation(state);
 
+  // P3-3 城市记忆指示器：已结识NPC/总数
+  renderCityMemory(state);
+
   // P1-5 渐进式揭示：根据 _unlockedHints 隐藏未解锁元素
   applyProgressiveDisclosure(state);
+}
+
+/** P3-3 城市记忆 — 侧栏显示已结识NPC占比 */
+function renderCityMemory(state) {
+  if (typeof NPCS === "undefined" || !NPCS.length) return;
+  var met = 0;
+  var total = NPCS.length;
+  var rel = state.relationships || {};
+  for (var key in rel) { if (rel[key] && rel[key].met) met++; }
+  if (met === 0) return;
+  var pct = Math.round(met / total * 100);
+  var el = document.getElementById("city-memory-indicator");
+  if (!el) {
+    el = document.createElement("div");
+    el.id = "city-memory-indicator";
+    el.style.cssText = "margin-top:8px;padding:6px 10px;border-radius:6px;background:rgba(74,158,92,0.08);border:1px solid rgba(74,158,92,0.15);font-size:11px;";
+    var anchor = document.getElementById("sidebar");
+    if (anchor) anchor.appendChild(el); else return;
+  }
+  el.innerHTML = '<div style="display:flex;justify-content:space-between;margin-bottom:4px;"><span>🧠 城市记忆</span><span>' + met + '/' + total + '</span></div>' +
+    '<div style="height:4px;background:var(--bg-input);border-radius:2px;overflow:hidden;margin-bottom:3px;">' +
+    '<div style="height:100%;width:' + pct + '%;background:' + (pct>=50?'var(--success)':pct>=20?'var(--warning)':'var(--danger)') + ';border-radius:2px;"></div></div>' +
+    '<div style="font-size:10px;color:var(--text-muted);">' + (met>=10?'🧠 你在这座城市有了存在感。':met>=5?'🧠 开始有人认识你了。':'🧠 这座城市开始记住你。') + '</div>';
 }
 
 /**

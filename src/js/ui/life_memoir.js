@@ -261,9 +261,64 @@
       getStats: getMemoirStats,
       generateEnding: generateEndingMemoir,
       show: showMemoirModal,
-      autoRecord,
+      autoRecord: autoRecord,
       categories: MEMOIR_CATEGORIES,
       maxPerCategory: MAX_MEMOIRS_PER_CATEGORY,
+      generateCityStory: generateCityStory,
     };
+  }
+
+  // ====== P3-1 城市故事生成 ======
+  function generateCityStory(state) {
+    if (!state) return "";
+    var p = state.player || {};
+    var s = state.status || {};
+    var r = state.resources || {};
+    var day = p.day || 1;
+    var ribbon = "";
+    var ribbonDesc = "";
+    if (typeof determineLifeRibbon === "function") {
+      var stats = typeof collectLifeStats === "function" ? collectLifeStats(state) : {};
+      var rib = determineLifeRibbon(state, stats);
+      if (rib) { ribbon = (rib.icon || "🌟") + " " + (rib.name || ""); ribbonDesc = rib.desc || ""; }
+    }
+    if (!ribbon) { ribbon = "🌆 城市过客"; ribbonDesc = "你在这座城市留下了自己的足迹。"; }
+    var cash = r.cash || 0;
+    var bank = r.bankBalance || 0;
+    var totalAssets = cash + bank;
+    var health = s.health || 0;
+    var illnessCount = (s.illnesses || []).length;
+    var fame = p.fame || 0;
+    var morality = p.morality || 50;
+    var phase = p.phase === "corporate" ? "🏢 职场人" : "🏘️ 街头打拼";
+    var memoirStats = typeof getMemoirStats === "function" ? getMemoirStats() : {};
+    var memoirCount = 0;
+    for (var mk in memoirStats) memoirCount += memoirStats[mk] || 0;
+
+    var html = '<div style="text-align:center;padding:8px;">';
+    html += '<div style="font-size:48px;margin-bottom:8px;">🏙️</div>';
+    html += '<h2 style="margin:4px 0;">你的城市故事</h2>';
+    html += '<div style="font-size:18px;font-weight:bold;color:var(--accent);margin:8px 0;">' + ribbon + '</div>';
+    html += '<div style="font-size:12px;color:var(--text-muted);margin-bottom:12px;">' + ribbonDesc + '</div>';
+    html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;text-align:left;font-size:12px;">';
+    html += '<div style="background:var(--bg-secondary);padding:8px;border-radius:6px;">📅 存活 <strong>' + day + '</strong> 天</div>';
+    html += '<div style="background:var(--bg-secondary);padding:8px;border-radius:6px;">💰 总资产 <strong>¥' + totalAssets.toLocaleString() + '</strong></div>';
+    html += '<div style="background:var(--bg-secondary);padding:8px;border-radius:6px;">❤️ 最终健康 <strong>' + health + '</strong></div>';
+    html += '<div style="background:var(--bg-secondary);padding:8px;border-radius:6px;">' + phase + '</div>';
+    if (fame > 0) html += '<div style="background:var(--bg-secondary);padding:8px;border-radius:6px;">⭐ 名气 <strong>' + fame + '</strong></div>';
+    if (illnessCount > 0) html += '<div style="background:var(--bg-secondary);padding:8px;border-radius:6px;">🏥 患病 <strong>' + illnessCount + '</strong> 次</div>';
+    if (morality >= 70) html += '<div style="background:var(--bg-secondary);padding:8px;border-radius:6px;">😇 道德高尚</div>';
+    else if (morality <= 30) html += '<div style="background:var(--bg-secondary);padding:8px;border-radius:6px;">😈 道德沦丧</div>';
+    html += '</div>';
+    html += '<div style="margin-top:12px;padding:10px;background:var(--bg-secondary);border-radius:8px;text-align:left;font-size:12px;line-height:1.6;">';
+    html += '<strong>📜 人生轨迹</strong><br>';
+    if (day < 30) html += '你在这座城市没能站稳脚跟，<strong>' + ribbon + '</strong>——一段短暂而深刻的经历。';
+    else if (day < 100) html += '你在这座城市挣扎了近百天，最终<strong>' + ribbon + '</strong>。这段日子教会了你生存。';
+    else if (day < 365) html += '你在这座城市坚持了近一年，从陌生到熟悉，最终<strong>' + ribbon + '</strong>。';
+    else html += '你在这座城市扎根了整整' + Math.floor(day / 365) + '年，经历了风风雨雨，最终<strong>' + ribbon + '</strong>。你的故事成为了这座城市的一部分。';
+    html += '</div>';
+    html += '<button class="btn btn-sm" style="margin-top:12px;" onclick="alert(\'📋 请截图分享你的城市故事！\')">📸 分享</button>';
+    html += '</div>';
+    return html;
   }
 })();

@@ -399,6 +399,42 @@ function renderSocialOverviewTab(state, content) {
     html += "</div></div>";
   }
 
+  // P3-2 同龄人进度锚点（社会比较心理）
+  html += '<div class="section"><h3>📊 同龄人进度</h3>';
+  html += "<div class='card' style='padding:12px;'>";
+  // 计算玩家收入
+  var playerSalary =
+    (state.corporate && state.corporate.job && state.corporate.job.salary) ||
+    (state.career && state.career.currentJob && state.career.currentJob.salary) ||
+    0;
+  // 从 NPC 数据计算平均月收入
+  var npcIncomes = [];
+  if (typeof NPCS !== "undefined") {
+    for (var ni = 0; ni < NPCS.length; ni++) {
+      if (NPCS[ni].monthlyIncome) npcIncomes.push(NPCS[ni].monthlyIncome);
+    }
+  }
+  var avgIncome = npcIncomes.length > 0
+    ? Math.round(npcIncomes.reduce(function(a,b){return a+b;}, 0) / npcIncomes.length)
+    : 0;
+  // 同龄进度条
+  var pct = avgIncome > 0 ? Math.min(100, Math.round(playerSalary / avgIncome * 100)) : 0;
+  html += '<div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:6px;">';
+  html += '<span>你的月收入</span><strong>¥' + playerSalary.toLocaleString() + '</strong>';
+  html += '</div>';
+  html += '<div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:6px;">';
+  html += '<span>同龄人平均</span><strong>¥' + avgIncome.toLocaleString() + '</strong>';
+  html += '</div>';
+  // 进度条
+  html += '<div style="height:8px;background:var(--bg-input);border-radius:4px;overflow:hidden;margin:6px 0;">';
+  html += '<div style="height:100%;width:' + pct + '%;background:' + (pct >= 100 ? 'var(--success)' : 'var(--warning)') + ';border-radius:4px;transition:width 0.3s;"></div>';
+  html += '</div>';
+  if (pct >= 150) html += '<p style="font-size:11px;color:var(--success);">🏆 你已经超越了大多数同龄人！</p>';
+  else if (pct >= 100) html += '<p style="font-size:11px;color:var(--success);">👍 你跟上了同龄人的步伐。</p>';
+  else if (pct >= 50) html += '<p style="font-size:11px;color:var(--warning);">💪 再加把劲，你可以追上同龄人！</p>';
+  else html += '<p style="font-size:11px;color:var(--danger);">📈 差距不小，但别灰心——每天进步一点点。</p>';
+  html += "</div></div>";
+
   // 同事摘要
   var colleagues = state.corporate?.colleagues?.network;
   if (colleagues && colleagues.length > 0) {
