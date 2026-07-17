@@ -455,6 +455,22 @@
 
   // ====== 导出（全局命名空间） ======
   window.Random = Random;
+
+  // ====== P1-2 统一命名空间：全局对象收口入口 ======
+  // CLS = City Life Story。所有全局数据对象最终都应挂在此命名空间下。
+  // 当前为初始骨架 + 子命名空间占位，后续逐批迁移。保持 window.* 向后兼容不删除。
+  window.CLS = window.CLS || {};
+  var CLS = window.CLS;
+  // 核心系统
+  CLS.Random = Random;
+  // 数据子命名空间（各文件在 export 处逐渐将各自 window.X 同时挂到 CLS.* 下）
+  CLS.data = {};     // locations, jobs, goods, items, skills, npcs, scenarios...
+  CLS.core = {};     // state, events, pipeline, save, weather...
+  CLS.ui = {};       // render, modal, wiki, tutorial...
+  CLS.phase1 = {};   // trade, needs, illness, pricing...
+  CLS.phase2 = {};   // corp_ops, investment, stock, startup...
+  // CLS.data 初始挂载常用引用（各数据文件导出时同时挂 CLS.data.X）
+  // 后续：window.LOCATIONS → CLS.data.locations (保留别名)
 })();
 
 ;
@@ -5428,6 +5444,76 @@ function dailyCleanup(state) {
   // 清理 L1-L4 新闻传导队列
   if (typeof cleanupConduitQueue === "function") {
     cleanupConduitQueue(state);
+  }
+}
+
+// ====== P1-1 事件格式收敛：MORAL_EVENTS / NEWS_EVENTS → RANDOM_EVENTS 适配器 ======
+// 把 MORAL_EVENTS 和 NEWS_EVENTS 注册到 RANDOM_EVENTS 统一池中，使所有事件
+// 都走同一套 schema + 同一触发层。保留旧数组向后兼容。
+
+/**
+ * 把 MORAL_EVENTS 转换为 RANDOM_EVENTS 格式并注册到统一池
+ */
+function registerMoralEventsToPool() {
+  if (typeof MORAL_EVENTS === "undefined" || !Array.isArray(MORAL_EVENTS)) return;
+  if (RANDOM_EVENTS._moralRegistered) return;
+  RANDOM_EVENTS._moralRegistered = true;
+
+  for (var mi = 0; mi < MORAL_EVENTS.length; mi++) {
+    var me = MORAL_EVENTS[mi];
+    if (!me || !me.id) continue;
+    var entry = {
+      id: me.id,
+      title: me.title,
+      story: me.desc || me.title,
+      phase: "street",
+      probability: me.dailyChance || 0.04,
+      _converted: "moral",
+      choices: Array.isArray(me.choices) ? me.choices.map(function(c) {
+        return { text: c.text, apply: c.immediate || function(){} };
+      }) : [],
+      conditions: (function(minDay, origCond) {
+        return function(st) {
+          if (minDay && st.player.day < minDay) return false;
+          if (typeof origCond === "function" && !origCond(st)) return false;
+          return true;
+        };
+      })(me.minDay, typeof me.condition === "function" ? me.condition : null),
+    };
+    RANDOM_EVENTS.push(entry);
+  }
+}
+
+/**
+ * 把 NEWS_EVENTS 转换为 RANDOM_EVENTS 格式并注册到统一池
+ */
+function registerNewsEventsToPool() {
+  if (typeof NEWS_EVENTS === "undefined" || !Array.isArray(NEWS_EVENTS)) return;
+  if (RANDOM_EVENTS._newsRegistered) return;
+  RANDOM_EVENTS._newsRegistered = true;
+
+  for (var ni = 0; ni < NEWS_EVENTS.length; ni++) {
+    var ne = NEWS_EVENTS[ni];
+    if (!ne || !ne.id) continue;
+    var entry = {
+      id: ne.id,
+      title: ne.title,
+      story: ne.content || ne.title,
+      phase: "street",
+      probability: ne.dailyChance || 0.03,
+      _converted: "news",
+      choices: Array.isArray(ne.choices) ? ne.choices.map(function(c) {
+        return { text: c.text, apply: c.immediate || function(){} };
+      }) : [],
+      conditions: (function(minDay, origCond) {
+        return function(st) {
+          if (minDay && st.player.day < minDay) return false;
+          if (typeof origCond === "function" && !origCond(st)) return false;
+          return true;
+        };
+      })(ne.minDay, typeof ne.condition === "function" ? ne.condition : null),
+    };
+    RANDOM_EVENTS.push(entry);
   }
 }
 
@@ -82516,6 +82602,152 @@ if (typeof window !== "undefined") {
 
   // ====== v3.99e 联动增强（R15 域B）=====
   // 3个新增事件填补：新闻×事件联动 / 极端天气消费 / 道德flag→NPC反应 空白
+
+  // ====== P1-4 长线因果链（2026-07-16）=====
+  // 3条链把单点事件串联为多步因果序列，复用 scheduleChainEvent 基础设施。
+
+  // 链#1：王婶人情链 — 帮王婶 → 15天后她回报
+  RANDOM_EVENTS.push({
+    id: "a_wang_return",
+    title: "🙏 王婶的回报",
+    story: "上次你帮了王婶一把，她一直记在心里。今天她拎着一袋腌菜和熟鸡蛋来找你。",
+    _isChainEvent: true,
+    phase: "street",
+    conditions: function (st) {
+      return (st.relationships && st.relationships.aunt_wang && st.relationships.aunt_wang.affinity >= 25) && st.player.day >= 15;
+    },
+    choices: [
+      {
+        text: "😊 收下，人情往来",
+        hint: "心情+ 关系+",
+        apply: function (st) {
+          st.needs.hunger = Math.max(0, st.needs.hunger - 15);
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 5);
+          if (st.relationships && st.relationships.aunt_wang) {
+            st.relationships.aunt_wang.affinity = Math.min(100, (st.relationships.aunt_wang.affinity || 0) + 5);
+          }
+          StateManager.addMessage("🍱 王婶的腌菜够吃好几天。", "success");
+        },
+      },
+      {
+        text: "🙅 婉拒，举手之劳",
+        hint: "道德+",
+        apply: function (st) {
+          st.player.morality = Math.min(100, (st.player.morality || 50) + 2);
+          if (st.relationships && st.relationships.aunt_wang) {
+            st.relationships.aunt_wang.affinity = Math.min(100, (st.relationships.aunt_wang.affinity || 0) + 3);
+          }
+          StateManager.addMessage("🤝 王婶点点头：「你这孩子，心肠好。」", "info");
+        },
+      },
+    ],
+  });
+
+  // 链#2：街坊口碑链 — 见义勇为 → 20天后口碑传播
+  RANDOM_EVENTS.push({
+    id: "street_rep_bonus",
+    title: "🗣️ 街坊口碑传开了",
+    story: "上回你仗义出手的事传开了。今天买菜，好几个摊主主动打招呼，卖水果的大姐塞了你几个橘子。",
+    _isChainEvent: true,
+    phase: "street",
+    conditions: function (st) {
+      return (st.player && st.player.morality >= 55) && st.player.day >= 25;
+    },
+    choices: [
+      {
+        text: "😄 跟街坊打成一片",
+        hint: "名气+ 心情+",
+        apply: function (st) {
+          st.player.fame = Math.min(100, (st.player.fame || 0) + 5);
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 8);
+          StateManager.addMessage("🌟 你在这一带有了点小名气。", "success");
+        },
+      },
+      {
+        text: "😌 低调处理",
+        hint: "心智+",
+        apply: function (st) {
+          st.player.mental = Math.min(100, (st.player.mental || 0) + 3);
+          StateManager.addMessage("🧘 你选择低调。", "info");
+        },
+      },
+    ],
+  });
+
+  // 链#3：健康危机链 — 忽视健康 → 30天后危机爆发
+  RANDOM_EVENTS.push({
+    id: "health_crash_warning",
+    title: "🏥 身体在报警",
+    story: "你一直硬撑着。今天早上头晕得厉害，眼前发黑。隔壁大爷说：「别把身子骨熬坏了。」",
+    _isChainEvent: true,
+    phase: "street",
+    conditions: function (st) {
+      return st.flags._ignoredHealthWarnings >= 2 && st.player.day >= 30;
+    },
+    choices: [
+      {
+        text: "🏥 去医院检查",
+        hint: "健康+ ¥-200",
+        apply: function (st) {
+          st.resources.cash = Math.max(0, (st.resources.cash || 0) - 200);
+          st.status.health = Math.min(100, (st.status.health || 100) + 15);
+          st.flags._ignoredHealthWarnings = 0;
+          StateManager.addMessage("💊 疲劳过度+轻度营养不良，医生开了药。", "info");
+        },
+      },
+      {
+        text: "💪 再扛一扛",
+        hint: "风险：健康恶化",
+        apply: function (st) {
+          st.status.health = Math.max(0, (st.status.health || 100) - 10);
+          st.flags._ignoredHealthWarnings = (st.flags._ignoredHealthWarnings || 0) + 1;
+          if ((st.flags._ignoredHealthWarnings || 0) >= 3) {
+            if (typeof scheduleChainEvent === "function") {
+              scheduleChainEvent(st, "health_crash_severe", 30, "street");
+            }
+          }
+          StateManager.addMessage("😰 再撑一撑。身体不会一直等你。", "warning");
+        },
+      },
+    ],
+  });
+
+  // 严重健康危机（链#3 第三阶段）
+  RANDOM_EVENTS.push({
+    id: "health_crash_severe",
+    title: "🚑 倒下了",
+    story: "你在街头一阵天旋地转后失去知觉。醒来时躺在医院里，护士递来缴费单——¥800。",
+    _isChainEvent: true,
+    phase: "street",
+    conditions: function (st) {
+      return st.player.day >= 5;
+    },
+    choices: [
+      {
+        text: "💳 借钱缴费",
+        hint: "负债+ 健康恢复",
+        apply: function (st) {
+          st.resources.cash = Math.max(0, (st.resources.cash || 0) - 800);
+          if (st.resources.cash < 0) {
+            st.resources.debt = (st.resources.debt || 0) + Math.abs(st.resources.cash);
+            st.resources.cash = 0;
+          }
+          st.status.health = Math.min(100, (st.status.health || 100) + 25);
+          st.flags._ignoredHealthWarnings = 0;
+          StateManager.addMessage("💊 医生说再晚来两天就麻烦了。", "info");
+        },
+      },
+      {
+        text: "😤 签免责书出院",
+        hint: "健康再恶化",
+        apply: function (st) {
+          st.status.health = Math.max(0, (st.status.health || 100) - 10);
+          st.player.physique = Math.max(0, (st.player.physique || 0) - 2);
+          StateManager.addMessage("🚶 你蹒跚走出医院，风吹过来，头还是晕的。", "warning");
+        },
+      },
+    ],
+  });
 })();
 
 ;
@@ -147474,6 +147706,9 @@ function getTravelApCost(fromKey, toKey, state) {
   return Math.max(5, base);
 }
 
+// P1-2 CLS 命名空间注册
+if (typeof window.CLS !== 'undefined' && window.CLS.data) window.CLS.data.LOCATIONS = LOCATIONS;
+
 ;
 // ==== js/data/location_flavor.js ====
 /**
@@ -148672,6 +148907,9 @@ function getJobById(jobId) {
   return STREET_JOBS.find((j) => j.id === jobId) || null;
 }
 
+// P1-2 CLS 命名空间注册
+if (typeof window.CLS !== 'undefined' && window.CLS.data) window.CLS.data.STREET_JOBS = STREET_JOBS;
+
 ;
 // ==== js/data/goods.js ====
 /**
@@ -149266,6 +149504,9 @@ function getGoodById(goodId) {
 function getAllGoodIds() {
   return GOODS.map((g) => g.id);
 }
+
+// P1-2 CLS 命名空间注册
+if (typeof window.CLS !== 'undefined' && window.CLS.data) window.CLS.data.GOODS = GOODS;
 
 ;
 // ==== js/data/items.js ====
@@ -150320,6 +150561,9 @@ const HOUSING_TIERS = [
 function getCurrentHousing(state) {
   return HOUSING_TIERS[state.housing?.tier || 0] || HOUSING_TIERS[0];
 }
+
+// P1-2 CLS 命名空间注册
+if (typeof window.CLS !== 'undefined' && window.CLS.data) window.CLS.data.ITEMS = ITEMS;
 
 ;
 // ==== js/data/news.js ====
@@ -152811,6 +153055,9 @@ function getAvailableCertificates(state) {
     return true;
   });
 }
+
+// P1-2 CLS 命名空间注册
+if (typeof window.CLS !== 'undefined' && window.CLS.data) window.CLS.data.CERTIFICATES = CERTIFICATES;
 
 ;
 // ==== js/data/npcs.js ====
@@ -156403,6 +156650,9 @@ function getNpcsAtLocation(locKey) {
 /** 获取好感度描述 */
 
 
+// P1-2 CLS 命名空间注册
+if (typeof window.CLS !== 'undefined' && window.CLS.data) window.CLS.data.NPCS = NPCS;
+
 ;
 // ==== js/data/scenarios.js ====
 /**
@@ -157456,6 +157706,9 @@ if (typeof window !== "undefined") {
     ],
   };
 }
+
+// P1-2 CLS 命名空间注册
+if (typeof window.CLS !== 'undefined' && window.CLS.data) window.CLS.data.SCENARIOS = SCENARIOS;
 
 ;
 // ==== js/data/corp.js ====
@@ -243412,6 +243665,10 @@ function triggerRandomEvent(state) {
     );
   }
 })();
+
+// P1-1 注册 MORAL_EVENTS 和 NEWS_EVENTS 到 RANDOM_EVENTS 统一池
+if (typeof registerMoralEventsToPool === "function") registerMoralEventsToPool();
+if (typeof registerNewsEventsToPool === "function") registerNewsEventsToPool();
 
 ;
 // ==== js/data/scenario_start_chains.js ====

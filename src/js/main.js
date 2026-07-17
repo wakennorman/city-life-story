@@ -5178,3 +5178,7 @@ function triggerRandomEvent(state) {
     );
   }
 })();
+
+// P1-1 注册 MORAL_EVENTS 和 NEWS_EVENTS 到 RANDOM_EVENTS 统一池
+if (typeof registerMoralEventsToPool === "function") registerMoralEventsToPool();
+if (typeof registerNewsEventsToPool === "function") registerNewsEventsToPool();

@@ -1017,3 +1017,6 @@ const STREET_JOBS = [
 function getJobById(jobId) {
   return STREET_JOBS.find((j) => j.id === jobId) || null;
 }
+
+// P1-2 CLS 命名空间注册
+if (typeof window.CLS !== 'undefined' && window.CLS.data) window.CLS.data.STREET_JOBS = STREET_JOBS;

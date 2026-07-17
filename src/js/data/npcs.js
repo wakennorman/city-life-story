@@ -3586,3 +3586,6 @@ function getNpcsAtLocation(locKey) {
 
 /** 获取好感度描述 */
 
+
+// P1-2 CLS 命名空间注册
+if (typeof window.CLS !== 'undefined' && window.CLS.data) window.CLS.data.NPCS = NPCS;

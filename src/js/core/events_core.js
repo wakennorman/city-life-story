@@ -1142,3 +1142,73 @@ function dailyCleanup(state) {
     cleanupConduitQueue(state);
   }
 }
+
+// ====== P1-1 事件格式收敛：MORAL_EVENTS / NEWS_EVENTS → RANDOM_EVENTS 适配器 ======
+// 把 MORAL_EVENTS 和 NEWS_EVENTS 注册到 RANDOM_EVENTS 统一池中，使所有事件
+// 都走同一套 schema + 同一触发层。保留旧数组向后兼容。
+
+/**
+ * 把 MORAL_EVENTS 转换为 RANDOM_EVENTS 格式并注册到统一池
+ */
+function registerMoralEventsToPool() {
+  if (typeof MORAL_EVENTS === "undefined" || !Array.isArray(MORAL_EVENTS)) return;
+  if (RANDOM_EVENTS._moralRegistered) return;
+  RANDOM_EVENTS._moralRegistered = true;
+
+  for (var mi = 0; mi < MORAL_EVENTS.length; mi++) {
+    var me = MORAL_EVENTS[mi];
+    if (!me || !me.id) continue;
+    var entry = {
+      id: me.id,
+      title: me.title,
+      story: me.desc || me.title,
+      phase: "street",
+      probability: me.dailyChance || 0.04,
+      _converted: "moral",
+      choices: Array.isArray(me.choices) ? me.choices.map(function(c) {
+        return { text: c.text, apply: c.immediate || function(){} };
+      }) : [],
+      conditions: (function(minDay, origCond) {
+        return function(st) {
+          if (minDay && st.player.day < minDay) return false;
+          if (typeof origCond === "function" && !origCond(st)) return false;
+          return true;
+        };
+      })(me.minDay, typeof me.condition === "function" ? me.condition : null),
+    };
+    RANDOM_EVENTS.push(entry);
+  }
+}
+
+/**
+ * 把 NEWS_EVENTS 转换为 RANDOM_EVENTS 格式并注册到统一池
+ */
+function registerNewsEventsToPool() {
+  if (typeof NEWS_EVENTS === "undefined" || !Array.isArray(NEWS_EVENTS)) return;
+  if (RANDOM_EVENTS._newsRegistered) return;
+  RANDOM_EVENTS._newsRegistered = true;
+
+  for (var ni = 0; ni < NEWS_EVENTS.length; ni++) {
+    var ne = NEWS_EVENTS[ni];
+    if (!ne || !ne.id) continue;
+    var entry = {
+      id: ne.id,
+      title: ne.title,
+      story: ne.content || ne.title,
+      phase: "street",
+      probability: ne.dailyChance || 0.03,
+      _converted: "news",
+      choices: Array.isArray(ne.choices) ? ne.choices.map(function(c) {
+        return { text: c.text, apply: c.immediate || function(){} };
+      }) : [],
+      conditions: (function(minDay, origCond) {
+        return function(st) {
+          if (minDay && st.player.day < minDay) return false;
+          if (typeof origCond === "function" && !origCond(st)) return false;
+          return true;
+        };
+      })(ne.minDay, typeof ne.condition === "function" ? ne.condition : null),
+    };
+    RANDOM_EVENTS.push(entry);
+  }
+}

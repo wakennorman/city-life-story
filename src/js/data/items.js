@@ -1049,3 +1049,6 @@ const HOUSING_TIERS = [
 function getCurrentHousing(state) {
   return HOUSING_TIERS[state.housing?.tier || 0] || HOUSING_TIERS[0];
 }
+
+// P1-2 CLS 命名空间注册
+if (typeof window.CLS !== 'undefined' && window.CLS.data) window.CLS.data.ITEMS = ITEMS;

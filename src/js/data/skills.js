@@ -297,3 +297,6 @@ function getAvailableCertificates(state) {
     return true;
   });
 }
+
+// P1-2 CLS 命名空间注册
+if (typeof window.CLS !== 'undefined' && window.CLS.data) window.CLS.data.CERTIFICATES = CERTIFICATES;

@@ -452,4 +452,20 @@
 
   // ====== 导出（全局命名空间） ======
   window.Random = Random;
+
+  // ====== P1-2 统一命名空间：全局对象收口入口 ======
+  // CLS = City Life Story。所有全局数据对象最终都应挂在此命名空间下。
+  // 当前为初始骨架 + 子命名空间占位，后续逐批迁移。保持 window.* 向后兼容不删除。
+  window.CLS = window.CLS || {};
+  var CLS = window.CLS;
+  // 核心系统
+  CLS.Random = Random;
+  // 数据子命名空间（各文件在 export 处逐渐将各自 window.X 同时挂到 CLS.* 下）
+  CLS.data = {};     // locations, jobs, goods, items, skills, npcs, scenarios...
+  CLS.core = {};     // state, events, pipeline, save, weather...
+  CLS.ui = {};       // render, modal, wiki, tutorial...
+  CLS.phase1 = {};   // trade, needs, illness, pricing...
+  CLS.phase2 = {};   // corp_ops, investment, stock, startup...
+  // CLS.data 初始挂载常用引用（各数据文件导出时同时挂 CLS.data.X）
+  // 后续：window.LOCATIONS → CLS.data.locations (保留别名)
 })();
