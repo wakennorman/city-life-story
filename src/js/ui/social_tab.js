@@ -53,11 +53,13 @@ function renderNpcRelationships(state, content) {
   (function () {
     if (!state.player || !state.player.day || typeof NPCS === "undefined") return;
     var _today = state.player.day;
+    // [全系统自洽修复] 域D A类#1: 生日用 (day-1)%365+1 替代纯 day，支持 year 2+
+    var _dayOfYear = ((_today - 1) % 365) + 1;
     var _birthdayNpcs = [];
     for (var _bi = 0; _bi < NPCS.length; _bi++) {
       var _n = NPCS[_bi];
       if (_n && _n.birthday && _n.id && state.relationships && state.relationships[_n.id] && state.relationships[_n.id].met) {
-        if (_n.birthday === _today) _birthdayNpcs.push(_n);
+        if (_n.birthday === _dayOfYear) _birthdayNpcs.push(_n);
       }
     }
     if (_birthdayNpcs.length > 0) {

@@ -415,10 +415,12 @@ function tickNpcRelationships(state) {
     }
   }
 
-  // [全系统自洽修复] 域D 修复:checkNpcRelationEventTriggers 输出无任何消费者→关系事件链永不触发。此处接入每日tick。
+  // [全系统自洽修复] 域D A类#1:checkNpcRelationEventTriggers 输出无任何消费者→关系事件链永不触发。此处接入每日tick。
   runNpcRelationChainEvents(state, day);
   // [全系统自洽修复] 域D 联动增强3:圈子归属感（D→G，社会比较/归属感→needs.happiness）
   runNpcCircleBelonging(state, day);
+  // [全系统自洽修复] 域D A类#2: NPC生日检测→触发小效果（心情+3 + 消息）
+  runBirthdayCelebration(state, day);
 }
 
 /** [全系统自洽修复] 域D 修复:NPC id→中文名，替代 replace(/_/g," ") 展示的原始 id */
@@ -475,6 +477,24 @@ function runNpcRelationChainEvents(state, day) {
         "info",
       );
       cd[key] = day + 14;
+    } else if (t.type === "business_cooperation") {
+      // [全系统自洽修复] 域D A类#4: 业务合作 — A向B推荐你
+      applyAffinityChange(state, t.npcA, 1, "业务推荐");
+      applyAffinityChange(state, t.npcB, 1, "业务推荐");
+      StateManager.addMessage(
+        "🤝 " + nA + "向" + nB + "推荐了你：「这小伙子/姑娘靠谱。」好感各+1。",
+        "info"
+      );
+      cd[key] = day + 14;
+    } else if (t.type === "classmate_reunion") {
+      // [全系统自洽修复] 域D A类#4: 老同学重聚 — 叙旧引出回忆
+      applyAffinityChange(state, t.npcA, 2, "同窗叙旧");
+      applyAffinityChange(state, t.npcB, 2, "同窗叙旧");
+      StateManager.addMessage(
+        "🎓 " + nA + "和" + nB + "聊起当年上学的事，笑着摇头：「那时候真简单。」好感各+2。",
+        "info"
+      );
+      cd[key] = day + 14;
     }
   }
 }
@@ -495,18 +515,96 @@ function runNpcCircleBelonging(state, day) {
   var last = state.npcRelationshipLog.lastBelongingDay || 0;
   if (day - last < 7) return;
   state.npcRelationshipLog.lastBelongingDay = day;
+  // [全系统自洽修复] 域D 联动增强2: 圈子归属感多状态收益
   state.needs.happiness = Math.min(100, (state.needs.happiness || 0) + 2);
+  if (state.status) state.status.health = Math.min(100, (state.status.health || 50) + 1);
+  state.needs.fatigue = Math.max(0, (state.needs.fatigue || 0) - 1);
   if (typeof StateManager !== "undefined") {
     StateManager.addMessage(
       "🫂 这座城市里，你已经有了 " +
         circle +
-        " 个说得上话的人。夜里回到出租屋，不再觉得那么孤单（心情+2）",
+        " 个说得上话的人。夜里回到出租屋，不再觉得那么孤单（心情+2，健康+1，疲劳-1）",
       "info",
     );
   }
 }
 
-/** 记录玩家与NPC的互动 */
+/**
+ * [全系统自洽修复] 域D A类#2: NPC生日庆祝
+ * 每天检测是否有NPC生日（基于 day-of-year），有且已结识则发消息+心情+3。
+ * 防刷屏：每个NPC每年只庆祝一次（存 _lastBirthdayCelebratedYear）。
+ */
+function runBirthdayCelebration(state, day) {
+  if (!state.relationships || !state.needs || !state.player) return;
+  if (typeof NPCS === "undefined" || !NPCS || !NPCS.length) return;
+  var _dayOfYear = ((day - 1) % 365) + 1;
+  if (!state.npcRelationshipLog) state.npcRelationshipLog = {};
+  var _celebrated = state.npcRelationshipLog._birthdayCelebrated || {};
+  state.npcRelationshipLog._birthdayCelebrated = _celebrated;
+  var _year = Math.floor((day - 1) / 365) + 1;
+
+  for (var _bi = 0; _bi < NPCS.length; _bi++) {
+    var _n = NPCS[_bi];
+    if (!_n || !_n.id || !_n.birthday || !_n.name) continue;
+    if (_n.birthday !== _dayOfYear) continue;
+    var _rel = state.relationships[_n.id];
+    if (!_rel || !_rel.met) continue;
+    // 今年已庆祝过？跳过
+    var _key = _n.id + "_" + _year;
+    if (_celebrated[_key]) continue;
+    _celebrated[_key] = true;
+    // [全系统自洽修复] 域D 联动增强2: 叙事分层 — 好感等级决定奖励丰度
+    var _aff = _rel.affinity || 0;
+    var _bonusMsg = "";
+    var _bonusHappy = 3;
+    var _bonusExtra = "";
+    if (_aff >= 80) {
+      _bonusHappy = 8;
+      if (_n.monthlyIncome) { _bonusExtra = "。对方高兴地分享了一些行业经验（心智+2）"; state.player.mental = Math.min(100, (state.player.mental || 0) + 2); }
+      else { _bonusExtra = "。挚友的祝福让你们的关系更加深厚（心智+1）"; state.player.mental = Math.min(100, (state.player.mental || 0) + 1); }
+    } else if (_aff >= 60) {
+      _bonusHappy = 5;
+      _bonusExtra = "。对方拉着你聊了好一会儿。";
+    } else if (_aff >= 30) {
+      _bonusHappy = 3;
+      _bonusExtra = "。对方有些意外你还记得。";
+    } else {
+      _bonusHappy = 2;
+      _bonusExtra = "。对方淡淡地笑了笑。";
+    }
+    state.needs.happiness = Math.min(100, (state.needs.happiness || 0) + _bonusHappy);
+    // 好友(≥60)额外送小礼物
+    if (_aff >= 60 && state.resources) {
+      var _giftVal = 10 + Random.int(0, 40);
+      state.resources.cash += _giftVal;
+      _bonusExtra += "还收到了¥" + _giftVal + "的生日回礼。";
+    }
+    if (typeof StateManager !== "undefined") {
+      var _line = _n.birthdayLine || "今天是我生日，没想到你还记得！";
+      StateManager.addMessage(
+        "🎂 " + _n.name + "（" + (_n.role || "") + "）今天生日！" + _line + _bonusExtra + " 心情+" + _bonusHappy + "。",
+        "success"
+      );
+    }
+  }
+}
+
+/**
+ * [全系统自洽修复] 域D 联动增强1: 生日当天拜访NPC好感双倍
+ * 在 applyAffinityChange 中检测：若当天是NPC生日且change>0，则翻倍。
+ */
+function _getBirthdayBonus(state, npcId, change) {
+  if (change <= 0 || !state.player || !state.player.day) return change;
+  if (typeof NPCS === "undefined" || !NPCS || !NPCS.length) return change;
+  var _dayOfYear = ((state.player.day - 1) % 365) + 1;
+  for (var _bi = 0; _bi < NPCS.length; _bi++) {
+    var _n = NPCS[_bi];
+    if (_n && _n.id === npcId && _n.birthday === _dayOfYear) {
+      return change * 2; // 生日当天好感翻倍
+    }
+  }
+  return change;
+}
 function recordNpcInteraction(npcId, change, reason) {
   if (typeof StateManager === "undefined") return;
   var state = StateManager.getState();
@@ -533,8 +631,10 @@ function applyAffinityChange(state, npcId, change, reason) {
   if (!state.relationships[npcId]) {
     state.relationships[npcId] = { affinity: 0, met: true };
   }
+  // [全系统自洽修复] 域D 联动增强1: 生日当天好感翻倍
+  var _adjustedChange = _getBirthdayBonus(state, npcId, change);
   var oldAffinity = state.relationships[npcId].affinity;
-  var newAffinity = Math.max(-100, Math.min(100, oldAffinity + change));
+  var newAffinity = Math.max(-100, Math.min(100, oldAffinity + _adjustedChange));
   state.relationships[npcId].affinity = newAffinity;
   state.relationships[npcId].met = true;
   // [全系统自洽修复] 域D 联动增强1: 记录最近互动天数
@@ -658,6 +758,23 @@ function checkNpcRelationEventTriggers(state) {
           relationType: type,
           thresholdA: 60,
           thresholdB: 20,
+        });
+      }
+      // [全系统自洽修复] 域D A类#4: business/classmate 事件类型接入
+      if (type === "business" && affA >= 40 && affB >= 30) {
+        triggers.push({
+          type: "business_cooperation",
+          npcA: npcA, npcB: npcB,
+          relationType: type,
+          thresholdA: 40, thresholdB: 30,
+        });
+      }
+      if (type === "classmate" && affA >= 30 && affB >= 30) {
+        triggers.push({
+          type: "classmate_reunion",
+          npcA: npcA, npcB: npcB,
+          relationType: type,
+          thresholdA: 30, thresholdB: 30,
         });
       }
     }

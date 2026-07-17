@@ -571,6 +571,9 @@ function parseEffectString(effectStr) {
  * 应用政治事件效果
  */
 function applyPoliticsEffects(state, effects) {
+  // [全系统自洽修复] 域D A类#3: state.player.corporate 可能未初始化，防御性兜底
+  if (!state.player) state.player = {};
+  if (!state.player.corporate) state.player.corporate = {};
   const p = state.player.corporate;
 
   for (const [key, value] of Object.entries(effects)) {
