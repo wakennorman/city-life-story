@@ -11,7 +11,8 @@
  */
 
 // ====== 工具函数 ======
-if(typeof _esc==="undefined"){
+
+/** 转义 HTML 特殊字符 */
 function _esc(str) {
   if (!str) return "";
   return String(str)
@@ -3597,6 +3598,4 @@ function tickSupplyChain(state, company) {
   // 更新供应链风险
   const risk = getSupplyChainRisk(company);
   company.supplyChainRisk = risk.risk;
-}
-
 }

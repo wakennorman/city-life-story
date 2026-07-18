@@ -195,6 +195,7 @@ function createDefaultState() {
       consecutiveC: 0,
       quarterlyActions: 3,
       actionsUsed: 0,
+      corpQuarter: 1, // [全系统自洽修复] 域H A类: 默认Q1，endQuarter用c.corpQuarter推进
       team: [],
       stocks: [],
       stockMarket: {},

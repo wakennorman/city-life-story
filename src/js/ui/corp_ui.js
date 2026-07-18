@@ -5,6 +5,26 @@
 // [已清理] _fateTag 已合并到 render.js 统一版本（含 IPO 标记），此处删除死代码
 
 /**
+ * 获取公司文化效果摘要
+ */
+if (typeof getCultureModsSummary === "undefined") {
+function getCultureModsSummary(mods) {
+  if (!mods) return "";
+  var parts = [];
+  if (mods.kpiReq) parts.push("KPI×" + mods.kpiReq);
+  if (mods.promoChance) parts.push("晋升×" + mods.promoChance);
+  if (mods.fatigueGain) parts.push("疲劳×" + mods.fatigueGain);
+  if (mods.dignityLoss) parts.push("尊严损失×" + mods.dignityLoss);
+  if (mods.abilityGain) parts.push("能力×" + mods.abilityGain);
+  if (mods.happinessGain) parts.push("心情×" + mods.happinessGain);
+  if (mods.stability) parts.push("稳定×" + mods.stability);
+  if (mods.riskGain) parts.push("风险×" + mods.riskGain);
+  if (parts.length === 0) return "无特殊加成";
+  return parts.join(" ");
+}
+}
+
+/**
  * 获取公司行业（从COMPANIES数组或行业映射）
  */
 if (typeof getCompanyIndustryById === "undefined") {
@@ -657,6 +677,10 @@ function renderCompanyHistory(state) {
       " · " +
       (corp.company.culture || "") +
       "</div>" +
+      // [全系统自洽修复] 域H 联动增强4: 公司文化属性影响展示（H→F）
+      (corp.company.cultureIcon ? '<div style="font-size:10px;color:var(--text-muted);margin-top:4px;">' +
+        '文化加成：' + (corp.company.cultureMods ? getCultureModsSummary(corp.company.cultureMods) : '') +
+        "</div>" : "") +
       "</div>" +
       "</div>" +
       '<div style="display:flex;gap:24px;font-size:11px;color:var(--text-muted);">' +

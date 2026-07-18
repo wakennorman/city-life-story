@@ -377,7 +377,8 @@ function generateNewCompany(industryOverride) {
       max: 16000 + Random.int(0, 14999),
     },
     // CEO 特质（影响命运事件权重）
-    ceoTrait: Random.fromArray(CEO_TRAITS).id,
+    // [全系统自洽修复] 域H 修复:CEO_TRAITS 可能未定义（enterprise_fate.js 未加载）
+    ceoTrait: (typeof CEO_TRAITS !== "undefined" ? Random.fromArray(CEO_TRAITS).id : "visionary"),
     ceoBio: generateCeoBio(),
   };
 }
@@ -582,7 +583,8 @@ function spawnFromRuins(state, deceasedCompany) {
       min: 8000 + Random.int(0, 7999),
       max: 16000 + Random.int(0, 14999),
     },
-    ceoTrait: Random.fromArray(CEO_TRAITS).id,
+    // [全系统自洽修复] 域H 修复:CEO_TRAITS 可能未定义（enterprise_fate.js 未加载）
+    ceoTrait: (typeof CEO_TRAITS !== "undefined" ? Random.fromArray(CEO_TRAITS).id : "visionary"),
     ceoBio: generateCeoBio(),
   };
 

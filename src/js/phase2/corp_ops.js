@@ -107,6 +107,11 @@ function doCorporateAction(actionId) {
 /** 季度结束 */
 function endQuarter() {
   const state = StateManager.getState();
+  // [全系统自洽修复] 域H A类#2: state.corporate 空守卫（防旧存档/降级状态崩溃）
+  if (!state.corporate || !state.corporate.rank) {
+    StateManager.addMessage("⚠️ 未入职，无法结算季度。", "warning");
+    return false;
+  }
   const c = state.corporate;
 
   // 已退休人员停发工资（查 career_dev 退休标记）
@@ -248,6 +253,27 @@ function endQuarter() {
       `🎂 又一年过去了，你现在${state.player.age}岁了。`,
       "event",
     );
+    // [全系统自洽修复] 域H 联动增强3: 职场年度叙事回顾（H→B）
+    var yearsHere = state.player.corpYear || 1;
+    var gradeThisYear = (c.perfHistory && c.perfHistory.length > 0) ? c.perfHistory[c.perfHistory.length - 1].grade : "C";
+    var totalEarnedCorp = state.resources && state.resources.totalEarned ? state.resources.totalEarned : 0;
+    var reflection = "";
+    if (yearsHere <= 2) {
+      reflection = "入职第" + yearsHere + "年，你从新人开始一步步站稳脚跟。";
+    } else if (yearsHere <= 5) {
+      reflection = "第" + yearsHere + "年了，你已成为团队的中坚力量。";
+    } else {
+      reflection = "第" + yearsHere + "年——你看着新来的年轻人，想起当年的自己。";
+    }
+    if (gradeThisYear === "S+" || gradeThisYear === "S") {
+      reflection += " 今年绩效" + gradeThisYear + "，你对自己的表现很满意。";
+    } else if (gradeThisYear === "C") {
+      reflection += " 今年绩效不太理想，但明年还有机会。";
+    }
+    if (totalEarnedCorp > 0) {
+      reflection += " 职场生涯累计收入¥" + totalEarnedCorp.toLocaleString() + "。";
+    }
+    StateManager.addMessage("📋 " + reflection, "info");
   } else {
     c.corpQuarter++;
   }
@@ -310,6 +336,8 @@ function enterCorporatePhase(companyId) {
   state.corporate.rank = "P5";
   // [全系统自洽修复] 域H 修复:初始化corporate.level(P5→1)，供events_corp/family_events事件条件使用
   state.corporate.level = 1;
+  // [全系统自洽修复] 域H A类#1: 初始化corpQuarter(默认1=Q1)，endQuarter使用c.corpQuarter推进季度
+  state.corporate.corpQuarter = 1;
   state.corporate.company = company;
   state.corporate.joinedDay = p.day;
   state.corporate.actionsUsed = 0;

@@ -175,6 +175,19 @@ const MENTORSHIP_LEVELS = {
   },
 };
 
+// [全系统自洽修复] 域H A类: 同事网络初始化守卫（供各社交函数使用）
+function _ensureColleagues(state) {
+  if (!state.corporate) state.corporate = {};
+  if (!state.corporate.colleagues) {
+    if (typeof initColleagueNetwork === "function") {
+      initColleagueNetwork(state);
+    } else {
+      state.corporate.colleagues = { network: [], factions: [], mentees: [] };
+    }
+  }
+  return state.corporate.colleagues.network;
+}
+
 /**
  * 初始化同事关系网
  */
@@ -265,6 +278,7 @@ function generateColleague(state, company) {
  * 增加同事好感度
  */
 function increaseColleagueRelationship(state, colleagueId, amount, reason) {
+  _ensureColleagues(state);
   const colleagues = state.corporate.colleagues.network;
   const colleague = colleagues.find((c) => c.id === colleagueId);
   if (!colleague) return false;
@@ -304,6 +318,7 @@ function increaseColleagueRelationship(state, colleagueId, amount, reason) {
  * 降低同事好感度
  */
 function decreaseColleagueRelationship(state, colleagueId, amount, reason) {
+  _ensureColleagues(state);
   const colleagues = state.corporate.colleagues.network;
   const colleague = colleagues.find((c) => c.id === colleagueId);
   if (!colleague) return false;
@@ -337,6 +352,7 @@ function decreaseColleagueRelationship(state, colleagueId, amount, reason) {
  * 建立导师关系
  */
 function establishMentorship(state, mentorId) {
+  _ensureColleagues(state);
   const colleagues = state.corporate.colleagues.network;
   const mentor = colleagues.find((c) => c.id === mentorId);
   if (!mentor) return { success: false, message: "找不到该同事" };
@@ -397,6 +413,7 @@ function endMentorship(state) {
  * 收徒弟
  */
 function takeMentee(state, menteeId) {
+  _ensureColleagues(state);
   const colleagues = state.corporate.colleagues.network;
   const mentee = colleagues.find((c) => c.id === menteeId);
   if (!mentee) return { success: false, message: "找不到该同事" };
@@ -600,6 +617,8 @@ function applyPoliticsEffects(state, effects) {
  * 社交行动：请同事吃饭
  */
 function treatColleagueMeal(state, colleagueId, tier) {
+  // [全系统自洽修复] 域H A类#3: state.corporate.colleagues 空守卫
+  _ensureColleagues(state);
   const colleagues = state.corporate.colleagues.network;
   const colleague = colleagues.find((c) => c.id === colleagueId);
   if (!colleague) return { success: false, message: "找不到该同事" };

@@ -88,6 +88,25 @@ function applyPromotion(state, newRank) {
   // [全系统自洽修复] 域H 联动增强1: 晋升使人精神振奋→疲劳-10（H→G）
   state.needs.fatigue = Math.max(0, (state.needs.fatigue || 0) - 10);
 
+  // [全系统自洽修复] 域H 联动增强2: 晋升通知NPC社交圈，提升同事好感（H→D）
+  if (state.relationships) {
+    var workplaceNPCs = ["boss_li", "xiao_mei", "zhaojie", "old_zhou"];
+    for (var ni = 0; ni < workplaceNPCs.length; ni++) {
+      var npcId = workplaceNPCs[ni];
+      if (state.relationships[npcId] && state.relationships[npcId].met) {
+        state.relationships[npcId].affinity = Math.min(100, (state.relationships[npcId].affinity || 0) + 3);
+      }
+    }
+    if (state.corporate && state.corporate.team) {
+      for (var ti = 0; ti < state.corporate.team.length; ti++) {
+        if (state.corporate.team[ti].loyalty !== undefined) {
+          state.corporate.team[ti].loyalty = Math.min(100, state.corporate.team[ti].loyalty + 5);
+        }
+      }
+    }
+    StateManager.addMessage("🤝 晋升消息传开，同事们对你的态度更好了。", "info");
+  }
+
   StateManager.addMessage(
     `🎉 恭喜晋升！${CORP_RANKS[oldRank].name} → ${rankData.name}！月薪调整为 ¥${rankData.baseSalary.toLocaleString()}`,
     "success",

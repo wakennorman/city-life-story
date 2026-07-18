@@ -12,7 +12,6 @@
 // ====== 工具函数 ======
 
 /** 转义 HTML 特殊字符 */
-if(typeof _esc==="undefined"){
 function _esc(str) {
   if (!str) return "";
   return String(str)
@@ -2125,5 +2124,3 @@ const PRODUCT_CATEGORIES = {
     description: "支付/借贷/理财科技，牌照是核心壁垒",
   },
 };
-
-}

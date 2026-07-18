@@ -7,7 +7,8 @@
  */
 
 // ====== 工具函数 ======
-if(typeof _esc==="undefined"){
+
+/** 转义 HTML 特殊字符 */
 function _esc(str) {
   if (!str) return "";
   return String(str)
@@ -1207,6 +1208,4 @@ if (typeof module !== "undefined" && module.exports) {
     triggerStartupEvent,
     showStartupEventModal,
   };
-}
-
 }
