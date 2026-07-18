@@ -557,6 +557,8 @@ function handlePoliticsChoice(eventType, optionIndex) {
  */
 function parseEffectString(effectStr) {
   const effects = {};
+  // [全系统自洽修复] 域D A类#2: effectStr 可能为 undefined/null
+  if (!effectStr || typeof effectStr !== "string") return effects;
   const pairs = effectStr.split("，");
   for (const pair of pairs) {
     const match = pair.match(/([^\s，]+)([+-]\d+)/);

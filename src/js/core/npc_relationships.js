@@ -366,6 +366,8 @@ function tickNpcRelationships(state) {
     for (var targetId in relationTargets) {
       if (propagated[targetId]) continue;
       var coeff = relationTargets[targetId];
+      // [全系统自洽修复] 域D A类#3: interaction.change 可能 NaN/undefined（旧存档/异常数据），阻断NaN传播
+      if (typeof interaction.change !== "number" || !isFinite(interaction.change)) continue;
       var change = interaction.change * coeff;
       applyAffinityChange(state, targetId, change, "关系传导");
       propagated[targetId] = true;
@@ -531,6 +533,25 @@ function runNpcCircleBelonging(state, day) {
       "info",
     );
   }
+  // [全系统自洽修复] 域D 联动增强: 信任圈(好感≥60)额外奖励每14天+心情
+  var _trusted = 0;
+  for (var _tid in state.relationships) {
+    var _tr = state.relationships[_tid];
+    if (_tr && _tr.met && (_tr.affinity || 0) >= 60) _trusted++;
+  }
+  if (_trusted >= 2) {
+    var _lastTrust = state.npcRelationshipLog.lastTrustedDay || 0;
+    if (day - _lastTrust >= 14) {
+      state.npcRelationshipLog.lastTrustedDay = day;
+      state.needs.happiness = Math.min(100, (state.needs.happiness || 0) + 3);
+      if (typeof StateManager !== "undefined") {
+        StateManager.addMessage(
+          "🤗 你有 " + _trusted + " 位可以托付真心的朋友。在这座城市，你并不孤独（心情+3）",
+          "info"
+        );
+      }
+    }
+  }
 }
 
 /**
@@ -641,8 +662,8 @@ function applyAffinityChange(state, npcId, change, reason) {
   var newAffinity = Math.max(-100, Math.min(100, oldAffinity + _adjustedChange));
   state.relationships[npcId].affinity = newAffinity;
   state.relationships[npcId].met = true;
-  // [全系统自洽修复] 域D 联动增强1: 记录最近互动天数
-  if (state.player && state.player.day && change !== 0) {
+  // [全系统自洽修复] 域D 联动增强1: 记录最近互动天数（即使change=0也记录，防止衰减系统误判）
+  if (state.player && state.player.day) {
     state.relationships[npcId]._lastInteractionDay = state.player.day;
   }
 
