@@ -3256,6 +3256,7 @@ function renderTradeTab(state, parent) {
       <div style="font-size:10px;color:var(--text-muted);margin-bottom:6px;">
         当前零售价: <strong style="color:${priceColor}">¥${price.toFixed(1)}</strong>${trendHtml}
         ${priceLabel}
+        ${_renderSupplyDemandTag(state, good.id)}
       </div>
       <div style="display:flex;gap:4px;flex-wrap:wrap;align-items:center;">
         <button class="btn btn-sm btn-success buy-btn" data-good="${good.id}" data-qty="1">买1</button>
@@ -6544,4 +6545,18 @@ function scrollMessageLogToTop() {
   if (!logEl) return;
   var c = logEl.querySelector(".log-content");
   if (c) c.scrollTop = 0;
+}
+
+/** [全系统自洽修复] 域A 联动增强1: 供需状态标签 — 在交易Tab商品卡片显示供需指示器 */
+function _renderSupplyDemandTag(state, goodId) {
+  if (!state || !state.trade || !state.trade.supplyDemand) return "";
+  var locKey = state.trade.currentLocation;
+  if (!locKey || !state.trade.supplyDemand[locKey]) return "";
+  var sd = state.trade.supplyDemand[locKey][goodId];
+  if (sd === undefined || sd === null) return "";
+  if (sd > 15) return '<span style="color:var(--danger);font-size:10px;margin-left:4px;">📈 供不应求</span>';
+  if (sd > 5) return '<span style="color:var(--warning);font-size:10px;margin-left:4px;">📈 需求旺盛</span>';
+  if (sd < -15) return '<span style="color:var(--success);font-size:10px;margin-left:4px;">📉 供过于求</span>';
+  if (sd < -5) return '<span style="color:var(--info);font-size:10px;margin-left:4px;">📉 供给过剩</span>';
+  return "";
 }
