@@ -725,3 +725,12 @@ if (typeof window !== "undefined") {
     ],
   };
 }
+
+// [全系统自洽修复] 域C 联动增强1: 获取活跃连携数（C→F 技能Tab展示）
+function getActiveSynergiesCount(state) {
+  if (!state || !state.skillSynergies) return 0;
+  var count = 0;
+  if (state.skillSynergies.activeSynergies) count += state.skillSynergies.activeSynergies.length;
+  if (state.skillSynergies.activeThemes) count += state.skillSynergies.activeThemes.length;
+  return count;
+}

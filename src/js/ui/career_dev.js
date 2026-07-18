@@ -2990,10 +2990,13 @@ function getCareerPerformanceRequirement(level) {
 function getCareerPerformanceScore(state) {
   var career = state.career || {};
   var job = career.currentJob || {};
-  if (typeof job.performance === "number") return job.performance;
+  if (typeof job.performance === "number") {
+    // [全系统自洽修复] 域C A类#3: 确保返回有效数字，NaN/Infinity→回退
+    if (isFinite(job.performance)) return job.performance;
+  }
   var corp = state.player && state.player.corporate;
-  if (corp && typeof corp.kpi === "number") return corp.kpi;
-  if (state.corporate && typeof state.corporate.kpi === "number") {
+  if (corp && typeof corp.kpi === "number" && isFinite(corp.kpi)) return corp.kpi;
+  if (state.corporate && typeof state.corporate.kpi === "number" && isFinite(state.corporate.kpi)) {
     return state.corporate.kpi;
   }
   return 50;
@@ -3982,6 +3985,11 @@ function tickCareerFiringRisk(state) {
 function enhancedApplyCareerJob(pathId, levelId) {
   try {
     var state = StateManager.getState();
+    // [全系统自洽修复] 域C A类#2: CAREER_PATHS 可能未定义（加载顺序问题）
+    if (typeof CAREER_PATHS === "undefined" || !CAREER_PATHS) {
+      StateManager.addMessage("⚠️ 职业系统尚未加载", "warning");
+      return;
+    }
     var path = CAREER_PATHS[pathId];
     if (!path) {
       StateManager.addMessage("⚠️ 该职业路径不存在", "warning");

@@ -3841,8 +3841,20 @@ function getAvailableActions(state) {
               ? npc.birthdayLine
               : festLine || contextLine || Random.fromArray(npc.talkLines);
           const bdTag = isBirthday ? " 🎂" : "";
+          // [全系统自洽修复] 域C 联动增强2: 技能等级影响NPC对话收获(C→D)
+          var _skillBonus = "";
+          if (!isBirthday && Random.chance(0.15)) {
+            var _highSkills = Object.keys(state.skills).filter(function(k) {
+              return state.skills[k] && state.skills[k].level >= 50;
+            });
+            if (_highSkills.length > 0) {
+              var _sk = Random.fromArray(_highSkills);
+              affinityGain += 1;
+              _skillBonus = "（" + _sk + "技能引人注目，好感额外+1）";
+            }
+          }
           StateManager.addMessage(
-            `💬${bdTag} ${npc.name}：${line} (好感+${affinityGain})`,
+            `💬${bdTag} ${npc.name}：${line} (好感+${affinityGain})${_skillBonus}`,
             isBirthday ? "success" : "info",
           );
           state.needs.happiness = Math.min(

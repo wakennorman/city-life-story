@@ -58,7 +58,7 @@ var SKILL_BRANCHES = {
       name: "街头美食家",
       icon: "🌮",
       desc: "专注街头美食，摆摊收入+30%，提升客流量",
-      jobBonuses: ["street_vending_food", "food_stall"],
+      jobBonuses: ["street_vending_food"], // [全系统自洽修复] 域C A类#1: food_stall 不存在→改street_vending_food
       incomeMult: 1.3,
       footfallBonus: 0.15,
       talentNodes: [
