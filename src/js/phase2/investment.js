@@ -1334,6 +1334,35 @@ function tickInvestmentDaily(state) {
   }
 
   // ================================================================
+  // [优化] 市场情绪计算 — 基于最近5日整体涨跌幅判定牛熊
+  // ================================================================
+  try {
+    var _moodScores = 0, _moodCount = 0;
+    for (var _mi = 0; _mi < INV_STOCKS.length; _mi++) {
+      var _ms = INV_STOCKS[_mi];
+      var _mm = inv.stockMarket[_ms.symbol];
+      if (!_mm || !_mm.history || _mm.history.length < 3) continue;
+      var _recent = _mm.history.slice(-3);
+      var _start = _recent[0].price;
+      var _end = _recent[_recent.length - 1].price;
+      if (_start > 0) {
+        _moodScores += (_end - _start) / _start;
+        _moodCount++;
+      }
+    }
+    if (_moodCount >= 5) {
+      var _avgMood = _moodScores / _moodCount;
+      if (_avgMood > 0.015) inv._marketMood = "bullish";
+      else if (_avgMood < -0.015) inv._marketMood = "bearish";
+      else inv._marketMood = "neutral";
+    } else {
+      inv._marketMood = "neutral";
+    }
+  } catch (e) {
+    // 静默
+  }
+
+  // ================================================================
   // 投资里程碑检查（仅在有持仓时触发，每日最多一次）
   // ================================================================
   if (
@@ -2558,6 +2587,136 @@ function renderDailyPLPanel(state) {
 }
 
 // ============================================================
+//  [优化] 资产配置面板 — 显示当前各类资产占比
+// ============================================================
+function renderAssetAllocationPanel(snapshot) {
+  if (!snapshot || !snapshot.groups) return "";
+  var total = snapshot.investmentValue || 0;
+  if (total <= 0) return "";
+  var groups = snapshot.groups;
+  var items = [
+    { key: "stocks", label: "股票", color: "#e07a30" },
+    { key: "crypto", label: "虚拟币", color: "#9a6cd0" },
+    { key: "precious", label: "贵金属", color: "#d4b030" },
+    { key: "futures", label: "期货基金", color: "#4a8ee6" },
+    { key: "properties", label: "房产", color: "#4cb84a" },
+    { key: "cars", label: "汽车", color: "#d07a5a" },
+  ];
+  var html = '<div style="margin-bottom:8px;padding:8px 12px;background:rgba(255,255,255,0.035);border:1px solid rgba(255,255,255,0.07);border-radius:6px;font-size:11px;">' +
+    '<div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">' +
+    '<strong>📊 资产配置</strong>' +
+    '<span style="color:var(--text-muted);font-size:10px;">总投资 ¥' + Math.round(total).toLocaleString() + '</span></div>' +
+    '<div style="display:flex;gap:4px;flex-wrap:wrap;align-items:center;">';
+  for (var i = 0; i < items.length; i++) {
+    var g = groups[items[i].key];
+    var val = (g && g.value) || 0;
+    var pct = total > 0 ? (val / total) * 100 : 0;
+    if (pct < 0.5) continue;
+    html += '<span style="display:inline-flex;align-items:center;gap:3px;padding:2px 6px;background:' + items[i].color + '22;border:1px solid ' + items[i].color + '44;border-radius:4px;font-size:10px;">' +
+      '<span style="width:6px;height:6px;border-radius:50%;background:' + items[i].color + ';"></span>' +
+      items[i].label + ' ' + pct.toFixed(1) + '%</span>';
+  }
+  html += '</div></div>';
+  return html;
+}
+
+// ============================================================
+//  [优化] 投资分析弹窗 — 显示技术指标 + 资产配置建议
+// ============================================================
+function showInvestmentAnalysisModal() {
+  var state = typeof StateManager !== "undefined" ? StateManager.getState() : null;
+  if (!state || !state.investment) {
+    if (typeof StateManager !== "undefined") StateManager.addMessage("投资系统未初始化", "warning");
+    return;
+  }
+  var inv = state.investment;
+  var snapshot = getInvestmentAssetSnapshot(state);
+  var totalVal = snapshot.investmentValue || 0;
+
+  // 技术指标一览
+  var techHtml = '<h4 style="margin:0 0 6px 0;font-size:13px;color:var(--accent);">📈 技术指标说明</h4>' +
+    '<div style="font-size:11px;color:var(--text-secondary);line-height:1.7;margin-bottom:8px;">';
+
+  var indicators = typeof TECHNICAL_INDICATORS !== "undefined" ? TECHNICAL_INDICATORS : null;
+  if (indicators) {
+    techHtml += '<table style="width:100%;border-collapse:collapse;font-size:10px;">' +
+      '<tr style="border-bottom:1px solid var(--border);"><th style="text-align:left;padding:4px;">指标</th><th style="text-align:left;padding:4px;">说明</th><th style="text-align:left;padding:4px;">用法</th></tr>';
+    for (var k in indicators) {
+      var ind = indicators[k];
+      techHtml += '<tr style="border-bottom:1px solid rgba(255,255,255,0.04);">' +
+        '<td style="padding:4px;">' + ind.icon + ' ' + ind.name + '</td>' +
+        '<td style="padding:4px;color:var(--text-muted);">' + ind.desc + '</td>' +
+        '<td style="padding:4px;color:var(--text-muted);font-size:9px;">' + ind.calc + '</td></tr>';
+    }
+    techHtml += '</table>';
+  } else {
+    techHtml += '<p>技术指标数据未加载。</p>';
+  }
+  techHtml += '</div>';
+
+  // 资产配置建议
+  var allocHtml = '<h4 style="margin:12px 0 6px 0;font-size:13px;color:var(--accent);">🎯 资产配置建议</h4>' +
+    '<div style="font-size:11px;color:var(--text-secondary);line-height:1.7;">';
+
+  var strategies = typeof ASSET_ALLOCATION_STRATEGIES !== "undefined" ? ASSET_ALLOCATION_STRATEGIES : null;
+  if (strategies && totalVal > 0) {
+    allocHtml += '<table style="width:100%;border-collapse:collapse;font-size:10px;">' +
+      '<tr style="border-bottom:1px solid var(--border);"><th style="text-align:left;padding:4px;">类型</th><th style="text-align:left;padding:4px;">风险</th><th style="text-align:left;padding:4px;">配置</th><th style="text-align:left;padding:4px;">预期收益</th></tr>';
+    for (var sk in strategies) {
+      var strat = strategies[sk];
+      var allocStr = "";
+      for (var ak in strat.allocation) {
+        if (strat.allocation[ak] > 0) allocStr += ak + " " + strat.allocation[ak] + "% ";
+      }
+      allocHtml += '<tr style="border-bottom:1px solid rgba(255,255,255,0.04);">' +
+        '<td style="padding:4px;">' + strat.icon + ' ' + strat.name + '</td>' +
+        '<td style="padding:4px;color:var(--text-muted);">' + strat.riskLevel + '</td>' +
+        '<td style="padding:4px;color:var(--text-muted);font-size:9px;">' + allocStr + '</td>' +
+        '<td style="padding:4px;color:var(--text-muted);">' + strat.expectedReturn + '</td></tr>';
+    }
+    allocHtml += '</table>';
+  } else {
+    allocHtml += '<p>需要先持有投资资产才能给出配置建议。</p>';
+  }
+  allocHtml += '</div>';
+
+  // 止损止盈策略
+  var stopHtml = '<h4 style="margin:12px 0 6px 0;font-size:13px;color:var(--accent);">🛑 止损止盈策略</h4>' +
+    '<div style="font-size:11px;color:var(--text-secondary);line-height:1.7;">';
+
+  var stopLoss = typeof STOP_LOSS_STRATEGIES !== "undefined" ? STOP_LOSS_STRATEGIES : null;
+  if (stopLoss) {
+    stopHtml += '<table style="width:100%;border-collapse:collapse;font-size:10px;">' +
+      '<tr style="border-bottom:1px solid var(--border);"><th style="text-align:left;padding:4px;">策略</th><th style="text-align:left;padding:4px;">说明</th><th style="text-align:left;padding:4px;">优缺点</th></tr>';
+    for (var slk in stopLoss) {
+      var sl = stopLoss[slk];
+      stopHtml += '<tr style="border-bottom:1px solid rgba(255,255,255,0.04);">' +
+        '<td style="padding:4px;">' + sl.icon + ' ' + sl.name + '</td>' +
+        '<td style="padding:4px;color:var(--text-muted);font-size:9px;">' + sl.desc + '</td>' +
+        '<td style="padding:4px;color:var(--text-muted);font-size:9px;">' + sl.pros + ' / ' + sl.cons + '</td></tr>';
+    }
+    stopHtml += '</table>';
+  } else {
+    stopHtml += '<p>止损止盈策略数据未加载。</p>';
+  }
+  stopHtml += '</div>';
+
+  var body = techHtml + '<hr style="border:none;border-top:1px solid var(--border);margin:8px 0;">' +
+    allocHtml + '<hr style="border:none;border-top:1px solid var(--border);margin:8px 0;">' +
+    stopHtml;
+
+  if (typeof showModal === "function") {
+    showModal({
+      title: "📊 投资分析工具",
+      body: body,
+      buttons: [{ text: "知道了", cls: "btn-primary" }],
+    });
+  } else {
+    StateManager.addMessage("弹窗系统未加载", "warning");
+  }
+}
+
+// ============================================================
 //  投资主页面渲染
 // ============================================================
 function renderInvestmentTab(state, parent) {
@@ -2589,7 +2748,7 @@ function renderInvestmentTab(state, parent) {
     totalPLSign +
     "¥" +
     Math.round(totalPL).toLocaleString() +
-    "</span></h3>" +
+    '</span> <span style="font-size:11px;color:var(--text-muted);cursor:pointer;" onclick="showInvestmentAnalysisModal()" title="查看投资分析工具">📊 分析</span></h3>' +
     '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;">' +
     summaryCard("股票", assetSnapshot.groups.stocks) +
     summaryCard("虚拟币", assetSnapshot.groups.crypto) +
@@ -2598,6 +2757,7 @@ function renderInvestmentTab(state, parent) {
     summaryCard("房产", assetSnapshot.groups.properties) +
     summaryCard("汽车", assetSnapshot.groups.cars) +
     "</div>" +
+    renderAssetAllocationPanel(assetSnapshot) +
     renderDailyPLPanel(state) +
     renderNewsInvestmentDrivers(state) +
     renderMarketSentiment(state, inv) +
@@ -3134,6 +3294,17 @@ function renderStocks(area, inv, state, parent) {
     card.className = "action-card";
     card.style.borderLeft = "3px solid " + clr;
     var sharesStr = h ? h.shares.toFixed(2) : "";
+    // [优化] 技术指标：计算简单RSI信号（5日均价 vs 当前价）
+    var _ma5 = (m.history && m.history.length >= 5)
+      ? m.history.slice(-5).reduce(function(a,b){return a+b.price;},0)/5
+      : null;
+    var _trendSignal = "";
+    var _trendClr = "";
+    if (_ma5 !== null) {
+      if (m.price > _ma5 * 1.02) { _trendSignal = "📈 强势"; _trendClr = "var(--danger)"; }
+      else if (m.price < _ma5 * 0.98) { _trendSignal = "📉 弱势"; _trendClr = "var(--success)"; }
+      else { _trendSignal = "➡️ 盘整"; _trendClr = "var(--text-muted)"; }
+    }
     card.innerHTML =
       '<div style="display:flex;justify-content:space-between;">' +
       "<strong>" +
@@ -3152,6 +3323,7 @@ function renderStocks(area, inv, state, parent) {
       " | " +
       s.desc +
       "</div>" +
+      (_trendSignal ? '<div style="font-size:10px;color:' + _trendClr + ';margin:2px 0;">MA5信号: ' + _trendSignal + '</div>' : "") +
       (h
         ? '<div style="font-size:10px;margin:4px 0;">' +
           "持仓" +

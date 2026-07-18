@@ -4341,7 +4341,7 @@ body {
     box-shadow: 8px 0 28px rgba(0, 0, 0, 0.18);
     transition: left 0.28s ease;
     z-index: 300;
-    gap: 10px;
+    gap: 6px;
     overscroll-behavior: contain;
     visibility: hidden;
   }
@@ -4350,12 +4350,13 @@ body {
     position: sticky;
     top: -12px;
     display: block;
-    margin: -12px -12px 10px;
-    padding: 12px;
+    margin: -12px -12px 6px;
+    padding: 8px 12px;
     border-bottom: 1px solid var(--border);
     background: var(--bg-secondary);
     color: var(--accent);
     font-weight: 700;
+    font-size: 13px;
   }
   #sidebar.open {
     left: 0 !important;
@@ -4364,12 +4365,12 @@ body {
     outline-offset: -3px;
   }
   #sidebar .sidebar-section {
-    padding: 10px;
+    padding: 6px 8px;
     border-color: var(--border);
   }
   #sidebar .sidebar-section h3 {
-    margin-bottom: 8px;
-    font-size: 12px;
+    margin-bottom: 4px;
+    font-size: 10px;
     letter-spacing: 0;
   }
   #street-stats-section,
@@ -4383,26 +4384,26 @@ body {
 
   /* ====== 位置 & 状态值行 ====== */
   #location-section .stat-row:nth-of-type(n + 6) {
-    display: none;
+    display: flex;
   }
   #location-section .stat-row {
     display: flex !important;
   }
   .stat-row {
-    min-height: 32px;
-    margin-bottom: 8px;
-    gap: 8px;
+    min-height: 22px;
+    margin-bottom: 3px;
+    gap: 4px;
   }
   .stat-label {
-    width: 54px;
-    font-size: 12px;
+    width: 40px;
+    font-size: 10px;
   }
   .stat-value {
-    width: 42px;
-    font-size: 12px;
+    width: 34px;
+    font-size: 10px;
   }
   .stat-bar-wrap {
-    height: 18px;
+    height: 10px;
   }
   #daily-focus-section,
   #needs-section,

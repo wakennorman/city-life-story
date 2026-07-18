@@ -39,7 +39,7 @@ const DAILY_PIPELINE = [
     fn: function (state) {
       var day = state.player.day;
       var hints = state.flags._unlockedHints;
-      if (!hints) { state.flags._unlockedHints = hints = ["cash", "health", "dailyGoal"]; }
+      if (!hints) { state.flags._unlockedHints = hints = ["physique","intelligence","agility","mental","charm","morality","hunger","fatigue","hygiene","happiness","fame","cash","health","dailyGoal"]; }
       function unlockAll(arr) {
         var newUnlocks = [];
         for (var ui = 0; ui < arr.length; ui++) {

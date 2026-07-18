@@ -688,31 +688,35 @@ function renderCareerTab(state, parent) {
   });
   parent.appendChild(nav);
 
-  // ---- 内容 ----
+  // ---- 内容（使用子容器，避免投资等全页模块清空导航）----
+  var contentDiv = document.createElement("div");
+  contentDiv.id = "career-sub-content";
+  parent.appendChild(contentDiv);
+
   switch (currentSubTab) {
     case "career_overview": {
       if (typeof renderCareerOverview === "function") {
-        renderCareerOverview(state, parent);
+        renderCareerOverview(state, contentDiv);
       } else {
-        parent.innerHTML +=
+        contentDiv.innerHTML +=
           '<p style="color:var(--text-muted);text-align:center;">📊 总览加载中...</p>';
       }
       break;
     }
     case "career_jobs": {
       if (typeof renderCareerJobs === "function") {
-        renderCareerJobs(state, parent);
+        renderCareerJobs(state, contentDiv);
       } else {
-        parent.innerHTML +=
+        contentDiv.innerHTML +=
           '<p style="color:var(--text-muted);text-align:center;">💼 求职信息加载中...</p>';
       }
       break;
     }
     case "career_invest": {
       if (typeof renderInvestmentTab === "function") {
-        renderInvestmentTab(state, parent);
+        renderInvestmentTab(state, contentDiv);
       } else {
-        parent.innerHTML +=
+        contentDiv.innerHTML +=
           '<p style="color:var(--text-muted);text-align:center;">💰 投资系统加载中...</p>';
       }
       break;
@@ -736,24 +740,24 @@ function renderCareerTab(state, parent) {
         hustleContainer.appendChild(fateTitle);
         renderEnterpriseFateTab(state, hustleContainer);
       }
-      parent.appendChild(hustleContainer);
+      contentDiv.appendChild(hustleContainer);
       break;
     }
     case "career_startup": {
       if (typeof renderStartupTab === "function") {
         state._careerSubTab = "career_startup";
-        renderStartupTab(state, parent);
+        renderStartupTab(state, contentDiv);
       } else {
-        parent.innerHTML +=
+        contentDiv.innerHTML +=
           '<p style="color:var(--text-muted);text-align:center;">🚀 创业系统加载中...</p>';
       }
       break;
     }
     case "career_achievements": {
       if (typeof renderAchievementsTab === "function") {
-        renderAchievementsTab(state, parent);
+        renderAchievementsTab(state, contentDiv);
       } else {
-        parent.innerHTML +=
+        contentDiv.innerHTML +=
           '<p style="color:var(--text-muted);text-align:center;">🏅 成就系统加载中...</p>';
       }
       break;
