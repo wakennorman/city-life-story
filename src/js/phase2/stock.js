@@ -532,6 +532,11 @@ function renderStockCard(stock, state) {
 
 function showStockTradeModal() {
   const state = StateManager.getState();
+  // [全系统自洽修复] 域E A类#3: stockMarket可能未初始化（旧存档/Phase1）
+  if (!state.corporate || !state.corporate.stockMarket) {
+    if (typeof StateManager !== "undefined") StateManager.addMessage("⚠️ 股票市场尚未开放", "warning");
+    return;
+  }
   // 首次打开：bootstrap 历史
   if (Object.values(state.corporate.stockMarket).some((m) => !m._initialized)) {
     bootstrapStockHistory(state);

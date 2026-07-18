@@ -1438,8 +1438,10 @@ function buyInvStock(symbol, shares) {
   });
   if (h) {
     var total = h.shares + shares;
+    // [全系统自洽修复] 域E A类#1: avgPrice可能NaN（旧存档/数据异常），防御兜底
+    var _oldAvg = (typeof h.avgPrice === "number" && isFinite(h.avgPrice)) ? h.avgPrice : 0;
     h.avgPrice =
-      Math.round(((h.avgPrice * h.shares + cost) / total) * 100) / 100;
+      Math.round(((_oldAvg * h.shares + cost) / total) * 100) / 100;
     h.shares = total;
   } else
     inv.stockHoldings.push({
@@ -1511,7 +1513,11 @@ function sellInvStock(symbol, shares) {
     return;
   }
   // 连续盈利计数（供 dailyEconomicSettlement 的 getConsecutiveWinDecay 使用）
-  var pl = (m.price - (h.avgPrice || 0)) * shares;
+  // [全系统自洽修复] 域E A类#2: avgPrice 或 m.price 可能 NaN，阻断 pl 传播
+  var _sellPrice = isFinite(m.price) ? m.price : 0;
+  var _avgPx = (typeof h.avgPrice === "number" && isFinite(h.avgPrice)) ? h.avgPrice : 0;
+  var pl = (_sellPrice - _avgPx) * shares;
+  if (!isFinite(pl)) pl = 0;
   if (pl > 0) {
     inv._consecutiveWins = (inv._consecutiveWins || 0) + 1;
     // [全系统自洽修复] 域E 联动增强1: 投资盈利→小幅心情+1（财务安全感）
@@ -1521,6 +1527,8 @@ function sellInvStock(symbol, shares) {
     // [全系统自洽修复] 域E 联动增强2: 投资亏损叙事（E→B）— 亏损情感回响
     if (pl < 0 && state.needs) {
       state.needs.happiness = Math.max(0, (state.needs.happiness || 0) - 1);
+      // [全系统自洽修复] 域E 联动增强1: 亏损较大时引发焦虑→疲劳+（E→G）
+      if (Math.abs(pl) > 500) state.needs.fatigue = Math.min(100, (state.needs.fatigue || 0) + 2);
       if (!state.flags._invLossNarrativeDay || state.flags._invLossNarrativeDay < state.player.day) {
         state.flags._invLossNarrativeDay = state.player.day;
         StateManager.addMessage("📉 投资亏损让心情有些低落。投资有风险，入市需谨慎。", "warning");

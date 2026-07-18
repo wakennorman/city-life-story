@@ -3836,6 +3836,14 @@ function getAvailableActions(state) {
           if (!isBirthday && !festLine && Random.chance(0.35)) {
             contextLine = getNpcContextDialogue(npc.id, state);
           }
+          // [全系统自洽修复] 域E 联动增强2: 市场活跃时NPC主动提及投资话题（E→D）
+          if (!contextLine && !isBirthday && !festLine && Random.chance(0.08)) {
+            if (state.investment && state.investment._marketMood === "bullish") {
+              contextLine = "最近股市不错，你买股票了吗？听说好多人赚了！";
+            } else if (state.investment && state.investment._marketMood === "bearish") {
+              contextLine = "最近行情不好，投资要谨慎啊，别把钱都扔进去。";
+            }
+          }
           const line =
             isBirthday && npc.birthdayLine
               ? npc.birthdayLine
