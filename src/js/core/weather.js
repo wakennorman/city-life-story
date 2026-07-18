@@ -366,6 +366,8 @@ function updateWeatherTemperature(state, season) {
   w.temperature = Math.round(
     Math.max(-15, Math.min(45, tempBase + weatherOffset + noise)),
   );
+  // [全系统自洽修复] 域G A类#1: 温度极端值防御（NaN/Infinity→回退22°C）
+  if (!isFinite(w.temperature) || isNaN(w.temperature)) w.temperature = 22;
 }
 
 /**

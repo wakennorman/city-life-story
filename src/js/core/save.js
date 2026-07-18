@@ -826,9 +826,13 @@ function importSave(jsonStr) {
     const data = JSON.parse(jsonStr);
     // P0-3：版本缺失不再硬拒——importState 会把无版本存档视为 v0 跑全套迁移。
     // 仍要求 player 存在（缺 player 是结构性损坏，无法安全迁移）。
-    if (!data.player) {
+    if (!data.player || typeof data.player !== "object") {
       throw new Error("无效的存档格式");
     }
+    // [全系统自洽修复] 域G A类#3: 防御性检查——关键字段缺失时补默认值而非崩溃
+    if (!data.resources) data.resources = { cash: 0, bankBalance: 0, debt: 0 };
+    if (!data.status) data.status = { health: 70 };
+    if (!data.needs) data.needs = { hunger: 70, fatigue: 0, hygiene: 60, happiness: 50 };
     StateManager.importState(data);
     StateManager.addMessage("📥 存档导入成功！", "success");
     return true;

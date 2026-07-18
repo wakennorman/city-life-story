@@ -4137,7 +4137,9 @@ function doStreetJob(job) {
   }
 
   // 计算收入（含新闻+装备+情绪修正）
+  // [全系统自洽修复] 域G A类#2: payCalc 返回 NaN/undefined 时防御
   let pay = job.payCalc(state);
+  if (typeof pay !== "number" || !isFinite(pay) || pay < 0) pay = 0;
   if (state._jobMultipliers && state._jobMultipliers[job.id]) {
     pay = Math.floor(pay * state._jobMultipliers[job.id]);
   }

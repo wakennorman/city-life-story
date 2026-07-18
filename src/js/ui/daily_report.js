@@ -178,6 +178,20 @@ function buildReportHTML(txs, state, reconcileInfo) {
     '<div style="font-size:12px;color:var(--text-muted);margin-top:4px;">● 收入 绿 · 支出 红 · 点击“继续”进入下一天</div>';
   bodyHtml += "</div>";
 
+  // [全系统自洽修复] 域G 联动增强1: 日报显示昨日天气回顾
+  (function () {
+    try {
+      if (!state.weather || !state.weather.current) return;
+      if (typeof WEATHER_TYPES === "undefined") return;
+      var _wDef = WEATHER_TYPES.find(function (w) { return w.id === state.weather.current; });
+      if (!_wDef) return;
+      var _wt = state.weather.temperature || 22;
+      bodyHtml += '<div style="padding:4px 0;font-size:11px;color:var(--text-muted);text-align:center;border-bottom:1px solid var(--border-light);margin-bottom:8px;">';
+      bodyHtml += "☁️ 昨日天气：" + _wDef.icon + " " + _wDef.name + " · " + Math.round(_wt) + "°C";
+      bodyHtml += "</div>";
+    } catch (e) {}
+  })();
+
   // [全系统自洽修复] 域F 联动增强2: 日报中显示NPC生日提醒
   (function () {
     try {
@@ -731,6 +745,17 @@ function generateDailyReportSummary(state, incomes, expenses) {
   var _ws = state.flags && state.flags._workStreak;
   if (_ws && _ws >= 5) {
     highlights.push("🔥 连续工作 " + _ws + " 天" + (_ws >= 100 ? "！你是劳模" : _ws >= 30 ? "，铁打的城市人" : _ws >= 10 ? "，渐入佳境" : "，保持节奏"));
+  }
+
+  // [全系统自洽修复] 域G 联动增强2: 已结识NPC统计（G→D，社会比较/归属感）
+  var _npcMet = 0;
+  if (state.relationships) {
+    for (var _rid in state.relationships) {
+      if (state.relationships[_rid] && state.relationships[_rid].met) _npcMet++;
+    }
+  }
+  if (_npcMet >= 3 && _npcMet % 3 === 0 && reportDay > 7) {
+    highlights.push("👥 已结识 " + _npcMet + " 位街头好友，这座城市开始有温度了");
   }
 
   var totalEarned = (state.resources && state.resources.totalEarned) || 0;
