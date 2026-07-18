@@ -5,6 +5,11 @@
 /** 执行职场行动 */
 function doCorporateAction(actionId) {
   const state = StateManager.getState();
+  // [全系统自洽修复] 域H A类#3: state.corporate 可能未初始化（Phase1误调）
+  if (!state.corporate || !state.corporate.rank) {
+    if (typeof StateManager !== "undefined") StateManager.addMessage("⚠️ 未入职，无法执行职场行动。", "warning");
+    return false;
+  }
   const action = CORP_ACTIONS.find((a) => a.id === actionId);
   if (!action) return false;
 
@@ -107,6 +112,10 @@ function endQuarter() {
   // 已退休人员停发工资（查 career_dev 退休标记）
   if (state.flags && state.flags._retired) {
     StateManager.addMessage("🏖️ 已退休，季度工资停发。", "info");
+    // [全系统自洽修复] 域H A类#1: 退休后仍重置 actionsUsed+推进季度，否则 actionsUsed 永不归零→endQuarter 死循环
+    c.actionsUsed = 0;
+    if (c.corpQuarter >= 4) { c.corpQuarter = 1; state.player.corpYear++; }
+    else { c.corpQuarter++; }
     return;
   }
 

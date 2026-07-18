@@ -10,6 +10,8 @@ function checkPromotion(state) {
   if (!rankData || !rankData.next) return null;
 
   const reqs = rankData.promotionReqs;
+  // [全系统自洽修复] 域H A类#2: promotionReqs 可能不存在（数据残缺），防御空值
+  if (!reqs) return null;
   const c = state.player.corporate;
   const corp = state.corporate;
 
@@ -83,6 +85,8 @@ function applyPromotion(state, newRank) {
     state.player.corporate.dignity + 10,
   );
   state.player.corporate.kpi = Math.min(150, state.player.corporate.kpi + 15);
+  // [全系统自洽修复] 域H 联动增强1: 晋升使人精神振奋→疲劳-10（H→G）
+  state.needs.fatigue = Math.max(0, (state.needs.fatigue || 0) - 10);
 
   StateManager.addMessage(
     `🎉 恭喜晋升！${CORP_RANKS[oldRank].name} → ${rankData.name}！月薪调整为 ¥${rankData.baseSalary.toLocaleString()}`,

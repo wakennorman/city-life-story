@@ -33,6 +33,7 @@ function renderCorporateActions(state) {
     <span>📅 第${state.player.corpYear}年 Q${state.player.corpQuarter}</span>
     <span>|</span>
     <span>🏷️ <strong style="color:var(--accent)">${state.corporate.rank}</strong></span>
+    ${state.flags && state.flags.q4Sprint ? '<span style="margin-left:8px;padding:1px 6px;background:var(--warning);color:var(--bg-primary);border-radius:3px;font-size:10px;font-weight:700;">🏃 Q4冲刺</span>' : ""}
     <span style="margin-left:auto;font-size:11px;color:var(--text-muted);">
       行动 ${state.corporate.actionsUsed}/${rankData.maxActions || 3}
     </span>
