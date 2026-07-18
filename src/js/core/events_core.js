@@ -403,6 +403,10 @@ function queueRandomEvent(state, phase) {
 
   // ponytail: 排除链式事件——它们只能通过 scheduleChainEvent 触发
   var eligible = pool.filter(function (e) {
+    // [全系统自洽修复] 域B A类#2: 事件无phase字段时静默跳过（防止undefined===phase永假导致死循环）
+    if (!e.phase) return false;
+    // [全系统自洽修复] 域B A类#3: 事件被标记为dead时跳过（防死锁——事件质量差致永远无法触发但占据权重）
+    if (e._dead) return false;
     if (e._isChainEvent) return false;
 
     // 约定式触发条件评估：triggers 数据对象 + conditions 函数
@@ -446,6 +450,10 @@ function queueRandomEvent(state, phase) {
     // 世界参数反馈环：行业热度高的领域相关事件更易触发
     if (typeof getSectorEventWeightMod === "function" && e.sector) {
       w *= getSectorEventWeightMod(e.sector);
+    }
+    // [全系统自洽修复] 域B 联动增强1: 极端天气提升相关事件概率（B→G）
+    if (e.weather && state.weather && state.weather.current) {
+      if (e.weather === state.weather.current) w *= 2.5;
     }
     // 35岁危机追访：路径已选且事件条件满足时，提高出场优先级
     if (isCrisis35FollowupEvent(e, state)) {
@@ -593,6 +601,8 @@ function showEventModal(evt) {
       <div class="event-header">
         <div class="event-icon">${evt.icon}</div>
         <h2 class="event-title">${evt.title}</h2>
+        ${evt.weather ? '<span class="event-tag weather-tag" style="font-size:10px;padding:1px 6px;border-radius:3px;background:rgba(90,138,180,0.15);color:var(--info);margin-left:8px;">🌤️ 天气</span>' : ""}
+        ${evt.sector ? '<span class="event-tag sector-tag" style="font-size:10px;padding:1px 6px;border-radius:3px;background:rgba(74,158,92,0.15);color:var(--success);margin-left:4px;">🏭 ' + evt.sector + '</span>' : ""}
       </div>
       <p class="event-story ${isSpringFest ? "spring-fest-story" : ""}">${evt.story}</p>
       <div class="event-choices">${choicesHtml}</div>
@@ -662,6 +672,9 @@ function showEventModal(evt) {
       } catch (e) {
         console.error("Event choice apply error:", e);
       }
+      // [全系统自洽修复] 域B A类#1: 事件结算后现金NaN/负数防御（防止apply未扣款或倍率导致负数）
+      if (typeof state.resources.cash !== "number" || !isFinite(state.resources.cash)) state.resources.cash = 0;
+      state.resources.cash = Math.max(0, state.resources.cash);
       // v3.1 ⑤ 难度惩罚倍率结算：休闲×0.7 / 标准×1.0 / 困难×1.3 / 地狱×1.6
       try {
         if (typeof getDifficultyMultiplier === "function") {
