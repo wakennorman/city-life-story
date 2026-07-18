@@ -190,10 +190,11 @@
           hint: "职场人气( popularity )+[PLACEHOLDER]、公司评价(upward)+[PLACEHOLDER]",
           apply: function (st) {
             st.flags._fameCorporateDone = true;
-            if (st.corporate) {
-              st.corporate.popularity = Math.min(
+            // [全系统自洽修复] 域G A类#1: popularity 在 st.player.corporate 而非 st.corporate，写错对象静默丢失
+            if (st.player && st.player.corporate) {
+              st.player.corporate.popularity = Math.min(
                 100,
-                (st.corporate.popularity || 30) + 4,
+                (st.player.corporate.popularity || 30) + 4,
               );
             }
             if (st.player && st.player.corporate) {
@@ -214,8 +215,9 @@
           hint: "风险(risk)-[PLACEHOLDER]",
           apply: function (st) {
             st.flags._fameCorporateDone = true;
-            if (st.corporate) {
-              st.corporate.risk = Math.max(0, (st.corporate.risk || 0) - 5);
+            // [全系统自洽修复] 域G A类#1: risk 在 st.player.corporate 而非 st.corporate
+            if (st.player && st.player.corporate) {
+              st.player.corporate.risk = Math.max(0, (st.player.corporate.risk || 0) - 5);
             }
             if (typeof StateManager !== "undefined" && StateManager.addMessage)
               StateManager.addMessage(

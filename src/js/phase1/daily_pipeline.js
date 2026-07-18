@@ -192,10 +192,12 @@ const DAILY_PIPELINE = [
           "warning",
         );
       }
-      state.needs.fatigue = Math.max(
-        0,
-        state.needs.fatigue - Math.round(recovery * penalty),
-      );
+      // [全系统自洽修复] 域G A类#3: fatigue NaN 防御（旧存档/极端值导致疲劳相关阈值全部静默失效）
+      var _fatigue = state.needs.fatigue;
+      if (typeof _fatigue !== "number" || !isFinite(_fatigue)) _fatigue = 0;
+      var _recoveryAmt = Math.round(recovery * penalty);
+      if (!isFinite(_recoveryAmt) || _recoveryAmt < 0) _recoveryAmt = 0;
+      state.needs.fatigue = Math.max(0, _fatigue - _recoveryAmt);
       delete state._fatigueRecoveryPenalty;
       state.needs.hygiene = Math.min(
         100,

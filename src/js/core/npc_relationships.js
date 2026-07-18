@@ -332,10 +332,14 @@ const RELATION_PROPAGATION = {
 function initNpcRelationships(state) {
   if (!state.relationships) state.relationships = {};
   var npcIds = Object.keys(NPC_RELATION_MATRIX);
+  // [全系统自洽修复] 域G 联动增强2: 基础属性影响NPC初始好感(体质/魅力溢出)
+  var _physBonus = Math.max(0, Math.floor(((state.player && state.player.physique) || 22) / 10 - 2));
+  var _charmBonus = Math.max(0, Math.floor(((state.player && state.player.charm) || 20) / 10 - 2));
   for (var i = 0; i < npcIds.length; i++) {
     var npcId = npcIds[i];
     if (!state.relationships[npcId]) {
-      state.relationships[npcId] = { affinity: 0, met: false };
+      var _initAff = Math.min(6, _physBonus + _charmBonus);
+      state.relationships[npcId] = { affinity: _initAff, met: false };
     }
   }
 }

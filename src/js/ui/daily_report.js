@@ -727,6 +727,12 @@ function generateDailyReportSummary(state, incomes, expenses) {
   else if (reportDay === 100) highlights.push("💪 百天了，城市没把你打倒");
   else if (reportDay === 365) highlights.push("🌟 一年了，从头到今天");
 
+  // [全系统自洽修复] 域G 联动增强1: 连续工作天数显示（禀赋效应：不想中断记录）
+  var _ws = state.flags && state.flags._workStreak;
+  if (_ws && _ws >= 5) {
+    highlights.push("🔥 连续工作 " + _ws + " 天" + (_ws >= 100 ? "！你是劳模" : _ws >= 30 ? "，铁打的城市人" : _ws >= 10 ? "，渐入佳境" : "，保持节奏"));
+  }
+
   var totalEarned = (state.resources && state.resources.totalEarned) || 0;
   var maxEarned = state.flags._maxEarnedMilestone || 0;
   if (totalEarned >= 10000 && maxEarned < 10000) {
