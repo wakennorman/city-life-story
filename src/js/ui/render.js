@@ -336,6 +336,10 @@ function renderWeatherPanel(state) {
     '<span style="font-size:11px;color:var(--text-secondary);">🌡️' +
     Math.round(w.temperature || 22) +
     "°C</span>";
+  // [全系统自洽修复] 域F 联动增强1: 极温预警（F→G）
+  var _temp = w.temperature || 22;
+  if (_temp >= 35) html += '<span style="font-size:10px;color:var(--danger);margin-left:2px;">🔥 高温预警</span>';
+  else if (_temp <= 0) html += '<span style="font-size:10px;color:var(--info);margin-left:2px;">❄️ 低温预警</span>';
   if (tempEffect) {
     html +=
       '<span style="font-size:10px;color:var(--text-muted);">(' +
@@ -1232,9 +1236,9 @@ function renderGoalStrip(state, parent) {
   div.innerHTML =
     '<span style="font-weight:600;color:var(--accent);white-space:nowrap;">🌟 人生目标</span>' +
     '<span style="font-size:11px;">' +
-    dream.icon +
+    (dream.icon || "🎯") +
     " " +
-    dream.name +
+    (dream.name || "未设定") +
     "</span>" +
     '<div style="flex:1;max-width:160px;height:5px;background:var(--bg-input);border-radius:3px;overflow:hidden;">' +
     '<div style="width:' +
@@ -1261,6 +1265,8 @@ function renderActiveNews(state, parent) {
     for (const news of state.activeNews) {
       if (news._isIntroNews) continue;
       if (_shown >= _maxN) break;
+      // [全系统自洽修复] 域F A类#2: 新闻物件可能不含 headline（格式异常）
+      if (!news || !news.headline) continue;
       const banner = document.createElement("div");
       banner.className = "news-banner";
       banner.innerHTML =
@@ -2299,6 +2305,8 @@ function createActionCard(action, state) {
 
 // ====== Map Tab =====
 function renderMapTab(state, parent) {
+  // [全系统自洽修复] 域F A类#3: state.trade可能未初始化（初始状态/旧存档）
+  if (!state.trade) { parent.innerHTML = '<p style="color:var(--text-muted);padding:20px;text-align:center;">🗺️ 地图加载中...</p>'; return; }
   const locKey = state.trade.currentLocation;
   const loc = getLocation(locKey);
   const reachable = new Set(getReachableLocations(locKey));
@@ -4020,8 +4028,11 @@ function renderInventoryTab(state, parent) {
 function renderSkillsTab(state, parent) {
   parent.innerHTML = "";
   var div = document.createElement("div");
+  var _synCount = typeof getActiveSynergiesCount === "function" ? getActiveSynergiesCount(state) : 0;
   div.innerHTML =
-    '<h3 style="color:var(--text-muted);margin-bottom:12px;">📚 技能 <span style="font-size:11px;color:var(--accent);">⚡15+💰¥50 = 训练一次</span></h3>';
+    '<h3 style="color:var(--text-muted);margin-bottom:12px;">📚 技能 <span style="font-size:11px;color:var(--accent);">⚡15+💰¥50 = 训练一次</span>' +
+    (_synCount > 0 ? '<span style="font-size:11px;color:var(--success);margin-left:8px;">🔗 ' + _synCount + '个连携活跃</span>' : "") +
+    '</h3>';
 
   var grid = document.createElement("div");
   grid.className = "action-cards";
