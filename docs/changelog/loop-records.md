@@ -6822,3 +6822,36 @@ social 策略存活率 60% → 80%（+20pp），NPC互惠帮助社交策略获�
 - node --check 6 文件全部 PASS
 - build.py 8356.4KB PASS
 - mc_verify_v3.6.cjs trigger_registry ✅
+
+---
+
+## R45 域C 职业/成长 第四轮 (2026-07-19)
+
+**commits**: `752a3fa` (联动) + `3a446778` (A类+联动，HEAD)
+
+### 指令一：A类修复（6项）
+
+| # | 文件 | 缺陷 | 修复 |
+|---|------|------|------|
+| 1 | skill_tree.js | jobBonuses 引用 22 个不存在工作(electronics_repair/bike_customization/ui_assistant/database_clerk 等) | 移除死引用，保留真实工作 |
+| 2 | skill_tree.js | smart_electric/precision_welding 空 jobBonuses[] 使 incomeMult 1.25x/1.3x 死代码 | → factory_electrician / steel_worker |
+| 3 | skill_synergy.js | unlockJobs/unlockBusinesses/unlockActions 引用 18 个不存在工作 | 清空为 [] |
+| 4 | skill_bonuses.js | CITY_PULSE_RULES/grantJobSkillXp/SKILL_SYNERGIES 引用 11 个不存在工作(food_stall/street_vending_goods 等) | 移除死引用 |
+| 5 | perf.js | state.corporate.rank/team 无空值守卫 | rank 默认 "P5"，team 短路守卫 |
+| 6 | main.js+career_dev.js | insider_trading st.resources.cash 裸访问×4 + career_level celebr/cash<500 守卫 | cash 防御+setTimeout 回调守卫 |
+
+### 指令二：联动增强（4项）
+
+| 联动 | 文件 | 联动域 | 设计意图 |
+|------|------|--------|----------|
+| getSkillFatigueReduction | skill_bonuses.js+main.js | C→G | 技能等级降低同领域工作疲劳(大师-8/精通-5/熟练-3) |
+| getSkillTierName | skill_bonuses.js | C→F | 技能升级显示层级称号(👑超凡入圣/🌟一代宗师/…) |
+| NPC 里程碑祝贺 | skill_bonuses.js | C→D | 技能达 30/50/70/100 时好感≥60 NPC 发祝贺 |
+| skill_master_visitor + career_legacy_reflection | career_dev.js | C→D/G | 技能≥80 慕名求教者 + 职业履历厚度反思 |
+
+### 验证
+
+- node --check 6 文件全部 PASS
+- build.py 8427.2KB PASS
+- smoke_sim "无崩溃/NaN" PASS
+- git push ✅

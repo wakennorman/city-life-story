@@ -32,8 +32,8 @@
   "lastDomain": "C",
   "lastRound": 45,
   "lastDate": "2026-07-19",
-  "lastCommit": "1be51d4e",
-  "pushStatus": "PENDING",
+  "lastCommit": "3a446778",
+  "pushStatus": "PUSHED",
   "completedDomains": ["A", "B", "C", "D", "E", "F", "G", "H"],
-  "description": "R45: 域C(职业/成长 第四轮) 审查中..."
+  "description": "R45: 域C(职业/成长 第四轮) A类修复6项(jobBonuses死引用3文件+空数组收入死代码+perf守卫+insider_trading/career_level守卫)+联动增强4项(技能疲劳减/层级称号/NPC祝贺/2新事件), commits 752a3fa+3a446778, 已推 ✅"
 }
