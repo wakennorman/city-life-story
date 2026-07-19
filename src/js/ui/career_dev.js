@@ -5373,6 +5373,148 @@ if (typeof document !== "undefined") {
     },
   ];
 
+  // ===== 联动增强1：技能满级→NPC慕名而来求教（C→D 职业成长→NPC社交） =====
+  // 设计意图：技能满级不应只有数值成就感，还应有叙事层面的社交回报
+  // 参考：《大多数》老手带新手的传承感 / Stardew Valley 村民来访
+  var SKILL_MASTER_VISITOR = {
+    id: "skill_master_visitor",
+    phase: "street",
+    icon: "🙏",
+    title: "慕名而来的求教者",
+    story:
+      "你在街上走着，一个年轻人快步追上来：「请问您是{skillName}的{masterName}吗？我听说您在这方面已经达到顶尖水平了，能不能指点我两句？」\n\n你愣了一下，没想到自己的名声已经传出去了。",
+    triggers: { minDay: 365 },
+    conditions: function (st) {
+      if (!st.skills) return false;
+      var hasMaster = false;
+      var masterSkill = null;
+      var masterName = "";
+      for (var sk in st.skills) {
+        var lv = (st.skills[sk] && st.skills[sk].level) || 0;
+        if (lv >= 80) {
+          hasMaster = true;
+          masterSkill = sk;
+          masterName = sk;
+          break;
+        }
+      }
+      st._skillMasterVisitorSkill = masterSkill;
+      return hasMaster;
+    },
+    probability: 0.03,
+    repeatable: false,
+    choices: [
+      {
+        text: "📚 耐心指点，传授经验",
+        hint: "心智+8，名气+5，解锁长期徒弟关系",
+        apply: function (st) {
+          st.flags._skillMasterVisitorDone = true;
+          st.flags._hasApprentice = true;
+          st.player.mental = Math.min(100, (st.player.mental || 50) + 8);
+          st.player.fame = Math.min(100, (st.player.fame || 0) + 5);
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 5);
+          // 徒弟偶尔会带来收入
+          if (typeof Random !== "undefined" && Random.chance(0.3)) {
+            var apprenticeGift = Random.int(100, 500);
+            if (st.resources) st.resources.cash += apprenticeGift;
+            StateManager.addMessage(
+              "📚 你花了半天时间给他讲解了要点。一周后，他寄来了¥" +
+                apprenticeGift +
+                "表示感谢。你的技艺改变了另一个人的人生。心智+8，名气+5，心情+5，获得徒弟心意¥" +
+                apprenticeGift +
+                "。",
+              "success",
+            );
+          } else {
+            StateManager.addMessage(
+              "📚 你倾囊相授。他感激地说：「我一定会努力的！」看着他的背影，你仿佛看到了当年的自己。心智+8，名气+5，心情+5。",
+              "success",
+            );
+          }
+        },
+      },
+      {
+        text: "💼 推荐他去正规培训",
+        hint: "心智+3，不增加负担",
+        apply: function (st) {
+          st.flags._skillMasterVisitorDone = true;
+          st.player.mental = Math.min(100, (st.player.mental || 50) + 3);
+          StateManager.addMessage(
+            "🎓 你推荐了几家靠谱的培训机构。虽然没收徒，但他还是很感激你的指点。心智+3。",
+            "info",
+          );
+        },
+      },
+      {
+        text: "🤷 抱歉，我很忙",
+        hint: "无影响，但错失一次传承机会",
+        apply: function (st) {
+          st.flags._skillMasterVisitorDone = true;
+          st.player.morality = Math.max(
+            0,
+            (st.player.morality || 50) - 2,
+          );
+          StateManager.addMessage(
+            "🤷 你摆摆手说自己在忙。年轻人眼里闪过一丝失望，默默离开了。道德-2。",
+            "warning",
+          );
+        },
+      },
+    ],
+  };
+
+  // ===== 联动增强2：职业履历→简历故事（C→G 职业成长→生命周期叙事） =====
+  // 设计意图：让玩家感受到职业选择的重量——每一次跳槽/坚持都有叙事回响
+  var CAREER_LEGACY_REFLECTION = {
+    id: "career_legacy_reflection",
+    phase: "street",
+    icon: "📋",
+    title: "职业履历的厚度",
+    story:
+      "你翻出抽屉里那本旧笔记本，里面记着你这些年换过的每一份工作。从最初的{firstJob}到现在现在的{currentJob}，这条路你走了{workYears}年。\n\n每一份工作都留下了印记——有些是伤疤，有些是勋章。",
+    triggers: { minDay: 365 },
+    conditions: function (st) {
+      if (!st.career || !st.career.history) return false;
+      var historyLen = st.career.history.length;
+      if (historyLen < 2) return false;
+      if (st.flags._careerLegacyReflectionSeen) return false;
+      return true;
+    },
+    probability: 0.02,
+    repeatable: false,
+    choices: [
+      {
+        text: "📖 把经历写成博客",
+        hint: "名气+8，心智+5，帮助他人",
+        apply: function (st) {
+          st.flags._careerLegacyReflectionSeen = true;
+          st.player.fame = Math.min(100, (st.player.fame || 0) + 8);
+          st.player.mental = Math.min(100, (st.player.mental || 50) + 5);
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 3);
+          StateManager.addMessage(
+            "📖 你把职业经历写成了系列博客。没想到阅读量破万，很多人留言说受到了启发。名气+8，心智+5，心情+3。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "🤔 默默合上笔记本",
+        hint: "心智+2，继续前行",
+        apply: function (st) {
+          st.flags._careerLegacyReflectionSeen = true;
+          st.player.mental = Math.min(100, (st.player.mental || 50) + 2);
+          StateManager.addMessage(
+            "🤔 你合上笔记本，深吸一口气。过去的就让它过去，未来还在前方等着。心智+2。",
+            "info",
+          );
+        },
+      },
+    ],
+  };
+
+  RANDOM_EVENTS.push(SKILL_MASTER_VISITOR);
+  RANDOM_EVENTS.push(CAREER_LEGACY_REFLECTION);
+
   for (var sme = 0; sme < SKILL_MAX_EVENTS.length; sme++) {
     RANDOM_EVENTS.push(SKILL_MAX_EVENTS[sme]);
   }

@@ -87350,7 +87350,8 @@ if (typeof window !== "undefined") {
               sym = "ALIM";
               m = st.investment.stockMarket[sym];
             }
-            var buyAmount = Math.min(5000, st.resources.cash);
+            var cash = (st.resources && st.resources.cash) || 0;
+            var buyAmount = Math.min(5000, cash);
             if (buyAmount <= 100) {
               StateManager.addMessage(
                 "📈 你想追风口，但手里现金太少，只买了" +
@@ -87367,7 +87368,7 @@ if (typeof window !== "undefined") {
               return;
             }
             var shares = Math.floor(buyAmount / m.price);
-            st.resources.cash -= shares * m.price; // [全系统自洽修复] 域B: 用实际成交价而非buyAmount(避免多扣款)
+            if (st.resources) st.resources.cash -= shares * m.price; // [全系统自洽修复] 域C 修复:insider_trading_events cash裸访问
             var h = st.investment.stockHoldings.find(function (s) {
               return s.symbol === sym;
             });
@@ -87402,6 +87403,7 @@ if (typeof window !== "undefined") {
             );
             // 第二天：随机结果（涨跌）
             setTimeout(function () {
+              if (!st.resources) return;
               var profit = Random.chance(0.55);
               if (profit) {
                 var gain = Random.int(800, 3000);
@@ -87506,17 +87508,18 @@ if (typeof window !== "undefined") {
               StateManager.addMessage("⚠️ 目标股票不存在。", "warning");
               return;
             }
+            var cash = (st.resources && st.resources.cash) || 0;
             var buyAmount = Math.min(
               8000,
-              st.resources.cash * 0.5,
-              st.resources.cash - 500,
+              cash * 0.5,
+              cash - 500,
             );
             if (buyAmount <= 100) {
               StateManager.addMessage("⚠️ 现金不足，无法加仓。", "warning");
               return;
             }
             var shares = Math.floor(buyAmount / m.price);
-            st.resources.cash -= shares * m.price; // [全系统自洽修复] 域B: 用实际成交价而非buyAmount(避免多扣款)
+            if (st.resources) st.resources.cash -= shares * m.price; // [全系统自洽修复] 域C 修复:insider_trading_events cash裸访问
             var h = st.investment.stockHoldings.find(function (s) {
               return s.symbol === target;
             });
@@ -87550,6 +87553,7 @@ if (typeof window !== "undefined") {
             );
             // 3天后回报
             setTimeout(function () {
+              if (!st.resources) return;
               var success = Random.chance(0.6);
               if (success) {
                 var gain = Random.int(2000, 8000);
@@ -87648,7 +87652,7 @@ if (typeof window !== "undefined") {
               var m = st.investment.stockMarket[h.symbol];
               if (!m) continue;
               var revenue = Math.round(m.price * h.shares * 100) / 100;
-              st.resources.cash += revenue;
+              if (st.resources) st.resources.cash += revenue;
               soldTotal += revenue;
               st.investment.stockHoldings.splice(i, 1);
             }
@@ -87729,18 +87733,27 @@ if (typeof window !== "undefined") {
           hint: "90%是骗局，10%可能赚点",
           apply: function (st) {
             st.flags._joinedInsiderGroup = true;
-            st.resources.cash = Math.max(0, st.resources.cash - 500);
-            if (Random.chance(0.1)) {
-              // 10%幸运
-              var gain = Random.int(200, 1000);
-              st.resources.cash += gain;
-              StateManager.addMessage(
-                "💰 你交了¥500进群。没想到群里推荐的几只股真的涨了，你小赚¥" +
-                  gain +
-                  "。运气好是运气好，但这种运气不长久。",
-                "info",
-              );
+            if (st.resources) {
+              st.resources.cash = Math.max(0, st.resources.cash - 500);
+              if (Random.chance(0.1)) {
+                // 10%幸运
+                var gain = Random.int(200, 1000);
+                st.resources.cash += gain;
+                StateManager.addMessage(
+                  "💰 你交了¥500进群。没想到群里推荐的几只股真的涨了，你小赚¥" +
+                    gain +
+                    "。运气好是运气好，但这种运气不长久。",
+                  "info",
+                );
+              } else {
+                StateManager.addMessage(
+                  "💰 你交了¥500进群。群里每天发一堆消息，推荐的股涨跌随机。一周后你发现——群主删了你，跑路了。¥500打了水漂。",
+                  "warning",
+                );
+              }
             } else {
+              st.resources = { cash: -500 };
+              st.flags._joinedInsiderGroup = true;
               StateManager.addMessage(
                 "💰 你交了¥500进群。群里每天发一堆消息，推荐的股涨跌随机。一周后你发现——群主删了你，跑路了。¥500打了水漂。",
                 "warning",
@@ -87819,6 +87832,7 @@ if (typeof window !== "undefined") {
             );
             // 后续回报：20天后
             setTimeout(function () {
+              if (!st.resources) return;
               var profit = Random.int(5000, 15000);
               st.resources.cash += profit;
               StateManager.addMessage(
@@ -138865,6 +138879,8 @@ if (typeof window !== "undefined") {
  * - 每个分支有 3 个天赋节点（Lv.10/25/50解锁），树状前置关系
  * - 分支提供独特的被动加成，影响相关工作和收入
  * - 特定分支影响职场晋升门槛
+ *
+ * [全系统自洽修复] 域C A类#4: jobBonuses移除22个不存在的工作引用(标记待实现)
  */
 
 // ====== 技能分支定义 ======
@@ -138961,7 +138977,7 @@ var SKILL_BRANCHES = {
       name: "精密维修",
       icon: "🔬",
       desc: "专修精密仪器，维修收入+25%，解锁仪器仪表维修工作",
-      jobBonuses: ["instrument_repair", "electronics_repair"],
+      jobBonuses: ["instrument_repair"], // electronics_repair 待实现
       incomeMult: 1.25,
       talentNodes: [
         {
@@ -139001,7 +139017,7 @@ var SKILL_BRANCHES = {
       name: "改装达人",
       icon: "🛠️",
       desc: "擅长改装升级，解锁改装工作，装备效果+20%",
-      jobBonuses: ["bike_customization", "phone_modding"],
+      jobBonuses: ["phone_modding"], // bike_customization 待实现
       equipmentBonus: 0.2,
       talentNodes: [
         {
@@ -139044,7 +139060,7 @@ var SKILL_BRANCHES = {
       name: "前端开发",
       icon: "🎨",
       desc: "专注用户界面开发，职场能力加成+30%，解锁前端岗位",
-      jobBonuses: ["web_designer", "ui_assistant"],
+      jobBonuses: ["web_designer"], // ui_assistant 待实现
       corpAbilityMult: 1.3,
       talentNodes: [
         {
@@ -139084,7 +139100,7 @@ var SKILL_BRANCHES = {
       name: "后端架构",
       icon: "⚙️",
       desc: "专注服务端与架构，职场能力加成+50%，解锁后端运维岗位",
-      jobBonuses: ["server_ops", "database_clerk"],
+      jobBonuses: ["server_ops"], // database_clerk 待实现
       corpAbilityMult: 1.5,
       talentNodes: [
         {
@@ -139124,7 +139140,7 @@ var SKILL_BRANCHES = {
       name: "安全攻防",
       icon: "🔒",
       desc: "专注网络安全，解锁安全审计岗位，降低职场风险",
-      jobBonuses: ["network_monitor", "security_auditor"],
+      jobBonuses: ["network_monitor"], // security_auditor 待实现
       riskReduction: 0.3,
       talentNodes: [
         {
@@ -139167,7 +139183,7 @@ var SKILL_BRANCHES = {
       name: "商务英语",
       icon: "💼",
       desc: "专注商务场景，家教/外贸收入+30%，解锁商务翻译工作",
-      jobBonuses: ["foreign_trade_assistant", "biz_translator"],
+      jobBonuses: ["foreign_trade_assistant"], // biz_translator 待实现
       incomeMult: 1.3,
       talentNodes: [
         {
@@ -139207,7 +139223,7 @@ var SKILL_BRANCHES = {
       name: "翻译达人",
       icon: "📝",
       desc: "专注文本翻译，解锁翻译类工作，内容创作收入+25%",
-      jobBonuses: ["document_translator", "subtitle_worker"],
+      jobBonuses: ["document_translator"], // subtitle_worker 待实现
       incomeMult: 1.25,
       talentNodes: [
         {
@@ -139290,7 +139306,7 @@ var SKILL_BRANCHES = {
       name: "货运驾驶",
       icon: "🚚",
       desc: "专注货物运输，货运/配送收入+30%，解锁物流工作",
-      jobBonuses: ["truck_assistant", "warehouse_logistics"],
+      jobBonuses: ["truck_assistant"], // warehouse_logistics 待实现
       incomeMult: 1.3,
       talentNodes: [
         {
@@ -139333,7 +139349,7 @@ var SKILL_BRANCHES = {
       name: "门店销售",
       icon: "🏪",
       desc: "专注门店零售，买入折扣上限提升至25%，解锁导购工作",
-      jobBonuses: ["shop_assistant", "promoter"],
+      jobBonuses: ["shop_assistant"], // promoter 待实现
       discountCap: 0.25,
       talentNodes: [
         {
@@ -139373,7 +139389,7 @@ var SKILL_BRANCHES = {
       name: "商务谈判",
       icon: "🤝",
       desc: "擅长商务谈判，卖出溢价上限提升至25%，解锁采购工作",
-      jobBonuses: ["procurement_clerk", "biz_negotiator"],
+      jobBonuses: ["procurement_clerk"], // biz_negotiator 待实现
       premiumCap: 0.25,
       talentNodes: [
         {
@@ -139416,7 +139432,7 @@ var SKILL_BRANCHES = {
       name: "团队管理",
       icon: "👥",
       desc: "专注团队建设，向上管理加成+50%，团队规模+2",
-      jobBonuses: ["team_lead", "project_coordinator"],
+      jobBonuses: ["project_coordinator"], // team_lead 待实现
       upwardMgmtMult: 1.5,
       teamSizeBonus: 2,
       talentNodes: [
@@ -139457,7 +139473,7 @@ var SKILL_BRANCHES = {
       name: "战略规划",
       icon: "📊",
       desc: "专注战略规划，向上管理加成+50%，解锁分析师岗位",
-      jobBonuses: ["analyst", "planning_assistant"],
+      jobBonuses: [], // analyst/planning_assistant 待实现
       upwardMgmtMult: 1.5,
       talentNodes: [
         {
@@ -139500,7 +139516,7 @@ var SKILL_BRANCHES = {
       name: "税务会计",
       icon: "🧾",
       desc: "专注税务处理，银行利率加成翻倍，解锁税务工作",
-      jobBonuses: ["tax_assistant", "bookkeeper"],
+      jobBonuses: [], // tax_assistant/bookkeeper 待实现
       bankRateMult: 2.0,
       talentNodes: [
         {
@@ -139540,7 +139556,7 @@ var SKILL_BRANCHES = {
       name: "审计风控",
       icon: "🔍",
       desc: "专注审计风控，职场风险-30%，解锁审计工作",
-      jobBonuses: ["audit_assistant", "risk_controller"],
+      jobBonuses: ["audit_assistant"], // risk_controller 待实现
       riskReduction: 0.3,
       talentNodes: [
         {
@@ -139583,7 +139599,7 @@ var SKILL_BRANCHES = {
       name: "强电工程",
       icon: "⚡",
       desc: "专注工业强电，工厂收入加成翻倍，解锁电力维护工作",
-      jobBonuses: ["factory_electrician", "power_line_assistant"],
+      jobBonuses: ["factory_electrician"], // power_line_assistant 待实现
       factoryBonusMult: 2.0,
       talentNodes: [
         {
@@ -139623,7 +139639,7 @@ var SKILL_BRANCHES = {
       name: "弱电智能",
       icon: "💡",
       desc: "专注弱电智能化，解锁智能家居/网络布线工作",
-      jobBonuses: ["smart_home_tech", "network_cabling"],
+      jobBonuses: [], // smart_home_tech/network_cabling 待实现
       incomeMult: 1.25,
       talentNodes: [
         {
@@ -139666,7 +139682,7 @@ var SKILL_BRANCHES = {
       name: "结构焊接",
       icon: "🏗️",
       desc: "专注建筑结构焊接，建筑收入加成+50%，解锁钢结构工作",
-      jobBonuses: ["steel_worker", "bridge_welder"],
+      jobBonuses: ["steel_worker"], // bridge_welder 待实现
       constructionBonusMult: 1.5,
       talentNodes: [
         {
@@ -139706,7 +139722,7 @@ var SKILL_BRANCHES = {
       name: "精密焊接",
       icon: "🔬",
       desc: "专注精密器件焊接，解锁珠宝/电子焊接工作",
-      jobBonuses: ["jewelry_welder", "electronics_welder"],
+      jobBonuses: [], // jewelry_welder/electronics_welder 待实现
       incomeMult: 1.3,
       talentNodes: [
         {
@@ -141100,6 +141116,8 @@ if (typeof window !== "undefined") {
  * - 连携效果分为：双技能连携（2门）、三技能连携（3门）、主题连携（3+门同主题）
  * - 连携效果影响：工作收入、XP获取、特殊行动解锁、NPC互动等
  * - 连携效果在技能等级变化时自动检测
+ *
+ * [全系统自洽修复] 域C A类#5: unlockJobs/unlockBusinesses/unlockActions移除18个不存在引用
  */
 
 // 双技能连携（2门技能达到阈值）
@@ -141118,7 +141136,7 @@ const SKILL_SYNERGY_DUAL = {
       street_vending_food: { incomeMultiplier: 1.3 },
       sister_zhang_vending: { incomeMultiplier: 1.3 },
       // 解锁新工作：餐饮摊主
-      unlockJobs: ["restaurant_owner"],
+      unlockJobs: [], // restaurant_owner 待实现
       // 食材成本-15%
       foodCostReduction: 0.15,
       // 顾客满意度+20%
@@ -141142,7 +141160,7 @@ const SKILL_SYNERGY_DUAL = {
       freelance_writing: { incomeMultiplier: 1.3 },
       content_writing: { incomeMultiplier: 1.3 },
       // 解锁国际外包工作
-      unlockJobs: ["international_freelance", "foreign_client_coding"],
+      unlockJobs: [], // international_freelance/foreign_client_coding 待实现
       // 学习XP+20%
       codingXpBonus: 0.2,
       englishXpBonus: 0.2,
@@ -141165,7 +141183,7 @@ const SKILL_SYNERGY_DUAL = {
       electronics_repair: { incomeMultiplier: 1.35 },
       factory_electrician: { incomeMultiplier: 1.3 },
       // 解锁综合维修工作
-      unlockJobs: ["comprehensive_repairman"],
+      unlockJobs: [], // comprehensive_repairman 待实现
       // 装备维修损耗-30%
       repairWearReduction: 0.3,
     },
@@ -141186,7 +141204,7 @@ const SKILL_SYNERGY_DUAL = {
       shop_assistant: { incomeMultiplier: 1.3 },
       promoter: { incomeMultiplier: 1.3 },
       // 解锁团队销售管理
-      unlockJobs: ["sales_team_lead"],
+      unlockJobs: [], // sales_team_lead 待实现
       // 团队规模+2
       teamSizeBonus: 2,
       // 人缘成长+15%
@@ -141210,7 +141228,7 @@ const SKILL_SYNERGY_DUAL = {
       warehouse_logistics: { incomeMultiplier: 1.3 },
       wholesale_delivery: { incomeMultiplier: 1.35 },
       // 解锁长途运输工作
-      unlockJobs: ["long_haul_driver", "logistics_manager"],
+      unlockJobs: [], // long_haul_driver/logistics_manager 待实现
       // 旅行AP-3（效率更高）
       travelApReduction: 3,
     },
@@ -141232,7 +141250,7 @@ const SKILL_SYNERGY_DUAL = {
       // 自己修理装备节省50%修理费
       selfRepairDiscount: 0.5,
       // 解锁家庭维修行动
-      unlockActions: ["home_repair"],
+      unlockActions: [], // home_repair 待实现
       // 幸福感+10%
       happinessBonus: 10,
     },
@@ -141254,7 +141272,7 @@ const SKILL_SYNERGY_DUAL = {
       // 向上管理+20
       upwardMgmtBonus: 20,
       // 解锁外企管理岗位
-      unlockJobs: ["foreign_company_manager", "international_project_lead"],
+      unlockJobs: [], // foreign_company_manager/international_project_lead 待实现
       // 晋升速度+25%
       promoSpeedBonus: 0.25,
     },
@@ -141276,7 +141294,7 @@ const SKILL_SYNERGY_DUAL = {
       // 股票交易手续费-50%
       tradingFeeReduction: 0.5,
       // 解锁高级投资分析
-      unlockActions: ["advanced_investment_analysis"],
+      unlockActions: [], // advanced_investment_analysis 待实现
       // 每日被动收入+¥50（来自投资）
       passiveInvestmentIncome: 50,
     },
@@ -141300,7 +141318,7 @@ const SKILL_SYNERGY_TRIPLE = {
       // 所有餐饮相关收入+50%
       restaurantIncomeBonus: 0.5,
       // 解锁连锁餐厅
-      unlockBusinesses: ["restaurant_chain"],
+      unlockBusinesses: [], // restaurant_chain 待实现
       // 每日被动收入+¥200
       passiveRestaurantIncome: 200,
       // 员工效率+30%
@@ -141327,7 +141345,7 @@ const SKILL_SYNERGY_TRIPLE = {
       // 向上管理+30
       upwardMgmtBonus: 30,
       // 解锁CTO岗位
-      unlockJobs: ["cto", "tech_director"],
+      unlockJobs: [], // cto/tech_director 待实现
       // 晋升速度+50%
       promoSpeedBonus: 0.5,
       // 团队规模+5
@@ -141352,7 +141370,7 @@ const SKILL_SYNERGY_TRIPLE = {
       // 维修类工作收入+50%
       comprehensiveRepairBonus: 0.5,
       // 解锁智能家居安装工作
-      unlockJobs: ["smart_home_installer", "iot_developer"],
+      unlockJobs: [], // smart_home_installer/iot_developer 待实现
       // 装备维修损耗-50%
       repairWearReduction: 0.5,
       // 每日被动收入+¥100（来自智能家居项目）
@@ -141375,7 +141393,7 @@ const SKILL_SYNERGY_TRIPLE = {
       // 货运/配送收入+50%
       logisticsIncomeBonus: 0.5,
       // 解锁物流公司
-      unlockBusinesses: ["logistics_company"],
+      unlockBusinesses: [], // logistics_company 待实现
       // 每日被动收入+¥250
       passiveLogisticsIncome: 250,
       // 车队规模+3
@@ -141399,7 +141417,7 @@ const SKILL_SYNERGY_THEME = {
     effects: {
       techIncomeBonus: 0.15,
       techXpBonus: 0.1,
-      unlockJobs: ["tech_consultant"],
+      unlockJobs: [], // tech_consultant 待实现
     },
     desc: "技术相关技能多，成为技术顾问，收入翻倍。",
   },
@@ -141416,7 +141434,7 @@ const SKILL_SYNERGY_THEME = {
     effects: {
       businessIncomeBonus: 0.15,
       businessXpBonus: 0.1,
-      unlockJobs: ["business_consultant"],
+      unlockJobs: [], // business_consultant 待实现
     },
     desc: "商业相关技能多，成为商业顾问，收入翻倍。",
   },
@@ -141433,7 +141451,7 @@ const SKILL_SYNERGY_THEME = {
     effects: {
       serviceIncomeBonus: 0.15,
       serviceXpBonus: 0.1,
-      unlockJobs: ["personal_assistant"],
+      unlockJobs: [], // personal_assistant 待实现
     },
     desc: "生活服务技能多，成为私人助理，收入翻倍。",
   },
@@ -172022,6 +172040,10 @@ if (typeof window !== "undefined") {
  *
  * 设计理念：每项技能不仅解锁工作，还对相关的游戏系统产生渐进式加成，
  * 让技能培养有持续正反馈，形成"学以致用"的良性循环。
+ *
+ * [全系统自洽修复] 域C A类#1: grantJobSkillXp移除food_stall/street_vending_goods/barber等死引用
+ * [全系统自洽修复] 域C A类#2: CITY_PULSE_RULES移除6个不存在的工作引用
+ * [全系统自洽修复] 域C A类#3: SKILL_SYNERGIES移除4个不存在的工作引用
  */
 
 /** cooking技能 → 自己做饭折扣（技能越高做饭越划算） */
@@ -172207,8 +172229,6 @@ var CITY_PULSE_RULES = [
     footfall: { commercialDist: 0.65, park: 0.75, slum: 0.8 },
     jobs: {
       street_vending_food: 0.65,
-      street_vending_goods: 0.65,
-      food_stall: 0.72,
       delivery_rider: 1.08,
     },
     tip: "🚨 城管严查期，摆摊客流和收入下滑，外卖/室内服务更稳。",
@@ -172221,7 +172241,6 @@ var CITY_PULSE_RULES = [
     jobs: {
       delivery_rider: 1.25,
       street_vending_food: 0.92,
-      food_stall: 0.95,
     },
     tip: "🛵 平台补贴期，外卖骑手短期收益高，但餐饮摊会被平台分走客流。",
   },
@@ -172232,7 +172251,6 @@ var CITY_PULSE_RULES = [
     footfall: { construction: 1.25, slum: 0.82, wholesaleMarket: 1.12 },
     jobs: {
       manual_labor_construction: 1.18,
-      skilled_labor_construction: 1.18,
       cleaning_service: 1.12,
       repair_service: 1.15,
       waste_recycling: 1.08,
@@ -172246,7 +172264,6 @@ var CITY_PULSE_RULES = [
     footfall: { construction: 0.82, bank: 1.08 },
     jobs: {
       manual_labor_construction: 0.85,
-      skilled_labor_construction: 0.88,
       premium_engineering: 0.92,
       repair_service: 1.05,
     },
@@ -172271,7 +172288,6 @@ var CITY_PULSE_RULES = [
     footfall: { techPark: 0.9, factoryZone: 0.92 },
     jobs: {
       data_entry: 0.92,
-      customer_service_tech: 0.9,
       content_writing: 0.95,
       factory_work_assembly: 0.9,
       factory_overtime: 0.88,
@@ -172285,7 +172301,6 @@ var CITY_PULSE_RULES = [
     footfall: { techPark: 1.25, school: 1.08 },
     jobs: {
       data_entry: 1.15,
-      customer_service_tech: 1.14,
       content_writing: 1.12,
       junior_analyst: 1.18,
       tutoring: 1.08,
@@ -172300,7 +172315,6 @@ var CITY_PULSE_RULES = [
     jobs: {
       package_delivery: 1.18,
       tutoring: 1.16,
-      school_maintenance: 1.08,
       street_vending_food: 1.05,
     },
     tip: "🎒 开学相关需求旺，大学城快递、家教和小吃摊都有机会。",
@@ -172325,7 +172339,6 @@ var CITY_PULSE_RULES = [
     jobs: {
       warehouse_worker: 1.08,
       delivery_rider: 1.06,
-      street_vending_goods: 0.94,
     },
     tip: "📈 物价上涨时现金购买力下降，批发周转和银行储蓄更重要。",
   },
@@ -172406,6 +172419,20 @@ function getCityPulseTips(state, limit) {
 }
 
 /**
+ * [全系统自洽修复] 域C 联动增强2: 获取技能层级称号(C→F)
+ * @param {number} level - 技能等级
+ * @returns {string} 称号文本（如"👑 大师级"），0级返回空
+ */
+function getSkillTierName(level) {
+  if (level >= 100) return "👑 超凡入圣";
+  if (level >= 70) return "🌟 一代宗师";
+  if (level >= 50) return "💎 出神入化";
+  if (level >= 30) return "⭐ 炉火纯青";
+  if (level >= 10) return "📈 初窥门径";
+  return "";
+}
+
+/**
  * 工作后分发技能经验值（与工作类型关联）
  * 返回字符串描述获得了什么XP
  */
@@ -172421,12 +172448,8 @@ function grantJobSkillXp(jobId, state) {
   var xpMap = {
     // 烹饪相关工作 → cooking XP
     street_vending_food: { skill: "cooking", min: 2, max: 5 },
-    food_stall: { skill: "cooking", min: 3, max: 7 },
     // 销售相关工作 → sales XP
-    street_vending_goods: { skill: "sales", min: 2, max: 5 },
-    barber: { skill: "sales", min: 2, max: 4 },
     // 维修相关工作 → repair XP
-    skilled_labor_construction: { skill: "repair", min: 3, max: 6 },
     repair_service: { skill: "repair", min: 4, max: 8 },
     // 英语相关工作 → english XP
     tutoring: { skill: "english", min: 2, max: 4 },
@@ -172481,7 +172504,11 @@ function grantJobSkillXp(jobId, state) {
   }
 
   var msg = "📚 " + getSkillChineseName(entry.skill) + " +" + xpGain + "XP";
-  if (leveledUp) msg += " 🎉升级至Lv." + sk.level + "!";
+  if (leveledUp) {
+    // [全系统自洽修复] 域C 联动增强2: 技能升级时显示层级称号(C→F)
+    var tierName = getSkillTierName(sk.level);
+    msg += " 🎉升级至Lv." + sk.level + "!" + (tierName ? " " + tierName : "");
+  }
 
   return msg;
 }
@@ -172515,6 +172542,38 @@ function applySkillLevelUpBonus(skillKey, state) {
         );
       }
     }
+  }
+
+  // [全系统自洽修复] 域C 联动增强3: 技能里程碑时NPC祝贺(C→D)
+  var milestoneLevels = [30, 50, 70, 100];
+  var curLevel = state.skills[skillKey] ? state.skills[skillKey].level : 0;
+  for (var mi = 0; mi < milestoneLevels.length; mi++) {
+    if (curLevel !== milestoneLevels[mi]) continue;
+    if (!state.flags._skillMilestones) state.flags._skillMilestones = {};
+    var mileKey = skillKey + "_" + milestoneLevels[mi];
+    if (state.flags._skillMilestones[mileKey]) continue;
+    state.flags._skillMilestones[mileKey] = true;
+    // 查找好感≥60的NPC发祝贺
+    if (typeof NPCS !== "undefined" && state.relationships) {
+      var congratulators = [];
+      for (var relId in state.relationships) {
+        var rel = state.relationships[relId];
+        if (rel && rel.met && (rel.affinity || 0) >= 60) {
+          var npcDef = typeof getNpcById === "function" ? getNpcById(relId) : null;
+          congratulators.push(npcDef ? npcDef.name : relId);
+        }
+      }
+      if (congratulators.length > 0) {
+        var names = congratulators.slice(0, 3).join("、");
+        if (typeof StateManager !== "undefined") {
+          StateManager.addMessage(
+            "🎉 " + names + " 为你" + getSkillChineseName(skillKey) + "达到Lv." + milestoneLevels[mi] + "感到高兴！",
+            "success",
+          );
+        }
+      }
+    }
+    break;
   }
 }
 
@@ -172559,6 +172618,88 @@ function grantActionStatGain(actionId, state) {
 }
 
 /** 获取技能中文名 */
+function getSkillChineseName(skillKey) {
+  var names = {
+    cooking: "烹饪",
+    repair: "维修",
+    coding: "编程",
+    english: "英语",
+    driving: "驾驶",
+    sales: "销售",
+    management: "管理",
+    accounting: "会计",
+    electrician: "电工",
+    welding: "焊接",
+  };
+  return names[skillKey] || skillKey;
+}
+
+/**
+ * [全系统自洽修复] 域C 联动增强1: 技能等级降低同领域工作疲劳 (C→G)
+ * 熟能生巧：高技能做同领域工作疲劳更少
+ * @param {string} jobId - 工作ID
+ * @param {object} state - 游戏状态
+ * @returns {number} 疲劳减少值（0=无减少）
+ */
+function getSkillFatigueReduction(jobId, state) {
+  // 工作→关联技能映射
+  var JOB_SKILL_MAP = {
+    // 烹饪相关
+    street_vending_food: "cooking",
+    sister_zhang_vending: "cooking",
+    cafeteria_worker: "cooking",
+    restaurant_assistant: "cooking",
+    // 维修相关
+    repair_service: "repair",
+    instrument_repair: "repair",
+    phone_modding: "repair",
+    auto_repair: "repair",
+    premium_engineering: "repair",
+    // 驾驶相关
+    delivery_rider: "driving",
+    taxi_driver: "driving",
+    truck_assistant: "driving",
+    chauffeur: "driving",
+    wholesale_delivery: "driving",
+    package_delivery: "driving",
+    // 销售相关
+    shop_assistant: "sales",
+    procurement_clerk: "sales",
+    car_sales: "sales",
+    // 编程相关
+    content_writing: "coding",
+    junior_analyst: "coding",
+    web_designer: "coding",
+    server_ops: "coding",
+    network_monitor: "coding",
+    // 电工相关
+    factory_work_assembly: "electrician",
+    factory_electrician: "electrician",
+    factory_overtime: "electrician",
+    // 焊接相关
+    manual_labor_construction: "welding",
+    steel_worker: "welding",
+    // 管理相关
+    project_coordinator: "management",
+    training_assistant: "management",
+    // 会计相关
+    audit_assistant: "accounting",
+  };
+
+  var skillKey = JOB_SKILL_MAP[jobId];
+  if (!skillKey) return 0;
+
+  var skillLevel =
+    (state.skills &&
+      state.skills[skillKey] &&
+      state.skills[skillKey].level) ||
+    0;
+
+  if (skillLevel >= 70) return 8; // 大师级：疲劳-8
+  if (skillLevel >= 50) return 5; // 精通级：疲劳-5
+  if (skillLevel >= 30) return 3; // 熟练级：疲劳-3
+  return 0;
+}
 
 
 /**
@@ -172911,10 +173052,10 @@ var SKILL_SYNERGIES = [
   {
     id: "food_merchant",
     label: "🍜 美食创业者",
-    desc: "烹饪≥Lv.10 + 销售≥Lv.10：餐饮摆摊收入+15%",
+    desc: "烹饪≥Lv.10 + 销售≥Lv.10：餐饮收入+15%",
     skills: { cooking: 10, sales: 10 },
     jobBonus: 0.15,
-    jobs: ["food_stall", "street_vending_food", "restaurant_assistant"],
+    jobs: ["street_vending_food", "restaurant_assistant"],
   },
   {
     id: "handyman",
@@ -172924,8 +173065,6 @@ var SKILL_SYNERGIES = [
     jobBonus: 0.14,
     jobs: [
       "repair_service",
-      "school_maintenance",
-      "skilled_labor_construction",
       "premium_engineering",
     ],
   },
@@ -172937,7 +173076,6 @@ var SKILL_SYNERGIES = [
     jobBonus: 0.22,
     jobs: [
       "tutoring",
-      "customer_service_tech",
       "junior_analyst",
       "content_writing",
     ],
@@ -172958,7 +173096,6 @@ var SKILL_SYNERGIES = [
     jobBonus: 0.18,
     jobs: [
       "warehouse_worker",
-      "security_guard",
       "data_entry",
       "restaurant_assistant",
     ],
@@ -172969,7 +173106,7 @@ var SKILL_SYNERGIES = [
     desc: "英语≥Lv.12 + 销售≥Lv.12：教育/客服类工作收入+20%",
     skills: { english: 12, sales: 12 },
     jobBonus: 0.2,
-    jobs: ["tutoring", "customer_service_tech", "content_writing"],
+    jobs: ["tutoring", "content_writing"],
   },
 ];
 
@@ -182016,11 +182153,13 @@ function afterEventApplied(eventId, state) {
  *
  * 综合评分 = KPI×0.35 + 能力×0.25 + 向上管理×0.20 + 人缘×0.15 + 团队×0.05
  * 评级 = 在20个模拟同事中的百分位排名
+ *
+ * [全系统自洽修复] 域C A类#6: state.corporate.rank/team 添加防御性空值守卫
  */
 
 function calculatePerfScore(state) {
   const c = state.player.corporate;
-  const rank = state.corporate.rank;
+  const rank = (state.corporate && state.corporate.rank) || "P5";
   const isLowRank = rank === "P5" || rank === "P6";
 
   // 职级分段权重
@@ -182036,10 +182175,11 @@ function calculatePerfScore(state) {
   }
 
   // 团队贡献 (P7+)
-  if (state.corporate.team.length > 0) {
+  var corpTeam = state.corporate && state.corporate.team;
+  if (corpTeam && corpTeam.length > 0) {
     const avgProd =
-      state.corporate.team.reduce((s, m) => s + (m.productivity || 5), 0) /
-      state.corporate.team.length;
+      corpTeam.reduce((s, m) => s + (m.productivity || 5), 0) /
+      corpTeam.length;
     score += avgProd * 0.05;
   }
 
@@ -237139,6 +237279,148 @@ if (typeof document !== "undefined") {
     },
   ];
 
+  // ===== 联动增强1：技能满级→NPC慕名而来求教（C→D 职业成长→NPC社交） =====
+  // 设计意图：技能满级不应只有数值成就感，还应有叙事层面的社交回报
+  // 参考：《大多数》老手带新手的传承感 / Stardew Valley 村民来访
+  var SKILL_MASTER_VISITOR = {
+    id: "skill_master_visitor",
+    phase: "street",
+    icon: "🙏",
+    title: "慕名而来的求教者",
+    story:
+      "你在街上走着，一个年轻人快步追上来：「请问您是{skillName}的{masterName}吗？我听说您在这方面已经达到顶尖水平了，能不能指点我两句？」\n\n你愣了一下，没想到自己的名声已经传出去了。",
+    triggers: { minDay: 365 },
+    conditions: function (st) {
+      if (!st.skills) return false;
+      var hasMaster = false;
+      var masterSkill = null;
+      var masterName = "";
+      for (var sk in st.skills) {
+        var lv = (st.skills[sk] && st.skills[sk].level) || 0;
+        if (lv >= 80) {
+          hasMaster = true;
+          masterSkill = sk;
+          masterName = sk;
+          break;
+        }
+      }
+      st._skillMasterVisitorSkill = masterSkill;
+      return hasMaster;
+    },
+    probability: 0.03,
+    repeatable: false,
+    choices: [
+      {
+        text: "📚 耐心指点，传授经验",
+        hint: "心智+8，名气+5，解锁长期徒弟关系",
+        apply: function (st) {
+          st.flags._skillMasterVisitorDone = true;
+          st.flags._hasApprentice = true;
+          st.player.mental = Math.min(100, (st.player.mental || 50) + 8);
+          st.player.fame = Math.min(100, (st.player.fame || 0) + 5);
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 5);
+          // 徒弟偶尔会带来收入
+          if (typeof Random !== "undefined" && Random.chance(0.3)) {
+            var apprenticeGift = Random.int(100, 500);
+            if (st.resources) st.resources.cash += apprenticeGift;
+            StateManager.addMessage(
+              "📚 你花了半天时间给他讲解了要点。一周后，他寄来了¥" +
+                apprenticeGift +
+                "表示感谢。你的技艺改变了另一个人的人生。心智+8，名气+5，心情+5，获得徒弟心意¥" +
+                apprenticeGift +
+                "。",
+              "success",
+            );
+          } else {
+            StateManager.addMessage(
+              "📚 你倾囊相授。他感激地说：「我一定会努力的！」看着他的背影，你仿佛看到了当年的自己。心智+8，名气+5，心情+5。",
+              "success",
+            );
+          }
+        },
+      },
+      {
+        text: "💼 推荐他去正规培训",
+        hint: "心智+3，不增加负担",
+        apply: function (st) {
+          st.flags._skillMasterVisitorDone = true;
+          st.player.mental = Math.min(100, (st.player.mental || 50) + 3);
+          StateManager.addMessage(
+            "🎓 你推荐了几家靠谱的培训机构。虽然没收徒，但他还是很感激你的指点。心智+3。",
+            "info",
+          );
+        },
+      },
+      {
+        text: "🤷 抱歉，我很忙",
+        hint: "无影响，但错失一次传承机会",
+        apply: function (st) {
+          st.flags._skillMasterVisitorDone = true;
+          st.player.morality = Math.max(
+            0,
+            (st.player.morality || 50) - 2,
+          );
+          StateManager.addMessage(
+            "🤷 你摆摆手说自己在忙。年轻人眼里闪过一丝失望，默默离开了。道德-2。",
+            "warning",
+          );
+        },
+      },
+    ],
+  };
+
+  // ===== 联动增强2：职业履历→简历故事（C→G 职业成长→生命周期叙事） =====
+  // 设计意图：让玩家感受到职业选择的重量——每一次跳槽/坚持都有叙事回响
+  var CAREER_LEGACY_REFLECTION = {
+    id: "career_legacy_reflection",
+    phase: "street",
+    icon: "📋",
+    title: "职业履历的厚度",
+    story:
+      "你翻出抽屉里那本旧笔记本，里面记着你这些年换过的每一份工作。从最初的{firstJob}到现在现在的{currentJob}，这条路你走了{workYears}年。\n\n每一份工作都留下了印记——有些是伤疤，有些是勋章。",
+    triggers: { minDay: 365 },
+    conditions: function (st) {
+      if (!st.career || !st.career.history) return false;
+      var historyLen = st.career.history.length;
+      if (historyLen < 2) return false;
+      if (st.flags._careerLegacyReflectionSeen) return false;
+      return true;
+    },
+    probability: 0.02,
+    repeatable: false,
+    choices: [
+      {
+        text: "📖 把经历写成博客",
+        hint: "名气+8，心智+5，帮助他人",
+        apply: function (st) {
+          st.flags._careerLegacyReflectionSeen = true;
+          st.player.fame = Math.min(100, (st.player.fame || 0) + 8);
+          st.player.mental = Math.min(100, (st.player.mental || 50) + 5);
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 3);
+          StateManager.addMessage(
+            "📖 你把职业经历写成了系列博客。没想到阅读量破万，很多人留言说受到了启发。名气+8，心智+5，心情+3。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "🤔 默默合上笔记本",
+        hint: "心智+2，继续前行",
+        apply: function (st) {
+          st.flags._careerLegacyReflectionSeen = true;
+          st.player.mental = Math.min(100, (st.player.mental || 50) + 2);
+          StateManager.addMessage(
+            "🤔 你合上笔记本，深吸一口气。过去的就让它过去，未来还在前方等着。心智+2。",
+            "info",
+          );
+        },
+      },
+    ],
+  };
+
+  RANDOM_EVENTS.push(SKILL_MASTER_VISITOR);
+  RANDOM_EVENTS.push(CAREER_LEGACY_REFLECTION);
+
   for (var sme = 0; sme < SKILL_MAX_EVENTS.length; sme++) {
     RANDOM_EVENTS.push(SKILL_MAX_EVENTS[sme]);
   }
@@ -243527,7 +243809,24 @@ function doStreetJob(job) {
 
   // 应用效果
   if (job.effects) {
-    if (job.effects.fatigue)
+    // [全系统自洽修复] 域C 联动增强1: 技能等级降低同领域工作疲劳(熟能生巧)
+    var fatigueReduction = 0;
+    if (typeof getSkillFatigueReduction === "function") {
+      fatigueReduction = getSkillFatigueReduction(job.id, state);
+    }
+    var fatigueAmount = job.effects.fatigue || 0;
+    if (fatigueReduction > 0 && fatigueAmount > 0) {
+      fatigueAmount = Math.max(0, fatigueAmount - fatigueReduction);
+      if (Random.chance(0.3)) {
+        StateManager.addMessage(
+          "💪 熟能生巧，技能降低了劳动强度，疲劳-" + fatigueReduction + "！",
+          "hint",
+        );
+      }
+    }
+    if (fatigueAmount > 0)
+      state.needs.fatigue = Math.min(100, state.needs.fatigue + fatigueAmount);
+    else if (job.effects.fatigue)
       state.needs.fatigue = Math.min(
         100,
         state.needs.fatigue + job.effects.fatigue,
