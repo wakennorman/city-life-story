@@ -1544,6 +1544,18 @@ const DAILY_PIPELINE = [
           );
         }
       }
+
+      // [全系统自洽修复] 域E A类#1: 执行完整经济结算（市场饱和度·连续盈利衰减·难度收入曲线）
+      // dailyEconomicSettlement 返回各经济指标，存入 state._economySettlement 供投资系统读取
+      // 注：marketSaturationPenalty 已按当日总资产动态计算，自修正，无需额外衰减逻辑
+      try {
+        var settlement = eco.dailyEconomicSettlement(state);
+        if (settlement) {
+          state._economySettlement = settlement;
+        }
+      } catch (e) {
+        // 经济结算失败不影响主流程
+      }
     },
   },
 

@@ -1180,6 +1180,12 @@ function tickInvestmentDaily(state) {
     var m = inv.stockMarket[s.symbol];
     if (!m) continue;
 
+    // [全系统自洽修复] 域E A类#2: NaN 价格守卫 — 旧存档/数据异常时重置为 basePrice
+    if (!isFinite(m.price) || m.price <= 0) {
+      m.price = s.basePrice * Random.float(0.85, 1.15);
+      m.price = Math.round(m.price * 100) / 100;
+    }
+
     // 基础随机游走 + 世界参数行业热度偏置
     var baseChange = 1 + s.trend + Random.float(-s.volatility, s.volatility);
     if (typeof getSectorHeat === "function") {
@@ -1197,7 +1203,13 @@ function tickInvestmentDaily(state) {
         ? getNewsEffectForInvestment(s.symbol, s.industry, s.category, state)
         : 1.0;
 
-    m.price = Math.max(0.01, m.price * baseChange * newsMul);
+    // [全系统自洽修复] 域E A类#1: 市场饱和度惩罚（从每日经济结算读取，按当前总资产动态计算，自修正）
+    var _satPenalty = 1.0;
+    if (state._economySettlement && isFinite(state._economySettlement.marketSaturationPenalty)) {
+      _satPenalty = state._economySettlement.marketSaturationPenalty;
+    }
+
+    m.price = Math.max(0.01, m.price * baseChange * newsMul * _satPenalty);
     m.price = Math.round(m.price * 100) / 100;
     m.history.push({ day: state.player.day, price: m.price });
     if (m.history.length > 20) m.history.shift();
@@ -1334,6 +1346,45 @@ function tickInvestmentDaily(state) {
   }
 
   // ================================================================
+  // [全系统自洽修复] 域E 联动增强2: 投资回撤→经济焦虑（E→G）
+  //  组合回撤>20%时触发疲劳+2 + 健康-1（压力应激）
+  //  每日限触发一次，避免叠加速度过快
+  // ================================================================
+  try {
+    var _peak = inv._portfolioPeak || 0;
+    var _curPv = 0;
+    var _sm2 = inv.stockMarket || {};
+    var _h2 = inv.stockHoldings || [];
+    for (var _hi2 = 0; _hi2 < _h2.length; _hi2++) {
+      var _h2i = _h2[_hi2];
+      var _m2 = _sm2[_h2i.symbol];
+      if (_m2 && isFinite(_m2.price) && isFinite(_h2i.shares))
+        _curPv += _m2.price * _h2i.shares;
+    }
+    var _p2 = inv.properties || [];
+    for (var _pi2 = 0; _pi2 < _p2.length; _pi2++) {
+      _curPv += _p2[_pi2].currentPrice || _p2[_pi2].buyPrice || 0;
+    }
+    if ((inv.btcHoldings || 0) > 0)
+      _curPv += (inv.btcPrice || 0) * inv.btcHoldings;
+    if (_peak > 0 && _curPv > 0) {
+      var _dd = (_peak - _curPv) / _peak;
+      if (_dd > 0.2 && state.needs) {
+        if (!state.flags._econAnxietyDay || state.flags._econAnxietyDay < state.player.day) {
+          state.flags._econAnxietyDay = state.player.day;
+          state.needs.fatigue = Math.min(100, (state.needs.fatigue || 0) + 2);
+          state.needs.health = Math.max(0, (state.needs.health || 100) - 1);
+          if (_dd > 0.35) {
+            state.needs.mental = Math.max(0, (state.needs.mental || 50) - 3);
+          }
+        }
+      }
+    }
+  } catch (e) {
+    // 静默：经济焦虑不影响主流程
+  }
+
+  // ================================================================
   // [优化] 市场情绪计算 — 基于最近5日整体涨跌幅判定牛熊
   // ================================================================
   try {
@@ -1360,6 +1411,42 @@ function tickInvestmentDaily(state) {
     }
   } catch (e) {
     // 静默
+  }
+
+  // ================================================================
+  // [全系统自洽修复] 域E 联动增强3: 市场情绪→NPC话题（E→D）
+  //  牛熊市时高好感NPC会谈论市场，增加沉浸感
+  //  每日最多一次，仅在有持仓且至少一位NPC好感≥40时触发
+  // ================================================================
+  try {
+    var _mood = inv._marketMood;
+    if (_mood && _mood !== "neutral" && inv.stockHoldings && inv.stockHoldings.length > 0) {
+      if (!state.flags._npcMarketTalkDay || state.flags._npcMarketTalkDay < state.player.day) {
+        var _talkedNpc = null;
+        var _rels = state.relationships || {};
+        for (var _rid in _rels) {
+          if (_rels[_rid] && _rels[_rid].met && (_rels[_rid].affinity || 0) >= 40) {
+            _talkedNpc = _rid;
+            break;
+          }
+        }
+        if (_talkedNpc) {
+          state.flags._npcMarketTalkDay = state.player.day;
+          var _npcName = "";
+          if (typeof NPC_DATA !== "undefined" && NPC_DATA[_talkedNpc]) {
+            _npcName = NPC_DATA[_talkedNpc].name || _talkedNpc;
+          } else {
+            _npcName = _talkedNpc;
+          }
+          var _talkMsg = _mood === "bullish"
+            ? _npcName + "兴奋地说最近行情不错，问你要不要一起看看机会。"
+            : _npcName + "叹气说最近市场不太好，让你投资多留个心眼。";
+          StateManager.addMessage("💬 " + _talkMsg, "hint");
+        }
+      }
+    }
+  } catch (e) {
+    // 静默：NPC话题不影响主流程
   }
 
   // ================================================================
@@ -1549,6 +1636,16 @@ function sellInvStock(symbol, shares) {
   if (!isFinite(pl)) pl = 0;
   if (pl > 0) {
     inv._consecutiveWins = (inv._consecutiveWins || 0) + 1;
+    // [全系统自洽修复] 域E A类#1: 应用连续盈利衰减（第4次后每次-8%利润）
+    var _winDecay = 1.0;
+    if (typeof window.EconomySystem !== "undefined" && window.EconomySystem.getConsecutiveWinDecay) {
+      _winDecay = window.EconomySystem.getConsecutiveWinDecay(inv._consecutiveWins);
+    }
+    if (_winDecay < 1.0) {
+      var _decayAmount = Math.round(pl * (1 - _winDecay));
+      revenue = Math.max(0, revenue - _decayAmount);
+      pl = pl - _decayAmount;
+    }
     // [全系统自洽修复] 域E 联动增强1: 投资盈利→小幅心情+1（财务安全感）
     if (state.needs) state.needs.happiness = Math.min(100, (state.needs.happiness || 0) + 1);
   } else {
@@ -1719,11 +1816,13 @@ function sellProperty(propId) {
   }
 
   // NaN 防御：旧存档或未初始化时 currentPrice 可能缺失
-  if (prop.currentPrice == null || isNaN(prop.currentPrice))
+  if (prop.currentPrice == null || !isFinite(prop.currentPrice))
     prop.currentPrice = prop.buyPrice || 0;
-  // [全系统自洽修复] 域E 修复:房产手续费5%→2%，降低买入即亏幅度
-  var net = prop.currentPrice - Math.round(prop.currentPrice * 0.02);
-  state.resources.cash += net;
+  // [全系统自洽修复] 域E A类#4: net 可能 NaN（currentPrice 异常），兜底
+  var fee = Math.round(prop.currentPrice * 0.02);
+  if (!isFinite(fee)) fee = 0;
+  var net = prop.currentPrice - fee;
+  if (!isFinite(net)) net = 0;
   inv.properties.splice(idx, 1);
   StateManager.addMessage(
     "出售" + prop.name + " 到手¥" + net.toLocaleString(),
@@ -2587,6 +2686,32 @@ function renderDailyPLPanel(state) {
 }
 
 // ============================================================
+//  [全系统自洽修复] 域E 联动增强1: 投资组合回撤指示器（E→F）
+//  显示当前投资价值与历史峰值的回撤幅度，帮助玩家识别风险
+// ============================================================
+function renderDrawdownIndicator(state) {
+  var inv = state.investment;
+  if (!inv) return "";
+  var peak = inv._portfolioPeak;
+  if (!peak || peak <= 0) return "";
+  var snapshot = getInvestmentAssetSnapshot(state);
+  var curVal = snapshot.investmentValue || 0;
+  if (curVal <= 0) return "";
+  var dd = (peak - curVal) / peak;
+  if (dd <= 0.01) return ""; // 回撤<1%不显示
+  var ddPct = (dd * 100).toFixed(1);
+  var color = "var(--text-muted)";
+  var icon = "📉";
+  var label = "小幅回撤";
+  if (dd > 0.2) { color = "var(--danger)"; icon = "🔴"; label = "深度回撤"; }
+  else if (dd > 0.1) { color = "var(--warning)"; icon = "⚠️"; label = "明显回撤"; }
+  return '<div style="padding:6px 10px;margin-bottom:8px;background:rgba(255,255,255,0.04);border:1px solid ' + color + ';border-radius:6px;font-size:11px;display:flex;align-items:center;justify-content:space-between;">' +
+    '<span>' + icon + ' ' + label + '：距历史峰值 ' + ddPct + '%</span>' +
+    '<span style="color:' + color + ';font-weight:bold;">峰值 ¥' + Math.round(peak).toLocaleString() + ' → 当前 ¥' + Math.round(curVal).toLocaleString() + '</span>' +
+    '</div>';
+}
+
+// ============================================================
 //  [优化] 资产配置面板 — 显示当前各类资产占比
 // ============================================================
 function renderAssetAllocationPanel(snapshot) {
@@ -2758,6 +2883,7 @@ function renderInvestmentTab(state, parent) {
     summaryCard("汽车", assetSnapshot.groups.cars) +
     "</div>" +
     renderAssetAllocationPanel(assetSnapshot) +
+    renderDrawdownIndicator(state) +
     renderDailyPLPanel(state) +
     renderNewsInvestmentDrivers(state) +
     renderMarketSentiment(state, inv) +

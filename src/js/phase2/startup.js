@@ -494,6 +494,14 @@ function registerStartup(state, name, industry, description) {
   const day = state.player.day;
   const minCash = getStartupRegistrationCost(state); // 剧本/阶段感知启动资金
 
+  // [全系统自洽修复] 域E A类#3: minCash 可能 NaN（状态未初始化），防御兜底
+  if (!isFinite(minCash) || minCash <= 0) {
+    return {
+      success: false,
+      message: "启动资金计算异常，请检查游戏状态后重试。",
+    };
+  }
+
   if (cash < minCash) {
     return {
       success: false,
