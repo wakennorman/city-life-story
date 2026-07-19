@@ -8,6 +8,8 @@
  * - 连携效果分为：双技能连携（2门）、三技能连携（3门）、主题连携（3+门同主题）
  * - 连携效果影响：工作收入、XP获取、特殊行动解锁、NPC互动等
  * - 连携效果在技能等级变化时自动检测
+ *
+ * [全系统自洽修复] 域C A类#5: unlockJobs/unlockBusinesses/unlockActions移除18个不存在引用
  */
 
 // 双技能连携（2门技能达到阈值）
@@ -26,7 +28,7 @@ const SKILL_SYNERGY_DUAL = {
       street_vending_food: { incomeMultiplier: 1.3 },
       sister_zhang_vending: { incomeMultiplier: 1.3 },
       // 解锁新工作：餐饮摊主
-      unlockJobs: ["restaurant_owner"],
+      unlockJobs: [], // restaurant_owner 待实现
       // 食材成本-15%
       foodCostReduction: 0.15,
       // 顾客满意度+20%
@@ -50,7 +52,7 @@ const SKILL_SYNERGY_DUAL = {
       freelance_writing: { incomeMultiplier: 1.3 },
       content_writing: { incomeMultiplier: 1.3 },
       // 解锁国际外包工作
-      unlockJobs: ["international_freelance", "foreign_client_coding"],
+      unlockJobs: [], // international_freelance/foreign_client_coding 待实现
       // 学习XP+20%
       codingXpBonus: 0.2,
       englishXpBonus: 0.2,
@@ -73,7 +75,7 @@ const SKILL_SYNERGY_DUAL = {
       electronics_repair: { incomeMultiplier: 1.35 },
       factory_electrician: { incomeMultiplier: 1.3 },
       // 解锁综合维修工作
-      unlockJobs: ["comprehensive_repairman"],
+      unlockJobs: [], // comprehensive_repairman 待实现
       // 装备维修损耗-30%
       repairWearReduction: 0.3,
     },
@@ -94,7 +96,7 @@ const SKILL_SYNERGY_DUAL = {
       shop_assistant: { incomeMultiplier: 1.3 },
       promoter: { incomeMultiplier: 1.3 },
       // 解锁团队销售管理
-      unlockJobs: ["sales_team_lead"],
+      unlockJobs: [], // sales_team_lead 待实现
       // 团队规模+2
       teamSizeBonus: 2,
       // 人缘成长+15%
@@ -118,7 +120,7 @@ const SKILL_SYNERGY_DUAL = {
       warehouse_logistics: { incomeMultiplier: 1.3 },
       wholesale_delivery: { incomeMultiplier: 1.35 },
       // 解锁长途运输工作
-      unlockJobs: ["long_haul_driver", "logistics_manager"],
+      unlockJobs: [], // long_haul_driver/logistics_manager 待实现
       // 旅行AP-3（效率更高）
       travelApReduction: 3,
     },
@@ -140,7 +142,7 @@ const SKILL_SYNERGY_DUAL = {
       // 自己修理装备节省50%修理费
       selfRepairDiscount: 0.5,
       // 解锁家庭维修行动
-      unlockActions: ["home_repair"],
+      unlockActions: [], // home_repair 待实现
       // 幸福感+10%
       happinessBonus: 10,
     },
@@ -162,7 +164,7 @@ const SKILL_SYNERGY_DUAL = {
       // 向上管理+20
       upwardMgmtBonus: 20,
       // 解锁外企管理岗位
-      unlockJobs: ["foreign_company_manager", "international_project_lead"],
+      unlockJobs: [], // foreign_company_manager/international_project_lead 待实现
       // 晋升速度+25%
       promoSpeedBonus: 0.25,
     },
@@ -184,7 +186,7 @@ const SKILL_SYNERGY_DUAL = {
       // 股票交易手续费-50%
       tradingFeeReduction: 0.5,
       // 解锁高级投资分析
-      unlockActions: ["advanced_investment_analysis"],
+      unlockActions: [], // advanced_investment_analysis 待实现
       // 每日被动收入+¥50（来自投资）
       passiveInvestmentIncome: 50,
     },
@@ -208,7 +210,7 @@ const SKILL_SYNERGY_TRIPLE = {
       // 所有餐饮相关收入+50%
       restaurantIncomeBonus: 0.5,
       // 解锁连锁餐厅
-      unlockBusinesses: ["restaurant_chain"],
+      unlockBusinesses: [], // restaurant_chain 待实现
       // 每日被动收入+¥200
       passiveRestaurantIncome: 200,
       // 员工效率+30%
@@ -235,7 +237,7 @@ const SKILL_SYNERGY_TRIPLE = {
       // 向上管理+30
       upwardMgmtBonus: 30,
       // 解锁CTO岗位
-      unlockJobs: ["cto", "tech_director"],
+      unlockJobs: [], // cto/tech_director 待实现
       // 晋升速度+50%
       promoSpeedBonus: 0.5,
       // 团队规模+5
@@ -260,7 +262,7 @@ const SKILL_SYNERGY_TRIPLE = {
       // 维修类工作收入+50%
       comprehensiveRepairBonus: 0.5,
       // 解锁智能家居安装工作
-      unlockJobs: ["smart_home_installer", "iot_developer"],
+      unlockJobs: [], // smart_home_installer/iot_developer 待实现
       // 装备维修损耗-50%
       repairWearReduction: 0.5,
       // 每日被动收入+¥100（来自智能家居项目）
@@ -283,7 +285,7 @@ const SKILL_SYNERGY_TRIPLE = {
       // 货运/配送收入+50%
       logisticsIncomeBonus: 0.5,
       // 解锁物流公司
-      unlockBusinesses: ["logistics_company"],
+      unlockBusinesses: [], // logistics_company 待实现
       // 每日被动收入+¥250
       passiveLogisticsIncome: 250,
       // 车队规模+3
@@ -307,7 +309,7 @@ const SKILL_SYNERGY_THEME = {
     effects: {
       techIncomeBonus: 0.15,
       techXpBonus: 0.1,
-      unlockJobs: ["tech_consultant"],
+      unlockJobs: [], // tech_consultant 待实现
     },
     desc: "技术相关技能多，成为技术顾问，收入翻倍。",
   },
@@ -324,7 +326,7 @@ const SKILL_SYNERGY_THEME = {
     effects: {
       businessIncomeBonus: 0.15,
       businessXpBonus: 0.1,
-      unlockJobs: ["business_consultant"],
+      unlockJobs: [], // business_consultant 待实现
     },
     desc: "商业相关技能多，成为商业顾问，收入翻倍。",
   },
@@ -341,7 +343,7 @@ const SKILL_SYNERGY_THEME = {
     effects: {
       serviceIncomeBonus: 0.15,
       serviceXpBonus: 0.1,
-      unlockJobs: ["personal_assistant"],
+      unlockJobs: [], // personal_assistant 待实现
     },
     desc: "生活服务技能多，成为私人助理，收入翻倍。",
   },

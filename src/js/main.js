@@ -4405,7 +4405,24 @@ function doStreetJob(job) {
 
   // 应用效果
   if (job.effects) {
-    if (job.effects.fatigue)
+    // [全系统自洽修复] 域C 联动增强1: 技能等级降低同领域工作疲劳(熟能生巧)
+    var fatigueReduction = 0;
+    if (typeof getSkillFatigueReduction === "function") {
+      fatigueReduction = getSkillFatigueReduction(job.id, state);
+    }
+    var fatigueAmount = job.effects.fatigue || 0;
+    if (fatigueReduction > 0 && fatigueAmount > 0) {
+      fatigueAmount = Math.max(0, fatigueAmount - fatigueReduction);
+      if (Random.chance(0.3)) {
+        StateManager.addMessage(
+          "💪 熟能生巧，技能降低了劳动强度，疲劳-" + fatigueReduction + "！",
+          "hint",
+        );
+      }
+    }
+    if (fatigueAmount > 0)
+      state.needs.fatigue = Math.min(100, state.needs.fatigue + fatigueAmount);
+    else if (job.effects.fatigue)
       state.needs.fatigue = Math.min(
         100,
         state.needs.fatigue + job.effects.fatigue,

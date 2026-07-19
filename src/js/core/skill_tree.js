@@ -6,6 +6,8 @@
  * - 每个分支有 3 个天赋节点（Lv.10/25/50解锁），树状前置关系
  * - 分支提供独特的被动加成，影响相关工作和收入
  * - 特定分支影响职场晋升门槛
+ *
+ * [全系统自洽修复] 域C A类#4: jobBonuses移除22个不存在的工作引用(标记待实现)
  */
 
 // ====== 技能分支定义 ======
@@ -102,7 +104,7 @@ var SKILL_BRANCHES = {
       name: "精密维修",
       icon: "🔬",
       desc: "专修精密仪器，维修收入+25%，解锁仪器仪表维修工作",
-      jobBonuses: ["instrument_repair", "electronics_repair"],
+      jobBonuses: ["instrument_repair"], // electronics_repair 待实现
       incomeMult: 1.25,
       talentNodes: [
         {
@@ -142,7 +144,7 @@ var SKILL_BRANCHES = {
       name: "改装达人",
       icon: "🛠️",
       desc: "擅长改装升级，解锁改装工作，装备效果+20%",
-      jobBonuses: ["bike_customization", "phone_modding"],
+      jobBonuses: ["phone_modding"], // bike_customization 待实现
       equipmentBonus: 0.2,
       talentNodes: [
         {
@@ -185,7 +187,7 @@ var SKILL_BRANCHES = {
       name: "前端开发",
       icon: "🎨",
       desc: "专注用户界面开发，职场能力加成+30%，解锁前端岗位",
-      jobBonuses: ["web_designer", "ui_assistant"],
+      jobBonuses: ["web_designer"], // ui_assistant 待实现
       corpAbilityMult: 1.3,
       talentNodes: [
         {
@@ -225,7 +227,7 @@ var SKILL_BRANCHES = {
       name: "后端架构",
       icon: "⚙️",
       desc: "专注服务端与架构，职场能力加成+50%，解锁后端运维岗位",
-      jobBonuses: ["server_ops", "database_clerk"],
+      jobBonuses: ["server_ops"], // database_clerk 待实现
       corpAbilityMult: 1.5,
       talentNodes: [
         {
@@ -265,7 +267,7 @@ var SKILL_BRANCHES = {
       name: "安全攻防",
       icon: "🔒",
       desc: "专注网络安全，解锁安全审计岗位，降低职场风险",
-      jobBonuses: ["network_monitor", "security_auditor"],
+      jobBonuses: ["network_monitor"], // security_auditor 待实现
       riskReduction: 0.3,
       talentNodes: [
         {
@@ -308,7 +310,7 @@ var SKILL_BRANCHES = {
       name: "商务英语",
       icon: "💼",
       desc: "专注商务场景，家教/外贸收入+30%，解锁商务翻译工作",
-      jobBonuses: ["foreign_trade_assistant", "biz_translator"],
+      jobBonuses: ["foreign_trade_assistant"], // biz_translator 待实现
       incomeMult: 1.3,
       talentNodes: [
         {
@@ -348,7 +350,7 @@ var SKILL_BRANCHES = {
       name: "翻译达人",
       icon: "📝",
       desc: "专注文本翻译，解锁翻译类工作，内容创作收入+25%",
-      jobBonuses: ["document_translator", "subtitle_worker"],
+      jobBonuses: ["document_translator"], // subtitle_worker 待实现
       incomeMult: 1.25,
       talentNodes: [
         {
@@ -431,7 +433,7 @@ var SKILL_BRANCHES = {
       name: "货运驾驶",
       icon: "🚚",
       desc: "专注货物运输，货运/配送收入+30%，解锁物流工作",
-      jobBonuses: ["truck_assistant", "warehouse_logistics"],
+      jobBonuses: ["truck_assistant"], // warehouse_logistics 待实现
       incomeMult: 1.3,
       talentNodes: [
         {
@@ -474,7 +476,7 @@ var SKILL_BRANCHES = {
       name: "门店销售",
       icon: "🏪",
       desc: "专注门店零售，买入折扣上限提升至25%，解锁导购工作",
-      jobBonuses: ["shop_assistant", "promoter"],
+      jobBonuses: ["shop_assistant"], // promoter 待实现
       discountCap: 0.25,
       talentNodes: [
         {
@@ -514,7 +516,7 @@ var SKILL_BRANCHES = {
       name: "商务谈判",
       icon: "🤝",
       desc: "擅长商务谈判，卖出溢价上限提升至25%，解锁采购工作",
-      jobBonuses: ["procurement_clerk", "biz_negotiator"],
+      jobBonuses: ["procurement_clerk"], // biz_negotiator 待实现
       premiumCap: 0.25,
       talentNodes: [
         {
@@ -557,7 +559,7 @@ var SKILL_BRANCHES = {
       name: "团队管理",
       icon: "👥",
       desc: "专注团队建设，向上管理加成+50%，团队规模+2",
-      jobBonuses: ["team_lead", "project_coordinator"],
+      jobBonuses: ["project_coordinator"], // team_lead 待实现
       upwardMgmtMult: 1.5,
       teamSizeBonus: 2,
       talentNodes: [
@@ -598,7 +600,7 @@ var SKILL_BRANCHES = {
       name: "战略规划",
       icon: "📊",
       desc: "专注战略规划，向上管理加成+50%，解锁分析师岗位",
-      jobBonuses: ["analyst", "planning_assistant"],
+      jobBonuses: [], // analyst/planning_assistant 待实现
       upwardMgmtMult: 1.5,
       talentNodes: [
         {
@@ -641,7 +643,7 @@ var SKILL_BRANCHES = {
       name: "税务会计",
       icon: "🧾",
       desc: "专注税务处理，银行利率加成翻倍，解锁税务工作",
-      jobBonuses: ["tax_assistant", "bookkeeper"],
+      jobBonuses: [], // tax_assistant/bookkeeper 待实现
       bankRateMult: 2.0,
       talentNodes: [
         {
@@ -681,7 +683,7 @@ var SKILL_BRANCHES = {
       name: "审计风控",
       icon: "🔍",
       desc: "专注审计风控，职场风险-30%，解锁审计工作",
-      jobBonuses: ["audit_assistant", "risk_controller"],
+      jobBonuses: ["audit_assistant"], // risk_controller 待实现
       riskReduction: 0.3,
       talentNodes: [
         {
@@ -724,7 +726,7 @@ var SKILL_BRANCHES = {
       name: "强电工程",
       icon: "⚡",
       desc: "专注工业强电，工厂收入加成翻倍，解锁电力维护工作",
-      jobBonuses: ["factory_electrician", "power_line_assistant"],
+      jobBonuses: ["factory_electrician"], // power_line_assistant 待实现
       factoryBonusMult: 2.0,
       talentNodes: [
         {
@@ -764,7 +766,7 @@ var SKILL_BRANCHES = {
       name: "弱电智能",
       icon: "💡",
       desc: "专注弱电智能化，解锁智能家居/网络布线工作",
-      jobBonuses: ["smart_home_tech", "network_cabling"],
+      jobBonuses: ["factory_electrician"], // [全系统自洽修复] 域C 修复:弱电智能1.25x收入加成→指向真实电工工作factory_electrician
       incomeMult: 1.25,
       talentNodes: [
         {
@@ -807,7 +809,7 @@ var SKILL_BRANCHES = {
       name: "结构焊接",
       icon: "🏗️",
       desc: "专注建筑结构焊接，建筑收入加成+50%，解锁钢结构工作",
-      jobBonuses: ["steel_worker", "bridge_welder"],
+      jobBonuses: ["steel_worker"], // bridge_welder 待实现
       constructionBonusMult: 1.5,
       talentNodes: [
         {
@@ -847,7 +849,7 @@ var SKILL_BRANCHES = {
       name: "精密焊接",
       icon: "🔬",
       desc: "专注精密器件焊接，解锁珠宝/电子焊接工作",
-      jobBonuses: ["jewelry_welder", "electronics_welder"],
+      jobBonuses: ["steel_worker"], // [全系统自洽修复] 域C 修复:精密焊接1.3x收入加成→指向真实焊接工作steel_worker
       incomeMult: 1.3,
       talentNodes: [
         {

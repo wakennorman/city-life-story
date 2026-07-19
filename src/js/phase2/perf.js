@@ -3,11 +3,13 @@
  *
  * 综合评分 = KPI×0.35 + 能力×0.25 + 向上管理×0.20 + 人缘×0.15 + 团队×0.05
  * 评级 = 在20个模拟同事中的百分位排名
+ *
+ * [全系统自洽修复] 域C A类#6: state.corporate.rank/team 添加防御性空值守卫
  */
 
 function calculatePerfScore(state) {
   const c = state.player.corporate;
-  const rank = state.corporate.rank;
+  const rank = (state.corporate && state.corporate.rank) || "P5";
   const isLowRank = rank === "P5" || rank === "P6";
 
   // 职级分段权重
@@ -23,10 +25,11 @@ function calculatePerfScore(state) {
   }
 
   // 团队贡献 (P7+)
-  if (state.corporate.team.length > 0) {
+  var corpTeam = state.corporate && state.corporate.team;
+  if (corpTeam && corpTeam.length > 0) {
     const avgProd =
-      state.corporate.team.reduce((s, m) => s + (m.productivity || 5), 0) /
-      state.corporate.team.length;
+      corpTeam.reduce((s, m) => s + (m.productivity || 5), 0) /
+      corpTeam.length;
     score += avgProd * 0.05;
   }
 

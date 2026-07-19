@@ -139639,7 +139639,7 @@ var SKILL_BRANCHES = {
       name: "弱电智能",
       icon: "💡",
       desc: "专注弱电智能化，解锁智能家居/网络布线工作",
-      jobBonuses: [], // smart_home_tech/network_cabling 待实现
+      jobBonuses: ["factory_electrician"], // [全系统自洽修复] 域C 修复:弱电智能1.25x收入加成→指向真实电工工作factory_electrician
       incomeMult: 1.25,
       talentNodes: [
         {
@@ -139722,7 +139722,7 @@ var SKILL_BRANCHES = {
       name: "精密焊接",
       icon: "🔬",
       desc: "专注精密器件焊接，解锁珠宝/电子焊接工作",
-      jobBonuses: [], // jewelry_welder/electronics_welder 待实现
+      jobBonuses: ["steel_worker"], // [全系统自洽修复] 域C 修复:精密焊接1.3x收入加成→指向真实焊接工作steel_worker
       incomeMult: 1.3,
       talentNodes: [
         {

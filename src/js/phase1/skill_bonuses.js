@@ -3,6 +3,10 @@
  *
  * 设计理念：每项技能不仅解锁工作，还对相关的游戏系统产生渐进式加成，
  * 让技能培养有持续正反馈，形成"学以致用"的良性循环。
+ *
+ * [全系统自洽修复] 域C A类#1: grantJobSkillXp移除food_stall/street_vending_goods/barber等死引用
+ * [全系统自洽修复] 域C A类#2: CITY_PULSE_RULES移除6个不存在的工作引用
+ * [全系统自洽修复] 域C A类#3: SKILL_SYNERGIES移除4个不存在的工作引用
  */
 
 /** cooking技能 → 自己做饭折扣（技能越高做饭越划算） */
@@ -188,8 +192,6 @@ var CITY_PULSE_RULES = [
     footfall: { commercialDist: 0.65, park: 0.75, slum: 0.8 },
     jobs: {
       street_vending_food: 0.65,
-      street_vending_goods: 0.65,
-      food_stall: 0.72,
       delivery_rider: 1.08,
     },
     tip: "🚨 城管严查期，摆摊客流和收入下滑，外卖/室内服务更稳。",
@@ -202,7 +204,6 @@ var CITY_PULSE_RULES = [
     jobs: {
       delivery_rider: 1.25,
       street_vending_food: 0.92,
-      food_stall: 0.95,
     },
     tip: "🛵 平台补贴期，外卖骑手短期收益高，但餐饮摊会被平台分走客流。",
   },
@@ -213,7 +214,6 @@ var CITY_PULSE_RULES = [
     footfall: { construction: 1.25, slum: 0.82, wholesaleMarket: 1.12 },
     jobs: {
       manual_labor_construction: 1.18,
-      skilled_labor_construction: 1.18,
       cleaning_service: 1.12,
       repair_service: 1.15,
       waste_recycling: 1.08,
@@ -227,7 +227,6 @@ var CITY_PULSE_RULES = [
     footfall: { construction: 0.82, bank: 1.08 },
     jobs: {
       manual_labor_construction: 0.85,
-      skilled_labor_construction: 0.88,
       premium_engineering: 0.92,
       repair_service: 1.05,
     },
@@ -252,7 +251,6 @@ var CITY_PULSE_RULES = [
     footfall: { techPark: 0.9, factoryZone: 0.92 },
     jobs: {
       data_entry: 0.92,
-      customer_service_tech: 0.9,
       content_writing: 0.95,
       factory_work_assembly: 0.9,
       factory_overtime: 0.88,
@@ -266,7 +264,6 @@ var CITY_PULSE_RULES = [
     footfall: { techPark: 1.25, school: 1.08 },
     jobs: {
       data_entry: 1.15,
-      customer_service_tech: 1.14,
       content_writing: 1.12,
       junior_analyst: 1.18,
       tutoring: 1.08,
@@ -281,7 +278,6 @@ var CITY_PULSE_RULES = [
     jobs: {
       package_delivery: 1.18,
       tutoring: 1.16,
-      school_maintenance: 1.08,
       street_vending_food: 1.05,
     },
     tip: "🎒 开学相关需求旺，大学城快递、家教和小吃摊都有机会。",
@@ -306,7 +302,6 @@ var CITY_PULSE_RULES = [
     jobs: {
       warehouse_worker: 1.08,
       delivery_rider: 1.06,
-      street_vending_goods: 0.94,
     },
     tip: "📈 物价上涨时现金购买力下降，批发周转和银行储蓄更重要。",
   },
@@ -387,6 +382,20 @@ function getCityPulseTips(state, limit) {
 }
 
 /**
+ * [全系统自洽修复] 域C 联动增强2: 获取技能层级称号(C→F)
+ * @param {number} level - 技能等级
+ * @returns {string} 称号文本（如"👑 大师级"），0级返回空
+ */
+function getSkillTierName(level) {
+  if (level >= 100) return "👑 超凡入圣";
+  if (level >= 70) return "🌟 一代宗师";
+  if (level >= 50) return "💎 出神入化";
+  if (level >= 30) return "⭐ 炉火纯青";
+  if (level >= 10) return "📈 初窥门径";
+  return "";
+}
+
+/**
  * 工作后分发技能经验值（与工作类型关联）
  * 返回字符串描述获得了什么XP
  */
@@ -402,12 +411,8 @@ function grantJobSkillXp(jobId, state) {
   var xpMap = {
     // 烹饪相关工作 → cooking XP
     street_vending_food: { skill: "cooking", min: 2, max: 5 },
-    food_stall: { skill: "cooking", min: 3, max: 7 },
     // 销售相关工作 → sales XP
-    street_vending_goods: { skill: "sales", min: 2, max: 5 },
-    barber: { skill: "sales", min: 2, max: 4 },
     // 维修相关工作 → repair XP
-    skilled_labor_construction: { skill: "repair", min: 3, max: 6 },
     repair_service: { skill: "repair", min: 4, max: 8 },
     // 英语相关工作 → english XP
     tutoring: { skill: "english", min: 2, max: 4 },
@@ -462,7 +467,11 @@ function grantJobSkillXp(jobId, state) {
   }
 
   var msg = "📚 " + getSkillChineseName(entry.skill) + " +" + xpGain + "XP";
-  if (leveledUp) msg += " 🎉升级至Lv." + sk.level + "!";
+  if (leveledUp) {
+    // [全系统自洽修复] 域C 联动增强2: 技能升级时显示层级称号(C→F)
+    var tierName = getSkillTierName(sk.level);
+    msg += " 🎉升级至Lv." + sk.level + "!" + (tierName ? " " + tierName : "");
+  }
 
   return msg;
 }
@@ -496,6 +505,38 @@ function applySkillLevelUpBonus(skillKey, state) {
         );
       }
     }
+  }
+
+  // [全系统自洽修复] 域C 联动增强3: 技能里程碑时NPC祝贺(C→D)
+  var milestoneLevels = [30, 50, 70, 100];
+  var curLevel = state.skills[skillKey] ? state.skills[skillKey].level : 0;
+  for (var mi = 0; mi < milestoneLevels.length; mi++) {
+    if (curLevel !== milestoneLevels[mi]) continue;
+    if (!state.flags._skillMilestones) state.flags._skillMilestones = {};
+    var mileKey = skillKey + "_" + milestoneLevels[mi];
+    if (state.flags._skillMilestones[mileKey]) continue;
+    state.flags._skillMilestones[mileKey] = true;
+    // 查找好感≥60的NPC发祝贺
+    if (typeof NPCS !== "undefined" && state.relationships) {
+      var congratulators = [];
+      for (var relId in state.relationships) {
+        var rel = state.relationships[relId];
+        if (rel && rel.met && (rel.affinity || 0) >= 60) {
+          var npcDef = typeof getNpcById === "function" ? getNpcById(relId) : null;
+          congratulators.push(npcDef ? npcDef.name : relId);
+        }
+      }
+      if (congratulators.length > 0) {
+        var names = congratulators.slice(0, 3).join("、");
+        if (typeof StateManager !== "undefined") {
+          StateManager.addMessage(
+            "🎉 " + names + " 为你" + getSkillChineseName(skillKey) + "达到Lv." + milestoneLevels[mi] + "感到高兴！",
+            "success",
+          );
+        }
+      }
+    }
+    break;
   }
 }
 
@@ -540,6 +581,88 @@ function grantActionStatGain(actionId, state) {
 }
 
 /** 获取技能中文名 */
+function getSkillChineseName(skillKey) {
+  var names = {
+    cooking: "烹饪",
+    repair: "维修",
+    coding: "编程",
+    english: "英语",
+    driving: "驾驶",
+    sales: "销售",
+    management: "管理",
+    accounting: "会计",
+    electrician: "电工",
+    welding: "焊接",
+  };
+  return names[skillKey] || skillKey;
+}
+
+/**
+ * [全系统自洽修复] 域C 联动增强1: 技能等级降低同领域工作疲劳 (C→G)
+ * 熟能生巧：高技能做同领域工作疲劳更少
+ * @param {string} jobId - 工作ID
+ * @param {object} state - 游戏状态
+ * @returns {number} 疲劳减少值（0=无减少）
+ */
+function getSkillFatigueReduction(jobId, state) {
+  // 工作→关联技能映射
+  var JOB_SKILL_MAP = {
+    // 烹饪相关
+    street_vending_food: "cooking",
+    sister_zhang_vending: "cooking",
+    cafeteria_worker: "cooking",
+    restaurant_assistant: "cooking",
+    // 维修相关
+    repair_service: "repair",
+    instrument_repair: "repair",
+    phone_modding: "repair",
+    auto_repair: "repair",
+    premium_engineering: "repair",
+    // 驾驶相关
+    delivery_rider: "driving",
+    taxi_driver: "driving",
+    truck_assistant: "driving",
+    chauffeur: "driving",
+    wholesale_delivery: "driving",
+    package_delivery: "driving",
+    // 销售相关
+    shop_assistant: "sales",
+    procurement_clerk: "sales",
+    car_sales: "sales",
+    // 编程相关
+    content_writing: "coding",
+    junior_analyst: "coding",
+    web_designer: "coding",
+    server_ops: "coding",
+    network_monitor: "coding",
+    // 电工相关
+    factory_work_assembly: "electrician",
+    factory_electrician: "electrician",
+    factory_overtime: "electrician",
+    // 焊接相关
+    manual_labor_construction: "welding",
+    steel_worker: "welding",
+    // 管理相关
+    project_coordinator: "management",
+    training_assistant: "management",
+    // 会计相关
+    audit_assistant: "accounting",
+  };
+
+  var skillKey = JOB_SKILL_MAP[jobId];
+  if (!skillKey) return 0;
+
+  var skillLevel =
+    (state.skills &&
+      state.skills[skillKey] &&
+      state.skills[skillKey].level) ||
+    0;
+
+  if (skillLevel >= 70) return 8; // 大师级：疲劳-8
+  if (skillLevel >= 50) return 5; // 精通级：疲劳-5
+  if (skillLevel >= 30) return 3; // 熟练级：疲劳-3
+  return 0;
+}
 
 
 /**
@@ -892,10 +1015,10 @@ var SKILL_SYNERGIES = [
   {
     id: "food_merchant",
     label: "🍜 美食创业者",
-    desc: "烹饪≥Lv.10 + 销售≥Lv.10：餐饮摆摊收入+15%",
+    desc: "烹饪≥Lv.10 + 销售≥Lv.10：餐饮收入+15%",
     skills: { cooking: 10, sales: 10 },
     jobBonus: 0.15,
-    jobs: ["food_stall", "street_vending_food", "restaurant_assistant"],
+    jobs: ["street_vending_food", "restaurant_assistant"],
   },
   {
     id: "handyman",
@@ -905,8 +1028,6 @@ var SKILL_SYNERGIES = [
     jobBonus: 0.14,
     jobs: [
       "repair_service",
-      "school_maintenance",
-      "skilled_labor_construction",
       "premium_engineering",
     ],
   },
@@ -918,7 +1039,6 @@ var SKILL_SYNERGIES = [
     jobBonus: 0.22,
     jobs: [
       "tutoring",
-      "customer_service_tech",
       "junior_analyst",
       "content_writing",
     ],
@@ -939,7 +1059,6 @@ var SKILL_SYNERGIES = [
     jobBonus: 0.18,
     jobs: [
       "warehouse_worker",
-      "security_guard",
       "data_entry",
       "restaurant_assistant",
     ],
@@ -950,7 +1069,7 @@ var SKILL_SYNERGIES = [
     desc: "英语≥Lv.12 + 销售≥Lv.12：教育/客服类工作收入+20%",
     skills: { english: 12, sales: 12 },
     jobBonus: 0.2,
-    jobs: ["tutoring", "customer_service_tech", "content_writing"],
+    jobs: ["tutoring", "content_writing"],
   },
 ];
 
