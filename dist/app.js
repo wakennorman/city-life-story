@@ -150960,6 +150960,44 @@ function getCurrentHousing(state) {
   return HOUSING_TIERS[state.housing?.tier || 0] || HOUSING_TIERS[0];
 }
 
+/**
+ * 验证食材在 ITEMS 和 GOODS 之间的价格一致性
+ * 仅在开发环境（非生产）调用，防止数据不同步
+ * @returns {Array<string>} 不一致项的警告列表
+ */
+function validateIngredientPrices() {
+  var warnings = [];
+  if (typeof GOODS === 'undefined') return warnings;
+  for (var i = 0; i < ITEMS.length; i++) {
+    var item = ITEMS[i];
+    if (!item.isIngredient) continue;
+    var good = null;
+    for (var g = 0; g < GOODS.length; g++) {
+      if (GOODS[g].id === item.id && GOODS[g].isIngredient) {
+        good = GOODS[g];
+        break;
+      }
+    }
+    if (!good) continue;
+    if (Math.abs(item.price - good.basePrice) > 0.01) {
+      warnings.push(
+        '食材价格不一致: ' + item.name + ' — ITEMS: ¥' + item.price + ', GOODS: ¥' + good.basePrice
+      );
+    }
+  }
+  if (warnings.length > 0 && typeof console !== 'undefined') {
+    console.warn('[数据验证] 食材价格不一致(' + warnings.length + '项):', warnings);
+  }
+  return warnings;
+}
+
+// 自动执行验证（仅在非生产环境）
+if (typeof window !== 'undefined' && window.location && window.location.hostname === 'localhost') {
+  setTimeout(validateIngredientPrices, 1000);
+}
+
+// [全系统自洽修复] 域A 联动增强#1: 食材价格同步验证函数 — 确保 ITEMS 与 GOODS 间食材价格一致
+
 // P1-2 CLS 命名空间注册
 if (typeof window.CLS !== 'undefined' && window.CLS.data) window.CLS.data.ITEMS = ITEMS;
 
@@ -159669,13 +159707,13 @@ const ILLNESSES = {
     severity: 6,
     naturalCureDays: [60, 120],
     isChronic: true,
-    triggerHabit: { nephropathyCount: 1, age: 50 },
+    triggerHabit: { kidneyDiseaseCount: 1, age: 50 }, // [全系统自洽修复] 域A A类#4: nephropathyCount→kidneyDiseaseCount
     triggerChance: 0.2,
     symptom: { health: -4, fatigue: 6, physiqueDebuff: 8, kidneyFunctionLow: true },
     treatCost: { hospital_monthly: 800 },
     desc: "肾病恶化至肾衰竭，需要定期透析或移植。按月治疗（¥800/月）。",
     isEvolution: true,
-    evolvesFrom: ["hypertensive_nephropathy"],
+    evolvesFrom: ["kidney_disease"], // [全系统自洽修复] 域A A类#1: hypertensive_nephropathy→kidney_disease
   },
   heart_attack: {
     id: "heart_attack",
@@ -159683,13 +159721,13 @@ const ILLNESSES = {
     icon: "💔",
     severity: 6,
     naturalCureDays: [60, 90],
-    triggerHabit: { coronaryHeartDiseaseCount: 1, age: 45 },
+    triggerHabit: { heartDiseaseCount: 1, age: 45 }, // [全系统自洽修复] 域A A类#5: coronaryHeartDiseaseCount→heartDiseaseCount
     triggerChance: 0.15,
     symptom: { health: -5, fatigue: 8, physiqueDebuff: 10, randomChestPain: 0.05 },
     treatCost: { hospital_monthly: 600 },
     desc: "冠心病恶化导致心脏病发作。需要按月治疗（¥600/月）+ 严格避免劳累和情绪激动。",
     isEvolution: true,
-    evolvesFrom: ["coronary_heart_disease"],
+    evolvesFrom: ["heart_disease"], // [全系统自洽修复] 域A A类#2: coronary_heart_disease→heart_disease
   },
 
   liver_cancer: {
@@ -159704,7 +159742,7 @@ const ILLNESSES = {
     treatCost: { hospital: 50000 },
     desc: "脂肪肝长期未愈演化成肝癌。健康急剧下降，食欲严重丧失。手术是唯一可能根治的手段，费用极高。",
     isEvolution: true,
-    evolvesFrom: ["fatty_liver"],
+    evolvesFrom: ["liver_cirrhosis"], // [全系统自洽修复] 域A A类#3: fatty_liver→liver_cirrhosis 正确演化链: 脂肪肝→肝硬化→肝癌
     isCritical: true,
   },
 };
@@ -178548,6 +178586,29 @@ var MARKET_EVENTS = [
     season: ["summer", "winter"],
     desc: "品牌换季清仓大甩卖",
   },
+
+  // ====== 宏观经济周期事件（影响所有商品） ======
+  // 联动增强：数据→经济系统深度联动，模拟宏观经济波动
+  {
+    id: "inflation_cycle",
+    name: "通胀周期",
+    goodId: "*", // 特殊标记：影响所有商品
+    priceMod: 1.15,
+    duration: 5,
+    prob: 0.015,
+    season: null,
+    desc: "宏观经济通胀，所有商品价格上涨15%",
+  },
+  {
+    id: "deflation_cycle",
+    name: "通缩周期",
+    goodId: "*",
+    priceMod: 0.85,
+    duration: 5,
+    prob: 0.015,
+    season: null,
+    desc: "宏观经济通缩，所有商品价格下降15%",
+  },
 ];
 
 /** 检查并触发市场事件 */
@@ -178593,8 +178654,9 @@ function getMarketEventPriceMod(state, goodId) {
   if (!state.trade.marketEvents) return 1.0;
   var mod = 1.0;
   for (var i = 0; i < state.trade.marketEvents.length; i++) {
-    if (state.trade.marketEvents[i].goodId === goodId)
-      mod *= state.trade.marketEvents[i].priceMod;
+    var evt = state.trade.marketEvents[i];
+    if (evt.goodId === goodId || evt.goodId === "*") // 支持"*"全商品事件
+      mod *= evt.priceMod;
   }
   return mod;
 }

@@ -1050,5 +1050,43 @@ function getCurrentHousing(state) {
   return HOUSING_TIERS[state.housing?.tier || 0] || HOUSING_TIERS[0];
 }
 
+/**
+ * 验证食材在 ITEMS 和 GOODS 之间的价格一致性
+ * 仅在开发环境（非生产）调用，防止数据不同步
+ * @returns {Array<string>} 不一致项的警告列表
+ */
+function validateIngredientPrices() {
+  var warnings = [];
+  if (typeof GOODS === 'undefined') return warnings;
+  for (var i = 0; i < ITEMS.length; i++) {
+    var item = ITEMS[i];
+    if (!item.isIngredient) continue;
+    var good = null;
+    for (var g = 0; g < GOODS.length; g++) {
+      if (GOODS[g].id === item.id && GOODS[g].isIngredient) {
+        good = GOODS[g];
+        break;
+      }
+    }
+    if (!good) continue;
+    if (Math.abs(item.price - good.basePrice) > 0.01) {
+      warnings.push(
+        '食材价格不一致: ' + item.name + ' — ITEMS: ¥' + item.price + ', GOODS: ¥' + good.basePrice
+      );
+    }
+  }
+  if (warnings.length > 0 && typeof console !== 'undefined') {
+    console.warn('[数据验证] 食材价格不一致(' + warnings.length + '项):', warnings);
+  }
+  return warnings;
+}
+
+// 自动执行验证（仅在非生产环境）
+if (typeof window !== 'undefined' && window.location && window.location.hostname === 'localhost') {
+  setTimeout(validateIngredientPrices, 1000);
+}
+
+// [全系统自洽修复] 域A 联动增强#1: 食材价格同步验证函数 — 确保 ITEMS 与 GOODS 间食材价格一致
+
 // P1-2 CLS 命名空间注册
 if (typeof window.CLS !== 'undefined' && window.CLS.data) window.CLS.data.ITEMS = ITEMS;

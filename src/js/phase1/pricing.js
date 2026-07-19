@@ -363,6 +363,29 @@ var MARKET_EVENTS = [
     season: ["summer", "winter"],
     desc: "品牌换季清仓大甩卖",
   },
+
+  // ====== 宏观经济周期事件（影响所有商品） ======
+  // 联动增强：数据→经济系统深度联动，模拟宏观经济波动
+  {
+    id: "inflation_cycle",
+    name: "通胀周期",
+    goodId: "*", // 特殊标记：影响所有商品
+    priceMod: 1.15,
+    duration: 5,
+    prob: 0.015,
+    season: null,
+    desc: "宏观经济通胀，所有商品价格上涨15%",
+  },
+  {
+    id: "deflation_cycle",
+    name: "通缩周期",
+    goodId: "*",
+    priceMod: 0.85,
+    duration: 5,
+    prob: 0.015,
+    season: null,
+    desc: "宏观经济通缩，所有商品价格下降15%",
+  },
 ];
 
 /** 检查并触发市场事件 */
@@ -408,8 +431,9 @@ function getMarketEventPriceMod(state, goodId) {
   if (!state.trade.marketEvents) return 1.0;
   var mod = 1.0;
   for (var i = 0; i < state.trade.marketEvents.length; i++) {
-    if (state.trade.marketEvents[i].goodId === goodId)
-      mod *= state.trade.marketEvents[i].priceMod;
+    var evt = state.trade.marketEvents[i];
+    if (evt.goodId === goodId || evt.goodId === "*") // 支持"*"全商品事件
+      mod *= evt.priceMod;
   }
   return mod;
 }

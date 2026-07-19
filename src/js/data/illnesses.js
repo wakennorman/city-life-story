@@ -500,13 +500,13 @@ const ILLNESSES = {
     severity: 6,
     naturalCureDays: [60, 120],
     isChronic: true,
-    triggerHabit: { nephropathyCount: 1, age: 50 },
+    triggerHabit: { kidneyDiseaseCount: 1, age: 50 }, // [全系统自洽修复] 域A A类#4: nephropathyCount→kidneyDiseaseCount
     triggerChance: 0.2,
     symptom: { health: -4, fatigue: 6, physiqueDebuff: 8, kidneyFunctionLow: true },
     treatCost: { hospital_monthly: 800 },
     desc: "肾病恶化至肾衰竭，需要定期透析或移植。按月治疗（¥800/月）。",
     isEvolution: true,
-    evolvesFrom: ["hypertensive_nephropathy"],
+    evolvesFrom: ["kidney_disease"], // [全系统自洽修复] 域A A类#1: hypertensive_nephropathy→kidney_disease
   },
   heart_attack: {
     id: "heart_attack",
@@ -514,13 +514,13 @@ const ILLNESSES = {
     icon: "💔",
     severity: 6,
     naturalCureDays: [60, 90],
-    triggerHabit: { coronaryHeartDiseaseCount: 1, age: 45 },
+    triggerHabit: { heartDiseaseCount: 1, age: 45 }, // [全系统自洽修复] 域A A类#5: coronaryHeartDiseaseCount→heartDiseaseCount
     triggerChance: 0.15,
     symptom: { health: -5, fatigue: 8, physiqueDebuff: 10, randomChestPain: 0.05 },
     treatCost: { hospital_monthly: 600 },
     desc: "冠心病恶化导致心脏病发作。需要按月治疗（¥600/月）+ 严格避免劳累和情绪激动。",
     isEvolution: true,
-    evolvesFrom: ["coronary_heart_disease"],
+    evolvesFrom: ["heart_disease"], // [全系统自洽修复] 域A A类#2: coronary_heart_disease→heart_disease
   },
 
   liver_cancer: {
@@ -535,7 +535,7 @@ const ILLNESSES = {
     treatCost: { hospital: 50000 },
     desc: "脂肪肝长期未愈演化成肝癌。健康急剧下降，食欲严重丧失。手术是唯一可能根治的手段，费用极高。",
     isEvolution: true,
-    evolvesFrom: ["fatty_liver"],
+    evolvesFrom: ["liver_cirrhosis"], // [全系统自洽修复] 域A A类#3: fatty_liver→liver_cirrhosis 正确演化链: 脂肪肝→肝硬化→肝癌
     isCritical: true,
   },
 };
