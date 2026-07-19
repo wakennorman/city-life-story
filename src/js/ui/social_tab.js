@@ -131,6 +131,10 @@ function renderNpcRelationships(state, content) {
       });
     var _displayName = _npcDef ? _npcDef.name : npcId.replace(/_/g, " ");
     html += '<span style="font-weight:bold;">' + _displayName + "</span>";
+    // [全系统自洽修复] 域D 联动增强2: 挚友(≥80)特殊标记+奖励提示
+    if (affinity >= 80) {
+      html += '<span style="margin-left:4px;font-size:9px;background:var(--success);color:#fff;border-radius:3px;padding:1px 5px;">挚友</span>';
+    }
     html +=
       '<span style="margin-left:auto;">' + Math.round(affinity) + "</span>";
     html += "</div>";

@@ -6399,5 +6399,57 @@
     RANDOM_EVENTS.push(ev_branch_choice);
     RANDOM_EVENTS.push(ev_talent_light);
     RANDOM_EVENTS.push(ev_mastery);
+
+    // [全系统自洽修复] 域D 联动增强1: 夜市情报交换 — 陈哥&老周双NPC好感联动事件
+    (function () {
+      RANDOM_EVENTS.push({
+        id: "night_market_info_swap",
+        phase: "street",
+        icon: "🌙",
+        title: "夜市情报交换",
+        story: "夜市收摊时分，陈哥和老周难得坐在一起喝啤酒。陈哥朝你招手：「过来过来，正说起你呢！」\n老周咧嘴一笑：「这小子在废品站学到不少门道，现在可精了。」\n陈哥眯起眼：「那正好，我手头有条消息，老周的人脉加上你的脑子，能搞点事情。」",
+        triggers: {
+          minDay: 30,
+          relationshipMet: "chen_ge",
+          relationshipAffinityMin: [{ id: "chen_ge", min: 50 }, { id: "old_zhou", min: 50 }],
+          excludeFlags: ["_npcInfoSwapDone"],
+        },
+        choices: [
+          {
+            text: "🤝 掺一脚，听听是什么消息",
+            hint: "智力+2，现金+200，解锁隐藏情报",
+            apply: function (st) {
+              st.flags._npcInfoSwapDone = true;
+              st.player.intelligence = Math.min(100, (st.player.intelligence || 0) + 2);
+              st.resources.cash += 200;
+              st.resources.totalEarned += 200;
+              st.flags._nightMarketInfo = true;
+              if (st.relationships.chen_ge) st.relationships.chen_ge.affinity = Math.min(100, (st.relationships.chen_ge.affinity || 0) + 3);
+              if (st.relationships.old_zhou) st.relationships.old_zhou.affinity = Math.min(100, (st.relationships.old_zhou.affinity || 0) + 3);
+              StateManager.addMessage("🌙 陈哥说的消息是：城西要建新物流园，附近的废品站和批发市场都会受益。你提前锁定了这个信息！智力+2，现金+200，陈哥和老周好感各+3。", "success");
+            },
+          },
+          {
+            text: "🍺 坐下一起喝一杯",
+            hint: "心情+10，好感各+5",
+            apply: function (st) {
+              st.flags._npcInfoSwapDone = true;
+              st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 10);
+              if (st.relationships.chen_ge) st.relationships.chen_ge.affinity = Math.min(100, (st.relationships.chen_ge.affinity || 0) + 5);
+              if (st.relationships.old_zhou) st.relationships.old_zhou.affinity = Math.min(100, (st.relationships.old_zhou.affinity || 0) + 5);
+              StateManager.addMessage("🍺 你坐下来，听两人聊城里的旧事和新鲜事。老周说他年轻时候也做过情报，陈哥哈哈大笑。夜市的灯火里，你觉得自己终于融入了这座城市的角落。心情+10，好感各+5。", "info");
+            },
+          },
+          {
+            text: "🚶 不凑这个热闹",
+            hint: "无效果",
+            apply: function (st) {
+              st.flags._npcInfoSwapDone = true;
+              StateManager.addMessage("🚶 你摆摆手走了。身后传来陈哥的声音：「这小子，还是这么独。」", "info");
+            },
+          },
+        ],
+      });
+    })();
   })();
 })();

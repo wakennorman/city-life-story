@@ -286,6 +286,33 @@ function buildReportHTML(txs, state, reconcileInfo) {
   bodyHtml += peakHTML;
   bodyHtml += "</div>";
 
+  // [全系统自洽修复] 域D 联动增强3: NPC近况 — 随机显示已结识NPC的动态（D→G 核心日报）
+  (function () {
+    if (!state.relationships || !state.player) return;
+    var _npcUpdates = [];
+    for (var _ni = 0; _ni < (typeof NPCS !== "undefined" ? NPCS.length : 0); _ni++) {
+      var _n = NPCS[_ni];
+      if (!_n || !_n.id) continue;
+      var _rel = state.relationships[_n.id];
+      if (!_rel || !_rel.met || (_rel.affinity || 0) < 20) continue;
+      if (_n.encounterLines && _n.encounterLines.length > 0) {
+        var _line = _n.encounterLines[Math.floor(Math.random() * _n.encounterLines.length)];
+        _npcUpdates.push({ name: _n.name, line: _line, aff: _rel.affinity || 0 });
+      }
+    }
+    if (_npcUpdates.length > 0) {
+      // 随机选1-2条
+      _npcUpdates.sort(function () { return Math.random() - 0.5; });
+      var _count = Math.min(2, _npcUpdates.length);
+      bodyHtml += '<div class="daily-report-npc" style="padding:6px 0;margin:2px 0 4px;border-top:1px solid var(--border);font-size:11px;color:var(--text-muted);">';
+      bodyHtml += '<span style="font-weight:bold;font-size:11px;">👥 城中见闻</span>';
+      for (var _ui = 0; _ui < _count; _ui++) {
+        bodyHtml += '<div style="padding:2px 0;">' + _npcUpdates[_ui].name + '：' + _npcUpdates[_ui].line + '</div>';
+      }
+      bodyHtml += '</div>';
+    }
+  })();
+
   // 明日展望（留存钩子 — 让玩家期待明天）
   if (tomorrowHTML) {
     bodyHtml +=

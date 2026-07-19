@@ -667,6 +667,23 @@ function applyAffinityChange(state, npcId, change, reason) {
     state.relationships[npcId]._lastInteractionDay = state.player.day;
   }
 
+  // [全系统自洽修复] 域D A类#3: 记录每日互动到 npcRelationshipLog，供蝴蝶效应传播系统消费
+  if (state.player && state.player.day) {
+    if (!state.npcRelationshipLog) state.npcRelationshipLog = {};
+    if (!state.npcRelationshipLog.dailyInteractions) {
+      state.npcRelationshipLog.dailyInteractions = {};
+    }
+    var _existing = state.npcRelationshipLog.dailyInteractions[npcId];
+    if (_existing) {
+      _existing.change += change;
+    } else {
+      state.npcRelationshipLog.dailyInteractions[npcId] = {
+        change: change,
+        reason: reason || "互动",
+      };
+    }
+  }
+
   if (change !== 0) {
     var oldLabel = getAffinityLabel(oldAffinity);
     var newLabel = getAffinityLabel(newAffinity);

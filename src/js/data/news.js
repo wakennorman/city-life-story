@@ -465,10 +465,10 @@ const NEWS_EVENTS = [
         apply: (st) => {
           st.needs.hunger = Math.min(100, st.needs.hunger + 10);
           st.needs.happiness = Math.min(100, st.needs.happiness + 8);
-          if (st.relationships && st.relationships.auntWang) {
-            st.relationships.auntWang.affinity = Math.min(
+          if (st.relationships && st.relationships.aunt_wang) {
+            st.relationships.aunt_wang.affinity = Math.min(
               100,
-              (st.relationships.auntWang.affinity || 0) + 3,
+              (st.relationships.aunt_wang.affinity || 0) + 3,
             );
           }
           StateManager.addMessage(
@@ -488,10 +488,10 @@ const NEWS_EVENTS = [
           }
           st.resources.cash -= 20;
           st.needs.happiness = Math.min(100, st.needs.happiness + 5);
-          if (st.relationships && st.relationships.auntWang) {
-            st.relationships.auntWang.affinity = Math.min(
+          if (st.relationships && st.relationships.aunt_wang) {
+            st.relationships.aunt_wang.affinity = Math.min(
               100,
-              (st.relationships.auntWang.affinity || 0) + 5,
+              (st.relationships.aunt_wang.affinity || 0) + 5,
             );
           }
           StateManager.addMessage(
@@ -505,10 +505,10 @@ const NEWS_EVENTS = [
         hint: "不想欠人情",
         apply: (st) => {
           st.needs.happiness = Math.max(0, st.needs.happiness - 2);
-          if (st.relationships && st.relationships.auntWang) {
-            st.relationships.auntWang.affinity = Math.max(
+          if (st.relationships && st.relationships.aunt_wang) {
+            st.relationships.aunt_wang.affinity = Math.max(
               0,
-              (st.relationships.auntWang.affinity || 0) - 3,
+              (st.relationships.aunt_wang.affinity || 0) - 3,
             );
           }
           StateManager.addMessage(

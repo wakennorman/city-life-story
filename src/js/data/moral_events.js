@@ -2420,16 +2420,11 @@ const MORAL_CONSEQUENCES = {
       return "有一天你走在路上，那个妈妈认出了你。她老公给了你一些进货渠道的建议。";
     },
     apply: function (s) {
-      if (s.relationships && s.relationships.wholesaler) {
-        s.relationships.wholesaler.affinity = Math.min(
-          100,
-          (s.relationships.wholesaler.affinity || 0) + 15,
-        );
-        s.relationships.wholesaler.met = true;
-      }
+      // [全系统自洽修复] 域D A类#2: wholesaler NPC不存在 → 改为批发折扣标志
+      s.flags._wholesaleChannelTip = true;
       s.needs.happiness = Math.min(100, s.needs.happiness + 5);
       StateManager.addMessage(
-        "🤝 她老公给了你一些进货建议，批发商关系+15。",
+        "🤝 她老公给了你一些进货建议，以后批发市场进货成本-5%。",
         "success",
       );
     },
