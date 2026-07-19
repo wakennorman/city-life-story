@@ -8212,6 +8212,8 @@ function showLegalComplianceModal(state) {
 /** 显示法律事件应对弹窗 */
 function showLegalResponseModal(eventId) {
   const state = StateManager.getState();
+  // [全系统自洽修复] 域E A类#1: state.startup 可能未定义（Phase1玩家/旧存档），导致 .company 裸访问→TypeError
+  if (!state || !state.startup || !state.startup.company) return;
   const company = state.startup.company;
   if (!company || !company.pendingLegalEvent) return;
 
@@ -8279,8 +8281,10 @@ function showLegalResponseModal(eventId) {
 
 /** 显示竞争对手防御面板 */
 function showCompetitorDefenseModal(state) {
+  // [全系统自洽修复] 域E A类#2: state.startup 可能未定义，导致 .company 裸访问→TypeError
+  if (!state || !state.startup || !state.startup.company)
+    return { success: false, message: "没有公司" };
   const company = state.startup.company;
-  if (!company) return { success: false, message: "没有公司" };
 
   const competitors = state.startup.competitors || [];
   const activeAttacks = company.activeCompetitorAttacks || [];

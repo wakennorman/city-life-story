@@ -287,6 +287,158 @@
         },
       ],
     },
+
+    // ===== ④ E→D：投资盈利→NPC注意到你的变化（社交溢出）=====
+    {
+      id: "investment_profit_npc_attention",
+      phase: "street",
+      icon: "💰",
+      title: "钱多了，朋友的眼神也变了",
+      story:
+        "这几个月账户红了又绿，但总体是赚的。你换了部新手机，穿了件像样的外套。\n\n朋友聚会时，有人不经意多看了你两眼。「你现在看着不像当初那个打零工的了。」\n\n钱不一定让人快乐，但确实改变了别人看你的方式。",
+      triggers: { minDay: 90, excludeFlags: ["_profitNpcAttention"] },
+      conditions: function (st) {
+        var inv = st.investment;
+        if (!inv) return false;
+        var holds =
+          (inv.stockHoldings && inv.stockHoldings.length > 0) ||
+          inv.btcHoldings > 0;
+        if (!holds) return false;
+        var rels = st.relationships || {};
+        return Object.keys(rels).some(function (k) {
+          var r = rels[k];
+          return r && r.met && (r.affinity || 0) >= 10;
+        });
+      },
+      probability: 0.05,
+      repeatable: false,
+      choices: [
+        {
+          text: "🤝 请朋友们吃顿好的",
+          hint: "花钱买开心，NPC好感+3~5",
+          apply: function (st) {
+            st.flags._profitNpcAttention = true;
+            var npcId = pickClosestMetNpc(st);
+            if (npcId && typeof applyAffinityChange === "function") {
+              applyAffinityChange(st, npcId, 3, "投资盈利·请客吃饭");
+            }
+            if (st.resources) st.resources.cash = Math.max(0, (st.resources.cash || 0) - 500);
+            st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 5);
+            StateManager.addMessage("🤝 你请朋友们吃了顿好的。钱花在值得的地方，比存在账户里更有意义。心情+5。", "success");
+          },
+        },
+        {
+          text: "😏 保持低调，不声张",
+          hint: "低调行事，避免嫉妒",
+          apply: function (st) {
+            st.flags._profitNpcAttention = true;
+            st.player.morality = Math.min(100, (st.player.morality || 50) + 2);
+            StateManager.addMessage("😏 你没显摆，日子该怎么过还怎么过。低调是金。道德+2。", "info");
+          },
+        },
+      ],
+    },
+
+    // ===== ⑤ E→G：巨额投资亏损→经济焦虑心理事件=====
+    {
+      id: "investment_loss_anxiety",
+      phase: "street",
+      icon: "📉",
+      title: "账户绿到让你睡不着",
+      story:
+        "今天你打开投资软件，发现持仓又绿了。算了一下，这笔钱够交三个月房租。\n\n你开始怀疑自己：到底是该继续持有等反弹，还是赶紧割肉保住本金？\n\n失眠的那晚，你终于明白——投资最大的敌人不是市场，是自己。",
+      triggers: { minDay: 60, excludeFlags: ["_invLossAnxiety"] },
+      conditions: function (st) {
+        var inv = st.investment;
+        if (!inv) return false;
+        var holds = inv.stockHoldings || [];
+        if (holds.length === 0) return false;
+        var totalPL = 0;
+        for (var i = 0; i < holds.length; i++) {
+          var h = holds[i];
+          var m = inv.stockMarket && inv.stockMarket[h.symbol];
+          if (m && m.price && h.avgPrice) {
+            totalPL += (m.price - h.avgPrice) * (h.shares || 0);
+          }
+        }
+        return totalPL < -10000; // [PLACEHOLDER] 浮亏超过¥10000触发
+      },
+      probability: 0.03,
+      repeatable: false,
+      choices: [
+        {
+          text: "🧘 深呼吸，接受亏损是投资的一部分",
+          hint: "心智+5，心情-2",
+          apply: function (st) {
+            st.flags._invLossAnxiety = true;
+            st.player.mental = Math.min(100, (st.player.mental || 50) + 5);
+            st.needs.happiness = Math.max(0, (st.needs.happiness || 50) - 2);
+            StateManager.addMessage("🧘 你接受了亏损的现实。投资第一课：市场永远比你聪明。心智+5。", "info");
+          },
+        },
+        {
+          text: "📖 停下来学习，补补投资知识",
+          hint: "finance技能+8，心智+3",
+          apply: function (st) {
+            st.flags._invLossAnxiety = true;
+            if (typeof addSkillXp === "function") addSkillXp("finance", 8);
+            st.player.mental = Math.min(100, (st.player.mental || 50) + 3);
+            StateManager.addMessage("📖 你翻出了《聪明的投资者》，决心把亏的钱变成学费。finance+8。", "good");
+          },
+        },
+        {
+          text: "😤 不管了，反正也不是真钱",
+          hint: "心情+3，但可能错失止损时机",
+          apply: function (st) {
+            st.flags._invLossAnxiety = true;
+            st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 3);
+            StateManager.addMessage("😤 你关掉了软件。眼不见为净——反正浮亏不是真亏。心情+3。", "warning");
+          },
+        },
+      ],
+    },
+
+    // ===== ⑥ E→D：财富税触发→NPC间的经济话题=====
+    {
+      id: "wealth_tax_npc_conversation",
+      phase: "corporate",
+      icon: "🏛️",
+      title: "收到财富税通知的那天",
+      story:
+        "你收到了一条银行短信：「您的财富税已扣除¥X,XXX。」\n\n中午和同事吃饭，有人提起最近涨的税。有人说该转移资产，有人说这是共同富裕。\n\n你忽然意识到：当你开始被收财富税的时候，说明你已经不是一般打工人了。",
+      triggers: { minDay: 180, excludeFlags: ["_wealthTaxNpc"] },
+      conditions: function (st) {
+        var settlement = st._economySettlement;
+        if (!settlement || !settlement.activeTaxTier) return false;
+        return settlement.wealthTax > 0;
+      },
+      probability: 0.04,
+      repeatable: false,
+      choices: [
+        {
+          text: "🤝 融入规则，学习税务筹划",
+          hint: "心智+4，finance技能+5",
+          apply: function (st) {
+            st.flags._wealthTaxNpc = true;
+            st.player.mental = Math.min(100, (st.player.mental || 50) + 4);
+            if (typeof addSkillXp === "function") addSkillXp("finance", 5);
+            st.flags._taxPlanning = true;
+            StateManager.addMessage("🤝 你没有抱怨，而是开始研究税务筹划。这是富人必修的课。心智+4，finance+5。", "good");
+          },
+        },
+        {
+          text: "💬 和同事聊聊资产配置",
+          hint: "职场声誉+3，社交加深",
+          apply: function (st) {
+            st.flags._wealthTaxNpc = true;
+            if (st.player.corporate) {
+              st.player.corporate.upwardMgmt = Math.min(100, (st.player.corporate.upwardMgmt || 50) + 3);
+            }
+            StateManager.addMessage("💬 你和几个同事讨论了资产配置的不同思路。信息差就是财富差。职场声誉+3。", "success");
+          },
+        },
+      ],
+    },
   ];
 
   for (var i = 0; i < ECON_EVENTS.length; i++) {
