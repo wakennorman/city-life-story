@@ -988,6 +988,15 @@ function renderWeatherPanel(state) {
     ';margin-left:auto;">☂️' +
     comfortLabel +
     "</span>";
+  // [全系统自洽修复] 域F 联动增强1: 极温预警 — 温度>35°C或<-5°C时额外提示
+  var temp = w.temperature || 22;
+  if (temp > 35) {
+    html +=
+      '<span style="font-size:10px;color:var(--danger);margin-left:4px;">🔥 高温预警！注意防暑</span>';
+  } else if (temp < -5) {
+    html +=
+      '<span style="font-size:10px;color:var(--info);margin-left:4px;">❄️ 严寒预警！注意防寒</span>';
+  }
   html += "</div>";
 
   if (isPersistent) {

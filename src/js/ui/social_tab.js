@@ -475,6 +475,36 @@ function renderSocialOverviewTab(state, content) {
   else html += '<p style="font-size:11px;color:var(--danger);">📈 差距不小，但别灰心——每天进步一点点。</p>';
   html += "</div></div>";
 
+  // [全系统自洽修复] 域F 联动增强2: 可拜访NPC计数 — 冷却结束可互动的NPC数量
+  try {
+    var rels = state.relationships || {};
+    var visitableCount = 0;
+    var totalMet = 0;
+    var today = state.player ? state.player.day : 0;
+    for (var rid in rels) {
+      if (!Object.prototype.hasOwnProperty.call(rels, rid)) continue;
+      var r = rels[rid];
+      if (!r || !r.met) continue;
+      totalMet++;
+      // 冷却检查：_lastVisitDay + 7天冷却
+      var lastVisit = r._lastVisitDay || 0;
+      if (today - lastVisit >= 7) {
+        visitableCount++;
+      }
+    }
+    if (totalMet > 0) {
+      html += '<div class="section"><h3>👥 NPC社交</h3>';
+      html += "<div class='card' style='padding:12px;'>";
+      html += "<p>已结识 <strong>" + totalMet + "</strong> 人 · 可拜访 <strong style='color:var(--success);'>" + visitableCount + "</strong> 人（冷却结束）</p>";
+      if (visitableCount > 0) {
+        html += '<p style="font-size:11px;color:var(--text-muted);margin-top:4px;">💡 去找他们聊聊吧！拜访NPC可以提升好感，解锁加成和事件。</p>';
+      }
+      html += "</div></div>";
+    }
+  } catch (e) {
+    // 静默：NPC计数不影响主流程
+  }
+
   // 同事摘要
   var colleagues = state.corporate?.colleagues?.network;
   if (colleagues && colleagues.length > 0) {

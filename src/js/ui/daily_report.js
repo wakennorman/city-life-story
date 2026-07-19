@@ -815,7 +815,7 @@ function generateDailyReportSummary(state, incomes, expenses) {
       }
     }
     var diff =
-      state.resources.cash + (state.resources.bankBalance || 0) - prevCash;
+      (state.resources && (state.resources.cash || 0)) + (state.resources && (state.resources.bankBalance || 0)) - prevCash;
     if (diff > 0) {
       highlights.push("📈 过去30天财富增长 ¥" + diff.toLocaleString());
     } else if (diff < 0) {
@@ -883,7 +883,7 @@ function showDailyReport(state) {
   var txs = (state.flags._dailyTransactions || []).slice();
   recordDailyReportHistory(state, txs);
   state.flags._dailyTransactions = [];
-  state.flags._dayStartCash = state.resources.cash || 0;
+  state.flags._dayStartCash = (state.resources && state.resources.cash) || 0;
 
   var bodyHtml = buildReportHTML(txs, state, reconcileInfo);
 
