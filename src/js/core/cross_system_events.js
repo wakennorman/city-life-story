@@ -5718,19 +5718,21 @@
     conditions: function (st) {
       if (st.flags._investmentLossAnxietySeen) return false;
       if (!st.player || st.player.day < 60) return false;
+      // [全系统自洽修复] 域B A类#1: 原读 _tradeLog/inv.totalLoss（均永未写入=死代码）
+      // → 改为实时计算持仓浮亏（stockHoldings.avgPrice vs 现价），真实可触发
       var totalLoss = 0;
-      var tradeLog = st.flags && st.flags._tradeLog;
-      if (Array.isArray(tradeLog)) {
-        for (var i = 0; i < tradeLog.length; i++) {
-          var entry = tradeLog[i];
-          if (entry && entry.profit < 0) {
-            totalLoss += Math.abs(entry.profit);
-          }
-        }
-      }
       var inv = st.investment;
-      if (inv && typeof inv.totalLoss === "number") {
-        totalLoss += inv.totalLoss;
+      var holdings = inv && inv.stockHoldings ? inv.stockHoldings : [];
+      for (var i = 0; i < holdings.length; i++) {
+        var h = holdings[i];
+        if (!h || !h.avgPrice || !h.qty) continue;
+        var cur =
+          (inv.stockMarket &&
+            inv.stockMarket[h.symbol] &&
+            inv.stockMarket[h.symbol].price) ||
+          0;
+        if (!isFinite(cur)) continue;
+        if (cur < h.avgPrice) totalLoss += (h.avgPrice - cur) * h.qty;
       }
       if (totalLoss < 10000) return false;
       return true;
@@ -6009,6 +6011,7 @@
   var BAD_COMMUTE_WEATHER = ["stormy", "heavy_rain", "heavy_snow", "snowy"];
   RANDOM_EVENTS.push({
     id: "stormy_corp_commute",
+    phase: "corporate",
     _isChainEvent: false,
     icon: "🌊",
     title: "暴雨中的通勤路",
@@ -6089,6 +6092,7 @@
   if (typeof RANDOM_EVENTS === "undefined") return;
   RANDOM_EVENTS.push({
     id: "homeless_endurance_crisis",
+    phase: "street",
     _isChainEvent: false,
     icon: "🏚️",
     title: "天桥下的第N个夜晚",

@@ -5558,4 +5558,231 @@
       },
     ],
   });
+
+  // ====================================================================
+  // R44 联动增强①：心智巅峰·清明（高心智里程碑 · B→A/G）
+  // 联动域：属性(心智) × 需求(心情) × NPC社交
+  // 设计意图：mental 是六大核心属性之一，但从未有过"心智巅峰"叙事。
+  //   心理学：峰终定律（顿悟时刻成为峰值记忆）+ 自我实现（马斯洛顶层需求）
+  //   mental≥82 + day≥120 时触发人生顿悟时刻，把数值成长转化为情感体验。
+  // ====================================================================
+  RANDOM_EVENTS.push({
+    id: "mental_milestone_clarity",
+    phase: "street",
+    icon: "💎",
+    title: "清明的瞬间",
+    story:
+      "你蹲在出租屋里整理杂物，翻出初来乍到时那件起球的外套和一本写满计划的笔记本。\n\n你一页页翻着——有些计划实现了，有些早就忘了。窗外阳光照进来，灰尘在光柱里慢慢转。你突然觉得脑子里从未这么清楚过：哦，原来我已经走到这里了。\n\n不是高兴，也不是难过，是一种很安静的明白。",
+    conditions: function (st) {
+      if (!st || !st.player) return false;
+      if (st.flags._mentalClaritySeen) return false;
+      if (st.player.day < 120) return false;
+      if ((st.player.mental || 0) < 82) return false;
+      return true;
+    },
+    probability: 0.05,
+    repeatable: false,
+    choices: [
+      {
+        text: "✍️ 把这个瞬间写下来",
+        hint: "智力+2 心智+1 心情+10",
+        apply: function (st) {
+          st.flags._mentalClaritySeen = true;
+          st.flags._wroteClarity = true;
+          st.player.intelligence = Math.min(100, (st.player.intelligence || 10) + 2);
+          st.player.mental = Math.min(100, (st.player.mental || 50) + 1);
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 10);
+          StateManager.addMessage(
+            "✍️ 你在笔记本空白页写下了一些字。笔停下的那一刻，胸口暖暖的。智力+2，心智+1，心情+10。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "💬 找最亲近的人分享",
+        hint: "心情+8 NPC好感+5（如果有）",
+        apply: function (st) {
+          st.flags._mentalClaritySeen = true;
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 8);
+          var bestNpc = null, bestAff = 59;
+          var rels = st.relationships || {};
+          for (var nid in rels) {
+            var r = rels[nid];
+            if (r && r.met && (r.affinity || 0) > bestAff) { bestAff = r.affinity; bestNpc = nid; }
+          }
+          if (bestNpc) {
+            rels[bestNpc].affinity = Math.min(100, (rels[bestNpc].affinity || 0) + 5);
+            StateManager.addMessage(
+              "💬 你去找了生命里那个人，把今天的感觉说了出来。对方静静地听，最后说：你真的变了很多。\n有些话，说出来才算数。心情+8，好感+5。",
+              "success",
+            );
+          } else {
+            StateManager.addMessage(
+              "💬 你翻遍手机，才发现没什么适合拨的号码。但这种明白的感觉，自己收着也挺好。心情+8。",
+              "info",
+            );
+          }
+        },
+      },
+      {
+        text: "🧘 一个人坐着消化",
+        hint: "心智+3 心情+5",
+        apply: function (st) {
+          st.flags._mentalClaritySeen = true;
+          st.player.mental = Math.min(100, (st.player.mental || 50) + 3);
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 5);
+          StateManager.addMessage(
+            "🧘 你就这么坐着，看光柱慢慢移到墙根。不说话，不记录。有些明白，自己知道就够了。心智+3，心情+5。",
+            "info",
+          );
+        },
+      },
+    ],
+  });
+
+  // ====================================================================
+  // R44 联动增强②：名气变现·代言（名声首次转化为经济机会 · B→D/E）
+  // 联动域：名气子系统 × 经济 × 道德
+  // 设计意图：fame 数值长期只有"被认出"类叙事，从未真正"变现"。
+  //   心理学：禀赋效应（名气是资产要善用）+ 损失厌恶（拒绝怕失去机会）
+  //   fame≥50 时有人请玩家当代言人，检验玩家价值观。
+  // ====================================================================
+  RANDOM_EVENTS.push({
+    id: "fame_endorsement_offer",
+    phase: "street",
+    icon: "📢",
+    title: "代言的邀约",
+    story:
+      "菜市场开小卖部的刘老板一脸笑意地拦住你：哎，你就是那个谁吧？我见过你——在这条街上你有名！\n\n他压低声音：帮个忙呗，月底我店里搞活动，你往店门口站一天，拍几张照，给大家笑着说两句。一天¥1000，怎么样？\n\n你瞥了眼他店里——烟酒混杂，广告写着喝XX酒，做阔过人。这不是什么体面广告，但钱是真的。",
+    conditions: function (st) {
+      if (!st || !st.player || st.player.day < 90) return false;
+      if (st.flags._fameEndorseSeen) return false;
+      return (st.player.fame || 0) >= 50;
+    },
+    probability: 0.04,
+    repeatable: false,
+    choices: [
+      {
+        text: "💰 收钱站一天",
+        hint: "现金+¥1000 名气+5 道德-3",
+        apply: function (st) {
+          st.flags._fameEndorseSeen = true;
+          st.resources.cash = (st.resources.cash || 0) + 1000;
+          st.player.fame = Math.min(100, (st.player.fame || 0) + 5);
+          st.player.morality = Math.max(0, (st.player.morality || 50) - 3);
+          StateManager.addMessage(
+            "💰 你在店门口站了一整天。¥1000到账很快，但回家路上你一直在想——这张脸还能不能要。现金+¥1000，名气+5，道德-3。",
+            "warning",
+          );
+        },
+      },
+      {
+        text: "🤝 只收成本¥300",
+        hint: "现金+¥300 名气+3 心情+5",
+        apply: function (st) {
+          st.flags._fameEndorseSeen = true;
+          st.resources.cash = (st.resources.cash || 0) + 300;
+          st.player.fame = Math.min(100, (st.player.fame || 0) + 3);
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 5);
+          StateManager.addMessage(
+            "🤝 你砍到了¥300。刘老板不太高兴，但你心里舒服。名字可以卖，但不能论斤卖。现金+¥300，名气+3，心情+5。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "🙅 婉拒，名气不是这么用的",
+        hint: "道德+5 心智+2",
+        apply: function (st) {
+          st.flags._fameEndorseSeen = true;
+          st.player.morality = Math.min(100, (st.player.morality || 50) + 5);
+          st.player.mental = Math.min(100, (st.player.mental || 50) + 2);
+          StateManager.addMessage(
+            "🙅 你微笑着摇头。刘老板走的时候嘟囔了一句不识抬举。但你守住了底线——名气这东西，太容易贱卖。道德+5，心智+2。",
+            "success",
+          );
+        },
+      },
+    ],
+  });
+
+  // ====================================================================
+  // R44 联动增强③：王婶×陈师傅 从摊到厨（NPC友好格 · B→D）
+  // 联动域：NPC关系矩阵 friendly格 × 食材经济
+  // 设计意图：消费 NPC_RELATION_MATRIX 中 aunt_wang × chef_chen 友好关系。
+  //   王婶是菜摊阿姨，陈师傅是餐馆厨师——天然食材供应链的两端。
+  //   心理学：社会闭合理论（朋友的朋友是朋友）+ 关系资产
+  // ====================================================================
+  RANDOM_EVENTS.push({
+    id: "npc_friendly_wang_chen_supply",
+    phase: "street",
+    icon: "🥬",
+    title: "一条供应链上的两个熟人",
+    story:
+      "你拎着王婶刚给你留的一袋时蔬往回走，路过陈师傅的餐馆后门——陈师傅居然也在，正和王婶隔着板车说话。\n\n王婶看见你，招手：来得正好！陈师傅说我卖给他的菜新鲜，想让我每周固定供货——你给评评，他餐馆一天能消化多少斤？\n\n陈师傅搓着手笑：王姐的菜没得说，就是量不稳定。你能帮我俩搭个线，保证每周一三五各送二十斤，我给你俩都优惠。\n\n两个人都看着你，等你拿主意。",
+    conditions: function (st) {
+      if (!st || !st.relationships) return false;
+      if (st.flags._npcFriendlyWangChenSeen) return false;
+      var aw = st.relationships.aunt_wang;
+      var cc = st.relationships.chef_chen;
+      return (
+        aw && aw.met && (aw.affinity || 0) >= 25 &&
+        cc && cc.met && (cc.affinity || 0) >= 25 &&
+        st.player.day >= 70
+      );
+    },
+    probability: 0.02,
+    repeatable: false,
+    choices: [
+      {
+        text: "🤝 促成两人长期合作",
+        hint: "王婶+陈师傅好感各+4 开启供应线",
+        apply: function (st) {
+          st.flags._npcFriendlyWangChenSeen = true;
+          st.flags._wangChenSupply = true;
+          if (st.relationships.aunt_wang)
+            st.relationships.aunt_wang.affinity = Math.min(100, (st.relationships.aunt_wang.affinity || 0) + 4);
+          if (st.relationships.chef_chen)
+            st.relationships.chef_chen.affinity = Math.min(100, (st.relationships.chef_chen.affinity || 0) + 4);
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 6);
+          StateManager.addMessage(
+            "🤝 你帮两人敲定了送菜时间。王婶高兴——固定客源；陈师傅高兴——稳定供应。你搭了一根线，两个人都念你的好。王婶+陈师傅好感各+4，心情+6。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "🥬 帮王婶谈个好价钱",
+        hint: "王婶好感+6 陈师傅好感+1",
+        apply: function (st) {
+          st.flags._npcFriendlyWangChenSeen = true;
+          if (st.relationships.aunt_wang)
+            st.relationships.aunt_wang.affinity = Math.min(100, (st.relationships.aunt_wang.affinity || 0) + 6);
+          if (st.relationships.chef_chen)
+            st.relationships.chef_chen.affinity = Math.min(100, (st.relationships.chef_chen.affinity || 0) + 1);
+          st.player.intelligence = Math.min(100, (st.player.intelligence || 10) + 1);
+          StateManager.addMessage(
+            "🥬 你帮王婶把供货价往上谈了两成。王婶笑着说还是你会过日子。陈师傅虽然多付了钱，但也服气。王婶好感+6，陈师傅+1，智力+1。",
+            "success",
+          );
+        },
+      },
+      {
+        text: "🍳 帮陈师傅压点成本",
+        hint: "陈师傅好感+6 王婶好感+1",
+        apply: function (st) {
+          st.flags._npcFriendlyWangChenSeen = true;
+          if (st.relationships.chef_chen)
+            st.relationships.chef_chen.affinity = Math.min(100, (st.relationships.chef_chen.affinity || 0) + 6);
+          if (st.relationships.aunt_wang)
+            st.relationships.aunt_wang.affinity = Math.min(100, (st.relationships.aunt_wang.affinity || 0) + 1);
+          st.player.charm = Math.min(100, (st.player.charm || 10) + 1);
+          StateManager.addMessage(
+            "🍳 你帮陈师傅把次货剔出去，按质定价。陈师傅感谢——成本控住了。王婶虽然少赚了点道理，但也认同——做生意不能骗自己人。陈师傅好感+6，王婶+1，魅力+1。",
+            "success",
+          );
+        },
+      },
+    ],
+  });
 })();

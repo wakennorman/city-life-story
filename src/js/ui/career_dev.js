@@ -5072,13 +5072,25 @@ if (typeof document !== "undefined") {
           hint: "庆祝成就，花¥500",
           cost: 500,
           apply: function (st) {
+            var job = (st.career && st.career.currentJob) || {};
+            var pathName = job.pathName || "职业";
+            if ((st.resources && st.resources.cash) < 500) {
+              StateManager.addMessage(
+                "🏆 你已经达到了「" +
+                  pathName +
+                  "」的最高职级！但¥500庆祝费用你暂时拿不出来，先在心里为自己鼓掌吧。",
+                "warning",
+              );
+              st.flags._careerMaxLevelCelebrated = true;
+              return;
+            }
             st.flags._careerMaxLevelCelebrated = true;
             st.resources.cash -= 500;
             st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 20);
             st.player.mental = Math.min(100, (st.player.mental || 50) + 10);
             StateManager.addMessage(
               "🏆 你达到了「" +
-                (st.career.currentJob.pathName || "职业") +
+                pathName +
                 "」的最高职级！花¥500庆祝一下，你值得。心情+20，心智+10。",
               "success",
             );
