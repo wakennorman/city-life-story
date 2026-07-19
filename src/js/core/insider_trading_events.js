@@ -68,7 +68,8 @@
               sym = "ALIM";
               m = st.investment.stockMarket[sym];
             }
-            var buyAmount = Math.min(5000, st.resources.cash);
+            var cash = (st.resources && st.resources.cash) || 0;
+            var buyAmount = Math.min(5000, cash);
             if (buyAmount <= 100) {
               StateManager.addMessage(
                 "📈 你想追风口，但手里现金太少，只买了" +
@@ -85,7 +86,7 @@
               return;
             }
             var shares = Math.floor(buyAmount / m.price);
-            st.resources.cash -= shares * m.price; // [全系统自洽修复] 域B: 用实际成交价而非buyAmount(避免多扣款)
+            if (st.resources) st.resources.cash -= shares * m.price; // [全系统自洽修复] 域C 修复:insider_trading_events cash裸访问
             var h = st.investment.stockHoldings.find(function (s) {
               return s.symbol === sym;
             });
@@ -120,6 +121,7 @@
             );
             // 第二天：随机结果（涨跌）
             setTimeout(function () {
+              if (!st.resources) return;
               var profit = Random.chance(0.55);
               if (profit) {
                 var gain = Random.int(800, 3000);
@@ -224,17 +226,18 @@
               StateManager.addMessage("⚠️ 目标股票不存在。", "warning");
               return;
             }
+            var cash = (st.resources && st.resources.cash) || 0;
             var buyAmount = Math.min(
               8000,
-              st.resources.cash * 0.5,
-              st.resources.cash - 500,
+              cash * 0.5,
+              cash - 500,
             );
             if (buyAmount <= 100) {
               StateManager.addMessage("⚠️ 现金不足，无法加仓。", "warning");
               return;
             }
             var shares = Math.floor(buyAmount / m.price);
-            st.resources.cash -= shares * m.price; // [全系统自洽修复] 域B: 用实际成交价而非buyAmount(避免多扣款)
+            if (st.resources) st.resources.cash -= shares * m.price; // [全系统自洽修复] 域C 修复:insider_trading_events cash裸访问
             var h = st.investment.stockHoldings.find(function (s) {
               return s.symbol === target;
             });
@@ -268,6 +271,7 @@
             );
             // 3天后回报
             setTimeout(function () {
+              if (!st.resources) return;
               var success = Random.chance(0.6);
               if (success) {
                 var gain = Random.int(2000, 8000);
@@ -366,7 +370,7 @@
               var m = st.investment.stockMarket[h.symbol];
               if (!m) continue;
               var revenue = Math.round(m.price * h.shares * 100) / 100;
-              st.resources.cash += revenue;
+              if (st.resources) st.resources.cash += revenue;
               soldTotal += revenue;
               st.investment.stockHoldings.splice(i, 1);
             }
@@ -447,18 +451,27 @@
           hint: "90%是骗局，10%可能赚点",
           apply: function (st) {
             st.flags._joinedInsiderGroup = true;
-            st.resources.cash = Math.max(0, st.resources.cash - 500);
-            if (Random.chance(0.1)) {
-              // 10%幸运
-              var gain = Random.int(200, 1000);
-              st.resources.cash += gain;
-              StateManager.addMessage(
-                "💰 你交了¥500进群。没想到群里推荐的几只股真的涨了，你小赚¥" +
-                  gain +
-                  "。运气好是运气好，但这种运气不长久。",
-                "info",
-              );
+            if (st.resources) {
+              st.resources.cash = Math.max(0, st.resources.cash - 500);
+              if (Random.chance(0.1)) {
+                // 10%幸运
+                var gain = Random.int(200, 1000);
+                st.resources.cash += gain;
+                StateManager.addMessage(
+                  "💰 你交了¥500进群。没想到群里推荐的几只股真的涨了，你小赚¥" +
+                    gain +
+                    "。运气好是运气好，但这种运气不长久。",
+                  "info",
+                );
+              } else {
+                StateManager.addMessage(
+                  "💰 你交了¥500进群。群里每天发一堆消息，推荐的股涨跌随机。一周后你发现——群主删了你，跑路了。¥500打了水漂。",
+                  "warning",
+                );
+              }
             } else {
+              st.resources = { cash: -500 };
+              st.flags._joinedInsiderGroup = true;
               StateManager.addMessage(
                 "💰 你交了¥500进群。群里每天发一堆消息，推荐的股涨跌随机。一周后你发现——群主删了你，跑路了。¥500打了水漂。",
                 "warning",
@@ -537,6 +550,7 @@
             );
             // 后续回报：20天后
             setTimeout(function () {
+              if (!st.resources) return;
               var profit = Random.int(5000, 15000);
               st.resources.cash += profit;
               StateManager.addMessage(
