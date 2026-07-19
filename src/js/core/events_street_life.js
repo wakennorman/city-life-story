@@ -313,7 +313,8 @@
               st.player.fame = Math.min(100, (st.player.fame || 0) + 8);
               StateManager.addMessage("📱 舆论反转！你涨了2,000粉。", "event");
             } else {
-              st.needs.happiness = Math.max(0, st.needs.happiness - 15);
+              // [全系统自洽修复] 域B A类#4: NaN守卫
+              st.needs.happiness = Math.max(0, (st.needs.happiness || 50) - 15);
               StateManager.addMessage(
                 "📱 澄清视频没人看。先发声才重要。",
                 "warning",
@@ -541,7 +542,7 @@
                 "event",
               );
             } else {
-              st.resources.cash -= 9999;
+              // [全系统自洽修复] 域B A类#1: 费用已在 line 532 扣除，此处不再重复扣款
               StateManager.addMessage(
                 "🎣 全是百度货。退款时被拉黑。所有教你快速致富的人都在靠你致富。",
                 "warning",
@@ -617,8 +618,9 @@
           apply: function (st) {
             st.flags._shoppingFestSeen = true;
             st.resources.cash += 280;
-            st.needs.fatigue = Math.min(100, st.needs.fatigue + 15);
-            st.needs.hunger = Math.max(0, st.needs.hunger - 8);
+            // [全系统自洽修复] 域B A类#4: NaN守卫
+            st.needs.fatigue = Math.min(100, (st.needs.fatigue || 0) + 15);
+            st.needs.hunger = Math.max(0, (st.needs.hunger || 50) - 8);
             StateManager.addMessage(
               "📦 干到凌晨两点，腰快断了。但钱是真的。",
               "info",
@@ -678,7 +680,8 @@
             st.flags._p2pCrashSeen = true;
             st.flags._p2pHelped = true;
             st.player.fame = Math.min(100, (st.player.fame || 0) + 5);
-            st.player.actionPoints -= 15;
+            // [全系统自洽修复] 域B A类#4: actionPoints守卫
+            st.player.actionPoints = Math.max(0, (st.player.actionPoints || 100) - 15);
             StateManager.addMessage(
               "📢 你帮老人们写了投诉信。有人拉着你的手说谢谢。",
               "event",
@@ -712,10 +715,11 @@
           hint: "15点行动力，预计赚¥200-400",
           apply: function (st) {
             st.flags._sharingEconomySeen = true;
-            st.needs.fatigue = Math.min(100, st.needs.fatigue + 12);
+            // [全系统自洽修复] 域B A类#4: NaN守卫
+            st.needs.fatigue = Math.min(100, (st.needs.fatigue || 0) + 12);
             var earn = Random.int(200, 399);
             st.resources.cash += earn;
-            st.needs.hygiene = Math.max(0, st.needs.hygiene - 5);
+            st.needs.hygiene = Math.max(0, (st.needs.hygiene || 50) - 5);
             StateManager.addMessage(
               "♻️ 拆了一下午单车，卖了¥" + earn + "。手上全是铁锈味。",
               "info",
@@ -1042,7 +1046,8 @@
       title: "长租公寓爆雷",
       story:
         "「城客公寓」爆雷了。房东没收到租金要赶人，租客一次性交了半年房租却被物业贴了催缴单。你住的城中村虽然没有长租公寓，但好几个工友都在群里问：「有没有便宜的单间转租？」",
-      triggers: { minDay: 15, excludeFlags: ["_rentalCrashSeen"] },
+      // [全系统自洽修复] 域B A类#2: 叙事结果提及"王婶"(aunt_wang)，需校验已结识
+      triggers: { minDay: 15, excludeFlags: ["_rentalCrashSeen"], relationshipMet: "aunt_wang" },
       choices: [
         {
           text: "🏠 帮忙转介绍靠谱房东",
@@ -2523,7 +2528,8 @@
             st.player.fame = Math.min(100, (st.player.fame || 0) + 5);
             var danger = Random.float(0, 1);
             if (danger < 0.3) {
-              st.status.health = Math.max(0, st.status.health - 5);
+              // [全系统自洽修复] 域B A类#4: NaN守卫
+              st.status.health = Math.max(0, (st.status.health || 50) - 5);
               StateManager.addMessage(
                 "📢 你被理疗中心的人威胁了。「多管闲事的下场你知道吧？」你说知道了。",
                 "warning",
@@ -2995,8 +3001,9 @@
           hint: "赶时间但会淋湿",
           apply: function (st) {
             st.flags._rainChatSeen = true;
-            st.status.health = Math.max(0, st.status.health - 3);
-            st.needs.happiness = Math.max(0, st.needs.happiness - 2);
+            // [全系统自洽修复] 域B A类#4: NaN守卫
+            st.status.health = Math.max(0, (st.status.health || 50) - 3);
+            st.needs.happiness = Math.max(0, (st.needs.happiness || 50) - 2);
             StateManager.addMessage(
               "🏃 你跑到家了，淋成了落汤鸡。健康-3。",
               "warning",
@@ -3197,8 +3204,9 @@
           hint: "花钱买清净",
           apply: function (st) {
             st.flags._mercedesRoommate = true;
-            var loan = Math.min(5000, st.resources.cash);
-            st.resources.cash -= loan;
+            // [全系统自洽修复] 域B A类#4: cash守卫
+            var loan = Math.min(5000, st.resources.cash || 0);
+            st.resources.cash = Math.max(0, (st.resources.cash || 0) - loan);
             // 大概率不还
             if (Random.chance(0.7)) {
               StateManager.addMessage(

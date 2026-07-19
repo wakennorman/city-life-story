@@ -13291,7 +13291,8 @@ function registerNewsEventsToPool() {
               st.player.fame = Math.min(100, (st.player.fame || 0) + 8);
               StateManager.addMessage("📱 舆论反转！你涨了2,000粉。", "event");
             } else {
-              st.needs.happiness = Math.max(0, st.needs.happiness - 15);
+              // [全系统自洽修复] 域B A类#4: NaN守卫
+              st.needs.happiness = Math.max(0, (st.needs.happiness || 50) - 15);
               StateManager.addMessage(
                 "📱 澄清视频没人看。先发声才重要。",
                 "warning",
@@ -13519,7 +13520,7 @@ function registerNewsEventsToPool() {
                 "event",
               );
             } else {
-              st.resources.cash -= 9999;
+              // [全系统自洽修复] 域B A类#1: 费用已在 line 532 扣除，此处不再重复扣款
               StateManager.addMessage(
                 "🎣 全是百度货。退款时被拉黑。所有教你快速致富的人都在靠你致富。",
                 "warning",
@@ -13595,8 +13596,9 @@ function registerNewsEventsToPool() {
           apply: function (st) {
             st.flags._shoppingFestSeen = true;
             st.resources.cash += 280;
-            st.needs.fatigue = Math.min(100, st.needs.fatigue + 15);
-            st.needs.hunger = Math.max(0, st.needs.hunger - 8);
+            // [全系统自洽修复] 域B A类#4: NaN守卫
+            st.needs.fatigue = Math.min(100, (st.needs.fatigue || 0) + 15);
+            st.needs.hunger = Math.max(0, (st.needs.hunger || 50) - 8);
             StateManager.addMessage(
               "📦 干到凌晨两点，腰快断了。但钱是真的。",
               "info",
@@ -13656,7 +13658,8 @@ function registerNewsEventsToPool() {
             st.flags._p2pCrashSeen = true;
             st.flags._p2pHelped = true;
             st.player.fame = Math.min(100, (st.player.fame || 0) + 5);
-            st.player.actionPoints -= 15;
+            // [全系统自洽修复] 域B A类#4: actionPoints守卫
+            st.player.actionPoints = Math.max(0, (st.player.actionPoints || 100) - 15);
             StateManager.addMessage(
               "📢 你帮老人们写了投诉信。有人拉着你的手说谢谢。",
               "event",
@@ -13690,10 +13693,11 @@ function registerNewsEventsToPool() {
           hint: "15点行动力，预计赚¥200-400",
           apply: function (st) {
             st.flags._sharingEconomySeen = true;
-            st.needs.fatigue = Math.min(100, st.needs.fatigue + 12);
+            // [全系统自洽修复] 域B A类#4: NaN守卫
+            st.needs.fatigue = Math.min(100, (st.needs.fatigue || 0) + 12);
             var earn = Random.int(200, 399);
             st.resources.cash += earn;
-            st.needs.hygiene = Math.max(0, st.needs.hygiene - 5);
+            st.needs.hygiene = Math.max(0, (st.needs.hygiene || 50) - 5);
             StateManager.addMessage(
               "♻️ 拆了一下午单车，卖了¥" + earn + "。手上全是铁锈味。",
               "info",
@@ -14020,7 +14024,8 @@ function registerNewsEventsToPool() {
       title: "长租公寓爆雷",
       story:
         "「城客公寓」爆雷了。房东没收到租金要赶人，租客一次性交了半年房租却被物业贴了催缴单。你住的城中村虽然没有长租公寓，但好几个工友都在群里问：「有没有便宜的单间转租？」",
-      triggers: { minDay: 15, excludeFlags: ["_rentalCrashSeen"] },
+      // [全系统自洽修复] 域B A类#2: 叙事结果提及"王婶"(aunt_wang)，需校验已结识
+      triggers: { minDay: 15, excludeFlags: ["_rentalCrashSeen"], relationshipMet: "aunt_wang" },
       choices: [
         {
           text: "🏠 帮忙转介绍靠谱房东",
@@ -15501,7 +15506,8 @@ function registerNewsEventsToPool() {
             st.player.fame = Math.min(100, (st.player.fame || 0) + 5);
             var danger = Random.float(0, 1);
             if (danger < 0.3) {
-              st.status.health = Math.max(0, st.status.health - 5);
+              // [全系统自洽修复] 域B A类#4: NaN守卫
+              st.status.health = Math.max(0, (st.status.health || 50) - 5);
               StateManager.addMessage(
                 "📢 你被理疗中心的人威胁了。「多管闲事的下场你知道吧？」你说知道了。",
                 "warning",
@@ -15973,8 +15979,9 @@ function registerNewsEventsToPool() {
           hint: "赶时间但会淋湿",
           apply: function (st) {
             st.flags._rainChatSeen = true;
-            st.status.health = Math.max(0, st.status.health - 3);
-            st.needs.happiness = Math.max(0, st.needs.happiness - 2);
+            // [全系统自洽修复] 域B A类#4: NaN守卫
+            st.status.health = Math.max(0, (st.status.health || 50) - 3);
+            st.needs.happiness = Math.max(0, (st.needs.happiness || 50) - 2);
             StateManager.addMessage(
               "🏃 你跑到家了，淋成了落汤鸡。健康-3。",
               "warning",
@@ -16175,8 +16182,9 @@ function registerNewsEventsToPool() {
           hint: "花钱买清净",
           apply: function (st) {
             st.flags._mercedesRoommate = true;
-            var loan = Math.min(5000, st.resources.cash);
-            st.resources.cash -= loan;
+            // [全系统自洽修复] 域B A类#4: cash守卫
+            var loan = Math.min(5000, st.resources.cash || 0);
+            st.resources.cash = Math.max(0, (st.resources.cash || 0) - loan);
             // 大概率不还
             if (Random.chance(0.7)) {
               StateManager.addMessage(
@@ -82773,6 +82781,171 @@ if (typeof window !== "undefined") {
 })();
 
 ;
+// ==== js/core/domain_b_linkage_r44.js ====
+/**
+ * 域B 联动增强 — R44 季节变迁·深夜独白 叙事事件
+ *
+ * 设计意图：填补两个显著的情感叙事空白
+ *   1. 季节更替 → 城市生活的时间流逝感（B→G 核心机制）
+ *   2. 深夜孤独 → 打工人深夜独白的情绪共鸣（B→G 核心机制）
+ *
+ * 接入方式：IIFE 注入 RANDOM_EVENTS 统一池
+ */
+(function () {
+  if (typeof RANDOM_EVENTS === "undefined" || !RANDOM_EVENTS) return;
+  if (RANDOM_EVENTS._domainBLinkageR44Loaded) return;
+  RANDOM_EVENTS._domainBLinkageR44Loaded = true;
+
+  var LINKAGE_EVENTS = [
+    // ===== 事件1：季节更替叙事 =====
+    // 联动：B(事件/叙事) → G(核心机制/天气季节)
+    // 设计意图：季节变化是城市生活的重要时间刻度，让玩家感受城市随时间流逝的质感
+    {
+      id: "season_change_reflection",
+      phase: "street",
+      icon: "🍂",
+      title: "季节变了",
+      story:
+        "你走在街上，忽然发现路边的树已经换了一身颜色。空气里的味道也不一样了——不再是之前那种闷热潮湿，而是带着一丝凉意的干燥。\\n\\n这座城市用最安静的方式告诉你：时间在走。你掏出手机看了看日历，发现距离上一次留意季节变化，已经过了很久很久。",
+      triggers: {
+        minDay: 15,
+        excludeFlags: ["_seasonChangeReflectionSeen"],
+      },
+      conditions: function (st) {
+        // 季节变化检测：检查当前季节是否与上次触发时不同
+        if (!st.weather || !st.weather.season) return false;
+        if (st.flags._lastSeasonChangeSeason === st.weather.season) return false;
+        return true;
+      },
+      probability: 0.05,
+      repeatable: true, // 每个季节可以触发一次
+      choices: [
+        {
+          text: "📸 拍张照片，记录这一刻",
+          hint: "心智+3，心情+5，记录城市记忆",
+          apply: function (st) {
+            st.flags._seasonChangeReflectionSeen = true;
+            st.flags._lastSeasonChangeSeason = st.weather && st.weather.season;
+            st.player.mental = Math.min(100, (st.player.mental || 0) + 3);
+            st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 5);
+            StateManager.addMessage(
+              "📸 你拍下了一张街景。照片里，这座城市正在变脸。等你老了，这些照片会比钱更珍贵。心智+3，心情+5。",
+              "success",
+            );
+          },
+        },
+        {
+          text: "📝 在心里默默记一笔",
+          hint: "智力+2，内心坚韧+1",
+          apply: function (st) {
+            st.flags._seasonChangeReflectionSeen = true;
+            st.flags._lastSeasonChangeSeason = st.weather && st.weather.season;
+            st.player.intelligence = Math.min(100, (st.player.intelligence || 0) + 2);
+            st.player.mental = Math.min(100, (st.player.mental || 0) + 1);
+            StateManager.addMessage(
+              "📝 你继续走路，但把这件事记在了心里。这座城市的时间感，你开始懂了。智力+2，心智+1。",
+              "info",
+            );
+          },
+        },
+        {
+          text: "😐 季节而已，跟我有什么关系",
+          hint: "适应也是一种力量",
+          apply: function (st) {
+            st.flags._seasonChangeReflectionSeen = true;
+            st.flags._lastSeasonChangeSeason = st.weather && st.weather.season;
+            st.player.mental = Math.min(100, (st.player.mental || 0) + 3);
+            StateManager.addMessage(
+              "😐 你拉紧衣领继续赶路。在这座城市里生存，有时候钝感一点反而更好。心智+3。",
+              "info",
+            );
+          },
+        },
+      ],
+    },
+
+    // ===== 事件2：深夜独白叙事 =====
+    // 联动：B(事件/叙事) → G(核心机制/夜间时段+心情)
+    // 设计意图：深夜独白是城市打工人最常见的情感场景，填补「孤独感」叙事空白
+    {
+      id: "late_night_monologue",
+      phase: "street",
+      icon: "🌙",
+      title: "深夜的独白",
+      story:
+        "夜深了，你躺在床上盯着天花板，窗外偶尔传来几声车鸣。手机屏幕亮了一下又暗了——没有新消息。\\n\\n你想起今天——不，是最近——好像一直是这样。白天忙忙碌碌，晚上一个人躺着。这座城市的灯红酒绿，跟你隔着一堵墙。\\n\\n你翻了个身，脑子里突然冒出一个问题：「我到底在为了什么？」",
+      triggers: {
+        minDay: 30,
+        excludeFlags: ["_lateNightMonologueSeen"],
+      },
+      conditions: function (st) {
+        // 晚间时段 + 心情偏低 + 没有太多社交
+        if (st.player.timeSlot !== "evening") return false;
+        if ((st.needs.happiness || 50) > 35) return false; // 心情高时不会触发
+        // 有亲密社交关系时不会触发
+        var hasCloseFriend = false;
+        if (st.relationships) {
+          for (var id in st.relationships) {
+            var r = st.relationships[id];
+            if (r && r.affinity && r.affinity >= 60) {
+              hasCloseFriend = true;
+              break;
+            }
+          }
+        }
+        if (hasCloseFriend) return false;
+        return true;
+      },
+      probability: 0.06,
+      repeatable: false,
+      choices: [
+        {
+          text: "💪 给自己打气：明天会更好",
+          hint: "心智+5，找回动力",
+          apply: function (st) {
+            st.flags._lateNightMonologueSeen = true;
+            st.player.mental = Math.min(100, (st.player.mental || 0) + 5);
+            st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 5);
+            StateManager.addMessage(
+              "💪 你对着黑暗说了句「加油」。声音在空荡荡的房间里回响，但你感觉比刚才好了一点。心智+5，心情+5。",
+              "success",
+            );
+          },
+        },
+        {
+          text: "📱 刷手机转移注意力",
+          hint: "暂时逃避，疲劳+5",
+          apply: function (st) {
+            st.flags._lateNightMonologueSeen = true;
+            st.needs.fatigue = Math.min(100, (st.needs.fatigue || 0) + 5);
+            StateManager.addMessage(
+              "📱 你刷了半小时短视频。笑是笑了，但放下手机后，空虚感又涌了上来。疲劳+5。",
+              "info",
+            );
+          },
+        },
+        {
+          text: "🖊️ 写日记把想法倒出来",
+          hint: "心智+3，智力+2，自我梳理",
+          apply: function (st) {
+            st.flags._lateNightMonologueSeen = true;
+            st.player.mental = Math.min(100, (st.player.mental || 0) + 3);
+            st.player.intelligence = Math.min(100, (st.player.intelligence || 0) + 2);
+            StateManager.addMessage(
+              "🖊️ 你写了三页纸。写完后再看一遍，发现问题其实没那么大，但说出来舒服多了。心智+3，智力+2。",
+              "success",
+            );
+          },
+        },
+      ],
+    },
+  ];
+
+  for (var i = 0; i < LINKAGE_EVENTS.length; i++) {
+    RANDOM_EVENTS.push(LINKAGE_EVENTS[i]);
+  }
+})();
+;
 // ==== js/core/career_path_events.js ====
 /**
  * 职业专属随机事件池 — v3.10
@@ -83250,10 +83423,10 @@ if (typeof window !== "undefined") {
             var socialScore =
               (st.skills && st.skills.social && st.skills.social.level) || 0;
             if (socialScore >= 50 || _chance(0.5)) {
-              st.resources.cash = Math.max(0, st.resources.cash - 800);
+              st.resources.cash = Math.max(0, (st.resources.cash || 0) - 800);
               var cap = _cap(st);
               if (cap) {
-                cap.partnerTrust = Math.min(100, cap.partnerTrust + 8);
+                cap.partnerTrust = Math.min(100, (cap.partnerTrust || 0) + 8);
                 _clamp(cap);
               }
               if (st.career.currentJob) {
@@ -83266,7 +83439,8 @@ if (typeof window !== "undefined") {
                 "success",
               );
             } else {
-              st.resources.cash = Math.max(0, st.resources.cash - 800);
+              // [全系统自洽修复] 域B A类#3: cash守卫
+              st.resources.cash = Math.max(0, (st.resources.cash || 0) - 800);
               _msg(
                 "😐 领导客气地吃完了，考核结果还是「良好」。钱没白花，关系维护住了。花了¥800。",
                 "info",
@@ -84218,7 +84392,8 @@ if (typeof window !== "undefined") {
           text: "🤝 主动走动，维护与校领导的关系",
           hint: "人情关系投资",
           apply: function (st) {
-            st.resources.cash = Math.max(0, st.resources.cash - 500);
+            // [全系统自洽修复] 域B A类#3: cash守卫
+            st.resources.cash = Math.max(0, (st.resources.cash || 0) - 500);
             if (_chance(0.6)) {
               st.resources.cash += 3000;
               var cap = _cap(st);
@@ -84283,7 +84458,8 @@ if (typeof window !== "undefined") {
           text: "💰 直接垫付小额赔偿，快速解决",
           hint: "花钱了事，效率第一",
           apply: function (st) {
-            st.resources.cash = Math.max(0, st.resources.cash - 150);
+            // [全系统自洽修复] 域B A类#3: cash守卫
+            st.resources.cash = Math.max(0, (st.resources.cash || 0) - 150);
             var cap = _cap(st);
             if (cap) {
               cap.reputation = Math.min(100, cap.reputation + 4);
@@ -84373,7 +84549,8 @@ if (typeof window !== "undefined") {
                 "success",
               );
             } else {
-              st.resources.cash = Math.max(0, st.resources.cash - 2000);
+              // [全系统自洽修复] 域B A类#3: cash守卫
+              st.resources.cash = Math.max(0, (st.resources.cash || 0) - 2000);
               _msg(
                 "😰 还是被发现了，罚款¥2000并责令整改。但因你积极处置，没有关店。",
                 "warning",
@@ -84385,7 +84562,8 @@ if (typeof window !== "undefined") {
           text: "😰 慌乱，什么都没做",
           hint: "被动受罚",
           apply: function (st) {
-            st.resources.cash = Math.max(0, st.resources.cash - 5000);
+            // [全系统自洽修复] 域B A类#3: cash守卫
+            st.resources.cash = Math.max(0, (st.resources.cash || 0) - 5000);
             var cap = _cap(st);
             if (cap) {
               cap.reputation = Math.max(0, cap.reputation - 10);

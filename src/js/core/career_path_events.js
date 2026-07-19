@@ -474,10 +474,10 @@
             var socialScore =
               (st.skills && st.skills.social && st.skills.social.level) || 0;
             if (socialScore >= 50 || _chance(0.5)) {
-              st.resources.cash = Math.max(0, st.resources.cash - 800);
+              st.resources.cash = Math.max(0, (st.resources.cash || 0) - 800);
               var cap = _cap(st);
               if (cap) {
-                cap.partnerTrust = Math.min(100, cap.partnerTrust + 8);
+                cap.partnerTrust = Math.min(100, (cap.partnerTrust || 0) + 8);
                 _clamp(cap);
               }
               if (st.career.currentJob) {
@@ -490,7 +490,8 @@
                 "success",
               );
             } else {
-              st.resources.cash = Math.max(0, st.resources.cash - 800);
+              // [全系统自洽修复] 域B A类#3: cash守卫
+              st.resources.cash = Math.max(0, (st.resources.cash || 0) - 800);
               _msg(
                 "😐 领导客气地吃完了，考核结果还是「良好」。钱没白花，关系维护住了。花了¥800。",
                 "info",
@@ -1442,7 +1443,8 @@
           text: "🤝 主动走动，维护与校领导的关系",
           hint: "人情关系投资",
           apply: function (st) {
-            st.resources.cash = Math.max(0, st.resources.cash - 500);
+            // [全系统自洽修复] 域B A类#3: cash守卫
+            st.resources.cash = Math.max(0, (st.resources.cash || 0) - 500);
             if (_chance(0.6)) {
               st.resources.cash += 3000;
               var cap = _cap(st);
@@ -1507,7 +1509,8 @@
           text: "💰 直接垫付小额赔偿，快速解决",
           hint: "花钱了事，效率第一",
           apply: function (st) {
-            st.resources.cash = Math.max(0, st.resources.cash - 150);
+            // [全系统自洽修复] 域B A类#3: cash守卫
+            st.resources.cash = Math.max(0, (st.resources.cash || 0) - 150);
             var cap = _cap(st);
             if (cap) {
               cap.reputation = Math.min(100, cap.reputation + 4);
@@ -1597,7 +1600,8 @@
                 "success",
               );
             } else {
-              st.resources.cash = Math.max(0, st.resources.cash - 2000);
+              // [全系统自洽修复] 域B A类#3: cash守卫
+              st.resources.cash = Math.max(0, (st.resources.cash || 0) - 2000);
               _msg(
                 "😰 还是被发现了，罚款¥2000并责令整改。但因你积极处置，没有关店。",
                 "warning",
@@ -1609,7 +1613,8 @@
           text: "😰 慌乱，什么都没做",
           hint: "被动受罚",
           apply: function (st) {
-            st.resources.cash = Math.max(0, st.resources.cash - 5000);
+            // [全系统自洽修复] 域B A类#3: cash守卫
+            st.resources.cash = Math.max(0, (st.resources.cash || 0) - 5000);
             var cap = _cap(st);
             if (cap) {
               cap.reputation = Math.max(0, cap.reputation - 10);
