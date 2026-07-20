@@ -93,6 +93,8 @@ function getCategoryIcon(category) {
  * 未接线的现金变动不再伪造成真实收入/支出，只作为对账提示展示。
  */
 function reconcileTransactions(state) {
+  // [全系统自洽修复] 域F A类#2: state.flags 守卫
+  if (!state || !state.flags) return { delta: 0, transactions: [] };
   var txs = state.flags._dailyTransactions || [];
   var trackedDelta = 0;
   for (var i = 0; i < txs.length; i++) {
@@ -929,6 +931,8 @@ function recordDailyReportHistory(state, txs) {
  * 在 pipeline 的 daily_report 步骤中调用
  */
 function showDailyReport(state) {
+  // [全系统自洽修复] 域F A类#1: state.flags 守卫
+  if (!state || !state.flags) return;
   // 游戏结束/胜利时不显示（对应 modal 优先）
   if (state.flags.gameOver || state.flags.victory) return;
 
