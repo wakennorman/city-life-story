@@ -4809,12 +4809,12 @@ function showCareerPathPreviewModal(pathKey) {
   };
   var _rec = _branchRecMap[pathKey];
   if (_rec) {
-    var _skBranch = state.skillBranches && state.skillBranches[_rec.skill];
+    var _skBranch = st.skillBranches && st.skillBranches[_rec.skill];
     var _hasBranch = _skBranch && _rec.branches.indexOf(_skBranch) >= 0;
-    var _skLv = (state.skills[_rec.skill] && state.skills[_rec.skill].level) || 0;
+    var _skLv = (st.skills[_rec.skill] && st.skills[_rec.skill].level) || 0;
     body += '<div style="font-size:10px;color:var(--text-muted);padding:6px 8px;margin-bottom:8px;background:rgba(255,183,77,0.06);border:1px solid rgba(255,183,77,0.2);border-radius:6px;">';
     body += '🌳 推荐技能分支：<strong>' + getSkillChineseName(_rec.skill) + '</strong>（当前Lv.' + _skLv + '）→ ';
-    body += _hasBranch ? '✅ 已选择「' + getSkillBranchLabel(_rec.skill, state) + '」' : '推荐' + _rec.tip;
+    body += _hasBranch ? '✅ 已选择「' + getSkillBranchLabel(_rec.skill, st) + '」' : '推荐' + _rec.tip;
     body += '</div>';
   }
 
