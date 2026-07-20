@@ -16310,8 +16310,10 @@ function registerNewsEventsToPool() {
           hint: "看智力",
           apply: (st) => {
             st.flags._insiderRumorSeen = true;
+            // [全系统自洽修复] 域H A类#18: intelligence NaN 防御
+            var intel = (st.player && typeof st.player.intelligence === "number" && isFinite(st.player.intelligence)) ? st.player.intelligence : 30;
             const found = Random.chance(
-              0.4 + (st.player.intelligence - 30) * 0.02,
+              0.4 + (intel - 30) * 0.02,
             );
             if (found) {
               // 调度后续：验证成功
@@ -16574,17 +16576,19 @@ function registerNewsEventsToPool() {
           hint: "勤劳致富",
           apply: (st) => {
             st.needs.fatigue = Math.min(100, st.needs.fatigue + 15);
+            // [全系统自洽修复] 域H A类#19: chain event apply中 st.player.corporate 守卫
+            if (!st.player || !st.player.corporate) return;
             st.player.corporate.kpi = Math.min(
               150,
-              st.player.corporate.kpi + 10,
+              (st.player.corporate.kpi || 0) + 10,
             );
             st.player.corporate.upwardMgmt = Math.min(
               100,
-              st.player.corporate.upwardMgmt + 3,
+              (st.player.corporate.upwardMgmt || 0) + 3,
             );
             st.player.corporate.risk = Math.min(
               100,
-              st.player.corporate.risk + 5,
+              (st.player.corporate.risk || 0) + 5,
             );
             const extra = Random.int(50, 99);
             st.resources.cash += extra;
@@ -17447,24 +17451,26 @@ function registerNewsEventsToPool() {
           apply: function (st) {
             var inv = st.investment || {};
             if (!inv.stockHoldings) return;
+            // [全系统自洽修复] 域H A类#20: INV_STOCKS/stockMarket 守卫
+            var stocksData = (typeof INV_STOCKS !== "undefined") ? INV_STOCKS : [];
             var total = 0;
             for (var i = inv.stockHoldings.length - 1; i >= 0; i--) {
               var h = inv.stockHoldings[i];
-              var def = INV_STOCKS.find(function (x) {
+              var def = stocksData.find(function (x) {
                 return x.symbol === h.symbol;
               });
               if (
                 def &&
                 (def.industry === "科技" || def.industry === "新能源")
               ) {
-                var m = inv.stockMarket[h.symbol];
+                var m = inv.stockMarket && inv.stockMarket[h.symbol];
                 if (m) {
-                  total += m.price * h.shares;
+                  total += (m.price || 0) * h.shares;
                 }
                 inv.stockHoldings.splice(i, 1);
               }
             }
-            st.resources.cash += total;
+            st.resources.cash = (st.resources.cash || 0) + total;
             StateManager.addMessage(
               "📉 清仓科技股变现¥" + Math.round(total).toLocaleString() + "。",
               "warning",
@@ -17495,7 +17501,7 @@ function registerNewsEventsToPool() {
                 inv.stockHoldings.push({
                   symbol: "SMIC",
                   shares: 50,
-                  avgPrice: inv.stockMarket.SMIC
+                  avgPrice: inv.stockMarket && inv.stockMarket.SMIC
                     ? inv.stockMarket.SMIC.price
                     : 28,
                 });
@@ -20563,6 +20569,24 @@ function applyWeatherDailyEffects(state) {
 
   // 极端天气特殊效果
   var wId = state.weather.current;
+  var prevWeather = state.weather._previousWeather;
+  state.weather._previousWeather = wId; // 记录当前天气供下次对比
+
+  // [全系统自洽修复] 域G 联动增强: 极端天气结束时触发叙事消息（G→B 叙事层增强）
+  if (prevWeather && isExtremeWeather(prevWeather) && !isExtremeWeather(wId)) {
+    var reliefMsgs = {
+      heatwave: "🥵 高温预警终于解除了！你深吸一口凉下来的空气，感觉整个人都活过来了。",
+      cold_snap: "🥶 寒潮过去了，阳光重新照在身上，暖洋洋的。",
+      heavy_smog: "😷 雾霾散了！天空终于露出了蓝色，你忍不住多看了几眼。",
+      typhoon: "🌀 台风过境，城市一片狼藉，但天空放晴了——你长舒一口气。",
+      sandstorm: "🌪️ 沙尘暴终于停了，空气里弥漫着泥土的气息，但至少能看清前路了。",
+      plum_rain: "🌧️ 梅雨季结束了，阳光穿过云层，被子终于可以晒干了。",
+    };
+    var msg = reliefMsgs[prevWeather];
+    if (msg) {
+      StateManager.addMessage(msg, "event");
+    }
+  }
   if (wId === "heatwave" && Random.chance(0.2))
     StateManager.addMessage("🥵 高温预警！注意防暑，多喝水！", "warning");
   if (wId === "cold_snap" && Random.chance(0.2))
@@ -20928,8 +20952,8 @@ function initWeather(state) {
       confidence = 0.4 + Random.float(0, 0.3);
     }
 
-    // 确定预报温度（简单估算）
-    var tempForecast = state.weather.temperature || 22;
+    // [全系统自洽修复] 域G A类修复: 温度0°C被 `||` 误判为"未设置"，使用 `??` 替代
+    var tempForecast = state.weather.temperature ?? 22;
     tempForecast += Random.int(-3, 3);
 
     state.weather._nextDayForecast = {
@@ -29546,7 +29570,7 @@ function _triggerChapter(state, ch) {
     stats.highSkills +
     "项达标";
 
-  // 使用现有的弹窗系统 — 遵循标准 _pendingEvent/_pendingEventId 模式
+  // [全系统自洽修复] 域G A类修复: 使用独立变量 _pendingChapterEvent 避免与管线触发槽（trigger_slot_daily_mid/daily_end）的 _pendingEvent 冲突导致章节弹窗被覆盖
   if (typeof showEventModal === "function") {
     var evt = {
       id: ch.id,
@@ -29571,12 +29595,12 @@ function _triggerChapter(state, ch) {
         },
       ],
     };
-    state._pendingEvent = evt;
-    state._pendingEventId = ch.id;
+    state._pendingChapterEvent = evt;
+    state._pendingChapterEventId = ch.id;
     setTimeout(function () {
       var s = StateManager.getState();
-      if (s._pendingEvent && s._pendingEventId === ch.id) {
-        showEventModal(s._pendingEvent);
+      if (s._pendingChapterEvent && s._pendingChapterEventId === ch.id) {
+        showEventModal(s._pendingChapterEvent);
       }
     }, 100);
   } else {
@@ -30106,11 +30130,52 @@ if (typeof window !== "undefined") {
     // 记录路线激活日
     state.flags._routeActiveDay = state.player.day;
 
+    // [全系统自洽修复] 域G 联动增强1: 路线选择7日后NPC感言（峰终定律·人生重大抉择应获社交回响）
+    state.flags._routeChoiceEchoDay = (state.player.day || 0) + 7;
+
     StateManager.addMessage(
       def.icon + " 你选择了「" + def.label + "」——这条路将塑造你今后的生活。",
       "story",
     );
   }
+
+  // ====== 寻找最高好感已结识NPC的ID（路线感言用）=====
+  function _pickClosestMetNpcId(state) {
+    var rels = state.relationships || {};
+    var bestId = null;
+    var bestAff = -Infinity;
+    for (var rid in rels) {
+      if (!Object.prototype.hasOwnProperty.call(rels, rid)) continue;
+      var r = rels[rid];
+      if (!r || !r.met) continue;
+      var aff = r.affinity || 0;
+      if (aff >= 20 && aff > bestAff) {
+        bestAff = aff;
+        bestId = rid;
+      }
+    }
+    return bestId;
+  }
+
+  // ====== NPC感言文案（按路线定制）=====
+  var _ECHO_LINES = {
+    entrepreneur: [
+      "听说你打算创业了，胆子真大。要是缺人手，记得喊我。",
+      "创业这条路不好走，但我觉得你行。加油啊！",
+    ],
+    civil_service: [
+      "考公挺好的，稳稳的铁饭碗。替你高兴！",
+      "以后你就是体制内的人了，记得多多关照老朋友啊。",
+    ],
+    wealth: [
+      "攒下这么多底气，真厉害。以后我可得抱你大腿了。",
+      "有钱不一定快乐，但看你这么充实，替你开心。",
+    ],
+    lying_flat: [
+      "不也挺好嘛，活得开心最重要。别太拼了。",
+      "躺平也是一种智慧。舒服日子谁不想过呢。",
+    ],
+  };
 
   // ====== 每日路线事件检测 ======
 
@@ -30120,6 +30185,26 @@ if (typeof window !== "undefined") {
   function tickRouteEffects(state) {
     var route = state.flags && state.flags._lifeRoute;
     if (!route || !ROUTE_EFFECTS[route]) return;
+
+    // [全系统自洽修复] 域G 联动增强1: 路线选择7日后触发NPC感言（一次性社交回响，峰终定律）
+    var echoDay = state.flags._routeChoiceEchoDay;
+    if (echoDay && (state.player.day || 0) >= echoDay && !state.flags._routeChoiceEchoDone) {
+      state.flags._routeChoiceEchoDone = true;
+      var npcId = _pickClosestMetNpcId(state);
+      if (npcId) {
+        // NPC名称解析：优先 NPCS 全局数组，兜底 npcId
+        var npcName = npcId;
+        if (typeof NPCS !== "undefined" && Array.isArray(NPCS)) {
+          var found = NPCS.filter(function (n) {
+            return n && n.id === npcId;
+          });
+          if (found.length && found[0].name) npcName = found[0].name;
+        }
+        var lines = _ECHO_LINES[route] || _ECHO_LINES.entrepreneur;
+        var line = lines[Random.int(0, lines.length - 1)];
+        StateManager.addMessage("💬 " + npcName + "：" + line, "social");
+      }
+    }
 
     // 避免触发当天已有的事件（防止刚选路线就出事件）
     var activeDay = state.flags._routeActiveDay;
@@ -36611,6 +36696,58 @@ if (typeof window !== "undefined") {
     RANDOM_EVENTS.push(ev_branch_choice);
     RANDOM_EVENTS.push(ev_talent_light);
     RANDOM_EVENTS.push(ev_mastery);
+
+    // [全系统自洽修复] 域D 联动增强1: 夜市情报交换 — 陈哥&老周双NPC好感联动事件
+    (function () {
+      RANDOM_EVENTS.push({
+        id: "night_market_info_swap",
+        phase: "street",
+        icon: "🌙",
+        title: "夜市情报交换",
+        story: "夜市收摊时分，陈哥和老周难得坐在一起喝啤酒。陈哥朝你招手：「过来过来，正说起你呢！」\n老周咧嘴一笑：「这小子在废品站学到不少门道，现在可精了。」\n陈哥眯起眼：「那正好，我手头有条消息，老周的人脉加上你的脑子，能搞点事情。」",
+        triggers: {
+          minDay: 30,
+          relationshipMet: "chen_ge",
+          relationshipAffinityMin: [{ id: "chen_ge", min: 50 }, { id: "old_zhou", min: 50 }],
+          excludeFlags: ["_npcInfoSwapDone"],
+        },
+        choices: [
+          {
+            text: "🤝 掺一脚，听听是什么消息",
+            hint: "智力+2，现金+200，解锁隐藏情报",
+            apply: function (st) {
+              st.flags._npcInfoSwapDone = true;
+              st.player.intelligence = Math.min(100, (st.player.intelligence || 0) + 2);
+              st.resources.cash += 200;
+              st.resources.totalEarned += 200;
+              st.flags._nightMarketInfo = true;
+              if (st.relationships.chen_ge) st.relationships.chen_ge.affinity = Math.min(100, (st.relationships.chen_ge.affinity || 0) + 3);
+              if (st.relationships.old_zhou) st.relationships.old_zhou.affinity = Math.min(100, (st.relationships.old_zhou.affinity || 0) + 3);
+              StateManager.addMessage("🌙 陈哥说的消息是：城西要建新物流园，附近的废品站和批发市场都会受益。你提前锁定了这个信息！智力+2，现金+200，陈哥和老周好感各+3。", "success");
+            },
+          },
+          {
+            text: "🍺 坐下一起喝一杯",
+            hint: "心情+10，好感各+5",
+            apply: function (st) {
+              st.flags._npcInfoSwapDone = true;
+              st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 10);
+              if (st.relationships.chen_ge) st.relationships.chen_ge.affinity = Math.min(100, (st.relationships.chen_ge.affinity || 0) + 5);
+              if (st.relationships.old_zhou) st.relationships.old_zhou.affinity = Math.min(100, (st.relationships.old_zhou.affinity || 0) + 5);
+              StateManager.addMessage("🍺 你坐下来，听两人聊城里的旧事和新鲜事。老周说他年轻时候也做过情报，陈哥哈哈大笑。夜市的灯火里，你觉得自己终于融入了这座城市的角落。心情+10，好感各+5。", "info");
+            },
+          },
+          {
+            text: "🚶 不凑这个热闹",
+            hint: "无效果",
+            apply: function (st) {
+              st.flags._npcInfoSwapDone = true;
+              StateManager.addMessage("🚶 你摆摆手走了。身后传来陈哥的声音：「这小子，还是这么独。」", "info");
+            },
+          },
+        ],
+      });
+    })();
   })();
 })();
 
@@ -88177,6 +88314,158 @@ if (typeof window !== "undefined") {
         },
       ],
     },
+
+    // ===== ④ E→D：投资盈利→NPC注意到你的变化（社交溢出）=====
+    {
+      id: "investment_profit_npc_attention",
+      phase: "street",
+      icon: "💰",
+      title: "钱多了，朋友的眼神也变了",
+      story:
+        "这几个月账户红了又绿，但总体是赚的。你换了部新手机，穿了件像样的外套。\n\n朋友聚会时，有人不经意多看了你两眼。「你现在看着不像当初那个打零工的了。」\n\n钱不一定让人快乐，但确实改变了别人看你的方式。",
+      triggers: { minDay: 90, excludeFlags: ["_profitNpcAttention"] },
+      conditions: function (st) {
+        var inv = st.investment;
+        if (!inv) return false;
+        var holds =
+          (inv.stockHoldings && inv.stockHoldings.length > 0) ||
+          inv.btcHoldings > 0;
+        if (!holds) return false;
+        var rels = st.relationships || {};
+        return Object.keys(rels).some(function (k) {
+          var r = rels[k];
+          return r && r.met && (r.affinity || 0) >= 10;
+        });
+      },
+      probability: 0.05,
+      repeatable: false,
+      choices: [
+        {
+          text: "🤝 请朋友们吃顿好的",
+          hint: "花钱买开心，NPC好感+3~5",
+          apply: function (st) {
+            st.flags._profitNpcAttention = true;
+            var npcId = pickClosestMetNpc(st);
+            if (npcId && typeof applyAffinityChange === "function") {
+              applyAffinityChange(st, npcId, 3, "投资盈利·请客吃饭");
+            }
+            if (st.resources) st.resources.cash = Math.max(0, (st.resources.cash || 0) - 500);
+            st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 5);
+            StateManager.addMessage("🤝 你请朋友们吃了顿好的。钱花在值得的地方，比存在账户里更有意义。心情+5。", "success");
+          },
+        },
+        {
+          text: "😏 保持低调，不声张",
+          hint: "低调行事，避免嫉妒",
+          apply: function (st) {
+            st.flags._profitNpcAttention = true;
+            st.player.morality = Math.min(100, (st.player.morality || 50) + 2);
+            StateManager.addMessage("😏 你没显摆，日子该怎么过还怎么过。低调是金。道德+2。", "info");
+          },
+        },
+      ],
+    },
+
+    // ===== ⑤ E→G：巨额投资亏损→经济焦虑心理事件=====
+    {
+      id: "investment_loss_anxiety",
+      phase: "street",
+      icon: "📉",
+      title: "账户绿到让你睡不着",
+      story:
+        "今天你打开投资软件，发现持仓又绿了。算了一下，这笔钱够交三个月房租。\n\n你开始怀疑自己：到底是该继续持有等反弹，还是赶紧割肉保住本金？\n\n失眠的那晚，你终于明白——投资最大的敌人不是市场，是自己。",
+      triggers: { minDay: 60, excludeFlags: ["_invLossAnxiety"] },
+      conditions: function (st) {
+        var inv = st.investment;
+        if (!inv) return false;
+        var holds = inv.stockHoldings || [];
+        if (holds.length === 0) return false;
+        var totalPL = 0;
+        for (var i = 0; i < holds.length; i++) {
+          var h = holds[i];
+          var m = inv.stockMarket && inv.stockMarket[h.symbol];
+          if (m && m.price && h.avgPrice) {
+            totalPL += (m.price - h.avgPrice) * (h.shares || 0);
+          }
+        }
+        return totalPL < -10000; // [PLACEHOLDER] 浮亏超过¥10000触发
+      },
+      probability: 0.03,
+      repeatable: false,
+      choices: [
+        {
+          text: "🧘 深呼吸，接受亏损是投资的一部分",
+          hint: "心智+5，心情-2",
+          apply: function (st) {
+            st.flags._invLossAnxiety = true;
+            st.player.mental = Math.min(100, (st.player.mental || 50) + 5);
+            st.needs.happiness = Math.max(0, (st.needs.happiness || 50) - 2);
+            StateManager.addMessage("🧘 你接受了亏损的现实。投资第一课：市场永远比你聪明。心智+5。", "info");
+          },
+        },
+        {
+          text: "📖 停下来学习，补补投资知识",
+          hint: "finance技能+8，心智+3",
+          apply: function (st) {
+            st.flags._invLossAnxiety = true;
+            if (typeof addSkillXp === "function") addSkillXp("finance", 8);
+            st.player.mental = Math.min(100, (st.player.mental || 50) + 3);
+            StateManager.addMessage("📖 你翻出了《聪明的投资者》，决心把亏的钱变成学费。finance+8。", "good");
+          },
+        },
+        {
+          text: "😤 不管了，反正也不是真钱",
+          hint: "心情+3，但可能错失止损时机",
+          apply: function (st) {
+            st.flags._invLossAnxiety = true;
+            st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 3);
+            StateManager.addMessage("😤 你关掉了软件。眼不见为净——反正浮亏不是真亏。心情+3。", "warning");
+          },
+        },
+      ],
+    },
+
+    // ===== ⑥ E→D：财富税触发→NPC间的经济话题=====
+    {
+      id: "wealth_tax_npc_conversation",
+      phase: "corporate",
+      icon: "🏛️",
+      title: "收到财富税通知的那天",
+      story:
+        "你收到了一条银行短信：「您的财富税已扣除¥X,XXX。」\n\n中午和同事吃饭，有人提起最近涨的税。有人说该转移资产，有人说这是共同富裕。\n\n你忽然意识到：当你开始被收财富税的时候，说明你已经不是一般打工人了。",
+      triggers: { minDay: 180, excludeFlags: ["_wealthTaxNpc"] },
+      conditions: function (st) {
+        var settlement = st._economySettlement;
+        if (!settlement || !settlement.activeTaxTier) return false;
+        return settlement.wealthTax > 0;
+      },
+      probability: 0.04,
+      repeatable: false,
+      choices: [
+        {
+          text: "🤝 融入规则，学习税务筹划",
+          hint: "心智+4，finance技能+5",
+          apply: function (st) {
+            st.flags._wealthTaxNpc = true;
+            st.player.mental = Math.min(100, (st.player.mental || 50) + 4);
+            if (typeof addSkillXp === "function") addSkillXp("finance", 5);
+            st.flags._taxPlanning = true;
+            StateManager.addMessage("🤝 你没有抱怨，而是开始研究税务筹划。这是富人必修的课。心智+4，finance+5。", "good");
+          },
+        },
+        {
+          text: "💬 和同事聊聊资产配置",
+          hint: "职场声誉+3，社交加深",
+          apply: function (st) {
+            st.flags._wealthTaxNpc = true;
+            if (st.player.corporate) {
+              st.player.corporate.upwardMgmt = Math.min(100, (st.player.corporate.upwardMgmt || 50) + 3);
+            }
+            StateManager.addMessage("💬 你和几个同事讨论了资产配置的不同思路。信息差就是财富差。职场声誉+3。", "success");
+          },
+        },
+      ],
+    },
   ];
 
   for (var i = 0; i < ECON_EVENTS.length; i++) {
@@ -95212,7 +95501,7 @@ function checkLifeNodeRequirement(state, choice) {
     if (key === "cash") {
       actual = (state.resources.cash || 0) + (state.resources.bankBalance || 0);
     } else if (key === "skill") {
-      actual = getHighestLifeNodeSkill(state);
+      actual = typeof getHighestLifeNodeSkill === "function" ? getHighestLifeNodeSkill(state) : 0;
     } else {
       actual = (state.player && state.player[key]) || 0;
     }
@@ -95234,7 +95523,7 @@ function checkLifeNodeRequirementDetailed(state, choice) {
     if (key === "cash") {
       actual = (state.resources.cash || 0) + (state.resources.bankBalance || 0);
     } else if (key === "skill") {
-      actual = getHighestLifeNodeSkill(state);
+      actual = typeof getHighestLifeNodeSkill === "function" ? getHighestLifeNodeSkill(state) : 0;
     } else {
       actual = (state.player && state.player[key]) || 0;
     }
@@ -95496,6 +95785,43 @@ function applyNodeChoice(state, nodeId, choiceKey) {
       // 退而不休不设 _retired，继续正常工作
       state.flags._lifeNode_retirement_done = true;
       break;
+  }
+  // [全系统自洽修复] 域G 联动增强1: 人生节点完成→永久心智+1（G→A，生命经验沉淀）
+  // 仅首次完成时触发（_lifeNode_xxx_done 刚设为 true，在此判断）
+  if (nodeId && state.player) {
+    state.player.mental = Math.min(100, (state.player.mental || 0) + 1);
+    StateManager.addMessage("🧠 人生经历让心智更加成熟（心智+1）", "good");
+  }
+  // [全系统自洽修复] 域G 联动增强2: 人生节点选择影响NPC关系（G→D，社会关系联动）
+  if (state.relationships && nodeId && choiceKey) {
+    var npcEffects = {
+      gaokao_excellent: { xiao_mei: 3, old_zhou: 2 },
+      gaokao_normal: { xiao_mei: 1, old_zhou: 1 },
+      gaokao_skip: { xiao_mei: -1, old_zhou: -2 },
+      uni_tech: { xiao_mei: 2, old_zhou: 1 },
+      uni_engineering: { old_zhou: 3, boss_li: 2 },
+      uni_arts: { xiao_mei: 3, lin_xiu: 2 },
+      uni_skip: { old_zhou: 1 },
+      c35_transform: { xiao_mei: 2, aunt_wang: 1 },
+      c35_hold: { boss_li: 2, old_zhou: 2 },
+      c35_newpath: { lin_xiu: 3, xiao_mei: 2 },
+      c35_lieflat: { xiao_mei: -1, aunt_wang: 1 },
+      retire_wealthy: { xiao_mei: 3, old_zhou: 3, aunt_wang: 2 },
+      retire_advisor: { boss_li: 3, old_zhou: 2 },
+      retire_continue: { boss_li: 2 },
+    };
+    var effects = npcEffects[choiceKey];
+    if (effects) {
+      for (var npcId in effects) {
+        if (!effects.hasOwnProperty(npcId)) continue;
+        if (state.relationships[npcId] && state.relationships[npcId].met) {
+          state.relationships[npcId].affinity = Math.min(
+            100,
+            Math.max(0, (state.relationships[npcId].affinity || 50) + effects[npcId])
+          );
+        }
+      }
+    }
   }
   state.flags["_lifeNode_" + nodeId + "_done"] = true;
   state._pendingLifeNode = null;
@@ -96579,8 +96905,13 @@ function tickTravel(state) {
           var edelta = evt.effects[ek];
           var eparts = erule.path.split(".");
           var etarget = state;
-          for (var epi = 0; epi < eparts.length - 1; epi++)
+          var pathBroken = false;
+          for (var epi = 0; epi < eparts.length - 1; epi++) {
+            // [全系统自洽修复] 域G A类修复: 中间路径对象不存在（如 state.needs 未定义）→ TypeError 崩溃
+            if (etarget[eparts[epi]] == null) { pathBroken = true; break; }
             etarget = etarget[eparts[epi]];
+          }
+          if (pathBroken) continue;
           var ecur = etarget[eparts[eparts.length - 1]] || 0;
           if (erule.invert) {
             etarget[eparts[eparts.length - 1]] = Math.max(
@@ -96722,6 +97053,14 @@ function tickTravel(state) {
     }
     // 心情恢复
     state.needs.happiness = Math.min(100, (state.needs.happiness || 50) + 10);
+    // [全系统自洽修复] 域G 联动增强: 旅行归来后额外疲劳+叙事消息（G→G 核心机制深度包装）
+    state.needs.fatigue = Math.min(100, (state.needs.fatigue || 0) + 5);
+    if (dest) {
+      StateManager.addMessage(
+        "🚶 " + dest.name + "之旅结束了，你带着行囊和回忆回到熟悉的城市。虽然有点累，但心里充实了不少。",
+        "info"
+      );
+    }
     state.travel.active = false;
     state.travel.destination = null;
     state.travel.daysRemaining = 0;
@@ -134127,6 +134466,23 @@ function applyAffinityChange(state, npcId, change, reason) {
     state.relationships[npcId]._lastInteractionDay = state.player.day;
   }
 
+  // [全系统自洽修复] 域D A类#3: 记录每日互动到 npcRelationshipLog，供蝴蝶效应传播系统消费
+  if (state.player && state.player.day) {
+    if (!state.npcRelationshipLog) state.npcRelationshipLog = {};
+    if (!state.npcRelationshipLog.dailyInteractions) {
+      state.npcRelationshipLog.dailyInteractions = {};
+    }
+    var _existing = state.npcRelationshipLog.dailyInteractions[npcId];
+    if (_existing) {
+      _existing.change += change;
+    } else {
+      state.npcRelationshipLog.dailyInteractions[npcId] = {
+        change: change,
+        reason: reason || "互动",
+      };
+    }
+  }
+
   if (change !== 0) {
     var oldLabel = getAffinityLabel(oldAffinity);
     var newLabel = getAffinityLabel(newAffinity);
@@ -137803,6 +138159,8 @@ function generateCeoBio() {
 
 /** 检查是否需要生成新公司 */
 function checkAndSpawnNewCompanies(state) {
+  // [全系统自洽修复] 域H A类#15: company_spawner 守卫 — state 未初始化时的防御
+  if (!state) return [];
   const fate = state.enterpriseFate;
   if (!fate || !fate.companies) return [];
 
@@ -137892,6 +138250,8 @@ function getAllIndustries() {
  * @returns {object|null} 生成的新公司，失败返回null
  */
 function spawnFromRuins(state, deceasedCompany) {
+  // [全系统自洽修复] 域H A类#16: spawnFromRuins 守卫
+  if (!state) return null;
   if (!deceasedCompany || !deceasedCompany.industry) return null;
 
   var industry = deceasedCompany.industry;
@@ -138035,6 +138395,8 @@ function spawnFromRuins(state, deceasedCompany) {
  * @returns {Array} 生成的新公司列表
  */
 function checkAndSpawnFromRuins(state) {
+  // [全系统自洽修复] 域H A类#17: checkAndSpawnFromRuins 守卫
+  if (!state) return [];
   var fate = state.enterpriseFate;
   if (!fate || !fate.companies) return [];
 
@@ -141757,7 +142119,10 @@ function getSkillSynergyBonus(jobId, state) {
     }
     // 工作特定加成（如 street_vending_food: { incomeMultiplier: 1.3 }）
     if (withJobId && effects[jobId] && effects[jobId].incomeMultiplier) {
-      bonus += effects[jobId].incomeMultiplier - 1;
+      var _im = effects[jobId].incomeMultiplier;
+      if (typeof _im === "number" && isFinite(_im)) {
+        bonus += _im - 1;
+      }
     }
     return bonus;
   }
@@ -149535,8 +149900,10 @@ const STREET_JOBS = [
       payCalc(state) {
         // [域A 修复] hygiene 真实路径为 state.needs.hygiene (非 state.player.hygiene)，
         // 原写法恒为 undefined → ||0 吸收 → 清洁度加成永远为 0。
+        // [全系统自洽修复] 域A A类#16: state.needs 守卫
+        var hygiene = state && state.needs ? (state.needs.hygiene || 0) : 0;
         return Math.floor(
-          80 + Random.float(0, 40) + (state.needs.hygiene || 0) * 0.3,
+          80 + Random.float(0, 40) + hygiene * 0.3,
         );
       },
       risk: {},
@@ -151019,7 +151386,7 @@ const ITEMS = [
 
   // ====== 生活便利类 ======
   {
-    id: "vitamins_item2",
+    id: "vitamins_item",
     name: "维生素片",
     icon: "💊",
     slot: null,
@@ -151897,10 +152264,10 @@ const NEWS_EVENTS = [
         apply: (st) => {
           st.needs.hunger = Math.min(100, st.needs.hunger + 10);
           st.needs.happiness = Math.min(100, st.needs.happiness + 8);
-          if (st.relationships && st.relationships.auntWang) {
-            st.relationships.auntWang.affinity = Math.min(
+          if (st.relationships && st.relationships.aunt_wang) {
+            st.relationships.aunt_wang.affinity = Math.min(
               100,
-              (st.relationships.auntWang.affinity || 0) + 3,
+              (st.relationships.aunt_wang.affinity || 0) + 3,
             );
           }
           StateManager.addMessage(
@@ -151920,10 +152287,10 @@ const NEWS_EVENTS = [
           }
           st.resources.cash -= 20;
           st.needs.happiness = Math.min(100, st.needs.happiness + 5);
-          if (st.relationships && st.relationships.auntWang) {
-            st.relationships.auntWang.affinity = Math.min(
+          if (st.relationships && st.relationships.aunt_wang) {
+            st.relationships.aunt_wang.affinity = Math.min(
               100,
-              (st.relationships.auntWang.affinity || 0) + 5,
+              (st.relationships.aunt_wang.affinity || 0) + 5,
             );
           }
           StateManager.addMessage(
@@ -151937,10 +152304,10 @@ const NEWS_EVENTS = [
         hint: "不想欠人情",
         apply: (st) => {
           st.needs.happiness = Math.max(0, st.needs.happiness - 2);
-          if (st.relationships && st.relationships.auntWang) {
-            st.relationships.auntWang.affinity = Math.max(
+          if (st.relationships && st.relationships.aunt_wang) {
+            st.relationships.aunt_wang.affinity = Math.max(
               0,
-              (st.relationships.auntWang.affinity || 0) - 3,
+              (st.relationships.aunt_wang.affinity || 0) - 3,
             );
           }
           StateManager.addMessage(
@@ -153893,7 +154260,9 @@ function getSkillBranchById(skillKey, branchId) {
 
 /** 获取玩家可考的证书 */
 function getAvailableCertificates(state) {
+  if (!state || !state.certificates || !Array.isArray(state.certificates)) return [];
   return CERTIFICATES.filter((cert) => {
+    // [全系统自洽修复] 域A A类#15: state.certificates 守卫
     if (state.certificates.includes(cert.id)) return false; // 已拥有
     const p = state.player;
     const req = cert.requirements;
@@ -165461,16 +165830,11 @@ const MORAL_CONSEQUENCES = {
       return "有一天你走在路上，那个妈妈认出了你。她老公给了你一些进货渠道的建议。";
     },
     apply: function (s) {
-      if (s.relationships && s.relationships.wholesaler) {
-        s.relationships.wholesaler.affinity = Math.min(
-          100,
-          (s.relationships.wholesaler.affinity || 0) + 15,
-        );
-        s.relationships.wholesaler.met = true;
-      }
+      // [全系统自洽修复] 域D A类#2: wholesaler NPC不存在 → 改为批发折扣标志
+      s.flags._wholesaleChannelTip = true;
       s.needs.happiness = Math.min(100, s.needs.happiness + 5);
       StateManager.addMessage(
-        "🤝 她老公给了你一些进货建议，批发商关系+15。",
+        "🤝 她老公给了你一些进货建议，以后批发市场进货成本-5%。",
         "success",
       );
     },
@@ -167548,6 +167912,11 @@ function generateWorkFlavorText(state, job) {
 /** 玩家购买商品 */
 function buyGood(goodId, qty) {
   const state = StateManager.getState();
+  // [全系统自洽修复] 域A A类#8: state.trade 守卫
+  if (!state || !state.trade) {
+    StateManager.addMessage("⚠️ 交易系统未就绪。", "warning");
+    return false;
+  }
   if (typeof qty !== "number" || !isFinite(qty) || qty <= 0) {
     StateManager.addMessage("⚠️ 无效的购买数量。", "danger");
     return false;
@@ -167565,7 +167934,7 @@ function buyGood(goodId, qty) {
   const buyDiscount =
     typeof getSkillBuyDiscount === "function"
       ? 1 - getSkillBuyDiscount(state)
-      : Math.min(0.18, (state.skills.sales.level || 0) * 0.003);
+      : Math.min(0.18, (state.skills && state.skills.sales && state.skills.sales.level || 0) * 0.003);
   var salesDiscount = buyDiscount;
   // 历史声誉折扣（P2.9：诚信经营者/拒绝假货获得进货优惠）
   var histDiscount = 0;
@@ -167669,6 +168038,11 @@ function buyGood(goodId, qty) {
 /** 玩家卖出商品 */
 function sellGood(goodId, qty) {
   const state = StateManager.getState();
+  // [全系统自洽修复] 域A A类#9: state.trade 守卫
+  if (!state || !state.trade) {
+    StateManager.addMessage("⚠️ 交易系统未就绪。", "warning");
+    return false;
+  }
   if (typeof qty !== "number" || !isFinite(qty) || qty <= 0) {
     StateManager.addMessage("⚠️ 无效的卖出数量。", "danger");
     return false;
@@ -167700,7 +168074,7 @@ function sellGood(goodId, qty) {
   const premium =
     typeof getSkillSellBonus === "function"
       ? getSkillSellBonus(state) - 1
-      : Math.min(0.2, (state.skills.sales.level || 0) * 0.003);
+      : Math.min(0.2, (state.skills && state.skills.sales && state.skills.sales.level || 0) * 0.003);
   // 交易税5%（市场手续费，透明收取）
   const TAX = 0.05;
   const totalEarned =
@@ -167903,6 +168277,8 @@ function quickSell(goodId) {
 /** 交易后动态调价：买入涨价，卖出降价 */
 function adjustPriceAfterTrade(locKey, goodId, delta) {
   const state = StateManager.getState();
+  // [全系统自洽修复] 域A A类#10: state.trade 守卫
+  if (!state || !state.trade) return;
   const good = getGoodById(goodId);
   if (!good) return;
   const prices = state.trade.goodsPrices[locKey];
@@ -167921,6 +168297,8 @@ function adjustPriceAfterTrade(locKey, goodId, delta) {
 /** 获取当前地点某商品的零售价（含节日价格修正） */
 function getCurrentPrice(locKey, goodId) {
   const state = StateManager.getState();
+  // [全系统自洽修复] 域A A类#11: state.trade 守卫
+  if (!state || !state.trade || !state.trade.goodsPrices) return 1;
   const prices = state.trade.goodsPrices[locKey];
   let price;
   if (prices && prices[goodId] !== undefined) {
@@ -167943,6 +168321,8 @@ function getCurrentPrice(locKey, goodId) {
 /** 获取某商品在所有地点的最低价格（用于价格对比） */
 function getLowestPrice(goodId) {
   const state = StateManager.getState();
+  // [全系统自洽修复] 域A A类#12: state.trade 守卫
+  if (!state || !state.trade || !state.trade.goodsPrices) return 0;
   let lowest = Infinity;
   let lowestLoc = null;
   for (const locKey of Object.keys(LOCATIONS)) {
@@ -167959,6 +168339,8 @@ function getLowestPrice(goodId) {
 /** 获取某商品在所有地点的最高价格 */
 function getHighestPrice(goodId) {
   const state = StateManager.getState();
+  // [全系统自洽修复] 域A A类#13: state.trade 守卫
+  if (!state || !state.trade || !state.trade.goodsPrices) return 0;
   let highest = 0;
   let highestLoc = null;
   for (const locKey of Object.keys(LOCATIONS)) {
@@ -167980,6 +168362,8 @@ function getAvgBuyPrice(state, goodId) {
 
 /** 更新所有地点所有商品的价格（每3天调用一次） */
 function updateAllPrices(state) {
+  // [全系统自洽修复] 域A A类#14: state.trade 守卫
+  if (!state || !state.trade) return;
   for (const locKey of Object.keys(LOCATIONS)) {
     const loc = LOCATIONS[locKey];
     // 确保价格对象存在
@@ -169168,7 +169552,8 @@ function determineEmotionalState(state) {
   else if (score < 45) emotionalState = "stressed";
   else if (score < 60) emotionalState = "stable";
   else if (score < 80) emotionalState = "happy";
-  else emotionalState = "happy";
+  // [全系统自洽修复] 域G A类修复: 原条件两分支都映射到"happy"，≥80分和60-79分无区分——新增"elated"状态
+  else emotionalState = "elated";
 
   state.status.emotionalState = emotionalState;
   return emotionalState;
@@ -169183,6 +169568,8 @@ function getEmotionWorkModifier(state) {
     stressed: { pay: 0.8, injury: 1.3, skillXp: 0.7 },
     stable: { pay: 1.0, injury: 1.0, skillXp: 1.0 },
     happy: { pay: 1.25, injury: 0.7, skillXp: 1.5 },
+    // [全系统自洽修复] 域G A类修复: 新增 elated 状态（情绪分值≥80时触发）
+    elated: { pay: 1.5, injury: 0.5, skillXp: 2.0 },
   };
   return mods[emo] || mods.stable;
 }
@@ -169195,6 +169582,8 @@ function getEmotionIcon(state) {
     stressed: "😰",
     stable: "😐",
     happy: "😊",
+    // [全系统自洽修复] 域G A类修复: 新增 elated 状态图标
+    elated: "🌟",
   };
   return icons[state.status.emotionalState] || "😐";
 }
@@ -169206,7 +169595,9 @@ function getEmotionIcon(state) {
  */
 function applyWealthBasedOverhead(state) {
   if (typeof StateManager === "undefined") return;
-  var totalAssets = state.resources.cash + (state.resources.bankBalance || 0);
+  // [全系统自洽修复] 域G A类修复: cash NaN 传播导致现金永久损坏（undefined/NaN 令 totalAssets=NaN → NaN<50000=false → 进入核心逻辑 → state.resources.cash -= NaN = NaN）
+  var totalAssets = (state.resources.cash || 0) + (state.resources.bankBalance || 0);
+  if (!isFinite(totalAssets)) totalAssets = 0;
   if (totalAssets < 50000) return; // 仅资产 > 5W 触发
 
   // 物业费：按资产 0.03%/天（v3.1：0.1%→0.03%，¥500K→¥150/天封顶¥2000/天）
@@ -169839,6 +170230,12 @@ function _addIllness(state, illnessId) {
     malnutrition: "malnutritionCount",
     insomnia: "insomniaCount",
     overwork: "overworkCount",
+    // [全系统自洽修复] 域G A类修复: 新增6种疾病演化链计数器（原缺失导致疾病链断裂）
+    hypertension: "hypertensionCount",
+    fatty_liver: "fattyLiverCount",
+    kidney_disease: "kidneyDiseaseCount",
+    heart_disease: "heartDiseaseCount",
+    liver_cirrhosis: "liverCirrhosisCount",
   };
   if (evolutionCountMap[illnessId]) {
     var countKey = evolutionCountMap[illnessId];
@@ -169854,6 +170251,7 @@ function recordIllnessCure(state, illnessId) {
   var h = (state.flags._habits = state.flags._habits || {});
 
   // 将痊愈的疾病计入演化历史
+  // [全系统自洽修复] 域G A类修复: 新增6种疾病演化链计数器（fattyLiverCount/hypertensionCount/kidneyDiseaseCount/heartDiseaseCount/liverCirrhosisCount/hepatitisBCount）
   if (illnessId === "cold") h.coldCount = (h.coldCount || 0) + 1;
   else if (illnessId === "stomach_inflammation")
     h.stomach_inflammationCount = (h.stomach_inflammationCount || 0) + 1;
@@ -169869,6 +170267,16 @@ function recordIllnessCure(state, illnessId) {
     h.insomniaCount = (h.insomniaCount || 0) + 1;
   else if (illnessId === "overwork")
     h.overworkCount = (h.overworkCount || 0) + 1;
+  else if (illnessId === "hypertension")
+    h.hypertensionCount = (h.hypertensionCount || 0) + 1;
+  else if (illnessId === "fatty_liver")
+    h.fattyLiverCount = (h.fattyLiverCount || 0) + 1;
+  else if (illnessId === "kidney_disease")
+    h.kidneyDiseaseCount = (h.kidneyDiseaseCount || 0) + 1;
+  else if (illnessId === "heart_disease")
+    h.heartDiseaseCount = (h.heartDiseaseCount || 0) + 1;
+  else if (illnessId === "liver_cirrhosis")
+    h.liverCirrhosisCount = (h.liverCirrhosisCount || 0) + 1;
 }
 
 // ====== 每日疾病结算 ======
@@ -177588,6 +177996,18 @@ const DAILY_PIPELINE = [
           );
         }
       }
+
+      // [全系统自洽修复] 域E A类#1: 执行完整经济结算（市场饱和度·连续盈利衰减·难度收入曲线）
+      // dailyEconomicSettlement 返回各经济指标，存入 state._economySettlement 供投资系统读取
+      // 注：marketSaturationPenalty 已按当日总资产动态计算，自修正，无需额外衰减逻辑
+      try {
+        var settlement = eco.dailyEconomicSettlement(state);
+        if (settlement) {
+          state._economySettlement = settlement;
+        }
+      } catch (e) {
+        // 经济结算失败不影响主流程
+      }
     },
   },
 
@@ -178905,7 +179325,8 @@ function getGoodTag(locKey, goodId) {
 
 /** 计算地点 + 标签综合价格修正系数（不含供需/市场事件） */
 function getLocationPriceModifier(locKey, goodId) {
-  var loc = getLocation(locKey);
+  // [全系统自洽修复] 域A A类#7: getLocation 函数守卫
+  var loc = typeof getLocation === "function" ? getLocation(locKey) : null;
   var mod = 1.0;
   if (loc && loc.priceMod && loc.priceMod[goodId]) {
     mod = loc.priceMod[goodId];
@@ -178920,6 +179341,8 @@ function getLocationPriceModifier(locKey, goodId) {
 
 /** 记录玩家在某地买入（推高价格） */
 function recordLocalPurchase(state, locKey, goodId, qty) {
+  // [全系统自洽修复] 域A A类#1: state.trade 守卫
+  if (!state || !state.trade) return;
   if (!state.trade.supplyDemand) state.trade.supplyDemand = {};
   if (!state.trade.supplyDemand[locKey]) state.trade.supplyDemand[locKey] = {};
   if (!state.trade.supplyDemand[locKey][goodId])
@@ -178933,6 +179356,8 @@ function recordLocalPurchase(state, locKey, goodId, qty) {
 
 /** 记录玩家在某地卖出（压低价格） */
 function recordLocalSale(state, locKey, goodId, qty) {
+  // [全系统自洽修复] 域A A类#2: state.trade 守卫
+  if (!state || !state.trade) return;
   if (!state.trade.supplyDemand) state.trade.supplyDemand = {};
   if (!state.trade.supplyDemand[locKey]) state.trade.supplyDemand[locKey] = {};
   if (!state.trade.supplyDemand[locKey][goodId])
@@ -178946,6 +179371,8 @@ function recordLocalSale(state, locKey, goodId, qty) {
 
 /** 供需对价格的影响（每点 ±0.5%） */
 function getSupplyDemandPriceMod(state, locKey, goodId) {
+  // [全系统自洽修复] 域A A类#5: state.trade 守卫
+  if (!state || !state.trade) return 1.0;
   if (!state.trade.supplyDemand || !state.trade.supplyDemand[locKey])
     return 1.0;
   var sd = state.trade.supplyDemand[locKey][goodId] || 0;
@@ -178954,6 +179381,8 @@ function getSupplyDemandPriceMod(state, locKey, goodId) {
 
 /** 每日衰减供需（向0回归20%） */
 function decaySupplyDemand(state) {
+  // [全系统自洽修复] 域A A类#3: state.trade 守卫
+  if (!state || !state.trade) return;
   if (!state.trade.supplyDemand) return;
   for (var locKey in state.trade.supplyDemand) {
     if (!state.trade.supplyDemand.hasOwnProperty(locKey)) continue;
@@ -179159,6 +179588,8 @@ var MARKET_EVENTS = [
 
 /** 检查并触发市场事件 */
 function checkMarketEvents(state) {
+  // [全系统自洽修复] 域A A类#4: state.trade 守卫
+  if (!state || !state.trade) return;
   if (!state.trade.marketEvents) state.trade.marketEvents = [];
   // 衰减现有事件
   state.trade.marketEvents = state.trade.marketEvents.filter(function (evt) {
@@ -179197,6 +179628,8 @@ function checkMarketEvents(state) {
 
 /** 市场事件对某商品的价格修正 */
 function getMarketEventPriceMod(state, goodId) {
+  // [全系统自洽修复] 域A A类#6: state.trade 守卫
+  if (!state || !state.trade) return 1.0;
   if (!state.trade.marketEvents) return 1.0;
   var mod = 1.0;
   for (var i = 0; i < state.trade.marketEvents.length; i++) {
@@ -179282,6 +179715,11 @@ function calcFinalPrice(state, locKey, goodId) {
     price *= getWeatherGoodPriceMod(state, goodId);
   // 每日随机价格冲击
   price *= getDailyPriceShock(locKey, goodId);
+  // [全系统自洽修复] 域A 联动增强1: 季节性物价（goods.js seasonal 字段原dead data，现接入计算）
+  if (good.seasonal && state.weather && state.weather.season) {
+    var sMod = good.seasonal[state.weather.season];
+    if (isFinite(sMod) && sMod > 0) price *= sMod;
+  }
   var rl = state.relationships
     ? Object.keys(state.relationships).filter(function (k) {
         return state.relationships[k] && state.relationships[k].met;
@@ -182269,6 +182707,9 @@ function getGradeBonus(grade) {
  */
 
 function checkPromotion(state) {
+  // [全系统自洽修复] 域H A类#9: 晋升系统守卫 — state.corporate/state.player.corporate 前置检查
+  if (!state || !state.corporate) return null;
+  if (!state.player || !state.player.corporate) return null;
   const rank = state.corporate.rank;
   if (rank === "P10") return null;
 
@@ -182299,6 +182740,8 @@ function checkPromotion(state) {
   if (popularityReq && c.popularity < popularityReq) return null;
 
   // 绩效要求
+  // [全系统自洽修复] 域H A类#10: perfHistory 可能未初始化
+  if (!corp.perfHistory || !Array.isArray(corp.perfHistory)) return null;
   const recentPerfs = corp.perfHistory.slice(-3);
   if (reqs.minGrade && recentPerfs.length > 0) {
     const latestGrade = recentPerfs[recentPerfs.length - 1].grade;
@@ -182306,7 +182749,8 @@ function checkPromotion(state) {
   }
 
   // 团队人数 (P7+)
-  if (reqs.minTeamSize && corp.team.length < reqs.minTeamSize) return null;
+  // [全系统自洽修复] 域H A类#11: team 可能未初始化
+  if (reqs.minTeamSize && (!corp.team || !Array.isArray(corp.team) || corp.team.length < reqs.minTeamSize)) return null;
 
   // 重大项目 (P7+)
   if (
@@ -182317,9 +182761,10 @@ function checkPromotion(state) {
 
   // P10特殊判定
   if (rank === "P9") {
+    // [全系统自洽修复] 域H A类#12: popularity/upwardMgmt NaN 防御
     let chance = 0.6;
-    chance += c.popularity * 0.002;
-    chance += c.upwardMgmt * 0.002;
+    chance += (typeof c.popularity === "number" && isFinite(c.popularity) ? c.popularity : 50) * 0.002;
+    chance += (typeof c.upwardMgmt === "number" && isFinite(c.upwardMgmt) ? c.upwardMgmt : 50) * 0.002;
     var promoBonus =
       (state.inheritanceBonuses && state.inheritanceBonuses.promoChance) || 0;
     chance += promoBonus;
@@ -182333,6 +182778,9 @@ function checkPromotion(state) {
 }
 
 function applyPromotion(state, newRank) {
+  // [全系统自洽修复] 域H A类#13: applyPromotion 守卫 — state.corporate/player.corporate 前置检查
+  if (!state || !state.corporate) return;
+  if (!state.player || !state.player.corporate) return;
   const oldRank = state.corporate.rank;
   state.corporate.rank = newRank;
   // [全系统自洽修复] 域H 修复:晋升时同步更新corporate.level(P5→1, P6→2, ...)
@@ -182341,16 +182789,11 @@ function applyPromotion(state, newRank) {
   const rankData = CORP_RANKS[newRank];
 
   // 晋升奖励
-  state.player.corporate.ability = Math.min(
-    100,
-    state.player.corporate.ability + 5,
-  );
-  state.player.corporate.hair = Math.min(100, state.player.corporate.hair + 10);
-  state.player.corporate.dignity = Math.min(
-    100,
-    state.player.corporate.dignity + 10,
-  );
-  state.player.corporate.kpi = Math.min(150, state.player.corporate.kpi + 15);
+  var c = state.player.corporate;
+  c.ability = Math.min(100, (c.ability || 0) + 5);
+  c.hair = Math.min(100, (c.hair || 0) + 10);
+  c.dignity = Math.min(100, (c.dignity || 0) + 10);
+  c.kpi = Math.min(150, (c.kpi || 0) + 15);
   // [全系统自洽修复] 域H 联动增强1: 晋升使人精神振奋→疲劳-10（H→G）
   state.needs.fatigue = Math.max(0, (state.needs.fatigue || 0) - 10);
 
@@ -182389,6 +182832,8 @@ function gradeMeetsMin(grade, minGrade) {
 }
 
 function getPromotionProgress(state) {
+  // [全系统自洽修复] 域H A类#14: getPromotionProgress 守卫
+  if (!state || !state.corporate) return { done: false, text: "未入职" };
   const rank = state.corporate.rank;
   if (rank === "P10") return { done: true, text: "已是最高职级！" };
 
@@ -182396,28 +182841,28 @@ function getPromotionProgress(state) {
   if (!rankData) return { done: false, text: "无法判定" };
 
   const reqs = rankData.promotionReqs;
-  const c = state.player.corporate;
+  const c = (state.player && state.player.corporate) || {};
   const corp = state.corporate;
 
   const checks = [];
   if (reqs.minAbility)
-    checks.push({ label: "能力", current: c.ability, target: reqs.minAbility });
+    checks.push({ label: "能力", current: c.ability || 0, target: reqs.minAbility });
   if (reqs.minUpward)
     checks.push({
       label: "向上管理",
-      current: c.upwardMgmt,
+      current: c.upwardMgmt || 0,
       target: reqs.minUpward,
     });
   if (reqs.minPopularity)
     checks.push({
       label: "人缘",
-      current: c.popularity,
+      current: c.popularity || 0,
       target: reqs.minPopularity,
     });
   if (reqs.minTeamSize)
     checks.push({
       label: "团队人数",
-      current: corp.team.length,
+      current: (corp.team && Array.isArray(corp.team) ? corp.team.length : 0),
       target: reqs.minTeamSize,
     });
   if (reqs.minProjects)
@@ -182440,6 +182885,13 @@ function getPromotionProgress(state) {
 /** 招聘团队成员 */
 function hireTeamMember(memberTypeId) {
   const state = StateManager.getState();
+  // [全系统自洽修复] 域H A类#6: 团队系统守卫 — state.corporate/state.resources/state.player 前置检查
+  if (!state.corporate || !state.corporate.rank) {
+    StateManager.addMessage("⚠️ 未入职，无法管理团队。", "warning");
+    return false;
+  }
+  if (!state.resources) state.resources = { cash: 0, bankBalance: 0 };
+  if (!state.player) { StateManager.addMessage("⚠️ 游戏状态异常。", "warning"); return false; }
   const rankData = CORP_RANKS[state.corporate.rank];
   if (!rankData || !rankData.canManageTeam) {
     StateManager.addMessage("⚠️ P7以上才能管理团队。", "warning");
@@ -182455,7 +182907,7 @@ function hireTeamMember(memberTypeId) {
 
   // 招聘成本
   const cost = 10000;
-  if (state.resources.cash < cost) {
+  if ((state.resources.cash || 0) < cost) {
     StateManager.addMessage(
       `⚠️ 招聘需要 ¥${cost.toLocaleString()}。`,
       "warning",
@@ -182490,6 +182942,10 @@ function hireTeamMember(memberTypeId) {
 /** 解雇团队成员 */
 function fireTeamMember(index) {
   const state = StateManager.getState();
+  if (!state.corporate || !state.corporate.team || !Array.isArray(state.corporate.team)) {
+    StateManager.addMessage("⚠️ 团队数据不可用。", "warning");
+    return false;
+  }
   if (index < 0 || index >= state.corporate.team.length) return false;
 
   const member = state.corporate.team[index];
@@ -182497,12 +182953,15 @@ function fireTeamMember(index) {
 
   // 团队士气影响
   for (const m of state.corporate.team) {
-    m.loyalty = Math.max(0, m.loyalty - 5);
+    m.loyalty = Math.max(0, (m.loyalty || 50) - 5);
   }
-  state.player.corporate.popularity = Math.max(
-    0,
-    state.player.corporate.popularity - 5,
-  );
+  // [全系统自洽修复] 域H A类#8: state.player.corporate 守卫 + NaN 防御
+  if (state.player && state.player.corporate) {
+    state.player.corporate.popularity = Math.max(
+      0,
+      (state.player.corporate.popularity || 50) - 5,
+    );
+  }
 
   StateManager.addMessage(`👋 ${member.name} 离开了团队。`, "warning");
   return true;
@@ -182510,22 +182969,25 @@ function fireTeamMember(index) {
 
 /** 计算团队产出系数 */
 function getTeamProductivity(state) {
+  // [全系统自洽修复] 域H A类#7: 团队系统守卫 — 防止 state.corporate/team 未初始化崩溃
+  if (!state || !state.corporate || !state.corporate.team || !Array.isArray(state.corporate.team)) {
+    return 1.0;
+  }
   if (state.corporate.team.length === 0) return 1.0;
 
   const totalProductivity = state.corporate.team.reduce(
-    (s, m) => s + Math.max(1, m.productivity),
+    (s, m) => s + Math.max(1, (typeof m.productivity === "number" && isFinite(m.productivity)) ? m.productivity : 1),
     0,
   );
   const avgLoyalty =
-    state.corporate.team.reduce((s, m) => s + Math.max(1, m.loyalty), 0) /
+    state.corporate.team.reduce((s, m) => s + Math.max(1, (typeof m.loyalty === "number" && isFinite(m.loyalty)) ? m.loyalty : 1), 0) /
     state.corporate.team.length;
   const sizeBonus = Math.min(1.5, 1 + state.corporate.team.length * 0.05);
 
-  return (
-    (totalProductivity / state.corporate.team.length) *
-    (avgLoyalty / 100) *
-    sizeBonus
-  );
+  // [全系统自洽修复] 域H A类#7: 防止 NaN 传播（如果所有团队成员属性异常，返回基础值 1.0）
+  var result = (totalProductivity / state.corporate.team.length) * (avgLoyalty / 100) * sizeBonus;
+  if (!isFinite(result) || isNaN(result)) return 1.0;
+  return result;
 }
 
 ;
@@ -183196,9 +183658,14 @@ function refreshStockMarket(state) {
 /** 执行职场行动 */
 function doCorporateAction(actionId) {
   const state = StateManager.getState();
-  // [全系统自洽修复] 域H A类#3: state.corporate 可能未初始化（Phase1误调）
+  // [全系统自洽修复] 域H A类#2: state.corporate 可能未初始化（Phase1误调）
   if (!state.corporate || !state.corporate.rank) {
     if (typeof StateManager !== "undefined") StateManager.addMessage("⚠️ 未入职，无法执行职场行动。", "warning");
+    return false;
+  }
+  // [全系统自洽修复] 域H A类#3: 检查 state.player.corporate 存在性（与 state.corporate 是不同路径）
+  if (!state.player.corporate) {
+    if (typeof StateManager !== "undefined") StateManager.addMessage("⚠️ 职场角色数据未初始化，无法执行职场行动。", "warning");
     return false;
   }
   const action = CORP_ACTIONS.find((a) => a.id === actionId);
@@ -183222,7 +183689,8 @@ function doCorporateAction(actionId) {
   }
 
   // 检查费用
-  if (action.cost && state.resources.cash < action.cost) {
+  // [全系统自洽修复] 域H A类: cash NaN 防御（旧存档/极端值导致现金损坏）
+  if (action.cost && (state.resources.cash || 0) < action.cost) {
     StateManager.addMessage(`⚠️ 需要 ¥${action.cost}，现金不足。`, "warning");
     return false;
   }
@@ -183316,7 +183784,16 @@ function endQuarter() {
   }
 
   // 绩效考核
+  // [全系统自洽修复] 域H A类#4: typeof 守卫 + state.resources/state.needs 防御
+  if (typeof calculatePerfScore !== "function") {
+    StateManager.addMessage("⚠️ 绩效系统不可用，跳过季度结算。", "warning");
+    return false;
+  }
   const perfResult = calculatePerfScore(state);
+  if (typeof assignGrade !== "function") {
+    StateManager.addMessage("⚠️ 绩效评级系统不可用，跳过季度结算。", "warning");
+    return false;
+  }
   const grade = assignGrade(perfResult.score, state);
   c.perfHistory.push({
     year: state.player.corpYear,
@@ -183335,15 +183812,18 @@ function endQuarter() {
   // 发放季度工资
   const rankData = CORP_RANKS[c.rank];
   const salary = rankData ? rankData.baseSalary * 3 : 45000;
-  state.resources.cash += salary;
-  state.resources.totalEarned += salary;
-  addDailyTransaction(
-    state,
-    "income",
-    "salary",
-    salary,
-    "季度工资 - " + c.rank,
-  );
+  if (!state.resources) state.resources = { cash: 0, bankBalance: 0, totalEarned: 0 };
+  state.resources.cash = (state.resources.cash || 0) + salary;
+  state.resources.totalEarned = (state.resources.totalEarned || 0) + salary;
+  if (typeof addDailyTransaction === "function") {
+    addDailyTransaction(
+      state,
+      "income",
+      "salary",
+      salary,
+      "季度工资 - " + c.rank,
+    );
+  }
 
   StateManager.addMessage(
     `💰 Q${c.corpQuarter} 结束。工资到账 ¥${salary.toLocaleString()}。绩效: ${grade.grade}`,
@@ -183375,6 +183855,11 @@ function endQuarter() {
   // Q4 冲刺（下季度 KPI 增益 +50%）
   if (c.corpQuarter === 4) {
     state.flags.q4Sprint = true;
+    // [全系统自洽修复] 域H 联动增强1: Q4冲刺积累疲劳（H→G）
+    if (state.needs) {
+      state.needs.fatigue = Math.min(100, (state.needs.fatigue || 0) + 5);
+      StateManager.addMessage("😰 冲刺季压力大，疲劳+5。", "warning");
+    }
     StateManager.addMessage(
       "🏃 进入Q4冲刺季！下季度所有KPI增益+50%，绩效评分×1.1。",
       "event",
@@ -183400,11 +183885,18 @@ function endQuarter() {
     typeof updateStockPrices === "function" &&
     Object.keys(c.stockMarket || {}).length > 0
   ) {
+    // [全系统自洽修复] 域H 联动增强2: 绩效影响股价（H→E）
+    // S/S+级绩效→利好公司股价，C级→利空
+    if (grade.grade === "S+" || grade.grade === "S") {
+      state.flags._corpPerfStockBoost = true;
+    } else if (grade.grade === "C") {
+      state.flags._corpPerfStockDrag = true;
+    }
     updateStockPrices(state, false);
   }
 
   // 职场随机事件
-  if (Random.chance(0.2)) {
+  if (Random.chance(0.2) && typeof rollCorporateEvent === "function") {
     rollCorporateEvent(state);
   }
 
@@ -183470,11 +183962,11 @@ function endQuarter() {
   }
 
   // 失败条件
-  checkCorpLoseConditions(state);
+  if (typeof checkCorpLoseConditions === "function") checkCorpLoseConditions(state);
   // 胜利条件
-  checkCorpWinConditions(state);
+  if (typeof checkCorpWinConditions === "function") checkCorpWinConditions(state);
 
-  autoSave("milestone");
+  if (typeof autoSave === "function") autoSave("milestone");
 }
 
 /** 进入职场阶段 */
@@ -183503,6 +183995,9 @@ function enterCorporatePhase(companyId) {
   p.phase = "corporate";
   p.corpYear = 1;
   p.corpQuarter = 1;
+
+  // [全系统自洽修复] 域H A类#5: 初始化 p.corporate 对象防止后续属性访问崩溃
+  if (!p.corporate) p.corporate = {};
 
   p.corporate.hair = 100;
   p.corporate.dignity = Math.min(100, Math.round(p.mental * 1.2));
@@ -184776,6 +185271,12 @@ function tickInvestmentDaily(state) {
     var m = inv.stockMarket[s.symbol];
     if (!m) continue;
 
+    // [全系统自洽修复] 域E A类#2: NaN 价格守卫 — 旧存档/数据异常时重置为 basePrice
+    if (!isFinite(m.price) || m.price <= 0) {
+      m.price = s.basePrice * Random.float(0.85, 1.15);
+      m.price = Math.round(m.price * 100) / 100;
+    }
+
     // 基础随机游走 + 世界参数行业热度偏置
     var baseChange = 1 + s.trend + Random.float(-s.volatility, s.volatility);
     if (typeof getSectorHeat === "function") {
@@ -184787,13 +185288,37 @@ function tickInvestmentDaily(state) {
       }
     }
 
+    // [全系统自洽修复] 域G 联动增强3: 极端天气→市场波动放大（G→E）
+    // 极端天气时 volatility 临时放大 15-30%，台风/暴雪影响最大
+    if (state.weather && state.weather.current) {
+      var _weatherVolMul = 1.0;
+      var _wId = state.weather.current;
+      if (_wId === "typhoon" || _wId === "sandstorm") _weatherVolMul = 1.3;
+      else if (_wId === "snowy" || _wId === "stormy" || _wId === "cold_snap") _weatherVolMul = 1.2;
+      else if (_wId === "heatwave" || _wId === "heavy_smog") _weatherVolMul = 1.15;
+      if (_weatherVolMul > 1.0) {
+        baseChange = 1 + s.trend + Random.float(-s.volatility * _weatherVolMul, s.volatility * _weatherVolMul);
+        // 重新应用热度偏置（因 baseChange 被重写，需重新计算）
+        if (typeof getSectorHeat === "function") {
+          var _heat2 = getSectorHeat(s.industry);
+          if (_heat2 && _heat2 !== 1.0) baseChange *= 1 + (_heat2 - 1.0) * 0.1;
+        }
+      }
+    }
+
     // 新闻效应乘数
     var newsMul =
       typeof getNewsEffectForInvestment === "function"
         ? getNewsEffectForInvestment(s.symbol, s.industry, s.category, state)
         : 1.0;
 
-    m.price = Math.max(0.01, m.price * baseChange * newsMul);
+    // [全系统自洽修复] 域E A类#1: 市场饱和度惩罚（从每日经济结算读取，按当前总资产动态计算，自修正）
+    var _satPenalty = 1.0;
+    if (state._economySettlement && isFinite(state._economySettlement.marketSaturationPenalty)) {
+      _satPenalty = state._economySettlement.marketSaturationPenalty;
+    }
+
+    m.price = Math.max(0.01, m.price * baseChange * newsMul * _satPenalty);
     m.price = Math.round(m.price * 100) / 100;
     m.history.push({ day: state.player.day, price: m.price });
     if (m.history.length > 20) m.history.shift();
@@ -184930,6 +185455,45 @@ function tickInvestmentDaily(state) {
   }
 
   // ================================================================
+  // [全系统自洽修复] 域E 联动增强2: 投资回撤→经济焦虑（E→G）
+  //  组合回撤>20%时触发疲劳+2 + 健康-1（压力应激）
+  //  每日限触发一次，避免叠加速度过快
+  // ================================================================
+  try {
+    var _peak = inv._portfolioPeak || 0;
+    var _curPv = 0;
+    var _sm2 = inv.stockMarket || {};
+    var _h2 = inv.stockHoldings || [];
+    for (var _hi2 = 0; _hi2 < _h2.length; _hi2++) {
+      var _h2i = _h2[_hi2];
+      var _m2 = _sm2[_h2i.symbol];
+      if (_m2 && isFinite(_m2.price) && isFinite(_h2i.shares))
+        _curPv += _m2.price * _h2i.shares;
+    }
+    var _p2 = inv.properties || [];
+    for (var _pi2 = 0; _pi2 < _p2.length; _pi2++) {
+      _curPv += _p2[_pi2].currentPrice || _p2[_pi2].buyPrice || 0;
+    }
+    if ((inv.btcHoldings || 0) > 0)
+      _curPv += (inv.btcPrice || 0) * inv.btcHoldings;
+    if (_peak > 0 && _curPv > 0) {
+      var _dd = (_peak - _curPv) / _peak;
+      if (_dd > 0.2 && state.needs) {
+        if (!state.flags._econAnxietyDay || state.flags._econAnxietyDay < state.player.day) {
+          state.flags._econAnxietyDay = state.player.day;
+          state.needs.fatigue = Math.min(100, (state.needs.fatigue || 0) + 2);
+          state.needs.health = Math.max(0, (state.needs.health || 100) - 1);
+          if (_dd > 0.35) {
+            state.needs.mental = Math.max(0, (state.needs.mental || 50) - 3);
+          }
+        }
+      }
+    }
+  } catch (e) {
+    // 静默：经济焦虑不影响主流程
+  }
+
+  // ================================================================
   // [优化] 市场情绪计算 — 基于最近5日整体涨跌幅判定牛熊
   // ================================================================
   try {
@@ -184956,6 +185520,42 @@ function tickInvestmentDaily(state) {
     }
   } catch (e) {
     // 静默
+  }
+
+  // ================================================================
+  // [全系统自洽修复] 域E 联动增强3: 市场情绪→NPC话题（E→D）
+  //  牛熊市时高好感NPC会谈论市场，增加沉浸感
+  //  每日最多一次，仅在有持仓且至少一位NPC好感≥40时触发
+  // ================================================================
+  try {
+    var _mood = inv._marketMood;
+    if (_mood && _mood !== "neutral" && inv.stockHoldings && inv.stockHoldings.length > 0) {
+      if (!state.flags._npcMarketTalkDay || state.flags._npcMarketTalkDay < state.player.day) {
+        var _talkedNpc = null;
+        var _rels = state.relationships || {};
+        for (var _rid in _rels) {
+          if (_rels[_rid] && _rels[_rid].met && (_rels[_rid].affinity || 0) >= 40) {
+            _talkedNpc = _rid;
+            break;
+          }
+        }
+        if (_talkedNpc) {
+          state.flags._npcMarketTalkDay = state.player.day;
+          var _npcName = "";
+          if (typeof NPC_DATA !== "undefined" && NPC_DATA[_talkedNpc]) {
+            _npcName = NPC_DATA[_talkedNpc].name || _talkedNpc;
+          } else {
+            _npcName = _talkedNpc;
+          }
+          var _talkMsg = _mood === "bullish"
+            ? _npcName + "兴奋地说最近行情不错，问你要不要一起看看机会。"
+            : _npcName + "叹气说最近市场不太好，让你投资多留个心眼。";
+          StateManager.addMessage("💬 " + _talkMsg, "hint");
+        }
+      }
+    }
+  } catch (e) {
+    // 静默：NPC话题不影响主流程
   }
 
   // ================================================================
@@ -185145,6 +185745,16 @@ function sellInvStock(symbol, shares) {
   if (!isFinite(pl)) pl = 0;
   if (pl > 0) {
     inv._consecutiveWins = (inv._consecutiveWins || 0) + 1;
+    // [全系统自洽修复] 域E A类#1: 应用连续盈利衰减（第4次后每次-8%利润）
+    var _winDecay = 1.0;
+    if (typeof window.EconomySystem !== "undefined" && window.EconomySystem.getConsecutiveWinDecay) {
+      _winDecay = window.EconomySystem.getConsecutiveWinDecay(inv._consecutiveWins);
+    }
+    if (_winDecay < 1.0) {
+      var _decayAmount = Math.round(pl * (1 - _winDecay));
+      revenue = Math.max(0, revenue - _decayAmount);
+      pl = pl - _decayAmount;
+    }
     // [全系统自洽修复] 域E 联动增强1: 投资盈利→小幅心情+1（财务安全感）
     if (state.needs) state.needs.happiness = Math.min(100, (state.needs.happiness || 0) + 1);
   } else {
@@ -185315,11 +185925,13 @@ function sellProperty(propId) {
   }
 
   // NaN 防御：旧存档或未初始化时 currentPrice 可能缺失
-  if (prop.currentPrice == null || isNaN(prop.currentPrice))
+  if (prop.currentPrice == null || !isFinite(prop.currentPrice))
     prop.currentPrice = prop.buyPrice || 0;
-  // [全系统自洽修复] 域E 修复:房产手续费5%→2%，降低买入即亏幅度
-  var net = prop.currentPrice - Math.round(prop.currentPrice * 0.02);
-  state.resources.cash += net;
+  // [全系统自洽修复] 域E A类#4: net 可能 NaN（currentPrice 异常），兜底
+  var fee = Math.round(prop.currentPrice * 0.02);
+  if (!isFinite(fee)) fee = 0;
+  var net = prop.currentPrice - fee;
+  if (!isFinite(net)) net = 0;
   inv.properties.splice(idx, 1);
   StateManager.addMessage(
     "出售" + prop.name + " 到手¥" + net.toLocaleString(),
@@ -186183,6 +186795,32 @@ function renderDailyPLPanel(state) {
 }
 
 // ============================================================
+//  [全系统自洽修复] 域E 联动增强1: 投资组合回撤指示器（E→F）
+//  显示当前投资价值与历史峰值的回撤幅度，帮助玩家识别风险
+// ============================================================
+function renderDrawdownIndicator(state) {
+  var inv = state.investment;
+  if (!inv) return "";
+  var peak = inv._portfolioPeak;
+  if (!peak || peak <= 0) return "";
+  var snapshot = getInvestmentAssetSnapshot(state);
+  var curVal = snapshot.investmentValue || 0;
+  if (curVal <= 0) return "";
+  var dd = (peak - curVal) / peak;
+  if (dd <= 0.01) return ""; // 回撤<1%不显示
+  var ddPct = (dd * 100).toFixed(1);
+  var color = "var(--text-muted)";
+  var icon = "📉";
+  var label = "小幅回撤";
+  if (dd > 0.2) { color = "var(--danger)"; icon = "🔴"; label = "深度回撤"; }
+  else if (dd > 0.1) { color = "var(--warning)"; icon = "⚠️"; label = "明显回撤"; }
+  return '<div style="padding:6px 10px;margin-bottom:8px;background:rgba(255,255,255,0.04);border:1px solid ' + color + ';border-radius:6px;font-size:11px;display:flex;align-items:center;justify-content:space-between;">' +
+    '<span>' + icon + ' ' + label + '：距历史峰值 ' + ddPct + '%</span>' +
+    '<span style="color:' + color + ';font-weight:bold;">峰值 ¥' + Math.round(peak).toLocaleString() + ' → 当前 ¥' + Math.round(curVal).toLocaleString() + '</span>' +
+    '</div>';
+}
+
+// ============================================================
 //  [优化] 资产配置面板 — 显示当前各类资产占比
 // ============================================================
 function renderAssetAllocationPanel(snapshot) {
@@ -186354,6 +186992,7 @@ function renderInvestmentTab(state, parent) {
     summaryCard("汽车", assetSnapshot.groups.cars) +
     "</div>" +
     renderAssetAllocationPanel(assetSnapshot) +
+    renderDrawdownIndicator(state) +
     renderDailyPLPanel(state) +
     renderNewsInvestmentDrivers(state) +
     renderMarketSentiment(state, inv) +
@@ -190673,7 +191312,13 @@ function getStartupEffectiveCareerRank(state) {
 
 function getStartupRegistrationCost(state) {
   var stc = getStartupTriggerConditions(state);
-  return stc.cashRequired || 50000;
+  var base = stc.cashRequired || 50000;
+  // [全系统自洽修复] 域G A类: 创业路线(_routeStartupCostMod)应减免注册费，此前仅 UI 展示未实际生效
+  var mod = state.flags && isFinite(state.flags._routeStartupCostMod)
+    ? state.flags._routeStartupCostMod
+    : 1.0;
+  if (mod > 0 && mod < 1) base = Math.round(base * mod);
+  return base;
 }
 
 /** 打开注册公司弹窗 */
@@ -190988,6 +191633,14 @@ function registerStartup(state, name, industry, description) {
   const cash = state.resources.cash;
   const day = state.player.day;
   const minCash = getStartupRegistrationCost(state); // 剧本/阶段感知启动资金
+
+  // [全系统自洽修复] 域E A类#3: minCash 可能 NaN（状态未初始化），防御兜底
+  if (!isFinite(minCash) || minCash <= 0) {
+    return {
+      success: false,
+      message: "启动资金计算异常，请检查游戏状态后重试。",
+    };
+  }
 
   if (cash < minCash) {
     return {
@@ -192934,8 +193587,11 @@ function tickStartup(state, tickType) {
   for (const product of company.products) {
     if (product.status === "launched") {
       const baseRevenue = DAILY_BASE_REVENUE * timeMult;
-      const techMod = product.technologyScore / 100;
-      const marketMod = product.marketScore / 100;
+      // [全系统自洽修复] 域H A类#25: 防止 revenue 计算中 technologyScore/marketScore NaN 传播
+      var _tech = (typeof product.technologyScore === "number" && isFinite(product.technologyScore)) ? product.technologyScore : 50;
+      var _market = (typeof product.marketScore === "number" && isFinite(product.marketScore)) ? product.marketScore : 50;
+      const techMod = _tech / 100;
+      const marketMod = _market / 100;
       const industryMod =
         STARTUP_INDUSTRIES[company.industry]?.avgBurnRate / 50000 || 1;
       const growthMod = 1 + (company.revenue > 0 ? DAILY_GROWTH_BONUS : 0);
@@ -193019,15 +193675,23 @@ function tickStartup(state, tickType) {
   company.expenses = totalExpenses;
 
   // 3. 净现金流
+  // [全系统自洽修复] 域H A类#21: 防止 totalRevenue/totalExpenses NaN 传播
+  if (typeof totalRevenue !== "number" || !isFinite(totalRevenue)) totalRevenue = 0;
+  if (typeof totalExpenses !== "number" || !isFinite(totalExpenses)) totalExpenses = 0;
   const netCash = totalRevenue - totalExpenses;
-  company.cashReserve += netCash;
+  company.cashReserve = (typeof company.cashReserve === "number" && isFinite(company.cashReserve)) ? company.cashReserve + netCash : netCash;
 
   // 4. 烧钱率 & runway
   company.burnRate = Math.max(0, totalExpenses - totalRevenue);
+  if (!isFinite(company.burnRate)) company.burnRate = 0;
   company.monthsOfRunway =
-    company.burnRate > 0 ? company.cashReserve / (company.burnRate / 30) : 999;
+    company.burnRate > 0 ? (company.cashReserve || 0) / (company.burnRate / 30) : 999;
 
   // 5. 估值漂移
+  // [全系统自洽修复] 域H A类#22: 防止 company.valuation NaN 传播
+  if (typeof company.valuation !== "number" || !isFinite(company.valuation)) {
+    company.valuation = 5000000; // 默认估值500万
+  }
   const valuationUpMod = tickType === "daily" ? 0.0003 : 0.02;
   const valuationDownMod = tickType === "daily" ? 0.0002 : 0.01;
   if (netCash > 0) {
@@ -193037,8 +193701,10 @@ function tickStartup(state, tickType) {
       1 - valuationDownMod - Random.float(0, valuationDownMod);
   }
   company.valuation = Math.round(company.valuation);
+  if (!isFinite(company.valuation)) company.valuation = 5000000;
 
   // 更新峰值估值
+  if (!startup.history) startup.history = {};
   if (company.valuation > (startup.history.peakValuation || 0)) {
     startup.history.peakValuation = company.valuation;
   }
@@ -193087,8 +193753,10 @@ function tickStartup(state, tickType) {
         ? 0.05
         : 0;
       const baseGrowth = DAILY_BASE_GROWTH * timeMult;
-      const productFactor =
-        (product.technologyScore + product.marketScore) / 200;
+      // [全系统自洽修复] 域H A类#23: 防止 technologyScore/marketScore NaN 传播
+      var techScore = (typeof product.technologyScore === "number" && isFinite(product.technologyScore)) ? product.technologyScore : 50;
+      var marketScore = (typeof product.marketScore === "number" && isFinite(product.marketScore)) ? product.marketScore : 50;
+      const productFactor = (techScore + marketScore) / 200;
       const growthRate = baseGrowth * productFactor + wordOfMouth;
 
       if (!product.users) product.users = 100;
@@ -193096,8 +193764,10 @@ function tickStartup(state, tickType) {
 
       // 口碑评分
       if (!product.rating) product.rating = 3.5;
+      // [全系统自洽修复] 域H A类#24: 防止 ratingChange NaN 传播
+      var _techForRating = (typeof product.technologyScore === "number" && isFinite(product.technologyScore)) ? product.technologyScore : 50;
       const ratingChange =
-        ((product.technologyScore / 100 - 0.5) * 0.2) / timeMult +
+        ((_techForRating / 100 - 0.5) * 0.2) / timeMult +
         Random.float(-0.05, 0.05) / timeMult;
       product.rating = Math.max(1, Math.min(5, product.rating + ratingChange));
 
@@ -198699,6 +199369,8 @@ function showLegalComplianceModal(state) {
 /** 显示法律事件应对弹窗 */
 function showLegalResponseModal(eventId) {
   const state = StateManager.getState();
+  // [全系统自洽修复] 域E A类#1: state.startup 可能未定义（Phase1玩家/旧存档），导致 .company 裸访问→TypeError
+  if (!state || !state.startup || !state.startup.company) return;
   const company = state.startup.company;
   if (!company || !company.pendingLegalEvent) return;
 
@@ -198766,8 +199438,10 @@ function showLegalResponseModal(eventId) {
 
 /** 显示竞争对手防御面板 */
 function showCompetitorDefenseModal(state) {
+  // [全系统自洽修复] 域E A类#2: state.startup 可能未定义，导致 .company 裸访问→TypeError
+  if (!state || !state.startup || !state.startup.company)
+    return { success: false, message: "没有公司" };
   const company = state.startup.company;
-  if (!company) return { success: false, message: "没有公司" };
 
   const competitors = state.startup.competitors || [];
   const activeAttacks = company.activeCompetitorAttacks || [];
@@ -210811,6 +211485,15 @@ function renderWeatherPanel(state) {
     ';margin-left:auto;">☂️' +
     comfortLabel +
     "</span>";
+  // [全系统自洽修复] 域F 联动增强1: 极温预警 — 温度>35°C或<-5°C时额外提示
+  var temp = w.temperature || 22;
+  if (temp > 35) {
+    html +=
+      '<span style="font-size:10px;color:var(--danger);margin-left:4px;">🔥 高温预警！注意防暑</span>';
+  } else if (temp < -5) {
+    html +=
+      '<span style="font-size:10px;color:var(--info);margin-left:4px;">❄️ 严寒预警！注意防寒</span>';
+  }
   html += "</div>";
 
   if (isPersistent) {
@@ -216352,7 +217035,9 @@ function renderSkillsTab(state, parent) {
     synDiv.style.cssText =
       "margin-top:14px;padding:10px;background:rgba(255,255,255,0.03);border-radius:8px;border:1px solid rgba(255,255,255,0.06);";
     var synTitle =
-      '<h3 style="color:var(--text-muted);margin-bottom:8px;font-size:12px;">✨ 技能协同增益</h3>';
+      '<h3 style="color:var(--text-muted);margin-bottom:8px;font-size:12px;">✨ 技能协同增益' +
+      (activeSyn.length > 0 ? ' <span style="color:var(--success);font-size:10px;">(' + activeSyn.length + '项激活)</span>' : '') +
+      '</h3>';
     if (activeSyn.length === 0) {
       synDiv.innerHTML =
         synTitle +
@@ -228054,6 +228739,26 @@ function _wikiDetailItem(state, id) {
     html += "</ul>";
   }
 
+  // [全系统自洽修复] 域A 联动增强2: 物品→职业收入加成（jobBonuses 原仅 events_core 消费，百科不可见）
+  if (item.jobBonuses && typeof item.jobBonuses === "object" && typeof STREET_JOBS !== "undefined") {
+    var _jbKeys = Object.keys(item.jobBonuses);
+    if (_jbKeys.length > 0) {
+      html += '<h3>💼 职业收入加成</h3><ul class="wiki-list">';
+      for (var ji = 0; ji < _jbKeys.length; ji++) {
+        var jid = _jbKeys[ji];
+        var jb = item.jobBonuses[jid];
+        var jmult = jb && jb.incomeMultiplier ? jb.incomeMultiplier : null;
+        var jname = jid;
+        for (var sj = 0; sj < STREET_JOBS.length; sj++) {
+          if (STREET_JOBS[sj].id === jid) { jname = STREET_JOBS[sj].name; break; }
+        }
+        var multStr = jmult ? ("（收入×" + jmult + "）") : "";
+        html += "<li>" + _wkE(jname) + " " + _wkE(multStr) + "</li>";
+      }
+      html += "</ul>";
+    }
+  }
+
   if (item.buyLocations && item.buyLocations.length > 0) {
     html += '<h3>🛒 购买地点</h3><div class="wiki-links">';
     for (var b = 0; b < item.buyLocations.length; b++) {
@@ -230532,6 +231237,33 @@ function buildReportHTML(txs, state, reconcileInfo) {
   bodyHtml += peakHTML;
   bodyHtml += "</div>";
 
+  // [全系统自洽修复] 域D 联动增强3: NPC近况 — 随机显示已结识NPC的动态（D→G 核心日报）
+  (function () {
+    if (!state.relationships || !state.player) return;
+    var _npcUpdates = [];
+    for (var _ni = 0; _ni < (typeof NPCS !== "undefined" ? NPCS.length : 0); _ni++) {
+      var _n = NPCS[_ni];
+      if (!_n || !_n.id) continue;
+      var _rel = state.relationships[_n.id];
+      if (!_rel || !_rel.met || (_rel.affinity || 0) < 20) continue;
+      if (_n.encounterLines && _n.encounterLines.length > 0) {
+        var _line = _n.encounterLines[Math.floor(Math.random() * _n.encounterLines.length)];
+        _npcUpdates.push({ name: _n.name, line: _line, aff: _rel.affinity || 0 });
+      }
+    }
+    if (_npcUpdates.length > 0) {
+      // 随机选1-2条
+      _npcUpdates.sort(function () { return Math.random() - 0.5; });
+      var _count = Math.min(2, _npcUpdates.length);
+      bodyHtml += '<div class="daily-report-npc" style="padding:6px 0;margin:2px 0 4px;border-top:1px solid var(--border);font-size:11px;color:var(--text-muted);">';
+      bodyHtml += '<span style="font-weight:bold;font-size:11px;">👥 城中见闻</span>';
+      for (var _ui = 0; _ui < _count; _ui++) {
+        bodyHtml += '<div style="padding:2px 0;">' + _npcUpdates[_ui].name + '：' + _npcUpdates[_ui].line + '</div>';
+      }
+      bodyHtml += '</div>';
+    }
+  })();
+
   // 明日展望（留存钩子 — 让玩家期待明天）
   if (tomorrowHTML) {
     bodyHtml +=
@@ -231004,6 +231736,39 @@ function generateDailyReportSummary(state, incomes, expenses) {
     highlights.push("👥 已结识 " + _npcMet + " 位街头好友，这座城市开始有温度了");
   }
 
+  // [全系统自洽修复] 域G 联动增强2: 人生节点进度日报（G→F）
+  try {
+    if (typeof getLifeNodeStatus === "function") {
+      var _lnStatus = getLifeNodeStatus(state);
+      if (_lnStatus && _lnStatus.completed && _lnStatus.completed.length > 0) {
+        var _completedCount = _lnStatus.completed.length;
+        var _lnNames = _lnStatus.completed.map(function(n){ return n.icon + n.name; }).join("·");
+        highlights.push("🎯 已度过 " + _completedCount + " 个人生节点（" + _lnNames + "）");
+      }
+    }
+  } catch (e) {
+    // 静默
+  }
+
+  // [全系统自洽修复] 域G 联动增强: 经济结算感知（G→E，让玩家看见每日经济系统的隐形结果）
+  try {
+    var _stlement = state._economySettlement;
+    if (_stlement) {
+      // activeTaxTier 是 {min,max,rate,label} 对象（economy_v3.1.js），无税时为 null
+      var _tier = _stlement.activeTaxTier;
+      if (_tier && _tier.label) {
+        highlights.push("📊 当前财富税档位：" + _tier.label + "（资产越多，责任越大）");
+      }
+      var _sat = _stlement.marketSaturationPenalty;
+      if (isFinite(_sat) && _sat > 0 && _sat < 0.95) {
+        var _satPct = Math.round((1 - _sat) * 100);
+        highlights.push("🏙️ 市场饱和度让投资收益打了" + (100 - _satPct) + "折");
+      }
+    }
+  } catch (e) {
+    // 静默：经济结算展示不影响主报告
+  }
+
   var totalEarned = (state.resources && state.resources.totalEarned) || 0;
   var maxEarned = state.flags._maxEarnedMilestone || 0;
   if (totalEarned >= 10000 && maxEarned < 10000) {
@@ -231034,7 +231799,7 @@ function generateDailyReportSummary(state, incomes, expenses) {
       }
     }
     var diff =
-      state.resources.cash + (state.resources.bankBalance || 0) - prevCash;
+      (state.resources && (state.resources.cash || 0)) + (state.resources && (state.resources.bankBalance || 0)) - prevCash;
     if (diff > 0) {
       highlights.push("📈 过去30天财富增长 ¥" + diff.toLocaleString());
     } else if (diff < 0) {
@@ -231102,7 +231867,7 @@ function showDailyReport(state) {
   var txs = (state.flags._dailyTransactions || []).slice();
   recordDailyReportHistory(state, txs);
   state.flags._dailyTransactions = [];
-  state.flags._dayStartCash = state.resources.cash || 0;
+  state.flags._dayStartCash = (state.resources && state.resources.cash) || 0;
 
   var bodyHtml = buildReportHTML(txs, state, reconcileInfo);
 
@@ -231297,6 +232062,10 @@ function renderNpcRelationships(state, content) {
       });
     var _displayName = _npcDef ? _npcDef.name : npcId.replace(/_/g, " ");
     html += '<span style="font-weight:bold;">' + _displayName + "</span>";
+    // [全系统自洽修复] 域D 联动增强2: 挚友(≥80)特殊标记+奖励提示
+    if (affinity >= 80) {
+      html += '<span style="margin-left:4px;font-size:9px;background:var(--success);color:#fff;border-radius:3px;padding:1px 5px;">挚友</span>';
+    }
     html +=
       '<span style="margin-left:auto;">' + Math.round(affinity) + "</span>";
     html += "</div>";
@@ -231636,6 +232405,36 @@ function renderSocialOverviewTab(state, content) {
   else if (pct >= 50) html += '<p style="font-size:11px;color:var(--warning);">💪 再加把劲，你可以追上同龄人！</p>';
   else html += '<p style="font-size:11px;color:var(--danger);">📈 差距不小，但别灰心——每天进步一点点。</p>';
   html += "</div></div>";
+
+  // [全系统自洽修复] 域F 联动增强2: 可拜访NPC计数 — 冷却结束可互动的NPC数量
+  try {
+    var rels = state.relationships || {};
+    var visitableCount = 0;
+    var totalMet = 0;
+    var today = state.player ? state.player.day : 0;
+    for (var rid in rels) {
+      if (!Object.prototype.hasOwnProperty.call(rels, rid)) continue;
+      var r = rels[rid];
+      if (!r || !r.met) continue;
+      totalMet++;
+      // 冷却检查：_lastVisitDay + 7天冷却
+      var lastVisit = r._lastVisitDay || 0;
+      if (today - lastVisit >= 7) {
+        visitableCount++;
+      }
+    }
+    if (totalMet > 0) {
+      html += '<div class="section"><h3>👥 NPC社交</h3>';
+      html += "<div class='card' style='padding:12px;'>";
+      html += "<p>已结识 <strong>" + totalMet + "</strong> 人 · 可拜访 <strong style='color:var(--success);'>" + visitableCount + "</strong> 人（冷却结束）</p>";
+      if (visitableCount > 0) {
+        html += '<p style="font-size:11px;color:var(--text-muted);margin-top:4px;">💡 去找他们聊聊吧！拜访NPC可以提升好感，解锁加成和事件。</p>';
+      }
+      html += "</div></div>";
+    }
+  } catch (e) {
+    // 静默：NPC计数不影响主流程
+  }
 
   // 同事摘要
   var colleagues = state.corporate?.colleagues?.network;
@@ -239417,6 +240216,8 @@ let gameStarted = false;
 function setStatBar(id, value, cssClass) {
   const wrap = document.getElementById(id);
   if (!wrap) return;
+  // [全系统自洽修复] 域G A类修复: NaN/undefined 无防御，Math.max(0,Math.min(100,undefined))=NaN → DOM 显示"NaN"
+  if (typeof value !== "number" || !isFinite(value)) value = 0;
   const bar = wrap.querySelector(".stat-bar");
   const valEl = wrap.querySelector(".stat-value");
   if (bar) {
@@ -240315,16 +241116,31 @@ function startScenarioGame(scenarioId) {
     var evt = scenario.startEvent;
     StateManager.addMessage("📖 " + evt.title + " " + evt.text, "event");
     if (evt.effects) {
+      // [全系统自洽修复] 域G A类#1: 效果键路径映射 — happiness/fatigue/hunger/hygiene 在 state.needs 而非 state.player
+      var EFFECT_ROUTES = {
+        happiness: { target: "needs", max: 100 },
+        fatigue: { target: "needs", max: 100 },
+        hunger: { target: "needs", max: 100 },
+        hygiene: { target: "needs", max: 100 },
+        mental: { target: "player", max: 100 },
+        fame: { target: "player", max: 100 },
+        charm: { target: "player", max: 100 },
+        physique: { target: "player", max: 100 },
+        intelligence: { target: "player", max: 100 },
+        agility: { target: "player", max: 100 },
+        morality: { target: "player", max: 100 },
+        health: { target: "status", max: 100 },
+      };
       for (var effKey in evt.effects) {
-        if (
-          evt.effects.hasOwnProperty(effKey) &&
-          typeof state.player[effKey] === "number"
-        ) {
-          state.player[effKey] = Math.max(
-            0,
-            Math.min(100, state.player[effKey] + evt.effects[effKey]),
-          );
-        }
+        if (!evt.effects.hasOwnProperty(effKey)) continue;
+        var route = EFFECT_ROUTES[effKey];
+        if (!route) continue;
+        var container = state[route.target];
+        if (!container || typeof container[effKey] !== "number") continue;
+        container[effKey] = Math.max(
+          0,
+          Math.min(route.max, container[effKey] + evt.effects[effKey]),
+        );
       }
     }
   }
@@ -241414,21 +242230,22 @@ function showCompareResult() {
     bodyHtml +=
       '<h4 style="margin:16px 0 8px;color:var(--text-muted);">🏢 职场状态</h4>' +
       diffVal("职级", s1.corporate?.rank || "P5", s2.corporate?.rank || "P5") +
-      diffVal("KPI", s1.corporate?.kpi || 0, s2.corporate?.kpi || 0) +
-      diffVal("能力", s1.corporate?.ability || 0, s2.corporate?.ability || 0) +
-      diffVal("尊严", s1.corporate?.dignity || 0, s2.corporate?.dignity || 0) +
+      // [全系统自洽修复] 域G A类修复: kpi/ability/dignity/popularity/upwardMgmt/risk/hair 在 state.player.corporate 而非 state.corporate（state.corporate 存的是 company/rank/department 等企业信息），导致所有职场属性对比值恒为0
+      diffVal("KPI", s1.player.corporate?.kpi || 0, s2.player.corporate?.kpi || 0) +
+      diffVal("能力", s1.player.corporate?.ability || 0, s2.player.corporate?.ability || 0) +
+      diffVal("尊严", s1.player.corporate?.dignity || 0, s2.player.corporate?.dignity || 0) +
       diffVal(
         "人缘",
-        s1.corporate?.popularity || 0,
-        s2.corporate?.popularity || 0,
+        s1.player.corporate?.popularity || 0,
+        s2.player.corporate?.popularity || 0,
       ) +
       diffVal(
         "向上管理",
-        s1.corporate?.upwardMgmt || 0,
-        s2.corporate?.upwardMgmt || 0,
+        s1.player.corporate?.upwardMgmt || 0,
+        s2.player.corporate?.upwardMgmt || 0,
       ) +
-      diffVal("风险", s1.corporate?.risk || 0, s2.corporate?.risk || 0) +
-      diffVal("发量", s1.corporate?.hair || 100, s2.corporate?.hair || 100);
+      diffVal("风险", s1.player.corporate?.risk || 0, s2.player.corporate?.risk || 0) +
+      diffVal("发量", s1.player.corporate?.hair || 100, s2.player.corporate?.hair || 100);
   }
 
   // 属性对比
@@ -243537,6 +244354,10 @@ function doStreetJob(job) {
 
   // 扣除启动资金
   if (job.startupCost) {
+    // [全系统自洽修复] 域G A类修复: cash NaN 守卫（防止旧存档/极端值导致现金永久损坏）
+    if (typeof state.resources.cash !== "number" || !isFinite(state.resources.cash)) {
+      state.resources.cash = 0;
+    }
     state.resources.cash -= job.startupCost;
   }
 
@@ -243808,6 +244629,10 @@ function doStreetJob(job) {
   else if (titleBonus === 3) pay = Math.floor(pay * 1.15);
 
   // 应用效果
+  // [全系统自洽修复] 域G A类修复: employment 无守卫（旧存档缺失导致崩溃）
+  if (!state.employment) {
+    state.employment = { currentJob: null, jobStartDay: 0, completedShifts: {} };
+  }
   if (job.effects) {
     // [全系统自洽修复] 域C 联动增强1: 技能等级降低同领域工作疲劳(熟能生巧)
     var fatigueReduction = 0;
@@ -243959,6 +244784,10 @@ function doStreetJob(job) {
     }
   }
 
+  // [全系统自洽修复] 域G A类修复: totalEarned NaN 传播守卫（旧存档/极端值导致现金永久损坏）
+  if (typeof state.resources.totalEarned !== "number" || !isFinite(state.resources.totalEarned)) {
+    state.resources.totalEarned = 0;
+  }
   state.resources.cash += pay;
   state.resources.totalEarned += pay;
   addDailyTransaction(
@@ -244355,7 +245184,9 @@ function consumeAP(cost) {
   );
 
   // 更新显示用的时段
-  const pct = state.player.actionPoints / state.player.maxActionPoints;
+  // [全系统自洽修复] 域G A类#3: maxActionPoints 可能为0/NaN（旧存档/数据异常），兜底防除零
+  var _maxAp = (typeof state.player.maxActionPoints === "number" && isFinite(state.player.maxActionPoints) && state.player.maxActionPoints > 0) ? state.player.maxActionPoints : 100;
+  const pct = state.player.actionPoints / _maxAp;
   if (pct > 0.66) state.player.timeSlot = "morning";
   else if (pct > 0.33) state.player.timeSlot = "afternoon";
   else state.player.timeSlot = "evening";
