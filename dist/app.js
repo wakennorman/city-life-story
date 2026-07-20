@@ -4961,7 +4961,8 @@ function showEventModal(evt) {
           }
         }
         // v3.1 ⑤ 事件惩罚倍率：快照关键数值，结算后对负向 delta 乘算难度系数
-        var _preEvtCash = state.resources.cash;
+        // [全系统自洽修复] 域B A类#1: _preEvtCash NaN 守卫 — 防止旧存档/极端值导致现金永久损坏
+        var _preEvtCash = (typeof state.resources.cash === "number" && isFinite(state.resources.cash)) ? state.resources.cash : 0;
         var _preEvtHealth = (state.status && state.status.health) || 100;
         var _preEvtMental = state.player ? state.player.mental : 0;
         if (typeof choice.apply === "function") {
@@ -4990,18 +4991,22 @@ function showEventModal(evt) {
           var epMult = getDifficultyMultiplier(state, "eventPenalty");
           if (epMult !== 1.0) {
             // 仅对负向 delta（惩罚）应用倍率，不放大正向收益
-            var dCash = state.resources.cash - _preEvtCash;
+            // [全系统自洽修复] 域B A类#1: dCash/state.resources.cash NaN 守卫 — 扩散到 cash 则永久损坏
+            var dCash = (state.resources.cash || 0) - (_preEvtCash || 0);
+            if (!isFinite(dCash)) dCash = 0;
             if (dCash < 0)
-              state.resources.cash = _preEvtCash + Math.round(dCash * epMult);
+              state.resources.cash = (_preEvtCash || 0) + Math.round(dCash * epMult);
             if (state.stats) {
               var dHealth =
                 (state.status ? state.status.health : 100) - _preEvtHealth;
+              if (!isFinite(dHealth)) dHealth = 0;
               if (dHealth < 0)
                 state.status.health =
                   _preEvtHealth + Math.round(dHealth * epMult);
             }
             if (state.player) {
               var dMental = state.player.mental - _preEvtMental;
+              if (!isFinite(dMental)) dMental = 0;
               if (dMental < 0)
                 state.player.mental =
                   _preEvtMental + Math.round(dMental * epMult);
@@ -164202,8 +164207,11 @@ const MORAL_EVENTS = [
         flag: "moral_cat_rescue",
         score: 12,
         immediate: function (s) {
+          // [全系统自洽修复] 域B A类#2: cash NaN 守卫 — 防止事件扣款永久损坏现金
+          if (typeof s.resources.cash !== "number" || !isFinite(s.resources.cash)) s.resources.cash = 0;
           s.resources.cash -= Random.int(80, 150);
-          s.needs.happiness = Math.min(100, s.needs.happiness + 10);
+          s.resources.cash = Math.max(0, s.resources.cash);
+          s.needs.happiness = Math.min(100, (s.needs.happiness || 50) + 10);
           s.player.fame = Math.min(100, (s.player.fame || 0) + 3);
           StateManager.addMessage(
             "🏥 宠物医生说小猫能救活，你心里暖暖的。",
@@ -231768,7 +231776,8 @@ function generateDailyReportSummary(state, incomes, expenses) {
     highlights.push("👥 已结识 " + _npcMet + " 位街头好友，这座城市开始有温度了");
   }
 
-  // [全系统自洽修复] 域G 联动增强2: 人生节点进度日报（G→F）
+
+  // [全系统自洽修复] 域G 联动增强: 人生节点进度日报（G→F）
   try {
     if (typeof getLifeNodeStatus === "function") {
       var _lnStatus = getLifeNodeStatus(state);

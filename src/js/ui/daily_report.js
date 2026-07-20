@@ -785,7 +785,8 @@ function generateDailyReportSummary(state, incomes, expenses) {
     highlights.push("👥 已结识 " + _npcMet + " 位街头好友，这座城市开始有温度了");
   }
 
-  // [全系统自洽修复] 域G 联动增强2: 人生节点进度日报（G→F）
+
+  // [全系统自洽修复] 域G 联动增强: 人生节点进度日报（G→F）
   try {
     if (typeof getLifeNodeStatus === "function") {
       var _lnStatus = getLifeNodeStatus(state);
