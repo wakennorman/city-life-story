@@ -1851,6 +1851,8 @@ function sellProperty(propId) {
   if (!isFinite(fee)) fee = 0;
   var net = prop.currentPrice - fee;
   if (!isFinite(net)) net = 0;
+  // [全系统自洽修复] 域E A类修复: 卖房从未将 net 加到玩家现金中！splice 后即丢失，玩家永远拿不到卖房款
+  state.resources.cash = (isFinite(state.resources.cash) ? state.resources.cash : 0) + net;
   inv.properties.splice(idx, 1);
   StateManager.addMessage(
     "出售" + prop.name + " 到手¥" + net.toLocaleString(),

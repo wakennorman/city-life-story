@@ -240,7 +240,7 @@ function calculateMACD(prices) {
     macd: Math.round(macdLine * 100) / 100,
     signal: Math.round(signalLine * 100) / 100,
     histogram: Math.round(histogram * 100) / 100,
-    signal: histogram > 0 ? "买入信号" : histogram < -0.5 ? "卖出信号" : "中性",
+    signalLabel: histogram > 0 ? "买入信号" : histogram < -0.5 ? "卖出信号" : "中性",
   };
 }
 

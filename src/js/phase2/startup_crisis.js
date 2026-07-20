@@ -485,9 +485,11 @@ function applyCrisisChoice(state, crisisId, option) {
 
     // 根据选项类型应用效果
     if (option.text.includes("融资")) {
+      // [全系统自洽修复] 域E A类修复: cashReserve/valuation NaN 守卫
+      if (!isFinite(company.valuation) || company.valuation <= 0) company.valuation = 1000000;
       const raiseAmount = Math.round(company.valuation * 0.1);
       const dilution = Random.float(0.1, 0.2);
-      company.cashReserve += raiseAmount;
+      company.cashReserve = (isFinite(company.cashReserve) ? company.cashReserve : 0) + raiseAmount;
       company.valuation = Math.round(
         company.valuation + raiseAmount / dilution,
       );
@@ -505,19 +507,23 @@ function applyCrisisChoice(state, crisisId, option) {
       for (let i = 0; i < toFire; i++) {
         company.employees.pop();
       }
-      company.cashReserve += 5000 * toFire; // 节省薪资
-      company.reputation = Math.max(0, company.reputation - 15);
+      // [全系统自洽修复] 域E A类修复: cashReserve NaN 守卫
+      company.cashReserve = (isFinite(company.cashReserve) ? company.cashReserve : 0) + 5000 * toFire;
+      company.reputation = Math.max(0, (company.reputation || 0) - 15);
     }
 
     if (option.text.includes("变卖")) {
-      company.cashReserve += Math.round(company.cashReserve * 0.3);
-      company.marketScore = Math.max(0, company.marketScore - 10);
+      var _cr = isFinite(company.cashReserve) ? company.cashReserve : 0;
+      company.cashReserve = _cr + Math.round(_cr * 0.3);
+      company.marketScore = Math.max(0, (company.marketScore || 0) - 10);
     }
 
     if (option.text.includes("自掏")) {
-      const injectAmount = Math.min(state.resources.cash, 100000);
-      state.resources.cash -= injectAmount;
-      company.cashReserve += injectAmount;
+      // [全系统自洽修复] 域E A类修复: cash NaN 守卫（防止旧存档/极端值导致现金永久损坏）
+      var _personalCash = isFinite(state.resources.cash) ? state.resources.cash : 0;
+      const injectAmount = Math.min(_personalCash, 100000);
+      state.resources.cash = _personalCash - injectAmount;
+      company.cashReserve = (isFinite(company.cashReserve) ? company.cashReserve : 0) + injectAmount;
     }
 
     if (option.text.includes("加薪")) {
@@ -542,14 +548,16 @@ function applyCrisisChoice(state, crisisId, option) {
 
     if (option.text.includes("补偿")) {
       const cost = Random.int(5000, 19999);
-      company.cashReserve = Math.max(0, company.cashReserve - cost);
-      company.reputation = Math.min(100, company.reputation + 15);
+      // [全系统自洽修复] 域E A类修复: cashReserve NaN 守卫
+      company.cashReserve = Math.max(0, (isFinite(company.cashReserve) ? company.cashReserve : 0) - cost);
+      company.reputation = Math.min(100, (company.reputation || 0) + 15);
     }
 
     if (option.text.includes("公关")) {
       const cost = Random.int(20000, 49999);
-      company.cashReserve = Math.max(0, company.cashReserve - cost);
-      company.reputation = Math.min(100, company.reputation + 20);
+      // [全系统自洽修复] 域E A类修复: cashReserve NaN 守卫
+      company.cashReserve = Math.max(0, (isFinite(company.cashReserve) ? company.cashReserve : 0) - cost);
+      company.reputation = Math.min(100, (company.reputation || 0) + 20);
     }
 
     if (option.text.includes("和解")) {
