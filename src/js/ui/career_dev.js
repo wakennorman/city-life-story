@@ -4392,6 +4392,14 @@ function enhancedApplyCareerJob(pathId, levelId) {
     }
     if (anyGoodRelation) interviewChance += 0.03;
 
+    // [全系统自洽修复] 域D 联动增强: D→C NPC面试推荐加成 — 高好感关键NPC提供面试成功率加成
+    if (typeof getNpcReferralBonus === "function") {
+      var _npcBonus = getNpcReferralBonus(state);
+      if (_npcBonus > 0) {
+        interviewChance += _npcBonus / 100;
+      }
+    }
+
     interviewChance = Math.max(0.1, Math.min(0.95, interviewChance));
 
     // 构建反馈信息
@@ -4404,6 +4412,13 @@ function enhancedApplyCareerJob(pathId, levelId) {
     }
     if (hasFormalClothes) {
       feedbackParts.push("👔 着装得体 +15%");
+    }
+    // [全系统自洽修复] 域D 联动增强: D→C NPC面试推荐加成反馈
+    if (typeof getNpcReferralBonus === "function") {
+      var _npcBonus = getNpcReferralBonus(state);
+      if (_npcBonus > 0) {
+        feedbackParts.push("👥 人脉推荐 +" + _npcBonus + "%");
+      }
     }
 
     var randVal = Random.float(0, 1);

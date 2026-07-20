@@ -312,10 +312,20 @@ function rollDailyNpcEcho(state) {
     }
   }
 
+  // [全系统自洽修复] 域G 联动增强: 情绪状态影响NPC回响内容（G→D，极佳/抑郁时追加专属台词）
+  var _emoSuffix = "";
+  if (state.status && state.status.emotionalState) {
+    if (state.status.emotionalState === "elated") {
+      _emoSuffix = " " + (["他今天看起来特别高兴。", "这人今天心情不错啊。", "感觉你今天状态很好！"][Random.int(0, 2)] || "");
+    } else if (state.status.emotionalState === "depressed") {
+      _emoSuffix = " " + (["他今天好像不太对劲……", "这人今天心事重重的。", "你还好吗？脸色不太好。"][Random.int(0, 2)] || "");
+    }
+  }
+
   // 生成回响消息
   var echoes = getNpcDailyEchoes(selected.id, selected.affinity, state);
   if (echoes) {
-    StateManager.addMessage("💬 " + echoes, "info");
+    StateManager.addMessage("💬 " + echoes + _emoSuffix, "info");
   }
 }
 
@@ -513,8 +523,9 @@ function rollNewsNpcComment(state, newsHeadline) {
         };
         StateManager.addMessage("💬 " + echoes[actualNpcId], "info");
         // 好感高的NPC更积极回应
+        // [全系统自洽修复] 域D A类修复: 好感度改走 applyAffinityChange（确保 _lastInteractionDay 更新 + 蝴蝶效应日志 + 升降级播报）
         if (rel.affinity >= 40) {
-          rel.affinity = Math.min(100, rel.affinity + 1);
+          applyAffinityChange(state, actualNpcId, 1, "新闻评论");
         }
         return;
       }
@@ -669,7 +680,8 @@ function rollLocationNpcInteraction(state, locationKey) {
                 ? Random.fromArray(npcDef.encounterLines)
                 : npcDef.name + "正在附近忙活着呢。";
             StateManager.addMessage("💬 " + sline, "info");
-            srel.affinity = Math.min(100, srel.affinity + 1);
+            // [全系统自洽修复] 域D A类修复: 好感度改走 applyAffinityChange（确保 _lastInteractionDay 更新 + 蝴蝶效应日志 + 升降级播报）
+            applyAffinityChange(state, snpc.npcId, 1, "日程偶遇");
             if (typeof tryRevealNpcInfo === "function") {
               tryRevealNpcInfo(snpc.npcId, state, "encounter");
             }
@@ -701,22 +713,20 @@ function rollLocationNpcInteraction(state, locationKey) {
   // [全系统自洽修复] 域D 联动增强2: NPC生日自动祝贺
   var _npcDef =
     typeof getNpcById === "function" ? getNpcById(locData.npcId) : null;
-  var _dayInYear = (state.player.day || 1) % 365;
-  if (
-    _npcDef &&
-    _npcDef.birthday &&
-    _dayInYear === _npcDef.birthday &&
-    !state.flags._npcBirthdayGreeted
-  ) {
-    state.flags._npcBirthdayGreeted = {};
-  }
+  // [全系统自洽修复] 域D A类修复: 修正 _dayInYear 计算（(day-1)%365+1 替代 day%365，支持年边界）
+  var _dayInYear = ((state.player.day || 1) - 1) % 365 + 1;
+  // [全系统自洽修复] 域D A类修复: _npcBirthdayGreeted 按年追踪，避免跨年无法重复祝贺
+  if (!state.flags._npcBirthdayGreeted) state.flags._npcBirthdayGreeted = {};
+  var _bdayYear = Math.floor(((state.player.day || 1) - 1) / 365);
   var _isBirthday =
     _npcDef && _npcDef.birthday && _dayInYear === _npcDef.birthday;
 
   if (_isBirthday) {
     // 生日特殊互动 — 不消耗常规消息
-    if (!state.flags._npcBirthdayGreeted[locData.npcId]) {
-      state.flags._npcBirthdayGreeted[locData.npcId] = true;
+    // [全系统自洽修复] 域D A类修复: 用年+bdayKey确保跨年可重复祝贺
+    var _bdayKey = locData.npcId + "_y" + _bdayYear;
+    if (!state.flags._npcBirthdayGreeted[_bdayKey]) {
+      state.flags._npcBirthdayGreeted[_bdayKey] = true;
       var _bdayMsg = _npcDef.birthdayLine || "今天是我生日！你居然记得？";
       StateManager.addMessage(
         "🎂 " + _npcDef.name + "：" + _bdayMsg,
@@ -743,13 +753,15 @@ function rollLocationNpcInteraction(state, locationKey) {
           "🎁 你送出了" + _npcDef.name + "喜欢的礼物，她/他非常开心！好感+10。",
           "success",
         );
-        rel.affinity = Math.min(100, rel.affinity + 10);
+        // [全系统自洽修复] 域D A类修复: 生日好感度改走 applyAffinityChange
+        applyAffinityChange(state, locData.npcId, 10, "生日礼物");
       } else {
         StateManager.addMessage(
           "💬 你送上生日祝福，" + _npcDef.name + "很高兴。好感+5。",
           "info",
         );
-        rel.affinity = Math.min(100, rel.affinity + 5);
+        // [全系统自洽修复] 域D A类修复: 生日好感度改走 applyAffinityChange
+        applyAffinityChange(state, locData.npcId, 5, "生日祝福");
       }
       if (typeof tryRevealNpcInfo === "function") {
         tryRevealNpcInfo(locData.npcId, state, "encounter");
@@ -761,7 +773,8 @@ function rollLocationNpcInteraction(state, locationKey) {
   var msg = Random.fromArray(locData.msgs);
   StateManager.addMessage("💬 " + msg, "info");
   // 每次偶遇好感+1（自动社交）
-  rel.affinity = Math.min(100, rel.affinity + 1);
+  // [全系统自洽修复] 域D A类修复: 好感度改走 applyAffinityChange（确保 _lastInteractionDay 更新 + 蝴蝶效应日志 + 升降级播报）
+  applyAffinityChange(state, locData.npcId, 1, "地点偶遇");
   // 同时尝试信息解锁
   if (typeof tryRevealNpcInfo === "function") {
     tryRevealNpcInfo(locData.npcId, state, "encounter");
@@ -1017,6 +1030,9 @@ function runDailyNpcBridge(state) {
 
   // 5. 好感阈值事件检查 — 每日检查，补足30/60/80叙事链路
   checkNpcAffinityEvents(state);
+
+  // [全系统自洽修复] 域D 联动增强: D→B 困境援手检查 — 玩家陷入困境时NPC主动帮助
+  rollNpcRescueOnStruggle(state);
 }
 
 /**
@@ -1176,5 +1192,106 @@ function afterEventApplied(eventId, state) {
     state.flags._experiencedNarratives = [];
   if (state.flags._experiencedNarratives.indexOf(eventId) < 0) {
     state.flags._experiencedNarratives.push(eventId);
+  }
+}
+
+// ============================================================
+// 第六层：NPC社交联动增强 — 面试推荐加成
+// ============================================================
+
+/**
+ * [全系统自洽修复] 域D 联动增强: D→C NPC面试推荐加成
+ * 根据已结识NPC的好感度提供面试成功概率加成。
+ * 关键NPC（中介/工头/老板）好感≥60提供最大加成，其他NPC好感≥30提供基础加成。
+ * @param {object} state 游戏状态
+ * @returns {number} 面试成功率加成（百分点，0-25）
+ */
+function getNpcReferralBonus(state) {
+  if (!state || !state.relationships) return 0;
+  var bonus = 0;
+  // 关键推荐人：张姐(中介)、李工头(包工头)、赵姐(房产中介)、陈哥(情报贩子)
+  var keyNpcs = ["sister_zhang", "boss_li", "zhaojie", "chen_ge"];
+  for (var ki = 0; ki < keyNpcs.length; ki++) {
+    var rel = state.relationships[keyNpcs[ki]];
+    if (rel && rel.met) {
+      var aff = rel.affinity || 0;
+      if (aff >= 80) bonus += 6;
+      else if (aff >= 60) bonus += 4;
+      else if (aff >= 30) bonus += 2;
+    }
+  }
+  // 其他NPC好感加权（每10个好感≥30的NPC +1%，上限5%）
+  var otherCount = 0;
+  for (var id in state.relationships) {
+    if (keyNpcs.indexOf(id) >= 0) continue;
+    var r = state.relationships[id];
+    if (r && r.met && (r.affinity || 0) >= 30) otherCount++;
+  }
+  bonus += Math.min(5, otherCount);
+  return Math.min(25, bonus);
+}
+
+// ============================================================
+// 第七层：NPC社交联动增强 — 困境援手
+// ============================================================
+
+/**
+ * [全系统自洽修复] 域D 联动增强: D→B NPC困境援手叙事
+ * 玩家陷入困境（饥饿≤15或健康≤20或心情≤10）时，好感≥70的NPC有概率主动伸出援手。
+ * 每个NPC冷却30天。
+ * @param {object} state 游戏状态
+ */
+function rollNpcRescueOnStruggle(state) {
+  if (!state || !state.relationships || !state.needs) return;
+  // 检测玩家是否处于困境
+  var _hunger = state.needs.hunger || 50;
+  var _health = state.status ? state.status.health || 50 : 50;
+  var _happy = state.needs.happiness || 50;
+  var _inDanger = (_hunger <= 15 || _health <= 20 || _happy <= 10);
+  if (!_inDanger) return;
+
+  if (!state.flags) state.flags = {};
+  if (!state.flags._npcRescueCooldown) state.flags._npcRescueCooldown = {};
+
+  // 遍历所有已结识的NPC，找好感≥70的
+  for (var _rescId in state.relationships) {
+    var _rescRel = state.relationships[_rescId];
+    if (!_rescRel || !_rescRel.met || (_rescRel.affinity || 0) < 70) continue;
+    // 冷却检查
+    var _lastRescue = state.flags._npcRescueCooldown[_rescId] || 0;
+    if (state.player.day - _lastRescue < 30) continue;
+    // 30%概率触发
+    if (typeof Random === "undefined" || !Random.chance(0.3)) continue;
+
+    // 查找NPC中文名
+    var _rescName = _rescId;
+    if (typeof NPCS !== "undefined") {
+      var _rescDef = NPCS.find(function(n) { return n.id === _rescId; });
+      if (_rescDef) _rescName = _rescDef.name;
+    }
+    // 根据困境类型提供不同援手
+    state.flags._npcRescueCooldown[_rescId] = state.player.day;
+    if (_hunger <= 15) {
+      state.needs.hunger = Math.min(50, state.needs.hunger + 30);
+      StateManager.addMessage(
+        "🍜 " + _rescName + "看到你饿着肚子，不由分说拉你去吃了顿饭：「别省这个钱，身体要紧。」饥饿+30。",
+        "success"
+      );
+    } else if (_health <= 20) {
+      if (state.status) state.status.health = Math.min(60, (state.status.health || 50) + 20);
+      StateManager.addMessage(
+        "🏥 " + _rescName + "看你脸色不好，硬塞给你一些药：「拿着，我上次生病剩的，别硬撑。」健康+20。",
+        "success"
+      );
+    } else if (_happy <= 10) {
+      state.needs.happiness = Math.min(60, state.needs.happiness + 25);
+      StateManager.addMessage(
+        "☕ " + _rescName + "拉你坐下聊了会儿天：「看你最近不太对劲，有什么事别一个人扛着。」心情+25。",
+        "success"
+      );
+    }
+    // 援手同时增加好感
+    applyAffinityChange(state, _rescId, 2, "困境援手");
+    return; // 一次困境只触发一个NPC援手
   }
 }

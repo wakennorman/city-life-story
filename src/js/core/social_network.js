@@ -317,6 +317,41 @@ function tickSocialNetwork(state) {
       );
     }
   }
+
+  // [全系统自洽修复] 域D 联动增强: D→G 孤独感检测 — 长时间无社交触发负面情绪缓冲
+  if (state.relationships && state.needs && state.player) {
+    if (!state.npcRelationshipLog) state.npcRelationshipLog = {};
+    var _lastSocial = state.npcRelationshipLog._lastSocialDay || 0;
+    // 更新最近社交日：遍历所有NPC的 _lastInteractionDay
+    for (var _socId in state.relationships) {
+      var _socRel = state.relationships[_socId];
+      if (_socRel && _socRel.met && (_socRel._lastInteractionDay || 0) > _lastSocial) {
+        _lastSocial = _socRel._lastInteractionDay;
+      }
+    }
+    state.npcRelationshipLog._lastSocialDay = _lastSocial;
+    var _daysSinceSocial = state.player.day - _lastSocial;
+    if (_daysSinceSocial >= 14 && _lastSocial > 0) {
+      // 14天无社交 → 孤独感加深
+      state.needs.happiness = Math.max(0, (state.needs.happiness || 50) - 3);
+      if (state.status) state.status.health = Math.max(0, (state.status.health || 50) - 1);
+      if (typeof StateManager !== "undefined") {
+        StateManager.addMessage(
+          "💔 你已经很久没有跟人好好说话了。这座城市人来人往，你却觉得自己像个孤岛（心情-3，健康-1）",
+          "warning",
+        );
+      }
+    } else if (_daysSinceSocial >= 7 && _lastSocial > 0) {
+      // 7天无社交 → 轻度孤独感
+      state.needs.happiness = Math.max(0, (state.needs.happiness || 50) - 1);
+      if (typeof StateManager !== "undefined") {
+        StateManager.addMessage(
+          "😔 你翻了翻手机通讯录，发现好几天没跟人聊过天了。也许该去找个朋友说说话（心情-1）",
+          "warning",
+        );
+      }
+    }
+  }
 }
 
 // ====== 全局挂载 ======
