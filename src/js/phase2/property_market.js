@@ -150,9 +150,12 @@ function tickPropertyMarket(state) {
 
     var changeMult = calculatePropertyDailyChange(prop, def, state);
 
+    // [全系统自洽修复] 域E A类#2: currentPrice 可能为0（被保底逻辑重置），用 != null 避免0被误判为缺失
+    var currentPrice = (prop.currentPrice != null && !isNaN(prop.currentPrice)) ? prop.currentPrice : prop.buyPrice;
     prop.currentPrice = Math.round(
-      (prop.currentPrice || prop.buyPrice) * changeMult,
+      (currentPrice || prop.buyPrice) * changeMult,
     );
+    if (!isFinite(prop.currentPrice)) prop.currentPrice = prop.buyPrice || 0;
     // 保底价（不低于买入价的 10%，防止归零）
     var floor = Math.round((prop.buyPrice || 0) * 0.1);
     if (prop.currentPrice < floor) prop.currentPrice = floor;
@@ -424,7 +427,9 @@ function calculatePropertyDailyChange(prop, propDef, state) {
   }
 
   // 总变化率
-  var totalDrift = cycleDrift + sectorDrift + policyDrift + baseAppr + noise;
+  // [全系统自洽修复] 域E A类#1: totalDrift NaN 防御（任一组件 NaN 会导致所有房产价格永久损坏）
+  var totalDrift = (cycleDrift || 0) + (sectorDrift || 0) + (policyDrift || 0) + (baseAppr || 0) + (noise || 0);
+  if (!isFinite(totalDrift)) totalDrift = 0;
 
   // 限制单日最大涨跌幅度（防止极端值）
   totalDrift = Math.max(-0.08, Math.min(0.08, totalDrift));

@@ -257,6 +257,11 @@ function updateStockPrices(state, forceNews = false) {
 /** 买入股票 */
 function buyStock(symbol, shares) {
   const state = StateManager.getState();
+  // [全系统自洽修复] 域E A类#5: state.corporate 守卫
+  if (!state.corporate || !state.corporate.stockMarket) {
+    StateManager.addMessage("⚠️ 股票市场未初始化。", "warning");
+    return false;
+  }
   const market = state.corporate.stockMarket[symbol];
   if (!market) {
     StateManager.addMessage("⚠️ 不存在的股票。", "danger");
@@ -329,6 +334,11 @@ function buyStock(symbol, shares) {
 /** 卖出股票 */
 function sellStock(symbol, shares) {
   const state = StateManager.getState();
+  // [全系统自洽修复] 域E A类#6: state.corporate.stocks 守卫
+  if (!state.corporate || !state.corporate.stocks) {
+    StateManager.addMessage("⚠️ 股票持仓未初始化。", "warning");
+    return false;
+  }
   const holding = state.corporate.stocks.find((s) => s.symbol === symbol);
   if (!holding || holding.shares < shares || !isFinite(shares) || shares <= 0) {
     StateManager.addMessage("⚠️ 持仓不足。", "danger");

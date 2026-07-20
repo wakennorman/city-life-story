@@ -188,7 +188,8 @@ const LEVERAGE_SETTINGS = {
  * 计算移动平均线
  */
 function calculateMA(prices, period) {
-  if (prices.length < period) return null;
+  // [全系统自洽修复] 域E A类#7: prices 守卫
+  if (!prices || !Array.isArray(prices) || prices.length < period) return null;
   const slice = prices.slice(-period);
   const sum = slice.reduce((a, b) => a + b.price, 0);
   return sum / period;
@@ -198,7 +199,8 @@ function calculateMA(prices, period) {
  * 计算EMA（指数移动平均）
  */
 function calculateEMA(prices, period) {
-  if (prices.length < period) return null;
+  // [全系统自洽修复] 域E A类#8: prices 守卫
+  if (!prices || !Array.isArray(prices) || prices.length < period) return null;
   const k = 2 / (period + 1);
   let ema = prices[0].price;
   for (let i = 1; i < prices.length; i++) {
@@ -545,6 +547,8 @@ function analyzePortfolio(state) {
 function setStopLoss(state, symbol, type, params) {
   const inv = state.investment;
   if (!inv) return { success: false, message: "投资系统未初始化" };
+  // [全系统自洽修复] 域E A类#10: stockHoldings 守卫
+  if (!inv.stockHoldings) return { success: false, message: "无持仓数据" };
 
   const holding = inv.stockHoldings.find((h) => h.symbol === symbol);
   if (!holding) return { success: false, message: "没有该股票的持仓" };
@@ -574,6 +578,9 @@ function setStopLoss(state, symbol, type, params) {
 function checkStopLoss(state) {
   const inv = state.investment;
   if (!inv || !inv.stopLossOrders) return;
+  // [全系统自洽修复] 域E A类#11: state.player/stockMarket 守卫
+  if (!state.player) return;
+  if (!inv.stockMarket) return;
 
   const today = state.player.day;
   const triggeredOrders = [];
@@ -646,7 +653,8 @@ function checkStopLoss(state) {
  * 计算夏普比率（简化版）
  */
 function calculateSharpeRatio(prices, riskFreeRate = 0.03) {
-  if (prices.length < 30) return null;
+  // [全系统自洽修复] 域E A类#9: prices 守卫
+  if (!prices || !Array.isArray(prices) || prices.length < 30) return null;
 
   // 计算日收益率
   const returns = [];

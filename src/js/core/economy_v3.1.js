@@ -106,6 +106,8 @@ const EconomySystem = (function () {
 
   // 连续盈利衰减系数
   function getConsecutiveWinDecay(consecutiveWins) {
+    // [全系统自洽修复] 域E A类#12: consecutiveWins NaN 防御
+    if (typeof consecutiveWins !== "number" || !isFinite(consecutiveWins)) return 1.0;
     if (consecutiveWins < INVESTMENT_CAPS.decayStart) return 1.0;
     const excess = consecutiveWins - INVESTMENT_CAPS.decayStart + 1;
     // 每多一次衰减 8%, 最大衰减 50%
@@ -115,6 +117,9 @@ const EconomySystem = (function () {
 
   // 市场饱和度: 当玩家总资产/城市总财富比超过阈值时, 投资收益下降
   function getMarketSaturationPenalty(playerAssets, cityWealth, difficulty) {
+    // [全系统自洽修复] 域E A类#13: playerAssets/cityWealth NaN 防御
+    if (typeof playerAssets !== "number" || !isFinite(playerAssets) || playerAssets <= 0) return 1.0;
+    if (typeof cityWealth !== "number" || !isFinite(cityWealth) || cityWealth <= 0) return 1.0;
     const ratio = playerAssets / cityWealth;
     const threshold =
       difficulty === "hard"

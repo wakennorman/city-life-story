@@ -139,7 +139,10 @@ function getNewsInvestmentSummary(state) {
     var avgMul = 0;
     var count = 0;
     for (var ei = 0; ei < effects.length; ei++) {
-      avgMul += effects[ei].mul;
+      // [全系统自洽修复] 域E A类#14: eff.mul NaN 防御
+      var _mul = effects[ei].mul;
+      if (typeof _mul !== "number" || !isFinite(_mul)) continue;
+      avgMul += _mul;
       count++;
     }
     avgMul = count > 0 ? avgMul / count : 1;

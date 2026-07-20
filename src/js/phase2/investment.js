@@ -1551,6 +1551,11 @@ function buyInvStock(symbol, shares) {
 
   var state = StateManager.getState();
   var inv = state.investment;
+  // [全系统自洽修复] 域E A类#3: inv/stockMarket 守卫
+  if (!inv || !inv.stockMarket) {
+    StateManager.addMessage("⚠️ 投资系统未初始化。", "warning");
+    return false;
+  }
   var m = inv.stockMarket[symbol];
   if (!m) return;
   if (shares <= 0) {
@@ -1624,6 +1629,11 @@ function sellInvStock(symbol, shares) {
 
   var state = StateManager.getState();
   var inv = state.investment;
+  // [全系统自洽修复] 域E A类#4: inv/stockHoldings 守卫
+  if (!inv || !inv.stockHoldings) {
+    StateManager.addMessage("⚠️ 投资系统未初始化。", "warning");
+    return false;
+  }
   var h = inv.stockHoldings.find(function (s) {
     return s.symbol === symbol;
   });
