@@ -136,7 +136,8 @@ function getGoodTag(locKey, goodId) {
 
 /** 计算地点 + 标签综合价格修正系数（不含供需/市场事件） */
 function getLocationPriceModifier(locKey, goodId) {
-  var loc = getLocation(locKey);
+  // [全系统自洽修复] 域A A类#7: getLocation 函数守卫
+  var loc = typeof getLocation === "function" ? getLocation(locKey) : null;
   var mod = 1.0;
   if (loc && loc.priceMod && loc.priceMod[goodId]) {
     mod = loc.priceMod[goodId];
@@ -151,6 +152,8 @@ function getLocationPriceModifier(locKey, goodId) {
 
 /** 记录玩家在某地买入（推高价格） */
 function recordLocalPurchase(state, locKey, goodId, qty) {
+  // [全系统自洽修复] 域A A类#1: state.trade 守卫
+  if (!state || !state.trade) return;
   if (!state.trade.supplyDemand) state.trade.supplyDemand = {};
   if (!state.trade.supplyDemand[locKey]) state.trade.supplyDemand[locKey] = {};
   if (!state.trade.supplyDemand[locKey][goodId])
@@ -164,6 +167,8 @@ function recordLocalPurchase(state, locKey, goodId, qty) {
 
 /** 记录玩家在某地卖出（压低价格） */
 function recordLocalSale(state, locKey, goodId, qty) {
+  // [全系统自洽修复] 域A A类#2: state.trade 守卫
+  if (!state || !state.trade) return;
   if (!state.trade.supplyDemand) state.trade.supplyDemand = {};
   if (!state.trade.supplyDemand[locKey]) state.trade.supplyDemand[locKey] = {};
   if (!state.trade.supplyDemand[locKey][goodId])
@@ -177,6 +182,8 @@ function recordLocalSale(state, locKey, goodId, qty) {
 
 /** 供需对价格的影响（每点 ±0.5%） */
 function getSupplyDemandPriceMod(state, locKey, goodId) {
+  // [全系统自洽修复] 域A A类#5: state.trade 守卫
+  if (!state || !state.trade) return 1.0;
   if (!state.trade.supplyDemand || !state.trade.supplyDemand[locKey])
     return 1.0;
   var sd = state.trade.supplyDemand[locKey][goodId] || 0;
@@ -185,6 +192,8 @@ function getSupplyDemandPriceMod(state, locKey, goodId) {
 
 /** 每日衰减供需（向0回归20%） */
 function decaySupplyDemand(state) {
+  // [全系统自洽修复] 域A A类#3: state.trade 守卫
+  if (!state || !state.trade) return;
   if (!state.trade.supplyDemand) return;
   for (var locKey in state.trade.supplyDemand) {
     if (!state.trade.supplyDemand.hasOwnProperty(locKey)) continue;
@@ -390,6 +399,8 @@ var MARKET_EVENTS = [
 
 /** 检查并触发市场事件 */
 function checkMarketEvents(state) {
+  // [全系统自洽修复] 域A A类#4: state.trade 守卫
+  if (!state || !state.trade) return;
   if (!state.trade.marketEvents) state.trade.marketEvents = [];
   // 衰减现有事件
   state.trade.marketEvents = state.trade.marketEvents.filter(function (evt) {
@@ -428,6 +439,8 @@ function checkMarketEvents(state) {
 
 /** 市场事件对某商品的价格修正 */
 function getMarketEventPriceMod(state, goodId) {
+  // [全系统自洽修复] 域A A类#6: state.trade 守卫
+  if (!state || !state.trade) return 1.0;
   if (!state.trade.marketEvents) return 1.0;
   var mod = 1.0;
   for (var i = 0; i < state.trade.marketEvents.length; i++) {
@@ -513,6 +526,11 @@ function calcFinalPrice(state, locKey, goodId) {
     price *= getWeatherGoodPriceMod(state, goodId);
   // 每日随机价格冲击
   price *= getDailyPriceShock(locKey, goodId);
+  // [全系统自洽修复] 域A 联动增强1: 季节性物价（goods.js seasonal 字段原dead data，现接入计算）
+  if (good.seasonal && state.weather && state.weather.season) {
+    var sMod = good.seasonal[state.weather.season];
+    if (isFinite(sMod) && sMod > 0) price *= sMod;
+  }
   var rl = state.relationships
     ? Object.keys(state.relationships).filter(function (k) {
         return state.relationships[k] && state.relationships[k].met;

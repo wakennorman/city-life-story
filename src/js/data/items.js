@@ -682,7 +682,7 @@ const ITEMS = [
 
   // ====== 生活便利类 ======
   {
-    id: "vitamins_item2",
+    id: "vitamins_item",
     name: "维生素片",
     icon: "💊",
     slot: null,

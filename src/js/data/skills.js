@@ -272,7 +272,9 @@ function getSkillBranchById(skillKey, branchId) {
 
 /** 获取玩家可考的证书 */
 function getAvailableCertificates(state) {
+  if (!state || !state.certificates || !Array.isArray(state.certificates)) return [];
   return CERTIFICATES.filter((cert) => {
+    // [全系统自洽修复] 域A A类#15: state.certificates 守卫
     if (state.certificates.includes(cert.id)) return false; // 已拥有
     const p = state.player;
     const req = cert.requirements;

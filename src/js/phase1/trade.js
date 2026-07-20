@@ -7,6 +7,11 @@
 /** 玩家购买商品 */
 function buyGood(goodId, qty) {
   const state = StateManager.getState();
+  // [全系统自洽修复] 域A A类#8: state.trade 守卫
+  if (!state || !state.trade) {
+    StateManager.addMessage("⚠️ 交易系统未就绪。", "warning");
+    return false;
+  }
   if (typeof qty !== "number" || !isFinite(qty) || qty <= 0) {
     StateManager.addMessage("⚠️ 无效的购买数量。", "danger");
     return false;
@@ -24,7 +29,7 @@ function buyGood(goodId, qty) {
   const buyDiscount =
     typeof getSkillBuyDiscount === "function"
       ? 1 - getSkillBuyDiscount(state)
-      : Math.min(0.18, (state.skills.sales.level || 0) * 0.003);
+      : Math.min(0.18, (state.skills && state.skills.sales && state.skills.sales.level || 0) * 0.003);
   var salesDiscount = buyDiscount;
   // 历史声誉折扣（P2.9：诚信经营者/拒绝假货获得进货优惠）
   var histDiscount = 0;
@@ -128,6 +133,11 @@ function buyGood(goodId, qty) {
 /** 玩家卖出商品 */
 function sellGood(goodId, qty) {
   const state = StateManager.getState();
+  // [全系统自洽修复] 域A A类#9: state.trade 守卫
+  if (!state || !state.trade) {
+    StateManager.addMessage("⚠️ 交易系统未就绪。", "warning");
+    return false;
+  }
   if (typeof qty !== "number" || !isFinite(qty) || qty <= 0) {
     StateManager.addMessage("⚠️ 无效的卖出数量。", "danger");
     return false;
@@ -159,7 +169,7 @@ function sellGood(goodId, qty) {
   const premium =
     typeof getSkillSellBonus === "function"
       ? getSkillSellBonus(state) - 1
-      : Math.min(0.2, (state.skills.sales.level || 0) * 0.003);
+      : Math.min(0.2, (state.skills && state.skills.sales && state.skills.sales.level || 0) * 0.003);
   // 交易税5%（市场手续费，透明收取）
   const TAX = 0.05;
   const totalEarned =
@@ -362,6 +372,8 @@ function quickSell(goodId) {
 /** 交易后动态调价：买入涨价，卖出降价 */
 function adjustPriceAfterTrade(locKey, goodId, delta) {
   const state = StateManager.getState();
+  // [全系统自洽修复] 域A A类#10: state.trade 守卫
+  if (!state || !state.trade) return;
   const good = getGoodById(goodId);
   if (!good) return;
   const prices = state.trade.goodsPrices[locKey];
@@ -380,6 +392,8 @@ function adjustPriceAfterTrade(locKey, goodId, delta) {
 /** 获取当前地点某商品的零售价（含节日价格修正） */
 function getCurrentPrice(locKey, goodId) {
   const state = StateManager.getState();
+  // [全系统自洽修复] 域A A类#11: state.trade 守卫
+  if (!state || !state.trade || !state.trade.goodsPrices) return 1;
   const prices = state.trade.goodsPrices[locKey];
   let price;
   if (prices && prices[goodId] !== undefined) {
@@ -402,6 +416,8 @@ function getCurrentPrice(locKey, goodId) {
 /** 获取某商品在所有地点的最低价格（用于价格对比） */
 function getLowestPrice(goodId) {
   const state = StateManager.getState();
+  // [全系统自洽修复] 域A A类#12: state.trade 守卫
+  if (!state || !state.trade || !state.trade.goodsPrices) return 0;
   let lowest = Infinity;
   let lowestLoc = null;
   for (const locKey of Object.keys(LOCATIONS)) {
@@ -418,6 +434,8 @@ function getLowestPrice(goodId) {
 /** 获取某商品在所有地点的最高价格 */
 function getHighestPrice(goodId) {
   const state = StateManager.getState();
+  // [全系统自洽修复] 域A A类#13: state.trade 守卫
+  if (!state || !state.trade || !state.trade.goodsPrices) return 0;
   let highest = 0;
   let highestLoc = null;
   for (const locKey of Object.keys(LOCATIONS)) {
@@ -439,6 +457,8 @@ function getAvgBuyPrice(state, goodId) {
 
 /** 更新所有地点所有商品的价格（每3天调用一次） */
 function updateAllPrices(state) {
+  // [全系统自洽修复] 域A A类#14: state.trade 守卫
+  if (!state || !state.trade) return;
   for (const locKey of Object.keys(LOCATIONS)) {
     const loc = LOCATIONS[locKey];
     // 确保价格对象存在

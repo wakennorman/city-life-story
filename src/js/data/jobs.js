@@ -821,8 +821,10 @@ const STREET_JOBS = [
       payCalc(state) {
         // [域A 修复] hygiene 真实路径为 state.needs.hygiene (非 state.player.hygiene)，
         // 原写法恒为 undefined → ||0 吸收 → 清洁度加成永远为 0。
+        // [全系统自洽修复] 域A A类#16: state.needs 守卫
+        var hygiene = state && state.needs ? (state.needs.hygiene || 0) : 0;
         return Math.floor(
-          80 + Random.float(0, 40) + (state.needs.hygiene || 0) * 0.3,
+          80 + Random.float(0, 40) + hygiene * 0.3,
         );
       },
       risk: {},
