@@ -474,7 +474,8 @@
       triggers: { minDay: 30 },
       conditions: function (st) {
         // [已审查] 部分保留：corporate.popularity 无 trigger 等价字段
-        return (st.player.corporate.popularity || 0) >= 20;
+        // [全系统自洽修复] 域H A类#6: st.player.corporate 空守卫
+        return st.player && st.player.corporate && (st.player.corporate.popularity || 0) >= 20;
       },
       choices: [
         {
@@ -635,7 +636,8 @@
       triggers: { minDay: 60 },
       conditions: function (st) {
         // [已审查] 含 OR 逻辑，保留 conditions
-        return (
+        // [全系统自洽修复] 域H A类#7: st.player.corporate 空守卫
+        return st.player && st.player.corporate && (
           (st.player.fame || 0) >= 5 || (st.player.corporate.ability || 0) >= 30
         );
       },
@@ -801,7 +803,8 @@
       triggers: { minDay: 45 },
       conditions: function (st) {
         // [已审查] 部分保留：corporate.ability 无 trigger 等价字段
-        return (st.player.corporate.ability || 0) >= 15;
+        // [全系统自洽修复] 域H A类#8: st.player.corporate 空守卫
+        return st.player && st.player.corporate && (st.player.corporate.ability || 0) >= 15;
       },
       choices: [
         {
@@ -986,7 +989,8 @@
       triggers: { minDay: 60 },
       conditions: function (st) {
         // [已审查] 部分保留：ability/popularity 无 trigger 等价字段
-        return (
+        // [全系统自洽修复] 域H A类#9: st.player.corporate 空守卫
+        return st.player && st.player.corporate && (
           (st.player.corporate.ability || 0) >= 25 &&
           (st.player.corporate.popularity || 0) >= 20
         );
@@ -1285,7 +1289,8 @@
             var total = 0;
             for (var i = inv.stockHoldings.length - 1; i >= 0; i--) {
               if (inv.stockHoldings[i].symbol === "TSLA") {
-                var m = inv.stockMarket.TSLA;
+                // [全系统自洽修复] 域H A类#5: inv.stockMarket 空守卫
+                var m = inv.stockMarket && inv.stockMarket.TSLA;
                 if (m) {
                   total += m.price * inv.stockHoldings[i].shares;
                 }
@@ -1416,6 +1421,7 @@
         var vcCond =
           !!st.flags._acceptedVCFunding ||
           (st.corporate &&
+            st.player.corporate &&
             (st.player.corporate.kpi || 0) > 70 &&
             st.player.day > 200);
         return lvOk && vcCond && !st.flags._founderOustSeen;

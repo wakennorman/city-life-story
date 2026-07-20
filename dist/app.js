@@ -16741,7 +16741,8 @@ function registerNewsEventsToPool() {
       triggers: { minDay: 30 },
       conditions: function (st) {
         // [已审查] 部分保留：corporate.popularity 无 trigger 等价字段
-        return (st.player.corporate.popularity || 0) >= 20;
+        // [全系统自洽修复] 域H A类#6: st.player.corporate 空守卫
+        return st.player && st.player.corporate && (st.player.corporate.popularity || 0) >= 20;
       },
       choices: [
         {
@@ -16902,7 +16903,8 @@ function registerNewsEventsToPool() {
       triggers: { minDay: 60 },
       conditions: function (st) {
         // [已审查] 含 OR 逻辑，保留 conditions
-        return (
+        // [全系统自洽修复] 域H A类#7: st.player.corporate 空守卫
+        return st.player && st.player.corporate && (
           (st.player.fame || 0) >= 5 || (st.player.corporate.ability || 0) >= 30
         );
       },
@@ -17068,7 +17070,8 @@ function registerNewsEventsToPool() {
       triggers: { minDay: 45 },
       conditions: function (st) {
         // [已审查] 部分保留：corporate.ability 无 trigger 等价字段
-        return (st.player.corporate.ability || 0) >= 15;
+        // [全系统自洽修复] 域H A类#8: st.player.corporate 空守卫
+        return st.player && st.player.corporate && (st.player.corporate.ability || 0) >= 15;
       },
       choices: [
         {
@@ -17253,7 +17256,8 @@ function registerNewsEventsToPool() {
       triggers: { minDay: 60 },
       conditions: function (st) {
         // [已审查] 部分保留：ability/popularity 无 trigger 等价字段
-        return (
+        // [全系统自洽修复] 域H A类#9: st.player.corporate 空守卫
+        return st.player && st.player.corporate && (
           (st.player.corporate.ability || 0) >= 25 &&
           (st.player.corporate.popularity || 0) >= 20
         );
@@ -17552,7 +17556,8 @@ function registerNewsEventsToPool() {
             var total = 0;
             for (var i = inv.stockHoldings.length - 1; i >= 0; i--) {
               if (inv.stockHoldings[i].symbol === "TSLA") {
-                var m = inv.stockMarket.TSLA;
+                // [全系统自洽修复] 域H A类#5: inv.stockMarket 空守卫
+                var m = inv.stockMarket && inv.stockMarket.TSLA;
                 if (m) {
                   total += m.price * inv.stockHoldings[i].shares;
                 }
@@ -17683,6 +17688,7 @@ function registerNewsEventsToPool() {
         var vcCond =
           !!st.flags._acceptedVCFunding ||
           (st.corporate &&
+            st.player.corporate &&
             (st.player.corporate.kpi || 0) > 70 &&
             st.player.day > 200);
         return lvOk && vcCond && !st.flags._founderOustSeen;
@@ -182722,6 +182728,10 @@ function afterEventApplied(eventId, state) {
  */
 
 function calculatePerfScore(state) {
+  // [全系统自洽修复] 域H A类#1: state.player.corporate 空守卫（防止链式事件错误触发）
+  if (!state || !state.player || !state.player.corporate) {
+    return { score: 50 };
+  }
   const c = state.player.corporate;
   const rank = (state.corporate && state.corporate.rank) || "P5";
   const isLowRank = rank === "P5" || rank === "P6";
@@ -182795,7 +182805,8 @@ function assignGrade(rawScore, state) {
   else grade = "C";
 
   // 人缘惩罚：<40 封顶 A, <20 再降一级
-  const pop = state.player.corporate.popularity;
+  // [全系统自洽修复] 域H A类#2: state.player.corporate 空守卫
+  var pop = (state && state.player && state.player.corporate) ? state.player.corporate.popularity : 50;
   if (pop < 20 && grade !== "C") {
     const gradeOrder = ["C", "B", "A", "S", "S+"];
     const idx = gradeOrder.indexOf(grade);
@@ -205391,9 +205402,11 @@ function chatWithColleague(state, colleagueId) {
   );
 
   if (topic.risk) {
+    // [全系统自洽修复] 域H A类#11: state.player.corporate 空守卫
+    if (!state.player.corporate) state.player.corporate = {};
     state.player.corporate.risk = Math.min(
       100,
-      state.player.corporate.risk + topic.risk,
+      (state.player.corporate.risk || 0) + topic.risk,
     );
     StateManager.addMessage(
       `⚠️ 和${colleague.name}聊${topic.topic}，风险+${topic.risk}`,
@@ -206707,7 +206720,7 @@ function checkCrisisTriggerConditions(crisis, company) {
     return false;
   if (
     trigger.employeeCount !== undefined &&
-    company.employees.length < trigger.employeeCount
+    (!company.employees || !Array.isArray(company.employees) || company.employees.length < trigger.employeeCount)
   )
     return false;
   if (trigger.userCount !== undefined) {
@@ -206756,7 +206769,7 @@ function showCrisisModal(state, crisisId, crisis) {
           ${crisis.desc}
         </div>
         <div style="font-size:10px;color:var(--text-muted);margin-top:8px;">
-          当前状态：Runway ${Math.round(company.monthsOfRunway)}月 | 估值 ¥${Math.round(company.valuation).toLocaleString()} | 团队 ${company.employees.length}人
+          当前状态：Runway ${Math.round(company.monthsOfRunway)}月 | 估值 ¥${Math.round(company.valuation).toLocaleString()} | 团队 ${(company.employees && Array.isArray(company.employees) ? company.employees.length : 0)}人
         </div>
       </div>
 
@@ -206841,6 +206854,8 @@ function applyCrisisChoice(state, crisisId, option) {
     }
 
     if (option.text.includes("裁员")) {
+      // [全系统自洽修复] 域H A类#10: company.employees 空守卫
+      if (!company.employees || !Array.isArray(company.employees)) return;
       const toFire = Math.min(
         company.employees.length,
         Math.ceil(company.employees.length * 0.3),
@@ -206903,7 +206918,8 @@ function applyCrisisChoice(state, crisisId, option) {
 
     if (option.text.includes("和解")) {
       const cost = Random.int(50000, 199999);
-      company.cashReserve = Math.max(0, company.cashReserve - cost);
+      // [全系统自洽修复] 域H A类#3: cashReserve NaN 守卫
+      company.cashReserve = Math.max(0, (isFinite(company.cashReserve) ? company.cashReserve : 0) - cost);
       company.reputation = Math.max(0, company.reputation - 5);
     }
 
@@ -206927,7 +206943,8 @@ function applyCrisisChoice(state, crisisId, option) {
     }
 
     if (option.text.includes("应诉")) {
-      company.cashReserve = Math.max(0, company.cashReserve - 100000);
+      // [全系统自洽修复] 域H A类#4: cashReserve NaN 守卫
+      company.cashReserve = Math.max(0, (isFinite(company.cashReserve) ? company.cashReserve : 0) - 100000);
       company.reputation = Math.max(0, company.reputation - 20);
     }
 

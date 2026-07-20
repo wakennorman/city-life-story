@@ -8,6 +8,10 @@
  */
 
 function calculatePerfScore(state) {
+  // [全系统自洽修复] 域H A类#1: state.player.corporate 空守卫（防止链式事件错误触发）
+  if (!state || !state.player || !state.player.corporate) {
+    return { score: 50 };
+  }
   const c = state.player.corporate;
   const rank = (state.corporate && state.corporate.rank) || "P5";
   const isLowRank = rank === "P5" || rank === "P6";
@@ -81,7 +85,8 @@ function assignGrade(rawScore, state) {
   else grade = "C";
 
   // 人缘惩罚：<40 封顶 A, <20 再降一级
-  const pop = state.player.corporate.popularity;
+  // [全系统自洽修复] 域H A类#2: state.player.corporate 空守卫
+  var pop = (state && state.player && state.player.corporate) ? state.player.corporate.popularity : 50;
   if (pop < 20 && grade !== "C") {
     const gradeOrder = ["C", "B", "A", "S", "S+"];
     const idx = gradeOrder.indexOf(grade);

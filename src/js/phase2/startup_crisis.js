@@ -366,7 +366,7 @@ function checkCrisisTriggerConditions(crisis, company) {
     return false;
   if (
     trigger.employeeCount !== undefined &&
-    company.employees.length < trigger.employeeCount
+    (!company.employees || !Array.isArray(company.employees) || company.employees.length < trigger.employeeCount)
   )
     return false;
   if (trigger.userCount !== undefined) {
@@ -415,7 +415,7 @@ function showCrisisModal(state, crisisId, crisis) {
           ${crisis.desc}
         </div>
         <div style="font-size:10px;color:var(--text-muted);margin-top:8px;">
-          当前状态：Runway ${Math.round(company.monthsOfRunway)}月 | 估值 ¥${Math.round(company.valuation).toLocaleString()} | 团队 ${company.employees.length}人
+          当前状态：Runway ${Math.round(company.monthsOfRunway)}月 | 估值 ¥${Math.round(company.valuation).toLocaleString()} | 团队 ${(company.employees && Array.isArray(company.employees) ? company.employees.length : 0)}人
         </div>
       </div>
 
@@ -500,6 +500,8 @@ function applyCrisisChoice(state, crisisId, option) {
     }
 
     if (option.text.includes("裁员")) {
+      // [全系统自洽修复] 域H A类#10: company.employees 空守卫
+      if (!company.employees || !Array.isArray(company.employees)) return;
       const toFire = Math.min(
         company.employees.length,
         Math.ceil(company.employees.length * 0.3),
@@ -562,7 +564,8 @@ function applyCrisisChoice(state, crisisId, option) {
 
     if (option.text.includes("和解")) {
       const cost = Random.int(50000, 199999);
-      company.cashReserve = Math.max(0, company.cashReserve - cost);
+      // [全系统自洽修复] 域H A类#3: cashReserve NaN 守卫
+      company.cashReserve = Math.max(0, (isFinite(company.cashReserve) ? company.cashReserve : 0) - cost);
       company.reputation = Math.max(0, company.reputation - 5);
     }
 
@@ -586,7 +589,8 @@ function applyCrisisChoice(state, crisisId, option) {
     }
 
     if (option.text.includes("应诉")) {
-      company.cashReserve = Math.max(0, company.cashReserve - 100000);
+      // [全系统自洽修复] 域H A类#4: cashReserve NaN 守卫
+      company.cashReserve = Math.max(0, (isFinite(company.cashReserve) ? company.cashReserve : 0) - 100000);
       company.reputation = Math.max(0, company.reputation - 20);
     }
 

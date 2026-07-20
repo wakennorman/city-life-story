@@ -682,9 +682,11 @@ function chatWithColleague(state, colleagueId) {
   );
 
   if (topic.risk) {
+    // [全系统自洽修复] 域H A类#11: state.player.corporate 空守卫
+    if (!state.player.corporate) state.player.corporate = {};
     state.player.corporate.risk = Math.min(
       100,
-      state.player.corporate.risk + topic.risk,
+      (state.player.corporate.risk || 0) + topic.risk,
     );
     StateManager.addMessage(
       `⚠️ 和${colleague.name}聊${topic.topic}，风险+${topic.risk}`,
