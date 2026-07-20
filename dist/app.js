@@ -184095,11 +184095,7 @@ function doCorporateAction(actionId) {
   var rankDataProgress = state.corporate.rank ? CORP_RANKS[state.corporate.rank] : null;
   var maxActs = rankDataProgress ? rankDataProgress.maxActions : 3;
   var used = state.corporate.actionsUsed;
-  var barLen = 10;
-  var filled = Math.round((used / maxActs) * barLen);
-  var empty = barLen - filled;
-  var progressBar = "█".repeat(filled) + "░".repeat(empty);
-  StateManager.addMessage(`📊 季度行动进度: [${progressBar}] ${used}/${maxActs}`, "hint");
+  StateManager.addMessage(`📊 季度行动进度: ${used}/${maxActs}`, "info");
 
   // 检查季度是否用完
   const rankData = CORP_RANKS[state.corporate.rank];
@@ -219661,6 +219657,24 @@ function renderCorporateActions(state) {
     </span>
   `;
   area.appendChild(qDiv);
+
+  // [全系统自洽修复] 域H 联动增强4: 季度行动进度条（H→F）
+  var actsUsed = state.corporate.actionsUsed || 0;
+  var actsMax = rankData.maxActions || 3;
+  var actPct = Math.min(100, Math.round((actsUsed / actsMax) * 100));
+  var actColor = actPct >= 100 ? "var(--danger)" : actPct >= 75 ? "var(--warning)" : "var(--success)";
+  var actBarDiv = document.createElement("div");
+  actBarDiv.style.cssText = "padding:6px 0;margin:4px 0 8px 0;font-size:11px;";
+  actBarDiv.innerHTML = `
+    <div style="display:flex;justify-content:space-between;margin-bottom:2px;">
+      <span style="color:var(--text-muted);">📊 季度行动进度</span>
+      <span style="color:${actColor};font-weight:700;">${actsUsed}/${actsMax}</span>
+    </div>
+    <div style="height:10px;background:rgba(255,255,255,0.05);border-radius:5px;overflow:hidden;">
+      <div style="width:${actPct}%;height:100%;background:${actColor};border-radius:5px;transition:width 0.3s;"></div>
+    </div>
+  `;
+  area.appendChild(actBarDiv);
 
   // 晋升进度条 (Q3前显示)
   if (state.player.corpQuarter === 3 && state.corporate.rank !== "P10") {

@@ -104,11 +104,7 @@ function doCorporateAction(actionId) {
   var rankDataProgress = state.corporate.rank ? CORP_RANKS[state.corporate.rank] : null;
   var maxActs = rankDataProgress ? rankDataProgress.maxActions : 3;
   var used = state.corporate.actionsUsed;
-  var barLen = 10;
-  var filled = Math.round((used / maxActs) * barLen);
-  var empty = barLen - filled;
-  var progressBar = "█".repeat(filled) + "░".repeat(empty);
-  StateManager.addMessage(`📊 季度行动进度: [${progressBar}] ${used}/${maxActs}`, "hint");
+  StateManager.addMessage(`📊 季度行动进度: ${used}/${maxActs}`, "info");
 
   // 检查季度是否用完
   const rankData = CORP_RANKS[state.corporate.rank];
