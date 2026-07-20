@@ -5,9 +5,14 @@
 /** 执行职场行动 */
 function doCorporateAction(actionId) {
   const state = StateManager.getState();
-  // [全系统自洽修复] 域H A类#3: state.corporate 可能未初始化（Phase1误调）
+  // [全系统自洽修复] 域H A类#2: state.corporate 可能未初始化（Phase1误调）
   if (!state.corporate || !state.corporate.rank) {
     if (typeof StateManager !== "undefined") StateManager.addMessage("⚠️ 未入职，无法执行职场行动。", "warning");
+    return false;
+  }
+  // [全系统自洽修复] 域H A类#3: 检查 state.player.corporate 存在性（与 state.corporate 是不同路径）
+  if (!state.player.corporate) {
+    if (typeof StateManager !== "undefined") StateManager.addMessage("⚠️ 职场角色数据未初始化，无法执行职场行动。", "warning");
     return false;
   }
   const action = CORP_ACTIONS.find((a) => a.id === actionId);
@@ -31,7 +36,8 @@ function doCorporateAction(actionId) {
   }
 
   // 检查费用
-  if (action.cost && state.resources.cash < action.cost) {
+  // [全系统自洽修复] 域H A类: cash NaN 防御（旧存档/极端值导致现金损坏）
+  if (action.cost && (state.resources.cash || 0) < action.cost) {
     StateManager.addMessage(`⚠️ 需要 ¥${action.cost}，现金不足。`, "warning");
     return false;
   }
@@ -125,7 +131,16 @@ function endQuarter() {
   }
 
   // 绩效考核
+  // [全系统自洽修复] 域H A类#4: typeof 守卫 + state.resources/state.needs 防御
+  if (typeof calculatePerfScore !== "function") {
+    StateManager.addMessage("⚠️ 绩效系统不可用，跳过季度结算。", "warning");
+    return false;
+  }
   const perfResult = calculatePerfScore(state);
+  if (typeof assignGrade !== "function") {
+    StateManager.addMessage("⚠️ 绩效评级系统不可用，跳过季度结算。", "warning");
+    return false;
+  }
   const grade = assignGrade(perfResult.score, state);
   c.perfHistory.push({
     year: state.player.corpYear,
@@ -144,15 +159,18 @@ function endQuarter() {
   // 发放季度工资
   const rankData = CORP_RANKS[c.rank];
   const salary = rankData ? rankData.baseSalary * 3 : 45000;
-  state.resources.cash += salary;
-  state.resources.totalEarned += salary;
-  addDailyTransaction(
-    state,
-    "income",
-    "salary",
-    salary,
-    "季度工资 - " + c.rank,
-  );
+  if (!state.resources) state.resources = { cash: 0, bankBalance: 0, totalEarned: 0 };
+  state.resources.cash = (state.resources.cash || 0) + salary;
+  state.resources.totalEarned = (state.resources.totalEarned || 0) + salary;
+  if (typeof addDailyTransaction === "function") {
+    addDailyTransaction(
+      state,
+      "income",
+      "salary",
+      salary,
+      "季度工资 - " + c.rank,
+    );
+  }
 
   StateManager.addMessage(
     `💰 Q${c.corpQuarter} 结束。工资到账 ¥${salary.toLocaleString()}。绩效: ${grade.grade}`,
@@ -184,6 +202,11 @@ function endQuarter() {
   // Q4 冲刺（下季度 KPI 增益 +50%）
   if (c.corpQuarter === 4) {
     state.flags.q4Sprint = true;
+    // [全系统自洽修复] 域H 联动增强1: Q4冲刺积累疲劳（H→G）
+    if (state.needs) {
+      state.needs.fatigue = Math.min(100, (state.needs.fatigue || 0) + 5);
+      StateManager.addMessage("😰 冲刺季压力大，疲劳+5。", "warning");
+    }
     StateManager.addMessage(
       "🏃 进入Q4冲刺季！下季度所有KPI增益+50%，绩效评分×1.1。",
       "event",
@@ -209,11 +232,18 @@ function endQuarter() {
     typeof updateStockPrices === "function" &&
     Object.keys(c.stockMarket || {}).length > 0
   ) {
+    // [全系统自洽修复] 域H 联动增强2: 绩效影响股价（H→E）
+    // S/S+级绩效→利好公司股价，C级→利空
+    if (grade.grade === "S+" || grade.grade === "S") {
+      state.flags._corpPerfStockBoost = true;
+    } else if (grade.grade === "C") {
+      state.flags._corpPerfStockDrag = true;
+    }
     updateStockPrices(state, false);
   }
 
   // 职场随机事件
-  if (Random.chance(0.2)) {
+  if (Random.chance(0.2) && typeof rollCorporateEvent === "function") {
     rollCorporateEvent(state);
   }
 
@@ -279,11 +309,11 @@ function endQuarter() {
   }
 
   // 失败条件
-  checkCorpLoseConditions(state);
+  if (typeof checkCorpLoseConditions === "function") checkCorpLoseConditions(state);
   // 胜利条件
-  checkCorpWinConditions(state);
+  if (typeof checkCorpWinConditions === "function") checkCorpWinConditions(state);
 
-  autoSave("milestone");
+  if (typeof autoSave === "function") autoSave("milestone");
 }
 
 /** 进入职场阶段 */
@@ -312,6 +342,9 @@ function enterCorporatePhase(companyId) {
   p.phase = "corporate";
   p.corpYear = 1;
   p.corpQuarter = 1;
+
+  // [全系统自洽修复] 域H A类#5: 初始化 p.corporate 对象防止后续属性访问崩溃
+  if (!p.corporate) p.corporate = {};
 
   p.corporate.hair = 100;
   p.corporate.dignity = Math.min(100, Math.round(p.mental * 1.2));

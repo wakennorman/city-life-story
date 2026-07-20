@@ -5,6 +5,13 @@
 /** 招聘团队成员 */
 function hireTeamMember(memberTypeId) {
   const state = StateManager.getState();
+  // [全系统自洽修复] 域H A类#6: 团队系统守卫 — state.corporate/state.resources/state.player 前置检查
+  if (!state.corporate || !state.corporate.rank) {
+    StateManager.addMessage("⚠️ 未入职，无法管理团队。", "warning");
+    return false;
+  }
+  if (!state.resources) state.resources = { cash: 0, bankBalance: 0 };
+  if (!state.player) { StateManager.addMessage("⚠️ 游戏状态异常。", "warning"); return false; }
   const rankData = CORP_RANKS[state.corporate.rank];
   if (!rankData || !rankData.canManageTeam) {
     StateManager.addMessage("⚠️ P7以上才能管理团队。", "warning");
@@ -20,7 +27,7 @@ function hireTeamMember(memberTypeId) {
 
   // 招聘成本
   const cost = 10000;
-  if (state.resources.cash < cost) {
+  if ((state.resources.cash || 0) < cost) {
     StateManager.addMessage(
       `⚠️ 招聘需要 ¥${cost.toLocaleString()}。`,
       "warning",
@@ -55,6 +62,10 @@ function hireTeamMember(memberTypeId) {
 /** 解雇团队成员 */
 function fireTeamMember(index) {
   const state = StateManager.getState();
+  if (!state.corporate || !state.corporate.team || !Array.isArray(state.corporate.team)) {
+    StateManager.addMessage("⚠️ 团队数据不可用。", "warning");
+    return false;
+  }
   if (index < 0 || index >= state.corporate.team.length) return false;
 
   const member = state.corporate.team[index];
@@ -62,12 +73,15 @@ function fireTeamMember(index) {
 
   // 团队士气影响
   for (const m of state.corporate.team) {
-    m.loyalty = Math.max(0, m.loyalty - 5);
+    m.loyalty = Math.max(0, (m.loyalty || 50) - 5);
   }
-  state.player.corporate.popularity = Math.max(
-    0,
-    state.player.corporate.popularity - 5,
-  );
+  // [全系统自洽修复] 域H A类#8: state.player.corporate 守卫 + NaN 防御
+  if (state.player && state.player.corporate) {
+    state.player.corporate.popularity = Math.max(
+      0,
+      (state.player.corporate.popularity || 50) - 5,
+    );
+  }
 
   StateManager.addMessage(`👋 ${member.name} 离开了团队。`, "warning");
   return true;
@@ -75,20 +89,23 @@ function fireTeamMember(index) {
 
 /** 计算团队产出系数 */
 function getTeamProductivity(state) {
+  // [全系统自洽修复] 域H A类#7: 团队系统守卫 — 防止 state.corporate/team 未初始化崩溃
+  if (!state || !state.corporate || !state.corporate.team || !Array.isArray(state.corporate.team)) {
+    return 1.0;
+  }
   if (state.corporate.team.length === 0) return 1.0;
 
   const totalProductivity = state.corporate.team.reduce(
-    (s, m) => s + Math.max(1, m.productivity),
+    (s, m) => s + Math.max(1, (typeof m.productivity === "number" && isFinite(m.productivity)) ? m.productivity : 1),
     0,
   );
   const avgLoyalty =
-    state.corporate.team.reduce((s, m) => s + Math.max(1, m.loyalty), 0) /
+    state.corporate.team.reduce((s, m) => s + Math.max(1, (typeof m.loyalty === "number" && isFinite(m.loyalty)) ? m.loyalty : 1), 0) /
     state.corporate.team.length;
   const sizeBonus = Math.min(1.5, 1 + state.corporate.team.length * 0.05);
 
-  return (
-    (totalProductivity / state.corporate.team.length) *
-    (avgLoyalty / 100) *
-    sizeBonus
-  );
+  // [全系统自洽修复] 域H A类#7: 防止 NaN 传播（如果所有团队成员属性异常，返回基础值 1.0）
+  var result = (totalProductivity / state.corporate.team.length) * (avgLoyalty / 100) * sizeBonus;
+  if (!isFinite(result) || isNaN(result)) return 1.0;
+  return result;
 }
