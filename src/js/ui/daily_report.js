@@ -459,10 +459,34 @@ function generatePeakMomentHTML(state, incomes, expenses) {
       text: "百天不倒！城市没有把你打倒！",
       type: "milestone",
     });
+  } else if (day === 200) {
+    highlights.push({
+      icon: "🏛️",
+      text: "两百天！你已经不是当初那个刚下火车的人了。这座城市塑造了你，你也在塑造它。",
+      type: "milestone",
+    });
+  } else if (day === 300) {
+    highlights.push({
+      icon: "🌄",
+      text: "三百天，快一年了。你开始觉得，这座城市真的能容得下你。",
+      type: "milestone",
+    });
   } else if (day === 365) {
     highlights.push({
       icon: "🌟",
       text: "一年了！从零到今天，你走了很远！",
+      type: "milestone",
+    });
+  } else if (day === 500) {
+    highlights.push({
+      icon: "🏆",
+      text: "五百天！这座城市见证了你的成长，你也见证了它的四季更替。",
+      type: "milestone",
+    });
+  } else if (day === 1000) {
+    highlights.push({
+      icon: "👑",
+      text: "一千天！你已经是这座城市的传说了。",
       type: "milestone",
     });
   }
@@ -646,6 +670,21 @@ function generateTomorrowPreviewHTML(state) {
         suggestions[0] +
         "</div>",
     );
+  }
+
+  // [全系统自洽修复] 域G 联动增强: 情绪状态自省（G→F 峰终定律·终处情感回响）
+  if (state.status && state.status.emotionalState) {
+    var _emo = state.status.emotionalState;
+    var _emoTexts = {
+      depressed: "😢 今天过得很艰难。但你还在这里，这本身就是一种勇敢。",
+      sad: "😔 心情有些低落。明天会是新的一天，去吃点好的、找人说说话。",
+      stressed: "😰 压力很大。记得给自己喘口气，城市不会因为你停下而崩塌。",
+      stable: "😐 平平淡淡的一天。有时候，稳定就是最好的状态。",
+      happy: "😊 今天心情不错！明天继续保持，好状态会带来好运气。",
+      elated: "🌟 今天太棒了！你感觉自己无所不能——享受这一刻吧！",
+    };
+    var _emoMsg = _emoTexts[_emo] || _emoTexts.stable;
+    suggestions.push(_emoMsg);
   }
 
   // 3. 目标梯度效应：下一个连续工作里程碑预告
