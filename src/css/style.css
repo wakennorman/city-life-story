@@ -986,6 +986,14 @@ body {
   padding-left: 6px;
   border-radius: 0 3px 3px 0;
 }
+/* [全系统自洽修复] 域G: NPC社交感言（路线选择回响） */
+.log-entry.social {
+  color: #8e7cc3;
+  background: rgba(142, 124, 195, 0.06);
+  border-left: 2px solid rgba(142, 124, 195, 0.35);
+  padding-left: 6px;
+  border-radius: 0 3px 3px 0;
+}
 
 /* --- Inventory Grid --- */
 .inventory-grid {

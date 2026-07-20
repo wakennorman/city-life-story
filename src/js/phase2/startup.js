@@ -178,7 +178,13 @@ function getStartupEffectiveCareerRank(state) {
 
 function getStartupRegistrationCost(state) {
   var stc = getStartupTriggerConditions(state);
-  return stc.cashRequired || 50000;
+  var base = stc.cashRequired || 50000;
+  // [全系统自洽修复] 域G A类: 创业路线(_routeStartupCostMod)应减免注册费，此前仅 UI 展示未实际生效
+  var mod = state.flags && isFinite(state.flags._routeStartupCostMod)
+    ? state.flags._routeStartupCostMod
+    : 1.0;
+  if (mod > 0 && mod < 1) base = Math.round(base * mod);
+  return base;
 }
 
 /** 打开注册公司弹窗 */

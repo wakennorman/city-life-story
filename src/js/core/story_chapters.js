@@ -299,7 +299,7 @@ function _triggerChapter(state, ch) {
     stats.highSkills +
     "项达标";
 
-  // 使用现有的弹窗系统 — 遵循标准 _pendingEvent/_pendingEventId 模式
+  // [全系统自洽修复] 域G A类修复: 使用独立变量 _pendingChapterEvent 避免与管线触发槽（trigger_slot_daily_mid/daily_end）的 _pendingEvent 冲突导致章节弹窗被覆盖
   if (typeof showEventModal === "function") {
     var evt = {
       id: ch.id,
@@ -324,12 +324,12 @@ function _triggerChapter(state, ch) {
         },
       ],
     };
-    state._pendingEvent = evt;
-    state._pendingEventId = ch.id;
+    state._pendingChapterEvent = evt;
+    state._pendingChapterEventId = ch.id;
     setTimeout(function () {
       var s = StateManager.getState();
-      if (s._pendingEvent && s._pendingEventId === ch.id) {
-        showEventModal(s._pendingEvent);
+      if (s._pendingChapterEvent && s._pendingChapterEventId === ch.id) {
+        showEventModal(s._pendingChapterEvent);
       }
     }, 100);
   } else {

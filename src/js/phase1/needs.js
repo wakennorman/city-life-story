@@ -139,7 +139,8 @@ function determineEmotionalState(state) {
   else if (score < 45) emotionalState = "stressed";
   else if (score < 60) emotionalState = "stable";
   else if (score < 80) emotionalState = "happy";
-  else emotionalState = "happy";
+  // [全系统自洽修复] 域G A类修复: 原条件两分支都映射到"happy"，≥80分和60-79分无区分——新增"elated"状态
+  else emotionalState = "elated";
 
   state.status.emotionalState = emotionalState;
   return emotionalState;
@@ -154,6 +155,8 @@ function getEmotionWorkModifier(state) {
     stressed: { pay: 0.8, injury: 1.3, skillXp: 0.7 },
     stable: { pay: 1.0, injury: 1.0, skillXp: 1.0 },
     happy: { pay: 1.25, injury: 0.7, skillXp: 1.5 },
+    // [全系统自洽修复] 域G A类修复: 新增 elated 状态（情绪分值≥80时触发）
+    elated: { pay: 1.5, injury: 0.5, skillXp: 2.0 },
   };
   return mods[emo] || mods.stable;
 }
@@ -166,6 +169,8 @@ function getEmotionIcon(state) {
     stressed: "😰",
     stable: "😐",
     happy: "😊",
+    // [全系统自洽修复] 域G A类修复: 新增 elated 状态图标
+    elated: "🌟",
   };
   return icons[state.status.emotionalState] || "😐";
 }
@@ -177,7 +182,9 @@ function getEmotionIcon(state) {
  */
 function applyWealthBasedOverhead(state) {
   if (typeof StateManager === "undefined") return;
-  var totalAssets = state.resources.cash + (state.resources.bankBalance || 0);
+  // [全系统自洽修复] 域G A类修复: cash NaN 传播导致现金永久损坏（undefined/NaN 令 totalAssets=NaN → NaN<50000=false → 进入核心逻辑 → state.resources.cash -= NaN = NaN）
+  var totalAssets = (state.resources.cash || 0) + (state.resources.bankBalance || 0);
+  if (!isFinite(totalAssets)) totalAssets = 0;
   if (totalAssets < 50000) return; // 仅资产 > 5W 触发
 
   // 物业费：按资产 0.03%/天（v3.1：0.1%→0.03%，¥500K→¥150/天封顶¥2000/天）

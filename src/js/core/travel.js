@@ -447,8 +447,13 @@ function tickTravel(state) {
           var edelta = evt.effects[ek];
           var eparts = erule.path.split(".");
           var etarget = state;
-          for (var epi = 0; epi < eparts.length - 1; epi++)
+          var pathBroken = false;
+          for (var epi = 0; epi < eparts.length - 1; epi++) {
+            // [全系统自洽修复] 域G A类修复: 中间路径对象不存在（如 state.needs 未定义）→ TypeError 崩溃
+            if (etarget[eparts[epi]] == null) { pathBroken = true; break; }
             etarget = etarget[eparts[epi]];
+          }
+          if (pathBroken) continue;
           var ecur = etarget[eparts[eparts.length - 1]] || 0;
           if (erule.invert) {
             etarget[eparts[eparts.length - 1]] = Math.max(

@@ -184,6 +184,12 @@ function _addIllness(state, illnessId) {
     malnutrition: "malnutritionCount",
     insomnia: "insomniaCount",
     overwork: "overworkCount",
+    // [全系统自洽修复] 域G A类修复: 新增6种疾病演化链计数器（原缺失导致疾病链断裂）
+    hypertension: "hypertensionCount",
+    fatty_liver: "fattyLiverCount",
+    kidney_disease: "kidneyDiseaseCount",
+    heart_disease: "heartDiseaseCount",
+    liver_cirrhosis: "liverCirrhosisCount",
   };
   if (evolutionCountMap[illnessId]) {
     var countKey = evolutionCountMap[illnessId];
@@ -199,6 +205,7 @@ function recordIllnessCure(state, illnessId) {
   var h = (state.flags._habits = state.flags._habits || {});
 
   // 将痊愈的疾病计入演化历史
+  // [全系统自洽修复] 域G A类修复: 新增6种疾病演化链计数器（fattyLiverCount/hypertensionCount/kidneyDiseaseCount/heartDiseaseCount/liverCirrhosisCount/hepatitisBCount）
   if (illnessId === "cold") h.coldCount = (h.coldCount || 0) + 1;
   else if (illnessId === "stomach_inflammation")
     h.stomach_inflammationCount = (h.stomach_inflammationCount || 0) + 1;
@@ -214,6 +221,16 @@ function recordIllnessCure(state, illnessId) {
     h.insomniaCount = (h.insomniaCount || 0) + 1;
   else if (illnessId === "overwork")
     h.overworkCount = (h.overworkCount || 0) + 1;
+  else if (illnessId === "hypertension")
+    h.hypertensionCount = (h.hypertensionCount || 0) + 1;
+  else if (illnessId === "fatty_liver")
+    h.fattyLiverCount = (h.fattyLiverCount || 0) + 1;
+  else if (illnessId === "kidney_disease")
+    h.kidneyDiseaseCount = (h.kidneyDiseaseCount || 0) + 1;
+  else if (illnessId === "heart_disease")
+    h.heartDiseaseCount = (h.heartDiseaseCount || 0) + 1;
+  else if (illnessId === "liver_cirrhosis")
+    h.liverCirrhosisCount = (h.liverCirrhosisCount || 0) + 1;
 }
 
 // ====== 每日疾病结算 ======

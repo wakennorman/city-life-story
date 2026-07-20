@@ -354,11 +354,52 @@
     // 记录路线激活日
     state.flags._routeActiveDay = state.player.day;
 
+    // [全系统自洽修复] 域G 联动增强1: 路线选择7日后NPC感言（峰终定律·人生重大抉择应获社交回响）
+    state.flags._routeChoiceEchoDay = (state.player.day || 0) + 7;
+
     StateManager.addMessage(
       def.icon + " 你选择了「" + def.label + "」——这条路将塑造你今后的生活。",
       "story",
     );
   }
+
+  // ====== 寻找最高好感已结识NPC的ID（路线感言用）=====
+  function _pickClosestMetNpcId(state) {
+    var rels = state.relationships || {};
+    var bestId = null;
+    var bestAff = -Infinity;
+    for (var rid in rels) {
+      if (!Object.prototype.hasOwnProperty.call(rels, rid)) continue;
+      var r = rels[rid];
+      if (!r || !r.met) continue;
+      var aff = r.affinity || 0;
+      if (aff >= 20 && aff > bestAff) {
+        bestAff = aff;
+        bestId = rid;
+      }
+    }
+    return bestId;
+  }
+
+  // ====== NPC感言文案（按路线定制）=====
+  var _ECHO_LINES = {
+    entrepreneur: [
+      "听说你打算创业了，胆子真大。要是缺人手，记得喊我。",
+      "创业这条路不好走，但我觉得你行。加油啊！",
+    ],
+    civil_service: [
+      "考公挺好的，稳稳的铁饭碗。替你高兴！",
+      "以后你就是体制内的人了，记得多多关照老朋友啊。",
+    ],
+    wealth: [
+      "攒下这么多底气，真厉害。以后我可得抱你大腿了。",
+      "有钱不一定快乐，但看你这么充实，替你开心。",
+    ],
+    lying_flat: [
+      "不也挺好嘛，活得开心最重要。别太拼了。",
+      "躺平也是一种智慧。舒服日子谁不想过呢。",
+    ],
+  };
 
   // ====== 每日路线事件检测 ======
 
@@ -368,6 +409,26 @@
   function tickRouteEffects(state) {
     var route = state.flags && state.flags._lifeRoute;
     if (!route || !ROUTE_EFFECTS[route]) return;
+
+    // [全系统自洽修复] 域G 联动增强1: 路线选择7日后触发NPC感言（一次性社交回响，峰终定律）
+    var echoDay = state.flags._routeChoiceEchoDay;
+    if (echoDay && (state.player.day || 0) >= echoDay && !state.flags._routeChoiceEchoDone) {
+      state.flags._routeChoiceEchoDone = true;
+      var npcId = _pickClosestMetNpcId(state);
+      if (npcId) {
+        // NPC名称解析：优先 NPCS 全局数组，兜底 npcId
+        var npcName = npcId;
+        if (typeof NPCS !== "undefined" && Array.isArray(NPCS)) {
+          var found = NPCS.filter(function (n) {
+            return n && n.id === npcId;
+          });
+          if (found.length && found[0].name) npcName = found[0].name;
+        }
+        var lines = _ECHO_LINES[route] || _ECHO_LINES.entrepreneur;
+        var line = lines[Random.int(0, lines.length - 1)];
+        StateManager.addMessage("💬 " + npcName + "：" + line, "social");
+      }
+    }
 
     // 避免触发当天已有的事件（防止刚选路线就出事件）
     var activeDay = state.flags._routeActiveDay;

@@ -785,6 +785,25 @@ function generateDailyReportSummary(state, incomes, expenses) {
     highlights.push("👥 已结识 " + _npcMet + " 位街头好友，这座城市开始有温度了");
   }
 
+  // [全系统自洽修复] 域G 联动增强: 经济结算感知（G→E，让玩家看见每日经济系统的隐形结果）
+  try {
+    var _stlement = state._economySettlement;
+    if (_stlement) {
+      // activeTaxTier 是 {min,max,rate,label} 对象（economy_v3.1.js），无税时为 null
+      var _tier = _stlement.activeTaxTier;
+      if (_tier && _tier.label) {
+        highlights.push("📊 当前财富税档位：" + _tier.label + "（资产越多，责任越大）");
+      }
+      var _sat = _stlement.marketSaturationPenalty;
+      if (isFinite(_sat) && _sat > 0 && _sat < 0.95) {
+        var _satPct = Math.round((1 - _sat) * 100);
+        highlights.push("🏙️ 市场饱和度让投资收益打了" + (100 - _satPct) + "折");
+      }
+    }
+  } catch (e) {
+    // 静默：经济结算展示不影响主报告
+  }
+
   var totalEarned = (state.resources && state.resources.totalEarned) || 0;
   var maxEarned = state.flags._maxEarnedMilestone || 0;
   if (totalEarned >= 10000 && maxEarned < 10000) {

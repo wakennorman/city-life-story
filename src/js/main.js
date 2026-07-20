@@ -13,6 +13,8 @@ let gameStarted = false;
 function setStatBar(id, value, cssClass) {
   const wrap = document.getElementById(id);
   if (!wrap) return;
+  // [全系统自洽修复] 域G A类修复: NaN/undefined 无防御，Math.max(0,Math.min(100,undefined))=NaN → DOM 显示"NaN"
+  if (typeof value !== "number" || !isFinite(value)) value = 0;
   const bar = wrap.querySelector(".stat-bar");
   const valEl = wrap.querySelector(".stat-value");
   if (bar) {
@@ -2010,21 +2012,22 @@ function showCompareResult() {
     bodyHtml +=
       '<h4 style="margin:16px 0 8px;color:var(--text-muted);">🏢 职场状态</h4>' +
       diffVal("职级", s1.corporate?.rank || "P5", s2.corporate?.rank || "P5") +
-      diffVal("KPI", s1.corporate?.kpi || 0, s2.corporate?.kpi || 0) +
-      diffVal("能力", s1.corporate?.ability || 0, s2.corporate?.ability || 0) +
-      diffVal("尊严", s1.corporate?.dignity || 0, s2.corporate?.dignity || 0) +
+      // [全系统自洽修复] 域G A类修复: kpi/ability/dignity/popularity/upwardMgmt/risk/hair 在 state.player.corporate 而非 state.corporate（state.corporate 存的是 company/rank/department 等企业信息），导致所有职场属性对比值恒为0
+      diffVal("KPI", s1.player.corporate?.kpi || 0, s2.player.corporate?.kpi || 0) +
+      diffVal("能力", s1.player.corporate?.ability || 0, s2.player.corporate?.ability || 0) +
+      diffVal("尊严", s1.player.corporate?.dignity || 0, s2.player.corporate?.dignity || 0) +
       diffVal(
         "人缘",
-        s1.corporate?.popularity || 0,
-        s2.corporate?.popularity || 0,
+        s1.player.corporate?.popularity || 0,
+        s2.player.corporate?.popularity || 0,
       ) +
       diffVal(
         "向上管理",
-        s1.corporate?.upwardMgmt || 0,
-        s2.corporate?.upwardMgmt || 0,
+        s1.player.corporate?.upwardMgmt || 0,
+        s2.player.corporate?.upwardMgmt || 0,
       ) +
-      diffVal("风险", s1.corporate?.risk || 0, s2.corporate?.risk || 0) +
-      diffVal("发量", s1.corporate?.hair || 100, s2.corporate?.hair || 100);
+      diffVal("风险", s1.player.corporate?.risk || 0, s2.player.corporate?.risk || 0) +
+      diffVal("发量", s1.player.corporate?.hair || 100, s2.player.corporate?.hair || 100);
   }
 
   // 属性对比
@@ -4133,6 +4136,10 @@ function doStreetJob(job) {
 
   // 扣除启动资金
   if (job.startupCost) {
+    // [全系统自洽修复] 域G A类修复: cash NaN 守卫（防止旧存档/极端值导致现金永久损坏）
+    if (typeof state.resources.cash !== "number" || !isFinite(state.resources.cash)) {
+      state.resources.cash = 0;
+    }
     state.resources.cash -= job.startupCost;
   }
 
@@ -4404,6 +4411,10 @@ function doStreetJob(job) {
   else if (titleBonus === 3) pay = Math.floor(pay * 1.15);
 
   // 应用效果
+  // [全系统自洽修复] 域G A类修复: employment 无守卫（旧存档缺失导致崩溃）
+  if (!state.employment) {
+    state.employment = { currentJob: null, jobStartDay: 0, completedShifts: {} };
+  }
   if (job.effects) {
     // [全系统自洽修复] 域C 联动增强1: 技能等级降低同领域工作疲劳(熟能生巧)
     var fatigueReduction = 0;
@@ -4555,6 +4566,10 @@ function doStreetJob(job) {
     }
   }
 
+  // [全系统自洽修复] 域G A类修复: totalEarned NaN 传播守卫（旧存档/极端值导致现金永久损坏）
+  if (typeof state.resources.totalEarned !== "number" || !isFinite(state.resources.totalEarned)) {
+    state.resources.totalEarned = 0;
+  }
   state.resources.cash += pay;
   state.resources.totalEarned += pay;
   addDailyTransaction(

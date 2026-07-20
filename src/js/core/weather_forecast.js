@@ -67,8 +67,8 @@
       confidence = 0.4 + Random.float(0, 0.3);
     }
 
-    // 确定预报温度（简单估算）
-    var tempForecast = state.weather.temperature || 22;
+    // [全系统自洽修复] 域G A类修复: 温度0°C被 `||` 误判为"未设置"，使用 `??` 替代
+    var tempForecast = state.weather.temperature ?? 22;
     tempForecast += Random.int(-3, 3);
 
     state.weather._nextDayForecast = {
