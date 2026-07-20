@@ -267,7 +267,7 @@ function checkLifeNodeRequirement(state, choice) {
     if (key === "cash") {
       actual = (state.resources.cash || 0) + (state.resources.bankBalance || 0);
     } else if (key === "skill") {
-      actual = getHighestLifeNodeSkill(state);
+      actual = typeof getHighestLifeNodeSkill === "function" ? getHighestLifeNodeSkill(state) : 0;
     } else {
       actual = (state.player && state.player[key]) || 0;
     }
@@ -289,7 +289,7 @@ function checkLifeNodeRequirementDetailed(state, choice) {
     if (key === "cash") {
       actual = (state.resources.cash || 0) + (state.resources.bankBalance || 0);
     } else if (key === "skill") {
-      actual = getHighestLifeNodeSkill(state);
+      actual = typeof getHighestLifeNodeSkill === "function" ? getHighestLifeNodeSkill(state) : 0;
     } else {
       actual = (state.player && state.player[key]) || 0;
     }
@@ -551,6 +551,12 @@ function applyNodeChoice(state, nodeId, choiceKey) {
       // 退而不休不设 _retired，继续正常工作
       state.flags._lifeNode_retirement_done = true;
       break;
+  }
+  // [全系统自洽修复] 域G 联动增强1: 人生节点完成→永久心智+1（G→A，生命经验沉淀）
+  // 仅首次完成时触发（_lifeNode_xxx_done 刚设为 true，在此判断）
+  if (nodeId && state.player) {
+    state.player.mental = Math.min(100, (state.player.mental || 0) + 1);
+    StateManager.addMessage("🧠 人生经历让心智更加成熟（心智+1）", "good");
   }
   state.flags["_lifeNode_" + nodeId + "_done"] = true;
   state._pendingLifeNode = null;

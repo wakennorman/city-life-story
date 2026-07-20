@@ -785,6 +785,20 @@ function generateDailyReportSummary(state, incomes, expenses) {
     highlights.push("👥 已结识 " + _npcMet + " 位街头好友，这座城市开始有温度了");
   }
 
+  // [全系统自洽修复] 域G 联动增强2: 人生节点进度日报（G→F）
+  try {
+    if (typeof getLifeNodeStatus === "function") {
+      var _lnStatus = getLifeNodeStatus(state);
+      if (_lnStatus && _lnStatus.completed && _lnStatus.completed.length > 0) {
+        var _completedCount = _lnStatus.completed.length;
+        var _lnNames = _lnStatus.completed.map(function(n){ return n.icon + n.name; }).join("·");
+        highlights.push("🎯 已度过 " + _completedCount + " 个人生节点（" + _lnNames + "）");
+      }
+    }
+  } catch (e) {
+    // 静默
+  }
+
   // [全系统自洽修复] 域G 联动增强: 经济结算感知（G→E，让玩家看见每日经济系统的隐形结果）
   try {
     var _stlement = state._economySettlement;

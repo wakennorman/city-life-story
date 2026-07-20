@@ -913,16 +913,31 @@ function startScenarioGame(scenarioId) {
     var evt = scenario.startEvent;
     StateManager.addMessage("📖 " + evt.title + " " + evt.text, "event");
     if (evt.effects) {
+      // [全系统自洽修复] 域G A类#1: 效果键路径映射 — happiness/fatigue/hunger/hygiene 在 state.needs 而非 state.player
+      var EFFECT_ROUTES = {
+        happiness: { target: "needs", max: 100 },
+        fatigue: { target: "needs", max: 100 },
+        hunger: { target: "needs", max: 100 },
+        hygiene: { target: "needs", max: 100 },
+        mental: { target: "player", max: 100 },
+        fame: { target: "player", max: 100 },
+        charm: { target: "player", max: 100 },
+        physique: { target: "player", max: 100 },
+        intelligence: { target: "player", max: 100 },
+        agility: { target: "player", max: 100 },
+        morality: { target: "player", max: 100 },
+        health: { target: "status", max: 100 },
+      };
       for (var effKey in evt.effects) {
-        if (
-          evt.effects.hasOwnProperty(effKey) &&
-          typeof state.player[effKey] === "number"
-        ) {
-          state.player[effKey] = Math.max(
-            0,
-            Math.min(100, state.player[effKey] + evt.effects[effKey]),
-          );
-        }
+        if (!evt.effects.hasOwnProperty(effKey)) continue;
+        var route = EFFECT_ROUTES[effKey];
+        if (!route) continue;
+        var container = state[route.target];
+        if (!container || typeof container[effKey] !== "number") continue;
+        container[effKey] = Math.max(
+          0,
+          Math.min(route.max, container[effKey] + evt.effects[effKey]),
+        );
       }
     }
   }
@@ -4966,7 +4981,9 @@ function consumeAP(cost) {
   );
 
   // 更新显示用的时段
-  const pct = state.player.actionPoints / state.player.maxActionPoints;
+  // [全系统自洽修复] 域G A类#3: maxActionPoints 可能为0/NaN（旧存档/数据异常），兜底防除零
+  var _maxAp = (typeof state.player.maxActionPoints === "number" && isFinite(state.player.maxActionPoints) && state.player.maxActionPoints > 0) ? state.player.maxActionPoints : 100;
+  const pct = state.player.actionPoints / _maxAp;
   if (pct > 0.66) state.player.timeSlot = "morning";
   else if (pct > 0.33) state.player.timeSlot = "afternoon";
   else state.player.timeSlot = "evening";

@@ -1197,6 +1197,24 @@ function tickInvestmentDaily(state) {
       }
     }
 
+    // [全系统自洽修复] 域G 联动增强3: 极端天气→市场波动放大（G→E）
+    // 极端天气时 volatility 临时放大 15-30%，台风/暴雪影响最大
+    if (state.weather && state.weather.current) {
+      var _weatherVolMul = 1.0;
+      var _wId = state.weather.current;
+      if (_wId === "typhoon" || _wId === "sandstorm") _weatherVolMul = 1.3;
+      else if (_wId === "snowy" || _wId === "stormy" || _wId === "cold_snap") _weatherVolMul = 1.2;
+      else if (_wId === "heatwave" || _wId === "heavy_smog") _weatherVolMul = 1.15;
+      if (_weatherVolMul > 1.0) {
+        baseChange = 1 + s.trend + Random.float(-s.volatility * _weatherVolMul, s.volatility * _weatherVolMul);
+        // 重新应用热度偏置（因 baseChange 被重写，需重新计算）
+        if (typeof getSectorHeat === "function") {
+          var _heat2 = getSectorHeat(s.industry);
+          if (_heat2 && _heat2 !== 1.0) baseChange *= 1 + (_heat2 - 1.0) * 0.1;
+        }
+      }
+    }
+
     // 新闻效应乘数
     var newsMul =
       typeof getNewsEffectForInvestment === "function"
