@@ -562,6 +562,7 @@ function registerStartup(state, name, industry, description) {
     // ====== P0-5: KPI/OKR 目标系统 ======
     okrs: [], // 季度 OKR 列表 [{id, quarter, year, objective, keyResults: [], status, progress}]
     currentQuarterOkr: null, // 当前季度正在执行的 OKR
+    investorRelationship: 30, // 投资人关系基础值（默认30，范围0-100）
     kpiHistory: [], // KPI 历史 [{quarter, year, kpi, score, bonus}]
     teamGoals: [], // 团队目标 [{id, team, target, progress, deadline}]
     employeeGoals: [], // 个人目标 [{employeeId, goal, target, progress}]
