@@ -83,9 +83,14 @@
           text: "💰 塞个红包了事",
           hint: "花¥200-400，直接摆平",
           apply: function (st) {
+            // [全系统自洽修复] 域B A类#3: 城管事件守卫 — st.flags/st.resources/st.player/st.chengguan 前置防御
+            if (!st.flags) st.flags = {};
+            if (!st.resources) st.resources = { cash: 0 };
+            if (!st.player) st.player = { morality: 50 };
+            if (!st.chengguan) st.chengguan = { relationship: 50, heat: 0 };
             st.flags._chengguanRaidPanicSeen = true;
-            var bribe = Math.min(st.resources.cash, 200 + Random.int(0, 200));
-            st.resources.cash -= bribe;
+            var bribe = Math.min(st.resources.cash || 0, 200 + Random.int(0, 200));
+            st.resources.cash = (st.resources.cash || 0) - bribe;
             st.chengguan.relationship = Math.min(
               100,
               (st.chengguan.relationship || 0) + 5,

@@ -368,6 +368,8 @@
           text: "🎓 报名更高级的培训，冲击满级",
           hint: "智力+5，技能XP额外+100",
           apply: function (st) {
+            // [全系统自洽修复] 域B A类#5: st.flags 守卫
+            if (!st.flags) st.flags = {};
             st.flags._careerSkillHalfCenturyDone = true;
             if (st.player) st.player.intelligence = Math.min(100, (st.player.intelligence || 20) + 5);
             var topSkill = null, topLv = 0;
@@ -385,6 +387,8 @@
           text: "🏆 用专家级技能接更赚钱的活",
           hint: "名声+5，现金+¥2000",
           apply: function (st) {
+            // [全系统自洽修复] 域B A类#8: st.flags 守卫
+            if (!st.flags) st.flags = {};
             st.flags._careerSkillHalfCenturyDone = true;
             if (st.player) st.player.fame = Math.min(100, (st.player.fame || 0) + 5);
             if (st.resources) st.resources.cash = (st.resources.cash || 0) + 2000;
@@ -396,6 +400,8 @@
           text: "📝 把经验写成教程，分享给新人",
           hint: "心智+5，道德+3",
           apply: function (st) {
+            // [全系统自洽修复] 域B A类#9: st.flags 守卫
+            if (!st.flags) st.flags = {};
             st.flags._careerSkillHalfCenturyDone = true;
             if (st.player) {
               st.player.mental = Math.min(100, (st.player.mental || 50) + 5);
@@ -430,6 +436,8 @@
           text: "👑 开山收徒，将技艺传承下去",
           hint: "魅力+10，名声+15，获得学徒",
           apply: function (st) {
+            // [全系统自洽修复] 域B A类#6: st.flags 守卫
+            if (!st.flags) st.flags = {};
             st.flags._careerSkillCenturyDone = true;
             st.flags._skillMasterHasApprentice = true;
             if (st.player) {
@@ -445,6 +453,8 @@
           text: "💎 用满级技能创业，打造自己的品牌",
           hint: "解锁创业加成，启动资金减免",
           apply: function (st) {
+            // [全系统自洽修复] 域B A类#7: st.flags 守卫
+            if (!st.flags) st.flags = {};
             st.flags._careerSkillCenturyDone = true;
             st.flags._skillMasterStartupBonus = true;
             if (st.player) {
@@ -464,7 +474,10 @@
               st.player.intelligence = Math.min(100, (st.player.intelligence || 20) + 10);
               st.player.fame = Math.min(100, (st.player.fame || 0) + 20);
             }
-            st.resources._passiveBookRoyalty = (st.resources._passiveBookRoyalty || 0) + 500;
+            // [全系统自洽修复] 域B A类#4: st.resources 守卫
+            if (st.resources) {
+              st.resources._passiveBookRoyalty = (st.resources._passiveBookRoyalty || 0) + 500;
+            }
             if (typeof StateManager !== "undefined" && StateManager.addMessage)
               StateManager.addMessage("📖 你的专著出版！智力+10，名声+20，每月版税¥500。后世会记得你的名字。", "success");
           },

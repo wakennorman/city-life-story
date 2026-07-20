@@ -52,7 +52,8 @@
           hint: "¥2800，健康+25",
           apply: function (st) {
             st.flags._healthCrisisSeen = true;
-            var cost = Math.min(2800, st.resources.cash);
+            if (!st.resources) st.resources = { cash: 0 };
+            var cost = Math.min(2800, st.resources.cash || 0);
             st.resources.cash -= cost;
             if (!st.personalGrowth) st.personalGrowth = {};
             if (!st.personalGrowth.health) st.personalGrowth.health = {};
@@ -77,7 +78,8 @@
           hint: "省钱但健康改善有限",
           apply: function (st) {
             st.flags._healthCrisisSeen = true;
-            var cost = Math.min(500, st.resources.cash);
+            if (!st.resources) st.resources = { cash: 0 };
+            var cost = Math.min(500, st.resources.cash || 0);
             st.resources.cash -= cost;
             if (!st.personalGrowth) st.personalGrowth = {};
             if (!st.personalGrowth.health) st.personalGrowth.health = {};
@@ -98,7 +100,8 @@
           hint: "需要决心，长期受益",
           apply: function (st) {
             st.flags._healthCrisisSeen = true;
-            var cost = Math.min(500, st.resources.cash);
+            if (!st.resources) st.resources = { cash: 0 };
+            var cost = Math.min(500, st.resources.cash || 0);
             st.resources.cash -= cost;
             if (!st.personalGrowth) st.personalGrowth = {};
             if (!st.personalGrowth.health) st.personalGrowth.health = {};
@@ -159,7 +162,8 @@
           hint: "¥500，专业疏导",
           apply: function (st) {
             st.flags._burnoutSeen = true;
-            var cost = Math.min(500, st.resources.cash);
+            if (!st.resources) st.resources = { cash: 0 };
+            var cost = Math.min(500, st.resources.cash || 0);
             st.resources.cash -= cost;
             if (!st.personalGrowth) st.personalGrowth = {};
             if (!st.personalGrowth.health) st.personalGrowth.health = {};
@@ -267,7 +271,8 @@
                 fitness: 30,
                 plastic: 0,
               };
-            var cost = Math.min(300, st.resources.cash);
+            if (!st.resources) st.resources = { cash: 0 };
+            var cost = Math.min(300, st.resources.cash || 0);
             st.resources.cash -= cost;
             var img = st.personalGrowth.image;
             img.style = Math.min(100, (img.style || 0) + 8);
@@ -294,7 +299,8 @@
                 fitness: 30,
                 plastic: 0,
               };
-            var cost = Math.min(50, st.resources.cash);
+            if (!st.resources) st.resources = { cash: 0 };
+            var cost = Math.min(50, st.resources.cash || 0);
             st.resources.cash -= cost;
             var img = st.personalGrowth.image;
             img.skincare = Math.min(100, (img.skincare || 0) + 5);

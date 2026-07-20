@@ -468,6 +468,11 @@
           text: "🧥 把外套给他",
           hint: "助人",
           apply: function (st) {
+            // [全系统自洽修复] 域B A类#1: st.flags/st.needs/st.player/st.status 守卫
+            if (!st.flags) st.flags = {};
+            if (!st.needs) st.needs = { happiness: 50, fatigue: 0 };
+            if (!st.player) st.player = { fame: 0 };
+            if (!st.status) st.status = { health: 50 };
             st.flags._gaveCoatToHomeless = true;
             st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 10);
             st.player.fame = Math.min(100, (st.player.fame || 0) + 2);
@@ -541,7 +546,8 @@
             st.flags._helpedFriendFindWork = true;
             st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 8);
             st.player.fame = Math.min(100, (st.player.fame || 0) + 2);
-            if (st.relationships && st.relationships.old_zhou) {
+            // [全系统自洽修复] 域B A类#2: old_zhou met 门控
+            if (st.relationships && st.relationships.old_zhou && st.relationships.old_zhou.met) {
               st.relationships.old_zhou.affinity = Math.min(
                 100,
                 (st.relationships.old_zhou.affinity || 0) + 5,
