@@ -3460,7 +3460,7 @@ function tickCareerJobDaily(state) {
 
   // ----- burnout 过劳后果（P0-5） -----
   // [全系统自洽修复] 域C 修复:Math.random→Random.chance 统一随机系统
-  if (cap.burnout >= 80 && (typeof Random !== 'undefined' ? Random.chance(0.15) : Math.random() < 0.15)) {
+  if (cap.burnout >= 80 && Random.chance(0.15)) {
     // 强制过劳病假
     state.status = state.status || {};
     state.status.health = Math.max(0, (state.status.health || 100) - 10);
@@ -3476,7 +3476,7 @@ function tickCareerJobDaily(state) {
     job.performance = Math.max(0, (job.performance || 50) - 1);
     state.status = state.status || {};
     state.status.health = Math.max(0, (state.status.health || 100) - 0.5);
-    if (typeof Random !== 'undefined' ? Random.chance(0.05) : Math.random() < 0.05) {
+    if (Random.chance(0.05)) {
       StateManager.addMessage(
         "⚠️ 身体发出警告：长期高压工作正在消耗你的健康",
         "warning",
@@ -3844,7 +3844,7 @@ function tickCareerOccupationalRisk(state) {
   }
 
   var prob = profile.dailyProb[levelIdx] || 0.003;
-  var rng = Random ? Random.float(0, 1) : Math.random();
+  var rng = Random.float(0, 1);
   if (rng >= prob) return;
 
   // 触发职业风险
@@ -3925,14 +3925,14 @@ function tickCareerHealthBonus(state) {
     var medicineLevel =
       (state.skills && state.skills.medicine && state.skills.medicine.level) ||
       0;
-    if (medicineLevel >= 20 && (typeof Random !== 'undefined' ? Random.chance(0.3) : Math.random() < 0.3)) {
+    if (medicineLevel >= 20 && Random.chance(0.3)) {
       state.status = state.status || {};
       state.status.health = Math.min(100, (state.status.health || 100) + 0.5);
     }
   }
   // 🏥 护理：医疗环境工作，疾病抵抗力更强
   if (job.path === "medical") {
-    if (typeof Random !== 'undefined' ? Random.chance(0.2) : Math.random() < 0.2) {
+    if (Random.chance(0.2)) {
       state.status = state.status || {};
       state.status.health = Math.min(100, (state.status.health || 100) + 0.3);
     }
@@ -4406,8 +4406,7 @@ function enhancedApplyCareerJob(pathId, levelId) {
       feedbackParts.push("👔 着装得体 +15%");
     }
 
-    var randVal =
-      typeof Random !== "undefined" ? Random.float(0, 1) : Math.random();
+    var randVal = Random.float(0, 1);
     if (randVal > interviewChance) {
       // 面试失败 → 弹窗展示详细原因
       var failChancePct = Math.round(interviewChance * 100);
