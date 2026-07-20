@@ -128784,13 +128784,16 @@ function getNewsEffectForInvestment(symbol, industry, category, state) {
 
       // 按具体标的匹配
       if (eff.symbols && Array.isArray(eff.symbols)) {
+        var symbolMatched = false;
         for (var si = 0; si < eff.symbols.length; si++) {
           if (eff.symbols[si] === symbol) {
             combinedMul *= eff.mul;
             hasEffect = true;
+            symbolMatched = true;
+            break; // [全系统自洽修复] 域E A类#15: 防止同 effect 内重复符号导致 mul 多次乘算
           }
         }
-        if (eff.symbols.indexOf(symbol) >= 0) continue;
+        if (symbolMatched) continue; // 已匹配具体标的，跳过行业/类别匹配
       }
 
       // 按行业或类别匹配（互斥：同一 effect 不重复乘算）
@@ -191800,6 +191803,7 @@ function registerStartup(state, name, industry, description) {
     // ====== P0-5: KPI/OKR 目标系统 ======
     okrs: [], // 季度 OKR 列表 [{id, quarter, year, objective, keyResults: [], status, progress}]
     currentQuarterOkr: null, // 当前季度正在执行的 OKR
+    investorRelationship: 30, // 投资人关系基础值（默认30，范围0-100）
     kpiHistory: [], // KPI 历史 [{quarter, year, kpi, score, bonus}]
     teamGoals: [], // 团队目标 [{id, team, target, progress, deadline}]
     employeeGoals: [], // 个人目标 [{employeeId, goal, target, progress}]
