@@ -638,6 +638,8 @@ function recordNpcInteraction(npcId, change, reason) {
   if (!state.npcRelationshipLog.dailyInteractions) {
     state.npcRelationshipLog.dailyInteractions = {};
   }
+  // [全系统自洽修复] 域D A类: change NaN 守卫 — 防止 NaN 传播到蝴蝶效应系统
+  if (typeof change !== "number" || !isFinite(change)) change = 0;
   var existing = state.npcRelationshipLog.dailyInteractions[npcId];
   if (existing) {
     existing.change += change;

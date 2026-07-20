@@ -846,6 +846,19 @@ function generateDailyReportSummary(state, incomes, expenses) {
     }
   } catch (e) {}
 
+  // [全系统自洽修复] 域D 联动增强: 近七日可拜访NPC数纳入日报（D→F）
+  try {
+    if (state.relationships && state.player) {
+      var _today = state.player.day;
+      var _visitNow = 0;
+      for (var _vi in state.relationships) {
+        var _vr = state.relationships[_vi];
+        if (_vr && _vr.met && (!_vr._lastVisit || _vr._lastVisit + 7 <= _today)) _visitNow++;
+      }
+      if (_visitNow >= 3) highlights.push("🚶 今日可拜访 " + _visitNow + " 位朋友");
+    }
+  } catch (e) {}
+
   // 30天回顾
   if (reportDay > 0 && reportDay % 30 === 0 && state.flags._cashHistory) {
     var history = state.flags._cashHistory;
