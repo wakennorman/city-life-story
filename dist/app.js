@@ -36768,6 +36768,191 @@ if (typeof window !== "undefined") {
       });
     })();
   })();
+
+  // ====== [全系统自洽修复] 域H R61 联动增强: 4项Phase2/公司域跨域桥接事件 ======
+  (function () {
+    // 事件1: 创业宣言 — Phase1→2过渡仪式（填补打工转创业无情感过渡的空白）
+    var ev_startup_declaration = {
+      id: "startup_declaration",
+      phase: "corporate",
+      icon: "🚀",
+      title: "创业宣言",
+      story: "公司注册下来的那天，你站在工商局门口，看着手里的营业执照，突然觉得这一切是真的了。\n从第一天来这座城市打零工到现在，你经历了无数个被拒绝的夜晚、无数次算不清的账、无数次想放弃的瞬间。而现在，你真的有了自己的公司。\n街角煎饼摊的王阿姨看到你，笑着说：「哟，老板了？」",
+      triggers: {
+        minDay: 180,
+        companyJustFormed: true,
+        excludeFlags: ["_startupDeclarationDone"],
+      },
+      choices: [
+        {
+          text: "📝 写下创业宣言，贴在办公室墙上",
+          hint: "morality+3, mood+8, 公司reputation+5",
+          apply: function (st) {
+            st.flags._startupDeclarationDone = true;
+            if (st.player) { st.player.morality = Math.min(100, (st.player.morality || 0) + 3); st.player.happiness = Math.min(100, (st.player.happiness || 0) + 8); }
+            if (st.startup && st.startup.company) st.startup.company.reputation = (st.startup.company.reputation || 0) + 5;
+            StateManager.addMessage("📝 你在一张纸上写下了自己的创业宣言：「从打零工到有尊严地赚钱，这条路我走了整整XX天。」贴在公司墙上，每次看到都提醒自己为什么出发。心情+8，道德+3。", "success");
+          },
+        },
+        {
+          text: "🍻 请最早的朋友吃顿饭",
+          hint: "心情+5, 老周/陈哥好感+8",
+          apply: function (st) {
+            st.flags._startupDeclarationDone = true;
+            if (st.player) st.player.happiness = Math.min(100, (st.player.happiness || 0) + 5);
+            if (st.relationships && st.relationships.old_zhou) st.relationships.old_zhou.affinity = Math.min(100, (st.relationships.old_zhou.affinity || 0) + 8);
+            if (st.relationships && st.relationships.chen_ge) st.relationships.chen_ge.affinity = Math.min(100, (st.relationships.chen_ge.affinity || 0) + 8);
+            StateManager.addMessage("🍻 你约了老周和陈哥吃饭。老周拍着你的肩膀说：「早就看你不对劲了，你不是干一辈子临时工的料。」陈哥则默默给你倒了杯酒。心情+5，老周和陈哥好感各+8。", "info");
+          },
+        },
+        {
+          text: "💰 把第一笔注册资金存定期",
+          hint: "现金-5000, 安全感+20, 理智+5",
+          apply: function (st) {
+            st.flags._startupDeclarationDone = true;
+            if (st.resources) { st.resources.cash = (st.resources.cash || 0) - 5000; }
+            if (st.player) { st.player.rationality = Math.min(100, (st.player.rationality || 0) + 5); }
+            StateManager.addMessage("💰 你把5000块存进了定期，告诉自己：不管公司成败，这笔钱是底线。理智+5。", "info");
+          },
+        },
+      ],
+    };
+
+    // 事件2: 首次晋升庆功 — 晋升后无仪式感的叙事修复
+    var ev_first_promo_celebration = {
+      id: "first_promo_celebration",
+      phase: "corporate",
+      icon: "🎉",
+      title: "晋升庆功宴",
+      story: "你收到了晋升邮件的那一刻，手机震动了一下。从实习生到正式员工，你在这家公司已经第XXX天了。\n同事们在群里发了红包，老板还特意在部门会议上表扬了你。你看着窗外这座城市的霓虹灯，想起刚来时的窘迫。",
+      triggers: {
+        minDay: 90,
+        excludeFlags: ["_firstPromoCelebDone"],
+      },
+      apply: function (st) {
+        st.flags._firstPromoCelebDone = true;
+        if (st.player) {
+          st.player.happiness = Math.min(100, (st.player.happiness || 0) + 10);
+          st.player.upwardMgmt = Math.min(100, (st.player.upwardMgmt || 0) + 3);
+        }
+        // 同事网络关系自动提升
+        if (st.relationships) {
+          var colleagues = ["boss_li", "colleague_zhang", "colleague_li"];
+          for (var i = 0; i < colleagues.length; i++) {
+            if (st.relationships[colleagues[i]]) {
+              st.relationships[colleagues[i]].affinity = Math.min(100, (st.relationships[colleagues[i]].affinity || 0) + 2);
+            }
+          }
+        }
+        StateManager.addMessage("🎉 晋升庆功宴！心情+10，管理能力+3，同事们好感各+2。你在城市里又多了一个值得骄傲的理由。", "success");
+      },
+      probability: 0.03,
+    };
+
+    // 事件3: 团队人才流失 — 员工离职的人性化叙事（填补团队系统无人性叙事的空白）
+    var ev_talent_departure = {
+      id: "ev_talent_departure",
+      phase: "corporate",
+      icon: "🚪",
+      title: "核心员工离职",
+      story: "早上到公司，发现小李的工位空了。桌上留了一封信和一个小蛋糕。\n「老板，对不起。家里安排我去南方发展，待遇比我这里好很多。谢谢你这段时间的照顾，这个小蛋糕是我请大家吃的。」\n你看着那封信，心里五味杂陈。小李是你公司最年轻的工程师，也是你亲手招进来的。",
+      triggers: {
+        minDay: 60,
+        excludeFlags: ["_talentDepartureDone"],
+      },
+      choices: [
+        {
+          text: "😢 给他发个红包祝福",
+          hint: "心情-3, 道德+5, 公司声誉+3",
+          apply: function (st) {
+            st.flags._talentDepartureDone = true;
+            st.flags._talentDepartureBlessing = true;
+            if (st.player) { st.player.happiness = Math.max(0, (st.player.happiness || 0) - 3); st.player.morality = Math.min(100, (st.player.morality || 0) + 5); }
+            if (st.startup && st.startup.company) st.startup.company.reputation = (st.startup.company.reputation || 0) + 3;
+            StateManager.addMessage("😢 你给小李发了一个红包：「出去好好干，以后有机会再合作。」小李回了个拥抱的表情。心情-3，道德+5，公司声誉+3。", "info");
+          },
+        },
+        {
+          text: "🤝 试试挽留，给更好的条件",
+          hint: "现金-3000, 留存率↑, 团队士气+5",
+          apply: function (st) {
+            st.flags._talentDepartureDone = true;
+            st.flags._talentDepartureRetained = true;
+            if (st.resources) st.resources.cash = (st.resources.cash || 0) - 3000;
+            if (st.player) st.player.happiness = Math.min(100, (st.player.happiness || 0) + 5);
+            if (st.startup && st.startup.company && st.startup.company.team) {
+              for (var i = 0; i < st.startup.company.team.length; i++) {
+                if (st.startup.company.team[i] && st.startup.company.team[i].morale) {
+                  st.startup.company.team[i].morale = Math.min(100, st.startup.company.team[i].morale + 5);
+                }
+              }
+            }
+            StateManager.addMessage("🤝 你给小李涨了20%的工资。他犹豫了一下，点了点头。现金-3000，团队士气+5。", "success");
+          },
+        },
+        {
+          text: "📋 办理离职手续，保持联系",
+          hint: "无额外效果，但节省现金",
+          apply: function (st) {
+            st.flags._talentDepartureDone = true;
+            st.flags._talentDepartureLeft = true;
+            StateManager.addMessage("📋 你帮他办了离职手续，加了微信说以后常联系。省下了加薪的钱，但心里总觉得少了点什么。", "info");
+          },
+        },
+      ],
+      probability: 0.02,
+    };
+
+    // 事件4: 季度报告社交溢出 — 季度绩效影响同事关系的叙事化（填补E→D跨域空白）
+    var ev_quarter_social_spillover = {
+      id: "ev_quarter_social_spillover",
+      phase: "corporate",
+      icon: "📊",
+      title: "季度报告后的社交涟漪",
+      story: "季度绩效报告出来了。你的部门表现不错，但隔壁部门的老赵好像不太高兴。\n中午吃饭的时候，老赵主动来找你：「听说你们部门这次绩效很好啊？我们组那个项目你也知道的，天天加班到十点。」\n你意识到，绩效不只是数字，它会影响办公室里的人际关系。",
+      triggers: {
+        minDay: 90,
+        excludeFlags: ["_quarterSocialSpilloverDone"],
+      },
+      choices: [
+        {
+          text: "🍔 请老赵吃顿饭，聊聊他们的困难",
+          hint: "现金-500, 老赵好感+10, 跨部门合作↑",
+          apply: function (st) {
+            st.flags._quarterSocialSpilloverDone = true;
+            if (st.resources) st.resources.cash = (st.resources.cash || 0) - 500;
+            if (st.relationships && st.relationships.boss_li) st.relationships.boss_li.affinity = Math.min(100, (st.relationships.boss_li.affinity || 0) + 10);
+            if (st.player) st.player.happiness = Math.min(100, (st.player.happiness || 0) + 3);
+            StateManager.addMessage("🍔 你请老赵吃了顿火锅。他说他们组确实不容易，但你部门的项目他也帮忙了不少。现金-500，boss_li好感+10，心情+3。", "success");
+          },
+        },
+        {
+          text: "😊 微笑听着，不表态",
+          hint: "无效果，但避免冲突",
+          apply: function (st) {
+            st.flags._quarterSocialSpilloverDone = true;
+            StateManager.addMessage("😊 你微笑着听老赵抱怨，但没有说什么。有时候，不说话就是最好的回答。", "info");
+          },
+        },
+        {
+          text: "💪 分享一些你的经验",
+          hint: "智力+2, 老赵好感+5, 团队协作↑",
+          apply: function (st) {
+            st.flags._quarterSocialSpilloverDone = true;
+            if (st.player) { st.player.intelligence = Math.min(100, (st.player.intelligence || 0) + 2); st.player.happiness = Math.min(100, (st.player.happiness || 0) + 2); }
+            if (st.relationships && st.relationships.boss_li) st.relationships.boss_li.affinity = Math.min(100, (st.relationships.boss_li.affinity || 0) + 5);
+            StateManager.addMessage("💪 你把自己的工作方法分享给了老赵。他说：「你说得对，我们确实太闷头干了。」智力+2，boss_li好感+5。", "info");
+          },
+        },
+      ],
+      probability: 0.04,
+    };
+
+    RANDOM_EVENTS.push(ev_startup_declaration);
+    RANDOM_EVENTS.push(ev_first_promo_celebration);
+    RANDOM_EVENTS.push(ev_talent_departure);
+    RANDOM_EVENTS.push(ev_quarter_social_spillover);
+  })();
 })();
 
 ;

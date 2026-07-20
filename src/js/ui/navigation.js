@@ -845,27 +845,7 @@ function initTabNavigation() {
         return;
       }
 
-      // 检查阶段限制
-      var state =
-        typeof StateManager !== "undefined" ? StateManager.getState() : null;
-      if (state) {
-        if (
-          tabName === "corp" &&
-          state.player &&
-          state.player.phase !== "corporate"
-        ) {
-          StateManager.addMessage("⛔ 职场 Tab 仅在公司阶段可用", "warning");
-          return;
-        }
-        if (
-          tabName === "trade" &&
-          state.player &&
-          state.player.phase !== "street"
-        ) {
-          StateManager.addMessage("⛔ 交易 Tab 仅在街头阶段可用", "warning");
-          return;
-        }
-      }
+      // [全系统自洽修复] 域F A类修复: 删除死代码 — v3.7合并后 corp/trade Tab 已不存在
 
       // 执行 Tab 切换
       if (typeof switchTab === "function") {
