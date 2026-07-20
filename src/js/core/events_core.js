@@ -652,7 +652,8 @@ function showEventModal(evt) {
           }
         }
         // v3.1 ⑤ 事件惩罚倍率：快照关键数值，结算后对负向 delta 乘算难度系数
-        var _preEvtCash = state.resources.cash;
+        // [全系统自洽修复] 域B A类#1: _preEvtCash NaN 守卫 — 防止旧存档/极端值导致现金永久损坏
+        var _preEvtCash = (typeof state.resources.cash === "number" && isFinite(state.resources.cash)) ? state.resources.cash : 0;
         var _preEvtHealth = (state.status && state.status.health) || 100;
         var _preEvtMental = state.player ? state.player.mental : 0;
         if (typeof choice.apply === "function") {
@@ -681,18 +682,22 @@ function showEventModal(evt) {
           var epMult = getDifficultyMultiplier(state, "eventPenalty");
           if (epMult !== 1.0) {
             // 仅对负向 delta（惩罚）应用倍率，不放大正向收益
-            var dCash = state.resources.cash - _preEvtCash;
+            // [全系统自洽修复] 域B A类#1: dCash/state.resources.cash NaN 守卫 — 扩散到 cash 则永久损坏
+            var dCash = (state.resources.cash || 0) - (_preEvtCash || 0);
+            if (!isFinite(dCash)) dCash = 0;
             if (dCash < 0)
-              state.resources.cash = _preEvtCash + Math.round(dCash * epMult);
+              state.resources.cash = (_preEvtCash || 0) + Math.round(dCash * epMult);
             if (state.stats) {
               var dHealth =
                 (state.status ? state.status.health : 100) - _preEvtHealth;
+              if (!isFinite(dHealth)) dHealth = 0;
               if (dHealth < 0)
                 state.status.health =
                   _preEvtHealth + Math.round(dHealth * epMult);
             }
             if (state.player) {
               var dMental = state.player.mental - _preEvtMental;
+              if (!isFinite(dMental)) dMental = 0;
               if (dMental < 0)
                 state.player.mental =
                   _preEvtMental + Math.round(dMental * epMult);
@@ -705,6 +710,15 @@ function showEventModal(evt) {
       // 清掉待弹事件（三字段全部清理）
       state._pendingEvent = null;
       state._pendingEventId = null;
+      // [全系统自洽修复] 域B 联动增强: 追踪每日事件触发次数（供日报使用）
+      if (state.flags) {
+        if (!state.flags._dailyEventCount || state.flags._dailyEventDay !== state.player.day) {
+          state.flags._dailyEventCount = 1;
+          state.flags._dailyEventDay = state.player.day;
+        } else {
+          state.flags._dailyEventCount++;
+        }
+      }
       // 关闭弹窗 + 重新渲染
       document.body.removeChild(overlay);
       renderAll();

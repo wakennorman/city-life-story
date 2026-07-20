@@ -838,6 +838,14 @@ function generateDailyReportSummary(state, incomes, expenses) {
     }
   }
 
+  // [全系统自洽修复] 域B 联动增强: 今日事件触发计数纳入日报（B→F）
+  try {
+    var _evtCount = state.flags && state.flags._dailyEventCount;
+    if (_evtCount && _evtCount > 0) {
+      highlights.push("📜 今日触发 " + _evtCount + " 个事件，城中故事不断");
+    }
+  } catch (e) {}
+
   // 30天回顾
   if (reportDay > 0 && reportDay % 30 === 0 && state.flags._cashHistory) {
     var history = state.flags._cashHistory;

@@ -760,8 +760,11 @@ const MORAL_EVENTS = [
         flag: "moral_cat_rescue",
         score: 12,
         immediate: function (s) {
+          // [全系统自洽修复] 域B A类#2: cash NaN 守卫 — 防止事件扣款永久损坏现金
+          if (typeof s.resources.cash !== "number" || !isFinite(s.resources.cash)) s.resources.cash = 0;
           s.resources.cash -= Random.int(80, 150);
-          s.needs.happiness = Math.min(100, s.needs.happiness + 10);
+          s.resources.cash = Math.max(0, s.resources.cash);
+          s.needs.happiness = Math.min(100, (s.needs.happiness || 50) + 10);
           s.player.fame = Math.min(100, (s.player.fame || 0) + 3);
           StateManager.addMessage(
             "🏥 宠物医生说小猫能救活，你心里暖暖的。",
