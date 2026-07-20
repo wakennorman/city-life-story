@@ -79,6 +79,9 @@ function applyPromotion(state, newRank) {
   if (!state.player || !state.player.corporate) return;
   const oldRank = state.corporate.rank;
   state.corporate.rank = newRank;
+  // [全系统自洽修复] 域C 联动: 记录晋升总次数，供C→D晋升社交涟漪事件(_careerPromotionNpcCongrats)使用
+  if (!state.flags) state.flags = {};
+  state.flags._totalPromotions = (state.flags._totalPromotions || 0) + 1;
   // [全系统自洽修复] 域H 修复:晋升时同步更新corporate.level(P5→1, P6→2, ...)
   var _rankMatch = newRank && newRank.match(/P(\d+)/);
   state.corporate.level = _rankMatch ? parseInt(_rankMatch[1], 10) - 4 : 1;

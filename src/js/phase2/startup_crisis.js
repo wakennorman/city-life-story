@@ -473,8 +473,12 @@ function handleCrisisChoice(crisisId, optionIndex) {
  */
 function applyCrisisChoice(state, crisisId, option) {
   const startup = state.startup;
-  const company = startup.company;
-  if (!company) return;
+  const company = startup?.company;
+  // [全系统自洽修复] 域H R61: startup.company/null守卫+清理pendingCrisis
+  if (!company) {
+    state._pendingCrisis = null;
+    return;
+  }
 
   // 计算成功率
   const success = Random.chance(option.successChance);

@@ -1749,6 +1749,16 @@ function renderCareerOverview(state, parent) {
       burnColor +
       ';border-radius:3px;transition:width 0.3s;"></div></div></div>';
     html += "</div>";
+    // [全系统自洽修复] 域C联动: 高倦怠→健康预警展示 (C→G/F 联动)
+    if (burnout >= 60) {
+      var bleedWarn = Math.floor((burnout - 60) / 20);
+      if (bleedWarn >= 1) {
+        html +=
+          '<div style="margin-top:4px;font-size:9px;color:var(--danger);">⚠️ 高压侵蚀健康：每日最高-' +
+          bleedWarn +
+          "健康，务必安排休息</div>";
+      }
+    }
 
     // 晋升进度
     if (nextLevel) {
@@ -2326,7 +2336,7 @@ function initCareerColleagues(state) {
     { type: "社交达人", bonus: "人脉广" },
     { type: "技术宅", bonus: "技术强" },
   ];
-  var n = 2 + Math.floor(Math.random() * 2);
+  var n = Random.int(2, 3);
   for (var i = 0; i < n; i++) {
     net.push({
       id:
@@ -2335,12 +2345,12 @@ function initCareerColleagues(state) {
         "_" +
         i +
         "_" +
-        Math.random().toString(36).slice(2, 8),
-      name: names[Math.floor(Math.random() * names.length)],
+        Random.int(10000, 99999),
+      name: Random.fromArray(names),
       role: "neutral",
-      personality: traits[Math.floor(Math.random() * traits.length)],
-      relationship: 20 + Math.floor(Math.random() * 20),
-      trust: 15 + Math.floor(Math.random() * 15),
+      personality: Random.fromArray(traits),
+      relationship: 20 + Random.int(0, 19),
+      trust: 15 + Random.int(0, 14),
       lastInteraction: state.player.day,
     });
   }
@@ -2402,10 +2412,10 @@ function careerSocialAction(action, colleagueId) {
       return;
     }
     p.actionPoints -= 1;
-    var cg = 2 + Math.floor(Math.random() * 3);
+    var cg = Random.int(2, 4);
     c.relationship = Math.min(100, (c.relationship || 0) + cg);
     c.lastInteraction = p.day;
-    var lead = Math.random() < 0.3;
+    var lead = Random.chance(0.3);
     if (lead) cap.clientLeads = (cap.clientLeads || 0) + 1;
     clampCareerCapital(cap);
     StateManager.addMessage(
@@ -2464,7 +2474,7 @@ function careerWorkAction(type) {
     job.performance = Math.min(100, (job.performance || 50) + 8);
     cap.burnout = (cap.burnout || 0) + 3;
     cap.industryResources = (cap.industryResources || 0) + 2;
-    var leadP = Math.random() < 0.1;
+    var leadP = Random.chance(0.1);
     if (leadP) cap.clientLeads = (cap.clientLeads || 0) + 3;
     clampCareerCapital(cap);
     StateManager.addMessage(

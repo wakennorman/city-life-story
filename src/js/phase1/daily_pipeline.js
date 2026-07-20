@@ -665,6 +665,38 @@ const DAILY_PIPELINE = [
     },
   },
 
+  // === 域C联动: 职业倦怠→健康损耗 (C→G) ===
+  // 长期高压工作积累的职业倦怠(burnout)开始侵蚀健康——反映真实打工人的慢性病风险
+  {
+    name: "career_burnout_health_bleed",
+    fn: function (state) {
+      // [全系统自洽修复] 域C联动: 职业倦怠接入健康子系统
+      if (!state) return;
+      if (state.player && state.player.phase === "street") return;
+      var cap = state.careerCapital || {};
+      var burnout = cap.burnout || 0;
+      if (burnout < 60) return; // 倦怠值<60不触发（正常范围）
+      var bleed = Math.floor((burnout - 60) / 20); // 60→0, 80→1, 100→2
+      if (bleed <= 0) return;
+      if (typeof StateManager === "undefined") return;
+      // 健康损耗（status.health 或 stats.health）
+      var healthPath = state.status && typeof state.status.health === "number"
+        ? state.status
+        : (state.stats && typeof state.stats.health === "number" ? state.stats : null);
+      if (healthPath) {
+        var before = healthPath.health;
+        healthPath.health = Math.max(0, before - bleed);
+      }
+      // 仅在严重时推送消息（避免刷屏）
+      if (burnout >= 80 && bleed >= 1 && state.player && state.player.day % 7 === 0) {
+        StateManager.addMessage(
+          "😰 连续高压工作，身体亮起红灯。健康-" + bleed + "，倦怠值" + burnout,
+          "warning"
+        );
+      }
+    },
+  },
+
   // === Phase 2 个人成长每日 tick ===
   {
     name: "personal_growth_daily",

@@ -3829,7 +3829,8 @@ function resolveCrisisEvent(state, optionIndex) {
   const option = CRISIS_RESPONSE_OPTIONS[optionKey];
   if (!option) return { success: false, message: "无效应对方案" };
 
-  // 检查费用
+  // [全系统自洽修复] 域H R61: cashReserve扣费前NaN守卫
+  if (!isFinite(company.cashReserve)) company.cashReserve = 0;
   if (company.cashReserve < option.cost) {
     return {
       success: false,
