@@ -5019,6 +5019,15 @@ function showEventModal(evt) {
       // 清掉待弹事件（三字段全部清理）
       state._pendingEvent = null;
       state._pendingEventId = null;
+      // [全系统自洽修复] 域B 联动增强: 追踪每日事件触发次数（供日报使用）
+      if (state.flags) {
+        if (!state.flags._dailyEventCount || state.flags._dailyEventDay !== state.player.day) {
+          state.flags._dailyEventCount = 1;
+          state.flags._dailyEventDay = state.player.day;
+        } else {
+          state.flags._dailyEventCount++;
+        }
+      }
       // 关闭弹窗 + 重新渲染
       document.body.removeChild(overlay);
       renderAll();
@@ -98582,6 +98591,8 @@ const EconomySystem = (function () {
 
   // 连续盈利衰减系数
   function getConsecutiveWinDecay(consecutiveWins) {
+    // [全系统自洽修复] 域E A类#12: consecutiveWins NaN 防御
+    if (typeof consecutiveWins !== "number" || !isFinite(consecutiveWins)) return 1.0;
     if (consecutiveWins < INVESTMENT_CAPS.decayStart) return 1.0;
     const excess = consecutiveWins - INVESTMENT_CAPS.decayStart + 1;
     // 每多一次衰减 8%, 最大衰减 50%
@@ -98591,6 +98602,9 @@ const EconomySystem = (function () {
 
   // 市场饱和度: 当玩家总资产/城市总财富比超过阈值时, 投资收益下降
   function getMarketSaturationPenalty(playerAssets, cityWealth, difficulty) {
+    // [全系统自洽修复] 域E A类#13: playerAssets/cityWealth NaN 防御
+    if (typeof playerAssets !== "number" || !isFinite(playerAssets) || playerAssets <= 0) return 1.0;
+    if (typeof cityWealth !== "number" || !isFinite(cityWealth) || cityWealth <= 0) return 1.0;
     const ratio = playerAssets / cityWealth;
     const threshold =
       difficulty === "hard"
@@ -128856,7 +128870,10 @@ function getNewsInvestmentSummary(state) {
     var avgMul = 0;
     var count = 0;
     for (var ei = 0; ei < effects.length; ei++) {
-      avgMul += effects[ei].mul;
+      // [全系统自洽修复] 域E A类#14: eff.mul NaN 防御
+      var _mul = effects[ei].mul;
+      if (typeof _mul !== "number" || !isFinite(_mul)) continue;
+      avgMul += _mul;
       count++;
     }
     avgMul = count > 0 ? avgMul / count : 1;
@@ -183291,6 +183308,11 @@ function updateStockPrices(state, forceNews = false) {
 /** 买入股票 */
 function buyStock(symbol, shares) {
   const state = StateManager.getState();
+  // [全系统自洽修复] 域E A类#5: state.corporate 守卫
+  if (!state.corporate || !state.corporate.stockMarket) {
+    StateManager.addMessage("⚠️ 股票市场未初始化。", "warning");
+    return false;
+  }
   const market = state.corporate.stockMarket[symbol];
   if (!market) {
     StateManager.addMessage("⚠️ 不存在的股票。", "danger");
@@ -183363,6 +183385,11 @@ function buyStock(symbol, shares) {
 /** 卖出股票 */
 function sellStock(symbol, shares) {
   const state = StateManager.getState();
+  // [全系统自洽修复] 域E A类#6: state.corporate.stocks 守卫
+  if (!state.corporate || !state.corporate.stocks) {
+    StateManager.addMessage("⚠️ 股票持仓未初始化。", "warning");
+    return false;
+  }
   const holding = state.corporate.stocks.find((s) => s.symbol === symbol);
   if (!holding || holding.shares < shares || !isFinite(shares) || shares <= 0) {
     StateManager.addMessage("⚠️ 持仓不足。", "danger");
@@ -185682,6 +185709,11 @@ function buyInvStock(symbol, shares) {
 
   var state = StateManager.getState();
   var inv = state.investment;
+  // [全系统自洽修复] 域E A类#3: inv/stockMarket 守卫
+  if (!inv || !inv.stockMarket) {
+    StateManager.addMessage("⚠️ 投资系统未初始化。", "warning");
+    return false;
+  }
   var m = inv.stockMarket[symbol];
   if (!m) return;
   if (shares <= 0) {
@@ -185755,6 +185787,11 @@ function sellInvStock(symbol, shares) {
 
   var state = StateManager.getState();
   var inv = state.investment;
+  // [全系统自洽修复] 域E A类#4: inv/stockHoldings 守卫
+  if (!inv || !inv.stockHoldings) {
+    StateManager.addMessage("⚠️ 投资系统未初始化。", "warning");
+    return false;
+  }
   var h = inv.stockHoldings.find(function (s) {
     return s.symbol === symbol;
   });
@@ -188613,9 +188650,12 @@ function tickPropertyMarket(state) {
 
     var changeMult = calculatePropertyDailyChange(prop, def, state);
 
+    // [全系统自洽修复] 域E A类#2: currentPrice 可能为0（被保底逻辑重置），用 != null 避免0被误判为缺失
+    var currentPrice = (prop.currentPrice != null && !isNaN(prop.currentPrice)) ? prop.currentPrice : prop.buyPrice;
     prop.currentPrice = Math.round(
-      (prop.currentPrice || prop.buyPrice) * changeMult,
+      (currentPrice || prop.buyPrice) * changeMult,
     );
+    if (!isFinite(prop.currentPrice)) prop.currentPrice = prop.buyPrice || 0;
     // 保底价（不低于买入价的 10%，防止归零）
     var floor = Math.round((prop.buyPrice || 0) * 0.1);
     if (prop.currentPrice < floor) prop.currentPrice = floor;
@@ -188887,7 +188927,9 @@ function calculatePropertyDailyChange(prop, propDef, state) {
   }
 
   // 总变化率
-  var totalDrift = cycleDrift + sectorDrift + policyDrift + baseAppr + noise;
+  // [全系统自洽修复] 域E A类#1: totalDrift NaN 防御（任一组件 NaN 会导致所有房产价格永久损坏）
+  var totalDrift = (cycleDrift || 0) + (sectorDrift || 0) + (policyDrift || 0) + (baseAppr || 0) + (noise || 0);
+  if (!isFinite(totalDrift)) totalDrift = 0;
 
   // 限制单日最大涨跌幅度（防止极端值）
   totalDrift = Math.max(-0.08, Math.min(0.08, totalDrift));
@@ -205569,7 +205611,8 @@ const LEVERAGE_SETTINGS = {
  * 计算移动平均线
  */
 function calculateMA(prices, period) {
-  if (prices.length < period) return null;
+  // [全系统自洽修复] 域E A类#7: prices 守卫
+  if (!prices || !Array.isArray(prices) || prices.length < period) return null;
   const slice = prices.slice(-period);
   const sum = slice.reduce((a, b) => a + b.price, 0);
   return sum / period;
@@ -205579,7 +205622,8 @@ function calculateMA(prices, period) {
  * 计算EMA（指数移动平均）
  */
 function calculateEMA(prices, period) {
-  if (prices.length < period) return null;
+  // [全系统自洽修复] 域E A类#8: prices 守卫
+  if (!prices || !Array.isArray(prices) || prices.length < period) return null;
   const k = 2 / (period + 1);
   let ema = prices[0].price;
   for (let i = 1; i < prices.length; i++) {
@@ -205926,6 +205970,8 @@ function analyzePortfolio(state) {
 function setStopLoss(state, symbol, type, params) {
   const inv = state.investment;
   if (!inv) return { success: false, message: "投资系统未初始化" };
+  // [全系统自洽修复] 域E A类#10: stockHoldings 守卫
+  if (!inv.stockHoldings) return { success: false, message: "无持仓数据" };
 
   const holding = inv.stockHoldings.find((h) => h.symbol === symbol);
   if (!holding) return { success: false, message: "没有该股票的持仓" };
@@ -205955,6 +206001,9 @@ function setStopLoss(state, symbol, type, params) {
 function checkStopLoss(state) {
   const inv = state.investment;
   if (!inv || !inv.stopLossOrders) return;
+  // [全系统自洽修复] 域E A类#11: state.player/stockMarket 守卫
+  if (!state.player) return;
+  if (!inv.stockMarket) return;
 
   const today = state.player.day;
   const triggeredOrders = [];
@@ -206027,7 +206076,8 @@ function checkStopLoss(state) {
  * 计算夏普比率（简化版）
  */
 function calculateSharpeRatio(prices, riskFreeRate = 0.03) {
-  if (prices.length < 30) return null;
+  // [全系统自洽修复] 域E A类#9: prices 守卫
+  if (!prices || !Array.isArray(prices) || prices.length < 30) return null;
 
   // 计算日收益率
   const returns = [];
@@ -213808,6 +213858,7 @@ function renderTimeSlot(state, parent) {
   div.style.cssText = `display:flex;align-items:center;gap:6px;padding:6px 12px;background:var(--bg-card);border-radius:8px;margin-bottom:6px;${lowAp ? "border:2px solid var(--warning);box-shadow:0 0 12px rgba(196,154,58,0.35);animation:ap-blink-border 1.5s infinite;" : "border:1px solid var(--border);"}`;
   div.innerHTML = `
     <span style="white-space:nowrap;">📅 第 <strong>${state.player.day}</strong> 天</span>
+    ${typeof getEmotionIcon === "function" ? `<span style="font-size:14px;line-height:1;">${getEmotionIcon(state)}</span>` : ""}
     <span style="color:var(--text-muted);">|</span>
     <span class="time-slot-badge ${slot}">${slotNames[slot]}</span>
     <span style="white-space:nowrap;font-size:12px;margin-left:auto;">
@@ -231829,6 +231880,14 @@ function generateDailyReportSummary(state, incomes, expenses) {
     }
   }
 
+  // [全系统自洽修复] 域B 联动增强: 今日事件触发计数纳入日报（B→F）
+  try {
+    var _evtCount = state.flags && state.flags._dailyEventCount;
+    if (_evtCount && _evtCount > 0) {
+      highlights.push("📜 今日触发 " + _evtCount + " 个事件，城中故事不断");
+    }
+  } catch (e) {}
+
   // 30天回顾
   if (reportDay > 0 && reportDay % 30 === 0 && state.flags._cashHistory) {
     var history = state.flags._cashHistory;
@@ -235374,7 +235433,7 @@ function generateJobOffers(state) {
       path: job.path,
       levelId: nl.id,
       levelName: nl.name,
-      salary: Math.round(nl.salary * 0.95),
+      salary: Math.round((nl.salary || 0) * 0.95),
       desc: "同行业晋升跳（职级升半级，月薪随职级）",
     });
   }
@@ -235392,7 +235451,7 @@ function generateJobOffers(state) {
       // 跨路径薪资下限：不低于当前薪资×0.85，避免跳槽反而降薪
       var cross1Salary = Math.max(
         Math.round((job.salary || 5000) * 0.85),
-        Math.round(p1.levels[idx1].salary * 1.1),
+        Math.round((p1.levels[idx1].salary || 0) * 1.1),
       );
       offers.push({
         id: "hop_cross1",

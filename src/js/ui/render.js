@@ -1206,6 +1206,7 @@ function renderTimeSlot(state, parent) {
   div.style.cssText = `display:flex;align-items:center;gap:6px;padding:6px 12px;background:var(--bg-card);border-radius:8px;margin-bottom:6px;${lowAp ? "border:2px solid var(--warning);box-shadow:0 0 12px rgba(196,154,58,0.35);animation:ap-blink-border 1.5s infinite;" : "border:1px solid var(--border);"}`;
   div.innerHTML = `
     <span style="white-space:nowrap;">📅 第 <strong>${state.player.day}</strong> 天</span>
+    ${typeof getEmotionIcon === "function" ? `<span style="font-size:14px;line-height:1;">${getEmotionIcon(state)}</span>` : ""}
     <span style="color:var(--text-muted);">|</span>
     <span class="time-slot-badge ${slot}">${slotNames[slot]}</span>
     <span style="white-space:nowrap;font-size:12px;margin-left:auto;">
