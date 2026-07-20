@@ -182958,6 +182958,22 @@ function applyPromotion(state, newRank) {
     "success",
   );
 
+  // [全系统自洽修复] 域H 联动增强7: 晋升里程碑UI消息（H→F）— 显示下一职级晋升条件预览
+  if (rankData.next) {
+    var nextRankData = CORP_RANKS[rankData.next];
+    if (nextRankData && nextRankData.promotionReqs) {
+      var nextReqs = nextRankData.promotionReqs;
+      var reqParts = [];
+      if (nextReqs.minAbility) reqParts.push("能力≥" + nextReqs.minAbility);
+      if (nextReqs.minUpward) reqParts.push("向上管理≥" + nextReqs.minUpward);
+      if (nextReqs.minPopularity) reqParts.push("人缘≥" + nextReqs.minPopularity);
+      if (nextReqs.minTeamSize) reqParts.push("团队≥" + nextReqs.minTeamSize + "人");
+      if (nextReqs.minGrade) reqParts.push("绩效≥" + nextReqs.minGrade);
+      var nextRankName = nextRankData.name || rankData.next;
+      StateManager.addMessage("🎯 下一站: " + nextRankName + " — 需要" + reqParts.join("、"), "hint");
+    }
+  }
+
   if (newRank === "P10") {
     checkCorpWinConditions(state);
   }
@@ -183900,6 +183916,16 @@ function doCorporateAction(actionId) {
   state.corporate.actionsUsed++;
   StateManager.addMessage(`${action.icon} ${action.name}完成！`, "success");
 
+  // [全系统自洽修复] 域H 联动增强4: 季度行动进度指示器（H→F）
+  var rankDataProgress = state.corporate.rank ? CORP_RANKS[state.corporate.rank] : null;
+  var maxActs = rankDataProgress ? rankDataProgress.maxActions : 3;
+  var used = state.corporate.actionsUsed;
+  var barLen = 10;
+  var filled = Math.round((used / maxActs) * barLen);
+  var empty = barLen - filled;
+  var progressBar = "█".repeat(filled) + "░".repeat(empty);
+  StateManager.addMessage(`📊 季度行动进度: [${progressBar}] ${used}/${maxActs}`, "hint");
+
   // 检查季度是否用完
   const rankData = CORP_RANKS[state.corporate.rank];
   const maxActions = rankData ? rankData.maxActions : 3;
@@ -183976,6 +184002,26 @@ function endQuarter() {
     `💰 Q${c.corpQuarter} 结束。工资到账 ¥${salary.toLocaleString()}。绩效: ${grade.grade}`,
     "success",
   );
+
+  // [全系统自洽修复] 域H 联动增强6: 季度绩效影响职场同事关系（H→D）
+  if (typeof addDailyTransaction === "function" && state.relationships) {
+    var gradeAffinityMap = { "S+": 5, S: 4, A: 3, B: 1, C: -2 };
+    var affinityChange = gradeAffinityMap[grade.grade] || 0;
+    if (affinityChange !== 0) {
+      var workplaceNPCs = ["boss_li", "xiao_mei", "zhaojie", "old_zhou"];
+      for (var wi = 0; wi < workplaceNPCs.length; wi++) {
+        var npcRel = state.relationships[workplaceNPCs[wi]];
+        if (npcRel && npcRel.met) {
+          npcRel.affinity = Math.max(0, Math.min(100, (npcRel.affinity || 50) + affinityChange));
+        }
+      }
+      if (affinityChange > 0) {
+        StateManager.addMessage("📈 好绩效让同事们对你刮目相看，好感度+" + affinityChange + "。", "success");
+      } else if (affinityChange < 0) {
+        StateManager.addMessage("📉 绩效不佳，同事们看你的眼神有点微妙，好感度" + affinityChange + "。", "warning");
+      }
+    }
+  }
 
   // Q1 年终奖（发放后清除冲刺标记）
   if (c.corpQuarter === 1 && c.perfHistory.length >= 4) {
@@ -184071,6 +184117,21 @@ function endQuarter() {
   // ====== Phase 2: 检查交易处罚是否到期 ======
   if (typeof checkTradingPenalty === "function") {
     checkTradingPenalty(state);
+  }
+
+  // [全系统自洽修复] 域H 联动增强5: 职场压力累积叙事（H→B）— 风险过高时触发倦怠反思
+  var riskLevel = c.risk || 0;
+  if (riskLevel > 70) {
+    var burnoutMsg = "😰 职场风险等级已达" + riskLevel + "，你感到身心俱疲。";
+    if (riskLevel > 85) {
+      burnoutMsg += " 连续的高压工作让你开始怀疑自己是否还能撑下去。";
+      state.needs.fatigue = Math.min(100, (state.needs.fatigue || 0) + 5);
+      state.needs.happiness = Math.max(0, (state.needs.happiness || 50) - 5);
+    } else {
+      burnoutMsg += " 你告诉自己再坚持一下，但身体在发出警告。";
+      state.needs.fatigue = Math.min(100, (state.needs.fatigue || 0) + 3);
+    }
+    StateManager.addMessage(burnoutMsg, "warning");
   }
 
   // 推进季度

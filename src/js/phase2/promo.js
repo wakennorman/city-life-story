@@ -117,6 +117,22 @@ function applyPromotion(state, newRank) {
     "success",
   );
 
+  // [全系统自洽修复] 域H 联动增强7: 晋升里程碑UI消息（H→F）— 显示下一职级晋升条件预览
+  if (rankData.next) {
+    var nextRankData = CORP_RANKS[rankData.next];
+    if (nextRankData && nextRankData.promotionReqs) {
+      var nextReqs = nextRankData.promotionReqs;
+      var reqParts = [];
+      if (nextReqs.minAbility) reqParts.push("能力≥" + nextReqs.minAbility);
+      if (nextReqs.minUpward) reqParts.push("向上管理≥" + nextReqs.minUpward);
+      if (nextReqs.minPopularity) reqParts.push("人缘≥" + nextReqs.minPopularity);
+      if (nextReqs.minTeamSize) reqParts.push("团队≥" + nextReqs.minTeamSize + "人");
+      if (nextReqs.minGrade) reqParts.push("绩效≥" + nextReqs.minGrade);
+      var nextRankName = nextRankData.name || rankData.next;
+      StateManager.addMessage("🎯 下一站: " + nextRankName + " — 需要" + reqParts.join("、"), "hint");
+    }
+  }
+
   if (newRank === "P10") {
     checkCorpWinConditions(state);
   }
