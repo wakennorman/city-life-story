@@ -1773,6 +1773,30 @@ const DAILY_PIPELINE = [
     },
   },
 
+  // === 技能连携被动收入（域C 深度开发）===
+  {
+    name: "skill_synergy_income",
+    fn: function (state) {
+      if (!state.skillSynergies || !state.skillSynergies.effects) return;
+      var effects = state.skillSynergies.effects;
+      var totalPassive = 0;
+      // 检查所有被动收入效果
+      var passiveKeys = ["passiveInvestmentIncome", "passiveRestaurantIncome", "passiveStockIncome", "passiveSmartHomeIncome", "passiveLogisticsIncome"];
+      for (var pi = 0; pi < passiveKeys.length; pi++) {
+        var pk = passiveKeys[pi];
+        if (typeof effects[pk] === "number" && isFinite(effects[pk]) && effects[pk] > 0) {
+          totalPassive += effects[pk];
+        }
+      }
+      if (totalPassive > 0) {
+        state.resources.cash = (state.resources.cash || 0) + totalPassive;
+        if (typeof addDailyTransaction === "function") {
+          addDailyTransaction(state, "income", "investment_income", totalPassive, "技能连携被动收入");
+        }
+      }
+    },
+  },
+
   // === 新闻桥接（新闻→事件权重 + 价格情绪）===
   {
     name: "news_bridge",

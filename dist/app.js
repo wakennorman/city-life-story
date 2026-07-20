@@ -142320,8 +142320,8 @@ const SKILL_SYNERGY_DUAL = {
       investmentIncomeBonus: 0.3,
       // 股票交易手续费-50%
       tradingFeeReduction: 0.5,
-      // 解锁高级投资分析
-      unlockActions: [], // advanced_investment_analysis 待实现
+      // [全系统自洽修复] 域C 深度开发: 实装连携解锁工作
+      unlockJobs: ["finance_analyst"],
       // 每日被动收入+¥50（来自投资）
       passiveInvestmentIncome: 50,
     },
@@ -178960,6 +178960,30 @@ const DAILY_PIPELINE = [
         var synergyResults = checkSkillSynergies(state);
         // 将连携结果存入 state 供渲染使用
         state.skillSynergies = synergyResults;
+      }
+    },
+  },
+
+  // === 技能连携被动收入（域C 深度开发）===
+  {
+    name: "skill_synergy_income",
+    fn: function (state) {
+      if (!state.skillSynergies || !state.skillSynergies.effects) return;
+      var effects = state.skillSynergies.effects;
+      var totalPassive = 0;
+      // 检查所有被动收入效果
+      var passiveKeys = ["passiveInvestmentIncome", "passiveRestaurantIncome", "passiveStockIncome", "passiveSmartHomeIncome", "passiveLogisticsIncome"];
+      for (var pi = 0; pi < passiveKeys.length; pi++) {
+        var pk = passiveKeys[pi];
+        if (typeof effects[pk] === "number" && isFinite(effects[pk]) && effects[pk] > 0) {
+          totalPassive += effects[pk];
+        }
+      }
+      if (totalPassive > 0) {
+        state.resources.cash = (state.resources.cash || 0) + totalPassive;
+        if (typeof addDailyTransaction === "function") {
+          addDailyTransaction(state, "income", "investment_income", totalPassive, "技能连携被动收入");
+        }
       }
     },
   },
@@ -234563,6 +234587,74 @@ const CAREER_PATHS = {
         reqWorkDays: 3650,
         desc: "主管科室全面工作，承担政策制定与执行",
         reqSocial: 65,
+      },
+    ],
+  },
+  // [全系统自洽修复] 域C 深度开发: 新增法律路径
+  legal: {
+    name: "法律服务",
+    icon: "⚖️",
+    category: "white_collar",
+    levels: [
+      {
+        id: "legal_assistant", name: "法律助理", minAge: 22,
+        reqSkills: { english: 10 }, reqAttrs: { intelligence: 25 },
+        salary: 6000, reqEducation: 1,
+        desc: "整理案卷、法律检索、起草文书",
+      },
+      {
+        id: "legal_officer", name: "法务专员", minAge: 25,
+        reqSkills: { english: 20, management: 10 }, reqAttrs: { intelligence: 35, mental: 25 },
+        salary: 11000, reqEducation: 1, reqWorkDays: 365,
+        desc: "独立处理合同审核、法律咨询、纠纷调解",
+      },
+      {
+        id: "legal_senior", name: "资深法务", minAge: 28,
+        reqSkills: { english: 30, management: 25 }, reqAttrs: { intelligence: 48, mental: 38 },
+        salary: 20000, reqEducation: 1, reqWorkDays: 1095,
+        desc: "重大合同谈判、诉讼策略、团队指导",
+        reqSocial: 40,
+      },
+      {
+        id: "legal_director", name: "法务总监", minAge: 32,
+        reqSkills: { english: 40, management: 40 }, reqAttrs: { intelligence: 58, mental: 50, charm: 35 },
+        salary: 35000, reqEducation: 1, reqWorkDays: 2190,
+        desc: "法务部全面管理、公司治理、合规体系搭建",
+        reqSocial: 55,
+      },
+    ],
+  },
+  // [全系统自洽修复] 域C 深度开发: 新增教育路径
+  education: {
+    name: "教育培训",
+    icon: "📚",
+    category: "white_collar",
+    levels: [
+      {
+        id: "edu_assistant", name: "助教", minAge: 20,
+        reqSkills: { social: 10 }, reqAttrs: { mental: 20 },
+        salary: 5000, reqEducation: 1,
+        desc: "协助主讲老师批改作业、课后辅导、维持课堂纪律",
+      },
+      {
+        id: "edu_teacher", name: "教师", minAge: 23,
+        reqSkills: { social: 20, management: 10 }, reqAttrs: { mental: 30, intelligence: 30 },
+        salary: 9000, reqEducation: 1, reqWorkDays: 365,
+        desc: "独立备课授课、班级管理、家校沟通",
+      },
+      {
+        id: "edu_senior", name: "高级教师", minAge: 28,
+        reqSkills: { social: 35, management: 25 }, reqAttrs: { mental: 42, intelligence: 42 },
+        salary: 16000, reqEducation: 1, reqWorkDays: 1095,
+        desc: "学科带头人、教研组长、课程开发",
+        reqSocial: 35,
+      },
+      {
+        id: "edu_director", name: "教务主任", minAge: 32,
+        reqSkills: { social: 45, management: 40 }, reqAttrs: { mental: 50, intelligence: 50, charm: 30 },
+        salary: 28000, reqEducation: 1, reqWorkDays: 2190,
+        desc: "教务管理、师资培训、教学质量管理",
+        reqSocial: 50,
       },
     ],
   },
