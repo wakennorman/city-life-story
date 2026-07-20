@@ -145,6 +145,18 @@ function determineEmotionalState(state) {
   else emotionalState = "elated";
 
   state.status.emotionalState = emotionalState;
+
+  // [全系统自洽修复] 域G 联动增强: 首次达到 elated 状态时发送庆祝消息
+  if (emotionalState === "elated" && !state.flags._everElated) {
+    state.flags._everElated = true;
+    StateManager.addMessage("🌟 你感觉自己状态极佳！今天做什么都特别顺手！", "success");
+  }
+  // 首次进入抑郁/悲伤时发送关注提示
+  if (emotionalState === "depressed" && !state.flags._everDepressed) {
+    state.flags._everDepressed = true;
+    StateManager.addMessage("😢 你感到前所未有的低落。也许该找人聊聊，或者好好休息一下。", "warning");
+  }
+
   return emotionalState;
 }
 
