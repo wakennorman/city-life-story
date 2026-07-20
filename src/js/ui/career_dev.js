@@ -1822,6 +1822,56 @@ function renderCareerOverview(state, parent) {
     html += "</div></div></div>";
   }
 
+  // === [全系统自洽修复] 域C 联动增强: 技能连携状态（C→F，daily_pipeline 计算但 career UI 未展示）===
+  if (
+    state.skillSynergies &&
+    ((state.skillSynergies.dual && Object.keys(state.skillSynergies.dual).length) ||
+      (state.skillSynergies.triple &&
+        Object.keys(state.skillSynergies.triple).length) ||
+      (state.skillSynergies.theme &&
+        Object.keys(state.skillSynergies.theme).length))
+  ) {
+    html +=
+      '<div class="section" style="margin-top:8px;"><h3>🔗 技能连携</h3><div class="card" style="padding:10px;">';
+    var _synergyTypes = [
+      { key: "dual", label: "双技能", color: "#4a9e5c" },
+      { key: "triple", label: "三技能", color: "#4a6cf7" },
+      { key: "theme", label: "主题", color: "#e8b84c" },
+    ];
+    for (var _sti = 0; _sti < _synergyTypes.length; _sti++) {
+      var _st = _synergyTypes[_sti];
+      var _syn = state.skillSynergies[_st.key];
+      if (!_syn) continue;
+      for (var _sid in _syn) {
+        if (!_syn.hasOwnProperty(_sid)) continue;
+        var _s = _syn[_sid];
+        if (!_s) continue;
+        var _name = _s.name || _sid;
+        html +=
+          '<div style="font-size:11px;font-weight:bold;color:' +
+          _st.color +
+          ';margin-top:4px;">' +
+          _st.label +
+          " · " +
+          _wkE(_name) +
+          "</div>";
+        if (_s.effects) {
+          for (var _ek in _s.effects) {
+            if (!_s.effects.hasOwnProperty(_ek)) continue;
+            if (_ek === "unlockJobs" || _ek === "unlockActions") continue;
+            html +=
+              '<div style="font-size:10px;color:var(--text-secondary);margin-left:8px;">• ' +
+              _wkE(_ek) +
+              ": " +
+              _wkE(String(_s.effects[_ek])) +
+              "</div>";
+          }
+        }
+      }
+    }
+    html += "</div></div>";
+  }
+
   // === 二、职业资本雷达卡 ===
   html +=
     '<div class="section" style="margin-top:8px;"><h3>📊 职业资本</h3><div class="card" style="padding:10px;">';

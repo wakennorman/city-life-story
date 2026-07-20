@@ -86335,6 +86335,11 @@ if (typeof window !== "undefined") {
           text: "🧥 把外套给他",
           hint: "助人",
           apply: function (st) {
+            // [全系统自洽修复] 域B A类#1: st.flags/st.needs/st.player/st.status 守卫
+            if (!st.flags) st.flags = {};
+            if (!st.needs) st.needs = { happiness: 50, fatigue: 0 };
+            if (!st.player) st.player = { fame: 0 };
+            if (!st.status) st.status = { health: 50 };
             st.flags._gaveCoatToHomeless = true;
             st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 10);
             st.player.fame = Math.min(100, (st.player.fame || 0) + 2);
@@ -86408,7 +86413,8 @@ if (typeof window !== "undefined") {
             st.flags._helpedFriendFindWork = true;
             st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 8);
             st.player.fame = Math.min(100, (st.player.fame || 0) + 2);
-            if (st.relationships && st.relationships.old_zhou) {
+            // [全系统自洽修复] 域B A类#2: old_zhou met 门控
+            if (st.relationships && st.relationships.old_zhou && st.relationships.old_zhou.met) {
               st.relationships.old_zhou.affinity = Math.min(
                 100,
                 (st.relationships.old_zhou.affinity || 0) + 5,
@@ -87021,9 +87027,14 @@ if (typeof window !== "undefined") {
           text: "💰 塞个红包了事",
           hint: "花¥200-400，直接摆平",
           apply: function (st) {
+            // [全系统自洽修复] 域B A类#3: 城管事件守卫 — st.flags/st.resources/st.player/st.chengguan 前置防御
+            if (!st.flags) st.flags = {};
+            if (!st.resources) st.resources = { cash: 0 };
+            if (!st.player) st.player = { morality: 50 };
+            if (!st.chengguan) st.chengguan = { relationship: 50, heat: 0 };
             st.flags._chengguanRaidPanicSeen = true;
-            var bribe = Math.min(st.resources.cash, 200 + Random.int(0, 200));
-            st.resources.cash -= bribe;
+            var bribe = Math.min(st.resources.cash || 0, 200 + Random.int(0, 200));
+            st.resources.cash = (st.resources.cash || 0) - bribe;
             st.chengguan.relationship = Math.min(
               100,
               (st.chengguan.relationship || 0) + 5,
@@ -91081,6 +91092,8 @@ if (typeof window !== "undefined") {
           text: "🎓 报名更高级的培训，冲击满级",
           hint: "智力+5，技能XP额外+100",
           apply: function (st) {
+            // [全系统自洽修复] 域B A类#5: st.flags 守卫
+            if (!st.flags) st.flags = {};
             st.flags._careerSkillHalfCenturyDone = true;
             if (st.player) st.player.intelligence = Math.min(100, (st.player.intelligence || 20) + 5);
             var topSkill = null, topLv = 0;
@@ -91098,6 +91111,8 @@ if (typeof window !== "undefined") {
           text: "🏆 用专家级技能接更赚钱的活",
           hint: "名声+5，现金+¥2000",
           apply: function (st) {
+            // [全系统自洽修复] 域B A类#8: st.flags 守卫
+            if (!st.flags) st.flags = {};
             st.flags._careerSkillHalfCenturyDone = true;
             if (st.player) st.player.fame = Math.min(100, (st.player.fame || 0) + 5);
             if (st.resources) st.resources.cash = (st.resources.cash || 0) + 2000;
@@ -91109,6 +91124,8 @@ if (typeof window !== "undefined") {
           text: "📝 把经验写成教程，分享给新人",
           hint: "心智+5，道德+3",
           apply: function (st) {
+            // [全系统自洽修复] 域B A类#9: st.flags 守卫
+            if (!st.flags) st.flags = {};
             st.flags._careerSkillHalfCenturyDone = true;
             if (st.player) {
               st.player.mental = Math.min(100, (st.player.mental || 50) + 5);
@@ -91143,6 +91160,8 @@ if (typeof window !== "undefined") {
           text: "👑 开山收徒，将技艺传承下去",
           hint: "魅力+10，名声+15，获得学徒",
           apply: function (st) {
+            // [全系统自洽修复] 域B A类#6: st.flags 守卫
+            if (!st.flags) st.flags = {};
             st.flags._careerSkillCenturyDone = true;
             st.flags._skillMasterHasApprentice = true;
             if (st.player) {
@@ -91158,6 +91177,8 @@ if (typeof window !== "undefined") {
           text: "💎 用满级技能创业，打造自己的品牌",
           hint: "解锁创业加成，启动资金减免",
           apply: function (st) {
+            // [全系统自洽修复] 域B A类#7: st.flags 守卫
+            if (!st.flags) st.flags = {};
             st.flags._careerSkillCenturyDone = true;
             st.flags._skillMasterStartupBonus = true;
             if (st.player) {
@@ -91177,7 +91198,10 @@ if (typeof window !== "undefined") {
               st.player.intelligence = Math.min(100, (st.player.intelligence || 20) + 10);
               st.player.fame = Math.min(100, (st.player.fame || 0) + 20);
             }
-            st.resources._passiveBookRoyalty = (st.resources._passiveBookRoyalty || 0) + 500;
+            // [全系统自洽修复] 域B A类#4: st.resources 守卫
+            if (st.resources) {
+              st.resources._passiveBookRoyalty = (st.resources._passiveBookRoyalty || 0) + 500;
+            }
             if (typeof StateManager !== "undefined" && StateManager.addMessage)
               StateManager.addMessage("📖 你的专著出版！智力+10，名声+20，每月版税¥500。后世会记得你的名字。", "success");
           },
@@ -93322,7 +93346,8 @@ if (typeof window !== "undefined") {
           hint: "¥2800，健康+25",
           apply: function (st) {
             st.flags._healthCrisisSeen = true;
-            var cost = Math.min(2800, st.resources.cash);
+            if (!st.resources) st.resources = { cash: 0 };
+            var cost = Math.min(2800, st.resources.cash || 0);
             st.resources.cash -= cost;
             if (!st.personalGrowth) st.personalGrowth = {};
             if (!st.personalGrowth.health) st.personalGrowth.health = {};
@@ -93347,7 +93372,8 @@ if (typeof window !== "undefined") {
           hint: "省钱但健康改善有限",
           apply: function (st) {
             st.flags._healthCrisisSeen = true;
-            var cost = Math.min(500, st.resources.cash);
+            if (!st.resources) st.resources = { cash: 0 };
+            var cost = Math.min(500, st.resources.cash || 0);
             st.resources.cash -= cost;
             if (!st.personalGrowth) st.personalGrowth = {};
             if (!st.personalGrowth.health) st.personalGrowth.health = {};
@@ -93368,7 +93394,8 @@ if (typeof window !== "undefined") {
           hint: "需要决心，长期受益",
           apply: function (st) {
             st.flags._healthCrisisSeen = true;
-            var cost = Math.min(500, st.resources.cash);
+            if (!st.resources) st.resources = { cash: 0 };
+            var cost = Math.min(500, st.resources.cash || 0);
             st.resources.cash -= cost;
             if (!st.personalGrowth) st.personalGrowth = {};
             if (!st.personalGrowth.health) st.personalGrowth.health = {};
@@ -93429,7 +93456,8 @@ if (typeof window !== "undefined") {
           hint: "¥500，专业疏导",
           apply: function (st) {
             st.flags._burnoutSeen = true;
-            var cost = Math.min(500, st.resources.cash);
+            if (!st.resources) st.resources = { cash: 0 };
+            var cost = Math.min(500, st.resources.cash || 0);
             st.resources.cash -= cost;
             if (!st.personalGrowth) st.personalGrowth = {};
             if (!st.personalGrowth.health) st.personalGrowth.health = {};
@@ -93537,7 +93565,8 @@ if (typeof window !== "undefined") {
                 fitness: 30,
                 plastic: 0,
               };
-            var cost = Math.min(300, st.resources.cash);
+            if (!st.resources) st.resources = { cash: 0 };
+            var cost = Math.min(300, st.resources.cash || 0);
             st.resources.cash -= cost;
             var img = st.personalGrowth.image;
             img.style = Math.min(100, (img.style || 0) + 8);
@@ -93564,7 +93593,8 @@ if (typeof window !== "undefined") {
                 fitness: 30,
                 plastic: 0,
               };
-            var cost = Math.min(50, st.resources.cash);
+            if (!st.resources) st.resources = { cash: 0 };
+            var cost = Math.min(50, st.resources.cash || 0);
             st.resources.cash -= cost;
             var img = st.personalGrowth.image;
             img.skincare = Math.min(100, (img.skincare || 0) + 5);
@@ -94143,7 +94173,8 @@ if (typeof window !== "undefined") {
           apply: function (st) {
             st.flags = st.flags || {}; // [R16 域C修复]
             st.flags._teamBuildingSeen = true;
-            var cost = Math.min(300, st.resources.cash);
+            if (!st.resources) st.resources = { cash: 0 };
+            var cost = Math.min(300, st.resources.cash || 0);
             st.resources.cash -= cost;
             st.needs.fatigue = Math.min(100, (st.needs.fatigue || 0) + 15);
             st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 8);
@@ -94182,7 +94213,8 @@ if (typeof window !== "undefined") {
           apply: function (st) {
             st.flags = st.flags || {}; // [R16 域C修复]
             st.flags._teamBuildingSeen = true;
-            var cost = Math.min(50, st.resources.cash);
+            if (!st.resources) st.resources = { cash: 0 };
+            var cost = Math.min(50, st.resources.cash || 0);
             st.resources.cash -= cost;
             var cols = st.corporate.colleagues.network;
             for (var i = 0; i < Math.min(cols.length, 2); i++) {
@@ -234525,6 +234557,56 @@ function renderCareerOverview(state, parent) {
       Math.round(sh.fatigue || 0) +
       "</b></div>";
     html += "</div></div></div>";
+  }
+
+  // === [全系统自洽修复] 域C 联动增强: 技能连携状态（C→F，daily_pipeline 计算但 career UI 未展示）===
+  if (
+    state.skillSynergies &&
+    ((state.skillSynergies.dual && Object.keys(state.skillSynergies.dual).length) ||
+      (state.skillSynergies.triple &&
+        Object.keys(state.skillSynergies.triple).length) ||
+      (state.skillSynergies.theme &&
+        Object.keys(state.skillSynergies.theme).length))
+  ) {
+    html +=
+      '<div class="section" style="margin-top:8px;"><h3>🔗 技能连携</h3><div class="card" style="padding:10px;">';
+    var _synergyTypes = [
+      { key: "dual", label: "双技能", color: "#4a9e5c" },
+      { key: "triple", label: "三技能", color: "#4a6cf7" },
+      { key: "theme", label: "主题", color: "#e8b84c" },
+    ];
+    for (var _sti = 0; _sti < _synergyTypes.length; _sti++) {
+      var _st = _synergyTypes[_sti];
+      var _syn = state.skillSynergies[_st.key];
+      if (!_syn) continue;
+      for (var _sid in _syn) {
+        if (!_syn.hasOwnProperty(_sid)) continue;
+        var _s = _syn[_sid];
+        if (!_s) continue;
+        var _name = _s.name || _sid;
+        html +=
+          '<div style="font-size:11px;font-weight:bold;color:' +
+          _st.color +
+          ';margin-top:4px;">' +
+          _st.label +
+          " · " +
+          _wkE(_name) +
+          "</div>";
+        if (_s.effects) {
+          for (var _ek in _s.effects) {
+            if (!_s.effects.hasOwnProperty(_ek)) continue;
+            if (_ek === "unlockJobs" || _ek === "unlockActions") continue;
+            html +=
+              '<div style="font-size:10px;color:var(--text-secondary);margin-left:8px;">• ' +
+              _wkE(_ek) +
+              ": " +
+              _wkE(String(_s.effects[_ek])) +
+              "</div>";
+          }
+        }
+      }
+    }
+    html += "</div></div>";
   }
 
   // === 二、职业资本雷达卡 ===
