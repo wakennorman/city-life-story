@@ -169670,6 +169670,50 @@ function getEmotionIcon(state) {
   return icons[state.status.emotionalState] || "😐";
 }
 
+/** 获取情绪中文名 */
+function getEmotionName(state) {
+  var names = {
+    depressed: "抑郁",
+    sad: "悲伤",
+    stressed: "焦虑",
+    stable: "平稳",
+    happy: "开心",
+    elated: "极佳",
+  };
+  return names[state.status.emotionalState] || "未知";
+}
+
+// ====== 百科自动注册 ======
+if (typeof window !== "undefined" && window.MECHANICS) {
+  window.MECHANICS.emotion_system = {
+    id: "emotion_system",
+    name: "情绪系统",
+    icon: "😊",
+    brief: "情绪状态影响工作收入、技能经验和受伤率。6种状态从抑郁到极佳，好状态带来高收益。",
+    version: "1.0.0",
+    related: ["mechanics:needs", "mechanics:illness_system"],
+    sections: [
+      { kind: "desc", text: "情绪由心情、疲劳、饥饿、卫生、心智、健康综合决定。每日结算时自动判定，次日生效。" },
+      { kind: "subhead", text: "😊 情绪状态一览" },
+      {
+        kind: "list",
+        items: [
+          "😢 抑郁 (score<15)：收入×0.45 受伤×2.5 技能经验×0.3",
+          "😔 悲伤 (score<30)：收入×0.65 受伤×1.5 技能经验×0.5",
+          "😰 焦虑 (score<45)：收入×0.8 受伤×1.3 技能经验×0.7",
+          "😐 平稳 (score<60)：基线 1.0×",
+          "😊 开心 (score<80)：收入×1.25 受伤×0.7 技能经验×1.5",
+          "🌟 极佳 (score≥80)：收入×1.5 受伤×0.5 技能经验×2.0",
+        ],
+      },
+      {
+        kind: "tip",
+        text: "保持心情高、疲劳低、心智好是获得高情绪状态的关键。好情绪能显著提升收入效率！",
+      },
+    ],
+  };
+}
+
 /**
  * 资产关联维持性开支 — 解决后期"钱太多没事做"
  * 物业费按资产 0.1%/天，社交应酬按资产梯度衰减心情
