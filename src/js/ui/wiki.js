@@ -2005,6 +2005,26 @@ function _wikiDetailItem(state, id) {
     html += "</ul>";
   }
 
+  // [全系统自洽修复] 域A 联动增强2: 物品→职业收入加成（jobBonuses 原仅 events_core 消费，百科不可见）
+  if (item.jobBonuses && typeof item.jobBonuses === "object" && typeof STREET_JOBS !== "undefined") {
+    var _jbKeys = Object.keys(item.jobBonuses);
+    if (_jbKeys.length > 0) {
+      html += '<h3>💼 职业收入加成</h3><ul class="wiki-list">';
+      for (var ji = 0; ji < _jbKeys.length; ji++) {
+        var jid = _jbKeys[ji];
+        var jb = item.jobBonuses[jid];
+        var jmult = jb && jb.incomeMultiplier ? jb.incomeMultiplier : null;
+        var jname = jid;
+        for (var sj = 0; sj < STREET_JOBS.length; sj++) {
+          if (STREET_JOBS[sj].id === jid) { jname = STREET_JOBS[sj].name; break; }
+        }
+        var multStr = jmult ? ("（收入×" + jmult + "）") : "";
+        html += "<li>" + _wkE(jname) + " " + _wkE(multStr) + "</li>";
+      }
+      html += "</ul>";
+    }
+  }
+
   if (item.buyLocations && item.buyLocations.length > 0) {
     html += '<h3>🛒 购买地点</h3><div class="wiki-links">';
     for (var b = 0; b < item.buyLocations.length; b++) {
