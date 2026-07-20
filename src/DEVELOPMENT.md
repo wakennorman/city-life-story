@@ -1,6 +1,6 @@
 # 城市浮生记 (City Life Story) — 开发文档
 
-> 最后更新: 2026-07-17（P2-2 esbuild minify + 函数重定义根治）
+> 最后更新: 2026-07-20（阶段3试点：贷款评估 5 个叶子纯函数迁入 src/app/core/finance TS 规范源 + 单测覆盖；src/js 端零改动、加载序不变）
 > 历史流水账已归档到 `docs/changelog/`，本文件仅保留活文档。
 
 ---

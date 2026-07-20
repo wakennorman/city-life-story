@@ -1,0 +1,37 @@
+name: quality-gate
+
+on:
+  push:
+    branches: [main, master, dev]
+  pull_request:
+
+# 阶段1 质量门禁：lint + typecheck + 事件完整性 + 核心单测
+# 策略（增量采纳）：legacy src/js 的 ESLint 为 warn 级，不阻断现有优化循环；
+# typecheck(src/app, strict) 与事件完整性 / 单测必须 0 失败。
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      # 用 install 而非 ci：本仓库 package-lock 因本地代理未起暂未含 eslint，
+      # CI 网络可正常拉取；待本地代理恢复后建议改回 npm ci 并 regenerate lock。
+      - name: Install deps
+        run: npm install
+
+      - name: ESLint (legacy src/js, warn-level)
+        run: npm run lint
+
+      - name: TypeScript typecheck (src/app, strict)
+        run: npm run typecheck
+
+      - name: Event integrity + smoke
+        run: npm test
+
+      - name: Unit tests (core logic)
+        run: npm run test:unit

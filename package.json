@@ -17,10 +17,14 @@
     "build:legacy": "python build.py",
     "deploy": "npm run build:legacy && npm run verify:deploy && netlify deploy --dir=dist --prod",
     "deploy:dry": "npm run build:legacy && npm run verify:deploy && netlify deploy --dir=dist",
-    "check:balance": "node scripts/check-balance.mjs"
+    "check:balance": "node scripts/check-balance.mjs",
+    "lint": "eslint \"src/js/**/*.js\"",
+    "lint:fix": "eslint \"src/js/**/*.js\" --fix",
+    "test:unit": "node tests/finance.test.cjs && node tests/finance.canonical.test.cjs"
   },
   "devDependencies": {
     "esbuild": "^0.28.1",
+    "eslint": "^8.57.0",
     "typescript": "6.0.3",
     "vite": "8.1.0"
   },
