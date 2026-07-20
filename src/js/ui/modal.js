@@ -4,14 +4,16 @@
  * 从 main.js 提取，管理所有弹窗：showModal、存档菜单、银行操作、面试等。
  */
 
-// [全系统自洽修复] 域F modal.js 独立 _esc 辅助
-if(typeof _esc==="undefined"){
-function _esc(s) {
-  return String(s)
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;");
+// [全系统自洽修复] 域F A类修复: 原 if(typeof _esc==="undefined"){ 包裹整个文件，若 _esc 已定义则所有弹窗函数不执行（P0级）
+// 改为仅 _esc 函数受守卫，其余函数始终定义
+if (typeof _esc === "undefined") {
+  function _esc(s) {
+    return String(s)
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;");
+  }
 }
 
 // ====== 兼容旧式 showModal(title, desc, buttons) 签名 ======
@@ -96,6 +98,10 @@ function showModalImpl({ title, body, buttons = [] }) {
       if (shouldClose) {
         try {
           if (overlay.parentNode) {
+            // [全系统自洽修复] 域F A类修复: 按钮关闭时同步移除ESC监听器，防止内存泄漏
+            if (overlay._escHandler) {
+              document.removeEventListener("keydown", overlay._escHandler);
+            }
             overlay.parentNode.removeChild(overlay);
           }
         } catch (err) {
@@ -120,7 +126,8 @@ function showModalImpl({ title, body, buttons = [] }) {
     }
   });
   // [全系统自洽修复] 域F 修复:ESC键关闭弹窗，提升桌面端可用性
-  document.addEventListener("keydown", function _modalEscHandler(e) {
+  // [全系统自洽修复] 域F A类修复: 保存handler引用以便按钮关闭时移除，防止内存泄漏
+  var _modalEscHandler = function (e) {
     if (e.key === "Escape" && document.body.contains(overlay)) {
       try {
         if (overlay.parentNode) {
@@ -131,7 +138,10 @@ function showModalImpl({ title, body, buttons = [] }) {
       }
       document.removeEventListener("keydown", _modalEscHandler);
     }
-  });
+  };
+  document.addEventListener("keydown", _modalEscHandler);
+  // 保存引用到 overlay 上，供按钮关闭时同步移除
+  overlay._escHandler = _modalEscHandler;
   document.body.appendChild(overlay);
 }
 
@@ -354,9 +364,9 @@ function showDepositModal() {
   const state = StateManager.getState();
   showModal({
     title: "🏦 存款",
-    body: `<p>当前现金: ¥${state.resources.cash.toLocaleString()}</p>
-           <p>银行余额: ¥${state.resources.bankBalance.toLocaleString()}</p>
-           <label>存入金额: <input id="deposit-amount" type="number" min="1" max="${state.resources.cash}" value="${state.resources.cash}" style="width:100%;padding:8px;margin-top:8px;background:var(--bg-input);border:1px solid var(--border);color:var(--text-primary);border-radius:4px;"></label>`,
+    body: `<p>当前现金: ¥${(state.resources.cash || 0).toLocaleString()}</p>
+           <p>银行余额: ¥${(state.resources.bankBalance || 0).toLocaleString()}</p>
+           <label>存入金额: <input id="deposit-amount" type="number" min="1" max="${(state.resources.cash || 0)}" value="${(state.resources.cash || 0)}" style="width:100%;padding:8px;margin-top:8px;background:var(--bg-input);border:1px solid var(--border);color:var(--text-primary);border-radius:4px;"></label>`,
     buttons: [
       { text: "取消", cls: "", callback: () => {} },
       {
@@ -409,12 +419,12 @@ function showWithdrawModal() {
   const state = StateManager.getState();
   showModal({
     title: "💰 取款",
-    body: `<p>银行余额: ¥${state.resources.bankBalance.toLocaleString()}</p>
+    body: `<p>银行余额: ¥${(state.resources.bankBalance || 0).toLocaleString()}</p>
            <label>取出金额: <input id="withdraw-amount" type="number" min="1" max="${state.resources.bankBalance}" value="${state.resources.bankBalance}" style="width:100%;padding:8px;margin-top:8px;background:var(--bg-input);border:1px solid var(--border);color:var(--text-primary);border-radius:4px;"></label>`,
     buttons: [
       { text: "取消", cls: "", callback: () => {} },
       {
-        text: `取出全部 ¥${state.resources.bankBalance.toLocaleString()}`,
+        text: `取出全部 ¥${(state.resources.bankBalance || 0).toLocaleString()}`,
         cls: "btn-primary",
         callback: () => {
           const amt = state.resources.bankBalance;
@@ -756,15 +766,15 @@ function showRepayVillageModal() {
     body: `<p>欠村长: <strong style="color:var(--danger);">¥${villageDebt.toLocaleString()}</strong></p>
            <p>累计利息: ¥${interestAccumulated.toLocaleString()}</p>
            <p style="font-size:11px;color:var(--text-secondary);">日息0.35%复利，早还早轻松！</p>
-           <p>现金: <strong>¥${state.resources.cash.toLocaleString()}</strong></p>
-           <label>还款金额: <input id="repay-village-amount" type="number" min="1" max="${Math.min(state.resources.cash, villageDebt)}" value="${Math.min(state.resources.cash, villageDebt)}" style="width:100%;padding:8px;margin-top:8px;background:var(--bg-input);border:1px solid var(--border);color:var(--text-primary);border-radius:4px;"></label>`,
+           <p>现金: <strong>¥${(state.resources.cash || 0).toLocaleString()}</strong></p>
+           <label>还款金额: <input id="repay-village-amount" type="number" min="1" max="${Math.min((state.resources.cash || 0), villageDebt)}" value="${Math.min((state.resources.cash || 0), villageDebt)}" style="width:100%;padding:8px;margin-top:8px;background:var(--bg-input);border:1px solid var(--border);color:var(--text-primary);border-radius:4px;"></label>`,
     buttons: [
       { text: "取消", cls: "", callback: () => {} },
       {
         text: "还清全部",
         cls: "btn-success",
         callback: () => {
-          const amt = Math.min(state.resources.cash, villageDebt);
+          const amt = Math.min((state.resources.cash || 0), villageDebt);
           state.resources.cash -= amt;
           if (state.resources.villageDebt !== undefined) {
             state.resources.villageDebt -= amt;
@@ -1230,7 +1240,7 @@ function showItemShopModal(locationId) {
     "font-size:11px;color:var(--text-muted);margin-bottom:12px;";
   hint.textContent =
     "现金：¥" +
-    state.resources.cash.toLocaleString() +
+    (state.resources.cash || 0).toLocaleString() +
     " | 点击购买即可装备或放入背包";
   box.appendChild(hint);
 
@@ -2328,6 +2338,4 @@ function showInheritanceSummaryModal(inheritanceData) {
       },
     ],
   });
-}
-
 }

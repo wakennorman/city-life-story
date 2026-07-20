@@ -183611,7 +183611,7 @@ function showStockTradeModal() {
     return sum + (m ? m.price * s.shares : 0);
   }, 0);
   const totalCost = state.corporate.stocks.reduce(
-    (sum, s) => sum + s.avgPrice * s.shares,
+    (sum, s) => sum + (s.avgPrice || 0) * (s.shares || 0),
     0,
   );
   const totalPnL = Math.round(totalStockValue - totalCost);
@@ -210727,8 +210727,9 @@ function renderHeader(state) {
   const r = state.resources;
   const phaseLabel = p.phase === "corporate" ? "🏢 职场" : "🏘️ 街头";
 
-  document.getElementById("header-day").textContent = p.day;
-  document.getElementById("header-age").textContent = p.age;
+  // [全系统自洽修复] 域F A类修复: 防止 NaN/undefined 显示在顶栏
+  document.getElementById("header-day").textContent = isFinite(p.day) ? p.day : 1;
+  document.getElementById("header-age").textContent = isFinite(p.age) ? p.age : 20;
   var phaseEl = document.getElementById("header-phase");
   if (phaseEl) phaseEl.textContent = phaseLabel;
 
@@ -211126,7 +211127,8 @@ if(typeof renderReputationBadge==="undefined"){
 function renderReputationBadge(state) {
   if (typeof getHistoryModifiers !== "function") return;
   var mods = getHistoryModifiers(state);
-  if (!mods.reputationLabel) {
+  // [全系统自洽修复] 域F A类修复: mods 可能为 null（render.js 版本有 `!mods` 检查，此版本缺失）
+  if (!mods || !mods.reputationLabel) {
     var el = document.getElementById("reputation-badge");
     if (el) el.style.display = "none";
     return;
@@ -211357,10 +211359,13 @@ function renderStreetStats(state) {
 }
 
 function renderCorporateStats(state) {
-  const c = state.player.corporate;
+  // [全系统自洽修复] 域F A类修复: state.player.corporate 可能未初始化（旧存档/初入职场），data_viz.js 已用 `|| {}` 兜底
+  const c = state.player.corporate || {};
   // 切换侧边栏区域显示
-  document.getElementById("street-stats-section").style.display = "none";
-  document.getElementById("corp-stats-section").style.display = "block";
+  var _streetEl = document.getElementById("street-stats-section");
+  var _corpEl = document.getElementById("corp-stats-section");
+  if (_streetEl) _streetEl.style.display = "none";
+  if (_corpEl) _corpEl.style.display = "block";
 
   setStatBar("stat-hair", c.hair, "hair");
   setStatBar("stat-dignity", c.dignity, "dignity");
@@ -211383,9 +211388,10 @@ function renderCorporateStats(state) {
 function renderNeedsBars(state) {
   var statusSection = document.getElementById("location-section");
   if (statusSection) statusSection.style.display = "block";
-  const n = state.needs;
-  const s = state.status;
-  const p = state.player;
+  // [全系统自洽修复] 域F A类修复: state.needs/status/player 可能未初始化（边界场景）
+  const n = state.needs || {};
+  const s = state.status || {};
+  const p = state.player || {};
   setStatBar("stat-hunger", n.hunger, "hunger");
   setStatBar("stat-fatigue", n.fatigue, "fatigue");
   setStatBar("stat-hygiene", n.hygiene, "hygiene");
@@ -211416,6 +211422,8 @@ function renderNeedsBars(state) {
 
 if(typeof renderLocation==="undefined"){
 function renderLocation(state) {
+  // [全系统自洽修复] 域F A类修复: state.trade 可能未初始化（render.js 版本有 `if (!state.trade) return;`）
+  if (!state.trade) return;
   const locKey = state.trade.currentLocation;
   const loc = getLocation(locKey);
   if (loc) {
@@ -211912,6 +211920,8 @@ function _firstVisibleActionCardTop(area) {
 //   - 未传入：自动锚定首张可见 .action-card（行动/技能等 tab 通用）。
 function renderCurrentTab(state, anchorGoodId) {
   const area = document.getElementById("content-area");
+  // [全系统自洽修复] 域F A类修复: #content-area 不存在时崩溃（所有 Tab 渲染均依赖此元素）
+  if (!area) { console.warn("content-area not found"); return; }
 
   // ===== 阶段一（重绘前）：保存滚动状态 =====
   // 1. 卡片屏幕-位置锚定（修正上方区块伸缩导致的位移，交易/行动/技能 tab）
@@ -212895,8 +212905,11 @@ function renderLocation(state) {
   const locKey = state.trade.currentLocation;
   const loc = getLocation(locKey);
   if (loc) {
-    document.getElementById("location-name").textContent = loc.name;
-    document.getElementById("location-desc").textContent = loc.desc;
+    // [全系统自洽修复] 域F A类修复: DOM 元素可能不存在（动态渲染场景）
+    var _locNameEl = document.getElementById("location-name");
+    var _locDescEl = document.getElementById("location-desc");
+    if (_locNameEl) _locNameEl.textContent = loc.name;
+    if (_locDescEl) _locDescEl.textContent = loc.desc;
   }
 
   // 天气显示
@@ -215510,6 +215523,8 @@ function renderMapTab(state, parent) {
 
 // ====== Trade Tab ======
 function renderTradeTab(state, parent) {
+  // [全系统自洽修复] 域F A类修复: state.trade 可能未初始化（初始状态/旧存档）
+  if (!state.trade) { parent.innerHTML = '<p style="color:var(--text-muted);padding:20px;text-align:center;">📦 交易系统加载中...</p>'; return; }
   const locKey = state.trade.currentLocation;
   const loc = getLocation(locKey);
   const prices = state.trade.goodsPrices[locKey] || {};
@@ -215535,7 +215550,7 @@ function renderTradeTab(state, parent) {
       ${skillTag}
     </div>
     <div style="text-align:right;">
-      <span style="font-size:11px;color:var(--text-muted);">现金: <strong style="color:var(--success)">¥${state.resources.cash.toLocaleString()}</strong></span>
+      <span style="font-size:11px;color:var(--text-muted);">现金: <strong style="color:var(--success)">¥${(state.resources.cash || 0).toLocaleString()}</strong></span>
       ${(function () {
         var activeEvents = 0;
         if (state.trade && state.trade.marketEvents) {
@@ -216355,7 +216370,7 @@ function renderTradeTab(state, parent) {
           const isWholesaleLoc = locKey === "wholesaleMarket";
           const price = getCurrentPrice(locKey, goodId);
           const maxBuy =
-            price > 0 ? Math.floor(state.resources.cash / price) : 0;
+            price > 0 ? Math.floor((state.resources.cash || 0) / price) : 0;
           if (qty > maxBuy) {
             if (maxBuy <= 0) {
               StateManager.addMessage("⚠️ 现金不足以购买任何数量。", "danger");
@@ -220255,14 +220270,16 @@ function buildNgPlusData(state) {
  * 从 main.js 提取，管理所有弹窗：showModal、存档菜单、银行操作、面试等。
  */
 
-// [全系统自洽修复] 域F modal.js 独立 _esc 辅助
-if(typeof _esc==="undefined"){
-function _esc(s) {
-  return String(s)
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;");
+// [全系统自洽修复] 域F A类修复: 原 if(typeof _esc==="undefined"){ 包裹整个文件，若 _esc 已定义则所有弹窗函数不执行（P0级）
+// 改为仅 _esc 函数受守卫，其余函数始终定义
+if (typeof _esc === "undefined") {
+  function _esc(s) {
+    return String(s)
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;");
+  }
 }
 
 // ====== 兼容旧式 showModal(title, desc, buttons) 签名 ======
@@ -220347,6 +220364,10 @@ function showModalImpl({ title, body, buttons = [] }) {
       if (shouldClose) {
         try {
           if (overlay.parentNode) {
+            // [全系统自洽修复] 域F A类修复: 按钮关闭时同步移除ESC监听器，防止内存泄漏
+            if (overlay._escHandler) {
+              document.removeEventListener("keydown", overlay._escHandler);
+            }
             overlay.parentNode.removeChild(overlay);
           }
         } catch (err) {
@@ -220371,7 +220392,8 @@ function showModalImpl({ title, body, buttons = [] }) {
     }
   });
   // [全系统自洽修复] 域F 修复:ESC键关闭弹窗，提升桌面端可用性
-  document.addEventListener("keydown", function _modalEscHandler(e) {
+  // [全系统自洽修复] 域F A类修复: 保存handler引用以便按钮关闭时移除，防止内存泄漏
+  var _modalEscHandler = function (e) {
     if (e.key === "Escape" && document.body.contains(overlay)) {
       try {
         if (overlay.parentNode) {
@@ -220382,7 +220404,10 @@ function showModalImpl({ title, body, buttons = [] }) {
       }
       document.removeEventListener("keydown", _modalEscHandler);
     }
-  });
+  };
+  document.addEventListener("keydown", _modalEscHandler);
+  // 保存引用到 overlay 上，供按钮关闭时同步移除
+  overlay._escHandler = _modalEscHandler;
   document.body.appendChild(overlay);
 }
 
@@ -220605,9 +220630,9 @@ function showDepositModal() {
   const state = StateManager.getState();
   showModal({
     title: "🏦 存款",
-    body: `<p>当前现金: ¥${state.resources.cash.toLocaleString()}</p>
-           <p>银行余额: ¥${state.resources.bankBalance.toLocaleString()}</p>
-           <label>存入金额: <input id="deposit-amount" type="number" min="1" max="${state.resources.cash}" value="${state.resources.cash}" style="width:100%;padding:8px;margin-top:8px;background:var(--bg-input);border:1px solid var(--border);color:var(--text-primary);border-radius:4px;"></label>`,
+    body: `<p>当前现金: ¥${(state.resources.cash || 0).toLocaleString()}</p>
+           <p>银行余额: ¥${(state.resources.bankBalance || 0).toLocaleString()}</p>
+           <label>存入金额: <input id="deposit-amount" type="number" min="1" max="${(state.resources.cash || 0)}" value="${(state.resources.cash || 0)}" style="width:100%;padding:8px;margin-top:8px;background:var(--bg-input);border:1px solid var(--border);color:var(--text-primary);border-radius:4px;"></label>`,
     buttons: [
       { text: "取消", cls: "", callback: () => {} },
       {
@@ -220660,12 +220685,12 @@ function showWithdrawModal() {
   const state = StateManager.getState();
   showModal({
     title: "💰 取款",
-    body: `<p>银行余额: ¥${state.resources.bankBalance.toLocaleString()}</p>
+    body: `<p>银行余额: ¥${(state.resources.bankBalance || 0).toLocaleString()}</p>
            <label>取出金额: <input id="withdraw-amount" type="number" min="1" max="${state.resources.bankBalance}" value="${state.resources.bankBalance}" style="width:100%;padding:8px;margin-top:8px;background:var(--bg-input);border:1px solid var(--border);color:var(--text-primary);border-radius:4px;"></label>`,
     buttons: [
       { text: "取消", cls: "", callback: () => {} },
       {
-        text: `取出全部 ¥${state.resources.bankBalance.toLocaleString()}`,
+        text: `取出全部 ¥${(state.resources.bankBalance || 0).toLocaleString()}`,
         cls: "btn-primary",
         callback: () => {
           const amt = state.resources.bankBalance;
@@ -221007,15 +221032,15 @@ function showRepayVillageModal() {
     body: `<p>欠村长: <strong style="color:var(--danger);">¥${villageDebt.toLocaleString()}</strong></p>
            <p>累计利息: ¥${interestAccumulated.toLocaleString()}</p>
            <p style="font-size:11px;color:var(--text-secondary);">日息0.35%复利，早还早轻松！</p>
-           <p>现金: <strong>¥${state.resources.cash.toLocaleString()}</strong></p>
-           <label>还款金额: <input id="repay-village-amount" type="number" min="1" max="${Math.min(state.resources.cash, villageDebt)}" value="${Math.min(state.resources.cash, villageDebt)}" style="width:100%;padding:8px;margin-top:8px;background:var(--bg-input);border:1px solid var(--border);color:var(--text-primary);border-radius:4px;"></label>`,
+           <p>现金: <strong>¥${(state.resources.cash || 0).toLocaleString()}</strong></p>
+           <label>还款金额: <input id="repay-village-amount" type="number" min="1" max="${Math.min((state.resources.cash || 0), villageDebt)}" value="${Math.min((state.resources.cash || 0), villageDebt)}" style="width:100%;padding:8px;margin-top:8px;background:var(--bg-input);border:1px solid var(--border);color:var(--text-primary);border-radius:4px;"></label>`,
     buttons: [
       { text: "取消", cls: "", callback: () => {} },
       {
         text: "还清全部",
         cls: "btn-success",
         callback: () => {
-          const amt = Math.min(state.resources.cash, villageDebt);
+          const amt = Math.min((state.resources.cash || 0), villageDebt);
           state.resources.cash -= amt;
           if (state.resources.villageDebt !== undefined) {
             state.resources.villageDebt -= amt;
@@ -221481,7 +221506,7 @@ function showItemShopModal(locationId) {
     "font-size:11px;color:var(--text-muted);margin-bottom:12px;";
   hint.textContent =
     "现金：¥" +
-    state.resources.cash.toLocaleString() +
+    (state.resources.cash || 0).toLocaleString() +
     " | 点击购买即可装备或放入背包";
   box.appendChild(hint);
 
@@ -222579,8 +222604,6 @@ function showInheritanceSummaryModal(inheritanceData) {
       },
     ],
   });
-}
-
 }
 ;
 // ==== js/ui/heritage_store.js ====

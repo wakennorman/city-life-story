@@ -21,6 +21,8 @@ function _firstVisibleActionCardTop(area) {
 //   - 未传入：自动锚定首张可见 .action-card（行动/技能等 tab 通用）。
 function renderCurrentTab(state, anchorGoodId) {
   const area = document.getElementById("content-area");
+  // [全系统自洽修复] 域F A类修复: #content-area 不存在时崩溃（所有 Tab 渲染均依赖此元素）
+  if (!area) { console.warn("content-area not found"); return; }
 
   // ===== 阶段一（重绘前）：保存滚动状态 =====
   // 1. 卡片屏幕-位置锚定（修正上方区块伸缩导致的位移，交易/行动/技能 tab）

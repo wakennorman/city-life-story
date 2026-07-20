@@ -128,8 +128,9 @@ function renderHeader(state) {
   const r = state.resources;
   const phaseLabel = p.phase === "corporate" ? "🏢 职场" : "🏘️ 街头";
 
-  document.getElementById("header-day").textContent = p.day;
-  document.getElementById("header-age").textContent = p.age;
+  // [全系统自洽修复] 域F A类修复: 防止 NaN/undefined 显示在顶栏
+  document.getElementById("header-day").textContent = isFinite(p.day) ? p.day : 1;
+  document.getElementById("header-age").textContent = isFinite(p.age) ? p.age : 20;
   var phaseEl = document.getElementById("header-phase");
   if (phaseEl) phaseEl.textContent = phaseLabel;
 
@@ -527,7 +528,8 @@ if(typeof renderReputationBadge==="undefined"){
 function renderReputationBadge(state) {
   if (typeof getHistoryModifiers !== "function") return;
   var mods = getHistoryModifiers(state);
-  if (!mods.reputationLabel) {
+  // [全系统自洽修复] 域F A类修复: mods 可能为 null（render.js 版本有 `!mods` 检查，此版本缺失）
+  if (!mods || !mods.reputationLabel) {
     var el = document.getElementById("reputation-badge");
     if (el) el.style.display = "none";
     return;
@@ -758,10 +760,13 @@ function renderStreetStats(state) {
 }
 
 function renderCorporateStats(state) {
-  const c = state.player.corporate;
+  // [全系统自洽修复] 域F A类修复: state.player.corporate 可能未初始化（旧存档/初入职场），data_viz.js 已用 `|| {}` 兜底
+  const c = state.player.corporate || {};
   // 切换侧边栏区域显示
-  document.getElementById("street-stats-section").style.display = "none";
-  document.getElementById("corp-stats-section").style.display = "block";
+  var _streetEl = document.getElementById("street-stats-section");
+  var _corpEl = document.getElementById("corp-stats-section");
+  if (_streetEl) _streetEl.style.display = "none";
+  if (_corpEl) _corpEl.style.display = "block";
 
   setStatBar("stat-hair", c.hair, "hair");
   setStatBar("stat-dignity", c.dignity, "dignity");
@@ -784,9 +789,10 @@ function renderCorporateStats(state) {
 function renderNeedsBars(state) {
   var statusSection = document.getElementById("location-section");
   if (statusSection) statusSection.style.display = "block";
-  const n = state.needs;
-  const s = state.status;
-  const p = state.player;
+  // [全系统自洽修复] 域F A类修复: state.needs/status/player 可能未初始化（边界场景）
+  const n = state.needs || {};
+  const s = state.status || {};
+  const p = state.player || {};
   setStatBar("stat-hunger", n.hunger, "hunger");
   setStatBar("stat-fatigue", n.fatigue, "fatigue");
   setStatBar("stat-hygiene", n.hygiene, "hygiene");
@@ -817,6 +823,8 @@ function renderNeedsBars(state) {
 
 if(typeof renderLocation==="undefined"){
 function renderLocation(state) {
+  // [全系统自洽修复] 域F A类修复: state.trade 可能未初始化（render.js 版本有 `if (!state.trade) return;`）
+  if (!state.trade) return;
   const locKey = state.trade.currentLocation;
   const loc = getLocation(locKey);
   if (loc) {

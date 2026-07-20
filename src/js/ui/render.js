@@ -228,11 +228,14 @@ function renderStreetStats(state) {
 
 function renderLocation(state) {
   if (!state.trade) return;
-  const locKey = state.trade.currentLocation;
+  const locKey = state.trade && state.trade.currentLocation;
   const loc = getLocation(locKey);
   if (loc) {
-    document.getElementById("location-name").textContent = loc.name;
-    document.getElementById("location-desc").textContent = loc.desc;
+    // [全系统自洽修复] 域F A类修复: DOM 元素可能不存在（动态渲染场景）
+    var _locNameEl = document.getElementById("location-name");
+    var _locDescEl = document.getElementById("location-desc");
+    if (_locNameEl) _locNameEl.textContent = loc.name;
+    if (_locDescEl) _locDescEl.textContent = loc.desc;
   }
 
   // 天气显示
@@ -2308,7 +2311,7 @@ function createActionCard(action, state) {
 function renderMapTab(state, parent) {
   // [全系统自洽修复] 域F A类#3: state.trade可能未初始化（初始状态/旧存档）
   if (!state.trade) { parent.innerHTML = '<p style="color:var(--text-muted);padding:20px;text-align:center;">🗺️ 地图加载中...</p>'; return; }
-  const locKey = state.trade.currentLocation;
+  const locKey = state.trade && state.trade.currentLocation;
   const loc = getLocation(locKey);
   const reachable = new Set(getReachableLocations(locKey));
   reachable.add(locKey);
@@ -2846,7 +2849,9 @@ function renderMapTab(state, parent) {
 
 // ====== Trade Tab ======
 function renderTradeTab(state, parent) {
-  const locKey = state.trade.currentLocation;
+  // [全系统自洽修复] 域F A类修复: state.trade 可能未初始化（初始状态/旧存档）
+  if (!state.trade) { parent.innerHTML = '<p style="color:var(--text-muted);padding:20px;text-align:center;">📦 交易系统加载中...</p>'; return; }
+  const locKey = state.trade && state.trade.currentLocation;
   const loc = getLocation(locKey);
   const prices = state.trade.goodsPrices[locKey] || {};
   const isWholesale = locKey === "wholesaleMarket";
@@ -2871,7 +2876,7 @@ function renderTradeTab(state, parent) {
       ${skillTag}
     </div>
     <div style="text-align:right;">
-      <span style="font-size:11px;color:var(--text-muted);">现金: <strong style="color:var(--success)">¥${state.resources.cash.toLocaleString()}</strong></span>
+      <span style="font-size:11px;color:var(--text-muted);">现金: <strong style="color:var(--success)">¥${(state.resources.cash || 0).toLocaleString()}</strong></span>
       ${(function () {
         var activeEvents = 0;
         if (state.trade && state.trade.marketEvents) {
@@ -3593,7 +3598,7 @@ function renderTradeTab(state, parent) {
                 input.value = Math.min(1, item.qty);
             } else {
               const state = StateManager.getState();
-              const locKey = state.trade.currentLocation;
+              const locKey = state.trade && state.trade.currentLocation;
               const cash = state.resources.cash;
               const price = getCurrentPrice(locKey, goodId);
               // 批发市场按批发价计算最大可买数量
@@ -3687,11 +3692,11 @@ function renderTradeTab(state, parent) {
         if (side === "buy") {
           // 用现金做最终校验
           const state = StateManager.getState();
-          const locKey = state.trade.currentLocation;
+          const locKey = state.trade && state.trade.currentLocation;
           const isWholesaleLoc = locKey === "wholesaleMarket";
           const price = getCurrentPrice(locKey, goodId);
           const maxBuy =
-            price > 0 ? Math.floor(state.resources.cash / price) : 0;
+            price > 0 ? Math.floor((state.resources.cash || 0) / price) : 0;
           if (qty > maxBuy) {
             if (maxBuy <= 0) {
               StateManager.addMessage("⚠️ 现金不足以购买任何数量。", "danger");
