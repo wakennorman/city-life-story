@@ -2628,7 +2628,7 @@ function generateJobOffers(state) {
       path: job.path,
       levelId: nl.id,
       levelName: nl.name,
-      salary: Math.round(nl.salary * 0.95),
+      salary: Math.round((nl.salary || 0) * 0.95),
       desc: "同行业晋升跳（职级升半级，月薪随职级）",
     });
   }
@@ -2646,7 +2646,7 @@ function generateJobOffers(state) {
       // 跨路径薪资下限：不低于当前薪资×0.85，避免跳槽反而降薪
       var cross1Salary = Math.max(
         Math.round((job.salary || 5000) * 0.85),
-        Math.round(p1.levels[idx1].salary * 1.1),
+        Math.round((p1.levels[idx1].salary || 0) * 1.1),
       );
       offers.push({
         id: "hop_cross1",
