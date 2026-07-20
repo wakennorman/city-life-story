@@ -53,7 +53,8 @@ const EVENT_NPC_MAP = {
   free_clinic: {
     npcs: {
       xiao_mei: {
-        condition: (st) => st.status.sick,
+        // [全系统自洽修复] 域D A类#1: st.status 可能为 undefined（旧存档/异常状态），加守卫防崩溃
+        condition: (st) => st.status && st.status.sick,
         change: 2,
         msg: "小美听说你去做检查：'注意身体呀！'",
       },
@@ -1046,9 +1047,7 @@ function chatWithNpc(npcId, state) {
   }
   state.player.actionPoints = ap - 2;
 
-  // [全系统自洽修复] 域B A类#1: Math.random→Random.float 种子化RNG
-  var rollVal =
-    typeof Random !== "undefined" ? Random.float(0, 1) : Math.random();
+  var rollVal = Random.float(0, 1);
 
   // [全系统自洽修复] 域G 联动增强: 情绪状态影响社交倾向（G→D，好情绪→社交加分，坏情绪→社交减分）
   if (state.status && state.status.emotionalState) {
@@ -1060,10 +1059,7 @@ function chatWithNpc(npcId, state) {
   if (affinity >= 50) {
     // 好感高：大概率正面
     if (rollVal < 0.6) {
-      delta =
-        typeof Random !== "undefined"
-          ? Random.int(2, 3)
-          : 2 + Math.floor(Math.random() * 2); // +2~3
+      delta = Random.int(2, 3);
       chatType = "positive";
       message = "你们聊得很开心";
     } else if (rollVal < 0.85) {
@@ -1078,10 +1074,7 @@ function chatWithNpc(npcId, state) {
   } else if (affinity >= 10) {
     // 好感中等：中性为主
     if (rollVal < 0.4) {
-      delta =
-        typeof Random !== "undefined"
-          ? Random.int(1, 2)
-          : 1 + Math.floor(Math.random() * 2); // +1~2
+      delta = Random.int(1, 2);
       chatType = "positive";
       message = "你们聊得挺投缘";
     } else if (rollVal < 0.7) {
@@ -1108,10 +1101,7 @@ function chatWithNpc(npcId, state) {
       chatType = "neutral";
       message = "礼节性寒暄几句";
     } else {
-      delta =
-        typeof Random !== "undefined"
-          ? Random.int(-3, -1)
-          : -1 - Math.floor(Math.random() * 3); // -1~-3
+      delta = Random.int(-3, -1);
       chatType = "negative";
       message = "对方不太想搭理你";
     }
@@ -1166,12 +1156,8 @@ function chatWithNpc(npcId, state) {
     );
   }
 
-  // 传导好感变化给相关 NPC
-  if (typeof applyNpcPropagation === "function") {
-    var changeData = {};
-    changeData[npcId] = delta;
-    applyNpcPropagation(state, changeData);
-  }
+  // [全系统自洽修复] 域D A类#2: 删除死代码 — applyNpcPropagation 从未在 src/js 任何文件中定义
+  // 好感传导改由 npc_relationships.js::runNpcRelationChainEvents 独立处理，此处无需重复调用
 
   if (typeof renderAll === "function") renderAll();
 }

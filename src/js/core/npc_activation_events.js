@@ -453,4 +453,81 @@
       },
     ],
   });
+
+  // ===== 陈师傅（chef_chen）大厨 — A类:有定义/有矩阵/有下游事件，但无 first_meet → 永久 dormant =====
+  // 修复原则与 auntie_lin/chen_ge/ajie 一致：补登场闸门(!met)，解锁烹饪技能线+节日对话+好感奖励后续
+  RANDOM_EVENTS.push({
+    id: "npc_chef_chen_first_meet",
+    phase: "street",
+    icon: "🍳",
+    title: "商业区的陈师傅",
+    story:
+      "商业区的小餐馆里，一个围着油腻围裙的中年男人正颠勺炒菜，火舌蹿起半米高。他看见你探头，用锅铲指了指：「饿了吧？尝尝我新研制的葱爆牛肉！」\n\n" +
+      "一盘热菜摆到你面前，牛肉嫩滑、葱香扑鼻。他擦擦手问：「看你天天跑来跑去，不如学门手艺？做菜这行，饿不着。」",
+    conditions: function (st) {
+      // [全系统自洽修复] 域D A类#4: chef_chen 从未被任何路径 met → 本条解除 dormant
+      return (
+        st &&
+        st.player &&
+        st.player.day >= 10 &&
+        (!st.relationships ||
+          !st.relationships.chef_chen ||
+          !st.relationships.chef_chen.met)
+      );
+    },
+    probability: 0.035,
+    repeatable: false,
+    choices: [
+      {
+        text: "🍳 给他打下手，学两招",
+        hint: "结识陈师傅，好感+12，烹饪XP+20",
+        apply: function (st) {
+          if (!st.relationships) st.relationships = {};
+          if (!st.relationships.chef_chen) {
+            st.relationships.chef_chen = { affinity: 0, met: true };
+          }
+          st.relationships.chef_chen.met = true;
+          st.relationships.chef_chen.affinity = Math.min(
+            100,
+            (st.relationships.chef_chen.affinity || 0) + 12, // [PLACEHOLDER] 好感
+          );
+          // 烹饪技能XP奖励（鼓励玩家走进厨师职业路径 C→C联动）
+          if (st.skills && st.skills.cooking) {
+            st.skills.cooking.xp = (st.skills.cooking.xp || 0) + 20; // [PLACEHOLDER] 技能XP
+          }
+          if (st.needs)
+            st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 3); // [PLACEHOLDER] 心情
+          if (st.flags) {
+            st.flags._chefChenMetDay = st.player.day;
+          }
+          if (typeof StateManager !== "undefined" && StateManager.addMessage)
+            StateManager.addMessage(
+              "🍳 陈师傅把锅铲递给你：「手腕发力，火候看 color。」你初步体验了烹饪的魅力！结识陈师傅，好感+12，烹饪XP+20。",
+              "success",
+            );
+        },
+      },
+      {
+        text: "🍜 吃完就走，说声谢谢",
+        hint: "结识陈师傅，好感+5",
+        apply: function (st) {
+          if (!st.relationships) st.relationships = {};
+          if (!st.relationships.chef_chen) {
+            st.relationships.chef_chen = { affinity: 0, met: true };
+          }
+          st.relationships.chef_chen.met = true;
+          st.relationships.chef_chen.affinity = Math.min(
+            100,
+            (st.relationships.chef_chen.affinity || 0) + 5, // [PLACEHOLDER] 好感
+          );
+          if (st.flags) st.flags._chefChenMetDay = st.player.day;
+          if (typeof StateManager !== "undefined" && StateManager.addMessage)
+            StateManager.addMessage(
+              "🍜 陈师傅点点头：「年轻人有礼貌，常来吃啊。」结识陈师傅，好感+5。",
+              "info",
+            );
+        },
+      },
+    ],
+  });
 })();

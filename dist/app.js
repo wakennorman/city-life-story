@@ -92117,6 +92117,136 @@ if (typeof window !== "undefined") {
 })();
 
 ;
+// ==== js/core/npc_social_linkage_r66.js ====
+/*
+ * 城市浮生记 — 域D（NPC/社交）联动增强事件 v66
+ * R66 全系统优化·Domain D NPC→经济(E) + NPC→职业成长(C) 桥接
+ *
+ * 设计约束（与 v3.108 / R17 npc_social_linkage_events.js 一致）：
+ *  - 以 IIFE 注入全局 RANDOM_EVENTS 数组（非 ES import）
+ *  - 所有 state 访问均 || 防御；数值标 [PLACEHOLDER] 待数值组校准
+ *  - 事件引擎严格按 e.phase 过滤，本文件事件 phase:"street"
+ *  - NPC引用须 rel && rel.met；好感传导走 applyAffinityChange
+ *  - 里程碑/冷却用 st.flags._xxxDone 去重
+ */
+(function () {
+  if (typeof RANDOM_EVENTS === "undefined" || !RANDOM_EVENTS) return;
+  if (RANDOM_EVENTS._npcSocialR66Loaded) return;
+  RANDOM_EVENTS._npcSocialR66Loaded = true;
+
+  // ===== D→E：NPC投资情报（高好感NPC分享经济/投资线索,社交→经济跨域桥接）=====
+  RANDOM_EVENTS.push({
+    id: "npc_investment_whisper",
+    phase: "street",
+    icon: "💹",
+    title: "老陈在银行门口拉住了你",
+    desc:
+      "老陈在银行站岗时看见你路过，神秘兮兮地凑过来：\n\n" +
+      "「小陈啊，我跟你说，最近来办定期的人少了一半，都去买那个'理财'了。" +
+      "大厅经理天天打电话拉客户。我站八年了，没见过这架势——你想想，啥信号？」\n\n" +
+      "你心里一动：资金在从存款流向投资理财。",
+    conditions: function (st) {
+      if (!st || !st.relationships) return false;
+      if (st.flags && st.flags._npcInvestmentWhisperDone) return false;
+      var rel = st.relationships.uncle_chen_bank;
+      // [全系统自洽修复] 域D 自洽: 要求 met + 好感≥40（通用称谓,不直呼NPC名）
+      if (!rel || !rel.met || (rel.affinity || 0) < 40) return false;
+      // 有可投资资产（总资产≥2万才触发投资相关情报）
+      var totalAssets =
+        (st.resources && (st.resources.cash || 0) + (st.resources.bankBalance || 0)) || 0;
+      return totalAssets >= 20000;
+    },
+    choices: [
+      {
+        text: "📊 回去研究投资理财",
+        hint: "心智+2,开启投资意识",
+        apply: function (st) {
+          if (st.flags) st.flags._npcInvestmentWhisperDone = true;
+          if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 2); // [PLACEHOLDER]
+          // [D→E 联动]: 标记"社交驱动的投资意识",E域事件可读取此flag降低触发门槛
+          if (st.flags) st.flags._socialInvestmentAwareness = true;
+          if (typeof StateManager !== "undefined" && StateManager.addMessage)
+            StateManager.addMessage(
+              "💡 老陈一句话点醒你：钱不能只躺着。打开投资 Tab，开始让钱为你工作。",
+              "good",
+            );
+        },
+      },
+      {
+        text: "😅 笑笑没当真",
+        hint: "好感不变",
+        apply: function (st) {
+          if (st.flags) st.flags._npcInvestmentWhisperDone = true;
+          if (typeof StateManager !== "undefined" && StateManager.addMessage)
+            StateManager.addMessage("😅 老陈摆摆手：「年轻人不想这些，也行，稳当。」", "info");
+        },
+      },
+    ],
+    probability: 0.04,
+  });
+
+  // ===== D→C：NPC技能指导（高好感NPC提供职业技能buff,社交→职业成长跨域桥接）=====
+  // 设计: NPC好感≥60时,玩家执行匹配技能的工作可获额外XP(通过chatWithNpc对话间接种下"指导flag")
+  RANDOM_EVENTS.push({
+    id: "npc_skill_mentor_offer",
+    phase: "street",
+    icon: "🎓",
+    title: "一位老朋友想教你点东西",
+    desc:
+      "难得的好天气,你在常去的地点碰见一位熟识已久的老朋友。寒暄过后,他/她认真地说：\n\n" +
+      "「你最近干的活我看在眼里,有模有样了。要不要我点拨你几手?不收费,就当你这些天帮忙的回馈。」\n\n" +
+      "简单几句话,胜过你自己琢磨好几天。这就是有人带和没人带的区别。",
+    conditions: function (st) {
+      if (!st || !st.relationships || !st.player) return false;
+      if (st.flags && st.flags._npcSkillMentorOfferDone) return false;
+      // 你已经有至少2天工作经历(非萌新)且至少有一个工作
+      if ((st.player.day || 0) < 14) return false;
+      // 找到一个已结识、好感≥60的NPC
+      for (var id in st.relationships) {
+        var r = st.relationships[id];
+        if (r && r.met && (r.affinity || 0) >= 60) return true;
+      }
+      return false;
+    },
+    choices: [
+      {
+        text: "🎓 认真请教(获得技能指导buff)",
+        hint: "该NPC后续相关技能永久+5%XP",
+        apply: function (st) {
+          if (st.flags) {
+            st.flags._npcSkillMentorOfferDone = true;
+            // 找到最高好感的已结识NPC作为"指导者"
+          }
+          var bestId = null, bestAff = 60;
+          for (var id in st.relationships) {
+            var r = st.relationships[id];
+            if (r && r.met && (r.affinity || 0) > bestAff) { bestAff = r.affinity; bestId = id; }
+          }
+          if (bestId && st.flags) {
+            st.flags._npcMentorId = bestId;
+            st.flags._npcMentorXpBonus = 0.05; // [PLACEHOLDER] 5% XP加成
+          }
+          if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 3); // [PLACEHOLDER]
+          if (typeof StateManager !== "undefined" && StateManager.addMessage)
+            StateManager.addMessage(
+              "🎓 有人指引的路,走得更快。你的指导者已就位,相关技能经验获取提升。",
+              "success",
+            );
+        },
+      },
+      {
+        text: "😊 先记下,以后再说",
+        hint: "好感不变",
+        apply: function (st) {
+          if (st.flags) st.flags._npcSkillMentorOfferDone = true;
+        },
+      },
+    ],
+    probability: 0.03,
+  });
+})();
+
+;
 // ==== js/core/npc_activation_events.js ====
 /*
  * 城市浮生记 — 域D（NPC/社交）A类缺陷修复·沉睡NPC激活
@@ -92569,6 +92699,83 @@ if (typeof window !== "undefined") {
           if (st.flags) st.flags._zhaojieMetDay = st.player.day;
           if (typeof StateManager !== "undefined" && StateManager.addMessage)
             StateManager.addMessage("📱 赵姐笑着加了你的微信：「有需要随时找我，姐给你最实在的报价。」结识赵姐，好感+4。", "info");
+        },
+      },
+    ],
+  });
+
+  // ===== 陈师傅（chef_chen）大厨 — A类:有定义/有矩阵/有下游事件，但无 first_meet → 永久 dormant =====
+  // 修复原则与 auntie_lin/chen_ge/ajie 一致：补登场闸门(!met)，解锁烹饪技能线+节日对话+好感奖励后续
+  RANDOM_EVENTS.push({
+    id: "npc_chef_chen_first_meet",
+    phase: "street",
+    icon: "🍳",
+    title: "商业区的陈师傅",
+    story:
+      "商业区的小餐馆里，一个围着油腻围裙的中年男人正颠勺炒菜，火舌蹿起半米高。他看见你探头，用锅铲指了指：「饿了吧？尝尝我新研制的葱爆牛肉！」\n\n" +
+      "一盘热菜摆到你面前，牛肉嫩滑、葱香扑鼻。他擦擦手问：「看你天天跑来跑去，不如学门手艺？做菜这行，饿不着。」",
+    conditions: function (st) {
+      // [全系统自洽修复] 域D A类#4: chef_chen 从未被任何路径 met → 本条解除 dormant
+      return (
+        st &&
+        st.player &&
+        st.player.day >= 10 &&
+        (!st.relationships ||
+          !st.relationships.chef_chen ||
+          !st.relationships.chef_chen.met)
+      );
+    },
+    probability: 0.035,
+    repeatable: false,
+    choices: [
+      {
+        text: "🍳 给他打下手，学两招",
+        hint: "结识陈师傅，好感+12，烹饪XP+20",
+        apply: function (st) {
+          if (!st.relationships) st.relationships = {};
+          if (!st.relationships.chef_chen) {
+            st.relationships.chef_chen = { affinity: 0, met: true };
+          }
+          st.relationships.chef_chen.met = true;
+          st.relationships.chef_chen.affinity = Math.min(
+            100,
+            (st.relationships.chef_chen.affinity || 0) + 12, // [PLACEHOLDER] 好感
+          );
+          // 烹饪技能XP奖励（鼓励玩家走进厨师职业路径 C→C联动）
+          if (st.skills && st.skills.cooking) {
+            st.skills.cooking.xp = (st.skills.cooking.xp || 0) + 20; // [PLACEHOLDER] 技能XP
+          }
+          if (st.needs)
+            st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 3); // [PLACEHOLDER] 心情
+          if (st.flags) {
+            st.flags._chefChenMetDay = st.player.day;
+          }
+          if (typeof StateManager !== "undefined" && StateManager.addMessage)
+            StateManager.addMessage(
+              "🍳 陈师傅把锅铲递给你：「手腕发力，火候看 color。」你初步体验了烹饪的魅力！结识陈师傅，好感+12，烹饪XP+20。",
+              "success",
+            );
+        },
+      },
+      {
+        text: "🍜 吃完就走，说声谢谢",
+        hint: "结识陈师傅，好感+5",
+        apply: function (st) {
+          if (!st.relationships) st.relationships = {};
+          if (!st.relationships.chef_chen) {
+            st.relationships.chef_chen = { affinity: 0, met: true };
+          }
+          st.relationships.chef_chen.met = true;
+          st.relationships.chef_chen.affinity = Math.min(
+            100,
+            (st.relationships.chef_chen.affinity || 0) + 5, // [PLACEHOLDER] 好感
+          );
+          if (st.flags) st.flags._chefChenMetDay = st.player.day;
+          if (typeof StateManager !== "undefined" && StateManager.addMessage)
+            StateManager.addMessage(
+              "🍜 陈师傅点点头：「年轻人有礼貌，常来吃啊。」结识陈师傅，好感+5。",
+              "info",
+            );
         },
       },
     ],
@@ -180767,7 +180974,8 @@ const EVENT_NPC_MAP = {
   free_clinic: {
     npcs: {
       xiao_mei: {
-        condition: (st) => st.status.sick,
+        // [全系统自洽修复] 域D A类#1: st.status 可能为 undefined（旧存档/异常状态），加守卫防崩溃
+        condition: (st) => st.status && st.status.sick,
         change: 2,
         msg: "小美听说你去做检查：'注意身体呀！'",
       },
@@ -181760,9 +181968,7 @@ function chatWithNpc(npcId, state) {
   }
   state.player.actionPoints = ap - 2;
 
-  // [全系统自洽修复] 域B A类#1: Math.random→Random.float 种子化RNG
-  var rollVal =
-    typeof Random !== "undefined" ? Random.float(0, 1) : Math.random();
+  var rollVal = Random.float(0, 1);
 
   // [全系统自洽修复] 域G 联动增强: 情绪状态影响社交倾向（G→D，好情绪→社交加分，坏情绪→社交减分）
   if (state.status && state.status.emotionalState) {
@@ -181774,10 +181980,7 @@ function chatWithNpc(npcId, state) {
   if (affinity >= 50) {
     // 好感高：大概率正面
     if (rollVal < 0.6) {
-      delta =
-        typeof Random !== "undefined"
-          ? Random.int(2, 3)
-          : 2 + Math.floor(Math.random() * 2); // +2~3
+      delta = Random.int(2, 3);
       chatType = "positive";
       message = "你们聊得很开心";
     } else if (rollVal < 0.85) {
@@ -181792,10 +181995,7 @@ function chatWithNpc(npcId, state) {
   } else if (affinity >= 10) {
     // 好感中等：中性为主
     if (rollVal < 0.4) {
-      delta =
-        typeof Random !== "undefined"
-          ? Random.int(1, 2)
-          : 1 + Math.floor(Math.random() * 2); // +1~2
+      delta = Random.int(1, 2);
       chatType = "positive";
       message = "你们聊得挺投缘";
     } else if (rollVal < 0.7) {
@@ -181822,10 +182022,7 @@ function chatWithNpc(npcId, state) {
       chatType = "neutral";
       message = "礼节性寒暄几句";
     } else {
-      delta =
-        typeof Random !== "undefined"
-          ? Random.int(-3, -1)
-          : -1 - Math.floor(Math.random() * 3); // -1~-3
+      delta = Random.int(-3, -1);
       chatType = "negative";
       message = "对方不太想搭理你";
     }
@@ -181880,12 +182077,8 @@ function chatWithNpc(npcId, state) {
     );
   }
 
-  // 传导好感变化给相关 NPC
-  if (typeof applyNpcPropagation === "function") {
-    var changeData = {};
-    changeData[npcId] = delta;
-    applyNpcPropagation(state, changeData);
-  }
+  // [全系统自洽修复] 域D A类#2: 删除死代码 — applyNpcPropagation 从未在 src/js 任何文件中定义
+  // 好感传导改由 npc_relationships.js::runNpcRelationChainEvents 独立处理，此处无需重复调用
 
   if (typeof renderAll === "function") renderAll();
 }
@@ -237823,6 +238016,14 @@ function enhancedApplyCareerJob(pathId, levelId) {
     }
     if (anyGoodRelation) interviewChance += 0.03;
 
+    // [全系统自洽修复] 域D 联动增强: D→C NPC面试推荐加成 — 高好感关键NPC提供面试成功率加成
+    if (typeof getNpcReferralBonus === "function") {
+      var _npcBonus = getNpcReferralBonus(state);
+      if (_npcBonus > 0) {
+        interviewChance += _npcBonus / 100;
+      }
+    }
+
     interviewChance = Math.max(0.1, Math.min(0.95, interviewChance));
 
     // 构建反馈信息
@@ -237835,6 +238036,13 @@ function enhancedApplyCareerJob(pathId, levelId) {
     }
     if (hasFormalClothes) {
       feedbackParts.push("👔 着装得体 +15%");
+    }
+    // [全系统自洽修复] 域D 联动增强: D→C NPC面试推荐加成反馈
+    if (typeof getNpcReferralBonus === "function") {
+      var _npcBonus = getNpcReferralBonus(state);
+      if (_npcBonus > 0) {
+        feedbackParts.push("👥 人脉推荐 +" + _npcBonus + "%");
+      }
     }
 
     var randVal = Random.float(0, 1);
