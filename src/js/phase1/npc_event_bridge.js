@@ -1050,6 +1050,13 @@ function chatWithNpc(npcId, state) {
   var rollVal =
     typeof Random !== "undefined" ? Random.float(0, 1) : Math.random();
 
+  // [全系统自洽修复] 域G 联动增强: 情绪状态影响社交倾向（G→D，好情绪→社交加分，坏情绪→社交减分）
+  if (state.status && state.status.emotionalState) {
+    var _emoMods = { depressed: -0.15, sad: -0.10, stressed: -0.05, stable: 0, happy: 0.08, elated: 0.15 };
+    var _emoMod = _emoMods[state.status.emotionalState] || 0;
+    rollVal = Math.max(0, Math.min(1, rollVal - _emoMod));
+  }
+
   if (affinity >= 50) {
     // 好感高：大概率正面
     if (rollVal < 0.6) {
