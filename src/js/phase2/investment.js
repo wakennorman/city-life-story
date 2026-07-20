@@ -1358,6 +1358,24 @@ function tickInvestmentDaily(state) {
     if (_pv > 0) {
       if (!(inv._portfolioPeak > 0) || _pv > inv._portfolioPeak)
         inv._portfolioPeak = _pv;
+      // [全系统自洽修复] 域E 联动增强: E→G 资产里程碑叙事 — 首次跨越¥1万/¥10万/¥50万/¥100万时触发自我反思
+      var _milestones = [10000, 50000, 100000, 500000, 1000000];
+      for (var _mi = 0; _mi < _milestones.length; _mi++) {
+        var _ms = _milestones[_mi];
+        if (_pv >= _ms && !state.flags["_portfolioMilestone_" + _ms]) {
+          state.flags["_portfolioMilestone_" + _ms] = true;
+          var _msMsg = "";
+          if (_ms === 10000) _msMsg = "💭 投资组合突破¥1万！虽然不算多，但这是你第一次真切感受到「钱生钱」的力量。";
+          else if (_ms === 50000) _msMsg = "💭 投资组合突破¥5万！你开始认真思考资产配置了。";
+          else if (_ms === 100000) _msMsg = "💭 投资组合突破¥10万！你已经不是那个为房租发愁的人了。";
+          else if (_ms === 500000) _msMsg = "💭 投资组合突破¥50万！财务自由的目标似乎不再遥不可及。";
+          else if (_ms === 1000000) _msMsg = "💭 投资组合突破¥100万！你做到了——这座城市里，你已经站在了前列。";
+          if (_msMsg && typeof StateManager !== "undefined") {
+            StateManager.addMessage(_msMsg, "event");
+          }
+          break;
+        }
+      }
     }
   } catch (e) {
     // 静默：峰值追踪失败不影响主流程
@@ -1686,6 +1704,24 @@ function sellInvStock(symbol, shares) {
       if (!state.flags._invLossNarrativeDay || state.flags._invLossNarrativeDay < state.player.day) {
         state.flags._invLossNarrativeDay = state.player.day;
         StateManager.addMessage("📉 投资亏损让心情有些低落。投资有风险，入市需谨慎。", "warning");
+        // [全系统自洽修复] 域E 联动增强: E→D 亏损时NPC安慰 — 好感≥30的NPC有概率安慰
+        if (state.relationships && Math.abs(pl) > 300) {
+          var _lossNpcs = [];
+          for (var _lid in state.relationships) {
+            var _lr = state.relationships[_lid];
+            if (_lr && _lr.met && (_lr.affinity || 0) >= 30) _lossNpcs.push(_lid);
+          }
+          if (_lossNpcs.length > 0 && Random.chance(0.3)) {
+            var _lnpc = _lossNpcs[Random.int(0, _lossNpcs.length - 1)];
+            var _lname = _lnpc;
+            if (typeof NPCS !== "undefined") {
+              var _ldef = NPCS.find(function(nn) { return nn.id === _lnpc; });
+              if (_ldef) _lname = _ldef.name;
+            }
+            StateManager.addMessage("💬 " + _lname + "注意到你的郁闷，拍了拍你的肩膀：「投资有赚有赔，别太往心里去。」", "info");
+            applyAffinityChange(state, _lnpc, 1, "亏损安慰");
+          }
+        }
       }
     }
   }

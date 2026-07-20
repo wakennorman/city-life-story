@@ -314,13 +314,15 @@
               }
             }
             if (candidates.length > 0) {
-              npcId = candidates[Math.floor(Math.random() * candidates.length)];
+              // [全系统自洽修复] 域E A类修复: Math.random→Random.int 种子化RNG
+              npcId = candidates[Random.int(0, candidates.length - 1)];
               if (typeof applyAffinityChange === "function") {
                 applyAffinityChange(st, npcId, 2, "投资机会分享");
               }
             }
             // 机会分好坏：70%正面/30%陷阱
-            var isGood = Math.random() > 0.3;
+            // [全系统自洽修复] 域E A类修复: Math.random→Random.chance 种子化RNG
+            var isGood = Random.chance(0.7);
             if (isGood) {
               if (typeof addSkillXp === "function") addSkillXp("finance", 5);
               if (st.player) st.player.mental = (st.player.mental || 50) + 3;
@@ -332,7 +334,13 @@
                   "朋友的推荐确实有价值！finance+5，心智+3。" +
                     (npcId
                       ? " [" +
-                        (npcId.charAt(0).toUpperCase() + npcId.slice(1)) +
+                        (function() {
+                          if (typeof NPCS !== "undefined") {
+                            var _nd = NPCS.find(function(nn) { return nn.id === npcId; });
+                            if (_nd) return _nd.name;
+                          }
+                          return npcId.charAt(0).toUpperCase() + npcId.slice(1);
+                        })() +
                         "] "
                       : ""),
                   "good",

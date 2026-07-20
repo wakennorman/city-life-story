@@ -216,6 +216,37 @@ function buildReportHTML(txs, state, reconcileInfo) {
     } catch (e) { /* 静默：生日提醒不影响主流程 */ }
   })();
 
+  // [全系统自洽修复] 域E 联动增强: E→F 日报投资组合概况
+  (function () {
+    try {
+      var _inv = state.investment;
+      if (!_inv) return;
+      var _holdings = _inv.stockHoldings || [];
+      var _props = _inv.properties || [];
+      var _btc = _inv.btcHoldings || 0;
+      if (_holdings.length === 0 && _props.length === 0 && _btc <= 0) return;
+      // 计算总持仓市值
+      var _portVal = 0;
+      for (var _hi = 0; _hi < _holdings.length; _hi++) {
+        var _h = _holdings[_hi];
+        var _m = _inv.stockMarket && _inv.stockMarket[_h.symbol];
+        if (_m && isFinite(_m.price)) _portVal += _m.price * (_h.shares || 0);
+      }
+      for (var _pi = 0; _pi < _props.length; _pi++) {
+        var _p = _props[_pi];
+        _portVal += _p.currentPrice || _p.buyPrice || 0;
+      }
+      if (_btc > 0 && _inv.btcPrice > 0) _portVal += _btc * _inv.btcPrice;
+      if (_portVal <= 0) return;
+      bodyHtml += '<div style="padding:6px 12px;margin:6px 0;background:rgba(46,204,113,0.06);border:1px solid rgba(46,204,113,0.15);border-radius:8px;font-size:12px;">';
+      bodyHtml += '<span style="font-weight:700;">📈 投资组合</span>';
+      bodyHtml += '<span style="float:right;">¥' + Math.round(_portVal).toLocaleString() + '</span>';
+      bodyHtml += '<div style="font-size:10px;color:var(--text-muted);margin-top:2px;">';
+      bodyHtml += _holdings.length + '只股票 · ' + _props.length + '套房产' + (_btc > 0 ? ' · BTC' : '');
+      bodyHtml += '</div></div>';
+    } catch (e) { /* 静默：投资概况不影响主流程 */ }
+  })();
+
   // 收入区域
   bodyHtml += '<div class="daily-report-section" style="margin-bottom:14px;">';
   bodyHtml +=

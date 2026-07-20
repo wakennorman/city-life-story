@@ -93135,13 +93135,15 @@ if (typeof window !== "undefined") {
               }
             }
             if (candidates.length > 0) {
-              npcId = candidates[Math.floor(Math.random() * candidates.length)];
+              // [全系统自洽修复] 域E A类修复: Math.random→Random.int 种子化RNG
+              npcId = candidates[Random.int(0, candidates.length - 1)];
               if (typeof applyAffinityChange === "function") {
                 applyAffinityChange(st, npcId, 2, "投资机会分享");
               }
             }
             // 机会分好坏：70%正面/30%陷阱
-            var isGood = Math.random() > 0.3;
+            // [全系统自洽修复] 域E A类修复: Math.random→Random.chance 种子化RNG
+            var isGood = Random.chance(0.7);
             if (isGood) {
               if (typeof addSkillXp === "function") addSkillXp("finance", 5);
               if (st.player) st.player.mental = (st.player.mental || 50) + 3;
@@ -93153,7 +93155,13 @@ if (typeof window !== "undefined") {
                   "朋友的推荐确实有价值！finance+5，心智+3。" +
                     (npcId
                       ? " [" +
-                        (npcId.charAt(0).toUpperCase() + npcId.slice(1)) +
+                        (function() {
+                          if (typeof NPCS !== "undefined") {
+                            var _nd = NPCS.find(function(nn) { return nn.id === npcId; });
+                            if (_nd) return _nd.name;
+                          }
+                          return npcId.charAt(0).toUpperCase() + npcId.slice(1);
+                        })() +
                         "] "
                       : ""),
                   "good",
@@ -142154,8 +142162,8 @@ const SKILL_SYNERGY_DUAL = {
       // 摆摊小吃收入+30%
       street_vending_food: { incomeMultiplier: 1.3 },
       sister_zhang_vending: { incomeMultiplier: 1.3 },
-      // 解锁新工作：餐饮摊主
-      unlockJobs: [], // restaurant_owner 待实现
+      // [全系统自洽修复] 域C 深度开发: 实装连携解锁工作
+      unlockJobs: ["food_truck_owner"],
       // 食材成本-15%
       foodCostReduction: 0.15,
       // 顾客满意度+20%
@@ -142179,7 +142187,7 @@ const SKILL_SYNERGY_DUAL = {
       freelance_writing: { incomeMultiplier: 1.3 },
       content_writing: { incomeMultiplier: 1.3 },
       // 解锁国际外包工作
-      unlockJobs: [], // international_freelance/foreign_client_coding 待实现
+      unlockJobs: ["remote_dev"],
       // 学习XP+20%
       codingXpBonus: 0.2,
       englishXpBonus: 0.2,
@@ -142202,7 +142210,7 @@ const SKILL_SYNERGY_DUAL = {
       electronics_repair: { incomeMultiplier: 1.35 },
       factory_electrician: { incomeMultiplier: 1.3 },
       // 解锁综合维修工作
-      unlockJobs: [], // comprehensive_repairman 待实现
+      unlockJobs: ["master_repairman"],
       // 装备维修损耗-30%
       repairWearReduction: 0.3,
     },
@@ -142223,7 +142231,7 @@ const SKILL_SYNERGY_DUAL = {
       shop_assistant: { incomeMultiplier: 1.3 },
       promoter: { incomeMultiplier: 1.3 },
       // 解锁团队销售管理
-      unlockJobs: [], // sales_team_lead 待实现
+      unlockJobs: ["sales_team_lead"],
       // 团队规模+2
       teamSizeBonus: 2,
       // 人缘成长+15%
@@ -142247,7 +142255,7 @@ const SKILL_SYNERGY_DUAL = {
       warehouse_logistics: { incomeMultiplier: 1.3 },
       wholesale_delivery: { incomeMultiplier: 1.35 },
       // 解锁长途运输工作
-      unlockJobs: [], // long_haul_driver/logistics_manager 待实现
+      unlockJobs: ["long_haul_driver"],
       // 旅行AP-3（效率更高）
       travelApReduction: 3,
     },
@@ -142291,7 +142299,7 @@ const SKILL_SYNERGY_DUAL = {
       // 向上管理+20
       upwardMgmtBonus: 20,
       // 解锁外企管理岗位
-      unlockJobs: [], // foreign_company_manager/international_project_lead 待实现
+      unlockJobs: ["foreign_company_staff"],
       // 晋升速度+25%
       promoSpeedBonus: 0.25,
     },
@@ -142364,7 +142372,7 @@ const SKILL_SYNERGY_TRIPLE = {
       // 向上管理+30
       upwardMgmtBonus: 30,
       // 解锁CTO岗位
-      unlockJobs: [], // cto/tech_director 待实现
+      unlockJobs: [], // cto/tech_director — 属于职场路径，需 corporate 阶段
       // 晋升速度+50%
       promoSpeedBonus: 0.5,
       // 团队规模+5
@@ -142389,7 +142397,7 @@ const SKILL_SYNERGY_TRIPLE = {
       // 维修类工作收入+50%
       comprehensiveRepairBonus: 0.5,
       // 解锁智能家居安装工作
-      unlockJobs: [], // smart_home_installer/iot_developer 待实现
+      unlockJobs: ["smart_home_tech"],
       // 装备维修损耗-50%
       repairWearReduction: 0.5,
       // 每日被动收入+¥100（来自智能家居项目）
@@ -142526,6 +142534,10 @@ function checkSkillSynergies(state) {
         desc: synergy.desc,
         effects: synergy.effects,
       };
+      // [全系统自洽修复] 域C 深度开发: 设置连携激活标记供工作系统读取
+      if (state.flags) {
+        state.flags["_synergy_" + synergyId] = true;
+      }
       // 收集解锁内容
       if (synergy.effects.unlockJobs) {
         results.unlockedJobs = results.unlockedJobs.concat(
@@ -150104,6 +150116,15 @@ const STREET_JOBS = [
     },
     risk: { injury: 0.05, illness: 0.02 },
   },
+  // ── 技能连携解锁工作（域C 深度开发） ──
+  { id: "food_truck_owner", name: "移动餐车", desc: "开餐车卖小吃。烹饪+销售双技能加持，生意红火。需要餐饮创业连携激活。", icon: "🚚", location: "commercial", requirements: { minAge: 18, maxAge: 60 }, requiredFlag: "_synergy_cooking_sales", effects: { fatigue: 25, happiness: 5, cookingXp: 3, salesXp: 2 }, payCalc: function(s) { return Math.floor(200 + s.skills.cooking.level * 2 + s.skills.sales.level * 1.5 + Random.float(0, 100)); }, risk: { illness: 0.01 } },
+  { id: "remote_dev", name: "远程开发", desc: "接海外远程编程项目。需要国际外包连携激活。", icon: "💻", location: "techpark", requirements: { minAge: 20, maxAge: 60 }, requiredFlag: "_synergy_coding_english", effects: { fatigue: 10, codingXp: 4, englishXp: 2 }, payCalc: function(s) { return Math.floor(300 + s.skills.coding.level * 3 + s.skills.english.level * 2 + Random.float(0, 200)); }, risk: {} },
+  { id: "master_repairman", name: "全能维修", desc: "家电维修、电路检修无所不能。需要综合维修连携激活。", icon: "🔧", location: "commercial", requirements: { minAge: 18, maxAge: 60 }, requiredFlag: "_synergy_repair_electrician", effects: { fatigue: 20, repairXp: 3, electricianXp: 2 }, payCalc: function(s) { return Math.floor(250 + s.skills.repair.level * 2.5 + s.skills.electrician.level * 2 + Random.float(0, 100)); }, risk: { injury: 0.02 } },
+  { id: "sales_team_lead", name: "销售主管", desc: "带领小团队做地推和客户拓展。需要团队销售连携激活。", icon: "👥", location: "commercial", requirements: { minAge: 22, maxAge: 55 }, requiredFlag: "_synergy_sales_management", effects: { fatigue: 20, happiness: 5, salesXp: 3, managementXp: 2 }, payCalc: function(s) { return Math.floor(300 + s.skills.sales.level * 2.5 + s.skills.management.level * 2 + Random.float(0, 150)); }, risk: {} },
+  { id: "long_haul_driver", name: "长途司机", desc: "跑长途货运，跨省运输。需要长途运输连携激活。", icon: "🚛", location: "industrial", requirements: { minAge: 22, maxAge: 55 }, requiredFlag: "_synergy_driving_accounting", effects: { fatigue: 35, drivingXp: 4, accountingXp: 1 }, payCalc: function(s) { return Math.floor(250 + s.skills.driving.level * 2.5 + s.skills.accounting.level * 1.5 + Random.float(0, 150)); }, risk: { injury: 0.03 } },
+  { id: "foreign_company_staff", name: "外企职员", desc: "在外资企业做行政/协调工作。需要外企晋升连携激活。", icon: "🏢", location: "techpark", requirements: { minAge: 22, maxAge: 50 }, requiredFlag: "_synergy_english_management", effects: { fatigue: 15, englishXp: 3, managementXp: 2 }, payCalc: function(s) { return Math.floor(400 + s.skills.english.level * 3 + s.skills.management.level * 2 + Random.float(0, 200)); }, risk: {} },
+  { id: "finance_analyst", name: "财务分析师", desc: "为企业提供财务分析服务。需要财务自由连携激活。", icon: "📊", location: "techpark", requirements: { minAge: 22, maxAge: 55 }, requiredFlag: "_synergy_accounting_management", effects: { fatigue: 15, accountingXp: 3, managementXp: 2 }, payCalc: function(s) { return Math.floor(350 + s.skills.accounting.level * 3 + s.skills.management.level * 2 + Random.float(0, 150)); }, risk: {} },
+  { id: "smart_home_tech", name: "智能家居技术员", desc: "安装调试智能家居系统。需要智能家居专家连携激活。", icon: "🏡", location: "commercial", requirements: { minAge: 22, maxAge: 55 }, requiredFlag: "_synergy_repair_electrician_coding", effects: { fatigue: 20, repairXp: 3, electricianXp: 2, codingXp: 2 }, payCalc: function(s) { return Math.floor(400 + s.skills.repair.level * 2.5 + s.skills.electrician.level * 2 + s.skills.coding.level * 2 + Random.float(0, 200)); }, risk: { injury: 0.01 } },
 ];
 
 // ====== P2#12 技能树分支解锁工作 ======
@@ -186370,6 +186391,24 @@ function tickInvestmentDaily(state) {
     if (_pv > 0) {
       if (!(inv._portfolioPeak > 0) || _pv > inv._portfolioPeak)
         inv._portfolioPeak = _pv;
+      // [全系统自洽修复] 域E 联动增强: E→G 资产里程碑叙事 — 首次跨越¥1万/¥10万/¥50万/¥100万时触发自我反思
+      var _milestones = [10000, 50000, 100000, 500000, 1000000];
+      for (var _mi = 0; _mi < _milestones.length; _mi++) {
+        var _ms = _milestones[_mi];
+        if (_pv >= _ms && !state.flags["_portfolioMilestone_" + _ms]) {
+          state.flags["_portfolioMilestone_" + _ms] = true;
+          var _msMsg = "";
+          if (_ms === 10000) _msMsg = "💭 投资组合突破¥1万！虽然不算多，但这是你第一次真切感受到「钱生钱」的力量。";
+          else if (_ms === 50000) _msMsg = "💭 投资组合突破¥5万！你开始认真思考资产配置了。";
+          else if (_ms === 100000) _msMsg = "💭 投资组合突破¥10万！你已经不是那个为房租发愁的人了。";
+          else if (_ms === 500000) _msMsg = "💭 投资组合突破¥50万！财务自由的目标似乎不再遥不可及。";
+          else if (_ms === 1000000) _msMsg = "💭 投资组合突破¥100万！你做到了——这座城市里，你已经站在了前列。";
+          if (_msMsg && typeof StateManager !== "undefined") {
+            StateManager.addMessage(_msMsg, "event");
+          }
+          break;
+        }
+      }
     }
   } catch (e) {
     // 静默：峰值追踪失败不影响主流程
@@ -186698,6 +186737,24 @@ function sellInvStock(symbol, shares) {
       if (!state.flags._invLossNarrativeDay || state.flags._invLossNarrativeDay < state.player.day) {
         state.flags._invLossNarrativeDay = state.player.day;
         StateManager.addMessage("📉 投资亏损让心情有些低落。投资有风险，入市需谨慎。", "warning");
+        // [全系统自洽修复] 域E 联动增强: E→D 亏损时NPC安慰 — 好感≥30的NPC有概率安慰
+        if (state.relationships && Math.abs(pl) > 300) {
+          var _lossNpcs = [];
+          for (var _lid in state.relationships) {
+            var _lr = state.relationships[_lid];
+            if (_lr && _lr.met && (_lr.affinity || 0) >= 30) _lossNpcs.push(_lid);
+          }
+          if (_lossNpcs.length > 0 && Random.chance(0.3)) {
+            var _lnpc = _lossNpcs[Random.int(0, _lossNpcs.length - 1)];
+            var _lname = _lnpc;
+            if (typeof NPCS !== "undefined") {
+              var _ldef = NPCS.find(function(nn) { return nn.id === _lnpc; });
+              if (_ldef) _lname = _ldef.name;
+            }
+            StateManager.addMessage("💬 " + _lname + "注意到你的郁闷，拍了拍你的肩膀：「投资有赚有赔，别太往心里去。」", "info");
+            applyAffinityChange(state, _lnpc, 1, "亏损安慰");
+          }
+        }
       }
     }
   }
@@ -232171,6 +232228,37 @@ function buildReportHTML(txs, state, reconcileInfo) {
         bodyHtml += ' 今天生日！去拜访TA会有惊喜🎁</div>';
       }
     } catch (e) { /* 静默：生日提醒不影响主流程 */ }
+  })();
+
+  // [全系统自洽修复] 域E 联动增强: E→F 日报投资组合概况
+  (function () {
+    try {
+      var _inv = state.investment;
+      if (!_inv) return;
+      var _holdings = _inv.stockHoldings || [];
+      var _props = _inv.properties || [];
+      var _btc = _inv.btcHoldings || 0;
+      if (_holdings.length === 0 && _props.length === 0 && _btc <= 0) return;
+      // 计算总持仓市值
+      var _portVal = 0;
+      for (var _hi = 0; _hi < _holdings.length; _hi++) {
+        var _h = _holdings[_hi];
+        var _m = _inv.stockMarket && _inv.stockMarket[_h.symbol];
+        if (_m && isFinite(_m.price)) _portVal += _m.price * (_h.shares || 0);
+      }
+      for (var _pi = 0; _pi < _props.length; _pi++) {
+        var _p = _props[_pi];
+        _portVal += _p.currentPrice || _p.buyPrice || 0;
+      }
+      if (_btc > 0 && _inv.btcPrice > 0) _portVal += _btc * _inv.btcPrice;
+      if (_portVal <= 0) return;
+      bodyHtml += '<div style="padding:6px 12px;margin:6px 0;background:rgba(46,204,113,0.06);border:1px solid rgba(46,204,113,0.15);border-radius:8px;font-size:12px;">';
+      bodyHtml += '<span style="font-weight:700;">📈 投资组合</span>';
+      bodyHtml += '<span style="float:right;">¥' + Math.round(_portVal).toLocaleString() + '</span>';
+      bodyHtml += '<div style="font-size:10px;color:var(--text-muted);margin-top:2px;">';
+      bodyHtml += _holdings.length + '只股票 · ' + _props.length + '套房产' + (_btc > 0 ? ' · BTC' : '');
+      bodyHtml += '</div></div>';
+    } catch (e) { /* 静默：投资概况不影响主流程 */ }
   })();
 
   // 收入区域

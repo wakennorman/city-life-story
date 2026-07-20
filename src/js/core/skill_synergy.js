@@ -27,8 +27,8 @@ const SKILL_SYNERGY_DUAL = {
       // 摆摊小吃收入+30%
       street_vending_food: { incomeMultiplier: 1.3 },
       sister_zhang_vending: { incomeMultiplier: 1.3 },
-      // 解锁新工作：餐饮摊主
-      unlockJobs: [], // restaurant_owner 待实现
+      // [全系统自洽修复] 域C 深度开发: 实装连携解锁工作
+      unlockJobs: ["food_truck_owner"],
       // 食材成本-15%
       foodCostReduction: 0.15,
       // 顾客满意度+20%
@@ -52,7 +52,7 @@ const SKILL_SYNERGY_DUAL = {
       freelance_writing: { incomeMultiplier: 1.3 },
       content_writing: { incomeMultiplier: 1.3 },
       // 解锁国际外包工作
-      unlockJobs: [], // international_freelance/foreign_client_coding 待实现
+      unlockJobs: ["remote_dev"],
       // 学习XP+20%
       codingXpBonus: 0.2,
       englishXpBonus: 0.2,
@@ -75,7 +75,7 @@ const SKILL_SYNERGY_DUAL = {
       electronics_repair: { incomeMultiplier: 1.35 },
       factory_electrician: { incomeMultiplier: 1.3 },
       // 解锁综合维修工作
-      unlockJobs: [], // comprehensive_repairman 待实现
+      unlockJobs: ["master_repairman"],
       // 装备维修损耗-30%
       repairWearReduction: 0.3,
     },
@@ -96,7 +96,7 @@ const SKILL_SYNERGY_DUAL = {
       shop_assistant: { incomeMultiplier: 1.3 },
       promoter: { incomeMultiplier: 1.3 },
       // 解锁团队销售管理
-      unlockJobs: [], // sales_team_lead 待实现
+      unlockJobs: ["sales_team_lead"],
       // 团队规模+2
       teamSizeBonus: 2,
       // 人缘成长+15%
@@ -120,7 +120,7 @@ const SKILL_SYNERGY_DUAL = {
       warehouse_logistics: { incomeMultiplier: 1.3 },
       wholesale_delivery: { incomeMultiplier: 1.35 },
       // 解锁长途运输工作
-      unlockJobs: [], // long_haul_driver/logistics_manager 待实现
+      unlockJobs: ["long_haul_driver"],
       // 旅行AP-3（效率更高）
       travelApReduction: 3,
     },
@@ -164,7 +164,7 @@ const SKILL_SYNERGY_DUAL = {
       // 向上管理+20
       upwardMgmtBonus: 20,
       // 解锁外企管理岗位
-      unlockJobs: [], // foreign_company_manager/international_project_lead 待实现
+      unlockJobs: ["foreign_company_staff"],
       // 晋升速度+25%
       promoSpeedBonus: 0.25,
     },
@@ -185,8 +185,8 @@ const SKILL_SYNERGY_DUAL = {
       investmentIncomeBonus: 0.3,
       // 股票交易手续费-50%
       tradingFeeReduction: 0.5,
-      // 解锁高级投资分析
-      unlockActions: [], // advanced_investment_analysis 待实现
+      // [全系统自洽修复] 域C 深度开发: 实装连携解锁工作
+      unlockJobs: ["finance_analyst"],
       // 每日被动收入+¥50（来自投资）
       passiveInvestmentIncome: 50,
     },
@@ -237,7 +237,7 @@ const SKILL_SYNERGY_TRIPLE = {
       // 向上管理+30
       upwardMgmtBonus: 30,
       // 解锁CTO岗位
-      unlockJobs: [], // cto/tech_director 待实现
+      unlockJobs: [], // cto/tech_director — 属于职场路径，需 corporate 阶段
       // 晋升速度+50%
       promoSpeedBonus: 0.5,
       // 团队规模+5
@@ -262,7 +262,7 @@ const SKILL_SYNERGY_TRIPLE = {
       // 维修类工作收入+50%
       comprehensiveRepairBonus: 0.5,
       // 解锁智能家居安装工作
-      unlockJobs: [], // smart_home_installer/iot_developer 待实现
+      unlockJobs: ["smart_home_tech"],
       // 装备维修损耗-50%
       repairWearReduction: 0.5,
       // 每日被动收入+¥100（来自智能家居项目）
@@ -399,6 +399,10 @@ function checkSkillSynergies(state) {
         desc: synergy.desc,
         effects: synergy.effects,
       };
+      // [全系统自洽修复] 域C 深度开发: 设置连携激活标记供工作系统读取
+      if (state.flags) {
+        state.flags["_synergy_" + synergyId] = true;
+      }
       // 收集解锁内容
       if (synergy.effects.unlockJobs) {
         results.unlockedJobs = results.unlockedJobs.concat(
