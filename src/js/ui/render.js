@@ -1186,6 +1186,11 @@ function _growthStat(label, value, color) {
  * 与侧栏 #stat-* 采用同一 CSS 色梯度类、同一预警阈值
  */
 function renderTimeSlot(state, parent) {
+  // [全系统自洽修复] 域G A类#4: renderTimeSlot 守卫 — state.player 可能未初始化
+  if (!state || !state.player) {
+    if (parent) parent.innerHTML = '<div style="padding:6px 12px;font-size:12px;color:var(--text-muted);">📅 第 1 天</div>';
+    return;
+  }
   const slotNames = {
     morning: "☀️ 上午",
     afternoon: "🌤️ 下午",
@@ -1197,7 +1202,7 @@ function renderTimeSlot(state, parent) {
 
   // 住所数据（用于 "· Qn" 企业季标签）
   var phaseLabel =
-    state.player.phase === "corporate" ? ` · Q${state.player.corpQuarter}` : "";
+    state.player.phase === "corporate" ? ` · Q${state.player.corpQuarter || 1}` : "";
 
   const ap = state.player.actionPoints || 0;
   const maxAp = state.player.maxActionPoints || 100;
