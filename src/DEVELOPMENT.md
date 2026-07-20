@@ -1,6 +1,6 @@
 # 城市浮生记 (City Life Story) — 开发文档
 
-> 最后更新: 2026-07-20（阶段3批次3：技能加成 11 个叶子纯函数 getCookingDiscount 等迁 src/app/core/skills TS 规范源，新增 TS↔vanilla 双向比对单测 231/231；src/js 端零改动、加载序不变）
+> 最后更新: 2026-07-20（阶段3批次4：命名映射纯函数 getSkillTierName/getSkillChineseName/getStatChineseName 迁 src/app/core/naming TS 规范源，新增 TS↔vanilla 双向比对单测 41/41；src/js 端零改动、加载序不变）
 > 历史流水账已归档到 `docs/changelog/`，本文件仅保留活文档。
 
 ---
