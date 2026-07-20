@@ -206,6 +206,14 @@
         var rankMap = { P5: 5, P6: 6, P7: 7, P8: 8, P9: 9, P10: 10 };
         return (rankMap[rank] || 0) >= q.t;
       }
+      // [全系统自洽修复] 域G 联动增强: 情绪状态目标检查
+      case "emotionGte": {
+        var _curEmo = state.status && state.status.emotionalState;
+        if (!_curEmo) return false;
+        if (q.t === "happy") return _curEmo === "happy" || _curEmo === "elated";
+        if (q.t === "elated") return _curEmo === "elated";
+        return false;
+      }
     }
     return false;
   }
@@ -510,6 +518,18 @@
           type: "assetsGte",
           t: 500000,
         });
+    }
+
+    // [全系统自洽修复] 域G 联动增强: 情绪状态每日目标（G→F，引导玩家关注情绪管理）
+    if (state.status && state.status.emotionalState) {
+      var _emo = state.status.emotionalState;
+      if (_emo === "depressed" || _emo === "sad") {
+        pool.push({ id: "e_cheerup", icon: "😊", text: "心情好起来（去娱乐/找朋友聊天）", type: "emotionGte", t: "happy" });
+      } else if (_emo === "happy") {
+        pool.push({ id: "e_keep_happy", icon: "😊", text: "保持好心情", type: "emotionGte", t: "happy" });
+      } else if (_emo === "stable") {
+        pool.push({ id: "e_elated", icon: "🌟", text: "争取达到极佳状态", type: "emotionGte", t: "elated" });
+      }
     }
 
     // ── 保底（池太少时补充通用目标）──

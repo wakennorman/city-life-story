@@ -192913,6 +192913,11 @@ function raiseFunding(state, roundId) {
     roundDef.equityDilution[0] +
     Random.float(0, roundDef.equityDilution[1] - roundDef.equityDilution[0]);
 
+  // [全系统自洽修复] 域H R61: equityDilution极小值→估值暴涨防御
+  if (equityDilution < 0.001) {
+    return { success: false, message: "融资比例异常，请重试。" };
+  }
+
   // 更新股权
   const oldPlayerEquity = company.equity.player;
   company.equity.player =
@@ -192988,10 +192993,9 @@ function _addBoardMemberAfterFunding(state, roundId, investorType) {
 
   const template =
     BOARD_MEMBER_TEMPLATES[
-      investorType.key ||
-        Object.keys(BOARD_MEMBER_TEMPLATES).find(
-          (k) => BOARD_MEMBER_TEMPLATES[k].name === investorType.name,
-        )
+      Object.keys(BOARD_MEMBER_TEMPLATES).find(
+        (k) => BOARD_MEMBER_TEMPLATES[k].name === investorType.name,
+      )
     ];
   if (!template) return;
 
@@ -193852,13 +193856,12 @@ function tickStartup(state, tickType) {
     const officeCost = OFFICE_LOCATIONS[company.officeLocation].cost;
     rent = Math.round((officeCost * timeMult) / 90); // 月租转日租
   } else {
-    // 默认基础租金
+    // 默认基础租金（含员工空间）
     rent =
       Math.round(DAILY_RENT_BASE * timeMult) +
       company.employees.length * Math.round(DAILY_RENT_PER_EMP * timeMult);
   }
-  // 员工空间租金（每人额外）
-  rent += company.employees.length * Math.round(DAILY_RENT_PER_EMP * timeMult);
+  // [全系统自洽修复] 域H R61: 删除员工空间租金重复计算（原L2509重复累加）
   totalExpenses += rent;
   // 研发成本
   const rAndD =
@@ -195177,7 +195180,8 @@ function resolveCrisisEvent(state, optionIndex) {
   const option = CRISIS_RESPONSE_OPTIONS[optionKey];
   if (!option) return { success: false, message: "无效应对方案" };
 
-  // 检查费用
+  // [全系统自洽修复] 域H R61: cashReserve扣费前NaN守卫
+  if (!isFinite(company.cashReserve)) company.cashReserve = 0;
   if (company.cashReserve < option.cost) {
     return {
       success: false,
@@ -206881,8 +206885,12 @@ function handleCrisisChoice(crisisId, optionIndex) {
  */
 function applyCrisisChoice(state, crisisId, option) {
   const startup = state.startup;
-  const company = startup.company;
-  if (!company) return;
+  const company = startup?.company;
+  // [全系统自洽修复] 域H R61: startup.company/null守卫+清理pendingCrisis
+  if (!company) {
+    state._pendingCrisis = null;
+    return;
+  }
 
   // 计算成功率
   const success = Random.chance(option.successChance);
@@ -239009,6 +239017,14 @@ if (typeof window !== "undefined") {
         var rankMap = { P5: 5, P6: 6, P7: 7, P8: 8, P9: 9, P10: 10 };
         return (rankMap[rank] || 0) >= q.t;
       }
+      // [全系统自洽修复] 域G 联动增强: 情绪状态目标检查
+      case "emotionGte": {
+        var _curEmo = state.status && state.status.emotionalState;
+        if (!_curEmo) return false;
+        if (q.t === "happy") return _curEmo === "happy" || _curEmo === "elated";
+        if (q.t === "elated") return _curEmo === "elated";
+        return false;
+      }
     }
     return false;
   }
@@ -239313,6 +239329,18 @@ if (typeof window !== "undefined") {
           type: "assetsGte",
           t: 500000,
         });
+    }
+
+    // [全系统自洽修复] 域G 联动增强: 情绪状态每日目标（G→F，引导玩家关注情绪管理）
+    if (state.status && state.status.emotionalState) {
+      var _emo = state.status.emotionalState;
+      if (_emo === "depressed" || _emo === "sad") {
+        pool.push({ id: "e_cheerup", icon: "😊", text: "心情好起来（去娱乐/找朋友聊天）", type: "emotionGte", t: "happy" });
+      } else if (_emo === "happy") {
+        pool.push({ id: "e_keep_happy", icon: "😊", text: "保持好心情", type: "emotionGte", t: "happy" });
+      } else if (_emo === "stable") {
+        pool.push({ id: "e_elated", icon: "🌟", text: "争取达到极佳状态", type: "emotionGte", t: "elated" });
+      }
     }
 
     // ── 保底（池太少时补充通用目标）──
