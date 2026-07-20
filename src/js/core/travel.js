@@ -595,6 +595,14 @@ function tickTravel(state) {
     }
     // 心情恢复
     state.needs.happiness = Math.min(100, (state.needs.happiness || 50) + 10);
+    // [全系统自洽修复] 域G 联动增强: 旅行归来后额外疲劳+叙事消息（G→G 核心机制深度包装）
+    state.needs.fatigue = Math.min(100, (state.needs.fatigue || 0) + 5);
+    if (dest) {
+      StateManager.addMessage(
+        "🚶 " + dest.name + "之旅结束了，你带着行囊和回忆回到熟悉的城市。虽然有点累，但心里充实了不少。",
+        "info"
+      );
+    }
     state.travel.active = false;
     state.travel.destination = null;
     state.travel.daysRemaining = 0;

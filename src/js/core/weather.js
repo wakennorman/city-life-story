@@ -670,6 +670,24 @@ function applyWeatherDailyEffects(state) {
 
   // 极端天气特殊效果
   var wId = state.weather.current;
+  var prevWeather = state.weather._previousWeather;
+  state.weather._previousWeather = wId; // 记录当前天气供下次对比
+
+  // [全系统自洽修复] 域G 联动增强: 极端天气结束时触发叙事消息（G→B 叙事层增强）
+  if (prevWeather && isExtremeWeather(prevWeather) && !isExtremeWeather(wId)) {
+    var reliefMsgs = {
+      heatwave: "🥵 高温预警终于解除了！你深吸一口凉下来的空气，感觉整个人都活过来了。",
+      cold_snap: "🥶 寒潮过去了，阳光重新照在身上，暖洋洋的。",
+      heavy_smog: "😷 雾霾散了！天空终于露出了蓝色，你忍不住多看了几眼。",
+      typhoon: "🌀 台风过境，城市一片狼藉，但天空放晴了——你长舒一口气。",
+      sandstorm: "🌪️ 沙尘暴终于停了，空气里弥漫着泥土的气息，但至少能看清前路了。",
+      plum_rain: "🌧️ 梅雨季结束了，阳光穿过云层，被子终于可以晒干了。",
+    };
+    var msg = reliefMsgs[prevWeather];
+    if (msg) {
+      StateManager.addMessage(msg, "event");
+    }
+  }
   if (wId === "heatwave" && Random.chance(0.2))
     StateManager.addMessage("🥵 高温预警！注意防暑，多喝水！", "warning");
   if (wId === "cold_snap" && Random.chance(0.2))

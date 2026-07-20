@@ -558,6 +558,37 @@ function applyNodeChoice(state, nodeId, choiceKey) {
     state.player.mental = Math.min(100, (state.player.mental || 0) + 1);
     StateManager.addMessage("🧠 人生经历让心智更加成熟（心智+1）", "good");
   }
+  // [全系统自洽修复] 域G 联动增强2: 人生节点选择影响NPC关系（G→D，社会关系联动）
+  if (state.relationships && nodeId && choiceKey) {
+    var npcEffects = {
+      gaokao_excellent: { xiao_mei: 3, old_zhou: 2 },
+      gaokao_normal: { xiao_mei: 1, old_zhou: 1 },
+      gaokao_skip: { xiao_mei: -1, old_zhou: -2 },
+      uni_tech: { xiao_mei: 2, old_zhou: 1 },
+      uni_engineering: { old_zhou: 3, boss_li: 2 },
+      uni_arts: { xiao_mei: 3, lin_xiu: 2 },
+      uni_skip: { old_zhou: 1 },
+      c35_transform: { xiao_mei: 2, aunt_wang: 1 },
+      c35_hold: { boss_li: 2, old_zhou: 2 },
+      c35_newpath: { lin_xiu: 3, xiao_mei: 2 },
+      c35_lieflat: { xiao_mei: -1, aunt_wang: 1 },
+      retire_wealthy: { xiao_mei: 3, old_zhou: 3, aunt_wang: 2 },
+      retire_advisor: { boss_li: 3, old_zhou: 2 },
+      retire_continue: { boss_li: 2 },
+    };
+    var effects = npcEffects[choiceKey];
+    if (effects) {
+      for (var npcId in effects) {
+        if (!effects.hasOwnProperty(npcId)) continue;
+        if (state.relationships[npcId] && state.relationships[npcId].met) {
+          state.relationships[npcId].affinity = Math.min(
+            100,
+            Math.max(0, (state.relationships[npcId].affinity || 50) + effects[npcId])
+          );
+        }
+      }
+    }
+  }
   state.flags["_lifeNode_" + nodeId + "_done"] = true;
   state._pendingLifeNode = null;
 }
