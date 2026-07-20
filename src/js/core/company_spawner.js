@@ -401,6 +401,8 @@ function generateCeoBio() {
 
 /** 检查是否需要生成新公司 */
 function checkAndSpawnNewCompanies(state) {
+  // [全系统自洽修复] 域H A类#15: company_spawner 守卫 — state 未初始化时的防御
+  if (!state) return [];
   const fate = state.enterpriseFate;
   if (!fate || !fate.companies) return [];
 
@@ -490,6 +492,8 @@ function getAllIndustries() {
  * @returns {object|null} 生成的新公司，失败返回null
  */
 function spawnFromRuins(state, deceasedCompany) {
+  // [全系统自洽修复] 域H A类#16: spawnFromRuins 守卫
+  if (!state) return null;
   if (!deceasedCompany || !deceasedCompany.industry) return null;
 
   var industry = deceasedCompany.industry;
@@ -633,6 +637,8 @@ function spawnFromRuins(state, deceasedCompany) {
  * @returns {Array} 生成的新公司列表
  */
 function checkAndSpawnFromRuins(state) {
+  // [全系统自洽修复] 域H A类#17: checkAndSpawnFromRuins 守卫
+  if (!state) return [];
   var fate = state.enterpriseFate;
   if (!fate || !fate.companies) return [];
 

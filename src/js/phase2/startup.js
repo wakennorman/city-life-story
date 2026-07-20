@@ -2453,8 +2453,11 @@ function tickStartup(state, tickType) {
   for (const product of company.products) {
     if (product.status === "launched") {
       const baseRevenue = DAILY_BASE_REVENUE * timeMult;
-      const techMod = product.technologyScore / 100;
-      const marketMod = product.marketScore / 100;
+      // [全系统自洽修复] 域H A类#25: 防止 revenue 计算中 technologyScore/marketScore NaN 传播
+      var _tech = (typeof product.technologyScore === "number" && isFinite(product.technologyScore)) ? product.technologyScore : 50;
+      var _market = (typeof product.marketScore === "number" && isFinite(product.marketScore)) ? product.marketScore : 50;
+      const techMod = _tech / 100;
+      const marketMod = _market / 100;
       const industryMod =
         STARTUP_INDUSTRIES[company.industry]?.avgBurnRate / 50000 || 1;
       const growthMod = 1 + (company.revenue > 0 ? DAILY_GROWTH_BONUS : 0);
@@ -2538,15 +2541,23 @@ function tickStartup(state, tickType) {
   company.expenses = totalExpenses;
 
   // 3. 净现金流
+  // [全系统自洽修复] 域H A类#21: 防止 totalRevenue/totalExpenses NaN 传播
+  if (typeof totalRevenue !== "number" || !isFinite(totalRevenue)) totalRevenue = 0;
+  if (typeof totalExpenses !== "number" || !isFinite(totalExpenses)) totalExpenses = 0;
   const netCash = totalRevenue - totalExpenses;
-  company.cashReserve += netCash;
+  company.cashReserve = (typeof company.cashReserve === "number" && isFinite(company.cashReserve)) ? company.cashReserve + netCash : netCash;
 
   // 4. 烧钱率 & runway
   company.burnRate = Math.max(0, totalExpenses - totalRevenue);
+  if (!isFinite(company.burnRate)) company.burnRate = 0;
   company.monthsOfRunway =
-    company.burnRate > 0 ? company.cashReserve / (company.burnRate / 30) : 999;
+    company.burnRate > 0 ? (company.cashReserve || 0) / (company.burnRate / 30) : 999;
 
   // 5. 估值漂移
+  // [全系统自洽修复] 域H A类#22: 防止 company.valuation NaN 传播
+  if (typeof company.valuation !== "number" || !isFinite(company.valuation)) {
+    company.valuation = 5000000; // 默认估值500万
+  }
   const valuationUpMod = tickType === "daily" ? 0.0003 : 0.02;
   const valuationDownMod = tickType === "daily" ? 0.0002 : 0.01;
   if (netCash > 0) {
@@ -2556,8 +2567,10 @@ function tickStartup(state, tickType) {
       1 - valuationDownMod - Random.float(0, valuationDownMod);
   }
   company.valuation = Math.round(company.valuation);
+  if (!isFinite(company.valuation)) company.valuation = 5000000;
 
   // 更新峰值估值
+  if (!startup.history) startup.history = {};
   if (company.valuation > (startup.history.peakValuation || 0)) {
     startup.history.peakValuation = company.valuation;
   }
@@ -2606,8 +2619,10 @@ function tickStartup(state, tickType) {
         ? 0.05
         : 0;
       const baseGrowth = DAILY_BASE_GROWTH * timeMult;
-      const productFactor =
-        (product.technologyScore + product.marketScore) / 200;
+      // [全系统自洽修复] 域H A类#23: 防止 technologyScore/marketScore NaN 传播
+      var techScore = (typeof product.technologyScore === "number" && isFinite(product.technologyScore)) ? product.technologyScore : 50;
+      var marketScore = (typeof product.marketScore === "number" && isFinite(product.marketScore)) ? product.marketScore : 50;
+      const productFactor = (techScore + marketScore) / 200;
       const growthRate = baseGrowth * productFactor + wordOfMouth;
 
       if (!product.users) product.users = 100;
@@ -2615,8 +2630,10 @@ function tickStartup(state, tickType) {
 
       // 口碑评分
       if (!product.rating) product.rating = 3.5;
+      // [全系统自洽修复] 域H A类#24: 防止 ratingChange NaN 传播
+      var _techForRating = (typeof product.technologyScore === "number" && isFinite(product.technologyScore)) ? product.technologyScore : 50;
       const ratingChange =
-        ((product.technologyScore / 100 - 0.5) * 0.2) / timeMult +
+        ((_techForRating / 100 - 0.5) * 0.2) / timeMult +
         Random.float(-0.05, 0.05) / timeMult;
       product.rating = Math.max(1, Math.min(5, product.rating + ratingChange));
 

@@ -4473,7 +4473,9 @@ function renderSkillsTab(state, parent) {
     synDiv.style.cssText =
       "margin-top:14px;padding:10px;background:rgba(255,255,255,0.03);border-radius:8px;border:1px solid rgba(255,255,255,0.06);";
     var synTitle =
-      '<h3 style="color:var(--text-muted);margin-bottom:8px;font-size:12px;">✨ 技能协同增益</h3>';
+      '<h3 style="color:var(--text-muted);margin-bottom:8px;font-size:12px;">✨ 技能协同增益' +
+      (activeSyn.length > 0 ? ' <span style="color:var(--success);font-size:10px;">(' + activeSyn.length + '项激活)</span>' : '') +
+      '</h3>';
     if (activeSyn.length === 0) {
       synDiv.innerHTML =
         synTitle +

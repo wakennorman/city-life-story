@@ -649,7 +649,10 @@ function getSkillSynergyBonus(jobId, state) {
     }
     // 工作特定加成（如 street_vending_food: { incomeMultiplier: 1.3 }）
     if (withJobId && effects[jobId] && effects[jobId].incomeMultiplier) {
-      bonus += effects[jobId].incomeMultiplier - 1;
+      var _im = effects[jobId].incomeMultiplier;
+      if (typeof _im === "number" && isFinite(_im)) {
+        bonus += _im - 1;
+      }
     }
     return bonus;
   }

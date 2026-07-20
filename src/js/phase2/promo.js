@@ -3,6 +3,9 @@
  */
 
 function checkPromotion(state) {
+  // [全系统自洽修复] 域H A类#9: 晋升系统守卫 — state.corporate/state.player.corporate 前置检查
+  if (!state || !state.corporate) return null;
+  if (!state.player || !state.player.corporate) return null;
   const rank = state.corporate.rank;
   if (rank === "P10") return null;
 
@@ -33,6 +36,8 @@ function checkPromotion(state) {
   if (popularityReq && c.popularity < popularityReq) return null;
 
   // 绩效要求
+  // [全系统自洽修复] 域H A类#10: perfHistory 可能未初始化
+  if (!corp.perfHistory || !Array.isArray(corp.perfHistory)) return null;
   const recentPerfs = corp.perfHistory.slice(-3);
   if (reqs.minGrade && recentPerfs.length > 0) {
     const latestGrade = recentPerfs[recentPerfs.length - 1].grade;
@@ -40,7 +45,8 @@ function checkPromotion(state) {
   }
 
   // 团队人数 (P7+)
-  if (reqs.minTeamSize && corp.team.length < reqs.minTeamSize) return null;
+  // [全系统自洽修复] 域H A类#11: team 可能未初始化
+  if (reqs.minTeamSize && (!corp.team || !Array.isArray(corp.team) || corp.team.length < reqs.minTeamSize)) return null;
 
   // 重大项目 (P7+)
   if (
@@ -51,9 +57,10 @@ function checkPromotion(state) {
 
   // P10特殊判定
   if (rank === "P9") {
+    // [全系统自洽修复] 域H A类#12: popularity/upwardMgmt NaN 防御
     let chance = 0.6;
-    chance += c.popularity * 0.002;
-    chance += c.upwardMgmt * 0.002;
+    chance += (typeof c.popularity === "number" && isFinite(c.popularity) ? c.popularity : 50) * 0.002;
+    chance += (typeof c.upwardMgmt === "number" && isFinite(c.upwardMgmt) ? c.upwardMgmt : 50) * 0.002;
     var promoBonus =
       (state.inheritanceBonuses && state.inheritanceBonuses.promoChance) || 0;
     chance += promoBonus;
@@ -67,6 +74,9 @@ function checkPromotion(state) {
 }
 
 function applyPromotion(state, newRank) {
+  // [全系统自洽修复] 域H A类#13: applyPromotion 守卫 — state.corporate/player.corporate 前置检查
+  if (!state || !state.corporate) return;
+  if (!state.player || !state.player.corporate) return;
   const oldRank = state.corporate.rank;
   state.corporate.rank = newRank;
   // [全系统自洽修复] 域H 修复:晋升时同步更新corporate.level(P5→1, P6→2, ...)
@@ -75,16 +85,11 @@ function applyPromotion(state, newRank) {
   const rankData = CORP_RANKS[newRank];
 
   // 晋升奖励
-  state.player.corporate.ability = Math.min(
-    100,
-    state.player.corporate.ability + 5,
-  );
-  state.player.corporate.hair = Math.min(100, state.player.corporate.hair + 10);
-  state.player.corporate.dignity = Math.min(
-    100,
-    state.player.corporate.dignity + 10,
-  );
-  state.player.corporate.kpi = Math.min(150, state.player.corporate.kpi + 15);
+  var c = state.player.corporate;
+  c.ability = Math.min(100, (c.ability || 0) + 5);
+  c.hair = Math.min(100, (c.hair || 0) + 10);
+  c.dignity = Math.min(100, (c.dignity || 0) + 10);
+  c.kpi = Math.min(150, (c.kpi || 0) + 15);
   // [全系统自洽修复] 域H 联动增强1: 晋升使人精神振奋→疲劳-10（H→G）
   state.needs.fatigue = Math.max(0, (state.needs.fatigue || 0) - 10);
 
@@ -123,6 +128,8 @@ function gradeMeetsMin(grade, minGrade) {
 }
 
 function getPromotionProgress(state) {
+  // [全系统自洽修复] 域H A类#14: getPromotionProgress 守卫
+  if (!state || !state.corporate) return { done: false, text: "未入职" };
   const rank = state.corporate.rank;
   if (rank === "P10") return { done: true, text: "已是最高职级！" };
 
@@ -130,28 +137,28 @@ function getPromotionProgress(state) {
   if (!rankData) return { done: false, text: "无法判定" };
 
   const reqs = rankData.promotionReqs;
-  const c = state.player.corporate;
+  const c = (state.player && state.player.corporate) || {};
   const corp = state.corporate;
 
   const checks = [];
   if (reqs.minAbility)
-    checks.push({ label: "能力", current: c.ability, target: reqs.minAbility });
+    checks.push({ label: "能力", current: c.ability || 0, target: reqs.minAbility });
   if (reqs.minUpward)
     checks.push({
       label: "向上管理",
-      current: c.upwardMgmt,
+      current: c.upwardMgmt || 0,
       target: reqs.minUpward,
     });
   if (reqs.minPopularity)
     checks.push({
       label: "人缘",
-      current: c.popularity,
+      current: c.popularity || 0,
       target: reqs.minPopularity,
     });
   if (reqs.minTeamSize)
     checks.push({
       label: "团队人数",
-      current: corp.team.length,
+      current: (corp.team && Array.isArray(corp.team) ? corp.team.length : 0),
       target: reqs.minTeamSize,
     });
   if (reqs.minProjects)

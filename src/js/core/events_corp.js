@@ -57,8 +57,10 @@
           hint: "看智力",
           apply: (st) => {
             st.flags._insiderRumorSeen = true;
+            // [全系统自洽修复] 域H A类#18: intelligence NaN 防御
+            var intel = (st.player && typeof st.player.intelligence === "number" && isFinite(st.player.intelligence)) ? st.player.intelligence : 30;
             const found = Random.chance(
-              0.4 + (st.player.intelligence - 30) * 0.02,
+              0.4 + (intel - 30) * 0.02,
             );
             if (found) {
               // 调度后续：验证成功
@@ -321,17 +323,19 @@
           hint: "勤劳致富",
           apply: (st) => {
             st.needs.fatigue = Math.min(100, st.needs.fatigue + 15);
+            // [全系统自洽修复] 域H A类#19: chain event apply中 st.player.corporate 守卫
+            if (!st.player || !st.player.corporate) return;
             st.player.corporate.kpi = Math.min(
               150,
-              st.player.corporate.kpi + 10,
+              (st.player.corporate.kpi || 0) + 10,
             );
             st.player.corporate.upwardMgmt = Math.min(
               100,
-              st.player.corporate.upwardMgmt + 3,
+              (st.player.corporate.upwardMgmt || 0) + 3,
             );
             st.player.corporate.risk = Math.min(
               100,
-              st.player.corporate.risk + 5,
+              (st.player.corporate.risk || 0) + 5,
             );
             const extra = Random.int(50, 99);
             st.resources.cash += extra;
@@ -1194,24 +1198,26 @@
           apply: function (st) {
             var inv = st.investment || {};
             if (!inv.stockHoldings) return;
+            // [全系统自洽修复] 域H A类#20: INV_STOCKS/stockMarket 守卫
+            var stocksData = (typeof INV_STOCKS !== "undefined") ? INV_STOCKS : [];
             var total = 0;
             for (var i = inv.stockHoldings.length - 1; i >= 0; i--) {
               var h = inv.stockHoldings[i];
-              var def = INV_STOCKS.find(function (x) {
+              var def = stocksData.find(function (x) {
                 return x.symbol === h.symbol;
               });
               if (
                 def &&
                 (def.industry === "科技" || def.industry === "新能源")
               ) {
-                var m = inv.stockMarket[h.symbol];
+                var m = inv.stockMarket && inv.stockMarket[h.symbol];
                 if (m) {
-                  total += m.price * h.shares;
+                  total += (m.price || 0) * h.shares;
                 }
                 inv.stockHoldings.splice(i, 1);
               }
             }
-            st.resources.cash += total;
+            st.resources.cash = (st.resources.cash || 0) + total;
             StateManager.addMessage(
               "📉 清仓科技股变现¥" + Math.round(total).toLocaleString() + "。",
               "warning",
@@ -1242,7 +1248,7 @@
                 inv.stockHoldings.push({
                   symbol: "SMIC",
                   shares: 50,
-                  avgPrice: inv.stockMarket.SMIC
+                  avgPrice: inv.stockMarket && inv.stockMarket.SMIC
                     ? inv.stockMarket.SMIC.price
                     : 28,
                 });
