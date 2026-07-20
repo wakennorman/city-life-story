@@ -496,7 +496,8 @@ function registerStartup(state, name, industry, description) {
         "。请在创业Tab查看详细条件。",
     };
   }
-  const cash = state.resources.cash;
+  // [全系统自洽修复] 域H R61: cash裸访问防御，旧存档resources可能缺失
+  const cash = (state.resources && isFinite(state.resources.cash)) ? state.resources.cash : 0;
   const day = state.player.day;
   const minCash = getStartupRegistrationCost(state); // 剧本/阶段感知启动资金
 
@@ -1561,6 +1562,11 @@ function raiseFunding(state, roundId) {
     roundDef.equityDilution[0] +
     Random.float(0, roundDef.equityDilution[1] - roundDef.equityDilution[0]);
 
+  // [全系统自洽修复] 域H R61: equityDilution极小值→估值暴涨防御
+  if (equityDilution < 0.001) {
+    return { success: false, message: "融资比例异常，请重试。" };
+  }
+
   // 更新股权
   const oldPlayerEquity = company.equity.player;
   company.equity.player =
@@ -1636,10 +1642,9 @@ function _addBoardMemberAfterFunding(state, roundId, investorType) {
 
   const template =
     BOARD_MEMBER_TEMPLATES[
-      investorType.key ||
-        Object.keys(BOARD_MEMBER_TEMPLATES).find(
-          (k) => BOARD_MEMBER_TEMPLATES[k].name === investorType.name,
-        )
+      Object.keys(BOARD_MEMBER_TEMPLATES).find(
+        (k) => BOARD_MEMBER_TEMPLATES[k].name === investorType.name,
+      )
     ];
   if (!template) return;
 
@@ -2500,13 +2505,12 @@ function tickStartup(state, tickType) {
     const officeCost = OFFICE_LOCATIONS[company.officeLocation].cost;
     rent = Math.round((officeCost * timeMult) / 90); // 月租转日租
   } else {
-    // 默认基础租金
+    // 默认基础租金（含员工空间）
     rent =
       Math.round(DAILY_RENT_BASE * timeMult) +
       company.employees.length * Math.round(DAILY_RENT_PER_EMP * timeMult);
   }
-  // 员工空间租金（每人额外）
-  rent += company.employees.length * Math.round(DAILY_RENT_PER_EMP * timeMult);
+  // [全系统自洽修复] 域H R61: 删除员工空间租金重复计算（原L2509重复累加）
   totalExpenses += rent;
   // 研发成本
   const rAndD =

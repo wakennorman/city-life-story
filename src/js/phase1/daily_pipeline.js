@@ -39,7 +39,7 @@ const DAILY_PIPELINE = [
     fn: function (state) {
       var day = state.player.day;
       var hints = state.flags._unlockedHints;
-      if (!hints) { state.flags._unlockedHints = hints = ["physique","intelligence","agility","mental","charm","morality","hunger","fatigue","hygiene","happiness","fame","cash","health","dailyGoal"]; }
+      if (!hints) { state.flags._unlockedHints = hints = ["physique","intelligence","agility","mental","charm","morality","hunger","fatigue","hygiene","happiness","fame","cash","dailyGoal"]; }
       function unlockAll(arr) {
         var newUnlocks = [];
         for (var ui = 0; ui < arr.length; ui++) {
@@ -192,12 +192,10 @@ const DAILY_PIPELINE = [
           "warning",
         );
       }
-      // [全系统自洽修复] 域G A类#3: fatigue NaN 防御（旧存档/极端值导致疲劳相关阈值全部静默失效）
-      var _fatigue = state.needs.fatigue;
-      if (typeof _fatigue !== "number" || !isFinite(_fatigue)) _fatigue = 0;
-      var _recoveryAmt = Math.round(recovery * penalty);
-      if (!isFinite(_recoveryAmt) || _recoveryAmt < 0) _recoveryAmt = 0;
-      state.needs.fatigue = Math.max(0, _fatigue - _recoveryAmt);
+      state.needs.fatigue = Math.max(
+        0,
+        state.needs.fatigue - Math.round(recovery * penalty),
+      );
       delete state._fatigueRecoveryPenalty;
       state.needs.hygiene = Math.min(
         100,
@@ -1543,18 +1541,6 @@ const DAILY_PIPELINE = [
             "累进财富税",
           );
         }
-      }
-
-      // [全系统自洽修复] 域E A类#1: 执行完整经济结算（市场饱和度·连续盈利衰减·难度收入曲线）
-      // dailyEconomicSettlement 返回各经济指标，存入 state._economySettlement 供投资系统读取
-      // 注：marketSaturationPenalty 已按当日总资产动态计算，自修正，无需额外衰减逻辑
-      try {
-        var settlement = eco.dailyEconomicSettlement(state);
-        if (settlement) {
-          state._economySettlement = settlement;
-        }
-      } catch (e) {
-        // 经济结算失败不影响主流程
       }
     },
   },

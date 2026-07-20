@@ -672,7 +672,6 @@ function createDefaultState() {
       consecutiveC: 0,
       quarterlyActions: 3,
       actionsUsed: 0,
-      corpQuarter: 1, // [全系统自洽修复] 域H A类: 默认Q1，endQuarter用c.corpQuarter推进
       team: [],
       stocks: [],
       stockMarket: {},
@@ -940,8 +939,8 @@ function createDefaultState() {
       _chainEventQueue: [], // 链式事件调度队列 [{ eventId, triggerDay, phase }]
       _experiencedNarratives: [], // 已体验的叙事事件 id（防重复；旧存档经迁移回填）
       // P1-5 渐进式揭示：按天数里程碑解锁的 UI 指标列表
-      // 默认 Day 1 全部属性/状态解锁（原为渐进解锁，但玩家反馈需要全可见）
-      _unlockedHints: ["physique","intelligence","agility","mental","charm","morality","hunger","fatigue","hygiene","happiness","fame","cash","health","dailyGoal"],
+      // 默认 Day 1 解锁 cash/health/dailyGoal，后续由 daily_pipeline 追加
+      _unlockedHints: ["physique","intelligence","agility","mental","charm","morality","hunger","fatigue","hygiene","happiness","fame","cash","dailyGoal"],
 
       // --- 道德系统 ---
       moral: {
@@ -176623,7 +176622,7 @@ const DAILY_PIPELINE = [
     fn: function (state) {
       var day = state.player.day;
       var hints = state.flags._unlockedHints;
-      if (!hints) { state.flags._unlockedHints = hints = ["physique","intelligence","agility","mental","charm","morality","hunger","fatigue","hygiene","happiness","fame","cash","health","dailyGoal"]; }
+      if (!hints) { state.flags._unlockedHints = hints = ["physique","intelligence","agility","mental","charm","morality","hunger","fatigue","hygiene","happiness","fame","cash","dailyGoal"]; }
       function unlockAll(arr) {
         var newUnlocks = [];
         for (var ui = 0; ui < arr.length; ui++) {
@@ -176776,12 +176775,10 @@ const DAILY_PIPELINE = [
           "warning",
         );
       }
-      // [全系统自洽修复] 域G A类#3: fatigue NaN 防御（旧存档/极端值导致疲劳相关阈值全部静默失效）
-      var _fatigue = state.needs.fatigue;
-      if (typeof _fatigue !== "number" || !isFinite(_fatigue)) _fatigue = 0;
-      var _recoveryAmt = Math.round(recovery * penalty);
-      if (!isFinite(_recoveryAmt) || _recoveryAmt < 0) _recoveryAmt = 0;
-      state.needs.fatigue = Math.max(0, _fatigue - _recoveryAmt);
+      state.needs.fatigue = Math.max(
+        0,
+        state.needs.fatigue - Math.round(recovery * penalty),
+      );
       delete state._fatigueRecoveryPenalty;
       state.needs.hygiene = Math.min(
         100,
@@ -178127,18 +178124,6 @@ const DAILY_PIPELINE = [
             "累进财富税",
           );
         }
-      }
-
-      // [全系统自洽修复] 域E A类#1: 执行完整经济结算（市场饱和度·连续盈利衰减·难度收入曲线）
-      // dailyEconomicSettlement 返回各经济指标，存入 state._economySettlement 供投资系统读取
-      // 注：marketSaturationPenalty 已按当日总资产动态计算，自修正，无需额外衰减逻辑
-      try {
-        var settlement = eco.dailyEconomicSettlement(state);
-        if (settlement) {
-          state._economySettlement = settlement;
-        }
-      } catch (e) {
-        // 经济结算失败不影响主流程
       }
     },
   },
@@ -191862,7 +191847,8 @@ function registerStartup(state, name, industry, description) {
         "。请在创业Tab查看详细条件。",
     };
   }
-  const cash = state.resources.cash;
+  // [全系统自洽修复] 域H R61: cash裸访问防御，旧存档resources可能缺失
+  const cash = (state.resources && isFinite(state.resources.cash)) ? state.resources.cash : 0;
   const day = state.player.day;
   const minCash = getStartupRegistrationCost(state); // 剧本/阶段感知启动资金
 
