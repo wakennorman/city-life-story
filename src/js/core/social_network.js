@@ -299,6 +299,24 @@ function tickSocialNetwork(state) {
       state.socialNetwork.舆论危机.active = false;
     }
   }
+
+  // [全系统自洽修复] 域D 联动增强: 社交支持心情缓冲(D->G, 高好感NPC提供情绪支撑)
+  if (state.relationships && state.needs) {
+    var _supportCount = 0;
+    for (var _rid in state.relationships) {
+      if (!Object.prototype.hasOwnProperty.call(state.relationships, _rid)) continue;
+      var _r = state.relationships[_rid];
+      if (_r && _r.met && (_r.affinity || 0) >= 60) _supportCount++;
+    }
+    if (_supportCount > 0) {
+      // 每位信任级NPC提供+0.5心情/天, 上限+2(避免刷好感崩平衡)
+      var _supportBonus = Math.min(2, _supportCount * 0.5);
+      state.needs.happiness = Math.min(
+        100,
+        (state.needs.happiness || 50) + _supportBonus,
+      );
+    }
+  }
 }
 
 // ====== 全局挂载 ======

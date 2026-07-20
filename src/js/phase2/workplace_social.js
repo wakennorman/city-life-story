@@ -723,10 +723,19 @@ function getColleagueSummary(state) {
   };
 }
 
+// [全系统自洽修复] 域D 联动增强: 同事关系每日衰减(D->G, tickColleagueRelationships 原dead code, 现接入pipeline)
+function tickWorkplaceSocialDaily(state) {
+  if (!state || !state.corporate || !state.corporate.colleagues) return;
+  if (typeof tickColleagueRelationships === "function") {
+    tickColleagueRelationships(state);
+  }
+}
+
 /**
  * 百科注册
  */
 if (typeof window !== "undefined") {
+  window.tickWorkplaceSocialDaily = tickWorkplaceSocialDaily;
   window.treatColleagueMeal = treatColleagueMeal;
   window.chatWithColleague = chatWithColleague;
   window.getColleagueSummary = getColleagueSummary;

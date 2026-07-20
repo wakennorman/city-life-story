@@ -87401,6 +87401,24 @@ function tickSocialNetwork(state) {
       state.socialNetwork.舆论危机.active = false;
     }
   }
+
+  // [全系统自洽修复] 域D 联动增强: 社交支持心情缓冲(D->G, 高好感NPC提供情绪支撑)
+  if (state.relationships && state.needs) {
+    var _supportCount = 0;
+    for (var _rid in state.relationships) {
+      if (!Object.prototype.hasOwnProperty.call(state.relationships, _rid)) continue;
+      var _r = state.relationships[_rid];
+      if (_r && _r.met && (_r.affinity || 0) >= 60) _supportCount++;
+    }
+    if (_supportCount > 0) {
+      // 每位信任级NPC提供+0.5心情/天, 上限+2(避免刷好感崩平衡)
+      var _supportBonus = Math.min(2, _supportCount * 0.5);
+      state.needs.happiness = Math.min(
+        100,
+        (state.needs.happiness || 50) + _supportBonus,
+      );
+    }
+  }
 }
 
 // ====== 全局挂载 ======
@@ -205364,10 +205382,19 @@ function getColleagueSummary(state) {
   };
 }
 
+// [全系统自洽修复] 域D 联动增强: 同事关系每日衰减(D->G, tickColleagueRelationships 原dead code, 现接入pipeline)
+function tickWorkplaceSocialDaily(state) {
+  if (!state || !state.corporate || !state.corporate.colleagues) return;
+  if (typeof tickColleagueRelationships === "function") {
+    tickColleagueRelationships(state);
+  }
+}
+
 /**
  * 百科注册
  */
 if (typeof window !== "undefined") {
+  window.tickWorkplaceSocialDaily = tickWorkplaceSocialDaily;
   window.treatColleagueMeal = treatColleagueMeal;
   window.chatWithColleague = chatWithColleague;
   window.getColleagueSummary = getColleagueSummary;
@@ -212902,7 +212929,7 @@ function renderStreetStats(state) {
 
 function renderLocation(state) {
   if (!state.trade) return;
-  const locKey = state.trade.currentLocation;
+  const locKey = state.trade && state.trade.currentLocation;
   const loc = getLocation(locKey);
   if (loc) {
     // [全系统自洽修复] 域F A类修复: DOM 元素可能不存在（动态渲染场景）
@@ -214985,7 +215012,7 @@ function createActionCard(action, state) {
 function renderMapTab(state, parent) {
   // [全系统自洽修复] 域F A类#3: state.trade可能未初始化（初始状态/旧存档）
   if (!state.trade) { parent.innerHTML = '<p style="color:var(--text-muted);padding:20px;text-align:center;">🗺️ 地图加载中...</p>'; return; }
-  const locKey = state.trade.currentLocation;
+  const locKey = state.trade && state.trade.currentLocation;
   const loc = getLocation(locKey);
   const reachable = new Set(getReachableLocations(locKey));
   reachable.add(locKey);
@@ -215525,7 +215552,7 @@ function renderMapTab(state, parent) {
 function renderTradeTab(state, parent) {
   // [全系统自洽修复] 域F A类修复: state.trade 可能未初始化（初始状态/旧存档）
   if (!state.trade) { parent.innerHTML = '<p style="color:var(--text-muted);padding:20px;text-align:center;">📦 交易系统加载中...</p>'; return; }
-  const locKey = state.trade.currentLocation;
+  const locKey = state.trade && state.trade.currentLocation;
   const loc = getLocation(locKey);
   const prices = state.trade.goodsPrices[locKey] || {};
   const isWholesale = locKey === "wholesaleMarket";
@@ -216272,7 +216299,7 @@ function renderTradeTab(state, parent) {
                 input.value = Math.min(1, item.qty);
             } else {
               const state = StateManager.getState();
-              const locKey = state.trade.currentLocation;
+              const locKey = state.trade && state.trade.currentLocation;
               const cash = state.resources.cash;
               const price = getCurrentPrice(locKey, goodId);
               // 批发市场按批发价计算最大可买数量
@@ -216366,7 +216393,7 @@ function renderTradeTab(state, parent) {
         if (side === "buy") {
           // 用现金做最终校验
           const state = StateManager.getState();
-          const locKey = state.trade.currentLocation;
+          const locKey = state.trade && state.trade.currentLocation;
           const isWholesaleLoc = locKey === "wholesaleMarket";
           const price = getCurrentPrice(locKey, goodId);
           const maxBuy =
@@ -231170,6 +231197,8 @@ function getCategoryIcon(category) {
  * 未接线的现金变动不再伪造成真实收入/支出，只作为对账提示展示。
  */
 function reconcileTransactions(state) {
+  // [全系统自洽修复] 域F A类#2: state.flags 守卫
+  if (!state || !state.flags) return { delta: 0, transactions: [] };
   var txs = state.flags._dailyTransactions || [];
   var trackedDelta = 0;
   for (var i = 0; i < txs.length; i++) {
@@ -232006,6 +232035,8 @@ function recordDailyReportHistory(state, txs) {
  * 在 pipeline 的 daily_report 步骤中调用
  */
 function showDailyReport(state) {
+  // [全系统自洽修复] 域F A类#1: state.flags 守卫
+  if (!state || !state.flags) return;
   // 游戏结束/胜利时不显示（对应 modal 优先）
   if (state.flags.gameOver || state.flags.victory) return;
 
