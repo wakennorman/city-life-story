@@ -169613,16 +169613,18 @@ function determineEmotionalState(state) {
   const n = state.needs;
   let score = 50;
 
-  score += (n.happiness - 50) * 0.3;
+  score += (n.happiness - 50) * 0.35;
   if (n.fatigue > 80) score -= 20;
   else if (n.fatigue > 60) score -= 10;
   else if (n.fatigue < 20) score += 5;
   if (n.hunger < 20) score -= 15;
   else if (n.hunger < 40) score -= 5;
   if (n.hygiene < 20) score -= 10;
+  else if (n.hygiene > 80) score += 5; // 干净整洁心情好
   // 使用有效心智（状态差→心智打折→情绪更差→恶性循环）
-  score += (effective.mental - 50) * 0.15;
+  score += (effective.mental - 50) * 0.2;
   if (state.status.health < 30) score -= 20;
+  else if (state.status.health > 90) score += 5; // 健康良好加分
   if (state.status.injured) score -= 10;
   if (state.status.sick) score -= 8;
 
