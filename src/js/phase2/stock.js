@@ -558,7 +558,7 @@ function showStockTradeModal() {
     return sum + (m ? m.price * s.shares : 0);
   }, 0);
   const totalCost = state.corporate.stocks.reduce(
-    (sum, s) => sum + s.avgPrice * s.shares,
+    (sum, s) => sum + (s.avgPrice || 0) * (s.shares || 0),
     0,
   );
   const totalPnL = Math.round(totalStockValue - totalCost);
