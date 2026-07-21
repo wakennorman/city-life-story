@@ -227937,6 +227937,22 @@ function checkVictoryPaths(state) {
     );
     return;
   }
+
+  // 🌟 心灵大师（情绪状态极佳连续7天）
+  if (state.status && state.status.emotionalState === "elated") {
+    state.flags._elatedStreak = (state.flags._elatedStreak || 0) + 1;
+    if (state.flags._elatedStreak >= 7) {
+      triggerVictory(
+        state,
+        "zen_master",
+        "🌟 心灵大师！",
+        "连续7天保持极佳状态！你与自己达成了和解，没有什么能动摇你内心的平静与喜悦。",
+      );
+      return;
+    }
+  } else {
+    state.flags._elatedStreak = 0;
+  }
 }
 
 /** 触发胜利 */
