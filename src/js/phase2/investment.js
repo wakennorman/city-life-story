@@ -1299,7 +1299,7 @@ function tickInvestmentDaily(state) {
       (car.currentPrice || car.buyPrice) * (1 - _depr),
     );
     if (state.player.day % 30 === 0 && state.resources.cash >= car.maintenance)
-      state.resources.cash -= car.maintenance;
+      state.resources.cash = Math.max(0, (state.resources.cash || 0) - (car.maintenance || 0));
   }
 
   // ================================================================
@@ -1585,11 +1585,11 @@ function buyInvStock(symbol, shares) {
     StateManager.addMessage("⚠️ 价格异常，买入取消", "danger");
     return;
   }
-  if (state.resources.cash < cost) {
+  if ((state.resources.cash || 0) < cost) {
     StateManager.addMessage("现金不足", "danger");
     return;
   }
-  state.resources.cash -= cost;
+  state.resources.cash = Math.max(0, (state.resources.cash || 0) - cost);
   var h = inv.stockHoldings.find(function (s) {
     return s.symbol === symbol;
   });
@@ -1757,7 +1757,7 @@ function buyBtc(amount) {
     StateManager.addMessage("⚠️ 价格异常，买入取消", "danger");
     return;
   }
-  if (state.resources.cash < cost) {
+  if ((state.resources.cash || 0) < cost) {
     StateManager.addMessage("现金不足", "danger");
     return;
   }
@@ -1824,11 +1824,11 @@ function buyProperty(propId) {
   }
   var payPrice = prop.price - housingFundDiscount;
 
-  if (state.resources.cash < payPrice) {
+  if ((state.resources.cash || 0) < payPrice) {
     StateManager.addMessage("现金不足", "danger");
     return;
   }
-  state.resources.cash -= payPrice;
+  state.resources.cash = Math.max(0, (state.resources.cash || 0) - payPrice);
   inv.properties.push({
     id: prop.id,
     name: prop.name,
@@ -1903,11 +1903,11 @@ function buyCar(carId) {
     return c.id === carId;
   });
   if (!car) return;
-  if (state.resources.cash < car.price) {
+  if ((state.resources.cash || 0) < (car.price || 0)) {
     StateManager.addMessage("现金不足", "danger");
     return;
   }
-  state.resources.cash -= car.price;
+  state.resources.cash = Math.max(0, (state.resources.cash || 0) - (car.price || 0));
   inv.cars.push({
     id: car.id,
     name: car.name,
@@ -4062,11 +4062,11 @@ function renderProperties(area, inv, state, parent) {
           if (btn)
             btn.onclick = function () {
               var s = StateManager.getState();
-              if (s.resources.cash < highTier.cost) {
+              if ((s.resources.cash || 0) < (highTier.cost || 0)) {
                 StateManager.addMessage("现金不足", "danger");
                 return;
               }
-              s.resources.cash -= highTier.cost;
+              s.resources.cash = Math.max(0, (s.resources.cash || 0) - (highTier.cost || 0));
               s.housing.tier = 4;
               s.housing.rentedDay = s.player.day;
               s.inventory.capacity =

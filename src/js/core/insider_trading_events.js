@@ -470,7 +470,8 @@
                 );
               }
             } else {
-              st.resources = { cash: -500 };
+              st.resources = st.resources || {};
+              st.resources.cash = Math.max(0, (st.resources.cash || 0) - 500);
               st.flags._joinedInsiderGroup = true;
               StateManager.addMessage(
                 "💰 你交了¥500进群。群里每天发一堆消息，推荐的股涨跌随机。一周后你发现——群主删了你，跑路了。¥500打了水漂。",

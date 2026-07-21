@@ -6130,6 +6130,23 @@ body {
   transform: scale(0.96);
 }
 
+@media (max-width: 768px) {
+  .quick-travel-grid {
+    grid-template-columns: repeat(auto-fill, minmax(90px, 1fr)) !important;
+  }
+  .quick-travel-btn {
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 4px;
+    min-height: auto;
+    padding: 5px 7px;
+  }
+  .quick-travel-btn > div {
+    margin-top: 0 !important;
+  }
+}
+
 /* 交通方式出行按钮（选择交通方式后出现的地点列表） */
 .transit-go-btn {
   padding: 8px;

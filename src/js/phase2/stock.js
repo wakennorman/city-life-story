@@ -275,7 +275,7 @@ function buyStock(symbol, shares) {
   }
 
   const cost = Math.round(market.price * shares * 100) / 100;
-  if (state.resources.cash < cost) {
+  if ((state.resources.cash || 0) < cost) {
     StateManager.addMessage(
       `⚠️ 需要 ¥${cost.toLocaleString()}，现金不足。`,
       "danger",
@@ -283,7 +283,7 @@ function buyStock(symbol, shares) {
     return false;
   }
 
-  state.resources.cash -= cost;
+  state.resources.cash = Math.max(0, (state.resources.cash || 0) - cost);
 
   const existing = state.corporate.stocks.find((s) => s.symbol === symbol);
   if (existing) {
@@ -402,7 +402,7 @@ function calcMaxBuyShares(symbol) {
   const market = state.corporate.stockMarket[symbol];
   if (!market || market.price <= 0) return 0;
   // 保留 1 元，避免精度问题
-  const cash = Math.max(0, state.resources.cash - 1);
+  const cash = Math.max(0, (state.resources.cash || 0) - 1);
   return Math.floor(cash / market.price);
 }
 

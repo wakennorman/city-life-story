@@ -602,6 +602,14 @@ const DAILY_PIPELINE = [
     },
   },
 
+  // [全系统自洽修复] 域E A类缺陷: tickPropertyMarket 定义但从未被调用，房产价格永不更新
+  {
+    name: "property_market_tick",
+    fn: function (state) {
+      if (typeof tickPropertyMarket === "function") tickPropertyMarket(state);
+    },
+  },
+
   // === 创业公司每日运营tick ===
   {
     name: "startup_tick",

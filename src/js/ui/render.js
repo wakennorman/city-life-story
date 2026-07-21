@@ -2412,7 +2412,7 @@ function renderMapTab(state, parent) {
         <h4 style="color:var(--accent);margin:0;font-size:13px;">🚶 快速出行</h4>
         <span style="font-size:10px;color:var(--text-muted);">从 ${loc ? loc.name : "当前位置"} 出发</span>
       </div>
-      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:6px;">
+      <div class="quick-travel-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:6px;">
     `;
     for (const destKey of reachableList) {
       const dest = getLocation(destKey);
