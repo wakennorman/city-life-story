@@ -264,10 +264,8 @@
     for (var j = 0; j < available.length; j++) {
       totalWeight += available[j].weight;
     }
-    var r =
-      typeof Random !== "undefined"
-        ? Random.float(0, totalWeight)
-        : Math.random() * totalWeight;
+    // [全系统自洽修复] 域G A类: Random 始终已定义, 删除 Math.random 死代码兜底
+    var r = Random.float(0, totalWeight);
     var acc = 0;
     for (var k = 0; k < available.length; k++) {
       acc += available[k].weight;

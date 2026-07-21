@@ -666,10 +666,11 @@ function rollTalents(scenario) {
         })
       : weightedPool;
     if (!available.length) return null;
-    return available[Math.floor(Math.random() * available.length)];
+    return Random.fromArray(available);
   }
 
-  var roll = Math.random();
+  // [全系统自洽修复] 域G A类: Math.random→Random.float 种子化RNG
+  var roll = Random.float(0, 1);
   if (roll < 0.1) {
     return []; // 10% 命运弄人——无天赋
   } else if (roll < 0.8) {
@@ -864,24 +865,25 @@ function startScenarioGame(scenarioId) {
   }
 
   // --- v3.54 命运浮动：属性 ±15%、现金 ±15%（底线70%基础值）---
+  // [全系统自洽修复] 域G A类: Math.random→Random.float 种子化RNG(开局浮动也应确定性)
   var _svKeys = ["physique", "intelligence", "agility", "mental", "charm"];
   for (var _svi = 0; _svi < _svKeys.length; _svi++) {
     var _svk = _svKeys[_svi];
     if (typeof state.player[_svk] === "number") {
-      var _svf = 1 + (Math.random() * 2 - 1) * 0.15;
+      var _svf = 1 + (Random.float(0, 1) * 2 - 1) * 0.15;
       state.player[_svk] = Math.round(
         Math.max(1, Math.min(100, state.player[_svk] * _svf)),
       );
     }
   }
   var _cashBase = state.resources.cash;
-  var _cashF = 1 + (Math.random() * 2 - 1) * 0.15;
+  var _cashF = 1 + (Random.float(0, 1) * 2 - 1) * 0.15;
   state.resources.cash = Math.round(
     Math.max(Math.floor(_cashBase * 0.7), _cashBase * _cashF),
   );
   // 健康 ±5
   state.status.health = Math.round(
-    Math.max(1, Math.min(99, state.status.health + (Math.random() * 10 - 5))),
+    Math.max(1, Math.min(99, state.status.health + (Random.float(0, 1) * 10 - 5))),
   );
 
   // --- 剧本标记 ---

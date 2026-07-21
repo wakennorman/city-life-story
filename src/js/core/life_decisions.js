@@ -36,8 +36,7 @@ const LIFE_DECISIONS = [
         desc: "风险投资，可能翻倍也可能亏光",
         effect: function (state) {
           state.resources.cash = Math.max(0, state.resources.cash - 500);
-          var roll =
-            typeof Random !== "undefined" ? Random.float(0, 1) : Math.random();
+          var roll = Random.float(0, 1);
           if (roll < 0.4) {
             // 40% 亏光
             StateManager.addMessage(
@@ -49,9 +48,7 @@ const LIFE_DECISIONS = [
             // 35% 小赚
             var gain =
               300 +
-              (typeof Random !== "undefined"
-                ? Random.int(0, 399)
-                : Math.floor(Math.random() * 400));
+              Random.int(0, 399);
             state.resources.cash += gain;
             state.resources.totalEarned =
               (state.resources.totalEarned || 0) + gain;
@@ -64,9 +61,7 @@ const LIFE_DECISIONS = [
             // 25% 大赚
             var bigGain =
               800 +
-              (typeof Random !== "undefined"
-                ? Random.int(0, 699)
-                : Math.floor(Math.random() * 700));
+              Random.int(0, 699);
             state.resources.cash += bigGain;
             state.resources.totalEarned =
               (state.resources.totalEarned || 0) + bigGain;
@@ -202,7 +197,7 @@ const LIFE_DECISIONS = [
                 npcIds[
                   typeof Random !== "undefined"
                     ? Random.int(0, npcIds.length - 1)
-                    : Math.floor(Math.random() * npcIds.length)
+                    : Random.int(0, npcIds.length - 1)
                 ];
               if (state.relationships[target]) {
                 state.relationships[target].affinity =
@@ -629,10 +624,7 @@ function getStallIncome(state) {
   var daysActive = state.player.day - state.flags._stallPartnership.startDay;
   if (daysActive <= 0) return 0;
   var dailyIncome =
-    5 +
-    (typeof Random !== "undefined"
-      ? Random.int(0, 14)
-      : Math.floor(Math.random() * 15));
+    5 + Random.int(0, 14);
   var total = Math.floor(dailyIncome * 0.5); // 当日收入的一半
   state.flags._stallPartnership.totalEarned =
     (state.flags._stallPartnership.totalEarned || 0) + total;
@@ -644,9 +636,7 @@ function getShopIncome(state) {
   if (!state.flags._hasShop) return 0;
   var base = 50;
   var bonus =
-    typeof Random !== "undefined"
-      ? Random.int(0, 30)
-      : Math.floor(Math.random() * 31);
+    Random.int(0, 30);
   var fameBonus = Math.floor((state.player.fame || 0) * 0.5);
   var total = base + bonus + fameBonus;
   state.flags._shopTotalEarned = (state.flags._shopTotalEarned || 0) + total;

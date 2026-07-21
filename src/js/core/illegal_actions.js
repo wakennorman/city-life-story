@@ -199,7 +199,7 @@
     var day = state.player.day || 0;
     if (day - lastEcho < 5) return; // 至少 5 天间隔
     if (
-      typeof Random !== "undefined" ? !Random.chance(0.3) : Math.random() > 0.3
+      !Random.chance(0.3)
     )
       return; // 30% 概率触发
     state.flags._pendingMoralityEcho = false;
@@ -226,12 +226,8 @@
         },
       },
     ];
-    var e =
-      echoes[
-        typeof Random !== "undefined"
-          ? Random.int(0, echoes.length - 1)
-          : Math.floor(Math.random() * echoes.length)
-      ];
+    // [全系统自洽修复] 域B A类: Random 始终已定义, 删除 Math.random 死代码兜底
+    var e = echoes[Random.int(0, echoes.length - 1)];
     e.apply(state);
     if (typeof StateManager !== "undefined" && StateManager.addMessage) {
       StateManager.addMessage(e.msg, "warning");
@@ -298,10 +294,8 @@
   function _executeIllegalAction(state, action, effectiveCatchProb) {
     var day = state.player.day || 0;
     // 判定是否被抓
-    var caught =
-      typeof Random !== "undefined"
-        ? Random.chance(effectiveCatchProb || action.catchProb)
-        : Math.random() < (effectiveCatchProb || action.catchProb);
+    // [全系统自洽修复] 域B A类: Random 始终已定义, 删除 Math.random 死代码兜底
+    var caught = Random.chance(effectiveCatchProb || action.catchProb);
     if (caught) {
       // 被抓：拘留+罚款+道德扣
       var p = action.penalty;
@@ -343,10 +337,7 @@
       state.status.health = Math.max(20, (state.status.health || 100) - 15);
       // 染病判定
       if (
-        p.diseaseProb &&
-        (typeof Random !== "undefined"
-          ? Random.chance(p.diseaseProb)
-          : Math.random() < p.diseaseProb)
+        p.diseaseProb && Random.chance(p.diseaseProb)
       ) {
         if (typeof addIllness === "function") {
           addIllness(state, "std_suspicion"); // 假设疾病系统支持
@@ -367,12 +358,8 @@
     } else {
       // 未被抓：拿到奖励
       if (action.rewardType === "happiness") {
-        var happy =
-          action.rewardRange[0] + typeof Random !== "undefined"
-            ? Random.int(action.rewardRange[0], action.rewardRange[1] - 1)
-            : Math.floor(
-                Math.random() * (action.rewardRange[1] - action.rewardRange[0]),
-              );
+        // [全系统自洽修复] 域B A类: 修复 operator precedence bug (action.rewardRange[0] + typeof Random 恒为 NaN_truthy)
+        var happy = action.rewardRange[0] + Random.int(0, action.rewardRange[1] - action.rewardRange[0] - 1);
         state.needs.happiness = Math.min(
           100,
           (state.needs.happiness || 0) + happy,
@@ -387,12 +374,8 @@
           "info",
         );
       } else {
-        var reward =
-          action.rewardRange[0] + typeof Random !== "undefined"
-            ? Random.int(action.rewardRange[0], action.rewardRange[1] - 1)
-            : Math.floor(
-                Math.random() * (action.rewardRange[1] - action.rewardRange[0]),
-              );
+        // [全系统自洽修复] 域B A类: Random 始终已定义, 删除 Math.random 死代码兜底 + 修复 operator precedence bug
+        var reward = Random.int(action.rewardRange[0], action.rewardRange[1] - 1);
         state.resources.cash += reward;
         state.resources.totalEarned =
           (state.resources.totalEarned || 0) + reward;

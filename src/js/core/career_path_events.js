@@ -32,8 +32,9 @@
     if (typeof StateManager !== "undefined" && StateManager.addMessage)
       StateManager.addMessage(text, type || "info");
   }
+  // [全系统自洽修复] 域B A类: Random 始终已定义, 删除 Math.random 死代码兜底
   function _chance(p) {
-    return typeof Random !== "undefined" ? Random.chance(p) : Math.random() < p;
+    return Random.chance(p);
   }
 
   var EVENTS = [

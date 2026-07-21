@@ -4273,10 +4273,8 @@ if (typeof window !== "undefined") {
     for (var j = 0; j < available.length; j++) {
       totalWeight += available[j].weight;
     }
-    var r =
-      typeof Random !== "undefined"
-        ? Random.float(0, totalWeight)
-        : Math.random() * totalWeight;
+    // [全系统自洽修复] 域G A类: Random 始终已定义, 删除 Math.random 死代码兜底
+    var r = Random.float(0, totalWeight);
     var acc = 0;
     for (var k = 0; k < available.length; k++) {
       acc += available[k].weight;
@@ -28732,7 +28730,7 @@ if (typeof window !== "undefined") {
     var day = state.player.day || 0;
     if (day - lastEcho < 5) return; // 至少 5 天间隔
     if (
-      typeof Random !== "undefined" ? !Random.chance(0.3) : Math.random() > 0.3
+      !Random.chance(0.3)
     )
       return; // 30% 概率触发
     state.flags._pendingMoralityEcho = false;
@@ -28759,12 +28757,8 @@ if (typeof window !== "undefined") {
         },
       },
     ];
-    var e =
-      echoes[
-        typeof Random !== "undefined"
-          ? Random.int(0, echoes.length - 1)
-          : Math.floor(Math.random() * echoes.length)
-      ];
+    // [全系统自洽修复] 域B A类: Random 始终已定义, 删除 Math.random 死代码兜底
+    var e = echoes[Random.int(0, echoes.length - 1)];
     e.apply(state);
     if (typeof StateManager !== "undefined" && StateManager.addMessage) {
       StateManager.addMessage(e.msg, "warning");
@@ -28831,10 +28825,8 @@ if (typeof window !== "undefined") {
   function _executeIllegalAction(state, action, effectiveCatchProb) {
     var day = state.player.day || 0;
     // 判定是否被抓
-    var caught =
-      typeof Random !== "undefined"
-        ? Random.chance(effectiveCatchProb || action.catchProb)
-        : Math.random() < (effectiveCatchProb || action.catchProb);
+    // [全系统自洽修复] 域B A类: Random 始终已定义, 删除 Math.random 死代码兜底
+    var caught = Random.chance(effectiveCatchProb || action.catchProb);
     if (caught) {
       // 被抓：拘留+罚款+道德扣
       var p = action.penalty;
@@ -28876,10 +28868,7 @@ if (typeof window !== "undefined") {
       state.status.health = Math.max(20, (state.status.health || 100) - 15);
       // 染病判定
       if (
-        p.diseaseProb &&
-        (typeof Random !== "undefined"
-          ? Random.chance(p.diseaseProb)
-          : Math.random() < p.diseaseProb)
+        p.diseaseProb && Random.chance(p.diseaseProb)
       ) {
         if (typeof addIllness === "function") {
           addIllness(state, "std_suspicion"); // 假设疾病系统支持
@@ -28900,12 +28889,8 @@ if (typeof window !== "undefined") {
     } else {
       // 未被抓：拿到奖励
       if (action.rewardType === "happiness") {
-        var happy =
-          action.rewardRange[0] + typeof Random !== "undefined"
-            ? Random.int(action.rewardRange[0], action.rewardRange[1] - 1)
-            : Math.floor(
-                Math.random() * (action.rewardRange[1] - action.rewardRange[0]),
-              );
+        // [全系统自洽修复] 域B A类: 修复 operator precedence bug (action.rewardRange[0] + typeof Random 恒为 NaN_truthy)
+        var happy = action.rewardRange[0] + Random.int(0, action.rewardRange[1] - action.rewardRange[0] - 1);
         state.needs.happiness = Math.min(
           100,
           (state.needs.happiness || 0) + happy,
@@ -28920,12 +28905,8 @@ if (typeof window !== "undefined") {
           "info",
         );
       } else {
-        var reward =
-          action.rewardRange[0] + typeof Random !== "undefined"
-            ? Random.int(action.rewardRange[0], action.rewardRange[1] - 1)
-            : Math.floor(
-                Math.random() * (action.rewardRange[1] - action.rewardRange[0]),
-              );
+        // [全系统自洽修复] 域B A类: Random 始终已定义, 删除 Math.random 死代码兜底 + 修复 operator precedence bug
+        var reward = Random.int(action.rewardRange[0], action.rewardRange[1] - 1);
         state.resources.cash += reward;
         state.resources.totalEarned =
           (state.resources.totalEarned || 0) + reward;
@@ -83659,8 +83640,9 @@ if (typeof window !== "undefined") {
     if (typeof StateManager !== "undefined" && StateManager.addMessage)
       StateManager.addMessage(text, type || "info");
   }
+  // [全系统自洽修复] 域B A类: Random 始终已定义, 删除 Math.random 死代码兜底
   function _chance(p) {
-    return typeof Random !== "undefined" ? Random.chance(p) : Math.random() < p;
+    return Random.chance(p);
   }
 
   var EVENTS = [
@@ -87478,9 +87460,7 @@ function postToMoments(state, content, images, visibility) {
     var totalGain =
       baseGain +
       fameBonus +
-      (typeof Random !== "undefined"
-        ? Random.int(0, 2)
-        : Math.floor(Math.random() * 3));
+      Random.int(0, 2);
     state.socialNetwork.playerFans += totalGain;
     // 反哺名气：少量粉丝增长也略微提升名气
     state.player.fame = Math.min(
@@ -87566,35 +87546,21 @@ function refreshWeiboHotlist(state) {
   for (var i = 0; i < 10; i++) {
     var item = {
       rank: i + 1,
-      heat:
-        typeof Random !== "undefined"
-          ? Random.int(100000, 1100000 - 1)
-          : Math.floor(Math.random() * 1000000) + 100000,
+      // [全系统自洽修复] 域D A类: Random 始终已定义, 删除 Math.random 死代码兜底
+      heat: Random.int(100000, 1100000 - 1),
     };
     if (i < newsTopics.length) {
       item.title = newsTopics[i];
       item.category =
-        categories[
-          typeof Random !== "undefined"
-            ? Random.int(0, categories.length - 1)
-            : Math.floor(Math.random() * categories.length)
-        ];
+      item.category = categories[Random.int(0, categories.length - 1)];
     } else if (poolCopy.length > 0) {
-      var pickIdx =
-        typeof Random !== "undefined"
-          ? Random.int(0, poolCopy.length - 1)
-          : Math.floor(Math.random() * poolCopy.length);
+      var pickIdx = Random.int(0, poolCopy.length - 1);
       var picked = poolCopy.splice(pickIdx, 1)[0];
       item.title = picked.title;
       item.category = picked.category;
     } else {
       item.title = "热议话题" + (i + 1);
-      item.category =
-        categories[
-          typeof Random !== "undefined"
-            ? Random.int(0, categories.length - 1)
-            : Math.floor(Math.random() * categories.length)
-        ];
+      item.category = categories[Random.int(0, categories.length - 1)];
     }
     hotlist.push(item);
   }
@@ -87652,16 +87618,10 @@ function triggerPublicOpinionCrisis(state, topic, severity) {
   ensureSocialNetworkState(state);
   state.socialNetwork.舆论危机 = {
     active: true,
-    severity:
-      severity ||
-      (typeof Random !== "undefined"
-        ? Random.int(30, 79)
-        : Math.floor(Math.random() * 50) + 30),
+    // [全系统自洽修复] 域D A类: Random 始终已定义, 删除 Math.random 死代码兜底
+    severity: severity || Random.int(30, 79),
     topics: [topic],
-    daysRemaining:
-      typeof Random !== "undefined"
-        ? Random.int(3, 7)
-        : Math.floor(Math.random() * 5) + 3,
+    daysRemaining: Random.int(3, 7),
   };
 }
 
@@ -95090,8 +95050,7 @@ const LIFE_DECISIONS = [
         desc: "风险投资，可能翻倍也可能亏光",
         effect: function (state) {
           state.resources.cash = Math.max(0, state.resources.cash - 500);
-          var roll =
-            typeof Random !== "undefined" ? Random.float(0, 1) : Math.random();
+          var roll = Random.float(0, 1);
           if (roll < 0.4) {
             // 40% 亏光
             StateManager.addMessage(
@@ -95103,9 +95062,7 @@ const LIFE_DECISIONS = [
             // 35% 小赚
             var gain =
               300 +
-              (typeof Random !== "undefined"
-                ? Random.int(0, 399)
-                : Math.floor(Math.random() * 400));
+              Random.int(0, 399);
             state.resources.cash += gain;
             state.resources.totalEarned =
               (state.resources.totalEarned || 0) + gain;
@@ -95118,9 +95075,7 @@ const LIFE_DECISIONS = [
             // 25% 大赚
             var bigGain =
               800 +
-              (typeof Random !== "undefined"
-                ? Random.int(0, 699)
-                : Math.floor(Math.random() * 700));
+              Random.int(0, 699);
             state.resources.cash += bigGain;
             state.resources.totalEarned =
               (state.resources.totalEarned || 0) + bigGain;
@@ -95256,7 +95211,7 @@ const LIFE_DECISIONS = [
                 npcIds[
                   typeof Random !== "undefined"
                     ? Random.int(0, npcIds.length - 1)
-                    : Math.floor(Math.random() * npcIds.length)
+                    : Random.int(0, npcIds.length - 1)
                 ];
               if (state.relationships[target]) {
                 state.relationships[target].affinity =
@@ -95683,10 +95638,7 @@ function getStallIncome(state) {
   var daysActive = state.player.day - state.flags._stallPartnership.startDay;
   if (daysActive <= 0) return 0;
   var dailyIncome =
-    5 +
-    (typeof Random !== "undefined"
-      ? Random.int(0, 14)
-      : Math.floor(Math.random() * 15));
+    5 + Random.int(0, 14);
   var total = Math.floor(dailyIncome * 0.5); // 当日收入的一半
   state.flags._stallPartnership.totalEarned =
     (state.flags._stallPartnership.totalEarned || 0) + total;
@@ -95698,9 +95650,7 @@ function getShopIncome(state) {
   if (!state.flags._hasShop) return 0;
   var base = 50;
   var bonus =
-    typeof Random !== "undefined"
-      ? Random.int(0, 30)
-      : Math.floor(Math.random() * 31);
+    Random.int(0, 30);
   var fameBonus = Math.floor((state.player.fame || 0) * 0.5);
   var total = base + bonus + fameBonus;
   state.flags._shopTotalEarned = (state.flags._shopTotalEarned || 0) + total;
@@ -97633,12 +97583,10 @@ function tickTravel(state) {
     if (
       dest.events &&
       dest.events.length > 0 &&
-      (typeof Random === "undefined" ? Math.random() < 0.4 : Random.chance(0.4))
+      Random.chance(0.4)
     ) {
-      var evtIdx =
-        typeof Random !== "undefined"
-          ? Random.int(0, dest.events.length - 1)
-          : Math.floor(Math.random() * dest.events.length);
+      // [全系统自洽修复] 域G A类: Random 始终已定义, 删除 Math.random 死代码兜底
+      var evtIdx = Random.int(0, dest.events.length - 1);
       var evt = dest.events[evtIdx];
       // [CoC] 声明式 effects 对象优先（如 {happiness:10, intelligence:2}），向后兼容旧字符串
       if (evt.effects) {
@@ -97748,12 +97696,9 @@ function tickTravel(state) {
       dest.decisionEvents.length > 0 &&
       state.flags &&
       !state.flags._travelDecisionShown &&
-      (typeof Random !== "undefined" ? Random.chance(0.5) : Math.random() < 0.5)
+      Random.chance(0.5)
     ) {
-      var decIdx =
-        typeof Random !== "undefined"
-          ? Random.int(0, dest.decisionEvents.length - 1)
-          : Math.floor(Math.random() * dest.decisionEvents.length);
+      var decIdx = Random.int(0, dest.decisionEvents.length - 1);
       var dec = dest.decisionEvents[decIdx];
       state.flags._travelDecisionShown = true;
       if (
@@ -97794,12 +97739,7 @@ function tickTravel(state) {
   if (state.travel.daysRemaining <= 0) {
     // 获得纪念品
     if (dest && dest.souvenirs && dest.souvenirs.length > 0) {
-      var gift =
-        dest.souvenirs[
-          typeof Random !== "undefined"
-            ? Random.int(0, dest.souvenirs.length - 1)
-            : Math.floor(Math.random() * dest.souvenirs.length)
-        ];
+      var gift = dest.souvenirs[Random.int(0, dest.souvenirs.length - 1)];
       if (!state.travel.souvenirs) state.travel.souvenirs = [];
       state.travel.souvenirs.push(gift);
       if (typeof StateManager !== "undefined") {
@@ -98235,10 +98175,7 @@ function tickLegal(state) {
       );
     }
 
-    var won =
-      typeof Random !== "undefined"
-        ? Random.chance(winChance)
-        : Math.random() < winChance;
+    var won = Random.chance(winChance);
     ac.result = won ? "won" : "lost";
     state.legal.completedCases.push({
       caseId: ac.caseId,
@@ -98250,8 +98187,7 @@ function tickLegal(state) {
     if (won) {
       var rewardMin = caseData.rewardMin || 0;
       var rewardMax = caseData.rewardMax || 5000;
-      var r =
-        typeof Random !== "undefined" ? Random.float(0, 1) : Math.random();
+      var r = Random.float(0, 1);
       var reward = Math.round(rewardMin + r * (rewardMax - rewardMin));
       state.resources.cash = (state.resources.cash || 0) + reward;
       state.legal.totalLegalWon = (state.legal.totalLegalWon || 0) + reward;
@@ -139882,9 +139818,7 @@ function applyInheritance(newState, prevState, inheritanceData) {
         Math.round(
           prevDebt *
             (0.05 +
-              (typeof Random !== "undefined"
-                ? Random.float(0, 0.1)
-                : Math.random() * 0.1)),
+              Random.float(0, 0.1)),
         ),
       ),
     );
@@ -242450,10 +242384,11 @@ function rollTalents(scenario) {
         })
       : weightedPool;
     if (!available.length) return null;
-    return available[Math.floor(Math.random() * available.length)];
+    return Random.fromArray(available);
   }
 
-  var roll = Math.random();
+  // [全系统自洽修复] 域G A类: Math.random→Random.float 种子化RNG
+  var roll = Random.float(0, 1);
   if (roll < 0.1) {
     return []; // 10% 命运弄人——无天赋
   } else if (roll < 0.8) {
@@ -242648,24 +242583,25 @@ function startScenarioGame(scenarioId) {
   }
 
   // --- v3.54 命运浮动：属性 ±15%、现金 ±15%（底线70%基础值）---
+  // [全系统自洽修复] 域G A类: Math.random→Random.float 种子化RNG(开局浮动也应确定性)
   var _svKeys = ["physique", "intelligence", "agility", "mental", "charm"];
   for (var _svi = 0; _svi < _svKeys.length; _svi++) {
     var _svk = _svKeys[_svi];
     if (typeof state.player[_svk] === "number") {
-      var _svf = 1 + (Math.random() * 2 - 1) * 0.15;
+      var _svf = 1 + (Random.float(0, 1) * 2 - 1) * 0.15;
       state.player[_svk] = Math.round(
         Math.max(1, Math.min(100, state.player[_svk] * _svf)),
       );
     }
   }
   var _cashBase = state.resources.cash;
-  var _cashF = 1 + (Math.random() * 2 - 1) * 0.15;
+  var _cashF = 1 + (Random.float(0, 1) * 2 - 1) * 0.15;
   state.resources.cash = Math.round(
     Math.max(Math.floor(_cashBase * 0.7), _cashBase * _cashF),
   );
   // 健康 ±5
   state.status.health = Math.round(
-    Math.max(1, Math.min(99, state.status.health + (Math.random() * 10 - 5))),
+    Math.max(1, Math.min(99, state.status.health + (Random.float(0, 1) * 10 - 5))),
   );
 
   // --- 剧本标记 ---

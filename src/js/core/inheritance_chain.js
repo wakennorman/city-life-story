@@ -646,9 +646,7 @@ function applyInheritance(newState, prevState, inheritanceData) {
         Math.round(
           prevDebt *
             (0.05 +
-              (typeof Random !== "undefined"
-                ? Random.float(0, 0.1)
-                : Math.random() * 0.1)),
+              Random.float(0, 0.1)),
         ),
       ),
     );

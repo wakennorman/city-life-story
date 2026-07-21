@@ -80,9 +80,7 @@ function postToMoments(state, content, images, visibility) {
     var totalGain =
       baseGain +
       fameBonus +
-      (typeof Random !== "undefined"
-        ? Random.int(0, 2)
-        : Math.floor(Math.random() * 3));
+      Random.int(0, 2);
     state.socialNetwork.playerFans += totalGain;
     // 反哺名气：少量粉丝增长也略微提升名气
     state.player.fame = Math.min(
@@ -168,35 +166,21 @@ function refreshWeiboHotlist(state) {
   for (var i = 0; i < 10; i++) {
     var item = {
       rank: i + 1,
-      heat:
-        typeof Random !== "undefined"
-          ? Random.int(100000, 1100000 - 1)
-          : Math.floor(Math.random() * 1000000) + 100000,
+      // [全系统自洽修复] 域D A类: Random 始终已定义, 删除 Math.random 死代码兜底
+      heat: Random.int(100000, 1100000 - 1),
     };
     if (i < newsTopics.length) {
       item.title = newsTopics[i];
       item.category =
-        categories[
-          typeof Random !== "undefined"
-            ? Random.int(0, categories.length - 1)
-            : Math.floor(Math.random() * categories.length)
-        ];
+      item.category = categories[Random.int(0, categories.length - 1)];
     } else if (poolCopy.length > 0) {
-      var pickIdx =
-        typeof Random !== "undefined"
-          ? Random.int(0, poolCopy.length - 1)
-          : Math.floor(Math.random() * poolCopy.length);
+      var pickIdx = Random.int(0, poolCopy.length - 1);
       var picked = poolCopy.splice(pickIdx, 1)[0];
       item.title = picked.title;
       item.category = picked.category;
     } else {
       item.title = "热议话题" + (i + 1);
-      item.category =
-        categories[
-          typeof Random !== "undefined"
-            ? Random.int(0, categories.length - 1)
-            : Math.floor(Math.random() * categories.length)
-        ];
+      item.category = categories[Random.int(0, categories.length - 1)];
     }
     hotlist.push(item);
   }
@@ -254,16 +238,10 @@ function triggerPublicOpinionCrisis(state, topic, severity) {
   ensureSocialNetworkState(state);
   state.socialNetwork.舆论危机 = {
     active: true,
-    severity:
-      severity ||
-      (typeof Random !== "undefined"
-        ? Random.int(30, 79)
-        : Math.floor(Math.random() * 50) + 30),
+    // [全系统自洽修复] 域D A类: Random 始终已定义, 删除 Math.random 死代码兜底
+    severity: severity || Random.int(30, 79),
     topics: [topic],
-    daysRemaining:
-      typeof Random !== "undefined"
-        ? Random.int(3, 7)
-        : Math.floor(Math.random() * 5) + 3,
+    daysRemaining: Random.int(3, 7),
   };
 }
 

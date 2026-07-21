@@ -417,12 +417,10 @@ function tickTravel(state) {
     if (
       dest.events &&
       dest.events.length > 0 &&
-      (typeof Random === "undefined" ? Math.random() < 0.4 : Random.chance(0.4))
+      Random.chance(0.4)
     ) {
-      var evtIdx =
-        typeof Random !== "undefined"
-          ? Random.int(0, dest.events.length - 1)
-          : Math.floor(Math.random() * dest.events.length);
+      // [全系统自洽修复] 域G A类: Random 始终已定义, 删除 Math.random 死代码兜底
+      var evtIdx = Random.int(0, dest.events.length - 1);
       var evt = dest.events[evtIdx];
       // [CoC] 声明式 effects 对象优先（如 {happiness:10, intelligence:2}），向后兼容旧字符串
       if (evt.effects) {
@@ -532,12 +530,9 @@ function tickTravel(state) {
       dest.decisionEvents.length > 0 &&
       state.flags &&
       !state.flags._travelDecisionShown &&
-      (typeof Random !== "undefined" ? Random.chance(0.5) : Math.random() < 0.5)
+      Random.chance(0.5)
     ) {
-      var decIdx =
-        typeof Random !== "undefined"
-          ? Random.int(0, dest.decisionEvents.length - 1)
-          : Math.floor(Math.random() * dest.decisionEvents.length);
+      var decIdx = Random.int(0, dest.decisionEvents.length - 1);
       var dec = dest.decisionEvents[decIdx];
       state.flags._travelDecisionShown = true;
       if (
@@ -578,12 +573,7 @@ function tickTravel(state) {
   if (state.travel.daysRemaining <= 0) {
     // 获得纪念品
     if (dest && dest.souvenirs && dest.souvenirs.length > 0) {
-      var gift =
-        dest.souvenirs[
-          typeof Random !== "undefined"
-            ? Random.int(0, dest.souvenirs.length - 1)
-            : Math.floor(Math.random() * dest.souvenirs.length)
-        ];
+      var gift = dest.souvenirs[Random.int(0, dest.souvenirs.length - 1)];
       if (!state.travel.souvenirs) state.travel.souvenirs = [];
       state.travel.souvenirs.push(gift);
       if (typeof StateManager !== "undefined") {
