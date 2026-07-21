@@ -50,7 +50,7 @@ function doCorporateAction(actionId) {
 
   // 扣费
   if (action.cost) {
-    state.resources.cash -= action.cost;
+    state.resources.cash = Math.max(0, (state.resources.cash || 0) - (action.cost || 0));
   }
 
   // 应用效果（Q4冲刺KPI+50%）
@@ -90,7 +90,7 @@ function doCorporateAction(actionId) {
     );
   // 现金效果
   if (effects.cash)
-    state.resources.cash = Math.max(0, state.resources.cash + effects.cash);
+    state.resources.cash = Math.max(0, (state.resources.cash || 0) + (effects.cash || 0));
   if (effects.intelligence)
     state.player.intelligence = Math.min(
       100,
