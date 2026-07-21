@@ -1449,6 +1449,10 @@ const MORAL_EVENTS = [
     triggers: ["after_work"],
     triggerWeight: 2,
     triggerCooldown: 60,
+    condition: function (st) {
+      if (!st.career || !st.career.currentJob) return false; // [Layer3]
+      return true;
+    },
     choices: [
       {
         text: "👂 认真听他说，偶尔应和两句",
@@ -1493,6 +1497,10 @@ const MORAL_EVENTS = [
     desc: "楼道里一位独居老人正吃力地往下搬一袋米和一箱旧书，电梯坏了。他喘着粗气，额头上全是汗，走两步就要歇一下。",
     minDay: 5,
     dailyChance: 0.025,
+    condition: function (st) {
+      if (!st.housing || st.housing.tier < 1) return false; // [Layer3]
+      return true;
+    },
     choices: [
       {
         text: "🤝 上前帮他把东西搬下楼",

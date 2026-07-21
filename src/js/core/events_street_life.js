@@ -210,6 +210,7 @@
       title: "黄金摊位争夺战",
       story: "夜市街口位置空出来了。有人出¥3,000租一个月。那位置客流量是三倍。",
       triggers: { minDay: 30, excludeFlags: ["_stallLocationSeen"] },
+      conditions: function (st) { if (!st.player.workTypeCounts || !st.player.workTypeCounts.stall || st.player.workTypeCounts.stall < 1) return false; return true; }, // [Layer3]
       choices: [
         {
           text: "💰 砸¥3,000抢下",
@@ -253,6 +254,7 @@
       title: "寺庙经济",
       story: "灵隐寺排队比商场还多。卖香烛的大妈一天¥3,000。年轻人全来上香了。",
       triggers: { minDay: 40, excludeFlags: ["_templeEconomySeen"] },
+      conditions: function (st) { if (!st.player.workTypeCounts || !st.player.workTypeCounts.stall || st.player.workTypeCounts.stall < 1) return false; return true; }, // [Layer3]
       choices: [
         {
           text: "🩧 进手串去卖（¥800）",
@@ -440,6 +442,7 @@
         excludeFlags: ["_nearExpirySeen"],
         minCash: 1000,
       },
+      conditions: function (st) { if (!st.player.workTypeCounts || !st.player.workTypeCounts.stall || st.player.workTypeCounts.stall < 1) return false; return true; }, // [Layer3]
       choices: [
         {
           text: "📦 进¥1,000的货去卖",
@@ -1556,6 +1559,7 @@
       story:
         "银行又降息了——一年期存款利率从1.5%降到1.0%。余额宝的收益跌到1.8%，创历史新低。你算了算：存¥10000在银行，一年利息¥100，够吃两顿沙县。房东说下个月涨房租¥150。",
       triggers: { minDay: 20, excludeFlags: ["_depositRateCutSeen"] },
+      conditions: function (st) { if (!st.resources || st.resources.cash < 10000) return false; return true; }, // [Layer3]
       choices: [
         {
           text: "📈 把钱从银行取出来投资",
@@ -2156,6 +2160,7 @@
       story:
         "区里创文创卫检查，城管突然严打——三轮车被没收了五辆。老赵的车被抬上卡车时他差点哭了：「我贷款买的车啊……」但街角那个有固定摊位的人照样做生意——有关系和没关系，就是不一样。",
       triggers: { minDay: 10, excludeFlags: ["_vendorCrackdownSeen"] },
+      conditions: function (st) { if (!st.player.workTypeCounts || !st.player.workTypeCounts.stall || st.player.workTypeCounts.stall < 1) return false; return true; }, // [Layer3]
       choices: [
         {
           text: "🏪 花钱办个固定摊位证",
@@ -2718,6 +2723,7 @@
       story:
         "以前你靠灰色手段赚了第一桶金——倒卖发票、刷单。现在行业正规化了——政府发了牌照。当年的灰色技能突然变成了合规经验。以前的污点成了先发优势。",
       triggers: { minDay: 90, excludeFlags: ["_grayToLegitSeen"] },
+      conditions: function (st) { if (!st.player || st.player.morality > 30) return false; return true; }, // [Layer3]
       choices: [
         {
           text: "💼 申请正规牌照",
@@ -2855,6 +2861,7 @@
       story:
         "你回到住处发现室友把你的洗衣液用完了，厕所纸也用光了没补。这不是第一次了。你开门时他正在你的椅子上坐着刷手机。",
       triggers: { minDay: 5, excludeFlags: ["_roommateConflictSeen"] },
+      conditions: function (st) { if (!st.housing || st.housing.tier < 1) return false; return true; }, // [Layer3]
       choices: [
         {
           text: "😤 当面跟他说清楚",

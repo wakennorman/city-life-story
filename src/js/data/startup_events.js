@@ -531,6 +531,7 @@ const STARTUP_EVENTS_GROWTH = [
     triggerDayMin: 190,
     triggerDayMax: 290,
     industries: ["*"],
+    conditions: function (st) { if (!st.needs || st.needs.fatigue < 60) return false; return true; }, // [Layer3]
     title: "你病倒了",
     desc: "长期高压工作让你病倒了。医生建议休息2-4周。但公司离不开你。",
     options: [
@@ -766,6 +767,7 @@ const STARTUP_EVENTS_MATURE = [
     triggerDayMin: 380,
     triggerDayMax: 600,
     industries: ["*"],
+    conditions: function (st) { if (!st.startup || !st.startup.company || st.startup.company.reputation < 20) return false; return true; }, // [Layer3]
     title: "企业社会责任",
     desc: "公司已经有一定规模和社会影响力，需要考虑承担更多社会责任。",
     options: [
@@ -1071,6 +1073,9 @@ function triggerStartupEvent(state) {
     if (day < evt.triggerDayMin || day > evt.triggerDayMax + 200) return false;
     // 检查是否已触发过（每个事件限一次）
     if (startup.flags._eventTriggered && startup.flags._eventTriggered[evt.id])
+      return false;
+    // [Layer3] conditions 门控
+    if (typeof evt.conditions === "function" && !evt.conditions(state))
       return false;
 
     return true;

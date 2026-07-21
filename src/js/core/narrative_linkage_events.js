@@ -84,6 +84,7 @@
     triggers: { minDay: 40 },
     conditions: function (st) {
       if (!st || !st.relationships) return false;
+      if (!st.relationships.auntie_lin || !st.relationships.auntie_lin.met) return false; // [Layer3]
       if (st.flags && st.flags._narrOldTownDone) return false;
       if (!getMetNpcsR23(st, 0).length) return false;
       return true;

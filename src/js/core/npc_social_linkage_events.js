@@ -138,7 +138,7 @@
     {
       id: "social_market_tip",
       title: "在咖啡馆听到的一句闲话",
-      desc: "做金融的朋友随口提了句行业风向，你没当真，却在之后几天看到了印证。原来有些信息，真的只在圈子里流转。",
+      desc: "一个朋友随口提了句行业风向，你没当真，却在之后几天看到了印证。原来有些信息，真的只在圈子里流转。",
       phase: "corporate",
       triggers: { minDay: 120 },
       conditions: function (st) {

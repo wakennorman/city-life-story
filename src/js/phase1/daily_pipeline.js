@@ -453,7 +453,7 @@ const DAILY_PIPELINE = [
       if (typeof getStallIncome === "function") {
         var income = getStallIncome(state);
         if (income > 0) {
-          state.resources.cash += income;
+          state.resources.cash = (state.resources.cash || 0) + income;
           state.resources.totalEarned =
             (state.resources.totalEarned || 0) + income;
           addDailyTransaction(
@@ -468,7 +468,7 @@ const DAILY_PIPELINE = [
       if (typeof getShopIncome === "function") {
         var shopIncome = getShopIncome(state);
         if (shopIncome > 0) {
-          state.resources.cash += shopIncome;
+          state.resources.cash = (state.resources.cash || 0) + shopIncome;
           state.resources.totalEarned =
             (state.resources.totalEarned || 0) + shopIncome;
           addDailyTransaction(

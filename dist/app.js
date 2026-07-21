@@ -13242,6 +13242,7 @@ function registerNewsEventsToPool() {
       title: "黄金摊位争夺战",
       story: "夜市街口位置空出来了。有人出¥3,000租一个月。那位置客流量是三倍。",
       triggers: { minDay: 30, excludeFlags: ["_stallLocationSeen"] },
+      conditions: function (st) { if (!st.player.workTypeCounts || !st.player.workTypeCounts.stall || st.player.workTypeCounts.stall < 1) return false; return true; }, // [Layer3]
       choices: [
         {
           text: "💰 砸¥3,000抢下",
@@ -13285,6 +13286,7 @@ function registerNewsEventsToPool() {
       title: "寺庙经济",
       story: "灵隐寺排队比商场还多。卖香烛的大妈一天¥3,000。年轻人全来上香了。",
       triggers: { minDay: 40, excludeFlags: ["_templeEconomySeen"] },
+      conditions: function (st) { if (!st.player.workTypeCounts || !st.player.workTypeCounts.stall || st.player.workTypeCounts.stall < 1) return false; return true; }, // [Layer3]
       choices: [
         {
           text: "🩧 进手串去卖（¥800）",
@@ -13472,6 +13474,7 @@ function registerNewsEventsToPool() {
         excludeFlags: ["_nearExpirySeen"],
         minCash: 1000,
       },
+      conditions: function (st) { if (!st.player.workTypeCounts || !st.player.workTypeCounts.stall || st.player.workTypeCounts.stall < 1) return false; return true; }, // [Layer3]
       choices: [
         {
           text: "📦 进¥1,000的货去卖",
@@ -14527,6 +14530,7 @@ function registerNewsEventsToPool() {
       story:
         "「幻方量化」去年收益43%，今年前三个月已经亏了15%。有人说量化基金就是高频割韭菜——散户的每一笔交易都被算法预测。你想起上周自己买了就跌、卖了就涨的股票，后背一凉。",
       triggers: { minDay: 55, excludeFlags: ["_quantFundSeen"] },
+      conditions: function (st) { if (!st.investment || !st.investment.stockHoldings || Object.keys(st.investment.stockHoldings).length < 1) return false; return true; }, // [Layer3]
       choices: [
         {
           text: "🤖 买量化基金——打不过就加入",
@@ -14587,6 +14591,7 @@ function registerNewsEventsToPool() {
       story:
         "银行又降息了——一年期存款利率从1.5%降到1.0%。余额宝的收益跌到1.8%，创历史新低。你算了算：存¥10000在银行，一年利息¥100，够吃两顿沙县。房东说下个月涨房租¥150。",
       triggers: { minDay: 20, excludeFlags: ["_depositRateCutSeen"] },
+      conditions: function (st) { if (!st.resources || st.resources.cash < 10000) return false; return true; }, // [Layer3]
       choices: [
         {
           text: "📈 把钱从银行取出来投资",
@@ -15187,6 +15192,7 @@ function registerNewsEventsToPool() {
       story:
         "区里创文创卫检查，城管突然严打——三轮车被没收了五辆。老赵的车被抬上卡车时他差点哭了：「我贷款买的车啊……」但街角那个有固定摊位的人照样做生意——有关系和没关系，就是不一样。",
       triggers: { minDay: 10, excludeFlags: ["_vendorCrackdownSeen"] },
+      conditions: function (st) { if (!st.player.workTypeCounts || !st.player.workTypeCounts.stall || st.player.workTypeCounts.stall < 1) return false; return true; }, // [Layer3]
       choices: [
         {
           text: "🏪 花钱办个固定摊位证",
@@ -15749,6 +15755,7 @@ function registerNewsEventsToPool() {
       story:
         "以前你靠灰色手段赚了第一桶金——倒卖发票、刷单。现在行业正规化了——政府发了牌照。当年的灰色技能突然变成了合规经验。以前的污点成了先发优势。",
       triggers: { minDay: 90, excludeFlags: ["_grayToLegitSeen"] },
+      conditions: function (st) { if (!st.player || st.player.morality > 30) return false; return true; }, // [Layer3]
       choices: [
         {
           text: "💼 申请正规牌照",
@@ -15886,6 +15893,7 @@ function registerNewsEventsToPool() {
       story:
         "你回到住处发现室友把你的洗衣液用完了，厕所纸也用光了没补。这不是第一次了。你开门时他正在你的椅子上坐着刷手机。",
       triggers: { minDay: 5, excludeFlags: ["_roommateConflictSeen"] },
+      conditions: function (st) { if (!st.housing || st.housing.tier < 1) return false; return true; }, // [Layer3]
       choices: [
         {
           text: "😤 当面跟他说清楚",
@@ -19388,6 +19396,7 @@ function registerNewsEventsToPool() {
         story:
           "公司重点项目上线失败，客户投诉到了 CEO 那里。开会时大家都在沉默——直到领导看向你：「你是这个项目的第一负责人，你先说说。」但你知道，真正的问题出在技术总监给的架构方案上。他之前暗示过你「有问题我兜着」，现在却在会上装无辜。",
         triggers: { minDay: 90, phase: "corporate" },
+        conditions: function (st) { if (!st.corporate || !st.corporate.active) return false; return true; }, // [Layer3]
         choices: [
           {
             text: "📋 如实陈述，指出技术总监的方案问题",
@@ -19466,6 +19475,7 @@ function registerNewsEventsToPool() {
         story:
           "你距离下一个职级只差一步。HR 私下告诉你：「最近公司有个传统，晋升前需要表示一下——不是明面上的东西，就是请领导吃顿饭、送点土特产之类的。」你明白了，这是潜规则。",
         triggers: { minDay: 120, phase: "corporate" },
+        conditions: function (st) { if (!st.corporate || !st.corporate.active) return false; return true; }, // [Layer3]
         choices: [
           {
             text: "🎁 随大流，准备一份礼物",
@@ -19553,6 +19563,7 @@ function registerNewsEventsToPool() {
         story:
           "公司宣布优化 10% 的员工。你的 Leader 把你叫到办公室：「你手下有两个人，老赵和小林。老赵快退休了，家里有个生病的妻子。小林刚结婚，房贷压力大。我只能留一个，另一个……你自己跟他们说吧。」",
         triggers: { minDay: 150, phase: "corporate" },
+        conditions: function (st) { if (!st.corporate || !st.corporate.team || st.corporate.team.length < 2) return false; return true; }, // [Layer3]
         choices: [
           {
             text: "👴 保老赵，让他提前退休",
@@ -30531,6 +30542,8 @@ if (typeof window !== "undefined") {
       title: "风口来了",
       story: `手机弹了条推送："XX行业人才缺口巨大，日薪涨了50%！"\n你看了看，心跳加速——这不就是你一直在干的活吗？`,
       conditions: function (st) {
+        // [Layer3] 叙事说"你一直在干的活"→必须有工作
+        if (!st.career || !st.career.currentJob) return false;
         if (!st._worldParams || !st._worldParams.sectorHeat) return false;
         for (var sector in st._worldParams.sectorHeat) {
           if (st._worldParams.sectorHeat[sector] > 1.2) return true;
@@ -30583,6 +30596,8 @@ if (typeof window !== "undefined") {
       title: "行业寒冬",
       story: `新闻里铺天盖地都是"XX行业遇冷""企业缩编"的消息。你认识几个同行，已经在抱怨活越来越少、价钱越压越低。\n风口过了，日子得重新算计。`,
       conditions: function (st) {
+        // [Layer3] 叙事说"你认识几个同行"→必须有工作
+        if (!st.career || !st.career.currentJob) return false;
         if (!st._worldParams || !st._worldParams.sectorHeat) return false;
         if (st.player.day < 15) return false;
         if (
@@ -32816,8 +32831,8 @@ if (typeof window !== "undefined") {
       story:
         "你正在街上走着，一个中年男人快步迎上来——你认出来了，这是你一个月前帮忙送过紧急文件的那位客户。\n\n他笑着说：「可算碰上你了！上次你帮我送的那份标书中了！一直想谢谢你。」说着递过来一个袋子。",
       conditions: function (st) {
-        // 检查玩家是否具备长期跑腿/配送的特征：driving技能≥15 或 agility≥28（经常行动）
-        // 且游戏天数>30说明有足够时间积累客户
+        // [Layer3] 叙事说"帮送过紧急文件"→必须有配送经历
+        if (!st.player.workTypeCounts || !st.player.workTypeCounts['delivery_rider'] || st.player.workTypeCounts['delivery_rider'] < 1) return false;
         if (st.player.day < 30) return false;
         if (st.skills && st.skills.driving && st.skills.driving.level >= 15)
           return true;
@@ -87408,6 +87423,7 @@ if (typeof window !== "undefined") {
         excludeFlags: ["_chengguanRaidPanicSeen"],
       },
       conditions: function (st) {
+        if (!st.player.workTypeCounts || !st.player.workTypeCounts.stall || st.player.workTypeCounts.stall < 1) return false; // [Layer3]
         return st.chengguan && (st.chengguan.heat || 0) >= 60;
       },
       probability: 0.15,
@@ -89471,7 +89487,7 @@ if (typeof window !== "undefined") {
       icon: "🏛️",
       title: "人到中年，身后之事",
       story:
-        "体检报告摊在桌上，各项指标还算平稳，但医生那句「这个年纪要注意了」让你第一次认真想：万一。\n\n你攒下的房子、票子、那点比特币，若是哪天自己顾不上，该交给谁、怎么交？\n\n这不是晦气，是把辛苦半生换来的东西，安放进一个稳妥的结局。",
+        "体检报告摊在桌上，各项指标还算平稳，但医生那句「这个年纪要注意了」让你第一次认真想：万一。\n\n你攒下的票子和资产，若是哪天自己顾不上，该交给谁、怎么交？\n\n这不是晦气，是把辛苦半生换来的东西，安放进一个稳妥的结局。",
       triggers: { minDay: 1, excludeFlags: ["_estatePlanDone"] },
       conditions: function (st) {
         if (!st.flags || st.flags._estatePlanDone) return false;
@@ -89830,6 +89846,7 @@ if (typeof window !== "undefined") {
     phase: "street",
     probability: 0.05,
     conditions: function (st) {
+      if (!st.housing || st.housing.tier < 1) return false; // [Layer3]
       if (st.flags && st.flags._joblessIdentitySeen) return false;
       if (st.player && st.player.day < 15) return false;
       // 曾经有过工作，但现在失业了
@@ -91107,6 +91124,7 @@ if (typeof window !== "undefined") {
     triggers: { minDay: 40 },
     conditions: function (st) {
       if (!st || !st.relationships) return false;
+      if (!st.relationships.auntie_lin || !st.relationships.auntie_lin.met) return false; // [Layer3]
       if (st.flags && st.flags._narrOldTownDone) return false;
       if (!getMetNpcsR23(st, 0).length) return false;
       return true;
@@ -92210,7 +92228,7 @@ if (typeof window !== "undefined") {
     {
       id: "social_market_tip",
       title: "在咖啡馆听到的一句闲话",
-      desc: "做金融的朋友随口提了句行业风向，你没当真，却在之后几天看到了印证。原来有些信息，真的只在圈子里流转。",
+      desc: "一个朋友随口提了句行业风向，你没当真，却在之后几天看到了印证。原来有些信息，真的只在圈子里流转。",
       phase: "corporate",
       triggers: { minDay: 120 },
       conditions: function (st) {
@@ -94459,6 +94477,8 @@ if (typeof window !== "undefined") {
         "你睁着眼睛盯着天花板。这是今晚第三次爬起来数羊了。\\n\\n手机屏幕上是凌晨3:14。窗外黑漆漆的，你脑子里却在过今天——不，是这一周、这一个月的所有事：房租、工作、家人的电话、还不完的债。\\n\\n胸口像压了块石头。你不确定自己还能撑多久。",
       // [全系统自洽修复] 域B 修复: ①原路径 psychology 不存在(应为 health.mental) ②原阈值 stress>=75 等在 gameplay 中几乎不可达 → 事件永不触发。改为读取 health.mental + 心情/疲劳双维度兜底
       conditions: function (st) {
+        if (!st.housing || st.housing.tier < 1) return false; // [Layer3]
+        if (!st.career || !st.career.currentJob) return false; // [Layer3]
         var mental =
           st.personalGrowth && st.personalGrowth.health
             ? st.personalGrowth.health.mental
@@ -94563,6 +94583,7 @@ if (typeof window !== "undefined") {
         "你面试回来站在镜子前。头发油腻腻地贴在额头上，衬衫皱了皱，领口还有一点没擦干净的咖啡渍。\\n\\n你不确定自己是不是变丑了。不，应该说——你确定自己已经很久没认真打扮过了。\\n\\n手机相册里翻到半年前的照片，你都不认识那个人了。",
       // [全系统自洽修复] 域B 修复: personalGrowth.image 实际字段为{style,skincare,fitness,plastic}，原代码引用 appearance/grooming(不存在)→ NaN → 事件永不触发
       conditions: function (st) {
+        if (!st.flags || !st.flags._lastInterviewDay) return false; // [Layer3]
         var img =
           st.personalGrowth && st.personalGrowth.image
             ? st.personalGrowth.image
@@ -94670,6 +94691,7 @@ if (typeof window !== "undefined") {
       story:
         '手机日历上有个标记——你的一个目标，deadline是30天后。\\n\\n你点开看："30岁前存款¥50,000"。\\n\\n你查了查余额：¥12,300。还有30天。\\n\\n你想了想自己现在的节奏，按这个速度，大概率完不成。\\n\\n但你又不甘心。',
       conditions: function (st) {
+        if (!st.resources || st.resources.cash < 5000 || st.resources.cash > 20000) return false; // [Layer3]
         // 任何已激活目标：personalGrowth.goals 或已选梦想(_dreamId)即为"有目标"
         var goals = (st.personalGrowth && st.personalGrowth.goals) || [];
         var hasDream = !!(st.flags && st.flags._dreamId);
@@ -94758,7 +94780,7 @@ if (typeof window !== "undefined") {
       icon: "🎨",
       title: "那一刻你明白了",
       story:
-        "你练了这件事已经很久了。\\n\\n也许是练了三个月的吉他，也许是练了一年的书法，也许是跑了半年马拉松。\\n\\n今天突然，某个瞬间——你和它之间的隔阂消失了。你不再是在「学」它，你就是在「做」它。\\n\\n这种感觉很奇妙。你突然觉得，之前所有的辛苦都值得了。",
+        "你练了这件事已经很久了。\\n\\n也许是练了几个月吉他，也许是练了几个月书法，也许是跑了半年马拉松。\\n\\n今天突然，某个瞬间——你和它之间的隔阂消失了。你不再是在「学」它，你就是在「做」它。\\n\\n这种感觉很奇妙。你突然觉得，之前所有的辛苦都值得了。",
       conditions: function (st) {
         var hobbies =
           st.personalGrowth && st.personalGrowth.hobbies
@@ -144350,6 +144372,7 @@ const STARTUP_EVENTS_GROWTH = [
     triggerDayMin: 190,
     triggerDayMax: 290,
     industries: ["*"],
+    conditions: function (st) { if (!st.needs || st.needs.fatigue < 60) return false; return true; }, // [Layer3]
     title: "你病倒了",
     desc: "长期高压工作让你病倒了。医生建议休息2-4周。但公司离不开你。",
     options: [
@@ -144585,6 +144608,7 @@ const STARTUP_EVENTS_MATURE = [
     triggerDayMin: 380,
     triggerDayMax: 600,
     industries: ["*"],
+    conditions: function (st) { if (!st.startup || !st.startup.company || st.startup.company.reputation < 20) return false; return true; }, // [Layer3]
     title: "企业社会责任",
     desc: "公司已经有一定规模和社会影响力，需要考虑承担更多社会责任。",
     options: [
@@ -144890,6 +144914,9 @@ function triggerStartupEvent(state) {
     if (day < evt.triggerDayMin || day > evt.triggerDayMax + 200) return false;
     // 检查是否已触发过（每个事件限一次）
     if (startup.flags._eventTriggered && startup.flags._eventTriggered[evt.id])
+      return false;
+    // [Layer3] conditions 门控
+    if (typeof evt.conditions === "function" && !evt.conditions(state))
       return false;
 
     return true;
@@ -166055,6 +166082,10 @@ const MORAL_EVENTS = [
     desc: "你和朋友一起参加职业资格考试。你无意中看到他在用手机搜答案，监考老师正往这边走。他向你投来求助的眼神。",
     minDay: 15,
     dailyChance: 0.025,
+    condition: function (st) {
+      if (!st.relationships || Object.keys(st.relationships).length < 1) return false; // [Layer3]
+      return true;
+    },
     choices: [
       {
         text: "🗣️ 轻咳一声提醒他收手机",
@@ -166102,6 +166133,10 @@ const MORAL_EVENTS = [
     desc: "你借的图书馆书不小心被水杯打翻淋湿了，好几页黏在一起。书是刚出版的新书，定价¥68。还回去肯定会被发现。",
     minDay: 3,
     dailyChance: 0.04,
+    condition: function (st) {
+      if (!st.flags || !st.flags._hasLibraryCard) return false; // [Layer3]
+      return true;
+    },
     choices: [
       {
         text: "🏪 主动去图书馆说明情况并赔偿",
@@ -166305,6 +166340,7 @@ const MORAL_EVENTS = [
     minDay: 10,
     dailyChance: 0.03,
     condition: function (s) {
+      if (!s.housing || s.housing.tier < 1) return false; // [Layer3]
       return s.resources.cash >= 200;
     },
     choices: [
@@ -166362,6 +166398,10 @@ const MORAL_EVENTS = [
     triggers: ["after_work"],
     triggerWeight: 5,
     triggerCooldown: 25,
+    condition: function (st) {
+      if (!st.career || !st.career.currentJob) return false; // [Layer3]
+      return true;
+    },
     choices: [
       {
         text: "🎒 收进口袋，积少成多",
@@ -166463,6 +166503,10 @@ const MORAL_EVENTS = [
     triggers: ["after_work"],
     triggerWeight: 2,
     triggerCooldown: 60,
+    condition: function (st) {
+      if (!st.career || !st.career.currentJob) return false; // [Layer3]
+      return true;
+    },
     choices: [
       {
         text: "👂 认真听他说，偶尔应和两句",
@@ -166507,6 +166551,10 @@ const MORAL_EVENTS = [
     desc: "楼道里一位独居老人正吃力地往下搬一袋米和一箱旧书，电梯坏了。他喘着粗气，额头上全是汗，走两步就要歇一下。",
     minDay: 5,
     dailyChance: 0.025,
+    condition: function (st) {
+      if (!st.housing || st.housing.tier < 1) return false; // [Layer3]
+      return true;
+    },
     choices: [
       {
         text: "🤝 上前帮他把东西搬下楼",
@@ -178705,7 +178753,7 @@ const DAILY_PIPELINE = [
       if (typeof getStallIncome === "function") {
         var income = getStallIncome(state);
         if (income > 0) {
-          state.resources.cash += income;
+          state.resources.cash = (state.resources.cash || 0) + income;
           state.resources.totalEarned =
             (state.resources.totalEarned || 0) + income;
           addDailyTransaction(
@@ -178720,7 +178768,7 @@ const DAILY_PIPELINE = [
       if (typeof getShopIncome === "function") {
         var shopIncome = getShopIncome(state);
         if (shopIncome > 0) {
-          state.resources.cash += shopIncome;
+          state.resources.cash = (state.resources.cash || 0) + shopIncome;
           state.resources.totalEarned =
             (state.resources.totalEarned || 0) + shopIncome;
           addDailyTransaction(

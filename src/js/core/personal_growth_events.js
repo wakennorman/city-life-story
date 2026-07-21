@@ -136,6 +136,8 @@
         "你睁着眼睛盯着天花板。这是今晚第三次爬起来数羊了。\\n\\n手机屏幕上是凌晨3:14。窗外黑漆漆的，你脑子里却在过今天——不，是这一周、这一个月的所有事：房租、工作、家人的电话、还不完的债。\\n\\n胸口像压了块石头。你不确定自己还能撑多久。",
       // [全系统自洽修复] 域B 修复: ①原路径 psychology 不存在(应为 health.mental) ②原阈值 stress>=75 等在 gameplay 中几乎不可达 → 事件永不触发。改为读取 health.mental + 心情/疲劳双维度兜底
       conditions: function (st) {
+        if (!st.housing || st.housing.tier < 1) return false; // [Layer3]
+        if (!st.career || !st.career.currentJob) return false; // [Layer3]
         var mental =
           st.personalGrowth && st.personalGrowth.health
             ? st.personalGrowth.health.mental
@@ -240,6 +242,7 @@
         "你面试回来站在镜子前。头发油腻腻地贴在额头上，衬衫皱了皱，领口还有一点没擦干净的咖啡渍。\\n\\n你不确定自己是不是变丑了。不，应该说——你确定自己已经很久没认真打扮过了。\\n\\n手机相册里翻到半年前的照片，你都不认识那个人了。",
       // [全系统自洽修复] 域B 修复: personalGrowth.image 实际字段为{style,skincare,fitness,plastic}，原代码引用 appearance/grooming(不存在)→ NaN → 事件永不触发
       conditions: function (st) {
+        if (!st.flags || !st.flags._lastInterviewDay) return false; // [Layer3]
         var img =
           st.personalGrowth && st.personalGrowth.image
             ? st.personalGrowth.image
@@ -347,6 +350,7 @@
       story:
         '手机日历上有个标记——你的一个目标，deadline是30天后。\\n\\n你点开看："30岁前存款¥50,000"。\\n\\n你查了查余额：¥12,300。还有30天。\\n\\n你想了想自己现在的节奏，按这个速度，大概率完不成。\\n\\n但你又不甘心。',
       conditions: function (st) {
+        if (!st.resources || st.resources.cash < 5000 || st.resources.cash > 20000) return false; // [Layer3]
         // 任何已激活目标：personalGrowth.goals 或已选梦想(_dreamId)即为"有目标"
         var goals = (st.personalGrowth && st.personalGrowth.goals) || [];
         var hasDream = !!(st.flags && st.flags._dreamId);
@@ -435,7 +439,7 @@
       icon: "🎨",
       title: "那一刻你明白了",
       story:
-        "你练了这件事已经很久了。\\n\\n也许是练了三个月的吉他，也许是练了一年的书法，也许是跑了半年马拉松。\\n\\n今天突然，某个瞬间——你和它之间的隔阂消失了。你不再是在「学」它，你就是在「做」它。\\n\\n这种感觉很奇妙。你突然觉得，之前所有的辛苦都值得了。",
+        "你练了这件事已经很久了。\\n\\n也许是练了几个月吉他，也许是练了几个月书法，也许是跑了半年马拉松。\\n\\n今天突然，某个瞬间——你和它之间的隔阂消失了。你不再是在「学」它，你就是在「做」它。\\n\\n这种感觉很奇妙。你突然觉得，之前所有的辛苦都值得了。",
       conditions: function (st) {
         var hobbies =
           st.personalGrowth && st.personalGrowth.hobbies

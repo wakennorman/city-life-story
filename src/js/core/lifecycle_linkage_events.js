@@ -572,6 +572,7 @@
     phase: "street",
     probability: 0.05,
     conditions: function (st) {
+      if (!st.housing || st.housing.tier < 1) return false; // [Layer3]
       if (st.flags && st.flags._joblessIdentitySeen) return false;
       if (st.player && st.player.day < 15) return false;
       // 曾经有过工作，但现在失业了

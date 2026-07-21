@@ -31,6 +31,7 @@
         excludeFlags: ["_chengguanRaidPanicSeen"],
       },
       conditions: function (st) {
+        if (!st.player.workTypeCounts || !st.player.workTypeCounts.stall || st.player.workTypeCounts.stall < 1) return false; // [Layer3]
         return st.chengguan && (st.chengguan.heat || 0) >= 60;
       },
       probability: 0.15,
