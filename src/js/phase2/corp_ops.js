@@ -192,7 +192,8 @@ function endQuarter() {
       for (var wi = 0; wi < workplaceNPCs.length; wi++) {
         var npcRel = state.relationships[workplaceNPCs[wi]];
         if (npcRel && npcRel.met) {
-          npcRel.affinity = Math.max(0, Math.min(100, (npcRel.affinity || 50) + affinityChange));
+          // [全系统自洽修复] 域H A类修复: 绩效影响同事好感改走 applyAffinityChange
+          applyAffinityChange(state, workplaceNPCs[wi], affinityChange, "绩效影响");
         }
       }
       if (affinityChange > 0) {
@@ -353,6 +354,24 @@ function endQuarter() {
   if (typeof checkCorpLoseConditions === "function") checkCorpLoseConditions(state);
   // 胜利条件
   if (typeof checkCorpWinConditions === "function") checkCorpWinConditions(state);
+
+  // [全系统自洽修复] 域H 联动增强: H→G C级绩效压力增疲劳
+  if (grade.grade === "C" && state.needs) {
+    state.needs.fatigue = Math.min(100, (state.needs.fatigue || 0) + 3);
+    StateManager.addMessage("😰 绩效不佳让你压力很大，疲劳+3。", "warning");
+  }
+
+  // [全系统自洽修复] 域H 联动增强: H→F 季度末公司状态摘要
+  if (state.startup && state.startup.company) {
+    var _company = state.startup.company;
+    var _cash = _company.cashReserve || 0;
+    var _emp = (_company.employees || []).length;
+    var _burn = _company.burnRate || 0;
+    var _runway = _burn > 0 ? Math.round(_cash / _burn * 30) : 999;
+    if (_emp > 0) {
+      StateManager.addMessage("🏢 公司状态：团队" + _emp + "人 · 现金¥" + Math.round(_cash).toLocaleString() + " · 可维持约" + _runway + "天", "info");
+    }
+  }
 
   if (typeof autoSave === "function") autoSave("milestone");
 }
