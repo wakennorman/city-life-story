@@ -217193,6 +217193,10 @@ function renderMapTab(state, parent) {
           ap = 3; price = 10 + (typeof Random !== "undefined" && Random.int ? Random.int(0, 30) : 15);
           modeName = "🚕 打车";
         } else if (mode === "car") {
+          if (!hasCar) {
+            StateManager.addMessage("🚗 你还没有车，无法自驾出行。可以去汽车城看看。", "warning");
+            return;
+          }
           ap = 2; price = 5;
           modeName = "🚗 自驾";
         }
@@ -217225,15 +217229,14 @@ function renderMapTab(state, parent) {
   transitBar.style.cssText =
     "display:flex;flex-direction:column;gap:2px;padding:8px 0 4px;";
   const curMode = state.player.transitMode || "walk";
+  var hasCar = state.investment && state.investment.cars && state.investment.cars.length > 0;
   const TRANSIT_MODES = [
     { mode: "walk", label: "🚶 步行", desc: "免费" },
     { mode: "bike", label: "🚲 单车", desc: "¥3" },
     { mode: "metro", label: "🚇 地铁", desc: "¥4" },
     { mode: "taxi", label: "🚕 打车", desc: "¥10-40" },
+    { mode: "car", label: "🚗 自驾", desc: hasCar ? "¥5" : "🔒 需购车" },
   ];
-  // 有车时加自驾选项
-  var hasCar = state.investment && state.investment.cars && state.investment.cars.length > 0;
-  if (hasCar) TRANSIT_MODES.push({ mode: "car", label: "🚗 自驾", desc: "¥5" });
 
   // 按钮行
   var btnRow = document.createElement("div");
@@ -217242,19 +217245,27 @@ function renderMapTab(state, parent) {
     var btn = document.createElement("button");
     btn.className = "transit-bar-btn";
     btn.dataset.mode = tm.mode;
-    var isActive = tm.mode === curMode;
+    var isCarLocked = tm.mode === "car" && !hasCar;
+    var isActive = tm.mode === curMode && !isCarLocked;
     btn.style.cssText =
       "padding:4px 8px;font-size:11px;border-radius:6px;border:1px solid " +
-      (isActive ? "var(--accent)" : "var(--border-light)") +
+      (isCarLocked ? "var(--border-light)" : isActive ? "var(--accent)" : "var(--border-light)") +
       ";background:" +
-      (isActive ? "rgba(0,180,216,0.15)" : "var(--bg-input)") +
+      (isCarLocked ? "var(--bg-secondary)" : isActive ? "rgba(0,180,216,0.15)" : "var(--bg-input)") +
       ";color:" +
-      (isActive ? "var(--accent)" : "var(--text-secondary)") +
-      ";cursor:pointer;font-weight:" +
+      (isCarLocked ? "var(--text-muted)" : isActive ? "var(--accent)" : "var(--text-secondary)") +
+      ";cursor:" + (isCarLocked ? "not-allowed" : "pointer") +
+      ";font-weight:" +
       (isActive ? "600" : "400") +
+      ";opacity:" + (isCarLocked ? "0.5" : "1") +
       ";transition:all 0.15s;white-space:nowrap;";
     btn.innerHTML = tm.label + ' <span style="font-size:9px;opacity:0.7;">' + tm.desc + "</span>";
+    btn.title = isCarLocked ? "需要先购买一辆车才能自驾出行" : "";
     btn.addEventListener("click", function() {
+      if (isCarLocked) {
+        StateManager.addMessage("🚗 你还没有车，无法自驾出行。可以去汽车城看看。", "warning");
+        return;
+      }
       if (curMode !== tm.mode) {
         StateManager.update("player.transitMode", tm.mode);
         renderAll();
@@ -217270,7 +217281,7 @@ function renderMapTab(state, parent) {
     bike: "💡 共享单车，2跳内可达，消耗6AP，费用¥3",
     metro: "💡 地铁，仅限沿线站点，消耗5AP，费用¥4",
     taxi: "💡 打车直达，消耗3AP，按距离计费¥10-40",
-    car: "💡 自驾直达，消耗2AP，油费¥5",
+    car: hasCar ? "💡 自驾直达，消耗2AP，油费¥5" : "💡 自驾需先购车，解锁后消耗2AP，油费¥5",
   };
   var hint = document.createElement("div");
   hint.style.cssText = "font-size:10px;color:var(--text-muted);";
