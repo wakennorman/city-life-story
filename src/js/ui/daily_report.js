@@ -471,6 +471,19 @@ function generatePeakMomentHTML(state, incomes, expenses) {
     highlights.push({ icon: streakIcon, text: streakText, type: "positive" });
   }
 
+  // 1c. 连续目标完成天数展示（F→G 峰终定律·损失厌恶留存抓手）
+  // [全系统自洽修复] 域F联动: 每日目标连续完成追踪,中断归零驱动玩家每日回归
+  var questStreak = state.flags._questStreak || 0;
+  if (questStreak >= 2) {
+    var qStreakIcon =
+      questStreak >= 100 ? "👑" : questStreak >= 30 ? "🏆" : questStreak >= 7 ? "🔥" : "🎯";
+    var qStreakText =
+      questStreak >= 30
+        ? "连续 <strong>" + questStreak + "</strong> 天完成所有目标！"
+        : "连续 <strong>" + questStreak + "</strong> 天完成目标";
+    highlights.push({ icon: qStreakIcon, text: qStreakText, type: "positive" });
+  }
+
   // 2. 里程碑检测
   if (day === 7) {
     highlights.push({

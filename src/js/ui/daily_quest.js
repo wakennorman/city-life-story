@@ -669,6 +669,30 @@
       }
     }
 
+    // [全系统自洽修复] 域F联动: 每日目标完成连续天数追踪 (F→G 峰终定律·损失厌恶留存)
+    // 每天首次渲染时更新连续记录: 全达成+1, 否则重置为0
+    var _today = state.player.day;
+    if (state.flags._questStreakUpdatedDay !== _today) {
+      state.flags._questStreakUpdatedDay = _today;
+      if (allDone) {
+        state.flags._questStreak = (state.flags._questStreak || 0) + 1;
+        // 连续里程碑奖励 (禀赋效应·珍惜记录)
+        var _qs = state.flags._questStreak;
+        if (_qs === 7 || _qs === 30 || _qs === 100) {
+          var _bonus = _qs === 100 ? 5000 : _qs === 30 ? 1000 : 200;
+          state.resources.cash = (state.resources.cash || 0) + _bonus;
+          if (typeof StateManager !== "undefined" && StateManager.addMessage) {
+            StateManager.addMessage(
+              "🔥 连续" + _qs + "天完成所有目标！奖金 ¥" + _bonus,
+              "success",
+            );
+          }
+        }
+      } else {
+        state.flags._questStreak = 0;
+      }
+    }
+
     parent.appendChild(card);
   }
 
