@@ -2401,111 +2401,10 @@ function renderMapTab(state, parent) {
   // 服务标签 + 声望条（从 sidebar 迁移到地图 Tab 顶部）
   appendLocationServicesStrip(container, state, locKey);
 
-  // === ⭐ 快速出行置顶区（解决"地图没了"问题） ===
+  // 可达地点列表（用于地图节点点击和交通方式计算）
   const reachableList = Array.from(reachable).filter((k) => k !== locKey);
-  if (reachableList.length > 0) {
-    const quick = document.createElement("div");
-    quick.style.cssText =
-      "padding:14px;background:linear-gradient(135deg, var(--bg-card), rgba(0,180,216,0.08));border:1px solid var(--accent);border-radius:var(--radius-md);";
-    quick.innerHTML = `
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
-        <h4 style="color:var(--accent);margin:0;font-size:13px;">🚶 快速出行</h4>
-        <span style="font-size:10px;color:var(--text-muted);">从 ${loc ? loc.name : "当前位置"} 出发</span>
-      </div>
-      <div class="quick-travel-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:6px;">
-    `;
-    for (const destKey of reachableList) {
-      const dest = getLocation(destKey);
-      if (!dest) continue;
-      const destType =
-        dest.type === "commercial"
-          ? "🛒商业"
-          : dest.type === "industrial"
-            ? "🏭工业"
-            : dest.type === "residential"
-              ? "🏘️居住"
-              : dest.type === "service"
-                ? "🏥服务"
-                : dest.type === "education"
-                  ? "📚教育"
-                  : dest.type === "corporate"
-                    ? "🏢职场"
-                    : dest.type === "recreation"
-                      ? "🌳休闲"
-                      : dest.type === "institutional"
-                        ? "🏫机构"
-                        : "📍其他";
-      quick.innerHTML += `
-        <button class="quick-travel-btn" data-dest="${destKey}">
-          <div style="font-weight:600;color:var(--accent);font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">📍 ${dest.name}</div>
-          <div style="display:flex;gap:4px;align-items:center;margin-top:2px;">
-            <span style="font-size:9px;padding:0 4px;border-radius:2px;background:var(--bg-input);color:var(--text-muted);white-space:nowrap;">${destType}</span>
-            <span style="font-size:9px;color:var(--text-muted);white-space:nowrap;">🚶 ${getLocationHops(locKey, destKey) > 0 ? getLocationHops(locKey, destKey) + "跳" : "同在"}</span>
-          </div>
-        </button>
-      `;
-    }
-    quick.innerHTML += "</div>";
-    container.appendChild(quick);
-  }
 
-  // === v3.86 交通方式选择（步行/共享单车/地铁/打车/自驾）===
-  // 设计参考：北上广真实数据
-  //   步行 ¥0 全城可达（AP随距离递增）
-  //   共享单车 ¥3，仅适合相邻地点（≤2跳），比步行快
-  //   地铁 ¥4 固定，仅可到地铁沿线大站（科技园/商业区/医院/学校/培训中心/娱乐区）
-  //   打车 ¥15-50 按距离，可达任何已探索地点，最快但最贵
-  const transitWrap = document.createElement("div");
-  transitWrap.style.cssText =
-    "padding:12px;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-md);";
-  transitWrap.innerHTML = `
-    <h4 style="color:var(--accent);margin:0 0 8px;font-size:13px;">🚇 交通方式</h4>
-    <p style="font-size:11px;color:var(--text-muted);margin:0 0 10px;">
-      选择交通方式查看可达地点与费用。
-    </p>
-    <div id="transit-buttons" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:8px;">
-      <button class="transit-btn" data-mode="walk">
-        <div style="font-weight:600;color:var(--text-secondary);">🚶 步行</div>
-        <div style="font-size:10px;color:var(--text-muted);margin-top:2px;">免费 · 全城可达</div>
-        <div style="font-size:10px;color:var(--text-secondary);margin-top:2px;">最基础出行方式，AP按距离算</div>
-      </button>
-      <button class="transit-btn" data-mode="bike">
-        <div style="font-weight:600;color:var(--success);">🚲 共享单车</div>
-        <div style="font-size:10px;color:var(--text-muted);margin-top:2px;">¥3 · 2跳内可达</div>
-        <div style="font-size:10px;color:var(--text-secondary);margin-top:2px;">比步行快、比打车便宜</div>
-      </button>
-      <button class="transit-btn" data-mode="metro">
-        <div style="font-weight:600;color:var(--accent);">🚇 地铁</div>
-        <div style="font-size:10px;color:var(--text-muted);margin-top:2px;">¥4 · 地铁8站覆盖</div>
-        <div style="font-size:10px;color:var(--text-secondary);margin-top:2px;">科技园/商业区/医院/城中村等</div>
-      </button>
-      <button class="transit-btn" data-mode="taxi">
-        <div style="font-weight:600;color:var(--warning);">🚕 打车</div>
-        <div style="font-size:10px;color:var(--text-muted);margin-top:2px;">¥10-40 按距离</div>
-        <div style="font-size:10px;color:var(--text-secondary);margin-top:2px;">最快的点对点交通</div>
-      </button>
-    </div>
-    <div id="transit-result" style="margin-top:10px;font-size:12px;color:var(--text-secondary);"></div>
-  `;
-  // v4.0 自驾出行按钮（有车时动态添加）
-  var ownCars =
-    state.investment && state.investment.cars ? state.investment.cars : [];
-  if (ownCars.length > 0) {
-    var transitBtns = transitWrap.querySelector("#transit-buttons");
-    if (transitBtns) {
-      var carBtn = document.createElement("button");
-      carBtn.className = "transit-btn car-btn";
-      carBtn.dataset.mode = "car";
-      carBtn.innerHTML =
-        '<div style="font-weight:600;color:var(--accent);">🚗 自驾</div>' +
-        '<div style="font-size:10px;color:var(--text-muted);margin-top:2px;">¥5油费 · 任意直达</div>' +
-        '<div style="font-size:10px;color:var(--text-secondary);margin-top:2px;">用自己的车出行，不限跳数</div>';
-      transitBtns.appendChild(carBtn);
-    }
-  }
-  container.appendChild(transitWrap);
-
-  // v3.2 地铁沿线大站定义（扩展：新增城中村+批发市场）
+  // 地铁沿线大站定义（用于交通方式计算）
   const METRO_STATIONS = [
     "techPark",
     "commercialDist",
@@ -2513,183 +2412,9 @@ function renderMapTab(state, parent) {
     "school",
     "trainingCenter",
     "entertainment",
-    "slum", // v3.2 新增：城中村地铁站（城市中心扩张）
-    "wholesaleMarket", // v3.2 新增：批发市场站（物流枢纽）
+    "slum",
+    "wholesaleMarket",
   ];
-  // v3.2 共享单车扩展到2跳内（不仅相邻地点），价格¥2→¥3，AP-8→AP-6
-  // 打车价格下调：¥15-50→¥10-40
-  // 打包绑定交通方式按钮
-  setTimeout(() => {
-    document.querySelectorAll(".transit-btn").forEach((btn) => {
-      btn.addEventListener("click", () => {
-        const mode = btn.dataset.mode;
-        const result = document.getElementById("transit-result");
-        if (!result) return;
-        // 列出该交通方式可到的地点
-        let available = [];
-        let priceInfo = "";
-        let apInfo = "";
-        if (mode === "walk") {
-          available = reachableList.slice();
-          priceInfo = "免费";
-          apInfo = "行动力随距离递增（最近约6AP，最远约30AP）";
-        } else if (mode === "bike") {
-          // v3.2 共享单车扩展到2跳内
-          var bikeReachable = [];
-          var bikeQueue = [locKey];
-          var bikeVisited = {};
-          bikeVisited[locKey] = 0;
-          while (bikeQueue.length) {
-            var cur = bikeQueue.shift();
-            var dist = bikeVisited[cur];
-            if (dist >= 2) continue;
-            var neighbors = getReachableLocations(cur);
-            for (var ni = 0; ni < neighbors.length; ni++) {
-              var nb = neighbors[ni];
-              if (bikeVisited[nb] !== undefined) continue;
-              bikeVisited[nb] = dist + 1;
-              if (nb !== locKey && bikeReachable.indexOf(nb) < 0)
-                bikeReachable.push(nb);
-              bikeQueue.push(nb);
-            }
-          }
-          available = bikeReachable.slice();
-          priceInfo = "¥3/次";
-          apInfo = "行动力 -6（骑行适中）";
-        } else if (mode === "metro") {
-          available = reachableList.filter(
-            (k) => METRO_STATIONS.indexOf(k) >= 0,
-          );
-          // 也允许从地铁沿线出发到任何地铁沿线
-          if (METRO_STATIONS.indexOf(locKey) >= 0) {
-            METRO_STATIONS.forEach((k) => {
-              if (k !== locKey && available.indexOf(k) < 0) available.push(k);
-            });
-          }
-          priceInfo = "¥4/次";
-          apInfo = "行动力 -5（地铁最快）";
-        } else if (mode === "taxi") {
-          available = reachableList.slice();
-          priceInfo = "¥10-40（按距离）";
-          apInfo = "行动力 -3（最快但最贵）";
-        } else if (mode === "car") {
-          available = reachableList.slice();
-          priceInfo = "¥5油费";
-          apInfo = "行动力 -2（自驾快捷）";
-        }
-        if (available.length === 0) {
-          result.innerHTML =
-            '<span style="color:var(--danger);">该交通方式当前无可达地点</span>';
-          return;
-        }
-        result.innerHTML =
-          '<div style="margin-bottom:6px;">' +
-          "<strong>" +
-          {
-            walk: "🚶 步行",
-            bike: "🚲 共享单车",
-            metro: "🚇 地铁",
-            taxi: "🚕 打车",
-            car: "🚗 自驾",
-          }[mode] +
-          "</strong> · " +
-          priceInfo +
-          " · " +
-          apInfo +
-          "</div>" +
-          '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:6px;">' +
-          available
-            .map((k) => {
-              const d = getLocation(k);
-              if (!d) return "";
-              const price =
-                mode === "walk"
-                  ? 0
-                  : mode === "bike"
-                    ? 3 // v3.2 从¥2→¥3
-                    : mode === "metro"
-                      ? 4
-                      : 10 + Random.int(0, 30); // v3.2 从¥15-50→¥10-40
-              const hops = mode === "walk" ? getLocationHops(locKey, k) : 0;
-              const ap =
-                mode === "walk"
-                  ? 6 + hops * 4
-                  : mode === "bike"
-                    ? 6
-                    : mode === "metro"
-                      ? 5
-                      : mode === "car"
-                        ? 2
-                        : 3; // v3.2 单车AP-8→AP-6
-              return (
-                '<button class="transit-go-btn" data-dest="' +
-                k +
-                '" data-price="' +
-                price +
-                '" data-ap="' +
-                ap +
-                '" data-mode="' +
-                mode +
-                '" style="padding:8px;font-size:11px;">' +
-                '<div style="font-weight:600;">' +
-                d.name +
-                "</div>" +
-                '<div style="color:var(--text-muted);margin-top:2px;">¥' +
-                price +
-                " · 行动力" +
-                ap +
-                "</div>" +
-                "</button>"
-              );
-            })
-            .join("") +
-          "</div>";
-        // 绑定实际出行按钮
-        document.querySelectorAll(".transit-go-btn").forEach((gb) => {
-          gb.addEventListener("click", () => {
-            const destKey = gb.dataset.dest;
-            const price = parseInt(gb.dataset.price, 10) || 0;
-            const ap = parseInt(gb.dataset.ap, 10) || 5;
-            const modeName =
-              {
-                walk: "🚶 步行",
-                bike: "🚲 共享单车",
-                metro: "🚇 地铁",
-                taxi: "🚕 打车",
-              }[gb.dataset.mode] || "出行";
-            if ((state.resources.cash || 0) < price) {
-              StateManager.addMessage(
-                "💸 " + modeName + "需要¥" + price + "，你现金不够。",
-                "warning",
-              );
-              return;
-            }
-            state.resources.cash -= price;
-            StateManager.update("trade.currentLocation", destKey);
-            const dest = getLocation(destKey);
-            if (gb.dataset.mode === "walk") {
-              StateManager.addMessage(
-                "🚶 你步行来到了" + (dest ? dest.name : destKey) + "。",
-                "info",
-              );
-            } else {
-              StateManager.addMessage(
-                modeName +
-                  " 你来到了" +
-                  (dest ? dest.name : destKey) +
-                  "，花了¥" +
-                  price +
-                  "。",
-                "info",
-              );
-            }
-            if (typeof consumeAP === "function") consumeAP(ap);
-            renderAll();
-          });
-        });
-      });
-    });
-  }, 0);
 
   // 城市地图 — 使用 CSS Grid 布局，按地理关系排列
   const mapWrap = document.createElement("div");
@@ -2811,7 +2536,7 @@ function renderMapTab(state, parent) {
       </div>
       <div style="font-size:9px;color:var(--text-muted);margin-bottom:3px;">${mapLoc.type === "commercial" ? "🛒商业" : mapLoc.type === "industrial" ? "🏭工业" : mapLoc.type === "residential" ? "🏘️居住" : mapLoc.type === "service" ? "🏥服务" : mapLoc.type === "education" ? "📚教育" : mapLoc.type === "corporate" ? "🏢职场" : mapLoc.type === "recreation" ? "🌳休闲" : mapLoc.type === "institutional" ? "🏫机构" : ""}</div>
       <div style="display:flex;flex-wrap:wrap;gap:2px;justify-content:center;" class="map-node-badges">${badgeStr}</div>
-      ${canTravel ? '<div class="map-node-action" style="font-size:9px;color:var(--accent);margin-top:4px;">👆 点击前往</div>' : ""}
+      ${canTravel ? '<div class="map-node-action" style="font-size:9px;color:var(--accent);margin-top:4px;">' + (state.player.transitMode === "walk" ? "🚶" : state.player.transitMode === "bike" ? "🚲" : state.player.transitMode === "metro" ? "🚇" : state.player.transitMode === "taxi" ? "🚕" : state.player.transitMode === "car" ? "🚗" : "👆") + ' 点击前往</div>' : ""}
       ${!isReachable && !isCurrent ? '<div class="map-node-action" style="font-size:9px;color:var(--text-muted);margin-top:2px;">🔒 未探索</div>' : ""}
     `;
 
@@ -2827,13 +2552,42 @@ function renderMapTab(state, parent) {
         node.style.transform = "translate(-50%,-50%) scale(1)";
       });
       node.addEventListener("click", () => {
-        StateManager.update("trade.currentLocation", key);
         const dest = getLocation(key);
+        const mode = state.player.transitMode || "walk";
+        const hops = typeof getLocationHops === "function" ? getLocationHops(locKey, key) : 1;
+        var ap = 15, price = 0, modeName = "🚶 步行", canReach = true;
+        if (mode === "walk") {
+          ap = Math.max(6, 6 + hops * 4);
+          price = 0;
+          modeName = "🚶 步行";
+        } else if (mode === "bike") {
+          ap = 6; price = 3;
+          modeName = "🚲 共享单车";
+        } else if (mode === "metro") {
+          if (METRO_STATIONS.indexOf(key) < 0) { canReach = false; }
+          else { ap = 5; price = 4; modeName = "🚇 地铁"; }
+        } else if (mode === "taxi") {
+          ap = 3; price = 10 + (typeof Random !== "undefined" && Random.int ? Random.int(0, 30) : 15);
+          modeName = "🚕 打车";
+        } else if (mode === "car") {
+          ap = 2; price = 5;
+          modeName = "🚗 自驾";
+        }
+        if (!canReach) {
+          StateManager.addMessage("🚇 " + (dest ? dest.name : key) + "不在地铁沿线，请选择其他出行方式。", "warning");
+          return;
+        }
+        if ((state.resources.cash || 0) < price) {
+          StateManager.addMessage("💸 " + modeName + "需要¥" + price + "，你现金不够。", "warning");
+          return;
+        }
+        state.resources.cash -= price;
+        StateManager.update("trade.currentLocation", key);
         StateManager.addMessage(
-          `🚶 你来到了${dest ? dest.name : key}。`,
+          modeName + " 你来到了" + (dest ? dest.name : key) + costStr({ap: ap, cash: price}),
           "info",
         );
-        if (typeof consumeAP === "function") consumeAP(15);
+        if (typeof consumeAP === "function") consumeAP(ap);
         renderAll();
       });
     }
@@ -2842,19 +2596,74 @@ function renderMapTab(state, parent) {
   }
 
   mapWrap.appendChild(mapGrid);
+
+  // === 交通方式选择栏（地图底部，紧凑型） ===
+  const transitBar = document.createElement("div");
+  transitBar.style.cssText =
+    "display:flex;gap:4px;padding:8px 0 4px;flex-wrap:wrap;align-items:center;";
+  const curMode = state.player.transitMode || "walk";
+  const TRANSIT_MODES = [
+    { mode: "walk", label: "🚶 步行", desc: "免费" },
+    { mode: "bike", label: "🚲 单车", desc: "¥3" },
+    { mode: "metro", label: "🚇 地铁", desc: "¥4" },
+    { mode: "taxi", label: "🚕 打车", desc: "¥10-40" },
+  ];
+  // 有车时加自驾选项
+  var hasCar = state.investment && state.investment.cars && state.investment.cars.length > 0;
+  if (hasCar) TRANSIT_MODES.push({ mode: "car", label: "🚗 自驾", desc: "¥5" });
+
+  TRANSIT_MODES.forEach(function(tm) {
+    var btn = document.createElement("button");
+    btn.className = "transit-bar-btn";
+    btn.dataset.mode = tm.mode;
+    var isActive = tm.mode === curMode;
+    btn.style.cssText =
+      "padding:4px 8px;font-size:11px;border-radius:6px;border:1px solid " +
+      (isActive ? "var(--accent)" : "var(--border-light)") +
+      ";background:" +
+      (isActive ? "rgba(0,180,216,0.15)" : "var(--bg-input)") +
+      ";color:" +
+      (isActive ? "var(--accent)" : "var(--text-secondary)") +
+      ";cursor:pointer;font-weight:" +
+      (isActive ? "600" : "400") +
+      ";transition:all 0.15s;white-space:nowrap;";
+    btn.innerHTML = tm.label + ' <span style="font-size:9px;opacity:0.7;">' + tm.desc + "</span>";
+    btn.addEventListener("click", function() {
+      if (curMode !== tm.mode) {
+        StateManager.update("player.transitMode", tm.mode);
+        renderAll();
+      }
+    });
+    transitBar.appendChild(btn);
+  });
+
+  // 当前模式提示
+  var modeHints = {
+    walk: "步行到达，消耗行动力",
+    bike: "共享单车，2跳内可达，消耗6AP",
+    metro: "地铁，仅限沿线站点，消耗5AP",
+    taxi: "打车直达，消耗3AP，按距离计费",
+    car: "自驾直达，消耗2AP，油费¥5",
+  };
+  var hint = document.createElement("span");
+  hint.style.cssText = "font-size:10px;color:var(--text-muted);margin-left:4px;";
+  hint.textContent = "💡 " + (modeHints[curMode] || "选择出行方式");
+  transitBar.appendChild(hint);
+
+  mapWrap.appendChild(transitBar);
   container.appendChild(mapWrap);
 
-  // 图例
+  // 图例（紧凑型，便于后续扩展）
   const legend = document.createElement("div");
   legend.style.cssText =
-    "display:flex;gap:16px;flex-wrap:wrap;font-size:11px;color:var(--text-muted);padding:8px 0;";
+    "display:flex;gap:10px;flex-wrap:wrap;font-size:10px;color:var(--text-muted);padding:6px 0;";
   legend.innerHTML = `
-    <span>🟦 蓝框 = 当前位置</span>
-    <span>⬜ 亮框 = 可前往</span>
-    <span>🔒 暗色 = 未探索</span>
-    <span>🏠 绿标 = 可租房</span>
-    <span>📦 橙标 = 仓库/批发</span>
-    <span>🏥 红标 = 医院</span>
+    <span>🟦 当前位置</span>
+    <span>⬜ 可前往</span>
+    <span>🔒 未探索</span>
+    <span>🏠 可租房</span>
+    <span>📦 仓库/批发</span>
+    <span>🏥 医院</span>
   `;
   container.appendChild(legend);
 
@@ -2892,23 +2701,6 @@ function renderMapTab(state, parent) {
   container.appendChild(quickTable);
 
   parent.appendChild(container);
-
-  // 绑定快速出行按钮
-  setTimeout(() => {
-    document.querySelectorAll(".quick-travel-btn").forEach((btn) => {
-      btn.addEventListener("click", () => {
-        const destKey = btn.dataset.dest;
-        StateManager.update("trade.currentLocation", destKey);
-        const dest = getLocation(destKey);
-        StateManager.addMessage(
-          `🚶 你来到了${dest ? dest.name : destKey}。`,
-          "info",
-        );
-        if (typeof consumeAP === "function") consumeAP(15);
-        renderAll();
-      });
-    });
-  }, 0);
 
   // 延迟绘制 SVG 连线
   setTimeout(drawConnections, 100);
@@ -6280,6 +6072,7 @@ window.__doTrainCore = function (trainId) {
     _setTrainStatVal(p, t.stat, _getTrainStatVal(p, t.stat) + totalGain);
     var msg = "✨ " + (t.name || "训练") + " " + t.statLabel + "+" + totalGain;
     if (crit > 0) msg += "（爆击！）";
+    msg += costStr({ap: t.apCost});
     if (diminishingMult < 1.0) msg += "（高属性收益递减）";
     StateManager.addMessage(msg, "success");
   }

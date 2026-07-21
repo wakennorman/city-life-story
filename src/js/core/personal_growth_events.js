@@ -374,9 +374,10 @@
             );
             // 30天后来回报（模拟）
             setTimeout(function () {
+              if (!st.resources) st.resources = {};
               if (Random.chance(0.4)) {
                 var bonus = Random.int(1000, 5000);
-                st.resources.cash += bonus;
+                st.resources.cash = Math.max(0, (st.resources.cash || 0) + bonus);
                 StateManager.addMessage(
                   "🔥 30天过去了，你多赚了¥" +
                     bonus +
@@ -521,8 +522,9 @@
           hint: "收入+但不一定适合所有人",
           apply: function (st) {
             st.flags._hobbyBreakthrough = true;
+            if (!st.resources) st.resources = {};
             var income = Random.int(300, 1500);
-            st.resources.cash += income;
+            st.resources.cash = Math.max(0, (st.resources.cash || 0) + income);
             st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 5);
             StateManager.addMessage(
               "🎯 你尝试把这个爱好做成副业，头三个月小赚¥" +

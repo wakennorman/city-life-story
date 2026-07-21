@@ -5053,6 +5053,25 @@ function advanceTimeSlot() {
   consumeAP(33); // 保持旧的3时段行为
 }
 
+/**
+ * 约定式自动归类：消耗格式化
+ * 任何消耗资源的操作，在 StateManager.addMessage 中必须附加此函数的结果。
+ * 约定：所有消耗 ⚡AP / 💰现金 / 📦物品 的操作，消息末尾必须包含 (-⚡N -💰¥N) 格式。
+ *
+ * 用法：
+ *   StateManager.addMessage("🚶 步行前往XX" + costStr({ap: 15}), "info");
+ *   StateManager.addMessage("🚕 打车前往XX" + costStr({ap: 3, cash: 25}), "info");
+ *
+ * 扩展：如需新增消耗类型，在 parts.push 中添加对应分支即可。
+ */
+function costStr(costs) {
+  if (!costs) return "";
+  var parts = [];
+  if (typeof costs.ap === "number" && costs.ap > 0) parts.push("-⚡" + costs.ap);
+  if (typeof costs.cash === "number" && costs.cash > 0) parts.push("-💰¥" + costs.cash);
+  return parts.length > 0 ? "（" + parts.join(" ") + "）" : "";
+}
+
 // endDay 和 settleDailyFinance 已迁移至 js/phase1/daily_pipeline.js
 // 管线声明式架构：新增结算步骤只需 push {name, fn} 到 DAILY_PIPELINE 数组
 

@@ -6130,6 +6130,15 @@ body {
   transform: scale(0.96);
 }
 
+/* 地图交通方式选择栏按钮 */
+.transit-bar-btn:hover {
+  opacity: 0.85;
+  border-color: var(--accent);
+}
+.transit-bar-btn:active {
+  transform: scale(0.95);
+}
+
 @media (max-width: 768px) {
   .quick-travel-grid {
     grid-template-columns: repeat(auto-fill, minmax(90px, 1fr)) !important;
