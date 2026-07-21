@@ -647,13 +647,26 @@
       card.appendChild(row);
     });
 
-    // 全达成庆祝
+    // [全系统自洽修复] 域G 联动增强: 全达成奖励（G→F，激励玩家完成目标）
     if (allDone) {
       var celebrate = document.createElement("div");
       celebrate.style.cssText =
         "margin-top:7px;font-size:11px;color:var(--success);font-weight:600;";
       celebrate.textContent = "🎉 当前目标全部达成！继续前进，等待下一阶段。";
       card.appendChild(celebrate);
+      // 每日首次全达成给小额奖励
+      if (!state.flags._dailyQuestRewardCollected) {
+        state.flags._dailyQuestRewardCollected = true;
+        var reward = 50 + quests.length * 10;
+        state.resources.cash = (state.resources.cash || 0) + reward;
+        if (typeof addDailyTransaction === "function") {
+          addDailyTransaction(state, "income", "event_reward", reward, "每日目标奖金");
+        }
+        var rewardLine = document.createElement("div");
+        rewardLine.style.cssText = "margin-top:3px;font-size:11px;color:var(--accent);";
+        rewardLine.textContent = "💰 目标奖金 +¥" + reward;
+        card.appendChild(rewardLine);
+      }
     }
 
     parent.appendChild(card);
