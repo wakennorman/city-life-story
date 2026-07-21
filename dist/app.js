@@ -37073,6 +37073,93 @@ if (typeof window !== "undefined") {
     RANDOM_EVENTS.push(ev_talent_departure);
     RANDOM_EVENTS.push(ev_quarter_social_spillover);
   })();
+
+  // ============================================================
+  // R76 联动增强: 数据→叙事桥接（2项）
+  // 填补 economy_v3.1 隐形机制零叙事覆盖的设计空白
+  // ============================================================
+  (function () {
+    // [全系统自洽修复] 域A 联动增强1: 市场饱和度惩罚叙事化
+    // economy_v3.1.getMarketSaturationPenalty 原为隐形数据，玩家倒卖利润变薄却不知原因
+    var ev_market_saturation_narrative = {
+      id: "ev_market_saturation_narrative",
+      phase: "street",
+      icon: "📉",
+      title: "市场饱和了？",
+      story: "你最近倒卖商品的利润越来越薄了。批发市场的老王头跟你闲聊：「小伙子，你这路子我见过，同一个商品来回倒，卖多了市场就饱和了。换些别的货色，或者去远一点的场子看看。」\n你琢磨着他说的话，觉得有道理。",
+      triggers: {
+        minDay: 30,
+        excludeFlags: ["_marketSaturationNoticed"],
+      },
+      choices: [
+        {
+          text: "📦 换一批商品试试",
+          hint: "记住老王的话，换个品类倒卖",
+          apply: function (st) {
+            st.flags._marketSaturationNoticed = true;
+            if (st.player) st.player.intelligence = Math.min(100, (st.player.intelligence || 0) + 1);
+            StateManager.addMessage("📦 你记住了老王的话，下次换了个品类倒卖。智力+1，看来做生意学问不小。", "info");
+          },
+        },
+        {
+          text: "🤷 不管他，继续倒",
+          hint: "利润薄就薄吧，反正有得赚",
+          apply: function (st) {
+            st.flags._marketSaturationNoticed = true;
+            StateManager.addMessage("🤷 你没太在意老王的话。反正有得赚就行，市场饱和就饱和吧。", "info");
+          },
+        },
+      ],
+      probability: 0.06,
+    };
+
+    // [全系统自洽修复] 域A 联动增强2: 财富税档位首次达到的叙事化
+    // economy_v3.1.calculateProgressiveWealthTax 原为隐形数据，玩家被扣税却不知原因
+    var ev_wealth_tax_first_notice = {
+      id: "ev_wealth_tax_first_notice",
+      phase: "street",
+      icon: "💰",
+      title: "第一次感受到「富人税」",
+      story: "这天你打开银行APP，发现账户里莫名少了一笔钱。你仔细一看，是一笔「财产调节税」。\n你赶紧上网查了一下，才知道原来资产超过一定数额就要交税。「原来有钱也要交钱的……」你感叹道。\n这时你想起小时候村里的老支书说过：「城里规矩多，有钱也得守规矩。」",
+      triggers: {
+        minDay: 60,
+        excludeFlags: ["_wealthTaxFirstNotice"],
+      },
+      choices: [
+        {
+          text: "📚 好好学习税法",
+          hint: "智力+3, 以后了解税收政策",
+          apply: function (st) {
+            st.flags._wealthTaxFirstNotice = true;
+            if (st.player) st.player.intelligence = Math.min(100, (st.player.intelligence || 0) + 3);
+            StateManager.addMessage("📚 你认真研究了税收政策，发现合理避税也是有学问的。智力+3，以后要注意税务规划。", "success");
+          },
+        },
+        {
+          text: "😤 这税也太黑了",
+          hint: "心情-3, 但记住这个教训",
+          apply: function (st) {
+            st.flags._wealthTaxFirstNotice = true;
+            if (st.player) st.player.happiness = Math.max(0, (st.player.happiness || 0) - 3);
+            StateManager.addMessage("😤 你心里一阵不爽，但不得不承认这是城市的规矩。心情-3。", "warning");
+          },
+        },
+        {
+          text: "🤔 想办法合理避税",
+          hint: "心智+2, 开启税务规划思路",
+          apply: function (st) {
+            st.flags._wealthTaxFirstNotice = true;
+            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 0) + 2);
+            StateManager.addMessage("🤔 你开始思考如何合理避税——投资教育、购买保险、增加开支抵扣……心智+2。", "info");
+          },
+        },
+      ],
+      probability: 0.08,
+    };
+
+    RANDOM_EVENTS.push(ev_market_saturation_narrative);
+    RANDOM_EVENTS.push(ev_wealth_tax_first_notice);
+  })();
 })();
 
 ;
