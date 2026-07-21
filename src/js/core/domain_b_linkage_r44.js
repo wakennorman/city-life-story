@@ -98,12 +98,12 @@
         // 晚间时段 + 心情偏低 + 没有太多社交
         if (st.player.timeSlot !== "evening") return false;
         if ((st.needs.happiness || 50) > 35) return false; // 心情高时不会触发
-        // 有亲密社交关系时不会触发
+        // 有亲密社交关系时不会触发（[自洽修复] 域B A类#2: 补 r.met 门控）
         var hasCloseFriend = false;
         if (st.relationships) {
           for (var id in st.relationships) {
             var r = st.relationships[id];
-            if (r && r.affinity && r.affinity >= 60) {
+            if (r && r.met === true && r.affinity && r.affinity >= 60) {
               hasCloseFriend = true;
               break;
             }

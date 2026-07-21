@@ -2797,22 +2797,20 @@
         apply: function (st) {
           st.flags._lowMoodVisitSeen = true;
           st.needs.happiness = Math.min(100, st.needs.happiness + 15);
+          // [自洽修复] 域B A类#3: 不再强制激活 aunt_wang
           var r = st.relationships && st.relationships.aunt_wang;
-          if (!r) {
-            st.relationships = st.relationships || {};
-            r = st.relationships.aunt_wang = {
-              met: true,
-              affinity: 0,
-              discovered: {},
-            };
+          if (r && r.met === true) {
+            r.affinity = Math.min(100, (r.affinity || 0) + 6);
+            StateManager.addMessage(
+              "你开了门，隔壁王婶端着热汤进来。热气腾腾的汤下肚，心里也松了松。",
+              "good",
+            );
           } else {
-            r.met = true;
+            StateManager.addMessage(
+              "你开了门，热气腾腾的汤下肚，心里也松了松。",
+              "good",
+            );
           }
-          r.affinity = Math.min(100, (r.affinity || 0) + 6);
-          StateManager.addMessage(
-            "你开了门，热气腾腾的汤下肚，心里也松了松。",
-            "good",
-          );
         },
       },
       {
@@ -2918,22 +2916,20 @@
         apply: function (st) {
           st.flags._typhoonShelterSeen = true;
           st.needs.fatigue = Math.max(0, st.needs.fatigue + 8);
+          // [自洽修复] 域B A类#4: 不再强制激活 aunt_wang
           var r = st.relationships && st.relationships.aunt_wang;
-          if (!r) {
-            st.relationships = st.relationships || {};
-            r = st.relationships.aunt_wang = {
-              met: true,
-              affinity: 0,
-              discovered: {},
-            };
+          if (r && r.met === true) {
+            r.affinity = Math.min(100, (r.affinity || 0) + 7);
+            StateManager.addMessage(
+              "一屋子人挤着，有人讲笑话，有人分橘子。王婶也在，给你塞了一瓣橘子。风雨再大，屋里是暖的。",
+              "good",
+            );
           } else {
-            r.met = true;
+            StateManager.addMessage(
+              "一屋子人挤着，有人讲笑话，有人分橘子。风雨再大，屋里是暖的。",
+              "good",
+            );
           }
-          r.affinity = Math.min(100, (r.affinity || 0) + 7);
-          StateManager.addMessage(
-            "一屋子人挤着，有人讲笑话，有人分橘子。风雨再大，屋里是暖的。",
-            "good",
-          );
         },
       },
       {
@@ -5423,8 +5419,9 @@
     story: "上次你帮了王婶一把，她一直记在心里。今天她拎着一袋腌菜和熟鸡蛋来找你。",
     _isChainEvent: true,
     phase: "street",
+    // [自洽修复] 域B A类#1: 补 aunt_wang.met 门控
     conditions: function (st) {
-      return (st.relationships && st.relationships.aunt_wang && st.relationships.aunt_wang.affinity >= 25) && st.player.day >= 15;
+      return (st.relationships && st.relationships.aunt_wang && st.relationships.aunt_wang.met === true && st.relationships.aunt_wang.affinity >= 25) && st.player.day >= 15;
     },
     choices: [
       {

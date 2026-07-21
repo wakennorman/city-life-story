@@ -80569,22 +80569,20 @@ if (typeof window !== "undefined") {
         apply: function (st) {
           st.flags._lowMoodVisitSeen = true;
           st.needs.happiness = Math.min(100, st.needs.happiness + 15);
+          // [自洽修复] 域B A类#3: 不再强制激活 aunt_wang
           var r = st.relationships && st.relationships.aunt_wang;
-          if (!r) {
-            st.relationships = st.relationships || {};
-            r = st.relationships.aunt_wang = {
-              met: true,
-              affinity: 0,
-              discovered: {},
-            };
+          if (r && r.met === true) {
+            r.affinity = Math.min(100, (r.affinity || 0) + 6);
+            StateManager.addMessage(
+              "你开了门，隔壁王婶端着热汤进来。热气腾腾的汤下肚，心里也松了松。",
+              "good",
+            );
           } else {
-            r.met = true;
+            StateManager.addMessage(
+              "你开了门，热气腾腾的汤下肚，心里也松了松。",
+              "good",
+            );
           }
-          r.affinity = Math.min(100, (r.affinity || 0) + 6);
-          StateManager.addMessage(
-            "你开了门，热气腾腾的汤下肚，心里也松了松。",
-            "good",
-          );
         },
       },
       {
@@ -80690,22 +80688,20 @@ if (typeof window !== "undefined") {
         apply: function (st) {
           st.flags._typhoonShelterSeen = true;
           st.needs.fatigue = Math.max(0, st.needs.fatigue + 8);
+          // [自洽修复] 域B A类#4: 不再强制激活 aunt_wang
           var r = st.relationships && st.relationships.aunt_wang;
-          if (!r) {
-            st.relationships = st.relationships || {};
-            r = st.relationships.aunt_wang = {
-              met: true,
-              affinity: 0,
-              discovered: {},
-            };
+          if (r && r.met === true) {
+            r.affinity = Math.min(100, (r.affinity || 0) + 7);
+            StateManager.addMessage(
+              "一屋子人挤着，有人讲笑话，有人分橘子。王婶也在，给你塞了一瓣橘子。风雨再大，屋里是暖的。",
+              "good",
+            );
           } else {
-            r.met = true;
+            StateManager.addMessage(
+              "一屋子人挤着，有人讲笑话，有人分橘子。风雨再大，屋里是暖的。",
+              "good",
+            );
           }
-          r.affinity = Math.min(100, (r.affinity || 0) + 7);
-          StateManager.addMessage(
-            "一屋子人挤着，有人讲笑话，有人分橘子。风雨再大，屋里是暖的。",
-            "good",
-          );
         },
       },
       {
@@ -83195,8 +83191,9 @@ if (typeof window !== "undefined") {
     story: "上次你帮了王婶一把，她一直记在心里。今天她拎着一袋腌菜和熟鸡蛋来找你。",
     _isChainEvent: true,
     phase: "street",
+    // [自洽修复] 域B A类#1: 补 aunt_wang.met 门控
     conditions: function (st) {
-      return (st.relationships && st.relationships.aunt_wang && st.relationships.aunt_wang.affinity >= 25) && st.player.day >= 15;
+      return (st.relationships && st.relationships.aunt_wang && st.relationships.aunt_wang.met === true && st.relationships.aunt_wang.affinity >= 25) && st.player.day >= 15;
     },
     choices: [
       {
@@ -83661,12 +83658,12 @@ if (typeof window !== "undefined") {
         // 晚间时段 + 心情偏低 + 没有太多社交
         if (st.player.timeSlot !== "evening") return false;
         if ((st.needs.happiness || 50) > 35) return false; // 心情高时不会触发
-        // 有亲密社交关系时不会触发
+        // 有亲密社交关系时不会触发（[自洽修复] 域B A类#2: 补 r.met 门控）
         var hasCloseFriend = false;
         if (st.relationships) {
           for (var id in st.relationships) {
             var r = st.relationships[id];
-            if (r && r.affinity && r.affinity >= 60) {
+            if (r && r.met === true && r.affinity && r.affinity >= 60) {
               hasCloseFriend = true;
               break;
             }
@@ -218891,7 +218888,7 @@ function renderSkillsTab(state, parent) {
           );
           return;
         }
-        if (st.resources.cash < 50) {
+        if ((st.resources.cash || 0) < 50) {
           StateManager.addMessage("⚠️ 训练需要¥50书本费，钱不够", "warning");
           return;
         }
@@ -222548,7 +222545,7 @@ function showDepositModal() {
         if (lastBtn && !lastBtn.classList.contains("btn-success")) {
           lastBtn.textContent = `存入 ¥${val.toLocaleString()}`;
           lastBtn.onclick = () => {
-            const amt = Math.min(val, state.resources.cash);
+            const amt = Math.min(val, state.resources.cash || 0);
             state.resources.bankBalance += amt;
             state.resources.cash -= amt;
             StateManager.addMessage(
@@ -223287,7 +223284,7 @@ function buyItemFromShop(itemId) {
   // 价格：使用品质价格（如果有）
   var price = equippedItem ? equippedItem.actualPrice : item.price;
 
-  if (state.resources.cash < price) {
+  if ((state.resources.cash || 0) < price) {
     StateManager.addMessage("💸 现金不足，无法购买 " + item.name, "warning");
     return;
   }
