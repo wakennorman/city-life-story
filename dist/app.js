@@ -246564,12 +246564,34 @@ function gainRepFromWork(state, job) {
   }
 }
 
+// [全系统自洽修复] 域C 联动: 天赋XP倍率接入addSkillXp(使skill_tree定义的cookingXpMult/codingXpMult等真正生效)
+function getTalentXpMultiplier(skillKey, state) {
+  if (!state || !state.talentNodes || typeof getSkillBranchDef === "undefined") return 1.0;
+  var _mult = 1.0;
+  var _branches = getSkillBranchDef(skillKey);
+  for (var bi = 0; bi < _branches.length; bi++) {
+    var _nodes = _branches[bi].talentNodes || [];
+    for (var ni = 0; ni < _nodes.length; ni++) {
+      var _n = _nodes[ni];
+      if (!state.talentNodes[_n.id] || !_n.effects) continue;
+      // 兼容旧字段名: cookingXpMult / codingXpMult 等 → 统一读取
+      var _xpMult = _n.effects.xpMult || _n.effects[skillKey + "XpMult"];
+      if (typeof _xpMult === "number" && _xpMult > 0) {
+        _mult *= _xpMult;
+      }
+    }
+  }
+  return _mult;
+}
+
 function addSkillXp(skillKey, amount) {
   if (!amount || amount <= 0) return;
   const state = StateManager.getState();
   const skill = state.skills[skillKey];
   if (!skill) return;
-  skill.xp += amount;
+  // [域C联动] 天赋XP倍率生效
+  var _talentMult = getTalentXpMultiplier(skillKey, state);
+  skill.xp += Math.round(amount * _talentMult);
   // v3.1 审查改进：XP 需求从线性改为指数，level 0=120 → level 50≈10,000（之前 6,120）
   // 让玩家在高级别感受更有意义的成长压力，同时保留早期快速升级的爽快感
   var xpNeeded = Math.floor(
