@@ -34199,6 +34199,8 @@ if (typeof window !== "undefined") {
       story:
         "你今天照常去干活，但一到地方就觉得胸口发闷。同样的动作、同样的路线、同样的吆喝——你已经重复了不知道多少遍。\n\n你坐在路沿石上，看着别的摊位发呆。脑子里有个声音在说：「还要这样干多久？」",
       conditions: function (st) {
+        // [Layer3] 叙事说"今天照常去干活"→必须有工作
+        if (!st.career || !st.career.currentJob) return false;
         if (st.player.day < 20) return false;
         // 通过高疲劳和低心情间接判断倦怠
         if (!st.needs) return false;
@@ -35015,6 +35017,8 @@ if (typeof window !== "undefined") {
       story:
         "你在工地上干活时，突然听到一声喊——上面掉下来一捆钢管！虽然没砸到人，但碎砖块溅到了你这边。\n\n工头跑过来看了一圈：「没事没事，散了吧。」但你的手臂被划了一道口子，血渗了出来。",
       conditions: function (st) {
+        // [Layer3] 叙事说"你在工地上干活时"→必须有工作
+        if (!st.career || !st.career.currentJob) return false;
         if (st.player.day < 20) return false;
         var curLoc = st.trade && st.trade.currentLocation;
         if (curLoc !== "construction") return false;
@@ -35224,8 +35228,9 @@ if (typeof window !== "undefined") {
       story:
         "你在图书馆的自习区埋头苦读，但一道题卡了你半小时。你咬着笔帽，盯着书页上的公式发呆。\n\n对面一个戴眼镜的中年人合上自己的书，看了你一眼：「卡住了？来，我看看。」",
       conditions: function (st) {
+        // [Layer3] 叙事说"在图书馆的自习区埋头苦读"→必须身在图馆
+        if (!st.trade || st.trade.currentLocation !== 'library') return false;
         if (st.player.day < 25) return false;
-        if ((st.player.intelligence || 0) < 35) return false;
         // 得有一定的学历提升意愿（学过习或用过学习类行动）
         if (st.flags._libraryMentorDone) return false;
         return true;
@@ -35289,6 +35294,8 @@ if (typeof window !== "undefined") {
         "今天天气预报发布了高温预警，气温预计超过40度。你本打算去户外干活，但太阳毒辣得让人睁不开眼。\n\n你看了看手机上的账户余额，又抬头看了看天。\n\n工地和街边小摊都需要人。",
       // [自洽修复] v3.20 原始提交缺 conditions/apply → 补全
       conditions: function (st) {
+        // [Layer3] 叙事说"你本打算去户外干活"→必须有工作
+        if (!st.career || !st.career.currentJob) return false;
         return (
           st.player.phase === "street" &&
           st.weather &&
@@ -245791,8 +245798,8 @@ function getAvailableActions(state) {
               desc: fjob.desc + "（消耗" + (fjob.apCost || 20) + "AP）",
               handler: function () {
                 var pay = fjob.pay + Random.int(0, 29);
-                state.resources.cash += pay;
-                state.resources.totalEarned += pay;
+                state.resources.cash = (state.resources.cash || 0) + pay;
+                state.resources.totalEarned = (state.resources.totalEarned || 0) + pay;
                 addDailyTransaction(
                   state,
                   "income",
@@ -245843,8 +245850,8 @@ function getAvailableActions(state) {
           ap: 15,
           handler: () => {
             var earn = 50 + Math.floor(fame * 1.2) + Random.int(0, 79);
-            state.resources.cash += earn;
-            state.resources.totalEarned += earn;
+            state.resources.cash = (state.resources.cash || 0) + earn;
+            state.resources.totalEarned = (state.resources.totalEarned || 0) + earn;
             addDailyTransaction(
               state,
               "income",
@@ -245963,8 +245970,8 @@ function getAvailableActions(state) {
           ap: 25,
           handler: () => {
             var earn = 200 + Math.floor(fame * 2.5) + Random.int(0, 149);
-            state.resources.cash += earn;
-            state.resources.totalEarned += earn;
+            state.resources.cash = (state.resources.cash || 0) + earn;
+            state.resources.totalEarned = (state.resources.totalEarned || 0) + earn;
             addDailyTransaction(
               state,
               "income",
@@ -247328,8 +247335,8 @@ function doStreetJob(job) {
   if (typeof state.resources.totalEarned !== "number" || !isFinite(state.resources.totalEarned)) {
     state.resources.totalEarned = 0;
   }
-  state.resources.cash += pay;
-  state.resources.totalEarned += pay;
+  state.resources.cash = (state.resources.cash || 0) + pay;
+  state.resources.totalEarned = (state.resources.totalEarned || 0) + pay;
   addDailyTransaction(
     state,
     "income",

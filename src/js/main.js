@@ -3050,8 +3050,8 @@ function getAvailableActions(state) {
               desc: fjob.desc + "（消耗" + (fjob.apCost || 20) + "AP）",
               handler: function () {
                 var pay = fjob.pay + Random.int(0, 29);
-                state.resources.cash += pay;
-                state.resources.totalEarned += pay;
+                state.resources.cash = (state.resources.cash || 0) + pay;
+                state.resources.totalEarned = (state.resources.totalEarned || 0) + pay;
                 addDailyTransaction(
                   state,
                   "income",
@@ -3102,8 +3102,8 @@ function getAvailableActions(state) {
           ap: 15,
           handler: () => {
             var earn = 50 + Math.floor(fame * 1.2) + Random.int(0, 79);
-            state.resources.cash += earn;
-            state.resources.totalEarned += earn;
+            state.resources.cash = (state.resources.cash || 0) + earn;
+            state.resources.totalEarned = (state.resources.totalEarned || 0) + earn;
             addDailyTransaction(
               state,
               "income",
@@ -3222,8 +3222,8 @@ function getAvailableActions(state) {
           ap: 25,
           handler: () => {
             var earn = 200 + Math.floor(fame * 2.5) + Random.int(0, 149);
-            state.resources.cash += earn;
-            state.resources.totalEarned += earn;
+            state.resources.cash = (state.resources.cash || 0) + earn;
+            state.resources.totalEarned = (state.resources.totalEarned || 0) + earn;
             addDailyTransaction(
               state,
               "income",
@@ -4587,8 +4587,8 @@ function doStreetJob(job) {
   if (typeof state.resources.totalEarned !== "number" || !isFinite(state.resources.totalEarned)) {
     state.resources.totalEarned = 0;
   }
-  state.resources.cash += pay;
-  state.resources.totalEarned += pay;
+  state.resources.cash = (state.resources.cash || 0) + pay;
+  state.resources.totalEarned = (state.resources.totalEarned || 0) + pay;
   addDailyTransaction(
     state,
     "income",
