@@ -1,6 +1,6 @@
 # 城市浮生记 (City Life Story) — 开发文档
 
-> 最后更新: 2026-07-21（阶段3批次13：投资标的配置查表 getInvestmentAssetDef/getInvestmentAssetGroup/getInvestmentGroupLabel 迁 src/app/core/investment/assetLookup.ts TS 规范源；INV_STOCKS 配置以注入参数传入（避免标的配置双源，同 illnessDebuffs 模式）；新增 TS↔vanilla 双向比对单测 134/134（覆盖 60 真实标的）；src/js 端零改动、加载序不变）
+> 最后更新: 2026-07-21（阶段3批次14：地点旅行纯函数 getLocationHops/getTaxiCost 迁 src/app/core/travel/travel.ts TS 规范源；TRAVEL_GRAPH/LOCATIONS 配置以注入参数传入（避免地图数据双源，同 INV_STOCKS 模式）；新增 TS↔vanilla 双向比对单测 1470/1470（覆盖 27 地点两两对+6 异常对）；src/js 端零改动、加载序不变）
 > 历史流水账已归档到 `docs/changelog/`，本文件仅保留活文档。
 
 ---
