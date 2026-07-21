@@ -2600,7 +2600,7 @@ function renderMapTab(state, parent) {
   // === 交通方式选择栏（地图底部，紧凑型） ===
   const transitBar = document.createElement("div");
   transitBar.style.cssText =
-    "display:flex;gap:4px;padding:8px 0 4px;flex-wrap:wrap;align-items:center;";
+    "display:flex;flex-direction:column;gap:2px;padding:8px 0 4px;";
   const curMode = state.player.transitMode || "walk";
   const TRANSIT_MODES = [
     { mode: "walk", label: "🚶 步行", desc: "免费" },
@@ -2612,6 +2612,9 @@ function renderMapTab(state, parent) {
   var hasCar = state.investment && state.investment.cars && state.investment.cars.length > 0;
   if (hasCar) TRANSIT_MODES.push({ mode: "car", label: "🚗 自驾", desc: "¥5" });
 
+  // 按钮行
+  var btnRow = document.createElement("div");
+  btnRow.style.cssText = "display:flex;gap:4px;flex-wrap:wrap;";
   TRANSIT_MODES.forEach(function(tm) {
     var btn = document.createElement("button");
     btn.className = "transit-bar-btn";
@@ -2634,20 +2637,21 @@ function renderMapTab(state, parent) {
         renderAll();
       }
     });
-    transitBar.appendChild(btn);
+    btnRow.appendChild(btn);
   });
+  transitBar.appendChild(btnRow);
 
-  // 当前模式提示
+  // 当前模式提示（单独一行，避免换行不一致）
   var modeHints = {
-    walk: "步行到达，消耗行动力",
-    bike: "共享单车，2跳内可达，消耗6AP",
-    metro: "地铁，仅限沿线站点，消耗5AP",
-    taxi: "打车直达，消耗3AP，按距离计费",
-    car: "自驾直达，消耗2AP，油费¥5",
+    walk: "💡 步行到达目的地，消耗行动力",
+    bike: "💡 共享单车，2跳内可达，消耗6AP，费用¥3",
+    metro: "💡 地铁，仅限沿线站点，消耗5AP，费用¥4",
+    taxi: "💡 打车直达，消耗3AP，按距离计费¥10-40",
+    car: "💡 自驾直达，消耗2AP，油费¥5",
   };
-  var hint = document.createElement("span");
-  hint.style.cssText = "font-size:10px;color:var(--text-muted);margin-left:4px;";
-  hint.textContent = "💡 " + (modeHints[curMode] || "选择出行方式");
+  var hint = document.createElement("div");
+  hint.style.cssText = "font-size:10px;color:var(--text-muted);";
+  hint.textContent = modeHints[curMode] || "💡 选择出行方式";
   transitBar.appendChild(hint);
 
   mapWrap.appendChild(transitBar);
@@ -2656,14 +2660,14 @@ function renderMapTab(state, parent) {
   // 图例（紧凑型，便于后续扩展）
   const legend = document.createElement("div");
   legend.style.cssText =
-    "display:flex;gap:10px;flex-wrap:wrap;font-size:10px;color:var(--text-muted);padding:6px 0;";
+    "display:flex;gap:8px;flex-wrap:wrap;font-size:10px;color:var(--text-muted);padding:6px 0;";
   legend.innerHTML = `
-    <span>🟦 当前位置</span>
-    <span>⬜ 可前往</span>
-    <span>🔒 未探索</span>
-    <span>🏠 可租房</span>
-    <span>📦 仓库/批发</span>
-    <span>🏥 医院</span>
+    <span>🟦 蓝框 = 当前位置</span>
+    <span>⬜ 亮框 = 可前往</span>
+    <span>🔒 暗色 = 未探索</span>
+    <span>🏠 绿标 = 可租房</span>
+    <span>📦 橙标 = 仓库/批发</span>
+    <span>🏥 红标 = 医院</span>
   `;
   container.appendChild(legend);
 
