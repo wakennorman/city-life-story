@@ -239513,6 +239513,33 @@ function showCareerPathPreviewModal(pathKey) {
     body += '</div>';
   }
 
+
+  // [全系统自洽修复] 域C 联动增强: 技能连携解锁状态（C→F，职业路径预览中显示相关连携）
+  if (typeof SKILL_SYNERGY_DUAL !== "undefined") {
+    var _pathSynergies = [];
+    for (var _sid in SKILL_SYNERGY_DUAL) {
+      if (!Object.prototype.hasOwnProperty.call(SKILL_SYNERGY_DUAL, _sid)) continue;
+      var _syn = SKILL_SYNERGY_DUAL[_sid];
+      if (_syn.effects && _syn.effects.unlockJobs) {
+        for (var _uj = 0; _uj < _syn.effects.unlockJobs.length; _uj++) {
+          if (typeof checkJobCareerPath === "function" ? checkJobCareerPath(_syn.effects.unlockJobs[_uj]) === pathKey : _syn.effects.unlockJobs[_uj].indexOf(pathKey) >= 0) {
+            _pathSynergies.push(_syn);
+            break;
+          }
+        }
+      }
+    }
+    if (_pathSynergies.length > 0) {
+      body += '<div style="font-size:10px;padding:6px 8px;margin-bottom:8px;background:rgba(74,158,92,0.06);border-radius:6px;">';
+      body += "🔗 相关技能连携：";
+      for (var _psi = 0; _psi < _pathSynergies.length; _psi++) {
+        var _ps = _pathSynergies[_psi];
+        var _unlocked = typeof checkSynergyUnlocked === "function" ? checkSynergyUnlocked(_ps.id, st) : false;
+        body += '<span style="margin:0 3px;">' + (_unlocked ? "✅" : "🔒") + " " + _ps.name + "</span>";
+      }
+      body += "</div>";
+    }
+  }
   // 晋升阶梯图
   body +=
     '<div style="font-size:12px;font-weight:bold;margin-bottom:8px;">📈 晋升路线</div>';
