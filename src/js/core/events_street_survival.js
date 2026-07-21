@@ -467,6 +467,7 @@
       title: "楼盘烂尾传闻",
       story:
         "在城中村听到几个工友议论，说城郊那个新楼盘'锦绣豪庭'开发商资金链断了，可能要烂尾。不少购房者已经交了首付。有人说开发商正在秘密转让项目。",
+      conditions: function (st) { if (!st.housing || st.housing.tier > 1) return false; if (!st.career || !st.career.currentJob) return false; return true; }, // [Layer3]
       choices: [
         {
           text: "👂 多打听点消息 (花¥30请人吃饭)",

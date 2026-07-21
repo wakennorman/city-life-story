@@ -3238,6 +3238,7 @@
       story:
         "新闻弹窗：国家新能源补贴退坡30%。比丫迪暴跌8%，蔚小李跌12%~15%。你持有的新能源股浮盈20%还没走。",
       conditions: function (st) {
+        if (!st.investment || !st.investment.stockHoldings || Object.keys(st.investment.stockHoldings).length < 1) return false; // [Layer3]
         return (
           st.player.phase === "street" &&
           st.player.day >= 60 &&

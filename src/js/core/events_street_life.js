@@ -488,6 +488,7 @@
         excludeFlags: ["_gigSocialSeen"],
         relationshipMet: "old_zhou",
       },
+      conditions: function (st) { if (!st.sideHustle || !st.sideHustle.active) return false; return true; }, // [Layer3]
       choices: [
         {
           text: "\u2705 交",
@@ -1494,6 +1495,7 @@
       story:
         "「幻方量化」去年收益43%，今年前三个月已经亏了15%。有人说量化基金就是高频割韭菜——散户的每一笔交易都被算法预测。你想起上周自己买了就跌、卖了就涨的股票，后背一凉。",
       triggers: { minDay: 55, excludeFlags: ["_quantFundSeen"] },
+      conditions: function (st) { if (!st.investment || !st.investment.stockHoldings || Object.keys(st.investment.stockHoldings).length < 1) return false; return true; }, // [Layer3]
       choices: [
         {
           text: "🤖 买量化基金——打不过就加入",

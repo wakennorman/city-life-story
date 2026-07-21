@@ -506,6 +506,23 @@ if (typeof window !== "undefined") {
   RANDOM_EVENTS._eraEventsLoaded = true;
   for (var i = 0; i < ERA_EVENTS.length; i++) {
     var e = ERA_EVENTS[i];
+    var conditionsFn = null;
+    if (e.id === "era_180") {
+      conditionsFn = function (st) {
+        if (!st.player || st.player.totalWorkDays < 1) return false; // [Layer3]
+        return true;
+      };
+    } else if (e.id === "era_270") {
+      conditionsFn = function (st) {
+        if (!st.relationships || !st.relationships.aunt_wang || !st.relationships.aunt_wang.met) return false; // [Layer3]
+        return true;
+      };
+    } else if (e.id === "era_450") {
+      conditionsFn = function (st) {
+        if (!st.career || !st.career.currentJob) return false; // [Layer3]
+        return true;
+      };
+    }
     RANDOM_EVENTS.push({
       id: e.id,
       phase: e.phase || "street",
@@ -517,6 +534,7 @@ if (typeof window !== "undefined") {
       probability: 0,
       repeatable: false,
       _isChainEvent: true,
+      conditions: conditionsFn,
     });
   }
 })();

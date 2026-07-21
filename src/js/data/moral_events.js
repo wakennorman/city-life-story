@@ -1028,6 +1028,10 @@ const MORAL_EVENTS = [
     desc: "你和朋友一起参加职业资格考试。你无意中看到他在用手机搜答案，监考老师正往这边走。他向你投来求助的眼神。",
     minDay: 15,
     dailyChance: 0.025,
+    condition: function (st) {
+      if (!st.relationships || Object.keys(st.relationships).length < 1) return false; // [Layer3]
+      return true;
+    },
     choices: [
       {
         text: "🗣️ 轻咳一声提醒他收手机",
@@ -1075,6 +1079,10 @@ const MORAL_EVENTS = [
     desc: "你借的图书馆书不小心被水杯打翻淋湿了，好几页黏在一起。书是刚出版的新书，定价¥68。还回去肯定会被发现。",
     minDay: 3,
     dailyChance: 0.04,
+    condition: function (st) {
+      if (!st.flags || !st.flags._hasLibraryCard) return false; // [Layer3]
+      return true;
+    },
     choices: [
       {
         text: "🏪 主动去图书馆说明情况并赔偿",
@@ -1278,6 +1286,7 @@ const MORAL_EVENTS = [
     minDay: 10,
     dailyChance: 0.03,
     condition: function (s) {
+      if (!s.housing || s.housing.tier < 1) return false; // [Layer3]
       return s.resources.cash >= 200;
     },
     choices: [
@@ -1335,6 +1344,10 @@ const MORAL_EVENTS = [
     triggers: ["after_work"],
     triggerWeight: 5,
     triggerCooldown: 25,
+    condition: function (st) {
+      if (!st.career || !st.career.currentJob) return false; // [Layer3]
+      return true;
+    },
     choices: [
       {
         text: "🎒 收进口袋，积少成多",
@@ -1642,6 +1655,10 @@ const EXTREME_MORAL_EVENTS = [
     title: "📋 同事伪造工时",
     desc: "你发现临时工同事虚报了三天工时。他说家里老人住院，求你别举报。举报有奖金，不举报你也可能被牵连。",
     minDay: 25,
+    condition: function (st) {
+      if (!st.career || !st.career.currentJob) return false; // [Layer3]
+      return true;
+    },
     choices: [
       {
         text: "📣 举报，拿制度说话",
@@ -1675,6 +1692,10 @@ const EXTREME_MORAL_EVENTS = [
     title: "🏚️ 邻居被赶出门",
     desc: "隔壁一家今晚交不上房租，房东把行李扔到走廊。你刚攒下几百块，明天也要交自己的房租。",
     minDay: 20,
+    condition: function (st) {
+      if (!st.housing || st.housing.tier < 1) return false; // [Layer3]
+      return true;
+    },
     choices: [
       {
         text: "💸 借他们¥300先过夜",
@@ -1709,6 +1730,10 @@ const EXTREME_MORAL_EVENTS = [
     title: "🥫 快过期的临期食品",
     desc: "仓库主管让你把一批快过期的罐头贴上新日期，说卖出去就能给你分成。",
     minDay: 22,
+    condition: function (st) {
+      if (!st.career || !st.career.currentJob) return false; // [Layer3]
+      return true;
+    },
     choices: [
       {
         text: "🏷️ 照做，拿分成",
@@ -1775,6 +1800,10 @@ const EXTREME_MORAL_EVENTS = [
     title: "📱 欠薪证据",
     desc: "你拿到了包工头拖欠工人工资的聊天记录。公开会得罪人，私下卖给包工头可以换一笔封口费。",
     minDay: 30,
+    condition: function (st) {
+      if (!st.career || !st.career.currentJob) return false; // [Layer3]
+      return true;
+    },
     choices: [
       {
         text: "⚖️ 交给劳动监察",
@@ -1809,6 +1838,10 @@ const EXTREME_MORAL_EVENTS = [
     title: "🛏️ 救助站最后一张床",
     desc: "寒潮夜里，救助站只剩最后一张床位。你冻得发抖，门外还有一个更老的人。",
     minDay: 24,
+    condition: function (st) {
+      if (!st.weather || st.weather.temperature > 5) return false; // [Layer3]
+      return true;
+    },
     choices: [
       {
         text: "🛏️ 自己睡床，活过今晚最重要",
@@ -1843,6 +1876,10 @@ const EXTREME_MORAL_EVENTS = [
     title: "🧊 冰袋里的胰岛素",
     desc: "外卖箱里有一份误送的胰岛素。平台说找不到客户地址，超时会罚你钱。",
     minDay: 26,
+    condition: function (st) {
+      if (!st.career || !st.career.currentJob) return false; // [Layer3]
+      return true;
+    },
     choices: [
       {
         text: "🏃 自己查电话送回去",
@@ -2072,6 +2109,10 @@ const EXTREME_MORAL_EVENTS = [
     title: "🏗️ 工地安全事故",
     desc: "工地脚手架松动差点砸到人。负责人让你别说出去，今天给你双倍工资。",
     minDay: 30,
+    condition: function (st) {
+      if (!st.career || !st.career.currentJob) return false; // [Layer3]
+      return true;
+    },
     choices: [
       {
         text: "💰 拿双倍工资闭嘴",
@@ -2136,6 +2177,10 @@ const EXTREME_MORAL_EVENTS = [
     title: "💾 一份客户名单",
     desc: "兼职公司把客户手机号和住址表发错给了你。有人愿意花¥1000买这份名单。",
     minDay: 26,
+    condition: function (st) {
+      if (!st.sideHustle || !st.sideHustle.active) return false; // [Layer3]
+      return true;
+    },
     choices: [
       {
         text: "🧹 删除文件并提醒公司",
@@ -2214,6 +2259,7 @@ for (var emi = 0; emi < EXTREME_MORAL_EVENTS.length; emi++) {
       desc: eventDef.desc,
       minDay: eventDef.minDay || 10,
       dailyChance: eventDef.dailyChance || 0.025,
+      condition: eventDef.condition, // [Layer3] pass through
       choices: eventDef.choices.map(function (choiceDef) {
         return {
           text: choiceDef.text,

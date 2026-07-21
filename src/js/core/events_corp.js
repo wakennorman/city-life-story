@@ -556,6 +556,7 @@
         "客户打电话过来骂了 20 分钟，其实根本不是你的错，但他指名要投诉到你头上。",
       // [conditions→triggers]
       triggers: { minDay: 15 },
+      conditions: function (st) { if (!st.corporate || !st.corporate.active) return false; return true; }, // [Layer3]
       choices: [
         {
           text: "🙏 忍气吞声道歉",
@@ -2683,6 +2684,7 @@
       story:
         "你终于拿到了辰光网络的offer——P8，年薪¥80万。入职第一天，你发现旁边工位的同事在收拾东西：「公司第三季度要裁20%，你不知道？」HR的微笑很专业：「组织架构优化，正常调整。」",
       conditions: function (st) {
+        if (!st.flags || !st.flags._chenguangOffer) return false; // [Layer3]
         return (
           st.player.phase === "corporate" &&
           st.player.day >= 80 &&
@@ -2741,6 +2743,7 @@
       story:
         "作为辰光网络的P8员工，你看到了Q3内部数据——新增用户连续下滑，最大客户没续签，CFO悄悄减持。你知道股价三个月内必跌。一个念头冒出来：做空自己公司。",
       conditions: function (st) {
+        if (!st.corporate || st.corporate.rank !== "P8") return false; // [Layer3]
         return (
           st.player.phase === "corporate" &&
           st.player.day >= 100 &&
@@ -3077,6 +3080,7 @@
         story:
           "公司重点项目上线失败，客户投诉到了 CEO 那里。开会时大家都在沉默——直到领导看向你：「你是这个项目的第一负责人，你先说说。」但你知道，真正的问题出在技术总监给的架构方案上。他之前暗示过你「有问题我兜着」，现在却在会上装无辜。",
         triggers: { minDay: 90, phase: "corporate" },
+        conditions: function (st) { if (!st.corporate || !st.corporate.active) return false; return true; }, // [Layer3]
         choices: [
           {
             text: "📋 如实陈述，指出技术总监的方案问题",
@@ -3155,6 +3159,7 @@
         story:
           "你距离下一个职级只差一步。HR 私下告诉你：「最近公司有个传统，晋升前需要表示一下——不是明面上的东西，就是请领导吃顿饭、送点土特产之类的。」你明白了，这是潜规则。",
         triggers: { minDay: 120, phase: "corporate" },
+        conditions: function (st) { if (!st.corporate || !st.corporate.active) return false; return true; }, // [Layer3]
         choices: [
           {
             text: "🎁 随大流，准备一份礼物",
@@ -3242,6 +3247,7 @@
         story:
           "公司宣布优化 10% 的员工。你的 Leader 把你叫到办公室：「你手下有两个人，老赵和小林。老赵快退休了，家里有个生病的妻子。小林刚结婚，房贷压力大。我只能留一个，另一个……你自己跟他们说吧。」",
         triggers: { minDay: 150, phase: "corporate" },
+        conditions: function (st) { if (!st.corporate || !st.corporate.team || st.corporate.team.length < 2) return false; return true; }, // [Layer3]
         choices: [
           {
             text: "👴 保老赵，让他提前退休",
