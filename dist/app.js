@@ -168597,17 +168597,13 @@ function generateWorkFlavorText(state, job) {
     }
   }
 
-  // 加权随机选取一条
-  var totalWeight = 0;
-  for (var fi = 0; fi < flavorPool.length; fi++) {
-    totalWeight += flavorPool[fi].weight;
-  }
-  var roll = Math.random() * totalWeight;
-  for (var fi2 = 0; fi2 < flavorPool.length; fi2++) {
-    roll -= flavorPool[fi2].weight;
-    if (roll <= 0) {
-      return flavorPool[fi2].text;
-    }
+  // [全系统自洽修复] 域A A类: Math.random→Random.weighted 种子化RNG
+  if (flavorPool.length > 0) {
+    var _picked = Random.weighted(
+      flavorPool,
+      function (item) { return item.weight || 1; },
+    );
+    if (_picked) return _picked.text;
   }
 
   // 绝对兜底
@@ -168617,7 +168613,7 @@ function generateWorkFlavorText(state, job) {
     "🌆 收工了，街上的人渐渐多了起来。",
     "🧘 深呼吸一口，今天又撑过去了。",
   ];
-  return FALLBACKS[Math.floor(Math.random() * FALLBACKS.length)];
+  return Random.fromArray(FALLBACKS);
 }
 
 ;
@@ -169884,8 +169880,7 @@ function generateInfoText(npcId, infoTypeId, state) {
         return g.category === "scrap";
       });
       if (scrapGoods.length === 0) return "今天废品行情一般。";
-      var randomGood =
-        scrapGoods[Math.floor(Math.random() * scrapGoods.length)];
+      var randomGood = Random.fromArray(scrapGoods);
       var bestLoc = null;
       var bestPrice2 = 0;
       for (var lk4 in state.trade.goodsPrices) {
@@ -169931,7 +169926,7 @@ function tryTriggerNPCInfoShare(npcId, state) {
   if (!npc) return null;
 
   // 30%概率触发
-  if (Math.random() > 0.3) return null;
+  if (!Random.chance(0.3)) return null;
 
   var infoDef = NPC_TRADE_INFO[npcId];
   if (!infoDef) return null;
@@ -169949,8 +169944,7 @@ function tryTriggerNPCInfoShare(npcId, state) {
   }
   if (availableTypes.length === 0) return null;
 
-  var chosenType =
-    availableTypes[Math.floor(Math.random() * availableTypes.length)];
+  var chosenType = Random.fromArray(availableTypes);
   var infoText = generateInfoText(npcId, chosenType, state);
 
   // 微量销售XP
@@ -176219,7 +176213,7 @@ function showRemitModal() {
           if (
             amt >= 500 &&
             currentIdx < stageOrder.length - 1 &&
-            Math.random() < 0.3
+            Random.chance(0.3)
           ) {
             state.family.relationshipStage = stageOrder[currentIdx + 1];
             StateManager.addMessage(
@@ -177031,7 +177025,7 @@ function addTempleActions(state, actions) {
             buff: { luck: -3, happiness: -5 },
           },
         ];
-        var r = rolls[Math.floor(Math.random() * rolls.length)];
+        var r = Random.fromArray(rolls);
         flags._divinationResult = r.name;
         flags._divinationExpireDay = day + 1;
         flags._divinationBuff = r.buff;
@@ -178883,10 +178877,7 @@ const DAILY_PIPELINE = [
         day >= state.flags._careerLegacyDueDay
       ) {
         state.flags._careerLegacyDueDay = 0;
-        var _legacySuccess =
-          typeof Random !== "undefined"
-            ? Random.chance(0.6)
-            : Math.random() < 0.6;
+        var _legacySuccess = Random.chance(0.6);
         if (_legacySuccess) {
           state.resources.cash = (state.resources.cash || 0) + 100000;
           state.player.fame = Math.min(100, (state.player.fame || 0) + 20);

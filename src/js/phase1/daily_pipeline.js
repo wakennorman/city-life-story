@@ -1637,10 +1637,7 @@ const DAILY_PIPELINE = [
         day >= state.flags._careerLegacyDueDay
       ) {
         state.flags._careerLegacyDueDay = 0;
-        var _legacySuccess =
-          typeof Random !== "undefined"
-            ? Random.chance(0.6)
-            : Math.random() < 0.6;
+        var _legacySuccess = Random.chance(0.6);
         if (_legacySuccess) {
           state.resources.cash = (state.resources.cash || 0) + 100000;
           state.player.fame = Math.min(100, (state.player.fame || 0) + 20);
