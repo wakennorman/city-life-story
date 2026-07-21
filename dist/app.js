@@ -30525,6 +30525,7 @@ if (typeof window !== "undefined") {
       title: "风口来了",
       story: `手机弹了条推送："XX行业人才缺口巨大，日薪涨了50%！"\n你看了看，心跳加速——这不就是你一直在干的活吗？`,
       conditions: function (st) {
+        if (!st.career || !st.career.currentJob) return false; // [Layer3]
         if (!st._worldParams || !st._worldParams.sectorHeat) return false;
         for (var sector in st._worldParams.sectorHeat) {
           if (st._worldParams.sectorHeat[sector] > 1.2) return true;
@@ -30577,6 +30578,7 @@ if (typeof window !== "undefined") {
       title: "行业寒冬",
       story: `新闻里铺天盖地都是"XX行业遇冷""企业缩编"的消息。你认识几个同行，已经在抱怨活越来越少、价钱越压越低。\n风口过了，日子得重新算计。`,
       conditions: function (st) {
+        if (!st.career || !st.career.currentJob) return false; // [Layer3]
         if (!st._worldParams || !st._worldParams.sectorHeat) return false;
         if (st.player.day < 15) return false;
         if (
@@ -31914,7 +31916,7 @@ if (typeof window !== "undefined") {
       probability: 0.02,
       repeatable: false,
       story:
-        "新闻里铺天盖地地报道经济下行周期来临。分析师说可能持续6-12个月，各行各业都在收缩。你的投资组合和收入可能受到影响。",
+        "新闻里铺天盖地地报道经济下行周期来临。分析师说可能持续6-12个月，各行各业都在收缩。你的收入和资产可能受到影响。",
       choices: [
         {
           text: "🛡️ 抛售部分资产换现金",
@@ -32810,6 +32812,8 @@ if (typeof window !== "undefined") {
       story:
         "你正在街上走着，一个中年男人快步迎上来——你认出来了，这是你一个月前帮忙送过紧急文件的那位客户。\n\n他笑着说：「可算碰上你了！上次你帮我送的那份标书中了！一直想谢谢你。」说着递过来一个袋子。",
       conditions: function (st) {
+        // [Layer3] 需要有外卖配送历史
+        if (!st.player.workTypeCounts || !st.player.workTypeCounts.delivery_rider || st.player.workTypeCounts.delivery_rider < 1) return false;
         // 检查玩家是否具备长期跑腿/配送的特征：driving技能≥15 或 agility≥28（经常行动）
         // 且游戏天数>30说明有足够时间积累客户
         if (st.player.day < 30) return false;
@@ -33048,6 +33052,7 @@ if (typeof window !== "undefined") {
       story:
         "你在商业区的人群中看到一个人正鬼鬼祟祟地贴近前面背包的姑娘——他的手已经伸进了她的背包拉链缝隙。\n\n周围的人都忙着赶路，没人注意到。你只有几秒钟时间决定怎么做。",
       conditions: function (st) {
+        if (!st.trade || st.trade.currentLocation !== "commercialDist") return false; // [Layer3]
         // 天数>10，不重复
         if (st.player.day < 10) return false;
         if (st.flags._moralPickpocketSeen) return false;
@@ -34178,6 +34183,7 @@ if (typeof window !== "undefined") {
       story:
         "你今天照常去干活，但一到地方就觉得胸口发闷。同样的动作、同样的路线、同样的吆喝——你已经重复了不知道多少遍。\n\n你坐在路沿石上，看着别的摊位发呆。脑子里有个声音在说：「还要这样干多久？」",
       conditions: function (st) {
+        if (!st.career || !st.career.currentJob) return false; // [Layer3]
         if (st.player.day < 20) return false;
         // 通过高疲劳和低心情间接判断倦怠
         if (!st.needs) return false;
@@ -34265,6 +34271,7 @@ if (typeof window !== "undefined") {
       story:
         "你强撑着去干活，但手上的动作明显比平时慢。咳嗽压不住，额头烫得厉害。\n\n旁边的老主顾看了你一眼：「小伙子，你这脸色不对啊，发烧了吧？别干了，回去歇着。」",
       conditions: function (st) {
+        if (!st.career || !st.career.currentJob) return false; // [Layer3]
         if (st.player.day < 10) return false;
         if (
           !st.status ||
@@ -34994,6 +35001,7 @@ if (typeof window !== "undefined") {
       story:
         "你在工地上干活时，突然听到一声喊——上面掉下来一捆钢管！虽然没砸到人，但碎砖块溅到了你这边。\n\n工头跑过来看了一圈：「没事没事，散了吧。」但你的手臂被划了一道口子，血渗了出来。",
       conditions: function (st) {
+        if (!st.career || !st.career.currentJob) return false; // [Layer3]
         if (st.player.day < 20) return false;
         var curLoc = st.trade && st.trade.currentLocation;
         if (curLoc !== "construction") return false;
@@ -35203,6 +35211,7 @@ if (typeof window !== "undefined") {
       story:
         "你在图书馆的自习区埋头苦读，但一道题卡了你半小时。你咬着笔帽，盯着书页上的公式发呆。\n\n对面一个戴眼镜的中年人合上自己的书，看了你一眼：「卡住了？来，我看看。」",
       conditions: function (st) {
+        if (!st.trade || st.trade.currentLocation !== "library") return false; // [Layer3]
         if (st.player.day < 25) return false;
         if ((st.player.intelligence || 0) < 35) return false;
         // 得有一定的学历提升意愿（学过习或用过学习类行动）
@@ -35268,6 +35277,7 @@ if (typeof window !== "undefined") {
         "今天天气预报发布了高温预警，气温预计超过40度。你本打算去户外干活，但太阳毒辣得让人睁不开眼。\n\n你看了看手机上的账户余额，又抬头看了看天。\n\n工地和街边小摊都需要人。",
       // [自洽修复] v3.20 原始提交缺 conditions/apply → 补全
       conditions: function (st) {
+        if (!st.career || !st.career.currentJob) return false; // [Layer3]
         return (
           st.player.phase === "street" &&
           st.weather &&
@@ -55967,7 +55977,7 @@ if (typeof window !== "undefined") {
     story:
       "老周闻着香味蹭上门，你下厨露了一手。老人家吃得眉开眼笑，直夸你手艺好。",
 
-    // conditions：old_zhou 已结识 + cooking 技能 + 心情低（NPC ∩ 技能 ∩ 需求）
+    // conditions：old_zhou 已结识 + cooking 技能（NPC ∩ 技能）
 
     conditions: function (st) {
       var rel = st.relationships && st.relationships["old_zhou"]; // 检查 old_zhou 关系
@@ -55977,9 +55987,6 @@ if (typeof window !== "undefined") {
       var ck = st.skills && st.skills.cooking && st.skills.cooking.level; // 检查 cooking 等级
 
       if (typeof ck !== "number" || ck < 8) return false; // 检查 cooking>=8
-
-      if (typeof st.needs.happiness !== "number" || st.needs.happiness < 30)
-        return false; // 检查 心情低
 
       if (st.player.day < 8) return false; // 检查 中后期
 
@@ -56427,9 +56434,11 @@ if (typeof window !== "undefined") {
     story:
       "连夜暴雨把出租屋的屋檐泡漏了，水顺着墙角往下淌。你想起练过的维修手艺，抄起工具就爬上梯子。",
 
-    // conditions：雨天/暴雨 + repair 技能（技能×天气×需求空白区）
+    // conditions：雨天/暴雨 + repair 技能 + 有住所（技能×天气×需求空白区）
 
     conditions: function (st) {
+      if (!st.housing || st.housing.tier < 1) return false; // [Layer3] 叙事涉及出租屋
+
       var w = st.weather && st.weather.current; // 检查 天气
 
       if (w !== "rainy" && w !== "stormy") return false; // 检查 雨天或暴雨
@@ -57000,9 +57009,11 @@ if (typeof window !== "undefined") {
     story:
       "科技园里公司扎堆，你凭着嘴皮子帮人推销办公耗材，园区里攒下的好名声让你一路绿灯。",
 
-    // conditions：sales 技能 + 科技园声望（技能×声望×地点空白区）
+    // conditions：sales 技能 + 科技园声望 + 科技园位置（技能×声望×地点空白区）
 
     conditions: function (st) {
+      if (!st.trade || st.trade.currentLocation !== "techPark") return false; // [Layer3] 叙事涉及科技园
+
       var sales = st.skills && st.skills.sales && st.skills.sales.level; // 检查 sales 等级
 
       if (typeof sales !== "number" || sales < 15) return false; // 检查 sales>=15
@@ -58897,6 +58908,8 @@ if (typeof window !== "undefined") {
     // conditions：暴雨天气 + 已就业（天气×职业空白区）
 
     conditions: function (st) {
+      if (!st.career || !st.career.currentJob) return false; // [Layer3] 叙事涉及工地上班
+
       if (st.weather && st.weather.current !== "stormy") return false; // 检查 暴雨
 
       if (!st.employment || !st.employment.currentJob) return false; // 检查 已就业
@@ -69906,9 +69919,11 @@ if (typeof window !== "undefined") {
     story:
       "你常读财经新闻，又懂点账。一条政策动向被你看出门道，顺势小投了一笔，赚了点信息差。",
 
-    // conditions：accounting 技能 + 中后期（技能 ∩ 经济 ∩ 新闻系统）
+    // conditions：accounting 技能 + 中后期 + 有现金（技能 ∩ 经济 ∩ 新闻系统）
 
     conditions: function (st) {
+      if (!st.resources || st.resources.cash < 500) return false; // [Layer3] 叙事涉及投资
+
       var acc = st.skills && st.skills.accounting && st.skills.accounting.level; // 检查 accounting 等级
 
       if (typeof acc !== "number" || acc < 20) return false; // 检查 accounting>=20
@@ -72424,9 +72439,11 @@ if (typeof window !== "undefined") {
     story:
       "外头狂风暴雨出不了门，你正好窝在屋里敲代码：「老天爷逼我闭关，正好把活儿干完。」",
 
-    // conditions：暴风雨 + coding 技能（天气系统 + 技能系统）
+    // conditions：暴风雨 + coding 技能 + 有住所（天气系统 + 技能系统）
 
     conditions: function (st) {
+      if (!st.housing || st.housing.tier < 1) return false; // [Layer3] 叙事涉及窝在屋里
+
       if (st.weather.current !== "stormy") return false; // 检查 暴风雨
 
       var code = st.skills && st.skills.coding && st.skills.coding.level; // 检查 coding 等级
@@ -99955,6 +99972,124 @@ if (typeof window !== "undefined") {
   for (var i = 0; i < A_EVENTS.length; i++) {
     var evt = A_EVENTS[i];
     // 防御性兜底：确保必要字段存在
+    if (!evt.choices || !evt.choices.length) continue;
+    if (!evt.conditions) evt.conditions = function () { return false; };
+    RANDOM_EVENTS.push(evt);
+  }
+})();
+
+;
+// ==== js/core/domain_a_linkage_r92.js ====
+/*
+ * 城市浮生记 — 域A（数据/数值平衡）联动增强 · R92
+ * 全系统优化 loop R92 · 联动增强 2项
+ */
+(function () {
+  if (typeof RANDOM_EVENTS === "undefined" || !RANDOM_EVENTS) return;
+  if (RANDOM_EVENTS._domainALinkageR92) return;
+  RANDOM_EVENTS._domainALinkageR92 = true;
+
+  var A_EVENTS = [
+    // ===== 联动1: A→C 技能溢价工资叙事 =====
+    // 设计意图：技能等级影响工资的数值关系通过叙事让玩家感知，连接数据平衡与职业系统。
+    {
+      id: "skill_salary_premium_narrative",
+      title: "技能溢价的回报",
+      desc: "你发现随着技能提升，同样的活儿能拿到更多钱了。技能不只是数字，是真金白银的回报。",
+      phase: "street",
+      triggers: { minDay: 20 },
+      conditions: function (st) {
+        if (!st || !st.player || !st.skills || !st.flags) return false;
+        if (st.flags._skillSalaryNarrativeSeen) return false;
+        // 至少1个技能≥20级
+        for (var key in st.skills) {
+          if (st.skills[key] && st.skills[key].level >= 20) return true;
+        }
+        return false;
+      },
+      choices: [
+        {
+          text: "💰 继续深耕技能，期待更高回报",
+          apply: function (st) {
+            if (st.flags) st.flags._skillSalaryNarrativeSeen = true;
+            if (st.player) {
+              st.player.mental = Math.min(100, (st.player.mental || 50) + 3);
+              st.player.intelligence = Math.min(100, (st.player.intelligence || 50) + 1);
+            }
+            if (typeof StateManager !== "undefined" && StateManager.addMessage)
+              StateManager.addMessage(
+                "技能就是资本。你决定继续深耕，期待更高的回报。心智+3，智力+1。",
+                "good"
+              );
+          },
+        },
+        {
+          text: "🤔 考虑换个技能方向",
+          apply: function (st) {
+            if (st.flags) st.flags._skillSalaryNarrativeSeen = true;
+            if (st.player) st.player.intelligence = Math.min(100, (st.player.intelligence || 50) + 3);
+            if (typeof StateManager !== "undefined" && StateManager.addMessage)
+              StateManager.addMessage(
+                "你开始思考：哪个技能最值钱？换个方向会不会更好？智力+3。",
+                "info"
+              );
+          },
+        },
+      ],
+      probability: 0.04,
+    },
+
+    // ===== 联动2: A→E 市场供需感知 =====
+    // 设计意图：玩家对市场供需变化的感知，连接数据平衡与经济系统。
+    {
+      id: "market_supply_demand_sense",
+      title: "市场的脉搏",
+      desc: "你开始注意到市场上商品价格的变化规律。供需关系影响着每一次买卖的利润。",
+      phase: "street",
+      triggers: { minDay: 30 },
+      conditions: function (st) {
+        if (!st || !st.player || !st.trade || !st.flags) return false;
+        if (st.flags._marketSenseSeen) return false;
+        // 至少完成过3次交易
+        return (st.trade.totalProfit || 0) > 0 && (st.player.day || 0) >= 30;
+      },
+      choices: [
+        {
+          text: "📊 开始记录价格波动规律",
+          apply: function (st) {
+            if (st.flags) st.flags._marketSenseSeen = true;
+            if (st.player) {
+              st.player.intelligence = Math.min(100, (st.player.intelligence || 50) + 3);
+            }
+            if (typeof getTradeIntelSystem === "function") {
+              st.flags._tradeIntelUnlocked = true;
+            }
+            if (typeof StateManager !== "undefined" && StateManager.addMessage)
+              StateManager.addMessage(
+                "你开始记录价格波动。市场有规律，关键在于发现它。智力+3。",
+                "good"
+              );
+          },
+        },
+        {
+          text: "😐 随行就市，不想那么多",
+          apply: function (st) {
+            if (st.flags) st.flags._marketSenseSeen = true;
+            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 2);
+            if (typeof StateManager !== "undefined" && StateManager.addMessage)
+              StateManager.addMessage(
+                "你决定随行就市。想太多反而累。心智+2。",
+                "info"
+              );
+          },
+        },
+      ],
+      probability: 0.03,
+    },
+  ];
+
+  for (var i = 0; i < A_EVENTS.length; i++) {
+    var evt = A_EVENTS[i];
     if (!evt.choices || !evt.choices.length) continue;
     if (!evt.conditions) evt.conditions = function () { return false; };
     RANDOM_EVENTS.push(evt);
