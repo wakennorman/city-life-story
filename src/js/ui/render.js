@@ -1222,28 +1222,6 @@ function renderTimeSlot(state, parent) {
       ${lowAp ? `<span style="font-size:10px;color:var(--warning);animation:ap-blink 0.8s infinite;">⚠</span>` : ""}
     </span>
     ${phaseLabel ? `<span style="font-size:10px;color:var(--text-muted);margin-left:2px;">${phaseLabel}</span>` : ""}
-    ${state.relationships ? (function() {
-      var _today = state.player.day;
-      var _visitable = 0;
-      for (var _ri in state.relationships) {
-        var _rr = state.relationships[_ri];
-        if (_rr && _rr.met && (_rr._lastVisit || 0) + 7 <= _today) _visitable++;
-      }
-      return _visitable > 0 ? '<span style="font-size:10px;color:var(--success);margin-left:6px;">🚶' + _visitable + '</span>' : '';
-    })() : ''}
-    ${state.investment || state.corporate ? (function() {
-      var _inv = state.investment;
-      var _invCount = 0;
-      if (_inv) {
-        _invCount += (_inv.stockHoldings || []).length;
-        _invCount += (_inv.properties || []).length;
-        if ((_inv.btcHoldings || 0) > 0) _invCount++;
-      }
-      if (state.corporate) {
-        _invCount += (state.corporate.stocks || []).length;
-      }
-      return _invCount > 0 ? '<span style="font-size:10px;color:var(--text-muted);margin-left:4px;">📈' + _invCount + '</span>' : '';
-    })() : ''}
   `;
   parent.appendChild(div);
 }

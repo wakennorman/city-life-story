@@ -211884,23 +211884,20 @@ function renderHeader(state) {
   }
 
   // [全系统自洽修复] 域F 联动增强: 顶栏天数旁显示可拜访NPC数+投资标的数
-  var _dayEl = document.getElementById("header-day");
-  if (_dayEl && state.relationships) {
-    var _today = p.day, _v = 0, _ic = 0;
-    for (var _ri in state.relationships) {
-      var _r = state.relationships[_ri];
-      if (_r && _r.met && (_r._lastVisit || 0) + 7 <= _today) _v++;
+  var _today2 = p.day, _v2 = 0, _ic2 = 0;
+  if (state.relationships) {
+    for (var _ri2 in state.relationships) {
+      var _r2 = state.relationships[_ri2];
+      if (_r2 && _r2.met && (_r2._lastVisit || 0) + 7 <= _today2) _v2++;
     }
-    var _id = state.investment;
-    if (_id) { _ic += (_id.stockHoldings || []).length + (_id.properties || []).length; if ((_id.btcHoldings || 0) > 0) _ic++; }
-    if (state.corporate) _ic += (state.corporate.stocks || []).length;
-    var _suffix = "";
-    if (_v > 0) _suffix += ' <span style="font-size:10px;color:var(--success);">🚶' + _v + "</span>";
-    if (_ic > 0) _suffix += ' <span style="font-size:10px;color:var(--text-muted);">📈' + _ic + "</span>";
-    _dayEl.innerHTML = (isFinite(p.day) ? p.day : "1") + _suffix;
-  } else if (_dayEl) {
-    _dayEl.textContent = isFinite(p.day) ? p.day : 1;
   }
+  var _id2 = state.investment;
+  if (_id2) { _ic2 += (_id2.stockHoldings || []).length + (_id2.properties || []).length; if ((_id2.btcHoldings || 0) > 0) _ic2++; }
+  if (state.corporate) _ic2 += (state.corporate.stocks || []).length;
+  var _npcEl = document.getElementById("header-npc-indicator");
+  if (_npcEl) { _npcEl.style.display = _v2 > 0 ? "inline" : "none"; _npcEl.textContent = _v2 > 0 ? "🚶" + _v2 : ""; }
+  var _invEl = document.getElementById("header-invest-indicator");
+  if (_invEl) { _invEl.style.display = _ic2 > 0 ? "inline" : "none"; _invEl.textContent = _ic2 > 0 ? "📈" + _ic2 : ""; }
 }
 
 /**
@@ -215009,28 +215006,6 @@ function renderTimeSlot(state, parent) {
       ${lowAp ? `<span style="font-size:10px;color:var(--warning);animation:ap-blink 0.8s infinite;">⚠</span>` : ""}
     </span>
     ${phaseLabel ? `<span style="font-size:10px;color:var(--text-muted);margin-left:2px;">${phaseLabel}</span>` : ""}
-    ${state.relationships ? (function() {
-      var _today = state.player.day;
-      var _visitable = 0;
-      for (var _ri in state.relationships) {
-        var _rr = state.relationships[_ri];
-        if (_rr && _rr.met && (_rr._lastVisit || 0) + 7 <= _today) _visitable++;
-      }
-      return _visitable > 0 ? '<span style="font-size:10px;color:var(--success);margin-left:6px;">🚶' + _visitable + '</span>' : '';
-    })() : ''}
-    ${state.investment || state.corporate ? (function() {
-      var _inv = state.investment;
-      var _invCount = 0;
-      if (_inv) {
-        _invCount += (_inv.stockHoldings || []).length;
-        _invCount += (_inv.properties || []).length;
-        if ((_inv.btcHoldings || 0) > 0) _invCount++;
-      }
-      if (state.corporate) {
-        _invCount += (state.corporate.stocks || []).length;
-      }
-      return _invCount > 0 ? '<span style="font-size:10px;color:var(--text-muted);margin-left:4px;">📈' + _invCount + '</span>' : '';
-    })() : ''}
   `;
   parent.appendChild(div);
 }
