@@ -211900,6 +211900,10 @@ function renderHeader(state) {
     if (_v2 > 0) _suffix += " 🚶" + _v2;
     if (_ic2 > 0) _suffix += " 📈" + _ic2;
     _dayEl.textContent = (isFinite(p.day) ? p.day : "1") + _suffix;
+    // 调试：把 stockHoldings 长度写在浏览器标题上
+    if (_id2 && _id2.stockHoldings) {
+      document.title = "stockHoldings=" + _id2.stockHoldings.length + " ic=" + _ic2 + " day=" + p.day;
+    }
   }
 }
 
