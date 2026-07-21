@@ -2643,7 +2643,7 @@ function renderMapTab(state, parent) {
 
   // 当前模式提示（单独一行，避免换行不一致）
   var modeHints = {
-    walk: "💡 步行到达目的地，消耗行动力",
+    walk: "💡 步行到达，按距离消耗6~26AP，免费",
     bike: "💡 共享单车，2跳内可达，消耗6AP，费用¥3",
     metro: "💡 地铁，仅限沿线站点，消耗5AP，费用¥4",
     taxi: "💡 打车直达，消耗3AP，按距离计费¥10-40",
