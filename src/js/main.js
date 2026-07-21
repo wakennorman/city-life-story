@@ -4827,6 +4827,8 @@ function doStreetJob(job) {
   }
   state.flags._lastWorkDay = state.player.day;
   state.flags._workedToday = true; // 标记今日已工作，供 pipeline 检测
+  // [全系统自洽修复] 域A A类#5: 记录最近一次街头工作ID（供 tickManualLaborDays 判断体力劳动）
+  if (job && job.id) state.flags._lastStreetJobId = job.id;
 }
 
 /**

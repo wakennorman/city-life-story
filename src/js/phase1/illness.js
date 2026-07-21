@@ -469,6 +469,39 @@ function tickOfficeWorkDays(state) {
   }
 }
 
+// [全系统自洽修复] 域A A类#5: 新增 tickManualLaborDays（原 manualLaborDays 计数器从未递增，
+//   致 herniated_disc 永远无法触发）。体力劳动日累计，非体力日衰减。
+function tickManualLaborDays(state) {
+  if (!state.flags) return;
+  state.flags._habits = state.flags._habits || {};
+  var isManualJob = false;
+  // 检查当前是否为体力劳动（街头工作且非办公室类）
+  if (state.corporate && state.corporate.company) {
+    var jobDef = typeof getJobById === "function" ? getJobById(state.corporate.jobId) : null;
+    // 建筑/工厂/钢结构等体力岗位
+    if (jobDef && jobDef.location && /construction|factoryZone|slum/.test(jobDef.location)) {
+      isManualJob = true;
+    }
+    if (jobDef && /manual_labor|premium_engineering|steel_worker|factory_work|factory_electrician/.test(jobDef.id)) {
+      isManualJob = true;
+    }
+  } else {
+    // 街头阶段：检查最近一次工作是否为体力活
+    var lastJobId = state.flags._lastStreetJobId;
+    if (lastJobId && /manual_labor|premium_engineering|steel_worker|factory_work|waste_recycling|old_zhou_recycling/.test(lastJobId)) {
+      isManualJob = true;
+    }
+  }
+  if (isManualJob) {
+    state.flags._habits.manualLaborDays = (state.flags._habits.manualLaborDays || 0) + 1;
+  } else {
+    // 非体力日缓慢衰减（避免换工作后仍长期患病）
+    if (state.flags._habits.manualLaborDays > 0) {
+      state.flags._habits.manualLaborDays = Math.max(0, (state.flags._habits.manualLaborDays || 0) - 2);
+    }
+  }
+}
+
 // ====== 治疗 UI ======
 
 /** 打开诊所 / 看病弹窗（在医院解锁的行动里调用） */

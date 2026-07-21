@@ -529,7 +529,8 @@ const ILLNESSES = {
     icon: "☠️",
     severity: 8,
     naturalCureDays: [60, 120],
-    triggerHabit: { fattyLiverCount: 1, age: 50, hepatitisB: 1 },
+    // [全系统自洽修复] 域A A类#4: 移除 hepatitisB:1（该计数器从未递增，原条件永假致肝癌永远无法触发）
+    triggerHabit: { fattyLiverCount: 1, age: 50 },
     triggerChance: 0.2,
     symptom: { health: -6, hunger: -8, physiqueDebuff: 10, liverFailure: true },
     treatCost: { hospital: 50000 },

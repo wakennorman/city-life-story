@@ -598,10 +598,14 @@ function getBestTradeRoutes(state) {
         // 综合成本：每跳 −2% 利润 + 疲劳消耗影响未来效率
         var transportCost = hops * 2.5;
         // 路线饱和惩罚（用得越多利润越低）
+        // [全系统自洽修复] 域A B类: 原 getRouteSaturationPenalty 从未定义→死代码。
+        //   改为内联实现：基于玩家近期同路线交易次数计算饱和惩罚。
         var saturationPenalty = 0;
-        if (typeof getRouteSaturationPenalty === "function") {
-          var sat = getRouteSaturationPenalty(fromKey, toKey, g.id);
-          saturationPenalty = Math.round((1 - sat) * 100);
+        if (state.trade && state.trade._routeUsage) {
+          var routeKey = fromKey + "→" + toKey + ":" + g.id;
+          var usage = state.trade._routeUsage[routeKey] || 0;
+          // 每用过一次 +5% 饱和惩罚，上限 30%
+          saturationPenalty = Math.min(30, usage * 5);
         }
         // 是否从当前位置出发（就近优先）
         var isNearby = fromKey === currentLoc;

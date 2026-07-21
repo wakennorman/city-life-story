@@ -69,16 +69,24 @@ function buyGood(goodId, qty) {
   // 扣钱
   state.resources.cash -= totalCost;
 
-  // 加入背包
+  // [全系统自洽修复] 域A A类#1: buyGood 补 avgBuyPrice（原缺失致零售购买利润计算永0）
+  // 加入背包（记录买入价用于后续利润计算）
+  const unitPrice = Math.round((totalCost / qty) * 100) / 100;
   const existing = state.inventory.items.find((i) => i.id === goodId);
   if (existing) {
+    // 加权平均买入价
+    const oldTotal = (existing.avgBuyPrice || unitPrice) * existing.qty;
+    const newTotal = unitPrice * qty;
     existing.qty += qty;
     existing.boughtAt = locKey;
     existing.boughtDay = state.player.day;
+    existing.avgBuyPrice =
+      Math.round(((oldTotal + newTotal) / existing.qty) * 100) / 100;
   } else {
     state.inventory.items.push({
       id: goodId,
       qty,
+      avgBuyPrice: unitPrice,
       boughtAt: locKey,
       boughtDay: state.player.day,
     });
@@ -262,6 +270,13 @@ function sellGood(goodId, qty) {
       state.flags._shoppingFestTotalProfit =
         (state.flags._shoppingFestTotalProfit || 0) + totalEarned;
     }
+  }
+
+  // 路线使用追踪（供路线饱和惩罚计算）
+  if (state.trade && existing && existing.boughtAt) {
+    state.trade._routeUsage = state.trade._routeUsage || {};
+    var _routeKey2 = existing.boughtAt + "→" + locKey + ":" + goodId;
+    state.trade._routeUsage[_routeKey2] = (state.trade._routeUsage[_routeKey2] || 0) + 1;
   }
 
   return true;

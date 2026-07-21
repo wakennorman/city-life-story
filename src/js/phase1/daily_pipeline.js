@@ -358,6 +358,8 @@ const DAILY_PIPELINE = [
       if (typeof tickHabits === "function") tickHabits(state);
       // 办公室工作天数追踪（职业病）
       if (typeof tickOfficeWorkDays === "function") tickOfficeWorkDays(state);
+      // 体力劳动天数追踪（腰椎间盘突出等职业病）
+      if (typeof tickManualLaborDays === "function") tickManualLaborDays(state);
     },
   },
 
@@ -565,6 +567,15 @@ const DAILY_PIPELINE = [
     fn: function (state) {
       if (typeof checkMarketEvents === "function") checkMarketEvents(state);
       if (typeof decaySupplyDemand === "function") decaySupplyDemand(state);
+      // 路线使用衰减（每3天减1次使用记录，让旧路线恢复吸引力）
+      if (state.trade && state.trade._routeUsage && state.player && state.player.day % 3 === 0) {
+        for (var _rKey in state.trade._routeUsage) {
+          if (state.trade._routeUsage[_rKey] > 0) {
+            state.trade._routeUsage[_rKey]--;
+            if (state.trade._routeUsage[_rKey] <= 0) delete state.trade._routeUsage[_rKey];
+          }
+        }
+      }
       if (typeof tickDailyPriceShocks === "function")
         tickDailyPriceShocks(state);
     },

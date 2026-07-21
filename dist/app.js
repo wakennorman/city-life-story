@@ -99248,6 +99248,9 @@ const EconomySystem = (function () {
     hell: 1.6, // 地狱模式增 60%
   };
 
+  // [全系统自洽修复] 域A A类#3: 原算法用 remaining=totalAssets 直接减 bracket 宽度，
+  //   未扣除 bracket.min 偏移，导致跨档部分被重复征税（如¥200001征税¥60而非¥0）。
+  //   改为标准累进：每档仅对 (min, min(max, totalAssets)) 区间征税。
   function calculateProgressiveWealthTax(totalAssets, difficulty) {
     if (
       typeof totalAssets !== "number" ||
@@ -99257,23 +99260,24 @@ const EconomySystem = (function () {
       return 0;
     const mult = DIFFICULTY_TAX_MULTIPLIER[difficulty] || 1.0;
     let totalTax = 0;
-    let remaining = totalAssets;
 
     for (const tier of WEALTH_TAX_THRESHOLDS) {
-      if (remaining <= 0) break;
-      const taxable = Math.min(remaining, tier.max - tier.min);
+      if (totalAssets <= tier.min) break; // 资产未达该档起征点
+      const upper = Math.min(totalAssets, tier.max);
+      const taxable = upper - tier.min;
       if (taxable <= 0) continue;
       totalTax += taxable * tier.rate;
-      remaining -= taxable;
     }
 
     return Math.round(totalTax * mult);
   }
 
+  // [全系统自洽修复] 域A A类#2: 原逻辑返回首个命中档（最低档），高资产玩家永远显示入门税
+  //   改为逆序遍历，返回最高命中档
   function getActiveTaxTier(totalAssets) {
-    for (const tier of WEALTH_TAX_THRESHOLDS) {
-      if (totalAssets >= tier.min) {
-        return tier;
+    for (let i = WEALTH_TAX_THRESHOLDS.length - 1; i >= 0; i--) {
+      if (totalAssets >= WEALTH_TAX_THRESHOLDS[i].min) {
+        return WEALTH_TAX_THRESHOLDS[i];
       }
     }
     return null;
@@ -141240,13 +141244,13 @@ function chooseSkillBranch(skillKey, branchId, state) {
     );
     return false;
   }
-  if (state.resources.cash < 200) {
+  if ((state.resources.cash || 0) < 200) {
     StateManager.addMessage("⚠️ 现金不足，选择发展方向需要¥200", "warning");
     return false;
   }
 
   state.player.actionPoints -= 15;
-  state.resources.cash -= 200;
+  state.resources.cash = Math.max(0, (state.resources.cash || 0) - 200);
   state.skillBranches[skillKey] = branchId;
 
   StateManager.addMessage(
@@ -141273,7 +141277,7 @@ function switchSkillBranch(skillKey, newBranchId, state) {
     StateManager.addMessage("⚠️ 切换发展方向需要30行动力", "warning");
     return false;
   }
-  if (state.resources.cash < 500) {
+  if ((state.resources.cash || 0) < 500) {
     StateManager.addMessage("⚠️ 切换发展方向需要¥500", "warning");
     return false;
   }
@@ -141287,7 +141291,7 @@ function switchSkillBranch(skillKey, newBranchId, state) {
   }
 
   state.player.actionPoints -= 30;
-  state.resources.cash -= 500;
+  state.resources.cash = Math.max(0, (state.resources.cash || 0) - 500);
   state.skillBranches[skillKey] = newBranchId;
 
   StateManager.addMessage(
@@ -141352,7 +141356,7 @@ function canActivateTalentNode(skillKey, nodeId, state) {
       reason: "行动力不足，需要" + node.apCost + "点行动力",
     };
   }
-  if (state.resources.cash < (node.cashCost || 0)) {
+  if ((state.resources.cash || 0) < (node.cashCost || 0)) {
     return {
       allowed: false,
       reason: "现金不足，需要¥" + node.cashCost,
@@ -141377,7 +141381,7 @@ function activateTalentNode(skillKey, nodeId, state) {
   var nodeKey = skillKey + "_" + branchId + "_" + nodeId;
 
   state.player.actionPoints -= node.apCost;
-  state.resources.cash -= node.cashCost;
+  state.resources.cash = Math.max(0, (state.resources.cash || 0) - (node.cashCost || 0));
   state.talentNodes[nodeKey] = true;
 
   StateManager.addMessage(
@@ -141387,7 +141391,7 @@ function activateTalentNode(skillKey, nodeId, state) {
 
   // 被动收入立即生效
   if (node.effects && node.effects.passiveIncome) {
-    state.resources.cash += node.effects.passiveIncome;
+    state.resources.cash = (state.resources.cash || 0) + (node.effects.passiveIncome || 0);
     StateManager.addMessage(
       "💰 天赋效果：获得 ¥" + node.effects.passiveIncome + " 被动收入",
       "info",
@@ -151509,7 +151513,7 @@ const GOODS = [
   {
     id: "vitamins_item",
     name: "维生素",
-    basePrice: 25,
+    basePrice: 20,
     unit: "瓶",
     category: "medicine",
     buyLocations: ["hospital", "commercialDist"],
@@ -151531,7 +151535,7 @@ const GOODS = [
   {
     id: "notebook_item",
     name: "笔记本",
-    basePrice: 5,
+    basePrice: 10,
     unit: "本",
     category: "stationery",
     buyLocations: ["school", "wholesaleMarket"],
@@ -161566,7 +161570,8 @@ const ILLNESSES = {
     icon: "☠️",
     severity: 8,
     naturalCureDays: [60, 120],
-    triggerHabit: { fattyLiverCount: 1, age: 50, hepatitisB: 1 },
+    // [全系统自洽修复] 域A A类#4: 移除 hepatitisB:1（该计数器从未递增，原条件永假致肝癌永远无法触发）
+    triggerHabit: { fattyLiverCount: 1, age: 50 },
     triggerChance: 0.2,
     symptom: { health: -6, hunger: -8, physiqueDebuff: 10, liverFailure: true },
     treatCost: { hospital: 50000 },
@@ -169007,16 +169012,24 @@ function buyGood(goodId, qty) {
   // 扣钱
   state.resources.cash -= totalCost;
 
-  // 加入背包
+  // [全系统自洽修复] 域A A类#1: buyGood 补 avgBuyPrice（原缺失致零售购买利润计算永0）
+  // 加入背包（记录买入价用于后续利润计算）
+  const unitPrice = Math.round((totalCost / qty) * 100) / 100;
   const existing = state.inventory.items.find((i) => i.id === goodId);
   if (existing) {
+    // 加权平均买入价
+    const oldTotal = (existing.avgBuyPrice || unitPrice) * existing.qty;
+    const newTotal = unitPrice * qty;
     existing.qty += qty;
     existing.boughtAt = locKey;
     existing.boughtDay = state.player.day;
+    existing.avgBuyPrice =
+      Math.round(((oldTotal + newTotal) / existing.qty) * 100) / 100;
   } else {
     state.inventory.items.push({
       id: goodId,
       qty,
+      avgBuyPrice: unitPrice,
       boughtAt: locKey,
       boughtDay: state.player.day,
     });
@@ -169200,6 +169213,13 @@ function sellGood(goodId, qty) {
       state.flags._shoppingFestTotalProfit =
         (state.flags._shoppingFestTotalProfit || 0) + totalEarned;
     }
+  }
+
+  // 路线使用追踪（供路线饱和惩罚计算）
+  if (state.trade && existing && existing.boughtAt) {
+    state.trade._routeUsage = state.trade._routeUsage || {};
+    var _routeKey2 = existing.boughtAt + "→" + locKey + ":" + goodId;
+    state.trade._routeUsage[_routeKey2] = (state.trade._routeUsage[_routeKey2] || 0) + 1;
   }
 
   return true;
@@ -171210,6 +171230,11 @@ function tickHabits(state) {
     malnutritionCount: 0,
     insomniaCount: 0,
     overworkCount: 0,
+    // [全系统自洽修复] 域A 修复: 新增4个缺失计数器初始化，防止 undefined < threshold 导致疾病首日误触发
+    hypertensionCount: 0,
+    fattyLiverCount: 0,
+    kidneyDiseaseCount: 0,
+    heartDiseaseCount: 0,
     // 特殊习惯
     officeWorkDays: 0,
     hungerHighStreak: 0,
@@ -171362,6 +171387,10 @@ function _addIllness(state, illnessId) {
     kidney_disease: "kidneyDiseaseCount",
     heart_disease: "heartDiseaseCount",
     liver_cirrhosis: "liverCirrhosisCount",
+    kidney_disease: "kidneyDiseaseCount",
+    heart_disease: "heartDiseaseCount",
+    hypertension: "hypertensionCount",
+    fatty_liver: "fattyLiverCount",
   };
   if (evolutionCountMap[illnessId]) {
     var countKey = evolutionCountMap[illnessId];
@@ -171628,6 +171657,39 @@ function tickOfficeWorkDays(state) {
       state.flags._habits = state.flags._habits || {};
       state.flags._habits.officeWorkDays =
         (state.flags._habits.officeWorkDays || 0) + 1;
+    }
+  }
+}
+
+// [全系统自洽修复] 域A A类#5: 新增 tickManualLaborDays（原 manualLaborDays 计数器从未递增，
+//   致 herniated_disc 永远无法触发）。体力劳动日累计，非体力日衰减。
+function tickManualLaborDays(state) {
+  if (!state.flags) return;
+  state.flags._habits = state.flags._habits || {};
+  var isManualJob = false;
+  // 检查当前是否为体力劳动（街头工作且非办公室类）
+  if (state.corporate && state.corporate.company) {
+    var jobDef = typeof getJobById === "function" ? getJobById(state.corporate.jobId) : null;
+    // 建筑/工厂/钢结构等体力岗位
+    if (jobDef && jobDef.location && /construction|factoryZone|slum/.test(jobDef.location)) {
+      isManualJob = true;
+    }
+    if (jobDef && /manual_labor|premium_engineering|steel_worker|factory_work|factory_electrician/.test(jobDef.id)) {
+      isManualJob = true;
+    }
+  } else {
+    // 街头阶段：检查最近一次工作是否为体力活
+    var lastJobId = state.flags._lastStreetJobId;
+    if (lastJobId && /manual_labor|premium_engineering|steel_worker|factory_work|waste_recycling|old_zhou_recycling/.test(lastJobId)) {
+      isManualJob = true;
+    }
+  }
+  if (isManualJob) {
+    state.flags._habits.manualLaborDays = (state.flags._habits.manualLaborDays || 0) + 1;
+  } else {
+    // 非体力日缓慢衰减（避免换工作后仍长期患病）
+    if (state.flags._habits.manualLaborDays > 0) {
+      state.flags._habits.manualLaborDays = Math.max(0, (state.flags._habits.manualLaborDays || 0) - 2);
     }
   }
 }
@@ -177936,6 +177998,8 @@ const DAILY_PIPELINE = [
       if (typeof tickHabits === "function") tickHabits(state);
       // 办公室工作天数追踪（职业病）
       if (typeof tickOfficeWorkDays === "function") tickOfficeWorkDays(state);
+      // 体力劳动天数追踪（腰椎间盘突出等职业病）
+      if (typeof tickManualLaborDays === "function") tickManualLaborDays(state);
     },
   },
 
@@ -178143,6 +178207,15 @@ const DAILY_PIPELINE = [
     fn: function (state) {
       if (typeof checkMarketEvents === "function") checkMarketEvents(state);
       if (typeof decaySupplyDemand === "function") decaySupplyDemand(state);
+      // 路线使用衰减（每3天减1次使用记录，让旧路线恢复吸引力）
+      if (state.trade && state.trade._routeUsage && state.player && state.player.day % 3 === 0) {
+        for (var _rKey in state.trade._routeUsage) {
+          if (state.trade._routeUsage[_rKey] > 0) {
+            state.trade._routeUsage[_rKey]--;
+            if (state.trade._routeUsage[_rKey] <= 0) delete state.trade._routeUsage[_rKey];
+          }
+        }
+      }
       if (typeof tickDailyPriceShocks === "function")
         tickDailyPriceShocks(state);
     },
@@ -180965,10 +181038,14 @@ function getBestTradeRoutes(state) {
         // 综合成本：每跳 −2% 利润 + 疲劳消耗影响未来效率
         var transportCost = hops * 2.5;
         // 路线饱和惩罚（用得越多利润越低）
+        // [全系统自洽修复] 域A B类: 原 getRouteSaturationPenalty 从未定义→死代码。
+        //   改为内联实现：基于玩家近期同路线交易次数计算饱和惩罚。
         var saturationPenalty = 0;
-        if (typeof getRouteSaturationPenalty === "function") {
-          var sat = getRouteSaturationPenalty(fromKey, toKey, g.id);
-          saturationPenalty = Math.round((1 - sat) * 100);
+        if (state.trade && state.trade._routeUsage) {
+          var routeKey = fromKey + "→" + toKey + ":" + g.id;
+          var usage = state.trade._routeUsage[routeKey] || 0;
+          // 每用过一次 +5% 饱和惩罚，上限 30%
+          saturationPenalty = Math.min(30, usage * 5);
         }
         // 是否从当前位置出发（就近优先）
         var isNearby = fromKey === currentLoc;
@@ -236897,7 +236974,7 @@ function careerSocialAction(action, colleagueId) {
   var cap = ensureCareerCapital(state);
 
   if (action === "meal") {
-    if (state.resources.cash < 50) {
+    if ((state.resources.cash || 0) < 50) {
       StateManager.addMessage("⚠️ 现金不足¥50", "warning");
       return;
     }
@@ -236905,7 +236982,7 @@ function careerSocialAction(action, colleagueId) {
       StateManager.addMessage("⚠️ 行动力不足(需2)", "warning");
       return;
     }
-    state.resources.cash -= 50;
+    state.resources.cash = Math.max(0, (state.resources.cash || 0) - 50);
     p.actionPoints -= 2;
     var gain = Math.round(5 + c.relationship / 20);
     c.relationship = Math.min(100, (c.relationship || 0) + gain);
@@ -237000,7 +237077,7 @@ function careerWorkAction(type) {
     p.actionPoints -= 2;
     job.performance = Math.min(100, (job.performance || 50) + 5);
     var ot = Math.round((job.salary || 5000) / 30);
-    state.resources.cash += ot;
+    state.resources.cash = (state.resources.cash || 0) + (ot || 0);
     state.resources.totalEarned = (state.resources.totalEarned || 0) + ot;
     cap.burnout = (cap.burnout || 0) + 5;
     if (state.status)
@@ -237915,7 +237992,7 @@ function tickCareerJobDaily(state) {
     }
     // P1-5：证书→职业薪资加成
     var certBonus = _calcCertSalaryBonus(state, job.path, job.salary || 5000);
-    state.resources.cash += salary + certBonus;
+    state.resources.cash = (state.resources.cash || 0) + (salary || 0) + (certBonus || 0);
     state.resources.totalEarned += salary + certBonus;
     var salaryMsg =
       "💰 收到月薪 ¥" + salary.toLocaleString() + "（" + job.levelName + "）";
@@ -238034,7 +238111,7 @@ function tickCareerJobDaily(state) {
         dreamBonus = applyDreamIncomeBonus(state, bonus, "bonus");
       }
       var finalBonus = dreamBonus;
-      state.resources.cash += finalBonus;
+      state.resources.cash = (state.resources.cash || 0) + (finalBonus || 0);
       state.resources.totalEarned += finalBonus;
       var coeffLabel =
         coeff === 3
@@ -239664,7 +239741,7 @@ if (typeof document !== "undefined") {
           apply: function (st) {
             var job = (st.career && st.career.currentJob) || {};
             var pathName = job.pathName || "职业";
-            if ((st.resources && st.resources.cash) < 500) {
+            if ((st.resources && (st.resources.cash || 0)) < 500) {
               StateManager.addMessage(
                 "🏆 你已经达到了「" +
                   pathName +
@@ -239675,7 +239752,7 @@ if (typeof document !== "undefined") {
               return;
             }
             st.flags._careerMaxLevelCelebrated = true;
-            st.resources.cash -= 500;
+            st.resources.cash = Math.max(0, (st.resources.cash || 0) - 500);
             st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 20);
             st.player.mental = Math.min(100, (st.player.mental || 50) + 10);
             StateManager.addMessage(
@@ -246973,6 +247050,8 @@ function doStreetJob(job) {
   }
   state.flags._lastWorkDay = state.player.day;
   state.flags._workedToday = true; // 标记今日已工作，供 pipeline 检测
+  // [全系统自洽修复] 域A A类#5: 记录最近一次街头工作ID（供 tickManualLaborDays 判断体力劳动）
+  if (job && job.id) state.flags._lastStreetJobId = job.id;
 }
 
 /**

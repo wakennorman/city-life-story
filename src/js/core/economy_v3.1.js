@@ -35,6 +35,9 @@ const EconomySystem = (function () {
     hell: 1.6, // 地狱模式增 60%
   };
 
+  // [全系统自洽修复] 域A A类#3: 原算法用 remaining=totalAssets 直接减 bracket 宽度，
+  //   未扣除 bracket.min 偏移，导致跨档部分被重复征税（如¥200001征税¥60而非¥0）。
+  //   改为标准累进：每档仅对 (min, min(max, totalAssets)) 区间征税。
   function calculateProgressiveWealthTax(totalAssets, difficulty) {
     if (
       typeof totalAssets !== "number" ||
@@ -44,23 +47,24 @@ const EconomySystem = (function () {
       return 0;
     const mult = DIFFICULTY_TAX_MULTIPLIER[difficulty] || 1.0;
     let totalTax = 0;
-    let remaining = totalAssets;
 
     for (const tier of WEALTH_TAX_THRESHOLDS) {
-      if (remaining <= 0) break;
-      const taxable = Math.min(remaining, tier.max - tier.min);
+      if (totalAssets <= tier.min) break; // 资产未达该档起征点
+      const upper = Math.min(totalAssets, tier.max);
+      const taxable = upper - tier.min;
       if (taxable <= 0) continue;
       totalTax += taxable * tier.rate;
-      remaining -= taxable;
     }
 
     return Math.round(totalTax * mult);
   }
 
+  // [全系统自洽修复] 域A A类#2: 原逻辑返回首个命中档（最低档），高资产玩家永远显示入门税
+  //   改为逆序遍历，返回最高命中档
   function getActiveTaxTier(totalAssets) {
-    for (const tier of WEALTH_TAX_THRESHOLDS) {
-      if (totalAssets >= tier.min) {
-        return tier;
+    for (let i = WEALTH_TAX_THRESHOLDS.length - 1; i >= 0; i--) {
+      if (totalAssets >= WEALTH_TAX_THRESHOLDS[i].min) {
+        return WEALTH_TAX_THRESHOLDS[i];
       }
     }
     return null;

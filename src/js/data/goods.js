@@ -371,7 +371,7 @@ const GOODS = [
   {
     id: "vitamins_item",
     name: "维生素",
-    basePrice: 25,
+    basePrice: 20,
     unit: "瓶",
     category: "medicine",
     buyLocations: ["hospital", "commercialDist"],
@@ -393,7 +393,7 @@ const GOODS = [
   {
     id: "notebook_item",
     name: "笔记本",
-    basePrice: 5,
+    basePrice: 10,
     unit: "本",
     category: "stationery",
     buyLocations: ["school", "wholesaleMarket"],
