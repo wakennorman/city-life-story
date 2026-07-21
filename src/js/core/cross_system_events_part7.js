@@ -4142,7 +4142,7 @@
     conditions: function (st) {
       if (st.flags._10mMilestoneDone) return false;
       var total =
-        (st.player.cash || 0) +
+        (st.resources.cash || 0) +
         (st.bankBalance || 0) +
         (st.investment && st.investment.portfolio
           ? Object.values(st.investment.portfolio).reduce(function (s, h) {
@@ -4291,7 +4291,7 @@
         apply: function (st) {
           st.flags._ngHeritageGiftDone = true;
           var bonus = 200 + Math.floor((((st.player.day || 1) * 17) % 7) * 100);
-          st.player.cash = (st.player.cash || 0) + bonus;
+          st.resources.cash = (st.resources.cash || 0) + bonus;
           st.player.morality = Math.min(100, (st.player.morality || 50) + 5);
           StateManager.addMessage(
             "🎁 你收下了红包，里面有¥" +
@@ -5724,8 +5724,8 @@
           st.flags._winterColdGrindSeen = true;
           st.flags._winterWorkerBadge = true;
           st.needs.energy = Math.max(0, (st.needs.energy || 50) - 10);
-          var bonus = Math.floor((st.player.cash || 0) * 0.0 + 50);
-          st.player.cash = (st.player.cash || 0) + bonus;
+          var bonus = Math.floor((st.resources.cash || 0) * 0.0 + 50);
+          st.resources.cash = (st.resources.cash || 0) + bonus;
           st.player.physique = Math.min(100, (st.player.physique || 0) + 2);
           StateManager.addMessage(
             "❄️ 你咬着牙把今天的活干完了。手指一整天都没暖过来，但账上多了¥" +
@@ -5740,8 +5740,8 @@
         hint: "花¥15·卫生+10·心情+10·恢复状态",
         apply: function (st) {
           st.flags._winterColdGrindSeen = true;
-          if ((st.player.cash || 0) >= 15) {
-            st.player.cash -= 15;
+          if ((st.resources.cash || 0) >= 15) {
+            st.resources.cash -= 15;
             st.needs.hygiene = Math.min(100, (st.needs.hygiene || 50) + 10);
             st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 10);
             StateManager.addMessage(

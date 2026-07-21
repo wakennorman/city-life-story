@@ -54,8 +54,8 @@
             st.flags._yearEndReflectionDone = false;
           }, 0);
           var cost = 30;
-          if ((st.player.cash || 0) >= cost) {
-            st.player.cash -= cost;
+          if ((st.resources.cash || 0) >= cost) {
+            st.resources.cash -= cost;
             st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 20);
             st.player.fame = Math.min(100, (st.player.fame || 0) + 2);
             StateManager.addMessage(

@@ -3887,6 +3887,14 @@ body {
     font-size: 12px !important;
     touch-action: manipulation;
   }
+  .city-map .map-node .map-node-badges,
+  .map-node .map-node-badges {
+    display: none !important;
+  }
+  .city-map .map-node .map-node-action,
+  .map-node .map-node-action {
+    display: none !important;
+  }
 
   .modal-overlay {
     align-items: center;
@@ -4731,6 +4739,14 @@ body {
     padding: 6px 7px !important;
     font-size: 11px !important;
   }
+  .city-map .map-node .map-node-badges,
+  .map-node .map-node-badges {
+    display: none !important;
+  }
+  .city-map .map-node .map-node-action,
+  .map-node .map-node-action {
+    display: none !important;
+  }
 
   /* ====== 弹窗 & 百科 ====== */
   .modal-box h2 {
@@ -5138,6 +5154,28 @@ body {
   }
 
   /* ====== 移动端地图区域紧凑 ====== */
+  .city-map {
+    min-height: 200px !important;
+    padding: 6px !important;
+    min-width: 480px !important;  /* 确保地图容器可横向滚动 */
+  }
+  .city-map > div {
+    min-height: 200px !important;
+  }
+  .city-map .map-node,
+  .map-node {
+    min-width: 56px !important;
+    padding: 3px 5px !important;
+    font-size: 10px !important;
+  }
+  .city-map .map-node .map-node-badges,
+  .map-node .map-node-badges {
+    display: none !important;  /* 服务标签在服务条已显示，地图节点上隐藏避免杂乱 */
+  }
+  .city-map .map-node .map-node-action,
+  .map-node .map-node-action {
+    display: none !important;  /* "👆 点击前往" 提示在移动端太占空间，隐藏 */
+  }
   .map-location-list {
     gap: 4px;
   }

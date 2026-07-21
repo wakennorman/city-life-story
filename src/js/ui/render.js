@@ -2810,9 +2810,9 @@ function renderMapTab(state, parent) {
         ${isCurrent ? "📍 " : ""}${mapLoc.name}
       </div>
       <div style="font-size:9px;color:var(--text-muted);margin-bottom:3px;">${mapLoc.type === "commercial" ? "🛒商业" : mapLoc.type === "industrial" ? "🏭工业" : mapLoc.type === "residential" ? "🏘️居住" : mapLoc.type === "service" ? "🏥服务" : mapLoc.type === "education" ? "📚教育" : mapLoc.type === "corporate" ? "🏢职场" : mapLoc.type === "recreation" ? "🌳休闲" : mapLoc.type === "institutional" ? "🏫机构" : ""}</div>
-      <div style="display:flex;flex-wrap:wrap;gap:2px;justify-content:center;">${badgeStr}</div>
-      ${canTravel ? '<div style="font-size:9px;color:var(--accent);margin-top:4px;">👆 点击前往</div>' : ""}
-      ${!isReachable && !isCurrent ? '<div style="font-size:9px;color:var(--text-muted);margin-top:2px;">🔒 未探索</div>' : ""}
+      <div style="display:flex;flex-wrap:wrap;gap:2px;justify-content:center;" class="map-node-badges">${badgeStr}</div>
+      ${canTravel ? '<div class="map-node-action" style="font-size:9px;color:var(--accent);margin-top:4px;">👆 点击前往</div>' : ""}
+      ${!isReachable && !isCurrent ? '<div class="map-node-action" style="font-size:9px;color:var(--text-muted);margin-top:2px;">🔒 未探索</div>' : ""}
     `;
 
     if (canTravel) {
@@ -2933,6 +2933,34 @@ function renderTradeTab(state, parent) {
         ? GOODS
         : [];
 
+  // 已访问区域数量提示（供 skillTag 使用）
+  var visitedLocs =
+    typeof getRememberedLocations === "function"
+      ? getRememberedLocations(state)
+      : [];
+  var salesLvl =
+    state.skills && state.skills.sales ? state.skills.sales.level : 0;
+  var canCompare =
+    typeof canSeePriceMarkers === "function"
+      ? canSeePriceMarkers(state)
+      : false;
+
+  // 技能等级标签
+  var skillTag = "";
+  if (salesLvl < 20) {
+    skillTag =
+      '<span style="font-size:11px;color:var(--text-muted);margin-left:8px;">🔍 销售' +
+      salesLvl +
+      "级 — 仅看本地价格</span>";
+  } else {
+    skillTag =
+      '<span style="font-size:11px;color:var(--text-muted);margin-left:8px;">🔍 销售' +
+      salesLvl +
+      "级 — 可对比" +
+      visitedLocs.length +
+      "个区域</span>";
+  }
+
   // 标题区
   const headerDiv = document.createElement("div");
   headerDiv.style.cssText =
@@ -2945,34 +2973,46 @@ function renderTradeTab(state, parent) {
       ${skillTag}
     </div>
     <div style="text-align:right;">
-      <span style="font-size:11px;color:var(--text-muted);">现金: <strong style="color:var(--success)">¥${(state.resources.cash || 0).toLocaleString()}</strong></span>
-      ${(function () {
+      <span style="font-size:11px;color:var(--text-muted);">现金: <strong style="color:var(--success)">¥${(state.resources && state.resources.cash ? state.resources.cash : 0).toLocaleString()}</strong></span>
+      ${(function() {
         var activeEvents = 0;
         if (state.trade && state.trade.marketEvents) {
           for (var _ei = 0; _ei < state.trade.marketEvents.length; _ei++) {
             if (state.trade.marketEvents[_ei].remaining > 0) activeEvents++;
           }
         }
-        return activeEvents > 0
-          ? '<div style="font-size:10px;color:#e8a838;margin-top:2px;">📊 ' +
-              activeEvents +
-              "个市场活动</div>"
-          : "";
-      })()}
-        + (function() {
-          if (activeEvents <= 0) return "";
-          var detail = "";
+        var html = "";
+        if (activeEvents > 0) {
+          html += '<div style="font-size:10px;color:#e8a838;margin-top:2px;">📊 ' + activeEvents + '个市场活动</div>';
           for (var ei = 0; ei < state.trade.marketEvents.length; ei++) {
             var me = state.trade.marketEvents[ei];
             if (me.remaining > 0) {
-              detail += "<div style=\"font-size:9px;color:var(--text-muted);margin-top:1px;\">" + me.desc + " (剩" + me.remaining + "天)</div>";
+              html += '<div style="font-size:9px;color:var(--text-muted);margin-top:1px;">' + me.desc + ' (剩' + me.remaining + '天)</div>';
             }
           }
-          return detail;
-        })()
+        }
+        return html;
+      })()}
     </div>
   `;
   parent.appendChild(headerDiv);
+
+  // [全系统自洽修复] 域A 联动增强#2: 财富税档位UI展示（EconomySystem.getActiveTaxTier 数据此前无UI出口）
+  if (typeof EconomySystem !== "undefined" && EconomySystem && state.resources) {
+    var _nwTax = (state.resources.cash || 0) + (state.resources.bankBalance || 0);
+    var _tier = EconomySystem.getActiveTaxTier(_nwTax);
+    if (_tier) {
+      var _taxBar = document.createElement("div");
+      _taxBar.style.cssText =
+        "display:flex;align-items:center;justify-content:space-between;" +
+        "background:rgba(232,168,56,0.06);border:1px solid rgba(232,168,56,0.15);border-radius:6px;" +
+        "padding:5px 10px;margin-bottom:10px;font-size:11px;color:var(--text-secondary);";
+      _taxBar.innerHTML =
+        '<span>💼 财富税档：<strong style="color:#e8a838;">' + _tier.label + '</strong></span>' +
+        '<span style="color:var(--text-muted);">日税率 ' + ((_tier.rate || 0) * 100).toFixed(3) + '% · 起征 ¥' + (_tier.min || 0).toLocaleString() + '</span>';
+      parent.appendChild(_taxBar);
+    }
+  }
 
   // 节日价格提示横幅
   if (typeof getFestivalPriceNote === "function") {
@@ -3076,34 +3116,6 @@ function renderTradeTab(state, parent) {
   // 重置每日交易XP计数器
   if (typeof resetDailyTradeXp === "function") {
     resetDailyTradeXp(state);
-  }
-
-  // 已访问区域数量提示
-  var visitedLocs =
-    typeof getRememberedLocations === "function"
-      ? getRememberedLocations(state)
-      : [];
-  var salesLvl =
-    state.skills && state.skills.sales ? state.skills.sales.level : 0;
-  var canCompare =
-    typeof canSeePriceMarkers === "function"
-      ? canSeePriceMarkers(state)
-      : false;
-
-  // 技能等级标签
-  var skillTag = "";
-  if (salesLvl < 20) {
-    skillTag =
-      '<span style="font-size:11px;color:var(--text-muted);margin-left:8px;">🔍 销售' +
-      salesLvl +
-      "级 — 仅看本地价格</span>";
-  } else {
-    skillTag =
-      '<span style="font-size:11px;color:var(--text-muted);margin-left:8px;">🔍 销售' +
-      salesLvl +
-      "级 — 可对比" +
-      visitedLocs.length +
-      "个区域</span>";
   }
 
   // 模糊记忆提示条

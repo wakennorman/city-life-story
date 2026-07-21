@@ -45,7 +45,7 @@
           hint: "妈妈手术顺利进行，道德+10",
           apply: function (st) {
             st.flags._motherSickSeen = true;
-            var cost = Math.min(12000, st.resources.cash);
+            var cost = Math.min(12000, st.resources.cash || 0);
             st.resources.cash -= cost;
             if (!st.family.parents.mother) st.family.parents.mother = {};
             st.family.parents.mother.health = "healthy";

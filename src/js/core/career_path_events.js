@@ -1561,7 +1561,7 @@
           text: "📦 临时外包，找兼职帮忙",
           hint: "花钱解决问题",
           apply: function (st) {
-            st.resources.cash = Math.max(0, st.resources.cash - 1200);
+            st.resources.cash = Math.max(0, (st.resources.cash || 0) - 1200);
             _msg(
               "🛵 花¥1200找了10个临时工，两天清完，投诉量回落。成本控制不算完美但解决了问题。",
               "info",

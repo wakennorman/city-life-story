@@ -2872,7 +2872,7 @@
         hint: "现金- 安稳+",
         apply: function (st) {
           var hike = Math.round((st.resources.cash || 0) * 0.06); // 涨租差价
-          st.resources.cash = Math.max(0, st.resources.cash - hike);
+          st.resources.cash = Math.max(0, (st.resources.cash || 0) - hike);
           StateManager.addMessage(
             "你补齐了涨租的差价，总算没流落街头。",
             "info",

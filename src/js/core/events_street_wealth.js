@@ -86,7 +86,7 @@
             st.flags._honestyCompound = true;
             st.flags._hasBusinessLicense = true;
             var cost = 50;
-            st.resources.cash = Math.max(0, st.resources.cash - cost);
+            st.resources.cash = Math.max(0, (st.resources.cash || 0) - cost);
             st.player.fame = Math.min(100, st.player.fame + 10);
             StateManager.addMessage(
               "📋 花了¥" +

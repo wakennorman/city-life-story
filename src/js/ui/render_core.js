@@ -129,7 +129,7 @@ function renderHeader(state) {
   const phaseLabel = p.phase === "corporate" ? "🏢 职场" : "🏘️ 街头";
 
   // [全系统自洽修复] 域F A类修复: 防止 NaN/undefined 显示在顶栏
-  document.getElementById("header-day").textContent = isFinite(p.day) ? p.day : 1;
+  document.getElementById("header-day").textContent = "第" + (isFinite(p.day) ? p.day : 1) + "天";
   document.getElementById("header-age").textContent = isFinite(p.age) ? p.age : 20;
   var phaseEl = document.getElementById("header-phase");
   if (phaseEl) phaseEl.textContent = phaseLabel;

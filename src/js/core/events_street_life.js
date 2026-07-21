@@ -1331,7 +1331,7 @@
           hint: "稳健",
           apply: function (st) {
             st.flags._stockBoomSeen = true;
-            var invest = Math.min(Math.floor(st.resources.cash / 2), 5000);
+            var invest = Math.min(Math.floor((st.resources.cash || 0) / 2), 5000);
             st.resources.cash -= invest;
             st.flags._stockBoomHalfInvested = invest;
             st.flags._stockBoomDay = st.player.day;

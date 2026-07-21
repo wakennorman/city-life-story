@@ -6862,7 +6862,7 @@ function registerNewsEventsToPool() {
             st.player.fame = Math.min(100, st.player.fame + 5);
             if (Random.chance(0.15)) {
               const fine = Random.int(300, 499);
-              st.resources.cash = Math.max(0, st.resources.cash - fine);
+              st.resources.cash = Math.max(0, (st.resources.cash || 0) - fine);
               StateManager.addMessage(
                 "🧓 你扶起了老人，对方家属却说你撞倒了他，赔了 ¥" +
                   fine +
@@ -8685,7 +8685,7 @@ function registerNewsEventsToPool() {
           hint: "归还钱包里的钱",
           apply: function (st) {
             var repaid = Random.int(100, 179);
-            st.resources.cash = Math.max(0, st.resources.cash - repaid);
+            st.resources.cash = Math.max(0, (st.resources.cash || 0) - repaid);
             st.needs.happiness = Math.min(100, st.needs.happiness + 15);
             st.player.fame = Math.min(100, st.player.fame + 8);
             st.flags._keptWallet = false;
@@ -9522,7 +9522,7 @@ function registerNewsEventsToPool() {
             st.flags._honestyCompound = true;
             st.flags._hasBusinessLicense = true;
             var cost = 50;
-            st.resources.cash = Math.max(0, st.resources.cash - cost);
+            st.resources.cash = Math.max(0, (st.resources.cash || 0) - cost);
             st.player.fame = Math.min(100, st.player.fame + 10);
             StateManager.addMessage(
               "📋 花了¥" +
@@ -14358,7 +14358,7 @@ function registerNewsEventsToPool() {
           hint: "稳健",
           apply: function (st) {
             st.flags._stockBoomSeen = true;
-            var invest = Math.min(Math.floor(st.resources.cash / 2), 5000);
+            var invest = Math.min(Math.floor((st.resources.cash || 0) / 2), 5000);
             st.resources.cash -= invest;
             st.flags._stockBoomHalfInvested = invest;
             st.flags._stockBoomDay = st.player.day;
@@ -18655,7 +18655,7 @@ function registerNewsEventsToPool() {
             st.flags._insiderInvestigationSeen = true;
             st.flags._insiderConfessed = true;
             var fine = Math.round((st.flags._insiderProfit || 160000) * 0.6);
-            st.resources.cash = Math.max(0, st.resources.cash - fine);
+            st.resources.cash = Math.max(0, (st.resources.cash || 0) - fine);
             st.flags._insiderRecord = true;
             st.player.fame = Math.max(0, (st.player.fame || 0) - 15);
             StateManager.addMessage(
@@ -18681,7 +18681,7 @@ function registerNewsEventsToPool() {
             } else {
               st.flags._insiderCaught = true;
               var fine2 = Math.round((st.flags._insiderProfit || 160000) * 1.2);
-              st.resources.cash = Math.max(0, st.resources.cash - fine2);
+              st.resources.cash = Math.max(0, (st.resources.cash || 0) - fine2);
               StateManager.addMessage(
                 "🤥 证据确凿，处罚加重！罚款¥" +
                   fine2.toLocaleString() +
@@ -45776,7 +45776,7 @@ if (typeof window !== "undefined") {
         hint: "现金- 安稳+",
         apply: function (st) {
           var hike = Math.round((st.resources.cash || 0) * 0.06); // 涨租差价
-          st.resources.cash = Math.max(0, st.resources.cash - hike);
+          st.resources.cash = Math.max(0, (st.resources.cash || 0) - hike);
           StateManager.addMessage(
             "你补齐了涨租的差价，总算没流落街头。",
             "info",
@@ -76049,7 +76049,7 @@ if (typeof window !== "undefined") {
     conditions: function (st) {
       if (st.flags._10mMilestoneDone) return false;
       var total =
-        (st.player.cash || 0) +
+        (st.resources.cash || 0) +
         (st.bankBalance || 0) +
         (st.investment && st.investment.portfolio
           ? Object.values(st.investment.portfolio).reduce(function (s, h) {
@@ -76198,7 +76198,7 @@ if (typeof window !== "undefined") {
         apply: function (st) {
           st.flags._ngHeritageGiftDone = true;
           var bonus = 200 + Math.floor((((st.player.day || 1) * 17) % 7) * 100);
-          st.player.cash = (st.player.cash || 0) + bonus;
+          st.resources.cash = (st.resources.cash || 0) + bonus;
           st.player.morality = Math.min(100, (st.player.morality || 50) + 5);
           StateManager.addMessage(
             "🎁 你收下了红包，里面有¥" +
@@ -77631,8 +77631,8 @@ if (typeof window !== "undefined") {
           st.flags._winterColdGrindSeen = true;
           st.flags._winterWorkerBadge = true;
           st.needs.energy = Math.max(0, (st.needs.energy || 50) - 10);
-          var bonus = Math.floor((st.player.cash || 0) * 0.0 + 50);
-          st.player.cash = (st.player.cash || 0) + bonus;
+          var bonus = Math.floor((st.resources.cash || 0) * 0.0 + 50);
+          st.resources.cash = (st.resources.cash || 0) + bonus;
           st.player.physique = Math.min(100, (st.player.physique || 0) + 2);
           StateManager.addMessage(
             "❄️ 你咬着牙把今天的活干完了。手指一整天都没暖过来，但账上多了¥" +
@@ -77647,8 +77647,8 @@ if (typeof window !== "undefined") {
         hint: "花¥15·卫生+10·心情+10·恢复状态",
         apply: function (st) {
           st.flags._winterColdGrindSeen = true;
-          if ((st.player.cash || 0) >= 15) {
-            st.player.cash -= 15;
+          if ((st.resources.cash || 0) >= 15) {
+            st.resources.cash -= 15;
             st.needs.hygiene = Math.min(100, (st.needs.hygiene || 50) + 10);
             st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 10);
             StateManager.addMessage(
@@ -77739,8 +77739,8 @@ if (typeof window !== "undefined") {
             st.flags._yearEndReflectionDone = false;
           }, 0);
           var cost = 30;
-          if ((st.player.cash || 0) >= cost) {
-            st.player.cash -= cost;
+          if ((st.resources.cash || 0) >= cost) {
+            st.resources.cash -= cost;
             st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 20);
             st.player.fame = Math.min(100, (st.player.fame || 0) + 2);
             StateManager.addMessage(
@@ -85202,7 +85202,7 @@ if (typeof window !== "undefined") {
           text: "📦 临时外包，找兼职帮忙",
           hint: "花钱解决问题",
           apply: function (st) {
-            st.resources.cash = Math.max(0, st.resources.cash - 1200);
+            st.resources.cash = Math.max(0, (st.resources.cash || 0) - 1200);
             _msg(
               "🛵 花¥1200找了10个临时工，两天清完，投诉量回落。成本控制不算完美但解决了问题。",
               "info",
@@ -86842,7 +86842,7 @@ if (typeof window !== "undefined") {
           hint: "妈妈手术顺利进行，道德+10",
           apply: function (st) {
             st.flags._motherSickSeen = true;
-            var cost = Math.min(12000, st.resources.cash);
+            var cost = Math.min(12000, st.resources.cash || 0);
             st.resources.cash -= cost;
             if (!st.family.parents.mother) st.family.parents.mother = {};
             st.family.parents.mother.health = "healthy";
@@ -90862,6 +90862,52 @@ if (typeof window !== "undefined") {
       },
     ],
     probability: 0.04,
+  });
+
+  // ===== B→A：供需失衡事件 — 事件系统反馈到市场数据 =====
+  // 设计意图：当玩家在某地大量买入/卖出导致供需失衡时，触发叙事事件解释价格变动
+  // 联动: data_linkage_events.js + pricing.js (supplyDemand)
+  RANDOM_EVENTS.push({
+    id: "data_supply_demand_tip",
+    title: "市场的「看不见的手」",
+    desc: "你频繁的买卖让商贩们开始警觉——他们悄悄调整了价格。这就是供需法则：买的人多了就涨，卖的人多了就跌。",
+    phase: "street",
+    triggers: { minDay: 15 },
+    conditions: function (st) {
+      if (!st || !st.trade || !st.trade.supplyDemand) return false;
+      if (st.flags && st.flags._dataSupplyDemandTipDone) return false;
+      // 检查是否有任何地点存在极端供需（|supplyDemand| >= 15）
+      var sd = st.trade.supplyDemand;
+      for (var locKey in sd) {
+        if (!Object.prototype.hasOwnProperty.call(sd, locKey)) continue;
+        var loc = sd[locKey];
+        for (var goodId in loc) {
+          if (!Object.prototype.hasOwnProperty.call(loc, goodId)) continue;
+          if (Math.abs(loc[goodId]) >= 15) return true;
+        }
+      }
+      return false;
+    },
+    choices: [
+      {
+        text: "留意供需变化，调整策略",
+        hint: "心智+2·理解市场规律",
+        apply: function (st) {
+          if (st.flags) st.flags._dataSupplyDemandTipDone = true;
+          if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 2);
+          if (typeof StateManager !== "undefined" && StateManager.addMessage)
+            StateManager.addMessage("📊 你开始理解供需法则——价格不是凭空变动的。", "good");
+        },
+      },
+      {
+        text: "继续按自己的节奏做买卖",
+        hint: "习以为常",
+        apply: function (st) {
+          if (st.flags) st.flags._dataSupplyDemandTipDone = true;
+        },
+      },
+    ],
+    probability: 0.05,
   });
 })();
 
@@ -99418,6 +99464,239 @@ if (typeof window !== "undefined") {
     ],
   };
 }
+
+;
+// ==== js/core/domain_a_linkage_r76.js ====
+/*
+ * 城市浮生记 — 域A（数据/数值平衡）联动增强 · R76
+ * 全系统优化 loop R76 · 联动增强 3项
+ *
+ * 设计约束（与既有 linkage 文件一致）：
+ *  - IIFE 注入全局 RANDOM_EVENTS，避免改 cross_system_events.js。
+ *  - 所有 state 访问均 || 防御；数值标 [PLACEHOLDER]。
+ *  - 里程碑类事件用 st.flags._xxxDone 去重。
+ */
+(function () {
+  if (typeof RANDOM_EVENTS === "undefined" || !RANDOM_EVENTS) return;
+  if (RANDOM_EVENTS._domainALinkageR76) return;
+  RANDOM_EVENTS._domainALinkageR76 = true;
+
+  // ---- 本地助手 ----
+
+  // 安全改好感
+  function safeAffinityR76(st, npcId, change, reason) {
+    if (!st || !npcId) return;
+    if (typeof applyAffinityChange === "function") {
+      applyAffinityChange(st, npcId, change, reason || "域A R76联动");
+      return;
+    }
+    if (!st.relationships) st.relationships = {};
+    if (!st.relationships[npcId])
+      st.relationships[npcId] = { met: true, affinity: 0 };
+    st.relationships[npcId].affinity =
+      (st.relationships[npcId].affinity || 0) + change;
+    st.relationships[npcId].met = true;
+  }
+
+  // 净资产
+  function netWorthR76(st) {
+    if (!st || !st.resources) return 0;
+    var nw = (st.resources.cash || 0) + (st.resources.bankBalance || 0);
+    if (typeof getInvestmentAssetSnapshot === "function") {
+      try {
+        var snap = getInvestmentAssetSnapshot(st);
+        if (snap && snap.investmentValue) nw += snap.investmentValue;
+      } catch (e) { /* 忽略 */ }
+    }
+    return nw;
+  }
+
+  // 当前活跃财富税档
+  function activeTaxTierR76(st) {
+    if (typeof EconomySystem === "undefined" || !EconomySystem) return null;
+    try {
+      return EconomySystem.getActiveTaxTier(netWorthR76(st));
+    } catch (e) {
+      return null;
+    }
+  }
+
+  // ---- 联动事件 ----
+
+  var A_EVENTS = [
+    // ===== 联动1: A→B 财富税档位首达叙事 =====
+    // 设计意图：累进财富税档位（入门/中产/精英/富豪）首次命中时触发叙事，
+    //   让玩家感知到"钱越多税越重"的经济平衡机制，损失厌恶驱动资产多元化。
+    {
+      id: "wealth_tax_tier_milestone",
+      title: "税务通知",
+      desc: "你收到一条税务提醒短信。随着资产增长，你已进入新的纳税档次。",
+      phase: "street",
+      triggers: { minDay: 30 },
+      conditions: function (st) {
+        if (!st || !st.player || !st.flags) return false;
+        if (typeof EconomySystem === "undefined" || !EconomySystem) return false;
+        var nw = netWorthR76(st);
+        var tier = EconomySystem.getActiveTaxTier(nw);
+        if (!tier) return false;
+        // 每档仅触发一次
+        var flagKey = "_taxTierDone_" + tier.label;
+        if (st.flags[flagKey]) return false;
+        // 至少进入中产税以上（入门税不触发叙事，避免早期信息轰炸）
+        return nw >= 500000;
+      },
+      choices: [
+        {
+          text: "老老实实交税，守法公民",
+          apply: function (st) {
+            var tier = activeTaxTierR76(st);
+            if (tier && st.flags) st.flags["_taxTierDone_" + tier.label] = true;
+            if (st.player) st.player.morality = Math.min(100, (st.player.morality || 50) + 2);
+            if (typeof StateManager !== "undefined" && StateManager.addMessage)
+              StateManager.addMessage("依法纳税，心里踏实。道德+2。", "good");
+          },
+        },
+        {
+          text: "研究一下合理避税渠道",
+          apply: function (st) {
+            var tier = activeTaxTierR76(st);
+            if (tier && st.flags) st.flags["_taxTierDone_" + tier.label] = true;
+            if (st.player) {
+              st.player.intelligence = Math.min(100, (st.player.intelligence || 50) + 1);
+              st.player.morality = Math.max(0, (st.player.morality || 50) - 1);
+            }
+            // 标记：后续投资事件可消费此 flag 解锁"税务筹划"选项
+            if (st.flags) st.flags._taxAvoidanceMindset = true;
+            if (typeof StateManager !== "undefined" && StateManager.addMessage)
+              StateManager.addMessage("你开始关注税务筹划。智力+1，道德-1。", "hint");
+          },
+        },
+      ],
+      probability: 0.05,
+    },
+
+    // ===== 联动2: A→D 高资产NPC税负话题 =====
+    // 设计意图：当玩家资产达到精英税档时，已结识的高好感NPC主动聊起税负话题，
+    //   让经济数据（财富税）与社交系统产生交叉引用，体现"富有之后的烦恼"。
+    {
+      id: "npc_tax_burden_chat",
+      title: "饭局上的税负话题",
+      desc: "老友在饭桌上聊起最近的税务变化，看了你一眼：'你现在这个体量，得注意税务筹划啊。'",
+      phase: "street",
+      triggers: { minDay: 90 },
+      conditions: function (st) {
+        if (!st || !st.player || !st.relationships || !st.flags) return false;
+        if (st.flags._npcTaxBurdenChatDone) return false;
+        if (typeof EconomySystem === "undefined" || !EconomySystem) return false;
+        var nw = netWorthR76(st);
+        // 精英税档以上（¥200万+）
+        if (nw < 2000000) return false;
+        // 至少1个已结识且好感≥40的NPC
+        var hasClose = false;
+        for (var id in st.relationships) {
+          if (!Object.prototype.hasOwnProperty.call(st.relationships, id)) continue;
+          var r = st.relationships[id];
+          if (r && r.met && (r.affinity || 0) >= 40) { hasClose = true; break; }
+        }
+        return hasClose;
+      },
+      choices: [
+        {
+          text: "点头称是，分享自己的税务心得",
+          apply: function (st) {
+            if (st.flags) st.flags._npcTaxBurdenChatDone = true;
+            // 随机选一个高好感NPC好感+3
+            if (st.relationships) {
+              var best = null, bestAff = 0;
+              for (var id in st.relationships) {
+                if (!Object.prototype.hasOwnProperty.call(st.relationships, id)) continue;
+                var r = st.relationships[id];
+                if (r && r.met && (r.affinity || 0) >= 40 && (r.affinity || 0) > bestAff) {
+                  best = id; bestAff = r.affinity || 0;
+                }
+              }
+              if (best) safeAffinityR76(st, best, 3, "税负话题共鸣");
+            }
+            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 2);
+            if (typeof StateManager !== "undefined" && StateManager.addMessage)
+              StateManager.addMessage("与老友交流税务心得，心情舒畅。心智+2。", "good");
+          },
+        },
+        {
+          text: "淡然一笑，转移话题",
+          apply: function (st) {
+            if (st.flags) st.flags._npcTaxBurdenChatDone = true;
+            if (typeof StateManager !== "undefined" && StateManager.addMessage)
+              StateManager.addMessage("你不喜欢在饭桌上谈钱。", "hint");
+          },
+        },
+      ],
+      probability: 0.03,
+    },
+
+    // ===== 联动3: A→G 贷款信用等级叙事 =====
+    // 设计意图：economy_v3.1.js 的 getDynamicLoanRate 基于总资产阶梯定价，
+    //   但玩家从未被告知自己的"信用等级"。此事件将隐藏的贷款率转化为叙事感知，
+    //   让经济系统的隐性数据可见化，损失厌恶驱动玩家维护资产规模。
+    {
+      id: "loan_credit_tier_reveal",
+      title: "银行客户经理的电话",
+      desc: "银行打来电话：'基于您的资产状况，我们已经将您升级为VIP客户，享受优惠贷款利率。'",
+      phase: "street",
+      triggers: { minDay: 45 },
+      conditions: function (st) {
+        if (!st || !st.player || !st.resources || !st.flags) return false;
+        if (st.flags._loanCreditTierRevealDone) return false;
+        if (typeof EconomySystem === "undefined" || !EconomySystem) return false;
+        var nw = (st.resources.cash || 0) + (st.resources.bankBalance || 0);
+        // 总资产≥¥10万（进入第二档利率）
+        return nw >= 100000;
+      },
+      choices: [
+        {
+          text: "接受VIP身份，了解一下贷款优惠",
+          apply: function (st) {
+            if (st.flags) st.flags._loanCreditTierRevealDone = true;
+            if (st.player) {
+              st.player.intelligence = Math.min(100, (st.player.intelligence || 50) + 1);
+              st.player.mental = Math.min(100, (st.player.mental || 50) + 2);
+            }
+            // 标记：后续可解锁低息贷款选项
+            if (st.flags) st.flags._bankVipUnlocked = true;
+            if (typeof StateManager !== "undefined" && StateManager.addMessage) {
+              var rate = EconomySystem.getDynamicLoanRate(
+                (st.resources.cash || 0) + (st.resources.bankBalance || 0)
+              );
+              StateManager.addMessage(
+                "银行VIP客户已解锁！当前日利率 " + (rate * 100).toFixed(2) + "%。智力+1，心智+2。",
+                "good"
+              );
+            }
+          },
+        },
+        {
+          text: "婉拒，不想欠银行人情",
+          apply: function (st) {
+            if (st.flags) st.flags._loanCreditTierRevealDone = true;
+            if (st.player) st.player.morality = Math.min(100, (st.player.morality || 50) + 1);
+            if (typeof StateManager !== "undefined" && StateManager.addMessage)
+              StateManager.addMessage("你婉拒了银行的VIP邀请。不欠人情，心里轻松。道德+1。", "hint");
+          },
+        },
+      ],
+      probability: 0.04,
+    },
+  ];
+
+  // 注册到 RANDOM_EVENTS
+  for (var i = 0; i < A_EVENTS.length; i++) {
+    var evt = A_EVENTS[i];
+    // 防御性兜底：确保必要字段存在
+    if (!evt.choices || !evt.choices.length) continue;
+    if (!evt.conditions) evt.conditions = function () { return false; };
+    RANDOM_EVENTS.push(evt);
+  }
+})();
 
 ;
 // ==== js/data/era_events.js ====
@@ -211837,7 +212116,7 @@ function renderHeader(state) {
   const phaseLabel = p.phase === "corporate" ? "🏢 职场" : "🏘️ 街头";
 
   // [全系统自洽修复] 域F A类修复: 防止 NaN/undefined 显示在顶栏
-  document.getElementById("header-day").textContent = isFinite(p.day) ? p.day : 1;
+  document.getElementById("header-day").textContent = "第" + (isFinite(p.day) ? p.day : 1) + "天";
   document.getElementById("header-age").textContent = isFinite(p.age) ? p.age : 20;
   var phaseEl = document.getElementById("header-phase");
   if (phaseEl) phaseEl.textContent = phaseLabel;
@@ -216628,9 +216907,9 @@ function renderMapTab(state, parent) {
         ${isCurrent ? "📍 " : ""}${mapLoc.name}
       </div>
       <div style="font-size:9px;color:var(--text-muted);margin-bottom:3px;">${mapLoc.type === "commercial" ? "🛒商业" : mapLoc.type === "industrial" ? "🏭工业" : mapLoc.type === "residential" ? "🏘️居住" : mapLoc.type === "service" ? "🏥服务" : mapLoc.type === "education" ? "📚教育" : mapLoc.type === "corporate" ? "🏢职场" : mapLoc.type === "recreation" ? "🌳休闲" : mapLoc.type === "institutional" ? "🏫机构" : ""}</div>
-      <div style="display:flex;flex-wrap:wrap;gap:2px;justify-content:center;">${badgeStr}</div>
-      ${canTravel ? '<div style="font-size:9px;color:var(--accent);margin-top:4px;">👆 点击前往</div>' : ""}
-      ${!isReachable && !isCurrent ? '<div style="font-size:9px;color:var(--text-muted);margin-top:2px;">🔒 未探索</div>' : ""}
+      <div style="display:flex;flex-wrap:wrap;gap:2px;justify-content:center;" class="map-node-badges">${badgeStr}</div>
+      ${canTravel ? '<div class="map-node-action" style="font-size:9px;color:var(--accent);margin-top:4px;">👆 点击前往</div>' : ""}
+      ${!isReachable && !isCurrent ? '<div class="map-node-action" style="font-size:9px;color:var(--text-muted);margin-top:2px;">🔒 未探索</div>' : ""}
     `;
 
     if (canTravel) {
@@ -216751,6 +217030,34 @@ function renderTradeTab(state, parent) {
         ? GOODS
         : [];
 
+  // 已访问区域数量提示（供 skillTag 使用）
+  var visitedLocs =
+    typeof getRememberedLocations === "function"
+      ? getRememberedLocations(state)
+      : [];
+  var salesLvl =
+    state.skills && state.skills.sales ? state.skills.sales.level : 0;
+  var canCompare =
+    typeof canSeePriceMarkers === "function"
+      ? canSeePriceMarkers(state)
+      : false;
+
+  // 技能等级标签
+  var skillTag = "";
+  if (salesLvl < 20) {
+    skillTag =
+      '<span style="font-size:11px;color:var(--text-muted);margin-left:8px;">🔍 销售' +
+      salesLvl +
+      "级 — 仅看本地价格</span>";
+  } else {
+    skillTag =
+      '<span style="font-size:11px;color:var(--text-muted);margin-left:8px;">🔍 销售' +
+      salesLvl +
+      "级 — 可对比" +
+      visitedLocs.length +
+      "个区域</span>";
+  }
+
   // 标题区
   const headerDiv = document.createElement("div");
   headerDiv.style.cssText =
@@ -216763,34 +217070,46 @@ function renderTradeTab(state, parent) {
       ${skillTag}
     </div>
     <div style="text-align:right;">
-      <span style="font-size:11px;color:var(--text-muted);">现金: <strong style="color:var(--success)">¥${(state.resources.cash || 0).toLocaleString()}</strong></span>
-      ${(function () {
+      <span style="font-size:11px;color:var(--text-muted);">现金: <strong style="color:var(--success)">¥${(state.resources && state.resources.cash ? state.resources.cash : 0).toLocaleString()}</strong></span>
+      ${(function() {
         var activeEvents = 0;
         if (state.trade && state.trade.marketEvents) {
           for (var _ei = 0; _ei < state.trade.marketEvents.length; _ei++) {
             if (state.trade.marketEvents[_ei].remaining > 0) activeEvents++;
           }
         }
-        return activeEvents > 0
-          ? '<div style="font-size:10px;color:#e8a838;margin-top:2px;">📊 ' +
-              activeEvents +
-              "个市场活动</div>"
-          : "";
-      })()}
-        + (function() {
-          if (activeEvents <= 0) return "";
-          var detail = "";
+        var html = "";
+        if (activeEvents > 0) {
+          html += '<div style="font-size:10px;color:#e8a838;margin-top:2px;">📊 ' + activeEvents + '个市场活动</div>';
           for (var ei = 0; ei < state.trade.marketEvents.length; ei++) {
             var me = state.trade.marketEvents[ei];
             if (me.remaining > 0) {
-              detail += "<div style=\"font-size:9px;color:var(--text-muted);margin-top:1px;\">" + me.desc + " (剩" + me.remaining + "天)</div>";
+              html += '<div style="font-size:9px;color:var(--text-muted);margin-top:1px;">' + me.desc + ' (剩' + me.remaining + '天)</div>';
             }
           }
-          return detail;
-        })()
+        }
+        return html;
+      })()}
     </div>
   `;
   parent.appendChild(headerDiv);
+
+  // [全系统自洽修复] 域A 联动增强#2: 财富税档位UI展示（EconomySystem.getActiveTaxTier 数据此前无UI出口）
+  if (typeof EconomySystem !== "undefined" && EconomySystem && state.resources) {
+    var _nwTax = (state.resources.cash || 0) + (state.resources.bankBalance || 0);
+    var _tier = EconomySystem.getActiveTaxTier(_nwTax);
+    if (_tier) {
+      var _taxBar = document.createElement("div");
+      _taxBar.style.cssText =
+        "display:flex;align-items:center;justify-content:space-between;" +
+        "background:rgba(232,168,56,0.06);border:1px solid rgba(232,168,56,0.15);border-radius:6px;" +
+        "padding:5px 10px;margin-bottom:10px;font-size:11px;color:var(--text-secondary);";
+      _taxBar.innerHTML =
+        '<span>💼 财富税档：<strong style="color:#e8a838;">' + _tier.label + '</strong></span>' +
+        '<span style="color:var(--text-muted);">日税率 ' + ((_tier.rate || 0) * 100).toFixed(3) + '% · 起征 ¥' + (_tier.min || 0).toLocaleString() + '</span>';
+      parent.appendChild(_taxBar);
+    }
+  }
 
   // 节日价格提示横幅
   if (typeof getFestivalPriceNote === "function") {
@@ -216894,34 +217213,6 @@ function renderTradeTab(state, parent) {
   // 重置每日交易XP计数器
   if (typeof resetDailyTradeXp === "function") {
     resetDailyTradeXp(state);
-  }
-
-  // 已访问区域数量提示
-  var visitedLocs =
-    typeof getRememberedLocations === "function"
-      ? getRememberedLocations(state)
-      : [];
-  var salesLvl =
-    state.skills && state.skills.sales ? state.skills.sales.level : 0;
-  var canCompare =
-    typeof canSeePriceMarkers === "function"
-      ? canSeePriceMarkers(state)
-      : false;
-
-  // 技能等级标签
-  var skillTag = "";
-  if (salesLvl < 20) {
-    skillTag =
-      '<span style="font-size:11px;color:var(--text-muted);margin-left:8px;">🔍 销售' +
-      salesLvl +
-      "级 — 仅看本地价格</span>";
-  } else {
-    skillTag =
-      '<span style="font-size:11px;color:var(--text-muted);margin-left:8px;">🔍 销售' +
-      salesLvl +
-      "级 — 可对比" +
-      visitedLocs.length +
-      "个区域</span>";
   }
 
   // 模糊记忆提示条

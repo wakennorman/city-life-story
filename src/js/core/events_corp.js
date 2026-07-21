@@ -2353,7 +2353,7 @@
             st.flags._insiderInvestigationSeen = true;
             st.flags._insiderConfessed = true;
             var fine = Math.round((st.flags._insiderProfit || 160000) * 0.6);
-            st.resources.cash = Math.max(0, st.resources.cash - fine);
+            st.resources.cash = Math.max(0, (st.resources.cash || 0) - fine);
             st.flags._insiderRecord = true;
             st.player.fame = Math.max(0, (st.player.fame || 0) - 15);
             StateManager.addMessage(
@@ -2379,7 +2379,7 @@
             } else {
               st.flags._insiderCaught = true;
               var fine2 = Math.round((st.flags._insiderProfit || 160000) * 1.2);
-              st.resources.cash = Math.max(0, st.resources.cash - fine2);
+              st.resources.cash = Math.max(0, (st.resources.cash || 0) - fine2);
               StateManager.addMessage(
                 "🤥 证据确凿，处罚加重！罚款¥" +
                   fine2.toLocaleString() +

@@ -584,4 +584,50 @@
     ],
     probability: 0.04,
   });
+
+  // ===== B→A：供需失衡事件 — 事件系统反馈到市场数据 =====
+  // 设计意图：当玩家在某地大量买入/卖出导致供需失衡时，触发叙事事件解释价格变动
+  // 联动: data_linkage_events.js + pricing.js (supplyDemand)
+  RANDOM_EVENTS.push({
+    id: "data_supply_demand_tip",
+    title: "市场的「看不见的手」",
+    desc: "你频繁的买卖让商贩们开始警觉——他们悄悄调整了价格。这就是供需法则：买的人多了就涨，卖的人多了就跌。",
+    phase: "street",
+    triggers: { minDay: 15 },
+    conditions: function (st) {
+      if (!st || !st.trade || !st.trade.supplyDemand) return false;
+      if (st.flags && st.flags._dataSupplyDemandTipDone) return false;
+      // 检查是否有任何地点存在极端供需（|supplyDemand| >= 15）
+      var sd = st.trade.supplyDemand;
+      for (var locKey in sd) {
+        if (!Object.prototype.hasOwnProperty.call(sd, locKey)) continue;
+        var loc = sd[locKey];
+        for (var goodId in loc) {
+          if (!Object.prototype.hasOwnProperty.call(loc, goodId)) continue;
+          if (Math.abs(loc[goodId]) >= 15) return true;
+        }
+      }
+      return false;
+    },
+    choices: [
+      {
+        text: "留意供需变化，调整策略",
+        hint: "心智+2·理解市场规律",
+        apply: function (st) {
+          if (st.flags) st.flags._dataSupplyDemandTipDone = true;
+          if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 2);
+          if (typeof StateManager !== "undefined" && StateManager.addMessage)
+            StateManager.addMessage("📊 你开始理解供需法则——价格不是凭空变动的。", "good");
+        },
+      },
+      {
+        text: "继续按自己的节奏做买卖",
+        hint: "习以为常",
+        apply: function (st) {
+          if (st.flags) st.flags._dataSupplyDemandTipDone = true;
+        },
+      },
+    ],
+    probability: 0.05,
+  });
 })();

@@ -1274,7 +1274,7 @@
             st.player.fame = Math.min(100, st.player.fame + 5);
             if (Random.chance(0.15)) {
               const fine = Random.int(300, 499);
-              st.resources.cash = Math.max(0, st.resources.cash - fine);
+              st.resources.cash = Math.max(0, (st.resources.cash || 0) - fine);
               StateManager.addMessage(
                 "🧓 你扶起了老人，对方家属却说你撞倒了他，赔了 ¥" +
                   fine +
@@ -3097,7 +3097,7 @@
           hint: "归还钱包里的钱",
           apply: function (st) {
             var repaid = Random.int(100, 179);
-            st.resources.cash = Math.max(0, st.resources.cash - repaid);
+            st.resources.cash = Math.max(0, (st.resources.cash || 0) - repaid);
             st.needs.happiness = Math.min(100, st.needs.happiness + 15);
             st.player.fame = Math.min(100, st.player.fame + 8);
             st.flags._keptWallet = false;
