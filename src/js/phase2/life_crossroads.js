@@ -16,17 +16,8 @@
   function clamp(v, lo, hi) {
     return Math.max(lo, Math.min(hi, v));
   }
-  var R =
-    typeof Random !== "undefined" && Random
-      ? Random
-      : {
-          int: function (a, b) {
-            return Math.floor(Math.random() * (b - a + 1)) + a;
-          },
-          chance: function (p) {
-            return Math.random() < p;
-          },
-        };
+  // [全系统自洽修复] 域H A类: Random 始终已定义(random.js 先于 phase2 加载), 删除 Math.random 死代码兜底
+  var R = Random;
 
   function msg(state, text) {
     if (typeof StateManager !== "undefined")

@@ -198528,7 +198528,8 @@ function getAcquisitionOffer(state) {
     "对我们的用户增长数据印象深刻",
     "想补充他们在该领域的布局",
   ];
-  const acquirerComment = 评语[Random.fromArray(评语)];
+  // [全系统自洽修复] 域H A类: Random.fromArray 返回元素本身, 不应再用作数组索引(否则恒为 undefined)
+  const acquirerComment = Random.fromArray(评语);
 
   return {
     acquirerCid: acquirerCid,
@@ -204838,17 +204839,8 @@ function manageInventoryAction(state, inventoryType, action, amount) {
   function clamp(v, lo, hi) {
     return Math.max(lo, Math.min(hi, v));
   }
-  var R =
-    typeof Random !== "undefined" && Random
-      ? Random
-      : {
-          int: function (a, b) {
-            return Math.floor(Math.random() * (b - a + 1)) + a;
-          },
-          chance: function (p) {
-            return Math.random() < p;
-          },
-        };
+  // [全系统自洽修复] 域H A类: Random 始终已定义(random.js 先于 phase2 加载), 删除 Math.random 死代码兜底
+  var R = Random;
 
   function msg(state, text) {
     if (typeof StateManager !== "undefined")
@@ -214993,6 +214985,63 @@ function renderActiveNews(state, parent) {
       "%）";
     parent.appendChild(intelBanner);
   }
+
+  // [全系统自洽修复] 域F R69 联动增强1: 极温天气预警（G→F 天气系统可视化）
+  (function () {
+    var weather = state.weather || {};
+    var current = weather.current || "sunny";
+    var temperature = weather.temperature;
+    var tempWarning = null;
+    if (isFinite(temperature)) {
+      if (temperature > 38) tempWarning = "🔥 极高温！注意防暑降温，多喝水，避免长时间户外暴晒";
+      else if (temperature > 35) tempWarning = "⚠️ 高温预警！户外活动可能消耗额外体力";
+      else if (temperature < -10) tempWarning = "❄️ 极寒天气！注意保暖，外出增加衣物消耗";
+      else if (temperature < 0) tempWarning = "🌨️ 寒冷天气！注意防滑保暖";
+    }
+    // 极端天气视觉提示
+    var severeWeathers = ["storm", "heavy_rain", "heavy_smog", "foggy", "sandstorm"];
+    if (severeWeathers.indexOf(current) >= 0) {
+      var severeMsgs = {
+        storm: "⛈️ 暴风雨！减少外出，注意财产安全",
+        heavy_rain: "🌧️ 大雨！路面湿滑，交通时间延长",
+        heavy_smog: "🌫️ 重度雾霾！建议戴口罩，减少户外运动",
+        foggy: "🌫️ 大雾！能见度低，出行注意安全",
+        sandstorm: "🌪️ 沙尘暴！紧闭门窗，避免外出",
+      };
+      if (severeMsgs[current]) tempWarning = severeMsgs[current];
+    }
+    if (tempWarning) {
+      var warnDiv = document.createElement("div");
+      warnDiv.className = "weather-warning-banner";
+      warnDiv.style.cssText = "font-size:11px;padding:4px 8px;margin:2px 0;background:rgba(196,85,61,0.08);border-left:3px solid var(--danger);border-radius:4px;color:var(--danger);";
+      warnDiv.textContent = tempWarning;
+      parent.appendChild(warnDiv);
+    }
+  })();
+
+  // [全系统自洽修复] 域F R69 联动增强2: 情绪状态每日目标引导（G→F 情绪系统可视化）
+  (function () {
+    var status = state.status || {};
+    var emo = status.emotionalState;
+    if (!emo) return;
+    var emotionHints = {
+      depressed: "💭 情绪低落——试试去公园散步或与朋友聊天，心情恢复后工作效率更高",
+      sad: "😔 心情一般——做件让自己开心的小事吧，心情好才能事半功倍",
+      anxious: "😰 焦虑不安——深呼吸，去寺庙静心或做次按摩，心静自然凉",
+      calm: "😌 平静如水——很好的状态，适合处理复杂事务",
+      happy: "😊 心情愉悦——趁现在多做一些需要创造力的事",
+      elated: "🌟 兴奋不已——巅峰状态！抓住机会做件大事",
+      stressed: "😫 压力山大——别硬扛，休息一天比硬撑效率高",
+    };
+    var hint = emotionHints[emo];
+    if (hint) {
+      var emoDiv = document.createElement("div");
+      emoDiv.className = "emotion-hint-banner";
+      emoDiv.style.cssText = "font-size:11px;padding:4px 8px;margin:2px 0;background:rgba(90,138,180,0.08);border-left:3px solid var(--info);border-radius:4px;color:var(--info);";
+      emoDiv.textContent = hint;
+      parent.appendChild(emoDiv);
+    }
+  })();
 }
 
 // ====== Actions Tab ======

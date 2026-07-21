@@ -6321,7 +6321,8 @@ function getAcquisitionOffer(state) {
     "对我们的用户增长数据印象深刻",
     "想补充他们在该领域的布局",
   ];
-  const acquirerComment = 评语[Random.fromArray(评语)];
+  // [全系统自洽修复] 域H A类: Random.fromArray 返回元素本身, 不应再用作数组索引(否则恒为 undefined)
+  const acquirerComment = Random.fromArray(评语);
 
   return {
     acquirerCid: acquirerCid,
