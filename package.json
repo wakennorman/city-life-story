@@ -20,7 +20,7 @@
     "check:balance": "node scripts/check-balance.mjs",
     "lint": "eslint \"src/js/**/*.js\"",
     "lint:fix": "eslint \"src/js/**/*.js\" --fix",
-    "test:unit": "node tests/finance.test.cjs && node tests/finance.canonical.test.cjs && node tests/difficulty.canonical.test.cjs && node tests/skillBonuses.canonical.test.cjs && node tests/naming.canonical.test.cjs && node tests/branchBonuses.canonical.test.cjs && node tests/fatigueReduction.canonical.test.cjs && node tests/workModifier.canonical.test.cjs && node tests/statusInteractions.canonical.test.cjs && node tests/emotionMeta.canonical.test.cjs && node tests/reputation.canonical.test.cjs && node tests/illnessNeedsImpact.canonical.test.cjs && node tests/needsDecay.canonical.test.cjs"
+    "test:unit": "node tests/finance.test.cjs && node tests/finance.canonical.test.cjs && node tests/difficulty.canonical.test.cjs && node tests/skillBonuses.canonical.test.cjs && node tests/naming.canonical.test.cjs && node tests/branchBonuses.canonical.test.cjs && node tests/fatigueReduction.canonical.test.cjs && node tests/workModifier.canonical.test.cjs && node tests/statusInteractions.canonical.test.cjs && node tests/emotionMeta.canonical.test.cjs && node tests/reputation.canonical.test.cjs && node tests/illnessNeedsImpact.canonical.test.cjs && node tests/needsDecay.canonical.test.cjs && node tests/investmentAssetLookup.canonical.test.cjs"
   },
   "devDependencies": {
     "esbuild": "^0.28.1",

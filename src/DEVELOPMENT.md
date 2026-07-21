@@ -1,6 +1,6 @@
 # 城市浮生记 (City Life Story) — 开发文档
 
-> 最后更新: 2026-07-21（阶段3批次12：每日需求衰减纯计算核心 getNeedsDecayMultiplier/computeNeedsDecay 迁 src/app/core/needs/needsDecay.ts TS 规范源（从 applyNeedsDecay 提取，含 NaN/Infinity 守卫 + [0.1,5.0] 钳制，1:1 复刻）；新增 TS↔vanilla 双向比对单测 351/351；src/js 端零改动、加载序不变）
+> 最后更新: 2026-07-21（阶段3批次13：投资标的配置查表 getInvestmentAssetDef/getInvestmentAssetGroup/getInvestmentGroupLabel 迁 src/app/core/investment/assetLookup.ts TS 规范源；INV_STOCKS 配置以注入参数传入（避免标的配置双源，同 illnessDebuffs 模式）；新增 TS↔vanilla 双向比对单测 134/134（覆盖 60 真实标的）；src/js 端零改动、加载序不变）
 > 历史流水账已归档到 `docs/changelog/`，本文件仅保留活文档。
 
 ---
