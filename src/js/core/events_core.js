@@ -513,7 +513,8 @@ function showEventModal(evt) {
     return;
   }
 
-  // [全系统自洽修复] 域B 联动增强: B→G 情绪状态影响事件选择 — 情绪低落时"消极"选项标记
+  var choicesArr = evt.choices;
+// [全系统自洽修复] 域B 联动增强: B→G 情绪状态影响事件选择 — 情绪低落时"消极"选项标记
   if (typeof choicesArr === "object" && choicesArr.length > 0) {
     var _stateForEmo = StateManager.getState();
     var _emoState = _stateForEmo.status && _stateForEmo.status.emotionalState;
@@ -538,7 +539,8 @@ function showEventModal(evt) {
     }
   }
 
-  // 支持 choices 为函数（动态生成，如政策套利兑现事件）
+  
+// 支持 choices 为函数（动态生成，如政策套利兑现事件）
   var choicesArr = evt.choices;
   if (typeof choicesArr === "function") {
     choicesArr = choicesArr(StateManager.getState());

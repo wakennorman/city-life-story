@@ -210,7 +210,8 @@ function endQuarter() {
       { "S+": 3, S: 2, A: 1.5, B: 1, C: 0 }[grade.grade] || 0;
     const bonus = Math.round(rankData.baseSalary * bonusMultiplier);
     if (bonus > 0) {
-      state.resources.cash += bonus;
+      // [自洽修复] 域H A类#5: 防 cash 裸访问
+      state.resources.cash = (state.resources.cash || 0) + bonus;
       addDailyTransaction(
         state,
         "income",

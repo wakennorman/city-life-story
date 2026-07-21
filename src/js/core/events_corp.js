@@ -1990,16 +1990,19 @@
               100,
               st.player.corporate.dignity + 3,
             );
-            if (st.resources.cash >= 200) {
-              st.resources.cash -= 200;
+            // [自洽修复] 域H A类#7: 防 cash 裸访问+操作无效果
+            if ((st.resources.cash || 0) >= 200) {
+              st.resources.cash = (st.resources.cash || 0) - 200;
+              if (typeof scheduleChainEvent === "function") {
+                scheduleChainEvent(st, "workplace_headhunter", 5, "corporate");
+              }
+              StateManager.addMessage(
+                "🚪 你开始更新简历，悄悄面试。花¥200做了个职业咨询。",
+                "info",
+              );
+            } else {
+              StateManager.addMessage("⚠️ 现金不足 ¥200，无法做职业咨询。", "warning");
             }
-            if (typeof scheduleChainEvent === "function") {
-              scheduleChainEvent(st, "workplace_headhunter", 5, "corporate");
-            }
-            StateManager.addMessage(
-              "🚪 你开始更新简历，悄悄面试。花¥200做了个职业咨询。",
-              "info",
-            );
           },
         },
       ],
@@ -2120,6 +2123,11 @@
             if (st.corporate) {
               st.corporate.team = [];
               st.corporate.jobOffer = null;
+              // [自洽修复] 域H A类#9: 跳槽时重置职场进度，防止旧公司状态泄漏到新公司
+              st.corporate.perfHistory = [];
+              st.corporate.corpQuarter = 1;
+              st.corporate.actionsUsed = 0;
+              st.corporate.consecutiveC = 0;
             }
           },
         },
@@ -2190,6 +2198,11 @@
             st.player.corporate.risk = 15;
             if (st.corporate) {
               st.corporate.team = [];
+              // [自洽修复] 域H A类#9: 跳槽时重置职场进度
+              st.corporate.perfHistory = [];
+              st.corporate.corpQuarter = 1;
+              st.corporate.actionsUsed = 0;
+              st.corporate.consecutiveC = 0;
             }
             StateManager.addMessage(
               "🚀 你接受了猎头offer！高薪新起点，但一切从零开始。",
@@ -2260,7 +2273,8 @@
                 avgPrice: 5000,
               });
             }
-            st.resources.cash -= 500000;
+            // [自洽修复] 域H A类#4: 防 NaN 污染 cash
+            st.resources.cash = Math.max(0, (st.resources.cash || 0) - 500000);
             StateManager.addMessage(
               "📈 你下单买了50万自己公司股票（100股）。手在抖——你知道这是违法的。",
               "warning",
@@ -2302,7 +2316,7 @@
             st.flags._insiderCashoutSeen = true;
             st.flags._insiderQuickSell = true;
             var profit = Random.int(150000, 169999);
-            st.resources.cash += profit;
+            st.resources.cash = (st.resources.cash || 0) + profit;
             st.flags._insiderProfit = profit;
             StateManager.addMessage(
               "💸 你卖出了！净赚¥" +
@@ -2320,7 +2334,7 @@
             st.flags._insiderCashoutSeen = true;
             st.flags._insiderSlowSell = true;
             var profit = Random.int(80000, 119999);
-            st.resources.cash += profit;
+            st.resources.cash = (st.resources.cash || 0) + profit;
             st.flags._insiderProfit = profit;
             StateManager.addMessage(
               "⏳ 分批卖出赚了¥" + profit.toLocaleString() + "。应该不扎眼……",

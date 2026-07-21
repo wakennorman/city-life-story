@@ -37,11 +37,11 @@ function hireTeamMember(memberTypeId) {
 
   state.resources.cash -= cost;
 
-  // 创建成员（加入随机性）
+  // 创建成员（加入随机性，[自洽修复] 域H A类#1: clamp loyalty/productivity 防负值）
   const member = {
     ...template,
-    productivity: template.productivity + Random.int(-2, 1),
-    loyalty: template.loyalty + Random.int(-5, 4),
+    productivity: Math.max(0, template.productivity + Random.int(-2, 1)),
+    loyalty: Math.max(0, Math.min(100, template.loyalty + Random.int(-5, 4))),
     hiredDay: state.player.day,
   };
 
@@ -95,12 +95,13 @@ function getTeamProductivity(state) {
   }
   if (state.corporate.team.length === 0) return 1.0;
 
+  // [自洽修复] 域H A类#15: 用 Math.max(0, ...) 替代 Math.max(1, ...)，负 loyalty 贡献 0 而非 1
   const totalProductivity = state.corporate.team.reduce(
-    (s, m) => s + Math.max(1, (typeof m.productivity === "number" && isFinite(m.productivity)) ? m.productivity : 1),
+    (s, m) => s + Math.max(0, (typeof m.productivity === "number" && isFinite(m.productivity)) ? m.productivity : 0),
     0,
   );
   const avgLoyalty =
-    state.corporate.team.reduce((s, m) => s + Math.max(1, (typeof m.loyalty === "number" && isFinite(m.loyalty)) ? m.loyalty : 1), 0) /
+    state.corporate.team.reduce((s, m) => s + Math.max(0, (typeof m.loyalty === "number" && isFinite(m.loyalty)) ? m.loyalty : 0), 0) /
     state.corporate.team.length;
   const sizeBonus = Math.min(1.5, 1 + state.corporate.team.length * 0.05);
 

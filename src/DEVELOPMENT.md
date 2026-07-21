@@ -1,6 +1,7 @@
 # 城市浮生记 (City Life Story) — 开发文档
 
-> 最后更新: 2026-07-22（阶段3批次15：地点旅行 AP 消耗纯函数 getTravelApCost 迁 src/app/core/travel/apCost.ts TS 规范源（独立模块，避免改动批次14已入库的 travel.ts）；TRAVEL_GRAPH/LOCATIONS 以注入参数传入，getTravelApReduction(驾驶技能减免)/getWeatherTravelApMod(天气倍率) 为可选注入依赖（默认 undefined，与 vanilla 单文件 vm 加载时 typeof 守卫跳过严格一致）；新增 TS↔vanilla 双向比对单测 13248/13248（27×27 对+7 异常对 × 18 状态形状，覆盖基础/富区互通/贫富跨区/驾驶减免/老周三轮车/天气倍率/保底5AP 全分支）；src/js 端零改动、加载序不变）
+> 最后更新: 2026-07-22（阶段3批次16：技能连携纯函数 checkSkillSynergies / getSkillSynergyBonus 迁 src/app/core/skills/synergy.ts TS 规范源（数据表 SKILL_SYNERGY_DUAL/TRIPLE/THEME 提至 synergyData.ts 规范源）；双连携激活时写入 state.flags['_synergy_'+id]=true 副作用与 vanilla 一致，data/jobs.js 以 requiredFlag 依赖该标记解锁连携工作；新增 TS↔vanilla 双向比对单测 40025/40025（数据表3保真 + 静态16 + 2500 随机种子×16 断言，覆盖 dual/triple/theme 全分支 + flags 副作用 + getSkillSynergyBonus 工作特定 incomeMultiplier）；src/js 端零改动、加载序不变）
+> 前置批次15：地点旅行 AP 消耗纯函数 getTravelApCost 迁 src/app/core/travel/apCost.ts（独立模块规避 travel.ts 回滚），TRAVEL_GRAPH/LOCATIONS 注入参数传入，13248/13248 等价单测。
 > 历史流水账已归档到 `docs/changelog/`，本文件仅保留活文档。
 
 ---

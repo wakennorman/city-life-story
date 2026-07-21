@@ -6281,8 +6281,9 @@ function processIPOResult(state, approved) {
       "success",
     );
 
-    // 玩家获得现金回报
-    state.resources.cash += startup.flags.exitValue;
+    // 玩家获得现金回报（[自洽修复] 域H A类#2: 防 NaN 污染 cash）
+    const ipoPayout = isFinite(startup.flags.exitValue) ? startup.flags.exitValue : 0;
+    state.resources.cash = (state.resources.cash || 0) + ipoPayout;
   } else {
     StateManager.addMessage("❌ IPO审核未通过，公司需要继续经营", "danger");
     startup.status = "growth";
@@ -6526,8 +6527,9 @@ function acceptAcquisition(state, offer) {
   startup.history.exitType = "acquired";
   startup.history.exitValue = offer.playerShareValue;
 
-  // 玩家获得现金
-  state.resources.cash += offer.playerShareValue;
+  // 玩家获得现金（[自洽修复] 域H A类#3: 防 NaN 污染 cash）
+  const acquisitionPayout = isFinite(offer.playerShareValue) ? offer.playerShareValue : 0;
+  state.resources.cash = (state.resources.cash || 0) + acquisitionPayout;
 
   // 在企业命运系统中标记
   if (state.enterpriseFate && state.enterpriseFate.companies) {
@@ -6576,12 +6578,12 @@ function bankrupt(state) {
   startup.history.exitType = "bankrupt";
   startup.history.exitValue = 0;
 
-  // 资产清算
-  const assetRecovery = Math.round(company.cashReserve * 0.3); // 只能收回30%
+  // 资产清算（[自洽修复] 域H A类#6: 负 recovery 会双倍扣钱+防裸访问）
+  const assetRecovery = Math.max(0, Math.round((company.cashReserve || 0) * 0.3)); // 只能收回30%
   company.cashReserve = assetRecovery;
 
   // 玩家获得剩余现金（如果有）
-  state.resources.cash += assetRecovery;
+  state.resources.cash = (state.resources.cash || 0) + assetRecovery;
 
   // 声誉损失
   state.status.health = Math.max(0, state.status.health - 10);

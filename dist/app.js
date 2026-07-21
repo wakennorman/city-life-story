@@ -4819,7 +4819,8 @@ function showEventModal(evt) {
     return;
   }
 
-  // [全系统自洽修复] 域B 联动增强: B→G 情绪状态影响事件选择 — 情绪低落时"消极"选项标记
+  var choicesArr = evt.choices;
+// [全系统自洽修复] 域B 联动增强: B→G 情绪状态影响事件选择 — 情绪低落时"消极"选项标记
   if (typeof choicesArr === "object" && choicesArr.length > 0) {
     var _stateForEmo = StateManager.getState();
     var _emoState = _stateForEmo.status && _stateForEmo.status.emotionalState;
@@ -4844,7 +4845,8 @@ function showEventModal(evt) {
     }
   }
 
-  // 支持 choices 为函数（动态生成，如政策套利兑现事件）
+  
+// 支持 choices 为函数（动态生成，如政策套利兑现事件）
   var choicesArr = evt.choices;
   if (typeof choicesArr === "function") {
     choicesArr = choicesArr(StateManager.getState());
@@ -18292,16 +18294,19 @@ function registerNewsEventsToPool() {
               100,
               st.player.corporate.dignity + 3,
             );
-            if (st.resources.cash >= 200) {
-              st.resources.cash -= 200;
+            // [自洽修复] 域H A类#7: 防 cash 裸访问+操作无效果
+            if ((st.resources.cash || 0) >= 200) {
+              st.resources.cash = (st.resources.cash || 0) - 200;
+              if (typeof scheduleChainEvent === "function") {
+                scheduleChainEvent(st, "workplace_headhunter", 5, "corporate");
+              }
+              StateManager.addMessage(
+                "🚪 你开始更新简历，悄悄面试。花¥200做了个职业咨询。",
+                "info",
+              );
+            } else {
+              StateManager.addMessage("⚠️ 现金不足 ¥200，无法做职业咨询。", "warning");
             }
-            if (typeof scheduleChainEvent === "function") {
-              scheduleChainEvent(st, "workplace_headhunter", 5, "corporate");
-            }
-            StateManager.addMessage(
-              "🚪 你开始更新简历，悄悄面试。花¥200做了个职业咨询。",
-              "info",
-            );
           },
         },
       ],
@@ -18422,6 +18427,11 @@ function registerNewsEventsToPool() {
             if (st.corporate) {
               st.corporate.team = [];
               st.corporate.jobOffer = null;
+              // [自洽修复] 域H A类#9: 跳槽时重置职场进度，防止旧公司状态泄漏到新公司
+              st.corporate.perfHistory = [];
+              st.corporate.corpQuarter = 1;
+              st.corporate.actionsUsed = 0;
+              st.corporate.consecutiveC = 0;
             }
           },
         },
@@ -18492,6 +18502,11 @@ function registerNewsEventsToPool() {
             st.player.corporate.risk = 15;
             if (st.corporate) {
               st.corporate.team = [];
+              // [自洽修复] 域H A类#9: 跳槽时重置职场进度
+              st.corporate.perfHistory = [];
+              st.corporate.corpQuarter = 1;
+              st.corporate.actionsUsed = 0;
+              st.corporate.consecutiveC = 0;
             }
             StateManager.addMessage(
               "🚀 你接受了猎头offer！高薪新起点，但一切从零开始。",
@@ -18562,7 +18577,8 @@ function registerNewsEventsToPool() {
                 avgPrice: 5000,
               });
             }
-            st.resources.cash -= 500000;
+            // [自洽修复] 域H A类#4: 防 NaN 污染 cash
+            st.resources.cash = Math.max(0, (st.resources.cash || 0) - 500000);
             StateManager.addMessage(
               "📈 你下单买了50万自己公司股票（100股）。手在抖——你知道这是违法的。",
               "warning",
@@ -18604,7 +18620,7 @@ function registerNewsEventsToPool() {
             st.flags._insiderCashoutSeen = true;
             st.flags._insiderQuickSell = true;
             var profit = Random.int(150000, 169999);
-            st.resources.cash += profit;
+            st.resources.cash = (st.resources.cash || 0) + profit;
             st.flags._insiderProfit = profit;
             StateManager.addMessage(
               "💸 你卖出了！净赚¥" +
@@ -18622,7 +18638,7 @@ function registerNewsEventsToPool() {
             st.flags._insiderCashoutSeen = true;
             st.flags._insiderSlowSell = true;
             var profit = Random.int(80000, 119999);
-            st.resources.cash += profit;
+            st.resources.cash = (st.resources.cash || 0) + profit;
             st.flags._insiderProfit = profit;
             StateManager.addMessage(
               "⏳ 分批卖出赚了¥" + profit.toLocaleString() + "。应该不扎眼……",
@@ -184577,11 +184593,11 @@ function hireTeamMember(memberTypeId) {
 
   state.resources.cash -= cost;
 
-  // 创建成员（加入随机性）
+  // 创建成员（加入随机性，[自洽修复] 域H A类#1: clamp loyalty/productivity 防负值）
   const member = {
     ...template,
-    productivity: template.productivity + Random.int(-2, 1),
-    loyalty: template.loyalty + Random.int(-5, 4),
+    productivity: Math.max(0, template.productivity + Random.int(-2, 1)),
+    loyalty: Math.max(0, Math.min(100, template.loyalty + Random.int(-5, 4))),
     hiredDay: state.player.day,
   };
 
@@ -184635,12 +184651,13 @@ function getTeamProductivity(state) {
   }
   if (state.corporate.team.length === 0) return 1.0;
 
+  // [自洽修复] 域H A类#15: 用 Math.max(0, ...) 替代 Math.max(1, ...)，负 loyalty 贡献 0 而非 1
   const totalProductivity = state.corporate.team.reduce(
-    (s, m) => s + Math.max(1, (typeof m.productivity === "number" && isFinite(m.productivity)) ? m.productivity : 1),
+    (s, m) => s + Math.max(0, (typeof m.productivity === "number" && isFinite(m.productivity)) ? m.productivity : 0),
     0,
   );
   const avgLoyalty =
-    state.corporate.team.reduce((s, m) => s + Math.max(1, (typeof m.loyalty === "number" && isFinite(m.loyalty)) ? m.loyalty : 1), 0) /
+    state.corporate.team.reduce((s, m) => s + Math.max(0, (typeof m.loyalty === "number" && isFinite(m.loyalty)) ? m.loyalty : 0), 0) /
     state.corporate.team.length;
   const sizeBonus = Math.min(1.5, 1 + state.corporate.team.length * 0.05);
 
@@ -185533,7 +185550,8 @@ function endQuarter() {
       { "S+": 3, S: 2, A: 1.5, B: 1, C: 0 }[grade.grade] || 0;
     const bonus = Math.round(rankData.baseSalary * bonusMultiplier);
     if (bonus > 0) {
-      state.resources.cash += bonus;
+      // [自洽修复] 域H A类#5: 防 cash 裸访问
+      state.resources.cash = (state.resources.cash || 0) + bonus;
       addDailyTransaction(
         state,
         "income",
@@ -199200,8 +199218,9 @@ function processIPOResult(state, approved) {
       "success",
     );
 
-    // 玩家获得现金回报
-    state.resources.cash += startup.flags.exitValue;
+    // 玩家获得现金回报（[自洽修复] 域H A类#2: 防 NaN 污染 cash）
+    const ipoPayout = isFinite(startup.flags.exitValue) ? startup.flags.exitValue : 0;
+    state.resources.cash = (state.resources.cash || 0) + ipoPayout;
   } else {
     StateManager.addMessage("❌ IPO审核未通过，公司需要继续经营", "danger");
     startup.status = "growth";
@@ -199445,8 +199464,9 @@ function acceptAcquisition(state, offer) {
   startup.history.exitType = "acquired";
   startup.history.exitValue = offer.playerShareValue;
 
-  // 玩家获得现金
-  state.resources.cash += offer.playerShareValue;
+  // 玩家获得现金（[自洽修复] 域H A类#3: 防 NaN 污染 cash）
+  const acquisitionPayout = isFinite(offer.playerShareValue) ? offer.playerShareValue : 0;
+  state.resources.cash = (state.resources.cash || 0) + acquisitionPayout;
 
   // 在企业命运系统中标记
   if (state.enterpriseFate && state.enterpriseFate.companies) {
@@ -199495,12 +199515,12 @@ function bankrupt(state) {
   startup.history.exitType = "bankrupt";
   startup.history.exitValue = 0;
 
-  // 资产清算
-  const assetRecovery = Math.round(company.cashReserve * 0.3); // 只能收回30%
+  // 资产清算（[自洽修复] 域H A类#6: 负 recovery 会双倍扣钱+防裸访问）
+  const assetRecovery = Math.max(0, Math.round((company.cashReserve || 0) * 0.3)); // 只能收回30%
   company.cashReserve = assetRecovery;
 
   // 玩家获得剩余现金（如果有）
-  state.resources.cash += assetRecovery;
+  state.resources.cash = (state.resources.cash || 0) + assetRecovery;
 
   // 声誉损失
   state.status.health = Math.max(0, state.status.health - 10);
