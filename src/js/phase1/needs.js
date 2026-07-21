@@ -167,11 +167,19 @@ function determineEmotionalState(state) {
   if (emotionalState === "elated" && !state.flags._everElated) {
     state.flags._everElated = true;
     StateManager.addMessage("🌟 你感觉自己状态极佳！今天做什么都特别顺手！", "success");
+    // 记录到回忆录
+    if (typeof addMemoir === "function") {
+      try { addMemoir("career", { icon: "🌟", title: "状态极佳", text: "今天你感觉自己状态极佳，做什么都特别顺手！这是你在这座城市第一次达到这样的巅峰状态。" }); } catch(e) {}
+    }
   }
   // 首次进入抑郁/悲伤时发送关注提示
   if (emotionalState === "depressed" && !state.flags._everDepressed) {
     state.flags._everDepressed = true;
     StateManager.addMessage("😢 你感到前所未有的低落。也许该找人聊聊，或者好好休息一下。", "warning");
+    // 记录到回忆录
+    if (typeof addMemoir === "function") {
+      try { addMemoir("illness", { icon: "😢", title: "情绪低谷", text: "今天是你在城市里最艰难的一天。情绪跌到了谷底，但你还在这里，没有放弃。" }); } catch(e) {}
+    }
   }
 
   return emotionalState;
