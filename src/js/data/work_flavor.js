@@ -298,17 +298,13 @@ function generateWorkFlavorText(state, job) {
     }
   }
 
-  // 加权随机选取一条
-  var totalWeight = 0;
-  for (var fi = 0; fi < flavorPool.length; fi++) {
-    totalWeight += flavorPool[fi].weight;
-  }
-  var roll = Math.random() * totalWeight;
-  for (var fi2 = 0; fi2 < flavorPool.length; fi2++) {
-    roll -= flavorPool[fi2].weight;
-    if (roll <= 0) {
-      return flavorPool[fi2].text;
-    }
+  // [全系统自洽修复] 域A A类: Math.random→Random.weighted 种子化RNG
+  if (flavorPool.length > 0) {
+    var _picked = Random.weighted(
+      flavorPool,
+      function (item) { return item.weight || 1; },
+    );
+    if (_picked) return _picked.text;
   }
 
   // 绝对兜底
@@ -318,5 +314,5 @@ function generateWorkFlavorText(state, job) {
     "🌆 收工了，街上的人渐渐多了起来。",
     "🧘 深呼吸一口，今天又撑过去了。",
   ];
-  return FALLBACKS[Math.floor(Math.random() * FALLBACKS.length)];
+  return Random.fromArray(FALLBACKS);
 }

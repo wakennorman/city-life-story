@@ -4916,9 +4916,13 @@ function showEventModal(evt) {
       const costTag = ch.cost
         ? ` <span style="color:var(--warning);font-size:11px;">需 ¥${ch.cost}</span>`
         : "";
+      // [全系统自洽修复] 域B 联动增强: B→G 情绪标记显示
+      var _moodTagHtml = "";
+      if (ch._moodTag === "sad") _moodTagHtml = ' <span style="font-size:9px;color:var(--text-muted);">😔</span>';
+      else if (ch._moodTag === "happy") _moodTagHtml = ' <span style="font-size:9px;color:var(--success);">😊</span>';
       return `
         <button class="event-choice ${disabled ? "disabled" : ""}" data-idx="${i}" ${disabled ? "disabled" : ""}>
-          <div class="choice-main">${ch.text}${costTag}</div>
+          <div class="choice-main">${ch.text}${costTag}${_moodTagHtml}</div>
           ${hintStr}
         </button>
       `;
@@ -5009,6 +5013,15 @@ function showEventModal(evt) {
       // [全系统自洽修复] 域B A类#1: 事件结算后现金NaN/负数防御（防止apply未扣款或倍率导致负数）
       if (typeof state.resources.cash !== "number" || !isFinite(state.resources.cash)) state.resources.cash = 0;
       state.resources.cash = Math.max(0, state.resources.cash);
+      // [全系统自洽修复] 域B 联动增强: B→F 事件历史记录
+      if (!state.flags._eventHistory) state.flags._eventHistory = [];
+      if (evt && evt.id) {
+        var _dup = state.flags._eventHistory.find(function(e) { return e.id === evt.id && e.day === state.player.day; });
+        if (!_dup) {
+          state.flags._eventHistory.push({ id: evt.id, title: evt.title || evt.id, day: state.player.day, phase: state.player.phase });
+          if (state.flags._eventHistory.length > 100) state.flags._eventHistory = state.flags._eventHistory.slice(-100);
+        }
+      }
       // v3.1 ⑤ 难度惩罚倍率结算：休闲×0.7 / 标准×1.0 / 困难×1.3 / 地狱×1.6
       try {
         if (typeof getDifficultyMultiplier === "function") {

@@ -1,6 +1,6 @@
 # 城市浮生记 (City Life Story) — 开发文档
 
-> 最后更新: 2026-07-21（阶段3批次5：技能分支加成 7 纯函数 getBranch* 迁 src/app/core/skills/branchBonuses.ts TS 规范源，依赖注入式 talentEffects 可选；新增 TS↔vanilla 双向比对单测 82/82；src/js 端零改动、加载序不变）
+> 最后更新: 2026-07-21（阶段3批次6：技能疲劳减免 getSkillFatigueReduction + JOB_SKILL_MAP 迁 src/app/core/skills/fatigueReduction.ts TS 规范源；新增 TS↔vanilla 双向比对单测 140/140；src/js 端零改动、加载序不变）
 > 历史流水账已归档到 `docs/changelog/`，本文件仅保留活文档。
 
 ---

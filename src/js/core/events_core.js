@@ -344,7 +344,7 @@ function evaluateTriggers(triggers, state) {
     for (var afi = 0; afi < affReqs.length; afi++) {
       var req = affReqs[afi];
       var npcRel2 = rels2[req.id];
-      if (!npcRel2 || (npcRel2.affinity || 0) < req.min) return false;
+      if (!npcRel2 || !npcRel2.met || (npcRel2.affinity || 0) < req.min) return false;
     }
   }
 
@@ -513,6 +513,31 @@ function showEventModal(evt) {
     return;
   }
 
+  // [全系统自洽修复] 域B 联动增强: B→G 情绪状态影响事件选择 — 情绪低落时"消极"选项标记
+  if (typeof choicesArr === "object" && choicesArr.length > 0) {
+    var _stateForEmo = StateManager.getState();
+    var _emoState = _stateForEmo.status && _stateForEmo.status.emotionalState;
+    if (_emoState === "depressed" || _emoState === "sad") {
+      for (var _ei = 0; _ei < choicesArr.length; _ei++) {
+        if (choicesArr[_ei] && choicesArr[_ei].text) {
+          var _txt = choicesArr[_ei].text;
+          if (_txt.indexOf("忍") >= 0 || _txt.indexOf("放弃") >= 0 || _txt.indexOf("算了") >= 0 || _txt.indexOf("逃避") >= 0) {
+            choicesArr[_ei]._moodTag = "sad";
+          }
+        }
+      }
+    } else if (_emoState === "elated" || _emoState === "happy") {
+      for (var _ej = 0; _ej < choicesArr.length; _ej++) {
+        if (choicesArr[_ej] && choicesArr[_ej].text) {
+          var _txt2 = choicesArr[_ej].text;
+          if (_txt2.indexOf("努力") >= 0 || _txt2.indexOf("坚持") >= 0 || _txt2.indexOf("试试") >= 0 || _txt2.indexOf("拼搏") >= 0) {
+            choicesArr[_ej]._moodTag = "happy";
+          }
+        }
+      }
+    }
+  }
+
   // 支持 choices 为函数（动态生成，如政策套利兑现事件）
   var choicesArr = evt.choices;
   if (typeof choicesArr === "function") {
@@ -583,9 +608,13 @@ function showEventModal(evt) {
       const costTag = ch.cost
         ? ` <span style="color:var(--warning);font-size:11px;">需 ¥${ch.cost}</span>`
         : "";
+      // [全系统自洽修复] 域B 联动增强: B→G 情绪标记显示
+      var _moodTagHtml = "";
+      if (ch._moodTag === "sad") _moodTagHtml = ' <span style="font-size:9px;color:var(--text-muted);">😔</span>';
+      else if (ch._moodTag === "happy") _moodTagHtml = ' <span style="font-size:9px;color:var(--success);">😊</span>';
       return `
         <button class="event-choice ${disabled ? "disabled" : ""}" data-idx="${i}" ${disabled ? "disabled" : ""}>
-          <div class="choice-main">${ch.text}${costTag}</div>
+          <div class="choice-main">${ch.text}${costTag}${_moodTagHtml}</div>
           ${hintStr}
         </button>
       `;
@@ -676,6 +705,15 @@ function showEventModal(evt) {
       // [全系统自洽修复] 域B A类#1: 事件结算后现金NaN/负数防御（防止apply未扣款或倍率导致负数）
       if (typeof state.resources.cash !== "number" || !isFinite(state.resources.cash)) state.resources.cash = 0;
       state.resources.cash = Math.max(0, state.resources.cash);
+      // [全系统自洽修复] 域B 联动增强: B→F 事件历史记录
+      if (!state.flags._eventHistory) state.flags._eventHistory = [];
+      if (evt && evt.id) {
+        var _dup = state.flags._eventHistory.find(function(e) { return e.id === evt.id && e.day === state.player.day; });
+        if (!_dup) {
+          state.flags._eventHistory.push({ id: evt.id, title: evt.title || evt.id, day: state.player.day, phase: state.player.phase });
+          if (state.flags._eventHistory.length > 100) state.flags._eventHistory = state.flags._eventHistory.slice(-100);
+        }
+      }
       // v3.1 ⑤ 难度惩罚倍率结算：休闲×0.7 / 标准×1.0 / 困难×1.3 / 地狱×1.6
       try {
         if (typeof getDifficultyMultiplier === "function") {
