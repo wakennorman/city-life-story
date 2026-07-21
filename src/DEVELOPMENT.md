@@ -1,6 +1,6 @@
 # 城市浮生记 (City Life Story) — 开发文档
 
-> 最后更新: 2026-07-21（阶段3批次9：情绪元数据 getEmotionIcon/getEmotionName 迁 src/app/core/emotion/meta.ts TS 规范源（扩展 batch7 模块）；新增 TS↔vanilla 双向比对单测 22/22；src/js 端零改动、加载序不变）
+> 最后更新: 2026-07-21（阶段3批次10：声望纯函数集 getReputation/getRepLevel/getRepTitle/getRepDesc/getRepPayMultiplier + REPUTATION_LEVELS/REPUTATION_BONUS 迁 src/app/core/reputation/reputation.ts TS 规范源；新增 TS↔vanilla 双向比对单测 166/166；src/js 端零改动、加载序不变）
 > 历史流水账已归档到 `docs/changelog/`，本文件仅保留活文档。
 
 ---
