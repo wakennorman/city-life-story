@@ -1,6 +1,6 @@
 # 城市浮生记 (City Life Story) — 开发文档
 
-> 最后更新: 2026-07-21（阶段3批次14：地点旅行纯函数 getLocationHops/getTaxiCost 迁 src/app/core/travel/travel.ts TS 规范源；TRAVEL_GRAPH/LOCATIONS 配置以注入参数传入（避免地图数据双源，同 INV_STOCKS 模式）；新增 TS↔vanilla 双向比对单测 1470/1470（覆盖 27 地点两两对+6 异常对）；src/js 端零改动、加载序不变）
+> 最后更新: 2026-07-22（阶段3批次15：地点旅行 AP 消耗纯函数 getTravelApCost 迁 src/app/core/travel/apCost.ts TS 规范源（独立模块，避免改动批次14已入库的 travel.ts）；TRAVEL_GRAPH/LOCATIONS 以注入参数传入，getTravelApReduction(驾驶技能减免)/getWeatherTravelApMod(天气倍率) 为可选注入依赖（默认 undefined，与 vanilla 单文件 vm 加载时 typeof 守卫跳过严格一致）；新增 TS↔vanilla 双向比对单测 13248/13248（27×27 对+7 异常对 × 18 状态形状，覆盖基础/富区互通/贫富跨区/驾驶减免/老周三轮车/天气倍率/保底5AP 全分支）；src/js 端零改动、加载序不变）
 > 历史流水账已归档到 `docs/changelog/`，本文件仅保留活文档。
 
 ---
