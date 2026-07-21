@@ -747,8 +747,7 @@ function generateInfoText(npcId, infoTypeId, state) {
         return g.category === "scrap";
       });
       if (scrapGoods.length === 0) return "今天废品行情一般。";
-      var randomGood =
-        scrapGoods[Math.floor(Math.random() * scrapGoods.length)];
+      var randomGood = Random.fromArray(scrapGoods);
       var bestLoc = null;
       var bestPrice2 = 0;
       for (var lk4 in state.trade.goodsPrices) {
@@ -794,7 +793,7 @@ function tryTriggerNPCInfoShare(npcId, state) {
   if (!npc) return null;
 
   // 30%概率触发
-  if (Math.random() > 0.3) return null;
+  if (!Random.chance(0.3)) return null;
 
   var infoDef = NPC_TRADE_INFO[npcId];
   if (!infoDef) return null;
@@ -812,8 +811,7 @@ function tryTriggerNPCInfoShare(npcId, state) {
   }
   if (availableTypes.length === 0) return null;
 
-  var chosenType =
-    availableTypes[Math.floor(Math.random() * availableTypes.length)];
+  var chosenType = Random.fromArray(availableTypes);
   var infoText = generateInfoText(npcId, chosenType, state);
 
   // 微量销售XP

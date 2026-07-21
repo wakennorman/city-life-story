@@ -1440,7 +1440,7 @@ function showRemitModal() {
           if (
             amt >= 500 &&
             currentIdx < stageOrder.length - 1 &&
-            Math.random() < 0.3
+            Random.chance(0.3)
           ) {
             state.family.relationshipStage = stageOrder[currentIdx + 1];
             StateManager.addMessage(
@@ -2252,7 +2252,7 @@ function addTempleActions(state, actions) {
             buff: { luck: -3, happiness: -5 },
           },
         ];
-        var r = rolls[Math.floor(Math.random() * rolls.length)];
+        var r = Random.fromArray(rolls);
         flags._divinationResult = r.name;
         flags._divinationExpireDay = day + 1;
         flags._divinationBuff = r.buff;
