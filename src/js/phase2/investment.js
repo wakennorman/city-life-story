@@ -2911,6 +2911,8 @@ function showInvestmentAnalysisModal() {
 //  投资主页面渲染
 // ============================================================
 function renderInvestmentTab(state, parent) {
+  // [全系统自洽修复] 域F 联动增强: 投资Tab渲染时同步更新顶栏
+  if (typeof renderHeader === "function") renderHeader(state);
   var inv = state.investment;
   if (!inv) {
     parent.innerHTML = "<p>投资系统初始化中...</p>";
