@@ -135509,7 +135509,7 @@ function runBirthdayCelebration(state, day) {
     // 好友(≥60)额外送小礼物
     if (_aff >= 60 && state.resources) {
       var _giftVal = 10 + Random.int(0, 40);
-      state.resources.cash += _giftVal;
+      state.resources.cash = (state.resources.cash || 0) + _giftVal;
       _bonusExtra += "还收到了¥" + _giftVal + "的生日回礼。";
     }
     if (typeof StateManager !== "undefined") {
@@ -155588,7 +155588,7 @@ const NPCS = [
         desc: "王大婶介绍可靠工作，每月额外收入",
         effect: function (st) {
           const bonus = 500 + Random.int(0, 299);
-          st.resources.cash += bonus;
+          st.resources.cash = (st.resources.cash || 0) + (bonus || 0);
           st.resources.totalEarned += bonus;
           StateManager.addMessage(
             "❤️ 王大婶：「我侄子开了家公司，特别推荐了你，给了你¥" +
@@ -155858,7 +155858,7 @@ const NPCS = [
           apply: function (st) {
             st.flags._npcFavor_boss_li = true;
             var reward = 150 + Random.int(0, 99);
-            st.resources.cash += reward;
+            st.resources.cash = (st.resources.cash || 0) + (reward || 0);
             st.resources.totalEarned += reward;
             st.needs.fatigue = Math.min(100, st.needs.fatigue + 20);
             st.player.physique = Math.min(100, st.player.physique + 1);
@@ -155911,7 +155911,7 @@ const NPCS = [
               st.relationships.boss_li.affinity + 10,
             );
             var reward = 300 + Random.int(0, 199);
-            st.resources.cash += reward;
+            st.resources.cash = (st.resources.cash || 0) + (reward || 0);
             st.resources.totalEarned += reward;
             st.player.fame = Math.min(100, st.player.fame + 8);
             st.player.intelligence = Math.min(
@@ -156075,7 +156075,7 @@ const NPCS = [
         desc: "张姐透露内部招聘信息",
         effect: function (st) {
           const bonus = 200 + Random.int(0, 299);
-          st.resources.cash += bonus;
+          st.resources.cash = (st.resources.cash || 0) + (bonus || 0);
           st.resources.totalEarned += bonus;
           StateManager.addMessage(
             "💕 张姐悄悄发来一个内推机会，接了个短单赚了 ¥" + bonus + "。",
@@ -156121,7 +156121,7 @@ const NPCS = [
           apply: function (st) {
             st.flags._npcFavor_sister_zhang = true;
             var pay = 80 + Random.int(0, 59);
-            st.resources.cash += pay;
+            st.resources.cash = (st.resources.cash || 0) + (pay || 0);
             st.resources.totalEarned += pay;
             st.player.fame = Math.min(100, st.player.fame + 5);
             st.skills.sales && (st.skills.sales.xp += 20);
@@ -156834,7 +156834,7 @@ const NPCS = [
           apply: function (st) {
             st.flags._npcFavor_chef_chen = true;
             var pay = 60 + Random.int(0, 39);
-            st.resources.cash += pay;
+            st.resources.cash = (st.resources.cash || 0) + (pay || 0);
             st.resources.totalEarned += pay;
             st.skills.cooking && (st.skills.cooking.xp += 50);
             if (!st.relationships.chef_chen)
@@ -157598,7 +157598,7 @@ const NPCS = [
           hint: "现金-500 好感+10",
           apply: function (st) {
             st.flags._npcDeepTask_xiaochen = true;
-            st.resources.cash = Math.max(0, st.resources.cash - 500);
+            st.resources.cash = Math.max(0, (st.resources.cash || 0) - 500);
             if (!st.relationships.xiaochen)
               st.relationships.xiaochen = { affinity: 0, met: true };
             st.relationships.xiaochen.affinity = Math.min(
@@ -158321,7 +158321,7 @@ const NPCS = [
           text: "☕ 帮你买咖啡",
           apply: function (st) {
             st.flags._npcFavor_dr_wang = true;
-            st.resources.cash -= 15;
+            st.resources.cash = Math.max(0, (st.resources.cash || 0) - 15);
             if (!st.relationships.dr_wang)
               st.relationships.dr_wang = { affinity: 0, met: true };
             st.relationships.dr_wang.affinity = Math.min(
@@ -158520,7 +158520,7 @@ const NPCS = [
           apply: function (st) {
             st.flags._npcFavor_zhaojie = true;
             var pay = 100 + Random.int(0, 99);
-            st.resources.cash += pay;
+            st.resources.cash = (st.resources.cash || 0) + (pay || 0);
             st.resources.totalEarned += pay;
             st.player.fame = Math.min(100, st.player.fame + 3);
             if (!st.relationships.zhaojie)
@@ -158735,7 +158735,7 @@ const NPCS = [
           apply: function (st) {
             st.flags._npcFavor_chen_ge = true;
             var pay = 80 + Random.int(0, 79);
-            st.resources.cash += pay;
+            st.resources.cash = (st.resources.cash || 0) + (pay || 0);
             st.resources.totalEarned += pay;
             st.player.fame = Math.min(100, st.player.fame + 2);
             if (!st.relationships.chen_ge)
@@ -234345,6 +234345,17 @@ function renderSocialOverviewTab(state, content) {
   html += '<div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:6px;">';
   html += '<span>你的月收入</span><strong>¥' + playerSalary.toLocaleString() + '</strong>';
   html += '</div>';
+
+    // [全系统自洽修复] 域D 联动增强: NPC礼物偏好提示（D→F，社交界面显示NPC喜欢什么礼物）
+    if (_npcDef && _npcDef.giftPrefers && _npcDef.giftPrefers.length > 0) {
+      var _giftLabelMap = { fruits: "水果", daily_use: "日用品", cigarettes: "香烟", beer: "啤酒", clothing: "服装", snacks: "零食", instant_noodles: "方便面", vegetables: "蔬菜", electronics: "电子产品", luxury: "奢侈品" };
+      var _giftNames = [];
+      for (var _gi = 0; _gi < _npcDef.giftPrefers.length; _gi++) {
+        var _giftCat = _npcDef.giftPrefers[_gi];
+        _giftNames.push(_giftLabelMap[_giftCat] || _giftCat);
+      }
+      html += '<div style="font-size:9px;color:var(--text-muted);margin-top:2px;">🎁 喜欢: ' + _giftNames.join("、") + '</div>';
+    }
   html += '<div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:6px;">';
   html += '<span>同龄人平均</span><strong>¥' + avgIncome.toLocaleString() + '</strong>';
   html += '</div>';

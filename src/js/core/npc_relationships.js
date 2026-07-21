@@ -601,7 +601,7 @@ function runBirthdayCelebration(state, day) {
     // 好友(≥60)额外送小礼物
     if (_aff >= 60 && state.resources) {
       var _giftVal = 10 + Random.int(0, 40);
-      state.resources.cash += _giftVal;
+      state.resources.cash = (state.resources.cash || 0) + _giftVal;
       _bonusExtra += "还收到了¥" + _giftVal + "的生日回礼。";
     }
     if (typeof StateManager !== "undefined") {
