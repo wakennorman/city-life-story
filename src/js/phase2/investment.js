@@ -1286,7 +1286,7 @@ function tickInvestmentDaily(state) {
       );
       var isSelfLived = inv.selfLivePropertyId === prop.id;
       if (state.player.day % 30 === 0 && !isSelfLived)
-        state.resources.cash += prop.rent || 0;
+        state.resources.cash = (state.resources.cash || 0) + (prop.rent || 0);
     }
   }
 
@@ -1725,7 +1725,7 @@ function sellInvStock(symbol, shares) {
       }
     }
   }
-  state.resources.cash += revenue;
+  state.resources.cash = (state.resources.cash || 0) + revenue;
   h.shares -= shares;
   if (h.shares <= 0)
     inv.stockHoldings = inv.stockHoldings.filter(function (s) {
@@ -1795,7 +1795,7 @@ function sellBtc(amount) {
   } else {
     inv._consecutiveWins = 0;
   }
-  state.resources.cash += revenue;
+  state.resources.cash = (state.resources.cash || 0) + revenue;
   inv.btcHoldings = Math.round((inv.btcHoldings - amount) * 10000) / 10000;
   // 清仓时重置成本
   if (inv.btcHoldings <= 0) inv.btcAvgCost = 0;
