@@ -144,7 +144,24 @@ function determineEmotionalState(state) {
   // [全系统自洽修复] 域G A类修复: 原条件两分支都映射到"happy"，≥80分和60-79分无区分——新增"elated"状态
   else emotionalState = "elated";
 
+  // [全系统自洽修复] 域F联动: 情绪状态转变时推送转折消息 (F→G 联动,让玩家感知情绪轨迹)
+  var prevEmo = state.status.emotionalState;
   state.status.emotionalState = emotionalState;
+  if (prevEmo && prevEmo !== emotionalState && typeof StateManager !== "undefined") {
+    var _emoTransitionMsgs = {
+      "stable_happy": "☀️ 今天状态不错,做事心情舒畅。",
+      "happy_elated": "🌟 你感觉自己状态极佳！今天做什么都特别顺手！",
+      "sad_stable": "🌤️ 心情总算慢慢平复了,生活还要继续。",
+      "stressed_sad": "😔 压力让你有些喘不过气,记得给自己减减负。",
+      "happy_stable": "🌥️ 激情退去,回归日常,这也是一种节奏。",
+      "stable_stressed": "😰 生活压力渐增,别忘了找点乐子调剂。",
+    };
+    var _key = prevEmo + "_" + emotionalState;
+    // 仅对正向/显著负向转变推送,避免刷屏(每7天最多一次)
+    if (_emoTransitionMsgs[_key] && state.player && state.player.day % 7 === 0) {
+      StateManager.addMessage(_emoTransitionMsgs[_key], "info");
+    }
+  }
 
   // [全系统自洽修复] 域G 联动增强: 首次达到 elated 状态时发送庆祝消息
   if (emotionalState === "elated" && !state.flags._everElated) {

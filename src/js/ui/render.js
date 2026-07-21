@@ -2545,7 +2545,7 @@ function renderMapTab(state, parent) {
                     ? 3 // v3.2 从¥2→¥3
                     : mode === "metro"
                       ? 4
-                      : 10 + Math.floor(Math.random() * 31); // v3.2 从¥15-50→¥10-40
+                      : 10 + Random.int(0, 30); // v3.2 从¥15-50→¥10-40
               const hops = mode === "walk" ? getLocationHops(locKey, k) : 0;
               const ap =
                 mode === "walk"
@@ -6175,7 +6175,7 @@ window.__doTrainCore = function (trainId) {
     curVal >= 90 ? 0.4 : curVal >= 80 ? 0.6 : curVal >= 70 ? 0.8 : 1.0;
 
   // 风险检查（整容）
-  if (t.risky && Math.random() < 0.2) {
+  if (t.risky && Random.chance(0.2)) {
     var oldVal = _getTrainStatVal(p, t.stat);
     _setTrainStatVal(p, t.stat, oldVal - 5);
     state.status.health = Math.max(20, (state.status.health || 100) - 15);
@@ -6185,9 +6185,8 @@ window.__doTrainCore = function (trainId) {
       "error",
     );
   } else {
-    var baseGain =
-      t.gain[0] + Math.floor(Math.random() * (t.gain[1] - t.gain[0] + 1));
-    var crit = Math.random() < 0.1 ? 2 : 0;
+    var baseGain = t.gain[0] + Random.int(0, t.gain[1] - t.gain[0]);
+    var crit = Random.chance(0.1) ? 2 : 0;
     baseGain = Math.max(1, Math.round(baseGain * diminishingMult));
     var totalGain = baseGain + crit;
     _setTrainStatVal(p, t.stat, _getTrainStatVal(p, t.stat) + totalGain);

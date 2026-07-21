@@ -329,13 +329,13 @@ function buildReportHTML(txs, state, reconcileInfo) {
       var _rel = state.relationships[_n.id];
       if (!_rel || !_rel.met || (_rel.affinity || 0) < 20) continue;
       if (_n.encounterLines && _n.encounterLines.length > 0) {
-        var _line = _n.encounterLines[Math.floor(Math.random() * _n.encounterLines.length)];
+        var _line = Random.fromArray(_n.encounterLines);
         _npcUpdates.push({ name: _n.name, line: _line, aff: _rel.affinity || 0 });
       }
     }
     if (_npcUpdates.length > 0) {
       // 随机选1-2条
-      _npcUpdates.sort(function () { return Math.random() - 0.5; });
+      _npcUpdates = Random.shuffle(_npcUpdates);
       var _count = Math.min(2, _npcUpdates.length);
       bodyHtml += '<div class="daily-report-npc" style="padding:6px 0;margin:2px 0 4px;border-top:1px solid var(--border);font-size:11px;color:var(--text-muted);">';
       bodyHtml += '<span style="font-weight:bold;font-size:11px;">👥 城中见闻</span>';

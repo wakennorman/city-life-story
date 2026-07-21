@@ -170238,7 +170238,24 @@ function determineEmotionalState(state) {
   // [全系统自洽修复] 域G A类修复: 原条件两分支都映射到"happy"，≥80分和60-79分无区分——新增"elated"状态
   else emotionalState = "elated";
 
+  // [全系统自洽修复] 域F联动: 情绪状态转变时推送转折消息 (F→G 联动,让玩家感知情绪轨迹)
+  var prevEmo = state.status.emotionalState;
   state.status.emotionalState = emotionalState;
+  if (prevEmo && prevEmo !== emotionalState && typeof StateManager !== "undefined") {
+    var _emoTransitionMsgs = {
+      "stable_happy": "☀️ 今天状态不错,做事心情舒畅。",
+      "happy_elated": "🌟 你感觉自己状态极佳！今天做什么都特别顺手！",
+      "sad_stable": "🌤️ 心情总算慢慢平复了,生活还要继续。",
+      "stressed_sad": "😔 压力让你有些喘不过气,记得给自己减减负。",
+      "happy_stable": "🌥️ 激情退去,回归日常,这也是一种节奏。",
+      "stable_stressed": "😰 生活压力渐增,别忘了找点乐子调剂。",
+    };
+    var _key = prevEmo + "_" + emotionalState;
+    // 仅对正向/显著负向转变推送,避免刷屏(每7天最多一次)
+    if (_emoTransitionMsgs[_key] && state.player && state.player.day % 7 === 0) {
+      StateManager.addMessage(_emoTransitionMsgs[_key], "info");
+    }
+  }
 
   // [全系统自洽修复] 域G 联动增强: 首次达到 elated 状态时发送庆祝消息
   if (emotionalState === "elated" && !state.flags._everElated) {
@@ -216177,7 +216194,7 @@ function renderMapTab(state, parent) {
                     ? 3 // v3.2 从¥2→¥3
                     : mode === "metro"
                       ? 4
-                      : 10 + Math.floor(Math.random() * 31); // v3.2 从¥15-50→¥10-40
+                      : 10 + Random.int(0, 30); // v3.2 从¥15-50→¥10-40
               const hops = mode === "walk" ? getLocationHops(locKey, k) : 0;
               const ap =
                 mode === "walk"
@@ -219807,7 +219824,7 @@ window.__doTrainCore = function (trainId) {
     curVal >= 90 ? 0.4 : curVal >= 80 ? 0.6 : curVal >= 70 ? 0.8 : 1.0;
 
   // 风险检查（整容）
-  if (t.risky && Math.random() < 0.2) {
+  if (t.risky && Random.chance(0.2)) {
     var oldVal = _getTrainStatVal(p, t.stat);
     _setTrainStatVal(p, t.stat, oldVal - 5);
     state.status.health = Math.max(20, (state.status.health || 100) - 15);
@@ -219817,9 +219834,8 @@ window.__doTrainCore = function (trainId) {
       "error",
     );
   } else {
-    var baseGain =
-      t.gain[0] + Math.floor(Math.random() * (t.gain[1] - t.gain[0] + 1));
-    var crit = Math.random() < 0.1 ? 2 : 0;
+    var baseGain = t.gain[0] + Random.int(0, t.gain[1] - t.gain[0]);
+    var crit = Random.chance(0.1) ? 2 : 0;
     baseGain = Math.max(1, Math.round(baseGain * diminishingMult));
     var totalGain = baseGain + crit;
     _setTrainStatVal(p, t.stat, _getTrainStatVal(p, t.stat) + totalGain);
@@ -232367,13 +232383,13 @@ function buildReportHTML(txs, state, reconcileInfo) {
       var _rel = state.relationships[_n.id];
       if (!_rel || !_rel.met || (_rel.affinity || 0) < 20) continue;
       if (_n.encounterLines && _n.encounterLines.length > 0) {
-        var _line = _n.encounterLines[Math.floor(Math.random() * _n.encounterLines.length)];
+        var _line = Random.fromArray(_n.encounterLines);
         _npcUpdates.push({ name: _n.name, line: _line, aff: _rel.affinity || 0 });
       }
     }
     if (_npcUpdates.length > 0) {
       // 随机选1-2条
-      _npcUpdates.sort(function () { return Math.random() - 0.5; });
+      _npcUpdates = Random.shuffle(_npcUpdates);
       var _count = Math.min(2, _npcUpdates.length);
       bodyHtml += '<div class="daily-report-npc" style="padding:6px 0;margin:2px 0 4px;border-top:1px solid var(--border);font-size:11px;color:var(--text-muted);">';
       bodyHtml += '<span style="font-weight:bold;font-size:11px;">👥 城中见闻</span>';
