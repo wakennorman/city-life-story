@@ -216777,6 +216777,17 @@ function renderTradeTab(state, parent) {
               "个市场活动</div>"
           : "";
       })()}
+        + (function() {
+          if (activeEvents <= 0) return "";
+          var detail = "";
+          for (var ei = 0; ei < state.trade.marketEvents.length; ei++) {
+            var me = state.trade.marketEvents[ei];
+            if (me.remaining > 0) {
+              detail += "<div style=\"font-size:9px;color:var(--text-muted);margin-top:1px;\">" + me.desc + " (剩" + me.remaining + "天)</div>";
+            }
+          }
+          return detail;
+        })()
     </div>
   `;
   parent.appendChild(headerDiv);
