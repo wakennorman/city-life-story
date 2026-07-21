@@ -1222,6 +1222,22 @@ function renderTimeSlot(state, parent) {
       ${lowAp ? `<span style="font-size:10px;color:var(--warning);animation:ap-blink 0.8s infinite;">⚠</span>` : ""}
     </span>
     ${phaseLabel ? `<span style="font-size:10px;color:var(--text-muted);margin-left:2px;">${phaseLabel}</span>` : ""}
+    ${state.relationships ? (function() {
+      var _today = state.player.day;
+      var _visitable = 0;
+      for (var _ri in state.relationships) {
+        var _rr = state.relationships[_ri];
+        if (_rr && _rr.met && (_rr._lastVisit || 0) + 7 <= _today) _visitable++;
+      }
+      return _visitable > 0 ? '<span style="font-size:10px;color:var(--success);margin-left:6px;">🚶' + _visitable + '</span>' : '';
+    })() : ''}
+    ${state.investment ? (function() {
+      var _inv = state.investment;
+      var _hv = (_inv.stockHoldings || []).length;
+      var _pv = (_inv.properties || []).length;
+      var _bc = _inv.btcHoldings || 0;
+      return (_hv + _pv + (_bc > 0 ? 1 : 0)) > 0 ? '<span style="font-size:10px;color:var(--text-muted);margin-left:4px;">📈' + (_hv + _pv + (_bc > 0 ? 1 : 0)) + '</span>' : '';
+    })() : ''}
   `;
   parent.appendChild(div);
 }

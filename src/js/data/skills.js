@@ -276,6 +276,8 @@ function getAvailableCertificates(state) {
   return CERTIFICATES.filter((cert) => {
     // [全系统自洽修复] 域A A类#15: state.certificates 守卫
     if (state.certificates.includes(cert.id)) return false; // 已拥有
+    // [全系统自洽修复] 域C R74: medical_license/professional_title_cert只能通过事件获取，不可直接考取
+    if (cert.id === "medical_license" || cert.id === "professional_title_cert") return false;
     const p = state.player;
     const req = cert.requirements;
     if (req.intelligence && p.intelligence < req.intelligence) return false;

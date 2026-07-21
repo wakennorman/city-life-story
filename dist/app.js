@@ -83991,7 +83991,8 @@ if (typeof window !== "undefined") {
         return (
           _path(st, "medical") &&
           _workDays(st) > 730 &&
-          st.career.currentJob.id !== "med_head_nurse"
+          // [全系统自洽修复] 域C R74: currentJob没有id字段，改用levelId
+          st.career.currentJob.levelId !== "med_head_nurse"
         );
       },
       choices: [
@@ -141093,19 +141094,20 @@ function getTalentNodeEffects(state) {
 
   for (var nodeKey in state.talentNodes) {
     if (!state.talentNodes[nodeKey]) continue;
-    // nodeKey format: "skillKey_branchId_nodeId"
-    var parts = nodeKey.split("_");
-    // 至少3部分：skill + branch + node
-    if (parts.length < 3) continue;
-    var skillKey = parts[0];
-    // branchId可能包含下划线，所以重组
-    // 简单方法：遍历所有可能分支来匹配
+    // nodeKey format: "skillKey_branchId_part1_part2_..._nodeId"
+    // [全系统自洽修复] 域C R74: branchId可能含下划线(如business_english)，改用从末尾反向解析
+    var underscoreIdx = nodeKey.indexOf("_");
+    if (underscoreIdx < 0) continue;
+    var skillKey = nodeKey.substring(0, underscoreIdx);
+    var rest = nodeKey.substring(underscoreIdx + 1);
     var branches = SKILL_BRANCHES[skillKey];
     if (!branches) continue;
     for (var bi = 0; bi < branches.length; bi++) {
       var branch = branches[bi];
-      if (nodeKey.indexOf(skillKey + "_" + branch.id + "_") !== 0) continue;
-      var nodeId = nodeKey.substring((skillKey + "_" + branch.id + "_").length);
+      var prefix = branch.id + "_";
+      var branchIdx = rest.indexOf(prefix);
+      if (branchIdx < 0) continue;
+      var nodeId = rest.substring(branchIdx + prefix.length);
       var node = getTalentNodeDef(skillKey, branch.id, nodeId);
       if (node && node.effects) {
         for (var eff in node.effects) {
@@ -154982,6 +154984,8 @@ function getAvailableCertificates(state) {
   return CERTIFICATES.filter((cert) => {
     // [全系统自洽修复] 域A A类#15: state.certificates 守卫
     if (state.certificates.includes(cert.id)) return false; // 已拥有
+    // [全系统自洽修复] 域C R74: medical_license/professional_title_cert只能通过事件获取，不可直接考取
+    if (cert.id === "medical_license" || cert.id === "professional_title_cert") return false;
     const p = state.player;
     const req = cert.requirements;
     if (req.intelligence && p.intelligence < req.intelligence) return false;
@@ -214948,6 +214952,22 @@ function renderTimeSlot(state, parent) {
       ${lowAp ? `<span style="font-size:10px;color:var(--warning);animation:ap-blink 0.8s infinite;">⚠</span>` : ""}
     </span>
     ${phaseLabel ? `<span style="font-size:10px;color:var(--text-muted);margin-left:2px;">${phaseLabel}</span>` : ""}
+    ${state.relationships ? (function() {
+      var _today = state.player.day;
+      var _visitable = 0;
+      for (var _ri in state.relationships) {
+        var _rr = state.relationships[_ri];
+        if (_rr && _rr.met && (_rr._lastVisit || 0) + 7 <= _today) _visitable++;
+      }
+      return _visitable > 0 ? '<span style="font-size:10px;color:var(--success);margin-left:6px;">🚶' + _visitable + '</span>' : '';
+    })() : ''}
+    ${state.investment ? (function() {
+      var _inv = state.investment;
+      var _hv = (_inv.stockHoldings || []).length;
+      var _pv = (_inv.properties || []).length;
+      var _bc = _inv.btcHoldings || 0;
+      return (_hv + _pv + (_bc > 0 ? 1 : 0)) > 0 ? '<span style="font-size:10px;color:var(--text-muted);margin-left:4px;">📈' + (_hv + _pv + (_bc > 0 ? 1 : 0)) + '</span>' : '';
+    })() : ''}
   `;
   parent.appendChild(div);
 }
@@ -234320,59 +234340,8 @@ const CAREER_PATHS = {
       },
     ],
   },
-  legal: {
-    name: "法律服务",
-    icon: "⚖️",
-    category: "white_collar",
-    levels: [
-      {
-        id: "leg_junior",
-        name: "法务助理",
-        minAge: 20,
-        reqSkills: { english: 15 },
-        reqAttrs: { intelligence: 25, mental: 20 },
-        salary: 5500,
-        reqEducation: 1,
-        desc: "合同整理、法规检索",
-      },
-      {
-        id: "leg_mid",
-        name: "法务专员",
-        minAge: 23,
-        reqSkills: { english: 25, management: 10 },
-        reqAttrs: { intelligence: 35, mental: 30 },
-        salary: 10000,
-        reqEducation: 1,
-        reqWorkDays: 365,
-        desc: "合同审核、法律咨询",
-      },
-      {
-        id: "leg_senior",
-        name: "高级法务",
-        minAge: 26,
-        reqSkills: { english: 35, management: 20 },
-        reqAttrs: { intelligence: 50, mental: 45, charm: 25 },
-        salary: 18000,
-        reqEducation: 1,
-        reqWorkDays: 1095,
-        desc: "重大合同谈判、合规管理",
-      },
-      {
-        id: "leg_director",
-        name: "法务总监",
-        minAge: 30,
-        reqSkills: { management: 40, english: 40 },
-        reqAttrs: { intelligence: 60, mental: 55, charm: 35 },
-        salary: 30000,
-        reqEducation: 1,
-        reqWorkDays: 2190,
-        desc: "法务部门管理、风控决策",
-        reqSocial: 50,
-      },
-    ],
-  },
-
-  // ===== P1-8：扩充路径（教育/物流/餐饮） =====
+  // [全系统自洽修复] 域C R74: 删除重复的legal路径定义(L265-315死代码)，保留新版(L705-738)
+  // 教育路径定义略
   education: {
     name: "教育培训",
     icon: "🏫",
@@ -236939,6 +236908,8 @@ function _getSkillValue(state, skill) {
 
 /** 检查晋升条件（v3.2 新增：属性+颜值+社交检查） */
 function checkCareerPromotion(state, pathId, level) {
+  // [全系统自洽修复] 域C R74: state空守卫
+  if (!state) return false;
   var p = state.player;
 
   // 年龄检查
@@ -237356,7 +237327,8 @@ function applyCareerPromotion(pathId, levelId) {
   state.career.currentJob.salary = level.salary;
   state.career.currentJob.performance = Math.max(
     45,
-    (state.career.currentJob.performance || 55) - 10,
+    // [全系统自洽修复] 域C R74: performance重置NaN守卫
+    (isFinite(state.career.currentJob.performance) ? state.career.currentJob.performance : 55) - 10,
   );
   cap.reputation = (cap.reputation || 0) + 8;
   cap.industryResources = (cap.industryResources || 0) + 4;

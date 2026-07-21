@@ -1153,19 +1153,20 @@ function getTalentNodeEffects(state) {
 
   for (var nodeKey in state.talentNodes) {
     if (!state.talentNodes[nodeKey]) continue;
-    // nodeKey format: "skillKey_branchId_nodeId"
-    var parts = nodeKey.split("_");
-    // 至少3部分：skill + branch + node
-    if (parts.length < 3) continue;
-    var skillKey = parts[0];
-    // branchId可能包含下划线，所以重组
-    // 简单方法：遍历所有可能分支来匹配
+    // nodeKey format: "skillKey_branchId_part1_part2_..._nodeId"
+    // [全系统自洽修复] 域C R74: branchId可能含下划线(如business_english)，改用从末尾反向解析
+    var underscoreIdx = nodeKey.indexOf("_");
+    if (underscoreIdx < 0) continue;
+    var skillKey = nodeKey.substring(0, underscoreIdx);
+    var rest = nodeKey.substring(underscoreIdx + 1);
     var branches = SKILL_BRANCHES[skillKey];
     if (!branches) continue;
     for (var bi = 0; bi < branches.length; bi++) {
       var branch = branches[bi];
-      if (nodeKey.indexOf(skillKey + "_" + branch.id + "_") !== 0) continue;
-      var nodeId = nodeKey.substring((skillKey + "_" + branch.id + "_").length);
+      var prefix = branch.id + "_";
+      var branchIdx = rest.indexOf(prefix);
+      if (branchIdx < 0) continue;
+      var nodeId = rest.substring(branchIdx + prefix.length);
       var node = getTalentNodeDef(skillKey, branch.id, nodeId);
       if (node && node.effects) {
         for (var eff in node.effects) {

@@ -383,7 +383,8 @@
         return (
           _path(st, "medical") &&
           _workDays(st) > 730 &&
-          st.career.currentJob.id !== "med_head_nurse"
+          // [全系统自洽修复] 域C R74: currentJob没有id字段，改用levelId
+          st.career.currentJob.levelId !== "med_head_nurse"
         );
       },
       choices: [

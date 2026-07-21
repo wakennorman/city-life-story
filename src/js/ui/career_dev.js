@@ -262,59 +262,8 @@ const CAREER_PATHS = {
       },
     ],
   },
-  legal: {
-    name: "法律服务",
-    icon: "⚖️",
-    category: "white_collar",
-    levels: [
-      {
-        id: "leg_junior",
-        name: "法务助理",
-        minAge: 20,
-        reqSkills: { english: 15 },
-        reqAttrs: { intelligence: 25, mental: 20 },
-        salary: 5500,
-        reqEducation: 1,
-        desc: "合同整理、法规检索",
-      },
-      {
-        id: "leg_mid",
-        name: "法务专员",
-        minAge: 23,
-        reqSkills: { english: 25, management: 10 },
-        reqAttrs: { intelligence: 35, mental: 30 },
-        salary: 10000,
-        reqEducation: 1,
-        reqWorkDays: 365,
-        desc: "合同审核、法律咨询",
-      },
-      {
-        id: "leg_senior",
-        name: "高级法务",
-        minAge: 26,
-        reqSkills: { english: 35, management: 20 },
-        reqAttrs: { intelligence: 50, mental: 45, charm: 25 },
-        salary: 18000,
-        reqEducation: 1,
-        reqWorkDays: 1095,
-        desc: "重大合同谈判、合规管理",
-      },
-      {
-        id: "leg_director",
-        name: "法务总监",
-        minAge: 30,
-        reqSkills: { management: 40, english: 40 },
-        reqAttrs: { intelligence: 60, mental: 55, charm: 35 },
-        salary: 30000,
-        reqEducation: 1,
-        reqWorkDays: 2190,
-        desc: "法务部门管理、风控决策",
-        reqSocial: 50,
-      },
-    ],
-  },
-
-  // ===== P1-8：扩充路径（教育/物流/餐饮） =====
+  // [全系统自洽修复] 域C R74: 删除重复的legal路径定义(L265-315死代码)，保留新版(L705-738)
+  // 教育路径定义略
   education: {
     name: "教育培训",
     icon: "🏫",
@@ -2881,6 +2830,8 @@ function _getSkillValue(state, skill) {
 
 /** 检查晋升条件（v3.2 新增：属性+颜值+社交检查） */
 function checkCareerPromotion(state, pathId, level) {
+  // [全系统自洽修复] 域C R74: state空守卫
+  if (!state) return false;
   var p = state.player;
 
   // 年龄检查
@@ -3298,7 +3249,8 @@ function applyCareerPromotion(pathId, levelId) {
   state.career.currentJob.salary = level.salary;
   state.career.currentJob.performance = Math.max(
     45,
-    (state.career.currentJob.performance || 55) - 10,
+    // [全系统自洽修复] 域C R74: performance重置NaN守卫
+    (isFinite(state.career.currentJob.performance) ? state.career.currentJob.performance : 55) - 10,
   );
   cap.reputation = (cap.reputation || 0) + 8;
   cap.industryResources = (cap.industryResources || 0) + 4;
