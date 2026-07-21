@@ -35697,7 +35697,47 @@ if (typeof window !== "undefined") {
         },
       ],
     },
-  ];
+  // [全系统自洽修复] 域G 联动增强: 持续抑郁→街头善意事件（G→B 叙事层）
+  {
+    id: "depression_street_kindness",
+    phase: "street",
+    icon: "☀️",
+    title: "陌生人的善意",
+    story: "你低着头走在街上，觉得全世界都灰蒙蒙的。一个卖烤红薯的大爷叫住了你：「小伙子/姑娘，喏，这个给你。」\n\n他递过来一个热腾腾的烤红薯，笑着说：「不要钱。天冷了，吃点热的心里就暖了。」\n\n你愣在原地，手里捧着那个烤红薯，热气扑在脸上。",
+    triggers: { minDay: 15 },
+    conditions: function (st) {
+      if (!st || !st.status || !st.flags) return false;
+      if (st.flags._depressionKindnessDone) return false;
+      // 连续抑郁/悲伤3天以上
+      var emo = st.status.emotionalState;
+      if (emo !== "depressed" && emo !== "sad") return false;
+      var streak = st.flags._depressionStreak || 0;
+      return streak >= 3;
+    },
+    choices: [
+      {
+        text: "接过红薯，说声谢谢",
+        hint: "心情+15，道德+1",
+        apply: function (st) {
+          if (st.flags) st.flags._depressionKindnessDone = true;
+          if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 15);
+          if (st.player) st.player.morality = Math.min(100, (st.player.morality || 50) + 1);
+          if (st.needs) st.needs.hunger = Math.min(100, (st.needs.hunger || 50) + 10);
+          StateManager.addMessage("☀️ 你接过红薯，咬了一口——很甜。大爷笑了笑：「这就对了，日子再难，也得吃口热乎的。」心情+15，道德+1。", "success");
+        },
+      },
+      {
+        text: "婉拒，但心里记下了这份暖意",
+        hint: "心智+5",
+        apply: function (st) {
+          if (st.flags) st.flags._depressionKindnessDone = true;
+          if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 5);
+          StateManager.addMessage("☀️ 你摆摆手说不用了，但那份热气还是留在了心里。这座城市虽然冷漠，但总有人在发光。心智+5。", "info");
+        },
+      },
+    ],
+  },
+];
 
   for (var i = 0; i < CROSS_EVENTS.length; i++) {
     // 防御性兜底：无 conditions 的事件默认放行（避免死代码），与 CAREER_EVENTS 一致
@@ -170289,6 +170329,13 @@ function determineEmotionalState(state) {
     }
   }
 
+  // [全系统自洽修复] 域G 联动增强: 追踪抑郁/悲伤连续天数（用于触发街头善意事件）
+  if (emotionalState === "depressed" || emotionalState === "sad") {
+    state.flags._depressionStreak = (state.flags._depressionStreak || 0) + 1;
+  } else {
+    state.flags._depressionStreak = 0;
+  }
+
   // [全系统自洽修复] 域G 联动增强: 首次达到 elated 状态时发送庆祝消息
   if (emotionalState === "elated" && !state.flags._everElated) {
     state.flags._everElated = true;
@@ -183756,7 +183803,8 @@ function applyPromotion(state, newRank) {
     for (var ni = 0; ni < workplaceNPCs.length; ni++) {
       var npcId = workplaceNPCs[ni];
       if (state.relationships[npcId] && state.relationships[npcId].met) {
-        state.relationships[npcId].affinity = Math.min(100, (state.relationships[npcId].affinity || 0) + 3);
+        // [全系统自洽修复] 域H A类修复: 晋升影响同事好感改走 applyAffinityChange
+          applyAffinityChange(state, npcId, 3, "晋升影响");
       }
     }
     if (state.corporate && state.corporate.team) {
@@ -184824,7 +184872,8 @@ function endQuarter() {
       for (var wi = 0; wi < workplaceNPCs.length; wi++) {
         var npcRel = state.relationships[workplaceNPCs[wi]];
         if (npcRel && npcRel.met) {
-          npcRel.affinity = Math.max(0, Math.min(100, (npcRel.affinity || 50) + affinityChange));
+          // [全系统自洽修复] 域H A类修复: 绩效影响同事好感改走 applyAffinityChange（确保 _lastInteractionDay 更新 + 蝴蝶效应日志 + 升降级播报）
+          applyAffinityChange(state, workplaceNPCs[wi], affinityChange, "绩效影响");
         }
       }
       if (affinityChange > 0) {
@@ -194783,8 +194832,27 @@ function tickStartup(state, tickType) {
 
   // 更新峰值估值
   if (!startup.history) startup.history = {};
-  if (company.valuation > (startup.history.peakValuation || 0)) {
+  var _prevPeak = startup.history.peakValuation || 0;
+  if (company.valuation > _prevPeak) {
     startup.history.peakValuation = company.valuation;
+  }
+  // [全系统自洽修复] 域H联动: 估值里程碑→心情峰终峰值(H→G 峰终定律·成就时刻)
+  if (typeof StateManager !== "undefined" && state.needs) {
+    var _milestones = [
+      { threshold: 1000000, flag: "_startupValuation1M", h: 8, msg: "🎉 公司估值突破¥1,000,000！你的坚持开始有了回报。" },
+      { threshold: 10000000, flag: "_startupValuation10M", h: 15, msg: "🚀 公司估值突破¥10,000,000！你正在创造属于自己的商业传奇！" },
+      { threshold: 100000000, flag: "_startupValuation100M", h: 25, msg: "💎 公司估值突破¥100,000,000！曾经的街头创业者,如今身价过亿！" },
+    ];
+    for (var _mi = 0; _mi < _milestones.length; _mi++) {
+      var _m = _milestones[_mi];
+      if (startup.history.peakValuation >= _m.threshold && _prevPeak < _m.threshold) {
+        if (!state.flags[_m.flag]) {
+          state.flags[_m.flag] = true;
+          state.needs.happiness = Math.min(100, (state.needs.happiness || 50) + _m.h);
+          StateManager.addMessage(_m.msg, "success");
+        }
+      }
+    }
   }
 
   // 6. 团队忠诚度衰减

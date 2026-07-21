@@ -2576,8 +2576,27 @@ function tickStartup(state, tickType) {
 
   // 更新峰值估值
   if (!startup.history) startup.history = {};
-  if (company.valuation > (startup.history.peakValuation || 0)) {
+  var _prevPeak = startup.history.peakValuation || 0;
+  if (company.valuation > _prevPeak) {
     startup.history.peakValuation = company.valuation;
+  }
+  // [全系统自洽修复] 域H联动: 估值里程碑→心情峰终峰值(H→G 峰终定律·成就时刻)
+  if (typeof StateManager !== "undefined" && state.needs) {
+    var _milestones = [
+      { threshold: 1000000, flag: "_startupValuation1M", h: 8, msg: "🎉 公司估值突破¥1,000,000！你的坚持开始有了回报。" },
+      { threshold: 10000000, flag: "_startupValuation10M", h: 15, msg: "🚀 公司估值突破¥10,000,000！你正在创造属于自己的商业传奇！" },
+      { threshold: 100000000, flag: "_startupValuation100M", h: 25, msg: "💎 公司估值突破¥100,000,000！曾经的街头创业者,如今身价过亿！" },
+    ];
+    for (var _mi = 0; _mi < _milestones.length; _mi++) {
+      var _m = _milestones[_mi];
+      if (startup.history.peakValuation >= _m.threshold && _prevPeak < _m.threshold) {
+        if (!state.flags[_m.flag]) {
+          state.flags[_m.flag] = true;
+          state.needs.happiness = Math.min(100, (state.needs.happiness || 50) + _m.h);
+          StateManager.addMessage(_m.msg, "success");
+        }
+      }
+    }
   }
 
   // 6. 团队忠诚度衰减

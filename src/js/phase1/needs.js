@@ -163,6 +163,13 @@ function determineEmotionalState(state) {
     }
   }
 
+  // [全系统自洽修复] 域G 联动增强: 追踪抑郁/悲伤连续天数（用于触发街头善意事件）
+  if (emotionalState === "depressed" || emotionalState === "sad") {
+    state.flags._depressionStreak = (state.flags._depressionStreak || 0) + 1;
+  } else {
+    state.flags._depressionStreak = 0;
+  }
+
   // [全系统自洽修复] 域G 联动增强: 首次达到 elated 状态时发送庆祝消息
   if (emotionalState === "elated" && !state.flags._everElated) {
     state.flags._everElated = true;
