@@ -789,7 +789,7 @@ function isItemNpcGift(itemId, npcId) {
     notebook_item: ["daily_use"],
     flashlight: ["daily_use"],
     radio: ["daily_use"],
-    vitamins_item2: ["daily_use"], // [全系统自洽修复] 域A 修复: vitamins_item2 → 礼物映射ID与实际物品ID对齐
+    vitamins_item: ["daily_use"], // [全系统自洽修复] 域A 修复: vitamins_item2→vitamins_item NPC礼物ID对齐
     eye_drops: ["daily_use"],
     back_massager: ["daily_use"],
     lunch_box: ["daily_use"],

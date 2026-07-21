@@ -2964,12 +2964,12 @@ function renderInvestmentTab(state, parent) {
     '<span style="color:var(--text-muted);">· 折线固定蓝色 · 价格/涨跌幅 红涨绿跌</span>' +
     "</div>" +
     '<div style="display:flex;gap:4px;margin-bottom:8px;flex-wrap:wrap;">' +
-    '<button class="btn btn-sm sub-tab active" data-stab="stocks">股票</button>' +
-    '<button class="btn btn-sm sub-tab" data-stab="crypto">虚拟币</button>' +
-    '<button class="btn btn-sm sub-tab" data-stab="precious">贵金属</button>' +
-    '<button class="btn btn-sm sub-tab" data-stab="futures">期货基金</button>' +
-    '<button class="btn btn-sm sub-tab" data-stab="re">房产</button>' +
-    '<button class="btn btn-sm sub-tab" data-stab="car">汽车</button>' +
+    '<button class="btn btn-sm sub-tab active" data-stab="stocks" title="📈 股票：投资A股/港股/美股，30只知名企业，短线波动大">股票</button>' +
+    '<button class="btn btn-sm sub-tab" data-stab="crypto" title="₿ 虚拟币：比特币等10种加密货币，高波动高风险">虚拟币</button>' +
+    '<button class="btn btn-sm sub-tab" data-stab="precious" title="🥇 贵金属：黄金/白银等实物贵金属，避险保值">贵金属</button>' +
+    '<button class="btn btn-sm sub-tab" data-stab="futures" title="📊 期货基金：指数基金/期货合约，长期定投">期货基金</button>' +
+    '<button class="btn btn-sm sub-tab" data-stab="re" title="🏠 房产：住宅/商铺/写字楼，大额投资长期持有">房产</button>' +
+    '<button class="btn btn-sm sub-tab" data-stab="car" title="🚗 汽车：二手车/新车，代步工具也可投资转卖">汽车</button>' +
     '</div><div id="inv-sub-area"></div>';
 
   parent.appendChild(cont);

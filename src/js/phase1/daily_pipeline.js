@@ -569,6 +569,19 @@ const DAILY_PIPELINE = [
         tickDailyPriceShocks(state);
     },
   },
+  // [全系统自洽修复] 域A 联动增强#1: 每日经济结算（累进财富税/动态利率/市场饱和度）
+  // 联动: A→G 核心机制 — 将 economy_v3.1.js 的 dailyEconomicSettlement 接入 pipeline
+  {
+    name: "economic_settlement",
+    fn: function (state) {
+      if (typeof EconomySystem !== "undefined" && EconomySystem.dailyEconomicSettlement) {
+        var result = EconomySystem.dailyEconomicSettlement(state);
+        if (result && result.wealthTax > 0) {
+          state.resources.cash = Math.max(0, (state.resources.cash || 0) - result.wealthTax);
+        }
+      }
+    },
+  },
 
   // === 投资tick ===
   {

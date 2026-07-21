@@ -536,8 +536,8 @@ function renderCityTab(state, parent) {
   parent.innerHTML = "";
   // ---- 子Tab导航 ----
   var SUB_TABS = [
-    { id: "city_map", label: "🗺️ 地图" },
-    { id: "city_trade", label: "📦 行情" },
+    { id: "city_map", label: "🗺️ 地图", title: "🗺️ 地图 — 城市地图导航、查看各地点信息" },
+    { id: "city_trade", label: "📦 行情", title: "📦 行情 — 商品价格行情、交易市场" },
   ];
   var currentSubTab = state._citySubTab || "city_map";
 
@@ -550,6 +550,7 @@ function renderCityTab(state, parent) {
       "btn btn-sm" + (currentSubTab === st.id ? " btn-primary" : "");
     btn.style.cssText = "font-size:11px;padding:4px 10px;white-space:nowrap;";
     btn.textContent = st.label;
+    btn.title = st.title;
     btn.onclick = function () {
       state._citySubTab = st.id;
       renderCityTab(state, parent);
@@ -586,10 +587,10 @@ function renderMeTab(state, parent) {
   parent.innerHTML = "";
   // ---- 子Tab导航 ----
   var SUB_TABS = [
-    { id: "me_inventory", label: "🎒 背包" },
-    { id: "me_skills", label: "📚 技能" },
-    { id: "me_growth", label: "🌱 成长" },
-    { id: "me_life", label: "🏥 人生事务" },
+    { id: "me_inventory", label: "🎒 背包", title: "🎒 背包 — 查看和管理随身物品、装备" },
+    { id: "me_skills", label: "📚 技能", title: "📚 技能 — 学习进度、技能等级、连携效果" },
+    { id: "me_growth", label: "🌱 成长", title: "🌱 成长 — 个人成长轨迹、天赋、属性训练" },
+    { id: "me_life", label: "🏥 人生事务", title: "🏥 人生事务 — 健康管理、疾病治疗、人生重大事务" },
   ];
   var currentSubTab = state._meSubTab || "me_inventory";
 
@@ -602,6 +603,7 @@ function renderMeTab(state, parent) {
       "btn btn-sm" + (currentSubTab === st.id ? " btn-primary" : "");
     btn.style.cssText = "font-size:11px;padding:4px 10px;white-space:nowrap;";
     btn.textContent = st.label;
+    btn.title = st.title;
     btn.onclick = function () {
       state._meSubTab = st.id;
       renderMeTab(state, parent);
@@ -661,12 +663,12 @@ function renderCareerTab(state, parent) {
   parent.innerHTML = "";
   // ---- 子Tab导航 ----
   var SUB_TABS = [
-    { id: "career_overview", label: "📊 总览" },
-    { id: "career_jobs", label: "💼 求职" },
-    { id: "career_invest", label: "💰 投资" },
-    { id: "career_hustle", label: "🔄 副业" },
-    { id: "career_startup", label: "🚀 创业" },
-    { id: "career_achievements", label: "🏅 成就" },
+    { id: "career_overview", label: "📊 总览", title: "📊 总览 — 当前工作状态、收入支出概览" },
+    { id: "career_jobs", label: "💼 求职", title: "💼 求职 — 找工作、面试、职业路线选择" },
+    { id: "career_invest", label: "💰 投资", title: "💰 投资 — 股票/虚拟币/贵金属/期货/房产/汽车" },
+    { id: "career_hustle", label: "🔄 副业", title: "🔄 副业 — 兼职赚钱、副业经营" },
+    { id: "career_startup", label: "🚀 创业", title: "🚀 创业 — 创办公司、企业运营管理" },
+    { id: "career_achievements", label: "🏅 成就", title: "🏅 成就 — 查看已解锁成就和达成条件" },
   ];
   var hasJob = !!(state.career && state.career.currentJob);
   var currentSubTab =
@@ -681,6 +683,7 @@ function renderCareerTab(state, parent) {
       "btn btn-sm" + (currentSubTab === st.id ? " btn-primary" : "");
     btn.style.cssText = "font-size:11px;padding:4px 10px;white-space:nowrap;";
     btn.textContent = st.label;
+    btn.title = st.title;
     btn.onclick = function () {
       state._careerTabSubTab = st.id;
       renderCareerTab(state, parent);

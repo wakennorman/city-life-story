@@ -73,6 +73,7 @@ function renderSideHustleTab(state, parent) {
 
     const card = document.createElement("div");
     card.className = "hustle-card" + (check.ok ? "" : " unavailable");
+    card.title = (hustle.icon || "💼") + " " + hustle.name + " — " + (hustle.desc || "") + " | 基础收入:¥" + (hustle.baseIncome || 0) + " 疲劳消耗:" + (hustle.fatigueCost || 0);
 
     // 检查是否可用
     const availableColor = check.ok ? "var(--accent)" : "var(--text-muted)";

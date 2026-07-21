@@ -628,8 +628,8 @@ function showEventModal(evt) {
       ${springFestDecorHtml}
       ${springFestProgressHtml}
       <div class="event-header">
-        <div class="event-icon">${evt.icon}</div>
-        <h2 class="event-title">${evt.title}</h2>
+        <div class="event-icon" title="${evt.title}">${evt.icon}</div>
+        <h2 class="event-title" title="${evt.story ? evt.story.replace(/<[^>]*>/g, '').substring(0, 100) : ''}">${evt.title}</h2>
         ${evt.weather ? '<span class="event-tag weather-tag" style="font-size:10px;padding:1px 6px;border-radius:3px;background:rgba(90,138,180,0.15);color:var(--info);margin-left:8px;">🌤️ 天气</span>' : ""}
         ${evt.sector ? '<span class="event-tag sector-tag" style="font-size:10px;padding:1px 6px;border-radius:3px;background:rgba(74,158,92,0.15);color:var(--success);margin-left:4px;">🏭 ' + evt.sector + '</span>' : ""}
       </div>

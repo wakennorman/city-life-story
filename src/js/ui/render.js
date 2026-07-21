@@ -2294,6 +2294,13 @@ function createActionCard(action, state) {
   card.className = "action-card";
   // v3.0 引导系统需要：在卡片上加 data-action-id 让 tutorial.js 能定位
   if (action.id) card.dataset.actionId = action.id;
+  // 行动卡片悬停说明
+  var _titleParts = [(action.icon || "⚡") + " " + action.name];
+  if (action.desc) _titleParts.push("— " + action.desc);
+  if (action.apCost) _titleParts.push("⚇ 消耗行动力:" + action.apCost);
+  if (action.payEstimate) _titleParts.push("💰 收益:" + action.payEstimate);
+  if (action.costEstimate) _titleParts.push("💸 花费:¥" + action.costEstimate);
+  card.title = _titleParts.join(" ");
   if (action.disabled) {
     card.classList.add("disabled");
   }
@@ -5833,12 +5840,12 @@ function renderMergedPersonalGrowthTab(state, parent) {
 
   // ---- 子Tab导航（v3.0：属性训练排第一，数据排最后）----
   var subTabs = [
-    { id: "pg_stat_train", label: "🏋️ 属性训练", icon: "🏋️" },
-    { id: "pg_edu", label: "🎓 学历", icon: "🎓" },
-    { id: "pg_hobbies", label: "🏃 爱好", icon: "🏃" },
-    { id: "pg_health", label: "💪 健康", icon: "💪" },
-    { id: "pg_goals", label: "🎯 目标", icon: "🎯" },
-    { id: "pg_charts", label: "📈 数据", icon: "📈" },
+    { id: "pg_stat_train", label: "🏋️ 属性训练", icon: "🏋️", title: "🏋️ 属性训练 — 提升基础属性（体质/智力/敏捷/心智/魅力）" },
+    { id: "pg_edu", label: "🎓 学历", icon: "🎓", title: "🎓 学历 — 查看学历等级、进修深造" },
+    { id: "pg_hobbies", label: "🏃 爱好", icon: "🏃", title: "🏃 爱好 — 培养业余爱好，丰富生活" },
+    { id: "pg_health", label: "💪 健康", icon: "💪", title: "💪 健康 — 健康管理、疾病治疗、保健养生" },
+    { id: "pg_goals", label: "🎯 目标", icon: "🎯", title: "🎯 目标 — 人生目标追踪、阶段任务" },
+    { id: "pg_charts", label: "📈 数据", icon: "📈", title: "📈 数据 — 查看个人数据统计和图表" },
   ];
   var currentSubTab = state._pgSubTab || "pg_stat_train";
 
@@ -5850,6 +5857,7 @@ function renderMergedPersonalGrowthTab(state, parent) {
     btn.className = "tab-btn" + (currentSubTab === st.id ? " active" : "");
     btn.style.cssText = "font-size:11px;padding:4px 10px;white-space:nowrap;";
     btn.textContent = st.label;
+    btn.title = st.title;
     btn.onclick = function () {
       state._pgSubTab = st.id;
       renderMergedPersonalGrowthTab(state, parent);
@@ -6546,6 +6554,7 @@ function renderMessageLog(state) {
     toggleBtn.id = "message-log-toggle";
     toggleBtn.className = "btn btn-sm";
     toggleBtn.textContent = "📌 展开";
+    toggleBtn.title = "展开/收起事件记录列表";
     toggleBtn.onclick = function (e) {
       e.stopPropagation();
       logEl.classList.toggle("collapsed");

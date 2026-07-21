@@ -4934,8 +4934,8 @@ function showEventModal(evt) {
       ${springFestDecorHtml}
       ${springFestProgressHtml}
       <div class="event-header">
-        <div class="event-icon">${evt.icon}</div>
-        <h2 class="event-title">${evt.title}</h2>
+        <div class="event-icon" title="${evt.title}">${evt.icon}</div>
+        <h2 class="event-title" title="${evt.story ? evt.story.replace(/<[^>]*>/g, '').substring(0, 100) : ''}">${evt.title}</h2>
         ${evt.weather ? '<span class="event-tag weather-tag" style="font-size:10px;padding:1px 6px;border-radius:3px;background:rgba(90,138,180,0.15);color:var(--info);margin-left:8px;">🌤️ 天气</span>' : ""}
         ${evt.sector ? '<span class="event-tag sector-tag" style="font-size:10px;padding:1px 6px;border-radius:3px;background:rgba(74,158,92,0.15);color:var(--success);margin-left:4px;">🏭 ' + evt.sector + '</span>' : ""}
       </div>
@@ -150192,14 +150192,14 @@ const STREET_JOBS = [
     risk: { injury: 0.05, illness: 0.02 },
   },
   // ── 技能连携解锁工作（域C 深度开发） ──
-  { id: "food_truck_owner", name: "移动餐车", desc: "开餐车卖小吃。烹饪+销售双技能加持，生意红火。需要餐饮创业连携激活。", icon: "🚚", location: "commercial", requirements: { minAge: 18, maxAge: 60 }, requiredFlag: "_synergy_cooking_sales", effects: { fatigue: 25, happiness: 5, cookingXp: 3, salesXp: 2 }, payCalc: function(s) { return Math.floor(200 + s.skills.cooking.level * 2 + s.skills.sales.level * 1.5 + Random.float(0, 100)); }, risk: { illness: 0.01 } },
-  { id: "remote_dev", name: "远程开发", desc: "接海外远程编程项目。需要国际外包连携激活。", icon: "💻", location: "techpark", requirements: { minAge: 20, maxAge: 60 }, requiredFlag: "_synergy_coding_english", effects: { fatigue: 10, codingXp: 4, englishXp: 2 }, payCalc: function(s) { return Math.floor(300 + s.skills.coding.level * 3 + s.skills.english.level * 2 + Random.float(0, 200)); }, risk: {} },
-  { id: "master_repairman", name: "全能维修", desc: "家电维修、电路检修无所不能。需要综合维修连携激活。", icon: "🔧", location: "commercial", requirements: { minAge: 18, maxAge: 60 }, requiredFlag: "_synergy_repair_electrician", effects: { fatigue: 20, repairXp: 3, electricianXp: 2 }, payCalc: function(s) { return Math.floor(250 + s.skills.repair.level * 2.5 + s.skills.electrician.level * 2 + Random.float(0, 100)); }, risk: { injury: 0.02 } },
-  { id: "sales_team_lead", name: "销售主管", desc: "带领小团队做地推和客户拓展。需要团队销售连携激活。", icon: "👥", location: "commercial", requirements: { minAge: 22, maxAge: 55 }, requiredFlag: "_synergy_sales_management", effects: { fatigue: 20, happiness: 5, salesXp: 3, managementXp: 2 }, payCalc: function(s) { return Math.floor(300 + s.skills.sales.level * 2.5 + s.skills.management.level * 2 + Random.float(0, 150)); }, risk: {} },
-  { id: "long_haul_driver", name: "长途司机", desc: "跑长途货运，跨省运输。需要长途运输连携激活。", icon: "🚛", location: "industrial", requirements: { minAge: 22, maxAge: 55 }, requiredFlag: "_synergy_driving_accounting", effects: { fatigue: 35, drivingXp: 4, accountingXp: 1 }, payCalc: function(s) { return Math.floor(250 + s.skills.driving.level * 2.5 + s.skills.accounting.level * 1.5 + Random.float(0, 150)); }, risk: { injury: 0.03 } },
-  { id: "foreign_company_staff", name: "外企职员", desc: "在外资企业做行政/协调工作。需要外企晋升连携激活。", icon: "🏢", location: "techpark", requirements: { minAge: 22, maxAge: 50 }, requiredFlag: "_synergy_english_management", effects: { fatigue: 15, englishXp: 3, managementXp: 2 }, payCalc: function(s) { return Math.floor(400 + s.skills.english.level * 3 + s.skills.management.level * 2 + Random.float(0, 200)); }, risk: {} },
-  { id: "finance_analyst", name: "财务分析师", desc: "为企业提供财务分析服务。需要财务自由连携激活。", icon: "📊", location: "techpark", requirements: { minAge: 22, maxAge: 55 }, requiredFlag: "_synergy_accounting_management", effects: { fatigue: 15, accountingXp: 3, managementXp: 2 }, payCalc: function(s) { return Math.floor(350 + s.skills.accounting.level * 3 + s.skills.management.level * 2 + Random.float(0, 150)); }, risk: {} },
-  { id: "smart_home_tech", name: "智能家居技术员", desc: "安装调试智能家居系统。需要智能家居专家连携激活。", icon: "🏡", location: "commercial", requirements: { minAge: 22, maxAge: 55 }, requiredFlag: "_synergy_repair_electrician_coding", effects: { fatigue: 20, repairXp: 3, electricianXp: 2, codingXp: 2 }, payCalc: function(s) { return Math.floor(400 + s.skills.repair.level * 2.5 + s.skills.electrician.level * 2 + s.skills.coding.level * 2 + Random.float(0, 200)); }, risk: { injury: 0.01 } },
+  { id: "food_truck_owner", name: "移动餐车", desc: "开餐车卖小吃。烹饪+销售双技能加持，生意红火。需要餐饮创业连携激活。", icon: "🚚", location: "commercialDist", requirements: { minAge: 18, maxAge: 60 }, requiredFlag: "_synergy_cooking_sales", effects: { fatigue: 25, happiness: 5, cookingXp: 3, salesXp: 2 }, payCalc: function(s) { return Math.floor(200 + s.skills.cooking.level * 2 + s.skills.sales.level * 1.5 + Random.float(0, 100)); }, risk: { illness: 0.01 } },
+  { id: "remote_dev", name: "远程开发", desc: "接海外远程编程项目。需要国际外包连携激活。", icon: "💻", location: "techPark", requirements: { minAge: 20, maxAge: 60 }, requiredFlag: "_synergy_coding_english", effects: { fatigue: 10, codingXp: 4, englishXp: 2 }, payCalc: function(s) { return Math.floor(300 + s.skills.coding.level * 3 + s.skills.english.level * 2 + Random.float(0, 200)); }, risk: {} },
+  { id: "master_repairman", name: "全能维修", desc: "家电维修、电路检修无所不能。需要综合维修连携激活。", icon: "🔧", location: "commercialDist", requirements: { minAge: 18, maxAge: 60 }, requiredFlag: "_synergy_repair_electrician", effects: { fatigue: 20, repairXp: 3, electricianXp: 2 }, payCalc: function(s) { return Math.floor(250 + s.skills.repair.level * 2.5 + s.skills.electrician.level * 2 + Random.float(0, 100)); }, risk: { injury: 0.02 } },
+  { id: "sales_team_lead", name: "销售主管", desc: "带领小团队做地推和客户拓展。需要团队销售连携激活。", icon: "👥", location: "commercialDist", requirements: { minAge: 22, maxAge: 55 }, requiredFlag: "_synergy_sales_management", effects: { fatigue: 20, happiness: 5, salesXp: 3, managementXp: 2 }, payCalc: function(s) { return Math.floor(300 + s.skills.sales.level * 2.5 + s.skills.management.level * 2 + Random.float(0, 150)); }, risk: {} },
+  { id: "long_haul_driver", name: "长途司机", desc: "跑长途货运，跨省运输。需要长途运输连携激活。", icon: "🚛", location: "factoryZone", requirements: { minAge: 22, maxAge: 55 }, requiredFlag: "_synergy_driving_accounting", effects: { fatigue: 35, drivingXp: 4, accountingXp: 1 }, payCalc: function(s) { return Math.floor(250 + s.skills.driving.level * 2.5 + s.skills.accounting.level * 1.5 + Random.float(0, 150)); }, risk: { injury: 0.03 } },
+  { id: "foreign_company_staff", name: "外企职员", desc: "在外资企业做行政/协调工作。需要外企晋升连携激活。", icon: "🏢", location: "techPark", requirements: { minAge: 22, maxAge: 50 }, requiredFlag: "_synergy_english_management", effects: { fatigue: 15, englishXp: 3, managementXp: 2 }, payCalc: function(s) { return Math.floor(400 + s.skills.english.level * 3 + s.skills.management.level * 2 + Random.float(0, 200)); }, risk: {} },
+  { id: "finance_analyst", name: "财务分析师", desc: "为企业提供财务分析服务。需要财务自由连携激活。", icon: "📊", location: "techPark", requirements: { minAge: 22, maxAge: 55 }, requiredFlag: "_synergy_accounting_management", effects: { fatigue: 15, accountingXp: 3, managementXp: 2 }, payCalc: function(s) { return Math.floor(350 + s.skills.accounting.level * 3 + s.skills.management.level * 2 + Random.float(0, 150)); }, risk: {} },
+  { id: "smart_home_tech", name: "智能家居技术员", desc: "安装调试智能家居系统。需要智能家居专家连携激活。", icon: "🏡", location: "commercialDist", requirements: { minAge: 22, maxAge: 55 }, requiredFlag: "_synergy_repair_electrician_coding", effects: { fatigue: 20, repairXp: 3, electricianXp: 2, codingXp: 2 }, payCalc: function(s) { return Math.floor(400 + s.skills.repair.level * 2.5 + s.skills.electrician.level * 2 + s.skills.coding.level * 2 + Random.float(0, 200)); }, risk: { injury: 0.01 } },
 ];
 
 // ====== P2#12 技能树分支解锁工作 ======
@@ -150648,7 +150648,7 @@ const STREET_JOBS = [
       desc: "在高档小区做家政服务。环境好、收入高，但需要细致耐心。",
       icon: "🧹",
       location: "luxury_community",
-      requirements: { hygiene: 30, minAge: 20, maxAge: 55 },
+      requirements: { mental: 25, minAge: 20, maxAge: 55 }, // [全系统自洽修复] 域A 修复: hygiene→mental (hygiene在state.needs不在state.player,原要求永不满足)
       effects: { fatigue: 18, hygiene: 5, happiness: 3, physiqueXp: 1 },
       payCalc(state) {
         // [域A 修复] hygiene 真实路径为 state.needs.hygiene (非 state.player.hygiene)，
@@ -152246,7 +152246,7 @@ function isItemNpcGift(itemId, npcId) {
     notebook_item: ["daily_use"],
     flashlight: ["daily_use"],
     radio: ["daily_use"],
-    vitamins_item2: ["daily_use"], // [全系统自洽修复] 域A 修复: vitamins_item2 → 礼物映射ID与实际物品ID对齐
+    vitamins_item: ["daily_use"], // [全系统自洽修复] 域A 修复: vitamins_item2→vitamins_item NPC礼物ID对齐
     eye_drops: ["daily_use"],
     back_massager: ["daily_use"],
     lunch_box: ["daily_use"],
@@ -177868,6 +177868,19 @@ const DAILY_PIPELINE = [
         tickDailyPriceShocks(state);
     },
   },
+  // [全系统自洽修复] 域A 联动增强#1: 每日经济结算（累进财富税/动态利率/市场饱和度）
+  // 联动: A→G 核心机制 — 将 economy_v3.1.js 的 dailyEconomicSettlement 接入 pipeline
+  {
+    name: "economic_settlement",
+    fn: function (state) {
+      if (typeof EconomySystem !== "undefined" && EconomySystem.dailyEconomicSettlement) {
+        var result = EconomySystem.dailyEconomicSettlement(state);
+        if (result && result.wealthTax > 0) {
+          state.resources.cash = Math.max(0, (state.resources.cash || 0) - result.wealthTax);
+        }
+      }
+    },
+  },
 
   // === 投资tick ===
   {
@@ -188146,12 +188159,12 @@ function renderInvestmentTab(state, parent) {
     '<span style="color:var(--text-muted);">· 折线固定蓝色 · 价格/涨跌幅 红涨绿跌</span>' +
     "</div>" +
     '<div style="display:flex;gap:4px;margin-bottom:8px;flex-wrap:wrap;">' +
-    '<button class="btn btn-sm sub-tab active" data-stab="stocks">股票</button>' +
-    '<button class="btn btn-sm sub-tab" data-stab="crypto">虚拟币</button>' +
-    '<button class="btn btn-sm sub-tab" data-stab="precious">贵金属</button>' +
-    '<button class="btn btn-sm sub-tab" data-stab="futures">期货基金</button>' +
-    '<button class="btn btn-sm sub-tab" data-stab="re">房产</button>' +
-    '<button class="btn btn-sm sub-tab" data-stab="car">汽车</button>' +
+    '<button class="btn btn-sm sub-tab active" data-stab="stocks" title="📈 股票：投资A股/港股/美股，30只知名企业，短线波动大">股票</button>' +
+    '<button class="btn btn-sm sub-tab" data-stab="crypto" title="₿ 虚拟币：比特币等10种加密货币，高波动高风险">虚拟币</button>' +
+    '<button class="btn btn-sm sub-tab" data-stab="precious" title="🥇 贵金属：黄金/白银等实物贵金属，避险保值">贵金属</button>' +
+    '<button class="btn btn-sm sub-tab" data-stab="futures" title="📊 期货基金：指数基金/期货合约，长期定投">期货基金</button>' +
+    '<button class="btn btn-sm sub-tab" data-stab="re" title="🏠 房产：住宅/商铺/写字楼，大额投资长期持有">房产</button>' +
+    '<button class="btn btn-sm sub-tab" data-stab="car" title="🚗 汽车：二手车/新车，代步工具也可投资转卖">汽车</button>' +
     '</div><div id="inv-sub-area"></div>';
 
   parent.appendChild(cont);
@@ -212555,6 +212568,7 @@ function renderLocation(state) {
   const loc = getLocation(locKey);
   if (loc) {
     document.getElementById("location-name").textContent = loc.name;
+    document.getElementById("location-name").title = "📍 当前地点：" + loc.name + " — " + (loc.desc || "");
     document.getElementById("location-desc").textContent = loc.desc;
   }
 
@@ -212703,7 +212717,7 @@ function renderWeatherPanel(state) {
 
   html +=
     '<div style="display:flex;align-items:center;gap:4px;flex-wrap:wrap;">';
-  html += '<span style="font-size:14px;">' + wDef.icon + "</span>";
+  html += '<span style="font-size:14px;" title="' + wDef.name + '：' + (wDef.desc || wDef.name) + '">' + wDef.icon + "</span>";
   html +=
     '<span style="font-size:12px;font-weight:600;">' + wDef.name + "</span>";
   html +=
@@ -213562,8 +213576,8 @@ function renderCityTab(state, parent) {
   parent.innerHTML = "";
   // ---- 子Tab导航 ----
   var SUB_TABS = [
-    { id: "city_map", label: "🗺️ 地图" },
-    { id: "city_trade", label: "📦 行情" },
+    { id: "city_map", label: "🗺️ 地图", title: "🗺️ 地图 — 城市地图导航、查看各地点信息" },
+    { id: "city_trade", label: "📦 行情", title: "📦 行情 — 商品价格行情、交易市场" },
   ];
   var currentSubTab = state._citySubTab || "city_map";
 
@@ -213576,6 +213590,7 @@ function renderCityTab(state, parent) {
       "btn btn-sm" + (currentSubTab === st.id ? " btn-primary" : "");
     btn.style.cssText = "font-size:11px;padding:4px 10px;white-space:nowrap;";
     btn.textContent = st.label;
+    btn.title = st.title;
     btn.onclick = function () {
       state._citySubTab = st.id;
       renderCityTab(state, parent);
@@ -213612,10 +213627,10 @@ function renderMeTab(state, parent) {
   parent.innerHTML = "";
   // ---- 子Tab导航 ----
   var SUB_TABS = [
-    { id: "me_inventory", label: "🎒 背包" },
-    { id: "me_skills", label: "📚 技能" },
-    { id: "me_growth", label: "🌱 成长" },
-    { id: "me_life", label: "🏥 人生事务" },
+    { id: "me_inventory", label: "🎒 背包", title: "🎒 背包 — 查看和管理随身物品、装备" },
+    { id: "me_skills", label: "📚 技能", title: "📚 技能 — 学习进度、技能等级、连携效果" },
+    { id: "me_growth", label: "🌱 成长", title: "🌱 成长 — 个人成长轨迹、天赋、属性训练" },
+    { id: "me_life", label: "🏥 人生事务", title: "🏥 人生事务 — 健康管理、疾病治疗、人生重大事务" },
   ];
   var currentSubTab = state._meSubTab || "me_inventory";
 
@@ -213628,6 +213643,7 @@ function renderMeTab(state, parent) {
       "btn btn-sm" + (currentSubTab === st.id ? " btn-primary" : "");
     btn.style.cssText = "font-size:11px;padding:4px 10px;white-space:nowrap;";
     btn.textContent = st.label;
+    btn.title = st.title;
     btn.onclick = function () {
       state._meSubTab = st.id;
       renderMeTab(state, parent);
@@ -213687,12 +213703,12 @@ function renderCareerTab(state, parent) {
   parent.innerHTML = "";
   // ---- 子Tab导航 ----
   var SUB_TABS = [
-    { id: "career_overview", label: "📊 总览" },
-    { id: "career_jobs", label: "💼 求职" },
-    { id: "career_invest", label: "💰 投资" },
-    { id: "career_hustle", label: "🔄 副业" },
-    { id: "career_startup", label: "🚀 创业" },
-    { id: "career_achievements", label: "🏅 成就" },
+    { id: "career_overview", label: "📊 总览", title: "📊 总览 — 当前工作状态、收入支出概览" },
+    { id: "career_jobs", label: "💼 求职", title: "💼 求职 — 找工作、面试、职业路线选择" },
+    { id: "career_invest", label: "💰 投资", title: "💰 投资 — 股票/虚拟币/贵金属/期货/房产/汽车" },
+    { id: "career_hustle", label: "🔄 副业", title: "🔄 副业 — 兼职赚钱、副业经营" },
+    { id: "career_startup", label: "🚀 创业", title: "🚀 创业 — 创办公司、企业运营管理" },
+    { id: "career_achievements", label: "🏅 成就", title: "🏅 成就 — 查看已解锁成就和达成条件" },
   ];
   var hasJob = !!(state.career && state.career.currentJob);
   var currentSubTab =
@@ -213707,6 +213723,7 @@ function renderCareerTab(state, parent) {
       "btn btn-sm" + (currentSubTab === st.id ? " btn-primary" : "");
     btn.style.cssText = "font-size:11px;padding:4px 10px;white-space:nowrap;";
     btn.textContent = st.label;
+    btn.title = st.title;
     btn.onclick = function () {
       state._careerTabSubTab = st.id;
       renderCareerTab(state, parent);
@@ -216095,6 +216112,13 @@ function createActionCard(action, state) {
   card.className = "action-card";
   // v3.0 引导系统需要：在卡片上加 data-action-id 让 tutorial.js 能定位
   if (action.id) card.dataset.actionId = action.id;
+  // 行动卡片悬停说明
+  var _titleParts = [(action.icon || "⚡") + " " + action.name];
+  if (action.desc) _titleParts.push("— " + action.desc);
+  if (action.apCost) _titleParts.push("⚇ 消耗行动力:" + action.apCost);
+  if (action.payEstimate) _titleParts.push("💰 收益:" + action.payEstimate);
+  if (action.costEstimate) _titleParts.push("💸 花费:¥" + action.costEstimate);
+  card.title = _titleParts.join(" ");
   if (action.disabled) {
     card.classList.add("disabled");
   }
@@ -219634,12 +219658,12 @@ function renderMergedPersonalGrowthTab(state, parent) {
 
   // ---- 子Tab导航（v3.0：属性训练排第一，数据排最后）----
   var subTabs = [
-    { id: "pg_stat_train", label: "🏋️ 属性训练", icon: "🏋️" },
-    { id: "pg_edu", label: "🎓 学历", icon: "🎓" },
-    { id: "pg_hobbies", label: "🏃 爱好", icon: "🏃" },
-    { id: "pg_health", label: "💪 健康", icon: "💪" },
-    { id: "pg_goals", label: "🎯 目标", icon: "🎯" },
-    { id: "pg_charts", label: "📈 数据", icon: "📈" },
+    { id: "pg_stat_train", label: "🏋️ 属性训练", icon: "🏋️", title: "🏋️ 属性训练 — 提升基础属性（体质/智力/敏捷/心智/魅力）" },
+    { id: "pg_edu", label: "🎓 学历", icon: "🎓", title: "🎓 学历 — 查看学历等级、进修深造" },
+    { id: "pg_hobbies", label: "🏃 爱好", icon: "🏃", title: "🏃 爱好 — 培养业余爱好，丰富生活" },
+    { id: "pg_health", label: "💪 健康", icon: "💪", title: "💪 健康 — 健康管理、疾病治疗、保健养生" },
+    { id: "pg_goals", label: "🎯 目标", icon: "🎯", title: "🎯 目标 — 人生目标追踪、阶段任务" },
+    { id: "pg_charts", label: "📈 数据", icon: "📈", title: "📈 数据 — 查看个人数据统计和图表" },
   ];
   var currentSubTab = state._pgSubTab || "pg_stat_train";
 
@@ -219651,6 +219675,7 @@ function renderMergedPersonalGrowthTab(state, parent) {
     btn.className = "tab-btn" + (currentSubTab === st.id ? " active" : "");
     btn.style.cssText = "font-size:11px;padding:4px 10px;white-space:nowrap;";
     btn.textContent = st.label;
+    btn.title = st.title;
     btn.onclick = function () {
       state._pgSubTab = st.id;
       renderMergedPersonalGrowthTab(state, parent);
@@ -220347,6 +220372,7 @@ function renderMessageLog(state) {
     toggleBtn.id = "message-log-toggle";
     toggleBtn.className = "btn btn-sm";
     toggleBtn.textContent = "📌 展开";
+    toggleBtn.title = "展开/收起事件记录列表";
     toggleBtn.onclick = function (e) {
       e.stopPropagation();
       logEl.classList.toggle("collapsed");
@@ -228825,14 +228851,15 @@ function renderWikiTab(state, parent) {
   wikiNav.style.cssText =
     "display:flex;gap:6px;padding:6px 0;flex-wrap:wrap;border-bottom:1px solid var(--border);margin-bottom:8px;";
   var wikiSubTabs = [
-    { id: "wiki_browse", label: "📖 百科" },
-    { id: "wiki_social", label: "👥 社交" },
+    { id: "wiki_browse", label: "📖 百科", title: "📖 百科 — 一站式查询游戏所有信息" },
+    { id: "wiki_social", label: "👥 社交", title: "👥 社交 — 查看NPC关系、社交网络、成就" },
   ];
   wikiSubTabs.forEach(function (st) {
     var btn = document.createElement("button");
     btn.className = "btn btn-sm" + (wikiSubTab === st.id ? " btn-primary" : "");
     btn.style.cssText = "font-size:11px;padding:4px 10px;white-space:nowrap;";
     btn.textContent = st.label;
+    btn.title = st.title;
     btn.onclick = function () {
       state._wikiSubTab = st.id;
       renderWikiTab(state, parent);
@@ -228890,6 +228917,7 @@ function renderWikiTab(state, parent) {
     if (c.id === _wikiState.catId && !_wikiState.query)
       btn.className += " active";
     btn.dataset.cat = c.id;
+    btn.title = c.icon + " " + c.name + " — 浏览" + c.name + "信息";
     btn.innerHTML =
       '<span class="wiki-nav-ico">' +
       c.icon +
@@ -233722,11 +233750,11 @@ function renderSocialTab(state, parent) {
 
   // ---- 顶部导航：Tab 内子标签 ----
   var subTabs = [
-    { id: "social_family", label: "👨‍👩‍👧 家庭生活", icon: "👨‍👩‍👧" },
-    { id: "social_workplace", label: "🏢 职场社交", icon: "🏢" },
-    { id: "social_npc", label: "👥 NPC关系网", icon: "👥" },
-    { id: "social_network", label: "📱 社交网络", icon: "📱" },
-    { id: "social_overview", label: "📊 关系总览", icon: "📊" },
+    { id: "social_family", label: "👨‍👩‍👧 家庭生活", icon: "👨‍👩‍👧", title: "👨‍👩‍👧 家庭生活 — 家人关系、家庭事务" },
+    { id: "social_workplace", label: "🏢 职场社交", icon: "🏢", title: "🏢 职场社交 — 同事关系、办公室社交" },
+    { id: "social_npc", label: "👥 NPC关系网", icon: "👥", title: "👥 NPC关系网 — 查看所有NPC好感度和关系状态" },
+    { id: "social_network", label: "📱 社交网络", icon: "📱", title: "📱 社交网络 — 社交圈动态、人脉经营" },
+    { id: "social_overview", label: "📊 关系总览", icon: "📊", title: "📊 关系总览 — 社交关系综合概览" },
   ];
   var currentSubTab = state._socialSubTab || "social_overview";
 
@@ -233738,6 +233766,7 @@ function renderSocialTab(state, parent) {
     btn.className = "tab-btn" + (currentSubTab === st.id ? " active" : "");
     btn.style.cssText = "font-size:11px;padding:4px 10px;white-space:nowrap;";
     btn.textContent = st.label;
+    btn.title = st.title;
     btn.onclick = function () {
       state._socialSubTab = st.id;
       renderSocialTab(state, parent);
@@ -235207,8 +235236,8 @@ function renderCareerDevTab(state, parent) {
 
   // 子Tab导航 — 上班族 + 总览（创业已在上级Tab独立，不在二级导航中重复）
   var subTabs = [
-    { id: "career_jobs", label: "💼 上班族", icon: "💼" },
-    { id: "career_overview", label: "📊 总览", icon: "📊" },
+    { id: "career_jobs", label: "💼 上班族", icon: "💼", title: "💼 上班族 — 找工作和上班相关" },
+    { id: "career_overview", label: "📊 总览", icon: "📊", title: "📊 总览 — 工作总览、收入支出概览" },
   ];
   // 智能默认：无工作→上班族列表直接可选，有工作→总览面板
   var hasJob = !!(state.career && state.career.currentJob);
@@ -235223,6 +235252,7 @@ function renderCareerDevTab(state, parent) {
     btn.className = "tab-btn" + (currentSubTab === st.id ? " active" : "");
     btn.style.cssText = "font-size:11px;padding:4px 10px;white-space:nowrap;";
     btn.textContent = st.label;
+    btn.title = st.title;
     btn.onclick = function () {
       state._careerSubTab = st.id;
       renderCareerDevTab(state, parent);
@@ -239855,6 +239885,7 @@ function renderSideHustleTab(state, parent) {
 
     const card = document.createElement("div");
     card.className = "hustle-card" + (check.ok ? "" : " unavailable");
+    card.title = (hustle.icon || "💼") + " " + hustle.name + " — " + (hustle.desc || "") + " | 基础收入:¥" + (hustle.baseIncome || 0) + " 疲劳消耗:" + (hustle.fatigueCost || 0);
 
     // 检查是否可用
     const availableColor = check.ok ? "var(--accent)" : "var(--text-muted)";

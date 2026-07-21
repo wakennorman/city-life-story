@@ -763,14 +763,15 @@ function renderWikiTab(state, parent) {
   wikiNav.style.cssText =
     "display:flex;gap:6px;padding:6px 0;flex-wrap:wrap;border-bottom:1px solid var(--border);margin-bottom:8px;";
   var wikiSubTabs = [
-    { id: "wiki_browse", label: "📖 百科" },
-    { id: "wiki_social", label: "👥 社交" },
+    { id: "wiki_browse", label: "📖 百科", title: "📖 百科 — 一站式查询游戏所有信息" },
+    { id: "wiki_social", label: "👥 社交", title: "👥 社交 — 查看NPC关系、社交网络、成就" },
   ];
   wikiSubTabs.forEach(function (st) {
     var btn = document.createElement("button");
     btn.className = "btn btn-sm" + (wikiSubTab === st.id ? " btn-primary" : "");
     btn.style.cssText = "font-size:11px;padding:4px 10px;white-space:nowrap;";
     btn.textContent = st.label;
+    btn.title = st.title;
     btn.onclick = function () {
       state._wikiSubTab = st.id;
       renderWikiTab(state, parent);
@@ -828,6 +829,7 @@ function renderWikiTab(state, parent) {
     if (c.id === _wikiState.catId && !_wikiState.query)
       btn.className += " active";
     btn.dataset.cat = c.id;
+    btn.title = c.icon + " " + c.name + " — 浏览" + c.name + "信息";
     btn.innerHTML =
       '<span class="wiki-nav-ico">' +
       c.icon +

@@ -860,6 +860,7 @@ function renderLocation(state) {
   const loc = getLocation(locKey);
   if (loc) {
     document.getElementById("location-name").textContent = loc.name;
+    document.getElementById("location-name").title = "📍 当前地点：" + loc.name + " — " + (loc.desc || "");
     document.getElementById("location-desc").textContent = loc.desc;
   }
 
@@ -1008,7 +1009,7 @@ function renderWeatherPanel(state) {
 
   html +=
     '<div style="display:flex;align-items:center;gap:4px;flex-wrap:wrap;">';
-  html += '<span style="font-size:14px;">' + wDef.icon + "</span>";
+  html += '<span style="font-size:14px;" title="' + wDef.name + '：' + (wDef.desc || wDef.name) + '">' + wDef.icon + "</span>";
   html +=
     '<span style="font-size:12px;font-weight:600;">' + wDef.name + "</span>";
   html +=

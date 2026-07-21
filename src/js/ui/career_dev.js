@@ -1045,8 +1045,8 @@ function renderCareerDevTab(state, parent) {
 
   // 子Tab导航 — 上班族 + 总览（创业已在上级Tab独立，不在二级导航中重复）
   var subTabs = [
-    { id: "career_jobs", label: "💼 上班族", icon: "💼" },
-    { id: "career_overview", label: "📊 总览", icon: "📊" },
+    { id: "career_jobs", label: "💼 上班族", icon: "💼", title: "💼 上班族 — 找工作和上班相关" },
+    { id: "career_overview", label: "📊 总览", icon: "📊", title: "📊 总览 — 工作总览、收入支出概览" },
   ];
   // 智能默认：无工作→上班族列表直接可选，有工作→总览面板
   var hasJob = !!(state.career && state.career.currentJob);
@@ -1061,6 +1061,7 @@ function renderCareerDevTab(state, parent) {
     btn.className = "tab-btn" + (currentSubTab === st.id ? " active" : "");
     btn.style.cssText = "font-size:11px;padding:4px 10px;white-space:nowrap;";
     btn.textContent = st.label;
+    btn.title = st.title;
     btn.onclick = function () {
       state._careerSubTab = st.id;
       renderCareerDevTab(state, parent);

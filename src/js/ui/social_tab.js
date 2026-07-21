@@ -354,11 +354,11 @@ function renderSocialTab(state, parent) {
 
   // ---- 顶部导航：Tab 内子标签 ----
   var subTabs = [
-    { id: "social_family", label: "👨‍👩‍👧 家庭生活", icon: "👨‍👩‍👧" },
-    { id: "social_workplace", label: "🏢 职场社交", icon: "🏢" },
-    { id: "social_npc", label: "👥 NPC关系网", icon: "👥" },
-    { id: "social_network", label: "📱 社交网络", icon: "📱" },
-    { id: "social_overview", label: "📊 关系总览", icon: "📊" },
+    { id: "social_family", label: "👨‍👩‍👧 家庭生活", icon: "👨‍👩‍👧", title: "👨‍👩‍👧 家庭生活 — 家人关系、家庭事务" },
+    { id: "social_workplace", label: "🏢 职场社交", icon: "🏢", title: "🏢 职场社交 — 同事关系、办公室社交" },
+    { id: "social_npc", label: "👥 NPC关系网", icon: "👥", title: "👥 NPC关系网 — 查看所有NPC好感度和关系状态" },
+    { id: "social_network", label: "📱 社交网络", icon: "📱", title: "📱 社交网络 — 社交圈动态、人脉经营" },
+    { id: "social_overview", label: "📊 关系总览", icon: "📊", title: "📊 关系总览 — 社交关系综合概览" },
   ];
   var currentSubTab = state._socialSubTab || "social_overview";
 
@@ -370,6 +370,7 @@ function renderSocialTab(state, parent) {
     btn.className = "tab-btn" + (currentSubTab === st.id ? " active" : "");
     btn.style.cssText = "font-size:11px;padding:4px 10px;white-space:nowrap;";
     btn.textContent = st.label;
+    btn.title = st.title;
     btn.onclick = function () {
       state._socialSubTab = st.id;
       renderSocialTab(state, parent);
