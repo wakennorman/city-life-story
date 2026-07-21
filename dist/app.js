@@ -218888,7 +218888,7 @@ function renderSkillsTab(state, parent) {
           );
           return;
         }
-        if ((st.resources.cash || 0) < 50) {
+        if (st.resources.cash < 50) {
           StateManager.addMessage("⚠️ 训练需要¥50书本费，钱不够", "warning");
           return;
         }
@@ -222545,7 +222545,7 @@ function showDepositModal() {
         if (lastBtn && !lastBtn.classList.contains("btn-success")) {
           lastBtn.textContent = `存入 ¥${val.toLocaleString()}`;
           lastBtn.onclick = () => {
-            const amt = Math.min(val, state.resources.cash || 0);
+            const amt = Math.min(val, state.resources.cash);
             state.resources.bankBalance += amt;
             state.resources.cash -= amt;
             StateManager.addMessage(
@@ -223284,7 +223284,7 @@ function buyItemFromShop(itemId) {
   // 价格：使用品质价格（如果有）
   var price = equippedItem ? equippedItem.actualPrice : item.price;
 
-  if ((state.resources.cash || 0) < price) {
+  if (state.resources.cash < price) {
     StateManager.addMessage("💸 现金不足，无法购买 " + item.name, "warning");
     return;
   }

@@ -9,7 +9,7 @@ const os = require("os");
 
 const ROOT = path.resolve(__dirname, "..");
 const VANILLA_FILE = path.join(ROOT, "src/js/data/locations.js");
-const TS_ENTRY = path.join(ROOT, "src/app/core/travel/travel.ts");
+const TS_ENTRY = path.join(ROOT, "src/app/core/travel/apCost.ts");
 
 let pass = 0, fail = 0;
 const fails = [];
