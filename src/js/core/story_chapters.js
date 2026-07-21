@@ -264,6 +264,34 @@ function _triggerChapter(state, ch) {
   state.flags[ch.flag] = true;
   state.flags._currentStoryChapter = ch.id;
 
+  // [全系统自洽修复] 域G联动: 章节完成→职业资本积累 (G→C 联动,人生节点兑现职场资源)
+  // 设计意图: 每完成一个主线章节,玩家对城市的认知/人脉/经验转化为可量化的职业资本
+  if (typeof ensureCareerCapital === "function") {
+    var cap = ensureCareerCapital(state);
+    var _chapterRewards = {
+      chapter1_survival: { industryResources: 8, clientLeads: 3 },
+      chapter2_standing: { industryResources: 15, clientLeads: 8, reputation: 5 },
+      chapter3_choice: { industryResources: 25, clientLeads: 15, reputation: 10, partnerTrust: 5 },
+    };
+    var _reward = _chapterRewards[ch.id];
+    if (_reward) {
+      cap.industryResources = (cap.industryResources || 0) + (_reward.industryResources || 0);
+      cap.clientLeads = (cap.clientLeads || 0) + (_reward.clientLeads || 0);
+      cap.reputation = (cap.reputation || 0) + (_reward.reputation || 0);
+      cap.partnerTrust = (cap.partnerTrust || 0) + (_reward.partnerTrust || 0);
+      if (typeof clampCareerCapital === "function") clampCareerCapital(cap);
+      if (typeof StateManager !== "undefined" && StateManager.addMessage) {
+        StateManager.addMessage(
+          "📖 完成「" + ch.title + "」，人生阅历转化为职场资源。行业资源+" +
+            (_reward.industryResources || 0) + "，客户线索+" + (_reward.clientLeads || 0) +
+            ((_reward.reputation || 0) > 0 ? "，声誉+" + _reward.reputation : "") +
+            "。",
+          "info",
+        );
+      }
+    }
+  }
+
   // 匹配最适合的结语
   var epilogue = ch.epilogues[0];
   for (var i = 0; i < ch.epilogues.length; i++) {
