@@ -207,6 +207,19 @@ function renderHeader(state) {
       ' <span title="可拜访NPC数（冷却结束，7天可拜访一次）">🚶' + _v2 + '</span>' +
       ' <span title="投资标的数（股票+房产+BTC）">📈' + _ic2 + '</span>';
   }
+
+  // [全系统自洽修复] 域F 联动增强: 顶栏各图标添加title悬停说明
+  var _titleMap = {
+    "header-season-label": "当前季节",
+    "header-age": "玩家年龄",
+    "header-phase": "当前人生阶段（街头/职场）",
+    "header-cash-label": "当前现金余额",
+    "header-debt-label": "当前债务总额"
+  };
+  for (var _tid in _titleMap) {
+    var _tel = document.getElementById(_tid);
+    if (_tel) _tel.title = _titleMap[_tid];
+  }
 }
 
 /**
