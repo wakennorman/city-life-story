@@ -38,6 +38,11 @@ function tickHabits(state) {
     malnutritionCount: 0,
     insomniaCount: 0,
     overworkCount: 0,
+    // [全系统自洽修复] 域A 修复: 新增4个缺失计数器初始化，防止 undefined < threshold 导致疾病首日误触发
+    hypertensionCount: 0,
+    fattyLiverCount: 0,
+    kidneyDiseaseCount: 0,
+    heartDiseaseCount: 0,
     // 特殊习惯
     officeWorkDays: 0,
     hungerHighStreak: 0,
@@ -190,6 +195,10 @@ function _addIllness(state, illnessId) {
     kidney_disease: "kidneyDiseaseCount",
     heart_disease: "heartDiseaseCount",
     liver_cirrhosis: "liverCirrhosisCount",
+    kidney_disease: "kidneyDiseaseCount",
+    heart_disease: "heartDiseaseCount",
+    hypertension: "hypertensionCount",
+    fatty_liver: "fattyLiverCount",
   };
   if (evolutionCountMap[illnessId]) {
     var countKey = evolutionCountMap[illnessId];

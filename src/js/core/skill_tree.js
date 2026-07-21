@@ -987,13 +987,13 @@ function chooseSkillBranch(skillKey, branchId, state) {
     );
     return false;
   }
-  if (state.resources.cash < 200) {
+  if ((state.resources.cash || 0) < 200) {
     StateManager.addMessage("⚠️ 现金不足，选择发展方向需要¥200", "warning");
     return false;
   }
 
   state.player.actionPoints -= 15;
-  state.resources.cash -= 200;
+  state.resources.cash = Math.max(0, (state.resources.cash || 0) - 200);
   state.skillBranches[skillKey] = branchId;
 
   StateManager.addMessage(
@@ -1020,7 +1020,7 @@ function switchSkillBranch(skillKey, newBranchId, state) {
     StateManager.addMessage("⚠️ 切换发展方向需要30行动力", "warning");
     return false;
   }
-  if (state.resources.cash < 500) {
+  if ((state.resources.cash || 0) < 500) {
     StateManager.addMessage("⚠️ 切换发展方向需要¥500", "warning");
     return false;
   }
@@ -1034,7 +1034,7 @@ function switchSkillBranch(skillKey, newBranchId, state) {
   }
 
   state.player.actionPoints -= 30;
-  state.resources.cash -= 500;
+  state.resources.cash = Math.max(0, (state.resources.cash || 0) - 500);
   state.skillBranches[skillKey] = newBranchId;
 
   StateManager.addMessage(
@@ -1099,7 +1099,7 @@ function canActivateTalentNode(skillKey, nodeId, state) {
       reason: "行动力不足，需要" + node.apCost + "点行动力",
     };
   }
-  if (state.resources.cash < (node.cashCost || 0)) {
+  if ((state.resources.cash || 0) < (node.cashCost || 0)) {
     return {
       allowed: false,
       reason: "现金不足，需要¥" + node.cashCost,
@@ -1124,7 +1124,7 @@ function activateTalentNode(skillKey, nodeId, state) {
   var nodeKey = skillKey + "_" + branchId + "_" + nodeId;
 
   state.player.actionPoints -= node.apCost;
-  state.resources.cash -= node.cashCost;
+  state.resources.cash = Math.max(0, (state.resources.cash || 0) - (node.cashCost || 0));
   state.talentNodes[nodeKey] = true;
 
   StateManager.addMessage(
@@ -1134,7 +1134,7 @@ function activateTalentNode(skillKey, nodeId, state) {
 
   // 被动收入立即生效
   if (node.effects && node.effects.passiveIncome) {
-    state.resources.cash += node.effects.passiveIncome;
+    state.resources.cash = (state.resources.cash || 0) + (node.effects.passiveIncome || 0);
     StateManager.addMessage(
       "💰 天赋效果：获得 ¥" + node.effects.passiveIncome + " 被动收入",
       "info",

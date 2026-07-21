@@ -2404,7 +2404,7 @@ function careerSocialAction(action, colleagueId) {
   var cap = ensureCareerCapital(state);
 
   if (action === "meal") {
-    if (state.resources.cash < 50) {
+    if ((state.resources.cash || 0) < 50) {
       StateManager.addMessage("⚠️ 现金不足¥50", "warning");
       return;
     }
@@ -2412,7 +2412,7 @@ function careerSocialAction(action, colleagueId) {
       StateManager.addMessage("⚠️ 行动力不足(需2)", "warning");
       return;
     }
-    state.resources.cash -= 50;
+    state.resources.cash = Math.max(0, (state.resources.cash || 0) - 50);
     p.actionPoints -= 2;
     var gain = Math.round(5 + c.relationship / 20);
     c.relationship = Math.min(100, (c.relationship || 0) + gain);
@@ -2507,7 +2507,7 @@ function careerWorkAction(type) {
     p.actionPoints -= 2;
     job.performance = Math.min(100, (job.performance || 50) + 5);
     var ot = Math.round((job.salary || 5000) / 30);
-    state.resources.cash += ot;
+    state.resources.cash = (state.resources.cash || 0) + (ot || 0);
     state.resources.totalEarned = (state.resources.totalEarned || 0) + ot;
     cap.burnout = (cap.burnout || 0) + 5;
     if (state.status)
@@ -3422,7 +3422,7 @@ function tickCareerJobDaily(state) {
     }
     // P1-5：证书→职业薪资加成
     var certBonus = _calcCertSalaryBonus(state, job.path, job.salary || 5000);
-    state.resources.cash += salary + certBonus;
+    state.resources.cash = (state.resources.cash || 0) + (salary || 0) + (certBonus || 0);
     state.resources.totalEarned += salary + certBonus;
     var salaryMsg =
       "💰 收到月薪 ¥" + salary.toLocaleString() + "（" + job.levelName + "）";
@@ -3541,7 +3541,7 @@ function tickCareerJobDaily(state) {
         dreamBonus = applyDreamIncomeBonus(state, bonus, "bonus");
       }
       var finalBonus = dreamBonus;
-      state.resources.cash += finalBonus;
+      state.resources.cash = (state.resources.cash || 0) + (finalBonus || 0);
       state.resources.totalEarned += finalBonus;
       var coeffLabel =
         coeff === 3
@@ -5171,7 +5171,7 @@ if (typeof document !== "undefined") {
           apply: function (st) {
             var job = (st.career && st.career.currentJob) || {};
             var pathName = job.pathName || "职业";
-            if ((st.resources && st.resources.cash) < 500) {
+            if ((st.resources && (st.resources.cash || 0)) < 500) {
               StateManager.addMessage(
                 "🏆 你已经达到了「" +
                   pathName +
@@ -5182,7 +5182,7 @@ if (typeof document !== "undefined") {
               return;
             }
             st.flags._careerMaxLevelCelebrated = true;
-            st.resources.cash -= 500;
+            st.resources.cash = Math.max(0, (st.resources.cash || 0) - 500);
             st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 20);
             st.player.mental = Math.min(100, (st.player.mental || 50) + 10);
             StateManager.addMessage(
