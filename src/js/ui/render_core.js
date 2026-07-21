@@ -190,7 +190,7 @@ function renderHeader(state) {
     seasonLabel.title = seasonDesc; // 鼠标悬停显示季节描述
   }
 
-  // [全系统自洽修复] 域F 联动增强: 天数后直接显示可拜访NPC数+投资标的数
+  // [全系统自洽修复] 域F 联动增强: 天数后显示可拜访NPC数+投资标的数(始终显示)
   var _today2 = p.day, _v2 = 0, _ic2 = 0;
   if (state.relationships) {
     for (var _ri2 in state.relationships) {
@@ -203,10 +203,7 @@ function renderHeader(state) {
   if (state.corporate) _ic2 += (state.corporate.stocks || []).length;
   var _dayEl = document.getElementById("header-day");
   if (_dayEl) {
-    var _suffix = "";
-    if (_v2 > 0) _suffix += " 🚶" + _v2;
-    if (_ic2 > 0) _suffix += " 📈" + _ic2;
-    _dayEl.textContent = (isFinite(p.day) ? p.day : "1") + _suffix;
+    _dayEl.textContent = (isFinite(p.day) ? p.day : "1") + " 🚶" + _v2 + " 📈" + _ic2;
   }
 }
 
