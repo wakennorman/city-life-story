@@ -1862,8 +1862,7 @@ const ACHIEVEMENTS = [
     story: "三十天，你学会了与这座城市的节奏共处。不是没有烦恼，而是你学会了不让烦恼占据全部。",
     icon: "😊",
     category: "里程碑",
-    triggers: { flagMet: "_happyDaysTotal" },
-    condition: function (st) { return (st.flags._happyDaysTotal || 0) >= 30; },
+    triggers: { flagMet: "_happy30DaysAchieved" },
   },
   {
     id: "elated_7_days",
@@ -1874,7 +1873,6 @@ const ACHIEVEMENTS = [
     category: "隐藏",
     hidden: true,
     triggers: { flagMet: "_elatedStreak" },
-    condition: function (st) { return (st.flags._elatedStreak || 0) >= 7; },
   },
 ];
 
@@ -2206,6 +2204,10 @@ function checkAchievements(state) {
     (state.career.currentJob.workDays || 0) >= 30
   ) {
     state.flags._careerTopPerformer = true;
+  }
+  // [全系统自洽修复] 域G 联动增强: 阳光心态（累计30天愉悦/极佳）
+  if ((state.flags._happyDaysTotal || 0) >= 30) {
+    state.flags._happy30DaysAchieved = true;
   }
   // ── 成就遍历 ──
   ACHIEVEMENTS.forEach(function (ach) {
