@@ -1845,6 +1845,37 @@ const ACHIEVEMENTS = [
     hidden: true,
     triggers: { flagMet: "_hasOccupationalDisease" },
   },
+  // [全系统自洽修复] 域G 联动增强: 情绪状态成就
+  {
+    id: "first_elated",
+    name: "情绪觉醒",
+    desc: "你第一次达到了极佳状态——与自己和解的感觉真好。",
+    story: "那天你走在街上，忽然觉得一切都对了。不是外面的世界变了，是你心里终于放晴了。",
+    icon: "🌟",
+    category: "人生第一次",
+    triggers: { flagMet: "_everElated" },
+  },
+  {
+    id: "happy_30_days",
+    name: "阳光心态",
+    desc: "累计30天保持愉悦或极佳状态。",
+    story: "三十天，你学会了与这座城市的节奏共处。不是没有烦恼，而是你学会了不让烦恼占据全部。",
+    icon: "😊",
+    category: "里程碑",
+    triggers: { flagMet: "_happyDaysTotal" },
+    condition: function (st) { return (st.flags._happyDaysTotal || 0) >= 30; },
+  },
+  {
+    id: "elated_7_days",
+    name: "心灵大师",
+    desc: "连续7天保持极佳状态——你与这座城市达成了完美的平衡。",
+    story: "七天，你像一阵清风穿过这座城市。没有什么能撼动你内心的平静与喜悦——你成为了自己的主人。",
+    icon: "🧘",
+    category: "隐藏",
+    hidden: true,
+    triggers: { flagMet: "_elatedStreak" },
+    condition: function (st) { return (st.flags._elatedStreak || 0) >= 7; },
+  },
 ];
 
 // ====== 成就触发调度表（约定式自动归类 v3.99c） ======

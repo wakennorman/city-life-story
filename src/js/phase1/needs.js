@@ -170,6 +170,11 @@ function determineEmotionalState(state) {
     state.flags._depressionStreak = 0;
   }
 
+  // [全系统自洽修复] 域G 联动增强: 追踪愉悦天数（用于成就系统）
+  if (emotionalState === "happy" || emotionalState === "elated") {
+    state.flags._happyDaysTotal = (state.flags._happyDaysTotal || 0) + 1;
+  }
+
   // [全系统自洽修复] 域G 联动增强: 首次达到 elated 状态时发送庆祝消息
   if (emotionalState === "elated" && !state.flags._everElated) {
     state.flags._everElated = true;
