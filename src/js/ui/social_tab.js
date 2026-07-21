@@ -412,6 +412,26 @@ function renderSocialTab(state, parent) {
 function renderSocialOverviewTab(state, content) {
   var html = '<div class="tab-content">';
 
+  // [全系统自洽修复] 域G 联动增强: 社交Tab显示情绪状态(G→F)
+  if (state.status && state.status.emotionalState) {
+    var _emoIcons = { depressed: "😢", sad: "😔", stressed: "😰", stable: "😐", happy: "😊", elated: "🌟" };
+    var _emoIcon = _emoIcons[state.status.emotionalState] || "😐";
+    var _emoDesc = {
+      depressed: "情绪低落，社交效果显著下降，建议先休息恢复",
+      sad: "心情不太好，社交效果略有下降",
+      stressed: "有些焦虑，社交时容易心不在焉",
+      stable: "情绪平稳，适合正常社交",
+      happy: "心情不错，社交效果有小幅加成",
+      elated: "状态极佳！社交效果大幅提升！",
+    };
+    html += '<div class="section"><h3>😊 当前情绪</h3>';
+    html += '<div class="card" style="padding:12px;display:flex;align-items:center;gap:12px;">';
+    html += '<span style="font-size:32px;">' + _emoIcon + '</span>';
+    html += '<div><div style="font-weight:600;font-size:14px;">' + (typeof getEmotionName === "function" ? getEmotionName(state) : state.status.emotionalState) + '</div>';
+    html += '<div style="font-size:12px;color:var(--text-muted);margin-top:4px;">' + (_emoDesc[state.status.emotionalState] || "") + '</div>';
+    html += '</div></div></div>';
+  }
+
   // 家庭摘要
   var family = state.family;
   if (family) {

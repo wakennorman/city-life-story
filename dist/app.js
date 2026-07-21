@@ -4652,7 +4652,7 @@ function evaluateTriggers(triggers, state) {
     for (var afi = 0; afi < affReqs.length; afi++) {
       var req = affReqs[afi];
       var npcRel2 = rels2[req.id];
-      if (!npcRel2 || (npcRel2.affinity || 0) < req.min) return false;
+      if (!npcRel2 || !npcRel2.met || (npcRel2.affinity || 0) < req.min) return false;
     }
   }
 
@@ -4819,6 +4819,31 @@ function showEventModal(evt) {
     s._pendingEvent = null;
     s._pendingEventId = null;
     return;
+  }
+
+  // [全系统自洽修复] 域B 联动增强: B→G 情绪状态影响事件选择 — 情绪低落时"消极"选项标记
+  if (typeof choicesArr === "object" && choicesArr.length > 0) {
+    var _stateForEmo = StateManager.getState();
+    var _emoState = _stateForEmo.status && _stateForEmo.status.emotionalState;
+    if (_emoState === "depressed" || _emoState === "sad") {
+      for (var _ei = 0; _ei < choicesArr.length; _ei++) {
+        if (choicesArr[_ei] && choicesArr[_ei].text) {
+          var _txt = choicesArr[_ei].text;
+          if (_txt.indexOf("忍") >= 0 || _txt.indexOf("放弃") >= 0 || _txt.indexOf("算了") >= 0 || _txt.indexOf("逃避") >= 0) {
+            choicesArr[_ei]._moodTag = "sad";
+          }
+        }
+      }
+    } else if (_emoState === "elated" || _emoState === "happy") {
+      for (var _ej = 0; _ej < choicesArr.length; _ej++) {
+        if (choicesArr[_ej] && choicesArr[_ej].text) {
+          var _txt2 = choicesArr[_ej].text;
+          if (_txt2.indexOf("努力") >= 0 || _txt2.indexOf("坚持") >= 0 || _txt2.indexOf("试试") >= 0 || _txt2.indexOf("拼搏") >= 0) {
+            choicesArr[_ej]._moodTag = "happy";
+          }
+        }
+      }
+    }
   }
 
   // 支持 choices 为函数（动态生成，如政策套利兑现事件）
@@ -233541,6 +233566,26 @@ function renderSocialTab(state, parent) {
 // ====== 关系总览 ======
 function renderSocialOverviewTab(state, content) {
   var html = '<div class="tab-content">';
+
+  // [全系统自洽修复] 域G 联动增强: 社交Tab显示情绪状态(G→F)
+  if (state.status && state.status.emotionalState) {
+    var _emoIcons = { depressed: "😢", sad: "😔", stressed: "😰", stable: "😐", happy: "😊", elated: "🌟" };
+    var _emoIcon = _emoIcons[state.status.emotionalState] || "😐";
+    var _emoDesc = {
+      depressed: "情绪低落，社交效果显著下降，建议先休息恢复",
+      sad: "心情不太好，社交效果略有下降",
+      stressed: "有些焦虑，社交时容易心不在焉",
+      stable: "情绪平稳，适合正常社交",
+      happy: "心情不错，社交效果有小幅加成",
+      elated: "状态极佳！社交效果大幅提升！",
+    };
+    html += '<div class="section"><h3>😊 当前情绪</h3>';
+    html += '<div class="card" style="padding:12px;display:flex;align-items:center;gap:12px;">';
+    html += '<span style="font-size:32px;">' + _emoIcon + '</span>';
+    html += '<div><div style="font-weight:600;font-size:14px;">' + (typeof getEmotionName === "function" ? getEmotionName(state) : state.status.emotionalState) + '</div>';
+    html += '<div style="font-size:12px;color:var(--text-muted);margin-top:4px;">' + (_emoDesc[state.status.emotionalState] || "") + '</div>';
+    html += '</div></div></div>';
+  }
 
   // 家庭摘要
   var family = state.family;
