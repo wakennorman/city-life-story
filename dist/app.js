@@ -214999,12 +214999,18 @@ function renderTimeSlot(state, parent) {
       }
       return _visitable > 0 ? '<span style="font-size:10px;color:var(--success);margin-left:6px;">🚶' + _visitable + '</span>' : '';
     })() : ''}
-    ${state.investment ? (function() {
+    ${state.investment || state.corporate ? (function() {
       var _inv = state.investment;
-      var _hv = (_inv.stockHoldings || []).length;
-      var _pv = (_inv.properties || []).length;
-      var _bc = _inv.btcHoldings || 0;
-      return (_hv + _pv + (_bc > 0 ? 1 : 0)) > 0 ? '<span style="font-size:10px;color:var(--text-muted);margin-left:4px;">📈' + (_hv + _pv + (_bc > 0 ? 1 : 0)) + '</span>' : '';
+      var _invCount = 0;
+      if (_inv) {
+        _invCount += (_inv.stockHoldings || []).length;
+        _invCount += (_inv.properties || []).length;
+        if ((_inv.btcHoldings || 0) > 0) _invCount++;
+      }
+      if (state.corporate) {
+        _invCount += (state.corporate.stocks || []).length;
+      }
+      return _invCount > 0 ? '<span style="font-size:10px;color:var(--text-muted);margin-left:4px;">📈' + _invCount + '</span>' : '';
     })() : ''}
   `;
   parent.appendChild(div);
