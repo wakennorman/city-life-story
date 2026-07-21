@@ -232,7 +232,7 @@
           hint: "安全但没收入",
           apply: function (st) {
             st.needs.hygiene = Math.min(100, (st.needs.hygiene || 50) + 5);
-            st.needs.mood = Math.min(100, (st.needs.mood || 50) + 3);
+            st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 3);
             StateManager.addMessage(
               "🌧️ 你在屋里躲了一天雨，读了一会书，心情平静。",
               "hint",

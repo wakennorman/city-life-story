@@ -182596,7 +182596,7 @@ function rollNpcRescueOnStruggle(state) {
           hint: "安全但没收入",
           apply: function (st) {
             st.needs.hygiene = Math.min(100, (st.needs.hygiene || 50) + 5);
-            st.needs.mood = Math.min(100, (st.needs.mood || 50) + 3);
+            st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 3);
             StateManager.addMessage(
               "🌧️ 你在屋里躲了一天雨，读了一会书，心情平静。",
               "hint",
@@ -238429,20 +238429,21 @@ function enhancedApplyCareerJob(pathId, levelId) {
     var statePenaltyMessages = [];
     var penaltyLines = [];
     var needs = state.needs || {};
-    if ((needs.food || 100) < 25) {
+    // [全系统自洽修复] 域C A类修复: needs.food→needs.hunger, needs.stamina→needs.fatigue（字段名错误导致面试惩罚从未生效）
+    if ((needs.hunger || 100) < 25) {
       statePenaltyMessages.push("饥饿");
       penaltyLines.push("🍖 饥饿 -12%");
       interviewChance -= 0.12;
-    } else if ((needs.food || 100) < 45) {
+    } else if ((needs.hunger || 100) < 45) {
       statePenaltyMessages.push("半饥饿状态");
       penaltyLines.push("🍖 半饥饿 -5%");
       interviewChance -= 0.05;
     }
-    if ((needs.stamina || 100) < 20) {
+    if ((needs.fatigue || 100) < 20) {
       statePenaltyMessages.push("极度疲劳");
       penaltyLines.push("😴 极度疲劳 -15%");
       interviewChance -= 0.15;
-    } else if ((needs.stamina || 100) < 45) {
+    } else if ((needs.fatigue || 100) < 45) {
       statePenaltyMessages.push("疲劳");
       penaltyLines.push("😴 疲劳 -6%");
       interviewChance -= 0.06;
@@ -238456,11 +238457,12 @@ function enhancedApplyCareerJob(pathId, levelId) {
       penaltyLines.push("🏥 亚健康 -4%");
       interviewChance -= 0.04;
     }
-    if ((needs.mood || 100) < 20) {
+    // [全系统自洽修复] 域C A类修复: needs.mood→needs.happiness
+    if ((needs.happiness || 100) < 20) {
       statePenaltyMessages.push("心情极差");
       penaltyLines.push("😢 心情极差 -10%");
       interviewChance -= 0.1;
-    } else if ((needs.mood || 100) < 45) {
+    } else if ((needs.happiness || 100) < 45) {
       statePenaltyMessages.push("心情不佳");
       penaltyLines.push("😢 心情不佳 -5%");
       interviewChance -= 0.05;
