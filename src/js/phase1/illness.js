@@ -386,7 +386,7 @@ function _tickChronic(state, inst, ill) {
       (typeof ill.treatCostMonthly === "number" && ill.treatCostMonthly) ||
       (ill.treatCost && ill.treatCost.hospital_monthly) ||
       200;
-    if (state.resources.cash >= monthly) {
+    if ((state.resources.cash || 0) >= monthly) {
       state.resources.cash -= monthly;
       state.flags._chronicMonthlyPaid = state.player.day;
       if (typeof addDailyTransaction === "function") {
@@ -615,7 +615,7 @@ function treatIllness(illnessId, tier) {
     StateManager.addMessage("💊 此病无法仅靠药店治疗，请去医院。", "warning");
     return;
   }
-  if (state.resources.cash < cost) {
+  if ((state.resources.cash || 0) < cost) {
     StateManager.addMessage("💸 现金不足 ¥" + cost + "。", "warning");
     return;
   }

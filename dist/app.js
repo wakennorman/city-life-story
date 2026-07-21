@@ -171840,7 +171840,7 @@ function _tickChronic(state, inst, ill) {
       (typeof ill.treatCostMonthly === "number" && ill.treatCostMonthly) ||
       (ill.treatCost && ill.treatCost.hospital_monthly) ||
       200;
-    if (state.resources.cash >= monthly) {
+    if ((state.resources.cash || 0) >= monthly) {
       state.resources.cash -= monthly;
       state.flags._chronicMonthlyPaid = state.player.day;
       if (typeof addDailyTransaction === "function") {
@@ -172069,7 +172069,7 @@ function treatIllness(illnessId, tier) {
     StateManager.addMessage("💊 此病无法仅靠药店治疗，请去医院。", "warning");
     return;
   }
-  if (state.resources.cash < cost) {
+  if ((state.resources.cash || 0) < cost) {
     StateManager.addMessage("💸 现金不足 ¥" + cost + "。", "warning");
     return;
   }
@@ -245088,7 +245088,7 @@ function getAvailableActions(state) {
         });
       } else {
         for (const opt of STORAGE_OPTIONS) {
-          const canAfford = state.resources.cash >= opt.cost;
+          const canAfford = (state.resources.cash || 0) >= opt.cost;
           actions.push({
             id: "storage_rent_" + opt.id,
             category: "survival",
@@ -245148,7 +245148,7 @@ function getAvailableActions(state) {
       ).filter((i) => i.id.startsWith("backpack_"));
       for (const pack of BACKPACKS) {
         if (ownedPacks.find((p) => p.id === pack.id)) continue;
-        const canAfford = state.resources.cash >= pack.cost;
+        const canAfford = (state.resources.cash || 0) >= pack.cost;
         actions.push({
           id: "buy_" + pack.id,
           category: "shopping",
@@ -245907,7 +245907,7 @@ function getAvailableActions(state) {
           5,
           Math.round(baseCost * (1 - totalDiscount)),
         );
-        if (st.resources.cash < foodCost) {
+        if ((st.resources.cash || 0) < foodCost) {
           StateManager.addMessage("⚠️ 钱不够吃饭了！", "danger");
           return;
         }
@@ -245951,7 +245951,7 @@ function getAvailableActions(state) {
       disabled: state.resources.cash < 8 ? true : false,
       handler: () => {
         const st = StateManager.getState();
-        if (st.resources.cash < 8) {
+        if ((st.resources.cash || 0) < 8) {
           StateManager.addMessage("⚠️ 不够钱洗澡。", "danger");
           return;
         }
@@ -246023,7 +246023,7 @@ function getAvailableActions(state) {
         apCost: 20,
         costEstimate: 50,
         effectEstimate: "健康+40, 伤病清除",
-        disabled: state.resources.cash < 50 ? true : false,
+        disabled: (state.resources.cash || 0) < 50 ? true : false,
         handler: () => {
           const st = StateManager.getState();
           st.resources.cash -= 50;
@@ -246278,7 +246278,7 @@ function getAvailableActions(state) {
         : [];
     for (const cert of available) {
       if (state.certificates.includes(cert.id)) continue;
-      const canAfford = state.resources.cash >= cert.requirements.cash;
+      const canAfford = (state.resources.cash || 0) >= (cert.requirements.cash || 0);
       actions.push({
         id: "cert_" + cert.id,
         category: "education",
