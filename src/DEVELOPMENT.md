@@ -1,6 +1,6 @@
 # 城市浮生记 (City Life Story) — 开发文档
 
-> 最后更新: 2026-07-21（阶段3批次7：情绪工作修正 getEmotionWorkModifier + EMOTION_WORK_MODIFIERS 迁 src/app/core/emotion/workModifier.ts TS 规范源；新增 TS↔vanilla 双向比对单测 8/8；src/js 端零改动、加载序不变）
+> 最后更新: 2026-07-21（阶段3批次8：状态互联 getEffectiveStats/getApCostMultiplier 迁 src/app/core/stats/statusInteractions.ts TS 规范源，可选依赖 illnessDebuffs 注入；新增 TS↔vanilla 双向比对单测 1980 用例全绿；src/js 端零改动、加载序不变）
 > 历史流水账已归档到 `docs/changelog/`，本文件仅保留活文档。
 
 ---
