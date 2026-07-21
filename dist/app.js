@@ -183803,8 +183803,7 @@ function applyPromotion(state, newRank) {
     for (var ni = 0; ni < workplaceNPCs.length; ni++) {
       var npcId = workplaceNPCs[ni];
       if (state.relationships[npcId] && state.relationships[npcId].met) {
-        // [全系统自洽修复] 域H A类修复: 晋升影响同事好感改走 applyAffinityChange
-          applyAffinityChange(state, npcId, 3, "晋升影响");
+        state.relationships[npcId].affinity = Math.min(100, (state.relationships[npcId].affinity || 0) + 3);
       }
     }
     if (state.corporate && state.corporate.team) {
@@ -184872,8 +184871,7 @@ function endQuarter() {
       for (var wi = 0; wi < workplaceNPCs.length; wi++) {
         var npcRel = state.relationships[workplaceNPCs[wi]];
         if (npcRel && npcRel.met) {
-          // [全系统自洽修复] 域H A类修复: 绩效影响同事好感改走 applyAffinityChange（确保 _lastInteractionDay 更新 + 蝴蝶效应日志 + 升降级播报）
-          applyAffinityChange(state, workplaceNPCs[wi], affinityChange, "绩效影响");
+          npcRel.affinity = Math.max(0, Math.min(100, (npcRel.affinity || 50) + affinityChange));
         }
       }
       if (affinityChange > 0) {
