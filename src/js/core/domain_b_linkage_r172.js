@@ -1,6 +1,6 @@
 /*
  * 城市浮生记 — 域B（事件/叙事）联动增强 · R172
- * 全系统优化 loop R172 · 联动增强 2项
+ * 全系统优化 loop R172 · 联动增强 4项
  *
  * 设计约束（与既有 linkage 文件一致）：
  *  - IIFE 注入全局 RANDOM_EVENTS，避免改 cross_system_events.js。
@@ -125,6 +125,137 @@
         },
       ],
       probability: 0.05,
+    },
+
+    // ===== 联动3: B→C 技能突破·职业觉醒叙事 =====
+    // 设计意图：当玩家某项技能达到Lv.70时，触发技能突破叙事事件，
+    //   让技能成长有仪式感，同时奖励技能XP形成正向循环。
+    {
+      id: "skill_breakthrough_narrative",
+      title: "技艺突破",
+      desc: "你日复一日的练习终于有了回报。今天干活时，你突然发现以前觉得困难的动作变得流畅自如，那些曾经看不懂的诀窍现在一目了然。\\n\\n你意识到——自己的技能已经突破了某个瓶颈，进入了一个新的层次。",
+      phase: "street",
+      triggers: { minDay: 30 },
+      conditions: function (st) {
+        if (!st || !st.skills || !st.flags) return false;
+        if (st.flags._skillBreakthroughNarrativeDone) return false;
+        // 检查是否有任何技能达到Lv.70
+        var skillKeys = ["cooking", "repair", "coding", "driving", "sales", "management", "accounting", "electrician", "welding", "english"];
+        for (var si = 0; si < skillKeys.length; si++) {
+          var sk = st.skills[skillKeys[si]];
+          if (sk && sk.level >= 70) return true;
+        }
+        return false;
+      },
+      choices: [
+        {
+          text: "🔥 趁热打铁，继续精进",
+          apply: function (st) {
+            if (st.flags) st.flags._skillBreakthroughNarrativeDone = true;
+            // 找到最高技能并奖励XP
+            if (st.skills) {
+              var bestSkill = null;
+              var bestLevel = 0;
+              for (var sk2 in st.skills) {
+                if (st.skills[sk2] && st.skills[sk2].level > bestLevel) {
+                  bestLevel = st.skills[sk2].level;
+                  bestSkill = sk2;
+                }
+              }
+              if (bestSkill && st.skills[bestSkill]) {
+                st.skills[bestSkill].xp = (st.skills[bestSkill].xp || 0) + 120;
+              }
+            }
+            if (st.player) {
+              st.player.mental = Math.min(100, (st.player.mental || 50) + 3);
+            }
+            if (typeof StateManager !== "undefined" && StateManager.addMessage)
+              StateManager.addMessage(
+                "你乘胜追击，继续钻研技艺。技能经验+120，心智+3。",
+                "good"
+              );
+          },
+        },
+        {
+          text: "🎓 收个徒弟，传授经验",
+          apply: function (st) {
+            if (st.flags) st.flags._skillBreakthroughNarrativeDone = true;
+            if (st.flags) st.flags._hasApprentice = true;
+            if (st.player) {
+              st.player.fame = Math.min(100, (st.player.fame || 0) + 5);
+              st.player.mental = Math.min(100, (st.player.mental || 50) + 2);
+            }
+            if (typeof StateManager !== "undefined" && StateManager.addMessage)
+              StateManager.addMessage(
+                "你开始带徒弟了。教别人的过程让你对技艺有了更深的理解，名气+5，心智+2。",
+                "success"
+              );
+          },
+        },
+      ],
+      probability: 0.04,
+    },
+
+    // ===== 联动4: B→E 市场波动·投资意识觉醒 =====
+    // 设计意图：当玩家经历多次市场事件后，触发投资意识觉醒叙事，
+    //   让经济系统与事件系统产生联动，为玩家开启投资路径。
+    {
+      id: "market_volatility_invest_awakening",
+      title: "波动中的机会",
+      desc: "你最近注意到市场上的商品价格经常上蹿下跳。有时候一天一个价，有时候一周翻倍又跌回原样。\\n\\n街口的投资顾问递给你一张传单：'行情波动大，正是理财好时机！'你看着传单上的收益率，陷入了沉思。",
+      phase: "street",
+      triggers: { minDay: 60 },
+      conditions: function (st) {
+        if (!st || !st.trade || !st.flags) return false;
+        if (st.flags._marketVolatilityInvestAwakeningDone) return false;
+        // 经历至少2次市场事件（或交易次数≥20）
+        var marketEvents = (st.trade.marketEvents && st.trade.marketEvents.length) || 0;
+        var totalBuys = st.trade.totalBuys || 0;
+        var totalSells = st.trade.totalSells || 0;
+        if (marketEvents >= 2 || (totalBuys + totalSells) >= 20) return true;
+        return false;
+      },
+      choices: [
+        {
+          text: "📈 开始学习投资理财",
+          apply: function (st) {
+            if (st.flags) st.flags._marketVolatilityInvestAwakeningDone = true;
+            if (st.flags) st.flags._investAwakening = true;
+            if (st.player) {
+              st.player.intelligence = Math.min(100, (st.player.intelligence || 50) + 3);
+            }
+            if (st.skills && st.skills.accounting) {
+              st.skills.accounting.xp = (st.skills.accounting.xp || 0) + 60;
+            }
+            if (typeof StateManager !== "undefined" && StateManager.addMessage)
+              StateManager.addMessage(
+                "你买了几本投资入门书，开始研究理财知识。智力+3，会计经验+60。",
+                "good"
+              );
+          },
+        },
+        {
+          text: "💼 先存钱，等机会再出手",
+          apply: function (st) {
+            if (st.flags) st.flags._marketVolatilityInvestAwakeningDone = true;
+            var saveAmt = 0;
+            if (st.resources) {
+              saveAmt = Math.min(500, st.resources.cash || 0);
+              st.resources.cash = (st.resources.cash || 0) - saveAmt;
+              st.resources.bankBalance = (st.resources.bankBalance || 0) + saveAmt;
+            }
+            if (st.player) {
+              st.player.mental = Math.min(100, (st.player.mental || 50) + 2);
+            }
+            if (typeof StateManager !== "undefined" && StateManager.addMessage)
+              StateManager.addMessage(
+                "你决定先存钱，等市场稳定了再出手。存了¥" + saveAmt + "到银行，心智+2。",
+                "info"
+              );
+          },
+        },
+      ],
+      probability: 0.035,
     },
   ];
 
