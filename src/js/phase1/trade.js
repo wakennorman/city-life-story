@@ -44,7 +44,7 @@ function buyGood(goodId, qty) {
   const discount = Math.min(0.3, salesDiscount + histDiscount + bulkDiscount);
   const totalCost = Math.round(price * qty * (1 - discount) * 100) / 100;
 
-  // [全系统自洽修复] 域A A类#1: cash 裸访问 → NaN防御，旧存档可能导致无限刷钱
+  // [全系统自洽修复] 域B R174 A类#1: cash裸访问→NaN防刷钱
   if ((Number(state.resources.cash) || 0) < totalCost) {
     StateManager.addMessage(
       `⚠️ 钱不够！需要 ¥${totalCost.toFixed(1)}，你只有 ¥${state.resources.cash}。`,

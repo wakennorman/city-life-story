@@ -195,10 +195,6 @@ function _addIllness(state, illnessId) {
     kidney_disease: "kidneyDiseaseCount",
     heart_disease: "heartDiseaseCount",
     liver_cirrhosis: "liverCirrhosisCount",
-    kidney_disease: "kidneyDiseaseCount",
-    heart_disease: "heartDiseaseCount",
-    hypertension: "hypertensionCount",
-    fatty_liver: "fattyLiverCount",
   };
   if (evolutionCountMap[illnessId]) {
     var countKey = evolutionCountMap[illnessId];

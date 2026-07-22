@@ -2163,8 +2163,8 @@ function cleanupExpiredNews(state) {
     var decay = Math.max(0, 1 - elapsed / dur);
     if (decay <= 0) continue;
 
-    if (eff.jobBonus && eff.jobMultiplier) {
-      var bonusMul = 1 + (eff.jobMultiplier - 1) * decay;
+    if (eff.jobBonus && (eff.jobMultiplier || eff.jobBonusMultiplier)) {
+      var bonusMul = 1 + ((eff.jobBonusMultiplier || eff.jobMultiplier) - 1) * decay;
       for (var j = 0; j < eff.jobBonus.length; j++) {
         var jid = eff.jobBonus[j];
         state._jobMultipliers[jid] =
