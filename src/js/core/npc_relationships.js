@@ -630,28 +630,6 @@ function _getBirthdayBonus(state, npcId, change) {
   }
   return change;
 }
-function recordNpcInteraction(npcId, change, reason) {
-  if (typeof StateManager === "undefined") return;
-  var state = StateManager.getState();
-  if (!state) return;
-  if (!state.npcRelationshipLog) state.npcRelationshipLog = {};
-  if (!state.npcRelationshipLog.dailyInteractions) {
-    state.npcRelationshipLog.dailyInteractions = {};
-  }
-  // [全系统自洽修复] 域D A类: change NaN 守卫 — 防止 NaN 传播到蝴蝶效应系统
-  if (typeof change !== "number" || !isFinite(change)) change = 0;
-  var existing = state.npcRelationshipLog.dailyInteractions[npcId];
-  if (existing) {
-    existing.change += change;
-  } else {
-    state.npcRelationshipLog.dailyInteractions[npcId] = {
-      change: change,
-      reason: reason,
-    };
-  }
-  applyAffinityChange(state, npcId, change, reason);
-}
-
 /** 应用NPC好感变化 */
 function applyAffinityChange(state, npcId, change, reason) {
   if (!state.relationships) state.relationships = {};
@@ -712,59 +690,6 @@ function getAffinityLabel(affinity) {
   if (affinity >= 0) return "👤 初识";
   if (affinity >= -30) return "😐 冷淡";
   return "😠 厌恶";
-}
-
-/** 获取NPC之间的关系类型描述 */
-function getRelationDesc(npcA, npcB) {
-  var relations = NPC_RELATION_MATRIX[npcA];
-  if (!relations) return null;
-  var type = relations[npcB];
-  var relDef = RELATION_TYPES[type] || RELATION_TYPES.neutral;
-  return { type: type, label: relDef.label, color: relDef.color };
-}
-
-/** 获取NPC的关系网（用于社交Tab渲染） */
-function getNpcRelationshipNetwork(state) {
-  var network = [];
-  var npcIds = Object.keys(NPC_RELATION_MATRIX);
-
-  for (var i = 0; i < npcIds.length; i++) {
-    var npcId = npcIds[i];
-    var aff =
-      (state.relationships[npcId] && state.relationships[npcId].affinity) || 0;
-    var rel = state.relationships[npcId];
-    if (!rel || !rel.met) continue;
-
-    var connections = [];
-    var relations = NPC_RELATION_MATRIX[npcId];
-    for (var otherId in relations) {
-      var otherAff =
-        (state.relationships[otherId] &&
-          state.relationships[otherId].affinity) ||
-        0;
-      if (otherAff <= 0) continue;
-      var relDesc = getRelationDesc(npcId, otherId);
-      connections.push({
-        targetId: otherId,
-        relationType: relDesc.type,
-        relationLabel: relDesc.label,
-        relationColor: relDesc.color,
-        targetAffinity: otherAff,
-      });
-    }
-
-    network.push({
-      npcId: npcId,
-      affinity: aff,
-      affinityLabel: getAffinityLabel(aff),
-      connections: connections,
-    });
-  }
-
-  network.sort(function (a, b) {
-    return b.affinity - a.affinity;
-  });
-  return network;
 }
 
 /** 检查NPC关系链是否满足事件触发条件 */

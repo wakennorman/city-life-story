@@ -484,16 +484,6 @@ function renderSocialOverviewTab(state, content) {
   html += '<span>你的月收入</span><strong>¥' + playerSalary.toLocaleString() + '</strong>';
   html += '</div>';
 
-    // [全系统自洽修复] 域D 联动增强: NPC礼物偏好提示（D→F，社交界面显示NPC喜欢什么礼物）
-    if (_npcDef && _npcDef.giftPrefers && _npcDef.giftPrefers.length > 0) {
-      var _giftLabelMap = { fruits: "水果", daily_use: "日用品", cigarettes: "香烟", beer: "啤酒", clothing: "服装", snacks: "零食", instant_noodles: "方便面", vegetables: "蔬菜", electronics: "电子产品", luxury: "奢侈品" };
-      var _giftNames = [];
-      for (var _gi = 0; _gi < _npcDef.giftPrefers.length; _gi++) {
-        var _giftCat = _npcDef.giftPrefers[_gi];
-        _giftNames.push(_giftLabelMap[_giftCat] || _giftCat);
-      }
-      html += '<div style="font-size:9px;color:var(--text-muted);margin-top:2px;">🎁 喜欢: ' + _giftNames.join("、") + '</div>';
-    }
   html += '<div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:6px;">';
   html += '<span>同龄人平均</span><strong>¥' + avgIncome.toLocaleString() + '</strong>';
   html += '</div>';

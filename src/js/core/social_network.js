@@ -171,7 +171,6 @@ function refreshWeiboHotlist(state) {
     };
     if (i < newsTopics.length) {
       item.title = newsTopics[i];
-      item.category =
       item.category = categories[Random.int(0, categories.length - 1)];
     } else if (poolCopy.length > 0) {
       var pickIdx = Random.int(0, poolCopy.length - 1);
