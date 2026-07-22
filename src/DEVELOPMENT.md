@@ -1,6 +1,6 @@
 # 城市浮生记 (City Life Story) — 开发文档
 
-> 最后更新: 2026-07-22（Layer 4 时间线逻辑门控 L4-A 续扫（street 103 处 gameOver 门控 + 首过 5 处；累计 108）+ 阶段3批次17：分类排序纯函数 sortInteractiveList / getSkillCategory 迁 src/app/core/sort/ TS 规范源（sortUtils.ts 逻辑 + sortData.ts 数据：SKILL_CATEGORY_MAP + 3 内置列表配置 trade_goods/skills/stocks 回调等效实现）；sortInteractiveList 为纯函数（仅依赖传入 config+state，不读模块级注册表），5 层排序（分类顺序→同类优先级默认50→频次降序→成本升序→名称 zh-CN localeCompare）逐字节对齐；新增 TS↔vanilla 双向比对单测 1224/1224（静态分层7用例 + 400 随机种子×3 列表类型 + null/undefined 边界 + getSkillCategory 14 id + SKILL_CATEGORY_MAP 数据保真）；src/js 端零改动、加载序不变）
+> 最后更新: 2026-07-22（Layer 4 时间线逻辑门控 L4-A 收尾（street 125 处 gameOver 门控全覆盖 + 首过 5 处；累计 130）+ 阶段3批次17：分类排序纯函数 sortInteractiveList / getSkillCategory 迁 src/app/core/sort/ TS 规范源（sortUtils.ts 逻辑 + sortData.ts 数据：SKILL_CATEGORY_MAP + 3 内置列表配置 trade_goods/skills/stocks 回调等效实现）；sortInteractiveList 为纯函数（仅依赖传入 config+state，不读模块级注册表），5 层排序（分类顺序→同类优先级默认50→频次降序→成本升序→名称 zh-CN localeCompare）逐字节对齐；新增 TS↔vanilla 双向比对单测 1224/1224（静态分层7用例 + 400 随机种子×3 列表类型 + null/undefined 边界 + getSkillCategory 14 id + SKILL_CATEGORY_MAP 数据保真）；src/js 端零改动、加载序不变）
 
 > 前置批次16：技能连携纯函数 checkSkillSynergies / getSkillSynergyBonus 迁 src/app/core/skills/synergy.ts TS 规范源（数据表 SKILL_SYNERGY_DUAL/TRIPLE/THEME 提至 synergyData.ts 规范源）；双连携激活时写入 state.flags['_synergy_'+id]=true 副作用与 vanilla 一致，data/jobs.js 以 requiredFlag 依赖该标记解锁连携工作；新增 TS↔vanilla 双向比对单测 40025/40025（数据表3保真 + 静态16 + 2500 随机种子×16 断言，覆盖 dual/triple/theme 全分支 + flags 副作用 + getSkillSynergyBonus 工作特定 incomeMultiplier）；src/js 端零改动、加载序不变）
 > 前置批次15：地点旅行 AP 消耗纯函数 getTravelApCost 迁 src/app/core/travel/apCost.ts（独立模块规避 travel.ts 回滚），TRAVEL_GRAPH/LOCATIONS 注入参数传入，13248/13248 等价单测。
@@ -79,7 +79,7 @@
 - **P1-3 `_r21~_r27` 碎片文件按领域合并**：`economy_linkage_events{,_r27}.js` 等按领域并入主题文件，去轮次编号。纯移动 + IIFE 注入不变。验收：文件数减少、`events_integrity` id 唯一性不破、runtime 事件数不变。
 - **P1-4 内容深度（长线因果链）**：重心从"加事件数"转向"加事件链"。建 3~5 条贯穿全周目主线因果树（选择 A→N 天后果→再分叉），复用现有 `_chainEventQueue` / `scheduleChainEvent`。验收：主线链可端到端跑通（smoke 加一条链完成断言）。
 - **P1-5 新手认知过载**：渐进式揭示——开局只露 3 个核心指标（钱/健康/今日目标），其余随进度解锁。验收：首日可见指标数 ≤3，后续按里程碑解锁。
-- **P1-6 事件叙事门控体系（Layer 1-6）**：从技术层到选择均衡层的完整门控框架（规范源 `memory/event-gate-layer-system.md`，本轮补全）。Layer 1（技术层）✅ 已全覆盖；Layer 2（NPC自洽）🔶 部分覆盖（[Layer2] 待系统铺开）；Layer 3（玩家状态自洽）✅ 全覆盖（99 处门控 / 19 文件，a35defbf 2026-07-22 18:18）；Layer 4（时间线逻辑）🔴 进行中（L4-A gameOver 泄漏门控累计 108 处：首过 5 处 chengguan_events.js + events_corp.js 链式事件 + 本轮续扫 103 处 street 事件 conditions（events_street_survival 49 + events_street_wealth 54；events_street_life 跳过—并行 loop 占用，留待后续轮次）；L4-B phase-less 死事件 114 候选逐条人工复核；L4-C/D/E 待做）；Layer 5（经济缩放）⏳；Layer 6（选择均衡）⏳。验收：Layer 3 修复后 events_integrity 全绿 + 叙事穿帮事件 conditions 补全率 100%；Layer 4 验收 = gameOver 后无叙事事件 apply + 100% 事件含 `phase` 字段。
+- **P1-6 事件叙事门控体系（Layer 1-6）**：从技术层到选择均衡层的完整门控框架（规范源 `memory/event-gate-layer-system.md`，本轮补全）。Layer 1（技术层）✅ 已全覆盖；Layer 2（NPC自洽）🔶 部分覆盖（[Layer2] 待系统铺开）；Layer 3（玩家状态自洽）✅ 全覆盖（99 处门控 / 19 文件，a35defbf 2026-07-22 18:18）；Layer 4（时间线逻辑）🔴 进行中（L4-A gameOver 泄漏门控累计 130 处（street 全覆盖 125：survival 49 + wealth 54 + life 22）：首过 5 处 chengguan_events.js + events_corp.js 链式事件 + 本轮续扫 125 处 street 事件 conditions；L4-B phase-less 死事件 114 候选逐条人工复核；L4-C/D/E 待做）；Layer 5（经济缩放）⏳；Layer 6（选择均衡）⏳。验收：Layer 3 修复后 events_integrity 全绿 + 叙事穿帮事件 conditions 补全率 100%；Layer 4 验收 = gameOver 后无叙事事件 apply + 100% 事件含 `phase` 字段。
 
 ## P2 / P3 落地路线（中长期）
 

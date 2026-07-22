@@ -1,5 +1,5 @@
 {
-  "currentRound": 165,
+  "currentRound": 166,
   "currentDomain": "Layer4",
   "nextDomain": "Layer5",
   "rotationIndex": 0,
@@ -187,12 +187,17 @@
       "round": 165,
       "domain": "Layer4",
       "note": "L4-A street续扫 103 处 gameOver 门控 (events_street_survival 49 + wealth 54; life 跳过待 loop 让出)"
+    },
+    {
+      "round": 166,
+      "domain": "Layer4",
+      "note": "L4-A 收尾 life.js 22 处 gameOver 门控 → street 全覆盖 125 / L4-A 累计 130"
     }
   ],
   "lastDomain": "Layer4",
-  "lastRound": 165,
+  "lastRound": 166,
   "lastDate": "2026-07-22",
-  "lastCommit": "09b56b3a0cec3c80d32bfeb85da9df179c4752bb",
+  "lastCommit": "8dc2e701f7157d6351c2b8e58d6bd77105368b99",
   "pushStatus": "LOCAL",
   "completedDomains": [
     "A",
@@ -204,5 +209,5 @@
     "G",
     "H"
   ],
-  "description": "Layer4 时间线逻辑门控 L4-A 累计 108 处 gameOver 门控：首过 5 处(chengguan/events_corp 链式) + 续扫 103 处(street survival 49 + wealth 54；life 跳过待 loop 让出)；L4-B phase-less 死事件 114 候选待人工复核；gameOver 字段一致性(festivals/life_decisions/story_chapters/critical 误用 st.flags.gameOver) 待专项；手动「继续」驱动，自动 loop 并行扫 street/moral"
+  "description": "Layer4 时间线逻辑门控 L4-A 累计 130 处 gameOver 门控（street 全覆盖 125：survival 49 + wealth 54 + life 22；首过 5 处 chengguan/events_corp 链式）；L4-B phase-less 死事件 114 候选逐条人工复核；gameOver 字段一致性(festivals/life_decisions/story_chapters/critical 误用 st.flags.gameOver) 待专项；手动「继续」驱动，自动 loop 并行扫 street/moral"
 }

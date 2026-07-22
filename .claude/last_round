@@ -1,1 +1,1 @@
-fix: [Layer4] 时间线逻辑门控 L4-A 续扫 — street 事件 gameOver 泄漏门控 103 处（events_street_survival 49 + events_street_wealth 54）+ 文档/状态更新（09b56b3）
+fix: [Layer4] 时间线逻辑门控 L4-A 收尾 — events_street_life.js 22 处 gameOver 门控（street 全覆盖 125 / 累计 130）+ 文档/状态更新（8dc2e70）
