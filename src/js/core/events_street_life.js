@@ -77,6 +77,7 @@
       triggers: { minDay: 20, excludeFlags: ["_bikeShareSeen"] },
       // [自洽修复] conditions 新增：共享单车运维暗示体力工作，需有相关行动频次
       conditions: function (st) {
+        if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后不再触发街头叙事事件
         var hasManualWork =
           (st.stats &&
             st.stats.actionFreq &&
@@ -122,6 +123,7 @@
       triggers: { minDay: 35, excludeFlags: ["_liveStreamSeen"] },
       // [自洽修复] conditions 新增：直播风口事件需有 content/live 相关行动经历
       conditions: function (st) {
+        if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后不再触发街头叙事事件
         var hasContentExp =
           (st.stats &&
             st.stats.actionFreq &&
@@ -210,7 +212,10 @@
       title: "黄金摊位争夺战",
       story: "夜市街口位置空出来了。有人出¥3,000租一个月。那位置客流量是三倍。",
       triggers: { minDay: 30, excludeFlags: ["_stallLocationSeen"] },
-      conditions: function (st) { if (!st.player.workTypeCounts || !st.player.workTypeCounts.stall || st.player.workTypeCounts.stall < 1) return false; return true; }, // [Layer3]
+      conditions: function (st) {
+        if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后不再触发街头叙事事件
+        if (!st.player.workTypeCounts || !st.player.workTypeCounts.stall || st.player.workTypeCounts.stall < 1) return false; return true;
+      }, // [Layer3]
       choices: [
         {
           text: "💰 砸¥3,000抢下",
@@ -254,7 +259,10 @@
       title: "寺庙经济",
       story: "灵隐寺排队比商场还多。卖香烛的大妈一天¥3,000。年轻人全来上香了。",
       triggers: { minDay: 40, excludeFlags: ["_templeEconomySeen"] },
-      conditions: function (st) { if (!st.player.workTypeCounts || !st.player.workTypeCounts.stall || st.player.workTypeCounts.stall < 1) return false; return true; }, // [Layer3]
+      conditions: function (st) {
+        if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后不再触发街头叙事事件
+        if (!st.player.workTypeCounts || !st.player.workTypeCounts.stall || st.player.workTypeCounts.stall < 1) return false; return true;
+      }, // [Layer3]
       choices: [
         {
           text: "🩧 进手串去卖（¥800）",
@@ -297,6 +305,7 @@
       triggers: { minDay: 30, excludeFlags: ["_viralHarassmentSeen"] },
       // [自洽修复] conditions 新增：送外卖职业检查（story 明确"送外卖时"，需 sideHustle driving 或 logistics 路径）
       conditions: function (st) {
+        if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后不再触发街头叙事事件
         var isDelivery =
           (st.sideHustle && st.sideHustle.type === "driving") ||
           (st.career &&
@@ -347,6 +356,7 @@
       triggers: { minDay: 30, excludeFlags: ["_deliveryPriceSeen"] },
       // [自洽修复] conditions 新增：送外卖职业检查（story/options 提及骑手服，需 sideHustle driving 或 logistics 路径）
       conditions: function (st) {
+        if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后不再触发街头叙事事件
         var isDelivery =
           (st.sideHustle && st.sideHustle.type === "driving") ||
           (st.career &&
@@ -442,7 +452,10 @@
         excludeFlags: ["_nearExpirySeen"],
         minCash: 1000,
       },
-      conditions: function (st) { if (!st.player.workTypeCounts || !st.player.workTypeCounts.stall || st.player.workTypeCounts.stall < 1) return false; return true; }, // [Layer3]
+      conditions: function (st) {
+        if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后不再触发街头叙事事件
+        if (!st.player.workTypeCounts || !st.player.workTypeCounts.stall || st.player.workTypeCounts.stall < 1) return false; return true;
+      }, // [Layer3]
       choices: [
         {
           text: "📦 进¥1,000的货去卖",
@@ -491,7 +504,10 @@
         excludeFlags: ["_gigSocialSeen"],
         relationshipMet: "old_zhou",
       },
-      conditions: function (st) { if (!st.sideHustle || !st.sideHustle.active) return false; return true; }, // [Layer3]
+      conditions: function (st) {
+        if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后不再触发街头叙事事件
+        if (!st.sideHustle || !st.sideHustle.active) return false; return true;
+      }, // [Layer3]
       choices: [
         {
           text: "\u2705 交",
@@ -588,6 +604,7 @@
       triggers: { minDay: 10, excludeFlags: ["_shoppingFestSeen"] },
       // [自洽修复] conditions 新增：选项"去快递站做临时工"暗示物流/快递经历
       conditions: function (st) {
+        if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后不再触发街头叙事事件
         var hasLogistics =
           (st.sideHustle && st.sideHustle.type === "driving") ||
           (st.career &&
@@ -1498,7 +1515,10 @@
       story:
         "「幻方量化」去年收益43%，今年前三个月已经亏了15%。有人说量化基金就是高频割韭菜——散户的每一笔交易都被算法预测。你想起上周自己买了就跌、卖了就涨的股票，后背一凉。",
       triggers: { minDay: 55, excludeFlags: ["_quantFundSeen"] },
-      conditions: function (st) { if (!st.investment || !st.investment.stockHoldings || Object.keys(st.investment.stockHoldings).length < 1) return false; return true; }, // [Layer3]
+      conditions: function (st) {
+        if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后不再触发街头叙事事件
+        if (!st.investment || !st.investment.stockHoldings || Object.keys(st.investment.stockHoldings).length < 1) return false; return true;
+      }, // [Layer3]
       choices: [
         {
           text: "🤖 买量化基金——打不过就加入",
@@ -1559,7 +1579,10 @@
       story:
         "银行又降息了——一年期存款利率从1.5%降到1.0%。余额宝的收益跌到1.8%，创历史新低。你算了算：存¥10000在银行，一年利息¥100，够吃两顿沙县。房东说下个月涨房租¥150。",
       triggers: { minDay: 20, excludeFlags: ["_depositRateCutSeen"] },
-      conditions: function (st) { if (!st.resources || st.resources.cash < 10000) return false; return true; }, // [Layer3]
+      conditions: function (st) {
+        if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后不再触发街头叙事事件
+        if (!st.resources || st.resources.cash < 10000) return false; return true;
+      }, // [Layer3]
       choices: [
         {
           text: "📈 把钱从银行取出来投资",
@@ -1923,6 +1946,7 @@
       triggers: { minDay: 25, excludeFlags: ["_consumptionDownSeen"] },
       // [自洽修复] conditions 新增：选项"帮拼多多商家送货"暗示跑腿/配送经历
       conditions: function (st) {
+        if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后不再触发街头叙事事件
         // [Layer3] 叙事说"价格只有你的一半"暗示玩家有摊位
         var hasStall = (st.player && st.player.workTypeCounts && st.player.workTypeCounts.stall > 0);
         if (hasStall) return true;
@@ -2163,7 +2187,10 @@
       story:
         "区里创文创卫检查，城管突然严打——三轮车被没收了五辆。老赵的车被抬上卡车时他差点哭了：「我贷款买的车啊……」但街角那个有固定摊位的人照样做生意——有关系和没关系，就是不一样。",
       triggers: { minDay: 10, excludeFlags: ["_vendorCrackdownSeen"] },
-      conditions: function (st) { if (!st.player.workTypeCounts || !st.player.workTypeCounts.stall || st.player.workTypeCounts.stall < 1) return false; return true; }, // [Layer3]
+      conditions: function (st) {
+        if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后不再触发街头叙事事件
+        if (!st.player.workTypeCounts || !st.player.workTypeCounts.stall || st.player.workTypeCounts.stall < 1) return false; return true;
+      }, // [Layer3]
       choices: [
         {
           text: "🏪 花钱办个固定摊位证",
@@ -2661,7 +2688,10 @@
         "你之前投了一笔生意——¥50万砸进去了，项目半死不活。合伙人电话来了：「再投¥10万就能撑到下一轮——已经走到这一步了。」你握着手机，手心全是汗。",
       triggers: { minDay: 60, excludeFlags: ["_sunkCostSeen"], minCash: 50000 },
       // [Layer3] 叙事说"你之前投了一笔生意——¥50万砸进去了"，需玩家有大量收入记录
-      conditions: function (st) { return (st.resources && st.resources.totalEarned >= 500000) || (st.startup && st.startup.active); },
+      conditions: function (st) {
+        if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后不再触发街头叙事事件
+        return (st.resources && st.resources.totalEarned >= 500000) || (st.startup && st.startup.active);
+      },
       choices: [
         {
           text: "💰 追加投资",
@@ -2728,7 +2758,10 @@
       story:
         "以前你靠灰色手段赚了第一桶金——倒卖发票、刷单。现在行业正规化了——政府发了牌照。当年的灰色技能突然变成了合规经验。以前的污点成了先发优势。",
       triggers: { minDay: 90, excludeFlags: ["_grayToLegitSeen"] },
-      conditions: function (st) { if (!st.player || st.player.morality > 30) return false; return true; }, // [Layer3]
+      conditions: function (st) {
+        if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后不再触发街头叙事事件
+        if (!st.player || st.player.morality > 30) return false; return true;
+      }, // [Layer3]
       choices: [
         {
           text: "💼 申请正规牌照",
@@ -2786,6 +2819,7 @@
         "你中彩票了——或者拆迁款到账了——反正一夜之间有了¥200万。你搬进高档公寓，请工友吃了¥5000的饭。三个月后，钱花了一半。没有新的收入来源。",
       // [已审查] 含 OR 逻辑，保留 conditions
       conditions: function (st) {
+        if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后不再触发街头叙事事件
         return (
           st.player.phase === "street" &&
           st.player.day >= 50 &&
@@ -2866,7 +2900,10 @@
       story:
         "你回到住处发现室友把你的洗衣液用完了，厕所纸也用光了没补。这不是第一次了。你开门时他正在你的椅子上坐着刷手机。",
       triggers: { minDay: 5, excludeFlags: ["_roommateConflictSeen"] },
-      conditions: function (st) { if (!st.housing || st.housing.tier < 1) return false; return true; }, // [Layer3]
+      conditions: function (st) {
+        if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后不再触发街头叙事事件
+        if (!st.housing || st.housing.tier < 1) return false; return true;
+      }, // [Layer3]
       choices: [
         {
           text: "😤 当面跟他说清楚",
@@ -3208,6 +3245,7 @@
       triggers: { minDay: 45, excludeFlags: ["_mercedesRoommate"] },
       // [自洽修复] v3.20 原始提交缺 conditions/apply → 补全
       conditions: function (st) {
+        if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后不再触发街头叙事事件
         return st.housing && st.housing.tier >= 1;
       },
       probability: 0.05,
@@ -3286,6 +3324,7 @@
         "窗外风力到了7级，温度计显示零下二度。你缩在被窝里不敢出去——连呼吸都是白气。\n\n中午敲门声响了，是楼下的大爷。他拎着一袋热腾腾的小米粥：「小伙子，家里熬多了，给你端一碗来。这鬼天气别饿着肚子。」\n\n粥还烫手。你蹲在门口喝完，浑身暖和过来了。（⚡ 极端天气时更易触发）",
       // [已审查] 含 OR 逻辑（任意极端天气触发），保留 conditions
       conditions: function (st) {
+        if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后不再触发街头叙事事件
         var cold = st.weather && (typeof st.weather.temperature === "number" && st.weather.temperature <= 0);
         var storm = st.weather && st.weather.current === "stormy";
         if (!cold && !storm) return false;
@@ -3369,6 +3408,7 @@
       repeatable: false,
       // [已审查] 健康≥80 + 非开局(≥3天)即可能触发，体现病愈叙事（无疾病flag时fallback为纯健康恢复）
       conditions: function (st) {
+        if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后不再触发街头叙事事件
         if (st.flags && st.flags._firstGoodMealSeen) return false;
         if (!st.player || !st.player.day || st.player.day < 3) return false;
         return !!(st.status && st.status.health >= 80);
@@ -3427,6 +3467,7 @@
         "季节换了。衣柜里的厚衣服该收起来，薄衣服又没几件。\n\n街上已经有穿短袖的人了。你低头看看自己——单薄的衬衫在风里打颤。「入春先入夏，夏衣得提前备。」隔壁大爷说得对。\n\n换季不只是换衣服，是换一笔开销。",
       triggers: { excludeFlags: ["_seasonChangeSeen"] },
       conditions: function (st) {
+        if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后不再触发街头叙事事件
         if (!st.weather || !st.weather.season) return false;
         if (st.flags._seasonChangeSeen) return false;
         return true;
@@ -3486,6 +3527,7 @@
         "手机弹出一条祝福——「生日快乐！愿新的一岁，所求皆如愿。」\n\n这个城市没人记得你的生日。但今天，你自己记得就够了。\n\n看着银行卡余额和兜里的零钱……也许可以对自己好一点？也可能，算了，省着点用吧。",
       triggers: { minDay: 50 },
       conditions: function (st) {
+        if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后不再触发街头叙事事件
         if (st.flags && st.flags._birthdaySeen) return false;
         // [全系统自洽修复] 域B A类#5: 生日每365天触发（取day%365≈0表示周年纪念日），用近似值容差±1天
         var mod = st.player.day % 365;
