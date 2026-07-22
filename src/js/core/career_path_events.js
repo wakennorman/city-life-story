@@ -664,7 +664,8 @@
         return (
           _path(st, "civil") &&
           _workDays(st) > 730 &&
-          st.career.currentJob.id !== "civil_chief"
+          // [全系统自洽修复] 域C B类: currentJob.id→levelId
+          st.career.currentJob.levelId !== "civil_chief"
         );
       },
       choices: [
@@ -1885,7 +1886,8 @@
         return (
           _path(st, "doctor") &&
           _workDays(st) > 180 &&
-          st.career.currentJob.id !== "doc_attending"
+          // [全系统自洽修复] 域C B类: currentJob.id→levelId
+          st.career.currentJob.levelId !== "doc_attending"
         );
       },
       choices: [
@@ -1954,7 +1956,8 @@
         return (
           _path(st, "doctor") &&
           _workDays(st) > 365 &&
-          st.career.currentJob.id !== "doc_intern"
+          // [全系统自洽修复] 域C B类: currentJob.id→levelId
+          st.career.currentJob.levelId !== "doc_intern"
         );
       },
       choices: [
