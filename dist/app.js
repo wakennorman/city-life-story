@@ -20531,6 +20531,102 @@ function registerNewsEventsToPool() {
   if (typeof window !== "undefined") {
     window._domainALinkageR171 = true;
   }
+
+  // ================================================================
+  // [全系统自洽修复] 域A R171补遗: treatCostMonthly首次叙事化 + CERTIFICATE salaryBonus→社交认可
+  // 根因分析:
+  //   - illnesses.js 多个疾病定义 treatCostMonthly (severe_insomnia:800, heart_attack:600, diabetes:300 等),
+  //     illness.js 月度tick静默扣款但零事件有"每月扣病药费"的叙事包装
+  //   - CERTIFICATES数组定义了16+本证书的salaryBonus只影响数字,无事件展示"证书带来社会认可"
+  // ================================================================
+
+  var _extraA_EVENTS = [
+
+    // ===== 联动5: A→B 慢性病月治疗费通知 =====
+    {
+      id: "chronic_meds_monthly_notice",
+      title: "💊 每月一次的治疗费扣款",
+      desc: "医院按月扣除慢性病治疗费用。疾病子系统数据(treatCostMonthly)首次被事件消费。",
+      phase: "street",
+      repeatable: true,
+      cooldownDays: 30,
+      priority: 40,
+      conditions: function (st) {
+        if (!st || !st.status || !st.status.illnesses || !Array.isArray(st.status.illnesses)) return false;
+        if (st.flags && st.flags._chronicMedsMonthEnd && (st.player.day || 0) - st.flags._chronicMedsMonthEnd < 30) return false;
+        var totalMonthly = 0;
+        for (var i = 0; i < st.status.illnesses.length; i++) {
+          var illData = typeof getIllnessData === "function" ? getIllnessData(st.status.illnesses[i]) : null;
+          if (illData && typeof illData.treatCostMonthly === "number" && illData.treatCostMonthly > 0) {
+            totalMonthly += illData.treatCostMonthly;
+          }
+        }
+        return totalMonthly > 0;
+      },
+      probability: 0.10,
+      getText: function (st) {
+        var totalMonthly = 0;
+        var illnessNames = [];
+        for (var i = 0; i < st.status.illnesses.length; i++) {
+          var illData = typeof getIllnessData === "function" ? getIllnessData(st.status.illnesses[i]) : null;
+          if (illData && typeof illData.treatCostMonthly === "number" && illData.treatCostMonthly > 0) {
+            totalMonthly += illData.treatCostMonthly;
+            illnessNames.push(illData.name || "疾病");
+          }
+        }
+        return illnessNames.length > 0
+          ? "银行短信来了：「您本月" + illnessNames.join("、") + "的治疗费用¥" + totalMonthly.toLocaleString() + "已扣除。」\n\n这病治不好但可以控制，只要按时吃药。"
+          : "";
+      },
+      getStory: function (st) { return this.getText(st) || "每月治疗费正常扣除。"; },
+      apply: function (st) {
+        if (st.flags) st.flags._chronicMedsMonthEnd = st.player.day;
+      },
+      choices: [],
+      icons: ["💊", "📱"],
+    },
+
+    // ===== 联动6: A→C/D 证书社会认可 =====
+    {
+      id: "cert_social_recognition",
+      title: "🎓 同事注意到你的证书",
+      desc: "CERTIFICATE salaryBonus数据首次被事件叙事化——证书不只是涨薪工具，也是社交资本。",
+      phase: "corporate",
+      repeatable: true,
+      cooldownDays: 90,
+      priority: 55,
+      conditions: function (st) {
+        if (!st || !st.corporate || !st.corporate.active) return false;
+        if (!st.certificates || !Array.isArray(st.certificates) || st.certificates.length < 2) return false;
+        if (st.flags && st.flags._certSocialRecogDone) return false;
+        var day = st.player.day || 0;
+        return day >= 30 && day - (st.corporate.joinedDay || 0) >= 60;
+      },
+      probability: 0.06,
+      getText: function (st) {
+        var count = (st.certificates && Array.isArray(st.certificates)) ? st.certificates.length : 0;
+        return "新来的实习生看到你桌子上的证书堆，眼睛都直了：「您考了这么多证，真是厉害！」\n\n你笑了笑没说什么，只有你自己知道那些证书背后是多少个熬夜备考的夜晚。（拥有" + count + "个专业资质）";
+      },
+      getStory: function (st) { return this.getText(st); },
+      apply: function (st) {
+        var c = st.player.corporate;
+        if (!c) return;
+        c.popularity = Math.min(100, (c.popularity || 0) + 5);
+        c.dignity = Math.min(100, (c.dignity || 0) + 3);
+        if (st.player) st.player.morality = Math.min(100, (st.player.morality || 50) + 2);
+        st.flags._certSocialRecogDone = true;
+        StateManager.addMessage("🎓 你的专业资质让同事们刮目相看！人缘+5，尊严+3，道德感+2。", "success");
+      },
+      choices: [
+        { id: "keep_current", text: "😊 谦虚回应，专注工作" },
+      ],
+      icons: ["🎓", "👏"],
+    },
+  ];
+
+  for (var ei = 0; ei < _extraA_EVENTS.length; ei++) {
+    RANDOM_EVENTS.push(_extraA_EVENTS[ei]);
+  }
 })();
 ;
 // ==== js/core/domain_b_linkage_r172.js ====
@@ -168240,9 +168336,10 @@ const MORAL_EVENTS = [
         flag: "moral_wallet_flaunt",
         score: -10,
         immediate: function (s) {
-          s.resources.cash += 500;
+          // [全系统自洽修复] 域B A类#2: moral_wallet_flaunt cash无守卫
+          s.resources.cash = (s.resources.cash || 0) + 500;
           s.player.fame = Math.min(100, (s.player.fame || 0) + 5);
-          s.needs.happiness = Math.min(100, s.needs.happiness + 10);
+          s.needs.happiness = Math.min(100, (s.needs.happiness || 0) + 10);
           StateManager.addMessage(
             "📱 朋友圈炸了，但你隐约觉得不太妥当...",
             "event",
@@ -170475,14 +170572,16 @@ for (var emi = 0; emi < EXTREME_MORAL_EVENTS.length; emi++) {
       dailyChance: eventDef.dailyChance || 0.025,
       condition: eventDef.condition, // [Layer3] pass through
       choices: eventDef.choices.map(function (choiceDef) {
-        return {
-          text: choiceDef.text,
-          flag: choiceDef.flag,
-          score: choiceDef.score,
-          immediate: function (state) {
-            applyExtremeMoralDelta(state, choiceDef);
-          },
-        };
+        return (function (cd) {
+          return {
+            text: cd.text,
+            flag: cd.flag,
+            score: cd.score,
+            immediate: function (state) {
+              applyExtremeMoralDelta(state, cd);
+            },
+          };
+        })(choiceDef);
       }),
     });
   })(EXTREME_MORAL_EVENTS[emi]);
@@ -172492,6 +172591,192 @@ if (typeof window !== "undefined") {
 })();
 
 ;
+// ==== js/data/domain_c_linkage_r173.js ====
+/**
+ * 域C联动增强：技能分支选择仪式 + 技能连携觉醒 + 分支工作浮现
+ * [全系统自洽修复] 域C R173: skill_branches/chainEvent/SYNERGY首次被事件消费
+ */
+(function () {
+  "use strict";
+  if (typeof window === "undefined") return;
+
+  // ===== 事件1: 技能分支选择仪式 =====
+  // 根因：chooseSkillBranch()只发一行消息，零仪式感
+  var skill_branch_ritual = {
+    id: "skill_branch_ritual",
+    title: "🌳 天赋树分叉",
+    phase: "street",
+    repeatable: false,
+    priority: 85,
+    conditions: function (st) {
+      if (!st || !st.flags) return false;
+      if (st.flags._skillBranchRitualDone) return false;
+      var lastBranch = st.skillBranches && st.skillBranches._lastChosen;
+      return !!lastBranch;
+    },
+    probability: 1.0,
+    getText: function (st) {
+      var lastBranch = st.skillBranches && st.skillBranches._lastChosen;
+      var label = "";
+      if (lastBranch) {
+        var allBranches = typeof SKILL_BRANCHES === "object" ? SKILL_BRANCHES : {};
+        for (var sk in allBranches) {
+          var brs = allBranches[sk];
+          if (brs && Array.isArray(brs)) {
+            for (var bi = 0; bi < brs.length; bi++) {
+              if (brs[bi].id === lastBranch) {
+                label = (brs[bi].icon || "") + brs[bi].name + "（" + sk + "）";
+                break;
+              }
+            }
+          }
+        }
+      }
+      return label
+        ? "你确定了「" + label + "」的发展方向——这是一条单行道，但深耕必有回响。\n\n你想起导师的话：「选定了方向，就别回头。」"
+        : "你确定了一个新的发展方向。";
+    },
+    getStory: function (st) { return this.getText(st); },
+    apply: function (st) {
+      st.flags._skillBranchRitualDone = true;
+      if (st.player) {
+        st.player.happiness = Math.min(100, (st.player.happiness || 50) + 3);
+        st.player.mental = Math.min(100, (st.player.mental || 50) + 2);
+      }
+      StateManager.addMessage("🌳 你坚定地选择了自己的发展方向！心情+3，心智+2。", "success");
+    },
+    choices: [],
+    icons: ["🌳", "🛤️"],
+  };
+
+  // ===== 事件2: 双技能连携觉醒 =====
+  // 根因：checkSkillSynergies()检测到新连携后设置flag但没有叙事包装
+  var synergy_dual_unlock = {
+    id: "synergy_dual_unlock",
+    title: "🔗 连携觉醒",
+    phase: "street",
+    repeatable: true,
+    cooldownDays: 60,
+    priority: 70,
+    conditions: function (st) {
+      if (!st || !st.flags) return false;
+      if (!st.flags._justUnlockedDual || !st.flags._currentUnlockSynergyId) return false;
+      return true;
+    },
+    probability: 1.0,
+    getText: function (st) {
+      var sid = st.flags && st.flags._currentUnlockSynergyId;
+      var syn = typeof SKILL_SYNERGY_DUAL === "object" ? (SKILL_SYNERGY_DUAL[sid] || null) : null;
+      if (syn) {
+        return syn.icon + "「" + syn.name + "」觉醒！\n\n" + syn.desc;
+      }
+      return "两门技能的交汇产生了奇妙的化学反应！";
+    },
+    getStory: function (st) { return this.getText(st); },
+    apply: function (st) {
+      st.flags._justUnlockedDual = false;
+      st.flags._currentUnlockSynergyId = null;
+      st.flags._synergyDualEventShown = st.player.day;
+      if (st.player) st.player.happiness = Math.min(100, (st.player.happiness || 50) + 5);
+      StateManager.addMessage("🔗 连携觉醒！你感受到某种力量在汇聚……心情+5。", "success");
+    },
+    choices: [],
+    icons: ["🔗", "⚡"],
+  };
+
+  // ===== 事件3: 三联携降临 =====
+  var synergy_triple_unlock = {
+    id: "synergy_triple_unlock",
+    title: "👑 三连携降临",
+    phase: "street",
+    repeatable: true,
+    cooldownDays: 180,
+    priority: 90,
+    conditions: function (st) {
+      if (!st || !st.flags) return false;
+      if (!st.flags._justUnlockedTriple || !st.flags._currentUnlockSynergyId) return false;
+      return true;
+    },
+    probability: 1.0,
+    getText: function (st) {
+      var sid = st.flags && st.flags._currentUnlockSynergyId;
+      var syn = typeof SKILL_SYNERGY_TRIPLE === "object" ? (SKILL_SYNERGY_TRIPLE[sid] || null) : null;
+      if (syn) {
+        return syn.icon + "「" + syn.name + "」觉醒！\n\n" + syn.desc;
+      }
+      return "三门技能同时达到临界点——你感受到了前所未有的力量！";
+    },
+    getStory: function (st) { return this.getText(st); },
+    apply: function (st) {
+      st.flags._justUnlockedTriple = false;
+      st.flags._currentUnlockSynergyId = null;
+      st.flags._synergyTripleEventShown = st.player.day;
+      if (st.player) {
+        st.player.charm = Math.min(100, (st.player.charm || 50) + 3);
+        st.player.happiness = Math.min(100, (st.player.happiness || 50) + 10);
+      }
+      StateManager.addMessage("👑 三连携降临！这是少数人能触及的境界。魅力+3，心情+10。", "success");
+    },
+    choices: [],
+    icons: ["👑", "✨"],
+  };
+
+  // ===== 事件4: 分支解锁工作浮现 =====
+  // 根因：SKILL_BRANCHES的jobBonuses选择了分支才有效，但玩家不知道
+  var branch_job_discovery = {
+    id: "branch_job_discovery",
+    title: "📋 新机会浮现",
+    phase: "street",
+    repeatable: false,
+    priority: 60,
+    conditions: function (st) {
+      if (!st || !st.flags) return false;
+      if (st.flags._branchJobDiscovered) return false;
+      var lastBranch = st.skillBranches && st.skillBranches._lastChosenForJob;
+      if (!lastBranch) return false;
+      // 需要已选择分支≥30天
+      var foundedDay = st.skillBranches && st.skillBranches._lastChosenDay;
+      var day = st.player.day || 0;
+      return foundedDay && (day - foundedDay) >= 30;
+    },
+    probability: 0.15,
+    getText: function (st) {
+      var lastBranch = st.skillBranches && st.skillBranches._lastChosenForJob;
+      if (!lastBranch) return "你留意到了一些新的工作机会。";
+      var allBranches = typeof SKILL_BRANCHES === "object" ? SKILL_BRANCHES : {};
+      var label = "";
+      for (var sk in allBranches) {
+        var brs = allBranches[sk];
+        if (brs && Array.isArray(brs)) {
+          for (var bi = 0; bi < brs.length; bi++) {
+            if (brs[bi].id === lastBranch) {
+              label = (brs[bi].icon || "") + brs[bi].name;
+              break;
+            }
+          }
+        }
+      }
+      return "经过一段时间的学习，" + label + "方向的专精让你发现了一些别人看不到的机会！";
+    },
+    getStory: function (st) { return this.getText(st); },
+    apply: function (st) {
+      st.flags._branchJobDiscovered = true;
+      if (st.player) {
+        st.player.happiness = Math.min(100, (st.player.happiness || 50) + 5);
+      }
+      StateManager.addMessage("📋 你的专长为你打开了新的大门！心情+5。", "info");
+    },
+    choices: [],
+    icons: ["📋", "🔍"],
+  };
+
+  // ===== IIFE注入 =====
+  if (typeof RANDOM_EVENTS !== "undefined") {
+    RANDOM_EVENTS.push(skill_branch_ritual, synergy_dual_unlock, synergy_triple_unlock, branch_job_discovery);
+  }
+})();
+
+;
 // ==== js/data/crisis35_followups.js ====
 /**
  * v3.3 W1-T1: 35 岁分水岭三路径延伸事件链
@@ -172603,7 +172888,7 @@ if (typeof window !== "undefined") {
             if (Random.chance(Math.max(0.1, Math.min(0.85, chance / 100)))) {
               st.flags._passedCivilService = true;
               st.player.fame = Math.min(100, (st.player.fame || 0) + 25);
-              st.resources.cash += scaleAmount(5000, st.resources && st.resources.totalEarned);
+              st.resources.cash = (st.resources.cash || 0) + scaleAmount(5000, st.resources && st.resources.totalEarned);
               StateManager.addMessage(
                 "🎉 笔试通过！进入面试名单。亲戚朋友都打来祝贺电话，奖¥5000。",
                 "success",
@@ -172660,7 +172945,7 @@ if (typeof window !== "undefined") {
             st.flags.c35_career_overtime = true;
             st.needs.fatigue = Math.min(100, (st.needs.fatigue || 0) + 35);
             st.player.physique = Math.max(1, (st.player.physique || 0) - 2);
-            st.resources.cash += 2500;
+            st.resources.cash = (st.resources.cash || 0) + 2500;
             st.flags._careerKpiGood = (st.flags._careerKpiGood || 0) + 1;
             StateManager.addMessage(
               "☕ 你顶过去了。早上 6 点交了方案，老板回了个👍。月底拿到¥2500绩效。",
@@ -172720,7 +173005,7 @@ if (typeof window !== "undefined") {
               );
             } else {
               st.flags._careerSurvivedLayoff = false;
-              st.resources.cash += scaleAmount(8000, st.resources && st.resources.totalEarned);
+              st.resources.cash = (st.resources.cash || 0) + scaleAmount(8000, st.resources && st.resources.totalEarned);
               StateManager.addMessage(
                 "💔 没人替你说话。HR 给了¥8000的 N+1 让你走人。",
                 "warning",
@@ -172733,7 +173018,7 @@ if (typeof window !== "undefined") {
           apply: function (st) {
             st.flags.c35_career_layoff_list = true;
             st.flags._careerSurvivedLayoff = false;
-            st.resources.cash += scaleAmount(12000, st.resources && st.resources.totalEarned);
+            st.resources.cash = (st.resources.cash || 0) + scaleAmount(12000, st.resources && st.resources.totalEarned);
             st.needs.happiness = Math.min(100, st.needs.happiness + 5);
             StateManager.addMessage(
               "📃 你签了 N+1.5 的协议，¥12000到账。回家路上忽然觉得轻松。",
@@ -172826,8 +173111,9 @@ if (typeof window !== "undefined") {
           text: "😤 嫉妒+发泄性消费",
           apply: function (st) {
             st.flags.c35_lieflat_friend_circle = "envy";
-            var spend = Math.min(st.resources.cash, 300);
-            st.resources.cash -= spend;
+            // [全系统自洽修复] 域B A类#4: c35_lieflat envy cash无守卫
+            var _spend = Math.min(st.resources.cash || 0, 300);
+            st.resources.cash = (st.resources.cash || 0) - _spend;
             st.needs.happiness = Math.max(0, st.needs.happiness - 6);
             StateManager.addMessage(
               "🛒 你花¥" + spend + "买了一堆没用的东西。报复性消费没带来快乐。",
@@ -172874,17 +173160,19 @@ if (typeof window !== "undefined") {
       choices: [
         {
           text: "⚖️ 请律师催债（¥500）",
-          apply: function (st) {
+            apply: function (st) {
+            // [全系统自洽修复] 域B A类#4: bad_debt_chase cash无守卫
+            var _cash = (st.resources && st.resources.cash) || 0;
             st.flags.bad_debt_chase = "lawyer";
-            if (st.resources.cash < 500) {
+            if (_cash < 500) {
               StateManager.addMessage("💸 你连律师费都掏不起。", "warning");
               return;
             }
-            st.resources.cash -= 500;
+            st.resources.cash = _cash - 500;
             var amt = st.flags._badDebtAmount || 0;
             if (Random.chance(0.3)) {
               var rec = Math.floor(amt * 0.5);
-              st.resources.cash += rec;
+              st.resources.cash = (st.resources.cash || 0) + rec;
               StateManager.addMessage(
                 "📑 律师函生效，对方还了¥" + rec + "（一半）。",
                 "success",
@@ -172955,7 +173243,7 @@ if (typeof window !== "undefined") {
           apply: function (st) {
             st.flags.good_loan_return = true;
             var amt = st.flags._goodLoanReturn || 0;
-            st.resources.cash += amt;
+            st.resources.cash = (st.resources.cash || 0) + amt;
             // NPC 平均好感+5
             var rels = st.relationships || st.npcRelations || {};
             var bumped = 0;
@@ -172969,7 +173257,7 @@ if (typeof window !== "undefined") {
             // 30% 概率引荐高薪一次性工作
             if (Random.chance(0.3)) {
               var pay = Random.int(800, 2000);
-              st.resources.cash += pay;
+              st.resources.cash = (st.resources.cash || 0) + pay;
               StateManager.addMessage(
                 "🎁 对方还把你介绍给一个老板，临时项目结款¥" + pay + "。",
                 "success",
@@ -241718,6 +242006,10 @@ var _SKILL_PATH_MAP = {
   charm: "player.charm",
   fame: "player.fame",
   morality: "player.morality",
+  // [全系统自洽修复] 域C R173 A类#1: design→player.intelligence, social→player.charm 映射补全
+  // 根因：_SKILL_PATH_MAP缺design/social条目 → _getSkillValue返回0 → CAREER_PATHS中design/edu路径所有reqSkills永不可达
+  design: "player.intelligence",
+  social: "player.charm",
 };
 function _getSkillValue(state, skill) {
   var path = _SKILL_PATH_MAP[skill];
