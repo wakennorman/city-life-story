@@ -263,57 +263,7 @@ const CAREER_PATHS = {
     ],
   },
   // [全系统自洽修复] 域C R74: 删除重复的legal路径定义(L265-315死代码)，保留新版(L705-738)
-  // 教育路径定义略
-  education: {
-    name: "教育培训",
-    icon: "🏫",
-    category: "service",
-    levels: [
-      {
-        id: "edu_assist",
-        name: "教学助理",
-        minAge: 20,
-        reqSkills: { english: 5, management: 3 },
-        reqAttrs: { intelligence: 25, charm: 22 },
-        salary: 4000,
-        desc: "辅助教学、批改作业、课件制作",
-      },
-      {
-        id: "edu_teacher",
-        name: "教师",
-        minAge: 22,
-        reqSkills: { english: 10, management: 5 },
-        reqAttrs: { intelligence: 30, charm: 25, mental: 20 },
-        salary: 7500,
-        reqEducation: 1,
-        reqWorkDays: 365,
-        desc: "独立授课、班级管理、家长沟通",
-      },
-      {
-        id: "edu_headteacher",
-        name: "骨干教师/教研主任",
-        minAge: 28,
-        reqSkills: { management: 20, english: 15 },
-        reqAttrs: { intelligence: 42, charm: 35, mental: 30 },
-        salary: 13000,
-        reqEducation: 1,
-        reqWorkDays: 1095,
-        desc: "课程研发、带教新人、教学管理",
-      },
-      {
-        id: "edu_principal",
-        name: "副校长/校长",
-        minAge: 34,
-        reqSkills: { management: 38, english: 20 },
-        reqAttrs: { intelligence: 52, charm: 45, mental: 40 },
-        salary: 22000,
-        reqEducation: 1,
-        reqWorkDays: 2190,
-        desc: "学校行政管理、师资培养、政府对接",
-        reqSocial: 50,
-      },
-    ],
-  },
+  // [全系统自洽修复] 域C 修复:education 重复键——本条(edu_assist系, category:service)被下方第689行同名键(edu_assistant系)静默覆盖，整条不可达(死职业)。删除被覆盖的死路径，保留第689行活路径。
 
   logistics: {
     name: "物流快递",

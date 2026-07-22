@@ -705,6 +705,8 @@ function checkNpcRelationEventTriggers(state) {
 
     var relations = NPC_RELATION_MATRIX[npcA];
     for (var npcB in relations) {
+      // [全系统自洽修复] 域D R175 A类: npcB 未检查 met → 可能导致从未结识的NPC意外解锁
+      if (!state.relationships[npcB] || !state.relationships[npcB].met) continue;
       var type = relations[npcB];
       var affB =
         (state.relationships[npcB] && state.relationships[npcB].affinity) || 0;

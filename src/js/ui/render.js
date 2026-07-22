@@ -1367,13 +1367,15 @@ function renderActiveNews(state, parent) {
 }
 
 // ====== Actions Tab ======
-function _esc(str) {
+var _esc = _esc || function _esc(str) {
+  if (!str) return "";
   return String(str)
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;");
-}
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+};
 
 /** 根据当前状态生成若干条行动建议（数量由心智决定） */
 function getDailyActionTips(state) {

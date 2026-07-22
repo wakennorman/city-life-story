@@ -233,16 +233,4 @@ function showCompanyHistory(companyId, state) {
   });
 }
 
-/** 转义 HTML 特殊字符 */
-if(typeof _esc==="undefined"){
-function _esc(str) {
-  if (!str) return "";
-  return String(str)
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#39;");
-}
-
-}
+// _esc 转义函数由 render.js 全局提供

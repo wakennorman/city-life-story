@@ -12,16 +12,7 @@
 
 // ====== 工具函数 ======
 
-/** 转义 HTML 特殊字符 */
-function _esc(str) {
-  if (!str) return "";
-  return String(str)
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#39;");
-}
+// _esc 转义函数由 render.js 全局提供
 
 // ====== 办公地点系统 ======
 const OFFICE_LOCATIONS = {

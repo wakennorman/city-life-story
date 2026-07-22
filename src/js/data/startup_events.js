@@ -9,7 +9,7 @@
 // ====== 工具函数 ======
 
 /** 转义 HTML 特殊字符 */
-function _esc(str) {
+var _esc = _esc || function _esc(str) {
   if (!str) return "";
   return String(str)
     .replace(/&/g, "&amp;")
@@ -17,7 +17,7 @@ function _esc(str) {
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;")
     .replace(/'/g, "&#39;");
-}
+};
 
 // ====== 种子期事件（注册后0-90天）======
 const STARTUP_EVENTS_SEED = [
