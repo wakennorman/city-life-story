@@ -212,7 +212,8 @@ const LOCATIONS = {
     specialties: ["fruits", "water", "snacks"],
     dailyProbability: 0.3,
     specialCategory: ["food"],
-    jobs: ["hospital_companion", "hospital_companion"],
+    // [全系统自洽修复] 域A A类#1: 医院地点jobs重复死代码 "hospital_companion"×2 → 去重为单个
+    jobs: ["hospital_companion"],
     priceMod: {},
   },
   bank: {
