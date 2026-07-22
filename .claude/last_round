@@ -1,1 +1,1 @@
-feat: Layer 5 经济数值缩放（scaleAmount + 41 处硬编码金额动态化）
+fix: [域C] R166 A类修复1项+3项B类 — currentJob.id→levelId 字段对齐
