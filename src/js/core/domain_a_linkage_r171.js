@@ -307,4 +307,100 @@
   if (typeof window !== "undefined") {
     window._domainALinkageR171 = true;
   }
+
+  // ================================================================
+  // [全系统自洽修复] 域A R171补遗: treatCostMonthly首次叙事化 + CERTIFICATE salaryBonus→社交认可
+  // 根因分析:
+  //   - illnesses.js 多个疾病定义 treatCostMonthly (severe_insomnia:800, heart_attack:600, diabetes:300 等),
+  //     illness.js 月度tick静默扣款但零事件有"每月扣病药费"的叙事包装
+  //   - CERTIFICATES数组定义了16+本证书的salaryBonus只影响数字,无事件展示"证书带来社会认可"
+  // ================================================================
+
+  var _extraA_EVENTS = [
+
+    // ===== 联动5: A→B 慢性病月治疗费通知 =====
+    {
+      id: "chronic_meds_monthly_notice",
+      title: "💊 每月一次的治疗费扣款",
+      desc: "医院按月扣除慢性病治疗费用。疾病子系统数据(treatCostMonthly)首次被事件消费。",
+      phase: "street",
+      repeatable: true,
+      cooldownDays: 30,
+      priority: 40,
+      conditions: function (st) {
+        if (!st || !st.status || !st.status.illnesses || !Array.isArray(st.status.illnesses)) return false;
+        if (st.flags && st.flags._chronicMedsMonthEnd && (st.player.day || 0) - st.flags._chronicMedsMonthEnd < 30) return false;
+        var totalMonthly = 0;
+        for (var i = 0; i < st.status.illnesses.length; i++) {
+          var illData = typeof getIllnessData === "function" ? getIllnessData(st.status.illnesses[i]) : null;
+          if (illData && typeof illData.treatCostMonthly === "number" && illData.treatCostMonthly > 0) {
+            totalMonthly += illData.treatCostMonthly;
+          }
+        }
+        return totalMonthly > 0;
+      },
+      probability: 0.10,
+      getText: function (st) {
+        var totalMonthly = 0;
+        var illnessNames = [];
+        for (var i = 0; i < st.status.illnesses.length; i++) {
+          var illData = typeof getIllnessData === "function" ? getIllnessData(st.status.illnesses[i]) : null;
+          if (illData && typeof illData.treatCostMonthly === "number" && illData.treatCostMonthly > 0) {
+            totalMonthly += illData.treatCostMonthly;
+            illnessNames.push(illData.name || "疾病");
+          }
+        }
+        return illnessNames.length > 0
+          ? "银行短信来了：「您本月" + illnessNames.join("、") + "的治疗费用¥" + totalMonthly.toLocaleString() + "已扣除。」\n\n这病治不好但可以控制，只要按时吃药。"
+          : "";
+      },
+      getStory: function (st) { return this.getText(st) || "每月治疗费正常扣除。"; },
+      apply: function (st) {
+        if (st.flags) st.flags._chronicMedsMonthEnd = st.player.day;
+      },
+      choices: [],
+      icons: ["💊", "📱"],
+    },
+
+    // ===== 联动6: A→C/D 证书社会认可 =====
+    {
+      id: "cert_social_recognition",
+      title: "🎓 同事注意到你的证书",
+      desc: "CERTIFICATE salaryBonus数据首次被事件叙事化——证书不只是涨薪工具，也是社交资本。",
+      phase: "corporate",
+      repeatable: true,
+      cooldownDays: 90,
+      priority: 55,
+      conditions: function (st) {
+        if (!st || !st.corporate || !st.corporate.active) return false;
+        if (!st.certificates || !Array.isArray(st.certificates) || st.certificates.length < 2) return false;
+        if (st.flags && st.flags._certSocialRecogDone) return false;
+        var day = st.player.day || 0;
+        return day >= 30 && day - (st.corporate.joinedDay || 0) >= 60;
+      },
+      probability: 0.06,
+      getText: function (st) {
+        var count = (st.certificates && Array.isArray(st.certificates)) ? st.certificates.length : 0;
+        return "新来的实习生看到你桌子上的证书堆，眼睛都直了：「您考了这么多证，真是厉害！」\n\n你笑了笑没说什么，只有你自己知道那些证书背后是多少个熬夜备考的夜晚。（拥有" + count + "个专业资质）";
+      },
+      getStory: function (st) { return this.getText(st); },
+      apply: function (st) {
+        var c = st.player.corporate;
+        if (!c) return;
+        c.popularity = Math.min(100, (c.popularity || 0) + 5);
+        c.dignity = Math.min(100, (c.dignity || 0) + 3);
+        if (st.player) st.player.morality = Math.min(100, (st.player.morality || 50) + 2);
+        st.flags._certSocialRecogDone = true;
+        StateManager.addMessage("🎓 你的专业资质让同事们刮目相看！人缘+5，尊严+3，道德感+2。", "success");
+      },
+      choices: [
+        { id: "keep_current", text: "😊 谦虚回应，专注工作" },
+      ],
+      icons: ["🎓", "👏"],
+    },
+  ];
+
+  for (var ei = 0; ei < _extraA_EVENTS.length; ei++) {
+    RANDOM_EVENTS.push(_extraA_EVENTS[ei]);
+  }
 })();
