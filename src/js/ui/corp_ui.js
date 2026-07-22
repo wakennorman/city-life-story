@@ -273,6 +273,7 @@ function checkCorpWinConditions(state) {
 function checkCorpLoseConditions(state) {
   // [全系统自洽修复] 域H A类修复: state.player.corporate 守卫
   if (!state || !state.corporate || !state.player || !state.player.corporate) return false;
+  if (!state.flags) state.flags = {};
   const c = state.player.corporate;
   const corp = state.corporate;
 

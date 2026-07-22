@@ -1,7 +1,7 @@
 {
-  "currentRound": 167,
-  "currentDomain": "Layer4",
-  "nextDomain": "Layer5",
+  "currentRound": 170,
+  "currentDomain": "H",
+  "nextDomain": "A",
   "rotationIndex": 0,
   "domainOrder": [
     "A",
@@ -197,12 +197,17 @@
       "round": 167,
       "domain": "Layer4",
       "note": "gameOver字段一致性：根级gameOver真正写入，激活130处L4-A门控（Option C桥接，7处触发点镜像写入）"
+    },
+    {
+      "round": 170,
+      "domain": "H",
+      "note": "域H第二轮主审：enterCorporatePhase NaN守卫(职级属性初始化防御)+3公司跨域联动事件(H→A/C/D)注入RANDOM_EVENTS；MC 6×400d 0代码异常"
     }
   ],
-  "lastDomain": "Layer4",
-  "lastRound": 167,
-  "lastDate": "2026-07-22",
-  "lastCommit": "f2326f2298196af6dd85214d5d457c216c3798be",
+  "lastDomain": "H",
+  "lastRound": 170,
+  "lastDate": "2026-07-23",
+  "lastCommit": "3fdb9973ff2c081a484014549504b1949f93de8a",
   "pushStatus": "LOCAL",
   "completedDomains": [
     "A",
