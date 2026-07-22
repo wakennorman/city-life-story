@@ -2638,10 +2638,10 @@
       "出租屋的灯坏了半边，你躺在漆黑里刷到老家同学的动态——人家孩子都会叫爸爸了。胃里空空的，不是饿，是想家。手机相册自动弹出去年过年的全家福。",
     // conditions：极低心情阈值爆发（除饥饿外的 needs 阈值空白区）
     conditions: function (st) {
+      // [Layer3] 叙事说"出租屋的灯坏了半边"→必须有住所
+      if (!st.housing || st.housing.tier < 1) return false;
       if (!st.needs) return false; // 检查 needs 系统存在
       if ((st.needs.happiness || 100) >= 15) return false; // 检查 心情值<15（极低）
-      if (st.player.phase !== "street") return false; // 检查 仅在街头阶段
-      if (st.player.day < 7) return false; // 检查 开局几天后
       if (
         st.flags &&
         st.flags._moodLowLetterDay && // 检查 30天冷却
@@ -3224,6 +3224,8 @@
     story:
       "街头巷尾的债务压力越来越大，你手头紧得发颤。这时你遇到一个老熟人——曾经帮过你的张师傅，他现在生意不行了，开口向你借钱：「兄弟，就借我500，我下个月一定还。」\n\n可是你自己欠债如山，根本没有多余的钱。张师傅的眼里满是焦急。",
     conditions: function (st) {
+      // [Layer3] 叙事说"老熟人张师傅"→必须有一定的社交关系
+      if (!st.relationships || Object.keys(st.relationships).length < 1) return false;
       var morality = st.player.morality || 50;
       var debt = st.resources.totalDebt || 0;
       if (morality >= 30) return false;
@@ -3489,7 +3491,12 @@
         }
       }
       if (skilledSkills.length === 0) return false;
-      st._skillMilestoneTrigger = skilledSkills[0];
+      // [Layer3] 优先匹配 repair 技能（叙事说"修东西"）
+      if (skilledSkills.indexOf('repair') >= 0) {
+        st._skillMilestoneTrigger = 'repair';
+      } else {
+        st._skillMilestoneTrigger = skilledSkills[0];
+      }
       return true;
     },
     probability: 0.03,
@@ -3827,7 +3834,7 @@
     icon: "📞",
     title: "爸妈的电话",
     story:
-      "手机响了。屏幕上跳动着「爸」两个字。\n\n你接起来，那边传来父亲熟悉的声音：「最近怎么样啊？吃得好不好？天冷了多穿点。」\n\n你看了看日历——今天是他们的结婚纪念日，也是母亲的生日。你差点忘了。",
+      "手机响了。屏幕上跳动着「爸」两个字。\n\n你接起来，那边传来父亲熟悉的声音：「最近怎么样啊？吃得好不好？天冷了多穿点。」\n\n你看了看日历——今天是家里一个特别的日子，妈念叨了好久。你差点忘了。",
     // [自洽新增] conditions：家庭系统存在 + 周末触发
     conditions: function (st) {
       if (!st.family) return false;
@@ -5350,6 +5357,8 @@
       "春风吹走了冬天的寒冷。城市广场上搭起了一排排帐篷——一年一度的春季招聘会开始了！几十家企业摆摊招人，从工厂普工到写字楼文员，岗位多得让人眼花缭乱。你手里攥着简历，在人群里挤来挤去。",
     conditions: function (st) {
       // [自洽修复] 检查季节为春季 + 天数≥60
+      // [Layer3] 叙事说"你手里攥着简历"→必须有工作经验
+      if (!st.player.totalWorkDays || st.player.totalWorkDays < 1) return false;
       var season = st.weather && st.weather.season;
       return (
         st.player.phase === "street" &&

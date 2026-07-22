@@ -79,6 +79,7 @@
 - **P1-3 `_r21~_r27` 碎片文件按领域合并**：`economy_linkage_events{,_r27}.js` 等按领域并入主题文件，去轮次编号。纯移动 + IIFE 注入不变。验收：文件数减少、`events_integrity` id 唯一性不破、runtime 事件数不变。
 - **P1-4 内容深度（长线因果链）**：重心从"加事件数"转向"加事件链"。建 3~5 条贯穿全周目主线因果树（选择 A→N 天后果→再分叉），复用现有 `_chainEventQueue` / `scheduleChainEvent`。验收：主线链可端到端跑通（smoke 加一条链完成断言）。
 - **P1-5 新手认知过载**：渐进式揭示——开局只露 3 个核心指标（钱/健康/今日目标），其余随进度解锁。验收：首日可见指标数 ≤3，后续按里程碑解锁。
+- **P1-6 事件叙事门控体系（Layer 1-6）**：从技术层到选择均衡层的完整门控框架。Layer 1（技术层）✅ 已全覆盖；Layer 2（NPC自洽）✅ 已部分覆盖；Layer 3（玩家状态自洽）🔴 进行中（75 缺陷/21 High，已修 7 文件，剩 13 文件）；Layer 4（时间线逻辑）⏳；Layer 5（经济缩放）⏳；Layer 6（选择均衡）⏳。详见 `memory/event-gate-layer-system.md`。验收：Layer 3 修复后 events_integrity 全绿 + 叙事穿帮事件 conditions 补全率 100%。
 
 ## P2 / P3 落地路线（中长期）
 

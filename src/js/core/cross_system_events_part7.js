@@ -416,6 +416,8 @@
     // conditions：暴风雨 + coding 技能（天气系统 + 技能系统）
 
     conditions: function (st) {
+      // [Layer3] 叙事说"窝在屋里敲代码"→必须有住所
+      if (!st.housing || st.housing.tier < 1) return false;
       if (st.weather.current !== "stormy") return false; // 检查 暴风雨
 
       var code = st.skills && st.skills.coding && st.skills.coding.level; // 检查 coding 等级

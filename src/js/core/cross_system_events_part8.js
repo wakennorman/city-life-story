@@ -179,6 +179,8 @@
     story:
       "午饭时，市场部的陈经理把你叫到一边，压低声音说：「你知道技术部李总要被换掉的事吗？我这边正在整合资源，你跟着我走，好处少不了你的。」\n\n下午，技术部的老王也找到你：「陈那边的事你知道吧？别被他拉下水，他早晚出事。我这里稳得住，你安心跟着我。」\n\n两个人说的都头头是道，但你知道：只能站一边。",
     conditions: function (st) {
+      // [Layer3] 叙事提到"陈经理""李总"→必须已结识 boss_li
+      if (!st.relationships || !st.relationships.boss_li || !st.relationships.boss_li.met) return false;
       if (st.flags._corpOfficePoliticsDone) return false;
       if (!st.player || st.player.phase !== "corporate") return false;
       if (!st.employment || !st.employment.currentJob) return false;
@@ -593,6 +595,8 @@
     story:
       "加完班回家，你在巷口碰见了熟悉的面孔。对方难得没在忙，一个人坐在台阶上抽烟/织毛衣。看到你，招了招手：\n\n「来，坐会儿。」\n\n也许是今晚太安静了，也许是你从来没问过——对方第一次讲起了自己的故事。那些年的不容易，那些没能实现的梦，那些放下又拿起来的执念。\n\n你听着，才发现这个每天跟你点头的人，原来也有一段人生。",
     conditions: function (st) {
+      // [Layer3] 叙事说"加完班回家"→必须有工作
+      if (!st.career || !st.career.currentJob) return false;
       // [自洽修复] 检查是否有任意NPC好感≥80且已结识
       if (!st.relationships) return false;
       var hasDeepBond = false;
@@ -1100,6 +1104,8 @@
     story:
       "你坐在出租屋里，算了一笔账。\\n\\n从第一天来到这座城市起，你搬过砖、送过外卖、摆过摊、熬过夜、吃过亏、也赚过钱。\\n\\n那些¥20、¥50、¥100攒起来的数字，今天终于跨过了一个门槛——你在这座城市里，赚到了第一个一百万。\\n\\n不是存款，是流水。但这一百万，每一分都是你亲手挣的。",
     conditions: function (st) {
+      // [Layer3] 叙事说"你坐在出租屋里"→必须有住所
+      if (!st.housing || st.housing.tier < 1) return false;
       if (!st.resources) return false;
       var totalEarned = st.resources.totalEarned || 0;
       if (totalEarned < 1000000) return false;
@@ -2957,6 +2963,8 @@
     story:
       "两个组员为排期吵得面红耳赤，老板李总头疼地看你：‘你来说说？’\n\n你没急着站队，而是把两人的任务拆开一看——冲突根本不在人，在接口定义不清。",
     conditions: function (st) {
+      // [Layer3] 叙事提到"老板李总"→必须已结识 boss_li
+      if (!st.relationships || !st.relationships.boss_li || !st.relationships.boss_li.met) return false;
       // 检查 管理技能达到行家门槛
       var sk = st.skills && st.skills.management;
       if (!sk || sk.level < 40) return false;
@@ -4554,6 +4562,8 @@
       story:
         "你已经在这家公司待了三个月。今天加班到晚上九点，你站在写字楼的落地窗前，看着楼下的街道。\\n\\n街灯下，一个年轻人正蹲在路边吃炒面——就像你半年前的样子。\\n\\n手机震了一下，是老周发来的语音：「你小子现在混写字楼了？有空回来坐坐，废品站新收了台好收音机。」\\n\\n你笑了笑，没有立刻回复。\\n\\n这座城市还是那座城市。但你好像已经不是那个你了。",
       conditions: function (st) {
+        // [Layer3] 叙事说"老周发来的语音"→必须已结识 old_zhou
+        if (!st.relationships || !st.relationships.old_zhou || !st.relationships.old_zhou.met) return false;
         return (
           st.player &&
           st.player.phase === "corporate" &&
@@ -4764,6 +4774,8 @@
       story:
         "深夜送完最后一批货，你抄小路往回开。\n\n导航显示前方有主路可走，但你凭直觉打了方向盘拐进一条黑漆漆的窄巷——果然，五分钟后远处传来主路交通事故的警笛声。\n\n这不是运气。跑了五年车，城市的每条路都刻在你脑子里。哪里有近道、哪个路口有摄像头、雨天哪段路会积水——身体自己就记住了。\n\n副座的年轻同事看呆了：「师父你怎么知道要绕路？」",
       conditions: function (st) {
+        // [Layer3] 叙事说"深夜送完最后一批货"→必须有工作
+        if (!st.career || !st.career.currentJob) return false;
         return (
           st.skills &&
           st.skills.driving &&

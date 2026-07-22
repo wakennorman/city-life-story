@@ -1505,7 +1505,7 @@
       probability: 0.02,
       repeatable: false,
       story:
-        "新闻里铺天盖地地报道经济下行周期来临。分析师说可能持续6-12个月，各行各业都在收缩。你的投资组合和收入可能受到影响。",
+        "新闻里铺天盖地地报道经济下行周期来临。分析师说可能持续6-12个月，各行各业都在收缩。你的收入和资产可能受到影响。",
       choices: [
         {
           text: "🛡️ 抛售部分资产换现金",
@@ -2639,6 +2639,8 @@
       story:
         "你在商业区的人群中看到一个人正鬼鬼祟祟地贴近前面背包的姑娘——他的手已经伸进了她的背包拉链缝隙。\n\n周围的人都忙着赶路，没人注意到。你只有几秒钟时间决定怎么做。",
       conditions: function (st) {
+        // [Layer3] 叙事说"在商业区的人群中"→必须身在商业区
+        if (!st.trade || st.trade.currentLocation !== 'commercialDist') return false;
         // 天数>10，不重复
         if (st.player.day < 10) return false;
         if (st.flags._moralPickpocketSeen) return false;
@@ -3858,6 +3860,8 @@
       story:
         "你强撑着去干活，但手上的动作明显比平时慢。咳嗽压不住，额头烫得厉害。\n\n旁边的老主顾看了你一眼：「小伙子，你这脸色不对啊，发烧了吧？别干了，回去歇着。」",
       conditions: function (st) {
+        // [Layer3] 叙事说"你强撑着去干活"→必须有工作
+        if (!st.career || !st.career.currentJob) return false;
         if (st.player.day < 10) return false;
         if (
           !st.status ||

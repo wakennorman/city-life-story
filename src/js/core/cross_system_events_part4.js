@@ -1307,8 +1307,7 @@
 
       if (typeof ck !== "number" || ck < 8) return false; // 检查 cooking>=8
 
-      if (typeof st.needs.happiness !== "number" || st.needs.happiness < 30)
-        return false; // 检查 心情低
+      // [Layer3] 移除心情<30要求——叙事未暗示不开心，老周蹭饭是温馨场景
 
       if (st.player.day < 8) return false; // 检查 中后期
 
@@ -1759,6 +1758,8 @@
     // conditions：雨天/暴雨 + repair 技能（技能×天气×需求空白区）
 
     conditions: function (st) {
+      // [Layer3] 叙事说"出租屋的屋檐泡漏了"→必须有住所
+      if (!st.housing || st.housing.tier < 1) return false;
       var w = st.weather && st.weather.current; // 检查 天气
 
       if (w !== "rainy" && w !== "stormy") return false; // 检查 雨天或暴雨
@@ -2332,6 +2333,8 @@
     // conditions：sales 技能 + 科技园声望（技能×声望×地点空白区）
 
     conditions: function (st) {
+      // [Layer3] 叙事说"科技园里公司扎堆"→必须身在科技园
+      if (!st.trade || st.trade.currentLocation !== 'techPark') return false;
       var sales = st.skills && st.skills.sales && st.skills.sales.level; // 检查 sales 等级
 
       if (typeof sales !== "number" || sales < 15) return false; // 检查 sales>=15

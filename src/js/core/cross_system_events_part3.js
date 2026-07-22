@@ -2727,6 +2727,8 @@
     // conditions：chef_chen 已结识+好感 + management 技能 + 当前职业为厨师（NPC ∩ 技能 ∩ 职业）
 
     conditions: function (st) {
+      // [Layer3] 叙事说"你正端着厨师饭碗"→必须有厨房相关职业
+      if (!st.employment || !st.employment.currentJob) return false;
       var rel = st.relationships && st.relationships["chef_chen"]; // 检查 chef_chen 关系
 
       if (!rel || !rel.met) return false; // 检查 已结识
@@ -3573,6 +3575,8 @@
     // conditions：electrician + repair 技能（技能协同 ∩ 住所）
 
     conditions: function (st) {
+      // [Layer3] 叙事说"租房的电路老出毛病"→必须有住所
+      if (!st.housing || st.housing.tier < 1) return false;
       var el =
         st.skills && st.skills.electrician && st.skills.electrician.level; // 检查 electrician 等级
 
@@ -4897,13 +4901,13 @@
     // conditions：疲惫高 + 有现金（需求×事件空白区）
 
     conditions: function (st) {
+      // [Layer3] 叙事说"钱不够先记着"→玩家应现金拮据
+      var cash = st.resources && st.resources.cash; // 检查 现金
+      if (typeof cash !== "number" || cash >= 200) return false; // [Layer3] 改为现金<200以匹配叙事
+
       var fat = st.needs && st.needs.fatigue; // 检查 疲惫
 
       if (typeof fat !== "number" || fat <= 80) return false; // 检查 疲惫>80
-
-      var cash = st.resources && st.resources.cash; // 检查 现金
-
-      if (typeof cash !== "number" || cash < 200) return false; // 检查 现金>=200
 
       if (st.player.phase !== "street") return false; // 检查 街头阶段
 
