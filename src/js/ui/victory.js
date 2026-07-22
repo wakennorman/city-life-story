@@ -268,6 +268,8 @@ function checkVictoryPaths(state) {
 function triggerVictory(state, type, title, desc) {
   state.flags.victory = true;
   state.flags.victoryType = type;
+  state.gameOver = true;
+
   state.flags.gameOver = true;
   state.flags.victoryTitle = title;
   state.flags.victoryDesc = desc;

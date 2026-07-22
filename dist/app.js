@@ -175144,6 +175144,8 @@ function checkLoseConditions(state) {
   // 健康归零 → 游戏结束
   var health = state.status && state.status.health;
   if (health !== undefined && health <= 0) {
+    state.gameOver = true;
+
     state.flags.gameOver = true;
     state.flags.gameOverReason =
       "你的身体终于撑不住了。在这座城市里，你耗尽了最后一口气。";
@@ -175156,6 +175158,8 @@ function checkLoseConditions(state) {
   var bankDebt = (state.resources && state.resources.bankDebt) || 0;
   var totalCash = cash + bank - bankDebt;
   if (totalCash < -100000 && state.player.day > 180) {
+    state.gameOver = true;
+
     state.flags.gameOver = true;
     state.flags.gameOverReason =
       "债务压垮了你。在这座城市里，你再也找不到立足之地。";
@@ -222956,6 +222960,8 @@ function checkCorpWinConditions(state) {
   if (state.corporate.rank === "P10") {
     state.flags.victory = true;
     state.flags.victoryType = "p10";
+    state.gameOver = true;
+
     state.flags.gameOver = true;
     showVictoryModal();
     return true;
@@ -222963,6 +222969,8 @@ function checkCorpWinConditions(state) {
   if (state.resources.cash + state.resources.bankBalance >= 20000000) {
     state.flags.victory = true;
     state.flags.victoryType = "money";
+    state.gameOver = true;
+
     state.flags.gameOver = true;
     showVictoryModal();
     return true;
@@ -222976,6 +222984,8 @@ function checkCorpLoseConditions(state) {
 
   // 尊严归零 -> 精神崩溃（不可逆，Game Over）
   if (c.dignity <= 0) {
+    state.gameOver = true;
+
     state.flags.gameOver = true;
     state.flags.gameOverReason =
       "尊严耗尽——长期的精神压力让你选择了离开这个世界...";
@@ -222989,7 +222999,11 @@ function checkCorpLoseConditions(state) {
       state.corporate.rank,
     );
     if (rankIdx < 3) {
+      state.gameOver = true;
+
       state.flags.gameOver = true;
+      state.gameOverReason = `35岁危机——${state.player.age}岁了还只是${state.corporate.rank}，被公司优化了...`;
+
       state.flags.gameOverReason = `35岁危机——${state.player.age}岁了还只是${state.corporate.rank}，被公司优化了...`;
       showGameOverModal();
       return true;
@@ -230275,6 +230289,8 @@ function checkVictoryPaths(state) {
 function triggerVictory(state, type, title, desc) {
   state.flags.victory = true;
   state.flags.victoryType = type;
+  state.gameOver = true;
+
   state.flags.gameOver = true;
   state.flags.victoryTitle = title;
   state.flags.victoryDesc = desc;

@@ -249,6 +249,8 @@ function checkCorpWinConditions(state) {
   if (state.corporate.rank === "P10") {
     state.flags.victory = true;
     state.flags.victoryType = "p10";
+    state.gameOver = true;
+
     state.flags.gameOver = true;
     showVictoryModal();
     return true;
@@ -256,6 +258,8 @@ function checkCorpWinConditions(state) {
   if (state.resources.cash + state.resources.bankBalance >= 20000000) {
     state.flags.victory = true;
     state.flags.victoryType = "money";
+    state.gameOver = true;
+
     state.flags.gameOver = true;
     showVictoryModal();
     return true;
@@ -269,6 +273,8 @@ function checkCorpLoseConditions(state) {
 
   // 尊严归零 -> 精神崩溃（不可逆，Game Over）
   if (c.dignity <= 0) {
+    state.gameOver = true;
+
     state.flags.gameOver = true;
     state.flags.gameOverReason =
       "尊严耗尽——长期的精神压力让你选择了离开这个世界...";
@@ -282,7 +288,11 @@ function checkCorpLoseConditions(state) {
       state.corporate.rank,
     );
     if (rankIdx < 3) {
+      state.gameOver = true;
+
       state.flags.gameOver = true;
+      state.gameOverReason = `35岁危机——${state.player.age}岁了还只是${state.corporate.rank}，被公司优化了...`;
+
       state.flags.gameOverReason = `35岁危机——${state.player.age}岁了还只是${state.corporate.rank}，被公司优化了...`;
       showGameOverModal();
       return true;

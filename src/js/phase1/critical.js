@@ -759,6 +759,8 @@ function checkLoseConditions(state) {
   // 健康归零 → 游戏结束
   var health = state.status && state.status.health;
   if (health !== undefined && health <= 0) {
+    state.gameOver = true;
+
     state.flags.gameOver = true;
     state.flags.gameOverReason =
       "你的身体终于撑不住了。在这座城市里，你耗尽了最后一口气。";
@@ -771,6 +773,8 @@ function checkLoseConditions(state) {
   var bankDebt = (state.resources && state.resources.bankDebt) || 0;
   var totalCash = cash + bank - bankDebt;
   if (totalCash < -100000 && state.player.day > 180) {
+    state.gameOver = true;
+
     state.flags.gameOver = true;
     state.flags.gameOverReason =
       "债务压垮了你。在这座城市里，你再也找不到立足之地。";
