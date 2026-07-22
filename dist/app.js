@@ -10777,7 +10777,8 @@ function registerNewsEventsToPool() {
       conditions: function (st) {
         var afterFight =
           !!st.flags._acquisitionFighting &&
-          st.player.day >= (st.flags._acquisitionFightDay || 0) + 20;
+          // [Layer4] 叙事说"自己这一年的折腾"，需365天
+        st.player.day >= (st.flags._acquisitionFightDay || 0) + 365;
         var enduring = !!st.flags._acquisitionEnduring;
         return (
           (afterFight || enduring) &&
@@ -17860,7 +17861,7 @@ function registerNewsEventsToPool() {
       conditions: function (st) {
         return (
           !!st.flags._founderStayed &&
-          st.player.day >= (st.flags._founderStayed || 0) + 30 &&
+          st.player.day >= (st.flags._founderStayed || 0) + 365 &&
           !st.flags._founderHumiliationSeen
         );
       },
@@ -18981,7 +18982,7 @@ function registerNewsEventsToPool() {
       icon: "👔",
       title: "前上司东山再起",
       story:
-        "一年后行业峰会上张总跳槽成了VP。名片递过来你们四目相对——这个世界小到不知道得罪过的人明天坐在哪个位置上。",
+        "几个月后行业峰会上张总跳槽成了VP。名片递过来你们四目相对——这个世界小到不知道得罪过的人明天坐在哪个位置上。",
       conditions: function (st) {
         return (
           (!!st.flags._careerNailed || !!st.flags._careerHRComplaint) &&
@@ -19157,7 +19158,7 @@ function registerNewsEventsToPool() {
         "午休时，部门副经理老张把你拉到楼梯间，压低声音说：'年底要竞聘了，现在公司里分两派——王副总那一派要推自己的人上去，但李总这边还缺人。你跟了我这几年，我看好你。'他拍拍你的肩膀，等你表态。",
       conditions: function (st) {
         return (
-          st.player.day >= 90 &&
+          st.player.day >= 730 &&
           st.player.corporate &&
           st.player.corporate.popularity >= 25 &&
           !st.flags._officeFactionApproached
@@ -75233,7 +75234,7 @@ if (typeof window !== "undefined") {
       "你在常去的地点办事时，有人突然认出了你：「你就是那个……做了这么多年XX的老手吧？」\n\n对方眼里带着尊重——在这座城市里，长期积累的经验本身就是一笔财富。",
     // [自洽修复] conditions 新增：actionFreq 检查，累计行动≥50次
     conditions: function (st) {
-      if (st.player.day < 60) return false;
+      if (st.player.day < 1095) return false;
       var freq = st.stats && st.stats.actionFreq ? st.stats.actionFreq : {};
       var maxFreq = 0;
       for (var k in freq) {
@@ -75702,7 +75703,7 @@ if (typeof window !== "undefined") {
     story:
       "你算了一笔账——银行卡里的、手头的现金、零零散散的投资，加起来竟然有五十万了。\n\n你盯着手机上的数字看了很久。三年前你刚来这座城市时兜里只有几百块，现在居然攒下了半百万。你想起城中村那个漏雨的隔间，想起在工地搬砖时磨出血的手掌。\n\n窗外的城市依旧车水马龙，但你知道，有些东西已经不一样了。",
     conditions: function (st) {
-      if (st.player.day < 60) return false;
+      if (st.player.day < 1095) return false;
       if (st.flags && st.flags._wealth500kSeen) return false;
       var cash = st.resources && st.resources.cash;
       if (typeof cash !== "number") cash = 0;
@@ -78375,7 +78376,7 @@ if (typeof window !== "undefined") {
       }
       if (metCount < 3) return false;
       if (st.flags._communityGatheringSeen) return false;
-      if (st.player.day < 30) return false;
+      if (st.player.day < 730) return false;
       // 需要住所
       if ((st.resources.housing || "").indexOf("homeless") >= 0) return false;
       return true;
@@ -78554,6 +78555,7 @@ if (typeof window !== "undefined") {
     conditions: function (st) {
       // [自洽修复] 检查玩家是否做过"归还钱包"的道德选择
       if (!st.flags) return false;
+      if (st.player.day < 730) return false;
       var didGoodDeed =
         st.flags._returnedWallet ||
         st.flags._returnedFoundMoney ||
@@ -82580,7 +82582,7 @@ if (typeof window !== "undefined") {
           st.player &&
           st.player.education >= 3 &&
           !(st.flags && st.flags._phdGradSeen) &&
-          st.player.day >= 600
+          st.player.day >= 1440
         );
       },
       probability: 0.4,
@@ -86174,7 +86176,7 @@ if (typeof window !== "undefined") {
       icon: "📦",
       title: "线上活动突发崩了",
       story:
-        "大促正进行时，服务器突然崩溃。\n\n老板在群里连发了五个问号，运营总监把所有组长拉到紧急会议室。\n\n你的 KPI 挂在这活动上——但备份策略半年前你提过，预算没批。\n\n要不要现在说「我早说过」？",
+        "大促正进行时，服务器突然崩溃。\n\n老板在群里连发了五个问号，运营总监把所有组长拉到紧急会议室。\n\n你的 KPI 挂在这活动上——但备份策略几个月前你提过，预算没批。\n\n要不要现在说「我早说过」？",
       conditions: function (st) {
         return (
           _path(st, "operations") &&
@@ -94764,7 +94766,7 @@ if (typeof window !== "undefined") {
       icon: "🪞",
       title: "镜子前的自己",
       story:
-        "你面试回来站在镜子前。头发油腻腻地贴在额头上，衬衫皱了皱，领口还有一点没擦干净的咖啡渍。\\n\\n你不确定自己是不是变丑了。不，应该说——你确定自己已经很久没认真打扮过了。\\n\\n手机相册里翻到半年前的照片，你都不认识那个人了。",
+        "你面试回来站在镜子前。头发油腻腻地贴在额头上，衬衫皱了皱，领口还有一点没擦干净的咖啡渍。\\n\\n你不确定自己是不是变丑了。不，应该说——你确定自己已经很久没认真打扮过了。\\n\\n手机相册里翻到几个月前的照片，你都不认识那个人了。",
       // [全系统自洽修复] 域B 修复: personalGrowth.image 实际字段为{style,skincare,fitness,plastic}，原代码引用 appearance/grooming(不存在)→ NaN → 事件永不触发
       conditions: function (st) {
         if (!st.flags || !st.flags._lastInterviewDay) return false; // [Layer3]
@@ -169550,7 +169552,7 @@ if (typeof window !== "undefined") {
           amt > 0 &&
           !st.flags.good_loan_return &&
           (st.flags._goodLoanSeed === undefined ||
-            (st.player.day || 0) - st.flags._goodLoanSeed >= 30)
+            (st.player.day || 0) - st.flags._goodLoanSeed >= 365)
         );
       },
       choices: [

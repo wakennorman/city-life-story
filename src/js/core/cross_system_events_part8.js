@@ -503,7 +503,7 @@
       }
       if (metCount < 3) return false;
       if (st.flags._communityGatheringSeen) return false;
-      if (st.player.day < 30) return false;
+      if (st.player.day < 730) return false;
       // 需要住所
       if ((st.resources.housing || "").indexOf("homeless") >= 0) return false;
       return true;
@@ -682,6 +682,7 @@
     conditions: function (st) {
       // [自洽修复] 检查玩家是否做过"归还钱包"的道德选择
       if (!st.flags) return false;
+      if (st.player.day < 730) return false;
       var didGoodDeed =
         st.flags._returnedWallet ||
         st.flags._returnedFoundMoney ||
@@ -4708,7 +4709,7 @@
           st.player &&
           st.player.education >= 3 &&
           !(st.flags && st.flags._phdGradSeen) &&
-          st.player.day >= 600
+          st.player.day >= 1440
         );
       },
       probability: 0.4,

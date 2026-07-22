@@ -1529,7 +1529,7 @@
       conditions: function (st) {
         return (
           !!st.flags._founderStayed &&
-          st.player.day >= (st.flags._founderStayed || 0) + 30 &&
+          st.player.day >= (st.flags._founderStayed || 0) + 365 &&
           !st.flags._founderHumiliationSeen
         );
       },
@@ -2650,7 +2650,7 @@
       icon: "👔",
       title: "前上司东山再起",
       story:
-        "一年后行业峰会上张总跳槽成了VP。名片递过来你们四目相对——这个世界小到不知道得罪过的人明天坐在哪个位置上。",
+        "几个月后行业峰会上张总跳槽成了VP。名片递过来你们四目相对——这个世界小到不知道得罪过的人明天坐在哪个位置上。",
       conditions: function (st) {
         return (
           (!!st.flags._careerNailed || !!st.flags._careerHRComplaint) &&
@@ -2826,7 +2826,7 @@
         "午休时，部门副经理老张把你拉到楼梯间，压低声音说：'年底要竞聘了，现在公司里分两派——王副总那一派要推自己的人上去，但李总这边还缺人。你跟了我这几年，我看好你。'他拍拍你的肩膀，等你表态。",
       conditions: function (st) {
         return (
-          st.player.day >= 90 &&
+          st.player.day >= 730 &&
           st.player.corporate &&
           st.player.corporate.popularity >= 25 &&
           !st.flags._officeFactionApproached

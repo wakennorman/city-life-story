@@ -451,7 +451,7 @@
           amt > 0 &&
           !st.flags.good_loan_return &&
           (st.flags._goodLoanSeed === undefined ||
-            (st.player.day || 0) - st.flags._goodLoanSeed >= 30)
+            (st.player.day || 0) - st.flags._goodLoanSeed >= 365)
         );
       },
       choices: [

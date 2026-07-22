@@ -3141,7 +3141,7 @@
       "你在常去的地点办事时，有人突然认出了你：「你就是那个……做了这么多年XX的老手吧？」\n\n对方眼里带着尊重——在这座城市里，长期积累的经验本身就是一笔财富。",
     // [自洽修复] conditions 新增：actionFreq 检查，累计行动≥50次
     conditions: function (st) {
-      if (st.player.day < 60) return false;
+      if (st.player.day < 1095) return false;
       var freq = st.stats && st.stats.actionFreq ? st.stats.actionFreq : {};
       var maxFreq = 0;
       for (var k in freq) {
@@ -3610,7 +3610,7 @@
     story:
       "你算了一笔账——银行卡里的、手头的现金、零零散散的投资，加起来竟然有五十万了。\n\n你盯着手机上的数字看了很久。三年前你刚来这座城市时兜里只有几百块，现在居然攒下了半百万。你想起城中村那个漏雨的隔间，想起在工地搬砖时磨出血的手掌。\n\n窗外的城市依旧车水马龙，但你知道，有些东西已经不一样了。",
     conditions: function (st) {
-      if (st.player.day < 60) return false;
+      if (st.player.day < 1095) return false;
       if (st.flags && st.flags._wealth500kSeen) return false;
       var cash = st.resources && st.resources.cash;
       if (typeof cash !== "number") cash = 0;

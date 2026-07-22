@@ -1329,7 +1329,8 @@
       conditions: function (st) {
         var afterFight =
           !!st.flags._acquisitionFighting &&
-          st.player.day >= (st.flags._acquisitionFightDay || 0) + 20;
+          // [Layer4] 叙事说"自己这一年的折腾"，需365天
+        st.player.day >= (st.flags._acquisitionFightDay || 0) + 365;
         var enduring = !!st.flags._acquisitionEnduring;
         return (
           (afterFight || enduring) &&
