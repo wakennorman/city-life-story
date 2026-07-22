@@ -1631,7 +1631,7 @@
         return (
           hasObserved &&
           st.player.day >= triggerDay &&
-          st.resources.cash >= 100000 &&
+          st.resources.cash >= 300000 && // [全系统自洽修复] 域H A类: 阈值从100000→300000(实际成本)
           !st.flags._founderBuybackSeen
         );
       },
@@ -3181,7 +3181,8 @@
             cost: 2000,
             apply: function (st) {
               st.flags._promotionGiftGiven = true;
-              st.resources.cash -= 2000;
+              if ((st.resources.cash || 0) < 2000) { StateManager.addMessage("⚠️ 现金不足¥2000，无法准备礼物。", "warning"); return; }
+              st.resources.cash = (st.resources.cash || 0) - 2000; // [全系统自洽修复] 域H A类: 现金守卫防NaN
               st.player.corporate.popularity = Math.min(
                 100,
                 (st.player.corporate.popularity || 50) + 8,

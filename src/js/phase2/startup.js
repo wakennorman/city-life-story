@@ -1462,6 +1462,11 @@ function hireEmployee(state, role, salary) {
     company.marketScore = Math.min(100, company.marketScore + 3);
   }
 
+  // [全系统自洽修复] 域H R170 H→D 联动增强: 招募员工提升创业圈人脉
+  if (state.player) {
+    state.player.fame = Math.min(100, (state.player.fame || 0) + 1);
+  }
+
   // 检查阶段升级
   if (company.employees.length >= 5 && company.phase === "seed") {
     company.phase = "growth";
@@ -1498,7 +1503,7 @@ function fireEmployee(state, employeeId) {
 
   // 离职影响
   company.reputation = Math.max(0, company.reputation - 2);
-  company.loyalty = (company.loyalty || 70) - 5;
+  // [全系统自洽修复] 域H A类修复: company.loyalty 不存在(忠诚度是员工级属性), 删除无意义赋值
 
   StateManager.addMessage(
     "👋 「" + employee.name + "」已离职，公司声誉-2",
@@ -2456,6 +2461,8 @@ function tickStartup(state, tickType) {
 
   // 1. 收入计算
   let totalRevenue = 0;
+  // [全系统自洽修复] 域H A类修复: company.products 数组守卫(旧存档可能缺失products字段)
+  if (!Array.isArray(company.products)) company.products = [];
   for (const product of company.products) {
     if (product.status === "launched") {
       const baseRevenue = DAILY_BASE_REVENUE * timeMult;
@@ -2514,7 +2521,7 @@ function tickStartup(state, tickType) {
   totalExpenses += rent;
   // 研发成本
   const rAndD =
-    company.products.filter((p) => p.status === "developing").length *
+    (Array.isArray(company.products) ? company.products.filter((p) => p.status === "developing") : []).length *
     Math.round(DAILY_RD * timeMult);
   totalExpenses += rAndD;
   // 营销
@@ -2995,6 +3002,15 @@ function tickStartup(state, tickType) {
   // ====== P2-15: 供应链系统每日演化 ======
   if (typeof tickSupplyChain === "function") {
     tickSupplyChain(state, company);
+  }
+
+  // [全系统自洽修复] 域H R170 H→G 联动增强: 创业现金流影响日常心情
+  if (tickType === "daily" && state.needs) {
+    if (netCash > 0) {
+      state.needs.happiness = Math.min(100, (state.needs.happiness || 50) + 1);
+    } else if (netCash < -1000) {
+      state.needs.happiness = Math.max(0, (state.needs.happiness || 50) - 1);
+    }
   }
 }
 
@@ -4460,6 +4476,14 @@ function _updateCrisisResilienceLevel(state, company) {
 /** 每日员工满意度/倦怠演化 */
 function _tickEmployeeSatisfaction(state, emp, company, netCash, timeMult) {
   if (emp.burnoutLevel >= 3) return; // 重度倦怠员工不演化（已请假/离职中）
+  // [全系统自洽修复] 域H A类修复: satisfactionDetails 守卫(旧存档/新员工可能缺失)
+  if (!emp.satisfactionDetails) {
+    emp.satisfactionDetails = { salary: 50, workload: 50, growth: 50, atmosphere: 50 };
+  }
+  if (typeof emp.stressLevel !== "number" || !isFinite(emp.stressLevel)) emp.stressLevel = 50;
+  if (typeof emp.overtimeDays !== "number" || !isFinite(emp.overtimeDays)) emp.overtimeDays = 0;
+  if (typeof emp.burnoutRisk !== "number" || !isFinite(emp.burnoutRisk)) emp.burnoutRisk = 0;
+  if (typeof emp.burnoutLevel !== "number" || !isFinite(emp.burnoutLevel)) emp.burnoutLevel = 0;
 
   const day = state.player.day;
   const sat = emp.satisfactionDetails;
@@ -6334,15 +6358,15 @@ function getAcquisitionOffer(state) {
   );
 
   // 生成收购方评语
-  const评语 = [
+  const _acquirerComments = [
     "对你们的产品方向很感兴趣",
     "看好团队的技术实力",
     "希望整合你们的市场渠道",
     "对我们的用户增长数据印象深刻",
     "想补充他们在该领域的布局",
   ];
-  // [全系统自洽修复] 域H A类: Random.fromArray 返回元素本身, 不应再用作数组索引(否则恒为 undefined)
-  const acquirerComment = Random.fromArray(评语);
+  // [全系统自洽修复] 域H A类修复: 中文变量名改英文(_acquirerComments)
+  const acquirerComment = Random.fromArray(_acquirerComments);
 
   return {
     acquirerCid: acquirerCid,
@@ -6583,11 +6607,18 @@ function bankrupt(state) {
   company.cashReserve = assetRecovery;
 
   // 玩家获得剩余现金（如果有）
+  if (!state.resources) state.resources = { cash: 0, bankBalance: 0, totalEarned: 0 };
   state.resources.cash = (state.resources.cash || 0) + assetRecovery;
 
   // 声誉损失
   state.status.health = Math.max(0, state.status.health - 10);
   state.player.fame = Math.max(0, state.player.fame - 10);
+
+  // [全系统自洽修复] 域H R170 H→G 联动增强: 创业破产心理创伤
+  if (state.needs) {
+    state.needs.happiness = Math.max(0, (state.needs.happiness || 50) - 15);
+  }
+  state.player.mental = Math.max(0, (state.player.mental || 50) - 10);
 
   // 在企业命运系统中标记
   if (state.enterpriseFate && state.enterpriseFate.companies && company.id) {

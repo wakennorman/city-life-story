@@ -408,24 +408,19 @@ function enterCorporatePhase(companyId) {
   if (!p.corporate) p.corporate = {};
 
   p.corporate.hair = 100;
-  p.corporate.dignity = Math.min(100, Math.round(p.mental * 1.2));
-  p.corporate.upwardMgmt = Math.min(
-    100,
-    Math.round(state.skills.sales.level * 0.8 + 15),
-  );
-  p.corporate.kpi = Math.min(
-    150,
-    Math.round(p.agility * 0.5 + state.skills.coding.level * 0.5 + 15),
-  );
-  p.corporate.ability = Math.min(
-    100,
-    Math.round(p.intelligence * 0.8 + state.skills.coding.level * 0.5 + 10),
-  );
+  // [全系统自洽修复] 域H A类#19: 初始化防御 — p.mental/agility/intelligence 及 skills.*.level 缺失时回退默认，杜绝 NaN 污染职级属性(dignity/kpi/upwardMgmt/ability)
+  const _mental = (typeof p.mental === "number" && isFinite(p.mental)) ? p.mental : 50;
+  const _agility = (typeof p.agility === "number" && isFinite(p.agility)) ? p.agility : 50;
+  const _intel = (typeof p.intelligence === "number" && isFinite(p.intelligence)) ? p.intelligence : 50;
+  const _salesLv = (state.skills && state.skills.sales && typeof state.skills.sales.level === "number") ? state.skills.sales.level : 0;
+  const _codingLv = (state.skills && state.skills.coding && typeof state.skills.coding.level === "number") ? state.skills.coding.level : 0;
+  const _fame = (typeof p.fame === "number" && isFinite(p.fame)) ? p.fame : 0;
+  p.corporate.dignity = Math.min(100, Math.round(_mental * 1.2));
+  p.corporate.upwardMgmt = Math.min(100, Math.round(_salesLv * 0.8 + 15));
+  p.corporate.kpi = Math.min(150, Math.round(_agility * 0.5 + _codingLv * 0.5 + 15));
+  p.corporate.ability = Math.min(100, Math.round(_intel * 0.8 + _codingLv * 0.5 + 10));
   p.corporate.risk = Math.min(100, 8 + Random.int(0, 11));
-  p.corporate.popularity = Math.min(
-    100,
-    Math.round(state.player.fame * 0.5 + 25),
-  );
+  p.corporate.popularity = Math.min(100, Math.round(_fame * 0.5 + 25));
 
   state.corporate.rank = "P5";
   // [全系统自洽修复] 域H 修复:初始化corporate.level(P5→1)，供events_corp/family_events事件条件使用
@@ -435,6 +430,7 @@ function enterCorporatePhase(companyId) {
   state.corporate.company = company;
   state.corporate.joinedDay = p.day;
   state.corporate.actionsUsed = 0;
+  state.corporate.active = true; // [全系统自洽修复] 域H A类: 标记在职状态，events_corp 8个事件依赖此字段
 
   // 初始化股票市场
   if (typeof initStockMarket === "function") {

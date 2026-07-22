@@ -18367,7 +18367,7 @@ function registerNewsEventsToPool() {
         return (
           hasObserved &&
           st.player.day >= triggerDay &&
-          st.resources.cash >= 100000 &&
+          st.resources.cash >= 300000 && // [全系统自洽修复] 域H A类: 阈值从100000→300000(实际成本)
           !st.flags._founderBuybackSeen
         );
       },
@@ -19917,7 +19917,8 @@ function registerNewsEventsToPool() {
             cost: 2000,
             apply: function (st) {
               st.flags._promotionGiftGiven = true;
-              st.resources.cash -= 2000;
+              if ((st.resources.cash || 0) < 2000) { StateManager.addMessage("⚠️ 现金不足¥2000，无法准备礼物。", "warning"); return; }
+              st.resources.cash = (st.resources.cash || 0) - 2000; // [全系统自洽修复] 域H A类: 现金守卫防NaN
               st.player.corporate.popularity = Math.min(
                 100,
                 (st.player.corporate.popularity || 50) + 8,
@@ -188382,24 +188383,19 @@ function enterCorporatePhase(companyId) {
   if (!p.corporate) p.corporate = {};
 
   p.corporate.hair = 100;
-  p.corporate.dignity = Math.min(100, Math.round(p.mental * 1.2));
-  p.corporate.upwardMgmt = Math.min(
-    100,
-    Math.round(state.skills.sales.level * 0.8 + 15),
-  );
-  p.corporate.kpi = Math.min(
-    150,
-    Math.round(p.agility * 0.5 + state.skills.coding.level * 0.5 + 15),
-  );
-  p.corporate.ability = Math.min(
-    100,
-    Math.round(p.intelligence * 0.8 + state.skills.coding.level * 0.5 + 10),
-  );
+  // [全系统自洽修复] 域H A类#19: 初始化防御 — p.mental/agility/intelligence 及 skills.*.level 缺失时回退默认，杜绝 NaN 污染职级属性(dignity/kpi/upwardMgmt/ability)
+  const _mental = (typeof p.mental === "number" && isFinite(p.mental)) ? p.mental : 50;
+  const _agility = (typeof p.agility === "number" && isFinite(p.agility)) ? p.agility : 50;
+  const _intel = (typeof p.intelligence === "number" && isFinite(p.intelligence)) ? p.intelligence : 50;
+  const _salesLv = (state.skills && state.skills.sales && typeof state.skills.sales.level === "number") ? state.skills.sales.level : 0;
+  const _codingLv = (state.skills && state.skills.coding && typeof state.skills.coding.level === "number") ? state.skills.coding.level : 0;
+  const _fame = (typeof p.fame === "number" && isFinite(p.fame)) ? p.fame : 0;
+  p.corporate.dignity = Math.min(100, Math.round(_mental * 1.2));
+  p.corporate.upwardMgmt = Math.min(100, Math.round(_salesLv * 0.8 + 15));
+  p.corporate.kpi = Math.min(150, Math.round(_agility * 0.5 + _codingLv * 0.5 + 15));
+  p.corporate.ability = Math.min(100, Math.round(_intel * 0.8 + _codingLv * 0.5 + 10));
   p.corporate.risk = Math.min(100, 8 + Random.int(0, 11));
-  p.corporate.popularity = Math.min(
-    100,
-    Math.round(state.player.fame * 0.5 + 25),
-  );
+  p.corporate.popularity = Math.min(100, Math.round(_fame * 0.5 + 25));
 
   state.corporate.rank = "P5";
   // [全系统自洽修复] 域H 修复:初始化corporate.level(P5→1)，供events_corp/family_events事件条件使用
@@ -188409,6 +188405,7 @@ function enterCorporatePhase(companyId) {
   state.corporate.company = company;
   state.corporate.joinedDay = p.day;
   state.corporate.actionsUsed = 0;
+  state.corporate.active = true; // [全系统自洽修复] 域H A类: 标记在职状态，events_corp 8个事件依赖此字段
 
   // 初始化股票市场
   if (typeof initStockMarket === "function") {
@@ -197033,6 +197030,11 @@ function hireEmployee(state, role, salary) {
     company.marketScore = Math.min(100, company.marketScore + 3);
   }
 
+  // [全系统自洽修复] 域H R170 H→D 联动增强: 招募员工提升创业圈人脉
+  if (state.player) {
+    state.player.fame = Math.min(100, (state.player.fame || 0) + 1);
+  }
+
   // 检查阶段升级
   if (company.employees.length >= 5 && company.phase === "seed") {
     company.phase = "growth";
@@ -197069,7 +197071,7 @@ function fireEmployee(state, employeeId) {
 
   // 离职影响
   company.reputation = Math.max(0, company.reputation - 2);
-  company.loyalty = (company.loyalty || 70) - 5;
+  // [全系统自洽修复] 域H A类修复: company.loyalty 不存在(忠诚度是员工级属性), 删除无意义赋值
 
   StateManager.addMessage(
     "👋 「" + employee.name + "」已离职，公司声誉-2",
@@ -198027,6 +198029,8 @@ function tickStartup(state, tickType) {
 
   // 1. 收入计算
   let totalRevenue = 0;
+  // [全系统自洽修复] 域H A类修复: company.products 数组守卫(旧存档可能缺失products字段)
+  if (!Array.isArray(company.products)) company.products = [];
   for (const product of company.products) {
     if (product.status === "launched") {
       const baseRevenue = DAILY_BASE_REVENUE * timeMult;
@@ -198085,7 +198089,7 @@ function tickStartup(state, tickType) {
   totalExpenses += rent;
   // 研发成本
   const rAndD =
-    company.products.filter((p) => p.status === "developing").length *
+    (Array.isArray(company.products) ? company.products.filter((p) => p.status === "developing") : []).length *
     Math.round(DAILY_RD * timeMult);
   totalExpenses += rAndD;
   // 营销
@@ -198566,6 +198570,15 @@ function tickStartup(state, tickType) {
   // ====== P2-15: 供应链系统每日演化 ======
   if (typeof tickSupplyChain === "function") {
     tickSupplyChain(state, company);
+  }
+
+  // [全系统自洽修复] 域H R170 H→G 联动增强: 创业现金流影响日常心情
+  if (tickType === "daily" && state.needs) {
+    if (netCash > 0) {
+      state.needs.happiness = Math.min(100, (state.needs.happiness || 50) + 1);
+    } else if (netCash < -1000) {
+      state.needs.happiness = Math.max(0, (state.needs.happiness || 50) - 1);
+    }
   }
 }
 
@@ -200031,6 +200044,14 @@ function _updateCrisisResilienceLevel(state, company) {
 /** 每日员工满意度/倦怠演化 */
 function _tickEmployeeSatisfaction(state, emp, company, netCash, timeMult) {
   if (emp.burnoutLevel >= 3) return; // 重度倦怠员工不演化（已请假/离职中）
+  // [全系统自洽修复] 域H A类修复: satisfactionDetails 守卫(旧存档/新员工可能缺失)
+  if (!emp.satisfactionDetails) {
+    emp.satisfactionDetails = { salary: 50, workload: 50, growth: 50, atmosphere: 50 };
+  }
+  if (typeof emp.stressLevel !== "number" || !isFinite(emp.stressLevel)) emp.stressLevel = 50;
+  if (typeof emp.overtimeDays !== "number" || !isFinite(emp.overtimeDays)) emp.overtimeDays = 0;
+  if (typeof emp.burnoutRisk !== "number" || !isFinite(emp.burnoutRisk)) emp.burnoutRisk = 0;
+  if (typeof emp.burnoutLevel !== "number" || !isFinite(emp.burnoutLevel)) emp.burnoutLevel = 0;
 
   const day = state.player.day;
   const sat = emp.satisfactionDetails;
@@ -201905,15 +201926,15 @@ function getAcquisitionOffer(state) {
   );
 
   // 生成收购方评语
-  const评语 = [
+  const _acquirerComments = [
     "对你们的产品方向很感兴趣",
     "看好团队的技术实力",
     "希望整合你们的市场渠道",
     "对我们的用户增长数据印象深刻",
     "想补充他们在该领域的布局",
   ];
-  // [全系统自洽修复] 域H A类: Random.fromArray 返回元素本身, 不应再用作数组索引(否则恒为 undefined)
-  const acquirerComment = Random.fromArray(评语);
+  // [全系统自洽修复] 域H A类修复: 中文变量名改英文(_acquirerComments)
+  const acquirerComment = Random.fromArray(_acquirerComments);
 
   return {
     acquirerCid: acquirerCid,
@@ -202154,11 +202175,18 @@ function bankrupt(state) {
   company.cashReserve = assetRecovery;
 
   // 玩家获得剩余现金（如果有）
+  if (!state.resources) state.resources = { cash: 0, bankBalance: 0, totalEarned: 0 };
   state.resources.cash = (state.resources.cash || 0) + assetRecovery;
 
   // 声誉损失
   state.status.health = Math.max(0, state.status.health - 10);
   state.player.fame = Math.max(0, state.player.fame - 10);
+
+  // [全系统自洽修复] 域H R170 H→G 联动增强: 创业破产心理创伤
+  if (state.needs) {
+    state.needs.happiness = Math.max(0, (state.needs.happiness || 50) - 15);
+  }
+  state.player.mental = Math.max(0, (state.player.mental || 50) - 10);
 
   // 在企业命运系统中标记
   if (state.enterpriseFate && state.enterpriseFate.companies && company.id) {
@@ -223829,6 +223857,9 @@ function renderCorporateActions(state) {
 
 /** 渲染胜败条件检查 */
 function checkCorpWinConditions(state) {
+  // [全系统自洽修复] 域H A类修复: state.corporate/state.player 守卫
+  if (!state || !state.corporate || !state.player) return false;
+  if (!state.flags) state.flags = {};
   if (state.corporate.rank === "P10") {
     state.flags.victory = true;
     state.flags.victoryType = "p10";
@@ -223838,7 +223869,7 @@ function checkCorpWinConditions(state) {
     showVictoryModal();
     return true;
   }
-  if (state.resources.cash + state.resources.bankBalance >= 20000000) {
+  if ((state.resources && state.resources.cash || 0) + (state.resources && state.resources.bankBalance || 0) >= 20000000) {
     state.flags.victory = true;
     state.flags.victoryType = "money";
     state.gameOver = true;
@@ -223851,6 +223882,9 @@ function checkCorpWinConditions(state) {
 }
 
 function checkCorpLoseConditions(state) {
+  // [全系统自洽修复] 域H A类修复: state.player.corporate 守卫
+  if (!state || !state.corporate || !state.player || !state.player.corporate) return false;
+  if (!state.flags) state.flags = {};
   const c = state.player.corporate;
   const corp = state.corporate;
 
@@ -223913,6 +223947,8 @@ function downgradeToStreet(state, reason) {
 
   // 保留遣散费：季度工资的1-3倍
   const severance = rankData.baseSalary * 3 * (1 + Random.int(0, 2));
+  // [全系统自洽修复] 域H A类修复: state.resources 守卫
+  if (!state.resources) state.resources = { cash: 0, bankBalance: 0, totalEarned: 0 };
   state.resources.cash += severance;
 
   // 保留职场期间累积的投资

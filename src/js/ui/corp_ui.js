@@ -246,6 +246,9 @@ function renderCorporateActions(state) {
 
 /** 渲染胜败条件检查 */
 function checkCorpWinConditions(state) {
+  // [全系统自洽修复] 域H A类修复: state.corporate/state.player 守卫
+  if (!state || !state.corporate || !state.player) return false;
+  if (!state.flags) state.flags = {};
   if (state.corporate.rank === "P10") {
     state.flags.victory = true;
     state.flags.victoryType = "p10";
@@ -255,7 +258,7 @@ function checkCorpWinConditions(state) {
     showVictoryModal();
     return true;
   }
-  if (state.resources.cash + state.resources.bankBalance >= 20000000) {
+  if ((state.resources && state.resources.cash || 0) + (state.resources && state.resources.bankBalance || 0) >= 20000000) {
     state.flags.victory = true;
     state.flags.victoryType = "money";
     state.gameOver = true;
@@ -268,6 +271,8 @@ function checkCorpWinConditions(state) {
 }
 
 function checkCorpLoseConditions(state) {
+  // [全系统自洽修复] 域H A类修复: state.player.corporate 守卫
+  if (!state || !state.corporate || !state.player || !state.player.corporate) return false;
   const c = state.player.corporate;
   const corp = state.corporate;
 
@@ -330,6 +335,8 @@ function downgradeToStreet(state, reason) {
 
   // 保留遣散费：季度工资的1-3倍
   const severance = rankData.baseSalary * 3 * (1 + Random.int(0, 2));
+  // [全系统自洽修复] 域H A类修复: state.resources 守卫
+  if (!state.resources) state.resources = { cash: 0, bankBalance: 0, totalEarned: 0 };
   state.resources.cash += severance;
 
   // 保留职场期间累积的投资
