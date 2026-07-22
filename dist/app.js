@@ -20390,6 +20390,136 @@ function registerNewsEventsToPool() {
       ],
       probability: 0.04,
     },
+
+    // ===== 联动3: A→B 供需失衡·生活成本感知 =====
+    // 设计意图：当玩家经历某种商品价格剧烈波动时，触发生活成本叙事，
+    //   让玩家感受到宏观经济对普通人的影响，增强沉浸感。
+    {
+      id: "supply_demand_life_impact",
+      title: "菜价涨了，人心慌了",
+      desc: "今天去市场买菜，发现价格比上周贵了不少。旁边的大妈叹了口气：'哎，这日子越过越紧巴了。'你掂了掂手里的钱包，也沉默了。",
+      phase: "street",
+      triggers: { minDay: 15 },
+      conditions: function (st) {
+        if (!st || !st.trade || !st.flags) return false;
+        if (st.flags._supplyDemandLifeImpactDone) return false;
+        if (!st.trade.marketEvents || st.trade.marketEvents.length < 1) return false;
+        // 至少有一个事件的价格变动超过30%
+        var hasBigImpact = false;
+        for (var ei = 0; ei < st.trade.marketEvents.length; ei++) {
+          var evt = st.trade.marketEvents[ei];
+          if (evt.priceMod >= 1.3 || evt.priceMod <= 0.7) {
+            hasBigImpact = true;
+            break;
+          }
+        }
+        return hasBigImpact;
+      },
+      choices: [
+        {
+          text: "💰 精打细算，调整消费习惯",
+          apply: function (st) {
+            if (st.flags) st.flags._supplyDemandLifeImpactDone = true;
+            if (st.player) {
+              st.player.intelligence = Math.min(100, (st.player.intelligence || 50) + 2);
+              st.player.mental = Math.min(100, (st.player.mental || 50) + 1);
+            }
+            if (typeof StateManager !== "undefined" && StateManager.addMessage)
+              StateManager.addMessage(
+                "你开始记账了，每一笔花销都精打细算。智力+2，心智+1。",
+                "good"
+              );
+          },
+        },
+        {
+          text: "📈 趁机囤货，等涨价再卖",
+          apply: function (st) {
+            if (st.flags) st.flags._supplyDemandLifeImpactDone = true;
+            var 投机收益 = Random.int(100, 299);
+            st.resources.cash = (st.resources.cash || 0) + 投机收益;
+            if (st.player) {
+              st.player.fame = Math.min(100, (st.player.fame || 0) + 1);
+            }
+            if (typeof StateManager !== "undefined" && StateManager.addMessage)
+              StateManager.addMessage(
+                "你敏锐地嗅到了商机，小赚了一笔¥" + 投机收益 + "。",
+                "success"
+              );
+          },
+        },
+        {
+          text: "😮‍💨 只能忍着，日子还得过",
+          apply: function (st) {
+            if (st.flags) st.flags._supplyDemandLifeImpactDone = true;
+            if (st.player) {
+              st.player.mental = Math.min(100, (st.player.mental || 50) + 1);
+            }
+            if (typeof StateManager !== "undefined" && StateManager.addMessage)
+              StateManager.addMessage(
+                "你叹了口气，日子还得继续过。心智+1。",
+                "info"
+              );
+          },
+        },
+      ],
+      probability: 0.035,
+    },
+
+    // ===== 联动4: A→F 交易次数里程碑·市场嗅觉 =====
+    // 设计意图：当累计交易次数达到一定门槛时，玩家获得"市场嗅觉"加成，
+    //   在UI提示中体现为更精准的价格预测，鼓励玩家持续参与交易系统。
+    {
+      id: "trade_milestone_market_sense",
+      title: "你的市场嗅觉越来越敏锐了",
+      desc: "经过多次买卖的磨练，你对价格波动有了直觉般的判断力。什么时候该进货，什么时候该出手，心里渐渐有了数。",
+      phase: "street",
+      triggers: { minDay: 30 },
+      conditions: function (st) {
+        if (!st || !st.trade || !st.flags) return false;
+        if (st.flags._tradeMilestoneMarketSenseDone) return false;
+        var totalTrades = (st.trade.totalBuys || 0) + (st.trade.totalSells || 0);
+        if (totalTrades < 50) return false;
+        return true;
+      },
+      choices: [
+        {
+          text: "📊 认真总结交易经验，形成体系",
+          apply: function (st) {
+            if (st.flags) st.flags._tradeMilestoneMarketSenseDone = true;
+            if (st.skills && st.skills.sales) {
+              st.skills.sales.xp = (st.skills.sales.xp || 0) + 80;
+            }
+            if (st.player) {
+              st.player.intelligence = Math.min(100, (st.player.intelligence || 50) + 3);
+            }
+            if (st.flags) st.flags._marketSenseUnlocked = true;
+            if (typeof StateManager !== "undefined" && StateManager.addMessage)
+              StateManager.addMessage(
+                "你总结了一套自己的交易法则，销售经验+80，智力+3。",
+                "good"
+              );
+          },
+        },
+        {
+          text: "🤑 趁着手热，多做大额交易",
+          apply: function (st) {
+            if (st.flags) st.flags._tradeMilestoneMarketSenseDone = true;
+            var bonus = Random.int(300, 799);
+            st.resources.cash = (st.resources.cash || 0) + bonus;
+            if (st.player) {
+              st.player.fame = Math.min(100, (st.player.fame || 0) + 2);
+            }
+            if (st.flags) st.flags._marketSenseUnlocked = true;
+            if (typeof StateManager !== "undefined" && StateManager.addMessage)
+              StateManager.addMessage(
+                "你趁热打铁，做了一笔漂亮的交易，赚了¥" + bonus + "。名气+2。",
+                "success"
+              );
+          },
+        },
+      ],
+      probability: 0.03,
+    },
   ];
 
   // 注册事件
