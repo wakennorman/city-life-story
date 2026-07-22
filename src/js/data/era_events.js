@@ -522,6 +522,17 @@ if (typeof window !== "undefined") {
         if (!st.career || !st.career.currentJob) return false; // [Layer3]
         return true;
       };
+    } else if (e.id === "era_720") {
+      conditionsFn = function (st) {
+        if (!st.career || !st.career.currentJob) return false; // [Layer3] 叙事说"是继续打工，还是自己单干"
+        return true;
+      };
+    } else if (e.id === "era_900") {
+      conditionsFn = function (st) {
+        // [Layer3] 叙事说"现在好多人都找你咨询"，需玩家有一定名气或社交关系
+        if ((st.player && st.player.fame < 15) && (!st.relationships || Object.keys(st.relationships).length < 3)) return false;
+        return true;
+      };
     }
     RANDOM_EVENTS.push({
       id: e.id,

@@ -1594,6 +1594,8 @@ const EXTREME_MORAL_EVENTS = [
     title: "💊 药店柜台后的救命药",
     desc: "深夜药店只剩一个店员打盹。柜台后有一盒儿童退烧药，刚好是邻居孩子急需的那种，但你身上钱不够。",
     minDay: 18,
+    // [Layer3] 叙事说"邻居孩子急需"，需玩家有住所
+    condition: function (st) { return st.housing && st.housing.tier >= 1; },
     choices: [
       {
         text: "🧾 留下欠条，先拿药救人",
@@ -1775,6 +1777,8 @@ const EXTREME_MORAL_EVENTS = [
     title: "🏥 急诊队伍里的红包",
     desc: "医院急诊排队很长。有人悄悄告诉你，塞个红包可以提前进去。你的朋友正疼得发抖。",
     minDay: 28,
+    // [Layer3] 叙事说"你的朋友正疼得发抖"，需玩家有社交关系
+    condition: function (st) { return st.relationships && Object.keys(st.relationships).length > 0; },
     choices: [
       {
         text: "🧧 塞红包插队",
@@ -1954,6 +1958,8 @@ const EXTREME_MORAL_EVENTS = [
     title: "🎒 借学费的孩子",
     desc: "楼下孩子拿着缴费单，说妈妈电话打不通，明天不交就不能参加春游。你知道这可能只是大人教他的借口。",
     minDay: 20,
+    // [Layer3] 叙事说"楼下孩子"，需玩家有住所
+    condition: function (st) { return st.housing && st.housing.tier >= 1; },
     choices: [
       {
         text: "💳 帮他垫¥180",
@@ -2020,6 +2026,8 @@ const EXTREME_MORAL_EVENTS = [
     title: "🩸 血库告急",
     desc: "医院门口贴着急需献血的通知，血型刚好和你一样。你今天还要干体力活，献血可能影响收入。",
     minDay: 25,
+    // [Layer3] 叙事说"你今天还要干体力活"，需玩家有工作
+    condition: function (st) { return st.career && st.career.currentJob; },
     choices: [
       {
         text: "🩸 献血救急",

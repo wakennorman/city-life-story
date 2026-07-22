@@ -7132,6 +7132,8 @@ function registerNewsEventsToPool() {
       story:
         '干了半个月，工头说"年底一起结"。你知道这条街上好几个外来务工者都被拖欠过，年底往往人去楼空。',
       conditions: function (st) {
+        // [Layer3] 叙事说"干了半个月"，需玩家有工作
+        if (!st.career || !st.career.currentJob) return false;
         return st.player.phase === "street";
       },
       choices: [
@@ -7623,6 +7625,8 @@ function registerNewsEventsToPool() {
       story:
         "昨晚在夜市吃了碗牛杂，今早起来肚子一直不对劲。现在有工作要去，但感觉随时要跑厕所。",
       conditions: function (st) {
+        // [Layer3] 叙事说"现在有工作要去"，需玩家有工作
+        if (!st.career || !st.career.currentJob) return false;
         return st.player.phase === "street";
       },
       choices: [
@@ -9262,6 +9266,8 @@ function registerNewsEventsToPool() {
       title: "浓雾中的早市",
       story:
         "清晨起来，城市被浓雾笼罩。能见度不到十米。你走到平时摆摊的街口，发现早市比往常人多——雾天大家不爱出门，集中在市场里买东西。",
+      // [Layer3] 叙事说"平时摆摊的街口"，需玩家有摆摊经历
+      conditions: function (st) { return st.player && st.player.workTypeCounts && st.player.workTypeCounts.stall > 0; },
       // [全系统自洽联动] 域B 联动增强: 新增 foggy 天气事件，填补天气系统空白
       triggers: {
         weather: "foggy",
@@ -9370,6 +9376,8 @@ function registerNewsEventsToPool() {
       title: "告别街头",
       story:
         "你收到了第一份正式工作的录用通知。收拾东西的时候，你翻出了这几个月攒下的各种小物件——一张旧名片、一个社区志愿者的徽章、还有那张还没寄出的感谢信。这座城市的第一章，快要翻过去了。",
+      // [Layer3] 叙事说"你收到了第一份正式工作的录用通知"，需玩家有工作
+      conditions: function (st) { return st.career && st.career.currentJob; },
       // [全系统自洽联动] 域B 联动增强: Phase1→Phase2 过渡叙事桥接
       triggers: {
         minDay: 120,
@@ -10050,8 +10058,10 @@ function registerNewsEventsToPool() {
         minDay: 15,
         excludeFlags: ["_debtWarningGiven"],
       },
+      // [Layer3] 叙事说"你在出租屋里接起来"，需玩家有住所
       conditions: function (st) {
-        return (st.resources.villageDebt || 0) > 2000;
+        if (!st.housing || st.housing.tier < 1) return false;
+        return st.resources && st.resources.villageDebt > 2000;
       },
       choices: [
         {
@@ -12504,12 +12514,10 @@ function registerNewsEventsToPool() {
       title: "教育行业要变天了",
       story:
         "热搜第一：教育部要出台新规，学科类培训机构可能全部关停。你手上持有教育股，那个做家教的朋友刚续了半年房租。",
+      // [Layer3] 叙事说"你手上持有教育股"，需玩家持有股票
       conditions: function (st) {
-        return (
-          st.player.phase === "street" &&
-          st.player.day >= 30 &&
-          !st.flags._eduRumorSeen
-        );
+        if (!st.investment || !st.investment.stockHoldings || Object.keys(st.investment.stockHoldings).length === 0) return false;
+        return st.player && st.player.day >= 30;
       },
       choices: [
         {
@@ -12836,8 +12844,10 @@ function registerNewsEventsToPool() {
       title: "黄金暴涨！",
       story:
         "新闻在播报：国际金价突破历史新高，国内金饰价格已经冲到每克¥800。街边金店门口排起了长队，黄牛在门口加价收金条。你翻出手机看了眼——之前零散买的几克黄金已经涨了40%。要不要趁机操作一波？",
+      // [Layer3] 叙事说"之前零散买的几克黄金已经涨了40%"，需玩家持有黄金
       conditions: function (st) {
-        return st.player.day >= 30 && (st.resources.cash || 0) >= 2000;
+        if (!st.investment || !st.investment.goldHoldings || st.investment.goldHoldings <= 0) return false;
+        return st.player && st.player.day >= 30;
       },
       choices: [
         {
@@ -14955,6 +14965,9 @@ function registerNewsEventsToPool() {
       triggers: { minDay: 25, excludeFlags: ["_consumptionDownSeen"] },
       // [自洽修复] conditions 新增：选项"帮拼多多商家送货"暗示跑腿/配送经历
       conditions: function (st) {
+        // [Layer3] 叙事说"价格只有你的一半"暗示玩家有摊位
+        var hasStall = (st.player && st.player.workTypeCounts && st.player.workTypeCounts.stall > 0);
+        if (hasStall) return true;
         var hasDelivery =
           (st.sideHustle && st.sideHustle.type === "driving") ||
           (st.stats &&
@@ -15689,6 +15702,8 @@ function registerNewsEventsToPool() {
       story:
         "你之前投了一笔生意——¥50万砸进去了，项目半死不活。合伙人电话来了：「再投¥10万就能撑到下一轮——已经走到这一步了。」你握着手机，手心全是汗。",
       triggers: { minDay: 60, excludeFlags: ["_sunkCostSeen"], minCash: 50000 },
+      // [Layer3] 叙事说"你之前投了一笔生意——¥50万砸进去了"，需玩家有大量收入记录
+      conditions: function (st) { return (st.resources && st.resources.totalEarned >= 500000) || (st.startup && st.startup.active); },
       choices: [
         {
           text: "💰 追加投资",
@@ -16689,6 +16704,8 @@ function registerNewsEventsToPool() {
       conditions: function (st) {
         // [自洽修复] st.needs.health 不存在（state.needs 无 health 字段），改为 st.status.health
         // [已审查] 部分保留：health >= 25 无 trigger 等价字段
+        // [Layer3] 叙事说"领导在群里说全员加班"，需在公司上班
+        if (!st.corporate || !st.corporate.active) return false;
         return ((st.status && st.status.health) || 100) >= 25;
       },
       choices: [
@@ -17034,6 +17051,8 @@ function registerNewsEventsToPool() {
         "VP明天要来部门听汇报，Leader让你今晚赶一份PPT出来。这东西做好了能加分，做砸了就尴尬了。",
       // [conditions→triggers]
       triggers: { minDay: 10 },
+      // [Layer3] 叙事说"VP要来听汇报，Leader让你赶PPT"，需在公司上班
+      conditions: function (st) { return st.corporate && st.corporate.active === true; },
       choices: [
         {
           text: "🌙 熬夜做好",
@@ -17228,6 +17247,8 @@ function registerNewsEventsToPool() {
         "又到了公司年会。今年抽奖环节据说有大奖，但更重要的是和同事领导社交的机会。",
       // [conditions→triggers]
       triggers: { minDay: 60 },
+      // [Layer3] 叙事说"公司年会，和同事领导社交"，需在公司上班
+      conditions: function (st) { return st.corporate && st.corporate.active === true; },
       choices: [
         {
           text: "🍻 主动社交敬酒",
@@ -17380,6 +17401,8 @@ function registerNewsEventsToPool() {
         "茶水间里同事热火朝天：隔壁组的张三投了5万买狗狗币，上个月赚了20万！要不要也试试？",
       // [conditions→triggers]
       triggers: { minDay: 30, minCash: 2000 },
+      // [Layer3] 叙事说"茶水间里同事热火朝天"，需在公司上班
+      conditions: function (st) { return st.corporate && st.corporate.active === true; },
       choices: [
         {
           text: "🚀 跟风买(¥5000)",
@@ -17445,6 +17468,8 @@ function registerNewsEventsToPool() {
         "HR发全员邮件：公司即将IPO！老员工可按内部价认购员工股，每人最多认购500股。",
       // [conditions→triggers]
       triggers: { minDay: 90, minCash: 5000 },
+      // [Layer3] 叙事说"HR发全员邮件，公司即将IPO"，需在公司上班
+      conditions: function (st) { return st.corporate && st.corporate.active === true; },
       choices: [
         {
           text: "🔔 认购500股(¥4000)",
@@ -31935,7 +31960,7 @@ if (typeof window !== "undefined") {
       probability: 0.02,
       repeatable: false,
       story:
-        "新闻里铺天盖地地报道经济下行周期来临。分析师说可能持续6-12个月，各行各业都在收缩。你的投资组合和收入可能受到影响。",
+        "新闻里铺天盖地地报道经济下行周期来临。分析师说可能持续6-12个月，各行各业都在收缩。你的收入和资产可能受到影响。",
       choices: [
         {
           text: "🛡️ 抛售部分资产换现金",
@@ -33069,6 +33094,8 @@ if (typeof window !== "undefined") {
       story:
         "你在商业区的人群中看到一个人正鬼鬼祟祟地贴近前面背包的姑娘——他的手已经伸进了她的背包拉链缝隙。\n\n周围的人都忙着赶路，没人注意到。你只有几秒钟时间决定怎么做。",
       conditions: function (st) {
+        // [Layer3] 叙事说"在商业区的人群中"→必须身在商业区
+        if (!st.trade || st.trade.currentLocation !== 'commercialDist') return false;
         // 天数>10，不重复
         if (st.player.day < 10) return false;
         if (st.flags._moralPickpocketSeen) return false;
@@ -34288,6 +34315,8 @@ if (typeof window !== "undefined") {
       story:
         "你强撑着去干活，但手上的动作明显比平时慢。咳嗽压不住，额头烫得厉害。\n\n旁边的老主顾看了你一眼：「小伙子，你这脸色不对啊，发烧了吧？别干了，回去歇着。」",
       conditions: function (st) {
+        // [Layer3] 叙事说"你强撑着去干活"→必须有工作
+        if (!st.career || !st.career.currentJob) return false;
         if (st.player.day < 10) return false;
         if (
           !st.status ||
@@ -39818,6 +39847,8 @@ if (typeof window !== "undefined") {
       phase: "street",
       // [自洽修复] conditions 新增：修理技能≥40 检查
       conditions: function (st) {
+        // [Layer3] 叙事说"在批发市场挑货"，需玩家在批发市场
+        if (!st.trade || st.trade.currentLocation !== "wholesaleMarket") return false;
         // 检查玩家修理技能是否达到专业门槛
         var repairLvl =
           (st.skills && st.skills.repair && st.skills.repair.level) || 0;
@@ -41142,6 +41173,8 @@ if (typeof window !== "undefined") {
     story:
       "你最近总是失眠。\n\n白天干着同样的活，晚上躺在床上算账。\n\n你也刷到过那些「35岁职场危机」的文章，以前觉得是贩卖焦虑，现在发现自己已经在那个年纪了。\n\n同乡老周上个月回老家了，走之前说了一句话：「这城市终究是年轻人的。」你当时没接话——但这句话一直卡在喉咙里。",
     conditions: function (st) {
+        // [Layer3] 叙事直接称呼"老周"，需已结识老周
+        if (!st.relationships || !st.relationships.old_zhou || !st.relationships.old_zhou.met) return false;
       if (!st.flags || !st.flags._lifeNode_midlife_crisis_done) return false;
       if (st.player.age < 35) return false;
       if (st.flags._midlifeCareerSeen) return false;
@@ -42469,6 +42502,8 @@ if (typeof window !== "undefined") {
       "旁边一位大妈正在砍价：「两块五？太贵了，两块！」\n" +
       "摊主犹豫了一下——你知道这批菜值这个价。",
     conditions: function (st) {
+        // [Layer3] 叙事说"在菜市场闲逛"，需玩家在市场区域
+        if (!st.trade || (st.trade.currentLocation !== "wholesaleMarket" && st.trade.currentLocation !== "commercialDist")) return false;
       // 检查cooking技能≥15
       return (
         st.player &&
@@ -45674,10 +45709,10 @@ if (typeof window !== "undefined") {
       "出租屋的灯坏了半边，你躺在漆黑里刷到老家同学的动态——人家孩子都会叫爸爸了。胃里空空的，不是饿，是想家。手机相册自动弹出去年过年的全家福。",
     // conditions：极低心情阈值爆发（除饥饿外的 needs 阈值空白区）
     conditions: function (st) {
+      // [Layer3] 叙事说"出租屋的灯坏了半边"→必须有住所
+      if (!st.housing || st.housing.tier < 1) return false;
       if (!st.needs) return false; // 检查 needs 系统存在
       if ((st.needs.happiness || 100) >= 15) return false; // 检查 心情值<15（极低）
-      if (st.player.phase !== "street") return false; // 检查 仅在街头阶段
-      if (st.player.day < 7) return false; // 检查 开局几天后
       if (
         st.flags &&
         st.flags._moodLowLetterDay && // 检查 30天冷却
@@ -46260,6 +46295,8 @@ if (typeof window !== "undefined") {
     story:
       "街头巷尾的债务压力越来越大，你手头紧得发颤。这时你遇到一个老熟人——曾经帮过你的张师傅，他现在生意不行了，开口向你借钱：「兄弟，就借我500，我下个月一定还。」\n\n可是你自己欠债如山，根本没有多余的钱。张师傅的眼里满是焦急。",
     conditions: function (st) {
+      // [Layer3] 叙事说"老熟人张师傅"→必须有一定的社交关系
+      if (!st.relationships || Object.keys(st.relationships).length < 1) return false;
       var morality = st.player.morality || 50;
       var debt = st.resources.totalDebt || 0;
       if (morality >= 30) return false;
@@ -46525,7 +46562,12 @@ if (typeof window !== "undefined") {
         }
       }
       if (skilledSkills.length === 0) return false;
-      st._skillMilestoneTrigger = skilledSkills[0];
+      // [Layer3] 优先匹配 repair 技能（叙事说"修东西"）
+      if (skilledSkills.indexOf('repair') >= 0) {
+        st._skillMilestoneTrigger = 'repair';
+      } else {
+        st._skillMilestoneTrigger = skilledSkills[0];
+      }
       return true;
     },
     probability: 0.03,
@@ -46863,7 +46905,7 @@ if (typeof window !== "undefined") {
     icon: "📞",
     title: "爸妈的电话",
     story:
-      "手机响了。屏幕上跳动着「爸」两个字。\n\n你接起来，那边传来父亲熟悉的声音：「最近怎么样啊？吃得好不好？天冷了多穿点。」\n\n你看了看日历——今天是他们的结婚纪念日，也是母亲的生日。你差点忘了。",
+      "手机响了。屏幕上跳动着「爸」两个字。\n\n你接起来，那边传来父亲熟悉的声音：「最近怎么样啊？吃得好不好？天冷了多穿点。」\n\n你看了看日历——今天是家里一个特别的日子，妈念叨了好久。你差点忘了。",
     // [自洽新增] conditions：家庭系统存在 + 周末触发
     conditions: function (st) {
       if (!st.family) return false;
@@ -48386,6 +48428,8 @@ if (typeof window !== "undefined") {
       "春风吹走了冬天的寒冷。城市广场上搭起了一排排帐篷——一年一度的春季招聘会开始了！几十家企业摆摊招人，从工厂普工到写字楼文员，岗位多得让人眼花缭乱。你手里攥着简历，在人群里挤来挤去。",
     conditions: function (st) {
       // [自洽修复] 检查季节为春季 + 天数≥60
+      // [Layer3] 叙事说"你手里攥着简历"→必须有工作经验
+      if (!st.player.totalWorkDays || st.player.totalWorkDays < 1) return false;
       var season = st.weather && st.weather.season;
       return (
         st.player.phase === "street" &&
@@ -51600,6 +51644,8 @@ if (typeof window !== "undefined") {
     // conditions：chef_chen 已结识+好感 + management 技能 + 当前职业为厨师（NPC ∩ 技能 ∩ 职业）
 
     conditions: function (st) {
+      // [Layer3] 叙事说"你正端着厨师饭碗"→必须有厨房相关职业
+      if (!st.employment || !st.employment.currentJob) return false;
       var rel = st.relationships && st.relationships["chef_chen"]; // 检查 chef_chen 关系
 
       if (!rel || !rel.met) return false; // 检查 已结识
@@ -52446,6 +52492,8 @@ if (typeof window !== "undefined") {
     // conditions：electrician + repair 技能（技能协同 ∩ 住所）
 
     conditions: function (st) {
+      // [Layer3] 叙事说"租房的电路老出毛病"→必须有住所
+      if (!st.housing || st.housing.tier < 1) return false;
       var el =
         st.skills && st.skills.electrician && st.skills.electrician.level; // 检查 electrician 等级
 
@@ -53770,13 +53818,13 @@ if (typeof window !== "undefined") {
     // conditions：疲惫高 + 有现金（需求×事件空白区）
 
     conditions: function (st) {
+      // [Layer3] 叙事说"钱不够先记着"→玩家应现金拮据
+      var cash = st.resources && st.resources.cash; // 检查 现金
+      if (typeof cash !== "number" || cash >= 200) return false; // [Layer3] 改为现金<200以匹配叙事
+
       var fat = st.needs && st.needs.fatigue; // 检查 疲惫
 
       if (typeof fat !== "number" || fat <= 80) return false; // 检查 疲惫>80
-
-      var cash = st.resources && st.resources.cash; // 检查 现金
-
-      if (typeof cash !== "number" || cash < 200) return false; // 检查 现金>=200
 
       if (st.player.phase !== "street") return false; // 检查 街头阶段
 
@@ -56006,8 +56054,7 @@ if (typeof window !== "undefined") {
 
       if (typeof ck !== "number" || ck < 8) return false; // 检查 cooking>=8
 
-      if (typeof st.needs.happiness !== "number" || st.needs.happiness < 30)
-        return false; // 检查 心情低
+      // [Layer3] 移除心情<30要求——叙事未暗示不开心，老周蹭饭是温馨场景
 
       if (st.player.day < 8) return false; // 检查 中后期
 
@@ -56458,6 +56505,8 @@ if (typeof window !== "undefined") {
     // conditions：雨天/暴雨 + repair 技能（技能×天气×需求空白区）
 
     conditions: function (st) {
+      // [Layer3] 叙事说"出租屋的屋檐泡漏了"→必须有住所
+      if (!st.housing || st.housing.tier < 1) return false;
       var w = st.weather && st.weather.current; // 检查 天气
 
       if (w !== "rainy" && w !== "stormy") return false; // 检查 雨天或暴雨
@@ -57031,6 +57080,8 @@ if (typeof window !== "undefined") {
     // conditions：sales 技能 + 科技园声望（技能×声望×地点空白区）
 
     conditions: function (st) {
+      // [Layer3] 叙事说"科技园里公司扎堆"→必须身在科技园
+      if (!st.trade || st.trade.currentLocation !== 'techPark') return false;
       var sales = st.skills && st.skills.sales && st.skills.sales.level; // 检查 sales 等级
 
       if (typeof sales !== "number" || sales < 15) return false; // 检查 sales>=15
@@ -69937,6 +69988,8 @@ if (typeof window !== "undefined") {
     // conditions：accounting 技能 + 中后期（技能 ∩ 经济 ∩ 新闻系统）
 
     conditions: function (st) {
+      // [Layer3] 叙事说"顺势小投了一笔"→必须有可支配资金
+      if (!st.resources || st.resources.cash < 500) return false;
       var acc = st.skills && st.skills.accounting && st.skills.accounting.level; // 检查 accounting 等级
 
       if (typeof acc !== "number" || acc < 20) return false; // 检查 accounting>=20
@@ -72455,6 +72508,8 @@ if (typeof window !== "undefined") {
     // conditions：暴风雨 + coding 技能（天气系统 + 技能系统）
 
     conditions: function (st) {
+      // [Layer3] 叙事说"窝在屋里敲代码"→必须有住所
+      if (!st.housing || st.housing.tier < 1) return false;
       if (st.weather.current !== "stormy") return false; // 检查 暴风雨
 
       var code = st.skills && st.skills.coding && st.skills.coding.level; // 检查 coding 等级
@@ -77996,6 +78051,8 @@ if (typeof window !== "undefined") {
     story:
       "午饭时，市场部的陈经理把你叫到一边，压低声音说：「你知道技术部李总要被换掉的事吗？我这边正在整合资源，你跟着我走，好处少不了你的。」\n\n下午，技术部的老王也找到你：「陈那边的事你知道吧？别被他拉下水，他早晚出事。我这里稳得住，你安心跟着我。」\n\n两个人说的都头头是道，但你知道：只能站一边。",
     conditions: function (st) {
+      // [Layer3] 叙事提到"陈经理""李总"→必须已结识 boss_li
+      if (!st.relationships || !st.relationships.boss_li || !st.relationships.boss_li.met) return false;
       if (st.flags._corpOfficePoliticsDone) return false;
       if (!st.player || st.player.phase !== "corporate") return false;
       if (!st.employment || !st.employment.currentJob) return false;
@@ -78410,6 +78467,8 @@ if (typeof window !== "undefined") {
     story:
       "加完班回家，你在巷口碰见了熟悉的面孔。对方难得没在忙，一个人坐在台阶上抽烟/织毛衣。看到你，招了招手：\n\n「来，坐会儿。」\n\n也许是今晚太安静了，也许是你从来没问过——对方第一次讲起了自己的故事。那些年的不容易，那些没能实现的梦，那些放下又拿起来的执念。\n\n你听着，才发现这个每天跟你点头的人，原来也有一段人生。",
     conditions: function (st) {
+      // [Layer3] 叙事说"加完班回家"→必须有工作
+      if (!st.career || !st.career.currentJob) return false;
       // [自洽修复] 检查是否有任意NPC好感≥80且已结识
       if (!st.relationships) return false;
       var hasDeepBond = false;
@@ -78917,6 +78976,8 @@ if (typeof window !== "undefined") {
     story:
       "你坐在出租屋里，算了一笔账。\\n\\n从第一天来到这座城市起，你搬过砖、送过外卖、摆过摊、熬过夜、吃过亏、也赚过钱。\\n\\n那些¥20、¥50、¥100攒起来的数字，今天终于跨过了一个门槛——你在这座城市里，赚到了第一个一百万。\\n\\n不是存款，是流水。但这一百万，每一分都是你亲手挣的。",
     conditions: function (st) {
+      // [Layer3] 叙事说"你坐在出租屋里"→必须有住所
+      if (!st.housing || st.housing.tier < 1) return false;
       if (!st.resources) return false;
       var totalEarned = st.resources.totalEarned || 0;
       if (totalEarned < 1000000) return false;
@@ -80774,6 +80835,8 @@ if (typeof window !== "undefined") {
     story:
       "两个组员为排期吵得面红耳赤，老板李总头疼地看你：‘你来说说？’\n\n你没急着站队，而是把两人的任务拆开一看——冲突根本不在人，在接口定义不清。",
     conditions: function (st) {
+      // [Layer3] 叙事提到"老板李总"→必须已结识 boss_li
+      if (!st.relationships || !st.relationships.boss_li || !st.relationships.boss_li.met) return false;
       // 检查 管理技能达到行家门槛
       var sk = st.skills && st.skills.management;
       if (!sk || sk.level < 40) return false;
@@ -82371,6 +82434,8 @@ if (typeof window !== "undefined") {
       story:
         "你已经在这家公司待了三个月。今天加班到晚上九点，你站在写字楼的落地窗前，看着楼下的街道。\\n\\n街灯下，一个年轻人正蹲在路边吃炒面——就像你半年前的样子。\\n\\n手机震了一下，是老周发来的语音：「你小子现在混写字楼了？有空回来坐坐，废品站新收了台好收音机。」\\n\\n你笑了笑，没有立刻回复。\\n\\n这座城市还是那座城市。但你好像已经不是那个你了。",
       conditions: function (st) {
+        // [Layer3] 叙事说"老周发来的语音"→必须已结识 old_zhou
+        if (!st.relationships || !st.relationships.old_zhou || !st.relationships.old_zhou.met) return false;
         return (
           st.player &&
           st.player.phase === "corporate" &&
@@ -82581,6 +82646,8 @@ if (typeof window !== "undefined") {
       story:
         "深夜送完最后一批货，你抄小路往回开。\n\n导航显示前方有主路可走，但你凭直觉打了方向盘拐进一条黑漆漆的窄巷——果然，五分钟后远处传来主路交通事故的警笛声。\n\n这不是运气。跑了五年车，城市的每条路都刻在你脑子里。哪里有近道、哪个路口有摄像头、雨天哪段路会积水——身体自己就记住了。\n\n副座的年轻同事看呆了：「师父你怎么知道要绕路？」",
       conditions: function (st) {
+        // [Layer3] 叙事说"深夜送完最后一批货"→必须有工作
+        if (!st.career || !st.career.currentJob) return false;
         return (
           st.skills &&
           st.skills.driving &&
@@ -89491,19 +89558,10 @@ if (typeof window !== "undefined") {
       story:
         "今天翻手机日历，忽然意识到：你来这座城，整整一年了。\n\n从火车站广场那个兜里只剩三百块的夜晚，到如今有了熟悉的早餐摊、常去的茶馆、几个能随时发消息的人——城市不再只是钢筋水泥，而是一本慢慢写满的通讯录。\n\n你想起这一年里帮过你、也被你帮过的人。",
       triggers: { minDay: 365, excludeFlags: ["_cityAnnivDone"] },
+      // [Layer3] 叙事说"从火车站广场那个兜里只剩三百块的夜晚"，此场景仅适用于"城市务工者"剧本
       conditions: function (st) {
-        var day = (st.player && st.player.day) || 0;
-        if (day < 365) return false;
-        var yearMark = Math.floor(day / 365);
-        // 每满一整年触发一次：记录已达成的周年数，避免每年反复弹
-        if (((st.flags && st.flags._cityAnnivYear) || 0) >= yearMark)
-          return false;
-        var rels = st.relationships || {};
-        var hasMet = Object.keys(rels).some(function (k) {
-          var r = rels[k];
-          return r && r.met;
-        });
-        return hasMet;
+        if (!st.flags || !st.flags._scenarioId || st.flags._scenarioId !== "classic") return false;
+        return true;
       },
       probability: 0.05, // [PLACEHOLDER] 触发率待 playtest
       repeatable: false,
@@ -101047,6 +101105,17 @@ if (typeof window !== "undefined") {
     } else if (e.id === "era_450") {
       conditionsFn = function (st) {
         if (!st.career || !st.career.currentJob) return false; // [Layer3]
+        return true;
+      };
+    } else if (e.id === "era_720") {
+      conditionsFn = function (st) {
+        if (!st.career || !st.career.currentJob) return false; // [Layer3] 叙事说"是继续打工，还是自己单干"
+        return true;
+      };
+    } else if (e.id === "era_900") {
+      conditionsFn = function (st) {
+        // [Layer3] 叙事说"现在好多人都找你咨询"，需玩家有一定名气或社交关系
+        if ((st.player && st.player.fame < 15) && (!st.relationships || Object.keys(st.relationships).length < 3)) return false;
         return true;
       };
     }
@@ -144320,6 +144389,8 @@ const STARTUP_EVENTS_SEED = [
     industries: ["*"],
     title: "核心员工收到offer",
     desc: "你的一名核心员工收到了大厂的offer，薪资比你高50%。他来找你谈话。",
+    // [Layer3] 叙事说"你的一名核心员工收到了大厂的offer"，需玩家有员工
+    condition: function (st) { return st.company && st.company.employees && st.company.employees.length > 0; },
     options: [
       {
         text: "加薪留人",
@@ -144762,6 +144833,8 @@ const STARTUP_EVENTS_MATURE = [
     industries: ["*"],
     title: "核心团队成员离职创业",
     desc: "你的CTO/COO决定离职创业，而且方向和你高度重合。他邀请你投资。",
+    // [Layer3] 叙事说"你的CTO/COO决定离职创业"，但CTO/COO角色在系统中不存在，此为叙事超前问题，加条件防误触
+    condition: function (st) { return st.company && st.company.employees && st.company.employees.length >= 3; },
     options: [
       {
         text: "投资他，做战略投资",
@@ -166887,6 +166960,8 @@ const EXTREME_MORAL_EVENTS = [
     title: "💊 药店柜台后的救命药",
     desc: "深夜药店只剩一个店员打盹。柜台后有一盒儿童退烧药，刚好是邻居孩子急需的那种，但你身上钱不够。",
     minDay: 18,
+    // [Layer3] 叙事说"邻居孩子急需"，需玩家有住所
+    condition: function (st) { return st.housing && st.housing.tier >= 1; },
     choices: [
       {
         text: "🧾 留下欠条，先拿药救人",
@@ -167068,6 +167143,8 @@ const EXTREME_MORAL_EVENTS = [
     title: "🏥 急诊队伍里的红包",
     desc: "医院急诊排队很长。有人悄悄告诉你，塞个红包可以提前进去。你的朋友正疼得发抖。",
     minDay: 28,
+    // [Layer3] 叙事说"你的朋友正疼得发抖"，需玩家有社交关系
+    condition: function (st) { return st.relationships && Object.keys(st.relationships).length > 0; },
     choices: [
       {
         text: "🧧 塞红包插队",
@@ -167247,6 +167324,8 @@ const EXTREME_MORAL_EVENTS = [
     title: "🎒 借学费的孩子",
     desc: "楼下孩子拿着缴费单，说妈妈电话打不通，明天不交就不能参加春游。你知道这可能只是大人教他的借口。",
     minDay: 20,
+    // [Layer3] 叙事说"楼下孩子"，需玩家有住所
+    condition: function (st) { return st.housing && st.housing.tier >= 1; },
     choices: [
       {
         text: "💳 帮他垫¥180",
@@ -167313,6 +167392,8 @@ const EXTREME_MORAL_EVENTS = [
     title: "🩸 血库告急",
     desc: "医院门口贴着急需献血的通知，血型刚好和你一样。你今天还要干体力活，献血可能影响收入。",
     minDay: 25,
+    // [Layer3] 叙事说"你今天还要干体力活"，需玩家有工作
+    condition: function (st) { return st.career && st.career.currentJob; },
     choices: [
       {
         text: "🩸 献血救急",

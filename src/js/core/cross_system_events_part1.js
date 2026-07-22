@@ -2607,6 +2607,8 @@
       phase: "street",
       // [自洽修复] conditions 新增：修理技能≥40 检查
       conditions: function (st) {
+        // [Layer3] 叙事说"在批发市场挑货"，需玩家在批发市场
+        if (!st.trade || st.trade.currentLocation !== "wholesaleMarket") return false;
         // 检查玩家修理技能是否达到专业门槛
         var repairLvl =
           (st.skills && st.skills.repair && st.skills.repair.level) || 0;
@@ -3931,6 +3933,8 @@
     story:
       "你最近总是失眠。\n\n白天干着同样的活，晚上躺在床上算账。\n\n你也刷到过那些「35岁职场危机」的文章，以前觉得是贩卖焦虑，现在发现自己已经在那个年纪了。\n\n同乡老周上个月回老家了，走之前说了一句话：「这城市终究是年轻人的。」你当时没接话——但这句话一直卡在喉咙里。",
     conditions: function (st) {
+        // [Layer3] 叙事直接称呼"老周"，需已结识老周
+        if (!st.relationships || !st.relationships.old_zhou || !st.relationships.old_zhou.met) return false;
       if (!st.flags || !st.flags._lifeNode_midlife_crisis_done) return false;
       if (st.player.age < 35) return false;
       if (st.flags._midlifeCareerSeen) return false;
@@ -5258,6 +5262,8 @@
       "旁边一位大妈正在砍价：「两块五？太贵了，两块！」\n" +
       "摊主犹豫了一下——你知道这批菜值这个价。",
     conditions: function (st) {
+        // [Layer3] 叙事说"在菜市场闲逛"，需玩家在市场区域
+        if (!st.trade || (st.trade.currentLocation !== "wholesaleMarket" && st.trade.currentLocation !== "commercialDist")) return false;
       // 检查cooking技能≥15
       return (
         st.player &&

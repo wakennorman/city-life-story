@@ -1541,6 +1541,8 @@
       story:
         '干了半个月，工头说"年底一起结"。你知道这条街上好几个外来务工者都被拖欠过，年底往往人去楼空。',
       conditions: function (st) {
+        // [Layer3] 叙事说"干了半个月"，需玩家有工作
+        if (!st.career || !st.career.currentJob) return false;
         return st.player.phase === "street";
       },
       choices: [
@@ -2032,6 +2034,8 @@
       story:
         "昨晚在夜市吃了碗牛杂，今早起来肚子一直不对劲。现在有工作要去，但感觉随时要跑厕所。",
       conditions: function (st) {
+        // [Layer3] 叙事说"现在有工作要去"，需玩家有工作
+        if (!st.career || !st.career.currentJob) return false;
         return st.player.phase === "street";
       },
       choices: [
@@ -3671,6 +3675,8 @@
       title: "浓雾中的早市",
       story:
         "清晨起来，城市被浓雾笼罩。能见度不到十米。你走到平时摆摊的街口，发现早市比往常人多——雾天大家不爱出门，集中在市场里买东西。",
+      // [Layer3] 叙事说"平时摆摊的街口"，需玩家有摆摊经历
+      conditions: function (st) { return st.player && st.player.workTypeCounts && st.player.workTypeCounts.stall > 0; },
       // [全系统自洽联动] 域B 联动增强: 新增 foggy 天气事件，填补天气系统空白
       triggers: {
         weather: "foggy",
@@ -3779,6 +3785,8 @@
       title: "告别街头",
       story:
         "你收到了第一份正式工作的录用通知。收拾东西的时候，你翻出了这几个月攒下的各种小物件——一张旧名片、一个社区志愿者的徽章、还有那张还没寄出的感谢信。这座城市的第一章，快要翻过去了。",
+      // [Layer3] 叙事说"你收到了第一份正式工作的录用通知"，需玩家有工作
+      conditions: function (st) { return st.career && st.career.currentJob; },
       // [全系统自洽联动] 域B 联动增强: Phase1→Phase2 过渡叙事桥接
       triggers: {
         minDay: 120,

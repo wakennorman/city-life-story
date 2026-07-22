@@ -373,6 +373,8 @@
       conditions: function (st) {
         // [自洽修复] st.needs.health 不存在（state.needs 无 health 字段），改为 st.status.health
         // [已审查] 部分保留：health >= 25 无 trigger 等价字段
+        // [Layer3] 叙事说"领导在群里说全员加班"，需在公司上班
+        if (!st.corporate || !st.corporate.active) return false;
         return ((st.status && st.status.health) || 100) >= 25;
       },
       choices: [
@@ -718,6 +720,8 @@
         "VP明天要来部门听汇报，Leader让你今晚赶一份PPT出来。这东西做好了能加分，做砸了就尴尬了。",
       // [conditions→triggers]
       triggers: { minDay: 10 },
+      // [Layer3] 叙事说"VP要来听汇报，Leader让你赶PPT"，需在公司上班
+      conditions: function (st) { return st.corporate && st.corporate.active === true; },
       choices: [
         {
           text: "🌙 熬夜做好",
@@ -912,6 +916,8 @@
         "又到了公司年会。今年抽奖环节据说有大奖，但更重要的是和同事领导社交的机会。",
       // [conditions→triggers]
       triggers: { minDay: 60 },
+      // [Layer3] 叙事说"公司年会，和同事领导社交"，需在公司上班
+      conditions: function (st) { return st.corporate && st.corporate.active === true; },
       choices: [
         {
           text: "🍻 主动社交敬酒",
@@ -1064,6 +1070,8 @@
         "茶水间里同事热火朝天：隔壁组的张三投了5万买狗狗币，上个月赚了20万！要不要也试试？",
       // [conditions→triggers]
       triggers: { minDay: 30, minCash: 2000 },
+      // [Layer3] 叙事说"茶水间里同事热火朝天"，需在公司上班
+      conditions: function (st) { return st.corporate && st.corporate.active === true; },
       choices: [
         {
           text: "🚀 跟风买(¥5000)",
@@ -1129,6 +1137,8 @@
         "HR发全员邮件：公司即将IPO！老员工可按内部价认购员工股，每人最多认购500股。",
       // [conditions→triggers]
       triggers: { minDay: 90, minCash: 5000 },
+      // [Layer3] 叙事说"HR发全员邮件，公司即将IPO"，需在公司上班
+      conditions: function (st) { return st.corporate && st.corporate.active === true; },
       choices: [
         {
           text: "🔔 认购500股(¥4000)",

@@ -610,8 +610,10 @@
         minDay: 15,
         excludeFlags: ["_debtWarningGiven"],
       },
+      // [Layer3] 叙事说"你在出租屋里接起来"，需玩家有住所
       conditions: function (st) {
-        return (st.resources.villageDebt || 0) > 2000;
+        if (!st.housing || st.housing.tier < 1) return false;
+        return st.resources && st.resources.villageDebt > 2000;
       },
       choices: [
         {
@@ -3064,12 +3066,10 @@
       title: "教育行业要变天了",
       story:
         "热搜第一：教育部要出台新规，学科类培训机构可能全部关停。你手上持有教育股，那个做家教的朋友刚续了半年房租。",
+      // [Layer3] 叙事说"你手上持有教育股"，需玩家持有股票
       conditions: function (st) {
-        return (
-          st.player.phase === "street" &&
-          st.player.day >= 30 &&
-          !st.flags._eduRumorSeen
-        );
+        if (!st.investment || !st.investment.stockHoldings || Object.keys(st.investment.stockHoldings).length === 0) return false;
+        return st.player && st.player.day >= 30;
       },
       choices: [
         {
@@ -3396,8 +3396,10 @@
       title: "黄金暴涨！",
       story:
         "新闻在播报：国际金价突破历史新高，国内金饰价格已经冲到每克¥800。街边金店门口排起了长队，黄牛在门口加价收金条。你翻出手机看了眼——之前零散买的几克黄金已经涨了40%。要不要趁机操作一波？",
+      // [Layer3] 叙事说"之前零散买的几克黄金已经涨了40%"，需玩家持有黄金
       conditions: function (st) {
-        return st.player.day >= 30 && (st.resources.cash || 0) >= 2000;
+        if (!st.investment || !st.investment.goldHoldings || st.investment.goldHoldings <= 0) return false;
+        return st.player && st.player.day >= 30;
       },
       choices: [
         {

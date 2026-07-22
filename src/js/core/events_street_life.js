@@ -1923,6 +1923,9 @@
       triggers: { minDay: 25, excludeFlags: ["_consumptionDownSeen"] },
       // [自洽修复] conditions 新增：选项"帮拼多多商家送货"暗示跑腿/配送经历
       conditions: function (st) {
+        // [Layer3] 叙事说"价格只有你的一半"暗示玩家有摊位
+        var hasStall = (st.player && st.player.workTypeCounts && st.player.workTypeCounts.stall > 0);
+        if (hasStall) return true;
         var hasDelivery =
           (st.sideHustle && st.sideHustle.type === "driving") ||
           (st.stats &&
@@ -2657,6 +2660,8 @@
       story:
         "你之前投了一笔生意——¥50万砸进去了，项目半死不活。合伙人电话来了：「再投¥10万就能撑到下一轮——已经走到这一步了。」你握着手机，手心全是汗。",
       triggers: { minDay: 60, excludeFlags: ["_sunkCostSeen"], minCash: 50000 },
+      // [Layer3] 叙事说"你之前投了一笔生意——¥50万砸进去了"，需玩家有大量收入记录
+      conditions: function (st) { return (st.resources && st.resources.totalEarned >= 500000) || (st.startup && st.startup.active); },
       choices: [
         {
           text: "💰 追加投资",

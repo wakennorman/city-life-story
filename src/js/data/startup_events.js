@@ -240,6 +240,8 @@ const STARTUP_EVENTS_SEED = [
     industries: ["*"],
     title: "核心员工收到offer",
     desc: "你的一名核心员工收到了大厂的offer，薪资比你高50%。他来找你谈话。",
+    // [Layer3] 叙事说"你的一名核心员工收到了大厂的offer"，需玩家有员工
+    condition: function (st) { return st.company && st.company.employees && st.company.employees.length > 0; },
     options: [
       {
         text: "加薪留人",
@@ -682,6 +684,8 @@ const STARTUP_EVENTS_MATURE = [
     industries: ["*"],
     title: "核心团队成员离职创业",
     desc: "你的CTO/COO决定离职创业，而且方向和你高度重合。他邀请你投资。",
+    // [Layer3] 叙事说"你的CTO/COO决定离职创业"，但CTO/COO角色在系统中不存在，此为叙事超前问题，加条件防误触
+    condition: function (st) { return st.company && st.company.employees && st.company.employees.length >= 3; },
     options: [
       {
         text: "投资他，做战略投资",
