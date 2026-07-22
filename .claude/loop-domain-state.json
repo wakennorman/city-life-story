@@ -1,5 +1,5 @@
 {
-  "currentRound": 164,
+  "currentRound": 165,
   "currentDomain": "Layer4",
   "nextDomain": "Layer5",
   "rotationIndex": 0,
@@ -182,12 +182,17 @@
       "round": 164,
       "domain": "Layer4",
       "note": "L4-A first pass (5 gameOver gatings) + spec doc"
+    },
+    {
+      "round": 165,
+      "domain": "Layer4",
+      "note": "L4-A street续扫 103 处 gameOver 门控 (events_street_survival 49 + wealth 54; life 跳过待 loop 让出)"
     }
   ],
   "lastDomain": "Layer4",
-  "lastRound": 164,
+  "lastRound": 165,
   "lastDate": "2026-07-22",
-  "lastCommit": "d35450caefd84ea9b2ccab2577ae708e13fb2ed2",
+  "lastCommit": "09b56b3a0cec3c80d32bfeb85da9df179c4752bb",
   "pushStatus": "LOCAL",
   "completedDomains": [
     "A",
@@ -199,5 +204,5 @@
     "G",
     "H"
   ],
-  "description": "Layer4 时间线逻辑门控首过(L4-A gameOver 泄漏 5 处门控 chengguan_events.js+events_corp.js 链式事件 + 补全 Layer1-6 规范源 memory/event-gate-layer-system.md)；L4-B phase-less 死事件114候选待人工复核；手动「继续」驱动，自动 loop 并行也在扫 street/moral 事件"
+  "description": "Layer4 时间线逻辑门控 L4-A 累计 108 处 gameOver 门控：首过 5 处(chengguan/events_corp 链式) + 续扫 103 处(street survival 49 + wealth 54；life 跳过待 loop 让出)；L4-B phase-less 死事件 114 候选待人工复核；gameOver 字段一致性(festivals/life_decisions/story_chapters/critical 误用 st.flags.gameOver) 待专项；手动「继续」驱动，自动 loop 并行扫 street/moral"
 }

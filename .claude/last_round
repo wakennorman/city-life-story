@@ -1,1 +1,1 @@
-fix: [Layer4] 时间线逻辑门控首过 — L4-A gameOver 泄漏 5 处门控（chengguan_events.js + events_corp.js 链式事件）+ 补全 Layer 1-6 规范源
+fix: [Layer4] 时间线逻辑门控 L4-A 续扫 — street 事件 gameOver 泄漏门控 103 处（events_street_survival 49 + events_street_wealth 54）+ 文档/状态更新（09b56b3）
