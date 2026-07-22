@@ -468,15 +468,36 @@ function enterCorporatePhase(companyId) {
     `🏢 入职 ${company.name}！从P5开始职场生涯。${company.culture}。`,
     "success",
   );
+  // [全系统自洽修复] 域H 联动增强1: Phase1→2跨阶段继承 — 街头经验兑换职级加成
+  if (typeof calculateStreetLegacyBonus === "function") {
+    var legacy = calculateStreetLegacyBonus(state);
+    if (legacy.skipRank) {
+      state.corporate.rank = legacy.skipRank;
+      p.corporate.rank = legacy.skipRank;
+      StateManager.addMessage("🏆 街头经验兑换职级跳升！凭借" + p.day + "天历练，直接从" + legacy.skipRank + "入职！", "success");
+    }
+    if (legacy.kpiBonus > 0) {
+      p.corporate.kpi = Math.min(150, (p.corporate.kpi || 0) + legacy.kpiBonus);
+      StateManager.addMessage("📈 街头实战积累的KPI起点+" + legacy.kpiBonus + "。", "info");
+    }
+    if (legacy.upwardMgmtBonus > 0) {
+      p.corporate.upwardMgmt = Math.min(100, (p.corporate.upwardMgmt || 0) + legacy.upwardMgmtBonus);
+      StateManager.addMessage("🤝 多年人脉积累的向上管理起点+" + legacy.upwardMgmtBonus + "。", "info");
+    }
+    if (legacy.abilityBonus > 0) {
+      p.corporate.ability = Math.min(100, (p.corporate.ability || 0) + legacy.abilityBonus);
+      StateManager.addMessage("💼 赚到¥" + totalEarned.toLocaleString() + "的商业嗅觉让你起步能力+" + legacy.abilityBonus + "。", "info");
+    }
+  }
   // [全系统自洽修复] 域H 联动增强: Phase1→2过渡叙事闭环
-  var streetDays = p.day;
-  var totalEarned = state.resources.totalEarned || 0;
+  var streetDays2 = p.day;
+  var totalEarned2 = state.resources.totalEarned || 0;
   StateManager.addMessage(
     "📜 从街头到写字楼，你用了" +
-      streetDays +
+      streetDays2 +
       "天。" +
-      (totalEarned > 0
-        ? "街头打拼攒下¥" + totalEarned.toLocaleString() + "。"
+      (totalEarned2 > 0
+        ? "街头打拼攒下¥" + totalEarned2.toLocaleString() + "。"
         : "") +
       "新的战场，准备好了。",
     "info",

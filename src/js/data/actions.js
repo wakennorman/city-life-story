@@ -118,7 +118,7 @@ var LOCATION_EXTRA_ACTIONS = [
     location: "techPark",
     apCost: 20,
     condition: function (st) {
-      return st.player.intel >= 60;
+      return st.player.intelligence >= 60;
     },
     payEstimate: "0~∞",
     effectEstimate: "25%工作机会, 40%小费¥50",

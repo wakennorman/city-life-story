@@ -20221,6 +20221,708 @@ function registerNewsEventsToPool() {
 })();
 
 ;
+// ==== js/core/domain_a_linkage_r171.js ====
+/*
+ * 城市浮生记 — 域A（数据/数值平衡）联动增强 · R171
+ * 全系统优化 loop R171 · 联动增强 2项
+ *
+ * 设计约束（与既有 linkage 文件一致）：
+ *  - IIFE 注入全局 RANDOM_EVENTS，避免改 cross_system_events.js。
+ *  - 所有 state 访问均 || 防御。
+ *  - 里程碑类事件用 st.flags._xxxDone 去重。
+ */
+(function () {
+  if (typeof RANDOM_EVENTS === "undefined" || !RANDOM_EVENTS) return;
+  if (RANDOM_EVENTS._domainALinkageR171) return;
+  RANDOM_EVENTS._domainALinkageR171 = true;
+
+  // ---- 本地助手 ----
+
+  function netWorthR171(st) {
+    if (!st || !st.resources) return 0;
+    return (st.resources.cash || 0) + (st.resources.bankBalance || 0);
+  }
+
+  function metNpcsR171(st) {
+    if (!st || !st.relationships) return 0;
+    var count = 0;
+    for (var id in st.relationships) {
+      if (!Object.prototype.hasOwnProperty.call(st.relationships, id)) continue;
+      if (st.relationships[id] && st.relationships[id].met) count++;
+    }
+    return count;
+  }
+
+  function safeAffinityR171(st, npcId, change, reason) {
+    if (!st || !npcId) return;
+    if (typeof applyAffinityChange === "function") {
+      applyAffinityChange(st, npcId, change, reason || "域A R171联动");
+      return;
+    }
+    if (!st.relationships) st.relationships = {};
+    if (!st.relationships[npcId])
+      st.relationships[npcId] = { met: true, affinity: 0 };
+    st.relationships[npcId].affinity =
+      (st.relationships[npcId].affinity || 0) + change;
+    st.relationships[npcId].met = true;
+  }
+
+  var A_EVENTS = [
+
+    // ===== 联动1: A→D NPC财富感知 =====
+    // 设计意图：当玩家净资产达到¥50,000时，NPC伙伴注意到玩家的经济状况变化，
+    //   让财富积累产生社交反馈，激励玩家继续积累。
+    {
+      id: "wealth_milestone_npc_notice",
+      title: "你的变化，大家都看在眼里",
+      desc: "你最近手头宽裕了不少，身边的朋友也注意到了。有人开始向你请教赚钱的门路，也有人半开玩笑地说要抱大腿。",
+      phase: "street",
+      triggers: { minDay: 30 },
+      conditions: function (st) {
+        if (!st || !st.player || !st.resources || !st.flags) return false;
+        if (st.flags._wealthMilestoneNpcNoticeDone) return false;
+        // 净资产达到¥50,000
+        var nw = netWorthR171(st);
+        if (nw < 50000) return false;
+        // 至少认识2个NPC
+        if (metNpcsR171(st) < 2) return false;
+        return true;
+      },
+      choices: [
+        {
+          text: "🤝 谦虚回应，分享经验",
+          apply: function (st) {
+            if (st.flags) st.flags._wealthMilestoneNpcNoticeDone = true;
+            // 提升所有已结识NPC的好感
+            if (st.relationships) {
+              for (var id in st.relationships) {
+                if (!Object.prototype.hasOwnProperty.call(st.relationships, id)) continue;
+                if (st.relationships[id] && st.relationships[id].met) {
+                  safeAffinityR171(st, id, 2, "财富分享");
+                }
+              }
+            }
+            if (st.player) {
+              st.player.fame = Math.min(100, (st.player.fame || 0) + 2);
+              st.player.mental = Math.min(100, (st.player.mental || 50) + 2);
+            }
+            if (typeof StateManager !== "undefined" && StateManager.addMessage)
+              StateManager.addMessage(
+                "你谦虚地分享了自己的经验，朋友们对你刮目相看。人脉+2，名气+2，心智+2。",
+                "good"
+              );
+          },
+        },
+        {
+          text: "💼 低调处理，避免露富",
+          apply: function (st) {
+            if (st.flags) st.flags._wealthMilestoneNpcNoticeDone = true;
+            if (st.player) {
+              st.player.intelligence = Math.min(100, (st.player.intelligence || 50) + 2);
+            }
+            if (typeof StateManager !== "undefined" && StateManager.addMessage)
+              StateManager.addMessage(
+                "你笑了笑岔开话题，不想让人知道自己的底细。智力+2。",
+                "info"
+              );
+          },
+        },
+      ],
+      probability: 0.05,
+    },
+
+    // ===== 联动2: A→D 商贩人情·老顾客折扣 =====
+    // 设计意图：高频交易积累的商贩人脉在NPC关系中得到体现，
+    //   当玩家在某个市场交易次数足够多时，商贩NPC会主动提供折扣信息。
+    {
+      id: "trader_favor_discount",
+      title: "熟客的隐形福利",
+      desc: "你在一家老字号的摊位前停下，老板认出你是常客，悄悄告诉你：'今天进货价低，老顾客给你个内部价。'",
+      phase: "street",
+      triggers: { minDay: 45 },
+      conditions: function (st) {
+        if (!st || !st.player || !st.trade || !st.flags) return false;
+        if (st.flags._traderFavorDiscountDone) return false;
+        // 总交易次数达到一定门槛
+        var totalTrades = (st.trade.totalBuys || 0) + (st.trade.totalSells || 0);
+        if (totalTrades < 30) return false;
+        return true;
+      },
+      choices: [
+        {
+          text: "🛒 趁机多买点，囤货慢慢卖",
+          apply: function (st) {
+            if (st.flags) st.flags._traderFavorDiscountDone = true;
+            // 给一个小额现金奖励作为"折扣"
+            var discount = Random.int(200, 499);
+            st.resources.cash = (st.resources.cash || 0) + discount;
+            if (st.player) {
+              st.player.intelligence = Math.min(100, (st.player.intelligence || 50) + 2);
+            }
+            if (typeof StateManager !== "undefined" && StateManager.addMessage)
+              StateManager.addMessage(
+                "你趁机多进了一批货，老板给了内部价，省了约¥" + discount + "。",
+                "success"
+              );
+          },
+        },
+        {
+          text: "🤝 和老板多聊几句，拉近关系",
+          apply: function (st) {
+            if (st.flags) st.flags._traderFavorDiscountDone = true;
+            // 提升特定NPC好感（如果已结识）
+            var marketNpcs = ["aunt_wang", "old_zhou", "xiao_mei", "zhaojie"];
+            for (var ni = 0; ni < marketNpcs.length; ni++) {
+              if (st.relationships && st.relationships[marketNpcs[ni]] && st.relationships[marketNpcs[ni]].met) {
+                safeAffinityR171(st, marketNpcs[ni], 3, "市场人情");
+              }
+            }
+            if (st.player) {
+              st.player.fame = Math.min(100, (st.player.fame || 0) + 1);
+            }
+            if (typeof StateManager !== "undefined" && StateManager.addMessage)
+              StateManager.addMessage(
+                "你和老板聊了很久，了解到不少市场行情。几位老熟人的好感度提升了。",
+                "good"
+              );
+          },
+        },
+      ],
+      probability: 0.04,
+    },
+  ];
+
+  // 注册事件
+  for (var i = 0; i < A_EVENTS.length; i++) {
+    RANDOM_EVENTS.push(A_EVENTS[i]);
+  }
+
+  // 公开引用
+  if (typeof window !== "undefined") {
+    window._domainALinkageR171 = true;
+  }
+})();
+;
+// ==== js/data/corporate_npc_events.js ====
+/**
+ * 职场NPC深度互动事件 — D→H 联动
+ * [全系统自洽修复] 域H: conditions全部门控 state.corporate.active + NPC met/goodwill
+ */
+(function () {
+  "use strict";
+  if (typeof window === "undefined") return;
+
+  function npcMetCheck(st, npcId) {
+    var rel = st.relationships && st.relationships[npcId];
+    return rel && rel.met === true && (rel.affinity || 0) >= 30;
+  }
+
+  // 事件1: 李工头的技术顾问邀请
+  var li_guru_invite = {
+    id: "li_guru_invite",
+    title: "🔧 李工头的技术顾问",
+    phase: "corporate",
+    repeatable: true,
+    cooldownDays: 90,
+    priority: 70,
+    conditions: function (st) {
+      if (!st.corporate || !st.corporate.active) return false;
+      if (!npcMetCheck(st, "boss_li")) return false;
+      if (st.flags._liGuruInviteDone) return false;
+      return (st.skills.coding && st.skills.coding.level || 0) >= 35;
+    },
+    probability: 0.03,
+    story:
+      "李工头打电话来：「兄弟，听说你在大公司上班了？我们工地有几个设备要改造，你能不能周末来帮我看一下？」\n\n他说报酬不低，而且想正式聘你为技术顾问。",
+    choices: [
+      {
+        text: "✅ 周末去看看（赚钱但累）",
+        apply: function (st) {
+          if (st.resources) st.resources.cash = (st.resources.cash || 0) + 3000;
+          if (typeof addDailyTransaction === "function") addDailyTransaction(st, "income", "li_consulting", 3000, "周末技术咨询费（李工头）");
+          st.player.physique = Math.max(0, (st.player.physique || 10) - 2);
+          st.needs.fatigue = Math.min(100, (st.needs.fatigue || 50) + 10);
+          if (!st.relationships.boss_li) st.relationships.boss_li = { met: true, affinity: 0 };
+          st.relationships.boss_li.affinity = Math.min(100, (st.relationships.boss_li.affinity || 0) + 8);
+          st.flags._liGuruInviteDone = true;
+          StateManager.addMessage("🛠️ 周末帮李工头看工地，赚了¥3000，体力-2，疲劳+10。", "success");
+        },
+      },
+      {
+        text: "❌ 太忙了，下次吧",
+        apply: function (st) {
+          st.flags._liGuruInviteDone = true;
+          st.flags._liGuruInviteDeclined = true;
+          StateManager.addMessage("🚫 你以加班为由婉拒了李工头。", "info");
+        },
+      },
+    ],
+    icons: ["🔧", "💰"],
+  };
+
+  // 事件2: 小美的职业建议
+  var xiaomei_career_tip = {
+    id: "xiaomei_career_tip",
+    title: "💬 小美的职业建议",
+    phase: "corporate",
+    repeatable: true,
+    cooldownDays: 120,
+    priority: 60,
+    conditions: function (st) {
+      if (!st.corporate || !st.corporate.active) return false;
+      if (!npcMetCheck(st, "xiao_mei")) return false;
+      if (st.flags._xiaomeiCareerTipDone) return false;
+      return (st.player.day || 0) >= 120;
+    },
+    probability: 0.04,
+    story:
+      "小美约你喝咖啡：「你现在在大厂了吧？我刚认识几个同行朋友，听说现在AI和新能源方向最火。你要不要考虑转岗？」",
+    choices: [
+      {
+        text: "🤖 关注AI赛道（向上管理+KPI）",
+        apply: function (st) {
+          var c = st.player.corporate;
+          if (!c) return;
+          c.upwardMgmt = Math.min(100, (c.upwardMgmt || 0) + 5);
+          c.kpi = Math.min(150, (c.kpi || 0) + 5);
+          if (st.resources) st.resources.cash = (st.resources.cash || 0) + 500;
+          if (!st.relationships.xiao_mei) st.relationships.xiao_mei = { met: true, affinity: 0 };
+          st.relationships.xiao_mei.affinity = Math.min(100, (st.relationships.xiao_mei.affinity || 0) + 5);
+          st.flags._xiaomeiCareerTipDone = true;
+          StateManager.addMessage("💡 听取小美建议关注AI赛道，向上管理+5，KPI+5，交通费¥500。", "success");
+        },
+      },
+      {
+        text: "🌱 转向新能源（人缘+能力）",
+        apply: function (st) {
+          var c = st.player.corporate;
+          if (!c) return;
+          c.popularity = Math.min(100, (c.popularity || 0) + 5);
+          c.ability = Math.min(100, (c.ability || 0) + 3);
+          if (!st.relationships.xiao_mei) st.relationships.xiao_mei = { met: true, affinity: 0 };
+          st.relationships.xiao_mei.affinity = Math.min(100, (st.relationships.xiao_mei.affinity || 0) + 5);
+          st.flags._xiaomeiCareerTipDone = true;
+          StateManager.addMessage("🌱 转向新能源方向，人缘+5，能力+3。", "success");
+        },
+      },
+      {
+        text: "⏸️ 先稳住再说",
+        apply: function (st) {
+          if (!st.relationships.xiao_mei) st.relationships.xiao_mei = { met: true, affinity: 0 };
+          st.relationships.xiao_mei.affinity = Math.min(100, (st.relationships.xiao_mei.affinity || 0) + 5);
+          st.flags._xiaomeiCareerTipDone = true;
+          StateManager.addMessage("🤔 你决定先稳住当前方向，不急转岗。", "info");
+        },
+      },
+    ],
+    icons: ["☕", "💡"],
+  };
+
+  // 事件3: 赵姐的内部推荐
+  var zhaojie_jump_info = {
+    id: "zhaojie_jump_info",
+    title: "📋 赵姐的内部推荐",
+    phase: "corporate",
+    repeatable: true,
+    cooldownDays: 180,
+    priority: 75,
+    conditions: function (st) {
+      if (!st.corporate || !st.corporate.active) return false;
+      if (!npcMetCheck(st, "zhaojie")) return false;
+      if (st.flags._zhaojieJumpInfoDone) return false;
+      return (st.relationships.zhaojie && st.relationships.zhaojie.affinity || 0) >= 50;
+    },
+    probability: 0.035,
+    story:
+      "赵姐发来微信：「我们公司正在招高级工程师，五险一金齐全，年薪¥40W起，你要不要看看？」",
+    choices: [
+      {
+        text: "📝 好好准备（锁定内部推荐）",
+        apply: function (st) {
+          var c = st.player.corporate;
+          if (!c) return;
+          st.flags._zhaojieJumpPrepared = true;
+          c.upwardMgmt = Math.min(100, (c.upwardMgmt || 0) + 3);
+          st.relationships.zhaojie.affinity = Math.min(100, (st.relationships.zhaojie.affinity || 0) + 3);
+          st.flags._zhaojieJumpInfoDone = true;
+          StateManager.addMessage("📋 你开始准备跳槽材料，赵姐的推荐通道已锁定。向上管理+3。", "info");
+        },
+      },
+      {
+        text: "🙅 暂时不跳（礼貌拒绝）",
+        apply: function (st) {
+          st.flags._zhaojieJumpPassed = true;
+          st.relationships.zhaojie.affinity = Math.min(100, (st.relationships.zhaojie.affinity || 0) + 3);
+          st.flags._zhaojieJumpInfoDone = true;
+          StateManager.addMessage("🙅 你觉得目前还不想动，礼貌拒绝了赵姐的好意。", "info");
+        },
+      },
+    ],
+    icons: ["💬", "💼"],
+  };
+
+  // 事件4: 老周的旧部招聘
+  var oldzhou_hiring = {
+    id: "oldzhou_hiring",
+    title: "🏗️ 老周扩建队伍",
+    phase: "corporate",
+    repeatable: true,
+    cooldownDays: 180,
+    priority: 60,
+    conditions: function (st) {
+      if (!st.corporate || !st.corporate.active) return false;
+      if (!npcMetCheck(st, "old_zhou")) return false;
+      if (st.flags._oldzhouHiringDone) return false;
+      return (st.player.physique || 0) >= 40;
+    },
+    probability: 0.025,
+    story:
+      "老周在群里喊话：「兄弟，我承包了新的大项目，缺几个带班和质检的。你有大厂背景又懂体力活，来当我的工程主管怎么样？」",
+    choices: [
+      {
+        text: "👥 介绍工人给他（赚咨询费）",
+        apply: function (st) {
+          if (st.resources) st.resources.cash = (st.resources.cash || 0) + 2000;
+          if (typeof addDailyTransaction === "function") addDailyTransaction(st, "income", "oldzhou_referral", 2000, "工程外包咨询费");
+          if (!st.relationships.old_zhou) st.relationships.old_zhou = { met: true, affinity: 0 };
+          st.relationships.old_zhou.affinity = Math.min(100, (st.relationships.old_zhou.affinity || 0) + 5);
+          st.player.intelligence = Math.min(100, (st.player.intelligence || 10) + 2);
+          st.flags._oldzhouHiringDone = true;
+          StateManager.addMessage("🏗️ 给老周介绍2个靠谱工人，赚了¥2000，智力+2。", "success");
+        },
+      },
+      {
+        text: "👷 跟着老周跑工程（锻炼管理）",
+        apply: function (st) {
+          st.flags._oldzhouSelfManage = true;
+          st.player.charm = Math.min(100, (st.player.charm || 10) + 3);
+          st.flags._oldzhouHiringDone = true;
+          StateManager.addMessage("👷 你决定自己跟老周跑工程，锻炼了管理能力。魅力+3。", "success");
+        },
+      },
+      {
+        text: "🚫 专心大厂工作",
+        apply: function (st) {
+          st.flags._oldzhouHiringDone = true;
+          StateManager.addMessage("🤝 你感谢老周抬爱，但现在在大厂干得还不错。", "info");
+        },
+      },
+    ],
+    icons: ["🏗️", "💪"],
+  };
+
+  if (typeof RANDOM_EVENTS !== "undefined") {
+    RANDOM_EVENTS.push(li_guru_invite, xiaomei_career_tip, zhaojie_jump_info, oldzhou_hiring);
+  }
+})();
+
+;
+// ==== js/data/corporate_team_events.js ====
+/**
+ * 职场团队叙事事件 — H内部联动（team数据→事件叙事）
+ * [全系统自洽修复] 域H: team数组守卫 + rank门控
+ */
+(function () {
+  "use strict";
+  if (typeof window === "undefined") return;
+
+  /** 技术极客的神来之笔 */
+  var geek_brilliant_moment = {
+    id: "geek_brilliant_moment",
+    title: "🐛 极客修了一个没人搞定的Bug",
+    phase: "corporate",
+    repeatable: true,
+    cooldownDays: 60,
+    priority: 65,
+    conditions: function (st) {
+      if (!st.corporate || !st.corporate.active) return false;
+      var rankData = st.corporate.rank ? CORP_RANKS[st.corporate.rank] : null;
+      if (!rankData || !rankData.canManageTeam) return false;
+      if (!st.corporate.team || st.corporate.team.length === 0) return false;
+      return st.corporate.team.some(function (t) { return t.id === "geek_coder"; });
+    },
+    probability: 0.04,
+    getText: function (st) {
+      return "技术极客突然冲进你办公室：「老大！那个生产环境的老Bug我找到了！」\n\n他熬了两个通宵，修好了一个困扰团队半年的性能瓶颈。老板在群里点名表扬了你这个'技术骨干'。";
+    },
+    getStory: function () { return this.getText(); },
+    apply: function (st) {
+      var c = st.player.corporate;
+      if (!c) return;
+      c.kpi = Math.min(150, (c.kpi || 0) + 10);
+      c.ability = Math.min(100, (c.ability || 0) + 3);
+      if (st.resources) st.resources.cash = (st.resources.cash || 0) + 1000;
+      if (typeof addDailyTransaction === "function") addDailyTransaction(st, "income", "geek_bonus", 1000, "极客突破奖金");
+      StateManager.addMessage("🐛 技术极客神来之笔！KPI+10，能力+3，团队奖金¥1000。", "success");
+    },
+    icons: ["🐛", "💪"],
+  };
+
+  /** 房贷战神的崩溃边缘 */
+  var warrior_burnout_warning = {
+    id: "warrior_burnout_warning",
+    title: "😰 房贷战神倒下了",
+    phase: "corporate",
+    repeatable: false,
+    cooldownDays: 365,
+    priority: 70,
+    conditions: function (st) {
+      if (!st.corporate || !st.corporate.active) return false;
+      var rankData = st.corporate.rank ? CORP_RANKS[st.corporate.rank] : null;
+      if (!rankData || !rankData.canManageTeam) return false;
+      if (!st.corporate.team || st.corporate.team.length === 0) return false;
+      return st.corporate.team.some(function (t) { return t.id === "mortgage_warrior"; });
+    },
+    probability: 0.02,
+    getText: function (st) {
+      return "早上打卡时发现房贷战神没来。下午接到医院电话——他心脏病突发送急诊了。\n\n他背了180万房贷，孩子还在上幼儿园。他同事说他连续三个月每天只睡5小时。";
+    },
+    getStory: function () { return this.getText(); },
+    apply: function (st, choiceId) {
+      var c = st.player.corporate;
+      if (!c) return;
+      if (choiceId === "help") {
+        if (st.resources) st.resources.cash = (st.resources.cash || 0) - 5000;
+        if (typeof addDailyTransaction === "function") addDailyTransaction(st, "expense", "team_help", 5000, "团队成员紧急救助金");
+        c.dignity = Math.min(100, (c.dignity || 0) + 5);
+        c.popularity = Math.min(100, (c.popularity || 0) + 5);
+        st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 5);
+        StateManager.addMessage("💝 你自掏腰包资助了战友，尊严+5，人缘+5，心情+5。", "success");
+      } else if (choiceId === "report") {
+        c.risk = Math.min(100, (c.risk || 0) + 5);
+        c.dignity = Math.min(100, (c.dignity || 0) - 3);
+        StateManager.addMessage("📋 你向HR提交了事故报告，但心里不是滋味。风险+5，尊严-3。", "warning");
+      } else {
+        c.popularity = Math.max(0, (c.popularity || 0) - 5);
+        StateManager.addMessage("😶 你选择了沉默。人气-5。", "info");
+      }
+    },
+    choices: [
+      { id: "help", text: "💝 自掏腰包帮助（现金-¥5000，尊严+5）" },
+      { id: "report", text: "📋 按流程提交报告（风险+5）" },
+      { id: "silent", text: "😶 什么都没说（人气-5）" },
+    ],
+    icons: ["🏥", "💔"],
+  };
+
+  /** 应届生离职危机 */
+  var grad_quitting_crisis = {
+    id: "grad_quitting_crisis",
+    title: "📄 应届生递了辞职信",
+    phase: "corporate",
+    repeatable: true,
+    cooldownDays: 90,
+    priority: 60,
+    conditions: function (st) {
+      if (!st.corporate || !st.corporate.active) return false;
+      var rankData = st.corporate.rank ? CORP_RANKS[st.corporate.rank] : null;
+      if (!rankData || !rankData.canManageTeam) return false;
+      if (!st.corporate.team || st.corporate.team.length === 0) return false;
+      return st.corporate.team.some(function (t) { return t.id === "new_graduate"; });
+    },
+    probability: 0.05,
+    getText: function (st) {
+      return "应届生小刘把辞职信放在你桌上：「哥，我扛不住了。天天加班到凌晨，工资连房租都不够……我去考公了。」\n\n他刚来半年，是你亲手带的。";
+    },
+    getStory: function () { return this.getText(); },
+    apply: function (st, choiceId) {
+      var c = st.player.corporate;
+      if (!c) return;
+      if (choiceId === "retain") {
+        if ((c.ability || 0) >= 40 || (c.popularity || 0) >= 40) {
+          c.popularity = Math.min(100, (c.popularity || 0) + 3);
+          StateManager.addMessage("💬 你与小刘深谈，用愿景留住了他。人缘+3。", "success");
+        } else {
+          StateManager.addMessage("😔 你没能说服小刘，他走了。但你知道这不是你的错。", "info");
+        }
+      } else if (choiceId === "replace") {
+        if (st.resources) st.resources.cash = (st.resources.cash || 0) - 2000;
+        if (typeof addDailyTransaction === "function") addDailyTransaction(st, "expense", "recruit", 2000, "应届生替代招聘费");
+        StateManager.addMessage("🔄 你花了¥2000重新招了个人，疲惫感增加。", "info");
+      } else {
+        StateManager.addMessage("🤷 你叹了口气，让HR走流程。", "info");
+      }
+    },
+    choices: [
+      { id: "retain", text: "💬 试着挽留（需能力40+或人气40+）" },
+      { id: "replace", text: "🔄 换人（现金-¥2000）" },
+      { id: "let_go", text: "🤷 让他走吧" },
+    ],
+    icons: ["📄", "😢"],
+  };
+
+  if (typeof RANDOM_EVENTS !== "undefined") {
+    RANDOM_EVENTS.push(geek_brilliant_moment, warrior_burnout_warning, grad_quitting_crisis);
+  }
+})();
+
+;
+// ==== js/data/performance_legacy_events.js ====
+/**
+ * 绩效里程碑事件 — H→F/G 联动
+ * 基于 perfHistory 时间序列生成叙事回响
+ * [全系统自洽修复] 域H: perfHistory数组守卫+grade映射防御
+ */
+(function () {
+  "use strict";
+  if (typeof window === "undefined") return;
+
+  function analyzePerfTrend(st, n) {
+    var history = st.corporate?.perfHistory || [];
+    var recent = history.slice(-Math.min(n, history.length));
+    if (recent.length === 0) return { grades: [], score: 0, streakS: 0, streakC: 0, avg: 0 };
+    var grades = recent.map(function (r) { return r.grade || "C"; });
+    var scoreMap = { "S+": 5, S: 4, A: 3, B: 2, C: 1 };
+    var total = grades.reduce(function (sum, g) { return sum + (scoreMap[g] || 1); }, 0);
+    var avg = total / grades.length;
+    var streakS = 0, streakC = 0;
+    for (var i = grades.length - 1; i >= 0; i--) {
+      if (grades[i] === "S+" || grades[i] === "S") streakS++;
+      else break;
+    }
+    for (var j = grades.length - 1; j >= 0; j--) {
+      if (grades[j] === "C") streakC++;
+      else break;
+    }
+    return { grades: grades, score: avg, streakS: streakS, streakC: streakC, avg: avg };
+  }
+
+  // 事件1: S/S+连胜庆典
+  var perf_s_streak_celebration = {
+    id: "perf_s_streak_celebration",
+    title: "🎉 三连S绩效！",
+    phase: "corporate",
+    repeatable: false,
+    priority: 90,
+    conditions: function (st) {
+      if (!st.corporate || !st.corporate.active) return false;
+      if (st.flags._perfSStrikeDone) return false;
+      var trend = analyzePerfTrend(st, 4);
+      return trend.streakS >= 3;
+    },
+    probability: 1.0,
+    getText: function (st) {
+      return "连续三个季度S级绩效！人事部打电话来说老板要把你列入「高潜人才计划」。\n\n「你这个季度可以选：额外休假一周、或者¥20000现金激励、或者参加高管午餐会。」";
+    },
+    getStory: function () { return this.getText(); },
+    apply: function (st, choiceId) {
+      if (!st.flags._perfSStrikeDone) st.flags._perfSStrikeDone = true;
+      var c = st.player.corporate;
+      if (!c) return;
+      if (choiceId === "vacation") {
+        st.needs.fatigue = Math.max(0, (st.needs.fatigue || 50) - 20);
+        st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 10);
+        StateManager.addMessage("🏖️ 你选了休假，身心大爽！疲劳-20，心情+10。", "success");
+      } else if (choiceId === "cash") {
+        if (st.resources) st.resources.cash = (st.resources.cash || 0) + 20000;
+        if (typeof addDailyTransaction === "function") addDailyTransaction(st, "income", "perf_bonus", 20000, "S级绩效连续奖金");
+        StateManager.addMessage("💰 你选了¥20000现金激励！", "success");
+      } else if (choiceId === "lunch") {
+        c.upwardMgmt = Math.min(100, (c.upwardMgmt || 0) + 10);
+        c.popularity = Math.min(100, (c.popularity || 0) + 5);
+        StateManager.addMessage("🍽️ 高管午餐会上了！向上管理+10，人气+5。", "success");
+      }
+    },
+    choices: [
+      { id: "vacation", text: "🏖️ 休假一周（疲劳-20/心情+10）" },
+      { id: "cash", text: "💰 ¥20000现金奖励" },
+      { id: "lunch", text: "🍽️ 高管午餐会（向上+10/人缘+5）" },
+    ],
+    icons: ["🎉", "⭐"],
+  };
+
+  // 事件2: 绩效低谷反思
+  var perf_lowpoint_reflection = {
+    id: "perf_lowpoint_reflection",
+    title: "🌧️ 绩效滑铁卢",
+    phase: "corporate",
+    repeatable: false,
+    priority: 85,
+    conditions: function (st) {
+      if (!st.corporate || !st.corporate.active) return false;
+      if (st.flags._perfLowPointDone) return false;
+      var trend = analyzePerfTrend(st, 3);
+      return trend.streakC >= 2;
+    },
+    probability: 1.0,
+    getText: function (st) {
+      return "又一个季度C。你开始怀疑自己是不是选错了路。\n\n深夜下班的时候，你在天台上抽了根烟，看着远处城中村的方向——那些搬砖、跑外卖的日子，至少收入是看得见的。\n\n「你是想留在城市里拼，还是回去？」风很大，但你听见了自己的心跳。";
+    },
+    getStory: function () { return this.getText(); },
+    apply: function (st, choiceId) {
+      if (!st.flags._perfLowPointDone) st.flags._perfLowPointDone = true;
+      var c = st.player.corporate;
+      if (!c) return;
+      if (choiceId === "push_on") {
+        c.risk = Math.max(0, (c.risk || 0) - 5);
+        c.ability = Math.min(100, (c.ability || 0) + 5);
+        st.needs.fatigue = Math.min(100, (st.needs.fatigue || 50) + 10);
+        StateManager.addMessage("💪 你把烟掐了，决定再拼一次。能力提升+5，但疲劳+10。", "info");
+      } else if (choiceId === "rest") {
+        st.needs.fatigue = Math.max(0, (st.needs.fatigue || 50) - 15);
+        st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 5);
+        c.dignity = Math.min(100, (c.dignity || 0) + 3);
+        StateManager.addMessage("🧘 你决定给自己放几天假。疲劳-15，心情+5，尊严+3。", "info");
+      } else if (choiceId === "change_path") {
+        c.upwardMgmt = Math.min(100, (c.upwardMgmt || 0) + 5);
+        st.player.morality = Math.min(100, (st.player.morality || 50) + 3);
+        StateManager.addMessage("🔄 你决定换个方向。向上管理+5，道德感+3。", "info");
+      }
+    },
+    choices: [
+      { id: "push_on", text: "💪 继续拼（能力+5/疲劳+10）" },
+      { id: "rest", text: "🧘 休息调整（疲劳-15/心情+5）" },
+      { id: "change_path", text: "🔄 换方向（向上+5/道德+3）" },
+    ],
+    icons: ["🌧️", "💭"],
+  };
+
+  // 事件3: 绩效翻身仗
+  var perf_comeback_story = {
+    id: "perf_comeback_story",
+    title: "🔥 翻身仗",
+    phase: "corporate",
+    repeatable: true,
+    cooldownDays: 180,
+    priority: 80,
+    conditions: function (st) {
+      if (!st.corporate || !st.corporate.active) return false;
+      if (st.flags._perfComebackCooldown) return false;
+      var history = st.corporate.perfHistory || [];
+      if (history.length < 2) return false;
+      var last2 = history.slice(-2);
+      var prevGrade = (last2[0]?.grade || "").toUpperCase();
+      var currGrade = (last2[1]?.grade || "").toUpperCase();
+      if (prevGrade === "C" || prevGrade === "D") {
+        if (currGrade === "A" || currGrade === "S" || currGrade === "S+") {
+          return true;
+        }
+      }
+      return false;
+    },
+    probability: 0.5,
+    getText: function (st) {
+      return "你从上一个季度的C逆袭到了A！\n\n曾经看不起你的人现在对你刮目相看。李工头在朋友圈发了你绩效截图配文「牛啊兄弟」。小美说「我就知道你行的」。";
+    },
+    getStory: function () { return this.getText(); },
+    apply: function (st) {
+      st.flags._perfComebackCooldown = true;
+      var c = st.player.corporate;
+      if (!c) return;
+      c.dignity = Math.min(100, (c.dignity || 0) + 10);
+      c.popularity = Math.min(100, (c.popularity || 0) + 5);
+      st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 10);
+      StateManager.addMessage("🔥 你打了一场漂亮的翻身仗！尊严+10，人缘+5，心情+10。", "success");
+    },
+    icons: ["🔥", "💯"],
+  };
+
+  if (typeof RANDOM_EVENTS !== "undefined") {
+    RANDOM_EVENTS.push(perf_s_streak_celebration, perf_lowpoint_reflection, perf_comeback_story);
+  }
+})();
+
+;
 // ==== js/core/news_event_bridge.js ====
 /**
  * 新闻-事件桥接系统 — 让新闻影响事件触发、NPC态度和游戏机制
@@ -171171,6 +171873,526 @@ if (typeof window !== "undefined") {
 })();
 
 ;
+// ==== js/data/corporate_npc_events.js ====
+/**
+ * 职场NPC深度互动事件 — D→H 联动
+ * [全系统自洽修复] 域H: conditions全部门控 state.corporate.active + NPC met/goodwill
+ */
+(function () {
+  "use strict";
+  if (typeof window === "undefined") return;
+
+  function npcMetCheck(st, npcId) {
+    var rel = st.relationships && st.relationships[npcId];
+    return rel && rel.met === true && (rel.affinity || 0) >= 30;
+  }
+
+  // 事件1: 李工头的技术顾问邀请
+  var li_guru_invite = {
+    id: "li_guru_invite",
+    title: "🔧 李工头的技术顾问",
+    phase: "corporate",
+    repeatable: true,
+    cooldownDays: 90,
+    priority: 70,
+    conditions: function (st) {
+      if (!st.corporate || !st.corporate.active) return false;
+      if (!npcMetCheck(st, "boss_li")) return false;
+      if (st.flags._liGuruInviteDone) return false;
+      return (st.skills.coding && st.skills.coding.level || 0) >= 35;
+    },
+    probability: 0.03,
+    story:
+      "李工头打电话来：「兄弟，听说你在大公司上班了？我们工地有几个设备要改造，你能不能周末来帮我看一下？」\n\n他说报酬不低，而且想正式聘你为技术顾问。",
+    choices: [
+      {
+        text: "✅ 周末去看看（赚钱但累）",
+        apply: function (st) {
+          if (st.resources) st.resources.cash = (st.resources.cash || 0) + 3000;
+          if (typeof addDailyTransaction === "function") addDailyTransaction(st, "income", "li_consulting", 3000, "周末技术咨询费（李工头）");
+          st.player.physique = Math.max(0, (st.player.physique || 10) - 2);
+          st.needs.fatigue = Math.min(100, (st.needs.fatigue || 50) + 10);
+          if (!st.relationships.boss_li) st.relationships.boss_li = { met: true, affinity: 0 };
+          st.relationships.boss_li.affinity = Math.min(100, (st.relationships.boss_li.affinity || 0) + 8);
+          st.flags._liGuruInviteDone = true;
+          StateManager.addMessage("🛠️ 周末帮李工头看工地，赚了¥3000，体力-2，疲劳+10。", "success");
+        },
+      },
+      {
+        text: "❌ 太忙了，下次吧",
+        apply: function (st) {
+          st.flags._liGuruInviteDone = true;
+          st.flags._liGuruInviteDeclined = true;
+          StateManager.addMessage("🚫 你以加班为由婉拒了李工头。", "info");
+        },
+      },
+    ],
+    icons: ["🔧", "💰"],
+  };
+
+  // 事件2: 小美的职业建议
+  var xiaomei_career_tip = {
+    id: "xiaomei_career_tip",
+    title: "💬 小美的职业建议",
+    phase: "corporate",
+    repeatable: true,
+    cooldownDays: 120,
+    priority: 60,
+    conditions: function (st) {
+      if (!st.corporate || !st.corporate.active) return false;
+      if (!npcMetCheck(st, "xiao_mei")) return false;
+      if (st.flags._xiaomeiCareerTipDone) return false;
+      return (st.player.day || 0) >= 120;
+    },
+    probability: 0.04,
+    story:
+      "小美约你喝咖啡：「你现在在大厂了吧？我刚认识几个同行朋友，听说现在AI和新能源方向最火。你要不要考虑转岗？」",
+    choices: [
+      {
+        text: "🤖 关注AI赛道（向上管理+KPI）",
+        apply: function (st) {
+          var c = st.player.corporate;
+          if (!c) return;
+          c.upwardMgmt = Math.min(100, (c.upwardMgmt || 0) + 5);
+          c.kpi = Math.min(150, (c.kpi || 0) + 5);
+          if (st.resources) st.resources.cash = (st.resources.cash || 0) + 500;
+          if (!st.relationships.xiao_mei) st.relationships.xiao_mei = { met: true, affinity: 0 };
+          st.relationships.xiao_mei.affinity = Math.min(100, (st.relationships.xiao_mei.affinity || 0) + 5);
+          st.flags._xiaomeiCareerTipDone = true;
+          StateManager.addMessage("💡 听取小美建议关注AI赛道，向上管理+5，KPI+5，交通费¥500。", "success");
+        },
+      },
+      {
+        text: "🌱 转向新能源（人缘+能力）",
+        apply: function (st) {
+          var c = st.player.corporate;
+          if (!c) return;
+          c.popularity = Math.min(100, (c.popularity || 0) + 5);
+          c.ability = Math.min(100, (c.ability || 0) + 3);
+          if (!st.relationships.xiao_mei) st.relationships.xiao_mei = { met: true, affinity: 0 };
+          st.relationships.xiao_mei.affinity = Math.min(100, (st.relationships.xiao_mei.affinity || 0) + 5);
+          st.flags._xiaomeiCareerTipDone = true;
+          StateManager.addMessage("🌱 转向新能源方向，人缘+5，能力+3。", "success");
+        },
+      },
+      {
+        text: "⏸️ 先稳住再说",
+        apply: function (st) {
+          if (!st.relationships.xiao_mei) st.relationships.xiao_mei = { met: true, affinity: 0 };
+          st.relationships.xiao_mei.affinity = Math.min(100, (st.relationships.xiao_mei.affinity || 0) + 5);
+          st.flags._xiaomeiCareerTipDone = true;
+          StateManager.addMessage("🤔 你决定先稳住当前方向，不急转岗。", "info");
+        },
+      },
+    ],
+    icons: ["☕", "💡"],
+  };
+
+  // 事件3: 赵姐的内部推荐
+  var zhaojie_jump_info = {
+    id: "zhaojie_jump_info",
+    title: "📋 赵姐的内部推荐",
+    phase: "corporate",
+    repeatable: true,
+    cooldownDays: 180,
+    priority: 75,
+    conditions: function (st) {
+      if (!st.corporate || !st.corporate.active) return false;
+      if (!npcMetCheck(st, "zhaojie")) return false;
+      if (st.flags._zhaojieJumpInfoDone) return false;
+      return (st.relationships.zhaojie && st.relationships.zhaojie.affinity || 0) >= 50;
+    },
+    probability: 0.035,
+    story:
+      "赵姐发来微信：「我们公司正在招高级工程师，五险一金齐全，年薪¥40W起，你要不要看看？」",
+    choices: [
+      {
+        text: "📝 好好准备（锁定内部推荐）",
+        apply: function (st) {
+          var c = st.player.corporate;
+          if (!c) return;
+          st.flags._zhaojieJumpPrepared = true;
+          c.upwardMgmt = Math.min(100, (c.upwardMgmt || 0) + 3);
+          st.relationships.zhaojie.affinity = Math.min(100, (st.relationships.zhaojie.affinity || 0) + 3);
+          st.flags._zhaojieJumpInfoDone = true;
+          StateManager.addMessage("📋 你开始准备跳槽材料，赵姐的推荐通道已锁定。向上管理+3。", "info");
+        },
+      },
+      {
+        text: "🙅 暂时不跳（礼貌拒绝）",
+        apply: function (st) {
+          st.flags._zhaojieJumpPassed = true;
+          st.relationships.zhaojie.affinity = Math.min(100, (st.relationships.zhaojie.affinity || 0) + 3);
+          st.flags._zhaojieJumpInfoDone = true;
+          StateManager.addMessage("🙅 你觉得目前还不想动，礼貌拒绝了赵姐的好意。", "info");
+        },
+      },
+    ],
+    icons: ["💬", "💼"],
+  };
+
+  // 事件4: 老周的旧部招聘
+  var oldzhou_hiring = {
+    id: "oldzhou_hiring",
+    title: "🏗️ 老周扩建队伍",
+    phase: "corporate",
+    repeatable: true,
+    cooldownDays: 180,
+    priority: 60,
+    conditions: function (st) {
+      if (!st.corporate || !st.corporate.active) return false;
+      if (!npcMetCheck(st, "old_zhou")) return false;
+      if (st.flags._oldzhouHiringDone) return false;
+      return (st.player.physique || 0) >= 40;
+    },
+    probability: 0.025,
+    story:
+      "老周在群里喊话：「兄弟，我承包了新的大项目，缺几个带班和质检的。你有大厂背景又懂体力活，来当我的工程主管怎么样？」",
+    choices: [
+      {
+        text: "👥 介绍工人给他（赚咨询费）",
+        apply: function (st) {
+          if (st.resources) st.resources.cash = (st.resources.cash || 0) + 2000;
+          if (typeof addDailyTransaction === "function") addDailyTransaction(st, "income", "oldzhou_referral", 2000, "工程外包咨询费");
+          if (!st.relationships.old_zhou) st.relationships.old_zhou = { met: true, affinity: 0 };
+          st.relationships.old_zhou.affinity = Math.min(100, (st.relationships.old_zhou.affinity || 0) + 5);
+          st.player.intelligence = Math.min(100, (st.player.intelligence || 10) + 2);
+          st.flags._oldzhouHiringDone = true;
+          StateManager.addMessage("🏗️ 给老周介绍2个靠谱工人，赚了¥2000，智力+2。", "success");
+        },
+      },
+      {
+        text: "👷 跟着老周跑工程（锻炼管理）",
+        apply: function (st) {
+          st.flags._oldzhouSelfManage = true;
+          st.player.charm = Math.min(100, (st.player.charm || 10) + 3);
+          st.flags._oldzhouHiringDone = true;
+          StateManager.addMessage("👷 你决定自己跟老周跑工程，锻炼了管理能力。魅力+3。", "success");
+        },
+      },
+      {
+        text: "🚫 专心大厂工作",
+        apply: function (st) {
+          st.flags._oldzhouHiringDone = true;
+          StateManager.addMessage("🤝 你感谢老周抬爱，但现在在大厂干得还不错。", "info");
+        },
+      },
+    ],
+    icons: ["🏗️", "💪"],
+  };
+
+  if (typeof RANDOM_EVENTS !== "undefined") {
+    RANDOM_EVENTS.push(li_guru_invite, xiaomei_career_tip, zhaojie_jump_info, oldzhou_hiring);
+  }
+})();
+
+;
+// ==== js/data/corporate_team_events.js ====
+/**
+ * 职场团队叙事事件 — H内部联动（team数据→事件叙事）
+ * [全系统自洽修复] 域H: team数组守卫 + rank门控
+ */
+(function () {
+  "use strict";
+  if (typeof window === "undefined") return;
+
+  /** 技术极客的神来之笔 */
+  var geek_brilliant_moment = {
+    id: "geek_brilliant_moment",
+    title: "🐛 极客修了一个没人搞定的Bug",
+    phase: "corporate",
+    repeatable: true,
+    cooldownDays: 60,
+    priority: 65,
+    conditions: function (st) {
+      if (!st.corporate || !st.corporate.active) return false;
+      var rankData = st.corporate.rank ? CORP_RANKS[st.corporate.rank] : null;
+      if (!rankData || !rankData.canManageTeam) return false;
+      if (!st.corporate.team || st.corporate.team.length === 0) return false;
+      return st.corporate.team.some(function (t) { return t.id === "geek_coder"; });
+    },
+    probability: 0.04,
+    getText: function (st) {
+      return "技术极客突然冲进你办公室：「老大！那个生产环境的老Bug我找到了！」\n\n他熬了两个通宵，修好了一个困扰团队半年的性能瓶颈。老板在群里点名表扬了你这个'技术骨干'。";
+    },
+    getStory: function () { return this.getText(); },
+    apply: function (st) {
+      var c = st.player.corporate;
+      if (!c) return;
+      c.kpi = Math.min(150, (c.kpi || 0) + 10);
+      c.ability = Math.min(100, (c.ability || 0) + 3);
+      if (st.resources) st.resources.cash = (st.resources.cash || 0) + 1000;
+      if (typeof addDailyTransaction === "function") addDailyTransaction(st, "income", "geek_bonus", 1000, "极客突破奖金");
+      StateManager.addMessage("🐛 技术极客神来之笔！KPI+10，能力+3，团队奖金¥1000。", "success");
+    },
+    icons: ["🐛", "💪"],
+  };
+
+  /** 房贷战神的崩溃边缘 */
+  var warrior_burnout_warning = {
+    id: "warrior_burnout_warning",
+    title: "😰 房贷战神倒下了",
+    phase: "corporate",
+    repeatable: false,
+    cooldownDays: 365,
+    priority: 70,
+    conditions: function (st) {
+      if (!st.corporate || !st.corporate.active) return false;
+      var rankData = st.corporate.rank ? CORP_RANKS[st.corporate.rank] : null;
+      if (!rankData || !rankData.canManageTeam) return false;
+      if (!st.corporate.team || st.corporate.team.length === 0) return false;
+      return st.corporate.team.some(function (t) { return t.id === "mortgage_warrior"; });
+    },
+    probability: 0.02,
+    getText: function (st) {
+      return "早上打卡时发现房贷战神没来。下午接到医院电话——他心脏病突发送急诊了。\n\n他背了180万房贷，孩子还在上幼儿园。他同事说他连续三个月每天只睡5小时。";
+    },
+    getStory: function () { return this.getText(); },
+    apply: function (st, choiceId) {
+      var c = st.player.corporate;
+      if (!c) return;
+      if (choiceId === "help") {
+        if (st.resources) st.resources.cash = (st.resources.cash || 0) - 5000;
+        if (typeof addDailyTransaction === "function") addDailyTransaction(st, "expense", "team_help", 5000, "团队成员紧急救助金");
+        c.dignity = Math.min(100, (c.dignity || 0) + 5);
+        c.popularity = Math.min(100, (c.popularity || 0) + 5);
+        st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 5);
+        StateManager.addMessage("💝 你自掏腰包资助了战友，尊严+5，人缘+5，心情+5。", "success");
+      } else if (choiceId === "report") {
+        c.risk = Math.min(100, (c.risk || 0) + 5);
+        c.dignity = Math.min(100, (c.dignity || 0) - 3);
+        StateManager.addMessage("📋 你向HR提交了事故报告，但心里不是滋味。风险+5，尊严-3。", "warning");
+      } else {
+        c.popularity = Math.max(0, (c.popularity || 0) - 5);
+        StateManager.addMessage("😶 你选择了沉默。人气-5。", "info");
+      }
+    },
+    choices: [
+      { id: "help", text: "💝 自掏腰包帮助（现金-¥5000，尊严+5）" },
+      { id: "report", text: "📋 按流程提交报告（风险+5）" },
+      { id: "silent", text: "😶 什么都没说（人气-5）" },
+    ],
+    icons: ["🏥", "💔"],
+  };
+
+  /** 应届生离职危机 */
+  var grad_quitting_crisis = {
+    id: "grad_quitting_crisis",
+    title: "📄 应届生递了辞职信",
+    phase: "corporate",
+    repeatable: true,
+    cooldownDays: 90,
+    priority: 60,
+    conditions: function (st) {
+      if (!st.corporate || !st.corporate.active) return false;
+      var rankData = st.corporate.rank ? CORP_RANKS[st.corporate.rank] : null;
+      if (!rankData || !rankData.canManageTeam) return false;
+      if (!st.corporate.team || st.corporate.team.length === 0) return false;
+      return st.corporate.team.some(function (t) { return t.id === "new_graduate"; });
+    },
+    probability: 0.05,
+    getText: function (st) {
+      return "应届生小刘把辞职信放在你桌上：「哥，我扛不住了。天天加班到凌晨，工资连房租都不够……我去考公了。」\n\n他刚来半年，是你亲手带的。";
+    },
+    getStory: function () { return this.getText(); },
+    apply: function (st, choiceId) {
+      var c = st.player.corporate;
+      if (!c) return;
+      if (choiceId === "retain") {
+        if ((c.ability || 0) >= 40 || (c.popularity || 0) >= 40) {
+          c.popularity = Math.min(100, (c.popularity || 0) + 3);
+          StateManager.addMessage("💬 你与小刘深谈，用愿景留住了他。人缘+3。", "success");
+        } else {
+          StateManager.addMessage("😔 你没能说服小刘，他走了。但你知道这不是你的错。", "info");
+        }
+      } else if (choiceId === "replace") {
+        if (st.resources) st.resources.cash = (st.resources.cash || 0) - 2000;
+        if (typeof addDailyTransaction === "function") addDailyTransaction(st, "expense", "recruit", 2000, "应届生替代招聘费");
+        StateManager.addMessage("🔄 你花了¥2000重新招了个人，疲惫感增加。", "info");
+      } else {
+        StateManager.addMessage("🤷 你叹了口气，让HR走流程。", "info");
+      }
+    },
+    choices: [
+      { id: "retain", text: "💬 试着挽留（需能力40+或人气40+）" },
+      { id: "replace", text: "🔄 换人（现金-¥2000）" },
+      { id: "let_go", text: "🤷 让他走吧" },
+    ],
+    icons: ["📄", "😢"],
+  };
+
+  if (typeof RANDOM_EVENTS !== "undefined") {
+    RANDOM_EVENTS.push(geek_brilliant_moment, warrior_burnout_warning, grad_quitting_crisis);
+  }
+})();
+
+;
+// ==== js/data/performance_legacy_events.js ====
+/**
+ * 绩效里程碑事件 — H→F/G 联动
+ * 基于 perfHistory 时间序列生成叙事回响
+ * [全系统自洽修复] 域H: perfHistory数组守卫+grade映射防御
+ */
+(function () {
+  "use strict";
+  if (typeof window === "undefined") return;
+
+  function analyzePerfTrend(st, n) {
+    var history = st.corporate?.perfHistory || [];
+    var recent = history.slice(-Math.min(n, history.length));
+    if (recent.length === 0) return { grades: [], score: 0, streakS: 0, streakC: 0, avg: 0 };
+    var grades = recent.map(function (r) { return r.grade || "C"; });
+    var scoreMap = { "S+": 5, S: 4, A: 3, B: 2, C: 1 };
+    var total = grades.reduce(function (sum, g) { return sum + (scoreMap[g] || 1); }, 0);
+    var avg = total / grades.length;
+    var streakS = 0, streakC = 0;
+    for (var i = grades.length - 1; i >= 0; i--) {
+      if (grades[i] === "S+" || grades[i] === "S") streakS++;
+      else break;
+    }
+    for (var j = grades.length - 1; j >= 0; j--) {
+      if (grades[j] === "C") streakC++;
+      else break;
+    }
+    return { grades: grades, score: avg, streakS: streakS, streakC: streakC, avg: avg };
+  }
+
+  // 事件1: S/S+连胜庆典
+  var perf_s_streak_celebration = {
+    id: "perf_s_streak_celebration",
+    title: "🎉 三连S绩效！",
+    phase: "corporate",
+    repeatable: false,
+    priority: 90,
+    conditions: function (st) {
+      if (!st.corporate || !st.corporate.active) return false;
+      if (st.flags._perfSStrikeDone) return false;
+      var trend = analyzePerfTrend(st, 4);
+      return trend.streakS >= 3;
+    },
+    probability: 1.0,
+    getText: function (st) {
+      return "连续三个季度S级绩效！人事部打电话来说老板要把你列入「高潜人才计划」。\n\n「你这个季度可以选：额外休假一周、或者¥20000现金激励、或者参加高管午餐会。」";
+    },
+    getStory: function () { return this.getText(); },
+    apply: function (st, choiceId) {
+      if (!st.flags._perfSStrikeDone) st.flags._perfSStrikeDone = true;
+      var c = st.player.corporate;
+      if (!c) return;
+      if (choiceId === "vacation") {
+        st.needs.fatigue = Math.max(0, (st.needs.fatigue || 50) - 20);
+        st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 10);
+        StateManager.addMessage("🏖️ 你选了休假，身心大爽！疲劳-20，心情+10。", "success");
+      } else if (choiceId === "cash") {
+        if (st.resources) st.resources.cash = (st.resources.cash || 0) + 20000;
+        if (typeof addDailyTransaction === "function") addDailyTransaction(st, "income", "perf_bonus", 20000, "S级绩效连续奖金");
+        StateManager.addMessage("💰 你选了¥20000现金激励！", "success");
+      } else if (choiceId === "lunch") {
+        c.upwardMgmt = Math.min(100, (c.upwardMgmt || 0) + 10);
+        c.popularity = Math.min(100, (c.popularity || 0) + 5);
+        StateManager.addMessage("🍽️ 高管午餐会上了！向上管理+10，人气+5。", "success");
+      }
+    },
+    choices: [
+      { id: "vacation", text: "🏖️ 休假一周（疲劳-20/心情+10）" },
+      { id: "cash", text: "💰 ¥20000现金奖励" },
+      { id: "lunch", text: "🍽️ 高管午餐会（向上+10/人缘+5）" },
+    ],
+    icons: ["🎉", "⭐"],
+  };
+
+  // 事件2: 绩效低谷反思
+  var perf_lowpoint_reflection = {
+    id: "perf_lowpoint_reflection",
+    title: "🌧️ 绩效滑铁卢",
+    phase: "corporate",
+    repeatable: false,
+    priority: 85,
+    conditions: function (st) {
+      if (!st.corporate || !st.corporate.active) return false;
+      if (st.flags._perfLowPointDone) return false;
+      var trend = analyzePerfTrend(st, 3);
+      return trend.streakC >= 2;
+    },
+    probability: 1.0,
+    getText: function (st) {
+      return "又一个季度C。你开始怀疑自己是不是选错了路。\n\n深夜下班的时候，你在天台上抽了根烟，看着远处城中村的方向——那些搬砖、跑外卖的日子，至少收入是看得见的。\n\n「你是想留在城市里拼，还是回去？」风很大，但你听见了自己的心跳。";
+    },
+    getStory: function () { return this.getText(); },
+    apply: function (st, choiceId) {
+      if (!st.flags._perfLowPointDone) st.flags._perfLowPointDone = true;
+      var c = st.player.corporate;
+      if (!c) return;
+      if (choiceId === "push_on") {
+        c.risk = Math.max(0, (c.risk || 0) - 5);
+        c.ability = Math.min(100, (c.ability || 0) + 5);
+        st.needs.fatigue = Math.min(100, (st.needs.fatigue || 50) + 10);
+        StateManager.addMessage("💪 你把烟掐了，决定再拼一次。能力提升+5，但疲劳+10。", "info");
+      } else if (choiceId === "rest") {
+        st.needs.fatigue = Math.max(0, (st.needs.fatigue || 50) - 15);
+        st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 5);
+        c.dignity = Math.min(100, (c.dignity || 0) + 3);
+        StateManager.addMessage("🧘 你决定给自己放几天假。疲劳-15，心情+5，尊严+3。", "info");
+      } else if (choiceId === "change_path") {
+        c.upwardMgmt = Math.min(100, (c.upwardMgmt || 0) + 5);
+        st.player.morality = Math.min(100, (st.player.morality || 50) + 3);
+        StateManager.addMessage("🔄 你决定换个方向。向上管理+5，道德感+3。", "info");
+      }
+    },
+    choices: [
+      { id: "push_on", text: "💪 继续拼（能力+5/疲劳+10）" },
+      { id: "rest", text: "🧘 休息调整（疲劳-15/心情+5）" },
+      { id: "change_path", text: "🔄 换方向（向上+5/道德+3）" },
+    ],
+    icons: ["🌧️", "💭"],
+  };
+
+  // 事件3: 绩效翻身仗
+  var perf_comeback_story = {
+    id: "perf_comeback_story",
+    title: "🔥 翻身仗",
+    phase: "corporate",
+    repeatable: true,
+    cooldownDays: 180,
+    priority: 80,
+    conditions: function (st) {
+      if (!st.corporate || !st.corporate.active) return false;
+      if (st.flags._perfComebackCooldown) return false;
+      var history = st.corporate.perfHistory || [];
+      if (history.length < 2) return false;
+      var last2 = history.slice(-2);
+      var prevGrade = (last2[0]?.grade || "").toUpperCase();
+      var currGrade = (last2[1]?.grade || "").toUpperCase();
+      if (prevGrade === "C" || prevGrade === "D") {
+        if (currGrade === "A" || currGrade === "S" || currGrade === "S+") {
+          return true;
+        }
+      }
+      return false;
+    },
+    probability: 0.5,
+    getText: function (st) {
+      return "你从上一个季度的C逆袭到了A！\n\n曾经看不起你的人现在对你刮目相看。李工头在朋友圈发了你绩效截图配文「牛啊兄弟」。小美说「我就知道你行的」。";
+    },
+    getStory: function () { return this.getText(); },
+    apply: function (st) {
+      st.flags._perfComebackCooldown = true;
+      var c = st.player.corporate;
+      if (!c) return;
+      c.dignity = Math.min(100, (c.dignity || 0) + 10);
+      c.popularity = Math.min(100, (c.popularity || 0) + 5);
+      st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 10);
+      StateManager.addMessage("🔥 你打了一场漂亮的翻身仗！尊严+10，人缘+5，心情+10。", "success");
+    },
+    icons: ["🔥", "💯"],
+  };
+
+  if (typeof RANDOM_EVENTS !== "undefined") {
+    RANDOM_EVENTS.push(perf_s_streak_celebration, perf_lowpoint_reflection, perf_comeback_story);
+  }
+})();
+
+;
 // ==== js/data/crisis35_followups.js ====
 /**
  * v3.3 W1-T1: 35 岁分水岭三路径延伸事件链
@@ -178015,7 +179237,7 @@ var LOCATION_EXTRA_ACTIONS = [
     location: "techPark",
     apCost: 20,
     condition: function (st) {
-      return st.player.intel >= 60;
+      return st.player.intelligence >= 60;
     },
     payEstimate: "0~∞",
     effectEstimate: "25%工作机会, 40%小费¥50",
@@ -181288,6 +182510,22 @@ const DAILY_PIPELINE = [
         var result = EconomySystem.dailyEconomicSettlement(state);
         if (result && result.wealthTax > 0) {
           state.resources.cash = Math.max(0, (state.resources.cash || 0) - result.wealthTax);
+        }
+        // [全系统自洽修复] 域A R171 A→G 联动增强: 经济日报概要
+        if (result && typeof StateManager !== "undefined") {
+          var _ecoMsgs = [];
+          if (result.wealthTax > 500) {
+            _ecoMsgs.push("💰 今日财富税 ¥" + result.wealthTax.toLocaleString() + "（" + (result.activeTaxTier || "未达") + "档）");
+          }
+          if (result.loanRate && result.loanRate > 0.001) {
+            _ecoMsgs.push("🏦 当前贷款利率 " + (result.loanRate * 100).toFixed(2) + "%/日");
+          }
+          if (result.marketSaturationPenalty > 0) {
+            _ecoMsgs.push("📉 市场饱和度 " + result.marketSaturationPenalty.toFixed(0) + "%");
+          }
+          if (_ecoMsgs.length > 0 && _ecoMsgs[0]) {
+            StateManager.addMessage(_ecoMsgs.join(" · "), "info");
+          }
         }
       }
     },
@@ -188118,6 +189356,55 @@ function refreshStockMarket(state) {
 }
 
 ;
+// ==== js/phase2/corp_legacy_bonus.js ====
+/**
+ * Phase1街头经验 → Phase2入职定级加成（跨阶段继承）
+ * G→H 联动增强 | [全系统自洽修复] 域H 联动增强1
+ */
+function calculateStreetLegacyBonus(state) {
+  var p = state.player;
+  var s = state.skills;
+  var rel = state.relationships;
+  var legacy = {};
+
+  if (!state.resources || !state.needs) return legacy;
+
+  // 技能门槛→职级跳级
+  var skipRank = null;
+  if ((s.coding?.level || 0) >= 30 && (s.management?.level || 0) >= 10) {
+    skipRank = "P6";
+  } else if ((s.coding?.level || 0) >= 40) {
+    skipRank = "P6";
+  } else if ((s.sales?.level || 0) >= 40 && (p.fame || 0) >= 10) {
+    skipRank = "P6";
+  }
+  legacy.skipRank = skipRank;
+
+  // 街头工作经验→KPI起点加成
+  var streetDays = state.flags._totalStreetDays || (p.day || 0);
+  legacy.kpiBonus = Math.min(30, Math.floor(streetDays / 30));
+
+  // 人脉积累→向上管理加成
+  var metCount = 0;
+  if (rel) {
+    for (var key in rel) {
+      if (rel[key]?.met) metCount++;
+    }
+  }
+  legacy.upwardMgmtBonus = Math.min(20, metCount * 3);
+
+  // 副业收入证明商业嗅觉→能力起点加成
+  var totalEarned = state.resources.totalEarned || 0;
+  if (totalEarned >= 50000) {
+    legacy.abilityBonus = 15;
+  } else if (totalEarned >= 20000) {
+    legacy.abilityBonus = 8;
+  }
+
+  return legacy;
+}
+
+;
 // ==== js/phase2/corp_ops.js ====
 /**
  * 职场行动执行引擎
@@ -188589,15 +189876,36 @@ function enterCorporatePhase(companyId) {
     `🏢 入职 ${company.name}！从P5开始职场生涯。${company.culture}。`,
     "success",
   );
+  // [全系统自洽修复] 域H 联动增强1: Phase1→2跨阶段继承 — 街头经验兑换职级加成
+  if (typeof calculateStreetLegacyBonus === "function") {
+    var legacy = calculateStreetLegacyBonus(state);
+    if (legacy.skipRank) {
+      state.corporate.rank = legacy.skipRank;
+      p.corporate.rank = legacy.skipRank;
+      StateManager.addMessage("🏆 街头经验兑换职级跳升！凭借" + p.day + "天历练，直接从" + legacy.skipRank + "入职！", "success");
+    }
+    if (legacy.kpiBonus > 0) {
+      p.corporate.kpi = Math.min(150, (p.corporate.kpi || 0) + legacy.kpiBonus);
+      StateManager.addMessage("📈 街头实战积累的KPI起点+" + legacy.kpiBonus + "。", "info");
+    }
+    if (legacy.upwardMgmtBonus > 0) {
+      p.corporate.upwardMgmt = Math.min(100, (p.corporate.upwardMgmt || 0) + legacy.upwardMgmtBonus);
+      StateManager.addMessage("🤝 多年人脉积累的向上管理起点+" + legacy.upwardMgmtBonus + "。", "info");
+    }
+    if (legacy.abilityBonus > 0) {
+      p.corporate.ability = Math.min(100, (p.corporate.ability || 0) + legacy.abilityBonus);
+      StateManager.addMessage("💼 赚到¥" + totalEarned.toLocaleString() + "的商业嗅觉让你起步能力+" + legacy.abilityBonus + "。", "info");
+    }
+  }
   // [全系统自洽修复] 域H 联动增强: Phase1→2过渡叙事闭环
-  var streetDays = p.day;
-  var totalEarned = state.resources.totalEarned || 0;
+  var streetDays2 = p.day;
+  var totalEarned2 = state.resources.totalEarned || 0;
   StateManager.addMessage(
     "📜 从街头到写字楼，你用了" +
-      streetDays +
+      streetDays2 +
       "天。" +
-      (totalEarned > 0
-        ? "街头打拼攒下¥" + totalEarned.toLocaleString() + "。"
+      (totalEarned2 > 0
+        ? "街头打拼攒下¥" + totalEarned2.toLocaleString() + "。"
         : "") +
       "新的战场，准备好了。",
     "info",
@@ -208376,6 +209684,55 @@ function manageInventoryAction(state, inventoryType, action, amount) {
     StateManager.addMessage(result.reason, "warning");
   }
   return result;
+}
+
+;
+// ==== js/phase2/corp_legacy_bonus.js ====
+/**
+ * Phase1街头经验 → Phase2入职定级加成（跨阶段继承）
+ * G→H 联动增强 | [全系统自洽修复] 域H 联动增强1
+ */
+function calculateStreetLegacyBonus(state) {
+  var p = state.player;
+  var s = state.skills;
+  var rel = state.relationships;
+  var legacy = {};
+
+  if (!state.resources || !state.needs) return legacy;
+
+  // 技能门槛→职级跳级
+  var skipRank = null;
+  if ((s.coding?.level || 0) >= 30 && (s.management?.level || 0) >= 10) {
+    skipRank = "P6";
+  } else if ((s.coding?.level || 0) >= 40) {
+    skipRank = "P6";
+  } else if ((s.sales?.level || 0) >= 40 && (p.fame || 0) >= 10) {
+    skipRank = "P6";
+  }
+  legacy.skipRank = skipRank;
+
+  // 街头工作经验→KPI起点加成
+  var streetDays = state.flags._totalStreetDays || (p.day || 0);
+  legacy.kpiBonus = Math.min(30, Math.floor(streetDays / 30));
+
+  // 人脉积累→向上管理加成
+  var metCount = 0;
+  if (rel) {
+    for (var key in rel) {
+      if (rel[key]?.met) metCount++;
+    }
+  }
+  legacy.upwardMgmtBonus = Math.min(20, metCount * 3);
+
+  // 副业收入证明商业嗅觉→能力起点加成
+  var totalEarned = state.resources.totalEarned || 0;
+  if (totalEarned >= 50000) {
+    legacy.abilityBonus = 15;
+  } else if (totalEarned >= 20000) {
+    legacy.abilityBonus = 8;
+  }
+
+  return legacy;
 }
 
 ;
@@ -245274,6 +246631,18 @@ function checkJobRequirements(job, state) {
     return `销售技能不足 (需要${reqs.sales})`;
   if (reqs.english && s.english.level < reqs.english)
     return `英语技能不足 (需要${reqs.english})`;
+  if (reqs.coding && s.coding.level < reqs.coding)
+    return `编程技能不足 (需要${reqs.coding})`;
+  if (reqs.driving && s.driving.level < reqs.driving)
+    return `驾驶技能不足 (需要${reqs.driving})`;
+  if (reqs.management && s.management.level < reqs.management)
+    return `管理技能不足 (需要${reqs.management})`;
+  if (reqs.accounting && s.accounting.level < reqs.accounting)
+    return `会计技能不足 (需要${reqs.accounting})`;
+  if (reqs.electrician && s.electrician.level < reqs.electrician)
+    return `电工技能不足 (需要${reqs.electrician})`;
+  if (reqs.welding && s.welding.level < reqs.welding)
+    return `焊接技能不足 (需要${reqs.welding})`;
   if (job.requiredFlag && !state.flags[job.requiredFlag])
     return "尚未解锁（需要NPC好感度）";
   if (job.educationRequired && (p.education || 0) < job.educationRequired) {

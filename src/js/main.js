@@ -97,6 +97,18 @@ function checkJobRequirements(job, state) {
     return `销售技能不足 (需要${reqs.sales})`;
   if (reqs.english && s.english.level < reqs.english)
     return `英语技能不足 (需要${reqs.english})`;
+  if (reqs.coding && s.coding.level < reqs.coding)
+    return `编程技能不足 (需要${reqs.coding})`;
+  if (reqs.driving && s.driving.level < reqs.driving)
+    return `驾驶技能不足 (需要${reqs.driving})`;
+  if (reqs.management && s.management.level < reqs.management)
+    return `管理技能不足 (需要${reqs.management})`;
+  if (reqs.accounting && s.accounting.level < reqs.accounting)
+    return `会计技能不足 (需要${reqs.accounting})`;
+  if (reqs.electrician && s.electrician.level < reqs.electrician)
+    return `电工技能不足 (需要${reqs.electrician})`;
+  if (reqs.welding && s.welding.level < reqs.welding)
+    return `焊接技能不足 (需要${reqs.welding})`;
   if (job.requiredFlag && !state.flags[job.requiredFlag])
     return "尚未解锁（需要NPC好感度）";
   if (job.educationRequired && (p.education || 0) < job.educationRequired) {

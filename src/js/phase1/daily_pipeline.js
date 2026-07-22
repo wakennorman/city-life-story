@@ -590,6 +590,22 @@ const DAILY_PIPELINE = [
         if (result && result.wealthTax > 0) {
           state.resources.cash = Math.max(0, (state.resources.cash || 0) - result.wealthTax);
         }
+        // [全系统自洽修复] 域A R171 A→G 联动增强: 经济日报概要
+        if (result && typeof StateManager !== "undefined") {
+          var _ecoMsgs = [];
+          if (result.wealthTax > 500) {
+            _ecoMsgs.push("💰 今日财富税 ¥" + result.wealthTax.toLocaleString() + "（" + (result.activeTaxTier || "未达") + "档）");
+          }
+          if (result.loanRate && result.loanRate > 0.001) {
+            _ecoMsgs.push("🏦 当前贷款利率 " + (result.loanRate * 100).toFixed(2) + "%/日");
+          }
+          if (result.marketSaturationPenalty > 0) {
+            _ecoMsgs.push("📉 市场饱和度 " + result.marketSaturationPenalty.toFixed(0) + "%");
+          }
+          if (_ecoMsgs.length > 0 && _ecoMsgs[0]) {
+            StateManager.addMessage(_ecoMsgs.join(" · "), "info");
+          }
+        }
       }
     },
   },
