@@ -1049,6 +1049,8 @@ function renderCareerStartup(state, parent) {
 
 /** 职业路径子面板（上班族固定工作） */
 function renderCareerJobs(state, parent) {
+  // [全系统自洽修复] 域F A类#1: canPromote变量作用域泄漏——var声明在if块内，外部引用时若currentJob为null则ReferenceError
+  var canPromote = false;
   var p = state.player;
   var career = state.career || {};
   var currentJob = career.currentJob || null;

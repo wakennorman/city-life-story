@@ -98,9 +98,12 @@ function showModalImpl({ title, body, buttons = [] }) {
       if (shouldClose) {
         try {
           if (overlay.parentNode) {
-            // [全系统自洽修复] 域F A类修复: 按钮关闭时同步移除ESC监听器，防止内存泄漏
+            // [全系统自洽修复] 域F A类修复: 按钮关闭时同步移除ESC监听器+click listener，防止内存泄漏
             if (overlay._escHandler) {
               document.removeEventListener("keydown", overlay._escHandler);
+            }
+            if (overlay._clickHandler) {
+              overlay.removeEventListener("click", overlay._clickHandler);
             }
             overlay.parentNode.removeChild(overlay);
           }
@@ -116,7 +119,8 @@ function showModalImpl({ title, body, buttons = [] }) {
   overlay.appendChild(box);
   // 所有弹窗必须点击按钮关闭，不允许点击外部关闭
   // [全系统自洽修复] 域F 修复:点击遮罩时给抖动反馈，避免用户以为按钮死了
-  overlay.addEventListener("click", (e) => {
+  // [全系统自洽修复] 域F A类#2: overlay.click listener累积泄漏——每次showModal都addEventListener但不removeEventListener，频繁打开关闭会堆积handler；保存为overlay._clickHandler并在移除overlay时cleanup
+  var _overlayClickHandler = function (e) {
     if (e.target === overlay) {
       overlay.style.transition = "background 0.15s";
       overlay.style.background = "rgba(0,0,0,0.55)";
@@ -124,13 +128,19 @@ function showModalImpl({ title, body, buttons = [] }) {
         overlay.style.background = "";
       }, 200);
     }
-  });
+  };
+  overlay._clickHandler = _overlayClickHandler;
+  overlay.addEventListener("click", _overlayClickHandler);
   // [全系统自洽修复] 域F 修复:ESC键关闭弹窗，提升桌面端可用性
   // [全系统自洽修复] 域F A类修复: 保存handler引用以便按钮关闭时移除，防止内存泄漏
   var _modalEscHandler = function (e) {
     if (e.key === "Escape" && document.body.contains(overlay)) {
       try {
         if (overlay.parentNode) {
+          // [全系统自洽修复] 域F A类#2: ESC关闭时同步移除click listener
+          if (overlay._clickHandler) {
+            overlay.removeEventListener("click", overlay._clickHandler);
+          }
           overlay.parentNode.removeChild(overlay);
         }
       } catch (err) {
