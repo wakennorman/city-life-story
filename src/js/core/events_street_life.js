@@ -420,7 +420,7 @@
           hint: "赌反弹",
           apply: function (st) {
             st.flags._evUsedCarSeen = true;
-            st.resources.cash -= 30000;
+            st.resources.cash -= scaleAmount(30000, st.resources && st.resources.totalEarned);
             StateManager.addMessage(
               "💰 花¥30,000收了一台。陈哥说你胆子真大。",
               "event",
@@ -484,7 +484,7 @@
               return;
             }
             st.flags._nearExpirySeen = true;
-            st.resources.cash -= 5000;
+            st.resources.cash -= scaleAmount(5000, st.resources && st.resources.totalEarned);
             st.player.fame = Math.min(100, (st.player.fame || 0) + 3);
             StateManager.addMessage("🤝 成了临期食品专营户。", "event");
           },
@@ -550,9 +550,9 @@
           cost: 9999,
           apply: function (st) {
             st.flags._knowledgePaySeen = true;
-            st.resources.cash = Math.max(0, (st.resources.cash || 0) - 9999);
+            st.resources.cash = Math.max(0, (st.resources.cash || 0) - scaleAmount(9999, st.resources && st.resources.totalEarned));
             if (Random.chance(0.15)) {
-              st.resources.cash += 30000;
+              st.resources.cash += scaleAmount(30000, st.resources && st.resources.totalEarned);
               st.player.intelligence = Math.min(
                 100,
                 (st.player.intelligence || 10) + 5,
@@ -625,7 +625,7 @@
           apply: function (st) {
             st.flags._shoppingFestSeen = true;
             st.flags._shoppingFestDeal = "stock";
-            st.resources.cash -= 3000;
+            st.resources.cash -= scaleAmount(3000, st.resources && st.resources.totalEarned);
             st.flags._shoppingStockDay = st.player.day;
             StateManager.addMessage(
               "🎉 囤了一批货，等节后涨价卖。存货价值¥4200。",
@@ -679,7 +679,7 @@
             st.flags._p2pCrashSeen = true;
             if (st.resources.cash >= 5000) {
               st.flags._p2pInvested = true;
-              st.resources.cash -= 5000;
+              st.resources.cash -= scaleAmount(5000, st.resources && st.resources.totalEarned);
               st.flags._p2pDebtDay = st.player.day;
               StateManager.addMessage(
                 "💸 你用¥5000收了一张¥30000的债权。也许能要回来，也许打了水漂。",
@@ -964,7 +964,7 @@
           apply: function (st) {
             st.flags._demolitionSeen = true;
             if (st.resources.cash >= 50000) {
-              st.resources.cash -= 50000;
+              st.resources.cash -= scaleAmount(50000, st.resources && st.resources.totalEarned);
               st.flags._demolitionGambled = true;
               st.flags._demolitionDay = st.player.day;
               StateManager.addMessage(
@@ -1241,7 +1241,7 @@
           apply: function (st) {
             st.flags._schoolDistrictSeen = true;
             if (st.resources.cash >= 100000) {
-              st.resources.cash -= 100000;
+              st.resources.cash -= scaleAmount(100000, st.resources && st.resources.totalEarned);
               st.flags._schoolDistrictBought = true;
               st.flags._schoolDistrictDay = st.player.day;
               StateManager.addMessage(
@@ -1479,7 +1479,7 @@
           apply: function (st) {
             st.flags._retailVsWallSeen = true;
             if (st.resources.cash >= 5000) {
-              st.resources.cash -= 5000;
+              st.resources.cash -= scaleAmount(5000, st.resources && st.resources.totalEarned);
               st.flags._retailShortSide = true;
               st.flags._retailShortDay = st.player.day;
               StateManager.addMessage(
@@ -1526,7 +1526,7 @@
           apply: function (st) {
             st.flags._quantFundSeen = true;
             if (st.resources.cash >= 10000) {
-              st.resources.cash -= 10000;
+              st.resources.cash -= scaleAmount(10000, st.resources && st.resources.totalEarned);
               st.flags._quantFundBought = true;
               st.flags._quantFundDay = st.player.day;
               StateManager.addMessage(
@@ -1639,7 +1639,7 @@
           apply: function (st) {
             st.flags._exchangeRateSeen = true;
             if (st.resources.cash >= 5000) {
-              st.resources.cash -= 5000;
+              st.resources.cash -= scaleAmount(5000, st.resources && st.resources.totalEarned);
               st.flags._usdHeld = true;
               st.flags._usdHeldDay = st.player.day;
               StateManager.addMessage(
@@ -1703,7 +1703,7 @@
           apply: function (st) {
             st.flags._trustCrashSeen = true;
             if (st.resources.cash >= 5000) {
-              st.resources.cash -= 5000;
+              st.resources.cash -= scaleAmount(5000, st.resources && st.resources.totalEarned);
               st.flags._trustDebtBought = true;
               st.flags._trustDebtDay = st.player.day;
               StateManager.addMessage(
@@ -2419,7 +2419,7 @@
             if (luck < 0.15) {
               st.flags._shortVideoWentViral = true;
               st.player.fame = Math.min(100, (st.player.fame || 0) + 20);
-              st.resources.cash += 5000;
+              st.resources.cash += scaleAmount(5000, st.resources && st.resources.totalEarned);
               StateManager.addMessage(
                 "🎥 你拍的一条「城中村早餐摊」突然爆了！播放量200万！后台私信炸了。",
                 "event",
@@ -2622,10 +2622,10 @@
           apply: function (st) {
             st.flags._lastBatonSeen = true;
             if (st.resources.cash >= 5000) {
-              st.resources.cash -= 5000;
+              st.resources.cash -= scaleAmount(5000, st.resources && st.resources.totalEarned);
               var luck = Random.float(0, 1);
               if (luck < 0.25) {
-                st.resources.cash += 12000;
+                st.resources.cash += scaleAmount(12000, st.resources && st.resources.totalEarned);
                 StateManager.addMessage(
                   "生意火爆赚了¥12000！但满街模仿者让你不安。",
                   "event",
@@ -2699,10 +2699,10 @@
           apply: function (st) {
             st.flags._sunkCostSeen = true;
             if (st.resources.cash >= 100000) {
-              st.resources.cash -= 100000;
+              st.resources.cash -= scaleAmount(100000, st.resources && st.resources.totalEarned);
               var luck = Random.float(0, 1);
               if (luck < 0.45) {
-                st.resources.cash += 300000;
+                st.resources.cash += scaleAmount(300000, st.resources && st.resources.totalEarned);
                 StateManager.addMessage(
                   "赌对了！项目被收购，拿回¥30万。",
                   "event",
@@ -2738,7 +2738,7 @@
             st.flags._sunkCostSeen = true;
             if ((st.player.fame || 0) >= 30) {
               st.flags._sunkCostBailed = true;
-              st.resources.cash -= 5000;
+              st.resources.cash -= scaleAmount(5000, st.resources && st.resources.totalEarned);
               StateManager.addMessage(
                 "通过关系找到接盘侠。亏了¥5万中介费——比全亏好。",
                 "event",
@@ -2769,7 +2769,7 @@
           apply: function (st) {
             st.flags._grayToLegitSeen = true;
             if (st.resources.cash >= 20000) {
-              st.resources.cash -= 20000;
+              st.resources.cash -= scaleAmount(20000, st.resources && st.resources.totalEarned);
               st.flags._grayLegitBiz = true;
               st.player.fame = Math.min(100, (st.player.fame || 0) + 10);
               StateManager.addMessage(
@@ -2834,7 +2834,7 @@
           apply: function (st) {
             st.flags._classRollbackSeen = true;
             st.flags._rollbackBoughtHouse = true;
-            st.resources.cash -= 1500000;
+            st.resources.cash -= scaleAmount(1500000, st.resources && st.resources.totalEarned);
             if (st.housing) st.housing.tier = Math.max(st.housing.tier || 0, 5);
             StateManager.addMessage(
               "买了市中心两居室。月供¥5000——不叫财富自由，叫换种活法。",
@@ -2848,7 +2848,7 @@
           apply: function (st) {
             st.flags._classRollbackSeen = true;
             st.flags._rollbackSaved = true;
-            st.resources.cash -= 2000000;
+            st.resources.cash -= scaleAmount(2000000, st.resources && st.resources.totalEarned);
             st.flags._rollbackDay = st.player.day;
             StateManager.addMessage(
               "存了¥200万。月利息¥5800——比打工强，但越来越不值钱。",
@@ -2862,7 +2862,7 @@
           apply: function (st) {
             st.flags._classRollbackSeen = true;
             st.flags._rollbackStartedBiz = true;
-            st.resources.cash -= 500000;
+            st.resources.cash -= scaleAmount(500000, st.resources && st.resources.totalEarned);
             st.player.intelligence = Math.min(
               100,
               (st.player.intelligence || 10) + 10,
@@ -2879,7 +2879,7 @@
           apply: function (st) {
             st.flags._classRollbackSeen = true;
             st.flags._rollbackBurned = true;
-            st.resources.cash -= 50000;
+            st.resources.cash -= scaleAmount(50000, st.resources && st.resources.totalEarned);
             st.needs.happiness = Math.min(100, st.needs.happiness + 25);
             StateManager.addMessage(
               "租奔驰请全城喝了三天。卡里少了¥50000——最快乐72小时。",

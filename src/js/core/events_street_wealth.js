@@ -1240,7 +1240,7 @@
             st.flags._acquisitionTeaSeen = true;
             st.flags._acquiredTeaStore = st.player.day;
             st.flags._teaStoreCash = 80000;
-            st.resources.cash -= 80000;
+            st.resources.cash -= scaleAmount(80000, st.resources && st.resources.totalEarned);
             st.player.fame = Math.min(100, (st.player.fame || 0) + 4);
             st.player.mental = Math.min(100, st.player.mental + 3);
             StateManager.addMessage(
@@ -1310,7 +1310,7 @@
             st.flags._acquisitionStruggleSeen = true;
             st.flags._acquisitionFighting = true;
             st.flags._acquisitionFightDay = st.player.day;
-            st.resources.cash -= 15000;
+            st.resources.cash -= scaleAmount(15000, st.resources && st.resources.totalEarned);
             st.player.mental = Math.max(0, st.player.mental - 3);
             StateManager.addMessage(
               "🔥 砸¥15,000搞了波装修+网红打卡墙+小红书投放。现在就赌这20天能不能起来——心智-3，骰子已经掷下去了。",
@@ -2072,7 +2072,7 @@
           cost: 5000,
           apply: function (st) {
             st.flags._fateBoomSeen = true;
-            st.resources.cash -= 5000;
+            st.resources.cash -= scaleAmount(5000, st.resources && st.resources.totalEarned);
             st.flags._fateInsiderInvest =
               (st.flags._fateInsiderInvest || 0) + 5000;
             st.player.mental = Math.max(0, st.player.mental - 2);
@@ -2477,7 +2477,7 @@
           apply: function (st) {
             st.flags._reGambleSeen = true;
             st.flags._reBoughtHouse = st.player.day;
-            st.resources.cash -= 80000;
+            st.resources.cash -= scaleAmount(80000, st.resources && st.resources.totalEarned);
             st.player.fame = Math.min(100, (st.player.fame || 0) + 3);
             StateManager.addMessage(
               "🏠 花了¥80,000把老王的破房子买下来了。邻居们说你疯了，但你知道自己在赌什么。",
@@ -2519,7 +2519,7 @@
           apply: function (st) {
             st.flags._reDemolitionSeen = true;
             st.flags._reAccepted = true;
-            st.resources.cash += 120000;
+            st.resources.cash += scaleAmount(120000, st.resources && st.resources.totalEarned);
             st.resources.totalEarned += 120000;
             st.player.mental = Math.min(100, (st.player.mental || 20) + 3);
             st.player.intelligence = Math.min(
@@ -2589,7 +2589,7 @@
             st.flags._reSettleSeen = true;
             st.flags._reBoughtProperty = true;
             st.flags._rePropertyDay = st.player.day;
-            st.resources.cash -= 120000;
+            st.resources.cash -= scaleAmount(120000, st.resources && st.resources.totalEarned);
             st.resources.debt = (st.resources.debt || 0) + 120000;
             st.player.mental = Math.min(100, (st.player.mental || 20) + 5);
             StateManager.addMessage(
@@ -2605,7 +2605,7 @@
             st.flags._reSettleSeen = true;
             st.flags._reStartedBusiness = true;
             var bonus = Random.int(60000, 139999);
-            st.resources.cash -= 80000;
+            st.resources.cash -= scaleAmount(80000, st.resources && st.resources.totalEarned);
             st.resources.cash += bonus;
             st.resources.totalEarned += bonus;
             st.player.fame = Math.min(100, (st.player.fame || 0) + 4);
@@ -2651,7 +2651,7 @@
           apply: function (st) {
             st.flags._reCoalitionSeen = true;
             st.flags._reCoalitionAccepted = true;
-            st.resources.cash += 110000;
+            st.resources.cash += scaleAmount(110000, st.resources && st.resources.totalEarned);
             st.resources.totalEarned += 110000;
             st.player.mental = Math.max(0, (st.player.mental || 20) - 3);
             st.player.intelligence = Math.min(
@@ -2700,7 +2700,7 @@
           apply: function (st) {
             st.flags._reHoldoutEndSeen = true;
             st.flags._reFinalSettled = true;
-            st.resources.cash += 90000;
+            st.resources.cash += scaleAmount(90000, st.resources && st.resources.totalEarned);
             st.resources.totalEarned += 90000;
             st.player.mental = Math.max(0, (st.player.mental || 20) - 5);
             st.needs.happiness = Math.max(0, st.needs.happiness - 10);
@@ -2717,7 +2717,7 @@
           apply: function (st) {
             st.flags._reHoldoutEndSeen = true;
             st.flags._reLawyered = true;
-            st.resources.cash -= 15000;
+            st.resources.cash -= scaleAmount(15000, st.resources && st.resources.totalEarned);
             st.player.intelligence = Math.min(
               100,
               (st.player.intelligence || 10) + 3,
@@ -2761,7 +2761,7 @@
             st.flags._startupMeetSeen = true;
             st.flags._startupInvested = st.player.day;
             st.flags._startupAmount = 30000;
-            st.resources.cash -= 30000;
+            st.resources.cash -= scaleAmount(30000, st.resources && st.resources.totalEarned);
             st.player.mental = Math.min(100, (st.player.mental || 20) + 3);
             StateManager.addMessage(
               "💻 你给了一个陌生程序员¥30,000。他留着你的微信，说「两个月后见分晓」。",
@@ -2778,7 +2778,7 @@
             st.flags._startupMeetSeen = true;
             st.flags._startupInvested = st.player.day;
             st.flags._startupAmount = 10000;
-            st.resources.cash -= 10000;
+            st.resources.cash -= scaleAmount(10000, st.resources && st.resources.totalEarned);
             StateManager.addMessage(
               "💵 你给了¥10,000，占3%股份。小陈说「有总比没有好」。",
               "info",
@@ -2820,7 +2820,7 @@
           apply: function (st) {
             st.flags._startupProgressSeen = true;
             st.flags._startupBurning = true;
-            st.resources.cash -= 50000;
+            st.resources.cash -= scaleAmount(50000, st.resources && st.resources.totalEarned);
             StateManager.addMessage(
               "🔥 你把最后的积蓄砸了进去。小陈说「老板大气！」",
               "event",
@@ -3124,7 +3124,7 @@
           apply: function (st) {
             st.flags._eduRumorSeen = true;
             st.flags._eduShorted = true;
-            st.resources.cash += 5000;
+            st.resources.cash += scaleAmount(5000, st.resources && st.resources.totalEarned);
             StateManager.addMessage(
               "📉 你卖空了教育股。如果政策落地能赚更多。",
               "event",
@@ -3185,7 +3185,7 @@
           apply: function (st) {
             st.flags._eduCrashSeen = true;
             st.flags._eduBoughtAssets = true;
-            st.resources.cash -= 5000;
+            st.resources.cash -= scaleAmount(5000, st.resources && st.resources.totalEarned);
             StateManager.addMessage(
               "🏢 你花了¥5,000买了满满一车课桌椅和投影仪。",
               "event",
@@ -3252,7 +3252,7 @@
           apply: function (st) {
             st.flags._eduAftermathSeen = true;
             st.flags._eduStudyRoom = true;
-            st.resources.cash -= 20000;
+            st.resources.cash -= scaleAmount(20000, st.resources && st.resources.totalEarned);
             StateManager.addMessage(
               "📚 你在城中村开了「深夜自习室」——¥5/小时。第一周来了12个人。",
               "event",
@@ -3311,7 +3311,7 @@
           apply: function (st) {
             st.flags._evFrenzySeen = true;
             st.flags._evBoughtDip = true;
-            st.resources.cash -= 30000;
+            st.resources.cash -= scaleAmount(30000, st.resources && st.resources.totalEarned);
             StateManager.addMessage(
               "💰 你在跌停板加仓。朋友说你疯了。",
               "event",
@@ -3353,7 +3353,7 @@
           apply: function (st) {
             st.flags._evShakeoutSeen = true;
             st.flags._evSwitchedToLeader = true;
-            st.resources.cash -= 20000;
+            st.resources.cash -= scaleAmount(20000, st.resources && st.resources.totalEarned);
             StateManager.addMessage(
               "📊 卖掉杂牌加仓比丫迪。龙头就是龙头。",
               "event",
@@ -3367,7 +3367,7 @@
           apply: function (st) {
             st.flags._evShakeoutSeen = true;
             st.flags._evBoughtSmall = true;
-            st.resources.cash -= 15000;
+            st.resources.cash -= scaleAmount(15000, st.resources && st.resources.totalEarned);
             StateManager.addMessage(
               "💪 你找到一家现金流为正但被错杀的公司，投了¥15,000。",
               "event",
@@ -3463,7 +3463,7 @@
               StateManager.addMessage("💰 钱不够！", "warning");
               return;
             }
-            st.resources.cash -= 5000;
+            st.resources.cash -= scaleAmount(5000, st.resources && st.resources.totalEarned);
             st.flags._goldBought = true;
             st.flags._goldPrice = 5000;
             StateManager.addMessage(

@@ -1080,7 +1080,7 @@
           cost: 5000,
           apply: function (st) {
             if (st.resources.cash >= 5000) {
-              st.resources.cash -= 5000;
+              st.resources.cash -= scaleAmount(5000, st.resources && st.resources.totalEarned);
               if (Random.chance(0.3)) {
                 st.resources.cash = (st.resources.cash || 0) + Random.int(8000, 22999);
                 st.needs.happiness = Math.min(100, st.needs.happiness + 20);
@@ -1643,7 +1643,7 @@
           apply: function (st) {
             st.flags._founderBuybackSeen = true;
             st.flags._founderReclaimed = true;
-            st.resources.cash -= 300000;
+            st.resources.cash -= scaleAmount(300000, st.resources && st.resources.totalEarned);
             if (st.player && st.player.corporate) {
               st.player.corporate.dignity = Math.min(
                 100,
@@ -2289,7 +2289,7 @@
               });
             }
             // [自洽修复] 域H A类#4: 防 NaN 污染 cash
-            st.resources.cash = Math.max(0, (st.resources.cash || 0) - 500000);
+            st.resources.cash = Math.max(0, (st.resources.cash || 0) - scaleAmount(500000, st.resources && st.resources.totalEarned));
             StateManager.addMessage(
               "📈 你下单买了50万自己公司股票（100股）。手在抖——你知道这是违法的。",
               "warning",
@@ -2771,7 +2771,7 @@
           apply: function (st) {
             st.flags._shortSelfSeen = true;
             if (st.resources.cash >= 50000) {
-              st.resources.cash -= 50000;
+              st.resources.cash -= scaleAmount(50000, st.resources && st.resources.totalEarned);
               st.flags._shortedOwnCompany = true;
               st.flags._shortDay = st.player.day;
               if (typeof scheduleChainEvent === "function") {

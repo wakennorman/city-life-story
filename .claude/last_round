@@ -1,1 +1,1 @@
-fix: [Layer4] 时间线逻辑门控 L4-A 收尾 — events_street_life.js 22 处 gameOver 门控（street 全覆盖 125 / 累计 130）+ 文档/状态更新（8dc2e70）
+docs: [Layer4] 文档/状态更新 — L4-A 收尾 life.js 22 处（street 全覆盖 125 / 累计 130）round 166

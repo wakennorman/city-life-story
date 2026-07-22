@@ -108,7 +108,7 @@
             if (Random.chance(Math.max(0.1, Math.min(0.85, chance / 100)))) {
               st.flags._passedCivilService = true;
               st.player.fame = Math.min(100, (st.player.fame || 0) + 25);
-              st.resources.cash += 5000;
+              st.resources.cash += scaleAmount(5000, st.resources && st.resources.totalEarned);
               StateManager.addMessage(
                 "🎉 笔试通过！进入面试名单。亲戚朋友都打来祝贺电话，奖¥5000。",
                 "success",
@@ -225,7 +225,7 @@
               );
             } else {
               st.flags._careerSurvivedLayoff = false;
-              st.resources.cash += 8000;
+              st.resources.cash += scaleAmount(8000, st.resources && st.resources.totalEarned);
               StateManager.addMessage(
                 "💔 没人替你说话。HR 给了¥8000的 N+1 让你走人。",
                 "warning",
@@ -238,7 +238,7 @@
           apply: function (st) {
             st.flags.c35_career_layoff_list = true;
             st.flags._careerSurvivedLayoff = false;
-            st.resources.cash += 12000;
+            st.resources.cash += scaleAmount(12000, st.resources && st.resources.totalEarned);
             st.needs.happiness = Math.min(100, st.needs.happiness + 5);
             StateManager.addMessage(
               "📃 你签了 N+1.5 的协议，¥12000到账。回家路上忽然觉得轻松。",
