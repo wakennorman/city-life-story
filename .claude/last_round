@@ -1,1 +1,1 @@
-fix: [域C] R166 A类修复1项+3项B类 — currentJob.id→levelId 字段对齐
+fix: [Layer4] gameOver 字段一致性 — 根级 gameOver 真正写入，激活 130 处 L4-A 门控（f2326f22）+ 文档/状态更新
