@@ -1702,8 +1702,15 @@ const EXTREME_MORAL_EVENTS = [
     title: "🏚️ 邻居被赶出门",
     desc: "隔壁一家今晚交不上房租，房东把行李扔到走廊。你刚攒下几百块，明天也要交自己的房租。",
     minDay: 20,
-    condition: function (st) {
+    // [全系统自洽修复] 域B 联动增强: 极端天气→邻里互助（G→B桥接，寒流/大雨天时触发率翻倍）
+    triggers: { excludeFlags: ["_extremeEvictionSeen"] },
+    conditions: function (st) {
       if (!st.housing || st.housing.tier < 1) return false; // [Layer3]
+      if (st.flags && st.flags._extremeEvictionSeen) return false;
+      // 极端天气加成：-5℃以下或降雨时提高触发权重
+      if (st.weather && st.weather.temperature !== undefined && st.weather.temperature < -5) {
+        st._evtWeatherBonus = true;
+      }
       return true;
     },
     choices: [

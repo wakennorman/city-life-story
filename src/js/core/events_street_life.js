@@ -3273,6 +3273,262 @@
         },
       ],
     },
+
+    // ====== R164 联动增强1：极端天气·邻里互助（D→G + B） ======
+    // 填补"极端天气有叙事标签但无NPC互动事件"的空白区。
+    // 寒流/暴雨天时，同楼道的已结识NPC主动关心。
+    {
+      id: "cold_weather_neighbor_care",
+      phase: "street",
+      icon: "❄️",
+      title: "寒潮里的暖粥",
+      story:
+        "窗外风力到了7级，温度计显示零下二度。你缩在被窝里不敢出去——连呼吸都是白气。\n\n中午敲门声响了，是楼下的大爷。他拎着一袋热腾腾的小米粥：「小伙子，家里熬多了，给你端一碗来。这鬼天气别饿着肚子。」\n\n粥还烫手。你蹲在门口喝完，浑身暖和过来了。（⚡ 极端天气时更易触发）",
+      // [已审查] 含 OR 逻辑（任意极端天气触发），保留 conditions
+      conditions: function (st) {
+        var cold = st.weather && (typeof st.weather.temperature === "number" && st.weather.temperature <= 0);
+        var storm = st.weather && st.weather.current === "stormy";
+        if (!cold && !storm) return false;
+        // 需至少有一个已结识邻居
+        if (!st.relationships) return false;
+        for (var k in st.relationships) {
+          if (st.relationships[k] && st.relationships[k].met) return true;
+        }
+        return false;
+      },
+      probability: 0.03,
+      repeatable: false,
+      choices: [
+        {
+          text: "🙏 感激收下，邀请大爷进来坐坐",
+          hint: "心情+ 好感+ 建立连接",
+          apply: function (st) {
+            st.flags._coldNeighborSeen = true;
+            st.needs.hunger = Math.min(100, (st.needs.hunger || 50) + 15);
+            st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 10);
+            // 随机选一个已结识NPC加好感
+            var npcKeys = Object.keys(st.relationships).filter(function(k) { return st.relationships[k] && st.relationships[k].met; });
+            if (npcKeys.length > 0) {
+              var picked = npcKeys[Math.floor(Math.random() * npcKeys.length)];
+              if (typeof applyAffinityChange === "function") {
+                applyAffinityChange(st, picked, 5, "寒潮送粥");
+              } else if (st.relationships[picked]) {
+                st.relationships[picked].affinity = Math.min(100, (st.relationships[picked].affinity || 0) + 5);
+              }
+            }
+            StateManager.addMessage("❄️ 一碗小米粥下肚，整个人都活了。大爷说「以后有啥事吱声」——这座城市的温度，来自这些陌生人。心情+10。", "success");
+          },
+        },
+        {
+          text: "😊 谢谢，给他留了件厚毛衣",
+          hint: "道德+ 心情+ 有来有往",
+          apply: function (st) {
+            st.flags._coldNeighborSeen = true;
+            st.player.morality = Math.min(100, (st.player.morality || 50) + 5);
+            st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 8);
+            var npcKeys = Object.keys(st.relationships).filter(function(k) { return st.relationships[k] && st.relationships[k].met; });
+            if (npcKeys.length > 0) {
+              var picked = npcKeys[Math.floor(Math.random() * npcKeys.length)];
+              if (typeof applyAffinityChange === "function") {
+                applyAffinityChange(st, picked, 8, "互赠毛衣");
+              } else if (st.relationships[picked]) {
+                st.relationships[picked].affinity = Math.min(100, (st.relationships[picked].affinity || 0) + 8);
+              }
+            }
+            StateManager.addMessage("🧥 你翻出衣柜最厚的毛衣递给大爷，他说「这冬天有你这样的人，就不冷了」。心情+8，道德+5。人与人之间的善意是双向的。", "success");
+          },
+        },
+        {
+          text: "🚪 道谢但借口身体不适没多聊",
+          hint: "孤立感++ 心情-",
+          apply: function (st) {
+            st.flags._coldNeighborSeen = true;
+            st.needs.happiness = Math.max(0, (st.needs.happiness || 50) - 5);
+            StateManager.addMessage("🚪 你接过粥说了声谢谢就关上了门。粥很暖，但你意识到，拒绝这份温暖可能让自己更冷。", "warning");
+          },
+        },
+      ],
+    },
+
+    // ====== R164 联动增强2：病愈后的第一顿好饭（B→G） ======
+    // 填补"疾病治愈后零叙事回响"的最大空白区。
+    // 玩家从生病到恢复的过程中，第一次吃顿好的——感受健康的滋味。
+    {
+      id: "first_good_meal_after_sick",
+      phase: "street",
+      icon: "🍜",
+      title: "病愈后的第一顿饱饭",
+      story:
+        "大病初愈的第一天，胃里发出抗议——你饿坏了。\n\n街角煎饼摊大爷看你气色好转，加了两个蛋一个肠。「看你上次来都快不行了，好了就对了！人嘛，吃好饭才能好好过。」\n\n咬下去的瞬间，你觉得重新活过来了。",
+      triggers: {
+        minDay: 15,
+        excludeFlags: ["_firstGoodMealSeen"],
+        minStat: { health: 80 },
+      },
+      probability: 0.04,
+      repeatable: false,
+      // [已审查] 健康≥80 + 非开局(≥3天)即可能触发，体现病愈叙事（无疾病flag时fallback为纯健康恢复）
+      conditions: function (st) {
+        if (st.flags && st.flags._firstGoodMealSeen) return false;
+        if (!st.player || !st.player.day || st.player.day < 3) return false;
+        return !!(st.status && st.status.health >= 80);
+      },
+      choices: [
+        {
+          text: "🍽️ 去好点的餐馆庆祝重生",
+          hint: "花¥80，心情+ 心智+ 感恩",
+          cost: 80,
+          apply: function (st) {
+            st.flags._firstGoodMealSeen = true;
+            if (typeof st.resources.cash !== "number" || !isFinite(st.resources.cash)) st.resources.cash = 0;
+            st.resources.cash -= 80;
+            st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 15);
+            st.player.mental = Math.min(100, (st.player.mental || 0) + 5);
+            if (st.flags._daysSick) st.flags._daysSick = 0;
+            StateManager.addMessage("🍜 你吃了顿好的。看着窗外人来人往，突然觉得活着真好。有时候一个健康的身体，就是最大的财富。心情+15，心智+5。", "success");
+          },
+        },
+        {
+          text: "🥟 街边小吃犒劳自己",
+          hint: "花¥20，心情+",
+          cost: 20,
+          apply: function (st) {
+            st.flags._firstGoodMealSeen = true;
+            if (typeof st.resources.cash !== "number" || !isFinite(st.resources.cash)) st.resources.cash = 0;
+            st.resources.cash -= 20;
+            st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 10);
+            st.needs.hunger = Math.min(100, (st.needs.hunger || 50) + 30);
+            if (st.flags._daysSick) st.flags._daysSick = 0;
+            StateManager.addMessage("🥟 一碗热腾腾的云吞下肚，灵魂归位了。虽然不贵，但比什么山珍海味都香。心情+10。", "success");
+          },
+        },
+        {
+          text: "🍚 回家煮碗白米饭凑合",
+          hint: "免费，但缺仪式感",
+          apply: function (st) {
+            st.flags._firstGoodMealSeen = true;
+            st.needs.hunger = Math.min(100, (st.needs.hunger || 50) + 20);
+            st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 3);
+            if (st.flags._daysSick) st.flags._daysSick = 0;
+            StateManager.addMessage("🍚 白米饭配咸菜，吃饱了就行。健康回来了，但生活需要一点仪式感啊。心情+3。", "info");
+          },
+        },
+      ],
+    },
+
+    // ====== R164 联动增强3：换季支出·冬去春来（A→B 经济×事件） ======
+    // 季节交替时，玩家必须花钱买换季用品。体现"数据变化有叙事后果"。
+    {
+      id: "season_change_expense",
+      phase: "street",
+      icon: "🌤️",
+      title: "换季了",
+      story:
+        "季节换了。衣柜里的厚衣服该收起来，薄衣服又没几件。\n\n街上已经有穿短袖的人了。你低头看看自己——单薄的衬衫在风里打颤。「入春先入夏，夏衣得提前备。」隔壁大爷说得对。\n\n换季不只是换衣服，是换一笔开销。",
+      triggers: { excludeFlags: ["_seasonChangeSeen"] },
+      conditions: function (st) {
+        if (!st.weather || !st.weather.season) return false;
+        if (st.flags._seasonChangeSeen) return false;
+        return true;
+      },
+      probability: 0.05,
+      repeatable: false,
+      choices: [
+        {
+          text: "👕 去批发市场淘了几件（¥100-150）",
+          hint: "实惠但质量一般",
+          apply: function (st) {
+            st.flags._seasonChangeSeen = true;
+            if (typeof st.resources.cash !== "number" || !isFinite(st.resources.cash)) st.resources.cash = 0;
+            var cost = Random.int(100, 150);
+            var actualCost = Math.min(cost, st.resources.cash);
+            st.resources.cash -= actualCost;
+            st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 5);
+            StateManager.addMessage("👕 批发市场十元三件的T恤虽然薄了点，但好歹能换季。心里踏实了不少。心情+5。", "success");
+          },
+        },
+        {
+          text: "🛍️ 咬牙去商场买件质量好的",
+          hint: "¥200-300，质量耐久翻倍",
+          apply: function (st) {
+            st.flags._seasonChangeSeen = true;
+            if (typeof st.resources.cash !== "number" || !isFinite(st.resources.cash)) st.resources.cash = 0;
+            var cost = Random.int(200, 300);
+            var actualCost = Math.min(cost, st.resources.cash);
+            st.resources.cash -= actualCost;
+            st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 10);
+            st.needs.hygiene = Math.min(100, (st.needs.hygiene || 50) + 3);
+            StateManager.addMessage("🛍️ 商场里打折的衣服虽不如以前，但总比地摊强。穿得体面一点，心情都不一样了。心情+10。", "success");
+          },
+        },
+        {
+          text: "📦 先不买了，旧衣服还能穿",
+          hint: "省钱但卫生- 心情-",
+          apply: function (st) {
+            st.flags._seasonChangeSeen = true;
+            st.needs.happiness = Math.max(0, (st.needs.happiness || 50) - 5);
+            st.needs.hygiene = Math.max(0, (st.needs.hygiene || 50) - 5);
+            StateManager.addMessage("📦 翻来覆去还是那几件。换季就算了，等攒够了钱再说。卫生-5，心情-5。", "info");
+          },
+        },
+      ],
+    },
+
+    // ====== R164 联动增强4：生日的经济分岔（G→B 叙事层） ======
+    // 同一件事（过生日），在不同经济状况下有完全不同的叙事体验。
+    // 体现"经济状态→叙事选择"的桥接——这是本游戏最容易忽略的情绪锚点。
+    {
+      id: "birthday_economic_bifurcation",
+      phase: "street",
+      icon: "🎂",
+      title: "今天是我的生日",
+      story:
+        "手机弹出一条祝福——「生日快乐！愿新的一岁，所求皆如愿。」\n\n这个城市没人记得你的生日。但今天，你自己记得就够了。\n\n看着银行卡余额和兜里的零钱……也许可以对自己好一点？也可能，算了，省着点用吧。",
+      triggers: { minDay: 50 },
+      conditions: function (st) {
+        if (st.flags && st.flags._birthdaySeen) return false;
+        // [全系统自洽修复] 域B A类#5: 生日每365天触发（取day%365≈0表示周年纪念日），用近似值容差±1天
+        var mod = st.player.day % 365;
+        return mod >= 364 || mod <= 1;
+      },
+      probability: 0.06,
+      repeatable: false,
+      choices: [
+        {
+          text: "🎁 给自己买块小蛋糕",
+          hint: "花¥50，心情+ 仪式感",
+          cost: 50,
+          apply: function (st) {
+            st.flags._birthdaySeen = true;
+            if (typeof st.resources.cash !== "number" || !isFinite(st.resources.cash)) st.resources.cash = 0;
+            st.resources.cash -= 50;
+            st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 12);
+            st.needs.fatigue = Math.min(100, (st.needs.fatigue || 50) - 5);
+            StateManager.addMessage("🎂 一块小小的奶油蛋糕，加一根蜡烛。你许愿了——「希望明年这时候，一切都会更好。」心情+12。", "success");
+          },
+        },
+        {
+          text: "🍖 加个鸡腿犒劳自己",
+          hint: "免费，朴素但有仪式感",
+          apply: function (st) {
+            st.flags._birthdaySeen = true;
+            st.needs.hunger = Math.min(100, (st.needs.hunger || 50) + 10);
+            st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 5);
+            StateManager.addMessage("🍗 下班买了个卤鸡腿。一个人坐在路边吃完了。虽然简单，但今天的食物确实格外香。心情+5。", "info");
+          },
+        },
+        {
+          text: "😔 算了，早点睡",
+          hint: "省钱但孤独感+",
+          apply: function (st) {
+            st.flags._birthdaySeen = true;
+            st.needs.happiness = Math.max(0, (st.needs.happiness || 50) - 8);
+            st.player.mental = Math.max(0, (st.player.mental || 50) - 3);
+            StateManager.addMessage("😔 你没做任何庆祝。关了灯躺在床上，听着窗外的车声入睡。生日就像这个城市的霓虹——照亮所有人，除了自己。心情-8。", "warning");
+          },
+        },
+      ],
+    },
   ];
   for (var i = 0; i < EVENTS.length; i++) {
     // 防御性兜底：无 conditions 的事件默认放行（避免死代码），与 CAREER_EVENTS 一致
