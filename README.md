@@ -26,7 +26,7 @@
 │   ├── databus.js                             // 管控游戏状态
 │   ├── main.js                                // 游戏入口主函数
 │   └── render.js                              // 基础渲染信息
-├── .eslintrc.js                               // 代码规范
+├── .eslintrc.cjs                              // 代码规范
 ├── game.js                                    // 游戏逻辑主入口
 ├── game.json                                  // 游戏运行时配置
 ├── project.config.json                        // 项目配置
