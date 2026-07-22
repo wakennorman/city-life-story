@@ -607,6 +607,8 @@ const DAILY_PIPELINE = [
           }
         }
       }
+      // [全系统自洽修复] 域E A类#1: economy_v3_1_daily返回marketSaturationPenalty但未写回state._economySettlement，导致tickInvestmentDaily永远读不到
+      state._economySettlement = typeof result === "object" ? result : {};
     },
   },
 

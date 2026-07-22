@@ -1761,7 +1761,8 @@ function buyBtc(amount) {
     StateManager.addMessage("现金不足", "danger");
     return;
   }
-  state.resources.cash -= cost;
+  // [全系统自洽修复] 域E A类#2: buyBtc cash守卫修复
+  state.resources.cash = Math.max(0, (state.resources.cash || 0) - cost);
   // 追踪加权平均成本
   var oldTotal = (inv.btcAvgCost || 0) * (inv.btcHoldings || 0);
   var newTotal = oldTotal + cost;

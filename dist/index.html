@@ -175085,7 +175085,8 @@ function sellGood(goodId, qty) {
     Math.round(price * qty * (1 + premium) * (1 - TAX) * 100) / 100;
 
   // 加钱
-  state.resources.cash += totalEarned;
+  // [全系统自洽修复] 域E A类#6: sellGood 收入NaN防护
+  state.resources.cash = (state.resources.cash || 0) + totalEarned;
   state.resources.totalEarned += totalEarned;
   addDailyTransaction(
     state,
@@ -175210,7 +175211,8 @@ function buyWholesale(goodId, qty) {
   }
 
   // 检查现金
-  if (state.resources.cash < totalCost) {
+  // [全系统自洽修复] 域E A类#4: buyWholesale cash检查防护NaN/undefined
+  if ((Number(state.resources.cash) || 0) < totalCost) {
     StateManager.addMessage(
       `⚠️ 钱不够！需要 ¥${totalCost.toFixed(1)}。`,
       "danger",
@@ -175231,8 +175233,8 @@ function buyWholesale(goodId, qty) {
     return false;
   }
 
-  // 扣钱
-  state.resources.cash -= totalCost;
+  // [全系统自洽修复] 域E A类#5: buyWholesale 扣款NaN防护
+  state.resources.cash = Math.round((state.resources.cash || 0) - totalCost);
 
   // 记录买入价（用于后续利润计算）
   const existing = state.inventory.items.find((i) => i.id === goodId);
@@ -184189,6 +184191,8 @@ const DAILY_PIPELINE = [
           }
         }
       }
+      // [全系统自洽修复] 域E A类#1: economy_v3_1_daily返回marketSaturationPenalty但未写回state._economySettlement，导致tickInvestmentDaily永远读不到
+      state._economySettlement = typeof result === "object" ? result : {};
     },
   },
 
@@ -193279,7 +193283,8 @@ function buyBtc(amount) {
     StateManager.addMessage("现金不足", "danger");
     return;
   }
-  state.resources.cash -= cost;
+  // [全系统自洽修复] 域E A类#2: buyBtc cash守卫修复
+  state.resources.cash = Math.max(0, (state.resources.cash || 0) - cost);
   // 追踪加权平均成本
   var oldTotal = (inv.btcAvgCost || 0) * (inv.btcHoldings || 0);
   var newTotal = oldTotal + cost;
@@ -199125,7 +199130,8 @@ function registerStartup(state, name, industry, description) {
   }
 
   // 扣减启动资金
-  state.resources.cash -= minCash;
+  // [全系统自洽修复] 域E A类#7: registerStartup cash守卫
+  state.resources.cash = Math.max(0, (state.resources.cash || 0) - minCash);
   if (typeof addDailyTransaction === "function") {
     addDailyTransaction(state, "expense", "misc", minCash, "注册公司启动资金");
   }
@@ -199552,7 +199558,8 @@ function developProduct(state, productId, effort) {
 
   // 消耗公司现金（研发成本）
   const devCost = 1000 * effort;
-  company.cashReserve = Math.max(0, company.cashReserve - devCost);
+  // [全系统自洽修复] 域E A类#8: developProduct cashReserve NaN防护
+  company.cashReserve = Math.max(0, (company.cashReserve || 0) - devCost);
   company.expenses += devCost;
 
   // P0-3: 高强度开发积累技术债（effort=3 时）

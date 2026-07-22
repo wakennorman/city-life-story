@@ -184,7 +184,8 @@ function sellGood(goodId, qty) {
     Math.round(price * qty * (1 + premium) * (1 - TAX) * 100) / 100;
 
   // 加钱
-  state.resources.cash += totalEarned;
+  // [全系统自洽修复] 域E A类#6: sellGood 收入NaN防护
+  state.resources.cash = (state.resources.cash || 0) + totalEarned;
   state.resources.totalEarned += totalEarned;
   addDailyTransaction(
     state,
@@ -309,7 +310,8 @@ function buyWholesale(goodId, qty) {
   }
 
   // 检查现金
-  if (state.resources.cash < totalCost) {
+  // [全系统自洽修复] 域E A类#4: buyWholesale cash检查防护NaN/undefined
+  if ((Number(state.resources.cash) || 0) < totalCost) {
     StateManager.addMessage(
       `⚠️ 钱不够！需要 ¥${totalCost.toFixed(1)}。`,
       "danger",
@@ -330,8 +332,8 @@ function buyWholesale(goodId, qty) {
     return false;
   }
 
-  // 扣钱
-  state.resources.cash -= totalCost;
+  // [全系统自洽修复] 域E A类#5: buyWholesale 扣款NaN防护
+  state.resources.cash = Math.round((state.resources.cash || 0) - totalCost);
 
   // 记录买入价（用于后续利润计算）
   const existing = state.inventory.items.find((i) => i.id === goodId);

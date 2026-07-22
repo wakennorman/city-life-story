@@ -524,7 +524,8 @@ function registerStartup(state, name, industry, description) {
   }
 
   // 扣减启动资金
-  state.resources.cash -= minCash;
+  // [全系统自洽修复] 域E A类#7: registerStartup cash守卫
+  state.resources.cash = Math.max(0, (state.resources.cash || 0) - minCash);
   if (typeof addDailyTransaction === "function") {
     addDailyTransaction(state, "expense", "misc", minCash, "注册公司启动资金");
   }
@@ -951,7 +952,8 @@ function developProduct(state, productId, effort) {
 
   // 消耗公司现金（研发成本）
   const devCost = 1000 * effort;
-  company.cashReserve = Math.max(0, company.cashReserve - devCost);
+  // [全系统自洽修复] 域E A类#8: developProduct cashReserve NaN防护
+  company.cashReserve = Math.max(0, (company.cashReserve || 0) - devCost);
   company.expenses += devCost;
 
   // P0-3: 高强度开发积累技术债（effort=3 时）
