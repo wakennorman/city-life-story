@@ -92534,6 +92534,113 @@ if (typeof window !== "undefined") {
     ],
     probability: 0.05,
   });
+
+  // ================================================================
+  // R165 — C→F 技能连携职业总览可视化（C→F）
+  // ================================================================
+  // 填补"技能连携有数据但UI无展示"的空白区——让玩家在事业Tab看到自己的连携加成。
+  // 设计意图：连携效果不应只是后台数据，需要在前台可视化呈现。
+  // 参考：BitLife连携提示 / Civilization政策连线
+  RANDOM_EVENTS.push({
+    id: "career_skill_synergy_visual_hint",
+    phase: "street",
+    icon: "🔗",
+    title: "技能连携的火花",
+    story:
+      "今天你在整理技能树时突然意识到：编程40+英语35=能接英文外包单；烹饪50+销售30=摆摊收入 boosted。\n\n你的技能组合正在形成一种'连携'——不是单一技能多强，而是多种技能交叉产生的化学反应。去事业Tab看看你的技能加成吧！",
+    triggers: { minDay: 20 },
+    conditions: function (st) {
+      if (!st.skills) return false;
+      var skillCount = Object.keys(st.skills).filter(function(k) {
+        return (st.skills[k] && typeof st.skills[k] === "object") ?
+          (st.skills[k].level || 0) >= 20 :
+          (st.skills[k] || 0) >= 20;
+      }).length;
+      return skillCount >= 2;
+    },
+    probability: 0.06,
+    repeatable: false,
+    choices: [
+      {
+        text: "💡 我去事业Tab看看我的连携加成",
+        hint: "引导探索",
+        apply: function (st) {
+          st.flags._skillSynergyHintShown = true;
+          if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 2);
+          if (typeof StateManager !== "undefined" && StateManager.addMessage)
+            StateManager.addMessage("🔗 你开始关注自己的技能组合了。事业Tab里，系统会自动计算所有连携加成。心智+2。", "success");
+        },
+      },
+      {
+        text: "🤷 有空再说",
+        hint: "暂时忽略",
+        apply: function (st) {
+          st.flags._skillSynergyHintShown = true;
+          if (typeof StateManager !== "undefined" && StateManager.addMessage)
+            StateManager.addMessage("🤷 你可能觉得以后再看。但技能连携的加成是实实在在的。", "info");
+        },
+      },
+    ],
+  });
+
+  // ================================================================
+  // R165 — C→B 技能成长停滞预警（C→B）
+  // ================================================================
+  // 填补"成长系统只有正向反馈没有负向预警"的最大空白区。
+  // 连续30天不提升任何技能 → 触发焦虑叙事事件。
+  // 参考：This War of Mine的绝望感 / Papers Please的倦怠设计
+  RANDOM_EVENTS.push({
+    id: "career_stagnation_warning",
+    phase: "street",
+    icon: "⚠️",
+    title: "你是不是停下来了？",
+    story:
+      "翻开昨天的日历——你已经整整30天没有提升任何技能了。\n\n工作、吃饭、睡觉……循环往复。你想起刚进城时的雄心壮志，如今只剩日复一日的平庸。\n\n隔壁大爷说：「小伙子，人不学不知道，越混越潦草。」\n\n是时候改变一下了。",
+    triggers: { excludeFlags: ["_careerStagnationSeen"] },
+    conditions: function (st) {
+      if (!st.stats || !st.stats.actionFreq) return false;
+      if (st.flags && st.flags._careerStagnationSeen) return false;
+      // 过去30天内无任何技能XP获得
+      var trainDays = st.stats.actionFreq["train_attributes"] || 0;
+      var streetDays = st.stats.actionFreq["street_work_carry"] || 0;
+      // 纯体力劳动且无任何训练→触发
+      return streetDays > 10 && trainDays < 3 && st.player.day >= 35;
+    },
+    probability: 0.04,
+    repeatable: false,
+    choices: [
+      {
+        text: "📚 明天去培训中心学一门课",
+        hint: "投资自己，短期亏钱长期赚",
+        apply: function (st) {
+          st.flags._careerStagnationSeen = true;
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 5);
+          if (typeof StateManager !== "undefined" && StateManager.addMessage)
+            StateManager.addMessage("📚 你决定报名一个培训课程。虽然要花几百块，但你终于想明白了一件事——唯一不会贬值的就是自己。心情+5。", "success");
+        },
+      },
+      {
+        text: "🔄 换份更有挑战性的工作",
+        hint: "换个环境重新开始",
+        apply: function (st) {
+          st.flags._careerStagnationSeen = true;
+          st.player.mental = Math.max(0, (st.player.mental || 50) - 3);
+          if (typeof StateManager !== "undefined" && StateManager.addMessage)
+            StateManager.addMessage("🔄 你开始看新工作的招聘信息。有时换环境比硬撑更聪明。但做决定的这三天，你什么都没做。", "info");
+        },
+      },
+      {
+        text: "😤 继续干，日子总要过",
+        hint: "拖延改变",
+        apply: function (st) {
+          st.flags._careerStagnationSeen = true;
+          st.needs.happiness = Math.max(0, (st.needs.happiness || 50) - 8);
+          if (typeof StateManager !== "undefined" && StateManager.addMessage)
+            StateManager.addMessage("😤 你选择了继续。但夜深人静时，那种不安感越来越强烈。有些变化如果不主动发生，就会变成危机。心情-8。", "warning");
+        },
+      },
+    ],
+  });
 })();
 
 ;
@@ -144867,7 +144974,7 @@ const SKILL_SYNERGY_DUAL = {
     desc: "会做饭又会修东西，在家就能解决大部分问题，省钱又幸福。",
   },
 
-  // 英语 + 管理 = 外企晋升
+  // [全系统自洽修复] 域C A类#1: 清理空 unlockJobs — 外企加成通过career_dev salaryBonus消费，无需残留id
   english_management: {
     id: "english_management",
     name: "外企晋升",
@@ -144881,15 +144988,13 @@ const SKILL_SYNERGY_DUAL = {
       abilityFlatBonus: 15,
       // 向上管理+20
       upwardMgmtBonus: 20,
-      // 解锁外企管理岗位
-      unlockJobs: ["foreign_company_staff"],
       // 晋升速度+25%
       promoSpeedBonus: 0.25,
     },
     desc: "英语好又会管理，在外企如鱼得水，晋升飞快。",
   },
 
-  // 会计 + 投资 = 财务自由
+  // [全系统自洽修复] 域C A类#1: 清理空 unlockJobs — 投资加成已在investment消费，无需残留id
   accounting_investment: {
     id: "accounting_investment",
     name: "财务自由",
@@ -144903,8 +145008,6 @@ const SKILL_SYNERGY_DUAL = {
       investmentIncomeBonus: 0.3,
       // 股票交易手续费-50%
       tradingFeeReduction: 0.5,
-      // [全系统自洽修复] 域C 深度开发: 实装连携解锁工作
-      unlockJobs: ["finance_analyst"],
       // 每日被动收入+¥50（来自投资）
       passiveInvestmentIncome: 50,
     },
@@ -144914,7 +145017,7 @@ const SKILL_SYNERGY_DUAL = {
 
 // 三技能连携（3门技能达到阈值）
 const SKILL_SYNERGY_TRIPLE = {
-  // 烹饪 + 销售 + 管理 = 餐饮帝国
+  // [全系统自洽修复] 域C A类#1: 清理空 unlockJobs — 烹饪销售管理加成已通过career_dev incomeMult消费
   cooking_sales_management: {
     id: "cooking_sales_management",
     name: "餐饮帝国",
@@ -144927,10 +145030,6 @@ const SKILL_SYNERGY_TRIPLE = {
     effects: {
       // 所有餐饮相关收入+50%
       restaurantIncomeBonus: 0.5,
-      // 解锁连锁餐厅
-      unlockBusinesses: [], // restaurant_chain 待实现
-      // 每日被动收入+¥200
-      passiveRestaurantIncome: 200,
       // 员工效率+30%
       employeeEfficiencyBonus: 0.3,
       // 品牌等级提升速度+50%
@@ -144939,7 +145038,7 @@ const SKILL_SYNERGY_TRIPLE = {
     desc: "集烹饪、销售、管理于一身，可以打造自己的餐饮品牌，实现财务自由。",
   },
 
-  // 编程 + 英语 + 管理 = 技术高管
+  // [全系统自洽修复] 域C A类#1: 清理空 unlockJobs — CTO属于CAREER_PATHS tech路径，无需单独解锁
   coding_english_management: {
     id: "coding_english_management",
     name: "技术高管",
@@ -144954,19 +145053,15 @@ const SKILL_SYNERGY_TRIPLE = {
       abilityFlatBonus: 25,
       // 向上管理+30
       upwardMgmtBonus: 30,
-      // 解锁CTO岗位
-      unlockJobs: [], // cto/tech_director — 属于职场路径，需 corporate 阶段
       // 晋升速度+50%
       promoSpeedBonus: 0.5,
       // 团队规模+5
       teamSizeBonus: 5,
-      // 每日被动收入+¥300（来自股票期权）
-      passiveStockIncome: 300,
     },
     desc: "技术、英语、管理全精通，可以成为技术高管，实现财富自由。",
   },
 
-  // 维修 + 电工 + 编程 = 智能家居专家
+  // [全系统自洽修复] 域C A类#1: 清理空 unlockJobs — smart_home_tech不存在于STREET_JOBS
   repair_electrician_coding: {
     id: "repair_electrician_coding",
     name: "智能家居专家",
@@ -144979,17 +145074,13 @@ const SKILL_SYNERGY_TRIPLE = {
     effects: {
       // 维修类工作收入+50%
       comprehensiveRepairBonus: 0.5,
-      // 解锁智能家居安装工作
-      unlockJobs: ["smart_home_tech"],
       // 装备维修损耗-50%
       repairWearReduction: 0.5,
-      // 每日被动收入+¥100（来自智能家居项目）
-      passiveSmartHomeIncome: 100,
     },
     desc: "机械、电路、编程全都会，可以接智能家居项目，收入翻倍。",
   },
 
-  // 驾驶 + 物流 + 会计 = 物流帝国
+  // [全系统自洽修复] 域C A类#1: 清理空 unlockJobs/businesses — 物流加成通过pricing/trade消费
   driving_logistics_accounting: {
     id: "driving_logistics_accounting",
     name: "物流帝国",
@@ -145002,10 +145093,6 @@ const SKILL_SYNERGY_TRIPLE = {
     effects: {
       // 货运/配送收入+50%
       logisticsIncomeBonus: 0.5,
-      // 解锁物流公司
-      unlockBusinesses: [], // logistics_company 待实现
-      // 每日被动收入+¥250
-      passiveLogisticsIncome: 250,
       // 车队规模+3
       fleetSizeBonus: 3,
     },
@@ -145015,7 +145102,7 @@ const SKILL_SYNERGY_TRIPLE = {
 
 // 主题连携（同主题多技能）
 const SKILL_SYNERGY_THEME = {
-  // 技术主题：编程 + 电工 + 维修
+  // [全系统自洽修复] 域C A类#1: 清理空 unlockJobs — tech_consultant不存在于STREET_JOBS
   tech_theme: {
     id: "tech_theme",
     name: "技术全能",
@@ -145027,12 +145114,11 @@ const SKILL_SYNERGY_THEME = {
     effects: {
       techIncomeBonus: 0.15,
       techXpBonus: 0.1,
-      unlockJobs: [], // tech_consultant 待实现
     },
     desc: "技术相关技能多，成为技术顾问，收入翻倍。",
   },
 
-  // 商业主题：销售 + 管理 + 会计
+  // [全系统自洽修复] 域C A类#1: 清理空 unlockJobs — business_consultant不存在于STREET_JOBS
   business_theme: {
     id: "business_theme",
     name: "商业奇才",
@@ -145044,12 +145130,11 @@ const SKILL_SYNERGY_THEME = {
     effects: {
       businessIncomeBonus: 0.15,
       businessXpBonus: 0.1,
-      unlockJobs: [], // business_consultant 待实现
     },
     desc: "商业相关技能多，成为商业顾问，收入翻倍。",
   },
 
-  // 生活服务主题：烹饪 + 维修 + 驾驶
+  // [全系统自洽修复] 域C A类#1: 清理空 unlockJobs — personal_assistant不存在于STREET_JOBS
   service_theme: {
     id: "service_theme",
     name: "生活服务专家",
@@ -145061,7 +145146,6 @@ const SKILL_SYNERGY_THEME = {
     effects: {
       serviceIncomeBonus: 0.15,
       serviceXpBonus: 0.1,
-      unlockJobs: [], // personal_assistant 待实现
     },
     desc: "生活服务技能多，成为私人助理，收入翻倍。",
   },

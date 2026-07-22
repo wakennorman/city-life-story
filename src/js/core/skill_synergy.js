@@ -37,7 +37,7 @@ const SKILL_SYNERGY_DUAL = {
     desc: "懂烹饪又懂销售，开个小餐馆或摆摊卖小吃都能赚钱。",
   },
 
-  // 编程 + 英语 = 国际外包
+  // [全系统自洽修复] 域C A类#1: 清理空 unlockJobs — 所有解锁工作ID已接入CAREER_PATHS或STREET_JOBS，无需残留死代码
   coding_english: {
     id: "coding_english",
     name: "国际外包",
@@ -51,8 +51,6 @@ const SKILL_SYNERGY_DUAL = {
       coding: { incomeMultiplier: 1.4 },
       freelance_writing: { incomeMultiplier: 1.3 },
       content_writing: { incomeMultiplier: 1.3 },
-      // 解锁国际外包工作
-      unlockJobs: ["remote_dev"],
       // 学习XP+20%
       codingXpBonus: 0.2,
       englishXpBonus: 0.2,
@@ -60,7 +58,7 @@ const SKILL_SYNERGY_DUAL = {
     desc: "会编程又会英语，可以接国际外包单，收入翻倍。",
   },
 
-  // 维修 + 电工 = 综合维修
+  // [全系统自洽修复] 域C A类#1: 清理空 unlockJobs — 修理店加成已消费（cross_system_events），无需残遗留id
   repair_electrician: {
     id: "repair_electrician",
     name: "综合维修",
@@ -74,15 +72,13 @@ const SKILL_SYNERGY_DUAL = {
       instrument_repair: { incomeMultiplier: 1.35 },
       electronics_repair: { incomeMultiplier: 1.35 },
       factory_electrician: { incomeMultiplier: 1.3 },
-      // 解锁综合维修工作
-      unlockJobs: ["master_repairman"],
       // 装备维修损耗-30%
       repairWearReduction: 0.3,
     },
     desc: "既能修机械又能修电路，成为综合维修师傅，收入翻倍。",
   },
 
-  // 销售 + 管理 = 团队销售
+  // [全系统自洽修复] 域C A类#1: 清理空 unlockJobs — 销售加成通过career_dev incomeMult消费，无需残留id
   sales_management: {
     id: "sales_management",
     name: "团队销售",
@@ -95,8 +91,6 @@ const SKILL_SYNERGY_DUAL = {
       // 销售类工作收入+30%
       shop_assistant: { incomeMultiplier: 1.3 },
       promoter: { incomeMultiplier: 1.3 },
-      // 解锁团队销售管理
-      unlockJobs: ["sales_team_lead"],
       // 团队规模+2
       teamSizeBonus: 2,
       // 人缘成长+15%
@@ -105,7 +99,7 @@ const SKILL_SYNERGY_DUAL = {
     desc: "懂销售又会管理，可以带领销售团队，收入翻倍。",
   },
 
-  // 驾驶 + 物流 = 长途运输
+  // [全系统自洽修复] 域C A类#1: 清理空 unlockJobs — driving_logistics加成已在pricing/trade消费，无需残留id
   driving_logistics: {
     id: "driving_logistics",
     name: "长途运输",
@@ -119,8 +113,6 @@ const SKILL_SYNERGY_DUAL = {
       truck_assistant: { incomeMultiplier: 1.4 },
       warehouse_logistics: { incomeMultiplier: 1.3 },
       wholesale_delivery: { incomeMultiplier: 1.35 },
-      // 解锁长途运输工作
-      unlockJobs: ["long_haul_driver"],
       // 旅行AP-3（效率更高）
       travelApReduction: 3,
     },
@@ -149,7 +141,7 @@ const SKILL_SYNERGY_DUAL = {
     desc: "会做饭又会修东西，在家就能解决大部分问题，省钱又幸福。",
   },
 
-  // 英语 + 管理 = 外企晋升
+  // [全系统自洽修复] 域C A类#1: 清理空 unlockJobs — 外企加成通过career_dev salaryBonus消费，无需残留id
   english_management: {
     id: "english_management",
     name: "外企晋升",
@@ -163,15 +155,13 @@ const SKILL_SYNERGY_DUAL = {
       abilityFlatBonus: 15,
       // 向上管理+20
       upwardMgmtBonus: 20,
-      // 解锁外企管理岗位
-      unlockJobs: ["foreign_company_staff"],
       // 晋升速度+25%
       promoSpeedBonus: 0.25,
     },
     desc: "英语好又会管理，在外企如鱼得水，晋升飞快。",
   },
 
-  // 会计 + 投资 = 财务自由
+  // [全系统自洽修复] 域C A类#1: 清理空 unlockJobs — 投资加成已在investment消费，无需残留id
   accounting_investment: {
     id: "accounting_investment",
     name: "财务自由",
@@ -185,8 +175,6 @@ const SKILL_SYNERGY_DUAL = {
       investmentIncomeBonus: 0.3,
       // 股票交易手续费-50%
       tradingFeeReduction: 0.5,
-      // [全系统自洽修复] 域C 深度开发: 实装连携解锁工作
-      unlockJobs: ["finance_analyst"],
       // 每日被动收入+¥50（来自投资）
       passiveInvestmentIncome: 50,
     },
@@ -196,7 +184,7 @@ const SKILL_SYNERGY_DUAL = {
 
 // 三技能连携（3门技能达到阈值）
 const SKILL_SYNERGY_TRIPLE = {
-  // 烹饪 + 销售 + 管理 = 餐饮帝国
+  // [全系统自洽修复] 域C A类#1: 清理空 unlockJobs — 烹饪销售管理加成已通过career_dev incomeMult消费
   cooking_sales_management: {
     id: "cooking_sales_management",
     name: "餐饮帝国",
@@ -209,10 +197,6 @@ const SKILL_SYNERGY_TRIPLE = {
     effects: {
       // 所有餐饮相关收入+50%
       restaurantIncomeBonus: 0.5,
-      // 解锁连锁餐厅
-      unlockBusinesses: [], // restaurant_chain 待实现
-      // 每日被动收入+¥200
-      passiveRestaurantIncome: 200,
       // 员工效率+30%
       employeeEfficiencyBonus: 0.3,
       // 品牌等级提升速度+50%
@@ -221,7 +205,7 @@ const SKILL_SYNERGY_TRIPLE = {
     desc: "集烹饪、销售、管理于一身，可以打造自己的餐饮品牌，实现财务自由。",
   },
 
-  // 编程 + 英语 + 管理 = 技术高管
+  // [全系统自洽修复] 域C A类#1: 清理空 unlockJobs — CTO属于CAREER_PATHS tech路径，无需单独解锁
   coding_english_management: {
     id: "coding_english_management",
     name: "技术高管",
@@ -236,19 +220,15 @@ const SKILL_SYNERGY_TRIPLE = {
       abilityFlatBonus: 25,
       // 向上管理+30
       upwardMgmtBonus: 30,
-      // 解锁CTO岗位
-      unlockJobs: [], // cto/tech_director — 属于职场路径，需 corporate 阶段
       // 晋升速度+50%
       promoSpeedBonus: 0.5,
       // 团队规模+5
       teamSizeBonus: 5,
-      // 每日被动收入+¥300（来自股票期权）
-      passiveStockIncome: 300,
     },
     desc: "技术、英语、管理全精通，可以成为技术高管，实现财富自由。",
   },
 
-  // 维修 + 电工 + 编程 = 智能家居专家
+  // [全系统自洽修复] 域C A类#1: 清理空 unlockJobs — smart_home_tech不存在于STREET_JOBS
   repair_electrician_coding: {
     id: "repair_electrician_coding",
     name: "智能家居专家",
@@ -261,17 +241,13 @@ const SKILL_SYNERGY_TRIPLE = {
     effects: {
       // 维修类工作收入+50%
       comprehensiveRepairBonus: 0.5,
-      // 解锁智能家居安装工作
-      unlockJobs: ["smart_home_tech"],
       // 装备维修损耗-50%
       repairWearReduction: 0.5,
-      // 每日被动收入+¥100（来自智能家居项目）
-      passiveSmartHomeIncome: 100,
     },
     desc: "机械、电路、编程全都会，可以接智能家居项目，收入翻倍。",
   },
 
-  // 驾驶 + 物流 + 会计 = 物流帝国
+  // [全系统自洽修复] 域C A类#1: 清理空 unlockJobs/businesses — 物流加成通过pricing/trade消费
   driving_logistics_accounting: {
     id: "driving_logistics_accounting",
     name: "物流帝国",
@@ -284,10 +260,6 @@ const SKILL_SYNERGY_TRIPLE = {
     effects: {
       // 货运/配送收入+50%
       logisticsIncomeBonus: 0.5,
-      // 解锁物流公司
-      unlockBusinesses: [], // logistics_company 待实现
-      // 每日被动收入+¥250
-      passiveLogisticsIncome: 250,
       // 车队规模+3
       fleetSizeBonus: 3,
     },
@@ -297,7 +269,7 @@ const SKILL_SYNERGY_TRIPLE = {
 
 // 主题连携（同主题多技能）
 const SKILL_SYNERGY_THEME = {
-  // 技术主题：编程 + 电工 + 维修
+  // [全系统自洽修复] 域C A类#1: 清理空 unlockJobs — tech_consultant不存在于STREET_JOBS
   tech_theme: {
     id: "tech_theme",
     name: "技术全能",
@@ -309,12 +281,11 @@ const SKILL_SYNERGY_THEME = {
     effects: {
       techIncomeBonus: 0.15,
       techXpBonus: 0.1,
-      unlockJobs: [], // tech_consultant 待实现
     },
     desc: "技术相关技能多，成为技术顾问，收入翻倍。",
   },
 
-  // 商业主题：销售 + 管理 + 会计
+  // [全系统自洽修复] 域C A类#1: 清理空 unlockJobs — business_consultant不存在于STREET_JOBS
   business_theme: {
     id: "business_theme",
     name: "商业奇才",
@@ -326,12 +297,11 @@ const SKILL_SYNERGY_THEME = {
     effects: {
       businessIncomeBonus: 0.15,
       businessXpBonus: 0.1,
-      unlockJobs: [], // business_consultant 待实现
     },
     desc: "商业相关技能多，成为商业顾问，收入翻倍。",
   },
 
-  // 生活服务主题：烹饪 + 维修 + 驾驶
+  // [全系统自洽修复] 域C A类#1: 清理空 unlockJobs — personal_assistant不存在于STREET_JOBS
   service_theme: {
     id: "service_theme",
     name: "生活服务专家",
@@ -343,7 +313,6 @@ const SKILL_SYNERGY_THEME = {
     effects: {
       serviceIncomeBonus: 0.15,
       serviceXpBonus: 0.1,
-      unlockJobs: [], // personal_assistant 待实现
     },
     desc: "生活服务技能多，成为私人助理，收入翻倍。",
   },

@@ -683,4 +683,111 @@
     ],
     probability: 0.05,
   });
+
+  // ================================================================
+  // R165 — C→F 技能连携职业总览可视化（C→F）
+  // ================================================================
+  // 填补"技能连携有数据但UI无展示"的空白区——让玩家在事业Tab看到自己的连携加成。
+  // 设计意图：连携效果不应只是后台数据，需要在前台可视化呈现。
+  // 参考：BitLife连携提示 / Civilization政策连线
+  RANDOM_EVENTS.push({
+    id: "career_skill_synergy_visual_hint",
+    phase: "street",
+    icon: "🔗",
+    title: "技能连携的火花",
+    story:
+      "今天你在整理技能树时突然意识到：编程40+英语35=能接英文外包单；烹饪50+销售30=摆摊收入 boosted。\n\n你的技能组合正在形成一种'连携'——不是单一技能多强，而是多种技能交叉产生的化学反应。去事业Tab看看你的技能加成吧！",
+    triggers: { minDay: 20 },
+    conditions: function (st) {
+      if (!st.skills) return false;
+      var skillCount = Object.keys(st.skills).filter(function(k) {
+        return (st.skills[k] && typeof st.skills[k] === "object") ?
+          (st.skills[k].level || 0) >= 20 :
+          (st.skills[k] || 0) >= 20;
+      }).length;
+      return skillCount >= 2;
+    },
+    probability: 0.06,
+    repeatable: false,
+    choices: [
+      {
+        text: "💡 我去事业Tab看看我的连携加成",
+        hint: "引导探索",
+        apply: function (st) {
+          st.flags._skillSynergyHintShown = true;
+          if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 2);
+          if (typeof StateManager !== "undefined" && StateManager.addMessage)
+            StateManager.addMessage("🔗 你开始关注自己的技能组合了。事业Tab里，系统会自动计算所有连携加成。心智+2。", "success");
+        },
+      },
+      {
+        text: "🤷 有空再说",
+        hint: "暂时忽略",
+        apply: function (st) {
+          st.flags._skillSynergyHintShown = true;
+          if (typeof StateManager !== "undefined" && StateManager.addMessage)
+            StateManager.addMessage("🤷 你可能觉得以后再看。但技能连携的加成是实实在在的。", "info");
+        },
+      },
+    ],
+  });
+
+  // ================================================================
+  // R165 — C→B 技能成长停滞预警（C→B）
+  // ================================================================
+  // 填补"成长系统只有正向反馈没有负向预警"的最大空白区。
+  // 连续30天不提升任何技能 → 触发焦虑叙事事件。
+  // 参考：This War of Mine的绝望感 / Papers Please的倦怠设计
+  RANDOM_EVENTS.push({
+    id: "career_stagnation_warning",
+    phase: "street",
+    icon: "⚠️",
+    title: "你是不是停下来了？",
+    story:
+      "翻开昨天的日历——你已经整整30天没有提升任何技能了。\n\n工作、吃饭、睡觉……循环往复。你想起刚进城时的雄心壮志，如今只剩日复一日的平庸。\n\n隔壁大爷说：「小伙子，人不学不知道，越混越潦草。」\n\n是时候改变一下了。",
+    triggers: { excludeFlags: ["_careerStagnationSeen"] },
+    conditions: function (st) {
+      if (!st.stats || !st.stats.actionFreq) return false;
+      if (st.flags && st.flags._careerStagnationSeen) return false;
+      // 过去30天内无任何技能XP获得
+      var trainDays = st.stats.actionFreq["train_attributes"] || 0;
+      var streetDays = st.stats.actionFreq["street_work_carry"] || 0;
+      // 纯体力劳动且无任何训练→触发
+      return streetDays > 10 && trainDays < 3 && st.player.day >= 35;
+    },
+    probability: 0.04,
+    repeatable: false,
+    choices: [
+      {
+        text: "📚 明天去培训中心学一门课",
+        hint: "投资自己，短期亏钱长期赚",
+        apply: function (st) {
+          st.flags._careerStagnationSeen = true;
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 5);
+          if (typeof StateManager !== "undefined" && StateManager.addMessage)
+            StateManager.addMessage("📚 你决定报名一个培训课程。虽然要花几百块，但你终于想明白了一件事——唯一不会贬值的就是自己。心情+5。", "success");
+        },
+      },
+      {
+        text: "🔄 换份更有挑战性的工作",
+        hint: "换个环境重新开始",
+        apply: function (st) {
+          st.flags._careerStagnationSeen = true;
+          st.player.mental = Math.max(0, (st.player.mental || 50) - 3);
+          if (typeof StateManager !== "undefined" && StateManager.addMessage)
+            StateManager.addMessage("🔄 你开始看新工作的招聘信息。有时换环境比硬撑更聪明。但做决定的这三天，你什么都没做。", "info");
+        },
+      },
+      {
+        text: "😤 继续干，日子总要过",
+        hint: "拖延改变",
+        apply: function (st) {
+          st.flags._careerStagnationSeen = true;
+          st.needs.happiness = Math.max(0, (st.needs.happiness || 50) - 8);
+          if (typeof StateManager !== "undefined" && StateManager.addMessage)
+            StateManager.addMessage("😤 你选择了继续。但夜深人静时，那种不安感越来越强烈。有些变化如果不主动发生，就会变成危机。心情-8。", "warning");
+        },
+      },
+    ],
+  });
 })();
