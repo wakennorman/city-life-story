@@ -49,9 +49,10 @@ const MORAL_EVENTS = [
         flag: "moral_wallet_flaunt",
         score: -10,
         immediate: function (s) {
-          s.resources.cash += 500;
+          // [全系统自洽修复] 域B A类#2: moral_wallet_flaunt cash无守卫
+          s.resources.cash = (s.resources.cash || 0) + 500;
           s.player.fame = Math.min(100, (s.player.fame || 0) + 5);
-          s.needs.happiness = Math.min(100, s.needs.happiness + 10);
+          s.needs.happiness = Math.min(100, (s.needs.happiness || 0) + 10);
           StateManager.addMessage(
             "📱 朋友圈炸了，但你隐约觉得不太妥当...",
             "event",
@@ -2284,14 +2285,16 @@ for (var emi = 0; emi < EXTREME_MORAL_EVENTS.length; emi++) {
       dailyChance: eventDef.dailyChance || 0.025,
       condition: eventDef.condition, // [Layer3] pass through
       choices: eventDef.choices.map(function (choiceDef) {
-        return {
-          text: choiceDef.text,
-          flag: choiceDef.flag,
-          score: choiceDef.score,
-          immediate: function (state) {
-            applyExtremeMoralDelta(state, choiceDef);
-          },
-        };
+        return (function (cd) {
+          return {
+            text: cd.text,
+            flag: cd.flag,
+            score: cd.score,
+            immediate: function (state) {
+              applyExtremeMoralDelta(state, cd);
+            },
+          };
+        })(choiceDef);
       }),
     });
   })(EXTREME_MORAL_EVENTS[emi]);

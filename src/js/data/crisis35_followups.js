@@ -108,7 +108,7 @@
             if (Random.chance(Math.max(0.1, Math.min(0.85, chance / 100)))) {
               st.flags._passedCivilService = true;
               st.player.fame = Math.min(100, (st.player.fame || 0) + 25);
-              st.resources.cash += scaleAmount(5000, st.resources && st.resources.totalEarned);
+              st.resources.cash = (st.resources.cash || 0) + scaleAmount(5000, st.resources && st.resources.totalEarned);
               StateManager.addMessage(
                 "🎉 笔试通过！进入面试名单。亲戚朋友都打来祝贺电话，奖¥5000。",
                 "success",
@@ -165,7 +165,7 @@
             st.flags.c35_career_overtime = true;
             st.needs.fatigue = Math.min(100, (st.needs.fatigue || 0) + 35);
             st.player.physique = Math.max(1, (st.player.physique || 0) - 2);
-            st.resources.cash += 2500;
+            st.resources.cash = (st.resources.cash || 0) + 2500;
             st.flags._careerKpiGood = (st.flags._careerKpiGood || 0) + 1;
             StateManager.addMessage(
               "☕ 你顶过去了。早上 6 点交了方案，老板回了个👍。月底拿到¥2500绩效。",
@@ -225,7 +225,7 @@
               );
             } else {
               st.flags._careerSurvivedLayoff = false;
-              st.resources.cash += scaleAmount(8000, st.resources && st.resources.totalEarned);
+              st.resources.cash = (st.resources.cash || 0) + scaleAmount(8000, st.resources && st.resources.totalEarned);
               StateManager.addMessage(
                 "💔 没人替你说话。HR 给了¥8000的 N+1 让你走人。",
                 "warning",
@@ -238,7 +238,7 @@
           apply: function (st) {
             st.flags.c35_career_layoff_list = true;
             st.flags._careerSurvivedLayoff = false;
-            st.resources.cash += scaleAmount(12000, st.resources && st.resources.totalEarned);
+            st.resources.cash = (st.resources.cash || 0) + scaleAmount(12000, st.resources && st.resources.totalEarned);
             st.needs.happiness = Math.min(100, st.needs.happiness + 5);
             StateManager.addMessage(
               "📃 你签了 N+1.5 的协议，¥12000到账。回家路上忽然觉得轻松。",
@@ -331,8 +331,9 @@
           text: "😤 嫉妒+发泄性消费",
           apply: function (st) {
             st.flags.c35_lieflat_friend_circle = "envy";
-            var spend = Math.min(st.resources.cash, 300);
-            st.resources.cash -= spend;
+            // [全系统自洽修复] 域B A类#4: c35_lieflat envy cash无守卫
+            var _spend = Math.min(st.resources.cash || 0, 300);
+            st.resources.cash = (st.resources.cash || 0) - _spend;
             st.needs.happiness = Math.max(0, st.needs.happiness - 6);
             StateManager.addMessage(
               "🛒 你花¥" + spend + "买了一堆没用的东西。报复性消费没带来快乐。",
@@ -379,17 +380,19 @@
       choices: [
         {
           text: "⚖️ 请律师催债（¥500）",
-          apply: function (st) {
+            apply: function (st) {
+            // [全系统自洽修复] 域B A类#4: bad_debt_chase cash无守卫
+            var _cash = (st.resources && st.resources.cash) || 0;
             st.flags.bad_debt_chase = "lawyer";
-            if (st.resources.cash < 500) {
+            if (_cash < 500) {
               StateManager.addMessage("💸 你连律师费都掏不起。", "warning");
               return;
             }
-            st.resources.cash -= 500;
+            st.resources.cash = _cash - 500;
             var amt = st.flags._badDebtAmount || 0;
             if (Random.chance(0.3)) {
               var rec = Math.floor(amt * 0.5);
-              st.resources.cash += rec;
+              st.resources.cash = (st.resources.cash || 0) + rec;
               StateManager.addMessage(
                 "📑 律师函生效，对方还了¥" + rec + "（一半）。",
                 "success",
@@ -460,7 +463,7 @@
           apply: function (st) {
             st.flags.good_loan_return = true;
             var amt = st.flags._goodLoanReturn || 0;
-            st.resources.cash += amt;
+            st.resources.cash = (st.resources.cash || 0) + amt;
             // NPC 平均好感+5
             var rels = st.relationships || st.npcRelations || {};
             var bumped = 0;
@@ -474,7 +477,7 @@
             // 30% 概率引荐高薪一次性工作
             if (Random.chance(0.3)) {
               var pay = Random.int(800, 2000);
-              st.resources.cash += pay;
+              st.resources.cash = (st.resources.cash || 0) + pay;
               StateManager.addMessage(
                 "🎁 对方还把你介绍给一个老板，临时项目结款¥" + pay + "。",
                 "success",
