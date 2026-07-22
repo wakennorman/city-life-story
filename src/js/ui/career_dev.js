@@ -2814,6 +2814,10 @@ var _SKILL_PATH_MAP = {
   charm: "player.charm",
   fame: "player.fame",
   morality: "player.morality",
+  // [全系统自洽修复] 域C R173 A类#1: design→player.intelligence, social→player.charm 映射补全
+  // 根因：_SKILL_PATH_MAP缺design/social条目 → _getSkillValue返回0 → CAREER_PATHS中design/edu路径所有reqSkills永不可达
+  design: "player.intelligence",
+  social: "player.charm",
 };
 function _getSkillValue(state, skill) {
   var path = _SKILL_PATH_MAP[skill];
