@@ -1,39 +1,203 @@
 {
-  "currentRound": 45,
-  "currentDomain": "C",
-  "nextDomain": "D",
+  "currentRound": 164,
+  "currentDomain": "Layer4",
+  "nextDomain": "Layer5",
   "rotationIndex": 0,
-  "domainOrder": ["A", "B", "C", "D", "E", "F", "G", "H"],
-  "history": [
-    {"round": 1, "domain": "A"}, {"round": 2, "domain": "B"},
-    {"round": 3, "domain": "C"}, {"round": 4, "domain": "D"},
-    {"round": 5, "domain": "B"}, {"round": 6, "domain": "D"},
-    {"round": 7, "domain": "F"}, {"round": 8, "domain": "E"},
-    {"round": 9, "domain": "F"}, {"round": 10, "domain": "G"},
-    {"round": 11, "domain": "F"}, {"round": 12, "domain": "G"},
-    {"round": 13, "domain": "H"}, {"round": 14, "domain": "A"},
-    {"round": 15, "domain": "B"}, {"round": 16, "domain": "D"},
-    {"round": 17, "domain": "F"}, {"round": 18, "domain": "G"},
-    {"round": 19, "domain": "A"}, {"round": 20, "domain": "B"},
-    {"round": 21, "domain": "C"}, {"round": 23, "domain": "C"},
-    {"round": 27, "domain": "E"}, {"round": 28, "domain": "F"},
-    {"round": 29, "domain": "D"}, {"round": 30, "domain": "D"},
-    {"round": 31, "domain": "E"}, {"round": 32, "domain": "F"},
-    {"round": 33, "domain": "G"}, {"round": 34, "domain": "H"},
-    {"round": 35, "domain": "A"}, {"round": 36, "domain": "B"},
-    {"round": 37, "domain": "C"}, {"round": 38, "domain": "D"},
-    {"round": 39, "domain": "E"}, {"round": 40, "domain": "F"},
-    {"round": 41, "domain": "G"},
-    {"round": 42, "domain": "H"},
-    {"round": 43, "domain": "A"},
-    {"round": 44, "domain": "B"},
-    {"round": 45, "domain": "C"}
+  "domainOrder": [
+    "A",
+    "B",
+    "C",
+    "D",
+    "E",
+    "F",
+    "G",
+    "H"
   ],
-  "lastDomain": "C",
-  "lastRound": 45,
-  "lastDate": "2026-07-19",
-  "lastCommit": "3a446778",
-  "pushStatus": "PUSHED",
-  "completedDomains": ["A", "B", "C", "D", "E", "F", "G", "H"],
-  "description": "R45: 域C(职业/成长 第四轮) A类修复6项(jobBonuses死引用3文件+空数组收入死代码+perf守卫+insider_trading/career_level守卫)+联动增强4项(技能疲劳减/层级称号/NPC祝贺/2新事件), commits 752a3fa+3a446778, 已推 ✅"
+  "history": [
+    {
+      "round": 1,
+      "domain": "A"
+    },
+    {
+      "round": 2,
+      "domain": "B"
+    },
+    {
+      "round": 3,
+      "domain": "C"
+    },
+    {
+      "round": 4,
+      "domain": "D"
+    },
+    {
+      "round": 5,
+      "domain": "B"
+    },
+    {
+      "round": 6,
+      "domain": "D"
+    },
+    {
+      "round": 7,
+      "domain": "F"
+    },
+    {
+      "round": 8,
+      "domain": "E"
+    },
+    {
+      "round": 9,
+      "domain": "F"
+    },
+    {
+      "round": 10,
+      "domain": "G"
+    },
+    {
+      "round": 11,
+      "domain": "F"
+    },
+    {
+      "round": 12,
+      "domain": "G"
+    },
+    {
+      "round": 13,
+      "domain": "H"
+    },
+    {
+      "round": 14,
+      "domain": "A"
+    },
+    {
+      "round": 15,
+      "domain": "B"
+    },
+    {
+      "round": 16,
+      "domain": "D"
+    },
+    {
+      "round": 17,
+      "domain": "F"
+    },
+    {
+      "round": 18,
+      "domain": "G"
+    },
+    {
+      "round": 19,
+      "domain": "A"
+    },
+    {
+      "round": 20,
+      "domain": "B"
+    },
+    {
+      "round": 21,
+      "domain": "C"
+    },
+    {
+      "round": 23,
+      "domain": "C"
+    },
+    {
+      "round": 27,
+      "domain": "E"
+    },
+    {
+      "round": 28,
+      "domain": "F"
+    },
+    {
+      "round": 29,
+      "domain": "D"
+    },
+    {
+      "round": 30,
+      "domain": "D"
+    },
+    {
+      "round": 31,
+      "domain": "E"
+    },
+    {
+      "round": 32,
+      "domain": "F"
+    },
+    {
+      "round": 33,
+      "domain": "G"
+    },
+    {
+      "round": 34,
+      "domain": "H"
+    },
+    {
+      "round": 35,
+      "domain": "A"
+    },
+    {
+      "round": 36,
+      "domain": "B"
+    },
+    {
+      "round": 37,
+      "domain": "C"
+    },
+    {
+      "round": 38,
+      "domain": "D"
+    },
+    {
+      "round": 39,
+      "domain": "E"
+    },
+    {
+      "round": 40,
+      "domain": "F"
+    },
+    {
+      "round": 41,
+      "domain": "G"
+    },
+    {
+      "round": 42,
+      "domain": "H"
+    },
+    {
+      "round": 43,
+      "domain": "A"
+    },
+    {
+      "round": 44,
+      "domain": "B"
+    },
+    {
+      "round": 45,
+      "domain": "C"
+    },
+    {
+      "round": 164,
+      "domain": "Layer4",
+      "note": "L4-A first pass (5 gameOver gatings) + spec doc"
+    }
+  ],
+  "lastDomain": "Layer4",
+  "lastRound": 164,
+  "lastDate": "2026-07-22",
+  "lastCommit": "d35450caefd84ea9b2ccab2577ae708e13fb2ed2",
+  "pushStatus": "LOCAL",
+  "completedDomains": [
+    "A",
+    "B",
+    "C",
+    "D",
+    "E",
+    "F",
+    "G",
+    "H"
+  ],
+  "description": "Layer4 时间线逻辑门控首过(L4-A gameOver 泄漏 5 处门控 chengguan_events.js+events_corp.js 链式事件 + 补全 Layer1-6 规范源 memory/event-gate-layer-system.md)；L4-B phase-less 死事件114候选待人工复核；手动「继续」驱动，自动 loop 并行也在扫 street/moral 事件"
 }
