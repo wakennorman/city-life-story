@@ -486,7 +486,7 @@ function enterCorporatePhase(companyId) {
     }
     if (legacy.abilityBonus > 0) {
       p.corporate.ability = Math.min(100, (p.corporate.ability || 0) + legacy.abilityBonus);
-      StateManager.addMessage("💼 赚到¥" + totalEarned.toLocaleString() + "的商业嗅觉让你起步能力+" + legacy.abilityBonus + "。", "info");
+      StateManager.addMessage("💼 赚到¥" + (state.resources.totalEarned || 0).toLocaleString() + "的商业嗅觉让你起步能力+" + legacy.abilityBonus + "。", "info");
     }
   }
   // [全系统自洽修复] 域H 联动增强: Phase1→2过渡叙事闭环

@@ -45,7 +45,7 @@ const ERA_EVENTS = [
         cost: 200,
         apply: function (st) {
           st.flags._eraEvent_90 = true;
-          st.resources.cash -= 200;
+          st.resources.cash = Math.max(0, (st.resources.cash || 0) - 200);
           if (!st.investment) st.investment = {};
           if (!st.investment.history) st.investment.history = [];
           st.investment.history.push({
@@ -236,7 +236,7 @@ const ERA_EVENTS = [
         cost: 100,
         apply: function (st) {
           st.flags._eraEvent_365 = true;
-          st.resources.cash -= 100;
+          st.resources.cash = Math.max(0, (st.resources.cash || 0) - 100);
           st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 15);
           StateManager.addMessage(
             "🎉 你请自己吃了一顿大餐。一年了，值得庆祝。心情+15。",
@@ -335,7 +335,7 @@ const ERA_EVENTS = [
         cost: 150,
         apply: function (st) {
           st.flags._eraEvent_540 = true;
-          st.resources.cash -= 150;
+          st.resources.cash = Math.max(0, (st.resources.cash || 0) - 150);
           st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 10);
           StateManager.addMessage(
             "✨ 你体验了高端消费。虽然贵，但感觉不错。心情+10。",
@@ -361,7 +361,7 @@ const ERA_EVENTS = [
         cost: 500,
         apply: function (st) {
           st.flags._eraEvent_540 = true;
-          st.resources.cash -= 500;
+          st.resources.cash = Math.max(0, (st.resources.cash || 0) - 500);
           st.flags.smallBusinessUnlocked = true;
           StateManager.addMessage(
             "💡 你决定自己开个小店。虽然有风险，但这是实现梦想的机会。解锁创业机会。",
@@ -412,7 +412,7 @@ const ERA_EVENTS = [
         cost: 1000,
         apply: function (st) {
           st.flags._eraEvent_720 = true;
-          st.resources.cash -= 1000;
+          st.resources.cash = Math.max(0, (st.resources.cash || 0) - 1000);
           st.flags.startupUnlocked = true;
           StateManager.addMessage(
             "🏢 你决定认真考虑创业。虽然需要投入，但这是改变命运的机会。解锁创业Tab。",

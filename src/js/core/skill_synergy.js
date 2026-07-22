@@ -410,6 +410,12 @@ function checkSkillSynergies(state) {
         desc: synergy.desc,
         effects: synergy.effects,
       };
+      // [全系统自洽修复] 域C A类#3: TRIPLE 连携同步设置 _synergy_<id> 标记（与 DUAL 一致）。
+      // 原逻辑只在 DUAL 分支置位，导致 driving_logistics_accounting→long_haul_driver、
+      // repair_electrician_coding→smart_home_tech 的 requiredFlag 永不被满足 → 死工作。
+      if (state.flags) {
+        state.flags["_synergy_" + synergyId] = true;
+      }
       if (synergy.effects.unlockJobs) {
         results.unlockedJobs = results.unlockedJobs.concat(
           synergy.effects.unlockJobs,
@@ -689,10 +695,10 @@ if (typeof window !== "undefined") {
           "🏠 **家庭全能**：烹饪30+ 维修30+ → 做饭效果+50%",
           "🏢 **外企晋升**：英语60+ 管理50+ → 职场能力+15",
           "💰 **财务自由**：会计50+ 管理40+ → 投资收入+30%",
-          "👑 **餐饮帝国**：烹饪60+ 销售60+ 管理50+ → 被动收入+¥200",
-          "🚀 **技术高管**：编程70+ 英语60+ 管理60+ → 被动收入+¥300",
-          "🏡 **智能家居专家**：维修50+ 电工50+ 编程40+ → 被动收入+¥100",
-          "🚚 **物流帝国**：驾驶60+ 会计50+ 管理40+ → 被动收入+¥250",
+          "👑 **餐饮帝国**：烹饪60+ 销售60+ 管理50+ → 餐饮收入+50% / 员工效率+30% / 品牌成长+50%", // [全系统自洽修复] 域C A类#5: 修正百科文案（原称"被动收入+¥200"，但该连携 effect 无 passiveIncome 字段，系叙事与机制不符）
+          "🚀 **技术高管**：编程70+ 英语60+ 管理60+ → 能力+25 / 向上管理+30 / 晋升速度+50% / 团队+5",
+          "🏡 **智能家居专家**：维修50+ 电工50+ 编程40+ → 维修收入+50% / 维修损耗-50%",
+          "🚚 **物流帝国**：驾驶60+ 会计50+ 管理40+ → 货运收入+50% / 车队规模+3",
         ],
       },
       {

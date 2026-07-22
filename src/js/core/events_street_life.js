@@ -3348,7 +3348,7 @@
             // 随机选一个已结识NPC加好感
             var npcKeys = Object.keys(st.relationships).filter(function(k) { return st.relationships[k] && st.relationships[k].met; });
             if (npcKeys.length > 0) {
-              var picked = npcKeys[Math.floor(Math.random() * npcKeys.length)];
+              var picked = Random.fromArray(npcKeys);
               if (typeof applyAffinityChange === "function") {
                 applyAffinityChange(st, picked, 5, "寒潮送粥");
               } else if (st.relationships[picked]) {
@@ -3367,7 +3367,7 @@
             st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 8);
             var npcKeys = Object.keys(st.relationships).filter(function(k) { return st.relationships[k] && st.relationships[k].met; });
             if (npcKeys.length > 0) {
-              var picked = npcKeys[Math.floor(Math.random() * npcKeys.length)];
+              var picked = Random.fromArray(npcKeys);
               if (typeof applyAffinityChange === "function") {
                 applyAffinityChange(st, picked, 8, "互赠毛衣");
               } else if (st.relationships[picked]) {

@@ -16,25 +16,30 @@
     priority: 65,
     conditions: function (st) {
       if (!st.corporate || !st.corporate.active) return false;
+      if (st.flags._geekBrilliantCooldown && (st.player.day || 0) < st.flags._geekBrilliantCooldown) return false; // 90天冷却
       var rankData = st.corporate.rank ? CORP_RANKS[st.corporate.rank] : null;
       if (!rankData || !rankData.canManageTeam) return false;
       if (!st.corporate.team || st.corporate.team.length === 0) return false;
       return st.corporate.team.some(function (t) { return t.id === "geek_coder"; });
     },
     probability: 0.04,
-    getText: function (st) {
-      return "技术极客突然冲进你办公室：「老大！那个生产环境的老Bug我找到了！」\n\n他熬了两个通宵，修好了一个困扰团队半年的性能瓶颈。老板在群里点名表扬了你这个'技术骨干'。";
-    },
-    getStory: function () { return this.getText(); },
-    apply: function (st) {
-      var c = st.player.corporate;
-      if (!c) return;
-      c.kpi = Math.min(150, (c.kpi || 0) + 10);
-      c.ability = Math.min(100, (c.ability || 0) + 3);
-      if (st.resources) st.resources.cash = (st.resources.cash || 0) + 1000;
-      if (typeof addDailyTransaction === "function") addDailyTransaction(st, "income", "geek_bonus", 1000, "极客突破奖金");
-      StateManager.addMessage("🐛 技术极客神来之笔！KPI+10，能力+3，团队奖金¥1000。", "success");
-    },
+    story:
+      "技术极客突然冲进你办公室：「老大！那个生产环境的老Bug我找到了！」\n\n他熬了两个通宵，修好了一个困扰团队半年的性能瓶颈。老板在群里点名表扬了你这个'技术骨干'。",
+    choices: [
+      {
+        text: "👍 表扬团队（KPI+10/能力+3/奖金¥1000）",
+        apply: function (st) {
+          var c = st.player.corporate;
+          if (!c) return;
+          c.kpi = Math.min(150, (c.kpi || 0) + 10);
+          c.ability = Math.min(100, (c.ability || 0) + 3);
+          if (st.resources) st.resources.cash = (st.resources.cash || 0) + 1000;
+          if (typeof addDailyTransaction === "function") addDailyTransaction(st, "income", "geek_bonus", 1000, "极客突破奖金");
+          st.flags._geekBrilliantCooldown = (st.player.day || 0) + 90; // 90天冷却
+          StateManager.addMessage("🐛 技术极客神来之笔！KPI+10，能力+3，团队奖金¥1000。", "success");
+        },
+      },
+    ],
     icons: ["🐛", "💪"],
   };
 
@@ -48,39 +53,51 @@
     priority: 70,
     conditions: function (st) {
       if (!st.corporate || !st.corporate.active) return false;
+      if (st.flags._warriorBurnoutDone) return false; // 一次性事件
       var rankData = st.corporate.rank ? CORP_RANKS[st.corporate.rank] : null;
       if (!rankData || !rankData.canManageTeam) return false;
       if (!st.corporate.team || st.corporate.team.length === 0) return false;
       return st.corporate.team.some(function (t) { return t.id === "mortgage_warrior"; });
     },
     probability: 0.02,
-    getText: function (st) {
-      return "早上打卡时发现房贷战神没来。下午接到医院电话——他心脏病突发送急诊了。\n\n他背了180万房贷，孩子还在上幼儿园。他同事说他连续三个月每天只睡5小时。";
-    },
-    getStory: function () { return this.getText(); },
-    apply: function (st, choiceId) {
-      var c = st.player.corporate;
-      if (!c) return;
-      if (choiceId === "help") {
-        if (st.resources) st.resources.cash = (st.resources.cash || 0) - 5000;
-        if (typeof addDailyTransaction === "function") addDailyTransaction(st, "expense", "team_help", 5000, "团队成员紧急救助金");
-        c.dignity = Math.min(100, (c.dignity || 0) + 5);
-        c.popularity = Math.min(100, (c.popularity || 0) + 5);
-        st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 5);
-        StateManager.addMessage("💝 你自掏腰包资助了战友，尊严+5，人缘+5，心情+5。", "success");
-      } else if (choiceId === "report") {
-        c.risk = Math.min(100, (c.risk || 0) + 5);
-        c.dignity = Math.min(100, (c.dignity || 0) - 3);
-        StateManager.addMessage("📋 你向HR提交了事故报告，但心里不是滋味。风险+5，尊严-3。", "warning");
-      } else {
-        c.popularity = Math.max(0, (c.popularity || 0) - 5);
-        StateManager.addMessage("😶 你选择了沉默。人气-5。", "info");
-      }
-    },
+    story:
+      "早上打卡时发现房贷战神没来。下午接到医院电话——他心脏病突发送急诊了。\n\n他背了180万房贷，孩子还在上幼儿园。他同事说他连续三个月每天只睡5小时。",
     choices: [
-      { id: "help", text: "💝 自掏腰包帮助（现金-¥5000，尊严+5）" },
-      { id: "report", text: "📋 按流程提交报告（风险+5）" },
-      { id: "silent", text: "😶 什么都没说（人气-5）" },
+      {
+        text: "💝 自掏腰包帮助（现金-¥5000，尊严+5）",
+        apply: function (st) {
+          var c = st.player.corporate;
+          if (!c) return;
+          if (st.resources) st.resources.cash = (st.resources.cash || 0) - 5000;
+          if (typeof addDailyTransaction === "function") addDailyTransaction(st, "expense", "team_help", 5000, "团队成员紧急救助金");
+          c.dignity = Math.min(100, (c.dignity || 0) + 5);
+          c.popularity = Math.min(100, (c.popularity || 0) + 5);
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 5);
+          st.flags._warriorBurnoutDone = true;
+          StateManager.addMessage("💝 你自掏腰包资助了战友，尊严+5，人缘+5，心情+5。", "success");
+        },
+      },
+      {
+        text: "📋 按流程提交报告（风险+5）",
+        apply: function (st) {
+          var c = st.player.corporate;
+          if (!c) return;
+          c.risk = Math.min(100, (c.risk || 0) + 5);
+          c.dignity = Math.min(100, (c.dignity || 0) - 3);
+          st.flags._warriorBurnoutDone = true;
+          StateManager.addMessage("📋 你向HR提交了事故报告，但心里不是滋味。风险+5，尊严-3。", "warning");
+        },
+      },
+      {
+        text: "😶 什么都没说（人气-5）",
+        apply: function (st) {
+          var c = st.player.corporate;
+          if (!c) return;
+          c.popularity = Math.max(0, (c.popularity || 0) - 5);
+          st.flags._warriorBurnoutDone = true;
+          StateManager.addMessage("😶 你选择了沉默。人气-5。", "info");
+        },
+      },
     ],
     icons: ["🏥", "💔"],
   };
@@ -95,38 +112,46 @@
     priority: 60,
     conditions: function (st) {
       if (!st.corporate || !st.corporate.active) return false;
+      if (st.flags._gradQuitCooldown && (st.player.day || 0) < st.flags._gradQuitCooldown) return false; // 90天冷却
       var rankData = st.corporate.rank ? CORP_RANKS[st.corporate.rank] : null;
       if (!rankData || !rankData.canManageTeam) return false;
       if (!st.corporate.team || st.corporate.team.length === 0) return false;
       return st.corporate.team.some(function (t) { return t.id === "new_graduate"; });
     },
     probability: 0.05,
-    getText: function (st) {
-      return "应届生小刘把辞职信放在你桌上：「哥，我扛不住了。天天加班到凌晨，工资连房租都不够……我去考公了。」\n\n他刚来半年，是你亲手带的。";
-    },
-    getStory: function () { return this.getText(); },
-    apply: function (st, choiceId) {
-      var c = st.player.corporate;
-      if (!c) return;
-      if (choiceId === "retain") {
-        if ((c.ability || 0) >= 40 || (c.popularity || 0) >= 40) {
-          c.popularity = Math.min(100, (c.popularity || 0) + 3);
-          StateManager.addMessage("💬 你与小刘深谈，用愿景留住了他。人缘+3。", "success");
-        } else {
-          StateManager.addMessage("😔 你没能说服小刘，他走了。但你知道这不是你的错。", "info");
-        }
-      } else if (choiceId === "replace") {
-        if (st.resources) st.resources.cash = (st.resources.cash || 0) - 2000;
-        if (typeof addDailyTransaction === "function") addDailyTransaction(st, "expense", "recruit", 2000, "应届生替代招聘费");
-        StateManager.addMessage("🔄 你花了¥2000重新招了个人，疲惫感增加。", "info");
-      } else {
-        StateManager.addMessage("🤷 你叹了口气，让HR走流程。", "info");
-      }
-    },
+    story:
+      "应届生小刘把辞职信放在你桌上：「哥，我扛不住了。天天加班到凌晨，工资连房租都不够……我去考公了。」\n\n他刚来半年，是你亲手带的。",
     choices: [
-      { id: "retain", text: "💬 试着挽留（需能力40+或人气40+）" },
-      { id: "replace", text: "🔄 换人（现金-¥2000）" },
-      { id: "let_go", text: "🤷 让他走吧" },
+      {
+        text: "💬 试着挽留（需能力40+或人气40+）",
+        apply: function (st) {
+          var c = st.player.corporate;
+          if (!c) return;
+          st.flags._gradQuitCooldown = (st.player.day || 0) + 90;
+          if ((c.ability || 0) >= 40 || (c.popularity || 0) >= 40) {
+            c.popularity = Math.min(100, (c.popularity || 0) + 3);
+            StateManager.addMessage("💬 你与小刘深谈，用愿景留住了他。人缘+3。", "success");
+          } else {
+            StateManager.addMessage("😔 你没能说服小刘，他走了。但你知道这不是你的错。", "info");
+          }
+        },
+      },
+      {
+        text: "🔄 换人（现金-¥2000）",
+        apply: function (st) {
+          st.flags._gradQuitCooldown = (st.player.day || 0) + 90;
+          if (st.resources) st.resources.cash = (st.resources.cash || 0) - 2000;
+          if (typeof addDailyTransaction === "function") addDailyTransaction(st, "expense", "recruit", 2000, "应届生替代招聘费");
+          StateManager.addMessage("🔄 你花了¥2000重新招了个人，疲惫感增加。", "info");
+        },
+      },
+      {
+        text: "🤷 让他走吧",
+        apply: function (st) {
+          st.flags._gradQuitCooldown = (st.player.day || 0) + 90;
+          StateManager.addMessage("🤷 你叹了口气，让HR走流程。", "info");
+        },
+      },
     ],
     icons: ["📄", "😢"],
   };
