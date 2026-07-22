@@ -1,223 +1,29 @@
 {
-  "currentRound": 170,
-  "currentDomain": "H",
-  "nextDomain": "A",
-  "rotationIndex": 0,
-  "domainOrder": [
-    "A",
-    "B",
-    "C",
-    "D",
-    "E",
-    "F",
-    "G",
-    "H"
-  ],
+  "currentRound": 172,
+  "currentDomain": "B",
+  "nextDomain": "C",
+  "rotationIndex": 2,
+  "domainOrder": ["A", "B", "C", "D", "E", "F", "G", "H"],
+  "domainRecency": {
+    "A": 171,
+    "B": 172,
+    "C": 165,
+    "D": 167,
+    "E": 167,
+    "F": 168,
+    "G": 169,
+    "H": 170
+  },
   "history": [
-    {
-      "round": 1,
-      "domain": "A"
-    },
-    {
-      "round": 2,
-      "domain": "B"
-    },
-    {
-      "round": 3,
-      "domain": "C"
-    },
-    {
-      "round": 4,
-      "domain": "D"
-    },
-    {
-      "round": 5,
-      "domain": "B"
-    },
-    {
-      "round": 6,
-      "domain": "D"
-    },
-    {
-      "round": 7,
-      "domain": "F"
-    },
-    {
-      "round": 8,
-      "domain": "E"
-    },
-    {
-      "round": 9,
-      "domain": "F"
-    },
-    {
-      "round": 10,
-      "domain": "G"
-    },
-    {
-      "round": 11,
-      "domain": "F"
-    },
-    {
-      "round": 12,
-      "domain": "G"
-    },
-    {
-      "round": 13,
-      "domain": "H"
-    },
-    {
-      "round": 14,
-      "domain": "A"
-    },
-    {
-      "round": 15,
-      "domain": "B"
-    },
-    {
-      "round": 16,
-      "domain": "D"
-    },
-    {
-      "round": 17,
-      "domain": "F"
-    },
-    {
-      "round": 18,
-      "domain": "G"
-    },
-    {
-      "round": 19,
-      "domain": "A"
-    },
-    {
-      "round": 20,
-      "domain": "B"
-    },
-    {
-      "round": 21,
-      "domain": "C"
-    },
-    {
-      "round": 23,
-      "domain": "C"
-    },
-    {
-      "round": 27,
-      "domain": "E"
-    },
-    {
-      "round": 28,
-      "domain": "F"
-    },
-    {
-      "round": 29,
-      "domain": "D"
-    },
-    {
-      "round": 30,
-      "domain": "D"
-    },
-    {
-      "round": 31,
-      "domain": "E"
-    },
-    {
-      "round": 32,
-      "domain": "F"
-    },
-    {
-      "round": 33,
-      "domain": "G"
-    },
-    {
-      "round": 34,
-      "domain": "H"
-    },
-    {
-      "round": 35,
-      "domain": "A"
-    },
-    {
-      "round": 36,
-      "domain": "B"
-    },
-    {
-      "round": 37,
-      "domain": "C"
-    },
-    {
-      "round": 38,
-      "domain": "D"
-    },
-    {
-      "round": 39,
-      "domain": "E"
-    },
-    {
-      "round": 40,
-      "domain": "F"
-    },
-    {
-      "round": 41,
-      "domain": "G"
-    },
-    {
-      "round": 42,
-      "domain": "H"
-    },
-    {
-      "round": 43,
-      "domain": "A"
-    },
-    {
-      "round": 44,
-      "domain": "B"
-    },
-    {
-      "round": 45,
-      "domain": "C"
-    },
-    {
-      "round": 164,
-      "domain": "Layer4",
-      "note": "L4-A first pass (5 gameOver gatings) + spec doc"
-    },
-    {
-      "round": 165,
-      "domain": "Layer4",
-      "note": "L4-A street续扫 103 处 gameOver 门控 (events_street_survival 49 + wealth 54; life 跳过待 loop 让出)"
-    },
-    {
-      "round": 166,
-      "domain": "Layer4",
-      "note": "L4-A 收尾 life.js 22 处 gameOver 门控 → street 全覆盖 125 / L4-A 累计 130"
-    },
-    {
-      "round": 167,
-      "domain": "Layer4",
-      "note": "gameOver字段一致性：根级gameOver真正写入，激活130处L4-A门控（Option C桥接，7处触发点镜像写入）"
-    },
-    {
-      "round": 170,
-      "domain": "H",
-      "note": "域H第二轮主审：enterCorporatePhase NaN守卫(职级属性初始化防御)+3公司跨域联动事件(H→A/C/D)注入RANDOM_EVENTS；MC 6×400d 0代码异常"
-    }
+    {"round": 170, "domain": "H", "note": "域H: enterCorporatePhase NaN守卫+3公司跨域联动事件(H→A/C/D)+Phase1→2继承(corp_legacy_bonus)+3数据文件(D→H NPC/H团队/H→F绩效)"},
+    {"round": 171, "domain": "A", "note": "域A: 2联动增强(A→G经济日报/A→D NPC财富感知)+A类补提交(医院jobs去重+buyGood现金NaN防御)"},
+    {"round": 172, "domain": "B", "note": "域B: 2项A类(Math.random→Random统一)+4联动增强(B→C技能突破/B→E市场波动/B→G/B→A)"}
   ],
-  "lastDomain": "H",
-  "lastRound": 170,
+  "lastDomain": "B",
+  "lastRound": 172,
   "lastDate": "2026-07-23",
-  "lastCommit": "3fdb9973ff2c081a484014549504b1949f93de8a",
-  "pushStatus": "LOCAL",
-  "completedDomains": [
-    "A",
-    "B",
-    "C",
-    "D",
-    "E",
-    "F",
-    "G",
-    "H"
-  ],
-  "description": "Layer4 时间线逻辑门控：L4-A 130处gameOver门控(首过5+street125)已生效——gameOver字段一致性专项完成(根级gameOver真正写入，激活门控)；L4-B phase-less死事件114候选逐条人工复核；L4-C/D/E待做。Layer5经济缩放已由loop完成(eb57efb3)。手动「继续」驱动，自动loop并行扫street/moral/域C"
+  "lastCommit": "fad3d220",
+  "pushStatus": "PUSHED",
+  "completedDomains": ["A", "B", "C", "D", "E", "F", "G", "H"],
+  "description": "全系统优化 loop R172 完成。域B第四轮: 2项A类+4项联动。下轮R173→域C(最薄弱,R165后未轮到)。"
 }
