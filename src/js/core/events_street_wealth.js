@@ -76,6 +76,7 @@
         excludeFlags: ["_honestyCompound"],
       },
       conditions: function (st) {
+        if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后不再触发街头叙事事件
         return (st.player.fame || 0) >= 30;
       },
       choices: [
@@ -212,6 +213,7 @@
         excludeFlags: ["_hadMentalCrisis"],
       },
       conditions: function (st) {
+        if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后不再触发街头叙事事件
         return (st.player.mental || 0) < 20 && (st.housing.tier || 0) >= 1;
       },
       choices: [
@@ -272,6 +274,7 @@
         excludeFlags: ["_hadTherapy"],
       },
       conditions: function (st) {
+        if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后不再触发街头叙事事件
         return (st.player.mental || 0) < 35;
       },
       choices: [
@@ -612,6 +615,7 @@
       },
       // [Layer3] 叙事说"你在出租屋里接起来"，需玩家有住所
       conditions: function (st) {
+        if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后不再触发街头叙事事件
         if (!st.housing || st.housing.tier < 1) return false;
         return st.resources && st.resources.villageDebt > 2000;
       },
@@ -687,6 +691,7 @@
       story:
         "你老家的一个远房亲戚突然加了你微信，说「村长让我给你带个话：你那笔债不能再拖了，他说如果年前还不上，就要跟你爸说这事了。」",
       conditions: function (st) {
+        if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后不再触发街头叙事事件
         return (
           st.player.phase === "street" &&
           (st.resources.villageDebt || 0) > 3000 &&
@@ -774,6 +779,7 @@
       story:
         "你出租屋门被敲响了。打开门，看到村长站在门口，身后跟着你爸。「找到了，」村长说，「你自己说吧。」",
       conditions: function (st) {
+        if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后不再触发街头叙事事件
         return (
           st.player.phase === "street" &&
           (st.resources.villageDebt || 0) > 4000 &&
@@ -845,6 +851,7 @@
       story:
         "你投资的楼盘开发商突然资金链断裂，宣布破产重组！工地停工，物业跑路，业主群炸了锅。这套房子…可能要烂尾了。",
       conditions: function (st) {
+        if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后不再触发街头叙事事件
         var inv = st.investment || {};
         return (
           inv.properties &&
@@ -920,6 +927,7 @@
       story:
         "历时数月的业主维权终于有了结果——银行接管开发商，承诺续建烂尾楼，业主获得延期赔偿。你们赢了！",
       conditions: function (st) {
+        if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后不再触发街头叙事事件
         return (
           !!st.flags._propertyRightsGroup &&
           st.player.day >= (st.flags._propertyCollapseDay || 0) + 25 &&
@@ -980,6 +988,7 @@
       story:
         "群里炸锅了！某外卖平台宣布每单补贴+¥3，另一家立刻跟进——这是一年里骑手最好赚的时候。平台代理正在路边招人，注册就给¥60，补贴大战期间接单收益额外+30%。错过了这个窗口，下次不知道什么时候再有。",
       conditions: function (st) {
+        if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后不再触发街头叙事事件
         var hasNews =
           st.activeNews &&
           st.activeNews.some(function (n) {
@@ -1031,6 +1040,7 @@
       story:
         "骑手群突然安静了。昨晚平台悄悄改了规则：每单补贴砍掉¥2，还加了「差评扣款机制」。你算了一下，实际收入比刚注册时少了35%。几个老骑手已经愤而离职，另一些准备组团维权。你才跑了这几天——怎么办？",
       conditions: function (st) {
+        if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后不再触发街头叙事事件
         var hasRiderWinter =
           st.activeNews &&
           st.activeNews.some(function (n) {
@@ -1096,6 +1106,7 @@
       story:
         "维权团传来消息：经过多次谈判，平台同意象征性支付一次「和解金」，但拒绝恢复补贴，并向组织者发了封号警告。团队里分成两派——一派说拿钱走人，活该；另一派说继续上诉，这是原则问题。",
       conditions: function (st) {
+        if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后不再触发街头叙事事件
         return (
           !!st.flags._riderRightsComplaint &&
           st.player.day >= (st.flags._riderRightsComplaint || 0) + 15 &&
@@ -1147,6 +1158,7 @@
       story:
         "等了这么久，终于等到消息：政府启动'保交楼'专项基金，接管你的楼盘续建。代价是交付时间推迟2年，但总归不会烂尾了。",
       conditions: function (st) {
+        if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后不再触发街头叙事事件
         return (
           !!st.flags._waitingPropertyResolution &&
           st.player.day >= (st.flags._propertyCollapseDay || 0) + 20 &&
@@ -1211,6 +1223,7 @@
       story:
         "巷口“老李茶饮”贴了转让告示。老李说儿子留学，他要去陪读，店铺连带设备打包¥80,000。地段一般但有老客户，每月流水能跑个万把块。你掂量了下口袋：手头是有这个钱，可一旦砸下去，就是把家底押在一家小店上了。",
       conditions: function (st) {
+        if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后不再触发街头叙事事件
         return (
           st.player.phase === "street" &&
           st.player.day > 100 &&
@@ -1261,6 +1274,7 @@
       story:
         "接手老李茶饮快一个月了。问题来了：原来稳定的老客户大半流失（觉得“换老板就变味”），新顾客又不来。每月房租水电¥2,500，上个月只赚¥800，倒贴¥1,700。隔壁新开的“星巴超”反倒生意火爆——同样卖茶，人家做出了网红奶茶概念，年轻人在门口排队。",
       conditions: function (st) {
+        if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后不再触发街头叙事事件
         return (
           !!st.flags._acquiredTeaStore &&
           st.player.day >= (st.flags._acquiredTeaStore || 0) + 25 &&
@@ -1327,6 +1341,7 @@
       story:
         "星巴超的人正式登门：他们要在这条街扩张，一口气收购周边7家店面，给你的报价是当初买入价的45%。代理人很客气：“王老板，您这店地段确实不错，但说实话——独立小店是熬不过我们这种连锁的。这价钱已经是给老李面子。”望着空荡荡的店面，你忽然意识到：自己这一年的折腾，不过是给对手培育了一片好地皮。",
       conditions: function (st) {
+        if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后不再触发街头叙事事件
         var afterFight =
           !!st.flags._acquisitionFighting &&
           // [Layer4] 叙事说"自己这一年的折腾"，需365天
@@ -1391,6 +1406,7 @@
       story:
         "刷短视频时刷到一条爆款：你做的这行，有个 90 后团队搞了个新模式——他们用「订阅制+数据派单」，把传统从业者效率提升了 40%，3 个月就吃掉了 15% 的市场。看着评论区那句“老一代再不转型就要被淘汰了”，你心里一紧——你做这行已经 30 多天，今天的单量明显比一个月前少。",
       conditions: function (st) {
+        if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后不再触发街头叙事事件
         var jobStreaks = st.flags._jobStreaks || {};
         var totalDays = 0;
         for (var k in jobStreaks) {
@@ -1475,6 +1491,7 @@
       story:
         "10 天的转型训练营结束。你学了“数据派单”逻辑，也认识了几个同期转型的人——有人做副业，有人 all-in 新模式。教练说：“旧行业的活儿还能干 6~12 个月，但每过一季度市场份额会少 5%。你现在转，是抄底；再等半年，可能连转的成本都凑不齐了。”",
       conditions: function (st) {
+        if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后不再触发街头叙事事件
         return (
           !!st.flags._disruptionStudying &&
           st.player.day >= (st.flags._disruptionStudying || 0) + 10 &&
@@ -1534,6 +1551,7 @@
       story:
         "三个月过去了。新模式占了行业 40% 份额，老模式从业者中能转型的转了，转不了的去了别的行业。你回头看自己这阵子的选择，发现这行业的洗牌就像潮水——不是谁错了，是潮水在往哪个方向走。",
       conditions: function (st) {
+        if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后不再触发街头叙事事件
         var pivoted =
           !!st.flags._disruptionPivoted &&
           st.player.day >= (st.flags._disruptionPivoted || 0) + 40;
@@ -1598,6 +1616,7 @@
         "小美把你拉到咖啡厅角落，压低声音：「我导师在规划局有熟人——科技园东边那片旧厂房要被政府收储了，规划是扩建三期。消息还没公开，估计两周内官宣。你要是能在那片搞到点什么……你懂的。」她眨眨眼，把一张二手房东的名片推过来。",
       // [自洽修复] 新增：xiao_mei 关系 met 检查（story 直呼"小美"，需已结识）
       conditions: function (st) {
+        if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后不再触发街头叙事事件
         var rel = st.relationships && st.relationships.xiao_mei;
         // [自洽修复] 检查 met 字段（直呼已定义NPC名需已结识）
         if (!rel || !rel.met) return false;
@@ -1666,6 +1685,7 @@
       story:
         "新闻推送弹出来：市政府正式公告科技园东区旧厂房改造项目立项，总投资80亿，预计带动周边3公里商业价值提升30%~50%。你记得两周前小美说的那番话——现在，到了看选择的时候了。",
       conditions: function (st) {
+        if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后不再触发街头叙事事件
         return (
           (!!st.flags._arbitrageTechparkActed ||
             !!st.flags._arbitrageTechparkModerate) &&
@@ -1682,6 +1702,7 @@
           text: "💰 把优先承租权转手（溢价300%！）",
           hint: "空手套白狼，净赚¥5000~8000",
           conditions: function (st) {
+        if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后不再触发街头叙事事件
             return !!st.flags._arbitrageTechparkActed;
           },
           apply: function (st) {
@@ -1705,6 +1726,7 @@
           text: "📉 卖出科技股（获利+40%）",
           hint: "见好就收",
           conditions: function (st) {
+        if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后不再触发街头叙事事件
             return !!st.flags._arbitrageTechparkModerate;
           },
           apply: function (st) {
@@ -1734,6 +1756,7 @@
         "张姐神神秘秘地凑过来说：「我表妹在市场监管局，说下个月要出新规——所有街头摊贩必须持《食品摊贩登记卡》才能出摊，无证的一律罚款¥200起。现在办证只需要¥50+健康证，等新规一出，办证窗口排都排不上，黄牛价至少¥500。」她把一张健康体检表塞到你手里。",
       // [自洽修复] 新增：sister_zhang 关系 met 检查（story 直呼"张姐"，需已结识）
       conditions: function (st) {
+        if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后不再触发街头叙事事件
         var rel = st.relationships && st.relationships.sister_zhang;
         // [自洽修复] 检查 met 字段（直呼已定义NPC名需已结识）
         if (!rel || !rel.met) return false;
@@ -1803,6 +1826,7 @@
       story:
         "果然，新规说来就来。城管大队今天出现在街头，挨个检查登记卡。有证的摊贩照常营业，没证的被当场开罚单——¥200起步。你远远看着几个没证的同行跟城管吵起来，心里庆幸（或后悔）自己当初的选择。",
       conditions: function (st) {
+        if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后不再触发街头叙事事件
         var tipDay = st.flags._arbitrageLicenseTipDay || 0;
         return (
           (st.flags._arbitrageLicenseActed ||
@@ -1875,6 +1899,7 @@
         "陈师傅一边擦灶台一边跟你说：「我听餐饮协会的老哥说，市里要搞『餐饮卫生星级评定』，A级店每季度补贴¥2000，还上推荐榜单。但是评上A级得提前整改——换不锈钢灶台、装灭蝇灯、搞明厨亮灶，成本大概¥1500。现在申请窗口还没开，等正式通知出来再搞，排队至少俩月。」他把一份整改清单递过来。",
       // [自洽修复] 新增：chef_chen 关系 met 检查（story 直呼"陈师傅"，需已结识）
       conditions: function (st) {
+        if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后不再触发街头叙事事件
         var rel = st.relationships && st.relationships.chef_chen;
         // [自洽修复] 检查 met 字段（直呼已定义NPC名需已结识）
         if (!rel || !rel.met) return false;
@@ -1938,6 +1963,7 @@
       story:
         "餐饮协会的公告贴出来了。你挤在人群里找自己的摊位号——评级结果直接决定了接下来一个季度你能拿多少补贴、上什么推荐榜单。",
       conditions: function (st) {
+        if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后不再触发街头叙事事件
         return (
           (st.flags._arbitrageHygieneInvested ||
             st.flags._arbitrageHygieneModerate ||
@@ -2011,6 +2037,7 @@
       story:
         "你在刷新闻时看到一条不起眼的行业快讯——你持股的那家公司刚刚发布了超预期的产品数据。圈内小范围流传，正式公告要等三天后才出。现在买入还来得及……但这算内幕交易吗？",
       conditions: function (st) {
+        if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后不再触发街头叙事事件
         if (
           st.player.phase !== "street" ||
           !st.investment ||
@@ -2077,6 +2104,7 @@
       story:
         "你持仓的一只股票突然异动，跌幅超过10%！消息面上，关联公司爆出了负面新闻。你要不要紧急操作？",
       conditions: function (st) {
+        if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后不再触发街头叙事事件
         if (
           !st.investment ||
           !st.investment.stockHoldings ||
@@ -2180,6 +2208,7 @@
       story:
         "搬进单间后本以为能安静些，没想到隔壁是一对刚搬来的年轻情侣，半夜还在吵架摔东西。你敲了墙提醒，对方反而更大声了。明天还要早起打工，怎么办？",
       conditions: function (st) {
+        if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后不再触发街头叙事事件
         return st.player.phase === "street" && (st.housing.tier || 0) === 2;
       },
       choices: [
@@ -2243,6 +2272,7 @@
       story:
         "点了一份¥25的外卖，放在门口准备回去拿，出来时发现袋子不见了。楼道里有个陌生人正鬼鬼祟祟地走开。",
       conditions: function (st) {
+        if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后不再触发街头叙事事件
         return (
           st.player.phase === "street" &&
           (st.housing.tier || 0) >= 2 &&
@@ -2305,6 +2335,7 @@
       story:
         "住对门的那个独居中年男人来敲门，说家里急事要借¥200，明天就还。你们平时见面只是点头之交，但你注意到他神色慌张，手一直在抖。",
       conditions: function (st) {
+        if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后不再触发街头叙事事件
         return (
           st.player.phase === "street" &&
           (st.housing.tier || 0) >= 3 &&
@@ -2375,6 +2406,7 @@
       story:
         "小区物业在门口发传单：「业主专享！健身房年卡¥300，原价¥800。」你住的一居室正好在这个小区里。健身对身体好，但300块也不便宜。",
       conditions: function (st) {
+        if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后不再触发街头叙事事件
         return (
           st.player.phase === "street" &&
           (st.housing.tier || 0) >= 3 &&
@@ -2429,6 +2461,7 @@
       story:
         "巷口公告栏贴了一张城市规划公示图，隐约能看到你家那片被红线圈了起来。围观的邻居们窃窃私语：「要拆了要拆了！」你心算了一下——如果真拆，私房能赔¥150,000~¥250,000。但你手上没房，得现在买才有机会。卖私房的老王开口就要¥80,000，「你不买明天别人就买了。」",
       conditions: function (st) {
+        if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后不再触发街头叙事事件
         return (
           st.player.phase === "street" &&
           st.player.day >= 40 &&
@@ -2476,6 +2509,7 @@
       story:
         "一个月后，拆迁办果然带着测量仪进村了！公示出来了：标准赔偿¥180,000/户，签字后30天打款。但老王那房子面积有争议，按照新规可能只能赔¥120,000。隔壁几户已经在商量联合起来抬价。你的选择是——",
       conditions: function (st) {
+        if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后不再触发街头叙事事件
         return !!st.flags._reBoughtHouse && !st.flags._reDemolitionSeen;
       },
       choices: [
@@ -2540,6 +2574,7 @@
       story:
         "¥120,000的拆迁款到账了。你看着余额，这是你人生中最大的一笔钱。但城里的房价已经因为这波拆迁涨了一轮——你手上这点钱，付首付都不够。工友老张说：「赶紧买房！不买房钱会贬值！」也有人劝你：「拿这钱做点小生意吧。」你坐在出租屋里，对着手机银行发了一晚上的呆。",
       conditions: function (st) {
+        if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后不再触发街头叙事事件
         return (
           !!st.flags._reAccepted &&
           !st.flags._reSettleSeen &&
@@ -2606,6 +2641,7 @@
       story:
         "等了20天，阵线内部开始松动了。老张的老婆生病需要钱，他第一个偷偷签了协议。阵线一破，拆迁办各个击破——最后到你这儿的时候，赔偿降到了¥110,000。比原来少了一万。邻居们互相指责，说有人当了叛徒。你也拿到了钱，但心里不是滋味。",
       conditions: function (st) {
+        if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后不再触发街头叙事事件
         return !!st.flags._reCoalition && !st.flags._reCoalitionSeen;
       },
       choices: [
@@ -2654,6 +2690,7 @@
       story:
         "坚持了几个月，最终还是撑不住了。楼里断了水电气，周围全围了铁皮，进出要翻墙。晚上有陌生人敲窗「劝」你搬走。最后你在街道办的调解下签了字——赔偿¥90,000。老王在街对面看着你，脸上说不清是同情还是庆幸。",
       conditions: function (st) {
+        if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后不再触发街头叙事事件
         return !!st.flags._reHoldout && !st.flags._reHoldoutEndSeen;
       },
       choices: [
@@ -2703,6 +2740,7 @@
         "你在咖啡馆躲雨时，邻座一个戴眼镜的年轻人突然跟你搭话：「哥们，我看你像个干实事的人。」他叫小陈，是个全栈程序员，说做了一个AI笔记App，就差一个懂市场和运营的合伙人。他不要你全职，先投点钱试试——¥30,000换10%股份。他眼睛亮得让人不忍心拒绝。",
       // [自洽修复] conditions 新增：雨天检查（story 明确"躲雨时"，需天气为 rainy/stormy）
       conditions: function (st) {
+        if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后不再触发街头叙事事件
         var isRainy =
           st.weather &&
           (st.weather.current === "rainy" || st.weather.current === "stormy");
@@ -2771,6 +2809,7 @@
       story:
         "小陈深夜给你发了条微信，附件是一张用户增长曲线图——上线6周，DAU从0冲到了12,000，日新增1,500。他电话里兴奋地说：「我们要火了！但服务器扛不住了，需要再投¥50,000扩容，或者找机构投资进来——机构要占30%。」",
       conditions: function (st) {
+        if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后不再触发街头叙事事件
         return !!st.flags._startupInvested && !st.flags._startupProgressSeen;
       },
       choices: [
@@ -2829,6 +2868,7 @@
       story:
         "小陈电话里的声音很平静：「公司被字节龙收购了，¥1,200万全现金。你的股份按比例折算……钱明天打到账上。」你握着手机，回忆起那个雨天的咖啡馆。",
       conditions: function (st) {
+        if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后不再触发街头叙事事件
         return (
           (!!st.flags._startupBurning || !!st.flags._startupVCFunding) &&
           !st.flags._startupExitSeen
@@ -2885,6 +2925,7 @@
       story:
         "工友老张把你拉到一边，压低声音说批发市场那边有块「空地」——几个小摊贩每月交¥500保护费，没人管。他已经收了三个月了，想找个帮手，「你体格不错，往那一站就有威慑力。不用动手，分你三成。」他掏出三张皱巴巴的¥100，「这是你这个月的预付款。」",
       conditions: function (st) {
+        if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后不再触发街头叙事事件
         return (
           st.player.phase === "street" &&
           st.player.day >= 30 &&
@@ -2946,6 +2987,7 @@
       story:
         "跟老张去批发市场收钱。卖水果的老王头颤巍巍地数了¥500递给老张，眼神里全是恐惧。你站在旁边，觉得自己像一堵墙——不是保护他的墙，是压在他心口的墙。市场角落新装了两个监控摄像头。",
       conditions: function (st) {
+        if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后不再触发街头叙事事件
         return !!st.flags._grayJoined && !st.flags._grayCollectSeen;
       },
       choices: [
@@ -2987,6 +3029,7 @@
       story:
         "两个便衣警察在工地门口等你：「××批发市场的案子，监控显示你上个月15号在场。你认识张××吗？」",
       conditions: function (st) {
+        if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后不再触发街头叙事事件
         return !!st.flags._grayDeepIn && !st.flags._grayCleanupSeen;
       },
       choices: [
@@ -3029,6 +3072,7 @@
       story:
         "批发市场的案子破了。老王头托人转告你：「谢谢。」你不知道他怎么知道的。但你知道自己在这片的名声变了——有人敬你，也有人躲着你。",
       conditions: function (st) {
+        if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后不再触发街头叙事事件
         return !!st.flags._grayReported && !st.flags._grayAftermathSeen;
       },
       choices: [
@@ -3069,6 +3113,7 @@
         "热搜第一：教育部要出台新规，学科类培训机构可能全部关停。你手上持有教育股，那个做家教的朋友刚续了半年房租。",
       // [Layer3] 叙事说"你手上持有教育股"，需玩家持有股票
       conditions: function (st) {
+        if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后不再触发街头叙事事件
         if (!st.investment || !st.investment.stockHoldings || Object.keys(st.investment.stockHoldings).length === 0) return false;
         return st.player && st.player.day >= 30;
       },
@@ -3119,6 +3164,7 @@
         "双减文件正式公布：学科类培训不得上市融资。教育股暴跌90%。你的家教兼职也发来消息：「抱歉不需要了。」",
       // [自洽修复] conditions 新增：家教职业检查（story 明确"你的家教兼职"，需有 tutoring 工作/副业/行动记录）
       conditions: function (st) {
+        if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后不再触发街头叙事事件
         var hasTutoring =
           (st.employment &&
             st.employment.currentJob &&
@@ -3180,6 +3226,7 @@
       story:
         "双减落地一个月后，课桌椅在闲鱼上翻倍卖掉了。前老师在小区偷偷上网课月入¥12,000。政策没需求消失——只是藏到了地下。",
       conditions: function (st) {
+        if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后不再触发街头叙事事件
         return (
           (!!st.flags._eduBoughtAssets || !!st.flags._eduPrivateTutor) &&
           !st.flags._eduAftermathSeen
@@ -3239,6 +3286,7 @@
       story:
         "新闻弹窗：国家新能源补贴退坡30%。比丫迪暴跌8%，蔚小李跌12%~15%。你持有的新能源股浮盈20%还没走。",
       conditions: function (st) {
+        if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后不再触发街头叙事事件
         if (!st.investment || !st.investment.stockHoldings || Object.keys(st.investment.stockHoldings).length < 1) return false; // [Layer3]
         return (
           st.player.phase === "street" &&
@@ -3295,6 +3343,7 @@
       story:
         "三周后行业分化：比丫迪刀片电池突破，股价反弹；知马汽车停产，云度被起诉欠款。优胜劣汰。",
       conditions: function (st) {
+        if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后不再触发街头叙事事件
         return !!st.flags._evFrenzySeen && !st.flags._evShakeoutSeen;
       },
       choices: [
@@ -3349,6 +3398,7 @@
       story:
         "三个月后。比丫迪旗舰车型订单超预期300%，股价创了新高。你当初追加的投资翻了一倍。",
       conditions: function (st) {
+        if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后不再触发街头叙事事件
         return (
           (!!st.flags._evSwitchedToLeader || !!st.flags._evBoughtSmall) &&
           !st.flags._evRecoverySeen
@@ -3399,6 +3449,7 @@
         "新闻在播报：国际金价突破历史新高，国内金饰价格已经冲到每克¥800。街边金店门口排起了长队，黄牛在门口加价收金条。你翻出手机看了眼——之前零散买的几克黄金已经涨了40%。要不要趁机操作一波？",
       // [Layer3] 叙事说"之前零散买的几克黄金已经涨了40%"，需玩家持有黄金
       conditions: function (st) {
+        if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后不再触发街头叙事事件
         if (!st.investment || !st.investment.goldHoldings || st.investment.goldHoldings <= 0) return false;
         return st.player && st.player.day >= 30;
       },
@@ -3464,6 +3515,7 @@
       story:
         "半个月过去，金价已经涨到了令人瞠目的程度——每克¥950！新闻里专家们还在喊'黄金看到¥1000'，但街边收金条的黄牛已经悄悄减少了收购量。你手里的金条现在浮盈不少。",
       conditions: function (st) {
+        if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后不再触发街头叙事事件
         return !!st.flags._goldBought && !st.flags._goldPeakDone;
       },
       choices: [
@@ -3507,6 +3559,7 @@
       story:
         "最坏的情况发生了——国际金价一夜暴跌15%！原因是美联储突然加息，美元走强。国内金价跟着跳水，你手里的金条现在不但没赚，反而亏了本金。金店门口又开始排队，这次是卖金的人。",
       conditions: function (st) {
+        if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后不再触发街头叙事事件
         return !!st.flags._goldHeld && !st.flags._goldCrashDone;
       },
       choices: [
@@ -3553,6 +3606,7 @@
       story:
         "一个月后，金价慢慢回升到了中位线。虽然没回到最高点，但比你割肉时强多了。你当初坚持持有的决定，现在看来是对的。",
       conditions: function (st) {
+        if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后不再触发街头叙事事件
         return !!st.flags._goldHeldLong && !st.flags._goldReboundDone;
       },
       choices: [

@@ -242,6 +242,7 @@
       _isChainEvent: false,
       // [已审查] 含 OR 逻辑（day≥10 || health≤70），保留 conditions 不变
       conditions: function (st) {
+        if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后不再触发街头叙事事件
         // [自洽修复] st.needs.health 不存在（state.needs 无 health 字段），改为 st.status.health
         return (
           st.player.day >= 10 ||
@@ -354,6 +355,7 @@
       _isChainEvent: false,
       // [已审查] 含 OR 逻辑（fame>=3 || corporate.popularity>=10），保留 conditions 不变
       conditions: function (st) {
+        if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后不再触发街头叙事事件
         return (
           st.player.day >= 10 &&
           ((st.player.fame || 0) >= 3 ||
@@ -467,7 +469,9 @@
       title: "楼盘烂尾传闻",
       story:
         "在城中村听到几个工友议论，说城郊那个新楼盘'锦绣豪庭'开发商资金链断了，可能要烂尾。不少购房者已经交了首付。有人说开发商正在秘密转让项目。",
-      conditions: function (st) { if (!st.housing || st.housing.tier > 1) return false; if (!st.career || !st.career.currentJob) return false; return true; }, // [Layer3]
+      conditions: function (st) {
+        if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后不再触发街头叙事事件
+        if (!st.housing || st.housing.tier > 1) return false; if (!st.career || !st.career.currentJob) return false; return true; }, // [Layer3]
       choices: [
         {
           text: "👂 多打听点消息 (花¥30请人吃饭)",
@@ -764,6 +768,7 @@
         "手机上弹出新闻：受国际局势影响，全球股市暴跌7%！所有人都在恐慌性抛售。你现在持有投资资产吗？",
       // [conditions→triggers] 已审查：复杂条件（inv.stockHoldings.length>0）保留
       conditions: function (st) {
+        if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后不再触发街头叙事事件
         var inv = st.investment || {};
         return inv.stockHoldings && inv.stockHoldings.length > 0;
       },
@@ -837,6 +842,7 @@
       // [conditions→triggers] + [全系统自洽修复] 域B A类#4: location 非 evaluateTriggers 支持字段，改 conditions 函数
       triggers: { minCash: 1000 },
       conditions: function (st) {
+        if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后不再触发街头叙事事件
         return st.trade && st.trade.currentLocation === "wholesaleMarket";
       },
       choices: [
@@ -1019,6 +1025,7 @@
       story:
         "隔壁城市出了严厉的房产调控政策，房价已经开始跌了。这边会不会跟进？你的房产怎么办？",
       conditions: function (st) {
+        if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后不再触发街头叙事事件
         var inv = st.investment || {};
         return inv.properties && inv.properties.length > 0;
       },
@@ -1064,6 +1071,7 @@
       title: "生病中有人介绍偏方",
       story: "你病还没好，路边一个老太太神神秘秘说她有个祖传偏方，包治百病。",
       conditions: function (st) {
+        if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后不再触发街头叙事事件
         return st.status.sick || st.status.health < 40;
       },
       choices: [
@@ -1114,6 +1122,7 @@
       story:
         "你实在饿得不行了。一位路过的阿姨看到你脸色不好，问你需不需要帮助。",
       conditions: function (st) {
+        if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后不再触发街头叙事事件
         return st.needs.hunger < 20;
       },
       choices: [
@@ -1149,6 +1158,7 @@
       story:
         "你走进银行，客户经理热情地推荐一款「稳赚不赔」的理财产品，年化收益号称8%。",
       conditions: function (st) {
+        if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后不再触发街头叙事事件
         return (
           st.player.phase === "street" &&
           st.trade &&
@@ -1199,6 +1209,7 @@
       id: "business_district_chance",
       _isChainEvent: false,
       conditions: function (st) {
+        if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后不再触发街头叙事事件
         return (
           st.player.day >= 40 &&
           (st.resources.cash || 0) >= 500 &&
@@ -1259,6 +1270,7 @@
       story:
         "菜市场门口，一位老大爷摔倒在地，周围人都在看但没人上前。你要怎么做？",
       conditions: function (st) {
+        if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后不再触发街头叙事事件
         return (
           st.player.phase === "street" &&
           st.trade &&
@@ -1325,6 +1337,7 @@
         '你的工友老刘从脚手架上摔下来，工头悄悄跟你说"别声张，私了了事，你多分200块"。老刘疼得直哼。',
       // [自洽修复] conditions 新增：建筑工地职业/地点/行动频次 检查
       conditions: function (st) {
+        if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后不再触发街头叙事事件
         var hasConstruction =
           (st.employment &&
             st.employment.currentJob &&
@@ -1395,6 +1408,7 @@
         "你从批发市场进了一批电子产品，摆摊时才发现全是山寨货。你手里还有20件，进货成本已经付了¥800。",
       // [自洽修复] conditions 新增：摆摊职业/副业/行动频次 检查
       conditions: function (st) {
+        if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后不再触发街头叙事事件
         var hasStall =
           (st.employment &&
             st.employment.currentJob &&
@@ -1479,6 +1493,7 @@
       story:
         '老家来的表哥说带你去听个"财富自由分享会"，说能月入过万。地址在郊区某酒店。',
       conditions: function (st) {
+        if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后不再触发街头叙事事件
         return st.player.phase === "street";
       },
       choices: [
@@ -1541,6 +1556,7 @@
       story:
         '干了半个月，工头说"年底一起结"。你知道这条街上好几个外来务工者都被拖欠过，年底往往人去楼空。',
       conditions: function (st) {
+        if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后不再触发街头叙事事件
         // [Layer3] 叙事说"干了半个月"，需玩家有工作
         if (!st.career || !st.career.currentJob) return false;
         return st.player.phase === "street";
@@ -1609,6 +1625,7 @@
         '房东王大婶敲门说："下个月房租从300涨到500，不行就搬走。"你现在住的这里还算安全。',
       // [自洽修复] 叙事中直接称呼"王大婶"(aunt_wang)，conditions 必须校验已结识
       conditions: function (st) {
+        if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后不再触发街头叙事事件
         return (
           st.player.phase === "street" &&
           st.housing.tier >= 1 &&
@@ -1685,6 +1702,7 @@
         "今天摆摊，一个穿着体面的中年女人在你摊位前停了很久，说她在一家公司负责采购，问你有没有兴趣合作供货。",
       // [自洽修复] conditions 新增：摆摊职业/副业/行动频次 检查
       conditions: function (st) {
+        if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后不再触发街头叙事事件
         var hasStall =
           (st.employment &&
             st.employment.currentJob &&
@@ -1747,6 +1765,7 @@
       story:
         "城中村路口有人摆了个二手手机摊，一部外观完好的安卓机，卖¥150，比正规店便宜多了。",
       conditions: function (st) {
+        if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后不再触发街头叙事事件
         return st.player.phase === "street" && st.resources.cash >= 150;
       },
       choices: [
@@ -1896,6 +1915,7 @@
         "菜场里，有人叫你名字——是你们县的老周头的儿子小周，在城里打拼了三年，看起来过得还行。",
       // [全系统自洽修复] 域B 修复:叙事直呼"老周头"(old_zhou),conditions需校验已结识
       conditions: function (st) {
+        if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后不再触发街头叙事事件
         if (st.player.phase !== "street") return false;
         if (
           !st.relationships ||
@@ -1960,6 +1980,7 @@
         "下午突然电闪雷鸣，暴雨将至。你刚摆好的货还没收，跑一趟要20分钟。同时有个生意正谈到关键处。",
       // [自洽修复] conditions 新增：暴雨天气 检查 + 摆摊职业/副业/行动频次 检查
       conditions: function (st) {
+        if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后不再触发街头叙事事件
         var isRainy =
           st.weather &&
           (st.weather.current === "rainy" || st.weather.current === "stormy");
@@ -2034,6 +2055,7 @@
       story:
         "昨晚在夜市吃了碗牛杂，今早起来肚子一直不对劲。现在有工作要去，但感觉随时要跑厕所。",
       conditions: function (st) {
+        if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后不再触发街头叙事事件
         // [Layer3] 叙事说"现在有工作要去"，需玩家有工作
         if (!st.career || !st.career.currentJob) return false;
         return st.player.phase === "street";
@@ -2096,6 +2118,7 @@
         '政府最近出通知要"整治市容"，街头管得更严了。据说明天会有大规模清查，抓到无证经营的罚款¥1000起。',
       // [全系统自洽修复] 域B 修复:城管清理事件无摆摊/职业条件检查→任何街头玩家都会触发，与叙事不符。添加摆摊/贸易相关条件。
       conditions: function (st) {
+        if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后不再触发街头叙事事件
         var hasTrade =
           (st.trade &&
             st.trade.currentLocation &&
@@ -2175,6 +2198,7 @@
         '房东王大婶敲门说："我侄子家装修，需要个会刷墙的人，管饭，300块一天，你去不去？"',
       // [自洽修复] 新增：aunt_wang 关系 met 检查（story 直呼"王大婶"，需已结识）
       conditions: function (st) {
+        if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后不再触发街头叙事事件
         var rel = st.relationships && st.relationships["aunt_wang"];
         // [自洽修复] 检查 met 字段（直呼已定义NPC名需已结识）
         if (!rel || !rel.met) return false;
@@ -2230,6 +2254,7 @@
         "李工头难得开心，说这个月工程提前完工，要给干活积极的人发奖金。你和他的关系决定你能拿多少。",
       // [自洽修复] 新增：boss_li 关系 met 检查（story 直呼"李工头"，需已结识）
       conditions: function (st) {
+        if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后不再触发街头叙事事件
         var rel = st.relationships && st.relationships["boss_li"];
         // [自洽修复] 检查 met 字段（直呼已定义NPC名需已结识）
         if (!rel || !rel.met) return false;
@@ -2281,6 +2306,7 @@
       story:
         "合租的宿舍有人丢了¥300现金，室友们互相猜疑。你有点印象，昨天看到一个平时鬼鬼祟祟的人进过那屋。",
       conditions: function (st) {
+        if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后不再触发街头叙事事件
         return st.player.phase === "street" && (st.housing.tier || 0) >= 1;
       },
       choices: [
@@ -2336,6 +2362,7 @@
       story:
         "早上醒来，你放在桥洞下的背包被人翻过了。幸好现金还藏在鞋底的暗格里，但一些零碎物品不见了——包括那件冬天用来挡风的旧外套。周围几个同样露宿的人都在互相打量。",
       conditions: function (st) {
+        if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后不再触发街头叙事事件
         return st.player.phase === "street" && (st.housing.tier || 0) === 0;
       },
       choices: [
@@ -2399,6 +2426,7 @@
         "天气预报说今晚有暴雨。你平时躲雨的那个桥洞位置，已经被另一个人占了。他看着你，你也看着他。雨还有两小时就到。",
       // [自洽修复] conditions 新增：暴雨天气 检查
       conditions: function (st) {
+        if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后不再触发街头叙事事件
         var isRainy =
           st.weather &&
           (st.weather.current === "rainy" || st.weather.current === "stormy");
@@ -2473,6 +2501,7 @@
       story:
         "街角那家慈善食堂今天开门早，已经有十几个人在排队了。你肚子很饿，但排队至少要两小时。旁边有人小声说：「今天好像有肉。」",
       conditions: function (st) {
+        if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后不再触发街头叙事事件
         return (
           st.player.phase === "street" &&
           (st.housing.tier || 0) === 0 &&
@@ -2548,6 +2577,7 @@
       story:
         "早上醒来，几个城管正在挨个叫醒露宿的人：「这里不能住了，赶紧收拾东西走人！」你的东西还堆在桥洞下，还没整理好。",
       conditions: function (st) {
+        if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后不再触发街头叙事事件
         return st.player.phase === "street" && (st.housing.tier || 0) === 0;
       },
       choices: [
@@ -2614,6 +2644,7 @@
         "货运站招夜班搬运工，12点到早上6点，时薪¥25，一晚能赚¥150，但白天就没法正常干活了。",
       maxCash: 50000,
       conditions: function (st) {
+        if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后不再触发街头叙事事件
         return st.player.phase === "street" && st.needs.fatigue <= 60;
       },
       choices: [
@@ -2676,6 +2707,7 @@
       story:
         "你在公交站椅子下发现一部崭新旗舰手机，锁屏是一对老夫妻和孙子的合影。附近几乎没人。",
       conditions: function (st) {
+        if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后不再触发街头叙事事件
         return st.player.phase === "street";
       },
       choices: [
@@ -2793,6 +2825,7 @@
       story:
         '去工地路上，一个老大爷突然捂着胸口倒在路边。旁边路人大多驻足观望，没人敢上前——"扶不扶"的事大家都怕。',
       conditions: function (st) {
+        if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后不再触发街头叙事事件
         return (
           st.player.phase === "street" &&
           st.trade &&
@@ -2858,6 +2891,7 @@
       story:
         "不知不觉，你已经在这座城市漂了整整一个月。站在路边，望着来来往往的人群，你开始思考……接下来的路怎么走？",
       conditions: function (st) {
+        if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后不再触发街头叙事事件
         return (
           st.player.phase === "street" &&
           st.player.day === 30 &&
@@ -2932,6 +2966,7 @@
       story:
         "六十天。你已经对这座城市不再陌生。但偶尔还是会有迷茫——这条路，走对了吗？",
       conditions: function (st) {
+        if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后不再触发街头叙事事件
         return (
           st.player.phase === "street" &&
           st.player.day === 60 &&
@@ -2991,6 +3026,7 @@
       story:
         "九十天。一个季度。很多来这座城市的人，三个月后悄悄打道回府了。而你还在这里。这座城市在等你给它一个答案。",
       conditions: function (st) {
+        if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后不再触发街头叙事事件
         return (
           st.player.phase === "street" &&
           st.player.day === 90 &&
@@ -3045,6 +3081,7 @@
       story:
         "当年你不顾工头施压，帮工友老刘叫了救护车。今天他来找你，说他表弟在正规工程公司，手上有个活缺人……",
       conditions: function (st) {
+        if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后不再触发街头叙事事件
         return (
           st.player.phase === "street" &&
           st.flags._helpedCoworker &&
@@ -3090,6 +3127,7 @@
       story:
         "路上你听到身后有人喊你。一个陌生女人说她当时丢了钱包，到处找，最后从监控看到你捡走了……",
       conditions: function (st) {
+        if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后不再触发街头叙事事件
         return (
           st.player.phase === "street" &&
           st.flags._keptWallet &&
@@ -3137,6 +3175,7 @@
       story:
         "你拒绝假货、做生意讲诚信的事传开了。圈子里的人私下讨论，说你这个人靠谱，有个批发商想跟你长期合作……",
       conditions: function (st) {
+        if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后不再触发街头叙事事件
         return (
           st.player.phase === "street" &&
           st.flags._refusedFakeGoods &&
@@ -3182,6 +3221,7 @@
       story:
         '你上次举报欠薪的事情，劳动仲裁中心记了档。今天接到通知：你的案例被评为"维权先锋"，有奖励，也有记者想采访……',
       conditions: function (st) {
+        if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后不再触发街头叙事事件
         return (
           st.player.phase === "street" &&
           st.flags._foughtWageTheft &&
@@ -3243,6 +3283,7 @@
       story:
         "老刘微信说他在新工地发现包工头要跑路，三十几个工友的工资危了！他第一个想到你——那次你帮他的事他一直没忘。",
       conditions: function (st) {
+        if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后不再触发街头叙事事件
         return (
           st.player.phase === "street" &&
           (st.flags._helpedCoworker || st.flags._foughtWageTheft) &&
@@ -3297,6 +3338,7 @@
         "大学城的小美发消息说她有个朋友想给孩子找数学家教，她推荐了你。对方愿意付每小时¥80，一周两节。",
       // [自洽修复] 新增：xiao_mei 关系 met 检查（story 直呼"小美"，需已结识）
       conditions: function (st) {
+        if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后不再触发街头叙事事件
         var rel = st.relationships && st.relationships["xiao_mei"];
         // [自洽修复] 检查 met 字段（直呼已定义NPC名需已结识）
         if (!rel || !rel.met) return false;
@@ -3341,6 +3383,7 @@
       story:
         "老刘又来找你了。这次不一样——他自己接了个小工程，手上有三四个人，正在扩张，想拉你入伙一起干。他说：「当时你帮了我，这次我想帮你往上走一步。」",
       conditions: function (st) {
+        if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后不再触发街头叙事事件
         return (
           st.player.phase === "street" &&
           st.flags._helpedCoworker &&
@@ -3390,6 +3433,7 @@
       story:
         "一个陌生男人堵住你的去路，自我介绍说是那家倒闭假货铺的合伙人。他沉着脸说：「你让老板损失了不少钱，我们要你解释清楚。」",
       conditions: function (st) {
+        if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后不再触发街头叙事事件
         return (
           st.player.phase === "street" &&
           st.flags._refusedFakeGoods &&
@@ -3450,6 +3494,7 @@
       story:
         "一个中年男人提着水果篮在巷口打听你。看到你之后，他快步走过来握住你的手：'太感谢了！我身份证和银行卡都在里面，补办太麻烦了。'他硬要把果篮塞给你，又从口袋里掏出一个信封。",
       conditions: function (st) {
+        if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后不再触发街头叙事事件
         return !!st.flags._returnedWallet && !st.flags._walletOwnerVisited;
       },
       choices: [
@@ -3510,6 +3555,7 @@
       story:
         "几个月前你捡到钱包的那个人——他原来是一家小工厂的老板。他托人带话：厂里缺个靠谱的管仓库的，活不累，待遇比外面强。如果你有兴趣，随时可以过去看看。",
       conditions: function (st) {
+        if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后不再触发街头叙事事件
         return (
           (!!st.flags._walletOwnerFriend || !!st.flags._walletOwnerPure) &&
           !st.flags._walletJobOffered
@@ -3558,6 +3604,7 @@
         '你在工厂区闲逛时，一个穿着工装的中年男人拍了拍你的肩膀："小伙子，看你手上全是茧子，干过机修吗？我们厂正缺个能修设备的。",\\n\\n他递了张名片——是一家中型工厂的技术主管。',
       // [自洽修复] v3.20 原始提交缺 conditions/apply → 补全
       conditions: function (st) {
+        if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后不再触发街头叙事事件
         var rep = st.skills && st.skills.repair ? st.skills.repair.level : 0;
         return (
           st.player.phase === "street" &&
@@ -3627,6 +3674,7 @@
       // [自洽修复] v3.20 原始提交缺 conditions/apply → 补全
       // 联动 flags._returnedFoundMoney（道德系统长线回响）
       conditions: function (st) {
+        if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后不再触发街头叙事事件
         return (
           st.player.phase === "street" &&
           st.flags._returnedFoundMoney === true &&
@@ -3676,7 +3724,9 @@
       story:
         "清晨起来，城市被浓雾笼罩。能见度不到十米。你走到平时摆摊的街口，发现早市比往常人多——雾天大家不爱出门，集中在市场里买东西。",
       // [Layer3] 叙事说"平时摆摊的街口"，需玩家有摆摊经历
-      conditions: function (st) { return st.player && st.player.workTypeCounts && st.player.workTypeCounts.stall > 0; },
+      conditions: function (st) {
+        if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后不再触发街头叙事事件
+        return st.player && st.player.workTypeCounts && st.player.workTypeCounts.stall > 0; },
       // [全系统自洽联动] 域B 联动增强: 新增 foggy 天气事件，填补天气系统空白
       triggers: {
         weather: "foggy",
@@ -3786,7 +3836,9 @@
       story:
         "你收到了第一份正式工作的录用通知。收拾东西的时候，你翻出了这几个月攒下的各种小物件——一张旧名片、一个社区志愿者的徽章、还有那张还没寄出的感谢信。这座城市的第一章，快要翻过去了。",
       // [Layer3] 叙事说"你收到了第一份正式工作的录用通知"，需玩家有工作
-      conditions: function (st) { return st.career && st.career.currentJob; },
+      conditions: function (st) {
+        if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后不再触发街头叙事事件
+        return st.career && st.career.currentJob; },
       // [全系统自洽联动] 域B 联动增强: Phase1→Phase2 过渡叙事桥接
       triggers: {
         minDay: 120,

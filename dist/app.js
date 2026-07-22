@@ -5833,6 +5833,7 @@ function registerNewsEventsToPool() {
       _isChainEvent: false,
       // [已审查] 含 OR 逻辑（day≥10 || health≤70），保留 conditions 不变
       conditions: function (st) {
+        if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后不再触发街头叙事事件
         // [自洽修复] st.needs.health 不存在（state.needs 无 health 字段），改为 st.status.health
         return (
           st.player.day >= 10 ||
@@ -5945,6 +5946,7 @@ function registerNewsEventsToPool() {
       _isChainEvent: false,
       // [已审查] 含 OR 逻辑（fame>=3 || corporate.popularity>=10），保留 conditions 不变
       conditions: function (st) {
+        if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后不再触发街头叙事事件
         return (
           st.player.day >= 10 &&
           ((st.player.fame || 0) >= 3 ||
@@ -6058,7 +6060,9 @@ function registerNewsEventsToPool() {
       title: "楼盘烂尾传闻",
       story:
         "在城中村听到几个工友议论，说城郊那个新楼盘'锦绣豪庭'开发商资金链断了，可能要烂尾。不少购房者已经交了首付。有人说开发商正在秘密转让项目。",
-      conditions: function (st) { if (!st.housing || st.housing.tier > 1) return false; if (!st.career || !st.career.currentJob) return false; return true; }, // [Layer3]
+      conditions: function (st) {
+        if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后不再触发街头叙事事件
+        if (!st.housing || st.housing.tier > 1) return false; if (!st.career || !st.career.currentJob) return false; return true; }, // [Layer3]
       choices: [
         {
           text: "👂 多打听点消息 (花¥30请人吃饭)",
@@ -6355,6 +6359,7 @@ function registerNewsEventsToPool() {
         "手机上弹出新闻：受国际局势影响，全球股市暴跌7%！所有人都在恐慌性抛售。你现在持有投资资产吗？",
       // [conditions→triggers] 已审查：复杂条件（inv.stockHoldings.length>0）保留
       conditions: function (st) {
+        if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后不再触发街头叙事事件
         var inv = st.investment || {};
         return inv.stockHoldings && inv.stockHoldings.length > 0;
       },
@@ -6428,6 +6433,7 @@ function registerNewsEventsToPool() {
       // [conditions→triggers] + [全系统自洽修复] 域B A类#4: location 非 evaluateTriggers 支持字段，改 conditions 函数
       triggers: { minCash: 1000 },
       conditions: function (st) {
+        if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后不再触发街头叙事事件
         return st.trade && st.trade.currentLocation === "wholesaleMarket";
       },
       choices: [
@@ -6610,6 +6616,7 @@ function registerNewsEventsToPool() {
       story:
         "隔壁城市出了严厉的房产调控政策，房价已经开始跌了。这边会不会跟进？你的房产怎么办？",
       conditions: function (st) {
+        if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后不再触发街头叙事事件
         var inv = st.investment || {};
         return inv.properties && inv.properties.length > 0;
       },
@@ -6655,6 +6662,7 @@ function registerNewsEventsToPool() {
       title: "生病中有人介绍偏方",
       story: "你病还没好，路边一个老太太神神秘秘说她有个祖传偏方，包治百病。",
       conditions: function (st) {
+        if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后不再触发街头叙事事件
         return st.status.sick || st.status.health < 40;
       },
       choices: [
@@ -6705,6 +6713,7 @@ function registerNewsEventsToPool() {
       story:
         "你实在饿得不行了。一位路过的阿姨看到你脸色不好，问你需不需要帮助。",
       conditions: function (st) {
+        if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后不再触发街头叙事事件
         return st.needs.hunger < 20;
       },
       choices: [
@@ -6740,6 +6749,7 @@ function registerNewsEventsToPool() {
       story:
         "你走进银行，客户经理热情地推荐一款「稳赚不赔」的理财产品，年化收益号称8%。",
       conditions: function (st) {
+        if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后不再触发街头叙事事件
         return (
           st.player.phase === "street" &&
           st.trade &&
@@ -6790,6 +6800,7 @@ function registerNewsEventsToPool() {
       id: "business_district_chance",
       _isChainEvent: false,
       conditions: function (st) {
+        if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后不再触发街头叙事事件
         return (
           st.player.day >= 40 &&
           (st.resources.cash || 0) >= 500 &&
@@ -6850,6 +6861,7 @@ function registerNewsEventsToPool() {
       story:
         "菜市场门口，一位老大爷摔倒在地，周围人都在看但没人上前。你要怎么做？",
       conditions: function (st) {
+        if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后不再触发街头叙事事件
         return (
           st.player.phase === "street" &&
           st.trade &&
@@ -6916,6 +6928,7 @@ function registerNewsEventsToPool() {
         '你的工友老刘从脚手架上摔下来，工头悄悄跟你说"别声张，私了了事，你多分200块"。老刘疼得直哼。',
       // [自洽修复] conditions 新增：建筑工地职业/地点/行动频次 检查
       conditions: function (st) {
+        if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后不再触发街头叙事事件
         var hasConstruction =
           (st.employment &&
             st.employment.currentJob &&
@@ -6986,6 +6999,7 @@ function registerNewsEventsToPool() {
         "你从批发市场进了一批电子产品，摆摊时才发现全是山寨货。你手里还有20件，进货成本已经付了¥800。",
       // [自洽修复] conditions 新增：摆摊职业/副业/行动频次 检查
       conditions: function (st) {
+        if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后不再触发街头叙事事件
         var hasStall =
           (st.employment &&
             st.employment.currentJob &&
@@ -7070,6 +7084,7 @@ function registerNewsEventsToPool() {
       story:
         '老家来的表哥说带你去听个"财富自由分享会"，说能月入过万。地址在郊区某酒店。',
       conditions: function (st) {
+        if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后不再触发街头叙事事件
         return st.player.phase === "street";
       },
       choices: [
@@ -7132,6 +7147,7 @@ function registerNewsEventsToPool() {
       story:
         '干了半个月，工头说"年底一起结"。你知道这条街上好几个外来务工者都被拖欠过，年底往往人去楼空。',
       conditions: function (st) {
+        if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后不再触发街头叙事事件
         // [Layer3] 叙事说"干了半个月"，需玩家有工作
         if (!st.career || !st.career.currentJob) return false;
         return st.player.phase === "street";
@@ -7200,6 +7216,7 @@ function registerNewsEventsToPool() {
         '房东王大婶敲门说："下个月房租从300涨到500，不行就搬走。"你现在住的这里还算安全。',
       // [自洽修复] 叙事中直接称呼"王大婶"(aunt_wang)，conditions 必须校验已结识
       conditions: function (st) {
+        if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后不再触发街头叙事事件
         return (
           st.player.phase === "street" &&
           st.housing.tier >= 1 &&
@@ -7276,6 +7293,7 @@ function registerNewsEventsToPool() {
         "今天摆摊，一个穿着体面的中年女人在你摊位前停了很久，说她在一家公司负责采购，问你有没有兴趣合作供货。",
       // [自洽修复] conditions 新增：摆摊职业/副业/行动频次 检查
       conditions: function (st) {
+        if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后不再触发街头叙事事件
         var hasStall =
           (st.employment &&
             st.employment.currentJob &&
@@ -7338,6 +7356,7 @@ function registerNewsEventsToPool() {
       story:
         "城中村路口有人摆了个二手手机摊，一部外观完好的安卓机，卖¥150，比正规店便宜多了。",
       conditions: function (st) {
+        if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后不再触发街头叙事事件
         return st.player.phase === "street" && st.resources.cash >= 150;
       },
       choices: [
@@ -7487,6 +7506,7 @@ function registerNewsEventsToPool() {
         "菜场里，有人叫你名字——是你们县的老周头的儿子小周，在城里打拼了三年，看起来过得还行。",
       // [全系统自洽修复] 域B 修复:叙事直呼"老周头"(old_zhou),conditions需校验已结识
       conditions: function (st) {
+        if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后不再触发街头叙事事件
         if (st.player.phase !== "street") return false;
         if (
           !st.relationships ||
@@ -7551,6 +7571,7 @@ function registerNewsEventsToPool() {
         "下午突然电闪雷鸣，暴雨将至。你刚摆好的货还没收，跑一趟要20分钟。同时有个生意正谈到关键处。",
       // [自洽修复] conditions 新增：暴雨天气 检查 + 摆摊职业/副业/行动频次 检查
       conditions: function (st) {
+        if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后不再触发街头叙事事件
         var isRainy =
           st.weather &&
           (st.weather.current === "rainy" || st.weather.current === "stormy");
@@ -7625,6 +7646,7 @@ function registerNewsEventsToPool() {
       story:
         "昨晚在夜市吃了碗牛杂，今早起来肚子一直不对劲。现在有工作要去，但感觉随时要跑厕所。",
       conditions: function (st) {
+        if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后不再触发街头叙事事件
         // [Layer3] 叙事说"现在有工作要去"，需玩家有工作
         if (!st.career || !st.career.currentJob) return false;
         return st.player.phase === "street";
@@ -7687,6 +7709,7 @@ function registerNewsEventsToPool() {
         '政府最近出通知要"整治市容"，街头管得更严了。据说明天会有大规模清查，抓到无证经营的罚款¥1000起。',
       // [全系统自洽修复] 域B 修复:城管清理事件无摆摊/职业条件检查→任何街头玩家都会触发，与叙事不符。添加摆摊/贸易相关条件。
       conditions: function (st) {
+        if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后不再触发街头叙事事件
         var hasTrade =
           (st.trade &&
             st.trade.currentLocation &&
@@ -7766,6 +7789,7 @@ function registerNewsEventsToPool() {
         '房东王大婶敲门说："我侄子家装修，需要个会刷墙的人，管饭，300块一天，你去不去？"',
       // [自洽修复] 新增：aunt_wang 关系 met 检查（story 直呼"王大婶"，需已结识）
       conditions: function (st) {
+        if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后不再触发街头叙事事件
         var rel = st.relationships && st.relationships["aunt_wang"];
         // [自洽修复] 检查 met 字段（直呼已定义NPC名需已结识）
         if (!rel || !rel.met) return false;
@@ -7821,6 +7845,7 @@ function registerNewsEventsToPool() {
         "李工头难得开心，说这个月工程提前完工，要给干活积极的人发奖金。你和他的关系决定你能拿多少。",
       // [自洽修复] 新增：boss_li 关系 met 检查（story 直呼"李工头"，需已结识）
       conditions: function (st) {
+        if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后不再触发街头叙事事件
         var rel = st.relationships && st.relationships["boss_li"];
         // [自洽修复] 检查 met 字段（直呼已定义NPC名需已结识）
         if (!rel || !rel.met) return false;
@@ -7872,6 +7897,7 @@ function registerNewsEventsToPool() {
       story:
         "合租的宿舍有人丢了¥300现金，室友们互相猜疑。你有点印象，昨天看到一个平时鬼鬼祟祟的人进过那屋。",
       conditions: function (st) {
+        if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后不再触发街头叙事事件
         return st.player.phase === "street" && (st.housing.tier || 0) >= 1;
       },
       choices: [
@@ -7927,6 +7953,7 @@ function registerNewsEventsToPool() {
       story:
         "早上醒来，你放在桥洞下的背包被人翻过了。幸好现金还藏在鞋底的暗格里，但一些零碎物品不见了——包括那件冬天用来挡风的旧外套。周围几个同样露宿的人都在互相打量。",
       conditions: function (st) {
+        if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后不再触发街头叙事事件
         return st.player.phase === "street" && (st.housing.tier || 0) === 0;
       },
       choices: [
@@ -7990,6 +8017,7 @@ function registerNewsEventsToPool() {
         "天气预报说今晚有暴雨。你平时躲雨的那个桥洞位置，已经被另一个人占了。他看着你，你也看着他。雨还有两小时就到。",
       // [自洽修复] conditions 新增：暴雨天气 检查
       conditions: function (st) {
+        if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后不再触发街头叙事事件
         var isRainy =
           st.weather &&
           (st.weather.current === "rainy" || st.weather.current === "stormy");
@@ -8064,6 +8092,7 @@ function registerNewsEventsToPool() {
       story:
         "街角那家慈善食堂今天开门早，已经有十几个人在排队了。你肚子很饿，但排队至少要两小时。旁边有人小声说：「今天好像有肉。」",
       conditions: function (st) {
+        if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后不再触发街头叙事事件
         return (
           st.player.phase === "street" &&
           (st.housing.tier || 0) === 0 &&
@@ -8139,6 +8168,7 @@ function registerNewsEventsToPool() {
       story:
         "早上醒来，几个城管正在挨个叫醒露宿的人：「这里不能住了，赶紧收拾东西走人！」你的东西还堆在桥洞下，还没整理好。",
       conditions: function (st) {
+        if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后不再触发街头叙事事件
         return st.player.phase === "street" && (st.housing.tier || 0) === 0;
       },
       choices: [
@@ -8205,6 +8235,7 @@ function registerNewsEventsToPool() {
         "货运站招夜班搬运工，12点到早上6点，时薪¥25，一晚能赚¥150，但白天就没法正常干活了。",
       maxCash: 50000,
       conditions: function (st) {
+        if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后不再触发街头叙事事件
         return st.player.phase === "street" && st.needs.fatigue <= 60;
       },
       choices: [
@@ -8267,6 +8298,7 @@ function registerNewsEventsToPool() {
       story:
         "你在公交站椅子下发现一部崭新旗舰手机，锁屏是一对老夫妻和孙子的合影。附近几乎没人。",
       conditions: function (st) {
+        if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后不再触发街头叙事事件
         return st.player.phase === "street";
       },
       choices: [
@@ -8384,6 +8416,7 @@ function registerNewsEventsToPool() {
       story:
         '去工地路上，一个老大爷突然捂着胸口倒在路边。旁边路人大多驻足观望，没人敢上前——"扶不扶"的事大家都怕。',
       conditions: function (st) {
+        if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后不再触发街头叙事事件
         return (
           st.player.phase === "street" &&
           st.trade &&
@@ -8449,6 +8482,7 @@ function registerNewsEventsToPool() {
       story:
         "不知不觉，你已经在这座城市漂了整整一个月。站在路边，望着来来往往的人群，你开始思考……接下来的路怎么走？",
       conditions: function (st) {
+        if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后不再触发街头叙事事件
         return (
           st.player.phase === "street" &&
           st.player.day === 30 &&
@@ -8523,6 +8557,7 @@ function registerNewsEventsToPool() {
       story:
         "六十天。你已经对这座城市不再陌生。但偶尔还是会有迷茫——这条路，走对了吗？",
       conditions: function (st) {
+        if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后不再触发街头叙事事件
         return (
           st.player.phase === "street" &&
           st.player.day === 60 &&
@@ -8582,6 +8617,7 @@ function registerNewsEventsToPool() {
       story:
         "九十天。一个季度。很多来这座城市的人，三个月后悄悄打道回府了。而你还在这里。这座城市在等你给它一个答案。",
       conditions: function (st) {
+        if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后不再触发街头叙事事件
         return (
           st.player.phase === "street" &&
           st.player.day === 90 &&
@@ -8636,6 +8672,7 @@ function registerNewsEventsToPool() {
       story:
         "当年你不顾工头施压，帮工友老刘叫了救护车。今天他来找你，说他表弟在正规工程公司，手上有个活缺人……",
       conditions: function (st) {
+        if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后不再触发街头叙事事件
         return (
           st.player.phase === "street" &&
           st.flags._helpedCoworker &&
@@ -8681,6 +8718,7 @@ function registerNewsEventsToPool() {
       story:
         "路上你听到身后有人喊你。一个陌生女人说她当时丢了钱包，到处找，最后从监控看到你捡走了……",
       conditions: function (st) {
+        if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后不再触发街头叙事事件
         return (
           st.player.phase === "street" &&
           st.flags._keptWallet &&
@@ -8728,6 +8766,7 @@ function registerNewsEventsToPool() {
       story:
         "你拒绝假货、做生意讲诚信的事传开了。圈子里的人私下讨论，说你这个人靠谱，有个批发商想跟你长期合作……",
       conditions: function (st) {
+        if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后不再触发街头叙事事件
         return (
           st.player.phase === "street" &&
           st.flags._refusedFakeGoods &&
@@ -8773,6 +8812,7 @@ function registerNewsEventsToPool() {
       story:
         '你上次举报欠薪的事情，劳动仲裁中心记了档。今天接到通知：你的案例被评为"维权先锋"，有奖励，也有记者想采访……',
       conditions: function (st) {
+        if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后不再触发街头叙事事件
         return (
           st.player.phase === "street" &&
           st.flags._foughtWageTheft &&
@@ -8834,6 +8874,7 @@ function registerNewsEventsToPool() {
       story:
         "老刘微信说他在新工地发现包工头要跑路，三十几个工友的工资危了！他第一个想到你——那次你帮他的事他一直没忘。",
       conditions: function (st) {
+        if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后不再触发街头叙事事件
         return (
           st.player.phase === "street" &&
           (st.flags._helpedCoworker || st.flags._foughtWageTheft) &&
@@ -8888,6 +8929,7 @@ function registerNewsEventsToPool() {
         "大学城的小美发消息说她有个朋友想给孩子找数学家教，她推荐了你。对方愿意付每小时¥80，一周两节。",
       // [自洽修复] 新增：xiao_mei 关系 met 检查（story 直呼"小美"，需已结识）
       conditions: function (st) {
+        if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后不再触发街头叙事事件
         var rel = st.relationships && st.relationships["xiao_mei"];
         // [自洽修复] 检查 met 字段（直呼已定义NPC名需已结识）
         if (!rel || !rel.met) return false;
@@ -8932,6 +8974,7 @@ function registerNewsEventsToPool() {
       story:
         "老刘又来找你了。这次不一样——他自己接了个小工程，手上有三四个人，正在扩张，想拉你入伙一起干。他说：「当时你帮了我，这次我想帮你往上走一步。」",
       conditions: function (st) {
+        if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后不再触发街头叙事事件
         return (
           st.player.phase === "street" &&
           st.flags._helpedCoworker &&
@@ -8981,6 +9024,7 @@ function registerNewsEventsToPool() {
       story:
         "一个陌生男人堵住你的去路，自我介绍说是那家倒闭假货铺的合伙人。他沉着脸说：「你让老板损失了不少钱，我们要你解释清楚。」",
       conditions: function (st) {
+        if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后不再触发街头叙事事件
         return (
           st.player.phase === "street" &&
           st.flags._refusedFakeGoods &&
@@ -9041,6 +9085,7 @@ function registerNewsEventsToPool() {
       story:
         "一个中年男人提着水果篮在巷口打听你。看到你之后，他快步走过来握住你的手：'太感谢了！我身份证和银行卡都在里面，补办太麻烦了。'他硬要把果篮塞给你，又从口袋里掏出一个信封。",
       conditions: function (st) {
+        if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后不再触发街头叙事事件
         return !!st.flags._returnedWallet && !st.flags._walletOwnerVisited;
       },
       choices: [
@@ -9101,6 +9146,7 @@ function registerNewsEventsToPool() {
       story:
         "几个月前你捡到钱包的那个人——他原来是一家小工厂的老板。他托人带话：厂里缺个靠谱的管仓库的，活不累，待遇比外面强。如果你有兴趣，随时可以过去看看。",
       conditions: function (st) {
+        if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后不再触发街头叙事事件
         return (
           (!!st.flags._walletOwnerFriend || !!st.flags._walletOwnerPure) &&
           !st.flags._walletJobOffered
@@ -9149,6 +9195,7 @@ function registerNewsEventsToPool() {
         '你在工厂区闲逛时，一个穿着工装的中年男人拍了拍你的肩膀："小伙子，看你手上全是茧子，干过机修吗？我们厂正缺个能修设备的。",\\n\\n他递了张名片——是一家中型工厂的技术主管。',
       // [自洽修复] v3.20 原始提交缺 conditions/apply → 补全
       conditions: function (st) {
+        if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后不再触发街头叙事事件
         var rep = st.skills && st.skills.repair ? st.skills.repair.level : 0;
         return (
           st.player.phase === "street" &&
@@ -9218,6 +9265,7 @@ function registerNewsEventsToPool() {
       // [自洽修复] v3.20 原始提交缺 conditions/apply → 补全
       // 联动 flags._returnedFoundMoney（道德系统长线回响）
       conditions: function (st) {
+        if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后不再触发街头叙事事件
         return (
           st.player.phase === "street" &&
           st.flags._returnedFoundMoney === true &&
@@ -9267,7 +9315,9 @@ function registerNewsEventsToPool() {
       story:
         "清晨起来，城市被浓雾笼罩。能见度不到十米。你走到平时摆摊的街口，发现早市比往常人多——雾天大家不爱出门，集中在市场里买东西。",
       // [Layer3] 叙事说"平时摆摊的街口"，需玩家有摆摊经历
-      conditions: function (st) { return st.player && st.player.workTypeCounts && st.player.workTypeCounts.stall > 0; },
+      conditions: function (st) {
+        if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后不再触发街头叙事事件
+        return st.player && st.player.workTypeCounts && st.player.workTypeCounts.stall > 0; },
       // [全系统自洽联动] 域B 联动增强: 新增 foggy 天气事件，填补天气系统空白
       triggers: {
         weather: "foggy",
@@ -9377,7 +9427,9 @@ function registerNewsEventsToPool() {
       story:
         "你收到了第一份正式工作的录用通知。收拾东西的时候，你翻出了这几个月攒下的各种小物件——一张旧名片、一个社区志愿者的徽章、还有那张还没寄出的感谢信。这座城市的第一章，快要翻过去了。",
       // [Layer3] 叙事说"你收到了第一份正式工作的录用通知"，需玩家有工作
-      conditions: function (st) { return st.career && st.career.currentJob; },
+      conditions: function (st) {
+        if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后不再触发街头叙事事件
+        return st.career && st.career.currentJob; },
       // [全系统自洽联动] 域B 联动增强: Phase1→Phase2 过渡叙事桥接
       triggers: {
         minDay: 120,
@@ -9524,6 +9576,7 @@ function registerNewsEventsToPool() {
         excludeFlags: ["_honestyCompound"],
       },
       conditions: function (st) {
+        if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后不再触发街头叙事事件
         return (st.player.fame || 0) >= 30;
       },
       choices: [
@@ -9660,6 +9713,7 @@ function registerNewsEventsToPool() {
         excludeFlags: ["_hadMentalCrisis"],
       },
       conditions: function (st) {
+        if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后不再触发街头叙事事件
         return (st.player.mental || 0) < 20 && (st.housing.tier || 0) >= 1;
       },
       choices: [
@@ -9720,6 +9774,7 @@ function registerNewsEventsToPool() {
         excludeFlags: ["_hadTherapy"],
       },
       conditions: function (st) {
+        if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后不再触发街头叙事事件
         return (st.player.mental || 0) < 35;
       },
       choices: [
@@ -10060,6 +10115,7 @@ function registerNewsEventsToPool() {
       },
       // [Layer3] 叙事说"你在出租屋里接起来"，需玩家有住所
       conditions: function (st) {
+        if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后不再触发街头叙事事件
         if (!st.housing || st.housing.tier < 1) return false;
         return st.resources && st.resources.villageDebt > 2000;
       },
@@ -10135,6 +10191,7 @@ function registerNewsEventsToPool() {
       story:
         "你老家的一个远房亲戚突然加了你微信，说「村长让我给你带个话：你那笔债不能再拖了，他说如果年前还不上，就要跟你爸说这事了。」",
       conditions: function (st) {
+        if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后不再触发街头叙事事件
         return (
           st.player.phase === "street" &&
           (st.resources.villageDebt || 0) > 3000 &&
@@ -10222,6 +10279,7 @@ function registerNewsEventsToPool() {
       story:
         "你出租屋门被敲响了。打开门，看到村长站在门口，身后跟着你爸。「找到了，」村长说，「你自己说吧。」",
       conditions: function (st) {
+        if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后不再触发街头叙事事件
         return (
           st.player.phase === "street" &&
           (st.resources.villageDebt || 0) > 4000 &&
@@ -10293,6 +10351,7 @@ function registerNewsEventsToPool() {
       story:
         "你投资的楼盘开发商突然资金链断裂，宣布破产重组！工地停工，物业跑路，业主群炸了锅。这套房子…可能要烂尾了。",
       conditions: function (st) {
+        if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后不再触发街头叙事事件
         var inv = st.investment || {};
         return (
           inv.properties &&
@@ -10368,6 +10427,7 @@ function registerNewsEventsToPool() {
       story:
         "历时数月的业主维权终于有了结果——银行接管开发商，承诺续建烂尾楼，业主获得延期赔偿。你们赢了！",
       conditions: function (st) {
+        if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后不再触发街头叙事事件
         return (
           !!st.flags._propertyRightsGroup &&
           st.player.day >= (st.flags._propertyCollapseDay || 0) + 25 &&
@@ -10428,6 +10488,7 @@ function registerNewsEventsToPool() {
       story:
         "群里炸锅了！某外卖平台宣布每单补贴+¥3，另一家立刻跟进——这是一年里骑手最好赚的时候。平台代理正在路边招人，注册就给¥60，补贴大战期间接单收益额外+30%。错过了这个窗口，下次不知道什么时候再有。",
       conditions: function (st) {
+        if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后不再触发街头叙事事件
         var hasNews =
           st.activeNews &&
           st.activeNews.some(function (n) {
@@ -10479,6 +10540,7 @@ function registerNewsEventsToPool() {
       story:
         "骑手群突然安静了。昨晚平台悄悄改了规则：每单补贴砍掉¥2，还加了「差评扣款机制」。你算了一下，实际收入比刚注册时少了35%。几个老骑手已经愤而离职，另一些准备组团维权。你才跑了这几天——怎么办？",
       conditions: function (st) {
+        if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后不再触发街头叙事事件
         var hasRiderWinter =
           st.activeNews &&
           st.activeNews.some(function (n) {
@@ -10544,6 +10606,7 @@ function registerNewsEventsToPool() {
       story:
         "维权团传来消息：经过多次谈判，平台同意象征性支付一次「和解金」，但拒绝恢复补贴，并向组织者发了封号警告。团队里分成两派——一派说拿钱走人，活该；另一派说继续上诉，这是原则问题。",
       conditions: function (st) {
+        if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后不再触发街头叙事事件
         return (
           !!st.flags._riderRightsComplaint &&
           st.player.day >= (st.flags._riderRightsComplaint || 0) + 15 &&
@@ -10595,6 +10658,7 @@ function registerNewsEventsToPool() {
       story:
         "等了这么久，终于等到消息：政府启动'保交楼'专项基金，接管你的楼盘续建。代价是交付时间推迟2年，但总归不会烂尾了。",
       conditions: function (st) {
+        if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后不再触发街头叙事事件
         return (
           !!st.flags._waitingPropertyResolution &&
           st.player.day >= (st.flags._propertyCollapseDay || 0) + 20 &&
@@ -10659,6 +10723,7 @@ function registerNewsEventsToPool() {
       story:
         "巷口“老李茶饮”贴了转让告示。老李说儿子留学，他要去陪读，店铺连带设备打包¥80,000。地段一般但有老客户，每月流水能跑个万把块。你掂量了下口袋：手头是有这个钱，可一旦砸下去，就是把家底押在一家小店上了。",
       conditions: function (st) {
+        if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后不再触发街头叙事事件
         return (
           st.player.phase === "street" &&
           st.player.day > 100 &&
@@ -10709,6 +10774,7 @@ function registerNewsEventsToPool() {
       story:
         "接手老李茶饮快一个月了。问题来了：原来稳定的老客户大半流失（觉得“换老板就变味”），新顾客又不来。每月房租水电¥2,500，上个月只赚¥800，倒贴¥1,700。隔壁新开的“星巴超”反倒生意火爆——同样卖茶，人家做出了网红奶茶概念，年轻人在门口排队。",
       conditions: function (st) {
+        if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后不再触发街头叙事事件
         return (
           !!st.flags._acquiredTeaStore &&
           st.player.day >= (st.flags._acquiredTeaStore || 0) + 25 &&
@@ -10775,6 +10841,7 @@ function registerNewsEventsToPool() {
       story:
         "星巴超的人正式登门：他们要在这条街扩张，一口气收购周边7家店面，给你的报价是当初买入价的45%。代理人很客气：“王老板，您这店地段确实不错，但说实话——独立小店是熬不过我们这种连锁的。这价钱已经是给老李面子。”望着空荡荡的店面，你忽然意识到：自己这一年的折腾，不过是给对手培育了一片好地皮。",
       conditions: function (st) {
+        if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后不再触发街头叙事事件
         var afterFight =
           !!st.flags._acquisitionFighting &&
           // [Layer4] 叙事说"自己这一年的折腾"，需365天
@@ -10839,6 +10906,7 @@ function registerNewsEventsToPool() {
       story:
         "刷短视频时刷到一条爆款：你做的这行，有个 90 后团队搞了个新模式——他们用「订阅制+数据派单」，把传统从业者效率提升了 40%，3 个月就吃掉了 15% 的市场。看着评论区那句“老一代再不转型就要被淘汰了”，你心里一紧——你做这行已经 30 多天，今天的单量明显比一个月前少。",
       conditions: function (st) {
+        if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后不再触发街头叙事事件
         var jobStreaks = st.flags._jobStreaks || {};
         var totalDays = 0;
         for (var k in jobStreaks) {
@@ -10923,6 +10991,7 @@ function registerNewsEventsToPool() {
       story:
         "10 天的转型训练营结束。你学了“数据派单”逻辑，也认识了几个同期转型的人——有人做副业，有人 all-in 新模式。教练说：“旧行业的活儿还能干 6~12 个月，但每过一季度市场份额会少 5%。你现在转，是抄底；再等半年，可能连转的成本都凑不齐了。”",
       conditions: function (st) {
+        if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后不再触发街头叙事事件
         return (
           !!st.flags._disruptionStudying &&
           st.player.day >= (st.flags._disruptionStudying || 0) + 10 &&
@@ -10982,6 +11051,7 @@ function registerNewsEventsToPool() {
       story:
         "三个月过去了。新模式占了行业 40% 份额，老模式从业者中能转型的转了，转不了的去了别的行业。你回头看自己这阵子的选择，发现这行业的洗牌就像潮水——不是谁错了，是潮水在往哪个方向走。",
       conditions: function (st) {
+        if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后不再触发街头叙事事件
         var pivoted =
           !!st.flags._disruptionPivoted &&
           st.player.day >= (st.flags._disruptionPivoted || 0) + 40;
@@ -11046,6 +11116,7 @@ function registerNewsEventsToPool() {
         "小美把你拉到咖啡厅角落，压低声音：「我导师在规划局有熟人——科技园东边那片旧厂房要被政府收储了，规划是扩建三期。消息还没公开，估计两周内官宣。你要是能在那片搞到点什么……你懂的。」她眨眨眼，把一张二手房东的名片推过来。",
       // [自洽修复] 新增：xiao_mei 关系 met 检查（story 直呼"小美"，需已结识）
       conditions: function (st) {
+        if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后不再触发街头叙事事件
         var rel = st.relationships && st.relationships.xiao_mei;
         // [自洽修复] 检查 met 字段（直呼已定义NPC名需已结识）
         if (!rel || !rel.met) return false;
@@ -11114,6 +11185,7 @@ function registerNewsEventsToPool() {
       story:
         "新闻推送弹出来：市政府正式公告科技园东区旧厂房改造项目立项，总投资80亿，预计带动周边3公里商业价值提升30%~50%。你记得两周前小美说的那番话——现在，到了看选择的时候了。",
       conditions: function (st) {
+        if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后不再触发街头叙事事件
         return (
           (!!st.flags._arbitrageTechparkActed ||
             !!st.flags._arbitrageTechparkModerate) &&
@@ -11130,6 +11202,7 @@ function registerNewsEventsToPool() {
           text: "💰 把优先承租权转手（溢价300%！）",
           hint: "空手套白狼，净赚¥5000~8000",
           conditions: function (st) {
+        if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后不再触发街头叙事事件
             return !!st.flags._arbitrageTechparkActed;
           },
           apply: function (st) {
@@ -11153,6 +11226,7 @@ function registerNewsEventsToPool() {
           text: "📉 卖出科技股（获利+40%）",
           hint: "见好就收",
           conditions: function (st) {
+        if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后不再触发街头叙事事件
             return !!st.flags._arbitrageTechparkModerate;
           },
           apply: function (st) {
@@ -11182,6 +11256,7 @@ function registerNewsEventsToPool() {
         "张姐神神秘秘地凑过来说：「我表妹在市场监管局，说下个月要出新规——所有街头摊贩必须持《食品摊贩登记卡》才能出摊，无证的一律罚款¥200起。现在办证只需要¥50+健康证，等新规一出，办证窗口排都排不上，黄牛价至少¥500。」她把一张健康体检表塞到你手里。",
       // [自洽修复] 新增：sister_zhang 关系 met 检查（story 直呼"张姐"，需已结识）
       conditions: function (st) {
+        if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后不再触发街头叙事事件
         var rel = st.relationships && st.relationships.sister_zhang;
         // [自洽修复] 检查 met 字段（直呼已定义NPC名需已结识）
         if (!rel || !rel.met) return false;
@@ -11251,6 +11326,7 @@ function registerNewsEventsToPool() {
       story:
         "果然，新规说来就来。城管大队今天出现在街头，挨个检查登记卡。有证的摊贩照常营业，没证的被当场开罚单——¥200起步。你远远看着几个没证的同行跟城管吵起来，心里庆幸（或后悔）自己当初的选择。",
       conditions: function (st) {
+        if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后不再触发街头叙事事件
         var tipDay = st.flags._arbitrageLicenseTipDay || 0;
         return (
           (st.flags._arbitrageLicenseActed ||
@@ -11323,6 +11399,7 @@ function registerNewsEventsToPool() {
         "陈师傅一边擦灶台一边跟你说：「我听餐饮协会的老哥说，市里要搞『餐饮卫生星级评定』，A级店每季度补贴¥2000，还上推荐榜单。但是评上A级得提前整改——换不锈钢灶台、装灭蝇灯、搞明厨亮灶，成本大概¥1500。现在申请窗口还没开，等正式通知出来再搞，排队至少俩月。」他把一份整改清单递过来。",
       // [自洽修复] 新增：chef_chen 关系 met 检查（story 直呼"陈师傅"，需已结识）
       conditions: function (st) {
+        if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后不再触发街头叙事事件
         var rel = st.relationships && st.relationships.chef_chen;
         // [自洽修复] 检查 met 字段（直呼已定义NPC名需已结识）
         if (!rel || !rel.met) return false;
@@ -11386,6 +11463,7 @@ function registerNewsEventsToPool() {
       story:
         "餐饮协会的公告贴出来了。你挤在人群里找自己的摊位号——评级结果直接决定了接下来一个季度你能拿多少补贴、上什么推荐榜单。",
       conditions: function (st) {
+        if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后不再触发街头叙事事件
         return (
           (st.flags._arbitrageHygieneInvested ||
             st.flags._arbitrageHygieneModerate ||
@@ -11459,6 +11537,7 @@ function registerNewsEventsToPool() {
       story:
         "你在刷新闻时看到一条不起眼的行业快讯——你持股的那家公司刚刚发布了超预期的产品数据。圈内小范围流传，正式公告要等三天后才出。现在买入还来得及……但这算内幕交易吗？",
       conditions: function (st) {
+        if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后不再触发街头叙事事件
         if (
           st.player.phase !== "street" ||
           !st.investment ||
@@ -11525,6 +11604,7 @@ function registerNewsEventsToPool() {
       story:
         "你持仓的一只股票突然异动，跌幅超过10%！消息面上，关联公司爆出了负面新闻。你要不要紧急操作？",
       conditions: function (st) {
+        if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后不再触发街头叙事事件
         if (
           !st.investment ||
           !st.investment.stockHoldings ||
@@ -11628,6 +11708,7 @@ function registerNewsEventsToPool() {
       story:
         "搬进单间后本以为能安静些，没想到隔壁是一对刚搬来的年轻情侣，半夜还在吵架摔东西。你敲了墙提醒，对方反而更大声了。明天还要早起打工，怎么办？",
       conditions: function (st) {
+        if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后不再触发街头叙事事件
         return st.player.phase === "street" && (st.housing.tier || 0) === 2;
       },
       choices: [
@@ -11691,6 +11772,7 @@ function registerNewsEventsToPool() {
       story:
         "点了一份¥25的外卖，放在门口准备回去拿，出来时发现袋子不见了。楼道里有个陌生人正鬼鬼祟祟地走开。",
       conditions: function (st) {
+        if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后不再触发街头叙事事件
         return (
           st.player.phase === "street" &&
           (st.housing.tier || 0) >= 2 &&
@@ -11753,6 +11835,7 @@ function registerNewsEventsToPool() {
       story:
         "住对门的那个独居中年男人来敲门，说家里急事要借¥200，明天就还。你们平时见面只是点头之交，但你注意到他神色慌张，手一直在抖。",
       conditions: function (st) {
+        if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后不再触发街头叙事事件
         return (
           st.player.phase === "street" &&
           (st.housing.tier || 0) >= 3 &&
@@ -11823,6 +11906,7 @@ function registerNewsEventsToPool() {
       story:
         "小区物业在门口发传单：「业主专享！健身房年卡¥300，原价¥800。」你住的一居室正好在这个小区里。健身对身体好，但300块也不便宜。",
       conditions: function (st) {
+        if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后不再触发街头叙事事件
         return (
           st.player.phase === "street" &&
           (st.housing.tier || 0) >= 3 &&
@@ -11877,6 +11961,7 @@ function registerNewsEventsToPool() {
       story:
         "巷口公告栏贴了一张城市规划公示图，隐约能看到你家那片被红线圈了起来。围观的邻居们窃窃私语：「要拆了要拆了！」你心算了一下——如果真拆，私房能赔¥150,000~¥250,000。但你手上没房，得现在买才有机会。卖私房的老王开口就要¥80,000，「你不买明天别人就买了。」",
       conditions: function (st) {
+        if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后不再触发街头叙事事件
         return (
           st.player.phase === "street" &&
           st.player.day >= 40 &&
@@ -11924,6 +12009,7 @@ function registerNewsEventsToPool() {
       story:
         "一个月后，拆迁办果然带着测量仪进村了！公示出来了：标准赔偿¥180,000/户，签字后30天打款。但老王那房子面积有争议，按照新规可能只能赔¥120,000。隔壁几户已经在商量联合起来抬价。你的选择是——",
       conditions: function (st) {
+        if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后不再触发街头叙事事件
         return !!st.flags._reBoughtHouse && !st.flags._reDemolitionSeen;
       },
       choices: [
@@ -11988,6 +12074,7 @@ function registerNewsEventsToPool() {
       story:
         "¥120,000的拆迁款到账了。你看着余额，这是你人生中最大的一笔钱。但城里的房价已经因为这波拆迁涨了一轮——你手上这点钱，付首付都不够。工友老张说：「赶紧买房！不买房钱会贬值！」也有人劝你：「拿这钱做点小生意吧。」你坐在出租屋里，对着手机银行发了一晚上的呆。",
       conditions: function (st) {
+        if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后不再触发街头叙事事件
         return (
           !!st.flags._reAccepted &&
           !st.flags._reSettleSeen &&
@@ -12054,6 +12141,7 @@ function registerNewsEventsToPool() {
       story:
         "等了20天，阵线内部开始松动了。老张的老婆生病需要钱，他第一个偷偷签了协议。阵线一破，拆迁办各个击破——最后到你这儿的时候，赔偿降到了¥110,000。比原来少了一万。邻居们互相指责，说有人当了叛徒。你也拿到了钱，但心里不是滋味。",
       conditions: function (st) {
+        if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后不再触发街头叙事事件
         return !!st.flags._reCoalition && !st.flags._reCoalitionSeen;
       },
       choices: [
@@ -12102,6 +12190,7 @@ function registerNewsEventsToPool() {
       story:
         "坚持了几个月，最终还是撑不住了。楼里断了水电气，周围全围了铁皮，进出要翻墙。晚上有陌生人敲窗「劝」你搬走。最后你在街道办的调解下签了字——赔偿¥90,000。老王在街对面看着你，脸上说不清是同情还是庆幸。",
       conditions: function (st) {
+        if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后不再触发街头叙事事件
         return !!st.flags._reHoldout && !st.flags._reHoldoutEndSeen;
       },
       choices: [
@@ -12151,6 +12240,7 @@ function registerNewsEventsToPool() {
         "你在咖啡馆躲雨时，邻座一个戴眼镜的年轻人突然跟你搭话：「哥们，我看你像个干实事的人。」他叫小陈，是个全栈程序员，说做了一个AI笔记App，就差一个懂市场和运营的合伙人。他不要你全职，先投点钱试试——¥30,000换10%股份。他眼睛亮得让人不忍心拒绝。",
       // [自洽修复] conditions 新增：雨天检查（story 明确"躲雨时"，需天气为 rainy/stormy）
       conditions: function (st) {
+        if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后不再触发街头叙事事件
         var isRainy =
           st.weather &&
           (st.weather.current === "rainy" || st.weather.current === "stormy");
@@ -12219,6 +12309,7 @@ function registerNewsEventsToPool() {
       story:
         "小陈深夜给你发了条微信，附件是一张用户增长曲线图——上线6周，DAU从0冲到了12,000，日新增1,500。他电话里兴奋地说：「我们要火了！但服务器扛不住了，需要再投¥50,000扩容，或者找机构投资进来——机构要占30%。」",
       conditions: function (st) {
+        if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后不再触发街头叙事事件
         return !!st.flags._startupInvested && !st.flags._startupProgressSeen;
       },
       choices: [
@@ -12277,6 +12368,7 @@ function registerNewsEventsToPool() {
       story:
         "小陈电话里的声音很平静：「公司被字节龙收购了，¥1,200万全现金。你的股份按比例折算……钱明天打到账上。」你握着手机，回忆起那个雨天的咖啡馆。",
       conditions: function (st) {
+        if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后不再触发街头叙事事件
         return (
           (!!st.flags._startupBurning || !!st.flags._startupVCFunding) &&
           !st.flags._startupExitSeen
@@ -12333,6 +12425,7 @@ function registerNewsEventsToPool() {
       story:
         "工友老张把你拉到一边，压低声音说批发市场那边有块「空地」——几个小摊贩每月交¥500保护费，没人管。他已经收了三个月了，想找个帮手，「你体格不错，往那一站就有威慑力。不用动手，分你三成。」他掏出三张皱巴巴的¥100，「这是你这个月的预付款。」",
       conditions: function (st) {
+        if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后不再触发街头叙事事件
         return (
           st.player.phase === "street" &&
           st.player.day >= 30 &&
@@ -12394,6 +12487,7 @@ function registerNewsEventsToPool() {
       story:
         "跟老张去批发市场收钱。卖水果的老王头颤巍巍地数了¥500递给老张，眼神里全是恐惧。你站在旁边，觉得自己像一堵墙——不是保护他的墙，是压在他心口的墙。市场角落新装了两个监控摄像头。",
       conditions: function (st) {
+        if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后不再触发街头叙事事件
         return !!st.flags._grayJoined && !st.flags._grayCollectSeen;
       },
       choices: [
@@ -12435,6 +12529,7 @@ function registerNewsEventsToPool() {
       story:
         "两个便衣警察在工地门口等你：「××批发市场的案子，监控显示你上个月15号在场。你认识张××吗？」",
       conditions: function (st) {
+        if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后不再触发街头叙事事件
         return !!st.flags._grayDeepIn && !st.flags._grayCleanupSeen;
       },
       choices: [
@@ -12477,6 +12572,7 @@ function registerNewsEventsToPool() {
       story:
         "批发市场的案子破了。老王头托人转告你：「谢谢。」你不知道他怎么知道的。但你知道自己在这片的名声变了——有人敬你，也有人躲着你。",
       conditions: function (st) {
+        if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后不再触发街头叙事事件
         return !!st.flags._grayReported && !st.flags._grayAftermathSeen;
       },
       choices: [
@@ -12517,6 +12613,7 @@ function registerNewsEventsToPool() {
         "热搜第一：教育部要出台新规，学科类培训机构可能全部关停。你手上持有教育股，那个做家教的朋友刚续了半年房租。",
       // [Layer3] 叙事说"你手上持有教育股"，需玩家持有股票
       conditions: function (st) {
+        if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后不再触发街头叙事事件
         if (!st.investment || !st.investment.stockHoldings || Object.keys(st.investment.stockHoldings).length === 0) return false;
         return st.player && st.player.day >= 30;
       },
@@ -12567,6 +12664,7 @@ function registerNewsEventsToPool() {
         "双减文件正式公布：学科类培训不得上市融资。教育股暴跌90%。你的家教兼职也发来消息：「抱歉不需要了。」",
       // [自洽修复] conditions 新增：家教职业检查（story 明确"你的家教兼职"，需有 tutoring 工作/副业/行动记录）
       conditions: function (st) {
+        if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后不再触发街头叙事事件
         var hasTutoring =
           (st.employment &&
             st.employment.currentJob &&
@@ -12628,6 +12726,7 @@ function registerNewsEventsToPool() {
       story:
         "双减落地一个月后，课桌椅在闲鱼上翻倍卖掉了。前老师在小区偷偷上网课月入¥12,000。政策没需求消失——只是藏到了地下。",
       conditions: function (st) {
+        if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后不再触发街头叙事事件
         return (
           (!!st.flags._eduBoughtAssets || !!st.flags._eduPrivateTutor) &&
           !st.flags._eduAftermathSeen
@@ -12687,6 +12786,7 @@ function registerNewsEventsToPool() {
       story:
         "新闻弹窗：国家新能源补贴退坡30%。比丫迪暴跌8%，蔚小李跌12%~15%。你持有的新能源股浮盈20%还没走。",
       conditions: function (st) {
+        if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后不再触发街头叙事事件
         if (!st.investment || !st.investment.stockHoldings || Object.keys(st.investment.stockHoldings).length < 1) return false; // [Layer3]
         return (
           st.player.phase === "street" &&
@@ -12743,6 +12843,7 @@ function registerNewsEventsToPool() {
       story:
         "三周后行业分化：比丫迪刀片电池突破，股价反弹；知马汽车停产，云度被起诉欠款。优胜劣汰。",
       conditions: function (st) {
+        if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后不再触发街头叙事事件
         return !!st.flags._evFrenzySeen && !st.flags._evShakeoutSeen;
       },
       choices: [
@@ -12797,6 +12898,7 @@ function registerNewsEventsToPool() {
       story:
         "三个月后。比丫迪旗舰车型订单超预期300%，股价创了新高。你当初追加的投资翻了一倍。",
       conditions: function (st) {
+        if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后不再触发街头叙事事件
         return (
           (!!st.flags._evSwitchedToLeader || !!st.flags._evBoughtSmall) &&
           !st.flags._evRecoverySeen
@@ -12847,6 +12949,7 @@ function registerNewsEventsToPool() {
         "新闻在播报：国际金价突破历史新高，国内金饰价格已经冲到每克¥800。街边金店门口排起了长队，黄牛在门口加价收金条。你翻出手机看了眼——之前零散买的几克黄金已经涨了40%。要不要趁机操作一波？",
       // [Layer3] 叙事说"之前零散买的几克黄金已经涨了40%"，需玩家持有黄金
       conditions: function (st) {
+        if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后不再触发街头叙事事件
         if (!st.investment || !st.investment.goldHoldings || st.investment.goldHoldings <= 0) return false;
         return st.player && st.player.day >= 30;
       },
@@ -12912,6 +13015,7 @@ function registerNewsEventsToPool() {
       story:
         "半个月过去，金价已经涨到了令人瞠目的程度——每克¥950！新闻里专家们还在喊'黄金看到¥1000'，但街边收金条的黄牛已经悄悄减少了收购量。你手里的金条现在浮盈不少。",
       conditions: function (st) {
+        if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后不再触发街头叙事事件
         return !!st.flags._goldBought && !st.flags._goldPeakDone;
       },
       choices: [
@@ -12955,6 +13059,7 @@ function registerNewsEventsToPool() {
       story:
         "最坏的情况发生了——国际金价一夜暴跌15%！原因是美联储突然加息，美元走强。国内金价跟着跳水，你手里的金条现在不但没赚，反而亏了本金。金店门口又开始排队，这次是卖金的人。",
       conditions: function (st) {
+        if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后不再触发街头叙事事件
         return !!st.flags._goldHeld && !st.flags._goldCrashDone;
       },
       choices: [
@@ -13001,6 +13106,7 @@ function registerNewsEventsToPool() {
       story:
         "一个月后，金价慢慢回升到了中位线。虽然没回到最高点，但比你割肉时强多了。你当初坚持持有的决定，现在看来是对的。",
       conditions: function (st) {
+        if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后不再触发街头叙事事件
         return !!st.flags._goldHeldLong && !st.flags._goldReboundDone;
       },
       choices: [
@@ -16326,20 +16432,18 @@ function registerNewsEventsToPool() {
       icon: "❄️",
       title: "寒潮里的暖粥",
       story:
-        "窗外风力到了7级，温度计显示零下二度。你缩在被窝里不敢出去——连呼吸都是白气。\n\n中午敲门声响了，是楼下的大爷。他拎着一袋热腾腾的小米粥：「小伙子，家里熬多了，给你端一碗来。这鬼天气别饿着肚子。」\n\n粥还烫手。你蹲在门口喝完，浑身暖和过来了。",
-      // [已审查] 含 OR 逻辑（任意天气触发），保留 conditions
-      triggers: { excludeFlags: ["_coldNeighborSeen"] },
+        "窗外风力到了7级，温度计显示零下二度。你缩在被窝里不敢出去——连呼吸都是白气。\n\n中午敲门声响了，是楼下的大爷。他拎着一袋热腾腾的小米粥：「小伙子，家里熬多了，给你端一碗来。这鬼天气别饿着肚子。」\n\n粥还烫手。你蹲在门口喝完，浑身暖和过来了。（⚡ 极端天气时更易触发）",
+      // [已审查] 含 OR 逻辑（任意极端天气触发），保留 conditions
       conditions: function (st) {
-        var cold = st.weather && (st.weather.temperature !== undefined && st.weather.temperature <= 0);
+        var cold = st.weather && (typeof st.weather.temperature === "number" && st.weather.temperature <= 0);
         var storm = st.weather && st.weather.current === "stormy";
         if (!cold && !storm) return false;
         // 需至少有一个已结识邻居
         if (!st.relationships) return false;
-        var anyNpc = false;
         for (var k in st.relationships) {
-          if (st.relationships[k] && st.relationships[k].met) { anyNpc = true; break; }
+          if (st.relationships[k] && st.relationships[k].met) return true;
         }
-        return anyNpc && !st.flags._coldNeighborSeen;
+        return false;
       },
       probability: 0.03,
       repeatable: false,
@@ -16403,28 +16507,21 @@ function registerNewsEventsToPool() {
       phase: "street",
       icon: "🍜",
       title: "病愈后的第一顿饱饭",
-      story: function (st) {
-        var daysSick = st.flags._daysSick || 0;
-        var name = st.player.name || "你";
-        if (daysSick >= 10) {
-          return "这次病得够狠——整整" + daysSick + "天没出门。今天终于退烧了，胃口大好。\n\n你走进街角那家面馆，要了份最大的红烧牛肉面。汤浓肉厚，热气扑脸。老板笑着说：「小伙子脸色好多了！」\n\n原来好好吃饭的感觉，是这样的。";
-        }
-        return "病了一场之后，你第一次觉得饿了。\n\n街边煎饼摊大爷给你做了个双蛋加肠的超大份。「看你瘦的，多吃点！」\n\n咬下去的瞬间，你觉得重新活过来了。";
-      },
+      story:
+        "大病初愈的第一天，胃里发出抗议——你饿坏了。\n\n街角煎饼摊大爷看你气色好转，加了两个蛋一个肠。「看你上次来都快不行了，好了就对了！人嘛，吃好饭才能好好过。」\n\n咬下去的瞬间，你觉得重新活过来了。",
       triggers: {
         minDay: 15,
         excludeFlags: ["_firstGoodMealSeen"],
         minStat: { health: 80 },
       },
-      // [已审查] 含 OR 逻辑（daysSick ≥10 或 daysSick 未计），保留 conditions
-      conditions: function (st) {
-        var wasSick = st.flags._daysSick && st.flags._daysSick >= 5;
-        var justRecovered = st.status && st.status.health >= 80 && !st.flags._firstGoodMealSeen;
-        if (!wasSick && !justRecovered) return false;
-        return true;
-      },
       probability: 0.04,
       repeatable: false,
+      // [已审查] 健康≥80 + 非开局(≥3天)即可能触发，体现病愈叙事（无疾病flag时fallback为纯健康恢复）
+      conditions: function (st) {
+        if (st.flags && st.flags._firstGoodMealSeen) return false;
+        if (!st.player || !st.player.day || st.player.day < 3) return false;
+        return !!(st.status && st.status.health >= 80);
+      },
       choices: [
         {
           text: "🍽️ 去好点的餐馆庆祝重生",
@@ -16475,13 +16572,8 @@ function registerNewsEventsToPool() {
       phase: "street",
       icon: "🌤️",
       title: "换季了",
-      story: function (st) {
-        var currentSeason = st.weather && st.weather.season;
-        if (currentSeason === "spring") {
-          return "春天来了，厚衣服收进柜子里，衣柜里全是薄外套。\n\n但翻箱倒柜发现一件难事：夏天的衬衫一件都没有。上次买的廉价T恤已经洗破了三个。\n\n「入春先入夏，夏衣得提前备。」老周说得对。";
-        }
-        return "季节换了。衣柜里的厚衣服该收起来，薄衣服又没几件。\n\n换季不只是换衣服，是换一笔开销。";
-      },
+      story:
+        "季节换了。衣柜里的厚衣服该收起来，薄衣服又没几件。\n\n街上已经有穿短袖的人了。你低头看看自己——单薄的衬衫在风里打颤。「入春先入夏，夏衣得提前备。」隔壁大爷说得对。\n\n换季不只是换衣服，是换一笔开销。",
       triggers: { excludeFlags: ["_seasonChangeSeen"] },
       conditions: function (st) {
         if (!st.weather || !st.weather.season) return false;
@@ -16539,26 +16631,14 @@ function registerNewsEventsToPool() {
       phase: "street",
       icon: "🎂",
       title: "今天是我的生日",
-      story: function (st) {
-        var cash = (st.resources && st.resources.cash) || 0;
-        var totalEarned = (st.resources && st.resources.totalEarned) || 0;
-        var day = st.player && st.player.day;
-        if (cash >= 500) {
-          return "手机弹出一条祝福——「生日快乐！愿新的一岁，所求皆如愿。」\n\n你看了看银行卡余额，还有¥" + cash.toLocaleString() + "。\n\n这个城市没人记得你的生日。但今天，你自己记得就够了。决定去吃顿好的吧？";
-        }
-        if (totalEarned >= 50000) {
-          return "手机震了一下——「生日快乐。」\n\n一年过去了。你赚了¥" + totalEarned.toLocaleString() + "。回想年初那个刚进城、兜里只有三百块钱的自己，像换了个人。\n\n有些东西变好了，有些东西还在原地。但至少，你站稳了。";
-        }
-        return "日历上划了个圈——今天是你的生日。\n\n但你没钱庆祝。连买个蛋糕都要犹豫半天。手机没有一条消息。\n\n「没关系，」你对自己说，「明天还得上班呢。」";
-      },
+      story:
+        "手机弹出一条祝福——「生日快乐！愿新的一岁，所求皆如愿。」\n\n这个城市没人记得你的生日。但今天，你自己记得就够了。\n\n看着银行卡余额和兜里的零钱……也许可以对自己好一点？也可能，算了，省着点用吧。",
       triggers: { minDay: 50 },
       conditions: function (st) {
         if (st.flags && st.flags._birthdaySeen) return false;
-        // 基于天数判断是否接近"游戏内生日"（假设游戏开始日即为第1个生日纪念日）
-        if (!st.player || !st.player.day || st.player.day < 50) return false;
-        // 每365天触发一次（简化为day%365===0或接近里程碑）
+        // [全系统自洽修复] 域B A类#5: 生日每365天触发（取day%365≈0表示周年纪念日），用近似值容差±1天
         var mod = st.player.day % 365;
-        return mod >= 0 && mod <= 2;
+        return mod >= 364 || mod <= 1;
       },
       probability: 0.06,
       repeatable: false,
