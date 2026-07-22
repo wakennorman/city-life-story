@@ -21,6 +21,7 @@
       // [conditions→triggers]
       triggers: { minDay: 30, excludeFlags: ["_insiderRumorSeen"] },
       conditions: function (st) {
+        if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后链式内幕事件不再触发
         // [已审查] 部分保留：corporate.kpi 无 trigger 等价字段
         return st.player.corporate && st.player.corporate.kpi >= 20;
       },
@@ -1527,6 +1528,7 @@
       story:
         "新 CEO 上任一个月，你这位“前创始人”被分配的工作是——给一群空降高管讲解你当年定的产品逻辑，然后做成 PPT 让他们“参考”。你看着会议室里那些一年前还没听说过这家公司的人，对你的产品指指点点，心里冷笑：他们连用户名字都念不准。但下班路上，你还是去打了点酒。",
       conditions: function (st) {
+        if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后前创始人羞辱链不再触发
         return (
           !!st.flags._founderStayed &&
           st.player.day >= (st.flags._founderStayed || 0) + 365 &&
@@ -1620,6 +1622,7 @@
       story:
         "深夜接到当年合伙人老陈的电话：“新 CEO 一年烧了 3 个亿，下个季度要不到融资就完蛋。投资人现在愿意 4 折出售他们手里的股份——总价 ¥800,000。我和老张能凑¥500,000，差¥300,000。如果你能掏出来，我们三个人就能拿回这家公司。” 你看着对面墙上自己当年挂的那张“再创业”的字，握着手机的手在抖。",
       conditions: function (st) {
+        if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后回购链不再触发
         var hasObserved =
           !!st.flags._founderObserving || !!st.flags._founderRebuilding;
         var triggerDay = st.flags._founderStayed
@@ -1769,6 +1772,7 @@
       _isChainEvent: false, // [全系统自洽修复] 域B,
       phase: "corporate",
       conditions: function (st) {
+        if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后穿小鞋链不再触发
         return (
           st.player.phase === "corporate" &&
           st.player.day >= 60 &&
