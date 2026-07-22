@@ -128,7 +128,8 @@ function fileLawsuit(state, caseId, lawyerId) {
     }
   }
 
-  if ((state.resources.cash || 0) < totalCost)
+  // [全系统自洽修复] 域G A类#3: legal.js fileLawsuit totalCost NaN防御 — NaN<totalCost永假导致免费立案
+  if ((state.resources.cash || 0) < (totalCost || 0))
     return { ok: false, msg: "现金不足，诉讼费+律师费共需¥" + totalCost };
 
   state.resources.cash -= totalCost;

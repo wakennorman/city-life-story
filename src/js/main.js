@@ -3508,7 +3508,9 @@ function getAvailableActions(state) {
         handler: () => {
           const st = StateManager.getState();
           st.resources.cash -= 50;
-          st.status.health = Math.min(100, st.status.health + 40);
+          // [全系统自洽修复] 域G A类#2: 医院看病缺 status 守卫 → NaN传播
+          if (!st.status) st.status = {};
+          st.status.health = Math.min(100, (st.status.health || 50) + 40);
           st.status.injured = false;
           // v3.1：医院治疗同时清除疾病数组（兼容illness.js疾病系统）
           if (st.status.illnesses && st.status.illnesses.length > 0) {

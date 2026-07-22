@@ -524,15 +524,12 @@ function applyNodeChoice(state, nodeId, choiceKey) {
       state.flags._career35Path = "lieflat";
       break;
 
+    // [全系统自洽修复] 域G A类#4: retire_wealthy 退休金基数字段名 — career→employment
     case "retire_wealthy":
       state.flags._retirementType = "wealthy";
       state.flags._retired = true;
-      if (state.career && state.career.currentJob) {
-        state.career.pensionBase = state.career.currentJob.salary || 5000;
-      } else {
-        state.career = state.career || {};
-        state.career.pensionBase = 5000;
-      }
+      var _empJob = (state.employment && state.employment.currentJob) ? state.employment.currentJob : null;
+      state.flags._pensionBase = _empJob ? (_empJob.salary || 5000) : 5000;
       state.needs.happiness = Math.min(100, (state.needs.happiness || 50) + 20);
       break;
     case "retire_advisor":

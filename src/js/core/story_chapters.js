@@ -270,7 +270,8 @@ function _triggerChapter(state, ch) {
     var cap = ensureCareerCapital(state);
     var _chapterRewards = {
       chapter1_survival: { industryResources: 8, clientLeads: 3 },
-      chapter2_standing: { industryResources: 15, clientLeads: 8, reputation: 5 },
+      // [全系统自洽修复] 域G A类#1: chapter key不匹配 — chapter2_standing→chapter2_foothold
+      chapter2_foothold: { industryResources: 15, clientLeads: 8, reputation: 5 },
       chapter3_choice: { industryResources: 25, clientLeads: 15, reputation: 10, partnerTrust: 5 },
     };
     var _reward = _chapterRewards[ch.id];

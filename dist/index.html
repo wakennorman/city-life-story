@@ -31716,7 +31716,8 @@ function _triggerChapter(state, ch) {
     var cap = ensureCareerCapital(state);
     var _chapterRewards = {
       chapter1_survival: { industryResources: 8, clientLeads: 3 },
-      chapter2_standing: { industryResources: 15, clientLeads: 8, reputation: 5 },
+      // [全系统自洽修复] 域G A类#1: chapter key不匹配 — chapter2_standing→chapter2_foothold
+      chapter2_foothold: { industryResources: 15, clientLeads: 8, reputation: 5 },
       chapter3_choice: { industryResources: 25, clientLeads: 15, reputation: 10, partnerTrust: 5 },
     };
     var _reward = _chapterRewards[ch.id];
@@ -100551,15 +100552,12 @@ function applyNodeChoice(state, nodeId, choiceKey) {
       state.flags._career35Path = "lieflat";
       break;
 
+    // [全系统自洽修复] 域G A类#4: retire_wealthy 退休金基数字段名 — career→employment
     case "retire_wealthy":
       state.flags._retirementType = "wealthy";
       state.flags._retired = true;
-      if (state.career && state.career.currentJob) {
-        state.career.pensionBase = state.career.currentJob.salary || 5000;
-      } else {
-        state.career = state.career || {};
-        state.career.pensionBase = 5000;
-      }
+      var _empJob = (state.employment && state.employment.currentJob) ? state.employment.currentJob : null;
+      state.flags._pensionBase = _empJob ? (_empJob.salary || 5000) : 5000;
       state.needs.happiness = Math.min(100, (state.needs.happiness || 50) + 20);
       break;
     case "retire_advisor":
@@ -102196,7 +102194,8 @@ function fileLawsuit(state, caseId, lawyerId) {
     }
   }
 
-  if ((state.resources.cash || 0) < totalCost)
+  // [全系统自洽修复] 域G A类#3: legal.js fileLawsuit totalCost NaN防御 — NaN<totalCost永假导致免费立案
+  if ((state.resources.cash || 0) < (totalCost || 0))
     return { ok: false, msg: "现金不足，诉讼费+律师费共需¥" + totalCost };
 
   state.resources.cash -= totalCost;
@@ -174070,6 +174069,493 @@ if (typeof window !== "undefined") {
   // ===== IIFE\u6ce8\u5165 =====
   if (typeof RANDOM_EVENTS !== "undefined") {
     RANDOM_EVENTS.push(npc_zhou_retirement, npc_aunt_wang_moving, npc_chef_chen_retiring, social_support_intervention);
+  }
+})();
+</script>
+    <!-- v3.176: 域E经济投资联动 — 正收益验证/创业安全网/被动收入 -->
+    <script>/**
+ * 域E联动增强：正收益验证 + 投资×创业安全网 + 被动收入超越
+ * [全系统自洽修复] 域E R176: investment盈利叙事首次被事件消费
+ */
+(function () {
+  "use strict";
+  if (typeof window === "undefined") return;
+
+  // ===== 事件1: 正收益验证 =====
+  var positive_validation = {
+    id: "positive_validation",
+    title: "\u4f60\u6253\u8d62\u4e86\u5e02\u573a",
+    phase: "street",
+    repeatable: false,
+    priority: 80,
+    conditions: function (st) {
+      if (!st || !st.flags || !st.investment) return false;
+      if (st.flags._positiveValidation) return false;
+      var lastProfit = st.investment._lastProfitableTrade || null;
+      if (!lastProfit || lastProfit.profitRatio < 0.10) return false;
+      return true;
+    },
+    probability: 0.05,
+    getStory: function (st) {
+      var p = st.investment._lastProfitableTrade;
+      if (!p) return "\u4f60\u6210\u529f\u5356\u51fa\u4e86\u4e00\u7b14\u6709\u76ca\u7684\u80a1\u7968\u3002";
+      return "\u4f60\u5356\u51fa\u4e86" + p.symbol + "\uff0c\u8d5a\u4e86" + p.profitStr + "\u3002\n\n\u4f60\u7a81\u7136\u610f\u8bc6\u5230\u2014\u2014\u4f60\u521a\u624d\u505a\u4e86\u4e00\u4e2a\u6b63\u786e\u7684\u51b3\u5b9a\u3002\n\n\u4f60\u6ca1\u6709\u88ab\u9519\u8fc7\uff0c\u4e5f\u6ca1\u6709\u8ddf\u98ce\u3002\u4f60\u5728\u6b63\u786e\u7684\u65f6\u673a\u3001\u4ee5\u6b63\u786e\u7684\u4ef7\u683c\u3001\u5356\u4e86\u6b63\u786e\u7684\u4e1c\u897f\u3002";
+    },
+    getText: function (st) { return this.getStory(st); },
+    apply: function (st, choiceId) {
+      if (!st) return;
+      st.flags._positiveValidation = true;
+      if (choiceId === "keep_holding") {
+        st.player.mental = Math.min(100, (st.player.mental || 50) + 4);
+        st.player.intelligence = Math.min(100, (st.player.intelligence || 50) + 2);
+        StateManager.addMessage("\u2705 \u4f60\u9009\u62e9\u4e86\u7406\u6027\u6210\u957f\u3002\u6295\u8d44\u4e0d\u662f\u6253\u724c\uff0c\u662f\u6280\u80fd\u3002\u667a\u529b+2\u3002", "success");
+      } else if (choiceId === "bank_deposit") {
+        st.resources.cash = (st.resources.cash || 0) + 500;
+        StateManager.addMessage("\u2705 \u843d\u889d\u4e3a\u5b89\u3002\u4f60\u628a\u90e8\u5206\u5229\u6da6\u5b58\u8fdb\u4e86\u94f6\u884c\u3002", "info");
+      } else {
+        st.player.morality = Math.max(0, (st.player.morality || 50) - 2);
+        StateManager.addMessage("\u2705 \u4f60\u60f3\u518d\u52a0\u4ed3\u3002\u4f46\u8d2a\u5a6a\u53ef\u80fd\u662f\u4e0b\u4e00\u6b21\u7684\u6559\u8bad\u3002", "warning");
+      }
+    },
+    choices: [
+      { text: "\u7ee7\u7eed\u6301\u6709\uff0c\u8ba9\u5229\u6da6\u8dd1", id: "keep_holding" },
+      { text: "\u843d\u889d\u4e3a\u5b89\uff0c\u5b58\u94f6\u884c", id: "bank_deposit" },
+      { text: "\u518d\u52a0\u4ed3\uff0c\u8d76\u70ed\u6253\u94c1", id: "add_position" },
+    ],
+    icons: ["\u2705", "\u80a1\u7968"],
+  };
+
+  // ===== 事件2: \u6295\u8d44\times\u521b\u4e1a\u5b89\u5168\u7f51 =====
+  var invest_startup_safety_net = {
+    id: "invest_startup_safety_net",
+    title: "\u4f60\u7684\u5e95\u7ebf",
+    phase: "corporate",
+    repeatable: false,
+    priority: 85,
+    conditions: function (st) {
+      if (!st || !st.startup || !st.startup.company) return false;
+      if (st.flags._investStartupSafetyNetDone) return false;
+      var inv = st.investment;
+      var hasStock = inv && inv.stockHoldings && inv.stockHoldings.length > 0;
+      var hasBtc = inv && (inv.btcHoldings || 0) > 0;
+      var hasProp = inv && inv.properties && inv.properties.length > 0;
+      return hasStock || hasBtc || hasProp;
+    },
+    probability: 0.1,
+    getStory: function (st) {
+      var companyName = st.startup.company.name || "\u4f60\u7684\u516c\u53f8";
+      return companyName + "\u7684\u73b0\u91d1\u6d41\u7d27\u5f20\u4e86\u3002\u4f60\u6253\u5f00\u6295\u8d44APP\u2014\u2014\u54c7\u54c7\uff0c\u8fd8\u6709\u4e00\u4e9b\u5e95\u5e93\u3002\n\n\u8fd9\u5c31\u662f\u201c\u4e0d\u8981\u628a\u86cb\u74dc\u653e\u5728\u4e00\u4e2a\u7bee\u5b50\u91cc\u201d\u7684\u542b\u4e49\u3002";
+    },
+    getText: function (st) { return this.getStory(st); },
+    apply: function (st, choiceId) {
+      if (!st) return;
+      st.flags._investStartupSafetyNetDone = true;
+      if (choiceId === "sell_invest") {
+        st.flags._investRebalanced = true;
+        st.player.mental = Math.min(100, (st.player.mental || 50) + 3);
+        StateManager.addMessage("\u4f60\u5356\u4e86\u4e00\u90e8\u5206\u6295\u8d44\u8865\u73b0\u91d1\u6d41\u3002\u8fd9\u4e0d\u662f\u5931\u8d25\u2014\u2014\u662f\u8c03\u6574\u3002", "info");
+      } else if (choiceId === "hold_course") {
+        st.player.intelligence = Math.min(100, (st.player.intelligence || 50) + 3);
+        StateManager.addMessage("\u4f60\u51b3\u5b9a\u575a\u6301\u4e0b\u53bb\u3002\u4e0d\u9760\u6295\u8d44\u586b\u5751\u2014\u2014\u8fd9\u662f\u5bf9\u81ea\u5df1\u4fe1\u5ff5\u7684\u6d4b\u8bd5\u3002", "success");
+      } else {
+        st.flags._lessonDiversification = true;
+        st.player.morality = Math.min(100, (st.player.morality || 50) + 2);
+        StateManager.addMessage("\u4f60\u53ea\u662f\u8bb0\u4f4f\u4e86\u2014\u2014\u4ece\u6b64\u4ee5\u540e\u4e0d\u518d\u628a\u6240\u6709\u7684\u94b1\u6253\u5728\u4e00\u4e2a\u7bee\u5b50\u91cc\u3002", "hint");
+      }
+    },
+    choices: [
+      { text: "\u5356\u90e8\u5206\u6295\u8d44\u8865\u73b0\u91d1\u6d41", id: "sell_invest" },
+      { text: "\u575a\u6301\u4e0b\u53bb\uff0c\u4e0d\u9760\u6295\u8d44", id: "hold_course" },
+      { text: "\u4ec0\u4e48\u90fd\u4e0d\u505a\uff0c\u5c31\u8bb0\u4f4f\u8fd9\u4e00\u6b21", id: "just_remember" },
+    ],
+    icons: ["\u4e0b\u7ebf", "\u4e09\u89d2"],
+  };
+
+  // ===== 事件3: \u88ab\u52a8\u6536\u5165\u8d85\u8d8a\u4e3b\u52a8\u6536\u5165 =====
+  var passive_income_identity = {
+    id: "passive_income_identity",
+    title: "\u4f60\u4e0d\u518d\u5355\u7eaf\u9760\u5de5\u8d44\u4e86",
+    phase: "street",
+    repeatable: false,
+    priority: 90,
+    conditions: function (st) {
+      if (!st || !st.flags || !st.investment) return false;
+      if (st.flags._passiveIncomeIdentityShift) return false;
+      var totalAssets = (st.resources && (st.resources.cash || 0) + (st.resources.bankBalance || 0)) || 0;
+      if (totalAssets < 10000) return false;
+      return true;
+    },
+    probability: 0.04,
+    getStory: function (st) {
+      return "\u4eca\u5929\u53d1\u5de5\u8d44\u7684\u65e5\u5b50\uff0c\u4f60\u60ef\u5e38\u6027\u5730\u6253\u5f00\u6295\u8d44APP\u2014\u2014\u7136\u540e\u5413\u4e86\u4e00\u8def\u3002\n\n\u672c\u6708\u7684\u5229\u606f+\u79df\u91d1+\u80a1\u606f\u603b\u8ba1\u6bd4\u4f60\u4e0a\u73ed\u633a\u591a\u3002\n\n\u4f60\u7a81\u7136\u610f\u8bc6\u5230\u4e00\u4ef6\u5f88\u5fae\u5999\u7684\u4e8b\u60c5\uff1a\u4f60\u4e0d\u518d\u662f'\u9760\u4e00\u4efd\u5de5\u4f5c\u6d3b\u7740\u7684\u4eba'\u4e86\u3002";
+    },
+    getText: function (st) { return this.getStory(st); },
+    apply: function (st, choiceId) {
+      if (!st) return;
+      st.flags._passiveIncomeIdentityShift = true;
+      st.flags._passiveFree = true;
+      if (choiceId === "rest_day") {
+        st.player.happiness = Math.min(100, (st.player.happiness || 50) + 8);
+        StateManager.addMessage("\u2728 \u7ed9\u81ea\u5df1\u653e\u4e00\u5929\u5047\u3002\u4f60\u503c\u5f97\u3002\u8fd9\u4e0d\u662f\u6684\u5bcc\u2014\u2014\u8fd9\u662f\u5c0f\u786e\u3002", "success");
+      } else if (choiceId === "reinvest") {
+        st.player.intelligence = Math.min(100, (st.player.intelligence || 50) + 3);
+        st.flags._reinvestFlag = true;
+        StateManager.addMessage("\u2728 \u4f60\u51b3\u5b9a\u7ee7\u7eed\u52a0\u7801\u3002\u8fd9\u4e9b\u94b1\u4e0d\u4f1a\u8ba9\u4f60\u505c\u4e0b\u6765\u3002", "info");
+      } else {
+        st.player.happiness = Math.min(100, (st.player.happiness || 50) + 5);
+        StateManager.addMessage("\u2728 \u4f60\u7528\u8fd9\u7b14\u94b1\u4e70\u4e86\u4e00\u4ef6\u597d\u4e1c\u897f\u3002\u4eb2\u7231\u7684\u4e1c\u897f\uff0c\u4e0d\u662f\u5de5\u5177\u3002", "hint");
+      }
+    },
+    choices: [
+      { text: "\u7ed9\u81ea\u5df1\u653e\u4e00\u5929\u5047", id: "rest_day" },
+      { text: "\u7ee7\u7eed\u52a0\u7801\u6295\u8d44", id: "reinvest" },
+      { text: "\u4e70\u4ef6\u597d\u4e1c\u897f\u5956\u52b1\u81ea\u5df1", id: "buy_gift" },
+    ],
+    icons: ["\u2728", "\u81ea\u7531"],
+  };
+
+  // ===== IIFE\u6ce8\u5165 =====
+  if (typeof RANDOM_EVENTS !== "undefined") {
+    RANDOM_EVENTS.push(positive_validation, invest_startup_safety_net, passive_income_identity);
+  }
+})();
+</script>
+    <!-- v3.177: 域G核心机制联动 — 人生节点情绪/章节回响/存款里程碑/疲劳预警 -->
+    <script>/**
+ * 域G联动增强 Part 1 -- 人生节点情绪余波 + 章节回响
+ * [全系统自洽修复] 域G R177: life_nodes/story_chapters 首次被事件系统消费
+ */
+(function () {
+  'use strict';
+  if (typeof window === 'undefined') return;
+
+  // ===== A组: 人生节点情绪余波 =====
+
+  var life_node_emotional_afterglow = {
+    id: 'life_node_emotional_afterglow',
+    title: '节点的余波',
+    phase: 'street',
+    repeatable: false,
+    priority: 85,
+    conditions: function (st) {
+      if (!st || !st.flags) return false;
+      if (!st.flags._lastLifeNodeTriggered) return false;
+      if (st.flags._emotionalAfterglowDone) return false;
+      return true;
+    },
+    probability: 0.06,
+    getStory: function (st) {
+      var flag = st.flags._lastLifeNodeTriggered;
+      if (flag === 'gaokao') {
+        return '那天考完最后一科，你走出考场的那一刻，阳光刺眼得让你想哭。\n\n不是悲伤，是那种"终于熬过一关了"的虚脱感。\n\n现在想来，那天的风、蝉鸣、考场外举着扇子的妈妈\u2014\u2014像一部老电影的开场。';
+      } else if (flag === 'university') {
+        return '拿到大学录取通知书的那天，全家都忙开了。\n\n你把通知书放在枕头底下睡了一整夜\u2014\u2014怕被风吹跑，怕是一场梦。\n\n如今在城市里摸爬滚打，那张纸不知还躺在哪个角落。';
+      } else if (flag === 'career35') {
+        return '35岁这天，你照了照镜子。\n\n发际线比上个月又退了一点。公司群里的00后开始用你没听过的术语。\n\n但你突然意识到\u2014\u201435不是下坡路的起点，只是换了条上坡路。';
+      } else if (flag === 'retirement') {
+        return '退休证到手的那天，你站在窗前发了很久的呆。\n\n四十年工作说没就没\u2014\u2014但那些一起熬过大夜的同事、一起拿下的项目、一起喝过的茶，都在。\n\n你终于有时间想想，自己想要什么生活了。';
+      } else {
+        return '某个深夜，你突然想起生命中的一个重要节点。\n\n那一刻的紧张、期待、恐惧\u2014\u2014像刚发生一样清晰。\n\n你问自己：那时的选择，对吗？';
+      }
+    },
+    getText: function (st) {
+      return this.getStory(st);
+    },
+    apply: function (st, choiceId) {
+      if (!st) return;
+      st.flags._emotionalAfterglowDone = true;
+      if (choiceId === 'diary') {
+        st.player.mental = Math.min(100, (st.player.mental || 50) + 5);
+        st.player.happiness = Math.min(100, (st.player.happiness || 50) + 5);
+        StateManager.addMessage('你把那段记忆写进了日记。有时候记录本身就是疗愈。精神+5，心情+5。', 'success');
+      } else if (choiceId === 'walk_out') {
+        st.player.fatigue = Math.min(100, (st.player.fatigue || 0) + 3);
+        st.player.happiness = Math.min(100, (st.player.happiness || 50) + 8);
+        StateManager.addMessage('你出门走了走。城市的灯火依然温暖。疲劳+3，心情+8。', 'info');
+      } else {
+        st.flags._pragmaticCoping = true;
+        StateManager.addMessage('算了，想这些没用。明天还得赚钱。', 'hint');
+      }
+    },
+    choices: [
+      { text: '\ud83d\udcdd 写进日记', id: 'diary' },
+      { text: '\ud83d\udeb6 出去走走', id: 'walk_out' },
+      { text: '\ud83d\udcb0 先攒钱要紧', id: 'save_money' },
+    ],
+    icons: ['\ud83e\udd14', '\ud83d\udcdd'],
+  };
+
+  // ===== B组: 章节回响 =====
+
+  var chapter_echo_emotional_impact = {
+    id: 'chapter_echo_emotional_impact',
+    title: '章节回响',
+    phase: 'street',
+    repeatable: true,
+    maxTriggers: 3,
+    priority: 80,
+    conditions: function (st) {
+      if (!st || !st.flags) return false;
+      var hasChapter =
+        !!st.flags._ch1Done ||
+        !!st.flags._ch2Done ||
+        !!st.flags._ch3Done;
+      if (!hasChapter) return false;
+      var usedCount = st.flags._chapterEchoUsedCount || 0;
+      if (usedCount >= 3) return false;
+      return true;
+    },
+    probability: 0.05,
+    getStory: function (st) {
+      var cash = (st.resources && isFinite(st.resources.cash) ? st.resources.cash : 0);
+      var health = (st.status && isFinite(st.status.health) ? st.status.health : 70);
+      var day = (st.player && isFinite(st.player.day) ? st.player.day : 1);
+
+      if (st.flags._ch3Done) {
+        return '你已经在这个城市度过了近一年的时间。\n\n第' + day + '天，回头一看\u2014\u2014从第一天连租房都找不到，到现在居然有了自己的节奏。\n\n存款' + (cash >= 1000 ? '\u00a5' + Math.round(cash) : '快见底了') + '，身体' + (health >= 60 ? '还不错' : '有点吃不消了') + '。\n\n你还记得刚来时的那个自己吗？';
+      } else if (st.flags._ch2Done) {
+        return '第一百多天过去了。\n\n你在某个加班的深夜突然想起来\u2014\u2014刚来这座城市的时候，连地图都看不懂。\n\n现在的你至少知道哪家面馆最划算，哪个时间点打车最便宜。\n\n生存技能点满了。';
+      } else {
+        return '三十天。\n\n你说你来这个城市才不久，但已经经历了不少事\u2014\u2014第一次被骗、第一份兼职、第一次生病。\n\n那些你以为熬不过去的日子，都已经过去了。';
+      }
+    },
+    getText: function (st) {
+      return this.getStory(st);
+    },
+    apply: function (st, choiceId) {
+      if (!st) return;
+      if (!st.flags) st.flags = {};
+      st.flags._chapterEchoUsedCount = (st.flags._chapterEchoUsedCount || 0) + 1;
+      if (choiceId === 'move_forward') {
+        st.player.happiness = Math.min(100, (st.player.happiness || 50) + 10);
+        st.player.mental = Math.min(100, (st.player.mental || 50) + 3);
+        StateManager.addMessage('你深吸一口气，继续往前走。每一步都算数。心情+10，精神+3。', 'success');
+      } else if (choiceId === 'thank_self') {
+        st.player.charm = Math.min(100, (st.player.charm || 50) + 2);
+        st.player.happiness = Math.min(100, (st.player.happiness || 50) + 12);
+        StateManager.addMessage('你对自己说声辛苦了。这份自我认可比任何人的赞美都重要。魅力+2，心情+12。', 'success');
+      } else {
+        st.flags._chapterEchoRegret = true;
+        StateManager.addMessage('如果重来一次\u2026\u2026但你没有if。只有now。', 'hint');
+      }
+    },
+    choices: [
+      { text: '\u27a1\ufe0f 只管往前走', id: 'move_forward' },
+      { text: '\ud83d\ude4f 感谢自己', id: 'thank_self' },
+      { text: '\u2753 如果重来一次', id: 'regret' },
+    ],
+    icons: ['\ud83d\udcd6', '\ud83d\udd04'],
+  };
+
+  // ===== IIFE注入 =====
+  if (typeof RANDOM_EVENTS !== 'undefined') {
+    RANDOM_EVENTS.push(life_node_emotional_afterglow, chapter_echo_emotional_impact);
+  }
+})();
+</script>
+    <script>/**
+ * 域G联动增强 Part 2 -- 存款里程碑 + 疲劳预警
+ * [全系统自洽修复] 域G R177: resources.totalAssets/fatigue首次被事件叙事消费
+ */
+(function () {
+  'use strict';
+  if (typeof window === 'undefined') return;
+
+  // ===== A组: 存款里程碑链式阈值 (1k->5k->20k) =====
+
+  function _getTotalAssets(st) {
+    var cash = st.resources && isFinite(st.resources.cash) ? st.resources.cash : 0;
+    var bank = st.resources && isFinite(st.resources.bankBalance) ? st.resources.bankBalance : 0;
+    var invest = st.investment && isFinite(st.investment.portfolioValue) ? st.investment.portfolioValue : 0;
+    return Math.round(cash + bank + invest);
+  }
+
+  // --- 里程碑1: 1000元 第一桶金的雏形 ---
+  var milestone_savings_1k = {
+    id: 'milestone_savings_1k',
+    title: '破千！',
+    phase: 'street',
+    repeatable: false,
+    priority: 90,
+    conditions: function (st) {
+      if (!st || !st.resources) return false;
+      if (st.flags._milestone1kDone) return false;
+      var total = _getTotalAssets(st);
+      var prev = st.flags._prevSavingsCheck || 0;
+      return total >= 1000 && (total - prev) >= 500;
+    },
+    probability: 1.0,
+    getStory: function (st) {
+      var total = _getTotalAssets(st);
+      return '你打开账户看了一眼\u2014\u2014存款终于过了￥1,000！\n\n从刚来城市的￥300，到这一千块，你吃了不知道多少顿路边摊、省了多少顿像样的饭。\n\n一千块不多，但它是你的。第一笔真正的、完全属于自己的数字。\n\n总资产：￥' + total + '。';
+    },
+    getText: function (st) {
+      return this.getStory(st);
+    },
+    apply: function (st, choiceId) {
+      if (!st) return;
+      st.flags._milestone1kDone = true;
+      if (!st.flags) st.flags = {};
+      st.flags._prevSavingsCheck = _getTotalAssets(st);
+      if (choiceId === 'save_more') {
+        st.player.happiness = Math.min(100, (st.player.happiness || 50) + 8);
+        st.player.mental = Math.min(100, (st.player.mental || 50) + 3);
+        StateManager.addMessage('你把这事记在心里。一千不是终点，只是起点。心情+8，精神+3。', 'success');
+      } else if (choiceId === 'treat_self') {
+        st.player.happiness = Math.min(100, (st.player.happiness || 50) + 10);
+        st.resources.cash = Math.max(0, (st.resources.cash || 0) - 100);
+        StateManager.addMessage('出去吃了一顿好的！￥100的烤肉，配一碗白米饭。快乐无价。心情+10。', 'info');
+      }
+    },
+    choices: [
+      { text: '\ud83d\udc37 继续存，不慌', id: 'save_more' },
+      { text: '\ud83c\udf56 犒劳自己吃一顿', id: 'treat_self' },
+    ],
+    icons: ['\ud83d\udcb0', '里程碑'],
+  };
+
+  // --- 里程碑2: 5000元 安全垫 ---
+  var milestone_savings_5k = {
+    id: 'milestone_savings_5k',
+    title: '安全垫',
+    phase: 'street',
+    repeatable: false,
+    priority: 90,
+    conditions: function (st) {
+      if (!st || !st.resources) return false;
+      if (st.flags._milestone5kDone) return false;
+      if (!st.flags._milestone1kDone) return false;
+      var total = _getTotalAssets(st);
+      var prev = st.flags._prevSavingsCheck || 0;
+      return total >= 5000 && (total - prev) >= 2000;
+    },
+    probability: 1.0,
+    getStory: function (st) {
+      var total = _getTotalAssets(st);
+      return '五千元。城市里大部分人一个月的工资，但你一分一分攒下来的。\n\n房东涨租你不慌了\u2014\u2014这个月房租可以先缓两天。病假请不起了\u2014\u2014至少药钱有了着落。\n\n五千元不叫富有，但它给了你一个"安全垫"。在这个城市里，安全垫就是尊严。\n\n总资产：￥' + total + '。';
+    },
+    getText: function (st) {
+      return this.getStory(st);
+    },
+    apply: function (st, choiceId) {
+      if (!st) return;
+      st.flags._milestone5kDone = true;
+      if (!st.flags) st.flags = {};
+      st.flags._prevSavingsCheck = _getTotalAssets(st);
+      if (choiceId === 'learn_invest') {
+        st.player.intelligence = Math.min(100, (st.player.intelligence || 50) + 4);
+        st.player.mental = Math.min(100, (st.player.mental || 50) + 2);
+        StateManager.addMessage('你买了一本理财入门书。知识才是最好的投资。智力+4，精神+2。', 'success');
+      } else if (choiceId === 'emergency_fund') {
+        st.player.happiness = Math.min(100, (st.player.happiness || 50) + 6);
+        st.player.mental = Math.min(100, (st.player.mental || 50) + 5);
+        st.flags._emergencyMindset = true;
+        StateManager.addMessage('你把心安了下来。知道钱在那儿，你就知道再怎么也能活下去。心情+6，精神+5。', 'success');
+      }
+    },
+    choices: [
+      { text: '\ud83d\udcda 买理财书学习', id: 'learn_invest' },
+      { text: '\ud83d\udee1\ufe0f 这就是我的紧急备用金', id: 'emergency_fund' },
+    ],
+    icons: ['\ud83d\udcb0', '安全垫'],
+  };
+
+  // --- 里程碑3: 20000元 城市的敲门砖 ---
+  var milestone_savings_20k = {
+    id: 'milestone_savings_20k',
+    title: '两万块的分量',
+    phase: 'street',
+    repeatable: false,
+    priority: 95,
+    conditions: function (st) {
+      if (!st || !st.resources) return false;
+      if (st.flags._milestone20kDone) return false;
+      if (!st.flags._milestone5kDone) return false;
+      var total = _getTotalAssets(st);
+      var prev = st.flags._prevSavingsCheck || 0;
+      return total >= 20000 && (total - prev) >= 5000;
+    },
+    probability: 1.0,
+    getStory: function (st) {
+      var total = _getTotalAssets(st);
+      return '两万块。\n\n这个数字让你突然有了一些以前不敢想的念头\u2014\u2014报个技能培训班？换个好点的住处？或者\u2026\u2026开始考虑副业甚至创业？\n\n在城市的规则里，两万块是一块敲门砖。它不够买房，但足够让你说"我可以试试"。\n\n总资产：￥' + total + '。';
+    },
+    getText: function (st) {
+      return this.getStory(st);
+    },
+    apply: function (st, choiceId) {
+      if (!st) return;
+      st.flags._milestone20kDone = true;
+      if (!st.flags) st.flags = {};
+      st.flags._prevSavingsCheck = _getTotalAssets(st);
+      if (choiceId === 'invest_self') {
+        st.player.intelligence = Math.min(100, (st.player.intelligence || 50) + 5);
+        st.flags._investInSelf = true;
+        StateManager.addMessage('你决定把这笔钱的一部分用在自己身上。培训/证书/技能\u2014\u2014这是最有回报的投资。智力+5。', 'success');
+      } else if (choiceId === 'expand_hustle') {
+        st.player.happiness = Math.min(100, (st.player.happiness || 50) + 10);
+        st.player.mental = Math.min(100, (st.player.mental || 50) + 3);
+        st.flags._expandHustle = true;
+        StateManager.addMessage('你有底气去拓展副业了。两万块的底牌在手，不怕试错。心情+10。', 'success');
+      }
+    },
+    choices: [
+      { text: '\ud83d\udca1 投资自己（技能培训/考证）', id: 'invest_self' },
+      { text: '\ud83d\ude80 扩大副业规模', id: 'expand_hustle' },
+    ],
+    icons: ['\ud83d\udcb0', '敲门砖'],
+  };
+
+  // ===== B组: 疲劳预警 =====
+
+  var milestone_fatigue_warning = {
+    id: 'milestone_fatigue_warning',
+    title: '身体的提醒',
+    phase: 'any',
+    repeatable: false,
+    priority: 70,
+    conditions: function (st) {
+      if (!st) return false;
+      var fatigue = (st.needs && isFinite(st.needs.fatigue)) ? st.needs.fatigue : 0;
+      if (fatigue < 80) return false;
+      var prevCheck = st.flags._prevFatigueCheck || 0;
+      if ((st.player.day || 0) - prevCheck < 15) return false;
+      return true;
+    },
+    probability: 0.12,
+    getStory: function (st) {
+      var fat = (st.needs && isFinite(st.needs.fatigue)) ? Math.round(st.needs.fatigue) : 85;
+      return '你已经连续几天觉得特别累了。\n\n肩膀酸痛、眼睛干涩、注意力不集中\u2014\u2014身体在抗议了。\n\n疲劳值：' + Math.round(fat) + '%。你知道再这样下去会出问题，但"今天还有好多事没做完"\u2026\u2026\n\n你真的还能撑下去吗？';
+    },
+    getText: function (st) {
+      return this.getStory(st);
+    },
+    apply: function (st, choiceId) {
+      if (!st) return;
+      if (!st.flags) st.flags = {};
+      st.flags._prevFatigueCheck = st.player.day || 0;
+      if (choiceId === 'caffeine') {
+        var cost = Math.min((st.resources && isFinite(st.resources.cash) ? st.resources.cash : 0), 15);
+        st.resources.cash = (st.resources.cash || 0) - cost;
+        st.status.health = Math.max(0, (st.status && isFinite(st.status.health) ? st.status.health : 70) - 5);
+        st.needs.fatigue = Math.max(0, (st.needs.fatigue || 0) - 10);
+        StateManager.addMessage('灌了三杯浓缩咖啡硬扛下去。疲劳-10，健康-5。明天你会后悔今天的决定。', 'warning');
+      } else {
+        st.needs.fatigue = Math.max(0, (st.needs.fatigue || 0) - 30);
+        st.player.happiness = Math.min(100, (st.player.happiness || 50) + 5);
+        StateManager.addMessage('你请了一天假。躺在床上发呆，什么也没做。反而感觉好多了。疲劳-30，心情+5。', 'success');
+      }
+    },
+    choices: [
+      { text: '\u2615\ufe0f 咖啡因硬扛（￥15，健康-5）', id: 'caffeine' },
+      { text: '\ud83d\ude34 请假补觉（疲劳-30）', id: 'rest_day' },
+    ],
+    icons: ['\u26a0\ufe0f', '疲劳'],
+  };
+
+  // ===== IIFE注入 =====
+  if (typeof RANDOM_EVENTS !== 'undefined') {
+    RANDOM_EVENTS.push(milestone_savings_1k, milestone_savings_5k, milestone_savings_20k, milestone_fatigue_warning);
   }
 })();
 </script>
@@ -251526,7 +252012,9 @@ function getAvailableActions(state) {
         handler: () => {
           const st = StateManager.getState();
           st.resources.cash -= 50;
-          st.status.health = Math.min(100, st.status.health + 40);
+          // [全系统自洽修复] 域G A类#2: 医院看病缺 status 守卫 → NaN传播
+          if (!st.status) st.status = {};
+          st.status.health = Math.min(100, (st.status.health || 50) + 40);
           st.status.injured = false;
           // v3.1：医院治疗同时清除疾病数组（兼容illness.js疾病系统）
           if (st.status.illnesses && st.status.illnesses.length > 0) {
