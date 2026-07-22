@@ -1,1 +1,1 @@
-docs: [Layer4] 文档/状态更新 — L4-A 收尾 life.js 22 处（street 全覆盖 125 / 累计 130）round 166
+feat: Layer 5 经济数值缩放（scaleAmount + 41 处硬编码金额动态化）
