@@ -580,22 +580,7 @@ function grantActionStatGain(actionId, state) {
   return gains.length > 0 ? "💪 " + gains.join(", ") : "";
 }
 
-/** 获取技能中文名 */
-function getSkillChineseName(skillKey) {
-  var names = {
-    cooking: "烹饪",
-    repair: "维修",
-    coding: "编程",
-    english: "英语",
-    driving: "驾驶",
-    sales: "销售",
-    management: "管理",
-    accounting: "会计",
-    electrician: "电工",
-    welding: "焊接",
-  };
-  return names[skillKey] || skillKey;
-}
+/** 获取技能中文名 — 由 skill_tree.js 全局提供 */
 
 /**
  * [全系统自洽修复] 域C 联动增强1: 技能等级降低同领域工作疲劳 (C→G)
