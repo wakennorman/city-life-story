@@ -1408,11 +1408,11 @@ const DAILY_PIPELINE = [
             bonusMult: Math.round(bonusMult * 100) / 100,
           };
           StateManager.addMessage(
-            "🔥 今日热招：" +
+            "🔥 今日热招（日结）：" +
               hotJob.name +
               "！工价×" +
               bonusMult.toFixed(1) +
-              "，仅限今天！",
+              "，仅限今天！去⚡行动页找到它",
             "event",
           );
         }

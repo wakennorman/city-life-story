@@ -2187,8 +2187,9 @@ function renderActionsTab(state, parent) {
     recentActionIds.sort(function (a, b) {
       return (lastUseMap[b] || 0) - (lastUseMap[a] || 0);
     });
-    // 取前5个
-    var topRecentIds = recentActionIds.slice(0, 5);
+    // 取前N个（手机端4个，桌面端5个）
+    var _recentMax = window.innerWidth <= 768 ? 4 : 5;
+    var topRecentIds = recentActionIds.slice(0, _recentMax);
     if (topRecentIds.length > 0) {
       var recentActions = [];
       for (var _ri = 0; _ri < topRecentIds.length; _ri++) {
@@ -2207,7 +2208,7 @@ function renderActionsTab(state, parent) {
         recentTitle.style.cssText =
           "font-size:11px;color:var(--info);font-weight:700;margin-bottom:6px;letter-spacing:0.5px;";
         recentTitle.innerHTML =
-          "🏃 最近行动 <span style='font-size:9px;color:var(--text-muted);font-weight:400;'>（最近 5 个，按使用时间排序）</span>";
+          "🏃 最近行动 <span style='font-size:9px;color:var(--text-muted);font-weight:400;'>（最近 " + _recentMax + " 个，按使用时间排序）</span>";
         recentBox.appendChild(recentTitle);
         var recentGrid = document.createElement("div");
         recentGrid.className = "action-cards";

@@ -4955,9 +4955,12 @@ function showCareerPathPreviewModal(pathKey) {
       text: "📄 投递简历",
       cls: "btn-primary",
       callback: function () {
-        if (typeof enhancedApplyCareerJob === "function") {
-          enhancedApplyCareerJob(pathKey, entryLevel.id);
-        }
+        // 用 setTimeout 让当前弹窗先关闭，避免新弹窗被 blocked
+        setTimeout(function () {
+          if (typeof enhancedApplyCareerJob === "function") {
+            enhancedApplyCareerJob(pathKey, entryLevel.id);
+          }
+        }, 100);
       },
     });
   } else {

@@ -621,26 +621,9 @@ function applyCrisisChoice(state, crisisId, option) {
 }
 
 /**
- * 获取危机摘要
+ * 获取危机摘要 — 由 startup_competition.js 提供完整实现
+ * 本文件不再定义 getCrisisSummary，避免与 startup_competition.js 的 function 声明冲突
  */
-if (typeof getCrisisSummary === "undefined") {
-function getCrisisSummary(company) {
-  if (!company.crisisHistory || company.crisisHistory.length === 0) {
-    return { total: 0, survived: 0, failed: 0 };
-  }
-
-  const total = company.crisisHistory.length;
-  const survived = company.crisisHistory.filter((c) => c.success).length;
-  const failed = total - survived;
-
-  return {
-    total,
-    survived,
-    failed,
-    survivalRate: Math.round((survived / total) * 100),
-  };
-}
-}
 
 /**
  * 百科注册

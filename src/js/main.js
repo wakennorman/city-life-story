@@ -263,6 +263,10 @@ function estimateJobPay(job, state) {
       var wageMult = getDifficultyMultiplier(state, "wage");
       if (wageMult !== 1.0) pay = Math.floor(pay * wageMult);
     }
+    // 天气修正
+    if (typeof getWeatherWorkMod === "function") {
+      pay = Math.floor(pay * getWeatherWorkMod(state));
+    }
     total += pay;
   }
   return Math.floor(total / 10);
@@ -339,6 +343,14 @@ function estimateJobPayDetailed(job, state) {
     if (suiteMulti !== 1.0) {
       tags.push("🎯+" + Math.round((suiteMulti - 1) * 100) + "%");
       base = Math.floor(base * suiteMulti);
+    }
+  }
+  // 天气修正（户外工作收入受天气影响）
+  if (typeof getWeatherWorkMod === "function") {
+    var weatherMult = getWeatherWorkMod(state);
+    if (weatherMult < 1.0) {
+      tags.push("🌧️" + Math.round((weatherMult - 1) * 100) + "%");
+      base = Math.floor(base * weatherMult);
     }
   }
   // 连击加成

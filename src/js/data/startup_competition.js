@@ -2071,20 +2071,7 @@ function applyCrisisEffects(state, company, crisis) {
 /**
  * 获取危机应对方案
  */
-if(typeof getAvailableCrisisResponses==="undefined"){
-function getAvailableCrisisResponses(crisisId) {
-  const template = OPERATIONAL_CRISIS_TEMPLATES[crisisId];
-  if (!template || !template.responseOptions) return {};
-
-  const responses = {};
-  for (const respId of template.responseOptions) {
-    if (CRISIS_RESPONSE_TEMPLATES[respId]) {
-      responses[respId] = CRISIS_RESPONSE_TEMPLATES[respId];
-    }
-  }
-  return responses;
-}
-}
+// getAvailableCrisisResponses 由 startup.js 提供完整实现，本文件不再定义
 
 /**
  * 执行危机应对

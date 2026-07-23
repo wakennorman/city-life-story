@@ -575,7 +575,7 @@ function generatePeakMomentHTML(state, incomes, expenses) {
   } else if (totalEarned >= 1000 && !state.flags._peakNoted1k) {
     highlights.push({
       icon: "🎯",
-      text: "赚到了人生的第一个 <strong>¥1,000</strong>！",
+      text: "累计赚到了人生第一个 <strong>¥1,000</strong>！",
       type: "milestone",
     });
     state.flags._peakNoted1k = true;

@@ -81,13 +81,9 @@ function isCompanyDeceased(cid) {
   return !!memory.deceasedCompanies[cid];
 }
 
-/** 获取所有已倒闭公司列表 */
-if (typeof getDeceasedCompanies === "undefined") {
-function getDeceasedCompanies() {
-  var memory = getMultiRunMemory();
-  return Object.keys(memory.deceasedCompanies);
-}
-}
+/** 获取所有已倒闭公司列表 — 由 enterprise_fate.js 提供完整实现 */
+// [全系统自洽修复] 域G: 去除重复函数声明 — multi_run_memory.js 不再定义 getDeceasedCompanies
+// enterprise_fate.js 已提供更完整的实现（含详细公司信息），加载顺序在前面
 
 /** 获取所有仍存活的原始公司ID（过滤掉已倒闭的） */
 function getSurvivingCompanyIds() {

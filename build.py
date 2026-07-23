@@ -133,27 +133,8 @@ def main():
         f.write(bundle_code)
     raw_kb = os.path.getsize(app_js_path) / 1024
 
-    # P2-2: esbuild 压缩
-    try:
-        min_tmp = app_js_path + '.min.tmp'
-        subprocess.run(
-            ['npx.cmd', 'esbuild', app_js_path,
-             '--minify', '--outfile=' + min_tmp,
-             '--target=es2015',
-             '--log-level=warning'],
-            capture_output=True, text=True, check=True,
-        )
-        # 用压缩文件覆盖原文件（Windows 下 os.replace 可能失败，先删再移）
-        if os.path.exists(app_js_path):
-            os.remove(app_js_path)
-        os.rename(min_tmp, app_js_path)
-        min_kb = os.path.getsize(app_js_path) / 1024
-        saved = raw_kb - min_kb
-        print(f'  📦 esbuild minify: {raw_kb:.0f} KB → {min_kb:.0f} KB (省 {saved:.0f} KB / {100*saved/raw_kb:.0f}%)')
-    except subprocess.CalledProcessError as e:
-        print(f'  ⚠️ esbuild 出错（{e.stderr[:200] if e.stderr else ""}），使用未压缩 app.js')
-    except FileNotFoundError:
-        print('  ⚠️ esbuild 未安装，使用未压缩 app.js')
+    # P2-2: esbuild 压缩已禁用 — 源文件有重复 function 声明与 esbuild 的 use strict 不兼容
+    # 待修复所有重复声明后重新启用：npx esbuild app.js --minify --outfile=app.js
 
     html_kb = os.path.getsize(OUTPUT_FILE) / 1024
     app_kb = os.path.getsize(app_js_path) / 1024
