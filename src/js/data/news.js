@@ -10,7 +10,7 @@
  *   mul       - 价格乘数（>1 涨价，<1 跌价）
  */
 
-const NEWS_EVENTS = [
+var NEWS_EVENTS = [
   // === 价格影响事件 ===
   {
     id: "metal_boom",
