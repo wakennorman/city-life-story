@@ -230,7 +230,7 @@ const EQUIPMENT_SUITES = {
       { id: "smart_watch", name: "智能手表", slot: "accessory" },
       { id: "smartphone", name: "智能手机", slot: "accessory" },
       { id: "noise_cancelling_earphones", name: "降噪耳机", slot: "accessory" },
-      { id: "notebook_item", name: "记事本", slot: null },
+      { id: "memo_pad", name: "记事本", slot: null }, // [全系统自洽修复] 域A 修复: notebook_item→memo_pad (原ID与stationery笔记本冲突导致死代码)
     ],
     tiers: [
       {

@@ -1048,7 +1048,7 @@
               cap.clientLeads = Math.min(100, cap.clientLeads + 15);
               _clamp(cap);
             }
-            st.resources.cash += scaleAmount(8000, st.resources && st.resources.totalEarned);
+            st.resources.cash = (st.resources.cash || 0) + scaleAmount(8000, st.resources && st.resources.totalEarned); // [全系统自洽修复] 域B A类:cash NaN守卫
             _msg(
               "🎉 你接了几个小商业合作，额外收入¥8000，同时在行业建立了个人品牌。声誉+18，客户线索+15。",
               "success",
@@ -1099,7 +1099,7 @@
                 cap.reputation = Math.min(100, cap.reputation + 20);
                 _clamp(cap);
               }
-              st.resources.cash += scaleAmount(5000, st.resources && st.resources.totalEarned);
+              st.resources.cash = (st.resources.cash || 0) + scaleAmount(5000, st.resources && st.resources.totalEarned); // [全系统自洽修复] 域B A类:cash NaN守卫
               _msg(
                 "🏆 你举报属实，合规部门认定你立了大功，获得¥5000奖励，声誉大涨。声誉+20。",
                 "success",
@@ -1655,7 +1655,7 @@
               cap.clientLeads = Math.min(100, cap.clientLeads + 20);
               _clamp(cap);
             }
-            st.resources.cash += scaleAmount(8000, st.resources && st.resources.totalEarned);
+            st.resources.cash = (st.resources.cash || 0) + scaleAmount(8000, st.resources && st.resources.totalEarned); // [全系统自洽修复] 域B A类:cash NaN守卫
             st.needs.fatigue = Math.min(100, (st.needs.fatigue || 0) + 25);
             _msg(
               "🏆 你们撑过了爆单期，额外收入¥8000，积累了大量回头客。声誉+15，客户线索+20，疲劳+25。",
@@ -2038,7 +2038,7 @@
               var cap = _cap(st);
               if (cap) cap.reputation = Math.min(100, cap.reputation + 15);
               _clamp(cap);
-              st.resources.cash += scaleAmount(5000, st.resources && st.resources.totalEarned);
+              st.resources.cash = (st.resources.cash || 0) + scaleAmount(5000, st.resources && st.resources.totalEarned); // [全系统自洽修复] 域B A类:cash NaN守卫
               _msg(
                 "🎉 你成功考上事业编制！从此有了「铁饭碗」，单位奖励¥5000，声誉+15。",
                 "success",

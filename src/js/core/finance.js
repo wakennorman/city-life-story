@@ -459,8 +459,8 @@ function grantLoan(state, amount) {
   }
 
   // 发放贷款
-  state.resources.cash += amount;
-  state.resources.bankDebt += amount;
+  state.resources.cash = (state.resources.cash || 0) + amount; // [全系统自洽修复] 域E A类#2: cash NaN守卫
+  state.resources.bankDebt = (state.resources.bankDebt || 0) + amount;
   state.resources.bankDebtDay = state.player.day;
 
   // 记录信贷历史

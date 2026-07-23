@@ -205,6 +205,18 @@ const DAILY_PIPELINE = [
         0,
         Math.min(100, state.needs.happiness - 3 + (house.happinessBonus || 0)),
       );
+      // [全系统自洽修复] 域A 修复: 住所tier5/6特效接入（healthRecovery/skillStudyBonus/npcVisitBonus/fameGain 原定义但从未消费）
+      if (house.effects) {
+        if (house.effects.healthRecovery) {
+          state.player.health = Math.min(100, (state.player.health || 0) + house.effects.healthRecovery);
+        }
+        if (house.effects.fameGain) {
+          state.player.fame = Math.min(100, (state.player.fame || 0) + house.effects.fameGain);
+        }
+        // skillStudyBonus/npcVisitBonus 存入状态供技能训练/NPC互动读取
+        state._housingSkillStudyBonus = house.effects.skillStudyBonus || 0;
+        state._housingNpcVisitBonus = house.effects.npcVisitBonus || 0;
+      }
       // 王大婶好感30解锁每日带饭（饥饱+15）
       if (state.flags.auntWangMeal) {
         state.needs.hunger = Math.min(100, state.needs.hunger + 15);

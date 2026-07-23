@@ -1694,6 +1694,10 @@ function sellInvStock(symbol, shares) {
     }
     // [全系统自洽修复] 域E 联动增强1: 投资盈利→小幅心情+1（财务安全感）
     if (state.needs) state.needs.happiness = Math.min(100, (state.needs.happiness || 0) + 1);
+    // [全系统自洽修复] 域E 联动增强4: E→C 盈利交易→销售经验+5
+    if (state.skills && state.skills.sales && typeof state.skills.sales.xp === "number") {
+      state.skills.sales.xp += 5;
+    }
   } else {
     inv._consecutiveWins = 0;
     // [全系统自洽修复] 域E 联动增强2: 投资亏损叙事（E→B）— 亏损情感回响
@@ -1923,7 +1927,7 @@ function buyCar(carId) {
     (state.player.maxActionPoints || 100) + car.travelBonus;
   state.player.actionPoints = Math.min(
     state.player.maxActionPoints,
-    state.player.actionPoints + car.travelBonus,
+    (state.player.actionPoints || 0) + car.travelBonus, // [全系统自洽修复] 域E A类#1: actionPoints可能undefined→NaN传播
   );
   StateManager.addMessage(
     "购入" + car.name + " 行动力上限+" + car.travelBonus,
@@ -2686,7 +2690,7 @@ function calculateDailyPL(state) {
     var h = holdings[i];
     var m = inv.stockMarket[h.symbol];
     if (!m || !m.history || m.history.length < 2) continue;
-    var prevPrice = m.history[m.history.length - 2].price;
+    var prevPrice = m.history[m.history.length - 2] && isFinite(m.history[m.history.length - 2].price) ? m.history[m.history.length - 2].price : m.price; // [全系统自洽修复] 域E A类#3: prevPrice可能undefined→NaN传播
     var change = (m.price - prevPrice) * h.shares;
     var group = getInvestmentAssetGroup(h.symbol);
     if (group === "stocks") dailyPL.stocks += change;

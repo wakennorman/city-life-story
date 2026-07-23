@@ -650,7 +650,7 @@ var ITEMS = [
     buyLocations: ["techPark", "commercialDist", "school"],
   },
   {
-    id: "notebook_item",
+    id: "memo_pad",
     name: "记事本",
     icon: "📓",
     slot: null,
@@ -786,7 +786,7 @@ function isItemNpcGift(itemId, npcId) {
     laptop_bag: ["daily_use"],
     smart_watch: ["electronics", "daily_use"],
     noise_cancelling_earphones: ["electronics", "daily_use"],
-    notebook_item: ["daily_use"],
+    memo_pad: ["daily_use"], // [全系统自洽修复] 域A 修复: notebook_item→memo_pad (原ID冲突)
     flashlight: ["daily_use"],
     radio: ["daily_use"],
     vitamins_item: ["daily_use"], // [全系统自洽修复] 域A 修复: vitamins_item2→vitamins_item NPC礼物ID对齐

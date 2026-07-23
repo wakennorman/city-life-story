@@ -3042,8 +3042,8 @@ function grantLoan(state, amount) {
   }
 
   // 发放贷款
-  state.resources.cash += amount;
-  state.resources.bankDebt += amount;
+  state.resources.cash = (state.resources.cash || 0) + amount; // [全系统自洽修复] 域E A类#2: cash NaN守卫
+  state.resources.bankDebt = (state.resources.bankDebt || 0) + amount;
   state.resources.bankDebtDay = state.player.day;
 
   // 记录信贷历史
@@ -5632,7 +5632,7 @@ function registerNewsEventsToPool() {
           hint: "拿钱走人",
           apply: (st) => {
             const cash = Random.int(80, 279);
-            st.resources.cash += cash;
+            st.resources.cash = (st.resources.cash || 0) + cash; // [全系统自洽修复] 域B A类:cash NaN守卫
             st.needs.happiness = Math.max(0, st.needs.happiness - 8);
             st.flags._keptWallet = true;
             StateManager.addMessage(
@@ -5682,7 +5682,7 @@ function registerNewsEventsToPool() {
           hint: "认怂保平安",
           cost: 80,
           apply: (st) => {
-            st.resources.cash = Math.max(0, st.resources.cash - 80);
+            st.resources.cash = Math.max(0, (st.resources.cash || 0) - 80); // [全系统自洽修复] 域B A类:cash NaN守卫
             st.needs.happiness = Math.max(0, st.needs.happiness - 15);
             StateManager.addMessage(
               "💸 给了 80 块，混混笑着走了。心里憋屈。",
@@ -5702,7 +5702,7 @@ function registerNewsEventsToPool() {
             } else {
               st.status.injured = true;
               st.status.health = Math.max(0, st.status.health - 20);
-              st.resources.cash = Math.max(0, st.resources.cash - 100);
+              st.resources.cash = Math.max(0, (st.resources.cash || 0) - 100); // [全系统自洽修复] 域B A类:cash NaN守卫
               StateManager.addMessage(
                 "🏃 没跑掉，挨了一顿拳脚，被抢了 100 块！",
                 "danger",
@@ -5721,7 +5721,7 @@ function registerNewsEventsToPool() {
                 "success",
               );
             } else {
-              st.resources.cash = Math.max(0, st.resources.cash - 50);
+              st.resources.cash = Math.max(0, (st.resources.cash || 0) - 50); // [全系统自洽修复] 域B A类:cash NaN守卫
               st.needs.happiness = Math.max(0, st.needs.happiness - 5);
               StateManager.addMessage(
                 "📱 被识破了！还是被抢了 50 块，混混也走了。",
@@ -5747,18 +5747,18 @@ function registerNewsEventsToPool() {
           text: "💰 信了，押 ¥500",
           hint: "赌一把",
           apply: (st) => {
-            if (st.resources.cash < 500) {
+            if ((st.resources.cash || 0) < 500) { // [全系统自洽修复] 域B A类:cash NaN守卫
               StateManager.addMessage(
                 "💰 现金不足 500，错失良机（坑）",
                 "warning",
               );
               return;
             }
-            st.resources.cash -= 500;
+            st.resources.cash = Math.max(0, (st.resources.cash || 0) - 500); // [全系统自洽修复] 域B A类:cash NaN守卫
             // 50% 概率赚一倍，50% 概率打水漂
             if (Random.chance(0.4)) {
               const profit = Random.int(300, 699);
-              st.resources.cash += profit;
+              st.resources.cash = (st.resources.cash || 0) + profit; // [全系统自洽修复] 域B A类:cash NaN守卫
               StateManager.addMessage(
                 `💰 消息是真的！赚了 ¥${profit - 500}。`,
                 "success",
@@ -5813,7 +5813,7 @@ function registerNewsEventsToPool() {
             st.needs.fatigue = Math.min(100, st.needs.fatigue + 12);
             if (Random.chance(0.5)) {
               const reward = Random.int(50, 129);
-              st.resources.cash += reward;
+              st.resources.cash = (st.resources.cash || 0) + reward; // [全系统自洽修复] 域B A类:cash NaN守卫
               st.player.fame = Math.min(100, st.player.fame + 2);
               st.needs.happiness = Math.min(100, st.needs.happiness + 10);
               // 类似老周的性格，帮忙后老周好感微量提升
@@ -5918,11 +5918,11 @@ function registerNewsEventsToPool() {
           hint: "可能加技能",
           cost: 50,
           apply: (st) => {
-            if (st.resources.cash < 50) {
+            if ((st.resources.cash || 0) < 50) { // [全系统自洽修复] 域B A类:cash NaN守卫
               StateManager.addMessage("🛍️ 钱不够买！", "warning");
               return;
             }
-            st.resources.cash -= 50;
+            st.resources.cash = Math.max(0, (st.resources.cash || 0) - 50); // [全系统自洽修复] 域B A类:cash NaN守卫
             const skills = Object.keys(st.skills);
             const key = Random.fromArray(skills);
             st.skills[key].xp += Random.int(40, 69);
@@ -5937,11 +5937,11 @@ function registerNewsEventsToPool() {
           hint: "提升卫生/心情",
           cost: 30,
           apply: (st) => {
-            if (st.resources.cash < 30) {
+            if ((st.resources.cash || 0) < 30) { // [全系统自洽修复] 域B A类:cash NaN守卫
               StateManager.addMessage("🧥 钱不够买！", "warning");
               return;
             }
-            st.resources.cash -= 30;
+            st.resources.cash = Math.max(0, (st.resources.cash || 0) - 30); // [全系统自洽修复] 域B A类:cash NaN守卫
             st.needs.hygiene = Math.min(100, st.needs.hygiene + 15);
             st.needs.happiness = Math.min(100, st.needs.happiness + 8);
             StateManager.addMessage(
@@ -6032,7 +6032,7 @@ function registerNewsEventsToPool() {
           text: "🏠 收养它",
           hint: "需要花钱照顾",
           apply: (st) => {
-            st.resources.cash = Math.max(0, st.resources.cash - 30);
+            st.resources.cash = Math.max(0, (st.resources.cash || 0) - 30); // [全系统自洽修复] 域B A类:cash NaN守卫
             st.needs.happiness = Math.min(100, st.needs.happiness + 20);
             st.needs.fatigue = Math.max(0, st.needs.fatigue - 5);
             st.player.fame = Math.min(100, st.player.fame + 1);
@@ -6087,11 +6087,11 @@ function registerNewsEventsToPool() {
           hint: "需要情报",
           cost: 30,
           apply: (st) => {
-            if (st.resources.cash < 30) {
+            if ((st.resources.cash || 0) < 30) { // [全系统自洽修复] 域B A类:cash NaN守卫
               StateManager.addMessage("👂 钱不够，先攒点再说。", "warning");
               return;
             }
-            st.resources.cash -= 30;
+            st.resources.cash = Math.max(0, (st.resources.cash || 0) - 30); // [全系统自洽修复] 域B A类:cash NaN守卫
             st.needs.happiness = Math.min(100, st.needs.happiness + 3);
             // 调度后续事件：内幕消息
             if (typeof scheduleChainEvent === "function") {
@@ -6145,20 +6145,20 @@ function registerNewsEventsToPool() {
           hint: "高风险高回报",
           cost: 2000,
           apply: (st) => {
-            if (st.resources.cash < 2000) {
+            if ((st.resources.cash || 0) < 2000) { // [全系统自洽修复] 域B A类:cash NaN守卫
               StateManager.addMessage(
                 "💰 现金不足2000，只能遗憾错过。",
                 "warning",
               );
               return;
             }
-            st.resources.cash -= 2000;
+            st.resources.cash = Math.max(0, (st.resources.cash || 0) - 2000); // [全系统自洽修复] 域B A类:cash NaN守卫
             // 60% 概率成功：收购消息公布，股票翻倍
             // 40% 概率失败：消息是假的/收购失败
             const success = Random.chance(0.6);
             if (success) {
               const profit = Random.int(2500, 3999);
-              st.resources.cash += profit;
+              st.resources.cash = (st.resources.cash || 0) + profit; // [全系统自洽修复] 域B A类:cash NaN守卫
               st.player.fame = Math.min(100, st.player.fame + 5);
               st.needs.happiness = Math.min(100, st.needs.happiness + 15);
               // 标记已参与赌局成功
@@ -6201,15 +6201,15 @@ function registerNewsEventsToPool() {
           hint: "留条后路",
           cost: 500,
           apply: (st) => {
-            if (st.resources.cash < 500) {
+            if ((st.resources.cash || 0) < 500) { // [全系统自洽修复] 域B A类:cash NaN守卫
               StateManager.addMessage("💵 钱不够！", "warning");
               return;
             }
-            st.resources.cash -= 500;
+            st.resources.cash = Math.max(0, (st.resources.cash || 0) - 500); // [全系统自洽修复] 域B A类:cash NaN守卫
             const success = Random.chance(0.6);
             if (success) {
               const profit = Random.int(700, 1199);
-              st.resources.cash += profit;
+              st.resources.cash = (st.resources.cash || 0) + profit; // [全系统自洽修复] 域B A类:cash NaN守卫
               st.needs.happiness = Math.min(100, st.needs.happiness + 8);
               st.flags._realEstateGambleWon = true;
               StateManager.addMessage(
@@ -6259,7 +6259,7 @@ function registerNewsEventsToPool() {
           hint: "花钱买平安",
           cost: 300,
           apply: (st) => {
-            st.resources.cash = Math.max(0, st.resources.cash - 300);
+            st.resources.cash = Math.max(0, (st.resources.cash || 0) - 300); // [全系统自洽修复] 域B A类:cash NaN守卫
             st.needs.happiness = Math.max(0, st.needs.happiness - 10);
             StateManager.addMessage(
               "💸 给了300块，他们才放你走。心里窝火，但平安最重要。",
@@ -6282,7 +6282,7 @@ function registerNewsEventsToPool() {
             } else {
               st.status.injured = true;
               st.status.health = Math.max(0, st.status.health - 15);
-              st.resources.cash = Math.max(0, st.resources.cash - 200);
+              st.resources.cash = Math.max(0, (st.resources.cash || 0) - 200); // [全系统自洽修复] 域B A类:cash NaN守卫
               StateManager.addMessage(
                 "👊 硬刚失败了！挨了顿揍，还被抢了200块...",
                 "danger",
@@ -6319,7 +6319,7 @@ function registerNewsEventsToPool() {
           apply: (st) => {
             // 借高利贷
             const borrow = 1000;
-            st.resources.cash += borrow;
+            st.resources.cash = (st.resources.cash || 0) + borrow; // [全系统自洽修复] 域B A类:cash NaN守卫
             st.resources.villageDebt = (st.resources.villageDebt || 0) + borrow;
             st.needs.happiness = Math.max(0, st.needs.happiness - 12);
             st.player.mental = Math.max(0, st.player.mental - 5);
@@ -6337,7 +6337,7 @@ function registerNewsEventsToPool() {
             st.needs.happiness = Math.max(0, st.needs.happiness - 5);
             // 当天额外收入
             const extra = Random.int(30, 69);
-            st.resources.cash += extra;
+            st.resources.cash = (st.resources.cash || 0) + extra; // [全系统自洽修复] 域B A类:cash NaN守卫
             st.resources.totalEarned += extra;
             StateManager.addMessage(
               `💪 多干了几小时活，赚了 ¥${extra}。慢慢来，总能补回来。`,
@@ -6395,7 +6395,7 @@ function registerNewsEventsToPool() {
                 if (m && h.shares > 0) total += m.price * h.shares;
                 // [全系统自洽修复] 域B 修复:market_crash_news 清仓时 h.shares=0 导致 NaN 除零崩溃
               }
-              st.resources.cash += total * 0.7;
+              st.resources.cash = (st.resources.cash || 0) + total * 0.7; // [全系统自洽修复] 域B A类:cash NaN守卫
               inv.stockHoldings = [];
             }
             StateManager.addMessage(
@@ -6422,8 +6422,8 @@ function registerNewsEventsToPool() {
           hint: "赌一把",
           apply: function (st) {
             var buyAmt = Random.int(500, 1999);
-            if (st.resources.cash >= buyAmt) {
-              st.resources.cash -= buyAmt;
+            if ((st.resources.cash || 0) >= buyAmt) { // [全系统自洽修复] 域B A类:cash NaN守卫
+              st.resources.cash = Math.max(0, (st.resources.cash || 0) - buyAmt); // [全系统自洽修复] 域B A类:cash NaN守卫
               st.needs.happiness = Math.max(0, st.needs.happiness - 10);
               StateManager.addMessage(
                 "💰 拿出¥" +
@@ -6460,7 +6460,7 @@ function registerNewsEventsToPool() {
           hint: "转手能赚",
           cost: 800,
           apply: function (st) {
-            st.resources.cash -= 800;
+            st.resources.cash = Math.max(0, (st.resources.cash || 0) - 800); // [全系统自洽修复] 域B A类:cash NaN守卫
             var goods = ["electronics", "daily_use", "clothing", "beer"];
             var g = Random.fromArray(goods);
             var qty = Random.int(10, 29);
@@ -6508,11 +6508,11 @@ function registerNewsEventsToPool() {
           hint: "小赌怡情",
           cost: 20,
           apply: function (st) {
-            if (st.resources.cash >= 20) {
-              st.resources.cash -= 20;
+            if ((st.resources.cash || 0) >= 20) { // [全系统自洽修复] 域B A类:cash NaN守卫
+              st.resources.cash = Math.max(0, (st.resources.cash || 0) - 20); // [全系统自洽修复] 域B A类:cash NaN守卫
               if (Random.chance(0.15)) {
                 var win = Random.int(200, 699);
-                st.resources.cash += win;
+                st.resources.cash = (st.resources.cash || 0) + win; // [全系统自洽修复] 域B A类:cash NaN守卫
                 st.needs.happiness = Math.min(100, st.needs.happiness + 15);
                 StateManager.addMessage(
                   "🎫 中了¥" + win + "！太爽了！",
@@ -6531,11 +6531,11 @@ function registerNewsEventsToPool() {
           hint: "赌性大发",
           cost: 200,
           apply: function (st) {
-            if (st.resources.cash >= 200) {
-              st.resources.cash -= 200;
+            if ((st.resources.cash || 0) >= 200) { // [全系统自洽修复] 域B A类:cash NaN守卫
+              st.resources.cash = Math.max(0, (st.resources.cash || 0) - 200); // [全系统自洽修复] 域B A类:cash NaN守卫
               if (Random.chance(0.1)) {
                 var win = Random.int(5000, 19999);
-                st.resources.cash += win;
+                st.resources.cash = (st.resources.cash || 0) + win; // [全系统自洽修复] 域B A类:cash NaN守卫
                 st.needs.happiness = Math.min(100, st.needs.happiness + 30);
                 StateManager.addMessage(
                   "🎰 中了¥" + win + "！激动到手抖！",
@@ -6543,7 +6543,7 @@ function registerNewsEventsToPool() {
                 );
               } else if (Random.chance(0.3)) {
                 var win2 = Random.int(100, 499);
-                st.resources.cash += win2;
+                st.resources.cash = (st.resources.cash || 0) + win2; // [全系统自洽修复] 域B A类:cash NaN守卫
                 StateManager.addMessage(
                   "🎰 中了¥" + win2 + "，回了点本。",
                   "info",
@@ -6589,8 +6589,8 @@ function registerNewsEventsToPool() {
             var m = inv.stockMarket.XAU;
             if (!m) return;
             var cost = m.price * 5;
-            if (st.resources.cash >= cost) {
-              st.resources.cash -= cost;
+            if ((st.resources.cash || 0) >= cost) { // [全系统自洽修复] 域B A类:cash NaN守卫
+              st.resources.cash = Math.max(0, (st.resources.cash || 0) - cost); // [全系统自洽修复] 域B A类:cash NaN守卫
               inv.stockHoldings = inv.stockHoldings || [];
               var h = inv.stockHoldings.find(function (x) {
                 return x.symbol === "XAU";
@@ -6650,7 +6650,7 @@ function registerNewsEventsToPool() {
               total +=
                 inv.properties[i].currentPrice || inv.properties[i].buyPrice;
             }
-            st.resources.cash += total * 0.85;
+            st.resources.cash = (st.resources.cash || 0) + total * 0.85; // [全系统自洽修复] 域B A类:cash NaN守卫
             inv.properties = [];
             StateManager.addMessage(
               "🏠 85折急售房产，回笼了¥" +
@@ -6689,8 +6689,8 @@ function registerNewsEventsToPool() {
           hint: "死马当活马医",
           cost: 50,
           apply: function (st) {
-            if (st.resources.cash >= 50) {
-              st.resources.cash -= 50;
+            if ((st.resources.cash || 0) >= 50) { // [全系统自洽修复] 域B A类:cash NaN守卫
+              st.resources.cash = Math.max(0, (st.resources.cash || 0) - 50); // [全系统自洽修复] 域B A类:cash NaN守卫
               if (Random.chance(0.4)) {
                 st.status.sick = false;
                 st.status.health = Math.min(100, st.status.health + 30);
@@ -6772,7 +6772,7 @@ function registerNewsEventsToPool() {
           st.player.phase === "street" &&
           st.trade &&
           st.trade.currentLocation === "bank" &&
-          st.resources.cash >= 500
+          (st.resources.cash || 0) >= 500 // [全系统自洽修复] 域B A类:cash NaN守卫
         );
       },
       choices: [
@@ -6781,8 +6781,8 @@ function registerNewsEventsToPool() {
           hint: "试试看",
           cost: 2000,
           apply: function (st) {
-            if (st.resources.cash >= 2000) {
-              st.resources.cash -= 2000;
+            if ((st.resources.cash || 0) >= 2000) { // [全系统自洽修复] 域B A类:cash NaN守卫
+              st.resources.cash = Math.max(0, (st.resources.cash || 0) - 2000); // [全系统自洽修复] 域B A类:cash NaN守卫
               st._ipo_invest = 2000;
               st.needs.happiness = Math.min(100, st.needs.happiness + 3);
               StateManager.addMessage(
@@ -6838,12 +6838,12 @@ function registerNewsEventsToPool() {
           hint: "梦想",
           cost: 500,
           apply: function (st) {
-            if (st.resources.cash >= 500) {
-              st.resources.cash -= 500;
+            if ((st.resources.cash || 0) >= 500) { // [全系统自洽修复] 域B A类:cash NaN守卫
+              st.resources.cash = Math.max(0, (st.resources.cash || 0) - 500); // [全系统自洽修复] 域B A类:cash NaN守卫
               var skillScore =
                 st.skills.sales.level + st.skills.management.level;
               if (Random.chance(0.2 + skillScore * 0.005)) {
-                st.resources.cash += 50000;
+                st.resources.cash = (st.resources.cash || 0) + 50000; // [全系统自洽修复] 域B A类:cash NaN守卫
                 st.player.fame = Math.min(100, st.player.fame + 20);
                 st.needs.happiness = Math.min(100, st.needs.happiness + 30);
                 StateManager.addMessage(
@@ -6962,7 +6962,7 @@ function registerNewsEventsToPool() {
           text: "💰 收钱保持沉默",
           hint: "拿200块",
           apply: function (st) {
-            st.resources.cash += 200;
+            st.resources.cash = (st.resources.cash || 0) + 200; // [全系统自洽修复] 域B A类:cash NaN守卫
             st.needs.happiness = Math.max(0, st.needs.happiness - 18);
             if (st.relationships && st.relationships["boss_li"]) {
               st.relationships["boss_li"].affinity = Math.min(
@@ -7032,7 +7032,7 @@ function registerNewsEventsToPool() {
             (st.stats.actionFreq["food_stall"] > 0 ||
               st.stats.actionFreq["start_business"] > 0));
         return (
-          st.player.phase === "street" && st.resources.cash > 0 && hasStall
+          st.player.phase === "street" && (st.resources.cash || 0) > 0 && hasStall // [全系统自洽修复] 域B A类:cash NaN守卫
         );
       },
       choices: [
@@ -7041,7 +7041,7 @@ function registerNewsEventsToPool() {
           hint: "损失已发生，捞回来",
           apply: function (st) {
             const earned = Random.int(400, 699);
-            st.resources.cash += earned;
+            st.resources.cash = (st.resources.cash || 0) + earned; // [全系统自洽修复] 域B A类:cash NaN守卫
             st.resources.totalEarned += earned;
             if (Random.chance(0.3)) {
               st.player.fame = Math.max(0, st.player.fame - 10);
@@ -7077,7 +7077,7 @@ function registerNewsEventsToPool() {
           apply: function (st) {
             if (Random.chance(0.5)) {
               const refund = Random.int(400, 599);
-              st.resources.cash += refund;
+              st.resources.cash = (st.resources.cash || 0) + refund; // [全系统自洽修复] 域B A类:cash NaN守卫
               StateManager.addMessage(
                 "↩️ 死缠烂打两小时，批发商退了 ¥" +
                   refund +
@@ -7111,8 +7111,8 @@ function registerNewsEventsToPool() {
           hint: "好奇心驱使",
           apply: function (st) {
             const loss = Random.int(500, 999);
-            if (st.resources.cash >= loss) {
-              st.resources.cash -= loss;
+            if ((st.resources.cash || 0) >= loss) { // [全系统自洽修复] 域B A类:cash NaN守卫
+              st.resources.cash = Math.max(0, (st.resources.cash || 0) - loss); // [全系统自洽修复] 域B A类:cash NaN守卫
               st.needs.happiness = Math.max(0, st.needs.happiness - 30);
               StateManager.addMessage(
                 "🎪 进去才发现是传销！被骗去 ¥" +
@@ -7183,7 +7183,7 @@ function registerNewsEventsToPool() {
               st.needs.happiness = Math.max(0, st.needs.happiness - 25);
             } else {
               const paid = Random.int(1200, 1999);
-              st.resources.cash += paid;
+              st.resources.cash = (st.resources.cash || 0) + paid; // [全系统自洽修复] 域B A类:cash NaN守卫
               st.resources.totalEarned += paid;
               StateManager.addMessage(
                 "⏳ 没想到工头真的年底结账，一次性给了 ¥" +
@@ -7199,7 +7199,7 @@ function registerNewsEventsToPool() {
           hint: "用法律维权",
           apply: function (st) {
             const recovered = Random.int(600, 999);
-            st.resources.cash += recovered;
+            st.resources.cash = (st.resources.cash || 0) + recovered; // [全系统自洽修复] 域B A类:cash NaN守卫
             st.resources.totalEarned += recovered;
             st.needs.happiness = Math.min(100, st.needs.happiness + 12);
             st.flags._foughtWageTheft = true;
@@ -7338,7 +7338,7 @@ function registerNewsEventsToPool() {
           apply: function (st) {
             if (Random.chance(0.6)) {
               const bonus = Random.int(800, 1999);
-              st.resources.cash += bonus;
+              st.resources.cash = (st.resources.cash || 0) + bonus; // [全系统自洽修复] 域B A类:cash NaN守卫
               st.resources.totalEarned += bonus;
               st.player.fame = Math.min(100, st.player.fame + 8);
               StateManager.addMessage(
@@ -9649,7 +9649,7 @@ function registerNewsEventsToPool() {
           apply: function (st) {
             st.flags._walletKarmaGood = true;
             var bonus = Random.int(400, 699);
-            st.resources.cash += bonus;
+            st.resources.cash = (st.resources.cash || 0) + bonus; // [全系统自洽修复] 域B A类:cash NaN守卫
             st.resources.totalEarned += bonus;
             st.player.intelligence = Math.min(100, st.player.intelligence + 2);
             StateManager.addMessage(
@@ -10171,7 +10171,7 @@ function registerNewsEventsToPool() {
               return;
             }
             st.flags._debtWarningGiven = true;
-            st.resources.cash -= pay;
+            st.resources.cash = Math.max(0, (st.resources.cash || 0) - pay); // [全系统自洽修复] 域B A类:cash NaN守卫
             st.resources.villageDebt -= pay;
             st.flags._debtExtensionDays = (st.player.day || 0) + 60;
             StateManager.addMessage(
@@ -10254,7 +10254,7 @@ function registerNewsEventsToPool() {
               return;
             }
             st.flags._debtPressureGiven = true;
-            st.resources.cash -= pay;
+            st.resources.cash = Math.max(0, (st.resources.cash || 0) - pay); // [全系统自洽修复] 域B A类:cash NaN守卫
             st.resources.villageDebt -= pay;
             st.flags._debtExtensionDays = (st.player.day || 0) + 60;
             StateManager.addMessage(
@@ -10327,7 +10327,7 @@ function registerNewsEventsToPool() {
               );
               return;
             }
-            st.resources.cash -= pay;
+            st.resources.cash = Math.max(0, (st.resources.cash || 0) - pay); // [全系统自洽修复] 域B A类:cash NaN守卫
             st.resources.villageDebt -= pay;
             st.resources.dailyInterest = 0.0035;
             st.needs.happiness = Math.max(0, st.needs.happiness - 15);
@@ -10393,7 +10393,7 @@ function registerNewsEventsToPool() {
                 inv.properties[pi].currentPrice || inv.properties[pi].buyPrice;
             }
             var proceeds = Math.round(total * 0.55);
-            st.resources.cash += proceeds;
+            st.resources.cash = (st.resources.cash || 0) + proceeds; // [全系统自洽修复] 域B A类:cash NaN守卫
             st.resources.totalEarned += proceeds;
             inv.properties = [];
             st.needs.happiness = Math.max(0, st.needs.happiness - 20);
@@ -10413,7 +10413,7 @@ function registerNewsEventsToPool() {
             st.flags._developerCollapseTriggered = true;
             st.flags._propertyRightsGroup = true;
             st.flags._propertyCollapseDay = st.player.day;
-            st.resources.cash = Math.max(0, st.resources.cash - 500);
+            st.resources.cash = Math.max(0, (st.resources.cash || 0) - 500); // [全系统自洽修复] 域B A类:cash NaN守卫
             st.player.fame = Math.min(100, st.player.fame + 5);
             st.player.mental = Math.max(0, st.player.mental - 3);
             StateManager.addMessage(
@@ -10458,7 +10458,7 @@ function registerNewsEventsToPool() {
           hint: "补偿¥800+名气",
           apply: function (st) {
             st.flags._propertyRightsResolved = true;
-            st.resources.cash += 800;
+            st.resources.cash = (st.resources.cash || 0) + 800; // [全系统自洽修复] 域B A类:cash NaN守卫
             st.resources.totalEarned += 800;
             st.player.fame = Math.min(100, st.player.fame + 8);
             st.player.mental = Math.min(100, st.player.mental + 8);
@@ -10485,7 +10485,7 @@ function registerNewsEventsToPool() {
               inv.properties = [];
             }
             var proceeds = Math.round(total * 0.72) + 800;
-            st.resources.cash += proceeds;
+            st.resources.cash = (st.resources.cash || 0) + proceeds; // [全系统自洽修复] 域B A类:cash NaN守卫
             st.resources.totalEarned += proceeds;
             st.player.fame = Math.min(100, st.player.fame + 5);
             StateManager.addMessage(
@@ -10525,7 +10525,7 @@ function registerNewsEventsToPool() {
           apply: function (st) {
             st.flags._subsidyWarRider = st.player.day;
             st.flags._subsidyWarJoinSeen = true;
-            st.resources.cash += 60;
+            st.resources.cash = (st.resources.cash || 0) + 60; // [全系统自洽修复] 域B A类:cash NaN守卫
             st.player.physique = Math.max(
               0,
               Math.min(100, (st.player.physique || 10) - 2),
@@ -10577,7 +10577,7 @@ function registerNewsEventsToPool() {
           apply: function (st) {
             st.flags._subsidyWarCrashSeen = true;
             st.flags._subsidyWarLeft = true;
-            st.resources.cash += 30;
+            st.resources.cash = (st.resources.cash || 0) + 30; // [全系统自洽修复] 域B A类:cash NaN守卫
             StateManager.addMessage(
               "😤 退���了骑手平台，结清¥30余款。这波赚了点但也磨了体力——教训：补贴战是短期机会，别依赖平台。",
               "warning",
@@ -10591,7 +10591,7 @@ function registerNewsEventsToPool() {
           apply: function (st) {
             st.flags._subsidyWarCrashSeen = true;
             st.flags._riderRightsComplaint = st.player.day;
-            st.resources.cash -= 50;
+            st.resources.cash = Math.max(0, (st.resources.cash || 0) - 50); // [全系统自洽修复] 域B A类:cash NaN守卫
             st.player.fame = Math.min(100, (st.player.fame || 0) + 5);
             StateManager.addMessage(
               "📢 加入骑手维权团，花了¥50组织费，名气+5。平台已知晓，15天后看结果。",
@@ -10606,7 +10606,7 @@ function registerNewsEventsToPool() {
           apply: function (st) {
             st.flags._subsidyWarCrashSeen = true;
             st.flags._exRiderVendor = true;
-            st.resources.cash -= 200;
+            st.resources.cash = Math.max(0, (st.resources.cash || 0) - 200); // [全系统自洽修复] 域B A类:cash NaN守卫
             st.player.physique = Math.min(100, (st.player.physique || 10) + 3);
             StateManager.addMessage(
               "🍜 用补贴大战攒的钱开了个摆摊！花掉¥200启动本钱，体质+3（骑手练出来的腿脚）。",
@@ -10642,7 +10642,7 @@ function registerNewsEventsToPool() {
             );
             var payout = 280 + days * 3;
             st.flags._riderRightsResolved = true;
-            st.resources.cash += payout;
+            st.resources.cash = (st.resources.cash || 0) + payout; // [全系统自洽修复] 域B A类:cash NaN守卫
             st.player.fame = Math.min(100, (st.player.fame || 0) + 3);
             StateManager.addMessage(
               "💰 接受和解，到手¥" +
@@ -10721,7 +10721,7 @@ function registerNewsEventsToPool() {
               inv2.properties = [];
             }
             var out = Math.round(total2 * 0.7);
-            st.resources.cash += out;
+            st.resources.cash = (st.resources.cash || 0) + out; // [全系统自洽修复] 域B A类:cash NaN守卫
             st.resources.totalEarned += out;
             StateManager.addMessage(
               "🏃 以70折出手，到手¥" +
@@ -10758,7 +10758,7 @@ function registerNewsEventsToPool() {
             st.flags._acquisitionTeaSeen = true;
             st.flags._acquiredTeaStore = st.player.day;
             st.flags._teaStoreCash = 80000;
-            st.resources.cash -= scaleAmount(80000, st.resources && st.resources.totalEarned);
+            st.resources.cash = Math.max(0, (st.resources.cash || 0) - scaleAmount(80000, st.resources && st.resources.totalEarned)); // [全系统自洽修复] 域B A类:cash NaN守卫
             st.player.fame = Math.min(100, (st.player.fame || 0) + 4);
             st.player.mental = Math.min(100, st.player.mental + 3);
             StateManager.addMessage(
@@ -10808,7 +10808,7 @@ function registerNewsEventsToPool() {
             st.flags._acquisitionDealtEarly = true;
             st.flags._acquiredTeaStore = null;
             var proceeds = Math.round(80000 * 0.65);
-            st.resources.cash += proceeds;
+            st.resources.cash = (st.resources.cash || 0) + proceeds; // [全系统自洽修复] 域B A类:cash NaN守卫
             st.resources.totalEarned += proceeds;
             st.player.mental = Math.max(0, st.player.mental - 5);
             st.needs.happiness = Math.max(0, st.needs.happiness - 10);
@@ -10828,7 +10828,7 @@ function registerNewsEventsToPool() {
             st.flags._acquisitionStruggleSeen = true;
             st.flags._acquisitionFighting = true;
             st.flags._acquisitionFightDay = st.player.day;
-            st.resources.cash -= scaleAmount(15000, st.resources && st.resources.totalEarned);
+            st.resources.cash = Math.max(0, (st.resources.cash || 0) - scaleAmount(15000, st.resources && st.resources.totalEarned)); // [全系统自洽修复] 域B A类:cash NaN守卫
             st.player.mental = Math.max(0, st.player.mental - 3);
             StateManager.addMessage(
               "🔥 砸¥15,000搞了波装修+网红打卡墙+小红书投放。现在就赌这20天能不能起来——心智-3，骰子已经掷下去了。",
@@ -10881,7 +10881,7 @@ function registerNewsEventsToPool() {
             st.flags._businessLessonLearned = true;
             st.flags._acquiredTeaStore = null;
             var proceeds = Math.round(80000 * 0.45);
-            st.resources.cash += proceeds;
+            st.resources.cash = (st.resources.cash || 0) + proceeds; // [全系统自洽修复] 域B A类:cash NaN守卫
             st.resources.totalEarned += proceeds;
             st.player.mental = Math.min(100, st.player.mental + 4);
             st.player.intelligence = Math.min(
@@ -10949,7 +10949,7 @@ function registerNewsEventsToPool() {
           apply: function (st) {
             st.flags._disruptionSeen = true;
             st.flags._disruptionStudying = st.player.day;
-            st.resources.cash -= 800;
+            st.resources.cash = Math.max(0, (st.resources.cash || 0) - 800); // [全系统自洽修复] 域B A类:cash NaN守卫
             st.player.intelligence = Math.min(
               100,
               (st.player.intelligence || 10) + 2,
@@ -11093,7 +11093,7 @@ function registerNewsEventsToPool() {
             var msg = "";
             if (st.flags._disruptionPivoted) {
               // 转型成功者
-              st.resources.cash += 3500;
+              st.resources.cash = (st.resources.cash || 0) + 3500; // [全系统自洽修复] 域B A类:cash NaN守卫
               st.resources.totalEarned += 3500;
               st.player.intelligence = Math.min(
                 100,
@@ -11105,7 +11105,7 @@ function registerNewsEventsToPool() {
                 "📊 转型那批人吃到了红利。新平台给早期入驻者发了¥3,500奖金，智力+3，名气+5。“早行动者”标签解锁——以后类似机会触发时优先看到。";
             } else if (st.flags._disruptionSidehustle) {
               // 副业派
-              st.resources.cash += 1800;
+              st.resources.cash = (st.resources.cash || 0) + 1800; // [全系统自洽修复] 域B A类:cash NaN守卫
               st.resources.totalEarned += 1800;
               st.player.physique = Math.max(0, (st.player.physique || 10) - 2);
               st.player.mental = Math.min(100, st.player.mental + 3);
@@ -11113,7 +11113,7 @@ function registerNewsEventsToPool() {
                 "📊 两线作战的回报：累计副业收入¥1,800入账，体质-2（这阵子真累），心智+3（你扛过来了）。结论是不够极致，但没掉队。";
             } else if (st.flags._disruptionHolding) {
               // 坚守派
-              st.resources.cash = Math.max(0, st.resources.cash - 1200);
+              st.resources.cash = Math.max(0, (st.resources.cash || 0) - 1200); // [全系统自洽修复] 域B A类:cash NaN守卫
               st.player.mental = Math.max(0, st.player.mental - 6);
               st.needs.happiness = Math.max(0, st.needs.happiness - 10);
               st.player.fame = Math.min(100, (st.player.fame || 0) + 4);
@@ -11154,7 +11154,7 @@ function registerNewsEventsToPool() {
           apply: function (st) {
             st.flags._arbitrageTechparkTipSeen = true;
             st.flags._arbitrageTechparkActed = st.player.day;
-            st.resources.cash -= 2000;
+            st.resources.cash = Math.max(0, (st.resources.cash || 0) - 2000); // [全系统自洽修复] 域B A类:cash NaN守卫
             st.player.mental = Math.min(100, (st.player.mental || 10) + 2);
             StateManager.addMessage(
               "📐 你咬咬牙付了¥2000定金，以租代持谈下了一间旧厂房仓库的优先承租权。如果消息是真的，等科技园扩建公告一出，租金至少翻倍；如果是假的……¥2000打水漂。心智+2，赌局开始了。",
@@ -11169,7 +11169,7 @@ function registerNewsEventsToPool() {
           apply: function (st) {
             st.flags._arbitrageTechparkTipSeen = true;
             st.flags._arbitrageTechparkModerate = st.player.day;
-            st.resources.cash -= 1000;
+            st.resources.cash = Math.max(0, (st.resources.cash || 0) - 1000); // [全系统自洽修复] 域B A类:cash NaN守卫
             // 记入临时投资，政策兑现时模拟增值
             st.flags._arbitrageTechparkInvest =
               (st.flags._arbitrageTechparkInvest || 0) + 1000;
@@ -11226,7 +11226,7 @@ function registerNewsEventsToPool() {
           apply: function (st) {
             st.flags._arbitrageTechparkPayoffSeen = true;
             var profit = Random.int(5000, 7999);
-            st.resources.cash += profit;
+            st.resources.cash = (st.resources.cash || 0) + profit; // [全系统自洽修复] 域B A类:cash NaN守卫
             st.resources.totalEarned += profit;
             st.player.fame = Math.min(100, (st.player.fame || 0) + 8);
             st.player.mental = Math.min(100, (st.player.mental || 10) + 3);
@@ -11251,7 +11251,7 @@ function registerNewsEventsToPool() {
             st.flags._arbitrageTechparkPayoffSeen = true;
             var invest = st.flags._arbitrageTechparkInvest || 1000;
             var ret = Math.round(invest * 1.4);
-            st.resources.cash += ret;
+            st.resources.cash = (st.resources.cash || 0) + ret; // [全系统自洽修复] 域B A类:cash NaN守卫
             st.resources.totalEarned += ret;
             StateManager.addMessage(
               "📉 你卖掉了科技股，到手¥" +
@@ -11295,7 +11295,7 @@ function registerNewsEventsToPool() {
             st.flags._arbitrageLicenseTipSeen = true;
             st.flags._arbitrageLicenseTipDay = st.player.day;
             st.flags._arbitrageLicenseActed = true;
-            st.resources.cash -= 80;
+            st.resources.cash = Math.max(0, (st.resources.cash || 0) - 80); // [全系统自洽修复] 域B A类:cash NaN守卫
             st.flags._hasBusinessLicense = true; // 复用个体户执照标志
             st.player.physique = Math.max(0, (st.player.physique || 10) - 1);
             StateManager.addMessage(
@@ -11312,7 +11312,7 @@ function registerNewsEventsToPool() {
             st.flags._arbitrageLicenseTipSeen = true;
             st.flags._arbitrageLicenseTipDay = st.player.day;
             st.flags._arbitrageLicenseScalped = true;
-            st.resources.cash -= 240;
+            st.resources.cash = Math.max(0, (st.resources.cash || 0) - 240); // [全系统自洽修复] 域B A类:cash NaN守卫
             st.player.fame = Math.max(0, (st.player.fame || 0) - 3);
             st.player.mental = Math.max(0, (st.player.mental || 10) - 2);
             StateManager.addMessage(
@@ -11378,7 +11378,7 @@ function registerNewsEventsToPool() {
             apply: function (s) {
               s.flags._arbitrageLicensePayoffSeen = true;
               var profit = 400 * 3;
-              s.resources.cash += profit;
+              s.resources.cash = (s.resources.cash || 0) + profit; // [全系统自洽修复] 域B A类:cash NaN守卫
               s.resources.totalEarned += profit;
               s.player.fame = Math.max(0, (s.player.fame || 0) + 5);
               s.player.mental = Math.min(100, (s.player.mental || 10) + 2);
@@ -11437,7 +11437,7 @@ function registerNewsEventsToPool() {
           apply: function (st) {
             st.flags._arbitrageHygieneTipSeen = true;
             st.flags._arbitrageHygieneInvested = st.player.day;
-            st.resources.cash -= 1500;
+            st.resources.cash = Math.max(0, (st.resources.cash || 0) - 1500); // [全系统自洽修复] 域B A类:cash NaN守卫
             st.player.physique = Math.max(0, (st.player.physique || 10) - 2);
             StateManager.addMessage(
               "🔧 你买了不锈钢灶台和灭蝇灯，花了两天把摊位彻底改造。¥1500见了底，但看着焕然一新的操作台，你觉得值。",
@@ -11452,7 +11452,7 @@ function registerNewsEventsToPool() {
           apply: function (st) {
             st.flags._arbitrageHygieneTipSeen = true;
             st.flags._arbitrageHygieneModerate = st.player.day;
-            st.resources.cash -= 300;
+            st.resources.cash = Math.max(0, (st.resources.cash || 0) - 300); // [全系统自洽修复] 域B A类:cash NaN守卫
             StateManager.addMessage(
               "🧹 你买了灭蝇灯和新的围裙，灶台擦了又擦。花¥300做了表面功夫——评不上A级，但至少不会被罚。",
               "info",
@@ -11502,7 +11502,7 @@ function registerNewsEventsToPool() {
             hint: "提前整改的回报",
             apply: function (s) {
               s.flags._arbitrageHygienePayoffSeen = true;
-              s.resources.cash += 2000;
+              s.resources.cash = (s.resources.cash || 0) + 2000; // [全系统自洽修复] 域B A类:cash NaN守卫
               s.resources.totalEarned += 2000;
               s.player.fame = Math.min(100, (s.player.fame || 0) + 12);
               s.player.mental = Math.min(100, (s.player.mental || 10) + 5);
@@ -11520,7 +11520,7 @@ function registerNewsEventsToPool() {
             hint: "中等回报，有上升空间",
             apply: function (s) {
               s.flags._arbitrageHygienePayoffSeen = true;
-              s.resources.cash += 500;
+              s.resources.cash = (s.resources.cash || 0) + 500; // [全系统自洽修复] 域B A类:cash NaN守卫
               s.resources.totalEarned += 500;
               s.needs.happiness = Math.min(100, (s.needs.happiness || 50) + 5);
               StateManager.addMessage(
@@ -11590,7 +11590,7 @@ function registerNewsEventsToPool() {
           cost: 5000,
           apply: function (st) {
             st.flags._fateBoomSeen = true;
-            st.resources.cash -= scaleAmount(5000, st.resources && st.resources.totalEarned);
+            st.resources.cash = Math.max(0, (st.resources.cash || 0) - scaleAmount(5000, st.resources && st.resources.totalEarned)); // [全系统自洽修复] 域B A类:cash NaN守卫
             st.flags._fateInsiderInvest =
               (st.flags._fateInsiderInvest || 0) + 5000;
             st.player.mental = Math.max(0, st.player.mental - 2);
@@ -11684,7 +11684,7 @@ function registerNewsEventsToPool() {
                 var sellShares = Math.floor(h.shares * 0.5);
                 if (sellShares > 0) {
                   var revenue = Math.round(mkt.price * sellShares * 100) / 100;
-                  st.resources.cash += revenue;
+                  st.resources.cash = (st.resources.cash || 0) + revenue; // [全系统自洽修复] 域B A类:cash NaN守卫
                   st.resources.totalEarned += revenue;
                   h.shares -= sellShares;
                   soldTotal += revenue;
@@ -11821,7 +11821,7 @@ function registerNewsEventsToPool() {
           text: "😤 算了，再点一份",
           hint: "花钱买省心",
           apply: function (st) {
-            st.resources.cash -= 25;
+            st.resources.cash = Math.max(0, (st.resources.cash || 0) - 25); // [全系统自洽修复] 域B A类:cash NaN守卫
             st.needs.hunger = Math.min(100, st.needs.hunger + 25);
             st.needs.happiness = Math.max(0, st.needs.happiness - 3);
             StateManager.addMessage(
@@ -11834,7 +11834,7 @@ function registerNewsEventsToPool() {
           text: "🚶 去路边随便吃点",
           hint: "不浪费",
           apply: function (st) {
-            st.resources.cash -= 5;
+            st.resources.cash = Math.max(0, (st.resources.cash || 0) - 5); // [全系统自洽修复] 域B A类:cash NaN守卫
             st.needs.hunger = Math.min(100, st.needs.hunger + 15);
             st.needs.happiness = Math.max(0, st.needs.happiness - 5);
             StateManager.addMessage(
@@ -11865,10 +11865,10 @@ function registerNewsEventsToPool() {
           text: "💰 借给他",
           hint: "帮一把",
           apply: function (st) {
-            st.resources.cash -= 200;
+            st.resources.cash = Math.max(0, (st.resources.cash || 0) - 200); // [全系统自洽修复] 域B A类:cash NaN守卫
             st.needs.happiness = Math.min(100, st.needs.happiness + 5);
             if (Random.chance(0.6)) {
-              st.resources.cash += 200;
+              st.resources.cash = (st.resources.cash || 0) + 200; // [全系统自洽修复] 域B A类:cash NaN守卫
               st.needs.happiness = Math.min(100, st.needs.happiness + 3);
               StateManager.addMessage(
                 "第二天他果然还了钱，还带了盒饼干：「谢谢啊，要不是你，我真不知道怎么办。」",
@@ -11894,7 +11894,7 @@ function registerNewsEventsToPool() {
                 "info",
               );
             } else {
-              st.resources.cash -= 200;
+              st.resources.cash = Math.max(0, (st.resources.cash || 0) - 200); // [全系统自洽修复] 域B A类:cash NaN守卫
               st.needs.happiness = Math.min(100, st.needs.happiness + 3);
               StateManager.addMessage(
                 "他说家人生病要买药。你信了，借了200。第二天他没说还钱的事，你也没好意思催。",
@@ -11936,7 +11936,7 @@ function registerNewsEventsToPool() {
           text: "💪 办卡！投资健康",
           hint: "长期收益",
           apply: function (st) {
-            st.resources.cash -= 300;
+            st.resources.cash = Math.max(0, (st.resources.cash || 0) - 300); // [全系统自洽修复] 域B A类:cash NaN守卫
             st.needs.happiness = Math.min(100, st.needs.happiness + 8);
             StateManager.addMessage(
               "你办了健身卡。虽然300块不少，但想想能锻炼身体，值了。心情+8。",
@@ -11995,7 +11995,7 @@ function registerNewsEventsToPool() {
           apply: function (st) {
             st.flags._reGambleSeen = true;
             st.flags._reBoughtHouse = st.player.day;
-            st.resources.cash -= scaleAmount(80000, st.resources && st.resources.totalEarned);
+            st.resources.cash = Math.max(0, (st.resources.cash || 0) - scaleAmount(80000, st.resources && st.resources.totalEarned)); // [全系统自洽修复] 域B A类:cash NaN守卫
             st.player.fame = Math.min(100, (st.player.fame || 0) + 3);
             StateManager.addMessage(
               "🏠 花了¥80,000把老王的破房子买下来了。邻居们说你疯了，但你知道自己在赌什么。",
@@ -12037,7 +12037,7 @@ function registerNewsEventsToPool() {
           apply: function (st) {
             st.flags._reDemolitionSeen = true;
             st.flags._reAccepted = true;
-            st.resources.cash += scaleAmount(120000, st.resources && st.resources.totalEarned);
+            st.resources.cash = (st.resources.cash || 0) + scaleAmount(120000, st.resources && st.resources.totalEarned); // [全系统自洽修复] 域B A类:cash NaN守卫
             st.resources.totalEarned += 120000;
             st.player.mental = Math.min(100, (st.player.mental || 20) + 3);
             st.player.intelligence = Math.min(
@@ -12107,7 +12107,7 @@ function registerNewsEventsToPool() {
             st.flags._reSettleSeen = true;
             st.flags._reBoughtProperty = true;
             st.flags._rePropertyDay = st.player.day;
-            st.resources.cash -= scaleAmount(120000, st.resources && st.resources.totalEarned);
+            st.resources.cash = Math.max(0, (st.resources.cash || 0) - scaleAmount(120000, st.resources && st.resources.totalEarned)); // [全系统自洽修复] 域B A类:cash NaN守卫
             st.resources.debt = (st.resources.debt || 0) + 120000;
             st.player.mental = Math.min(100, (st.player.mental || 20) + 5);
             StateManager.addMessage(
@@ -12123,8 +12123,8 @@ function registerNewsEventsToPool() {
             st.flags._reSettleSeen = true;
             st.flags._reStartedBusiness = true;
             var bonus = Random.int(60000, 139999);
-            st.resources.cash -= scaleAmount(80000, st.resources && st.resources.totalEarned);
-            st.resources.cash += bonus;
+            st.resources.cash = Math.max(0, (st.resources.cash || 0) - scaleAmount(80000, st.resources && st.resources.totalEarned)); // [全系统自洽修复] 域B A类:cash NaN守卫
+            st.resources.cash = (st.resources.cash || 0) + bonus; // [全系统自洽修复] 域B A类:cash NaN守卫
             st.resources.totalEarned += bonus;
             st.player.fame = Math.min(100, (st.player.fame || 0) + 4);
             StateManager.addMessage(
@@ -12169,7 +12169,7 @@ function registerNewsEventsToPool() {
           apply: function (st) {
             st.flags._reCoalitionSeen = true;
             st.flags._reCoalitionAccepted = true;
-            st.resources.cash += scaleAmount(110000, st.resources && st.resources.totalEarned);
+            st.resources.cash = (st.resources.cash || 0) + scaleAmount(110000, st.resources && st.resources.totalEarned); // [全系统自洽修复] 域B A类:cash NaN守卫
             st.resources.totalEarned += 110000;
             st.player.mental = Math.max(0, (st.player.mental || 20) - 3);
             st.player.intelligence = Math.min(
@@ -12218,7 +12218,7 @@ function registerNewsEventsToPool() {
           apply: function (st) {
             st.flags._reHoldoutEndSeen = true;
             st.flags._reFinalSettled = true;
-            st.resources.cash += scaleAmount(90000, st.resources && st.resources.totalEarned);
+            st.resources.cash = (st.resources.cash || 0) + scaleAmount(90000, st.resources && st.resources.totalEarned); // [全系统自洽修复] 域B A类:cash NaN守卫
             st.resources.totalEarned += 90000;
             st.player.mental = Math.max(0, (st.player.mental || 20) - 5);
             st.needs.happiness = Math.max(0, st.needs.happiness - 10);
@@ -12235,7 +12235,7 @@ function registerNewsEventsToPool() {
           apply: function (st) {
             st.flags._reHoldoutEndSeen = true;
             st.flags._reLawyered = true;
-            st.resources.cash -= scaleAmount(15000, st.resources && st.resources.totalEarned);
+            st.resources.cash = Math.max(0, (st.resources.cash || 0) - scaleAmount(15000, st.resources && st.resources.totalEarned)); // [全系统自洽修复] 域B A类:cash NaN守卫
             st.player.intelligence = Math.min(
               100,
               (st.player.intelligence || 10) + 3,
@@ -12279,7 +12279,7 @@ function registerNewsEventsToPool() {
             st.flags._startupMeetSeen = true;
             st.flags._startupInvested = st.player.day;
             st.flags._startupAmount = 30000;
-            st.resources.cash -= scaleAmount(30000, st.resources && st.resources.totalEarned);
+            st.resources.cash = Math.max(0, (st.resources.cash || 0) - scaleAmount(30000, st.resources && st.resources.totalEarned)); // [全系统自洽修复] 域B A类:cash NaN守卫
             st.player.mental = Math.min(100, (st.player.mental || 20) + 3);
             StateManager.addMessage(
               "💻 你给了一个陌生程序员¥30,000。他留着你的微信，说「两个月后见分晓」。",
@@ -12296,7 +12296,7 @@ function registerNewsEventsToPool() {
             st.flags._startupMeetSeen = true;
             st.flags._startupInvested = st.player.day;
             st.flags._startupAmount = 10000;
-            st.resources.cash -= scaleAmount(10000, st.resources && st.resources.totalEarned);
+            st.resources.cash = Math.max(0, (st.resources.cash || 0) - scaleAmount(10000, st.resources && st.resources.totalEarned)); // [全系统自洽修复] 域B A类:cash NaN守卫
             StateManager.addMessage(
               "💵 你给了¥10,000，占3%股份。小陈说「有总比没有好」。",
               "info",
@@ -12338,7 +12338,7 @@ function registerNewsEventsToPool() {
           apply: function (st) {
             st.flags._startupProgressSeen = true;
             st.flags._startupBurning = true;
-            st.resources.cash -= scaleAmount(50000, st.resources && st.resources.totalEarned);
+            st.resources.cash = Math.max(0, (st.resources.cash || 0) - scaleAmount(50000, st.resources && st.resources.totalEarned)); // [全系统自洽修复] 域B A类:cash NaN守卫
             StateManager.addMessage(
               "🔥 你把最后的积蓄砸了进去。小陈说「老板大气！」",
               "event",
@@ -12366,7 +12366,7 @@ function registerNewsEventsToPool() {
             st.flags._startupProgressSeen = true;
             st.flags._startupExitedEarly = true;
             var refund = Math.round((st.flags._startupAmount || 30000) * 1.2);
-            st.resources.cash += refund;
+            st.resources.cash = (st.resources.cash || 0) + refund; // [全系统自洽修复] 域B A类:cash NaN守卫
             StateManager.addMessage(
               "🛑 你跟小陈说急用钱，他加了20%还给你——¥" +
                 refund.toLocaleString() +
@@ -12402,7 +12402,7 @@ function registerNewsEventsToPool() {
             var multi = st.flags._startupBurning ? 3.5 : 1.8;
             var base = st.flags._startupAmount || 30000;
             var payout = Math.round(base * multi) + Random.int(0, 49999);
-            st.resources.cash += payout;
+            st.resources.cash = (st.resources.cash || 0) + payout; // [全系统自洽修复] 域B A类:cash NaN守卫
             st.resources.totalEarned += payout;
             st.player.fame = Math.min(100, (st.player.fame || 0) + 12);
             st.player.mental = Math.min(100, (st.player.mental || 20) + 10);
@@ -12458,7 +12458,7 @@ function registerNewsEventsToPool() {
           apply: function (st) {
             st.flags._grayOfferSeen = true;
             st.flags._grayJoined = st.player.day;
-            st.resources.cash += 300;
+            st.resources.cash = (st.resources.cash || 0) + 300; // [全系统自洽修复] 域B A类:cash NaN守卫
             st.player.fame = Math.max(0, (st.player.fame || 0) - 3);
             StateManager.addMessage(
               "😈 你接了那¥300。老张拍拍你肩膀：「识相！」",
@@ -12515,7 +12515,7 @@ function registerNewsEventsToPool() {
           apply: function (st) {
             st.flags._grayCollectSeen = true;
             st.flags._grayDeepIn = true;
-            st.resources.cash += 500;
+            st.resources.cash = (st.resources.cash || 0) + 500; // [全系统自洽修复] 域B A类:cash NaN守卫
             st.player.fame = Math.max(0, (st.player.fame || 0) - 5);
             StateManager.addMessage(
               "😶 分到你手上¥500。监控正对着收钱的位置。",
@@ -12557,7 +12557,7 @@ function registerNewsEventsToPool() {
           apply: function (st) {
             st.flags._grayCleanupSeen = true;
             st.flags._grayTestified = true;
-            st.resources.cash = Math.max(0, st.resources.cash - 2000);
+            st.resources.cash = Math.max(0, (st.resources.cash || 0) - 2000); // [全系统自洽修复] 域B A类:cash NaN守卫
             st.player.fame = Math.max(0, (st.player.fame || 0) - 8);
             st.player.mental = Math.min(100, (st.player.mental || 20) + 6);
             StateManager.addMessage(
@@ -12642,7 +12642,7 @@ function registerNewsEventsToPool() {
           apply: function (st) {
             st.flags._eduRumorSeen = true;
             st.flags._eduShorted = true;
-            st.resources.cash += scaleAmount(5000, st.resources && st.resources.totalEarned);
+            st.resources.cash = (st.resources.cash || 0) + scaleAmount(5000, st.resources && st.resources.totalEarned); // [全系统自洽修复] 域B A类:cash NaN守卫
             StateManager.addMessage(
               "📉 你卖空了教育股。如果政策落地能赚更多。",
               "event",
@@ -12703,7 +12703,7 @@ function registerNewsEventsToPool() {
           apply: function (st) {
             st.flags._eduCrashSeen = true;
             st.flags._eduBoughtAssets = true;
-            st.resources.cash -= scaleAmount(5000, st.resources && st.resources.totalEarned);
+            st.resources.cash = Math.max(0, (st.resources.cash || 0) - scaleAmount(5000, st.resources && st.resources.totalEarned)); // [全系统自洽修复] 域B A类:cash NaN守卫
             StateManager.addMessage(
               "🏢 你花了¥5,000买了满满一车课桌椅和投影仪。",
               "event",
@@ -12757,7 +12757,7 @@ function registerNewsEventsToPool() {
           apply: function (st) {
             st.flags._eduAftermathSeen = true;
             var earn = Random.int(7000, 9999);
-            st.resources.cash += earn;
+            st.resources.cash = (st.resources.cash || 0) + earn; // [全系统自洽修复] 域B A类:cash NaN守卫
             StateManager.addMessage(
               "♻️ 净赚¥" + earn.toLocaleString() + "。",
               "event",
@@ -12770,7 +12770,7 @@ function registerNewsEventsToPool() {
           apply: function (st) {
             st.flags._eduAftermathSeen = true;
             st.flags._eduStudyRoom = true;
-            st.resources.cash -= scaleAmount(20000, st.resources && st.resources.totalEarned);
+            st.resources.cash = Math.max(0, (st.resources.cash || 0) - scaleAmount(20000, st.resources && st.resources.totalEarned)); // [全系统自洽修复] 域B A类:cash NaN守卫
             StateManager.addMessage(
               "📚 你在城中村开了「深夜自习室」——¥5/小时。第一周来了12个人。",
               "event",
@@ -12784,7 +12784,7 @@ function registerNewsEventsToPool() {
             st.flags._eduAftermathSeen = true;
             st.flags._eduMiddleman = true;
             var income = Random.int(3000, 7999);
-            st.resources.cash += income;
+            st.resources.cash = (st.resources.cash || 0) + income; // [全系统自洽修复] 域B A类:cash NaN守卫
             StateManager.addMessage(
               "🤝 月中介收入¥" +
                 income.toLocaleString() +
@@ -12829,7 +12829,7 @@ function registerNewsEventsToPool() {
           apply: function (st) {
             st.flags._evFrenzySeen = true;
             st.flags._evBoughtDip = true;
-            st.resources.cash -= scaleAmount(30000, st.resources && st.resources.totalEarned);
+            st.resources.cash = Math.max(0, (st.resources.cash || 0) - scaleAmount(30000, st.resources && st.resources.totalEarned)); // [全系统自洽修复] 域B A类:cash NaN守卫
             StateManager.addMessage(
               "💰 你在跌停板加仓。朋友说你疯了。",
               "event",
@@ -12871,7 +12871,7 @@ function registerNewsEventsToPool() {
           apply: function (st) {
             st.flags._evShakeoutSeen = true;
             st.flags._evSwitchedToLeader = true;
-            st.resources.cash -= scaleAmount(20000, st.resources && st.resources.totalEarned);
+            st.resources.cash = Math.max(0, (st.resources.cash || 0) - scaleAmount(20000, st.resources && st.resources.totalEarned)); // [全系统自洽修复] 域B A类:cash NaN守卫
             StateManager.addMessage(
               "📊 卖掉杂牌加仓比丫迪。龙头就是龙头。",
               "event",
@@ -12885,7 +12885,7 @@ function registerNewsEventsToPool() {
           apply: function (st) {
             st.flags._evShakeoutSeen = true;
             st.flags._evBoughtSmall = true;
-            st.resources.cash -= scaleAmount(15000, st.resources && st.resources.totalEarned);
+            st.resources.cash = Math.max(0, (st.resources.cash || 0) - scaleAmount(15000, st.resources && st.resources.totalEarned)); // [全系统自洽修复] 域B A类:cash NaN守卫
             StateManager.addMessage(
               "💪 你找到一家现金流为正但被错杀的公司，投了¥15,000。",
               "event",
@@ -12929,7 +12929,7 @@ function registerNewsEventsToPool() {
           apply: function (st) {
             st.flags._evRecoverySeen = true;
             var reward = Random.int(25000, 49999);
-            st.resources.cash += reward;
+            st.resources.cash = (st.resources.cash || 0) + reward; // [全系统自洽修复] 域B A类:cash NaN守卫
             st.player.intelligence = Math.min(
               100,
               (st.player.intelligence || 10) + 3,
@@ -12946,7 +12946,7 @@ function registerNewsEventsToPool() {
           apply: function (st) {
             st.flags._evRecoverySeen = true;
             var reward2 = Random.int(30000, 39999);
-            st.resources.cash += reward2;
+            st.resources.cash = (st.resources.cash || 0) + reward2; // [全系统自洽修复] 域B A类:cash NaN守卫
             st.player.mental = Math.min(100, (st.player.mental || 20) + 5);
             StateManager.addMessage(
               "✅ 锁定了¥" + reward2.toLocaleString() + "的利润。",
@@ -12977,11 +12977,11 @@ function registerNewsEventsToPool() {
           hint: "追高风险",
           cost: 5000,
           apply: function (st) {
-            if (st.resources.cash < 5000) {
+            if ((st.resources.cash || 0) < 5000) {
               StateManager.addMessage("💰 钱不够！", "warning");
               return;
             }
-            st.resources.cash -= scaleAmount(5000, st.resources && st.resources.totalEarned);
+            st.resources.cash = Math.max(0, (st.resources.cash || 0) - scaleAmount(5000, st.resources && st.resources.totalEarned)); // [全系统自洽修复] 域B A类:cash NaN守卫
             st.flags._goldBought = true;
             st.flags._goldPrice = 5000;
             StateManager.addMessage(
@@ -12996,11 +12996,11 @@ function registerNewsEventsToPool() {
           hint: "谨慎参与",
           cost: 1000,
           apply: function (st) {
-            if (st.resources.cash < 1000) {
+            if ((st.resources.cash || 0) < 1000) {
               StateManager.addMessage("💵 钱不够！", "warning");
               return;
             }
-            st.resources.cash -= 1000;
+            st.resources.cash = Math.max(0, (st.resources.cash || 0) - 1000); // [全系统自洽修复] 域B A类:cash NaN守卫
             st.flags._goldBought = true;
             st.flags._goldPrice = 1000;
             StateManager.addMessage(
@@ -13044,7 +13044,7 @@ function registerNewsEventsToPool() {
             st.flags._goldPeakDone = true;
             st.flags._goldSold = true;
             var profit = Math.round((st.flags._goldPrice || 1000) * 0.6);
-            st.resources.cash += (st.flags._goldPrice || 1000) + profit;
+            st.resources.cash = (st.resources.cash || 0) + (st.flags._goldPrice || 1000) + profit; // [全系统自洽修复] 域B A类:cash NaN守卫
             st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 8);
             StateManager.addMessage(
               "✅ 你卖出所有金条，净赚¥" + profit + "！",
@@ -13087,7 +13087,7 @@ function registerNewsEventsToPool() {
           apply: function (st) {
             st.flags._goldCrashDone = true;
             var loss = Math.round((st.flags._goldPrice || 1000) * 0.35);
-            st.resources.cash += (st.flags._goldPrice || 1000) - loss;
+            st.resources.cash = (st.resources.cash || 0) + (st.flags._goldPrice || 1000) - loss; // [全系统自洽修复] 域B A类:cash NaN守卫
             st.needs.happiness = Math.max(0, (st.needs.happiness || 50) - 10);
             st.player.mental = Math.max(0, (st.player.mental || 50) - 5);
             StateManager.addMessage(
@@ -13134,7 +13134,7 @@ function registerNewsEventsToPool() {
           apply: function (st) {
             st.flags._goldReboundDone = true;
             var loss = Math.round((st.flags._goldPrice || 1000) * 0.12);
-            st.resources.cash += (st.flags._goldPrice || 1000) - loss;
+            st.resources.cash = (st.resources.cash || 0) + (st.flags._goldPrice || 1000) - loss; // [全系统自洽修复] 域B A类:cash NaN守卫
             st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 3);
             StateManager.addMessage(
               "✅ 反弹中卖出，亏损¥" + loss + "。比割肉强多了。",
@@ -16786,8 +16786,8 @@ function registerNewsEventsToPool() {
           apply: (st) => {
             st.flags._insiderRumorSeen = true;
             st.needs.fatigue = Math.min(100, st.needs.fatigue + 5);
-            if (st.resources.cash >= 100) {
-              st.resources.cash -= 100;
+            if ((st.resources.cash || 0) >= 100) {
+              st.resources.cash = Math.max(0, (st.resources.cash || 0) - 100); // [全系统自洽修复] 域B A类:cash NaN守卫
               // 调度后续：验证结果
               if (typeof scheduleChainEvent === "function") {
                 scheduleChainEvent(st, "insider_verify", 2, "corporate");
@@ -16869,11 +16869,11 @@ function registerNewsEventsToPool() {
           hint: "高风险高回报",
           cost: 3000,
           apply: (st) => {
-            if (st.resources.cash < 3000) {
+            if ((st.resources.cash || 0) < 3000) {
               StateManager.addMessage("💰 钱不够！", "warning");
               return;
             }
-            st.resources.cash -= 3000;
+            st.resources.cash = Math.max(0, (st.resources.cash || 0) - 3000); // [全系统自洽修复] 域B A类:cash NaN守卫
             const success = Random.chance(0.7);
             if (success) {
               const profit = Random.int(4000, 5999);
@@ -16917,11 +16917,11 @@ function registerNewsEventsToPool() {
           hint: "留条后路",
           cost: 1000,
           apply: (st) => {
-            if (st.resources.cash < 1000) {
+            if ((st.resources.cash || 0) < 1000) {
               StateManager.addMessage("💵 钱不够！", "warning");
               return;
             }
-            st.resources.cash -= 1000;
+            st.resources.cash = Math.max(0, (st.resources.cash || 0) - 1000); // [全系统自洽修复] 域B A类:cash NaN守卫
             const success = Random.chance(0.7);
             if (success) {
               const profit = Random.int(1300, 1899);
@@ -17833,8 +17833,8 @@ function registerNewsEventsToPool() {
           hint: "FOMO了",
           cost: 5000,
           apply: function (st) {
-            if (st.resources.cash >= 5000) {
-              st.resources.cash -= scaleAmount(5000, st.resources && st.resources.totalEarned);
+            if ((st.resources.cash || 0) >= 5000) {
+              st.resources.cash = Math.max(0, (st.resources.cash || 0) - scaleAmount(5000, st.resources && st.resources.totalEarned)); // [全系统自洽修复] 域B A类:cash NaN守卫
               if (Random.chance(0.3)) {
                 st.resources.cash = (st.resources.cash || 0) + Random.int(8000, 22999);
                 st.needs.happiness = Math.min(100, st.needs.happiness + 20);
@@ -17900,8 +17900,8 @@ function registerNewsEventsToPool() {
           hint: "员工福利",
           cost: 4000,
           apply: function (st) {
-            if (st.resources.cash >= 4000) {
-              st.resources.cash -= 4000;
+            if ((st.resources.cash || 0) >= 4000) {
+              st.resources.cash = Math.max(0, (st.resources.cash || 0) - 4000); // [全系统自洽修复] 域B A类:cash NaN守卫
               var inv = st.investment || {};
               inv.stockHoldings = inv.stockHoldings || [];
               inv.stockHoldings.push({
@@ -17927,8 +17927,8 @@ function registerNewsEventsToPool() {
           hint: "试一试",
           cost: 800,
           apply: function (st) {
-            if (st.resources.cash >= 800) {
-              st.resources.cash -= 800;
+            if ((st.resources.cash || 0) >= 800) {
+              st.resources.cash = Math.max(0, (st.resources.cash || 0) - 800); // [全系统自洽修复] 域B A类:cash NaN守卫
               var inv = st.investment || {};
               inv.stockHoldings = inv.stockHoldings || [];
               inv.stockHoldings.push({
@@ -18000,8 +18000,8 @@ function registerNewsEventsToPool() {
           apply: function (st) {
             var inv = st.investment || {};
             var cost = Random.int(1000, 3999);
-            if (st.resources.cash >= cost) {
-              st.resources.cash -= cost;
+            if ((st.resources.cash || 0) >= cost) {
+              st.resources.cash = Math.max(0, (st.resources.cash || 0) - cost); // [全系统自洽修复] 域B A类:cash NaN守卫
               inv.stockHoldings = inv.stockHoldings || [];
               var smic = inv.stockHoldings.find(function (x) {
                 return x.symbol === "SMIC";
@@ -18078,8 +18078,8 @@ function registerNewsEventsToPool() {
           apply: function (st) {
             var inv = st.investment || {};
             var cost = 2000;
-            if (st.resources.cash >= 2000) {
-              st.resources.cash -= 2000;
+            if ((st.resources.cash || 0) >= 2000) {
+              st.resources.cash = Math.max(0, (st.resources.cash || 0) - 2000); // [全系统自洽修复] 域B A类:cash NaN守卫
               inv.stockHoldings = inv.stockHoldings || [];
               var h = inv.stockHoldings.find(function (x) {
                 return x.symbol === "TSLA";
@@ -18135,8 +18135,8 @@ function registerNewsEventsToPool() {
           apply: function (st) {
             var inv = st.investment || {};
             var cost = 3000;
-            if (st.resources.cash >= cost) {
-              st.resources.cash -= cost;
+            if ((st.resources.cash || 0) >= cost) {
+              st.resources.cash = Math.max(0, (st.resources.cash || 0) - cost); // [全系统自洽修复] 域B A类:cash NaN守卫
               inv.btcHoldings = (inv.btcHoldings || 0) + 0.003;
               inv.btcAvgCost =
                 inv.btcHoldings > 0
@@ -18385,7 +18385,7 @@ function registerNewsEventsToPool() {
         return (
           hasObserved &&
           st.player.day >= triggerDay &&
-          st.resources.cash >= 300000 && // [全系统自洽修复] 域H A类: 阈值从100000→300000(实际成本)
+          (st.resources.cash || 0) >= 300000 && // [全系统自洽修复] 域H A类: 阈值从100000→300000(实际成本); [全系统自洽修复] 域B A类:cash NaN守卫
           !st.flags._founderBuybackSeen
         );
       },
@@ -18397,7 +18397,7 @@ function registerNewsEventsToPool() {
           apply: function (st) {
             st.flags._founderBuybackSeen = true;
             st.flags._founderReclaimed = true;
-            st.resources.cash -= scaleAmount(300000, st.resources && st.resources.totalEarned);
+            st.resources.cash = Math.max(0, (st.resources.cash || 0) - scaleAmount(300000, st.resources && st.resources.totalEarned)); // [全系统自洽修复] 域B A类:cash NaN守卫
             if (st.player && st.player.corporate) {
               st.player.corporate.dignity = Math.min(
                 100,
@@ -19524,8 +19524,8 @@ function registerNewsEventsToPool() {
           hint: "¥50000保证金，合法但职业风险",
           apply: function (st) {
             st.flags._shortSelfSeen = true;
-            if (st.resources.cash >= 50000) {
-              st.resources.cash -= scaleAmount(50000, st.resources && st.resources.totalEarned);
+            if ((st.resources.cash || 0) >= 50000) {
+              st.resources.cash = Math.max(0, (st.resources.cash || 0) - scaleAmount(50000, st.resources && st.resources.totalEarned)); // [全系统自洽修复] 域B A类:cash NaN守卫
               st.flags._shortedOwnCompany = true;
               st.flags._shortDay = st.player.day;
               if (typeof scheduleChainEvent === "function") {
@@ -86585,7 +86585,7 @@ if (typeof window !== "undefined") {
               cap.clientLeads = Math.min(100, cap.clientLeads + 15);
               _clamp(cap);
             }
-            st.resources.cash += scaleAmount(8000, st.resources && st.resources.totalEarned);
+            st.resources.cash = (st.resources.cash || 0) + scaleAmount(8000, st.resources && st.resources.totalEarned); // [全系统自洽修复] 域B A类:cash NaN守卫
             _msg(
               "🎉 你接了几个小商业合作，额外收入¥8000，同时在行业建立了个人品牌。声誉+18，客户线索+15。",
               "success",
@@ -86636,7 +86636,7 @@ if (typeof window !== "undefined") {
                 cap.reputation = Math.min(100, cap.reputation + 20);
                 _clamp(cap);
               }
-              st.resources.cash += scaleAmount(5000, st.resources && st.resources.totalEarned);
+              st.resources.cash = (st.resources.cash || 0) + scaleAmount(5000, st.resources && st.resources.totalEarned); // [全系统自洽修复] 域B A类:cash NaN守卫
               _msg(
                 "🏆 你举报属实，合规部门认定你立了大功，获得¥5000奖励，声誉大涨。声誉+20。",
                 "success",
@@ -87192,7 +87192,7 @@ if (typeof window !== "undefined") {
               cap.clientLeads = Math.min(100, cap.clientLeads + 20);
               _clamp(cap);
             }
-            st.resources.cash += scaleAmount(8000, st.resources && st.resources.totalEarned);
+            st.resources.cash = (st.resources.cash || 0) + scaleAmount(8000, st.resources && st.resources.totalEarned); // [全系统自洽修复] 域B A类:cash NaN守卫
             st.needs.fatigue = Math.min(100, (st.needs.fatigue || 0) + 25);
             _msg(
               "🏆 你们撑过了爆单期，额外收入¥8000，积累了大量回头客。声誉+15，客户线索+20，疲劳+25。",
@@ -87575,7 +87575,7 @@ if (typeof window !== "undefined") {
               var cap = _cap(st);
               if (cap) cap.reputation = Math.min(100, cap.reputation + 15);
               _clamp(cap);
-              st.resources.cash += scaleAmount(5000, st.resources && st.resources.totalEarned);
+              st.resources.cash = (st.resources.cash || 0) + scaleAmount(5000, st.resources && st.resources.totalEarned); // [全系统自洽修复] 域B A类:cash NaN守卫
               _msg(
                 "🎉 你成功考上事业编制！从此有了「铁饭碗」，单位奖励¥5000，声誉+15。",
                 "success",
@@ -146355,7 +146355,7 @@ const EQUIPMENT_SUITES = {
       { id: "smart_watch", name: "智能手表", slot: "accessory" },
       { id: "smartphone", name: "智能手机", slot: "accessory" },
       { id: "noise_cancelling_earphones", name: "降噪耳机", slot: "accessory" },
-      { id: "notebook_item", name: "记事本", slot: null },
+      { id: "memo_pad", name: "记事本", slot: null }, // [全系统自洽修复] 域A 修复: notebook_item→memo_pad (原ID与stationery笔记本冲突导致死代码)
     ],
     tiers: [
       {
@@ -156918,7 +156918,7 @@ var ITEMS = [
     buyLocations: ["techPark", "commercialDist", "school"],
   },
   {
-    id: "notebook_item",
+    id: "memo_pad",
     name: "记事本",
     icon: "📓",
     slot: null,
@@ -157054,7 +157054,7 @@ function isItemNpcGift(itemId, npcId) {
     laptop_bag: ["daily_use"],
     smart_watch: ["electronics", "daily_use"],
     noise_cancelling_earphones: ["electronics", "daily_use"],
-    notebook_item: ["daily_use"],
+    memo_pad: ["daily_use"], // [全系统自洽修复] 域A 修复: notebook_item→memo_pad (原ID冲突)
     flashlight: ["daily_use"],
     radio: ["daily_use"],
     vitamins_item: ["daily_use"], // [全系统自洽修复] 域A 修复: vitamins_item2→vitamins_item NPC礼物ID对齐
@@ -169019,7 +169019,7 @@ const MORAL_EVENTS = [
         immediate: function (s) {
           // [联动flag] 触发"昧下钱包的阴影"后续事件
           s.flags.moralWalletStolen = true;
-          s.resources.cash += 500;
+          s.resources.cash = (s.resources.cash || 0) + 500; // [全系统自洽修复] 域B A类:cash NaN守卫
           s.needs.happiness = Math.min(100, s.needs.happiness + 8);
           StateManager.addMessage(
             "💵 你快速把钱塞进口袋，心跳加速地离开了。",
@@ -169058,7 +169058,7 @@ const MORAL_EVENTS = [
         immediate: function (s) {
           // [联动flag] 触发"乞丐的线报"后续事件
           s.flags.moralFedBeggar = true;
-          s.resources.cash -= 15;
+          s.resources.cash = Math.max(0, (s.resources.cash || 0) - 15); // [全系统自洽修复] 域B A类:cash NaN守卫
           s.needs.happiness = Math.min(100, s.needs.happiness + 6);
           StateManager.addMessage("🎭 老人眼眶湿润，连声道谢。", "success");
         },
@@ -169068,7 +169068,7 @@ const MORAL_EVENTS = [
         flag: "moral_beggar_coin",
         score: 3,
         immediate: function (s) {
-          s.resources.cash -= 2;
+          s.resources.cash = Math.max(0, (s.resources.cash || 0) - 2); // [全系统自洽修复] 域B A类:cash NaN守卫
           s.needs.happiness = Math.max(0, s.needs.happiness - 1);
           StateManager.addMessage(
             "🪙 硬币叮当落入碗中，你没有多看一眼。",
@@ -169126,7 +169126,7 @@ const MORAL_EVENTS = [
         flag: "moral_change_keep",
         score: -8,
         immediate: function (s) {
-          s.resources.cash += 20;
+          s.resources.cash = (s.resources.cash || 0) + 20; // [全系统自洽修复] 域B A类:cash NaN守卫
           s.needs.happiness = Math.max(0, s.needs.happiness - 1);
           StateManager.addMessage("💵 你快速离开小店，¥20到手。", "info");
         },
@@ -169261,7 +169261,7 @@ const MORAL_EVENTS = [
         flag: "moral_phone_sell",
         score: -12,
         immediate: function (s) {
-          s.resources.cash += 1500;
+          s.resources.cash = (s.resources.cash || 0) + 1500; // [全系统自洽修复] 域B A类:cash NaN守卫
           s.needs.happiness = Math.min(100, s.needs.happiness + 5);
           StateManager.addMessage(
             "💰 二手店老板狐疑地看了你一眼，还是收了。",
@@ -169287,7 +169287,7 @@ const MORAL_EVENTS = [
         immediate: function (s) {
           // [联动flag] 触发"流浪狗再次相遇"后续事件
           s.flags.moralFedDog = true;
-          s.resources.cash -= 3;
+          s.resources.cash = Math.max(0, (s.resources.cash || 0) - 3); // [全系统自洽修复] 域B A类:cash NaN守卫
           s.needs.happiness = Math.min(100, s.needs.happiness + 8);
           StateManager.addMessage(
             "🐕 小狗狼吞虎咽地吃完，舔了舔你的手。",
@@ -169392,7 +169392,7 @@ const MORAL_EVENTS = [
         flag: "moral_bike_steal",
         score: -15,
         immediate: function (s) {
-          s.resources.cash += Random.int(20, 40);
+          s.resources.cash = (s.resources.cash || 0) + Random.int(20, 40); // [全系统自洽修复] 域B A类:cash NaN守卫
           s.needs.happiness = Math.min(100, Math.max(0, s.needs.happiness + 2));
           StateManager.addMessage(
             "💀 把车推到废品站卖了¥30，但你心里隐约觉得不太对。",
@@ -169537,7 +169537,7 @@ const MORAL_EVENTS = [
         flag: "moral_fraud_join",
         score: -15,
         immediate: function (s) {
-          s.resources.cash += 200;
+          s.resources.cash = (s.resources.cash || 0) + 200; // [全系统自洽修复] 域B A类:cash NaN守卫
           s.player.corporate.risk = Math.min(
             100,
             (s.player.corporate.risk || 0) + 15,
@@ -169583,7 +169583,7 @@ const MORAL_EVENTS = [
         score: -18,
         immediate: function (s) {
           var taken = Random.int(200, 500);
-          s.resources.cash += taken;
+          s.resources.cash = (s.resources.cash || 0) + taken; // [全系统自洽修复] 域B A类:cash NaN守卫
           s.needs.happiness = Math.min(100, s.needs.happiness + 5);
           StateManager.addMessage(
             "💸 你的手在发抖，取了¥" + taken + "赶紧离开了。",
@@ -169618,7 +169618,7 @@ const MORAL_EVENTS = [
         flag: "moral_cashier_return",
         score: 8,
         immediate: function (s) {
-          s.resources.cash -= 30;
+          s.resources.cash = Math.max(0, (s.resources.cash || 0) - 30); // [全系统自洽修复] 域B A类:cash NaN守卫
           s.needs.happiness = Math.min(100, s.needs.happiness + 5);
           StateManager.addMessage(
             "😊 收银员感激地说「你真是个好人！」",
@@ -169631,7 +169631,7 @@ const MORAL_EVENTS = [
         flag: "moral_cashier_keep",
         score: -5,
         immediate: function (s) {
-          s.resources.cash += 30;
+          s.resources.cash = (s.resources.cash || 0) + 30; // [全系统自洽修复] 域B A类:cash NaN守卫
           s.needs.happiness = Math.max(0, s.needs.happiness - 2);
           StateManager.addMessage(
             "😐 你安慰自己说「算了，就当是超市的失误。」",
@@ -169746,7 +169746,7 @@ const MORAL_EVENTS = [
         immediate: function (s) {
           // [全系统自洽修复] 域B A类#2: cash NaN 守卫 — 防止事件扣款永久损坏现金
           if (typeof s.resources.cash !== "number" || !isFinite(s.resources.cash)) s.resources.cash = 0;
-          s.resources.cash -= Random.int(80, 150);
+          s.resources.cash = Math.max(0, (s.resources.cash || 0) - Random.int(80, 150)); // [全系统自洽修复] 域B A类:cash NaN守卫
           s.resources.cash = Math.max(0, s.resources.cash);
           s.needs.happiness = Math.min(100, (s.needs.happiness || 50) + 10);
           s.player.fame = Math.min(100, (s.player.fame || 0) + 3);
@@ -169761,7 +169761,7 @@ const MORAL_EVENTS = [
         flag: "moral_cat_feed",
         score: 4,
         immediate: function (s) {
-          s.resources.cash -= 5;
+          s.resources.cash = Math.max(0, (s.resources.cash || 0) - 5); // [全系统自洽修复] 域B A类:cash NaN守卫
           s.needs.happiness = Math.min(100, s.needs.happiness + 2);
           StateManager.addMessage(
             "🐱 你放下吃的，小猫狼吞虎咽地吃起来。",
@@ -169809,7 +169809,7 @@ const MORAL_EVENTS = [
         score: -2,
         immediate: function (s) {
           var earned = Random.int(10, 20);
-          s.resources.cash += earned;
+          s.resources.cash = (s.resources.cash || 0) + earned; // [全系统自洽修复] 域B A类:cash NaN守卫
           s.needs.fatigue = Math.min(100, s.needs.fatigue + 3);
           StateManager.addMessage(
             "💰 他犹豫了一下，给了你¥" + earned + "。",
@@ -169922,7 +169922,7 @@ const MORAL_EVENTS = [
         flag: "moral_scan_honest",
         score: 6,
         immediate: function (s) {
-          s.resources.cash -= 48;
+          s.resources.cash = Math.max(0, (s.resources.cash || 0) - 48); // [全系统自洽修复] 域B A类:cash NaN守卫
           s.needs.happiness = Math.min(100, s.needs.happiness + 3);
           StateManager.addMessage(
             "🛒 你扫码付了巧克力的钱。诚信值+1。",
@@ -169968,7 +169968,7 @@ const MORAL_EVENTS = [
         flag: "moral_taxi_fix",
         score: 6,
         immediate: function (s) {
-          s.resources.cash -= 2;
+          s.resources.cash = Math.max(0, (s.resources.cash || 0) - 2); // [全系统自洽修复] 域B A类:cash NaN守卫
           s.needs.happiness = Math.min(100, s.needs.happiness + 4);
           s.player.fame = Math.min(100, (s.player.fame || 0) + 1);
           StateManager.addMessage(
@@ -169982,7 +169982,7 @@ const MORAL_EVENTS = [
         flag: "moral_taxi_keep",
         score: -3,
         immediate: function (s) {
-          s.resources.cash += 2;
+          s.resources.cash = (s.resources.cash || 0) + 2; // [全系统自洽修复] 域B A类:cash NaN守卫
           s.needs.happiness = Math.max(0, s.needs.happiness - 1);
           StateManager.addMessage(
             "🤐 你接过钱下了车。¥2而已，司机不会在意的...吧。",
@@ -169995,7 +169995,7 @@ const MORAL_EVENTS = [
         flag: "moral_taxi_tip",
         score: 8,
         immediate: function (s) {
-          s.resources.cash -= 10;
+          s.resources.cash = Math.max(0, (s.resources.cash || 0) - 10); // [全系统自洽修复] 域B A类:cash NaN守卫
           s.needs.happiness = Math.min(100, s.needs.happiness + 6);
           s.player.fame = Math.min(100, (s.player.fame || 0) + 2);
           StateManager.addMessage(
@@ -170073,8 +170073,8 @@ const MORAL_EVENTS = [
         flag: "moral_book_pay",
         score: 8,
         immediate: function (s) {
-          if (s.resources.cash >= 68) {
-            s.resources.cash -= 68;
+          if ((s.resources.cash || 0) >= 68) {
+            s.resources.cash = Math.max(0, (s.resources.cash || 0) - 68); // [全系统自洽修复] 域B A类:cash NaN守卫
             s.needs.happiness = Math.min(100, s.needs.happiness + 3);
             s.player.fame = Math.min(100, (s.player.fame || 0) + 2);
             StateManager.addMessage(
@@ -170106,8 +170106,8 @@ const MORAL_EVENTS = [
         flag: "moral_book_replace",
         score: 6,
         immediate: function (s) {
-          if (s.resources.cash >= 68) {
-            s.resources.cash -= 68;
+          if ((s.resources.cash || 0) >= 68) {
+            s.resources.cash = Math.max(0, (s.resources.cash || 0) - 68); // [全系统自洽修复] 域B A类:cash NaN守卫
             s.needs.happiness = Math.min(100, s.needs.happiness + 4);
             StateManager.addMessage(
               "📖 你买了新书还回去，管理员没发现区别——但你知道。",
@@ -170271,7 +170271,7 @@ const MORAL_EVENTS = [
     dailyChance: 0.03,
     condition: function (s) {
       if (!s.housing || s.housing.tier < 1) return false; // [Layer3]
-      return s.resources.cash >= 200;
+      return (s.resources.cash || 0) >= 200;
     },
     choices: [
       {
@@ -170279,7 +170279,7 @@ const MORAL_EVENTS = [
         flag: "moral_borrow_again",
         score: 5,
         immediate: function (s) {
-          s.resources.cash -= 200;
+          s.resources.cash = Math.max(0, (s.resources.cash || 0) - 200); // [全系统自洽修复] 域B A类:cash NaN守卫
           s.needs.happiness = Math.max(0, s.needs.happiness - 2);
           s.flags._neighborDebt = (s.flags._neighborDebt || 150) + 200;
           StateManager.addMessage(
@@ -170306,7 +170306,7 @@ const MORAL_EVENTS = [
         flag: "moral_borrow_iou",
         score: 8,
         immediate: function (s) {
-          s.resources.cash -= 200;
+          s.resources.cash = Math.max(0, (s.resources.cash || 0) - 200); // [全系统自洽修复] 域B A类:cash NaN守卫
           s.flags._neighborIOU = (s.flags._neighborIOU || 150) + 200;
           s.flags._neighborHasIOU = true;
           s.player.fame = Math.min(100, (s.player.fame || 0) + 2);
@@ -170338,7 +170338,7 @@ const MORAL_EVENTS = [
         flag: "moral_find_coin_keep",
         score: 2,
         immediate: function (s) {
-          s.resources.cash += 3;
+          s.resources.cash = (s.resources.cash || 0) + 3; // [全系统自洽修复] 域B A类:cash NaN守卫
           s.needs.happiness = Math.min(100, s.needs.happiness + 2);
           StateManager.addMessage("口袋里多了¥3，虽然不多但聊胜于无。", "info");
         },
@@ -170383,8 +170383,8 @@ const MORAL_EVENTS = [
         flag: "moral_rain_shelter_cafe",
         score: 3,
         immediate: function (s) {
-          if (s.resources.cash >= 5) {
-            s.resources.cash -= 5;
+          if ((s.resources.cash || 0) >= 5) {
+            s.resources.cash = Math.max(0, (s.resources.cash || 0) - 5); // [全系统自洽修复] 域B A类:cash NaN守卫
             s.needs.fatigue = Math.max(0, s.needs.fatigue - 10);
             s.needs.happiness = Math.min(100, s.needs.happiness + 5);
             StateManager.addMessage(
@@ -171313,7 +171313,7 @@ const MORAL_CONSEQUENCES = {
       return "你收到了一封信：失主通过派出所联系到你，原来他是一家科技公司的HR，附了一张¥200购物卡和一张名片。";
     },
     apply: function (s) {
-      s.resources.cash += 200;
+      s.resources.cash = (s.resources.cash || 0) + 200; // [全系统自洽修复] 域B A类:cash NaN守卫
       s.needs.happiness = Math.min(100, s.needs.happiness + 10);
       s.player.fame = Math.min(100, (s.player.fame || 0) + 5);
       StateManager.addMessage(
@@ -171363,7 +171363,7 @@ const MORAL_CONSEQUENCES = {
     apply: function (s) {
       var val = Random.int(100, 300);
       s.needs.happiness = Math.min(100, s.needs.happiness + 8);
-      s.resources.cash += val;
+      s.resources.cash = (s.resources.cash || 0) + val; // [全系统自洽修复] 域B A类:cash NaN守卫
       StateManager.addMessage(
         "🎨 老乞丐送你的字画卖了¥" + val + "！他说「好人会有好报」。",
         "success",
@@ -171378,7 +171378,7 @@ const MORAL_CONSEQUENCES = {
       return "再去那家小卖部时，老板对你特别热情，说你是少见的老实人。以后来买东西都给你抹零。";
     },
     apply: function (s) {
-      s.resources.cash += 30;
+      s.resources.cash = (s.resources.cash || 0) + 30; // [全系统自洽修复] 域B A类:cash NaN守卫
       StateManager.addMessage(
         "🏪 老板塞给你一包零食：「你这样的年轻人不多了。」",
         "success",
@@ -171393,7 +171393,7 @@ const MORAL_CONSEQUENCES = {
       return "被偷的那位女士辗转找到你，带了水果和¥200现金来感谢你的见义勇为。";
     },
     apply: function (s) {
-      s.resources.cash += 200;
+      s.resources.cash = (s.resources.cash || 0) + 200; // [全系统自洽修复] 域B A类:cash NaN守卫
       s.player.fame = Math.min(100, (s.player.fame || 0) + 8);
       s.needs.happiness = Math.min(100, s.needs.happiness + 8);
       StateManager.addMessage(
@@ -171436,7 +171436,7 @@ const MORAL_CONSEQUENCES = {
       return "市场监督来了！有人举报你缺斤短两。你被罚款并且被要求整改。";
     },
     apply: function (s) {
-      s.resources.cash -= 200;
+      s.resources.cash = Math.max(0, (s.resources.cash || 0) - 200); // [全系统自洽修复] 域B A类:cash NaN守卫
       s.player.fame = Math.max(0, (s.player.fame || 0) - 10);
       s.needs.happiness = Math.max(0, s.needs.happiness - 10);
       StateManager.addMessage("⚠️ 市监局突检！被罚¥200。", "danger");
@@ -171705,7 +171705,7 @@ const MORAL_CONSEQUENCES = {
       return "有次你在路边等车，上次那个出租车司机正好经过，认出了你，主动停下说「顺路带你一程，免费的！」";
     },
     apply: function (s) {
-      s.resources.cash += 20;
+      s.resources.cash = (s.resources.cash || 0) + 20; // [全系统自洽修复] 域B A类:cash NaN守卫
       s.needs.happiness = Math.min(100, s.needs.happiness + 5);
       StateManager.addMessage(
         "🚕 司机正好顺路，免费捎了你一段！省了¥20。",
@@ -171779,7 +171779,7 @@ const MORAL_CONSEQUENCES = {
       return "图书馆发来短信：您归还的图书有严重污损，请尽快到馆处理赔偿事宜。逾期将影响信用记录。";
     },
     apply: function (s) {
-      s.resources.cash -= 68;
+      s.resources.cash = Math.max(0, (s.resources.cash || 0) - 68); // [全系统自洽修复] 域B A类:cash NaN守卫
       s.needs.happiness = Math.max(0, s.needs.happiness - 6);
       s.player.fame = Math.max(0, (s.player.fame || 0) - 2);
       StateManager.addMessage(
@@ -171812,7 +171812,7 @@ const MORAL_CONSEQUENCES = {
       return "几天后两个穿制服的人敲了你的门——巷子里有监控。车主报了警，监控拍到了你的背影。";
     },
     apply: function (s) {
-      s.resources.cash -= 300;
+      s.resources.cash = Math.max(0, (s.resources.cash || 0) - 300); // [全系统自洽修复] 域B A类:cash NaN守卫
       s.player.fame = Math.max(0, (s.player.fame || 0) - 5);
       s.needs.happiness = Math.max(0, s.needs.happiness - 10);
       StateManager.addMessage(
@@ -171831,7 +171831,7 @@ const MORAL_CONSEQUENCES = {
     apply: function (s) {
       s.player.fame = Math.min(100, (s.player.fame || 0) + 8);
       s.needs.happiness = Math.min(100, s.needs.happiness + 10);
-      s.resources.cash += 100;
+      s.resources.cash = (s.resources.cash || 0) + 100; // [全系统自洽修复] 域B A类:cash NaN守卫
       StateManager.addMessage(
         "📰 社区给了¥100奖励和一面锦旗！老奶奶的家人也打来电话道谢。",
         "success",
@@ -171862,7 +171862,7 @@ const MORAL_CONSEQUENCES = {
     },
     apply: function (s) {
       var total = s.flags._neighborDebt || 350;
-      s.resources.cash += total;
+      s.resources.cash = (s.resources.cash || 0) + total; // [全系统自洽修复] 域B A类:cash NaN守卫
       s.needs.happiness = Math.min(100, s.needs.happiness + 8);
       StateManager.addMessage(
         "💸 邻居还了¥" + total + "！他找了份新工作，说谢谢你当时的信任。",
@@ -171952,7 +171952,7 @@ const MORAL_CONSEQUENCES = {
       return "你抽屉里那张借条——对方主动联系，把钱还给了你，还多塞了一盒水果。「写借条这事让我重新审视了自己。」他说。";
     },
     apply: function (s) {
-      s.resources.cash += 500;
+      s.resources.cash = (s.resources.cash || 0) + 500; // [全系统自洽修复] 域B A类:cash NaN守卫
       s.player.fame = Math.min(100, (s.player.fame || 0) + 3);
       s.needs.happiness = Math.min(100, s.needs.happiness + 5);
       StateManager.addMessage("💰 朋友还了¥500，还多了一份信任。", "success");
@@ -172040,7 +172040,7 @@ const MORAL_CONSEQUENCES = {
       return "你发的那条朋友圈被转发了上百次，有人私信感谢你说她母亲差点被骗，多亏看到提醒才没转账。";
     },
     apply: function (s) {
-      s.resources.cash += 100;
+      s.resources.cash = (s.resources.cash || 0) + 100; // [全系统自洽修复] 域B A类:cash NaN守卫
       s.needs.happiness = Math.min(100, s.needs.happiness + 12);
       s.player.fame = Math.min(100, (s.player.fame || 0) + 6);
       s.flags.moral = s.flags.moral || {};
@@ -172457,12 +172457,12 @@ const SIDE_HUSTLE_EVENTS = [
         hint: "高风险高回报，需要额外资金",
         cost: 200,
         apply: function (st) {
-          st.resources.cash -= 200;
+          st.resources.cash = Math.max(0, (st.resources.cash || 0) - 200); // [全系统自洽修复] 域B A类:cash NaN守卫
           if (Random.chance(0.4)) {
             var profit = Random.int(300, 800);
             // [联动flag] 触发"被人请教投资"后续事件
             st.flags.investBottomed = true;
-            st.resources.cash += profit;
+            st.resources.cash = (st.resources.cash || 0) + profit; // [全系统自洽修复] 域B A类:cash NaN守卫
             StateManager.addMessage(
               "🔥 你抄底成功了！赚了¥" + profit + "。胆子大的人运气好。",
               "success",
@@ -184656,6 +184656,18 @@ const DAILY_PIPELINE = [
         0,
         Math.min(100, state.needs.happiness - 3 + (house.happinessBonus || 0)),
       );
+      // [全系统自洽修复] 域A 修复: 住所tier5/6特效接入（healthRecovery/skillStudyBonus/npcVisitBonus/fameGain 原定义但从未消费）
+      if (house.effects) {
+        if (house.effects.healthRecovery) {
+          state.player.health = Math.min(100, (state.player.health || 0) + house.effects.healthRecovery);
+        }
+        if (house.effects.fameGain) {
+          state.player.fame = Math.min(100, (state.player.fame || 0) + house.effects.fameGain);
+        }
+        // skillStudyBonus/npcVisitBonus 存入状态供技能训练/NPC互动读取
+        state._housingSkillStudyBonus = house.effects.skillStudyBonus || 0;
+        state._housingNpcVisitBonus = house.effects.npcVisitBonus || 0;
+      }
       // 王大婶好感30解锁每日带饭（饥饱+15）
       if (state.flags.auntWangMeal) {
         state.needs.hunger = Math.min(100, state.needs.hunger + 15);
@@ -194395,6 +194407,10 @@ function sellInvStock(symbol, shares) {
     }
     // [全系统自洽修复] 域E 联动增强1: 投资盈利→小幅心情+1（财务安全感）
     if (state.needs) state.needs.happiness = Math.min(100, (state.needs.happiness || 0) + 1);
+    // [全系统自洽修复] 域E 联动增强4: E→C 盈利交易→销售经验+5
+    if (state.skills && state.skills.sales && typeof state.skills.sales.xp === "number") {
+      state.skills.sales.xp += 5;
+    }
   } else {
     inv._consecutiveWins = 0;
     // [全系统自洽修复] 域E 联动增强2: 投资亏损叙事（E→B）— 亏损情感回响
@@ -194624,7 +194640,7 @@ function buyCar(carId) {
     (state.player.maxActionPoints || 100) + car.travelBonus;
   state.player.actionPoints = Math.min(
     state.player.maxActionPoints,
-    state.player.actionPoints + car.travelBonus,
+    (state.player.actionPoints || 0) + car.travelBonus, // [全系统自洽修复] 域E A类#1: actionPoints可能undefined→NaN传播
   );
   StateManager.addMessage(
     "购入" + car.name + " 行动力上限+" + car.travelBonus,
@@ -195387,7 +195403,7 @@ function calculateDailyPL(state) {
     var h = holdings[i];
     var m = inv.stockMarket[h.symbol];
     if (!m || !m.history || m.history.length < 2) continue;
-    var prevPrice = m.history[m.history.length - 2].price;
+    var prevPrice = m.history[m.history.length - 2] && isFinite(m.history[m.history.length - 2].price) ? m.history[m.history.length - 2].price : m.price; // [全系统自洽修复] 域E A类#3: prevPrice可能undefined→NaN传播
     var change = (m.price - prevPrice) * h.shares;
     var group = getInvestmentAssetGroup(h.symbol);
     if (group === "stocks") dailyPL.stocks += change;
@@ -253184,6 +253200,17 @@ function getAvailableActions(state) {
               addSkillXp("cooking", cert.effects.foodHandlingXp); // 食安→烹饪
             if (cert.effects.psychologyXp)
               addSkillXp("social", cert.effects.psychologyXp); // 心理→社交
+            // [全系统自洽修复] 域A 修复: 证书被动特效接入（injuryReduction/illnessRiskReduction/fatigueReduction/healthBonus/mentalBonus 原定义但从未应用）
+            if (cert.effects.injuryReduction)
+              state._injuryReduction = (state._injuryReduction || 0) + cert.effects.injuryReduction;
+            if (cert.effects.illnessRiskReduction)
+              state._illnessRiskReduction = (state._illnessRiskReduction || 0) + cert.effects.illnessRiskReduction;
+            if (cert.effects.fatigueReduction)
+              state._fatigueReduction = (state._fatigueReduction || 0) + cert.effects.fatigueReduction;
+            if (cert.effects.healthBonus)
+              state.player.health = Math.min(100, (state.player.health || 0) + cert.effects.healthBonus);
+            if (cert.effects.mentalBonus)
+              state.player.mental = Math.min(100, (state.player.mental || 0) + cert.effects.mentalBonus);
             StateManager.addMessage(
               `📜 恭喜！成功考取${cert.name}！`,
               "success",
@@ -253840,6 +253867,11 @@ function doStreetJob(job) {
       fatigueReduction = getSkillFatigueReduction(job.id, state);
     }
     var fatigueAmount = job.effects.fatigue || 0;
+    // [全系统自洽修复] 域A 修复: 证书fatigueReduction累加（rehab_therapist等降低疲劳）
+    var certFatigueReduction = state._fatigueReduction || 0;
+    if (certFatigueReduction > 0) {
+      fatigueAmount = Math.max(0, fatigueAmount - certFatigueReduction);
+    }
     if (fatigueReduction > 0 && fatigueAmount > 0) {
       fatigueAmount = Math.max(0, fatigueAmount - fatigueReduction);
       if (Random.chance(0.3)) {
@@ -254115,10 +254147,11 @@ function doStreetJob(job) {
       typeof getEmotionWorkModifier === "function"
         ? getEmotionWorkModifier(state).injury || 1
         : 1;
-    const certReduction =
-      state.certificates && state.certificates.includes("construction_safety")
-        ? 0.5
-        : 1.0;
+    // [全系统自洽修复] 域A 修复: 证书injuryReduction累加（construction_safety 0.5 + 其他证书累加）
+    var certInjuryReduction = state._injuryReduction || 0;
+    if (state.certificates && state.certificates.includes("construction_safety"))
+      certInjuryReduction += 0.5;
+    const certReduction = Math.max(0, 1 - certInjuryReduction);
     if (
       job.risk.injury &&
       Random.chance(Math.min(1, job.risk.injury * riskMod * certReduction))
@@ -254131,9 +254164,12 @@ function doStreetJob(job) {
         "danger",
       );
     }
+    // [全系统自洽修复] 域A 修复: 证书illnessRiskReduction累加（nursing_cert/health_manager等）
+    var certIllnessReduction = state._illnessRiskReduction || 0;
+    var illnessChance = Math.max(0, (job.risk.illness || 0) * riskMod * (1 - certIllnessReduction));
     if (
       job.risk.illness &&
-      Random.chance(Math.min(1, (job.risk.illness || 0) * riskMod))
+      Random.chance(Math.min(1, illnessChance))
     ) {
       state.status.health = Math.max(0, state.status.health - 10);
       // v3.1：工作环境致病走illness.js疾病系统（不再直接设sick=true）

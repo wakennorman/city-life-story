@@ -32,8 +32,8 @@
           apply: (st) => {
             st.flags._insiderRumorSeen = true;
             st.needs.fatigue = Math.min(100, st.needs.fatigue + 5);
-            if (st.resources.cash >= 100) {
-              st.resources.cash -= 100;
+            if ((st.resources.cash || 0) >= 100) {
+              st.resources.cash = Math.max(0, (st.resources.cash || 0) - 100); // [全系统自洽修复] 域B A类:cash NaN守卫
               // 调度后续：验证结果
               if (typeof scheduleChainEvent === "function") {
                 scheduleChainEvent(st, "insider_verify", 2, "corporate");
@@ -115,11 +115,11 @@
           hint: "高风险高回报",
           cost: 3000,
           apply: (st) => {
-            if (st.resources.cash < 3000) {
+            if ((st.resources.cash || 0) < 3000) {
               StateManager.addMessage("💰 钱不够！", "warning");
               return;
             }
-            st.resources.cash -= 3000;
+            st.resources.cash = Math.max(0, (st.resources.cash || 0) - 3000); // [全系统自洽修复] 域B A类:cash NaN守卫
             const success = Random.chance(0.7);
             if (success) {
               const profit = Random.int(4000, 5999);
@@ -163,11 +163,11 @@
           hint: "留条后路",
           cost: 1000,
           apply: (st) => {
-            if (st.resources.cash < 1000) {
+            if ((st.resources.cash || 0) < 1000) {
               StateManager.addMessage("💵 钱不够！", "warning");
               return;
             }
-            st.resources.cash -= 1000;
+            st.resources.cash = Math.max(0, (st.resources.cash || 0) - 1000); // [全系统自洽修复] 域B A类:cash NaN守卫
             const success = Random.chance(0.7);
             if (success) {
               const profit = Random.int(1300, 1899);
@@ -1079,8 +1079,8 @@
           hint: "FOMO了",
           cost: 5000,
           apply: function (st) {
-            if (st.resources.cash >= 5000) {
-              st.resources.cash -= scaleAmount(5000, st.resources && st.resources.totalEarned);
+            if ((st.resources.cash || 0) >= 5000) {
+              st.resources.cash = Math.max(0, (st.resources.cash || 0) - scaleAmount(5000, st.resources && st.resources.totalEarned)); // [全系统自洽修复] 域B A类:cash NaN守卫
               if (Random.chance(0.3)) {
                 st.resources.cash = (st.resources.cash || 0) + Random.int(8000, 22999);
                 st.needs.happiness = Math.min(100, st.needs.happiness + 20);
@@ -1146,8 +1146,8 @@
           hint: "员工福利",
           cost: 4000,
           apply: function (st) {
-            if (st.resources.cash >= 4000) {
-              st.resources.cash -= 4000;
+            if ((st.resources.cash || 0) >= 4000) {
+              st.resources.cash = Math.max(0, (st.resources.cash || 0) - 4000); // [全系统自洽修复] 域B A类:cash NaN守卫
               var inv = st.investment || {};
               inv.stockHoldings = inv.stockHoldings || [];
               inv.stockHoldings.push({
@@ -1173,8 +1173,8 @@
           hint: "试一试",
           cost: 800,
           apply: function (st) {
-            if (st.resources.cash >= 800) {
-              st.resources.cash -= 800;
+            if ((st.resources.cash || 0) >= 800) {
+              st.resources.cash = Math.max(0, (st.resources.cash || 0) - 800); // [全系统自洽修复] 域B A类:cash NaN守卫
               var inv = st.investment || {};
               inv.stockHoldings = inv.stockHoldings || [];
               inv.stockHoldings.push({
@@ -1246,8 +1246,8 @@
           apply: function (st) {
             var inv = st.investment || {};
             var cost = Random.int(1000, 3999);
-            if (st.resources.cash >= cost) {
-              st.resources.cash -= cost;
+            if ((st.resources.cash || 0) >= cost) {
+              st.resources.cash = Math.max(0, (st.resources.cash || 0) - cost); // [全系统自洽修复] 域B A类:cash NaN守卫
               inv.stockHoldings = inv.stockHoldings || [];
               var smic = inv.stockHoldings.find(function (x) {
                 return x.symbol === "SMIC";
@@ -1324,8 +1324,8 @@
           apply: function (st) {
             var inv = st.investment || {};
             var cost = 2000;
-            if (st.resources.cash >= 2000) {
-              st.resources.cash -= 2000;
+            if ((st.resources.cash || 0) >= 2000) {
+              st.resources.cash = Math.max(0, (st.resources.cash || 0) - 2000); // [全系统自洽修复] 域B A类:cash NaN守卫
               inv.stockHoldings = inv.stockHoldings || [];
               var h = inv.stockHoldings.find(function (x) {
                 return x.symbol === "TSLA";
@@ -1381,8 +1381,8 @@
           apply: function (st) {
             var inv = st.investment || {};
             var cost = 3000;
-            if (st.resources.cash >= cost) {
-              st.resources.cash -= cost;
+            if ((st.resources.cash || 0) >= cost) {
+              st.resources.cash = Math.max(0, (st.resources.cash || 0) - cost); // [全系统自洽修复] 域B A类:cash NaN守卫
               inv.btcHoldings = (inv.btcHoldings || 0) + 0.003;
               inv.btcAvgCost =
                 inv.btcHoldings > 0
@@ -1631,7 +1631,7 @@
         return (
           hasObserved &&
           st.player.day >= triggerDay &&
-          st.resources.cash >= 300000 && // [全系统自洽修复] 域H A类: 阈值从100000→300000(实际成本)
+          (st.resources.cash || 0) >= 300000 && // [全系统自洽修复] 域H A类: 阈值从100000→300000(实际成本); [全系统自洽修复] 域B A类:cash NaN守卫
           !st.flags._founderBuybackSeen
         );
       },
@@ -1643,7 +1643,7 @@
           apply: function (st) {
             st.flags._founderBuybackSeen = true;
             st.flags._founderReclaimed = true;
-            st.resources.cash -= scaleAmount(300000, st.resources && st.resources.totalEarned);
+            st.resources.cash = Math.max(0, (st.resources.cash || 0) - scaleAmount(300000, st.resources && st.resources.totalEarned)); // [全系统自洽修复] 域B A类:cash NaN守卫
             if (st.player && st.player.corporate) {
               st.player.corporate.dignity = Math.min(
                 100,
@@ -2770,8 +2770,8 @@
           hint: "¥50000保证金，合法但职业风险",
           apply: function (st) {
             st.flags._shortSelfSeen = true;
-            if (st.resources.cash >= 50000) {
-              st.resources.cash -= scaleAmount(50000, st.resources && st.resources.totalEarned);
+            if ((st.resources.cash || 0) >= 50000) {
+              st.resources.cash = Math.max(0, (st.resources.cash || 0) - scaleAmount(50000, st.resources && st.resources.totalEarned)); // [全系统自洽修复] 域B A类:cash NaN守卫
               st.flags._shortedOwnCompany = true;
               st.flags._shortDay = st.player.day;
               if (typeof scheduleChainEvent === "function") {

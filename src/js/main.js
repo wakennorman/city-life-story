@@ -3834,6 +3834,17 @@ function getAvailableActions(state) {
               addSkillXp("cooking", cert.effects.foodHandlingXp); // 食安→烹饪
             if (cert.effects.psychologyXp)
               addSkillXp("social", cert.effects.psychologyXp); // 心理→社交
+            // [全系统自洽修复] 域A 修复: 证书被动特效接入（injuryReduction/illnessRiskReduction/fatigueReduction/healthBonus/mentalBonus 原定义但从未应用）
+            if (cert.effects.injuryReduction)
+              state._injuryReduction = (state._injuryReduction || 0) + cert.effects.injuryReduction;
+            if (cert.effects.illnessRiskReduction)
+              state._illnessRiskReduction = (state._illnessRiskReduction || 0) + cert.effects.illnessRiskReduction;
+            if (cert.effects.fatigueReduction)
+              state._fatigueReduction = (state._fatigueReduction || 0) + cert.effects.fatigueReduction;
+            if (cert.effects.healthBonus)
+              state.player.health = Math.min(100, (state.player.health || 0) + cert.effects.healthBonus);
+            if (cert.effects.mentalBonus)
+              state.player.mental = Math.min(100, (state.player.mental || 0) + cert.effects.mentalBonus);
             StateManager.addMessage(
               `📜 恭喜！成功考取${cert.name}！`,
               "success",
@@ -4490,6 +4501,11 @@ function doStreetJob(job) {
       fatigueReduction = getSkillFatigueReduction(job.id, state);
     }
     var fatigueAmount = job.effects.fatigue || 0;
+    // [全系统自洽修复] 域A 修复: 证书fatigueReduction累加（rehab_therapist等降低疲劳）
+    var certFatigueReduction = state._fatigueReduction || 0;
+    if (certFatigueReduction > 0) {
+      fatigueAmount = Math.max(0, fatigueAmount - certFatigueReduction);
+    }
     if (fatigueReduction > 0 && fatigueAmount > 0) {
       fatigueAmount = Math.max(0, fatigueAmount - fatigueReduction);
       if (Random.chance(0.3)) {
@@ -4765,10 +4781,11 @@ function doStreetJob(job) {
       typeof getEmotionWorkModifier === "function"
         ? getEmotionWorkModifier(state).injury || 1
         : 1;
-    const certReduction =
-      state.certificates && state.certificates.includes("construction_safety")
-        ? 0.5
-        : 1.0;
+    // [全系统自洽修复] 域A 修复: 证书injuryReduction累加（construction_safety 0.5 + 其他证书累加）
+    var certInjuryReduction = state._injuryReduction || 0;
+    if (state.certificates && state.certificates.includes("construction_safety"))
+      certInjuryReduction += 0.5;
+    const certReduction = Math.max(0, 1 - certInjuryReduction);
     if (
       job.risk.injury &&
       Random.chance(Math.min(1, job.risk.injury * riskMod * certReduction))
@@ -4781,9 +4798,12 @@ function doStreetJob(job) {
         "danger",
       );
     }
+    // [全系统自洽修复] 域A 修复: 证书illnessRiskReduction累加（nursing_cert/health_manager等）
+    var certIllnessReduction = state._illnessRiskReduction || 0;
+    var illnessChance = Math.max(0, (job.risk.illness || 0) * riskMod * (1 - certIllnessReduction));
     if (
       job.risk.illness &&
-      Random.chance(Math.min(1, (job.risk.illness || 0) * riskMod))
+      Random.chance(Math.min(1, illnessChance))
     ) {
       state.status.health = Math.max(0, state.status.health - 10);
       // v3.1：工作环境致病走illness.js疾病系统（不再直接设sick=true）

@@ -255,12 +255,12 @@ const SIDE_HUSTLE_EVENTS = [
         hint: "高风险高回报，需要额外资金",
         cost: 200,
         apply: function (st) {
-          st.resources.cash -= 200;
+          st.resources.cash = Math.max(0, (st.resources.cash || 0) - 200); // [全系统自洽修复] 域B A类:cash NaN守卫
           if (Random.chance(0.4)) {
             var profit = Random.int(300, 800);
             // [联动flag] 触发"被人请教投资"后续事件
             st.flags.investBottomed = true;
-            st.resources.cash += profit;
+            st.resources.cash = (st.resources.cash || 0) + profit; // [全系统自洽修复] 域B A类:cash NaN守卫
             StateManager.addMessage(
               "🔥 你抄底成功了！赚了¥" + profit + "。胆子大的人运气好。",
               "success",
