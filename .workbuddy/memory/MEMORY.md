@@ -64,6 +64,13 @@
 - 每次代码改动更新 `src/DEVELOPMENT.md` 顶部版本行。
 - MC 验证：`node --max-old-space-size=8192 tests/monte_carlo.cjs --trials 6 --days 400`（默认 10×1000d 易 OOM；6×400d 足以验 0 异常）。
 
+## 域F UI/UX 关键事实（2026-07-24 R186）
+
+- 证书真实字段 `state.certificates`（数组，main.js push cert.id）；`state.certs` 死字段已修（daily_quest×2/tutorial 三处）。UI 读证书一律用 certificates。
+- `state.flags._questStreak`（每日目标连击，daily_quest.js:676 维护）为真实字段，R186 起被 ui_r186_quest_ritual 消费。
+- `state.career` 为动态字段（从未求职时 undefined），任何 `state.career.currentJob` 解引用须守卫。
+- 轮次号协调：并行窗口可能占用轮次号（R187 域C 已被 397310d3 占用但未回填 loop-state），开轮前先 git log 核对 linkage_r{N} 文件避免冲突；发现者代为回填 recency。
+
 ## 域E 经济/投资 真实架构与关键发现（2026-07-24 R185，重要）
 
 - 域E 核心小文件（economy_v3.1.js/finance.js/news_investment_bridge.js）已被历轮高度加固；A类缺陷主要藏在 phase2 大文件（investment.js 3941行 / investment_analysis.js）的**旧存档迁移路径**。
