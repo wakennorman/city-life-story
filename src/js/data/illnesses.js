@@ -199,7 +199,8 @@ const ILLNESSES = {
     icon: "☠️",
     severity: 6,
     naturalCureDays: [60, 120],
-    triggerHabit: { gastritisCount: 3, age: 45 },
+    // [全系统自洽修复] 域A A类#6: gastritisCount→gastric_ulcerCount（匹配 evolvesFrom: gastric_ulcer，原字段致演化链断裂）
+    triggerHabit: { gastric_ulcerCount: 1, age: 45 },
     triggerChance: 0.35,
     symptom: {
       health: -5,
@@ -484,7 +485,7 @@ const ILLNESSES = {
     name: "肝硬化",
     icon: "🫁",
     severity: 5,
-    naturalCureDays: [30, 60],
+    // [全系统自洽修复] 域A A类#1: 删除 naturalCureDays（isChronic=true 的疾病不会自然痊愈，原字段矛盾且为死数据）
     isChronic: true,
     triggerHabit: { fattyLiverCount: 1, age: 35 },
     triggerChance: 0.3,
@@ -493,14 +494,14 @@ const ILLNESSES = {
     desc: "脂肪肝长期未控制发展为肝硬化。肝功能持续下降，需要按月治疗（¥300/月）。",
     isEvolution: true,
     evolvesFrom: ["fatty_liver"],
-    evolvesTo: ["liver_cancer"],
+    // [全系统自洽修复] 域A A类#1: 删除 evolvesTo（慢性病不会自然演化，原字段为死数据）
   },
   kidney_failure: {
     id: "kidney_failure",
     name: "肾衰竭",
     icon: "🫘",
     severity: 6,
-    naturalCureDays: [60, 120],
+    // [全系统自洽修复] 域A A类#2: 删除 naturalCureDays（isChronic=true 矛盾字段）
     isChronic: true,
     triggerHabit: { kidneyDiseaseCount: 1, age: 50 }, // [全系统自洽修复] 域A A类#4: nephropathyCount→kidneyDiseaseCount
     triggerChance: 0.2,
@@ -515,7 +516,7 @@ const ILLNESSES = {
     name: "心脏病发作",
     icon: "💔",
     severity: 6,
-    naturalCureDays: [60, 90],
+    // [全系统自洽修复] 域A A类#3: 删除 naturalCureDays（非慢性病却含自然痊愈天数，与 treatCostMonthly 并存矛盾）
     triggerHabit: { heartDiseaseCount: 1, age: 45 }, // [全系统自洽修复] 域A A类#5: coronaryHeartDiseaseCount→heartDiseaseCount
     triggerChance: 0.15,
     symptom: { health: -5, fatigue: 8, physiqueDebuff: 10, randomChestPain: 0.05 },
@@ -532,7 +533,8 @@ const ILLNESSES = {
     severity: 8,
     naturalCureDays: [60, 120],
     // [全系统自洽修复] 域A A类#4: 移除 hepatitisB:1（该计数器从未递增，原条件永假致肝癌永远无法触发）
-    triggerHabit: { fattyLiverCount: 1, age: 50 },
+    // [全系统自洽修复] 域A A类#5: fattyLiverCount→liverCirrhosisCount（匹配 evolvesFrom: liver_cirrhosis，原字段致演化链断裂）
+    triggerHabit: { liverCirrhosisCount: 1, age: 50 },
     triggerChance: 0.2,
     symptom: { health: -6, hunger: -8, physiqueDebuff: 10, liverFailure: true },
     treatCost: { hospital: 50000 },

@@ -134,6 +134,8 @@ function rollDailyIllness(state) {
     if (typeof getDifficultyMultiplier === "function") {
       ch *= getDifficultyMultiplier(state, "illness");
     }
+    // [全系统自洽修复] 域A A类#7: clamp ch 上限 0.95（地狱×冬季 seasonInfluence 可致 ch>1.0→Random.chance 必真，疾病100%触发=平衡崩溃）
+    if (ch > 0.95) ch = 0.95;
     if (!Random.chance(ch)) continue;
 
     // 患病！
@@ -200,6 +202,8 @@ function _addIllness(state, illnessId) {
     kidney_disease: "kidneyDiseaseCount",
     heart_disease: "heartDiseaseCount",
     liver_cirrhosis: "liverCirrhosisCount",
+    // [全系统自洽修复] 域A A类#6: 补全 gastric_ulcer 计数器（原缺失致胃癌演化链断裂）
+    gastric_ulcer: "gastric_ulcerCount",
   };
   if (evolutionCountMap[illnessId]) {
     var countKey = evolutionCountMap[illnessId];
@@ -241,6 +245,9 @@ function recordIllnessCure(state, illnessId) {
     h.heartDiseaseCount = (h.heartDiseaseCount || 0) + 1;
   else if (illnessId === "liver_cirrhosis")
     h.liverCirrhosisCount = (h.liverCirrhosisCount || 0) + 1;
+  // [全系统自洽修复] 域A A类#6: 补全 gastric_ulcer 痊愈计数器
+  else if (illnessId === "gastric_ulcer")
+    h.gastric_ulcerCount = (h.gastric_ulcerCount || 0) + 1;
 }
 
 // ====== 每日疾病结算 ======
