@@ -581,6 +581,9 @@ function checkStopLoss(state) {
   // [全系统自洽修复] 域E A类#11: state.player/stockMarket 守卫
   if (!state.player) return;
   if (!inv.stockMarket) return;
+  // [全系统自洽修复] 域E 修复:analyzePortfolio/setStopLoss 均守卫 stockHoldings 而 checkStopLoss 缺——
+  //   旧存档缺该数组且有止损单时，:595 的 .find 抛 TypeError，止损检查整体崩溃。
+  if (!Array.isArray(inv.stockHoldings)) return;
 
   const today = state.player.day;
   const triggeredOrders = [];
@@ -596,6 +599,9 @@ function checkStopLoss(state) {
     if (!holding) continue;
 
     const buyPrice = holding.avgPrice;
+    // [全系统自洽修复] 域E 修复:buyPrice 为 0/undefined(旧存档) 时下方 (x/buyPrice) 与 (x/highSinceBuy)
+    //   会得 Infinity/NaN，trailing_stop 分支可能误触发止损卖出。
+    if (typeof buyPrice !== "number" || !isFinite(buyPrice) || buyPrice <= 0) continue;
     let shouldTrigger = false;
     let triggerPrice = null;
 

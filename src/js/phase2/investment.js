@@ -1135,8 +1135,20 @@ function initInvestment(state) {
       };
     }
   }
-  if (inv.btcPrice <= 0) inv.btcPrice = 200000;
+  // [全系统自洽修复] 域E 修复:btcPrice undefined 判定失效——`undefined <= 0` 恒为 false，
+  //   旧存档缺 btcPrice 时永不回填 → sellBtc 用 undefined 算 revenue → 现金被污染为 NaN（经济系统静默报废）。
+  //   改为显式类型判定，任何非有限正数都回填 200000。
+  if (typeof inv.btcPrice !== "number" || !isFinite(inv.btcPrice) || inv.btcPrice <= 0)
+    inv.btcPrice = 200000;
   if (!inv.btcHistory) inv.btcHistory = [];
+  // [全系统自洽修复] 域E 修复:initInvestment 未回填 stockHoldings/properties/cars，
+  //   而写入路径(buyInvStock/buyProperty/buyCar)裸访问它们 → 旧存档迁移后首次买入即 TypeError。
+  //   与本文件读取路径(tick/snapshot/render 均 `|| []`)保持一致，统一在初始化处回填。
+  if (!Array.isArray(inv.stockHoldings)) inv.stockHoldings = [];
+  if (!Array.isArray(inv.properties)) inv.properties = [];
+  if (!Array.isArray(inv.cars)) inv.cars = [];
+  if (typeof inv.btcHoldings !== "number" || !isFinite(inv.btcHoldings))
+    inv.btcHoldings = 0;
   // 同样为 BTC 生成回溯历史
   if (inv.btcHistory.length === 0 && inv.btcPrice > 0) {
     var btcSeed = inv.btcPrice * Random.float(0.85, 1.15);
@@ -1590,6 +1602,8 @@ function buyInvStock(symbol, shares) {
     return;
   }
   state.resources.cash = Math.max(0, (state.resources.cash || 0) - cost);
+  // [全系统自洽修复] 域E 修复:sellInvStock 有 stockHoldings 守卫而 buyInvStock 缺——旧存档缺该数组时买股即 TypeError。
+  if (!Array.isArray(inv.stockHoldings)) inv.stockHoldings = [];
   var h = inv.stockHoldings.find(function (s) {
     return s.symbol === symbol;
   });
@@ -1729,6 +1743,10 @@ function sellInvStock(symbol, shares) {
       }
     }
   }
+  // [全系统自洽修复] 域E 修复:_totalInvestmentProfit 此前只被 R167/R96 联动事件读取、全代码从未写入
+  //   → 那些事件的盈亏门槛(profit≤-5000 / ≥20000 / ≥10000)永不满足=死事件。
+  //   此处累计已实现损益(pl 已含连续盈利衰减)，复活这些跨域叙事。
+  inv._totalInvestmentProfit = (inv._totalInvestmentProfit || 0) + pl;
   state.resources.cash = (state.resources.cash || 0) + revenue;
   h.shares -= shares;
   if (h.shares <= 0)
@@ -1785,15 +1803,29 @@ function buyBtc(amount) {
 function sellBtc(amount) {
   var state = StateManager.getState();
   var inv = state.investment;
-  if (inv.btcHoldings < amount) {
+  // [全系统自洽修复] 域E 修复:buyBtc 有 isNaN(cost) 守卫而 sellBtc 缺——
+  //   btcPrice/btcHoldings 为 undefined(旧存档) 时 `undefined < amount` 为 false 不拦截，
+  //   继而 revenue=NaN 加进现金 → state.resources.cash 变 NaN，整套经济结算静默报废。
+  if (!inv) return;
+  if (typeof inv.btcPrice !== "number" || !isFinite(inv.btcPrice) || inv.btcPrice <= 0) {
+    StateManager.addMessage("⚠️ 比特币行情异常，卖出取消", "danger");
+    return;
+  }
+  if (typeof inv.btcHoldings !== "number" || !isFinite(inv.btcHoldings) || inv.btcHoldings < amount) {
     StateManager.addMessage("持仓不足", "danger");
     return;
   }
   var curPrice = inv.btcPrice;
   var revenue = Math.round(curPrice * amount * 100) / 100;
+  if (isNaN(revenue) || !isFinite(revenue)) {
+    StateManager.addMessage("⚠️ 价格异常，卖出取消", "danger");
+    return;
+  }
   var avgCost = inv.btcAvgCost || 0;
   var pl = avgCost > 0 ? Math.round((curPrice - avgCost) * amount) : 0;
   var plStr = pl !== 0 ? (pl > 0 ? " 📈+" : " 📉") + pl : "";
+  // [全系统自洽修复] 域E 修复:同 sellInvStock，累计 BTC 已实现损益到 _totalInvestmentProfit，复活死事件。
+  if (isFinite(pl)) inv._totalInvestmentProfit = (inv._totalInvestmentProfit || 0) + pl;
   // 连续盈利计数（供 getConsecutiveWinDecay 使用）
   if (pl > 0) {
     inv._consecutiveWins = (inv._consecutiveWins || 0) + 1;
@@ -1834,6 +1866,8 @@ function buyProperty(propId) {
     return;
   }
   state.resources.cash = Math.max(0, (state.resources.cash || 0) - payPrice);
+  // [全系统自洽修复] 域E 修复:写入路径缺 properties 守卫（读取路径均 `|| []`）——旧存档买房即 TypeError。
+  if (!Array.isArray(inv.properties)) inv.properties = [];
   inv.properties.push({
     id: prop.id,
     name: prop.name,
@@ -1860,6 +1894,8 @@ function buyProperty(propId) {
 function sellProperty(propId) {
   var state = StateManager.getState();
   var inv = state.investment;
+  // [全系统自洽修复] 域E 修复:旧存档缺 properties 时读 .length 抛 TypeError。
+  if (!inv || !Array.isArray(inv.properties)) return;
   var idx = -1;
   for (var i = 0; i < inv.properties.length; i++) {
     if (inv.properties[i].id === propId) {
@@ -1875,7 +1911,8 @@ function sellProperty(propId) {
   if (wasSelfLived) {
     inv.selfLivePropertyId = null;
     // 降级住所到 tier 1（合租床位），日租恢复
-    if (typeof HOUSING_TIERS !== "undefined") {
+    // [全系统自洽修复] 域E 修复:裸写 state.housing/state.inventory，缺失时 TypeError。
+    if (typeof HOUSING_TIERS !== "undefined" && state.housing && state.inventory) {
       state.housing.tier = 1;
       state.inventory.capacity =
         (HOUSING_TIERS[1] ? HOUSING_TIERS[1].capacity : 50) +
@@ -1913,6 +1950,8 @@ function buyCar(carId) {
     return;
   }
   state.resources.cash = Math.max(0, (state.resources.cash || 0) - (car.price || 0));
+  // [全系统自洽修复] 域E 修复:写入路径缺 cars 守卫（tick 读取用 `|| []`）——旧存档买车即 TypeError。
+  if (!Array.isArray(inv.cars)) inv.cars = [];
   inv.cars.push({
     id: car.id,
     name: car.name,
