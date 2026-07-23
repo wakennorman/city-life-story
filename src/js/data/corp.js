@@ -106,7 +106,7 @@ const CORP_RANKS = {
   },
 };
 
-const COMPANIES = [
+var COMPANIES = [
   {
     id: "star_tech",
     name: "星辰科技",
