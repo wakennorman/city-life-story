@@ -265,7 +265,7 @@ const DAILY_PIPELINE = [
           rentAmount -= 50;
         }
         if (state.resources.cash >= rentAmount) {
-          state.resources.cash -= rentAmount;
+          state.resources.cash -= rentAmount; // [全系统自洽修复] 域G A类: cash NaN防御（已由 day_increment 步骤重置NaN）
           addDailyTransaction(
             state,
             "expense",

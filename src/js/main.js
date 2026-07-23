@@ -2516,7 +2516,7 @@ function getAvailableActions(state) {
         reqFail: !canAfford ? "需 ¥" + house.cost : null,
         handler: (function (tier, h) {
           return function () {
-            state.resources.cash -= h.cost;
+            state.resources.cash = (state.resources.cash || 0) - h.cost; // [全系统自洽修复] 域G A类: cash NaN防御
             state.housing.tier = tier;
             state.housing.rentedDay = state.player.day;
             state.inventory.capacity =
@@ -2580,7 +2580,7 @@ function getAvailableActions(state) {
             disabled: !canAfford,
             reqFail: !canAfford ? `需 ¥${opt.cost}` : null,
             handler: () => {
-              state.resources.cash -= opt.cost;
+              state.resources.cash = (state.resources.cash || 0) - opt.cost; // [全系统自洽修复] 域G A类: cash NaN防御
               state.housing.storageRented = true;
               state.housing.storageCapacity = opt.capacity;
               // [全系统自洽修复] 域G A类修复: housing.tier 上限扩容至 6
@@ -2639,7 +2639,7 @@ function getAvailableActions(state) {
           costEstimate: pack.cost,
           disabled: !canAfford,
           handler: () => {
-            state.resources.cash -= pack.cost;
+            state.resources.cash = (state.resources.cash || 0) - pack.cost; // [全系统自洽修复] 域G A类: cash NaN防御
             state.inventory.items.push({ id: pack.id, qty: 1 });
             state.inventory.capacity += pack.capacity;
             StateManager.addMessage(
@@ -3370,7 +3370,7 @@ function getAvailableActions(state) {
       apCost: 10,
       costEstimate: 15,
       effectEstimate: "饥饱+35, 心情+8",
-      disabled: state.resources.cash < 8 ? true : false,
+      disabled: (state.resources.cash || 0) < 8 ? true : false,
       handler: () => {
         const st = StateManager.getState();
         const isNewbie = st.player.day <= 10;
@@ -3402,7 +3402,7 @@ function getAvailableActions(state) {
           cookHint = `（烹饪Lv${cookingLvl}省了¥${saved}）`;
         }
 
-        st.resources.cash -= foodCost;
+        st.resources.cash = (st.resources.cash || 0) - foodCost;
         addDailyTransaction(
           st,
           "expense",
@@ -3429,14 +3429,14 @@ function getAvailableActions(state) {
       icon: "🚿",
       costEstimate: 8,
       effectEstimate: "卫生+40",
-      disabled: state.resources.cash < 8 ? true : false,
+      disabled: (state.resources.cash || 0) < 8 ? true : false,
       handler: () => {
         const st = StateManager.getState();
         if ((st.resources.cash || 0) < 8) {
           StateManager.addMessage("⚠️ 不够钱洗澡。", "danger");
           return;
         }
-        st.resources.cash -= 8;
+        st.resources.cash = (st.resources.cash || 0) - 8;
         st.needs.hygiene = Math.min(100, st.needs.hygiene + 40);
         StateManager.addMessage("🚿 洗了个澡，神清气爽。", "success");
         consumeAP(10);
@@ -3774,7 +3774,7 @@ function getAvailableActions(state) {
         handler: () => {
           if (Random.chance(cert.examPassRate)) {
             state.certificates.push(cert.id);
-            state.resources.cash -= cert.requirements.cash;
+            state.resources.cash = (state.resources.cash || 0) - (cert.requirements.cash || 0); // [全系统自洽修复] 域G A类: cash NaN防御
             if (cert.effects.codingXp)
               addSkillXp("coding", cert.effects.codingXp);
             if (cert.effects.englishXp)
@@ -3816,7 +3816,7 @@ function getAvailableActions(state) {
               "success",
             );
           } else {
-            state.resources.cash -= Math.floor(cert.requirements.cash / 2);
+            state.resources.cash = (state.resources.cash || 0) - Math.floor((cert.requirements.cash || 0) / 2); // [全系统自洽修复] 域G A类: cash NaN防御
             StateManager.addMessage(
               `📜 ${cert.name}考试未通过，报名费损失一半。下次再努力！`,
               "warning",

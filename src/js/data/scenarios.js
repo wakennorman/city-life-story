@@ -150,7 +150,7 @@ const SCENARIOS = [
         apply: function (s) {
           s.player.physique = Math.min(100, s.player.physique + 15);
           s.player.agility = Math.min(100, s.player.agility + 10);
-          s.resources.cash += 500;
+          s.resources.cash = (s.resources.cash || 0) + 500; // [全系统自洽修复] 域G A类: cash NaN防御
         },
       },
     ],
@@ -549,7 +549,7 @@ const SCENARIOS = [
         apply: function (s) {
           s.player.physique = Math.min(100, s.player.physique + 8);
           s.player.mental = Math.min(100, s.player.mental + 8);
-          s.resources.cash += 500;
+          s.resources.cash = (s.resources.cash || 0) + 500; // [全系统自洽修复] 域G A类: cash NaN防御
         },
       },
     ],
@@ -622,7 +622,7 @@ const SCENARIOS = [
         rarity: "common",
         desc: "父亲给的是明账，还有自己藏着的¥8000",
         apply: function (s) {
-          s.resources.cash += 8000;
+          s.resources.cash = (s.resources.cash || 0) + 8000; // [全系统自洽修复] 域G A类: cash NaN防御
         },
       },
       {
@@ -685,7 +685,7 @@ const SCENARIOS = [
         rarity: "rare",
         desc: "父亲悄悄给的备用金，现金再+¥20000",
         apply: function (s) {
-          s.resources.cash += 20000;
+          s.resources.cash = (s.resources.cash || 0) + 20000; // [全系统自洽修复] 域G A类: cash NaN防御
         },
       },
     ],
@@ -774,7 +774,7 @@ const SCENARIOS = [
         rarity: "common",
         desc: "多年工作攒下的私人小金库，现金+¥8000",
         apply: function (s) {
-          s.resources.cash += 8000;
+          s.resources.cash = (s.resources.cash || 0) + 8000; // [全系统自洽修复] 域G A类: cash NaN防御
         },
       },
       {

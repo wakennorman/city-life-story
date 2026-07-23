@@ -186,12 +186,9 @@ const LIFE_NODES = {
         effect: function (st) {
           st.flags._retirementType = "wealthy";
           st.flags._retired = true;
-          if (st.career && st.career.currentJob) {
-            st.career.pensionBase = st.career.currentJob.salary || 5000;
-          } else {
-            st.career = st.career || {};
-            st.career.pensionBase = 5000;
-          }
+          // [全系统自洽修复] 域G A类修复: 行内 effect 使用 st.employment 替代 st.career（R177 修复了 switch-case 兜底但 inline effect 优先级更高）
+          var _empJob = (st.employment && st.employment.currentJob) ? st.employment.currentJob : null;
+          st.flags._pensionBase = _empJob ? (_empJob.salary || 5000) : 5000;
           st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 20);
         },
       },
