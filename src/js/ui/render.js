@@ -1009,12 +1009,23 @@ function renderGrowthTab(state, parent) {
       var favorDone = !!(state.flags && state.flags["_npcFavor_" + npc.id]);
       var bar = Math.min(100, Math.max(0, aff));
       var barColor = aff >= 70 ? "#4caf50" : aff >= 40 ? "#ff9800" : "#2196f3";
+      // [全系统自洽修复] 域A 联动增强#3: A→D NPC礼物偏好提示
+      var _giftHint = "";
+      if (npc.giftPrefers && Array.isArray(npc.giftPrefers) && npc.giftPrefers.length > 0) {
+        var _giftIcons = { fruits: "🍎", daily_use: "🧴", snacks: "🍪", cigarettes: "🚬", beer: "🍺", clothing: "👔", electronics: "📱", vegetables: "🥬", luxury: "💎", instant_noodles: "🍜" };
+        var _prefIcons = [];
+        for (var _gpi = 0; _gpi < Math.min(2, npc.giftPrefers.length); _gpi++) {
+          _prefIcons.push(_giftIcons[npc.giftPrefers[_gpi]] || "🎁");
+        }
+        _giftHint = ' <span style="font-size:9px;color:var(--text-muted);">' + _prefIcons.join("") + "</span>";
+      }
       npcHtml +=
         '<div style="background:var(--bg-input);border-radius:6px;padding:8px;border:1px solid var(--border);">' +
         '<div style="font-size:12px;font-weight:600;color:var(--text-primary);margin-bottom:4px;">' +
         _esc(npc.name) +
         " " +
         affLabel +
+        _giftHint +
         "</div>" +
         '<div style="background:var(--bg-card);border-radius:3px;height:4px;overflow:hidden;margin-bottom:4px;">' +
         '<div style="width:' +

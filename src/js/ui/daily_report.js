@@ -216,6 +216,27 @@ function buildReportHTML(txs, state, reconcileInfo) {
     } catch (e) { /* 静默：生日提醒不影响主流程 */ }
   })();
 
+  // [全系统自洽修复] 域A 联动增强#1: A→G 日报市场事件预警 — 当有活跃市场事件时告知玩家价格波动
+  (function () {
+    try {
+      if (!state.trade || !state.trade.marketEvents) return;
+      var _activeEvts = [];
+      for (var _aei = 0; _aei < state.trade.marketEvents.length; _aei++) {
+        var _ae = state.trade.marketEvents[_aei];
+        if (_ae.remaining > 0) _activeEvts.push(_ae);
+      }
+      if (_activeEvts.length === 0) return;
+      bodyHtml += '<div style="padding:6px 10px;margin:6px 0;background:rgba(232,168,56,0.06);border:1px solid rgba(232,168,56,0.15);border-radius:6px;font-size:11px;">';
+      bodyHtml += '<div style="font-weight:600;margin-bottom:4px;">📊 市场动态</div>';
+      for (var _aei2 = 0; _aei2 < _activeEvts.length; _aei2++) {
+        var _ae2 = _activeEvts[_aei2];
+        var _dir = _ae2.priceMod > 1 ? '📈' : '📉';
+        bodyHtml += '<div style="padding:2px 0;">' + _dir + ' ' + _ae2.desc + '（剩' + _ae2.remaining + '天）</div>';
+      }
+      bodyHtml += '</div>';
+    } catch (e) { /* 静默 */ }
+  })();
+
   // [全系统自洽修复] 域E 联动增强: E→F 日报投资组合概况
   (function () {
     try {
@@ -778,6 +799,32 @@ function generateTomorrowPreviewHTML(state) {
       );
     }
   }
+
+  // [全系统自洽修复] 域A 联动增强#2: A→G 季节性物价提示 — 当季节变化时提示玩家哪些商品有季节性价差
+  (function () {
+    try {
+      if (!state.weather || !state.weather.season || typeof GOODS === "undefined") return;
+      var _season = state.weather.season;
+      var _seasonalGoods = [];
+      for (var _sg = 0; _sg < GOODS.length; _sg++) {
+        var _g = GOODS[_sg];
+        if (_g.seasonal && _g.seasonal[_season] && (_g.seasonal[_season] < 0.9 || _g.seasonal[_season] > 1.1)) {
+          var _dir = _g.seasonal[_season] < 1 ? "📉便宜" : "📈贵";
+          _seasonalGoods.push({ name: _g.name, dir: _dir, mod: _g.seasonal[_season] });
+        }
+      }
+      if (_seasonalGoods.length > 0) {
+        var _tip = '🌾 当前季节商品：';
+        for (var _si = 0; _si < Math.min(3, _seasonalGoods.length); _si++) {
+          _tip += _seasonalGoods[_si].name + _seasonalGoods[_si].dir;
+          if (_si < Math.min(3, _seasonalGoods.length) - 1) _tip += " · ";
+        }
+        parts.push(
+          '<div style="color:var(--text-muted);margin-top:4px;font-size:10px;text-align:center;">' + _tip + '</div>'
+        );
+      }
+    } catch (e) { /* 静默 */ }
+  })();
 
   // 4. 持续天数情感锚点
   var day = state.player.day || 1;
