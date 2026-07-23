@@ -9,6 +9,21 @@
 const RANDOM_EVENTS = [];
 
 /**
+ * 金额缩放函数 — 根据玩家累计总收入缩放事件金额
+ * 防止早期天价事件崩盘、晚期小额事件无感
+ * @param {number} base - 基础金额
+ * @param {number} totalEarned - 玩家累计总收入
+ * @returns {number} 缩放后的金额
+ */
+function scaleAmount(base, totalEarned) {
+  if (typeof base !== "number" || !isFinite(base)) return 0;
+  if (typeof totalEarned !== "number" || !isFinite(totalEarned) || totalEarned <= 0) return base;
+  // 每累计 ¥500,000 总收入，金额增加 10%，上限 3x
+  var factor = 1 + Math.min(2, Math.floor(totalEarned / 500000) * 0.1);
+  return Math.round(base * factor);
+}
+
+/**
  * 注册链式事件（P0-4: 链式事件填充）
  * @param {Object} state - 游戏状态
  * @param {string} eventId - 事件ID
@@ -423,12 +438,12 @@ function queueRandomEvent(state, phase) {
     // 财富检查：太有钱时不出贫穷主题事件
     if (
       e.maxCash &&
-      state.resources.cash + (state.resources.bankBalance || 0) > e.maxCash
+      (state.resources.cash || 0) + (state.resources.bankBalance || 0) > e.maxCash
     )
       return false;
     if (
       e.minCash &&
-      state.resources.cash + (state.resources.bankBalance || 0) < e.minCash
+      (state.resources.cash || 0) + (state.resources.bankBalance || 0) < e.minCash
     )
       return false;
     return true;
@@ -607,7 +622,7 @@ function showEventModal(evt) {
         : "";
       // 检查现金是否够
       let disabled = false;
-      if (ch.cost && StateManager.getState().resources.cash < ch.cost) {
+      if (ch.cost && (StateManager.getState().resources.cash || 0) < ch.cost) {
         disabled = true;
       }
       const costTag = ch.cost
@@ -794,7 +809,7 @@ function showJobOfferModal() {
         cls: "btn-success",
         callback: () => {
           // 简化版：直接加钱 + 重置属性
-          state.resources.cash += offer.salary;
+          state.resources.cash = (state.resources.cash || 0) + offer.salary;
           state.player.corporate.kpi = Math.max(
             0,
             state.player.corporate.kpi * 0.5,
