@@ -241,7 +241,8 @@ const STARTUP_EVENTS_SEED = [
     title: "核心员工收到offer",
     desc: "你的一名核心员工收到了大厂的offer，薪资比你高50%。他来找你谈话。",
     // [Layer3] 叙事说"你的一名核心员工收到了大厂的offer"，需玩家有员工
-    condition: function (st) { return st.company && st.company.employees && st.company.employees.length > 0; },
+    // [全系统自洽修复] 域H 修复:门控键 condition→conditions(triggerStartupEvent 只读复数,原为死门控) + st.company→st.startup.company(公司真实挂在 state.startup.company,原引用不存在字段恒 undefined→零员工也弹"被挖角"叙事矛盾)
+    conditions: function (st) { return st.startup && st.startup.company && st.startup.company.employees && st.startup.company.employees.length > 0; },
     options: [
       {
         text: "加薪留人",
@@ -685,7 +686,8 @@ const STARTUP_EVENTS_MATURE = [
     title: "核心团队成员离职创业",
     desc: "你的CTO/COO决定离职创业，而且方向和你高度重合。他邀请你投资。",
     // [Layer3] 叙事说"你的CTO/COO决定离职创业"，但CTO/COO角色在系统中不存在，此为叙事超前问题，加条件防误触
-    condition: function (st) { return st.company && st.company.employees && st.company.employees.length >= 3; },
+    // [全系统自洽修复] 域H 修复:门控键 condition→conditions(triggerStartupEvent 只读复数,原为死门控) + st.company→st.startup.company(原引用不存在字段→无员工时也误触"核心团队离职"叙事矛盾)
+    conditions: function (st) { return st.startup && st.startup.company && st.startup.company.employees && st.startup.company.employees.length >= 3; },
     options: [
       {
         text: "投资他，做战略投资",
@@ -1106,6 +1108,8 @@ function _applyStartupEffects(company, effects) {
     reputation: { clamp: true, min: 0, max: 100 },
     marketScore: { clamp: true, min: 0, max: 100 },
     technologyScore: { clamp: true, min: 0, max: 100 },
+    // [全系统自洽修复] 域H 修复:revenue 是公司真实字段(startup.js:1530/1754 KPI 评分读取),但原映射表遗漏→mature_second_curve 选项承诺的 +30000 营收被静默丢弃(数据与描述不符)
+    revenue: { clamp: true, min: 0, max: Infinity },
   };
   for (var key in effects) {
     if (!effects.hasOwnProperty(key) || key === "additionalEffect") continue;
