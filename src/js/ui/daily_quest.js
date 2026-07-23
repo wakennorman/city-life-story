@@ -155,7 +155,8 @@
     var assets = cash + bank;
     var debt = (r.villageDebt || r.debt || 0) + (r.bankDebt || 0);
     var rels = state.relationships || {};
-    var certs = state.certs || {};
+    // [全系统自洽修复] 域F 修复:state.certs 为死字段(全库无写入点)，真实字段为 state.certificates 数组(main.js push cert.id)——原 certGte 目标永久无法完成
+    var certs = state.certificates || [];
 
     switch (q.type) {
       case "cashGte":
@@ -175,10 +176,8 @@
       case "corporate":
         return p.phase === "corporate";
       case "certGte": {
-        var n = Object.keys(certs).filter(function (k) {
-          return certs[k];
-        }).length;
-        return n >= q.t;
+        // [全系统自洽修复] 域F 修复:certificates 为数组，直接取 length
+        return certs.length >= q.t;
       }
       case "npcGte": {
         return Object.keys(rels).some(function (k) {
@@ -230,10 +229,9 @@
     var day = p.day;
     var housing = (state.housing && state.housing.tier) || 0;
     var rels = state.relationships || {};
-    var certs = state.certs || {};
-    var certCount = Object.keys(certs).filter(function (k) {
-      return certs[k];
-    }).length;
+    // [全系统自洽修复] 域F 修复:state.certs 死字段→state.certificates 数组；原 certCount 恒0 致「考下第一张证书」目标反复推入且永不完成
+    var certs = state.certificates || [];
+    var certCount = certs.length;
     var metNpcs = Object.keys(rels).filter(function (k) {
       return rels[k] && rels[k].met;
     }).length;

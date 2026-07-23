@@ -168,7 +168,8 @@ function checkVictoryPaths(state) {
     _vcAgeYear >= 35 &&
     (!state.housing || state.housing.tier === 0) &&
     state.resources.cash < 500 &&
-    !state.career.currentJob
+    // [全系统自洽修复] 域F 修复:state.career 为动态字段(从未求职时 undefined)，无守卫解引用 currentJob 抛 TypeError
+    !(state.career && state.career.currentJob)
   ) {
     triggerVictory(
       state,

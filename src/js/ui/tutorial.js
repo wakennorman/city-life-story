@@ -1492,15 +1492,9 @@ var DYNAMIC_HINTS = [
   {
     id: "first_skill_cert",
     trigger: function (st) {
-      var certs = st.certs || {};
-      var hasCert = false;
-      for (var c in certs) {
-        if (certs[c]) {
-          hasCert = true;
-          break;
-        }
-      }
-      return hasCert && !st.flags._hint_first_skill_cert;
+      // [全系统自洽修复] 域F 修复:st.certs 死字段(全库无写入点)→st.certificates 数组；原「首证引导」永不弹出
+      var certs = st.certificates || [];
+      return certs.length > 0 && !st.flags._hint_first_skill_cert;
     },
     message: "📜 你考到了第一张证书！证书能提升求职竞争力和收入。",
   },
