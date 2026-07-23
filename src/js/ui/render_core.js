@@ -1235,7 +1235,7 @@ function switchTab(tabName) {
 
 // ====== Tab 渲染函数注册表（v3.7 合并重构：5 个主 Tab）=====
 // 注意：跨文件函数用 fnName 字符串 + 运行时 window[fnName] 动态查找
-const TAB_RENDERERS = {
+var TAB_RENDERERS = {
   // ⚡ 行动 — 原位行动列表（保持不变，所有阶段核心入口）
   actions: { fnName: "renderActionsTab", fallback: "⚡ 行动加载中..." },
 
