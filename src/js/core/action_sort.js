@@ -308,7 +308,7 @@
     busking: "work",
     beg: "work",
     vending_advice: "work",
-    play_dice: "work",
+    play_dice: "other",
     apply_job: "work",
     trade_header: "work",
     wholesale_header: "work",

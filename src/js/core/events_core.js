@@ -497,8 +497,11 @@ function queueRandomEvent(state, phase) {
  * @param {Object} evt - 事件对象
  */
 function showEventModal(evt) {
-  // 先卸掉任何旧弹窗
-  document.querySelector(".modal-overlay")?.remove();
+  // 保护：如果已存在其他弹窗（如每日结算），不强制移除，让事件排队
+  if (document.querySelector(".modal-overlay")) {
+    // 已有弹窗，不覆盖——事件会留在 state._pendingEvent 中稍后弹出
+    return;
+  }
 
   // 保护：evt 为 null/undefined 时静默返回
   // 防御空 choices 数组（否则弹窗无按钮，游戏永久卡死）

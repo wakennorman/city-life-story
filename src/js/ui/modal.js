@@ -37,14 +37,10 @@ function showModal() {
 
 // ====== 模态对话框实现 ======
 function showModalImpl({ title, body, buttons = [] }) {
-  // 先清理旧的 modal-overlay，避免叠加
-  const oldOverlay = document.querySelector(".modal-overlay");
-  if (oldOverlay) {
-    try {
-      document.body.removeChild(oldOverlay);
-    } catch (e) {
-      console.warn("移除旧弹窗失败:", e);
-    }
+  // 如果已有弹窗，不覆盖（防止每日结算被新弹窗挤掉）
+  const existingOverlay = document.querySelector(".modal-overlay");
+  if (existingOverlay) {
+    return;
   }
 
   const overlay = document.createElement("div");

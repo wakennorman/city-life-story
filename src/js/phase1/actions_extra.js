@@ -186,7 +186,7 @@ function addStreetExtras(state, actions) {
     name: "路边赌骰子",
     desc: "和地摊小贩玩骰子，押 50 赢了翻倍，输了打水漂。",
     icon: "🎲",
-    category: "work",
+    category: "other",
     costEstimate: 50,
     apCost: 20,
     payEstimate: "0或100",

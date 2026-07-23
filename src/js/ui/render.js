@@ -2137,13 +2137,20 @@ function renderActionsTab(state, parent) {
 
   // === 频次追踪 + 智能排序 ===
   if (typeof ActionSort !== "undefined" && ActionSort.sortActions) {
-    // 包装所有行动的 handler，记录点击频次
+    // 包装所有行动的 handler，记录点击频次 + 最近使用时间
     var freq =
       state.stats && state.stats.actionFreq ? state.stats.actionFreq : {};
     var firstUse =
       state.stats && state.stats.actionFirstUse
         ? state.stats.actionFirstUse
         : {};
+    var lastUse =
+      state.stats && state.stats.actionLastUse
+        ? state.stats.actionLastUse
+        : {};
+    if (state.stats && !state.stats.actionLastUse) {
+      state.stats.actionLastUse = {};
+    }
 
     for (var _ai = 0; _ai < actions.length; _ai++) {
       (function (_act) {
@@ -2156,42 +2163,62 @@ function renderActionsTab(state, parent) {
               if (state && state.player) firstUse[_aid] = state.player.day;
             }
             freq[_aid]++;
+            // 记录最近使用天
+            if (state && state.player) {
+              lastUse[_aid] = state.player.day;
+            }
             return _orig.apply(this, arguments);
           };
         }
       })(actions[_ai]);
     }
 
-    // 多层排序（含新行动助力）
+    // 多层排序
     actions = ActionSort.sortActions(actions, state);
   }
 
-  // === ✨ 新行动助力条（首次使用后 3 天内置顶展示） ===
-  if (typeof ActionSort !== "undefined" && ActionSort.isActionNew) {
-    var newActions = actions.filter(function (a) {
-      return !a.disabled && ActionSort.isActionNew(a.id, state);
+  // === 🏃 最近行动（显示最近使用的 5 个行动） ===
+  if (state.stats && state.stats.actionLastUse) {
+    var lastUseMap = state.stats.actionLastUse;
+    var recentActionIds = Object.keys(lastUseMap).filter(function (id) {
+      return lastUseMap[id] > 0;
     });
-    if (newActions.length > 0) {
-      var newBox = document.createElement("div");
-      newBox.style.cssText =
-        "margin-bottom:14px;padding:10px 14px;background:linear-gradient(135deg, rgba(255,215,0,0.06), rgba(255,165,0,0.04));border:1px solid rgba(255,215,0,0.3);border-radius:var(--radius-md);";
-      var newTitle = document.createElement("div");
-      newTitle.style.cssText =
-        "font-size:11px;color:var(--warning);font-weight:700;margin-bottom:6px;letter-spacing:0.5px;";
-      newTitle.innerHTML =
-        "✨ 新行动 — 首次解锁 3 天内排序靠前 <span style='font-size:9px;color:var(--text-muted);font-weight:400;'>（今天第 " +
-        (state.player ? state.player.day : "?") +
-        " 天）</span>";
-      newBox.appendChild(newTitle);
-      var newGrid = document.createElement("div");
-      newGrid.className = "action-cards";
-      newGrid.style.gridTemplateColumns =
-        "repeat(auto-fill, minmax(160px, 1fr))";
-      for (var _n = 0; _n < newActions.length; _n++) {
-        newGrid.appendChild(createActionCard(newActions[_n], state));
+    // 按最近使用天降序排序
+    recentActionIds.sort(function (a, b) {
+      return (lastUseMap[b] || 0) - (lastUseMap[a] || 0);
+    });
+    // 取前5个
+    var topRecentIds = recentActionIds.slice(0, 5);
+    if (topRecentIds.length > 0) {
+      var recentActions = [];
+      for (var _ri = 0; _ri < topRecentIds.length; _ri++) {
+        for (var _aj2 = 0; _aj2 < actions.length; _aj2++) {
+          if (actions[_aj2].id === topRecentIds[_ri]) {
+            recentActions.push(actions[_aj2]);
+            break;
+          }
+        }
       }
-      newBox.appendChild(newGrid);
-      parent.appendChild(newBox);
+      if (recentActions.length > 0) {
+        var recentBox = document.createElement("div");
+        recentBox.style.cssText =
+          "margin-bottom:14px;padding:10px 14px;background:linear-gradient(135deg, rgba(52,152,219,0.06), rgba(46,204,113,0.04));border:1px solid rgba(52,152,219,0.25);border-radius:var(--radius-md);";
+        var recentTitle = document.createElement("div");
+        recentTitle.style.cssText =
+          "font-size:11px;color:var(--info);font-weight:700;margin-bottom:6px;letter-spacing:0.5px;";
+        recentTitle.innerHTML =
+          "🏃 最近行动 <span style='font-size:9px;color:var(--text-muted);font-weight:400;'>（最近 5 个，按使用时间排序）</span>";
+        recentBox.appendChild(recentTitle);
+        var recentGrid = document.createElement("div");
+        recentGrid.className = "action-cards";
+        recentGrid.style.gridTemplateColumns =
+          "repeat(auto-fill, minmax(160px, 1fr))";
+        for (var _rn = 0; _rn < recentActions.length; _rn++) {
+          recentGrid.appendChild(createActionCard(recentActions[_rn], state));
+        }
+        recentBox.appendChild(recentGrid);
+        parent.appendChild(recentBox);
+      }
     }
   }
 

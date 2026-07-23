@@ -1056,6 +1056,18 @@ function showDailyReport(state) {
     if (overlay.parentNode) {
       overlay.parentNode.removeChild(overlay);
     }
+    // 关闭日报后，检查是否有排队等待的事件弹窗
+    var _st = typeof StateManager !== "undefined" ? StateManager.getState() : null;
+    if (_st && _st._pendingEvent) {
+      var _pe = _st._pendingEvent;
+      _st._pendingEvent = null;
+      _st._pendingEventId = null;
+      setTimeout(function () {
+        if (typeof showEventModal === "function") {
+          showEventModal(_pe);
+        }
+      }, 100);
+    }
   });
   btnRow.appendChild(continueBtn);
   box.appendChild(btnRow);
