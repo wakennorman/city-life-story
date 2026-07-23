@@ -13,6 +13,10 @@
   - `followUpId` 为**动态生成** id（news_system.js:1974 `id: news.followUpId`），非静态条目，勿当"缺失 id"误报。
 - `src/js/core/events_core.js` → RANDOM_EVENTS 引擎（street/corporate 阶段事件）
   - 用 `triggers`(数据对象)/`conditions`(函数)/`trigger`(函数) 门控；`e.evaluateTriggers` 实现 minDay/minCash/minSkill/weather/phase 等。
+- `src/js/data/startup_events.js` → `ALL_STARTUP_EVENTS` 数组，由 `triggerStartupEvent(state)` 消费（seed/growth/mature 三阶段）
+  - **门控引擎只认 `conditions:`(复数,:1082)**——写单数 `condition:` = 死门控（R188 踩坑，seed_headhunted/mature_team_left 两处即此）。
+  - 创业公司真实容器 **`state.startup.company`**（**非** `state.company`，全库无后者）；含 `.cashReserve/.employees/.revenue/.reputation/.marketScore/.technologyScore/.phase/.foundedDay`。
+  - `company.revenue` 是 `startup.js:1530/1754` KPI 评分真实字段；但选项 effect 走 `_applyStartupEffects` 的 `STARTUP_FIELD_MAP`(:1104) 白名单——不在表内的字段(如曾遗漏的 revenue) 被 `if(!rule)continue` **静默丢弃**（R188 已补 revenue）。
 
 ## 覆盖指令关键事实（2026-07-12，最高优先级）
 

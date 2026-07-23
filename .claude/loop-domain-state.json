@@ -1,8 +1,8 @@
 {
-  "currentRound": 187,
-  "currentDomain": "F",
-  "nextDomain": "H",
-  "rotationIndex": 5,
+  "currentRound": 188,
+  "currentDomain": "H",
+  "nextDomain": "A",
+  "rotationIndex": 7,
   "domainOrder": [
     "A",
     "B",
@@ -21,28 +21,13 @@
     "E": 185,
     "F": 186,
     "G": 180,
-    "H": 170
+    "H": 188
   },
   "history": [
     {
-      "round": 171,
-      "domain": "A",
-      "note": "域A: 2联动增强(A→G经济日报/A→D NPC财富感知)+A类补提交(医院jobs去重+buyGood现金NaN防御)"
-    },
-    {
-      "round": 172,
-      "domain": "B",
-      "note": "域B: 2项A类(Math.random→Random统一)+4联动增强(B→C技能突破/B→E市场波动/B→G/B→A)"
-    },
-    {
-      "round": 180,
-      "domain": "G",
-      "note": "域G: 核心机制/生命周期 A类修复(5项)+联动增强(3项) (git log 核验)"
-    },
-    {
       "round": 184,
       "domain": "D",
-      "note": "域D: A类修复4项(ajie随机位置/拜访按钮作用域/chatWithNpc上下文台词/deepTask flag)+联动增强3项(D→G人情节骨/D→E人情借贷/D→C师徒传承)"
+      "note": "域D: A类修复4项+联动增强3项(D→G人情节骨/D→E人情借贷/D→C师徒传承)"
     },
     {
       "round": 185,
@@ -52,19 +37,24 @@
     {
       "round": 186,
       "domain": "F",
-      "note": "域F: A类修复2项(state.certs死字段→certificates 每日目标certGte永不完成+首证引导永不弹出 / victory.js state.career未守卫解引用)+联动增强3项(F→C证书上墙/F→G目标连击仪式/F→D复盘分享)"
+      "note": "域F: A类修复2项(state.certs死字段→certificates/victory.js career守卫)+联动增强3项(F→C/F→G/F→D)"
     },
     {
       "round": 187,
       "domain": "C",
-      "note": "域C(并行窗口397310d3落地,本轮代为回填recency): 联动增强3项(职场倦怠→健康C→G/职业声望→社交C→D/技能顿悟→叙事C→B)"
+      "note": "域C(并行窗口397310d3落地): 联动增强3项(职场倦怠→健康C→G/职业声望→社交C→D/技能顿悟→叙事C→B)"
+    },
+    {
+      "round": 188,
+      "domain": "H",
+      "note": "域H: A类修复3项(startup_events.js condition→conditions死门控+st.company→st.startup.company不存在字段/STARTUP_FIELD_MAP遗漏revenue静默丢弃)+联动增强3项(H→E股权套现/H→D联合创始人情谊/H→G创业者透支反思)"
     }
   ],
-  "lastDomain": "F",
-  "lastRound": 186,
+  "lastDomain": "H",
+  "lastRound": 188,
   "lastDate": "2026-07-24",
-  "lastCommit": "dca54685",
-  "pushStatus": "PUSHED",
+  "lastCommit": "b74c17ab",
+  "pushStatus": "PENDING",
   "completedDomains": [
     "A",
     "B",
@@ -75,5 +65,5 @@
     "G",
     "H"
   ],
-  "description": "全系统优化 loop R186 完成。域F(UI/UX): 2项A类修复(certs死字段/career守卫) + 3项联动增强。并行窗口R187域C已回填recency。下轮R188→域H(Phase2/公司, recency 170 最薄弱)。"
+  "description": "全系统优化 loop R188 完成。域H(Phase2/公司): 3项A类修复(startup_events 死门控/不存在字段/revenue 遗漏) + 3项联动增强(H→E/H→D/H→G)。下轮R189→域A(数据/数值平衡, recency 171 最薄弱)。"
 }
