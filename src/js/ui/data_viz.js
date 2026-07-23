@@ -1070,6 +1070,7 @@ if (typeof window !== "undefined") {
   window.drawAssetLineChart = drawAssetLineChart;
   window.drawRadarChart = drawRadarChart;
   window.drawSkillGrowthChart = drawSkillGrowthChart;
-  window.renderGrowthTab = renderGrowthTab;
-  window._dataVizRenderGrowthTab = renderGrowthTab;
+  // [全系统自洽修复] 域F 修复:renderGrowthTab 在 Node headless 加载时因块级函数声明不可见而缺失→守卫式挂载，顺序无关，避免整文件加载崩溃
+  window.renderGrowthTab = (typeof renderGrowthTab !== "undefined") ? renderGrowthTab : function(){ /* headless fallback */ };
+  window._dataVizRenderGrowthTab = window.renderGrowthTab;
 }

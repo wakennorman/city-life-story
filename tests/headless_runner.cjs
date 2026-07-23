@@ -1003,11 +1003,11 @@
         var bank = state.resources.bankBalance || 0;
         var effectiveCash = cash + bank * 0.01;
 
-        // 2. 吃饭（饥饿 > 50 且有钱）
-        if (needs.hunger > 50 && cash >= 8 && ap >= 10) {
+        // 2. 吃饭（饥饿 < 60 即没吃饱、且有钱才吃；引擎语义：hunger 越大越饱）
+        if (needs.hunger < 60 && cash >= 8 && ap >= 10) {
           var cost = 10;
           state.resources.cash = Math.max(0, state.resources.cash - cost);
-          state.needs.hunger = Math.max(0, state.needs.hunger - 30);
+          state.needs.hunger = Math.min(100, state.needs.hunger + 30);
           state.needs.happiness = Math.min(100, state.needs.happiness + 3);
           ap -= 10;
         }
@@ -1019,10 +1019,10 @@
           ap -= 15;
         }
 
-        // 4. 卫生（卫生 > 50 且有钱）
-        if (needs.hygiene > 50 && cash >= 5 && ap >= 10) {
+        // 4. 卫生（hygiene < 50 即脏了、且有钱才洗；引擎语义：hygiene 越大越干净）
+        if (needs.hygiene < 50 && cash >= 5 && ap >= 10) {
           state.resources.cash = Math.max(0, state.resources.cash - 5);
-          state.needs.hygiene = Math.max(0, state.needs.hygiene - 35);
+          state.needs.hygiene = Math.min(100, state.needs.hygiene + 35);
           ap -= 10;
         }
 
@@ -1057,10 +1057,10 @@
         var cash = state.resources.cash;
         var needs = state.needs;
 
-        // 最低限度吃饭
-        if (needs.hunger > 70 && cash >= 5 && ap >= 10) {
+        // 最低限度吃饭（hunger < 40 即快饿了才吃；引擎语义：hunger 越大越饱）
+        if (needs.hunger < 40 && cash >= 5 && ap >= 10) {
           state.resources.cash = Math.max(0, state.resources.cash - 5);
-          state.needs.hunger = Math.max(0, state.needs.hunger - 20);
+          state.needs.hunger = Math.min(100, state.needs.hunger + 20);
           ap -= 10;
         }
 
@@ -1086,10 +1086,10 @@
         var cash = state.resources.cash;
         var needs = state.needs;
 
-        // 吃饭（饥饿 > 40）
-        if (needs.hunger > 40 && cash >= 8 && ap >= 10) {
+        // 吃饭（hunger < 60 即没吃饱才吃；引擎语义：hunger 越大越饱）
+        if (needs.hunger < 60 && cash >= 8 && ap >= 10) {
           state.resources.cash = Math.max(0, state.resources.cash - 8);
-          state.needs.hunger = Math.max(0, state.needs.hunger - 30);
+          state.needs.hunger = Math.min(100, state.needs.hunger + 30);
           state.needs.happiness = Math.min(100, state.needs.happiness + 3);
           ap -= 10;
         }

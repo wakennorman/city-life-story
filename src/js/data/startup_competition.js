@@ -2569,7 +2569,8 @@ if (typeof window !== "undefined") {
   window.CRISIS_RESPONSE_TEMPLATES = CRISIS_RESPONSE_TEMPLATES;
   window.detectOperationalCrisis = detectOperationalCrisis;
   window.applyCrisisEffects = applyCrisisEffects;
-  window.getAvailableCrisisResponses = getAvailableCrisisResponses;
+  // [全系统自洽修复] 域H 修复:getAvailableCrisisResponses 仅定义于 phase2/startup.js，本文件加载更早时未定义→守卫式挂载，缺失时返回空列表，避免整文件加载崩溃致 Phase2 公司系统失效
+  window.getAvailableCrisisResponses = (typeof getAvailableCrisisResponses !== "undefined") ? getAvailableCrisisResponses : function(){ return []; };
   window.executeCrisisResponse = executeCrisisResponse;
   window.getCrisisSeverityColor = getCrisisSeverityColor;
   window.getCrisisUrgencyColor = getCrisisUrgencyColor;
