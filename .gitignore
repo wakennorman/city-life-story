@@ -12,3 +12,4 @@ Thumbs.db
 # Dependencies (if any)
 node_modules/
 dist/app.min.*
+__pycache__/
