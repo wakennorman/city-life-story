@@ -3970,6 +3970,14 @@ function _wikiDetailIllness(state, id) {
     html += "</ul>";
   }
 
+  // [全系统自洽修复] 域A 联动增强: 疾病preventionHint接入百科展示（原定义但从未展示）
+  if (ill.preventionHint) {
+    html +=
+      '<h3>🛡️ 预防建议</h3><p class="wiki-desc">💡 ' +
+      _wkE(ill.preventionHint) +
+      "</p>";
+  }
+
   // === 演化链信息 ===
   if (ill.isEvolution || ill.evolvesFrom || ill.evolvesTo) {
     html += '<h3>🔄 疾病演化链</h3><ul class="wiki-list">';

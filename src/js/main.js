@@ -3789,7 +3789,7 @@ function getAvailableActions(state) {
         id: "cert_" + cert.id,
         category: "education",
         name: `考取${cert.name}`,
-        desc: `${cert.desc} 费用:¥${cert.requirements.cash} 通过率:${Math.round(cert.examPassRate * 100)}%`,
+        desc: `${cert.desc} 费用:¥${cert.requirements.cash} 通过率:${Math.round(cert.examPassRate * 100)}%${cert.trainingDays ? " 培训:" + cert.trainingDays + "天" : ""}`, // [全系统自洽修复] 域A 联动增强: certificate trainingDays接入UI展示（原定义但从未展示）
         icon: "📜",
         costEstimate: cert.requirements.cash,
         disabled: !canAfford,
@@ -3889,9 +3889,16 @@ function getAvailableActions(state) {
           if (typeof getHistoryModifiers === "function") {
             _histNpcBonus = getHistoryModifiers(state).npcAffinityBonus || 0;
           }
+          // [全系统自洽修复] 域A 联动增强: 住所tier5/6 npcVisitBonus接入NPC好感（豪宅/别墅招待加成）
+          var _housingNpcBonus = state._housingNpcVisitBonus || 0;
+          var _housingNpcTag = "";
+          if (_housingNpcBonus > 0 && !isBirthday && Random.chance(0.3)) {
+            _housingNpcTag = "（住所雅致，好感额外+" + Math.round(5 * _housingNpcBonus) + "）";
+          }
           const affinityGain =
             (isBirthday ? 10 + Random.int(0, 4) : 5 + Random.int(0, 4)) +
-            _histNpcBonus;
+            _histNpcBonus +
+            (_housingNpcTag ? Math.round(5 * _housingNpcBonus) : 0);
           r.affinity = Math.min(100, r.affinity + affinityGain);
           // 节日专属台词（P1.8）：节日期间65%概率触发
           var festLine = null;
@@ -3930,7 +3937,7 @@ function getAvailableActions(state) {
             }
           }
           StateManager.addMessage(
-            `💬${bdTag} ${npc.name}：${line} (好感+${affinityGain})${_skillBonus}`,
+            `💬${bdTag} ${npc.name}：${line} (好感+${affinityGain})${_skillBonus}${_housingNpcTag}`,
             isBirthday ? "success" : "info",
           );
           state.needs.happiness = Math.min(
@@ -4946,6 +4953,9 @@ function addSkillXp(skillKey, amount) {
   if (!skill) return;
   // [域C联动] 天赋XP倍率生效
   var _talentMult = getTalentXpMultiplier(skillKey, state);
+  // [全系统自洽修复] 域A 联动增强: 住所tier5/6 skillStudyBonus接入技能XP（豪宅/别墅学习加成）
+  var housingBonus = state._housingSkillStudyBonus || 0;
+  if (housingBonus > 0) amount = Math.round(amount * (1 + housingBonus));
   skill.xp += Math.round(amount * _talentMult);
   // v3.1 审查改进：XP 需求从线性改为指数，level 0=120 → level 50≈10,000（之前 6,120）
   // 让玩家在高级别感受更有意义的成长压力，同时保留早期快速升级的爽快感
