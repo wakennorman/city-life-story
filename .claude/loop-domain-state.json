@@ -1,8 +1,8 @@
 {
-  "currentRound": 172,
-  "currentDomain": "B",
-  "nextDomain": "C",
-  "rotationIndex": 2,
+  "currentRound": 181,
+  "currentDomain": "G",
+  "nextDomain": "H",
+  "rotationIndex": 7,
   "domainOrder": ["A", "B", "C", "D", "E", "F", "G", "H"],
   "domainRecency": {
     "A": 171,
@@ -11,19 +11,20 @@
     "D": 167,
     "E": 167,
     "F": 168,
-    "G": 169,
+    "G": 180,
     "H": 170
   },
   "history": [
     {"round": 170, "domain": "H", "note": "域H: enterCorporatePhase NaN守卫+3公司跨域联动事件(H→A/C/D)+Phase1→2继承(corp_legacy_bonus)+3数据文件(D→H NPC/H团队/H→F绩效)"},
     {"round": 171, "domain": "A", "note": "域A: 2联动增强(A→G经济日报/A→D NPC财富感知)+A类补提交(医院jobs去重+buyGood现金NaN防御)"},
-    {"round": 172, "domain": "B", "note": "域B: 2项A类(Math.random→Random统一)+4联动增强(B→C技能突破/B→E市场波动/B→G/B→A)"}
+    {"round": 172, "domain": "B", "note": "域B: 2项A类(Math.random→Random统一)+4联动增强(B→C技能突破/B→E市场波动/B→G/B→A)"},
+    {"round": 180, "domain": "G", "note": "域G: 核心机制/生命周期 A类修复(5项)+联动增强(3项) (git log 核验)"}
   ],
-  "lastDomain": "B",
-  "lastRound": 172,
-  "lastDate": "2026-07-23",
-  "lastCommit": "fad3d220",
+  "lastDomain": "G",
+  "lastRound": 180,
+  "lastDate": "2026-07-24",
+  "lastCommit": "bcf0e15b",
   "pushStatus": "PUSHED",
   "completedDomains": ["A", "B", "C", "D", "E", "F", "G", "H"],
-  "description": "全系统优化 loop R172 完成。域B第四轮: 2项A类+4项联动。下轮R173→域C(最薄弱,R165后未轮到)。"
+  "description": "全系统优化 loop 接管路子: 真实进度已至 R180(域G, git log 核验; 原 loop-domain-state.json R172 已过时)。下一轮 R181→域H。自动化已重配置为10分钟触发兼容规范(推main+rebase保护+薄弱域轮换+A类修复+联动增强); 平台调度器最小粒度=HOURLY, 真10分钟需外部调度器触发(提示词已兼容)。"
 }
