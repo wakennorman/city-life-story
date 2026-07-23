@@ -136,9 +136,9 @@
         apply: function (st) {
           if (!st.flags) st.flags = {};
           st.flags._npcBusinessTippingDone = true;
-          var roll = Math.random ? Math.random() : 0.5; // [种子化RNG，不影响平衡]
+          var roll = Random.chance(0.5) ? 0.6 : 0.4; // [全系统自洽修复] 域B A类: Math.random→Random.chance 种子化RNG
           if (roll > 0.4) {
-            var cashReward = 300 + Math.floor(Math.random() * 400); // [PLACEHOLDER]
+            var cashReward = 300 + Random.int(0, 399); // [全系统自洽修复] 域B A类: Math.random→Random.int 种子化RNG
             st.resources.cash = (st.resources.cash || 0) + cashReward;
             st.resources.totalEarned = (st.resources.totalEarned || 0) + cashReward;
             if (typeof StateManager !== "undefined" && StateManager.addMessage)
@@ -146,7 +146,7 @@
           } else {
             var skillList = Object.keys(st.skills || {});
             if (skillList.length > 0) {
-              var sk = skillList[Math.floor(Math.random() * skillList.length)];
+              var sk = skillList[Random.int(0, skillList.length - 1)]; // [全系统自洽修复] 域B A类: Math.random→Random.int 种子化RNG
               st.skills[sk].xp = (st.skills[sk].xp || 0) + 80; // [PLACEHOLDER]
               if (typeof StateManager !== "undefined" && StateManager.addMessage)
                 StateManager.addMessage("🤝 熟人的门道让你学到不少经验，" + (sk || "技能") + " XP+80！", "success");
@@ -215,7 +215,7 @@
           if (!st.flags) st.flags = {};
           st.flags._npcMentorSkillsDone = true;
           st.resources.cash = Math.max(0, (st.resources.cash || 0) - 100);
-          var xpGain = 50 + Math.floor(Math.random() * 101); // [PLACEHOLDER]
+          var xpGain = 50 + Random.int(0, 100); // [全系统自洽修复] 域B A类: Math.random→Random.int 种子化RNG
           if (st.skills) {
             var skKeys = Object.keys(st.skills);
             if (skKeys.length > 0) {

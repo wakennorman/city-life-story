@@ -724,7 +724,7 @@ function showEventModal(evt) {
       }
       // [全系统自洽修复] 域B A类#1: 事件结算后现金NaN/负数防御（防止apply未扣款或倍率导致负数）
       if (typeof state.resources.cash !== "number" || !isFinite(state.resources.cash)) state.resources.cash = 0;
-      state.resources.cash = Math.max(0, state.resources.cash);
+      state.resources.cash = Math.max(0, state.resources.cash || 0);
       // [全系统自洽修复] 域B 联动增强: B→F 事件历史记录
       if (!state.flags._eventHistory) state.flags._eventHistory = [];
       if (evt && evt.id) {

@@ -2593,7 +2593,7 @@
                 "success",
               );
             } else {
-              st.resources.cash = Math.max(0, st.resources.cash - 20);
+              st.resources.cash = Math.max(0, (st.resources.cash || 0) - 20); // [全系统自洽修复] 域B A类:cash NaN守卫
               st.needs.happiness = Math.max(0, st.needs.happiness - 10);
               StateManager.addMessage(
                 "你收拾得太慢，被城管没收了部分东西，还罚了20块。剩下的东西散落在地上。",

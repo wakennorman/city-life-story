@@ -5031,7 +5031,7 @@ function showEventModal(evt) {
       }
       // [全系统自洽修复] 域B A类#1: 事件结算后现金NaN/负数防御（防止apply未扣款或倍率导致负数）
       if (typeof state.resources.cash !== "number" || !isFinite(state.resources.cash)) state.resources.cash = 0;
-      state.resources.cash = Math.max(0, state.resources.cash);
+      state.resources.cash = Math.max(0, state.resources.cash || 0);
       // [全系统自洽修复] 域B 联动增强: B→F 事件历史记录
       if (!state.flags._eventHistory) state.flags._eventHistory = [];
       if (evt && evt.id) {
@@ -8202,7 +8202,7 @@ function registerNewsEventsToPool() {
                 "success",
               );
             } else {
-              st.resources.cash = Math.max(0, st.resources.cash - 20);
+              st.resources.cash = Math.max(0, (st.resources.cash || 0) - 20); // [全系统自洽修复] 域B A类:cash NaN守卫
               st.needs.happiness = Math.max(0, st.needs.happiness - 10);
               StateManager.addMessage(
                 "你收拾得太慢，被城管没收了部分东西，还罚了20块。剩下的东西散落在地上。",
@@ -96390,9 +96390,9 @@ if (typeof window !== "undefined") {
         apply: function (st) {
           if (!st.flags) st.flags = {};
           st.flags._npcBusinessTippingDone = true;
-          var roll = Math.random ? Math.random() : 0.5; // [种子化RNG，不影响平衡]
+          var roll = Random.chance(0.5) ? 0.6 : 0.4; // [全系统自洽修复] 域B A类: Math.random→Random.chance 种子化RNG
           if (roll > 0.4) {
-            var cashReward = 300 + Math.floor(Math.random() * 400); // [PLACEHOLDER]
+            var cashReward = 300 + Random.int(0, 399); // [全系统自洽修复] 域B A类: Math.random→Random.int 种子化RNG
             st.resources.cash = (st.resources.cash || 0) + cashReward;
             st.resources.totalEarned = (st.resources.totalEarned || 0) + cashReward;
             if (typeof StateManager !== "undefined" && StateManager.addMessage)
@@ -96400,7 +96400,7 @@ if (typeof window !== "undefined") {
           } else {
             var skillList = Object.keys(st.skills || {});
             if (skillList.length > 0) {
-              var sk = skillList[Math.floor(Math.random() * skillList.length)];
+              var sk = skillList[Random.int(0, skillList.length - 1)]; // [全系统自洽修复] 域B A类: Math.random→Random.int 种子化RNG
               st.skills[sk].xp = (st.skills[sk].xp || 0) + 80; // [PLACEHOLDER]
               if (typeof StateManager !== "undefined" && StateManager.addMessage)
                 StateManager.addMessage("🤝 熟人的门道让你学到不少经验，" + (sk || "技能") + " XP+80！", "success");
@@ -96469,7 +96469,7 @@ if (typeof window !== "undefined") {
           if (!st.flags) st.flags = {};
           st.flags._npcMentorSkillsDone = true;
           st.resources.cash = Math.max(0, (st.resources.cash || 0) - 100);
-          var xpGain = 50 + Math.floor(Math.random() * 101); // [PLACEHOLDER]
+          var xpGain = 50 + Random.int(0, 100); // [全系统自洽修复] 域B A类: Math.random→Random.int 种子化RNG
           if (st.skills) {
             var skKeys = Object.keys(st.skills);
             if (skKeys.length > 0) {
@@ -151572,7 +151572,8 @@ if (typeof window !== "undefined") {
   window.CRISIS_RESPONSE_TEMPLATES = CRISIS_RESPONSE_TEMPLATES;
   window.detectOperationalCrisis = detectOperationalCrisis;
   window.applyCrisisEffects = applyCrisisEffects;
-  window.getAvailableCrisisResponses = getAvailableCrisisResponses;
+  // [全系统自洽修复] 域H 修复:getAvailableCrisisResponses 仅定义于 phase2/startup.js，本文件加载更早时未定义→守卫式挂载，缺失时返回空列表，避免整文件加载崩溃致 Phase2 公司系统失效
+  window.getAvailableCrisisResponses = (typeof getAvailableCrisisResponses !== "undefined") ? getAvailableCrisisResponses : function(){ return []; };
   window.executeCrisisResponse = executeCrisisResponse;
   window.getCrisisSeverityColor = getCrisisSeverityColor;
   window.getCrisisUrgencyColor = getCrisisUrgencyColor;
@@ -170456,7 +170457,7 @@ const MORAL_EVENTS = [
         flag: "moral_fellow_drink",
         score: 1,
         immediate: function (s) {
-          s.resources.cash = Math.max(0, s.resources.cash - 3);
+          s.resources.cash = Math.max(0, (s.resources.cash || 0) - 3); // [全系统自洽修复] 域B A类:cash NaN守卫
           s.needs.fatigue = Math.min(100, s.needs.fatigue + 8);
           s.needs.happiness = Math.min(100, s.needs.happiness + 8);
           StateManager.addMessage("两瓶啤酒下肚，心里那点疲惫都散了。", "info");
@@ -219269,8 +219270,9 @@ if (typeof window !== "undefined") {
   window.drawAssetLineChart = drawAssetLineChart;
   window.drawRadarChart = drawRadarChart;
   window.drawSkillGrowthChart = drawSkillGrowthChart;
-  window.renderGrowthTab = renderGrowthTab;
-  window._dataVizRenderGrowthTab = renderGrowthTab;
+  // [全系统自洽修复] 域F 修复:renderGrowthTab 在 Node headless 加载时因块级函数声明不可见而缺失→守卫式挂载，顺序无关，避免整文件加载崩溃
+  window.renderGrowthTab = (typeof renderGrowthTab !== "undefined") ? renderGrowthTab : function(){ /* headless fallback */ };
+  window._dataVizRenderGrowthTab = window.renderGrowthTab;
 }
 
 ;
@@ -239531,6 +239533,14 @@ function _wikiDetailIllness(state, id) {
     html += "</ul>";
   }
 
+  // [全系统自洽修复] 域A 联动增强: 疾病preventionHint接入百科展示（原定义但从未展示）
+  if (ill.preventionHint) {
+    html +=
+      '<h3>🛡️ 预防建议</h3><p class="wiki-desc">💡 ' +
+      _wkE(ill.preventionHint) +
+      "</p>";
+  }
+
   // === 演化链信息 ===
   if (ill.isEvolution || ill.evolvesFrom || ill.evolvesTo) {
     html += '<h3>🔄 疾病演化链</h3><ul class="wiki-list">';
@@ -253155,7 +253165,7 @@ function getAvailableActions(state) {
         id: "cert_" + cert.id,
         category: "education",
         name: `考取${cert.name}`,
-        desc: `${cert.desc} 费用:¥${cert.requirements.cash} 通过率:${Math.round(cert.examPassRate * 100)}%`,
+        desc: `${cert.desc} 费用:¥${cert.requirements.cash} 通过率:${Math.round(cert.examPassRate * 100)}%${cert.trainingDays ? " 培训:" + cert.trainingDays + "天" : ""}`, // [全系统自洽修复] 域A 联动增强: certificate trainingDays接入UI展示（原定义但从未展示）
         icon: "📜",
         costEstimate: cert.requirements.cash,
         disabled: !canAfford,
@@ -253255,9 +253265,16 @@ function getAvailableActions(state) {
           if (typeof getHistoryModifiers === "function") {
             _histNpcBonus = getHistoryModifiers(state).npcAffinityBonus || 0;
           }
+          // [全系统自洽修复] 域A 联动增强: 住所tier5/6 npcVisitBonus接入NPC好感（豪宅/别墅招待加成）
+          var _housingNpcBonus = state._housingNpcVisitBonus || 0;
+          var _housingNpcTag = "";
+          if (_housingNpcBonus > 0 && !isBirthday && Random.chance(0.3)) {
+            _housingNpcTag = "（住所雅致，好感额外+" + Math.round(5 * _housingNpcBonus) + "）";
+          }
           const affinityGain =
             (isBirthday ? 10 + Random.int(0, 4) : 5 + Random.int(0, 4)) +
-            _histNpcBonus;
+            _histNpcBonus +
+            (_housingNpcTag ? Math.round(5 * _housingNpcBonus) : 0);
           r.affinity = Math.min(100, r.affinity + affinityGain);
           // 节日专属台词（P1.8）：节日期间65%概率触发
           var festLine = null;
@@ -253296,7 +253313,7 @@ function getAvailableActions(state) {
             }
           }
           StateManager.addMessage(
-            `💬${bdTag} ${npc.name}：${line} (好感+${affinityGain})${_skillBonus}`,
+            `💬${bdTag} ${npc.name}：${line} (好感+${affinityGain})${_skillBonus}${_housingNpcTag}`,
             isBirthday ? "success" : "info",
           );
           state.needs.happiness = Math.min(
@@ -254312,6 +254329,9 @@ function addSkillXp(skillKey, amount) {
   if (!skill) return;
   // [域C联动] 天赋XP倍率生效
   var _talentMult = getTalentXpMultiplier(skillKey, state);
+  // [全系统自洽修复] 域A 联动增强: 住所tier5/6 skillStudyBonus接入技能XP（豪宅/别墅学习加成）
+  var housingBonus = state._housingSkillStudyBonus || 0;
+  if (housingBonus > 0) amount = Math.round(amount * (1 + housingBonus));
   skill.xp += Math.round(amount * _talentMult);
   // v3.1 审查改进：XP 需求从线性改为指数，level 0=120 → level 50≈10,000（之前 6,120）
   // 让玩家在高级别感受更有意义的成长压力，同时保留早期快速升级的爽快感

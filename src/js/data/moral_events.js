@@ -1473,7 +1473,7 @@ const MORAL_EVENTS = [
         flag: "moral_fellow_drink",
         score: 1,
         immediate: function (s) {
-          s.resources.cash = Math.max(0, s.resources.cash - 3);
+          s.resources.cash = Math.max(0, (s.resources.cash || 0) - 3); // [全系统自洽修复] 域B A类:cash NaN守卫
           s.needs.fatigue = Math.min(100, s.needs.fatigue + 8);
           s.needs.happiness = Math.min(100, s.needs.happiness + 8);
           StateManager.addMessage("两瓶啤酒下肚，心里那点疲惫都散了。", "info");
