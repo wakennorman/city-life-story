@@ -2359,6 +2359,17 @@ function getAvailableActions(state) {
   const actions = [];
 
   // 提升为函数级变量（用 let，块内可重新指向用 const）
+  if (!state.trade || !state.trade.currentLocation) {
+    actions.push({
+      id: "no_location",
+      category: "other",
+      name: "当前位置不可用",
+      desc: "游戏状态异常，尝试旅行到一个地点。",
+      icon: "🚫",
+      disabled: true,
+    });
+    return actions;
+  }
   const locKey = state.trade.currentLocation;
 
   if (state.player.phase === "street") {
@@ -4146,6 +4157,20 @@ function getAvailableActions(state) {
   // --- 注入扩展行动库（生存/社交/学习/生活/投资/梦想）---
   if (typeof addExtraActions === "function") {
     addExtraActions(state, actions);
+  }
+
+  // 兜底：确保至少有一个行动，防止行动Tab空白
+  if (actions.length === 0) {
+    actions.push({
+      id: "idle",
+      category: "other",
+      name: "待机休息",
+      desc: "今天什么都不做，休息一天。",
+      icon: "😴",
+      handler: function () {
+        StateManager.addMessage("😴 你休息了一天，什么也没做。", "info");
+      },
+    });
   }
 
   return actions;

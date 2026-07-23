@@ -123,6 +123,12 @@ def main():
                 shutil.copy2(src_file, os.path.join(DIST_DIR, fname))
                 print(f"  📦 favicon: {fname}")
 
+    # 复制 _headers 到 dist/（GitHub Pages CSP 配置）
+    headers_src = os.path.join(SRC_DIR, '_headers')
+    if os.path.isfile(headers_src):
+        shutil.copy2(headers_src, os.path.join(DIST_DIR, '_headers'))
+        print(f"  📦 _headers")
+
     # 写入 index.html（瘦壳，只含内联 CSS + boot 脚本 + defer app.js）
     with open(OUTPUT_FILE, 'w', encoding='utf-8') as f:
         f.write(html)

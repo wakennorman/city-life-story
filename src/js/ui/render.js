@@ -2107,7 +2107,8 @@ function renderGuidanceBar(state, parent) {
 }
 
 function renderActionsTab(state, parent) {
-  var actions = getAvailableActions(state);
+  try {
+    var actions = getAvailableActions(state);
 
   // 移除"地点不符"的冗余行动（不在当前地点的行动直接不展示）
   actions = actions.filter(function (a) {
@@ -2316,6 +2317,11 @@ function renderActionsTab(state, parent) {
       fallbackCards.appendChild(createActionCard(nonTravelActions[_ak], state));
     }
     parent.appendChild(fallbackCards);
+  }
+
+  } catch (e) {
+    console.error("[renderActionsTab] 渲染异常:", e);
+    parent.innerHTML += '<div style="padding:20px;text-align:center;color:var(--text-muted);font-size:13px;">⚡ 行动加载异常，请刷新页面重试</div>';
   }
 }
 

@@ -97,6 +97,9 @@ function buyGood(goodId, qty) {
   adjustPriceAfterTrade(locKey, goodId, buyDelta);
   const newPrice = getCurrentPrice(locKey, goodId);
 
+  // 记录购买支出
+  addDailyTransaction(state, "expense", "shopping", totalCost, "购买" + good.name + "×" + qty);
+
   // 交易获得销售经验
   if (typeof gainTradeXp === "function") {
     gainTradeXp(state);
@@ -355,6 +358,9 @@ function buyWholesale(goodId, qty) {
       boughtDay: state.player.day,
     });
   }
+
+  // 记录批发支出
+  addDailyTransaction(state, "expense", "shopping", totalCost, "批发" + good.name + "×" + qty);
 
   StateManager.addMessage(
     `📦 批发进货 ${qty}${good.unit}${good.name}，批发价 ¥${wholesalePrice.toFixed(1)}/件，共 ¥${totalCost.toFixed(1)}。`,
