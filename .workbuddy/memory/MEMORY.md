@@ -55,11 +55,20 @@
 - 全代码库（含设计文档）搜不到「日常开发」一词；它是对 `@scene#15:"日常开发"` 指令的**误读**，并非游戏内场景或职业。
 - 收到模糊 scene/主题指令时，**先 grep 确认它是否真实存在**，再动手；用户一句「无关」即最高优先级终止信号，立刻停手确认方向，不要辩解或继续。
 
-## 提交纪律（v3.0 SOP）
+## 提交纪律（当前自动化 v3.2：直接提交+推送 main）
 
-- 只动 `loop/auto`：`git checkout -B loop/auto`（基于当前 HEAD）；绝不向 main 提交/推送。
-- 提交前 `git rev-parse HEAD > .claude/last_known_head`（过 pre-commit 漂移检查）。
+- 当前全系统 8 域轮换优化自动化（10 分钟触发·推 main·rebase 保护）**直接提交并推送 `main`**；`loop/auto` 分支方案为早期实验，已不再使用。
+- 提交前 `git rev-parse HEAD > .claude/last_known_head`（过 pre-commit 漂移检查；每轮提交前必须同步**当前 HEAD**，否则钩子拦截）。
 - 改事件文件后必须 `python build.py` 使 dist/index.html 比源新；提交时 `git add dist/index.html`。
 - 只 `git add` 本轮具体文件 + `.claude/last_known_head`；绝不 `-A`/`--amend`。
 - 每次代码改动更新 `src/DEVELOPMENT.md` 顶部版本行。
 - MC 验证：`node --max-old-space-size=8192 tests/monte_carlo.cjs --trials 6 --days 400`（默认 10×1000d 易 OOM；6×400d 足以验 0 异常）。
+
+## 域E 经济/投资 真实架构与关键发现（2026-07-24 R185，重要）
+
+- 域E 核心小文件（economy_v3.1.js/finance.js/news_investment_bridge.js）已被历轮高度加固；A类缺陷主要藏在 phase2 大文件（investment.js 3941行 / investment_analysis.js）的**旧存档迁移路径**。
+- 真实持仓容器 `state.investment.stockHoldings` / `properties` / `cars`（全代码读取均 `||[]`，但**写入路径曾缺守卫** → 旧存档首次买入/买房/买车即 TypeError）。买入/买产/买车前统一 `if(!Array.isArray(inv.x)) inv.x=[]` 守卫模式。
+- `state.investment.btcPrice`/`btcHoldings` 旧存档缺省为 `undefined` → `undefined<=0` 恒 false 致回填失效；`sellBtc` 须 `typeof!=="number"||!isFinite||<=0` 显式判定 + `revenue` isFinite 守卫，否则 `state.resources.cash` 被污染为 NaN（经济结算静默报废）。
+- `_totalInvestmentProfit`（域E 损益汇总）曾为**只被 R167/R96 联动事件读取、全代码从未写入**的死字段 → R167 的 `market_storm_endurance`(≤-5000)/`investment_social_circle`(≥20000) 及 R96 事件永久死事件。R185 在 `sellInvStock`/`sellBtc` 累计已实现损益到该字段，复活死事件。
+- 联动事件（`domain_e_linkage_r185.js`）触发门槛复用本字段 `_totalInvestmentProfit`，已非死字段。
+- 注意：并行窗口已提交 `89fa1396 fix:[域E] A类修复3项`（economy_v3.1 consecutiveWins / news_investment_bridge category / property_market Infinity%），与 R185 不重复，勿回退。

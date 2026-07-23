@@ -1,15 +1,15 @@
 {
-  "currentRound": 184,
-  "currentDomain": "D",
-  "nextDomain": "E",
-  "rotationIndex": 4,
+  "currentRound": 185,
+  "currentDomain": "E",
+  "nextDomain": "F",
+  "rotationIndex": 5,
   "domainOrder": ["A", "B", "C", "D", "E", "F", "G", "H"],
   "domainRecency": {
     "A": 171,
     "B": 172,
     "C": 165,
     "D": 184,
-    "E": 167,
+    "E": 185,
     "F": 168,
     "G": 180,
     "H": 170
@@ -19,13 +19,14 @@
     {"round": 171, "domain": "A", "note": "域A: 2联动增强(A→G经济日报/A→D NPC财富感知)+A类补提交(医院jobs去重+buyGood现金NaN防御)"},
     {"round": 172, "domain": "B", "note": "域B: 2项A类(Math.random→Random统一)+4联动增强(B→C技能突破/B→E市场波动/B→G/B→A)"},
     {"round": 180, "domain": "G", "note": "域G: 核心机制/生命周期 A类修复(5项)+联动增强(3项) (git log 核验)"},
-    {"round": 184, "domain": "D", "note": "域D: A类修复4项(ajie随机位置/拜访按钮作用域/chatWithNpc上下文台词/deepTask flag)+联动增强3项(D→G人情节骨/D→E人情借贷/D→C师徒传承)"}
+    {"round": 184, "domain": "D", "note": "域D: A类修复4项(ajie随机位置/拜访按钮作用域/chatWithNpc上下文台词/deepTask flag)+联动增强3项(D→G人情节骨/D→E人情借贷/D→C师徒传承)"},
+    {"round": 185, "domain": "E", "note": "域E: A类修复8项(investment.js btcPrice/stockHoldings/properties/cars/btcHoldings旧存档守卫+sellBtc NaN污染现金+sellProperty自住分支裸写+_totalInvestmentProfit死字段复活/investment_analysis checkStopLoss守卫)+联动增强3项(E→G财务安全垫/E→D盘感识风险劝阻朋友走applyAffinityChange/E→C财报盘感迁移职场 accounting)"}
   ],
-  "lastDomain": "D",
-  "lastRound": 184,
+  "lastDomain": "E",
+  "lastRound": 185,
   "lastDate": "2026-07-24",
   "lastCommit": "08f225d1",
-  "pushStatus": "PUSHED",
+  "pushStatus": "PENDING",
   "completedDomains": [
     "A",
     "B",
@@ -36,5 +37,5 @@
     "G",
     "H"
   ],
-  "description": "全系统优化 loop R184 完成。域D第四轮: 4项A类修复 + 3项联动增强。下轮R185→域E(经济/投资,recency=167)。"
+  "description": "全系统优化 loop R185 完成。域E(经济/投资): 8项A类修复 + 3项联动增强。下轮R186→域F(UI/UX)。"
 }
