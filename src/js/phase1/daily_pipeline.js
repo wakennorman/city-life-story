@@ -1859,6 +1859,7 @@ const DAILY_PIPELINE = [
     name: "npc_trade_info_share",
     fn: function (state) {
       if (typeof tryTriggerNPCInfoShare !== "function") return;
+      if (typeof NPC_TRADE_INFO === "undefined" || !NPC_TRADE_INFO) return;
       // 遍历所有NPC，看是否有主动分享
       for (var npcId in NPC_TRADE_INFO) {
         if (!NPC_TRADE_INFO.hasOwnProperty(npcId)) continue;

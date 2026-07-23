@@ -223,7 +223,7 @@ const LIFE_NODES = {
         apply: "retire_continue",
         effect: function (st) {
           st.flags._retirementType = "continue";
-          st.flags._retired = true;
+          // 退而不休不设 _retired，继续正常工作
           st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 5);
         },
       },
@@ -448,7 +448,9 @@ function applyNodeChoice(state, nodeId, choiceKey) {
   if (!state.flags) state.flags = {};
   state.flags._lifeNode_choice = choiceKey;
 
-  // 约定式效果：优先使用choice内联的effect函数（无需维护switch-case）
+  // [全系统自洽修复] 域G A类修复: 不再 return 跳过共享代码（心智+1/NPC关系/flag设置）
+  // 用变量标记是否已应用内联效果，switch-case 作为兜底
+  var _inlineApplied = false;
   if (LIFE_NODES[nodeId]) {
     var nodeChoices = LIFE_NODES[nodeId].choices || [];
     for (var ci = 0; ci < nodeChoices.length; ci++) {
@@ -461,13 +463,15 @@ function applyNodeChoice(state, nodeId, choiceKey) {
         } catch (e) {
           console.warn("lifeNode effect error:", e);
         }
-        return; // 内联effect执行完毕，跳过旧switch-case
+        _inlineApplied = true;
+        break; // 跳出循环但继续执行共享代码
       }
     }
   }
 
-  // 旧switch-case兜底（兼容未迁移的老choice）
-  switch (choiceKey) {
+  // 旧switch-case兜底（仅当 inline effect 未执行时）
+  if (!_inlineApplied) {
+    switch (choiceKey) {
     case "gaokao_excellent":
       state.player.intelligence = Math.min(
         100,
@@ -532,12 +536,9 @@ function applyNodeChoice(state, nodeId, choiceKey) {
     case "retire_advisor":
       state.flags._retirementType = "advisor";
       state.flags._retired = true;
-      if (state.career && state.career.currentJob) {
-        state.career.pensionBase = state.career.currentJob.salary || 5000;
-      } else {
-        state.career = state.career || {};
-        state.career.pensionBase = 5000;
-      }
+      // 退休金基数字段对齐（兜底路径，inline effect 优先）
+      var _advJob = (state.employment && state.employment.currentJob) ? state.employment.currentJob : null;
+      state.flags._pensionBase = _advJob ? (_advJob.salary || 5000) : 5000;
       state.resources.cash = (state.resources.cash || 0) + 2000;
       break;
     case "retire_continue":
@@ -545,6 +546,7 @@ function applyNodeChoice(state, nodeId, choiceKey) {
       // 退而不休不设 _retired，继续正常工作
       state.flags._lifeNode_retirement_done = true;
       break;
+    }
   }
   // [全系统自洽修复] 域G 联动增强1: 人生节点完成→永久心智+1（G→A，生命经验沉淀）
   // 仅首次完成时触发（_lifeNode_xxx_done 刚设为 true，在此判断）

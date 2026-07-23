@@ -370,7 +370,7 @@ function startTravel(state, destId) {
     return { ok: false, msg: "极端天气，不适合出行！" };
   }
 
-  state.resources.cash -= dest.cost;
+  state.resources.cash = Math.max(0, (state.resources.cash || 0) - dest.cost);
   // [全系统自洽修复] 域G 联动增强: 天气影响旅行AP消耗（暴雨/台风/暴雪增加出行成本）
   var weatherApMod =
     typeof getWeatherTravelApMod === "function"
