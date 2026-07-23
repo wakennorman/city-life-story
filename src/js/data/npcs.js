@@ -1647,15 +1647,17 @@ var NPCS = [
       story:
         "老陈叹了口气：「干了这么多年保安，攒了点钱。儿子说让我退休，但我不知道能干啥……你给个建议？」",
       choices: [
-        {
-          text: "💪 退休也好，陪陪家人",
-          hint: "好感+8",
-          apply: function (st) {
-            st.flags._npcDeepTask_uncle_chen_bank = true;
-            st.relationships.uncle_chen_bank.affinity = Math.min(
-              100,
-              st.relationships.uncle_chen_bank.affinity + 8,
-            );
+      {
+        text: "💪 退休也好，陪陪家人",
+        hint: "好感+8",
+        apply: function (st) {
+          // [全系统自洽修复] 域D A类#5: deepTask flag初始化（与所有NPC deepTask保持一致）
+          if (!st.flags) st.flags = {};
+          st.flags._npcDeepTask_uncle_chen_bank = true;
+          st.relationships.uncle_chen_bank.affinity = Math.min(
+            100,
+            st.relationships.uncle_chen_bank.affinity + 8,
+          );
             StateManager.addMessage(
               "💕 老陈点点头：「你说得对，我也该歇歇了。」",
               "success",
@@ -3398,12 +3400,12 @@ var NPCS = [
     role: "老同学",
     monthlyIncome: 14000,
     avatar: "images/avatars/ajie.png",
-    location: "random", // 随机出现
+    location: "random", // 随机出现 — [全系统自洽修复] 域D A类#5: random值使位置偶遇系统无法定位，改为实际地点以便schedule匹配
     schedule: {
-      morning: "random",
-      afternoon: "random",
-      evening: "random",
-      night: "random",
+      morning: "slum",
+      afternoon: "commercialDist",
+      evening: "commercialDist",
+      night: "entertainment",
     },
     birthday: 310,
     desc: "陈哥的老同学，多年前失踪后突然出现。欠了钱没还，又消失了。",

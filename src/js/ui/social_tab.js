@@ -399,6 +399,10 @@ function renderSocialTab(state, parent) {
       break;
     case "social_network":
       renderSocialNetworkTab(state, content);
+      // [全系统自洽修复] 域D: social_network 子Tab也需绑定拜访按钮
+      setTimeout(function () {
+        _bindVisitBtns(state, content);
+      }, 0);
       break;
     case "social_overview":
     default:
@@ -698,7 +702,7 @@ function renderSocialNetworkTab(state, parent) {
   parent.innerHTML = html;
 
   // ====== 公共：NPC 拜访按钮事件绑定（所有子Tab共享） ======
-  /** [全系统自洽修复] 域D 修复:将拜访按钮事件绑定提升为公共函数，供 social_npc / social_network 等子Tab共用 */
+  /** [全系统自洽修复] 域D 修复:将拜访按钮事件绑定提升为模块级公共函数，供所有社交子Tab共用 */
   function _bindVisitBtns(state, parent) {
     var btns = parent.querySelectorAll(".npc-visit-btn");
     for (var bi = 0; bi < btns.length; bi++) {
@@ -789,5 +793,4 @@ function renderSocialNetworkTab(state, parent) {
       })(btns[bi]);
     }
   }
-  _bindVisitBtns(state, parent);
 }

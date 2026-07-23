@@ -1123,6 +1123,21 @@ function chatWithNpc(npcId, state) {
     }
   }
 
+  // [全系统自洽修复] 域D A类#5: chatWithNpc — 对话时优先消费 NPC.contextDialogue 动态台词（替代固定 talkLines）
+  var _npcDef = null;
+  if (typeof NPCS !== "undefined" && NPCS.length) {
+    _npcDef = NPCS.find(function(n) { return n.id === npcId; });
+  }
+  if (_npcDef && _npcDef.contextDialogue && _npcDef.contextDialogue.length > 0) {
+    for (var ci = 0; ci < _npcDef.contextDialogue.length; ci++) {
+      var cd = _npcDef.contextDialogue[ci];
+      if (cd.condition && typeof cd.condition === "function" && cd.condition(state)) {
+        message = cd.line;
+        chatType = "context";
+        break;
+      }
+    }
+  }
   // [全系统自洽修复] 域D A类#2: 好感写入统一走 applyAffinityChange(钳制 + _lastInteractionDay + 升级播报)
   applyAffinityChange(state, npcId, delta, message);
 

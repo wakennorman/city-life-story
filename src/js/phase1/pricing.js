@@ -537,7 +537,7 @@ function calcFinalPrice(state, locKey, goodId) {
       }).length
     : 0;
   var npcP = Math.min(10, Math.floor(rl / 2) * 0.5);
-  if (npcP > 0) price *= 1 + npcP / 100;
+  if (npcP > 0) price *= 1 - npcP / 100; // [全系统自洽修复] 域A A类#1: NPC关系定价方向反转（原为+导致认识越多NPC物价越高，应折扣而非加价）
   // v3.1: 难度物价乘数（休闲档-10%，地狱档+30%）
   if (typeof getDifficultyMultiplier === "function") {
     var priceMult = getDifficultyMultiplier(state, "price");

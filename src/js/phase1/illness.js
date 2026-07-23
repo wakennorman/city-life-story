@@ -117,6 +117,11 @@ function rollDailyIllness(state) {
 
     // 概率掷骰
     var ch = ill.triggerChance || 0.5;
+    // [全系统自洽修复] 域A A类#2: seasonInfluence 接入实际计算（原定义在 cold/flu 上但从未被读取）
+    if (ill.seasonInfluence && state.weather && state.weather.season) {
+      var seasonMod = ill.seasonInfluence[state.weather.season];
+      if (typeof seasonMod === "number" && seasonMod > 0) ch *= seasonMod;
+    }
     // 消费点：城市服务·社区免费体检 medical.healthCheckDone → 建立健康基线，降低大病（severity≥4 或危急重症）触发概率
     if (
       state.medical &&
@@ -738,6 +743,7 @@ function checkEvolutionRisk(state) {
             insomniaCount: "失眠",
             depressionCount: "抑郁",
             officeWorkDays: "办公室工作",
+            manualLaborDays: "体力劳动天数", // [全系统自洽修复] 域A A类#3: 补全 manualLaborDays 标签（原缺失致腰椎间盘突出演化预警显示"未知习惯"）
             hungerHighStreak: "过度饱食",
             healthUnder30: "健康低下",
             age: "年龄",
@@ -795,6 +801,7 @@ function _showEvolutionWarningModal(
       insomniaCount: "得过失眠次数",
       depressionCount: "得过抑郁次数",
       officeWorkDays: "办公室工作天数",
+      manualLaborDays: "体力劳动天数", // [全系统自洽修复] 域A A类#3: 补全 manualLaborDays 标签
       hungerHighStreak: "连续过度饱食天数",
       healthUnder30: "健康<30天数",
       age: "年龄",

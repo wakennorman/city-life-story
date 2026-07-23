@@ -381,6 +381,8 @@ const ILLNESSES = {
     naturalCureDays: [5, 10],
     triggerHabit: { coldCount: 1, highFatigueStreak: 2 },
     triggerChance: 0.35,
+    // [全系统自洽修复] 域A A类#2: 补充flu的季节影响（流感冬春高发，与cold一致）
+    seasonInfluence: { spring: 1.4, summer: 0.4, autumn: 0.8, winter: 1.6 },
     symptom: { health: -3, fatigue: 10, fever: true },
     treatCost: { pharmacy: 200, hospital: 500 },
     desc: "比普通感冒更严重，高烧、全身酸痛。需要休息+药物治疗。",
