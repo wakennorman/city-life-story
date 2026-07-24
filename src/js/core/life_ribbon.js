@@ -98,10 +98,14 @@ var LIFE_RIBBONS = [
     priority: 6,
     color: "#8B6914",
     check: function (st, stats) {
-      var props = (st.investment && st.investment.properties) || [];
-      return props.some(function (p) {
-        return p.isSelfOccupied && p.mortgageRemaining > 0;
-      });
+      // [全系统自洽修复] 域G 修复:房奴一生缎带死字段——原读 p.isSelfOccupied/p.mortgageRemaining
+      // (全库仅此一处读取、无任何写入,恒 undefined→缎带永不授予)。改读真实字段:
+      // 自住房 st.investment.selfLivePropertyId(state.js:216 初始化) + 家庭房贷
+      // st.family.mortgage.remainingDays(daily_pipeline.js:1165 family_mortgage_tick 维护)。
+      var selfLive =
+        st.investment && st.investment.selfLivePropertyId != null;
+      var famMort = st.family && st.family.mortgage;
+      return !!(selfLive && famMort && (famMort.remainingDays || 0) > 0);
     },
   },
   {

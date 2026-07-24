@@ -504,7 +504,7 @@ const ILLNESSES = {
     // [全系统自洽修复] 域A A类#2: 删除 naturalCureDays（isChronic=true 矛盾字段）
     isChronic: true,
     triggerHabit: { kidneyDiseaseCount: 1, age: 50 }, // [全系统自洽修复] 域A A类#4: nephropathyCount→kidneyDiseaseCount
-    triggerChance: 0.2,
+    triggerChance: 0.12,
     symptom: { health: -4, fatigue: 6, physiqueDebuff: 8, kidneyFunctionLow: true },
     treatCost: { hospital_monthly: 800 },
     desc: "肾病恶化至肾衰竭，需要定期透析或移植。按月治疗（¥800/月）。",
@@ -518,7 +518,7 @@ const ILLNESSES = {
     severity: 6,
     // [全系统自洽修复] 域A A类#3: 删除 naturalCureDays（非慢性病却含自然痊愈天数，与 treatCostMonthly 并存矛盾）
     triggerHabit: { heartDiseaseCount: 1, age: 45 }, // [全系统自洽修复] 域A A类#5: coronaryHeartDiseaseCount→heartDiseaseCount
-    triggerChance: 0.15,
+    triggerChance: 0.1,
     symptom: { health: -5, fatigue: 8, physiqueDebuff: 10, randomChestPain: 0.05 },
     treatCost: { hospital_monthly: 600 },
     desc: "冠心病恶化导致心脏病发作。需要按月治疗（¥600/月）+ 严格避免劳累和情绪激动。",
