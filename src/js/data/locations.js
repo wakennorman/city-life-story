@@ -305,14 +305,14 @@ const LOCATIONS = {
     wealthTier: 3,
     footfall: 0.3,
     vendingNote: "门禁严格，需要预约才能进入",
-    specialties: ["luxury", "electronics"],
+    specialties: ["cigarettes", "electronics"], // [全系统自洽修复] 域A 修复:A1 "luxury"是category非good.id→改真实高端货cigarettes(否则招牌商品被getGoodById静默丢弃)
     dailyProbability: 0.2,
     specialCategory: ["luxury"],
     jobs: ["premium_housekeeper", "chauffeur"],
     priceMod: {
       clothing: 1.3,
       electronics: 1.2,
-      luxury: 1.4,
+      cigarettes: 1.4, // [全系统自洽修复] 域A 修复:A1 priceMod键"luxury"非good.id→永不命中→改cigarettes
     },
   },
   old_community: {
@@ -324,13 +324,13 @@ const LOCATIONS = {
     wealthTier: 2,
     footfall: 0.7,
     vendingNote: "老年居民多，消费习惯保守",
-    specialties: ["daily_use", "food"],
+    specialties: ["daily_use", "vegetables"], // [全系统自洽修复] 域A 修复:A1 "food"是category非good.id→改老小区主食蔬菜vegetables
     dailyProbability: 0.4,
     specialCategory: ["daily", "food"],
     jobs: ["cleaning_service", "repair_service"],
     priceMod: {
       daily_use: 0.9,
-      food: 0.85,
+      vegetables: 0.85, // [全系统自洽修复] 域A 修复:A1 priceMod键"food"非good.id→永不命中→改vegetables
     },
   },
   //
@@ -451,11 +451,11 @@ const LOCATIONS = {
     wealthTier: 2,
     footfall: 0.8,
     vendingNote: "运动人群多，消费力中等",
-    specialties: ["sports_equipment", "snacks"],
+    specialties: ["vitamins_item", "snacks"], // [全系统自洽修复] 域A 修复:A1 "sports_equipment"非good.id(不存在)→改健身场景真实货vitamins_item
     dailyProbability: 0.4,
     specialCategory: ["daily"],
     jobs: ["gym_coach"],
-    priceMod: { snacks: 1.1, sports_equipment: 1.0 },
+    priceMod: { snacks: 1.1, vitamins_item: 1.1 }, // [全系统自洽修复] 域A 修复:A1 priceMod键"sports_equipment"非good.id→改vitamins_item
   },
   internet_cafe: {
     id: "internet_cafe",
@@ -466,11 +466,11 @@ const LOCATIONS = {
     wealthTier: 2,
     footfall: 0.7,
     vendingNote: "年轻人多，零食饮料消费旺盛",
-    specialties: ["snacks", "beverages"],
+    specialties: ["snacks", "beer"], // [全系统自洽修复] 域A 修复:A1 "beverages"非good.id(不存在)→改真实饮品beer
     dailyProbability: 0.5,
     specialCategory: ["food"],
     jobs: ["data_entry"],
-    priceMod: { snacks: 1.0, beverages: 1.0 },
+    priceMod: { snacks: 1.0, beer: 1.0 }, // [全系统自洽修复] 域A 修复:A1 priceMod键"beverages"非good.id→改beer
   },
   logistics_park: {
     id: "logistics_park",
@@ -481,11 +481,11 @@ const LOCATIONS = {
     wealthTier: 2,
     footfall: 1.0,
     vendingNote: "快递员和司机是主力消费群体",
-    specialties: ["food", "daily_use"],
+    specialties: ["instant_noodles", "daily_use"], // [全系统自洽修复] 域A 修复:A1 "food"是category非good.id→改快递员场景主食instant_noodles
     dailyProbability: 0.5,
     specialCategory: ["food", "daily"],
     jobs: ["package_delivery", "warehouse_worker", "logistics_sorting"],
-    priceMod: { food: 0.9, daily_use: 0.85 },
+    priceMod: { instant_noodles: 0.9, daily_use: 0.85 }, // [全系统自洽修复] 域A 修复:A1 priceMod键"food"非good.id→改instant_noodles
   },
   auto_city: {
     id: "auto_city",
@@ -496,7 +496,7 @@ const LOCATIONS = {
     wealthTier: 3,
     footfall: 0.6,
     vendingNote: "看车人多，但买车人少",
-    specialties: ["electronics", "luxury"],
+    specialties: ["electronics", "cigarettes"], // [全系统自洽修复] 域A 修复:A1 "luxury"是category非good.id→改真实高端货cigarettes
     dailyProbability: 0.3,
     specialCategory: ["electronics"],
     jobs: ["auto_repair", "car_sales"],
@@ -511,9 +511,9 @@ const LOCATIONS = {
     wealthTier: 2,
     footfall: 0.5,
     vendingNote: "爱好者多，消费力中等",
-    specialties: ["flowers", "pets"],
+    specialties: ["carnation", "rose"], // [全系统自洽修复] 域A 修复:A1 "flowers"是category、"pets"不存在→改真实花卉good.id carnation/rose
     dailyProbability: 0.3,
-    specialCategory: [],
+    specialCategory: ["flowers"], // [全系统自洽修复] 域A 修复:A1 specialCategory补flowers使花鸟市场提升花卉出现概率
     jobs: ["pet_sitter"],
     priceMod: {},
   },
@@ -527,14 +527,14 @@ const LOCATIONS = {
     wealthTier: 2,
     footfall: 0.8,
     vendingNote: "淘货人多，消费力参差不齐",
-    specialties: ["clothing", "electronics", "books"],
+    specialties: ["clothing", "electronics", "second_hand_book"], // [全系统自洽修复] 域A 修复:A1 "books"是category非good.id→改真实二手书second_hand_book
     dailyProbability: 0.5,
     specialCategory: ["clothing", "electronics"],
     jobs: [],
     priceMod: {
       clothing: 0.7,
       electronics: 0.75,
-      books: 0.6,
+      second_hand_book: 0.6, // [全系统自洽修复] 域A 修复:A1 priceMod键"books"非good.id→改second_hand_book
     },
   },
   vegetable_market: {
@@ -545,15 +545,15 @@ const LOCATIONS = {
     wealthTier: 2,
     footfall: 1.2,
     vendingNote: "买菜人多，但消费力有限",
-    specialties: ["vegetables", "fruits", "meat", "seafood"],
+    specialties: ["vegetables", "fruits", "pork", "fish"], // [全系统自洽修复] 域A 修复:A1 "meat"/"seafood"非good.id(不存在)→改真实肉类good.id pork/fish
     dailyProbability: 0.8,
     specialCategory: ["food"],
     jobs: ["street_vending_food"],
     priceMod: {
       vegetables: 0.7,
       fruits: 0.75,
-      meat: 0.85,
-      seafood: 0.8,
+      pork: 0.85, // [全系统自洽修复] 域A 修复:A1 priceMod键"meat"非good.id→改pork
+      fish: 0.8, // [全系统自洽修复] 域A 修复:A1 priceMod键"seafood"非good.id→改fish
     },
   },
 };

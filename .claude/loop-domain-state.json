@@ -1,8 +1,8 @@
 {
-  "currentRound": 188,
-  "currentDomain": "H",
-  "nextDomain": "A",
-  "rotationIndex": 7,
+  "currentRound": 189,
+  "currentDomain": "A",
+  "nextDomain": "B",
+  "rotationIndex": 0,
   "domainOrder": [
     "A",
     "B",
@@ -14,7 +14,7 @@
     "H"
   ],
   "domainRecency": {
-    "A": 171,
+    "A": 189,
     "B": 172,
     "C": 187,
     "D": 184,
@@ -24,11 +24,6 @@
     "H": 188
   },
   "history": [
-    {
-      "round": 184,
-      "domain": "D",
-      "note": "域D: A类修复4项+联动增强3项(D→G人情节骨/D→E人情借贷/D→C师徒传承)"
-    },
     {
       "round": 185,
       "domain": "E",
@@ -48,13 +43,18 @@
       "round": 188,
       "domain": "H",
       "note": "域H: A类修复3项(startup_events.js condition→conditions死门控+st.company→st.startup.company不存在字段/STARTUP_FIELD_MAP遗漏revenue静默丢弃)+联动增强3项(H→E股权套现/H→D联合创始人情谊/H→G创业者透支反思)"
+    },
+    {
+      "round": 189,
+      "domain": "A",
+      "note": "域A: A类修复2项(locations.js 9地点 specialties/priceMod 非good.id token→招牌商品+价格倍率双双死数据,改真实good.id / skills.js getAvailableCertificates 补 electrician技能门槛+ageMin/ageMax年龄门槛,原死门控)+联动增强3项(A→D识货荐友/A→C练摊议价眼力/A→E小本第一桶金)"
     }
   ],
-  "lastDomain": "H",
-  "lastRound": 188,
+  "lastDomain": "A",
+  "lastRound": 189,
   "lastDate": "2026-07-24",
-  "lastCommit": "8bcbe4f5",
-  "pushStatus": "PUSHED",
+  "lastCommit": "PENDING",
+  "pushStatus": "PENDING",
   "completedDomains": [
     "A",
     "B",
@@ -65,5 +65,5 @@
     "G",
     "H"
   ],
-  "description": "全系统优化 loop R188 完成。域H(Phase2/公司): 3项A类修复(startup_events 死门控/不存在字段/revenue 遗漏) + 3项联动增强(H→E/H→D/H→G)。下轮R189→域A(数据/数值平衡, recency 171 最薄弱)。"
+  "description": "全系统优化 loop R189 完成。域A(数据/数值平衡, recency 171 最薄弱): 2项A类修复(地点交易系统 specialties/priceMod 无效id / 证书电工+年龄门槛死门控) + 3项联动增强(A→D/A→C/A→E)。下轮R190→域B(事件/叙事, recency 172 最薄弱)。"
 }

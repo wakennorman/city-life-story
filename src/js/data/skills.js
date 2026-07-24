@@ -297,7 +297,17 @@ function getAvailableCertificates(state) {
       return false;
     if (req.sales && state.skills.sales && state.skills.sales.level < req.sales)
       return false;
+    // [全系统自洽修复] 域A 修复:A2 electrician技能门槛原无人校验(electrician_cert req.electrician:20死门控)→电工0级也能考电工证
+    if (
+      req.electrician &&
+      state.skills.electrician &&
+      state.skills.electrician.level < req.electrician
+    )
+      return false;
     if (req.mental && p.mental < req.mental) return false;
+    // [全系统自洽修复] 域A 修复:A2 年龄门槛ageMin/ageMax原全库无消费者(死门控)→超龄/未成年也能考驾照/厨师证等
+    if (req.ageMin && (p.age || 0) < req.ageMin) return false;
+    if (req.ageMax && (p.age || 0) > req.ageMax) return false;
     return true;
   });
 }
