@@ -633,6 +633,33 @@
       }
     }
 
+    // === D→F 联动: 社交提醒（有好感度接近里程碑的NPC时显示）===
+    if (state.relationships && typeof NPCS !== "undefined") {
+      var _closeToTarget = null;
+      var _bestAff = 0;
+      for (var _nid in state.relationships) {
+        var _rel = state.relationships[_nid];
+        if (!_rel || !_rel.met) continue;
+        var _aff = _rel.affinity || 0;
+        if (_aff >= 30 && _aff < 40 && _aff > _bestAff) {
+          _closeToTarget = { id: _nid, next: 40, cur: _aff };
+          _bestAff = _aff;
+        } else if (_aff >= 60 && _aff < 70 && _aff > _bestAff) {
+          _closeToTarget = { id: _nid, next: 70, cur: _aff };
+          _bestAff = _aff;
+        }
+      }
+      if (_closeToTarget) {
+        var _npc = NPCS.find(function (n) { return n.id === _closeToTarget.id; });
+        if (_npc) {
+          var _socialTip = document.createElement("div");
+          _socialTip.style.cssText = "margin-bottom:6px;padding:5px 8px;background:rgba(196,154,58,0.06);border-radius:6px;font-size:10px;color:var(--text-secondary);";
+          _socialTip.innerHTML = "💬 " + (_npc.icon || "👤") + " " + (_npc.name || _npc.id) + " 好感" + _closeToTarget.cur + "/" + _closeToTarget.next + "，再聊聊天就到下一阶了";
+          card.appendChild(_socialTip);
+        }
+      }
+    }
+
     // 目标列表
     quests.forEach(function (q, i) {
       var done = _checkQuest(q, state);

@@ -186444,6 +186444,20 @@ const DAILY_PIPELINE = [
           );
         }
       }
+      // === D→G 联动: 社交支持→心情恢复 ===
+      // 有亲密好友(好感≥60)的玩家每天获得额外心情恢复，模拟社交支持
+      if (state.relationships) {
+        var _closeFriends = 0;
+        for (var _rid in state.relationships) {
+          if (state.relationships[_rid] && (state.relationships[_rid].affinity || 0) >= 60) {
+            _closeFriends++;
+          }
+        }
+        if (_closeFriends >= 1) {
+          var _socialBonus = Math.min(3, _closeFriends);
+          state.needs.happiness = Math.min(100, (state.needs.happiness || 50) + _socialBonus);
+        }
+      }
     },
   },
 
@@ -250161,6 +250175,33 @@ if (typeof window !== "undefined") {
           " ¥" + (_nextLevel.salary || 0).toLocaleString() + "/月" +
           " · 在职" + (_job.workDays || 0) + "天";
         card.appendChild(_progress);
+      }
+    }
+
+    // === D→F 联动: 社交提醒（有好感度接近里程碑的NPC时显示）===
+    if (state.relationships && typeof NPCS !== "undefined") {
+      var _closeToTarget = null;
+      var _bestAff = 0;
+      for (var _nid in state.relationships) {
+        var _rel = state.relationships[_nid];
+        if (!_rel || !_rel.met) continue;
+        var _aff = _rel.affinity || 0;
+        if (_aff >= 30 && _aff < 40 && _aff > _bestAff) {
+          _closeToTarget = { id: _nid, next: 40, cur: _aff };
+          _bestAff = _aff;
+        } else if (_aff >= 60 && _aff < 70 && _aff > _bestAff) {
+          _closeToTarget = { id: _nid, next: 70, cur: _aff };
+          _bestAff = _aff;
+        }
+      }
+      if (_closeToTarget) {
+        var _npc = NPCS.find(function (n) { return n.id === _closeToTarget.id; });
+        if (_npc) {
+          var _socialTip = document.createElement("div");
+          _socialTip.style.cssText = "margin-bottom:6px;padding:5px 8px;background:rgba(196,154,58,0.06);border-radius:6px;font-size:10px;color:var(--text-secondary);";
+          _socialTip.innerHTML = "💬 " + (_npc.icon || "👤") + " " + (_npc.name || _npc.id) + " 好感" + _closeToTarget.cur + "/" + _closeToTarget.next + "，再聊聊天就到下一阶了";
+          card.appendChild(_socialTip);
+        }
       }
     }
 

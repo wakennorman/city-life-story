@@ -215,6 +215,20 @@ const DAILY_PIPELINE = [
           );
         }
       }
+      // === D→G 联动: 社交支持→心情恢复 ===
+      // 有亲密好友(好感≥60)的玩家每天获得额外心情恢复，模拟社交支持
+      if (state.relationships) {
+        var _closeFriends = 0;
+        for (var _rid in state.relationships) {
+          if (state.relationships[_rid] && (state.relationships[_rid].affinity || 0) >= 60) {
+            _closeFriends++;
+          }
+        }
+        if (_closeFriends >= 1) {
+          var _socialBonus = Math.min(3, _closeFriends);
+          state.needs.happiness = Math.min(100, (state.needs.happiness || 50) + _socialBonus);
+        }
+      }
     },
   },
 
