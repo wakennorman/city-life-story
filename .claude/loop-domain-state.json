@@ -1,7 +1,7 @@
 {
-  "currentRound": 192,
-  "currentDomain": "G",
-  "nextDomain": "H",
+  "currentRound": 193,
+  "currentDomain": "H",
+  "nextDomain": "D",
   "rotationIndex": 7,
   "domainOrder": [
     "A",
@@ -21,7 +21,7 @@
     "E": 185,
     "F": 186,
     "G": 192,
-    "H": 188
+    "H": 193
   },
   "history": [
     {
@@ -58,13 +58,18 @@
       "round": 192,
       "domain": "G",
       "note": "域G: A类修复1项(life_ribbon.js「房奴一生」缎带check死字段,改读selfLivePropertyId/family.mortgage.remainingDays)+联动增强3项(G→D暖房请街坊/G→C安居后重拾手艺/G→A还贷精算心智成长),新建core_lifecycle_linkage_r192.js;另并发进程产出domain_g_linkage_r192.js(极端天气生存记忆/季节更替叙事)2项,合并提交。下轮R193→域H(recency 188)。"
+    },
+    {
+      "round": 193,
+      "domain": "H",
+      "note": "域H: A类2项(startup_events.js STARTUP_FIELD_MAP 遗漏 revenue→mature_second_curve/consumer_viral三事件营收增益被静默丢弃,补 revenue:{clamp,min0} / events_corp.js:1570 技能经验 .exp→.xp,「管理技能XP+50」静默丢失修复)+联动3项(新建 domain_h_linkage_r193.js,3 corporate: H→E营收里程碑迁移理财意识/H→D团队年终心意涨好感firstMetNpc/H→C带队复盘addSkillXp管理XP)。并行窗口 investment.js(域E tradeLog+71行)已 stash 隔离构建后 pop 还原,全程不碰。MC 6×400d 0代码异常。下轮R194→域D(recency 184 最薄弱)。"
     }
   ],
-  "lastDomain": "G",
-  "lastRound": 192,
-  "lastDate": "2026-07-24",
-  "lastCommit": "9cbf6306",
-  "pushStatus": "PUSHED",
+  "lastDomain": "H",
+  "lastRound": 193,
+  "lastDate": "2026-07-25",
+  "lastCommit": "PENDING",
+  "pushStatus": "PENDING",
   "completedDomains": [
     "A",
     "B",
@@ -75,5 +80,5 @@
     "G",
     "H"
   ],
-  "description": "全系统优化 loop R192 完成。域G第五轮: 1项A类修复(life_ribbon房奴一生缎带死字段复活) + 5项联动增强(3项core_lifecycle_linkage_r192 + 2项domain_g_linkage_r192)。H为最薄弱(recency 188)，下轮R193→域H。"
+  "description": "全系统优化 loop R193 完成。域H: 2项A类修复(startup_events revenue字段映射遗漏 + events_corp .exp→.xp 管理XP拼写) + 3项联动增强(domain_h_linkage_r193.js: H→E/H→D/H→C)。D为最薄弱(recency 184)，下轮R194→域D。"
 }
