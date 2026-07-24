@@ -403,9 +403,11 @@ function showWelcome() {
           "</button>" +
           '<button id="btn-load-menu" class="btn btn-sm" style="margin-top:8px;">📋 选择存档...</button>';
         document.getElementById("btn-load-latest").onclick = function () {
+          console.log("[btn-load-latest] clicked, slot=", latest.slot, "latest=", JSON.stringify(latest));
           loadExistingGame(latest.slot);
         };
         document.getElementById("btn-load-menu").onclick = function () {
+          console.log("[btn-load-menu] clicked");
           showLoadMenuOnWelcome();
         };
       } else {
@@ -1810,29 +1812,41 @@ function startNewGame() {
 }
 
 function loadExistingGame(slot) {
-  var saveData = loadGame(slot);
-  if (!saveData) {
-    // 尝试从索引重新加载（兼容旧存档格式）
-    if (typeof getSlotInfo === "function") {
-      var info = getSlotInfo(slot);
-      if (info && (slot === "_auto" || (typeof slot === "number" && slot >= 1 && slot <= 5))) {
-        saveData = loadGame(slot);
+  try {
+    console.log("[loadExistingGame] 尝试读档 slot=", slot, "type=", typeof slot);
+    var saveData = loadGame(slot);
+    console.log("[loadExistingGame] loadGame 结果:", saveData ? "找到存档" : "null");
+    if (!saveData) {
+      // 兜底：尝试用数字格式重新加载
+      if (typeof slot === "string" && /^\d+$/.test(slot)) {
+        saveData = loadGame(Number(slot));
+        console.log("[loadExistingGame] 数字格式重试:", saveData ? "找到" : "仍null");
       }
     }
+    if (!saveData && typeof slot === "number") {
+      // 兜底：尝试用字符串格式重新加载
+      saveData = loadGame(String(slot));
+      console.log("[loadExistingGame] 字符串格式重试:", saveData ? "找到" : "仍null");
+    }
     if (!saveData) {
-      StateManager.addMessage("⚠️ 存档数据不存在，请检查或重新开始游戏。", "danger");
+      console.error("[loadExistingGame] 存档数据不存在, slot=", slot);
+      if (typeof showModal === "function") {
+        showModal({
+          title: "⚠️ 读档失败",
+          body: '<p style="color:var(--danger);">存档数据不存在，请检查或重新开始游戏。</p>',
+          buttons: [{ text: "知道了", cls: "btn-primary" }],
+        });
+      }
       return;
     }
-  }
-  if (saveData) {
-    // 显示读档回忆文案（P1 - 存档快照）
+    StateManager.importState(saveData);
+    // 显示读档回忆文案（P1 - 存档快照）— 必须在 importState 之后，否则 StateManager 未初始化
     if (saveData._snapshot && typeof getLoadMemoryText === "function") {
       var memoryText = getLoadMemoryText(saveData._snapshot);
       if (memoryText) {
         StateManager.addMessage("📖 读档记忆：" + memoryText, "event");
       }
     }
-    StateManager.importState(saveData);
     // 兼容旧存档：初始化企业命运系统
     if (typeof initEnterpriseFate === "function") {
       initEnterpriseFate(StateManager.getState());
@@ -1859,6 +1873,15 @@ function loadExistingGame(slot) {
     if (typeof initCashCarousel === "function") initCashCarousel();
     // 绑定顶栏按钮（同 startNewGame）
     bindHeaderButtons();
+  } catch (e) {
+    console.error("[loadExistingGame] 异常:", e);
+    if (typeof showModal === "function") {
+      showModal({
+        title: "⚠️ 读档异常",
+        body: '<p style="color:var(--danger);">读档时发生错误：' + (e.message || "未知错误") + '</p>',
+        buttons: [{ text: "知道了", cls: "btn-primary" }],
+      });
+    }
   }
 }
 
@@ -2202,9 +2225,12 @@ function showLoadMenuOnWelcome() {
 
   // 绑定存档槽位点击（替代不稳定的 inline onclick）
   setTimeout(function () {
-    document.querySelectorAll(".welcome-slot-card").forEach(function (card) {
+    var cards = document.querySelectorAll(".welcome-slot-card");
+    console.log("[welcome-slot] 找到卡片数:", cards.length);
+    cards.forEach(function (card) {
       card.addEventListener("click", function () {
         var slot = card.dataset.slot;
+        console.log("[welcome-slot] 点击 slot=", slot);
         var isCompare = card.dataset.compare === "1";
         if (isCompare) {
           selectForCompare(slot);

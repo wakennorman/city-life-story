@@ -302,7 +302,8 @@ function endQuarter() {
   }
 
   // [全系统自洽修复] 域H 联动增强5: 职场压力累积叙事（H→B）— 风险过高时触发倦怠反思
-  var riskLevel = c.risk || 0;
+  // [全系统自洽修复] 域H 修复: risk字段路径修正（原读state.corporate.risk→恒undefined，改读state.player.corporate.risk）
+  var riskLevel = (state.player.corporate && state.player.corporate.risk) || 0;
   if (riskLevel > 70) {
     var burnoutMsg = "😰 职场风险等级已达" + riskLevel + "，你感到身心俱疲。";
     if (riskLevel > 85) {

@@ -2703,11 +2703,8 @@ function calculateStabilityMultiplier(state) {
 function calculateDTIPenalty(state, monthlyIncome) {
   if (monthlyIncome <= 0) return 0.05; // 无收入 → 接近拒贷
 
-  // [全系统自洽修复] 域E 修复:运算符优先级——+高于||，导致debt非零时bankDebt和villageDebt被静默忽略
-  const totalDebt =
-    (state.resources?.debt || 0) +
-    (state.resources?.bankDebt || 0) +
-    (state.resources?.villageDebt || 0);
+  // [全系统自洽修复] 域E 修复: debt字段已是total(=villageDebt+bankDebt)，原三重求和致DTI翻倍→贷款额系统性低估
+  const totalDebt = state.resources?.debt || 0;
 
   const dtI = totalDebt / monthlyIncome;
 
@@ -2865,10 +2862,8 @@ function calculateLoanCapacity(state) {
 
   // Step 5: 负债率惩罚
   const dtiMod = calculateDTIPenalty(state, monthlyIncome);
-  const totalDebt =
-    (state.resources?.debt || 0) +
-    (state.resources?.bankDebt || 0) +
-    (state.resources?.villageDebt || 0);
+  // [全系统自洽修复] 域E 修复: debt已是total，原三重求和致DTI翻倍
+  const totalDebt = state.resources?.debt || 0;
   const dtI = totalDebt / monthlyIncome;
 
   if (dtI >= 1) {
@@ -3044,6 +3039,7 @@ function grantLoan(state, amount) {
   // 发放贷款
   state.resources.cash = (state.resources.cash || 0) + amount; // [全系统自洽修复] 域E A类#2: cash NaN守卫
   state.resources.bankDebt = (state.resources.bankDebt || 0) + amount;
+  state.resources.debt = (state.resources.debt || 0) + amount; // [全系统自洽修复] 域E 修复: 保持debt=total不变量（原缺失致debt滞后）
   state.resources.bankDebtDay = state.player.day;
 
   // 记录信贷历史
@@ -3518,8 +3514,8 @@ function loadGame(slot) {
     let key;
     if (slot === "_auto") {
       key = AUTO_SAVE_KEY;
-    } else if (typeof slot === "number" && slot >= 1 && slot <= NUM_SLOTS) {
-      key = slotKey(slot);
+    } else if ((typeof slot === "number" || (typeof slot === "string" && /^\d+$/.test(slot))) && Number(slot) >= 1 && Number(slot) <= NUM_SLOTS) {
+      key = slotKey(Number(slot));
     } else {
       // 兼容旧版：尝试直接以 slot 为键
       key = slot;
@@ -3543,18 +3539,20 @@ function deleteSave(slot) {
     setSaveIndex(index);
     return;
   }
-  if (slot < 1 || slot > NUM_SLOTS) return;
-  localStorage.removeItem(slotKey(slot));
+  var numSlot = (typeof slot === "string" && /^\d+$/.test(slot)) ? Number(slot) : slot;
+  if (typeof numSlot !== "number" || numSlot < 1 || numSlot > NUM_SLOTS) return;
+  localStorage.removeItem(slotKey(numSlot));
   const index = getSaveIndex();
-  delete index[slot];
+  delete index[numSlot];
   setSaveIndex(index);
 }
 
 /** 检查指定槽位是否有存档 */
 function hasSave(slot) {
   if (slot === "_auto") return localStorage.getItem(AUTO_SAVE_KEY) !== null;
-  if (typeof slot === "number")
-    return localStorage.getItem(slotKey(slot)) !== null;
+  var numSlot = (typeof slot === "string" && /^\d+$/.test(slot)) ? Number(slot) : slot;
+  if (typeof numSlot === "number" && numSlot >= 1 && numSlot <= NUM_SLOTS)
+    return localStorage.getItem(slotKey(numSlot)) !== null;
   // 兼容检查任意存档
   const index = getSaveIndex();
   return Object.keys(index).length > 0;
@@ -19134,10 +19132,12 @@ function registerNewsEventsToPool() {
       story:
         "你终于拿到了辰光网络的offer——P8，年薪¥80万。入职第一天，你发现旁边工位的同事在收拾东西：「公司第三季度要裁20%，你不知道？」HR的微笑很专业：「组织架构优化，正常调整。」",
       conditions: function (st) {
-        if (!st.flags || !st.flags._chenguangOffer) return false; // [Layer3]
+        // [全系统自洽修复] 域H 修复: _chenguangOffer标记从未设置→事件永不可达，改为P8职级+天数门控
+        if (!st.flags) return false;
         return (
           st.player.phase === "corporate" &&
           st.player.day >= 80 &&
+          st.corporate && st.corporate.rank === "P8" &&
           !st.flags._siegeReversalSeen
         );
       },
@@ -194095,7 +194095,8 @@ function endQuarter() {
   }
 
   // [全系统自洽修复] 域H 联动增强5: 职场压力累积叙事（H→B）— 风险过高时触发倦怠反思
-  var riskLevel = c.risk || 0;
+  // [全系统自洽修复] 域H 修复: risk字段路径修正（原读state.corporate.risk→恒undefined，改读state.player.corporate.risk）
+  var riskLevel = (state.player.corporate && state.player.corporate.risk) || 0;
   if (riskLevel > 70) {
     var burnoutMsg = "😰 职场风险等级已达" + riskLevel + "，你感到身心俱疲。";
     if (riskLevel > 85) {
@@ -195485,6 +195486,7 @@ function tickInvestmentDaily(state) {
   var inv = state.investment;
   if (!inv || inv.lastTickDay >= state.player.day) return;
   inv.lastTickDay = state.player.day;
+  state.flags._invSkillXpToday = false; // [全系统自洽修复] 域E 联动: 每日重置投资技能XP标记
 
   // ================================================================
   // 新闻→投资价格传导：计算活跃新闻对各标的的综合影响
@@ -195697,6 +195699,14 @@ function tickInvestmentDaily(state) {
           break;
         }
       }
+      // [全系统自洽修复] 域E 联动增强: 投资组合首次突破¥10万→财务安全感健康加成（E→G）
+      if (_pv >= 100000 && !state.flags._financialSecurityHealth) {
+        state.flags._financialSecurityHealth = true;
+        if (state.status) {
+          state.status.health = Math.min(100, (state.status.health || 0) + 5);
+          StateManager.addMessage("💪 投资组合突破¥10万，财务安全感让你身心舒畅。健康+5。", "success");
+        }
+      }
     }
   } catch (e) {
     // 静默：峰值追踪失败不影响主流程
@@ -195837,6 +195847,15 @@ function checkInvestmentMilestones(state, inv) {
   if (inv.btcHoldings && inv.btcHoldings > 0) {
     var btcPrice = inv.btcPrice || 0;
     totalValue += btcPrice * inv.btcHoldings;
+  }
+
+  // [全系统自洽修复] 域E 联动增强: 投资实践→会计/管理技能XP（E→C 经济-职业联动）
+  if (totalValue >= 50000 && !state.flags._invSkillXpToday && state.skills) {
+    state.flags._invSkillXpToday = true;
+    if (typeof addSkillXp === "function") {
+      addSkillXp("accounting", 3); // 投资实践→会计经验
+      if (totalValue >= 200000) addSkillXp("management", 2); // 大额投资→管理经验
+    }
   }
 
   var prevMilestone = state.flags._invLastMilestone || 0;
@@ -251533,9 +251552,11 @@ function showWelcome() {
           "</button>" +
           '<button id="btn-load-menu" class="btn btn-sm" style="margin-top:8px;">📋 选择存档...</button>';
         document.getElementById("btn-load-latest").onclick = function () {
+          console.log("[btn-load-latest] clicked, slot=", latest.slot, "latest=", JSON.stringify(latest));
           loadExistingGame(latest.slot);
         };
         document.getElementById("btn-load-menu").onclick = function () {
+          console.log("[btn-load-menu] clicked");
           showLoadMenuOnWelcome();
         };
       } else {
@@ -252940,29 +252961,41 @@ function startNewGame() {
 }
 
 function loadExistingGame(slot) {
-  var saveData = loadGame(slot);
-  if (!saveData) {
-    // 尝试从索引重新加载（兼容旧存档格式）
-    if (typeof getSlotInfo === "function") {
-      var info = getSlotInfo(slot);
-      if (info && (slot === "_auto" || (typeof slot === "number" && slot >= 1 && slot <= 5))) {
-        saveData = loadGame(slot);
+  try {
+    console.log("[loadExistingGame] 尝试读档 slot=", slot, "type=", typeof slot);
+    var saveData = loadGame(slot);
+    console.log("[loadExistingGame] loadGame 结果:", saveData ? "找到存档" : "null");
+    if (!saveData) {
+      // 兜底：尝试用数字格式重新加载
+      if (typeof slot === "string" && /^\d+$/.test(slot)) {
+        saveData = loadGame(Number(slot));
+        console.log("[loadExistingGame] 数字格式重试:", saveData ? "找到" : "仍null");
       }
     }
+    if (!saveData && typeof slot === "number") {
+      // 兜底：尝试用字符串格式重新加载
+      saveData = loadGame(String(slot));
+      console.log("[loadExistingGame] 字符串格式重试:", saveData ? "找到" : "仍null");
+    }
     if (!saveData) {
-      StateManager.addMessage("⚠️ 存档数据不存在，请检查或重新开始游戏。", "danger");
+      console.error("[loadExistingGame] 存档数据不存在, slot=", slot);
+      if (typeof showModal === "function") {
+        showModal({
+          title: "⚠️ 读档失败",
+          body: '<p style="color:var(--danger);">存档数据不存在，请检查或重新开始游戏。</p>',
+          buttons: [{ text: "知道了", cls: "btn-primary" }],
+        });
+      }
       return;
     }
-  }
-  if (saveData) {
-    // 显示读档回忆文案（P1 - 存档快照）
+    StateManager.importState(saveData);
+    // 显示读档回忆文案（P1 - 存档快照）— 必须在 importState 之后，否则 StateManager 未初始化
     if (saveData._snapshot && typeof getLoadMemoryText === "function") {
       var memoryText = getLoadMemoryText(saveData._snapshot);
       if (memoryText) {
         StateManager.addMessage("📖 读档记忆：" + memoryText, "event");
       }
     }
-    StateManager.importState(saveData);
     // 兼容旧存档：初始化企业命运系统
     if (typeof initEnterpriseFate === "function") {
       initEnterpriseFate(StateManager.getState());
@@ -252989,6 +253022,15 @@ function loadExistingGame(slot) {
     if (typeof initCashCarousel === "function") initCashCarousel();
     // 绑定顶栏按钮（同 startNewGame）
     bindHeaderButtons();
+  } catch (e) {
+    console.error("[loadExistingGame] 异常:", e);
+    if (typeof showModal === "function") {
+      showModal({
+        title: "⚠️ 读档异常",
+        body: '<p style="color:var(--danger);">读档时发生错误：' + (e.message || "未知错误") + '</p>',
+        buttons: [{ text: "知道了", cls: "btn-primary" }],
+      });
+    }
   }
 }
 
@@ -253332,9 +253374,12 @@ function showLoadMenuOnWelcome() {
 
   // 绑定存档槽位点击（替代不稳定的 inline onclick）
   setTimeout(function () {
-    document.querySelectorAll(".welcome-slot-card").forEach(function (card) {
+    var cards = document.querySelectorAll(".welcome-slot-card");
+    console.log("[welcome-slot] 找到卡片数:", cards.length);
+    cards.forEach(function (card) {
       card.addEventListener("click", function () {
         var slot = card.dataset.slot;
+        console.log("[welcome-slot] 点击 slot=", slot);
         var isCompare = card.dataset.compare === "1";
         if (isCompare) {
           selectForCompare(slot);

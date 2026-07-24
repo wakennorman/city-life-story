@@ -2684,10 +2684,12 @@
       story:
         "你终于拿到了辰光网络的offer——P8，年薪¥80万。入职第一天，你发现旁边工位的同事在收拾东西：「公司第三季度要裁20%，你不知道？」HR的微笑很专业：「组织架构优化，正常调整。」",
       conditions: function (st) {
-        if (!st.flags || !st.flags._chenguangOffer) return false; // [Layer3]
+        // [全系统自洽修复] 域H 修复: _chenguangOffer标记从未设置→事件永不可达，改为P8职级+天数门控
+        if (!st.flags) return false;
         return (
           st.player.phase === "corporate" &&
           st.player.day >= 80 &&
+          st.corporate && st.corporate.rank === "P8" &&
           !st.flags._siegeReversalSeen
         );
       },

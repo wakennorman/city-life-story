@@ -381,8 +381,8 @@ function loadGame(slot) {
     let key;
     if (slot === "_auto") {
       key = AUTO_SAVE_KEY;
-    } else if (typeof slot === "number" && slot >= 1 && slot <= NUM_SLOTS) {
-      key = slotKey(slot);
+    } else if ((typeof slot === "number" || (typeof slot === "string" && /^\d+$/.test(slot))) && Number(slot) >= 1 && Number(slot) <= NUM_SLOTS) {
+      key = slotKey(Number(slot));
     } else {
       // 兼容旧版：尝试直接以 slot 为键
       key = slot;
@@ -406,18 +406,20 @@ function deleteSave(slot) {
     setSaveIndex(index);
     return;
   }
-  if (slot < 1 || slot > NUM_SLOTS) return;
-  localStorage.removeItem(slotKey(slot));
+  var numSlot = (typeof slot === "string" && /^\d+$/.test(slot)) ? Number(slot) : slot;
+  if (typeof numSlot !== "number" || numSlot < 1 || numSlot > NUM_SLOTS) return;
+  localStorage.removeItem(slotKey(numSlot));
   const index = getSaveIndex();
-  delete index[slot];
+  delete index[numSlot];
   setSaveIndex(index);
 }
 
 /** 检查指定槽位是否有存档 */
 function hasSave(slot) {
   if (slot === "_auto") return localStorage.getItem(AUTO_SAVE_KEY) !== null;
-  if (typeof slot === "number")
-    return localStorage.getItem(slotKey(slot)) !== null;
+  var numSlot = (typeof slot === "string" && /^\d+$/.test(slot)) ? Number(slot) : slot;
+  if (typeof numSlot === "number" && numSlot >= 1 && numSlot <= NUM_SLOTS)
+    return localStorage.getItem(slotKey(numSlot)) !== null;
   // 兼容检查任意存档
   const index = getSaveIndex();
   return Object.keys(index).length > 0;
