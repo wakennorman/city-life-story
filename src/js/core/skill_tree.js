@@ -994,6 +994,7 @@ function chooseSkillBranch(skillKey, branchId, state) {
 
   state.player.actionPoints -= 15;
   state.resources.cash = Math.max(0, (state.resources.cash || 0) - 200);
+  if (!state.skillBranches) state.skillBranches = {}; // [全系统自洽修复] 域C A类: skillBranches 守卫
   state.skillBranches[skillKey] = branchId;
 
   StateManager.addMessage(

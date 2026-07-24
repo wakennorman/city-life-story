@@ -36,7 +36,7 @@
     priority: 90,
     conditions: function (st) {
       if (!st.corporate || !st.corporate.active) return false;
-      if (st.flags._perfSStrikeDone) return false;
+      if (st.flags && st.flags._perfSStrikeDone) return false; // [全系统自洽修复] 域C A类: st.flags 守卫
       var trend = analyzePerfTrend(st, 4);
       return trend.streakS >= 3;
     },
@@ -86,7 +86,7 @@
     priority: 85,
     conditions: function (st) {
       if (!st.corporate || !st.corporate.active) return false;
-      if (st.flags._perfLowPointDone) return false;
+      if (st.flags && st.flags._perfLowPointDone) return false; // [全系统自洽修复] 域C A类: st.flags 守卫
       var trend = analyzePerfTrend(st, 3);
       return trend.streakC >= 2;
     },
@@ -143,7 +143,7 @@
     priority: 80,
     conditions: function (st) {
       if (!st.corporate || !st.corporate.active) return false;
-      if (st.flags._perfComebackCooldown) return false;
+      if (st.flags && st.flags._perfComebackCooldown) return false; // [全系统自洽修复] 域C A类: st.flags 守卫
       var history = (st.corporate.perfHistory) || [];
       if (history.length < 2) return false;
       var last2 = history.slice(-2);

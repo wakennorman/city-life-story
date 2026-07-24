@@ -6370,8 +6370,8 @@ function renderPgEdu(state, content) {
   var edu = p.education ?? state.education ?? 0;
   var ep = p.eduProgress ||
     state.eduProgress || { studyPoints: 0, examsPassed: 0, totalExams: 6 };
-  var eduNames = ["大专", "本科", "研究生"];
-  var eduIcons = ["🎓", "📜", "🏛️"];
+  var eduNames = ["大专", "本科", "研究生", "博士"]; // [全系统自洽修复] 域F 修复: 补充博士(edu=3)定义，原缺失致渲染"undefined"
+  var eduIcons = ["🎓", "📜", "🏛️", "🎓"];
   var label = (eduIcons[edu] || "🎓") + " " + (eduNames[edu] || "大专");
   var html = '<div class="tab-content">';
   html += '<h2 style="font-size:15px;">🎓 学历</h2>';
@@ -6404,7 +6404,7 @@ function renderPgEdu(state, content) {
   } else {
     html +=
       '<div style="font-size:12px;color:var(--text-secondary);">已通过所有考试，当前学历为 ' +
-      eduNames[edu] +
+      (eduNames[edu] || "博士") + // [全系统自洽修复] 域F 修复: edu=3时eduNames[edu]为undefined→兜底"博士"
       "。</div>";
   }
   html += "</div></div>";

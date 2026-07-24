@@ -147152,6 +147152,7 @@ function chooseSkillBranch(skillKey, branchId, state) {
 
   state.player.actionPoints -= 15;
   state.resources.cash = Math.max(0, (state.resources.cash || 0) - 200);
+  if (!state.skillBranches) state.skillBranches = {}; // [全系统自洽修复] 域C A类: skillBranches 守卫
   state.skillBranches[skillKey] = branchId;
 
   StateManager.addMessage(
@@ -174502,7 +174503,7 @@ if (typeof window !== "undefined") {
     priority: 90,
     conditions: function (st) {
       if (!st.corporate || !st.corporate.active) return false;
-      if (st.flags._perfSStrikeDone) return false;
+      if (st.flags && st.flags._perfSStrikeDone) return false; // [全系统自洽修复] 域C A类: st.flags 守卫
       var trend = analyzePerfTrend(st, 4);
       return trend.streakS >= 3;
     },
@@ -174552,7 +174553,7 @@ if (typeof window !== "undefined") {
     priority: 85,
     conditions: function (st) {
       if (!st.corporate || !st.corporate.active) return false;
-      if (st.flags._perfLowPointDone) return false;
+      if (st.flags && st.flags._perfLowPointDone) return false; // [全系统自洽修复] 域C A类: st.flags 守卫
       var trend = analyzePerfTrend(st, 3);
       return trend.streakC >= 2;
     },
@@ -174609,7 +174610,7 @@ if (typeof window !== "undefined") {
     priority: 80,
     conditions: function (st) {
       if (!st.corporate || !st.corporate.active) return false;
-      if (st.flags._perfComebackCooldown) return false;
+      if (st.flags && st.flags._perfComebackCooldown) return false; // [全系统自洽修复] 域C A类: st.flags 守卫
       var history = (st.corporate.perfHistory) || [];
       if (history.length < 2) return false;
       var last2 = history.slice(-2);
@@ -192477,12 +192478,12 @@ function calculatePerfScore(state) {
   let score = 0;
   if (isLowRank) {
     // P5/P6 执行层: KPI(70%) + 向上管理(30%)
-    score += c.kpi * 0.7;
-    score += c.upwardMgmt * 0.3;
+    score += (c.kpi || 0) * 0.7;
+    score += (c.upwardMgmt || 0) * 0.3;
   } else {
     // P7+ 管理层: KPI(40%) + 向上管理(60%)
-    score += c.kpi * 0.4;
-    score += c.upwardMgmt * 0.6;
+    score += (c.kpi || 0) * 0.4;
+    score += (c.upwardMgmt || 0) * 0.6;
   }
 
   // 团队贡献 (P7+)
@@ -192511,7 +192512,7 @@ function calculatePerfScore(state) {
   if (_popularity > 80) score += 5;
 
   // Q4冲刺加成（在 endQuarter 中设置）
-  if (state.flags.q4Sprint) {
+  if (state.flags && state.flags.q4Sprint) {
     score *= 1.1;
   }
 
@@ -229168,8 +229169,8 @@ function renderPgEdu(state, content) {
   var edu = p.education ?? state.education ?? 0;
   var ep = p.eduProgress ||
     state.eduProgress || { studyPoints: 0, examsPassed: 0, totalExams: 6 };
-  var eduNames = ["大专", "本科", "研究生"];
-  var eduIcons = ["🎓", "📜", "🏛️"];
+  var eduNames = ["大专", "本科", "研究生", "博士"]; // [全系统自洽修复] 域F 修复: 补充博士(edu=3)定义，原缺失致渲染"undefined"
+  var eduIcons = ["🎓", "📜", "🏛️", "🎓"];
   var label = (eduIcons[edu] || "🎓") + " " + (eduNames[edu] || "大专");
   var html = '<div class="tab-content">';
   html += '<h2 style="font-size:15px;">🎓 学历</h2>';
@@ -229202,7 +229203,7 @@ function renderPgEdu(state, content) {
   } else {
     html +=
       '<div style="font-size:12px;color:var(--text-secondary);">已通过所有考试，当前学历为 ' +
-      eduNames[edu] +
+      (eduNames[edu] || "博士") + // [全系统自洽修复] 域F 修复: edu=3时eduNames[edu]为undefined→兜底"博士"
       "。</div>";
   }
   html += "</div></div>";

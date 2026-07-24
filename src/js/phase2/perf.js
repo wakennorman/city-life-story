@@ -20,12 +20,12 @@ function calculatePerfScore(state) {
   let score = 0;
   if (isLowRank) {
     // P5/P6 执行层: KPI(70%) + 向上管理(30%)
-    score += c.kpi * 0.7;
-    score += c.upwardMgmt * 0.3;
+    score += (c.kpi || 0) * 0.7;
+    score += (c.upwardMgmt || 0) * 0.3;
   } else {
     // P7+ 管理层: KPI(40%) + 向上管理(60%)
-    score += c.kpi * 0.4;
-    score += c.upwardMgmt * 0.6;
+    score += (c.kpi || 0) * 0.4;
+    score += (c.upwardMgmt || 0) * 0.6;
   }
 
   // 团队贡献 (P7+)
@@ -54,7 +54,7 @@ function calculatePerfScore(state) {
   if (_popularity > 80) score += 5;
 
   // Q4冲刺加成（在 endQuarter 中设置）
-  if (state.flags.q4Sprint) {
+  if (state.flags && state.flags.q4Sprint) {
     score *= 1.1;
   }
 
