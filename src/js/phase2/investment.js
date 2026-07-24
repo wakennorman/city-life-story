@@ -1164,7 +1164,8 @@ function initInvestment(state) {
     inv.btcHistory.push({ day: state.player.day, price: inv.btcPrice });
     if (inv.btcHistory.length > 30) inv.btcHistory.shift();
   }
-  inv.lastTickDay = state.player.day;
+  // 仅当确实初始化了新数据时才更新 lastTickDay，避免误重置导致 tick 被跳过
+  if (initialized) inv.lastTickDay = state.player.day;
 
   // 房产市场 v2 初始化/迁移
   if (typeof initPropertyMarket === "function") {
@@ -1240,6 +1241,7 @@ function tickInvestmentDaily(state) {
       _satPenalty = state._economySettlement.marketSaturationPenalty;
     }
 
+    var oldPrice = m.price;
     m.price = Math.max(0.01, m.price * baseChange * newsMul * _satPenalty);
     m.price = Math.round(m.price * 100) / 100;
     m.history.push({ day: state.player.day, price: m.price });
