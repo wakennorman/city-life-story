@@ -6466,6 +6466,36 @@ function renderMessageLog(state) {
     if (tb) tb.textContent = "📌 展开";
   }
 
+  // [全系统自洽修复] 域F 联动增强: 消息记录类型过滤（F→B 帮助玩家快速定位事件/收入/系统消息）
+  var _logFilter = state._logFilter || "all";
+  if (headerEl && !headerEl.querySelector("#message-log-filter")) {
+    var filterWrap = document.createElement("span");
+    filterWrap.id = "message-log-filter";
+    filterWrap.style.cssText = "display:inline-flex;gap:2px;margin-left:6px;";
+    var _filters = [
+      { id: "all", label: "全部" },
+      { id: "event", label: "🎭" },
+      { id: "success", label: "✅" },
+      { id: "warning", label: "⚠️" },
+    ];
+    for (var _fi = 0; _fi < _filters.length; _fi++) {
+      (function (f) {
+        var fb = document.createElement("button");
+        fb.className = "btn btn-sm";
+        fb.style.cssText = "padding:1px 5px;font-size:10px;min-width:auto;";
+        fb.textContent = f.label;
+        fb.title = "过滤: " + f.id;
+        if (_logFilter === f.id) fb.style.borderColor = "var(--accent)";
+        fb.onclick = function () {
+          state._logFilter = f.id;
+          renderMessageLog(state);
+        };
+        filterWrap.appendChild(fb);
+      })(_filters[_fi]);
+    }
+    headerEl.appendChild(filterWrap);
+  }
+
   var msgs = (state && state.messageLog) || [];
   // 显示全部记录（state.js 自动限制在300条以内，不再额外截断）
   var recent = msgs;
@@ -6473,6 +6503,8 @@ function renderMessageLog(state) {
   for (var i = recent.length - 1; i >= 0; i--) {
     var m = recent[i];
     var cls = m.type || "info";
+    // 类型过滤
+    if (_logFilter !== "all" && cls !== _logFilter) continue;
     var dayStr = m.day ? "<span class='log-day'>D" + m.day + "</span>" : "";
     var txt = String(m.text || "")
       .replace(/</g, "&lt;")

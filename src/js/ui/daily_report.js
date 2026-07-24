@@ -361,7 +361,9 @@ function buildReportHTML(txs, state, reconcileInfo) {
       bodyHtml += '<div class="daily-report-npc" style="padding:6px 0;margin:2px 0 4px;border-top:1px solid var(--border);font-size:11px;color:var(--text-muted);">';
       bodyHtml += '<span style="font-weight:bold;font-size:11px;">👥 城中见闻</span>';
       for (var _ui = 0; _ui < _count; _ui++) {
-        bodyHtml += '<div style="padding:2px 0;">' + _npcUpdates[_ui].name + '：' + _npcUpdates[_ui].line + '</div>';
+        // [全系统自洽修复] 域F 联动增强: 日报NPC近况可点击跳转社交Tab（F→D 提升社交触达）
+        var _npcNameEsc = escapeHtml(_npcUpdates[_ui].name);
+        bodyHtml += '<div style="padding:2px 0;"><span style="color:var(--accent);cursor:pointer;text-decoration:underline;" onclick="if(typeof navigateTo===\'function\')navigateTo(null,{type:\'tab\',tab:\'social\'});">' + _npcNameEsc + '</span>：' + escapeHtml(_npcUpdates[_ui].line) + '</div>';
       }
       bodyHtml += '</div>';
     }
