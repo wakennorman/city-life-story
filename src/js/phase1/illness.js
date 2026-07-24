@@ -134,6 +134,10 @@ function rollDailyIllness(state) {
     if (typeof getDifficultyMultiplier === "function") {
       ch *= getDifficultyMultiplier(state, "illness");
     }
+    // [全系统自洽修复] 域A R197 修复:接入证书 illnessRiskReduction 效果(护理/健康管理证书承诺"降低患病风险",此前 flag 无消费者→乘性下调触发概率)
+    var _certIllnessCut =
+      (state.flags && state.flags._illnessRiskReduction) || 0;
+    if (_certIllnessCut > 0) ch *= 1 - Math.min(0.8, _certIllnessCut);
     // [全系统自洽修复] 域A A类#7: clamp ch 上限 0.95（地狱×冬季 seasonInfluence 可致 ch>1.0→Random.chance 必真，疾病100%触发=平衡崩溃）
     if (ch > 0.95) ch = 0.95;
     if (!Random.chance(ch)) continue;

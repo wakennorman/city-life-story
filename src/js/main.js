@@ -3942,6 +3942,27 @@ function getAvailableActions(state) {
               addSkillXp("cooking", cert.effects.foodHandlingXp); // 食安→烹饪
             if (cert.effects.psychologyXp)
               addSkillXp("social", cert.effects.psychologyXp); // 心理→社交
+            // [全系统自洽修复] 域A R197 修复:证书 healthBonus/mentalBonus/illnessRiskReduction/fatigueReduction 效果键全库无消费者→证书宣称的"健康+/心智+/降低患病风险/疲劳-"静默失效,此处补齐消费分支
+            if (cert.effects.healthBonus)
+              state.status.health = Math.min(
+                100,
+                (state.status.health || 0) + cert.effects.healthBonus,
+              );
+            if (cert.effects.mentalBonus)
+              state.player.mental = Math.min(
+                100,
+                (state.player.mental || 0) + cert.effects.mentalBonus,
+              );
+            if (cert.effects.illnessRiskReduction)
+              state.flags._illnessRiskReduction = Math.min(
+                0.8,
+                (state.flags._illnessRiskReduction || 0) +
+                  cert.effects.illnessRiskReduction,
+              );
+            if (cert.effects.fatigueReduction)
+              state.flags._certFatigueReduction =
+                (state.flags._certFatigueReduction || 0) +
+                cert.effects.fatigueReduction;
             StateManager.addMessage(
               `📜 恭喜！成功考取${cert.name}！`,
               "success",
@@ -4596,6 +4617,8 @@ function doStreetJob(job) {
     if (typeof getSkillFatigueReduction === "function") {
       fatigueReduction = getSkillFatigueReduction(job.id, state);
     }
+    // [全系统自洽修复] 域A R197 修复:接入证书 fatigueReduction 常驻效果(如康复治疗师证书承诺"疲劳-3",此前 flag 无消费者)
+    fatigueReduction += (state.flags && state.flags._certFatigueReduction) || 0;
     var fatigueAmount = job.effects.fatigue || 0;
     if (fatigueReduction > 0 && fatigueAmount > 0) {
       fatigueAmount = Math.max(0, fatigueAmount - fatigueReduction);
