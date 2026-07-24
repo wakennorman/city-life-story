@@ -56,7 +56,8 @@ var NEWS_EVENTS = [
     id: "crackdown",
     headline: "🚔 城管严查摆摊！商业区摆摊收入减半",
     effects: {
-      jobPenalty: ["street_vending_food", "street_vending_goods", "food_stall"],
+      // [全系统自洽修复] 域B 修复:street_vending_goods/food_stall 非真实job id(见npcs.js:645/news.js:137注释)→存入_introJobBonuses永不匹配真实job致惩罚静默失效,改真实摆摊job
+      jobPenalty: ["street_vending_food", "sister_zhang_vending"],
       jobMultiplier: 0.5,
       investmentEffect: [{ industry: "消费", mul: 0.9 }],
       duration: 4,
@@ -114,7 +115,8 @@ var NEWS_EVENTS = [
     desc: "市里将在公园举办为期一周的文化节，街头表演、手工艺品摊位报名火爆。",
     effects: {
       priceMod: { snacks: 1.3, fruits: 1.2, clothing: 1.1 },
-      jobBonus: ["busking", "park_flower_vendor", "street_performer"],
+      // [全系统自洽修复] 域B 修复:park_flower_vendor/street_performer 非真实job id(见news.js:137注释)→改真实街头job
+      jobBonus: ["busking", "sister_zhang_vending"],
       jobMultiplier: 1.5,
       duration: 3,
     },
@@ -140,7 +142,8 @@ var NEWS_EVENTS = [
     id: "construction_boom",
     headline: "🏗️ 新楼盘开工！工地大量招人，工资上涨",
     effects: {
-      jobBonus: ["manual_labor_construction", "skilled_labor_construction"],
+      // [全系统自洽修复] 域B 修复:skilled_labor_construction 非真实job id(对应技能岗真实为 steel_worker)→改真实job
+      jobBonus: ["manual_labor_construction", "steel_worker"],
       jobMultiplier: 1.5,
       investmentEffect: [
         { symbols: ["ESTATE"], mul: 1.18 },
@@ -244,9 +247,10 @@ var NEWS_EVENTS = [
     headline: "🏚️ 城中村旧改试点启动！装修、清运、工地短工需求明显增加",
     effects: {
       priceMod: { daily_use: 1.25, scrap_metal: 1.25, scrap_paper: 1.1 },
+      // [全系统自洽修复] 域B 修复:skilled_labor_construction 非真实job id→改真实job steel_worker
       jobBonus: [
         "manual_labor_construction",
-        "skilled_labor_construction",
+        "steel_worker",
         "cleaning_service",
         "repair_service",
       ],
@@ -876,7 +880,8 @@ var NEWS_EVENTS = [
     headline: "🔬 食品安全事件曝光！外卖订单骤降，菜市场食材需求上升",
     desc: "媒体暗访曝光多家网红外卖店铺后厨卫生问题，市民纷纷转向自己做饭，食材价格小幅上涨。",
     effects: {
-      jobPenalty: ["delivery_rider", "street_vending_food", "food_stall"],
+      // [全系统自洽修复] 域B 修复:food_stall 非真实job id→改真实餐饮job restaurant_assistant
+      jobPenalty: ["delivery_rider", "street_vending_food", "restaurant_assistant"],
       jobMultiplier: 0.6,
       priceMod: { vegetables: 1.3, fruits: 1.15, noodles: 1.1 },
       investmentEffect: [
@@ -914,7 +919,8 @@ var NEWS_EVENTS = [
     headline: "✈️ 旅游市场全面复苏！景区爆满，服务业用工荒",
     desc: "长假期间旅游需求井喷式增长，景区周边酒店、餐饮、交通全线紧张，服务业时薪大涨。",
     effects: {
-      jobBonus: ["cleaning_service", "hospitality"],
+      // [全系统自洽修复] 域B 修复:hospitality 非真实job id→改真实服务业job restaurant_assistant
+      jobBonus: ["cleaning_service", "restaurant_assistant"],
       jobMultiplier: 1.5,
       priceMod: { snacks: 1.4, water: 1.3, beer: 1.3 },
       investmentEffect: [
@@ -1119,7 +1125,8 @@ var NEWS_FOLLOWUP = {
         { symbols: ["NVDA", "TSMC"], mul: 0.91 },
         { industry: "科技", mul: 1.08 },
       ],
-      jobBonus: ["coding_freelance", "data_analyst"],
+      // [全系统自洽修复] 域B 修复:coding_freelance/data_analyst 非真实job id→改真实科技岗 remote_dev/junior_analyst
+      jobBonus: ["remote_dev", "junior_analyst"],
       jobMultiplier: 1.2,
       duration: 5,
     },
@@ -1154,11 +1161,13 @@ var NEWS_FOLLOWUP = {
   tech_layoff_echo: {
     headline: "🔄 裁员潮催生创业潮！前大厂员工纷纷下场创业，共享办公空间爆满",
     effects: {
-      jobBonus: ["coding_freelance"],
+      // [全系统自洽修复] 域B 修复:coding_freelance 非真实job id→改真实科技岗 remote_dev
+      jobBonus: ["remote_dev"],
       jobMultiplier: 1.2,
       investmentEffect: [
         { industry: "科技", mul: 0.96 },
-        { symbols: ["WEORK"], mul: 1.15 },
+        // [全系统自洽修复] 域B 修复:WEORK 非真实股票symbol(INV_STOCKS无此标的)→投资效果静默失效,共享办公空间爆满→改真实 ESTATE(房地产)
+        { symbols: ["ESTATE"], mul: 1.15 },
       ],
       duration: 4,
     },
@@ -1166,7 +1175,8 @@ var NEWS_FOLLOWUP = {
   food_safety_echo: {
     headline: "🧑‍🍳 食品安全整顿收尾！外卖平台推出明厨亮灶计划，合格商家订单回升",
     effects: {
-      jobBonus: ["delivery_rider", "food_stall"],
+      // [全系统自洽修复] 域B 修复:food_stall 非真实job id→改真实餐饮job restaurant_assistant
+      jobBonus: ["delivery_rider", "restaurant_assistant"],
       jobMultiplier: 1.1,
       investmentEffect: [
         { symbols: ["MEIT"], mul: 1.04 },
