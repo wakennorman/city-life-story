@@ -292,7 +292,7 @@ var NEWS_EVENTS = [
         text: "💰 据为己有",
         hint: "拿钱走人",
         apply: (st) => {
-          st.resources.cash += 50;
+          st.resources.cash = (st.resources.cash || 0) + 50;
           st.needs.happiness = Math.max(0, st.needs.happiness - 3);
           st.flags._keptWallet = true;
           StateManager.addMessage(
@@ -335,7 +335,7 @@ var NEWS_EVENTS = [
         text: "🚔 报警",
         hint: "走正规渠道",
         apply: (st) => {
-          st.resources.cash = Math.max(0, st.resources.cash - 100);
+          st.resources.cash = Math.max(0, (st.resources.cash || 0) - 100);
           st.player.fame = Math.min(100, st.player.fame + 1);
           st.needs.happiness = Math.max(0, st.needs.happiness - 5);
           StateManager.addMessage(
@@ -348,7 +348,7 @@ var NEWS_EVENTS = [
         text: "😤 自认倒霉",
         hint: "长个教训",
         apply: (st) => {
-          st.resources.cash = Math.max(0, st.resources.cash - 100);
+          st.resources.cash = Math.max(0, (st.resources.cash || 0) - 100);
           st.needs.happiness = Math.max(0, st.needs.happiness - 8);
           st.player.mental = Math.min(100, st.player.mental + 2);
           StateManager.addMessage(
@@ -486,11 +486,11 @@ var NEWS_EVENTS = [
         hint: "花¥20维护关系",
         cost: 20,
         apply: (st) => {
-          if (st.resources.cash < 20) {
+          if ((st.resources.cash || 0) < 20) {
             StateManager.addMessage("💝 钱不够买礼物！", "warning");
             return;
           }
-          st.resources.cash -= 20;
+          st.resources.cash = Math.max(0, (st.resources.cash || 0) - 20);
           st.needs.happiness = Math.min(100, st.needs.happiness + 5);
           if (st.relationships && st.relationships.aunt_wang) {
             st.relationships.aunt_wang.affinity = Math.min(
@@ -536,11 +536,11 @@ var NEWS_EVENTS = [
         hint: "花小钱学技能",
         cost: 30,
         apply: (st) => {
-          if (st.resources.cash < 30) {
+          if ((st.resources.cash || 0) < 30) {
             StateManager.addMessage("📚 钱不够买！", "warning");
             return;
           }
-          st.resources.cash -= 30;
+          st.resources.cash = Math.max(0, (st.resources.cash || 0) - 30);
           var skills = Object.keys(st.skills || {});
           if (skills.length > 0) {
             var key = Random.fromArray(skills);
@@ -1902,11 +1902,11 @@ function applyNewsEffect(news, state) {
 
   // 现金
   if (effects.cashBonus) {
-    state.resources.cash += effects.cashBonus;
+    state.resources.cash = (state.resources.cash || 0) + effects.cashBonus;
     state.resources.totalEarned += effects.cashBonus;
   }
   if (effects.cashLoss) {
-    state.resources.cash = Math.max(0, state.resources.cash - effects.cashLoss);
+    state.resources.cash = Math.max(0, (state.resources.cash || 0) - effects.cashLoss);
   }
 
   // 需求

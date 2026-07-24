@@ -1154,6 +1154,8 @@ var NPCS = [
         id: "xiao_mei_30",
         desc: "小美每周分享一道英语/编程练习题（+XP）",
         effect: function (st) {
+          st.skills.english = st.skills.english || { level: 0, xp: 0 }; // [全系统自洽修复] 域D 修复: skills守卫
+          st.skills.coding = st.skills.coding || { level: 0, xp: 0 };
           st.skills.english.xp += 60;
           st.skills.coding.xp += 60;
           StateManager.addMessage(
@@ -1371,6 +1373,7 @@ var NPCS = [
         id: "chef_chen_30",
         desc: "陈师傅教你一道菜（烹饪XP+80）",
         effect: function (st) {
+          st.skills.cooking = st.skills.cooking || { level: 0, xp: 0 }; // [全系统自洽修复] 域D 修复: skills.cooking守卫
           st.skills.cooking.xp += 80;
           StateManager.addMessage(
             "💕 陈师傅手把手教了你一道特色菜，烹饪XP+80！",
@@ -1384,7 +1387,9 @@ var NPCS = [
         desc: "陈师傅让你做帮厨打下手（每次+¥50+烹饪XP）",
         effect: function (st) {
           st.flags.chefChenAssistant = true;
+          st.resources = st.resources || { cash: 0 }; // [全系统自洽修复] 域D 修复: resources守卫
           st.resources.cash += 50;
+          st.skills.cooking = st.skills.cooking || { level: 0, xp: 0 };
           st.skills.cooking.xp += 40;
           StateManager.addMessage(
             "💕 陈师傅：「你来帮我打下手吧，一次50块，还能学手艺。」",

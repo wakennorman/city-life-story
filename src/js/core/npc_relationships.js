@@ -664,7 +664,7 @@ function applyAffinityChange(state, npcId, change, reason) {
     }
   }
 
-  if (change !== 0) {
+  if (change !== 0 && typeof StateManager !== "undefined") { // [全系统自洽修复] 域D 修复: StateManager守卫（原缺失致管线崩溃）
     var oldLabel = getAffinityLabel(oldAffinity);
     var newLabel = getAffinityLabel(newAffinity);
     if (oldLabel !== newLabel) {

@@ -255,6 +255,7 @@ function tickSocialNetwork(state) {
   // 网红收入结算（每天发放到现金）
   var incomeResult = calculateInfluencerIncome(state);
   if (incomeResult && incomeResult.income > 0) {
+    state.resources = state.resources || { cash: 0 }; // [全系统自洽修复] 域D 修复: state.resources守卫（原缺失致管线崩溃）
     state.resources.cash = (state.resources.cash || 0) + incomeResult.income;
     addDailyTransaction(
       state,

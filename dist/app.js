@@ -89238,6 +89238,7 @@ function tickSocialNetwork(state) {
   // 网红收入结算（每天发放到现金）
   var incomeResult = calculateInfluencerIncome(state);
   if (incomeResult && incomeResult.income > 0) {
+    state.resources = state.resources || { cash: 0 }; // [全系统自洽修复] 域D 修复: state.resources守卫（原缺失致管线崩溃）
     state.resources.cash = (state.resources.cash || 0) + incomeResult.income;
     addDailyTransaction(
       state,
@@ -141577,7 +141578,7 @@ function applyAffinityChange(state, npcId, change, reason) {
     }
   }
 
-  if (change !== 0) {
+  if (change !== 0 && typeof StateManager !== "undefined") { // [全系统自洽修复] 域D 修复: StateManager守卫（原缺失致管线崩溃）
     var oldLabel = getAffinityLabel(oldAffinity);
     var newLabel = getAffinityLabel(newAffinity);
     if (oldLabel !== newLabel) {
@@ -159100,7 +159101,7 @@ var NEWS_EVENTS = [
         text: "💰 据为己有",
         hint: "拿钱走人",
         apply: (st) => {
-          st.resources.cash += 50;
+          st.resources.cash = (st.resources.cash || 0) + 50;
           st.needs.happiness = Math.max(0, st.needs.happiness - 3);
           st.flags._keptWallet = true;
           StateManager.addMessage(
@@ -159143,7 +159144,7 @@ var NEWS_EVENTS = [
         text: "🚔 报警",
         hint: "走正规渠道",
         apply: (st) => {
-          st.resources.cash = Math.max(0, st.resources.cash - 100);
+          st.resources.cash = Math.max(0, (st.resources.cash || 0) - 100);
           st.player.fame = Math.min(100, st.player.fame + 1);
           st.needs.happiness = Math.max(0, st.needs.happiness - 5);
           StateManager.addMessage(
@@ -159156,7 +159157,7 @@ var NEWS_EVENTS = [
         text: "😤 自认倒霉",
         hint: "长个教训",
         apply: (st) => {
-          st.resources.cash = Math.max(0, st.resources.cash - 100);
+          st.resources.cash = Math.max(0, (st.resources.cash || 0) - 100);
           st.needs.happiness = Math.max(0, st.needs.happiness - 8);
           st.player.mental = Math.min(100, st.player.mental + 2);
           StateManager.addMessage(
@@ -159294,11 +159295,11 @@ var NEWS_EVENTS = [
         hint: "花¥20维护关系",
         cost: 20,
         apply: (st) => {
-          if (st.resources.cash < 20) {
+          if ((st.resources.cash || 0) < 20) {
             StateManager.addMessage("💝 钱不够买礼物！", "warning");
             return;
           }
-          st.resources.cash -= 20;
+          st.resources.cash = Math.max(0, (st.resources.cash || 0) - 20);
           st.needs.happiness = Math.min(100, st.needs.happiness + 5);
           if (st.relationships && st.relationships.aunt_wang) {
             st.relationships.aunt_wang.affinity = Math.min(
@@ -159344,11 +159345,11 @@ var NEWS_EVENTS = [
         hint: "花小钱学技能",
         cost: 30,
         apply: (st) => {
-          if (st.resources.cash < 30) {
+          if ((st.resources.cash || 0) < 30) {
             StateManager.addMessage("📚 钱不够买！", "warning");
             return;
           }
-          st.resources.cash -= 30;
+          st.resources.cash = Math.max(0, (st.resources.cash || 0) - 30);
           var skills = Object.keys(st.skills || {});
           if (skills.length > 0) {
             var key = Random.fromArray(skills);
@@ -160710,11 +160711,11 @@ function applyNewsEffect(news, state) {
 
   // 现金
   if (effects.cashBonus) {
-    state.resources.cash += effects.cashBonus;
+    state.resources.cash = (state.resources.cash || 0) + effects.cashBonus;
     state.resources.totalEarned += effects.cashBonus;
   }
   if (effects.cashLoss) {
-    state.resources.cash = Math.max(0, state.resources.cash - effects.cashLoss);
+    state.resources.cash = Math.max(0, (state.resources.cash || 0) - effects.cashLoss);
   }
 
   // 需求
@@ -162480,6 +162481,8 @@ var NPCS = [
         id: "xiao_mei_30",
         desc: "小美每周分享一道英语/编程练习题（+XP）",
         effect: function (st) {
+          st.skills.english = st.skills.english || { level: 0, xp: 0 }; // [全系统自洽修复] 域D 修复: skills守卫
+          st.skills.coding = st.skills.coding || { level: 0, xp: 0 };
           st.skills.english.xp += 60;
           st.skills.coding.xp += 60;
           StateManager.addMessage(
@@ -162697,6 +162700,7 @@ var NPCS = [
         id: "chef_chen_30",
         desc: "陈师傅教你一道菜（烹饪XP+80）",
         effect: function (st) {
+          st.skills.cooking = st.skills.cooking || { level: 0, xp: 0 }; // [全系统自洽修复] 域D 修复: skills.cooking守卫
           st.skills.cooking.xp += 80;
           StateManager.addMessage(
             "💕 陈师傅手把手教了你一道特色菜，烹饪XP+80！",
@@ -243009,8 +243013,9 @@ function renderSocialOverviewTab(state, content) {
       var r = rels[rid];
       if (!r || !r.met) continue;
       totalMet++;
-      // 冷却检查：_lastVisitDay + 7天冷却
-      var lastVisit = r._lastVisitDay || 0;
+      // [全系统自洽修复] 域D 修复: 冷却字段名对齐（按钮写_lastVisit，此处读_lastVisitDay→永不同步）
+      // 冷却检查：_lastVisit + 7天冷却
+      var lastVisit = r._lastVisit || 0;
       if (today - lastVisit >= 7) {
         visitableCount++;
       }

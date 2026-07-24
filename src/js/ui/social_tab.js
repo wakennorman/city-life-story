@@ -534,8 +534,9 @@ function renderSocialOverviewTab(state, content) {
       var r = rels[rid];
       if (!r || !r.met) continue;
       totalMet++;
-      // 冷却检查：_lastVisitDay + 7天冷却
-      var lastVisit = r._lastVisitDay || 0;
+      // [全系统自洽修复] 域D 修复: 冷却字段名对齐（按钮写_lastVisit，此处读_lastVisitDay→永不同步）
+      // 冷却检查：_lastVisit + 7天冷却
+      var lastVisit = r._lastVisit || 0;
       if (today - lastVisit >= 7) {
         visitableCount++;
       }
