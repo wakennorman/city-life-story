@@ -3927,6 +3927,11 @@ function getAvailableActions(state) {
           if (typeof tryRevealNpcInfo === "function") {
             tryRevealNpcInfo(npc.id, state, "chat");
           }
+          // [全系统自洽修复] 域D 联动增强: 高好感NPC分享投资心得（D→E 社交-经济联动）
+          if (!isBirthday && !festLine && contextLine && (rel.affinity || 0) >= 60 && state.player && state.player.day >= 30 && Random.chance(0.05)) {
+            var _investTips = ["最近关注下房产市场，听说有波动", "股市好像有动静，你可以留意下", "听说批发市场最近有套利机会", "有闲钱可以考虑存银行，利息还不错"];
+            StateManager.addMessage("💡 " + npc.name + "分享投资心得：" + Random.fromArray(_investTips), "hint");
+          }
           // v3.30: 互惠原理 — 12%概率NPC回赠小礼物
           if (!isBirthday && Random.chance(0.12) && rel.affinity >= 5) {
             var giftRoll = Random.int(0, 3);

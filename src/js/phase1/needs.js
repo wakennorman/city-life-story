@@ -21,9 +21,19 @@ function applyNeedsDecay(state) {
     0,
     Math.min(100, (n.hygiene || 0) - Math.round(7 * decayMul)),
   );
+  // [全系统自洽修复] 域D 联动增强: 社交支持心情缓冲（D→G 高好感NPC减轻心情衰减）
+  var _socialSupport = 0;
+  if (state.relationships) {
+    for (var _rk in state.relationships) {
+      if (state.relationships[_rk] && state.relationships[_rk].met && (state.relationships[_rk].affinity || 0) >= 50) {
+        _socialSupport++;
+      }
+    }
+  }
+  var _socialBonus = Math.min(2, _socialSupport * 0.5); // 每个高好感NPC减0.5衰减，最多-2
   n.happiness = Math.max(
     0,
-    Math.min(100, (n.happiness || 0) - Math.round(4 * decayMul)),
+    Math.min(100, (n.happiness || 0) - Math.round(Math.max(1, 4 * decayMul - _socialBonus))),
   );
   // fatigue 在 endDay 中通过睡眠恢复单独处理
 }

@@ -100532,7 +100532,7 @@ const LIFE_DECISIONS = [
         text: "💪 搏一把！投 ¥500 试试水",
         desc: "风险投资，可能翻倍也可能亏光",
         effect: function (state) {
-          state.resources.cash = Math.max(0, state.resources.cash - 500);
+          state.resources.cash = Math.max(0, (state.resources.cash || 0) - 500);
           var roll = Random.float(0, 1);
           if (roll < 0.4) {
             // 40% 亏光
@@ -100546,7 +100546,7 @@ const LIFE_DECISIONS = [
             var gain =
               300 +
               Random.int(0, 399);
-            state.resources.cash += gain;
+            state.resources.cash = (state.resources.cash || 0) + gain;
             state.resources.totalEarned =
               (state.resources.totalEarned || 0) + gain;
             StateManager.addMessage(
@@ -100559,7 +100559,7 @@ const LIFE_DECISIONS = [
             var bigGain =
               800 +
               Random.int(0, 699);
-            state.resources.cash += bigGain;
+            state.resources.cash = (state.resources.cash || 0) + bigGain;
             state.resources.totalEarned =
               (state.resources.totalEarned || 0) + bigGain;
             state.skills.sales.xp = (state.skills.sales.xp || 0) + 20;
@@ -100626,7 +100626,7 @@ const LIFE_DECISIONS = [
         desc: "升级住房，改善生活质量",
         effect: function (state) {
           var tier = state.housing ? state.housing.tier || 0 : 0;
-          if (tier < 1 && state.resources.cash >= 300) {
+          if (tier < 1 && (state.resources.cash || 0) >= 300) {
             state.resources.cash -= 300;
             state.housing.tier = 1;
             state.housing.rentedDay = state.player.day;
@@ -100635,7 +100635,7 @@ const LIFE_DECISIONS = [
               "🏠 你租下了城中村的一个床位。虽然简陋，但总算有个遮风挡雨的地方。",
               "success",
             );
-          } else if (tier < 2 && state.resources.cash >= 800) {
+          } else if (tier < 2 && (state.resources.cash || 0) >= 800) {
             state.resources.cash -= 800;
             state.housing.tier = 2;
             state.housing.rentedDay = state.player.day;
@@ -100671,7 +100671,7 @@ const LIFE_DECISIONS = [
               skillCount++;
             }
           }
-          state.resources.cash = Math.max(0, state.resources.cash - 200);
+          state.resources.cash = Math.max(0, (state.resources.cash || 0) - 200);
           StateManager.addMessage(
             "📖 你花 ¥200 买了二手教材和网课。知识改变命运——希望吧。" +
               (skillCount > 0 ? " 所有技能 +15 XP" : ""),
@@ -100684,7 +100684,7 @@ const LIFE_DECISIONS = [
         text: "🤝 把钱花在社交上",
         desc: "请客吃饭，扩展人脉",
         effect: function (state) {
-          state.resources.cash = Math.max(0, state.resources.cash - 150);
+          state.resources.cash = Math.max(0, (state.resources.cash || 0) - 150);
           state.player.fame = (state.player.fame || 0) + 3;
           // 随机 NPC 好感 +5
           if (typeof state.relationships === "object" && state.relationships) {
@@ -100803,7 +100803,7 @@ const LIFE_DECISIONS = [
         text: "❤️ 买份热饭和一件外套送给他",
         desc: "花费 ¥50，道德+5",
         effect: function (state) {
-          state.resources.cash = Math.max(0, state.resources.cash - 50);
+          state.resources.cash = Math.max(0, (state.resources.cash || 0) - 50);
           state.needs.happiness = Math.min(
             100,
             (state.needs.happiness || 50) + 8,
@@ -100821,7 +100821,7 @@ const LIFE_DECISIONS = [
         text: "🤝 给他 ¥100，让他自己去买",
         desc: "花费 ¥100，省事但疏离",
         effect: function (state) {
-          state.resources.cash = Math.max(0, state.resources.cash - 100);
+          state.resources.cash = Math.max(0, (state.resources.cash || 0) - 100);
           state.player.fame = (state.player.fame || 0) + 1;
           state.flags._lifeDec_warmth = "gave_money";
           StateManager.addMessage(
@@ -100875,7 +100875,7 @@ const LIFE_DECISIONS = [
         desc: "冒险，可能更好也可能更差",
         effect: function (state) {
           // 短期损失，长期增益
-          state.resources.cash = Math.max(0, state.resources.cash - 300);
+          state.resources.cash = Math.max(0, (state.resources.cash || 0) - 300);
           state.player.fame = Math.max(0, (state.player.fame || 0) - 2);
           // 但获得新视野
           state.player.intelligence = (state.player.intelligence || 0) + 2;
@@ -100972,7 +100972,7 @@ const LIFE_DECISIONS = [
           state.flags._lifeDec_oneYear = "driven";
           state.flags._drivenBonus = true;
           state.player.fame = (state.player.fame || 0) + 5;
-          state.resources.cash = Math.max(0, state.resources.cash - 500);
+          state.resources.cash = Math.max(0, (state.resources.cash || 0) - 500);
           StateManager.addMessage(
             "🔥 你撕掉了墙上那张写了又改、改了又写的计划表。重新写下一行字：" +
               "「要么不做，要么做到最好。」 名气+5，投资 ¥500 在自我提升上。",
@@ -178724,9 +178724,19 @@ function applyNeedsDecay(state) {
     0,
     Math.min(100, (n.hygiene || 0) - Math.round(7 * decayMul)),
   );
+  // [全系统自洽修复] 域D 联动增强: 社交支持心情缓冲（D→G 高好感NPC减轻心情衰减）
+  var _socialSupport = 0;
+  if (state.relationships) {
+    for (var _rk in state.relationships) {
+      if (state.relationships[_rk] && state.relationships[_rk].met && (state.relationships[_rk].affinity || 0) >= 50) {
+        _socialSupport++;
+      }
+    }
+  }
+  var _socialBonus = Math.min(2, _socialSupport * 0.5); // 每个高好感NPC减0.5衰减，最多-2
   n.happiness = Math.max(
     0,
-    Math.min(100, (n.happiness || 0) - Math.round(4 * decayMul)),
+    Math.min(100, (n.happiness || 0) - Math.round(Math.max(1, 4 * decayMul - _socialBonus))),
   );
   // fatigue 在 endDay 中通过睡眠恢复单独处理
 }
@@ -254880,6 +254890,11 @@ function getAvailableActions(state) {
           // 信息发现：聊天中可能解锁隐藏信息（生日/喜好）
           if (typeof tryRevealNpcInfo === "function") {
             tryRevealNpcInfo(npc.id, state, "chat");
+          }
+          // [全系统自洽修复] 域D 联动增强: 高好感NPC分享投资心得（D→E 社交-经济联动）
+          if (!isBirthday && !festLine && contextLine && (rel.affinity || 0) >= 60 && state.player && state.player.day >= 30 && Random.chance(0.05)) {
+            var _investTips = ["最近关注下房产市场，听说有波动", "股市好像有动静，你可以留意下", "听说批发市场最近有套利机会", "有闲钱可以考虑存银行，利息还不错"];
+            StateManager.addMessage("💡 " + npc.name + "分享投资心得：" + Random.fromArray(_investTips), "hint");
           }
           // v3.30: 互惠原理 — 12%概率NPC回赠小礼物
           if (!isBirthday && Random.chance(0.12) && rel.affinity >= 5) {
