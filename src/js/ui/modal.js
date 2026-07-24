@@ -379,7 +379,7 @@ function showDepositModal() {
         text: "存入全部",
         cls: "btn-success",
         callback: () => {
-          const amt = state.resources.cash;
+          const amt = state.resources.cash || 0; // [全系统自洽修复] 域F A类: cash NaN守卫
           state.resources.bankBalance += amt;
           state.resources.cash = 0;
           StateManager.addMessage(
@@ -1143,11 +1143,11 @@ function buyItemFromShop(itemId) {
   // 价格：使用品质价格（如果有）
   var price = equippedItem ? equippedItem.actualPrice : item.price;
 
-  if (state.resources.cash < price) {
+  if ((state.resources.cash || 0) < price) { // [全系统自洽修复] 域F A类: cash NaN守卫
     StateManager.addMessage("💸 现金不足，无法购买 " + item.name, "warning");
     return;
   }
-  state.resources.cash -= price;
+  state.resources.cash = (state.resources.cash || 0) - price; // [全系统自洽修复] 域F A类: cash NaN守卫
   addDailyTransaction(
     state,
     "expense",
@@ -1266,7 +1266,7 @@ function showItemShopModal(locationId) {
       var actualPrice = item.price;
       var hasQuality = item.slot && typeof getQualityPriceMult === "function";
       var maxPrice = hasQuality ? Math.round(item.price * 1.5) : item.price;
-      var canAfford = state.resources.cash >= actualPrice;
+      var canAfford = (state.resources.cash || 0) >= actualPrice; // [全系统自洽修复] 域F A类: cash NaN守卫
       // 检查是否已装备
       var equipped =
         state.inventory.equipment &&

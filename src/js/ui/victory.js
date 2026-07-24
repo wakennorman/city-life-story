@@ -7,7 +7,7 @@
 
 /** 每日检查所有胜利路线 */
 function checkVictoryPaths(state) {
-  if (state.flags.gameOver || state.flags.victory) return;
+  if (!state.flags || state.flags.gameOver || state.flags.victory) return; // [全系统自洽修复] 域F A类: state.flags 守卫
   const inv = state.investment;
 
   // 🏪 经商大亨：累计交易利润 >= ¥500,000
@@ -109,7 +109,7 @@ function checkVictoryPaths(state) {
     (state.investment && state.investment.properties
       ? state.investment.properties.length
       : 0) > 0;
-  var _vcLiquid = state.resources.cash + (state.resources.bankBalance || 0);
+  var _vcLiquid = (state.resources.cash || 0) + (state.resources.bankBalance || 0); // [全系统自洽修复] 域F A类: cash NaN守卫
   if (_vcCurrentSalary > 20000 && _vcOwnsHouse && _vcLiquid >= 50000) {
     triggerVictory(
       state,
@@ -167,7 +167,7 @@ function checkVictoryPaths(state) {
   if (
     _vcAgeYear >= 35 &&
     (!state.housing || state.housing.tier === 0) &&
-    state.resources.cash < 500 &&
+    (state.resources.cash || 0) < 500 && // [全系统自洽修复] 域F A类: cash NaN守卫
     // [全系统自洽修复] 域F 修复:state.career 为动态字段(从未求职时 undefined)，无守卫解引用 currentJob 抛 TypeError
     !(state.career && state.career.currentJob)
   ) {
@@ -227,7 +227,7 @@ function checkVictoryPaths(state) {
   }
 
   // 🏢 职场巅峰（保留原有逻辑）
-  if (state.player.phase === "corporate" && state.corporate.rank === "P10") {
+  if (state.player.phase === "corporate" && state.corporate && state.corporate.rank === "P10") { // [全系统自洽修复] 域F A类: state.corporate 守卫
     triggerVictory(
       state,
       "p10",
@@ -238,7 +238,7 @@ function checkVictoryPaths(state) {
   }
 
   // 💵 财务自由（保留原有 ¥20,000,000）
-  if (state.resources.cash + (state.resources.bankBalance || 0) >= 2000000) {
+  if ((state.resources.cash || 0) + (state.resources.bankBalance || 0) >= 2000000) { // [全系统自洽修复] 域F A类: cash NaN守卫
     triggerVictory(
       state,
       "money",

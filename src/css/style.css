@@ -1465,6 +1465,14 @@ body {
   padding: 20px 22px;
 }
 
+@media (max-width: 420px) {
+  .daily-report-box {
+    min-width: 0;
+    max-width: 92vw;
+    padding: 16px 14px;
+  }
+}
+
 .daily-report-box .btn-lg {
   font-size: 15px;
   padding: 10px 24px;
@@ -1620,6 +1628,13 @@ body {
   max-width: 540px;
   border-top: 4px solid var(--accent);
   background: linear-gradient(180deg, var(--bg-secondary), var(--bg-card));
+}
+
+@media (max-width: 420px) {
+  .event-box {
+    min-width: 0;
+    max-width: 92vw;
+  }
 }
 
 .event-header {
@@ -2660,7 +2675,14 @@ body {
   max-height: 85vh;
   overflow-y: auto;
   border-top: 4px solid #4a9e5c;
-  background: linear-gradient(
+}
+
+@media (max-width: 540px) {
+  .company-history-modal .modal-box {
+    min-width: 0;
+    max-width: 92vw;
+  }
+}
     180deg,
     rgba(74, 158, 92, 0.06),
     var(--bg-secondary)

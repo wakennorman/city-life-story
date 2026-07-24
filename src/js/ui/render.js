@@ -2632,7 +2632,7 @@ function renderMapTab(state, parent) {
           StateManager.addMessage("💸 " + modeName + "需要¥" + price + "，你现金不够。", "warning");
           return;
         }
-        state.resources.cash -= price;
+        state.resources.cash = (state.resources.cash || 0) - price; // [全系统自洽修复] 域F A类: cash NaN守卫
         StateManager.update("trade.currentLocation", key);
         StateManager.addMessage(
           modeName + " 你来到了" + (dest ? dest.name : key) + costStr({ap: ap, cash: price}),
@@ -3545,7 +3545,7 @@ function renderTradeTab(state, parent) {
             } else {
               const state = StateManager.getState();
               const locKey = state.trade && state.trade.currentLocation;
-              const cash = state.resources.cash;
+              const cash = state.resources.cash || 0; // [全系统自洽修复] 域F A类: cash NaN守卫
               const price = getCurrentPrice(locKey, goodId);
               // 批发市场按批发价计算最大可买数量
               const effectivePrice =
@@ -3759,7 +3759,7 @@ function renderInventoryTab(state, parent) {
   div.innerHTML = `
     <h3 style="color:var(--text-muted);margin-bottom:12px;">🎒 物品栏
       <span style="font-size:11px;color:var(--text-muted)">
-        (仓库 ${state.inventory.items.length}/${state.inventory.capacity} 槽位)
+        (仓库 ${(state.inventory && state.inventory.items.length) || 0}/${(state.inventory && state.inventory.capacity) || 0} 槽位)
       </span>
       <span style="font-size:10px;color:var(--text-muted);margin-left:8px;">
         负重 ${totalWeight}/${maxCarry}kg
@@ -6108,7 +6108,7 @@ window.__doTrainCore = function (trainId) {
     StateManager.addMessage("💸 现金不足，需要¥" + price, "warning");
     return;
   }
-  if (t.basePrice > 0) state.resources.cash -= price;
+  if (t.basePrice > 0) state.resources.cash = (state.resources.cash || 0) - price; // [全系统自洽修复] 域F A类: cash NaN守卫
   flags["_trainCount_" + t.id] = count + 1;
 
   // 属性训练——基于当前值递减收益（参考《完美人生》难提升设计）

@@ -125,7 +125,7 @@ function renderCorporateActions(state) {
         reqText = `需 ${action.requiresRank}+`;
       }
     }
-    if (action.cost && state.resources.cash < action.cost) {
+    if (action.cost && (state.resources.cash || 0) < action.cost) { // [全系统自洽修复] 域F A类: cash NaN守卫
       disabled = true;
       reqText = `需 ¥${action.cost}`;
     }
@@ -370,6 +370,7 @@ function downgradeToStreet(state, reason) {
   state.player.corporate.popularity = 25;
 
   // 回到城中村
+  if (!state.housing) state.housing = { tier: 0 }; // [全系统自洽修复] 域F A类: state.housing 守卫
   state.housing.tier = Math.max(0, state.housing.tier - 2);
   const baseCap = [20, 50, 100, 200][state.housing.tier] || 20;
   state.inventory.capacity = baseCap + (state.housing.storageCapacity || 0);
@@ -566,7 +567,7 @@ function showVictoryModal() {
     (state.corporate && state.corporate.rank ? state.corporate.rank : "—") +
     "</td></tr>" +
     "<tr><td>现金</td><td>¥" +
-    state.resources.cash.toLocaleString() +
+    ((state.resources.cash || 0)).toLocaleString() + // [全系统自洽修复] 域F A类: cash NaN守卫
     "</td></tr>" +
     "<tr><td>总收入</td><td>¥" +
     (state.resources.totalEarned || 0).toLocaleString() +

@@ -221515,6 +221515,7 @@ function renderReputationBadge(state) {
 /** 道德状态显示 */
 if(typeof renderMoralStatus==="undefined"){
 function renderMoralStatus(state) {
+  if (!state || !state.flags) return; // [全系统自洽修复] 域F A类: state.flags 守卫
   var moral = state.flags.moral;
   if (!moral || !moral.actions || moral.actions.length === 0) return;
   var score = moral.score || 0;
@@ -225655,7 +225656,7 @@ function renderMapTab(state, parent) {
           StateManager.addMessage("💸 " + modeName + "需要¥" + price + "，你现金不够。", "warning");
           return;
         }
-        state.resources.cash -= price;
+        state.resources.cash = (state.resources.cash || 0) - price; // [全系统自洽修复] 域F A类: cash NaN守卫
         StateManager.update("trade.currentLocation", key);
         StateManager.addMessage(
           modeName + " 你来到了" + (dest ? dest.name : key) + costStr({ap: ap, cash: price}),
@@ -226568,7 +226569,7 @@ function renderTradeTab(state, parent) {
             } else {
               const state = StateManager.getState();
               const locKey = state.trade && state.trade.currentLocation;
-              const cash = state.resources.cash;
+              const cash = state.resources.cash || 0; // [全系统自洽修复] 域F A类: cash NaN守卫
               const price = getCurrentPrice(locKey, goodId);
               // 批发市场按批发价计算最大可买数量
               const effectivePrice =
@@ -226782,7 +226783,7 @@ function renderInventoryTab(state, parent) {
   div.innerHTML = `
     <h3 style="color:var(--text-muted);margin-bottom:12px;">🎒 物品栏
       <span style="font-size:11px;color:var(--text-muted)">
-        (仓库 ${state.inventory.items.length}/${state.inventory.capacity} 槽位)
+        (仓库 ${(state.inventory && state.inventory.items.length) || 0}/${(state.inventory && state.inventory.capacity) || 0} 槽位)
       </span>
       <span style="font-size:10px;color:var(--text-muted);margin-left:8px;">
         负重 ${totalWeight}/${maxCarry}kg
@@ -229131,7 +229132,7 @@ window.__doTrainCore = function (trainId) {
     StateManager.addMessage("💸 现金不足，需要¥" + price, "warning");
     return;
   }
-  if (t.basePrice > 0) state.resources.cash -= price;
+  if (t.basePrice > 0) state.resources.cash = (state.resources.cash || 0) - price; // [全系统自洽修复] 域F A类: cash NaN守卫
   flags["_trainCount_" + t.id] = count + 1;
 
   // 属性训练——基于当前值递减收益（参考《完美人生》难提升设计）
@@ -229681,7 +229682,7 @@ function renderCorporateActions(state) {
         reqText = `需 ${action.requiresRank}+`;
       }
     }
-    if (action.cost && state.resources.cash < action.cost) {
+    if (action.cost && (state.resources.cash || 0) < action.cost) { // [全系统自洽修复] 域F A类: cash NaN守卫
       disabled = true;
       reqText = `需 ¥${action.cost}`;
     }
@@ -229926,6 +229927,7 @@ function downgradeToStreet(state, reason) {
   state.player.corporate.popularity = 25;
 
   // 回到城中村
+  if (!state.housing) state.housing = { tier: 0 }; // [全系统自洽修复] 域F A类: state.housing 守卫
   state.housing.tier = Math.max(0, state.housing.tier - 2);
   const baseCap = [20, 50, 100, 200][state.housing.tier] || 20;
   state.inventory.capacity = baseCap + (state.housing.storageCapacity || 0);
@@ -230122,7 +230124,7 @@ function showVictoryModal() {
     (state.corporate && state.corporate.rank ? state.corporate.rank : "—") +
     "</td></tr>" +
     "<tr><td>现金</td><td>¥" +
-    state.resources.cash.toLocaleString() +
+    ((state.resources.cash || 0)).toLocaleString() + // [全系统自洽修复] 域F A类: cash NaN守卫
     "</td></tr>" +
     "<tr><td>总收入</td><td>¥" +
     (state.resources.totalEarned || 0).toLocaleString() +
@@ -230979,7 +230981,7 @@ function showDepositModal() {
         text: "存入全部",
         cls: "btn-success",
         callback: () => {
-          const amt = state.resources.cash;
+          const amt = state.resources.cash || 0; // [全系统自洽修复] 域F A类: cash NaN守卫
           state.resources.bankBalance += amt;
           state.resources.cash = 0;
           StateManager.addMessage(
@@ -231743,11 +231745,11 @@ function buyItemFromShop(itemId) {
   // 价格：使用品质价格（如果有）
   var price = equippedItem ? equippedItem.actualPrice : item.price;
 
-  if (state.resources.cash < price) {
+  if ((state.resources.cash || 0) < price) { // [全系统自洽修复] 域F A类: cash NaN守卫
     StateManager.addMessage("💸 现金不足，无法购买 " + item.name, "warning");
     return;
   }
-  state.resources.cash -= price;
+  state.resources.cash = (state.resources.cash || 0) - price; // [全系统自洽修复] 域F A类: cash NaN守卫
   addDailyTransaction(
     state,
     "expense",
@@ -231866,7 +231868,7 @@ function showItemShopModal(locationId) {
       var actualPrice = item.price;
       var hasQuality = item.slot && typeof getQualityPriceMult === "function";
       var maxPrice = hasQuality ? Math.round(item.price * 1.5) : item.price;
-      var canAfford = state.resources.cash >= actualPrice;
+      var canAfford = (state.resources.cash || 0) >= actualPrice; // [全系统自洽修复] 域F A类: cash NaN守卫
       // 检查是否已装备
       var equipped =
         state.inventory.equipment &&
@@ -236881,7 +236883,7 @@ window._navEnsureInit = function () {
 
 /** 每日检查所有胜利路线 */
 function checkVictoryPaths(state) {
-  if (state.flags.gameOver || state.flags.victory) return;
+  if (!state.flags || state.flags.gameOver || state.flags.victory) return; // [全系统自洽修复] 域F A类: state.flags 守卫
   const inv = state.investment;
 
   // 🏪 经商大亨：累计交易利润 >= ¥500,000
@@ -236983,7 +236985,7 @@ function checkVictoryPaths(state) {
     (state.investment && state.investment.properties
       ? state.investment.properties.length
       : 0) > 0;
-  var _vcLiquid = state.resources.cash + (state.resources.bankBalance || 0);
+  var _vcLiquid = (state.resources.cash || 0) + (state.resources.bankBalance || 0); // [全系统自洽修复] 域F A类: cash NaN守卫
   if (_vcCurrentSalary > 20000 && _vcOwnsHouse && _vcLiquid >= 50000) {
     triggerVictory(
       state,
@@ -237041,7 +237043,7 @@ function checkVictoryPaths(state) {
   if (
     _vcAgeYear >= 35 &&
     (!state.housing || state.housing.tier === 0) &&
-    state.resources.cash < 500 &&
+    (state.resources.cash || 0) < 500 && // [全系统自洽修复] 域F A类: cash NaN守卫
     // [全系统自洽修复] 域F 修复:state.career 为动态字段(从未求职时 undefined)，无守卫解引用 currentJob 抛 TypeError
     !(state.career && state.career.currentJob)
   ) {
@@ -237101,7 +237103,7 @@ function checkVictoryPaths(state) {
   }
 
   // 🏢 职场巅峰（保留原有逻辑）
-  if (state.player.phase === "corporate" && state.corporate.rank === "P10") {
+  if (state.player.phase === "corporate" && state.corporate && state.corporate.rank === "P10") { // [全系统自洽修复] 域F A类: state.corporate 守卫
     triggerVictory(
       state,
       "p10",
@@ -237112,7 +237114,7 @@ function checkVictoryPaths(state) {
   }
 
   // 💵 财务自由（保留原有 ¥20,000,000）
-  if (state.resources.cash + (state.resources.bankBalance || 0) >= 2000000) {
+  if ((state.resources.cash || 0) + (state.resources.bankBalance || 0) >= 2000000) { // [全系统自洽修复] 域F A类: cash NaN守卫
     triggerVictory(
       state,
       "money",

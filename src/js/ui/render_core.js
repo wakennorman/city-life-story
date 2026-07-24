@@ -602,6 +602,7 @@ function renderReputationBadge(state) {
 /** 道德状态显示 */
 if(typeof renderMoralStatus==="undefined"){
 function renderMoralStatus(state) {
+  if (!state || !state.flags) return; // [全系统自洽修复] 域F A类: state.flags 守卫
   var moral = state.flags.moral;
   if (!moral || !moral.actions || moral.actions.length === 0) return;
   var score = moral.score || 0;
