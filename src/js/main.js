@@ -1810,7 +1810,20 @@ function startNewGame() {
 }
 
 function loadExistingGame(slot) {
-  const saveData = loadGame(slot);
+  var saveData = loadGame(slot);
+  if (!saveData) {
+    // 尝试从索引重新加载（兼容旧存档格式）
+    if (typeof getSlotInfo === "function") {
+      var info = getSlotInfo(slot);
+      if (info && (slot === "_auto" || (typeof slot === "number" && slot >= 1 && slot <= 5))) {
+        saveData = loadGame(slot);
+      }
+    }
+    if (!saveData) {
+      StateManager.addMessage("⚠️ 存档数据不存在，请检查或重新开始游戏。", "danger");
+      return;
+    }
+  }
   if (saveData) {
     // 显示读档回忆文案（P1 - 存档快照）
     if (saveData._snapshot && typeof getLoadMemoryText === "function") {

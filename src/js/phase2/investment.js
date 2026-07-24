@@ -3253,7 +3253,7 @@ function bindInvQtyHandlers(area, state, parent, tabFn) {
             if (mkt && mkt.price > 0) {
               var maxQ =
                 Math.floor(
-                  (s.resources.cash / mkt.price) *
+                  ((s.resources.cash || 0) / mkt.price) *
                     (1 / (parseFloat(input.step) || 1)),
                 ) * (parseFloat(input.step) || 1);
               if (def && def.category === "股票") maxQ = Math.floor(maxQ);
@@ -3354,7 +3354,7 @@ function bindInvQtyHandlers(area, state, parent, tabFn) {
         var s = StateManager.getState();
         var mkt = s.investment.stockMarket[sym];
         if (mkt && mkt.price > 0) {
-          var maxQ = Math.floor(s.resources.cash / mkt.price / step) * step;
+          var maxQ = Math.floor((s.resources.cash || 0) / mkt.price / step) * step;
           var def = null;
           for (var i = 0; i < INV_STOCKS.length; i++) {
             if (INV_STOCKS[i].symbol === sym) {
@@ -3604,7 +3604,7 @@ function renderStocks(area, inv, state, parent) {
         var price = parseFloat(this.dataset.p);
         var maxQ =
           price > 0
-            ? Math.floor(StateManager.getState().resources.cash / price)
+            ? Math.floor((StateManager.getState().resources.cash || 0) / price)
             : 0;
         if (maxQ < 1) {
           StateManager.addMessage("现金不足，无法全买", "warning");
@@ -3766,7 +3766,7 @@ function renderBtc(area, inv, state, parent) {
         var maxQ =
           price > 0
             ? Math.floor(
-                (StateManager.getState().resources.cash / price) * factor,
+                ((StateManager.getState().resources.cash || 0) / price) * factor,
               ) / factor
             : 0;
         if (maxQ <= 0) {
@@ -3893,7 +3893,7 @@ function renderPrecious(area, inv, state, parent) {
         var price = parseFloat(this.dataset.p);
         var maxQ =
           price > 0
-            ? Math.floor(StateManager.getState().resources.cash / price)
+            ? Math.floor((StateManager.getState().resources.cash || 0) / price)
             : 0;
         if (maxQ < 1) {
           StateManager.addMessage("现金不足，无法全买", "warning");
@@ -4020,7 +4020,7 @@ function renderFutures(area, inv, state, parent) {
         var price = parseFloat(this.dataset.p);
         var maxQ =
           price > 0
-            ? Math.floor(StateManager.getState().resources.cash / price)
+            ? Math.floor((StateManager.getState().resources.cash || 0) / price)
             : 0;
         if (maxQ < 1) {
           StateManager.addMessage("现金不足，无法全买", "warning");

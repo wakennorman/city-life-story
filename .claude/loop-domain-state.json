@@ -1,7 +1,7 @@
 {
-  "currentRound": 191,
-  "currentDomain": "C",
-  "nextDomain": "G",
+  "currentRound": 192,
+  "currentDomain": "G",
+  "nextDomain": "H",
   "rotationIndex": 0,
   "domainOrder": [
     "A",
@@ -20,7 +20,7 @@
     "D": 184,
     "E": 185,
     "F": 186,
-    "G": 180,
+    "G": 192,
     "H": 188
   },
   "history": [
@@ -53,13 +53,18 @@
       "round": 191,
       "domain": "C",
       "note": "域C: A类修复1项(jobs.js long_haul_driver死工作 requiredFlag \"_synergy_driving_accounting\"无对应连携→永不可入职,改真实连携\"_synergy_driving_logistics\"「长途运输」DUAL driving+accounting,与job名/desc/payCalc一致;该修已随并行提交eb13d27b落地)+联动增强3项(C→E连携私活变现/C→D同行手艺认可/C→G成长回望叙事)"
+    },
+    {
+      "round": 192,
+      "domain": "G",
+      "note": "域G: A类修复1项(life_ribbon.js「房奴一生」缎带mortgage_slave check死字段——原读p.isSelfOccupied/p.mortgageRemaining,全库仅此一处读取零写入恒undefined→缎带永不授予,改读真实字段st.investment.selfLivePropertyId+st.family.mortgage.remainingDays)+联动增强3项(G→D暖房请街坊涨好感/G→C安居后重拾手艺加技能/G→A还贷精算换心智成长),新建core_lifecycle_linkage_r192.js承接安家里程碑复活价值链"
     }
   ],
-  "lastDomain": "C",
-  "lastRound": 191,
+  "lastDomain": "G",
+  "lastRound": 192,
   "lastDate": "2026-07-24",
-  "lastCommit": "89399c3c",
-  "pushStatus": "PUSHED",
+  "lastCommit": "PENDING",
+  "pushStatus": "PENDING",
   "completedDomains": [
     "A",
     "B",
