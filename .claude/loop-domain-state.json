@@ -1,7 +1,7 @@
 {
-  "currentRound": 195,
-  "currentDomain": "E",
-  "nextDomain": "F",
+  "currentRound": 196,
+  "currentDomain": "C",
+  "nextDomain": "A",
   "rotationIndex": 8,
   "domainOrder": [
     "A",
@@ -16,7 +16,7 @@
   "domainRecency": {
     "A": 189,
     "B": 190,
-    "C": 191,
+    "C": 196,
     "D": 194,
     "E": 195,
     "F": 186,
@@ -58,13 +58,18 @@
       "round": 195,
       "domain": "E",
       "note": "域E: A类1项(investment_analysis.js 止损止盈整链死机制:checkStopLoss/setStopLoss 全库无调用方→止损单永不被创建/评估;因 daily_pipeline/investment.js 并行在途不可碰,在 domain_e_linkage_r195.js 以包装全局 tickInvestmentDaily 接线,try/catch+仅有止损单才调用)+联动3项(E→F券商顾问引导挂10%止损·复活setStopLoss/E→G止损触发后纪律体悟·首个消费order.triggered/E→C技术面复盘·复活analyzeStockTechnicals+accounting XP)。C类记录:analyzePortfolio等3个UI分析函数待财务Tab合流后接入。MC 6×400d 0代码异常。下轮R196→域F(recency 186 最薄弱)。"
+    },
+    {
+      "round": 196,
+      "domain": "C",
+      "note": "域C(pivot自F): A类0项——域C A类缺陷已全部由并行窗口覆盖(career_dev.js:3376 在职里程碑健康加成死字段 state.needs.health→state.status.health 由9b8ddfa2同源修复 / career_dev.js totalEarned NaN守卫×2 由f1ba9549 / reqSocial晋升检查+caregiverXp孤儿effect+5项技能检查 由9b8ddfa2),本窗口不再重复修。联动增强3项(新建 domain_c_linkage_r196.js,2 street+1 corporate: C→B手艺成街坊美谈→state.player.fame+4+mental / C→F执业沉淀作品集→mental+happiness / C→H前辈点名带新人→addSkillXp management+cash,全||防御,数值[PLACEHOLDER])。P.S. 并行 f1ba9549 在 src/index.html 误注册了缺失文件 domain_f_linkage_r196.js(悬空引用),本窗口 pivot 将其改为存在的 domain_c_linkage_r196.js,消除悬空引用。MC 6×400d 0代码异常。下轮R197→域A(recency 189 最薄弱)。"
     }
   ],
-  "lastDomain": "E",
-  "lastRound": 195,
+  "lastDomain": "C",
+  "lastRound": 196,
   "lastDate": "2026-07-25",
-  "lastCommit": "803d3aa0",
-  "pushStatus": "PUSHED",
+  "lastCommit": "PENDING",
+  "pushStatus": "PENDING",
   "completedDomains": [
     "A",
     "B",
@@ -75,5 +80,5 @@
     "G",
     "H"
   ],
-  "description": "全系统优化 loop R195 完成。域E(经济/投资): 1项A类修复(止损止盈链 checkStopLoss/setStopLoss 死机制→包装 tickInvestmentDaily 接线复活) + 3项联动增强(domain_e_linkage_r195.js: E→F止损引导/E→G止损纪律叙事/E→C技术面复盘)。F为最薄弱(recency 186)，下轮R196→域F。"
+  "description": "全系统优化 loop R196 pivot→域C(职业/成长)。域C A类缺陷已由并行窗口(9b8ddfa2/f1ba9549)全量覆盖,故A类0项;本窗口仅补3项跨域联动增强(domain_c_linkage_r196.js: C→B手艺美谈名望/C→F作品集心智+心情/C→H前辈带人转化management技能+现金),全||防御,数值[PLACEHOLDER]。附带修正并行 f1ba9549 在 index.html 误注册的缺失文件 domain_f_linkage_r196.js 为 domain_c_linkage_r196.js(消除悬空引用)。A为最薄弱(recency 189),下轮R197→域A。"
 }
