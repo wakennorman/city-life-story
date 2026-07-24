@@ -2120,24 +2120,13 @@ function showLoadMenuOnWelcome() {
     } else {
       var phaseLabel = s.phase === "corporate" ? "🏢" : "🏘️";
       var isSelected = _compareSelected.includes(s.slot);
-      var clickHandler = _compareMode
-        ? "selectForCompare('" + s.slot + "')"
-        : "document.querySelector('.modal-overlay')?.remove();loadExistingGame('" +
-          s.slot +
-          "')";
       var borderStyle = isSelected
         ? "border:2px solid var(--accent);"
         : "border:1px solid var(--border);";
 
       bodyHtml +=
-        '<div style="padding:10px;margin:4px 0;background:var(--bg-card);border-radius:4px;cursor:pointer;transition:all 0.2s;' +
+        '<div class="welcome-slot-card" data-slot="' + s.slot + '" data-compare="' + (_compareMode ? "1" : "0") + '" style="padding:10px;margin:4px 0;background:var(--bg-card);border-radius:4px;cursor:pointer;transition:all 0.2s;' +
         borderStyle +
-        '"' +
-        " onmouseover=\"this.style.borderColor='var(--accent)';this.style.background='var(--bg-card-hover)';this.style.transform='translateY(-1px)';this.style.boxShadow='0 4px 12px var(--accent-glow)';\" onmouseout=\"this.style.borderColor='" +
-        (_compareMode ? "var(--accent)" : "var(--border)") +
-        "';this.style.background='var(--bg-card)';this.style.transform='none';this.style.boxShadow='none';\"" +
-        ' onclick="' +
-        clickHandler +
         '">' +
         '<div style="display:flex;justify-content:space-between;align-items:center;">' +
         "<strong>" +
@@ -2197,6 +2186,27 @@ function showLoadMenuOnWelcome() {
     body: bodyHtml,
     buttons: buttons,
   });
+
+  // 绑定存档槽位点击（替代不稳定的 inline onclick）
+  setTimeout(function () {
+    document.querySelectorAll(".welcome-slot-card").forEach(function (card) {
+      card.addEventListener("click", function () {
+        var slot = card.dataset.slot;
+        var isCompare = card.dataset.compare === "1";
+        if (isCompare) {
+          selectForCompare(slot);
+        } else {
+          var overlay = document.querySelector(".modal-overlay");
+          if (overlay) {
+            if (overlay._escHandler) document.removeEventListener("keydown", overlay._escHandler);
+            if (overlay._clickHandler) overlay.removeEventListener("click", overlay._clickHandler);
+            overlay.parentNode?.removeChild(overlay);
+          }
+          loadExistingGame(slot);
+        }
+      });
+    });
+  }, 50);
 }
 
 /** 初始化各地商品价格 */

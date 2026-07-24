@@ -136,8 +136,8 @@
         hint: "花¥30 恢复饱腹+健康",
         apply: function (st) {
           st.flags._hungerAccumulationSeen = true;
-          if (st.resources.cash >= 30) {
-            st.resources.cash -= 30;
+          if ((st.resources.cash || 0) >= 30) {
+            st.resources.cash = Math.max(0, (st.resources.cash || 0) - 30);
             st.needs.hunger = Math.min(100, (st.needs.hunger || 0) + 35);
             st.status.health = Math.min(100, (st.status.health || 70) + 5);
             st.needs.happiness = Math.min(100, (st.needs.happiness || 20) + 10);
@@ -158,8 +158,8 @@
         hint: "花¥10 最低成本",
         apply: function (st) {
           st.flags._hungerAccumulationSeen = true;
-          if (st.resources.cash >= 10) {
-            st.resources.cash -= 10;
+          if ((st.resources.cash || 0) >= 10) {
+            st.resources.cash = Math.max(0, (st.resources.cash || 0) - 10);
             st.needs.hunger = Math.min(100, (st.needs.hunger || 0) + 20);
             StateManager.addMessage(
               "⚠️ 你回到住处煮了碗方便面。虽然简单，但好歹填饱了肚子。饱腹+20，-¥10。",
@@ -218,7 +218,7 @@
         text: "💼 接下职位",
         hint: "大额现金+ 名声+",
         apply: function (st) {
-          st.resources.cash += 1500;
+          st.resources.cash = (st.resources.cash || 0) + 1500;
           st.player.fame = Math.min(100, (st.player.fame || 0) + 6);
           st.flags._financeDirectorSeen = true;
           StateManager.addMessage(
@@ -231,7 +231,7 @@
         text: "🤝 先当顾问",
         hint: "轻量 现金+",
         apply: function (st) {
-          st.resources.cash += 400;
+          st.resources.cash = (st.resources.cash || 0) + 400;
           st.player.fame = Math.min(100, (st.player.fame || 0) + 2);
           st.flags._financeDirectorSeen = true;
           StateManager.addMessage(
@@ -268,7 +268,7 @@
         hint: "现金+ 名声+ 好感+",
         apply: function (st) {
           var rel = st.relationships && st.relationships["aunt_wang"];
-          st.resources.cash += 350;
+          st.resources.cash = (st.resources.cash || 0) + 350;
           st.player.fame = Math.min(100, (st.player.fame || 0) + 5);
           if (rel) rel.affinity = Math.min(100, rel.affinity + 5);
           st.flags._auntWangElderSeen = true;
@@ -318,7 +318,7 @@
         text: "🤝 接下内推",
         hint: "现金+ 名声+ 好感+",
         apply: function (st) {
-          st.resources.cash += 300;
+          st.resources.cash = (st.resources.cash || 0) + 300;
           st.player.fame = Math.min(100, (st.player.fame || 0) + 5);
           var rel = st.relationships.boss_li;
           rel.affinity = Math.min(100, rel.affinity + 5);
@@ -369,7 +369,7 @@
         text: "💪 接转包单",
         hint: "大额现金+ 名声+",
         apply: function (st) {
-          st.resources.cash += 500;
+          st.resources.cash = (st.resources.cash || 0) + 500;
           st.player.fame = Math.min(100, (st.player.fame || 0) + 5);
           var rel = st.relationships.brother_huang;
           rel.affinity = Math.min(100, rel.affinity + 5);
@@ -384,7 +384,7 @@
         text: "🔧 先试小单",
         hint: "低风险 现金+",
         apply: function (st) {
-          st.resources.cash += 150;
+          st.resources.cash = (st.resources.cash || 0) + 150;
           st.flags._brotherHuangSubSeen = true;
           StateManager.addMessage(
             "你先接了个小转包练手，落袋¥150，跟黄哥也混熟了。",
@@ -418,7 +418,7 @@
         text: "📈 听顾问配置",
         hint: "现金+ 名声+",
         apply: function (st) {
-          st.resources.cash += 700;
+          st.resources.cash = (st.resources.cash || 0) + 700;
           st.player.fame = Math.min(100, (st.player.fame || 0) + 4);
           st.flags._wealthAdvisorySeen = true;
           StateManager.addMessage(
@@ -431,7 +431,7 @@
         text: "🏪 盘个小本生意",
         hint: "轻量 现金+",
         apply: function (st) {
-          st.resources.cash += 300;
+          st.resources.cash = (st.resources.cash || 0) + 300;
           st.flags._wealthAdvisorySeen = true;
           StateManager.addMessage(
             "你拿闲钱盘了个小本生意练手，落袋¥300。",
@@ -466,7 +466,7 @@
         text: "🤝 接秘方合伙",
         hint: "现金+ 名声+ 好感+",
         apply: function (st) {
-          st.resources.cash += 250;
+          st.resources.cash = (st.resources.cash || 0) + 250;
           st.player.fame = Math.min(100, (st.player.fame || 0) + 4);
           var rel = st.relationships.chef_chen;
           rel.affinity = Math.min(100, rel.affinity + 5);
@@ -518,7 +518,7 @@
         text: "💻 卖调度工具",
         hint: "现金+ 名声+",
         apply: function (st) {
-          st.resources.cash += 450;
+          st.resources.cash = (st.resources.cash || 0) + 450;
           st.player.fame = Math.min(100, (st.player.fame || 0) + 4);
           StateManager.addMessage(
             "你把调度工具打包卖给几个车队，落袋¥450，名声+4。",
@@ -530,7 +530,7 @@
         text: "🔧 先给一家试用",
         hint: "轻量 现金+",
         apply: function (st) {
-          st.resources.cash += 120;
+          st.resources.cash = (st.resources.cash || 0) + 120;
           StateManager.addMessage(
             "你先给一家车队免费试用，落袋¥120，口碑慢慢传开。",
             "info",
@@ -566,7 +566,7 @@
         text: "🚛 接车队管理",
         hint: "现金+ 名声+",
         apply: function (st) {
-          st.resources.cash += 550;
+          st.resources.cash = (st.resources.cash || 0) + 550;
           st.player.fame = Math.min(100, (st.player.fame || 0) + 5);
           st.flags._fleetSeen = true;
           StateManager.addMessage(
@@ -579,7 +579,7 @@
         text: "📋 只做调度",
         hint: "轻量 现金+",
         apply: function (st) {
-          st.resources.cash += 200;
+          st.resources.cash = (st.resources.cash || 0) + 200;
           st.flags._fleetSeen = true;
           StateManager.addMessage(
             "你只管排班调度，落袋¥200，不背管理锅。",
@@ -615,7 +615,7 @@
         text: "🚐 开车出去卖",
         hint: "现金+（日结）",
         apply: function (st) {
-          st.resources.cash += 300;
+          st.resources.cash = (st.resources.cash || 0) + 300;
           st.player.fame = Math.min(100, (st.player.fame || 0) + 3);
           StateManager.addMessage(
             "你开着面包车沿街叫卖，一天下来入账¥300，名声+3。",
@@ -627,7 +627,7 @@
         text: "🤔 先试一趟",
         hint: "低风险 现金+",
         apply: function (st) {
-          st.resources.cash += 100;
+          st.resources.cash = (st.resources.cash || 0) + 100;
           StateManager.addMessage(
             "你先拉一车货试卖，落袋¥100，摸清楚了哪片好卖。",
             "info",
@@ -664,7 +664,7 @@
         text: "👷 组队接工程",
         hint: "大额现金+ 名声+",
         apply: function (st) {
-          st.resources.cash += 600;
+          st.resources.cash = (st.resources.cash || 0) + 600;
           st.player.fame = Math.min(100, (st.player.fame || 0) + 5);
           st.flags._elecMgmtTeamSeen = true;
           StateManager.addMessage(
@@ -677,7 +677,7 @@
         text: "🔧 先小范围试",
         hint: "低风险 现金+",
         apply: function (st) {
-          st.resources.cash += 200;
+          st.resources.cash = (st.resources.cash || 0) + 200;
           st.flags._elecMgmtTeamSeen = true;
           StateManager.addMessage(
             "你先带两人接了个小工程练手，落袋¥200，口碑慢慢立起来。",
@@ -713,7 +713,7 @@
         text: "📝 接本地化",
         hint: "现金+ 名声+",
         apply: function (st) {
-          st.resources.cash += 700;
+          st.resources.cash = (st.resources.cash || 0) + 700;
           st.player.fame = Math.min(100, (st.player.fame || 0) + 5);
           st.flags._localizeSeen = true;
           StateManager.addMessage(
@@ -726,7 +726,7 @@
         text: "🧩 只做脚手架",
         hint: "轻量 现金+",
         apply: function (st) {
-          st.resources.cash += 250;
+          st.resources.cash = (st.resources.cash || 0) + 250;
           st.flags._localizeSeen = true;
           StateManager.addMessage(
             "你只写了双语脚手架模板，落袋¥250，后续按需复用。",
@@ -763,7 +763,7 @@
         text: "💼 接中层岗",
         hint: "大额现金+ 名声+",
         apply: function (st) {
-          st.resources.cash += 1200;
+          st.resources.cash = (st.resources.cash || 0) + 1200;
           st.player.fame = Math.min(100, (st.player.fame || 0) + 6);
           st.flags._englishMgmtSeen = true;
           StateManager.addMessage(
@@ -776,7 +776,7 @@
         text: "🤝 先当顾问",
         hint: "轻量 现金+",
         apply: function (st) {
-          st.resources.cash += 300;
+          st.resources.cash = (st.resources.cash || 0) + 300;
           st.player.fame = Math.min(100, (st.player.fame || 0) + 2);
           st.flags._englishMgmtSeen = true;
           StateManager.addMessage(
@@ -812,7 +812,7 @@
         text: "🏠 盘下便宜房",
         hint: "现金+ 名声+",
         apply: function (st) {
-          st.resources.cash += 300;
+          st.resources.cash = (st.resources.cash || 0) + 300;
           st.player.fame = Math.min(100, (st.player.fame || 0) + 4);
           st.flags._oldtownSeen = true;
           StateManager.addMessage(
@@ -825,7 +825,7 @@
         text: "🗣️ 只做信息贩子",
         hint: "轻量 现金+",
         apply: function (st) {
-          st.resources.cash += 120;
+          st.resources.cash = (st.resources.cash || 0) + 120;
           st.flags._oldtownSeen = true;
           StateManager.addMessage(
             "你只靠灵通消息帮人牵线，落袋¥120，不占本钱。",
@@ -859,7 +859,7 @@
         text: "🏘️ 接下互助基金",
         hint: "现金+ 名声+",
         apply: function (st) {
-          st.resources.cash += 450;
+          st.resources.cash = (st.resources.cash || 0) + 450;
           st.player.fame = Math.min(100, (st.player.fame || 0) + 6);
           st.flags._charityHubSeen = true;
           StateManager.addMessage(
@@ -906,7 +906,7 @@
         text: "🗝️ 接下钥匙",
         hint: "现金+ 名声+",
         apply: function (st) {
-          st.resources.cash += 400;
+          st.resources.cash = (st.resources.cash || 0) + 400;
           st.player.fame = Math.min(100, (st.player.fame || 0) + 5);
           st.flags._communityEntrustSeen = true;
           StateManager.addMessage(
@@ -1051,7 +1051,7 @@
         text: "💡 改智能设备",
         hint: "现金+ 名声+",
         apply: function (st) {
-          st.resources.cash += 400;
+          st.resources.cash = (st.resources.cash || 0) + 400;
           st.player.fame = Math.min(100, (st.player.fame || 0) + 4);
           st.flags._smartDeviceSeen = true;
           StateManager.addMessage(
@@ -1064,7 +1064,7 @@
         text: "🔬 先打样",
         hint: "轻量 现金+",
         apply: function (st) {
-          st.resources.cash += 120;
+          st.resources.cash = (st.resources.cash || 0) + 120;
           st.flags._smartDeviceSeen = true;
           StateManager.addMessage(
             "你先做了个样品验证思路，落袋¥120，订单慢慢来了。",
@@ -1098,7 +1098,7 @@
         text: "🏦 拿低息周转",
         hint: "现金+ 名声+",
         apply: function (st) {
-          st.resources.cash += 500;
+          st.resources.cash = (st.resources.cash || 0) + 500;
           st.player.fame = Math.min(100, (st.player.fame || 0) + 4);
           st.flags._commercialLoanSeen = true;
           StateManager.addMessage(
@@ -1111,7 +1111,7 @@
         text: "🤝 只代卖不借钱",
         hint: "轻量 现金+",
         apply: function (st) {
-          st.resources.cash += 150;
+          st.resources.cash = (st.resources.cash || 0) + 150;
           st.flags._commercialLoanSeen = true;
           StateManager.addMessage(
             "你只帮熟铺代卖跑量，落袋¥150，稳妥不背债。",
@@ -1146,7 +1146,7 @@
         text: "🤝 接资源合作",
         hint: "现金+ 名声+ 好感+",
         apply: function (st) {
-          st.resources.cash += 300;
+          st.resources.cash = (st.resources.cash || 0) + 300;
           st.player.fame = Math.min(100, (st.player.fame || 0) + 4);
           var rel = st.relationships.sister_wu;
           rel.affinity = Math.min(100, rel.affinity + 5);
@@ -1195,7 +1195,7 @@
         text: "⚙️ 接后端单",
         hint: "现金+ 名声+",
         apply: function (st) {
-          st.resources.cash += 950;
+          st.resources.cash = (st.resources.cash || 0) + 950;
           st.player.fame = Math.min(100, (st.player.fame || 0) + 6);
           st.flags._backendSystemSeen = true;
           StateManager.addMessage(
@@ -1208,7 +1208,7 @@
         text: "🧱 先出脚手架",
         hint: "轻量 现金+",
         apply: function (st) {
-          st.resources.cash += 320;
+          st.resources.cash = (st.resources.cash || 0) + 320;
           st.flags._backendSystemSeen = true;
           StateManager.addMessage(
             "你先搭了套后端脚手架，落袋¥320，后续按模板复用。",
@@ -1241,7 +1241,7 @@
         text: "🏪 开连锁档口",
         hint: "大额现金+ 名声+",
         apply: function (st) {
-          st.resources.cash += 800;
+          st.resources.cash = (st.resources.cash || 0) + 800;
           st.player.fame = Math.min(100, (st.player.fame || 0) + 6);
           st.flags._cookMgmtChainSeen = true;
           StateManager.addMessage(
@@ -1254,7 +1254,7 @@
         text: "🍳 先直营一家",
         hint: "轻量 现金+",
         apply: function (st) {
-          st.resources.cash += 300;
+          st.resources.cash = (st.resources.cash || 0) + 300;
           st.player.fame = Math.min(100, (st.player.fame || 0) + 3);
           st.flags._cookMgmtChainSeen = true;
           StateManager.addMessage(
@@ -1288,7 +1288,7 @@
         text: "🌍 接出海单",
         hint: "现金+ 名声+",
         apply: function (st) {
-          st.resources.cash += 1000;
+          st.resources.cash = (st.resources.cash || 0) + 1000;
           st.player.fame = Math.min(100, (st.player.fame || 0) + 6);
           st.flags._engGlobalSeen = true;
           StateManager.addMessage(
@@ -1301,7 +1301,7 @@
         text: "🔌 先搭试点",
         hint: "轻量 现金+",
         apply: function (st) {
-          st.resources.cash += 350;
+          st.resources.cash = (st.resources.cash || 0) + 350;
           st.flags._engGlobalSeen = true;
           StateManager.addMessage(
             "你先搭了个海外试点节点验证，落袋¥350，后续单子自来。",
@@ -1334,7 +1334,7 @@
         text: "🖥️ 接整站单",
         hint: "现金+ 名声+",
         apply: function (st) {
-          st.resources.cash += 900;
+          st.resources.cash = (st.resources.cash || 0) + 900;
           st.player.fame = Math.min(100, (st.player.fame || 0) + 6);
           st.flags._frontendArchSeen = true;
           StateManager.addMessage(
@@ -1347,7 +1347,7 @@
         text: "🧱 先出模板",
         hint: "轻量 现金+",
         apply: function (st) {
-          st.resources.cash += 300;
+          st.resources.cash = (st.resources.cash || 0) + 300;
           st.flags._frontendArchSeen = true;
           StateManager.addMessage(
             "你先做了套可复用模板挂出去，落袋¥300，口碑慢慢起来。",
@@ -1380,7 +1380,7 @@
         text: "🛠️ 接定制单",
         hint: "现金+ 名声+",
         apply: function (st) {
-          st.resources.cash += 600;
+          st.resources.cash = (st.resources.cash || 0) + 600;
           st.player.fame = Math.min(100, (st.player.fame || 0) + 5);
           st.flags._modCustomGigSeen = true;
           StateManager.addMessage(
@@ -1393,7 +1393,7 @@
         text: "📦 先出样品",
         hint: "轻量 现金+",
         apply: function (st) {
-          st.resources.cash += 200;
+          st.resources.cash = (st.resources.cash || 0) + 200;
           st.flags._modCustomGigSeen = true;
           StateManager.addMessage(
             "你先做了个样品挂出来，落袋¥200，慢慢有回头客。",
@@ -1426,7 +1426,7 @@
         text: "🛡️ 接风控单",
         hint: "现金+ 名声+",
         apply: function (st) {
-          st.resources.cash += 850;
+          st.resources.cash = (st.resources.cash || 0) + 850;
           st.player.fame = Math.min(100, (st.player.fame || 0) + 6);
           st.flags._secExpertSeen = true;
           StateManager.addMessage(
@@ -1439,7 +1439,7 @@
         text: "🔍 先出审计",
         hint: "轻量 现金+",
         apply: function (st) {
-          st.resources.cash += 280;
+          st.resources.cash = (st.resources.cash || 0) + 280;
           st.flags._secExpertSeen = true;
           StateManager.addMessage(
             "你先做了份安全审计模板，落袋¥280，口碑慢慢传开。",
@@ -1579,7 +1579,7 @@
         text: "🔧 接私单报价",
         hint: "现金+（佣金）",
         apply: function (st) {
-          st.resources.cash += 350;
+          st.resources.cash = (st.resources.cash || 0) + 350;
           st.player.fame = Math.min(100, (st.player.fame || 0) + 3);
           StateManager.addMessage(
             "你报了个实在价，客户痛快拍板。工友直夸你会来事。现金+350，名声+3。",
@@ -1591,7 +1591,7 @@
         text: "🤝 只牵线不接",
         hint: "轻量 现金+",
         apply: function (st) {
-          st.resources.cash += 80;
+          st.resources.cash = (st.resources.cash || 0) + 80;
           StateManager.addMessage(
             "你把单子转给相熟的老师傅，抽了点介绍费，人情也攒下了。现金+80。",
             "info",
@@ -1625,7 +1625,7 @@
         text: "🏠 搬去合租",
         hint: "月租省 好感+",
         apply: function (st) {
-          st.resources.cash += 120; // 省下月租差额
+          st.resources.cash = (st.resources.cash || 0) + 120; // 省下月租差额
           var rel = st.relationships.xiao_mei;
           rel.affinity = Math.min(100, rel.affinity + 5);
           st.flags._xiaomeiRoommateSeen = true;
@@ -1701,7 +1701,7 @@
 
           s.level = Math.min(100, s.level + 1);
 
-          st.resources.cash += 400;
+          st.resources.cash = (st.resources.cash || 0) + 400;
 
           st.resources.debt = (st.resources.debt || 0) + 400;
 
@@ -1867,7 +1867,7 @@
         hint: "现金+ 名声+",
 
         apply: function (st) {
-          st.resources.cash += 440;
+          st.resources.cash = (st.resources.cash || 0) + 440;
 
           st.player.fame = Math.min(100, (st.player.fame || 0) + 4);
 
@@ -1887,7 +1887,7 @@
         hint: "轻量 现金+",
 
         apply: function (st) {
-          st.resources.cash += 160;
+          st.resources.cash = (st.resources.cash || 0) + 160;
 
           st.flags._bookkeepingSeen = true;
 
@@ -1943,7 +1943,7 @@
         hint: "现金+ 名声+",
 
         apply: function (st) {
-          st.resources.cash += 420;
+          st.resources.cash = (st.resources.cash || 0) + 420;
 
           st.player.fame = Math.min(100, (st.player.fame || 0) + 4);
 
@@ -1963,7 +1963,7 @@
         hint: "轻量 现金+",
 
         apply: function (st) {
-          st.resources.cash += 150;
+          st.resources.cash = (st.resources.cash || 0) + 150;
 
           st.flags._trainMentorSeen = true;
 
@@ -2023,7 +2023,7 @@
         apply: function (st) {
           var rel = st.relationships && st.relationships["aunt_wang"];
 
-          st.resources.cash += 260;
+          st.resources.cash = (st.resources.cash || 0) + 260;
 
           if (rel) rel.affinity = Math.min(100, rel.affinity + 5); // 王阿姨更待见你
 
@@ -2184,7 +2184,7 @@
         apply: function (st) {
           var rel = st.relationships && st.relationships["uncle_chen_bank"];
 
-          st.resources.cash += 280;
+          st.resources.cash = (st.resources.cash || 0) + 280;
 
           if (rel) rel.affinity = Math.min(100, rel.affinity + 4);
 
@@ -2349,7 +2349,7 @@
         apply: function (st) {
           var rel = st.relationships && st.relationships["boss_li"];
 
-          st.resources.cash += 460;
+          st.resources.cash = (st.resources.cash || 0) + 460;
 
           st.player.fame = Math.min(100, (st.player.fame || 0) + 5);
 
@@ -2371,7 +2371,7 @@
         hint: "轻量 现金+",
 
         apply: function (st) {
-          st.resources.cash += 170;
+          st.resources.cash = (st.resources.cash || 0) + 170;
 
           st.flags._bossLiMgmtSeen = true;
 
@@ -2431,7 +2431,7 @@
         apply: function (st) {
           var rel = st.relationships && st.relationships["brother_huang"];
 
-          st.resources.cash += 520;
+          st.resources.cash = (st.resources.cash || 0) + 520;
 
           st.player.fame = Math.min(100, (st.player.fame || 0) + 4);
 
@@ -2453,7 +2453,7 @@
         hint: "轻量 现金+",
 
         apply: function (st) {
-          st.resources.cash += 190;
+          st.resources.cash = (st.resources.cash || 0) + 190;
 
           st.flags._brotherHuangCodeSeen = true;
 
@@ -2515,7 +2515,7 @@
 
           s.level = Math.min(100, s.level + 2);
 
-          st.resources.cash += 280;
+          st.resources.cash = (st.resources.cash || 0) + 280;
 
           st.flags._bhCodeSeen = true;
 
@@ -2533,7 +2533,7 @@
         hint: "轻量 现金+",
 
         apply: function (st) {
-          st.resources.cash += 100;
+          st.resources.cash = (st.resources.cash || 0) + 100;
 
           st.flags._bhCodeSeen = true;
 
@@ -2589,7 +2589,7 @@
         apply: function (st) {
           var rel = st.relationships && st.relationships["chef_chen"];
 
-          st.resources.cash += 420;
+          st.resources.cash = (st.resources.cash || 0) + 420;
 
           st.player.fame = Math.min(100, (st.player.fame || 0) + 4);
 
@@ -2833,7 +2833,7 @@
         hint: "现金+ 名声+",
 
         apply: function (st) {
-          st.resources.cash += 300;
+          st.resources.cash = (st.resources.cash || 0) + 300;
 
           st.player.fame = Math.min(100, (st.player.fame || 0) + 3);
 
@@ -2853,7 +2853,7 @@
         hint: "轻量 现金+",
 
         apply: function (st) {
-          st.resources.cash += 110;
+          st.resources.cash = (st.resources.cash || 0) + 110;
 
           st.flags._cloudyMarketSeen = true;
 
@@ -2915,7 +2915,7 @@
 
           s.level = Math.min(100, s.level + 2);
 
-          st.resources.cash += 300;
+          st.resources.cash = (st.resources.cash || 0) + 300;
 
           st.flags._chenAutoSeen = true;
 
@@ -2985,7 +2985,7 @@
         hint: "现金+ 技能+",
 
         apply: function (st) {
-          st.resources.cash += 230;
+          st.resources.cash = (st.resources.cash || 0) + 230;
 
           if (st.skills && st.skills.driving)
             st.skills.driving.level = Math.min(
@@ -3010,7 +3010,7 @@
         hint: "轻量 现金+",
 
         apply: function (st) {
-          st.resources.cash += 90;
+          st.resources.cash = (st.resources.cash || 0) + 90;
 
           st.flags._commDriveSeen = true;
 
@@ -3064,7 +3064,7 @@
         hint: "现金+ 声望+",
 
         apply: function (st) {
-          st.resources.cash += 150;
+          st.resources.cash = (st.resources.cash || 0) + 150;
 
           st.reputation.commercialDist =
             (st.reputation.commercialDist || 0) + 2;
@@ -3138,7 +3138,7 @@
         hint: "现金+ 声望+",
 
         apply: function (st) {
-          st.resources.cash += 200;
+          st.resources.cash = (st.resources.cash || 0) + 200;
 
           if (st.reputation)
             st.reputation.commercialDist = Math.min(
@@ -3295,7 +3295,7 @@
         hint: "现金+ 名声+",
 
         apply: function (st) {
-          st.resources.cash += 400;
+          st.resources.cash = (st.resources.cash || 0) + 400;
 
           st.player.fame = Math.min(100, (st.player.fame || 0) + 4);
 
@@ -3315,7 +3315,7 @@
         hint: "轻量 现金+",
 
         apply: function (st) {
-          st.resources.cash += 150;
+          st.resources.cash = (st.resources.cash || 0) + 150;
 
           st.flags._foodStallSeen = true;
 
@@ -3374,7 +3374,7 @@
         hint: "现金+ 保手艺",
 
         apply: function (st) {
-          st.resources.cash += 140;
+          st.resources.cash = (st.resources.cash || 0) + 140;
 
           st.flags._declElecSeen = true;
 
@@ -3448,7 +3448,7 @@
         hint: "现金+ 好感+",
 
         apply: function (st) {
-          st.resources.cash += 120;
+          st.resources.cash = (st.resources.cash || 0) + 120;
 
           var rel = st.relationships && st.relationships["sister_zhang"];
 
@@ -3525,7 +3525,7 @@
         hint: "现金+ 名声+",
 
         apply: function (st) {
-          st.resources.cash += 500;
+          st.resources.cash = (st.resources.cash || 0) + 500;
 
           st.player.fame = Math.min(100, (st.player.fame || 0) + 5);
 
@@ -3545,7 +3545,7 @@
         hint: "轻量 现金+",
 
         apply: function (st) {
-          st.resources.cash += 180;
+          st.resources.cash = (st.resources.cash || 0) + 180;
 
           st.flags._homeIotSeen = true;
 
@@ -3604,7 +3604,7 @@
         hint: "现金+ 幸福+",
 
         apply: function (st) {
-          st.resources.cash += 90;
+          st.resources.cash = (st.resources.cash || 0) + 90;
 
           st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 5);
 
@@ -3682,7 +3682,7 @@
         hint: "现金+ 名声+",
 
         apply: function (st) {
-          st.resources.cash += 460;
+          st.resources.cash = (st.resources.cash || 0) + 460;
 
           st.player.fame = Math.min(100, (st.player.fame || 0) + 4);
 
@@ -3702,7 +3702,7 @@
         hint: "轻量 现金+",
 
         apply: function (st) {
-          st.resources.cash += 170;
+          st.resources.cash = (st.resources.cash || 0) + 170;
 
           st.flags._exportSeen = true;
 
@@ -3760,7 +3760,7 @@
 
           s.level = Math.min(100, s.level + 2);
 
-          st.resources.cash += 260;
+          st.resources.cash = (st.resources.cash || 0) + 260;
 
           if (st.reputation)
             st.reputation.techPark = Math.min(
@@ -3845,7 +3845,7 @@
 
           s.level = Math.min(100, s.level + 2);
 
-          st.resources.cash += 220;
+          st.resources.cash = (st.resources.cash || 0) + 220;
 
           st.flags._meiTranslateSeen = true;
 
@@ -3899,7 +3899,7 @@
 
       if (era.stageId !== "decline") return false; // 检查 衰退期
 
-      if (typeof st.resources.cash !== "number" || st.resources.cash >= 500)
+      if (typeof st.resources.cash !== "number" || (st.resources.cash || 0) >= 500)
         return false; // 检查 现金偏低
 
       if (st.player.phase !== "street") return false; // 检查 街头阶段
@@ -3924,7 +3924,7 @@
         apply: function (st) {
           st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 6);
 
-          st.resources.cash += 60;
+          st.resources.cash = (st.resources.cash || 0) + 60;
 
           st.flags._declineHoardSeen = true;
 
@@ -4232,7 +4232,7 @@
         hint: "现金+ 名声+",
 
         apply: function (st) {
-          st.resources.cash += 700;
+          st.resources.cash = (st.resources.cash || 0) + 700;
 
           st.player.fame = Math.min(100, (st.player.fame || 0) + 5);
 
@@ -4252,7 +4252,7 @@
         hint: "轻量 现金+",
 
         apply: function (st) {
-          st.resources.cash += 250;
+          st.resources.cash = (st.resources.cash || 0) + 250;
 
           st.flags._growthBoomSeen = true;
 
@@ -4314,7 +4314,7 @@
 
           s.level = Math.min(100, s.level + 2);
 
-          st.resources.cash += 200;
+          st.resources.cash = (st.resources.cash || 0) + 200;
 
           st.flags._initWeldSeen = true;
 
@@ -4392,7 +4392,7 @@
 
           s.level = Math.min(100, s.level + 2);
 
-          st.resources.cash += 260;
+          st.resources.cash = (st.resources.cash || 0) + 260;
 
           st.flags._matureInvSeen = true;
 
@@ -4476,7 +4476,7 @@
 
           s.level = Math.min(100, s.level + 2);
 
-          st.resources.cash += 300;
+          st.resources.cash = (st.resources.cash || 0) + 300;
 
           st.flags._matureWeldSeen = true;
 
@@ -4552,7 +4552,7 @@
         apply: function (st) {
           var rel = st.relationships && st.relationships["boss_li"];
 
-          st.resources.cash += 450;
+          st.resources.cash = (st.resources.cash || 0) + 450;
 
           if (rel) rel.affinity = Math.min(100, rel.affinity + 5);
 
@@ -4629,7 +4629,7 @@
         apply: function (st) {
           st.player.fame = Math.min(100, st.player.fame + 5);
 
-          st.resources.cash += 150;
+          st.resources.cash = (st.resources.cash || 0) + 150;
 
           st.flags._fameMediaSeen = true;
 
@@ -4704,7 +4704,7 @@
 
           s.level = Math.min(100, s.level + 2);
 
-          st.resources.cash += 180;
+          st.resources.cash = (st.resources.cash || 0) + 180;
 
           st.needs.fatigue = Math.min(100, (st.needs.fatigue || 0) + 12);
 
@@ -5086,7 +5086,7 @@
         hint: "现金+ 口碑+",
 
         apply: function (st) {
-          st.resources.cash += 220;
+          st.resources.cash = (st.resources.cash || 0) + 220;
 
           if (st.sideHustle)
             st.sideHustle.reputation = (st.sideHustle.reputation || 0) + 4;
@@ -5107,7 +5107,7 @@
         hint: "轻量 现金+",
 
         apply: function (st) {
-          st.resources.cash += 80;
+          st.resources.cash = (st.resources.cash || 0) + 80;
 
           st.flags._growthSalesSeen = true;
 
@@ -5468,7 +5468,7 @@
         hint: "现金+ 名声+",
 
         apply: function (st) {
-          st.resources.cash += 420;
+          st.resources.cash = (st.resources.cash || 0) + 420;
 
           st.player.fame = Math.min(100, (st.player.fame || 0) + 3);
 
@@ -5488,7 +5488,7 @@
         hint: "轻量 现金+",
 
         apply: function (st) {
-          st.resources.cash += 150;
+          st.resources.cash = (st.resources.cash || 0) + 150;
 
           st.flags._heatwaveDeliverySeen = true;
 
@@ -5542,7 +5542,7 @@
         hint: "现金+ 疲惫+",
 
         apply: function (st) {
-          st.resources.cash += 260;
+          st.resources.cash = (st.resources.cash || 0) + 260;
 
           if (st.needs)
             st.needs.fatigue = Math.min(100, (st.needs.fatigue || 0) + 10);
@@ -5563,7 +5563,7 @@
         hint: "轻量 现金+",
 
         apply: function (st) {
-          st.resources.cash += 120;
+          st.resources.cash = (st.resources.cash || 0) + 120;
 
           st.flags._heatwaveDriveSeen = true;
 

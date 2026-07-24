@@ -110,7 +110,7 @@
         hint: "现金+ 债务+",
 
         apply: function (st) {
-          st.resources.cash += 550;
+          st.resources.cash = (st.resources.cash || 0) + 550;
 
           st.resources.debt = (st.resources.debt || 0) + 550;
 
@@ -176,7 +176,7 @@
         hint: "现金+ 经验+",
 
         apply: function (st) {
-          st.resources.cash += 210;
+          st.resources.cash = (st.resources.cash || 0) + 210;
 
           if (st.skills && st.skills.sales)
             st.skills.sales.xp = (st.skills.sales.xp || 0) + 25;
@@ -479,7 +479,7 @@
         hint: "现金+ 经验+",
 
         apply: function (st) {
-          st.resources.cash += 320;
+          st.resources.cash = (st.resources.cash || 0) + 320;
 
           if (st.skills && st.skills.coding)
             st.skills.coding.xp = (st.skills.coding.xp || 0) + 30;
@@ -547,7 +547,7 @@
         hint: "现金+ 风险+",
 
         apply: function (st) {
-          st.resources.cash += 160;
+          st.resources.cash = (st.resources.cash || 0) + 160;
 
           st.resources.invested = (st.resources.invested || 0) + 100;
 
@@ -619,7 +619,7 @@
         hint: "现金+ 经验+",
 
         apply: function (st) {
-          st.resources.cash += 180;
+          st.resources.cash = (st.resources.cash || 0) + 180;
 
           if (st.skills && st.skills.repair)
             st.skills.repair.xp = (st.skills.repair.xp || 0) + 20;
@@ -773,7 +773,7 @@
           if (st.skills && st.skills.coding)
             st.skills.coding.xp = (st.skills.coding.xp || 0) + 35;
 
-          st.resources.cash += 120;
+          st.resources.cash = (st.resources.cash || 0) + 120;
 
           st.flags._r113FreqTrain = true;
 
@@ -917,7 +917,7 @@
         hint: "现金+ 经验+",
 
         apply: function (st) {
-          st.resources.cash += 240;
+          st.resources.cash = (st.resources.cash || 0) + 240;
 
           if (st.skills && st.skills.welding)
             st.skills.welding.xp = (st.skills.welding.xp || 0) + 30;
@@ -1056,7 +1056,7 @@
         hint: "现金+ 债务+",
 
         apply: function (st) {
-          st.resources.cash += 400;
+          st.resources.cash = (st.resources.cash || 0) + 400;
 
           st.resources.debt = (st.resources.debt || 0) + 400;
 
@@ -1124,7 +1124,7 @@
         hint: "现金+ 经验+",
 
         apply: function (st) {
-          st.resources.cash += 260;
+          st.resources.cash = (st.resources.cash || 0) + 260;
 
           if (st.skills && st.skills.sales)
             st.skills.sales.xp = (st.skills.sales.xp || 0) + 20;
@@ -1196,7 +1196,7 @@
         hint: "现金+ 债务+",
 
         apply: function (st) {
-          st.resources.cash += 800;
+          st.resources.cash = (st.resources.cash || 0) + 800;
 
           st.resources.debt = (st.resources.debt || 0) + 800;
 
@@ -1408,7 +1408,7 @@
         hint: "现金+ 疲劳+",
 
         apply: function (st) {
-          st.resources.cash += 210;
+          st.resources.cash = (st.resources.cash || 0) + 210;
 
           st.needs.fatigue = Math.min(100, (st.needs.fatigue || 0) + 12);
 
@@ -1477,7 +1477,7 @@
         hint: "现金+ 好感+",
 
         apply: function (st) {
-          st.resources.cash += 160;
+          st.resources.cash = (st.resources.cash || 0) + 160;
 
           if (st.relationships && st.relationships.aunt_wang)
             st.relationships.aunt_wang.affinity = Math.min(
@@ -1560,7 +1560,7 @@
         hint: "现金+ 经验+",
 
         apply: function (st) {
-          st.resources.cash += 300;
+          st.resources.cash = (st.resources.cash || 0) + 300;
 
           st.skills.accounting.xp = (st.skills.accounting.xp || 0) + 35;
 
@@ -1627,7 +1627,7 @@
         hint: "现金+ 健康- 疲劳+",
 
         apply: function (st) {
-          st.resources.cash += 150;
+          st.resources.cash = (st.resources.cash || 0) + 150;
 
           st.status.health = Math.max(0, (st.status.health || 0) - 6);
 
@@ -1703,7 +1703,7 @@
         hint: "现金+ 经验+",
 
         apply: function (st) {
-          st.resources.cash += 240;
+          st.resources.cash = (st.resources.cash || 0) + 240;
 
           st.skills.repair.xp = (st.skills.repair.xp || 0) + 30;
 
@@ -1776,7 +1776,7 @@
         hint: "现金+ 名声+",
 
         apply: function (st) {
-          st.resources.cash += 260;
+          st.resources.cash = (st.resources.cash || 0) + 260;
 
           st.player.fame = Math.min(100, (st.player.fame || 0) + 4);
 
@@ -1845,7 +1845,7 @@
         hint: "现金+ 风险+",
 
         apply: function (st) {
-          st.resources.cash += 280;
+          st.resources.cash = (st.resources.cash || 0) + 280;
 
           st.trade.totalProfit = (st.trade.totalProfit || 0) + 280;
 
@@ -1976,7 +1976,7 @@
         hint: "现金+ 健康-",
 
         apply: function (st) {
-          st.resources.cash += 200;
+          st.resources.cash = (st.resources.cash || 0) + 200;
 
           st.status.health = Math.max(0, (st.status.health || 0) - 10);
 
@@ -2050,7 +2050,7 @@
         hint: "现金+ 经验+",
 
         apply: function (st) {
-          st.resources.cash += 320;
+          st.resources.cash = (st.resources.cash || 0) + 320;
 
           st.skills.coding.xp = (st.skills.coding.xp || 0) + 40;
 
@@ -2128,7 +2128,7 @@
         hint: "现金+ 经验+",
 
         apply: function (st) {
-          st.resources.cash += 180;
+          st.resources.cash = (st.resources.cash || 0) + 180;
 
           st.skills.sales.xp = (st.skills.sales.xp || 0) + 25;
 
@@ -2194,7 +2194,7 @@
         hint: "轻量 现金+ 名声+",
 
         apply: function (st) {
-          st.resources.cash += 120;
+          st.resources.cash = (st.resources.cash || 0) + 120;
 
           st.player.fame = Math.min(100, (st.player.fame || 0) + 2);
 
@@ -2329,7 +2329,7 @@
         hint: "现金+ 饥饿-",
 
         apply: function (st) {
-          st.resources.cash += 90;
+          st.resources.cash = (st.resources.cash || 0) + 90;
 
           st.needs.hunger = Math.max(0, (st.needs.hunger || 0) - 20);
 
@@ -2484,7 +2484,7 @@
         hint: "现金+ 健康- 疲劳+",
 
         apply: function (st) {
-          st.resources.cash += 360;
+          st.resources.cash = (st.resources.cash || 0) + 360;
 
           st.status.health = Math.max(0, (st.status.health || 0) - 8);
 
@@ -2558,7 +2558,7 @@
         hint: "现金+ 好感+",
 
         apply: function (st) {
-          st.resources.cash += 220;
+          st.resources.cash = (st.resources.cash || 0) + 220;
 
           if (st.relationships && st.relationships.boss_li)
             st.relationships.boss_li.affinity = Math.min(
@@ -2635,7 +2635,7 @@
         hint: "现金+ 经验+",
 
         apply: function (st) {
-          st.resources.cash += 260;
+          st.resources.cash = (st.resources.cash || 0) + 260;
 
           st.skills.english.xp = (st.skills.english.xp || 0) + 35;
 
@@ -2772,7 +2772,7 @@
         hint: "现金+ 疲劳+",
 
         apply: function (st) {
-          st.resources.cash += 240;
+          st.resources.cash = (st.resources.cash || 0) + 240;
 
           st.needs.fatigue = Math.min(100, (st.needs.fatigue || 0) + 12);
 
@@ -2792,7 +2792,7 @@
         hint: "轻量 现金+",
 
         apply: function (st) {
-          st.resources.cash += 120;
+          st.resources.cash = (st.resources.cash || 0) + 120;
 
           st.flags._r99InflDrv = true;
 
@@ -2847,7 +2847,7 @@
         hint: "现金+ 经验+",
 
         apply: function (st) {
-          st.resources.cash += 150;
+          st.resources.cash = (st.resources.cash || 0) + 150;
 
           st.skills.repair.xp = (st.skills.repair.xp || 0) + 25;
 
@@ -2925,7 +2925,7 @@
         hint: "现金+ 名声+",
 
         apply: function (st) {
-          st.resources.cash += 280;
+          st.resources.cash = (st.resources.cash || 0) + 280;
 
           st.player.fame = (st.player.fame || 0) + 3;
 
@@ -2996,7 +2996,7 @@
         hint: "现金+ 名声+",
 
         apply: function (st) {
-          st.resources.cash += 500;
+          st.resources.cash = (st.resources.cash || 0) + 500;
 
           st.player.fame = Math.min(100, (st.player.fame || 0) + 5);
 
@@ -3016,7 +3016,7 @@
         hint: "轻量 现金+",
 
         apply: function (st) {
-          st.resources.cash += 200;
+          st.resources.cash = (st.resources.cash || 0) + 200;
 
           st.flags._crewLeadSeen = true;
 
@@ -3078,7 +3078,7 @@
         apply: function (st) {
           var rel = st.relationships && st.relationships["boss_li"];
 
-          st.resources.cash += 480;
+          st.resources.cash = (st.resources.cash || 0) + 480;
 
           if (rel) rel.affinity = Math.min(100, rel.affinity + 5);
 
@@ -3315,7 +3315,7 @@
         hint: "现金+ 道德-",
 
         apply: function (st) {
-          st.resources.cash += 200;
+          st.resources.cash = (st.resources.cash || 0) + 200;
 
           st.player.morality = Math.max(0, st.player.morality - 4);
 
@@ -3389,7 +3389,7 @@
         hint: "现金+ 道德-",
 
         apply: function (st) {
-          st.resources.cash += 260;
+          st.resources.cash = (st.resources.cash || 0) + 260;
 
           if (st.player)
             st.player.morality = Math.max(0, (st.player.morality || 0) - 5);
@@ -3463,7 +3463,7 @@
         hint: "现金+ 道德-",
 
         apply: function (st) {
-          st.resources.cash += 550;
+          st.resources.cash = (st.resources.cash || 0) + 550;
 
           st.player.morality = Math.max(0, (st.player.morality || 0) - 8); // 道德下降
 
@@ -3608,7 +3608,7 @@
         hint: "现金+ 心情+",
 
         apply: function (st) {
-          st.resources.cash += 320;
+          st.resources.cash = (st.resources.cash || 0) + 320;
 
           if (st.needs)
             st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 12); // 心情回升
@@ -3658,7 +3658,7 @@
     // conditions：accounting 技能 + 中后期 + 有现金（技能 ∩ 经济 ∩ 新闻系统）
 
     conditions: function (st) {
-      if (!st.resources || st.resources.cash < 500) return false; // [Layer3] 叙事涉及投资
+      if (!st.resources || (st.resources.cash || 0) < 500) return false; // [Layer3] 叙事涉及投资
 
       var acc = st.skills && st.skills.accounting && st.skills.accounting.level; // 检查 accounting 等级
 
@@ -3688,7 +3688,7 @@
 
           s.level = Math.min(100, s.level + 2);
 
-          st.resources.cash += 220;
+          st.resources.cash = (st.resources.cash || 0) + 220;
 
           st.flags._newsAccSeen = true;
 
@@ -3767,7 +3767,7 @@
         apply: function (st) {
           var rel = st.relationships && st.relationships["old_zhou"];
 
-          st.resources.cash += 200;
+          st.resources.cash = (st.resources.cash || 0) + 200;
 
           if (rel) rel.affinity = Math.min(100, rel.affinity + 3);
 
@@ -3845,7 +3845,7 @@
         apply: function (st) {
           var rel = st.relationships && st.relationships["old_zhou"];
 
-          st.resources.cash += 220;
+          st.resources.cash = (st.resources.cash || 0) + 220;
 
           if (rel) rel.affinity = Math.min(100, rel.affinity + 5);
 
@@ -3923,7 +3923,7 @@
         apply: function (st) {
           var rel = st.relationships && st.relationships["old_zhou"];
 
-          st.resources.cash += 430;
+          st.resources.cash = (st.resources.cash || 0) + 430;
 
           st.player.fame = Math.min(100, (st.player.fame || 0) + 3);
 
@@ -3998,7 +3998,7 @@
         hint: "现金+ 道德- 名声-",
 
         apply: function (st) {
-          st.resources.cash += 500;
+          st.resources.cash = (st.resources.cash || 0) + 500;
 
           st.player.morality = Math.max(0, (st.player.morality || 0) - 8);
 
@@ -4072,7 +4072,7 @@
         hint: "现金+ 双技能xp+",
 
         apply: function (st) {
-          st.resources.cash += 320;
+          st.resources.cash = (st.resources.cash || 0) + 320;
 
           if (st.skills && st.skills.welding)
             st.skills.welding.xp = (st.skills.welding.xp || 0) + 25;
@@ -4144,7 +4144,7 @@
         hint: "现金+ 好感+",
 
         apply: function (st) {
-          st.resources.cash += 120;
+          st.resources.cash = (st.resources.cash || 0) + 120;
 
           var rel = st.relationships.xiao_mei;
 
@@ -4219,7 +4219,7 @@
         hint: "现金+ 名声+",
 
         apply: function (st) {
-          st.resources.cash += 360;
+          st.resources.cash = (st.resources.cash || 0) + 360;
 
           st.player.fame = Math.min(100, (st.player.fame || 0) + 4);
 
@@ -4238,7 +4238,7 @@
         hint: "轻量 现金+",
 
         apply: function (st) {
-          st.resources.cash += 120;
+          st.resources.cash = (st.resources.cash || 0) + 120;
 
           st.flags._r116EraGrowth = true;
 
@@ -4352,7 +4352,7 @@
         hint: "现金+ 名声+",
 
         apply: function (st) {
-          st.resources.cash += 280;
+          st.resources.cash = (st.resources.cash || 0) + 280;
 
           st.player.fame = Math.min(100, (st.player.fame || 0) + 5);
 
@@ -4426,7 +4426,7 @@
         hint: "现金+ 烹饪xp+",
 
         apply: function (st) {
-          st.resources.cash += 200;
+          st.resources.cash = (st.resources.cash || 0) + 200;
 
           if (st.skills && st.skills.cooking)
             st.skills.cooking.xp = (st.skills.cooking.xp || 0) + 25;
@@ -4502,7 +4502,7 @@
         hint: "现金+ 名声+",
 
         apply: function (st) {
-          st.resources.cash += 240;
+          st.resources.cash = (st.resources.cash || 0) + 240;
 
           st.player.fame = Math.min(100, (st.player.fame || 0) + 4);
 
@@ -4653,7 +4653,7 @@
         hint: "现金+ 编程xp+",
 
         apply: function (st) {
-          st.resources.cash += 260;
+          st.resources.cash = (st.resources.cash || 0) + 260;
 
           if (st.skills && st.skills.coding)
             st.skills.coding.xp = (st.skills.coding.xp || 0) + 25;
@@ -4721,7 +4721,7 @@
         hint: "现金+ 驾驶xp+",
 
         apply: function (st) {
-          st.resources.cash += 300;
+          st.resources.cash = (st.resources.cash || 0) + 300;
 
           if (st.skills && st.skills.driving)
             st.skills.driving.xp = (st.skills.driving.xp || 0) + 20;
@@ -4743,7 +4743,7 @@
         hint: "轻量 现金+",
 
         apply: function (st) {
-          st.resources.cash += 130;
+          st.resources.cash = (st.resources.cash || 0) + 130;
 
           st.flags._r118DriveHeat = true;
 
@@ -4792,7 +4792,7 @@
         hint: "现金+ 名声+",
 
         apply: function (st) {
-          st.resources.cash += 220;
+          st.resources.cash = (st.resources.cash || 0) + 220;
 
           st.player.fame = Math.min(100, (st.player.fame || 0) + 4);
 
@@ -4867,7 +4867,7 @@
         hint: "现金+ 英语xp+ 名声+",
 
         apply: function (st) {
-          st.resources.cash += 240;
+          st.resources.cash = (st.resources.cash || 0) + 240;
 
           if (st.skills && st.skills.english)
             st.skills.english.xp = (st.skills.english.xp || 0) + 25;
@@ -4942,7 +4942,7 @@
         hint: "现金+ 维修xp+",
 
         apply: function (st) {
-          st.resources.cash += 180;
+          st.resources.cash = (st.resources.cash || 0) + 180;
 
           if (st.skills && st.skills.repair)
             st.skills.repair.xp = (st.skills.repair.xp || 0) + 25;
@@ -5012,7 +5012,7 @@
         hint: "现金+ 名声+",
 
         apply: function (st) {
-          st.resources.cash += 200;
+          st.resources.cash = (st.resources.cash || 0) + 200;
 
           st.player.fame = Math.min(100, (st.player.fame || 0) + 5);
 
@@ -5088,7 +5088,7 @@
         hint: "现金+ 名声+",
 
         apply: function (st) {
-          st.resources.cash += 380;
+          st.resources.cash = (st.resources.cash || 0) + 380;
 
           st.player.fame = Math.min(100, (st.player.fame || 0) + 4);
 
@@ -5108,7 +5108,7 @@
         hint: "轻量 现金+",
 
         apply: function (st) {
-          st.resources.cash += 130;
+          st.resources.cash = (st.resources.cash || 0) + 130;
 
           st.flags._wetElecSeen = true;
 
@@ -5162,7 +5162,7 @@
         hint: "现金+ 名声+",
 
         apply: function (st) {
-          st.resources.cash += 180;
+          st.resources.cash = (st.resources.cash || 0) + 180;
 
           st.player.fame = Math.min(100, (st.player.fame || 0) + 3);
 
@@ -5243,7 +5243,7 @@
 
           s2.level = Math.min(100, s2.level + 1);
 
-          st.resources.cash += 260;
+          st.resources.cash = (st.resources.cash || 0) + 260;
 
           st.flags._repairCodeSeen = true;
 
@@ -5401,7 +5401,7 @@
         hint: "现金+ 好感+",
 
         apply: function (st) {
-          st.resources.cash += 220;
+          st.resources.cash = (st.resources.cash || 0) + 220;
 
           var rel = st.relationships && st.relationships["uncle_chen_bank"];
 
@@ -5477,7 +5477,7 @@
         hint: "现金+ 饥饿-",
 
         apply: function (st) {
-          st.resources.cash += 200;
+          st.resources.cash = (st.resources.cash || 0) + 200;
 
           if (st.needs)
             st.needs.hunger = Math.max(0, (st.needs.hunger || 0) - 20); // 饥饿缓解
@@ -5556,7 +5556,7 @@
         hint: "现金+ 好感+",
 
         apply: function (st) {
-          st.resources.cash += 200;
+          st.resources.cash = (st.resources.cash || 0) + 200;
 
           var rel = st.relationships && st.relationships["old_zhou"];
 
@@ -5721,7 +5721,7 @@
         apply: function (st) {
           var rel = st.relationships && st.relationships["sister_wu"];
 
-          st.resources.cash += 470;
+          st.resources.cash = (st.resources.cash || 0) + 470;
 
           st.player.fame = Math.min(100, (st.player.fame || 0) + 4);
 
@@ -5743,7 +5743,7 @@
         hint: "轻量 现金+",
 
         apply: function (st) {
-          st.resources.cash += 170;
+          st.resources.cash = (st.resources.cash || 0) + 170;
 
           st.flags._sisterWuPartnerSeen = true;
 
