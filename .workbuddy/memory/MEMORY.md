@@ -37,12 +37,16 @@
 - `_totalInvestmentProfit`/`_consecutiveWins` 由 sellInvStock/sellBtc 维护（历轮已接，非死字段）。
 - **R195**：investment_analysis.js 止损链（setStopLoss→stopLossOrders→checkStopLoss→sellInvStock）曾全库无调用方=死机制；R195 在 domain_e_linkage_r195.js 以**包装 tickInvestmentDaily** 方式接线（daily_pipeline:615 按名调用全局绑定，晚加载文件重赋值即生效——此模式可复用于"在途文件不可碰"时的接线）；analyzeStockTechnicals 由 invest_r195_technical_review 事件复活。注册序：该文件须在 investment_analysis.js(:836) 之后。
 - 并行窗口正开发「财务Tab」（index.html tab按钮/investment.js tradeLog/render*/state.js 等在途），勿碰勿回退。
-- **R198 C类记录(不修)**：investment.js:1435 写 `state.needs.health` 死字段(真实 `state.status.health`)——每日经济焦虑静默扣永不渲染的健康值;webapp_runtime_bridge.js:176-188 读写 `state.player.health` 死字段(真实 `state.status.health`),桥接层血量永远与渲染层脱节。财务Tab并行在途+桥接层敏感,留后续 E/H 或桥接层轮次处理(勿在域F轮次碰投资.js)。
+- **R198 C类记录(部分修正·R199)**：investment.js:1435 写 `state.needs.health` 死字段(真实 `state.status.health`)——每日经济焦虑静默扣永不渲染的健康值，**仍为真实 C类待修**(财务Tab并行在途+投资.js敏感,留后续 E/H 轮次)。`webapp_runtime_bridge.js:172-189` getPlayerHealth/addPlayerHealth **经 R199 核实主路径正确读 `state.status.health`**，`player.health` 仅为 `status.health` 非 number 时永不触发的兜底分支——**非死字段A类，R198/Explore 误报已修正**。
 
 ## 域F/G/H 要点
 - UI 安全区：#app 100dvh / viewport-fit=cover / tab-bar+mobile-hud safe-area padding，勿回退。
 - critical.js 延期惩罚阶梯、startup_crisis 危机链均已接线复活（R20/R21）；events_corp `.exp`→`.xp`（全库统一 .xp）。
 - daily_pipeline 无通用外部 slot 注册机制（静态数组）；接线新逻辑用包装全局函数模式。
+- **域G 时代变迁(era_transform)**：`ERA_EVENTS_TRIGGER_DAYS=[90,180,270,365,450,540,720,900]` 与 era_events.js day 集合完全一致(无死里程碑)；`state._eraState`(真实活跃字段,被 cross_system 数十处消费)含 `.inflationIndex`(基准1.0,1.3为通胀显著阈值)与 `.stageId`(≠"initial" 表已入周期)。`state._pendingEraEvent` 是**确证的死flag**(仅 era_transform.js:137 写入/:240 init 置null,全库零消费者,scheduleChainEvent 有兜底)——**R199 事件 `era_r199_reflection` 首次消费并在 apply 置 null,形成"写入→消费→清除"闭环,复活该叙事层**。
+- **域G 多轮加固结论(R20/R192/R197/R199)**：A类已净尽。R199 再审计15核心文件+死字段黑名单grep+pipeline slot生产者核查+era day匹配,候选(`_pendingEraEvent`/`webapp_runtime_bridge`/`career_burnout`/`ERA_EVENTS_TRIGGER_DAYS`)逐一证伪,诚实报告 A类0项。联动3项(新建 domain_g_linkage_r199.js,已 push main 862a993f): G→B时代回望·复活死flag _pendingEraEvent / G→E通胀避险·读 _eraState.inflationIndex≥1.3→置 _dataInvestorMindset / G→H久历周期经营定力·_eraState.stageId≠initial+在职→addSkillXp management+cash。下轮→H(recency 193 最薄弱)。
+- **域H 多轮修复结论(R13/R21/R200)**：A类已净尽(R13 修 startup 空员工 NaN+startup_crisis 危机链死代码 / R21 修 events_corp `corporateorate` 9处拼写+startup.js 空员工 NaN+startup_crisis 接线复活)。R200 域H 第三轮再修3项(A类)：①corp_ops.js `doCorporateAction` 行动结算后接线办公室政治互动事件死机制——`triggerOfficePoliticsEvent`+`OFFICE_POLITICS_EVENTS`(5事件)全库零调用方,R200 在结算后 `typeof showModal` 守卫接线;②career_dev.js 导师关系死路——`endMentorship` 零调用方(全库无解除入口),R200 补「👋解除师徒」按钮+`careerSocialAction("unmentor")` 分支复活;③workplace_social.js 徒弟出师死循环——`mentee.progress` 卡100每日刷屏+零回报+永占3席,R200 改一次性回报(人缘+5/关系+10+毕业移除)。`decreaseColleagueRelationship` 死函数经 R200 事件 `corp_r200_colleague_thaw`(H→D)复活。
+- **域H 误报修正(R200)**：`establishMentorship`(拜师)有 career_dev.js `careerSocialAction("mentor")` 平行实现、`takeMentee`(收徒)有 workplace_social_events.js 平行实现——**非死机制,勿误修**;真死路是"解除师徒无入口"(endMentorship 零调用方)。`mentorship.level` 每日+0.5 但无 gameplay 消费(死数据),R200 事件 `corp_r200_mentor_wisdom`(H→B,level≥90门槛)首次使其有叙事回报。
 
 ## 模糊指令处理
 - 收到模糊 scene/主题指令先 grep 确认真实存在；用户一句「无关」=最高优先级停手信号。
