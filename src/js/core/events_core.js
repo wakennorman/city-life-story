@@ -654,7 +654,7 @@ function showEventModal(evt) {
         ${evt.weather ? '<span class="event-tag weather-tag" style="font-size:10px;padding:1px 6px;border-radius:3px;background:rgba(90,138,180,0.15);color:var(--info);margin-left:8px;">🌤️ 天气</span>' : ""}
         ${evt.sector ? '<span class="event-tag sector-tag" style="font-size:10px;padding:1px 6px;border-radius:3px;background:rgba(74,158,92,0.15);color:var(--success);margin-left:4px;">🏭 ' + evt.sector + '</span>' : ""}
       </div>
-      <p class="event-story ${isSpringFest ? "spring-fest-story" : ""}">${evt.story}</p>
+      <p class="event-story ${isSpringFest ? "spring-fest-story" : ""}">${evt.story || evt.desc || ""}</p>
       <div class="event-choices">${choicesHtml}</div>
       <div style="text-align:center;margin-top:8px;font-size:10px;color:var(--accent);">
         ${isSpringFest ? "🧨 做出你的选择，迎接新的一年" : "⚡ 请选择一个选项继续"}
@@ -712,6 +712,9 @@ function showEventModal(evt) {
           if (typeof afterEventApplied === "function") {
             afterEventApplied(evt.id, state);
           }
+        } else if (typeof choice.immediate === "function") {
+          // [全系统自洽修复] 域B A类#2: 兼容 moral_events 的 immediate 格式（trigger_registry 路径的道德事件）
+          choice.immediate(state);
         } else if (typeof choice.effect === "function") {
           // 兼容春节活动事件的 effect 模式（返回 {ok, msg}）
           var result = choice.effect(state);
@@ -723,7 +726,57 @@ function showEventModal(evt) {
       } catch (e) {
         console.error("Event choice apply error:", e);
       }
-      // [全系统自洽修复] 域B A类#1: 事件结算后现金NaN/负数防御（防止apply未扣款或倍率导致负数）
+      // [全系统自洽修复] 域B 联动增强#1 B→G: 记录最近事件(最多3个)，供UI展示和NPC话题引用
+      state.flags._recentEvents = state.flags._recentEvents || [];
+      state.flags._recentEvents.unshift({
+        id: evt.id,
+        title: evt.title || evt.id,
+        icon: evt.icon || "📰",
+        day: state.player.day,
+      });
+      if (state.flags._recentEvents.length > 3) state.flags._recentEvents.length = 3;
+
+      // [全系统自洽修复] 域B 联动增强#2 B→D: 高风险事件后NPC安慰 — 亲近NPC会主动关心玩家
+      try {
+        if (evt._isChainEvent || evt.id.indexOf("moral_") === 0 || evt.id.indexOf("risk") >= 0) {
+          var _rels = state.relationships || {};
+          var _comfortNpc = null;
+          for (var _rid in _rels) {
+            if (_rels[_rid] && _rels[_rid].met && (_rels[_rid].affinity || 0) >= 40) {
+              _comfortNpc = _rid;
+              break;
+            }
+          }
+          if (_comfortNpc && typeof NPCS !== "undefined") {
+            var _npcDef = NPCS.find(function(nn) { return nn.id === _comfortNpc; });
+            if (_npcDef && Random.chance(0.4)) {
+              StateManager.addMessage("💬 " + _npcDef.name + "注意到了你的经历，对你点点头：「没事吧？有什么需要帮忙的尽管说。」", "info");
+            }
+          }
+        }
+      } catch (e) {
+        // 静默：NPC安慰不影响主流程
+      }
+
+      // [全系统自洽修复] 域B 联动增强#3 B→A: 新闻事件短期影响商品价格
+      try {
+        if (evt._converted === "news" && evt.newsEffects && evt.newsEffects.priceMod && state.trade) {
+          for (var _pmId in evt.newsEffects.priceMod) {
+            if (evt.newsEffects.priceMod.hasOwnProperty(_pmId)) {
+              // 在所有地点应用价格修正
+              for (var _locKey in state.trade.goodsPrices) {
+                if (state.trade.goodsPrices.hasOwnProperty(_locKey) && state.trade.goodsPrices[_locKey][_pmId]) {
+                  state.trade.goodsPrices[_locKey][_pmId] = Math.round(
+                    state.trade.goodsPrices[_locKey][_pmId] * evt.newsEffects.priceMod[_pmId] * 100
+                  ) / 100;
+                }
+              }
+            }
+          }
+        }
+      } catch (e) {
+        // 静默：新闻价格影响不影响主流程
+      }
       if (typeof state.resources.cash !== "number" || !isFinite(state.resources.cash)) state.resources.cash = 0;
       state.resources.cash = Math.max(0, state.resources.cash || 0);
       // [全系统自洽修复] 域B 联动增强: B→F 事件历史记录

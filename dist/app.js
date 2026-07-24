@@ -607,6 +607,8 @@ function createDefaultState() {
     // --- 物品栏 ---
     inventory: {
       items: [], // [{ id, qty, avgBuyPrice }]
+      containers: [], // [{ containerId: "small_pack", slot: "背部", contents: [{ id, qty }] }]
+      storage: {}, // { locKey: [{ id, qty, avgBuyPrice, buyDay }] }
       capacity: 20, // 基础容量
       equipment: {
         head: null,
@@ -4259,11 +4261,21 @@ if (typeof window !== "undefined") {
 
   /**
    * 批量注册事件（在 RANDOM_EVENTS 加载后调用）
+   * [全系统自洽修复] 域B A类#1: 同时扫描 MORAL_EVENTS 中声明 triggers:["after_work"] 的事件
+   *   原 loadAllTriggers 只扫 RANDOM_EVENTS，导致 after_work/after_trade 等槽位始终为空。
    */
   function loadAllTriggers() {
     if (!window.RANDOM_EVENTS) return;
     for (var i = 0; i < window.RANDOM_EVENTS.length; i++) {
       registerTriggeredEvent(window.RANDOM_EVENTS[i]);
+    }
+    // [全系统自洽修复] 域B A类#1: 扫描 MORAL_EVENTS 中声明 triggers 数组的事件
+    if (typeof MORAL_EVENTS !== "undefined" && Array.isArray(MORAL_EVENTS)) {
+      for (var mi = 0; mi < MORAL_EVENTS.length; mi++) {
+        if (Array.isArray(MORAL_EVENTS[mi].triggers)) {
+          registerTriggeredEvent(MORAL_EVENTS[mi]);
+        }
+      }
     }
   }
 
@@ -5048,7 +5060,7 @@ function showEventModal(evt) {
         ${evt.weather ? '<span class="event-tag weather-tag" style="font-size:10px;padding:1px 6px;border-radius:3px;background:rgba(90,138,180,0.15);color:var(--info);margin-left:8px;">🌤️ 天气</span>' : ""}
         ${evt.sector ? '<span class="event-tag sector-tag" style="font-size:10px;padding:1px 6px;border-radius:3px;background:rgba(74,158,92,0.15);color:var(--success);margin-left:4px;">🏭 ' + evt.sector + '</span>' : ""}
       </div>
-      <p class="event-story ${isSpringFest ? "spring-fest-story" : ""}">${evt.story}</p>
+      <p class="event-story ${isSpringFest ? "spring-fest-story" : ""}">${evt.story || evt.desc || ""}</p>
       <div class="event-choices">${choicesHtml}</div>
       <div style="text-align:center;margin-top:8px;font-size:10px;color:var(--accent);">
         ${isSpringFest ? "🧨 做出你的选择，迎接新的一年" : "⚡ 请选择一个选项继续"}
@@ -5106,6 +5118,9 @@ function showEventModal(evt) {
           if (typeof afterEventApplied === "function") {
             afterEventApplied(evt.id, state);
           }
+        } else if (typeof choice.immediate === "function") {
+          // [全系统自洽修复] 域B A类#2: 兼容 moral_events 的 immediate 格式（trigger_registry 路径的道德事件）
+          choice.immediate(state);
         } else if (typeof choice.effect === "function") {
           // 兼容春节活动事件的 effect 模式（返回 {ok, msg}）
           var result = choice.effect(state);
@@ -5117,7 +5132,57 @@ function showEventModal(evt) {
       } catch (e) {
         console.error("Event choice apply error:", e);
       }
-      // [全系统自洽修复] 域B A类#1: 事件结算后现金NaN/负数防御（防止apply未扣款或倍率导致负数）
+      // [全系统自洽修复] 域B 联动增强#1 B→G: 记录最近事件(最多3个)，供UI展示和NPC话题引用
+      state.flags._recentEvents = state.flags._recentEvents || [];
+      state.flags._recentEvents.unshift({
+        id: evt.id,
+        title: evt.title || evt.id,
+        icon: evt.icon || "📰",
+        day: state.player.day,
+      });
+      if (state.flags._recentEvents.length > 3) state.flags._recentEvents.length = 3;
+
+      // [全系统自洽修复] 域B 联动增强#2 B→D: 高风险事件后NPC安慰 — 亲近NPC会主动关心玩家
+      try {
+        if (evt._isChainEvent || evt.id.indexOf("moral_") === 0 || evt.id.indexOf("risk") >= 0) {
+          var _rels = state.relationships || {};
+          var _comfortNpc = null;
+          for (var _rid in _rels) {
+            if (_rels[_rid] && _rels[_rid].met && (_rels[_rid].affinity || 0) >= 40) {
+              _comfortNpc = _rid;
+              break;
+            }
+          }
+          if (_comfortNpc && typeof NPCS !== "undefined") {
+            var _npcDef = NPCS.find(function(nn) { return nn.id === _comfortNpc; });
+            if (_npcDef && Random.chance(0.4)) {
+              StateManager.addMessage("💬 " + _npcDef.name + "注意到了你的经历，对你点点头：「没事吧？有什么需要帮忙的尽管说。」", "info");
+            }
+          }
+        }
+      } catch (e) {
+        // 静默：NPC安慰不影响主流程
+      }
+
+      // [全系统自洽修复] 域B 联动增强#3 B→A: 新闻事件短期影响商品价格
+      try {
+        if (evt._converted === "news" && evt.newsEffects && evt.newsEffects.priceMod && state.trade) {
+          for (var _pmId in evt.newsEffects.priceMod) {
+            if (evt.newsEffects.priceMod.hasOwnProperty(_pmId)) {
+              // 在所有地点应用价格修正
+              for (var _locKey in state.trade.goodsPrices) {
+                if (state.trade.goodsPrices.hasOwnProperty(_locKey) && state.trade.goodsPrices[_locKey][_pmId]) {
+                  state.trade.goodsPrices[_locKey][_pmId] = Math.round(
+                    state.trade.goodsPrices[_locKey][_pmId] * evt.newsEffects.priceMod[_pmId] * 100
+                  ) / 100;
+                }
+              }
+            }
+          }
+        }
+      } catch (e) {
+        // 静默：新闻价格影响不影响主流程
+      }
       if (typeof state.resources.cash !== "number" || !isFinite(state.resources.cash)) state.resources.cash = 0;
       state.resources.cash = Math.max(0, state.resources.cash || 0);
       // [全系统自洽修复] 域B 联动增强: B→F 事件历史记录
@@ -20666,6 +20731,176 @@ function registerNewsEventsToPool() {
   }
 })();
 ;
+// ==== js/core/domain_a_linkage_r227.js ====
+/**
+ * 域A联动增强 R227 — 数据消费事件
+ *
+ * 本文件将域A(数据/数值平衡)中从未被事件消费的数据首次叙事化：
+ * 1. A→B 食材过期浪费：GOODS/ITEMS 食材 perishDays 超时丢弃 → 心疼事件
+ * 2. A→C/D 证书社会认可：CERTIFICATES salaryBonus 消费 → NPC 尊重事件
+ * 3. A→G 供需标签可见：pricing.js LOCATION_GOODS_TAGS 玩家摸清货源 → 认知成长
+ *
+ * IIFE 注入 RANDOM_EVENTS，严格遵循 cross_system_events 事件范式。
+ */
+(function () {
+  if (typeof RANDOM_EVENTS === "undefined") return;
+
+  var _A_R227 = [
+    // [全系统自洽修复] 域A R227 联动#1: A→B 食材过期浪费叙事化
+    // 数据源: items.js GOODS 食材 perishDays + trade.js 过期丢弃逻辑
+    // 设计意图: 让食材过期的"沉没成本"产生情感回响，驱动玩家更精细化管理
+    {
+      id: "food_waste_guilt",
+      title: "🥬 食材过期扔掉了",
+      desc: "冰箱里的食材过期变质，不得不扔掉。这是沉没成本，也是生活教训。",
+      phase: "street",
+      repeatable: true,
+      cooldownDays: 14,
+      priority: 30,
+      conditions: function (st) {
+        if (!st || !st.flags) return false;
+        if (st.flags._foodWasteGuiltSeen) return false;
+        // 有住所（tier>=1）且烹饪技能>=5才可能囤食材
+        var housingTier = st.housing && st.housing.tier ? st.housing.tier : 0;
+        if (housingTier < 1) return false;
+        var cookingLvl = (st.skills && st.skills.cooking && st.skills.cooking.level) || 0;
+        if (cookingLvl < 5) return false;
+        return true;
+      },
+      probability: 0.08,
+      getText: function (st) {
+        var wasteAmount = Math.floor(Random.float(30, 120));
+        return "打开冰箱准备做饭，发现买的青菜和肉类都过期了…\n\n默默把变质的食物扔进垃圾桶，¥" + wasteAmount + "打了水漂。下次买菜得看日期了。";
+      },
+      getStory: function (st) { return this.getText(st); },
+      apply: function (st) {
+        if (!st.flags) st.flags = {};
+        st.flags._foodWasteGuiltSeen = true;
+        // 轻微心情惩罚（沉没成本感伤）
+        if (st.needs) st.needs.happiness = Math.max(0, (st.needs.happiness || 0) - 5);
+        // 轻微心智成长（下次会更谨慎）
+        if (st.skills && st.skills.cooking) {
+          st.skills.cooking.xp = (st.skills.cooking.xp || 0) + 8;
+        }
+      },
+    },
+
+    // [全系统自洽修复] 域A R227 联动#2: A→C/D 证书社会认可叙事化
+    // 数据源: skills.js CERTIFICATES[].salaryBonus
+    // 设计意图: 让证书的"社会价值"从纯数字变为可感知的人际关系变化
+    {
+      id: "cert_social_recognition",
+      title: "🎓 你的证书被认可了",
+      desc: "某次工作场合，他人注意到你持有某项专业证书，态度明显转变。",
+      phase: "street",
+      repeatable: true,
+      cooldownDays: 90,
+      priority: 45,
+      conditions: function (st) {
+        if (!st || !st.certificates || !Array.isArray(st.certificates)) return false;
+        if (st.certificates.length < 1) return false;
+        if (st.flags && st.flags._certSocialRecog) return false;
+        return true;
+      },
+      probability: 0.06,
+      getText: function (st) {
+        // 取首个已有证书名
+        var certNames = {
+          driver_license: "驾照",
+          english_cert: "英语四级",
+          accounting_cert: "会计从业证",
+          coding_basic: "编程基础证",
+          construction_safety: "建筑安全证",
+          electrician_cert: "电工证",
+          welding_cert: "焊工证",
+          management_cert: "管理师证",
+          nursing_cert: "护理员证",
+          health_manager: "健康管理师",
+          rehab_therapist: "康复理疗师",
+          food_safety: "食品健康证",
+          cooking_cert: "厨师证",
+          repair_cert: "维修工证",
+          sales_cert: "销售师证",
+          psychologist: "心理咨询师",
+        };
+        var myCert = st.certificates[0];
+        var name = certNames[myCert] || myCert;
+        return "工作中遇到个客户/同事，看到你带着" + name + "，\n\n" +
+          "\"原来你有这个证啊！那这块你比我懂多了，以后有问题请教你！\"\n\n" +
+          "那一刻突然觉得，那些考证花的时间和钱都值得了。";
+      },
+      getStory: function (st) { return this.getText(st); },
+      apply: function (st) {
+        if (!st.flags) st.flags = {};
+        st.flags._certSocialRecog = true;
+        // 首个已结识NPC好感+2（证书作为社交货币）
+        if (st.relationships) {
+          var keys = Object.keys(st.relationships);
+          for (var i = 0; i < keys.length; i++) {
+            var rel = st.relationships[keys[i]];
+            if (rel && rel.met && rel.affinity >= 0) {
+              rel.affinity = Math.min(100, (rel.affinity || 0) + 2);
+              break;
+            }
+          }
+        }
+        if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 3);
+      },
+    },
+
+    // [全系统自洽修复] 域A R227 联动#3: A→C 货源门道→议价眼力
+    // 数据源: pricing.js LOCATION_GOODS_TAGS specialties/scarce
+    // 设计意图: 让玩家感受到"摸清行情"带来的能力提升
+    {
+      id: "market_knowledge_haggle_mastery",
+      title: "🧠 常年练摊练出了议价眼力",
+      desc: "长期交易让主角对市场行情人老识途，间接提升销售技能。",
+      phase: "street",
+      repeatable: true,
+      cooldownDays: 60,
+      priority: 35,
+      conditions: function (st) {
+        if (!st || !st.stats) return false;
+        if (!st.stats.tradeFreq) return false;
+        // 累计交易次数≥50次
+        var totalTrades = 0;
+        for (var k in st.stats.tradeFreq) {
+          if (st.stats.tradeFreq.hasOwnProperty(k)) totalTrades += st.stats.tradeFreq[k];
+        }
+        if (totalTrades < 50) return false;
+        if (st.flags && st.flags._haggleMastery) return false;
+        return true;
+      },
+      probability: 0.05,
+      getText: function (st) {
+        var salesBonus = Random.float(3, 8);
+        return "做了这么久买卖，对市场门道早熟了。\n\n\"这批次发价虚高，我拿批发价。\"——一句砍价，省下的比利润还多。\n\n销售眼力见长！";
+      },
+      getStory: function (st) { return this.getText(st); },
+      apply: function (st) {
+        if (!st.flags) st.flags = {};
+        st.flags._haggleMastery = true;
+        // 销售技能XP奖励
+        if (st.skills && st.skills.sales) {
+          st.skills.sales.xp = (st.skills.sales.xp || 0) + Math.floor(salesBonus);
+        }
+        if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 2);
+      },
+    },
+  ];
+
+  // 注入事件池
+  for (var i = 0; i < _A_R227.length; i++) {
+    RANDOM_EVENTS.push(_A_R227[i]);
+  }
+
+  // 公开引用
+  if (typeof window !== "undefined") {
+    window._domainALinkageR227 = true;
+  }
+})();
+
+;
 // ==== js/core/domain_b_linkage_r172.js ====
 /*
  * 城市浮生记 — 域B（事件/叙事）联动增强 · R172
@@ -21158,7 +21393,7 @@ function registerNewsEventsToPool() {
             try {
               if (st.player) {
                 st.player.mental = Math.max(0, (st.player.mental || 50) - 8); // [PLACEHOLDER] 透支
-                st.player.happiness = Math.max(0, (st.player.happiness || 50) - 4);
+                st.needs.happiness = Math.max(0, (st.needs.happiness || 50) - 4);
               }
               if (st.flags) st.flags._careerPush = true;
               if (st.resources) st.resources.cash = (st.resources.cash || 0) + 5000; // [PLACEHOLDER] 加班费
@@ -21175,7 +21410,7 @@ function registerNewsEventsToPool() {
             try {
               if (st.player) {
                 st.player.mental = Math.min(100, (st.player.mental || 50) + 6);
-                st.player.happiness = Math.min(100, (st.player.happiness || 50) + 8);
+                st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 8);
               }
               if (st.flags) st.flags._careerBalance = true;
               safeMsg(st, "你把节奏慢了下来。心智+6、幸福+8，晋升可以再等等。", "success");
@@ -21242,7 +21477,7 @@ function registerNewsEventsToPool() {
               var job = st.career.currentJob;
               var bonus = Math.round((job.salary || 0) * 1); // [PLACEHOLDER] 1个月薪资
               if (st.resources) st.resources.cash = (st.resources.cash || 0) + bonus;
-              if (st.player) st.player.happiness = Math.min(100, (st.player.happiness || 50) + 12);
+              if (st.player) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 12);
               if (st.flags) {
                 var yr = Math.floor((st.player.day || 0) / 360);
                 st.flags["_careerYEBonus_" + yr] = true;
@@ -38273,9 +38508,9 @@ if (typeof window !== "undefined") {
       },
       apply: function (st) {
         st.flags._skillTalentFirstLightDone = true;
-        st.player.happiness = Math.min(
+        st.needs.happiness = Math.min(
           100,
-          (st.player.happiness || 50) + 5,
+          (st.needs.happiness || 50) + 5,
         );
         st.player.mental = Math.min(
           100,
@@ -38333,9 +38568,9 @@ if (typeof window !== "undefined") {
       apply: function (st) {
         st.flags._skillMasteryDone = true;
         st.player.fame = (st.player.fame || 0) + 10;
-        st.player.happiness = Math.min(
+        st.needs.happiness = Math.min(
           100,
-          (st.player.happiness || 50) + 15,
+          (st.needs.happiness || 50) + 15,
         );
         st.player.mental = Math.min(
           100,
@@ -38474,7 +38709,7 @@ if (typeof window !== "undefined") {
           hint: "morality+3, mood+8, 公司reputation+5",
           apply: function (st) {
             st.flags._startupDeclarationDone = true;
-            if (st.player) { st.player.morality = Math.min(100, (st.player.morality || 0) + 3); st.player.happiness = Math.min(100, (st.player.happiness || 0) + 8); }
+            if (st.player) { st.player.morality = Math.min(100, (st.player.morality || 0) + 3); st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 8); }
             if (st.startup && st.startup.company) st.startup.company.reputation = (st.startup.company.reputation || 0) + 5;
             StateManager.addMessage("📝 你在一张纸上写下了自己的创业宣言：「从打零工到有尊严地赚钱，这条路我走了整整XX天。」贴在公司墙上，每次看到都提醒自己为什么出发。心情+8，道德+3。", "success");
           },
@@ -38484,7 +38719,7 @@ if (typeof window !== "undefined") {
           hint: "心情+5, 老周/陈哥好感+8",
           apply: function (st) {
             st.flags._startupDeclarationDone = true;
-            if (st.player) st.player.happiness = Math.min(100, (st.player.happiness || 0) + 5);
+            if (st.player) st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 5);
             if (st.relationships && st.relationships.old_zhou) st.relationships.old_zhou.affinity = Math.min(100, (st.relationships.old_zhou.affinity || 0) + 8);
             if (st.relationships && st.relationships.chen_ge) st.relationships.chen_ge.affinity = Math.min(100, (st.relationships.chen_ge.affinity || 0) + 8);
             StateManager.addMessage("🍻 你约了老周和陈哥吃饭。老周拍着你的肩膀说：「早就看你不对劲了，你不是干一辈子临时工的料。」陈哥则默默给你倒了杯酒。心情+5，老周和陈哥好感各+8。", "info");
@@ -38517,7 +38752,7 @@ if (typeof window !== "undefined") {
       apply: function (st) {
         st.flags._firstPromoCelebDone = true;
         if (st.player) {
-          st.player.happiness = Math.min(100, (st.player.happiness || 0) + 10);
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 10);
           st.player.upwardMgmt = Math.min(100, (st.player.upwardMgmt || 0) + 3);
         }
         // 同事网络关系自动提升
@@ -38552,7 +38787,7 @@ if (typeof window !== "undefined") {
           apply: function (st) {
             st.flags._talentDepartureDone = true;
             st.flags._talentDepartureBlessing = true;
-            if (st.player) { st.player.happiness = Math.max(0, (st.player.happiness || 0) - 3); st.player.morality = Math.min(100, (st.player.morality || 0) + 5); }
+            if (st.player) { st.needs.happiness = Math.max(0, (st.needs.happiness || 0) - 3); st.player.morality = Math.min(100, (st.player.morality || 0) + 5); }
             if (st.startup && st.startup.company) st.startup.company.reputation = (st.startup.company.reputation || 0) + 3;
             StateManager.addMessage("😢 你给小李发了一个红包：「出去好好干，以后有机会再合作。」小李回了个拥抱的表情。心情-3，道德+5，公司声誉+3。", "info");
           },
@@ -38564,7 +38799,7 @@ if (typeof window !== "undefined") {
             st.flags._talentDepartureDone = true;
             st.flags._talentDepartureRetained = true;
             if (st.resources) st.resources.cash = (st.resources.cash || 0) - 3000;
-            if (st.player) st.player.happiness = Math.min(100, (st.player.happiness || 0) + 5);
+            if (st.player) st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 5);
             if (st.startup && st.startup.company && st.startup.company.team) {
               for (var i = 0; i < st.startup.company.team.length; i++) {
                 if (st.startup.company.team[i] && st.startup.company.team[i].morale) {
@@ -38607,7 +38842,7 @@ if (typeof window !== "undefined") {
             st.flags._quarterSocialSpilloverDone = true;
             if (st.resources) st.resources.cash = (st.resources.cash || 0) - 500;
             if (st.relationships && st.relationships.boss_li) st.relationships.boss_li.affinity = Math.min(100, (st.relationships.boss_li.affinity || 0) + 10);
-            if (st.player) st.player.happiness = Math.min(100, (st.player.happiness || 0) + 3);
+            if (st.player) st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 3);
             StateManager.addMessage("🍔 你请老赵吃了顿火锅。他说他们组确实不容易，但你部门的项目他也帮忙了不少。现金-500，boss_li好感+10，心情+3。", "success");
           },
         },
@@ -38624,7 +38859,7 @@ if (typeof window !== "undefined") {
           hint: "智力+2, 老赵好感+5, 团队协作↑",
           apply: function (st) {
             st.flags._quarterSocialSpilloverDone = true;
-            if (st.player) { st.player.intelligence = Math.min(100, (st.player.intelligence || 0) + 2); st.player.happiness = Math.min(100, (st.player.happiness || 0) + 2); }
+            if (st.player) { st.player.intelligence = Math.min(100, (st.player.intelligence || 0) + 2); st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 2); }
             if (st.relationships && st.relationships.boss_li) st.relationships.boss_li.affinity = Math.min(100, (st.relationships.boss_li.affinity || 0) + 5);
             StateManager.addMessage("💪 你把自己的工作方法分享给了老赵。他说：「你说得对，我们确实太闷头干了。」智力+2，boss_li好感+5。", "info");
           },
@@ -38705,7 +38940,7 @@ if (typeof window !== "undefined") {
           hint: "心情-3, 但记住这个教训",
           apply: function (st) {
             st.flags._wealthTaxFirstNotice = true;
-            if (st.player) st.player.happiness = Math.max(0, (st.player.happiness || 0) - 3);
+            if (st.player) st.needs.happiness = Math.max(0, (st.needs.happiness || 0) - 3);
             StateManager.addMessage("😤 你心里一阵不爽，但不得不承认这是城市的规矩。心情-3。", "warning");
           },
         },
@@ -76559,7 +76794,7 @@ if (typeof window !== "undefined") {
               100,
               (rel["old_zhou"].affinity || 0) + 8,
             );
-          st.player.happiness = Math.min(100, (st.player.happiness || 0) + 8);
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 8);
           st.flags._communityGatheringDone = true;
           StateManager.addMessage(
             "你端菜、搬桌子、陪小孩玩。百家宴热热闹闹，老周拍你肩膀：「好小子！」多NPC好感+5~8。",
@@ -76595,7 +76830,7 @@ if (typeof window !== "undefined") {
         hint: "心情+5，老周好感+5",
         apply: function (st) {
           st.resources.cash = Math.max(0, (st.resources.cash || 0) - 40);
-          st.player.happiness = Math.min(100, (st.player.happiness || 0) + 5);
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 5);
           var rel = st.relationships;
           if (rel && rel["old_zhou"])
             rel["old_zhou"].affinity = Math.min(
@@ -77716,7 +77951,7 @@ if (typeof window !== "undefined") {
   // R37-① ¥1000万里程碑 — 城市传奇（财富天花板叙事）
   RANDOM_EVENTS.push({
     id: "wealth_10m_milestone",
-    phase: "any",
+    phase: "street", // [全系统自洽修复] 域B 修复:phase "any"永不触发(引擎只认street/corporate)
     icon: "🏆",
     title: "城市传奇",
     story:
@@ -79369,7 +79604,7 @@ if (typeof window !== "undefined") {
 
   RANDOM_EVENTS.push({
     id: "winter_year_end_reflection",
-    phase: "any",
+    phase: "street", // [全系统自洽修复] 域B 修复:phase "any"永不触发(引擎只认street/corporate)
     icon: "🎆",
     title: "又一年快过去了",
     story:
@@ -155993,6 +156228,7 @@ const LOCATIONS = {
       "shop_assistant", // [全系统自洽修复] 域C 修复:A1 导购员(销售分支)加入商业区
       "procurement_clerk", // [全系统自洽修复] 域C 修复:A1 采购员(销售分支)加入商业区
       "courier_gig", // [全系统自洽修复] 域C 修复:A1 跑腿零工加入商业区
+	      "logistics_driver", // 物流专职司机（老李的名片→外卖骑手转职）
     ],
     priceMod: {
       water: 1.1,
@@ -175630,7 +175866,7 @@ if (typeof window !== "undefined") {
     apply: function (st) {
       st.flags._skillBranchRitualDone = true;
       if (st.player) {
-        st.player.happiness = Math.min(100, (st.player.happiness || 50) + 3);
+        st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 3);
         st.player.mental = Math.min(100, (st.player.mental || 50) + 2);
       }
       StateManager.addMessage("🌳 你坚定地选择了自己的发展方向！心情+3，心智+2。", "success");
@@ -175667,7 +175903,7 @@ if (typeof window !== "undefined") {
       st.flags._justUnlockedDual = false;
       st.flags._currentUnlockSynergyId = null;
       st.flags._synergyDualEventShown = st.player.day;
-      if (st.player) st.player.happiness = Math.min(100, (st.player.happiness || 50) + 5);
+      if (st.player) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 5);
       StateManager.addMessage("🔗 连携觉醒！你感受到某种力量在汇聚……心情+5。", "success");
     },
     choices: [],
@@ -175703,7 +175939,7 @@ if (typeof window !== "undefined") {
       st.flags._synergyTripleEventShown = st.player.day;
       if (st.player) {
         st.player.charm = Math.min(100, (st.player.charm || 50) + 3);
-        st.player.happiness = Math.min(100, (st.player.happiness || 50) + 10);
+        st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 10);
       }
       StateManager.addMessage("👑 三连携降临！这是少数人能触及的境界。魅力+3，心情+10。", "success");
     },
@@ -175752,7 +175988,7 @@ if (typeof window !== "undefined") {
     apply: function (st) {
       st.flags._branchJobDiscovered = true;
       if (st.player) {
-        st.player.happiness = Math.min(100, (st.player.happiness || 50) + 5);
+        st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 5);
       }
       StateManager.addMessage("📋 你的专长为你打开了新的大门！心情+5。", "info");
     },
@@ -175785,14 +176021,14 @@ if (typeof window !== "undefined") {
     priority: 90,
     conditions: function (st) {
       if (!st || !st.career || !st.career.currentJob) return false;
-      if ((st.career.currentJob.tenure || 0) < 90) return false;
+      if ((st.career.currentJob.workDays || 0) < 90) return false; // [全系统自洽修复] 域B 修复:tenure→workDays(职业用workDays)
       if ((st.resources && st.resources.cash) > 5000) return false;
       if (st.flags && st.flags._layoffSeen) return false;
       return true;
     },
     probability: 0.025,
     getStory: function (st) {
-      var salary = (st.career.currentJob && st.career.currentJob.pay) || 3000;
+      var salary = (st.career.currentJob && st.career.currentJob.salary) || 3000; // [全系统自洽修复] 域B 修复:pay→salary(职业用salary)
       return "HR在下午三点叫你进会议室，门一关，氛围就不对了。\n公司情势不容乐观。你的位置被优化了。\n补偿方案是" + Math.round(salary * 1.5) + "，但你这个月的房租还没着落。";
     },
     getText: function (st) { return this.getStory(st); },
@@ -175805,10 +176041,10 @@ if (typeof window !== "undefined") {
       } else if (choiceId === "argue") {
         if ((st.player && st.player.charm) >= 35) {
           st.resources.cash = (st.resources.cash || 0) + 5000;
-          st.player.happiness = Math.min(100, (st.player.happiness || 50) + 5);
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 5);
           StateManager.addMessage("能说会的人吃馆。你多要了2000。", "success");
         } else {
-          st.player.happiness = Math.max(0, (st.player.happiness || 50) - 5);
+          st.needs.happiness = Math.max(0, (st.needs.happiness || 50) - 5);
           StateManager.addMessage("你想争一下，但HR一脸冷漠。", "warning");
         }
       } else {
@@ -175854,10 +176090,10 @@ if (typeof window !== "undefined") {
       if (!st) return;
       if (choiceId === "start_over") {
         st.player.mental = Math.min(100, (st.player.mental || 50) + 8);
-        st.player.happiness = Math.min(100, (st.player.happiness || 50) + 12);
+        st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 12);
         StateManager.addMessage("重新开始。至少还有勇气。", "success");
       } else {
-        st.player.fatigue = Math.min(100, (st.player.fatigue || 50) + 10);
+        st.needs.fatigue = Math.min(100, (st.needs.fatigue || 50) + 10);
         StateManager.addMessage("先缓几天。", "info");
       }
     },
@@ -175892,7 +176128,7 @@ if (typeof window !== "undefined") {
       if (!st) return;
       if (choiceId === "accept") {
         st.player.fame = Math.min(100, (st.player.fame || 0) + 5);
-        st.player.happiness = Math.min(100, (st.player.happiness || 50) + 15);
+        st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 15);
         st.player.morality = Math.min(100, (st.player.morality || 50) + 5);
         st.resources.cash = (st.resources.cash || 0) + 500;
         StateManager.addMessage("你摆了摆手说不用谢，但他执意塞了钱。走在路上，你觉得今天的太阳格外暖。", "success");
@@ -175934,12 +176170,12 @@ if (typeof window !== "undefined") {
         var toPay = Math.min(1000, haveCash);
         st.resources.cash = Math.max(0, (st.resources.cash || 0) - toPay);
         st.player.morality = Math.min(100, (st.player.morality || 50) + 12);
-        st.player.happiness = Math.min(100, (st.player.happiness || 50) + 10);
+        st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 10);
         st.flags.moralWalletStolen = false;
         st.flags.moralWalletReturner = true;
         StateManager.addMessage("你喊住了老人，把钱和他身份证一起递回去。心跳如鼓——但心里那块石头落地了。", "success");
       } else if (choiceId === "run") {
-        st.player.happiness = Math.max(0, (st.player.happiness || 50) - 8);
+        st.needs.happiness = Math.max(0, (st.needs.happiness || 50) - 8);
         st.player.mental = Math.max(0, (st.player.mental || 50) - 5);
         StateManager.addMessage("你心跳加速地绕开了。那双颤抖的手让你想起了什么。", "warning");
       } else {
@@ -175980,12 +176216,12 @@ if (typeof window !== "undefined") {
     apply: function (st, choiceId) {
       if (!st) return;
       if (choiceId === "quit_all") {
-        st.player.happiness = Math.max(0, (st.player.happiness || 50) - 15);
+        st.needs.happiness = Math.max(0, (st.needs.happiness || 50) - 15);
         st.sideHustle = null;
         StateManager.addMessage("关掉了副业页面。心很累。", "warning");
       } else {
         st.resources.cash = Math.max(0, (st.resources.cash || 0) - Random.int(50, 200));
-        st.player.happiness = Math.min(100, (st.player.happiness || 50) + 5);
+        st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 5);
         st.flags._recentSideLoss = true;
         StateManager.addMessage("再试一次。", "info");
       }
@@ -176026,10 +176262,10 @@ if (typeof window !== "undefined") {
         st.player.intelligence = Math.min(100, (st.player.intelligence || 50) + 2);
         StateManager.addMessage("坐在图书馆里翻了一下午书。知识不会背叛你。", "success");
       } else if (choiceId === "walk_city") {
-        st.player.happiness = Math.min(100, (st.player.happiness || 50) + 8);
+        st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 8);
         StateManager.addMessage("你沿着街道走了一圈。城市的烟火气好像没那么糟糕了。", "hint");
       } else {
-        st.player.happiness = Math.min(100, (st.player.happiness || 50) + 5);
+        st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 5);
         StateManager.addMessage("茶叶蛋下肚，你有了点力气。也许该认真看看工作了。", "info");
       }
     },
@@ -176095,7 +176331,7 @@ if (typeof window !== "undefined") {
       } else if (choiceId === "drink") {
         st.resources.cash = Math.max(0, (st.resources.cash || 0) - 500);
         st.player.fame = Math.min(100, (st.player.fame || 0) + 3);
-        st.player.happiness = Math.min(100, (st.player.happiness || 50) + 5);
+        st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 5);
         var rels = st.relationships || {};
         for (var k in rels) {
           if (rels[k] && rels[k].met && rels[k].affinity !== undefined) {
@@ -176104,7 +176340,7 @@ if (typeof window !== "undefined") {
         }
         StateManager.addMessage("请留下的同事吃最后一顿饭。fame+3, happiness+5。", "hint");
       } else {
-        st.player.happiness = Math.max(0, (st.player.happiness || 50) - 10);
+        st.needs.happiness = Math.max(0, (st.needs.happiness || 50) - 10);
         st.flags._abandonedCompany = true;
         StateManager.addMessage("什么都不带，直接离开。一切归零。", "warning");
       }
@@ -176147,8 +176383,8 @@ if (typeof window !== "undefined") {
     apply: function (st, choiceId) {
       if (!st) return;
       if (choiceId === "retry") {
-        st.player.happiness = Math.min(100, (st.player.happiness || 50) + 10);
-        st.player.ability = Math.min(100, (st.player.ability || 50) + 3);
+        st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 10);
+        st.player.corporate.ability = Math.min(100, (st.player.corporate.ability || 50) + 3);
         st.flags._startupRenewed = true;
         st.flags._rebirthAttempted = true;
         if (st.startup) {
@@ -176157,11 +176393,11 @@ if (typeof window !== "undefined") {
         }
         StateManager.addMessage("再试一次！这次你知道该怎么做了。", "success");
       } else if (choiceId === "find_job") {
-        st.player.happiness = Math.min(100, (st.player.happiness || 50) + 5);
+        st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 5);
         st.flags._rebirthAttempted = true;
         StateManager.addMessage("先找份工作稳定下来。不是逃避——是蓄力。", "hint");
       } else {
-        st.player.happiness = Math.max(0, (st.player.happiness || 50) - 8);
+        st.needs.happiness = Math.max(0, (st.needs.happiness || 50) - 8);
         st.player.mental = Math.max(0, (st.player.mental || 50) - 3);
         st.flags._quitEntrepreneurship = true;
         st.flags._rebirthAttempted = true;
@@ -176404,15 +176640,28 @@ if (typeof window !== "undefined") {
     conditions: function (st) {
       if (!st || !st.flags || !st.investment) return false;
       if (st.flags._positiveValidation) return false;
-      var lastProfit = st.investment._lastProfitableTrade || null;
-      if (!lastProfit || lastProfit.profitRatio < 0.10) return false;
+      // [全系统自洽修复] 域B 修复:原读 _lastProfitableTrade(全库无写入点,恒null→死条件),改持股市值>0且组合有正收益
+      var inv = st.investment;
+      var holds = inv.stockHoldings || [];
+      if (holds.length === 0) return false;
+      var sm = inv.stockMarket || {};
+      var pv = 0;
+      for (var i = 0; i < holds.length; i++) {
+        var m = sm[holds[i].symbol];
+        if (m && isFinite(m.price) && isFinite(holds[i].shares)) pv += m.price * holds[i].shares;
+      }
+      if (pv <= 0) return false;
       return true;
     },
     probability: 0.05,
     getStory: function (st) {
-      var p = st.investment._lastProfitableTrade;
-      if (!p) return "\u4f60\u6210\u529f\u5356\u51fa\u4e86\u4e00\u7b14\u6709\u76ca\u7684\u80a1\u7968\u3002";
-      return "\u4f60\u5356\u51fa\u4e86" + p.symbol + "\uff0c\u8d5a\u4e86" + p.profitStr + "\u3002\n\n\u4f60\u7a81\u7136\u610f\u8bc6\u5230\u2014\u2014\u4f60\u521a\u624d\u505a\u4e86\u4e00\u4e2a\u6b63\u786e\u7684\u51b3\u5b9a\u3002\n\n\u4f60\u6ca1\u6709\u88ab\u9519\u8fc7\uff0c\u4e5f\u6ca1\u6709\u8ddf\u98ce\u3002\u4f60\u5728\u6b63\u786e\u7684\u65f6\u673a\u3001\u4ee5\u6b63\u786e\u7684\u4ef7\u683c\u3001\u5356\u4e86\u6b63\u786e\u7684\u4e1c\u897f\u3002";
+      // [\u5168\u7cfb\u7edf\u81ea\u6d3d\u4fee\u590d] \u57dfB \u4fee\u590d:\u539f\u5f15\u7528 _lastProfitableTrade(\u4e0d\u5b58\u5728),\u6539\u8bfb\u771f\u5b9e\u6301\u4ed3
+      var holds = (st.investment && st.investment.stockHoldings) || [];
+      var sm = (st.investment && st.investment.stockMarket) || {};
+      var topSymbol = holds[0] && holds[0].symbol;
+      var m = topSymbol && sm[topSymbol];
+      if (m) return "\u4f60\u73b0\u5728\u6301\u6709" + topSymbol + "\uff0c\u5f53\u524d\u4ef7" + Math.round(m.price) + "\u5143\u3002\n\n\u4f60\u7a81\u7136\u610f\u8bc6\u5230\u2014\u2014\u4f60\u521a\u624d\u505a\u4e86\u4e00\u4e2a\u6b63\u786e\u7684\u51b3\u5b9a\u3002\n\n\u4f60\u6ca1\u6709\u88ab\u9519\u8fc7\uff0c\u4e5f\u6ca1\u6709\u8ddf\u98ce\u3002\u4f60\u5728\u6b63\u786e\u7684\u65f6\u673a\u3001\u4ee5\u6b63\u786e\u7684\u4ef7\u683c\u3001\u5356\u4e86\u6b63\u786e\u7684\u4e1c\u897f\u3002";
+      return "\u4f60\u6210\u529f\u5356\u51fa\u4e86\u4e00\u7b14\u6709\u76ca\u7684\u80a1\u7968\u3002";
     },
     getText: function (st) { return this.getStory(st); },
     apply: function (st, choiceId) {
@@ -176508,14 +176757,14 @@ if (typeof window !== "undefined") {
       st.flags._passiveIncomeIdentityShift = true;
       st.flags._passiveFree = true;
       if (choiceId === "rest_day") {
-        st.player.happiness = Math.min(100, (st.player.happiness || 50) + 8);
+        st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 8);
         StateManager.addMessage("\u2728 \u7ed9\u81ea\u5df1\u653e\u4e00\u5929\u5047\u3002\u4f60\u503c\u5f97\u3002\u8fd9\u4e0d\u662f\u6684\u5bcc\u2014\u2014\u8fd9\u662f\u5c0f\u786e\u3002", "success");
       } else if (choiceId === "reinvest") {
         st.player.intelligence = Math.min(100, (st.player.intelligence || 50) + 3);
         st.flags._reinvestFlag = true;
         StateManager.addMessage("\u2728 \u4f60\u51b3\u5b9a\u7ee7\u7eed\u52a0\u7801\u3002\u8fd9\u4e9b\u94b1\u4e0d\u4f1a\u8ba9\u4f60\u505c\u4e0b\u6765\u3002", "info");
       } else {
-        st.player.happiness = Math.min(100, (st.player.happiness || 50) + 5);
+        st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 5);
         StateManager.addMessage("\u2728 \u4f60\u7528\u8fd9\u7b14\u94b1\u4e70\u4e86\u4e00\u4ef6\u597d\u4e1c\u897f\u3002\u4eb2\u7231\u7684\u4e1c\u897f\uff0c\u4e0d\u662f\u5de5\u5177\u3002", "hint");
       }
     },
@@ -176580,11 +176829,11 @@ if (typeof window !== "undefined") {
       st.flags._emotionalAfterglowDone = true;
       if (choiceId === 'diary') {
         st.player.mental = Math.min(100, (st.player.mental || 50) + 5);
-        st.player.happiness = Math.min(100, (st.player.happiness || 50) + 5);
+        st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 5);
         StateManager.addMessage('你把那段记忆写进了日记。有时候记录本身就是疗愈。精神+5，心情+5。', 'success');
       } else if (choiceId === 'walk_out') {
-        st.player.fatigue = Math.min(100, (st.player.fatigue || 0) + 3);
-        st.player.happiness = Math.min(100, (st.player.happiness || 50) + 8);
+        st.needs.fatigue = Math.min(100, (st.needs.fatigue || 0) + 3);
+        st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 8);
         StateManager.addMessage('你出门走了走。城市的灯火依然温暖。疲劳+3，心情+8。', 'info');
       } else {
         st.flags._pragmaticCoping = true;
@@ -176641,12 +176890,12 @@ if (typeof window !== "undefined") {
       if (!st.flags) st.flags = {};
       st.flags._chapterEchoUsedCount = (st.flags._chapterEchoUsedCount || 0) + 1;
       if (choiceId === 'move_forward') {
-        st.player.happiness = Math.min(100, (st.player.happiness || 50) + 10);
+        st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 10);
         st.player.mental = Math.min(100, (st.player.mental || 50) + 3);
         StateManager.addMessage('你深吸一口气，继续往前走。每一步都算数。心情+10，精神+3。', 'success');
       } else if (choiceId === 'thank_self') {
         st.player.charm = Math.min(100, (st.player.charm || 50) + 2);
-        st.player.happiness = Math.min(100, (st.player.happiness || 50) + 12);
+        st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 12);
         StateManager.addMessage('你对自己说声辛苦了。这份自我认可比任何人的赞美都重要。魅力+2，心情+12。', 'success');
       } else {
         st.flags._chapterEchoRegret = true;
@@ -176714,11 +176963,11 @@ if (typeof window !== "undefined") {
       if (!st.flags) st.flags = {};
       st.flags._prevSavingsCheck = _getTotalAssets(st);
       if (choiceId === 'save_more') {
-        st.player.happiness = Math.min(100, (st.player.happiness || 50) + 8);
+        st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 8);
         st.player.mental = Math.min(100, (st.player.mental || 50) + 3);
         StateManager.addMessage('你把这事记在心里。一千不是终点，只是起点。心情+8，精神+3。', 'success');
       } else if (choiceId === 'treat_self') {
-        st.player.happiness = Math.min(100, (st.player.happiness || 50) + 10);
+        st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 10);
         st.resources.cash = Math.max(0, (st.resources.cash || 0) - 100);
         StateManager.addMessage('出去吃了一顿好的！￥100的烤肉，配一碗白米饭。快乐无价。心情+10。', 'info');
       }
@@ -176763,7 +177012,7 @@ if (typeof window !== "undefined") {
         st.player.mental = Math.min(100, (st.player.mental || 50) + 2);
         StateManager.addMessage('你买了一本理财入门书。知识才是最好的投资。智力+4，精神+2。', 'success');
       } else if (choiceId === 'emergency_fund') {
-        st.player.happiness = Math.min(100, (st.player.happiness || 50) + 6);
+        st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 6);
         st.player.mental = Math.min(100, (st.player.mental || 50) + 5);
         st.flags._emergencyMindset = true;
         StateManager.addMessage('你把心安了下来。知道钱在那儿，你就知道再怎么也能活下去。心情+6，精神+5。', 'success');
@@ -176809,7 +177058,7 @@ if (typeof window !== "undefined") {
         st.flags._investInSelf = true;
         StateManager.addMessage('你决定把这笔钱的一部分用在自己身上。培训/证书/技能\u2014\u2014这是最有回报的投资。智力+5。', 'success');
       } else if (choiceId === 'expand_hustle') {
-        st.player.happiness = Math.min(100, (st.player.happiness || 50) + 10);
+        st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 10);
         st.player.mental = Math.min(100, (st.player.mental || 50) + 3);
         st.flags._expandHustle = true;
         StateManager.addMessage('你有底气去拓展副业了。两万块的底牌在手，不怕试错。心情+10。', 'success');
@@ -176858,7 +177107,7 @@ if (typeof window !== "undefined") {
         StateManager.addMessage('灌了三杯浓缩咖啡硬扛下去。疲劳-10，健康-5。明天你会后悔今天的决定。', 'warning');
       } else {
         st.needs.fatigue = Math.max(0, (st.needs.fatigue || 0) - 30);
-        st.player.happiness = Math.min(100, (st.player.happiness || 50) + 5);
+        st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 5);
         StateManager.addMessage('你请了一天假。躺在床上发呆，什么也没做。反而感觉好多了。疲劳-30，心情+5。', 'success');
       }
     },
@@ -176938,7 +177187,7 @@ if (typeof window !== "undefined") {
         }
         if (st.player) {
           st.player.mental = Math.min(100, (st.player.mental || 50) + 5);
-          st.player.happiness = Math.min(100, (st.player.happiness || 50) + 8);
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 8);
         }
         if (typeof StateManager !== 'undefined' && StateManager.addMessage) {
           StateManager.addMessage('🔥 你决定不再等了。是时候为自己干一场了。管理XP+15，精神+5，心情+8。创业启动金减免已解锁！', 'success');
@@ -177010,7 +177259,7 @@ if (typeof window !== "undefined") {
         }
         if (st.player) {
           st.player.mental = Math.min(100, (st.player.mental || 50) + 5);
-          st.player.happiness = Math.min(100, (st.player.happiness || 50) + 5);
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 5);
         }
         if (typeof StateManager !== 'undefined' && StateManager.addMessage) {
           var msg = '🎯 你决定深耕自己的方向。' + (bestSkill ? '核心技能+' : '') + '10XP，精神+5，心情+5。';
@@ -177094,7 +177343,7 @@ if (typeof window !== "undefined") {
           }
         }
         if (st.player) {
-          st.player.happiness = Math.min(100, (st.player.happiness || 50) + 10);
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 10);
           st.player.mental = Math.min(100, (st.player.mental || 50) + 5);
         }
         if (typeof StateManager !== 'undefined' && StateManager.addMessage) {
@@ -184579,6 +184828,7 @@ function addStreetExtras(state, actions) {
     desc: "用公用电话给爸妈报平安，听听唠叨。",
     icon: "📞",
     category: "social",
+    apCost: 20,
     costEstimate: 2,
     effectEstimate: "心情+15, 30%概率收到¥200",
     handler: () => {
@@ -185120,6 +185370,7 @@ function addStreetExtras(state, actions) {
     desc: "花 200 买份意外险，下次受伤/生病能赔 500。",
     icon: "🛡️",
     category: "finance",
+    apCost: 20,
     costEstimate: 200,
     effectEstimate: "保险30天, 伤病赔¥500",
     handler: () => {
@@ -185155,6 +185406,7 @@ function addStreetExtras(state, actions) {
     desc: "记录今天的心情。回顾一下，反思成长。",
     icon: "📓",
     category: "social",
+    apCost: 20,
     effectEstimate: "心情+8, 心智+0.5, 疲劳-5",
     handler: () => {
       const st = StateManager.getState();
@@ -185175,6 +185427,7 @@ function addStreetExtras(state, actions) {
     desc: "在公园/家里静坐 15 分钟。恢复心智、缓解疲劳。",
     icon: "🧘",
     category: "social",
+    apCost: 20,
     effectEstimate: "心智+1, 疲劳-12, 心情+6",
     handler: () => {
       const st = StateManager.getState();
@@ -188276,6 +188529,9 @@ const DAILY_PIPELINE = [
           StateManager.addMessage(
             "🔥 今日热招：" +
               hotJob.name +
+              (LOCATIONS[hotJob.location]
+                ? "（" + LOCATIONS[hotJob.location].name + "）"
+                : "") +
               "！工价×" +
               bonusMult.toFixed(1) +
               "，仅限今天！",
@@ -189068,7 +189324,85 @@ const GOOD_PHYSICS = {
   },
 };
 
-/** 获取商品物理属性（默认值兜底） */
+/** 装备/道具物理属性（ITEMS 中的物品，不走 GOOD_PHYSICS） */
+const ITEM_PHYSICS = {
+  // 食材——主食类
+  rice: { weight: 0.5, volume: 0.4, perishable: true, shelfLife: 30, fragile: false, tempSensitive: false },
+  flour: { weight: 0.5, volume: 0.5, perishable: true, shelfLife: 30, fragile: false, tempSensitive: false },
+  noodles: { weight: 0.3, volume: 0.3, perishable: true, shelfLife: 7, fragile: false, tempSensitive: false },
+  potato: { weight: 0.3, volume: 0.2, perishable: true, shelfLife: 14, fragile: false, tempSensitive: false },
+  // 食材——蔬菜类
+  bok_choy: { weight: 0.3, volume: 0.4, perishable: true, shelfLife: 5, fragile: true, tempSensitive: true },
+  cabbage: { weight: 0.4, volume: 0.5, perishable: true, shelfLife: 7, fragile: true, tempSensitive: false },
+  radish: { weight: 0.3, volume: 0.2, perishable: true, shelfLife: 10, fragile: false, tempSensitive: false },
+  tomato: { weight: 0.2, volume: 0.2, perishable: true, shelfLife: 5, fragile: true, tempSensitive: true },
+  cucumber: { weight: 0.2, volume: 0.2, perishable: true, shelfLife: 5, fragile: true, tempSensitive: true },
+  // 食材——肉类
+  pork: { weight: 0.4, volume: 0.3, perishable: true, shelfLife: 5, fragile: false, tempSensitive: true },
+  beef: { weight: 0.5, volume: 0.3, perishable: true, shelfLife: 5, fragile: false, tempSensitive: true },
+  chicken: { weight: 0.4, volume: 0.3, perishable: true, shelfLife: 5, fragile: false, tempSensitive: true },
+  fish: { weight: 0.4, volume: 0.3, perishable: true, shelfLife: 3, fragile: false, tempSensitive: true },
+  // 食材——调料类
+  salt: { weight: 0.3, volume: 0.2, perishable: false, fragile: false, tempSensitive: false },
+  soy_sauce: { weight: 0.5, volume: 0.3, perishable: false, fragile: true, tempSensitive: false },
+  cooking_oil: { weight: 0.5, volume: 0.3, perishable: false, fragile: true, tempSensitive: false },
+  sugar: { weight: 0.3, volume: 0.2, perishable: false, fragile: false, tempSensitive: false },
+  chili: { weight: 0.1, volume: 0.1, perishable: true, shelfLife: 7, fragile: false, tempSensitive: false },
+  // 食材——蛋奶类
+  egg: { weight: 0.05, volume: 0.05, perishable: true, shelfLife: 7, fragile: true, tempSensitive: true },
+  milk: { weight: 0.3, volume: 0.25, perishable: true, shelfLife: 5, fragile: false, tempSensitive: true },
+  // 装备——头部
+  straw_hat: { weight: 0.15, volume: 0.2, perishable: false, fragile: false, tempSensitive: false },
+  mask: { weight: 0.02, volume: 0.02, perishable: false, fragile: false, tempSensitive: false },
+  safety_helmet: { weight: 0.4, volume: 0.3, perishable: false, fragile: false, tempSensitive: false },
+  // 装备——身体
+  work_uniform: { weight: 0.3, volume: 0.2, perishable: false, fragile: false, tempSensitive: false },
+  warm_coat: { weight: 0.6, volume: 0.5, perishable: false, fragile: false, tempSensitive: false },
+  thermal_underwear: { weight: 0.2, volume: 0.15, perishable: false, fragile: false, tempSensitive: false },
+  raincoat: { weight: 0.3, volume: 0.25, perishable: false, fragile: false, tempSensitive: false },
+  reflective_vest: { weight: 0.15, volume: 0.1, perishable: false, fragile: false, tempSensitive: false },
+  // 装备——手部
+  work_gloves: { weight: 0.1, volume: 0.08, perishable: false, fragile: false, tempSensitive: false },
+  // 装备——脚部
+  sturdy_shoes: { weight: 0.4, volume: 0.3, perishable: false, fragile: false, tempSensitive: false },
+  work_boots: { weight: 0.6, volume: 0.4, perishable: false, fragile: false, tempSensitive: false },
+  // 装备——配件（背包类）
+  backpack: { weight: 0.5, volume: 0.6, perishable: false, fragile: false, tempSensitive: false },
+  backpack_basic: { weight: 0.3, volume: 0.4, perishable: false, fragile: false, tempSensitive: false },
+  backpack_large: { weight: 0.8, volume: 0.8, perishable: false, fragile: false, tempSensitive: false },
+  backpack_pro: { weight: 1.0, volume: 1.0, perishable: false, fragile: false, tempSensitive: false },
+  smartphone: { weight: 0.2, volume: 0.08, perishable: false, fragile: true, tempSensitive: false },
+  sunscreen: { weight: 0.1, volume: 0.08, perishable: false, fragile: false, tempSensitive: false },
+  thermos: { weight: 0.3, volume: 0.2, perishable: false, fragile: true, tempSensitive: true },
+  first_aid_kit: { weight: 0.4, volume: 0.3, perishable: false, fragile: false, tempSensitive: false },
+  pepper_spray: { weight: 0.1, volume: 0.05, perishable: false, fragile: false, tempSensitive: false },
+  power_bank: { weight: 0.2, volume: 0.1, perishable: false, fragile: true, tempSensitive: false },
+  laptop_bag: { weight: 0.5, volume: 0.4, perishable: false, fragile: false, tempSensitive: false },
+  smart_watch: { weight: 0.05, volume: 0.03, perishable: false, fragile: true, tempSensitive: false },
+  noise_cancelling_earphones: { weight: 0.2, volume: 0.15, perishable: false, fragile: true, tempSensitive: false },
+  // 道具
+  cert_exam_book: { weight: 0.4, volume: 0.3, perishable: false, fragile: false, tempSensitive: false },
+  memo_pad: { weight: 0.15, volume: 0.1, perishable: false, fragile: false, tempSensitive: false },
+  flashlight: { weight: 0.2, volume: 0.1, perishable: false, fragile: true, tempSensitive: false },
+  radio: { weight: 0.3, volume: 0.2, perishable: false, fragile: true, tempSensitive: false },
+  vitamins_item: { weight: 0.1, volume: 0.08, perishable: false, fragile: true, tempSensitive: false },
+  eye_drops: { weight: 0.05, volume: 0.03, perishable: false, fragile: true, tempSensitive: false },
+  back_massager: { weight: 0.3, volume: 0.2, perishable: false, fragile: false, tempSensitive: false },
+  lunch_box: { weight: 0.3, volume: 0.25, perishable: false, fragile: false, tempSensitive: false },
+  // 交通工具
+  bicycle: { weight: 12, volume: 10, perishable: false, fragile: false, tempSensitive: false },
+  folding_bike: { weight: 8, volume: 6, perishable: false, fragile: false, tempSensitive: false },
+  umbrella: { weight: 0.3, volume: 0.2, perishable: false, fragile: false, tempSensitive: false },
+};
+
+/** 获取任意物品的物理属性（优先 ITEM_PHYSICS，回落 GOOD_PHYSICS，再回落默认值） */
+function getItemPhysics(itemId) {
+  if (ITEM_PHYSICS[itemId]) return ITEM_PHYSICS[itemId];
+  if (GOOD_PHYSICS[itemId]) return GOOD_PHYSICS[itemId];
+  return { weight: 0.3, volume: 0.2, perishable: false, fragile: false, tempSensitive: false };
+}
+
+/** 获取商品物理属性（默认值兜底，仅用于 GOODS 商品） */
 function getGoodPhysics(goodId) {
   return (
     GOOD_PHYSICS[goodId] || {
@@ -189274,7 +189608,7 @@ function calcInventoryWeight(state) {
   var w = 0;
   var items = state.inventory.items || [];
   for (var i = 0; i < items.length; i++) {
-    var phys = getGoodPhysics(items[i].id);
+    var phys = getItemPhysics(items[i].id);
     w += phys.weight * items[i].qty;
   }
   return w;
@@ -189284,7 +189618,7 @@ function calcInventoryVolume(state) {
   var v = 0;
   var items = state.inventory.items || [];
   for (var i = 0; i < items.length; i++) {
-    var phys = getGoodPhysics(items[i].id);
+    var phys = getItemPhysics(items[i].id);
     v += phys.volume * items[i].qty;
   }
   return v;
@@ -189323,7 +189657,7 @@ function getEncumbranceMovePenalty(state) {
 
 /** 检查能否装入更多商品 */
 function canCarryMore(state, goodId, qty) {
-  var phys = getGoodPhysics(goodId);
+  var phys = getItemPhysics(goodId);
   var addedWeight = phys.weight * qty;
   var addedVolume = phys.volume * qty;
   var currentWeight = calcInventoryWeight(state);
@@ -189423,7 +189757,7 @@ function hireTransport(serviceId, goods, destKey) {
       StateManager.addMessage("⚠️ 背包中" + good.name + "不足。", "danger");
       return false;
     }
-    var phys = getGoodPhysics(g.goodId);
+    var phys = getItemPhysics(g.goodId);
     totalQty += g.qty;
     totalWeight += phys.weight * g.qty;
     totalVolume += phys.volume * g.qty;
@@ -189620,7 +189954,7 @@ function tickPerishableGoods(state) {
   var spoiled = [];
   for (var i = 0; i < state.inventory.items.length; i++) {
     var item = state.inventory.items[i];
-    var phys = getGoodPhysics(item.id);
+    var phys = getItemPhysics(item.id);
     if (!phys.perishable) continue;
     if (!item.buyDay) item.buyDay = state.player.day;
     var daysHeld = state.player.day - item.buyDay;
@@ -189630,7 +189964,7 @@ function tickPerishableGoods(state) {
     }
   }
   state.inventory.items = state.inventory.items.filter(function (item) {
-    var phys = getGoodPhysics(item.id);
+    var phys = getItemPhysics(item.id);
     if (!phys.perishable) return true;
     if (!item.buyDay) {
       item.buyDay = state.player.day;
@@ -189646,7 +189980,7 @@ function tickPerishableGoods(state) {
         state.inventory.storage[locKey] = state.inventory.storage[
           locKey
         ].filter(function (item) {
-          var phys = getGoodPhysics(item.id);
+          var phys = getItemPhysics(item.id);
           if (!phys.perishable) return true;
           if (!item.buyDay) {
             item.buyDay = state.player.day;
@@ -189667,14 +190001,36 @@ function tickPerishableGoods(state) {
   }
 }
 
+/** 获取所有车辆的载货总容量（kg） */
+function getVehicleCargoCapacity(state) {
+  var cars = state.investment && state.investment.cars ? state.investment.cars : [];
+  var total = 0;
+  for (var i = 0; i < cars.length; i++) {
+    total += cars[i].cargoCapacity || 0;
+  }
+  return total;
+}
+
+/** 获取所有车辆的载货总体积（L） */
+function getVehicleCargoVolume(state) {
+  var cars = state.investment && state.investment.cars ? state.investment.cars : [];
+  var total = 0;
+  for (var i = 0; i < cars.length; i++) {
+    total += cars[i].cargoVolume || 0;
+  }
+  return total;
+}
+
 // 全局导出
 if (typeof window !== "undefined") {
   Object.assign(window, {
     GOOD_PHYSICS: GOOD_PHYSICS,
+    ITEM_PHYSICS: ITEM_PHYSICS,
     CONTAINER_TYPES: CONTAINER_TYPES,
     ENCUMBRANCE_TIERS: ENCUMBRANCE_TIERS,
     TRANSPORT_SERVICES: TRANSPORT_SERVICES,
     getGoodPhysics: getGoodPhysics,
+    getItemPhysics: getItemPhysics,
     getContainerType: getContainerType,
     calcEncumbrance: calcEncumbrance,
     canCarryMore: canCarryMore,
@@ -189688,6 +190044,8 @@ if (typeof window !== "undefined") {
     retrieveFromStorage: retrieveFromStorage,
     getTransportService: getTransportService,
     tickPerishableGoods: tickPerishableGoods,
+    getVehicleCargoCapacity: getVehicleCargoCapacity,
+    getVehicleCargoVolume: getVehicleCargoVolume,
   });
 }
 
@@ -198593,7 +198951,7 @@ function renderStocks(area, inv, state, parent) {
         }
       }
       rowsHtml += `
-        <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.04);font-size:11px;gap:8px;">
+        <div class="stock-holding-row" data-symbol="${h.symbol}" style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.04);font-size:11px;gap:8px;cursor:pointer;" title="点击查看${stkName}逐笔成交记录">
           <span style="font-weight:600;min-width:50px;">${h.symbol}</span>
           <span style="color:var(--text-secondary);min-width:55px;font-size:10px;">${stkName}</span>
           <span style="min-width:40px;text-align:right;">${h.shares}股</span>
@@ -198615,8 +198973,58 @@ function renderStocks(area, inv, state, parent) {
         <span style="min-width:50px;">代码</span><span style="min-width:55px;">名称</span><span style="min-width:40px;text-align:right;">数量</span><span style="min-width:55px;text-align:right;">均价</span><span style="min-width:55px;text-align:right;">现价</span><span style="min-width:60px;text-align:right;">市值</span><span style="min-width:70px;text-align:right;">盈亏</span><span style="min-width:45px;text-align:right;">幅度</span>
       </div>
       ${rowsHtml}
+      <div id="trade-log-area"></div>
     `;
     area.appendChild(portfolioDiv);
+
+    // 持仓行点击展开成交记录
+    setTimeout(function() {
+      var logArea = document.getElementById("trade-log-area");
+      portfolioDiv.querySelectorAll(".stock-holding-row").forEach(function(rw){
+        var sym = rw.dataset.symbol;
+        rw.onclick = function() {
+          if (this._expanded) {
+            this._expanded = false;
+            this.style.background = "transparent";
+            var existing = logArea.querySelector("[data-for-sym=\"" + sym + "\"]");
+            if (existing) existing.remove();
+            return;
+          }
+          this._expanded = true;
+          this.style.background = "rgba(0,180,216,0.08)";
+          var prev = logArea.querySelector("[data-for-sym=\"" + sym + "\"]");
+          if (prev) prev.remove();
+          var logs = (inv.tradeLog || []).filter(function(t){ return t.symbol === sym; });
+          if (logs.length === 0) return;
+          logs.sort(function(a,b){ return a.day - b.day; });
+          var logRows = "";
+          logs.forEach(function(t){
+            var isBuy = t.type === "buy";
+            var signText = isBuy ? "买入" : "卖出";
+            var clr = isBuy ? "var(--danger)" : "var(--success)";
+            var plHtml = "";
+            if (typeof t.pl === "number") {
+              var clr2 = t.pl >= 0 ? "var(--danger)" : "var(--success)";
+              var plSign = t.pl >= 0 ? "+" : "";
+              plHtml = ' <span style="color:' + clr2 + '">(' + plSign + "¥" + Math.round(t.pl) + ")</span>";
+            }
+            logRows += '<div style="display:flex;gap:8px;font-size:10px;color:var(--text-muted);padding:3px 0;border-bottom:1px dashed rgba(255,255,255,0.06);">';
+            logRows += '<span style="min-width:60px;">第' + t.day + '天</span>';
+            logRows += '<span style="min-width:30px;color:' + clr + ';font-weight:bold;">' + signText + '</span>';
+            logRows += '<span style="min-width:70px;text-align:right;">' + t.price.toFixed(2) + '¥/' + (t.unitLabel||"") + '</span>';
+            var qtyDec = (t.unitLabel && t.unitLabel !== "股") ? 4 : 0;
+            logRows += '<span style="min-width:50px;text-align:right;">×' + Number(t.quantity).toFixed(qtyDec) + '</span>';
+            logRows += '<span style="min-width:80px;text-align:right;">=' + ('¥' + Math.round(t.total).toLocaleString()) + '</span>';
+            logRows += plHtml + '</div>';
+          });
+          var div = document.createElement("div");
+          div.setAttribute("data-for-sym", sym);
+          div.style.cssText = "margin-top:6px;padding:8px;background:rgba(0,0,0,0.25);border-radius:6px;font-size:10px;";
+          div.innerHTML = '<div style="display:flex;gap:8px;font-size:9px;color:var(--text-muted);padding:2px 0 4px 0;border-bottom:1px solid var(--border);margin-bottom:2px;"><span style="min-width:60px;">日期</span><span style="min-width:30px;">操作</span><span style="min-width:70px;text-align:right;">单价</span><span style="min-width:50px;text-align:right;">数量</span><span style="min-width:80px;text-align:right;">金额</span></div>' + logRows;
+          logArea.appendChild(div);
+        };
+      });
+    }, 0);
   }
 
   var grid = document.createElement("div");
@@ -223245,6 +223653,9 @@ var TAB_RENDERERS = {
   // 💼 事业 — 经济面板（工作/投资/副业/创业/企业命运）
   career: { fnName: "renderCareerTab", fallback: "💼 事业加载中..." },
 
+  // 💰 财务 — 收支明细、资产负债、财务趋势
+  finance: { fnName: "renderFinanceTab", fallback: "💰 财务加载中..." },
+
   // 📖 百科 — 信息面板（百科/NPC社交/成就/叙事）
   wiki: { fnName: "renderWikiTab", fallback: "📖 百科加载中..." },
 };
@@ -226963,7 +227374,6 @@ function renderTradeTab(state, parent) {
     </div>
     <div style="text-align:right;">
       <span style="font-size:11px;color:var(--text-muted);">现金: <strong style="color:var(--success)">¥${(state.resources && state.resources.cash ? state.resources.cash : 0).toLocaleString()}</strong></span>
-      ${(state.trade && state.trade.totalProfit ? '<div style="font-size:10px;color:var(--text-muted);margin-top:1px;">📈 累计利润: <strong style="' + (state.trade.totalProfit > 0 ? 'color:var(--success)' : 'color:var(--danger)') + ';">¥' + (state.trade.totalProfit || 0).toLocaleString() + '</strong></div>' : '')}
       ${(function() {
         var activeEvents = 0;
         if (state.trade && state.trade.marketEvents) {
@@ -227900,8 +228310,21 @@ function renderInventoryTab(state, parent) {
       <span style="font-size:10px;color:var(--text-muted);margin-left:8px;">
         负重 ${totalWeight}/${maxCarry}kg
       </span>
+      <span id="encumbrance-tier" style="font-size:10px;margin-left:6px;font-weight:600;"></span>
     </h3>
   `;
+  // 负重等级展示（JS 动态更新颜色）
+  var tierSpan = div.querySelector("#encumbrance-tier");
+  if (tierSpan && encumbranceTier) {
+    var tn = encumbranceTier.name;
+    var tc = "var(--text-muted)";
+    if (tn === "略重") tc = "#ff9800";
+    else if (tn === "沉重") tc = "#ff5722";
+    else if (tn === "超载") tc = "#f44336";
+    else if (tn === "极限") tc = "#d32f2f";
+    tierSpan.textContent = "[" + tn + "]" + (encumbranceTier.apPenalty > 0 ? " (AP-" + encumbranceTier.apPenalty + ")" : "");
+    tierSpan.style.color = tc;
+  }
 
   const items = state.inventory && state.inventory.items ? state.inventory.items : []; // [全系统自洽修复] 域F A类: state.inventory 守卫
   if (items.length === 0) {
@@ -228109,7 +228532,49 @@ function renderInventoryTab(state, parent) {
   equipDiv.appendChild(equipGrid);
   div.appendChild(equipDiv);
 
+  // === 仓库管理（当前地点仓库） ===
+  var locKey = state.trade && state.trade.currentLocation;
+  var storage = state.inventory && state.inventory.storage ? state.inventory.storage[locKey] : null;
+  if (storage && storage.length > 0) {
+    var storageDiv = document.createElement("div");
+    storageDiv.style.cssText = "margin-top:12px;";
+    storageDiv.innerHTML = '<h4 style="font-size:13px;color:var(--text-muted);margin-bottom:6px;">📦 当地仓库 (' + locKey + ')</h4>';
+    var storageGrid = document.createElement("div");
+    storageGrid.style.cssText = "display:flex;flex-wrap:wrap;gap:6px;";
+    storage.forEach(function (sItem) {
+      var goodDef = (typeof getGoodById === "function") ? getGoodById(sItem.id) : null;
+      var itemDef = (typeof getItemById === "function") ? getItemById(sItem.id) : null;
+      var sName = goodDef ? goodDef.name : (itemDef ? itemDef.name : sItem.id);
+      var sIcon = itemDef ? (itemDef.icon || "📦") : "📦";
+      var card = document.createElement("div");
+      card.style.cssText = "background:var(--bg-card);border:1px solid var(--border);border-radius:6px;padding:6px 10px;font-size:11px;display:flex;align-items:center;gap:6px;";
+      card.innerHTML = '<span>' + sIcon + ' ' + sName + ' ×' + sItem.qty + '</span>' +
+        '<button class="storage-retrieve-btn" data-good="' + sItem.id + '" style="padding:2px 8px;font-size:10px;border:1px solid var(--accent);border-radius:4px;background:transparent;color:var(--accent);cursor:pointer;">取出</button>';
+      storageGrid.appendChild(card);
+    });
+    storageDiv.appendChild(storageGrid);
+    div.appendChild(storageDiv);
+  }
+
   parent.appendChild(div);
+
+  // 绑定仓库取出按钮
+  setTimeout(function () {
+    parent.querySelectorAll(".storage-retrieve-btn").forEach(function (btn) {
+      btn.addEventListener("click", function (e) {
+        e.stopPropagation();
+        var goodId = btn.dataset.good;
+        if (typeof retrieveFromStorage === "function") {
+          retrieveFromStorage(goodId, 1);
+          var st = StateManager.getState();
+          renderCurrentTab(st);
+          renderSidebar(st);
+          renderHeader(st);
+          renderMessageLog(st);
+        }
+      });
+    });
+  }, 0);
 }
 
 // ====== Skills Tab ======
@@ -230701,6 +231166,155 @@ function _renderSupplyDemandTag(state, goodId) {
   if (sd < -15) return '<span style="color:var(--success);font-size:10px;margin-left:4px;">📉 供过于求</span>';
   if (sd < -5) return '<span style="color:var(--info);font-size:10px;margin-left:4px;">📉 供给过剩</span>';
   return "";
+}
+
+// ====== 💰 财务 Tab — 收支明细、资产负债、财务趋势 ======
+function renderFinanceTab(state, parent) {
+  parent.innerHTML = "";
+  var div = document.createElement("div");
+  div.style.cssText = "display:flex;flex-direction:column;gap:12px;";
+
+  var r = state.resources || {};
+  var cash = r.cash || 0;
+  var bankBalance = r.bankBalance || 0;
+  var villageDebt = r.villageDebt || 0;
+  var bankDebt = r.bankDebt || 0;
+  var totalDebt = villageDebt + bankDebt;
+  var netWorth = cash + bankBalance - totalDebt;
+  var txs = state.flags._dailyTransactions || [];
+
+  // === 总览区 ===
+  var overview = document.createElement("div");
+  overview.style.cssText = "display:grid;grid-template-columns:repeat(4,1fr);gap:8px;";
+  var statBoxes = [
+    { label: "💰 现金", value: "¥" + cash.toLocaleString(), color: "var(--success)" },
+    { label: "🏦 储蓄", value: "¥" + bankBalance.toLocaleString(), color: "#4fc3f7" },
+    { label: "💸 负债", value: "¥" + totalDebt.toLocaleString(), color: totalDebt > 0 ? "var(--danger)" : "var(--text-muted)" },
+    { label: "📊 净资产", value: "¥" + netWorth.toLocaleString(), color: netWorth >= 0 ? "var(--success)" : "var(--danger)" },
+  ];
+  statBoxes.forEach(function (box) {
+    var card = document.createElement("div");
+    card.style.cssText = "background:var(--bg-card);border:1px solid var(--border);border-radius:8px;padding:10px 12px;text-align:center;";
+    var labelEl = document.createElement("div");
+    labelEl.style.cssText = "font-size:11px;color:var(--text-muted);margin-bottom:4px;";
+    labelEl.textContent = box.label;
+    var valEl = document.createElement("div");
+    valEl.style.cssText = "font-size:16px;font-weight:700;color:" + box.color + ";";
+    valEl.textContent = box.value;
+    card.appendChild(labelEl);
+    card.appendChild(valEl);
+    overview.appendChild(card);
+  });
+  div.appendChild(overview);
+
+  // === 今日收支明细 ===
+  var sectionTitle = document.createElement("h3");
+  sectionTitle.style.cssText = "margin:8px 0 4px;font-size:14px;color:var(--text-primary);";
+  sectionTitle.textContent = "📋 今日收支明细";
+  div.appendChild(sectionTitle);
+
+  if (txs.length === 0) {
+    var empty = document.createElement("div");
+    empty.style.cssText = "padding:20px;text-align:center;color:var(--text-muted);font-size:13px;background:var(--bg-card);border:1px dashed var(--border);border-radius:8px;";
+    empty.textContent = "今天还没有收支记录，开始行动吧！";
+    div.appendChild(empty);
+  } else {
+    // 分组：收入 vs 支出
+    var incomeTxs = [];
+    var expenseTxs = [];
+    txs.forEach(function (t) {
+      if (t.type === "income") incomeTxs.push(t);
+      else expenseTxs.push(t);
+    });
+
+    // 统计
+    var totalIncome = incomeTxs.reduce(function (s, t) { return s + (t.amount || 0); }, 0);
+    var totalExpense = expenseTxs.reduce(function (s, t) { return s + (t.amount || 0); }, 0);
+    var netIncome = totalIncome - totalExpense;
+
+    // 净收入概览
+    var netRow = document.createElement("div");
+    netRow.style.cssText = "display:flex;justify-content:space-between;padding:6px 10px;background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:6px;font-size:12px;margin-bottom:6px;";
+    netRow.innerHTML = '<span style="color:var(--text-muted);">净收入</span><span style="font-weight:700;color:' + (netIncome >= 0 ? "var(--success)" : "var(--danger)") + ';">' + (netIncome >= 0 ? "+" : "") + "¥" + netIncome.toLocaleString() + "</span>";
+    div.appendChild(netRow);
+
+    // 收入列表
+    if (incomeTxs.length > 0) {
+      var incTitle = document.createElement("div");
+      incTitle.style.cssText = "font-size:12px;color:var(--success);font-weight:600;margin-bottom:4px;";
+      incTitle.textContent = "🟢 收入 (" + incomeTxs.length + "笔) 合计 ¥" + totalIncome.toLocaleString();
+      div.appendChild(incTitle);
+
+      incomeTxs.forEach(function (t) {
+        var catLabel = (typeof getCategoryLabel === "function") ? getCategoryLabel(t.category) : t.category;
+        var catIcon = (typeof getCategoryIcon === "function") ? getCategoryIcon(t.category) : "💰";
+        var row = document.createElement("div");
+        row.style.cssText = "display:flex;justify-content:space-between;align-items:center;padding:4px 8px;background:rgba(76,175,80,0.04);border-radius:4px;font-size:12px;margin-bottom:2px;";
+        row.innerHTML = '<span style="color:var(--text-secondary);">' + catIcon + " " + catLabel + " — " + (t.description || "") + '</span><span style="color:var(--success);font-weight:600;">+¥' + (t.amount || 0).toLocaleString() + "</span>";
+        div.appendChild(row);
+      });
+    }
+
+    // 支出列表
+    if (expenseTxs.length > 0) {
+      var expTitle = document.createElement("div");
+      expTitle.style.cssText = "font-size:12px;color:var(--danger);font-weight:600;margin:6px 0 4px;";
+      expTitle.textContent = "🔴 支出 (" + expenseTxs.length + "笔) 合计 ¥" + totalExpense.toLocaleString();
+      div.appendChild(expTitle);
+
+      expenseTxs.forEach(function (t) {
+        var catLabel = (typeof getCategoryLabel === "function") ? getCategoryLabel(t.category) : t.category;
+        var catIcon = (typeof getCategoryIcon === "function") ? getCategoryIcon(t.category) : "💸";
+        var row = document.createElement("div");
+        row.style.cssText = "display:flex;justify-content:space-between;align-items:center;padding:4px 8px;background:rgba(244,67,54,0.04);border-radius:4px;font-size:12px;margin-bottom:2px;";
+        row.innerHTML = '<span style="color:var(--text-secondary);">' + catIcon + " " + catLabel + " — " + (t.description || "") + '</span><span style="color:var(--danger);font-weight:600;">-¥' + (t.amount || 0).toLocaleString() + "</span>";
+        div.appendChild(row);
+      });
+    }
+  }
+
+  // === 历史趋势（近30天）===
+  var hist = state.history || {};
+  var incomeHist = hist.income || [];
+  var expenseHist = hist.expense || [];
+  if (incomeHist.length > 0 || expenseHist.length > 0) {
+    var trendTitle = document.createElement("h3");
+    trendTitle.style.cssText = "margin:12px 0 4px;font-size:14px;color:var(--text-primary);";
+    trendTitle.textContent = "📈 近30日收支趋势";
+    div.appendChild(trendTitle);
+
+    // 取最近30天
+    var recentDays = Math.min(30, incomeHist.length, expenseHist.length);
+    var startIdx = Math.max(0, incomeHist.length - 30);
+    var maxVal = 0;
+    for (var i = startIdx; i < incomeHist.length; i++) {
+      maxVal = Math.max(maxVal, incomeHist[i] || 0, expenseHist[i] || 0);
+    }
+    if (maxVal < 1) maxVal = 1;
+
+    var chartContainer = document.createElement("div");
+    chartContainer.style.cssText = "display:flex;align-items:flex-end;gap:2px;height:100px;padding:8px 4px;background:var(--bg-card);border:1px solid var(--border);border-radius:8px;overflow-x:auto;";
+
+    for (var ci = startIdx; ci < incomeHist.length; ci++) {
+      var dayCol = document.createElement("div");
+      dayCol.style.cssText = "display:flex;flex-direction:column;align-items:center;gap:1px;flex-shrink:0;";
+
+      var incBar = incomeHist[ci] || 0;
+      var expBar = expenseHist[ci] || 0;
+      var incH = Math.round((incBar / maxVal) * 70);
+      var expH = Math.round((expBar / maxVal) * 70);
+      if (incH < 1 && incBar > 0) incH = 1;
+      if (expH < 1 && expBar > 0) expH = 1;
+
+      dayCol.innerHTML = '<div style="width:8px;height:' + incH + 'px;background:var(--success);border-radius:1px 1px 0 0;" title="收入 ¥' + incBar.toLocaleString() + '"></div>' +
+        '<div style="width:8px;height:' + expH + 'px;background:var(--danger);border-radius:0 0 1px 1px;" title="支出 ¥' + expBar.toLocaleString() + '"></div>' +
+        '<span style="font-size:7px;color:var(--text-muted);margin-top:2px;">D' + (ci + 1) + '</span>';
+      chartContainer.appendChild(dayCol);
+    }
+    div.appendChild(chartContainer);
+  }
+
+  parent.appendChild(div);
 }
 
 ;
@@ -254875,6 +255489,7 @@ function getAvailableActions(state) {
         name: job.name,
         desc: job.desc + footfallLabel,
         icon: job.icon,
+        apCost: 33,
         payEstimate:
           payDetail && payDetail.min != null
             ? `${payDetail.min}~${payDetail.max}`
@@ -255290,7 +255905,7 @@ function getAvailableActions(state) {
             category: "education",
             name: "申请本科学历认证",
             desc: "6门科目全部通过！提交认证，获得本科学历，解锁更多工作机会。",
-            ap: 0,
+            apCost: 0,
             handler: () => {
               state.player.education = 1;
               state.education = 1;
@@ -255316,7 +255931,7 @@ function getAvailableActions(state) {
                 "消耗25AP，+6学习点（当前" +
                 gradEp.studyPoints +
                 "点，本门需200点）。需智力≥30。",
-              ap: 25,
+              apCost: 25,
               handler: function () {
                 if (!state.player.eduProgress)
                   state.player.eduProgress = {
@@ -255368,7 +255983,7 @@ function getAvailableActions(state) {
               "%（第" +
               (gradEp.examsPassed + 1) +
               "/6门）。",
-            ap: 30,
+            apCost: 30,
             reqFail: !gradCanExam
               ? gradEp.studyPoints < 200
                 ? "学习点不足（" + (gradEp.studyPoints || 0) + "/200）"
@@ -255408,7 +256023,7 @@ function getAvailableActions(state) {
               category: "education",
               name: "🎓 申请研究生学历认证",
               desc: "6门科目全部通过！提交认证，获得研究生学历，解锁高级职位和高薪机会。",
-              ap: 0,
+              apCost: 0,
               handler: function () {
                 state.player.education = 2;
                 state.education = 2;
@@ -255445,7 +256060,7 @@ function getAvailableActions(state) {
               "消耗20AP，推进研究工作。已发表论文" +
               currResearch +
               "篇（需≥3篇毕业）。",
-            ap: 20,
+            apCost: 20,
             handler: function () {
               consumeAP(20);
               var progress = Random.int(5, 15);
@@ -255490,7 +256105,7 @@ function getAvailableActions(state) {
                 "已发表" +
                 currResearch +
                 "篇论文！提交博士论文答辩，获得博士学位。解锁学术路线。",
-              ap: 10,
+              apCost: 0,
               handler: function () {
                 state.player.education = 3;
                 state.education = 3;
@@ -255550,6 +256165,7 @@ function getAvailableActions(state) {
               id: fjob.id,
               category: "work",
               label: fjob.icon + " [节日] " + fjob.name + " ¥" + fjob.pay,
+              apCost: fjob.apCost || 20,
               desc: fjob.desc + "（消耗" + (fjob.apCost || 20) + "AP）",
               handler: function () {
                 var pay = fjob.pay + Random.int(0, 29);
@@ -255602,7 +256218,7 @@ function getAvailableActions(state) {
           category: "appliance",
           name: "本地名人效应",
           desc: `名气${fame}点，商家请你站台推广，收现金并涨粉。(每天一次)`,
-          ap: 15,
+          apCost: 15,
           handler: () => {
             var earn = 50 + Math.floor(fame * 1.2) + Random.int(0, 79);
             state.resources.cash = (state.resources.cash || 0) + earn;
@@ -255635,7 +256251,7 @@ function getAvailableActions(state) {
           category: "appliance",
           name: "粉丝认出你了",
           desc: `有人认出你（名气${fame}），主动来搭话聊天，心情好极了。(每天一次)`,
-          ap: 5,
+          apCost: 5,
           handler: () => {
             state.needs.happiness = Math.min(100, state.needs.happiness + 20);
             state.player.mental = Math.min(100, state.player.mental + 2);
@@ -255662,7 +256278,7 @@ function getAvailableActions(state) {
           category: "appliance",
           name: "名人专属指导课",
           desc: `名气${fame}点，教练/老师主动找你，提供一次免费专项训练。(每天一次)`,
-          ap: 20,
+          apCost: 20,
           handler: () => {
             // 随机提升一项属性或技能
             var targets = ["physique", "intelligence", "agility", "mental"];
@@ -255694,7 +256310,7 @@ function getAvailableActions(state) {
           category: "appliance",
           name: "VIP就诊通道",
           desc: `名气${fame}点，护士认出你直接带去优先诊室，挂号费减半。(每天一次)`,
-          ap: 10,
+          apCost: 10,
           handler: () => {
             var healAmt = 25 + Math.floor(fame * 0.3);
             state.status.health = Math.min(
@@ -255722,7 +256338,7 @@ function getAvailableActions(state) {
           category: "appliance",
           name: "科技论坛演讲嘉宾",
           desc: `名气${fame}点，主办方邀请你做嘉宾分享，演讲费+名气暴增。(每天一次)`,
-          ap: 25,
+          apCost: 25,
           handler: () => {
             var earn = 200 + Math.floor(fame * 2.5) + Random.int(0, 149);
             state.resources.cash = (state.resources.cash || 0) + earn;
@@ -255986,27 +256602,40 @@ function getAvailableActions(state) {
 
     // 医院
     if (locKey === "hospital") {
+      var hasIllnesses =
+        state.status.illnesses && state.status.illnesses.length > 0;
       actions.push({
         id: "heal",
         category: "survival",
         name: "看病治疗",
-        desc: "花50元看病，恢复健康、治疗伤病。",
+        desc: hasIllnesses
+          ? "花50元做基础诊疗，恢复健康。具体疾病需分别治疗。"
+          : "花50元看病，恢复健康、治疗伤病。",
         icon: "🏥",
         apCost: 20,
         costEstimate: 50,
-        effectEstimate: "健康+40, 伤病清除",
+        effectEstimate: hasIllnesses
+          ? "健康+40（疾病需分别治疗）"
+          : "健康+40, 伤病清除",
         disabled: (state.resources.cash || 0) < 50 ? true : false,
         handler: () => {
           const st = StateManager.getState();
           st.resources.cash = Math.max(0, (st.resources.cash || 0) - 50);
           st.status.health = Math.min(100, st.status.health + 40);
           st.status.injured = false;
-          // v3.1：医院治疗同时清除疾病数组（兼容illness.js疾病系统）
+          // 不再一键清除所有疾病！具体疾病需通过"看病"选项分症治疗
           if (st.status.illnesses && st.status.illnesses.length > 0) {
-            st.status.illnesses = [];
+            StateManager.addMessage(
+              "🏥 做了基础诊疗，健康恢复了一些。但你的具体疾病需要分别治疗（使用「看病」选项）。",
+              "warning",
+            );
+          } else {
+            st.status.sick = false;
+            StateManager.addMessage(
+              "🏥 看了医生，健康恢复了不少。",
+              "success",
+            );
           }
-          st.status.sick = false;
-          StateManager.addMessage("🏥 看了医生，健康恢复了不少。", "success");
           consumeAP(20);
         },
       });
@@ -256257,6 +256886,7 @@ function getAvailableActions(state) {
         name: `考取${cert.name}`,
         desc: `${cert.desc} 费用:¥${cert.requirements.cash} 通过率:${Math.round(cert.examPassRate * 100)}%`,
         icon: "📜",
+        apCost: 33,
         costEstimate: cert.requirements.cash,
         disabled: !canAfford,
         reqFail: !canAfford ? `需 ¥${cert.requirements.cash}` : null,

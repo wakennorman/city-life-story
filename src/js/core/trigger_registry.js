@@ -162,11 +162,21 @@
 
   /**
    * 批量注册事件（在 RANDOM_EVENTS 加载后调用）
+   * [全系统自洽修复] 域B A类#1: 同时扫描 MORAL_EVENTS 中声明 triggers:["after_work"] 的事件
+   *   原 loadAllTriggers 只扫 RANDOM_EVENTS，导致 after_work/after_trade 等槽位始终为空。
    */
   function loadAllTriggers() {
     if (!window.RANDOM_EVENTS) return;
     for (var i = 0; i < window.RANDOM_EVENTS.length; i++) {
       registerTriggeredEvent(window.RANDOM_EVENTS[i]);
+    }
+    // [全系统自洽修复] 域B A类#1: 扫描 MORAL_EVENTS 中声明 triggers 数组的事件
+    if (typeof MORAL_EVENTS !== "undefined" && Array.isArray(MORAL_EVENTS)) {
+      for (var mi = 0; mi < MORAL_EVENTS.length; mi++) {
+        if (Array.isArray(MORAL_EVENTS[mi].triggers)) {
+          registerTriggeredEvent(MORAL_EVENTS[mi]);
+        }
+      }
     }
   }
 
