@@ -7375,7 +7375,7 @@ function registerNewsEventsToPool() {
         "城中村路口有人摆了个二手手机摊，一部外观完好的安卓机，卖¥150，比正规店便宜多了。",
       conditions: function (st) {
         if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后不再触发街头叙事事件
-        return st.player.phase === "street" && st.resources.cash >= 150;
+        return st.player.phase === "street" && (st.resources.cash || 0) >= 150;
       },
       choices: [
         {
@@ -7383,7 +7383,7 @@ function registerNewsEventsToPool() {
           hint: "投资装备",
           apply: function (st) {
             if (Random.chance(0.7)) {
-              st.resources.cash -= 150;
+              st.resources.cash = Math.max(0, (st.resources.cash || 0) - 150);
               st.player.fame = Math.min(100, st.player.fame + 2);
               // smartphone 是 accessory 装备：装备到槽位（带品质）
               var phoneDef =
@@ -7395,7 +7395,7 @@ function registerNewsEventsToPool() {
                 st.inventory.equipmentInstances = {};
               if (st.inventory.equipment.accessory) {
                 // 已有配件：按成交价折现（避免 actualPrice 套利）
-                st.resources.cash += 150;
+                st.resources.cash = (st.resources.cash || 0) + 150;
                 st.resources.totalEarned += 150;
                 StateManager.addMessage(
                   "📱 买到一部成色不错的手机，但你已有配件，转手卖了¥150。跑外卖的路仍敞开，名气+2。",
@@ -7430,7 +7430,7 @@ function registerNewsEventsToPool() {
                 );
               }
             } else {
-              st.resources.cash -= 150;
+              st.resources.cash = Math.max(0, (st.resources.cash || 0) - 150);
               st.needs.happiness = Math.max(0, st.needs.happiness - 10);
               StateManager.addMessage(
                 "📱 买回来发现是翻新机，主板有问题，修了¥50还是不稳定。买贵了。",
@@ -7448,7 +7448,7 @@ function registerNewsEventsToPool() {
               st.player.intelligence + 0.3,
             );
             const price = Random.int(100, 179);
-            st.resources.cash -= price;
+            st.resources.cash = Math.max(0, (st.resources.cash || 0) - price);
             // smartphone 是 accessory 装备：装备到槽位（带品质）
             var phoneDef2 =
               typeof getItemById === "function"
@@ -7459,7 +7459,7 @@ function registerNewsEventsToPool() {
               st.inventory.equipmentInstances = {};
             if (st.inventory.equipment.accessory) {
               // 已有配件：按成交价折现
-              st.resources.cash += price;
+              st.resources.cash = (st.resources.cash || 0) + price;
               st.resources.totalEarned += price;
               StateManager.addMessage(
                 "🔍 你仔细测试了30分钟，砍价到¥" +
@@ -7539,13 +7539,13 @@ function registerNewsEventsToPool() {
           text: "🍺 请他喝瓶啤酒叙旧",
           hint: "¥10 维系人脉",
           apply: function (st) {
-            if (st.resources.cash >= 10) {
-              st.resources.cash -= 10;
+            if ((st.resources.cash || 0) >= 10) {
+              st.resources.cash = Math.max(0, (st.resources.cash || 0) - 10);
               st.needs.happiness = Math.min(100, st.needs.happiness + 20);
               const tip = Random.float(0, 1);
               if (tip < 0.4) {
                 const cash = Random.int(200, 499);
-                st.resources.cash += cash;
+                st.resources.cash = (st.resources.cash || 0) + cash;
                 StateManager.addMessage(
                   "🤗 聊得投机，他给你介绍了个短期活，赚了 ¥" +
                     cash +
@@ -7628,7 +7628,7 @@ function registerNewsEventsToPool() {
           apply: function (st) {
             if (Random.chance(0.5)) {
               const deal = Random.int(150, 349);
-              st.resources.cash += deal;
+              st.resources.cash = (st.resources.cash || 0) + deal;
               st.resources.totalEarned += deal;
               StateManager.addMessage(
                 "💰 生意谈成了 ¥" + deal + "，但摊子淋湿了一半货，有得有失。",
@@ -7687,8 +7687,8 @@ function registerNewsEventsToPool() {
           text: "💊 去药店买点止泻药",
           hint: "¥15 解决问题",
           apply: function (st) {
-            if (st.resources.cash >= 15) {
-              st.resources.cash -= 15;
+            if ((st.resources.cash || 0) >= 15) {
+              st.resources.cash = Math.max(0, (st.resources.cash || 0) - 15);
               st.status.health = Math.min(100, st.status.health + 5);
               StateManager.addMessage(
                 "💊 买了止泻药，下午基本没事了。¥15 买健康很值。健康+5。",
@@ -7747,8 +7747,8 @@ function registerNewsEventsToPool() {
           text: "📋 花¥200办个临时许可证",
           hint: "正规化应对",
           apply: function (st) {
-            if (st.resources.cash >= 200) {
-              st.resources.cash -= 200;
+            if ((st.resources.cash || 0) >= 200) {
+              st.resources.cash = Math.max(0, (st.resources.cash || 0) - 200);
               st.player.fame = Math.min(100, st.player.fame + 3);
               StateManager.addMessage(
                 "📋 花¥200办了临时证，城管来了直接亮证件，没事。名气+3。",
@@ -7767,8 +7767,8 @@ function registerNewsEventsToPool() {
           hint: "走关系",
           apply: function (st) {
             const bribe = Random.int(100, 199);
-            if (st.resources.cash >= bribe) {
-              st.resources.cash -= bribe;
+            if ((st.resources.cash || 0) >= bribe) {
+              st.resources.cash = Math.max(0, (st.resources.cash || 0) - bribe);
               if (st.chengguan)
                 st.chengguan.heat = Math.max(0, st.chengguan.heat - 30);
               StateManager.addMessage(
@@ -7823,7 +7823,7 @@ function registerNewsEventsToPool() {
           hint: "抓住机会",
           apply: function (st) {
             const earned = Random.int(250, 399);
-            st.resources.cash += earned;
+            st.resources.cash = (st.resources.cash || 0) + earned;
             st.resources.totalEarned += earned;
             st.needs.fatigue = Math.min(100, st.needs.fatigue + 30);
             st.needs.hygiene = Math.max(0, st.needs.hygiene - 15);
@@ -7884,7 +7884,7 @@ function registerNewsEventsToPool() {
                 : affinity >= 20
                   ? Random.int(200, 399)
                   : Random.int(50, 149);
-            st.resources.cash += bonus;
+            st.resources.cash = (st.resources.cash || 0) + bonus;
             st.resources.totalEarned += bonus;
             StateManager.addMessage(
               "🎉 根据你和工头的关系，拿到了奖金 ¥" + bonus + "！",
@@ -7897,7 +7897,7 @@ function registerNewsEventsToPool() {
           hint: "随缘",
           apply: function (st) {
             const small = Random.int(50, 129);
-            st.resources.cash += small;
+            st.resources.cash = (st.resources.cash || 0) + small;
             st.resources.totalEarned += small;
             StateManager.addMessage(
               "😌 工头随手给了你 ¥" + small + " 红包，低调也有收获。",
@@ -8135,8 +8135,8 @@ function registerNewsEventsToPool() {
           text: "💰 花¥10买份快餐",
           hint: "花钱省时间",
           apply: function (st) {
-            if (st.resources.cash >= 10) {
-              st.resources.cash -= 10;
+            if ((st.resources.cash || 0) >= 10) {
+              st.resources.cash = Math.max(0, (st.resources.cash || 0) - 10);
               st.needs.hunger = Math.min(100, st.needs.hunger + 25);
               st.needs.happiness = Math.min(100, st.needs.happiness + 2);
               StateManager.addMessage(
@@ -8159,7 +8159,7 @@ function registerNewsEventsToPool() {
             st.needs.hunger = Math.max(0, st.needs.hunger - 10);
             if (Random.chance(0.4)) {
               const earned = Random.int(20, 49);
-              st.resources.cash += earned;
+              st.resources.cash = (st.resources.cash || 0) + earned;
               st.needs.happiness = Math.min(100, st.needs.happiness + 3);
               StateManager.addMessage(
                 "你找到个临时活，赚了¥" +
@@ -8262,7 +8262,7 @@ function registerNewsEventsToPool() {
           hint: "赚快钱",
           apply: function (st) {
             var earned = Random.int(120, 179);
-            st.resources.cash += earned;
+            st.resources.cash = (st.resources.cash || 0) + earned;
             st.resources.totalEarned += earned;
             st.needs.fatigue = Math.min(100, st.needs.fatigue + 40);
             st.status.health = Math.max(0, st.status.health - 8);
@@ -8291,7 +8291,7 @@ function registerNewsEventsToPool() {
           apply: function (st) {
             if (Random.chance(0.5)) {
               var earned2 = Random.int(100, 149);
-              st.resources.cash += earned2;
+              st.resources.cash = (st.resources.cash || 0) + earned2;
               st.resources.totalEarned += earned2;
               st.needs.fatigue = Math.min(100, st.needs.fatigue + 20);
               StateManager.addMessage(
@@ -8328,7 +8328,7 @@ function registerNewsEventsToPool() {
             st.player.fame = Math.min(100, st.player.fame + 8);
             if (Random.chance(0.6)) {
               var reward = Random.int(200, 499);
-              st.resources.cash += reward;
+              st.resources.cash = (st.resources.cash || 0) + reward;
               StateManager.addMessage(
                 "📞 失主找来了，感激地塞给你¥" +
                   reward +
@@ -8349,7 +8349,7 @@ function registerNewsEventsToPool() {
           hint: "换现金",
           apply: function (st) {
             var earn = Random.int(600, 999);
-            st.resources.cash += earn;
+            st.resources.cash = (st.resources.cash || 0) + earn;
             st.resources.totalEarned += earn;
             st.needs.happiness = Math.max(0, st.needs.happiness - 12);
             StateManager.addMessage(
@@ -8367,7 +8367,7 @@ function registerNewsEventsToPool() {
               st.player.intelligence + 0.5,
             );
             var rewardB = Random.int(100, 299);
-            st.resources.cash += rewardB;
+            st.resources.cash = (st.resources.cash || 0) + rewardB;
             st.resources.totalEarned += rewardB;
             st.player.fame = Math.min(100, st.player.fame + 4);
             StateManager.addMessage(
@@ -8448,7 +8448,7 @@ function registerNewsEventsToPool() {
           apply: function (st) {
             if (Random.chance(0.2)) {
               var cost = Random.int(200, 399);
-              if (st.resources.cash >= cost) st.resources.cash -= cost;
+              if ((st.resources.cash || 0) >= cost) st.resources.cash = Math.max(0, (st.resources.cash || 0) - cost);
               st.needs.happiness = Math.max(0, st.needs.happiness - 5);
               StateManager.addMessage(
                 "🚑 老人救回来了！但家属误以为你是肇事者讹了你¥" +
@@ -8514,7 +8514,7 @@ function registerNewsEventsToPool() {
           apply: function (st) {
             st.flags._milestone30 = true;
             st.flags._milestone30Path = "money";
-            st.resources.cash += 150;
+            st.resources.cash = (st.resources.cash || 0) + 150;
             st.resources.totalEarned += 150;
             st.needs.happiness = Math.min(100, st.needs.happiness + 10);
             StateManager.addMessage(
@@ -8670,7 +8670,7 @@ function registerNewsEventsToPool() {
             st.needs.happiness = Math.min(100, st.needs.happiness + 30);
             st.player.mental = Math.min(100, st.player.mental + 5);
             var remit = Random.int(200, 399);
-            st.resources.cash += remit;
+            st.resources.cash = (st.resources.cash || 0) + remit;
             st.resources.totalEarned += remit;
             StateManager.addMessage(
               "📞 家人听说你坚持了三个月，偷偷汇来了¥" +
@@ -8703,7 +8703,7 @@ function registerNewsEventsToPool() {
           hint: "人情就是资本",
           apply: function (st) {
             var pay = Random.int(300, 499);
-            st.resources.cash += pay;
+            st.resources.cash = (st.resources.cash || 0) + pay;
             st.resources.totalEarned += pay;
             st.player.physique = Math.min(100, st.player.physique + 2);
             st.player.fame = Math.min(100, st.player.fame + 5);
@@ -8797,7 +8797,7 @@ function registerNewsEventsToPool() {
           hint: "打开批发渠道",
           apply: function (st) {
             var bonus = Random.int(500, 799);
-            st.resources.cash += bonus;
+            st.resources.cash = (st.resources.cash || 0) + bonus;
             st.resources.totalEarned += bonus;
             st.player.fame = Math.min(100, st.player.fame + 10);
             st.flags._bulkSupplier = true;
@@ -8843,7 +8843,7 @@ function registerNewsEventsToPool() {
           hint: "名气暴增，但会树敌",
           apply: function (st) {
             var award = Random.int(200, 299);
-            st.resources.cash += award;
+            st.resources.cash = (st.resources.cash || 0) + award;
             st.resources.totalEarned += award;
             st.player.fame = Math.min(100, st.player.fame + 18);
             st.needs.happiness = Math.min(100, st.needs.happiness + 15);
@@ -8860,7 +8860,7 @@ function registerNewsEventsToPool() {
           hint: "低调处理",
           apply: function (st) {
             var award = Random.int(200, 299);
-            st.resources.cash += award;
+            st.resources.cash = (st.resources.cash || 0) + award;
             st.resources.totalEarned += award;
             st.player.fame = Math.min(100, st.player.fame + 8);
             st.needs.happiness = Math.min(100, st.needs.happiness + 10);
@@ -8963,7 +8963,7 @@ function registerNewsEventsToPool() {
           hint: "每周+¥160",
           apply: function (st) {
             const earned = Random.int(160, 239);
-            st.resources.cash += earned;
+            st.resources.cash = (st.resources.cash || 0) + earned;
             st.resources.totalEarned += earned;
             st.skills.english && (st.skills.english.xp += 15);
             StateManager.addMessage(
@@ -9008,7 +9008,7 @@ function registerNewsEventsToPool() {
             st.flags._oldLiuAdvance = true;
             st.flags._liuPartner = true;
             var bonus = Random.int(600, 999);
-            st.resources.cash += bonus;
+            st.resources.cash = (st.resources.cash || 0) + bonus;
             st.resources.totalEarned += bonus;
             st.player.physique = Math.min(100, st.player.physique + 3);
             st.player.fame = Math.min(100, st.player.fame + 8);
@@ -9114,7 +9114,7 @@ function registerNewsEventsToPool() {
             st.flags._walletOwnerVisited = true;
             st.flags._walletOwnerFriend = true;
             var reward = Random.int(200, 499);
-            st.resources.cash += reward;
+            st.resources.cash = (st.resources.cash || 0) + reward;
             st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 10);
             st.player.fame = Math.min(100, (st.player.fame || 0) + 2);
             StateManager.addMessage(
@@ -9177,7 +9177,7 @@ function registerNewsEventsToPool() {
           apply: function (st) {
             st.flags._walletJobOffered = true;
             st.flags._walletJobAccepted = true;
-            st.resources.cash += 2000;
+            st.resources.cash = (st.resources.cash || 0) + 2000;
             st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 8);
             StateManager.addMessage(
               "💼 仓库管理员的工作还不错，月薪¥4500，包吃住。好人有好报。",
@@ -9348,7 +9348,7 @@ function registerNewsEventsToPool() {
           apply: function (st) {
             st.flags._foggyMorningMarketSeen = true;
             var extra = Random.int(100, 300);
-            st.resources.cash += extra;
+            st.resources.cash = (st.resources.cash || 0) + extra;
             st.resources.totalEarned += extra;
             st.needs.fatigue = Math.min(100, (st.needs.fatigue || 0) + 10);
             StateManager.addMessage(
@@ -10745,7 +10745,7 @@ function registerNewsEventsToPool() {
         return (
           st.player.phase === "street" &&
           st.player.day > 100 &&
-          st.resources.cash >= 80000 &&
+          (st.resources.cash || 0) >= 80000 &&
           !st.flags._acquisitionTeaSeen
         );
       },
@@ -11794,7 +11794,7 @@ function registerNewsEventsToPool() {
         return (
           st.player.phase === "street" &&
           (st.housing.tier || 0) >= 2 &&
-          st.resources.cash >= 25
+          (st.resources.cash || 0) >= 25
         );
       },
       choices: [
@@ -11857,7 +11857,7 @@ function registerNewsEventsToPool() {
         return (
           st.player.phase === "street" &&
           (st.housing.tier || 0) >= 3 &&
-          st.resources.cash >= 200
+          (st.resources.cash || 0) >= 200
         );
       },
       choices: [
@@ -11928,7 +11928,7 @@ function registerNewsEventsToPool() {
         return (
           st.player.phase === "street" &&
           (st.housing.tier || 0) >= 3 &&
-          st.resources.cash >= 300
+          (st.resources.cash || 0) >= 300
         );
       },
       choices: [
@@ -11983,7 +11983,7 @@ function registerNewsEventsToPool() {
         return (
           st.player.phase === "street" &&
           st.player.day >= 40 &&
-          st.resources.cash >= 80000 &&
+          (st.resources.cash || 0) >= 80000 &&
           !st.flags._reGambleSeen
         );
       },
@@ -12265,7 +12265,7 @@ function registerNewsEventsToPool() {
         return (
           st.player.phase === "street" &&
           st.player.day >= 50 &&
-          st.resources.cash >= 30000 &&
+          (st.resources.cash || 0) >= 30000 &&
           !st.flags._startupMeetSeen &&
           isRainy
         );
@@ -13192,7 +13192,7 @@ function registerNewsEventsToPool() {
           text: "💰 趁低价囤菜等涨价",
           hint: "投机",
           apply: function (st) {
-            if (st.resources.cash < 2000) {
+            if ((st.resources.cash || 0) < 2000) {
               StateManager.addMessage(
                 "💰 资金不足2000，囤不了这么多。",
                 "warning",
@@ -13200,7 +13200,7 @@ function registerNewsEventsToPool() {
               return;
             }
             st.flags._communityGroupBuySeen = true;
-            st.resources.cash -= 2000;
+            st.resources.cash = Math.max(0, (st.resources.cash || 0) - 2000);
             StateManager.addMessage("💰 你囤了一批土豆白菜。", "event");
           },
         },
@@ -13210,7 +13210,7 @@ function registerNewsEventsToPool() {
           apply: function (st) {
             st.flags._communityGroupBuySeen = true;
             st.needs.fatigue = Math.min(100, st.needs.fatigue + 10);
-            st.resources.cash += 300;
+            st.resources.cash = (st.resources.cash || 0) + 300;
             StateManager.addMessage(
               "🛵 注册了众包配送。钱不多但稳定。",
               "info",
@@ -13224,7 +13224,7 @@ function registerNewsEventsToPool() {
             st.flags._communityGroupBuySeen = true;
             st.player.fame = Math.min(100, (st.player.fame || 0) + 3);
             var earn = Random.int(200, 299);
-            st.resources.cash += earn;
+            st.resources.cash = (st.resources.cash || 0) + earn;
             StateManager.addMessage(
               "😞 帮王婶拉微信群配送，抽成¥" + earn.toLocaleString() + "。",
               "event",
@@ -13261,7 +13261,7 @@ function registerNewsEventsToPool() {
           apply: function (st) {
             st.flags._bikeShareSeen = true;
             st.needs.fatigue = Math.min(100, st.needs.fatigue + 15);
-            st.resources.cash += 600;
+            st.resources.cash = (st.resources.cash || 0) + 600;
             st.player.physique = Math.min(100, (st.player.physique || 20) + 1);
             StateManager.addMessage("🚲 干了一周到手¥600。", "event");
           },
@@ -13271,7 +13271,7 @@ function registerNewsEventsToPool() {
           hint: "灰色路线",
           apply: function (st) {
             st.flags._bikeShareSeen = true;
-            st.resources.cash += 400;
+            st.resources.cash = (st.resources.cash || 0) + 400;
             st.player.fame = Math.max(0, (st.player.fame || 0) - 2);
             StateManager.addMessage("🔧 拆零件卖废品赚了¥400。", "warning");
           },
@@ -13303,7 +13303,7 @@ function registerNewsEventsToPool() {
           text: "📱 试播三天",
           hint: "低成本",
           apply: function (st) {
-            if (st.resources.cash < 200) {
+            if ((st.resources.cash || 0) < 200) {
               StateManager.addMessage(
                 "📱 启动资金不够200，先攒着。",
                 "warning",
@@ -13311,9 +13311,9 @@ function registerNewsEventsToPool() {
               return;
             }
             st.flags._liveStreamSeen = true;
-            st.resources.cash -= 200;
+            st.resources.cash = Math.max(0, (st.resources.cash || 0) - 200);
             if (Random.chance(0.3)) {
-              st.resources.cash += 800;
+              st.resources.cash = (st.resources.cash || 0) + 800;
               StateManager.addMessage("📱 第三天卖了¥800！有搞头。", "success");
             } else {
               StateManager.addMessage("📱 最多5个观众。99%是炮灰。", "warning");
@@ -13326,7 +13326,7 @@ function registerNewsEventsToPool() {
           apply: function (st) {
             st.flags._liveStreamSeen = true;
             var earn = Random.int(400, 599);
-            st.resources.cash += earn;
+            st.resources.cash = (st.resources.cash || 0) + earn;
             StateManager.addMessage(
               "💼 日结¥" + earn.toLocaleString() + "。",
               "info",
@@ -13387,7 +13387,7 @@ function registerNewsEventsToPool() {
             st.resources.cash = Math.max(0, (st.resources.cash || 0) - 3000);
             st.flags._stallLocationSeen = true;
             var earn = Random.int(3000, 4999);
-            st.resources.cash += earn;
+            st.resources.cash = (st.resources.cash || 0) + earn;
             st.resources.totalEarned += earn;
             StateManager.addMessage(
               "💰 抢到位置！第一晚流水¥" + earn.toLocaleString() + "。",
@@ -13431,7 +13431,7 @@ function registerNewsEventsToPool() {
             st.resources.cash = Math.max(0, (st.resources.cash || 0) - 800);
             st.flags._templeEconomySeen = true;
             var earn = Random.int(1200, 1999);
-            st.resources.cash += earn;
+            st.resources.cash = (st.resources.cash || 0) + earn;
             StateManager.addMessage(
               "🩧 开光手串赚了¥" + earn.toLocaleString() + "。",
               "event",
@@ -13444,7 +13444,7 @@ function registerNewsEventsToPool() {
           apply: function (st) {
             st.flags._templeEconomySeen = true;
             var earn2 = Random.int(800, 1199);
-            st.resources.cash += earn2;
+            st.resources.cash = (st.resources.cash || 0) + earn2;
             StateManager.addMessage(
               "\u2615 三轮车咖啡摊赚了¥" + earn2.toLocaleString() + "。",
               "event",
@@ -13478,7 +13478,7 @@ function registerNewsEventsToPool() {
           apply: function (st) {
             st.flags._viralHarassmentSeen = true;
             if (Random.chance(0.5)) {
-              st.resources.cash += 2000;
+              st.resources.cash = (st.resources.cash || 0) + 2000;
               st.player.fame = Math.min(100, (st.player.fame || 0) + 8);
               StateManager.addMessage("📱 舆论反转！你涨了2,000粉。", "event");
             } else {
@@ -13527,7 +13527,7 @@ function registerNewsEventsToPool() {
           hint: "团结",
           apply: function (st) {
             st.flags._deliveryPriceSeen = true;
-            st.resources.cash -= 200;
+            st.resources.cash = Math.max(0, (st.resources.cash || 0) - 200);
             st.player.fame = Math.min(100, (st.player.fame || 0) + 4);
             StateManager.addMessage("😤 罢工三天，单价涨回¥7.0。", "event");
           },
@@ -13538,7 +13538,7 @@ function registerNewsEventsToPool() {
           apply: function (st) {
             st.flags._deliveryPriceSeen = true;
             var earn = Random.int(300, 599);
-            st.resources.cash += earn;
+            st.resources.cash = (st.resources.cash || 0) + earn;
             StateManager.addMessage(
               "\u26a1 跑腿高价单多赚¥" + earn.toLocaleString() + "。",
               "event",
@@ -13577,7 +13577,7 @@ function registerNewsEventsToPool() {
           hint: "赌反弹",
           apply: function (st) {
             st.flags._evUsedCarSeen = true;
-            st.resources.cash -= 30000;
+            st.resources.cash = Math.max(0, (st.resources.cash || 0) - 30000);
             StateManager.addMessage(
               "💰 花¥30,000收了一台。陈哥说你胆子真大。",
               "event",
@@ -13619,7 +13619,7 @@ function registerNewsEventsToPool() {
             st.resources.cash = Math.max(0, (st.resources.cash || 0) - 1000);
             st.flags._nearExpirySeen = true;
             var earn = Random.int(1500, 2299);
-            st.resources.cash += earn;
+            st.resources.cash = (st.resources.cash || 0) + earn;
             StateManager.addMessage(
               "📦 夜市赚了¥" + earn.toLocaleString() + "。",
               "event",
@@ -13630,7 +13630,7 @@ function registerNewsEventsToPool() {
           text: "🤝 长期合作",
           hint: "做大",
           apply: function (st) {
-            if (st.resources.cash < 5000) {
+            if ((st.resources.cash || 0) < 5000) {
               StateManager.addMessage(
                 "🤝 资金不足5000，做不了长期合作。",
                 "warning",
@@ -13638,7 +13638,7 @@ function registerNewsEventsToPool() {
               return;
             }
             st.flags._nearExpirySeen = true;
-            st.resources.cash -= 5000;
+            st.resources.cash = Math.max(0, (st.resources.cash || 0) - 5000);
             st.player.fame = Math.min(100, (st.player.fame || 0) + 3);
             StateManager.addMessage("🤝 成了临期食品专营户。", "event");
           },
@@ -13664,7 +13664,7 @@ function registerNewsEventsToPool() {
           hint: "每月¥900",
           apply: function (st) {
             st.flags._gigSocialSeen = true;
-            st.resources.cash -= 900;
+            st.resources.cash = Math.max(0, (st.resources.cash || 0) - 900);
             st.player.mental = Math.min(100, (st.player.mental || 20) + 5);
             StateManager.addMessage(
               "\u2705 每月扣¥900，但心里踏实了。",
@@ -13702,7 +13702,7 @@ function registerNewsEventsToPool() {
             st.flags._knowledgePaySeen = true;
             st.resources.cash = Math.max(0, (st.resources.cash || 0) - 9999);
             if (Random.chance(0.15)) {
-              st.resources.cash += 30000;
+              st.resources.cash = (st.resources.cash || 0) + 30000;
               st.player.intelligence = Math.min(
                 100,
                 (st.player.intelligence || 10) + 5,
@@ -13725,7 +13725,7 @@ function registerNewsEventsToPool() {
           hint: "便宜但慢",
           apply: function (st) {
             st.flags._knowledgePaySeen = true;
-            st.resources.cash -= 200;
+            st.resources.cash = Math.max(0, (st.resources.cash || 0) - 200);
             st.player.intelligence = Math.min(
               100,
               (st.player.intelligence || 10) + 2,
@@ -13774,7 +13774,7 @@ function registerNewsEventsToPool() {
           apply: function (st) {
             st.flags._shoppingFestSeen = true;
             st.flags._shoppingFestDeal = "stock";
-            st.resources.cash -= 3000;
+            st.resources.cash = Math.max(0, (st.resources.cash || 0) - 3000);
             st.flags._shoppingStockDay = st.player.day;
             StateManager.addMessage(
               "🎉 囤了一批货，等节后涨价卖。存货价值¥4200。",
@@ -13787,7 +13787,7 @@ function registerNewsEventsToPool() {
           hint: "¥280/天，消耗15行动力",
           apply: function (st) {
             st.flags._shoppingFestSeen = true;
-            st.resources.cash += 280;
+            st.resources.cash = (st.resources.cash || 0) + 280;
             // [全系统自洽修复] 域B A类#4: NaN守卫
             st.needs.fatigue = Math.min(100, (st.needs.fatigue || 0) + 15);
             st.needs.hunger = Math.max(0, (st.needs.hunger || 50) - 8);
@@ -13802,7 +13802,7 @@ function registerNewsEventsToPool() {
           hint: "犒劳自己一下就对了",
           apply: function (st) {
             st.flags._shoppingFestSeen = true;
-            st.resources.cash -= 200;
+            st.resources.cash = Math.max(0, (st.resources.cash || 0) - 200);
             st.needs.happiness = Math.min(100, st.needs.happiness + 15);
             StateManager.addMessage(
               "🛒 买了一套新衣服和一双鞋。好久没这么开心了。",
@@ -13826,9 +13826,9 @@ function registerNewsEventsToPool() {
           hint: "¥5000收¥30000债权，可能打水漂",
           apply: function (st) {
             st.flags._p2pCrashSeen = true;
-            if (st.resources.cash >= 5000) {
+            if ((st.resources.cash || 0) >= 5000) {
               st.flags._p2pInvested = true;
-              st.resources.cash -= 5000;
+              st.resources.cash = Math.max(0, (st.resources.cash || 0) - 5000);
               st.flags._p2pDebtDay = st.player.day;
               StateManager.addMessage(
                 "💸 你用¥5000收了一张¥30000的债权。也许能要回来，也许打了水漂。",
@@ -13888,7 +13888,7 @@ function registerNewsEventsToPool() {
             // [全系统自洽修复] 域B A类#4: NaN守卫
             st.needs.fatigue = Math.min(100, (st.needs.fatigue || 0) + 12);
             var earn = Random.int(200, 399);
-            st.resources.cash += earn;
+            st.resources.cash = (st.resources.cash || 0) + earn;
             st.needs.hygiene = Math.max(0, (st.needs.hygiene || 50) - 5);
             StateManager.addMessage(
               "♻️ 拆了一下午单车，卖了¥" + earn + "。手上全是铁锈味。",
@@ -13933,8 +13933,8 @@ function registerNewsEventsToPool() {
           hint: "¥3000收MacBook，转手可卖¥5000",
           apply: function (st) {
             st.flags._bigTechLayoffSeen = true;
-            if (st.resources.cash >= 3000) {
-              st.resources.cash -= 3000;
+            if ((st.resources.cash || 0) >= 3000) {
+              st.resources.cash = Math.max(0, (st.resources.cash || 0) - 3000);
               st.flags._layoffGear = true;
               st.flags._layoffGearDay = st.player.day;
               StateManager.addMessage(
@@ -13946,8 +13946,8 @@ function registerNewsEventsToPool() {
                 "💻 看了一圈好东西但买不起。有个大哥问你要不要他的显示器，¥200。",
                 "info",
               );
-              if (st.resources.cash >= 200) {
-                st.resources.cash -= 200;
+              if ((st.resources.cash || 0) >= 200) {
+                st.resources.cash = Math.max(0, (st.resources.cash || 0) - 200);
                 st.flags._layoffCheapGear = true;
                 StateManager.addMessage(
                   "🖥️ 捡漏了一台27寸显示器，自己用也行卖了也行。",
@@ -13975,7 +13975,7 @@ function registerNewsEventsToPool() {
           apply: function (st) {
             st.flags._bigTechLayoffSeen = true;
             st.needs.fatigue = Math.min(100, st.needs.fatigue + 8);
-            st.resources.cash += 180;
+            st.resources.cash = (st.resources.cash || 0) + 180;
             StateManager.addMessage(
               "🏪 你推着小车过去。被裁的人买盒饭不还价——他们没心情。",
               "info",
@@ -14045,8 +14045,8 @@ function registerNewsEventsToPool() {
           hint: "高风险投资，¥2000起",
           apply: function (st) {
             st.flags._chinaDelistSeen = true;
-            if (st.resources.cash >= 2000) {
-              st.resources.cash -= 2000;
+            if ((st.resources.cash || 0) >= 2000) {
+              st.resources.cash = Math.max(0, (st.resources.cash || 0) - 2000);
               st.flags._chinaDelistBought = true;
               st.flags._chinaDelistDay = st.player.day;
               StateManager.addMessage(
@@ -14112,8 +14112,8 @@ function registerNewsEventsToPool() {
           hint: "高风险投机，需要¥5万首付",
           apply: function (st) {
             st.flags._demolitionSeen = true;
-            if (st.resources.cash >= 50000) {
-              st.resources.cash -= 50000;
+            if ((st.resources.cash || 0) >= 50000) {
+              st.resources.cash = Math.max(0, (st.resources.cash || 0) - 50000);
               st.flags._demolitionGambled = true;
               st.flags._demolitionDay = st.player.day;
               StateManager.addMessage(
@@ -14133,8 +14133,8 @@ function registerNewsEventsToPool() {
           hint: "拆迁片区装修需求大",
           apply: function (st) {
             st.flags._demolitionSeen = true;
-            if (st.resources.cash >= 2000) {
-              st.resources.cash -= 2000;
+            if ((st.resources.cash || 0) >= 2000) {
+              st.resources.cash = Math.max(0, (st.resources.cash || 0) - 2000);
               st.flags._demolitionSupply = true;
               StateManager.addMessage(
                 "🏪 你进了水泥和瓷砖。拆迁户装修总得买东西吧。",
@@ -14169,8 +14169,8 @@ function registerNewsEventsToPool() {
           hint: "名声+2，用良心投票",
           apply: function (st) {
             st.flags._unfinishedSeen = true;
-            if (st.resources.cash >= 300) {
-              st.resources.cash -= 300;
+            if ((st.resources.cash || 0) >= 300) {
+              st.resources.cash = Math.max(0, (st.resources.cash || 0) - 300);
               st.player.fame = Math.min(100, (st.player.fame || 0) + 2);
               StateManager.addMessage(
                 "⚖️ 你捐了¥300。业主群把你拉进去发了三个鲜花表情。",
@@ -14229,7 +14229,7 @@ function registerNewsEventsToPool() {
             if (!st.relationships.aunt_wang) {
               st.relationships.aunt_wang = { affinity: 0, met: true };
             }
-            st.resources.cash += 100;
+            st.resources.cash = (st.resources.cash || 0) + 100;
             StateManager.addMessage(
               "🏠 你介绍了王婶的空房给工友。王婶给了你¥100红包。",
               "success",
@@ -14287,8 +14287,8 @@ function registerNewsEventsToPool() {
           hint: "政策利好，¥2000尝试",
           apply: function (st) {
             st.flags._purchaseRelaxSeen = true;
-            if (st.resources.cash >= 2000) {
-              st.resources.cash -= 2000;
+            if ((st.resources.cash || 0) >= 2000) {
+              st.resources.cash = Math.max(0, (st.resources.cash || 0) - 2000);
               st.flags._realEstateStockBought = true;
               st.flags._realEstateStockDay = st.player.day;
               StateManager.addMessage(
@@ -14389,8 +14389,8 @@ function registerNewsEventsToPool() {
           hint: "有些房东急出手，打七折",
           apply: function (st) {
             st.flags._schoolDistrictSeen = true;
-            if (st.resources.cash >= 100000) {
-              st.resources.cash -= 100000;
+            if ((st.resources.cash || 0) >= 100000) {
+              st.resources.cash = Math.max(0, (st.resources.cash || 0) - 100000);
               st.flags._schoolDistrictBought = true;
               st.flags._schoolDistrictDay = st.player.day;
               StateManager.addMessage(
@@ -14487,7 +14487,7 @@ function registerNewsEventsToPool() {
           apply: function (st) {
             st.flags._stockBoomSeen = true;
             var invest = Math.min(st.resources.cash, 10000);
-            st.resources.cash -= invest;
+            st.resources.cash = Math.max(0, (st.resources.cash || 0) - invest);
             st.flags._stockBoomInvested = invest;
             st.flags._stockBoomDay = st.player.day;
             StateManager.addMessage(
@@ -14502,7 +14502,7 @@ function registerNewsEventsToPool() {
           apply: function (st) {
             st.flags._stockBoomSeen = true;
             var invest = Math.min(Math.floor((st.resources.cash || 0) / 2), 5000);
-            st.resources.cash -= invest;
+            st.resources.cash = Math.max(0, (st.resources.cash || 0) - invest);
             st.flags._stockBoomHalfInvested = invest;
             st.flags._stockBoomDay = st.player.day;
             StateManager.addMessage(
@@ -14542,8 +14542,8 @@ function registerNewsEventsToPool() {
           hint: "¥2000起，可能暴富可能归零",
           apply: function (st) {
             st.flags._cryptoCycleSeen = true;
-            if (st.resources.cash >= 2000) {
-              st.resources.cash -= 2000;
+            if ((st.resources.cash || 0) >= 2000) {
+              st.resources.cash = Math.max(0, (st.resources.cash || 0) - 2000);
               st.flags._cryptoBought = true;
               st.flags._cryptoDay = st.player.day;
               StateManager.addMessage(
@@ -14563,7 +14563,7 @@ function registerNewsEventsToPool() {
           hint: "体力活，一天赚¥300",
           apply: function (st) {
             st.flags._cryptoCycleSeen = true;
-            st.resources.cash += 300;
+            st.resources.cash = (st.resources.cash || 0) + 300;
             st.needs.fatigue = Math.min(100, st.needs.fatigue + 12);
             StateManager.addMessage(
               "⚡ 装了一天显卡。老板问你要不要工资折成ETH——你没敢。",
@@ -14606,8 +14606,8 @@ function registerNewsEventsToPool() {
           hint: "买¥2000，可能会翻倍也可能血本无归",
           apply: function (st) {
             st.flags._retailVsWallSeen = true;
-            if (st.resources.cash >= 2000) {
-              st.resources.cash -= 2000;
+            if ((st.resources.cash || 0) >= 2000) {
+              st.resources.cash = Math.max(0, (st.resources.cash || 0) - 2000);
               st.flags._retailWsbBet = true;
               st.flags._retailWsbDay = st.player.day;
               StateManager.addMessage(
@@ -14627,8 +14627,8 @@ function registerNewsEventsToPool() {
           hint: "需要¥5000保证金，有大机构背书",
           apply: function (st) {
             st.flags._retailVsWallSeen = true;
-            if (st.resources.cash >= 5000) {
-              st.resources.cash -= 5000;
+            if ((st.resources.cash || 0) >= 5000) {
+              st.resources.cash = Math.max(0, (st.resources.cash || 0) - 5000);
               st.flags._retailShortSide = true;
               st.flags._retailShortDay = st.player.day;
               StateManager.addMessage(
@@ -14671,8 +14671,8 @@ function registerNewsEventsToPool() {
           hint: "¥10000起购，年化预期12%",
           apply: function (st) {
             st.flags._quantFundSeen = true;
-            if (st.resources.cash >= 10000) {
-              st.resources.cash -= 10000;
+            if ((st.resources.cash || 0) >= 10000) {
+              st.resources.cash = Math.max(0, (st.resources.cash || 0) - 10000);
               st.flags._quantFundBought = true;
               st.flags._quantFundDay = st.player.day;
               StateManager.addMessage(
@@ -14725,7 +14725,7 @@ function registerNewsEventsToPool() {
       story:
         "银行又降息了——一年期存款利率从1.5%降到1.0%。余额宝的收益跌到1.8%，创历史新低。你算了算：存¥10000在银行，一年利息¥100，够吃两顿沙县。房东说下个月涨房租¥150。",
       triggers: { minDay: 20, excludeFlags: ["_depositRateCutSeen"] },
-      conditions: function (st) { if (!st.resources || st.resources.cash < 10000) return false; return true; }, // [Layer3]
+      conditions: function (st) { if (!st.resources || (st.resources.cash || 0) < 10000) return false; return true; }, // [Layer3]
       choices: [
         {
           text: "📈 把钱从银行取出来投资",
@@ -14781,8 +14781,8 @@ function registerNewsEventsToPool() {
           hint: "¥5000换美元，保值但占用资金",
           apply: function (st) {
             st.flags._exchangeRateSeen = true;
-            if (st.resources.cash >= 5000) {
-              st.resources.cash -= 5000;
+            if ((st.resources.cash || 0) >= 5000) {
+              st.resources.cash = Math.max(0, (st.resources.cash || 0) - 5000);
               st.flags._usdHeld = true;
               st.flags._usdHeldDay = st.player.day;
               StateManager.addMessage(
@@ -14802,8 +14802,8 @@ function registerNewsEventsToPool() {
           hint: "进货成本增加前囤货",
           apply: function (st) {
             st.flags._exchangeRateSeen = true;
-            if (st.resources.cash >= 3000) {
-              st.resources.cash -= 3000;
+            if ((st.resources.cash || 0) >= 3000) {
+              st.resources.cash = Math.max(0, (st.resources.cash || 0) - 3000);
               st.flags._importGoodsStock = true;
               StateManager.addMessage(
                 "📦 你在涨价前进了一批硬盘和内存。过两周能卖个好价钱。",
@@ -14845,8 +14845,8 @@ function registerNewsEventsToPool() {
           hint: "¥5000收¥50000份额，可能血本无归也可能翻盘",
           apply: function (st) {
             st.flags._trustCrashSeen = true;
-            if (st.resources.cash >= 5000) {
-              st.resources.cash -= 5000;
+            if ((st.resources.cash || 0) >= 5000) {
+              st.resources.cash = Math.max(0, (st.resources.cash || 0) - 5000);
               st.flags._trustDebtBought = true;
               st.flags._trustDebtDay = st.player.day;
               StateManager.addMessage(
@@ -14903,7 +14903,7 @@ function registerNewsEventsToPool() {
             st.flags._pandemicSeen = true;
             st.flags._pandemicVolunteer = true;
             st.player.fame = Math.min(100, (st.player.fame || 0) + 8);
-            st.resources.cash += 300;
+            st.resources.cash = (st.resources.cash || 0) + 300;
             StateManager.addMessage(
               "😷 你穿了三天防护服。社区大妈给你竖了大拇指。累，但值。",
               "event",
@@ -14915,8 +14915,8 @@ function registerNewsEventsToPool() {
           hint: "倒卖防疫物资，收益高但有争议",
           apply: function (st) {
             st.flags._pandemicSeen = true;
-            if (st.resources.cash >= 2000) {
-              st.resources.cash -= 2000;
+            if ((st.resources.cash || 0) >= 2000) {
+              st.resources.cash = Math.max(0, (st.resources.cash || 0) - 2000);
               st.flags._pandemicProfiteer = true;
               StateManager.addMessage(
                 "📦 你进了一批口罩按进价3倍卖。赚钱了——但你妈知道了会怎么说？",
@@ -14935,7 +14935,7 @@ function registerNewsEventsToPool() {
           hint: "安全第一",
           apply: function (st) {
             st.flags._pandemicSeen = true;
-            st.resources.cash -= 200;
+            st.resources.cash = Math.max(0, (st.resources.cash || 0) - 200);
             StateManager.addMessage(
               "🏠 你买了半个月的粮食和水。待在屋里最安全。",
               "info",
@@ -14977,8 +14977,8 @@ function registerNewsEventsToPool() {
           hint: "¥2000，赌国运",
           apply: function (st) {
             st.flags._chipLocalSeen = true;
-            if (st.resources.cash >= 2000) {
-              st.resources.cash -= 2000;
+            if ((st.resources.cash || 0) >= 2000) {
+              st.resources.cash = Math.max(0, (st.resources.cash || 0) - 2000);
               st.flags._chipStockBought = true;
               st.flags._chipStockDay = st.player.day;
               StateManager.addMessage(
@@ -14998,8 +14998,8 @@ function registerNewsEventsToPool() {
           hint: "花笔学费学习实用技能",
           apply: function (st) {
             st.flags._chipLocalSeen = true;
-            if (st.resources.cash >= 500) {
-              st.resources.cash -= 500;
+            if ((st.resources.cash || 0) >= 500) {
+              st.resources.cash = Math.max(0, (st.resources.cash || 0) - 500);
               st.player.intelligence = Math.min(
                 100,
                 (st.player.intelligence || 10) + 3,
@@ -15037,8 +15037,8 @@ function registerNewsEventsToPool() {
           hint: "门槛低利润薄，¥1000进货",
           apply: function (st) {
             st.flags._preMadeFoodSeen = true;
-            if (st.resources.cash >= 1000) {
-              st.resources.cash -= 1000;
+            if ((st.resources.cash || 0) >= 1000) {
+              st.resources.cash = Math.max(0, (st.resources.cash || 0) - 1000);
               st.flags._premadeStock = true;
               StateManager.addMessage(
                 "📦 你进了200包鱼香肉丝料理包。¥3.5进价卖¥6——薄利多销。",
@@ -15104,8 +15104,8 @@ function registerNewsEventsToPool() {
           hint: "薄利多销，¥2000进货",
           apply: function (st) {
             st.flags._consumptionDownSeen = true;
-            if (st.resources.cash >= 2000) {
-              st.resources.cash -= 2000;
+            if ((st.resources.cash || 0) >= 2000) {
+              st.resources.cash = Math.max(0, (st.resources.cash || 0) - 2000);
               st.flags._lowPriceRoute = true;
               StateManager.addMessage(
                 "📦 你进了便宜货。利润薄但走量大——¥10一件一天能卖30件。",
@@ -15137,7 +15137,7 @@ function registerNewsEventsToPool() {
           hint: "跑腿一天赚¥150",
           apply: function (st) {
             st.flags._consumptionDownSeen = true;
-            st.resources.cash += 150;
+            st.resources.cash = (st.resources.cash || 0) + 150;
             st.needs.fatigue = Math.min(100, st.needs.fatigue + 10);
             StateManager.addMessage(
               "🛵 你跑了一天配送。9.9包邮的商品，配送费¥2.5——跑得腿抽筋。",
@@ -15173,8 +15173,8 @@ function registerNewsEventsToPool() {
           hint: "¥1500进货，在夜市卖",
           apply: function (st) {
             st.flags._goingGlobalSeen = true;
-            if (st.resources.cash >= 1500) {
-              st.resources.cash -= 1500;
+            if ((st.resources.cash || 0) >= 1500) {
+              st.resources.cash = Math.max(0, (st.resources.cash || 0) - 1500);
               st.flags._sheinFlipping = true;
               StateManager.addMessage(
                 "📦 你进了一批SHEIN尾单。质量不错，夜市上一晚上卖了¥400。",
@@ -15193,8 +15193,8 @@ function registerNewsEventsToPool() {
           hint: "花钱买教材，为将来铺路",
           apply: function (st) {
             st.flags._goingGlobalSeen = true;
-            if (st.resources.cash >= 300) {
-              st.resources.cash -= 300;
+            if ((st.resources.cash || 0) >= 300) {
+              st.resources.cash = Math.max(0, (st.resources.cash || 0) - 300);
               st.player.intelligence = Math.min(
                 100,
                 (st.player.intelligence || 10) + 2,
@@ -15222,8 +15222,8 @@ function registerNewsEventsToPool() {
           hint: "¥500扫货，转手能卖¥1000",
           apply: function (st) {
             st.flags._retailCollapseSeen = true;
-            if (st.resources.cash >= 500) {
-              st.resources.cash -= 500;
+            if ((st.resources.cash || 0) >= 500) {
+              st.resources.cash = Math.max(0, (st.resources.cash || 0) - 500);
               st.flags._clearanceStock = true;
               StateManager.addMessage(
                 "🛒 你扫了一堆日用品——洗衣液¥5一瓶，纸巾¥2一条。赚了。",
@@ -15242,7 +15242,7 @@ function registerNewsEventsToPool() {
           hint: "投资固定资产，¥50一个货架",
           apply: function (st) {
             st.flags._retailCollapseSeen = true;
-            st.resources.cash -= 50;
+            st.resources.cash = Math.max(0, (st.resources.cash || 0) - 50);
             st.flags._stallShelf = true;
             StateManager.addMessage(
               "🛋️ 你买了一个超市货架。以后摆摊东西终于可以摆放整齐了。",
@@ -15289,8 +15289,8 @@ function registerNewsEventsToPool() {
           hint: "电动汽车越多，充电桩越赚",
           apply: function (st) {
             st.flags._evPriceWarSeen = true;
-            if (st.resources.cash >= 2000) {
-              st.resources.cash -= 2000;
+            if ((st.resources.cash || 0) >= 2000) {
+              st.resources.cash = Math.max(0, (st.resources.cash || 0) - 2000);
               st.flags._evChargingStock = true;
               st.flags._evChargingStockDay = st.player.day;
               StateManager.addMessage(
@@ -15333,8 +15333,8 @@ function registerNewsEventsToPool() {
           hint: "花¥2000办证，以后合法经营",
           apply: function (st) {
             st.flags._vendorCrackdownSeen = true;
-            if (st.resources.cash >= 2000) {
-              st.resources.cash -= 2000;
+            if ((st.resources.cash || 0) >= 2000) {
+              st.resources.cash = Math.max(0, (st.resources.cash || 0) - 2000);
               st.flags._legalStallPermit = true;
               StateManager.addMessage(
                 "🏪 你办了摊位证。贵，但再也不用躲城管了。",
@@ -15366,7 +15366,7 @@ function registerNewsEventsToPool() {
           apply: function (st) {
             st.flags._vendorCrackdownSeen = true;
             st.player.fame = Math.min(100, (st.player.fame || 0) + 1);
-            st.resources.cash += 100;
+            st.resources.cash = (st.resources.cash || 0) + 100;
             StateManager.addMessage(
               "📢 你帮老赵要回了三轮车。他千恩万谢。",
               "success",
@@ -15444,8 +15444,8 @@ function registerNewsEventsToPool() {
           apply: function (st) {
             st.flags._socialSecuritySeen = true;
             st.flags._paySocialSecurity = true;
-            if (st.resources.cash >= 800) {
-              st.resources.cash -= 800;
+            if ((st.resources.cash || 0) >= 800) {
+              st.resources.cash = Math.max(0, (st.resources.cash || 0) - 800);
               StateManager.addMessage(
                 "💰 你交了¥800社保。心疼——但想到老了至少有个依靠。",
                 "event",
@@ -15499,7 +15499,7 @@ function registerNewsEventsToPool() {
           apply: function (st) {
             st.flags._garbageClassSeen = true;
             st.player.fame = Math.min(100, (st.player.fame || 0) + 3);
-            st.resources.cash += 50;
+            st.resources.cash = (st.resources.cash || 0) + 50;
             StateManager.addMessage(
               "👨‍🏫 你穿上了志愿者马甲。站了一天——比打工轻松。",
               "info",
@@ -15512,7 +15512,7 @@ function registerNewsEventsToPool() {
           apply: function (st) {
             st.flags._garbageClassSeen = true;
             st.needs.fatigue = Math.min(100, st.needs.fatigue + 5);
-            st.resources.cash += 60;
+            st.resources.cash = (st.resources.cash || 0) + 60;
             StateManager.addMessage(
               "🚶 你帮几户老年人扔了垃圾。¥5不多，但积少成多。",
               "info",
@@ -15555,13 +15555,13 @@ function registerNewsEventsToPool() {
             if (luck < 0.15) {
               st.flags._shortVideoWentViral = true;
               st.player.fame = Math.min(100, (st.player.fame || 0) + 20);
-              st.resources.cash += 5000;
+              st.resources.cash = (st.resources.cash || 0) + 5000;
               StateManager.addMessage(
                 "🎥 你拍的一条「城中村早餐摊」突然爆了！播放量200万！后台私信炸了。",
                 "event",
               );
             } else if (luck < 0.5) {
-              st.resources.cash += 200;
+              st.resources.cash = (st.resources.cash || 0) + 200;
               st.needs.fatigue = Math.min(100, st.needs.fatigue + 10);
               StateManager.addMessage(
                 "🎥 你坚持发了一个月。有了500个粉丝——不多，但有人在看。",
@@ -15581,8 +15581,8 @@ function registerNewsEventsToPool() {
           hint: "做供应链赚钱稳",
           apply: function (st) {
             st.flags._shortVideoSeen = true;
-            if (st.resources.cash >= 1000) {
-              st.resources.cash -= 1000;
+            if ((st.resources.cash || 0) >= 1000) {
+              st.resources.cash = Math.max(0, (st.resources.cash || 0) - 1000);
               st.flags._influencerSupply = true;
               StateManager.addMessage(
                 "📦 你跟阿珍谈了合作——她卖货你供货。靠谱的生意。",
@@ -15629,8 +15629,8 @@ function registerNewsEventsToPool() {
           hint: "花点钱换一个全新的方向",
           apply: function (st) {
             st.flags._examCompetitionSeen = true;
-            if (st.resources.cash >= 300) {
-              st.resources.cash -= 300;
+            if ((st.resources.cash || 0) >= 300) {
+              st.resources.cash = Math.max(0, (st.resources.cash || 0) - 300);
               st.player.intelligence = Math.min(
                 100,
                 (st.player.intelligence || 10) + 2,
@@ -15653,8 +15653,8 @@ function registerNewsEventsToPool() {
           hint: "考试期间需求暴涨",
           apply: function (st) {
             st.flags._examCompetitionSeen = true;
-            if (st.resources.cash >= 3000) {
-              st.resources.cash -= 3000;
+            if ((st.resources.cash || 0) >= 3000) {
+              st.resources.cash = Math.max(0, (st.resources.cash || 0) - 3000);
               st.flags._examRentalBiz = true;
               StateManager.addMessage(
                 "🏠 你租了一间房做日租。考试那几天赚了¥2000。",
@@ -15673,7 +15673,7 @@ function registerNewsEventsToPool() {
           hint: "日结¥120",
           apply: function (st) {
             st.flags._examCompetitionSeen = true;
-            st.resources.cash += 120;
+            st.resources.cash = (st.resources.cash || 0) + 120;
             st.needs.fatigue = Math.min(100, st.needs.fatigue + 5);
             StateManager.addMessage(
               "🏪 你发了一天传单。每一个接过传单的人脸上都写着焦虑。",
@@ -15721,7 +15721,7 @@ function registerNewsEventsToPool() {
           apply: function (st) {
             st.flags._healthScamSeen = true;
             st.flags._scamSalesman = true;
-            st.resources.cash += 500;
+            st.resources.cash = (st.resources.cash || 0) + 500;
             st.player.fame = Math.max(0, (st.player.fame || 0) - 3);
             StateManager.addMessage(
               "💰 你卖出了一床被子。¥500提成拿到手——但那老太太说「小伙子你是个好人」的时候你不敢看她的眼睛。",
@@ -15757,17 +15757,17 @@ function registerNewsEventsToPool() {
           hint: "¥5000投入，可能血本无归",
           apply: function (st) {
             st.flags._lastBatonSeen = true;
-            if (st.resources.cash >= 5000) {
-              st.resources.cash -= 5000;
+            if ((st.resources.cash || 0) >= 5000) {
+              st.resources.cash = Math.max(0, (st.resources.cash || 0) - 5000);
               var luck = Random.float(0, 1);
               if (luck < 0.25) {
-                st.resources.cash += 12000;
+                st.resources.cash = (st.resources.cash || 0) + 12000;
                 StateManager.addMessage(
                   "生意火爆赚了¥12000！但满街模仿者让你不安。",
                   "event",
                 );
               } else if (luck < 0.6) {
-                st.resources.cash += 2000;
+                st.resources.cash = (st.resources.cash || 0) + 2000;
                 StateManager.addMessage(
                   "不赚不亏。风口来得快去得也快。",
                   "info",
@@ -15788,9 +15788,9 @@ function registerNewsEventsToPool() {
           hint: "赚快钱，¥2000进货",
           apply: function (st) {
             st.flags._lastBatonSeen = true;
-            if (st.resources.cash >= 2000) {
-              st.resources.cash -= 2000;
-              st.resources.cash += 3500;
+            if ((st.resources.cash || 0) >= 2000) {
+              st.resources.cash = Math.max(0, (st.resources.cash || 0) - 2000);
+              st.resources.cash = (st.resources.cash || 0) + 3500;
               StateManager.addMessage("供了三天货，赚了¥1500。", "success");
             } else {
               StateManager.addMessage("想供货连本钱都没有。", "info");
@@ -15829,11 +15829,11 @@ function registerNewsEventsToPool() {
           hint: "投¥10万，50%可能翻盘",
           apply: function (st) {
             st.flags._sunkCostSeen = true;
-            if (st.resources.cash >= 100000) {
-              st.resources.cash -= 100000;
+            if ((st.resources.cash || 0) >= 100000) {
+              st.resources.cash = Math.max(0, (st.resources.cash || 0) - 100000);
               var luck = Random.float(0, 1);
               if (luck < 0.45) {
-                st.resources.cash += 300000;
+                st.resources.cash = (st.resources.cash || 0) + 300000;
                 StateManager.addMessage(
                   "赌对了！项目被收购，拿回¥30万。",
                   "event",
@@ -15869,7 +15869,7 @@ function registerNewsEventsToPool() {
             st.flags._sunkCostSeen = true;
             if ((st.player.fame || 0) >= 30) {
               st.flags._sunkCostBailed = true;
-              st.resources.cash -= 5000;
+              st.resources.cash = Math.max(0, (st.resources.cash || 0) - 5000);
               StateManager.addMessage(
                 "通过关系找到接盘侠。亏了¥5万中介费——比全亏好。",
                 "event",
@@ -15896,8 +15896,8 @@ function registerNewsEventsToPool() {
           hint: "¥20000办牌照，合法经营",
           apply: function (st) {
             st.flags._grayToLegitSeen = true;
-            if (st.resources.cash >= 20000) {
-              st.resources.cash -= 20000;
+            if ((st.resources.cash || 0) >= 20000) {
+              st.resources.cash = Math.max(0, (st.resources.cash || 0) - 20000);
               st.flags._grayLegitBiz = true;
               st.player.fame = Math.min(100, (st.player.fame || 0) + 10);
               StateManager.addMessage(
@@ -15951,7 +15951,7 @@ function registerNewsEventsToPool() {
           st.player.phase === "street" &&
           st.player.day >= 50 &&
           !st.flags._classRollbackSeen &&
-          (st.flags._demolitionGambled || st.resources.cash >= 50000)
+          (st.flags._demolitionGambled || (st.resources.cash || 0) >= 50000)
         );
       },
       choices: [
@@ -15961,7 +15961,7 @@ function registerNewsEventsToPool() {
           apply: function (st) {
             st.flags._classRollbackSeen = true;
             st.flags._rollbackBoughtHouse = true;
-            st.resources.cash -= 1500000;
+            st.resources.cash = Math.max(0, (st.resources.cash || 0) - 1500000);
             if (st.housing) st.housing.tier = Math.max(st.housing.tier || 0, 5);
             StateManager.addMessage(
               "买了市中心两居室。月供¥5000——不叫财富自由，叫换种活法。",
@@ -15975,7 +15975,7 @@ function registerNewsEventsToPool() {
           apply: function (st) {
             st.flags._classRollbackSeen = true;
             st.flags._rollbackSaved = true;
-            st.resources.cash -= 2000000;
+            st.resources.cash = Math.max(0, (st.resources.cash || 0) - 2000000);
             st.flags._rollbackDay = st.player.day;
             StateManager.addMessage(
               "存了¥200万。月利息¥5800——比打工强，但越来越不值钱。",
@@ -15989,7 +15989,7 @@ function registerNewsEventsToPool() {
           apply: function (st) {
             st.flags._classRollbackSeen = true;
             st.flags._rollbackStartedBiz = true;
-            st.resources.cash -= 500000;
+            st.resources.cash = Math.max(0, (st.resources.cash || 0) - 500000);
             st.player.intelligence = Math.min(
               100,
               (st.player.intelligence || 10) + 10,
@@ -16006,7 +16006,7 @@ function registerNewsEventsToPool() {
           apply: function (st) {
             st.flags._classRollbackSeen = true;
             st.flags._rollbackBurned = true;
-            st.resources.cash -= 50000;
+            st.resources.cash = Math.max(0, (st.resources.cash || 0) - 50000);
             st.needs.happiness = Math.min(100, st.needs.happiness + 25);
             StateManager.addMessage(
               "租奔驰请全城喝了三天。卡里少了¥50000——最快乐72小时。",
@@ -16061,7 +16061,7 @@ function registerNewsEventsToPool() {
           hint: "多一事不如少一事",
           apply: function (st) {
             st.flags._roommateConflictSeen = true;
-            st.resources.cash -= 15;
+            st.resources.cash = Math.max(0, (st.resources.cash || 0) - 15);
             st.needs.happiness = Math.max(0, st.needs.happiness - 3);
             StateManager.addMessage(
               "😶 你默默去楼下超市买了新的。花¥15买个清净。",
@@ -16149,7 +16149,7 @@ function registerNewsEventsToPool() {
             st.needs.happiness = Math.min(100, st.needs.happiness + 4);
             st.player.mental = Math.min(100, (st.player.mental || 50) + 2);
             if (Random.chance(0.3)) {
-              st.resources.cash += 20;
+              st.resources.cash = (st.resources.cash || 0) + 20;
               StateManager.addMessage(
                 "☔ 聊开了！他原来是个小包工头，给了你一张名片说明天来找他干活。¥20预付款。",
                 "success",
@@ -16253,7 +16253,7 @@ function registerNewsEventsToPool() {
           hint: "够吃好几天",
           apply: function (st) {
             st.flags._clearanceBargainSeen = true;
-            st.resources.cash -= 10;
+            st.resources.cash = Math.max(0, (st.resources.cash || 0) - 10);
             st.needs.hunger = Math.min(100, st.needs.hunger + 15);
             st.needs.happiness = Math.min(100, st.needs.happiness + 5);
             StateManager.addMessage(
@@ -16267,7 +16267,7 @@ function registerNewsEventsToPool() {
           hint: "省钱但大姐脸色不好",
           apply: function (st) {
             st.flags._clearanceBargainSeen = true;
-            st.resources.cash -= 8;
+            st.resources.cash = Math.max(0, (st.resources.cash || 0) - 8);
             st.needs.hunger = Math.min(100, st.needs.hunger + 15);
             st.needs.happiness = Math.max(0, st.needs.happiness - 1);
             StateManager.addMessage(
@@ -16338,14 +16338,14 @@ function registerNewsEventsToPool() {
           hint: "社交放松",
           apply: function (st) {
             st.flags._age30Reflection = true;
-            if (st.resources.cash < 50) {
+            if ((st.resources.cash || 0) < 50) {
               StateManager.addMessage(
                 "🍺 你想请客，但摸了摸口袋——连顿像样的饭都请不起。只好说改天。",
                 "warning",
               );
               return;
             }
-            st.resources.cash -= 50;
+            st.resources.cash = Math.max(0, (st.resources.cash || 0) - 50);
             st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 12);
             st.player.fame = Math.min(100, (st.player.fame || 0) + 2);
             StateManager.addMessage(
@@ -16391,14 +16391,14 @@ function registerNewsEventsToPool() {
                 "warning",
               );
             } else {
-              st.resources.cash += loan;
+              st.resources.cash = (st.resources.cash || 0) + loan;
               StateManager.addMessage(
                 "💰 你借了¥" +
                   loan +
                   "。没想到下个月真还了，还多给了¥200利息。算你运气好。",
                 "success",
               );
-              st.resources.cash += 200;
+              st.resources.cash = (st.resources.cash || 0) + 200;
             }
           },
         },
@@ -31911,7 +31911,7 @@ if (typeof window !== "undefined") {
           hint: "花钱省事",
           cost: 100,
           apply: function (st) {
-            st.resources.cash -= 100;
+            st.resources.cash = Math.max(0, (st.resources.cash || 0) - 100);
             st.relationships.aunt_wang.affinity = Math.min(
               100,
               (st.relationships.aunt_wang.affinity || 0) + 5,
@@ -31959,7 +31959,7 @@ if (typeof window !== "undefined") {
           hint: "体力消耗大，但收入翻倍",
           apply: function (st) {
             var bonus = Random.int(80, 200);
-            st.resources.cash += bonus;
+            st.resources.cash = (st.resources.cash || 0) + bonus;
             st.needs.fatigue = Math.min(100, (st.needs.fatigue || 0) + 20);
             st.needs.hunger = Math.max(0, (st.needs.hunger || 0) - 15);
             StateManager.addMessage(
@@ -32022,7 +32022,7 @@ if (typeof window !== "undefined") {
             st.needs.fatigue = Math.min(100, (st.needs.fatigue || 0) + 12);
             if (Random.chance(0.5)) {
               var tip = Random.int(20, 60);
-              st.resources.cash += tip;
+              st.resources.cash = (st.resources.cash || 0) + tip;
               StateManager.addMessage(
                 "🛠️ 你试了试别的行当，赚了¥" + tip + "，似乎能糊口。心智+3。",
                 "success",
@@ -32114,7 +32114,7 @@ if (typeof window !== "undefined") {
             var windfall = Math.round(
               base * scale * (0.8 + Random.float(0, 0.6)),
             );
-            st.resources.cash += windfall;
+            st.resources.cash = (st.resources.cash || 0) + windfall;
             st.resources.totalEarned =
               (st.resources.totalEarned || 0) + windfall;
             company.reputation = Math.min(100, (company.reputation || 0) + 4);
@@ -32133,7 +32133,7 @@ if (typeof window !== "undefined") {
           hint: "稳健：红利较少但无风险",
           apply: function (st) {
             var windfall = Math.round(500 * (0.8 + Random.float(0, 0.4)));
-            st.resources.cash += windfall;
+            st.resources.cash = (st.resources.cash || 0) + windfall;
             st.resources.totalEarned =
               (st.resources.totalEarned || 0) + windfall;
             StateManager.addMessage(
@@ -32184,11 +32184,11 @@ if (typeof window !== "undefined") {
           hint: "高风险高回报",
           cost: 50,
           apply: function (st) {
-            st.resources.cash -= 50;
+            st.resources.cash = Math.max(0, (st.resources.cash || 0) - 50);
             var result = Random.int(0, 3);
             if (result === 0) {
               var profit = Random.int(100, 500);
-              st.resources.cash += profit;
+              st.resources.cash = (st.resources.cash || 0) + profit;
               StateManager.addMessage(
                 `💰 抄底成功！你低买高卖赚了¥${profit}！`,
                 "success",
@@ -32250,7 +32250,7 @@ if (typeof window !== "undefined") {
           apply: function (st) {
             st.flags._foundATMCash = true;
             var amount = Random.int(300, 800);
-            st.resources.cash += amount;
+            st.resources.cash = (st.resources.cash || 0) + amount;
             st.needs.happiness = Math.max(0, (st.needs.happiness || 0) - 10);
             st.flags._moralScore = (st.flags._moralScore || 0) - 3;
             st.flags._keptFoundMoney = true;
@@ -32288,7 +32288,7 @@ if (typeof window !== "undefined") {
               "📸 你拍了照发到业主群。半天后有人来认领，给了你¥50感谢费。心情+5。",
               "success",
             );
-            st.resources.cash += 50;
+            st.resources.cash = (st.resources.cash || 0) + 50;
           },
         },
       ],
@@ -32314,7 +32314,7 @@ if (typeof window !== "undefined") {
           apply: function (st) {
             var profit = Random.int(150, 400);
             var zhouShare = Math.floor(profit * 0.3);
-            st.resources.cash += profit - zhouShare;
+            st.resources.cash = (st.resources.cash || 0) + profit - zhouShare;
             st.needs.fatigue = Math.min(100, (st.needs.fatigue || 0) + 25);
             st.relationships.old_zhou.affinity = Math.min(
               100,
@@ -32335,9 +32335,9 @@ if (typeof window !== "undefined") {
           hint: "花钱但省力",
           cost: 100,
           apply: function (st) {
-            st.resources.cash -= 100;
+            st.resources.cash = Math.max(0, (st.resources.cash || 0) - 100);
             var profit = Random.int(100, 250);
-            st.resources.cash += profit;
+            st.resources.cash = (st.resources.cash || 0) + profit;
             st.relationships.old_zhou.affinity = Math.min(
               100,
               (st.relationships.old_zhou.affinity || 0) + 5,
@@ -32397,7 +32397,7 @@ if (typeof window !== "undefined") {
             var int = st.player.intelligence || 0;
             if (int >= 40) {
               var profit = Random.int(150, 350);
-              st.resources.cash += profit;
+              st.resources.cash = (st.resources.cash || 0) + profit;
               st.resources.totalEarned =
                 (st.resources.totalEarned || 0) + profit;
               st.player.mental = Math.min(100, (st.player.mental || 0) + 2);
@@ -32409,7 +32409,7 @@ if (typeof window !== "undefined") {
               );
             } else {
               var small = Random.int(40, 100);
-              st.resources.cash += small;
+              st.resources.cash = (st.resources.cash || 0) + small;
               StateManager.addMessage(
                 "🧠 你凭直觉买了几样便宜货，小赚¥" +
                   small +
@@ -32466,14 +32466,14 @@ if (typeof window !== "undefined") {
           text: "🍜 听劝，吃碗面（¥15）",
           hint: "恢复饥饿，健康+3",
           apply: function (st) {
-            if (st.resources.cash < 15) {
+            if ((st.resources.cash || 0) < 15) {
               StateManager.addMessage(
                 "😅 你翻了翻口袋，连¥15的面钱都掏不出来……只好咽了咽口水。",
                 "warning",
               );
               return;
             }
-            st.resources.cash -= 15;
+            st.resources.cash = Math.max(0, (st.resources.cash || 0) - 15);
             st.needs.hunger = Math.min(100, (st.needs.hunger || 0) + 35);
             st.status.health = Math.min(100, (st.status.health || 0) + 3);
             if (st.flags._habits) st.flags._habits.lowHungerStreak = 0;
@@ -32487,14 +32487,14 @@ if (typeof window !== "undefined") {
           text: "💊 买点止晕药扛过去（¥8）",
           hint: "临时缓解，不治本",
           apply: function (st) {
-            if (st.resources.cash < 8) {
+            if ((st.resources.cash || 0) < 8) {
               StateManager.addMessage(
                 "😵 你连药都买不起，只好在路边蹲着等这阵晕过去。",
                 "warning",
               );
               return;
             }
-            st.resources.cash -= 8;
+            st.resources.cash = Math.max(0, (st.resources.cash || 0) - 8);
             st.needs.hunger = Math.max(0, (st.needs.hunger || 0) - 5);
             StateManager.addMessage(
               "💊 止晕药压住了症状，但胃还在隐隐作痛。这只是缓兵之计。",
@@ -32617,8 +32617,8 @@ if (typeof window !== "undefined") {
           apply: function (st) {
             st.flags._veteranWelcomeSeen = true;
             var cost = 15;
-            if (st.resources.cash >= cost) {
-              st.resources.cash -= cost;
+            if ((st.resources.cash || 0) >= cost) {
+              st.resources.cash = Math.max(0, (st.resources.cash || 0) - cost);
               st.player.fame = Math.min(100, (st.player.fame || 0) + 6);
               st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 8);
               StateManager.addMessage(
@@ -32688,7 +32688,7 @@ if (typeof window !== "undefined") {
             st.flags._walletCameraSeen = true;
             st.flags._walletConfessed = true;
             var refund = Math.min(st.resources.cash, 200);
-            st.resources.cash -= refund;
+            st.resources.cash = Math.max(0, (st.resources.cash || 0) - refund);
             st.player.morality = Math.min(100, (st.player.morality || 50) + 8);
             st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 10);
             StateManager.addMessage(
@@ -32769,12 +32769,12 @@ if (typeof window !== "undefined") {
           text: "💧 买冰水防暑，继续干（¥15）",
           hint: "健康+3，疲劳+5",
           apply: function (st) {
-            if (st.resources.cash >= 15) {
-              st.resources.cash -= 15;
+            if ((st.resources.cash || 0) >= 15) {
+              st.resources.cash = Math.max(0, (st.resources.cash || 0) - 15);
               st.status.health = Math.min(100, (st.status.health || 0) + 3);
               st.needs.fatigue = Math.min(100, (st.needs.fatigue || 0) + 5);
               var pay = st.employment.currentJob.payCalc(st);
-              st.resources.cash += Math.floor(pay * 0.8);
+              st.resources.cash = (st.resources.cash || 0) + Math.floor(pay * 0.8);
               st.resources.totalEarned =
                 (st.resources.totalEarned || 0) + Math.floor(pay * 0.8);
               StateManager.addMessage(
@@ -32796,7 +32796,7 @@ if (typeof window !== "undefined") {
           hint: "收入×0.6，但健康+5",
           apply: function (st) {
             var pay = st.employment.currentJob.payCalc(st);
-            st.resources.cash += Math.floor(pay * 0.6);
+            st.resources.cash = (st.resources.cash || 0) + Math.floor(pay * 0.6);
             st.resources.totalEarned =
               (st.resources.totalEarned || 0) + Math.floor(pay * 0.6);
             st.status.health = Math.min(100, (st.status.health || 0) + 5);
@@ -32861,7 +32861,7 @@ if (typeof window !== "undefined") {
           apply: function (st) {
             st.resources.cash = Math.max(0, (st.resources.cash || 0) - 50); // [全系统自洽修复] 域B 修复:cost扣款缺失
             var profit = Random.int(80, 180);
-            st.resources.cash += profit;
+            st.resources.cash = (st.resources.cash || 0) + profit;
             st.resources.totalEarned = (st.resources.totalEarned || 0) + profit;
             if (!st.relationships.old_zhou.affinity)
               st.relationships.old_zhou.affinity = 0;
@@ -32949,7 +32949,7 @@ if (typeof window !== "undefined") {
               ? st.employment.currentJob.payCalc(st)
               : 100;
             var bonus = Math.floor(pay * 1.5);
-            st.resources.cash += bonus;
+            st.resources.cash = (st.resources.cash || 0) + bonus;
             st.resources.totalEarned = (st.resources.totalEarned || 0) + bonus;
             st.needs.fatigue = Math.min(100, (st.needs.fatigue || 0) + 20);
             if (Random.chance(0.3)) {
@@ -32990,7 +32990,7 @@ if (typeof window !== "undefined") {
               (st.relationships.boss_li.affinity || 0) + 5,
             );
             var indoorPay = Random.int(80, 150);
-            st.resources.cash += indoorPay;
+            st.resources.cash = (st.resources.cash || 0) + indoorPay;
             st.resources.totalEarned =
               (st.resources.totalEarned || 0) + indoorPay;
             StateManager.addMessage(
@@ -33041,7 +33041,7 @@ if (typeof window !== "undefined") {
               st.flags._factoryRepairMan = true;
               st.skills.repair.xp += 50;
               var bonus = Random.int(200, 400);
-              st.resources.cash += bonus;
+              st.resources.cash = (st.resources.cash || 0) + bonus;
               st.resources.totalEarned =
                 (st.resources.totalEarned || 0) + bonus;
               StateManager.addMessage(
@@ -33117,7 +33117,7 @@ if (typeof window !== "undefined") {
           hint: "健康+5，雾霾伤害减免",
           cost: 10,
           apply: function (st) {
-            st.resources.cash -= 10;
+            st.resources.cash = Math.max(0, (st.resources.cash || 0) - 10);
             st.status.health = Math.min(100, (st.status.health || 0) + 5);
             StateManager.addMessage(
               "😷 你买了口罩，虽然贵了点，但雾霾天保护自己很重要。健康+5。",
@@ -33305,7 +33305,7 @@ if (typeof window !== "undefined") {
             var compensation = Math.round(
               (st.career.currentJob.salary || 5000) * 1.5,
             );
-            st.resources.cash += compensation;
+            st.resources.cash = (st.resources.cash || 0) + compensation;
             st.career.history.push({
               day: st.player.day,
               event:
@@ -33388,12 +33388,12 @@ if (typeof window !== "undefined") {
           text: "📉 趁低吸纳，逆向投资",
           hint: "高风险高回报",
           apply: function (st) {
-            if (st.resources.cash < 10000) {
+            if ((st.resources.cash || 0) < 10000) {
               StateManager.addMessage("你的现金太少，不适合逆向投资。", "hint");
               return;
             }
             var invest = Math.min(st.resources.cash * 0.3, 50000);
-            st.resources.cash -= invest;
+            st.resources.cash = Math.max(0, (st.resources.cash || 0) - invest);
             st._pendingDownturnReturn = {
               amount: invest,
               day: st.player.day + 180,
@@ -33426,7 +33426,7 @@ if (typeof window !== "undefined") {
           hint: "交税保平安",
           apply: function (st) {
             var tax = Math.round(st.resources.cash * 0.08);
-            st.resources.cash -= tax;
+            st.resources.cash = Math.max(0, (st.resources.cash || 0) - tax);
             StateManager.addMessage(
               "📋 你主动申报并缴纳了¥" +
                 tax.toLocaleString() +
@@ -33439,14 +33439,14 @@ if (typeof window !== "undefined") {
           text: "🏦 咨询会计师做税务规划",
           hint: "花费¥10,000，30%概率审计更严",
           apply: function (st) {
-            if (st.resources.cash < 10000) {
+            if ((st.resources.cash || 0) < 10000) {
               StateManager.addMessage(
                 "会计师咨询费¥10,000，你付不起。",
                 "warning",
               );
               return;
             }
-            st.resources.cash -= 10000;
+            st.resources.cash = Math.max(0, (st.resources.cash || 0) - 10000);
             // v3.1：30% 概率审计更严，补税至6%（而非4%）
             var rate =
               Random && Random.float
@@ -33455,7 +33455,7 @@ if (typeof window !== "undefined") {
                   : 0.04
                 : 0.04;
             var tax = Math.round(st.resources.cash * rate);
-            st.resources.cash -= tax;
+            st.resources.cash = Math.max(0, (st.resources.cash || 0) - tax);
             StateManager.addMessage(
               "👔 会计师帮你做了税务规划" +
                 (rate > 0.04 ? "，但遇到严格审计" : "") +
@@ -33492,7 +33492,7 @@ if (typeof window !== "undefined") {
         return (
           st.weather &&
           (st.weather.current === "rainy" || st.weather.current === "stormy") &&
-          st.resources.cash < 10000
+          (st.resources.cash || 0) < 10000
         );
       },
       probability: 0.03,
@@ -33505,7 +33505,7 @@ if (typeof window !== "undefined") {
           hint: "收入×1.5，健康-5",
           apply: function (st) {
             var earn = 80 + Random.int(0, 120);
-            st.resources.cash += Math.round(earn * 1.5);
+            st.resources.cash = (st.resources.cash || 0) + Math.round(earn * 1.5);
             st.status.health = Math.max(0, (st.status.health || 100) - 5);
             StateManager.addMessage(
               "☔ 你在暴雨中摆摊，虽然淋得浑身湿透，但赚了¥" +
@@ -33519,13 +33519,13 @@ if (typeof window !== "undefined") {
           text: "🏃 冒雨跑腿帮人送东西，雨天人少单多",
           hint: "¥200 + 可能有好人缘",
           apply: function (st) {
-            st.resources.cash += 200;
+            st.resources.cash = (st.resources.cash || 0) + 200;
             if (Random.chance(0.3)) {
               StateManager.addMessage(
                 "🏃 客户看你冒雨跑腿，多给了¥50小费。",
                 "success",
               );
-              st.resources.cash += 50;
+              st.resources.cash = (st.resources.cash || 0) + 50;
             } else {
               StateManager.addMessage(
                 "🏃 你顶着暴雨跑了几趟，浑身湿透赚了¥200。",
@@ -33571,8 +33571,8 @@ if (typeof window !== "undefined") {
           text: "🏠 去看看（押一付三¥2000）",
           hint: "租到单间，不再露宿",
           apply: function (st) {
-            if (st.resources.cash >= 2000) {
-              st.resources.cash -= 2000;
+            if ((st.resources.cash || 0) >= 2000) {
+              st.resources.cash = Math.max(0, (st.resources.cash || 0) - 2000);
               if (!st.housing) st.housing = {};
               var newTier = Math.max(st.housing.tier || 0, 1);
               st.housing.tier = newTier;
@@ -33605,8 +33605,8 @@ if (typeof window !== "undefined") {
           apply: function (st) {
             var rel = st.relationships && st.relationships.aunt_wang;
             if (rel && rel.affinity >= 60) {
-              if (st.resources.cash >= 1200) {
-                st.resources.cash -= 1200;
+              if ((st.resources.cash || 0) >= 1200) {
+                st.resources.cash = Math.max(0, (st.resources.cash || 0) - 1200);
                 if (!st.housing) st.housing = {};
                 st.housing.tier = Math.max(st.housing.tier || 0, 1);
                 st.flags._wangRentalDiscounted = true;
@@ -33822,9 +33822,9 @@ if (typeof window !== "undefined") {
           hint: "收入×1.8，但可能被抓",
           apply: function (st) {
             var earn = 100 + Random.int(0, 200);
-            st.resources.cash += Math.round(earn * 1.8);
+            st.resources.cash = (st.resources.cash || 0) + Math.round(earn * 1.8);
             if (Random.chance(0.25)) {
-              st.resources.cash -= 200;
+              st.resources.cash = Math.max(0, (st.resources.cash || 0) - 200);
               StateManager.addMessage(
                 "🚔 城管来了！你收起摊位就跑，但还是被罚了¥200。净赚¥" +
                   Math.round(earn * 1.8 - 200).toLocaleString() +
@@ -33845,7 +33845,7 @@ if (typeof window !== "undefined") {
           text: "📄 发传单",
           hint: "¥80，稳定收入",
           apply: function (st) {
-            st.resources.cash += 80;
+            st.resources.cash = (st.resources.cash || 0) + 80;
             StateManager.addMessage(
               "📄 你在科技园门口发了一下午传单，赚了¥80。",
               "info",
@@ -33898,8 +33898,8 @@ if (typeof window !== "undefined") {
           text: "🏥 去医院体检",
           hint: "¥200，发现隐藏健康问题",
           apply: function (st) {
-            if (st.resources.cash >= 200) {
-              st.resources.cash -= 200;
+            if ((st.resources.cash || 0) >= 200) {
+              st.resources.cash = Math.max(0, (st.resources.cash || 0) - 200);
               var foundIssue = Random.chance(0.3);
               if (foundIssue) {
                 st.flags._checkupFoundIssue = true;
@@ -33938,8 +33938,8 @@ if (typeof window !== "undefined") {
           text: "💊 买点保健品",
           hint: "¥50，健康+3%",
           apply: function (st) {
-            if (st.resources.cash >= 50) {
-              st.resources.cash -= 50;
+            if ((st.resources.cash || 0) >= 50) {
+              st.resources.cash = Math.max(0, (st.resources.cash || 0) - 50);
               st.status.health = Math.min(100, (st.status.health || 80) + 3);
               StateManager.addMessage(
                 "💊 你在药店买了些维生素，至少心理上感觉好多了。",
@@ -33976,7 +33976,7 @@ if (typeof window !== "undefined") {
           hint: "体力活，收入¥500-800 + 修理+5",
           apply: function (st) {
             var earn = 500 + Random.int(0, 300);
-            st.resources.cash += earn;
+            st.resources.cash = (st.resources.cash || 0) + earn;
             st.needs.fatigue = Math.min(100, st.needs.fatigue + 20);
             if (st.skills && st.skills.repair) {
               st.skills.repair.level = Math.min(
@@ -34006,7 +34006,7 @@ if (typeof window !== "undefined") {
             var social =
               (st.skills && st.skills.social && st.skills.social.level) || 0;
             if (social >= 25) {
-              st.resources.cash += 200;
+              st.resources.cash = (st.resources.cash || 0) + 200;
               if (!st.relationships.old_zhou) {
                 st.relationships.old_zhou = { affinity: 0, met: true };
               }
@@ -34052,7 +34052,7 @@ if (typeof window !== "undefined") {
           rel.met &&
           rel.affinity >= 30 &&
           st.player.day > 45 &&
-          st.resources.cash < 50000
+          (st.resources.cash || 0) < 50000
         );
       },
       probability: 0.03,
@@ -34065,7 +34065,7 @@ if (typeof window !== "undefined") {
           hint: "时薪¥15-20，分享收入",
           apply: function (st) {
             var earn = 60 + Random.int(0, 40);
-            st.resources.cash += Math.round(earn * 1.5);
+            st.resources.cash = (st.resources.cash || 0) + Math.round(earn * 1.5);
             if (!st.relationships.xiao_mei) {
               st.relationships.xiao_mei = { affinity: 0, met: true };
             }
@@ -34086,7 +34086,7 @@ if (typeof window !== "undefined") {
           hint: "时薪¥25-30，不带她",
           apply: function (st) {
             var earn = 100 + Random.int(0, 50);
-            st.resources.cash += earn;
+            st.resources.cash = (st.resources.cash || 0) + earn;
             if (!st.relationships.xiao_mei) {
               st.relationships.xiao_mei = { affinity: 0, met: true };
             }
@@ -34267,7 +34267,7 @@ if (typeof window !== "undefined") {
             st.needs.hunger = Math.min(100, (st.needs.hunger || 50) + 15);
             // 随机给一点感谢费
             var tip = Random.int(30, 80);
-            st.resources.cash += tip;
+            st.resources.cash = (st.resources.cash || 0) + tip;
             st.resources.totalEarned = (st.resources.totalEarned || 0) + tip;
             StateManager.addMessage(
               "🎁 袋子里有一盒点心和¥" +
@@ -34354,14 +34354,14 @@ if (typeof window !== "undefined") {
           text: "🔧 买一个拆开研究",
           hint: "维修XP+40，损失¥50",
           apply: function (st) {
-            if (st.resources.cash < 50) {
+            if ((st.resources.cash || 0) < 50) {
               StateManager.addMessage(
                 "😅 你摸了摸口袋，连¥50的假货都买不起……",
                 "warning",
               );
               return;
             }
-            st.resources.cash -= 50;
+            st.resources.cash = Math.max(0, (st.resources.cash || 0) - 50);
             if (st.skills && st.skills.repair) {
               st.skills.repair.xp = (st.skills.repair.xp || 0) + 40;
             }
@@ -34664,7 +34664,7 @@ if (typeof window !== "undefined") {
           hint: "强制的，¥150-300，健康恢复+15",
           apply: function (st) {
             var cost = Random.int(150, 300);
-            if (st.resources.cash < cost) {
+            if ((st.resources.cash || 0) < cost) {
               // 钱不够也要去，欠费
               var actualCost = st.resources.cash;
               st.resources.cash = 0;
@@ -34679,7 +34679,7 @@ if (typeof window !== "undefined") {
                 "warning",
               );
             } else {
-              st.resources.cash -= cost;
+              st.resources.cash = Math.max(0, (st.resources.cash || 0) - cost);
             }
             st.status.health = Math.min(100, (st.status.health || 50) + 15);
             // 重置饥饿积累
@@ -34782,8 +34782,8 @@ if (typeof window !== "undefined") {
                 "你咬着牙在路边小摊买了俩包子，花了¥8。饥饿+15。",
                 "info",
               );
-              if (st.resources.cash >= 8) {
-                st.resources.cash -= 8;
+              if ((st.resources.cash || 0) >= 8) {
+                st.resources.cash = Math.max(0, (st.resources.cash || 0) - 8);
               }
               st.needs.hunger = Math.min(100, (st.needs.hunger || 0) + 15);
             }
@@ -34801,8 +34801,8 @@ if (typeof window !== "undefined") {
             // 小概率真的昏倒被送医院（强制更高费用）
             if (Random.chance(0.3)) {
               var forcedCost = Random.int(200, 400);
-              if (st.resources.cash >= forcedCost) {
-                st.resources.cash -= forcedCost;
+              if ((st.resources.cash || 0) >= forcedCost) {
+                st.resources.cash = Math.max(0, (st.resources.cash || 0) - forcedCost);
               } else {
                 st.resources.debt =
                   (st.resources.debt || 0) +
@@ -34867,7 +34867,7 @@ if (typeof window !== "undefined") {
           hint: "强制的，¥200-400，疲劳-30，健康+10",
           apply: function (st) {
             var cost = Random.int(200, 400);
-            if (st.resources.cash < cost) {
+            if ((st.resources.cash || 0) < cost) {
               var actualCost = st.resources.cash;
               st.resources.cash = 0;
               st.resources.debt =
@@ -34881,7 +34881,7 @@ if (typeof window !== "undefined") {
                 "warning",
               );
             } else {
-              st.resources.cash -= cost;
+              st.resources.cash = Math.max(0, (st.resources.cash || 0) - cost);
               StateManager.addMessage(
                 "🏥 你到诊所挂了两瓶水，医生说：「年轻人，再这样下去心脏会出问题。」花了¥" +
                   cost +
@@ -34928,14 +34928,14 @@ if (typeof window !== "undefined") {
           text: "💊 买瓶功能饮料硬撑",
           hint: "¥15，疲劳-8，但治标不治本",
           apply: function (st) {
-            if (st.resources.cash < 15) {
+            if ((st.resources.cash || 0) < 15) {
               StateManager.addMessage(
                 "😅 你摸了摸口袋，连¥15的功能饮料都买不起……",
                 "warning",
               );
               return;
             }
-            st.resources.cash -= 15;
+            st.resources.cash = Math.max(0, (st.resources.cash || 0) - 15);
             st.needs.fatigue = Math.max(0, (st.needs.fatigue || 0) - 8);
             st.needs.happiness = Math.max(0, (st.needs.happiness || 50) - 3);
             st.status.health = Math.max(0, (st.status.health || 70) - 3);
@@ -35162,7 +35162,7 @@ if (typeof window !== "undefined") {
             }
             // 对方坚持给答谢
             var reward = Random.int(50, 150);
-            st.resources.cash += reward;
+            st.resources.cash = (st.resources.cash || 0) + reward;
             st.resources.totalEarned = (st.resources.totalEarned || 0) + reward;
             st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 20);
             StateManager.addMessage(
@@ -35183,7 +35183,7 @@ if (typeof window !== "undefined") {
             st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 15);
             // 对方给答谢
             var reward = Random.int(30, 100);
-            st.resources.cash += reward;
+            st.resources.cash = (st.resources.cash || 0) + reward;
             st.resources.totalEarned = (st.resources.totalEarned || 0) + reward;
             StateManager.addMessage(
               "🙏 你笑了笑说：「谁都有困难的时候。」她感动地点点头，塞给你¥" +
@@ -35276,14 +35276,14 @@ if (typeof window !== "undefined") {
           text: "🏃 赶紧去澡堂洗个澡",
           hint: "¥15，卫生+30，但可能耽误事",
           apply: function (st) {
-            if (st.resources.cash < 15) {
+            if ((st.resources.cash || 0) < 15) {
               StateManager.addMessage(
                 "😅 你摸了摸口袋，连¥15的澡堂钱都没有……只好尴尬地离开。",
                 "warning",
               );
               return;
             }
-            st.resources.cash -= 15;
+            st.resources.cash = Math.max(0, (st.resources.cash || 0) - 15);
             st.needs.hygiene = Math.min(100, (st.needs.hygiene || 0) + 30);
             st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 8);
             // 重置卫生积累
@@ -35549,7 +35549,7 @@ if (typeof window !== "undefined") {
           apply: function (st) {
             st.flags._equipBreakDay = st.player.day;
             var cost = Random.int(100, 300);
-            if (st.resources.cash < cost) {
+            if ((st.resources.cash || 0) < cost) {
               StateManager.addMessage(
                 "😅 你摸了摸口袋，连¥" +
                   cost +
@@ -35558,7 +35558,7 @@ if (typeof window !== "undefined") {
               );
               return;
             }
-            st.resources.cash -= cost;
+            st.resources.cash = Math.max(0, (st.resources.cash || 0) - cost);
             // 修复所有装备耐久
             var equip = st.inventory.equipmentInstances;
             for (var slot in equip) {
@@ -35714,7 +35714,7 @@ if (typeof window !== "undefined") {
           apply: function (st) {
             st.flags._sickWorkDay = st.player.day;
             var cost = Random.int(100, 200);
-            if (st.resources.cash < cost) {
+            if ((st.resources.cash || 0) < cost) {
               var charged = st.resources.cash;
               st.resources.cash = 0;
               st.resources.debt = (st.resources.debt || 0) + (cost - charged);
@@ -35727,7 +35727,7 @@ if (typeof window !== "undefined") {
                 "warning",
               );
             } else {
-              st.resources.cash -= cost;
+              st.resources.cash = Math.max(0, (st.resources.cash || 0) - cost);
               StateManager.addMessage(
                 "🏥 你去了诊所，医生量了体温说烧到38度5。打了一针开了药，花了¥" +
                   cost +
@@ -35749,7 +35749,7 @@ if (typeof window !== "undefined") {
               "😤 你挤出笑容说没事。老主顾摇了摇头，多给了你¥20小费：「拿着买点药吃。」你收下钱，心里有点酸。健康-5，名气+2。",
               "warning",
             );
-            st.resources.cash += 20;
+            st.resources.cash = (st.resources.cash || 0) + 20;
             st.resources.totalEarned = (st.resources.totalEarned || 0) + 20;
           },
         },
@@ -36157,8 +36157,8 @@ if (typeof window !== "undefined") {
               500,
               Math.max(200, Math.floor((st.resources.cash || 0) * 0.3)),
             );
-            if (st.resources.cash >= repay) {
-              st.resources.cash -= repay;
+            if ((st.resources.cash || 0) >= repay) {
+              st.resources.cash = Math.max(0, (st.resources.cash || 0) - repay);
               st.resources.debt = Math.max(0, (st.resources.debt || 0) - repay);
               st.needs.happiness = Math.max(0, (st.needs.happiness || 50) - 5);
               StateManager.addMessage(
@@ -36258,8 +36258,8 @@ if (typeof window !== "undefined") {
           apply: function (st) {
             st.flags._zhangTrainingDone = true;
             var cost = 300;
-            if (st.resources.cash >= cost) {
-              st.resources.cash -= cost;
+            if ((st.resources.cash || 0) >= cost) {
+              st.resources.cash = Math.max(0, (st.resources.cash || 0) - cost);
               if (st.skills && st.skills.electrician) {
                 st.skills.electrician.xp = (st.skills.electrician.xp || 0) + 80;
                 st.skills.electrician.level = Math.min(
@@ -36298,8 +36298,8 @@ if (typeof window !== "undefined") {
           apply: function (st) {
             st.flags._zhangTrainingDone = true;
             var cost = 300;
-            if (st.resources.cash >= cost) {
-              st.resources.cash -= cost;
+            if ((st.resources.cash || 0) >= cost) {
+              st.resources.cash = Math.max(0, (st.resources.cash || 0) - cost);
               if (st.skills && st.skills.welding) {
                 st.skills.welding.xp = (st.skills.welding.xp || 0) + 80;
                 st.skills.welding.level = Math.min(
@@ -36442,8 +36442,8 @@ if (typeof window !== "undefined") {
           apply: function (st) {
             st.flags._constructionAccidentDay = st.player.day;
             var cost = Random.int(50, 100);
-            if (st.resources.cash >= cost) {
-              st.resources.cash -= cost;
+            if ((st.resources.cash || 0) >= cost) {
+              st.resources.cash = Math.max(0, (st.resources.cash || 0) - cost);
               st.status.health = Math.min(100, (st.status.health || 70) + 5);
               StateManager.addMessage(
                 "🏥 你到附近诊所清洗了伤口，缝了两针。花了¥" +
@@ -36466,7 +36466,7 @@ if (typeof window !== "undefined") {
               st.relationships.boss_li &&
               (st.relationships.boss_li.affinity || 0) >= 30
             ) {
-              st.resources.cash += 80;
+              st.resources.cash = (st.resources.cash || 0) + 80;
               st.relationships.boss_li.affinity = Math.min(
                 100,
                 (st.relationships.boss_li.affinity || 0) + 3,
@@ -36582,7 +36582,7 @@ if (typeof window !== "undefined") {
               st.skills[bestSkill].xp = (st.skills[bestSkill].xp || 0) + 30;
             }
             var tip = Random.int(50, 150);
-            st.resources.cash += tip;
+            st.resources.cash = (st.resources.cash || 0) + tip;
             st.resources.totalEarned = (st.resources.totalEarned || 0) + tip;
             st.player.fame = Math.min(100, (st.player.fame || 0) + 3);
             st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 10);
@@ -36714,7 +36714,7 @@ if (typeof window !== "undefined") {
           hint: "户外收入×1.2但疲劳激增，健康下降",
           apply: function (st) {
             var earn = Random.int(80, 160);
-            st.resources.cash += Math.round(earn * 1.2);
+            st.resources.cash = (st.resources.cash || 0) + Math.round(earn * 1.2);
             st.resources.totalEarned =
               (st.resources.totalEarned || 0) + Math.round(earn * 1.2);
             st.needs.fatigue = Math.min(100, (st.needs.fatigue || 0) + 25);
@@ -36731,16 +36731,16 @@ if (typeof window !== "undefined") {
           text: "🏪 买西瓜解暑，找阴凉处做点活",
           hint: "花小钱保健康，少量收入",
           apply: function (st) {
-            if (st.resources.cash < 10) {
+            if ((st.resources.cash || 0) < 10) {
               StateManager.addMessage(
                 "😅 你连¥10的西瓜都买不起，只好找了个树荫干坐着。",
                 "warning",
               );
               return;
             }
-            st.resources.cash -= 10;
+            st.resources.cash = Math.max(0, (st.resources.cash || 0) - 10);
             var earn = Random.int(30, 80);
-            st.resources.cash += earn;
+            st.resources.cash = (st.resources.cash || 0) + earn;
             st.needs.fatigue = Math.min(100, (st.needs.fatigue || 0) + 10);
             StateManager.addMessage(
               "🏪 你花¥10买了个西瓜，边吃边找阴凉处做了点零活，赚了¥" +
@@ -36790,7 +36790,7 @@ if (typeof window !== "undefined") {
           apply: function (st) {
             st.flags._groupBuyCourier = true;
             var earn = Random.int(30, 60);
-            st.resources.cash += earn;
+            st.resources.cash = (st.resources.cash || 0) + earn;
             st.resources.totalEarned = (st.resources.totalEarned || 0) + earn;
             st.needs.fatigue = Math.min(100, (st.needs.fatigue || 0) + 15);
             StateManager.addMessage(
@@ -36840,7 +36840,7 @@ if (typeof window !== "undefined") {
           st.player.phase === "street" &&
           st.player.intelligence >= 45 &&
           st.player.day >= 90 &&
-          (st.resources.cash >= 5000 || st.player.fame >= 10) &&
+          ((st.resources.cash || 0) >= 5000 || st.player.fame >= 10) &&
           !st.flags._quantInviteSeen
         );
       },
@@ -37297,7 +37297,7 @@ if (typeof window !== "undefined") {
           hint: "批发价更低，但需要跑远路",
           apply: function (st) {
             var saved = Random.int(10, 30);
-            st.resources.cash -= saved; // 交通费
+            st.resources.cash = Math.max(0, (st.resources.cash || 0) - saved); // 交通费
             st.needs.hunger = Math.min(100, (st.needs.hunger || 0) + 20);
             st.needs.fatigue = Math.min(100, (st.needs.fatigue || 0) + 8);
             StateManager.addMessage(
@@ -37313,7 +37313,7 @@ if (typeof window !== "undefined") {
           hint: "省钱，营养一般",
           apply: function (st) {
             var cheap = Random.int(3, 8);
-            st.resources.cash -= cheap;
+            st.resources.cash = Math.max(0, (st.resources.cash || 0) - cheap);
             st.needs.hunger = Math.min(100, (st.needs.hunger || 0) + 12);
             st.needs.happiness = Math.max(0, (st.needs.happiness || 50) - 3);
             StateManager.addMessage(
@@ -37329,7 +37329,7 @@ if (typeof window !== "undefined") {
           hint: "心智+2，长期省钱",
           apply: function (st) {
             var spend = Random.int(50, 150);
-            st.resources.cash -= spend;
+            st.resources.cash = Math.max(0, (st.resources.cash || 0) - spend);
             st.flags._hoardedFood = (st.flags._hoardedFood || 0) + spend;
             st.player.mental = Math.min(100, (st.player.mental || 0) + 2);
             StateManager.addMessage(
@@ -37379,8 +37379,8 @@ if (typeof window !== "undefined") {
             var foodCost = Random.int(15, 25);
             var deliveryCost = Random.int(10, 20);
             var total = foodCost + deliveryCost;
-            if (st.resources.cash >= total) {
-              st.resources.cash -= total;
+            if ((st.resources.cash || 0) >= total) {
+              st.resources.cash = Math.max(0, (st.resources.cash || 0) - total);
               st.needs.hunger = Math.min(100, (st.needs.hunger || 0) + 35);
               st.needs.happiness = Math.min(
                 100,
@@ -38239,8 +38239,8 @@ if (typeof window !== "undefined") {
           text: "🎉 请全街吃饭庆祝",
           hint: "花费¥500，所有NPC好感+3",
           apply: function (st) {
-            if (st.resources.cash >= 500) {
-              st.resources.cash -= 500;
+            if ((st.resources.cash || 0) >= 500) {
+              st.resources.cash = Math.max(0, (st.resources.cash || 0) - 500);
               var rels = st.relationships || {};
               for (var rid in rels) {
                 if (rels[rid] && rels[rid].met) {
@@ -38261,8 +38261,8 @@ if (typeof window !== "undefined") {
           text: "📚 把钱投到学习中",
           hint: "现金-¥300，所有技能+100XP",
           apply: function (st) {
-            if (st.resources.cash >= 300) {
-              st.resources.cash -= 300;
+            if ((st.resources.cash || 0) >= 300) {
+              st.resources.cash = Math.max(0, (st.resources.cash || 0) - 300);
               if (st.skills) {
                 for (var s in st.skills) {
                   if (st.skills[s]) {
@@ -38305,7 +38305,7 @@ if (typeof window !== "undefined") {
             apply: function (st) {
               st.flags._npcInfoSwapDone = true;
               st.player.intelligence = Math.min(100, (st.player.intelligence || 0) + 2);
-              st.resources.cash += 200;
+              st.resources.cash = (st.resources.cash || 0) + 200;
               st.resources.totalEarned += 200;
               st.flags._nightMarketInfo = true;
               if (st.relationships.chen_ge) st.relationships.chen_ge.affinity = Math.min(100, (st.relationships.chen_ge.affinity || 0) + 3);
@@ -86456,7 +86456,7 @@ if (typeof window !== "undefined") {
                 cap.clientLeads = Math.min(100, cap.clientLeads + 12);
                 _clamp(cap);
               }
-              st.resources.cash += Math.round(
+              st.resources.cash = (st.resources.cash || 0) + Math.round(
                 ((_job(st) && _job(st).salary) || 8000) * 0.3,
               );
               _msg(
@@ -86489,7 +86489,7 @@ if (typeof window !== "undefined") {
           hint: "拼了，不择手段追单",
           apply: function (st) {
             if (_chance(0.55)) {
-              st.resources.cash += scaleAmount(6000, st.resources && st.resources.totalEarned);
+              st.resources.cash = (st.resources.cash || 0) + scaleAmount(6000, st.resources && st.resources.totalEarned);
               var cap = _cap(st);
               if (cap) {
                 cap.clientLeads = Math.min(100, cap.clientLeads + 8);
@@ -86513,7 +86513,7 @@ if (typeof window !== "undefined") {
           hint: "精准打单",
           apply: function (st) {
             if (_chance(0.7)) {
-              st.resources.cash += 4000;
+              st.resources.cash = (st.resources.cash || 0) + 4000;
               _msg(
                 "🎯 精准攻克，最重要的那单签了，团队差一点达标。提成¥4000。老板也认可了你的判断力。",
                 "success",
@@ -86626,7 +86626,7 @@ if (typeof window !== "undefined") {
           hint: "尽人事，听天命",
           apply: function (st) {
             if (_chance(0.45)) {
-              st.resources.cash += 3000;
+              st.resources.cash = (st.resources.cash || 0) + 3000;
               var cap = _cap(st);
               if (cap) {
                 cap.reputation = Math.min(100, cap.reputation + 15);
@@ -86651,7 +86651,7 @@ if (typeof window !== "undefined") {
             // [全系统自洽修复] 域B A类#3: cash守卫
             st.resources.cash = Math.max(0, (st.resources.cash || 0) - 500);
             if (_chance(0.6)) {
-              st.resources.cash += 3000;
+              st.resources.cash = (st.resources.cash || 0) + 3000;
               var cap = _cap(st);
               if (cap) {
                 cap.reputation = Math.min(100, cap.reputation + 15);
@@ -86874,7 +86874,7 @@ if (typeof window !== "undefined") {
               cap.reputation = Math.min(100, cap.reputation + 8);
               _clamp(cap);
             }
-            st.resources.cash += 3000;
+            st.resources.cash = (st.resources.cash || 0) + 3000;
             _msg(
               "🍜 你控制了接单节奏，口碑评分没有下滑，稳稳赚了¥3000，声誉+8。长远来看是对的。",
               "success",
@@ -87195,7 +87195,7 @@ if (typeof window !== "undefined") {
           hint: "有道德风险",
           apply: function (st) {
             if (_chance(0.6)) {
-              st.resources.cash += 3000;
+              st.resources.cash = (st.resources.cash || 0) + 3000;
               _msg(
                 "💸 你每个月多拿了约¥3000「学术费」。你知道这不是完全合规的。",
                 "warning",
@@ -87354,7 +87354,7 @@ if (typeof window !== "undefined") {
               var cap = _cap(st);
               if (cap) cap.reputation = Math.min(100, cap.reputation + 15);
               _clamp(cap);
-              st.resources.cash += 3000;
+              st.resources.cash = (st.resources.cash || 0) + 3000;
               _msg(
                 "🏆 你起草的政策文件获得市领导批示肯定！单位通报表扬，名声大噪。声誉+15，奖金¥3000。",
                 "success",
@@ -88407,7 +88407,7 @@ if (typeof window !== "undefined") {
           apply: function (st) {
             st.flags._motherSickSeen = true;
             var cost = Math.min(12000, st.resources.cash || 0);
-            st.resources.cash -= cost;
+            st.resources.cash = Math.max(0, (st.resources.cash || 0) - cost);
             if (!st.family.parents.mother) st.family.parents.mother = {};
             st.family.parents.mother.health = "healthy";
             st.family.parents.mother.medicalCost = 0;
@@ -88427,7 +88427,7 @@ if (typeof window !== "undefined") {
           apply: function (st) {
             st.flags._motherSickSeen = true;
             var cost = Math.min(5000, st.resources.cash);
-            st.resources.cash -= cost;
+            st.resources.cash = Math.max(0, (st.resources.cash || 0) - cost);
             if (!st.family.parents.mother) st.family.parents.mother = {};
             // 手术延期，健康维持"观察中"
             st.family.parents.mother.health = "under_observation";
@@ -88479,7 +88479,7 @@ if (typeof window !== "undefined") {
           st.family &&
           st.family.mortgage &&
           st.family.mortgage.remainingDays > 0 &&
-          st.resources.cash < (st.family.mortgage.monthlyPayment || 5000)
+          (st.resources.cash || 0) < (st.family.mortgage.monthlyPayment || 5000)
         );
       },
       probability: 0.07,
@@ -88492,7 +88492,7 @@ if (typeof window !== "undefined") {
             st.flags._mortgageOverdueSeen = true;
             var payment = st.family.mortgage.monthlyPayment || 5000;
             var actualPay = Math.min(payment, st.resources.cash);
-            st.resources.cash -= actualPay;
+            st.resources.cash = Math.max(0, (st.resources.cash || 0) - actualPay);
             st.family.mortgage.remainingDays = Math.max(
               0,
               (st.family.mortgage.remainingDays || 360) - 30,
@@ -88577,7 +88577,7 @@ if (typeof window !== "undefined") {
           apply: function (st) {
             st.flags._fatherBirthdaySeen = true;
             var cost = Math.min(4000, Math.max(2000, st.resources.cash * 0.3));
-            st.resources.cash -= cost;
+            st.resources.cash = Math.max(0, (st.resources.cash || 0) - cost);
             st.needs.fatigue = Math.min(100, (st.needs.fatigue || 0) + 20);
             st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 25);
             // 提升家庭关系阶段
@@ -88613,7 +88613,7 @@ if (typeof window !== "undefined") {
           apply: function (st) {
             st.flags._fatherBirthdaySeen = true;
             var cost = Math.min(1500, st.resources.cash);
-            st.resources.cash -= cost;
+            st.resources.cash = Math.max(0, (st.resources.cash || 0) - cost);
             st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 8);
             if (!st.family.parents.father) st.family.parents.father = {};
             st.family.parents.father.companionship =
@@ -88660,7 +88660,7 @@ if (typeof window !== "undefined") {
         excludeFlags: ["_corpMotherSurgeryDone"],
       },
       conditions: function (st) {
-        return st.corporate && st.resources.cash >= 10000;
+        return st.corporate && (st.resources.cash || 0) >= 10000;
       },
       probability: 0.05,
       repeatable: false,
@@ -170888,11 +170888,6 @@ const MORAL_EVENTS = [
     desc: "你看到路边停着一辆共享单车，车锁没扣上，也没人扫码。骑走就能省下一笔交通费，但这样做不太对。",
     minDay: 2,
     dailyChance: 0.05,
-    condition: function (s) {
-      // 只在街面地点触发（不在医院/银行/培训中心等室内）
-      var indoorLocs = ["hospital", "bank", "trainingCenter", "gov_office", "temple"];
-      return indoorLocs.indexOf(s.trade?.currentLocation) === -1;
-    },
     choices: [
       {
         text: "🔒 帮它锁上，拍张照报修",
@@ -170911,50 +170906,10 @@ const MORAL_EVENTS = [
         flag: "moral_bike_steal",
         score: -8,
         immediate: function (s) {
-          var curLoc = s.trade?.currentLocation;
-          var locKeys = Object.keys(window.LOCATIONS || {}).filter(function (k) {
-            return k !== curLoc;
-          });
-          // 生成目的地选择弹窗
-          setTimeout(function () {
-            var state = StateManager.getState();
-            var listHtml = '<p style="margin-bottom:8px;color:var(--text-secondary);">🚲 骑共享单车去哪？</p><div style="max-height:300px;overflow-y:auto;">';
-            for (var li = 0; li < locKeys.length; li++) {
-              var loc = window.LOCATIONS[locKeys[li]];
-              if (!loc) continue;
-              var hops = typeof getLocationHops === "function" ? getLocationHops(state.trade?.currentLocation, locKeys[li]) : 1;
-              var apCost = 6 + Math.max(0, hops - 1) * 4;
-              listHtml += '<div class="bike-dest-card" data-dest="' + locKeys[li] + '" style="padding:10px 12px;margin:4px 0;background:var(--bg-card);border:1px solid var(--border);border-radius:6px;cursor:pointer;">' +
-                '<div style="display:flex;justify-content:space-between;align-items:center;">' +
-                '<strong>' + (loc.icon || "📍") + " " + loc.name + "</strong>" +
-                '<span style="font-size:11px;color:var(--warning);">⚡' + apCost + '</span>' +
-                "</div>" +
-                '<div style="font-size:11px;color:var(--text-muted);margin-top:2px;">' + (loc.desc || "") + " · " + hops + "跳</div>" +
-                "</div>";
-            }
-            listHtml += "</div>";
-            showModal({
-              title: "🚲 共享单车 · 选择目的地",
-              body: listHtml,
-              buttons: [{ text: "算了，不骑了", cls: "", callback: function () { return true; } }],
-            });
-            setTimeout(function () {
-              document.querySelectorAll(".bike-dest-card").forEach(function (card) {
-                card.addEventListener("click", function () {
-                  var dest = card.dataset.dest;
-                  if (!dest || !state.trade) return;
-                  document.querySelector(".modal-overlay")?.remove();
-                  var hops2 = typeof getLocationHops === "function" ? getLocationHops(state.trade.currentLocation, dest) : 1;
-                  var apCost2 = 6 + Math.max(0, hops2 - 1) * 4;
-                  state.trade.currentLocation = dest;
-                  state.player.actionPoints = Math.max(0, (state.player.actionPoints || 0) - apCost2);
-                  state.needs.happiness = Math.max(0, (state.needs.happiness || 50) - 3);
-                  StateManager.addMessage("🚲 你骑着共享单车到了" + (window.LOCATIONS[dest]?.name || dest) + "，消耗了⚡" + apCost2 + "行动力。", "warning");
-                  renderAll();
-                });
-              });
-            }, 50);
-          }, 0);
+          StateManager.addMessage(
+            "🚲 你骑了几条街，总觉得有人在看你。",
+            "warning",
+          );
         },
       },
       {
@@ -179109,7 +179064,7 @@ function applyStatusInteractions(state) {
 
 /**
  * 极端状态检测（在每个行动之前和endDay中调用）
- * 返回: null(正常) | 'skip_day'(跳过当日剩余时间) | 'forced_rest'(强制休息)
+ * 返回: null(正常) | 'skip_day'(跳过当日剩余时间) | 'forced_rest'(强制休息) | 'game_over'(死亡结局)
  */
 function checkExtremeConditions(state) {
   var n = state.needs,
@@ -179620,16 +179575,6 @@ function tickIllnessDecay(state) {
           (ill.icon || "🤒") + " 你的" + ill.name + "好了。",
           "success",
         );
-        // [全系统自洽修复] 域G 联动增强: 重症康复→峰终定律积极收尾（G→B 健康-叙事联动）
-        if ((ill.severity || 1) >= 4 && !state.flags["_recoveredFrom_" + inst.id]) {
-          state.flags["_recoveredFrom_" + inst.id] = true;
-          StateManager.addMessage(
-            "💪 从" + ill.name + "中康复，你更加珍惜健康的日子。心智+3，心情+10。",
-            "success",
-          );
-          state.player.mental = Math.min(100, (state.player.mental || 0) + 3);
-          state.needs.happiness = Math.min(100, (state.needs.happiness || 0) + 10);
-        }
         // 记录痊愈，用于演化链追踪
         recordIllnessCure(state, inst.id);
         continue; // 不放回 remaining
@@ -185942,7 +185887,7 @@ const DAILY_PIPELINE = [
             StateManager.addMessage(
               "💡 你有 ¥" +
                 ch +
-                "，可以租个合租床位（¥150+¥12/天）改善睡眠和卫生。去城中村看看？合租床位每天自动恢复疲劳+20、卫生+5。",
+                "，可以租个合租床位（¥150+¥12/天）改善睡眠和卫生。去城中村看看？",
               "info",
             );
           }
@@ -185951,7 +185896,7 @@ const DAILY_PIPELINE = [
             StateManager.addMessage(
               "💡 你有 ¥" +
                 ch +
-                "，单间（¥800+¥25/天）有独立空间，还能做饭洗澡。单间每天自动恢复疲劳+35、卫生+10，还有小厨房。去城中村找房东？",
+                "，单间（¥800+¥25/天）有独立空间，还能做饭洗澡。去城中村找房东？",
               "info",
             );
           }
@@ -187753,6 +187698,9 @@ function runDailyPipeline(state) {
     // （v3.0 修复：daily_report 也加入始终执行列表，否则极端状态天玩家看不到收支报告）
     if (step.name === "extreme_check" || step.name === "critical_punish") {
       var result = step.fn(state);
+      if (result === "game_over") {
+        return; // 死亡结局，立即停止管线
+      }
       if (result === "skip_day") {
         StateManager.addMessage(
           "🌙 第" + state.player.day + "天在昏迷中过去了...",
@@ -227801,23 +227749,50 @@ function renderAchievementsTab(state, parent) {
 
 /**
  * 成就解锁通知弹窗
- * 在成就解锁时调用，显示一个模态弹窗，需要玩家点击确认
+ * 在成就解锁时调用，显示一个飘窗动画
  */
 function showAchievementUnlockedPopup(ach) {
   if (!ach) return;
-  // 使用模态弹窗，需要玩家点击后才继续
-  showModal({
-    title: "🏆 成就解锁！",
-    body: '<div style="text-align:center;padding:8px 0;">' +
-      '<div style="font-size:48px;margin-bottom:12px;">' + _esc(ach.icon || "🏅") + '</div>' +
-      '<div style="font-size:18px;font-weight:bold;color:var(--accent);margin-bottom:8px;">' + _esc(ach.name) + '</div>' +
-      '<div style="font-size:13px;color:var(--text-secondary);line-height:1.6;">' + _esc(ach.desc || "") + '</div>' +
-      (ach.story ? '<div style="margin-top:10px;padding:10px;background:rgba(74,158,92,0.06);border-radius:8px;font-size:12px;color:var(--text-primary);line-height:1.5;border-left:3px solid var(--accent);text-align:left;">📖 ' + _esc(ach.story) + '</div>' : "") +
-      '</div>',
-    buttons: [
-      { text: "🎉 太棒了！", cls: "btn-primary", callback: function () { return true; } },
-    ],
-  });
+  var existing = document.getElementById("ach-popup");
+  if (existing) existing.remove();
+
+  var popup = document.createElement("div");
+  popup.id = "ach-popup";
+  popup.style.cssText =
+    "position:fixed;top:80px;right:20px;z-index:9999;" +
+    "background:linear-gradient(135deg,var(--bg-card),#2a2520);" +
+    "border:2px solid var(--accent);border-radius:12px;" +
+    "padding:16px 20px;min-width:260px;max-width:320px;" +
+    "box-shadow:0 8px 32px rgba(0,0,0,0.4);" +
+    "animation:achSlideIn 0.5s ease-out;" +
+    "display:flex;gap:12px;align-items:flex-start;";
+
+  // [全系统自洽修复] 域F 成就弹窗 innerHTML 加 _esc 防 XSS/文字截断
+  popup.innerHTML =
+    '<div style="font-size:32px;flex-shrink:0;">' +
+    _esc(ach.icon || "🏅") +
+    "</div>" +
+    '<div style="flex:1;min-width:0;">' +
+    '<div style="font-size:10px;color:var(--accent);font-weight:bold;margin-bottom:2px;">🏆 成就解锁</div>' +
+    '<div style="font-size:14px;font-weight:bold;color:var(--text-primary);margin-bottom:2px;">' +
+    _esc(ach.name) +
+    "</div>" +
+    '<div style="font-size:11px;color:var(--text-secondary);">' +
+    _esc(ach.desc || "") +
+    "</div>" +
+    "</div>";
+
+  document.body.appendChild(popup);
+
+  // 3秒后淡出移除
+  setTimeout(function () {
+    popup.style.transition = "opacity 0.5s, transform 0.5s";
+    popup.style.opacity = "0";
+    popup.style.transform = "translateX(50px)";
+    setTimeout(function () {
+      if (popup.parentNode) popup.remove();
+    }, 500);
+  }, 3000);
 }
 
 // ====== P2#12 技能分支选择弹窗 ======
@@ -229611,6 +229586,42 @@ function downgradeToStreet(state, reason) {
 function showVictoryModal() {
   const state = StateManager.getState();
 
+  // === 死亡结局：简化弹窗，不生成遗产数据 ===
+  if (state.flags.death) {
+    var deathHtml =
+      '<div style="text-align:center;padding:12px 0;">' +
+      '<div style="font-size:64px;margin-bottom:16px;">💀</div>' +
+      '<div style="font-size:20px;font-weight:bold;color:var(--danger);margin-bottom:12px;">' +
+      (state.flags.victoryTitle || "💀 客死异乡") +
+      "</div>" +
+      '<div style="font-size:13px;color:var(--text-secondary);line-height:1.8;margin-bottom:16px;">' +
+      (state.flags.victoryDesc || "你的健康归零，在这座城市里倒下了。") +
+      "</div>" +
+      '<div style="font-size:12px;color:var(--text-muted);line-height:1.6;">' +
+      "你一共活了 <strong style='color:var(--text-primary);'>" + state.player.day + " 天</strong>，" +
+      "年龄 <strong style='color:var(--text-primary);'>" + state.player.age + " 岁</strong>。<br>" +
+      "城市依旧运转，但你的故事已经画上了句号。" +
+      "</div>" +
+      "</div>";
+
+    showModal({
+      title: "💀 游戏结束",
+      body: deathHtml,
+      buttons: [
+        {
+          text: "🔄 重新开始",
+          cls: "btn-primary",
+          callback: function () {
+            document.querySelector(".modal-overlay")?.remove();
+            location.reload();
+            return true;
+          },
+        },
+      ],
+    });
+    return;
+  }
+
   // Phase 3: 记录多周目记忆 + 生成遗产数据
   if (typeof recordPlaythroughEndEnhanced === "function") {
     recordPlaythroughEndEnhanced(state);
@@ -230287,17 +230298,10 @@ function showModal() {
 
 // ====== 模态对话框实现 ======
 function showModalImpl({ title, body, buttons = [] }) {
-  // 如果已有弹窗，先移除旧的（防止弹窗堆积）
+  // 如果已有弹窗，不覆盖（防止每日结算被新弹窗挤掉）
   const existingOverlay = document.querySelector(".modal-overlay");
   if (existingOverlay) {
-    // 清理旧弹窗的 ESC 和 click 监听器
-    if (existingOverlay._escHandler) {
-      document.removeEventListener("keydown", existingOverlay._escHandler);
-    }
-    if (existingOverlay._clickHandler) {
-      existingOverlay.removeEventListener("click", existingOverlay._clickHandler);
-    }
-    existingOverlay.parentNode?.removeChild(existingOverlay);
+    return;
   }
 
   const overlay = document.createElement("div");
@@ -254563,10 +254567,6 @@ function getAvailableActions(state) {
               contextLine = "最近行情不好，投资要谨慎啊，别把钱都扔进去。";
             }
           }
-          // [全系统自洽修复] 域G 联动增强: NPC对玩家健康状态的反应（G→D 健康-社交联动）
-          if (!contextLine && !isBirthday && !festLine && state.status && state.status.health < 30 && Random.chance(0.12)) {
-            contextLine = "你脸色不太好，要不要去医院看看？别硬撑。";
-          }
           const line =
             isBirthday && npc.birthdayLine
               ? npc.birthdayLine
@@ -255690,6 +255690,14 @@ function getSkillPayBonus(jobId, state) {
 /** 消耗行动力，推进时间。每次行动调用此函数替代旧的 advanceTimeSlot() */
 function consumeAP(cost) {
   const state = StateManager.getState();
+  // === 极端状态检测（健康归零等，在任何 AP 消耗之前）===
+  if (typeof checkExtremeConditions === "function") {
+    var extremeResult = checkExtremeConditions(state);
+    if (extremeResult === "game_over" || extremeResult === "skip_day") {
+      renderAll();
+      return false;
+    }
+  }
   // === 临界状态强制选择窗（在任何 AP 消耗之前）===
   // 弹窗后中断本次行动，玩家选完会重新点击行动按钮
   if (typeof checkCriticalNeeds === "function" && checkCriticalNeeds(state)) {

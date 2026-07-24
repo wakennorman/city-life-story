@@ -234,7 +234,7 @@ function applyStatusInteractions(state) {
 
 /**
  * 极端状态检测（在每个行动之前和endDay中调用）
- * 返回: null(正常) | 'skip_day'(跳过当日剩余时间) | 'forced_rest'(强制休息)
+ * 返回: null(正常) | 'skip_day'(跳过当日剩余时间) | 'forced_rest'(强制休息) | 'game_over'(死亡结局)
  */
 function checkExtremeConditions(state) {
   var n = state.needs,

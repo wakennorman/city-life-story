@@ -1254,7 +1254,7 @@
                 cap.clientLeads = Math.min(100, cap.clientLeads + 12);
                 _clamp(cap);
               }
-              st.resources.cash += Math.round(
+              st.resources.cash = (st.resources.cash || 0) + Math.round(
                 ((_job(st) && _job(st).salary) || 8000) * 0.3,
               );
               _msg(
@@ -1287,7 +1287,7 @@
           hint: "拼了，不择手段追单",
           apply: function (st) {
             if (_chance(0.55)) {
-              st.resources.cash += scaleAmount(6000, st.resources && st.resources.totalEarned);
+              st.resources.cash = (st.resources.cash || 0) + scaleAmount(6000, st.resources && st.resources.totalEarned);
               var cap = _cap(st);
               if (cap) {
                 cap.clientLeads = Math.min(100, cap.clientLeads + 8);
@@ -1311,7 +1311,7 @@
           hint: "精准打单",
           apply: function (st) {
             if (_chance(0.7)) {
-              st.resources.cash += 4000;
+              st.resources.cash = (st.resources.cash || 0) + 4000;
               _msg(
                 "🎯 精准攻克，最重要的那单签了，团队差一点达标。提成¥4000。老板也认可了你的判断力。",
                 "success",
@@ -1424,7 +1424,7 @@
           hint: "尽人事，听天命",
           apply: function (st) {
             if (_chance(0.45)) {
-              st.resources.cash += 3000;
+              st.resources.cash = (st.resources.cash || 0) + 3000;
               var cap = _cap(st);
               if (cap) {
                 cap.reputation = Math.min(100, cap.reputation + 15);
@@ -1449,7 +1449,7 @@
             // [全系统自洽修复] 域B A类#3: cash守卫
             st.resources.cash = Math.max(0, (st.resources.cash || 0) - 500);
             if (_chance(0.6)) {
-              st.resources.cash += 3000;
+              st.resources.cash = (st.resources.cash || 0) + 3000;
               var cap = _cap(st);
               if (cap) {
                 cap.reputation = Math.min(100, cap.reputation + 15);
@@ -1672,7 +1672,7 @@
               cap.reputation = Math.min(100, cap.reputation + 8);
               _clamp(cap);
             }
-            st.resources.cash += 3000;
+            st.resources.cash = (st.resources.cash || 0) + 3000;
             _msg(
               "🍜 你控制了接单节奏，口碑评分没有下滑，稳稳赚了¥3000，声誉+8。长远来看是对的。",
               "success",
@@ -1993,7 +1993,7 @@
           hint: "有道德风险",
           apply: function (st) {
             if (_chance(0.6)) {
-              st.resources.cash += 3000;
+              st.resources.cash = (st.resources.cash || 0) + 3000;
               _msg(
                 "💸 你每个月多拿了约¥3000「学术费」。你知道这不是完全合规的。",
                 "warning",
@@ -2152,7 +2152,7 @@
               var cap = _cap(st);
               if (cap) cap.reputation = Math.min(100, cap.reputation + 15);
               _clamp(cap);
-              st.resources.cash += 3000;
+              st.resources.cash = (st.resources.cash || 0) + 3000;
               _msg(
                 "🏆 你起草的政策文件获得市领导批示肯定！单位通报表扬，名声大噪。声誉+15，奖金¥3000。",
                 "success",

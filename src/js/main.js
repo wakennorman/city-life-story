@@ -4987,6 +4987,14 @@ function getSkillPayBonus(jobId, state) {
 /** 消耗行动力，推进时间。每次行动调用此函数替代旧的 advanceTimeSlot() */
 function consumeAP(cost) {
   const state = StateManager.getState();
+  // === 极端状态检测（健康归零等，在任何 AP 消耗之前）===
+  if (typeof checkExtremeConditions === "function") {
+    var extremeResult = checkExtremeConditions(state);
+    if (extremeResult === "game_over" || extremeResult === "skip_day") {
+      renderAll();
+      return false;
+    }
+  }
   // === 临界状态强制选择窗（在任何 AP 消耗之前）===
   // 弹窗后中断本次行动，玩家选完会重新点击行动按钮
   if (typeof checkCriticalNeeds === "function" && checkCriticalNeeds(state)) {

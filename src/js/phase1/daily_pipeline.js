@@ -2042,6 +2042,9 @@ function runDailyPipeline(state) {
     // （v3.0 修复：daily_report 也加入始终执行列表，否则极端状态天玩家看不到收支报告）
     if (step.name === "extreme_check" || step.name === "critical_punish") {
       var result = step.fn(state);
+      if (result === "game_over") {
+        return; // 死亡结局，立即停止管线
+      }
       if (result === "skip_day") {
         StateManager.addMessage(
           "🌙 第" + state.player.day + "天在昏迷中过去了...",

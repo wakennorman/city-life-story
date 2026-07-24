@@ -406,6 +406,42 @@ function downgradeToStreet(state, reason) {
 function showVictoryModal() {
   const state = StateManager.getState();
 
+  // === 死亡结局：简化弹窗，不生成遗产数据 ===
+  if (state.flags.death) {
+    var deathHtml =
+      '<div style="text-align:center;padding:12px 0;">' +
+      '<div style="font-size:64px;margin-bottom:16px;">💀</div>' +
+      '<div style="font-size:20px;font-weight:bold;color:var(--danger);margin-bottom:12px;">' +
+      (state.flags.victoryTitle || "💀 客死异乡") +
+      "</div>" +
+      '<div style="font-size:13px;color:var(--text-secondary);line-height:1.8;margin-bottom:16px;">' +
+      (state.flags.victoryDesc || "你的健康归零，在这座城市里倒下了。") +
+      "</div>" +
+      '<div style="font-size:12px;color:var(--text-muted);line-height:1.6;">' +
+      "你一共活了 <strong style='color:var(--text-primary);'>" + state.player.day + " 天</strong>，" +
+      "年龄 <strong style='color:var(--text-primary);'>" + state.player.age + " 岁</strong>。<br>" +
+      "城市依旧运转，但你的故事已经画上了句号。" +
+      "</div>" +
+      "</div>";
+
+    showModal({
+      title: "💀 游戏结束",
+      body: deathHtml,
+      buttons: [
+        {
+          text: "🔄 重新开始",
+          cls: "btn-primary",
+          callback: function () {
+            document.querySelector(".modal-overlay")?.remove();
+            location.reload();
+            return true;
+          },
+        },
+      ],
+    });
+    return;
+  }
+
   // Phase 3: 记录多周目记忆 + 生成遗产数据
   if (typeof recordPlaythroughEndEnhanced === "function") {
     recordPlaythroughEndEnhanced(state);

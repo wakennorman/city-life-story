@@ -1227,7 +1227,7 @@
         return (
           st.player.phase === "street" &&
           st.player.day > 100 &&
-          st.resources.cash >= 80000 &&
+          (st.resources.cash || 0) >= 80000 &&
           !st.flags._acquisitionTeaSeen
         );
       },
@@ -2276,7 +2276,7 @@
         return (
           st.player.phase === "street" &&
           (st.housing.tier || 0) >= 2 &&
-          st.resources.cash >= 25
+          (st.resources.cash || 0) >= 25
         );
       },
       choices: [
@@ -2339,7 +2339,7 @@
         return (
           st.player.phase === "street" &&
           (st.housing.tier || 0) >= 3 &&
-          st.resources.cash >= 200
+          (st.resources.cash || 0) >= 200
         );
       },
       choices: [
@@ -2410,7 +2410,7 @@
         return (
           st.player.phase === "street" &&
           (st.housing.tier || 0) >= 3 &&
-          st.resources.cash >= 300
+          (st.resources.cash || 0) >= 300
         );
       },
       choices: [
@@ -2465,7 +2465,7 @@
         return (
           st.player.phase === "street" &&
           st.player.day >= 40 &&
-          st.resources.cash >= 80000 &&
+          (st.resources.cash || 0) >= 80000 &&
           !st.flags._reGambleSeen
         );
       },
@@ -2747,7 +2747,7 @@
         return (
           st.player.phase === "street" &&
           st.player.day >= 50 &&
-          st.resources.cash >= 30000 &&
+          (st.resources.cash || 0) >= 30000 &&
           !st.flags._startupMeetSeen &&
           isRainy
         );

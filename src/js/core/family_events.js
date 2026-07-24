@@ -46,7 +46,7 @@
           apply: function (st) {
             st.flags._motherSickSeen = true;
             var cost = Math.min(12000, st.resources.cash || 0);
-            st.resources.cash -= cost;
+            st.resources.cash = Math.max(0, (st.resources.cash || 0) - cost);
             if (!st.family.parents.mother) st.family.parents.mother = {};
             st.family.parents.mother.health = "healthy";
             st.family.parents.mother.medicalCost = 0;
@@ -66,7 +66,7 @@
           apply: function (st) {
             st.flags._motherSickSeen = true;
             var cost = Math.min(5000, st.resources.cash);
-            st.resources.cash -= cost;
+            st.resources.cash = Math.max(0, (st.resources.cash || 0) - cost);
             if (!st.family.parents.mother) st.family.parents.mother = {};
             // 手术延期，健康维持"观察中"
             st.family.parents.mother.health = "under_observation";
@@ -118,7 +118,7 @@
           st.family &&
           st.family.mortgage &&
           st.family.mortgage.remainingDays > 0 &&
-          st.resources.cash < (st.family.mortgage.monthlyPayment || 5000)
+          (st.resources.cash || 0) < (st.family.mortgage.monthlyPayment || 5000)
         );
       },
       probability: 0.07,
@@ -131,7 +131,7 @@
             st.flags._mortgageOverdueSeen = true;
             var payment = st.family.mortgage.monthlyPayment || 5000;
             var actualPay = Math.min(payment, st.resources.cash);
-            st.resources.cash -= actualPay;
+            st.resources.cash = Math.max(0, (st.resources.cash || 0) - actualPay);
             st.family.mortgage.remainingDays = Math.max(
               0,
               (st.family.mortgage.remainingDays || 360) - 30,
@@ -216,7 +216,7 @@
           apply: function (st) {
             st.flags._fatherBirthdaySeen = true;
             var cost = Math.min(4000, Math.max(2000, st.resources.cash * 0.3));
-            st.resources.cash -= cost;
+            st.resources.cash = Math.max(0, (st.resources.cash || 0) - cost);
             st.needs.fatigue = Math.min(100, (st.needs.fatigue || 0) + 20);
             st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 25);
             // 提升家庭关系阶段
@@ -252,7 +252,7 @@
           apply: function (st) {
             st.flags._fatherBirthdaySeen = true;
             var cost = Math.min(1500, st.resources.cash);
-            st.resources.cash -= cost;
+            st.resources.cash = Math.max(0, (st.resources.cash || 0) - cost);
             st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 8);
             if (!st.family.parents.father) st.family.parents.father = {};
             st.family.parents.father.companionship =
@@ -299,7 +299,7 @@
         excludeFlags: ["_corpMotherSurgeryDone"],
       },
       conditions: function (st) {
-        return st.corporate && st.resources.cash >= 10000;
+        return st.corporate && (st.resources.cash || 0) >= 10000;
       },
       probability: 0.05,
       repeatable: false,
