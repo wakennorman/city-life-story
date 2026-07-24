@@ -31,7 +31,6 @@
         excludeFlags: ["_chengguanRaidPanicSeen"],
       },
       conditions: function (st) {
-        if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后不再触发街头惊魂
         if (!st.player.workTypeCounts || !st.player.workTypeCounts.stall || st.player.workTypeCounts.stall < 1) return false; // [Layer3]
         return st.chengguan && (st.chengguan.heat || 0) >= 60;
       },

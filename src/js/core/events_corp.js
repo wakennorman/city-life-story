@@ -21,7 +21,6 @@
       // [conditions→triggers]
       triggers: { minDay: 30, excludeFlags: ["_insiderRumorSeen"] },
       conditions: function (st) {
-        if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后链式内幕事件不再触发
         // [已审查] 部分保留：corporate.kpi 无 trigger 等价字段
         return st.player.corporate && st.player.corporate.kpi >= 20;
       },
@@ -32,8 +31,8 @@
           apply: (st) => {
             st.flags._insiderRumorSeen = true;
             st.needs.fatigue = Math.min(100, st.needs.fatigue + 5);
-            if ((st.resources.cash || 0) >= 100) {
-              st.resources.cash = Math.max(0, (st.resources.cash || 0) - 100); // [全系统自洽修复] 域B A类:cash NaN守卫
+            if (st.resources.cash >= 100) {
+              st.resources.cash -= 100;
               // 调度后续：验证结果
               if (typeof scheduleChainEvent === "function") {
                 scheduleChainEvent(st, "insider_verify", 2, "corporate");
@@ -115,15 +114,15 @@
           hint: "高风险高回报",
           cost: 3000,
           apply: (st) => {
-            if ((st.resources.cash || 0) < 3000) {
+            if (st.resources.cash < 3000) {
               StateManager.addMessage("💰 钱不够！", "warning");
               return;
             }
-            st.resources.cash = Math.max(0, (st.resources.cash || 0) - 3000); // [全系统自洽修复] 域B A类:cash NaN守卫
+            st.resources.cash -= 3000;
             const success = Random.chance(0.7);
             if (success) {
               const profit = Random.int(4000, 5999);
-              st.resources.cash = (st.resources.cash || 0) + profit;
+              st.resources.cash += profit;
               st.needs.happiness = Math.min(100, st.needs.happiness + 12);
               st.flags._insiderTradingWon = true;
               StateManager.addMessage(
@@ -163,15 +162,15 @@
           hint: "留条后路",
           cost: 1000,
           apply: (st) => {
-            if ((st.resources.cash || 0) < 1000) {
+            if (st.resources.cash < 1000) {
               StateManager.addMessage("💵 钱不够！", "warning");
               return;
             }
-            st.resources.cash = Math.max(0, (st.resources.cash || 0) - 1000); // [全系统自洽修复] 域B A类:cash NaN守卫
+            st.resources.cash -= 1000;
             const success = Random.chance(0.7);
             if (success) {
               const profit = Random.int(1300, 1899);
-              st.resources.cash = (st.resources.cash || 0) + profit;
+              st.resources.cash += profit;
               st.needs.happiness = Math.min(100, st.needs.happiness + 6);
               StateManager.addMessage(
                 `💰 赌对了，小赚 ¥${profit - 1000}。`,
@@ -306,7 +305,7 @@
             const recovered = Random.chance(0.15);
             if (recovered) {
               const back = Random.int(300, 499);
-              st.resources.cash = (st.resources.cash || 0) + back;
+              st.resources.cash += back;
               StateManager.addMessage(
                 `🚔 警察立案了！居然追回了 ¥${back}，真是意外之喜。`,
                 "success",
@@ -339,7 +338,7 @@
               (st.player.corporate.risk || 0) + 5,
             );
             const extra = Random.int(50, 99);
-            st.resources.cash = (st.resources.cash || 0) + extra;
+            st.resources.cash += extra;
             st.resources.totalEarned += extra;
             StateManager.addMessage(
               `💪 加班加了一周，KPI+10，赚了 ¥${extra}。慢慢补回来。`,
@@ -374,8 +373,6 @@
       conditions: function (st) {
         // [自洽修复] st.needs.health 不存在（state.needs 无 health 字段），改为 st.status.health
         // [已审查] 部分保留：health >= 25 无 trigger 等价字段
-        // [Layer3] 叙事说"领导在群里说全员加班"，需在公司上班
-        if (!st.corporate || !st.corporate.active) return false;
         return ((st.status && st.status.health) || 100) >= 25;
       },
       choices: [
@@ -522,7 +519,7 @@
           hint: "考验向上管理",
           apply: (st) => {
             if (st.player.corporate.upwardMgmt >= 40) {
-              st.resources.cash = (st.resources.cash || 0) + 200;
+              st.resources.cash += 200;
               st.player.corporate.popularity = Math.max(
                 0,
                 st.player.corporate.popularity - 2,
@@ -721,8 +718,6 @@
         "VP明天要来部门听汇报，Leader让你今晚赶一份PPT出来。这东西做好了能加分，做砸了就尴尬了。",
       // [conditions→triggers]
       triggers: { minDay: 10 },
-      // [Layer3] 叙事说"VP要来听汇报，Leader让你赶PPT"，需在公司上班
-      conditions: function (st) { return st.corporate && st.corporate.active === true; },
       choices: [
         {
           text: "🌙 熬夜做好",
@@ -917,8 +912,6 @@
         "又到了公司年会。今年抽奖环节据说有大奖，但更重要的是和同事领导社交的机会。",
       // [conditions→triggers]
       triggers: { minDay: 60 },
-      // [Layer3] 叙事说"公司年会，和同事领导社交"，需在公司上班
-      conditions: function (st) { return st.corporate && st.corporate.active === true; },
       choices: [
         {
           text: "🍻 主动社交敬酒",
@@ -949,14 +942,14 @@
           apply: (st) => {
             const roll = Random.float(0, 1);
             if (roll < 0.05) {
-              st.resources.cash = (st.resources.cash || 0) + 10000;
+              st.resources.cash += 10000;
               st.needs.happiness = Math.min(100, st.needs.happiness + 20);
               StateManager.addMessage(
                 "🎰 中了大奖 ¥10,000！全场欢呼！",
                 "success",
               );
             } else if (roll < 0.3) {
-              st.resources.cash = (st.resources.cash || 0) + 500;
+              st.resources.cash += 500;
               StateManager.addMessage("🎰 中了小奖 ¥500。聊胜于无。", "info");
             } else {
               st.needs.happiness = Math.max(0, st.needs.happiness - 3);
@@ -1071,25 +1064,23 @@
         "茶水间里同事热火朝天：隔壁组的张三投了5万买狗狗币，上个月赚了20万！要不要也试试？",
       // [conditions→triggers]
       triggers: { minDay: 30, minCash: 2000 },
-      // [Layer3] 叙事说"茶水间里同事热火朝天"，需在公司上班
-      conditions: function (st) { return st.corporate && st.corporate.active === true; },
       choices: [
         {
           text: "🚀 跟风买(¥5000)",
           hint: "FOMO了",
           cost: 5000,
           apply: function (st) {
-            if ((st.resources.cash || 0) >= 5000) {
-              st.resources.cash = Math.max(0, (st.resources.cash || 0) - scaleAmount(5000, st.resources && st.resources.totalEarned)); // [全系统自洽修复] 域B A类:cash NaN守卫
+            if (st.resources.cash >= 5000) {
+              st.resources.cash -= 5000;
               if (Random.chance(0.3)) {
-                st.resources.cash = (st.resources.cash || 0) + Random.int(8000, 22999);
+                st.resources.cash += Random.int(8000, 22999);
                 st.needs.happiness = Math.min(100, st.needs.happiness + 20);
                 StateManager.addMessage(
                   "🚀 运气爆棚追涨成功！大赚了一笔！",
                   "success",
                 );
               } else if (Random.chance(0.5)) {
-                st.resources.cash = (st.resources.cash || 0) + Random.int(3000, 6999);
+                st.resources.cash += Random.int(3000, 6999);
                 StateManager.addMessage("🚀 小赚一点就跑了，还行。", "info");
               } else {
                 st.needs.happiness = Math.max(0, st.needs.happiness - 25);
@@ -1138,16 +1129,14 @@
         "HR发全员邮件：公司即将IPO！老员工可按内部价认购员工股，每人最多认购500股。",
       // [conditions→triggers]
       triggers: { minDay: 90, minCash: 5000 },
-      // [Layer3] 叙事说"HR发全员邮件，公司即将IPO"，需在公司上班
-      conditions: function (st) { return st.corporate && st.corporate.active === true; },
       choices: [
         {
           text: "🔔 认购500股(¥4000)",
           hint: "员工福利",
           cost: 4000,
           apply: function (st) {
-            if ((st.resources.cash || 0) >= 4000) {
-              st.resources.cash = Math.max(0, (st.resources.cash || 0) - 4000); // [全系统自洽修复] 域B A类:cash NaN守卫
+            if (st.resources.cash >= 4000) {
+              st.resources.cash -= 4000;
               var inv = st.investment || {};
               inv.stockHoldings = inv.stockHoldings || [];
               inv.stockHoldings.push({
@@ -1173,8 +1162,8 @@
           hint: "试一试",
           cost: 800,
           apply: function (st) {
-            if ((st.resources.cash || 0) >= 800) {
-              st.resources.cash = Math.max(0, (st.resources.cash || 0) - 800); // [全系统自洽修复] 域B A类:cash NaN守卫
+            if (st.resources.cash >= 800) {
+              st.resources.cash -= 800;
               var inv = st.investment || {};
               inv.stockHoldings = inv.stockHoldings || [];
               inv.stockHoldings.push({
@@ -1246,8 +1235,8 @@
           apply: function (st) {
             var inv = st.investment || {};
             var cost = Random.int(1000, 3999);
-            if ((st.resources.cash || 0) >= cost) {
-              st.resources.cash = Math.max(0, (st.resources.cash || 0) - cost); // [全系统自洽修复] 域B A类:cash NaN守卫
+            if (st.resources.cash >= cost) {
+              st.resources.cash -= cost;
               inv.stockHoldings = inv.stockHoldings || [];
               var smic = inv.stockHoldings.find(function (x) {
                 return x.symbol === "SMIC";
@@ -1309,7 +1298,7 @@
                 inv.stockHoldings.splice(i, 1);
               }
             }
-            st.resources.cash = (st.resources.cash || 0) + total;
+            st.resources.cash += total;
             StateManager.addMessage(
               "📉 趁跌停前跑了，变现¥" +
                 Math.round(total).toLocaleString() +
@@ -1324,8 +1313,8 @@
           apply: function (st) {
             var inv = st.investment || {};
             var cost = 2000;
-            if ((st.resources.cash || 0) >= 2000) {
-              st.resources.cash = Math.max(0, (st.resources.cash || 0) - 2000); // [全系统自洽修复] 域B A类:cash NaN守卫
+            if (st.resources.cash >= 2000) {
+              st.resources.cash -= 2000;
               inv.stockHoldings = inv.stockHoldings || [];
               var h = inv.stockHoldings.find(function (x) {
                 return x.symbol === "TSLA";
@@ -1381,8 +1370,8 @@
           apply: function (st) {
             var inv = st.investment || {};
             var cost = 3000;
-            if ((st.resources.cash || 0) >= cost) {
-              st.resources.cash = Math.max(0, (st.resources.cash || 0) - cost); // [全系统自洽修复] 域B A类:cash NaN守卫
+            if (st.resources.cash >= cost) {
+              st.resources.cash -= cost;
               inv.btcHoldings = (inv.btcHoldings || 0) + 0.003;
               inv.btcAvgCost =
                 inv.btcHoldings > 0
@@ -1471,7 +1460,7 @@
           apply: function (st) {
             st.flags._founderOustSeen = true;
             st.flags._founderExited = true;
-            st.resources.cash = (st.resources.cash || 0) + 150000;
+            st.resources.cash += 150000;
             st.resources.totalEarned += 150000;
             if (st.player && st.player.corporate) {
               st.player.corporate.dignity = Math.min(
@@ -1528,10 +1517,9 @@
       story:
         "新 CEO 上任一个月，你这位“前创始人”被分配的工作是——给一群空降高管讲解你当年定的产品逻辑，然后做成 PPT 让他们“参考”。你看着会议室里那些一年前还没听说过这家公司的人，对你的产品指指点点，心里冷笑：他们连用户名字都念不准。但下班路上，你还是去打了点酒。",
       conditions: function (st) {
-        if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后前创始人羞辱链不再触发
         return (
           !!st.flags._founderStayed &&
-          st.player.day >= (st.flags._founderStayed || 0) + 365 &&
+          st.player.day >= (st.flags._founderStayed || 0) + 30 &&
           !st.flags._founderHumiliationSeen
         );
       },
@@ -1622,7 +1610,6 @@
       story:
         "深夜接到当年合伙人老陈的电话：“新 CEO 一年烧了 3 个亿，下个季度要不到融资就完蛋。投资人现在愿意 4 折出售他们手里的股份——总价 ¥800,000。我和老张能凑¥500,000，差¥300,000。如果你能掏出来，我们三个人就能拿回这家公司。” 你看着对面墙上自己当年挂的那张“再创业”的字，握着手机的手在抖。",
       conditions: function (st) {
-        if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后回购链不再触发
         var hasObserved =
           !!st.flags._founderObserving || !!st.flags._founderRebuilding;
         var triggerDay = st.flags._founderStayed
@@ -1631,7 +1618,7 @@
         return (
           hasObserved &&
           st.player.day >= triggerDay &&
-          (st.resources.cash || 0) >= 300000 && // [全系统自洽修复] 域H A类: 阈值从100000→300000(实际成本); [全系统自洽修复] 域B A类:cash NaN守卫
+          st.resources.cash >= 100000 &&
           !st.flags._founderBuybackSeen
         );
       },
@@ -1643,7 +1630,7 @@
           apply: function (st) {
             st.flags._founderBuybackSeen = true;
             st.flags._founderReclaimed = true;
-            st.resources.cash = Math.max(0, (st.resources.cash || 0) - scaleAmount(300000, st.resources && st.resources.totalEarned)); // [全系统自洽修复] 域B A类:cash NaN守卫
+            st.resources.cash -= 300000;
             if (st.player && st.player.corporate) {
               st.player.corporate.dignity = Math.min(
                 100,
@@ -1729,7 +1716,7 @@
             st.flags._fateCollapseSeen = true;
             st.flags._formerCompanyCollapsed = true;
             var severance = Random.int(50000, 69999);
-            st.resources.cash = (st.resources.cash || 0) + severance;
+            st.resources.cash += severance;
             st.resources.totalEarned += severance;
             st.player.mental = Math.max(0, st.player.mental - 5);
             StateManager.addMessage(
@@ -1772,7 +1759,6 @@
       _isChainEvent: false, // [全系统自洽修复] 域B,
       phase: "corporate",
       conditions: function (st) {
-        if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后穿小鞋链不再触发
         return (
           st.player.phase === "corporate" &&
           st.player.day >= 60 &&
@@ -2289,7 +2275,7 @@
               });
             }
             // [自洽修复] 域H A类#4: 防 NaN 污染 cash
-            st.resources.cash = Math.max(0, (st.resources.cash || 0) - scaleAmount(500000, st.resources && st.resources.totalEarned));
+            st.resources.cash = Math.max(0, (st.resources.cash || 0) - 500000);
             StateManager.addMessage(
               "📈 你下单买了50万自己公司股票（100股）。手在抖——你知道这是违法的。",
               "warning",
@@ -2654,7 +2640,7 @@
       icon: "👔",
       title: "前上司东山再起",
       story:
-        "几个月后行业峰会上张总跳槽成了VP。名片递过来你们四目相对——这个世界小到不知道得罪过的人明天坐在哪个位置上。",
+        "一年后行业峰会上张总跳槽成了VP。名片递过来你们四目相对——这个世界小到不知道得罪过的人明天坐在哪个位置上。",
       conditions: function (st) {
         return (
           (!!st.flags._careerNailed || !!st.flags._careerHRComplaint) &&
@@ -2770,8 +2756,8 @@
           hint: "¥50000保证金，合法但职业风险",
           apply: function (st) {
             st.flags._shortSelfSeen = true;
-            if ((st.resources.cash || 0) >= 50000) {
-              st.resources.cash = Math.max(0, (st.resources.cash || 0) - scaleAmount(50000, st.resources && st.resources.totalEarned)); // [全系统自洽修复] 域B A类:cash NaN守卫
+            if (st.resources.cash >= 50000) {
+              st.resources.cash -= 50000;
               st.flags._shortedOwnCompany = true;
               st.flags._shortDay = st.player.day;
               if (typeof scheduleChainEvent === "function") {
@@ -2830,7 +2816,7 @@
         "午休时，部门副经理老张把你拉到楼梯间，压低声音说：'年底要竞聘了，现在公司里分两派——王副总那一派要推自己的人上去，但李总这边还缺人。你跟了我这几年，我看好你。'他拍拍你的肩膀，等你表态。",
       conditions: function (st) {
         return (
-          st.player.day >= 730 &&
+          st.player.day >= 90 &&
           st.player.corporate &&
           st.player.corporate.popularity >= 25 &&
           !st.flags._officeFactionApproached
@@ -3038,7 +3024,7 @@
               );
             }
             st.player.fame = Math.max(0, (st.player.fame || 0) + fameGain);
-            st.resources.cash = (st.resources.cash || 0) + 5000;
+            st.resources.cash += 5000;
             st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 12);
             StateManager.addMessage(
               "🏆 你成功获得了晋升机会！老张拍了拍你的肩：'我没看错人。'",
@@ -3181,8 +3167,7 @@
             cost: 2000,
             apply: function (st) {
               st.flags._promotionGiftGiven = true;
-              if ((st.resources.cash || 0) < 2000) { StateManager.addMessage("⚠️ 现金不足¥2000，无法准备礼物。", "warning"); return; }
-              st.resources.cash = (st.resources.cash || 0) - 2000; // [全系统自洽修复] 域H A类: 现金守卫防NaN
+              st.resources.cash -= 2000;
               st.player.corporate.popularity = Math.min(
                 100,
                 (st.player.corporate.popularity || 50) + 8,
@@ -3262,7 +3247,6 @@
         story:
           "公司宣布优化 10% 的员工。你的 Leader 把你叫到办公室：「你手下有两个人，老赵和小林。老赵快退休了，家里有个生病的妻子。小林刚结婚，房贷压力大。我只能留一个，另一个……你自己跟他们说吧。」",
         triggers: { minDay: 150, phase: "corporate" },
-        conditions: function (st) { if (!st.corporate || !st.corporate.team || st.corporate.team.length < 2) return false; return true; }, // [Layer3]
         choices: [
           {
             text: "👴 保老赵，让他提前退休",

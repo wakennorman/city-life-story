@@ -91,10 +91,19 @@
       story:
         "今天翻手机日历，忽然意识到：你来这座城，整整一年了。\n\n从火车站广场那个兜里只剩三百块的夜晚，到如今有了熟悉的早餐摊、常去的茶馆、几个能随时发消息的人——城市不再只是钢筋水泥，而是一本慢慢写满的通讯录。\n\n你想起这一年里帮过你、也被你帮过的人。",
       triggers: { minDay: 365, excludeFlags: ["_cityAnnivDone"] },
-      // [Layer3] 叙事说"从火车站广场那个兜里只剩三百块的夜晚"，此场景仅适用于"城市务工者"剧本
       conditions: function (st) {
-        if (!st.flags || !st.flags._scenarioId || st.flags._scenarioId !== "classic") return false;
-        return true;
+        var day = (st.player && st.player.day) || 0;
+        if (day < 365) return false;
+        var yearMark = Math.floor(day / 365);
+        // 每满一整年触发一次：记录已达成的周年数，避免每年反复弹
+        if (((st.flags && st.flags._cityAnnivYear) || 0) >= yearMark)
+          return false;
+        var rels = st.relationships || {};
+        var hasMet = Object.keys(rels).some(function (k) {
+          var r = rels[k];
+          return r && r.met;
+        });
+        return hasMet;
       },
       probability: 0.05, // [PLACEHOLDER] 触发率待 playtest
       repeatable: false,

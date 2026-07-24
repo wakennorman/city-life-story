@@ -97,18 +97,6 @@ function checkJobRequirements(job, state) {
     return `销售技能不足 (需要${reqs.sales})`;
   if (reqs.english && s.english.level < reqs.english)
     return `英语技能不足 (需要${reqs.english})`;
-  if (reqs.coding && s.coding.level < reqs.coding)
-    return `编程技能不足 (需要${reqs.coding})`;
-  if (reqs.driving && s.driving.level < reqs.driving)
-    return `驾驶技能不足 (需要${reqs.driving})`;
-  if (reqs.management && s.management.level < reqs.management)
-    return `管理技能不足 (需要${reqs.management})`;
-  if (reqs.accounting && s.accounting.level < reqs.accounting)
-    return `会计技能不足 (需要${reqs.accounting})`;
-  if (reqs.electrician && s.electrician.level < reqs.electrician)
-    return `电工技能不足 (需要${reqs.electrician})`;
-  if (reqs.welding && s.welding.level < reqs.welding)
-    return `焊接技能不足 (需要${reqs.welding})`;
   if (job.requiredFlag && !state.flags[job.requiredFlag])
     return "尚未解锁（需要NPC好感度）";
   if (job.educationRequired && (p.education || 0) < job.educationRequired) {
@@ -263,10 +251,6 @@ function estimateJobPay(job, state) {
       var wageMult = getDifficultyMultiplier(state, "wage");
       if (wageMult !== 1.0) pay = Math.floor(pay * wageMult);
     }
-    // 天气修正
-    if (typeof getWeatherWorkMod === "function") {
-      pay = Math.floor(pay * getWeatherWorkMod(state));
-    }
     total += pay;
   }
   return Math.floor(total / 10);
@@ -343,14 +327,6 @@ function estimateJobPayDetailed(job, state) {
     if (suiteMulti !== 1.0) {
       tags.push("🎯+" + Math.round((suiteMulti - 1) * 100) + "%");
       base = Math.floor(base * suiteMulti);
-    }
-  }
-  // 天气修正（户外工作收入受天气影响）
-  if (typeof getWeatherWorkMod === "function") {
-    var weatherMult = getWeatherWorkMod(state);
-    if (weatherMult < 1.0) {
-      tags.push("🌧️" + Math.round((weatherMult - 1) * 100) + "%");
-      base = Math.floor(base * weatherMult);
     }
   }
   // 连击加成
@@ -2359,17 +2335,6 @@ function getAvailableActions(state) {
   const actions = [];
 
   // 提升为函数级变量（用 let，块内可重新指向用 const）
-  if (!state.trade || !state.trade.currentLocation) {
-    actions.push({
-      id: "no_location",
-      category: "other",
-      name: "当前位置不可用",
-      desc: "游戏状态异常，尝试旅行到一个地点。",
-      icon: "🚫",
-      disabled: true,
-    });
-    return actions;
-  }
   const locKey = state.trade.currentLocation;
 
   if (state.player.phase === "street") {
@@ -2539,7 +2504,7 @@ function getAvailableActions(state) {
         reqFail: !canAfford ? "需 ¥" + house.cost : null,
         handler: (function (tier, h) {
           return function () {
-            state.resources.cash = (state.resources.cash || 0) - h.cost; // [全系统自洽修复] 域G A类: cash NaN防御
+            state.resources.cash -= h.cost;
             state.housing.tier = tier;
             state.housing.rentedDay = state.player.day;
             state.inventory.capacity =
@@ -2603,7 +2568,7 @@ function getAvailableActions(state) {
             disabled: !canAfford,
             reqFail: !canAfford ? `需 ¥${opt.cost}` : null,
             handler: () => {
-              state.resources.cash = (state.resources.cash || 0) - opt.cost; // [全系统自洽修复] 域G A类: cash NaN防御
+              state.resources.cash -= opt.cost;
               state.housing.storageRented = true;
               state.housing.storageCapacity = opt.capacity;
               // [全系统自洽修复] 域G A类修复: housing.tier 上限扩容至 6
@@ -2662,7 +2627,7 @@ function getAvailableActions(state) {
           costEstimate: pack.cost,
           disabled: !canAfford,
           handler: () => {
-            state.resources.cash = (state.resources.cash || 0) - pack.cost; // [全系统自洽修复] 域G A类: cash NaN防御
+            state.resources.cash -= pack.cost;
             state.inventory.items.push({ id: pack.id, qty: 1 });
             state.inventory.capacity += pack.capacity;
             StateManager.addMessage(
@@ -3393,7 +3358,7 @@ function getAvailableActions(state) {
       apCost: 10,
       costEstimate: 15,
       effectEstimate: "饥饱+35, 心情+8",
-      disabled: (state.resources.cash || 0) < 8 ? true : false,
+      disabled: state.resources.cash < 8 ? true : false,
       handler: () => {
         const st = StateManager.getState();
         const isNewbie = st.player.day <= 10;
@@ -3425,7 +3390,7 @@ function getAvailableActions(state) {
           cookHint = `（烹饪Lv${cookingLvl}省了¥${saved}）`;
         }
 
-        st.resources.cash = (st.resources.cash || 0) - foodCost;
+        st.resources.cash -= foodCost;
         addDailyTransaction(
           st,
           "expense",
@@ -3452,14 +3417,14 @@ function getAvailableActions(state) {
       icon: "🚿",
       costEstimate: 8,
       effectEstimate: "卫生+40",
-      disabled: (state.resources.cash || 0) < 8 ? true : false,
+      disabled: state.resources.cash < 8 ? true : false,
       handler: () => {
         const st = StateManager.getState();
         if ((st.resources.cash || 0) < 8) {
           StateManager.addMessage("⚠️ 不够钱洗澡。", "danger");
           return;
         }
-        st.resources.cash = (st.resources.cash || 0) - 8;
+        st.resources.cash -= 8;
         st.needs.hygiene = Math.min(100, st.needs.hygiene + 40);
         StateManager.addMessage("🚿 洗了个澡，神清气爽。", "success");
         consumeAP(10);
@@ -3530,10 +3495,8 @@ function getAvailableActions(state) {
         disabled: (state.resources.cash || 0) < 50 ? true : false,
         handler: () => {
           const st = StateManager.getState();
-          st.resources.cash = Math.max(0, (st.resources.cash || 0) - 50);
-          // [全系统自洽修复] 域G A类#2: 医院看病缺 status 守卫 → NaN传播
-          if (!st.status) st.status = {};
-          st.status.health = Math.min(100, (st.status.health || 50) + 40);
+          st.resources.cash -= 50;
+          st.status.health = Math.min(100, st.status.health + 40);
           st.status.injured = false;
           // v3.1：医院治疗同时清除疾病数组（兼容illness.js疾病系统）
           if (st.status.illnesses && st.status.illnesses.length > 0) {
@@ -3789,7 +3752,7 @@ function getAvailableActions(state) {
         id: "cert_" + cert.id,
         category: "education",
         name: `考取${cert.name}`,
-        desc: `${cert.desc} 费用:¥${cert.requirements.cash} 通过率:${Math.round(cert.examPassRate * 100)}%${cert.trainingDays ? " 培训:" + cert.trainingDays + "天" : ""}`, // [全系统自洽修复] 域A 联动增强: certificate trainingDays接入UI展示（原定义但从未展示）
+        desc: `${cert.desc} 费用:¥${cert.requirements.cash} 通过率:${Math.round(cert.examPassRate * 100)}%`,
         icon: "📜",
         costEstimate: cert.requirements.cash,
         disabled: !canAfford,
@@ -3797,7 +3760,7 @@ function getAvailableActions(state) {
         handler: () => {
           if (Random.chance(cert.examPassRate)) {
             state.certificates.push(cert.id);
-            state.resources.cash = (state.resources.cash || 0) - (cert.requirements.cash || 0); // [全系统自洽修复] 域G A类: cash NaN防御
+            state.resources.cash -= cert.requirements.cash;
             if (cert.effects.codingXp)
               addSkillXp("coding", cert.effects.codingXp);
             if (cert.effects.englishXp)
@@ -3834,23 +3797,12 @@ function getAvailableActions(state) {
               addSkillXp("cooking", cert.effects.foodHandlingXp); // 食安→烹饪
             if (cert.effects.psychologyXp)
               addSkillXp("social", cert.effects.psychologyXp); // 心理→社交
-            // [全系统自洽修复] 域A 修复: 证书被动特效接入（injuryReduction/illnessRiskReduction/fatigueReduction/healthBonus/mentalBonus 原定义但从未应用）
-            if (cert.effects.injuryReduction)
-              state._injuryReduction = (state._injuryReduction || 0) + cert.effects.injuryReduction;
-            if (cert.effects.illnessRiskReduction)
-              state._illnessRiskReduction = (state._illnessRiskReduction || 0) + cert.effects.illnessRiskReduction;
-            if (cert.effects.fatigueReduction)
-              state._fatigueReduction = (state._fatigueReduction || 0) + cert.effects.fatigueReduction;
-            if (cert.effects.healthBonus)
-              state.player.health = Math.min(100, (state.player.health || 0) + cert.effects.healthBonus);
-            if (cert.effects.mentalBonus)
-              state.player.mental = Math.min(100, (state.player.mental || 0) + cert.effects.mentalBonus);
             StateManager.addMessage(
               `📜 恭喜！成功考取${cert.name}！`,
               "success",
             );
           } else {
-            state.resources.cash = (state.resources.cash || 0) - Math.floor((cert.requirements.cash || 0) / 2); // [全系统自洽修复] 域G A类: cash NaN防御
+            state.resources.cash -= Math.floor(cert.requirements.cash / 2);
             StateManager.addMessage(
               `📜 ${cert.name}考试未通过，报名费损失一半。下次再努力！`,
               "warning",
@@ -3889,16 +3841,9 @@ function getAvailableActions(state) {
           if (typeof getHistoryModifiers === "function") {
             _histNpcBonus = getHistoryModifiers(state).npcAffinityBonus || 0;
           }
-          // [全系统自洽修复] 域A 联动增强: 住所tier5/6 npcVisitBonus接入NPC好感（豪宅/别墅招待加成）
-          var _housingNpcBonus = state._housingNpcVisitBonus || 0;
-          var _housingNpcTag = "";
-          if (_housingNpcBonus > 0 && !isBirthday && Random.chance(0.3)) {
-            _housingNpcTag = "（住所雅致，好感额外+" + Math.round(5 * _housingNpcBonus) + "）";
-          }
           const affinityGain =
             (isBirthday ? 10 + Random.int(0, 4) : 5 + Random.int(0, 4)) +
-            _histNpcBonus +
-            (_housingNpcTag ? Math.round(5 * _housingNpcBonus) : 0);
+            _histNpcBonus;
           r.affinity = Math.min(100, r.affinity + affinityGain);
           // 节日专属台词（P1.8）：节日期间65%概率触发
           var festLine = null;
@@ -3937,7 +3882,7 @@ function getAvailableActions(state) {
             }
           }
           StateManager.addMessage(
-            `💬${bdTag} ${npc.name}：${line} (好感+${affinityGain})${_skillBonus}${_housingNpcTag}`,
+            `💬${bdTag} ${npc.name}：${line} (好感+${affinityGain})${_skillBonus}`,
             isBirthday ? "success" : "info",
           );
           state.needs.happiness = Math.min(
@@ -4175,20 +4120,6 @@ function getAvailableActions(state) {
   // --- 注入扩展行动库（生存/社交/学习/生活/投资/梦想）---
   if (typeof addExtraActions === "function") {
     addExtraActions(state, actions);
-  }
-
-  // 兜底：确保至少有一个行动，防止行动Tab空白
-  if (actions.length === 0) {
-    actions.push({
-      id: "idle",
-      category: "other",
-      name: "待机休息",
-      desc: "今天什么都不做，休息一天。",
-      icon: "😴",
-      handler: function () {
-        StateManager.addMessage("😴 你休息了一天，什么也没做。", "info");
-      },
-    });
   }
 
   return actions;
@@ -4508,11 +4439,6 @@ function doStreetJob(job) {
       fatigueReduction = getSkillFatigueReduction(job.id, state);
     }
     var fatigueAmount = job.effects.fatigue || 0;
-    // [全系统自洽修复] 域A 修复: 证书fatigueReduction累加（rehab_therapist等降低疲劳）
-    var certFatigueReduction = state._fatigueReduction || 0;
-    if (certFatigueReduction > 0) {
-      fatigueAmount = Math.max(0, fatigueAmount - certFatigueReduction);
-    }
     if (fatigueReduction > 0 && fatigueAmount > 0) {
       fatigueAmount = Math.max(0, fatigueAmount - fatigueReduction);
       if (Random.chance(0.3)) {
@@ -4788,11 +4714,10 @@ function doStreetJob(job) {
       typeof getEmotionWorkModifier === "function"
         ? getEmotionWorkModifier(state).injury || 1
         : 1;
-    // [全系统自洽修复] 域A 修复: 证书injuryReduction累加（construction_safety 0.5 + 其他证书累加）
-    var certInjuryReduction = state._injuryReduction || 0;
-    if (state.certificates && state.certificates.includes("construction_safety"))
-      certInjuryReduction += 0.5;
-    const certReduction = Math.max(0, 1 - certInjuryReduction);
+    const certReduction =
+      state.certificates && state.certificates.includes("construction_safety")
+        ? 0.5
+        : 1.0;
     if (
       job.risk.injury &&
       Random.chance(Math.min(1, job.risk.injury * riskMod * certReduction))
@@ -4805,12 +4730,9 @@ function doStreetJob(job) {
         "danger",
       );
     }
-    // [全系统自洽修复] 域A 修复: 证书illnessRiskReduction累加（nursing_cert/health_manager等）
-    var certIllnessReduction = state._illnessRiskReduction || 0;
-    var illnessChance = Math.max(0, (job.risk.illness || 0) * riskMod * (1 - certIllnessReduction));
     if (
       job.risk.illness &&
-      Random.chance(Math.min(1, illnessChance))
+      Random.chance(Math.min(1, (job.risk.illness || 0) * riskMod))
     ) {
       state.status.health = Math.max(0, state.status.health - 10);
       // v3.1：工作环境致病走illness.js疾病系统（不再直接设sick=true）
@@ -4953,9 +4875,6 @@ function addSkillXp(skillKey, amount) {
   if (!skill) return;
   // [域C联动] 天赋XP倍率生效
   var _talentMult = getTalentXpMultiplier(skillKey, state);
-  // [全系统自洽修复] 域A 联动增强: 住所tier5/6 skillStudyBonus接入技能XP（豪宅/别墅学习加成）
-  var housingBonus = state._housingSkillStudyBonus || 0;
-  if (housingBonus > 0) amount = Math.round(amount * (1 + housingBonus));
   skill.xp += Math.round(amount * _talentMult);
   // v3.1 审查改进：XP 需求从线性改为指数，level 0=120 → level 50≈10,000（之前 6,120）
   // 让玩家在高级别感受更有意义的成长压力，同时保留早期快速升级的爽快感

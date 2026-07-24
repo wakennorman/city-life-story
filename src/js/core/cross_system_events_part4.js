@@ -1296,7 +1296,7 @@
     story:
       "老周闻着香味蹭上门，你下厨露了一手。老人家吃得眉开眼笑，直夸你手艺好。",
 
-    // conditions：old_zhou 已结识 + cooking 技能 + 心情低（NPC ∩ 技能 ∩ 需求）
+    // conditions：old_zhou 已结识 + cooking 技能（NPC ∩ 技能）
 
     conditions: function (st) {
       var rel = st.relationships && st.relationships["old_zhou"]; // 检查 old_zhou 关系
@@ -1306,8 +1306,6 @@
       var ck = st.skills && st.skills.cooking && st.skills.cooking.level; // 检查 cooking 等级
 
       if (typeof ck !== "number" || ck < 8) return false; // 检查 cooking>=8
-
-      // [Layer3] 移除心情<30要求——叙事未暗示不开心，老周蹭饭是温馨场景
 
       if (st.player.day < 8) return false; // 检查 中后期
 
@@ -1755,11 +1753,11 @@
     story:
       "连夜暴雨把出租屋的屋檐泡漏了，水顺着墙角往下淌。你想起练过的维修手艺，抄起工具就爬上梯子。",
 
-    // conditions：雨天/暴雨 + repair 技能（技能×天气×需求空白区）
+    // conditions：雨天/暴雨 + repair 技能 + 有住所（技能×天气×需求空白区）
 
     conditions: function (st) {
-      // [Layer3] 叙事说"出租屋的屋檐泡漏了"→必须有住所
-      if (!st.housing || st.housing.tier < 1) return false;
+      if (!st.housing || st.housing.tier < 1) return false; // [Layer3] 叙事涉及出租屋
+
       var w = st.weather && st.weather.current; // 检查 天气
 
       if (w !== "rainy" && w !== "stormy") return false; // 检查 雨天或暴雨
@@ -2330,11 +2328,11 @@
     story:
       "科技园里公司扎堆，你凭着嘴皮子帮人推销办公耗材，园区里攒下的好名声让你一路绿灯。",
 
-    // conditions：sales 技能 + 科技园声望（技能×声望×地点空白区）
+    // conditions：sales 技能 + 科技园声望 + 科技园位置（技能×声望×地点空白区）
 
     conditions: function (st) {
-      // [Layer3] 叙事说"科技园里公司扎堆"→必须身在科技园
-      if (!st.trade || st.trade.currentLocation !== 'techPark') return false;
+      if (!st.trade || st.trade.currentLocation !== "techPark") return false; // [Layer3] 叙事涉及科技园
+
       var sales = st.skills && st.skills.sales && st.skills.sales.level; // 检查 sales 等级
 
       if (typeof sales !== "number" || sales < 15) return false; // 检查 sales>=15
@@ -4229,6 +4227,8 @@
     // conditions：暴雨天气 + 已就业（天气×职业空白区）
 
     conditions: function (st) {
+      if (!st.career || !st.career.currentJob) return false; // [Layer3] 叙事涉及工地上班
+
       if (st.weather && st.weather.current !== "stormy") return false; // 检查 暴雨
 
       if (!st.employment || !st.employment.currentJob) return false; // 检查 已就业

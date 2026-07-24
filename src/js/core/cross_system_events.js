@@ -112,8 +112,7 @@
       title: "风口来了",
       story: `手机弹了条推送："XX行业人才缺口巨大，日薪涨了50%！"\n你看了看，心跳加速——这不就是你一直在干的活吗？`,
       conditions: function (st) {
-        // [Layer3] 叙事说"你一直在干的活"→必须有工作
-        if (!st.career || !st.career.currentJob) return false;
+        if (!st.career || !st.career.currentJob) return false; // [Layer3]
         if (!st._worldParams || !st._worldParams.sectorHeat) return false;
         for (var sector in st._worldParams.sectorHeat) {
           if (st._worldParams.sectorHeat[sector] > 1.2) return true;
@@ -166,8 +165,7 @@
       title: "行业寒冬",
       story: `新闻里铺天盖地都是"XX行业遇冷""企业缩编"的消息。你认识几个同行，已经在抱怨活越来越少、价钱越压越低。\n风口过了，日子得重新算计。`,
       conditions: function (st) {
-        // [Layer3] 叙事说"你认识几个同行"→必须有工作
-        if (!st.career || !st.career.currentJob) return false;
+        if (!st.career || !st.career.currentJob) return false; // [Layer3]
         if (!st._worldParams || !st._worldParams.sectorHeat) return false;
         if (st.player.day < 15) return false;
         if (
@@ -2401,8 +2399,10 @@
       story:
         "你正在街上走着，一个中年男人快步迎上来——你认出来了，这是你一个月前帮忙送过紧急文件的那位客户。\n\n他笑着说：「可算碰上你了！上次你帮我送的那份标书中了！一直想谢谢你。」说着递过来一个袋子。",
       conditions: function (st) {
-        // [Layer3] 叙事说"帮送过紧急文件"→必须有配送经历
-        if (!st.player.workTypeCounts || !st.player.workTypeCounts['delivery_rider'] || st.player.workTypeCounts['delivery_rider'] < 1) return false;
+        // [Layer3] 需要有外卖配送历史
+        if (!st.player.workTypeCounts || !st.player.workTypeCounts.delivery_rider || st.player.workTypeCounts.delivery_rider < 1) return false;
+        // 检查玩家是否具备长期跑腿/配送的特征：driving技能≥15 或 agility≥28（经常行动）
+        // 且游戏天数>30说明有足够时间积累客户
         if (st.player.day < 30) return false;
         if (st.skills && st.skills.driving && st.skills.driving.level >= 15)
           return true;
@@ -2639,8 +2639,7 @@
       story:
         "你在商业区的人群中看到一个人正鬼鬼祟祟地贴近前面背包的姑娘——他的手已经伸进了她的背包拉链缝隙。\n\n周围的人都忙着赶路，没人注意到。你只有几秒钟时间决定怎么做。",
       conditions: function (st) {
-        // [Layer3] 叙事说"在商业区的人群中"→必须身在商业区
-        if (!st.trade || st.trade.currentLocation !== 'commercialDist') return false;
+        if (!st.trade || st.trade.currentLocation !== "commercialDist") return false; // [Layer3]
         // 天数>10，不重复
         if (st.player.day < 10) return false;
         if (st.flags._moralPickpocketSeen) return false;
@@ -3771,8 +3770,7 @@
       story:
         "你今天照常去干活，但一到地方就觉得胸口发闷。同样的动作、同样的路线、同样的吆喝——你已经重复了不知道多少遍。\n\n你坐在路沿石上，看着别的摊位发呆。脑子里有个声音在说：「还要这样干多久？」",
       conditions: function (st) {
-        // [Layer3] 叙事说"今天照常去干活"→必须有工作
-        if (!st.career || !st.career.currentJob) return false;
+        if (!st.career || !st.career.currentJob) return false; // [Layer3]
         if (st.player.day < 20) return false;
         // 通过高疲劳和低心情间接判断倦怠
         if (!st.needs) return false;
@@ -3860,8 +3858,7 @@
       story:
         "你强撑着去干活，但手上的动作明显比平时慢。咳嗽压不住，额头烫得厉害。\n\n旁边的老主顾看了你一眼：「小伙子，你这脸色不对啊，发烧了吧？别干了，回去歇着。」",
       conditions: function (st) {
-        // [Layer3] 叙事说"你强撑着去干活"→必须有工作
-        if (!st.career || !st.career.currentJob) return false;
+        if (!st.career || !st.career.currentJob) return false; // [Layer3]
         if (st.player.day < 10) return false;
         if (
           !st.status ||
@@ -4591,8 +4588,7 @@
       story:
         "你在工地上干活时，突然听到一声喊——上面掉下来一捆钢管！虽然没砸到人，但碎砖块溅到了你这边。\n\n工头跑过来看了一圈：「没事没事，散了吧。」但你的手臂被划了一道口子，血渗了出来。",
       conditions: function (st) {
-        // [Layer3] 叙事说"你在工地上干活时"→必须有工作
-        if (!st.career || !st.career.currentJob) return false;
+        if (!st.career || !st.career.currentJob) return false; // [Layer3]
         if (st.player.day < 20) return false;
         var curLoc = st.trade && st.trade.currentLocation;
         if (curLoc !== "construction") return false;
@@ -4802,9 +4798,9 @@
       story:
         "你在图书馆的自习区埋头苦读，但一道题卡了你半小时。你咬着笔帽，盯着书页上的公式发呆。\n\n对面一个戴眼镜的中年人合上自己的书，看了你一眼：「卡住了？来，我看看。」",
       conditions: function (st) {
-        // [Layer3] 叙事说"在图书馆的自习区埋头苦读"→必须身在图馆
-        if (!st.trade || st.trade.currentLocation !== 'library') return false;
+        if (!st.trade || st.trade.currentLocation !== "library") return false; // [Layer3]
         if (st.player.day < 25) return false;
+        if ((st.player.intelligence || 0) < 35) return false;
         // 得有一定的学历提升意愿（学过习或用过学习类行动）
         if (st.flags._libraryMentorDone) return false;
         return true;
@@ -4868,8 +4864,7 @@
         "今天天气预报发布了高温预警，气温预计超过40度。你本打算去户外干活，但太阳毒辣得让人睁不开眼。\n\n你看了看手机上的账户余额，又抬头看了看天。\n\n工地和街边小摊都需要人。",
       // [自洽修复] v3.20 原始提交缺 conditions/apply → 补全
       conditions: function (st) {
-        // [Layer3] 叙事说"你本打算去户外干活"→必须有工作
-        if (!st.career || !st.career.currentJob) return false;
+        if (!st.career || !st.career.currentJob) return false; // [Layer3]
         return (
           st.player.phase === "street" &&
           st.weather &&

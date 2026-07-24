@@ -205,18 +205,6 @@ const DAILY_PIPELINE = [
         0,
         Math.min(100, state.needs.happiness - 3 + (house.happinessBonus || 0)),
       );
-      // [全系统自洽修复] 域A 修复: 住所tier5/6特效接入（healthRecovery/skillStudyBonus/npcVisitBonus/fameGain 原定义但从未消费）
-      if (house.effects) {
-        if (house.effects.healthRecovery) {
-          state.player.health = Math.min(100, (state.player.health || 0) + house.effects.healthRecovery);
-        }
-        if (house.effects.fameGain) {
-          state.player.fame = Math.min(100, (state.player.fame || 0) + house.effects.fameGain);
-        }
-        // skillStudyBonus/npcVisitBonus 存入状态供技能训练/NPC互动读取
-        state._housingSkillStudyBonus = house.effects.skillStudyBonus || 0;
-        state._housingNpcVisitBonus = house.effects.npcVisitBonus || 0;
-      }
       // 王大婶好感30解锁每日带饭（饥饱+15）
       if (state.flags.auntWangMeal) {
         state.needs.hunger = Math.min(100, state.needs.hunger + 15);
@@ -277,7 +265,7 @@ const DAILY_PIPELINE = [
           rentAmount -= 50;
         }
         if (state.resources.cash >= rentAmount) {
-          state.resources.cash -= rentAmount; // [全系统自洽修复] 域G A类: cash NaN防御（已由 day_increment 步骤重置NaN）
+          state.resources.cash -= rentAmount;
           addDailyTransaction(
             state,
             "expense",
@@ -602,25 +590,7 @@ const DAILY_PIPELINE = [
         if (result && result.wealthTax > 0) {
           state.resources.cash = Math.max(0, (state.resources.cash || 0) - result.wealthTax);
         }
-        // [全系统自洽修复] 域A R171 A→G 联动增强: 经济日报概要
-        if (result && typeof StateManager !== "undefined") {
-          var _ecoMsgs = [];
-          if (result.wealthTax > 500) {
-            _ecoMsgs.push("💰 今日财富税 ¥" + result.wealthTax.toLocaleString() + "（" + (result.activeTaxTier || "未达") + "档）");
-          }
-          if (result.loanRate && result.loanRate > 0.001) {
-            _ecoMsgs.push("🏦 当前贷款利率 " + (result.loanRate * 100).toFixed(2) + "%/日");
-          }
-          if (result.marketSaturationPenalty > 0) {
-            _ecoMsgs.push("📉 市场饱和度 " + result.marketSaturationPenalty.toFixed(0) + "%");
-          }
-          if (_ecoMsgs.length > 0 && _ecoMsgs[0]) {
-            StateManager.addMessage(_ecoMsgs.join(" · "), "info");
-          }
-        }
       }
-      // [全系统自洽修复] 域E A类#1: economy_v3_1_daily返回marketSaturationPenalty但未写回state._economySettlement，导致tickInvestmentDaily永远读不到
-      state._economySettlement = typeof result === "object" ? result : {};
     },
   },
 
@@ -1420,11 +1390,11 @@ const DAILY_PIPELINE = [
             bonusMult: Math.round(bonusMult * 100) / 100,
           };
           StateManager.addMessage(
-            "🔥 今日热招（日结）：" +
+            "🔥 今日热招：" +
               hotJob.name +
               "！工价×" +
               bonusMult.toFixed(1) +
-              "，仅限今天！去⚡行动页找到它",
+              "，仅限今天！",
             "event",
           );
         }
@@ -1871,7 +1841,6 @@ const DAILY_PIPELINE = [
     name: "npc_trade_info_share",
     fn: function (state) {
       if (typeof tryTriggerNPCInfoShare !== "function") return;
-      if (typeof NPC_TRADE_INFO === "undefined" || !NPC_TRADE_INFO) return;
       // 遍历所有NPC，看是否有主动分享
       for (var npcId in NPC_TRADE_INFO) {
         if (!NPC_TRADE_INFO.hasOwnProperty(npcId)) continue;

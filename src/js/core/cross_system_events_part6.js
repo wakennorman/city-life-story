@@ -3655,11 +3655,11 @@
     story:
       "你常读财经新闻，又懂点账。一条政策动向被你看出门道，顺势小投了一笔，赚了点信息差。",
 
-    // conditions：accounting 技能 + 中后期（技能 ∩ 经济 ∩ 新闻系统）
+    // conditions：accounting 技能 + 中后期 + 有现金（技能 ∩ 经济 ∩ 新闻系统）
 
     conditions: function (st) {
-      // [Layer3] 叙事说"顺势小投了一笔"→必须有可支配资金
-      if (!st.resources || st.resources.cash < 500) return false;
+      if (!st.resources || st.resources.cash < 500) return false; // [Layer3] 叙事涉及投资
+
       var acc = st.skills && st.skills.accounting && st.skills.accounting.level; // 检查 accounting 等级
 
       if (typeof acc !== "number" || acc < 20) return false; // 检查 accounting>=20
