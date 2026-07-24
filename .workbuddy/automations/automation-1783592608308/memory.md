@@ -236,3 +236,19 @@
 - 联动3（新建 domain_c_linkage_r191.js IIFE→RANDOM_EVENTS，3 street）：skill_r191_synergy_gig(C→E 长途运输连携→跑私活现金+1200/驾驶XP,承接死工作复活变现)/skill_r191_peer_respect(C→D 手艺火候→同行讨教→首个已结识NPC好感 applyAffinityChange 守 rel.met)/skill_r191_hard_won(C→G 回望≥2门硬本事→心智/幸福成长叙事)。含 skillLv/firstMetNpc 防御辅助。src/index.html 注册在 R190 之后。该文件+构建产物随并行提交 d8e3b699 落地。
 - 验证：node --check 通过；build.py→dist app.js 9036.8KB（_domainCLinkageR191Loaded 已入 bundle）；MC 6×400d **0代码异常**（NaN% 仅空分布桶报表显示项，非运行时异常；trader/corporate 存活率偏低为既有C类平衡波动）。
 - 本窗口 docs/state 提交 89399c3c（round doc/CLAUDE.md/loop-state/MEMORY.md）+ 回填 e58fecdb（pushStatus=PUSHED），**均已 push origin main 成功**。并行窗口未提交改动（corp_ui/victory/modal/render/_check_skill_tree）已 stash→push→pop 全程无损保留。下轮→G（核心机制/生命周期，recency 180 最薄弱）。
+
+## 最近执行（2026-07-25，R194 域D NPC/社交 — 已 push main 174f9a8e）
+
+- 起始 loop-state=round193/H/next=D（D recency 184 最薄弱）。HEAD=5b86989b（R193 已 push）。域D 子系统经 R8/R17+并行窗口加固已健壮；精准 grep + Explore 只读扫描 12 个域D文件定位 A类。
+- A类2（均确证、在已注册 npc_linkage_r167.js）：① :55 `pickClosestNpcR167` 返回 `for...in` 尾变量 `id` 而非捕获的最高好感 `best` → `safeAffinityR167(st,best.id,5)` 好感+5 加错NPC，改返回 `best`；② :237 写 `st.player.happiness` 死字段（真实 `st.needs.happiness`）→「心情+8」静默丢失，改 `st.needs.happiness`。
+- 联动3（新建 domain_d_linkage_r194.js IIFE→RANDOM_EVENTS，2 street+1 corporate，全 ||防御，firstMetNpcD194/bumpAffinityD194/topSkillKeyD194 辅助，[PLACEHOLDER]）：npc_d_r194_budget_buddy(D→A 朋友理账→intelligence+mental+_npcBudgetSense)/npc_d_r194_mentor_praise(D→C 前辈背书→最高技能 addSkillXp+10)/npc_d_r194_colleague_invest_tip(D→E 同事理财→_dataInvestorMindset+cash+1000)。严守域D铁律（只读 state.relationships / rel&&rel.met / applyAffinityChange）。
+- 验证：node --check 2文件 OK；build dist app.js 9107.8KB（R194 标志入 bundle）；MC 6×400d **0代码异常**（grinder/trader/corporate 存活率偏低为既有RNG平衡阈值非回归；social 100%/balanced 83.3% 达标）。
+- 提交4笔（fix 5e4458ef / feat cb8f469c / loop-state d89d7430 / 回填 pushStatus 174f9a8e），**均 push origin main 成功**（5b86989b..174f9a8e，与 origin 同步）。并行在途 investment.js 全程 stash 隔离(2次 stash/pop 无损还原)。下轮→E（经济/投资，recency 185 最薄弱）。
+
+## 最近执行（2026-07-25，R195 域E 经济/投资 — 待 push main）
+
+- 起始 loop-state=round194/D/next=E（E recency 185 最薄弱）；HEAD 演进 174f9a8e(R194 push)→9a5c8029(并行窗口域A cash NaN守卫8项已落地,为本轮提交父 HEAD)。
+- A类1（确证死机制）：investment_analysis.js 六函数（checkStopLoss/setStopLoss/analyzeStockTechnicals/analyzePortfolio/calculateSharpeRatio/getMarketSentimentIndicator）全库零调用方→止损止盈整链死（setStopLoss 下单永不评估、checkStopLoss 永不触发）。修复：文件末尾追加 IIFE 包装全局 tickInvestmentDaily（typeof 守卫+try/catch），每日对 state.investment.stopLossOrders 调 checkStopLoss 复活死函数；setStopLoss/analyzeStockTechnicals 由联动事件调用复活。
+- 联动3（新建 domain_e_linkage_r195.js IIFE→RANDOM_EVENTS，全||防御，guard _domainELinkageR195Loaded，[PLACEHOLDER]）：invest_r195_stoploss_advisor(E→F 券商引导挂10%止损单→setStopLoss 复活)/invest_r195_stoploss_discipline(E→G 首个消费 checkStopLoss 写入的 order.triggered→mental+5/读 st.needs.happiness+3)/invest_r195_technical_review(E→C 调 analyzeStockTechnicals 技术面复盘+addSkillXp("accounting",8))。src/index.html 注册在 investment_analysis.js 之后。
+- 验证：node --check 2文件 OK；build dist app.js 9121.1KB（R195 双标志入 bundle）；MC 6×400d MC_EXIT=0·0代码异常（前7天死亡率全0.0%<10% 无早期死亡回归；trader/social/corporate 存活率偏低为既有RNG平衡阈值非回归）。
+- 提交纪律：仅 add 本轮文件+dist+loop-state+last_known_head，不 -A/--amend/force；并行在途 cooking/goods/items/trade 等(财务Tab)全程 stash 隔离(stash@{0})，push 后 pop 无损还原。下轮→F（UI/UX，recency 186 最薄弱）。

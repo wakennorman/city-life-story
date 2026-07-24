@@ -1,100 +1,47 @@
-# MEMORY — 城市浮生记 全系统优化循环
+# MEMORY — 城市浮生记 全系统优化循环（精简版 2026-07-25）
 
-## 事件系统真实架构（覆盖指令描述的 3 文件模型已过期，勿盲从）
-
-事件系统实际为 **三套子系统**，格式互不相同，均经全局 bundle 注入（非 ES import）：
-
-- `src/js/data/moral_events.js` → `MORAL_EVENTS` 数组 + `MORAL_CONSEQUENCES` 对象
-  - 事件: `{id,title,desc,minDay,dailyChance,condition?,choices:[{text,flag,score,immediate}]}`
-  - 后果(按 flag key): `{id,title,delay:[min,max],desc,apply}`
-  - 引擎 `triggerMoralEvent` 用 `evt.condition`(函数) 门控；未定义 condition 即不过滤。
-- `src/js/data/news.js` → `NEWS_EVENTS` 数组，由 `news_system.js` 消费
-  - `{id,headline,effects:{priceMod,investmentEffect,jobPenalty,jobMultiplier,duration},type,seasons?,followUpId?,followUpDelay?}`
-  - `followUpId` 为**动态生成** id（news_system.js:1974 `id: news.followUpId`），非静态条目，勿当"缺失 id"误报。
-- `src/js/core/events_core.js` → RANDOM_EVENTS 引擎（street/corporate 阶段事件）
-  - 用 `triggers`(数据对象)/`conditions`(函数)/`trigger`(函数) 门控；`e.evaluateTriggers` 实现 minDay/minCash/minSkill/weather/phase 等。
-- `src/js/data/startup_events.js` → `ALL_STARTUP_EVENTS` 数组，由 `triggerStartupEvent(state)` 消费（seed/growth/mature 三阶段）
-  - **门控引擎只认 `conditions:`(复数,:1082)**——写单数 `condition:` = 死门控（R188 踩坑，seed_headhunted/mature_team_left 两处即此）。
-  - 创业公司真实容器 **`state.startup.company`**（**非** `state.company`，全库无后者）；含 `.cashReserve/.employees/.revenue/.reputation/.marketScore/.technologyScore/.phase/.foundedDay`。
-  - `company.revenue` 是 `startup.js:1530/1754` KPI 评分真实字段；但选项 effect 走 `_applyStartupEffects` 的 `STARTUP_FIELD_MAP`(:1104) 白名单——不在表内的字段(如曾遗漏的 revenue) 被 `if(!rule)continue` **静默丢弃**（R188 已补 revenue）。
-
-## 覆盖指令关键事实（2026-07-12，最高优先级）
-
-- 优先序 **B→D→F** 连续三轮，之后恢复 C→E→G→H→A…（覆盖"选薄弱域"逻辑）。
-- 覆盖指令称"events.js/moral_events.js/news.js 三文件、旧文件已删"——**与现状不符**：旧文件（cross_system_events.js 等）仍存在，且真实格式非 `{id,title,desc,cond?,apply}`。注入新事件须用上述真实格式。
-- 严禁重建已删除旧文件（cross_system_events.js 等）；旧 670 事件 id 不可从 git 还原。
-
-## subsidy 专项结论（重要，勿反复尝试）
-
-- `subsidy` 在 `c87666ce` 被**故意删除**（注释："与 training_subsidy 重复，保留 training_subsidy（效果更完整）"）。`training_subsidy` 当前存活。
-- 32 锚定核心 id 中 `subsidy` 按设计缺失即正确；**不应还原**。
-- 32 锚定 id 存活校验应以 moral_events.js + news.js 为准。
-
-## 已确认的防御性字段（state.js）
-
-- `s.trade` 恒初始化（state.js:156 + 修复 :722）；`s.relationships` 可能为空对象/undefined（访问须 `if(!s.relationships)`）。
-- `reputation` 为顶层按地点 key 对象；`skills` 无 `writing`；`xiaoli/auntie_lin/master_zhao` 在 npcs.js 仍为 TODO。
-- 有效 goods id 示例：water/snacks/vegetables/beer/scrap_metal/scrap_plastic/rice。
-- 有效 investment：industry ∈ {科技,新能源,消费,金融,房地产,医药}；category ∈ {股票,贵金属,期货,虚拟币}；symbols 含 COPPER/NICKEL/ALUM/CL/NG。
-- 有效 seasons：spring/summer/autumn/winter。
-
-## 职业系统真实架构（2026-07-13 重要，防脱钩）
-
-- 玩家职业线的**真实入口**是 `src/js/data/career_dev.js` 的 `CAREER_PATHS`（10 路径 × 42 职位，已含互联网/IT 线，终极目标 P5→P10）。
-- **不要另起平行职业系统**：往 `SKILL_BRANCHES`(coding) 加职业分支、往 `STREET_JOBS` 加自由工作、往 `CORP_ACTIONS` 加公司行为、往 `cross_system_events.js` 加职业事件——这些会和 CAREER_PATHS 脱钩，变成孤儿内容（已踩过一次坑，见 2026-07-13 回滚）。
-- 扩展职业内容应接入 `CAREER_PATHS` 体系，而非造第二套。
-- 公司行为若复用 `corp.risk` 作 tech debt，须确认它落在 CAREER_PATHS 的公司职业链内。
-
-### 技能连携 flag 命名规约（2026-07-24 R191 重要，防死工作）
-
-- `jobs.js` 中带 `requiredFlag: "_synergy_<id>"` 的岗位，其 `<id>` **必须精确等于 skill_synergy.js 定义的连携 id**，否则岗位永不可入职（死工作）。
-- 真实连携 id（skill_synergy.js）：DUAL `driving_logistics`（中文名「长途运输」，技能 driving+accounting）→ flag `_synergy_driving_logistics`；TRIPLE `driving_logistics_accounting`（「物流帝国」driving+accounting+management）→ flag `_synergy_driving_logistics_accounting`。**没有 `driving_accounting`**。
-- R191 已修：`long_haul_driver` 原写 `_synergy_driving_accounting`（无此连携）→ 永久死工作，改真实 `_synergy_driving_logistics`（与其 desc/payCalc 的 driving+accounting 完全对应）。此修随并行提交 `eb13d27b` 落地。
-- 新增/改岗位连携门控前，先 `grep "_synergy_" skill_synergy.js` 核对 flag 字面量，勿臆造。
-
-## NPC/社交系统真实架构（2026-07-14 R8 域D，重要）
-
-- 关系引擎入口 `src/js/core/npc_relationships.js`：`tickNpcRelationships` 由 `daily_pipeline.js` npc_relationships_tick slot 每日调用。含 14×14 关系矩阵 + 传播矩阵 + 好感衰减（7天无互动）。
-- **R8 已修死代码**：`checkNpcRelationEventTriggers`（triangular_choice/old_friend_reaction 触发）此前无任何消费者→关系事件链永不触发，已接入 `runNpcRelationChainEvents`（tick 末尾，14天冷却）。
-- **仍为死代码**：`getNpcRelationshipNetwork(state)`（社交 Tab 关系网渲染）无 caller，属域 F UI。R9 未接入此函数，而是直接在 `renderNpcRelationships` 追加「圈子归属感概览+激活进度」桥接 R8 机制（F→D）。该函数仍待接。
-- **UI 安全区/动态视口（R9 域F，重要）**：根 `#app` 已 `100vh`→`100dvh`（地址栏遮挡修复）；`index.html` viewport 已加 `viewport-fit=cover`；`#tab-bar`/`#mobile-hud` 有 `padding-top: env(safe-area-inset-top)`；`.world-news-panel` 移动端有 `padding-bottom: env(safe-area-inset-bottom)`。改移动端 UI 勿回退这些。
-- NPC id→中文名 helper：R8 新增 `getNpcDisplayName(npcId)`（读全局 `NPCS`）。禁止再用 `id.replace(/_/g," ")` 直显（输出 "aunt wang" 之类）。
-- 守卫铁律：引用 NPC 须 `rel && rel.met && (rel.affinity||0)>=N`；只读 `state.relationships`，绝不读 `state.npcRelationships`。跨 NPC 传导用 `applyAffinityChange`（自动 clamp + 记 _lastInteractionDay）；message 需 `typeof StateManager !== "undefined"` 守卫。
-
-## 「日常开发」/ scene#15 不是真实游戏内容（2026-07-13）
-
-- 全代码库（含设计文档）搜不到「日常开发」一词；它是对 `@scene#15:"日常开发"` 指令的**误读**，并非游戏内场景或职业。
-- 收到模糊 scene/主题指令时，**先 grep 确认它是否真实存在**，再动手；用户一句「无关」即最高优先级终止信号，立刻停手确认方向，不要辩解或继续。
-
-## 提交纪律（当前自动化 v3.2：直接提交+推送 main）
-
-- 当前全系统 8 域轮换优化自动化（10 分钟触发·推 main·rebase 保护）**直接提交并推送 `main`**；`loop/auto` 分支方案为早期实验，已不再使用。
-- 提交前 `git rev-parse HEAD > .claude/last_known_head`（过 pre-commit 漂移检查；每轮提交前必须同步**当前 HEAD**，否则钩子拦截）。
-- 改事件文件后必须 `python build.py` 使 dist/index.html 比源新；提交时 `git add dist/index.html`。
-- 只 `git add` 本轮具体文件 + `.claude/last_known_head`；绝不 `-A`/`--amend`。
+## 提交纪律（自动化 v3.2：直接提交+push main）
+- 每轮：只处理本轮文件；并行窗口在途改动**先 `git stash push -- <文件>` 隔离，push 后 pop 还原**（R193/194/195 验证无损）。
+- 提交前 `git rev-parse HEAD > .claude/last_known_head`（须为**当前 HEAD**，否则 pre-commit 拦截）。
+- 改源后必须 `python build.py`（dist 须比 src 新），`git add dist/` 变更文件。只 add 本轮文件；绝不 `-A`/`--amend`/force push。push 前 `git pull --rebase origin main`。
 - 每次代码改动更新 `src/DEVELOPMENT.md` 顶部版本行。
-- MC 验证：`node --max-old-space-size=8192 tests/monte_carlo.cjs --trials 6 --days 400`（默认 10×1000d 易 OOM；6×400d 足以验 0 异常）。
+- MC 验证：`node --max-old-space-size=8192 tests/monte_carlo.cjs --trials 6 --days 400`（10×500d 易 OOM）。存活率<80% 的 ❌ 多为既有 RNG 平衡阈值，只要 0 TypeError/ReferenceError/NaN/Infinity 即过。
+- 轮次号协调：开轮先 git log + ls linkage_r{N} 核对轮次是否被并行窗口占用。
 
-## 域F UI/UX 关键事实（2026-07-24 R186）
+## 事件系统真实架构（四套子系统，全局 bundle 注入非 ES import）
+- `data/moral_events.js` → MORAL_EVENTS 数组 + MORAL_CONSEQUENCES 对象；`evt.condition`(单数函数) 门控。
+- `data/news.js` → NEWS_EVENTS，news_system.js 消费；`followUpId` 为动态生成 id 勿误报缺失。effects 里 job id/symbol 必须真实存在（R190 修 10 处死引用）。
+- `core/events_core.js` → RANDOM_EVENTS 引擎；**:379 `filter(e=>e.phase===phase)` → 无 phase 字段=死事件**，linkage 事件必须显式 `phase:"street"/"corporate"`；门控用 `conditions`(函数)。
+- `data/startup_events.js` → ALL_STARTUP_EVENTS（seed/growth/mature）；**只认 `conditions:`(复数)**，单数=死门控；容器是 `state.startup.company`（非 state.company）；选项 effect 走 STARTUP_FIELD_MAP(:1104) 白名单，不在表内静默丢弃（revenue 由 R193 补入）。
+- 严禁重建已删除旧文件（cross_system_events.js 旧 670 事件不可还原）；`subsidy` 事件为故意删除（与 training_subsidy 去重），勿还原。
 
-- 证书真实字段 `state.certificates`（数组，main.js push cert.id）；`state.certs` 死字段已修（daily_quest×2/tutorial 三处）。UI 读证书一律用 certificates。
-- `state.flags._questStreak`（每日目标连击，daily_quest.js:676 维护）为真实字段，R186 起被 ui_r186_quest_ritual 消费。
-- `state.career` 为动态字段（从未求职时 undefined），任何 `state.career.currentJob` 解引用须守卫。
-- 轮次号协调：并行窗口可能占用轮次号（R187 域C 已被 397310d3 占用但未回填 loop-state），开轮前先 git log 核对 linkage_r{N} 文件避免冲突；发现者代为回填 recency。
+## state.js 真实字段基准（写条件前必核）
+- 幸福感 `state.needs.happiness`（**`state.player.happiness` 是死字段**，历轮已修多处）；心智 `state.player.mental`；健康 `state.status.health`；饥饿 `state.needs.hunger`。
+- 现金 `state.resources.cash`；存款 `state.resources.bankBalance`；每日流水 `state.flags._dailyTransactions`。
+- `state.career` 动态字段（可 undefined）；证书 `state.certificates`（`state.certs` 死字段）；`st.player.corporate.upward` 是真实惰性字段（非错误）；`state.corporate.team/jobOffer/company` 为顶层真实字段。
+- `skills` 真实键：cooking/repair/coding/english/driving/sales/management/accounting/electrician/welding/medicine/social（无 writing/design）；addSkillXp 传假键静默丢弃。
+- `reputation` 顶层按地点 key；`relationships` 可能 undefined；`xiaoli/auntie_lin/master_zhao` 在 npcs.js 仍 TODO——NPC 事件用 firstMetNpc 遍历，勿硬编码。
+- investment 合法值：industry∈{科技,新能源,消费,金融,房地产,医药}；category∈{股票,贵金属,期货,虚拟币,基金,汽车}；symbol 以 INV_STOCKS 为准（含 COPPER/NICKEL/ALUM/CL/NG/ESTATE/HUAW/NVDA/TSMC/LITH）。
+- locations.js `specialties`/`priceMod` 键必须是 **good.id** 非分类名（R189 修 9 地点）；无效 id 被静默丢弃。
 
-## 域E 经济/投资 真实架构与关键发现（2026-07-24 R185，重要）
+## 域D NPC/社交铁律
+- 引用 NPC 须 `rel && rel.met && (rel.affinity||0)>=N`；只读 `state.relationships`；跨 NPC 好感一律 `applyAffinityChange`（自动 clamp+记 _lastInteractionDay）；显名用 `getNpcDisplayName`；StateManager 调用前 typeof 守卫。
+- 关系引擎 npc_relationships.js（14×14 矩阵，daily_pipeline slot 每日 tick）；`getNpcRelationshipNetwork` 仍死代码待接。
 
-- 域E 核心小文件（economy_v3.1.js/finance.js/news_investment_bridge.js）已被历轮高度加固；A类缺陷主要藏在 phase2 大文件（investment.js 3941行 / investment_analysis.js）的**旧存档迁移路径**。
-- 真实持仓容器 `state.investment.stockHoldings` / `properties` / `cars`（全代码读取均 `||[]`，但**写入路径曾缺守卫** → 旧存档首次买入/买房/买车即 TypeError）。买入/买产/买车前统一 `if(!Array.isArray(inv.x)) inv.x=[]` 守卫模式。
-- `state.investment.btcPrice`/`btcHoldings` 旧存档缺省为 `undefined` → `undefined<=0` 恒 false 致回填失效；`sellBtc` 须 `typeof!=="number"||!isFinite||<=0` 显式判定 + `revenue` isFinite 守卫，否则 `state.resources.cash` 被污染为 NaN（经济结算静默报废）。
-- `_totalInvestmentProfit`（域E 损益汇总）曾为**只被 R167/R96 联动事件读取、全代码从未写入**的死字段 → R167 的 `market_storm_endurance`(≤-5000)/`investment_social_circle`(≥20000) 及 R96 事件永久死事件。R185 在 `sellInvStock`/`sellBtc` 累计已实现损益到该字段，复活死事件。
-- 联动事件（`domain_e_linkage_r185.js`）触发门槛复用本字段 `_totalInvestmentProfit`，已非死字段。
-- 注意：并行窗口已提交 `89fa1396 fix:[域E] A类修复3项`（economy_v3.1 consecutiveWins / news_investment_bridge category / property_market Infinity%），与 R185 不重复，勿回退。
+## 域C 职业铁律
+- 职业线唯一入口 `CAREER_PATHS`（ui/career_dev.js，10路径×42职位）；勿另起平行职业系统（踩过坑）。
+- jobs.js `requiredFlag:"_synergy_<id>"` 必须精确等于 skill_synergy.js 连携 id（真实：`driving_logistics`/`driving_logistics_accounting`，无 driving_accounting；R191 修 long_haul_driver 死工作）。
 
-## 域A 数据/数值平衡 关键事实（2026-07-24 R189，重要）
+## 域E 经济/投资
+- A类多藏于 investment.js(3941行)/investment_analysis.js 的旧存档迁移路径；持仓 `state.investment.stockHoldings/properties/cars` 写入前须 `Array.isArray` 守卫；btc 字段须 typeof+isFinite 显式判定防 cash NaN。
+- `_totalInvestmentProfit`/`_consecutiveWins` 由 sellInvStock/sellBtc 维护（历轮已接，非死字段）。
+- **R195**：investment_analysis.js 止损链（setStopLoss→stopLossOrders→checkStopLoss→sellInvStock）曾全库无调用方=死机制；R195 在 domain_e_linkage_r195.js 以**包装 tickInvestmentDaily** 方式接线（daily_pipeline:615 按名调用全局绑定，晚加载文件重赋值即生效——此模式可复用于"在途文件不可碰"时的接线）；analyzeStockTechnicals 由 invest_r195_technical_review 事件复活。注册序：该文件须在 investment_analysis.js(:836) 之后。
+- 并行窗口正开发「财务Tab」（index.html tab按钮/investment.js tradeLog/render*/state.js 等在途），勿碰勿回退。
 
-- `good.id` ≠ `good.category`。`locations.js` 的 `loc.specialties`/`loc.priceMod` 键必须是 **good.id**（如 cigarettes/beer/vegetables/vitamins_item/instant_noodles/second_hand_book/carnation/rose/pork/fish），不能用分类名（luxury/beverages/food/sports_equipment/books/meat/seafood 等）。
-- 招牌商品系统：`getDailyGoodsForLocation`(trade_intel.js:840) 用 `loc.specialties.map(getGoodById).filter(Boolean)` 消费 → 无效 id 被**静默丢弃**（死数据，不报错）。
-- 价格倍率：`loc.priceMod[good.id]` 被 main.js:2233 / trade.js:495 / pricing.js:142 / wiki.js:1575,1894 / weather.js:749 / actions_extra.js:1917 消费；键非 good.id 则倍率恒为 1（失效）。
-- R189 修 9 地点：luxury_community/auto_city luxury→cigarettes；old_community food→vegetables；gym sports_equipment→vitamins_item；internet_cafe beverages→beer；logistics_park food→instant_noodles；flower_bird_market [flowers,pets]→[carnation,rose]（specialCategory 补[flowers]）；flea_market books→second_hand_book；vegetable_market [meat,seafood]→[pork,fish]。
-- `getAvailableCertificates`(skills.js:274) 证书门槛校验：**现金不加入 available 过滤**（main.js:3787 已用 `disabled`+`需¥X` 提示处理，否则证书会从列表直接消失）；R189 补 `electrician` 技能门槛(level)+`ageMin`/`ageMax` 年龄门槛（原全库无消费者，死门控）。年龄用 `state.player.age`（初始 20）。
+## 域F/G/H 要点
+- UI 安全区：#app 100dvh / viewport-fit=cover / tab-bar+mobile-hud safe-area padding，勿回退。
+- critical.js 延期惩罚阶梯、startup_crisis 危机链均已接线复活（R20/R21）；events_corp `.exp`→`.xp`（全库统一 .xp）。
+- daily_pipeline 无通用外部 slot 注册机制（静态数组）；接线新逻辑用包装全局函数模式。
+
+## 模糊指令处理
+- 收到模糊 scene/主题指令先 grep 确认真实存在；用户一句「无关」=最高优先级停手信号。

@@ -1,8 +1,8 @@
 {
-  "currentRound": 194,
-  "currentDomain": "D",
-  "nextDomain": "E",
-  "rotationIndex": 7,
+  "currentRound": 195,
+  "currentDomain": "E",
+  "nextDomain": "F",
+  "rotationIndex": 8,
   "domainOrder": [
     "A",
     "B",
@@ -18,27 +18,12 @@
     "B": 190,
     "C": 191,
     "D": 194,
-    "E": 185,
+    "E": 195,
     "F": 186,
     "G": 192,
     "H": 193
   },
   "history": [
-    {
-      "round": 186,
-      "domain": "F",
-      "note": "域F: A类修复2项(state.certs死字段→certificates/victory.js career守卫)+联动增强3项(F→C/F→G/F→D)"
-    },
-    {
-      "round": 187,
-      "domain": "C",
-      "note": "域C(并行窗口397310d3落地): 联动增强3项(职场倦怠→健康C→G/职业声望→社交C→D/技能顿悟→叙事C→B)"
-    },
-    {
-      "round": 188,
-      "domain": "H",
-      "note": "域H: A类修复3项(startup_events.js condition→conditions死门控+st.company→st.startup.company不存在字段/STARTUP_FIELD_MAP遗漏revenue静默丢弃)+联动增强3项(H→E股权套现/H→D联合创始人情谊/H→G创业者透支反思)"
-    },
     {
       "round": 189,
       "domain": "A",
@@ -68,13 +53,18 @@
       "round": 194,
       "domain": "D",
       "note": "域D: A类2项(npc_linkage_r167.js:55 pickClosestNpcR167 返回 for...in 尾变量 id→好感+5加错NPC,改返回捕获的 best / npc_linkage_r167.js:237 写 st.player.happiness 死字段→st.needs.happiness,「心情+8」被静默丢弃)+联动3项(新建 domain_d_linkage_r194.js,2 street+1 corporate: D→A朋友理账数据素养intelligence+mental/D→C前辈背书技能XP成长/D→E同事理财意识_dataInvestorMindset+cash落袋,严守域D铁律 rel&&rel.met/applyAffinityChange)。MC 6×400d 0代码异常。下轮R195→域E(recency 185 最薄弱)。"
+    },
+    {
+      "round": 195,
+      "domain": "E",
+      "note": "域E: A类1项(investment_analysis.js 止损止盈整链死机制:checkStopLoss/setStopLoss 全库无调用方→止损单永不被创建/评估;因 daily_pipeline/investment.js 并行在途不可碰,在 domain_e_linkage_r195.js 以包装全局 tickInvestmentDaily 接线,try/catch+仅有止损单才调用)+联动3项(E→F券商顾问引导挂10%止损·复活setStopLoss/E→G止损触发后纪律体悟·首个消费order.triggered/E→C技术面复盘·复活analyzeStockTechnicals+accounting XP)。C类记录:analyzePortfolio等3个UI分析函数待财务Tab合流后接入。MC 6×400d 0代码异常。下轮R196→域F(recency 186 最薄弱)。"
     }
   ],
-  "lastDomain": "D",
-  "lastRound": 194,
+  "lastDomain": "E",
+  "lastRound": 195,
   "lastDate": "2026-07-25",
-  "lastCommit": "cb8f469c",
-  "pushStatus": "PUSHED",
+  "lastCommit": "PENDING",
+  "pushStatus": "PENDING",
   "completedDomains": [
     "A",
     "B",
@@ -85,5 +75,5 @@
     "G",
     "H"
   ],
-  "description": "全系统优化 loop R194 完成。域D(NPC/社交): 2项A类修复(npc_linkage_r167.js pickClosestNpcR167 返回尾变量id致好感加错NPC / st.player.happiness 死字段→st.needs.happiness 心情+8静默丢失) + 3项联动增强(domain_d_linkage_r194.js: D→A理账数据素养/D→C前辈背书技能成长/D→E同事理财意识落袋)。E为最薄弱(recency 185)，下轮R195→域E。"
+  "description": "全系统优化 loop R195 完成。域E(经济/投资): 1项A类修复(止损止盈链 checkStopLoss/setStopLoss 死机制→包装 tickInvestmentDaily 接线复活) + 3项联动增强(domain_e_linkage_r195.js: E→F止损引导/E→G止损纪律叙事/E→C技术面复盘)。F为最薄弱(recency 186)，下轮R196→域F。"
 }
