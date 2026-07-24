@@ -186958,6 +186958,21 @@ const DAILY_PIPELINE = [
     },
   },
 
+  // === C→G 联动: 职业稳定→心情恢复 ===
+  // 有稳定工作(>30天)的玩家每天获得微量心情恢复，体现职业安全感
+  {
+    name: "career_stability_happiness",
+    fn: function (state) {
+      if (!state || !state.player) return;
+      if (state.player.phase === "street") return;
+      var job = state.career && state.career.currentJob;
+      if (!job || !job.workDays) return;
+      if (job.workDays < 30) return;
+      var bonus = Math.min(3, Math.floor(job.workDays / 180) + 1);
+      state.needs.happiness = Math.min(100, (state.needs.happiness || 50) + bonus);
+    },
+  },
+
   // === Phase 2 个人成长每日 tick ===
   {
     name: "personal_growth_daily",
@@ -250132,6 +250147,22 @@ if (typeof window !== "undefined") {
     hdr.appendChild(hdrLeft);
     hdr.appendChild(hdrRight);
     card.appendChild(hdr);
+
+    // === C→F 联动: 职场进度条（有工作时显示）===
+    var _job = state.career && state.career.currentJob;
+    if (_job) {
+      var _pathData = typeof CAREER_PATHS !== "undefined" ? CAREER_PATHS[_job.path] : null;
+      var _nextLevel = typeof getNextCareerLevel === "function" ? getNextCareerLevel(_job.path, _job.levelId) : null;
+      if (_nextLevel) {
+        var _progress = document.createElement("div");
+        _progress.style.cssText = "margin-bottom:6px;padding:5px 8px;background:rgba(74,158,92,0.06);border-radius:6px;font-size:10px;color:var(--text-secondary);";
+        _progress.innerHTML =
+          "⬆️ " + (_pathData ? _pathData.icon + " " : "") + "下一级：" + _nextLevel.name +
+          " ¥" + (_nextLevel.salary || 0).toLocaleString() + "/月" +
+          " · 在职" + (_job.workDays || 0) + "天";
+        card.appendChild(_progress);
+      }
+    }
 
     // 目标列表
     quests.forEach(function (q, i) {

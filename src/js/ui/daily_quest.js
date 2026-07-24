@@ -617,6 +617,22 @@
     hdr.appendChild(hdrRight);
     card.appendChild(hdr);
 
+    // === C→F 联动: 职场进度条（有工作时显示）===
+    var _job = state.career && state.career.currentJob;
+    if (_job) {
+      var _pathData = typeof CAREER_PATHS !== "undefined" ? CAREER_PATHS[_job.path] : null;
+      var _nextLevel = typeof getNextCareerLevel === "function" ? getNextCareerLevel(_job.path, _job.levelId) : null;
+      if (_nextLevel) {
+        var _progress = document.createElement("div");
+        _progress.style.cssText = "margin-bottom:6px;padding:5px 8px;background:rgba(74,158,92,0.06);border-radius:6px;font-size:10px;color:var(--text-secondary);";
+        _progress.innerHTML =
+          "⬆️ " + (_pathData ? _pathData.icon + " " : "") + "下一级：" + _nextLevel.name +
+          " ¥" + (_nextLevel.salary || 0).toLocaleString() + "/月" +
+          " · 在职" + (_job.workDays || 0) + "天";
+        card.appendChild(_progress);
+      }
+    }
+
     // 目标列表
     quests.forEach(function (q, i) {
       var done = _checkQuest(q, state);

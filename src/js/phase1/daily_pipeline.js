@@ -729,6 +729,21 @@ const DAILY_PIPELINE = [
     },
   },
 
+  // === C→G 联动: 职业稳定→心情恢复 ===
+  // 有稳定工作(>30天)的玩家每天获得微量心情恢复，体现职业安全感
+  {
+    name: "career_stability_happiness",
+    fn: function (state) {
+      if (!state || !state.player) return;
+      if (state.player.phase === "street") return;
+      var job = state.career && state.career.currentJob;
+      if (!job || !job.workDays) return;
+      if (job.workDays < 30) return;
+      var bonus = Math.min(3, Math.floor(job.workDays / 180) + 1);
+      state.needs.happiness = Math.min(100, (state.needs.happiness || 50) + bonus);
+    },
+  },
+
   // === Phase 2 个人成长每日 tick ===
   {
     name: "personal_growth_daily",
