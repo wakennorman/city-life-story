@@ -249,7 +249,7 @@
               );
               return;
             }
-            st.resources.cash -= 50;
+            st.resources.cash = (st.resources.cash || 0) - 50; // [全系统自洽修复] 域B A类: cash NaN守卫
             st.skills = st.skills || {};
             st.skills.coding = st.skills.coding || { level: 1, xp: 0 };
             st.skills.coding.xp = (st.skills.coding.xp || 0) + 50;
@@ -343,7 +343,7 @@
               );
               return;
             }
-            st.resources.cash -= 50;
+            st.resources.cash = (st.resources.cash || 0) - 50; // [全系统自洽修复] 域B A类: cash NaN守卫
             st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 5);
             st.flags._donatedToVendor = true;
             StateManager.addMessage(
@@ -412,7 +412,7 @@
           apply: function (st) {
             var charm = st.player.charm || 0;
             if (charm >= 35 && (st.resources.cash || 0) >= 200) {
-              st.resources.cash -= 200;
+              st.resources.cash = (st.resources.cash || 0) - 200; // [全系统自洽修复] 域B A类: cash NaN守卫
               var income = 500 + Random.int(0, 200);
               st.resources.cash = (st.resources.cash || 0) + income;
               st.resources.totalEarned =
@@ -492,7 +492,7 @@
               StateManager.addMessage("🍞 你摸了摸口袋，没什么钱。", "warning");
               return;
             }
-            st.resources.cash -= 15;
+            st.resources.cash = (st.resources.cash || 0) - 15; // [全系统自洽修复] 域B A类: cash NaN守卫
             st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 5);
             st.flags._boughtFoodForHomeless = true;
             StateManager.addMessage(
