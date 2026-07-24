@@ -158678,6 +158678,141 @@ var ITEMS = [
     desc: "补充蛋白质和钙质。",
   },
 
+  // [全系统自洽修复] 域A A类#1: 新增12种菜品食材（在goods.js中定义为isIngredient，用于cooking.js食谱，
+  //   但未在items.js中定义，导致validateIngredientPrices不检查、isItemNpcGift无映射）
+  {
+    id: "corn",
+    name: "玉米",
+    icon: "🌽",
+    slot: null,
+    price: 2,
+    perishDays: 7,
+    isIngredient: true,
+    ingredientType: "主食",
+    desc: "可做玉米粥、蒸玉米。秋季丰收价低。",
+  },
+  {
+    id: "lettuce",
+    name: "生菜",
+    icon: "🥬",
+    slot: null,
+    price: 2,
+    perishDays: 3,
+    isIngredient: true,
+    ingredientType: "蔬菜",
+    desc: "可做生菜包肉。保质期短。",
+  },
+  {
+    id: "mushroom",
+    name: "蘑菇",
+    icon: "🍄",
+    slot: null,
+    price: 4,
+    perishDays: 3,
+    isIngredient: true,
+    ingredientType: "蔬菜",
+    desc: "可做蘑菇汤、炒蘑菇。",
+  },
+  {
+    id: "vinegar",
+    name: "醋",
+    icon: "🫙",
+    slot: null,
+    price: 2,
+    perishDays: 365,
+    isIngredient: true,
+    ingredientType: "调料",
+    desc: "调味必备，保质期长。",
+  },
+  {
+    id: "tofu",
+    name: "豆腐",
+    icon: "🫘",
+    slot: null,
+    price: 3,
+    perishDays: 2,
+    isIngredient: true,
+    ingredientType: "蔬菜",
+    desc: "可做麻婆豆腐、豆腐汤。保质期极短。",
+  },
+  {
+    id: "bamboo_shoot",
+    name: "竹笋",
+    icon: "🎋",
+    slot: null,
+    price: 5,
+    perishDays: 5,
+    isIngredient: true,
+    ingredientType: "蔬菜",
+    desc: "可做竹笋炒肉。春季最鲜。",
+  },
+  {
+    id: "garlic",
+    name: "大蒜",
+    icon: "🧄",
+    slot: null,
+    price: 2,
+    perishDays: 20,
+    isIngredient: true,
+    ingredientType: "调料",
+    desc: "提味增香，几乎每道菜都用。",
+  },
+  {
+    id: "onion",
+    name: "洋葱",
+    icon: "🧅",
+    slot: null,
+    price: 2,
+    perishDays: 14,
+    isIngredient: true,
+    ingredientType: "调料",
+    desc: "做菜必备，保鲜期较长。",
+  },
+  {
+    id: "starch",
+    name: "淀粉",
+    icon: "🫙",
+    slot: null,
+    price: 2,
+    perishDays: 180,
+    isIngredient: true,
+    ingredientType: "调料",
+    desc: "勾芡用，做菜增稠。",
+  },
+  {
+    id: "shrimp",
+    name: "虾",
+    icon: "🦐",
+    slot: null,
+    price: 20,
+    perishDays: 2,
+    isIngredient: true,
+    ingredientType: "肉类",
+    desc: "高蛋白，清蒸/油焖。保质期极短。",
+  },
+  {
+    id: "duck",
+    name: "鸭子",
+    icon: "🦆",
+    slot: null,
+    price: 22,
+    perishDays: 4,
+    isIngredient: true,
+    ingredientType: "肉类",
+    desc: "可做烤鸭/炖鸭汤。",
+  },
+  {
+    id: "ginger",
+    name: "生姜",
+    icon: "🧄",
+    slot: null,
+    price: 3,
+    perishDays: 15,
+    isIngredient: true,
+    ingredientType: "调料",
+    desc: "驱寒暖胃，炖汤必备。",
+  },
+
   // ============================================================
   // 装备/道具
   // ============================================================
@@ -183872,7 +184007,7 @@ var LOCATION_EXTRA_ACTIONS = [
       if (findValue > 120) earn = 250 + Random.int(0, 100);
       else if (findValue > 80) earn = 100 + Random.int(0, 80);
       else earn = 20 + Random.int(0, 30);
-      st.resources.cash += earn;
+      st.resources.cash = (st.resources.cash || 0) + earn;
       StateManager.addMessage(
         "🔩 你在废品站翻了半天，" +
           (earn > 100
@@ -183895,7 +184030,7 @@ var LOCATION_EXTRA_ACTIONS = [
     payEstimate: "80~120",
     handler: function (st) {
       var earn = 80 + Random.int(0, 40);
-      st.resources.cash += earn;
+      st.resources.cash = (st.resources.cash || 0) + earn;
       st.needs.fatigue = Math.min(100, (st.needs.fatigue || 0) + 15);
       StateManager.addMessage(
         "🏭 你在工厂干了一天体力活，赚了¥" +
@@ -183913,7 +184048,7 @@ var LOCATION_EXTRA_ACTIONS = [
     location: "school",
     apCost: 25,
     condition: function (st) {
-      return st.resources.cash >= 10;
+      return (st.resources.cash || 0) >= 10;
     },
     costEstimate: 10,
     effectEstimate: "技能XP+19",
@@ -183947,7 +184082,7 @@ var LOCATION_EXTRA_ACTIONS = [
     effectEstimate: "心情-10",
     handler: function (st) {
       var earn = 60 + Random.int(0, 20);
-      st.resources.cash += earn;
+      st.resources.cash = (st.resources.cash || 0) + earn;
       st.needs.happiness = Math.max(0, (st.needs.happiness || 50) - 10);
       StateManager.addMessage(
         "📄 你发了一天的传单，赚了¥" +
@@ -183977,7 +184112,7 @@ var LOCATION_EXTRA_ACTIONS = [
           "success",
         );
       } else if (Random.chance(0.4)) {
-        st.resources.cash += 50;
+        st.resources.cash = (st.resources.cash || 0) + 50;
         StateManager.addMessage(
           "💡 你帮一个创业团队跑腿买了咖啡和午饭，赚了¥50小费。",
           "info",
@@ -184003,7 +184138,7 @@ var LOCATION_EXTRA_ACTIONS = [
     payEstimate: "200",
     effectEstimate: "健康+10, 疲劳+5",
     handler: function (st) {
-      st.resources.cash += 200;
+      st.resources.cash = (st.resources.cash || 0) + 200;
       st.status.health = Math.min(100, (st.status.health || 80) + 10);
       st.needs.fatigue = Math.min(100, (st.needs.fatigue || 0) + 5);
       StateManager.addMessage(
@@ -184041,7 +184176,7 @@ var LOCATION_EXTRA_ACTIONS = [
     location: "trainingCenter",
     apCost: 20,
     condition: function (st) {
-      return st.resources.cash >= 5;
+      return (st.resources.cash || 0) >= 5;
     },
     costEstimate: 5,
     effectEstimate: "技能XP+9~20",
@@ -184070,7 +184205,7 @@ var LOCATION_EXTRA_ACTIONS = [
     location: "temple",
     apCost: 15,
     condition: function (st) {
-      return st.resources.cash >= 10;
+      return (st.resources.cash || 0) >= 10;
     },
     costEstimate: 10,
     effectEstimate: "心情+20, 道德+1",
@@ -184103,7 +184238,7 @@ var LOCATION_EXTRA_ACTIONS = [
     effectEstimate: "社交XP+5",
     handler: function (st) {
       var earn = 100 + Random.int(0, 200);
-      st.resources.cash += earn;
+      st.resources.cash = (st.resources.cash || 0) + earn;
       if (st.skills && st.skills.social) {
         st.skills.social.xp = (st.skills.social.xp || 0) + 5;
       }
@@ -198418,7 +198553,7 @@ function renderStocks(area, inv, state, parent) {
         }
       }
       rowsHtml += `
-        <div class="stock-holding-row" data-symbol="${h.symbol}" style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.04);font-size:11px;gap:8px;cursor:pointer;" title="点击查看${stkName}逐笔成交记录">
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.04);font-size:11px;gap:8px;">
           <span style="font-weight:600;min-width:50px;">${h.symbol}</span>
           <span style="color:var(--text-secondary);min-width:55px;font-size:10px;">${stkName}</span>
           <span style="min-width:40px;text-align:right;">${h.shares}股</span>
@@ -198440,58 +198575,8 @@ function renderStocks(area, inv, state, parent) {
         <span style="min-width:50px;">代码</span><span style="min-width:55px;">名称</span><span style="min-width:40px;text-align:right;">数量</span><span style="min-width:55px;text-align:right;">均价</span><span style="min-width:55px;text-align:right;">现价</span><span style="min-width:60px;text-align:right;">市值</span><span style="min-width:70px;text-align:right;">盈亏</span><span style="min-width:45px;text-align:right;">幅度</span>
       </div>
       ${rowsHtml}
-      <div id="trade-log-area"></div>
     `;
     area.appendChild(portfolioDiv);
-
-    // 持仓行点击展开成交记录
-    setTimeout(function() {
-      var logArea = document.getElementById("trade-log-area");
-      portfolioDiv.querySelectorAll(".stock-holding-row").forEach(function(rw){
-        var sym = rw.dataset.symbol;
-        rw.onclick = function() {
-          if (this._expanded) {
-            this._expanded = false;
-            this.style.background = "transparent";
-            var existing = logArea.querySelector("[data-for-sym=\"" + sym + "\"]");
-            if (existing) existing.remove();
-            return;
-          }
-          this._expanded = true;
-          this.style.background = "rgba(0,180,216,0.08)";
-          var prev = logArea.querySelector("[data-for-sym=\"" + sym + "\"]");
-          if (prev) prev.remove();
-          var logs = (inv.tradeLog || []).filter(function(t){ return t.symbol === sym; });
-          if (logs.length === 0) return;
-          logs.sort(function(a,b){ return a.day - b.day; });
-          var logRows = "";
-          logs.forEach(function(t){
-            var isBuy = t.type === "buy";
-            var signText = isBuy ? "买入" : "卖出";
-            var clr = isBuy ? "var(--danger)" : "var(--success)";
-            var plHtml = "";
-            if (typeof t.pl === "number") {
-              var clr2 = t.pl >= 0 ? "var(--danger)" : "var(--success)";
-              var plSign = t.pl >= 0 ? "+" : "";
-              plHtml = ' <span style="color:' + clr2 + '">(' + plSign + "¥" + Math.round(t.pl) + ")</span>";
-            }
-            logRows += '<div style="display:flex;gap:8px;font-size:10px;color:var(--text-muted);padding:3px 0;border-bottom:1px dashed rgba(255,255,255,0.06);">';
-            logRows += '<span style="min-width:60px;">第' + t.day + '天</span>';
-            logRows += '<span style="min-width:30px;color:' + clr + ';font-weight:bold;">' + signText + '</span>';
-            logRows += '<span style="min-width:70px;text-align:right;">' + t.price.toFixed(2) + '¥/' + (t.unitLabel||"") + '</span>';
-            var qtyDec = (t.unitLabel && t.unitLabel !== "股") ? 4 : 0;
-            logRows += '<span style="min-width:50px;text-align:right;">×' + Number(t.quantity).toFixed(qtyDec) + '</span>';
-            logRows += '<span style="min-width:80px;text-align:right;">=' + ('¥' + Math.round(t.total).toLocaleString()) + '</span>';
-            logRows += plHtml + '</div>';
-          });
-          var div = document.createElement("div");
-          div.setAttribute("data-for-sym", sym);
-          div.style.cssText = "margin-top:6px;padding:8px;background:rgba(0,0,0,0.25);border-radius:6px;font-size:10px;";
-          div.innerHTML = '<div style="display:flex;gap:8px;font-size:9px;color:var(--text-muted);padding:2px 0 4px 0;border-bottom:1px solid var(--border);margin-bottom:2px;"><span style="min-width:60px;">日期</span><span style="min-width:30px;">操作</span><span style="min-width:70px;text-align:right;">单价</span><span style="min-width:50px;text-align:right;">数量</span><span style="min-width:80px;text-align:right;">金额</span></div>' + logRows;
-          logArea.appendChild(div);
-        };
-      });
-    }, 0);
   }
 
   var grid = document.createElement("div");
@@ -217309,6 +217394,36 @@ if (typeof window !== "undefined") {
   };
 }
 
+// [全系统自洽修复] 域E 修复:checkStopLoss/setStopLoss 止损止盈整链死机制接线（R195）
+//   本文件的 checkStopLoss 全库无任何调用方 → 止损单 inv.stopLossOrders 即使存在也永不
+//   被评估，setStopLoss→stopLossOrders→checkStopLoss→sellInvStock 整链死代码。
+//   接线方式：包装全局 tickInvestmentDaily（investment.js 定义、daily_pipeline.js:615 按名
+//   调用全局绑定，本文件加载序在 investment.js 之后，重赋值即生效）——每日投资 tick 完成后、
+//   且仅当存在止损单时评估；try/catch 保证止损评估异常绝不中断每日结算。
+(function () {
+  if (typeof tickInvestmentDaily !== "function" || typeof checkStopLoss !== "function") return;
+  if (tickInvestmentDaily._stopLossWiredR195) return;
+  var _origTickInvestmentDailyR195 = tickInvestmentDaily;
+  tickInvestmentDaily = function (state) {
+    var ret = _origTickInvestmentDailyR195.apply(this, arguments);
+    try {
+      if (
+        state &&
+        state.investment &&
+        Array.isArray(state.investment.stopLossOrders) &&
+        state.investment.stopLossOrders.length > 0
+      ) {
+        checkStopLoss(state);
+      }
+    } catch (e) {
+      if (typeof console !== "undefined" && console.warn)
+        console.warn("R195 止损单每日评估失败(不影响结算):", e);
+    }
+    return ret;
+  };
+  tickInvestmentDaily._stopLossWiredR195 = true;
+})();
+
 ;
 // ==== js/phase2/startup_crisis.js ====
 /**
@@ -220306,6 +220421,219 @@ if (typeof window !== "undefined") {
     ],
   };
 }
+
+;
+// ==== js/core/domain_e_linkage_r195.js ====
+/*
+ * 城市浮生记 — 域E（经济/投资）A类修复 + 联动增强 · R195
+ * 全系统优化 loop R195
+ *
+ * 本轮核心：复活「止损止盈/技术分析」死子系统（investment_analysis.js）。
+ *  - A类修复：checkStopLoss(state) 全库无任何调用方 → 玩家即使持有止损单
+ *    (inv.stopLossOrders) 也永远不会被评估/触发，整条
+ *    setStopLoss → stopLossOrders → checkStopLoss → sellInvStock 链为死机制。
+ *    因 daily_pipeline.js / investment.js 均有并行窗口在途改动（本轮铁律不碰），
+ *    此处以安全包装 tickInvestmentDaily 的方式接线：每日投资 tick 后评估止损单。
+ *  - 联动增强 3 项：复活 setStopLoss（券商顾问引导事件 E→F）、
+ *    消费 order.triggered（止损纪律叙事 E→G）、
+ *    复活 analyzeStockTechnicals（技术面复盘 E→C）。
+ *
+ * 设计约束（与既有 linkage 文件一致）：
+ *  - IIFE 注入全局 RANDOM_EVENTS；所有 state 访问均 || / typeof 防御。
+ *  - 里程碑类事件用 st.flags._xxxDone 去重；数值标 [PLACEHOLDER]。
+ *  - 本文件须在 investment.js / investment_analysis.js 之后加载（src/index.html 注册序保证）。
+ */
+(function () {
+  if (typeof RANDOM_EVENTS === "undefined" || !RANDOM_EVENTS) return;
+  if (RANDOM_EVENTS._domainELinkageR195Loaded) return;
+  RANDOM_EVENTS._domainELinkageR195Loaded = true;
+
+  // 注：checkStopLoss 死机制的每日接线（A类修复）在 investment_analysis.js 末尾
+  //     （包装 tickInvestmentDaily），本文件仅承担联动事件与 setStopLoss/
+  //     analyzeStockTechnicals 的玩法入口复活。
+
+  // ---- 本地助手 ----
+
+  // 取市值最大的持仓（symbol），全防御；无持仓返回 null
+  function biggestHoldingR195(st) {
+    if (!st || !st.investment) return null;
+    var inv = st.investment;
+    if (!Array.isArray(inv.stockHoldings) || inv.stockHoldings.length === 0) return null;
+    if (!inv.stockMarket) return null;
+    var best = null,
+      bestVal = -1;
+    for (var i = 0; i < inv.stockHoldings.length; i++) {
+      var h = inv.stockHoldings[i];
+      if (!h || !h.symbol) continue;
+      var m = inv.stockMarket[h.symbol];
+      var price = m && typeof m.price === "number" && isFinite(m.price) ? m.price : 0;
+      var val = price * (h.shares || 0);
+      if (val > bestVal) {
+        bestVal = val;
+        best = h;
+      }
+    }
+    return best;
+  }
+
+  // 是否存在已触发的止损单（消费 checkStopLoss 写入的 order.triggered）
+  function hasTriggeredStopR195(st) {
+    if (!st || !st.investment || !Array.isArray(st.investment.stopLossOrders)) return false;
+    for (var i = 0; i < st.investment.stopLossOrders.length; i++) {
+      var o = st.investment.stopLossOrders[i];
+      if (o && o.triggered) return true;
+    }
+    return false;
+  }
+
+  // ===== 联动1: E→F 券商顾问引导设置止损（复活 setStopLoss，新玩法引导） =====
+  RANDOM_EVENTS.push({
+    id: "invest_r195_stoploss_advisor",
+    phase: "street",
+    icon: "🛑",
+    title: "券商客户经理的一通电话",
+    desc:
+      "券商的客户经理打来回访电话，语气挺诚恳：\n\n" +
+      "「看您持仓有段时间了，一直没设风控。市场这东西谁也说不准——" +
+      "给最大那笔仓位挂个止损单吧？亏到一成自动出，睡觉都踏实。」\n\n" +
+      "你想起身边人被深套的故事，握着手机犹豫了一下。",
+    conditions: function (st) {
+      if (!st || !st.player || !st.investment) return false;
+      if (st.flags && st.flags._investStopAdvisorDone) return false;
+      if ((st.player.day || 0) < 40) return false;
+      if (!Array.isArray(st.investment.stockHoldings) || st.investment.stockHoldings.length === 0)
+        return false;
+      // 已有止损单则不再引导
+      if (Array.isArray(st.investment.stopLossOrders) && st.investment.stopLossOrders.length > 0)
+        return false;
+      return !!biggestHoldingR195(st);
+    },
+    choices: [
+      {
+        text: "🛑 听劝，给最大持仓挂10%止损单",
+        hint: "设置固定百分比止损，mental+2",
+        apply: function (st) {
+          if (st.flags) st.flags._investStopAdvisorDone = true;
+          var h = biggestHoldingR195(st);
+          if (h && typeof setStopLoss === "function") {
+            // 复活 setStopLoss：threshold 取 STOP_LOSS_STRATEGIES.fixed_percent 合法档位
+            setStopLoss(st, h.symbol, "fixed_percent", { threshold: 10 }); // [PLACEHOLDER]
+          }
+          if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 2); // [PLACEHOLDER]
+          if (typeof StateManager !== "undefined" && StateManager.addMessage)
+            StateManager.addMessage(
+              "🛑 你给最大持仓挂上了止损单——涨跌之外，多了一层底线。mental+2。",
+              "good",
+            );
+        },
+      },
+      {
+        text: "😤 我看好的票，不用止损",
+        hint: "保持现状",
+        apply: function (st) {
+          if (st.flags) st.flags._investStopAdvisorDone = true;
+        },
+      },
+    ],
+    probability: 0.035,
+  });
+
+  // ===== 联动2: E→G 止损单真实触发后 → 止损纪律的人生体悟 =====
+  RANDOM_EVENTS.push({
+    id: "invest_r195_stoploss_discipline",
+    phase: "street",
+    icon: "🧘",
+    title: "那笔被止损卖掉的股票",
+    desc:
+      "复盘账户时你看到那笔被系统自动止损卖出的股票——\n\n" +
+      "当时肉疼，可它后来跌得更深。你保住的不是几个点的本金，" +
+      "是「亏损不与自己较劲」的纪律。\n\n" +
+      "投资如此，过日子好像也如此。",
+    conditions: function (st) {
+      if (!st || !st.player) return false;
+      if (st.flags && st.flags._investStopDisciplineDone) return false;
+      return hasTriggeredStopR195(st);
+    },
+    choices: [
+      {
+        text: "🧘 把纪律写进性格里",
+        hint: "mental+5, happiness+3",
+        apply: function (st) {
+          if (st.flags) st.flags._investStopDisciplineDone = true;
+          if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 5); // [PLACEHOLDER]
+          if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 3); // [PLACEHOLDER]
+          if (typeof StateManager !== "undefined" && StateManager.addMessage)
+            StateManager.addMessage(
+              "🧘 及时止损保住了本金，也磨出了心性。mental+5，happiness+3。",
+              "good",
+            );
+        },
+      },
+      {
+        text: "😮‍💨 还是有点心疼",
+        hint: "无变化",
+        apply: function (st) {
+          if (st.flags) st.flags._investStopDisciplineDone = true;
+        },
+      },
+    ],
+    probability: 0.05,
+  });
+
+  // ===== 联动3: E→C 技术面复盘（复活 analyzeStockTechnicals）→ 财务技能成长 =====
+  RANDOM_EVENTS.push({
+    id: "invest_r195_technical_review",
+    phase: "corporate",
+    icon: "📊",
+    title: "深夜的一次技术面复盘",
+    desc:
+      "夜深人静，你翻出自己最大持仓的K线，把均线、MACD、RSI逐个看了一遍。\n\n" +
+      "指标不是水晶球，但一遍遍复盘下来，你对「涨跌背后的节奏」" +
+      "有了自己的手感——这份手感，白天做账做分析时也用得上。",
+    conditions: function (st) {
+      if (!st || !st.player || !st.investment) return false;
+      if (st.player.phase !== "corporate") return false;
+      if (st.flags && st.flags._investTechReviewDone) return false;
+      if ((st.player.day || 0) < 50) return false;
+      return !!biggestHoldingR195(st);
+    },
+    choices: [
+      {
+        text: "📊 认真复盘一遍（财务技能XP）",
+        hint: "accounting XP+8, mental+2",
+        apply: function (st) {
+          if (st.flags) st.flags._investTechReviewDone = true;
+          var summary = "";
+          var h = biggestHoldingR195(st);
+          if (h && typeof analyzeStockTechnicals === "function") {
+            try {
+              // 复活 analyzeStockTechnicals：真实调用产出评级摘要
+              var r = analyzeStockTechnicals(h.symbol, st);
+              if (r && !r.error && r.rating) summary = h.symbol + "：" + r.trend + "，评级 " + r.rating;
+            } catch (e) {
+              summary = "";
+            }
+          }
+          if (typeof addSkillXp === "function") addSkillXp("accounting", 8); // [PLACEHOLDER] 真实技能键
+          if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 2); // [PLACEHOLDER]
+          if (typeof StateManager !== "undefined" && StateManager.addMessage)
+            StateManager.addMessage(
+              "📊 复盘完毕。" + (summary ? summary + "。" : "") + "accounting XP+8，mental+2。",
+              "good",
+            );
+        },
+      },
+      {
+        text: "🥱 太晚了，明天再说",
+        hint: "无变化",
+        apply: function (st) {
+          if (st.flags) st.flags._investTechReviewDone = true;
+        },
+      },
+    ],
+    probability: 0.03,
+  });
+})();
 
 ;
 // ==== js/components/companyHistory.js ====

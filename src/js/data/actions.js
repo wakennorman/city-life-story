@@ -29,7 +29,7 @@ var LOCATION_EXTRA_ACTIONS = [
       if (findValue > 120) earn = 250 + Random.int(0, 100);
       else if (findValue > 80) earn = 100 + Random.int(0, 80);
       else earn = 20 + Random.int(0, 30);
-      st.resources.cash += earn;
+      st.resources.cash = (st.resources.cash || 0) + earn;
       StateManager.addMessage(
         "🔩 你在废品站翻了半天，" +
           (earn > 100
@@ -52,7 +52,7 @@ var LOCATION_EXTRA_ACTIONS = [
     payEstimate: "80~120",
     handler: function (st) {
       var earn = 80 + Random.int(0, 40);
-      st.resources.cash += earn;
+      st.resources.cash = (st.resources.cash || 0) + earn;
       st.needs.fatigue = Math.min(100, (st.needs.fatigue || 0) + 15);
       StateManager.addMessage(
         "🏭 你在工厂干了一天体力活，赚了¥" +
@@ -70,7 +70,7 @@ var LOCATION_EXTRA_ACTIONS = [
     location: "school",
     apCost: 25,
     condition: function (st) {
-      return st.resources.cash >= 10;
+      return (st.resources.cash || 0) >= 10;
     },
     costEstimate: 10,
     effectEstimate: "技能XP+19",
@@ -104,7 +104,7 @@ var LOCATION_EXTRA_ACTIONS = [
     effectEstimate: "心情-10",
     handler: function (st) {
       var earn = 60 + Random.int(0, 20);
-      st.resources.cash += earn;
+      st.resources.cash = (st.resources.cash || 0) + earn;
       st.needs.happiness = Math.max(0, (st.needs.happiness || 50) - 10);
       StateManager.addMessage(
         "📄 你发了一天的传单，赚了¥" +
@@ -134,7 +134,7 @@ var LOCATION_EXTRA_ACTIONS = [
           "success",
         );
       } else if (Random.chance(0.4)) {
-        st.resources.cash += 50;
+        st.resources.cash = (st.resources.cash || 0) + 50;
         StateManager.addMessage(
           "💡 你帮一个创业团队跑腿买了咖啡和午饭，赚了¥50小费。",
           "info",
@@ -160,7 +160,7 @@ var LOCATION_EXTRA_ACTIONS = [
     payEstimate: "200",
     effectEstimate: "健康+10, 疲劳+5",
     handler: function (st) {
-      st.resources.cash += 200;
+      st.resources.cash = (st.resources.cash || 0) + 200;
       st.status.health = Math.min(100, (st.status.health || 80) + 10);
       st.needs.fatigue = Math.min(100, (st.needs.fatigue || 0) + 5);
       StateManager.addMessage(
@@ -198,7 +198,7 @@ var LOCATION_EXTRA_ACTIONS = [
     location: "trainingCenter",
     apCost: 20,
     condition: function (st) {
-      return st.resources.cash >= 5;
+      return (st.resources.cash || 0) >= 5;
     },
     costEstimate: 5,
     effectEstimate: "技能XP+9~20",
@@ -227,7 +227,7 @@ var LOCATION_EXTRA_ACTIONS = [
     location: "temple",
     apCost: 15,
     condition: function (st) {
-      return st.resources.cash >= 10;
+      return (st.resources.cash || 0) >= 10;
     },
     costEstimate: 10,
     effectEstimate: "心情+20, 道德+1",
@@ -260,7 +260,7 @@ var LOCATION_EXTRA_ACTIONS = [
     effectEstimate: "社交XP+5",
     handler: function (st) {
       var earn = 100 + Random.int(0, 200);
-      st.resources.cash += earn;
+      st.resources.cash = (st.resources.cash || 0) + earn;
       if (st.skills && st.skills.social) {
         st.skills.social.xp = (st.skills.social.xp || 0) + 5;
       }
