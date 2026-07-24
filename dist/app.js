@@ -183427,7 +183427,11 @@ var LOCATION_EXTRA_ACTIONS = [
     payEstimate: "50~300",
     handler: function (st) {
       var cost = 50;
-      st.resources.cash -= cost;
+      if ((st.resources.cash || 0) < cost) {
+        StateManager.addMessage("💸 现金不够付¥50入场费。", "warning");
+        return;
+      }
+      st.resources.cash = Math.max(0, (st.resources.cash || 0) - cost);
       var findValue =
         Random.int(0, 100) + (st.skills.repair ? st.skills.repair.level : 0);
       var earn = 0;
@@ -183480,7 +183484,7 @@ var LOCATION_EXTRA_ACTIONS = [
     costEstimate: 10,
     effectEstimate: "技能XP+19",
     handler: function (st) {
-      st.resources.cash -= 10;
+      st.resources.cash = Math.max(0, (st.resources.cash || 0) - 10);
       if (st.skills) {
         for (var sk in st.skills) {
           if (st.skills[sk] && st.skills[sk].xp !== undefined) {
@@ -183608,7 +183612,7 @@ var LOCATION_EXTRA_ACTIONS = [
     costEstimate: 5,
     effectEstimate: "技能XP+9~20",
     handler: function (st) {
-      st.resources.cash -= 5;
+      st.resources.cash = Math.max(0, (st.resources.cash || 0) - 5);
       var xpGain = Math.round(Random.int(8, 18) * 1.15);
       if (st.skills) {
         for (var sk in st.skills) {
@@ -183637,7 +183641,7 @@ var LOCATION_EXTRA_ACTIONS = [
     costEstimate: 10,
     effectEstimate: "心情+20, 道德+1",
     handler: function (st) {
-      st.resources.cash -= 10;
+      st.resources.cash = Math.max(0, (st.resources.cash || 0) - 10);
       st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 20);
       if (st.player.morality !== undefined) {
         st.player.morality = Math.max(
