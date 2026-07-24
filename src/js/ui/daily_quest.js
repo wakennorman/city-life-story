@@ -660,6 +660,24 @@
       }
     }
 
+    // === E→F 联动: 投资快照（有持仓时显示市场概况）===
+    var _inv = state.investment;
+    if (_inv) {
+      var _stockCount = (_inv.stockHoldings || []).length;
+      var _propCount = (_inv.properties || []).length;
+      var _fundCount = (_inv.mutualFunds || []).length;
+      if (_stockCount > 0 || _propCount > 0 || _fundCount > 0) {
+        var _invTip = document.createElement("div");
+        _invTip.style.cssText = "margin-bottom:6px;padding:5px 8px;background:rgba(99,179,237,0.06);border-radius:6px;font-size:10px;color:var(--text-secondary);";
+        var _parts = [];
+        if (_stockCount > 0) _parts.push("📈 股票 " + _stockCount + "支");
+        if (_fundCount > 0) _parts.push("📊 基金 " + _fundCount + "支");
+        if (_propCount > 0) _parts.push("🏠 房产 " + _propCount + "处");
+        _invTip.innerHTML = "💰 投资组合：" + _parts.join(" · ");
+        card.appendChild(_invTip);
+      }
+    }
+
     // 目标列表
     quests.forEach(function (q, i) {
       var done = _checkQuest(q, state);

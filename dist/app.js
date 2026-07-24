@@ -186987,6 +186987,23 @@ const DAILY_PIPELINE = [
     },
   },
 
+  // === E→G 联动: 投资收入→心情增益 ===
+  // 有投资分红/租金收入的玩家获得微量心情提升，体现财务安全感
+  {
+    name: "investment_income_happiness",
+    fn: function (state) {
+      if (!state || !state.investment) return;
+      var inv = state.investment;
+      var hasIncome = false;
+      if (inv.dividendDay && inv.dividendDay === state.player.day) hasIncome = true;
+      if (inv.rentalIncome && inv.rentalIncome > 0) hasIncome = true;
+      if (inv.lastDividend && inv.lastDividend > 0) hasIncome = true;
+      if (hasIncome) {
+        state.needs.happiness = Math.min(100, (state.needs.happiness || 50) + 2);
+      }
+    },
+  },
+
   // === Phase 2 个人成长每日 tick ===
   {
     name: "personal_growth_daily",
@@ -250202,6 +250219,24 @@ if (typeof window !== "undefined") {
           _socialTip.innerHTML = "💬 " + (_npc.icon || "👤") + " " + (_npc.name || _npc.id) + " 好感" + _closeToTarget.cur + "/" + _closeToTarget.next + "，再聊聊天就到下一阶了";
           card.appendChild(_socialTip);
         }
+      }
+    }
+
+    // === E→F 联动: 投资快照（有持仓时显示市场概况）===
+    var _inv = state.investment;
+    if (_inv) {
+      var _stockCount = (_inv.stockHoldings || []).length;
+      var _propCount = (_inv.properties || []).length;
+      var _fundCount = (_inv.mutualFunds || []).length;
+      if (_stockCount > 0 || _propCount > 0 || _fundCount > 0) {
+        var _invTip = document.createElement("div");
+        _invTip.style.cssText = "margin-bottom:6px;padding:5px 8px;background:rgba(99,179,237,0.06);border-radius:6px;font-size:10px;color:var(--text-secondary);";
+        var _parts = [];
+        if (_stockCount > 0) _parts.push("📈 股票 " + _stockCount + "支");
+        if (_fundCount > 0) _parts.push("📊 基金 " + _fundCount + "支");
+        if (_propCount > 0) _parts.push("🏠 房产 " + _propCount + "处");
+        _invTip.innerHTML = "💰 投资组合：" + _parts.join(" · ");
+        card.appendChild(_invTip);
       }
     }
 

@@ -758,6 +758,23 @@ const DAILY_PIPELINE = [
     },
   },
 
+  // === E→G 联动: 投资收入→心情增益 ===
+  // 有投资分红/租金收入的玩家获得微量心情提升，体现财务安全感
+  {
+    name: "investment_income_happiness",
+    fn: function (state) {
+      if (!state || !state.investment) return;
+      var inv = state.investment;
+      var hasIncome = false;
+      if (inv.dividendDay && inv.dividendDay === state.player.day) hasIncome = true;
+      if (inv.rentalIncome && inv.rentalIncome > 0) hasIncome = true;
+      if (inv.lastDividend && inv.lastDividend > 0) hasIncome = true;
+      if (hasIncome) {
+        state.needs.happiness = Math.min(100, (state.needs.happiness || 50) + 2);
+      }
+    },
+  },
+
   // === Phase 2 个人成长每日 tick ===
   {
     name: "personal_growth_daily",
