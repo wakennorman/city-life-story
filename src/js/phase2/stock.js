@@ -354,7 +354,7 @@ function sellStock(symbol, shares) {
   const revenue = Math.round(market.price * shares * 100) / 100;
   const profit = revenue - (holding.avgPrice || 0) * shares;
 
-  state.resources.cash += revenue;
+  state.resources.cash = (state.resources.cash || 0) + revenue; // [全系统自洽修复] 域E A类: cash NaN守卫
   state.resources.totalEarned += Math.max(0, profit);
 
   holding.shares -= shares;
@@ -568,7 +568,7 @@ function showStockTradeModal() {
     <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 12px;background:var(--bg-card);border-radius:6px;margin-bottom:12px;">
       <div>
         <div style="font-size:11px;color:var(--text-muted);">现金</div>
-        <div style="font-size:16px;font-weight:600;color:var(--success);">¥${state.resources.cash.toLocaleString()}</div>
+        <div style="font-size:16px;font-weight:600;color:var(--success);">¥${(state.resources.cash || 0).toLocaleString()}</div>
       </div>
       <div>
         <div style="font-size:11px;color:var(--text-muted);">持仓市值</div>

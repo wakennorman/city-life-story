@@ -3087,13 +3087,13 @@ function repayLoan(state, amount) {
     return false;
   }
 
-  const actualRepay = Math.min(amount, state.resources.cash, bankDebt);
+  const actualRepay = Math.min(amount, state.resources.cash || 0, bankDebt); // [全系统自洽修复] 域E A类: cash NaN守卫
   if (actualRepay <= 0) {
     StateManager.addMessage("⚠️ 现金不足或无债务可还。", "warning");
     return false;
   }
 
-  state.resources.cash -= actualRepay;
+  state.resources.cash = (state.resources.cash || 0) - actualRepay; // [全系统自洽修复] 域E A类: cash NaN守卫
   state.resources.bankDebt -= actualRepay;
 
   // 更新总债务
@@ -179575,6 +179575,16 @@ function tickIllnessDecay(state) {
           (ill.icon || "🤒") + " 你的" + ill.name + "好了。",
           "success",
         );
+        // [全系统自洽修复] 域G 联动增强: 重症康复→峰终定律积极收尾（G→B 健康-叙事联动）
+        if ((ill.severity || 1) >= 4 && !state.flags["_recoveredFrom_" + inst.id]) {
+          state.flags["_recoveredFrom_" + inst.id] = true;
+          StateManager.addMessage(
+            "💪 从" + ill.name + "中康复，你更加珍惜健康的日子。心智+3，心情+10。",
+            "success",
+          );
+          state.player.mental = Math.min(100, (state.player.mental || 0) + 3);
+          state.needs.happiness = Math.min(100, (state.needs.happiness || 0) + 10);
+        }
         // 记录痊愈，用于演化链追踪
         recordIllnessCure(state, inst.id);
         continue; // 不放回 remaining
@@ -193063,7 +193073,7 @@ function sellStock(symbol, shares) {
   const revenue = Math.round(market.price * shares * 100) / 100;
   const profit = revenue - (holding.avgPrice || 0) * shares;
 
-  state.resources.cash += revenue;
+  state.resources.cash = (state.resources.cash || 0) + revenue; // [全系统自洽修复] 域E A类: cash NaN守卫
   state.resources.totalEarned += Math.max(0, profit);
 
   holding.shares -= shares;
@@ -193277,7 +193287,7 @@ function showStockTradeModal() {
     <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 12px;background:var(--bg-card);border-radius:6px;margin-bottom:12px;">
       <div>
         <div style="font-size:11px;color:var(--text-muted);">现金</div>
-        <div style="font-size:16px;font-weight:600;color:var(--success);">¥${state.resources.cash.toLocaleString()}</div>
+        <div style="font-size:16px;font-weight:600;color:var(--success);">¥${(state.resources.cash || 0).toLocaleString()}</div>
       </div>
       <div>
         <div style="font-size:11px;color:var(--text-muted);">持仓市值</div>
@@ -195204,7 +195214,7 @@ function tickInvestmentDaily(state) {
     car.currentPrice = Math.round(
       (car.currentPrice || car.buyPrice) * (1 - _depr),
     );
-    if (state.player.day % 30 === 0 && state.resources.cash >= car.maintenance)
+    if (state.player.day % 30 === 0 && (state.resources.cash || 0) >= car.maintenance) // [全系统自洽修复] 域E A类: cash NaN守卫
       state.resources.cash = Math.max(0, (state.resources.cash || 0) - (car.maintenance || 0));
   }
 
@@ -197955,7 +197965,7 @@ function renderProperties(area, inv, state, parent) {
       rentDiv.style.cssText =
         "margin-bottom:12px;padding:10px;background:rgba(52,152,219,0.08);border:1px solid var(--info,#3498db);border-radius:8px;";
       var curTier = state.housing ? state.housing.tier || 0 : 0;
-      var canRentHigh = state.resources.cash >= highTier.cost && curTier < 4;
+      var canRentHigh = (state.resources.cash || 0) >= highTier.cost && curTier < 4; // [全系统自洽修复] 域E A类: cash NaN守卫
       var alreadyHigh = curTier >= 4;
       rentDiv.innerHTML =
         '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">' +
@@ -198051,7 +198061,7 @@ function renderProperties(area, inv, state, parent) {
         break;
       }
     }
-    var canAfford = state.resources.cash >= propDef.price;
+    var canAfford = (state.resources.cash || 0) >= propDef.price; // [全系统自洽修复] 域E A类: cash NaN守卫
     var card = document.createElement("div");
     card.className = "action-card";
     card.style.borderLeft =
@@ -198227,7 +198237,7 @@ function renderCars(area, inv, state, parent) {
         break;
       }
     }
-    var canAfford = state.resources.cash >= carDef.price;
+    var canAfford = (state.resources.cash || 0) >= carDef.price; // [全系统自洽修复] 域E A类: cash NaN守卫
     var card = document.createElement("div");
     card.className = "action-card";
     card.style.borderLeft =
@@ -198484,7 +198494,7 @@ function tickPropertyMarket(state) {
     var isSelfLived = inv.selfLivePropertyId === prop.id;
     if (state.player.day % 30 === 0 && !isSelfLived) {
       var rentAmount = prop.rent || 0;
-      state.resources.cash += rentAmount;
+      state.resources.cash = (state.resources.cash || 0) + rentAmount; // [全系统自洽修复] 域E A类: cash NaN守卫
       if (typeof addDailyTransaction === "function") {
         addDailyTransaction(
           state,

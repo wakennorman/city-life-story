@@ -1310,7 +1310,7 @@ function tickInvestmentDaily(state) {
     car.currentPrice = Math.round(
       (car.currentPrice || car.buyPrice) * (1 - _depr),
     );
-    if (state.player.day % 30 === 0 && state.resources.cash >= car.maintenance)
+    if (state.player.day % 30 === 0 && (state.resources.cash || 0) >= car.maintenance) // [全系统自洽修复] 域E A类: cash NaN守卫
       state.resources.cash = Math.max(0, (state.resources.cash || 0) - (car.maintenance || 0));
   }
 
@@ -4061,7 +4061,7 @@ function renderProperties(area, inv, state, parent) {
       rentDiv.style.cssText =
         "margin-bottom:12px;padding:10px;background:rgba(52,152,219,0.08);border:1px solid var(--info,#3498db);border-radius:8px;";
       var curTier = state.housing ? state.housing.tier || 0 : 0;
-      var canRentHigh = state.resources.cash >= highTier.cost && curTier < 4;
+      var canRentHigh = (state.resources.cash || 0) >= highTier.cost && curTier < 4; // [全系统自洽修复] 域E A类: cash NaN守卫
       var alreadyHigh = curTier >= 4;
       rentDiv.innerHTML =
         '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">' +
@@ -4157,7 +4157,7 @@ function renderProperties(area, inv, state, parent) {
         break;
       }
     }
-    var canAfford = state.resources.cash >= propDef.price;
+    var canAfford = (state.resources.cash || 0) >= propDef.price; // [全系统自洽修复] 域E A类: cash NaN守卫
     var card = document.createElement("div");
     card.className = "action-card";
     card.style.borderLeft =
@@ -4333,7 +4333,7 @@ function renderCars(area, inv, state, parent) {
         break;
       }
     }
-    var canAfford = state.resources.cash >= carDef.price;
+    var canAfford = (state.resources.cash || 0) >= carDef.price; // [全系统自洽修复] 域E A类: cash NaN守卫
     var card = document.createElement("div");
     card.className = "action-card";
     card.style.borderLeft =

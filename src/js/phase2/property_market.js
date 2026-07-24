@@ -164,7 +164,7 @@ function tickPropertyMarket(state) {
     var isSelfLived = inv.selfLivePropertyId === prop.id;
     if (state.player.day % 30 === 0 && !isSelfLived) {
       var rentAmount = prop.rent || 0;
-      state.resources.cash += rentAmount;
+      state.resources.cash = (state.resources.cash || 0) + rentAmount; // [全系统自洽修复] 域E A类: cash NaN守卫
       if (typeof addDailyTransaction === "function") {
         addDailyTransaction(
           state,

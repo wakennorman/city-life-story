@@ -504,13 +504,13 @@ function repayLoan(state, amount) {
     return false;
   }
 
-  const actualRepay = Math.min(amount, state.resources.cash, bankDebt);
+  const actualRepay = Math.min(amount, state.resources.cash || 0, bankDebt); // [全系统自洽修复] 域E A类: cash NaN守卫
   if (actualRepay <= 0) {
     StateManager.addMessage("⚠️ 现金不足或无债务可还。", "warning");
     return false;
   }
 
-  state.resources.cash -= actualRepay;
+  state.resources.cash = (state.resources.cash || 0) - actualRepay; // [全系统自洽修复] 域E A类: cash NaN守卫
   state.resources.bankDebt -= actualRepay;
 
   // 更新总债务
