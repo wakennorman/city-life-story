@@ -2620,7 +2620,7 @@ function getAvailableActions(state) {
         reqFail: !canAfford ? "需 ¥" + house.cost : null,
         handler: (function (tier, h) {
           return function () {
-            state.resources.cash -= h.cost;
+            state.resources.cash = Math.max(0, (state.resources.cash || 0) - h.cost);
             state.housing.tier = tier;
             state.housing.rentedDay = state.player.day;
             state.inventory.capacity =
@@ -2684,7 +2684,7 @@ function getAvailableActions(state) {
             disabled: !canAfford,
             reqFail: !canAfford ? `需 ¥${opt.cost}` : null,
             handler: () => {
-              state.resources.cash -= opt.cost;
+              state.resources.cash = Math.max(0, (state.resources.cash || 0) - opt.cost);
               state.housing.storageRented = true;
               state.housing.storageCapacity = opt.capacity;
               // [全系统自洽修复] 域G A类修复: housing.tier 上限扩容至 6
@@ -2743,7 +2743,7 @@ function getAvailableActions(state) {
           costEstimate: pack.cost,
           disabled: !canAfford,
           handler: () => {
-            state.resources.cash -= pack.cost;
+            state.resources.cash = Math.max(0, (state.resources.cash || 0) - pack.cost);
             state.inventory.items.push({ id: pack.id, qty: 1 });
             state.inventory.capacity += pack.capacity;
             StateManager.addMessage(
@@ -3508,7 +3508,7 @@ function getAvailableActions(state) {
           cookHint = `（烹饪Lv${cookingLvl}省了¥${saved}）`;
         }
 
-        st.resources.cash -= foodCost;
+        st.resources.cash = Math.max(0, (st.resources.cash || 0) - foodCost);
         addDailyTransaction(
           st,
           "expense",
@@ -3542,7 +3542,7 @@ function getAvailableActions(state) {
           StateManager.addMessage("⚠️ 不够钱洗澡。", "danger");
           return;
         }
-        st.resources.cash -= 8;
+        st.resources.cash = Math.max(0, (st.resources.cash || 0) - 8);
         st.needs.hygiene = Math.min(100, st.needs.hygiene + 40);
         StateManager.addMessage("🚿 洗了个澡，神清气爽。", "success");
         consumeAP(10);
@@ -3613,7 +3613,7 @@ function getAvailableActions(state) {
         disabled: (state.resources.cash || 0) < 50 ? true : false,
         handler: () => {
           const st = StateManager.getState();
-          st.resources.cash -= 50;
+          st.resources.cash = Math.max(0, (st.resources.cash || 0) - 50);
           st.status.health = Math.min(100, st.status.health + 40);
           st.status.injured = false;
           // v3.1：医院治疗同时清除疾病数组（兼容illness.js疾病系统）
@@ -3878,7 +3878,7 @@ function getAvailableActions(state) {
         handler: () => {
           if (Random.chance(cert.examPassRate)) {
             state.certificates.push(cert.id);
-            state.resources.cash -= cert.requirements.cash;
+            state.resources.cash = Math.max(0, (state.resources.cash || 0) - cert.requirements.cash);
             if (cert.effects.codingXp)
               addSkillXp("coding", cert.effects.codingXp);
             if (cert.effects.englishXp)
@@ -3920,7 +3920,7 @@ function getAvailableActions(state) {
               "success",
             );
           } else {
-            state.resources.cash -= Math.floor(cert.requirements.cash / 2);
+            state.resources.cash = Math.max(0, (state.resources.cash || 0) - Math.floor)(cert.requirements.cash / 2);
             StateManager.addMessage(
               `📜 ${cert.name}考试未通过，报名费损失一半。下次再努力！`,
               "warning",
@@ -4288,7 +4288,7 @@ function doStreetJob(job) {
     if (typeof state.resources.cash !== "number" || !isFinite(state.resources.cash)) {
       state.resources.cash = 0;
     }
-    state.resources.cash -= job.startupCost;
+    state.resources.cash = Math.max(0, (state.resources.cash || 0) - job.startupCost);
   }
 
   // 计算收入（含新闻+装备+情绪修正）
