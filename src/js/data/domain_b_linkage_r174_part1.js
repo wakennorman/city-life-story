@@ -162,7 +162,7 @@
       if (choiceId === "return_redeem") {
         var haveCash = (st.resources && st.resources.cash) || 0;
         var toPay = Math.min(1000, haveCash);
-        st.resources.cash -= toPay;
+        st.resources.cash = Math.max(0, (st.resources.cash || 0) - toPay);
         st.player.morality = Math.min(100, (st.player.morality || 50) + 12);
         st.player.happiness = Math.min(100, (st.player.happiness || 50) + 10);
         st.flags.moralWalletStolen = false;

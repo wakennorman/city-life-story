@@ -1903,7 +1903,7 @@ function applyNewsEffect(news, state) {
   // 现金
   if (effects.cashBonus) {
     state.resources.cash = (state.resources.cash || 0) + effects.cashBonus;
-    state.resources.totalEarned += effects.cashBonus;
+    state.resources.totalEarned = (state.resources.totalEarned || 0) + (effects.cashBonus || 0);
   }
   if (effects.cashLoss) {
     state.resources.cash = Math.max(0, (state.resources.cash || 0) - effects.cashLoss);

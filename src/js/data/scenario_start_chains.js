@@ -117,7 +117,7 @@
             apply: function (st) {
               st.housing.tier = 1;
               st.inventory.capacity = Math.max(st.inventory.capacity || 20, 50);
-              if (st.resources.cash >= 15) st.resources.cash -= 15;
+              if ((st.resources.cash || 0) >= 15) st.resources.cash = Math.max(0, (st.resources.cash || 0) - 15);
               StateManager.addMessage(
                 "🏠 虽然只是间不到10平米的隔间，但至少有个能遮风挡雨的地方了。",
                 "info",
@@ -530,7 +530,7 @@
             hint: "¥200，系统学习",
             apply: function (st) {
               if ((st.resources.cash || 0) >= 200) {
-                st.resources.cash -= 200;
+                st.resources.cash = Math.max(0, (st.resources.cash || 0) - 200);
                 st.flags._tookLanguageClass = true;
                 StateManager.addMessage(
                   "📚 报了夜校的普通话班。钱花得心疼，但学会了就是自己的。",
@@ -771,7 +771,7 @@
             hint: "法律途径维权",
             apply: function (st) {
               st.flags._consultedLawyer = true;
-              if ((st.resources.cash || 0) >= 5000) st.resources.cash -= 5000;
+              if ((st.resources.cash || 0) >= 5000) st.resources.cash = Math.max(0, (st.resources.cash || 0) - 5000);
               StateManager.addMessage(
                 "⚖️ 律师说公司裁员程序有问题，你有机会争取更多赔偿。但需要时间。",
                 "info",
@@ -896,7 +896,7 @@
             text: "认了，先住下",
             hint: "凑合住，再慢慢找",
             apply: function (st) {
-              if ((st.resources.cash || 0) >= 3000) st.resources.cash -= 3000;
+              if ((st.resources.cash || 0) >= 3000) st.resources.cash = Math.max(0, (st.resources.cash || 0) - 3000);
               st.housing.tier = Math.max(st.housing.tier || 0, 1);
               StateManager.addMessage(
                 "😩 交了三个月房租和押金，¥3000没了。这房间虽然差，但至少有个地方睡。",
@@ -908,7 +908,7 @@
             text: "找合租",
             hint: "省钱，还能有室友",
             apply: function (st) {
-              if ((st.resources.cash || 0) >= 1500) st.resources.cash -= 1500;
+              if ((st.resources.cash || 0) >= 1500) st.resources.cash = Math.max(0, (st.resources.cash || 0) - 1500);
               StateManager.addMessage(
                 "🏠 在豆瓣上找到了一个合租帖，室友是个程序员。房租¥1500/月，便宜不少。",
                 "info",
@@ -951,7 +951,7 @@
             text: "搞好人缘",
             hint: "请同事喝奶茶",
             apply: function (st) {
-              if ((st.resources.cash || 0) >= 50) st.resources.cash -= 50;
+              if ((st.resources.cash || 0) >= 50) st.resources.cash = Math.max(0, (st.resources.cash || 0) - 50);
               StateManager.addMessage(
                 "🧋 请同事喝了杯奶茶，关系拉近了不少。职场不光靠能力，也靠人情世故。",
                 "info",
@@ -974,7 +974,7 @@
               if ((st.resources.cash || 0) >= 1000) {
                 st.resources.bankBalance =
                   (st.resources.bankBalance || 0) + 1000;
-                st.resources.cash -= 1000;
+                st.resources.cash = Math.max(0, (st.resources.cash || 0) - 1000);
               }
               StateManager.addMessage(
                 "🏦 你存了¥1000到银行。虽然不多，但这是攒钱的开始。",
@@ -986,7 +986,7 @@
             text: "给爸妈买礼物",
             hint: "孝顺一下",
             apply: function (st) {
-              if ((st.resources.cash || 0) >= 500) st.resources.cash -= 500;
+              if ((st.resources.cash || 0) >= 500) st.resources.cash = Math.max(0, (st.resources.cash || 0) - 500);
               st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 8);
               StateManager.addMessage(
                 "🎁 给爸妈各买了件衣服。电话里妈妈说「长大了」，你鼻子一酸。",
@@ -999,7 +999,7 @@
             hint: "报个课学新技能",
             apply: function (st) {
               if ((st.resources.cash || 0) >= 800) {
-                st.resources.cash -= 800;
+                st.resources.cash = Math.max(0, (st.resources.cash || 0) - 800);
                 st.player.intelligence = Math.min(
                   100,
                   (st.player.intelligence || 0) + 2,

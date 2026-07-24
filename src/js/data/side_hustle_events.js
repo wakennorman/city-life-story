@@ -351,6 +351,7 @@ const SIDE_HUSTLE_EVENTS = [
  */
 function triggerSideHustleEvent(state, currentHustleId) {
   if (!state || !state.player || state._pendingEvent) return false;
+  if (!state.flags) state.flags = {};
 
   // 当日最多触发一次
   var todayKey = "side_hustle_event_" + state.player.day;

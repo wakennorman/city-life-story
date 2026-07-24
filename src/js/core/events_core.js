@@ -31,6 +31,7 @@ function scaleAmount(base, totalEarned) {
  * @param {Object} conditions - 触发条件（可选）
  */
 function queueChainEvent(state, eventId, delayDays, conditions) {
+  if (!state.flags) state.flags = {};
   if (!state.flags._chainEventQueue) {
     state.flags._chainEventQueue = [];
   }
@@ -726,7 +727,8 @@ function showEventModal(evt) {
       if (typeof state.resources.cash !== "number" || !isFinite(state.resources.cash)) state.resources.cash = 0;
       state.resources.cash = Math.max(0, state.resources.cash || 0);
       // [全系统自洽修复] 域B 联动增强: B→F 事件历史记录
-      if (!state.flags._eventHistory) state.flags._eventHistory = [];
+      if (!state.flags) state.flags = {};
+  if (!state.flags._eventHistory) state.flags._eventHistory = [];
       if (evt && evt.id) {
         var _dup = state.flags._eventHistory.find(function(e) { return e.id === evt.id && e.day === state.player.day; });
         if (!_dup) {

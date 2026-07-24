@@ -4425,6 +4425,7 @@ function scaleAmount(base, totalEarned) {
  * @param {Object} conditions - 触发条件（可选）
  */
 function queueChainEvent(state, eventId, delayDays, conditions) {
+  if (!state.flags) state.flags = {};
   if (!state.flags._chainEventQueue) {
     state.flags._chainEventQueue = [];
   }
@@ -5120,7 +5121,8 @@ function showEventModal(evt) {
       if (typeof state.resources.cash !== "number" || !isFinite(state.resources.cash)) state.resources.cash = 0;
       state.resources.cash = Math.max(0, state.resources.cash || 0);
       // [全系统自洽修复] 域B 联动增强: B→F 事件历史记录
-      if (!state.flags._eventHistory) state.flags._eventHistory = [];
+      if (!state.flags) state.flags = {};
+  if (!state.flags._eventHistory) state.flags._eventHistory = [];
       if (evt && evt.id) {
         var _dup = state.flags._eventHistory.find(function(e) { return e.id === evt.id && e.day === state.player.day; });
         if (!_dup) {
@@ -154859,7 +154861,7 @@ function tickSupplyChain(state, company) {
             apply: function (st) {
               st.housing.tier = 1;
               st.inventory.capacity = Math.max(st.inventory.capacity || 20, 50);
-              if (st.resources.cash >= 15) st.resources.cash -= 15;
+              if ((st.resources.cash || 0) >= 15) st.resources.cash = Math.max(0, (st.resources.cash || 0) - 15);
               StateManager.addMessage(
                 "🏠 虽然只是间不到10平米的隔间，但至少有个能遮风挡雨的地方了。",
                 "info",
@@ -155272,7 +155274,7 @@ function tickSupplyChain(state, company) {
             hint: "¥200，系统学习",
             apply: function (st) {
               if ((st.resources.cash || 0) >= 200) {
-                st.resources.cash -= 200;
+                st.resources.cash = Math.max(0, (st.resources.cash || 0) - 200);
                 st.flags._tookLanguageClass = true;
                 StateManager.addMessage(
                   "📚 报了夜校的普通话班。钱花得心疼，但学会了就是自己的。",
@@ -155513,7 +155515,7 @@ function tickSupplyChain(state, company) {
             hint: "法律途径维权",
             apply: function (st) {
               st.flags._consultedLawyer = true;
-              if ((st.resources.cash || 0) >= 5000) st.resources.cash -= 5000;
+              if ((st.resources.cash || 0) >= 5000) st.resources.cash = Math.max(0, (st.resources.cash || 0) - 5000);
               StateManager.addMessage(
                 "⚖️ 律师说公司裁员程序有问题，你有机会争取更多赔偿。但需要时间。",
                 "info",
@@ -155638,7 +155640,7 @@ function tickSupplyChain(state, company) {
             text: "认了，先住下",
             hint: "凑合住，再慢慢找",
             apply: function (st) {
-              if ((st.resources.cash || 0) >= 3000) st.resources.cash -= 3000;
+              if ((st.resources.cash || 0) >= 3000) st.resources.cash = Math.max(0, (st.resources.cash || 0) - 3000);
               st.housing.tier = Math.max(st.housing.tier || 0, 1);
               StateManager.addMessage(
                 "😩 交了三个月房租和押金，¥3000没了。这房间虽然差，但至少有个地方睡。",
@@ -155650,7 +155652,7 @@ function tickSupplyChain(state, company) {
             text: "找合租",
             hint: "省钱，还能有室友",
             apply: function (st) {
-              if ((st.resources.cash || 0) >= 1500) st.resources.cash -= 1500;
+              if ((st.resources.cash || 0) >= 1500) st.resources.cash = Math.max(0, (st.resources.cash || 0) - 1500);
               StateManager.addMessage(
                 "🏠 在豆瓣上找到了一个合租帖，室友是个程序员。房租¥1500/月，便宜不少。",
                 "info",
@@ -155693,7 +155695,7 @@ function tickSupplyChain(state, company) {
             text: "搞好人缘",
             hint: "请同事喝奶茶",
             apply: function (st) {
-              if ((st.resources.cash || 0) >= 50) st.resources.cash -= 50;
+              if ((st.resources.cash || 0) >= 50) st.resources.cash = Math.max(0, (st.resources.cash || 0) - 50);
               StateManager.addMessage(
                 "🧋 请同事喝了杯奶茶，关系拉近了不少。职场不光靠能力，也靠人情世故。",
                 "info",
@@ -155716,7 +155718,7 @@ function tickSupplyChain(state, company) {
               if ((st.resources.cash || 0) >= 1000) {
                 st.resources.bankBalance =
                   (st.resources.bankBalance || 0) + 1000;
-                st.resources.cash -= 1000;
+                st.resources.cash = Math.max(0, (st.resources.cash || 0) - 1000);
               }
               StateManager.addMessage(
                 "🏦 你存了¥1000到银行。虽然不多，但这是攒钱的开始。",
@@ -155728,7 +155730,7 @@ function tickSupplyChain(state, company) {
             text: "给爸妈买礼物",
             hint: "孝顺一下",
             apply: function (st) {
-              if ((st.resources.cash || 0) >= 500) st.resources.cash -= 500;
+              if ((st.resources.cash || 0) >= 500) st.resources.cash = Math.max(0, (st.resources.cash || 0) - 500);
               st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 8);
               StateManager.addMessage(
                 "🎁 给爸妈各买了件衣服。电话里妈妈说「长大了」，你鼻子一酸。",
@@ -155741,7 +155743,7 @@ function tickSupplyChain(state, company) {
             hint: "报个课学新技能",
             apply: function (st) {
               if ((st.resources.cash || 0) >= 800) {
-                st.resources.cash -= 800;
+                st.resources.cash = Math.max(0, (st.resources.cash || 0) - 800);
                 st.player.intelligence = Math.min(
                   100,
                   (st.player.intelligence || 0) + 2,
@@ -161570,7 +161572,7 @@ function applyNewsEffect(news, state) {
   // 现金
   if (effects.cashBonus) {
     state.resources.cash = (state.resources.cash || 0) + effects.cashBonus;
-    state.resources.totalEarned += effects.cashBonus;
+    state.resources.totalEarned = (state.resources.totalEarned || 0) + (effects.cashBonus || 0);
   }
   if (effects.cashLoss) {
     state.resources.cash = Math.max(0, (state.resources.cash || 0) - effects.cashLoss);
@@ -171461,7 +171463,7 @@ const MORAL_EVENTS = [
         flag: "moral_change_keep",
         score: -8,
         immediate: function (s) {
-          s.resources.cash += 20;
+          s.resources.cash = (s.resources.cash || 0) + 20;
           s.needs.happiness = Math.max(0, s.needs.happiness - 1);
           StateManager.addMessage("💵 你快速离开小店，¥20到手。", "info");
         },
@@ -171596,7 +171598,7 @@ const MORAL_EVENTS = [
         flag: "moral_phone_sell",
         score: -12,
         immediate: function (s) {
-          s.resources.cash += 1500;
+          s.resources.cash = (s.resources.cash || 0) + 1500;
           s.needs.happiness = Math.min(100, s.needs.happiness + 5);
           StateManager.addMessage(
             "💰 二手店老板狐疑地看了你一眼，还是收了。",
@@ -171727,7 +171729,7 @@ const MORAL_EVENTS = [
         flag: "moral_bike_steal",
         score: -15,
         immediate: function (s) {
-          s.resources.cash += Random.int(20, 40);
+          s.resources.cash = (s.resources.cash || 0) + Random.int(20, 40);
           s.needs.happiness = Math.min(100, Math.max(0, s.needs.happiness + 2));
           StateManager.addMessage(
             "💀 把车推到废品站卖了¥30，但你心里隐约觉得不太对。",
@@ -171872,7 +171874,7 @@ const MORAL_EVENTS = [
         flag: "moral_fraud_join",
         score: -15,
         immediate: function (s) {
-          s.resources.cash += 200;
+          s.resources.cash = (s.resources.cash || 0) + 200;
           s.player.corporate.risk = Math.min(
             100,
             (s.player.corporate.risk || 0) + 15,
@@ -171918,7 +171920,7 @@ const MORAL_EVENTS = [
         score: -18,
         immediate: function (s) {
           var taken = Random.int(200, 500);
-          s.resources.cash += taken;
+          s.resources.cash = (s.resources.cash || 0) + taken;
           s.needs.happiness = Math.min(100, s.needs.happiness + 5);
           StateManager.addMessage(
             "💸 你的手在发抖，取了¥" + taken + "赶紧离开了。",
@@ -171966,7 +171968,7 @@ const MORAL_EVENTS = [
         flag: "moral_cashier_keep",
         score: -5,
         immediate: function (s) {
-          s.resources.cash += 30;
+          s.resources.cash = (s.resources.cash || 0) + 30;
           s.needs.happiness = Math.max(0, s.needs.happiness - 2);
           StateManager.addMessage(
             "😐 你安慰自己说「算了，就当是超市的失误。」",
@@ -172144,7 +172146,7 @@ const MORAL_EVENTS = [
         score: -2,
         immediate: function (s) {
           var earned = Random.int(10, 20);
-          s.resources.cash += earned;
+          s.resources.cash = (s.resources.cash || 0) + earned;
           s.needs.fatigue = Math.min(100, s.needs.fatigue + 3);
           StateManager.addMessage(
             "💰 他犹豫了一下，给了你¥" + earned + "。",
@@ -172317,7 +172319,7 @@ const MORAL_EVENTS = [
         flag: "moral_taxi_keep",
         score: -3,
         immediate: function (s) {
-          s.resources.cash += 2;
+          s.resources.cash = (s.resources.cash || 0) + 2;
           s.needs.happiness = Math.max(0, s.needs.happiness - 1);
           StateManager.addMessage(
             "🤐 你接过钱下了车。¥2而已，司机不会在意的...吧。",
@@ -172408,7 +172410,7 @@ const MORAL_EVENTS = [
         flag: "moral_book_pay",
         score: 8,
         immediate: function (s) {
-          if (s.resources.cash >= 68) {
+          if ((s.resources.cash || 0) >= 68) {
             s.resources.cash = Math.max(0, (s.resources.cash || 0) - 68);
             s.needs.happiness = Math.min(100, s.needs.happiness + 3);
             s.player.fame = Math.min(100, (s.player.fame || 0) + 2);
@@ -172441,7 +172443,7 @@ const MORAL_EVENTS = [
         flag: "moral_book_replace",
         score: 6,
         immediate: function (s) {
-          if (s.resources.cash >= 68) {
+          if ((s.resources.cash || 0) >= 68) {
             s.resources.cash = Math.max(0, (s.resources.cash || 0) - 68);
             s.needs.happiness = Math.min(100, s.needs.happiness + 4);
             StateManager.addMessage(
@@ -172606,7 +172608,7 @@ const MORAL_EVENTS = [
     dailyChance: 0.03,
     condition: function (s) {
       if (!s.housing || s.housing.tier < 1) return false; // [Layer3]
-      return s.resources.cash >= 200;
+      return (s.resources.cash || 0) >= 200;
     },
     choices: [
       {
@@ -172673,7 +172675,7 @@ const MORAL_EVENTS = [
         flag: "moral_find_coin_keep",
         score: 2,
         immediate: function (s) {
-          s.resources.cash += 3;
+          s.resources.cash = (s.resources.cash || 0) + 3;
           s.needs.happiness = Math.min(100, s.needs.happiness + 2);
           StateManager.addMessage("口袋里多了¥3，虽然不多但聊胜于无。", "info");
         },
@@ -172718,7 +172720,7 @@ const MORAL_EVENTS = [
         flag: "moral_rain_shelter_cafe",
         score: 3,
         immediate: function (s) {
-          if (s.resources.cash >= 5) {
+          if ((s.resources.cash || 0) >= 5) {
             s.resources.cash = Math.max(0, (s.resources.cash || 0) - 5);
             s.needs.fatigue = Math.max(0, s.needs.fatigue - 10);
             s.needs.happiness = Math.min(100, s.needs.happiness + 5);
@@ -172791,7 +172793,7 @@ const MORAL_EVENTS = [
         flag: "moral_fellow_drink",
         score: 1,
         immediate: function (s) {
-          s.resources.cash = Math.max(0, s.resources.cash - 3);
+          s.resources.cash = Math.max(0, (s.resources.cash || 0) - 3);
           s.needs.fatigue = Math.min(100, s.needs.fatigue + 8);
           s.needs.happiness = Math.min(100, s.needs.happiness + 8);
           StateManager.addMessage("两瓶啤酒下肚，心里那点疲惫都散了。", "info");
@@ -173598,7 +173600,7 @@ const MORAL_CONSEQUENCES = {
       return "你收到了一封信：失主通过派出所联系到你，原来他是一家科技公司的HR，附了一张¥200购物卡和一张名片。";
     },
     apply: function (s) {
-      s.resources.cash += 200;
+      s.resources.cash = (s.resources.cash || 0) + 200;
       s.needs.happiness = Math.min(100, s.needs.happiness + 10);
       s.player.fame = Math.min(100, (s.player.fame || 0) + 5);
       StateManager.addMessage(
@@ -173648,7 +173650,7 @@ const MORAL_CONSEQUENCES = {
     apply: function (s) {
       var val = Random.int(100, 300);
       s.needs.happiness = Math.min(100, s.needs.happiness + 8);
-      s.resources.cash += val;
+      s.resources.cash = (s.resources.cash || 0) + val;
       StateManager.addMessage(
         "🎨 老乞丐送你的字画卖了¥" + val + "！他说「好人会有好报」。",
         "success",
@@ -173663,7 +173665,7 @@ const MORAL_CONSEQUENCES = {
       return "再去那家小卖部时，老板对你特别热情，说你是少见的老实人。以后来买东西都给你抹零。";
     },
     apply: function (s) {
-      s.resources.cash += 30;
+      s.resources.cash = (s.resources.cash || 0) + 30;
       StateManager.addMessage(
         "🏪 老板塞给你一包零食：「你这样的年轻人不多了。」",
         "success",
@@ -173678,7 +173680,7 @@ const MORAL_CONSEQUENCES = {
       return "被偷的那位女士辗转找到你，带了水果和¥200现金来感谢你的见义勇为。";
     },
     apply: function (s) {
-      s.resources.cash += 200;
+      s.resources.cash = (s.resources.cash || 0) + 200;
       s.player.fame = Math.min(100, (s.player.fame || 0) + 8);
       s.needs.happiness = Math.min(100, s.needs.happiness + 8);
       StateManager.addMessage(
@@ -173990,7 +173992,7 @@ const MORAL_CONSEQUENCES = {
       return "有次你在路边等车，上次那个出租车司机正好经过，认出了你，主动停下说「顺路带你一程，免费的！」";
     },
     apply: function (s) {
-      s.resources.cash += 20;
+      s.resources.cash = (s.resources.cash || 0) + 20;
       s.needs.happiness = Math.min(100, s.needs.happiness + 5);
       StateManager.addMessage(
         "🚕 司机正好顺路，免费捎了你一段！省了¥20。",
@@ -174116,7 +174118,7 @@ const MORAL_CONSEQUENCES = {
     apply: function (s) {
       s.player.fame = Math.min(100, (s.player.fame || 0) + 8);
       s.needs.happiness = Math.min(100, s.needs.happiness + 10);
-      s.resources.cash += 100;
+      s.resources.cash = (s.resources.cash || 0) + 100;
       StateManager.addMessage(
         "📰 社区给了¥100奖励和一面锦旗！老奶奶的家人也打来电话道谢。",
         "success",
@@ -174147,7 +174149,7 @@ const MORAL_CONSEQUENCES = {
     },
     apply: function (s) {
       var total = s.flags._neighborDebt || 350;
-      s.resources.cash += total;
+      s.resources.cash = (s.resources.cash || 0) + total;
       s.needs.happiness = Math.min(100, s.needs.happiness + 8);
       StateManager.addMessage(
         "💸 邻居还了¥" + total + "！他找了份新工作，说谢谢你当时的信任。",
@@ -174325,7 +174327,7 @@ const MORAL_CONSEQUENCES = {
       return "你发的那条朋友圈被转发了上百次，有人私信感谢你说她母亲差点被骗，多亏看到提醒才没转账。";
     },
     apply: function (s) {
-      s.resources.cash += 100;
+      s.resources.cash = (s.resources.cash || 0) + 100;
       s.needs.happiness = Math.min(100, s.needs.happiness + 12);
       s.player.fame = Math.min(100, (s.player.fame || 0) + 6);
       s.flags.moral = s.flags.moral || {};
@@ -174342,6 +174344,8 @@ const MORAL_CONSEQUENCES = {
 
 /** 随机触发一个道德事件（在consumeAP中调用）。返回true表示触发了 */
 function triggerMoralEvent(state) {
+  if (!state.flags) state.flags = {};
+  if (!state.flags.moral) state.flags.moral = { actions: [], pendingConsequences: [] };
   // 每日最多一次
   var todayActions = (state.flags.moral.actions || []).filter(function (a) {
     return a.day === state.player.day;
@@ -174423,6 +174427,8 @@ function triggerMoralEvent(state) {
 
 /** 每日检查并触发待处理的道德后果（在 daily_pipeline 中调用） */
 function checkMoralConsequences(state) {
+  if (!state.flags) state.flags = {};
+  if (!state.flags.moral) state.flags.moral = { actions: [], pendingConsequences: [] };
   var pending = state.flags.moral.pendingConsequences;
   if (!pending || pending.length === 0) return;
 
@@ -174838,6 +174844,7 @@ const SIDE_HUSTLE_EVENTS = [
  */
 function triggerSideHustleEvent(state, currentHustleId) {
   if (!state || !state.player || state._pendingEvent) return false;
+  if (!state.flags) state.flags = {};
 
   // 当日最多触发一次
   var todayKey = "side_hustle_event_" + state.player.day;
@@ -175923,7 +175930,7 @@ if (typeof window !== "undefined") {
       if (choiceId === "return_redeem") {
         var haveCash = (st.resources && st.resources.cash) || 0;
         var toPay = Math.min(1000, haveCash);
-        st.resources.cash -= toPay;
+        st.resources.cash = Math.max(0, (st.resources.cash || 0) - toPay);
         st.player.morality = Math.min(100, (st.player.morality || 50) + 12);
         st.player.happiness = Math.min(100, (st.player.happiness || 50) + 10);
         st.flags.moralWalletStolen = false;
@@ -257958,7 +257965,7 @@ if (typeof registerNewsEventsToPool === "function") registerNewsEventsToPool();
             apply: function (st) {
               st.housing.tier = 1;
               st.inventory.capacity = Math.max(st.inventory.capacity || 20, 50);
-              if (st.resources.cash >= 15) st.resources.cash -= 15;
+              if ((st.resources.cash || 0) >= 15) st.resources.cash = Math.max(0, (st.resources.cash || 0) - 15);
               StateManager.addMessage(
                 "🏠 虽然只是间不到10平米的隔间，但至少有个能遮风挡雨的地方了。",
                 "info",
@@ -258371,7 +258378,7 @@ if (typeof registerNewsEventsToPool === "function") registerNewsEventsToPool();
             hint: "¥200，系统学习",
             apply: function (st) {
               if ((st.resources.cash || 0) >= 200) {
-                st.resources.cash -= 200;
+                st.resources.cash = Math.max(0, (st.resources.cash || 0) - 200);
                 st.flags._tookLanguageClass = true;
                 StateManager.addMessage(
                   "📚 报了夜校的普通话班。钱花得心疼，但学会了就是自己的。",
@@ -258612,7 +258619,7 @@ if (typeof registerNewsEventsToPool === "function") registerNewsEventsToPool();
             hint: "法律途径维权",
             apply: function (st) {
               st.flags._consultedLawyer = true;
-              if ((st.resources.cash || 0) >= 5000) st.resources.cash -= 5000;
+              if ((st.resources.cash || 0) >= 5000) st.resources.cash = Math.max(0, (st.resources.cash || 0) - 5000);
               StateManager.addMessage(
                 "⚖️ 律师说公司裁员程序有问题，你有机会争取更多赔偿。但需要时间。",
                 "info",
@@ -258737,7 +258744,7 @@ if (typeof registerNewsEventsToPool === "function") registerNewsEventsToPool();
             text: "认了，先住下",
             hint: "凑合住，再慢慢找",
             apply: function (st) {
-              if ((st.resources.cash || 0) >= 3000) st.resources.cash -= 3000;
+              if ((st.resources.cash || 0) >= 3000) st.resources.cash = Math.max(0, (st.resources.cash || 0) - 3000);
               st.housing.tier = Math.max(st.housing.tier || 0, 1);
               StateManager.addMessage(
                 "😩 交了三个月房租和押金，¥3000没了。这房间虽然差，但至少有个地方睡。",
@@ -258749,7 +258756,7 @@ if (typeof registerNewsEventsToPool === "function") registerNewsEventsToPool();
             text: "找合租",
             hint: "省钱，还能有室友",
             apply: function (st) {
-              if ((st.resources.cash || 0) >= 1500) st.resources.cash -= 1500;
+              if ((st.resources.cash || 0) >= 1500) st.resources.cash = Math.max(0, (st.resources.cash || 0) - 1500);
               StateManager.addMessage(
                 "🏠 在豆瓣上找到了一个合租帖，室友是个程序员。房租¥1500/月，便宜不少。",
                 "info",
@@ -258792,7 +258799,7 @@ if (typeof registerNewsEventsToPool === "function") registerNewsEventsToPool();
             text: "搞好人缘",
             hint: "请同事喝奶茶",
             apply: function (st) {
-              if ((st.resources.cash || 0) >= 50) st.resources.cash -= 50;
+              if ((st.resources.cash || 0) >= 50) st.resources.cash = Math.max(0, (st.resources.cash || 0) - 50);
               StateManager.addMessage(
                 "🧋 请同事喝了杯奶茶，关系拉近了不少。职场不光靠能力，也靠人情世故。",
                 "info",
@@ -258815,7 +258822,7 @@ if (typeof registerNewsEventsToPool === "function") registerNewsEventsToPool();
               if ((st.resources.cash || 0) >= 1000) {
                 st.resources.bankBalance =
                   (st.resources.bankBalance || 0) + 1000;
-                st.resources.cash -= 1000;
+                st.resources.cash = Math.max(0, (st.resources.cash || 0) - 1000);
               }
               StateManager.addMessage(
                 "🏦 你存了¥1000到银行。虽然不多，但这是攒钱的开始。",
@@ -258827,7 +258834,7 @@ if (typeof registerNewsEventsToPool === "function") registerNewsEventsToPool();
             text: "给爸妈买礼物",
             hint: "孝顺一下",
             apply: function (st) {
-              if ((st.resources.cash || 0) >= 500) st.resources.cash -= 500;
+              if ((st.resources.cash || 0) >= 500) st.resources.cash = Math.max(0, (st.resources.cash || 0) - 500);
               st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 8);
               StateManager.addMessage(
                 "🎁 给爸妈各买了件衣服。电话里妈妈说「长大了」，你鼻子一酸。",
@@ -258840,7 +258847,7 @@ if (typeof registerNewsEventsToPool === "function") registerNewsEventsToPool();
             hint: "报个课学新技能",
             apply: function (st) {
               if ((st.resources.cash || 0) >= 800) {
-                st.resources.cash -= 800;
+                st.resources.cash = Math.max(0, (st.resources.cash || 0) - 800);
                 st.player.intelligence = Math.min(
                   100,
                   (st.player.intelligence || 0) + 2,
