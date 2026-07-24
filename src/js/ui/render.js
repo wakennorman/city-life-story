@@ -2131,6 +2131,23 @@ function renderActionsTab(state, parent) {
     }
     var actions = getAvailableActions(state);
 
+    // === F→G 联动: 健康/疲劳预警横幅 ===
+    var _health = state.status && state.status.health;
+    var _fatigue = state.needs && state.needs.fatigue;
+    var _warnings = [];
+    if (_health !== undefined && _health <= 30) {
+      _warnings.push("🏥 健康 " + _health + "%，危险！立即就医！");
+    }
+    if (_fatigue !== undefined && _fatigue >= 85) {
+      _warnings.push("😴 疲劳 " + _fatigue + "%，快撑不住了！休息！");
+    }
+    if (_warnings.length > 0) {
+      var _warnBar = document.createElement("div");
+      _warnBar.style.cssText = "margin-bottom:10px;padding:8px 12px;background:rgba(196,61,61,0.12);border:1px solid rgba(196,61,61,0.3);border-radius:8px;font-size:12px;font-weight:600;color:var(--danger);line-height:1.5;";
+      _warnBar.textContent = _warnings.join(" ");
+      parent.appendChild(_warnBar);
+    }
+
   // 移除"地点不符"的冗余行动（不在当前地点的行动直接不展示）
   actions = actions.filter(function (a) {
     return !(
