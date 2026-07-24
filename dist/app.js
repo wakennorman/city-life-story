@@ -162714,7 +162714,9 @@ var NPCS = [
         desc: "陈师傅让你做帮厨打下手（每次+¥50+烹饪XP）",
         effect: function (st) {
           st.flags.chefChenAssistant = true;
+          st.resources = st.resources || { cash: 0 }; // [全系统自洽修复] 域D 修复: resources守卫
           st.resources.cash += 50;
+          st.skills.cooking = st.skills.cooking || { level: 0, xp: 0 };
           st.skills.cooking.xp += 40;
           StateManager.addMessage(
             "💕 陈师傅：「你来帮我打下手吧，一次50块，还能学手艺。」",
