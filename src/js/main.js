@@ -99,6 +99,17 @@ function checkJobRequirements(job, state) {
     return `英语技能不足 (需要${reqs.english})`;
   if (reqs.driving && s.driving.level < reqs.driving)
     return `驾驶技能不足，需要驾照 (需要${reqs.driving})`;
+  // [全系统自洽修复] 域C 修复:补全5项缺失技能检查(原仅查cooking/repair/sales/english/driving)
+  if (reqs.welding && s.welding.level < reqs.welding)
+    return `焊接技能不足 (需要${reqs.welding})`;
+  if (reqs.electrician && s.electrician.level < reqs.electrician)
+    return `电工技能不足 (需要${reqs.electrician})`;
+  if (reqs.coding && s.coding.level < reqs.coding)
+    return `编程技能不足 (需要${reqs.coding})`;
+  if (reqs.management && s.management.level < reqs.management)
+    return `管理技能不足 (需要${reqs.management})`;
+  if (reqs.accounting && s.accounting.level < reqs.accounting)
+    return `会计技能不足 (需要${reqs.accounting})`;
   if (job.requiredFlag && !state.flags[job.requiredFlag])
     return "尚未解锁（需要NPC好感度）";
   if (job.educationRequired && (p.education || 0) < job.educationRequired) {
@@ -4634,6 +4645,8 @@ function doStreetJob(job) {
     addSkillXp("welding", job.effects.weldingXp || 0);
     addSkillXp("medicine", job.effects.medicineXp || 0);
     addSkillXp("social", job.effects.socialXp || 0);
+    // [全系统自洽修复] 域C 修复:caregiverXp原doStreetJob未消费(孤儿effect),映射到medicine技能
+    addSkillXp("medicine", job.effects.caregiverXp || 0);
     // [全系统自洽修复] 域C 修复:A2 street-job skill XP单key别名统一(codingXp→coding等已在别处)
     if (job.effects.codingXp) addSkillXp("coding", job.effects.codingXp);
     if (job.effects.managementXp)

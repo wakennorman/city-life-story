@@ -2817,6 +2817,12 @@ function checkCareerPromotion(state, pathId, level) {
     }
   }
 
+  // [全系统自洽修复] 域C 修复:reqSocial原checkCareerPromotion未检查(UI显示需求但晋升不验证)
+  if (level.reqSocial) {
+    var socialVal = _getSkillValue(state, "social");
+    if (socialVal < level.reqSocial) return false;
+  }
+
   // 工作天数检查
   var career = state.career || {};
   var workDays = career.currentJob ? career.currentJob.workDays || 0 : 0;
@@ -2936,6 +2942,17 @@ function checkCareerPromotionDetailed(state, pathId, level) {
         required: reqa,
       });
     }
+  }
+
+  // [全系统自洽修复] 域C 修复:reqSocial详情面板(原仅文本显示,现与晋升逻辑一致)
+  if (level.reqSocial) {
+    var socialCur = _getCareerReqValue(state, "social");
+    results.push({
+      label: "人脉≥" + level.reqSocial,
+      ok: socialCur >= level.reqSocial,
+      current: socialCur,
+      required: level.reqSocial,
+    });
   }
 
   // 工作天数
@@ -3373,7 +3390,9 @@ function tickCareerJobDaily(state) {
     if (_newWd === 30 || _newWd === 90 || _newWd === 365 || _newWd % 365 === 0) {
       if (state.needs) {
         state.needs.happiness = Math.min(100, (state.needs.happiness || 0) + 3);
-        state.needs.health = Math.min(100, (state.needs.health || 100) + 1);
+        // [全系统自洽修复] 域F 修复:career_dev.js 里程碑健康加成写 state.needs.health 死字段
+        // （state.needs 无 health，真实且被渲染的字段为 state.status.health）→「+1 健康」被静默丢弃，改为真实字段
+        state.status.health = Math.min(100, (state.status.health || 100) + 1);
       }
     }
   }
