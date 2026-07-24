@@ -205,6 +205,22 @@ function sellGood(goodId, qty) {
       state.trade.totalProfit =
         (state.trade.totalProfit || 0) + unitProfit * qty;
       state.flags._firstTradeDone = true; // 成就：第一次倒买倒卖
+      // [全系统自洽修复] 域A 联动增强#1 A→B: 交易利润里程碑叙事 — 首次累积利润达¥500/¥5000/¥50000时触发
+      if (state.trade.totalProfit >= 50000 && !state.flags._tradeMilestone50000) {
+        state.flags._tradeMilestone50000 = true;
+        StateManager.addMessage("📈 累计交易利润突破¥50,000！你已是这座城市里精明的商人，街坊邻居都叫你「倒爷」。", "event");
+      } else if (state.trade.totalProfit >= 5000 && !state.flags._tradeMilestone5000) {
+        state.flags._tradeMilestone5000 = true;
+        StateManager.addMessage("📈 累计交易利润突破¥5,000！你开始摸清了倒买倒卖的门道，对市场价格越来越敏感。", "success");
+      } else if (state.trade.totalProfit >= 500 && !state.flags._tradeMilestone500) {
+        state.flags._tradeMilestone500 = true;
+        StateManager.addMessage("📈 累计交易利润突破¥500！第一次靠低买高卖赚到钱，你体会到了做生意的乐趣。", "success");
+      }
+      // [全系统自洽修复] 域A 联动增强#2 A→E: 交易利润→投资信心 — 累计交易利润超¥2000后投资分析获得小幅加成
+      if (state.trade.totalProfit >= 2000 && !state.flags._tradeLearnedInvest) {
+        state.flags._tradeLearnedInvest = true;
+        StateManager.addMessage("💡 经历了多次倒买倒卖，你对市场波动有了直觉——投资分析能力悄然提升。", "info");
+      }
     }
   }
 

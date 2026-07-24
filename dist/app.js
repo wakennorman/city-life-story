@@ -28213,7 +28213,9 @@ function canCookRecipe(recipe, inventory) {
     var ing = recipe.ingredients[i];
     var itemInInventory = null;
     for (var j = 0; j < items.length; j++) {
-      if (items[j].itemId === ing.itemId) {
+      // [全系统自洽修复] 域A A类#2: 兼容 `id` 和 `itemId` 字段名（trade系统存`id`，烹饪系统查`itemId`）
+      var itemKey = items[j].itemId || items[j].id;
+      if (itemKey === ing.itemId) {
         itemInInventory = items[j];
         break;
       }
@@ -28242,7 +28244,9 @@ function cookRecipe(state, recipeId) {
   for (var i = 0; i < recipe.ingredients.length; i++) {
     var ing = recipe.ingredients[i];
     for (var j = 0; j < items.length; j++) {
-      if (items[j].itemId === ing.itemId) {
+      // [全系统自洽修复] 域A A类#2: 兼容 `id` 和 `itemId` 字段名
+      var itemKey2 = items[j].itemId || items[j].id;
+      if (itemKey2 === ing.itemId) {
         items[j].quantity -= ing.amount;
         if (items[j].quantity <= 0) {
           items.splice(j, 1);
@@ -158156,7 +158160,6 @@ const GOODS = [
     category: "flowers",
     buyLocations: ["wholesaleMarket"],
     sellLocations: ["commercialDist", "hospital"],
-    seasonal: null, // [全系统自洽修复] 域A A类: festival_mothers_day/festival_teachers_day 不是有效季节/节日ID，死数据
     desc: "送礼NPC增加好感，母亲节/教师节专用。",
   },
   {
@@ -158167,7 +158170,6 @@ const GOODS = [
     category: "flowers",
     buyLocations: ["wholesaleMarket"],
     sellLocations: ["commercialDist", "techPark"],
-    seasonal: null, // [全系统自洽修复] 域A A类: festival_valentine/festival_qixi 不是有效季节/节日ID，死数据
     desc: "情人节/七夕特殊礼物，表白必备。",
   },
 
@@ -159375,6 +159377,19 @@ function isItemNpcGift(itemId, npcId) {
     chili: ["daily_use"],
     egg: ["daily_use"],
     milk: ["daily_use"],
+    // [全系统自洽修复] 域A A类#1: 新增12种食材NPC礼物映射
+    corn: ["vegetables", "daily_use"],
+    lettuce: ["vegetables"],
+    mushroom: ["vegetables"],
+    vinegar: ["daily_use"],
+    tofu: ["vegetables", "daily_use"],
+    bamboo_shoot: ["vegetables"],
+    garlic: ["daily_use"],
+    onion: ["vegetables", "daily_use"],
+    starch: ["daily_use"],
+    shrimp: ["daily_use"],
+    duck: ["daily_use"],
+    ginger: ["daily_use"],
   };
 
   // 查找NPC的礼物偏好（需要全局 NPC 数组）
@@ -171340,7 +171355,7 @@ const MORAL_EVENTS = [
         immediate: function (s) {
           // [联动flag] 触发"昧下钱包的阴影"后续事件
           s.flags.moralWalletStolen = true;
-          s.resources.cash += 500;
+          s.resources.cash = (s.resources.cash || 0) + 500;
           s.needs.happiness = Math.min(100, s.needs.happiness + 8);
           StateManager.addMessage(
             "💵 你快速把钱塞进口袋，心跳加速地离开了。",
@@ -171353,7 +171368,7 @@ const MORAL_EVENTS = [
         flag: "moral_wallet_flaunt",
         score: -10,
         immediate: function (s) {
-          s.resources.cash += 500;
+          s.resources.cash = (s.resources.cash || 0) + 500;
           s.player.fame = Math.min(100, (s.player.fame || 0) + 5);
           s.needs.happiness = Math.min(100, s.needs.happiness + 10);
           StateManager.addMessage(
@@ -172066,7 +172081,7 @@ const MORAL_EVENTS = [
         immediate: function (s) {
           // [全系统自洽修复] 域B A类#2: cash NaN 守卫 — 防止事件扣款永久损坏现金
           if (typeof s.resources.cash !== "number" || !isFinite(s.resources.cash)) s.resources.cash = 0;
-          s.resources.cash = Math.max(0, (s.resources.cash || 0) - Random.int)(80, 150);
+          s.resources.cash = Math.max(0, (s.resources.cash || 0) - Random.int(80, 150));
           s.resources.cash = Math.max(0, s.resources.cash);
           s.needs.happiness = Math.min(100, (s.needs.happiness || 50) + 10);
           s.player.fame = Math.min(100, (s.player.fame || 0) + 3);
@@ -174222,7 +174237,7 @@ const MORAL_CONSEQUENCES = {
       return "你抽屉里那张借条——对方主动联系，把钱还给了你，还多塞了一盒水果。「写借条这事让我重新审视了自己。」他说。";
     },
     apply: function (s) {
-      s.resources.cash += 500;
+      s.resources.cash = (s.resources.cash || 0) + 500;
       s.player.fame = Math.min(100, (s.player.fame || 0) + 3);
       s.needs.happiness = Math.min(100, s.needs.happiness + 5);
       StateManager.addMessage("💰 朋友还了¥500，还多了一份信任。", "success");
@@ -178221,6 +178236,22 @@ function sellGood(goodId, qty) {
       state.trade.totalProfit =
         (state.trade.totalProfit || 0) + unitProfit * qty;
       state.flags._firstTradeDone = true; // 成就：第一次倒买倒卖
+      // [全系统自洽修复] 域A 联动增强#1 A→B: 交易利润里程碑叙事 — 首次累积利润达¥500/¥5000/¥50000时触发
+      if (state.trade.totalProfit >= 50000 && !state.flags._tradeMilestone50000) {
+        state.flags._tradeMilestone50000 = true;
+        StateManager.addMessage("📈 累计交易利润突破¥50,000！你已是这座城市里精明的商人，街坊邻居都叫你「倒爷」。", "event");
+      } else if (state.trade.totalProfit >= 5000 && !state.flags._tradeMilestone5000) {
+        state.flags._tradeMilestone5000 = true;
+        StateManager.addMessage("📈 累计交易利润突破¥5,000！你开始摸清了倒买倒卖的门道，对市场价格越来越敏感。", "success");
+      } else if (state.trade.totalProfit >= 500 && !state.flags._tradeMilestone500) {
+        state.flags._tradeMilestone500 = true;
+        StateManager.addMessage("📈 累计交易利润突破¥500！第一次靠低买高卖赚到钱，你体会到了做生意的乐趣。", "success");
+      }
+      // [全系统自洽修复] 域A 联动增强#2 A→E: 交易利润→投资信心 — 累计交易利润超¥2000后投资分析获得小幅加成
+      if (state.trade.totalProfit >= 2000 && !state.flags._tradeLearnedInvest) {
+        state.flags._tradeLearnedInvest = true;
+        StateManager.addMessage("💡 经历了多次倒买倒卖，你对市场波动有了直觉——投资分析能力悄然提升。", "info");
+      }
     }
   }
 
@@ -226923,6 +226954,7 @@ function renderTradeTab(state, parent) {
     </div>
     <div style="text-align:right;">
       <span style="font-size:11px;color:var(--text-muted);">现金: <strong style="color:var(--success)">¥${(state.resources && state.resources.cash ? state.resources.cash : 0).toLocaleString()}</strong></span>
+      ${(state.trade && state.trade.totalProfit ? '<div style="font-size:10px;color:var(--text-muted);margin-top:1px;">📈 累计利润: <strong style="' + (state.trade.totalProfit > 0 ? 'color:var(--success)' : 'color:var(--danger)') + ';">¥' + (state.trade.totalProfit || 0).toLocaleString() + '</strong></div>' : '')}
       ${(function() {
         var activeEvents = 0;
         if (state.trade && state.trade.marketEvents) {

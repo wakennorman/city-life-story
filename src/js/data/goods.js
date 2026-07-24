@@ -332,7 +332,6 @@ const GOODS = [
     category: "flowers",
     buyLocations: ["wholesaleMarket"],
     sellLocations: ["commercialDist", "hospital"],
-    seasonal: null, // [全系统自洽修复] 域A A类: festival_mothers_day/festival_teachers_day 不是有效季节/节日ID，死数据
     desc: "送礼NPC增加好感，母亲节/教师节专用。",
   },
   {
@@ -343,7 +342,6 @@ const GOODS = [
     category: "flowers",
     buyLocations: ["wholesaleMarket"],
     sellLocations: ["commercialDist", "techPark"],
-    seasonal: null, // [全系统自洽修复] 域A A类: festival_valentine/festival_qixi 不是有效季节/节日ID，死数据
     desc: "情人节/七夕特殊礼物，表白必备。",
   },
 

@@ -2856,6 +2856,7 @@ function renderTradeTab(state, parent) {
     </div>
     <div style="text-align:right;">
       <span style="font-size:11px;color:var(--text-muted);">现金: <strong style="color:var(--success)">¥${(state.resources && state.resources.cash ? state.resources.cash : 0).toLocaleString()}</strong></span>
+      ${(state.trade && state.trade.totalProfit ? '<div style="font-size:10px;color:var(--text-muted);margin-top:1px;">📈 累计利润: <strong style="' + (state.trade.totalProfit > 0 ? 'color:var(--success)' : 'color:var(--danger)') + ';">¥' + (state.trade.totalProfit || 0).toLocaleString() + '</strong></div>' : '')}
       ${(function() {
         var activeEvents = 0;
         if (state.trade && state.trade.marketEvents) {

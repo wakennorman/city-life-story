@@ -706,7 +706,9 @@ function canCookRecipe(recipe, inventory) {
     var ing = recipe.ingredients[i];
     var itemInInventory = null;
     for (var j = 0; j < items.length; j++) {
-      if (items[j].itemId === ing.itemId) {
+      // [全系统自洽修复] 域A A类#2: 兼容 `id` 和 `itemId` 字段名（trade系统存`id`，烹饪系统查`itemId`）
+      var itemKey = items[j].itemId || items[j].id;
+      if (itemKey === ing.itemId) {
         itemInInventory = items[j];
         break;
       }
@@ -735,7 +737,9 @@ function cookRecipe(state, recipeId) {
   for (var i = 0; i < recipe.ingredients.length; i++) {
     var ing = recipe.ingredients[i];
     for (var j = 0; j < items.length; j++) {
-      if (items[j].itemId === ing.itemId) {
+      // [全系统自洽修复] 域A A类#2: 兼容 `id` 和 `itemId` 字段名
+      var itemKey2 = items[j].itemId || items[j].id;
+      if (itemKey2 === ing.itemId) {
         items[j].quantity -= ing.amount;
         if (items[j].quantity <= 0) {
           items.splice(j, 1);
