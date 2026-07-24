@@ -4381,7 +4381,7 @@ function renderSkillsTab(state, parent) {
           );
           return;
         }
-        if (st.resources.cash < 50) {
+        if ((st.resources.cash || 0) < 50) {
           StateManager.addMessage("⚠️ 训练需要¥50书本费，钱不够", "warning");
           return;
         }

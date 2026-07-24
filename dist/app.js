@@ -229652,7 +229652,7 @@ function renderSkillsTab(state, parent) {
           );
           return;
         }
-        if (st.resources.cash < 50) {
+        if ((st.resources.cash || 0) < 50) {
           StateManager.addMessage("⚠️ 训练需要¥50书本费，钱不够", "warning");
           return;
         }
@@ -252582,7 +252582,8 @@ if (typeof window !== "undefined") {
       celebrate.textContent = "🎉 当前目标全部达成！" + _stageAdvice;
       card.appendChild(celebrate);
       // [全系统自洽修复] 域F 修复: 每日目标奖金改为按天发放（原flag终身只触发一次，导致后续天数有庆祝无奖励）
-      if (state.flags._dailyQuestRewardCollectedDay !== state.player.day) {
+      if (!state.flags) state.flags = {};
+	      if (state.flags._dailyQuestRewardCollectedDay !== state.player.day) {
         state.flags._dailyQuestRewardCollectedDay = state.player.day;
         var reward = 50 + quests.length * 10;
         state.resources.cash = (state.resources.cash || 0) + reward;
