@@ -6431,7 +6431,8 @@ function renderMessageLog(state) {
     var toggleBtn = document.createElement("button");
     toggleBtn.id = "message-log-toggle";
     toggleBtn.className = "btn btn-sm";
-    toggleBtn.textContent = "📌 展开";
+    // [全系统自洽修复] 域F 修复: 初始标签基于当前折叠状态（桌面端默认展开应显示"收起"）
+    toggleBtn.textContent = logEl.classList.contains("collapsed") ? "📌 展开" : "📌 收起";
     toggleBtn.title = "展开/收起事件记录列表";
     toggleBtn.onclick = function (e) {
       e.stopPropagation();
