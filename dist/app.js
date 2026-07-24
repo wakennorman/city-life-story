@@ -148333,9 +148333,9 @@ const SKILL_SYNERGY_DUAL = {
       { id: "english", minLevel: 50 },
     ],
     effects: {
-      // 编程类工作收入+40%
+      // [全系统自洽修复] 域C A类#2: coding_english 清理死引用 freelance_writing → instrument_repair(真实work)
       coding: { incomeMultiplier: 1.4 },
-      freelance_writing: { incomeMultiplier: 1.3 },
+      instrument_repair: { incomeMultiplier: 1.3 },
       content_writing: { incomeMultiplier: 1.3 },
       // 学习XP+20%
       codingXpBonus: 0.2,
@@ -148354,9 +148354,8 @@ const SKILL_SYNERGY_DUAL = {
       { id: "electrician", minLevel: 40 },
     ],
     effects: {
-      // 维修类工作收入+35%
+      // [全系统自洽修复] 域C A类#3: repair_electrician 清理死引用 electronics_repair → instrument_repair(真实work)
       instrument_repair: { incomeMultiplier: 1.35 },
-      electronics_repair: { incomeMultiplier: 1.35 },
       factory_electrician: { incomeMultiplier: 1.3 },
       // 装备维修损耗-30%
       repairWearReduction: 0.3,
@@ -148374,9 +148373,8 @@ const SKILL_SYNERGY_DUAL = {
       { id: "management", minLevel: 40 },
     ],
     effects: {
-      // 销售类工作收入+30%
+      // [全系统自洽修复] 域C A类#4: sales_management 清理死引用 promoter → shop_assistant(真实work)
       shop_assistant: { incomeMultiplier: 1.3 },
-      promoter: { incomeMultiplier: 1.3 },
       // 团队规模+2
       teamSizeBonus: 2,
       // 人缘成长+15%
@@ -148395,9 +148393,8 @@ const SKILL_SYNERGY_DUAL = {
       { id: "accounting", minLevel: 30 }, // 会计用于计算运费
     ],
     effects: {
-      // 货运/配送收入+40%
+      // [全系统自洽修复] 域C A类#5: driving_logistics 清理死引用 warehouse_logistics → truck_assistant(真实work)
       truck_assistant: { incomeMultiplier: 1.4 },
-      warehouse_logistics: { incomeMultiplier: 1.3 },
       wholesale_delivery: { incomeMultiplier: 1.35 },
       // 旅行AP-3（效率更高）
       travelApReduction: 3,
@@ -170891,6 +170888,11 @@ const MORAL_EVENTS = [
     desc: "你看到路边停着一辆共享单车，车锁没扣上，也没人扫码。骑走就能省下一笔交通费，但这样做不太对。",
     minDay: 2,
     dailyChance: 0.05,
+    condition: function (s) {
+      // 只在街面地点触发（不在医院/银行/培训中心等室内）
+      var indoorLocs = ["hospital", "bank", "trainingCenter", "gov_office", "temple"];
+      return indoorLocs.indexOf(s.trade?.currentLocation) === -1;
+    },
     choices: [
       {
         text: "🔒 帮它锁上，拍张照报修",
@@ -170909,10 +170911,50 @@ const MORAL_EVENTS = [
         flag: "moral_bike_steal",
         score: -8,
         immediate: function (s) {
-          StateManager.addMessage(
-            "🚲 你骑了几条街，总觉得有人在看你。",
-            "warning",
-          );
+          var curLoc = s.trade?.currentLocation;
+          var locKeys = Object.keys(window.LOCATIONS || {}).filter(function (k) {
+            return k !== curLoc;
+          });
+          // 生成目的地选择弹窗
+          setTimeout(function () {
+            var state = StateManager.getState();
+            var listHtml = '<p style="margin-bottom:8px;color:var(--text-secondary);">🚲 骑共享单车去哪？</p><div style="max-height:300px;overflow-y:auto;">';
+            for (var li = 0; li < locKeys.length; li++) {
+              var loc = window.LOCATIONS[locKeys[li]];
+              if (!loc) continue;
+              var hops = typeof getLocationHops === "function" ? getLocationHops(state.trade?.currentLocation, locKeys[li]) : 1;
+              var apCost = 6 + Math.max(0, hops - 1) * 4;
+              listHtml += '<div class="bike-dest-card" data-dest="' + locKeys[li] + '" style="padding:10px 12px;margin:4px 0;background:var(--bg-card);border:1px solid var(--border);border-radius:6px;cursor:pointer;">' +
+                '<div style="display:flex;justify-content:space-between;align-items:center;">' +
+                '<strong>' + (loc.icon || "📍") + " " + loc.name + "</strong>" +
+                '<span style="font-size:11px;color:var(--warning);">⚡' + apCost + '</span>' +
+                "</div>" +
+                '<div style="font-size:11px;color:var(--text-muted);margin-top:2px;">' + (loc.desc || "") + " · " + hops + "跳</div>" +
+                "</div>";
+            }
+            listHtml += "</div>";
+            showModal({
+              title: "🚲 共享单车 · 选择目的地",
+              body: listHtml,
+              buttons: [{ text: "算了，不骑了", cls: "", callback: function () { return true; } }],
+            });
+            setTimeout(function () {
+              document.querySelectorAll(".bike-dest-card").forEach(function (card) {
+                card.addEventListener("click", function () {
+                  var dest = card.dataset.dest;
+                  if (!dest || !state.trade) return;
+                  document.querySelector(".modal-overlay")?.remove();
+                  var hops2 = typeof getLocationHops === "function" ? getLocationHops(state.trade.currentLocation, dest) : 1;
+                  var apCost2 = 6 + Math.max(0, hops2 - 1) * 4;
+                  state.trade.currentLocation = dest;
+                  state.player.actionPoints = Math.max(0, (state.player.actionPoints || 0) - apCost2);
+                  state.needs.happiness = Math.max(0, (state.needs.happiness || 50) - 3);
+                  StateManager.addMessage("🚲 你骑着共享单车到了" + (window.LOCATIONS[dest]?.name || dest) + "，消耗了⚡" + apCost2 + "行动力。", "warning");
+                  renderAll();
+                });
+              });
+            }, 50);
+          }, 0);
         },
       },
       {
@@ -179570,6 +179612,16 @@ function tickIllnessDecay(state) {
           (ill.icon || "🤒") + " 你的" + ill.name + "好了。",
           "success",
         );
+        // [全系统自洽修复] 域G 联动增强: 重症康复→峰终定律积极收尾（G→B 健康-叙事联动）
+        if ((ill.severity || 1) >= 4 && !state.flags["_recoveredFrom_" + inst.id]) {
+          state.flags["_recoveredFrom_" + inst.id] = true;
+          StateManager.addMessage(
+            "💪 从" + ill.name + "中康复，你更加珍惜健康的日子。心智+3，心情+10。",
+            "success",
+          );
+          state.player.mental = Math.min(100, (state.player.mental || 0) + 3);
+          state.needs.happiness = Math.min(100, (state.needs.happiness || 0) + 10);
+        }
         // 记录痊愈，用于演化链追踪
         recordIllnessCure(state, inst.id);
         continue; // 不放回 remaining
@@ -230254,10 +230306,17 @@ function showModal() {
 
 // ====== 模态对话框实现 ======
 function showModalImpl({ title, body, buttons = [] }) {
-  // 如果已有弹窗，不覆盖（防止每日结算被新弹窗挤掉）
+  // 如果已有弹窗，先移除旧的（防止弹窗堆积）
   const existingOverlay = document.querySelector(".modal-overlay");
   if (existingOverlay) {
-    return;
+    // 清理旧弹窗的 ESC 和 click 监听器
+    if (existingOverlay._escHandler) {
+      document.removeEventListener("keydown", existingOverlay._escHandler);
+    }
+    if (existingOverlay._clickHandler) {
+      existingOverlay.removeEventListener("click", existingOverlay._clickHandler);
+    }
+    existingOverlay.parentNode?.removeChild(existingOverlay);
   }
 
   const overlay = document.createElement("div");
@@ -254522,6 +254581,10 @@ function getAvailableActions(state) {
             } else if (state.investment && state.investment._marketMood === "bearish") {
               contextLine = "最近行情不好，投资要谨慎啊，别把钱都扔进去。";
             }
+          }
+          // [全系统自洽修复] 域G 联动增强: NPC对玩家健康状态的反应（G→D 健康-社交联动）
+          if (!contextLine && !isBirthday && !festLine && state.status && state.status.health < 30 && Random.chance(0.12)) {
+            contextLine = "你脸色不太好，要不要去医院看看？别硬撑。";
           }
           const line =
             isBirthday && npc.birthdayLine

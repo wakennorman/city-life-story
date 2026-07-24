@@ -47,9 +47,9 @@ const SKILL_SYNERGY_DUAL = {
       { id: "english", minLevel: 50 },
     ],
     effects: {
-      // 编程类工作收入+40%
+      // [全系统自洽修复] 域C A类#2: coding_english 清理死引用 freelance_writing → instrument_repair(真实work)
       coding: { incomeMultiplier: 1.4 },
-      freelance_writing: { incomeMultiplier: 1.3 },
+      instrument_repair: { incomeMultiplier: 1.3 },
       content_writing: { incomeMultiplier: 1.3 },
       // 学习XP+20%
       codingXpBonus: 0.2,
@@ -68,9 +68,8 @@ const SKILL_SYNERGY_DUAL = {
       { id: "electrician", minLevel: 40 },
     ],
     effects: {
-      // 维修类工作收入+35%
+      // [全系统自洽修复] 域C A类#3: repair_electrician 清理死引用 electronics_repair → instrument_repair(真实work)
       instrument_repair: { incomeMultiplier: 1.35 },
-      electronics_repair: { incomeMultiplier: 1.35 },
       factory_electrician: { incomeMultiplier: 1.3 },
       // 装备维修损耗-30%
       repairWearReduction: 0.3,
@@ -88,9 +87,8 @@ const SKILL_SYNERGY_DUAL = {
       { id: "management", minLevel: 40 },
     ],
     effects: {
-      // 销售类工作收入+30%
+      // [全系统自洽修复] 域C A类#4: sales_management 清理死引用 promoter → shop_assistant(真实work)
       shop_assistant: { incomeMultiplier: 1.3 },
-      promoter: { incomeMultiplier: 1.3 },
       // 团队规模+2
       teamSizeBonus: 2,
       // 人缘成长+15%
@@ -109,9 +107,8 @@ const SKILL_SYNERGY_DUAL = {
       { id: "accounting", minLevel: 30 }, // 会计用于计算运费
     ],
     effects: {
-      // 货运/配送收入+40%
+      // [全系统自洽修复] 域C A类#5: driving_logistics 清理死引用 warehouse_logistics → truck_assistant(真实work)
       truck_assistant: { incomeMultiplier: 1.4 },
-      warehouse_logistics: { incomeMultiplier: 1.3 },
       wholesale_delivery: { incomeMultiplier: 1.35 },
       // 旅行AP-3（效率更高）
       travelApReduction: 3,
