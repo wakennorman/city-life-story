@@ -429,7 +429,7 @@ function grantJobSkillXp(jobId, state) {
   var entry = xpMap[jobId];
   if (!entry) return "";
 
-  var sk = state.skills[entry.skill];
+  var sk = state.skills && state.skills[entry.skill]; // [全系统自洽修复] 域C A类: state.skills 守卫
   if (!sk) return "";
 
   var xpGain = Random.int(entry.min, entry.max);
@@ -509,9 +509,10 @@ function applySkillLevelUpBonus(skillKey, state) {
 
   // [全系统自洽修复] 域C 联动增强3: 技能里程碑时NPC祝贺(C→D)
   var milestoneLevels = [30, 50, 70, 100];
-  var curLevel = state.skills[skillKey] ? state.skills[skillKey].level : 0;
+  var curLevel = state.skills && state.skills[skillKey] ? state.skills[skillKey].level : 0; // [全系统自洽修复] 域C A类: state.skills 守卫
   for (var mi = 0; mi < milestoneLevels.length; mi++) {
     if (curLevel !== milestoneLevels[mi]) continue;
+    if (!state.flags) state.flags = {}; // [全系统自洽修复] 域C A类: state.flags 守卫
     if (!state.flags._skillMilestones) state.flags._skillMilestones = {};
     var mileKey = skillKey + "_" + milestoneLevels[mi];
     if (state.flags._skillMilestones[mileKey]) continue;
@@ -562,6 +563,7 @@ function grantActionStatGain(actionId, state) {
   var entry = statMap[actionId];
   if (!entry) return "";
 
+  if (!state || !state.player) return ""; // [全系统自洽修复] 域C A类: state.player 守卫
   var p = state.player;
   var gains = [];
 
@@ -792,6 +794,7 @@ function checkNpcAffinityRewards(npcId, state) {
   var rel = state.relationships[npcId];
   if (!rel) return;
   var affinity = rel.affinity || 0;
+  if (!state.flags) state.flags = {}; // [全系统自洽修复] 域C A类: state.flags 守卫
   if (!state.flags._npcRewardsClaimed) state.flags._npcRewardsClaimed = {};
   npc.affinityRewards.forEach(function (reward) {
     if (
@@ -810,6 +813,7 @@ function checkNpcAffinityRewards(npcId, state) {
 
 /** 每日财务结算 — 银行利息（含accounting技能加成） */
 function settleDailyFinance(state) {
+  if (!state || !state.resources) return; // [全系统自洽修复] 域C A类: state.resources 守卫
   var bal = state.resources.bankBalance || 0;
   if (bal <= 0) return;
   var accountingLvl =
@@ -826,13 +830,15 @@ function settleDailyFinance(state) {
   var interest = Math.floor(bal * rate);
   if (interest > 0) {
     state.resources.bankBalance += interest;
-    addDailyTransaction(
-      state,
-      "income",
-      "bank_interest",
-      interest,
-      "存款利息（利率" + (rate * 100).toFixed(3) + "%）",
-    );
+    if (typeof addDailyTransaction === "function") { // [全系统自洽修复] 域C A类: addDailyTransaction 守卫
+      addDailyTransaction(
+        state,
+        "income",
+        "bank_interest",
+        interest,
+        "存款利息（利率" + (rate * 100).toFixed(3) + "%）",
+      );
+    }
     StateManager.addMessage(
       "🏦 银行利息 +¥" +
         interest +
