@@ -2412,7 +2412,7 @@ function createActionCard(action, state) {
       ${action.reqFail ? `<span class="req-fail">⚠ ${action.reqFail}</span>` : ""}
     </div>
     ${action.pricePreview ? `<div class="price-preview">${action.pricePreview}</div>` : ""}
-    ${action.payTags && action.payTags.length > 0 ? `<div style="font-size:9px;color:var(--accent);margin-top:2px;letter-spacing:0.5px;">${action.payTags.join(" ")}</div>` : ""}
+    ${action.payTags && action.payTags.length > 0 ? `<div style="font-size:10px;color:var(--accent);margin-top:3px;letter-spacing:0.3px;line-height:1.4;">💡 ${action.payTags.join(" · ")}</div>` : ""}
   `;
 
   if (!action.disabled) {
@@ -5373,6 +5373,12 @@ function renderIllnessRow(state) {
     fameRow.parentNode.insertBefore(box, fameRow.nextSibling);
   }
 
+  // 第1天且无疾病记录（旧存档残留）→ 隐藏伤病栏
+  if (state.player.day <= 1 && illnesses.length === 0) {
+    box.style.display = "none";
+    state.status.injured = false;
+    return;
+  }
   if (illnesses.length === 0 && !injured) {
     box.style.display = "none";
     return;

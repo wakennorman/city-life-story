@@ -7,6 +7,12 @@
  * ⚠️ 新剧本开局设计铁律：
  *   具体数字 × 人物关系 × 道德困境 × 倒计时 × 情感温度
  *   参见 memory/opening-hook-design-prompt.md
+ *
+ * 🚗 驾照注意：
+ *   新剧本需考虑角色是否合理拥有驾照，可在 skills.driving 中设置初始等级。
+ *   - 已有驾照（driving≥10）：可直接从事驾驶类工作（批发配送、快递、网约车等）
+ *   - 无驾照：需到培训中心考取（¥800，通过率60%）
+ *   沙盒模式在"技能"区下方有"已有驾照"复选框。
  */
 
 const SCENARIOS = [
@@ -994,6 +1000,7 @@ const SANDBOX_DEFAULTS = {
   education: 0,
   housingTier: 0,
   fame: 0,
+  hasLicense: false, // 开局是否有驾照
   startLocation: "slum",
   cooking: 0,
   repair: 0,

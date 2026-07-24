@@ -241,7 +241,7 @@ function generateWorkFlavorText(state, job) {
     { text: "🏃 下班后跑了步去赶公交，在城市里活着就是一场长跑。", minDay: 5 },
     { text: "🎯 今天的任务完成了，离这个月的目标又近了一步。", minDay: 7 },
     { text: "🌅 清晨的街道还没醒，你已经开始了一天的奔波。", minDay: 0 },
-    { text: "🍜 今天奢侈了一把，面里加了个蛋。", minDay: 0 },
+    { text: "🍜 收工后去面馆犒劳了自己一顿，加了个蛋。", minDay: 0 },
     { text: "🧹 干完活帮老板收拾了一下，他多给了几块钱。", minDay: 3 },
     { text: "🤝 今天帮新来的工友搬了趟货，他感激地递了根烟。", minDay: 10 },
     { text: "🌙 月亮升起来了，拖着疲惫的身体往住处走。", minDay: 0 },

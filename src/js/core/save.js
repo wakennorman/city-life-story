@@ -1,12 +1,11 @@
 /**
- * 存档系统 — localStorage 多槽位持久化
+ * 存档系统 — localStorage 多槽位持久化（无限槽位）
  *
- * 5个手动存档槽 + 1个自动存档
  * 索引键: 'city_life_story_index' — 存储各槽位元信息
- * 存档键: 'city_life_story_slot_N' (N=1..5) + 'city_life_story_autosave'
+ * 存档键: 'city_life_story_slot_<id>' (id 为数字或字符串)
+ * 自动存档键: 'city_life_story_autosave' + 'city_life_story_autosave_prev'
  */
 
-const NUM_SLOTS = 5;
 const SLOT_PREFIX = "city_life_story_slot_";
 const AUTO_SAVE_KEY = "city_life_story_autosave";
 const AUTO_SAVE_PREV_KEY = "city_life_story_autosave_prev"; // 滚动双槽·前一日备份
@@ -15,9 +14,9 @@ const INDEX_KEY = "city_life_story_index";
 // localStorage 配额警戒线（字节）
 const QUOTA_WARN_THRESHOLD = 2 * 1024 * 1024; // 剩余<2MB时预警
 
-/** 获取槽位键 */
-function slotKey(n) {
-  return SLOT_PREFIX + n;
+/** 获取槽位键（支持数字或字符串 ID） */
+function slotKey(id) {
+  return SLOT_PREFIX + id;
 }
 
 /** 读取存档索引 */
@@ -37,48 +36,69 @@ function setSaveIndex(index) {
 
 /**
  * 检测 localStorage 剩余空间
- * 通过试探性写入检测是否接近配额上限
- * 返回 { ok: boolean, remaining: number, detail: string }
+ *
+ * 浏览器 localStorage 典型限额（每域名）：
+ *   Chrome:  ~10MB  |  Firefox: ~10MB  |  Safari: ~5MB  |  Edge: ~10MB
+ *
+ * 策略：
+ *   1. 快速写 500KB 探针 → 成功则空间充足（剩余 ≥ 5MB 参考值）
+ *   2. 失败则二分法精确探测 0~500KB
+ *
+ * 返回 { ok: boolean, remaining: number, detail: string, measured: boolean }
+ *   ok: 剩余空间 ≥ QUOTA_WARN_THRESHOLD (2MB)
+ *   remaining: 真实剩余空间估值（充足时返回 5MB 参考值，不触发预警）
+ *   measured: true=真实测量值，false=参考值（空间充足）
  */
 function checkStorageQuota() {
   try {
     var probeKey = "__quota_probe__";
-    // 先写一个小值确认 localStorage 还可写入
+    // 先确认 localStorage 可写
     localStorage.setItem(probeKey, "1");
-    // 尝试写入一个 ~500KB 的字符串 — 如果失败说明快满了
-    var probeData = new Array(500 * 1024).join("x");
+
+    // 快速检测：尝试写入 500KB
+    var quickTest = new Array(500 * 1024).join("x");
     try {
-      localStorage.setItem(probeKey, probeData);
+      localStorage.setItem(probeKey, quickTest);
       localStorage.removeItem(probeKey);
-      return { ok: true, remaining: QUOTA_WARN_THRESHOLD + 1, detail: "充足" };
-    } catch (quotaErr) {
-      // 500KB 写入失败 → 接近配额上限
+      // 500KB 写入成功 → 空间充足，返回 5MB 参考值（高于所有预警阈值）
+      return { ok: true, remaining: 5 * 1024 * 1024, detail: "充足", measured: false };
+    } catch (_) {
+      // 500KB 写入失败 → 空间不足，二分法精确探测 0~500KB
       localStorage.removeItem(probeKey);
-      // 用二分法逼近剩余空间
-      var lo = 0,
-        hi = 500 * 1024,
-        lastOk = 0;
-      while (lo <= hi) {
-        var mid = Math.floor((lo + hi) / 2);
-        try {
-          var test = new Array(mid).join("x");
-          localStorage.setItem(probeKey, test);
-          lastOk = mid;
-          localStorage.removeItem(probeKey);
-          lo = mid + 1;
-        } catch (e) {
-          hi = mid - 1;
-        }
-      }
-      return {
-        ok: lastOk >= QUOTA_WARN_THRESHOLD,
-        remaining: lastOk,
-        detail: "剩余约 " + Math.round(lastOk / 1024) + "KB",
-      };
     }
+
+    // 二分法探测 0~500KB 之间的精确剩余空间
+    var lo = 0,
+      hi = 500 * 1024,
+      lastOk = 0;
+    while (lo <= hi) {
+      var mid = Math.floor((lo + hi) / 2);
+      try {
+        var test = new Array(mid).join("x");
+        localStorage.setItem(probeKey, test);
+        lastOk = mid;
+        localStorage.removeItem(probeKey);
+        lo = mid + 1;
+      } catch (e) {
+        hi = mid - 1;
+      }
+    }
+
+    // 清理探针
+    try { localStorage.removeItem(probeKey); } catch (_) {}
+
+    var remaining = lastOk;
+    var ok = remaining >= QUOTA_WARN_THRESHOLD;
+
+    var detail = remaining >= 1024 * 1024
+      ? "剩余约 " + (remaining / (1024 * 1024)).toFixed(1) + "MB"
+      : remaining >= 1024
+        ? "剩余约 " + Math.round(remaining / 1024) + "KB"
+        : "剩余 " + remaining + "B";
+
+    return { ok: ok, remaining: remaining, detail: detail, measured: true };
   } catch (e) {
-    // localStorage 不可用（隐私模式等）
-    return { ok: false, remaining: 0, detail: "无法检测: " + e.message };
+    return { ok: false, remaining: -1, detail: "无法检测: " + e.message, measured: false };
   }
 }
 
@@ -219,9 +239,9 @@ function _trimStateForSave(saveData) {
   return saveData;
 }
 
-/** 保存游戏到指定槽位（1-5） */
+/** 保存游戏到指定槽位（支持数字或字符串 ID） */
 function saveGame(slot) {
-  if (slot < 1 || slot > NUM_SLOTS) {
+  if (slot == null || slot === "") {
     StateManager.addMessage("⚠️ 无效的存档槽位。", "danger");
     return false;
   }
@@ -233,11 +253,19 @@ function saveGame(slot) {
     var quota =
       typeof checkStorageQuota === "function" ? checkStorageQuota() : null;
     if (quota && !quota.ok) {
+      const delMsg = "请删除旧存档以腾出空间。";
       StateManager.addMessage(
-        "⚠️ 存储空间不足（" + quota.detail + "），请清理旧存档后再保存。",
+        "⚠️ 存储空间不足（" + quota.detail + "），" + delMsg,
         "danger",
       );
       return false;
+    }
+    // 低空间预警（仅真实测量值且剩余 < 5MB，但还能存）
+    if (quota && quota.measured && quota.remaining < 5 * 1024 * 1024 && quota.remaining > 0) {
+      StateManager.addMessage(
+        "⚠️ 存储空间剩余不多（" + quota.detail + "），建议删除旧存档。",
+        "warning",
+      );
     }
 
     state.lastPlayedAt = Date.now();
@@ -274,11 +302,13 @@ function saveGame(slot) {
         : state.flags._isSandboxMode
           ? "⚙️沙盒"
           : "🎯经典",
+      // 为字符串 ID 槽位记录标签（首次保存时）
+      label: typeof slot === "string" && isNaN(Number(slot)) ? "存档 " + new Date().toLocaleString("zh-CN", { month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit" }) : undefined,
     };
     setSaveIndex(index);
 
     StateManager.addMessage(
-      `💾 已保存到槽位 ${slot}（第${state.player.day}天，¥${state.resources.cash.toLocaleString()}）`,
+      `💾 已保存（第${state.player.day}天，¥${state.resources.cash.toLocaleString()}）`,
       "success",
     );
     return true;
@@ -302,6 +332,13 @@ function autoSave(reason) {
         "danger",
       );
       return false;
+    }
+    // 低空间预警（仅真实测量值）
+    if (quota.measured && quota.remaining < 5 * 1024 * 1024 && quota.remaining > 0) {
+      StateManager.addMessage(
+        "⚠️ 存储空间不足（" + quota.detail + "），建议删除旧存档以防自动存档失败。",
+        "warning",
+      );
     }
 
     // 深拷贝
@@ -375,17 +412,26 @@ function autoSave(reason) {
   }
 }
 
+/** 生成新的存档 ID（唯一，基于时间戳） */
+function generateSlotId() {
+  return "s_" + Date.now() + "_" + Math.random().toString(36).slice(2, 6);
+}
+
+/** 创建新存档（自动分配新 ID） */
+function saveGameNew() {
+  var newId = generateSlotId();
+  return saveGame(newId) ? newId : null;
+}
+
 /** 从指定槽位加载存档 */
 function loadGame(slot) {
   try {
     let key;
     if (slot === "_auto") {
       key = AUTO_SAVE_KEY;
-    } else if ((typeof slot === "number" || (typeof slot === "string" && /^\d+$/.test(slot))) && Number(slot) >= 1 && Number(slot) <= NUM_SLOTS) {
-      key = slotKey(Number(slot));
     } else {
-      // 兼容旧版：尝试直接以 slot 为键
-      key = slot;
+      // 统一通过 slotKey 构建键名（支持数字或字符串 ID）
+      key = slotKey(slot);
     }
 
     const json = localStorage.getItem(key);
@@ -401,28 +447,22 @@ function loadGame(slot) {
 function deleteSave(slot) {
   if (slot === "_auto") {
     localStorage.removeItem(AUTO_SAVE_KEY);
+    localStorage.removeItem(AUTO_SAVE_PREV_KEY);
     const index = getSaveIndex();
     delete index._auto;
     setSaveIndex(index);
     return;
   }
-  var numSlot = (typeof slot === "string" && /^\d+$/.test(slot)) ? Number(slot) : slot;
-  if (typeof numSlot !== "number" || numSlot < 1 || numSlot > NUM_SLOTS) return;
-  localStorage.removeItem(slotKey(numSlot));
+  localStorage.removeItem(slotKey(slot));
   const index = getSaveIndex();
-  delete index[numSlot];
+  delete index[slot];
   setSaveIndex(index);
 }
 
 /** 检查指定槽位是否有存档 */
 function hasSave(slot) {
   if (slot === "_auto") return localStorage.getItem(AUTO_SAVE_KEY) !== null;
-  var numSlot = (typeof slot === "string" && /^\d+$/.test(slot)) ? Number(slot) : slot;
-  if (typeof numSlot === "number" && numSlot >= 1 && numSlot <= NUM_SLOTS)
-    return localStorage.getItem(slotKey(numSlot)) !== null;
-  // 兼容检查任意存档
-  const index = getSaveIndex();
-  return Object.keys(index).length > 0;
+  return localStorage.getItem(slotKey(slot)) !== null;
 }
 
 /** 获取存档槽位的显示信息 */
@@ -471,9 +511,17 @@ function getSlotInfo(slot) {
       ? LOCATIONS[meta.location].name
       : meta.location;
 
+  // 标签：优先使用索引中保存的 label，其次用数字槽位名
+  var label = meta.label;
+  if (!label) {
+    label = typeof slot === "number" || (typeof slot === "string" && /^\d+$/.test(slot))
+      ? "存档 #" + slot
+      : "存档 " + date.toLocaleString("zh-CN", { month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit" });
+  }
+
   return {
     slot,
-    label: `存档槽位 ${slot}`,
+    label: label,
     day: meta.day,
     phase: meta.phase,
     cash: meta.cash,
@@ -488,32 +536,25 @@ function getSlotInfo(slot) {
   };
 }
 
-/** 获取所有存档槽位信息 */
+/** 获取所有存档槽位信息（自动存档 + 所有手动存档，无数量限制） */
 function getAllSlots() {
   const slots = [];
   // 自动存档
   const auto = getSlotInfo("_auto");
   if (auto) slots.push(auto);
-  // 手动存档 1-5
-  for (let i = 1; i <= NUM_SLOTS; i++) {
-    const info = getSlotInfo(i);
+  // 遍历索引中所有手动存档
+  const index = getSaveIndex();
+  for (var key in index) {
+    if (key === "_auto") continue;
+    const info = getSlotInfo(key);
     if (info) slots.push(info);
   }
   return slots;
 }
 
-/** 获取所有槽位（含空槽位） */
+/** 获取所有槽位（含空槽位占位，当前仅返回已有存档，无空槽位概念） */
 function getAllSlotsWithEmpty() {
-  const slots = [];
-  // 自动存档
-  const auto = getSlotInfo("_auto");
-  slots.push(auto || { slot: "_auto", label: "🤖 自动存档", empty: true });
-  // 手动存档
-  for (let i = 1; i <= NUM_SLOTS; i++) {
-    const info = getSlotInfo(i);
-    slots.push(info || { slot: i, label: `存档槽位 ${i}`, empty: true });
-  }
-  return slots;
+  return getAllSlots();
 }
 
 function createSnapshot(state) {
@@ -844,10 +885,57 @@ function importSave(jsonStr) {
   }
 }
 
+// ====== 存储空间管理 ======
+
+/** 获取存储空间使用情况概览 */
+function getStorageInfo() {
+  var info = {
+    total: 0,         // 总使用量（字节）
+    limit: 0,         // 总配额（字节）
+    remaining: 0,     // 剩余空间（字节）
+    saveCount: 0,     // 存档数量
+    saves: [],        // 每个存档的大小
+    percent: 0,       // 使用百分比
+    ok: true,
+  };
+  try {
+    // 计算各存档大小
+    var index = getSaveIndex();
+    for (var key in index) {
+      var lsKey = key === "_auto" ? AUTO_SAVE_KEY : slotKey(key);
+      var raw = localStorage.getItem(lsKey);
+      if (raw) {
+        var size = typeof Blob !== "undefined" ? new Blob([raw]).size : raw.length * 2;
+        info.saves.push({ slot: key, label: index[key].label || key, size: size, day: index[key].day || 0 });
+        info.total += size;
+        info.saveCount++;
+      }
+    }
+    // 检测剩余空间
+    var quota = checkStorageQuota();
+    info.remaining = quota.remaining;
+    info.ok = quota.ok;
+    info.detail = quota.detail;
+    info.measured = quota.measured;
+  } catch (e) {
+    info.ok = false;
+    info.detail = "无法检测: " + e.message;
+  }
+  return info;
+}
+
+/** 格式化字节为可读字符串 */
+function formatSize(bytes) {
+  if (bytes < 1024) return bytes + "B";
+  if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + "KB";
+  return (bytes / (1024 * 1024)).toFixed(1) + "MB";
+}
+
 // 全局挂载
 if (typeof window !== "undefined") {
   Object.assign(window, {
     saveGame,
+    saveGameNew,
     loadGame,
     deleteSave,
     hasSave,
@@ -858,8 +946,9 @@ if (typeof window !== "undefined") {
     exportSave,
     importSave,
     checkStorageQuota,
+    getStorageInfo,
+    formatSize,
     _trimStateForSave,
-    NUM_SLOTS,
     SLOT_PREFIX,
     AUTO_SAVE_KEY,
     AUTO_SAVE_PREV_KEY,

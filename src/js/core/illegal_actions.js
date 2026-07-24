@@ -302,6 +302,9 @@
       if (p.jailDays > 0) {
         state.flags = state.flags || {};
         state.flags._inJailUntil = day + p.jailDays;
+        // 推进游戏时间：拘留天数
+        state.player.day += p.jailDays;
+        state.player.actionPoints = 0;
         StateManager.addMessage(
           "🚔 你被警察当场抓获！拘留 " +
             p.jailDays +
@@ -317,15 +320,27 @@
           "error",
         );
       }
-      // 罚款（不够则扣到 0）
-      var fineActual = Math.min(state.resources.cash, p.fine);
-      state.resources.cash -= fineActual;
-      if (typeof addDailyTransaction === "function" && fineActual > 0) {
+      // 罚款（不够则记欠款）
+      var fineShortfall = 0;
+      if (state.resources.cash >= p.fine) {
+        state.resources.cash -= p.fine;
+      } else {
+        fineShortfall = p.fine - (state.resources.cash || 0);
+        state.resources.cash = 0;
+        // 欠款转为债务
+        state.resources.villageDebt = (state.resources.villageDebt || 0) + fineShortfall;
+        state.flags._fineDebt = (state.flags._fineDebt || 0) + fineShortfall;
+        StateManager.addMessage(
+          "⚠️ 现金不够支付全额罚款，欠¥" + fineShortfall + "已转为债务！",
+          "warning",
+        );
+      }
+      if (typeof addDailyTransaction === "function" && p.fine > 0) {
         addDailyTransaction(
           state,
           "expense",
           "fine",
-          fineActual,
+          p.fine,
           "违法行为罚款 - " + action.name,
         );
       }

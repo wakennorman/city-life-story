@@ -2700,20 +2700,24 @@
         hint: "心情+ 现金-",
 
         apply: function (st) {
-          st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 30);
-
-          st.resources.cash = Math.max(0, (st.resources.cash || 0) - 40);
-
-          st.flags._r99Happy = true;
-
-          StateManager.addMessage(
-            "你花了¥40找点乐子，心情松快不少。",
-
-            "success",
-          );
+          if ((st.resources.cash || 0) >= 40) {
+            st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 30);
+            st.resources.cash = Math.max(0, (st.resources.cash || 0) - 40);
+            st.flags._r99Happy = true;
+            StateManager.addMessage(
+              "你花了¥40找点乐子，心情松快不少。",
+              "success",
+            );
+          } else {
+            st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 8);
+            st.flags._r99Happy = true;
+            StateManager.addMessage(
+              "你摸了摸口袋，只剩¥" + (st.resources.cash || 0) + "，只好在公园里散了散步，心情好了一些。",
+              "info",
+            );
+          }
         },
       },
-
       {
         text: "🧘 自己缓着",
 

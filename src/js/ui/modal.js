@@ -215,7 +215,7 @@ function showHelpModal() {
           <li>🗺️ 地图Tab查看所有地点和通勤方式（步行/单车/地铁/打车/自驾）</li>
           <li>📦 交易Tab低买高卖赚差价，注意季节/节日价格波动</li>
           <li>📜 培训中心考证书永久提升属性+技能，证书→月薪加成</li>
-          <li>💾 每日结束自动存档 + 5个手动存档槽位</li>
+          <li>💾 每日结束自动存档 + 无限手动存档（注意存储空间）</li>
           <li>🎯 每日任务+早安仪式+热招提醒，帮你规划每一天</li>
           <li>📊 每日收支报告（峰终定律设计），回顾高光+明日展望</li>
           <li>💊 健康<50立刻去医院！疾病会演化升级</li>
@@ -833,36 +833,62 @@ function showSaveMenu() {
       "</div>";
   }
 
+  // 存储空间状态
+  var storageInfo = typeof getStorageInfo === "function" ? getStorageInfo() : null;
+  var storageLine = "";
+  if (storageInfo && storageInfo.total > 0) {
+    // measured=false 时 remaining 是参考值 5MB，不显示具体剩余空间
+    var remainingText = "";
+    if (storageInfo.measured) {
+      remainingText = '<span>剩余 ' + formatSize(storageInfo.remaining) + '</span>';
+    }
+    storageLine = '<div style="padding:6px 12px;margin-bottom:8px;font-size:11px;color:var(--text-muted);display:flex;justify-content:space-between;">' +
+      '<span>📦 已用 ' + formatSize(storageInfo.total) + '</span>' +
+      '<span>' + storageInfo.saveCount + ' 个存档</span>' +
+      remainingText +
+      '</div>';
+  }
+  // 低空间预警条（仅 measured=true 时显示，避免误报）
+  var warnLine = "";
+  if (storageInfo && storageInfo.measured && storageInfo.remaining < 5 * 1024 * 1024 && storageInfo.remaining > 0) {
+    var warnColor = storageInfo.remaining < 1024 * 1024 ? "var(--danger)" : "var(--warning)";
+    warnLine = '<div style="padding:8px 12px;margin-bottom:8px;background:rgba(231,76,60,0.08);border:1px solid rgba(231,76,60,0.2);border-radius:6px;font-size:12px;color:' + warnColor + ';">' +
+      '⚠️ 存储空间不足（剩余 ' + formatSize(storageInfo.remaining) + '），建议删除旧存档腾出空间。' +
+      '</div>';
+  }
+
   let bodyHtml =
-    '<p style="margin-bottom:8px;color:var(--text-secondary);">选择一个槽位保存当前进度：</p>';
+    '<p style="margin-bottom:8px;color:var(--text-secondary);">选择已有存档覆盖，或创建新存档：</p>';
   bodyHtml += autoLine;
+  bodyHtml += storageLine;
+  bodyHtml += warnLine;
   bodyHtml += '<div style="max-height:400px;overflow-y:auto;">';
+
+  // 列出所有已有存档（可覆盖）
   for (const s of allSlots) {
     if (s.slot === "_auto") continue; // 自动存档不可手动覆盖
-    if (s.empty) {
-      bodyHtml += `
-        <div class="save-slot-card" data-slot="${s.slot}" style="padding:12px;margin:4px 0;background:var(--bg-card);border:1px solid var(--border);border-radius:6px;cursor:pointer;">
-          <div style="display:flex;justify-content:space-between;align-items:center;">
-            <strong style="color:var(--accent);">${s.label}</strong>
-            <span style="font-size:11px;color:var(--text-muted);">空槽位</span>
-          </div>
-        </div>`;
-    } else {
-      const phaseLabel = s.phase === "corporate" ? "🏢" : "🏘️";
-      bodyHtml += `
-        <div class="save-slot-card" data-slot="${s.slot}" style="padding:12px;margin:4px 0;background:var(--bg-card);border:1px solid var(--border);border-radius:6px;cursor:pointer;">
-          <div style="display:flex;justify-content:space-between;align-items:center;">
-            <strong style="color:var(--warning);">${s.mode ? s.mode + " " : ""}${s.label}</strong>
-            <span style="font-size:11px;color:var(--text-muted);">${s.date}</span>
-          </div>
-          <div style="font-size:12px;color:var(--text-secondary);margin-top:4px;">
-            ${phaseLabel} 第${s.day}天 | 年龄${s.age} | 💰 ¥${s.cash?.toLocaleString()}
-            ${s.rank ? ` | 🏢 ${s.rank}` : ""}
-          </div>
-          <div style="font-size:10px;color:var(--danger);margin-top:2px;">⚠️ 覆盖后旧存档将丢失</div>
-        </div>`;
-    }
+    const phaseLabel = s.phase === "corporate" ? "🏢" : "🏘️";
+    bodyHtml += `
+      <div class="save-slot-card" data-slot="${s.slot}" style="padding:12px;margin:4px 0;background:var(--bg-card);border:1px solid var(--border);border-radius:6px;cursor:pointer;">
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <strong style="color:var(--warning);">${s.mode ? s.mode + " " : ""}${s.label}</strong>
+          <span style="font-size:11px;color:var(--text-muted);">${s.date}</span>
+        </div>
+        <div style="font-size:12px;color:var(--text-secondary);margin-top:4px;">
+          ${phaseLabel} 第${s.day}天 | 年龄${s.age} | 💰 ¥${s.cash?.toLocaleString()}
+          ${s.rank ? ` | 🏢 ${s.rank}` : ""}
+        </div>
+        <div style="font-size:10px;color:var(--danger);margin-top:2px;">⚠️ 点击覆盖此存档</div>
+      </div>`;
   }
+
+  // 新建存档按钮
+  bodyHtml += `
+    <div id="save-new-slot" style="padding:16px;margin:8px 0;background:rgba(39,174,96,0.06);border:2px dashed rgba(39,174,96,0.3);border-radius:6px;cursor:pointer;text-align:center;transition:background 0.15s;"
+         onmouseover="this.style.background='rgba(39,174,96,0.12)'" onmouseout="this.style.background='rgba(39,174,96,0.06)'">
+      <span style="font-size:15px;color:#27ae60;">📁 新建存档</span>
+    </div>`;
+
   bodyHtml += "</div>";
 
   showModal({
@@ -875,7 +901,7 @@ function showSaveMenu() {
   setTimeout(() => {
     document.querySelectorAll(".save-slot-card").forEach((card) => {
       card.addEventListener("click", () => {
-        const slot = parseInt(card.dataset.slot);
+        const slot = card.dataset.slot;
         const existing = getSlotInfo(slot);
         if (existing) {
           // 确认覆盖
@@ -902,6 +928,15 @@ function showSaveMenu() {
         }
       });
     });
+    // 新建存档按钮
+    document.getElementById("save-new-slot")?.addEventListener("click", () => {
+      document.querySelector(".modal-overlay")?.remove();
+      var newId = saveGameNew();
+      if (newId) {
+        StateManager.addMessage("💾 已创建新存档！", "success");
+      }
+      renderAll();
+    });
   }, 50);
 }
 
@@ -912,36 +947,31 @@ function showLoadMenu() {
   bodyHtml += '<div style="max-height:400px;overflow-y:auto;">';
   let hasAnySave = false;
   for (const s of allSlots) {
-    if (s.empty) {
-      // 自动存档空槽位不显示
-      if (s.slot === "_auto") continue;
-      bodyHtml += `<div style="padding:8px;margin:4px 0;background:var(--bg-card);border-radius:4px;opacity:0.4;font-size:12px;color:var(--text-muted);">${s.label} — 空</div>`;
-    } else {
-      hasAnySave = true;
-      const phaseLabel = s.phase === "corporate" ? "🏢" : "🏘️";
-      const modeTag = s.mode ? s.mode + " " : "";
-      const isAuto = s.slot === "_auto";
-      // 自动存档用绿色高亮样式
-      const borderColor = isAuto ? "rgba(39,174,96,0.4)" : "var(--border)";
-      const bgColor = isAuto ? "rgba(39,174,96,0.04)" : "var(--bg-card)";
-      const labelIcon = isAuto ? "🤖 " : "";
-      const labelName = isAuto ? "自动存档" : s.label;
-      bodyHtml += `
-        <div class="load-slot-card" data-slot="${s.slot}" style="padding:12px;margin:4px 0;background:${bgColor};border:1px solid ${borderColor};border-radius:6px;cursor:pointer;transition:border-color 0.15s;${isAuto ? "border-left:3px solid #27ae60;" : ""}">
-          <div style="display:flex;justify-content:space-between;align-items:center;">
-            <strong>${labelIcon}${modeTag}${labelName}</strong>
-            <span style="font-size:11px;color:var(--text-muted);">${s.date || ""}</span>
-          </div>
-          <div style="font-size:12px;color:var(--text-secondary);margin-top:3px;">
-            ${phaseLabel} 第${s.day}天 | 年龄${s.age} | 💰 ¥${(s.cash || 0).toLocaleString()}
-            ${s.rank ? ` | 🏢 ${s.rank}` : ""}
-            ${s.debt > 0 ? ` | ⚠️ 欠款 ¥${s.debt.toLocaleString()}` : ""}
-            ${s.totalEarned > 0 ? ` | 总赚 ¥${s.totalEarned.toLocaleString()}` : ""}
-          </div>
-          ${s.narrative ? `<div style="font-size:11px;color:#27ae60;margin-top:5px;padding:4px 6px;background:rgba(39,174,96,0.06);border-radius:4px;border-left:2px solid rgba(39,174,96,0.3);">${s.narrative}</div>` : ""}
-          ${isAuto ? '<div style="font-size:10px;color:#27ae60;margin-top:3px;">↻ 每日自动保存 · 前一日备份可用</div>' : ""}
-        </div>`;
-    }
+    if (s.slot === "_auto" && !s.cash) continue; // 自动存档空槽位不显示
+    hasAnySave = true;
+    const phaseLabel = s.phase === "corporate" ? "🏢" : "🏘️";
+    const modeTag = s.mode ? s.mode + " " : "";
+    const isAuto = s.slot === "_auto";
+    // 自动存档用绿色高亮样式
+    const borderColor = isAuto ? "rgba(39,174,96,0.4)" : "var(--border)";
+    const bgColor = isAuto ? "rgba(39,174,96,0.04)" : "var(--bg-card)";
+    const labelIcon = isAuto ? "🤖 " : "";
+    const labelName = isAuto ? "自动存档" : s.label;
+    bodyHtml += `
+      <div class="load-slot-card" data-slot="${s.slot}" style="padding:12px;margin:4px 0;background:${bgColor};border:1px solid ${borderColor};border-radius:6px;cursor:pointer;transition:border-color 0.15s;${isAuto ? "border-left:3px solid #27ae60;" : ""}">
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <strong>${labelIcon}${modeTag}${labelName}</strong>
+          <span style="font-size:11px;color:var(--text-muted);">${s.date || ""}</span>
+        </div>
+        <div style="font-size:12px;color:var(--text-secondary);margin-top:3px;">
+          ${phaseLabel} 第${s.day}天 | 年龄${s.age} | 💰 ¥${(s.cash || 0).toLocaleString()}
+          ${s.rank ? ` | 🏢 ${s.rank}` : ""}
+          ${s.debt > 0 ? ` | ⚠️ 欠款 ¥${s.debt.toLocaleString()}` : ""}
+          ${s.totalEarned > 0 ? ` | 总赚 ¥${s.totalEarned.toLocaleString()}` : ""}
+        </div>
+        ${s.narrative ? `<div style="font-size:11px;color:#27ae60;margin-top:5px;padding:4px 6px;background:rgba(39,174,96,0.06);border-radius:4px;border-left:2px solid rgba(39,174,96,0.3);">${s.narrative}</div>` : ""}
+        ${isAuto ? '<div style="font-size:10px;color:#27ae60;margin-top:3px;">↻ 每日自动保存 · 前一日备份可用</div>' : ""}
+      </div>`;
   }
   bodyHtml += "</div>";
   if (!hasAnySave) {
@@ -990,18 +1020,39 @@ function showDeleteMenu() {
     return;
   }
 
+  // 存储空间信息
+  var storageInfo = typeof getStorageInfo === "function" ? getStorageInfo() : null;
+  var storageLine = "";
+  if (storageInfo && storageInfo.total > 0) {
+    storageLine = '<div style="padding:6px 12px;margin-bottom:8px;font-size:11px;color:var(--text-muted);display:flex;justify-content:space-between;">' +
+      '<span>📦 已用 ' + formatSize(storageInfo.total) + '</span>' +
+      '<span>' + storageInfo.saveCount + ' 个存档</span>' +
+      '</div>';
+  }
+
   let bodyHtml =
     '<p style="margin-bottom:8px;color:var(--danger);">选择要删除的存档（不可恢复）：</p>';
+  bodyHtml += storageLine;
   bodyHtml += '<div style="max-height:300px;overflow-y:auto;">';
   for (const s of allSlots) {
     const phaseLabel = s.phase === "corporate" ? "🏢" : "🏘️";
+    // 查找该存档的大小
+    var sizeStr = "";
+    if (storageInfo && storageInfo.saves) {
+      for (var si = 0; si < storageInfo.saves.length; si++) {
+        if (storageInfo.saves[si].slot == s.slot) {
+          sizeStr = formatSize(storageInfo.saves[si].size);
+          break;
+        }
+      }
+    }
     bodyHtml += `
       <div class="del-slot-card" data-slot="${s.slot}" style="padding:10px;margin:4px 0;background:var(--bg-card);border:1px solid var(--border);border-radius:6px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;">
         <div>
           <strong>${s.label}</strong>
           <span style="font-size:11px;color:var(--text-muted);margin-left:8px;">${s.date}</span>
         </div>
-        <span style="font-size:11px;color:var(--text-muted);">${phaseLabel} Day${s.day} ¥${s.cash?.toLocaleString()}</span>
+        <span style="font-size:11px;color:var(--text-muted);">${phaseLabel} Day${s.day} ${sizeStr}</span>
       </div>`;
   }
   bodyHtml += "</div>";

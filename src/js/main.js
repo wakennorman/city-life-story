@@ -97,6 +97,8 @@ function checkJobRequirements(job, state) {
     return `销售技能不足 (需要${reqs.sales})`;
   if (reqs.english && s.english.level < reqs.english)
     return `英语技能不足 (需要${reqs.english})`;
+  if (reqs.driving && s.driving.level < reqs.driving)
+    return `驾驶技能不足，需要驾照 (需要${reqs.driving})`;
   if (job.requiredFlag && !state.flags[job.requiredFlag])
     return "尚未解锁（需要NPC好感度）";
   if (job.educationRequired && (p.education || 0) < job.educationRequired) {
@@ -257,6 +259,40 @@ function estimateJobPay(job, state) {
   return Math.floor(total / 10);
 }
 
+/** 估算工作收入范围（20次模拟取 min/max/avg，含各项加成）
+ *  用于在卡片上显示"当前状态下实际能赚到的区间"，而非固定的 payCalc 裸区间 */
+function estimateJobPayRange(job, state) {
+  var results = [];
+  for (var i = 0; i < 20; i++) {
+    if (typeof job.payCalc !== "function") return { min: 0, max: 0, avg: 0 };
+    var pay = job.payCalc(state);
+    if (state._jobMultipliers && state._jobMultipliers[job.id])
+      pay = Math.floor(pay * state._jobMultipliers[job.id]);
+    if (state._allJobsBonus && state._allJobsBonus !== 1)
+      pay = Math.floor(pay * state._allJobsBonus);
+    if (typeof getItemJobBonus === "function") {
+      var equipMulti = getItemJobBonus(job.id, state);
+      if (equipMulti !== 1.0) pay = Math.floor(pay * equipMulti);
+    }
+    if (typeof getSuiteJobBonus === "function") {
+      var suiteMulti = getSuiteJobBonus(job.id, state);
+      if (suiteMulti !== 1.0) pay = Math.floor(pay * suiteMulti);
+    }
+    if (typeof getNewsJobMultiplier === "function")
+      pay = Math.floor(pay * getNewsJobMultiplier(job.id, state));
+    if (typeof getDifficultyMultiplier === "function") {
+      var wageMult = getDifficultyMultiplier(state, "wage");
+      if (wageMult !== 1.0) pay = Math.floor(pay * wageMult);
+    }
+    results.push(pay);
+  }
+  var min = Math.min.apply(null, results);
+  var max = Math.max.apply(null, results);
+  var total = 0;
+  for (var j = 0; j < results.length; j++) total += results[j];
+  return { min: min, max: max, avg: Math.floor(total / results.length) };
+}
+
 /** 估算工作收入并返回加成明细（P3.5）*/
 function estimateJobPayDetailed(job, state) {
   var base = Math.floor(job.payCalc(state));
@@ -355,7 +391,12 @@ function estimateJobPayDetailed(job, state) {
     }
   }
 
-  return { estimated: base, tags: tags };
+  // 计算实际收入区间（含全部加成后的 min/max）
+  var range = typeof estimateJobPayRange === "function"
+    ? estimateJobPayRange(job, state)
+    : { min: base, max: Math.floor(base * 1.3) };
+
+  return { estimated: base, tags: tags, min: range.min, max: range.max };
 }
 
 // ====== 欢迎界面 ======
@@ -1015,8 +1056,6 @@ function startScenarioGame(scenarioId) {
       }
     }, 3000);
   };
-
-  // --- v3.57 随机抽签 → 揭示弹窗 ---
   if (scenario.talents && scenario.talents.length > 0) {
     var _rolled = rollTalents(scenario);
     showTalentRevealModal(
@@ -1285,6 +1324,18 @@ function renderSandboxConfig() {
   }
   html += "</div>";
 
+  // 驾照选项
+  var _hasLicenseChecked = cfg.hasLicense ? "checked" : "";
+  html +=
+    '<div class="sandbox-section" style="padding-top:0;">' +
+    '<div class="sandbox-row" style="justify-content:flex-start;gap:8px;">' +
+    '<input type="checkbox" id="sandbox-has-license" ' +
+    _hasLicenseChecked +
+    ' onchange="updateSandboxConfig(\'hasLicense\', this.checked)" style="width:16px;height:16px;accent-color:var(--accent-text,#4a7c59);">' +
+    '<label for="sandbox-has-license" style="font-size:13px;cursor:pointer;">🚗 已有驾照（可直接从事驾驶类工作）</label>' +
+    "</div>" +
+    "</div>";
+
   // 快速预设
   html +=
     '<div class="sandbox-section">' +
@@ -1481,6 +1532,16 @@ function startSandboxGame() {
         var lvl = Math.max(0, Math.min(100, cfg[sk] || 0));
         state.skills[sk].level = lvl;
         state.skills[sk].xp = 0;
+      }
+    }
+
+    // --- 驾照 ---
+    if (cfg.hasLicense) {
+      if (!state.certificates.includes("driver_license")) {
+        state.certificates.push("driver_license");
+      }
+      if (state.skills.driving && state.skills.driving.level < 10) {
+        state.skills.driving.level = Math.min(100, state.skills.driving.level + 10);
       }
     }
 
@@ -2429,9 +2490,12 @@ function getAvailableActions(state) {
         name: job.name,
         desc: job.desc + footfallLabel,
         icon: job.icon,
-        payEstimate: payEstimate
-          ? `${payEstimate - (job.startupCost || 0)}~${payEstimate + Math.floor(payEstimate * 0.3)}`
-          : null,
+        payEstimate:
+          payDetail && payDetail.min != null
+            ? `${payDetail.min}~${payDetail.max}`
+            : payEstimate
+              ? `${payEstimate - (job.startupCost || 0)}~${payEstimate + Math.floor(payEstimate * 0.3)}`
+              : null,
         payTags:
           payDetail && payDetail.tags && payDetail.tags.length > 0
             ? payDetail.tags
@@ -2742,7 +2806,8 @@ function getAvailableActions(state) {
             category: "education",
             name: "自考备考",
             desc: `消耗20AP，+5学习点（当前${ep.studyPoints}点，本门需150点）。有10%概率智力+1。`,
-            ap: 20,
+            icon: "📖",
+            apCost: 20,
             handler: () => {
               if (!state.player.eduProgress)
                 state.player.eduProgress = {
@@ -2796,7 +2861,8 @@ function getAvailableActions(state) {
           category: "education",
           name: "参加考试",
           desc: `消耗30AP，需学习点≥150（当前${ep.studyPoints}）。通过率${examPassRate.toFixed(0)}%（第${ep.examsPassed + 1}/6门）。`,
-          ap: 30,
+          icon: "📝",
+          apCost: 30,
           reqFail: !canExam
             ? ep.studyPoints < 150
               ? `学习点不足（${ep.studyPoints}/150）`
@@ -4079,7 +4145,9 @@ function getAvailableActions(state) {
                     '<div style="margin-top:12px;">' +
                     choicesHtml +
                     "</div>",
-                  buttons: [],
+                  buttons: [
+                    { text: "取消", cls: "", callback: function () {} },
+                  ],
                 });
                 setTimeout(function () {
                   var overlay = document.querySelector(".modal-overlay");
@@ -4148,7 +4216,9 @@ function getAvailableActions(state) {
                     '<div style="margin-top:12px;">' +
                     choicesHtml +
                     "</div>",
-                  buttons: [],
+                  buttons: [
+                    { text: "取消", cls: "", callback: function () {} },
+                  ],
                 });
                 setTimeout(function () {
                   var overlay = document.querySelector(".modal-overlay");
@@ -4648,6 +4718,29 @@ function doStreetJob(job) {
   if (typeof state.resources.totalEarned !== "number" || !isFinite(state.resources.totalEarned)) {
     state.resources.totalEarned = 0;
   }
+
+  // === 废品回收·街坊情报网络（4号楼林老师废纸箱 / 5号楼废铜管）===
+  // 玩家在里程碑事件选择"谢谢大妈，以后常过来"后激活 _wasteRecyclingNetwork
+  // 大妈的情报变成真实可交互的游戏机制：
+  //   - 每周二（weekDay===2）：4号楼林老师放废纸箱 → 额外收入+15%
+  //   - 每月初（day%30∈[1,3]）：5号楼废铜管 → 额外收入+25%
+  if (job.id === "waste_recycling" && state.flags && state.flags._wasteRecyclingNetwork) {
+    var wd = ((state.player.day - 1) % 7) + 1; // 1=周一 ... 7=周日
+    var dom = state.player.day % 30; // 模拟月内天数
+    if (wd === 2) {
+      var paperBonus = Math.floor(pay * 0.15) + 5;
+      pay += paperBonus;
+      if (Random.chance(0.5)) {
+        StateManager.addMessage("📦 4号楼林老师的废纸箱！情报准，多赚¥" + paperBonus, "success");
+      }
+    }
+    if (dom >= 1 && dom <= 3) {
+      var copperBonus = Math.floor(pay * 0.25) + 10;
+      pay += copperBonus;
+      StateManager.addMessage("🔩 5号楼废铜管！月初果然有货，多赚¥" + copperBonus, "success");
+    }
+  }
+
   state.resources.cash = (state.resources.cash || 0) + pay;
   state.resources.totalEarned = (state.resources.totalEarned || 0) + pay;
   addDailyTransaction(

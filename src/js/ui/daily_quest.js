@@ -650,7 +650,22 @@
       var celebrate = document.createElement("div");
       celebrate.style.cssText =
         "margin-top:7px;font-size:11px;color:var(--success);font-weight:600;";
-      celebrate.textContent = "🎉 当前目标全部达成！继续前进，等待下一阶段。";
+      // 根据当前阶段给出更具体的引导
+      var _stageAdvice = "";
+      var _stage = _getLifeStage(state);
+      if (_stage === "survival") {
+        var _remaining = 7 - (state.player.day || 1);
+        _stageAdvice = "第8天进入下一阶段，还有" + Math.max(0, _remaining) + "天，继续赚钱攒钱！";
+      } else if (_stage === "debt") {
+        _stageAdvice = "还清债务进入积累期，去培训中心提升智力！";
+      } else if (_stage === "growth") {
+        _stageAdvice = "智力达45后去科技园应聘，开启职场人生！";
+      } else if (_stage === "corporate") {
+        _stageAdvice = "努力晋升，争取月薪¥15000+！";
+      } else {
+        _stageAdvice = "继续前进，创造你的传奇！";
+      }
+      celebrate.textContent = "🎉 当前目标全部达成！" + _stageAdvice;
       card.appendChild(celebrate);
       // [全系统自洽修复] 域F 修复: 每日目标奖金改为按天发放（原flag终身只触发一次，导致后续天数有庆祝无奖励）
       if (state.flags._dailyQuestRewardCollectedDay !== state.player.day) {

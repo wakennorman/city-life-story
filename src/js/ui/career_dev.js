@@ -1920,6 +1920,7 @@ function renderCareerOverview(state, parent) {
     '<div style="font-size:10px;color:var(--text-muted);margin-bottom:6px;">你对10条职业路线的掌握程度 — 点击任意路线查看详情</div>';
   html +=
     '<div class="career-panorama-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:4px;">';
+  var catOrder = ["white_collar", "service", "blue_collar_gov"];
   for (var _pki = 0; _pki < catOrder.length; _pki++) {
     var _catId = catOrder[_pki];
     for (var _pk2 in CAREER_PATHS) {

@@ -3132,14 +3132,13 @@ if (typeof window !== "undefined") {
 ;
 // ==== js/core/save.js ====
 /**
- * 存档系统 — localStorage 多槽位持久化
+ * 存档系统 — localStorage 多槽位持久化（无限槽位）
  *
- * 5个手动存档槽 + 1个自动存档
  * 索引键: 'city_life_story_index' — 存储各槽位元信息
- * 存档键: 'city_life_story_slot_N' (N=1..5) + 'city_life_story_autosave'
+ * 存档键: 'city_life_story_slot_<id>' (id 为数字或字符串)
+ * 自动存档键: 'city_life_story_autosave' + 'city_life_story_autosave_prev'
  */
 
-const NUM_SLOTS = 5;
 const SLOT_PREFIX = "city_life_story_slot_";
 const AUTO_SAVE_KEY = "city_life_story_autosave";
 const AUTO_SAVE_PREV_KEY = "city_life_story_autosave_prev"; // 滚动双槽·前一日备份
@@ -3148,9 +3147,9 @@ const INDEX_KEY = "city_life_story_index";
 // localStorage 配额警戒线（字节）
 const QUOTA_WARN_THRESHOLD = 2 * 1024 * 1024; // 剩余<2MB时预警
 
-/** 获取槽位键 */
-function slotKey(n) {
-  return SLOT_PREFIX + n;
+/** 获取槽位键（支持数字或字符串 ID） */
+function slotKey(id) {
+  return SLOT_PREFIX + id;
 }
 
 /** 读取存档索引 */
@@ -3170,48 +3169,69 @@ function setSaveIndex(index) {
 
 /**
  * 检测 localStorage 剩余空间
- * 通过试探性写入检测是否接近配额上限
- * 返回 { ok: boolean, remaining: number, detail: string }
+ *
+ * 浏览器 localStorage 典型限额（每域名）：
+ *   Chrome:  ~10MB  |  Firefox: ~10MB  |  Safari: ~5MB  |  Edge: ~10MB
+ *
+ * 策略：
+ *   1. 快速写 500KB 探针 → 成功则空间充足（剩余 ≥ 5MB 参考值）
+ *   2. 失败则二分法精确探测 0~500KB
+ *
+ * 返回 { ok: boolean, remaining: number, detail: string, measured: boolean }
+ *   ok: 剩余空间 ≥ QUOTA_WARN_THRESHOLD (2MB)
+ *   remaining: 真实剩余空间估值（充足时返回 5MB 参考值，不触发预警）
+ *   measured: true=真实测量值，false=参考值（空间充足）
  */
 function checkStorageQuota() {
   try {
     var probeKey = "__quota_probe__";
-    // 先写一个小值确认 localStorage 还可写入
+    // 先确认 localStorage 可写
     localStorage.setItem(probeKey, "1");
-    // 尝试写入一个 ~500KB 的字符串 — 如果失败说明快满了
-    var probeData = new Array(500 * 1024).join("x");
+
+    // 快速检测：尝试写入 500KB
+    var quickTest = new Array(500 * 1024).join("x");
     try {
-      localStorage.setItem(probeKey, probeData);
+      localStorage.setItem(probeKey, quickTest);
       localStorage.removeItem(probeKey);
-      return { ok: true, remaining: QUOTA_WARN_THRESHOLD + 1, detail: "充足" };
-    } catch (quotaErr) {
-      // 500KB 写入失败 → 接近配额上限
+      // 500KB 写入成功 → 空间充足，返回 5MB 参考值（高于所有预警阈值）
+      return { ok: true, remaining: 5 * 1024 * 1024, detail: "充足", measured: false };
+    } catch (_) {
+      // 500KB 写入失败 → 空间不足，二分法精确探测 0~500KB
       localStorage.removeItem(probeKey);
-      // 用二分法逼近剩余空间
-      var lo = 0,
-        hi = 500 * 1024,
-        lastOk = 0;
-      while (lo <= hi) {
-        var mid = Math.floor((lo + hi) / 2);
-        try {
-          var test = new Array(mid).join("x");
-          localStorage.setItem(probeKey, test);
-          lastOk = mid;
-          localStorage.removeItem(probeKey);
-          lo = mid + 1;
-        } catch (e) {
-          hi = mid - 1;
-        }
-      }
-      return {
-        ok: lastOk >= QUOTA_WARN_THRESHOLD,
-        remaining: lastOk,
-        detail: "剩余约 " + Math.round(lastOk / 1024) + "KB",
-      };
     }
+
+    // 二分法探测 0~500KB 之间的精确剩余空间
+    var lo = 0,
+      hi = 500 * 1024,
+      lastOk = 0;
+    while (lo <= hi) {
+      var mid = Math.floor((lo + hi) / 2);
+      try {
+        var test = new Array(mid).join("x");
+        localStorage.setItem(probeKey, test);
+        lastOk = mid;
+        localStorage.removeItem(probeKey);
+        lo = mid + 1;
+      } catch (e) {
+        hi = mid - 1;
+      }
+    }
+
+    // 清理探针
+    try { localStorage.removeItem(probeKey); } catch (_) {}
+
+    var remaining = lastOk;
+    var ok = remaining >= QUOTA_WARN_THRESHOLD;
+
+    var detail = remaining >= 1024 * 1024
+      ? "剩余约 " + (remaining / (1024 * 1024)).toFixed(1) + "MB"
+      : remaining >= 1024
+        ? "剩余约 " + Math.round(remaining / 1024) + "KB"
+        : "剩余 " + remaining + "B";
+
+    return { ok: ok, remaining: remaining, detail: detail, measured: true };
   } catch (e) {
-    // localStorage 不可用（隐私模式等）
-    return { ok: false, remaining: 0, detail: "无法检测: " + e.message };
+    return { ok: false, remaining: -1, detail: "无法检测: " + e.message, measured: false };
   }
 }
 
@@ -3352,9 +3372,9 @@ function _trimStateForSave(saveData) {
   return saveData;
 }
 
-/** 保存游戏到指定槽位（1-5） */
+/** 保存游戏到指定槽位（支持数字或字符串 ID） */
 function saveGame(slot) {
-  if (slot < 1 || slot > NUM_SLOTS) {
+  if (slot == null || slot === "") {
     StateManager.addMessage("⚠️ 无效的存档槽位。", "danger");
     return false;
   }
@@ -3366,11 +3386,19 @@ function saveGame(slot) {
     var quota =
       typeof checkStorageQuota === "function" ? checkStorageQuota() : null;
     if (quota && !quota.ok) {
+      const delMsg = "请删除旧存档以腾出空间。";
       StateManager.addMessage(
-        "⚠️ 存储空间不足（" + quota.detail + "），请清理旧存档后再保存。",
+        "⚠️ 存储空间不足（" + quota.detail + "），" + delMsg,
         "danger",
       );
       return false;
+    }
+    // 低空间预警（仅真实测量值且剩余 < 5MB，但还能存）
+    if (quota && quota.measured && quota.remaining < 5 * 1024 * 1024 && quota.remaining > 0) {
+      StateManager.addMessage(
+        "⚠️ 存储空间剩余不多（" + quota.detail + "），建议删除旧存档。",
+        "warning",
+      );
     }
 
     state.lastPlayedAt = Date.now();
@@ -3407,11 +3435,13 @@ function saveGame(slot) {
         : state.flags._isSandboxMode
           ? "⚙️沙盒"
           : "🎯经典",
+      // 为字符串 ID 槽位记录标签（首次保存时）
+      label: typeof slot === "string" && isNaN(Number(slot)) ? "存档 " + new Date().toLocaleString("zh-CN", { month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit" }) : undefined,
     };
     setSaveIndex(index);
 
     StateManager.addMessage(
-      `💾 已保存到槽位 ${slot}（第${state.player.day}天，¥${state.resources.cash.toLocaleString()}）`,
+      `💾 已保存（第${state.player.day}天，¥${state.resources.cash.toLocaleString()}）`,
       "success",
     );
     return true;
@@ -3435,6 +3465,13 @@ function autoSave(reason) {
         "danger",
       );
       return false;
+    }
+    // 低空间预警（仅真实测量值）
+    if (quota.measured && quota.remaining < 5 * 1024 * 1024 && quota.remaining > 0) {
+      StateManager.addMessage(
+        "⚠️ 存储空间不足（" + quota.detail + "），建议删除旧存档以防自动存档失败。",
+        "warning",
+      );
     }
 
     // 深拷贝
@@ -3508,17 +3545,26 @@ function autoSave(reason) {
   }
 }
 
+/** 生成新的存档 ID（唯一，基于时间戳） */
+function generateSlotId() {
+  return "s_" + Date.now() + "_" + Math.random().toString(36).slice(2, 6);
+}
+
+/** 创建新存档（自动分配新 ID） */
+function saveGameNew() {
+  var newId = generateSlotId();
+  return saveGame(newId) ? newId : null;
+}
+
 /** 从指定槽位加载存档 */
 function loadGame(slot) {
   try {
     let key;
     if (slot === "_auto") {
       key = AUTO_SAVE_KEY;
-    } else if ((typeof slot === "number" || (typeof slot === "string" && /^\d+$/.test(slot))) && Number(slot) >= 1 && Number(slot) <= NUM_SLOTS) {
-      key = slotKey(Number(slot));
     } else {
-      // 兼容旧版：尝试直接以 slot 为键
-      key = slot;
+      // 统一通过 slotKey 构建键名（支持数字或字符串 ID）
+      key = slotKey(slot);
     }
 
     const json = localStorage.getItem(key);
@@ -3534,28 +3580,22 @@ function loadGame(slot) {
 function deleteSave(slot) {
   if (slot === "_auto") {
     localStorage.removeItem(AUTO_SAVE_KEY);
+    localStorage.removeItem(AUTO_SAVE_PREV_KEY);
     const index = getSaveIndex();
     delete index._auto;
     setSaveIndex(index);
     return;
   }
-  var numSlot = (typeof slot === "string" && /^\d+$/.test(slot)) ? Number(slot) : slot;
-  if (typeof numSlot !== "number" || numSlot < 1 || numSlot > NUM_SLOTS) return;
-  localStorage.removeItem(slotKey(numSlot));
+  localStorage.removeItem(slotKey(slot));
   const index = getSaveIndex();
-  delete index[numSlot];
+  delete index[slot];
   setSaveIndex(index);
 }
 
 /** 检查指定槽位是否有存档 */
 function hasSave(slot) {
   if (slot === "_auto") return localStorage.getItem(AUTO_SAVE_KEY) !== null;
-  var numSlot = (typeof slot === "string" && /^\d+$/.test(slot)) ? Number(slot) : slot;
-  if (typeof numSlot === "number" && numSlot >= 1 && numSlot <= NUM_SLOTS)
-    return localStorage.getItem(slotKey(numSlot)) !== null;
-  // 兼容检查任意存档
-  const index = getSaveIndex();
-  return Object.keys(index).length > 0;
+  return localStorage.getItem(slotKey(slot)) !== null;
 }
 
 /** 获取存档槽位的显示信息 */
@@ -3604,9 +3644,17 @@ function getSlotInfo(slot) {
       ? LOCATIONS[meta.location].name
       : meta.location;
 
+  // 标签：优先使用索引中保存的 label，其次用数字槽位名
+  var label = meta.label;
+  if (!label) {
+    label = typeof slot === "number" || (typeof slot === "string" && /^\d+$/.test(slot))
+      ? "存档 #" + slot
+      : "存档 " + date.toLocaleString("zh-CN", { month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit" });
+  }
+
   return {
     slot,
-    label: `存档槽位 ${slot}`,
+    label: label,
     day: meta.day,
     phase: meta.phase,
     cash: meta.cash,
@@ -3621,32 +3669,25 @@ function getSlotInfo(slot) {
   };
 }
 
-/** 获取所有存档槽位信息 */
+/** 获取所有存档槽位信息（自动存档 + 所有手动存档，无数量限制） */
 function getAllSlots() {
   const slots = [];
   // 自动存档
   const auto = getSlotInfo("_auto");
   if (auto) slots.push(auto);
-  // 手动存档 1-5
-  for (let i = 1; i <= NUM_SLOTS; i++) {
-    const info = getSlotInfo(i);
+  // 遍历索引中所有手动存档
+  const index = getSaveIndex();
+  for (var key in index) {
+    if (key === "_auto") continue;
+    const info = getSlotInfo(key);
     if (info) slots.push(info);
   }
   return slots;
 }
 
-/** 获取所有槽位（含空槽位） */
+/** 获取所有槽位（含空槽位占位，当前仅返回已有存档，无空槽位概念） */
 function getAllSlotsWithEmpty() {
-  const slots = [];
-  // 自动存档
-  const auto = getSlotInfo("_auto");
-  slots.push(auto || { slot: "_auto", label: "🤖 自动存档", empty: true });
-  // 手动存档
-  for (let i = 1; i <= NUM_SLOTS; i++) {
-    const info = getSlotInfo(i);
-    slots.push(info || { slot: i, label: `存档槽位 ${i}`, empty: true });
-  }
-  return slots;
+  return getAllSlots();
 }
 
 function createSnapshot(state) {
@@ -3977,10 +4018,57 @@ function importSave(jsonStr) {
   }
 }
 
+// ====== 存储空间管理 ======
+
+/** 获取存储空间使用情况概览 */
+function getStorageInfo() {
+  var info = {
+    total: 0,         // 总使用量（字节）
+    limit: 0,         // 总配额（字节）
+    remaining: 0,     // 剩余空间（字节）
+    saveCount: 0,     // 存档数量
+    saves: [],        // 每个存档的大小
+    percent: 0,       // 使用百分比
+    ok: true,
+  };
+  try {
+    // 计算各存档大小
+    var index = getSaveIndex();
+    for (var key in index) {
+      var lsKey = key === "_auto" ? AUTO_SAVE_KEY : slotKey(key);
+      var raw = localStorage.getItem(lsKey);
+      if (raw) {
+        var size = typeof Blob !== "undefined" ? new Blob([raw]).size : raw.length * 2;
+        info.saves.push({ slot: key, label: index[key].label || key, size: size, day: index[key].day || 0 });
+        info.total += size;
+        info.saveCount++;
+      }
+    }
+    // 检测剩余空间
+    var quota = checkStorageQuota();
+    info.remaining = quota.remaining;
+    info.ok = quota.ok;
+    info.detail = quota.detail;
+    info.measured = quota.measured;
+  } catch (e) {
+    info.ok = false;
+    info.detail = "无法检测: " + e.message;
+  }
+  return info;
+}
+
+/** 格式化字节为可读字符串 */
+function formatSize(bytes) {
+  if (bytes < 1024) return bytes + "B";
+  if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + "KB";
+  return (bytes / (1024 * 1024)).toFixed(1) + "MB";
+}
+
 // 全局挂载
 if (typeof window !== "undefined") {
   Object.assign(window, {
     saveGame,
+    saveGameNew,
     loadGame,
     deleteSave,
     hasSave,
@@ -3991,8 +4079,9 @@ if (typeof window !== "undefined") {
     exportSave,
     importSave,
     checkStorageQuota,
+    getStorageInfo,
+    formatSize,
     _trimStateForSave,
-    NUM_SLOTS,
     SLOT_PREFIX,
     AUTO_SAVE_KEY,
     AUTO_SAVE_PREV_KEY,
@@ -30303,6 +30392,9 @@ if (typeof window !== "undefined") {
       if (p.jailDays > 0) {
         state.flags = state.flags || {};
         state.flags._inJailUntil = day + p.jailDays;
+        // 推进游戏时间：拘留天数
+        state.player.day += p.jailDays;
+        state.player.actionPoints = 0;
         StateManager.addMessage(
           "🚔 你被警察当场抓获！拘留 " +
             p.jailDays +
@@ -30318,15 +30410,27 @@ if (typeof window !== "undefined") {
           "error",
         );
       }
-      // 罚款（不够则扣到 0）
-      var fineActual = Math.min(state.resources.cash, p.fine);
-      state.resources.cash -= fineActual;
-      if (typeof addDailyTransaction === "function" && fineActual > 0) {
+      // 罚款（不够则记欠款）
+      var fineShortfall = 0;
+      if (state.resources.cash >= p.fine) {
+        state.resources.cash -= p.fine;
+      } else {
+        fineShortfall = p.fine - (state.resources.cash || 0);
+        state.resources.cash = 0;
+        // 欠款转为债务
+        state.resources.villageDebt = (state.resources.villageDebt || 0) + fineShortfall;
+        state.flags._fineDebt = (state.flags._fineDebt || 0) + fineShortfall;
+        StateManager.addMessage(
+          "⚠️ 现金不够支付全额罚款，欠¥" + fineShortfall + "已转为债务！",
+          "warning",
+        );
+      }
+      if (typeof addDailyTransaction === "function" && p.fine > 0) {
         addDailyTransaction(
           state,
           "expense",
           "fine",
-          fineActual,
+          p.fine,
           "违法行为罚款 - " + action.name,
         );
       }
@@ -70401,20 +70505,24 @@ if (typeof window !== "undefined") {
         hint: "心情+ 现金-",
 
         apply: function (st) {
-          st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 30);
-
-          st.resources.cash = Math.max(0, (st.resources.cash || 0) - 40);
-
-          st.flags._r99Happy = true;
-
-          StateManager.addMessage(
-            "你花了¥40找点乐子，心情松快不少。",
-
-            "success",
-          );
+          if ((st.resources.cash || 0) >= 40) {
+            st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 30);
+            st.resources.cash = Math.max(0, (st.resources.cash || 0) - 40);
+            st.flags._r99Happy = true;
+            StateManager.addMessage(
+              "你花了¥40找点乐子，心情松快不少。",
+              "success",
+            );
+          } else {
+            st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 8);
+            st.flags._r99Happy = true;
+            StateManager.addMessage(
+              "你摸了摸口袋，只剩¥" + (st.resources.cash || 0) + "，只好在公园里散了散步，心情好了一些。",
+              "info",
+            );
+          }
         },
       },
-
       {
         text: "🧘 自己缓着",
 
@@ -165101,6 +165209,12 @@ if (typeof window.CLS !== 'undefined' && window.CLS.data) window.CLS.data.NPCS =
  * ⚠️ 新剧本开局设计铁律：
  *   具体数字 × 人物关系 × 道德困境 × 倒计时 × 情感温度
  *   参见 memory/opening-hook-design-prompt.md
+ *
+ * 🚗 驾照注意：
+ *   新剧本需考虑角色是否合理拥有驾照，可在 skills.driving 中设置初始等级。
+ *   - 已有驾照（driving≥10）：可直接从事驾驶类工作（批发配送、快递、网约车等）
+ *   - 无驾照：需到培训中心考取（¥800，通过率60%）
+ *   沙盒模式在"技能"区下方有"已有驾照"复选框。
  */
 
 const SCENARIOS = [
@@ -166088,6 +166202,7 @@ const SANDBOX_DEFAULTS = {
   education: 0,
   housingTier: 0,
   fame: 0,
+  hasLicense: false, // 开局是否有驾照
   startLocation: "slum",
   cooking: 0,
   repair: 0,
@@ -177252,7 +177367,7 @@ function generateWorkFlavorText(state, job) {
     { text: "🏃 下班后跑了步去赶公交，在城市里活着就是一场长跑。", minDay: 5 },
     { text: "🎯 今天的任务完成了，离这个月的目标又近了一步。", minDay: 7 },
     { text: "🌅 清晨的街道还没醒，你已经开始了一天的奔波。", minDay: 0 },
-    { text: "🍜 今天奢侈了一把，面里加了个蛋。", minDay: 0 },
+    { text: "🍜 收工后去面馆犒劳了自己一顿，加了个蛋。", minDay: 0 },
     { text: "🧹 干完活帮老板收拾了一下，他多给了几块钱。", minDay: 3 },
     { text: "🤝 今天帮新来的工友搬了趟货，他感激地递了根烟。", minDay: 10 },
     { text: "🌙 月亮升起来了，拖着疲惫的身体往住处走。", minDay: 0 },
@@ -181346,9 +181461,11 @@ function _punishByNeed阶梯式(state, need, deferCount) {
         "danger",
       );
     } else if (deferCount === 3) {
-      // 第3次延期：重度 — 饿晕，健康-15，饥饱重置为8
+      // 第3次延期：重度 — 饿晕
       state.status.health = Math.max(0, state.status.health - 15);
       state.needs.hunger = 8;
+      // 移动回住所或医院
+      _moveToHomeOrHospital(state, "饿晕在街头");
       StateManager.addMessage(
         "💀 你饿晕在街头！醒来已是深夜，健康-15。",
         "danger",
@@ -181370,6 +181487,7 @@ function _punishByNeed阶梯式(state, need, deferCount) {
       state.needs.hunger = 30;
       state.status.health = Math.max(0, state.status.health - 10);
       state.flags._everHospitalized = true;
+      state.trade.currentLocation = "hospital";
       StateManager.addMessage(
         "🏥 连续多日挨饿，你被送进医院急救！花了¥" + fee + "。",
         "danger",
@@ -181396,6 +181514,7 @@ function _punishByNeed阶梯式(state, need, deferCount) {
       state.needs.happiness = Math.max(0, state.needs.happiness - 15);
       state.status.health = Math.max(0, state.status.health - 8);
       state.flags._everCollapsed = true;
+      _moveToHomeOrHospital(state, "过劳晕倒");
       StateManager.addMessage(
         "😵 你累倒在路边！睡了一觉，疲劳重置但心情和健康受损。",
         "danger",
@@ -181406,6 +181525,7 @@ function _punishByNeed阶梯式(state, need, deferCount) {
       state.needs.fatigue = 10;
       state.status.health = Math.max(0, state.status.health - 15);
       state.flags._everHospitalized = true;
+      state.trade.currentLocation = "hospital";
       StateManager.addMessage(
         "🏥 连续多日过劳，你被强制送医治疗！健康-15。",
         "danger",
@@ -181535,6 +181655,22 @@ function _contractIllness(state, illnessId) {
   }
 }
 
+/** 晕倒/昏迷时移动回住所或医院 */
+function _moveToHomeOrHospital(state, reason) {
+  var tier = state.housing ? state.housing.tier || 0 : 0;
+  if (tier > 0 && state.housing && state.housing.location) {
+    // 有住所 → 移动回住所
+    state.trade.currentLocation = state.housing.location;
+    StateManager.addMessage("🏠 被好心人送回了住所。", "info");
+  } else {
+    // 无住所 → 送医院（需付费）
+    state.trade.currentLocation = "hospital";
+    var fee = 100 + Random.int(0, 50);
+    state.resources.cash = Math.max(0, (state.resources.cash || 0) - fee);
+    StateManager.addMessage("🏥 被路人送到医院，花了¥" + fee + "急救费。", "danger");
+  }
+}
+
 /** 失败条件判定 — [全系统自洽修复] 域G A类修复: 原调用 checkLoseConditions 未定义导致每日管线崩溃 */
 function checkLoseConditions(state) {
   if (!state || !state.player || !state.flags) return;
@@ -181549,6 +181685,7 @@ function checkLoseConditions(state) {
     state.flags.gameOver = true;
     state.flags.gameOverReason =
       "你的身体终于撑不住了。在这座城市里，你耗尽了最后一口气。";
+    if (typeof showGameOverModal === "function") showGameOverModal();
     return;
   }
 
@@ -181563,6 +181700,7 @@ function checkLoseConditions(state) {
     state.flags.gameOver = true;
     state.flags.gameOverReason =
       "债务压垮了你。在这座城市里，你再也找不到立足之地。";
+    if (typeof showGameOverModal === "function") showGameOverModal();
     return;
   }
 }
@@ -181942,7 +182080,9 @@ function showCookingRecipeModal(state, amenity, totalAp, cost) {
     showModal({
       title: "📋 重要提示",
       body: html,
-      buttons: [],
+      buttons: [
+        { text: "取消", cls: "", callback: function () {} },
+      ],
     });
   } else if (typeof showCustomModal === "function") {
     showCustomModal(html);
@@ -183560,7 +183700,9 @@ function addLocationExtraActions(state, actions) {
         apCost: a.apCost,
         payEstimate: a.payEstimate,
         handler: function () {
-          a.handler(StateManager.getState());
+          var st = StateManager.getState();
+          if (typeof consumeAP === "function") consumeAP(a.apCost || 20);
+          a.handler(st);
         },
       });
     })(act);
@@ -184369,6 +184511,15 @@ function addStreetExtras(state, actions) {
     effectEstimate: "保险30天, 伤病赔¥500",
     handler: () => {
       const st = StateManager.getState();
+      // 检查是否已有有效保险，避免重复购买
+      if (st.flags.hasInsurance && st.flags.insuranceExpire >= st.player.day) {
+        var remainDays = st.flags.insuranceExpire - st.player.day;
+        StateManager.addMessage(
+          "🛡️ 你已有意外险（还剩" + remainDays + "天），到期后再买吧。",
+          "info",
+        );
+        return;
+      }
       if ((st.resources.cash || 0) < 200) {
         StateManager.addMessage("🛡️ 保险都买不起。", "warning");
         return;
@@ -184377,7 +184528,7 @@ function addStreetExtras(state, actions) {
       st.flags.hasInsurance = true;
       st.flags.insuranceExpire = st.player.day + 30;
       StateManager.addMessage(
-        "🛡️ 买了 30 天意外险！期间受伤/生病赔付 500。",
+        "🛡️ 买了 30 天意外险！期间受伤/生病赔付 500（到期日：第" + (st.player.day + 30) + "天）。",
         "success",
       );
       consumeAP(20);
@@ -186041,7 +186192,10 @@ function showHomeActionsModal(state) {
   showModal({
     title: "🏠 在住所",
     body: html,
-    buttons: [{ text: "出门", cls: "", callback: function () {} }],
+    buttons: [
+      { text: "取消", cls: "", callback: function () {} },
+      { text: "出门", cls: "", callback: function () {} },
+    ],
   });
   setTimeout(function () {
     var ov = document.querySelector(".modal-overlay");
@@ -225461,7 +225615,7 @@ function createActionCard(action, state) {
       ${action.reqFail ? `<span class="req-fail">⚠ ${action.reqFail}</span>` : ""}
     </div>
     ${action.pricePreview ? `<div class="price-preview">${action.pricePreview}</div>` : ""}
-    ${action.payTags && action.payTags.length > 0 ? `<div style="font-size:9px;color:var(--accent);margin-top:2px;letter-spacing:0.5px;">${action.payTags.join(" ")}</div>` : ""}
+    ${action.payTags && action.payTags.length > 0 ? `<div style="font-size:10px;color:var(--accent);margin-top:3px;letter-spacing:0.3px;line-height:1.4;">💡 ${action.payTags.join(" · ")}</div>` : ""}
   `;
 
   if (!action.disabled) {
@@ -228422,6 +228576,12 @@ function renderIllnessRow(state) {
     fameRow.parentNode.insertBefore(box, fameRow.nextSibling);
   }
 
+  // 第1天且无疾病记录（旧存档残留）→ 隐藏伤病栏
+  if (state.player.day <= 1 && illnesses.length === 0) {
+    box.style.display = "none";
+    state.status.injured = false;
+    return;
+  }
   if (illnesses.length === 0 && !injured) {
     box.style.display = "none";
     return;
@@ -230921,7 +231081,7 @@ function showHelpModal() {
           <li>🗺️ 地图Tab查看所有地点和通勤方式（步行/单车/地铁/打车/自驾）</li>
           <li>📦 交易Tab低买高卖赚差价，注意季节/节日价格波动</li>
           <li>📜 培训中心考证书永久提升属性+技能，证书→月薪加成</li>
-          <li>💾 每日结束自动存档 + 5个手动存档槽位</li>
+          <li>💾 每日结束自动存档 + 无限手动存档（注意存储空间）</li>
           <li>🎯 每日任务+早安仪式+热招提醒，帮你规划每一天</li>
           <li>📊 每日收支报告（峰终定律设计），回顾高光+明日展望</li>
           <li>💊 健康<50立刻去医院！疾病会演化升级</li>
@@ -231539,36 +231699,62 @@ function showSaveMenu() {
       "</div>";
   }
 
+  // 存储空间状态
+  var storageInfo = typeof getStorageInfo === "function" ? getStorageInfo() : null;
+  var storageLine = "";
+  if (storageInfo && storageInfo.total > 0) {
+    // measured=false 时 remaining 是参考值 5MB，不显示具体剩余空间
+    var remainingText = "";
+    if (storageInfo.measured) {
+      remainingText = '<span>剩余 ' + formatSize(storageInfo.remaining) + '</span>';
+    }
+    storageLine = '<div style="padding:6px 12px;margin-bottom:8px;font-size:11px;color:var(--text-muted);display:flex;justify-content:space-between;">' +
+      '<span>📦 已用 ' + formatSize(storageInfo.total) + '</span>' +
+      '<span>' + storageInfo.saveCount + ' 个存档</span>' +
+      remainingText +
+      '</div>';
+  }
+  // 低空间预警条（仅 measured=true 时显示，避免误报）
+  var warnLine = "";
+  if (storageInfo && storageInfo.measured && storageInfo.remaining < 5 * 1024 * 1024 && storageInfo.remaining > 0) {
+    var warnColor = storageInfo.remaining < 1024 * 1024 ? "var(--danger)" : "var(--warning)";
+    warnLine = '<div style="padding:8px 12px;margin-bottom:8px;background:rgba(231,76,60,0.08);border:1px solid rgba(231,76,60,0.2);border-radius:6px;font-size:12px;color:' + warnColor + ';">' +
+      '⚠️ 存储空间不足（剩余 ' + formatSize(storageInfo.remaining) + '），建议删除旧存档腾出空间。' +
+      '</div>';
+  }
+
   let bodyHtml =
-    '<p style="margin-bottom:8px;color:var(--text-secondary);">选择一个槽位保存当前进度：</p>';
+    '<p style="margin-bottom:8px;color:var(--text-secondary);">选择已有存档覆盖，或创建新存档：</p>';
   bodyHtml += autoLine;
+  bodyHtml += storageLine;
+  bodyHtml += warnLine;
   bodyHtml += '<div style="max-height:400px;overflow-y:auto;">';
+
+  // 列出所有已有存档（可覆盖）
   for (const s of allSlots) {
     if (s.slot === "_auto") continue; // 自动存档不可手动覆盖
-    if (s.empty) {
-      bodyHtml += `
-        <div class="save-slot-card" data-slot="${s.slot}" style="padding:12px;margin:4px 0;background:var(--bg-card);border:1px solid var(--border);border-radius:6px;cursor:pointer;">
-          <div style="display:flex;justify-content:space-between;align-items:center;">
-            <strong style="color:var(--accent);">${s.label}</strong>
-            <span style="font-size:11px;color:var(--text-muted);">空槽位</span>
-          </div>
-        </div>`;
-    } else {
-      const phaseLabel = s.phase === "corporate" ? "🏢" : "🏘️";
-      bodyHtml += `
-        <div class="save-slot-card" data-slot="${s.slot}" style="padding:12px;margin:4px 0;background:var(--bg-card);border:1px solid var(--border);border-radius:6px;cursor:pointer;">
-          <div style="display:flex;justify-content:space-between;align-items:center;">
-            <strong style="color:var(--warning);">${s.mode ? s.mode + " " : ""}${s.label}</strong>
-            <span style="font-size:11px;color:var(--text-muted);">${s.date}</span>
-          </div>
-          <div style="font-size:12px;color:var(--text-secondary);margin-top:4px;">
-            ${phaseLabel} 第${s.day}天 | 年龄${s.age} | 💰 ¥${s.cash?.toLocaleString()}
-            ${s.rank ? ` | 🏢 ${s.rank}` : ""}
-          </div>
-          <div style="font-size:10px;color:var(--danger);margin-top:2px;">⚠️ 覆盖后旧存档将丢失</div>
-        </div>`;
-    }
+    const phaseLabel = s.phase === "corporate" ? "🏢" : "🏘️";
+    bodyHtml += `
+      <div class="save-slot-card" data-slot="${s.slot}" style="padding:12px;margin:4px 0;background:var(--bg-card);border:1px solid var(--border);border-radius:6px;cursor:pointer;">
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <strong style="color:var(--warning);">${s.mode ? s.mode + " " : ""}${s.label}</strong>
+          <span style="font-size:11px;color:var(--text-muted);">${s.date}</span>
+        </div>
+        <div style="font-size:12px;color:var(--text-secondary);margin-top:4px;">
+          ${phaseLabel} 第${s.day}天 | 年龄${s.age} | 💰 ¥${s.cash?.toLocaleString()}
+          ${s.rank ? ` | 🏢 ${s.rank}` : ""}
+        </div>
+        <div style="font-size:10px;color:var(--danger);margin-top:2px;">⚠️ 点击覆盖此存档</div>
+      </div>`;
   }
+
+  // 新建存档按钮
+  bodyHtml += `
+    <div id="save-new-slot" style="padding:16px;margin:8px 0;background:rgba(39,174,96,0.06);border:2px dashed rgba(39,174,96,0.3);border-radius:6px;cursor:pointer;text-align:center;transition:background 0.15s;"
+         onmouseover="this.style.background='rgba(39,174,96,0.12)'" onmouseout="this.style.background='rgba(39,174,96,0.06)'">
+      <span style="font-size:15px;color:#27ae60;">📁 新建存档</span>
+    </div>`;
+
   bodyHtml += "</div>";
 
   showModal({
@@ -231581,7 +231767,7 @@ function showSaveMenu() {
   setTimeout(() => {
     document.querySelectorAll(".save-slot-card").forEach((card) => {
       card.addEventListener("click", () => {
-        const slot = parseInt(card.dataset.slot);
+        const slot = card.dataset.slot;
         const existing = getSlotInfo(slot);
         if (existing) {
           // 确认覆盖
@@ -231608,6 +231794,15 @@ function showSaveMenu() {
         }
       });
     });
+    // 新建存档按钮
+    document.getElementById("save-new-slot")?.addEventListener("click", () => {
+      document.querySelector(".modal-overlay")?.remove();
+      var newId = saveGameNew();
+      if (newId) {
+        StateManager.addMessage("💾 已创建新存档！", "success");
+      }
+      renderAll();
+    });
   }, 50);
 }
 
@@ -231618,36 +231813,31 @@ function showLoadMenu() {
   bodyHtml += '<div style="max-height:400px;overflow-y:auto;">';
   let hasAnySave = false;
   for (const s of allSlots) {
-    if (s.empty) {
-      // 自动存档空槽位不显示
-      if (s.slot === "_auto") continue;
-      bodyHtml += `<div style="padding:8px;margin:4px 0;background:var(--bg-card);border-radius:4px;opacity:0.4;font-size:12px;color:var(--text-muted);">${s.label} — 空</div>`;
-    } else {
-      hasAnySave = true;
-      const phaseLabel = s.phase === "corporate" ? "🏢" : "🏘️";
-      const modeTag = s.mode ? s.mode + " " : "";
-      const isAuto = s.slot === "_auto";
-      // 自动存档用绿色高亮样式
-      const borderColor = isAuto ? "rgba(39,174,96,0.4)" : "var(--border)";
-      const bgColor = isAuto ? "rgba(39,174,96,0.04)" : "var(--bg-card)";
-      const labelIcon = isAuto ? "🤖 " : "";
-      const labelName = isAuto ? "自动存档" : s.label;
-      bodyHtml += `
-        <div class="load-slot-card" data-slot="${s.slot}" style="padding:12px;margin:4px 0;background:${bgColor};border:1px solid ${borderColor};border-radius:6px;cursor:pointer;transition:border-color 0.15s;${isAuto ? "border-left:3px solid #27ae60;" : ""}">
-          <div style="display:flex;justify-content:space-between;align-items:center;">
-            <strong>${labelIcon}${modeTag}${labelName}</strong>
-            <span style="font-size:11px;color:var(--text-muted);">${s.date || ""}</span>
-          </div>
-          <div style="font-size:12px;color:var(--text-secondary);margin-top:3px;">
-            ${phaseLabel} 第${s.day}天 | 年龄${s.age} | 💰 ¥${(s.cash || 0).toLocaleString()}
-            ${s.rank ? ` | 🏢 ${s.rank}` : ""}
-            ${s.debt > 0 ? ` | ⚠️ 欠款 ¥${s.debt.toLocaleString()}` : ""}
-            ${s.totalEarned > 0 ? ` | 总赚 ¥${s.totalEarned.toLocaleString()}` : ""}
-          </div>
-          ${s.narrative ? `<div style="font-size:11px;color:#27ae60;margin-top:5px;padding:4px 6px;background:rgba(39,174,96,0.06);border-radius:4px;border-left:2px solid rgba(39,174,96,0.3);">${s.narrative}</div>` : ""}
-          ${isAuto ? '<div style="font-size:10px;color:#27ae60;margin-top:3px;">↻ 每日自动保存 · 前一日备份可用</div>' : ""}
-        </div>`;
-    }
+    if (s.slot === "_auto" && !s.cash) continue; // 自动存档空槽位不显示
+    hasAnySave = true;
+    const phaseLabel = s.phase === "corporate" ? "🏢" : "🏘️";
+    const modeTag = s.mode ? s.mode + " " : "";
+    const isAuto = s.slot === "_auto";
+    // 自动存档用绿色高亮样式
+    const borderColor = isAuto ? "rgba(39,174,96,0.4)" : "var(--border)";
+    const bgColor = isAuto ? "rgba(39,174,96,0.04)" : "var(--bg-card)";
+    const labelIcon = isAuto ? "🤖 " : "";
+    const labelName = isAuto ? "自动存档" : s.label;
+    bodyHtml += `
+      <div class="load-slot-card" data-slot="${s.slot}" style="padding:12px;margin:4px 0;background:${bgColor};border:1px solid ${borderColor};border-radius:6px;cursor:pointer;transition:border-color 0.15s;${isAuto ? "border-left:3px solid #27ae60;" : ""}">
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <strong>${labelIcon}${modeTag}${labelName}</strong>
+          <span style="font-size:11px;color:var(--text-muted);">${s.date || ""}</span>
+        </div>
+        <div style="font-size:12px;color:var(--text-secondary);margin-top:3px;">
+          ${phaseLabel} 第${s.day}天 | 年龄${s.age} | 💰 ¥${(s.cash || 0).toLocaleString()}
+          ${s.rank ? ` | 🏢 ${s.rank}` : ""}
+          ${s.debt > 0 ? ` | ⚠️ 欠款 ¥${s.debt.toLocaleString()}` : ""}
+          ${s.totalEarned > 0 ? ` | 总赚 ¥${s.totalEarned.toLocaleString()}` : ""}
+        </div>
+        ${s.narrative ? `<div style="font-size:11px;color:#27ae60;margin-top:5px;padding:4px 6px;background:rgba(39,174,96,0.06);border-radius:4px;border-left:2px solid rgba(39,174,96,0.3);">${s.narrative}</div>` : ""}
+        ${isAuto ? '<div style="font-size:10px;color:#27ae60;margin-top:3px;">↻ 每日自动保存 · 前一日备份可用</div>' : ""}
+      </div>`;
   }
   bodyHtml += "</div>";
   if (!hasAnySave) {
@@ -231696,18 +231886,39 @@ function showDeleteMenu() {
     return;
   }
 
+  // 存储空间信息
+  var storageInfo = typeof getStorageInfo === "function" ? getStorageInfo() : null;
+  var storageLine = "";
+  if (storageInfo && storageInfo.total > 0) {
+    storageLine = '<div style="padding:6px 12px;margin-bottom:8px;font-size:11px;color:var(--text-muted);display:flex;justify-content:space-between;">' +
+      '<span>📦 已用 ' + formatSize(storageInfo.total) + '</span>' +
+      '<span>' + storageInfo.saveCount + ' 个存档</span>' +
+      '</div>';
+  }
+
   let bodyHtml =
     '<p style="margin-bottom:8px;color:var(--danger);">选择要删除的存档（不可恢复）：</p>';
+  bodyHtml += storageLine;
   bodyHtml += '<div style="max-height:300px;overflow-y:auto;">';
   for (const s of allSlots) {
     const phaseLabel = s.phase === "corporate" ? "🏢" : "🏘️";
+    // 查找该存档的大小
+    var sizeStr = "";
+    if (storageInfo && storageInfo.saves) {
+      for (var si = 0; si < storageInfo.saves.length; si++) {
+        if (storageInfo.saves[si].slot == s.slot) {
+          sizeStr = formatSize(storageInfo.saves[si].size);
+          break;
+        }
+      }
+    }
     bodyHtml += `
       <div class="del-slot-card" data-slot="${s.slot}" style="padding:10px;margin:4px 0;background:var(--bg-card);border:1px solid var(--border);border-radius:6px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;">
         <div>
           <strong>${s.label}</strong>
           <span style="font-size:11px;color:var(--text-muted);margin-left:8px;">${s.date}</span>
         </div>
-        <span style="font-size:11px;color:var(--text-muted);">${phaseLabel} Day${s.day} ¥${s.cash?.toLocaleString()}</span>
+        <span style="font-size:11px;color:var(--text-muted);">${phaseLabel} Day${s.day} ${sizeStr}</span>
       </div>`;
   }
   bodyHtml += "</div>";
@@ -245418,6 +245629,7 @@ function renderCareerOverview(state, parent) {
     '<div style="font-size:10px;color:var(--text-muted);margin-bottom:6px;">你对10条职业路线的掌握程度 — 点击任意路线查看详情</div>';
   html +=
     '<div class="career-panorama-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:4px;">';
+  var catOrder = ["white_collar", "service", "blue_collar_gov"];
   for (var _pki = 0; _pki < catOrder.length; _pki++) {
     var _catId = catOrder[_pki];
     for (var _pk2 in CAREER_PATHS) {
@@ -249950,7 +250162,22 @@ if (typeof window !== "undefined") {
       var celebrate = document.createElement("div");
       celebrate.style.cssText =
         "margin-top:7px;font-size:11px;color:var(--success);font-weight:600;";
-      celebrate.textContent = "🎉 当前目标全部达成！继续前进，等待下一阶段。";
+      // 根据当前阶段给出更具体的引导
+      var _stageAdvice = "";
+      var _stage = _getLifeStage(state);
+      if (_stage === "survival") {
+        var _remaining = 7 - (state.player.day || 1);
+        _stageAdvice = "第8天进入下一阶段，还有" + Math.max(0, _remaining) + "天，继续赚钱攒钱！";
+      } else if (_stage === "debt") {
+        _stageAdvice = "还清债务进入积累期，去培训中心提升智力！";
+      } else if (_stage === "growth") {
+        _stageAdvice = "智力达45后去科技园应聘，开启职场人生！";
+      } else if (_stage === "corporate") {
+        _stageAdvice = "努力晋升，争取月薪¥15000+！";
+      } else {
+        _stageAdvice = "继续前进，创造你的传奇！";
+      }
+      celebrate.textContent = "🎉 当前目标全部达成！" + _stageAdvice;
       card.appendChild(celebrate);
       // [全系统自洽修复] 域F 修复: 每日目标奖金改为按天发放（原flag终身只触发一次，导致后续天数有庆祝无奖励）
       if (state.flags._dailyQuestRewardCollectedDay !== state.player.day) {
@@ -250088,7 +250315,7 @@ var JOB_MILESTONE_EVENTS = {
   waste_recycling: {
     t1: {
       title: "街坊认可",
-      desc: "你已经在这片街区捡了整整七天废品。街口卖凉皮的胖大妈拍了拍你肩膀：\n\n「小伙子，我看你挺实诚的，不偷不抢。告诉你个秘密——4号楼林老师每周二把废纸箱放楼道口，5号楼每月初有废铜管。去早点，别让别人抢了。」\n\n这是这条街老江湖才知道的情报。",
+      desc: "你在这片街区捡了七次废品，街坊邻里都开始认得你了。街口卖凉皮的胖大妈拍了拍你肩膀：\n\n「小伙子，我看你挺实诚的，不偷不抢。告诉你个秘密——4号楼林老师每周二把废纸箱放楼道口，5号楼每月初有废铜管。去早点，别让别人抢了。」\n\n这是这条街老江湖才知道的情报。",
       choices: [
         {
           label: "谢谢大妈，以后常过来",
@@ -251246,6 +251473,8 @@ function checkJobRequirements(job, state) {
     return `销售技能不足 (需要${reqs.sales})`;
   if (reqs.english && s.english.level < reqs.english)
     return `英语技能不足 (需要${reqs.english})`;
+  if (reqs.driving && s.driving.level < reqs.driving)
+    return `驾驶技能不足，需要驾照 (需要${reqs.driving})`;
   if (job.requiredFlag && !state.flags[job.requiredFlag])
     return "尚未解锁（需要NPC好感度）";
   if (job.educationRequired && (p.education || 0) < job.educationRequired) {
@@ -251406,6 +251635,40 @@ function estimateJobPay(job, state) {
   return Math.floor(total / 10);
 }
 
+/** 估算工作收入范围（20次模拟取 min/max/avg，含各项加成）
+ *  用于在卡片上显示"当前状态下实际能赚到的区间"，而非固定的 payCalc 裸区间 */
+function estimateJobPayRange(job, state) {
+  var results = [];
+  for (var i = 0; i < 20; i++) {
+    if (typeof job.payCalc !== "function") return { min: 0, max: 0, avg: 0 };
+    var pay = job.payCalc(state);
+    if (state._jobMultipliers && state._jobMultipliers[job.id])
+      pay = Math.floor(pay * state._jobMultipliers[job.id]);
+    if (state._allJobsBonus && state._allJobsBonus !== 1)
+      pay = Math.floor(pay * state._allJobsBonus);
+    if (typeof getItemJobBonus === "function") {
+      var equipMulti = getItemJobBonus(job.id, state);
+      if (equipMulti !== 1.0) pay = Math.floor(pay * equipMulti);
+    }
+    if (typeof getSuiteJobBonus === "function") {
+      var suiteMulti = getSuiteJobBonus(job.id, state);
+      if (suiteMulti !== 1.0) pay = Math.floor(pay * suiteMulti);
+    }
+    if (typeof getNewsJobMultiplier === "function")
+      pay = Math.floor(pay * getNewsJobMultiplier(job.id, state));
+    if (typeof getDifficultyMultiplier === "function") {
+      var wageMult = getDifficultyMultiplier(state, "wage");
+      if (wageMult !== 1.0) pay = Math.floor(pay * wageMult);
+    }
+    results.push(pay);
+  }
+  var min = Math.min.apply(null, results);
+  var max = Math.max.apply(null, results);
+  var total = 0;
+  for (var j = 0; j < results.length; j++) total += results[j];
+  return { min: min, max: max, avg: Math.floor(total / results.length) };
+}
+
 /** 估算工作收入并返回加成明细（P3.5）*/
 function estimateJobPayDetailed(job, state) {
   var base = Math.floor(job.payCalc(state));
@@ -251504,7 +251767,12 @@ function estimateJobPayDetailed(job, state) {
     }
   }
 
-  return { estimated: base, tags: tags };
+  // 计算实际收入区间（含全部加成后的 min/max）
+  var range = typeof estimateJobPayRange === "function"
+    ? estimateJobPayRange(job, state)
+    : { min: base, max: Math.floor(base * 1.3) };
+
+  return { estimated: base, tags: tags, min: range.min, max: range.max };
 }
 
 // ====== 欢迎界面 ======
@@ -252164,8 +252432,6 @@ function startScenarioGame(scenarioId) {
       }
     }, 3000);
   };
-
-  // --- v3.57 随机抽签 → 揭示弹窗 ---
   if (scenario.talents && scenario.talents.length > 0) {
     var _rolled = rollTalents(scenario);
     showTalentRevealModal(
@@ -252434,6 +252700,18 @@ function renderSandboxConfig() {
   }
   html += "</div>";
 
+  // 驾照选项
+  var _hasLicenseChecked = cfg.hasLicense ? "checked" : "";
+  html +=
+    '<div class="sandbox-section" style="padding-top:0;">' +
+    '<div class="sandbox-row" style="justify-content:flex-start;gap:8px;">' +
+    '<input type="checkbox" id="sandbox-has-license" ' +
+    _hasLicenseChecked +
+    ' onchange="updateSandboxConfig(\'hasLicense\', this.checked)" style="width:16px;height:16px;accent-color:var(--accent-text,#4a7c59);">' +
+    '<label for="sandbox-has-license" style="font-size:13px;cursor:pointer;">🚗 已有驾照（可直接从事驾驶类工作）</label>' +
+    "</div>" +
+    "</div>";
+
   // 快速预设
   html +=
     '<div class="sandbox-section">' +
@@ -252630,6 +252908,16 @@ function startSandboxGame() {
         var lvl = Math.max(0, Math.min(100, cfg[sk] || 0));
         state.skills[sk].level = lvl;
         state.skills[sk].xp = 0;
+      }
+    }
+
+    // --- 驾照 ---
+    if (cfg.hasLicense) {
+      if (!state.certificates.includes("driver_license")) {
+        state.certificates.push("driver_license");
+      }
+      if (state.skills.driving && state.skills.driving.level < 10) {
+        state.skills.driving.level = Math.min(100, state.skills.driving.level + 10);
       }
     }
 
@@ -253578,9 +253866,12 @@ function getAvailableActions(state) {
         name: job.name,
         desc: job.desc + footfallLabel,
         icon: job.icon,
-        payEstimate: payEstimate
-          ? `${payEstimate - (job.startupCost || 0)}~${payEstimate + Math.floor(payEstimate * 0.3)}`
-          : null,
+        payEstimate:
+          payDetail && payDetail.min != null
+            ? `${payDetail.min}~${payDetail.max}`
+            : payEstimate
+              ? `${payEstimate - (job.startupCost || 0)}~${payEstimate + Math.floor(payEstimate * 0.3)}`
+              : null,
         payTags:
           payDetail && payDetail.tags && payDetail.tags.length > 0
             ? payDetail.tags
@@ -253891,7 +254182,8 @@ function getAvailableActions(state) {
             category: "education",
             name: "自考备考",
             desc: `消耗20AP，+5学习点（当前${ep.studyPoints}点，本门需150点）。有10%概率智力+1。`,
-            ap: 20,
+            icon: "📖",
+            apCost: 20,
             handler: () => {
               if (!state.player.eduProgress)
                 state.player.eduProgress = {
@@ -253945,7 +254237,8 @@ function getAvailableActions(state) {
           category: "education",
           name: "参加考试",
           desc: `消耗30AP，需学习点≥150（当前${ep.studyPoints}）。通过率${examPassRate.toFixed(0)}%（第${ep.examsPassed + 1}/6门）。`,
-          ap: 30,
+          icon: "📝",
+          apCost: 30,
           reqFail: !canExam
             ? ep.studyPoints < 150
               ? `学习点不足（${ep.studyPoints}/150）`
@@ -255228,7 +255521,9 @@ function getAvailableActions(state) {
                     '<div style="margin-top:12px;">' +
                     choicesHtml +
                     "</div>",
-                  buttons: [],
+                  buttons: [
+                    { text: "取消", cls: "", callback: function () {} },
+                  ],
                 });
                 setTimeout(function () {
                   var overlay = document.querySelector(".modal-overlay");
@@ -255297,7 +255592,9 @@ function getAvailableActions(state) {
                     '<div style="margin-top:12px;">' +
                     choicesHtml +
                     "</div>",
-                  buttons: [],
+                  buttons: [
+                    { text: "取消", cls: "", callback: function () {} },
+                  ],
                 });
                 setTimeout(function () {
                   var overlay = document.querySelector(".modal-overlay");
@@ -255797,6 +256094,29 @@ function doStreetJob(job) {
   if (typeof state.resources.totalEarned !== "number" || !isFinite(state.resources.totalEarned)) {
     state.resources.totalEarned = 0;
   }
+
+  // === 废品回收·街坊情报网络（4号楼林老师废纸箱 / 5号楼废铜管）===
+  // 玩家在里程碑事件选择"谢谢大妈，以后常过来"后激活 _wasteRecyclingNetwork
+  // 大妈的情报变成真实可交互的游戏机制：
+  //   - 每周二（weekDay===2）：4号楼林老师放废纸箱 → 额外收入+15%
+  //   - 每月初（day%30∈[1,3]）：5号楼废铜管 → 额外收入+25%
+  if (job.id === "waste_recycling" && state.flags && state.flags._wasteRecyclingNetwork) {
+    var wd = ((state.player.day - 1) % 7) + 1; // 1=周一 ... 7=周日
+    var dom = state.player.day % 30; // 模拟月内天数
+    if (wd === 2) {
+      var paperBonus = Math.floor(pay * 0.15) + 5;
+      pay += paperBonus;
+      if (Random.chance(0.5)) {
+        StateManager.addMessage("📦 4号楼林老师的废纸箱！情报准，多赚¥" + paperBonus, "success");
+      }
+    }
+    if (dom >= 1 && dom <= 3) {
+      var copperBonus = Math.floor(pay * 0.25) + 10;
+      pay += copperBonus;
+      StateManager.addMessage("🔩 5号楼废铜管！月初果然有货，多赚¥" + copperBonus, "success");
+    }
+  }
+
   state.resources.cash = (state.resources.cash || 0) + pay;
   state.resources.totalEarned = (state.resources.totalEarned || 0) + pay;
   addDailyTransaction(

@@ -765,6 +765,15 @@ function addStreetExtras(state, actions) {
     effectEstimate: "保险30天, 伤病赔¥500",
     handler: () => {
       const st = StateManager.getState();
+      // 检查是否已有有效保险，避免重复购买
+      if (st.flags.hasInsurance && st.flags.insuranceExpire >= st.player.day) {
+        var remainDays = st.flags.insuranceExpire - st.player.day;
+        StateManager.addMessage(
+          "🛡️ 你已有意外险（还剩" + remainDays + "天），到期后再买吧。",
+          "info",
+        );
+        return;
+      }
       if ((st.resources.cash || 0) < 200) {
         StateManager.addMessage("🛡️ 保险都买不起。", "warning");
         return;
@@ -773,7 +782,7 @@ function addStreetExtras(state, actions) {
       st.flags.hasInsurance = true;
       st.flags.insuranceExpire = st.player.day + 30;
       StateManager.addMessage(
-        "🛡️ 买了 30 天意外险！期间受伤/生病赔付 500。",
+        "🛡️ 买了 30 天意外险！期间受伤/生病赔付 500（到期日：第" + (st.player.day + 30) + "天）。",
         "success",
       );
       consumeAP(20);
@@ -2437,7 +2446,10 @@ function showHomeActionsModal(state) {
   showModal({
     title: "🏠 在住所",
     body: html,
-    buttons: [{ text: "出门", cls: "", callback: function () {} }],
+    buttons: [
+      { text: "取消", cls: "", callback: function () {} },
+      { text: "出门", cls: "", callback: function () {} },
+    ],
   });
   setTimeout(function () {
     var ov = document.querySelector(".modal-overlay");

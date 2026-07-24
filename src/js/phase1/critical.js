@@ -561,9 +561,11 @@ function _punishByNeed阶梯式(state, need, deferCount) {
         "danger",
       );
     } else if (deferCount === 3) {
-      // 第3次延期：重度 — 饿晕，健康-15，饥饱重置为8
+      // 第3次延期：重度 — 饿晕
       state.status.health = Math.max(0, state.status.health - 15);
       state.needs.hunger = 8;
+      // 移动回住所或医院
+      _moveToHomeOrHospital(state, "饿晕在街头");
       StateManager.addMessage(
         "💀 你饿晕在街头！醒来已是深夜，健康-15。",
         "danger",
@@ -585,6 +587,7 @@ function _punishByNeed阶梯式(state, need, deferCount) {
       state.needs.hunger = 30;
       state.status.health = Math.max(0, state.status.health - 10);
       state.flags._everHospitalized = true;
+      state.trade.currentLocation = "hospital";
       StateManager.addMessage(
         "🏥 连续多日挨饿，你被送进医院急救！花了¥" + fee + "。",
         "danger",
@@ -611,6 +614,7 @@ function _punishByNeed阶梯式(state, need, deferCount) {
       state.needs.happiness = Math.max(0, state.needs.happiness - 15);
       state.status.health = Math.max(0, state.status.health - 8);
       state.flags._everCollapsed = true;
+      _moveToHomeOrHospital(state, "过劳晕倒");
       StateManager.addMessage(
         "😵 你累倒在路边！睡了一觉，疲劳重置但心情和健康受损。",
         "danger",
@@ -621,6 +625,7 @@ function _punishByNeed阶梯式(state, need, deferCount) {
       state.needs.fatigue = 10;
       state.status.health = Math.max(0, state.status.health - 15);
       state.flags._everHospitalized = true;
+      state.trade.currentLocation = "hospital";
       StateManager.addMessage(
         "🏥 连续多日过劳，你被强制送医治疗！健康-15。",
         "danger",
@@ -750,6 +755,22 @@ function _contractIllness(state, illnessId) {
   }
 }
 
+/** 晕倒/昏迷时移动回住所或医院 */
+function _moveToHomeOrHospital(state, reason) {
+  var tier = state.housing ? state.housing.tier || 0 : 0;
+  if (tier > 0 && state.housing && state.housing.location) {
+    // 有住所 → 移动回住所
+    state.trade.currentLocation = state.housing.location;
+    StateManager.addMessage("🏠 被好心人送回了住所。", "info");
+  } else {
+    // 无住所 → 送医院（需付费）
+    state.trade.currentLocation = "hospital";
+    var fee = 100 + Random.int(0, 50);
+    state.resources.cash = Math.max(0, (state.resources.cash || 0) - fee);
+    StateManager.addMessage("🏥 被路人送到医院，花了¥" + fee + "急救费。", "danger");
+  }
+}
+
 /** 失败条件判定 — [全系统自洽修复] 域G A类修复: 原调用 checkLoseConditions 未定义导致每日管线崩溃 */
 function checkLoseConditions(state) {
   if (!state || !state.player || !state.flags) return;
@@ -764,6 +785,7 @@ function checkLoseConditions(state) {
     state.flags.gameOver = true;
     state.flags.gameOverReason =
       "你的身体终于撑不住了。在这座城市里，你耗尽了最后一口气。";
+    if (typeof showGameOverModal === "function") showGameOverModal();
     return;
   }
 
@@ -778,6 +800,7 @@ function checkLoseConditions(state) {
     state.flags.gameOver = true;
     state.flags.gameOverReason =
       "债务压垮了你。在这座城市里，你再也找不到立足之地。";
+    if (typeof showGameOverModal === "function") showGameOverModal();
     return;
   }
 }
@@ -1157,7 +1180,9 @@ function showCookingRecipeModal(state, amenity, totalAp, cost) {
     showModal({
       title: "📋 重要提示",
       body: html,
-      buttons: [],
+      buttons: [
+        { text: "取消", cls: "", callback: function () {} },
+      ],
     });
   } else if (typeof showCustomModal === "function") {
     showCustomModal(html);

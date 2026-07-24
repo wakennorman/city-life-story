@@ -291,7 +291,9 @@ function addLocationExtraActions(state, actions) {
         apCost: a.apCost,
         payEstimate: a.payEstimate,
         handler: function () {
-          a.handler(StateManager.getState());
+          var st = StateManager.getState();
+          if (typeof consumeAP === "function") consumeAP(a.apCost || 20);
+          a.handler(st);
         },
       });
     })(act);
