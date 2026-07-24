@@ -1,7 +1,7 @@
 {
-  "currentRound": 190,
-  "currentDomain": "B",
-  "nextDomain": "C",
+  "currentRound": 191,
+  "currentDomain": "C",
+  "nextDomain": "G",
   "rotationIndex": 0,
   "domainOrder": [
     "A",
@@ -16,7 +16,7 @@
   "domainRecency": {
     "A": 189,
     "B": 190,
-    "C": 187,
+    "C": 191,
     "D": 184,
     "E": 185,
     "F": 186,
@@ -48,13 +48,18 @@
       "round": 190,
       "domain": "B",
       "note": "域B: A类修复10处(news.js jobPenalty/jobBonus 8个不存在job id + investmentEffect 1个不存在symbol WEORK,均致新闻效果静默失效死数据,改真实id:sister_zhang_vending/restaurant_assistant/steel_worker/remote_dev/junior_analyst/ESTATE)+联动增强3项(B→D新闻闲聊涨好感/B→C潮流带动技能/B→E市场嗅觉投资意识)"
+    },
+    {
+      "round": 191,
+      "domain": "C",
+      "note": "域C: A类修复1项(jobs.js long_haul_driver死工作 requiredFlag \"_synergy_driving_accounting\"无对应连携→永不可入职,改真实连携\"_synergy_driving_logistics\"「长途运输」DUAL driving+accounting,与job名/desc/payCalc一致;该修已随并行提交eb13d27b落地)+联动增强3项(C→E连携私活变现/C→D同行手艺认可/C→G成长回望叙事)"
     }
   ],
-  "lastDomain": "B",
-  "lastRound": 190,
+  "lastDomain": "C",
+  "lastRound": 191,
   "lastDate": "2026-07-24",
-  "lastCommit": "ee0d2663",
-  "pushStatus": "PUSHED",
+  "lastCommit": "PENDING",
+  "pushStatus": "PENDING",
   "completedDomains": [
     "A",
     "B",
@@ -65,5 +70,5 @@
     "G",
     "H"
   ],
-  "description": "全系统优化 loop R190 完成。域B(事件/叙事, recency 172 最薄弱): 10处A类修复(news.js jobPenalty/jobBonus/investmentEffect 引用不存在的 job id 与股票 symbol,导致新闻效果静默失效) + 3项联动增强(B→D/B→C/B→E)。下轮R191→域C(职业/成长, recency 187)。"
+  "description": "全系统优化 loop R191 完成。域C(职业/成长, recency 187): A类修复1项(jobs.js long_haul_driver 死工作——requiredFlag 引用不存在的连携 _synergy_driving_accounting 致永不可入职,改真实连携 _synergy_driving_logistics「长途运输」) + 3项联动增强(C→E连携私活变现/C→D同行手艺认可/C→G成长回望叙事,承接死工作复活价值链闭合)。下轮R192→域G(核心机制/生命周期, recency 180 最薄弱)。"
 }

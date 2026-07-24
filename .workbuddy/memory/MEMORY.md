@@ -45,6 +45,13 @@
 - 扩展职业内容应接入 `CAREER_PATHS` 体系，而非造第二套。
 - 公司行为若复用 `corp.risk` 作 tech debt，须确认它落在 CAREER_PATHS 的公司职业链内。
 
+### 技能连携 flag 命名规约（2026-07-24 R191 重要，防死工作）
+
+- `jobs.js` 中带 `requiredFlag: "_synergy_<id>"` 的岗位，其 `<id>` **必须精确等于 skill_synergy.js 定义的连携 id**，否则岗位永不可入职（死工作）。
+- 真实连携 id（skill_synergy.js）：DUAL `driving_logistics`（中文名「长途运输」，技能 driving+accounting）→ flag `_synergy_driving_logistics`；TRIPLE `driving_logistics_accounting`（「物流帝国」driving+accounting+management）→ flag `_synergy_driving_logistics_accounting`。**没有 `driving_accounting`**。
+- R191 已修：`long_haul_driver` 原写 `_synergy_driving_accounting`（无此连携）→ 永久死工作，改真实 `_synergy_driving_logistics`（与其 desc/payCalc 的 driving+accounting 完全对应）。此修随并行提交 `eb13d27b` 落地。
+- 新增/改岗位连携门控前，先 `grep "_synergy_" skill_synergy.js` 核对 flag 字面量，勿臆造。
+
 ## NPC/社交系统真实架构（2026-07-14 R8 域D，重要）
 
 - 关系引擎入口 `src/js/core/npc_relationships.js`：`tickNpcRelationships` 由 `daily_pipeline.js` npc_relationships_tick slot 每日调用。含 14×14 关系矩阵 + 传播矩阵 + 好感衰减（7天无互动）。
