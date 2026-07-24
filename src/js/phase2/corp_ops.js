@@ -100,6 +100,27 @@ function doCorporateAction(actionId) {
   state.corporate.actionsUsed++;
   StateManager.addMessage(`${action.icon} ${action.name}完成！`, "success");
 
+  // [全系统自洽修复] 域H 修复:办公室政治互动事件系统死机制接线 ——
+  // triggerOfficePoliticsEvent/handlePoliticsChoice/applyPoliticsEffects + OFFICE_POLITICS_EVENTS(5事件)
+  // 全库零调用方（office_politics 行动此前只走上方静态 effects，互动分支从未触发）。
+  // typeof showModal 守卫保证 headless(MC测试)下安全跳过，try/catch 防 UI 异常中断行动结算。
+  if (
+    actionId === "office_politics" &&
+    typeof triggerOfficePoliticsEvent === "function" &&
+    typeof showModal === "function" &&
+    typeof OFFICE_POLITICS_EVENTS !== "undefined"
+  ) {
+    try {
+      var _polKeys = Object.keys(OFFICE_POLITICS_EVENTS);
+      if (_polKeys.length > 0) {
+        var _polType = _polKeys[Math.floor(Math.random() * _polKeys.length)];
+        triggerOfficePoliticsEvent(state, _polType);
+      }
+    } catch (e) {
+      /* headless/渲染异常时静默，静态 effects 已生效 */
+    }
+  }
+
   // [全系统自洽修复] 域H 联动增强4: 季度行动进度指示器（H→F）
   var rankDataProgress = state.corporate.rank ? CORP_RANKS[state.corporate.rank] : null;
   var maxActs = rankDataProgress ? rankDataProgress.maxActions : 3;

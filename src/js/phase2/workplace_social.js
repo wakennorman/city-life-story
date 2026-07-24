@@ -484,12 +484,33 @@ function tickColleagueRelationships(state) {
     }
 
     // 徒弟成长
+    // [全系统自洽修复] 域H 修复:徒弟出师死循环 —— progress 达100后停在100，
+    // 每日 tick 重复播报"出师了！"刷屏，且零回报、永久占用3席收徒上限。
+    // 改为：出师时一次性回报（人缘+关系+），并从 mentees 列表毕业移除。
     if (state.corporate.colleagues.mentees) {
-      for (const mentee of state.corporate.colleagues.mentees) {
+      const menteeList = state.corporate.colleagues.mentees;
+      for (let mi = menteeList.length - 1; mi >= 0; mi--) {
+        const mentee = menteeList[mi];
         if (mentee.menteeId === colleague.id) {
-          mentee.progress = Math.min(100, mentee.progress + 1);
+          mentee.progress = Math.min(100, (mentee.progress || 0) + 1);
           if (mentee.progress >= 100) {
-            StateManager.addMessage(`🎉 ${colleague.name}出师了！`, "success");
+            colleague.role = "ally";
+            colleague.relationship = Math.min(
+              100,
+              (colleague.relationship || 0) + 10,
+            );
+            if (state.player && state.player.corporate) {
+              const pc = state.player.corporate;
+              pc.popularity = Math.max(
+                0,
+                Math.min(100, (pc.popularity || 0) + 5),
+              );
+            }
+            menteeList.splice(mi, 1);
+            StateManager.addMessage(
+              `🎉 ${colleague.name}出师了！他逢人便说你的好——人缘+5，关系+10。`,
+              "success",
+            );
           }
         }
       }

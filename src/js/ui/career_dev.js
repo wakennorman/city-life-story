@@ -1299,6 +1299,14 @@ function renderCareerJobs(state, parent) {
             co.id +
             "')\">👨‍🏫拜师</button>";
         }
+        // [全系统自洽修复] 域H 修复:导师关系死路 —— 拜师提示"你已有导师，先解除"，
+        // 但全库无任何解除入口(endMentorship 死函数零调用方)，导师一旦确立永不可换。
+        if (co.role === "mentor") {
+          html +=
+            '<button class="btn btn-xs" style="min-height:44px;font-size:10px;padding:4px 8px;" onclick="careerSocialAction(\'unmentor\',\'' +
+            co.id +
+            "')\">👋解除师徒</button>";
+        }
         html += "</div></div>";
       }
     } else {
@@ -2425,6 +2433,25 @@ function careerSocialAction(action, colleagueId) {
       "👨‍🏫 拜" + c.name + "为师！晋升推荐与危机保护已解锁",
       "success",
     );
+  } else if (action === "unmentor") {
+    // [全系统自洽修复] 域H 修复:导师关系死路 —— 补解除师徒入口，
+    // 复活死函数 endMentorship(workplace_social.js:392，全库此前零调用方)。
+    if (
+      !state.corporate.colleagues.mentorship ||
+      state.corporate.colleagues.mentorship.mentorId !== c.id
+    ) {
+      StateManager.addMessage("⚠️ " + c.name + "不是你的导师", "warning");
+      return;
+    }
+    if (typeof endMentorship === "function") {
+      endMentorship(state);
+    } else {
+      // 兜底：与 endMentorship 同语义的内联实现
+      c.role = "ally";
+      c.relationship = Math.max(40, (c.relationship || 0) - 20);
+      state.corporate.colleagues.mentorship = null;
+      StateManager.addMessage("👋 你结束了和" + c.name + "的导师关系。", "warning");
+    }
   }
   if (typeof renderAll === "function") renderAll();
 }
