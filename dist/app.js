@@ -221312,159 +221312,153 @@ if (typeof window !== "undefined") {
 })();
 
 ;
-// ==== js/core/domain_f_linkage_r196.js ====
+// ==== js/core/domain_c_linkage_r196.js ====
 /*
- * 城市浮生记 — 域F（UI/UX）联动增强事件 · 第二轮（R196）
- * loop R196 全系统优化·Domain F 界面/体验 → 跨域桥接（F→E / F→G / F→H）
+ * 城市浮生记 — 域C（职业/成长）联动增强事件 · 第二轮（R196）
+ * loop R196 全系统优化·Domain C 职业/成长 → 跨域桥接（C→B / C→F / C→H）
  *
- * 设计约束（与 R19 ui_linkage_events.js / R11-R18 各域 linkage 一致）：
- *  - 以 IIFE 注入全局 RANDOM_EVENTS 数组（非 ES import），避免改 cross_system_events.js。
+ * 背景：域C 已在 R16/R191 覆盖 C→D/C→A/C→E/C→G（career_linkage_events.js / domain_c_linkage_r191.js）。
+ * 本轮补齐尚未覆盖的跨域视角：C→B（手艺成街坊美谈·叙事）、C→F（执业沉淀成清晰作品集·UI清晰感）、
+ * C→H（职场专业被公司/创业看重·经营资本）。id 前缀 c196_ 与 R16 career_ 及 R191 skill_r191_ 既有前缀不冲突。
+ *
+ * 设计约束（与 R16/R191 各域 linkage 一致）：
+ *  - IIFE 注入全局 RANDOM_EVENTS（非 ES import），避免改 cross_system_events.js。
  *  - 所有 state 访问均 || 防御；数值一律标 [PLACEHOLDER] 待数值组校准。
- *  - 事件引擎严格按 e.phase 过滤（state.player.phase 仅 "street"/"corporate"），
- *    故本文件事件须显式设置 phase；这里 2 street + 1 corporate 覆盖两种人生阶段。
- *  - 社交桥接严格遵守域D架构铁律：只读 state.relationships；引用 NPC 须 rel && rel.met；
- *    跨 NPC 好感传导一律走 applyAffinityChange（自动 clamp + 记 _lastInteractionDay + 升级播报）。
- *  - 里程碑/冷却用 st.flags._xxxDone 去重（conditions 与 apply 双重拦截）。
- *  - id 前缀 ui2_ 与 R19 的 ui_ 不冲突。
- *  - 主题：界面/体验层面的「理财看板、习惯规划、职场形象」反哺到经济(E)、核心机制(G)、公司(H)。
+ *  - 引擎严格按 e.phase 过滤（state.player.phase 仅 "street"/"corporate"），故显式设 phase（2 street + 1 corporate）。
+ *  - 社交桥接严守域D铁律：只读 state.relationships；引用 NPC 须 rel && rel.met；跨 NPC 好感走 applyAffinityChange。
+ *  - 里程碑/冷却用 st.flags._xxxCooldown 去重（conditions 与 apply 双重拦截）。
  */
 (function () {
   if (typeof RANDOM_EVENTS === "undefined" || !RANDOM_EVENTS) return;
-  if (RANDOM_EVENTS._domainFLinkageR196Loaded) return;
-  RANDOM_EVENTS._domainFLinkageR196Loaded = true;
+  if (RANDOM_EVENTS._domainCLinkageR196Loaded) return;
+  RANDOM_EVENTS._domainCLinkageR196Loaded = true;
 
-  // ---- 本地助手（IIFE 作用域，避免与同模式文件命名冲突） ----
-
-  // 取已结识且好感达阈值的 NPC 列表（域D铁律：须 rel && rel.met）
-  function getMetNpcsF196(st, minAff) {
+  // 取已结识且好感达阈值的 NPC（域D铁律：须 rel && rel.met）
+  function getMetNpcsC196(st, minAff) {
     minAff = minAff || 0;
     var out = [];
     if (!st || !st.relationships) return out;
     for (var id in st.relationships) {
       if (!Object.prototype.hasOwnProperty.call(st.relationships, id)) continue;
       var r = st.relationships[id];
-      if (r && r.met && (r.affinity || 0) >= minAff)
-        out.push({ id: id, rel: r });
+      if (r && r.met && (r.affinity || 0) >= minAff) out.push({ id: id, rel: r });
     }
     return out;
   }
 
-  // 安全改好感：优先全局 applyAffinityChange，否则兜底直写（域D铁律）
-  function safeAffinityF196(st, npcId, change, reason) {
+  // 安全改好感：优先 applyAffinityChange，否则兜底直写（域D铁律）
+  function safeAffinityC196(st, npcId, change, reason) {
     if (!st || !npcId) return;
     if (typeof applyAffinityChange === "function") {
-      applyAffinityChange(st, npcId, change, reason || "域F联动R196");
+      applyAffinityChange(st, npcId, change, reason || "域C联动R196");
       return;
     }
     if (!st.relationships) st.relationships = {};
-    if (!st.relationships[npcId])
-      st.relationships[npcId] = { met: true, affinity: 0 };
-    st.relationships[npcId].affinity =
-      (st.relationships[npcId].affinity || 0) + change;
+    if (!st.relationships[npcId]) st.relationships[npcId] = { met: true, affinity: 0 };
+    st.relationships[npcId].affinity = (st.relationships[npcId].affinity || 0) + change;
     st.relationships[npcId].met = true;
   }
 
-  // ---- 域F 联动事件（R196） ----
-
-  var UI_EVENTS_R196 = [
-    // ===== F→E：理财看板让漏掉的订阅现形 ↔ 经济/投资（落袋腾本金+理财意识） =====
+  var C_EVENTS_R196 = [
+    // ===== C→B：手艺被街坊传为美谈 ↔ 事件/叙事（职业声望化为名望记忆） =====
     {
-      id: "ui2_fintech_clarity",
-      title: "理财看板揪出的那笔忘了退的订阅",
-      desc: "你把一个多月没打开的记账/预算面板重新拾起来，顺手把自动扣费的项目列了遍。翻到第三页才发现，半年前随手开的会员还在每月扣钱——你当即退掉，并把这笔钱划进了平时舍不得碰的投资账户。",
+      id: "c196_craft_mastery_tale",
+      title: "你的手艺，成了街坊嘴里的美谈",
+      desc: "你咬牙磨了好几年的那门手艺，不知从哪天起成了附近人茶余饭后的谈资——「就是那个谁，东西做得真地道」。后来连隔壁街区都有人专门找上门。",
+      phase: "street",
+      triggers: { minDay: 80 },
+      conditions: function (st) {
+        if (!st || !st.player) return false;
+        if (st.flags && st.flags._c196CraftTaleCooldown) return false;
+        // 须有真实职业技能沉淀（coding/repair/welding/cooking 等真实键）
+        var hasSkill = false;
+        if (st.skills) {
+          for (var k in st.skills) {
+            if (Object.prototype.hasOwnProperty.call(st.skills, k) && (st.skills[k] || 0) >= 25) {
+              hasSkill = true; break;
+            }
+          }
+        }
+        return hasSkill;
+      },
+      choices: [
+        {
+          text: "把这门手艺继续磨下去",
+          apply: function (st) {
+            // B域桥接：职业声望化为真实名望（state.player.fame 是真实字段）
+            if (st.player) st.player.fame = (st.player.fame || 0) + 4; // [PLACEHOLDER] 名望回馈
+            if (st.flags) {
+              st.flags._careerTaleSeen = true; // 叙事记忆 flag（B域事件可消费）
+              st.flags._c196CraftTaleCooldown = true;
+            }
+            if (st.player) st.player.mental = (st.player.mental || 50) + 3;
+            if (typeof StateManager !== "undefined" && StateManager.addMessage)
+              StateManager.addMessage(
+                "被人念叨的手艺，比奖状更让人踏实。",
+                "good",
+              );
+          },
+        },
+        {
+          text: "听过就算了",
+          apply: function (st) {
+            if (st.player) st.player.mental = (st.player.mental || 50) + 1;
+            if (st.flags) st.flags._c196CraftTaleCooldown = true;
+          },
+        },
+      ],
+      probability: 0.04,
+    },
+
+    // ===== C→F：执业沉淀成清晰作品集 ↔ 界面/体验（职业秩序感反哺心智+心情） =====
+    {
+      id: "c196_portfolio_clarity",
+      title: "把执业沉淀成一份说得清的作品集",
+      desc: "你把散落各处的项目、证书、客户评价，归置成一份清爽的看板。某天翻开，发现几年的成长竟一目了然——那种「没白干」的踏实感，比升职信还顶用。",
       phase: "street",
       triggers: { minDay: 60 },
       conditions: function (st) {
         if (!st || !st.player) return false;
-        if (st.flags && st.flags._ui2FintechClarityCooldown) return false;
+        if (st.flags && st.flags._c196PortfolioClarityCooldown) return false;
         return true;
       },
       choices: [
         {
-          text: "把省下的钱定投进去",
+          text: "定期更新这份看板",
           apply: function (st) {
-            // E域桥接：UI 清晰感转化为真实现金落袋 + 理财意识 flag（复用 _dataInvestorMindset 跨域契约）
-            if (st.resources && typeof st.resources.cash === "number") {
-              st.resources.cash += 600; // [PLACEHOLDER] 退回订阅的累计金额
-            } else if (st.resources) {
-              st.resources.cash = (st.resources.cash || 0) + 600; // [PLACEHOLDER]
-            }
-            if (st.flags) {
-              st.flags._dataInvestorMindset = true; // 跨域契约：与 R18/R22/R23 一致
-              st.flags._ui2FintechClarityCooldown = true;
-            }
-            if (st.needs) st.needs.happiness = (st.needs.happiness || 50) + 3;
-            if (typeof StateManager !== "undefined" && StateManager.addMessage)
-              StateManager.addMessage(
-                "一眼看穿的糊涂账，比赚一笔还让人安心。",
-                "good",
-              );
-          },
-        },
-        {
-          text: "退了就行，钱先花掉",
-          apply: function (st) {
-            if (st.resources && typeof st.resources.cash === "number") {
-              st.resources.cash += 200; // [PLACEHOLDER]
-            } else if (st.resources) {
-              st.resources.cash = (st.resources.cash || 0) + 200; // [PLACEHOLDER]
-            }
-            if (st.flags) st.flags._ui2FintechClarityCooldown = true;
-          },
-        },
-      ],
-      probability: 0.04,
-    },
-
-    // ===== F→G：习惯规划面板帮你把日子过出节奏 ↔ 核心机制/生命周期（心智+心情成长） =====
-    {
-      id: "ui2_life_planner",
-      title: "一块习惯面板，把飘着的日子钉出了节奏",
-      desc: "你在手机里摆了块习惯面板，睡觉、喝水、散步各占一格。头几天总忘，半个月后竟成了肌肉记忆——某天抬头，发现焦虑没那么容易涌上来了。",
-      phase: "street",
-      triggers: { minDay: 50 },
-      conditions: function (st) {
-        if (!st || !st.player) return false;
-        if (st.flags && st.flags._ui2LifePlannerCooldown) return false;
-        return true;
-      },
-      choices: [
-        {
-          text: "把这股节奏守住",
-          apply: function (st) {
-            // G域桥接：生活秩序感反哺核心生存属性（mental 在 player，happiness 在 needs，均为真实字段）
-            if (st.player) st.player.mental = (st.player.mental || 50) + 5; // [PLACEHOLDER] 心智回馈
+            // F域桥接：职业沉淀的清晰感反哺核心生存属性（mental 在 player，happiness 在 needs，均为真实字段）
+            if (st.player) st.player.mental = (st.player.mental || 50) + 5; // [PLACEHOLDER] 心智
             if (st.needs) st.needs.happiness = (st.needs.happiness || 50) + 4; // [PLACEHOLDER] 心情
-            if (st.flags) st.flags._ui2LifePlannerCooldown = true;
+            if (st.flags) st.flags._c196PortfolioClarityCooldown = true;
             if (typeof StateManager !== "undefined" && StateManager.addMessage)
               StateManager.addMessage(
-                "把生活钉出节奏，紧绷感自己就松了下来。",
+                "看得清来路，才走得稳前路。",
                 "good",
               );
           },
         },
         {
-          text: "偶尔摆烂也没事",
+          text: "做一次就丢一边",
           apply: function (st) {
             if (st.player) st.player.mental = (st.player.mental || 50) + 2;
-            if (st.flags) st.flags._ui2LifePlannerCooldown = true;
+            if (st.flags) st.flags._c196PortfolioClarityCooldown = true;
           },
         },
       ],
       probability: 0.04,
     },
 
-    // ===== F→H：把职业履历页打磨顺眼 ↔ 公司/创业（形象转化为经营技能） =====
+    // ===== C→H：职场专业被公司/创业看重 ↔ 公司/创业（专业资本转化为经营技能+现金） =====
     {
-      id: "ui2_profile_polish",
-      title: "被同事转发的一份「像样的」履历页",
-      desc: "年终复盘前，你把个人主页和项目集重新排了版——配色统一、重点突出。没想到一位前辈顺手转发给了业务线的负责人，对方回了一句：这人，做事有章法。",
+      id: "c196_corporate_mentor_value",
+      title: "前辈点名：这活儿，你来带新人",
+      desc: "部门里有个新项目要带人，主管没绕弯子，直接点你：『你那套干法，新人得学。』你硬着头皮开了几场内训，没想到反响比预期好——连老板都来听了半场。",
       phase: "corporate",
       triggers: { minDay: 120 },
       conditions: function (st) {
         if (!st || !st.player) return false;
-        if (st.flags && st.flags._ui2ProfilePolishCooldown) return false;
-        // 须处于公司/职场语境：有固定工作或 corporate 公司对象（均为真实字段）
+        if (st.flags && st.flags._c196CorpMentorCooldown) return false;
+        // 须处于公司/职场语境（真实字段）
         var hasJob =
           (st.career && st.career.currentJob) ||
           (st.corporate && st.corporate.company);
@@ -221473,25 +221467,31 @@ if (typeof window !== "undefined") {
       },
       choices: [
         {
-          text: "把这套呈现沉淀成方法论",
+          text: "把经验梳理成方法论",
           apply: function (st) {
-            // H域桥接：呈现力转化为真实经营/管理技能（management 为公司 KPI 真实技能键）
-            if (typeof addSkillXp === "function") addSkillXp("management", 8); // [PLACEHOLDER] 表达/管理XP
+            // H域桥接：职业专业资本转化为真实经营/管理技能（management 为公司 KPI 真实技能键）
+            if (typeof addSkillXp === "function") addSkillXp("management", 8); // [PLACEHOLDER] 管理/经营XP
+            // 内训补贴落袋（state.resources.cash 真实）
+            if (st.resources && typeof st.resources.cash === "number") {
+              st.resources.cash += 800; // [PLACEHOLDER] 内训补贴
+            } else if (st.resources) {
+              st.resources.cash = (st.resources.cash || 0) + 800; // [PLACEHOLDER]
+            }
             if (st.player) st.player.mental = (st.player.mental || 50) + 3;
             if (st.needs) st.needs.happiness = (st.needs.happiness || 50) + 2;
-            if (st.flags) st.flags._ui2ProfilePolishCooldown = true;
+            if (st.flags) st.flags._c196CorpMentorCooldown = true;
             if (typeof StateManager !== "undefined" && StateManager.addMessage)
               StateManager.addMessage(
-                "把门面做漂亮，机会有时就藏在门面背后。",
+                "能教别人的本事，才是真本事。",
                 "good",
               );
           },
         },
         {
-          text: "被夸一句就够本了",
+          text: "带完就完，不折腾",
           apply: function (st) {
             if (st.player) st.player.mental = (st.player.mental || 50) + 1;
-            if (st.flags) st.flags._ui2ProfilePolishCooldown = true;
+            if (st.flags) st.flags._c196CorpMentorCooldown = true;
           },
         },
       ],
@@ -221499,8 +221499,8 @@ if (typeof window !== "undefined") {
     },
   ];
 
-  for (var i = 0; i < UI_EVENTS_R196.length; i++) {
-    RANDOM_EVENTS.push(UI_EVENTS_R196[i]);
+  for (var i = 0; i < C_EVENTS_R196.length; i++) {
+    RANDOM_EVENTS.push(C_EVENTS_R196[i]);
   }
 })();
 
