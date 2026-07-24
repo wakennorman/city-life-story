@@ -2490,6 +2490,7 @@ function getAvailableActions(state) {
         name: job.name,
         desc: job.desc + footfallLabel,
         icon: job.icon,
+        apCost: 33,
         payEstimate:
           payDetail && payDetail.min != null
             ? `${payDetail.min}~${payDetail.max}`
@@ -2905,7 +2906,7 @@ function getAvailableActions(state) {
             category: "education",
             name: "申请本科学历认证",
             desc: "6门科目全部通过！提交认证，获得本科学历，解锁更多工作机会。",
-            ap: 0,
+            apCost: 0,
             handler: () => {
               state.player.education = 1;
               state.education = 1;
@@ -2931,7 +2932,7 @@ function getAvailableActions(state) {
                 "消耗25AP，+6学习点（当前" +
                 gradEp.studyPoints +
                 "点，本门需200点）。需智力≥30。",
-              ap: 25,
+              apCost: 25,
               handler: function () {
                 if (!state.player.eduProgress)
                   state.player.eduProgress = {
@@ -2983,7 +2984,7 @@ function getAvailableActions(state) {
               "%（第" +
               (gradEp.examsPassed + 1) +
               "/6门）。",
-            ap: 30,
+            apCost: 30,
             reqFail: !gradCanExam
               ? gradEp.studyPoints < 200
                 ? "学习点不足（" + (gradEp.studyPoints || 0) + "/200）"
@@ -3023,7 +3024,7 @@ function getAvailableActions(state) {
               category: "education",
               name: "🎓 申请研究生学历认证",
               desc: "6门科目全部通过！提交认证，获得研究生学历，解锁高级职位和高薪机会。",
-              ap: 0,
+              apCost: 0,
               handler: function () {
                 state.player.education = 2;
                 state.education = 2;
@@ -3060,7 +3061,7 @@ function getAvailableActions(state) {
               "消耗20AP，推进研究工作。已发表论文" +
               currResearch +
               "篇（需≥3篇毕业）。",
-            ap: 20,
+            apCost: 20,
             handler: function () {
               consumeAP(20);
               var progress = Random.int(5, 15);
@@ -3105,7 +3106,7 @@ function getAvailableActions(state) {
                 "已发表" +
                 currResearch +
                 "篇论文！提交博士论文答辩，获得博士学位。解锁学术路线。",
-              ap: 10,
+              apCost: 0,
               handler: function () {
                 state.player.education = 3;
                 state.education = 3;
@@ -3165,6 +3166,7 @@ function getAvailableActions(state) {
               id: fjob.id,
               category: "work",
               label: fjob.icon + " [节日] " + fjob.name + " ¥" + fjob.pay,
+              apCost: fjob.apCost || 20,
               desc: fjob.desc + "（消耗" + (fjob.apCost || 20) + "AP）",
               handler: function () {
                 var pay = fjob.pay + Random.int(0, 29);
@@ -3217,7 +3219,7 @@ function getAvailableActions(state) {
           category: "appliance",
           name: "本地名人效应",
           desc: `名气${fame}点，商家请你站台推广，收现金并涨粉。(每天一次)`,
-          ap: 15,
+          apCost: 15,
           handler: () => {
             var earn = 50 + Math.floor(fame * 1.2) + Random.int(0, 79);
             state.resources.cash = (state.resources.cash || 0) + earn;
@@ -3250,7 +3252,7 @@ function getAvailableActions(state) {
           category: "appliance",
           name: "粉丝认出你了",
           desc: `有人认出你（名气${fame}），主动来搭话聊天，心情好极了。(每天一次)`,
-          ap: 5,
+          apCost: 5,
           handler: () => {
             state.needs.happiness = Math.min(100, state.needs.happiness + 20);
             state.player.mental = Math.min(100, state.player.mental + 2);
@@ -3277,7 +3279,7 @@ function getAvailableActions(state) {
           category: "appliance",
           name: "名人专属指导课",
           desc: `名气${fame}点，教练/老师主动找你，提供一次免费专项训练。(每天一次)`,
-          ap: 20,
+          apCost: 20,
           handler: () => {
             // 随机提升一项属性或技能
             var targets = ["physique", "intelligence", "agility", "mental"];
@@ -3309,7 +3311,7 @@ function getAvailableActions(state) {
           category: "appliance",
           name: "VIP就诊通道",
           desc: `名气${fame}点，护士认出你直接带去优先诊室，挂号费减半。(每天一次)`,
-          ap: 10,
+          apCost: 10,
           handler: () => {
             var healAmt = 25 + Math.floor(fame * 0.3);
             state.status.health = Math.min(
@@ -3337,7 +3339,7 @@ function getAvailableActions(state) {
           category: "appliance",
           name: "科技论坛演讲嘉宾",
           desc: `名气${fame}点，主办方邀请你做嘉宾分享，演讲费+名气暴增。(每天一次)`,
-          ap: 25,
+          apCost: 25,
           handler: () => {
             var earn = 200 + Math.floor(fame * 2.5) + Random.int(0, 149);
             state.resources.cash = (state.resources.cash || 0) + earn;
@@ -3601,27 +3603,40 @@ function getAvailableActions(state) {
 
     // 医院
     if (locKey === "hospital") {
+      var hasIllnesses =
+        state.status.illnesses && state.status.illnesses.length > 0;
       actions.push({
         id: "heal",
         category: "survival",
         name: "看病治疗",
-        desc: "花50元看病，恢复健康、治疗伤病。",
+        desc: hasIllnesses
+          ? "花50元做基础诊疗，恢复健康。具体疾病需分别治疗。"
+          : "花50元看病，恢复健康、治疗伤病。",
         icon: "🏥",
         apCost: 20,
         costEstimate: 50,
-        effectEstimate: "健康+40, 伤病清除",
+        effectEstimate: hasIllnesses
+          ? "健康+40（疾病需分别治疗）"
+          : "健康+40, 伤病清除",
         disabled: (state.resources.cash || 0) < 50 ? true : false,
         handler: () => {
           const st = StateManager.getState();
           st.resources.cash = Math.max(0, (st.resources.cash || 0) - 50);
           st.status.health = Math.min(100, st.status.health + 40);
           st.status.injured = false;
-          // v3.1：医院治疗同时清除疾病数组（兼容illness.js疾病系统）
+          // 不再一键清除所有疾病！具体疾病需通过"看病"选项分症治疗
           if (st.status.illnesses && st.status.illnesses.length > 0) {
-            st.status.illnesses = [];
+            StateManager.addMessage(
+              "🏥 做了基础诊疗，健康恢复了一些。但你的具体疾病需要分别治疗（使用「看病」选项）。",
+              "warning",
+            );
+          } else {
+            st.status.sick = false;
+            StateManager.addMessage(
+              "🏥 看了医生，健康恢复了不少。",
+              "success",
+            );
           }
-          st.status.sick = false;
-          StateManager.addMessage("🏥 看了医生，健康恢复了不少。", "success");
           consumeAP(20);
         },
       });
@@ -3872,6 +3887,7 @@ function getAvailableActions(state) {
         name: `考取${cert.name}`,
         desc: `${cert.desc} 费用:¥${cert.requirements.cash} 通过率:${Math.round(cert.examPassRate * 100)}%`,
         icon: "📜",
+        apCost: 33,
         costEstimate: cert.requirements.cash,
         disabled: !canAfford,
         reqFail: !canAfford ? `需 ¥${cert.requirements.cash}` : null,

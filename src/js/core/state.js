@@ -130,6 +130,8 @@ function createDefaultState() {
     // --- 物品栏 ---
     inventory: {
       items: [], // [{ id, qty, avgBuyPrice }]
+      containers: [], // [{ containerId: "small_pack", slot: "背部", contents: [{ id, qty }] }]
+      storage: {}, // { locKey: [{ id, qty, avgBuyPrice, buyDay }] }
       capacity: 20, // 基础容量
       equipment: {
         head: null,

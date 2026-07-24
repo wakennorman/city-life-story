@@ -220,6 +220,7 @@ function addStreetExtras(state, actions) {
     desc: "用公用电话给爸妈报平安，听听唠叨。",
     icon: "📞",
     category: "social",
+    apCost: 20,
     costEstimate: 2,
     effectEstimate: "心情+15, 30%概率收到¥200",
     handler: () => {
@@ -761,6 +762,7 @@ function addStreetExtras(state, actions) {
     desc: "花 200 买份意外险，下次受伤/生病能赔 500。",
     icon: "🛡️",
     category: "finance",
+    apCost: 20,
     costEstimate: 200,
     effectEstimate: "保险30天, 伤病赔¥500",
     handler: () => {
@@ -796,6 +798,7 @@ function addStreetExtras(state, actions) {
     desc: "记录今天的心情。回顾一下，反思成长。",
     icon: "📓",
     category: "social",
+    apCost: 20,
     effectEstimate: "心情+8, 心智+0.5, 疲劳-5",
     handler: () => {
       const st = StateManager.getState();
@@ -816,6 +819,7 @@ function addStreetExtras(state, actions) {
     desc: "在公园/家里静坐 15 分钟。恢复心智、缓解疲劳。",
     icon: "🧘",
     category: "social",
+    apCost: 20,
     effectEstimate: "心智+1, 疲劳-12, 心情+6",
     handler: () => {
       const st = StateManager.getState();

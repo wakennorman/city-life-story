@@ -3470,7 +3470,7 @@ function renderStocks(area, inv, state, parent) {
         }
       }
       rowsHtml += `
-        <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.04);font-size:11px;gap:8px;">
+        <div class="stock-holding-row" data-symbol="${h.symbol}" style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.04);font-size:11px;gap:8px;cursor:pointer;" title="点击查看${stkName}逐笔成交记录">
           <span style="font-weight:600;min-width:50px;">${h.symbol}</span>
           <span style="color:var(--text-secondary);min-width:55px;font-size:10px;">${stkName}</span>
           <span style="min-width:40px;text-align:right;">${h.shares}股</span>
@@ -3492,8 +3492,58 @@ function renderStocks(area, inv, state, parent) {
         <span style="min-width:50px;">代码</span><span style="min-width:55px;">名称</span><span style="min-width:40px;text-align:right;">数量</span><span style="min-width:55px;text-align:right;">均价</span><span style="min-width:55px;text-align:right;">现价</span><span style="min-width:60px;text-align:right;">市值</span><span style="min-width:70px;text-align:right;">盈亏</span><span style="min-width:45px;text-align:right;">幅度</span>
       </div>
       ${rowsHtml}
+      <div id="trade-log-area"></div>
     `;
     area.appendChild(portfolioDiv);
+
+    // 持仓行点击展开成交记录
+    setTimeout(function() {
+      var logArea = document.getElementById("trade-log-area");
+      portfolioDiv.querySelectorAll(".stock-holding-row").forEach(function(rw){
+        var sym = rw.dataset.symbol;
+        rw.onclick = function() {
+          if (this._expanded) {
+            this._expanded = false;
+            this.style.background = "transparent";
+            var existing = logArea.querySelector("[data-for-sym=\"" + sym + "\"]");
+            if (existing) existing.remove();
+            return;
+          }
+          this._expanded = true;
+          this.style.background = "rgba(0,180,216,0.08)";
+          var prev = logArea.querySelector("[data-for-sym=\"" + sym + "\"]");
+          if (prev) prev.remove();
+          var logs = (inv.tradeLog || []).filter(function(t){ return t.symbol === sym; });
+          if (logs.length === 0) return;
+          logs.sort(function(a,b){ return a.day - b.day; });
+          var logRows = "";
+          logs.forEach(function(t){
+            var isBuy = t.type === "buy";
+            var signText = isBuy ? "买入" : "卖出";
+            var clr = isBuy ? "var(--danger)" : "var(--success)";
+            var plHtml = "";
+            if (typeof t.pl === "number") {
+              var clr2 = t.pl >= 0 ? "var(--danger)" : "var(--success)";
+              var plSign = t.pl >= 0 ? "+" : "";
+              plHtml = ' <span style="color:' + clr2 + '">(' + plSign + "¥" + Math.round(t.pl) + ")</span>";
+            }
+            logRows += '<div style="display:flex;gap:8px;font-size:10px;color:var(--text-muted);padding:3px 0;border-bottom:1px dashed rgba(255,255,255,0.06);">';
+            logRows += '<span style="min-width:60px;">第' + t.day + '天</span>';
+            logRows += '<span style="min-width:30px;color:' + clr + ';font-weight:bold;">' + signText + '</span>';
+            logRows += '<span style="min-width:70px;text-align:right;">' + t.price.toFixed(2) + '¥/' + (t.unitLabel||"") + '</span>';
+            var qtyDec = (t.unitLabel && t.unitLabel !== "股") ? 4 : 0;
+            logRows += '<span style="min-width:50px;text-align:right;">×' + Number(t.quantity).toFixed(qtyDec) + '</span>';
+            logRows += '<span style="min-width:80px;text-align:right;">=' + ('¥' + Math.round(t.total).toLocaleString()) + '</span>';
+            logRows += plHtml + '</div>';
+          });
+          var div = document.createElement("div");
+          div.setAttribute("data-for-sym", sym);
+          div.style.cssText = "margin-top:6px;padding:8px;background:rgba(0,0,0,0.25);border-radius:6px;font-size:10px;";
+          div.innerHTML = '<div style="display:flex;gap:8px;font-size:9px;color:var(--text-muted);padding:2px 0 4px 0;border-bottom:1px solid var(--border);margin-bottom:2px;"><span style="min-width:60px;">日期</span><span style="min-width:30px;">操作</span><span style="min-width:70px;text-align:right;">单价</span><span style="min-width:50px;text-align:right;">数量</span><span style="min-width:80px;text-align:right;">金额</span></div>' + logRows;
+          logArea.appendChild(div);
+        };
+      });
+    }, 0);
   }
 
   var grid = document.createElement("div");

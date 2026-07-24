@@ -103,7 +103,85 @@ const GOOD_PHYSICS = {
   },
 };
 
-/** 获取商品物理属性（默认值兜底） */
+/** 装备/道具物理属性（ITEMS 中的物品，不走 GOOD_PHYSICS） */
+const ITEM_PHYSICS = {
+  // 食材——主食类
+  rice: { weight: 0.5, volume: 0.4, perishable: true, shelfLife: 30, fragile: false, tempSensitive: false },
+  flour: { weight: 0.5, volume: 0.5, perishable: true, shelfLife: 30, fragile: false, tempSensitive: false },
+  noodles: { weight: 0.3, volume: 0.3, perishable: true, shelfLife: 7, fragile: false, tempSensitive: false },
+  potato: { weight: 0.3, volume: 0.2, perishable: true, shelfLife: 14, fragile: false, tempSensitive: false },
+  // 食材——蔬菜类
+  bok_choy: { weight: 0.3, volume: 0.4, perishable: true, shelfLife: 5, fragile: true, tempSensitive: true },
+  cabbage: { weight: 0.4, volume: 0.5, perishable: true, shelfLife: 7, fragile: true, tempSensitive: false },
+  radish: { weight: 0.3, volume: 0.2, perishable: true, shelfLife: 10, fragile: false, tempSensitive: false },
+  tomato: { weight: 0.2, volume: 0.2, perishable: true, shelfLife: 5, fragile: true, tempSensitive: true },
+  cucumber: { weight: 0.2, volume: 0.2, perishable: true, shelfLife: 5, fragile: true, tempSensitive: true },
+  // 食材——肉类
+  pork: { weight: 0.4, volume: 0.3, perishable: true, shelfLife: 5, fragile: false, tempSensitive: true },
+  beef: { weight: 0.5, volume: 0.3, perishable: true, shelfLife: 5, fragile: false, tempSensitive: true },
+  chicken: { weight: 0.4, volume: 0.3, perishable: true, shelfLife: 5, fragile: false, tempSensitive: true },
+  fish: { weight: 0.4, volume: 0.3, perishable: true, shelfLife: 3, fragile: false, tempSensitive: true },
+  // 食材——调料类
+  salt: { weight: 0.3, volume: 0.2, perishable: false, fragile: false, tempSensitive: false },
+  soy_sauce: { weight: 0.5, volume: 0.3, perishable: false, fragile: true, tempSensitive: false },
+  cooking_oil: { weight: 0.5, volume: 0.3, perishable: false, fragile: true, tempSensitive: false },
+  sugar: { weight: 0.3, volume: 0.2, perishable: false, fragile: false, tempSensitive: false },
+  chili: { weight: 0.1, volume: 0.1, perishable: true, shelfLife: 7, fragile: false, tempSensitive: false },
+  // 食材——蛋奶类
+  egg: { weight: 0.05, volume: 0.05, perishable: true, shelfLife: 7, fragile: true, tempSensitive: true },
+  milk: { weight: 0.3, volume: 0.25, perishable: true, shelfLife: 5, fragile: false, tempSensitive: true },
+  // 装备——头部
+  straw_hat: { weight: 0.15, volume: 0.2, perishable: false, fragile: false, tempSensitive: false },
+  mask: { weight: 0.02, volume: 0.02, perishable: false, fragile: false, tempSensitive: false },
+  safety_helmet: { weight: 0.4, volume: 0.3, perishable: false, fragile: false, tempSensitive: false },
+  // 装备——身体
+  work_uniform: { weight: 0.3, volume: 0.2, perishable: false, fragile: false, tempSensitive: false },
+  warm_coat: { weight: 0.6, volume: 0.5, perishable: false, fragile: false, tempSensitive: false },
+  thermal_underwear: { weight: 0.2, volume: 0.15, perishable: false, fragile: false, tempSensitive: false },
+  raincoat: { weight: 0.3, volume: 0.25, perishable: false, fragile: false, tempSensitive: false },
+  reflective_vest: { weight: 0.15, volume: 0.1, perishable: false, fragile: false, tempSensitive: false },
+  // 装备——手部
+  work_gloves: { weight: 0.1, volume: 0.08, perishable: false, fragile: false, tempSensitive: false },
+  // 装备——脚部
+  sturdy_shoes: { weight: 0.4, volume: 0.3, perishable: false, fragile: false, tempSensitive: false },
+  work_boots: { weight: 0.6, volume: 0.4, perishable: false, fragile: false, tempSensitive: false },
+  // 装备——配件（背包类）
+  backpack: { weight: 0.5, volume: 0.6, perishable: false, fragile: false, tempSensitive: false },
+  backpack_basic: { weight: 0.3, volume: 0.4, perishable: false, fragile: false, tempSensitive: false },
+  backpack_large: { weight: 0.8, volume: 0.8, perishable: false, fragile: false, tempSensitive: false },
+  backpack_pro: { weight: 1.0, volume: 1.0, perishable: false, fragile: false, tempSensitive: false },
+  smartphone: { weight: 0.2, volume: 0.08, perishable: false, fragile: true, tempSensitive: false },
+  sunscreen: { weight: 0.1, volume: 0.08, perishable: false, fragile: false, tempSensitive: false },
+  thermos: { weight: 0.3, volume: 0.2, perishable: false, fragile: true, tempSensitive: true },
+  first_aid_kit: { weight: 0.4, volume: 0.3, perishable: false, fragile: false, tempSensitive: false },
+  pepper_spray: { weight: 0.1, volume: 0.05, perishable: false, fragile: false, tempSensitive: false },
+  power_bank: { weight: 0.2, volume: 0.1, perishable: false, fragile: true, tempSensitive: false },
+  laptop_bag: { weight: 0.5, volume: 0.4, perishable: false, fragile: false, tempSensitive: false },
+  smart_watch: { weight: 0.05, volume: 0.03, perishable: false, fragile: true, tempSensitive: false },
+  noise_cancelling_earphones: { weight: 0.2, volume: 0.15, perishable: false, fragile: true, tempSensitive: false },
+  // 道具
+  cert_exam_book: { weight: 0.4, volume: 0.3, perishable: false, fragile: false, tempSensitive: false },
+  memo_pad: { weight: 0.15, volume: 0.1, perishable: false, fragile: false, tempSensitive: false },
+  flashlight: { weight: 0.2, volume: 0.1, perishable: false, fragile: true, tempSensitive: false },
+  radio: { weight: 0.3, volume: 0.2, perishable: false, fragile: true, tempSensitive: false },
+  vitamins_item: { weight: 0.1, volume: 0.08, perishable: false, fragile: true, tempSensitive: false },
+  eye_drops: { weight: 0.05, volume: 0.03, perishable: false, fragile: true, tempSensitive: false },
+  back_massager: { weight: 0.3, volume: 0.2, perishable: false, fragile: false, tempSensitive: false },
+  lunch_box: { weight: 0.3, volume: 0.25, perishable: false, fragile: false, tempSensitive: false },
+  // 交通工具
+  bicycle: { weight: 12, volume: 10, perishable: false, fragile: false, tempSensitive: false },
+  folding_bike: { weight: 8, volume: 6, perishable: false, fragile: false, tempSensitive: false },
+  umbrella: { weight: 0.3, volume: 0.2, perishable: false, fragile: false, tempSensitive: false },
+};
+
+/** 获取任意物品的物理属性（优先 ITEM_PHYSICS，回落 GOOD_PHYSICS，再回落默认值） */
+function getItemPhysics(itemId) {
+  if (ITEM_PHYSICS[itemId]) return ITEM_PHYSICS[itemId];
+  if (GOOD_PHYSICS[itemId]) return GOOD_PHYSICS[itemId];
+  return { weight: 0.3, volume: 0.2, perishable: false, fragile: false, tempSensitive: false };
+}
+
+/** 获取商品物理属性（默认值兜底，仅用于 GOODS 商品） */
 function getGoodPhysics(goodId) {
   return (
     GOOD_PHYSICS[goodId] || {
@@ -309,7 +387,7 @@ function calcInventoryWeight(state) {
   var w = 0;
   var items = state.inventory.items || [];
   for (var i = 0; i < items.length; i++) {
-    var phys = getGoodPhysics(items[i].id);
+    var phys = getItemPhysics(items[i].id);
     w += phys.weight * items[i].qty;
   }
   return w;
@@ -319,7 +397,7 @@ function calcInventoryVolume(state) {
   var v = 0;
   var items = state.inventory.items || [];
   for (var i = 0; i < items.length; i++) {
-    var phys = getGoodPhysics(items[i].id);
+    var phys = getItemPhysics(items[i].id);
     v += phys.volume * items[i].qty;
   }
   return v;
@@ -358,7 +436,7 @@ function getEncumbranceMovePenalty(state) {
 
 /** 检查能否装入更多商品 */
 function canCarryMore(state, goodId, qty) {
-  var phys = getGoodPhysics(goodId);
+  var phys = getItemPhysics(goodId);
   var addedWeight = phys.weight * qty;
   var addedVolume = phys.volume * qty;
   var currentWeight = calcInventoryWeight(state);
@@ -458,7 +536,7 @@ function hireTransport(serviceId, goods, destKey) {
       StateManager.addMessage("⚠️ 背包中" + good.name + "不足。", "danger");
       return false;
     }
-    var phys = getGoodPhysics(g.goodId);
+    var phys = getItemPhysics(g.goodId);
     totalQty += g.qty;
     totalWeight += phys.weight * g.qty;
     totalVolume += phys.volume * g.qty;
@@ -655,7 +733,7 @@ function tickPerishableGoods(state) {
   var spoiled = [];
   for (var i = 0; i < state.inventory.items.length; i++) {
     var item = state.inventory.items[i];
-    var phys = getGoodPhysics(item.id);
+    var phys = getItemPhysics(item.id);
     if (!phys.perishable) continue;
     if (!item.buyDay) item.buyDay = state.player.day;
     var daysHeld = state.player.day - item.buyDay;
@@ -665,7 +743,7 @@ function tickPerishableGoods(state) {
     }
   }
   state.inventory.items = state.inventory.items.filter(function (item) {
-    var phys = getGoodPhysics(item.id);
+    var phys = getItemPhysics(item.id);
     if (!phys.perishable) return true;
     if (!item.buyDay) {
       item.buyDay = state.player.day;
@@ -681,7 +759,7 @@ function tickPerishableGoods(state) {
         state.inventory.storage[locKey] = state.inventory.storage[
           locKey
         ].filter(function (item) {
-          var phys = getGoodPhysics(item.id);
+          var phys = getItemPhysics(item.id);
           if (!phys.perishable) return true;
           if (!item.buyDay) {
             item.buyDay = state.player.day;
@@ -702,14 +780,36 @@ function tickPerishableGoods(state) {
   }
 }
 
+/** 获取所有车辆的载货总容量（kg） */
+function getVehicleCargoCapacity(state) {
+  var cars = state.investment && state.investment.cars ? state.investment.cars : [];
+  var total = 0;
+  for (var i = 0; i < cars.length; i++) {
+    total += cars[i].cargoCapacity || 0;
+  }
+  return total;
+}
+
+/** 获取所有车辆的载货总体积（L） */
+function getVehicleCargoVolume(state) {
+  var cars = state.investment && state.investment.cars ? state.investment.cars : [];
+  var total = 0;
+  for (var i = 0; i < cars.length; i++) {
+    total += cars[i].cargoVolume || 0;
+  }
+  return total;
+}
+
 // 全局导出
 if (typeof window !== "undefined") {
   Object.assign(window, {
     GOOD_PHYSICS: GOOD_PHYSICS,
+    ITEM_PHYSICS: ITEM_PHYSICS,
     CONTAINER_TYPES: CONTAINER_TYPES,
     ENCUMBRANCE_TIERS: ENCUMBRANCE_TIERS,
     TRANSPORT_SERVICES: TRANSPORT_SERVICES,
     getGoodPhysics: getGoodPhysics,
+    getItemPhysics: getItemPhysics,
     getContainerType: getContainerType,
     calcEncumbrance: calcEncumbrance,
     canCarryMore: canCarryMore,
@@ -723,5 +823,7 @@ if (typeof window !== "undefined") {
     retrieveFromStorage: retrieveFromStorage,
     getTransportService: getTransportService,
     tickPerishableGoods: tickPerishableGoods,
+    getVehicleCargoCapacity: getVehicleCargoCapacity,
+    getVehicleCargoVolume: getVehicleCargoVolume,
   });
 }

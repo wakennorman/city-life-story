@@ -1438,6 +1438,9 @@ const DAILY_PIPELINE = [
           StateManager.addMessage(
             "🔥 今日热招：" +
               hotJob.name +
+              (LOCATIONS[hotJob.location]
+                ? "（" + LOCATIONS[hotJob.location].name + "）"
+                : "") +
               "！工价×" +
               bonusMult.toFixed(1) +
               "，仅限今天！",

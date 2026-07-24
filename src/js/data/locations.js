@@ -163,6 +163,7 @@ const LOCATIONS = {
       "shop_assistant", // [全系统自洽修复] 域C 修复:A1 导购员(销售分支)加入商业区
       "procurement_clerk", // [全系统自洽修复] 域C 修复:A1 采购员(销售分支)加入商业区
       "courier_gig", // [全系统自洽修复] 域C 修复:A1 跑腿零工加入商业区
+	      "logistics_driver", // 物流专职司机（老李的名片→外卖骑手转职）
     ],
     priceMod: {
       water: 1.1,

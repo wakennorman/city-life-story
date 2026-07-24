@@ -1249,6 +1249,9 @@ var TAB_RENDERERS = {
   // 💼 事业 — 经济面板（工作/投资/副业/创业/企业命运）
   career: { fnName: "renderCareerTab", fallback: "💼 事业加载中..." },
 
+  // 💰 财务 — 收支明细、资产负债、财务趋势
+  finance: { fnName: "renderFinanceTab", fallback: "💰 财务加载中..." },
+
   // 📖 百科 — 信息面板（百科/NPC社交/成就/叙事）
   wiki: { fnName: "renderWikiTab", fallback: "📖 百科加载中..." },
 };

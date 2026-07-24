@@ -2856,7 +2856,6 @@ function renderTradeTab(state, parent) {
     </div>
     <div style="text-align:right;">
       <span style="font-size:11px;color:var(--text-muted);">现金: <strong style="color:var(--success)">¥${(state.resources && state.resources.cash ? state.resources.cash : 0).toLocaleString()}</strong></span>
-      ${(state.trade && state.trade.totalProfit ? '<div style="font-size:10px;color:var(--text-muted);margin-top:1px;">📈 累计利润: <strong style="' + (state.trade.totalProfit > 0 ? 'color:var(--success)' : 'color:var(--danger)') + ';">¥' + (state.trade.totalProfit || 0).toLocaleString() + '</strong></div>' : '')}
       ${(function() {
         var activeEvents = 0;
         if (state.trade && state.trade.marketEvents) {
@@ -3793,8 +3792,21 @@ function renderInventoryTab(state, parent) {
       <span style="font-size:10px;color:var(--text-muted);margin-left:8px;">
         负重 ${totalWeight}/${maxCarry}kg
       </span>
+      <span id="encumbrance-tier" style="font-size:10px;margin-left:6px;font-weight:600;"></span>
     </h3>
   `;
+  // 负重等级展示（JS 动态更新颜色）
+  var tierSpan = div.querySelector("#encumbrance-tier");
+  if (tierSpan && encumbranceTier) {
+    var tn = encumbranceTier.name;
+    var tc = "var(--text-muted)";
+    if (tn === "略重") tc = "#ff9800";
+    else if (tn === "沉重") tc = "#ff5722";
+    else if (tn === "超载") tc = "#f44336";
+    else if (tn === "极限") tc = "#d32f2f";
+    tierSpan.textContent = "[" + tn + "]" + (encumbranceTier.apPenalty > 0 ? " (AP-" + encumbranceTier.apPenalty + ")" : "");
+    tierSpan.style.color = tc;
+  }
 
   const items = state.inventory && state.inventory.items ? state.inventory.items : []; // [全系统自洽修复] 域F A类: state.inventory 守卫
   if (items.length === 0) {
@@ -4002,7 +4014,49 @@ function renderInventoryTab(state, parent) {
   equipDiv.appendChild(equipGrid);
   div.appendChild(equipDiv);
 
+  // === 仓库管理（当前地点仓库） ===
+  var locKey = state.trade && state.trade.currentLocation;
+  var storage = state.inventory && state.inventory.storage ? state.inventory.storage[locKey] : null;
+  if (storage && storage.length > 0) {
+    var storageDiv = document.createElement("div");
+    storageDiv.style.cssText = "margin-top:12px;";
+    storageDiv.innerHTML = '<h4 style="font-size:13px;color:var(--text-muted);margin-bottom:6px;">📦 当地仓库 (' + locKey + ')</h4>';
+    var storageGrid = document.createElement("div");
+    storageGrid.style.cssText = "display:flex;flex-wrap:wrap;gap:6px;";
+    storage.forEach(function (sItem) {
+      var goodDef = (typeof getGoodById === "function") ? getGoodById(sItem.id) : null;
+      var itemDef = (typeof getItemById === "function") ? getItemById(sItem.id) : null;
+      var sName = goodDef ? goodDef.name : (itemDef ? itemDef.name : sItem.id);
+      var sIcon = itemDef ? (itemDef.icon || "📦") : "📦";
+      var card = document.createElement("div");
+      card.style.cssText = "background:var(--bg-card);border:1px solid var(--border);border-radius:6px;padding:6px 10px;font-size:11px;display:flex;align-items:center;gap:6px;";
+      card.innerHTML = '<span>' + sIcon + ' ' + sName + ' ×' + sItem.qty + '</span>' +
+        '<button class="storage-retrieve-btn" data-good="' + sItem.id + '" style="padding:2px 8px;font-size:10px;border:1px solid var(--accent);border-radius:4px;background:transparent;color:var(--accent);cursor:pointer;">取出</button>';
+      storageGrid.appendChild(card);
+    });
+    storageDiv.appendChild(storageGrid);
+    div.appendChild(storageDiv);
+  }
+
   parent.appendChild(div);
+
+  // 绑定仓库取出按钮
+  setTimeout(function () {
+    parent.querySelectorAll(".storage-retrieve-btn").forEach(function (btn) {
+      btn.addEventListener("click", function (e) {
+        e.stopPropagation();
+        var goodId = btn.dataset.good;
+        if (typeof retrieveFromStorage === "function") {
+          retrieveFromStorage(goodId, 1);
+          var st = StateManager.getState();
+          renderCurrentTab(st);
+          renderSidebar(st);
+          renderHeader(st);
+          renderMessageLog(st);
+        }
+      });
+    });
+  }, 0);
 }
 
 // ====== Skills Tab ======
@@ -6594,4 +6648,153 @@ function _renderSupplyDemandTag(state, goodId) {
   if (sd < -15) return '<span style="color:var(--success);font-size:10px;margin-left:4px;">📉 供过于求</span>';
   if (sd < -5) return '<span style="color:var(--info);font-size:10px;margin-left:4px;">📉 供给过剩</span>';
   return "";
+}
+
+// ====== 💰 财务 Tab — 收支明细、资产负债、财务趋势 ======
+function renderFinanceTab(state, parent) {
+  parent.innerHTML = "";
+  var div = document.createElement("div");
+  div.style.cssText = "display:flex;flex-direction:column;gap:12px;";
+
+  var r = state.resources || {};
+  var cash = r.cash || 0;
+  var bankBalance = r.bankBalance || 0;
+  var villageDebt = r.villageDebt || 0;
+  var bankDebt = r.bankDebt || 0;
+  var totalDebt = villageDebt + bankDebt;
+  var netWorth = cash + bankBalance - totalDebt;
+  var txs = state.flags._dailyTransactions || [];
+
+  // === 总览区 ===
+  var overview = document.createElement("div");
+  overview.style.cssText = "display:grid;grid-template-columns:repeat(4,1fr);gap:8px;";
+  var statBoxes = [
+    { label: "💰 现金", value: "¥" + cash.toLocaleString(), color: "var(--success)" },
+    { label: "🏦 储蓄", value: "¥" + bankBalance.toLocaleString(), color: "#4fc3f7" },
+    { label: "💸 负债", value: "¥" + totalDebt.toLocaleString(), color: totalDebt > 0 ? "var(--danger)" : "var(--text-muted)" },
+    { label: "📊 净资产", value: "¥" + netWorth.toLocaleString(), color: netWorth >= 0 ? "var(--success)" : "var(--danger)" },
+  ];
+  statBoxes.forEach(function (box) {
+    var card = document.createElement("div");
+    card.style.cssText = "background:var(--bg-card);border:1px solid var(--border);border-radius:8px;padding:10px 12px;text-align:center;";
+    var labelEl = document.createElement("div");
+    labelEl.style.cssText = "font-size:11px;color:var(--text-muted);margin-bottom:4px;";
+    labelEl.textContent = box.label;
+    var valEl = document.createElement("div");
+    valEl.style.cssText = "font-size:16px;font-weight:700;color:" + box.color + ";";
+    valEl.textContent = box.value;
+    card.appendChild(labelEl);
+    card.appendChild(valEl);
+    overview.appendChild(card);
+  });
+  div.appendChild(overview);
+
+  // === 今日收支明细 ===
+  var sectionTitle = document.createElement("h3");
+  sectionTitle.style.cssText = "margin:8px 0 4px;font-size:14px;color:var(--text-primary);";
+  sectionTitle.textContent = "📋 今日收支明细";
+  div.appendChild(sectionTitle);
+
+  if (txs.length === 0) {
+    var empty = document.createElement("div");
+    empty.style.cssText = "padding:20px;text-align:center;color:var(--text-muted);font-size:13px;background:var(--bg-card);border:1px dashed var(--border);border-radius:8px;";
+    empty.textContent = "今天还没有收支记录，开始行动吧！";
+    div.appendChild(empty);
+  } else {
+    // 分组：收入 vs 支出
+    var incomeTxs = [];
+    var expenseTxs = [];
+    txs.forEach(function (t) {
+      if (t.type === "income") incomeTxs.push(t);
+      else expenseTxs.push(t);
+    });
+
+    // 统计
+    var totalIncome = incomeTxs.reduce(function (s, t) { return s + (t.amount || 0); }, 0);
+    var totalExpense = expenseTxs.reduce(function (s, t) { return s + (t.amount || 0); }, 0);
+    var netIncome = totalIncome - totalExpense;
+
+    // 净收入概览
+    var netRow = document.createElement("div");
+    netRow.style.cssText = "display:flex;justify-content:space-between;padding:6px 10px;background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:6px;font-size:12px;margin-bottom:6px;";
+    netRow.innerHTML = '<span style="color:var(--text-muted);">净收入</span><span style="font-weight:700;color:' + (netIncome >= 0 ? "var(--success)" : "var(--danger)") + ';">' + (netIncome >= 0 ? "+" : "") + "¥" + netIncome.toLocaleString() + "</span>";
+    div.appendChild(netRow);
+
+    // 收入列表
+    if (incomeTxs.length > 0) {
+      var incTitle = document.createElement("div");
+      incTitle.style.cssText = "font-size:12px;color:var(--success);font-weight:600;margin-bottom:4px;";
+      incTitle.textContent = "🟢 收入 (" + incomeTxs.length + "笔) 合计 ¥" + totalIncome.toLocaleString();
+      div.appendChild(incTitle);
+
+      incomeTxs.forEach(function (t) {
+        var catLabel = (typeof getCategoryLabel === "function") ? getCategoryLabel(t.category) : t.category;
+        var catIcon = (typeof getCategoryIcon === "function") ? getCategoryIcon(t.category) : "💰";
+        var row = document.createElement("div");
+        row.style.cssText = "display:flex;justify-content:space-between;align-items:center;padding:4px 8px;background:rgba(76,175,80,0.04);border-radius:4px;font-size:12px;margin-bottom:2px;";
+        row.innerHTML = '<span style="color:var(--text-secondary);">' + catIcon + " " + catLabel + " — " + (t.description || "") + '</span><span style="color:var(--success);font-weight:600;">+¥' + (t.amount || 0).toLocaleString() + "</span>";
+        div.appendChild(row);
+      });
+    }
+
+    // 支出列表
+    if (expenseTxs.length > 0) {
+      var expTitle = document.createElement("div");
+      expTitle.style.cssText = "font-size:12px;color:var(--danger);font-weight:600;margin:6px 0 4px;";
+      expTitle.textContent = "🔴 支出 (" + expenseTxs.length + "笔) 合计 ¥" + totalExpense.toLocaleString();
+      div.appendChild(expTitle);
+
+      expenseTxs.forEach(function (t) {
+        var catLabel = (typeof getCategoryLabel === "function") ? getCategoryLabel(t.category) : t.category;
+        var catIcon = (typeof getCategoryIcon === "function") ? getCategoryIcon(t.category) : "💸";
+        var row = document.createElement("div");
+        row.style.cssText = "display:flex;justify-content:space-between;align-items:center;padding:4px 8px;background:rgba(244,67,54,0.04);border-radius:4px;font-size:12px;margin-bottom:2px;";
+        row.innerHTML = '<span style="color:var(--text-secondary);">' + catIcon + " " + catLabel + " — " + (t.description || "") + '</span><span style="color:var(--danger);font-weight:600;">-¥' + (t.amount || 0).toLocaleString() + "</span>";
+        div.appendChild(row);
+      });
+    }
+  }
+
+  // === 历史趋势（近30天）===
+  var hist = state.history || {};
+  var incomeHist = hist.income || [];
+  var expenseHist = hist.expense || [];
+  if (incomeHist.length > 0 || expenseHist.length > 0) {
+    var trendTitle = document.createElement("h3");
+    trendTitle.style.cssText = "margin:12px 0 4px;font-size:14px;color:var(--text-primary);";
+    trendTitle.textContent = "📈 近30日收支趋势";
+    div.appendChild(trendTitle);
+
+    // 取最近30天
+    var recentDays = Math.min(30, incomeHist.length, expenseHist.length);
+    var startIdx = Math.max(0, incomeHist.length - 30);
+    var maxVal = 0;
+    for (var i = startIdx; i < incomeHist.length; i++) {
+      maxVal = Math.max(maxVal, incomeHist[i] || 0, expenseHist[i] || 0);
+    }
+    if (maxVal < 1) maxVal = 1;
+
+    var chartContainer = document.createElement("div");
+    chartContainer.style.cssText = "display:flex;align-items:flex-end;gap:2px;height:100px;padding:8px 4px;background:var(--bg-card);border:1px solid var(--border);border-radius:8px;overflow-x:auto;";
+
+    for (var ci = startIdx; ci < incomeHist.length; ci++) {
+      var dayCol = document.createElement("div");
+      dayCol.style.cssText = "display:flex;flex-direction:column;align-items:center;gap:1px;flex-shrink:0;";
+
+      var incBar = incomeHist[ci] || 0;
+      var expBar = expenseHist[ci] || 0;
+      var incH = Math.round((incBar / maxVal) * 70);
+      var expH = Math.round((expBar / maxVal) * 70);
+      if (incH < 1 && incBar > 0) incH = 1;
+      if (expH < 1 && expBar > 0) expH = 1;
+
+      dayCol.innerHTML = '<div style="width:8px;height:' + incH + 'px;background:var(--success);border-radius:1px 1px 0 0;" title="收入 ¥' + incBar.toLocaleString() + '"></div>' +
+        '<div style="width:8px;height:' + expH + 'px;background:var(--danger);border-radius:0 0 1px 1px;" title="支出 ¥' + expBar.toLocaleString() + '"></div>' +
+        '<span style="font-size:7px;color:var(--text-muted);margin-top:2px;">D' + (ci + 1) + '</span>';
+      chartContainer.appendChild(dayCol);
+    }
+    div.appendChild(chartContainer);
+  }
+
+  parent.appendChild(div);
 }
