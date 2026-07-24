@@ -352,7 +352,7 @@ function proposeToNpc(state, npcId) {
     return { success: false, message: "至少需要¥20,000现金准备求婚和登记" };
   }
 
-  state.resources.cash -= ceremonyCost;
+  state.resources.cash = Math.max(0, (state.resources.cash || 0) - ceremonyCost);
   var partnerTypeKeys = Object.keys(SPOUSE_TYPES);
   var typeKey = Random.fromArray(partnerTypeKeys);
   var typeData = SPOUSE_TYPES[typeKey];
@@ -506,7 +506,7 @@ function goDating(state, eventId) {
     return { success: false, message: `现金不足，需要¥${cost}` };
   }
 
-  state.resources.cash -= cost;
+  state.resources.cash = Math.max(0, (state.resources.cash || 0) - cost);
 
   // 计算成功率（基础成功率 + 关系加成）
   const relationshipBonus = (target.relationship / 100) * 0.3;
@@ -585,7 +585,7 @@ function getMarried(state) {
     return { success: false, message: `婚礼需要¥${weddingCost}，现金不足` };
   }
 
-  state.resources.cash -= weddingCost;
+  state.resources.cash = Math.max(0, (state.resources.cash || 0) - weddingCost);
 
   state.family.spouse = {
     name: target.name,
@@ -625,7 +625,7 @@ function haveChild(state) {
     return { success: false, message: `生育需要¥${birthCost}，现金不足` };
   }
 
-  state.resources.cash -= birthCost;
+  state.resources.cash = Math.max(0, (state.resources.cash || 0) - birthCost);
 
   const names = [
     "宝宝",
@@ -707,7 +707,7 @@ function investChildEducation(state, childId) {
     return { success: false, message: "教育投入需要¥" + cost.toLocaleString() };
   }
 
-  state.resources.cash -= cost;
+  state.resources.cash = Math.max(0, (state.resources.cash || 0) - cost);
   child.educationLevel = currentLevel + 1;
   child.education = getChildEducationName(child.educationLevel);
   child.intelligence = Math.min(100, (child.intelligence || 50) + 3);
@@ -902,7 +902,7 @@ function accompanyParents(state, parentKey) {
     return { success: false, message: "行动力不足" };
   }
 
-  state.player.actionPoints -= AP_COST;
+  state.player.actionPoints = Math.max(0, (state.player.actionPoints || 0) - AP_COST);
 
   const healthState = PARENT_HEALTH_STATES[parent.health];
   parent.companionshipDays = (parent.companionshipDays || 0) + 1;
@@ -933,7 +933,7 @@ function takeParentToHospital(state, parentKey) {
     };
   }
 
-  state.resources.cash -= cost;
+  state.resources.cash = Math.max(0, (state.resources.cash || 0) - cost);
 
   // 治疗成功，健康改善
   const healthOrder = [
@@ -1034,8 +1034,8 @@ function doFamilyActivity(state, activityId) {
     return { success: false, message: `需要¥${cost}，现金不足` };
   }
 
-  state.player.actionPoints -= activity.apCost;
-  state.resources.cash -= cost;
+  state.player.actionPoints = Math.max(0, (state.player.actionPoints || 0) - activity.apCost);
+  state.resources.cash = Math.max(0, (state.resources.cash || 0) - cost);
 
   // 应用效果
   if (state.family.spouse) {

@@ -193198,7 +193198,7 @@ function hireTeamMember(memberTypeId) {
     return false;
   }
 
-  state.resources.cash -= cost;
+  state.resources.cash = Math.max(0, (state.resources.cash || 0) - cost);
 
   // 创建成员（加入随机性，[自洽修复] 域H A类#1: clamp loyalty/productivity 防负值）
   const member = {
@@ -215797,7 +215797,7 @@ function chatWithColleague(state, colleagueId) {
     return { success: false, message: "行动力不足" };
   }
 
-  state.player.actionPoints -= AP_COST;
+  state.player.actionPoints = Math.max(0, (state.player.actionPoints || 0) - AP_COST);
 
   // 随机聊天内容
   const topics = [
@@ -217800,7 +217800,7 @@ function proposeToNpc(state, npcId) {
     return { success: false, message: "至少需要¥20,000现金准备求婚和登记" };
   }
 
-  state.resources.cash -= ceremonyCost;
+  state.resources.cash = Math.max(0, (state.resources.cash || 0) - ceremonyCost);
   var partnerTypeKeys = Object.keys(SPOUSE_TYPES);
   var typeKey = Random.fromArray(partnerTypeKeys);
   var typeData = SPOUSE_TYPES[typeKey];
@@ -217954,7 +217954,7 @@ function goDating(state, eventId) {
     return { success: false, message: `现金不足，需要¥${cost}` };
   }
 
-  state.resources.cash -= cost;
+  state.resources.cash = Math.max(0, (state.resources.cash || 0) - cost);
 
   // 计算成功率（基础成功率 + 关系加成）
   const relationshipBonus = (target.relationship / 100) * 0.3;
@@ -218033,7 +218033,7 @@ function getMarried(state) {
     return { success: false, message: `婚礼需要¥${weddingCost}，现金不足` };
   }
 
-  state.resources.cash -= weddingCost;
+  state.resources.cash = Math.max(0, (state.resources.cash || 0) - weddingCost);
 
   state.family.spouse = {
     name: target.name,
@@ -218073,7 +218073,7 @@ function haveChild(state) {
     return { success: false, message: `生育需要¥${birthCost}，现金不足` };
   }
 
-  state.resources.cash -= birthCost;
+  state.resources.cash = Math.max(0, (state.resources.cash || 0) - birthCost);
 
   const names = [
     "宝宝",
@@ -218155,7 +218155,7 @@ function investChildEducation(state, childId) {
     return { success: false, message: "教育投入需要¥" + cost.toLocaleString() };
   }
 
-  state.resources.cash -= cost;
+  state.resources.cash = Math.max(0, (state.resources.cash || 0) - cost);
   child.educationLevel = currentLevel + 1;
   child.education = getChildEducationName(child.educationLevel);
   child.intelligence = Math.min(100, (child.intelligence || 50) + 3);
@@ -218350,7 +218350,7 @@ function accompanyParents(state, parentKey) {
     return { success: false, message: "行动力不足" };
   }
 
-  state.player.actionPoints -= AP_COST;
+  state.player.actionPoints = Math.max(0, (state.player.actionPoints || 0) - AP_COST);
 
   const healthState = PARENT_HEALTH_STATES[parent.health];
   parent.companionshipDays = (parent.companionshipDays || 0) + 1;
@@ -218381,7 +218381,7 @@ function takeParentToHospital(state, parentKey) {
     };
   }
 
-  state.resources.cash -= cost;
+  state.resources.cash = Math.max(0, (state.resources.cash || 0) - cost);
 
   // 治疗成功，健康改善
   const healthOrder = [
@@ -218482,8 +218482,8 @@ function doFamilyActivity(state, activityId) {
     return { success: false, message: `需要¥${cost}，现金不足` };
   }
 
-  state.player.actionPoints -= activity.apCost;
-  state.resources.cash -= cost;
+  state.player.actionPoints = Math.max(0, (state.player.actionPoints || 0) - activity.apCost);
+  state.resources.cash = Math.max(0, (state.resources.cash || 0) - cost);
 
   // 应用效果
   if (state.family.spouse) {
@@ -219202,8 +219202,8 @@ function practiceHobby(state, hobbyId) {
     return { success: false, message: `需要¥${cost}，现金不足` };
   }
 
-  state.player.actionPoints -= hobby.baseAP;
-  state.resources.cash -= cost;
+  state.player.actionPoints = Math.max(0, (state.player.actionPoints || 0) - hobby.baseAP);
+  state.resources.cash = Math.max(0, (state.resources.cash || 0) - cost);
 
   // 更新爱好等级
   if (!state.personalGrowth.hobbies[hobbyId]) {
@@ -219368,7 +219368,7 @@ function healthCheckup(state) {
     return { success: false, message: `体检需要¥${cost}，现金不足` };
   }
 
-  state.resources.cash -= cost;
+  state.resources.cash = Math.max(0, (state.resources.cash || 0) - cost);
 
   const pg = state.personalGrowth;
   const day = state.player.day;
@@ -219417,7 +219417,7 @@ function 心理咨询(state) {
     return { success: false, message: `心理咨询需要¥${cost}，现金不足` };
   }
 
-  state.resources.cash -= cost;
+  state.resources.cash = Math.max(0, (state.resources.cash || 0) - cost);
 
   const pg = state.personalGrowth;
   pg.psychology.stress = Math.max(0, pg.psychology.stress - 10);
@@ -219470,7 +219470,7 @@ function improveImage(state, dimension, method) {
     return { success: false, message: `需要¥${methodData.cost}，现金不足` };
   }
 
-  state.resources.cash -= methodData.cost;
+  state.resources.cash = Math.max(0, (state.resources.cash || 0) - methodData.cost);
 
   pg.image[dimension] = Math.min(100, dimValue + methodData.gain);
 
@@ -219568,7 +219568,7 @@ function readBook(state, bookTitle) {
     return { success: false, message: "需要15点行动力" };
   }
 
-  state.player.actionPoints -= 15;
+  state.player.actionPoints = Math.max(0, (state.player.actionPoints || 0) - 15);
 
   pg.reading.booksRead++;
   pg.reading.booksThisYear++;

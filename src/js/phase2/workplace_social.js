@@ -660,7 +660,7 @@ function chatWithColleague(state, colleagueId) {
     return { success: false, message: "行动力不足" };
   }
 
-  state.player.actionPoints -= AP_COST;
+  state.player.actionPoints = Math.max(0, (state.player.actionPoints || 0) - AP_COST);
 
   // 随机聊天内容
   const topics = [

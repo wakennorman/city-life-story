@@ -586,8 +586,8 @@ function practiceHobby(state, hobbyId) {
     return { success: false, message: `需要¥${cost}，现金不足` };
   }
 
-  state.player.actionPoints -= hobby.baseAP;
-  state.resources.cash -= cost;
+  state.player.actionPoints = Math.max(0, (state.player.actionPoints || 0) - hobby.baseAP);
+  state.resources.cash = Math.max(0, (state.resources.cash || 0) - cost);
 
   // 更新爱好等级
   if (!state.personalGrowth.hobbies[hobbyId]) {
@@ -752,7 +752,7 @@ function healthCheckup(state) {
     return { success: false, message: `体检需要¥${cost}，现金不足` };
   }
 
-  state.resources.cash -= cost;
+  state.resources.cash = Math.max(0, (state.resources.cash || 0) - cost);
 
   const pg = state.personalGrowth;
   const day = state.player.day;
@@ -801,7 +801,7 @@ function 心理咨询(state) {
     return { success: false, message: `心理咨询需要¥${cost}，现金不足` };
   }
 
-  state.resources.cash -= cost;
+  state.resources.cash = Math.max(0, (state.resources.cash || 0) - cost);
 
   const pg = state.personalGrowth;
   pg.psychology.stress = Math.max(0, pg.psychology.stress - 10);
@@ -854,7 +854,7 @@ function improveImage(state, dimension, method) {
     return { success: false, message: `需要¥${methodData.cost}，现金不足` };
   }
 
-  state.resources.cash -= methodData.cost;
+  state.resources.cash = Math.max(0, (state.resources.cash || 0) - methodData.cost);
 
   pg.image[dimension] = Math.min(100, dimValue + methodData.gain);
 
@@ -952,7 +952,7 @@ function readBook(state, bookTitle) {
     return { success: false, message: "需要15点行动力" };
   }
 
-  state.player.actionPoints -= 15;
+  state.player.actionPoints = Math.max(0, (state.player.actionPoints || 0) - 15);
 
   pg.reading.booksRead++;
   pg.reading.booksThisYear++;

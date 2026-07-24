@@ -35,7 +35,7 @@ function hireTeamMember(memberTypeId) {
     return false;
   }
 
-  state.resources.cash -= cost;
+  state.resources.cash = Math.max(0, (state.resources.cash || 0) - cost);
 
   // 创建成员（加入随机性，[自洽修复] 域H A类#1: clamp loyalty/productivity 防负值）
   const member = {
