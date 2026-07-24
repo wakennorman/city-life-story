@@ -114,15 +114,15 @@
           hint: "高风险高回报",
           cost: 3000,
           apply: (st) => {
-            if (st.resources.cash < 3000) {
+            if ((st.resources.cash || 0) < 3000) {
               StateManager.addMessage("💰 钱不够！", "warning");
               return;
             }
-            st.resources.cash -= 3000;
+            st.resources.cash = Math.max(0, (st.resources.cash || 0) - 3000);
             const success = Random.chance(0.7);
             if (success) {
               const profit = Random.int(4000, 5999);
-              st.resources.cash += profit;
+              st.resources.cash = (st.resources.cash || 0) + profit;
               st.needs.happiness = Math.min(100, st.needs.happiness + 12);
               st.flags._insiderTradingWon = true;
               StateManager.addMessage(
@@ -162,15 +162,15 @@
           hint: "留条后路",
           cost: 1000,
           apply: (st) => {
-            if (st.resources.cash < 1000) {
+            if ((st.resources.cash || 0) < 1000) {
               StateManager.addMessage("💵 钱不够！", "warning");
               return;
             }
-            st.resources.cash -= 1000;
+            st.resources.cash = Math.max(0, (st.resources.cash || 0) - 1000);
             const success = Random.chance(0.7);
             if (success) {
               const profit = Random.int(1300, 1899);
-              st.resources.cash += profit;
+              st.resources.cash = (st.resources.cash || 0) + profit;
               st.needs.happiness = Math.min(100, st.needs.happiness + 6);
               StateManager.addMessage(
                 `💰 赌对了，小赚 ¥${profit - 1000}。`,
@@ -305,7 +305,7 @@
             const recovered = Random.chance(0.15);
             if (recovered) {
               const back = Random.int(300, 499);
-              st.resources.cash += back;
+              st.resources.cash = (st.resources.cash || 0) + back;
               StateManager.addMessage(
                 `🚔 警察立案了！居然追回了 ¥${back}，真是意外之喜。`,
                 "success",
@@ -338,7 +338,7 @@
               (st.player.corporate.risk || 0) + 5,
             );
             const extra = Random.int(50, 99);
-            st.resources.cash += extra;
+            st.resources.cash = (st.resources.cash || 0) + extra;
             st.resources.totalEarned += extra;
             StateManager.addMessage(
               `💪 加班加了一周，KPI+10，赚了 ¥${extra}。慢慢补回来。`,
@@ -519,7 +519,7 @@
           hint: "考验向上管理",
           apply: (st) => {
             if (st.player.corporate.upwardMgmt >= 40) {
-              st.resources.cash += 200;
+              st.resources.cash = (st.resources.cash || 0) + 200;
               st.player.corporate.popularity = Math.max(
                 0,
                 st.player.corporate.popularity - 2,
@@ -942,14 +942,14 @@
           apply: (st) => {
             const roll = Random.float(0, 1);
             if (roll < 0.05) {
-              st.resources.cash += 10000;
+              st.resources.cash = (st.resources.cash || 0) + 10000;
               st.needs.happiness = Math.min(100, st.needs.happiness + 20);
               StateManager.addMessage(
                 "🎰 中了大奖 ¥10,000！全场欢呼！",
                 "success",
               );
             } else if (roll < 0.3) {
-              st.resources.cash += 500;
+              st.resources.cash = (st.resources.cash || 0) + 500;
               StateManager.addMessage("🎰 中了小奖 ¥500。聊胜于无。", "info");
             } else {
               st.needs.happiness = Math.max(0, st.needs.happiness - 3);
@@ -1070,17 +1070,17 @@
           hint: "FOMO了",
           cost: 5000,
           apply: function (st) {
-            if (st.resources.cash >= 5000) {
-              st.resources.cash -= 5000;
+            if ((st.resources.cash || 0) >= 5000) {
+              st.resources.cash = Math.max(0, (st.resources.cash || 0) - 5000);
               if (Random.chance(0.3)) {
-                st.resources.cash += Random.int(8000, 22999);
+                st.resources.cash = (st.resources.cash || 0) + Random.int(8000, 22999);
                 st.needs.happiness = Math.min(100, st.needs.happiness + 20);
                 StateManager.addMessage(
                   "🚀 运气爆棚追涨成功！大赚了一笔！",
                   "success",
                 );
               } else if (Random.chance(0.5)) {
-                st.resources.cash += Random.int(3000, 6999);
+                st.resources.cash = (st.resources.cash || 0) + Random.int(3000, 6999);
                 StateManager.addMessage("🚀 小赚一点就跑了，还行。", "info");
               } else {
                 st.needs.happiness = Math.max(0, st.needs.happiness - 25);
@@ -1135,8 +1135,8 @@
           hint: "员工福利",
           cost: 4000,
           apply: function (st) {
-            if (st.resources.cash >= 4000) {
-              st.resources.cash -= 4000;
+            if ((st.resources.cash || 0) >= 4000) {
+              st.resources.cash = Math.max(0, (st.resources.cash || 0) - 4000);
               var inv = st.investment || {};
               inv.stockHoldings = inv.stockHoldings || [];
               inv.stockHoldings.push({
@@ -1162,8 +1162,8 @@
           hint: "试一试",
           cost: 800,
           apply: function (st) {
-            if (st.resources.cash >= 800) {
-              st.resources.cash -= 800;
+            if ((st.resources.cash || 0) >= 800) {
+              st.resources.cash = Math.max(0, (st.resources.cash || 0) - 800);
               var inv = st.investment || {};
               inv.stockHoldings = inv.stockHoldings || [];
               inv.stockHoldings.push({
@@ -1235,8 +1235,8 @@
           apply: function (st) {
             var inv = st.investment || {};
             var cost = Random.int(1000, 3999);
-            if (st.resources.cash >= cost) {
-              st.resources.cash -= cost;
+            if ((st.resources.cash || 0) >= cost) {
+              st.resources.cash = Math.max(0, (st.resources.cash || 0) - cost);
               inv.stockHoldings = inv.stockHoldings || [];
               var smic = inv.stockHoldings.find(function (x) {
                 return x.symbol === "SMIC";
@@ -1298,7 +1298,7 @@
                 inv.stockHoldings.splice(i, 1);
               }
             }
-            st.resources.cash += total;
+            st.resources.cash = (st.resources.cash || 0) + total;
             StateManager.addMessage(
               "📉 趁跌停前跑了，变现¥" +
                 Math.round(total).toLocaleString() +
@@ -1313,8 +1313,8 @@
           apply: function (st) {
             var inv = st.investment || {};
             var cost = 2000;
-            if (st.resources.cash >= 2000) {
-              st.resources.cash -= 2000;
+            if ((st.resources.cash || 0) >= 2000) {
+              st.resources.cash = Math.max(0, (st.resources.cash || 0) - 2000);
               inv.stockHoldings = inv.stockHoldings || [];
               var h = inv.stockHoldings.find(function (x) {
                 return x.symbol === "TSLA";
@@ -1370,8 +1370,8 @@
           apply: function (st) {
             var inv = st.investment || {};
             var cost = 3000;
-            if (st.resources.cash >= cost) {
-              st.resources.cash -= cost;
+            if ((st.resources.cash || 0) >= cost) {
+              st.resources.cash = Math.max(0, (st.resources.cash || 0) - cost);
               inv.btcHoldings = (inv.btcHoldings || 0) + 0.003;
               inv.btcAvgCost =
                 inv.btcHoldings > 0
@@ -1460,7 +1460,7 @@
           apply: function (st) {
             st.flags._founderOustSeen = true;
             st.flags._founderExited = true;
-            st.resources.cash += 150000;
+            st.resources.cash = (st.resources.cash || 0) + 150000;
             st.resources.totalEarned += 150000;
             if (st.player && st.player.corporate) {
               st.player.corporate.dignity = Math.min(
@@ -1618,7 +1618,7 @@
         return (
           hasObserved &&
           st.player.day >= triggerDay &&
-          st.resources.cash >= 100000 &&
+          (st.resources.cash || 0) >= 100000 &&
           !st.flags._founderBuybackSeen
         );
       },
@@ -1630,7 +1630,7 @@
           apply: function (st) {
             st.flags._founderBuybackSeen = true;
             st.flags._founderReclaimed = true;
-            st.resources.cash -= 300000;
+            st.resources.cash = Math.max(0, (st.resources.cash || 0) - 300000);
             if (st.player && st.player.corporate) {
               st.player.corporate.dignity = Math.min(
                 100,
@@ -1716,7 +1716,7 @@
             st.flags._fateCollapseSeen = true;
             st.flags._formerCompanyCollapsed = true;
             var severance = Random.int(50000, 69999);
-            st.resources.cash += severance;
+            st.resources.cash = (st.resources.cash || 0) + severance;
             st.resources.totalEarned += severance;
             st.player.mental = Math.max(0, st.player.mental - 5);
             StateManager.addMessage(
@@ -2756,8 +2756,8 @@
           hint: "¥50000保证金，合法但职业风险",
           apply: function (st) {
             st.flags._shortSelfSeen = true;
-            if (st.resources.cash >= 50000) {
-              st.resources.cash -= 50000;
+            if ((st.resources.cash || 0) >= 50000) {
+              st.resources.cash = Math.max(0, (st.resources.cash || 0) - 50000);
               st.flags._shortedOwnCompany = true;
               st.flags._shortDay = st.player.day;
               if (typeof scheduleChainEvent === "function") {
@@ -3024,7 +3024,7 @@
               );
             }
             st.player.fame = Math.max(0, (st.player.fame || 0) + fameGain);
-            st.resources.cash += 5000;
+            st.resources.cash = (st.resources.cash || 0) + 5000;
             st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 12);
             StateManager.addMessage(
               "🏆 你成功获得了晋升机会！老张拍了拍你的肩：'我没看错人。'",
@@ -3167,7 +3167,7 @@
             cost: 2000,
             apply: function (st) {
               st.flags._promotionGiftGiven = true;
-              st.resources.cash -= 2000;
+              st.resources.cash = Math.max(0, (st.resources.cash || 0) - 2000);
               st.player.corporate.popularity = Math.min(
                 100,
                 (st.player.corporate.popularity || 50) + 8,
