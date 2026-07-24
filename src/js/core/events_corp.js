@@ -1567,7 +1567,10 @@
               );
             }
             if (st.skills && st.skills.management) {
-              st.skills.management.exp = (st.skills.management.exp || 0) + 50;
+              // [全系统自洽修复] 域H 修复:.exp→.xp —— 技能经验规范字段为 .xp(全库统一,
+              // 如 events_corp.js:1104/1398 st.skills.coding.xp)，原写 .exp 写入不存在的属性，
+              // 提示文案承诺的"管理技能XP+50"被静默丢弃。
+              st.skills.management.xp = (st.skills.management.xp || 0) + 50;
             }
             StateManager.addMessage(
               "📚 上班划水，下班修炼。智力+8、能力+5，管理技能XP+50。你心里有了清晰的目标：等机会回来，把这地方再赢一次。",

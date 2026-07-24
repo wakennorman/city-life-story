@@ -1102,6 +1102,10 @@ function _applyStartupEffects(company, effects) {
     reputation: { clamp: true, min: 0, max: 100 },
     marketScore: { clamp: true, min: 0, max: 100 },
     technologyScore: { clamp: true, min: 0, max: 100 },
+    // [全系统自洽修复] 域H 修复:补 revenue 字段 —— mature_second_curve/consumer_viral 三个事件的
+    // effect.revenue(+30000/+200000/+100000) 因映射表遗漏被 `if(!rule)continue` 静默丢弃，
+    // 而 company.revenue 是 startup.js KPI/融资读取的真实字段(startup.js:1530/1753)，营收增益本应落地。
+    revenue: { clamp: true, min: 0, max: Infinity },
   };
   for (var key in effects) {
     if (!effects.hasOwnProperty(key) || key === "additionalEffect") continue;
