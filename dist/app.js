@@ -20541,7 +20541,7 @@ function registerNewsEventsToPool() {
                   }
                 }
                 if (metIds.length > 0) {
-                  var chosenNpc = metIds[Math.floor(Math.random() * metIds.length)];
+                  var chosenNpc = metIds[Random.int(0, metIds.length - 1)]; // [全系统自洽修复] 域A A类: Math.random→Random.int 种子化RNG
                   safeAffinityR183(st, chosenNpc, 2, "NPC市场行情分享");
                 }
               }
