@@ -328,7 +328,7 @@ var _SCENARIO_STEP_OVERRIDES = {
         <p style="color:var(--text-secondary);font-size:11px;">你有修理 Lv.25+焊接 Lv.25，技能单价远高于纯体力活。</p>
         <p style="color:var(--success);font-size:12px;margin-top:6px;">👆 直接点击高亮处的 <strong>工作卡片</strong> 继续</p>
       `,
-      highlight: "#content-area .action-cards:first-child",
+      highlight: "#content-area .action-cards .action-card:first-child",
       waitForClick: "#content-area .action-cards a, #content-area .action-card",
       hint: "行动卡片列表里的第一项就是你的第一个工作机会。",
     },
@@ -421,7 +421,7 @@ var _SCENARIO_STEP_OVERRIDES = {
         <p style="color:var(--text-secondary);font-size:11px;">你有编程 Lv.10+英语 Lv.18，灵活运用这些技能。</p>
         <p style="color:var(--success);font-size:12px;margin-top:6px;">👆 点击高亮处的 <strong>工作卡片</strong> 开始</p>
       `,
-      highlight: "#content-area .action-cards:first-child",
+      highlight: "#content-area .action-cards .action-card:first-child",
       waitForClick: "#content-area .action-cards a, #content-area .action-card",
       hint: "行动卡片列表里能看到当前地点所有可做的工作。",
     },
@@ -513,7 +513,7 @@ var _SCENARIO_STEP_OVERRIDES = {
         <p style="color:var(--text-secondary);font-size:11px;">工厂流水线稳定可靠，日结现金，适合起步。</p>
         <p style="color:var(--success);font-size:12px;margin-top:6px;">👆 点击高亮处的 <strong>工作卡片</strong> 开始</p>
       `,
-      highlight: "#content-area .action-cards:first-child",
+      highlight: "#content-area .action-cards .action-card:first-child",
       waitForClick: "#content-area .action-cards a, #content-area .action-card",
       hint: "行动卡片列表第一项就是你能做的工作。",
     },
@@ -607,7 +607,7 @@ var _SCENARIO_STEP_OVERRIDES = {
         <p style="color:var(--text-secondary);font-size:11px;">第一周不赚钱也没关系，你的任务是学习市场。</p>
         <p style="color:var(--success);font-size:12px;margin-top:6px;">👆 点击高亮处的 <strong>行动卡片</strong> 开始了解市场</p>
       `,
-      highlight: "#content-area .action-cards:first-child",
+      highlight: "#content-area .action-cards .action-card:first-child",
       waitForClick: "#content-area .action-cards a, #content-area .action-card",
       hint: "行动卡片列表里能找到当前可做的事。",
     },
@@ -699,7 +699,7 @@ var _SCENARIO_STEP_OVERRIDES = {
         <p style="color:var(--text-secondary);font-size:11px;">编程 Lv.30+管理 Lv.25 可以直接接单变现，不等入职。</p>
         <p style="color:var(--success);font-size:12px;margin-top:6px;">👆 点击高亮处的 <strong>工作卡片</strong> 开始</p>
       `,
-      highlight: "#content-area .action-cards:first-child",
+      highlight: "#content-area .action-cards .action-card:first-child",
       waitForClick: "#content-area .action-cards a, #content-area .action-card",
       hint: "你目前所在地点的行动卡片就在下方。",
     },
@@ -791,7 +791,7 @@ var _SCENARIO_STEP_OVERRIDES = {
         <p style="color:var(--text-secondary);font-size:11px;">有编程基础，可以优先找与IT相关的入门工作。</p>
         <p style="color:var(--success);font-size:12px;margin-top:6px;">👆 点击高亮处的 <strong>工作卡片</strong> 开始</p>
       `,
-      highlight: "#content-area .action-cards:first-child",
+      highlight: "#content-area .action-cards .action-card:first-child",
       waitForClick: "#content-area .action-cards a, #content-area .action-card",
       hint: "行动卡片就在下方，选择你能做的工作。",
     },

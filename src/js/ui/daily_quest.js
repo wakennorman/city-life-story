@@ -652,9 +652,9 @@
         "margin-top:7px;font-size:11px;color:var(--success);font-weight:600;";
       celebrate.textContent = "🎉 当前目标全部达成！继续前进，等待下一阶段。";
       card.appendChild(celebrate);
-      // 每日首次全达成给小额奖励
-      if (!state.flags._dailyQuestRewardCollected) {
-        state.flags._dailyQuestRewardCollected = true;
+      // [全系统自洽修复] 域F 修复: 每日目标奖金改为按天发放（原flag终身只触发一次，导致后续天数有庆祝无奖励）
+      if (state.flags._dailyQuestRewardCollectedDay !== state.player.day) {
+        state.flags._dailyQuestRewardCollectedDay = state.player.day;
         var reward = 50 + quests.length * 10;
         state.resources.cash = (state.resources.cash || 0) + reward;
         if (typeof addDailyTransaction === "function") {
