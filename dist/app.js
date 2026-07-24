@@ -250257,6 +250257,32 @@ if (typeof window !== "undefined") {
       }
     }
 
+    // === G→F 联动: 天气简报+出行建议 ===
+    if (state.weather && state.weather.current) {
+      var _w = state.weather.current;
+      var _weatherIcons = { sunny: "☀️", cloudy: "⛅", rainy: "🌧️", stormy: "⛈️", snowy: "❄️", foggy: "🌫️", hot: "🌞", cold_snap: "🥶", heatwave: "🔥", heavy_rain: "🌊", plum_rain: "🌦️" };
+      var _weatherNames = { sunny: "晴", cloudy: "多云", rainy: "雨", stormy: "暴风雨", snowy: "雪", foggy: "雾", hot: "热", cold_snap: "寒潮", heatwave: "酷暑", heavy_rain: "暴雨", plum_rain: "梅雨" };
+      var _wName = _weatherNames[_w] || _w;
+      var _wIcon = _weatherIcons[_w] || "🌤️";
+      var _weatherTip = document.createElement("div");
+      _weatherTip.style.cssText = "margin-bottom:6px;padding:4px 8px;background:rgba(99,179,237,0.05);border-radius:6px;font-size:10px;color:var(--text-muted);";
+      var _wd = typeof getWeatherWorkDesc === "function" ? getWeatherWorkDesc(state) : "";
+      _weatherTip.textContent = _wIcon + " " + _wName + (_wd ? " · " + _wd : "");
+      card.appendChild(_weatherTip);
+    }
+    // === G→F 联动: 时间/行动力状态 ===
+    var _apPct = state.player.actionPoints / (state.player.maxActionPoints || 100);
+    var _timeSlotIcons = { morning: "🌅", afternoon: "☀️", evening: "🌆" };
+    var _timeSlotNames = { morning: "上午", afternoon: "下午", evening: "傍晚" };
+    var _tsIcon = _timeSlotIcons[state.player.timeSlot] || "⏰";
+    var _tsName = _timeSlotNames[state.player.timeSlot] || state.player.timeSlot || "白天";
+    if (state.player.actionPoints !== undefined) {
+      var _apTip = document.createElement("div");
+      _apTip.style.cssText = "margin-bottom:6px;padding:4px 8px;background:rgba(102,126,234,0.05);border-radius:6px;font-size:10px;color:var(--text-muted);";
+      _apTip.textContent = _tsIcon + " " + _tsName + " · ⚡" + state.player.actionPoints + "/" + (state.player.maxActionPoints || 100);
+      card.appendChild(_apTip);
+    }
+
     // 目标列表
     quests.forEach(function (q, i) {
       var done = _checkQuest(q, state);
