@@ -736,6 +736,8 @@ function registerStartup(state, name, industry, description) {
   state.startup.status = "seed";
   state.startup.company = company;
   state.startup.flags.registered = true;
+  // [全系统自洽修复] 域A R231: startup.history 旧存档兼容守卫 — history 可能为 undefined（v1.5 以前存档未含创业字段）
+  if (!state.startup.history) state.startup.history = {};
   state.startup.history.foundedDay = day;
 
   // 加入企业命运系统（Phase 2 联动）
@@ -1476,6 +1478,8 @@ function hireEmployee(state, role, salary) {
     StateManager.addMessage("📈 团队达到5人，公司进入成长期！", "success");
   }
 
+  // [全系统自洽修复] 域A R231: startup.history 守卫（同上 registerStartup）
+  if (!state.startup.history) state.startup.history = {};
   state.startup.history.employeesHired = company.employeesHired || 0;
 
   StateManager.addMessage(

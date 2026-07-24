@@ -1720,6 +1720,8 @@ function tickPendingEvents(state) {
                   ? (co.equity.player / 100) * co.valuation
                   : 0,
               );
+              // [全系统自洽修复] 域A R231: startup.history 守卫（IPO 退出路径）
+              if (!state.startup.history) state.startup.history = {};
               state.startup.history.exitedDay = state.player.day;
               state.startup.history.exitType = "ipo";
               state.startup.history.exitValue = state.startup.flags.exitValue;
