@@ -37,6 +37,7 @@
 - `_totalInvestmentProfit`/`_consecutiveWins` 由 sellInvStock/sellBtc 维护（历轮已接，非死字段）。
 - **R195**：investment_analysis.js 止损链（setStopLoss→stopLossOrders→checkStopLoss→sellInvStock）曾全库无调用方=死机制；R195 在 domain_e_linkage_r195.js 以**包装 tickInvestmentDaily** 方式接线（daily_pipeline:615 按名调用全局绑定，晚加载文件重赋值即生效——此模式可复用于"在途文件不可碰"时的接线）；analyzeStockTechnicals 由 invest_r195_technical_review 事件复活。注册序：该文件须在 investment_analysis.js(:836) 之后。
 - 并行窗口正开发「财务Tab」（index.html tab按钮/investment.js tradeLog/render*/state.js 等在途），勿碰勿回退。
+- **R198 C类记录(不修)**：investment.js:1435 写 `state.needs.health` 死字段(真实 `state.status.health`)——每日经济焦虑静默扣永不渲染的健康值;webapp_runtime_bridge.js:176-188 读写 `state.player.health` 死字段(真实 `state.status.health`),桥接层血量永远与渲染层脱节。财务Tab并行在途+桥接层敏感,留后续 E/H 或桥接层轮次处理(勿在域F轮次碰投资.js)。
 
 ## 域F/G/H 要点
 - UI 安全区：#app 100dvh / viewport-fit=cover / tab-bar+mobile-hud safe-area padding，勿回退。

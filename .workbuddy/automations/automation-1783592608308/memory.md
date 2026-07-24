@@ -252,3 +252,22 @@
 - 联动3（新建 domain_e_linkage_r195.js IIFE→RANDOM_EVENTS，全||防御，guard _domainELinkageR195Loaded，[PLACEHOLDER]）：invest_r195_stoploss_advisor(E→F 券商引导挂10%止损单→setStopLoss 复活)/invest_r195_stoploss_discipline(E→G 首个消费 checkStopLoss 写入的 order.triggered→mental+5/读 st.needs.happiness+3)/invest_r195_technical_review(E→C 调 analyzeStockTechnicals 技术面复盘+addSkillXp("accounting",8))。src/index.html 注册在 investment_analysis.js 之后。
 - 验证：node --check 2文件 OK；build dist app.js 9121.1KB（R195 双标志入 bundle）；MC 6×400d MC_EXIT=0·0代码异常（前7天死亡率全0.0%<10% 无早期死亡回归；trader/social/corporate 存活率偏低为既有RNG平衡阈值非回归）。
 - 提交纪律：仅 add 本轮文件+dist+loop-state+last_known_head，不 -A/--amend/force；并行在途 cooking/goods/items/trade 等(财务Tab)全程 stash 隔离(stash@{0})，push 后 pop 无损还原。下轮→F（UI/UX，recency 186 最薄弱）。
+
+## 最近执行（2026-07-25，R196 域C 职业/成长 — pivot自F · 已 push main 9322605e）
+
+- 起始状态：loop-domain-state.json 标 round196/F/next=A（F recency 186 最薄弱）。但执行中发现并行窗口已大幅推进（HEAD 演进 9b8ddfa2 域C A类3 / f1ba9549 域C totalEarned NaN+linkage R231，均 unpushed-ahead），且并行 f1ba9549 在 src/index.html 误注册了已删除的缺失文件 domain_f_linkage_r196.js（悬空引用→dist含404）。域F 与 域C 的 A类缺陷均已被并行窗口覆盖。
+- 决策：pivot R196→域C（recency 191）。域C A类=0（career_dev.js:3376 needs.health→status.health 由9b8ddfa2同源修复 / totalEarned NaN×2 由f1ba9549 / reqSocial+caregiverXp+5技能检查 由9b8ddfa2）。
+- 联动3（新建 domain_c_linkage_r196.js IIFE→RANDOM_EVENTS，2 street+1 corporate，全||防御，[PLACEHOLDER]，id前缀 c196_ 与 R16/R191/R231 不冲突）：c196_craft_mastery_tale(C→B 手艺美谈→state.player.fame+4+mental,置_CareerTaleSeen)/c196_portfolio_clarity(C→F 作品集→mental+needs.happiness)/c196_corporate_mentor_value(C→H 前辈带人→addSkillXp management+8+cash+800,条件 career.currentJob||corporate.company)。并修正 f1ba9549 的悬空引用 domain_f_linkage_r196.js→domain_c_linkage_r196.js。
+- 验证：node --check 通过（修复了注释内 `*/` 提前闭合块注释的语法错误）；build.py→dist 9177.8KB（_domainCLinkageR196Loaded 入 bundle，_domainFLinkageR196Loaded=0）；MC 6×400d MC_EXIT=0·0代码异常（grinder16.7%/corporate66.7%存活率偏低为既有RNG平衡阈值波动，非代码回归）。
+- 提交3笔（feat 47d96850 / loop-state bcd63c6b / 回填pushStatus 9322605e），**均 push origin main 成功**（9b8ddfa2..9322605e，含并行 f1ba9549 一并上 origin）。下轮→A（recency 189 最薄弱，全8域本轮循环完成，重启第二轮）。
+
+## 最近执行（2026-07-25，R197 域A 数据/数值平衡 — 已 push main cab0fc69）
+
+- 域A: A类1类4键（skills.js 证书效果键 healthBonus/mentalBonus/illnessRiskReduction/fatigueReduction 全库无消费者→nursing_cert/health_manager/rehab_therapist/psychologist 四证书 desc 宣称的健康+/心智+/降患病风险/疲劳- 全部静默失效，A类#4死效果键）。main.js 发证循环补4消费分支（healthBonus→state.status.health / mentalBonus→state.player.mental / illnessRiskReduction→累积 state.flags._illnessRiskReduction clamp0.8 且 phase1/illness.js:137 掷骰前 ch*=1-cut 乘性降患病率 / fatigueReduction→累积 state.flags._certFatigueReduction 且 main.js:4598 工作疲劳叠加）。联动增强3项（新建 domain_a_linkage_r197.js，2 street+1 corporate：a197_health_baseline A→G 建健康档案基线→status.health+mental·置_healthBaselineKeeper / a197_ledger_clarity A→F 收支明白账→mental+needs.happiness·置_budgetClarityKeeper / a197_data_driven_budget A→H 用数据争预算→addSkillXp management+cash，全||防御，数值[PLACEHOLDER]）。C类记录不改：items.js skillStudy/skillXpBonus/skillStudyBonus 无应用器 + finance.js hasStreetStall/hasScavengeRoute flag 从未写入。MC 6×400d 0代码异常；构建9194.6KB。下轮→F（recency 186 最薄弱）。
+
+## 最近执行（2026-07-25，R198 域F UI/UX — 已 push main）
+
+- 起始 loop-state=round197/A/next=F（F recency 186 最薄弱）。HEAD 演进 ae0b97f1（并行窗口 d7f0b313 域F A类2项 cash+flags守卫 + ae0b97f1 域G A类9项 P0崩溃+cash守卫，均 live commit 进本地 main）。开轮 git log 核对：并行已占 R230(D)/R231(B)/R232-ish(F/G)，F 的 A类缺陷由并行兜底。
+- 域F: **A类0项（确证）**——Explore 子代理对 17 个 UI 文件逐行审计 + 死字段黑名单全库 grep，UI 层干净（历史 R19 itemId / R183 学历+消息toggle+每日目标终身一次+教程selector / R186 certs→certificates+career.currentJob 已修，本轮不重复修）。C类2项记录不修（域外/并行在途）：investment.js:1435 写 `state.needs.health` 死字段（真实 `state.status.health`，财务Tab并行在途勿碰）/ webapp_runtime_bridge.js:176 读写 `state.player.health` 死字段（真实 `state.status.health`，桥接层与渲染层脱节）。
+- 联动3项（新建 domain_f_linkage_r198.js IIFE→RANDOM_EVENTS，2 street+1 corporate，全||防御，[PLACEHOLDER]，id前缀 f198_ 不冲突）：f198_finance_glass(F→E 财务面板清晰→_dataInvestorMindset投资意识+mental)/f198_life_scrapbook(F→B 生活手账回望→mental+needs.happiness)/f198_board_deck(F→H 清爽路演材料→addSkillXp("management")+cash)。选向刻意避开 R19/R186 已用 F→A/D/C/G，补齐 F→E/B/H。
+- 验证：node --check 通过；build dist app.js 9204.6KB（R198 标志入 bundle）；MC 6×400d MC_EXIT=0·0代码异常（TypeError/ReferenceError/Uncaught grep=0；grinder16.7%/corporate66.7% 存活率<阈值为既有RNG平衡阈值非回归）。提交纪律：并行 live 推进致本地 main=ae0b97f1；本轮回合改动先 stash 隔离→pull/rebase(already up to date)→stash pop(无冲突)→重建 dist(含并行main.js/render.js/daily_quest.js修复+本轮回路)→feat 提交+回填 pushStatus。下轮→G（recency 192 最薄弱，已据并行 R230/R231 回填 B/D recency）。

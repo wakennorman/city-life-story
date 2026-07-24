@@ -1,7 +1,7 @@
 {
-  "currentRound": 197,
-  "currentDomain": "A",
-  "nextDomain": "F",
+  "currentRound": 198,
+  "currentDomain": "F",
+  "nextDomain": "G",
   "rotationIndex": 1,
   "domainOrder": [
     "A",
@@ -15,11 +15,11 @@
   ],
   "domainRecency": {
     "A": 197,
-    "B": 190,
+    "B": 231,
     "C": 196,
-    "D": 194,
+    "D": 230,
     "E": 195,
-    "F": 186,
+    "F": 198,
     "G": 192,
     "H": 193
   },
@@ -68,12 +68,17 @@
       "round": 197,
       "domain": "A",
       "note": "域A: A类1类4键(skills.js 证书效果键 healthBonus/mentalBonus/illnessRiskReduction/fatigueReduction 全库无消费者→nursing_cert/health_manager/rehab_therapist/psychologist 四证书 desc 宣称的健康+/心智+/降低患病风险/疲劳- 全部静默失效,A类#4死效果键;main.js 发证循环补4消费分支:healthBonus→state.status.health/mentalBonus→state.player.mental/illnessRiskReduction→累积 state.flags._illnessRiskReduction(clamp0.8)且 phase1/illness.js:137 掷骰前 ch*=1-cut 乘性降患病率/fatigueReduction→累积 state.flags._certFatigueReduction 且 main.js:4598 工作疲劳叠加)。联动增强3项(新建 domain_a_linkage_r197.js,2 street+1 corporate: a197_health_baseline A→G建健康档案基线→status.health+player.mental+置_healthBaselineKeeper呼应证书健康修复 / a197_ledger_clarity A→F收支明白账→mental+needs.happiness+置_budgetClarityKeeper / a197_data_driven_budget A→H用数据争预算→addSkillXp management+cash,全||防御,数值[PLACEHOLDER])。C类记录不改:items.js skillStudy/skillXpBonus/skillStudyBonus 无应用器 + finance.js hasStreetStall/hasScavengeRoute flag 从未写入。MC 6×400d 0代码异常;构建9194.6KB。下轮R198→域F(recency 186 最薄弱)。"
+    },
+    {
+      "round": 198,
+      "domain": "F",
+      "note": "域F: A类0项——Explore 子代理对 17 个 UI 文件逐行审计 + 死字段黑名单全库 grep,UI 层干净(历史 R19 itemId/R183 学历+消息toggle+每日目标终身一次+教程selector/R186 certs→certificates+career.currentJob 已修,本轮不重复修)。联动增强3项(新建 domain_f_linkage_r198.js,2 street+1 corporate: f198_finance_glass F→E 财务面板清晰→_dataInvestorMindset投资意识+mental / f198_life_scrapbook F→B 生活手账回望→mental+needs.happiness+置_f198Scrapbook / f198_board_deck F→H 清爽路演材料→addSkillXp management+cash,全||防御,数值[PLACEHOLDER])。C类记录(不修,域外/并行在途): investment.js:1435 写 state.needs.health 死字段(真实 state.status.health,财务Tab并行在途勿碰) / webapp_runtime_bridge.js:176 读写 state.player.health 死字段(真实 state.status.health,桥接层与渲染层脱节)。MC 6×400d 0代码异常(退出0;grinder16.7%/corporate66.7%存活率<阈值为既有RNG平衡阈值非代码回归);构建9204.6KB。下轮R199→域G(recency 192 最薄弱,已据并行 R230/R231 回填 B/D recency)。"
     }
   ],
-  "lastDomain": "A",
-  "lastRound": 197,
+  "lastDomain": "F",
+  "lastRound": 198,
   "lastDate": "2026-07-25",
-  "lastCommit": "PENDING",
+  "lastCommit": "cab0fc69a50e02ad56cbeba0dc18cc347d28183a",
   "pushStatus": "PENDING",
   "completedDomains": [
     "A",
@@ -85,5 +90,5 @@
     "G",
     "H"
   ],
-  "description": "全系统优化 loop R197→域A(数据/数值平衡,recency 189 最薄弱)。A类修复1类4键:skills.js 证书效果键 healthBonus/mentalBonus/illnessRiskReduction/fatigueReduction 全库无消费者(四证书宣称的健康/心智/患病风险/疲劳效果静默失效),main.js 发证循环补4消费分支+phase1/illness.js 掷骰前接入 illnessRiskReduction 乘性降患病率+main.js 工作疲劳叠加 certFatigueReduction。联动增强3项(domain_a_linkage_r197.js: A→G健康档案基线/A→F收支明白账清晰感/A→H用数据争预算→management XP+现金),全||防御,数值[PLACEHOLDER]。C类记录:items.js 装备效果键无应用器 + finance.js hasStreetStall/hasScavengeRoute flag 从未写入。MC 6×400d 0代码异常。下轮R198→域F(recency 186 最薄弱)。"
+  "description": "全系统优化 loop R198→域F(UI/UX,recency 186 最薄弱)。A类0项(Explore 子代理对17个UI文件逐行审计+死字段黑名单全库grep,UI层干净;历史R19/R183/R186已修itemId/学历/消息toggle/每日目标终身一次/教程selector/certs→certificates/career.currentJob)。联动增强3项(新建 domain_f_linkage_r198.js: F→E 财务面板清晰→_dataInvestorMindset投资意识+心智/F→B 生活手账回望→mental+needs.happiness/F→H 清爽路演材料→addSkillXp management+cash,全||防御,数值[PLACEHOLDER])。C类记录(不修): investment.js:1435 写 state.needs.health 死字段(真实state.status.health,财务Tab并行在途勿碰) / webapp_runtime_bridge.js:176 读写 state.player.health 死字段(真实state.status.health,桥接层与渲染层脱节)。MC 6×400d 0代码异常(退出0;grinder16.7%/corporate66.7%存活率<阈值为既有RNG平衡阈值非代码回归);构建9204.6KB。下轮R199→域G(recency 192 最薄弱,已据并行R230/R231回填B/D recency)。"
 }
