@@ -404,9 +404,9 @@ function showDepositModal() {
         if (lastBtn && !lastBtn.classList.contains("btn-success")) {
           lastBtn.textContent = `存入 ¥${val.toLocaleString()}`;
           lastBtn.onclick = () => {
-            const amt = Math.min(val, state.resources.cash);
+            const amt = Math.min(val, state.resources.cash || 0);
             state.resources.bankBalance += amt;
-            state.resources.cash -= amt;
+            state.resources.cash = Math.max(0, (state.resources.cash || 0) - amt);
             StateManager.addMessage(
               `🏦 存入 ¥${amt.toLocaleString()} 到银行。`,
               "success",
@@ -781,9 +781,9 @@ function showRepayVillageModal() {
         cls: "btn-success",
         callback: () => {
           const amt = Math.min((state.resources.cash || 0), villageDebt);
-          state.resources.cash -= amt;
+          state.resources.cash = Math.max(0, (state.resources.cash || 0) - amt);
           if (state.resources.villageDebt !== undefined) {
-            state.resources.villageDebt -= amt;
+            state.resources.villageDebt = Math.max(0, (state.resources.villageDebt || 0) - amt);
             state.resources.debt =
               state.resources.villageDebt + (state.resources.bankDebt || 0);
           } else {
