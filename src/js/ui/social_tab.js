@@ -456,9 +456,9 @@ function renderSocialOverviewTab(state, content) {
     if (family.parents) {
       html +=
         "<p>👴 父母：父亲" +
-        family.parents.father.age +
+        ((family.parents.father && family.parents.father.age) || "?") +
         "岁 · 母亲" +
-        family.parents.mother.age +
+        ((family.parents.mother && family.parents.mother.age) || "?") +
         "岁</p>";
     }
     html += "</div></div>";
@@ -487,6 +487,28 @@ function renderSocialOverviewTab(state, content) {
   html += '<div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:6px;">';
   html += '<span>你的月收入</span><strong>¥' + playerSalary.toLocaleString() + '</strong>';
   html += '</div>';
+
+  // [全系统自洽修复] 域D 联动增强: D→F 社交关系质量概览 — 显示深交/挚友数量
+  (function () {
+    if (!state.relationships) return;
+    var _total = 0, _close = 0, _intimate = 0;
+    for (var _rid in state.relationships) {
+      var _r = state.relationships[_rid];
+      if (_r && _r.met) {
+        _total++;
+        var _aff = _r.affinity || 0;
+        if (_aff >= 70) _intimate++;
+        else if (_aff >= 40) _close++;
+      }
+    }
+    if (_total > 0) {
+      html += '<div style="margin-top:8px;padding:8px;background:rgba(74,158,92,0.06);border-radius:6px;font-size:11px;">';
+      html += '🤝 社交圈：<strong>' + _total + '</strong>人 · 深交(≥40) <strong>' + (_close + _intimate) + '</strong>人 · 挚友(≥70) <strong>' + _intimate + '</strong>人';
+      if (_intimate >= 3) html += ' 🏆 你的社交网络非常稳固！';
+      else if (_intimate === 0) html += ' 💡 多拜访NPC培养好感吧';
+      html += '</div>';
+    }
+  })();
 
   html += '<div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:6px;">';
   html += '<span>同龄人平均</span><strong>¥' + avgIncome.toLocaleString() + '</strong>';

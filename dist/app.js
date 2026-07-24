@@ -182250,7 +182250,7 @@ function grantJobSkillXp(jobId, state) {
   var entry = xpMap[jobId];
   if (!entry) return "";
 
-  var sk = state.skills[entry.skill];
+  var sk = state.skills && state.skills[entry.skill]; // [全系统自洽修复] 域C A类: state.skills 守卫
   if (!sk) return "";
 
   var xpGain = Random.int(entry.min, entry.max);
@@ -182330,9 +182330,10 @@ function applySkillLevelUpBonus(skillKey, state) {
 
   // [全系统自洽修复] 域C 联动增强3: 技能里程碑时NPC祝贺(C→D)
   var milestoneLevels = [30, 50, 70, 100];
-  var curLevel = state.skills[skillKey] ? state.skills[skillKey].level : 0;
+  var curLevel = state.skills && state.skills[skillKey] ? state.skills[skillKey].level : 0; // [全系统自洽修复] 域C A类: state.skills 守卫
   for (var mi = 0; mi < milestoneLevels.length; mi++) {
     if (curLevel !== milestoneLevels[mi]) continue;
+    if (!state.flags) state.flags = {}; // [全系统自洽修复] 域C A类: state.flags 守卫
     if (!state.flags._skillMilestones) state.flags._skillMilestones = {};
     var mileKey = skillKey + "_" + milestoneLevels[mi];
     if (state.flags._skillMilestones[mileKey]) continue;
@@ -182383,6 +182384,7 @@ function grantActionStatGain(actionId, state) {
   var entry = statMap[actionId];
   if (!entry) return "";
 
+  if (!state || !state.player) return ""; // [全系统自洽修复] 域C A类: state.player 守卫
   var p = state.player;
   var gains = [];
 
@@ -182613,6 +182615,7 @@ function checkNpcAffinityRewards(npcId, state) {
   var rel = state.relationships[npcId];
   if (!rel) return;
   var affinity = rel.affinity || 0;
+  if (!state.flags) state.flags = {}; // [全系统自洽修复] 域C A类: state.flags 守卫
   if (!state.flags._npcRewardsClaimed) state.flags._npcRewardsClaimed = {};
   npc.affinityRewards.forEach(function (reward) {
     if (
@@ -182631,6 +182634,7 @@ function checkNpcAffinityRewards(npcId, state) {
 
 /** 每日财务结算 — 银行利息（含accounting技能加成） */
 function settleDailyFinance(state) {
+  if (!state || !state.resources) return; // [全系统自洽修复] 域C A类: state.resources 守卫
   var bal = state.resources.bankBalance || 0;
   if (bal <= 0) return;
   var accountingLvl =
@@ -182647,13 +182651,15 @@ function settleDailyFinance(state) {
   var interest = Math.floor(bal * rate);
   if (interest > 0) {
     state.resources.bankBalance += interest;
-    addDailyTransaction(
-      state,
-      "income",
-      "bank_interest",
-      interest,
-      "存款利息（利率" + (rate * 100).toFixed(3) + "%）",
-    );
+    if (typeof addDailyTransaction === "function") { // [全系统自洽修复] 域C A类: addDailyTransaction 守卫
+      addDailyTransaction(
+        state,
+        "income",
+        "bank_interest",
+        interest,
+        "存款利息（利率" + (rate * 100).toFixed(3) + "%）",
+      );
+    }
     StateManager.addMessage(
       "🏦 银行利息 +¥" +
         interest +
@@ -229230,7 +229236,8 @@ function renderMessageLog(state) {
     var toggleBtn = document.createElement("button");
     toggleBtn.id = "message-log-toggle";
     toggleBtn.className = "btn btn-sm";
-    toggleBtn.textContent = "📌 展开";
+    // [全系统自洽修复] 域F 修复: 初始标签基于当前折叠状态（桌面端默认展开应显示"收起"）
+    toggleBtn.textContent = logEl.classList.contains("collapsed") ? "📌 展开" : "📌 收起";
     toggleBtn.title = "展开/收起事件记录列表";
     toggleBtn.onclick = function (e) {
       e.stopPropagation();
@@ -242799,9 +242806,9 @@ function renderSocialOverviewTab(state, content) {
     if (family.parents) {
       html +=
         "<p>👴 父母：父亲" +
-        family.parents.father.age +
+        ((family.parents.father && family.parents.father.age) || "?") +
         "岁 · 母亲" +
-        family.parents.mother.age +
+        ((family.parents.mother && family.parents.mother.age) || "?") +
         "岁</p>";
     }
     html += "</div></div>";
@@ -242830,6 +242837,28 @@ function renderSocialOverviewTab(state, content) {
   html += '<div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:6px;">';
   html += '<span>你的月收入</span><strong>¥' + playerSalary.toLocaleString() + '</strong>';
   html += '</div>';
+
+  // [全系统自洽修复] 域D 联动增强: D→F 社交关系质量概览 — 显示深交/挚友数量
+  (function () {
+    if (!state.relationships) return;
+    var _total = 0, _close = 0, _intimate = 0;
+    for (var _rid in state.relationships) {
+      var _r = state.relationships[_rid];
+      if (_r && _r.met) {
+        _total++;
+        var _aff = _r.affinity || 0;
+        if (_aff >= 70) _intimate++;
+        else if (_aff >= 40) _close++;
+      }
+    }
+    if (_total > 0) {
+      html += '<div style="margin-top:8px;padding:8px;background:rgba(74,158,92,0.06);border-radius:6px;font-size:11px;">';
+      html += '🤝 社交圈：<strong>' + _total + '</strong>人 · 深交(≥40) <strong>' + (_close + _intimate) + '</strong>人 · 挚友(≥70) <strong>' + _intimate + '</strong>人';
+      if (_intimate >= 3) html += ' 🏆 你的社交网络非常稳固！';
+      else if (_intimate === 0) html += ' 💡 多拜访NPC培养好感吧';
+      html += '</div>';
+    }
+  })();
 
   html += '<div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:6px;">';
   html += '<span>同龄人平均</span><strong>¥' + avgIncome.toLocaleString() + '</strong>';
@@ -245278,6 +245307,7 @@ function renderCareerOverview(state, parent) {
   if (
     state.startup &&
     state.startup.status === "none" &&
+    state.flags &&
     !state.flags._phase2RitualShown
   ) {
     var _totalCash =
@@ -246007,6 +246037,7 @@ var _careerLabelMap = {
  * 获取技能/属性当前值（与 checkCareerPromotion 一致）
  */
 function _getCareerReqValue(state, key) {
+  if (!state || !state.player) return 0; // [全系统自洽修复] 域C A类: state.player 守卫
   var p = state.player;
   if (key === "intelligence") return p.intelligence || 0;
   if (key === "mental") return p.mental || 0;
@@ -246024,6 +246055,7 @@ function _getCareerReqValue(state, key) {
  * @returns {Array<{label:string, ok:boolean, current:number, required:(number|string)}>}
  */
 function checkCareerPromotionDetailed(state, pathId, level) {
+  if (!state || !state.player) return []; // [全系统自洽修复] 域C A类: state.player 守卫
   var p = state.player;
   var results = [];
 
@@ -246337,6 +246369,7 @@ function applyCareerPromotion(pathId, levelId) {
     event: "晋升：" + oldJob.levelName + " → " + level.name,
   });
   // v3.51：首次晋升成就标记
+  if (!state.flags) state.flags = {}; // [全系统自洽修复] 域C A类: state.flags 守卫
   if (!state.flags._careerFirstPromotion) {
     state.flags._careerFirstPromotion = true;
   }
@@ -246473,6 +246506,7 @@ function tickCareerJobDaily(state) {
   if (!state.career || !state.career.currentJob) return;
 
   // ====== 连续工作天数追踪（上班族版本）======
+  if (!state.flags) state.flags = {}; // [全系统自洽修复] 域C A类: state.flags 守卫
   if (!state.flags._workStreak) state.flags._workStreak = 0;
   if (!state.flags._lastWorkDay) state.flags._lastWorkDay = 0;
   if (state.flags._lastWorkDay === state.player.day - 1) {
@@ -246739,6 +246773,7 @@ function tickCareerJobDaily(state) {
   tickCareerOccupationalRisk(state);
 
   // ----- 倦怠恢复成就追踪 -----
+  if (!state.flags) state.flags = {}; // [全系统自洽修复] 域C A类: state.flags 守卫
   if ((cap.burnout || 0) >= 70) {
     state.flags._burnoutWasHigh = true;
   }
@@ -246989,6 +247024,7 @@ function tickCareerOccupationalRisk(state) {
   StateManager.addMessage(profile.msgs[levelIdx], "warning");
 
   // 设置职业病成就标记
+  if (!state.flags) state.flags = {}; // [全系统自洽修复] 域C A类: state.flags 守卫
   state.flags[profile.flagKey] = true;
   state.flags._hasOccupationalDisease = true;
 
