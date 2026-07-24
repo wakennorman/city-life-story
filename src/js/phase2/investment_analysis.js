@@ -838,3 +838,33 @@ if (typeof window !== "undefined") {
     ],
   };
 }
+
+// [全系统自洽修复] 域E 修复:checkStopLoss/setStopLoss 止损止盈整链死机制接线（R195）
+//   本文件的 checkStopLoss 全库无任何调用方 → 止损单 inv.stopLossOrders 即使存在也永不
+//   被评估，setStopLoss→stopLossOrders→checkStopLoss→sellInvStock 整链死代码。
+//   接线方式：包装全局 tickInvestmentDaily（investment.js 定义、daily_pipeline.js:615 按名
+//   调用全局绑定，本文件加载序在 investment.js 之后，重赋值即生效）——每日投资 tick 完成后、
+//   且仅当存在止损单时评估；try/catch 保证止损评估异常绝不中断每日结算。
+(function () {
+  if (typeof tickInvestmentDaily !== "function" || typeof checkStopLoss !== "function") return;
+  if (tickInvestmentDaily._stopLossWiredR195) return;
+  var _origTickInvestmentDailyR195 = tickInvestmentDaily;
+  tickInvestmentDaily = function (state) {
+    var ret = _origTickInvestmentDailyR195.apply(this, arguments);
+    try {
+      if (
+        state &&
+        state.investment &&
+        Array.isArray(state.investment.stopLossOrders) &&
+        state.investment.stopLossOrders.length > 0
+      ) {
+        checkStopLoss(state);
+      }
+    } catch (e) {
+      if (typeof console !== "undefined" && console.warn)
+        console.warn("R195 止损单每日评估失败(不影响结算):", e);
+    }
+    return ret;
+  };
+  tickInvestmentDaily._stopLossWiredR195 = true;
+})();
