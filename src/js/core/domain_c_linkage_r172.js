@@ -51,7 +51,7 @@
             try {
               if (st.player) {
                 st.player.mental = Math.max(0, (st.player.mental || 50) - 8); // [PLACEHOLDER] 透支
-                st.player.happiness = Math.max(0, (st.player.happiness || 50) - 4);
+                st.needs.happiness = Math.max(0, (st.needs.happiness || 50) - 4);
               }
               if (st.flags) st.flags._careerPush = true;
               if (st.resources) st.resources.cash = (st.resources.cash || 0) + 5000; // [PLACEHOLDER] 加班费
@@ -68,7 +68,7 @@
             try {
               if (st.player) {
                 st.player.mental = Math.min(100, (st.player.mental || 50) + 6);
-                st.player.happiness = Math.min(100, (st.player.happiness || 50) + 8);
+                st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 8);
               }
               if (st.flags) st.flags._careerBalance = true;
               safeMsg(st, "你把节奏慢了下来。心智+6、幸福+8，晋升可以再等等。", "success");
@@ -135,7 +135,7 @@
               var job = st.career.currentJob;
               var bonus = Math.round((job.salary || 0) * 1); // [PLACEHOLDER] 1个月薪资
               if (st.resources) st.resources.cash = (st.resources.cash || 0) + bonus;
-              if (st.player) st.player.happiness = Math.min(100, (st.player.happiness || 50) + 12);
+              if (st.player) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 12);
               if (st.flags) {
                 var yr = Math.floor((st.player.day || 0) / 360);
                 st.flags["_careerYEBonus_" + yr] = true;

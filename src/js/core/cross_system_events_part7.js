@@ -2979,7 +2979,7 @@
               100,
               (rel["old_zhou"].affinity || 0) + 8,
             );
-          st.player.happiness = Math.min(100, (st.player.happiness || 0) + 8);
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 8);
           st.flags._communityGatheringDone = true;
           StateManager.addMessage(
             "你端菜、搬桌子、陪小孩玩。百家宴热热闹闹，老周拍你肩膀：「好小子！」多NPC好感+5~8。",
@@ -3015,7 +3015,7 @@
         hint: "心情+5，老周好感+5",
         apply: function (st) {
           st.resources.cash = Math.max(0, (st.resources.cash || 0) - 40);
-          st.player.happiness = Math.min(100, (st.player.happiness || 0) + 5);
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 5);
           var rel = st.relationships;
           if (rel && rel["old_zhou"])
             rel["old_zhou"].affinity = Math.min(
@@ -4136,7 +4136,7 @@
   // R37-① ¥1000万里程碑 — 城市传奇（财富天花板叙事）
   RANDOM_EVENTS.push({
     id: "wealth_10m_milestone",
-    phase: "any",
+    phase: "street", // [全系统自洽修复] 域B 修复:phase "any"永不触发(引擎只认street/corporate)
     icon: "🏆",
     title: "城市传奇",
     story:

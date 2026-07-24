@@ -46,7 +46,7 @@
     apply: function (st) {
       st.flags._skillBranchRitualDone = true;
       if (st.player) {
-        st.player.happiness = Math.min(100, (st.player.happiness || 50) + 3);
+        st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 3);
         st.player.mental = Math.min(100, (st.player.mental || 50) + 2);
       }
       StateManager.addMessage("🌳 你坚定地选择了自己的发展方向！心情+3，心智+2。", "success");
@@ -83,7 +83,7 @@
       st.flags._justUnlockedDual = false;
       st.flags._currentUnlockSynergyId = null;
       st.flags._synergyDualEventShown = st.player.day;
-      if (st.player) st.player.happiness = Math.min(100, (st.player.happiness || 50) + 5);
+      if (st.player) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 5);
       StateManager.addMessage("🔗 连携觉醒！你感受到某种力量在汇聚……心情+5。", "success");
     },
     choices: [],
@@ -119,7 +119,7 @@
       st.flags._synergyTripleEventShown = st.player.day;
       if (st.player) {
         st.player.charm = Math.min(100, (st.player.charm || 50) + 3);
-        st.player.happiness = Math.min(100, (st.player.happiness || 50) + 10);
+        st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 10);
       }
       StateManager.addMessage("👑 三连携降临！这是少数人能触及的境界。魅力+3，心情+10。", "success");
     },
@@ -168,7 +168,7 @@
     apply: function (st) {
       st.flags._branchJobDiscovered = true;
       if (st.player) {
-        st.player.happiness = Math.min(100, (st.player.happiness || 50) + 5);
+        st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 5);
       }
       StateManager.addMessage("📋 你的专长为你打开了新的大门！心情+5。", "info");
     },

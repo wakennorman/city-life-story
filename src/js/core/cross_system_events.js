@@ -6322,9 +6322,9 @@
       },
       apply: function (st) {
         st.flags._skillTalentFirstLightDone = true;
-        st.player.happiness = Math.min(
+        st.needs.happiness = Math.min(
           100,
-          (st.player.happiness || 50) + 5,
+          (st.needs.happiness || 50) + 5,
         );
         st.player.mental = Math.min(
           100,
@@ -6382,9 +6382,9 @@
       apply: function (st) {
         st.flags._skillMasteryDone = true;
         st.player.fame = (st.player.fame || 0) + 10;
-        st.player.happiness = Math.min(
+        st.needs.happiness = Math.min(
           100,
-          (st.player.happiness || 50) + 15,
+          (st.needs.happiness || 50) + 15,
         );
         st.player.mental = Math.min(
           100,
@@ -6523,7 +6523,7 @@
           hint: "morality+3, mood+8, 公司reputation+5",
           apply: function (st) {
             st.flags._startupDeclarationDone = true;
-            if (st.player) { st.player.morality = Math.min(100, (st.player.morality || 0) + 3); st.player.happiness = Math.min(100, (st.player.happiness || 0) + 8); }
+            if (st.player) { st.player.morality = Math.min(100, (st.player.morality || 0) + 3); st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 8); }
             if (st.startup && st.startup.company) st.startup.company.reputation = (st.startup.company.reputation || 0) + 5;
             StateManager.addMessage("📝 你在一张纸上写下了自己的创业宣言：「从打零工到有尊严地赚钱，这条路我走了整整XX天。」贴在公司墙上，每次看到都提醒自己为什么出发。心情+8，道德+3。", "success");
           },
@@ -6533,7 +6533,7 @@
           hint: "心情+5, 老周/陈哥好感+8",
           apply: function (st) {
             st.flags._startupDeclarationDone = true;
-            if (st.player) st.player.happiness = Math.min(100, (st.player.happiness || 0) + 5);
+            if (st.player) st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 5);
             if (st.relationships && st.relationships.old_zhou) st.relationships.old_zhou.affinity = Math.min(100, (st.relationships.old_zhou.affinity || 0) + 8);
             if (st.relationships && st.relationships.chen_ge) st.relationships.chen_ge.affinity = Math.min(100, (st.relationships.chen_ge.affinity || 0) + 8);
             StateManager.addMessage("🍻 你约了老周和陈哥吃饭。老周拍着你的肩膀说：「早就看你不对劲了，你不是干一辈子临时工的料。」陈哥则默默给你倒了杯酒。心情+5，老周和陈哥好感各+8。", "info");
@@ -6566,7 +6566,7 @@
       apply: function (st) {
         st.flags._firstPromoCelebDone = true;
         if (st.player) {
-          st.player.happiness = Math.min(100, (st.player.happiness || 0) + 10);
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 10);
           st.player.upwardMgmt = Math.min(100, (st.player.upwardMgmt || 0) + 3);
         }
         // 同事网络关系自动提升
@@ -6601,7 +6601,7 @@
           apply: function (st) {
             st.flags._talentDepartureDone = true;
             st.flags._talentDepartureBlessing = true;
-            if (st.player) { st.player.happiness = Math.max(0, (st.player.happiness || 0) - 3); st.player.morality = Math.min(100, (st.player.morality || 0) + 5); }
+            if (st.player) { st.needs.happiness = Math.max(0, (st.needs.happiness || 0) - 3); st.player.morality = Math.min(100, (st.player.morality || 0) + 5); }
             if (st.startup && st.startup.company) st.startup.company.reputation = (st.startup.company.reputation || 0) + 3;
             StateManager.addMessage("😢 你给小李发了一个红包：「出去好好干，以后有机会再合作。」小李回了个拥抱的表情。心情-3，道德+5，公司声誉+3。", "info");
           },
@@ -6613,7 +6613,7 @@
             st.flags._talentDepartureDone = true;
             st.flags._talentDepartureRetained = true;
             if (st.resources) st.resources.cash = (st.resources.cash || 0) - 3000;
-            if (st.player) st.player.happiness = Math.min(100, (st.player.happiness || 0) + 5);
+            if (st.player) st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 5);
             if (st.startup && st.startup.company && st.startup.company.team) {
               for (var i = 0; i < st.startup.company.team.length; i++) {
                 if (st.startup.company.team[i] && st.startup.company.team[i].morale) {
@@ -6656,7 +6656,7 @@
             st.flags._quarterSocialSpilloverDone = true;
             if (st.resources) st.resources.cash = (st.resources.cash || 0) - 500;
             if (st.relationships && st.relationships.boss_li) st.relationships.boss_li.affinity = Math.min(100, (st.relationships.boss_li.affinity || 0) + 10);
-            if (st.player) st.player.happiness = Math.min(100, (st.player.happiness || 0) + 3);
+            if (st.player) st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 3);
             StateManager.addMessage("🍔 你请老赵吃了顿火锅。他说他们组确实不容易，但你部门的项目他也帮忙了不少。现金-500，boss_li好感+10，心情+3。", "success");
           },
         },
@@ -6673,7 +6673,7 @@
           hint: "智力+2, 老赵好感+5, 团队协作↑",
           apply: function (st) {
             st.flags._quarterSocialSpilloverDone = true;
-            if (st.player) { st.player.intelligence = Math.min(100, (st.player.intelligence || 0) + 2); st.player.happiness = Math.min(100, (st.player.happiness || 0) + 2); }
+            if (st.player) { st.player.intelligence = Math.min(100, (st.player.intelligence || 0) + 2); st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 2); }
             if (st.relationships && st.relationships.boss_li) st.relationships.boss_li.affinity = Math.min(100, (st.relationships.boss_li.affinity || 0) + 5);
             StateManager.addMessage("💪 你把自己的工作方法分享给了老赵。他说：「你说得对，我们确实太闷头干了。」智力+2，boss_li好感+5。", "info");
           },
@@ -6754,7 +6754,7 @@
           hint: "心情-3, 但记住这个教训",
           apply: function (st) {
             st.flags._wealthTaxFirstNotice = true;
-            if (st.player) st.player.happiness = Math.max(0, (st.player.happiness || 0) - 3);
+            if (st.player) st.needs.happiness = Math.max(0, (st.needs.happiness || 0) - 3);
             StateManager.addMessage("😤 你心里一阵不爽，但不得不承认这是城市的规矩。心情-3。", "warning");
           },
         },

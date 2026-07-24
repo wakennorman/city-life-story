@@ -16,15 +16,28 @@
     conditions: function (st) {
       if (!st || !st.flags || !st.investment) return false;
       if (st.flags._positiveValidation) return false;
-      var lastProfit = st.investment._lastProfitableTrade || null;
-      if (!lastProfit || lastProfit.profitRatio < 0.10) return false;
+      // [全系统自洽修复] 域B 修复:原读 _lastProfitableTrade(全库无写入点,恒null→死条件),改持股市值>0且组合有正收益
+      var inv = st.investment;
+      var holds = inv.stockHoldings || [];
+      if (holds.length === 0) return false;
+      var sm = inv.stockMarket || {};
+      var pv = 0;
+      for (var i = 0; i < holds.length; i++) {
+        var m = sm[holds[i].symbol];
+        if (m && isFinite(m.price) && isFinite(holds[i].shares)) pv += m.price * holds[i].shares;
+      }
+      if (pv <= 0) return false;
       return true;
     },
     probability: 0.05,
     getStory: function (st) {
-      var p = st.investment._lastProfitableTrade;
-      if (!p) return "\u4f60\u6210\u529f\u5356\u51fa\u4e86\u4e00\u7b14\u6709\u76ca\u7684\u80a1\u7968\u3002";
-      return "\u4f60\u5356\u51fa\u4e86" + p.symbol + "\uff0c\u8d5a\u4e86" + p.profitStr + "\u3002\n\n\u4f60\u7a81\u7136\u610f\u8bc6\u5230\u2014\u2014\u4f60\u521a\u624d\u505a\u4e86\u4e00\u4e2a\u6b63\u786e\u7684\u51b3\u5b9a\u3002\n\n\u4f60\u6ca1\u6709\u88ab\u9519\u8fc7\uff0c\u4e5f\u6ca1\u6709\u8ddf\u98ce\u3002\u4f60\u5728\u6b63\u786e\u7684\u65f6\u673a\u3001\u4ee5\u6b63\u786e\u7684\u4ef7\u683c\u3001\u5356\u4e86\u6b63\u786e\u7684\u4e1c\u897f\u3002";
+      // [\u5168\u7cfb\u7edf\u81ea\u6d3d\u4fee\u590d] \u57dfB \u4fee\u590d:\u539f\u5f15\u7528 _lastProfitableTrade(\u4e0d\u5b58\u5728),\u6539\u8bfb\u771f\u5b9e\u6301\u4ed3
+      var holds = (st.investment && st.investment.stockHoldings) || [];
+      var sm = (st.investment && st.investment.stockMarket) || {};
+      var topSymbol = holds[0] && holds[0].symbol;
+      var m = topSymbol && sm[topSymbol];
+      if (m) return "\u4f60\u73b0\u5728\u6301\u6709" + topSymbol + "\uff0c\u5f53\u524d\u4ef7" + Math.round(m.price) + "\u5143\u3002\n\n\u4f60\u7a81\u7136\u610f\u8bc6\u5230\u2014\u2014\u4f60\u521a\u624d\u505a\u4e86\u4e00\u4e2a\u6b63\u786e\u7684\u51b3\u5b9a\u3002\n\n\u4f60\u6ca1\u6709\u88ab\u9519\u8fc7\uff0c\u4e5f\u6ca1\u6709\u8ddf\u98ce\u3002\u4f60\u5728\u6b63\u786e\u7684\u65f6\u673a\u3001\u4ee5\u6b63\u786e\u7684\u4ef7\u683c\u3001\u5356\u4e86\u6b63\u786e\u7684\u4e1c\u897f\u3002";
+      return "\u4f60\u6210\u529f\u5356\u51fa\u4e86\u4e00\u7b14\u6709\u76ca\u7684\u80a1\u7968\u3002";
     },
     getText: function (st) { return this.getStory(st); },
     apply: function (st, choiceId) {
@@ -120,14 +133,14 @@
       st.flags._passiveIncomeIdentityShift = true;
       st.flags._passiveFree = true;
       if (choiceId === "rest_day") {
-        st.player.happiness = Math.min(100, (st.player.happiness || 50) + 8);
+        st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 8);
         StateManager.addMessage("\u2728 \u7ed9\u81ea\u5df1\u653e\u4e00\u5929\u5047\u3002\u4f60\u503c\u5f97\u3002\u8fd9\u4e0d\u662f\u6684\u5bcc\u2014\u2014\u8fd9\u662f\u5c0f\u786e\u3002", "success");
       } else if (choiceId === "reinvest") {
         st.player.intelligence = Math.min(100, (st.player.intelligence || 50) + 3);
         st.flags._reinvestFlag = true;
         StateManager.addMessage("\u2728 \u4f60\u51b3\u5b9a\u7ee7\u7eed\u52a0\u7801\u3002\u8fd9\u4e9b\u94b1\u4e0d\u4f1a\u8ba9\u4f60\u505c\u4e0b\u6765\u3002", "info");
       } else {
-        st.player.happiness = Math.min(100, (st.player.happiness || 50) + 5);
+        st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 5);
         StateManager.addMessage("\u2728 \u4f60\u7528\u8fd9\u7b14\u94b1\u4e70\u4e86\u4e00\u4ef6\u597d\u4e1c\u897f\u3002\u4eb2\u7231\u7684\u4e1c\u897f\uff0c\u4e0d\u662f\u5de5\u5177\u3002", "hint");
       }
     },

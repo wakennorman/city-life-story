@@ -43,11 +43,11 @@
       if (!st.flags) st.flags = {};
       st.flags._prevSavingsCheck = _getTotalAssets(st);
       if (choiceId === 'save_more') {
-        st.player.happiness = Math.min(100, (st.player.happiness || 50) + 8);
+        st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 8);
         st.player.mental = Math.min(100, (st.player.mental || 50) + 3);
         StateManager.addMessage('你把这事记在心里。一千不是终点，只是起点。心情+8，精神+3。', 'success');
       } else if (choiceId === 'treat_self') {
-        st.player.happiness = Math.min(100, (st.player.happiness || 50) + 10);
+        st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 10);
         st.resources.cash = Math.max(0, (st.resources.cash || 0) - 100);
         StateManager.addMessage('出去吃了一顿好的！￥100的烤肉，配一碗白米饭。快乐无价。心情+10。', 'info');
       }
@@ -92,7 +92,7 @@
         st.player.mental = Math.min(100, (st.player.mental || 50) + 2);
         StateManager.addMessage('你买了一本理财入门书。知识才是最好的投资。智力+4，精神+2。', 'success');
       } else if (choiceId === 'emergency_fund') {
-        st.player.happiness = Math.min(100, (st.player.happiness || 50) + 6);
+        st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 6);
         st.player.mental = Math.min(100, (st.player.mental || 50) + 5);
         st.flags._emergencyMindset = true;
         StateManager.addMessage('你把心安了下来。知道钱在那儿，你就知道再怎么也能活下去。心情+6，精神+5。', 'success');
@@ -138,7 +138,7 @@
         st.flags._investInSelf = true;
         StateManager.addMessage('你决定把这笔钱的一部分用在自己身上。培训/证书/技能\u2014\u2014这是最有回报的投资。智力+5。', 'success');
       } else if (choiceId === 'expand_hustle') {
-        st.player.happiness = Math.min(100, (st.player.happiness || 50) + 10);
+        st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 10);
         st.player.mental = Math.min(100, (st.player.mental || 50) + 3);
         st.flags._expandHustle = true;
         StateManager.addMessage('你有底气去拓展副业了。两万块的底牌在手，不怕试错。心情+10。', 'success');
@@ -187,7 +187,7 @@
         StateManager.addMessage('灌了三杯浓缩咖啡硬扛下去。疲劳-10，健康-5。明天你会后悔今天的决定。', 'warning');
       } else {
         st.needs.fatigue = Math.max(0, (st.needs.fatigue || 0) - 30);
-        st.player.happiness = Math.min(100, (st.player.happiness || 50) + 5);
+        st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 5);
         StateManager.addMessage('你请了一天假。躺在床上发呆，什么也没做。反而感觉好多了。疲劳-30，心情+5。', 'success');
       }
     },

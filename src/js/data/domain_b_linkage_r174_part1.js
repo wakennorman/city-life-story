@@ -15,14 +15,14 @@
     priority: 90,
     conditions: function (st) {
       if (!st || !st.career || !st.career.currentJob) return false;
-      if ((st.career.currentJob.tenure || 0) < 90) return false;
+      if ((st.career.currentJob.workDays || 0) < 90) return false; // [全系统自洽修复] 域B 修复:tenure→workDays(职业用workDays)
       if ((st.resources && st.resources.cash) > 5000) return false;
       if (st.flags && st.flags._layoffSeen) return false;
       return true;
     },
     probability: 0.025,
     getStory: function (st) {
-      var salary = (st.career.currentJob && st.career.currentJob.pay) || 3000;
+      var salary = (st.career.currentJob && st.career.currentJob.salary) || 3000; // [全系统自洽修复] 域B 修复:pay→salary(职业用salary)
       return "HR在下午三点叫你进会议室，门一关，氛围就不对了。\n公司情势不容乐观。你的位置被优化了。\n补偿方案是" + Math.round(salary * 1.5) + "，但你这个月的房租还没着落。";
     },
     getText: function (st) { return this.getStory(st); },
@@ -35,10 +35,10 @@
       } else if (choiceId === "argue") {
         if ((st.player && st.player.charm) >= 35) {
           st.resources.cash = (st.resources.cash || 0) + 5000;
-          st.player.happiness = Math.min(100, (st.player.happiness || 50) + 5);
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 5);
           StateManager.addMessage("能说会的人吃馆。你多要了2000。", "success");
         } else {
-          st.player.happiness = Math.max(0, (st.player.happiness || 50) - 5);
+          st.needs.happiness = Math.max(0, (st.needs.happiness || 50) - 5);
           StateManager.addMessage("你想争一下，但HR一脸冷漠。", "warning");
         }
       } else {
@@ -84,10 +84,10 @@
       if (!st) return;
       if (choiceId === "start_over") {
         st.player.mental = Math.min(100, (st.player.mental || 50) + 8);
-        st.player.happiness = Math.min(100, (st.player.happiness || 50) + 12);
+        st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 12);
         StateManager.addMessage("重新开始。至少还有勇气。", "success");
       } else {
-        st.player.fatigue = Math.min(100, (st.player.fatigue || 50) + 10);
+        st.needs.fatigue = Math.min(100, (st.needs.fatigue || 50) + 10);
         StateManager.addMessage("先缓几天。", "info");
       }
     },
@@ -122,7 +122,7 @@
       if (!st) return;
       if (choiceId === "accept") {
         st.player.fame = Math.min(100, (st.player.fame || 0) + 5);
-        st.player.happiness = Math.min(100, (st.player.happiness || 50) + 15);
+        st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 15);
         st.player.morality = Math.min(100, (st.player.morality || 50) + 5);
         st.resources.cash = (st.resources.cash || 0) + 500;
         StateManager.addMessage("你摆了摆手说不用谢，但他执意塞了钱。走在路上，你觉得今天的太阳格外暖。", "success");
@@ -164,12 +164,12 @@
         var toPay = Math.min(1000, haveCash);
         st.resources.cash = Math.max(0, (st.resources.cash || 0) - toPay);
         st.player.morality = Math.min(100, (st.player.morality || 50) + 12);
-        st.player.happiness = Math.min(100, (st.player.happiness || 50) + 10);
+        st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 10);
         st.flags.moralWalletStolen = false;
         st.flags.moralWalletReturner = true;
         StateManager.addMessage("你喊住了老人，把钱和他身份证一起递回去。心跳如鼓——但心里那块石头落地了。", "success");
       } else if (choiceId === "run") {
-        st.player.happiness = Math.max(0, (st.player.happiness || 50) - 8);
+        st.needs.happiness = Math.max(0, (st.needs.happiness || 50) - 8);
         st.player.mental = Math.max(0, (st.player.mental || 50) - 5);
         StateManager.addMessage("你心跳加速地绕开了。那双颤抖的手让你想起了什么。", "warning");
       } else {
@@ -210,12 +210,12 @@
     apply: function (st, choiceId) {
       if (!st) return;
       if (choiceId === "quit_all") {
-        st.player.happiness = Math.max(0, (st.player.happiness || 50) - 15);
+        st.needs.happiness = Math.max(0, (st.needs.happiness || 50) - 15);
         st.sideHustle = null;
         StateManager.addMessage("关掉了副业页面。心很累。", "warning");
       } else {
         st.resources.cash = Math.max(0, (st.resources.cash || 0) - Random.int(50, 200));
-        st.player.happiness = Math.min(100, (st.player.happiness || 50) + 5);
+        st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 5);
         st.flags._recentSideLoss = true;
         StateManager.addMessage("再试一次。", "info");
       }
@@ -256,10 +256,10 @@
         st.player.intelligence = Math.min(100, (st.player.intelligence || 50) + 2);
         StateManager.addMessage("坐在图书馆里翻了一下午书。知识不会背叛你。", "success");
       } else if (choiceId === "walk_city") {
-        st.player.happiness = Math.min(100, (st.player.happiness || 50) + 8);
+        st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 8);
         StateManager.addMessage("你沿着街道走了一圈。城市的烟火气好像没那么糟糕了。", "hint");
       } else {
-        st.player.happiness = Math.min(100, (st.player.happiness || 50) + 5);
+        st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 5);
         StateManager.addMessage("茶叶蛋下肚，你有了点力气。也许该认真看看工作了。", "info");
       }
     },

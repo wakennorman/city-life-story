@@ -59,7 +59,7 @@
         }
         if (st.player) {
           st.player.mental = Math.min(100, (st.player.mental || 50) + 5);
-          st.player.happiness = Math.min(100, (st.player.happiness || 50) + 8);
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 8);
         }
         if (typeof StateManager !== 'undefined' && StateManager.addMessage) {
           StateManager.addMessage('🔥 你决定不再等了。是时候为自己干一场了。管理XP+15，精神+5，心情+8。创业启动金减免已解锁！', 'success');
@@ -131,7 +131,7 @@
         }
         if (st.player) {
           st.player.mental = Math.min(100, (st.player.mental || 50) + 5);
-          st.player.happiness = Math.min(100, (st.player.happiness || 50) + 5);
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 5);
         }
         if (typeof StateManager !== 'undefined' && StateManager.addMessage) {
           var msg = '🎯 你决定深耕自己的方向。' + (bestSkill ? '核心技能+' : '') + '10XP，精神+5，心情+5。';
@@ -215,7 +215,7 @@
           }
         }
         if (st.player) {
-          st.player.happiness = Math.min(100, (st.player.happiness || 50) + 10);
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 10);
           st.player.mental = Math.min(100, (st.player.mental || 50) + 5);
         }
         if (typeof StateManager !== 'undefined' && StateManager.addMessage) {

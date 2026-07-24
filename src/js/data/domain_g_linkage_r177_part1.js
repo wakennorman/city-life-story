@@ -43,11 +43,11 @@
       st.flags._emotionalAfterglowDone = true;
       if (choiceId === 'diary') {
         st.player.mental = Math.min(100, (st.player.mental || 50) + 5);
-        st.player.happiness = Math.min(100, (st.player.happiness || 50) + 5);
+        st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 5);
         StateManager.addMessage('你把那段记忆写进了日记。有时候记录本身就是疗愈。精神+5，心情+5。', 'success');
       } else if (choiceId === 'walk_out') {
-        st.player.fatigue = Math.min(100, (st.player.fatigue || 0) + 3);
-        st.player.happiness = Math.min(100, (st.player.happiness || 50) + 8);
+        st.needs.fatigue = Math.min(100, (st.needs.fatigue || 0) + 3);
+        st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 8);
         StateManager.addMessage('你出门走了走。城市的灯火依然温暖。疲劳+3，心情+8。', 'info');
       } else {
         st.flags._pragmaticCoping = true;
@@ -104,12 +104,12 @@
       if (!st.flags) st.flags = {};
       st.flags._chapterEchoUsedCount = (st.flags._chapterEchoUsedCount || 0) + 1;
       if (choiceId === 'move_forward') {
-        st.player.happiness = Math.min(100, (st.player.happiness || 50) + 10);
+        st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 10);
         st.player.mental = Math.min(100, (st.player.mental || 50) + 3);
         StateManager.addMessage('你深吸一口气，继续往前走。每一步都算数。心情+10，精神+3。', 'success');
       } else if (choiceId === 'thank_self') {
         st.player.charm = Math.min(100, (st.player.charm || 50) + 2);
-        st.player.happiness = Math.min(100, (st.player.happiness || 50) + 12);
+        st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 12);
         StateManager.addMessage('你对自己说声辛苦了。这份自我认可比任何人的赞美都重要。魅力+2，心情+12。', 'success');
       } else {
         st.flags._chapterEchoRegret = true;

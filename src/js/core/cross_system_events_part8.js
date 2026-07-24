@@ -9,7 +9,7 @@
 
   RANDOM_EVENTS.push({
     id: "winter_year_end_reflection",
-    phase: "any",
+    phase: "street", // [全系统自洽修复] 域B 修复:phase "any"永不触发(引擎只认street/corporate)
     icon: "🎆",
     title: "又一年快过去了",
     story:

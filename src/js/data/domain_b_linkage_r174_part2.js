@@ -44,7 +44,7 @@
       } else if (choiceId === "drink") {
         st.resources.cash = Math.max(0, (st.resources.cash || 0) - 500);
         st.player.fame = Math.min(100, (st.player.fame || 0) + 3);
-        st.player.happiness = Math.min(100, (st.player.happiness || 50) + 5);
+        st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 5);
         var rels = st.relationships || {};
         for (var k in rels) {
           if (rels[k] && rels[k].met && rels[k].affinity !== undefined) {
@@ -53,7 +53,7 @@
         }
         StateManager.addMessage("请留下的同事吃最后一顿饭。fame+3, happiness+5。", "hint");
       } else {
-        st.player.happiness = Math.max(0, (st.player.happiness || 50) - 10);
+        st.needs.happiness = Math.max(0, (st.needs.happiness || 50) - 10);
         st.flags._abandonedCompany = true;
         StateManager.addMessage("什么都不带，直接离开。一切归零。", "warning");
       }
@@ -96,8 +96,8 @@
     apply: function (st, choiceId) {
       if (!st) return;
       if (choiceId === "retry") {
-        st.player.happiness = Math.min(100, (st.player.happiness || 50) + 10);
-        st.player.ability = Math.min(100, (st.player.ability || 50) + 3);
+        st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 10);
+        st.player.corporate.ability = Math.min(100, (st.player.corporate.ability || 50) + 3);
         st.flags._startupRenewed = true;
         st.flags._rebirthAttempted = true;
         if (st.startup) {
@@ -106,11 +106,11 @@
         }
         StateManager.addMessage("再试一次！这次你知道该怎么做了。", "success");
       } else if (choiceId === "find_job") {
-        st.player.happiness = Math.min(100, (st.player.happiness || 50) + 5);
+        st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 5);
         st.flags._rebirthAttempted = true;
         StateManager.addMessage("先找份工作稳定下来。不是逃避——是蓄力。", "hint");
       } else {
-        st.player.happiness = Math.max(0, (st.player.happiness || 50) - 8);
+        st.needs.happiness = Math.max(0, (st.needs.happiness || 50) - 8);
         st.player.mental = Math.max(0, (st.player.mental || 50) - 3);
         st.flags._quitEntrepreneurship = true;
         st.flags._rebirthAttempted = true;
