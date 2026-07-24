@@ -2136,6 +2136,7 @@ function renderCareerOverview(state, parent) {
   if (
     state.startup &&
     state.startup.status === "none" &&
+    state.flags &&
     !state.flags._phase2RitualShown
   ) {
     var _totalCash =
@@ -2865,6 +2866,7 @@ var _careerLabelMap = {
  * 获取技能/属性当前值（与 checkCareerPromotion 一致）
  */
 function _getCareerReqValue(state, key) {
+  if (!state || !state.player) return 0; // [全系统自洽修复] 域C A类: state.player 守卫
   var p = state.player;
   if (key === "intelligence") return p.intelligence || 0;
   if (key === "mental") return p.mental || 0;
@@ -2882,6 +2884,7 @@ function _getCareerReqValue(state, key) {
  * @returns {Array<{label:string, ok:boolean, current:number, required:(number|string)}>}
  */
 function checkCareerPromotionDetailed(state, pathId, level) {
+  if (!state || !state.player) return []; // [全系统自洽修复] 域C A类: state.player 守卫
   var p = state.player;
   var results = [];
 
@@ -3195,6 +3198,7 @@ function applyCareerPromotion(pathId, levelId) {
     event: "晋升：" + oldJob.levelName + " → " + level.name,
   });
   // v3.51：首次晋升成就标记
+  if (!state.flags) state.flags = {}; // [全系统自洽修复] 域C A类: state.flags 守卫
   if (!state.flags._careerFirstPromotion) {
     state.flags._careerFirstPromotion = true;
   }
@@ -3331,6 +3335,7 @@ function tickCareerJobDaily(state) {
   if (!state.career || !state.career.currentJob) return;
 
   // ====== 连续工作天数追踪（上班族版本）======
+  if (!state.flags) state.flags = {}; // [全系统自洽修复] 域C A类: state.flags 守卫
   if (!state.flags._workStreak) state.flags._workStreak = 0;
   if (!state.flags._lastWorkDay) state.flags._lastWorkDay = 0;
   if (state.flags._lastWorkDay === state.player.day - 1) {
@@ -3597,6 +3602,7 @@ function tickCareerJobDaily(state) {
   tickCareerOccupationalRisk(state);
 
   // ----- 倦怠恢复成就追踪 -----
+  if (!state.flags) state.flags = {}; // [全系统自洽修复] 域C A类: state.flags 守卫
   if ((cap.burnout || 0) >= 70) {
     state.flags._burnoutWasHigh = true;
   }
@@ -3847,6 +3853,7 @@ function tickCareerOccupationalRisk(state) {
   StateManager.addMessage(profile.msgs[levelIdx], "warning");
 
   // 设置职业病成就标记
+  if (!state.flags) state.flags = {}; // [全系统自洽修复] 域C A类: state.flags 守卫
   state.flags[profile.flagKey] = true;
   state.flags._hasOccupationalDisease = true;
 
