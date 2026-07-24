@@ -1,8 +1,8 @@
 {
-  "currentRound": 196,
-  "currentDomain": "C",
-  "nextDomain": "A",
-  "rotationIndex": 8,
+  "currentRound": 197,
+  "currentDomain": "A",
+  "nextDomain": "F",
+  "rotationIndex": 1,
   "domainOrder": [
     "A",
     "B",
@@ -14,7 +14,7 @@
     "H"
   ],
   "domainRecency": {
-    "A": 189,
+    "A": 197,
     "B": 190,
     "C": 196,
     "D": 194,
@@ -63,13 +63,18 @@
       "round": 196,
       "domain": "C",
       "note": "域C(pivot自F): A类0项——域C A类缺陷已全部由并行窗口覆盖(career_dev.js:3376 在职里程碑健康加成死字段 state.needs.health→state.status.health 由9b8ddfa2同源修复 / career_dev.js totalEarned NaN守卫×2 由f1ba9549 / reqSocial晋升检查+caregiverXp孤儿effect+5项技能检查 由9b8ddfa2),本窗口不再重复修。联动增强3项(新建 domain_c_linkage_r196.js,2 street+1 corporate: C→B手艺成街坊美谈→state.player.fame+4+mental / C→F执业沉淀作品集→mental+happiness / C→H前辈点名带新人→addSkillXp management+cash,全||防御,数值[PLACEHOLDER])。P.S. 并行 f1ba9549 在 src/index.html 误注册了缺失文件 domain_f_linkage_r196.js(悬空引用),本窗口 pivot 将其改为存在的 domain_c_linkage_r196.js,消除悬空引用。MC 6×400d 0代码异常。下轮R197→域A(recency 189 最薄弱)。"
+    },
+    {
+      "round": 197,
+      "domain": "A",
+      "note": "域A: A类1类4键(skills.js 证书效果键 healthBonus/mentalBonus/illnessRiskReduction/fatigueReduction 全库无消费者→nursing_cert/health_manager/rehab_therapist/psychologist 四证书 desc 宣称的健康+/心智+/降低患病风险/疲劳- 全部静默失效,A类#4死效果键;main.js 发证循环补4消费分支:healthBonus→state.status.health/mentalBonus→state.player.mental/illnessRiskReduction→累积 state.flags._illnessRiskReduction(clamp0.8)且 phase1/illness.js:137 掷骰前 ch*=1-cut 乘性降患病率/fatigueReduction→累积 state.flags._certFatigueReduction 且 main.js:4598 工作疲劳叠加)。联动增强3项(新建 domain_a_linkage_r197.js,2 street+1 corporate: a197_health_baseline A→G建健康档案基线→status.health+player.mental+置_healthBaselineKeeper呼应证书健康修复 / a197_ledger_clarity A→F收支明白账→mental+needs.happiness+置_budgetClarityKeeper / a197_data_driven_budget A→H用数据争预算→addSkillXp management+cash,全||防御,数值[PLACEHOLDER])。C类记录不改:items.js skillStudy/skillXpBonus/skillStudyBonus 无应用器 + finance.js hasStreetStall/hasScavengeRoute flag 从未写入。MC 6×400d 0代码异常;构建9194.6KB。下轮R198→域F(recency 186 最薄弱)。"
     }
   ],
-  "lastDomain": "C",
-  "lastRound": 196,
+  "lastDomain": "A",
+  "lastRound": 197,
   "lastDate": "2026-07-25",
-  "lastCommit": "bcd63c6bd7af3d825c5fae9436c9a9245d32cdd9",
-  "pushStatus": "PUSHED",
+  "lastCommit": "PENDING",
+  "pushStatus": "PENDING",
   "completedDomains": [
     "A",
     "B",
@@ -80,5 +85,5 @@
     "G",
     "H"
   ],
-  "description": "全系统优化 loop R196 pivot→域C(职业/成长)。域C A类缺陷已由并行窗口(9b8ddfa2/f1ba9549)全量覆盖,故A类0项;本窗口仅补3项跨域联动增强(domain_c_linkage_r196.js: C→B手艺美谈名望/C→F作品集心智+心情/C→H前辈带人转化management技能+现金),全||防御,数值[PLACEHOLDER]。附带修正并行 f1ba9549 在 index.html 误注册的缺失文件 domain_f_linkage_r196.js 为 domain_c_linkage_r196.js(消除悬空引用)。A为最薄弱(recency 189),下轮R197→域A。"
+  "description": "全系统优化 loop R197→域A(数据/数值平衡,recency 189 最薄弱)。A类修复1类4键:skills.js 证书效果键 healthBonus/mentalBonus/illnessRiskReduction/fatigueReduction 全库无消费者(四证书宣称的健康/心智/患病风险/疲劳效果静默失效),main.js 发证循环补4消费分支+phase1/illness.js 掷骰前接入 illnessRiskReduction 乘性降患病率+main.js 工作疲劳叠加 certFatigueReduction。联动增强3项(domain_a_linkage_r197.js: A→G健康档案基线/A→F收支明白账清晰感/A→H用数据争预算→management XP+现金),全||防御,数值[PLACEHOLDER]。C类记录:items.js 装备效果键无应用器 + finance.js hasStreetStall/hasScavengeRoute flag 从未写入。MC 6×400d 0代码异常。下轮R198→域F(recency 186 最薄弱)。"
 }
