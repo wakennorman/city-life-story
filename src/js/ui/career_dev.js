@@ -3411,7 +3411,13 @@ function tickCareerJobDaily(state) {
     // P1-5：证书→职业薪资加成
     var certBonus = _calcCertSalaryBonus(state, job.path, job.salary || 5000);
     state.resources.cash = (state.resources.cash || 0) + (salary || 0) + (certBonus || 0);
-    state.resources.totalEarned += salary + certBonus;
+    // [全系统自洽修复] 域C A类#1: totalEarned NaN守卫（原裸+=，旧存档/极端值可致NaN传播）
+    state.resources.totalEarned = (state.resources.totalEarned || 0) + (salary || 0) + (certBonus || 0);
+    // [全系统自洽修复] 域C 联动增强#1 C→E: 高薪职业→投资信心加成（月薪≥20000时解锁投资分析增益）
+    if (job.salary >= 20000 && !state.flags._highSalaryInvestor) {
+      state.flags._highSalaryInvestor = true;
+      StateManager.addMessage("💼 高薪让你有了更多投资底气。投资分析能力获得小幅加成。", "info");
+    }
     var salaryMsg =
       "💰 收到月薪 ¥" + salary.toLocaleString() + "（" + job.levelName + "）";
     if (isInProbation(state)) salaryMsg += "（试用期八折）";
@@ -3530,7 +3536,8 @@ function tickCareerJobDaily(state) {
       }
       var finalBonus = dreamBonus;
       state.resources.cash = (state.resources.cash || 0) + (finalBonus || 0);
-      state.resources.totalEarned += finalBonus;
+      // [全系统自洽修复] 域C A类#1: totalEarned NaN守卫
+      state.resources.totalEarned = (state.resources.totalEarned || 0) + (finalBonus || 0);
       var coeffLabel =
         coeff === 3
           ? "超额完成(×3)"

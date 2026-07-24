@@ -221312,6 +221312,199 @@ if (typeof window !== "undefined") {
 })();
 
 ;
+// ==== js/core/domain_f_linkage_r196.js ====
+/*
+ * 城市浮生记 — 域F（UI/UX）联动增强事件 · 第二轮（R196）
+ * loop R196 全系统优化·Domain F 界面/体验 → 跨域桥接（F→E / F→G / F→H）
+ *
+ * 设计约束（与 R19 ui_linkage_events.js / R11-R18 各域 linkage 一致）：
+ *  - 以 IIFE 注入全局 RANDOM_EVENTS 数组（非 ES import），避免改 cross_system_events.js。
+ *  - 所有 state 访问均 || 防御；数值一律标 [PLACEHOLDER] 待数值组校准。
+ *  - 事件引擎严格按 e.phase 过滤（state.player.phase 仅 "street"/"corporate"），
+ *    故本文件事件须显式设置 phase；这里 2 street + 1 corporate 覆盖两种人生阶段。
+ *  - 社交桥接严格遵守域D架构铁律：只读 state.relationships；引用 NPC 须 rel && rel.met；
+ *    跨 NPC 好感传导一律走 applyAffinityChange（自动 clamp + 记 _lastInteractionDay + 升级播报）。
+ *  - 里程碑/冷却用 st.flags._xxxDone 去重（conditions 与 apply 双重拦截）。
+ *  - id 前缀 ui2_ 与 R19 的 ui_ 不冲突。
+ *  - 主题：界面/体验层面的「理财看板、习惯规划、职场形象」反哺到经济(E)、核心机制(G)、公司(H)。
+ */
+(function () {
+  if (typeof RANDOM_EVENTS === "undefined" || !RANDOM_EVENTS) return;
+  if (RANDOM_EVENTS._domainFLinkageR196Loaded) return;
+  RANDOM_EVENTS._domainFLinkageR196Loaded = true;
+
+  // ---- 本地助手（IIFE 作用域，避免与同模式文件命名冲突） ----
+
+  // 取已结识且好感达阈值的 NPC 列表（域D铁律：须 rel && rel.met）
+  function getMetNpcsF196(st, minAff) {
+    minAff = minAff || 0;
+    var out = [];
+    if (!st || !st.relationships) return out;
+    for (var id in st.relationships) {
+      if (!Object.prototype.hasOwnProperty.call(st.relationships, id)) continue;
+      var r = st.relationships[id];
+      if (r && r.met && (r.affinity || 0) >= minAff)
+        out.push({ id: id, rel: r });
+    }
+    return out;
+  }
+
+  // 安全改好感：优先全局 applyAffinityChange，否则兜底直写（域D铁律）
+  function safeAffinityF196(st, npcId, change, reason) {
+    if (!st || !npcId) return;
+    if (typeof applyAffinityChange === "function") {
+      applyAffinityChange(st, npcId, change, reason || "域F联动R196");
+      return;
+    }
+    if (!st.relationships) st.relationships = {};
+    if (!st.relationships[npcId])
+      st.relationships[npcId] = { met: true, affinity: 0 };
+    st.relationships[npcId].affinity =
+      (st.relationships[npcId].affinity || 0) + change;
+    st.relationships[npcId].met = true;
+  }
+
+  // ---- 域F 联动事件（R196） ----
+
+  var UI_EVENTS_R196 = [
+    // ===== F→E：理财看板让漏掉的订阅现形 ↔ 经济/投资（落袋腾本金+理财意识） =====
+    {
+      id: "ui2_fintech_clarity",
+      title: "理财看板揪出的那笔忘了退的订阅",
+      desc: "你把一个多月没打开的记账/预算面板重新拾起来，顺手把自动扣费的项目列了遍。翻到第三页才发现，半年前随手开的会员还在每月扣钱——你当即退掉，并把这笔钱划进了平时舍不得碰的投资账户。",
+      phase: "street",
+      triggers: { minDay: 60 },
+      conditions: function (st) {
+        if (!st || !st.player) return false;
+        if (st.flags && st.flags._ui2FintechClarityCooldown) return false;
+        return true;
+      },
+      choices: [
+        {
+          text: "把省下的钱定投进去",
+          apply: function (st) {
+            // E域桥接：UI 清晰感转化为真实现金落袋 + 理财意识 flag（复用 _dataInvestorMindset 跨域契约）
+            if (st.resources && typeof st.resources.cash === "number") {
+              st.resources.cash += 600; // [PLACEHOLDER] 退回订阅的累计金额
+            } else if (st.resources) {
+              st.resources.cash = (st.resources.cash || 0) + 600; // [PLACEHOLDER]
+            }
+            if (st.flags) {
+              st.flags._dataInvestorMindset = true; // 跨域契约：与 R18/R22/R23 一致
+              st.flags._ui2FintechClarityCooldown = true;
+            }
+            if (st.needs) st.needs.happiness = (st.needs.happiness || 50) + 3;
+            if (typeof StateManager !== "undefined" && StateManager.addMessage)
+              StateManager.addMessage(
+                "一眼看穿的糊涂账，比赚一笔还让人安心。",
+                "good",
+              );
+          },
+        },
+        {
+          text: "退了就行，钱先花掉",
+          apply: function (st) {
+            if (st.resources && typeof st.resources.cash === "number") {
+              st.resources.cash += 200; // [PLACEHOLDER]
+            } else if (st.resources) {
+              st.resources.cash = (st.resources.cash || 0) + 200; // [PLACEHOLDER]
+            }
+            if (st.flags) st.flags._ui2FintechClarityCooldown = true;
+          },
+        },
+      ],
+      probability: 0.04,
+    },
+
+    // ===== F→G：习惯规划面板帮你把日子过出节奏 ↔ 核心机制/生命周期（心智+心情成长） =====
+    {
+      id: "ui2_life_planner",
+      title: "一块习惯面板，把飘着的日子钉出了节奏",
+      desc: "你在手机里摆了块习惯面板，睡觉、喝水、散步各占一格。头几天总忘，半个月后竟成了肌肉记忆——某天抬头，发现焦虑没那么容易涌上来了。",
+      phase: "street",
+      triggers: { minDay: 50 },
+      conditions: function (st) {
+        if (!st || !st.player) return false;
+        if (st.flags && st.flags._ui2LifePlannerCooldown) return false;
+        return true;
+      },
+      choices: [
+        {
+          text: "把这股节奏守住",
+          apply: function (st) {
+            // G域桥接：生活秩序感反哺核心生存属性（mental 在 player，happiness 在 needs，均为真实字段）
+            if (st.player) st.player.mental = (st.player.mental || 50) + 5; // [PLACEHOLDER] 心智回馈
+            if (st.needs) st.needs.happiness = (st.needs.happiness || 50) + 4; // [PLACEHOLDER] 心情
+            if (st.flags) st.flags._ui2LifePlannerCooldown = true;
+            if (typeof StateManager !== "undefined" && StateManager.addMessage)
+              StateManager.addMessage(
+                "把生活钉出节奏，紧绷感自己就松了下来。",
+                "good",
+              );
+          },
+        },
+        {
+          text: "偶尔摆烂也没事",
+          apply: function (st) {
+            if (st.player) st.player.mental = (st.player.mental || 50) + 2;
+            if (st.flags) st.flags._ui2LifePlannerCooldown = true;
+          },
+        },
+      ],
+      probability: 0.04,
+    },
+
+    // ===== F→H：把职业履历页打磨顺眼 ↔ 公司/创业（形象转化为经营技能） =====
+    {
+      id: "ui2_profile_polish",
+      title: "被同事转发的一份「像样的」履历页",
+      desc: "年终复盘前，你把个人主页和项目集重新排了版——配色统一、重点突出。没想到一位前辈顺手转发给了业务线的负责人，对方回了一句：这人，做事有章法。",
+      phase: "corporate",
+      triggers: { minDay: 120 },
+      conditions: function (st) {
+        if (!st || !st.player) return false;
+        if (st.flags && st.flags._ui2ProfilePolishCooldown) return false;
+        // 须处于公司/职场语境：有固定工作或 corporate 公司对象（均为真实字段）
+        var hasJob =
+          (st.career && st.career.currentJob) ||
+          (st.corporate && st.corporate.company);
+        if (!hasJob) return false;
+        return true;
+      },
+      choices: [
+        {
+          text: "把这套呈现沉淀成方法论",
+          apply: function (st) {
+            // H域桥接：呈现力转化为真实经营/管理技能（management 为公司 KPI 真实技能键）
+            if (typeof addSkillXp === "function") addSkillXp("management", 8); // [PLACEHOLDER] 表达/管理XP
+            if (st.player) st.player.mental = (st.player.mental || 50) + 3;
+            if (st.needs) st.needs.happiness = (st.needs.happiness || 50) + 2;
+            if (st.flags) st.flags._ui2ProfilePolishCooldown = true;
+            if (typeof StateManager !== "undefined" && StateManager.addMessage)
+              StateManager.addMessage(
+                "把门面做漂亮，机会有时就藏在门面背后。",
+                "good",
+              );
+          },
+        },
+        {
+          text: "被夸一句就够本了",
+          apply: function (st) {
+            if (st.player) st.player.mental = (st.player.mental || 50) + 1;
+            if (st.flags) st.flags._ui2ProfilePolishCooldown = true;
+          },
+        },
+      ],
+      probability: 0.04,
+    },
+  ];
+
+  for (var i = 0; i < UI_EVENTS_R196.length; i++) {
+    RANDOM_EVENTS.push(UI_EVENTS_R196[i]);
+  }
+})();
+
+;
 // ==== js/components/companyHistory.js ====
 /**
  * 公司历史书组件（P1 企业命运系统 Phase 2）
@@ -248290,6 +248483,12 @@ function checkCareerPromotion(state, pathId, level) {
     }
   }
 
+  // [全系统自洽修复] 域C 修复:reqSocial原checkCareerPromotion未检查(UI显示需求但晋升不验证)
+  if (level.reqSocial) {
+    var socialVal = _getSkillValue(state, "social");
+    if (socialVal < level.reqSocial) return false;
+  }
+
   // 工作天数检查
   var career = state.career || {};
   var workDays = career.currentJob ? career.currentJob.workDays || 0 : 0;
@@ -248409,6 +248608,17 @@ function checkCareerPromotionDetailed(state, pathId, level) {
         required: reqa,
       });
     }
+  }
+
+  // [全系统自洽修复] 域C 修复:reqSocial详情面板(原仅文本显示,现与晋升逻辑一致)
+  if (level.reqSocial) {
+    var socialCur = _getCareerReqValue(state, "social");
+    results.push({
+      label: "人脉≥" + level.reqSocial,
+      ok: socialCur >= level.reqSocial,
+      current: socialCur,
+      required: level.reqSocial,
+    });
   }
 
   // 工作天数
@@ -248846,7 +249056,9 @@ function tickCareerJobDaily(state) {
     if (_newWd === 30 || _newWd === 90 || _newWd === 365 || _newWd % 365 === 0) {
       if (state.needs) {
         state.needs.happiness = Math.min(100, (state.needs.happiness || 0) + 3);
-        state.needs.health = Math.min(100, (state.needs.health || 100) + 1);
+        // [全系统自洽修复] 域F 修复:career_dev.js 里程碑健康加成写 state.needs.health 死字段
+        // （state.needs 无 health，真实且被渲染的字段为 state.status.health）→「+1 健康」被静默丢弃，改为真实字段
+        state.status.health = Math.min(100, (state.status.health || 100) + 1);
       }
     }
   }
@@ -248865,7 +249077,13 @@ function tickCareerJobDaily(state) {
     // P1-5：证书→职业薪资加成
     var certBonus = _calcCertSalaryBonus(state, job.path, job.salary || 5000);
     state.resources.cash = (state.resources.cash || 0) + (salary || 0) + (certBonus || 0);
-    state.resources.totalEarned += salary + certBonus;
+    // [全系统自洽修复] 域C A类#1: totalEarned NaN守卫（原裸+=，旧存档/极端值可致NaN传播）
+    state.resources.totalEarned = (state.resources.totalEarned || 0) + (salary || 0) + (certBonus || 0);
+    // [全系统自洽修复] 域C 联动增强#1 C→E: 高薪职业→投资信心加成（月薪≥20000时解锁投资分析增益）
+    if (job.salary >= 20000 && !state.flags._highSalaryInvestor) {
+      state.flags._highSalaryInvestor = true;
+      StateManager.addMessage("💼 高薪让你有了更多投资底气。投资分析能力获得小幅加成。", "info");
+    }
     var salaryMsg =
       "💰 收到月薪 ¥" + salary.toLocaleString() + "（" + job.levelName + "）";
     if (isInProbation(state)) salaryMsg += "（试用期八折）";
@@ -248984,7 +249202,8 @@ function tickCareerJobDaily(state) {
       }
       var finalBonus = dreamBonus;
       state.resources.cash = (state.resources.cash || 0) + (finalBonus || 0);
-      state.resources.totalEarned += finalBonus;
+      // [全系统自洽修复] 域C A类#1: totalEarned NaN守卫
+      state.resources.totalEarned = (state.resources.totalEarned || 0) + (finalBonus || 0);
       var coeffLabel =
         coeff === 3
           ? "超额完成(×3)"
@@ -253326,6 +253545,17 @@ function checkJobRequirements(job, state) {
     return `英语技能不足 (需要${reqs.english})`;
   if (reqs.driving && s.driving.level < reqs.driving)
     return `驾驶技能不足，需要驾照 (需要${reqs.driving})`;
+  // [全系统自洽修复] 域C 修复:补全5项缺失技能检查(原仅查cooking/repair/sales/english/driving)
+  if (reqs.welding && s.welding.level < reqs.welding)
+    return `焊接技能不足 (需要${reqs.welding})`;
+  if (reqs.electrician && s.electrician.level < reqs.electrician)
+    return `电工技能不足 (需要${reqs.electrician})`;
+  if (reqs.coding && s.coding.level < reqs.coding)
+    return `编程技能不足 (需要${reqs.coding})`;
+  if (reqs.management && s.management.level < reqs.management)
+    return `管理技能不足 (需要${reqs.management})`;
+  if (reqs.accounting && s.accounting.level < reqs.accounting)
+    return `会计技能不足 (需要${reqs.accounting})`;
   if (job.requiredFlag && !state.flags[job.requiredFlag])
     return "尚未解锁（需要NPC好感度）";
   if (job.educationRequired && (p.education || 0) < job.educationRequired) {
@@ -257861,6 +258091,8 @@ function doStreetJob(job) {
     addSkillXp("welding", job.effects.weldingXp || 0);
     addSkillXp("medicine", job.effects.medicineXp || 0);
     addSkillXp("social", job.effects.socialXp || 0);
+    // [全系统自洽修复] 域C 修复:caregiverXp原doStreetJob未消费(孤儿effect),映射到medicine技能
+    addSkillXp("medicine", job.effects.caregiverXp || 0);
     // [全系统自洽修复] 域C 修复:A2 street-job skill XP单key别名统一(codingXp→coding等已在别处)
     if (job.effects.codingXp) addSkillXp("coding", job.effects.codingXp);
     if (job.effects.managementXp)
