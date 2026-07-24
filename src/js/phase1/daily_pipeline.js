@@ -225,7 +225,7 @@ const DAILY_PIPELINE = [
       if (!state || !state.housing) return;
       try {
         var ct = state.housing.tier || 0;
-        var ch = state.resources.cash;
+        var ch = state.resources.cash || 0; // [全系统自洽修复] 域G A类: cash NaN守卫
         if (ct === 0 && ch >= 150) {
           if (typeof StateManager !== "undefined" && StateManager.addMessage) {
             StateManager.addMessage(
@@ -264,8 +264,8 @@ const DAILY_PIPELINE = [
         if (state.flags.auntWangRentDiscount && rentAmount >= 50) {
           rentAmount -= 50;
         }
-        if (state.resources.cash >= rentAmount) {
-          state.resources.cash -= rentAmount;
+        if ((state.resources.cash || 0) >= rentAmount) { // [全系统自洽修复] 域G A类: cash NaN守卫
+          state.resources.cash = (state.resources.cash || 0) - rentAmount;
           addDailyTransaction(
             state,
             "expense",
@@ -289,8 +289,8 @@ const DAILY_PIPELINE = [
         state.housing.storageCapacity > 0
       ) {
         var storageRent = state.housing.storageCapacity >= 500 ? 50 : 20;
-        if (state.resources.cash >= storageRent) {
-          state.resources.cash -= storageRent;
+        if ((state.resources.cash || 0) >= storageRent) { // [全系统自洽修复] 域G A类: cash NaN守卫
+          state.resources.cash = (state.resources.cash || 0) - storageRent;
           addDailyTransaction(
             state,
             "expense",

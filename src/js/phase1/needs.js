@@ -285,7 +285,7 @@ function applyWealthBasedOverhead(state) {
   // 物业费：按资产 0.03%/天（v3.1：0.1%→0.03%，¥500K→¥150/天封顶¥2000/天）
   var propertyFee = Math.min(2000, Math.round(totalAssets * 0.0003));
   if (propertyFee > 0) {
-    state.resources.cash -= propertyFee;
+    state.resources.cash = (state.resources.cash || 0) - propertyFee; // [全系统自洽修复] 域G A类: cash NaN守卫
     if (typeof addDailyTransaction === "function") {
       addDailyTransaction(
         state,
@@ -308,7 +308,7 @@ function applyWealthBasedOverhead(state) {
   var UPKEEP = [0, 10, 40, 200, 500, 2000, 5000];
   var houseCost = UPKEEP[houseTier] || 0;
   if (houseCost > 0) {
-    state.resources.cash -= houseCost;
+    state.resources.cash = (state.resources.cash || 0) - houseCost; // [全系统自洽修复] 域G A类: cash NaN守卫
     if (typeof addDailyTransaction === "function") {
       addDailyTransaction(
         state,
@@ -332,7 +332,7 @@ function applyWealthBasedOverhead(state) {
     var excessWealth = totalAssets - 10000000;
     var wealthFee = Math.round(excessWealth * 0.001);
     if (wealthFee > 0) {
-      state.resources.cash -= wealthFee;
+      state.resources.cash = (state.resources.cash || 0) - wealthFee; // [全系统自洽修复] 域G A类: cash NaN守卫
       if (typeof addDailyTransaction === "function") {
         addDailyTransaction(
           state,

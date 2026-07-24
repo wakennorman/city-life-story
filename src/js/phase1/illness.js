@@ -395,7 +395,7 @@ function _tickChronic(state, inst, ill) {
       (ill.treatCost && ill.treatCost.hospital_monthly) ||
       200;
     if ((state.resources.cash || 0) >= monthly) {
-      state.resources.cash -= monthly;
+      state.resources.cash = (state.resources.cash || 0) - monthly; // [全系统自洽修复] 域G A类: cash NaN守卫
       state.flags._chronicMonthlyPaid = state.player.day;
       if (typeof addDailyTransaction === "function") {
         addDailyTransaction(
@@ -627,7 +627,7 @@ function treatIllness(illnessId, tier) {
     StateManager.addMessage("💸 现金不足 ¥" + cost + "。", "warning");
     return;
   }
-  state.resources.cash -= cost;
+  state.resources.cash = (state.resources.cash || 0) - cost; // [全系统自洽修复] 域G A类: cash NaN守卫
   if (typeof addDailyTransaction === "function") {
     addDailyTransaction(state, "expense", "medical", cost, ill.name + "治疗");
   }
