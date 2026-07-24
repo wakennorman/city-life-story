@@ -2119,6 +2119,16 @@ function renderGuidanceBar(state, parent) {
 
 function renderActionsTab(state, parent) {
   try {
+    // 防御性检查：state.trade/state.player 未初始化
+    if (!state || !state.trade || !state.player) {
+      parent.innerHTML = '<div style="padding:20px;text-align:center;color:var(--text-muted);font-size:13px;">⚡ 游戏状态尚未完全初始化，请稍后再试。</div>';
+      return;
+    }
+    // 游戏已结束，显示提示
+    if (state.flags && state.flags.gameOver) {
+      parent.innerHTML = '<div style="padding:20px;text-align:center;color:var(--text-muted);font-size:13px;">💀 游戏已结束，请刷新页面重新开始。</div>';
+      return;
+    }
     var actions = getAvailableActions(state);
 
   // 移除"地点不符"的冗余行动（不在当前地点的行动直接不展示）
@@ -2332,7 +2342,8 @@ function renderActionsTab(state, parent) {
 
   } catch (e) {
     console.error("[renderActionsTab] 渲染异常:", e);
-    parent.innerHTML += '<div style="padding:20px;text-align:center;color:var(--text-muted);font-size:13px;">⚡ 行动加载异常，请刷新页面重试</div>';
+    console.error("[renderActionsTab] 错误详情:", e.message, e.stack);
+    parent.innerHTML += '<div style="padding:20px;text-align:center;color:var(--text-muted);font-size:13px;">⚡ 行动加载异常 (' + (e.message || '未知错误') + ')，请刷新页面重试</div>';
   }
 }
 

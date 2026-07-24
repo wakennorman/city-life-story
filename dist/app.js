@@ -16472,7 +16472,7 @@ function registerNewsEventsToPool() {
       triggers: { minDay: 30, excludeFlags: ["_insiderRumorSeen"] },
       conditions: function (st) {
         // [已审查] 部分保留：corporate.kpi 无 trigger 等价字段
-        return st.player.corporate && st.player.corporate.kpi >= 20;
+        return st.player.corporate && (st.player.corporate || {}).kpi >= 20;
       },
       choices: [
         {
@@ -16537,9 +16537,9 @@ function registerNewsEventsToPool() {
           hint: "专注本职",
           apply: (st) => {
             st.flags._insiderRumorSeen = true;
-            st.player.corporate.kpi = Math.min(
+            (st.player.corporate || {}).kpi = Math.min(
               150,
-              st.player.corporate.kpi + 5,
+              (st.player.corporate || {}).kpi + 5,
             );
             st.needs.happiness = Math.min(100, st.needs.happiness + 2);
             StateManager.addMessage(
@@ -16676,9 +16676,9 @@ function registerNewsEventsToPool() {
                 "warning",
               );
             } else {
-              st.player.corporate.risk = Math.min(
+              (st.player.corporate || {}).risk = Math.min(
                 100,
-                st.player.corporate.risk + 20,
+                (st.player.corporate || {}).risk + 20,
               );
               StateManager.addMessage(
                 "😰 还是被盯上了！调查组找你谈话，虽然没查出啥，但公司知道了...",
@@ -16701,9 +16701,9 @@ function registerNewsEventsToPool() {
                 "success",
               );
             } else {
-              st.player.corporate.risk = Math.min(
+              (st.player.corporate || {}).risk = Math.min(
                 100,
-                st.player.corporate.risk + 15,
+                (st.player.corporate || {}).risk + 15,
               );
               StateManager.addMessage(
                 "🙋 虽然主动说明，但还是被警告了。公司知道了这件事...",
@@ -16723,9 +16723,9 @@ function registerNewsEventsToPool() {
                 "info",
               );
             } else {
-              st.player.corporate.risk = Math.min(
+              (st.player.corporate || {}).risk = Math.min(
                 100,
-                st.player.corporate.risk + 25,
+                (st.player.corporate || {}).risk + 25,
               );
               st.needs.happiness = Math.max(0, st.needs.happiness - 15);
               StateManager.addMessage(
@@ -16775,17 +16775,17 @@ function registerNewsEventsToPool() {
             st.needs.fatigue = Math.min(100, st.needs.fatigue + 15);
             // [全系统自洽修复] 域H A类#19: chain event apply中 st.player.corporate 守卫
             if (!st.player || !st.player.corporate) return;
-            st.player.corporate.kpi = Math.min(
+            (st.player.corporate || {}).kpi = Math.min(
               150,
-              (st.player.corporate.kpi || 0) + 10,
+              ((st.player.corporate || {}).kpi || 0) + 10,
             );
-            st.player.corporate.upwardMgmt = Math.min(
+            (st.player.corporate || {}).upwardMgmt = Math.min(
               100,
-              (st.player.corporate.upwardMgmt || 0) + 3,
+              ((st.player.corporate || {}).upwardMgmt || 0) + 3,
             );
-            st.player.corporate.risk = Math.min(
+            (st.player.corporate || {}).risk = Math.min(
               100,
-              (st.player.corporate.risk || 0) + 5,
+              ((st.player.corporate || {}).risk || 0) + 5,
             );
             const extra = Random.int(50, 99);
             st.resources.cash = (st.resources.cash || 0) + extra;
@@ -16830,25 +16830,25 @@ function registerNewsEventsToPool() {
           text: "💪 咬牙加班",
           hint: "高风险高回报",
           apply: (st) => {
-            st.player.corporate.ability = Math.min(
+            (st.player.corporate || {}).ability = Math.min(
               100,
-              st.player.corporate.ability + 3,
+              (st.player.corporate || {}).ability + 3,
             );
-            st.player.corporate.kpi = Math.min(
+            (st.player.corporate || {}).kpi = Math.min(
               150,
-              st.player.corporate.kpi + 12,
+              (st.player.corporate || {}).kpi + 12,
             );
-            st.player.corporate.upwardMgmt = Math.min(
+            (st.player.corporate || {}).upwardMgmt = Math.min(
               100,
-              st.player.corporate.upwardMgmt + 5,
+              (st.player.corporate || {}).upwardMgmt + 5,
             );
-            st.player.corporate.hair = Math.max(
+            (st.player.corporate || {}).hair = Math.max(
               0,
-              st.player.corporate.hair - 8,
+              (st.player.corporate || {}).hair - 8,
             );
-            st.player.corporate.risk = Math.min(
+            (st.player.corporate || {}).risk = Math.min(
               100,
-              st.player.corporate.risk + 3,
+              (st.player.corporate || {}).risk + 3,
             );
             st.needs.fatigue = Math.min(100, st.needs.fatigue + 20);
             StateManager.addMessage(
@@ -16862,9 +16862,9 @@ function registerNewsEventsToPool() {
           hint: "需要演技",
           apply: (st) => {
             if (Random.chance(0.5)) {
-              st.player.corporate.upwardMgmt = Math.max(
+              (st.player.corporate || {}).upwardMgmt = Math.max(
                 0,
-                st.player.corporate.upwardMgmt - 8,
+                (st.player.corporate || {}).upwardMgmt - 8,
               );
               StateManager.addMessage(
                 "😴 装病被识破！领导在群里阴阳怪气，向上管理-8。",
@@ -16885,13 +16885,13 @@ function registerNewsEventsToPool() {
           hint: "考验管理能力",
           apply: (st) => {
             if (st.corporate && st.corporate.team && st.corporate.team.length > 0) { // [全系统自洽修复] 域H A类: team 守卫
-              st.player.corporate.popularity = Math.min(
+              (st.player.corporate || {}).popularity = Math.min(
                 100,
-                st.player.corporate.popularity + 4,
+                (st.player.corporate || {}).popularity + 4,
               );
-              st.player.corporate.kpi = Math.min(
+              (st.player.corporate || {}).kpi = Math.min(
                 150,
-                st.player.corporate.kpi + 6,
+                (st.player.corporate || {}).kpi + 6,
               );
               st.needs.fatigue = Math.min(100, st.needs.fatigue + 8);
               StateManager.addMessage(
@@ -16899,9 +16899,9 @@ function registerNewsEventsToPool() {
                 "success",
               );
             } else {
-              st.player.corporate.upwardMgmt = Math.max(
+              (st.player.corporate || {}).upwardMgmt = Math.max(
                 0,
-                st.player.corporate.upwardMgmt - 3,
+                (st.player.corporate || {}).upwardMgmt - 3,
               );
               StateManager.addMessage(
                 "💬 一个人提议平摊？被领导婉拒，向上管理-3。",
@@ -16925,24 +16925,24 @@ function registerNewsEventsToPool() {
       conditions: function (st) {
         // [已审查] 部分保留：corporate.popularity 无 trigger 等价字段
         // [全系统自洽修复] 域H A类#6: st.player.corporate 空守卫
-        return st.player && st.player.corporate && (st.player.corporate.popularity || 0) >= 20;
+        return st.player && st.player.corporate && ((st.player.corporate || {}).popularity || 0) >= 20;
       },
       choices: [
         {
           text: "🤝 帮一把",
           hint: "维护关系",
           apply: (st) => {
-            st.player.corporate.popularity = Math.min(
+            (st.player.corporate || {}).popularity = Math.min(
               100,
-              st.player.corporate.popularity + 8,
+              (st.player.corporate || {}).popularity + 8,
             );
-            st.player.corporate.kpi = Math.min(
+            (st.player.corporate || {}).kpi = Math.min(
               150,
-              st.player.corporate.kpi + 5,
+              (st.player.corporate || {}).kpi + 5,
             );
-            st.player.corporate.risk = Math.min(
+            (st.player.corporate || {}).risk = Math.min(
               100,
-              st.player.corporate.risk + 4,
+              (st.player.corporate || {}).risk + 4,
             );
             StateManager.addMessage(
               "🤝 帮同事挂名！人缘+8，KPI+5，但万一项目出事你也有连带责任，风险+4。",
@@ -16954,9 +16954,9 @@ function registerNewsEventsToPool() {
           text: "🚫 婉言拒绝",
           hint: "自保",
           apply: (st) => {
-            st.player.corporate.popularity = Math.max(
+            (st.player.corporate || {}).popularity = Math.max(
               0,
-              st.player.corporate.popularity - 5,
+              (st.player.corporate || {}).popularity - 5,
             );
             StateManager.addMessage(
               "🚫 婉拒了同事。人缘-5，但保住了自己的羽毛。",
@@ -16968,24 +16968,24 @@ function registerNewsEventsToPool() {
           text: "💰 谈条件 (要分成)",
           hint: "考验向上管理",
           apply: (st) => {
-            if (st.player.corporate.upwardMgmt >= 40) {
+            if ((st.player.corporate || {}).upwardMgmt >= 40) {
               st.resources.cash = (st.resources.cash || 0) + 200;
-              st.player.corporate.popularity = Math.max(
+              (st.player.corporate || {}).popularity = Math.max(
                 0,
-                st.player.corporate.popularity - 2,
+                (st.player.corporate || {}).popularity - 2,
               );
-              st.player.corporate.upwardMgmt = Math.min(
+              (st.player.corporate || {}).upwardMgmt = Math.min(
                 100,
-                st.player.corporate.upwardMgmt + 3,
+                (st.player.corporate || {}).upwardMgmt + 3,
               );
               StateManager.addMessage(
                 "💰 谈下条件拿到 ¥200 分成！向上管理+3，但同事有点不爽。",
                 "success",
               );
             } else {
-              st.player.corporate.popularity = Math.max(
+              (st.player.corporate || {}).popularity = Math.max(
                 0,
-                st.player.corporate.popularity - 8,
+                (st.player.corporate || {}).popularity - 8,
               );
               StateManager.addMessage(
                 "💰 谈崩了。同事觉得你太势利，人缘-8。",
@@ -17012,10 +17012,10 @@ function registerNewsEventsToPool() {
           text: "🙏 忍气吞声道歉",
           hint: "保住 KPI",
           apply: (st) => {
-            st.player.corporate.kpi = Math.max(0, st.player.corporate.kpi - 5);
-            st.player.corporate.dignity = Math.max(
+            (st.player.corporate || {}).kpi = Math.max(0, (st.player.corporate || {}).kpi - 5);
+            (st.player.corporate || {}).dignity = Math.max(
               0,
-              st.player.corporate.dignity - 8,
+              (st.player.corporate || {}).dignity - 8,
             );
             st.needs.happiness = Math.max(0, st.needs.happiness - 5);
             StateManager.addMessage(
@@ -17029,13 +17029,13 @@ function registerNewsEventsToPool() {
           hint: "考验智力",
           apply: (st) => {
             if (Random.chance(0.4 + (st.player.intelligence - 20) * 0.02)) {
-              st.player.corporate.kpi = Math.min(
+              (st.player.corporate || {}).kpi = Math.min(
                 150,
-                st.player.corporate.kpi + 3,
+                (st.player.corporate || {}).kpi + 3,
               );
-              st.player.corporate.dignity = Math.min(
+              (st.player.corporate || {}).dignity = Math.min(
                 100,
-                st.player.corporate.dignity + 5,
+                (st.player.corporate || {}).dignity + 5,
               );
               st.needs.happiness = Math.min(100, st.needs.happiness + 8);
               StateManager.addMessage(
@@ -17043,9 +17043,9 @@ function registerNewsEventsToPool() {
                 "success",
               );
             } else {
-              st.player.corporate.kpi = Math.max(
+              (st.player.corporate || {}).kpi = Math.max(
                 0,
-                st.player.corporate.kpi - 8,
+                (st.player.corporate || {}).kpi - 8,
               );
               StateManager.addMessage(
                 "📋 讲道理被骂得更惨，KPI-8，还得听领导训话。",
@@ -17058,14 +17058,14 @@ function registerNewsEventsToPool() {
           text: "😡 直接挂电话",
           hint: "爽但有后果",
           apply: (st) => {
-            st.player.corporate.dignity = Math.min(
+            (st.player.corporate || {}).dignity = Math.min(
               100,
-              st.player.corporate.dignity + 10,
+              (st.player.corporate || {}).dignity + 10,
             );
-            st.player.corporate.kpi = Math.max(0, st.player.corporate.kpi - 10);
-            st.player.corporate.risk = Math.min(
+            (st.player.corporate || {}).kpi = Math.max(0, (st.player.corporate || {}).kpi - 10);
+            (st.player.corporate || {}).risk = Math.min(
               100,
-              st.player.corporate.risk + 5,
+              (st.player.corporate || {}).risk + 5,
             );
             st.needs.happiness = Math.min(100, st.needs.happiness + 12);
             StateManager.addMessage(
@@ -17089,7 +17089,7 @@ function registerNewsEventsToPool() {
         // [已审查] 含 OR 逻辑，保留 conditions
         // [全系统自洽修复] 域H A类#7: st.player.corporate 空守卫
         return st.player && st.player.corporate && (
-          (st.player.fame || 0) >= 5 || (st.player.corporate.ability || 0) >= 30
+          (st.player.fame || 0) >= 5 || ((st.player.corporate || {}).ability || 0) >= 30
         );
       },
       choices: [
@@ -17105,9 +17105,9 @@ function registerNewsEventsToPool() {
               );
               st.corporate.jobOffer = { salary: offer, company: "新公司" };
               st.needs.happiness = Math.min(100, st.needs.happiness + 10);
-              st.player.corporate.upwardMgmt = Math.max(
+              (st.player.corporate || {}).upwardMgmt = Math.max(
                 0,
-                st.player.corporate.upwardMgmt - 5,
+                (st.player.corporate || {}).upwardMgmt - 5,
               );
               StateManager.addMessage(
                 `📞 面试拿了 offer：年薪 ¥${offer.toLocaleString()}，诱惑很大！`,
@@ -17117,9 +17117,9 @@ function registerNewsEventsToPool() {
               setTimeout(() => showJobOfferModal(), 200);
             } else {
               st.needs.fatigue = Math.min(100, st.needs.fatigue + 5);
-              st.player.corporate.upwardMgmt = Math.max(
+              (st.player.corporate || {}).upwardMgmt = Math.max(
                 0,
-                st.player.corporate.upwardMgmt - 3,
+                (st.player.corporate || {}).upwardMgmt - 3,
               );
               StateManager.addMessage(
                 "📞 面试没成。领导听说你去面试了，脸色不太好看，向上管理-3。",
@@ -17132,9 +17132,9 @@ function registerNewsEventsToPool() {
           text: "📵 礼貌拒绝",
           hint: "保持忠诚",
           apply: (st) => {
-            st.player.corporate.upwardMgmt = Math.min(
+            (st.player.corporate || {}).upwardMgmt = Math.min(
               100,
-              st.player.corporate.upwardMgmt + 3,
+              (st.player.corporate || {}).upwardMgmt + 3,
             );
             StateManager.addMessage(
               "📵 拒了猎头。领导不知怎么知道了，对你更器重了，向上管理+3。",
@@ -17146,9 +17146,9 @@ function registerNewsEventsToPool() {
           text: "💬 把联系方式给同事",
           hint: "卖人情",
           apply: (st) => {
-            st.player.corporate.popularity = Math.min(
+            (st.player.corporate || {}).popularity = Math.min(
               100,
-              st.player.corporate.popularity + 8,
+              (st.player.corporate || {}).popularity + 8,
             );
             StateManager.addMessage(
               "💬 把猎头介绍给了同事，人缘+8。这小子请你吃了顿大餐！",
@@ -17173,17 +17173,17 @@ function registerNewsEventsToPool() {
           text: "🌙 熬夜做好",
           hint: "能力+向上管理",
           apply: (st) => {
-            st.player.corporate.ability = Math.min(
+            (st.player.corporate || {}).ability = Math.min(
               100,
-              st.player.corporate.ability + 4,
+              (st.player.corporate || {}).ability + 4,
             );
-            st.player.corporate.upwardMgmt = Math.min(
+            (st.player.corporate || {}).upwardMgmt = Math.min(
               100,
-              st.player.corporate.upwardMgmt + 8,
+              (st.player.corporate || {}).upwardMgmt + 8,
             );
-            st.player.corporate.hair = Math.max(
+            (st.player.corporate || {}).hair = Math.max(
               0,
-              st.player.corporate.hair - 6,
+              (st.player.corporate || {}).hair - 6,
             );
             st.needs.fatigue = Math.min(100, st.needs.fatigue + 18);
             StateManager.addMessage(
@@ -17197,9 +17197,9 @@ function registerNewsEventsToPool() {
           hint: "省力但有风险",
           apply: (st) => {
             if (Random.chance(0.55)) {
-              st.player.corporate.ability = Math.min(
+              (st.player.corporate || {}).ability = Math.min(
                 100,
-                st.player.corporate.ability + 2,
+                (st.player.corporate || {}).ability + 2,
               );
               st.needs.fatigue = Math.min(100, st.needs.fatigue + 5);
               StateManager.addMessage(
@@ -17207,13 +17207,13 @@ function registerNewsEventsToPool() {
                 "success",
               );
             } else {
-              st.player.corporate.upwardMgmt = Math.max(
+              (st.player.corporate || {}).upwardMgmt = Math.max(
                 0,
-                st.player.corporate.upwardMgmt - 6,
+                (st.player.corporate || {}).upwardMgmt - 6,
               );
-              st.player.corporate.risk = Math.min(
+              (st.player.corporate || {}).risk = Math.min(
                 100,
-                st.player.corporate.risk + 5,
+                (st.player.corporate || {}).risk + 5,
               );
               StateManager.addMessage(
                 "🤖 AI生成的内容有明显错误，被VP当场指出。向上管理-6。",
@@ -17226,13 +17226,13 @@ function registerNewsEventsToPool() {
           text: "🙏 推给同事",
           hint: "耍小聪明",
           apply: (st) => {
-            st.player.corporate.popularity = Math.max(
+            (st.player.corporate || {}).popularity = Math.max(
               0,
-              st.player.corporate.popularity - 10,
+              (st.player.corporate || {}).popularity - 10,
             );
-            st.player.corporate.upwardMgmt = Math.min(
+            (st.player.corporate || {}).upwardMgmt = Math.min(
               100,
-              st.player.corporate.upwardMgmt - 3,
+              (st.player.corporate || {}).upwardMgmt - 3,
             );
             StateManager.addMessage(
               "🙏 推给同事了。大家都看在眼里，人缘-10。",
@@ -17255,28 +17255,28 @@ function registerNewsEventsToPool() {
       conditions: function (st) {
         // [已审查] 部分保留：corporate.ability 无 trigger 等价字段
         // [全系统自洽修复] 域H A类#8: st.player.corporate 空守卫
-        return st.player && st.player.corporate && (st.player.corporate.ability || 0) >= 15;
+        return st.player && st.player.corporate && ((st.player.corporate || {}).ability || 0) >= 15;
       },
       choices: [
         {
           text: "🛠️ 主动认错并修复",
           hint: "诚实且专业",
           apply: (st) => {
-            st.player.corporate.ability = Math.min(
+            (st.player.corporate || {}).ability = Math.min(
               100,
-              st.player.corporate.ability + 3,
+              (st.player.corporate || {}).ability + 3,
             );
-            st.player.corporate.dignity = Math.max(
+            (st.player.corporate || {}).dignity = Math.max(
               0,
-              st.player.corporate.dignity - 5,
+              (st.player.corporate || {}).dignity - 5,
             );
-            st.player.corporate.upwardMgmt = Math.max(
+            (st.player.corporate || {}).upwardMgmt = Math.max(
               0,
-              st.player.corporate.upwardMgmt - 3,
+              (st.player.corporate || {}).upwardMgmt - 3,
             );
-            st.player.corporate.risk = Math.max(
+            (st.player.corporate || {}).risk = Math.max(
               0,
-              st.player.corporate.risk - 10,
+              (st.player.corporate || {}).risk - 10,
             );
             StateManager.addMessage(
               "🛠️ 坦白从宽！主动认错并给出了改进方案，风险-10。",
@@ -17289,26 +17289,26 @@ function registerNewsEventsToPool() {
           hint: "看运气",
           apply: (st) => {
             if (Random.chance(0.4)) {
-              st.player.corporate.upwardMgmt = Math.max(
+              (st.player.corporate || {}).upwardMgmt = Math.max(
                 0,
-                st.player.corporate.upwardMgmt - 15,
+                (st.player.corporate || {}).upwardMgmt - 15,
               );
-              st.player.corporate.risk = Math.min(
+              (st.player.corporate || {}).risk = Math.min(
                 100,
-                st.player.corporate.risk + 25,
+                (st.player.corporate || {}).risk + 25,
               );
-              st.player.corporate.dignity = Math.max(
+              (st.player.corporate || {}).dignity = Math.max(
                 0,
-                st.player.corporate.dignity - 10,
+                (st.player.corporate || {}).dignity - 10,
               );
               StateManager.addMessage(
                 "🫥 被发现了！领导暴怒，向上管理-15，风险+25！",
                 "danger",
               );
             } else {
-              st.player.corporate.risk = Math.min(
+              (st.player.corporate || {}).risk = Math.min(
                 100,
-                st.player.corporate.risk + 8,
+                (st.player.corporate || {}).risk + 8,
               );
               StateManager.addMessage(
                 "🫥 侥幸没被追到，但心里不安。风险+8。",
@@ -17321,27 +17321,27 @@ function registerNewsEventsToPool() {
           text: "🤝 找人分担责任",
           hint: "考验人缘",
           apply: (st) => {
-            if (st.player.corporate.popularity >= 50) {
-              st.player.corporate.risk = Math.max(
+            if ((st.player.corporate || {}).popularity >= 50) {
+              (st.player.corporate || {}).risk = Math.max(
                 0,
-                st.player.corporate.risk - 5,
+                (st.player.corporate || {}).risk - 5,
               );
-              st.player.corporate.popularity = Math.max(
+              (st.player.corporate || {}).popularity = Math.max(
                 0,
-                st.player.corporate.popularity - 8,
+                (st.player.corporate || {}).popularity - 8,
               );
               StateManager.addMessage(
                 "🤝 团队帮忙扛了一部分责任，风险仅-5，但人缘-8。",
                 "info",
               );
             } else {
-              st.player.corporate.risk = Math.min(
+              (st.player.corporate || {}).risk = Math.min(
                 100,
-                st.player.corporate.risk + 12,
+                (st.player.corporate || {}).risk + 12,
               );
-              st.player.corporate.popularity = Math.max(
+              (st.player.corporate || {}).popularity = Math.max(
                 0,
-                st.player.corporate.popularity - 5,
+                (st.player.corporate || {}).popularity - 5,
               );
               StateManager.addMessage(
                 "🤝 没人愿意帮你！人缘太低，自食其果。",
@@ -17367,17 +17367,17 @@ function registerNewsEventsToPool() {
           text: "🍻 主动社交敬酒",
           hint: "提升社交属性",
           apply: (st) => {
-            st.player.corporate.upwardMgmt = Math.min(
+            (st.player.corporate || {}).upwardMgmt = Math.min(
               100,
-              st.player.corporate.upwardMgmt + 8,
+              (st.player.corporate || {}).upwardMgmt + 8,
             );
-            st.player.corporate.popularity = Math.min(
+            (st.player.corporate || {}).popularity = Math.min(
               100,
-              st.player.corporate.popularity + 12,
+              (st.player.corporate || {}).popularity + 12,
             );
-            st.player.corporate.hair = Math.max(
+            (st.player.corporate || {}).hair = Math.max(
               0,
-              st.player.corporate.hair - 2,
+              (st.player.corporate || {}).hair - 2,
             );
             st.needs.happiness = Math.min(100, st.needs.happiness + 5);
             StateManager.addMessage(
@@ -17411,13 +17411,13 @@ function registerNewsEventsToPool() {
           text: "😴 请假不去",
           hint: "省事但减分",
           apply: (st) => {
-            st.player.corporate.popularity = Math.max(
+            (st.player.corporate || {}).popularity = Math.max(
               0,
-              st.player.corporate.popularity - 8,
+              (st.player.corporate || {}).popularity - 8,
             );
-            st.player.corporate.upwardMgmt = Math.max(
+            (st.player.corporate || {}).upwardMgmt = Math.max(
               0,
-              st.player.corporate.upwardMgmt - 3,
+              (st.player.corporate || {}).upwardMgmt - 3,
             );
             st.needs.fatigue = Math.max(0, st.needs.fatigue - 10);
             StateManager.addMessage(
@@ -17442,8 +17442,8 @@ function registerNewsEventsToPool() {
         // [已审查] 部分保留：ability/popularity 无 trigger 等价字段
         // [全系统自洽修复] 域H A类#9: st.player.corporate 空守卫
         return st.player && st.player.corporate && (
-          (st.player.corporate.ability || 0) >= 25 &&
-          (st.player.corporate.popularity || 0) >= 20
+          ((st.player.corporate || {}).ability || 0) >= 25 &&
+          ((st.player.corporate || {}).popularity || 0) >= 20
         );
       },
       choices: [
@@ -17451,18 +17451,18 @@ function registerNewsEventsToPool() {
           text: "📖 认真带教",
           hint: "培养管理能力",
           apply: (st) => {
-            st.player.corporate.ability = Math.min(
+            (st.player.corporate || {}).ability = Math.min(
               100,
-              st.player.corporate.ability + 2,
+              (st.player.corporate || {}).ability + 2,
             );
-            st.player.corporate.popularity = Math.min(
+            (st.player.corporate || {}).popularity = Math.min(
               100,
-              st.player.corporate.popularity + 10,
+              (st.player.corporate || {}).popularity + 10,
             );
             st.needs.fatigue = Math.min(100, st.needs.fatigue + 8);
-            st.player.corporate.kpi = Math.min(
+            (st.player.corporate || {}).kpi = Math.min(
               150,
-              st.player.corporate.kpi + 5,
+              (st.player.corporate || {}).kpi + 5,
             );
             StateManager.addMessage(
               "📖 带出来的实习生进步神速！人缘+10，能力+2。",
@@ -17474,13 +17474,13 @@ function registerNewsEventsToPool() {
           text: "📋 丢给他杂活",
           hint: "省心省力",
           apply: (st) => {
-            st.player.corporate.kpi = Math.min(
+            (st.player.corporate || {}).kpi = Math.min(
               150,
-              st.player.corporate.kpi + 3,
+              (st.player.corporate || {}).kpi + 3,
             );
-            st.player.corporate.popularity = Math.max(
+            (st.player.corporate || {}).popularity = Math.max(
               0,
-              st.player.corporate.popularity - 3,
+              (st.player.corporate || {}).popularity - 3,
             );
             StateManager.addMessage(
               "📋 杂活交给实习生，自己轻松了但实习生暗自不满。",
@@ -17492,9 +17492,9 @@ function registerNewsEventsToPool() {
           text: "🙅 拒绝带人",
           hint: "得罪领导",
           apply: (st) => {
-            st.player.corporate.upwardMgmt = Math.max(
+            (st.player.corporate || {}).upwardMgmt = Math.max(
               0,
-              st.player.corporate.upwardMgmt - 8,
+              (st.player.corporate || {}).upwardMgmt - 8,
             );
             StateManager.addMessage(
               "🙅 拒绝了领导安排，领导不太高兴。向上管理-8。",
@@ -17873,7 +17873,7 @@ function registerNewsEventsToPool() {
           !!st.flags._acceptedVCFunding ||
           (st.corporate &&
             st.player.corporate &&
-            (st.player.corporate.kpi || 0) > 70 &&
+            ((st.player.corporate || {}).kpi || 0) > 70 &&
             st.player.day > 200);
         return lvOk && vcCond && !st.flags._founderOustSeen;
       },
@@ -17885,17 +17885,17 @@ function registerNewsEventsToPool() {
             st.flags._founderOustSeen = true;
             st.flags._founderStayed = st.player.day;
             if (st.player && st.player.corporate) {
-              st.player.corporate.dignity = Math.max(
+              (st.player.corporate || {}).dignity = Math.max(
                 0,
-                (st.player.corporate.dignity || 50) - 25,
+                ((st.player.corporate || {}).dignity || 50) - 25,
               );
-              st.player.corporate.hair = Math.max(
+              (st.player.corporate || {}).hair = Math.max(
                 0,
-                (st.player.corporate.hair || 80) - 15,
+                ((st.player.corporate || {}).hair || 80) - 15,
               );
-              st.player.corporate.upwardMgmt = Math.max(
+              (st.player.corporate || {}).upwardMgmt = Math.max(
                 0,
-                (st.player.corporate.upwardMgmt || 50) - 10,
+                ((st.player.corporate || {}).upwardMgmt || 50) - 10,
               );
             }
             StateManager.addMessage(
@@ -17913,9 +17913,9 @@ function registerNewsEventsToPool() {
             st.resources.cash = (st.resources.cash || 0) + 150000;
             st.resources.totalEarned += 150000;
             if (st.player && st.player.corporate) {
-              st.player.corporate.dignity = Math.min(
+              (st.player.corporate || {}).dignity = Math.min(
                 100,
-                (st.player.corporate.dignity || 50) + 10,
+                ((st.player.corporate || {}).dignity || 50) + 10,
               );
             }
             st.player.fame = Math.min(100, (st.player.fame || 0) + 6);
@@ -17932,21 +17932,21 @@ function registerNewsEventsToPool() {
             st.flags._founderOustSeen = true;
             st.flags._founderRebelled = true;
             if (st.player && st.player.corporate) {
-              st.player.corporate.dignity = Math.min(
+              (st.player.corporate || {}).dignity = Math.min(
                 100,
-                (st.player.corporate.dignity || 50) + 30,
+                ((st.player.corporate || {}).dignity || 50) + 30,
               );
-              st.player.corporate.kpi = Math.max(
+              (st.player.corporate || {}).kpi = Math.max(
                 0,
-                (st.player.corporate.kpi || 50) - 30,
+                ((st.player.corporate || {}).kpi || 50) - 30,
               );
-              st.player.corporate.risk = Math.min(
+              (st.player.corporate || {}).risk = Math.min(
                 100,
-                (st.player.corporate.risk || 0) + 25,
+                ((st.player.corporate || {}).risk || 0) + 25,
               );
-              st.player.corporate.popularity = Math.min(
+              (st.player.corporate || {}).popularity = Math.min(
                 100,
-                (st.player.corporate.popularity || 50) + 10,
+                ((st.player.corporate || {}).popularity || 50) + 10,
               );
             }
             st.player.fame = Math.min(100, (st.player.fame || 0) + 10);
@@ -17981,17 +17981,17 @@ function registerNewsEventsToPool() {
             st.flags._founderHumiliationSeen = true;
             st.flags._founderObserving = true;
             if (st.player && st.player.corporate) {
-              st.player.corporate.dignity = Math.max(
+              (st.player.corporate || {}).dignity = Math.max(
                 0,
-                (st.player.corporate.dignity || 30) - 3,
+                ((st.player.corporate || {}).dignity || 30) - 3,
               );
-              st.player.corporate.upwardMgmt = Math.min(
+              (st.player.corporate || {}).upwardMgmt = Math.min(
                 100,
-                (st.player.corporate.upwardMgmt || 40) + 8,
+                ((st.player.corporate || {}).upwardMgmt || 40) + 8,
               );
-              st.player.corporate.ability = Math.min(
+              (st.player.corporate || {}).ability = Math.min(
                 100,
-                (st.player.corporate.ability || 50) + 3,
+                ((st.player.corporate || {}).ability || 50) + 3,
               );
             }
             StateManager.addMessage(
@@ -18011,9 +18011,9 @@ function registerNewsEventsToPool() {
               (st.player.intelligence || 10) + 8,
             );
             if (st.player && st.player.corporate) {
-              st.player.corporate.ability = Math.min(
+              (st.player.corporate || {}).ability = Math.min(
                 100,
-                (st.player.corporate.ability || 50) + 5,
+                ((st.player.corporate || {}).ability || 50) + 5,
               );
             }
             if (st.skills && st.skills.management) {
@@ -18033,13 +18033,13 @@ function registerNewsEventsToPool() {
             st.flags._founderQuitInRage = true;
             st.flags._founderStayed = null; // 关闭后续 buyback
             if (st.player && st.player.corporate) {
-              st.player.corporate.dignity = Math.min(
+              (st.player.corporate || {}).dignity = Math.min(
                 100,
-                (st.player.corporate.dignity || 30) + 25,
+                ((st.player.corporate || {}).dignity || 30) + 25,
               );
-              st.player.corporate.hair = Math.min(
+              (st.player.corporate || {}).hair = Math.min(
                 100,
-                (st.player.corporate.hair || 50) + 10,
+                ((st.player.corporate || {}).hair || 50) + 10,
               );
             }
             st.needs.happiness = Math.min(100, st.needs.happiness + 15);
@@ -18082,29 +18082,29 @@ function registerNewsEventsToPool() {
             st.flags._founderReclaimed = true;
             st.resources.cash = Math.max(0, (st.resources.cash || 0) - 300000);
             if (st.player && st.player.corporate) {
-              st.player.corporate.dignity = Math.min(
+              (st.player.corporate || {}).dignity = Math.min(
                 100,
-                (st.player.corporate.dignity || 30) + 40,
+                ((st.player.corporate || {}).dignity || 30) + 40,
               );
-              st.player.corporate.hair = Math.min(
+              (st.player.corporate || {}).hair = Math.min(
                 100,
-                (st.player.corporate.hair || 40) + 25,
+                ((st.player.corporate || {}).hair || 40) + 25,
               );
-              st.player.corporate.ability = Math.min(
+              (st.player.corporate || {}).ability = Math.min(
                 100,
-                (st.player.corporate.ability || 60) + 10,
+                ((st.player.corporate || {}).ability || 60) + 10,
               );
-              st.player.corporate.kpi = Math.min(
+              (st.player.corporate || {}).kpi = Math.min(
                 100,
-                (st.player.corporate.kpi || 50) + 20,
+                ((st.player.corporate || {}).kpi || 50) + 20,
               );
-              st.player.corporate.upwardMgmt = Math.min(
+              (st.player.corporate || {}).upwardMgmt = Math.min(
                 100,
-                (st.player.corporate.upwardMgmt || 40) + 30,
+                ((st.player.corporate || {}).upwardMgmt || 40) + 30,
               );
-              st.player.corporate.popularity = Math.min(
+              (st.player.corporate || {}).popularity = Math.min(
                 100,
-                (st.player.corporate.popularity || 50) + 15,
+                ((st.player.corporate || {}).popularity || 50) + 15,
               );
             }
             st.player.fame = Math.min(100, (st.player.fame || 0) + 20);
@@ -18122,13 +18122,13 @@ function registerNewsEventsToPool() {
             st.flags._founderBuybackSeen = true;
             st.flags._founderDeclinedBuyback = true;
             if (st.player && st.player.corporate) {
-              st.player.corporate.dignity = Math.max(
+              (st.player.corporate || {}).dignity = Math.max(
                 0,
-                (st.player.corporate.dignity || 30) - 5,
+                ((st.player.corporate || {}).dignity || 30) - 5,
               );
-              st.player.corporate.kpi = Math.min(
+              (st.player.corporate || {}).kpi = Math.min(
                 100,
-                (st.player.corporate.kpi || 50) + 10,
+                ((st.player.corporate || {}).kpi || 50) + 10,
               );
             }
             st.player.mental = Math.min(100, st.player.mental + 10);
@@ -18213,8 +18213,8 @@ function registerNewsEventsToPool() {
           st.player.phase === "corporate" &&
           st.player.day >= 60 &&
           st.player.corporate &&
-          st.player.corporate.kpi >= 30 &&
-          st.player.corporate.ability >= 20 &&
+          (st.player.corporate || {}).kpi >= 30 &&
+          (st.player.corporate || {}).ability >= 20 &&
           !st.flags._workplaceScapegoatSeen
         );
       },
@@ -18230,21 +18230,21 @@ function registerNewsEventsToPool() {
             st.flags._workplaceScapegoatSeen = true;
             const success = Random.chance(
               0.3 +
-                (st.player.corporate.upwardMgmt - 20) * 0.015 +
-                (st.player.corporate.ability - 30) * 0.01,
+                ((st.player.corporate || {}).upwardMgmt - 20) * 0.015 +
+                ((st.player.corporate || {}).ability - 30) * 0.01,
             );
             if (success) {
-              st.player.corporate.dignity = Math.min(
+              (st.player.corporate || {}).dignity = Math.min(
                 100,
-                st.player.corporate.dignity + 10,
+                (st.player.corporate || {}).dignity + 10,
               );
-              st.player.corporate.upwardMgmt = Math.max(
+              (st.player.corporate || {}).upwardMgmt = Math.max(
                 0,
-                st.player.corporate.upwardMgmt - 5,
+                (st.player.corporate || {}).upwardMgmt - 5,
               );
-              st.player.corporate.popularity = Math.min(
+              (st.player.corporate || {}).popularity = Math.min(
                 100,
-                st.player.corporate.popularity + 5,
+                (st.player.corporate || {}).popularity + 5,
               );
               if (typeof scheduleChainEvent === "function") {
                 scheduleChainEvent(st, "workplace_boss_grudge", 3, "corporate");
@@ -18254,13 +18254,13 @@ function registerNewsEventsToPool() {
                 "success",
               );
             } else {
-              st.player.corporate.dignity = Math.max(
+              (st.player.corporate || {}).dignity = Math.max(
                 0,
-                st.player.corporate.dignity - 10,
+                (st.player.corporate || {}).dignity - 10,
               );
-              st.player.corporate.kpi = Math.max(
+              (st.player.corporate || {}).kpi = Math.max(
                 0,
-                st.player.corporate.kpi - 15,
+                (st.player.corporate || {}).kpi - 15,
               );
               st.needs.happiness = Math.max(0, st.needs.happiness - 10);
               if (typeof scheduleChainEvent === "function") {
@@ -18278,15 +18278,15 @@ function registerNewsEventsToPool() {
           hint: "忍气吞声",
           apply: (st) => {
             st.flags._workplaceScapegoatSeen = true;
-            st.player.corporate.dignity = Math.max(
+            (st.player.corporate || {}).dignity = Math.max(
               0,
-              st.player.corporate.dignity - 15,
+              (st.player.corporate || {}).dignity - 15,
             );
-            st.player.corporate.kpi = Math.max(0, st.player.corporate.kpi - 10);
+            (st.player.corporate || {}).kpi = Math.max(0, (st.player.corporate || {}).kpi - 10);
             st.needs.happiness = Math.max(0, st.needs.happiness - 12);
-            st.player.corporate.upwardMgmt = Math.min(
+            (st.player.corporate || {}).upwardMgmt = Math.min(
               100,
-              st.player.corporate.upwardMgmt + 5,
+              (st.player.corporate || {}).upwardMgmt + 5,
             );
             if (typeof scheduleChainEvent === "function") {
               scheduleChainEvent(st, "workplace_rumors", 3, "corporate");
@@ -18303,16 +18303,16 @@ function registerNewsEventsToPool() {
           apply: (st) => {
             st.flags._workplaceScapegoatSeen = true;
             const success = Random.chance(
-              0.25 + (st.player.corporate.ability - 30) * 0.02,
+              0.25 + ((st.player.corporate || {}).ability - 30) * 0.02,
             );
             if (success) {
-              st.player.corporate.dignity = Math.min(
+              (st.player.corporate || {}).dignity = Math.min(
                 100,
-                st.player.corporate.dignity + 8,
+                (st.player.corporate || {}).dignity + 8,
               );
-              st.player.corporate.popularity = Math.min(
+              (st.player.corporate || {}).popularity = Math.min(
                 100,
-                st.player.corporate.popularity + 6,
+                (st.player.corporate || {}).popularity + 6,
               );
               if (typeof scheduleChainEvent === "function") {
                 scheduleChainEvent(st, "workplace_boss_grudge", 2, "corporate");
@@ -18322,17 +18322,17 @@ function registerNewsEventsToPool() {
                 "success",
               );
             } else {
-              st.player.corporate.dignity = Math.max(
+              (st.player.corporate || {}).dignity = Math.max(
                 0,
-                st.player.corporate.dignity - 12,
+                (st.player.corporate || {}).dignity - 12,
               );
-              st.player.corporate.kpi = Math.max(
+              (st.player.corporate || {}).kpi = Math.max(
                 0,
-                st.player.corporate.kpi - 20,
+                (st.player.corporate || {}).kpi - 20,
               );
-              st.player.corporate.risk = Math.min(
+              (st.player.corporate || {}).risk = Math.min(
                 100,
-                st.player.corporate.risk + 15,
+                (st.player.corporate || {}).risk + 15,
               );
               if (typeof scheduleChainEvent === "function") {
                 scheduleChainEvent(st, "workplace_boss_grudge", 1, "corporate");
@@ -18362,34 +18362,34 @@ function registerNewsEventsToPool() {
             st.needs.fatigue = Math.min(100, st.needs.fatigue + 15);
             const success = Random.chance(
               0.3 +
-                (st.player.corporate.ability - 30) * 0.02 +
+                ((st.player.corporate || {}).ability - 30) * 0.02 +
                 (st.player.intelligence - 30) * 0.01,
             );
             if (success) {
-              st.player.corporate.ability = Math.min(
+              (st.player.corporate || {}).ability = Math.min(
                 100,
-                st.player.corporate.ability + 5,
+                (st.player.corporate || {}).ability + 5,
               );
-              st.player.corporate.kpi = Math.min(
+              (st.player.corporate || {}).kpi = Math.min(
                 150,
-                st.player.corporate.kpi + 15,
+                (st.player.corporate || {}).kpi + 15,
               );
-              st.player.corporate.dignity = Math.min(
+              (st.player.corporate || {}).dignity = Math.min(
                 100,
-                st.player.corporate.dignity + 8,
+                (st.player.corporate || {}).dignity + 8,
               );
-              st.player.corporate.upwardMgmt = Math.min(
+              (st.player.corporate || {}).upwardMgmt = Math.min(
                 100,
-                st.player.corporate.upwardMgmt + 3,
+                (st.player.corporate || {}).upwardMgmt + 3,
               );
               StateManager.addMessage(
                 "💪 你把边缘项目做出了亮点，老板不得不公开表扬。能力+5，KPI+15。",
                 "success",
               );
             } else {
-              st.player.corporate.kpi = Math.max(
+              (st.player.corporate || {}).kpi = Math.max(
                 0,
-                st.player.corporate.kpi - 5,
+                (st.player.corporate || {}).kpi - 5,
               );
               st.needs.fatigue = Math.min(100, st.needs.fatigue + 5);
               StateManager.addMessage(
@@ -18405,25 +18405,25 @@ function registerNewsEventsToPool() {
           apply: (st) => {
             st.needs.fatigue = Math.min(100, st.needs.fatigue + 5);
             const success = Random.chance(
-              0.4 + (st.player.corporate.popularity - 30) * 0.01,
+              0.4 + ((st.player.corporate || {}).popularity - 30) * 0.01,
             );
             if (success) {
-              st.player.corporate.dignity = Math.min(
+              (st.player.corporate || {}).dignity = Math.min(
                 100,
-                st.player.corporate.dignity + 5,
+                (st.player.corporate || {}).dignity + 5,
               );
               StateManager.addMessage(
                 "📱 HR约谈了老板，说要注意管理方式。老板暂时收敛了一些。",
                 "success",
               );
             } else {
-              st.player.corporate.dignity = Math.max(
+              (st.player.corporate || {}).dignity = Math.max(
                 0,
-                st.player.corporate.dignity - 5,
+                (st.player.corporate || {}).dignity - 5,
               );
-              st.player.corporate.risk = Math.min(
+              (st.player.corporate || {}).risk = Math.min(
                 100,
-                st.player.corporate.risk + 10,
+                (st.player.corporate || {}).risk + 10,
               );
               StateManager.addMessage(
                 "📱 HR和稀泥，说'都是为公司好'。老板知道后更不爽了。",
@@ -18437,9 +18437,9 @@ function registerNewsEventsToPool() {
           hint: "另谋出路",
           apply: (st) => {
             st.needs.fatigue = Math.min(100, st.needs.fatigue + 8);
-            st.player.corporate.dignity = Math.min(
+            (st.player.corporate || {}).dignity = Math.min(
               100,
-              st.player.corporate.dignity + 3,
+              (st.player.corporate || {}).dignity + 3,
             );
             // [自洽修复] 域H A类#7: 防 cash 裸访问+操作无效果
             if ((st.resources.cash || 0) >= 200) {
@@ -18472,25 +18472,25 @@ function registerNewsEventsToPool() {
           hint: "正面应对",
           apply: (st) => {
             const success = Random.chance(
-              0.35 + (st.player.corporate.popularity - 20) * 0.015,
+              0.35 + ((st.player.corporate || {}).popularity - 20) * 0.015,
             );
             if (success) {
-              st.player.corporate.popularity = Math.min(
+              (st.player.corporate || {}).popularity = Math.min(
                 100,
-                st.player.corporate.popularity + 8,
+                (st.player.corporate || {}).popularity + 8,
               );
-              st.player.corporate.dignity = Math.min(
+              (st.player.corporate || {}).dignity = Math.min(
                 100,
-                st.player.corporate.dignity + 5,
+                (st.player.corporate || {}).dignity + 5,
               );
               StateManager.addMessage(
                 "🗣️ 你在群里澄清了事实，大家开始理解你的处境。人缘+8。",
                 "success",
               );
             } else {
-              st.player.corporate.popularity = Math.max(
+              (st.player.corporate || {}).popularity = Math.max(
                 0,
-                st.player.corporate.popularity - 5,
+                (st.player.corporate || {}).popularity - 5,
               );
               StateManager.addMessage(
                 "🗣️ 澄清被说成'狡辩'，情况更糟了。",
@@ -18504,17 +18504,17 @@ function registerNewsEventsToPool() {
           hint: "实力碾压",
           apply: (st) => {
             st.needs.fatigue = Math.min(100, st.needs.fatigue + 12);
-            st.player.corporate.kpi = Math.min(
+            (st.player.corporate || {}).kpi = Math.min(
               150,
-              st.player.corporate.kpi + 10,
+              (st.player.corporate || {}).kpi + 10,
             );
-            st.player.corporate.ability = Math.min(
+            (st.player.corporate || {}).ability = Math.min(
               100,
-              st.player.corporate.ability + 3,
+              (st.player.corporate || {}).ability + 3,
             );
-            st.player.corporate.popularity = Math.min(
+            (st.player.corporate || {}).popularity = Math.min(
               100,
-              st.player.corporate.popularity + 4,
+              (st.player.corporate || {}).popularity + 4,
             );
             StateManager.addMessage(
               "💪 你用一个漂亮的交付让大家闭嘴。KPI+10，人缘+4。",
@@ -18526,14 +18526,14 @@ function registerNewsEventsToPool() {
           text: "😔 保持沉默",
           hint: "忍",
           apply: (st) => {
-            st.player.corporate.dignity = Math.max(
+            (st.player.corporate || {}).dignity = Math.max(
               0,
-              st.player.corporate.dignity - 8,
+              (st.player.corporate || {}).dignity - 8,
             );
             st.needs.happiness = Math.max(0, st.needs.happiness - 10);
-            st.player.corporate.popularity = Math.max(
+            (st.player.corporate || {}).popularity = Math.max(
               0,
-              st.player.corporate.popularity - 5,
+              (st.player.corporate || {}).popularity - 5,
             );
             StateManager.addMessage(
               "😔 你选择沉默。尊严-8，心情-10，人缘-5。",
@@ -18557,16 +18557,16 @@ function registerNewsEventsToPool() {
           hint: "高薪但高风险",
           apply: (st) => {
             st.corporate.rank = "P6";
-            st.player.corporate.kpi = 30;
-            st.player.corporate.upwardMgmt = 10;
-            st.player.corporate.popularity = 20;
-            st.player.corporate.dignity = Math.min(
+            (st.player.corporate || {}).kpi = 30;
+            (st.player.corporate || {}).upwardMgmt = 10;
+            (st.player.corporate || {}).popularity = 20;
+            (st.player.corporate || {}).dignity = Math.min(
               100,
-              st.player.corporate.dignity + 10,
+              (st.player.corporate || {}).dignity + 10,
             );
             st.needs.happiness = Math.min(100, st.needs.happiness + 10);
             st.needs.fatigue = Math.max(0, st.needs.fatigue - 10);
-            st.player.corporate.risk = 15;
+            (st.player.corporate || {}).risk = 15;
             StateManager.addMessage(
               "🚀 你跳槽了！新公司薪资高40%，职位也提升了。但一切从零开始，风险也不小。",
               "success",
@@ -18587,18 +18587,18 @@ function registerNewsEventsToPool() {
           hint: "稳定但委屈",
           apply: (st) => {
             st.corporate.rank = "P6";
-            st.player.corporate.kpi = 50;
-            st.player.corporate.upwardMgmt = Math.min(
+            (st.player.corporate || {}).kpi = 50;
+            (st.player.corporate || {}).upwardMgmt = Math.min(
               100,
-              st.player.corporate.upwardMgmt + 15,
+              (st.player.corporate || {}).upwardMgmt + 15,
             );
-            st.player.corporate.dignity = Math.max(
+            (st.player.corporate || {}).dignity = Math.max(
               0,
-              st.player.corporate.dignity - 5,
+              (st.player.corporate || {}).dignity - 5,
             );
-            st.player.corporate.risk = Math.min(
+            (st.player.corporate || {}).risk = Math.min(
               100,
-              st.player.corporate.risk + 5,
+              (st.player.corporate || {}).risk + 5,
             );
             st.needs.happiness = Math.min(100, st.needs.happiness + 3);
             StateManager.addMessage(
@@ -18638,15 +18638,15 @@ function registerNewsEventsToPool() {
           hint: "搏一把",
           apply: (st) => {
             st.corporate.rank = "P6";
-            st.player.corporate.kpi = 30;
-            st.player.corporate.upwardMgmt = 10;
-            st.player.corporate.popularity = 20;
-            st.player.corporate.dignity = Math.min(
+            (st.player.corporate || {}).kpi = 30;
+            (st.player.corporate || {}).upwardMgmt = 10;
+            (st.player.corporate || {}).popularity = 20;
+            (st.player.corporate || {}).dignity = Math.min(
               100,
-              st.player.corporate.dignity + 10,
+              (st.player.corporate || {}).dignity + 10,
             );
             st.needs.happiness = Math.min(100, st.needs.happiness + 8);
-            st.player.corporate.risk = 15;
+            (st.player.corporate || {}).risk = 15;
             if (st.corporate) {
               st.corporate.team = [];
               // [自洽修复] 域H A类#9: 跳槽时重置职场进度
@@ -18666,14 +18666,14 @@ function registerNewsEventsToPool() {
           hint: "求稳",
           apply: (st) => {
             st.corporate.rank = "P6";
-            st.player.corporate.kpi = 50;
-            st.player.corporate.upwardMgmt = Math.min(
+            (st.player.corporate || {}).kpi = 50;
+            (st.player.corporate || {}).upwardMgmt = Math.min(
               100,
-              st.player.corporate.upwardMgmt + 15,
+              (st.player.corporate || {}).upwardMgmt + 15,
             );
-            st.player.corporate.dignity = Math.max(
+            (st.player.corporate || {}).dignity = Math.max(
               0,
-              st.player.corporate.dignity - 5,
+              (st.player.corporate || {}).dignity - 5,
             );
             st.needs.happiness = Math.min(100, st.needs.happiness + 2);
             StateManager.addMessage(
@@ -18879,13 +18879,13 @@ function registerNewsEventsToPool() {
           apply: function (st) {
             st.flags._careerSetupSeen = true;
             st.flags._careerSigned = st.player.day;
-            st.player.corporate.upwardMgmt = Math.min(
+            (st.player.corporate || {}).upwardMgmt = Math.min(
               100,
-              (st.player.corporate.upwardMgmt || 50) + 5,
+              ((st.player.corporate || {}).upwardMgmt || 50) + 5,
             );
-            st.player.corporate.risk = Math.min(
+            (st.player.corporate || {}).risk = Math.min(
               100,
-              (st.player.corporate.risk || 0) + 20,
+              ((st.player.corporate || {}).risk || 0) + 20,
             );
             StateManager.addMessage("✍️ 你签字了。纸包不住火。", "warning");
             scheduleChainEvent(st, "career_investigation", 25, "corporate");
@@ -18897,9 +18897,9 @@ function registerNewsEventsToPool() {
           apply: function (st) {
             st.flags._careerSetupSeen = true;
             st.flags._careerRefused = true;
-            st.player.corporate.upwardMgmt = Math.max(
+            (st.player.corporate || {}).upwardMgmt = Math.max(
               0,
-              (st.player.corporate.upwardMgmt || 50) - 10,
+              ((st.player.corporate || {}).upwardMgmt || 50) - 10,
             );
             StateManager.addMessage(
               "🚫 你说再跟财务对一下。他笑容淡了一瞬。",
@@ -18946,13 +18946,13 @@ function registerNewsEventsToPool() {
           apply: function (st) {
             st.flags._careerInvestigationSeen = true;
             st.flags._careerNailed = true;
-            st.player.corporate.upwardMgmt = Math.max(
+            (st.player.corporate || {}).upwardMgmt = Math.max(
               0,
-              (st.player.corporate.upwardMgmt || 50) - 20,
+              ((st.player.corporate || {}).upwardMgmt || 50) - 20,
             );
-            st.player.corporate.popularity = Math.min(
+            (st.player.corporate || {}).popularity = Math.min(
               100,
-              (st.player.corporate.popularity || 50) + 10,
+              ((st.player.corporate || {}).popularity || 50) + 10,
             );
             StateManager.addMessage(
               "😰 张总被调离。你成了「那个举报了张总的人」。",
@@ -18967,9 +18967,9 @@ function registerNewsEventsToPool() {
           apply: function (st) {
             st.flags._careerInvestigationSeen = true;
             st.flags._careerTookBlame = true;
-            st.player.corporate.kpi = Math.max(
+            (st.player.corporate || {}).kpi = Math.max(
               0,
-              (st.player.corporate.kpi || 50) - 15,
+              ((st.player.corporate || {}).kpi || 50) - 15,
             );
             StateManager.addMessage(
               "😶 口头警告。张总说「记着你的好」——可这最不值钱。",
@@ -19023,13 +19023,13 @@ function registerNewsEventsToPool() {
           apply: function (st) {
             st.flags._careerRetaliationSeen = true;
             st.flags._careerHRComplaint = true;
-            st.player.corporate.popularity = Math.min(
+            (st.player.corporate || {}).popularity = Math.min(
               100,
-              (st.player.corporate.popularity || 50) + 8,
+              ((st.player.corporate || {}).popularity || 50) + 8,
             );
-            st.player.corporate.risk = Math.min(
+            (st.player.corporate || {}).risk = Math.min(
               200,
-              (st.player.corporate.risk || 0) + 30,
+              ((st.player.corporate || {}).risk || 0) + 30,
             );
             StateManager.addMessage(
               "💥 HR介入张总被约谈。你成了「定时炸弹」。",
@@ -19062,9 +19062,9 @@ function registerNewsEventsToPool() {
           apply: function (st) {
             st.flags._careerEvidencePayoffSeen = true;
             st.corporate.level = Math.min(10, (st.corporate.level || 5) + 1);
-            st.player.corporate.kpi = Math.min(
+            (st.player.corporate || {}).kpi = Math.min(
               100,
-              (st.player.corporate.kpi || 50) + 10,
+              ((st.player.corporate || {}).kpi || 50) + 10,
             );
             StateManager.addMessage(
               "🎯 你接手了张总的职责。证据比情绪有用。",
@@ -19268,7 +19268,7 @@ function registerNewsEventsToPool() {
         return (
           st.player.day >= 90 &&
           st.player.corporate &&
-          st.player.corporate.popularity >= 25 &&
+          (st.player.corporate || {}).popularity >= 25 &&
           !st.flags._officeFactionApproached
         );
       },
@@ -19279,17 +19279,17 @@ function registerNewsEventsToPool() {
           apply: function (st) {
             st.flags._officeFactionApproached = true;
             st.flags._officeFactionJoined = "zhang";
-            st.player.corporate.popularity = Math.min(
+            (st.player.corporate || {}).popularity = Math.min(
               100,
-              (st.player.corporate.popularity || 50) + 5,
+              ((st.player.corporate || {}).popularity || 50) + 5,
             );
-            st.player.corporate.upwardMgmt = Math.min(
+            (st.player.corporate || {}).upwardMgmt = Math.min(
               100,
-              (st.player.corporate.upwardMgmt || 50) + 8,
+              ((st.player.corporate || {}).upwardMgmt || 50) + 8,
             );
-            st.player.corporate.risk = Math.min(
+            (st.player.corporate || {}).risk = Math.min(
               100,
-              (st.player.corporate.risk || 0) + 10,
+              ((st.player.corporate || {}).risk || 0) + 10,
             );
             StateManager.addMessage(
               "🤝 你握住了老张的手。有了靠山，但也埋下了雷。",
@@ -19309,13 +19309,13 @@ function registerNewsEventsToPool() {
           apply: function (st) {
             st.flags._officeFactionApproached = true;
             st.flags._officeFactionNeutral = true;
-            st.player.corporate.dignity = Math.min(
+            (st.player.corporate || {}).dignity = Math.min(
               100,
-              (st.player.corporate.dignity || 50) + 10,
+              ((st.player.corporate || {}).dignity || 50) + 10,
             );
-            st.player.corporate.popularity = Math.max(
+            (st.player.corporate || {}).popularity = Math.max(
               0,
-              (st.player.corporate.popularity || 50) - 5,
+              ((st.player.corporate || {}).popularity || 50) - 5,
             );
             StateManager.addMessage(
               "🙅 '我想专心做好本职工作。'老张脸色不太好看。",
@@ -19329,17 +19329,17 @@ function registerNewsEventsToPool() {
           apply: function (st) {
             st.flags._officeFactionApproached = true;
             st.flags._officeFactionDoubleAgent = true;
-            st.player.corporate.upwardMgmt = Math.min(
+            (st.player.corporate || {}).upwardMgmt = Math.min(
               100,
-              (st.player.corporate.upwardMgmt || 50) + 15,
+              ((st.player.corporate || {}).upwardMgmt || 50) + 15,
             );
-            st.player.corporate.risk = Math.min(
+            (st.player.corporate || {}).risk = Math.min(
               100,
-              (st.player.corporate.risk || 0) + 25,
+              ((st.player.corporate || {}).risk || 0) + 25,
             );
-            st.player.corporate.dignity = Math.max(
+            (st.player.corporate || {}).dignity = Math.max(
               0,
-              (st.player.corporate.dignity || 50) - 10,
+              ((st.player.corporate || {}).dignity || 50) - 10,
             );
             StateManager.addMessage(
               "📱 你偷偷给王副总发了消息。划船不靠桨，全靠浪。",
@@ -19373,17 +19373,17 @@ function registerNewsEventsToPool() {
           apply: function (st) {
             st.flags._officeFactionEscalationDone = true;
             st.flags._officeFactionLoyalist = true;
-            st.player.corporate.popularity = Math.min(
+            (st.player.corporate || {}).popularity = Math.min(
               100,
-              (st.player.corporate.popularity || 50) + 10,
+              ((st.player.corporate || {}).popularity || 50) + 10,
             );
-            st.player.corporate.risk = Math.min(
+            (st.player.corporate || {}).risk = Math.min(
               100,
-              (st.player.corporate.risk || 0) + 15,
+              ((st.player.corporate || {}).risk || 0) + 15,
             );
-            st.player.corporate.kpi = Math.min(
+            (st.player.corporate || {}).kpi = Math.min(
               100,
-              (st.player.corporate.kpi || 50) + 5,
+              ((st.player.corporate || {}).kpi || 50) + 5,
             );
             StateManager.addMessage(
               "🗣️ 你帮老张拉了三个支持者。'你小子有前途！'老张笑道。",
@@ -19398,13 +19398,13 @@ function registerNewsEventsToPool() {
           apply: function (st) {
             st.flags._officeFactionEscalationDone = true;
             st.flags._officeFactionWorker = true;
-            st.player.corporate.kpi = Math.min(
+            (st.player.corporate || {}).kpi = Math.min(
               100,
-              (st.player.corporate.kpi || 50) + 15,
+              ((st.player.corporate || {}).kpi || 50) + 15,
             );
-            st.player.corporate.ability = Math.min(
+            (st.player.corporate || {}).ability = Math.min(
               100,
-              (st.player.corporate.ability || 50) + 5,
+              ((st.player.corporate || {}).ability || 50) + 5,
             );
             StateManager.addMessage(
               "📋 你埋头苦干，把项目做了出来。业绩是最好的护身符。",
@@ -19419,13 +19419,13 @@ function registerNewsEventsToPool() {
           apply: function (st) {
             st.flags._officeFactionEscalationDone = true;
             st.flags._officeFactionEvidence = true;
-            st.player.corporate.dignity = Math.min(
+            (st.player.corporate || {}).dignity = Math.min(
               100,
-              (st.player.corporate.dignity || 50) + 5,
+              ((st.player.corporate || {}).dignity || 50) + 5,
             );
-            st.player.corporate.risk = Math.max(
+            (st.player.corporate || {}).risk = Math.max(
               0,
-              (st.player.corporate.risk || 0) - 10,
+              ((st.player.corporate || {}).risk || 0) - 10,
             );
             st.player.intelligence = Math.min(
               100,
@@ -19464,13 +19464,13 @@ function registerNewsEventsToPool() {
                 : 8;
             var fameGain = st.flags._officeFactionDoubleAgent ? -10 : bonus;
             if (st.player.corporate) {
-              st.player.corporate.kpi = Math.min(
+              (st.player.corporate || {}).kpi = Math.min(
                 100,
-                (st.player.corporate.kpi || 50) + bonus,
+                ((st.player.corporate || {}).kpi || 50) + bonus,
               );
-              st.player.corporate.popularity = Math.min(
+              (st.player.corporate || {}).popularity = Math.min(
                 100,
-                (st.player.corporate.popularity || 50) + 10,
+                ((st.player.corporate || {}).popularity || 50) + 10,
               );
             }
             st.player.fame = Math.max(0, (st.player.fame || 0) + fameGain);
@@ -19488,13 +19488,13 @@ function registerNewsEventsToPool() {
           apply: function (st) {
             st.flags._officeFactionOutcomeDone = true;
             if (st.player.corporate) {
-              st.player.corporate.dignity = Math.min(
+              (st.player.corporate || {}).dignity = Math.min(
                 100,
-                (st.player.corporate.dignity || 50) + 10,
+                ((st.player.corporate || {}).dignity || 50) + 10,
               );
-              st.player.corporate.popularity = Math.min(
+              (st.player.corporate || {}).popularity = Math.min(
                 100,
-                (st.player.corporate.popularity || 50) + 5,
+                ((st.player.corporate || {}).popularity || 50) + 5,
               );
             }
             st.player.mental = Math.min(100, (st.player.mental || 50) + 8);
@@ -19537,17 +19537,17 @@ function registerNewsEventsToPool() {
             hint: "诚实但得罪人",
             apply: function (st) {
               st.flags._blameGameHonest = true;
-              st.player.corporate.dignity = Math.min(
+              (st.player.corporate || {}).dignity = Math.min(
                 100,
-                (st.player.corporate.dignity || 50) + 10,
+                ((st.player.corporate || {}).dignity || 50) + 10,
               );
-              st.player.corporate.popularity = Math.max(
+              (st.player.corporate || {}).popularity = Math.max(
                 0,
-                (st.player.corporate.popularity || 50) - 15,
+                ((st.player.corporate || {}).popularity || 50) - 15,
               );
-              st.player.corporate.risk = Math.min(
+              (st.player.corporate || {}).risk = Math.min(
                 100,
-                (st.player.corporate.risk || 0) + 10,
+                ((st.player.corporate || {}).risk || 0) + 10,
               );
               StateManager.addMessage(
                 "📋 你说了实话。技术总监的脸色很难看。你的专业度得到了认可（尊严+10），但同事开始疏远你（人缘-15），风险也上升了（+10）。",
@@ -19560,13 +19560,13 @@ function registerNewsEventsToPool() {
             hint: "牺牲自己，保全团队",
             apply: function (st) {
               st.flags._blameGameTookIt = true;
-              st.player.corporate.dignity = Math.max(
+              (st.player.corporate || {}).dignity = Math.max(
                 0,
-                (st.player.corporate.dignity || 50) - 20,
+                ((st.player.corporate || {}).dignity || 50) - 20,
               );
-              st.player.corporate.popularity = Math.min(
+              (st.player.corporate || {}).popularity = Math.min(
                 100,
-                (st.player.corporate.popularity || 50) + 10,
+                ((st.player.corporate || {}).popularity || 50) + 10,
               );
               st.player.mental = Math.max(0, (st.player.mental || 50) - 8);
               st.needs.happiness = Math.max(0, (st.needs.happiness || 50) - 10);
@@ -19581,13 +19581,13 @@ function registerNewsEventsToPool() {
             hint: "各方不得罪，但显得没有担当",
             apply: function (st) {
               st.flags._blameGameNeutral = true;
-              st.player.corporate.upwardMgmt = Math.max(
+              (st.player.corporate || {}).upwardMgmt = Math.max(
                 0,
-                (st.player.corporate.upwardMgmt || 50) - 5,
+                ((st.player.corporate || {}).upwardMgmt || 50) - 5,
               );
-              st.player.corporate.dignity = Math.max(
+              (st.player.corporate || {}).dignity = Math.max(
                 0,
-                (st.player.corporate.dignity || 50) - 5,
+                ((st.player.corporate || {}).dignity || 50) - 5,
               );
               st.needs.happiness = Math.min(
                 100,
@@ -19618,9 +19618,9 @@ function registerNewsEventsToPool() {
             apply: function (st) {
               st.flags._promotionGiftGiven = true;
               st.resources.cash = Math.max(0, (st.resources.cash || 0) - 2000);
-              st.player.corporate.popularity = Math.min(
+              (st.player.corporate || {}).popularity = Math.min(
                 100,
-                (st.player.corporate.popularity || 50) + 8,
+                ((st.player.corporate || {}).popularity || 50) + 8,
               );
               st.needs.happiness = Math.max(0, (st.needs.happiness || 50) - 5);
               StateManager.addMessage(
@@ -19634,9 +19634,9 @@ function registerNewsEventsToPool() {
             hint: "不花钱，但晋升概率不变",
             apply: function (st) {
               st.flags._promotionNoGift = true;
-              st.player.corporate.dignity = Math.min(
+              (st.player.corporate || {}).dignity = Math.min(
                 100,
-                (st.player.corporate.dignity || 50) + 8,
+                ((st.player.corporate || {}).dignity || 50) + 8,
               );
               st.player.mental = Math.min(100, (st.player.mental || 50) + 5);
               StateManager.addMessage(
@@ -19650,18 +19650,18 @@ function registerNewsEventsToPool() {
             hint: "高风险高回报",
             apply: function (st) {
               st.flags._promotionReported = true;
-              st.player.corporate.risk = Math.min(
+              (st.player.corporate || {}).risk = Math.min(
                 100,
-                (st.player.corporate.risk || 0) + 20,
+                ((st.player.corporate || {}).risk || 0) + 20,
               );
-              st.player.corporate.dignity = Math.min(
+              (st.player.corporate || {}).dignity = Math.min(
                 100,
-                (st.player.corporate.dignity || 50) + 15,
+                ((st.player.corporate || {}).dignity || 50) + 15,
               );
               if (Random.chance(0.4)) {
-                st.player.corporate.popularity = Math.min(
+                (st.player.corporate || {}).popularity = Math.min(
                   100,
-                  (st.player.corporate.popularity || 50) + 10,
+                  ((st.player.corporate || {}).popularity || 50) + 10,
                 );
                 st.needs.happiness = Math.min(
                   100,
@@ -19672,9 +19672,9 @@ function registerNewsEventsToPool() {
                   "success",
                 );
               } else {
-                st.player.corporate.popularity = Math.max(
+                (st.player.corporate || {}).popularity = Math.max(
                   0,
-                  (st.player.corporate.popularity || 50) - 10,
+                  ((st.player.corporate || {}).popularity || 50) - 10,
                 );
                 st.needs.happiness = Math.max(
                   0,
@@ -19703,18 +19703,18 @@ function registerNewsEventsToPool() {
             hint: "人道主义，但小林可能怀恨",
             apply: function (st) {
               st.flags._layoffChoseOldZhao = true;
-              st.player.corporate.dignity = Math.min(
+              (st.player.corporate || {}).dignity = Math.min(
                 100,
-                (st.player.corporate.dignity || 50) + 10,
+                ((st.player.corporate || {}).dignity || 50) + 10,
               );
               st.player.mental = Math.min(100, (st.player.mental || 50) + 5);
               st.needs.happiness = Math.min(
                 100,
                 (st.needs.happiness || 50) + 8,
               );
-              st.player.corporate.popularity = Math.max(
+              (st.player.corporate || {}).popularity = Math.max(
                 0,
-                (st.player.corporate.popularity || 50) - 8,
+                ((st.player.corporate || {}).popularity || 50) - 8,
               );
               StateManager.addMessage(
                 "👴 你选择了老赵。他红着眼眶跟你握手。小林没说什么，但之后看你的眼神变了。尊严+10，心智+5，心情+8，小林人缘-8。",
@@ -19727,13 +19727,13 @@ function registerNewsEventsToPool() {
             hint: "现实考量，但老赵会失望",
             apply: function (st) {
               st.flags._layoffChoseXiaoLin = true;
-              st.player.corporate.dignity = Math.max(
+              (st.player.corporate || {}).dignity = Math.max(
                 0,
-                (st.player.corporate.dignity || 50) - 5,
+                ((st.player.corporate || {}).dignity || 50) - 5,
               );
-              st.player.corporate.popularity = Math.min(
+              (st.player.corporate || {}).popularity = Math.min(
                 100,
-                (st.player.corporate.popularity || 50) + 5,
+                ((st.player.corporate || {}).popularity || 50) + 5,
               );
               st.player.mental = Math.max(0, (st.player.mental || 50) - 8);
               StateManager.addMessage(
@@ -19747,9 +19747,9 @@ function registerNewsEventsToPool() {
             hint: "不干涉，把选择权还给当事人",
             apply: function (st) {
               st.flags._layoffLetThemDecide = true;
-              st.player.corporate.upwardMgmt = Math.min(
+              (st.player.corporate || {}).upwardMgmt = Math.min(
                 100,
-                (st.player.corporate.upwardMgmt || 50) + 5,
+                ((st.player.corporate || {}).upwardMgmt || 50) + 5,
               );
               st.player.mental = Math.min(100, (st.player.mental || 50) + 3);
               st.needs.happiness = Math.min(
@@ -150574,7 +150574,7 @@ function performMarketResearch(state, actionId) {
   const action = MARKET_INTELLIGENCE_ACTIONS.find((a) => a.id === actionId);
   if (!action) return { success: false, message: "无效操作" };
 
-  if (company.cashReserve < action.cost) {
+  if ((company.cashReserve || 0) < action.cost) {
     return {
       success: false,
       message: "现金不足，需要¥" + action.cost.toLocaleString(),
@@ -151323,7 +151323,7 @@ function executeCompetitorResponse(state, attack, responseId) {
   const baseCost =
     company.revenue > 0 ? company.revenue * response.costMult : 10000;
 
-  if (company.cashReserve < baseCost) {
+  if ((company.cashReserve || 0) < baseCost) {
     return {
       success: false,
       message: "现金不足，需要¥" + Math.round(baseCost).toLocaleString(),
@@ -151331,7 +151331,7 @@ function executeCompetitorResponse(state, attack, responseId) {
   }
 
   // 消耗现金
-  company.cashReserve -= baseCost;
+  company.cashReserve = Math.max(0, (company.cashReserve || 0) - baseCost);
   company.expenses += baseCost;
 
   // 成功率判定
@@ -152311,7 +152311,7 @@ function executeCrisisResponse(state, crisis, responseId) {
   const baseCost =
     company.revenue > 0 ? company.revenue * response.costMult : 10000;
 
-  if (company.cashReserve < baseCost) {
+  if ((company.cashReserve || 0) < baseCost) {
     return {
       success: false,
       message: "现金不足，需要¥" + Math.round(baseCost).toLocaleString(),
@@ -152319,7 +152319,7 @@ function executeCrisisResponse(state, crisis, responseId) {
   }
 
   // 消耗现金
-  company.cashReserve -= baseCost;
+  company.cashReserve = Math.max(0, (company.cashReserve || 0) - baseCost);
   company.expenses += baseCost;
 
   // 成功率判定
@@ -152481,7 +152481,7 @@ function checkOfficeUpgradeCondition(company, targetLevel) {
 
   // 检查资金（需要至少3倍月租的现金储备）
   const requiredCash = officeInfo.cost * 3;
-  if (company.cashReserve < requiredCash) {
+  if ((company.cashReserve || 0) < requiredCash) {
     return {
       canUpgrade: false,
       reason: `资金不足，需要至少¥${requiredCash.toLocaleString()}（3倍月租）`,
@@ -152535,7 +152535,7 @@ function upgradeOfficeLocation(company, targetLevel, day) {
   const oldLevel = company.officeLocation;
   const upgradeCost = OFFICE_LOCATIONS[targetLevel].cost;
 
-  if (company.cashReserve < upgradeCost) {
+  if ((company.cashReserve || 0) < upgradeCost) {
     return {
       success: false,
       reason: `现金不足，升级需要¥${upgradeCost.toLocaleString()}`,
@@ -152543,7 +152543,7 @@ function upgradeOfficeLocation(company, targetLevel, day) {
   }
 
   // 执行升级
-  company.cashReserve -= upgradeCost;
+  company.cashReserve = Math.max(0, (company.cashReserve || 0) - upgradeCost);
   company.officeLocation = targetLevel;
   company.officeUnlockDay[targetLevel] = day;
 
@@ -152579,7 +152579,7 @@ function downgradeOfficeLocation(company, targetLevel, day) {
   const refund = Math.floor(OFFICE_LOCATIONS[oldLevel].cost * 0.3); // 降级退还30%
 
   company.officeLocation = targetLevel;
-  company.cashReserve += refund;
+  company.cashReserve = (company.cashReserve || 0) + refund;
 
   company.officeUpgradeHistory.push({
     from: oldLevel,
@@ -152653,7 +152653,7 @@ function checkCultureChangeCondition(company, targetCulture) {
 
   // 检查资金（切换文化需要投入）
   const switchCost = 50000; // 文化切换基础成本
-  if (company.cashReserve < switchCost) {
+  if ((company.cashReserve || 0) < switchCost) {
     return {
       canChange: false,
       reason: `资金不足，文化切换需要¥${switchCost.toLocaleString()}`,
@@ -152676,7 +152676,7 @@ function changeCompanyCulture(company, targetCulture, day, reason) {
   const switchCost = result.cost;
 
   // 消耗资金
-  company.cashReserve -= switchCost;
+  company.cashReserve = Math.max(0, (company.cashReserve || 0) - switchCost);
   company.companyCulture = targetCulture;
   company.cultureAdoptionProgress = 0; // 重置适应度
   company.cultureConflictLevel = Math.min(4, company.cultureConflictLevel + 1); // 增加冲突等级
@@ -153145,8 +153145,8 @@ function terminatePartner(company, partnerId, day, reason) {
     50000 * (1 + partner.cooperationLevel * 0.2) * (1 - partner.trust / 100),
   );
 
-  if (company.cashReserve >= penalty) {
-    company.cashReserve -= penalty;
+  if ((company.cashReserve || 0) >= penalty) {
+    company.cashReserve = Math.max(0, (company.cashReserve || 0) - penalty);
   }
 
   // 声誉影响
@@ -153176,11 +153176,11 @@ function improvePartnerTrust(company, partnerId, day, amount, cost) {
     return { success: false, reason: "合作伙伴不存在或已终止" };
   }
 
-  if (company.cashReserve < cost) {
+  if ((company.cashReserve || 0) < cost) {
     return { success: false, reason: "资金不足" };
   }
 
-  company.cashReserve -= cost;
+  company.cashReserve = Math.max(0, (company.cashReserve || 0) - cost);
   partner.trust = Math.min(100, partner.trust + amount);
   partner.lastInteractionDay = day;
 
@@ -224744,6 +224744,16 @@ function renderGuidanceBar(state, parent) {
 
 function renderActionsTab(state, parent) {
   try {
+    // 防御性检查：state.trade/state.player 未初始化
+    if (!state || !state.trade || !state.player) {
+      parent.innerHTML = '<div style="padding:20px;text-align:center;color:var(--text-muted);font-size:13px;">⚡ 游戏状态尚未完全初始化，请稍后再试。</div>';
+      return;
+    }
+    // 游戏已结束，显示提示
+    if (state.flags && state.flags.gameOver) {
+      parent.innerHTML = '<div style="padding:20px;text-align:center;color:var(--text-muted);font-size:13px;">💀 游戏已结束，请刷新页面重新开始。</div>';
+      return;
+    }
     var actions = getAvailableActions(state);
 
   // 移除"地点不符"的冗余行动（不在当前地点的行动直接不展示）
@@ -224957,7 +224967,8 @@ function renderActionsTab(state, parent) {
 
   } catch (e) {
     console.error("[renderActionsTab] 渲染异常:", e);
-    parent.innerHTML += '<div style="padding:20px;text-align:center;color:var(--text-muted);font-size:13px;">⚡ 行动加载异常，请刷新页面重试</div>';
+    console.error("[renderActionsTab] 错误详情:", e.message, e.stack);
+    parent.innerHTML += '<div style="padding:20px;text-align:center;color:var(--text-muted);font-size:13px;">⚡ 行动加载异常 (' + (e.message || '未知错误') + ')，请刷新页面重试</div>';
   }
 }
 
@@ -250937,6 +250948,7 @@ function estimateJobPay(job, state) {
   // 模拟3次取平均
   let total = 0;
   for (let i = 0; i < 10; i++) {
+    if (typeof job.payCalc !== "function") return 0;
     let pay = job.payCalc(state);
     if (state._jobMultipliers && state._jobMultipliers[job.id]) {
       pay = Math.floor(pay * state._jobMultipliers[job.id]);
@@ -253046,6 +253058,8 @@ function buildTradePricePreview(state, locKey, isWholesale) {
 // ====== 可用行动列表 ======
 function getAvailableActions(state) {
   const actions = [];
+  // 防御 state.trade/state.player 未初始化
+  if (!state || !state.trade || !state.trade.currentLocation || !state.player) return actions;
 
   // 提升为函数级变量（用 let，块内可重新指向用 const）
   const locKey = state.trade.currentLocation;

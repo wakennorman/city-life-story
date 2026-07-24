@@ -350,7 +350,7 @@ function performMarketResearch(state, actionId) {
   const action = MARKET_INTELLIGENCE_ACTIONS.find((a) => a.id === actionId);
   if (!action) return { success: false, message: "无效操作" };
 
-  if (company.cashReserve < action.cost) {
+  if ((company.cashReserve || 0) < action.cost) {
     return {
       success: false,
       message: "现金不足，需要¥" + action.cost.toLocaleString(),
@@ -1099,7 +1099,7 @@ function executeCompetitorResponse(state, attack, responseId) {
   const baseCost =
     company.revenue > 0 ? company.revenue * response.costMult : 10000;
 
-  if (company.cashReserve < baseCost) {
+  if ((company.cashReserve || 0) < baseCost) {
     return {
       success: false,
       message: "现金不足，需要¥" + Math.round(baseCost).toLocaleString(),
@@ -1107,7 +1107,7 @@ function executeCompetitorResponse(state, attack, responseId) {
   }
 
   // 消耗现金
-  company.cashReserve -= baseCost;
+  company.cashReserve = Math.max(0, (company.cashReserve || 0) - baseCost);
   company.expenses += baseCost;
 
   // 成功率判定
@@ -2087,7 +2087,7 @@ function executeCrisisResponse(state, crisis, responseId) {
   const baseCost =
     company.revenue > 0 ? company.revenue * response.costMult : 10000;
 
-  if (company.cashReserve < baseCost) {
+  if ((company.cashReserve || 0) < baseCost) {
     return {
       success: false,
       message: "现金不足，需要¥" + Math.round(baseCost).toLocaleString(),
@@ -2095,7 +2095,7 @@ function executeCrisisResponse(state, crisis, responseId) {
   }
 
   // 消耗现金
-  company.cashReserve -= baseCost;
+  company.cashReserve = Math.max(0, (company.cashReserve || 0) - baseCost);
   company.expenses += baseCost;
 
   // 成功率判定
@@ -2257,7 +2257,7 @@ function checkOfficeUpgradeCondition(company, targetLevel) {
 
   // 检查资金（需要至少3倍月租的现金储备）
   const requiredCash = officeInfo.cost * 3;
-  if (company.cashReserve < requiredCash) {
+  if ((company.cashReserve || 0) < requiredCash) {
     return {
       canUpgrade: false,
       reason: `资金不足，需要至少¥${requiredCash.toLocaleString()}（3倍月租）`,
@@ -2311,7 +2311,7 @@ function upgradeOfficeLocation(company, targetLevel, day) {
   const oldLevel = company.officeLocation;
   const upgradeCost = OFFICE_LOCATIONS[targetLevel].cost;
 
-  if (company.cashReserve < upgradeCost) {
+  if ((company.cashReserve || 0) < upgradeCost) {
     return {
       success: false,
       reason: `现金不足，升级需要¥${upgradeCost.toLocaleString()}`,
@@ -2319,7 +2319,7 @@ function upgradeOfficeLocation(company, targetLevel, day) {
   }
 
   // 执行升级
-  company.cashReserve -= upgradeCost;
+  company.cashReserve = Math.max(0, (company.cashReserve || 0) - upgradeCost);
   company.officeLocation = targetLevel;
   company.officeUnlockDay[targetLevel] = day;
 
@@ -2355,7 +2355,7 @@ function downgradeOfficeLocation(company, targetLevel, day) {
   const refund = Math.floor(OFFICE_LOCATIONS[oldLevel].cost * 0.3); // 降级退还30%
 
   company.officeLocation = targetLevel;
-  company.cashReserve += refund;
+  company.cashReserve = (company.cashReserve || 0) + refund;
 
   company.officeUpgradeHistory.push({
     from: oldLevel,
@@ -2429,7 +2429,7 @@ function checkCultureChangeCondition(company, targetCulture) {
 
   // 检查资金（切换文化需要投入）
   const switchCost = 50000; // 文化切换基础成本
-  if (company.cashReserve < switchCost) {
+  if ((company.cashReserve || 0) < switchCost) {
     return {
       canChange: false,
       reason: `资金不足，文化切换需要¥${switchCost.toLocaleString()}`,
@@ -2452,7 +2452,7 @@ function changeCompanyCulture(company, targetCulture, day, reason) {
   const switchCost = result.cost;
 
   // 消耗资金
-  company.cashReserve -= switchCost;
+  company.cashReserve = Math.max(0, (company.cashReserve || 0) - switchCost);
   company.companyCulture = targetCulture;
   company.cultureAdoptionProgress = 0; // 重置适应度
   company.cultureConflictLevel = Math.min(4, company.cultureConflictLevel + 1); // 增加冲突等级
@@ -2921,8 +2921,8 @@ function terminatePartner(company, partnerId, day, reason) {
     50000 * (1 + partner.cooperationLevel * 0.2) * (1 - partner.trust / 100),
   );
 
-  if (company.cashReserve >= penalty) {
-    company.cashReserve -= penalty;
+  if ((company.cashReserve || 0) >= penalty) {
+    company.cashReserve = Math.max(0, (company.cashReserve || 0) - penalty);
   }
 
   // 声誉影响
@@ -2952,11 +2952,11 @@ function improvePartnerTrust(company, partnerId, day, amount, cost) {
     return { success: false, reason: "合作伙伴不存在或已终止" };
   }
 
-  if (company.cashReserve < cost) {
+  if ((company.cashReserve || 0) < cost) {
     return { success: false, reason: "资金不足" };
   }
 
-  company.cashReserve -= cost;
+  company.cashReserve = Math.max(0, (company.cashReserve || 0) - cost);
   partner.trust = Math.min(100, partner.trust + amount);
   partner.lastInteractionDay = day;
 

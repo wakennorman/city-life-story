@@ -224,6 +224,7 @@ function estimateJobPay(job, state) {
   // 模拟3次取平均
   let total = 0;
   for (let i = 0; i < 10; i++) {
+    if (typeof job.payCalc !== "function") return 0;
     let pay = job.payCalc(state);
     if (state._jobMultipliers && state._jobMultipliers[job.id]) {
       pay = Math.floor(pay * state._jobMultipliers[job.id]);
@@ -2333,6 +2334,8 @@ function buildTradePricePreview(state, locKey, isWholesale) {
 // ====== 可用行动列表 ======
 function getAvailableActions(state) {
   const actions = [];
+  // 防御 state.trade/state.player 未初始化
+  if (!state || !state.trade || !state.trade.currentLocation || !state.player) return actions;
 
   // 提升为函数级变量（用 let，块内可重新指向用 const）
   const locKey = state.trade.currentLocation;
