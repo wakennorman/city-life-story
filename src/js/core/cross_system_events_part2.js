@@ -3603,7 +3603,7 @@
             apply: function (s) {
               s.flags._coldSnapHousingSeen = true;
               if (s.resources.cash >= 30) {
-                s.resources.cash -= 30;
+                s.resources.cash = Math.max(0, (s.resources.cash || 0) - 30);
                 s.status.health = Math.max(0, (s.status.health || 70) - 3);
                 s.needs.happiness = Math.min(
                   100,
@@ -3634,7 +3634,7 @@
             apply: function (s) {
               s.flags._coldSnapHousingSeen = true;
               if (s.resources.cash >= 50) {
-                s.resources.cash -= 50;
+                s.resources.cash = Math.max(0, (s.resources.cash || 0) - 50);
                 s.needs.happiness = Math.min(
                   100,
                   (s.needs.happiness || 50) + 10,
@@ -3678,7 +3678,7 @@
           apply: function (s) {
             s.flags._coldSnapHousingSeen = true;
             if (s.resources.cash >= 20) {
-              s.resources.cash -= 20;
+              s.resources.cash = Math.max(0, (s.resources.cash || 0) - 20);
               s.needs.happiness = Math.min(100, (s.needs.happiness || 50) + 10);
               s.needs.hunger = Math.min(100, (s.needs.hunger || 50) + 15);
               StateManager.addMessage(

@@ -41787,7 +41787,7 @@ if (typeof window !== "undefined") {
         apply: function (s) {
           s.flags._firstEarnSeen = true;
           var saveAmt = Math.min(200, s.resources.cash || 0);
-          s.resources.cash -= saveAmt;
+          s.resources.cash = Math.max(0, (s.resources.cash || 0) - saveAmt);
           s.resources.bankBalance = (s.resources.bankBalance || 0) + saveAmt;
           s.player.mental = Math.min(100, (s.player.mental || 0) + 2);
           StateManager.addMessage(
@@ -42521,7 +42521,7 @@ if (typeof window !== "undefined") {
             s.medical.totalMedicalSpent || 5000,
             s.resources.cash || 0,
           );
-          s.resources.cash -= debt;
+          s.resources.cash = Math.max(0, (s.resources.cash || 0) - debt);
           s.medical.totalMedicalSpent = 0;
           s.player.mental = Math.min(100, (s.player.mental || 0) + 3);
           s.needs.happiness = Math.max(0, (s.needs.happiness || 50) - 5);
@@ -42603,7 +42603,7 @@ if (typeof window !== "undefined") {
         apply: function (s) {
           s.flags._travelHealthSeen = true;
           var cost = Math.min(300 + Random.int(0, 500), s.resources.cash || 0);
-          s.resources.cash -= cost;
+          s.resources.cash = Math.max(0, (s.resources.cash || 0) - cost);
           s.status.health = Math.min(100, (s.status.health || 0) + 15);
           s.player.mental = Math.min(100, (s.player.mental || 0) + 2);
           StateManager.addMessage(
@@ -42620,7 +42620,7 @@ if (typeof window !== "undefined") {
         apply: function (s) {
           s.flags._travelHealthSeen = true;
           var cost = Math.min(50 + Random.int(0, 100), s.resources.cash || 0);
-          s.resources.cash -= cost;
+          s.resources.cash = Math.max(0, (s.resources.cash || 0) - cost);
           s.status.health = Math.min(100, (s.status.health || 0) + 5);
           s.needs.happiness = Math.max(0, (s.needs.happiness || 50) - 5);
           StateManager.addMessage(
@@ -42673,7 +42673,7 @@ if (typeof window !== "undefined") {
         apply: function (s) {
           s.flags._midlifeCareerSeen = true;
           var cost = Math.min(2000, s.resources.cash || 0);
-          s.resources.cash -= cost;
+          s.resources.cash = Math.max(0, (s.resources.cash || 0) - cost);
           s.flags._midlifeRetraining = true;
           s.player.mental = Math.min(100, (s.player.mental || 0) + 5);
           s.needs.happiness = Math.min(100, (s.needs.happiness || 50) + 5);
@@ -42888,7 +42888,7 @@ if (typeof window !== "undefined") {
         hint: "省¥80，销售XP+30",
         apply: function (s) {
           s.flags._salesInsightDay = s.player.day;
-          s.resources.cash -= 120;
+          s.resources.cash = Math.max(0, (s.resources.cash || 0) - 120);
           s.skills.sales.xp = (s.skills.sales.xp || 0) + 30;
           s.player.mental = Math.min(100, (s.player.mental || 0) + 2);
           StateManager.addMessage(
@@ -42902,7 +42902,7 @@ if (typeof window !== "undefined") {
         hint: "多花¥80，省事",
         apply: function (s) {
           s.flags._salesInsightDay = s.player.day;
-          s.resources.cash -= 200;
+          s.resources.cash = Math.max(0, (s.resources.cash || 0) - 200);
           StateManager.addMessage(
             "😅 你付了¥200。虽然知道被宰了，但有时候不想把生活过成一场谈判。",
             "info",
@@ -42916,7 +42916,7 @@ if (typeof window !== "undefined") {
           s.flags._salesInsightDay = s.player.day;
           s.player.charm = Math.min(100, (s.player.charm || 0) + 2);
           s.skills.sales.xp = (s.skills.sales.xp || 0) + 20;
-          s.resources.cash -= 100;
+          s.resources.cash = Math.max(0, (s.resources.cash || 0) - 100);
           StateManager.addMessage(
             "🤝 你跟摊主聊了会儿，夸他选货眼光好。他心情好了，主动降价到¥100。销售XP+20，魅力+2。有时候真诚比技巧更管用。",
             "success",
@@ -48156,7 +48156,7 @@ if (typeof window !== "undefined") {
             apply: function (s) {
               s.flags._coldSnapHousingSeen = true;
               if (s.resources.cash >= 30) {
-                s.resources.cash -= 30;
+                s.resources.cash = Math.max(0, (s.resources.cash || 0) - 30);
                 s.status.health = Math.max(0, (s.status.health || 70) - 3);
                 s.needs.happiness = Math.min(
                   100,
@@ -48187,7 +48187,7 @@ if (typeof window !== "undefined") {
             apply: function (s) {
               s.flags._coldSnapHousingSeen = true;
               if (s.resources.cash >= 50) {
-                s.resources.cash -= 50;
+                s.resources.cash = Math.max(0, (s.resources.cash || 0) - 50);
                 s.needs.happiness = Math.min(
                   100,
                   (s.needs.happiness || 50) + 10,
@@ -48231,7 +48231,7 @@ if (typeof window !== "undefined") {
           apply: function (s) {
             s.flags._coldSnapHousingSeen = true;
             if (s.resources.cash >= 20) {
-              s.resources.cash -= 20;
+              s.resources.cash = Math.max(0, (s.resources.cash || 0) - 20);
               s.needs.happiness = Math.min(100, (s.needs.happiness || 50) + 10);
               s.needs.hunger = Math.min(100, (s.needs.hunger || 50) + 15);
               StateManager.addMessage(
@@ -170809,7 +170809,7 @@ const MORAL_EVENTS = [
         immediate: function (s) {
           // [联动flag] 触发"乞丐的线报"后续事件
           s.flags.moralFedBeggar = true;
-          s.resources.cash -= 15;
+          s.resources.cash = Math.max(0, (s.resources.cash || 0) - 15);
           s.needs.happiness = Math.min(100, s.needs.happiness + 6);
           StateManager.addMessage("🎭 老人眼眶湿润，连声道谢。", "success");
         },
@@ -170819,7 +170819,7 @@ const MORAL_EVENTS = [
         flag: "moral_beggar_coin",
         score: 3,
         immediate: function (s) {
-          s.resources.cash -= 2;
+          s.resources.cash = Math.max(0, (s.resources.cash || 0) - 2);
           s.needs.happiness = Math.max(0, s.needs.happiness - 1);
           StateManager.addMessage(
             "🪙 硬币叮当落入碗中，你没有多看一眼。",
@@ -171038,7 +171038,7 @@ const MORAL_EVENTS = [
         immediate: function (s) {
           // [联动flag] 触发"流浪狗再次相遇"后续事件
           s.flags.moralFedDog = true;
-          s.resources.cash -= 3;
+          s.resources.cash = Math.max(0, (s.resources.cash || 0) - 3);
           s.needs.happiness = Math.min(100, s.needs.happiness + 8);
           StateManager.addMessage(
             "🐕 小狗狼吞虎咽地吃完，舔了舔你的手。",
@@ -171369,7 +171369,7 @@ const MORAL_EVENTS = [
         flag: "moral_cashier_return",
         score: 8,
         immediate: function (s) {
-          s.resources.cash -= 30;
+          s.resources.cash = Math.max(0, (s.resources.cash || 0) - 30);
           s.needs.happiness = Math.min(100, s.needs.happiness + 5);
           StateManager.addMessage(
             "😊 收银员感激地说「你真是个好人！」",
@@ -171497,7 +171497,7 @@ const MORAL_EVENTS = [
         immediate: function (s) {
           // [全系统自洽修复] 域B A类#2: cash NaN 守卫 — 防止事件扣款永久损坏现金
           if (typeof s.resources.cash !== "number" || !isFinite(s.resources.cash)) s.resources.cash = 0;
-          s.resources.cash -= Random.int(80, 150);
+          s.resources.cash = Math.max(0, (s.resources.cash || 0) - Random.int)(80, 150);
           s.resources.cash = Math.max(0, s.resources.cash);
           s.needs.happiness = Math.min(100, (s.needs.happiness || 50) + 10);
           s.player.fame = Math.min(100, (s.player.fame || 0) + 3);
@@ -171512,7 +171512,7 @@ const MORAL_EVENTS = [
         flag: "moral_cat_feed",
         score: 4,
         immediate: function (s) {
-          s.resources.cash -= 5;
+          s.resources.cash = Math.max(0, (s.resources.cash || 0) - 5);
           s.needs.happiness = Math.min(100, s.needs.happiness + 2);
           StateManager.addMessage(
             "🐱 你放下吃的，小猫狼吞虎咽地吃起来。",
@@ -171673,7 +171673,7 @@ const MORAL_EVENTS = [
         flag: "moral_scan_honest",
         score: 6,
         immediate: function (s) {
-          s.resources.cash -= 48;
+          s.resources.cash = Math.max(0, (s.resources.cash || 0) - 48);
           s.needs.happiness = Math.min(100, s.needs.happiness + 3);
           StateManager.addMessage(
             "🛒 你扫码付了巧克力的钱。诚信值+1。",
@@ -171719,7 +171719,7 @@ const MORAL_EVENTS = [
         flag: "moral_taxi_fix",
         score: 6,
         immediate: function (s) {
-          s.resources.cash -= 2;
+          s.resources.cash = Math.max(0, (s.resources.cash || 0) - 2);
           s.needs.happiness = Math.min(100, s.needs.happiness + 4);
           s.player.fame = Math.min(100, (s.player.fame || 0) + 1);
           StateManager.addMessage(
@@ -171746,7 +171746,7 @@ const MORAL_EVENTS = [
         flag: "moral_taxi_tip",
         score: 8,
         immediate: function (s) {
-          s.resources.cash -= 10;
+          s.resources.cash = Math.max(0, (s.resources.cash || 0) - 10);
           s.needs.happiness = Math.min(100, s.needs.happiness + 6);
           s.player.fame = Math.min(100, (s.player.fame || 0) + 2);
           StateManager.addMessage(
@@ -171825,7 +171825,7 @@ const MORAL_EVENTS = [
         score: 8,
         immediate: function (s) {
           if (s.resources.cash >= 68) {
-            s.resources.cash -= 68;
+            s.resources.cash = Math.max(0, (s.resources.cash || 0) - 68);
             s.needs.happiness = Math.min(100, s.needs.happiness + 3);
             s.player.fame = Math.min(100, (s.player.fame || 0) + 2);
             StateManager.addMessage(
@@ -171858,7 +171858,7 @@ const MORAL_EVENTS = [
         score: 6,
         immediate: function (s) {
           if (s.resources.cash >= 68) {
-            s.resources.cash -= 68;
+            s.resources.cash = Math.max(0, (s.resources.cash || 0) - 68);
             s.needs.happiness = Math.min(100, s.needs.happiness + 4);
             StateManager.addMessage(
               "📖 你买了新书还回去，管理员没发现区别——但你知道。",
@@ -172030,7 +172030,7 @@ const MORAL_EVENTS = [
         flag: "moral_borrow_again",
         score: 5,
         immediate: function (s) {
-          s.resources.cash -= 200;
+          s.resources.cash = Math.max(0, (s.resources.cash || 0) - 200);
           s.needs.happiness = Math.max(0, s.needs.happiness - 2);
           s.flags._neighborDebt = (s.flags._neighborDebt || 150) + 200;
           StateManager.addMessage(
@@ -172057,7 +172057,7 @@ const MORAL_EVENTS = [
         flag: "moral_borrow_iou",
         score: 8,
         immediate: function (s) {
-          s.resources.cash -= 200;
+          s.resources.cash = Math.max(0, (s.resources.cash || 0) - 200);
           s.flags._neighborIOU = (s.flags._neighborIOU || 150) + 200;
           s.flags._neighborHasIOU = true;
           s.player.fame = Math.min(100, (s.player.fame || 0) + 2);
@@ -172135,7 +172135,7 @@ const MORAL_EVENTS = [
         score: 3,
         immediate: function (s) {
           if (s.resources.cash >= 5) {
-            s.resources.cash -= 5;
+            s.resources.cash = Math.max(0, (s.resources.cash || 0) - 5);
             s.needs.fatigue = Math.max(0, s.needs.fatigue - 10);
             s.needs.happiness = Math.min(100, s.needs.happiness + 5);
             StateManager.addMessage(
@@ -173137,7 +173137,7 @@ const MORAL_CONSEQUENCES = {
       return "市场监督来了！有人举报你缺斤短两。你被罚款并且被要求整改。";
     },
     apply: function (s) {
-      s.resources.cash -= 200;
+      s.resources.cash = Math.max(0, (s.resources.cash || 0) - 200);
       s.player.fame = Math.max(0, (s.player.fame || 0) - 10);
       s.needs.happiness = Math.max(0, s.needs.happiness - 10);
       StateManager.addMessage("⚠️ 市监局突检！被罚¥200。", "danger");
@@ -173480,7 +173480,7 @@ const MORAL_CONSEQUENCES = {
       return "图书馆发来短信：您归还的图书有严重污损，请尽快到馆处理赔偿事宜。逾期将影响信用记录。";
     },
     apply: function (s) {
-      s.resources.cash -= 68;
+      s.resources.cash = Math.max(0, (s.resources.cash || 0) - 68);
       s.needs.happiness = Math.max(0, s.needs.happiness - 6);
       s.player.fame = Math.max(0, (s.player.fame || 0) - 2);
       StateManager.addMessage(
@@ -173513,7 +173513,7 @@ const MORAL_CONSEQUENCES = {
       return "几天后两个穿制服的人敲了你的门——巷子里有监控。车主报了警，监控拍到了你的背影。";
     },
     apply: function (s) {
-      s.resources.cash -= 300;
+      s.resources.cash = Math.max(0, (s.resources.cash || 0) - 300);
       s.player.fame = Math.max(0, (s.player.fame || 0) - 5);
       s.needs.happiness = Math.max(0, s.needs.happiness - 10);
       StateManager.addMessage(
@@ -191762,7 +191762,7 @@ function rollNpcRescueOnStruggle(state) {
           hint: "花¥15减疲劳",
           cost: 15,
           apply: function (st) {
-            st.resources.cash -= 15;
+            st.resources.cash = Math.max(0, (st.resources.cash || 0) - 15);
             st.needs.fatigue -= 10;
             StateManager.addMessage(
               "☀️ 一瓶冰水解了暑气，感觉好多了。",
@@ -191799,7 +191799,7 @@ function rollNpcRescueOnStruggle(state) {
           hint: "食材开销减半",
           apply: function (st) {
             st.flags._autumnGroceries = true;
-            st.resources.cash -= 20;
+            st.resources.cash = Math.max(0, (st.resources.cash || 0) - 20);
             StateManager.addMessage(
               "🍂 你囤了一批便宜食材，未来几天的吃饭开销会省不少。",
               "success",
@@ -192050,7 +192050,7 @@ function rollNpcRescueOnStruggle(state) {
           hint: "解锁高薪工作",
           cost: 50,
           apply: function (st) {
-            st.resources.cash -= 50;
+            st.resources.cash = Math.max(0, (st.resources.cash || 0) - 50);
             st.flags._zhangLogisticsJob = true;
             if (st.relationships.sister_zhang)
               st.relationships.sister_zhang.affinity = Math.min(
@@ -192211,7 +192211,7 @@ function rollNpcRescueOnStruggle(state) {
           hint: "健康+15，花费¥200",
           cost: 200,
           apply: function (st) {
-            st.resources.cash -= 200;
+            st.resources.cash = Math.max(0, (st.resources.cash || 0) - 200);
             st.status.health = Math.min(100, (st.status.health || 50) + 15);
             StateManager.addMessage(
               "🏥 你买了药开始治疗，感觉身体在慢慢恢复。",
@@ -192261,7 +192261,7 @@ function rollNpcRescueOnStruggle(state) {
           cost: 500,
           apply: function (st) {
             st.resources.debt = Math.max(0, (st.resources.debt || 0) - 500);
-            st.resources.cash -= 500;
+            st.resources.cash = Math.max(0, (st.resources.cash || 0) - 500);
             StateManager.addMessage(
               "💸 你给了¥500先缓一缓，催债人暂时离开了。",
               "info",
@@ -192313,7 +192313,7 @@ function rollNpcRescueOnStruggle(state) {
           apply: function (st) {
             var cost =
               st.skills.repair && st.skills.repair.level > 10 ? 30 : 150;
-            st.resources.cash -= cost;
+            st.resources.cash = Math.max(0, (st.resources.cash || 0) - cost);
             st.needs.fatigue = Math.min(100, st.needs.fatigue + 10);
             StateManager.addMessage(
               "🔧 你花了¥" + cost + "修好了水管。",
@@ -192325,7 +192325,7 @@ function rollNpcRescueOnStruggle(state) {
           text: "💸 找师傅修",
           hint: "省事但贵",
           apply: function (st) {
-            st.resources.cash -= 150;
+            st.resources.cash = Math.max(0, (st.resources.cash || 0) - 150);
             StateManager.addMessage(
               "🔧 你找了师傅修好水管，花了¥150。",
               "info",
@@ -192343,7 +192343,7 @@ function rollNpcRescueOnStruggle(state) {
                 "success",
               );
             } else {
-              st.resources.cash -= 150;
+              st.resources.cash = Math.max(0, (st.resources.cash || 0) - 150);
               st.relationships.aunt_wang = st.relationships.aunt_wang || {
                 affinity: 0,
                 met: true,
@@ -192432,7 +192432,7 @@ function rollNpcRescueOnStruggle(state) {
           hint: "花¥30换新装备",
           cost: 30,
           apply: function (st) {
-            st.resources.cash -= 30;
+            st.resources.cash = Math.max(0, (st.resources.cash || 0) - 30);
             StateManager.addMessage(
               "⚙️ 你换了新装备，干活又利索了。",
               "success",
@@ -192450,7 +192450,7 @@ function rollNpcRescueOnStruggle(state) {
                 "success",
               );
             } else {
-              st.resources.cash -= 15;
+              st.resources.cash = Math.max(0, (st.resources.cash || 0) - 15);
               StateManager.addMessage(
                 "⚙️ 你勉强修了一下，但效果不太好，还是花了¥15买修补材料。",
                 "info",
@@ -192481,7 +192481,7 @@ function rollNpcRescueOnStruggle(state) {
               "🚓 警察备了案，但找回希望渺茫。你赶紧补办了手机卡，花了¥200。",
               "info",
             );
-            st.resources.cash -= 200;
+            st.resources.cash = Math.max(0, (st.resources.cash || 0) - 200);
           },
         },
         {
@@ -192511,7 +192511,7 @@ function rollNpcRescueOnStruggle(state) {
               "💸 你在二手市场淘了个同款手机。虽然心疼钱，但好歹有手机用了。",
               "info",
             );
-            st.resources.cash -= 500;
+            st.resources.cash = Math.max(0, (st.resources.cash || 0) - 500);
           },
         },
       ],
@@ -192735,7 +192735,7 @@ function rollNpcRescueOnStruggle(state) {
           hint: "做好人，可能收不回",
           cost: 500,
           apply: function (st) {
-            st.resources.cash -= 500;
+            st.resources.cash = Math.max(0, (st.resources.cash || 0) - 500);
             var repaid = Random.chance(0.4);
             if (repaid) {
               st.resources.cash += 600;
@@ -192756,7 +192756,7 @@ function rollNpcRescueOnStruggle(state) {
           hint: "大数目，高风险",
           cost: 2000,
           apply: function (st) {
-            st.resources.cash -= 2000;
+            st.resources.cash = Math.max(0, (st.resources.cash || 0) - 2000);
             var repaid = Random.chance(0.25);
             if (repaid) {
               st.resources.cash += 2500;
@@ -192814,7 +192814,7 @@ function rollNpcRescueOnStruggle(state) {
           apply: function (st) {
             st.needs.hunger = Math.min(100, (st.needs.hunger || 0) + 15);
             st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 8);
-            st.resources.cash -= 50;
+            st.resources.cash = Math.max(0, (st.resources.cash || 0) - 50);
             StateManager.addMessage(
               "🍖 你送了阿姨一箱牛奶。她笑得合不拢嘴：「这孩子懂事！」",
               "success",
@@ -250386,7 +250386,7 @@ var JOB_MILESTONE_EVENTS = {
           apply: function (state) {
             var cash = state.resources.cash || 0;
             if (cash >= 3000) {
-              state.resources.cash -= 3000;
+              state.resources.cash = Math.max(0, (state.resources.cash || 0) - 3000);
               state.flags.oldZhouReferred = true;
               state.flags.zhouScrapBonus = true;
               state.flags._jobMultipliers = state.flags._jobMultipliers || {};
@@ -250712,7 +250712,7 @@ var JOB_MILESTONE_EVENTS = {
           apply: function (state) {
             var cash = state.resources.cash || 0;
             if (cash >= 800) {
-              state.resources.cash -= 800;
+              state.resources.cash = Math.max(0, (state.resources.cash || 0) - 800);
               state.flags._loanToLaoGuan = (state.player.day || 0) + 30;
               state.flags._laoGuanFriend = true;
               StateManager.addMessage(
@@ -251264,7 +251264,7 @@ var JOB_MILESTONE_EVENTS = {
             var cash = state.resources.cash || 0;
             var deposit = Math.min(500, cash);
             if (deposit > 0) {
-              state.resources.cash -= deposit;
+              state.resources.cash = Math.max(0, (state.resources.cash || 0) - deposit);
               state.resources.bankDeposit =
                 (state.resources.bankDeposit || 0) + deposit;
               StateManager.addMessage(

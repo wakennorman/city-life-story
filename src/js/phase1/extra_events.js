@@ -94,7 +94,7 @@
           hint: "花¥15减疲劳",
           cost: 15,
           apply: function (st) {
-            st.resources.cash -= 15;
+            st.resources.cash = Math.max(0, (st.resources.cash || 0) - 15);
             st.needs.fatigue -= 10;
             StateManager.addMessage(
               "☀️ 一瓶冰水解了暑气，感觉好多了。",
@@ -131,7 +131,7 @@
           hint: "食材开销减半",
           apply: function (st) {
             st.flags._autumnGroceries = true;
-            st.resources.cash -= 20;
+            st.resources.cash = Math.max(0, (st.resources.cash || 0) - 20);
             StateManager.addMessage(
               "🍂 你囤了一批便宜食材，未来几天的吃饭开销会省不少。",
               "success",
@@ -382,7 +382,7 @@
           hint: "解锁高薪工作",
           cost: 50,
           apply: function (st) {
-            st.resources.cash -= 50;
+            st.resources.cash = Math.max(0, (st.resources.cash || 0) - 50);
             st.flags._zhangLogisticsJob = true;
             if (st.relationships.sister_zhang)
               st.relationships.sister_zhang.affinity = Math.min(
@@ -543,7 +543,7 @@
           hint: "健康+15，花费¥200",
           cost: 200,
           apply: function (st) {
-            st.resources.cash -= 200;
+            st.resources.cash = Math.max(0, (st.resources.cash || 0) - 200);
             st.status.health = Math.min(100, (st.status.health || 50) + 15);
             StateManager.addMessage(
               "🏥 你买了药开始治疗，感觉身体在慢慢恢复。",
@@ -593,7 +593,7 @@
           cost: 500,
           apply: function (st) {
             st.resources.debt = Math.max(0, (st.resources.debt || 0) - 500);
-            st.resources.cash -= 500;
+            st.resources.cash = Math.max(0, (st.resources.cash || 0) - 500);
             StateManager.addMessage(
               "💸 你给了¥500先缓一缓，催债人暂时离开了。",
               "info",
@@ -645,7 +645,7 @@
           apply: function (st) {
             var cost =
               st.skills.repair && st.skills.repair.level > 10 ? 30 : 150;
-            st.resources.cash -= cost;
+            st.resources.cash = Math.max(0, (st.resources.cash || 0) - cost);
             st.needs.fatigue = Math.min(100, st.needs.fatigue + 10);
             StateManager.addMessage(
               "🔧 你花了¥" + cost + "修好了水管。",
@@ -657,7 +657,7 @@
           text: "💸 找师傅修",
           hint: "省事但贵",
           apply: function (st) {
-            st.resources.cash -= 150;
+            st.resources.cash = Math.max(0, (st.resources.cash || 0) - 150);
             StateManager.addMessage(
               "🔧 你找了师傅修好水管，花了¥150。",
               "info",
@@ -675,7 +675,7 @@
                 "success",
               );
             } else {
-              st.resources.cash -= 150;
+              st.resources.cash = Math.max(0, (st.resources.cash || 0) - 150);
               st.relationships.aunt_wang = st.relationships.aunt_wang || {
                 affinity: 0,
                 met: true,
@@ -764,7 +764,7 @@
           hint: "花¥30换新装备",
           cost: 30,
           apply: function (st) {
-            st.resources.cash -= 30;
+            st.resources.cash = Math.max(0, (st.resources.cash || 0) - 30);
             StateManager.addMessage(
               "⚙️ 你换了新装备，干活又利索了。",
               "success",
@@ -782,7 +782,7 @@
                 "success",
               );
             } else {
-              st.resources.cash -= 15;
+              st.resources.cash = Math.max(0, (st.resources.cash || 0) - 15);
               StateManager.addMessage(
                 "⚙️ 你勉强修了一下，但效果不太好，还是花了¥15买修补材料。",
                 "info",
@@ -813,7 +813,7 @@
               "🚓 警察备了案，但找回希望渺茫。你赶紧补办了手机卡，花了¥200。",
               "info",
             );
-            st.resources.cash -= 200;
+            st.resources.cash = Math.max(0, (st.resources.cash || 0) - 200);
           },
         },
         {
@@ -843,7 +843,7 @@
               "💸 你在二手市场淘了个同款手机。虽然心疼钱，但好歹有手机用了。",
               "info",
             );
-            st.resources.cash -= 500;
+            st.resources.cash = Math.max(0, (st.resources.cash || 0) - 500);
           },
         },
       ],
@@ -1067,7 +1067,7 @@
           hint: "做好人，可能收不回",
           cost: 500,
           apply: function (st) {
-            st.resources.cash -= 500;
+            st.resources.cash = Math.max(0, (st.resources.cash || 0) - 500);
             var repaid = Random.chance(0.4);
             if (repaid) {
               st.resources.cash += 600;
@@ -1088,7 +1088,7 @@
           hint: "大数目，高风险",
           cost: 2000,
           apply: function (st) {
-            st.resources.cash -= 2000;
+            st.resources.cash = Math.max(0, (st.resources.cash || 0) - 2000);
             var repaid = Random.chance(0.25);
             if (repaid) {
               st.resources.cash += 2500;
@@ -1146,7 +1146,7 @@
           apply: function (st) {
             st.needs.hunger = Math.min(100, (st.needs.hunger || 0) + 15);
             st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 8);
-            st.resources.cash -= 50;
+            st.resources.cash = Math.max(0, (st.resources.cash || 0) - 50);
             StateManager.addMessage(
               "🍖 你送了阿姨一箱牛奶。她笑得合不拢嘴：「这孩子懂事！」",
               "success",

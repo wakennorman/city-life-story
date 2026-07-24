@@ -74,7 +74,7 @@ const MORAL_EVENTS = [
         immediate: function (s) {
           // [联动flag] 触发"乞丐的线报"后续事件
           s.flags.moralFedBeggar = true;
-          s.resources.cash -= 15;
+          s.resources.cash = Math.max(0, (s.resources.cash || 0) - 15);
           s.needs.happiness = Math.min(100, s.needs.happiness + 6);
           StateManager.addMessage("🎭 老人眼眶湿润，连声道谢。", "success");
         },
@@ -84,7 +84,7 @@ const MORAL_EVENTS = [
         flag: "moral_beggar_coin",
         score: 3,
         immediate: function (s) {
-          s.resources.cash -= 2;
+          s.resources.cash = Math.max(0, (s.resources.cash || 0) - 2);
           s.needs.happiness = Math.max(0, s.needs.happiness - 1);
           StateManager.addMessage(
             "🪙 硬币叮当落入碗中，你没有多看一眼。",
@@ -303,7 +303,7 @@ const MORAL_EVENTS = [
         immediate: function (s) {
           // [联动flag] 触发"流浪狗再次相遇"后续事件
           s.flags.moralFedDog = true;
-          s.resources.cash -= 3;
+          s.resources.cash = Math.max(0, (s.resources.cash || 0) - 3);
           s.needs.happiness = Math.min(100, s.needs.happiness + 8);
           StateManager.addMessage(
             "🐕 小狗狼吞虎咽地吃完，舔了舔你的手。",
@@ -634,7 +634,7 @@ const MORAL_EVENTS = [
         flag: "moral_cashier_return",
         score: 8,
         immediate: function (s) {
-          s.resources.cash -= 30;
+          s.resources.cash = Math.max(0, (s.resources.cash || 0) - 30);
           s.needs.happiness = Math.min(100, s.needs.happiness + 5);
           StateManager.addMessage(
             "😊 收银员感激地说「你真是个好人！」",
@@ -762,7 +762,7 @@ const MORAL_EVENTS = [
         immediate: function (s) {
           // [全系统自洽修复] 域B A类#2: cash NaN 守卫 — 防止事件扣款永久损坏现金
           if (typeof s.resources.cash !== "number" || !isFinite(s.resources.cash)) s.resources.cash = 0;
-          s.resources.cash -= Random.int(80, 150);
+          s.resources.cash = Math.max(0, (s.resources.cash || 0) - Random.int)(80, 150);
           s.resources.cash = Math.max(0, s.resources.cash);
           s.needs.happiness = Math.min(100, (s.needs.happiness || 50) + 10);
           s.player.fame = Math.min(100, (s.player.fame || 0) + 3);
@@ -777,7 +777,7 @@ const MORAL_EVENTS = [
         flag: "moral_cat_feed",
         score: 4,
         immediate: function (s) {
-          s.resources.cash -= 5;
+          s.resources.cash = Math.max(0, (s.resources.cash || 0) - 5);
           s.needs.happiness = Math.min(100, s.needs.happiness + 2);
           StateManager.addMessage(
             "🐱 你放下吃的，小猫狼吞虎咽地吃起来。",
@@ -938,7 +938,7 @@ const MORAL_EVENTS = [
         flag: "moral_scan_honest",
         score: 6,
         immediate: function (s) {
-          s.resources.cash -= 48;
+          s.resources.cash = Math.max(0, (s.resources.cash || 0) - 48);
           s.needs.happiness = Math.min(100, s.needs.happiness + 3);
           StateManager.addMessage(
             "🛒 你扫码付了巧克力的钱。诚信值+1。",
@@ -984,7 +984,7 @@ const MORAL_EVENTS = [
         flag: "moral_taxi_fix",
         score: 6,
         immediate: function (s) {
-          s.resources.cash -= 2;
+          s.resources.cash = Math.max(0, (s.resources.cash || 0) - 2);
           s.needs.happiness = Math.min(100, s.needs.happiness + 4);
           s.player.fame = Math.min(100, (s.player.fame || 0) + 1);
           StateManager.addMessage(
@@ -1011,7 +1011,7 @@ const MORAL_EVENTS = [
         flag: "moral_taxi_tip",
         score: 8,
         immediate: function (s) {
-          s.resources.cash -= 10;
+          s.resources.cash = Math.max(0, (s.resources.cash || 0) - 10);
           s.needs.happiness = Math.min(100, s.needs.happiness + 6);
           s.player.fame = Math.min(100, (s.player.fame || 0) + 2);
           StateManager.addMessage(
@@ -1090,7 +1090,7 @@ const MORAL_EVENTS = [
         score: 8,
         immediate: function (s) {
           if (s.resources.cash >= 68) {
-            s.resources.cash -= 68;
+            s.resources.cash = Math.max(0, (s.resources.cash || 0) - 68);
             s.needs.happiness = Math.min(100, s.needs.happiness + 3);
             s.player.fame = Math.min(100, (s.player.fame || 0) + 2);
             StateManager.addMessage(
@@ -1123,7 +1123,7 @@ const MORAL_EVENTS = [
         score: 6,
         immediate: function (s) {
           if (s.resources.cash >= 68) {
-            s.resources.cash -= 68;
+            s.resources.cash = Math.max(0, (s.resources.cash || 0) - 68);
             s.needs.happiness = Math.min(100, s.needs.happiness + 4);
             StateManager.addMessage(
               "📖 你买了新书还回去，管理员没发现区别——但你知道。",
@@ -1295,7 +1295,7 @@ const MORAL_EVENTS = [
         flag: "moral_borrow_again",
         score: 5,
         immediate: function (s) {
-          s.resources.cash -= 200;
+          s.resources.cash = Math.max(0, (s.resources.cash || 0) - 200);
           s.needs.happiness = Math.max(0, s.needs.happiness - 2);
           s.flags._neighborDebt = (s.flags._neighborDebt || 150) + 200;
           StateManager.addMessage(
@@ -1322,7 +1322,7 @@ const MORAL_EVENTS = [
         flag: "moral_borrow_iou",
         score: 8,
         immediate: function (s) {
-          s.resources.cash -= 200;
+          s.resources.cash = Math.max(0, (s.resources.cash || 0) - 200);
           s.flags._neighborIOU = (s.flags._neighborIOU || 150) + 200;
           s.flags._neighborHasIOU = true;
           s.player.fame = Math.min(100, (s.player.fame || 0) + 2);
@@ -1400,7 +1400,7 @@ const MORAL_EVENTS = [
         score: 3,
         immediate: function (s) {
           if (s.resources.cash >= 5) {
-            s.resources.cash -= 5;
+            s.resources.cash = Math.max(0, (s.resources.cash || 0) - 5);
             s.needs.fatigue = Math.max(0, s.needs.fatigue - 10);
             s.needs.happiness = Math.min(100, s.needs.happiness + 5);
             StateManager.addMessage(
@@ -2402,7 +2402,7 @@ const MORAL_CONSEQUENCES = {
       return "市场监督来了！有人举报你缺斤短两。你被罚款并且被要求整改。";
     },
     apply: function (s) {
-      s.resources.cash -= 200;
+      s.resources.cash = Math.max(0, (s.resources.cash || 0) - 200);
       s.player.fame = Math.max(0, (s.player.fame || 0) - 10);
       s.needs.happiness = Math.max(0, s.needs.happiness - 10);
       StateManager.addMessage("⚠️ 市监局突检！被罚¥200。", "danger");
@@ -2745,7 +2745,7 @@ const MORAL_CONSEQUENCES = {
       return "图书馆发来短信：您归还的图书有严重污损，请尽快到馆处理赔偿事宜。逾期将影响信用记录。";
     },
     apply: function (s) {
-      s.resources.cash -= 68;
+      s.resources.cash = Math.max(0, (s.resources.cash || 0) - 68);
       s.needs.happiness = Math.max(0, s.needs.happiness - 6);
       s.player.fame = Math.max(0, (s.player.fame || 0) - 2);
       StateManager.addMessage(
@@ -2778,7 +2778,7 @@ const MORAL_CONSEQUENCES = {
       return "几天后两个穿制服的人敲了你的门——巷子里有监控。车主报了警，监控拍到了你的背影。";
     },
     apply: function (s) {
-      s.resources.cash -= 300;
+      s.resources.cash = Math.max(0, (s.resources.cash || 0) - 300);
       s.player.fame = Math.max(0, (s.player.fame || 0) - 5);
       s.needs.happiness = Math.max(0, s.needs.happiness - 10);
       StateManager.addMessage(

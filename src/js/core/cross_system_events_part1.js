@@ -3065,7 +3065,7 @@
         apply: function (s) {
           s.flags._firstEarnSeen = true;
           var saveAmt = Math.min(200, s.resources.cash || 0);
-          s.resources.cash -= saveAmt;
+          s.resources.cash = Math.max(0, (s.resources.cash || 0) - saveAmt);
           s.resources.bankBalance = (s.resources.bankBalance || 0) + saveAmt;
           s.player.mental = Math.min(100, (s.player.mental || 0) + 2);
           StateManager.addMessage(
@@ -3799,7 +3799,7 @@
             s.medical.totalMedicalSpent || 5000,
             s.resources.cash || 0,
           );
-          s.resources.cash -= debt;
+          s.resources.cash = Math.max(0, (s.resources.cash || 0) - debt);
           s.medical.totalMedicalSpent = 0;
           s.player.mental = Math.min(100, (s.player.mental || 0) + 3);
           s.needs.happiness = Math.max(0, (s.needs.happiness || 50) - 5);
@@ -3881,7 +3881,7 @@
         apply: function (s) {
           s.flags._travelHealthSeen = true;
           var cost = Math.min(300 + Random.int(0, 500), s.resources.cash || 0);
-          s.resources.cash -= cost;
+          s.resources.cash = Math.max(0, (s.resources.cash || 0) - cost);
           s.status.health = Math.min(100, (s.status.health || 0) + 15);
           s.player.mental = Math.min(100, (s.player.mental || 0) + 2);
           StateManager.addMessage(
@@ -3898,7 +3898,7 @@
         apply: function (s) {
           s.flags._travelHealthSeen = true;
           var cost = Math.min(50 + Random.int(0, 100), s.resources.cash || 0);
-          s.resources.cash -= cost;
+          s.resources.cash = Math.max(0, (s.resources.cash || 0) - cost);
           s.status.health = Math.min(100, (s.status.health || 0) + 5);
           s.needs.happiness = Math.max(0, (s.needs.happiness || 50) - 5);
           StateManager.addMessage(
@@ -3951,7 +3951,7 @@
         apply: function (s) {
           s.flags._midlifeCareerSeen = true;
           var cost = Math.min(2000, s.resources.cash || 0);
-          s.resources.cash -= cost;
+          s.resources.cash = Math.max(0, (s.resources.cash || 0) - cost);
           s.flags._midlifeRetraining = true;
           s.player.mental = Math.min(100, (s.player.mental || 0) + 5);
           s.needs.happiness = Math.min(100, (s.needs.happiness || 50) + 5);
@@ -4166,7 +4166,7 @@
         hint: "省¥80，销售XP+30",
         apply: function (s) {
           s.flags._salesInsightDay = s.player.day;
-          s.resources.cash -= 120;
+          s.resources.cash = Math.max(0, (s.resources.cash || 0) - 120);
           s.skills.sales.xp = (s.skills.sales.xp || 0) + 30;
           s.player.mental = Math.min(100, (s.player.mental || 0) + 2);
           StateManager.addMessage(
@@ -4180,7 +4180,7 @@
         hint: "多花¥80，省事",
         apply: function (s) {
           s.flags._salesInsightDay = s.player.day;
-          s.resources.cash -= 200;
+          s.resources.cash = Math.max(0, (s.resources.cash || 0) - 200);
           StateManager.addMessage(
             "😅 你付了¥200。虽然知道被宰了，但有时候不想把生活过成一场谈判。",
             "info",
@@ -4194,7 +4194,7 @@
           s.flags._salesInsightDay = s.player.day;
           s.player.charm = Math.min(100, (s.player.charm || 0) + 2);
           s.skills.sales.xp = (s.skills.sales.xp || 0) + 20;
-          s.resources.cash -= 100;
+          s.resources.cash = Math.max(0, (s.resources.cash || 0) - 100);
           StateManager.addMessage(
             "🤝 你跟摊主聊了会儿，夸他选货眼光好。他心情好了，主动降价到¥100。销售XP+20，魅力+2。有时候真诚比技巧更管用。",
             "success",

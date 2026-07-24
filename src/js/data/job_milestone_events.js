@@ -83,7 +83,7 @@ var JOB_MILESTONE_EVENTS = {
           apply: function (state) {
             var cash = state.resources.cash || 0;
             if (cash >= 3000) {
-              state.resources.cash -= 3000;
+              state.resources.cash = Math.max(0, (state.resources.cash || 0) - 3000);
               state.flags.oldZhouReferred = true;
               state.flags.zhouScrapBonus = true;
               state.flags._jobMultipliers = state.flags._jobMultipliers || {};
@@ -409,7 +409,7 @@ var JOB_MILESTONE_EVENTS = {
           apply: function (state) {
             var cash = state.resources.cash || 0;
             if (cash >= 800) {
-              state.resources.cash -= 800;
+              state.resources.cash = Math.max(0, (state.resources.cash || 0) - 800);
               state.flags._loanToLaoGuan = (state.player.day || 0) + 30;
               state.flags._laoGuanFriend = true;
               StateManager.addMessage(
@@ -961,7 +961,7 @@ var JOB_MILESTONE_EVENTS = {
             var cash = state.resources.cash || 0;
             var deposit = Math.min(500, cash);
             if (deposit > 0) {
-              state.resources.cash -= deposit;
+              state.resources.cash = Math.max(0, (state.resources.cash || 0) - deposit);
               state.resources.bankDeposit =
                 (state.resources.bankDeposit || 0) + deposit;
               StateManager.addMessage(
