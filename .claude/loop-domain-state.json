@@ -1,7 +1,7 @@
 {
-  "currentRound": 193,
-  "currentDomain": "H",
-  "nextDomain": "D",
+  "currentRound": 194,
+  "currentDomain": "D",
+  "nextDomain": "E",
   "rotationIndex": 7,
   "domainOrder": [
     "A",
@@ -17,7 +17,7 @@
     "A": 189,
     "B": 190,
     "C": 191,
-    "D": 184,
+    "D": 194,
     "E": 185,
     "F": 186,
     "G": 192,
@@ -63,13 +63,18 @@
       "round": 193,
       "domain": "H",
       "note": "域H: A类2项(startup_events.js STARTUP_FIELD_MAP 遗漏 revenue→mature_second_curve/consumer_viral三事件营收增益被静默丢弃,补 revenue:{clamp,min0} / events_corp.js:1570 技能经验 .exp→.xp,「管理技能XP+50」静默丢失修复)+联动3项(新建 domain_h_linkage_r193.js,3 corporate: H→E营收里程碑迁移理财意识/H→D团队年终心意涨好感firstMetNpc/H→C带队复盘addSkillXp管理XP)。并行窗口 investment.js(域E tradeLog+71行)已 stash 隔离构建后 pop 还原,全程不碰。MC 6×400d 0代码异常。下轮R194→域D(recency 184 最薄弱)。"
+    },
+    {
+      "round": 194,
+      "domain": "D",
+      "note": "域D: A类2项(npc_linkage_r167.js:55 pickClosestNpcR167 返回 for...in 尾变量 id→好感+5加错NPC,改返回捕获的 best / npc_linkage_r167.js:237 写 st.player.happiness 死字段→st.needs.happiness,「心情+8」被静默丢弃)+联动3项(新建 domain_d_linkage_r194.js,2 street+1 corporate: D→A朋友理账数据素养intelligence+mental/D→C前辈背书技能XP成长/D→E同事理财意识_dataInvestorMindset+cash落袋,严守域D铁律 rel&&rel.met/applyAffinityChange)。MC 6×400d 0代码异常。下轮R195→域E(recency 185 最薄弱)。"
     }
   ],
-  "lastDomain": "H",
-  "lastRound": 193,
+  "lastDomain": "D",
+  "lastRound": 194,
   "lastDate": "2026-07-25",
-  "lastCommit": "7e0df6c9",
-  "pushStatus": "PUSHED",
+  "lastCommit": "cb8f469c",
+  "pushStatus": "PENDING",
   "completedDomains": [
     "A",
     "B",
@@ -80,5 +85,5 @@
     "G",
     "H"
   ],
-  "description": "全系统优化 loop R193 完成。域H: 2项A类修复(startup_events revenue字段映射遗漏 + events_corp .exp→.xp 管理XP拼写) + 3项联动增强(domain_h_linkage_r193.js: H→E/H→D/H→C)。D为最薄弱(recency 184)，下轮R194→域D。"
+  "description": "全系统优化 loop R194 完成。域D(NPC/社交): 2项A类修复(npc_linkage_r167.js pickClosestNpcR167 返回尾变量id致好感加错NPC / st.player.happiness 死字段→st.needs.happiness 心情+8静默丢失) + 3项联动增强(domain_d_linkage_r194.js: D→A理账数据素养/D→C前辈背书技能成长/D→E同事理财意识落袋)。E为最薄弱(recency 185)，下轮R195→域E。"
 }
