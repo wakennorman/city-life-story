@@ -83,3 +83,11 @@
 - `_totalInvestmentProfit`（域E 损益汇总）曾为**只被 R167/R96 联动事件读取、全代码从未写入**的死字段 → R167 的 `market_storm_endurance`(≤-5000)/`investment_social_circle`(≥20000) 及 R96 事件永久死事件。R185 在 `sellInvStock`/`sellBtc` 累计已实现损益到该字段，复活死事件。
 - 联动事件（`domain_e_linkage_r185.js`）触发门槛复用本字段 `_totalInvestmentProfit`，已非死字段。
 - 注意：并行窗口已提交 `89fa1396 fix:[域E] A类修复3项`（economy_v3.1 consecutiveWins / news_investment_bridge category / property_market Infinity%），与 R185 不重复，勿回退。
+
+## 域A 数据/数值平衡 关键事实（2026-07-24 R189，重要）
+
+- `good.id` ≠ `good.category`。`locations.js` 的 `loc.specialties`/`loc.priceMod` 键必须是 **good.id**（如 cigarettes/beer/vegetables/vitamins_item/instant_noodles/second_hand_book/carnation/rose/pork/fish），不能用分类名（luxury/beverages/food/sports_equipment/books/meat/seafood 等）。
+- 招牌商品系统：`getDailyGoodsForLocation`(trade_intel.js:840) 用 `loc.specialties.map(getGoodById).filter(Boolean)` 消费 → 无效 id 被**静默丢弃**（死数据，不报错）。
+- 价格倍率：`loc.priceMod[good.id]` 被 main.js:2233 / trade.js:495 / pricing.js:142 / wiki.js:1575,1894 / weather.js:749 / actions_extra.js:1917 消费；键非 good.id 则倍率恒为 1（失效）。
+- R189 修 9 地点：luxury_community/auto_city luxury→cigarettes；old_community food→vegetables；gym sports_equipment→vitamins_item；internet_cafe beverages→beer；logistics_park food→instant_noodles；flower_bird_market [flowers,pets]→[carnation,rose]（specialCategory 补[flowers]）；flea_market books→second_hand_book；vegetable_market [meat,seafood]→[pork,fish]。
+- `getAvailableCertificates`(skills.js:274) 证书门槛校验：**现金不加入 available 过滤**（main.js:3787 已用 `disabled`+`需¥X` 提示处理，否则证书会从列表直接消失）；R189 补 `electrician` 技能门槛(level)+`ageMin`/`ageMax` 年龄门槛（原全库无消费者，死门控）。年龄用 `state.player.age`（初始 20）。
