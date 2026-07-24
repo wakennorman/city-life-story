@@ -164,11 +164,11 @@ function renderNpcRelationships(state, content) {
           _cmpColor +
           ';margin-top:3px;">' +
           "💰 据说月薪 ¥" +
-          _npcDef.monthlyIncome.toLocaleString() +
+          (_npcDef.monthlyIncome || 0).toLocaleString() +
           " · " +
           _cmpText +
           " ¥" +
-          Math.abs(_diff).toLocaleString() +
+          Math.abs(_diff || 0).toLocaleString() +
           "</div>";
       }
     }
@@ -183,7 +183,7 @@ function renderNpcRelationships(state, content) {
         (_npcDef ? _npcDef.name : lastProp.from.replace(/_/g, " ")) +
         " (" +
         (lastProp.change > 0 ? "+" : "") +
-        lastProp.change.toFixed(1) +
+        (lastProp.change || 0).toFixed(1) +
         ")";
       html += "</div>";
     }
@@ -328,7 +328,7 @@ function renderNpcRelationships(state, content) {
           '<span style="color:' +
           (log.change > 0 ? "var(--success)" : "var(--danger)") +
           '">';
-        html += log.change > 0 ? "+" : "" + log.change.toFixed(1) + "</span> ";
+        html += log.change > 0 ? "+" : "" + (log.change || 0).toFixed(1) + "</span> ";
         html +=
           '<span style="color:var(--text-muted);font-size:10px;">(' +
           _logTypeLabel +

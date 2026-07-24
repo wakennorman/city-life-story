@@ -335,7 +335,7 @@
             st.flags._teamBuildingSeen = true;
             if (!st.resources) st.resources = { cash: 0 };
             var cost = Math.min(300, st.resources.cash || 0);
-            st.resources.cash -= cost;
+            st.resources.cash = Math.max(0, (st.resources.cash || 0) - cost);
             st.needs.fatigue = Math.min(100, (st.needs.fatigue || 0) + 15);
             st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 8);
             var cols = st.corporate.colleagues.network;
@@ -375,7 +375,7 @@
             st.flags._teamBuildingSeen = true;
             if (!st.resources) st.resources = { cash: 0 };
             var cost = Math.min(50, st.resources.cash || 0);
-            st.resources.cash -= cost;
+            st.resources.cash = Math.max(0, (st.resources.cash || 0) - cost);
             var cols = st.corporate.colleagues.network;
             for (var i = 0; i < Math.min(cols.length, 2); i++) {
               cols[i].relationship = Math.min(100, cols[i].relationship + 1);

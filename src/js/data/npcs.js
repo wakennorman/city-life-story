@@ -408,7 +408,7 @@ var NPCS = [
         id: "boss_li_60",
         desc: "李工头借给你¥500应急（无息）",
         effect: function (st) {
-          st.resources.cash += 500;
+          st.resources.cash = (st.resources.cash || 0) + 500;
           st.flags.bossLiLoan = true;
           StateManager.addMessage(
             "💕 李工头拍着你肩膀：「手头紧？先拿500，不急还。」",
@@ -750,7 +750,7 @@ var NPCS = [
               100,
               st.relationships.sister_zhang.affinity + 10,
             );
-            st.resources.cash += 600;
+            st.resources.cash = (st.resources.cash || 0) + 600;
             st.resources.totalEarned += 600;
             st.player.fame = Math.min(100, st.player.fame + 10);
             st.player.mental = Math.min(100, (st.player.mental || 0) + 5);
@@ -1388,7 +1388,7 @@ var NPCS = [
         effect: function (st) {
           st.flags.chefChenAssistant = true;
           st.resources = st.resources || { cash: 0 }; // [全系统自洽修复] 域D 修复: resources守卫
-          st.resources.cash += 50;
+          st.resources.cash = (st.resources.cash || 0) + 50;
           st.skills.cooking = st.skills.cooking || { level: 0, xp: 0 };
           st.skills.cooking.xp += 40;
           StateManager.addMessage(
@@ -1613,7 +1613,7 @@ var NPCS = [
           text: "💪 行，我来顶半天",
           apply: function (st) {
             st.flags._npcFavor_uncle_chen_bank = true;
-            st.resources.cash += 50 + Random.int(0, 30);
+            st.resources.cash = (st.resources.cash || 0) + 50 + Random.int(0, 30);
             st.needs.fatigue = Math.min(100, st.needs.fatigue + 5);
             if (!st.relationships.uncle_chen_bank)
               st.relationships.uncle_chen_bank = { affinity: 0, met: true };
@@ -1937,7 +1937,7 @@ var NPCS = [
           text: "🚴 帮你顶半天",
           apply: function (st) {
             st.flags._npcFavor_brother_huang = true;
-            st.resources.cash += 80 + Random.int(0, 40);
+            st.resources.cash = (st.resources.cash || 0) + 80 + Random.int(0, 40);
             st.needs.fatigue = Math.min(100, st.needs.fatigue + 15);
             if (!st.relationships.brother_huang)
               st.relationships.brother_huang = { affinity: 0, met: true };
@@ -2125,7 +2125,7 @@ var NPCS = [
           text: "🏍️ 帮你送两单",
           apply: function (st) {
             st.flags._npcFavor_xiaochen = true;
-            st.resources.cash += 40 + Random.int(0, 30);
+            st.resources.cash = (st.resources.cash || 0) + 40 + Random.int(0, 30);
             if (!st.relationships.xiaochen)
               st.relationships.xiaochen = { affinity: 0, met: true };
             st.relationships.xiaochen.affinity = Math.min(
@@ -2321,7 +2321,7 @@ var NPCS = [
           text: "💁 帮你照看摊子",
           apply: function (st) {
             st.flags._npcFavor_auntie_lin = true;
-            st.resources.cash += 50 + Random.int(0, 30);
+            st.resources.cash = (st.resources.cash || 0) + 50 + Random.int(0, 30);
             if (!st.relationships.auntie_lin)
               st.relationships.auntie_lin = { affinity: 0, met: true };
             st.relationships.auntie_lin.affinity = Math.min(
@@ -2523,7 +2523,7 @@ var NPCS = [
           text: "🔧 帮你打下手",
           apply: function (st) {
             st.flags._npcFavor_master_zhao = true;
-            st.resources.cash += 60 + Random.int(0, 40);
+            st.resources.cash = (st.resources.cash || 0) + 60 + Random.int(0, 40);
             st.skills.repair = st.skills.repair || { level: 0, xp: 0 };
             st.skills.repair.xp += 20;
             if (!st.relationships.master_zhao)
@@ -2718,7 +2718,7 @@ var NPCS = [
           text: "🔧 帮你修设备",
           apply: function (st) {
             st.flags._npcFavor_xiaoli = true;
-            st.resources.cash += 100 + Random.int(0, 50);
+            st.resources.cash = (st.resources.cash || 0) + 100 + Random.int(0, 50);
             if (!st.relationships.xiaoli)
               st.relationships.xiaoli = { affinity: 0, met: true };
             st.relationships.xiaoli.affinity = Math.min(
@@ -3450,7 +3450,7 @@ var NPCS = [
         desc: "阿杰还你一部分钱（¥100）",
         effect: function (st) {
           if (st.flags.ajiePaid) return;
-          st.resources.cash += 100;
+          st.resources.cash = (st.resources.cash || 0) + 100;
           st.flags.ajiePaid = true;
           StateManager.addMessage(
             "💕 阿杰：「先还你100，剩下的慢慢还。」收到¥100。",
@@ -3464,7 +3464,7 @@ var NPCS = [
         desc: "阿杰还你全部欠款（¥300）并介绍工作",
         effect: function (st) {
           if (st.flags.ajiePaidFull) return;
-          st.resources.cash += 300;
+          st.resources.cash = (st.resources.cash || 0) + 300;
           st.flags.ajiePaidFull = true;
           st.flags.ajieReferred = true;
           StateManager.addMessage(
