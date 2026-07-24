@@ -1176,6 +1176,7 @@ function tickInvestmentDaily(state) {
   var inv = state.investment;
   if (!inv || inv.lastTickDay >= state.player.day) return;
   inv.lastTickDay = state.player.day;
+  state.flags._invSkillXpToday = false; // [全系统自洽修复] 域E 联动: 每日重置投资技能XP标记
 
   // ================================================================
   // 新闻→投资价格传导：计算活跃新闻对各标的的综合影响
@@ -1388,6 +1389,14 @@ function tickInvestmentDaily(state) {
           break;
         }
       }
+      // [全系统自洽修复] 域E 联动增强: 投资组合首次突破¥10万→财务安全感健康加成（E→G）
+      if (_pv >= 100000 && !state.flags._financialSecurityHealth) {
+        state.flags._financialSecurityHealth = true;
+        if (state.status) {
+          state.status.health = Math.min(100, (state.status.health || 0) + 5);
+          StateManager.addMessage("💪 投资组合突破¥10万，财务安全感让你身心舒畅。健康+5。", "success");
+        }
+      }
     }
   } catch (e) {
     // 静默：峰值追踪失败不影响主流程
@@ -1528,6 +1537,15 @@ function checkInvestmentMilestones(state, inv) {
   if (inv.btcHoldings && inv.btcHoldings > 0) {
     var btcPrice = inv.btcPrice || 0;
     totalValue += btcPrice * inv.btcHoldings;
+  }
+
+  // [全系统自洽修复] 域E 联动增强: 投资实践→会计/管理技能XP（E→C 经济-职业联动）
+  if (totalValue >= 50000 && !state.flags._invSkillXpToday && state.skills) {
+    state.flags._invSkillXpToday = true;
+    if (typeof addSkillXp === "function") {
+      addSkillXp("accounting", 3); // 投资实践→会计经验
+      if (totalValue >= 200000) addSkillXp("management", 2); // 大额投资→管理经验
+    }
   }
 
   var prevMilestone = state.flags._invLastMilestone || 0;
