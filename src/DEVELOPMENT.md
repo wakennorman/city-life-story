@@ -1,6 +1,8 @@
 # 城市浮生记 (City Life Story) — 开发文档
 
-> 最后更新: 2026-07-24（域B R190：news.js 在 jobPenalty/jobBonus 引用 8 个不存在的 job id(street_vending_goods/food_stall/park_flower_vendor/street_performer/skilled_labor_construction/coding_freelance/data_analyst/hospitality)+1 个不存在的股票 symbol(WEORK) 共 10 处→存入 _introJobBonuses/investmentEffect 后永不匹配真实标的致惩罚/加成/投资效果静默失效(死数据),全部改同主题真实 id(sister_zhang_vending/restaurant_assistant/steel_worker/remote_dev/junior_analyst/ESTATE) + 3 项跨域联动增强(B→D新闻闲话涨好感/B→C顺风向补本事/B→E新闻盘感投资意识)；新建 domain_b_linkage_r190.js IIFE 注入 RANDOM_EVENTS(2 street+1 corporate)）
+> 最后更新: 2026-07-24（域G R192：life_ribbon.js「房奴一生」缎带死字段修复——check 原读 p.isSelfOccupied/p.mortgageRemaining(全库仅此一处读取、无任何写入,恒 undefined→缎带永不授予),改读真实字段 st.investment.selfLivePropertyId(state.js:216)+st.family.mortgage.remainingDays(daily_pipeline.js:1165 维护) + 3 项跨域联动增强(G→D暖房请街坊涨好感/G→C安居后重拾手艺加技能/G→A还贷精算换心智成长)；新建 core_lifecycle_linkage_r192.js IIFE 注入 RANDOM_EVENTS(3 street)，承接安家里程碑复活价值链）
+
+> R190（域B）：news.js 在 jobPenalty/jobBonus 引用 8 个不存在的 job id(street_vending_goods/food_stall/park_flower_vendor/street_performer/skilled_labor_construction/coding_freelance/data_analyst/hospitality)+1 个不存在的股票 symbol(WEORK) 共 10 处→存入 _introJobBonuses/investmentEffect 后永不匹配真实标的致惩罚/加成/投资效果静默失效(死数据),全部改同主题真实 id(sister_zhang_vending/restaurant_assistant/steel_worker/remote_dev/junior_analyst/ESTATE) + 3 项跨域联动增强(B→D新闻闲话涨好感/B→C顺风向补本事/B→E新闻盘感投资意识)；新建 domain_b_linkage_r190.js IIFE 注入 RANDOM_EVENTS(2 street+1 corporate)）
 
 > R189（域A）：locations.js 9地点 specialties/priceMod 引用非good.id token→招牌商品+价格倍率双双死数据,改真实good.id + skills.js getAvailableCertificates 补 electrician技能门槛+ageMin/ageMax年龄门槛(原死门控) + 3 项跨域联动增强(A→D/A→C/A→E)；构建 9012.8KB
 

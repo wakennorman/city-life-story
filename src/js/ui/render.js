@@ -3778,7 +3778,7 @@ function renderInventoryTab(state, parent) {
     </h3>
   `;
 
-  const items = state.inventory.items;
+  const items = state.inventory && state.inventory.items ? state.inventory.items : []; // [全系统自洽修复] 域F A类: state.inventory 守卫
   if (items.length === 0) {
     div.innerHTML += '<p style="color:var(--text-muted)">背包空空如也</p>';
   } else {

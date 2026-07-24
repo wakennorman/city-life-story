@@ -30517,10 +30517,14 @@ var LIFE_RIBBONS = [
     priority: 6,
     color: "#8B6914",
     check: function (st, stats) {
-      var props = (st.investment && st.investment.properties) || [];
-      return props.some(function (p) {
-        return p.isSelfOccupied && p.mortgageRemaining > 0;
-      });
+      // [全系统自洽修复] 域G 修复:房奴一生缎带死字段——原读 p.isSelfOccupied/p.mortgageRemaining
+      // (全库仅此一处读取、无任何写入,恒 undefined→缎带永不授予)。改读真实字段:
+      // 自住房 st.investment.selfLivePropertyId(state.js:216 初始化) + 家庭房贷
+      // st.family.mortgage.remainingDays(daily_pipeline.js:1165 family_mortgage_tick 维护)。
+      var selfLive =
+        st.investment && st.investment.selfLivePropertyId != null;
+      var famMort = st.family && st.family.mortgage;
+      return !!(selfLive && famMort && (famMort.remainingDays || 0) > 0);
     },
   },
   {
@@ -166920,8 +166924,8 @@ const ILLNESSES = {
     icon: "🦠",
     severity: 1,
     naturalCureDays: [4, 7],
-    triggerHabit: { lowHygieneStreak: 8 },
-    triggerChance: 0.45,
+    triggerHabit: { lowHygieneStreak: 12 },
+    triggerChance: 0.25,
     symptom: { health: -1, happiness: -2 },
     treatCost: { pharmacy: 120, hospital: 350 },
     desc: "湿疹、皮疹反复发作，痒得心烦。卫生太差闹的。",
@@ -166934,8 +166938,8 @@ const ILLNESSES = {
     icon: "🥵",
     severity: 3,
     naturalCureDays: [7, 12],
-    triggerHabit: { highFatigueStreak: 8 },
-    triggerChance: 0.45,
+    triggerHabit: { highFatigueStreak: 12 },
+    triggerChance: 0.25,
     symptom: { mentalDebuff: 8, fatigue: 5, apMult: 0.15 },
     treatCost: { hospital: 1200 },
     desc: "头晕乏力、注意力涣散，做啥效率都低。该停下来歇歇了。",
@@ -166947,8 +166951,8 @@ const ILLNESSES = {
     icon: "🌧️",
     severity: 3,
     naturalCureDays: [15, 30],
-    triggerHabit: { lowHappinessStreak: 15 },
-    triggerChance: 0.35,
+    triggerHabit: { lowHappinessStreak: 20 },
+    triggerChance: 0.2,
     symptom: { mentalDebuff: 15, apMult: 0.2, happiness: -3 },
     treatCost: { hospital: 1500 },
     desc: "什么都没意思，连床都不想下。走出来需要时间和帮助。",
@@ -166963,7 +166967,7 @@ const ILLNESSES = {
     severity: 3,
     naturalCureDays: [10, 20],
     triggerHabit: { stomach_inflammationCount: 2 },
-    triggerChance: 0.4,
+    triggerChance: 0.22,
     symptom: { health: -2, hunger: -3, physiqueDebuff: 2, stomachPain: true },
     treatCost: { pharmacy: 150, hospital: 600 },
     desc: "肠胃炎反复发作拖出来的慢性胃炎。胃酸过多、烧心、饭后胀气。要注意饮食调理。",
@@ -166976,7 +166980,7 @@ const ILLNESSES = {
     severity: 4,
     naturalCureDays: [20, 40],
     triggerHabit: { gastritisCount: 2 },
-    triggerChance: 0.4,
+    triggerChance: 0.22,
     symptom: {
       health: -4,
       hunger: -6,
@@ -166996,8 +167000,8 @@ const ILLNESSES = {
     icon: "💢",
     severity: 4,
     isChronic: true,
-    triggerHabit: { junkFoodMeals: 50, age: 35 },
-    triggerChance: 0.45,
+    triggerHabit: { junkFoodMeals: 60, age: 40 },
+    triggerChance: 0.25,
     symptom: { physiqueDebuff: 10, randomFaintCh: 0.005 },
     treatCost: { hospital_monthly: 200 },
     desc: "慢性病，需要持续吃药控制（按月¥200），不吃血压飙高有概率晕厥。",
@@ -167014,7 +167018,7 @@ const ILLNESSES = {
     naturalCureDays: [60, 120],
     // [全系统自洽修复] 域A A类#6: gastritisCount→gastric_ulcerCount（匹配 evolvesFrom: gastric_ulcer，原字段致演化链断裂）
     triggerHabit: { gastric_ulcerCount: 1, age: 45 },
-    triggerChance: 0.35,
+    triggerChance: 0.2,
     symptom: {
       health: -5,
       hunger: -10,
@@ -167035,7 +167039,7 @@ const ILLNESSES = {
     severity: 5,
     naturalCureDays: [30, 60],
     triggerHabit: { depressionCount: 2 },
-    triggerChance: 0.3,
+    triggerChance: 0.18,
     symptom: {
       mentalDebuff: 25,
       apMult: 0.3,
@@ -167056,8 +167060,8 @@ const ILLNESSES = {
     icon: "🫁",
     severity: 4,
     naturalCureDays: [10, 20],
-    triggerHabit: { coldCount: 1, highFatigueStreak: 3, healthUnder30: 1 },
-    triggerChance: 0.35,
+    triggerHabit: { coldCount: 2, highFatigueStreak: 5, healthUnder30: 2 },
+    triggerChance: 0.2,
     symptom: { health: -3, fatigue: 8, breathingDifficulty: true },
     treatCost: { pharmacy: 300, hospital: 800 },
     desc: "感冒未及时治疗+疲劳累积，发展成肺炎。呼吸困难，健康持续下降。",
@@ -167073,7 +167077,7 @@ const ILLNESSES = {
     severity: 7,
     naturalCureDays: [30, 90],
     triggerHabit: { pneumoniaCount: 1, healthUnder30: 1 },
-    triggerChance: 0.25,
+    triggerChance: 0.15,
     symptom: {
       health: -8,
       physiqueDebuff: 15,
@@ -167094,7 +167098,7 @@ const ILLNESSES = {
     severity: 3,
     naturalCureDays: [15, 30],
     triggerHabit: { malnutritionCount: 1, age: 35 },
-    triggerChance: 0.4,
+    triggerChance: 0.22,
     symptom: { physiqueDebuff: 5, fatigue: 3, dizzinessCh: 0.05 },
     treatCost: { pharmacy: 200, hospital: 500 },
     desc: "营养不良长期未愈，加上年龄增长，发展成贫血。体质下降，容易头晕。",
@@ -167110,7 +167114,7 @@ const ILLNESSES = {
     severity: 4,
     naturalCureDays: [20, 40],
     triggerHabit: { insomniaCount: 1, age: 40 },
-    triggerChance: 0.35,
+    triggerChance: 0.2,
     symptom: {
       fatigueRecoveryMult: 0.3,
       mentalDebuff: 10,
@@ -167131,7 +167135,7 @@ const ILLNESSES = {
     severity: 8,
     naturalCureDays: [7, 14],
     triggerHabit: { overworkCount: 1, age: 45 },
-    triggerChance: 0.2,
+    triggerChance: 0.12,
     symptom: { dailyDeathChance: 0.02, mentalDebuff: 20, physiqueDebuff: 10 },
     treatCost: { hospital: 5000 },
     desc: "过劳综合症未愈+年龄增长，猝死风险极高。每日有2%概率直接死亡。必须强制休息7天以上。",
@@ -167147,13 +167151,13 @@ const ILLNESSES = {
     icon: "🦴",
     severity: 3,
     naturalCureDays: [30, 60],
-    triggerHabit: { officeWorkDays: 80, lowHygieneStreak: 10 },
-    triggerChance: 0.45,
+    triggerHabit: { officeWorkDays: 100, lowHygieneStreak: 15 },
+    triggerChance: 0.25,
     // 细化：分级症状，久坐累积伤害
     graduatedTrigger: {
-      baseChance: 0.1,
-      perUnit: { officeWorkDays: 0.004 },
-      maxChance: 0.6,
+      baseChance: 0.08,
+      perUnit: { officeWorkDays: 0.003 },
+      maxChance: 0.4,
     },
     symptom: {
       intelligenceDebuff: 3,
@@ -167175,8 +167179,8 @@ const ILLNESSES = {
     icon: "🍬",
     severity: 5,
     isChronic: true,
-    triggerHabit: { junkFoodMeals: 80, age: 40, hungerHighStreak: 30 },
-    triggerChance: 0.3,
+    triggerHabit: { junkFoodMeals: 100, age: 45, hungerHighStreak: 40 },
+    triggerChance: 0.18,
     symptom: { health: -1, hunger: 5, fatigue: 2, randomVisionBlur: 0.02 },
     treatCost: { hospital_monthly: 300 },
     desc: "长期垃圾食品+肥胖+年龄增长导致的慢性病。需要持续控制饮食+药物（按月¥300）。",
@@ -167193,8 +167197,8 @@ const ILLNESSES = {
     icon: "🤒",
     severity: 3,
     naturalCureDays: [5, 10],
-    triggerHabit: { coldCount: 1, highFatigueStreak: 2 },
-    triggerChance: 0.35,
+    triggerHabit: { coldCount: 2, highFatigueStreak: 3 },
+    triggerChance: 0.2,
     // [全系统自洽修复] 域A A类#2: 补充flu的季节影响（流感冬春高发，与cold一致）
     seasonInfluence: { spring: 1.4, summer: 0.4, autumn: 0.8, winter: 1.6 },
     symptom: { health: -3, fatigue: 10, fever: true },
@@ -167213,8 +167217,8 @@ const ILLNESSES = {
     icon: "😰",
     severity: 3,
     naturalCureDays: [20, 40],
-    triggerHabit: { lowHappinessStreak: 20, highFatigueStreak: 10 },
-    triggerChance: 0.3,
+    triggerHabit: { lowHappinessStreak: 25, highFatigueStreak: 15 },
+    triggerChance: 0.18,
     symptom: { mentalDebuff: 10, apMult: 0.15, heartRateHigh: true },
     treatCost: { hospital: 2000 },
     desc: "长期心情低落+压力过大导致的焦虑症。心跳加速、坐立不安。需要心理治疗。",
@@ -167227,8 +167231,8 @@ const ILLNESSES = {
     icon: "🫘",
     severity: 3,
     isChronic: true,
-    triggerHabit: { junkFoodMeals: 60, age: 30 },
-    triggerChance: 0.35,
+    triggerHabit: { junkFoodMeals: 80, age: 35 },
+    triggerChance: 0.2,
     symptom: { health: -1, fatigue: 2, liverEnzymeHigh: true },
     treatCost: { hospital_monthly: 150 },
     desc: "长期垃圾食品+缺乏运动导致的脂肪肝。慢性病，需要按月治疗（¥150/月）+ 改善生活习惯。",
@@ -167244,8 +167248,8 @@ const ILLNESSES = {
     icon: "🦴",
     severity: 4,
     naturalCureDays: [30, 60],
-    triggerHabit: { manualLaborDays: 200, age: 35 },
-    triggerChance: 0.3,
+    triggerHabit: { manualLaborDays: 250, age: 40 },
+    triggerChance: 0.18,
     symptom: {
       physiqueDebuff: 8,
       fatigue: 5,
@@ -167267,7 +167271,7 @@ const ILLNESSES = {
     severity: 5,
     isChronic: true,
     triggerHabit: { hypertensionCount: 1, age: 45 },
-    triggerChance: 0.25,
+    triggerChance: 0.15,
     symptom: { health: -2, fatigue: 5, kidneyFunctionLow: true },
     treatCost: { hospital_monthly: 500 },
     desc: "高血压长期未控制导致的肾病。慢性病，需要按月治疗（¥500/月）+ 定期透析。",
@@ -167281,7 +167285,7 @@ const ILLNESSES = {
     severity: 5,
     isChronic: true,
     triggerHabit: { overworkCount: 2, age: 40, hypertensionCount: 1 },
-    triggerChance: 0.25,
+    triggerChance: 0.15,
     symptom: {
       health: -2,
       fatigue: 5,
@@ -167301,7 +167305,7 @@ const ILLNESSES = {
     // [全系统自洽修复] 域A A类#1: 删除 naturalCureDays（isChronic=true 的疾病不会自然痊愈，原字段矛盾且为死数据）
     isChronic: true,
     triggerHabit: { fattyLiverCount: 1, age: 35 },
-    triggerChance: 0.3,
+    triggerChance: 0.18,
     symptom: { health: -3, fatigue: 4, physiqueDebuff: 5, liverEnzymeHigh: true },
     treatCost: { hospital_monthly: 300 },
     desc: "脂肪肝长期未控制发展为肝硬化。肝功能持续下降，需要按月治疗（¥300/月）。",
@@ -167317,7 +167321,7 @@ const ILLNESSES = {
     // [全系统自洽修复] 域A A类#2: 删除 naturalCureDays（isChronic=true 矛盾字段）
     isChronic: true,
     triggerHabit: { kidneyDiseaseCount: 1, age: 50 }, // [全系统自洽修复] 域A A类#4: nephropathyCount→kidneyDiseaseCount
-    triggerChance: 0.2,
+    triggerChance: 0.12,
     symptom: { health: -4, fatigue: 6, physiqueDebuff: 8, kidneyFunctionLow: true },
     treatCost: { hospital_monthly: 800 },
     desc: "肾病恶化至肾衰竭，需要定期透析或移植。按月治疗（¥800/月）。",
@@ -167331,7 +167335,7 @@ const ILLNESSES = {
     severity: 6,
     // [全系统自洽修复] 域A A类#3: 删除 naturalCureDays（非慢性病却含自然痊愈天数，与 treatCostMonthly 并存矛盾）
     triggerHabit: { heartDiseaseCount: 1, age: 45 }, // [全系统自洽修复] 域A A类#5: coronaryHeartDiseaseCount→heartDiseaseCount
-    triggerChance: 0.15,
+    triggerChance: 0.1,
     symptom: { health: -5, fatigue: 8, physiqueDebuff: 10, randomChestPain: 0.05 },
     treatCost: { hospital_monthly: 600 },
     desc: "冠心病恶化导致心脏病发作。需要按月治疗（¥600/月）+ 严格避免劳累和情绪激动。",
@@ -167348,7 +167352,7 @@ const ILLNESSES = {
     // [全系统自洽修复] 域A A类#4: 移除 hepatitisB:1（该计数器从未递增，原条件永假致肝癌永远无法触发）
     // [全系统自洽修复] 域A A类#5: fattyLiverCount→liverCirrhosisCount（匹配 evolvesFrom: liver_cirrhosis，原字段致演化链断裂）
     triggerHabit: { liverCirrhosisCount: 1, age: 50 },
-    triggerChance: 0.2,
+    triggerChance: 0.12,
     symptom: { health: -6, hunger: -8, physiqueDebuff: 10, liverFailure: true },
     treatCost: { hospital: 50000 },
     desc: "脂肪肝长期未愈演化成肝癌。健康急剧下降，食欲严重丧失。手术是唯一可能根治的手段，费用极高。",
@@ -226403,7 +226407,7 @@ function renderInventoryTab(state, parent) {
     </h3>
   `;
 
-  const items = state.inventory.items;
+  const items = state.inventory && state.inventory.items ? state.inventory.items : []; // [全系统自洽修复] 域F A类: state.inventory 守卫
   if (items.length === 0) {
     div.innerHTML += '<p style="color:var(--text-muted)">背包空空如也</p>';
   } else {
