@@ -16,7 +16,7 @@
     priority: 65,
     conditions: function (st) {
       if (!st.corporate || !st.corporate.active) return false;
-      if (st.flags._geekBrilliantCooldown && (st.player.day || 0) < st.flags._geekBrilliantCooldown) return false; // 90天冷却
+      if (st.flags && st.flags._geekBrilliantCooldown && (st.player.day || 0) < st.flags._geekBrilliantCooldown) return false; // [全系统自洽修复] 域H A类: st.flags 守卫
       var rankData = st.corporate.rank ? CORP_RANKS[st.corporate.rank] : null;
       if (!rankData || !rankData.canManageTeam) return false;
       if (!st.corporate.team || st.corporate.team.length === 0) return false;
@@ -53,7 +53,7 @@
     priority: 70,
     conditions: function (st) {
       if (!st.corporate || !st.corporate.active) return false;
-      if (st.flags._warriorBurnoutDone) return false; // 一次性事件
+      if (st.flags && st.flags._warriorBurnoutDone) return false; // [全系统自洽修复] 域H A类: st.flags 守卫
       var rankData = st.corporate.rank ? CORP_RANKS[st.corporate.rank] : null;
       if (!rankData || !rankData.canManageTeam) return false;
       if (!st.corporate.team || st.corporate.team.length === 0) return false;
@@ -112,7 +112,7 @@
     priority: 60,
     conditions: function (st) {
       if (!st.corporate || !st.corporate.active) return false;
-      if (st.flags._gradQuitCooldown && (st.player.day || 0) < st.flags._gradQuitCooldown) return false; // 90天冷却
+      if (st.flags && st.flags._gradQuitCooldown && (st.player.day || 0) < st.flags._gradQuitCooldown) return false; // [全系统自洽修复] 域H A类: st.flags 守卫
       var rankData = st.corporate.rank ? CORP_RANKS[st.corporate.rank] : null;
       if (!rankData || !rankData.canManageTeam) return false;
       if (!st.corporate.team || st.corporate.team.length === 0) return false;

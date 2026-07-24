@@ -13244,7 +13244,6 @@ function registerNewsEventsToPool() {
       triggers: { minDay: 20, excludeFlags: ["_bikeShareSeen"] },
       // [自洽修复] conditions 新增：共享单车运维暗示体力工作，需有相关行动频次
       conditions: function (st) {
-        if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后不再触发街头叙事事件
         var hasManualWork =
           (st.stats &&
             st.stats.actionFreq &&
@@ -13290,7 +13289,6 @@ function registerNewsEventsToPool() {
       triggers: { minDay: 35, excludeFlags: ["_liveStreamSeen"] },
       // [自洽修复] conditions 新增：直播风口事件需有 content/live 相关行动经历
       conditions: function (st) {
-        if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后不再触发街头叙事事件
         var hasContentExp =
           (st.stats &&
             st.stats.actionFreq &&
@@ -13379,10 +13377,7 @@ function registerNewsEventsToPool() {
       title: "黄金摊位争夺战",
       story: "夜市街口位置空出来了。有人出¥3,000租一个月。那位置客流量是三倍。",
       triggers: { minDay: 30, excludeFlags: ["_stallLocationSeen"] },
-      conditions: function (st) {
-        if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后不再触发街头叙事事件
-        if (!st.player.workTypeCounts || !st.player.workTypeCounts.stall || st.player.workTypeCounts.stall < 1) return false; return true;
-      }, // [Layer3]
+      conditions: function (st) { if (!st.player.workTypeCounts || !st.player.workTypeCounts.stall || st.player.workTypeCounts.stall < 1) return false; return true; }, // [Layer3]
       choices: [
         {
           text: "💰 砸¥3,000抢下",
@@ -13426,10 +13421,7 @@ function registerNewsEventsToPool() {
       title: "寺庙经济",
       story: "灵隐寺排队比商场还多。卖香烛的大妈一天¥3,000。年轻人全来上香了。",
       triggers: { minDay: 40, excludeFlags: ["_templeEconomySeen"] },
-      conditions: function (st) {
-        if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后不再触发街头叙事事件
-        if (!st.player.workTypeCounts || !st.player.workTypeCounts.stall || st.player.workTypeCounts.stall < 1) return false; return true;
-      }, // [Layer3]
+      conditions: function (st) { if (!st.player.workTypeCounts || !st.player.workTypeCounts.stall || st.player.workTypeCounts.stall < 1) return false; return true; }, // [Layer3]
       choices: [
         {
           text: "🩧 进手串去卖（¥800）",
@@ -13472,7 +13464,6 @@ function registerNewsEventsToPool() {
       triggers: { minDay: 30, excludeFlags: ["_viralHarassmentSeen"] },
       // [自洽修复] conditions 新增：送外卖职业检查（story 明确"送外卖时"，需 sideHustle driving 或 logistics 路径）
       conditions: function (st) {
-        if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后不再触发街头叙事事件
         var isDelivery =
           (st.sideHustle && st.sideHustle.type === "driving") ||
           (st.career &&
@@ -13523,7 +13514,6 @@ function registerNewsEventsToPool() {
       triggers: { minDay: 30, excludeFlags: ["_deliveryPriceSeen"] },
       // [自洽修复] conditions 新增：送外卖职业检查（story/options 提及骑手服，需 sideHustle driving 或 logistics 路径）
       conditions: function (st) {
-        if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后不再触发街头叙事事件
         var isDelivery =
           (st.sideHustle && st.sideHustle.type === "driving") ||
           (st.career &&
@@ -13587,7 +13577,7 @@ function registerNewsEventsToPool() {
           hint: "赌反弹",
           apply: function (st) {
             st.flags._evUsedCarSeen = true;
-            st.resources.cash -= scaleAmount(30000, st.resources && st.resources.totalEarned);
+            st.resources.cash -= 30000;
             StateManager.addMessage(
               "💰 花¥30,000收了一台。陈哥说你胆子真大。",
               "event",
@@ -13619,10 +13609,7 @@ function registerNewsEventsToPool() {
         excludeFlags: ["_nearExpirySeen"],
         minCash: 1000,
       },
-      conditions: function (st) {
-        if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后不再触发街头叙事事件
-        if (!st.player.workTypeCounts || !st.player.workTypeCounts.stall || st.player.workTypeCounts.stall < 1) return false; return true;
-      }, // [Layer3]
+      conditions: function (st) { if (!st.player.workTypeCounts || !st.player.workTypeCounts.stall || st.player.workTypeCounts.stall < 1) return false; return true; }, // [Layer3]
       choices: [
         {
           text: "📦 进¥1,000的货去卖",
@@ -13651,7 +13638,7 @@ function registerNewsEventsToPool() {
               return;
             }
             st.flags._nearExpirySeen = true;
-            st.resources.cash -= scaleAmount(5000, st.resources && st.resources.totalEarned);
+            st.resources.cash -= 5000;
             st.player.fame = Math.min(100, (st.player.fame || 0) + 3);
             StateManager.addMessage("🤝 成了临期食品专营户。", "event");
           },
@@ -13671,10 +13658,6 @@ function registerNewsEventsToPool() {
         excludeFlags: ["_gigSocialSeen"],
         relationshipMet: "old_zhou",
       },
-      conditions: function (st) {
-        if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后不再触发街头叙事事件
-        if (!st.sideHustle || !st.sideHustle.active) return false; return true;
-      }, // [Layer3]
       choices: [
         {
           text: "\u2705 交",
@@ -13717,9 +13700,9 @@ function registerNewsEventsToPool() {
           cost: 9999,
           apply: function (st) {
             st.flags._knowledgePaySeen = true;
-            st.resources.cash = Math.max(0, (st.resources.cash || 0) - scaleAmount(9999, st.resources && st.resources.totalEarned));
+            st.resources.cash = Math.max(0, (st.resources.cash || 0) - 9999);
             if (Random.chance(0.15)) {
-              st.resources.cash += scaleAmount(30000, st.resources && st.resources.totalEarned);
+              st.resources.cash += 30000;
               st.player.intelligence = Math.min(
                 100,
                 (st.player.intelligence || 10) + 5,
@@ -13771,7 +13754,6 @@ function registerNewsEventsToPool() {
       triggers: { minDay: 10, excludeFlags: ["_shoppingFestSeen"] },
       // [自洽修复] conditions 新增：选项"去快递站做临时工"暗示物流/快递经历
       conditions: function (st) {
-        if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后不再触发街头叙事事件
         var hasLogistics =
           (st.sideHustle && st.sideHustle.type === "driving") ||
           (st.career &&
@@ -13792,7 +13774,7 @@ function registerNewsEventsToPool() {
           apply: function (st) {
             st.flags._shoppingFestSeen = true;
             st.flags._shoppingFestDeal = "stock";
-            st.resources.cash -= scaleAmount(3000, st.resources && st.resources.totalEarned);
+            st.resources.cash -= 3000;
             st.flags._shoppingStockDay = st.player.day;
             StateManager.addMessage(
               "🎉 囤了一批货，等节后涨价卖。存货价值¥4200。",
@@ -13846,7 +13828,7 @@ function registerNewsEventsToPool() {
             st.flags._p2pCrashSeen = true;
             if (st.resources.cash >= 5000) {
               st.flags._p2pInvested = true;
-              st.resources.cash -= scaleAmount(5000, st.resources && st.resources.totalEarned);
+              st.resources.cash -= 5000;
               st.flags._p2pDebtDay = st.player.day;
               StateManager.addMessage(
                 "💸 你用¥5000收了一张¥30000的债权。也许能要回来，也许打了水漂。",
@@ -14131,7 +14113,7 @@ function registerNewsEventsToPool() {
           apply: function (st) {
             st.flags._demolitionSeen = true;
             if (st.resources.cash >= 50000) {
-              st.resources.cash -= scaleAmount(50000, st.resources && st.resources.totalEarned);
+              st.resources.cash -= 50000;
               st.flags._demolitionGambled = true;
               st.flags._demolitionDay = st.player.day;
               StateManager.addMessage(
@@ -14408,7 +14390,7 @@ function registerNewsEventsToPool() {
           apply: function (st) {
             st.flags._schoolDistrictSeen = true;
             if (st.resources.cash >= 100000) {
-              st.resources.cash -= scaleAmount(100000, st.resources && st.resources.totalEarned);
+              st.resources.cash -= 100000;
               st.flags._schoolDistrictBought = true;
               st.flags._schoolDistrictDay = st.player.day;
               StateManager.addMessage(
@@ -14646,7 +14628,7 @@ function registerNewsEventsToPool() {
           apply: function (st) {
             st.flags._retailVsWallSeen = true;
             if (st.resources.cash >= 5000) {
-              st.resources.cash -= scaleAmount(5000, st.resources && st.resources.totalEarned);
+              st.resources.cash -= 5000;
               st.flags._retailShortSide = true;
               st.flags._retailShortDay = st.player.day;
               StateManager.addMessage(
@@ -14682,10 +14664,7 @@ function registerNewsEventsToPool() {
       story:
         "「幻方量化」去年收益43%，今年前三个月已经亏了15%。有人说量化基金就是高频割韭菜——散户的每一笔交易都被算法预测。你想起上周自己买了就跌、卖了就涨的股票，后背一凉。",
       triggers: { minDay: 55, excludeFlags: ["_quantFundSeen"] },
-      conditions: function (st) {
-        if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后不再触发街头叙事事件
-        if (!st.investment || !st.investment.stockHoldings || Object.keys(st.investment.stockHoldings).length < 1) return false; return true;
-      }, // [Layer3]
+      conditions: function (st) { if (!st.investment || !st.investment.stockHoldings || Object.keys(st.investment.stockHoldings).length < 1) return false; return true; }, // [Layer3]
       choices: [
         {
           text: "🤖 买量化基金——打不过就加入",
@@ -14693,7 +14672,7 @@ function registerNewsEventsToPool() {
           apply: function (st) {
             st.flags._quantFundSeen = true;
             if (st.resources.cash >= 10000) {
-              st.resources.cash -= scaleAmount(10000, st.resources && st.resources.totalEarned);
+              st.resources.cash -= 10000;
               st.flags._quantFundBought = true;
               st.flags._quantFundDay = st.player.day;
               StateManager.addMessage(
@@ -14746,10 +14725,7 @@ function registerNewsEventsToPool() {
       story:
         "银行又降息了——一年期存款利率从1.5%降到1.0%。余额宝的收益跌到1.8%，创历史新低。你算了算：存¥10000在银行，一年利息¥100，够吃两顿沙县。房东说下个月涨房租¥150。",
       triggers: { minDay: 20, excludeFlags: ["_depositRateCutSeen"] },
-      conditions: function (st) {
-        if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后不再触发街头叙事事件
-        if (!st.resources || st.resources.cash < 10000) return false; return true;
-      }, // [Layer3]
+      conditions: function (st) { if (!st.resources || st.resources.cash < 10000) return false; return true; }, // [Layer3]
       choices: [
         {
           text: "📈 把钱从银行取出来投资",
@@ -14806,7 +14782,7 @@ function registerNewsEventsToPool() {
           apply: function (st) {
             st.flags._exchangeRateSeen = true;
             if (st.resources.cash >= 5000) {
-              st.resources.cash -= scaleAmount(5000, st.resources && st.resources.totalEarned);
+              st.resources.cash -= 5000;
               st.flags._usdHeld = true;
               st.flags._usdHeldDay = st.player.day;
               StateManager.addMessage(
@@ -14870,7 +14846,7 @@ function registerNewsEventsToPool() {
           apply: function (st) {
             st.flags._trustCrashSeen = true;
             if (st.resources.cash >= 5000) {
-              st.resources.cash -= scaleAmount(5000, st.resources && st.resources.totalEarned);
+              st.resources.cash -= 5000;
               st.flags._trustDebtBought = true;
               st.flags._trustDebtDay = st.player.day;
               StateManager.addMessage(
@@ -15113,10 +15089,6 @@ function registerNewsEventsToPool() {
       triggers: { minDay: 25, excludeFlags: ["_consumptionDownSeen"] },
       // [自洽修复] conditions 新增：选项"帮拼多多商家送货"暗示跑腿/配送经历
       conditions: function (st) {
-        if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后不再触发街头叙事事件
-        // [Layer3] 叙事说"价格只有你的一半"暗示玩家有摊位
-        var hasStall = (st.player && st.player.workTypeCounts && st.player.workTypeCounts.stall > 0);
-        if (hasStall) return true;
         var hasDelivery =
           (st.sideHustle && st.sideHustle.type === "driving") ||
           (st.stats &&
@@ -15354,10 +15326,7 @@ function registerNewsEventsToPool() {
       story:
         "区里创文创卫检查，城管突然严打——三轮车被没收了五辆。老赵的车被抬上卡车时他差点哭了：「我贷款买的车啊……」但街角那个有固定摊位的人照样做生意——有关系和没关系，就是不一样。",
       triggers: { minDay: 10, excludeFlags: ["_vendorCrackdownSeen"] },
-      conditions: function (st) {
-        if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后不再触发街头叙事事件
-        if (!st.player.workTypeCounts || !st.player.workTypeCounts.stall || st.player.workTypeCounts.stall < 1) return false; return true;
-      }, // [Layer3]
+      conditions: function (st) { if (!st.player.workTypeCounts || !st.player.workTypeCounts.stall || st.player.workTypeCounts.stall < 1) return false; return true; }, // [Layer3]
       choices: [
         {
           text: "🏪 花钱办个固定摊位证",
@@ -15586,7 +15555,7 @@ function registerNewsEventsToPool() {
             if (luck < 0.15) {
               st.flags._shortVideoWentViral = true;
               st.player.fame = Math.min(100, (st.player.fame || 0) + 20);
-              st.resources.cash += scaleAmount(5000, st.resources && st.resources.totalEarned);
+              st.resources.cash += 5000;
               StateManager.addMessage(
                 "🎥 你拍的一条「城中村早餐摊」突然爆了！播放量200万！后台私信炸了。",
                 "event",
@@ -15789,10 +15758,10 @@ function registerNewsEventsToPool() {
           apply: function (st) {
             st.flags._lastBatonSeen = true;
             if (st.resources.cash >= 5000) {
-              st.resources.cash -= scaleAmount(5000, st.resources && st.resources.totalEarned);
+              st.resources.cash -= 5000;
               var luck = Random.float(0, 1);
               if (luck < 0.25) {
-                st.resources.cash += scaleAmount(12000, st.resources && st.resources.totalEarned);
+                st.resources.cash += 12000;
                 StateManager.addMessage(
                   "生意火爆赚了¥12000！但满街模仿者让你不安。",
                   "event",
@@ -15854,11 +15823,6 @@ function registerNewsEventsToPool() {
       story:
         "你之前投了一笔生意——¥50万砸进去了，项目半死不活。合伙人电话来了：「再投¥10万就能撑到下一轮——已经走到这一步了。」你握着手机，手心全是汗。",
       triggers: { minDay: 60, excludeFlags: ["_sunkCostSeen"], minCash: 50000 },
-      // [Layer3] 叙事说"你之前投了一笔生意——¥50万砸进去了"，需玩家有大量收入记录
-      conditions: function (st) {
-        if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后不再触发街头叙事事件
-        return (st.resources && st.resources.totalEarned >= 500000) || (st.startup && st.startup.active);
-      },
       choices: [
         {
           text: "💰 追加投资",
@@ -15866,10 +15830,10 @@ function registerNewsEventsToPool() {
           apply: function (st) {
             st.flags._sunkCostSeen = true;
             if (st.resources.cash >= 100000) {
-              st.resources.cash -= scaleAmount(100000, st.resources && st.resources.totalEarned);
+              st.resources.cash -= 100000;
               var luck = Random.float(0, 1);
               if (luck < 0.45) {
-                st.resources.cash += scaleAmount(300000, st.resources && st.resources.totalEarned);
+                st.resources.cash += 300000;
                 StateManager.addMessage(
                   "赌对了！项目被收购，拿回¥30万。",
                   "event",
@@ -15905,7 +15869,7 @@ function registerNewsEventsToPool() {
             st.flags._sunkCostSeen = true;
             if ((st.player.fame || 0) >= 30) {
               st.flags._sunkCostBailed = true;
-              st.resources.cash -= scaleAmount(5000, st.resources && st.resources.totalEarned);
+              st.resources.cash -= 5000;
               StateManager.addMessage(
                 "通过关系找到接盘侠。亏了¥5万中介费——比全亏好。",
                 "event",
@@ -15925,10 +15889,7 @@ function registerNewsEventsToPool() {
       story:
         "以前你靠灰色手段赚了第一桶金——倒卖发票、刷单。现在行业正规化了——政府发了牌照。当年的灰色技能突然变成了合规经验。以前的污点成了先发优势。",
       triggers: { minDay: 90, excludeFlags: ["_grayToLegitSeen"] },
-      conditions: function (st) {
-        if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后不再触发街头叙事事件
-        if (!st.player || st.player.morality > 30) return false; return true;
-      }, // [Layer3]
+      conditions: function (st) { if (!st.player || st.player.morality > 30) return false; return true; }, // [Layer3]
       choices: [
         {
           text: "💼 申请正规牌照",
@@ -15936,7 +15897,7 @@ function registerNewsEventsToPool() {
           apply: function (st) {
             st.flags._grayToLegitSeen = true;
             if (st.resources.cash >= 20000) {
-              st.resources.cash -= scaleAmount(20000, st.resources && st.resources.totalEarned);
+              st.resources.cash -= 20000;
               st.flags._grayLegitBiz = true;
               st.player.fame = Math.min(100, (st.player.fame || 0) + 10);
               StateManager.addMessage(
@@ -15986,7 +15947,6 @@ function registerNewsEventsToPool() {
         "你中彩票了——或者拆迁款到账了——反正一夜之间有了¥200万。你搬进高档公寓，请工友吃了¥5000的饭。三个月后，钱花了一半。没有新的收入来源。",
       // [已审查] 含 OR 逻辑，保留 conditions
       conditions: function (st) {
-        if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后不再触发街头叙事事件
         return (
           st.player.phase === "street" &&
           st.player.day >= 50 &&
@@ -16001,7 +15961,7 @@ function registerNewsEventsToPool() {
           apply: function (st) {
             st.flags._classRollbackSeen = true;
             st.flags._rollbackBoughtHouse = true;
-            st.resources.cash -= scaleAmount(1500000, st.resources && st.resources.totalEarned);
+            st.resources.cash -= 1500000;
             if (st.housing) st.housing.tier = Math.max(st.housing.tier || 0, 5);
             StateManager.addMessage(
               "买了市中心两居室。月供¥5000——不叫财富自由，叫换种活法。",
@@ -16015,7 +15975,7 @@ function registerNewsEventsToPool() {
           apply: function (st) {
             st.flags._classRollbackSeen = true;
             st.flags._rollbackSaved = true;
-            st.resources.cash -= scaleAmount(2000000, st.resources && st.resources.totalEarned);
+            st.resources.cash -= 2000000;
             st.flags._rollbackDay = st.player.day;
             StateManager.addMessage(
               "存了¥200万。月利息¥5800——比打工强，但越来越不值钱。",
@@ -16029,7 +15989,7 @@ function registerNewsEventsToPool() {
           apply: function (st) {
             st.flags._classRollbackSeen = true;
             st.flags._rollbackStartedBiz = true;
-            st.resources.cash -= scaleAmount(500000, st.resources && st.resources.totalEarned);
+            st.resources.cash -= 500000;
             st.player.intelligence = Math.min(
               100,
               (st.player.intelligence || 10) + 10,
@@ -16046,7 +16006,7 @@ function registerNewsEventsToPool() {
           apply: function (st) {
             st.flags._classRollbackSeen = true;
             st.flags._rollbackBurned = true;
-            st.resources.cash -= scaleAmount(50000, st.resources && st.resources.totalEarned);
+            st.resources.cash -= 50000;
             st.needs.happiness = Math.min(100, st.needs.happiness + 25);
             StateManager.addMessage(
               "租奔驰请全城喝了三天。卡里少了¥50000——最快乐72小时。",
@@ -16067,10 +16027,7 @@ function registerNewsEventsToPool() {
       story:
         "你回到住处发现室友把你的洗衣液用完了，厕所纸也用光了没补。这不是第一次了。你开门时他正在你的椅子上坐着刷手机。",
       triggers: { minDay: 5, excludeFlags: ["_roommateConflictSeen"] },
-      conditions: function (st) {
-        if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后不再触发街头叙事事件
-        if (!st.housing || st.housing.tier < 1) return false; return true;
-      }, // [Layer3]
+      conditions: function (st) { if (!st.housing || st.housing.tier < 1) return false; return true; }, // [Layer3]
       choices: [
         {
           text: "😤 当面跟他说清楚",
@@ -16412,7 +16369,6 @@ function registerNewsEventsToPool() {
       triggers: { minDay: 45, excludeFlags: ["_mercedesRoommate"] },
       // [自洽修复] v3.20 原始提交缺 conditions/apply → 补全
       conditions: function (st) {
-        if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后不再触发街头叙事事件
         return st.housing && st.housing.tier >= 1;
       },
       probability: 0.05,
@@ -16478,266 +16434,6 @@ function registerNewsEventsToPool() {
         },
       ],
     },
-
-    // ====== R164 联动增强1：极端天气·邻里互助（D→G + B） ======
-    // 填补"极端天气有叙事标签但无NPC互动事件"的空白区。
-    // 寒流/暴雨天时，同楼道的已结识NPC主动关心。
-    {
-      id: "cold_weather_neighbor_care",
-      phase: "street",
-      icon: "❄️",
-      title: "寒潮里的暖粥",
-      story:
-        "窗外风力到了7级，温度计显示零下二度。你缩在被窝里不敢出去——连呼吸都是白气。\n\n中午敲门声响了，是楼下的大爷。他拎着一袋热腾腾的小米粥：「小伙子，家里熬多了，给你端一碗来。这鬼天气别饿着肚子。」\n\n粥还烫手。你蹲在门口喝完，浑身暖和过来了。（⚡ 极端天气时更易触发）",
-      // [已审查] 含 OR 逻辑（任意极端天气触发），保留 conditions
-      conditions: function (st) {
-        if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后不再触发街头叙事事件
-        var cold = st.weather && (typeof st.weather.temperature === "number" && st.weather.temperature <= 0);
-        var storm = st.weather && st.weather.current === "stormy";
-        if (!cold && !storm) return false;
-        // 需至少有一个已结识邻居
-        if (!st.relationships) return false;
-        for (var k in st.relationships) {
-          if (st.relationships[k] && st.relationships[k].met) return true;
-        }
-        return false;
-      },
-      probability: 0.03,
-      repeatable: false,
-      choices: [
-        {
-          text: "🙏 感激收下，邀请大爷进来坐坐",
-          hint: "心情+ 好感+ 建立连接",
-          apply: function (st) {
-            st.flags._coldNeighborSeen = true;
-            st.needs.hunger = Math.min(100, (st.needs.hunger || 50) + 15);
-            st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 10);
-            // 随机选一个已结识NPC加好感
-            var npcKeys = Object.keys(st.relationships).filter(function(k) { return st.relationships[k] && st.relationships[k].met; });
-            if (npcKeys.length > 0) {
-              var picked = Random.fromArray(npcKeys);
-              if (typeof applyAffinityChange === "function") {
-                applyAffinityChange(st, picked, 5, "寒潮送粥");
-              } else if (st.relationships[picked]) {
-                st.relationships[picked].affinity = Math.min(100, (st.relationships[picked].affinity || 0) + 5);
-              }
-            }
-            StateManager.addMessage("❄️ 一碗小米粥下肚，整个人都活了。大爷说「以后有啥事吱声」——这座城市的温度，来自这些陌生人。心情+10。", "success");
-          },
-        },
-        {
-          text: "😊 谢谢，给他留了件厚毛衣",
-          hint: "道德+ 心情+ 有来有往",
-          apply: function (st) {
-            st.flags._coldNeighborSeen = true;
-            st.player.morality = Math.min(100, (st.player.morality || 50) + 5);
-            st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 8);
-            var npcKeys = Object.keys(st.relationships).filter(function(k) { return st.relationships[k] && st.relationships[k].met; });
-            if (npcKeys.length > 0) {
-              var picked = Random.fromArray(npcKeys);
-              if (typeof applyAffinityChange === "function") {
-                applyAffinityChange(st, picked, 8, "互赠毛衣");
-              } else if (st.relationships[picked]) {
-                st.relationships[picked].affinity = Math.min(100, (st.relationships[picked].affinity || 0) + 8);
-              }
-            }
-            StateManager.addMessage("🧥 你翻出衣柜最厚的毛衣递给大爷，他说「这冬天有你这样的人，就不冷了」。心情+8，道德+5。人与人之间的善意是双向的。", "success");
-          },
-        },
-        {
-          text: "🚪 道谢但借口身体不适没多聊",
-          hint: "孤立感++ 心情-",
-          apply: function (st) {
-            st.flags._coldNeighborSeen = true;
-            st.needs.happiness = Math.max(0, (st.needs.happiness || 50) - 5);
-            StateManager.addMessage("🚪 你接过粥说了声谢谢就关上了门。粥很暖，但你意识到，拒绝这份温暖可能让自己更冷。", "warning");
-          },
-        },
-      ],
-    },
-
-    // ====== R164 联动增强2：病愈后的第一顿好饭（B→G） ======
-    // 填补"疾病治愈后零叙事回响"的最大空白区。
-    // 玩家从生病到恢复的过程中，第一次吃顿好的——感受健康的滋味。
-    {
-      id: "first_good_meal_after_sick",
-      phase: "street",
-      icon: "🍜",
-      title: "病愈后的第一顿饱饭",
-      story:
-        "大病初愈的第一天，胃里发出抗议——你饿坏了。\n\n街角煎饼摊大爷看你气色好转，加了两个蛋一个肠。「看你上次来都快不行了，好了就对了！人嘛，吃好饭才能好好过。」\n\n咬下去的瞬间，你觉得重新活过来了。",
-      triggers: {
-        minDay: 15,
-        excludeFlags: ["_firstGoodMealSeen"],
-        minStat: { health: 80 },
-      },
-      probability: 0.04,
-      repeatable: false,
-      // [已审查] 健康≥80 + 非开局(≥3天)即可能触发，体现病愈叙事（无疾病flag时fallback为纯健康恢复）
-      conditions: function (st) {
-        if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后不再触发街头叙事事件
-        if (st.flags && st.flags._firstGoodMealSeen) return false;
-        if (!st.player || !st.player.day || st.player.day < 3) return false;
-        return !!(st.status && st.status.health >= 80);
-      },
-      choices: [
-        {
-          text: "🍽️ 去好点的餐馆庆祝重生",
-          hint: "花¥80，心情+ 心智+ 感恩",
-          cost: 80,
-          apply: function (st) {
-            st.flags._firstGoodMealSeen = true;
-            if (typeof st.resources.cash !== "number" || !isFinite(st.resources.cash)) st.resources.cash = 0;
-            st.resources.cash -= 80;
-            st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 15);
-            st.player.mental = Math.min(100, (st.player.mental || 0) + 5);
-            if (st.flags._daysSick) st.flags._daysSick = 0;
-            StateManager.addMessage("🍜 你吃了顿好的。看着窗外人来人往，突然觉得活着真好。有时候一个健康的身体，就是最大的财富。心情+15，心智+5。", "success");
-          },
-        },
-        {
-          text: "🥟 街边小吃犒劳自己",
-          hint: "花¥20，心情+",
-          cost: 20,
-          apply: function (st) {
-            st.flags._firstGoodMealSeen = true;
-            if (typeof st.resources.cash !== "number" || !isFinite(st.resources.cash)) st.resources.cash = 0;
-            st.resources.cash -= 20;
-            st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 10);
-            st.needs.hunger = Math.min(100, (st.needs.hunger || 50) + 30);
-            if (st.flags._daysSick) st.flags._daysSick = 0;
-            StateManager.addMessage("🥟 一碗热腾腾的云吞下肚，灵魂归位了。虽然不贵，但比什么山珍海味都香。心情+10。", "success");
-          },
-        },
-        {
-          text: "🍚 回家煮碗白米饭凑合",
-          hint: "免费，但缺仪式感",
-          apply: function (st) {
-            st.flags._firstGoodMealSeen = true;
-            st.needs.hunger = Math.min(100, (st.needs.hunger || 50) + 20);
-            st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 3);
-            if (st.flags._daysSick) st.flags._daysSick = 0;
-            StateManager.addMessage("🍚 白米饭配咸菜，吃饱了就行。健康回来了，但生活需要一点仪式感啊。心情+3。", "info");
-          },
-        },
-      ],
-    },
-
-    // ====== R164 联动增强3：换季支出·冬去春来（A→B 经济×事件） ======
-    // 季节交替时，玩家必须花钱买换季用品。体现"数据变化有叙事后果"。
-    {
-      id: "season_change_expense",
-      phase: "street",
-      icon: "🌤️",
-      title: "换季了",
-      story:
-        "季节换了。衣柜里的厚衣服该收起来，薄衣服又没几件。\n\n街上已经有穿短袖的人了。你低头看看自己——单薄的衬衫在风里打颤。「入春先入夏，夏衣得提前备。」隔壁大爷说得对。\n\n换季不只是换衣服，是换一笔开销。",
-      triggers: { excludeFlags: ["_seasonChangeSeen"] },
-      conditions: function (st) {
-        if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后不再触发街头叙事事件
-        if (!st.weather || !st.weather.season) return false;
-        if (st.flags._seasonChangeSeen) return false;
-        return true;
-      },
-      probability: 0.05,
-      repeatable: false,
-      choices: [
-        {
-          text: "👕 去批发市场淘了几件（¥100-150）",
-          hint: "实惠但质量一般",
-          apply: function (st) {
-            st.flags._seasonChangeSeen = true;
-            if (typeof st.resources.cash !== "number" || !isFinite(st.resources.cash)) st.resources.cash = 0;
-            var cost = Random.int(100, 150);
-            var actualCost = Math.min(cost, st.resources.cash);
-            st.resources.cash -= actualCost;
-            st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 5);
-            StateManager.addMessage("👕 批发市场十元三件的T恤虽然薄了点，但好歹能换季。心里踏实了不少。心情+5。", "success");
-          },
-        },
-        {
-          text: "🛍️ 咬牙去商场买件质量好的",
-          hint: "¥200-300，质量耐久翻倍",
-          apply: function (st) {
-            st.flags._seasonChangeSeen = true;
-            if (typeof st.resources.cash !== "number" || !isFinite(st.resources.cash)) st.resources.cash = 0;
-            var cost = Random.int(200, 300);
-            var actualCost = Math.min(cost, st.resources.cash);
-            st.resources.cash -= actualCost;
-            st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 10);
-            st.needs.hygiene = Math.min(100, (st.needs.hygiene || 50) + 3);
-            StateManager.addMessage("🛍️ 商场里打折的衣服虽不如以前，但总比地摊强。穿得体面一点，心情都不一样了。心情+10。", "success");
-          },
-        },
-        {
-          text: "📦 先不买了，旧衣服还能穿",
-          hint: "省钱但卫生- 心情-",
-          apply: function (st) {
-            st.flags._seasonChangeSeen = true;
-            st.needs.happiness = Math.max(0, (st.needs.happiness || 50) - 5);
-            st.needs.hygiene = Math.max(0, (st.needs.hygiene || 50) - 5);
-            StateManager.addMessage("📦 翻来覆去还是那几件。换季就算了，等攒够了钱再说。卫生-5，心情-5。", "info");
-          },
-        },
-      ],
-    },
-
-    // ====== R164 联动增强4：生日的经济分岔（G→B 叙事层） ======
-    // 同一件事（过生日），在不同经济状况下有完全不同的叙事体验。
-    // 体现"经济状态→叙事选择"的桥接——这是本游戏最容易忽略的情绪锚点。
-    {
-      id: "birthday_economic_bifurcation",
-      phase: "street",
-      icon: "🎂",
-      title: "今天是我的生日",
-      story:
-        "手机弹出一条祝福——「生日快乐！愿新的一岁，所求皆如愿。」\n\n这个城市没人记得你的生日。但今天，你自己记得就够了。\n\n看着银行卡余额和兜里的零钱……也许可以对自己好一点？也可能，算了，省着点用吧。",
-      triggers: { minDay: 50 },
-      conditions: function (st) {
-        if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后不再触发街头叙事事件
-        if (st.flags && st.flags._birthdaySeen) return false;
-        // [全系统自洽修复] 域B A类#5: 生日每365天触发（取day%365≈0表示周年纪念日），用近似值容差±1天
-        var mod = st.player.day % 365;
-        return mod >= 364 || mod <= 1;
-      },
-      probability: 0.06,
-      repeatable: false,
-      choices: [
-        {
-          text: "🎁 给自己买块小蛋糕",
-          hint: "花¥50，心情+ 仪式感",
-          cost: 50,
-          apply: function (st) {
-            st.flags._birthdaySeen = true;
-            if (typeof st.resources.cash !== "number" || !isFinite(st.resources.cash)) st.resources.cash = 0;
-            st.resources.cash -= 50;
-            st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 12);
-            st.needs.fatigue = Math.min(100, (st.needs.fatigue || 50) - 5);
-            StateManager.addMessage("🎂 一块小小的奶油蛋糕，加一根蜡烛。你许愿了——「希望明年这时候，一切都会更好。」心情+12。", "success");
-          },
-        },
-        {
-          text: "🍖 加个鸡腿犒劳自己",
-          hint: "免费，朴素但有仪式感",
-          apply: function (st) {
-            st.flags._birthdaySeen = true;
-            st.needs.hunger = Math.min(100, (st.needs.hunger || 50) + 10);
-            st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 5);
-            StateManager.addMessage("🍗 下班买了个卤鸡腿。一个人坐在路边吃完了。虽然简单，但今天的食物确实格外香。心情+5。", "info");
-          },
-        },
-        {
-          text: "😔 算了，早点睡",
-          hint: "省钱但孤独感+",
-          apply: function (st) {
-            st.flags._birthdaySeen = true;
-            st.needs.happiness = Math.max(0, (st.needs.happiness || 50) - 8);
-            st.player.mental = Math.max(0, (st.player.mental || 50) - 3);
-            StateManager.addMessage("😔 你没做任何庆祝。关了灯躺在床上，听着窗外的车声入睡。生日就像这个城市的霓虹——照亮所有人，除了自己。心情-8。", "warning");
-          },
-        },
-      ],
-    },
   ];
   for (var i = 0; i < EVENTS.length; i++) {
     // 防御性兜底：无 conditions 的事件默认放行（避免死代码），与 CAREER_EVENTS 一致
@@ -16775,7 +16471,6 @@ function registerNewsEventsToPool() {
       // [conditions→triggers]
       triggers: { minDay: 30, excludeFlags: ["_insiderRumorSeen"] },
       conditions: function (st) {
-        if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后链式内幕事件不再触发
         // [已审查] 部分保留：corporate.kpi 无 trigger 等价字段
         return st.player.corporate && st.player.corporate.kpi >= 20;
       },
@@ -16786,8 +16481,8 @@ function registerNewsEventsToPool() {
           apply: (st) => {
             st.flags._insiderRumorSeen = true;
             st.needs.fatigue = Math.min(100, st.needs.fatigue + 5);
-            if ((st.resources.cash || 0) >= 100) {
-              st.resources.cash = Math.max(0, (st.resources.cash || 0) - 100); // [全系统自洽修复] 域B A类:cash NaN守卫
+            if ((st.resources.cash || 0) >= 100) { // [全系统自洽修复] 域H A类: cash NaN守卫
+              st.resources.cash = (st.resources.cash || 0) - 100;
               // 调度后续：验证结果
               if (typeof scheduleChainEvent === "function") {
                 scheduleChainEvent(st, "insider_verify", 2, "corporate");
@@ -16869,15 +16564,15 @@ function registerNewsEventsToPool() {
           hint: "高风险高回报",
           cost: 3000,
           apply: (st) => {
-            if ((st.resources.cash || 0) < 3000) {
+            if (st.resources.cash < 3000) {
               StateManager.addMessage("💰 钱不够！", "warning");
               return;
             }
-            st.resources.cash = Math.max(0, (st.resources.cash || 0) - 3000); // [全系统自洽修复] 域B A类:cash NaN守卫
+            st.resources.cash -= 3000;
             const success = Random.chance(0.7);
             if (success) {
               const profit = Random.int(4000, 5999);
-              st.resources.cash = (st.resources.cash || 0) + profit;
+              st.resources.cash += profit;
               st.needs.happiness = Math.min(100, st.needs.happiness + 12);
               st.flags._insiderTradingWon = true;
               StateManager.addMessage(
@@ -16917,15 +16612,15 @@ function registerNewsEventsToPool() {
           hint: "留条后路",
           cost: 1000,
           apply: (st) => {
-            if ((st.resources.cash || 0) < 1000) {
+            if (st.resources.cash < 1000) {
               StateManager.addMessage("💵 钱不够！", "warning");
               return;
             }
-            st.resources.cash = Math.max(0, (st.resources.cash || 0) - 1000); // [全系统自洽修复] 域B A类:cash NaN守卫
+            st.resources.cash -= 1000;
             const success = Random.chance(0.7);
             if (success) {
               const profit = Random.int(1300, 1899);
-              st.resources.cash = (st.resources.cash || 0) + profit;
+              st.resources.cash += profit;
               st.needs.happiness = Math.min(100, st.needs.happiness + 6);
               StateManager.addMessage(
                 `💰 赌对了，小赚 ¥${profit - 1000}。`,
@@ -17060,7 +16755,7 @@ function registerNewsEventsToPool() {
             const recovered = Random.chance(0.15);
             if (recovered) {
               const back = Random.int(300, 499);
-              st.resources.cash = (st.resources.cash || 0) + back;
+              st.resources.cash += back;
               StateManager.addMessage(
                 `🚔 警察立案了！居然追回了 ¥${back}，真是意外之喜。`,
                 "success",
@@ -17093,7 +16788,7 @@ function registerNewsEventsToPool() {
               (st.player.corporate.risk || 0) + 5,
             );
             const extra = Random.int(50, 99);
-            st.resources.cash = (st.resources.cash || 0) + extra;
+            st.resources.cash += extra;
             st.resources.totalEarned += extra;
             StateManager.addMessage(
               `💪 加班加了一周，KPI+10，赚了 ¥${extra}。慢慢补回来。`,
@@ -17128,8 +16823,6 @@ function registerNewsEventsToPool() {
       conditions: function (st) {
         // [自洽修复] st.needs.health 不存在（state.needs 无 health 字段），改为 st.status.health
         // [已审查] 部分保留：health >= 25 无 trigger 等价字段
-        // [Layer3] 叙事说"领导在群里说全员加班"，需在公司上班
-        if (!st.corporate || !st.corporate.active) return false;
         return ((st.status && st.status.health) || 100) >= 25;
       },
       choices: [
@@ -17191,7 +16884,7 @@ function registerNewsEventsToPool() {
           text: "💬 提议平摊工作量",
           hint: "考验管理能力",
           apply: (st) => {
-            if (st.corporate.team.length > 0) {
+            if (st.corporate && st.corporate.team && st.corporate.team.length > 0) { // [全系统自洽修复] 域H A类: team 守卫
               st.player.corporate.popularity = Math.min(
                 100,
                 st.player.corporate.popularity + 4,
@@ -17276,7 +16969,7 @@ function registerNewsEventsToPool() {
           hint: "考验向上管理",
           apply: (st) => {
             if (st.player.corporate.upwardMgmt >= 40) {
-              st.resources.cash = (st.resources.cash || 0) + 200;
+              st.resources.cash += 200;
               st.player.corporate.popularity = Math.max(
                 0,
                 st.player.corporate.popularity - 2,
@@ -17475,8 +17168,6 @@ function registerNewsEventsToPool() {
         "VP明天要来部门听汇报，Leader让你今晚赶一份PPT出来。这东西做好了能加分，做砸了就尴尬了。",
       // [conditions→triggers]
       triggers: { minDay: 10 },
-      // [Layer3] 叙事说"VP要来听汇报，Leader让你赶PPT"，需在公司上班
-      conditions: function (st) { return st.corporate && st.corporate.active === true; },
       choices: [
         {
           text: "🌙 熬夜做好",
@@ -17671,8 +17362,6 @@ function registerNewsEventsToPool() {
         "又到了公司年会。今年抽奖环节据说有大奖，但更重要的是和同事领导社交的机会。",
       // [conditions→triggers]
       triggers: { minDay: 60 },
-      // [Layer3] 叙事说"公司年会，和同事领导社交"，需在公司上班
-      conditions: function (st) { return st.corporate && st.corporate.active === true; },
       choices: [
         {
           text: "🍻 主动社交敬酒",
@@ -17703,14 +17392,14 @@ function registerNewsEventsToPool() {
           apply: (st) => {
             const roll = Random.float(0, 1);
             if (roll < 0.05) {
-              st.resources.cash = (st.resources.cash || 0) + 10000;
+              st.resources.cash += 10000;
               st.needs.happiness = Math.min(100, st.needs.happiness + 20);
               StateManager.addMessage(
                 "🎰 中了大奖 ¥10,000！全场欢呼！",
                 "success",
               );
             } else if (roll < 0.3) {
-              st.resources.cash = (st.resources.cash || 0) + 500;
+              st.resources.cash += 500;
               StateManager.addMessage("🎰 中了小奖 ¥500。聊胜于无。", "info");
             } else {
               st.needs.happiness = Math.max(0, st.needs.happiness - 3);
@@ -17825,25 +17514,23 @@ function registerNewsEventsToPool() {
         "茶水间里同事热火朝天：隔壁组的张三投了5万买狗狗币，上个月赚了20万！要不要也试试？",
       // [conditions→triggers]
       triggers: { minDay: 30, minCash: 2000 },
-      // [Layer3] 叙事说"茶水间里同事热火朝天"，需在公司上班
-      conditions: function (st) { return st.corporate && st.corporate.active === true; },
       choices: [
         {
           text: "🚀 跟风买(¥5000)",
           hint: "FOMO了",
           cost: 5000,
           apply: function (st) {
-            if ((st.resources.cash || 0) >= 5000) {
-              st.resources.cash = Math.max(0, (st.resources.cash || 0) - scaleAmount(5000, st.resources && st.resources.totalEarned)); // [全系统自洽修复] 域B A类:cash NaN守卫
+            if (st.resources.cash >= 5000) {
+              st.resources.cash -= 5000;
               if (Random.chance(0.3)) {
-                st.resources.cash = (st.resources.cash || 0) + Random.int(8000, 22999);
+                st.resources.cash += Random.int(8000, 22999);
                 st.needs.happiness = Math.min(100, st.needs.happiness + 20);
                 StateManager.addMessage(
                   "🚀 运气爆棚追涨成功！大赚了一笔！",
                   "success",
                 );
               } else if (Random.chance(0.5)) {
-                st.resources.cash = (st.resources.cash || 0) + Random.int(3000, 6999);
+                st.resources.cash += Random.int(3000, 6999);
                 StateManager.addMessage("🚀 小赚一点就跑了，还行。", "info");
               } else {
                 st.needs.happiness = Math.max(0, st.needs.happiness - 25);
@@ -17892,16 +17579,14 @@ function registerNewsEventsToPool() {
         "HR发全员邮件：公司即将IPO！老员工可按内部价认购员工股，每人最多认购500股。",
       // [conditions→triggers]
       triggers: { minDay: 90, minCash: 5000 },
-      // [Layer3] 叙事说"HR发全员邮件，公司即将IPO"，需在公司上班
-      conditions: function (st) { return st.corporate && st.corporate.active === true; },
       choices: [
         {
           text: "🔔 认购500股(¥4000)",
           hint: "员工福利",
           cost: 4000,
           apply: function (st) {
-            if ((st.resources.cash || 0) >= 4000) {
-              st.resources.cash = Math.max(0, (st.resources.cash || 0) - 4000); // [全系统自洽修复] 域B A类:cash NaN守卫
+            if (st.resources.cash >= 4000) {
+              st.resources.cash -= 4000;
               var inv = st.investment || {};
               inv.stockHoldings = inv.stockHoldings || [];
               inv.stockHoldings.push({
@@ -17927,8 +17612,8 @@ function registerNewsEventsToPool() {
           hint: "试一试",
           cost: 800,
           apply: function (st) {
-            if ((st.resources.cash || 0) >= 800) {
-              st.resources.cash = Math.max(0, (st.resources.cash || 0) - 800); // [全系统自洽修复] 域B A类:cash NaN守卫
+            if (st.resources.cash >= 800) {
+              st.resources.cash -= 800;
               var inv = st.investment || {};
               inv.stockHoldings = inv.stockHoldings || [];
               inv.stockHoldings.push({
@@ -18000,8 +17685,8 @@ function registerNewsEventsToPool() {
           apply: function (st) {
             var inv = st.investment || {};
             var cost = Random.int(1000, 3999);
-            if ((st.resources.cash || 0) >= cost) {
-              st.resources.cash = Math.max(0, (st.resources.cash || 0) - cost); // [全系统自洽修复] 域B A类:cash NaN守卫
+            if (st.resources.cash >= cost) {
+              st.resources.cash -= cost;
               inv.stockHoldings = inv.stockHoldings || [];
               var smic = inv.stockHoldings.find(function (x) {
                 return x.symbol === "SMIC";
@@ -18063,7 +17748,7 @@ function registerNewsEventsToPool() {
                 inv.stockHoldings.splice(i, 1);
               }
             }
-            st.resources.cash = (st.resources.cash || 0) + total;
+            st.resources.cash += total;
             StateManager.addMessage(
               "📉 趁跌停前跑了，变现¥" +
                 Math.round(total).toLocaleString() +
@@ -18078,8 +17763,8 @@ function registerNewsEventsToPool() {
           apply: function (st) {
             var inv = st.investment || {};
             var cost = 2000;
-            if ((st.resources.cash || 0) >= 2000) {
-              st.resources.cash = Math.max(0, (st.resources.cash || 0) - 2000); // [全系统自洽修复] 域B A类:cash NaN守卫
+            if (st.resources.cash >= 2000) {
+              st.resources.cash -= 2000;
               inv.stockHoldings = inv.stockHoldings || [];
               var h = inv.stockHoldings.find(function (x) {
                 return x.symbol === "TSLA";
@@ -18135,8 +17820,8 @@ function registerNewsEventsToPool() {
           apply: function (st) {
             var inv = st.investment || {};
             var cost = 3000;
-            if ((st.resources.cash || 0) >= cost) {
-              st.resources.cash = Math.max(0, (st.resources.cash || 0) - cost); // [全系统自洽修复] 域B A类:cash NaN守卫
+            if (st.resources.cash >= cost) {
+              st.resources.cash -= cost;
               inv.btcHoldings = (inv.btcHoldings || 0) + 0.003;
               inv.btcAvgCost =
                 inv.btcHoldings > 0
@@ -18225,7 +17910,7 @@ function registerNewsEventsToPool() {
           apply: function (st) {
             st.flags._founderOustSeen = true;
             st.flags._founderExited = true;
-            st.resources.cash = (st.resources.cash || 0) + 150000;
+            st.resources.cash += 150000;
             st.resources.totalEarned += 150000;
             if (st.player && st.player.corporate) {
               st.player.corporate.dignity = Math.min(
@@ -18282,10 +17967,9 @@ function registerNewsEventsToPool() {
       story:
         "新 CEO 上任一个月，你这位“前创始人”被分配的工作是——给一群空降高管讲解你当年定的产品逻辑，然后做成 PPT 让他们“参考”。你看着会议室里那些一年前还没听说过这家公司的人，对你的产品指指点点，心里冷笑：他们连用户名字都念不准。但下班路上，你还是去打了点酒。",
       conditions: function (st) {
-        if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后前创始人羞辱链不再触发
         return (
           !!st.flags._founderStayed &&
-          st.player.day >= (st.flags._founderStayed || 0) + 365 &&
+          st.player.day >= (st.flags._founderStayed || 0) + 30 &&
           !st.flags._founderHumiliationSeen
         );
       },
@@ -18376,7 +18060,6 @@ function registerNewsEventsToPool() {
       story:
         "深夜接到当年合伙人老陈的电话：“新 CEO 一年烧了 3 个亿，下个季度要不到融资就完蛋。投资人现在愿意 4 折出售他们手里的股份——总价 ¥800,000。我和老张能凑¥500,000，差¥300,000。如果你能掏出来，我们三个人就能拿回这家公司。” 你看着对面墙上自己当年挂的那张“再创业”的字，握着手机的手在抖。",
       conditions: function (st) {
-        if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后回购链不再触发
         var hasObserved =
           !!st.flags._founderObserving || !!st.flags._founderRebuilding;
         var triggerDay = st.flags._founderStayed
@@ -18385,7 +18068,7 @@ function registerNewsEventsToPool() {
         return (
           hasObserved &&
           st.player.day >= triggerDay &&
-          (st.resources.cash || 0) >= 300000 && // [全系统自洽修复] 域H A类: 阈值从100000→300000(实际成本); [全系统自洽修复] 域B A类:cash NaN守卫
+          st.resources.cash >= 100000 &&
           !st.flags._founderBuybackSeen
         );
       },
@@ -18397,7 +18080,7 @@ function registerNewsEventsToPool() {
           apply: function (st) {
             st.flags._founderBuybackSeen = true;
             st.flags._founderReclaimed = true;
-            st.resources.cash = Math.max(0, (st.resources.cash || 0) - scaleAmount(300000, st.resources && st.resources.totalEarned)); // [全系统自洽修复] 域B A类:cash NaN守卫
+            st.resources.cash -= 300000;
             if (st.player && st.player.corporate) {
               st.player.corporate.dignity = Math.min(
                 100,
@@ -18483,7 +18166,7 @@ function registerNewsEventsToPool() {
             st.flags._fateCollapseSeen = true;
             st.flags._formerCompanyCollapsed = true;
             var severance = Random.int(50000, 69999);
-            st.resources.cash = (st.resources.cash || 0) + severance;
+            st.resources.cash += severance;
             st.resources.totalEarned += severance;
             st.player.mental = Math.max(0, st.player.mental - 5);
             StateManager.addMessage(
@@ -18526,7 +18209,6 @@ function registerNewsEventsToPool() {
       _isChainEvent: false, // [全系统自洽修复] 域B,
       phase: "corporate",
       conditions: function (st) {
-        if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后穿小鞋链不再触发
         return (
           st.player.phase === "corporate" &&
           st.player.day >= 60 &&
@@ -19043,7 +18725,7 @@ function registerNewsEventsToPool() {
               });
             }
             // [自洽修复] 域H A类#4: 防 NaN 污染 cash
-            st.resources.cash = Math.max(0, (st.resources.cash || 0) - scaleAmount(500000, st.resources && st.resources.totalEarned));
+            st.resources.cash = Math.max(0, (st.resources.cash || 0) - 500000);
             StateManager.addMessage(
               "📈 你下单买了50万自己公司股票（100股）。手在抖——你知道这是违法的。",
               "warning",
@@ -19408,7 +19090,7 @@ function registerNewsEventsToPool() {
       icon: "👔",
       title: "前上司东山再起",
       story:
-        "几个月后行业峰会上张总跳槽成了VP。名片递过来你们四目相对——这个世界小到不知道得罪过的人明天坐在哪个位置上。",
+        "一年后行业峰会上张总跳槽成了VP。名片递过来你们四目相对——这个世界小到不知道得罪过的人明天坐在哪个位置上。",
       conditions: function (st) {
         return (
           (!!st.flags._careerNailed || !!st.flags._careerHRComplaint) &&
@@ -19524,8 +19206,8 @@ function registerNewsEventsToPool() {
           hint: "¥50000保证金，合法但职业风险",
           apply: function (st) {
             st.flags._shortSelfSeen = true;
-            if ((st.resources.cash || 0) >= 50000) {
-              st.resources.cash = Math.max(0, (st.resources.cash || 0) - scaleAmount(50000, st.resources && st.resources.totalEarned)); // [全系统自洽修复] 域B A类:cash NaN守卫
+            if (st.resources.cash >= 50000) {
+              st.resources.cash -= 50000;
               st.flags._shortedOwnCompany = true;
               st.flags._shortDay = st.player.day;
               if (typeof scheduleChainEvent === "function") {
@@ -19584,7 +19266,7 @@ function registerNewsEventsToPool() {
         "午休时，部门副经理老张把你拉到楼梯间，压低声音说：'年底要竞聘了，现在公司里分两派——王副总那一派要推自己的人上去，但李总这边还缺人。你跟了我这几年，我看好你。'他拍拍你的肩膀，等你表态。",
       conditions: function (st) {
         return (
-          st.player.day >= 730 &&
+          st.player.day >= 90 &&
           st.player.corporate &&
           st.player.corporate.popularity >= 25 &&
           !st.flags._officeFactionApproached
@@ -19792,7 +19474,7 @@ function registerNewsEventsToPool() {
               );
             }
             st.player.fame = Math.max(0, (st.player.fame || 0) + fameGain);
-            st.resources.cash = (st.resources.cash || 0) + 5000;
+            st.resources.cash += 5000;
             st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 12);
             StateManager.addMessage(
               "🏆 你成功获得了晋升机会！老张拍了拍你的肩：'我没看错人。'",
@@ -19935,8 +19617,7 @@ function registerNewsEventsToPool() {
             cost: 2000,
             apply: function (st) {
               st.flags._promotionGiftGiven = true;
-              if ((st.resources.cash || 0) < 2000) { StateManager.addMessage("⚠️ 现金不足¥2000，无法准备礼物。", "warning"); return; }
-              st.resources.cash = (st.resources.cash || 0) - 2000; // [全系统自洽修复] 域H A类: 现金守卫防NaN
+              st.resources.cash -= 2000;
               st.player.corporate.popularity = Math.min(
                 100,
                 (st.player.corporate.popularity || 50) + 8,
@@ -20016,7 +19697,6 @@ function registerNewsEventsToPool() {
         story:
           "公司宣布优化 10% 的员工。你的 Leader 把你叫到办公室：「你手下有两个人，老赵和小林。老赵快退休了，家里有个生病的妻子。小林刚结婚，房贷压力大。我只能留一个，另一个……你自己跟他们说吧。」",
         triggers: { minDay: 150, phase: "corporate" },
-        conditions: function (st) { if (!st.corporate || !st.corporate.team || st.corporate.team.length < 2) return false; return true; }, // [Layer3]
         choices: [
           {
             text: "👴 保老赵，让他提前退休",
@@ -32266,8 +31946,7 @@ if (typeof window !== "undefined") {
       title: "风口来了",
       story: `手机弹了条推送："XX行业人才缺口巨大，日薪涨了50%！"\n你看了看，心跳加速——这不就是你一直在干的活吗？`,
       conditions: function (st) {
-        // [Layer3] 叙事说"你一直在干的活"→必须有工作
-        if (!st.career || !st.career.currentJob) return false;
+        if (!st.career || !st.career.currentJob) return false; // [Layer3]
         if (!st._worldParams || !st._worldParams.sectorHeat) return false;
         for (var sector in st._worldParams.sectorHeat) {
           if (st._worldParams.sectorHeat[sector] > 1.2) return true;
@@ -32320,8 +31999,7 @@ if (typeof window !== "undefined") {
       title: "行业寒冬",
       story: `新闻里铺天盖地都是"XX行业遇冷""企业缩编"的消息。你认识几个同行，已经在抱怨活越来越少、价钱越压越低。\n风口过了，日子得重新算计。`,
       conditions: function (st) {
-        // [Layer3] 叙事说"你认识几个同行"→必须有工作
-        if (!st.career || !st.career.currentJob) return false;
+        if (!st.career || !st.career.currentJob) return false; // [Layer3]
         if (!st._worldParams || !st._worldParams.sectorHeat) return false;
         if (st.player.day < 15) return false;
         if (
@@ -34555,8 +34233,10 @@ if (typeof window !== "undefined") {
       story:
         "你正在街上走着，一个中年男人快步迎上来——你认出来了，这是你一个月前帮忙送过紧急文件的那位客户。\n\n他笑着说：「可算碰上你了！上次你帮我送的那份标书中了！一直想谢谢你。」说着递过来一个袋子。",
       conditions: function (st) {
-        // [Layer3] 叙事说"帮送过紧急文件"→必须有配送经历
-        if (!st.player.workTypeCounts || !st.player.workTypeCounts['delivery_rider'] || st.player.workTypeCounts['delivery_rider'] < 1) return false;
+        // [Layer3] 需要有外卖配送历史
+        if (!st.player.workTypeCounts || !st.player.workTypeCounts.delivery_rider || st.player.workTypeCounts.delivery_rider < 1) return false;
+        // 检查玩家是否具备长期跑腿/配送的特征：driving技能≥15 或 agility≥28（经常行动）
+        // 且游戏天数>30说明有足够时间积累客户
         if (st.player.day < 30) return false;
         if (st.skills && st.skills.driving && st.skills.driving.level >= 15)
           return true;
@@ -34793,8 +34473,7 @@ if (typeof window !== "undefined") {
       story:
         "你在商业区的人群中看到一个人正鬼鬼祟祟地贴近前面背包的姑娘——他的手已经伸进了她的背包拉链缝隙。\n\n周围的人都忙着赶路，没人注意到。你只有几秒钟时间决定怎么做。",
       conditions: function (st) {
-        // [Layer3] 叙事说"在商业区的人群中"→必须身在商业区
-        if (!st.trade || st.trade.currentLocation !== 'commercialDist') return false;
+        if (!st.trade || st.trade.currentLocation !== "commercialDist") return false; // [Layer3]
         // 天数>10，不重复
         if (st.player.day < 10) return false;
         if (st.flags._moralPickpocketSeen) return false;
@@ -35925,8 +35604,7 @@ if (typeof window !== "undefined") {
       story:
         "你今天照常去干活，但一到地方就觉得胸口发闷。同样的动作、同样的路线、同样的吆喝——你已经重复了不知道多少遍。\n\n你坐在路沿石上，看着别的摊位发呆。脑子里有个声音在说：「还要这样干多久？」",
       conditions: function (st) {
-        // [Layer3] 叙事说"今天照常去干活"→必须有工作
-        if (!st.career || !st.career.currentJob) return false;
+        if (!st.career || !st.career.currentJob) return false; // [Layer3]
         if (st.player.day < 20) return false;
         // 通过高疲劳和低心情间接判断倦怠
         if (!st.needs) return false;
@@ -36014,8 +35692,7 @@ if (typeof window !== "undefined") {
       story:
         "你强撑着去干活，但手上的动作明显比平时慢。咳嗽压不住，额头烫得厉害。\n\n旁边的老主顾看了你一眼：「小伙子，你这脸色不对啊，发烧了吧？别干了，回去歇着。」",
       conditions: function (st) {
-        // [Layer3] 叙事说"你强撑着去干活"→必须有工作
-        if (!st.career || !st.career.currentJob) return false;
+        if (!st.career || !st.career.currentJob) return false; // [Layer3]
         if (st.player.day < 10) return false;
         if (
           !st.status ||
@@ -36745,8 +36422,7 @@ if (typeof window !== "undefined") {
       story:
         "你在工地上干活时，突然听到一声喊——上面掉下来一捆钢管！虽然没砸到人，但碎砖块溅到了你这边。\n\n工头跑过来看了一圈：「没事没事，散了吧。」但你的手臂被划了一道口子，血渗了出来。",
       conditions: function (st) {
-        // [Layer3] 叙事说"你在工地上干活时"→必须有工作
-        if (!st.career || !st.career.currentJob) return false;
+        if (!st.career || !st.career.currentJob) return false; // [Layer3]
         if (st.player.day < 20) return false;
         var curLoc = st.trade && st.trade.currentLocation;
         if (curLoc !== "construction") return false;
@@ -36956,9 +36632,9 @@ if (typeof window !== "undefined") {
       story:
         "你在图书馆的自习区埋头苦读，但一道题卡了你半小时。你咬着笔帽，盯着书页上的公式发呆。\n\n对面一个戴眼镜的中年人合上自己的书，看了你一眼：「卡住了？来，我看看。」",
       conditions: function (st) {
-        // [Layer3] 叙事说"在图书馆的自习区埋头苦读"→必须身在图馆
-        if (!st.trade || st.trade.currentLocation !== 'library') return false;
+        if (!st.trade || st.trade.currentLocation !== "library") return false; // [Layer3]
         if (st.player.day < 25) return false;
+        if ((st.player.intelligence || 0) < 35) return false;
         // 得有一定的学历提升意愿（学过习或用过学习类行动）
         if (st.flags._libraryMentorDone) return false;
         return true;
@@ -37022,8 +36698,7 @@ if (typeof window !== "undefined") {
         "今天天气预报发布了高温预警，气温预计超过40度。你本打算去户外干活，但太阳毒辣得让人睁不开眼。\n\n你看了看手机上的账户余额，又抬头看了看天。\n\n工地和街边小摊都需要人。",
       // [自洽修复] v3.20 原始提交缺 conditions/apply → 补全
       conditions: function (st) {
-        // [Layer3] 叙事说"你本打算去户外干活"→必须有工作
-        if (!st.career || !st.career.currentJob) return false;
+        if (!st.career || !st.career.currentJob) return false; // [Layer3]
         return (
           st.player.phase === "street" &&
           st.weather &&
@@ -47408,10 +47083,11 @@ if (typeof window !== "undefined") {
       "出租屋的灯坏了半边，你躺在漆黑里刷到老家同学的动态——人家孩子都会叫爸爸了。胃里空空的，不是饿，是想家。手机相册自动弹出去年过年的全家福。",
     // conditions：极低心情阈值爆发（除饥饿外的 needs 阈值空白区）
     conditions: function (st) {
-      // [Layer3] 叙事说"出租屋的灯坏了半边"→必须有住所
-      if (!st.housing || st.housing.tier < 1) return false;
       if (!st.needs) return false; // 检查 needs 系统存在
+      if (!st.housing || st.housing.tier < 1) return false; // [Layer3]
       if ((st.needs.happiness || 100) >= 15) return false; // 检查 心情值<15（极低）
+      if (st.player.phase !== "street") return false; // 检查 仅在街头阶段
+      if (st.player.day < 7) return false; // 检查 开局几天后
       if (
         st.flags &&
         st.flags._moodLowLetterDay && // 检查 30天冷却
@@ -47994,8 +47670,7 @@ if (typeof window !== "undefined") {
     story:
       "街头巷尾的债务压力越来越大，你手头紧得发颤。这时你遇到一个老熟人——曾经帮过你的张师傅，他现在生意不行了，开口向你借钱：「兄弟，就借我500，我下个月一定还。」\n\n可是你自己欠债如山，根本没有多余的钱。张师傅的眼里满是焦急。",
     conditions: function (st) {
-      // [Layer3] 叙事说"老熟人张师傅"→必须有一定的社交关系
-      if (!st.relationships || Object.keys(st.relationships).length < 1) return false;
+      if (!st.relationships || !st.relationships.zhang_shi_fu || !st.relationships.zhang_shi_fu.met) return false; // [Layer3]
       var morality = st.player.morality || 50;
       var debt = st.resources.totalDebt || 0;
       if (morality >= 30) return false;
@@ -48254,6 +47929,7 @@ if (typeof window !== "undefined") {
       if (st.flags._skillMilestoneSeen) return false;
       if (st.player.day < 40) return false;
       if (!st.skills) return false;
+      if (!st.skills.repair || st.skills.repair.level < 50) return false; // [Layer3]
       var skilledSkills = [];
       for (var sk in st.skills) {
         if (st.skills[sk] && st.skills[sk].level >= 50) {
@@ -48261,12 +47937,7 @@ if (typeof window !== "undefined") {
         }
       }
       if (skilledSkills.length === 0) return false;
-      // [Layer3] 优先匹配 repair 技能（叙事说"修东西"）
-      if (skilledSkills.indexOf('repair') >= 0) {
-        st._skillMilestoneTrigger = 'repair';
-      } else {
-        st._skillMilestoneTrigger = skilledSkills[0];
-      }
+      st._skillMilestoneTrigger = skilledSkills[0];
       return true;
     },
     probability: 0.03,
@@ -48604,7 +48275,7 @@ if (typeof window !== "undefined") {
     icon: "📞",
     title: "爸妈的电话",
     story:
-      "手机响了。屏幕上跳动着「爸」两个字。\n\n你接起来，那边传来父亲熟悉的声音：「最近怎么样啊？吃得好不好？天冷了多穿点。」\n\n你看了看日历——今天是家里一个特别的日子，妈念叨了好久。你差点忘了。",
+      "手机响了。屏幕上跳动着「妈」两个字。\n\n你接起来，那边传来母亲熟悉的声音：「最近怎么样啊？吃得好不好？天冷了多穿点。」\n\n今天是个特别的日子，妈打电话来了。你差点忘了。",
     // [自洽新增] conditions：家庭系统存在 + 周末触发
     conditions: function (st) {
       if (!st.family) return false;
@@ -50127,8 +49798,7 @@ if (typeof window !== "undefined") {
       "春风吹走了冬天的寒冷。城市广场上搭起了一排排帐篷——一年一度的春季招聘会开始了！几十家企业摆摊招人，从工厂普工到写字楼文员，岗位多得让人眼花缭乱。你手里攥着简历，在人群里挤来挤去。",
     conditions: function (st) {
       // [自洽修复] 检查季节为春季 + 天数≥60
-      // [Layer3] 叙事说"你手里攥着简历"→必须有工作经验
-      if (!st.player.totalWorkDays || st.player.totalWorkDays < 1) return false;
+      if (!st.player.totalWorkDays || st.player.totalWorkDays < 1) return false; // [Layer3]
       var season = st.weather && st.weather.season;
       return (
         st.player.phase === "street" &&
@@ -53343,8 +53013,6 @@ if (typeof window !== "undefined") {
     // conditions：chef_chen 已结识+好感 + management 技能 + 当前职业为厨师（NPC ∩ 技能 ∩ 职业）
 
     conditions: function (st) {
-      // [Layer3] 叙事说"你正端着厨师饭碗"→必须有厨房相关职业
-      if (!st.employment || !st.employment.currentJob) return false;
       var rel = st.relationships && st.relationships["chef_chen"]; // 检查 chef_chen 关系
 
       if (!rel || !rel.met) return false; // 检查 已结识
@@ -54191,8 +53859,6 @@ if (typeof window !== "undefined") {
     // conditions：electrician + repair 技能（技能协同 ∩ 住所）
 
     conditions: function (st) {
-      // [Layer3] 叙事说"租房的电路老出毛病"→必须有住所
-      if (!st.housing || st.housing.tier < 1) return false;
       var el =
         st.skills && st.skills.electrician && st.skills.electrician.level; // 检查 electrician 等级
 
@@ -54201,6 +53867,8 @@ if (typeof window !== "undefined") {
       var rp = st.skills && st.skills.repair && st.skills.repair.level; // 检查 repair 等级
 
       if (typeof rp !== "number" || rp < 5) return false; // 检查 repair>=5
+
+      if (!st.housing || st.housing.tier < 1) return false; // [Layer3]
 
       if (st.player.phase !== "street") return false; // 检查 街头阶段
 
@@ -55517,13 +55185,13 @@ if (typeof window !== "undefined") {
     // conditions：疲惫高 + 有现金（需求×事件空白区）
 
     conditions: function (st) {
-      // [Layer3] 叙事说"钱不够先记着"→玩家应现金拮据
-      var cash = st.resources && st.resources.cash; // 检查 现金
-      if (typeof cash !== "number" || cash >= 200) return false; // [Layer3] 改为现金<200以匹配叙事
-
       var fat = st.needs && st.needs.fatigue; // 检查 疲惫
 
       if (typeof fat !== "number" || fat <= 80) return false; // 检查 疲惫>80
+
+      var cash = st.resources && st.resources.cash; // 检查 现金
+
+      if (typeof cash !== "number" || cash >= 200) return false; // [Layer3] 钱不够先记着
 
       if (st.player.phase !== "street") return false; // 检查 街头阶段
 
@@ -57742,7 +57410,7 @@ if (typeof window !== "undefined") {
     story:
       "老周闻着香味蹭上门，你下厨露了一手。老人家吃得眉开眼笑，直夸你手艺好。",
 
-    // conditions：old_zhou 已结识 + cooking 技能 + 心情低（NPC ∩ 技能 ∩ 需求）
+    // conditions：old_zhou 已结识 + cooking 技能（NPC ∩ 技能）
 
     conditions: function (st) {
       var rel = st.relationships && st.relationships["old_zhou"]; // 检查 old_zhou 关系
@@ -57752,8 +57420,6 @@ if (typeof window !== "undefined") {
       var ck = st.skills && st.skills.cooking && st.skills.cooking.level; // 检查 cooking 等级
 
       if (typeof ck !== "number" || ck < 8) return false; // 检查 cooking>=8
-
-      // [Layer3] 移除心情<30要求——叙事未暗示不开心，老周蹭饭是温馨场景
 
       if (st.player.day < 8) return false; // 检查 中后期
 
@@ -58201,11 +57867,11 @@ if (typeof window !== "undefined") {
     story:
       "连夜暴雨把出租屋的屋檐泡漏了，水顺着墙角往下淌。你想起练过的维修手艺，抄起工具就爬上梯子。",
 
-    // conditions：雨天/暴雨 + repair 技能（技能×天气×需求空白区）
+    // conditions：雨天/暴雨 + repair 技能 + 有住所（技能×天气×需求空白区）
 
     conditions: function (st) {
-      // [Layer3] 叙事说"出租屋的屋檐泡漏了"→必须有住所
-      if (!st.housing || st.housing.tier < 1) return false;
+      if (!st.housing || st.housing.tier < 1) return false; // [Layer3] 叙事涉及出租屋
+
       var w = st.weather && st.weather.current; // 检查 天气
 
       if (w !== "rainy" && w !== "stormy") return false; // 检查 雨天或暴雨
@@ -58776,11 +58442,11 @@ if (typeof window !== "undefined") {
     story:
       "科技园里公司扎堆，你凭着嘴皮子帮人推销办公耗材，园区里攒下的好名声让你一路绿灯。",
 
-    // conditions：sales 技能 + 科技园声望（技能×声望×地点空白区）
+    // conditions：sales 技能 + 科技园声望 + 科技园位置（技能×声望×地点空白区）
 
     conditions: function (st) {
-      // [Layer3] 叙事说"科技园里公司扎堆"→必须身在科技园
-      if (!st.trade || st.trade.currentLocation !== 'techPark') return false;
+      if (!st.trade || st.trade.currentLocation !== "techPark") return false; // [Layer3] 叙事涉及科技园
+
       var sales = st.skills && st.skills.sales && st.skills.sales.level; // 检查 sales 等级
 
       if (typeof sales !== "number" || sales < 15) return false; // 检查 sales>=15
@@ -60675,6 +60341,8 @@ if (typeof window !== "undefined") {
     // conditions：暴雨天气 + 已就业（天气×职业空白区）
 
     conditions: function (st) {
+      if (!st.career || !st.career.currentJob) return false; // [Layer3] 叙事涉及工地上班
+
       if (st.weather && st.weather.current !== "stormy") return false; // 检查 暴雨
 
       if (!st.employment || !st.employment.currentJob) return false; // 检查 已就业
@@ -71684,11 +71352,11 @@ if (typeof window !== "undefined") {
     story:
       "你常读财经新闻，又懂点账。一条政策动向被你看出门道，顺势小投了一笔，赚了点信息差。",
 
-    // conditions：accounting 技能 + 中后期（技能 ∩ 经济 ∩ 新闻系统）
+    // conditions：accounting 技能 + 中后期 + 有现金（技能 ∩ 经济 ∩ 新闻系统）
 
     conditions: function (st) {
-      // [Layer3] 叙事说"顺势小投了一笔"→必须有可支配资金
-      if (!st.resources || st.resources.cash < 500) return false;
+      if (!st.resources || st.resources.cash < 500) return false; // [Layer3] 叙事涉及投资
+
       var acc = st.skills && st.skills.accounting && st.skills.accounting.level; // 检查 accounting 等级
 
       if (typeof acc !== "number" || acc < 20) return false; // 检查 accounting>=20
@@ -74204,11 +73872,11 @@ if (typeof window !== "undefined") {
     story:
       "外头狂风暴雨出不了门，你正好窝在屋里敲代码：「老天爷逼我闭关，正好把活儿干完。」",
 
-    // conditions：暴风雨 + coding 技能（天气系统 + 技能系统）
+    // conditions：暴风雨 + coding 技能 + 有住所（天气系统 + 技能系统）
 
     conditions: function (st) {
-      // [Layer3] 叙事说"窝在屋里敲代码"→必须有住所
-      if (!st.housing || st.housing.tier < 1) return false;
+      if (!st.housing || st.housing.tier < 1) return false; // [Layer3] 叙事涉及窝在屋里
+
       if (st.weather.current !== "stormy") return false; // 检查 暴风雨
 
       var code = st.skills && st.skills.coding && st.skills.coding.level; // 检查 coding 等级
@@ -76932,7 +76600,7 @@ if (typeof window !== "undefined") {
       "你在常去的地点办事时，有人突然认出了你：「你就是那个……做了这么多年XX的老手吧？」\n\n对方眼里带着尊重——在这座城市里，长期积累的经验本身就是一笔财富。",
     // [自洽修复] conditions 新增：actionFreq 检查，累计行动≥50次
     conditions: function (st) {
-      if (st.player.day < 1095) return false;
+      if (st.player.day < 60) return false;
       var freq = st.stats && st.stats.actionFreq ? st.stats.actionFreq : {};
       var maxFreq = 0;
       for (var k in freq) {
@@ -77401,7 +77069,7 @@ if (typeof window !== "undefined") {
     story:
       "你算了一笔账——银行卡里的、手头的现金、零零散散的投资，加起来竟然有五十万了。\n\n你盯着手机上的数字看了很久。三年前你刚来这座城市时兜里只有几百块，现在居然攒下了半百万。你想起城中村那个漏雨的隔间，想起在工地搬砖时磨出血的手掌。\n\n窗外的城市依旧车水马龙，但你知道，有些东西已经不一样了。",
     conditions: function (st) {
-      if (st.player.day < 1095) return false;
+      if (st.player.day < 60) return false;
       if (st.flags && st.flags._wealth500kSeen) return false;
       var cash = st.resources && st.resources.cash;
       if (typeof cash !== "number") cash = 0;
@@ -79750,8 +79418,7 @@ if (typeof window !== "undefined") {
     story:
       "午饭时，市场部的陈经理把你叫到一边，压低声音说：「你知道技术部李总要被换掉的事吗？我这边正在整合资源，你跟着我走，好处少不了你的。」\n\n下午，技术部的老王也找到你：「陈那边的事你知道吧？别被他拉下水，他早晚出事。我这里稳得住，你安心跟着我。」\n\n两个人说的都头头是道，但你知道：只能站一边。",
     conditions: function (st) {
-      // [Layer3] 叙事提到"陈经理""李总"→必须已结识 boss_li
-      if (!st.relationships || !st.relationships.boss_li || !st.relationships.boss_li.met) return false;
+      if (!st.relationships || !st.relationships.boss_li || !st.relationships.boss_li.met) return false; // [Layer3] 叙事涉及陈经理/李总
       if (st.flags._corpOfficePoliticsDone) return false;
       if (!st.player || st.player.phase !== "corporate") return false;
       if (!st.employment || !st.employment.currentJob) return false;
@@ -80074,7 +79741,7 @@ if (typeof window !== "undefined") {
       }
       if (metCount < 3) return false;
       if (st.flags._communityGatheringSeen) return false;
-      if (st.player.day < 730) return false;
+      if (st.player.day < 30) return false;
       // 需要住所
       if ((st.resources.housing || "").indexOf("homeless") >= 0) return false;
       return true;
@@ -80166,7 +79833,7 @@ if (typeof window !== "undefined") {
     story:
       "加完班回家，你在巷口碰见了熟悉的面孔。对方难得没在忙，一个人坐在台阶上抽烟/织毛衣。看到你，招了招手：\n\n「来，坐会儿。」\n\n也许是今晚太安静了，也许是你从来没问过——对方第一次讲起了自己的故事。那些年的不容易，那些没能实现的梦，那些放下又拿起来的执念。\n\n你听着，才发现这个每天跟你点头的人，原来也有一段人生。",
     conditions: function (st) {
-      // [Layer3] 叙事说"加完班回家"→必须有工作
+      // [Layer3] 叙事涉及加班，需有工作
       if (!st.career || !st.career.currentJob) return false;
       // [自洽修复] 检查是否有任意NPC好感≥80且已结识
       if (!st.relationships) return false;
@@ -80253,7 +79920,6 @@ if (typeof window !== "undefined") {
     conditions: function (st) {
       // [自洽修复] 检查玩家是否做过"归还钱包"的道德选择
       if (!st.flags) return false;
-      if (st.player.day < 730) return false;
       var didGoodDeed =
         st.flags._returnedWallet ||
         st.flags._returnedFoundMoney ||
@@ -80676,8 +80342,7 @@ if (typeof window !== "undefined") {
     story:
       "你坐在出租屋里，算了一笔账。\\n\\n从第一天来到这座城市起，你搬过砖、送过外卖、摆过摊、熬过夜、吃过亏、也赚过钱。\\n\\n那些¥20、¥50、¥100攒起来的数字，今天终于跨过了一个门槛——你在这座城市里，赚到了第一个一百万。\\n\\n不是存款，是流水。但这一百万，每一分都是你亲手挣的。",
     conditions: function (st) {
-      // [Layer3] 叙事说"你坐在出租屋里"→必须有住所
-      if (!st.housing || st.housing.tier < 1) return false;
+      if (!st.housing || st.housing.tier < 1) return false; // [Layer3] 叙事涉及出租屋
       if (!st.resources) return false;
       var totalEarned = st.resources.totalEarned || 0;
       if (totalEarned < 1000000) return false;
@@ -82535,7 +82200,7 @@ if (typeof window !== "undefined") {
     story:
       "两个组员为排期吵得面红耳赤，老板李总头疼地看你：‘你来说说？’\n\n你没急着站队，而是把两人的任务拆开一看——冲突根本不在人，在接口定义不清。",
     conditions: function (st) {
-      // [Layer3] 叙事提到"老板李总"→必须已结识 boss_li
+      // [Layer3] 叙事涉及李总
       if (!st.relationships || !st.relationships.boss_li || !st.relationships.boss_li.met) return false;
       // 检查 管理技能达到行家门槛
       var sk = st.skills && st.skills.management;
@@ -84134,7 +83799,7 @@ if (typeof window !== "undefined") {
       story:
         "你已经在这家公司待了三个月。今天加班到晚上九点，你站在写字楼的落地窗前，看着楼下的街道。\\n\\n街灯下，一个年轻人正蹲在路边吃炒面——就像你半年前的样子。\\n\\n手机震了一下，是老周发来的语音：「你小子现在混写字楼了？有空回来坐坐，废品站新收了台好收音机。」\\n\\n你笑了笑，没有立刻回复。\\n\\n这座城市还是那座城市。但你好像已经不是那个你了。",
       conditions: function (st) {
-        // [Layer3] 叙事说"老周发来的语音"→必须已结识 old_zhou
+        // [Layer3] 叙事/apply涉及老周
         if (!st.relationships || !st.relationships.old_zhou || !st.relationships.old_zhou.met) return false;
         return (
           st.player &&
@@ -84280,7 +83945,7 @@ if (typeof window !== "undefined") {
           st.player &&
           st.player.education >= 3 &&
           !(st.flags && st.flags._phdGradSeen) &&
-          st.player.day >= 1440
+          st.player.day >= 600
         );
       },
       probability: 0.4,
@@ -84346,7 +84011,7 @@ if (typeof window !== "undefined") {
       story:
         "深夜送完最后一批货，你抄小路往回开。\n\n导航显示前方有主路可走，但你凭直觉打了方向盘拐进一条黑漆漆的窄巷——果然，五分钟后远处传来主路交通事故的警笛声。\n\n这不是运气。跑了五年车，城市的每条路都刻在你脑子里。哪里有近道、哪个路口有摄像头、雨天哪段路会积水——身体自己就记住了。\n\n副座的年轻同事看呆了：「师父你怎么知道要绕路？」",
       conditions: function (st) {
-        // [Layer3] 叙事说"深夜送完最后一批货"→必须有工作
+        // [Layer3] 叙事涉及送完货
         if (!st.career || !st.career.currentJob) return false;
         return (
           st.skills &&
@@ -89200,7 +88865,6 @@ if (typeof window !== "undefined") {
         excludeFlags: ["_chengguanRaidPanicSeen"],
       },
       conditions: function (st) {
-        if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后不再触发街头惊魂
         if (!st.player.workTypeCounts || !st.player.workTypeCounts.stall || st.player.workTypeCounts.stall < 1) return false; // [Layer3]
         return st.chengguan && (st.chengguan.heat || 0) >= 60;
       },
@@ -93003,10 +92667,19 @@ if (typeof window !== "undefined") {
       story:
         "今天翻手机日历，忽然意识到：你来这座城，整整一年了。\n\n从火车站广场那个兜里只剩三百块的夜晚，到如今有了熟悉的早餐摊、常去的茶馆、几个能随时发消息的人——城市不再只是钢筋水泥，而是一本慢慢写满的通讯录。\n\n你想起这一年里帮过你、也被你帮过的人。",
       triggers: { minDay: 365, excludeFlags: ["_cityAnnivDone"] },
-      // [Layer3] 叙事说"从火车站广场那个兜里只剩三百块的夜晚"，此场景仅适用于"城市务工者"剧本
       conditions: function (st) {
-        if (!st.flags || !st.flags._scenarioId || st.flags._scenarioId !== "classic") return false;
-        return true;
+        var day = (st.player && st.player.day) || 0;
+        if (day < 365) return false;
+        var yearMark = Math.floor(day / 365);
+        // 每满一整年触发一次：记录已达成的周年数，避免每年反复弹
+        if (((st.flags && st.flags._cityAnnivYear) || 0) >= yearMark)
+          return false;
+        var rels = st.relationships || {};
+        var hasMet = Object.keys(rels).some(function (k) {
+          var r = rels[k];
+          return r && r.met;
+        });
+        return hasMet;
       },
       probability: 0.05, // [PLACEHOLDER] 触发率待 playtest
       repeatable: false,
@@ -99799,7 +99472,7 @@ if (typeof window !== "undefined") {
       icon: "🪞",
       title: "镜子前的自己",
       story:
-        "你面试回来站在镜子前。头发油腻腻地贴在额头上，衬衫皱了皱，领口还有一点没擦干净的咖啡渍。\\n\\n你不确定自己是不是变丑了。不，应该说——你确定自己已经很久没认真打扮过了。\\n\\n手机相册里翻到几个月前的照片，你都不认识那个人了。",
+        "你面试回来站在镜子前。头发油腻腻地贴在额头上，衬衫皱了皱，领口还有一点没擦干净的咖啡渍。\\n\\n你不确定自己是不是变丑了。不，应该说——你确定自己已经很久没认真打扮过了。\\n\\n手机相册里翻到半年前的照片，你都不认识那个人了。",
       // [全系统自洽修复] 域B 修复: personalGrowth.image 实际字段为{style,skincare,fitness,plastic}，原代码引用 appearance/grooming(不存在)→ NaN → 事件永不触发
       conditions: function (st) {
         if (!st.flags || !st.flags._lastInterviewDay) return false; // [Layer3]
@@ -149345,7 +149018,7 @@ function getActiveSynergiesCount(state) {
 // ====== 工具函数 ======
 
 /** 转义 HTML 特殊字符 */
-var _esc = _esc || function _esc(str) {
+function _esc(str) {
   if (!str) return "";
   return String(str)
     .replace(/&/g, "&amp;")
@@ -149353,7 +149026,7 @@ var _esc = _esc || function _esc(str) {
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;")
     .replace(/'/g, "&#39;");
-};
+}
 
 // ====== 种子期事件（注册后0-90天）======
 const STARTUP_EVENTS_SEED = [
@@ -149576,9 +149249,6 @@ const STARTUP_EVENTS_SEED = [
     industries: ["*"],
     title: "核心员工收到offer",
     desc: "你的一名核心员工收到了大厂的offer，薪资比你高50%。他来找你谈话。",
-    // [Layer3] 叙事说"你的一名核心员工收到了大厂的offer"，需玩家有员工
-    // [全系统自洽修复] 域H 修复:门控键 condition→conditions(triggerStartupEvent 只读复数,原为死门控) + st.company→st.startup.company(公司真实挂在 state.startup.company,原引用不存在字段恒 undefined→零员工也弹"被挖角"叙事矛盾)
-    conditions: function (st) { return st.startup && st.startup.company && st.startup.company.employees && st.startup.company.employees.length > 0; },
     options: [
       {
         text: "加薪留人",
@@ -150021,9 +149691,6 @@ const STARTUP_EVENTS_MATURE = [
     industries: ["*"],
     title: "核心团队成员离职创业",
     desc: "你的CTO/COO决定离职创业，而且方向和你高度重合。他邀请你投资。",
-    // [Layer3] 叙事说"你的CTO/COO决定离职创业"，但CTO/COO角色在系统中不存在，此为叙事超前问题，加条件防误触
-    // [全系统自洽修复] 域H 修复:门控键 condition→conditions(triggerStartupEvent 只读复数,原为死门控) + st.company→st.startup.company(原引用不存在字段→无员工时也误触"核心团队离职"叙事矛盾)
-    conditions: function (st) { return st.startup && st.startup.company && st.startup.company.employees && st.startup.company.employees.length >= 3; },
     options: [
       {
         text: "投资他，做战略投资",
@@ -150444,8 +150111,6 @@ function _applyStartupEffects(company, effects) {
     reputation: { clamp: true, min: 0, max: 100 },
     marketScore: { clamp: true, min: 0, max: 100 },
     technologyScore: { clamp: true, min: 0, max: 100 },
-    // [全系统自洽修复] 域H 修复:revenue 是公司真实字段(startup.js:1530/1754 KPI 评分读取),但原映射表遗漏→mature_second_curve 选项承诺的 +30000 营收被静默丢弃(数据与描述不符)
-    revenue: { clamp: true, min: 0, max: Infinity },
   };
   for (var key in effects) {
     if (!effects.hasOwnProperty(key) || key === "additionalEffect") continue;
@@ -170599,7 +170264,7 @@ const MORAL_EVENTS = [
         immediate: function (s) {
           // [联动flag] 触发"昧下钱包的阴影"后续事件
           s.flags.moralWalletStolen = true;
-          s.resources.cash = (s.resources.cash || 0) + 500; // [全系统自洽修复] 域B A类:cash NaN守卫
+          s.resources.cash += 500;
           s.needs.happiness = Math.min(100, s.needs.happiness + 8);
           StateManager.addMessage(
             "💵 你快速把钱塞进口袋，心跳加速地离开了。",
@@ -170612,10 +170277,9 @@ const MORAL_EVENTS = [
         flag: "moral_wallet_flaunt",
         score: -10,
         immediate: function (s) {
-          // [全系统自洽修复] 域B A类#2: moral_wallet_flaunt cash无守卫
-          s.resources.cash = (s.resources.cash || 0) + 500;
+          s.resources.cash += 500;
           s.player.fame = Math.min(100, (s.player.fame || 0) + 5);
-          s.needs.happiness = Math.min(100, (s.needs.happiness || 0) + 10);
+          s.needs.happiness = Math.min(100, s.needs.happiness + 10);
           StateManager.addMessage(
             "📱 朋友圈炸了，但你隐约觉得不太妥当...",
             "event",
@@ -170638,7 +170302,7 @@ const MORAL_EVENTS = [
         immediate: function (s) {
           // [联动flag] 触发"乞丐的线报"后续事件
           s.flags.moralFedBeggar = true;
-          s.resources.cash = Math.max(0, (s.resources.cash || 0) - 15); // [全系统自洽修复] 域B A类:cash NaN守卫
+          s.resources.cash -= 15;
           s.needs.happiness = Math.min(100, s.needs.happiness + 6);
           StateManager.addMessage("🎭 老人眼眶湿润，连声道谢。", "success");
         },
@@ -170648,7 +170312,7 @@ const MORAL_EVENTS = [
         flag: "moral_beggar_coin",
         score: 3,
         immediate: function (s) {
-          s.resources.cash = Math.max(0, (s.resources.cash || 0) - 2); // [全系统自洽修复] 域B A类:cash NaN守卫
+          s.resources.cash -= 2;
           s.needs.happiness = Math.max(0, s.needs.happiness - 1);
           StateManager.addMessage(
             "🪙 硬币叮当落入碗中，你没有多看一眼。",
@@ -170706,7 +170370,7 @@ const MORAL_EVENTS = [
         flag: "moral_change_keep",
         score: -8,
         immediate: function (s) {
-          s.resources.cash = (s.resources.cash || 0) + 20; // [全系统自洽修复] 域B A类:cash NaN守卫
+          s.resources.cash += 20;
           s.needs.happiness = Math.max(0, s.needs.happiness - 1);
           StateManager.addMessage("💵 你快速离开小店，¥20到手。", "info");
         },
@@ -170841,7 +170505,7 @@ const MORAL_EVENTS = [
         flag: "moral_phone_sell",
         score: -12,
         immediate: function (s) {
-          s.resources.cash = (s.resources.cash || 0) + 1500; // [全系统自洽修复] 域B A类:cash NaN守卫
+          s.resources.cash += 1500;
           s.needs.happiness = Math.min(100, s.needs.happiness + 5);
           StateManager.addMessage(
             "💰 二手店老板狐疑地看了你一眼，还是收了。",
@@ -170867,7 +170531,7 @@ const MORAL_EVENTS = [
         immediate: function (s) {
           // [联动flag] 触发"流浪狗再次相遇"后续事件
           s.flags.moralFedDog = true;
-          s.resources.cash = Math.max(0, (s.resources.cash || 0) - 3); // [全系统自洽修复] 域B A类:cash NaN守卫
+          s.resources.cash -= 3;
           s.needs.happiness = Math.min(100, s.needs.happiness + 8);
           StateManager.addMessage(
             "🐕 小狗狼吞虎咽地吃完，舔了舔你的手。",
@@ -170972,7 +170636,7 @@ const MORAL_EVENTS = [
         flag: "moral_bike_steal",
         score: -15,
         immediate: function (s) {
-          s.resources.cash = (s.resources.cash || 0) + Random.int(20, 40); // [全系统自洽修复] 域B A类:cash NaN守卫
+          s.resources.cash += Random.int(20, 40);
           s.needs.happiness = Math.min(100, Math.max(0, s.needs.happiness + 2));
           StateManager.addMessage(
             "💀 把车推到废品站卖了¥30，但你心里隐约觉得不太对。",
@@ -171117,7 +170781,7 @@ const MORAL_EVENTS = [
         flag: "moral_fraud_join",
         score: -15,
         immediate: function (s) {
-          s.resources.cash = (s.resources.cash || 0) + 200; // [全系统自洽修复] 域B A类:cash NaN守卫
+          s.resources.cash += 200;
           s.player.corporate.risk = Math.min(
             100,
             (s.player.corporate.risk || 0) + 15,
@@ -171163,7 +170827,7 @@ const MORAL_EVENTS = [
         score: -18,
         immediate: function (s) {
           var taken = Random.int(200, 500);
-          s.resources.cash = (s.resources.cash || 0) + taken; // [全系统自洽修复] 域B A类:cash NaN守卫
+          s.resources.cash += taken;
           s.needs.happiness = Math.min(100, s.needs.happiness + 5);
           StateManager.addMessage(
             "💸 你的手在发抖，取了¥" + taken + "赶紧离开了。",
@@ -171198,7 +170862,7 @@ const MORAL_EVENTS = [
         flag: "moral_cashier_return",
         score: 8,
         immediate: function (s) {
-          s.resources.cash = Math.max(0, (s.resources.cash || 0) - 30); // [全系统自洽修复] 域B A类:cash NaN守卫
+          s.resources.cash -= 30;
           s.needs.happiness = Math.min(100, s.needs.happiness + 5);
           StateManager.addMessage(
             "😊 收银员感激地说「你真是个好人！」",
@@ -171211,7 +170875,7 @@ const MORAL_EVENTS = [
         flag: "moral_cashier_keep",
         score: -5,
         immediate: function (s) {
-          s.resources.cash = (s.resources.cash || 0) + 30; // [全系统自洽修复] 域B A类:cash NaN守卫
+          s.resources.cash += 30;
           s.needs.happiness = Math.max(0, s.needs.happiness - 2);
           StateManager.addMessage(
             "😐 你安慰自己说「算了，就当是超市的失误。」",
@@ -171326,7 +170990,7 @@ const MORAL_EVENTS = [
         immediate: function (s) {
           // [全系统自洽修复] 域B A类#2: cash NaN 守卫 — 防止事件扣款永久损坏现金
           if (typeof s.resources.cash !== "number" || !isFinite(s.resources.cash)) s.resources.cash = 0;
-          s.resources.cash = Math.max(0, (s.resources.cash || 0) - Random.int(80, 150)); // [全系统自洽修复] 域B A类:cash NaN守卫
+          s.resources.cash -= Random.int(80, 150);
           s.resources.cash = Math.max(0, s.resources.cash);
           s.needs.happiness = Math.min(100, (s.needs.happiness || 50) + 10);
           s.player.fame = Math.min(100, (s.player.fame || 0) + 3);
@@ -171341,7 +171005,7 @@ const MORAL_EVENTS = [
         flag: "moral_cat_feed",
         score: 4,
         immediate: function (s) {
-          s.resources.cash = Math.max(0, (s.resources.cash || 0) - 5); // [全系统自洽修复] 域B A类:cash NaN守卫
+          s.resources.cash -= 5;
           s.needs.happiness = Math.min(100, s.needs.happiness + 2);
           StateManager.addMessage(
             "🐱 你放下吃的，小猫狼吞虎咽地吃起来。",
@@ -171389,7 +171053,7 @@ const MORAL_EVENTS = [
         score: -2,
         immediate: function (s) {
           var earned = Random.int(10, 20);
-          s.resources.cash = (s.resources.cash || 0) + earned; // [全系统自洽修复] 域B A类:cash NaN守卫
+          s.resources.cash += earned;
           s.needs.fatigue = Math.min(100, s.needs.fatigue + 3);
           StateManager.addMessage(
             "💰 他犹豫了一下，给了你¥" + earned + "。",
@@ -171502,7 +171166,7 @@ const MORAL_EVENTS = [
         flag: "moral_scan_honest",
         score: 6,
         immediate: function (s) {
-          s.resources.cash = Math.max(0, (s.resources.cash || 0) - 48); // [全系统自洽修复] 域B A类:cash NaN守卫
+          s.resources.cash -= 48;
           s.needs.happiness = Math.min(100, s.needs.happiness + 3);
           StateManager.addMessage(
             "🛒 你扫码付了巧克力的钱。诚信值+1。",
@@ -171548,7 +171212,7 @@ const MORAL_EVENTS = [
         flag: "moral_taxi_fix",
         score: 6,
         immediate: function (s) {
-          s.resources.cash = Math.max(0, (s.resources.cash || 0) - 2); // [全系统自洽修复] 域B A类:cash NaN守卫
+          s.resources.cash -= 2;
           s.needs.happiness = Math.min(100, s.needs.happiness + 4);
           s.player.fame = Math.min(100, (s.player.fame || 0) + 1);
           StateManager.addMessage(
@@ -171562,7 +171226,7 @@ const MORAL_EVENTS = [
         flag: "moral_taxi_keep",
         score: -3,
         immediate: function (s) {
-          s.resources.cash = (s.resources.cash || 0) + 2; // [全系统自洽修复] 域B A类:cash NaN守卫
+          s.resources.cash += 2;
           s.needs.happiness = Math.max(0, s.needs.happiness - 1);
           StateManager.addMessage(
             "🤐 你接过钱下了车。¥2而已，司机不会在意的...吧。",
@@ -171575,7 +171239,7 @@ const MORAL_EVENTS = [
         flag: "moral_taxi_tip",
         score: 8,
         immediate: function (s) {
-          s.resources.cash = Math.max(0, (s.resources.cash || 0) - 10); // [全系统自洽修复] 域B A类:cash NaN守卫
+          s.resources.cash -= 10;
           s.needs.happiness = Math.min(100, s.needs.happiness + 6);
           s.player.fame = Math.min(100, (s.player.fame || 0) + 2);
           StateManager.addMessage(
@@ -171653,8 +171317,8 @@ const MORAL_EVENTS = [
         flag: "moral_book_pay",
         score: 8,
         immediate: function (s) {
-          if ((s.resources.cash || 0) >= 68) {
-            s.resources.cash = Math.max(0, (s.resources.cash || 0) - 68); // [全系统自洽修复] 域B A类:cash NaN守卫
+          if (s.resources.cash >= 68) {
+            s.resources.cash -= 68;
             s.needs.happiness = Math.min(100, s.needs.happiness + 3);
             s.player.fame = Math.min(100, (s.player.fame || 0) + 2);
             StateManager.addMessage(
@@ -171686,8 +171350,8 @@ const MORAL_EVENTS = [
         flag: "moral_book_replace",
         score: 6,
         immediate: function (s) {
-          if ((s.resources.cash || 0) >= 68) {
-            s.resources.cash = Math.max(0, (s.resources.cash || 0) - 68); // [全系统自洽修复] 域B A类:cash NaN守卫
+          if (s.resources.cash >= 68) {
+            s.resources.cash -= 68;
             s.needs.happiness = Math.min(100, s.needs.happiness + 4);
             StateManager.addMessage(
               "📖 你买了新书还回去，管理员没发现区别——但你知道。",
@@ -171851,7 +171515,7 @@ const MORAL_EVENTS = [
     dailyChance: 0.03,
     condition: function (s) {
       if (!s.housing || s.housing.tier < 1) return false; // [Layer3]
-      return (s.resources.cash || 0) >= 200;
+      return s.resources.cash >= 200;
     },
     choices: [
       {
@@ -171859,7 +171523,7 @@ const MORAL_EVENTS = [
         flag: "moral_borrow_again",
         score: 5,
         immediate: function (s) {
-          s.resources.cash = Math.max(0, (s.resources.cash || 0) - 200); // [全系统自洽修复] 域B A类:cash NaN守卫
+          s.resources.cash -= 200;
           s.needs.happiness = Math.max(0, s.needs.happiness - 2);
           s.flags._neighborDebt = (s.flags._neighborDebt || 150) + 200;
           StateManager.addMessage(
@@ -171886,7 +171550,7 @@ const MORAL_EVENTS = [
         flag: "moral_borrow_iou",
         score: 8,
         immediate: function (s) {
-          s.resources.cash = Math.max(0, (s.resources.cash || 0) - 200); // [全系统自洽修复] 域B A类:cash NaN守卫
+          s.resources.cash -= 200;
           s.flags._neighborIOU = (s.flags._neighborIOU || 150) + 200;
           s.flags._neighborHasIOU = true;
           s.player.fame = Math.min(100, (s.player.fame || 0) + 2);
@@ -171918,7 +171582,7 @@ const MORAL_EVENTS = [
         flag: "moral_find_coin_keep",
         score: 2,
         immediate: function (s) {
-          s.resources.cash = (s.resources.cash || 0) + 3; // [全系统自洽修复] 域B A类:cash NaN守卫
+          s.resources.cash += 3;
           s.needs.happiness = Math.min(100, s.needs.happiness + 2);
           StateManager.addMessage("口袋里多了¥3，虽然不多但聊胜于无。", "info");
         },
@@ -171963,8 +171627,8 @@ const MORAL_EVENTS = [
         flag: "moral_rain_shelter_cafe",
         score: 3,
         immediate: function (s) {
-          if ((s.resources.cash || 0) >= 5) {
-            s.resources.cash = Math.max(0, (s.resources.cash || 0) - 5); // [全系统自洽修复] 域B A类:cash NaN守卫
+          if (s.resources.cash >= 5) {
+            s.resources.cash -= 5;
             s.needs.fatigue = Math.max(0, s.needs.fatigue - 10);
             s.needs.happiness = Math.min(100, s.needs.happiness + 5);
             StateManager.addMessage(
@@ -172036,7 +171700,7 @@ const MORAL_EVENTS = [
         flag: "moral_fellow_drink",
         score: 1,
         immediate: function (s) {
-          s.resources.cash = Math.max(0, (s.resources.cash || 0) - 3); // [全系统自洽修复] 域B A类:cash NaN守卫
+          s.resources.cash = Math.max(0, s.resources.cash - 3);
           s.needs.fatigue = Math.min(100, s.needs.fatigue + 8);
           s.needs.happiness = Math.min(100, s.needs.happiness + 8);
           StateManager.addMessage("两瓶啤酒下肚，心里那点疲惫都散了。", "info");
@@ -172158,8 +171822,6 @@ const EXTREME_MORAL_EVENTS = [
     title: "💊 药店柜台后的救命药",
     desc: "深夜药店只剩一个店员打盹。柜台后有一盒儿童退烧药，刚好是邻居孩子急需的那种，但你身上钱不够。",
     minDay: 18,
-    // [Layer3] 叙事说"邻居孩子急需"，需玩家有住所
-    condition: function (st) { return st.housing && st.housing.tier >= 1; },
     choices: [
       {
         text: "🧾 留下欠条，先拿药救人",
@@ -172229,10 +171891,6 @@ const EXTREME_MORAL_EVENTS = [
     title: "📋 同事伪造工时",
     desc: "你发现临时工同事虚报了三天工时。他说家里老人住院，求你别举报。举报有奖金，不举报你也可能被牵连。",
     minDay: 25,
-    condition: function (st) {
-      if (!st.career || !st.career.currentJob) return false; // [Layer3]
-      return true;
-    },
     choices: [
       {
         text: "📣 举报，拿制度说话",
@@ -172266,17 +171924,6 @@ const EXTREME_MORAL_EVENTS = [
     title: "🏚️ 邻居被赶出门",
     desc: "隔壁一家今晚交不上房租，房东把行李扔到走廊。你刚攒下几百块，明天也要交自己的房租。",
     minDay: 20,
-    // [全系统自洽修复] 域B 联动增强: 极端天气→邻里互助（G→B桥接，寒流/大雨天时触发率翻倍）
-    triggers: { excludeFlags: ["_extremeEvictionSeen"] },
-    conditions: function (st) {
-      if (!st.housing || st.housing.tier < 1) return false; // [Layer3]
-      if (st.flags && st.flags._extremeEvictionSeen) return false;
-      // 极端天气加成：-5℃以下或降雨时提高触发权重
-      if (st.weather && st.weather.temperature !== undefined && st.weather.temperature < -5) {
-        st._evtWeatherBonus = true;
-      }
-      return true;
-    },
     choices: [
       {
         text: "💸 借他们¥300先过夜",
@@ -172311,10 +171958,6 @@ const EXTREME_MORAL_EVENTS = [
     title: "🥫 快过期的临期食品",
     desc: "仓库主管让你把一批快过期的罐头贴上新日期，说卖出去就能给你分成。",
     minDay: 22,
-    condition: function (st) {
-      if (!st.career || !st.career.currentJob) return false; // [Layer3]
-      return true;
-    },
     choices: [
       {
         text: "🏷️ 照做，拿分成",
@@ -172348,8 +171991,6 @@ const EXTREME_MORAL_EVENTS = [
     title: "🏥 急诊队伍里的红包",
     desc: "医院急诊排队很长。有人悄悄告诉你，塞个红包可以提前进去。你的朋友正疼得发抖。",
     minDay: 28,
-    // [Layer3] 叙事说"你的朋友正疼得发抖"，需玩家有社交关系
-    condition: function (st) { return st.relationships && Object.keys(st.relationships).length > 0; },
     choices: [
       {
         text: "🧧 塞红包插队",
@@ -172383,10 +172024,6 @@ const EXTREME_MORAL_EVENTS = [
     title: "📱 欠薪证据",
     desc: "你拿到了包工头拖欠工人工资的聊天记录。公开会得罪人，私下卖给包工头可以换一笔封口费。",
     minDay: 30,
-    condition: function (st) {
-      if (!st.career || !st.career.currentJob) return false; // [Layer3]
-      return true;
-    },
     choices: [
       {
         text: "⚖️ 交给劳动监察",
@@ -172421,10 +172058,6 @@ const EXTREME_MORAL_EVENTS = [
     title: "🛏️ 救助站最后一张床",
     desc: "寒潮夜里，救助站只剩最后一张床位。你冻得发抖，门外还有一个更老的人。",
     minDay: 24,
-    condition: function (st) {
-      if (!st.weather || st.weather.temperature > 5) return false; // [Layer3]
-      return true;
-    },
     choices: [
       {
         text: "🛏️ 自己睡床，活过今晚最重要",
@@ -172459,10 +172092,6 @@ const EXTREME_MORAL_EVENTS = [
     title: "🧊 冰袋里的胰岛素",
     desc: "外卖箱里有一份误送的胰岛素。平台说找不到客户地址，超时会罚你钱。",
     minDay: 26,
-    condition: function (st) {
-      if (!st.career || !st.career.currentJob) return false; // [Layer3]
-      return true;
-    },
     choices: [
       {
         text: "🏃 自己查电话送回去",
@@ -172529,8 +172158,6 @@ const EXTREME_MORAL_EVENTS = [
     title: "🎒 借学费的孩子",
     desc: "楼下孩子拿着缴费单，说妈妈电话打不通，明天不交就不能参加春游。你知道这可能只是大人教他的借口。",
     minDay: 20,
-    // [Layer3] 叙事说"楼下孩子"，需玩家有住所
-    condition: function (st) { return st.housing && st.housing.tier >= 1; },
     choices: [
       {
         text: "💳 帮他垫¥180",
@@ -172597,8 +172224,6 @@ const EXTREME_MORAL_EVENTS = [
     title: "🩸 血库告急",
     desc: "医院门口贴着急需献血的通知，血型刚好和你一样。你今天还要干体力活，献血可能影响收入。",
     minDay: 25,
-    // [Layer3] 叙事说"你今天还要干体力活"，需玩家有工作
-    condition: function (st) { return st.career && st.career.currentJob; },
     choices: [
       {
         text: "🩸 献血救急",
@@ -172696,10 +172321,6 @@ const EXTREME_MORAL_EVENTS = [
     title: "🏗️ 工地安全事故",
     desc: "工地脚手架松动差点砸到人。负责人让你别说出去，今天给你双倍工资。",
     minDay: 30,
-    condition: function (st) {
-      if (!st.career || !st.career.currentJob) return false; // [Layer3]
-      return true;
-    },
     choices: [
       {
         text: "💰 拿双倍工资闭嘴",
@@ -172764,10 +172385,6 @@ const EXTREME_MORAL_EVENTS = [
     title: "💾 一份客户名单",
     desc: "兼职公司把客户手机号和住址表发错给了你。有人愿意花¥1000买这份名单。",
     minDay: 26,
-    condition: function (st) {
-      if (!st.sideHustle || !st.sideHustle.active) return false; // [Layer3]
-      return true;
-    },
     choices: [
       {
         text: "🧹 删除文件并提醒公司",
@@ -172846,18 +172463,15 @@ for (var emi = 0; emi < EXTREME_MORAL_EVENTS.length; emi++) {
       desc: eventDef.desc,
       minDay: eventDef.minDay || 10,
       dailyChance: eventDef.dailyChance || 0.025,
-      condition: eventDef.condition, // [Layer3] pass through
       choices: eventDef.choices.map(function (choiceDef) {
-        return (function (cd) {
-          return {
-            text: cd.text,
-            flag: cd.flag,
-            score: cd.score,
-            immediate: function (state) {
-              applyExtremeMoralDelta(state, cd);
-            },
-          };
-        })(choiceDef);
+        return {
+          text: choiceDef.text,
+          flag: choiceDef.flag,
+          score: choiceDef.score,
+          immediate: function (state) {
+            applyExtremeMoralDelta(state, choiceDef);
+          },
+        };
       }),
     });
   })(EXTREME_MORAL_EVENTS[emi]);
@@ -172893,7 +172507,7 @@ const MORAL_CONSEQUENCES = {
       return "你收到了一封信：失主通过派出所联系到你，原来他是一家科技公司的HR，附了一张¥200购物卡和一张名片。";
     },
     apply: function (s) {
-      s.resources.cash = (s.resources.cash || 0) + 200; // [全系统自洽修复] 域B A类:cash NaN守卫
+      s.resources.cash += 200;
       s.needs.happiness = Math.min(100, s.needs.happiness + 10);
       s.player.fame = Math.min(100, (s.player.fame || 0) + 5);
       StateManager.addMessage(
@@ -172943,7 +172557,7 @@ const MORAL_CONSEQUENCES = {
     apply: function (s) {
       var val = Random.int(100, 300);
       s.needs.happiness = Math.min(100, s.needs.happiness + 8);
-      s.resources.cash = (s.resources.cash || 0) + val; // [全系统自洽修复] 域B A类:cash NaN守卫
+      s.resources.cash += val;
       StateManager.addMessage(
         "🎨 老乞丐送你的字画卖了¥" + val + "！他说「好人会有好报」。",
         "success",
@@ -172958,7 +172572,7 @@ const MORAL_CONSEQUENCES = {
       return "再去那家小卖部时，老板对你特别热情，说你是少见的老实人。以后来买东西都给你抹零。";
     },
     apply: function (s) {
-      s.resources.cash = (s.resources.cash || 0) + 30; // [全系统自洽修复] 域B A类:cash NaN守卫
+      s.resources.cash += 30;
       StateManager.addMessage(
         "🏪 老板塞给你一包零食：「你这样的年轻人不多了。」",
         "success",
@@ -172973,7 +172587,7 @@ const MORAL_CONSEQUENCES = {
       return "被偷的那位女士辗转找到你，带了水果和¥200现金来感谢你的见义勇为。";
     },
     apply: function (s) {
-      s.resources.cash = (s.resources.cash || 0) + 200; // [全系统自洽修复] 域B A类:cash NaN守卫
+      s.resources.cash += 200;
       s.player.fame = Math.min(100, (s.player.fame || 0) + 8);
       s.needs.happiness = Math.min(100, s.needs.happiness + 8);
       StateManager.addMessage(
@@ -173016,7 +172630,7 @@ const MORAL_CONSEQUENCES = {
       return "市场监督来了！有人举报你缺斤短两。你被罚款并且被要求整改。";
     },
     apply: function (s) {
-      s.resources.cash = Math.max(0, (s.resources.cash || 0) - 200); // [全系统自洽修复] 域B A类:cash NaN守卫
+      s.resources.cash -= 200;
       s.player.fame = Math.max(0, (s.player.fame || 0) - 10);
       s.needs.happiness = Math.max(0, s.needs.happiness - 10);
       StateManager.addMessage("⚠️ 市监局突检！被罚¥200。", "danger");
@@ -173285,7 +172899,7 @@ const MORAL_CONSEQUENCES = {
       return "有次你在路边等车，上次那个出租车司机正好经过，认出了你，主动停下说「顺路带你一程，免费的！」";
     },
     apply: function (s) {
-      s.resources.cash = (s.resources.cash || 0) + 20; // [全系统自洽修复] 域B A类:cash NaN守卫
+      s.resources.cash += 20;
       s.needs.happiness = Math.min(100, s.needs.happiness + 5);
       StateManager.addMessage(
         "🚕 司机正好顺路，免费捎了你一段！省了¥20。",
@@ -173359,7 +172973,7 @@ const MORAL_CONSEQUENCES = {
       return "图书馆发来短信：您归还的图书有严重污损，请尽快到馆处理赔偿事宜。逾期将影响信用记录。";
     },
     apply: function (s) {
-      s.resources.cash = Math.max(0, (s.resources.cash || 0) - 68); // [全系统自洽修复] 域B A类:cash NaN守卫
+      s.resources.cash -= 68;
       s.needs.happiness = Math.max(0, s.needs.happiness - 6);
       s.player.fame = Math.max(0, (s.player.fame || 0) - 2);
       StateManager.addMessage(
@@ -173392,7 +173006,7 @@ const MORAL_CONSEQUENCES = {
       return "几天后两个穿制服的人敲了你的门——巷子里有监控。车主报了警，监控拍到了你的背影。";
     },
     apply: function (s) {
-      s.resources.cash = Math.max(0, (s.resources.cash || 0) - 300); // [全系统自洽修复] 域B A类:cash NaN守卫
+      s.resources.cash -= 300;
       s.player.fame = Math.max(0, (s.player.fame || 0) - 5);
       s.needs.happiness = Math.max(0, s.needs.happiness - 10);
       StateManager.addMessage(
@@ -173411,7 +173025,7 @@ const MORAL_CONSEQUENCES = {
     apply: function (s) {
       s.player.fame = Math.min(100, (s.player.fame || 0) + 8);
       s.needs.happiness = Math.min(100, s.needs.happiness + 10);
-      s.resources.cash = (s.resources.cash || 0) + 100; // [全系统自洽修复] 域B A类:cash NaN守卫
+      s.resources.cash += 100;
       StateManager.addMessage(
         "📰 社区给了¥100奖励和一面锦旗！老奶奶的家人也打来电话道谢。",
         "success",
@@ -173442,7 +173056,7 @@ const MORAL_CONSEQUENCES = {
     },
     apply: function (s) {
       var total = s.flags._neighborDebt || 350;
-      s.resources.cash = (s.resources.cash || 0) + total; // [全系统自洽修复] 域B A类:cash NaN守卫
+      s.resources.cash += total;
       s.needs.happiness = Math.min(100, s.needs.happiness + 8);
       StateManager.addMessage(
         "💸 邻居还了¥" + total + "！他找了份新工作，说谢谢你当时的信任。",
@@ -173532,7 +173146,7 @@ const MORAL_CONSEQUENCES = {
       return "你抽屉里那张借条——对方主动联系，把钱还给了你，还多塞了一盒水果。「写借条这事让我重新审视了自己。」他说。";
     },
     apply: function (s) {
-      s.resources.cash = (s.resources.cash || 0) + 500; // [全系统自洽修复] 域B A类:cash NaN守卫
+      s.resources.cash += 500;
       s.player.fame = Math.min(100, (s.player.fame || 0) + 3);
       s.needs.happiness = Math.min(100, s.needs.happiness + 5);
       StateManager.addMessage("💰 朋友还了¥500，还多了一份信任。", "success");
@@ -173620,7 +173234,7 @@ const MORAL_CONSEQUENCES = {
       return "你发的那条朋友圈被转发了上百次，有人私信感谢你说她母亲差点被骗，多亏看到提醒才没转账。";
     },
     apply: function (s) {
-      s.resources.cash = (s.resources.cash || 0) + 100; // [全系统自洽修复] 域B A类:cash NaN守卫
+      s.resources.cash += 100;
       s.needs.happiness = Math.min(100, s.needs.happiness + 12);
       s.player.fame = Math.min(100, (s.player.fame || 0) + 6);
       s.flags.moral = s.flags.moral || {};
@@ -174536,7 +174150,7 @@ if (typeof window !== "undefined") {
     priority: 65,
     conditions: function (st) {
       if (!st.corporate || !st.corporate.active) return false;
-      if (st.flags._geekBrilliantCooldown && (st.player.day || 0) < st.flags._geekBrilliantCooldown) return false; // 90天冷却
+      if (st.flags && st.flags._geekBrilliantCooldown && (st.player.day || 0) < st.flags._geekBrilliantCooldown) return false; // [全系统自洽修复] 域H A类: st.flags 守卫
       var rankData = st.corporate.rank ? CORP_RANKS[st.corporate.rank] : null;
       if (!rankData || !rankData.canManageTeam) return false;
       if (!st.corporate.team || st.corporate.team.length === 0) return false;
@@ -174573,7 +174187,7 @@ if (typeof window !== "undefined") {
     priority: 70,
     conditions: function (st) {
       if (!st.corporate || !st.corporate.active) return false;
-      if (st.flags._warriorBurnoutDone) return false; // 一次性事件
+      if (st.flags && st.flags._warriorBurnoutDone) return false; // [全系统自洽修复] 域H A类: st.flags 守卫
       var rankData = st.corporate.rank ? CORP_RANKS[st.corporate.rank] : null;
       if (!rankData || !rankData.canManageTeam) return false;
       if (!st.corporate.team || st.corporate.team.length === 0) return false;
@@ -174632,7 +174246,7 @@ if (typeof window !== "undefined") {
     priority: 60,
     conditions: function (st) {
       if (!st.corporate || !st.corporate.active) return false;
-      if (st.flags._gradQuitCooldown && (st.player.day || 0) < st.flags._gradQuitCooldown) return false; // 90天冷却
+      if (st.flags && st.flags._gradQuitCooldown && (st.player.day || 0) < st.flags._gradQuitCooldown) return false; // [全系统自洽修复] 域H A类: st.flags 守卫
       var rankData = st.corporate.rank ? CORP_RANKS[st.corporate.rank] : null;
       if (!rankData || !rankData.canManageTeam) return false;
       if (!st.corporate.team || st.corporate.team.length === 0) return false;
@@ -186242,18 +185856,6 @@ const DAILY_PIPELINE = [
         0,
         Math.min(100, state.needs.happiness - 3 + (house.happinessBonus || 0)),
       );
-      // [全系统自洽修复] 域A 修复: 住所tier5/6特效接入（healthRecovery/skillStudyBonus/npcVisitBonus/fameGain 原定义但从未消费）
-      if (house.effects) {
-        if (house.effects.healthRecovery) {
-          state.player.health = Math.min(100, (state.player.health || 0) + house.effects.healthRecovery);
-        }
-        if (house.effects.fameGain) {
-          state.player.fame = Math.min(100, (state.player.fame || 0) + house.effects.fameGain);
-        }
-        // skillStudyBonus/npcVisitBonus 存入状态供技能训练/NPC互动读取
-        state._housingSkillStudyBonus = house.effects.skillStudyBonus || 0;
-        state._housingNpcVisitBonus = house.effects.npcVisitBonus || 0;
-      }
       // 王大婶好感30解锁每日带饭（饥饱+15）
       if (state.flags.auntWangMeal) {
         state.needs.hunger = Math.min(100, state.needs.hunger + 15);
@@ -186314,7 +185916,7 @@ const DAILY_PIPELINE = [
           rentAmount -= 50;
         }
         if (state.resources.cash >= rentAmount) {
-          state.resources.cash -= rentAmount; // [全系统自洽修复] 域G A类: cash NaN防御（已由 day_increment 步骤重置NaN）
+          state.resources.cash -= rentAmount;
           addDailyTransaction(
             state,
             "expense",
@@ -186639,25 +186241,7 @@ const DAILY_PIPELINE = [
         if (result && result.wealthTax > 0) {
           state.resources.cash = Math.max(0, (state.resources.cash || 0) - result.wealthTax);
         }
-        // [全系统自洽修复] 域A R171 A→G 联动增强: 经济日报概要
-        if (result && typeof StateManager !== "undefined") {
-          var _ecoMsgs = [];
-          if (result.wealthTax > 500) {
-            _ecoMsgs.push("💰 今日财富税 ¥" + result.wealthTax.toLocaleString() + "（" + (result.activeTaxTier || "未达") + "档）");
-          }
-          if (result.loanRate && result.loanRate > 0.001) {
-            _ecoMsgs.push("🏦 当前贷款利率 " + (result.loanRate * 100).toFixed(2) + "%/日");
-          }
-          if (result.marketSaturationPenalty > 0) {
-            _ecoMsgs.push("📉 市场饱和度 " + result.marketSaturationPenalty.toFixed(0) + "%");
-          }
-          if (_ecoMsgs.length > 0 && _ecoMsgs[0]) {
-            StateManager.addMessage(_ecoMsgs.join(" · "), "info");
-          }
-        }
       }
-      // [全系统自洽修复] 域E A类#1: economy_v3_1_daily返回marketSaturationPenalty但未写回state._economySettlement，导致tickInvestmentDaily永远读不到
-      state._economySettlement = typeof result === "object" ? result : {};
     },
   },
 
@@ -187457,11 +187041,11 @@ const DAILY_PIPELINE = [
             bonusMult: Math.round(bonusMult * 100) / 100,
           };
           StateManager.addMessage(
-            "🔥 今日热招（日结）：" +
+            "🔥 今日热招：" +
               hotJob.name +
               "！工价×" +
               bonusMult.toFixed(1) +
-              "，仅限今天！去⚡行动页找到它",
+              "，仅限今天！",
             "event",
           );
         }
@@ -187908,7 +187492,6 @@ const DAILY_PIPELINE = [
     name: "npc_trade_info_share",
     fn: function (state) {
       if (typeof tryTriggerNPCInfoShare !== "function") return;
-      if (typeof NPC_TRADE_INFO === "undefined" || !NPC_TRADE_INFO) return;
       // 遍历所有NPC，看是否有主动分享
       for (var npcId in NPC_TRADE_INFO) {
         if (!NPC_TRADE_INFO.hasOwnProperty(npcId)) continue;
@@ -229490,6 +229073,36 @@ function renderMessageLog(state) {
     if (tb) tb.textContent = "📌 展开";
   }
 
+  // [全系统自洽修复] 域F 联动增强: 消息记录类型过滤（F→B 帮助玩家快速定位事件/收入/系统消息）
+  var _logFilter = state._logFilter || "all";
+  if (headerEl && !headerEl.querySelector("#message-log-filter")) {
+    var filterWrap = document.createElement("span");
+    filterWrap.id = "message-log-filter";
+    filterWrap.style.cssText = "display:inline-flex;gap:2px;margin-left:6px;";
+    var _filters = [
+      { id: "all", label: "全部" },
+      { id: "event", label: "🎭" },
+      { id: "success", label: "✅" },
+      { id: "warning", label: "⚠️" },
+    ];
+    for (var _fi = 0; _fi < _filters.length; _fi++) {
+      (function (f) {
+        var fb = document.createElement("button");
+        fb.className = "btn btn-sm";
+        fb.style.cssText = "padding:1px 5px;font-size:10px;min-width:auto;";
+        fb.textContent = f.label;
+        fb.title = "过滤: " + f.id;
+        if (_logFilter === f.id) fb.style.borderColor = "var(--accent)";
+        fb.onclick = function () {
+          state._logFilter = f.id;
+          renderMessageLog(state);
+        };
+        filterWrap.appendChild(fb);
+      })(_filters[_fi]);
+    }
+    headerEl.appendChild(filterWrap);
+  }
+
   var msgs = (state && state.messageLog) || [];
   // 显示全部记录（state.js 自动限制在300条以内，不再额外截断）
   var recent = msgs;
@@ -229497,6 +229110,8 @@ function renderMessageLog(state) {
   for (var i = recent.length - 1; i >= 0; i--) {
     var m = recent[i];
     var cls = m.type || "info";
+    // 类型过滤
+    if (_logFilter !== "all" && cls !== _logFilter) continue;
     var dayStr = m.day ? "<span class='log-day'>D" + m.day + "</span>" : "";
     var txt = String(m.text || "")
       .replace(/</g, "&lt;")
@@ -233435,7 +233050,7 @@ var _SCENARIO_STEP_OVERRIDES = {
         <p style="color:var(--text-secondary);font-size:11px;">你有修理 Lv.25+焊接 Lv.25，技能单价远高于纯体力活。</p>
         <p style="color:var(--success);font-size:12px;margin-top:6px;">👆 直接点击高亮处的 <strong>工作卡片</strong> 继续</p>
       `,
-      highlight: "#content-area .action-cards:first-child",
+      highlight: "#content-area .action-cards .action-card:first-child",
       waitForClick: "#content-area .action-cards a, #content-area .action-card",
       hint: "行动卡片列表里的第一项就是你的第一个工作机会。",
     },
@@ -233528,7 +233143,7 @@ var _SCENARIO_STEP_OVERRIDES = {
         <p style="color:var(--text-secondary);font-size:11px;">你有编程 Lv.10+英语 Lv.18，灵活运用这些技能。</p>
         <p style="color:var(--success);font-size:12px;margin-top:6px;">👆 点击高亮处的 <strong>工作卡片</strong> 开始</p>
       `,
-      highlight: "#content-area .action-cards:first-child",
+      highlight: "#content-area .action-cards .action-card:first-child",
       waitForClick: "#content-area .action-cards a, #content-area .action-card",
       hint: "行动卡片列表里能看到当前地点所有可做的工作。",
     },
@@ -233620,7 +233235,7 @@ var _SCENARIO_STEP_OVERRIDES = {
         <p style="color:var(--text-secondary);font-size:11px;">工厂流水线稳定可靠，日结现金，适合起步。</p>
         <p style="color:var(--success);font-size:12px;margin-top:6px;">👆 点击高亮处的 <strong>工作卡片</strong> 开始</p>
       `,
-      highlight: "#content-area .action-cards:first-child",
+      highlight: "#content-area .action-cards .action-card:first-child",
       waitForClick: "#content-area .action-cards a, #content-area .action-card",
       hint: "行动卡片列表第一项就是你能做的工作。",
     },
@@ -233714,7 +233329,7 @@ var _SCENARIO_STEP_OVERRIDES = {
         <p style="color:var(--text-secondary);font-size:11px;">第一周不赚钱也没关系，你的任务是学习市场。</p>
         <p style="color:var(--success);font-size:12px;margin-top:6px;">👆 点击高亮处的 <strong>行动卡片</strong> 开始了解市场</p>
       `,
-      highlight: "#content-area .action-cards:first-child",
+      highlight: "#content-area .action-cards .action-card:first-child",
       waitForClick: "#content-area .action-cards a, #content-area .action-card",
       hint: "行动卡片列表里能找到当前可做的事。",
     },
@@ -233806,7 +233421,7 @@ var _SCENARIO_STEP_OVERRIDES = {
         <p style="color:var(--text-secondary);font-size:11px;">编程 Lv.30+管理 Lv.25 可以直接接单变现，不等入职。</p>
         <p style="color:var(--success);font-size:12px;margin-top:6px;">👆 点击高亮处的 <strong>工作卡片</strong> 开始</p>
       `,
-      highlight: "#content-area .action-cards:first-child",
+      highlight: "#content-area .action-cards .action-card:first-child",
       waitForClick: "#content-area .action-cards a, #content-area .action-card",
       hint: "你目前所在地点的行动卡片就在下方。",
     },
@@ -233898,7 +233513,7 @@ var _SCENARIO_STEP_OVERRIDES = {
         <p style="color:var(--text-secondary);font-size:11px;">有编程基础，可以优先找与IT相关的入门工作。</p>
         <p style="color:var(--success);font-size:12px;margin-top:6px;">👆 点击高亮处的 <strong>工作卡片</strong> 开始</p>
       `,
-      highlight: "#content-area .action-cards:first-child",
+      highlight: "#content-area .action-cards .action-card:first-child",
       waitForClick: "#content-area .action-cards a, #content-area .action-card",
       hint: "行动卡片就在下方，选择你能做的工作。",
     },
@@ -241783,7 +241398,9 @@ function buildReportHTML(txs, state, reconcileInfo) {
       bodyHtml += '<div class="daily-report-npc" style="padding:6px 0;margin:2px 0 4px;border-top:1px solid var(--border);font-size:11px;color:var(--text-muted);">';
       bodyHtml += '<span style="font-weight:bold;font-size:11px;">👥 城中见闻</span>';
       for (var _ui = 0; _ui < _count; _ui++) {
-        bodyHtml += '<div style="padding:2px 0;">' + _npcUpdates[_ui].name + '：' + _npcUpdates[_ui].line + '</div>';
+        // [全系统自洽修复] 域F 联动增强: 日报NPC近况可点击跳转社交Tab（F→D 提升社交触达）
+        var _npcNameEsc = escapeHtml(_npcUpdates[_ui].name);
+        bodyHtml += '<div style="padding:2px 0;"><span style="color:var(--accent);cursor:pointer;text-decoration:underline;" onclick="if(typeof navigateTo===\'function\')navigateTo(null,{type:\'tab\',tab:\'social\'});">' + _npcNameEsc + '</span>：' + escapeHtml(_npcUpdates[_ui].line) + '</div>';
       }
       bodyHtml += '</div>';
     }
@@ -249845,9 +249462,9 @@ if (typeof window !== "undefined") {
         "margin-top:7px;font-size:11px;color:var(--success);font-weight:600;";
       celebrate.textContent = "🎉 当前目标全部达成！继续前进，等待下一阶段。";
       card.appendChild(celebrate);
-      // 每日首次全达成给小额奖励
-      if (!state.flags._dailyQuestRewardCollected) {
-        state.flags._dailyQuestRewardCollected = true;
+      // [全系统自洽修复] 域F 修复: 每日目标奖金改为按天发放（原flag终身只触发一次，导致后续天数有庆祝无奖励）
+      if (state.flags._dailyQuestRewardCollectedDay !== state.player.day) {
+        state.flags._dailyQuestRewardCollectedDay = state.player.day;
         var reward = 50 + quests.length * 10;
         state.resources.cash = (state.resources.cash || 0) + reward;
         if (typeof addDailyTransaction === "function") {
@@ -251139,18 +250756,6 @@ function checkJobRequirements(job, state) {
     return `销售技能不足 (需要${reqs.sales})`;
   if (reqs.english && s.english.level < reqs.english)
     return `英语技能不足 (需要${reqs.english})`;
-  if (reqs.coding && s.coding.level < reqs.coding)
-    return `编程技能不足 (需要${reqs.coding})`;
-  if (reqs.driving && s.driving.level < reqs.driving)
-    return `驾驶技能不足 (需要${reqs.driving})`;
-  if (reqs.management && s.management.level < reqs.management)
-    return `管理技能不足 (需要${reqs.management})`;
-  if (reqs.accounting && s.accounting.level < reqs.accounting)
-    return `会计技能不足 (需要${reqs.accounting})`;
-  if (reqs.electrician && s.electrician.level < reqs.electrician)
-    return `电工技能不足 (需要${reqs.electrician})`;
-  if (reqs.welding && s.welding.level < reqs.welding)
-    return `焊接技能不足 (需要${reqs.welding})`;
   if (job.requiredFlag && !state.flags[job.requiredFlag])
     return "尚未解锁（需要NPC好感度）";
   if (job.educationRequired && (p.education || 0) < job.educationRequired) {
@@ -251305,10 +250910,6 @@ function estimateJobPay(job, state) {
       var wageMult = getDifficultyMultiplier(state, "wage");
       if (wageMult !== 1.0) pay = Math.floor(pay * wageMult);
     }
-    // 天气修正
-    if (typeof getWeatherWorkMod === "function") {
-      pay = Math.floor(pay * getWeatherWorkMod(state));
-    }
     total += pay;
   }
   return Math.floor(total / 10);
@@ -251385,14 +250986,6 @@ function estimateJobPayDetailed(job, state) {
     if (suiteMulti !== 1.0) {
       tags.push("🎯+" + Math.round((suiteMulti - 1) * 100) + "%");
       base = Math.floor(base * suiteMulti);
-    }
-  }
-  // 天气修正（户外工作收入受天气影响）
-  if (typeof getWeatherWorkMod === "function") {
-    var weatherMult = getWeatherWorkMod(state);
-    if (weatherMult < 1.0) {
-      tags.push("🌧️" + Math.round((weatherMult - 1) * 100) + "%");
-      base = Math.floor(base * weatherMult);
     }
   }
   // 连击加成
@@ -253401,17 +252994,6 @@ function getAvailableActions(state) {
   const actions = [];
 
   // 提升为函数级变量（用 let，块内可重新指向用 const）
-  if (!state.trade || !state.trade.currentLocation) {
-    actions.push({
-      id: "no_location",
-      category: "other",
-      name: "当前位置不可用",
-      desc: "游戏状态异常，尝试旅行到一个地点。",
-      icon: "🚫",
-      disabled: true,
-    });
-    return actions;
-  }
   const locKey = state.trade.currentLocation;
 
   if (state.player.phase === "street") {
@@ -253581,7 +253163,7 @@ function getAvailableActions(state) {
         reqFail: !canAfford ? "需 ¥" + house.cost : null,
         handler: (function (tier, h) {
           return function () {
-            state.resources.cash = (state.resources.cash || 0) - h.cost; // [全系统自洽修复] 域G A类: cash NaN防御
+            state.resources.cash -= h.cost;
             state.housing.tier = tier;
             state.housing.rentedDay = state.player.day;
             state.inventory.capacity =
@@ -253645,7 +253227,7 @@ function getAvailableActions(state) {
             disabled: !canAfford,
             reqFail: !canAfford ? `需 ¥${opt.cost}` : null,
             handler: () => {
-              state.resources.cash = (state.resources.cash || 0) - opt.cost; // [全系统自洽修复] 域G A类: cash NaN防御
+              state.resources.cash -= opt.cost;
               state.housing.storageRented = true;
               state.housing.storageCapacity = opt.capacity;
               // [全系统自洽修复] 域G A类修复: housing.tier 上限扩容至 6
@@ -253704,7 +253286,7 @@ function getAvailableActions(state) {
           costEstimate: pack.cost,
           disabled: !canAfford,
           handler: () => {
-            state.resources.cash = (state.resources.cash || 0) - pack.cost; // [全系统自洽修复] 域G A类: cash NaN防御
+            state.resources.cash -= pack.cost;
             state.inventory.items.push({ id: pack.id, qty: 1 });
             state.inventory.capacity += pack.capacity;
             StateManager.addMessage(
@@ -254435,7 +254017,7 @@ function getAvailableActions(state) {
       apCost: 10,
       costEstimate: 15,
       effectEstimate: "饥饱+35, 心情+8",
-      disabled: (state.resources.cash || 0) < 8 ? true : false,
+      disabled: state.resources.cash < 8 ? true : false,
       handler: () => {
         const st = StateManager.getState();
         const isNewbie = st.player.day <= 10;
@@ -254467,7 +254049,7 @@ function getAvailableActions(state) {
           cookHint = `（烹饪Lv${cookingLvl}省了¥${saved}）`;
         }
 
-        st.resources.cash = (st.resources.cash || 0) - foodCost;
+        st.resources.cash -= foodCost;
         addDailyTransaction(
           st,
           "expense",
@@ -254494,14 +254076,14 @@ function getAvailableActions(state) {
       icon: "🚿",
       costEstimate: 8,
       effectEstimate: "卫生+40",
-      disabled: (state.resources.cash || 0) < 8 ? true : false,
+      disabled: state.resources.cash < 8 ? true : false,
       handler: () => {
         const st = StateManager.getState();
         if ((st.resources.cash || 0) < 8) {
           StateManager.addMessage("⚠️ 不够钱洗澡。", "danger");
           return;
         }
-        st.resources.cash = (st.resources.cash || 0) - 8;
+        st.resources.cash -= 8;
         st.needs.hygiene = Math.min(100, st.needs.hygiene + 40);
         StateManager.addMessage("🚿 洗了个澡，神清气爽。", "success");
         consumeAP(10);
@@ -254572,10 +254154,8 @@ function getAvailableActions(state) {
         disabled: (state.resources.cash || 0) < 50 ? true : false,
         handler: () => {
           const st = StateManager.getState();
-          st.resources.cash = Math.max(0, (st.resources.cash || 0) - 50);
-          // [全系统自洽修复] 域G A类#2: 医院看病缺 status 守卫 → NaN传播
-          if (!st.status) st.status = {};
-          st.status.health = Math.min(100, (st.status.health || 50) + 40);
+          st.resources.cash -= 50;
+          st.status.health = Math.min(100, st.status.health + 40);
           st.status.injured = false;
           // v3.1：医院治疗同时清除疾病数组（兼容illness.js疾病系统）
           if (st.status.illnesses && st.status.illnesses.length > 0) {
@@ -254831,7 +254411,7 @@ function getAvailableActions(state) {
         id: "cert_" + cert.id,
         category: "education",
         name: `考取${cert.name}`,
-        desc: `${cert.desc} 费用:¥${cert.requirements.cash} 通过率:${Math.round(cert.examPassRate * 100)}%${cert.trainingDays ? " 培训:" + cert.trainingDays + "天" : ""}`, // [全系统自洽修复] 域A 联动增强: certificate trainingDays接入UI展示（原定义但从未展示）
+        desc: `${cert.desc} 费用:¥${cert.requirements.cash} 通过率:${Math.round(cert.examPassRate * 100)}%`,
         icon: "📜",
         costEstimate: cert.requirements.cash,
         disabled: !canAfford,
@@ -254839,7 +254419,7 @@ function getAvailableActions(state) {
         handler: () => {
           if (Random.chance(cert.examPassRate)) {
             state.certificates.push(cert.id);
-            state.resources.cash = (state.resources.cash || 0) - (cert.requirements.cash || 0); // [全系统自洽修复] 域G A类: cash NaN防御
+            state.resources.cash -= cert.requirements.cash;
             if (cert.effects.codingXp)
               addSkillXp("coding", cert.effects.codingXp);
             if (cert.effects.englishXp)
@@ -254876,23 +254456,12 @@ function getAvailableActions(state) {
               addSkillXp("cooking", cert.effects.foodHandlingXp); // 食安→烹饪
             if (cert.effects.psychologyXp)
               addSkillXp("social", cert.effects.psychologyXp); // 心理→社交
-            // [全系统自洽修复] 域A 修复: 证书被动特效接入（injuryReduction/illnessRiskReduction/fatigueReduction/healthBonus/mentalBonus 原定义但从未应用）
-            if (cert.effects.injuryReduction)
-              state._injuryReduction = (state._injuryReduction || 0) + cert.effects.injuryReduction;
-            if (cert.effects.illnessRiskReduction)
-              state._illnessRiskReduction = (state._illnessRiskReduction || 0) + cert.effects.illnessRiskReduction;
-            if (cert.effects.fatigueReduction)
-              state._fatigueReduction = (state._fatigueReduction || 0) + cert.effects.fatigueReduction;
-            if (cert.effects.healthBonus)
-              state.player.health = Math.min(100, (state.player.health || 0) + cert.effects.healthBonus);
-            if (cert.effects.mentalBonus)
-              state.player.mental = Math.min(100, (state.player.mental || 0) + cert.effects.mentalBonus);
             StateManager.addMessage(
               `📜 恭喜！成功考取${cert.name}！`,
               "success",
             );
           } else {
-            state.resources.cash = (state.resources.cash || 0) - Math.floor((cert.requirements.cash || 0) / 2); // [全系统自洽修复] 域G A类: cash NaN防御
+            state.resources.cash -= Math.floor(cert.requirements.cash / 2);
             StateManager.addMessage(
               `📜 ${cert.name}考试未通过，报名费损失一半。下次再努力！`,
               "warning",
@@ -254931,16 +254500,9 @@ function getAvailableActions(state) {
           if (typeof getHistoryModifiers === "function") {
             _histNpcBonus = getHistoryModifiers(state).npcAffinityBonus || 0;
           }
-          // [全系统自洽修复] 域A 联动增强: 住所tier5/6 npcVisitBonus接入NPC好感（豪宅/别墅招待加成）
-          var _housingNpcBonus = state._housingNpcVisitBonus || 0;
-          var _housingNpcTag = "";
-          if (_housingNpcBonus > 0 && !isBirthday && Random.chance(0.3)) {
-            _housingNpcTag = "（住所雅致，好感额外+" + Math.round(5 * _housingNpcBonus) + "）";
-          }
           const affinityGain =
             (isBirthday ? 10 + Random.int(0, 4) : 5 + Random.int(0, 4)) +
-            _histNpcBonus +
-            (_housingNpcTag ? Math.round(5 * _housingNpcBonus) : 0);
+            _histNpcBonus;
           r.affinity = Math.min(100, r.affinity + affinityGain);
           // 节日专属台词（P1.8）：节日期间65%概率触发
           var festLine = null;
@@ -254979,7 +254541,7 @@ function getAvailableActions(state) {
             }
           }
           StateManager.addMessage(
-            `💬${bdTag} ${npc.name}：${line} (好感+${affinityGain})${_skillBonus}${_housingNpcTag}`,
+            `💬${bdTag} ${npc.name}：${line} (好感+${affinityGain})${_skillBonus}`,
             isBirthday ? "success" : "info",
           );
           state.needs.happiness = Math.min(
@@ -255217,20 +254779,6 @@ function getAvailableActions(state) {
   // --- 注入扩展行动库（生存/社交/学习/生活/投资/梦想）---
   if (typeof addExtraActions === "function") {
     addExtraActions(state, actions);
-  }
-
-  // 兜底：确保至少有一个行动，防止行动Tab空白
-  if (actions.length === 0) {
-    actions.push({
-      id: "idle",
-      category: "other",
-      name: "待机休息",
-      desc: "今天什么都不做，休息一天。",
-      icon: "😴",
-      handler: function () {
-        StateManager.addMessage("😴 你休息了一天，什么也没做。", "info");
-      },
-    });
   }
 
   return actions;
@@ -255550,11 +255098,6 @@ function doStreetJob(job) {
       fatigueReduction = getSkillFatigueReduction(job.id, state);
     }
     var fatigueAmount = job.effects.fatigue || 0;
-    // [全系统自洽修复] 域A 修复: 证书fatigueReduction累加（rehab_therapist等降低疲劳）
-    var certFatigueReduction = state._fatigueReduction || 0;
-    if (certFatigueReduction > 0) {
-      fatigueAmount = Math.max(0, fatigueAmount - certFatigueReduction);
-    }
     if (fatigueReduction > 0 && fatigueAmount > 0) {
       fatigueAmount = Math.max(0, fatigueAmount - fatigueReduction);
       if (Random.chance(0.3)) {
@@ -255830,11 +255373,10 @@ function doStreetJob(job) {
       typeof getEmotionWorkModifier === "function"
         ? getEmotionWorkModifier(state).injury || 1
         : 1;
-    // [全系统自洽修复] 域A 修复: 证书injuryReduction累加（construction_safety 0.5 + 其他证书累加）
-    var certInjuryReduction = state._injuryReduction || 0;
-    if (state.certificates && state.certificates.includes("construction_safety"))
-      certInjuryReduction += 0.5;
-    const certReduction = Math.max(0, 1 - certInjuryReduction);
+    const certReduction =
+      state.certificates && state.certificates.includes("construction_safety")
+        ? 0.5
+        : 1.0;
     if (
       job.risk.injury &&
       Random.chance(Math.min(1, job.risk.injury * riskMod * certReduction))
@@ -255847,12 +255389,9 @@ function doStreetJob(job) {
         "danger",
       );
     }
-    // [全系统自洽修复] 域A 修复: 证书illnessRiskReduction累加（nursing_cert/health_manager等）
-    var certIllnessReduction = state._illnessRiskReduction || 0;
-    var illnessChance = Math.max(0, (job.risk.illness || 0) * riskMod * (1 - certIllnessReduction));
     if (
       job.risk.illness &&
-      Random.chance(Math.min(1, illnessChance))
+      Random.chance(Math.min(1, (job.risk.illness || 0) * riskMod))
     ) {
       state.status.health = Math.max(0, state.status.health - 10);
       // v3.1：工作环境致病走illness.js疾病系统（不再直接设sick=true）
@@ -255995,9 +255534,6 @@ function addSkillXp(skillKey, amount) {
   if (!skill) return;
   // [域C联动] 天赋XP倍率生效
   var _talentMult = getTalentXpMultiplier(skillKey, state);
-  // [全系统自洽修复] 域A 联动增强: 住所tier5/6 skillStudyBonus接入技能XP（豪宅/别墅学习加成）
-  var housingBonus = state._housingSkillStudyBonus || 0;
-  if (housingBonus > 0) amount = Math.round(amount * (1 + housingBonus));
   skill.xp += Math.round(amount * _talentMult);
   // v3.1 审查改进：XP 需求从线性改为指数，level 0=120 → level 50≈10,000（之前 6,120）
   // 让玩家在高级别感受更有意义的成长压力，同时保留早期快速升级的爽快感

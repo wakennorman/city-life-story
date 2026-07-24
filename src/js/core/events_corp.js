@@ -31,8 +31,8 @@
           apply: (st) => {
             st.flags._insiderRumorSeen = true;
             st.needs.fatigue = Math.min(100, st.needs.fatigue + 5);
-            if (st.resources.cash >= 100) {
-              st.resources.cash -= 100;
+            if ((st.resources.cash || 0) >= 100) { // [全系统自洽修复] 域H A类: cash NaN守卫
+              st.resources.cash = (st.resources.cash || 0) - 100;
               // 调度后续：验证结果
               if (typeof scheduleChainEvent === "function") {
                 scheduleChainEvent(st, "insider_verify", 2, "corporate");
@@ -434,7 +434,7 @@
           text: "💬 提议平摊工作量",
           hint: "考验管理能力",
           apply: (st) => {
-            if (st.corporate.team.length > 0) {
+            if (st.corporate && st.corporate.team && st.corporate.team.length > 0) { // [全系统自洽修复] 域H A类: team 守卫
               st.player.corporate.popularity = Math.min(
                 100,
                 st.player.corporate.popularity + 4,
