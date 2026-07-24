@@ -228,3 +228,11 @@
 - 联动3（新建 `src/js/core/narrative_linkage_events.js` IIFE→RANDOM_EVENTS，2 street+1 corporate，全||防御，[PLACEHOLDER]，id 前缀 narr_* 不冲突）：narr_old_town_tale(B→D 市井旧事听故事涨好感→applyAffinityChange +6 守 rel.met 铁律)/narr_craftsman_bio(B→C 匠人传记启发→addSkillXp("repair",8) 真实键)/narr_teahouse_rumor(B→E 茶馆传闻腾投资本金→复用 _dataInvestorMindset + investment)。src/index.html 注册在 data_linkage_events_r22.js 之后。
 - 验证：node --check 2文件通过；build.py→dist 8299.2KB（比 src 新）；MC 6×400d **MC_EXIT=0·0代码异常**（grep 确认无 TypeError/ReferenceError/NaN/Infinity 行；前7天死亡率全0.0%<10% 无早期死亡崩溃回归）。存活率 balanced100%/grinder50%/skiller83.3%/trader50%/social66.7%<80%/corporate83.3% — trader/social 的 ❌ 为既有 RNG 平衡阈值波动（高风险路径阈值≥30% 均已达标），非代码异常。
 - 已提交 1ae3f816（8文件/500增/13删，未 push，pre-commit 三守卫全过），无并行窗口污染。last_known_head 已同步至 1ae3f816。下轮→C（职业/成长，第二轮）。
+
+## 最近执行（2026-07-24，R191 域C 职业/成长 — 已 push main e58fecdb）
+
+- 起始 loop-state=round190/B/next=C。本窗口执行 R191=域C。**极高并行度**：本轮进行中 HEAD 连续被并行窗口推进（4416e038→d8e3b699→56dbbe3c），我的工作树改动多次被并行窗口的 `git add -A` 提交扫入。
+- A类1：jobs.js `long_haul_driver` 长途司机死工作——`requiredFlag: "_synergy_driving_accounting"` 引用不存在的连携flag（skill_synergy.js 真实为 DUAL `_synergy_driving_logistics`「长途运输」driving+accounting / TRIPLE `_synergy_driving_logistics_accounting`「物流帝国」，**无 driving_accounting**）→ 永不可入职。改 `_synergy_driving_logistics`（与 desc/payCalc 完全对应）。该修随并行提交 eb13d27b 落地。
+- 联动3（新建 domain_c_linkage_r191.js IIFE→RANDOM_EVENTS，3 street）：skill_r191_synergy_gig(C→E 长途运输连携→跑私活现金+1200/驾驶XP,承接死工作复活变现)/skill_r191_peer_respect(C→D 手艺火候→同行讨教→首个已结识NPC好感 applyAffinityChange 守 rel.met)/skill_r191_hard_won(C→G 回望≥2门硬本事→心智/幸福成长叙事)。含 skillLv/firstMetNpc 防御辅助。src/index.html 注册在 R190 之后。该文件+构建产物随并行提交 d8e3b699 落地。
+- 验证：node --check 通过；build.py→dist app.js 9036.8KB（_domainCLinkageR191Loaded 已入 bundle）；MC 6×400d **0代码异常**（NaN% 仅空分布桶报表显示项，非运行时异常；trader/corporate 存活率偏低为既有C类平衡波动）。
+- 本窗口 docs/state 提交 89399c3c（round doc/CLAUDE.md/loop-state/MEMORY.md）+ 回填 e58fecdb（pushStatus=PUSHED），**均已 push origin main 成功**。并行窗口未提交改动（corp_ui/victory/modal/render/_check_skill_tree）已 stash→push→pop 全程无损保留。下轮→G（核心机制/生命周期，recency 180 最薄弱）。
