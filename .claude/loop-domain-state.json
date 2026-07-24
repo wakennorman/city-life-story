@@ -1,7 +1,7 @@
 {
-  "currentRound": 198,
-  "currentDomain": "F",
-  "nextDomain": "G",
+  "currentRound": 199,
+  "currentDomain": "G",
+  "nextDomain": "H",
   "rotationIndex": 1,
   "domainOrder": [
     "A",
@@ -20,7 +20,7 @@
     "D": 230,
     "E": 195,
     "F": 198,
-    "G": 192,
+    "G": 199,
     "H": 193
   },
   "history": [
@@ -73,13 +73,18 @@
       "round": 198,
       "domain": "F",
       "note": "域F: A类0项——Explore 子代理对 17 个 UI 文件逐行审计 + 死字段黑名单全库 grep,UI 层干净(历史 R19 itemId/R183 学历+消息toggle+每日目标终身一次+教程selector/R186 certs→certificates+career.currentJob 已修,本轮不重复修)。联动增强3项(新建 domain_f_linkage_r198.js,2 street+1 corporate: f198_finance_glass F→E 财务面板清晰→_dataInvestorMindset投资意识+mental / f198_life_scrapbook F→B 生活手账回望→mental+needs.happiness+置_f198Scrapbook / f198_board_deck F→H 清爽路演材料→addSkillXp management+cash,全||防御,数值[PLACEHOLDER])。C类记录(不修,域外/并行在途): investment.js:1435 写 state.needs.health 死字段(真实 state.status.health,财务Tab并行在途勿碰) / webapp_runtime_bridge.js:176 读写 state.player.health 死字段(真实 state.status.health,桥接层与渲染层脱节)。MC 6×400d 0代码异常(退出0;grinder16.7%/corporate66.7%存活率<阈值为既有RNG平衡阈值非代码回归);构建9204.6KB。下轮R199→域G(recency 192 最薄弱,已据并行 R230/R231 回填 B/D recency)。"
+    },
+    {
+      "round": 199,
+      "domain": "G",
+      "note": "域G(核心机制/生命周期): A类0项(诚实报告)——Explore 15核心文件逐行审计+死字段黑名单全库grep+pipeline slot生产者核查+era day匹配核实,域G经R20/R192/R197多轮加固已干净。候选逐一证伪: era_transform _pendingEraEvent 有 scheduleChainEvent 兜底属死flag非崩溃 / webapp_runtime_bridge getPlayerHealth 主路径正确读 status.health·player.health 仅永不触发兜底非死字段(修正R198/Explore判重) / daily_pipeline career_burnout 的 careerCapital.burnout 有career_path_events+side_hustle多处生产者非死代码 / ERA_EVENTS_TRIGGER_DAYS 与 era_events.js day集合完全一致[90,180,270,365,450,540,720,900]无死里程碑。联动增强3项(新建 domain_g_linkage_r199.js IIFE→RANDOM_EVENTS,2 street+1 corporate,全||防御,[PLACEHOLDER]): era_r199_reflection(G→B时代变迁回望·首次消费 era_transform.js:137 写入的死flag _pendingEraEvent 并在apply清除·全库此前零消费者→心智+心情) / era_r199_inflation_hedge(G→E通胀避险·读_eraState.inflationIndex≥1.3真实字段→置_dataInvestorMindset+心智) / era_r199_veteran_poise(G→H久历周期经营定力·_eraState.stageId≠initial+在职→addSkillXp management+cash)。本轮把 era_transform 时代变迁核心机制包装成叙事层,补齐历轮域G未用的 G→B(时代)/G→E/G→H 方向。MC 6×400d MC_EXIT=0·0代码异常(前7天死亡率全0.0%;trader66.7%<80%为既有RNG平衡阈值波动非回归);构建9215.5KB。下轮R200→域H(recency 193 最薄弱)。"
     }
   ],
-  "lastDomain": "F",
-  "lastRound": 198,
+  "lastDomain": "G",
+  "lastRound": 199,
   "lastDate": "2026-07-25",
-  "lastCommit": "de064cb59d8f794c29c40bcd3c30b3679a1f7602",
-  "pushStatus": "PUSHED",
+  "lastCommit": "PENDING",
+  "pushStatus": "PENDING",
   "completedDomains": [
     "A",
     "B",
