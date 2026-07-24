@@ -125,7 +125,7 @@
               var profit = Random.chance(0.55);
               if (profit) {
                 var gain = Random.int(800, 3000);
-                st.resources.cash += gain;
+                st.resources.cash = (st.resources.cash || 0) + gain;
                 StateManager.addMessage(
                   "📈 第二天开盘，" +
                     sym +
@@ -136,7 +136,7 @@
                 );
               } else {
                 var loss = Random.int(400, 2000);
-                st.resources.cash = Math.max(0, st.resources.cash - loss);
+                st.resources.cash = Math.max(0, (st.resources.cash || 0) - loss);
                 StateManager.addMessage(
                   "📉 消息是假的，" +
                     sym +
@@ -161,7 +161,7 @@
               var m = st.investment.stockMarket[h.symbol];
               if (!m) continue;
               var revenue = Math.round(m.price * h.shares * 100) / 100;
-              st.resources.cash += revenue;
+              st.resources.cash = (st.resources.cash || 0) + revenue;
               soldTotal += revenue;
               st.investment.stockHoldings.splice(i, 1);
             }
@@ -275,7 +275,7 @@
               var success = Random.chance(0.6);
               if (success) {
                 var gain = Random.int(2000, 8000);
-                st.resources.cash += gain;
+                st.resources.cash = (st.resources.cash || 0) + gain;
                 StateManager.addMessage(
                   "💰 三天后公告出炉，" +
                     target +
@@ -286,7 +286,7 @@
                 );
               } else {
                 var loss = Random.int(1000, 5000);
-                st.resources.cash = Math.max(0, st.resources.cash - loss);
+                st.resources.cash = Math.max(0, (st.resources.cash || 0) - loss);
                 StateManager.addMessage(
                   "💰 公告是利好，但你判断错方向亏了¥" +
                     loss +
@@ -370,7 +370,7 @@
               var m = st.investment.stockMarket[h.symbol];
               if (!m) continue;
               var revenue = Math.round(m.price * h.shares * 100) / 100;
-              if (st.resources) st.resources.cash += revenue;
+              if (st.resources) st.resources.cash = (st.resources.cash || 0) + revenue;
               soldTotal += revenue;
               st.investment.stockHoldings.splice(i, 1);
             }
@@ -452,11 +452,11 @@
           apply: function (st) {
             st.flags._joinedInsiderGroup = true;
             if (st.resources) {
-              st.resources.cash = Math.max(0, st.resources.cash - 500);
+              st.resources.cash = Math.max(0, (st.resources.cash || 0) - 500);
               if (Random.chance(0.1)) {
                 // 10%幸运
                 var gain = Random.int(200, 1000);
-                st.resources.cash += gain;
+                st.resources.cash = (st.resources.cash || 0) + gain;
                 StateManager.addMessage(
                   "💰 你交了¥500进群。没想到群里推荐的几只股真的涨了，你小赚¥" +
                     gain +
@@ -553,7 +553,7 @@
             setTimeout(function () {
               if (!st.resources) return;
               var profit = Random.int(5000, 15000);
-              st.resources.cash += profit;
+              st.resources.cash = (st.resources.cash || 0) + profit;
               StateManager.addMessage(
                 "🤝 一个月后，第一笔内幕交易落地——净赚¥" +
                   profit +

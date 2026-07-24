@@ -89481,7 +89481,7 @@ if (typeof window !== "undefined") {
               var profit = Random.chance(0.55);
               if (profit) {
                 var gain = Random.int(800, 3000);
-                st.resources.cash += gain;
+                st.resources.cash = (st.resources.cash || 0) + gain;
                 StateManager.addMessage(
                   "📈 第二天开盘，" +
                     sym +
@@ -89492,7 +89492,7 @@ if (typeof window !== "undefined") {
                 );
               } else {
                 var loss = Random.int(400, 2000);
-                st.resources.cash = Math.max(0, st.resources.cash - loss);
+                st.resources.cash = Math.max(0, (st.resources.cash || 0) - loss);
                 StateManager.addMessage(
                   "📉 消息是假的，" +
                     sym +
@@ -89517,7 +89517,7 @@ if (typeof window !== "undefined") {
               var m = st.investment.stockMarket[h.symbol];
               if (!m) continue;
               var revenue = Math.round(m.price * h.shares * 100) / 100;
-              st.resources.cash += revenue;
+              st.resources.cash = (st.resources.cash || 0) + revenue;
               soldTotal += revenue;
               st.investment.stockHoldings.splice(i, 1);
             }
@@ -89631,7 +89631,7 @@ if (typeof window !== "undefined") {
               var success = Random.chance(0.6);
               if (success) {
                 var gain = Random.int(2000, 8000);
-                st.resources.cash += gain;
+                st.resources.cash = (st.resources.cash || 0) + gain;
                 StateManager.addMessage(
                   "💰 三天后公告出炉，" +
                     target +
@@ -89642,7 +89642,7 @@ if (typeof window !== "undefined") {
                 );
               } else {
                 var loss = Random.int(1000, 5000);
-                st.resources.cash = Math.max(0, st.resources.cash - loss);
+                st.resources.cash = Math.max(0, (st.resources.cash || 0) - loss);
                 StateManager.addMessage(
                   "💰 公告是利好，但你判断错方向亏了¥" +
                     loss +
@@ -89726,7 +89726,7 @@ if (typeof window !== "undefined") {
               var m = st.investment.stockMarket[h.symbol];
               if (!m) continue;
               var revenue = Math.round(m.price * h.shares * 100) / 100;
-              if (st.resources) st.resources.cash += revenue;
+              if (st.resources) st.resources.cash = (st.resources.cash || 0) + revenue;
               soldTotal += revenue;
               st.investment.stockHoldings.splice(i, 1);
             }
@@ -89808,11 +89808,11 @@ if (typeof window !== "undefined") {
           apply: function (st) {
             st.flags._joinedInsiderGroup = true;
             if (st.resources) {
-              st.resources.cash = Math.max(0, st.resources.cash - 500);
+              st.resources.cash = Math.max(0, (st.resources.cash || 0) - 500);
               if (Random.chance(0.1)) {
                 // 10%幸运
                 var gain = Random.int(200, 1000);
-                st.resources.cash += gain;
+                st.resources.cash = (st.resources.cash || 0) + gain;
                 StateManager.addMessage(
                   "💰 你交了¥500进群。没想到群里推荐的几只股真的涨了，你小赚¥" +
                     gain +
@@ -89909,7 +89909,7 @@ if (typeof window !== "undefined") {
             setTimeout(function () {
               if (!st.resources) return;
               var profit = Random.int(5000, 15000);
-              st.resources.cash += profit;
+              st.resources.cash = (st.resources.cash || 0) + profit;
               StateManager.addMessage(
                 "🤝 一个月后，第一笔内幕交易落地——净赚¥" +
                   profit +
@@ -183605,7 +183605,7 @@ function addStreetExtras(state, actions) {
     handler: () => {
       const st = StateManager.getState();
       const earned = Random.int(1, 5);
-      st.resources.cash += earned;
+      st.resources.cash = (st.resources.cash || 0) + earned;
       st.resources.totalEarned += earned;
       addDailyTransaction(st, "income", "side_job", earned, "街头乞讨");
       st.needs.happiness = Math.max(0, st.needs.happiness - 12);
@@ -183630,14 +183630,14 @@ function addStreetExtras(state, actions) {
     payEstimate: "0或100",
     handler: () => {
       const st = StateManager.getState();
-      if (st.resources.cash < 50) {
+      if ((st.resources.cash || 0) < 50) {
         StateManager.addMessage("🎲 押不起 50 块。", "warning");
         return;
       }
-      st.resources.cash -= 50;
+      st.resources.cash = Math.max(0, (st.resources.cash || 0) - 50);
       addDailyTransaction(st, "expense", "entertainment", 50, "赌博押注");
       if (Random.chance(0.45)) {
-        st.resources.cash += 100;
+        st.resources.cash = (st.resources.cash || 0) + 100;
         st.resources.totalEarned += 50;
         addDailyTransaction(st, "income", "side_job", 100, "赌博赢钱");
         st.needs.happiness = Math.min(100, st.needs.happiness + 10);
@@ -183662,16 +183662,16 @@ function addStreetExtras(state, actions) {
     effectEstimate: "心情+15, 30%概率收到¥200",
     handler: () => {
       const st = StateManager.getState();
-      if (st.resources.cash < 2) {
+      if ((st.resources.cash || 0) < 2) {
         StateManager.addMessage("📞 电话费都付不起...", "warning");
         return;
       }
-      st.resources.cash -= 2;
+      st.resources.cash = Math.max(0, (st.resources.cash || 0) - 2);
       addDailyTransaction(st, "expense", "misc", 2, "给家里打电话");
       st.needs.happiness = Math.min(100, st.needs.happiness + 15);
       st.needs.hunger = Math.max(0, st.needs.hunger - 3);
       if (Random.chance(0.3)) {
-        st.resources.cash += 200; // 爸妈塞的钱
+        st.resources.cash = (st.resources.cash || 0) + 200; // 爸妈塞的钱
         addDailyTransaction(st, "income", "gift", 200, "爸妈给的零花钱");
         StateManager.addMessage(
           "📞 妈妈在电话里哭了，让你注意身体，转了 200 块。",
@@ -183709,15 +183709,15 @@ function addStreetExtras(state, actions) {
     costEstimate: 5,
     apCost: 20,
     payEstimate: "智力+0.3, 随机技能XP",
-    disabled: state.resources.cash < 5,
-    reqFail: state.resources.cash < 5 ? "现金不足" : null,
+    disabled: (state.resources.cash || 0) < 5,
+    reqFail: (state.resources.cash || 0) < 5 ? "现金不足" : null,
     handler: () => {
       const st = StateManager.getState();
-      if (st.resources.cash < 5) {
+      if ((st.resources.cash || 0) < 5) {
         StateManager.addMessage("💻 5 块都掏不出来。", "warning");
         return;
       }
-      st.resources.cash -= 5;
+      st.resources.cash = Math.max(0, (st.resources.cash || 0) - 5);
       st.needs.fatigue = Math.min(100, st.needs.fatigue + 8);
       st.player.intelligence = Math.min(100, st.player.intelligence + 0.3);
       const skills = ["english", "coding", "accounting"];
@@ -183741,20 +183741,20 @@ function addStreetExtras(state, actions) {
     costEstimate: 10,
     apCost: 20,
     payEstimate: "心情+10",
-    disabled: state.player.agility < 18 || state.resources.cash < 10,
+    disabled: state.player.agility < 18 || (state.resources.cash || 0) < 10,
     reqFail:
       state.player.agility < 18
         ? "需敏捷≥18"
-        : state.resources.cash < 10
+        : (state.resources.cash || 0) < 10
           ? "现金不足"
           : null,
     handler: () => {
       const st = StateManager.getState();
-      if (st.resources.cash < 10) {
+      if ((st.resources.cash || 0) < 10) {
         StateManager.addMessage("💈 剪不起头。", "warning");
         return;
       }
-      st.resources.cash -= 10;
+      st.resources.cash = Math.max(0, (st.resources.cash || 0) - 10);
       st.needs.hygiene = Math.min(100, st.needs.hygiene + 25);
       st.needs.happiness = Math.min(100, st.needs.happiness + 10);
       st.player.fame = Math.min(100, st.player.fame + 1);
@@ -183781,14 +183781,14 @@ function addStreetExtras(state, actions) {
       var lvl = getLocationProsperityLevel(locKey);
       var cost = [20, 45, 90, 180][Math.max(0, Math.min(3, lvl))];
       var gain = [1, 2, 3, 5][Math.max(0, Math.min(3, lvl))];
-      if (st.resources.cash < cost) {
+      if ((st.resources.cash || 0) < cost) {
         StateManager.addMessage(
           "💇 做发型需要¥" + cost + "，现金不足。",
           "warning",
         );
         return;
       }
-      st.resources.cash -= cost;
+      st.resources.cash = Math.max(0, (st.resources.cash || 0) - cost);
       st.player.charm = Math.min(100, (st.player.charm || 20) + gain);
       st.flags._hairStyleBoost = (st.flags._hairStyleBoost || 0) + gain;
       st.flags._hairStyleLastDay = st.player.day;
@@ -183947,20 +183947,20 @@ function addStreetExtras(state, actions) {
     costEstimate: 50,
     apCost: 20,
     payEstimate: "智力+1, 技能+",
-    disabled: state.player.intelligence < 25 || state.resources.cash < 50,
+    disabled: state.player.intelligence < 25 || (state.resources.cash || 0) < 50,
     reqFail:
       state.player.intelligence < 25
         ? "需智力≥25"
-        : state.resources.cash < 50
+        : (state.resources.cash || 0) < 50
           ? "现金不足"
           : null,
     handler: () => {
       const st = StateManager.getState();
-      if (st.resources.cash < 50) {
+      if ((st.resources.cash || 0) < 50) {
         StateManager.addMessage("🌃 学费 50 块都交不起。", "warning");
         return;
       }
-      st.resources.cash -= 50;
+      st.resources.cash = Math.max(0, (st.resources.cash || 0) - 50);
       st.needs.fatigue = Math.min(100, st.needs.fatigue + 15);
       st.player.intelligence = Math.min(100, st.player.intelligence + 1);
       st.skills.english.xp += 30;
@@ -183986,11 +183986,11 @@ function addStreetExtras(state, actions) {
     payEstimate: "体质+1, 敏捷+0.5",
     handler: () => {
       const st = StateManager.getState();
-      if (st.resources.cash < 200) {
+      if ((st.resources.cash || 0) < 200) {
         StateManager.addMessage("🏋️ 月卡 200 块都办不起。", "warning");
         return;
       }
-      st.resources.cash -= 200;
+      st.resources.cash = Math.max(0, (st.resources.cash || 0) - 200);
       st.player.physique = Math.min(100, st.player.physique + 1);
       st.player.agility = Math.min(100, st.player.agility + 0.5);
       st.needs.fatigue = Math.min(100, st.needs.fatigue + 15);
@@ -184015,11 +184015,11 @@ function addStreetExtras(state, actions) {
     payEstimate: "心情+18",
     handler: () => {
       const st = StateManager.getState();
-      if (st.resources.cash < 35) {
+      if ((st.resources.cash || 0) < 35) {
         StateManager.addMessage("🎬 35 块都掏不出来。", "warning");
         return;
       }
-      st.resources.cash -= 35;
+      st.resources.cash = Math.max(0, (st.resources.cash || 0) - 35);
       st.needs.fatigue = Math.max(0, st.needs.fatigue - 8);
       st.needs.happiness = Math.min(100, st.needs.happiness + 18);
       st.player.fame = Math.min(100, st.player.fame + 0.5);
@@ -184042,11 +184042,11 @@ function addStreetExtras(state, actions) {
     payEstimate: "心情+25, 人缘+",
     handler: () => {
       const st = StateManager.getState();
-      if (st.resources.cash < 80) {
+      if ((st.resources.cash || 0) < 80) {
         StateManager.addMessage("🎤 80 块都凑不齐。", "warning");
         return;
       }
-      st.resources.cash -= 80;
+      st.resources.cash = Math.max(0, (st.resources.cash || 0) - 80);
       st.needs.happiness = Math.min(100, st.needs.happiness + 25);
       st.needs.fatigue = Math.min(100, st.needs.fatigue + 5);
       st.needs.hunger = Math.max(0, st.needs.hunger - 8);
@@ -184070,11 +184070,11 @@ function addStreetExtras(state, actions) {
     payEstimate: "健康+5",
     handler: () => {
       const st = StateManager.getState();
-      if (st.resources.cash < 30) {
+      if ((st.resources.cash || 0) < 30) {
         StateManager.addMessage("💊 30 块都掏不出来。", "warning");
         return;
       }
-      st.resources.cash -= 30;
+      st.resources.cash = Math.max(0, (st.resources.cash || 0) - 30);
       st.status.health = Math.min(100, st.status.health + 5);
       st.player.physique = Math.min(100, st.player.physique + 0.3);
       StateManager.addMessage(
@@ -184096,11 +184096,11 @@ function addStreetExtras(state, actions) {
     payEstimate: "饥饱+30, 卫生+",
     handler: () => {
       const st = StateManager.getState();
-      if (st.resources.cash < 30) {
+      if ((st.resources.cash || 0) < 30) {
         StateManager.addMessage("🛒 30 块都掏不出来。", "warning");
         return;
       }
-      st.resources.cash -= 30;
+      st.resources.cash = Math.max(0, (st.resources.cash || 0) - 30);
       st.needs.hunger = Math.min(100, st.needs.hunger + 30);
       st.needs.hygiene = Math.min(100, st.needs.hygiene + 15);
       st.needs.happiness = Math.min(100, st.needs.happiness + 3);
@@ -184123,11 +184123,11 @@ function addStreetExtras(state, actions) {
     payEstimate: "卫生+10, 名气+",
     handler: () => {
       const st = StateManager.getState();
-      if (st.resources.cash < 80) {
+      if ((st.resources.cash || 0) < 80) {
         StateManager.addMessage("👕 80 块都掏不出来。", "warning");
         return;
       }
-      st.resources.cash -= 80;
+      st.resources.cash = Math.max(0, (st.resources.cash || 0) - 80);
       st.needs.hygiene = Math.min(100, st.needs.hygiene + 10);
       st.needs.happiness = Math.min(100, st.needs.happiness + 8);
       st.player.fame = Math.min(100, st.player.fame + 1);
@@ -184151,14 +184151,14 @@ function addStreetExtras(state, actions) {
     payEstimate: "0或50万",
     handler: () => {
       const st = StateManager.getState();
-      if (st.resources.cash < 2) {
+      if ((st.resources.cash || 0) < 2) {
         StateManager.addMessage("🎰 2 块都掏不出来。", "warning");
         return;
       }
-      st.resources.cash -= 2;
+      st.resources.cash = Math.max(0, (st.resources.cash || 0) - 2);
       const roll = Random.float(0, 1);
       if (roll < 0.00005) {
-        st.resources.cash += 500000;
+        st.resources.cash = (st.resources.cash || 0) + 500000;
         st.resources.totalEarned += 500000;
         st.needs.happiness = Math.min(100, st.needs.happiness + 50);
         StateManager.addMessage(
@@ -184167,7 +184167,7 @@ function addStreetExtras(state, actions) {
         );
       } else if (roll < 0.005) {
         const prize = Random.int(50, 249);
-        st.resources.cash += prize;
+        st.resources.cash = (st.resources.cash || 0) + prize;
         st.resources.totalEarned += prize;
         st.needs.happiness = Math.min(100, st.needs.happiness + 15);
         StateManager.addMessage(`🎰 小赚一笔！中了 ¥${prize}！`, "success");
@@ -184203,11 +184203,11 @@ function addStreetExtras(state, actions) {
     effectEstimate: "保险30天, 伤病赔¥500",
     handler: () => {
       const st = StateManager.getState();
-      if (st.resources.cash < 200) {
+      if ((st.resources.cash || 0) < 200) {
         StateManager.addMessage("🛡️ 保险都买不起。", "warning");
         return;
       }
-      st.resources.cash -= 200;
+      st.resources.cash = Math.max(0, (st.resources.cash || 0) - 200);
       st.flags.hasInsurance = true;
       st.flags.insuranceExpire = st.player.day + 30;
       StateManager.addMessage(
@@ -184273,15 +184273,15 @@ function addStreetExtras(state, actions) {
     costEstimate: 200,
     apCost: 20,
     payEstimate: "100~350",
-    disabled: state.resources.cash < 200,
-    reqFail: state.resources.cash < 200 ? "现金不足" : null,
+    disabled: (state.resources.cash || 0) < 200,
+    reqFail: (state.resources.cash || 0) < 200 ? "现金不足" : null,
     handler: () => {
       const st = StateManager.getState();
-      if (st.resources.cash < 200) {
+      if ((st.resources.cash || 0) < 200) {
         StateManager.addMessage("🏪 200 块启动资金都没有。", "warning");
         return;
       }
-      st.resources.cash -= 200;
+      st.resources.cash = Math.max(0, (st.resources.cash || 0) - 200);
       st.needs.fatigue = Math.min(100, st.needs.fatigue + 25);
       // 销售技能影响收益倍数：0级60%起步，每级+0.8%，50级达到100%基础收益，50级以上额外加成
       var salesLvl = st.skills.sales.level || 0;
@@ -184312,14 +184312,14 @@ function addStreetExtras(state, actions) {
           "🏪 摆摊失败！货没卖掉，城管还罚了款。",
           "danger",
         );
-        st.resources.cash = Math.max(0, st.resources.cash - 50);
+        st.resources.cash = Math.max(0, (st.resources.cash || 0) - 50);
         st.needs.happiness = Math.max(0, st.needs.happiness - 5);
         xpGain = Random.int(1, 3); // 1~3 XP（失败也能学点教训）
       }
       // 应用销售技能收益倍率
       var earned = Math.floor(baseEarned * salesMultiplier);
       if (earned > 0) {
-        st.resources.cash += earned;
+        st.resources.cash = (st.resources.cash || 0) + earned;
         st.resources.totalEarned += earned;
         addDailyTransaction(st, "income", "side_job", earned, "摆摊收入");
       }
@@ -184424,7 +184424,7 @@ function addStreetExtras(state, actions) {
         const st = StateManager.getState();
         const lvl = st.skills.coding.level || 0;
         const earned = Math.floor(80 + lvl * 1.5 + Random.float(0, 50));
-        st.resources.cash += earned;
+        st.resources.cash = (st.resources.cash || 0) + earned;
         st.resources.totalEarned += earned;
         addDailyTransaction(st, "income", "job_income", earned, "编程外包");
         st.needs.fatigue = Math.min(100, st.needs.fatigue + 15);
@@ -184476,7 +184476,7 @@ function addStreetExtras(state, actions) {
       effectEstimate: "道德+1/¥100",
       handler: function () {
         var st = StateManager.getState();
-        var maxDonate = Math.min(st.resources.cash, 1000);
+        var maxDonate = Math.min((st.resources.cash || 0), 1000);
         if (maxDonate < 100) {
           StateManager.addMessage(
             "💸 你翻遍口袋只找到¥" +
@@ -184487,7 +184487,7 @@ function addStreetExtras(state, actions) {
           return;
         }
         var amount = Math.min(maxDonate, 500);
-        st.resources.cash -= amount;
+        st.resources.cash = Math.max(0, (st.resources.cash || 0) - amount);
         var moralGain = Math.floor(amount / 100);
         if (typeof applyMoralityChange === "function") {
           applyMoralityChange(st, moralGain, "捐款");
@@ -184600,7 +184600,7 @@ function addStreetExtras(state, actions) {
         var bonus = Math.floor(salesLvl * 1.5);
         var earned = base + bonus;
         var fameGain = Random.int(3, 7);
-        st.resources.cash += earned;
+        st.resources.cash = (st.resources.cash || 0) + earned;
         st.resources.totalEarned += earned;
         addDailyTransaction(st, "income", "side_job", earned, "周末集市摆摊");
         st.player.fame = Math.min(100, st.player.fame + fameGain);
@@ -184641,7 +184641,7 @@ function addStreetExtras(state, actions) {
         var roll = Random.float(0, 1);
         if (roll < 0.4) {
           var cashTip = Random.int(100, 249);
-          st.resources.cash += cashTip;
+          st.resources.cash = (st.resources.cash || 0) + cashTip;
           st.resources.totalEarned += cashTip;
           StateManager.addMessage(
             "📋 打听到一个搬家公司临时招人，接了个单赚了¥" +
@@ -184834,7 +184834,7 @@ function showRemitModal() {
   const state = StateManager.getState();
   showModal({
     title: "💌 给家里汇款",
-    body: `<p>当前现金: ¥${state.resources.cash.toLocaleString()}</p>
+    body: `<p>当前现金: ¥${(state.resources.cash || 0).toLocaleString()}</p>
            <p style="font-size:11px;color:var(--text-secondary);">每汇 100 元，心情+3，家庭关系+1（汇款给家人不会涨名气，名气来自公共贡献）。</p>
            <label>汇款金额: <input id="remit-amount" type="number" min="100" max="${state.resources.cash}" value="200" style="width:100%;padding:8px;margin-top:8px;background:var(--bg-input);border:1px solid var(--border);color:var(--text-primary);border-radius:4px;"></label>`,
     buttons: [
@@ -184854,7 +184854,7 @@ function showRemitModal() {
             StateManager.addMessage("💌 至少汇 100 块。", "warning");
             return;
           }
-          state.resources.cash -= amt;
+          state.resources.cash = Math.max(0, (state.resources.cash || 0) - amt);
           state.needs.happiness = Math.min(
             100,
             state.needs.happiness + (amt / 100) * 3,
@@ -184909,7 +184909,7 @@ function showYuEBaoModal() {
     body: `
       <p>当前余额宝: <strong style="color:var(--success);">¥${yue.toLocaleString()}</strong></p>
       <p>今日收益预估: <strong>+¥${todayInterest}</strong>（日息 0.01%）</p>
-      <p>现金: ¥${state.resources.cash.toLocaleString()}</p>
+      <p>现金: ¥${(state.resources.cash || 0).toLocaleString()}</p>
       <label>转入金额: <input id="yue-amount" type="number" min="100" max="${state.resources.cash}" value="${Math.floor(state.resources.cash)}" style="width:100%;padding:8px;margin-top:8px;background:var(--bg-input);border:1px solid var(--border);color:var(--text-primary);border-radius:4px;"></label>
     `,
     buttons: [
@@ -184918,7 +184918,7 @@ function showYuEBaoModal() {
         text: "全部转出",
         cls: "btn-warning",
         callback: () => {
-          state.resources.cash += yue;
+          state.resources.cash = (state.resources.cash || 0) + yue;
           state.flags.yuEBao = 0;
           StateManager.addMessage(
             `💰 从余额宝转出 ¥${yue.toLocaleString()}。`,
@@ -184943,7 +184943,7 @@ function showYuEBaoModal() {
             StateManager.addMessage("💰 至少转入 100 块。", "warning");
             return;
           }
-          state.resources.cash -= amt;
+          state.resources.cash = Math.max(0, (state.resources.cash || 0) - amt);
           state.flags.yuEBao = (state.flags.yuEBao || 0) + amt;
           StateManager.addMessage(
             `💰 转入余额宝 ¥${amt.toLocaleString()}。`,
@@ -185464,7 +185464,7 @@ function ingredientBuyConfirm(goodId, unitPrice) {
   }
 
   // 扣钱
-  state.resources.cash -= totalCost;
+  state.resources.cash = Math.max(0, (state.resources.cash || 0) - totalCost);
 
   // 加库存（带购买日用于保鲜）
   state.inventory = state.inventory || { items: [], capacity: 20 };
@@ -185587,11 +185587,11 @@ function addTempleActions(state, actions) {
       icon: "🙏",
       apCost: 3,
       handler: function () {
-        if (state.resources.cash < 10) {
+        if ((state.resources.cash || 0) < 10) {
           StateManager.addMessage("香火钱至少要¥10。", "warning");
           return;
         }
-        state.resources.cash -= 10;
+        state.resources.cash = Math.max(0, (state.resources.cash || 0) - 10);
         state.needs.happiness = Math.min(100, (state.needs.happiness || 0) + 8);
         flags._luckBonus = (flags._luckBonus || 0) + 1;
         flags._templePrayDay = day;
@@ -185637,11 +185637,11 @@ function addTempleActions(state, actions) {
       icon: "💰",
       apCost: 2,
       handler: function () {
-        if (state.resources.cash < 50) {
+        if ((state.resources.cash || 0) < 50) {
           StateManager.addMessage("香火钱至少¥50。", "warning");
           return;
         }
-        state.resources.cash -= 50;
+        state.resources.cash = Math.max(0, (state.resources.cash || 0) - 50);
         flags._luckBonus = (flags._luckBonus || 0) + 3;
         flags.moralGoodChoices = (flags.moralGoodChoices || 0) + 1;
         state.player.fame = Math.min(100, (state.player.fame || 0) + 2);
@@ -185665,11 +185665,11 @@ function addTempleActions(state, actions) {
       icon: "🔖",
       apCost: 2,
       handler: function () {
-        if (state.resources.cash < 20) {
+        if ((state.resources.cash || 0) < 20) {
           StateManager.addMessage("求签费至少¥20。", "warning");
           return;
         }
-        state.resources.cash -= 20;
+        state.resources.cash = Math.max(0, (state.resources.cash || 0) - 20);
         flags._templeDivinationDay = day;
         var rolls = [
           {
@@ -185752,7 +185752,7 @@ function addExtraActions(state, actions) {
   }
   if (state.flags.hasInsurance && (state.status.injured || state.status.sick)) {
     if (!state.flags._insurancePaidThisCycle) {
-      state.resources.cash += 500;
+      state.resources.cash = (state.resources.cash || 0) + 500;
       state.flags._insurancePaidThisCycle = true;
       StateManager.addMessage("🛡️ 保险赔付了 ¥500！", "success");
     }
