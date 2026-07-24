@@ -120,11 +120,8 @@ function calculateStabilityMultiplier(state) {
 function calculateDTIPenalty(state, monthlyIncome) {
   if (monthlyIncome <= 0) return 0.05; // 无收入 → 接近拒贷
 
-  // [全系统自洽修复] 域E 修复:运算符优先级——+高于||，导致debt非零时bankDebt和villageDebt被静默忽略
-  const totalDebt =
-    (state.resources?.debt || 0) +
-    (state.resources?.bankDebt || 0) +
-    (state.resources?.villageDebt || 0);
+  // [全系统自洽修复] 域E 修复: debt字段已是total(=villageDebt+bankDebt)，原三重求和致DTI翻倍→贷款额系统性低估
+  const totalDebt = state.resources?.debt || 0;
 
   const dtI = totalDebt / monthlyIncome;
 
@@ -282,10 +279,8 @@ function calculateLoanCapacity(state) {
 
   // Step 5: 负债率惩罚
   const dtiMod = calculateDTIPenalty(state, monthlyIncome);
-  const totalDebt =
-    (state.resources?.debt || 0) +
-    (state.resources?.bankDebt || 0) +
-    (state.resources?.villageDebt || 0);
+  // [全系统自洽修复] 域E 修复: debt已是total，原三重求和致DTI翻倍
+  const totalDebt = state.resources?.debt || 0;
   const dtI = totalDebt / monthlyIncome;
 
   if (dtI >= 1) {
@@ -461,6 +456,7 @@ function grantLoan(state, amount) {
   // 发放贷款
   state.resources.cash = (state.resources.cash || 0) + amount; // [全系统自洽修复] 域E A类#2: cash NaN守卫
   state.resources.bankDebt = (state.resources.bankDebt || 0) + amount;
+  state.resources.debt = (state.resources.debt || 0) + amount; // [全系统自洽修复] 域E 修复: 保持debt=total不变量（原缺失致debt滞后）
   state.resources.bankDebtDay = state.player.day;
 
   // 记录信贷历史
