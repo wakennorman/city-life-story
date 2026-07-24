@@ -215175,11 +215175,11 @@ function treatColleagueMeal(state, colleagueId, tier) {
   const costs = { cheap: 50, normal: 150, fancy: 500 };
   const cost = costs[tier] || costs.normal;
 
-  if (state.resources.cash < cost) {
+  if ((state.resources.cash || 0) < cost) { // [全系统自洽修复] 域D A类: cash NaN守卫
     return { success: false, message: "现金不足" };
   }
 
-  state.resources.cash -= cost;
+  state.resources.cash = (state.resources.cash || 0) - cost; // [全系统自洽修复] 域D A类: cash NaN守卫
 
   // 根据消费档次和关系度计算效果
   const baseBonus = { cheap: 3, normal: 5, fancy: 8 };
@@ -254566,6 +254566,10 @@ function getAvailableActions(state) {
             } else if (state.investment && state.investment._marketMood === "bearish") {
               contextLine = "最近行情不好，投资要谨慎啊，别把钱都扔进去。";
             }
+          }
+          // [全系统自洽修复] 域G 联动增强: NPC对玩家健康状态的反应（G→D 健康-社交联动）
+          if (!contextLine && !isBirthday && !festLine && state.status && state.status.health < 30 && Random.chance(0.12)) {
+            contextLine = "你脸色不太好，要不要去医院看看？别硬撑。";
           }
           const line =
             isBirthday && npc.birthdayLine

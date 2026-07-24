@@ -3864,6 +3864,10 @@ function getAvailableActions(state) {
               contextLine = "最近行情不好，投资要谨慎啊，别把钱都扔进去。";
             }
           }
+          // [全系统自洽修复] 域G 联动增强: NPC对玩家健康状态的反应（G→D 健康-社交联动）
+          if (!contextLine && !isBirthday && !festLine && state.status && state.status.health < 30 && Random.chance(0.12)) {
+            contextLine = "你脸色不太好，要不要去医院看看？别硬撑。";
+          }
           const line =
             isBirthday && npc.birthdayLine
               ? npc.birthdayLine

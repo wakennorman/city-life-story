@@ -626,11 +626,11 @@ function treatColleagueMeal(state, colleagueId, tier) {
   const costs = { cheap: 50, normal: 150, fancy: 500 };
   const cost = costs[tier] || costs.normal;
 
-  if (state.resources.cash < cost) {
+  if ((state.resources.cash || 0) < cost) { // [全系统自洽修复] 域D A类: cash NaN守卫
     return { success: false, message: "现金不足" };
   }
 
-  state.resources.cash -= cost;
+  state.resources.cash = (state.resources.cash || 0) - cost; // [全系统自洽修复] 域D A类: cash NaN守卫
 
   // 根据消费档次和关系度计算效果
   const baseBonus = { cheap: 3, normal: 5, fancy: 8 };
