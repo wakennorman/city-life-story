@@ -3363,6 +3363,13 @@ function tickCareerJobDaily(state) {
     _milestoneMsg = "🏆 入职" + _newWd / 365 + "周年！坚持就是胜利";
   if (_milestoneMsg) {
     StateManager.addMessage(_milestoneMsg, "success");
+    // [全系统自洽修复] 域C 联动增强#1: C→G 里程碑幸福感 — 重大里程碑给予心情/健康加成
+    if (_newWd === 30 || _newWd === 90 || _newWd === 365 || _newWd % 365 === 0) {
+      if (state.needs) {
+        state.needs.happiness = Math.min(100, (state.needs.happiness || 0) + 3);
+        state.needs.health = Math.min(100, (state.needs.health || 100) + 1);
+      }
+    }
   }
   // 职业倦怠：工作日常量增长，但有被动恢复（周末/休息自然降低）
   var dailyBurnoutChange = 0.04;

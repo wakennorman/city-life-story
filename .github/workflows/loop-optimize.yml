@@ -1,0 +1,50 @@
+# ──────────────────────────────────────────────────────────────────────────────
+# 全系统优化循环 · 手动触发 (workflow_dispatch)
+#
+# 用法：GitHub → Actions → "Loop Optimization" → "Run workflow" → Run
+# 运行后自动: checkout → 读取薄弱域 → 通知 Claude 执行优化 → commit + push
+#
+# 注意: cron 自动触发(每10分钟)对无 agent 的 repo 意义有限 —
+#       因为真正的优化代码需要 Claude Code CLI 来写。
+#       本文件保留 dispatch 入口供你随时启动新一轮。
+# ──────────────────────────────────────────────────────────────────────────────
+name: 🔁 Loop Optimization · 全系统优化
+
+on:
+  workflow_dispatch:           # 手动触发（推荐）
+
+permissions:
+  contents: write
+
+jobs:
+  notify-loop:
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GH_PAT || github.token }}
+
+      - name: Read loop state
+        run: |
+          python -c "
+import json
+with open('.claude/loop-domain-state.json', 'r') as f:
+    st = json.load(f)
+r = st.get('currentRound', '?')
+d = st.get('currentDomain', '?')
+h = st.get('lastDomain', '?')
+print(f'Next round: R{int(r)+1} → Domain {d}')
+print(f'Last run: Domain {h}, round {st.get(\"lastRound\", \"?\")}')
+message = f'🔄 Loop optimization ready: next round is R{int(r)+1}, domain \"{st.get(\"domainLabels\", {}).get(d, d)}\".'
+print(f'MESSAGE={message}')
+"
+
+      - name: Summary
+        run: |
+          echo "## 🔁 全系统优化循环已就绪" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "点击此 workflow run 即可通知 Claude Code 执行下一轮优化。" >> $GITHUB_STEP_SUMMARY
+          echo "**下一步**: 运行 `/loop` 或再次触发此 action。" >> $GITHUB_STEP_SUMMARY

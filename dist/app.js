@@ -156348,7 +156348,7 @@ const STREET_JOBS = [
   { id: "remote_dev", name: "远程开发", desc: "接海外远程编程项目。需要国际外包连携激活。", icon: "💻", location: "techPark", requirements: { minAge: 20, maxAge: 60 }, requiredFlag: "_synergy_coding_english", effects: { fatigue: 10, codingXp: 4, englishXp: 2 }, payCalc: function(s) { return Math.floor(300 + s.skills.coding.level * 3 + s.skills.english.level * 2 + Random.float(0, 200)); }, risk: {} },
   { id: "master_repairman", name: "全能维修", desc: "家电维修、电路检修无所不能。需要综合维修连携激活。", icon: "🔧", location: "commercialDist", requirements: { minAge: 18, maxAge: 60 }, requiredFlag: "_synergy_repair_electrician", effects: { fatigue: 20, repairXp: 3, electricianXp: 2 }, payCalc: function(s) { return Math.floor(250 + s.skills.repair.level * 2.5 + s.skills.electrician.level * 2 + Random.float(0, 100)); }, risk: { injury: 0.02 } },
   { id: "sales_team_lead", name: "销售主管", desc: "带领小团队做地推和客户拓展。需要团队销售连携激活。", icon: "👥", location: "commercialDist", requirements: { minAge: 22, maxAge: 55 }, requiredFlag: "_synergy_sales_management", effects: { fatigue: 20, happiness: 5, salesXp: 3, managementXp: 2 }, payCalc: function(s) { return Math.floor(300 + s.skills.sales.level * 2.5 + s.skills.management.level * 2 + Random.float(0, 150)); }, risk: {} },
-  { id: "long_haul_driver", name: "长途司机", desc: "跑长途货运，跨省运输。需要长途运输连携激活。", icon: "🚛", location: "factoryZone", requirements: { minAge: 22, maxAge: 55 }, requiredFlag: "_synergy_driving_accounting", effects: { fatigue: 35, drivingXp: 4, accountingXp: 1 }, payCalc: function(s) { return Math.floor(250 + s.skills.driving.level * 2.5 + s.skills.accounting.level * 1.5 + Random.float(0, 150)); }, risk: { injury: 0.03 } },
+  { id: "long_haul_driver", name: "长途司机", desc: "跑长途货运，跨省运输。需要长途运输连携激活。", icon: "🚛", location: "factoryZone", requirements: { minAge: 22, maxAge: 55 }, requiredFlag: "_synergy_driving_logistics", effects: { fatigue: 35, drivingXp: 4, accountingXp: 1 }, payCalc: function(s) { return Math.floor(250 + s.skills.driving.level * 2.5 + s.skills.accounting.level * 1.5 + Random.float(0, 150)); }, risk: { injury: 0.03 } }, // [全系统自洽修复] 域C 修复:死工作 requiredFlag "_synergy_driving_accounting" 无对应连携(真实连携id为driving_logistics"长途运输")→永不可入职;改"_synergy_driving_logistics"(DUAL driving+accounting,与job名/desc/payCalc完全一致)
   { id: "foreign_company_staff", name: "外企职员", desc: "在外资企业做行政/协调工作。需要外企晋升连携激活。", icon: "🏢", location: "techPark", requirements: { minAge: 22, maxAge: 50 }, requiredFlag: "_synergy_english_management", effects: { fatigue: 15, englishXp: 3, managementXp: 2 }, payCalc: function(s) { return Math.floor(400 + s.skills.english.level * 3 + s.skills.management.level * 2 + Random.float(0, 200)); }, risk: {} },
   { id: "finance_analyst", name: "财务分析师", desc: "为企业提供财务分析服务。需要财务自由连携激活。", icon: "📊", location: "techPark", requirements: { minAge: 22, maxAge: 55 }, requiredFlag: "_synergy_accounting_investment", effects: { fatigue: 15, accountingXp: 3, managementXp: 2 }, payCalc: function(s) { return Math.floor(350 + s.skills.accounting.level * 3 + s.skills.management.level * 2 + Random.float(0, 150)); }, risk: {} }, // [全系统自洽修复] 域C A类#4: 修正死工作 flag（原 _synergy_accounting_management 连携不存在，实际解锁连携为 财务自由 accounting_investment）
   { id: "smart_home_tech", name: "智能家居技术员", desc: "安装调试智能家居系统。需要智能家居专家连携激活。", icon: "🏡", location: "commercialDist", requirements: { minAge: 22, maxAge: 55 }, requiredFlag: "_synergy_repair_electrician_coding", effects: { fatigue: 20, repairXp: 3, electricianXp: 2, codingXp: 2 }, payCalc: function(s) { return Math.floor(400 + s.skills.repair.level * 2.5 + s.skills.electrician.level * 2 + s.skills.coding.level * 2 + Random.float(0, 200)); }, risk: { injury: 0.01 } },
@@ -192494,17 +192494,21 @@ function calculatePerfScore(state) {
     score += avgProd * 0.05;
   }
 
-  // 惩罚项
-  if (c.hair < 30) score -= 15;
-  else if (c.hair < 50) score -= 5;
-  if (c.dignity < 20) score -= 20;
-  else if (c.dignity < 40) score -= 8;
-  if (c.risk > 70) score -= 15;
-  else if (c.risk > 50) score -= 5;
+  // 惩罚项（[全系统自洽修复] 域C A类#1: c.hair/dignity/risk可能undefined→NaN传播）
+  var _hair = typeof c.hair === "number" ? c.hair : 50;
+  var _dignity = typeof c.dignity === "number" ? c.dignity : 50;
+  var _risk = typeof c.risk === "number" ? c.risk : 50;
+  var _popularity = typeof c.popularity === "number" ? c.popularity : 50;
+  if (_hair < 30) score -= 15;
+  else if (_hair < 50) score -= 5;
+  if (_dignity < 20) score -= 20;
+  else if (_dignity < 40) score -= 8;
+  if (_risk > 70) score -= 15;
+  else if (_risk > 50) score -= 5;
 
   // 奖励项
-  if (c.dignity > 80) score += 5;
-  if (c.popularity > 80) score += 5;
+  if (_dignity > 80) score += 5;
+  if (_popularity > 80) score += 5;
 
   // Q4冲刺加成（在 endQuarter 中设置）
   if (state.flags.q4Sprint) {
@@ -246500,6 +246504,13 @@ function tickCareerJobDaily(state) {
     _milestoneMsg = "🏆 入职" + _newWd / 365 + "周年！坚持就是胜利";
   if (_milestoneMsg) {
     StateManager.addMessage(_milestoneMsg, "success");
+    // [全系统自洽修复] 域C 联动增强#1: C→G 里程碑幸福感 — 重大里程碑给予心情/健康加成
+    if (_newWd === 30 || _newWd === 90 || _newWd === 365 || _newWd % 365 === 0) {
+      if (state.needs) {
+        state.needs.happiness = Math.min(100, (state.needs.happiness || 0) + 3);
+        state.needs.health = Math.min(100, (state.needs.health || 100) + 1);
+      }
+    }
   }
   // 职业倦怠：工作日常量增长，但有被动恢复（周末/休息自然降低）
   var dailyBurnoutChange = 0.04;

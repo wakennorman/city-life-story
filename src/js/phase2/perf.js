@@ -37,17 +37,21 @@ function calculatePerfScore(state) {
     score += avgProd * 0.05;
   }
 
-  // 惩罚项
-  if (c.hair < 30) score -= 15;
-  else if (c.hair < 50) score -= 5;
-  if (c.dignity < 20) score -= 20;
-  else if (c.dignity < 40) score -= 8;
-  if (c.risk > 70) score -= 15;
-  else if (c.risk > 50) score -= 5;
+  // 惩罚项（[全系统自洽修复] 域C A类#1: c.hair/dignity/risk可能undefined→NaN传播）
+  var _hair = typeof c.hair === "number" ? c.hair : 50;
+  var _dignity = typeof c.dignity === "number" ? c.dignity : 50;
+  var _risk = typeof c.risk === "number" ? c.risk : 50;
+  var _popularity = typeof c.popularity === "number" ? c.popularity : 50;
+  if (_hair < 30) score -= 15;
+  else if (_hair < 50) score -= 5;
+  if (_dignity < 20) score -= 20;
+  else if (_dignity < 40) score -= 8;
+  if (_risk > 70) score -= 15;
+  else if (_risk > 50) score -= 5;
 
   // 奖励项
-  if (c.dignity > 80) score += 5;
-  if (c.popularity > 80) score += 5;
+  if (_dignity > 80) score += 5;
+  if (_popularity > 80) score += 5;
 
   // Q4冲刺加成（在 endQuarter 中设置）
   if (state.flags.q4Sprint) {
