@@ -124,6 +124,7 @@ function archiveYesterdayMemory(state) {
  * @returns {string[]} 地点 ID 数组
  */
 function getRememberedLocations(state) {
+  if (!state || !state.trade) return []; // [全系统自洽修复] 域A A类: state.trade 守卫
   var visited = state.trade.visitedToday || {};
   return Object.keys(visited);
 }
@@ -191,6 +192,7 @@ function canPredictTrend(state) {
  * @returns {string[]} 提示文本数组
  */
 function getPriceMemoryHints(state, locKey) {
+  if (!state || !state.trade) return []; // [全系统自洽修复] 域A A类: state.trade 守卫
   var memory = state.trade.priceMemory || [];
   var hints = [];
 
@@ -241,6 +243,7 @@ function getPriceMemoryHints(state, locKey) {
  */
 function getPriceMarker(state, locKey, goodId, price) {
   var result = { direction: null, label: "" };
+  if (!state || !state.trade) return result; // [全系统自洽修复] 域A A类: state.trade 守卫
   if (!canSeePriceMarkers(state)) return result;
 
   var visited = state.trade.visitedToday || {};
@@ -282,6 +285,7 @@ function getPriceMarker(state, locKey, goodId, price) {
  */
 function getVisitedExtreme(state, locKey, goodId) {
   var result = { isVisitedLowest: false, isVisitedHighest: false, label: "" };
+  if (!state || !state.trade) return result; // [全系统自洽修复] 域A A类: state.trade 守卫
   if (!canSeeVisitedExtremes(state)) return result;
 
   var visited = state.trade.visitedToday || {};
@@ -365,6 +369,7 @@ function getCityExtreme(state, locKey, goodId) {
  * @returns {string} "↑" | "↓" | "→" | ""
  */
 function getPriceTrend(state, locKey, goodId) {
+  if (!state || !state.trade) return ""; // [全系统自洽修复] 域A A类: state.trade 守卫
   if (!canPredictTrend(state)) return "";
 
   // 基于历史价格趋势判断（看过去3天的模糊记忆）
@@ -525,6 +530,7 @@ function getInfoCost(baseCost, affinity) {
  * @returns {{ success: boolean, message: string, info?: string }}
  */
 function buyInfoFromNpc(npcId, infoTypeId, state) {
+  if (!state) return { success: false, message: "⚠️ 游戏状态未就绪。" }; // [全系统自洽修复] 域A A类: state 守卫
   var npc = getNpcById(npcId);
   if (!npc) return { success: false, message: "⚠️ 找不到该NPC。" };
 
@@ -597,6 +603,7 @@ function buyInfoFromNpc(npcId, infoTypeId, state) {
  * 生成NPC情报的具体内容文本
  */
 function generateInfoText(npcId, infoTypeId, state) {
+  if (!state || !state.trade) return ""; // [全系统自洽修复] 域A A类: state.trade 守卫
   var infoDef = NPC_TRADE_INFO[npcId];
   if (!infoDef) return "";
 
@@ -838,6 +845,7 @@ function tryTriggerNPCInfoShare(npcId, state) {
  * @returns {Array} 可用商品列表
  */
 function getDailyGoodsForLocation(locKey, state) {
+  if (!state) return []; // [全系统自洽修复] 域A A类: state 守卫
   var loc = getLocation(locKey);
   if (!loc) return [];
 

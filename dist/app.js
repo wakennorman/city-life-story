@@ -177642,6 +177642,7 @@ function archiveYesterdayMemory(state) {
  * @returns {string[]} 地点 ID 数组
  */
 function getRememberedLocations(state) {
+  if (!state || !state.trade) return []; // [全系统自洽修复] 域A A类: state.trade 守卫
   var visited = state.trade.visitedToday || {};
   return Object.keys(visited);
 }
@@ -177709,6 +177710,7 @@ function canPredictTrend(state) {
  * @returns {string[]} 提示文本数组
  */
 function getPriceMemoryHints(state, locKey) {
+  if (!state || !state.trade) return []; // [全系统自洽修复] 域A A类: state.trade 守卫
   var memory = state.trade.priceMemory || [];
   var hints = [];
 
@@ -177759,6 +177761,7 @@ function getPriceMemoryHints(state, locKey) {
  */
 function getPriceMarker(state, locKey, goodId, price) {
   var result = { direction: null, label: "" };
+  if (!state || !state.trade) return result; // [全系统自洽修复] 域A A类: state.trade 守卫
   if (!canSeePriceMarkers(state)) return result;
 
   var visited = state.trade.visitedToday || {};
@@ -177800,6 +177803,7 @@ function getPriceMarker(state, locKey, goodId, price) {
  */
 function getVisitedExtreme(state, locKey, goodId) {
   var result = { isVisitedLowest: false, isVisitedHighest: false, label: "" };
+  if (!state || !state.trade) return result; // [全系统自洽修复] 域A A类: state.trade 守卫
   if (!canSeeVisitedExtremes(state)) return result;
 
   var visited = state.trade.visitedToday || {};
@@ -177883,6 +177887,7 @@ function getCityExtreme(state, locKey, goodId) {
  * @returns {string} "↑" | "↓" | "→" | ""
  */
 function getPriceTrend(state, locKey, goodId) {
+  if (!state || !state.trade) return ""; // [全系统自洽修复] 域A A类: state.trade 守卫
   if (!canPredictTrend(state)) return "";
 
   // 基于历史价格趋势判断（看过去3天的模糊记忆）
@@ -178043,6 +178048,7 @@ function getInfoCost(baseCost, affinity) {
  * @returns {{ success: boolean, message: string, info?: string }}
  */
 function buyInfoFromNpc(npcId, infoTypeId, state) {
+  if (!state) return { success: false, message: "⚠️ 游戏状态未就绪。" }; // [全系统自洽修复] 域A A类: state 守卫
   var npc = getNpcById(npcId);
   if (!npc) return { success: false, message: "⚠️ 找不到该NPC。" };
 
@@ -178115,6 +178121,7 @@ function buyInfoFromNpc(npcId, infoTypeId, state) {
  * 生成NPC情报的具体内容文本
  */
 function generateInfoText(npcId, infoTypeId, state) {
+  if (!state || !state.trade) return ""; // [全系统自洽修复] 域A A类: state.trade 守卫
   var infoDef = NPC_TRADE_INFO[npcId];
   if (!infoDef) return "";
 
@@ -178356,6 +178363,7 @@ function tryTriggerNPCInfoShare(npcId, state) {
  * @returns {Array} 可用商品列表
  */
 function getDailyGoodsForLocation(locKey, state) {
+  if (!state) return []; // [全系统自洽修复] 域A A类: state 守卫
   var loc = getLocation(locKey);
   if (!loc) return [];
 
@@ -185934,7 +185942,7 @@ const DAILY_PIPELINE = [
             StateManager.addMessage(
               "💡 你有 ¥" +
                 ch +
-                "，可以租个合租床位（¥150+¥12/天）改善睡眠和卫生。去城中村看看？",
+                "，可以租个合租床位（¥150+¥12/天）改善睡眠和卫生。去城中村看看？合租床位每天自动恢复疲劳+20、卫生+5。",
               "info",
             );
           }
@@ -185943,7 +185951,7 @@ const DAILY_PIPELINE = [
             StateManager.addMessage(
               "💡 你有 ¥" +
                 ch +
-                "，单间（¥800+¥25/天）有独立空间，还能做饭洗澡。去城中村找房东？",
+                "，单间（¥800+¥25/天）有独立空间，还能做饭洗澡。单间每天自动恢复疲劳+35、卫生+10，还有小厨房。去城中村找房东？",
               "info",
             );
           }
@@ -227793,50 +227801,23 @@ function renderAchievementsTab(state, parent) {
 
 /**
  * 成就解锁通知弹窗
- * 在成就解锁时调用，显示一个飘窗动画
+ * 在成就解锁时调用，显示一个模态弹窗，需要玩家点击确认
  */
 function showAchievementUnlockedPopup(ach) {
   if (!ach) return;
-  var existing = document.getElementById("ach-popup");
-  if (existing) existing.remove();
-
-  var popup = document.createElement("div");
-  popup.id = "ach-popup";
-  popup.style.cssText =
-    "position:fixed;top:80px;right:20px;z-index:9999;" +
-    "background:linear-gradient(135deg,var(--bg-card),#2a2520);" +
-    "border:2px solid var(--accent);border-radius:12px;" +
-    "padding:16px 20px;min-width:260px;max-width:320px;" +
-    "box-shadow:0 8px 32px rgba(0,0,0,0.4);" +
-    "animation:achSlideIn 0.5s ease-out;" +
-    "display:flex;gap:12px;align-items:flex-start;";
-
-  // [全系统自洽修复] 域F 成就弹窗 innerHTML 加 _esc 防 XSS/文字截断
-  popup.innerHTML =
-    '<div style="font-size:32px;flex-shrink:0;">' +
-    _esc(ach.icon || "🏅") +
-    "</div>" +
-    '<div style="flex:1;min-width:0;">' +
-    '<div style="font-size:10px;color:var(--accent);font-weight:bold;margin-bottom:2px;">🏆 成就解锁</div>' +
-    '<div style="font-size:14px;font-weight:bold;color:var(--text-primary);margin-bottom:2px;">' +
-    _esc(ach.name) +
-    "</div>" +
-    '<div style="font-size:11px;color:var(--text-secondary);">' +
-    _esc(ach.desc || "") +
-    "</div>" +
-    "</div>";
-
-  document.body.appendChild(popup);
-
-  // 3秒后淡出移除
-  setTimeout(function () {
-    popup.style.transition = "opacity 0.5s, transform 0.5s";
-    popup.style.opacity = "0";
-    popup.style.transform = "translateX(50px)";
-    setTimeout(function () {
-      if (popup.parentNode) popup.remove();
-    }, 500);
-  }, 3000);
+  // 使用模态弹窗，需要玩家点击后才继续
+  showModal({
+    title: "🏆 成就解锁！",
+    body: '<div style="text-align:center;padding:8px 0;">' +
+      '<div style="font-size:48px;margin-bottom:12px;">' + _esc(ach.icon || "🏅") + '</div>' +
+      '<div style="font-size:18px;font-weight:bold;color:var(--accent);margin-bottom:8px;">' + _esc(ach.name) + '</div>' +
+      '<div style="font-size:13px;color:var(--text-secondary);line-height:1.6;">' + _esc(ach.desc || "") + '</div>' +
+      (ach.story ? '<div style="margin-top:10px;padding:10px;background:rgba(74,158,92,0.06);border-radius:8px;font-size:12px;color:var(--text-primary);line-height:1.5;border-left:3px solid var(--accent);text-align:left;">📖 ' + _esc(ach.story) + '</div>' : "") +
+      '</div>',
+    buttons: [
+      { text: "🎉 太棒了！", cls: "btn-primary", callback: function () { return true; } },
+    ],
+  });
 }
 
 // ====== P2#12 技能分支选择弹窗 ======
