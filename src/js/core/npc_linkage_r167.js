@@ -52,7 +52,9 @@
         best = id; bestAff = r.affinity || 0;
       }
     }
-    return best ? { id: id, affinity: bestAff } : null;
+    // [全系统自洽修复] 域D 修复:返回捕获的最高好感NPC id(best),
+    // 原写 id 为 for...in 尾次迭代变量,导致 safeAffinityR167(st,best.id,...) 把好感+5加错NPC
+    return best ? { id: best, affinity: bestAff } : null;
   }
 
   // ---- 联动事件 ----
@@ -234,7 +236,9 @@
             // 恢复心情
             if (st.player) {
               st.player.mental = Math.min(100, (st.player.mental || 30) + 12);
-              st.player.happiness = Math.min(100, (st.player.happiness || 50) + 8);
+              // [全系统自洽修复] 域D 修复:st.player.happiness 是死字段(全库仅写入、无任何渲染读取),
+              // 真实幸福感字段为 st.needs.happiness——原写 player.happiness 致"心情+8"被静默丢弃。
+              st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 8);
             }
             // 给好感最高的NPC加好感
             var best = pickClosestNpcR167(st, 40);

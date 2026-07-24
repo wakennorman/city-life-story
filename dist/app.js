@@ -93282,6 +93282,221 @@ if (typeof window !== "undefined") {
 })();
 
 ;
+// ==== js/core/domain_d_linkage_r194.js ====
+/*
+ * 城市浮生记 — 域D（NPC/社交）联动增强 · R194
+ * 全系统优化 loop R194 · 联动增强 3项
+ *
+ * 设计约束（与既有 linkage 文件一致）：
+ *  - IIFE 注入全局 RANDOM_EVENTS，避免改 cross_system_events.js。
+ *  - 所有 state 访问均 || 防御；严守域D铁律(只读 state.relationships /
+ *    rel&&rel.met 守卫 / 跨NPC好感传导走 applyAffinityChange)。
+ *  - 里程碑类事件用 st.flags._xxxDone 去重。
+ *  - 数值标 [PLACEHOLDER]，便于后续平衡调参。
+ */
+(function () {
+  if (typeof RANDOM_EVENTS === "undefined" || !RANDOM_EVENTS) return;
+  if (RANDOM_EVENTS._domainDLinkageR194Loaded) return;
+  RANDOM_EVENTS._domainDLinkageR194Loaded = true;
+
+  // ---- 本地助手 ----
+
+  // 取首个已结识(met)且好感≥minAff 的NPC id（避免硬编码未激活NPC造成死事件）
+  function firstMetNpcD194(st, minAff) {
+    if (!st || !st.relationships) return null;
+    minAff = minAff || 0;
+    for (var id in st.relationships) {
+      if (!Object.prototype.hasOwnProperty.call(st.relationships, id)) continue;
+      var r = st.relationships[id];
+      if (r && r.met && (r.affinity || 0) >= minAff) return id;
+    }
+    return null;
+  }
+
+  // 安全好感传导（严守域D铁律：走 applyAffinityChange 自动钳制+记_lastInteractionDay+升级播报）
+  function bumpAffinityD194(st, npcId, delta, reason) {
+    if (!st || !npcId) return;
+    if (typeof applyAffinityChange === "function") {
+      applyAffinityChange(st, npcId, delta, reason || "域D R194联动");
+      return;
+    }
+    if (!st.relationships) st.relationships = {};
+    if (!st.relationships[npcId]) st.relationships[npcId] = { met: true, affinity: 0 };
+    st.relationships[npcId].affinity = Math.max(
+      -100,
+      Math.min(100, (st.relationships[npcId].affinity || 0) + delta),
+    );
+    st.relationships[npcId].met = true;
+  }
+
+  // 取玩家等级最高的真实技能键（addSkillXp 需真实键，否则静默 return）
+  function topSkillKeyD194(st) {
+    if (!st || !st.skills) return null;
+    var best = null,
+      bestLv = -1;
+    for (var k in st.skills) {
+      if (!Object.prototype.hasOwnProperty.call(st.skills, k)) continue;
+      var lv = (st.skills[k] && (st.skills[k].level || 0)) || 0;
+      if (lv > bestLv) {
+        bestLv = lv;
+        best = k;
+      }
+    }
+    return best;
+  }
+
+  // ===== 联动1: D→A 朋友帮你理账 → 数据素养提升 + 理账意识flag =====
+  RANDOM_EVENTS.push({
+    id: "npc_d_r194_budget_buddy",
+    phase: "street",
+    icon: "🧮",
+    title: "细心的朋友帮你理了笔账",
+    desc:
+      "一位平时过日子很精明的朋友翻了翻你的开销，笑着指了指几笔冤枉钱：\n\n" +
+      "「你这钱花得冤。记账、比价、攒零钱，都是基本功。我教你两招。」\n\n" +
+      "你忽然觉得，过日子也是门学问。",
+    conditions: function (st) {
+      if (!st || !st.relationships || !st.player) return false;
+      if (st.flags && st.flags._npcBudgetBuddyDone) return false;
+      if ((st.player.day || 0) < 20) return false;
+      return !!firstMetNpcD194(st, 40);
+    },
+    choices: [
+      {
+        text: "🧮 认真学两招（心智+数据素养）",
+        hint: "intelligence+2, mental+3, 开启理账意识",
+        apply: function (st) {
+          if (st.flags) {
+            st.flags._npcBudgetBuddyDone = true;
+            st.flags._npcBudgetSense = true; // [PLACEHOLDER] 数据域可读取: 提升日常开销效率
+          }
+          if (st.player) {
+            st.player.intelligence = Math.min(100, (st.player.intelligence || 50) + 2); // [PLACEHOLDER]
+            st.player.mental = Math.min(100, (st.player.mental || 50) + 3); // [PLACEHOLDER]
+          }
+          var nid = firstMetNpcD194(st, 40);
+          if (nid) bumpAffinityD194(st, nid, 3, "谢谢你教我理账");
+          if (typeof StateManager !== "undefined" && StateManager.addMessage)
+            StateManager.addMessage(
+              "🧮 朋友的两招理账法让你心里有数。intelligence+2，mental+3。",
+              "good",
+            );
+        },
+      },
+      {
+        text: "😅 记性不好，先记下",
+        hint: "好感不变",
+        apply: function (st) {
+          if (st.flags) st.flags._npcBudgetBuddyDone = true;
+        },
+      },
+    ],
+    probability: 0.03,
+  });
+
+  // ===== 联动2: D→C 圈里前辈公开夸你 → 职业技能成长 =====
+  RANDOM_EVENTS.push({
+    id: "npc_d_r194_mentor_praise",
+    phase: "street",
+    icon: "🌟",
+    title: "圈里一位前辈公开夸你靠谱",
+    desc:
+      "在一次聚会/饭局上，一位你敬重的前辈当着大伙的面说：\n\n" +
+      "「这年轻人，交给他的事我放心。肯学、肯扛，难得。」\n\n" +
+      "这话传开，竟有人主动想带你做项目。",
+    conditions: function (st) {
+      if (!st || !st.relationships || !st.player) return false;
+      if (st.flags && st.flags._npcMentorPraiseDone) return false;
+      if ((st.player.day || 0) < 30) return false;
+      return !!firstMetNpcD194(st, 50);
+    },
+    choices: [
+      {
+        text: "🌟 把夸奖化作手艺（技能XP+职业心智）",
+        hint: "最高技能XP+10, mental+3",
+        apply: function (st) {
+          if (st.flags) st.flags._npcMentorPraiseDone = true;
+          var sk = topSkillKeyD194(st);
+          var gain = 10; // [PLACEHOLDER]
+          if (sk && typeof addSkillXp === "function") {
+            addSkillXp(sk, gain);
+          } else if (sk && st.skills[sk]) {
+            st.skills[sk].xp = (st.skills[sk].xp || 0) + gain;
+          }
+          if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 3); // [PLACEHOLDER]
+          var nid = firstMetNpcD194(st, 50);
+          if (nid) bumpAffinityD194(st, nid, 4, "承蒙您抬爱");
+          if (typeof StateManager !== "undefined" && StateManager.addMessage)
+            StateManager.addMessage(
+              "🌟 前辈的一句夸奖成了你的敲门砖。" + (sk ? sk + " XP+" + gain : "") + "，mental+3。",
+              "good",
+            );
+        },
+      },
+      {
+        text: "🙇 低调记在心里",
+        hint: "好感不变",
+        apply: function (st) {
+          if (st.flags) st.flags._npcMentorPraiseDone = true;
+        },
+      },
+    ],
+    probability: 0.025,
+  });
+
+  // ===== 联动3: D→E 公司投缘同事聊理财 → 投资意识 + 实打实落袋 =====
+  RANDOM_EVENTS.push({
+    id: "npc_d_r194_colleague_invest_tip",
+    phase: "corporate",
+    icon: "💡",
+    title: "投缘的同事跟你聊了句理财",
+    desc:
+      "午休时，一位平时聊得来的同事压低声音：\n\n" +
+      "「我最近琢磨了点理财，别全放活期。小钱滚起来也是钱——当然，别梭哈。」\n\n" +
+      "你琢磨着，好像有点道理。",
+    conditions: function (st) {
+      if (!st || !st.relationships || !st.player) return false;
+      if (st.player.phase !== "corporate") return false;
+      if (st.flags && st.flags._npcColleagueInvestTipDone) return false;
+      if ((st.player.day || 0) < 60) return false;
+      return !!firstMetNpcD194(st, 30);
+    },
+    choices: [
+      {
+        text: "💡 听进去了，挪了点钱试水（投资意识+落袋）",
+        hint: "开启_dataInvestorMindset, cash+[PLACEHOLDER], mental+2",
+        apply: function (st) {
+          if (st.flags) {
+            st.flags._npcColleagueInvestTipDone = true;
+            st.flags._dataInvestorMindset = true; // 复用工经域联动门槛flag
+          }
+          if (st.resources) {
+            var tip = 1000; // [PLACEHOLDER] 同事情报变现的小额落袋
+            st.resources.cash = (st.resources.cash || 0) + tip;
+          }
+          if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 2); // [PLACEHOLDER]
+          var nid = firstMetNpcD194(st, 30);
+          if (nid) bumpAffinityD194(st, nid, 3, "谢同事的理财思路");
+          if (typeof StateManager !== "undefined" && StateManager.addMessage)
+            StateManager.addMessage(
+              "💡 同事一句理财思路，让你挪出本金小试。开启投资意识，cash+" + tip + "，mental+2。",
+              "good",
+            );
+        },
+      },
+      {
+        text: "😅 笑笑没接话",
+        hint: "好感不变",
+        apply: function (st) {
+          if (st.flags) st.flags._npcColleagueInvestTipDone = true;
+        },
+      },
+    ],
+    probability: 0.03,
+  });
+})();
+
+;
 // ==== js/core/lifecycle_linkage_events.js ====
 /**
  * 核心机制/生命周期域联动增强事件 — 域 G（核心机制/生命周期）跨域桥接
@@ -97797,7 +98012,9 @@ if (typeof window !== "undefined") {
         best = id; bestAff = r.affinity || 0;
       }
     }
-    return best ? { id: id, affinity: bestAff } : null;
+    // [全系统自洽修复] 域D 修复:返回捕获的最高好感NPC id(best),
+    // 原写 id 为 for...in 尾次迭代变量,导致 safeAffinityR167(st,best.id,...) 把好感+5加错NPC
+    return best ? { id: best, affinity: bestAff } : null;
   }
 
   // ---- 联动事件 ----
@@ -97979,7 +98196,9 @@ if (typeof window !== "undefined") {
             // 恢复心情
             if (st.player) {
               st.player.mental = Math.min(100, (st.player.mental || 30) + 12);
-              st.player.happiness = Math.min(100, (st.player.happiness || 50) + 8);
+              // [全系统自洽修复] 域D 修复:st.player.happiness 是死字段(全库仅写入、无任何渲染读取),
+              // 真实幸福感字段为 st.needs.happiness——原写 player.happiness 致"心情+8"被静默丢弃。
+              st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 8);
             }
             // 给好感最高的NPC加好感
             var best = pickClosestNpcR167(st, 40);
@@ -198199,7 +198418,7 @@ function renderStocks(area, inv, state, parent) {
         }
       }
       rowsHtml += `
-        <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.04);font-size:11px;gap:8px;">
+        <div class="stock-holding-row" data-symbol="${h.symbol}" style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.04);font-size:11px;gap:8px;cursor:pointer;" title="点击查看${stkName}逐笔成交记录">
           <span style="font-weight:600;min-width:50px;">${h.symbol}</span>
           <span style="color:var(--text-secondary);min-width:55px;font-size:10px;">${stkName}</span>
           <span style="min-width:40px;text-align:right;">${h.shares}股</span>
@@ -198221,8 +198440,58 @@ function renderStocks(area, inv, state, parent) {
         <span style="min-width:50px;">代码</span><span style="min-width:55px;">名称</span><span style="min-width:40px;text-align:right;">数量</span><span style="min-width:55px;text-align:right;">均价</span><span style="min-width:55px;text-align:right;">现价</span><span style="min-width:60px;text-align:right;">市值</span><span style="min-width:70px;text-align:right;">盈亏</span><span style="min-width:45px;text-align:right;">幅度</span>
       </div>
       ${rowsHtml}
+      <div id="trade-log-area"></div>
     `;
     area.appendChild(portfolioDiv);
+
+    // 持仓行点击展开成交记录
+    setTimeout(function() {
+      var logArea = document.getElementById("trade-log-area");
+      portfolioDiv.querySelectorAll(".stock-holding-row").forEach(function(rw){
+        var sym = rw.dataset.symbol;
+        rw.onclick = function() {
+          if (this._expanded) {
+            this._expanded = false;
+            this.style.background = "transparent";
+            var existing = logArea.querySelector("[data-for-sym=\"" + sym + "\"]");
+            if (existing) existing.remove();
+            return;
+          }
+          this._expanded = true;
+          this.style.background = "rgba(0,180,216,0.08)";
+          var prev = logArea.querySelector("[data-for-sym=\"" + sym + "\"]");
+          if (prev) prev.remove();
+          var logs = (inv.tradeLog || []).filter(function(t){ return t.symbol === sym; });
+          if (logs.length === 0) return;
+          logs.sort(function(a,b){ return a.day - b.day; });
+          var logRows = "";
+          logs.forEach(function(t){
+            var isBuy = t.type === "buy";
+            var signText = isBuy ? "买入" : "卖出";
+            var clr = isBuy ? "var(--danger)" : "var(--success)";
+            var plHtml = "";
+            if (typeof t.pl === "number") {
+              var clr2 = t.pl >= 0 ? "var(--danger)" : "var(--success)";
+              var plSign = t.pl >= 0 ? "+" : "";
+              plHtml = ' <span style="color:' + clr2 + '">(' + plSign + "¥" + Math.round(t.pl) + ")</span>";
+            }
+            logRows += '<div style="display:flex;gap:8px;font-size:10px;color:var(--text-muted);padding:3px 0;border-bottom:1px dashed rgba(255,255,255,0.06);">';
+            logRows += '<span style="min-width:60px;">第' + t.day + '天</span>';
+            logRows += '<span style="min-width:30px;color:' + clr + ';font-weight:bold;">' + signText + '</span>';
+            logRows += '<span style="min-width:70px;text-align:right;">' + t.price.toFixed(2) + '¥/' + (t.unitLabel||"") + '</span>';
+            var qtyDec = (t.unitLabel && t.unitLabel !== "股") ? 4 : 0;
+            logRows += '<span style="min-width:50px;text-align:right;">×' + Number(t.quantity).toFixed(qtyDec) + '</span>';
+            logRows += '<span style="min-width:80px;text-align:right;">=' + ('¥' + Math.round(t.total).toLocaleString()) + '</span>';
+            logRows += plHtml + '</div>';
+          });
+          var div = document.createElement("div");
+          div.setAttribute("data-for-sym", sym);
+          div.style.cssText = "margin-top:6px;padding:8px;background:rgba(0,0,0,0.25);border-radius:6px;font-size:10px;";
+          div.innerHTML = '<div style="display:flex;gap:8px;font-size:9px;color:var(--text-muted);padding:2px 0 4px 0;border-bottom:1px solid var(--border);margin-bottom:2px;"><span style="min-width:60px;">日期</span><span style="min-width:30px;">操作</span><span style="min-width:70px;text-align:right;">单价</span><span style="min-width:50px;text-align:right;">数量</span><span style="min-width:80px;text-align:right;">金额</span></div>' + logRows;
+          logArea.appendChild(div);
+        };
+      });
+    }, 0);
   }
 
   var grid = document.createElement("div");
