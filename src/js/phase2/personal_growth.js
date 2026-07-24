@@ -582,7 +582,7 @@ function practiceHobby(state, hobbyId) {
   // 检查费用
   const cost =
     hobby.baseCost + Math.floor(Random.float(0, hobby.baseCost * 0.5));
-  if (state.resources.cash < cost) {
+  if ((state.resources.cash || 0) < cost) {
     return { success: false, message: `需要¥${cost}，现金不足` };
   }
 
@@ -748,7 +748,7 @@ function applyHobbyBenefits(state, hobby) {
  */
 function healthCheckup(state) {
   const cost = Random.int(500, 999);
-  if (state.resources.cash < cost) {
+  if ((state.resources.cash || 0) < cost) {
     return { success: false, message: `体检需要¥${cost}，现金不足` };
   }
 
@@ -797,7 +797,7 @@ function healthCheckup(state) {
  */
 function 心理咨询(state) {
   const cost = 500;
-  if (state.resources.cash < cost) {
+  if ((state.resources.cash || 0) < cost) {
     return { success: false, message: `心理咨询需要¥${cost}，现金不足` };
   }
 
@@ -936,7 +936,7 @@ function completeGoal(state, goal) {
 
   // 给予奖励
   const reward = Random.int(1000, 2999);
-  state.resources.cash += reward;
+  state.resources.cash = (state.resources.cash || 0) + reward;
   state.player.fame = Math.min(100, state.player.fame + 5);
 
   StateManager.addMessage(`💰 目标达成奖励：¥${reward}，名气+5`, "success");

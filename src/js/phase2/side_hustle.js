@@ -348,7 +348,7 @@
     income = Math.round(income);
 
     // 应用收入
-    state.resources.cash += income;
+    state.resources.cash = (state.resources.cash || 0) + income;
     state.resources.totalEarned = (state.resources.totalEarned || 0) + income;
 
     // 增加疲劳度

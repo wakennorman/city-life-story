@@ -502,7 +502,7 @@ function goDating(state, eventId) {
 
   // 检查费用
   const cost = Random.int(event.cost[0], event.cost[1] - 1);
-  if (state.resources.cash < cost) {
+  if ((state.resources.cash || 0) < cost) {
     return { success: false, message: `现金不足，需要¥${cost}` };
   }
 
@@ -581,7 +581,7 @@ function getMarried(state) {
   }
 
   const weddingCost = Random.int(50000, 149999);
-  if (state.resources.cash < weddingCost) {
+  if ((state.resources.cash || 0) < weddingCost) {
     return { success: false, message: `婚礼需要¥${weddingCost}，现金不足` };
   }
 
@@ -621,7 +621,7 @@ function haveChild(state) {
   }
 
   const birthCost = Random.int(5000, 14999);
-  if (state.resources.cash < birthCost) {
+  if ((state.resources.cash || 0) < birthCost) {
     return { success: false, message: `生育需要¥${birthCost}，现金不足` };
   }
 
@@ -838,8 +838,8 @@ function tickFamilyDaily(state) {
     }
 
     // 月度收入
-    state.resources.cash += spouse.income;
-    state.resources.totalEarned += spouse.income;
+    state.resources.cash = (state.resources.cash || 0) + spouse.income;
+    state.resources.totalEarned = (state.resources.totalEarned || 0) + spouse.income;
   }
 
   // 月度家庭支出
@@ -851,8 +851,8 @@ function tickFamilyDaily(state) {
       expenses.monthlyChildren +
       expenses.monthlyParents;
 
-    if (state.resources.cash >= totalMonthly) {
-      state.resources.cash -= totalMonthly;
+    if ((state.resources.cash || 0) >= totalMonthly) {
+      state.resources.cash = Math.max(0, (state.resources.cash || 0) - totalMonthly);
       StateManager.addMessage(
         `📊 本月家庭支出¥${totalMonthly.toLocaleString()}`,
         "hint",
@@ -926,7 +926,7 @@ function takeParentToHospital(state, parentKey) {
   const healthState = PARENT_HEALTH_STATES[parent.health];
   const cost = healthState.medicalCost;
 
-  if (state.resources.cash < cost) {
+  if ((state.resources.cash || 0) < cost) {
     return {
       success: false,
       message: `治疗需要¥${cost.toLocaleString()}，现金不足`,
@@ -1030,7 +1030,7 @@ function doFamilyActivity(state, activityId) {
   // 检查费用
   const cost =
     activity.cost[0] + Random.int(activity.cost[0], activity.cost[1] - 1);
-  if (state.resources.cash < cost) {
+  if ((state.resources.cash || 0) < cost) {
     return { success: false, message: `需要¥${cost}，现金不足` };
   }
 
