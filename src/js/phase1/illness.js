@@ -372,6 +372,16 @@ function tickIllnessDecay(state) {
           (ill.icon || "🤒") + " 你的" + ill.name + "好了。",
           "success",
         );
+        // [全系统自洽修复] 域G 联动增强: 重症康复→峰终定律积极收尾（G→B 健康-叙事联动）
+        if ((ill.severity || 1) >= 4 && !state.flags["_recoveredFrom_" + inst.id]) {
+          state.flags["_recoveredFrom_" + inst.id] = true;
+          StateManager.addMessage(
+            "💪 从" + ill.name + "中康复，你更加珍惜健康的日子。心智+3，心情+10。",
+            "success",
+          );
+          state.player.mental = Math.min(100, (state.player.mental || 0) + 3);
+          state.needs.happiness = Math.min(100, (state.needs.happiness || 0) + 10);
+        }
         // 记录痊愈，用于演化链追踪
         recordIllnessCure(state, inst.id);
         continue; // 不放回 remaining
