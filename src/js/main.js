@@ -2516,7 +2516,7 @@ function getAvailableActions(state) {
         reqFail,
         disabled:
           !!reqFail ||
-          (job.startupCost && state.resources.cash < job.startupCost
+          (job.startupCost && (state.resources.cash || 0) < job.startupCost
             ? `启动资金不足(需¥${job.startupCost})`
             : null) ||
           null,
@@ -2526,7 +2526,7 @@ function getAvailableActions(state) {
             StateManager.addMessage(`⚠️ ${finalReq}`, "warning");
             return;
           }
-          if (job.startupCost && state.resources.cash < job.startupCost) {
+          if (job.startupCost && (state.resources.cash || 0) < job.startupCost) {
             StateManager.addMessage(
               `⚠️ 启动资金不足，需要 ¥${job.startupCost}`,
               "warning",
@@ -3473,7 +3473,7 @@ function getAvailableActions(state) {
         name: "还村长钱",
         desc: "随时还一部分或全部村长的账，无债一身轻。",
         icon: "🏘️",
-        disabled: state.resources.cash <= 0 ? true : false,
+        disabled: (state.resources.cash || 0) <= 0 ? true : false,
         handler: () => {
           showRepayVillageModal();
         },
@@ -3489,7 +3489,7 @@ function getAvailableActions(state) {
       apCost: 10,
       costEstimate: 15,
       effectEstimate: "饥饱+35, 心情+8",
-      disabled: state.resources.cash < 8 ? true : false,
+      disabled: (state.resources.cash || 0) < 8 ? true : false,
       handler: () => {
         const st = StateManager.getState();
         const isNewbie = st.player.day <= 10;
@@ -3548,7 +3548,7 @@ function getAvailableActions(state) {
       icon: "🚿",
       costEstimate: 8,
       effectEstimate: "卫生+40",
-      disabled: state.resources.cash < 8 ? true : false,
+      disabled: (state.resources.cash || 0) < 8 ? true : false,
       handler: () => {
         const st = StateManager.getState();
         if ((st.resources.cash || 0) < 8) {
@@ -3570,7 +3570,7 @@ function getAvailableActions(state) {
         name: "存款",
         desc: "把钱存入银行，吃利息也更安全。",
         icon: "🏦",
-        disabled: state.resources.cash <= 0 ? true : false,
+        disabled: (state.resources.cash || 0) <= 0 ? true : false,
         handler: () => {
           showDepositModal();
         },
@@ -3603,7 +3603,7 @@ function getAvailableActions(state) {
         desc: "偿还银行贷款。",
         icon: "💸",
         disabled:
-          (state.resources.bankDebt || 0) <= 0 && state.resources.cash <= 0
+          (state.resources.bankDebt || 0) <= 0 && (state.resources.cash || 0) <= 0
             ? true
             : false,
         handler: () => {
@@ -3764,7 +3764,7 @@ function getAvailableActions(state) {
           reqText = `需 ${action.requiresRank}+`;
         }
       }
-      if (action.cost && state.resources.cash < action.cost) {
+      if (action.cost && (state.resources.cash || 0) < action.cost) {
         disabled = true;
         reqText = `需 ¥${action.cost}`;
       }
@@ -3968,7 +3968,7 @@ function getAvailableActions(state) {
               "success",
             );
           } else {
-            state.resources.cash = Math.max(0, (state.resources.cash || 0) - Math.floor)(cert.requirements.cash / 2);
+            state.resources.cash = Math.max(0, (state.resources.cash || 0) - Math.floor(cert.requirements.cash / 2));
             StateManager.addMessage(
               `📜 ${cert.name}考试未通过，报名费损失一半。下次再努力！`,
               "warning",
@@ -4898,7 +4898,7 @@ function doStreetJob(job) {
       if (state.chengguan.warnings >= 2 || state.chengguan.relationship < -30) {
         // 没收货物+罚款
         const fine = 80 + Random.int(0, 199);
-        state.resources.cash = Math.max(0, state.resources.cash - fine);
+        state.resources.cash = Math.max(0, (state.resources.cash || 0) - fine);
         state.chengguan.warnings = 0;
         StateManager.addMessage(
           `🚔 城管突击检查！货物被没收，罚款 ¥${fine}！`,
