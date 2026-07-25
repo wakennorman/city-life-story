@@ -237,7 +237,7 @@ function buildReportHTML(txs, state, reconcileInfo) {
     } catch (e) { /* 静默 */ }
   })();
 
-  // [全系统自洽修复] 域E 联动增强: E→F 日报投资组合概况
+  // [全系统自洽修复] 域E 联动增强: E→F 日报投资组合概况（含每项盈亏）
   (function () {
     try {
       var _inv = state.investment;
@@ -246,24 +246,70 @@ function buildReportHTML(txs, state, reconcileInfo) {
       var _props = _inv.properties || [];
       var _btc = _inv.btcHoldings || 0;
       if (_holdings.length === 0 && _props.length === 0 && _btc <= 0) return;
-      // 计算总持仓市值
+      // 计算总持仓市值 + 逐项盈亏
       var _portVal = 0;
+      var _totalPL = 0;
+      var _plLines = [];
+      // 股票
       for (var _hi = 0; _hi < _holdings.length; _hi++) {
         var _h = _holdings[_hi];
         var _m = _inv.stockMarket && _inv.stockMarket[_h.symbol];
-        if (_m && isFinite(_m.price)) _portVal += _m.price * (_h.shares || 0);
+        var _px = _m && isFinite(_m.price) ? _m.price : 0;
+        var _val = _px * (_h.shares || 0);
+        _portVal += _val;
+        var _cost = (_h.avgPrice || 0) * (_h.shares || 0);
+        var _pl = _val - _cost;
+        _totalPL += _pl;
+        if (_h.shares > 0) {
+          var _plSign = _pl >= 0 ? "+" : "";
+          var _name = _h.symbol;
+          // 查找股票名称
+          if (typeof INV_STOCKS !== "undefined") {
+            for (var _si = 0; _si < INV_STOCKS.length; _si++) {
+              if (INV_STOCKS[_si].symbol === _h.symbol) {
+                _name = INV_STOCKS[_si].name;
+                break;
+              }
+            }
+          }
+          _plLines.push(
+            _name + " " + _h.shares + "股 " + _plSign + "¥" + Math.round(_pl).toLocaleString(),
+          );
+        }
       }
+      // 房产
       for (var _pi = 0; _pi < _props.length; _pi++) {
         var _p = _props[_pi];
-        _portVal += _p.currentPrice || _p.buyPrice || 0;
+        var _pVal = _p.currentPrice || _p.buyPrice || 0;
+        _portVal += _pVal;
+        var _pCost = _p.buyPrice || _pVal;
+        var _pPL = _pVal - _pCost;
+        _totalPL += _pPL;
+        var _pSign = _pPL >= 0 ? "+" : "";
+        _plLines.push(
+          (_p.name || "房产") + " " + _pSign + "¥" + Math.round(_pPL).toLocaleString(),
+        );
       }
-      if (_btc > 0 && _inv.btcPrice > 0) _portVal += _btc * _inv.btcPrice;
+      // BTC
+      if (_btc > 0 && _inv.btcPrice > 0) {
+        var _btcVal = _btc * _inv.btcPrice;
+        _portVal += _btcVal;
+        var _btcCost = (_inv.btcAvgCost || _inv.btcPrice) * _btc;
+        var _btcPL = _btcVal - _btcCost;
+        _totalPL += _btcPL;
+        var _btcSign = _btcPL >= 0 ? "+" : "";
+        _plLines.push("BTC " + _btcSign + "¥" + Math.round(_btcPL).toLocaleString());
+      }
       if (_portVal <= 0) return;
+      var _totalPLSign = _totalPL >= 0 ? "+" : "";
+      var _totalPLColor = _totalPL >= 0 ? "var(--danger)" : "var(--success)";
       bodyHtml += '<div style="padding:6px 12px;margin:6px 0;background:rgba(46,204,113,0.06);border:1px solid rgba(46,204,113,0.15);border-radius:8px;font-size:12px;">';
+      bodyHtml += '<div style="display:flex;justify-content:space-between;align-items:center;">';
       bodyHtml += '<span style="font-weight:700;">📈 投资组合</span>';
-      bodyHtml += '<span style="float:right;">¥' + Math.round(_portVal).toLocaleString() + '</span>';
-      bodyHtml += '<div style="font-size:10px;color:var(--text-muted);margin-top:2px;">';
-      bodyHtml += _holdings.length + '只股票 · ' + _props.length + '套房产' + (_btc > 0 ? ' · BTC' : '');
+      bodyHtml += '<span>¥' + Math.round(_portVal).toLocaleString() + ' <span style="font-size:11px;color:' + _totalPLColor + ';">(' + _totalPLSign + '¥' + Math.round(_totalPL).toLocaleString() + ')</span></span>';
+      bodyHtml += '</div>';
+      bodyHtml += '<div style="font-size:10px;color:var(--text-muted);margin-top:4px;line-height:1.6;">';
+      bodyHtml += _plLines.join('<br>');
       bodyHtml += '</div></div>';
     } catch (e) { /* 静默：投资概况不影响主流程 */ }
   })();

@@ -766,13 +766,26 @@ function _moveToHomeOrHospital(state, reason) {
     state.status.health = Math.min(30, (state.status.health || 0) + 10);
     StateManager.addMessage("🏠 被好心人送回了住所，休息后恢复了一点体力。", "info");
   } else {
-    // 无住所 → 送医院（需付费）
+    // 无住所 → 送医院（需付费，不够则欠债）
     state.trade.currentLocation = "hospital";
     var fee = 100 + Random.int(0, 50);
-    state.resources.cash = Math.max(0, (state.resources.cash || 0) - fee);
+    if ((state.resources.cash || 0) >= fee) {
+      state.resources.cash = Math.max(0, (state.resources.cash || 0) - fee);
+      StateManager.addMessage("🏥 被路人送到医院，花了¥" + fee + "急救费，伤势得到处理。", "danger");
+    } else {
+      // 钱不够→欠债
+      var shortfall = fee - (state.resources.cash || 0);
+      state.resources.cash = 0;
+      state.resources.bankDebt = (state.resources.bankDebt || 0) + shortfall;
+      state.resources.debt =
+        (state.resources.villageDebt || 0) + (state.resources.fineDebt || 0) + (state.resources.bankDebt || 0);
+      StateManager.addMessage(
+        "🏥 被路人送到医院，但付不起¥" + fee + "急救费，欠下¥" + shortfall + "债务。",
+        "danger",
+      );
+    }
     // 医院急救恢复健康（至少保底到15，防止健康0卡死）
     state.status.health = Math.max(15, (state.status.health || 0) + 20);
-    StateManager.addMessage("🏥 被路人送到医院，花了¥" + fee + "急救费，伤势得到处理。", "danger");
   }
 }
 
