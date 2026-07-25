@@ -231288,6 +231288,15 @@ function createActionCard(action, state) {
 
   if (!action.disabled) {
     card.addEventListener("click", () => {
+      // [全系统AP守卫] 通用AP检查 — 防止任何行动在AP不足时被执行（防御性兜底）
+      if (action.apCost > 0 && (state.player?.actionPoints || 0) < action.apCost) {
+        StateManager.addMessage(
+          `⚠️ 行动力不足！需要 ${action.apCost} 点，当前仅 ${state.player.actionPoints || 0} 点。`,
+          "warning",
+        );
+        renderAll();
+        return;
+      }
       if (action.handler) {
         action.handler();
         renderAll();
@@ -259940,6 +259949,9 @@ function getAvailableActions(state) {
           (job.startupCost && (state.resources.cash || 0) < job.startupCost
             ? `启动资金不足(需¥${job.startupCost})`
             : null) ||
+          ((state.player.actionPoints || 0) < 33
+            ? `行动力不足(需33点,当前${state.player.actionPoints || 0}点)`
+            : null) ||
           null,
         handler: () => {
           const finalReq = checkJobRequirements(job, state);
@@ -259950,6 +259962,13 @@ function getAvailableActions(state) {
           if (job.startupCost && (state.resources.cash || 0) < job.startupCost) {
             StateManager.addMessage(
               `⚠️ 启动资金不足，需要 ¥${job.startupCost}`,
+              "warning",
+            );
+            return;
+          }
+          if ((state.player.actionPoints || 0) < 33) {
+            StateManager.addMessage(
+              `⚠️ 行动力不足，需要33点，当前仅${state.player.actionPoints || 0}点。`,
               "warning",
             );
             return;
@@ -261337,9 +261356,11 @@ function getAvailableActions(state) {
         icon: "📜",
         apCost: 33,
         costEstimate: cert.requirements.cash,
-        disabled: !canAfford,
+        disabled: !canAfford || ((state.player.actionPoints || 0) < 33 ? `行动力不足(需33点,当前${state.player.actionPoints || 0}点)` : null),
         reqFail: !canAfford ? `需 ¥${cert.requirements.cash}` : null,
         handler: () => {
+          // [全系统AP守卫] 先消耗AP再考试
+          if (consumeAP(33) === false) return;
           if (Random.chance(cert.examPassRate)) {
             state.certificates.push(cert.id);
             state.resources.cash = Math.max(0, (state.resources.cash || 0) - cert.requirements.cash);
@@ -261464,7 +261485,6 @@ function getAvailableActions(state) {
               "warning",
             );
           }
-          advanceTimeSlot();
         },
       });
     }
@@ -261819,6 +261839,20 @@ function showEarnFloat(amount, sourceEl) {
 
 function doStreetJob(job) {
   const state = StateManager.getState();
+
+  // [全系统AP守卫] 行动力不足时直接拒绝（防御性编程，防止disabled漏掉或绕过）
+  if ((state.player.actionPoints || 0) < 33) {
+    StateManager.addMessage(
+      `⚠️ 行动力不足，无法继续工作。需要33点，当前仅${state.player.actionPoints || 0}点。`,
+      "warning",
+    );
+    return;
+  }
+
+  // [全系统AP守卫] 先消耗行动力再干活（防止极端状态检查提前返回导致AP不扣、可无限白嫖）
+  if (consumeAP(33) === false) {
+    return; // 极端状态（饿晕/过劳/病危）触发，跳过本次行动
+  }
 
   // [全系统自洽修复] 跟踪唯一街头工作天数（用于显示和经验计算）
   if (!state.flags._workedToday) {
@@ -262526,9 +262560,6 @@ function doStreetJob(job) {
       console.warn("TriggerRegistry after_work 触发失败:", e);
     }
   }
-
-  // 推进时间
-  advanceTimeSlot();
 
   // ====== 连续工作天数追踪（全局 Work Streak）======
   // 在 doStreetJob 末尾记录，用于 daily_pipeline 的连续工作奖励判断

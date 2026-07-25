@@ -2443,6 +2443,15 @@ function createActionCard(action, state) {
 
   if (!action.disabled) {
     card.addEventListener("click", () => {
+      // [全系统AP守卫] 通用AP检查 — 防止任何行动在AP不足时被执行（防御性兜底）
+      if (action.apCost > 0 && (state.player?.actionPoints || 0) < action.apCost) {
+        StateManager.addMessage(
+          `⚠️ 行动力不足！需要 ${action.apCost} 点，当前仅 ${state.player.actionPoints || 0} 点。`,
+          "warning",
+        );
+        renderAll();
+        return;
+      }
       if (action.handler) {
         action.handler();
         renderAll();
