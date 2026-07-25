@@ -165,19 +165,27 @@ function applyStatusInteractions(state) {
   if (n.hunger < 30) n.fatigue = Math.min(100, n.fatigue + 5);
   if (n.hunger < 15) n.fatigue = Math.min(100, n.fatigue + 8);
 
+  // --- 社交缓冲：当社交圈≥3熟人的负面情绪打击降低25% ---
+  var _socialBuffHappiness = function (val) {
+    if (state.flags && state.flags._socialBuffActive) {
+      return Math.max(0, Math.round(val * 0.75));
+    }
+    return val;
+  };
+
   // --- 饥饿→心情下降（饿肚子不开心） ---
-  if (n.hunger < 20) n.happiness = Math.max(0, n.happiness - 5);
+  if (n.hunger < 20) n.happiness = Math.max(0, n.happiness - _socialBuffHappiness(5));
 
   // --- 疲劳→心情下降（累了心情自然差） ---
-  if (n.fatigue > 70) n.happiness = Math.max(0, n.happiness - 3);
-  if (n.fatigue > 85) n.happiness = Math.max(0, n.happiness - 5);
+  if (n.fatigue > 70) n.happiness = Math.max(0, n.happiness - _socialBuffHappiness(3));
+  if (n.fatigue > 85) n.happiness = Math.max(0, n.happiness - _socialBuffHappiness(5));
 
   // --- 疲劳→懒得洗漱 ---
   if (n.fatigue > 85) n.hygiene = Math.max(0, n.hygiene - 3);
 
   // --- 卫生差→心情下降 ---
-  if (n.hygiene < 20) n.happiness = Math.max(0, n.happiness - 3);
-  if (n.hygiene < 10) n.happiness = Math.max(0, n.happiness - 5);
+  if (n.hygiene < 20) n.happiness = Math.max(0, n.happiness - _socialBuffHappiness(3));
+  if (n.hygiene < 10) n.happiness = Math.max(0, n.happiness - _socialBuffHappiness(5));
 
   // --- 心情好→缓解疲劳（心情愉快精力恢复快） ---
   if (n.happiness > 70) n.fatigue = Math.max(0, n.fatigue - 3);
@@ -249,7 +257,7 @@ function checkExtremeConditions(state) {
     st.health = Math.max(0, st.health - 15);
     n.hunger = 10; // 好心人给了点吃的
     n.fatigue = Math.min(100, n.fatigue + 20);
-    n.happiness = Math.max(0, n.happiness - 20);
+    n.happiness = Math.max(0, n.happiness - (state.flags && state.flags._socialBuffActive ? 15 : 20));
     return "skip_day";
   }
 

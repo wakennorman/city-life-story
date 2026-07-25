@@ -427,6 +427,18 @@ function tickNpcRelationships(state) {
   runNpcCircleBelonging(state, day);
   // [全系统自洽修复] 域D A类#2: NPC生日检测→触发小效果（心情+3 + 消息）
   runBirthdayCelebration(state, day);
+  // [R233 域D联动增强1] D→B NPC生日叙事深化（生日当天拜访触发带选择的事件）
+  if (typeof _checkBirthdayNarrativeR233 === "function") {
+    _checkBirthdayNarrativeR233(state);
+  }
+  // [R233 域D联动增强2] D→G 社交缓冲负面事件（≥3个熟人→负面情绪-25%）
+  if (typeof _applySocialBuffR233 === "function") {
+    _applySocialBuffR233(state);
+  }
+  // [R233 域D联动增强3] D→E 熟人投资情报（好感≥60的NPC提供投资建议）
+  if (typeof _checkNpcInvestmentTipR233 === "function") {
+    _checkNpcInvestmentTipR233(state);
+  }
 }
 
 /** [全系统自洽修复] 域D 修复:NPC id→中文名，替代 replace(/_/g," ") 展示的原始 id */
