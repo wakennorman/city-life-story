@@ -1069,6 +1069,26 @@ const DAILY_PIPELINE = [
     },
   },
 
+  // [R241 域H联动增强1] H→B 公司里程碑叙事（营收突破阈值触发庆祝事件）
+  {
+    name: "company_milestone_tick",
+    fn: function (state) {
+      if (typeof _checkCompanyMilestoneR241 === "function") {
+        _checkCompanyMilestoneR241(state);
+      }
+    },
+  },
+
+  // [R241 域H联动增强2] H→G 创业者健康压力（负债/低现金流/KPI影响健康）
+  {
+    name: "founder_health_stress_tick",
+    fn: function (state) {
+      if (typeof _checkFounderHealthStressR241 === "function") {
+        _checkFounderHealthStressR241(state);
+      }
+    },
+  },
+
   // [R240 域G联动增强2] G→C 健康影响职业提醒（生病/受伤时的工作建议）
   {
     name: "health_career_advice_tick",
@@ -1637,6 +1657,10 @@ const DAILY_PIPELINE = [
       // [R238 域F联动增强3] F→D NPC拜访提示（可拜访/即将衰减提醒）
       if (typeof _updateNpcVisitRemindersR238 === "function") {
         _updateNpcVisitRemindersR238(state);
+      }
+      // [R241 域H联动增强3] H→D 成功社交回响（公司成功后NPC主动联系）
+      if (typeof _checkSuccessSocialRippleR241 === "function") {
+        _checkSuccessSocialRippleR241(state);
       }
     },
   },
