@@ -758,9 +758,10 @@ function _contractIllness(state, illnessId) {
 /** 晕倒/昏迷时移动回住所或医院 */
 function _moveToHomeOrHospital(state, reason) {
   var tier = state.housing ? state.housing.tier || 0 : 0;
-  if (tier > 0 && state.housing && state.housing.location) {
+  var homeLoc = state.housing && (state.housing.location || state.housing.rentedAt);
+  if (tier > 0 && homeLoc) {
     // 有住所 → 移动回住所
-    state.trade.currentLocation = state.housing.location;
+    state.trade.currentLocation = homeLoc;
     StateManager.addMessage("🏠 被好心人送回了住所。", "info");
   } else {
     // 无住所 → 送医院（需付费）

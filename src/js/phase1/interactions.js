@@ -269,6 +269,10 @@ function checkExtremeConditions(state) {
     );
     st.health = Math.max(0, st.health - 10);
     if (Random.chance(0.4)) st.sick = true; // 40%概率过劳生病
+    // 实际移动回住所/医院，让"被送回家"不只是说说
+    if (typeof _moveToHomeOrHospital === "function") {
+      _moveToHomeOrHospital(state, "过劳晕倒");
+    }
     return "skip_day";
   }
 
