@@ -704,6 +704,16 @@ function getAffinityLabel(affinity) {
   return "😠 厌恶";
 }
 
+// [全系统自洽修复] 域D 修复:RELATION_TYPES原死数据,添加辅助函数消费标签/颜色
+function getRelationTypeLabel(typeKey) {
+  if (RELATION_TYPES[typeKey]) return RELATION_TYPES[typeKey].label;
+  return typeKey;
+}
+function getRelationTypeColor(typeKey) {
+  if (RELATION_TYPES[typeKey]) return RELATION_TYPES[typeKey].color;
+  return "#95A5A6";
+}
+
 /** 检查NPC关系链是否满足事件触发条件 */
 function checkNpcRelationEventTriggers(state) {
   var triggers = [];

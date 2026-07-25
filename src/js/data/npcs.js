@@ -3579,6 +3579,53 @@ var NPCS = [
       ],
     },
   },
+  // [全系统自洽修复] 域D 修复:old_ma原events_street_wealth.js引用但未定义(好感零回报+名字显示异常)
+  {
+    id: "old_ma",
+    name: "老马",
+    role: "工友",
+    monthlyIncome: 6000,
+    avatar: "",
+    location: "construction",
+    schedule: {
+      morning: "construction",
+      afternoon: "construction",
+      evening: "slum",
+      night: "slum",
+    },
+    birthday: 180,
+    desc: "工地上的老工人，干活实在，为人爽快。",
+    birthdayLine: "今天生日？来来来，我请客！",
+    festivalLines: {},
+    talkLines: [
+      "年轻人，干活要踏实，别怕吃苦。",
+      "这工地上的活，我干了二十年了。",
+    ],
+    presenceChance: 0.7,
+    encounterLines: [
+      "老马在工地上搬砖，看到你咧嘴一笑。",
+    ],
+    infoHints: {},
+    giftPrefers: ["beer", "cigarettes"],
+    skillThresholds: [],
+    tradeInfo: { expertise: [], infoTypes: {} },
+    presenceBonus: [],
+    affinityRewards: [
+      {
+        threshold: 30,
+        id: "old_ma_30",
+        desc: "老马教你砌墙技巧(体力XP+10)",
+        effect: function (st) {
+          if (st.flags.oldMaSkillBonus) return;
+          if (typeof addSkillXp === "function") addSkillXp("physique", 10);
+          st.flags.oldMaSkillBonus = true;
+          StateManager.addMessage("💕 老马教你砌墙的窍门。体力XP+10。", "success");
+        },
+      },
+    ],
+    favor: {},
+    deepTask: {},
+  },
 ];
 
 /** 获取NPC */

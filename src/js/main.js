@@ -1716,6 +1716,11 @@ function startNewGame() {
     initWeather(StateManager.getState());
   }
 
+  // [全系统自洽修复] 域D 修复:接入initNpcRelationships(原定义但未调用,NPC初始好感基于体质/魅力)
+  if (typeof initNpcRelationships === "function") {
+    initNpcRelationships(StateManager.getState());
+  }
+
   // 初始化装备耐久度
   if (typeof initEquipmentDurability === "function") {
     initEquipmentDurability(StateManager.getState());

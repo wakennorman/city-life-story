@@ -474,14 +474,13 @@
           text: "💬 直接告诉老马，他应该知道",
           hint: "坦诚相待，对方会感激你",
           apply: function (st) {
-            // [自洽修复] 补老马好感提升代码
-            if (!st.relationships.old_ma) {
-              st.relationships.old_ma = { affinity: 0, met: true };
+            // [全系统自洽修复] 域D 修复:使用applyAffinityChange统一API(原直接操作关系对象)
+            if (typeof applyAffinityChange === "function") {
+              applyAffinityChange(st, "old_ma", 8, "coworker_doc");
+            } else {
+              if (!st.relationships.old_ma) st.relationships.old_ma = { affinity: 0, met: true };
+              st.relationships.old_ma.affinity = Math.min(100, (st.relationships.old_ma.affinity || 0) + 8);
             }
-            st.relationships.old_ma.affinity = Math.min(
-              100,
-              (st.relationships.old_ma.affinity || 0) + 8,
-            );
             st.flags._coworkerDocSeen = true;
             st.flags._toldCoworkerDoc = true;
             st.needs.happiness = Math.min(100, st.needs.happiness + 8);
