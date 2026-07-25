@@ -2803,6 +2803,7 @@ var _careerLabelMap = {
   repair: "维修",
   electrician: "电工",
   welding: "焊工",
+  social: "社交", // [全系统自洽修复] 域C A类: education路径 reqSkills:{social:N} 缺失该标签→UI显示"social≥10"而非"社交≥10"
   caregiving: "护理",
   intelligence: "智力",
   mental: "能力",
@@ -3198,6 +3199,12 @@ function applyCareerPromotion(pathId, levelId) {
     "success",
   );
 
+  // [全系统自洽修复] 域C R243 联动增强(C→B): 晋升管理级职位叙事 — 行业新闻风格
+  if (level.reqSocial || (level.salary || 0) >= 20000) {
+    var _promoNews = "📰 行业动态：" + (CAREER_PATHS[job.path] ? CAREER_PATHS[job.path].name : "") + "领域" + level.name + "职位出现人事变动，业内关注薪资水平与职业发展空间。";
+    StateManager.addMessage(_promoNews, "info");
+  }
+
   // === v3.23: 触发槽 — career_promo ===
   if (typeof window.TriggerRegistry !== "undefined") {
     try {
@@ -3338,6 +3345,17 @@ function tickCareerJobDaily(state) {
         // （state.needs 无 health，真实且被渲染的字段为 state.status.health）→「+1 健康」被静默丢弃，改为真实字段
         state.status.health = Math.min(100, (state.status.health || 100) + 1);
       }
+      // [全系统自洽修复] 域C R243 联动增强(C→G): 年度里程碑(365天)额外健康+2与叙事叠加
+      if (_newWd === 365) {
+        state.status.health = Math.min(100, (state.status.health || 100) + 2);
+        state.needs.happiness = Math.min(100, (state.needs.happiness || 0) + 5);
+        StateManager.addMessage('🎉 入职一周年！稳定工作带来的安全感让你身心俱佳，健康+2，心情+5。', 'success');
+      } else if (_newWd > 0 && _newWd % 365 === 0) {
+        var _annivYears = _newWd / 365;
+        state.status.health = Math.min(100, (state.status.health || 100) + 3);
+        state.needs.happiness = Math.min(100, (state.needs.happiness || 0) + 8);
+        StateManager.addMessage('🎊 ' + _annivYears + '周年！多年的职场沉淀让你愈发从容，健康+3，心情+8。', 'success');
+      }
     }
   }
   // 职业倦怠：工作日常量增长，但有被动恢复（周末/休息自然降低）
@@ -3358,9 +3376,17 @@ function tickCareerJobDaily(state) {
     // [全系统自洽修复] 域C A类#1: totalEarned NaN守卫（原裸+=，旧存档/极端值可致NaN传播）
     state.resources.totalEarned = (state.resources.totalEarned || 0) + (salary || 0) + (certBonus || 0);
     // [全系统自洽修复] 域C 联动增强#1 C→E: 高薪职业→投资信心加成（月薪≥20000时解锁投资分析增益）
-    if (job.salary >= 20000 && !state.flags._highSalaryInvestor) {
-      state.flags._highSalaryInvestor = true;
-      StateManager.addMessage("💼 高薪让你有了更多投资底气。投资分析能力获得小幅加成。", "info");
+    if (job.salary >= 20000) {
+      if (!state.flags._highSalaryInvestor) {
+        state.flags._highSalaryInvestor = true;
+        StateManager.addMessage("💼 高薪让你有了更多投资底气。投资分析能力获得小幅加成。", "info");
+      }
+      // [全系统自洽修复] 域C R243 联动增强(C→E): 高薪发薪日叙事 — 每月发薪时提示资金规划
+      if (job.salary >= 30000) {
+        StateManager.addMessage("📈 月薪¥" + job.salary.toLocaleString() + "，除了消费，不妨考虑多元化资产配置。", "info");
+      } else {
+        StateManager.addMessage("💡 月薪¥" + job.salary.toLocaleString() + "，建议将20%收入用于储蓄或低风险投资。", "info");
+      }
     }
     var salaryMsg =
       "💰 收到月薪 ¥" + salary.toLocaleString() + "（" + job.levelName + "）";
