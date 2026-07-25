@@ -169956,7 +169956,7 @@ const ILLNESSES = {
     name: "重度抑郁",
     icon: "🌑",
     severity: 5,
-    naturalCureDays: [30, 60],
+    // [全系统自洽修复] 域A: 原 naturalCureDays 与 treatCostMonthly 并存(数据矛盾)→移除自然痊愈(慢性病需持续治疗)
     triggerHabit: { depressionCount: 2 },
     triggerChance: 0.18,
     symptom: {
@@ -170031,7 +170031,7 @@ const ILLNESSES = {
     name: "重度失眠",
     icon: "🌙",
     severity: 4,
-    naturalCureDays: [20, 40],
+    // [全系统自洽修复] 域A: 原 naturalCureDays 与 treatCostMonthly 并存(数据矛盾)→移除自然痊愈(慢性病需持续治疗)
     triggerHabit: { insomniaCount: 1, age: 40 },
     triggerChance: 0.2,
     symptom: {
@@ -180833,6 +180833,11 @@ function sellGood(goodId, qty) {
 /** 批发进货（批发市场专属） */
 function buyWholesale(goodId, qty) {
   const state = StateManager.getState();
+  // [全系统自洽修复] 域A: 旧存档守卫(原缺失→state.trade undefined 时 TypeError)
+  if (!state || !state.trade) {
+    StateManager.addMessage("⚠️ 交易系统未初始化。", "danger");
+    return false;
+  }
   if (typeof qty !== "number" || !isFinite(qty) || qty <= 0) {
     StateManager.addMessage("⚠️ 无效的批发数量。", "danger");
     return false;
@@ -197296,7 +197301,8 @@ function renderStockCard(stock, state) {
       ? market.history[market.history.length - 2].price
       : price;
   const todayChange = price - prev;
-  const todayPct = (todayChange / prev) * 100;
+  // [全系统自洽修复] 域E 修复:prev 可能回退为 0（新上市/退市股 price=0）→ 0/0=NaN 污染卡片，补 prev>0 守卫
+  const todayPct = prev > 0 ? (todayChange / prev) * 100 : 0;
 
   // 7日均价
   const last7 = market.history.slice(-7);
@@ -197308,9 +197314,11 @@ function renderStockCard(stock, state) {
 
   // 持仓盈亏
   const pnl = holding ? Math.round((price - holding.avgPrice) * shares) : 0;
-  const pnlPct = holding
-    ? ((price - holding.avgPrice) / holding.avgPrice) * 100
-    : 0;
+  // [全系统自洽修复] 域E 修复:holding.avgPrice 为 0/undefined（赠股/旧存档）时 (price-avg)/avg=Infinity/NaN → UI 显示 "Infinity%" 并可污染下游，补 isFinite+>0 守卫（与 investment.js:1778 _avgPx 兜底一致）
+  const pnlPct =
+    holding && isFinite(holding.avgPrice) && holding.avgPrice > 0
+      ? ((price - holding.avgPrice) / holding.avgPrice) * 100
+      : 0;
   // PnL颜色：中国/A股标准 — 盈利红/亏损绿（涨红跌绿）
   const pnlColor = pnl >= 0 ? "var(--danger)" : "var(--success)";
   // 涨跌颜色：红涨绿跌（中国/A股标准）

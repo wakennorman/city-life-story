@@ -305,6 +305,11 @@ function sellGood(goodId, qty) {
 /** 批发进货（批发市场专属） */
 function buyWholesale(goodId, qty) {
   const state = StateManager.getState();
+  // [全系统自洽修复] 域A: 旧存档守卫(原缺失→state.trade undefined 时 TypeError)
+  if (!state || !state.trade) {
+    StateManager.addMessage("⚠️ 交易系统未初始化。", "danger");
+    return false;
+  }
   if (typeof qty !== "number" || !isFinite(qty) || qty <= 0) {
     StateManager.addMessage("⚠️ 无效的批发数量。", "danger");
     return false;

@@ -220,7 +220,7 @@ const ILLNESSES = {
     name: "重度抑郁",
     icon: "🌑",
     severity: 5,
-    naturalCureDays: [30, 60],
+    // [全系统自洽修复] 域A: 原 naturalCureDays 与 treatCostMonthly 并存(数据矛盾)→移除自然痊愈(慢性病需持续治疗)
     triggerHabit: { depressionCount: 2 },
     triggerChance: 0.18,
     symptom: {
@@ -295,7 +295,7 @@ const ILLNESSES = {
     name: "重度失眠",
     icon: "🌙",
     severity: 4,
-    naturalCureDays: [20, 40],
+    // [全系统自洽修复] 域A: 原 naturalCureDays 与 treatCostMonthly 并存(数据矛盾)→移除自然痊愈(慢性病需持续治疗)
     triggerHabit: { insomniaCount: 1, age: 40 },
     triggerChance: 0.2,
     symptom: {
