@@ -1,7 +1,7 @@
 ﻿// ====== 生成唯一ID ======
 function _startupGenerateId() {
   return (
-    "sid_" + Date.now() + "_" + Random.float(0, 1).toString(36).substr(2, 9)
+    "sid_" + Random.int(100000, 999999) + "_" + Random.float(0, 1).toString(36).substr(2, 9)
   );
 }
 
@@ -4792,7 +4792,7 @@ function setQuarterlyOkr(state, objective, keyResults) {
   }
 
   // 生成 OKR ID
-  const okrId = "okr_" + year + "q" + quarter + "_" + Date.now();
+  const okrId = "okr_" + year + "q" + quarter + "_" + Random.int(100000, 999999);
 
   // 处理关键结果
   const processedKR = [];
@@ -5010,7 +5010,7 @@ function setTeamGoal(state, team, target, deadlineDays) {
     return { success: false, message: "无效的团队" };
   }
 
-  const goalId = "tg_" + Date.now();
+  const goalId = "tg_" + Random.int(100000, 999999);
   const goal = {
     id: goalId,
     team: team,
@@ -5072,7 +5072,7 @@ function setEmployeeGoal(state, employeeId, goalDescription, target) {
   const emp = company.employees.find((e) => e.id === employeeId);
   if (!emp) return { success: false, message: "员工不存在" };
 
-  const goalId = "eg_" + Date.now();
+  const goalId = "eg_" + Random.int(100000, 999999);
   const goal = {
     id: goalId,
     employeeId: employeeId,

@@ -356,7 +356,7 @@ function sellStock(symbol, shares) {
   const profit = revenue - (holding.avgPrice || 0) * shares;
 
   state.resources.cash = (state.resources.cash || 0) + revenue; // [全系统自洽修复] 域E A类: cash NaN守卫
-  state.resources.totalEarned += Math.max(0, profit);
+  state.resources.totalEarned = (state.resources.totalEarned || 0) + Math.max(0, profit);
 
   holding.shares -= shares;
   if (holding.shares <= 0) {

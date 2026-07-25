@@ -10146,14 +10146,13 @@ function registerNewsEventsToPool() {
           text: "💬 直接告诉老马，他应该知道",
           hint: "坦诚相待，对方会感激你",
           apply: function (st) {
-            // [自洽修复] 补老马好感提升代码
-            if (!st.relationships.old_ma) {
-              st.relationships.old_ma = { affinity: 0, met: true };
+            // [全系统自洽修复] 域D 修复:使用applyAffinityChange统一API(原直接操作关系对象)
+            if (typeof applyAffinityChange === "function") {
+              applyAffinityChange(st, "old_ma", 8, "coworker_doc");
+            } else {
+              if (!st.relationships.old_ma) st.relationships.old_ma = { affinity: 0, met: true };
+              st.relationships.old_ma.affinity = Math.min(100, (st.relationships.old_ma.affinity || 0) + 8);
             }
-            st.relationships.old_ma.affinity = Math.min(
-              100,
-              (st.relationships.old_ma.affinity || 0) + 8,
-            );
             st.flags._coworkerDocSeen = true;
             st.flags._toldCoworkerDoc = true;
             st.needs.happiness = Math.min(100, st.needs.happiness + 8);
@@ -142387,6 +142386,12 @@ function tickNpcRelationships(state) {
       if (typeof interaction.change !== "number" || !isFinite(interaction.change)) continue;
       var change = interaction.change * coeff;
       applyAffinityChange(state, targetId, change, "关系传导");
+      // [全系统自洽修复] 域D 修复:写入_propagationLog(原social_tab.js读取但从不写入→传导日志永远为空)
+      if (state.relationships[targetId]) {
+        if (!state.relationships[targetId]._propagationLog) state.relationships[targetId]._propagationLog = [];
+        state.relationships[targetId]._propagationLog.push({ day: day, change: change, from: npcId });
+        if (state.relationships[targetId]._propagationLog.length > 10) state.relationships[targetId]._propagationLog.shift();
+      }
       propagated[targetId] = true;
     }
   }
@@ -142719,6 +142724,16 @@ function getAffinityLabel(affinity) {
   if (affinity >= 0) return "👤 初识";
   if (affinity >= -30) return "😐 冷淡";
   return "😠 厌恶";
+}
+
+// [全系统自洽修复] 域D 修复:RELATION_TYPES原死数据,添加辅助函数消费标签/颜色
+function getRelationTypeLabel(typeKey) {
+  if (RELATION_TYPES[typeKey]) return RELATION_TYPES[typeKey].label;
+  return typeKey;
+}
+function getRelationTypeColor(typeKey) {
+  if (RELATION_TYPES[typeKey]) return RELATION_TYPES[typeKey].color;
+  return "#95A5A6";
 }
 
 /** 检查NPC关系链是否满足事件触发条件 */
@@ -166176,6 +166191,53 @@ var NPCS = [
       ],
     },
   },
+  // [全系统自洽修复] 域D 修复:old_ma原events_street_wealth.js引用但未定义(好感零回报+名字显示异常)
+  {
+    id: "old_ma",
+    name: "老马",
+    role: "工友",
+    monthlyIncome: 6000,
+    avatar: "",
+    location: "construction",
+    schedule: {
+      morning: "construction",
+      afternoon: "construction",
+      evening: "slum",
+      night: "slum",
+    },
+    birthday: 180,
+    desc: "工地上的老工人，干活实在，为人爽快。",
+    birthdayLine: "今天生日？来来来，我请客！",
+    festivalLines: {},
+    talkLines: [
+      "年轻人，干活要踏实，别怕吃苦。",
+      "这工地上的活，我干了二十年了。",
+    ],
+    presenceChance: 0.7,
+    encounterLines: [
+      "老马在工地上搬砖，看到你咧嘴一笑。",
+    ],
+    infoHints: {},
+    giftPrefers: ["beer", "cigarettes"],
+    skillThresholds: [],
+    tradeInfo: { expertise: [], infoTypes: {} },
+    presenceBonus: [],
+    affinityRewards: [
+      {
+        threshold: 30,
+        id: "old_ma_30",
+        desc: "老马教你砌墙技巧(体力XP+10)",
+        effect: function (st) {
+          if (st.flags.oldMaSkillBonus) return;
+          if (typeof addSkillXp === "function") addSkillXp("physique", 10);
+          st.flags.oldMaSkillBonus = true;
+          StateManager.addMessage("💕 老马教你砌墙的窍门。体力XP+10。", "success");
+        },
+      },
+    ],
+    favor: {},
+    deepTask: {},
+  },
 ];
 
 /** 获取NPC */
@@ -177273,6 +177335,167 @@ if (typeof window !== "undefined") {
   // ===== IIFE\u6ce8\u5165 =====
   if (typeof RANDOM_EVENTS !== "undefined") {
     RANDOM_EVENTS.push(npc_zhou_retirement, npc_aunt_wang_moving, npc_chef_chen_retiring, social_support_intervention);
+  }
+})();
+
+;
+// ==== js/data/domain_d_linkage_r234.js ====
+/**
+ * 域D联动增强 R234 — NPC/社交 × 跨域桥接
+ * [全系统自洽修复] 域D R234: 关系传导/职场社交数据首次被事件消费
+ *
+ * 2个新事件：
+ *   ① D→G: 关系传导回响 — 单NPC好感≥80后触发跨NPC传导叙事(消费_propagationLog,当前0事件覆盖)
+ *   ② D→C: 职场贵人 — 同事关系≥60触发职业推荐(消费corporate.colleagues.network,当前0事件覆盖)
+ */
+(function () {
+  "use strict";
+  if (typeof window === "undefined") return;
+  if (typeof RANDOM_EVENTS === "undefined" || !RANDOM_EVENTS) return;
+
+  function _npcName(npcId) {
+    if (typeof getNpcById === "function") {
+      var n = getNpcById(npcId);
+      if (n && n.name) return n.name;
+    }
+    return npcId;
+  }
+
+  // ===== ① D→G: 关系传导回响 =====
+  // 单NPC好感≥80后,触发跨NPC传导叙事(消费关系传导机制)
+  var affinity_propagation_echo = {
+    id: "affinity_propagation_echo",
+    title: "一封信",
+    phase: "street",
+    repeatable: false,
+    priority: 75,
+    conditions: function (st) {
+      if (!st || !st.flags || !st.relationships) return false;
+      if (st.flags._affinityPropEchoDone) return false;
+      // 找好感≥80的NPC,且其有关系传导日志
+      for (var k in st.relationships) {
+        if (Object.prototype.hasOwnProperty.call(st.relationships, k)) {
+          var r = st.relationships[k];
+          if (r && r.met === true && (r.affinity || 0) >= 80 && r._propagationLog && r._propagationLog.length > 0) {
+            st._propEchoNpc = k;
+            return true;
+          }
+        }
+      }
+      return false;
+    },
+    probability: 0.06,
+    getStory: function (st) {
+      var npcId = st._propEchoNpc;
+      var name = _npcName(npcId);
+      var L = [];
+      L.push("你在街上碰到了" + name + "的一个老朋友。");
+      L.push("");
+      L.push("'你就是" + name + "经常提起的那个人吧？'");
+      L.push("'他总说你这人靠谱。'");
+      L.push("");
+      L.push("你愣了一下,没想到" + name + "会在背后夸你。");
+      L.push("");
+      L.push("这座城市就是这样——你对一个人好,总会通过某种方式,传递到另一个人那里。");
+      return L.join("\n");
+    },
+    getText: function (st) { return this.getStory(st); },
+    apply: function (st, choiceId) {
+      if (!st) return;
+      if (!st.flags) st.flags = {};
+      st.flags._affinityPropEchoDone = true;
+      var npcId = st._propEchoNpc;
+      delete st._propEchoNpc;
+      if (choiceId === "humble") {
+        if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 8);
+        if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 3);
+        if (typeof StateManager !== "undefined" && StateManager.addMessage) {
+          StateManager.addMessage("😊 你谦虚地笑了笑。好感的传递,比任何回报都珍贵。心情+8,心智+3。", "success");
+        }
+      } else {
+        if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 5);
+        if (typeof addSkillXp === "function") addSkillXp("social", 8);
+        if (typeof StateManager !== "undefined" && StateManager.addMessage) {
+          StateManager.addMessage("🤝 你递上一支烟,聊了半晌。人脉XP+8,心情+5。", "success");
+        }
+      }
+    },
+    choices: [
+      { text: "😊 谦虚回应(心情+8,心智+3)", id: "humble" },
+      { text: "🤝 递烟结交(人脉XP+8,心情+5)", id: "connect" },
+    ],
+    icons: ["📜", "传导"],
+  };
+
+  // ===== ② D→C: 职场贵人 =====
+  // 同事关系≥60触发职业推荐叙事(消费corporate.colleagues.network)
+  var workplace_mentor_referral = {
+    id: "workplace_mentor_referral",
+    title: "一句推荐",
+    phase: "street",
+    repeatable: false,
+    priority: 78,
+    conditions: function (st) {
+      if (!st || !st.flags || !st.corporate || !st.corporate.colleagues) return false;
+      if (st.flags._workplaceMentorDone) return false;
+      var net = st.corporate.colleagues.network;
+      if (!Array.isArray(net) || net.length === 0) return false;
+      // 找关系≥60的同事
+      for (var i = 0; i < net.length; i++) {
+        if (net[i] && (net[i].relationship || 0) >= 60) {
+          st._mentorColleague = net[i].id || net[i].name;
+          return true;
+        }
+      }
+      return false;
+    },
+    probability: 0.07,
+    getStory: function (st) {
+      var name = st._mentorColleague || "老同事";
+      var L = [];
+      L.push("你以前的同事" + name + "突然联系你。");
+      L.push("");
+      L.push("'我现在在一家公司,正好缺人。你愿意来试试吗?'");
+      L.push("");
+      L.push("'我跟老板推荐过你,他说可以面试。'");
+      L.push("");
+      L.push("一个人对你的认可,可能会成为你人生的转折点。");
+      return L.join("\n");
+    },
+    getText: function (st) { return this.getStory(st); },
+    apply: function (st, choiceId) {
+      if (!st) return;
+      if (!st.flags) st.flags = {};
+      st.flags._workplaceMentorDone = true;
+      delete st._mentorColleague;
+      if (choiceId === "accept") {
+        // 接受: 置推荐flag + 管理XP + 心情
+        st.flags._careerReferral = true;
+        if (typeof addSkillXp === "function") addSkillXp("management", 12);
+        if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 8);
+        if (typeof StateManager !== "undefined" && StateManager.addMessage) {
+          StateManager.addMessage("💼 你决定去面试。职场推荐已解锁,管理XP+12,心情+8。", "success");
+        }
+      } else {
+        // 拒绝: 心智+5(清醒认知)
+        if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 5);
+        if (typeof StateManager !== "undefined" && StateManager.addMessage) {
+          StateManager.addMessage("🙂 你婉拒了。自己的路,自己选。心智+5。", "info");
+        }
+      }
+    },
+    choices: [
+      { text: "💼 接受推荐(管理XP+12,推荐flag)", id: "accept" },
+      { text: "🙂 婉拒,走自己的路(心智+5)", id: "decline" },
+    ],
+    icons: ["🤝", "推荐"],
+  };
+
+  RANDOM_EVENTS.push(affinity_propagation_echo);
+  RANDOM_EVENTS.push(workplace_mentor_referral);
+
+  if (typeof console !== "undefined" && console.log) {
+    console.log("[D R234] 2 linkage events registered");
   }
 })();
 
@@ -195320,7 +195543,7 @@ function sellStock(symbol, shares) {
   const profit = revenue - (holding.avgPrice || 0) * shares;
 
   state.resources.cash = (state.resources.cash || 0) + revenue; // [全系统自洽修复] 域E A类: cash NaN守卫
-  state.resources.totalEarned += Math.max(0, profit);
+  state.resources.totalEarned = (state.resources.totalEarned || 0) + Math.max(0, profit);
 
   holding.shares -= shares;
   if (holding.shares <= 0) {
@@ -203380,7 +203603,7 @@ const PRODUCT_CATEGORIES = {
 ﻿// ====== 生成唯一ID ======
 function _startupGenerateId() {
   return (
-    "sid_" + Date.now() + "_" + Random.float(0, 1).toString(36).substr(2, 9)
+    "sid_" + Random.int(100000, 999999) + "_" + Random.float(0, 1).toString(36).substr(2, 9)
   );
 }
 
@@ -208171,7 +208394,7 @@ function setQuarterlyOkr(state, objective, keyResults) {
   }
 
   // 生成 OKR ID
-  const okrId = "okr_" + year + "q" + quarter + "_" + Date.now();
+  const okrId = "okr_" + year + "q" + quarter + "_" + Random.int(100000, 999999);
 
   // 处理关键结果
   const processedKR = [];
@@ -208389,7 +208612,7 @@ function setTeamGoal(state, team, target, deadlineDays) {
     return { success: false, message: "无效的团队" };
   }
 
-  const goalId = "tg_" + Date.now();
+  const goalId = "tg_" + Random.int(100000, 999999);
   const goal = {
     id: goalId,
     team: team,
@@ -208451,7 +208674,7 @@ function setEmployeeGoal(state, employeeId, goalDescription, target) {
   const emp = company.employees.find((e) => e.id === employeeId);
   if (!emp) return { success: false, message: "员工不存在" };
 
-  const goalId = "eg_" + Date.now();
+  const goalId = "eg_" + Random.int(100000, 999999);
   const goal = {
     id: goalId,
     employeeId: employeeId,
@@ -232465,20 +232688,23 @@ function renderIllnessRow(state) {
 
 function renderWorkplaceSocialTab(state, parent) {
   const ws = state.workplaceSocial || {};
+  // [全系统自洽修复] 域D 修复:同事数据优先读corporate.colleagues.network(真实数据源),workplaceSocial.colleagues作回退
+  const corpNet = (state.corporate && state.corporate.colleagues && state.corporate.colleagues.network) || [];
+  const colleagues = (ws.colleagues && ws.colleagues.length > 0) ? ws.colleagues : corpNet;
   const html = `
     <div class="tab-content">
       <h2>👥 职场社交</h2>
       ${
-        ws.colleagues && ws.colleagues.length > 0
+        colleagues.length > 0
           ? `
         <div class="section">
           <h3>同事关系网</h3>
-          ${ws.colleagues
+          ${colleagues
             .map(
               (c) => `
             <div class="card" style="margin:8px 0;padding:12px;">
-              <div><strong>${c.name}</strong> <span class="tag">${c.role || "普通同事"}</span></div>
-              <div style="margin-top:6px;">好感度: <span class="affinity">${c.affinity || 0}</span></div>
+              <div><strong>${c.name || c.id || "同事"}</strong> <span class="tag">${c.role || "普通同事"}</span></div>
+              <div style="margin-top:6px;">好感度: <span class="affinity">${c.relationship != null ? c.relationship : (c.affinity || 0)}</span></div>
             </div>
           `,
             )
@@ -232487,16 +232713,15 @@ function renderWorkplaceSocialTab(state, parent) {
       `
           : '<p style="color:var(--text-muted);">暂无同事关系数据</p>'
       }
-      ${
-        ws.mentorship
-          ? `
+      ${(() => {
+        const mentorship = ws.mentorship || (state.corporate && state.corporate.colleagues && state.corporate.colleagues.mentorship);
+        return mentorship ? `
         <div class="section">
           <h3>👨‍🏫 导师关系</h3>
-          <p>当前导师: ${ws.mentorship.mentorId} (等级: ${ws.mentorship.level || "初级"})</p>
+          <p>当前导师: ${mentorship.mentorId} (等级: ${mentorship.level || "初级"})</p>
         </div>
-      `
-          : ""
-      }
+      ` : "";
+      })()}
       ${
         ws.officePoliticsLog && ws.officePoliticsLog.length > 0
           ? `
@@ -257216,6 +257441,11 @@ function startNewGame() {
   // 初始化天气系统（随机开局季节）
   if (typeof initWeather === "function") {
     initWeather(StateManager.getState());
+  }
+
+  // [全系统自洽修复] 域D 修复:接入initNpcRelationships(原定义但未调用,NPC初始好感基于体质/魅力)
+  if (typeof initNpcRelationships === "function") {
+    initNpcRelationships(StateManager.getState());
   }
 
   // 初始化装备耐久度
