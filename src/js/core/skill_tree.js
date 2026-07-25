@@ -1296,6 +1296,8 @@ function getSkillChineseName(skillKey) {
     accounting: "会计",
     electrician: "电工",
     welding: "焊接",
+    medicine: "医学", // [全系统自洽修复] 域C: 缺失→career_dev推荐分支UI显示"medicine"而非"医学"
+    social: "社交", // [全系统自洽修复] 域C: 缺失→career_dev推荐分支UI显示"social"而非"社交"
   };
   return names[skillKey] || skillKey;
 }

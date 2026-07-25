@@ -2405,7 +2405,8 @@
           typeof CAREER_PATHS !== "undefined" ? CAREER_PATHS[job.path] : null;
         if (!path || !path.levels || !path.levels.length) return false;
         var top = path.levels[path.levels.length - 1];
-        if (!top || job.id !== top.id) return false;
+        // [全系统自洽修复] 域C: 原 job.id 不存在(真实字段为 levelId)→条件恒假→满级巅峰事件永不触发(满级无收益A类)
+        if (!top || job.levelId !== top.id) return false;
         return (
           !st.flags ||
           !(st.flags._careerApexSeen && st.flags._careerApexSeen[job.path])
