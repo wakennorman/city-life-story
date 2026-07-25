@@ -260936,6 +260936,26 @@ function getAvailableActions(state) {
       });
     }
 
+    // 结束今天 — 行动力不足时主动结束（防止卡死在低AP无法继续）
+    if ((state.player.actionPoints || 0) > 0) {
+      actions.push({
+        id: "end_day",
+        category: "survival",
+        priority: 0,
+        name: "🛑 结束今天",
+        desc: "行动力不足以继续活动时，直接结束这一天，进入下一天。",
+        icon: "🛑",
+        apCost: 0,
+        handler: () => {
+          if (typeof endDay === "function") {
+            endDay();
+          } else {
+            StateManager.addMessage("⚠️ 无法结束今天，请刷新页面。", "error");
+          }
+        },
+      });
+    }
+
     actions.push({
       id: "eat",
       category: "survival",
