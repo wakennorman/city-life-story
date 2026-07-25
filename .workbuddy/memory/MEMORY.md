@@ -40,3 +40,4 @@
 - 教训：CLAUDE.md 是 CRLF——脚本改写须保留原换行符，否则整文件 diff；并行窗口会 add -A 扫走本轮源码并自行编号，账本轮次以 git log 实况为准重算。
 - R277 域A（第二轮第十一次）：loop-state 曾严重滞后（标R271/next=G），并行已推进 R272-R276→据 git log 重算 recency 取 A(最新R267)为最薄弱→R277。A类=0 诚实报告（死字段黑名单全库0命中）+ a277_*（A→C识货砍价/A→D街坊团购守rel.met/A→H成本控制报告）。构建9670.3KB。recency 基准(账本R278后·R277编号被并行占为域F)：A=278/B=274/C=272/D=275/E=276/F=277/G=271/H=273 → 下轮 G(最薄弱)。
 - recency 基准(R271 后)：A=267/B=266/C=271/D=268/E=269/F=270/G=264/H=265 → 下轮 G。
+- R284 域E（第四轮·账本R284）：A类1 = investment.js buyBtc 与 sellBtc/buyInvStock 不对称守卫缺口（缺 `if(!inv)return`→旧档 state.investment 未初始化时 `inv.btcPrice` 抛 TypeError 崩溃 / 缺 amount 校验→负数增币经济漏洞 / 补 btcPrice 有限性判定）。联动3 domain_e_linkage_r284.js（E→G btc_cold_wallet 置_assetSecurityMindset / E→A dip_buying_nerve 置_marketDisciplineForged / E→H seed_from_gains 收益→management XP+upward）。源码被并行 f21054e3「feat[域E R284]」扫入上 main，本窗口补账本 085c1c30+回填 35694a98。recency 基准(账本R284后)：A=280/B=281/C=282/D=283/E=284/F=277/G=278/H=279 → 下轮 F(最薄弱)。

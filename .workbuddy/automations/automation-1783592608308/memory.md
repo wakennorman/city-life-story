@@ -313,3 +313,10 @@
 - 联动3（新建 domain_a_linkage_r277.js,2 street+1 corporate,全||防御,a277_）：A→C 识货砍价/A→D 街坊团购(守 rel.met)/A→H 成本控制报告。
 - 并发：源码被并行 ff32c31e chore-scoop 提交上 main（HEAD 核验 index.html+dist 均含 r277·count=2）；并行同时占用 R277 标签为域F(2d01102b)→本轮账本去冲突改记 R278。MC 6×400d EXIT=0·0代码异常；构建9677.3KB。
 - 提交2笔（docs bb7128ed / chore 回填 e99c7ed0），均 push origin main 成功。下轮→G(recency 271 最薄弱)。
+
+## 最近执行（2026-07-26，账本R284 域E 经济/投资·第四轮循环 — 已 push main 35694a98）
+- 开轮 loop-state 严重滞后(标R278/next=G)，据 git log 重算并行已推进 R278-R283(A=280/B=281/C=282/D=283/E=276/F=277/G=278/H=279)→E=276 全局最薄弱→本轮域E。
+- A类1(确证): investment.js buyBtc 与兄弟函数 sellBtc/buyInvStock 不对称守卫缺口——①缺 `if(!inv)return`(旧存档 state.investment 未初始化→`inv.btcPrice` 抛 TypeError 使买币崩溃)②缺 amount 校验(负数/NaN→cost 为负→凭空增币经济漏洞)③补 btcPrice 有限性判定。
+- 联动3(新建 domain_e_linkage_r284.js,2 street+1 corporate,全||防御,e284_): E→G btc_cold_wallet 数字资产安全/E→A dip_buying_nerve 越跌越买定力/E→H seed_from_gains 收益变种子金。
+- 验证: node --check OK / build 9730.5KB / MC 6×400d EXIT=0·0代码异常(balanced/corporate 66.7% 既有RNG阈值)。
+- 并发: 源码(buyBtc/r284/index.html/dist)被并行窗口 f21054e3「feat [域E R284]」+ c9b5826a chore 扫入并已上 main(HEAD 核验全含);本窗口仅补账本(docs 085c1c30 + 回填 chore 35694a98)，均 push 成功。下轮→F(recency 277 最薄弱)。
