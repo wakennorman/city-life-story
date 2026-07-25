@@ -1,7 +1,7 @@
 {
-  "currentRound": 278,
-  "currentDomain": "A",
-  "nextDomain": "G",
+  "currentRound": 284,
+  "currentDomain": "E",
+  "nextDomain": "F",
   "rotationIndex": 0,
   "domainOrder": [
     "A",
@@ -14,32 +14,32 @@
     "H"
   ],
   "domainRecency": {
-    "A": 278,
-    "B": 274,
-    "C": 272,
-    "D": 275,
-    "E": 276,
+    "A": 280,
+    "B": 281,
+    "C": 282,
+    "D": 283,
+    "E": 284,
     "F": 277,
-    "G": 271,
-    "H": 273
+    "G": 278,
+    "H": 279
   },
   "history": [
     {
-      "round": 277,
-      "domain": "F",
-      "note": "域F(并行窗口·代码 domain_f_linkage_r277.js·commit 2d01102b): 并行窗口执行,本窗口未参与,仅回填 recency。"
+      "round": 283,
+      "domain": "D",
+      "note": "域D(并行窗口·commit 944ff22b): 并行窗口执行,本窗口未参与,仅回填 recency。"
     },
     {
-      "round": 278,
-      "domain": "A",
-      "note": "域A(数据/数值平衡·第二轮第十一次·账本R278·代码文件 domain_a_linkage_r277.js——R277 编号执行期间被并行窗口占为域F): 开轮 loop-state 严重滞后(标R271/next=G)，据 git log 重算并行已推进 R272-R277,各域最新 A=267/B=274/C=272/D=275/E=276/F=277/G=271/H=273→A 最薄弱。A类=0(诚实报告——历轮 R14/R22/R197/R242/R251/R258/R267 已净尽;本轮死字段黑名单全库0命中+近期联动文件干净)。联动3(新建 domain_a_linkage_r277.js,2 street+1 corporate,全||防御,[PLACEHOLDER],前缀 a277_): a277_haggle_edge(A→C 识货砍价·商业技能≥3+交易≥15→cash+技能XP)/a277_neighbor_bulk_buy(A→D 街坊团购·现金缓冲+已结识NPC→applyAffinityChange 守 rel.met 铁律)/a277_cost_control_report(A→H 成本控制报告·在职 corporate.company+账务管理≥8→management XP+奖金+upward)。node --check OK;build dist app.js 9670.3KB(count=4·代码已随并行 ff32c31e chore 提交上 main·HEAD 核验 index.html+dist 均含 r277);MC 6×400d EXIT=0·0代码异常(balanced/corporate 50%既有RNG阈值非回归)。下轮→G(recency 271 最薄弱)。"
+      "round": 284,
+      "domain": "E",
+      "note": "域E(经济/投资·第四轮循环·账本R284): 开轮 loop-state 严重滞后(标R278/next=G),据 git log 重算并行已推进 R278-R283(A=280/B=281/C=282/D=283/E=276/F=277/G=278/H=279)→E=276 全局最薄弱→本轮域E。A类1(确证): investment.js buyBtc 与 sellBtc/buyInvStock 存在不对称守卫缺口——①缺 `if(!inv)return`(旧存档 state.investment 未初始化时 `inv.btcPrice` 直接抛 TypeError 使买币崩溃,兄弟函数均已守卫)②缺 amount 有效性校验(传入负数/NaN→cost 为负→`cash<cost` 恒假→凭空增币的经济漏洞)③补 btcPrice 有限性判定,与 sellBtc 对齐。联动3(新建 domain_e_linkage_r284.js,2 street+1 corporate,全||防御,[PLACEHOLDER],前缀 e284_): e284_btc_cold_wallet(E→G 数字资产安全意识·持币者→冷钱包备份→心智+置 _assetSecurityMindset)/e284_dip_buying_nerve(E→A 越跌越买的定力·持仓+市值门槛→心智+intelligence·置 _marketDisciplineForged)/e284_seed_from_gains(E→H 收益变种子金·在职 corporate.company+投资积累≥20000→management XP+晋升势能 upward)。node --check OK;build dist app.js 9733.0KB(r284 flag count=2 入 bundle);MC 6×400d EXIT=0·0代码异常(TypeError/ReferenceError/NaN/Infinity grep=0;balanced/corporate 66.7%<80% 为既有RNG平衡阈值非回归,trader 83.3%/social 100% 达标)。下轮→F(recency 277 最薄弱)。"
     }
   ],
-  "lastDomain": "A",
-  "lastRound": 278,
+  "lastDomain": "E",
+  "lastRound": 284,
   "lastDate": "2026-07-26",
-  "lastCommit": "bb7128ed",
-  "pushStatus": "PUSHED",
+  "lastCommit": "PENDING",
+  "pushStatus": "PENDING",
   "completedDomains": [
     "A",
     "B",
@@ -50,5 +50,5 @@
     "G",
     "H"
   ],
-  "description": "全系统优化 loop R278→域A(数据/数值平衡,第二轮第十一次,账本R278·R277 编号被并行占为域F)。A类=0(历轮已净尽,诚实报告)。联动3(domain_a_linkage_r277.js: A→C识货砍价/A→D街坊团购[守rel.met铁律]/A→H成本控制报告)。代码已随并行 ff32c31e 上 main;本轮补账本。下轮→G(recency 271 最薄弱)。"
+  "description": "全系统优化 loop R284→域E(经济/投资,第四轮循环,账本R284)。A类1(buyBtc 不对称守卫缺口:补 !inv 守卫+amount 校验+btcPrice 有限性,防 TypeError 崩溃与负数增币漏洞)。联动3(domain_e_linkage_r284.js: E→G数字资产安全/E→A越跌越买定力/E→H收益变种子金)。下轮→F(recency 277 最薄弱)。"
 }
