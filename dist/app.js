@@ -230990,6 +230990,11 @@ function renderActionsTab(state, parent) {
     if (_fatigue !== undefined && _fatigue >= 85) {
       _warnings.push("😴 疲劳 " + _fatigue + "%，快撑不住了！休息！");
     }
+    // 罚单预警横幅
+    var _fineDebt = state.resources && state.resources.fineDebt;
+    if (_fineDebt > 0) {
+      _warnings.push("📋 有罚单¥" + _fineDebt.toLocaleString() + "未缴！每天2%滞纳金");
+    }
     if (_warnings.length > 0) {
       var _warnBar = document.createElement("div");
       _warnBar.style.cssText = "margin-bottom:10px;padding:8px 12px;background:rgba(196,61,61,0.12);border:1px solid rgba(196,61,61,0.3);border-radius:8px;font-size:12px;font-weight:600;color:var(--danger);line-height:1.5;";
@@ -260896,13 +260901,14 @@ function getAvailableActions(state) {
       });
     }
 
-    // 缴纳罚单 — 有未缴罚单时显示
+    // 缴纳罚单 — 有未缴罚单时显示（放在生存必需分类，确保醒目）
     if ((state.resources.fineDebt || 0) > 0) {
       actions.push({
         id: "pay_fine",
-        category: "finance",
+        category: "survival",
+        priority: 1,
         name: "📋 缴纳罚单",
-        desc: "去交管窗口缴纳未缴的罚单，滞纳金每天2%不停涨！",
+        desc: "未缴罚单每天2%滞纳金，赶紧交了吧！",
         icon: "📋",
         disabled: (state.resources.cash || 0) <= 0 ? true : false,
         handler: () => {

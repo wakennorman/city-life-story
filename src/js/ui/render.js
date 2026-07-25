@@ -2145,6 +2145,11 @@ function renderActionsTab(state, parent) {
     if (_fatigue !== undefined && _fatigue >= 85) {
       _warnings.push("😴 疲劳 " + _fatigue + "%，快撑不住了！休息！");
     }
+    // 罚单预警横幅
+    var _fineDebt = state.resources && state.resources.fineDebt;
+    if (_fineDebt > 0) {
+      _warnings.push("📋 有罚单¥" + _fineDebt.toLocaleString() + "未缴！每天2%滞纳金");
+    }
     if (_warnings.length > 0) {
       var _warnBar = document.createElement("div");
       _warnBar.style.cssText = "margin-bottom:10px;padding:8px 12px;background:rgba(196,61,61,0.12);border:1px solid rgba(196,61,61,0.3);border-radius:8px;font-size:12px;font-weight:600;color:var(--danger);line-height:1.5;";
