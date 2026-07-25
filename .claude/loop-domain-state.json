@@ -1,8 +1,8 @@
 {
-  "currentRound": 246,
-  "currentDomain": "E",
-  "nextDomain": "F",
-  "rotationIndex": 4,
+  "currentRound": 251,
+  "currentDomain": "A",
+  "nextDomain": "C",
+  "rotationIndex": 0,
   "domainOrder": [
     "A",
     "B",
@@ -14,14 +14,14 @@
     "H"
   ],
   "domainRecency": {
-    "A": 242,
-    "B": 244,
+    "A": 251,
+    "B": 250,
     "C": 243,
     "D": 245,
     "E": 246,
-    "F": 238,
-    "G": 240,
-    "H": 241
+    "F": 247,
+    "G": 248,
+    "H": 249
   },
   "history": [
     {
@@ -58,13 +58,18 @@
       "round": 246,
       "domain": "E",
       "note": "域E: A类3项(domain_e_linkage_r235.js:44 净资产漏算公司股——持仓无.price字段(stock.js:305建仓仅avgPrice)恒假→改 corporate.stockMarket[sym].price 权威取法(stock.js:570同源)+avgPrice回退+isFinite守卫 / :88 _downPct 声明滞后 var 提升恒 undefined→熊市 bear 分支永不可达且 _getMarketTrendR235 全库零调用方双料死函数→声明前置+导出 window / src/index.html 漏注册已提交的 domain_b_linkage_r244.js 悬空文件——build.py 按 script 序串接,dist 中 R244 内容系手改 dist 产物,任何重建都会静默剔除 R244 三事件必现回归→补注册)+联动3项(新建 domain_e_linkage_r246.js,2 street+1 corporate,全||防御,[PLACEHOLDER],id前缀 e246_): e246_bear_market_faces(E→B 熊市众生相·首个消费修复后可达的bear分支,双重复活死函数+死分支)/e246_wealth_treat_neighbors(E→D 宽裕请街坊·首个消费R235写入后全库零消费者死flag _wealthSocialBonus,守applyAffinityChange+met铁律)/e246_networth_backbone(E→H 身家底气·消费修复后首次含公司股市值的净资产→management XP+upward)。MC 6×400d EXIT=0·0代码异常(TypeError/ReferenceError/Uncaught/Infinity grep=0);构建9428.4KB。开轮核对:并行窗口已占 R243(C)/R244(B)/R245(D),本轮按真实recency取E(235最薄弱)。下轮R247→域F(recency 238 最薄弱)。"
+    },
+    {
+      "round": 251,
+      "domain": "A",
+      "note": "域A(数据/数值平衡·第五轮): A类=0(诚实报告)——逐子系统审计 illnesses/illness/jobs/economy_v3.1/skill_synergy/items/finance/needs/goods,死字段黑名单grep全库0命中、8个_synergy_flag全匹配连携id、6个referral flag均有writer、goods定价自洽无>3倍错配、items skillStudy无应用器为既有C类(R197已记)、演化链计数器/age门控经R197/R242加固均真工作;历轮R14/R22/R197/R242 已将域A A类净尽。联动3项(新建 domain_a_linkage_r251.js,2 street+1 corporate,全||防御,[PLACEHOLDER],id前缀 a251_): a251_skill_neighbor_help(A→D 技能助邻·历轮域A全新配对·真实技能level≥5+applyAffinityChange域D铁律+addSkillXp)/a251_price_inflation_sense(A→E 物价通胀嗅觉·历轮域A全新配对·读真实_eraState.inflationIndex≥1.2置_dataInvestorMindset(E域消费)+accounting XP)/a251_ledger_year_review(A→H 年终数据复盘·真实accounting/management≥8+在职→management XP+cash·角度区别R197争预算/R242证书背书)。MC 6×400d EXIT=0·CODE_ERR_COUNT=0;构建9448.0KB。开轮核对:loop-state标nextDomain=F但git log显示R247(F)/R248(G)/R249(H)已并行提交、R250(B)在途(已stash),重算真实recency取A(242最薄弱)。下轮→C(recency 243 除A外全局最薄弱)。"
     }
   ],
-  "lastDomain": "E",
-  "lastRound": 246,
+  "lastDomain": "A",
+  "lastRound": 251,
   "lastDate": "2026-07-26",
-  "lastCommit": "460fc3c4",
-  "pushStatus": "PUSHED",
+  "lastCommit": "PENDING",
+  "pushStatus": "PENDING",
   "completedDomains": [
     "A",
     "B",
@@ -75,5 +80,5 @@
     "G",
     "H"
   ],
-  "description": "全系统优化 loop R246→域E(经济/投资)。A类3项:净资产漏算公司股/熊市bear死分支+死函数/R244悬空注册补挂。联动3项(domain_e_linkage_r246.js: E→B熊市众生相/E→D宽裕请街坊消费死flag/E→H身家底气)。回填并行窗口 R243(C)/R244(B)/R245(D) recency。下轮R247→域F(recency 238 最薄弱)。"
+  "description": "全系统优化 loop R251→域A(数据/数值平衡·第五轮)。A类=0(诚实报告,历轮R14/R22/R197/R242已净尽)。联动3项(domain_a_linkage_r251.js: A→D技能助邻[全新配对]/A→E物价通胀嗅觉[全新配对]/A→H年终数据复盘)。回填并行窗口 R247(F)/R248(G)/R249(H) recency。下轮→C(recency 243 除A外全局最薄弱)。"
 }

@@ -3348,13 +3348,13 @@ function generateSaveNarrative(state) {
 
 /**
  * 裁剪存档数据中的冗余字段，减小体积
- * - messageLog: 保留前100条+后100条完整，中间浓缩摘要（仅当超过200条时触发）
+ * - messageLog: 保留前50条+后50条完整，中间浓缩摘要
  */
 function _trimStateForSave(saveData) {
-  if (saveData.messageLog && saveData.messageLog.length > 200) {
-    var head = saveData.messageLog.slice(0, 100);
-    var tail = saveData.messageLog.slice(-100);
-    var middle = saveData.messageLog.slice(100, -100);
+  if (saveData.messageLog && saveData.messageLog.length > 100) {
+    var head = saveData.messageLog.slice(0, 50);
+    var tail = saveData.messageLog.slice(-50);
+    var middle = saveData.messageLog.slice(50, -50);
     var condensed = [];
     // 按每10条一组浓缩
     for (var i = 0; i < middle.length; i += 10) {
@@ -38789,9 +38789,18 @@ if (typeof window !== "undefined") {
       phase: "street",
       icon: "🌳",
       title: "技能发展方向",
-      // [全系统自洽修复] 域B R244: story 不能为 function（引擎直接模板字面量渲染会显示函数源码）→ 改为静态文本
-      story:
-        "你的一门技能终于练到了Lv.30，是时候选择发展方向了。\n一个老前辈拍了拍你：\"这行水深，选对了路能少走很多弯路。\"",
+      story: function (st) {
+        var skillName =
+          typeof getSkillChineseName === "function"
+            ? getSkillChineseName(st._branchSkillKey)
+            : st._branchSkillKey;
+        return (
+          "你的" +
+          skillName +
+          "终于练到了Lv.30，是时候选择发展方向了。\n" +
+          "一个老前辈拍了拍你：\"这行水深，选对了路能少走很多弯路。\""
+        );
+      },
       triggers: {
         minDay: 15,
       },
@@ -38867,9 +38876,12 @@ if (typeof window !== "undefined") {
       phase: "street",
       icon: "⭐",
       title: "天赋点亮",
-      // [全系统自洽修复] 域B R244: story 不能为 function（引擎直接模板字面量渲染会显示函数源码）→ 改为静态文本
-      story:
-        "你终于攒够了资源，激活了天赋节点。\n一股力量涌入体内——不，是技能感悟加深了。",
+      story: function (st) {
+        return (
+          "你终于攒够了资源，激活了天赋节点。\n" +
+          "一股力量涌入体内——不，是技能感悟加深了。"
+        );
+      },
       triggers: {
         minDay: 30,
       },
@@ -38915,9 +38927,18 @@ if (typeof window !== "undefined") {
       phase: "street",
       icon: "🏆",
       title: "技能大成",
-      // [全系统自洽修复] 域B R244: story 不能为 function（引擎直接模板字面量渲染会显示函数源码）→ 改为静态文本
-      story:
-        "你的一门技能终于达到了Lv.100！\n街上的人都传开了——你是这条街上最有本事的人。",
+      story: function (st) {
+        var skillName =
+          typeof getSkillChineseName === "function"
+            ? getSkillChineseName(st._masterSkillKey)
+            : st._masterSkillKey;
+        return (
+          "你的" +
+          skillName +
+          "终于达到了Lv.100！\n" +
+          "街上的人都传开了——你是这条街上最有本事的人。"
+        );
+      },
       triggers: {
         minDay: 100,
       },
@@ -39067,12 +39088,8 @@ if (typeof window !== "undefined") {
       story: "公司注册下来的那天，你站在工商局门口，看着手里的营业执照，突然觉得这一切是真的了。\n从第一天来这座城市打零工到现在，你经历了无数个被拒绝的夜晚、无数次算不清的账、无数次想放弃的瞬间。而现在，你真的有了自己的公司。\n街角煎饼摊的王阿姨看到你，笑着说：「哟，老板了？」",
       triggers: {
         minDay: 180,
+        companyJustFormed: true,
         excludeFlags: ["_startupDeclarationDone"],
-      },
-      // [全系统自洽修复] 域B R244: 原 triggers.companyJustFormed 不是引擎白名单字段(evaluateTriggers不认识)→改为 conditions 守卫(检查 startup.company 是否存在)
-      conditions: function (st) {
-        if (st.gameOver) return false;
-        return !!(st.startup && st.startup.company);
       },
       choices: [
         {
@@ -39120,31 +39137,23 @@ if (typeof window !== "undefined") {
         minDay: 90,
         excludeFlags: ["_firstPromoCelebDone"],
       },
-      // [全系统自洽修复] 域B R244: 原事件无 choices 数组导致 showEventModal 守卫直接 return（死事件）→ 补确认按钮让事件可展示
-      choices: [
-        {
-          text: "🎉 值得庆祝",
-          hint: "心情+10，管理能力+3，同事好感+2",
-          apply: function (st) {
-            st.flags._firstPromoCelebDone = true;
-            if (st.player) {
-              if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 10);
-              st.player.upwardMgmt = Math.min(100, (st.player.upwardMgmt || 0) + 3);
+      apply: function (st) {
+        st.flags._firstPromoCelebDone = true;
+        if (st.player) {
+          st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 10);
+          st.player.upwardMgmt = Math.min(100, (st.player.upwardMgmt || 0) + 3);
+        }
+        // 同事网络关系自动提升
+        if (st.relationships) {
+          var colleagues = ["boss_li", "colleague_zhang", "colleague_li"];
+          for (var i = 0; i < colleagues.length; i++) {
+            if (st.relationships[colleagues[i]]) {
+              st.relationships[colleagues[i]].affinity = Math.min(100, (st.relationships[colleagues[i]].affinity || 0) + 2);
             }
-            if (st.relationships) {
-              var colleagues = ["boss_li", "colleague_zhang", "colleague_li"];
-              for (var i = 0; i < colleagues.length; i++) {
-                if (st.relationships[colleagues[i]]) {
-                  st.relationships[colleagues[i]].affinity = Math.min(100, (st.relationships[colleagues[i]].affinity || 0) + 2);
-                }
-              }
-            }
-            if (typeof StateManager !== "undefined" && StateManager.addMessage) {
-              StateManager.addMessage("🎉 晋升庆功宴！心情+10，管理能力+3，同事们好感各+2。你在城市里又多了一个值得骄傲的理由。", "success");
-            }
-          },
-        },
-      ],
+          }
+        }
+        StateManager.addMessage("🎉 晋升庆功宴！心情+10，管理能力+3，同事们好感各+2。你在城市里又多了一个值得骄傲的理由。", "success");
+      },
       probability: 0.03,
     };
 
@@ -39158,11 +39167,6 @@ if (typeof window !== "undefined") {
       triggers: {
         minDay: 60,
         excludeFlags: ["_talentDepartureDone"],
-      },
-      // [全系统自洽修复] 域B R244: 原事件无 conditions 门控(任何 corporate 阶段 day≥60 都会触发)→补 startup.company+team 守卫
-      conditions: function (st) {
-        if (st.gameOver) return false;
-        return !!(st.startup && st.startup.company && st.startup.company.team && st.startup.company.team.length > 0);
       },
       choices: [
         {
@@ -39217,11 +39221,6 @@ if (typeof window !== "undefined") {
       triggers: {
         minDay: 90,
         excludeFlags: ["_quarterSocialSpilloverDone"],
-      },
-      // [全系统自洽修复] 域B R244: 原事件无 conditions 门控→补 startup.company 守卫(需有公司才能触发办公室社交)
-      conditions: function (st) {
-        if (st.gameOver) return false;
-        return !!(st.startup && st.startup.company);
       },
       choices: [
         {
@@ -161562,8 +161561,9 @@ var NEWS_FOLLOWUP = {
   },
   training_subsidy_echo: {
     headline: "📚 培训补贴效应持续：职业技能考证热度不减，培训机构报名排队",
-    // [全系统自洽修复] 域B R244: 原 effects.effects 嵌套导致 applyNewsEffect 读取不到 trainingDiscount/duration → 静态修正为扁平结构
-    effects: { trainingDiscount: 0.5, duration: 5 },
+    effects: {
+      effects: { trainingDiscount: 0.5, duration: 5 },
+    },
   },
   // ====== 批次D后续新闻 ======
   tech_layoff_echo: {
@@ -172404,11 +172404,6 @@ const MORAL_EVENTS = [
     triggers: { minDay: 4, weather: ["rainy", "stormy"] },
     triggerWeight: 1,
     triggerCooldown: 14,
-    // [全系统自洽修复] 域B R244: 原 triggers.weather 不被 triggerMoralEvent 读取(仅读 minDay/condition)→补 condition 守卫雨雪天气
-    condition: function (s) {
-      var w = s.weather && s.weather.current;
-      return w === "rainy" || w === "stormy";
-    },
     choices: [
       {
         text: "🍖 买根火腿肠喂它，引到避雨处",
@@ -197391,11 +197386,11 @@ const INV_STOCKS = [
     symbol: "SHIB",
     name: "柴犬币",
     category: "虚拟币",
-    basePrice: 2000,
+    basePrice: 0.00002,
     volatility: 0.4,
     trend: -0.003,
     desc: "狗狗币杀手,社区驱动",
-    unit: "亿",
+    unit: "亿个",
   },
 
   // ========== 贵金属（8种） ==========
@@ -198108,15 +198103,15 @@ function initInvestment(state) {
         seedPrice = Math.max(0.5, seedPrice);
         history.push({
           day: state.player.day - numPoints + k,
-          price: Math.round(seedPrice * 10000) / 10000,
+          price: Math.round(seedPrice * 100) / 100,
         });
       }
       history.push({
         day: state.player.day,
-        price: Math.round(mPrice * 10000) / 10000,
+        price: Math.round(mPrice * 100) / 100,
       });
       inv.stockMarket[s.symbol] = {
-        price: Math.round(mPrice * 10000) / 10000,
+        price: Math.round(mPrice * 100) / 100,
         history: history,
       };
     }
@@ -198183,7 +198178,7 @@ function tickInvestmentDaily(state) {
     // [全系统自洽修复] 域E A类#2: NaN 价格守卫 — 旧存档/数据异常时重置为 basePrice
     if (!isFinite(m.price) || m.price <= 0) {
       m.price = s.basePrice * Random.float(0.85, 1.15);
-      m.price = Math.round(m.price * 10000) / 10000;
+      m.price = Math.round(m.price * 100) / 100;
     }
 
     // 基础随机游走 + 世界参数行业热度偏置
@@ -198231,7 +198226,7 @@ function tickInvestmentDaily(state) {
 
     var oldPrice = m.price;
     m.price = Math.max(0.01, m.price * baseChange * newsMul * _satPenalty);
-    m.price = Math.round(m.price * 10000) / 10000;
+    m.price = Math.round(m.price * 100) / 100;
     m.history.push({ day: state.player.day, price: m.price });
     if (m.history.length > 20) m.history.shift();
   }
@@ -199710,9 +199705,6 @@ function renderInvestmentHoldingPanel(area, inv, groupKeys, title, color) {
   var rows = [];
   var totalValue = 0;
   var totalPL = 0;
-  // 从 groupKeys 推断 tab 名称
-  var _tabMap = { stocks: "stocks", crypto: "crypto", precious: "precious", futures: "futures", properties: "re", cars: "car" };
-  var _tabName = groupKeys.length > 0 ? (_tabMap[groupKeys[0]] || groupKeys[0]) : "";
   for (var i = 0; i < groupKeys.length; i++) {
     var group = snapshot.groups[groupKeys[i]];
     if (!group) continue;
@@ -199736,7 +199728,7 @@ function renderInvestmentHoldingPanel(area, inv, groupKeys, title, color) {
       var plClr = row.pl >= 0 ? "var(--danger)" : "var(--success)";
       var plSign = row.pl >= 0 ? "+" : "";
       return (
-        '<div class="investment-holding-row" data-tab="' + _tabName + '" data-symbol="' + row.symbol + '" style="cursor:default;">' +
+        '<div class="investment-holding-row">' +
         '<span class="inv-h-symbol">' +
         row.symbol +
         "</span>" +
@@ -199769,7 +199761,6 @@ function renderInvestmentHoldingPanel(area, inv, groupKeys, title, color) {
         plSign +
         Number(row.plPct || 0).toFixed(1) +
         "%)</span>" +
-        '<span class="holding-nav-btn" data-symbol="' + row.symbol + '" style="cursor:pointer;font-size:12px;padding:2px 4px;border-radius:3px;margin-left:4px;" title="定位到卡片">🔍</span>' +
         "</div>"
       );
     })
@@ -199800,169 +199791,6 @@ function renderInvestmentHoldingPanel(area, inv, groupKeys, title, color) {
     rowsHtml +
     "</div>";
   area.appendChild(panel);
-
-  // 🔍 导航按钮：定位到对应卡片
-  setTimeout(function() {
-    panel.querySelectorAll(".holding-nav-btn").forEach(function(btn) {
-      btn.addEventListener("click", function(e) {
-        e.stopPropagation();
-        var sym = this.dataset.symbol;
-        var tab = _tabName;
-        // 切换到对应子Tab
-        var parentEl = area.closest ? (area.closest("#inv-sub-area") || area.parentElement) : area.parentElement;
-        var cont = parentEl ? parentEl.closest ? parentEl.closest('[class*="investment"]') : null : null;
-        var btns = (cont || document).querySelectorAll(".sub-tab");
-        var found = false;
-        for (var bi = 0; bi < btns.length; bi++) {
-          if (btns[bi].dataset.stab === tab) {
-            btns[bi].click();
-            found = true;
-            break;
-          }
-        }
-        // 滚动到对应卡片
-        setTimeout(function() {
-          var card = document.getElementById("chart-" + sym);
-          if (card) {
-            card.scrollIntoView({ behavior: "smooth", block: "center" });
-            card.style.transition = "box-shadow 0.3s, border-color 0.3s";
-            card.style.boxShadow = "0 0 16px var(--accent)";
-            card.style.borderColor = "var(--accent)";
-            setTimeout(function() { card.style.boxShadow = ""; card.style.borderColor = ""; }, 1500);
-          }
-        }, found ? 150 : 0);
-      });
-    });
-  }, 0);
-}
-
-// ============================================================
-//  📊 总持仓 — 统一显示所有资产类别的持仓
-// ============================================================
-function renderUnifiedHoldingsPanel(state, parent) {
-  var snapshot = getInvestmentAssetSnapshot(state);
-  var groups = snapshot.groups;
-  var allRows = [];
-  var totalValue = 0;
-  var totalPL = 0;
-  var groupLabels = {
-    stocks: "股票",
-    crypto: "虚拟币",
-    precious: "贵金属",
-    futures: "期货基金",
-    properties: "房产",
-    cars: "汽车",
-  };
-  var groupColors = {
-    stocks: "#e07a30",
-    crypto: "#9a6cd0",
-    precious: "#d4b030",
-    futures: "#4a8ee6",
-    properties: "#4cb84a",
-    cars: "#d07a5a",
-  };
-  var groupIcons = {
-    stocks: "📈",
-    crypto: "₿",
-    precious: "🥇",
-    futures: "📊",
-    properties: "🏠",
-    cars: "🚗",
-  };
-
-  for (var gk in groups) {
-    var g = groups[gk];
-    if (!g || g.rows.length === 0) continue;
-    for (var ri = 0; ri < g.rows.length; ri++) {
-      g.rows[ri]._groupKey = gk;
-      g.rows[ri]._groupLabel = groupLabels[gk] || gk;
-      g.rows[ri]._groupColor = groupColors[gk] || "var(--text-muted)";
-      g.rows[ri]._groupIcon = groupIcons[gk] || "📦";
-      allRows.push(g.rows[ri]);
-    }
-    totalValue += g.value;
-    totalPL += g.pl;
-  }
-  if (allRows.length === 0) return;
-
-  // 今日损益
-  var dailyPL = typeof calculateDailyPL === "function" ? calculateDailyPL(state) : null;
-  var totalDailyPL = dailyPL ? dailyPL.total : 0;
-
-  var totalClr = totalPL >= 0 ? "var(--danger)" : "var(--success)";
-  var totalSign = totalPL >= 0 ? "+" : "";
-  var dailyClr = totalDailyPL >= 0 ? "var(--danger)" : "var(--success)";
-  var dailySign = totalDailyPL >= 0 ? "+" : "";
-
-  var panel = document.createElement("div");
-  panel.className = "investment-holding-panel";
-  panel.style.cssText = "margin-bottom:12px;padding:12px;background:rgba(0,180,216,0.06);border:1px solid var(--accent);border-radius:8px;overflow-x:auto;";
-
-  var rowsHtml = allRows.map(function (row) {
-    var plClr = row.pl >= 0 ? "var(--danger)" : "var(--success)";
-    var plSign = row.pl >= 0 ? "+" : "";
-    var tabName = "";
-    if (row._groupKey === "stocks") tabName = "stocks";
-    else if (row._groupKey === "crypto") tabName = "crypto";
-    else if (row._groupKey === "precious") tabName = "precious";
-    else if (row._groupKey === "futures") tabName = "futures";
-    else if (row._groupKey === "properties") tabName = "re";
-    else if (row._groupKey === "cars") tabName = "car";
-    return '<div class="investment-holding-row unified-holding-row" style="cursor:pointer;" data-tab="' + tabName + '" data-symbol="' + row.symbol + '">' +
-      '<span class="inv-h-symbol" style="color:' + row._groupColor + ';">' + row._groupIcon + ' ' + row.symbol + '</span>' +
-      '<span class="inv-h-name" title="' + row._groupLabel + '">' + row.name + '</span>' +
-      '<span class="inv-h-qty">' + row.quantityText + '</span>' +
-      '<span class="inv-h-price">均¥' + Number(row.avgPrice || 0).toLocaleString(undefined, {maximumFractionDigits: 2}) + '</span>' +
-      '<span class="inv-h-price">现¥' + Number(row.price || 0).toLocaleString(undefined, {maximumFractionDigits: 2}) + '</span>' +
-      '<span class="inv-h-value">¥' + Math.round(row.value || 0).toLocaleString() + '</span>' +
-      '<span class="inv-h-pl" style="color:' + plClr + ';">' + plSign + '¥' + Math.round(row.pl || 0).toLocaleString() + ' (' + plSign + Number(row.plPct || 0).toFixed(1) + '%)</span>' +
-      '</div>';
-  }).join("");
-
-  panel.innerHTML =
-    '<div class="investment-holding-scroll">' +
-    '<div class="investment-holding-head">' +
-    '<h4 style="margin:0;font-size:13px;color:var(--accent);">📊 总持仓 <span style="font-size:10px;color:var(--text-muted);font-weight:400;">（点击行跳转至对应Tab）</span></h4>' +
-    '<span style="font-size:11px;">总市值 <strong style="color:var(--accent);">¥' + Math.round(totalValue).toLocaleString() + '</strong> | 总盈亏 <strong style="color:' + totalClr + ';">' + totalSign + '¥' + Math.round(totalPL).toLocaleString() + '</strong> | 今日 <strong style="color:' + dailyClr + ';">' + dailySign + '¥' + Math.round(totalDailyPL).toLocaleString() + '</strong></span>' +
-    '</div>' +
-    '<div class="investment-holding-row investment-holding-row-head">' +
-    '<span class="inv-h-symbol">代码</span><span class="inv-h-name">名称</span><span class="inv-h-qty">数量</span><span class="inv-h-price">均价</span><span class="inv-h-price">现价</span><span class="inv-h-value">市值</span><span class="inv-h-pl">盈亏</span>' +
-    '</div>' +
-    rowsHtml +
-    '</div>';
-
-  parent.appendChild(panel);
-
-  // 点击行跳转到对应Tab
-  setTimeout(function() {
-    panel.querySelectorAll(".unified-holding-row").forEach(function(rw) {
-      rw.addEventListener("click", function() {
-        var tab = this.dataset.tab;
-        var symbol = this.dataset.symbol;
-        // 切换到对应子Tab
-        var btns = parent.querySelectorAll(".sub-tab");
-        for (var i = 0; i < btns.length; i++) {
-          if (btns[i].dataset.stab === tab) {
-            btns[i].click();
-            // 滚动到对应卡片（如果是股票）
-            if (tab === "stocks") {
-              setTimeout(function() {
-                var card = document.getElementById("chart-" + symbol);
-                if (card) {
-                  card.scrollIntoView({ behavior: "smooth", block: "center" });
-                  card.style.transition = "box-shadow 0.3s, border-color 0.3s";
-                  card.style.boxShadow = "0 0 16px var(--accent)";
-                  card.style.borderColor = "var(--accent)";
-                  setTimeout(function() { card.style.boxShadow = ""; card.style.borderColor = ""; }, 1500);
-                }
-              }, 100);
-            }
-            break;
-          }
-        }
-      });
-    });
-  }, 0);
 }
 
 // [全系统自洽修复] 域E 增强: 每日投资损益汇总计算
@@ -200246,9 +200074,9 @@ function renderInvestmentTab(state, parent) {
     summaryCard("房产", assetSnapshot.groups.properties) +
     summaryCard("汽车", assetSnapshot.groups.cars) +
     "</div>" +
-    renderUnifiedHoldingsPanel(state, cont) +
     renderAssetAllocationPanel(assetSnapshot) +
     renderDrawdownIndicator(state) +
+    renderDailyPLPanel(state) +
     renderNewsInvestmentDrivers(state) +
     renderMarketSentiment(state, inv) +
     '<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;font-size:10px;color:var(--text-muted);flex-wrap:wrap;">' +
@@ -200702,7 +200530,7 @@ function renderStocks(area, inv, state, parent) {
         }
       }
       rowsHtml += `
-        <div class="stock-holding-row" data-symbol="${h.symbol}" style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.04);font-size:11px;gap:6px;cursor:pointer;" title="点击查看${stkName}逐笔成交记录">
+        <div class="stock-holding-row" data-symbol="${h.symbol}" style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.04);font-size:11px;gap:8px;cursor:pointer;" title="点击查看${stkName}逐笔成交记录">
           <span style="font-weight:600;min-width:50px;">${h.symbol}</span>
           <span style="color:var(--text-secondary);min-width:55px;font-size:10px;">${stkName}</span>
           <span style="min-width:40px;text-align:right;">${h.shares}股</span>
@@ -200711,20 +200539,14 @@ function renderStocks(area, inv, state, parent) {
           <span style="min-width:60px;text-align:right;">市值¥${Math.round(val).toLocaleString()}</span>
           <span style="min-width:70px;text-align:right;color:${plClr};font-weight:600;">${plSign}¥${Math.round(pl).toLocaleString()}</span>
           <span style="min-width:45px;text-align:right;color:${plClr};font-size:10px;">${plSign}${plPct.toFixed(1)}%</span>
-          <span class="holding-nav-btn" data-symbol="${h.symbol}" style="cursor:pointer;font-size:13px;padding:2px 4px;border-radius:3px;transition:background 0.15s;" title="定位到 ${stkName} 卡片">🔍</span>
         </div>`;
     }
     var totalClr = totalPL >= 0 ? "var(--danger)" : "var(--success)";
     var totalSign = totalPL >= 0 ? "+" : "";
-    // 计算今日股票损益
-    var dailyPL = typeof calculateDailyPL === "function" ? calculateDailyPL(state) : null;
-    var stockDailyPL = dailyPL ? dailyPL.stocks : 0;
-    var dailyClr = stockDailyPL >= 0 ? "var(--danger)" : "var(--success)";
-    var dailySign = stockDailyPL >= 0 ? "+" : "";
     portfolioDiv.innerHTML = `
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
-        <h4 style="margin:0;font-size:13px;color:var(--accent);">📊 我的股票</h4>
-        <span style="font-size:11px;">总市值 <strong style="color:var(--accent);">¥${Math.round(totalValue).toLocaleString()}</strong> | 总盈亏 <strong style="color:${totalClr};">${totalSign}¥${Math.round(totalPL).toLocaleString()}</strong> | 今日 <strong style="color:${dailyClr};">${dailySign}¥${Math.round(stockDailyPL).toLocaleString()}</strong></span>
+        <h4 style="margin:0;font-size:13px;color:var(--accent);">📊 我的持仓</h4>
+        <span style="font-size:11px;">总市值 <strong style="color:var(--accent);">¥${Math.round(totalValue).toLocaleString()}</strong> | 总盈亏 <strong style="color:${totalClr};">${totalSign}¥${Math.round(totalPL).toLocaleString()}</strong></span>
       </div>
       <div style="display:flex;justify-content:space-between;padding:4px 0;font-size:10px;color:var(--text-muted);border-bottom:2px solid var(--border);margin-bottom:4px;">
         <span style="min-width:50px;">代码</span><span style="min-width:55px;">名称</span><span style="min-width:40px;text-align:right;">数量</span><span style="min-width:55px;text-align:right;">均价</span><span style="min-width:55px;text-align:right;">现价</span><span style="min-width:60px;text-align:right;">市值</span><span style="min-width:70px;text-align:right;">盈亏</span><span style="min-width:45px;text-align:right;">幅度</span>
@@ -200734,36 +200556,16 @@ function renderStocks(area, inv, state, parent) {
     `;
     area.appendChild(portfolioDiv);
 
-    // 持仓行点击展开成交记录 + 🔍 按钮定位到卡片
+    // 持仓行点击展开成交记录
     setTimeout(function() {
       var logArea = document.getElementById("trade-log-area");
-      // 🔍 导航按钮：定位到对应股票卡片
-      portfolioDiv.querySelectorAll(".holding-nav-btn").forEach(function(btn){
-        btn.addEventListener("click", function(e) {
-          e.stopPropagation();
-          var sym = this.dataset.symbol;
-          var card = document.getElementById("chart-" + sym);
-          if (card) {
-            card.scrollIntoView({ behavior: "smooth", block: "center" });
-            card.style.transition = "box-shadow 0.3s, border-color 0.3s";
-            card.style.boxShadow = "0 0 16px var(--accent)";
-            card.style.borderColor = "var(--accent)";
-            setTimeout(function(){ card.style.boxShadow = ""; card.style.borderColor = ""; }, 1500);
-          } else {
-            StateManager.addMessage("⚠️ 未找到 " + sym + " 的卡片，请先切换到股票Tab。", "warning");
-          }
-        });
-      });
-      // 持仓行点击展开成交记录
       portfolioDiv.querySelectorAll(".stock-holding-row").forEach(function(rw){
         var sym = rw.dataset.symbol;
-        rw.onclick = function(e) {
-          // 点击🔍按钮时不触发
-          if (e.target.classList.contains("holding-nav-btn")) return;
+        rw.onclick = function() {
           if (this._expanded) {
             this._expanded = false;
             this.style.background = "transparent";
-            var existing = logArea.querySelector("[data-for-sym='" + sym + "']");
+            var existing = logArea.querySelector("[data-for-sym=\"" + sym + "\"]");
             if (existing) existing.remove();
             return;
           }
@@ -200774,7 +200576,7 @@ function renderStocks(area, inv, state, parent) {
           }
           this._expanded = true;
           this.style.background = "rgba(0,180,216,0.08)";
-          var prev = logArea.querySelector("[data-for-sym='" + sym + "']");
+          var prev = logArea.querySelector("[data-for-sym=\"" + sym + "\"]");
           if (prev) prev.remove();
           logs.sort(function(a,b){ return a.day - b.day; });
           var logRows = "";
@@ -226823,6 +226625,261 @@ if (typeof window !== "undefined") {
   ];
 
   for (var i = 0; i < E_EVENTS_R246.length; i++) RANDOM_EVENTS.push(E_EVENTS_R246[i]);
+})();
+
+;
+// ==== js/core/domain_a_linkage_r251.js ====
+/*
+ * 城市浮生记 — 域A（数据/数值平衡）联动增强事件 · R251
+ * loop R251 全系统优化·Domain A 数据/数值平衡 → 跨域桥接（A→D / A→E / A→H）
+ *
+ * 背景：域A 已在 R14/R22/R189/R197/R242 覆盖 A→B/A→C/A→F/A→G/A→H。
+ * 本轮 A类审计结论：A类=0（新缺陷）——illnesses/illness/jobs/economy_v3.1/
+ * skill_synergy/items/finance/needs/goods 各子系统经历轮加固（R14/R22/R197/R242）
+ * 后已自洽：死字段 grep 干净、8 个 _synergy_ 与 6 个 referral flag 均有写入者、
+ * 商品定价与描述一致（无 >3 倍错配）。故本轮聚焦联动增强。
+ *
+ * 三事件均使用「真实字段 + 真实机制」做跨域桥接，且补齐历轮域A 未做的方向：
+ *  - A→D（NPC/社交·全新配对）：技能助邻 —— 用真实生活技能（维修/厨艺/医护）
+ *      帮已结识的街坊，好感变更严守域D铁律走 applyAffinityChange。
+ *  - A→E（经济/投资·全新配对）：物价通胀嗅觉 —— 读真实 _eraState.inflationIndex，
+ *      从菜价数据里养出避险意识，置 _dataInvestorMindset（E域事件消费）。
+ *  - A→H（Phase2/公司）：年终数据复盘 —— 用真实 accounting/management 技能做
+ *      经营复盘，换来 management XP + 绩效。（角度区别于 R197 争预算 / R242 证书背书）
+ * id 前缀 a251_ 与 a189_/a197_/a242_/data_ 既有前缀均不冲突。
+ *
+ * 设计约束（与历轮各域 linkage 一致）：
+ *  - IIFE 注入全局 RANDOM_EVENTS（非 ES import），避免改主库既有事件文件。
+ *  - 所有 state 访问均 || 防御；数值一律标 [PLACEHOLDER] 待数值组校准。
+ *  - 引擎严格按 e.phase 过滤（state.player.phase 仅 "street"/"corporate"），故显式设 phase（2 street + 1 corporate）。
+ *  - 里程碑/去重用 st.flags._xxxCooldown（conditions 与 apply 双重拦截）。
+ *  - 域D铁律：只读 state.relationships / rel&&rel.met / applyAffinityChange / getNpcDisplayName。
+ */
+(function () {
+  if (typeof RANDOM_EVENTS === "undefined" || !RANDOM_EVENTS) return;
+  if (RANDOM_EVENTS._domainALinkageR251Loaded) return;
+  RANDOM_EVENTS._domainALinkageR251Loaded = true;
+
+  var PRACTICAL_SKILLS_R251 = ["repair", "cooking", "medicine"];
+  var SKILL_CN_R251 = {
+    repair: "维修",
+    cooking: "厨艺",
+    medicine: "医护",
+    accounting: "会计",
+    management: "管理",
+  };
+
+  // 防御辅助：取玩家最高的一项实用生活技能（level>=minLv 才算数），无则 null
+  function topPracticalSkillR251(st, minLv) {
+    minLv = minLv || 0;
+    if (!st || !st.skills) return null;
+    var bestKey = null;
+    var bestLv = -1;
+    for (var i = 0; i < PRACTICAL_SKILLS_R251.length; i++) {
+      var k = PRACTICAL_SKILLS_R251[i];
+      var s = st.skills[k];
+      var lv = (s && s.level) || 0;
+      if (lv >= minLv && lv > bestLv) {
+        bestLv = lv;
+        bestKey = k;
+      }
+    }
+    return bestKey ? { key: bestKey, level: bestLv } : null;
+  }
+
+  // 防御辅助：取首个已结识且好感>=minAff 的 NPC id（域D铁律：只读 relationships + met 守卫）
+  function firstMetNpcR251(st, minAff) {
+    minAff = minAff || 0;
+    if (!st || !st.relationships) return null;
+    for (var id in st.relationships) {
+      if (!Object.prototype.hasOwnProperty.call(st.relationships, id)) continue;
+      var r = st.relationships[id];
+      if (r && r.met && (r.affinity || 0) >= minAff) return id;
+    }
+    return null;
+  }
+
+  // 防御辅助：好感变更一律走 applyAffinityChange（自动 clamp+记 _lastInteractionDay）
+  function bumpAffinityR251(st, npcId, delta, why) {
+    try {
+      if (typeof applyAffinityChange === "function") {
+        applyAffinityChange(st, npcId, delta, why || "R251联动");
+        return true;
+      }
+    } catch (e) {}
+    return false;
+  }
+
+  function npcNameR251(npcId) {
+    try {
+      if (typeof getNpcDisplayName === "function")
+        return getNpcDisplayName(npcId);
+    } catch (e) {}
+    return npcId || "街坊";
+  }
+
+  var A_EVENTS_R251 = [
+    // ===== 1. A→D：技能助邻 ↔ NPC/社交（历轮域A 全新配对；真实技能 + 域D铁律好感变更） =====
+    {
+      id: "a251_skill_neighbor_help",
+      title: "顺手帮个忙",
+      desc: "楼道里碰见街坊正对着坏掉的东西发愁。你搭眼一看，心里有数——这点活儿难不倒你。举手之劳的事，帮衬一把，邻里间的情分就是这么一点点攒起来的。",
+      phase: "street",
+      triggers: { minDay: 35 },
+      conditions: function (st) {
+        if (!st || !st.player) return false;
+        if (st.flags && st.flags._a251SkillHelpCooldown) return false;
+        // 门控：持有一项实用技能(level>=5) + 有已结识街坊(好感>=10)
+        if (!topPracticalSkillR251(st, 5)) return false;
+        return !!firstMetNpcR251(st, 10);
+      },
+      choices: [
+        {
+          text: "搭把手，把活儿干利索",
+          apply: function (st) {
+            var sk = topPracticalSkillR251(st, 5);
+            var npcId = firstMetNpcR251(st, 10);
+            if (npcId) bumpAffinityR251(st, npcId, 6, "技能助邻"); // [PLACEHOLDER] 好感
+            // A→C 顺带：帮忙也是练手，对应技能小幅长进（含证书加成乘区）
+            if (sk && sk.key && typeof addSkillXp === "function")
+              addSkillXp(sk.key, 5); // [PLACEHOLDER] 技能XP
+            if (st.player)
+              st.player.mental = Math.min(100, (st.player.mental || 50) + 3); // [PLACEHOLDER] 心智
+            if (st.needs)
+              st.needs.happiness = Math.min(
+                100,
+                (st.needs.happiness || 0) + 3,
+              ); // [PLACEHOLDER] 心情
+            if (st.flags) {
+              st.flags._a251SkillHelpCooldown = true;
+              st.flags._skillNeighborBond = true; // 技能睦邻 flag（D域后续叙事可消费）
+            }
+            if (typeof StateManager !== "undefined" && StateManager.addMessage)
+              StateManager.addMessage(
+                "🔧 " +
+                  (sk ? SKILL_CN_R251[sk.key] || "手艺" : "手艺") +
+                  "派上用场，帮了" +
+                  npcNameR251(npcId) +
+                  "一把。",
+                "good",
+              );
+          },
+        },
+        {
+          text: "点头示意，忙自己的去了",
+          apply: function (st) {
+            if (st.player)
+              st.player.mental = Math.min(100, (st.player.mental || 50) + 1);
+            if (st.flags) st.flags._a251SkillHelpCooldown = true;
+          },
+        },
+      ],
+      probability: 0.04,
+    },
+
+    // ===== 2. A→E：物价通胀嗅觉 ↔ 经济/投资（历轮域A 全新配对；读真实 _eraState.inflationIndex） =====
+    {
+      id: "a251_price_inflation_sense",
+      title: "菜篮子里的数字",
+      desc: "又去了趟菜市场，同样一篮子东西，比上个月贵了一截。你没急着抱怨，反倒摸出手机记了几笔——这半年菜价、房租、油钱的涨幅，心里渐渐有了本账。钱搁着不动就是在缩水，这个道理，从菜价里也能咂摸出来。",
+      phase: "street",
+      triggers: { minDay: 50 },
+      conditions: function (st) {
+        if (!st || !st.player) return false;
+        if (st.flags && st.flags._a251InflationSenseCooldown) return false;
+        // 门控：读真实 _eraState.inflationIndex（>=1.2 通胀有感），未消费过
+        var era = st._eraState;
+        if (!era || typeof era.inflationIndex !== "number") return false;
+        return era.inflationIndex >= 1.2;
+      },
+      choices: [
+        {
+          text: "记账、比价，琢磨怎么让钱保值",
+          apply: function (st) {
+            if (st.flags) {
+              st.flags._dataInvestorMindset = true; // A→E 桥接：投资/避险意识（E域事件消费）
+              st.flags._a251InflationSenseCooldown = true;
+            }
+            if (st.player)
+              st.player.mental = Math.min(100, (st.player.mental || 50) + 2); // [PLACEHOLDER] 心智
+            if (typeof addSkillXp === "function") addSkillXp("accounting", 4); // [PLACEHOLDER] 会计XP（记账练手）
+            if (typeof StateManager !== "undefined" && StateManager.addMessage)
+              StateManager.addMessage(
+                "📈 菜价里读出通胀，钱得想办法保值了。",
+                "good",
+              );
+          },
+        },
+        {
+          text: "贵就少买点，日子照过",
+          apply: function (st) {
+            if (st.needs)
+              st.needs.happiness = Math.max(
+                0,
+                (st.needs.happiness || 0) - 1,
+              ); // [PLACEHOLDER] 精打细算的小失落
+            if (st.flags) st.flags._a251InflationSenseCooldown = true;
+          },
+        },
+      ],
+      probability: 0.045,
+    },
+
+    // ===== 3. A→H：年终数据复盘 ↔ Phase2/公司（真实 accounting/management 技能做经营复盘） =====
+    {
+      id: "a251_ledger_year_review",
+      title: "年终复盘会",
+      desc: "部门年终复盘，一屋子人对着报表你一言我一语。轮到你，你把这一年的数字掰开揉碎讲——哪条线在涨、哪块成本虚高、明年该往哪使劲，条理清楚。散会时主管拍了拍你：「就爱听这种拿数据说话的。」",
+      phase: "corporate",
+      triggers: { minDay: 70 },
+      conditions: function (st) {
+        if (!st || !st.player) return false;
+        if (st.flags && st.flags._a251LedgerReviewCooldown) return false;
+        // 门控：在职（career.currentJob 或 corporate.company）+ 会计或管理技能 level>=8
+        var employed =
+          (st.career && st.career.currentJob) ||
+          (st.corporate && st.corporate.company);
+        if (!employed) return false;
+        var acc = (st.skills && st.skills.accounting && st.skills.accounting.level) || 0;
+        var mgt = (st.skills && st.skills.management && st.skills.management.level) || 0;
+        return acc >= 8 || mgt >= 8;
+      },
+      choices: [
+        {
+          text: "拿数据说话，把复盘讲透",
+          apply: function (st) {
+            if (typeof addSkillXp === "function") addSkillXp("management", 7); // [PLACEHOLDER] 管理XP
+            if (st.resources)
+              st.resources.cash = (st.resources.cash || 0) + 800; // [PLACEHOLDER] 复盘绩效
+            if (st.player)
+              st.player.mental = Math.min(100, (st.player.mental || 50) + 3); // [PLACEHOLDER] 心智
+            if (st.flags) {
+              st.flags._a251LedgerReviewCooldown = true;
+              st.flags._dataReviewCredibility = true; // 数据复盘口碑 flag（H域后续可消费）
+            }
+            if (typeof StateManager !== "undefined" && StateManager.addMessage)
+              StateManager.addMessage(
+                "📊 一场拿数据说话的复盘，给你挣足了印象分。",
+                "good",
+              );
+          },
+        },
+        {
+          text: "照本宣科念一遍就行",
+          apply: function (st) {
+            if (st.player)
+              st.player.mental = Math.min(100, (st.player.mental || 50) + 1);
+            if (st.flags) st.flags._a251LedgerReviewCooldown = true;
+          },
+        },
+      ],
+      probability: 0.04,
+    },
+  ];
+
+  for (var i = 0; i < A_EVENTS_R251.length; i++) {
+    RANDOM_EVENTS.push(A_EVENTS_R251[i]);
+  }
 })();
 
 ;
