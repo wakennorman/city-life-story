@@ -183461,13 +183461,17 @@ function _moveToHomeOrHospital(state, reason) {
   if (tier > 0 && homeLoc) {
     // 有住所 → 移动回住所
     state.trade.currentLocation = homeLoc;
-    StateManager.addMessage("🏠 被好心人送回了住所。", "info");
+    // 回住所休息恢复少量健康
+    state.status.health = Math.min(30, (state.status.health || 0) + 10);
+    StateManager.addMessage("🏠 被好心人送回了住所，休息后恢复了一点体力。", "info");
   } else {
     // 无住所 → 送医院（需付费）
     state.trade.currentLocation = "hospital";
     var fee = 100 + Random.int(0, 50);
     state.resources.cash = Math.max(0, (state.resources.cash || 0) - fee);
-    StateManager.addMessage("🏥 被路人送到医院，花了¥" + fee + "急救费。", "danger");
+    // 医院急救恢复健康（至少保底到15，防止健康0卡死）
+    state.status.health = Math.max(15, (state.status.health || 0) + 20);
+    StateManager.addMessage("🏥 被路人送到医院，花了¥" + fee + "急救费，伤势得到处理。", "danger");
   }
 }
 
