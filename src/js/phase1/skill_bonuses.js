@@ -879,7 +879,7 @@ function settleDailyFinance(state) {
     state.resources.villageDebtInterest =
       (state.resources.villageDebtInterest || 0) + vdInterest;
     state.resources.debt =
-      (state.resources.villageDebt || 0) + (state.resources.bankDebt || 0);
+      (state.resources.villageDebt || 0) + (state.resources.fineDebt || 0) + (state.resources.bankDebt || 0);
     if (typeof addDailyTransaction === "function") {
       addDailyTransaction(
         state,
@@ -912,7 +912,7 @@ function settleDailyFinance(state) {
     var bdInterest = Math.max(1, Math.floor(bd * bdRate));
     state.resources.bankDebt = bd + bdInterest;
     state.resources.debt =
-      (state.resources.villageDebt || 0) + (state.resources.bankDebt || 0);
+      (state.resources.villageDebt || 0) + (state.resources.fineDebt || 0) + (state.resources.bankDebt || 0);
     if (typeof addDailyTransaction === "function") {
       addDailyTransaction(
         state,
@@ -928,6 +928,35 @@ function settleDailyFinance(state) {
           bdInterest +
           " 利息（日息0.012%，欠款¥" +
           state.resources.bankDebt.toLocaleString() +
+          "）",
+        "warning",
+      );
+    }
+  }
+
+  // === 罚单滞纳金：未缴罚单日增2%滞纳金 ===
+  var fd = state.resources.fineDebt || 0;
+  if (fd > 0) {
+    var fdRate = 0.02; // 每日2%滞纳金
+    var fdPenalty = Math.max(1, Math.floor(fd * fdRate));
+    state.resources.fineDebt = fd + fdPenalty;
+    state.resources.debt =
+      (state.resources.villageDebt || 0) + (state.resources.fineDebt || 0) + (state.resources.bankDebt || 0);
+    if (typeof addDailyTransaction === "function") {
+      addDailyTransaction(
+        state,
+        "expense",
+        "fine_penalty",
+        fdPenalty,
+        "罚单滞纳金（日2%）",
+      );
+    }
+    if (typeof StateManager !== "undefined" && StateManager.addMessage) {
+      StateManager.addMessage(
+        "📋 罚单滞纳金 +¥" +
+          fdPenalty +
+          "（日2%，欠款¥" +
+          state.resources.fineDebt.toLocaleString() +
           "）",
         "warning",
       );

@@ -2379,6 +2379,7 @@
       if (st.resources) {
         totalDebt += st.resources.debt || 0;
         totalDebt += st.resources.villageDebt || 0;
+        totalDebt += st.resources.fineDebt || 0;
         totalDebt += st.resources.bankDebt || 0;
       }
       if (totalDebt < 5000) return false;

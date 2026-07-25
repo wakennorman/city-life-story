@@ -1646,6 +1646,17 @@ function buyInvStock(symbol, shares) {
       shares: shares,
       avgPrice: m.price,
     });
+  // 记录成交
+  if (!Array.isArray(inv.tradeLog)) inv.tradeLog = [];
+  inv.tradeLog.push({
+    day: state.player.day,
+    symbol: symbol,
+    type: "buy",
+    price: m.price,
+    quantity: shares,
+    total: cost,
+    unitLabel: def?.unit || "股",
+  });
   // 追踪交易频次（用于排序）
   if (state.stats) {
     if (!state.stats.investFreq) state.stats.investFreq = {};
@@ -1779,6 +1790,18 @@ function sellInvStock(symbol, shares) {
     inv.stockHoldings = inv.stockHoldings.filter(function (s) {
       return s.symbol !== symbol;
     });
+  // 记录卖出成交
+  if (!Array.isArray(inv.tradeLog)) inv.tradeLog = [];
+  inv.tradeLog.push({
+    day: state.player.day,
+    symbol: symbol,
+    type: "sell",
+    price: m.price,
+    quantity: shares,
+    total: revenue,
+    pl: pl,
+    unitLabel: def?.unit || "股",
+  });
   // 追踪卖出频次（用于排序）
   if (state.stats) {
     if (!state.stats.investFreq) state.stats.investFreq = {};
@@ -3515,12 +3538,15 @@ function renderStocks(area, inv, state, parent) {
             if (existing) existing.remove();
             return;
           }
+          var logs = (inv.tradeLog || []).filter(function(t){ return t.symbol === sym; });
+          if (logs.length === 0) {
+            StateManager.addMessage("ℹ️ " + sym + " 暂无成交记录。", "info");
+            return;
+          }
           this._expanded = true;
           this.style.background = "rgba(0,180,216,0.08)";
           var prev = logArea.querySelector("[data-for-sym=\"" + sym + "\"]");
           if (prev) prev.remove();
-          var logs = (inv.tradeLog || []).filter(function(t){ return t.symbol === sym; });
-          if (logs.length === 0) return;
           logs.sort(function(a,b){ return a.day - b.day; });
           var logRows = "";
           logs.forEach(function(t){

@@ -290,7 +290,7 @@ function checkExtremeConditions(state) {
       );
       state.resources.bankDebt = (state.resources.bankDebt || 0) + 500;
       state.resources.debt =
-        (state.resources.villageDebt || 0) + (state.resources.bankDebt || 0);
+        (state.resources.villageDebt || 0) + (state.resources.fineDebt || 0) + (state.resources.bankDebt || 0);
       st.health = Math.min(30, st.health + 10);
     }
     return "skip_day";

@@ -1252,7 +1252,7 @@
       if (!st.flags || !st.resources) return false;
       if (!st.flags._everHadDebt) return false;
       var totalDebt =
-        (st.resources.debt || 0) + (st.resources.villageDebt || 0);
+        (st.resources.debt || 0) + (st.resources.villageDebt || 0) + (st.resources.fineDebt || 0);
       if (totalDebt > 0) return false;
       if (st.player.day < 30) return false;
       if (st.flags._debtFreeSeen) return false;

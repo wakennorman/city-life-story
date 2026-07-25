@@ -201,7 +201,7 @@ const STREET_JOBS = [
     risk: {},
   },
 
-  // ====== 商业区 — 服务/配送（2个）=====
+  // ====== 商业区 — 服务/配送（3个）=====
   {
     id: "delivery_rider",
     name: "外卖骑手",
@@ -232,6 +232,20 @@ const STREET_JOBS = [
       return Math.floor(50 + cookBonus + Random.float(0, 30));
     },
     risk: {},
+  },
+  {
+    id: "logistics_driver",
+    name: "物流专职司机",
+    desc: "老李给你安排的专职司机活，开物流车跑固定路线。稳定，不用看天气吃饭，比跑外卖强多了。",
+    icon: "🚛",
+    location: "commercialDist",
+    requirements: { driving: 15, agility: 25, minAge: 18, maxAge: 50 },
+    requiredFlag: "_logisticsJobOffer",
+    effects: { fatigue: 20, happiness: 8, drivingXp: 5, accountingXp: 1 },
+    payCalc(state) {
+      return Math.floor(120 + (state.skills.driving?.level || 0) * 2 + state.player.agility * 0.3 + Random.float(0, 80));
+    },
+    risk: { injury: 0.02 },
   },
 
   // ====== 大学城（1个）=====

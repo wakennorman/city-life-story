@@ -143,7 +143,7 @@
     var _reasons = [];
 
     // 负债压力
-    var _debt = (st.resources && (st.resources.bankDebt || 0) + (st.resources.villageDebt || 0)) || 0;
+    var _debt = (st.resources && (st.resources.bankDebt || 0) + (st.resources.villageDebt || 0) + (st.resources.fineDebt || 0)) || 0;
     if (_debt > 50000) {
       _stress += 3;
       _reasons.push("高额负债");

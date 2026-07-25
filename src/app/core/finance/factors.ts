@@ -27,6 +27,7 @@ export interface LoanFactorState {
     debt?: number;
     bankDebt?: number;
     villageDebt?: number;
+    fineDebt?: number;
     bankBalance?: number;
     bankCreditHistory?: Array<{ repaid?: boolean; rating?: "good" | "bad" | string }>;
   };
@@ -61,7 +62,8 @@ export function calculateDTIPenalty(state: LoanFactorState, monthlyIncome: numbe
   const totalDebt =
     (state.resources?.debt || 0) +
     (state.resources?.bankDebt || 0) +
-    (state.resources?.villageDebt || 0);
+    (state.resources?.villageDebt || 0) +
+    (state.resources?.fineDebt || 0);
 
   const dti = totalDebt / monthlyIncome;
   if (dti < 1) return 1.0;

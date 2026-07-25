@@ -2113,6 +2113,15 @@ function generateDailySummary(state, startCash, startHealth, startHappiness) {
     );
   }
 
+  // 罚单提示
+  if ((state.resources.fineDebt || 0) > 0 && highlights.length < 2) {
+    highlights.push(
+      "📋 还有¥" +
+        (state.resources.fineDebt || 0).toLocaleString() +
+        "罚单没缴，每天2%滞纳金",
+    );
+  }
+
   // 节日氛围
   if (typeof getCurrentFestival === "function") {
     var fest = getCurrentFestival(day);
@@ -2134,6 +2143,7 @@ function generateDailySummary(state, startCash, startHealth, startHappiness) {
   // 债务状态追踪（成就：还清欠债）
   if (
     (state.resources.villageDebt || 0) <= 0 &&
+    (state.resources.fineDebt || 0) <= 0 &&
     (state.resources.bankDebt || 0) <= 0
   ) {
     state.flags._debtFree = true;

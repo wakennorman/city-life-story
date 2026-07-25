@@ -541,6 +541,7 @@ function createDefaultState() {
       debt: 0, // 当前总欠款 — v3.2 无起步债
       villageDebt: 0, // 欠村长的钱 — v3.2 无起步债
       villageDebtInterest: 0, // 累计村长利息
+      fineDebt: 0, // 欠缴罚单（警察罚款未付）— v3.0 违法行为系统
       bankDebt: 0, // 欠银行的钱
       bankDebtDay: 0, // 最近一笔银行贷款发放日
       bankCreditHistory: [], // 信贷记录 [{ day, amount, repaid, rating }]
@@ -684,6 +685,7 @@ function createDefaultState() {
 
     // --- 投资系统 ---
     investment: {
+      tradeLog: [], // [{ day, symbol, type: "buy"|"sell", price, quantity, total, pl, unitLabel }]
       stockMarket: {},
       stockHoldings: [],
       btcPrice: 200000,
@@ -3096,7 +3098,7 @@ function repayLoan(state, amount) {
 
   // 更新总债务
   state.resources.debt =
-    (state.resources.villageDebt || 0) + (state.resources.bankDebt || 0);
+    (state.resources.villageDebt || 0) + (state.resources.fineDebt || 0) + (state.resources.bankDebt || 0);
 
   // 更新信贷记录：若还清，标记为良好
   if (state.resources.bankDebt <= 0) {
@@ -3243,7 +3245,7 @@ function generateSaveNarrative(state) {
   var r = state.resources;
   var day = p.day;
   var cash = (r.cash || 0) + (r.bankBalance || 0);
-  var debt = (r.villageDebt || 0) + (r.bankDebt || 0);
+  var debt = (r.villageDebt || 0) + (r.fineDebt || 0) + (r.bankDebt || 0);
 
   var locNames = {
     slum: "城中村",
@@ -30809,18 +30811,18 @@ if (typeof window !== "undefined") {
           "error",
         );
       }
-      // 罚款（不够则记欠款）
+      // 罚款（不够则记欠款为罚单债务）
       var fineShortfall = 0;
       if (state.resources.cash >= p.fine) {
         state.resources.cash -= p.fine;
       } else {
         fineShortfall = p.fine - (state.resources.cash || 0);
         state.resources.cash = 0;
-        // 欠款转为债务
-        state.resources.villageDebt = (state.resources.villageDebt || 0) + fineShortfall;
+        // 欠款转为罚单债务（不再记入"欠村长"）
+        state.resources.fineDebt = (state.resources.fineDebt || 0) + fineShortfall;
         state.flags._fineDebt = (state.flags._fineDebt || 0) + fineShortfall;
         StateManager.addMessage(
-          "⚠️ 现金不够支付全额罚款，欠¥" + fineShortfall + "已转为债务！",
+          "⚠️ 现金不够支付全额罚款，欠¥" + fineShortfall + "罚单未缴！去派出所缴纳或等滞纳金…",
           "warning",
         );
       }
@@ -31713,7 +31715,7 @@ function getStoryChapterChecklist(state) {
   var day = p.day || 1;
   var totalAssets = (r.cash || 0) + (r.bankBalance || 0);
   // [全系统自洽修复] 域G A类修复: state 中银行贷款字段为 `bankDebt`（见 state.js:66），原字段名 `bankLoan` 不存在→银行债务永不被计入 checklist
-  var debt = (r.villageDebt || 0) + (r.bankDebt || 0);
+  var debt = (r.villageDebt || 0) + (r.fineDebt || 0) + (r.bankDebt || 0);
   var items = [];
 
   function add(label, done, hint, weight) {
@@ -36646,7 +36648,7 @@ if (typeof window !== "undefined") {
       conditions: function (st) {
         if (st.player.day < 15) return false;
         var totalDebt =
-          (st.resources.debt || 0) + (st.resources.villageDebt || 0);
+          (st.resources.debt || 0) + (st.resources.villageDebt || 0) + (st.resources.fineDebt || 0);
         if (totalDebt < 500) return false;
         if (st.flags._debtMeetDay && st.player.day - st.flags._debtMeetDay < 30)
           return false;
@@ -41500,6 +41502,7 @@ if (typeof window !== "undefined") {
       if (st.resources) {
         totalDebt += st.resources.debt || 0;
         totalDebt += st.resources.villageDebt || 0;
+        totalDebt += st.resources.fineDebt || 0;
         totalDebt += st.resources.bankDebt || 0;
       }
       if (totalDebt < 5000) return false;
@@ -58305,7 +58308,7 @@ if (typeof window !== "undefined") {
       if ((st.player.morality || 0) < 75) return false; // 检查 道德>=75
 
       var debt =
-        (st.resources.villageDebt || 0) + (st.resources.loanPrincipal || 0); // 检查 欠款
+        (st.resources.villageDebt || 0) + (st.resources.fineDebt || 0) + (st.resources.loanPrincipal || 0); // 检查 欠款
 
       if (debt <= 0) return false; // 检查 已有欠款
 
@@ -81002,7 +81005,7 @@ if (typeof window !== "undefined") {
       if (!st.flags || !st.resources) return false;
       if (!st.flags._everHadDebt) return false;
       var totalDebt =
-        (st.resources.debt || 0) + (st.resources.villageDebt || 0);
+        (st.resources.debt || 0) + (st.resources.villageDebt || 0) + (st.resources.fineDebt || 0);
       if (totalDebt > 0) return false;
       if (st.player.day < 30) return false;
       if (st.flags._debtFreeSeen) return false;
@@ -157422,7 +157425,7 @@ const STREET_JOBS = [
     risk: {},
   },
 
-  // ====== 商业区 — 服务/配送（2个）=====
+  // ====== 商业区 — 服务/配送（3个）=====
   {
     id: "delivery_rider",
     name: "外卖骑手",
@@ -157453,6 +157456,20 @@ const STREET_JOBS = [
       return Math.floor(50 + cookBonus + Random.float(0, 30));
     },
     risk: {},
+  },
+  {
+    id: "logistics_driver",
+    name: "物流专职司机",
+    desc: "老李给你安排的专职司机活，开物流车跑固定路线。稳定，不用看天气吃饭，比跑外卖强多了。",
+    icon: "🚛",
+    location: "commercialDist",
+    requirements: { driving: 15, agility: 25, minAge: 18, maxAge: 50 },
+    requiredFlag: "_logisticsJobOffer",
+    effects: { fatigue: 20, happiness: 8, drivingXp: 5, accountingXp: 1 },
+    payCalc(state) {
+      return Math.floor(120 + (state.skills.driving?.level || 0) * 2 + state.player.agility * 0.3 + Random.float(0, 80));
+    },
+    risk: { injury: 0.02 },
   },
 
   // ====== 大学城（1个）=====
@@ -181396,7 +181413,7 @@ function checkExtremeConditions(state) {
       );
       state.resources.bankDebt = (state.resources.bankDebt || 0) + 500;
       state.resources.debt =
-        (state.resources.villageDebt || 0) + (state.resources.bankDebt || 0);
+        (state.resources.villageDebt || 0) + (state.resources.fineDebt || 0) + (state.resources.bankDebt || 0);
       st.health = Math.min(30, st.health + 10);
     }
     return "skip_day";
@@ -183260,7 +183277,7 @@ function _punishByNeed阶梯式(state, need, deferCount) {
       } else {
         state.resources.bankDebt = (state.resources.bankDebt || 0) + fee;
         state.resources.debt =
-          (state.resources.villageDebt || 0) + (state.resources.bankDebt || 0);
+          (state.resources.villageDebt || 0) + (state.resources.fineDebt || 0) + (state.resources.bankDebt || 0);
       }
       state.needs.hunger = 30;
       state.status.health = Math.max(0, state.status.health - 10);
@@ -184870,7 +184887,7 @@ function settleDailyFinance(state) {
     state.resources.villageDebtInterest =
       (state.resources.villageDebtInterest || 0) + vdInterest;
     state.resources.debt =
-      (state.resources.villageDebt || 0) + (state.resources.bankDebt || 0);
+      (state.resources.villageDebt || 0) + (state.resources.fineDebt || 0) + (state.resources.bankDebt || 0);
     if (typeof addDailyTransaction === "function") {
       addDailyTransaction(
         state,
@@ -184903,7 +184920,7 @@ function settleDailyFinance(state) {
     var bdInterest = Math.max(1, Math.floor(bd * bdRate));
     state.resources.bankDebt = bd + bdInterest;
     state.resources.debt =
-      (state.resources.villageDebt || 0) + (state.resources.bankDebt || 0);
+      (state.resources.villageDebt || 0) + (state.resources.fineDebt || 0) + (state.resources.bankDebt || 0);
     if (typeof addDailyTransaction === "function") {
       addDailyTransaction(
         state,
@@ -184919,6 +184936,35 @@ function settleDailyFinance(state) {
           bdInterest +
           " 利息（日息0.012%，欠款¥" +
           state.resources.bankDebt.toLocaleString() +
+          "）",
+        "warning",
+      );
+    }
+  }
+
+  // === 罚单滞纳金：未缴罚单日增2%滞纳金 ===
+  var fd = state.resources.fineDebt || 0;
+  if (fd > 0) {
+    var fdRate = 0.02; // 每日2%滞纳金
+    var fdPenalty = Math.max(1, Math.floor(fd * fdRate));
+    state.resources.fineDebt = fd + fdPenalty;
+    state.resources.debt =
+      (state.resources.villageDebt || 0) + (state.resources.fineDebt || 0) + (state.resources.bankDebt || 0);
+    if (typeof addDailyTransaction === "function") {
+      addDailyTransaction(
+        state,
+        "expense",
+        "fine_penalty",
+        fdPenalty,
+        "罚单滞纳金（日2%）",
+      );
+    }
+    if (typeof StateManager !== "undefined" && StateManager.addMessage) {
+      StateManager.addMessage(
+        "📋 罚单滞纳金 +¥" +
+          fdPenalty +
+          "（日2%，欠款¥" +
+          state.resources.fineDebt.toLocaleString() +
           "）",
         "warning",
       );
@@ -190124,6 +190170,15 @@ function generateDailySummary(state, startCash, startHealth, startHappiness) {
     );
   }
 
+  // 罚单提示
+  if ((state.resources.fineDebt || 0) > 0 && highlights.length < 2) {
+    highlights.push(
+      "📋 还有¥" +
+        (state.resources.fineDebt || 0).toLocaleString() +
+        "罚单没缴，每天2%滞纳金",
+    );
+  }
+
   // 节日氛围
   if (typeof getCurrentFestival === "function") {
     var fest = getCurrentFestival(day);
@@ -190145,6 +190200,7 @@ function generateDailySummary(state, startCash, startHealth, startHappiness) {
   // 债务状态追踪（成就：还清欠债）
   if (
     (state.resources.villageDebt || 0) <= 0 &&
+    (state.resources.fineDebt || 0) <= 0 &&
     (state.resources.bankDebt || 0) <= 0
   ) {
     state.flags._debtFree = true;
@@ -198168,6 +198224,17 @@ function buyInvStock(symbol, shares) {
       shares: shares,
       avgPrice: m.price,
     });
+  // 记录成交
+  if (!Array.isArray(inv.tradeLog)) inv.tradeLog = [];
+  inv.tradeLog.push({
+    day: state.player.day,
+    symbol: symbol,
+    type: "buy",
+    price: m.price,
+    quantity: shares,
+    total: cost,
+    unitLabel: def?.unit || "股",
+  });
   // 追踪交易频次（用于排序）
   if (state.stats) {
     if (!state.stats.investFreq) state.stats.investFreq = {};
@@ -198301,6 +198368,18 @@ function sellInvStock(symbol, shares) {
     inv.stockHoldings = inv.stockHoldings.filter(function (s) {
       return s.symbol !== symbol;
     });
+  // 记录卖出成交
+  if (!Array.isArray(inv.tradeLog)) inv.tradeLog = [];
+  inv.tradeLog.push({
+    day: state.player.day,
+    symbol: symbol,
+    type: "sell",
+    price: m.price,
+    quantity: shares,
+    total: revenue,
+    pl: pl,
+    unitLabel: def?.unit || "股",
+  });
   // 追踪卖出频次（用于排序）
   if (state.stats) {
     if (!state.stats.investFreq) state.stats.investFreq = {};
@@ -200037,12 +200116,15 @@ function renderStocks(area, inv, state, parent) {
             if (existing) existing.remove();
             return;
           }
+          var logs = (inv.tradeLog || []).filter(function(t){ return t.symbol === sym; });
+          if (logs.length === 0) {
+            StateManager.addMessage("ℹ️ " + sym + " 暂无成交记录。", "info");
+            return;
+          }
           this._expanded = true;
           this.style.background = "rgba(0,180,216,0.08)";
           var prev = logArea.querySelector("[data-for-sym=\"" + sym + "\"]");
           if (prev) prev.remove();
-          var logs = (inv.tradeLog || []).filter(function(t){ return t.symbol === sym; });
-          if (logs.length === 0) return;
           logs.sort(function(a,b){ return a.day - b.day; });
           var logRows = "";
           logs.forEach(function(t){
@@ -223923,7 +224005,7 @@ if (typeof window !== "undefined") {
     if (!st || !st.resources) return 0;
     var cash = st.resources.cash || 0;
     var bank = st.resources.bankBalance || 0;
-    var debt = (st.resources.villageDebt || 0) + (st.resources.bankDebt || 0);
+    var debt = (st.resources.villageDebt || 0) + (st.resources.fineDebt || 0) + (st.resources.bankDebt || 0);
     var stockVal = 0;
     // 股票市值
     if (st.corporate && st.corporate.stocks) {
@@ -224188,7 +224270,7 @@ if (typeof window !== "undefined") {
     // 现金每¥10k提供+1好感加成（上限+5）
     var _wealthBonus = Math.min(5, Math.floor(_cash / 10000));
     // 负债会降低好感
-    var _debt = (st.resources.villageDebt || 0) + (st.resources.bankDebt || 0);
+    var _debt = (st.resources.villageDebt || 0) + (st.resources.fineDebt || 0) + (st.resources.bankDebt || 0);
     var _debtPenalty = Math.min(3, Math.floor(_debt / 5000));
 
     var _netBonus = _wealthBonus - _debtPenalty;
@@ -224235,7 +224317,8 @@ if (typeof window !== "undefined") {
     icon: "💰",
     title: "财富与生活",
     story: "你算了算自己的净资产——发现自己比想象中" + (function() {
-      var st = typeof StateManager !== "undefined" && StateManager.getState ? StateManager.getState() : null;
+      var st = null;
+      try { st = typeof StateManager !== "undefined" && StateManager.getState ? StateManager.getState() : null; } catch(e) { st = null; }
       if (!st) return "……";
       var nw = _calcNetWorthR235(st);
       if (nw >= 100000) return "富有得多。财务自由的感觉真好。";
@@ -224964,7 +225047,7 @@ if (typeof window !== "undefined") {
     var _reasons = [];
 
     // 负债压力
-    var _debt = (st.resources && (st.resources.bankDebt || 0) + (st.resources.villageDebt || 0)) || 0;
+    var _debt = (st.resources && (st.resources.bankDebt || 0) + (st.resources.villageDebt || 0) + (st.resources.fineDebt || 0)) || 0;
     if (_debt > 50000) {
       _stress += 3;
       _reasons.push("高额负债");
@@ -226490,7 +226573,7 @@ function renderGrowthTab(state, container) {
       ? (state.resources.cash || 0) + (state.resources.bankBalance || 0)
       : 0;
   var debt = state.resources
-    ? (state.resources.villageDebt || 0) + (state.resources.bankDebt || 0)
+    ? (state.resources.villageDebt || 0) + (state.resources.fineDebt || 0) + (state.resources.bankDebt || 0)
     : 0;
   var cash = state.resources ? state.resources.cash || 0 : 0;
   var bank = state.resources ? state.resources.bankBalance || 0 : 0;
@@ -226985,6 +227068,7 @@ function renderDebtHeader(state) {
   var r = state.resources;
   var villageDebt = r.villageDebt || 0;
   var bankDebt = r.bankDebt || 0;
+  var fineDebt = r.fineDebt || 0;
 
   // 收集非零债务
   var debtItems = [];
@@ -226992,6 +227076,13 @@ function renderDebtHeader(state) {
     debtItems.push({
       label: "🏘️ 欠村长",
       value: "¥" + villageDebt.toLocaleString(),
+      color: "var(--danger)",
+    });
+  }
+  if (fineDebt > 0) {
+    debtItems.push({
+      label: "📋 欠罚单",
+      value: "¥" + fineDebt.toLocaleString(),
       color: "var(--danger)",
     });
   }
@@ -229712,6 +229803,7 @@ function renderGrowthTab(state, parent) {
     : (state.resources.cash || 0) + (state.resources.bankBalance || 0);
   var debt =
     (state.resources.villageDebt || state.resources.debt || 0) +
+    (state.resources.fineDebt || 0) +
     (state.resources.bankDebt || 0);
   briefSection.innerHTML =
     '<h3 style="margin:0 0 10px;font-size:13px;color:var(--text-primary);">📊 我的数字</h3>' +
@@ -230206,12 +230298,15 @@ function getDailyActionTips(state) {
       (state.resources.villageDebt || state.resources.debt)) ||
     0;
   var bankDebt = (state.resources && state.resources.bankDebt) || 0;
+  var fineDebt = (state.resources && state.resources.fineDebt) || 0;
   if (cash < 30 && day > 3)
     urgent.push("💸 现金见底！今天必须打工，否则连饭都吃不上。");
   else if (cash < 100 && day > 5)
     tips.push("💸 现金快用完了，今天务必赚点钱补充。");
   if (villageDebt > 0 && day % 10 === 0)
     tips.push("🏘️ 村长贷款日息0.35%，欠款越久越多，有钱就去还一点。");
+  if (fineDebt > 0 && day % 5 === 0)
+    tips.push("📋 你有¥" + fineDebt.toLocaleString() + "罚单未缴！每天2%滞纳金，去派出所交了吧。");
 
   // === 今日重点整合（原daily_focus内容）===
   // 装备耐久预警
@@ -230687,7 +230782,7 @@ function renderGuidanceBar(state, parent) {
   var p = state.player,
     r = state.resources || {};
   var cash = (r.cash || 0) + (r.bankBalance || 0);
-  var debt = (r.villageDebt || r.debt || 0) + (r.bankDebt || 0);
+  var debt = (r.villageDebt || r.debt || 0) + (r.fineDebt || 0) + (r.bankDebt || 0);
   var stageId =
     p.day <= 7
       ? "survival"
@@ -232533,10 +232628,12 @@ function renderInventoryTab(state, parent) {
   // 计算负重信息
   var totalWeight = 0;
   var maxCarry = 15 + (state.player.physique || 0) * 0.3;
+  var encumbranceTier = null;
   if (typeof calcEncumbrance === "function") {
     var enc = calcEncumbrance(state);
     totalWeight = Math.round(enc.totalWeight * 10) / 10;
     maxCarry = Math.round(enc.maxCarry * 10) / 10;
+    encumbranceTier = enc.tier;
   }
   div.innerHTML = `
     <h3 style="color:var(--text-muted);margin-bottom:12px;">🎒 物品栏
@@ -235416,8 +235513,9 @@ function renderFinanceTab(state, parent) {
   var cash = r.cash || 0;
   var bankBalance = r.bankBalance || 0;
   var villageDebt = r.villageDebt || 0;
+  var fineDebt = r.fineDebt || 0;
   var bankDebt = r.bankDebt || 0;
-  var totalDebt = villageDebt + bankDebt;
+  var totalDebt = villageDebt + fineDebt + bankDebt;
   var netWorth = cash + bankBalance - totalDebt;
   var txs = state.flags._dailyTransactions || [];
 
@@ -237425,7 +237523,7 @@ function showRepayVillageModal() {
           if (state.resources.villageDebt !== undefined) {
             state.resources.villageDebt = Math.max(0, (state.resources.villageDebt || 0) - amt);
             state.resources.debt =
-              state.resources.villageDebt + (state.resources.bankDebt || 0);
+              state.resources.villageDebt + (state.resources.bankDebt || 0) + (state.resources.fineDebt || 0);
           } else {
             state.resources.debt -= amt;
           }
@@ -237451,6 +237549,58 @@ function showRepayVillageModal() {
       // Allow custom amount via the input
     }
   }, 50);
+}
+
+/** 缴纳罚单的模态框 */
+function showPayFineModal() {
+  const state = StateManager.getState();
+  const fineDebt = state.resources.fineDebt || 0;
+  if (fineDebt <= 0) {
+    StateManager.addMessage("✅ 你没有任何未缴罚单。", "info");
+    return;
+  }
+  const cash = state.resources.cash || 0;
+  showModal({
+    title: "📋 缴纳罚单",
+    body: `<p>未缴罚单: <strong style="color:var(--danger);">¥${fineDebt.toLocaleString()}</strong></p>
+           <p style="font-size:11px;color:var(--text-secondary);">每天2%滞纳金，拖越久越多！</p>
+           <p>现金: <strong>¥${cash.toLocaleString()}</strong></p>
+           ${cash <= 0 ? '<p style="color:var(--danger);">⚠️ 现金不够，先打工赚钱吧。</p>' : '<label>缴纳金额: <input id="pay-fine-amount" type="number" min="1" max="' + Math.min(cash, fineDebt) + '" value="' + Math.min(cash, fineDebt) + '" style="width:100%;padding:8px;margin-top:8px;background:var(--bg-input);border:1px solid var(--border);color:var(--text-primary);border-radius:4px;"></label>'}`,
+    buttons: [
+      { text: "取消", cls: "", callback: () => {} },
+      ...(cash > 0 ? [{
+        text: "缴纳",
+        cls: "btn-success",
+        callback: () => {
+          const input = document.getElementById("pay-fine-amount");
+          const amt = input ? Math.min(parseInt(input.value) || 0, cash, fineDebt) : Math.min(cash, fineDebt);
+          if (amt <= 0) {
+            StateManager.addMessage("⚠️ 请输入有效金额。", "warning");
+            return;
+          }
+          state.resources.cash = Math.max(0, cash - amt);
+          state.resources.fineDebt = Math.max(0, fineDebt - amt);
+          state.resources.debt =
+            (state.resources.villageDebt || 0) + (state.resources.bankDebt || 0) + (state.resources.fineDebt || 0);
+          if (state.resources.fineDebt <= 0) {
+            StateManager.addMessage(
+              "🎉 罚单已全部缴清！守法公民心安理得。",
+              "success",
+            );
+          } else {
+            StateManager.addMessage(
+              `📋 缴纳罚单 ¥${amt.toLocaleString()}。还剩 ¥${state.resources.fineDebt.toLocaleString()} 未缴。`,
+              "success",
+            );
+          }
+          if (typeof addDailyTransaction === "function") {
+            addDailyTransaction(state, "expense", "fine_payment", amt, "缴纳罚单");
+          }
+          renderAll();
+        },
+      }] : []),
+    ],
+  });
 }
 
 // ====== 存档 / 读档菜单 =====
@@ -242319,6 +242469,15 @@ window._navEnsureInit = function () {
 
     // 债务紧迫
     var vd = r.villageDebt || 0;
+    var fd = r.fineDebt || 0;
+    if (fd > 0) {
+      out.push({
+        w: 85,
+        icon: "📋",
+        text: "缴纳罚单 ¥" + fd.toLocaleString(),
+        hint: "每天2%滞纳金，去派出所交了吧",
+      });
+    }
     if (vd > 0) {
       var vi = r.villageDebtInterest || 0;
       if (vi > 0 && vd > 3000 && p.day && p.day > 30) {
@@ -248131,6 +248290,14 @@ function generatePeakMomentHTML(state, incomes, expenses) {
     });
   }
   var debt = state.resources.villageDebt || 0;
+  var fineDebt = state.resources.fineDebt || 0;
+  if (fineDebt > 0) {
+    highlights.push({
+      icon: "📋",
+      text: "还有¥" + fineDebt.toLocaleString() + "罚单未缴，每天2%滞纳金！",
+      type: "warning",
+    });
+  }
   if (debt > 0 && day % 10 === 0) {
     // [全系统自洽修复] 域A 联动增强: 动态利率显示
     var ratePct = 0.35;
@@ -250813,50 +250980,8 @@ function renderCareerJobs(state, parent) {
 
   // ---- 街头工作→职业路径桥接（v3.46: 让街头经历可见地转化为职场资本） ----
   if (!currentJob) {
-    // 计算街头工作总天数
-    var actionFreq =
-      state.stats && state.stats.actionFreq ? state.stats.actionFreq : {};
-    var streetJobIds = [
-      "waste_recycling",
-      "old_zhou_recycling",
-      "manual_labor_construction",
-      "premium_engineering",
-      "factory_work_assembly",
-      "street_vending_food",
-      "delivery_rider",
-      "restaurant_assistant",
-      "content_writing",
-      "junior_analyst",
-      "busking",
-      "bank_security",
-      "training_assistant",
-      "hospital_companion",
-      "tutoring",
-      "factory_overtime",
-      "courier_gig",
-      "wholesale_delivery",
-      "wholesale_sorting",
-      "cafeteria_worker",
-      "instrument_repair",
-      "phone_modding",
-      "web_designer",
-      "server_ops",
-      "network_monitor",
-      "foreign_trade_assistant",
-      "document_translator",
-      "taxi_driver",
-      "truck_assistant",
-      "shop_assistant",
-      "procurement_clerk",
-      "project_coordinator",
-      "audit_assistant",
-      "factory_electrician",
-      "steel_worker",
-    ];
-    var streetTotalDays = 0;
-    for (var si = 0; si < streetJobIds.length; si++) {
-      streetTotalDays += actionFreq["job_" + streetJobIds[si]] || 0;
-    }
+    // 计算街头工作总天数（使用唯一工作天数，非 actionFreq 点击次数）
+    var streetTotalDays = (state.flags && state.flags._totalStreetDays) || 0;
     // 街头经验转为职场资本感知
     if (streetTotalDays > 0) {
       var skills = state.skills || {};
@@ -251491,49 +251616,7 @@ function renderCareerOverview(state, parent) {
 
   // === 无工作状态：推荐路径 + 证书引导 ===
   if (!job) {
-    var _af =
-      state.stats && state.stats.actionFreq ? state.stats.actionFreq : {};
-    var _sids = [
-      "waste_recycling",
-      "old_zhou_recycling",
-      "manual_labor_construction",
-      "premium_engineering",
-      "factory_work_assembly",
-      "street_vending_food",
-      "delivery_rider",
-      "restaurant_assistant",
-      "content_writing",
-      "junior_analyst",
-      "busking",
-      "bank_security",
-      "training_assistant",
-      "hospital_companion",
-      "tutoring",
-      "factory_overtime",
-      "courier_gig",
-      "wholesale_delivery",
-      "wholesale_sorting",
-      "cafeteria_worker",
-      "instrument_repair",
-      "phone_modding",
-      "web_designer",
-      "server_ops",
-      "network_monitor",
-      "foreign_trade_assistant",
-      "document_translator",
-      "taxi_driver",
-      "truck_assistant",
-      "shop_assistant",
-      "procurement_clerk",
-      "project_coordinator",
-      "audit_assistant",
-      "factory_electrician",
-      "steel_worker",
-    ];
-    var _sd = 0;
-    for (var _si2 = 0; _si2 < _sids.length; _si2++) {
-      _sd += _af["job_" + _sids[_si2]] || 0;
-    }
+    var _sd = (state.flags && state.flags._totalStreetDays) || 0;
     html +=
       '<div class="section" style="margin-top:8px;"><h3>🎯 事业准备</h3><div class="card" style="padding:10px;">';
     if (_sd > 0) {
@@ -255387,7 +255470,7 @@ if (typeof window !== "undefined") {
     var p = state.player;
     var r = state.resources || {};
     var cash = (r.cash || 0) + (r.bankBalance || 0);
-    var debt = (r.villageDebt || r.debt || 0) + (r.bankDebt || 0);
+    var debt = (r.villageDebt || r.debt || 0) + (r.fineDebt || 0) + (r.bankDebt || 0);
     if (p.day <= 7) return "survival";
     if (debt > 0) return "debt";
     if (p.phase === "corporate")
@@ -255408,7 +255491,7 @@ if (typeof window !== "undefined") {
     var p = state.player || {};
     if (stage.id === "debt") {
       var r = state.resources || {};
-      var debt = (r.villageDebt || r.debt || 0) + (r.bankDebt || 0);
+      var debt = (r.villageDebt || r.debt || 0) + (r.fineDebt || 0) + (r.bankDebt || 0);
       return debt > 0 ? "还清债务，攒到¥5000" : "攒下¥5000启动资金";
     }
     // 快到职场门槛时，提示玩家智力路线 → techPark
@@ -255493,7 +255576,7 @@ if (typeof window !== "undefined") {
     var cash = r.cash || 0;
     var bank = r.bankBalance || 0;
     var assets = cash + bank;
-    var debt = (r.villageDebt || r.debt || 0) + (r.bankDebt || 0);
+    var debt = (r.villageDebt || r.debt || 0) + (r.fineDebt || 0) + (r.bankDebt || 0);
     var rels = state.relationships || {};
     // [全系统自洽修复] 域F 修复:state.certs 为死字段(全库无写入点)，真实字段为 state.certificates 数组(main.js push cert.id)——原 certGte 目标永久无法完成
     var certs = state.certificates || [];
@@ -255564,7 +255647,7 @@ if (typeof window !== "undefined") {
     var cash = r.cash || 0;
     var bank = r.bankBalance || 0;
     var assets = cash + bank;
-    var debt = (r.villageDebt || r.debt || 0) + (r.bankDebt || 0);
+    var debt = (r.villageDebt || r.debt || 0) + (r.fineDebt || 0) + (r.bankDebt || 0);
     var intel = p.intelligence || 0;
     var day = p.day;
     var housing = (state.housing && state.housing.tier) || 0;
@@ -257944,11 +258027,11 @@ function showScenarioDetail(scenarioId) {
       s.resources.bankBalance.toLocaleString() +
       "</span></div>";
   }
-  if ((s.resources.villageDebt || 0) + (s.resources.bankDebt || 0) > 0) {
+  if ((s.resources.villageDebt || 0) + (s.resources.fineDebt || 0) + (s.resources.bankDebt || 0) > 0) {
     resourceLines +=
       '<div class="scenario-detail-stat"><span class="scenario-detail-stat-label">💸 负债</span><span class="scenario-detail-stat-val" style="color:var(--danger)">¥' +
       (
-        (s.resources.villageDebt || 0) + (s.resources.bankDebt || 0)
+        (s.resources.villageDebt || 0) + (s.resources.fineDebt || 0) + (s.resources.bankDebt || 0)
       ).toLocaleString() +
       "</span></div>";
   }
@@ -258201,7 +258284,7 @@ function startScenarioGame(scenarioId) {
   state.resources.villageDebt = scenario.resources.villageDebt || 0;
   state.resources.bankDebt = scenario.resources.bankDebt || 0;
   state.resources.debt =
-    (scenario.resources.villageDebt || 0) + (scenario.resources.bankDebt || 0);
+    (scenario.resources.villageDebt || 0) + (scenario.resources.fineDebt || 0) + (scenario.resources.bankDebt || 0);
   state.resources.loanPrincipal = scenario.resources.villageDebt || 0;
   state.resources.loanDay = 0;
 
@@ -258789,7 +258872,7 @@ function startSandboxGame() {
   var cfg = _sandboxConfig;
 
   // ——— 先展示"命运定锚"弹窗，让玩家选定挑战目标，再初始化游戏 ———
-  var _sbDebt = (cfg.villageDebt || 0) + (cfg.bankDebt || 0);
+  var _sbDebt = (cfg.villageDebt || 0) + (cfg.fineDebt || 0) + (cfg.bankDebt || 0);
   var _sbAssets = (cfg.cash || 0) + (cfg.bankBalance || 0);
   var _sbIntroBody =
     "你在城市里找了一张椅子坐下，把自己的账列了出来：<br><br>" +
@@ -258831,7 +258914,7 @@ function startSandboxGame() {
     state.resources.bankBalance = cfg.bankBalance || 0;
     state.resources.villageDebt = cfg.villageDebt || 0;
     state.resources.bankDebt = cfg.bankDebt || 0;
-    state.resources.debt = (cfg.villageDebt || 0) + (cfg.bankDebt || 0);
+    state.resources.debt = (cfg.villageDebt || 0) + (cfg.fineDebt || 0) + (cfg.bankDebt || 0);
     state.resources.loanPrincipal = cfg.villageDebt || 0;
     state.resources.loanDay = 0;
 
@@ -259430,8 +259513,8 @@ function showCompareResult() {
     ) +
     diffVal(
       "总债务",
-      (s1.resources.villageDebt || 0) + (s1.resources.bankDebt || 0),
-      (s2.resources.villageDebt || 0) + (s2.resources.bankDebt || 0),
+      (s1.resources.villageDebt || 0) + (s1.resources.fineDebt || 0) + (s1.resources.bankDebt || 0),
+      (s2.resources.villageDebt || 0) + (s2.resources.fineDebt || 0) + (s2.resources.bankDebt || 0),
       function (v) {
         return "¥" + v.toLocaleString();
       },
@@ -260813,6 +260896,21 @@ function getAvailableActions(state) {
       });
     }
 
+    // 缴纳罚单 — 有未缴罚单时显示
+    if ((state.resources.fineDebt || 0) > 0) {
+      actions.push({
+        id: "pay_fine",
+        category: "finance",
+        name: "📋 缴纳罚单",
+        desc: "去交管窗口缴纳未缴的罚单，滞纳金每天2%不停涨！",
+        icon: "📋",
+        disabled: (state.resources.cash || 0) <= 0 ? true : false,
+        handler: () => {
+          showPayFineModal();
+        },
+      });
+    }
+
     actions.push({
       id: "eat",
       category: "survival",
@@ -261715,6 +261813,11 @@ function showEarnFloat(amount, sourceEl) {
 
 function doStreetJob(job) {
   const state = StateManager.getState();
+
+  // [全系统自洽修复] 跟踪唯一街头工作天数（用于显示和经验计算）
+  if (!state.flags._workedToday) {
+    state.flags._totalStreetDays = (state.flags._totalStreetDays || 0) + 1;
+  }
 
   // 扣除启动资金
   if (job.startupCost) {
@@ -262717,7 +262820,7 @@ function getNextGoals(state) {
     goals.push({ title: "🚿 洗澡", desc: "太脏了", priority: 100 });
 
   const cash = r.cash || 0;
-  const debt = (r.villageDebt || 0) + (r.bankDebt || 0);
+  const debt = (r.villageDebt || 0) + (r.fineDebt || 0) + (r.bankDebt || 0);
   const hasInvestment = !!state.investment?.stockHoldings?.length;
 
   // 街头阶段
@@ -262861,7 +262964,7 @@ function renderWhatsNext(state) {
 
 function checkDebtCeiling(state) {
   const debt =
-    (state.resources?.villageDebt || 0) + (state.resources?.bankDebt || 0);
+    (state.resources?.villageDebt || 0) + (state.resources?.fineDebt || 0) + (state.resources?.bankDebt || 0);
   if (debt < 2000) return;
   const history = state.history?.income || [];
   const recent = history.slice(-7);

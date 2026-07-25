@@ -929,7 +929,7 @@ function renderGrowthTab(state, container) {
       ? (state.resources.cash || 0) + (state.resources.bankBalance || 0)
       : 0;
   var debt = state.resources
-    ? (state.resources.villageDebt || 0) + (state.resources.bankDebt || 0)
+    ? (state.resources.villageDebt || 0) + (state.resources.fineDebt || 0) + (state.resources.bankDebt || 0)
     : 0;
   var cash = state.resources ? state.resources.cash || 0 : 0;
   var bank = state.resources ? state.resources.bankBalance || 0 : 0;

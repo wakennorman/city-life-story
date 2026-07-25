@@ -785,7 +785,7 @@ function showRepayVillageModal() {
           if (state.resources.villageDebt !== undefined) {
             state.resources.villageDebt = Math.max(0, (state.resources.villageDebt || 0) - amt);
             state.resources.debt =
-              state.resources.villageDebt + (state.resources.bankDebt || 0);
+              state.resources.villageDebt + (state.resources.bankDebt || 0) + (state.resources.fineDebt || 0);
           } else {
             state.resources.debt -= amt;
           }
@@ -811,6 +811,58 @@ function showRepayVillageModal() {
       // Allow custom amount via the input
     }
   }, 50);
+}
+
+/** 缴纳罚单的模态框 */
+function showPayFineModal() {
+  const state = StateManager.getState();
+  const fineDebt = state.resources.fineDebt || 0;
+  if (fineDebt <= 0) {
+    StateManager.addMessage("✅ 你没有任何未缴罚单。", "info");
+    return;
+  }
+  const cash = state.resources.cash || 0;
+  showModal({
+    title: "📋 缴纳罚单",
+    body: `<p>未缴罚单: <strong style="color:var(--danger);">¥${fineDebt.toLocaleString()}</strong></p>
+           <p style="font-size:11px;color:var(--text-secondary);">每天2%滞纳金，拖越久越多！</p>
+           <p>现金: <strong>¥${cash.toLocaleString()}</strong></p>
+           ${cash <= 0 ? '<p style="color:var(--danger);">⚠️ 现金不够，先打工赚钱吧。</p>' : '<label>缴纳金额: <input id="pay-fine-amount" type="number" min="1" max="' + Math.min(cash, fineDebt) + '" value="' + Math.min(cash, fineDebt) + '" style="width:100%;padding:8px;margin-top:8px;background:var(--bg-input);border:1px solid var(--border);color:var(--text-primary);border-radius:4px;"></label>'}`,
+    buttons: [
+      { text: "取消", cls: "", callback: () => {} },
+      ...(cash > 0 ? [{
+        text: "缴纳",
+        cls: "btn-success",
+        callback: () => {
+          const input = document.getElementById("pay-fine-amount");
+          const amt = input ? Math.min(parseInt(input.value) || 0, cash, fineDebt) : Math.min(cash, fineDebt);
+          if (amt <= 0) {
+            StateManager.addMessage("⚠️ 请输入有效金额。", "warning");
+            return;
+          }
+          state.resources.cash = Math.max(0, cash - amt);
+          state.resources.fineDebt = Math.max(0, fineDebt - amt);
+          state.resources.debt =
+            (state.resources.villageDebt || 0) + (state.resources.bankDebt || 0) + (state.resources.fineDebt || 0);
+          if (state.resources.fineDebt <= 0) {
+            StateManager.addMessage(
+              "🎉 罚单已全部缴清！守法公民心安理得。",
+              "success",
+            );
+          } else {
+            StateManager.addMessage(
+              `📋 缴纳罚单 ¥${amt.toLocaleString()}。还剩 ¥${state.resources.fineDebt.toLocaleString()} 未缴。`,
+              "success",
+            );
+          }
+          if (typeof addDailyTransaction === "function") {
+            addDailyTransaction(state, "expense", "fine_payment", amt, "缴纳罚单");
+          }
+          renderAll();
+        },
+      }] : []),
+    ],
+  });
 }
 
 // ====== 存档 / 读档菜单 =====

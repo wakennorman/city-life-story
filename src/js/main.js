@@ -652,11 +652,11 @@ function showScenarioDetail(scenarioId) {
       s.resources.bankBalance.toLocaleString() +
       "</span></div>";
   }
-  if ((s.resources.villageDebt || 0) + (s.resources.bankDebt || 0) > 0) {
+  if ((s.resources.villageDebt || 0) + (s.resources.fineDebt || 0) + (s.resources.bankDebt || 0) > 0) {
     resourceLines +=
       '<div class="scenario-detail-stat"><span class="scenario-detail-stat-label">💸 负债</span><span class="scenario-detail-stat-val" style="color:var(--danger)">¥' +
       (
-        (s.resources.villageDebt || 0) + (s.resources.bankDebt || 0)
+        (s.resources.villageDebt || 0) + (s.resources.fineDebt || 0) + (s.resources.bankDebt || 0)
       ).toLocaleString() +
       "</span></div>";
   }
@@ -909,7 +909,7 @@ function startScenarioGame(scenarioId) {
   state.resources.villageDebt = scenario.resources.villageDebt || 0;
   state.resources.bankDebt = scenario.resources.bankDebt || 0;
   state.resources.debt =
-    (scenario.resources.villageDebt || 0) + (scenario.resources.bankDebt || 0);
+    (scenario.resources.villageDebt || 0) + (scenario.resources.fineDebt || 0) + (scenario.resources.bankDebt || 0);
   state.resources.loanPrincipal = scenario.resources.villageDebt || 0;
   state.resources.loanDay = 0;
 
@@ -1497,7 +1497,7 @@ function startSandboxGame() {
   var cfg = _sandboxConfig;
 
   // ——— 先展示"命运定锚"弹窗，让玩家选定挑战目标，再初始化游戏 ———
-  var _sbDebt = (cfg.villageDebt || 0) + (cfg.bankDebt || 0);
+  var _sbDebt = (cfg.villageDebt || 0) + (cfg.fineDebt || 0) + (cfg.bankDebt || 0);
   var _sbAssets = (cfg.cash || 0) + (cfg.bankBalance || 0);
   var _sbIntroBody =
     "你在城市里找了一张椅子坐下，把自己的账列了出来：<br><br>" +
@@ -1539,7 +1539,7 @@ function startSandboxGame() {
     state.resources.bankBalance = cfg.bankBalance || 0;
     state.resources.villageDebt = cfg.villageDebt || 0;
     state.resources.bankDebt = cfg.bankDebt || 0;
-    state.resources.debt = (cfg.villageDebt || 0) + (cfg.bankDebt || 0);
+    state.resources.debt = (cfg.villageDebt || 0) + (cfg.fineDebt || 0) + (cfg.bankDebt || 0);
     state.resources.loanPrincipal = cfg.villageDebt || 0;
     state.resources.loanDay = 0;
 
@@ -2138,8 +2138,8 @@ function showCompareResult() {
     ) +
     diffVal(
       "总债务",
-      (s1.resources.villageDebt || 0) + (s1.resources.bankDebt || 0),
-      (s2.resources.villageDebt || 0) + (s2.resources.bankDebt || 0),
+      (s1.resources.villageDebt || 0) + (s1.resources.fineDebt || 0) + (s1.resources.bankDebt || 0),
+      (s2.resources.villageDebt || 0) + (s2.resources.fineDebt || 0) + (s2.resources.bankDebt || 0),
       function (v) {
         return "¥" + v.toLocaleString();
       },
@@ -3521,6 +3521,21 @@ function getAvailableActions(state) {
       });
     }
 
+    // 缴纳罚单 — 有未缴罚单时显示
+    if ((state.resources.fineDebt || 0) > 0) {
+      actions.push({
+        id: "pay_fine",
+        category: "finance",
+        name: "📋 缴纳罚单",
+        desc: "去交管窗口缴纳未缴的罚单，滞纳金每天2%不停涨！",
+        icon: "📋",
+        disabled: (state.resources.cash || 0) <= 0 ? true : false,
+        handler: () => {
+          showPayFineModal();
+        },
+      });
+    }
+
     actions.push({
       id: "eat",
       category: "survival",
@@ -4423,6 +4438,11 @@ function showEarnFloat(amount, sourceEl) {
 
 function doStreetJob(job) {
   const state = StateManager.getState();
+
+  // [全系统自洽修复] 跟踪唯一街头工作天数（用于显示和经验计算）
+  if (!state.flags._workedToday) {
+    state.flags._totalStreetDays = (state.flags._totalStreetDays || 0) + 1;
+  }
 
   // 扣除启动资金
   if (job.startupCost) {
@@ -5425,7 +5445,7 @@ function getNextGoals(state) {
     goals.push({ title: "🚿 洗澡", desc: "太脏了", priority: 100 });
 
   const cash = r.cash || 0;
-  const debt = (r.villageDebt || 0) + (r.bankDebt || 0);
+  const debt = (r.villageDebt || 0) + (r.fineDebt || 0) + (r.bankDebt || 0);
   const hasInvestment = !!state.investment?.stockHoldings?.length;
 
   // 街头阶段
@@ -5569,7 +5589,7 @@ function renderWhatsNext(state) {
 
 function checkDebtCeiling(state) {
   const debt =
-    (state.resources?.villageDebt || 0) + (state.resources?.bankDebt || 0);
+    (state.resources?.villageDebt || 0) + (state.resources?.fineDebt || 0) + (state.resources?.bankDebt || 0);
   if (debt < 2000) return;
   const history = state.history?.income || [];
   const recent = history.slice(-7);

@@ -511,7 +511,7 @@ function repayLoan(state, amount) {
 
   // 更新总债务
   state.resources.debt =
-    (state.resources.villageDebt || 0) + (state.resources.bankDebt || 0);
+    (state.resources.villageDebt || 0) + (state.resources.fineDebt || 0) + (state.resources.bankDebt || 0);
 
   // 更新信贷记录：若还清，标记为良好
   if (state.resources.bankDebt <= 0) {

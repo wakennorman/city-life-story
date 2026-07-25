@@ -47,7 +47,7 @@
     var p = state.player;
     var r = state.resources || {};
     var cash = (r.cash || 0) + (r.bankBalance || 0);
-    var debt = (r.villageDebt || r.debt || 0) + (r.bankDebt || 0);
+    var debt = (r.villageDebt || r.debt || 0) + (r.fineDebt || 0) + (r.bankDebt || 0);
     if (p.day <= 7) return "survival";
     if (debt > 0) return "debt";
     if (p.phase === "corporate")
@@ -68,7 +68,7 @@
     var p = state.player || {};
     if (stage.id === "debt") {
       var r = state.resources || {};
-      var debt = (r.villageDebt || r.debt || 0) + (r.bankDebt || 0);
+      var debt = (r.villageDebt || r.debt || 0) + (r.fineDebt || 0) + (r.bankDebt || 0);
       return debt > 0 ? "还清债务，攒到¥5000" : "攒下¥5000启动资金";
     }
     // 快到职场门槛时，提示玩家智力路线 → techPark
@@ -153,7 +153,7 @@
     var cash = r.cash || 0;
     var bank = r.bankBalance || 0;
     var assets = cash + bank;
-    var debt = (r.villageDebt || r.debt || 0) + (r.bankDebt || 0);
+    var debt = (r.villageDebt || r.debt || 0) + (r.fineDebt || 0) + (r.bankDebt || 0);
     var rels = state.relationships || {};
     // [全系统自洽修复] 域F 修复:state.certs 为死字段(全库无写入点)，真实字段为 state.certificates 数组(main.js push cert.id)——原 certGte 目标永久无法完成
     var certs = state.certificates || [];
@@ -224,7 +224,7 @@
     var cash = r.cash || 0;
     var bank = r.bankBalance || 0;
     var assets = cash + bank;
-    var debt = (r.villageDebt || r.debt || 0) + (r.bankDebt || 0);
+    var debt = (r.villageDebt || r.debt || 0) + (r.fineDebt || 0) + (r.bankDebt || 0);
     var intel = p.intelligence || 0;
     var day = p.day;
     var housing = (state.housing && state.housing.tier) || 0;

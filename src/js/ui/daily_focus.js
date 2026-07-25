@@ -70,6 +70,15 @@
 
     // 债务紧迫
     var vd = r.villageDebt || 0;
+    var fd = r.fineDebt || 0;
+    if (fd > 0) {
+      out.push({
+        w: 85,
+        icon: "📋",
+        text: "缴纳罚单 ¥" + fd.toLocaleString(),
+        hint: "每天2%滞纳金，去派出所交了吧",
+      });
+    }
     if (vd > 0) {
       var vi = r.villageDebtInterest || 0;
       if (vi > 0 && vd > 3000 && p.day && p.day > 30) {

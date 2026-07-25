@@ -1330,50 +1330,8 @@ function renderCareerJobs(state, parent) {
 
   // ---- 街头工作→职业路径桥接（v3.46: 让街头经历可见地转化为职场资本） ----
   if (!currentJob) {
-    // 计算街头工作总天数
-    var actionFreq =
-      state.stats && state.stats.actionFreq ? state.stats.actionFreq : {};
-    var streetJobIds = [
-      "waste_recycling",
-      "old_zhou_recycling",
-      "manual_labor_construction",
-      "premium_engineering",
-      "factory_work_assembly",
-      "street_vending_food",
-      "delivery_rider",
-      "restaurant_assistant",
-      "content_writing",
-      "junior_analyst",
-      "busking",
-      "bank_security",
-      "training_assistant",
-      "hospital_companion",
-      "tutoring",
-      "factory_overtime",
-      "courier_gig",
-      "wholesale_delivery",
-      "wholesale_sorting",
-      "cafeteria_worker",
-      "instrument_repair",
-      "phone_modding",
-      "web_designer",
-      "server_ops",
-      "network_monitor",
-      "foreign_trade_assistant",
-      "document_translator",
-      "taxi_driver",
-      "truck_assistant",
-      "shop_assistant",
-      "procurement_clerk",
-      "project_coordinator",
-      "audit_assistant",
-      "factory_electrician",
-      "steel_worker",
-    ];
-    var streetTotalDays = 0;
-    for (var si = 0; si < streetJobIds.length; si++) {
-      streetTotalDays += actionFreq["job_" + streetJobIds[si]] || 0;
-    }
+    // 计算街头工作总天数（使用唯一工作天数，非 actionFreq 点击次数）
+    var streetTotalDays = (state.flags && state.flags._totalStreetDays) || 0;
     // 街头经验转为职场资本感知
     if (streetTotalDays > 0) {
       var skills = state.skills || {};
@@ -2008,49 +1966,7 @@ function renderCareerOverview(state, parent) {
 
   // === 无工作状态：推荐路径 + 证书引导 ===
   if (!job) {
-    var _af =
-      state.stats && state.stats.actionFreq ? state.stats.actionFreq : {};
-    var _sids = [
-      "waste_recycling",
-      "old_zhou_recycling",
-      "manual_labor_construction",
-      "premium_engineering",
-      "factory_work_assembly",
-      "street_vending_food",
-      "delivery_rider",
-      "restaurant_assistant",
-      "content_writing",
-      "junior_analyst",
-      "busking",
-      "bank_security",
-      "training_assistant",
-      "hospital_companion",
-      "tutoring",
-      "factory_overtime",
-      "courier_gig",
-      "wholesale_delivery",
-      "wholesale_sorting",
-      "cafeteria_worker",
-      "instrument_repair",
-      "phone_modding",
-      "web_designer",
-      "server_ops",
-      "network_monitor",
-      "foreign_trade_assistant",
-      "document_translator",
-      "taxi_driver",
-      "truck_assistant",
-      "shop_assistant",
-      "procurement_clerk",
-      "project_coordinator",
-      "audit_assistant",
-      "factory_electrician",
-      "steel_worker",
-    ];
-    var _sd = 0;
-    for (var _si2 = 0; _si2 < _sids.length; _si2++) {
-      _sd += _af["job_" + _sids[_si2]] || 0;
-    }
+    var _sd = (state.flags && state.flags._totalStreetDays) || 0;
     html +=
       '<div class="section" style="margin-top:8px;"><h3>🎯 事业准备</h3><div class="card" style="padding:10px;">';
     if (_sd > 0) {

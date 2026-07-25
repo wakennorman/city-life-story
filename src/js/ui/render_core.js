@@ -345,6 +345,7 @@ function renderDebtHeader(state) {
   var r = state.resources;
   var villageDebt = r.villageDebt || 0;
   var bankDebt = r.bankDebt || 0;
+  var fineDebt = r.fineDebt || 0;
 
   // 收集非零债务
   var debtItems = [];
@@ -352,6 +353,13 @@ function renderDebtHeader(state) {
     debtItems.push({
       label: "🏘️ 欠村长",
       value: "¥" + villageDebt.toLocaleString(),
+      color: "var(--danger)",
+    });
+  }
+  if (fineDebt > 0) {
+    debtItems.push({
+      label: "📋 欠罚单",
+      value: "¥" + fineDebt.toLocaleString(),
       color: "var(--danger)",
     });
   }

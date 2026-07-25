@@ -35,7 +35,7 @@
     if (!st || !st.resources) return 0;
     var cash = st.resources.cash || 0;
     var bank = st.resources.bankBalance || 0;
-    var debt = (st.resources.villageDebt || 0) + (st.resources.bankDebt || 0);
+    var debt = (st.resources.villageDebt || 0) + (st.resources.fineDebt || 0) + (st.resources.bankDebt || 0);
     var stockVal = 0;
     // 股票市值
     if (st.corporate && st.corporate.stocks) {
@@ -300,7 +300,7 @@
     // 现金每¥10k提供+1好感加成（上限+5）
     var _wealthBonus = Math.min(5, Math.floor(_cash / 10000));
     // 负债会降低好感
-    var _debt = (st.resources.villageDebt || 0) + (st.resources.bankDebt || 0);
+    var _debt = (st.resources.villageDebt || 0) + (st.resources.fineDebt || 0) + (st.resources.bankDebt || 0);
     var _debtPenalty = Math.min(3, Math.floor(_debt / 5000));
 
     var _netBonus = _wealthBonus - _debtPenalty;
@@ -347,7 +347,8 @@
     icon: "💰",
     title: "财富与生活",
     story: "你算了算自己的净资产——发现自己比想象中" + (function() {
-      var st = typeof StateManager !== "undefined" && StateManager.getState ? StateManager.getState() : null;
+      var st = null;
+      try { st = typeof StateManager !== "undefined" && StateManager.getState ? StateManager.getState() : null; } catch(e) { st = null; }
       if (!st) return "……";
       var nw = _calcNetWorthR235(st);
       if (nw >= 100000) return "富有得多。财务自由的感觉真好。";

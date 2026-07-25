@@ -64,6 +64,7 @@ function createDefaultState() {
       debt: 0, // 当前总欠款 — v3.2 无起步债
       villageDebt: 0, // 欠村长的钱 — v3.2 无起步债
       villageDebtInterest: 0, // 累计村长利息
+      fineDebt: 0, // 欠缴罚单（警察罚款未付）— v3.0 违法行为系统
       bankDebt: 0, // 欠银行的钱
       bankDebtDay: 0, // 最近一笔银行贷款发放日
       bankCreditHistory: [], // 信贷记录 [{ day, amount, repaid, rating }]
@@ -207,6 +208,7 @@ function createDefaultState() {
 
     // --- 投资系统 ---
     investment: {
+      tradeLog: [], // [{ day, symbol, type: "buy"|"sell", price, quantity, total, pl, unitLabel }]
       stockMarket: {},
       stockHoldings: [],
       btcPrice: 200000,

@@ -4305,7 +4305,7 @@
       conditions: function (st) {
         if (st.player.day < 15) return false;
         var totalDebt =
-          (st.resources.debt || 0) + (st.resources.villageDebt || 0);
+          (st.resources.debt || 0) + (st.resources.villageDebt || 0) + (st.resources.fineDebt || 0);
         if (totalDebt < 500) return false;
         if (st.flags._debtMeetDay && st.player.day - st.flags._debtMeetDay < 30)
           return false;

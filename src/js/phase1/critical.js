@@ -582,7 +582,7 @@ function _punishByNeed阶梯式(state, need, deferCount) {
       } else {
         state.resources.bankDebt = (state.resources.bankDebt || 0) + fee;
         state.resources.debt =
-          (state.resources.villageDebt || 0) + (state.resources.bankDebt || 0);
+          (state.resources.villageDebt || 0) + (state.resources.fineDebt || 0) + (state.resources.bankDebt || 0);
       }
       state.needs.hunger = 30;
       state.status.health = Math.max(0, state.status.health - 10);

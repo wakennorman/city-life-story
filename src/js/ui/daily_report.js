@@ -620,6 +620,14 @@ function generatePeakMomentHTML(state, incomes, expenses) {
     });
   }
   var debt = state.resources.villageDebt || 0;
+  var fineDebt = state.resources.fineDebt || 0;
+  if (fineDebt > 0) {
+    highlights.push({
+      icon: "📋",
+      text: "还有¥" + fineDebt.toLocaleString() + "罚单未缴，每天2%滞纳金！",
+      type: "warning",
+    });
+  }
   if (debt > 0 && day % 10 === 0) {
     // [全系统自洽修复] 域A 联动增强: 动态利率显示
     var ratePct = 0.35;

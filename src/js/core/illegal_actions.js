@@ -320,18 +320,18 @@
           "error",
         );
       }
-      // 罚款（不够则记欠款）
+      // 罚款（不够则记欠款为罚单债务）
       var fineShortfall = 0;
       if (state.resources.cash >= p.fine) {
         state.resources.cash -= p.fine;
       } else {
         fineShortfall = p.fine - (state.resources.cash || 0);
         state.resources.cash = 0;
-        // 欠款转为债务
-        state.resources.villageDebt = (state.resources.villageDebt || 0) + fineShortfall;
+        // 欠款转为罚单债务（不再记入"欠村长"）
+        state.resources.fineDebt = (state.resources.fineDebt || 0) + fineShortfall;
         state.flags._fineDebt = (state.flags._fineDebt || 0) + fineShortfall;
         StateManager.addMessage(
-          "⚠️ 现金不够支付全额罚款，欠¥" + fineShortfall + "已转为债务！",
+          "⚠️ 现金不够支付全额罚款，欠¥" + fineShortfall + "罚单未缴！去派出所缴纳或等滞纳金…",
           "warning",
         );
       }

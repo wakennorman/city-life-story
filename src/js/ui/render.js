@@ -958,6 +958,7 @@ function renderGrowthTab(state, parent) {
     : (state.resources.cash || 0) + (state.resources.bankBalance || 0);
   var debt =
     (state.resources.villageDebt || state.resources.debt || 0) +
+    (state.resources.fineDebt || 0) +
     (state.resources.bankDebt || 0);
   briefSection.innerHTML =
     '<h3 style="margin:0 0 10px;font-size:13px;color:var(--text-primary);">📊 我的数字</h3>' +
@@ -1452,12 +1453,15 @@ function getDailyActionTips(state) {
       (state.resources.villageDebt || state.resources.debt)) ||
     0;
   var bankDebt = (state.resources && state.resources.bankDebt) || 0;
+  var fineDebt = (state.resources && state.resources.fineDebt) || 0;
   if (cash < 30 && day > 3)
     urgent.push("💸 现金见底！今天必须打工，否则连饭都吃不上。");
   else if (cash < 100 && day > 5)
     tips.push("💸 现金快用完了，今天务必赚点钱补充。");
   if (villageDebt > 0 && day % 10 === 0)
     tips.push("🏘️ 村长贷款日息0.35%，欠款越久越多，有钱就去还一点。");
+  if (fineDebt > 0 && day % 5 === 0)
+    tips.push("📋 你有¥" + fineDebt.toLocaleString() + "罚单未缴！每天2%滞纳金，去派出所交了吧。");
 
   // === 今日重点整合（原daily_focus内容）===
   // 装备耐久预警
@@ -1933,7 +1937,7 @@ function renderGuidanceBar(state, parent) {
   var p = state.player,
     r = state.resources || {};
   var cash = (r.cash || 0) + (r.bankBalance || 0);
-  var debt = (r.villageDebt || r.debt || 0) + (r.bankDebt || 0);
+  var debt = (r.villageDebt || r.debt || 0) + (r.fineDebt || 0) + (r.bankDebt || 0);
   var stageId =
     p.day <= 7
       ? "survival"
@@ -3779,10 +3783,12 @@ function renderInventoryTab(state, parent) {
   // 计算负重信息
   var totalWeight = 0;
   var maxCarry = 15 + (state.player.physique || 0) * 0.3;
+  var encumbranceTier = null;
   if (typeof calcEncumbrance === "function") {
     var enc = calcEncumbrance(state);
     totalWeight = Math.round(enc.totalWeight * 10) / 10;
     maxCarry = Math.round(enc.maxCarry * 10) / 10;
+    encumbranceTier = enc.tier;
   }
   div.innerHTML = `
     <h3 style="color:var(--text-muted);margin-bottom:12px;">🎒 物品栏
@@ -6662,8 +6668,9 @@ function renderFinanceTab(state, parent) {
   var cash = r.cash || 0;
   var bankBalance = r.bankBalance || 0;
   var villageDebt = r.villageDebt || 0;
+  var fineDebt = r.fineDebt || 0;
   var bankDebt = r.bankDebt || 0;
-  var totalDebt = villageDebt + bankDebt;
+  var totalDebt = villageDebt + fineDebt + bankDebt;
   var netWorth = cash + bankBalance - totalDebt;
   var txs = state.flags._dailyTransactions || [];
 

@@ -1684,7 +1684,7 @@
       if ((st.player.morality || 0) < 75) return false; // 检查 道德>=75
 
       var debt =
-        (st.resources.villageDebt || 0) + (st.resources.loanPrincipal || 0); // 检查 欠款
+        (st.resources.villageDebt || 0) + (st.resources.fineDebt || 0) + (st.resources.loanPrincipal || 0); // 检查 欠款
 
       if (debt <= 0) return false; // 检查 已有欠款
 
