@@ -181377,6 +181377,20 @@ function checkNeedsThresholds(state) {
   for (const msg of msgs) {
     StateManager.addMessage(msg, "warning");
   }
+
+  // [全系统自洽修复] 域D R253 联动增强(D→G): 社交圈健康恢复 — 每3位好感≥50的NPC每日+0.5健康恢复
+  if (state.relationships && state.status) {
+    var _healthSupport = 0;
+    for (var _rk2 in state.relationships) {
+      if (state.relationships[_rk2] && state.relationships[_rk2].met && (state.relationships[_rk2].affinity || 0) >= 50) {
+        _healthSupport++;
+      }
+    }
+    if (_healthSupport >= 3) {
+      var _healthBonus = Math.min(1, Math.floor(_healthSupport / 3) * 0.5);
+      state.status.health = Math.min(100, (state.status.health || 100) + _healthBonus);
+    }
+  }
 }
 
 /** 伤病每日结算 — 已迁移到 illness.js，遍历 status.illnesses 数组 */
@@ -200101,12 +200115,17 @@ function renderInvestmentHoldingPanel(area, inv, groupKeys, title, color) {
           var card = document.getElementById("chart-" + sym);
           if (card) {
             card.scrollIntoView({ behavior: "smooth", block: "center" });
-            card.style.transition = "box-shadow 0.3s, border-color 0.3s";
-            card.style.boxShadow = "0 0 16px var(--accent)";
-            card.style.borderColor = "var(--accent)";
-            setTimeout(function() { card.style.boxShadow = ""; card.style.borderColor = ""; }, 1500);
+            card.style.transition = "background 0.5s, border-color 0.5s, box-shadow 0.5s";
+            card.style.background = "rgba(255, 215, 0, 0.25) !important";
+            card.style.borderColor = "#ffd700";
+            card.style.boxShadow = "0 0 24px rgba(255, 215, 0, 0.6)";
+            setTimeout(function() {
+              card.style.background = "";
+              card.style.borderColor = "";
+              card.style.boxShadow = "";
+            }, 2500);
           }
-        }, found ? 150 : 0);
+        }, found ? 200 : 0);
       });
     });
   }, 0);
@@ -200226,12 +200245,17 @@ function renderUnifiedHoldingsPanel(state, parent) {
                 var card = document.getElementById("chart-" + symbol);
                 if (card) {
                   card.scrollIntoView({ behavior: "smooth", block: "center" });
-                  card.style.transition = "box-shadow 0.3s, border-color 0.3s";
-                  card.style.boxShadow = "0 0 16px var(--accent)";
-                  card.style.borderColor = "var(--accent)";
-                  setTimeout(function() { card.style.boxShadow = ""; card.style.borderColor = ""; }, 1500);
+                  card.style.transition = "background 0.5s, border-color 0.5s, box-shadow 0.5s";
+                  card.style.background = "rgba(255, 215, 0, 0.25) !important";
+                  card.style.borderColor = "#ffd700";
+                  card.style.boxShadow = "0 0 24px rgba(255, 215, 0, 0.6)";
+                  setTimeout(function() {
+                    card.style.background = "";
+                    card.style.borderColor = "";
+                    card.style.boxShadow = "";
+                  }, 2500);
                 }
-              }, 100);
+              }, 200);
             }
             break;
           }
@@ -201021,10 +201045,15 @@ function renderStocks(area, inv, state, parent) {
           var card = document.getElementById("chart-" + sym);
           if (card) {
             card.scrollIntoView({ behavior: "smooth", block: "center" });
-            card.style.transition = "box-shadow 0.3s, border-color 0.3s";
-            card.style.boxShadow = "0 0 16px var(--accent)";
-            card.style.borderColor = "var(--accent)";
-            setTimeout(function(){ card.style.boxShadow = ""; card.style.borderColor = ""; }, 1500);
+            card.style.transition = "background 0.5s, border-color 0.5s, box-shadow 0.5s";
+            card.style.background = "rgba(255, 215, 0, 0.25) !important";
+            card.style.borderColor = "#ffd700";
+            card.style.boxShadow = "0 0 24px rgba(255, 215, 0, 0.6)";
+            setTimeout(function() {
+              card.style.background = "";
+              card.style.borderColor = "";
+              card.style.boxShadow = "";
+            }, 2500);
           } else {
             StateManager.addMessage("⚠️ 未找到 " + sym + " 的卡片，请先切换到股票Tab。", "warning");
           }
@@ -201137,6 +201166,7 @@ function renderStocks(area, inv, state, parent) {
 
     var card = document.createElement("div");
     card.className = "action-card";
+    card.id = cid;
     card.style.borderLeft = "3px solid " + clr;
     var sharesStr = h ? h.shares.toFixed(2) : "";
     // [优化] 技术指标：计算简单RSI信号（5日均价 vs 当前价）
@@ -201296,6 +201326,7 @@ function renderBtc(area, inv, state, parent) {
 
     var card = document.createElement("div");
     card.className = "action-card";
+    card.id = cid;
     card.style.borderLeft = "3px solid " + clr;
     var bq = s.basePrice > 1000 ? 0.001 : s.basePrice > 100 ? 0.1 : 10;
     var dec = s.basePrice > 1000 ? 4 : s.basePrice > 100 ? 2 : 0;
@@ -201442,6 +201473,7 @@ function renderPrecious(area, inv, state, parent) {
 
     var card = document.createElement("div");
     card.className = "action-card";
+    card.id = cid;
     card.style.borderLeft = "3px solid " + clr;
     var sharesStr = h ? h.shares.toFixed(2) : "";
     card.innerHTML =
@@ -201570,6 +201602,7 @@ function renderFutures(area, inv, state, parent) {
 
     var card = document.createElement("div");
     card.className = "action-card";
+    card.id = cid;
     card.style.borderLeft = "3px solid " + clr;
     card.innerHTML =
       '<div style="display:flex;justify-content:space-between;">' +

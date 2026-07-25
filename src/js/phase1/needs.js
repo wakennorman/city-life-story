@@ -88,6 +88,20 @@ function checkNeedsThresholds(state) {
   for (const msg of msgs) {
     StateManager.addMessage(msg, "warning");
   }
+
+  // [全系统自洽修复] 域D R253 联动增强(D→G): 社交圈健康恢复 — 每3位好感≥50的NPC每日+0.5健康恢复
+  if (state.relationships && state.status) {
+    var _healthSupport = 0;
+    for (var _rk2 in state.relationships) {
+      if (state.relationships[_rk2] && state.relationships[_rk2].met && (state.relationships[_rk2].affinity || 0) >= 50) {
+        _healthSupport++;
+      }
+    }
+    if (_healthSupport >= 3) {
+      var _healthBonus = Math.min(1, Math.floor(_healthSupport / 3) * 0.5);
+      state.status.health = Math.min(100, (state.status.health || 100) + _healthBonus);
+    }
+  }
 }
 
 /** 伤病每日结算 — 已迁移到 illness.js，遍历 status.illnesses 数组 */
