@@ -21736,6 +21736,166 @@ function registerNewsEventsToPool() {
 })();
 
 ;
+// ==== js/core/domain_b_linkage_r266.js ====
+/**
+ * 域B(事件/叙事) 联动增强 R266
+ * 叙事积累的多维回响——事件不仅是文字泡，还在经济/职业/UI层面留下痕迹。
+ * 桥接：
+ *   B→E  news_investment_diary   新闻→投资日记→经济意识（经济·信息沉淀）
+ *   B→C  event_career_synergy    事件→职业联动→技能成长（职业·经历变现）
+ *   B→F  event_history_timeline  事件历史→时间线UI（UI/UX信息展示）
+ */
+(function () {
+  if (typeof RANDOM_EVENTS === "undefined") return;
+  if (RANDOM_EVENTS._domainBLinkageR266Loaded) return;
+  RANDOM_EVENTS._domainBLinkageR266Loaded = true;
+
+  var EVENTS = [
+    {
+      id: "news_investment_diary",
+      phase: "street",
+      _isChainEvent: false,
+      icon: "📝",
+      title: "投资日记",
+      story: "你开始记录每天看到的财经新闻，以及它们对你生活的影响。\n\n「今天猪肉涨价了，我的买菜预算要调整。」「科技股涨了，我的基金跟着受益。」\n\n这些看似琐碎的记录，慢慢变成了你的投资直觉。你开始知道，新闻不只是新闻，它是你决策的参考。",
+      triggers: { minDay: 120, excludeFlags: ["_newsInvDiarySeen"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        if (!st.activeNews || st.activeNews.length < 3) return false;
+        return (st.resources && st.resources.cash || 0) >= 2000;
+      },
+      choices: [
+        {
+          text: "📝 认真记录每一条新闻",
+          hint: "心智+6，置投资意识flag",
+          apply: function (st) {
+            if (!st.flags) st.flags = {};
+            st.flags._newsInvDiarySeen = true;
+            st.flags._dataInvestorMindset = true;
+            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 6);
+            if (typeof StateManager !== "undefined" && StateManager.addMessage) {
+              StateManager.addMessage("📝 你开始写投资日记。信息就是财富。心智+6。", "success");
+            }
+          },
+        },
+        {
+          text: "🤷 看看就算了，不用记录",
+          hint: "心智+2",
+          apply: function (st) {
+            if (!st.flags) st.flags = {};
+            st.flags._newsInvDiarySeen = true;
+            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 2);
+            if (typeof StateManager !== "undefined" && StateManager.addMessage) {
+              StateManager.addMessage("🤷 你觉得看看就够了。心智+2。", "info");
+            }
+          },
+        },
+      ],
+      probability: 0.45,
+      repeatable: false,
+    },
+    {
+      id: "event_career_synergy",
+      phase: "street",
+      _isChainEvent: false,
+      icon: "🔗",
+      title: "事件与职业的联动",
+      story: "你发现，很多随机事件其实和你的职业息息相关。\n\n一个关于食品安全的新闻让你开始关注食材质量，一个关于技术趋势的讨论让你想学习新技能。\n\n你不再把事件当作独立的故事，而是当作职业成长的催化剂。",
+      triggers: { minDay: 150, excludeFlags: ["_eventCareerSynergySeen"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        var job = st.career && st.career.currentJob;
+        if (!job || !job.path) return false;
+        var history = (st.flags && st.flags._eventHistory) || [];
+        return history.length >= 8;
+      },
+      choices: [
+        {
+          text: "🔗 主动寻找事件与职业的连接",
+          hint: "心智+7，最高技能XP+10",
+          apply: function (st) {
+            if (!st.flags) st.flags = {};
+            st.flags._eventCareerSynergySeen = true;
+            var topSkill = "", topLv = 0;
+            for (var k in st.skills) {
+              var lv = (st.skills[k] && st.skills[k].level) || 0;
+              if (lv > topLv) { topLv = lv; topSkill = k; }
+            }
+            if (topSkill && typeof addSkillXp === "function") addSkillXp(topSkill, 10);
+            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 7);
+            if (typeof StateManager !== "undefined" && StateManager.addMessage) {
+              StateManager.addMessage("🔗 你开始主动寻找事件与职业的连接。经历就是资本。技能XP+10，心智+7。", "success");
+            }
+          },
+        },
+        {
+          text: "🤷 事件是事件，工作是工作",
+          hint: "心智+3",
+          apply: function (st) {
+            if (!st.flags) st.flags = {};
+            st.flags._eventCareerSynergySeen = true;
+            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 3);
+            if (typeof StateManager !== "undefined" && StateManager.addMessage) {
+              StateManager.addMessage("🤷 你觉得事件和工作应该分开。心智+3。", "info");
+            }
+          },
+        },
+      ],
+      probability: 0.5,
+      repeatable: false,
+    },
+    {
+      id: "event_history_timeline",
+      phase: "street",
+      _isChainEvent: false,
+      icon: "📅",
+      title: "事件时间线",
+      story: "你打开手机，看到自己这些年经历的事件——有些让你笑，有些让你哭，有些让你成长。\n\n这些事件像时间线上的节点，串联起你在这座城市的人生。每一个节点，都是你存在过的证据。",
+      triggers: { minDay: 180, excludeFlags: ["_eventTimelineSeen"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        var history = (st.flags && st.flags._eventHistory) || [];
+        return history.length >= 15;
+      },
+      choices: [
+        {
+          text: "📅 整理成时间线",
+          hint: "心情+8，心智+5",
+          apply: function (st) {
+            if (!st.flags) st.flags = {};
+            st.flags._eventTimelineSeen = true;
+            st.flags._eventTimelineUI = true;
+            if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 8);
+            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 5);
+            if (typeof StateManager !== "undefined" && StateManager.addMessage) {
+              StateManager.addMessage("📅 你整理了事件时间线。这些节点，串联起你的人生。心情+8，心智+5。", "success");
+            }
+          },
+        },
+        {
+          text: "🤷 不用整理，记住就好",
+          hint: "心智+3",
+          apply: function (st) {
+            if (!st.flags) st.flags = {};
+            st.flags._eventTimelineSeen = true;
+            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 3);
+            if (typeof StateManager !== "undefined" && StateManager.addMessage) {
+              StateManager.addMessage("🤷 你觉得不用整理，记住就好。心智+3。", "info");
+            }
+          },
+        },
+      ],
+      probability: 0.5,
+      repeatable: false,
+    },
+  ];
+
+  for (var i = 0; i < EVENTS.length; i++) {
+    RANDOM_EVENTS.push(EVENTS[i]);
+  }
+})();
+
+;
 // ==== js/core/domain_c_linkage_r171.js ====
 /**
  * 域C(职业/成长) 联动增强 R171
@@ -228398,6 +228558,178 @@ if (typeof window !== "undefined") {
   ];
 
   // 注入全局事件池
+  for (var i = 0; i < EVENTS.length; i++) {
+    RANDOM_EVENTS.push(EVENTS[i]);
+  }
+})();
+
+;
+// ==== js/core/domain_a_linkage_r267.js ====
+/**
+ * 域A(数据/数值平衡) 联动增强 R267
+ * 数据积累的多维回响——数值不仅是数字，还在健康/职业/UI层面留下痕迹。
+ * 桥接：
+ *   A→G  data_health_awareness   健康数据→健康自觉（核心机制·预防意识）
+ *   A→C  market_knowledge_xp     市场知识→职业技能XP（职业·经历变现）
+ *   A→F  price_alert_system      价格追踪→预警UI（UI/UX信息展示）
+ */
+(function () {
+  if (typeof RANDOM_EVENTS === "undefined") return;
+  if (RANDOM_EVENTS._domainALinkageR267Loaded) return;
+  RANDOM_EVENTS._domainALinkageR267Loaded = true;
+
+  var EVENTS = [
+    {
+      id: "data_health_awareness",
+      phase: "street",
+      _isChainEvent: false,
+      icon: "❤️",
+      title: "健康自觉",
+      story: "你开始关注自己的健康数据——睡眠时间、运动频率、饮食规律。\n\n这些数字让你意识到，身体不是可以无限透支的机器。你开始调整作息、注意饮食、适当运动。\n\n「预防胜于治疗」不是口号，是你用数据换来的觉悟。",
+      triggers: { minDay: 90, excludeFlags: ["_dataHealthAwarenessSeen"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        if (!st.status || !st.needs) return false;
+        return (st.stats && st.stats.actionFreq && st.stats.actionFreq.exercise || 0) >= 5;
+      },
+      choices: [
+        {
+          text: "❤️ 制定健康计划",
+          hint: "健康+8，心智+5",
+          apply: function (st) {
+            if (!st.flags) st.flags = {};
+            st.flags._dataHealthAwarenessSeen = true;
+            st.flags._healthBaselineKeeper = true;
+            if (st.status) st.status.health = Math.min(100, (st.status.health || 50) + 8);
+            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 5);
+            if (typeof StateManager !== "undefined" && StateManager.addMessage) {
+              StateManager.addMessage("❤️ 你制定了健康计划。身体是革命的本钱。健康+8，心智+5。", "success");
+            }
+          },
+        },
+        {
+          text: "🤷 顺其自然",
+          hint: "心智+2",
+          apply: function (st) {
+            if (!st.flags) st.flags = {};
+            st.flags._dataHealthAwarenessSeen = true;
+            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 2);
+            if (typeof StateManager !== "undefined" && StateManager.addMessage) {
+              StateManager.addMessage("🤷 你觉得顺其自然就好。心智+2。", "info");
+            }
+          },
+        },
+      ],
+      probability: 0.5,
+      repeatable: false,
+    },
+    {
+      id: "market_knowledge_xp",
+      phase: "street",
+      _isChainEvent: false,
+      icon: "📚",
+      title: "市场知识变现",
+      story: "这些年跑市场积累的经验，开始在你的职业中发挥作用。\n\n你知道什么时候该进货、什么时候该清仓、哪个摊位的价格最公道。这些书本上学不到的东西，成了你的核心竞争力。",
+      triggers: { minDay: 120, excludeFlags: ["_marketKnowledgeXpSeen"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        if (!st.skills || !st.stats || !st.stats.actionFreq) return false;
+        var totalTrades = (st.stats.actionFreq.buyGood || 0) + (st.stats.actionFreq.sellGood || 0);
+        if (totalTrades < 20) return false;
+        var topSkill = "", topLv = 0;
+        for (var k in st.skills) {
+          var lv = (st.skills[k] && st.skills[k].level) || 0;
+          if (lv > topLv) { topLv = lv; topSkill = k; }
+        }
+        return topSkill === "sales" || topSkill === "management" || topSkill === "accounting";
+      },
+      choices: [
+        {
+          text: "📚 系统整理市场经验",
+          hint: "最高商业技能XP+15，心智+6",
+          apply: function (st) {
+            if (!st.flags) st.flags = {};
+            st.flags._marketKnowledgeXpSeen = true;
+            var bizSkills = ["sales", "management", "accounting"];
+            var topSkill = "", topLv = 0;
+            for (var k in st.skills) {
+              if (bizSkills.indexOf(k) >= 0) {
+                var lv = (st.skills[k] && st.skills[k].level) || 0;
+                if (lv > topLv) { topLv = lv; topSkill = k; }
+              }
+            }
+            if (topSkill && typeof addSkillXp === "function") addSkillXp(topSkill, 15);
+            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 6);
+            if (typeof StateManager !== "undefined" && StateManager.addMessage) {
+              StateManager.addMessage("📚 你系统整理了市场经验。知识就是力量。技能XP+15，心智+6。", "success");
+            }
+          },
+        },
+        {
+          text: "🤷 经验不用整理，用多了自然记住",
+          hint: "心智+3",
+          apply: function (st) {
+            if (!st.flags) st.flags = {};
+            st.flags._marketKnowledgeXpSeen = true;
+            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 3);
+            if (typeof StateManager !== "undefined" && StateManager.addMessage) {
+              StateManager.addMessage("🤷 你觉得经验不用整理。心智+3。", "info");
+            }
+          },
+        },
+      ],
+      probability: 0.45,
+      repeatable: false,
+    },
+    {
+      id: "price_alert_system",
+      phase: "street",
+      _isChainEvent: false,
+      icon: "🔔",
+      title: "价格预警",
+      story: "你开始用手机记录每个地点的商品价格，设置价格提醒。\n\n「猪肉降到20以下就买」「啤酒涨到5以上就等等」。\n\n这些小小的价格预警，帮你省下了不少钱。积少成多，聚沙成塔。",
+      triggers: { minDay: 60, excludeFlags: ["_priceAlertSeen"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        if (!st.stats || !st.stats.visits) return false;
+        var locCount = 0;
+        for (var k in st.stats.visits) {
+          if (st.stats.visits[k] > 0) locCount++;
+        }
+        return locCount >= 4;
+      },
+      choices: [
+        {
+          text: "🔔 设置价格预警",
+          hint: "心智+5，解锁价格预警flag",
+          apply: function (st) {
+            if (!st.flags) st.flags = {};
+            st.flags._priceAlertSeen = true;
+            st.flags._priceAlertSystem = true;
+            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 5);
+            if (typeof StateManager !== "undefined" && StateManager.addMessage) {
+              StateManager.addMessage("🔔 你设置了价格预警系统。省钱就是赚钱。心智+5。", "success");
+            }
+          },
+        },
+        {
+          text: "🤷 不用那么复杂",
+          hint: "心智+2",
+          apply: function (st) {
+            if (!st.flags) st.flags = {};
+            st.flags._priceAlertSeen = true;
+            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 2);
+            if (typeof StateManager !== "undefined" && StateManager.addMessage) {
+              StateManager.addMessage("🤷 你觉得不用那么复杂。心智+2。", "info");
+            }
+          },
+        },
+      ],
+      probability: 0.5,
+      repeatable: false,
+    },
+  ];
+
   for (var i = 0; i < EVENTS.length; i++) {
     RANDOM_EVENTS.push(EVENTS[i]);
   }
