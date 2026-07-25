@@ -410,6 +410,53 @@ const DAILY_PIPELINE = [
     },
   },
 
+  // [全系统自洽修复] 域G R248 联动增强(G→D): 健康危机→NPC好感衰减
+  {
+    name: "health_npc_affinity_decay",
+    fn: function (state) {
+      if (!state.status || !state.relationships) return;
+      if (state.status.health < 30) {
+        var _decay = -0.3;
+        for (var _ni in state.relationships) {
+          var _r = state.relationships[_ni];
+          if (_r && _r.met) {
+            _r.affinity = Math.max(-50, (_r.affinity || 0) + _decay);
+          }
+        }
+      }
+    },
+  },
+
+  // [全系统自洽修复] 域G R248 联动增强(G→E): 极端天气→投资市场情绪抑制
+  {
+    name: "weather_market_mood",
+    fn: function (state) {
+      if (!state.weather || !state.investment) return;
+      var _extremeWeather = ["stormy", "snowy", "foggy", "cold_snap", "heatwave"];
+      if (_extremeWeather.indexOf(state.weather.current) >= 0) {
+        if (state.investment.stockMarket) {
+          for (var _sk in state.investment.stockMarket) {
+            var _stk = state.investment.stockMarket[_sk];
+            if (_stk && typeof _stk.price === "number" && isFinite(_stk.price)) {
+              _stk.price = _stk.price * 0.998;
+            }
+          }
+        }
+      }
+    },
+  },
+
+  // [全系统自洽修复] 域G R248 联动增强(G→C): 连续工作健康预警提示
+  {
+    name: "career_health_advice",
+    fn: function (state) {
+      if (!state.career || !state.career.currentJob || !state.status) return;
+      if (state.career.currentJob.workDays >= 90 && state.status.health < 50) {
+        StateManager.addMessage("💼 长期高压工作正在侵蚀你的健康，建议适当休息或安排调休。", "warning");
+      }
+    },
+  },
+
   // === 临界值延期惩罚（在 extreme_check 之前）===
   {
     name: "critical_punish",
