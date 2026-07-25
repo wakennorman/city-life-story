@@ -5499,20 +5499,23 @@ function renderIllnessRow(state) {
 
 function renderWorkplaceSocialTab(state, parent) {
   const ws = state.workplaceSocial || {};
+  // [全系统自洽修复] 域D 修复:同事数据优先读corporate.colleagues.network(真实数据源),workplaceSocial.colleagues作回退
+  const corpNet = (state.corporate && state.corporate.colleagues && state.corporate.colleagues.network) || [];
+  const colleagues = (ws.colleagues && ws.colleagues.length > 0) ? ws.colleagues : corpNet;
   const html = `
     <div class="tab-content">
       <h2>👥 职场社交</h2>
       ${
-        ws.colleagues && ws.colleagues.length > 0
+        colleagues.length > 0
           ? `
         <div class="section">
           <h3>同事关系网</h3>
-          ${ws.colleagues
+          ${colleagues
             .map(
               (c) => `
             <div class="card" style="margin:8px 0;padding:12px;">
-              <div><strong>${c.name}</strong> <span class="tag">${c.role || "普通同事"}</span></div>
-              <div style="margin-top:6px;">好感度: <span class="affinity">${c.affinity || 0}</span></div>
+              <div><strong>${c.name || c.id || "同事"}</strong> <span class="tag">${c.role || "普通同事"}</span></div>
+              <div style="margin-top:6px;">好感度: <span class="affinity">${c.relationship != null ? c.relationship : (c.affinity || 0)}</span></div>
             </div>
           `,
             )
@@ -5521,16 +5524,15 @@ function renderWorkplaceSocialTab(state, parent) {
       `
           : '<p style="color:var(--text-muted);">暂无同事关系数据</p>'
       }
-      ${
-        ws.mentorship
-          ? `
+      ${(() => {
+        const mentorship = ws.mentorship || (state.corporate && state.corporate.colleagues && state.corporate.colleagues.mentorship);
+        return mentorship ? `
         <div class="section">
           <h3>👨‍🏫 导师关系</h3>
-          <p>当前导师: ${ws.mentorship.mentorId} (等级: ${ws.mentorship.level || "初级"})</p>
+          <p>当前导师: ${mentorship.mentorId} (等级: ${mentorship.level || "初级"})</p>
         </div>
-      `
-          : ""
-      }
+      ` : "";
+      })()}
       ${
         ws.officePoliticsLog && ws.officePoliticsLog.length > 0
           ? `

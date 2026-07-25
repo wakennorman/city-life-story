@@ -370,6 +370,12 @@ function tickNpcRelationships(state) {
       if (typeof interaction.change !== "number" || !isFinite(interaction.change)) continue;
       var change = interaction.change * coeff;
       applyAffinityChange(state, targetId, change, "关系传导");
+      // [全系统自洽修复] 域D 修复:写入_propagationLog(原social_tab.js读取但从不写入→传导日志永远为空)
+      if (state.relationships[targetId]) {
+        if (!state.relationships[targetId]._propagationLog) state.relationships[targetId]._propagationLog = [];
+        state.relationships[targetId]._propagationLog.push({ day: day, change: change, from: npcId });
+        if (state.relationships[targetId]._propagationLog.length > 10) state.relationships[targetId]._propagationLog.shift();
+      }
       propagated[targetId] = true;
     }
   }
