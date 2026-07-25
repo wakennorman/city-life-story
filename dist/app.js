@@ -3348,13 +3348,13 @@ function generateSaveNarrative(state) {
 
 /**
  * 裁剪存档数据中的冗余字段，减小体积
- * - messageLog: 保留前50条+后50条完整，中间浓缩摘要
+ * - messageLog: 保留前100条+后100条完整，中间浓缩摘要（仅当超过200条时触发）
  */
 function _trimStateForSave(saveData) {
-  if (saveData.messageLog && saveData.messageLog.length > 100) {
-    var head = saveData.messageLog.slice(0, 50);
-    var tail = saveData.messageLog.slice(-50);
-    var middle = saveData.messageLog.slice(50, -50);
+  if (saveData.messageLog && saveData.messageLog.length > 200) {
+    var head = saveData.messageLog.slice(0, 100);
+    var tail = saveData.messageLog.slice(-100);
+    var middle = saveData.messageLog.slice(100, -100);
     var condensed = [];
     // 按每10条一组浓缩
     for (var i = 0; i < middle.length; i += 10) {
@@ -254565,6 +254565,17 @@ function applyCareerJob(pathId, levelId) {
   if (typeof initCareerColleagues === "function") {
     initCareerColleagues(state);
   }
+
+  // [全系统自洽修复] 域C R251 联动增强(C→D): 职业路径入职→NPC社交圈影响
+  if (state.relationships) {
+    var _pathNpcMap = { medical: "dr_wang", doctor: "dr_wang", legal: "zhaojie", education: "xiao_mei", finance: "uncle_chen_bank", tech: "xiaochen" };
+    var _npcId = _pathNpcMap[pathId];
+    if (_npcId && state.relationships[_npcId] && state.relationships[_npcId].met) {
+      state.relationships[_npcId].affinity = Math.min(100, (state.relationships[_npcId].affinity || 0) + 5);
+      StateManager.addMessage("🤝 入职" + (getCareerPathLabel(pathId) || pathId) + "后，你与" + (state.relationships[_npcId].name || _npcId) + "的联系更紧密了。", "info");
+    }
+  }
+
   cap.reputation = (cap.reputation || 0) + 2;
   cap.industryResources = (cap.industryResources || 0) + 1;
   clampCareerCapital(cap);
@@ -254655,6 +254666,12 @@ function applyCareerPromotion(pathId, levelId) {
   if (level.reqSocial || (level.salary || 0) >= 20000) {
     var _promoNews = "📰 行业动态：" + (CAREER_PATHS[job.path] ? CAREER_PATHS[job.path].name : "") + "领域" + level.name + "职位出现人事变动，业内关注薪资水平与职业发展空间。";
     StateManager.addMessage(_promoNews, "info");
+  }
+
+  // [全系统自洽修复] 域C R251 联动增强(C→G): 晋升带来健康信心加成
+  if (level.salary >= 15000 && state.status) {
+    state.status.health = Math.min(100, (state.status.health || 100) + 1);
+    StateManager.addMessage("💪 晋升带来的成就感让你精神焕发，健康+1。", "success");
   }
 
   // === v3.23: 触发槽 — career_promo ===
