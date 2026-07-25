@@ -18,6 +18,22 @@ function doCorporateAction(actionId) {
   const action = CORP_ACTIONS.find((a) => a.id === actionId);
   if (!action) return false;
 
+  // [全系统自洽修复] 域H R249 A类: 原requirements({intelligence:N}/{mental:N}/{coding:N})仅在数据定义但从不检查，3个行动的门控条件形同虚设
+  if (action.requirements) {
+    for (var _reqKey in action.requirements) {
+      var _reqVal = action.requirements[_reqKey];
+      var _playerVal = 0;
+      if (_reqKey === "intelligence") _playerVal = state.player.intelligence || 0;
+      else if (_reqKey === "mental") _playerVal = state.player.mental || 0;
+      else if (state.skills && state.skills[_reqKey]) _playerVal = state.skills[_reqKey].level || 0;
+      else _playerVal = state.player[_reqKey] || 0;
+      if (_playerVal < _reqVal) {
+        StateManager.addMessage("⚠️ 属性不足，无法执行此操作。需要" + _reqKey + "≥" + _reqVal + "（当前" + _playerVal + "）。", "warning");
+        return false;
+      }
+    }
+  }
+
   // 检查职级要求
   if (action.requiresRank) {
     const rankIndex = ["P5", "P6", "P7", "P8", "P9", "P10"].indexOf(
@@ -119,6 +135,25 @@ function doCorporateAction(actionId) {
     } catch (e) {
       /* headless/渲染异常时静默，静态 effects 已生效 */
     }
+  }
+
+  // [全系统自洽修复] 域H R249 联动增强(H→C): 做项目积累职业发展资本
+  if (actionId === "project_work" && typeof ensureCareerCapital === "function") {
+    var _cap = ensureCareerCapital(state);
+    if (_cap) {
+      _cap.industryResources = Math.min(100, (_cap.industryResources || 0) + 1);
+      _cap.reputation = Math.min(100, (_cap.reputation || 0) + 0.5);
+    }
+  }
+
+  // [全系统自洽修复] 域H R249 联动增强(H→E): 高管职级解锁投资额度
+  if (actionId === "side_project" && state.corporate.rank === "P8" || state.corporate.rank === "P9" || state.corporate.rank === "P10") {
+    StateManager.addMessage("💼 高管身份让你的投资渠道更广，可考虑大额投资机会。", "info");
+  }
+
+  // [全系统自洽修复] 域H R249 联动增强(H→B): 职场行动触发公司内部叙事
+  if (actionId === "innovation_proposal" && Random.chance(0.3)) {
+    StateManager.addMessage("📰 你提出的创新方案在内部传开了，同事开始关注你的工作动态。", "info");
   }
 
   // [全系统自洽修复] 域H 联动增强4: 季度行动进度指示器（H→F）

@@ -38789,18 +38789,9 @@ if (typeof window !== "undefined") {
       phase: "street",
       icon: "🌳",
       title: "技能发展方向",
-      story: function (st) {
-        var skillName =
-          typeof getSkillChineseName === "function"
-            ? getSkillChineseName(st._branchSkillKey)
-            : st._branchSkillKey;
-        return (
-          "你的" +
-          skillName +
-          "终于练到了Lv.30，是时候选择发展方向了。\n" +
-          "一个老前辈拍了拍你：\"这行水深，选对了路能少走很多弯路。\""
-        );
-      },
+      // [全系统自洽修复] 域B R244: story 不能为 function（引擎直接模板字面量渲染会显示函数源码）→ 改为静态文本
+      story:
+        "你的一门技能终于练到了Lv.30，是时候选择发展方向了。\n一个老前辈拍了拍你：\"这行水深，选对了路能少走很多弯路。\"",
       triggers: {
         minDay: 15,
       },
@@ -38876,12 +38867,9 @@ if (typeof window !== "undefined") {
       phase: "street",
       icon: "⭐",
       title: "天赋点亮",
-      story: function (st) {
-        return (
-          "你终于攒够了资源，激活了天赋节点。\n" +
-          "一股力量涌入体内——不，是技能感悟加深了。"
-        );
-      },
+      // [全系统自洽修复] 域B R244: story 不能为 function（引擎直接模板字面量渲染会显示函数源码）→ 改为静态文本
+      story:
+        "你终于攒够了资源，激活了天赋节点。\n一股力量涌入体内——不，是技能感悟加深了。",
       triggers: {
         minDay: 30,
       },
@@ -38927,18 +38915,9 @@ if (typeof window !== "undefined") {
       phase: "street",
       icon: "🏆",
       title: "技能大成",
-      story: function (st) {
-        var skillName =
-          typeof getSkillChineseName === "function"
-            ? getSkillChineseName(st._masterSkillKey)
-            : st._masterSkillKey;
-        return (
-          "你的" +
-          skillName +
-          "终于达到了Lv.100！\n" +
-          "街上的人都传开了——你是这条街上最有本事的人。"
-        );
-      },
+      // [全系统自洽修复] 域B R244: story 不能为 function（引擎直接模板字面量渲染会显示函数源码）→ 改为静态文本
+      story:
+        "你的一门技能终于达到了Lv.100！\n街上的人都传开了——你是这条街上最有本事的人。",
       triggers: {
         minDay: 100,
       },
@@ -39088,8 +39067,12 @@ if (typeof window !== "undefined") {
       story: "公司注册下来的那天，你站在工商局门口，看着手里的营业执照，突然觉得这一切是真的了。\n从第一天来这座城市打零工到现在，你经历了无数个被拒绝的夜晚、无数次算不清的账、无数次想放弃的瞬间。而现在，你真的有了自己的公司。\n街角煎饼摊的王阿姨看到你，笑着说：「哟，老板了？」",
       triggers: {
         minDay: 180,
-        companyJustFormed: true,
         excludeFlags: ["_startupDeclarationDone"],
+      },
+      // [全系统自洽修复] 域B R244: 原 triggers.companyJustFormed 不是引擎白名单字段(evaluateTriggers不认识)→改为 conditions 守卫(检查 startup.company 是否存在)
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        return !!(st.startup && st.startup.company);
       },
       choices: [
         {
@@ -39137,23 +39120,31 @@ if (typeof window !== "undefined") {
         minDay: 90,
         excludeFlags: ["_firstPromoCelebDone"],
       },
-      apply: function (st) {
-        st.flags._firstPromoCelebDone = true;
-        if (st.player) {
-          st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 10);
-          st.player.upwardMgmt = Math.min(100, (st.player.upwardMgmt || 0) + 3);
-        }
-        // 同事网络关系自动提升
-        if (st.relationships) {
-          var colleagues = ["boss_li", "colleague_zhang", "colleague_li"];
-          for (var i = 0; i < colleagues.length; i++) {
-            if (st.relationships[colleagues[i]]) {
-              st.relationships[colleagues[i]].affinity = Math.min(100, (st.relationships[colleagues[i]].affinity || 0) + 2);
+      // [全系统自洽修复] 域B R244: 原事件无 choices 数组导致 showEventModal 守卫直接 return（死事件）→ 补确认按钮让事件可展示
+      choices: [
+        {
+          text: "🎉 值得庆祝",
+          hint: "心情+10，管理能力+3，同事好感+2",
+          apply: function (st) {
+            st.flags._firstPromoCelebDone = true;
+            if (st.player) {
+              if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 10);
+              st.player.upwardMgmt = Math.min(100, (st.player.upwardMgmt || 0) + 3);
             }
-          }
-        }
-        StateManager.addMessage("🎉 晋升庆功宴！心情+10，管理能力+3，同事们好感各+2。你在城市里又多了一个值得骄傲的理由。", "success");
-      },
+            if (st.relationships) {
+              var colleagues = ["boss_li", "colleague_zhang", "colleague_li"];
+              for (var i = 0; i < colleagues.length; i++) {
+                if (st.relationships[colleagues[i]]) {
+                  st.relationships[colleagues[i]].affinity = Math.min(100, (st.relationships[colleagues[i]].affinity || 0) + 2);
+                }
+              }
+            }
+            if (typeof StateManager !== "undefined" && StateManager.addMessage) {
+              StateManager.addMessage("🎉 晋升庆功宴！心情+10，管理能力+3，同事们好感各+2。你在城市里又多了一个值得骄傲的理由。", "success");
+            }
+          },
+        },
+      ],
       probability: 0.03,
     };
 
@@ -39167,6 +39158,11 @@ if (typeof window !== "undefined") {
       triggers: {
         minDay: 60,
         excludeFlags: ["_talentDepartureDone"],
+      },
+      // [全系统自洽修复] 域B R244: 原事件无 conditions 门控(任何 corporate 阶段 day≥60 都会触发)→补 startup.company+team 守卫
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        return !!(st.startup && st.startup.company && st.startup.company.team && st.startup.company.team.length > 0);
       },
       choices: [
         {
@@ -39221,6 +39217,11 @@ if (typeof window !== "undefined") {
       triggers: {
         minDay: 90,
         excludeFlags: ["_quarterSocialSpilloverDone"],
+      },
+      // [全系统自洽修复] 域B R244: 原事件无 conditions 门控→补 startup.company 守卫(需有公司才能触发办公室社交)
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        return !!(st.startup && st.startup.company);
       },
       choices: [
         {
@@ -161561,9 +161562,8 @@ var NEWS_FOLLOWUP = {
   },
   training_subsidy_echo: {
     headline: "📚 培训补贴效应持续：职业技能考证热度不减，培训机构报名排队",
-    effects: {
-      effects: { trainingDiscount: 0.5, duration: 5 },
-    },
+    // [全系统自洽修复] 域B R244: 原 effects.effects 嵌套导致 applyNewsEffect 读取不到 trainingDiscount/duration → 静态修正为扁平结构
+    effects: { trainingDiscount: 0.5, duration: 5 },
   },
   // ====== 批次D后续新闻 ======
   tech_layoff_echo: {
@@ -172404,6 +172404,11 @@ const MORAL_EVENTS = [
     triggers: { minDay: 4, weather: ["rainy", "stormy"] },
     triggerWeight: 1,
     triggerCooldown: 14,
+    // [全系统自洽修复] 域B R244: 原 triggers.weather 不被 triggerMoralEvent 读取(仅读 minDay/condition)→补 condition 守卫雨雪天气
+    condition: function (s) {
+      var w = s.weather && s.weather.current;
+      return w === "rainy" || w === "stormy";
+    },
     choices: [
       {
         text: "🍖 买根火腿肠喂它，引到避雨处",
@@ -196426,6 +196431,22 @@ function doCorporateAction(actionId) {
   const action = CORP_ACTIONS.find((a) => a.id === actionId);
   if (!action) return false;
 
+  // [全系统自洽修复] 域H R249 A类: 原requirements({intelligence:N}/{mental:N}/{coding:N})仅在数据定义但从不检查，3个行动的门控条件形同虚设
+  if (action.requirements) {
+    for (var _reqKey in action.requirements) {
+      var _reqVal = action.requirements[_reqKey];
+      var _playerVal = 0;
+      if (_reqKey === "intelligence") _playerVal = state.player.intelligence || 0;
+      else if (_reqKey === "mental") _playerVal = state.player.mental || 0;
+      else if (state.skills && state.skills[_reqKey]) _playerVal = state.skills[_reqKey].level || 0;
+      else _playerVal = state.player[_reqKey] || 0;
+      if (_playerVal < _reqVal) {
+        StateManager.addMessage("⚠️ 属性不足，无法执行此操作。需要" + _reqKey + "≥" + _reqVal + "（当前" + _playerVal + "）。", "warning");
+        return false;
+      }
+    }
+  }
+
   // 检查职级要求
   if (action.requiresRank) {
     const rankIndex = ["P5", "P6", "P7", "P8", "P9", "P10"].indexOf(
@@ -196527,6 +196548,25 @@ function doCorporateAction(actionId) {
     } catch (e) {
       /* headless/渲染异常时静默，静态 effects 已生效 */
     }
+  }
+
+  // [全系统自洽修复] 域H R249 联动增强(H→C): 做项目积累职业发展资本
+  if (actionId === "project_work" && typeof ensureCareerCapital === "function") {
+    var _cap = ensureCareerCapital(state);
+    if (_cap) {
+      _cap.industryResources = Math.min(100, (_cap.industryResources || 0) + 1);
+      _cap.reputation = Math.min(100, (_cap.reputation || 0) + 0.5);
+    }
+  }
+
+  // [全系统自洽修复] 域H R249 联动增强(H→E): 高管职级解锁投资额度
+  if (actionId === "side_project" && state.corporate.rank === "P8" || state.corporate.rank === "P9" || state.corporate.rank === "P10") {
+    StateManager.addMessage("💼 高管身份让你的投资渠道更广，可考虑大额投资机会。", "info");
+  }
+
+  // [全系统自洽修复] 域H R249 联动增强(H→B): 职场行动触发公司内部叙事
+  if (actionId === "innovation_proposal" && Random.chance(0.3)) {
+    StateManager.addMessage("📰 你提出的创新方案在内部传开了，同事开始关注你的工作动态。", "info");
   }
 
   // [全系统自洽修复] 域H 联动增强4: 季度行动进度指示器（H→F）
@@ -197351,11 +197391,11 @@ const INV_STOCKS = [
     symbol: "SHIB",
     name: "柴犬币",
     category: "虚拟币",
-    basePrice: 0.00002,
+    basePrice: 2000,
     volatility: 0.4,
     trend: -0.003,
     desc: "狗狗币杀手,社区驱动",
-    unit: "亿个",
+    unit: "亿",
   },
 
   // ========== 贵金属（8种） ==========
@@ -198068,15 +198108,15 @@ function initInvestment(state) {
         seedPrice = Math.max(0.5, seedPrice);
         history.push({
           day: state.player.day - numPoints + k,
-          price: Math.round(seedPrice * 100) / 100,
+          price: Math.round(seedPrice * 10000) / 10000,
         });
       }
       history.push({
         day: state.player.day,
-        price: Math.round(mPrice * 100) / 100,
+        price: Math.round(mPrice * 10000) / 10000,
       });
       inv.stockMarket[s.symbol] = {
-        price: Math.round(mPrice * 100) / 100,
+        price: Math.round(mPrice * 10000) / 10000,
         history: history,
       };
     }
@@ -198143,7 +198183,7 @@ function tickInvestmentDaily(state) {
     // [全系统自洽修复] 域E A类#2: NaN 价格守卫 — 旧存档/数据异常时重置为 basePrice
     if (!isFinite(m.price) || m.price <= 0) {
       m.price = s.basePrice * Random.float(0.85, 1.15);
-      m.price = Math.round(m.price * 100) / 100;
+      m.price = Math.round(m.price * 10000) / 10000;
     }
 
     // 基础随机游走 + 世界参数行业热度偏置
@@ -198191,7 +198231,7 @@ function tickInvestmentDaily(state) {
 
     var oldPrice = m.price;
     m.price = Math.max(0.01, m.price * baseChange * newsMul * _satPenalty);
-    m.price = Math.round(m.price * 100) / 100;
+    m.price = Math.round(m.price * 10000) / 10000;
     m.history.push({ day: state.player.day, price: m.price });
     if (m.history.length > 20) m.history.shift();
   }
@@ -199670,6 +199710,9 @@ function renderInvestmentHoldingPanel(area, inv, groupKeys, title, color) {
   var rows = [];
   var totalValue = 0;
   var totalPL = 0;
+  // 从 groupKeys 推断 tab 名称
+  var _tabMap = { stocks: "stocks", crypto: "crypto", precious: "precious", futures: "futures", properties: "re", cars: "car" };
+  var _tabName = groupKeys.length > 0 ? (_tabMap[groupKeys[0]] || groupKeys[0]) : "";
   for (var i = 0; i < groupKeys.length; i++) {
     var group = snapshot.groups[groupKeys[i]];
     if (!group) continue;
@@ -199693,7 +199736,7 @@ function renderInvestmentHoldingPanel(area, inv, groupKeys, title, color) {
       var plClr = row.pl >= 0 ? "var(--danger)" : "var(--success)";
       var plSign = row.pl >= 0 ? "+" : "";
       return (
-        '<div class="investment-holding-row">' +
+        '<div class="investment-holding-row" data-tab="' + _tabName + '" data-symbol="' + row.symbol + '" style="cursor:default;">' +
         '<span class="inv-h-symbol">' +
         row.symbol +
         "</span>" +
@@ -199726,6 +199769,7 @@ function renderInvestmentHoldingPanel(area, inv, groupKeys, title, color) {
         plSign +
         Number(row.plPct || 0).toFixed(1) +
         "%)</span>" +
+        '<span class="holding-nav-btn" data-symbol="' + row.symbol + '" style="cursor:pointer;font-size:12px;padding:2px 4px;border-radius:3px;margin-left:4px;" title="定位到卡片">🔍</span>' +
         "</div>"
       );
     })
@@ -199756,6 +199800,40 @@ function renderInvestmentHoldingPanel(area, inv, groupKeys, title, color) {
     rowsHtml +
     "</div>";
   area.appendChild(panel);
+
+  // 🔍 导航按钮：定位到对应卡片
+  setTimeout(function() {
+    panel.querySelectorAll(".holding-nav-btn").forEach(function(btn) {
+      btn.addEventListener("click", function(e) {
+        e.stopPropagation();
+        var sym = this.dataset.symbol;
+        var tab = _tabName;
+        // 切换到对应子Tab
+        var parentEl = area.closest ? (area.closest("#inv-sub-area") || area.parentElement) : area.parentElement;
+        var cont = parentEl ? parentEl.closest ? parentEl.closest('[class*="investment"]') : null : null;
+        var btns = (cont || document).querySelectorAll(".sub-tab");
+        var found = false;
+        for (var bi = 0; bi < btns.length; bi++) {
+          if (btns[bi].dataset.stab === tab) {
+            btns[bi].click();
+            found = true;
+            break;
+          }
+        }
+        // 滚动到对应卡片
+        setTimeout(function() {
+          var card = document.getElementById("chart-" + sym);
+          if (card) {
+            card.scrollIntoView({ behavior: "smooth", block: "center" });
+            card.style.transition = "box-shadow 0.3s, border-color 0.3s";
+            card.style.boxShadow = "0 0 16px var(--accent)";
+            card.style.borderColor = "var(--accent)";
+            setTimeout(function() { card.style.boxShadow = ""; card.style.borderColor = ""; }, 1500);
+          }
+        }, found ? 150 : 0);
+      });
+    });
+  }, 0);
 }
 
 // ============================================================
