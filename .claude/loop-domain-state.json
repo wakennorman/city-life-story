@@ -1,7 +1,7 @@
 {
-  "currentRound": 201,
-  "currentDomain": "E",
-  "nextDomain": "F",
+  "currentRound": 242,
+  "currentDomain": "A",
+  "nextDomain": "C",
   "rotationIndex": 1,
   "domainOrder": [
     "A",
@@ -14,7 +14,7 @@
     "H"
   ],
   "domainRecency": {
-    "A": 197,
+    "A": 242,
     "B": 231,
     "C": 196,
     "D": 230,
@@ -48,13 +48,18 @@
       "round": 201,
       "domain": "E",
       "note": "域E: A类3处(investment.js 经济焦虑净值回撤块死字段 state.needs.health→state.status.health + state.needs.mental→state.player.mental,每日回撤的健康/心智惩罚此前静默丢失本轮起生效,A类#4 / stock.js OIL「黑金能源」industry \"能源\" 不在 WORLD_SECTORS→getSectorHeat 恒中性、OIL 与新闻板块经济脱钩,改合法板块 \"新能源\",A类#2)+联动3项(新建 domain_e_linkage_r201.js,1 street+2 corporate,全||防御,[PLACEHOLDER]): econ_r201_drawdown_reflect(E→G 净值回撤深夜自省·首次叙事消费本轮修复的经济焦虑回撤机制) / econ_r201_annual_ledger(E→A 年度投资总账·首个反思式消费真实字段 _totalInvestmentProfit·盈亏两态) / econ_r201_capital_backbone(E→H 投资底气反哺事业·_totalInvestmentProfit>0+在职→management XP+cash)。补齐历轮域E未用的 E→G/E→A/E→H 方向。网络中断恢复期并行窗口提交域C(e57c4534)/域D(0ddcae87),我的 index.html r201 注册与 dist 重建被并入其提交(已核 dist 含本轮全部改动),本窗口仅提交剩余 E 源文件与文档,不碰并行文件。MC 6×400d 0代码异常;构建9241.9KB。下轮R202→域F(recency 198;C/D 正被并行占用避让)。"
+    },
+    {
+      "round": 242,
+      "domain": "A",
+      "note": "域A: A类2项(main.js 发证循环接通三证书 cooking_cert/repair_cert/sales_cert 的 XpBonus/JobIncomeBonus 死效果键→_certSkillXpBonus/_certJobIncomeBonus 映射,addSkillXp 接证书XP乘区,getCertJobIncomeMultiplier 接工资链实发/估算/区间三处,证书宣称效果本轮起真正生效 / doStreetJob 三处 addSkillXp(\"agility\"/\"physique\"/\"intelligence\") 非真实技能键静默丢弃→移除,属性成长由状态经验转化块承接)+联动3项(新建 domain_a_linkage_r242.js,2 street+1 corporate,全||防御,[PLACEHOLDER],id前缀 a242_ 不冲突): a242_cert_word_of_mouth(A→B 持证市井佳话·首补A→B方向·消费_certJobIncomeBonus→fame+mental+happiness)/a242_cert_study_circle(A→C 证书学习圈·消费_certSkillXpBonus→addSkillXp 被加成技能)/a242_cert_resume_weight(A→H 简历硬证书·certificates.length≥2+在职→management XP+cash)。MC 6×400d 0代码异常;构建9361.8KB。下轮R243→域C(recency 196 最薄弱,8域本轮循环完成重启轮换)。"
     }
   ],
-  "lastDomain": "E",
-  "lastRound": 201,
+  "lastDomain": "A",
+  "lastRound": 242,
   "lastDate": "2026-07-25",
-  "lastCommit": "7100cde7",
-  "pushStatus": "PUSHED",
+  "lastCommit": "2971e821",
+  "pushStatus": "PENDING",
   "completedDomains": [
     "A",
     "B",
@@ -65,5 +70,5 @@
     "G",
     "H"
   ],
-  "description": "全系统优化 loop R201→域E(经济/投资,recency 195 最薄弱)。A类3处:investment.js 经济焦虑回撤块两处死字段(needs.health→status.health/needs.mental→player.mental)+stock.js OIL industry 脱钩(能源→新能源)。联动3项(domain_e_linkage_r201.js,1 street+2 corporate:E→G净值回撤自省首次消费本轮经济焦虑机制/E→A年度投资总账首消费_totalInvestmentProfit/E→H投资底气反哺management XP)。下轮R202→域F(recency 198;C/D 并行占用避让)。"
+  "description": "全系统优化 loop R242→域A(数据/数值平衡)。A类2项:三证书 XpBonus/JobIncomeBonus 死效果键接通技能链+工资链(证书宣称效果本轮起生效)/doStreetJob 移除三处非真实技能键死调用。联动3项(domain_a_linkage_r242.js,2 street+1 corporate:A→B持证市井佳话首补A→B/A→C证书学习圈/A→H简历硬证书)。下轮R243→域C(recency 196 最薄弱,8域本轮循环完成重启轮换)。"
 }
