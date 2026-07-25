@@ -37,7 +37,9 @@
 - `_totalInvestmentProfit`/`_consecutiveWins` 由 sellInvStock/sellBtc 维护（历轮已接，非死字段）。
 - **R195**：investment_analysis.js 止损链（setStopLoss→stopLossOrders→checkStopLoss→sellInvStock）曾全库无调用方=死机制；R195 在 domain_e_linkage_r195.js 以**包装 tickInvestmentDaily** 方式接线（daily_pipeline:615 按名调用全局绑定，晚加载文件重赋值即生效——此模式可复用于"在途文件不可碰"时的接线）；analyzeStockTechnicals 由 invest_r195_technical_review 事件复活。注册序：该文件须在 investment_analysis.js(:836) 之后。
 - 并行窗口正开发「财务Tab」（index.html tab按钮/investment.js tradeLog/render*/state.js 等在途），勿碰勿回退。
-- **R198 C类记录(部分修正·R199)**：investment.js:1435 写 `state.needs.health` 死字段(真实 `state.status.health`)——每日经济焦虑静默扣永不渲染的健康值，**仍为真实 C类待修**(财务Tab并行在途+投资.js敏感,留后续 E/H 轮次)。`webapp_runtime_bridge.js:172-189` getPlayerHealth/addPlayerHealth **经 R199 核实主路径正确读 `state.status.health`**，`player.health` 仅为 `status.health` 非 number 时永不触发的兜底分支——**非死字段A类，R198/Explore 误报已修正**。
+- **R201 修复(闭合 R198 C类)**：investment.js 经济焦虑「净值回撤」块曾写 `state.needs.health`+`state.needs.mental` 两处死字段(每日回撤的健康/心智惩罚静默丢失)——R201 已改为真实 `state.status.health`/`state.player.mental`(A类#4,本轮起生效)。`webapp_runtime_bridge.js:172-189` getPlayerHealth/addPlayerHealth 经 R199 核实主路径正确读 `state.status.health`(player.health 仅永不触发兜底)——**非死字段,勿误修**。
+- **R201 脱钩修复**：stock.js OIL「黑金能源」`industry` 合法值须在 **WORLD_SECTORS**(科技/消费/金融/房地产/医药/**新能源**)内——原写 `"能源"` 不在表→getSectorHeat/新闻板块匹配对 OIL 恒返回中性、股价脱钩,R201 改 `"新能源"`。写股票 industry 前务必核 WORLD_SECTORS。
+- **R201 联动**：domain_e_linkage_r201.js(1 street+2 corporate,注册于 index.html r200 之后):econ_r201_drawdown_reflect(E→G·首次叙事消费本轮经济焦虑回撤机制)/econ_r201_annual_ledger(E→A·首个反思式消费 `_totalInvestmentProfit`·盈亏两态)/econ_r201_capital_backbone(E→H·_totalInvestmentProfit>0+在职→management XP+cash)。
 
 ## 域F/G/H 要点
 - UI 安全区：#app 100dvh / viewport-fit=cover / tab-bar+mobile-hud safe-area padding，勿回退。

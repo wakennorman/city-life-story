@@ -1,7 +1,7 @@
 {
-  "currentRound": 200,
-  "currentDomain": "H",
-  "nextDomain": "E",
+  "currentRound": 201,
+  "currentDomain": "E",
+  "nextDomain": "F",
   "rotationIndex": 1,
   "domainOrder": [
     "A",
@@ -18,78 +18,43 @@
     "B": 231,
     "C": 196,
     "D": 230,
-    "E": 195,
+    "E": 201,
     "F": 198,
     "G": 199,
     "H": 200
   },
   "history": [
     {
-      "round": 189,
-      "domain": "A",
-      "note": "域A: A类修复2项(locations.js 9地点 specialties/priceMod 非good.id token→招牌商品+价格倍率双双死数据,改真实good.id / skills.js getAvailableCertificates 补 electrician技能门槛+ageMin/ageMax年龄门槛,原死门控)+联动增强3项(A→D识货荐友/A→C练摊议价眼力/A→E小本第一桶金)"
-    },
-    {
-      "round": 190,
-      "domain": "B",
-      "note": "域B: A类修复10处(news.js jobPenalty/jobBonus 8个不存在job id + investmentEffect 1个不存在symbol WEORK,均致新闻效果静默失效死数据,改真实id:sister_zhang_vending/restaurant_assistant/steel_worker/remote_dev/junior_analyst/ESTATE)+联动增强3项(B→D新闻闲聊涨好感/B→C潮流带动技能/B→E市场嗅觉投资意识)"
-    },
-    {
-      "round": 191,
-      "domain": "C",
-      "note": "域C: A类修复1项(jobs.js long_haul_driver死工作 requiredFlag \"_synergy_driving_accounting\"无对应连携→永不可入职,改真实连携\"_synergy_driving_logistics\"「长途运输」DUAL driving+accounting,与job名/desc/payCalc一致;该修已随并行提交eb13d27b落地)+联动增强3项(C→E连携私活变现/C→D同行手艺认可/C→G成长回望叙事)"
-    },
-    {
-      "round": 192,
-      "domain": "G",
-      "note": "域G: A类修复1项(life_ribbon.js「房奴一生」缎带check死字段,改读selfLivePropertyId/family.mortgage.remainingDays)+联动增强3项(G→D暖房请街坊/G→C安居后重拾手艺/G→A还贷精算心智成长),新建core_lifecycle_linkage_r192.js;另并发进程产出domain_g_linkage_r192.js(极端天气生存记忆/季节更替叙事)2项,合并提交。下轮R193→域H(recency 188)。"
-    },
-    {
-      "round": 193,
-      "domain": "H",
-      "note": "域H: A类2项(startup_events.js STARTUP_FIELD_MAP 遗漏 revenue→mature_second_curve/consumer_viral三事件营收增益被静默丢弃,补 revenue:{clamp,min0} / events_corp.js:1570 技能经验 .exp→.xp,「管理技能XP+50」静默丢失修复)+联动3项(新建 domain_h_linkage_r193.js,3 corporate: H→E营收里程碑迁移理财意识/H→D团队年终心意涨好感firstMetNpc/H→C带队复盘addSkillXp管理XP)。并行窗口 investment.js(域E tradeLog+71行)已 stash 隔离构建后 pop 还原,全程不碰。MC 6×400d 0代码异常。下轮R194→域D(recency 184 最薄弱)。"
-    },
-    {
-      "round": 194,
-      "domain": "D",
-      "note": "域D: A类2项(npc_linkage_r167.js:55 pickClosestNpcR167 返回 for...in 尾变量 id→好感+5加错NPC,改返回捕获的 best / npc_linkage_r167.js:237 写 st.player.happiness 死字段→st.needs.happiness,「心情+8」被静默丢弃)+联动3项(新建 domain_d_linkage_r194.js,2 street+1 corporate: D→A朋友理账数据素养intelligence+mental/D→C前辈背书技能XP成长/D→E同事理财意识_dataInvestorMindset+cash落袋,严守域D铁律 rel&&rel.met/applyAffinityChange)。MC 6×400d 0代码异常。下轮R195→域E(recency 185 最薄弱)。"
-    },
-    {
-      "round": 195,
-      "domain": "E",
-      "note": "域E: A类1项(investment_analysis.js 止损止盈整链死机制:checkStopLoss/setStopLoss 全库无调用方→止损单永不被创建/评估;因 daily_pipeline/investment.js 并行在途不可碰,在 domain_e_linkage_r195.js 以包装全局 tickInvestmentDaily 接线,try/catch+仅有止损单才调用)+联动3项(E→F券商顾问引导挂10%止损·复活setStopLoss/E→G止损触发后纪律体悟·首个消费order.triggered/E→C技术面复盘·复活analyzeStockTechnicals+accounting XP)。C类记录:analyzePortfolio等3个UI分析函数待财务Tab合流后接入。MC 6×400d 0代码异常。下轮R196→域F(recency 186 最薄弱)。"
-    },
-    {
-      "round": 196,
-      "domain": "C",
-      "note": "域C(pivot自F): A类0项——域C A类缺陷已全部由并行窗口覆盖(career_dev.js:3376 在职里程碑健康加成死字段 state.needs.health→state.status.health 由9b8ddfa2同源修复 / career_dev.js totalEarned NaN守卫×2 由f1ba9549 / reqSocial晋升检查+caregiverXp孤儿effect+5项技能检查 由9b8ddfa2),本窗口不再重复修。联动增强3项(新建 domain_c_linkage_r196.js,2 street+1 corporate: C→B手艺成街坊美谈→state.player.fame+4+mental / C→F执业沉淀作品集→mental+happiness / C→H前辈点名带新人→addSkillXp management+cash,全||防御,数值[PLACEHOLDER])。P.S. 并行 f1ba9549 在 src/index.html 误注册了缺失文件 domain_f_linkage_r196.js(悬空引用),本窗口 pivot 将其改为存在的 domain_c_linkage_r196.js,消除悬空引用。MC 6×400d 0代码异常。下轮R197→域A(recency 189 最薄弱)。"
-    },
-    {
       "round": 197,
       "domain": "A",
-      "note": "域A: A类1类4键(skills.js 证书效果键 healthBonus/mentalBonus/illnessRiskReduction/fatigueReduction 全库无消费者→nursing_cert/health_manager/rehab_therapist/psychologist 四证书 desc 宣称的健康+/心智+/降低患病风险/疲劳- 全部静默失效,A类#4死效果键;main.js 发证循环补4消费分支:healthBonus→state.status.health/mentalBonus→state.player.mental/illnessRiskReduction→累积 state.flags._illnessRiskReduction(clamp0.8)且 phase1/illness.js:137 掷骰前 ch*=1-cut 乘性降患病率/fatigueReduction→累积 state.flags._certFatigueReduction 且 main.js:4598 工作疲劳叠加)。联动增强3项(新建 domain_a_linkage_r197.js,2 street+1 corporate: a197_health_baseline A→G建健康档案基线→status.health+player.mental+置_healthBaselineKeeper呼应证书健康修复 / a197_ledger_clarity A→F收支明白账→mental+needs.happiness+置_budgetClarityKeeper / a197_data_driven_budget A→H用数据争预算→addSkillXp management+cash,全||防御,数值[PLACEHOLDER])。C类记录不改:items.js skillStudy/skillXpBonus/skillStudyBonus 无应用器 + finance.js hasStreetStall/hasScavengeRoute flag 从未写入。MC 6×400d 0代码异常;构建9194.6KB。下轮R198→域F(recency 186 最薄弱)。"
+      "note": "域A: A类1类4键(skills.js 证书效果键 healthBonus/mentalBonus/illnessRiskReduction/fatigueReduction 全库无消费者→四证书 desc 宣称效果静默失效,main.js 发证循环补4消费分支)+联动3项(domain_a_linkage_r197.js: A→G健康档案基线/A→F收支明白账/A→H用数据争预算)。"
     },
     {
       "round": 198,
       "domain": "F",
-      "note": "域F: A类0项——Explore 子代理对 17 个 UI 文件逐行审计 + 死字段黑名单全库 grep,UI 层干净(历史 R19 itemId/R183 学历+消息toggle+每日目标终身一次+教程selector/R186 certs→certificates+career.currentJob 已修,本轮不重复修)。联动增强3项(新建 domain_f_linkage_r198.js,2 street+1 corporate: f198_finance_glass F→E 财务面板清晰→_dataInvestorMindset投资意识+mental / f198_life_scrapbook F→B 生活手账回望→mental+needs.happiness+置_f198Scrapbook / f198_board_deck F→H 清爽路演材料→addSkillXp management+cash,全||防御,数值[PLACEHOLDER])。C类记录(不修,域外/并行在途): investment.js:1435 写 state.needs.health 死字段(真实 state.status.health,财务Tab并行在途勿碰) / webapp_runtime_bridge.js:176 读写 state.player.health 死字段(真实 state.status.health,桥接层与渲染层脱节)。MC 6×400d 0代码异常(退出0;grinder16.7%/corporate66.7%存活率<阈值为既有RNG平衡阈值非代码回归);构建9204.6KB。下轮R199→域G(recency 192 最薄弱,已据并行 R230/R231 回填 B/D recency)。"
+      "note": "域F: A类0项(Explore 17 UI文件逐行审计+死字段黑名单grep,UI层干净)+联动3项(domain_f_linkage_r198.js: F→E财务面板清晰/F→B生活手账/F→H清爽路演)。C类记录不修:investment.js:1435 needs.health / webapp_runtime_bridge player.health。"
     },
     {
       "round": 199,
       "domain": "G",
-      "note": "域G(核心机制/生命周期): A类0项(诚实报告)——Explore 15核心文件逐行审计+死字段黑名单全库grep+pipeline slot生产者核查+era day匹配核实,域G经R20/R192/R197多轮加固已干净。候选逐一证伪: era_transform _pendingEraEvent 有 scheduleChainEvent 兜底属死flag非崩溃 / webapp_runtime_bridge getPlayerHealth 主路径正确读 status.health·player.health 仅永不触发兜底非死字段(修正R198/Explore判重) / daily_pipeline career_burnout 的 careerCapital.burnout 有career_path_events+side_hustle多处生产者非死代码 / ERA_EVENTS_TRIGGER_DAYS 与 era_events.js day集合完全一致[90,180,270,365,450,540,720,900]无死里程碑。联动增强3项(新建 domain_g_linkage_r199.js IIFE→RANDOM_EVENTS,2 street+1 corporate,全||防御,[PLACEHOLDER]): era_r199_reflection(G→B时代变迁回望·首次消费 era_transform.js:137 写入的死flag _pendingEraEvent 并在apply清除·全库此前零消费者→心智+心情) / era_r199_inflation_hedge(G→E通胀避险·读_eraState.inflationIndex≥1.3真实字段→置_dataInvestorMindset+心智) / era_r199_veteran_poise(G→H久历周期经营定力·_eraState.stageId≠initial+在职→addSkillXp management+cash)。本轮把 era_transform 时代变迁核心机制包装成叙事层,补齐历轮域G未用的 G→B(时代)/G→E/G→H 方向。MC 6×400d MC_EXIT=0·0代码异常(前7天死亡率全0.0%;trader66.7%<80%为既有RNG平衡阈值波动非回归);构建9215.5KB。下轮R200→域H(recency 193 最薄弱)。"
+      "note": "域G: A类0项(诚实报告,15核心文件审计+候选逐一证伪)+联动3项(domain_g_linkage_r199.js: G→B时代回望消费死flag _pendingEraEvent/G→E通胀避险读 _eraState.inflationIndex≥1.3/G→H久历周期经营定力)。"
     },
     {
       "round": 200,
       "domain": "H",
-      "note": "域H: A类3项(corp_ops.js doCorporateAction 接线办公室政治互动事件死机制 triggerOfficePoliticsEvent+OFFICE_POLITICS_EVENTS 5事件全库零调用方,typeof showModal 守卫保 headless 安全 / career_dev.js 导师关系死路:拜师提示先解除但全库无解除入口 endMentorship 死函数,补解除师徒按钮+unmentor 分支复活 / workplace_social.js 徒弟出师死循环:progress停100每日刷屏+零回报+永占3席,改一次性回报人缘+5关系+10并毕业移除)。误报修正:拜师有 careerSocialAction 平行实现非死机制,establishMentorship/takeMentee 记C类冗余。联动3项(新建 domain_h_linkage_r200.js,3 corporate: H->B corp_r200_mentor_wisdom 导师压箱底·首次消费死数据 mentorship.level>=90 / H->G corp_r200_politics_toll 政治漩涡自省 risk>=60 / H->D corp_r200_colleague_thaw 同事僵局·复活死函数 decreaseColleagueRelationship)。构建9231.2KB。下轮R201->域E(recency 195 最薄弱)。"
+      "note": "域H: A类3项(corp_ops.js 接线办公室政治互动事件死机制/career_dev.js 补解除师徒入口复活endMentorship/workplace_social.js 徒弟出师一次性回报+毕业移除)+联动3项(domain_h_linkage_r200.js: H→B导师压箱底消费mentorship.level死数据/H→G政治漩涡自省/H→D同事僵局复活decreaseColleagueRelationship)。"
+    },
+    {
+      "round": 201,
+      "domain": "E",
+      "note": "域E: A类3处(investment.js 经济焦虑净值回撤块死字段 state.needs.health→state.status.health + state.needs.mental→state.player.mental,每日回撤的健康/心智惩罚此前静默丢失本轮起生效,A类#4 / stock.js OIL「黑金能源」industry \"能源\" 不在 WORLD_SECTORS→getSectorHeat 恒中性、OIL 与新闻板块经济脱钩,改合法板块 \"新能源\",A类#2)+联动3项(新建 domain_e_linkage_r201.js,1 street+2 corporate,全||防御,[PLACEHOLDER]): econ_r201_drawdown_reflect(E→G 净值回撤深夜自省·首次叙事消费本轮修复的经济焦虑回撤机制) / econ_r201_annual_ledger(E→A 年度投资总账·首个反思式消费真实字段 _totalInvestmentProfit·盈亏两态) / econ_r201_capital_backbone(E→H 投资底气反哺事业·_totalInvestmentProfit>0+在职→management XP+cash)。补齐历轮域E未用的 E→G/E→A/E→H 方向。网络中断恢复期并行窗口提交域C(e57c4534)/域D(0ddcae87),我的 index.html r201 注册与 dist 重建被并入其提交(已核 dist 含本轮全部改动),本窗口仅提交剩余 E 源文件与文档,不碰并行文件。MC 6×400d 0代码异常;构建9241.9KB。下轮R202→域F(recency 198;C/D 正被并行占用避让)。"
     }
   ],
-  "lastDomain": "H",
-  "lastRound": 200,
+  "lastDomain": "E",
+  "lastRound": 201,
   "lastDate": "2026-07-25",
-  "lastCommit": "1af404a32ce87fcbf745d83dd438a86caa6ff1c9",
-  "pushStatus": "PUSHED",
+  "lastCommit": "PENDING",
+  "pushStatus": "PENDING",
   "completedDomains": [
     "A",
     "B",
@@ -100,5 +65,5 @@
     "G",
     "H"
   ],
-  "description": "全系统优化 loop R200→域H(Phase2/公司,recency 193 最薄弱)。A类3项:办公室政治互动事件死机制接线/导师关系死路补解除入口/徒弟出师死循环一次性回报+毕业移除。联动3项(domain_h_linkage_r200.js,3 corporate:H→B导师压箱底消费mentorship.level死数据/H→G政治漩涡自省/H→D同事僵局复活decreaseColleagueRelationship)。下轮R201→域E(recency 195 最薄弱)。"
+  "description": "全系统优化 loop R201→域E(经济/投资,recency 195 最薄弱)。A类3处:investment.js 经济焦虑回撤块两处死字段(needs.health→status.health/needs.mental→player.mental)+stock.js OIL industry 脱钩(能源→新能源)。联动3项(domain_e_linkage_r201.js,1 street+2 corporate:E→G净值回撤自省首次消费本轮经济焦虑机制/E→A年度投资总账首消费_totalInvestmentProfit/E→H投资底气反哺management XP)。下轮R202→域F(recency 198;C/D 并行占用避让)。"
 }
