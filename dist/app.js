@@ -202128,6 +202128,18 @@ function sellInvStock(symbol, shares) {
 function buyBtc(amount) {
   var state = StateManager.getState();
   var inv = state.investment;
+  // [全系统自洽修复] 域E 修复:buyBtc 与 sellBtc/buyInvStock 存在不对称守卫缺口——
+  //   ① 缺 `if(!inv)return`：旧存档 state.investment 未初始化时 `inv.btcPrice` 直接抛 TypeError 使买币崩溃(兄弟函数均已守卫)；
+  //   ② 缺 amount 有效性校验：传入负数/NaN 时 cost 为负→`cash<cost` 恒假→`cash-=负数` 凭空增币并写入错误持仓(可利用经济漏洞)。
+  if (!inv) return;
+  if (typeof amount !== "number" || !isFinite(amount) || amount <= 0) {
+    StateManager.addMessage("⚠️ 买入数量无效。", "warning");
+    return;
+  }
+  if (typeof inv.btcPrice !== "number" || !isFinite(inv.btcPrice) || inv.btcPrice <= 0) {
+    StateManager.addMessage("⚠️ 比特币行情异常，买入取消", "danger");
+    return;
+  }
   var cost = Math.round(inv.btcPrice * amount * 100) / 100;
   if (isNaN(cost) || !isFinite(cost)) {
     StateManager.addMessage("⚠️ 价格异常，买入取消", "danger");
