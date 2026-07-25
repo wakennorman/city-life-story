@@ -898,6 +898,10 @@ const DAILY_PIPELINE = [
       if (typeof updateNextDayForecast === "function") {
         updateNextDayForecast(state);
       }
+      // [R240 域G联动增强1] G→B 极端天气叙事（heatwave/coldwave/storm/snow 触发事件）
+      if (typeof _checkExtremeWeatherNarrativeR240 === "function") {
+        _checkExtremeWeatherNarrativeR240(state);
+      }
     },
   },
 
@@ -1061,6 +1065,26 @@ const DAILY_PIPELINE = [
     fn: function (state) {
       if (typeof _updateStatusAlertsR238 === "function") {
         _updateStatusAlertsR238(state);
+      }
+    },
+  },
+
+  // [R240 域G联动增强2] G→C 健康影响职业提醒（生病/受伤时的工作建议）
+  {
+    name: "health_career_advice_tick",
+    fn: function (state) {
+      if (typeof _checkHealthCareerAdviceR240 === "function") {
+        _checkHealthCareerAdviceR240(state);
+      }
+    },
+  },
+
+  // [R240 域G联动增强3] G→D 人生事件社交回响（搬家/康复/创业等NPC回应）
+  {
+    name: "life_event_social_echo_tick",
+    fn: function (state) {
+      if (typeof _checkLifeEventSocialEchoR240 === "function") {
+        _checkLifeEventSocialEchoR240(state);
       }
     },
   },
