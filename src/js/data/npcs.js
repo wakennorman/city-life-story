@@ -169,7 +169,7 @@ var NPCS = [
         effect: function (st) {
           const bonus = 500 + Random.int(0, 299);
           st.resources.cash = (st.resources.cash || 0) + (bonus || 0);
-          st.resources.totalEarned += bonus;
+          st.resources.totalEarned = (st.resources.totalEarned || 0) + (bonus || 0);
           StateManager.addMessage(
             "❤️ 王大婶：「我侄子开了家公司，特别推荐了你，给了你¥" +
               bonus +
@@ -439,7 +439,7 @@ var NPCS = [
             st.flags._npcFavor_boss_li = true;
             var reward = 150 + Random.int(0, 99);
             st.resources.cash = (st.resources.cash || 0) + (reward || 0);
-            st.resources.totalEarned += reward;
+            st.resources.totalEarned = (st.resources.totalEarned || 0) + (reward || 0);
             st.needs.fatigue = Math.min(100, st.needs.fatigue + 20);
             st.player.physique = Math.min(100, st.player.physique + 1);
             if (!st.relationships.boss_li)
@@ -492,7 +492,7 @@ var NPCS = [
             );
             var reward = 300 + Random.int(0, 199);
             st.resources.cash = (st.resources.cash || 0) + (reward || 0);
-            st.resources.totalEarned += reward;
+            st.resources.totalEarned = (st.resources.totalEarned || 0) + (reward || 0);
             st.player.fame = Math.min(100, st.player.fame + 8);
             st.player.intelligence = Math.min(
               100,
@@ -656,7 +656,7 @@ var NPCS = [
         effect: function (st) {
           const bonus = 200 + Random.int(0, 299);
           st.resources.cash = (st.resources.cash || 0) + (bonus || 0);
-          st.resources.totalEarned += bonus;
+          st.resources.totalEarned = (st.resources.totalEarned || 0) + (bonus || 0);
           StateManager.addMessage(
             "💕 张姐悄悄发来一个内推机会，接了个短单赚了 ¥" + bonus + "。",
             "success",
@@ -702,7 +702,7 @@ var NPCS = [
             st.flags._npcFavor_sister_zhang = true;
             var pay = 80 + Random.int(0, 59);
             st.resources.cash = (st.resources.cash || 0) + (pay || 0);
-            st.resources.totalEarned += pay;
+            st.resources.totalEarned = (st.resources.totalEarned || 0) + (pay || 0);
             st.player.fame = Math.min(100, st.player.fame + 5);
             st.skills.sales && (st.skills.sales.xp += 20);
             if (!st.relationships.sister_zhang)
@@ -751,7 +751,7 @@ var NPCS = [
               st.relationships.sister_zhang.affinity + 10,
             );
             st.resources.cash = (st.resources.cash || 0) + 600;
-            st.resources.totalEarned += 600;
+            st.resources.totalEarned = (st.resources.totalEarned || 0) + 600;
             st.player.fame = Math.min(100, st.player.fame + 10);
             st.player.mental = Math.min(100, (st.player.mental || 0) + 5);
             st.flags.zhangDeepReferred = true;
@@ -1420,7 +1420,7 @@ var NPCS = [
             st.flags._npcFavor_chef_chen = true;
             var pay = 60 + Random.int(0, 39);
             st.resources.cash = (st.resources.cash || 0) + (pay || 0);
-            st.resources.totalEarned += pay;
+            st.resources.totalEarned = (st.resources.totalEarned || 0) + (pay || 0);
             st.skills.cooking && (st.skills.cooking.xp += 50);
             if (!st.relationships.chef_chen)
               st.relationships.chef_chen = { affinity: 0, met: true };
@@ -3108,7 +3108,7 @@ var NPCS = [
             st.flags._npcFavor_zhaojie = true;
             var pay = 100 + Random.int(0, 99);
             st.resources.cash = (st.resources.cash || 0) + (pay || 0);
-            st.resources.totalEarned += pay;
+            st.resources.totalEarned = (st.resources.totalEarned || 0) + (pay || 0);
             st.player.fame = Math.min(100, st.player.fame + 3);
             if (!st.relationships.zhaojie)
               st.relationships.zhaojie = { affinity: 0, met: true };
@@ -3323,7 +3323,7 @@ var NPCS = [
             st.flags._npcFavor_chen_ge = true;
             var pay = 80 + Random.int(0, 79);
             st.resources.cash = (st.resources.cash || 0) + (pay || 0);
-            st.resources.totalEarned += pay;
+            st.resources.totalEarned = (st.resources.totalEarned || 0) + (pay || 0);
             st.player.fame = Math.min(100, st.player.fame + 2);
             if (!st.relationships.chen_ge)
               st.relationships.chen_ge = { affinity: 0, met: true };

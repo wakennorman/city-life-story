@@ -55,7 +55,7 @@ function postToMoments(state, content, images, visibility) {
     return { ok: false, message: "行动力不足，发布朋友圈需要20点行动力。" };
   }
   var post = {
-    id: "post_" + state.player.day + "_" + Date.now(),
+    id: "post_" + state.player.day + "_" + Random.int(100000, 999999),
     authorId: "player",
     content: content,
     images: images || [],
@@ -257,13 +257,15 @@ function tickSocialNetwork(state) {
   if (incomeResult && incomeResult.income > 0) {
     state.resources = state.resources || { cash: 0 }; // [全系统自洽修复] 域D 修复: state.resources守卫（原缺失致管线崩溃）
     state.resources.cash = (state.resources.cash || 0) + incomeResult.income;
-    addDailyTransaction(
-      state,
-      "income",
-      "influencer",
-      Math.round(incomeResult.income),
-      "网红日收入",
-    );
+    if (typeof addDailyTransaction === "function") {
+      addDailyTransaction(
+        state,
+        "income",
+        "influencer",
+        Math.round(incomeResult.income),
+        "网红日收入",
+      );
+    }
   }
 
   // 舆论危机衰减
