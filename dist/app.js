@@ -198300,6 +198300,25 @@ function tickInvestmentDaily(state) {
           StateManager.addMessage("💪 投资组合突破¥10万，财务安全感让你身心舒畅。健康+5。", "success");
         }
       }
+      // [全系统自洽修复] 域E R246 联动增强(E→C): 投资组合突破¥10万→职业信心加成
+      if (_pv >= 100000 && !state.flags._investCareerConfidence) {
+        state.flags._investCareerConfidence = true;
+        StateManager.addMessage("💼 资产增值让你在职场上更有底气，敢于争取更好的机会和更高的薪资。", "info");
+      }
+      // [全系统自洽修复] 域E R246 联动增强(E→D): 投资组合突破¥50万→社交圈感知
+      if (_pv >= 500000 && !state.flags._investSocialPerception) {
+        state.flags._investSocialPerception = true;
+        StateManager.addMessage("🏘️ 你资产增值的消息在朋友圈里传开了，熟人看你的眼光似乎有了些变化。", "info");
+        // 提升所有已结识NPC的好感
+        if (state.relationships) {
+          for (var _rni in state.relationships) {
+            var _rr = state.relationships[_rni];
+            if (_rr && _rr.met) {
+              _rr.affinity = Math.min(100, (_rr.affinity || 0) + 3);
+            }
+          }
+        }
+      }
     }
   } catch (e) {
     // 静默：峰值追踪失败不影响主流程
@@ -198346,6 +198365,29 @@ function tickInvestmentDaily(state) {
     }
   } catch (e) {
     // 静默：经济焦虑不影响主流程
+  }
+
+  // [全系统自洽修复] 域E R246 联动增强(E→G): 组合创新高时心情提升
+  try {
+    var _peakH = inv._portfolioPeak || 0;
+    var _curPH = 0;
+    var _smH = inv.stockMarket || {};
+    var _hH = inv.stockHoldings || [];
+    for (var _hiH = 0; _hiH < _hH.length; _hiH++) {
+      var _hH2 = _hH[_hiH];
+      var _mH = _smH[_hH2.symbol];
+      if (_mH && isFinite(_mH.price) && isFinite(_hH2.shares)) _curPH += _mH.price * _hH2.shares;
+    }
+    if (_curPH > _peakH && _peakH > 0 && state.needs) {
+      var _gainPH = (_curPH - _peakH) / _peakH;
+      if (_gainPH > 0.05 && (!state.flags._portfolioHighDay || state.flags._portfolioHighDay < state.player.day)) {
+        state.flags._portfolioHighDay = state.player.day;
+        state.needs.happiness = Math.min(100, (state.needs.happiness || 0) + 5);
+        StateManager.addMessage("📈 投资组合创新高！盈利带来的成就感让你心情愉悦。", "success");
+      }
+    }
+  } catch (e) {
+    // 静默：组合新高不影响主流程
   }
 
   // ================================================================
@@ -199114,8 +199156,9 @@ function renderNewsInvestmentDrivers(state) {
 
   // 智力门控：根据intelligence和finance技能决定信息披露深度
   var intel = (state.player && state.player.intelligence) || 0;
+  // [全系统自洽修复] 域E R246 A类: state.skills.finance 不存在(真实技能为accounting)→投资分析深度门控恒为0,高深度分析永不可达
   var financeSkill =
-    (state.skills && state.skills.finance && state.skills.finance.level) || 0;
+    (state.skills && state.skills.accounting && state.skills.accounting.level) || 0;
   // depth 0=只看趋势方向  1=看板块涨跌%  2=看具体标的+量化数据
   var infoDepth =
     intel >= 50 || financeSkill >= 20
