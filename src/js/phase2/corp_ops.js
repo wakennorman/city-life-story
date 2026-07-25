@@ -147,7 +147,8 @@ function doCorporateAction(actionId) {
   }
 
   // [全系统自洽修复] 域H R249 联动增强(H→E): 高管职级解锁投资额度
-  if (actionId === "side_project" && state.corporate.rank === "P8" || state.corporate.rank === "P9" || state.corporate.rank === "P10") {
+  // [全系统自洽修复] 域H R257: 原 && / || 优先级 bug(P9/P10 任何行动都触发→应为仅 side_project 且 P8+)→加括号修正
+  if (actionId === "side_project" && (state.corporate.rank === "P8" || state.corporate.rank === "P9" || state.corporate.rank === "P10")) {
     StateManager.addMessage("💼 高管身份让你的投资渠道更广，可考虑大额投资机会。", "info");
   }
 
