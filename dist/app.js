@@ -199711,6 +199711,135 @@ function renderInvestmentHoldingPanel(area, inv, groupKeys, title, color) {
   area.appendChild(panel);
 }
 
+// ============================================================
+//  📊 总持仓 — 统一显示所有资产类别的持仓
+// ============================================================
+function renderUnifiedHoldingsPanel(state, parent) {
+  var snapshot = getInvestmentAssetSnapshot(state);
+  var groups = snapshot.groups;
+  var allRows = [];
+  var totalValue = 0;
+  var totalPL = 0;
+  var groupLabels = {
+    stocks: "股票",
+    crypto: "虚拟币",
+    precious: "贵金属",
+    futures: "期货基金",
+    properties: "房产",
+    cars: "汽车",
+  };
+  var groupColors = {
+    stocks: "#e07a30",
+    crypto: "#9a6cd0",
+    precious: "#d4b030",
+    futures: "#4a8ee6",
+    properties: "#4cb84a",
+    cars: "#d07a5a",
+  };
+  var groupIcons = {
+    stocks: "📈",
+    crypto: "₿",
+    precious: "🥇",
+    futures: "📊",
+    properties: "🏠",
+    cars: "🚗",
+  };
+
+  for (var gk in groups) {
+    var g = groups[gk];
+    if (!g || g.rows.length === 0) continue;
+    for (var ri = 0; ri < g.rows.length; ri++) {
+      g.rows[ri]._groupKey = gk;
+      g.rows[ri]._groupLabel = groupLabels[gk] || gk;
+      g.rows[ri]._groupColor = groupColors[gk] || "var(--text-muted)";
+      g.rows[ri]._groupIcon = groupIcons[gk] || "📦";
+      allRows.push(g.rows[ri]);
+    }
+    totalValue += g.value;
+    totalPL += g.pl;
+  }
+  if (allRows.length === 0) return;
+
+  // 今日损益
+  var dailyPL = typeof calculateDailyPL === "function" ? calculateDailyPL(state) : null;
+  var totalDailyPL = dailyPL ? dailyPL.total : 0;
+
+  var totalClr = totalPL >= 0 ? "var(--danger)" : "var(--success)";
+  var totalSign = totalPL >= 0 ? "+" : "";
+  var dailyClr = totalDailyPL >= 0 ? "var(--danger)" : "var(--success)";
+  var dailySign = totalDailyPL >= 0 ? "+" : "";
+
+  var panel = document.createElement("div");
+  panel.className = "investment-holding-panel";
+  panel.style.cssText = "margin-bottom:12px;padding:12px;background:rgba(0,180,216,0.06);border:1px solid var(--accent);border-radius:8px;overflow-x:auto;";
+
+  var rowsHtml = allRows.map(function (row) {
+    var plClr = row.pl >= 0 ? "var(--danger)" : "var(--success)";
+    var plSign = row.pl >= 0 ? "+" : "";
+    var tabName = "";
+    if (row._groupKey === "stocks") tabName = "stocks";
+    else if (row._groupKey === "crypto") tabName = "crypto";
+    else if (row._groupKey === "precious") tabName = "precious";
+    else if (row._groupKey === "futures") tabName = "futures";
+    else if (row._groupKey === "properties") tabName = "re";
+    else if (row._groupKey === "cars") tabName = "car";
+    return '<div class="investment-holding-row unified-holding-row" style="cursor:pointer;" data-tab="' + tabName + '" data-symbol="' + row.symbol + '">' +
+      '<span class="inv-h-symbol" style="color:' + row._groupColor + ';">' + row._groupIcon + ' ' + row.symbol + '</span>' +
+      '<span class="inv-h-name" title="' + row._groupLabel + '">' + row.name + '</span>' +
+      '<span class="inv-h-qty">' + row.quantityText + '</span>' +
+      '<span class="inv-h-price">均¥' + Number(row.avgPrice || 0).toLocaleString(undefined, {maximumFractionDigits: 2}) + '</span>' +
+      '<span class="inv-h-price">现¥' + Number(row.price || 0).toLocaleString(undefined, {maximumFractionDigits: 2}) + '</span>' +
+      '<span class="inv-h-value">¥' + Math.round(row.value || 0).toLocaleString() + '</span>' +
+      '<span class="inv-h-pl" style="color:' + plClr + ';">' + plSign + '¥' + Math.round(row.pl || 0).toLocaleString() + ' (' + plSign + Number(row.plPct || 0).toFixed(1) + '%)</span>' +
+      '</div>';
+  }).join("");
+
+  panel.innerHTML =
+    '<div class="investment-holding-scroll">' +
+    '<div class="investment-holding-head">' +
+    '<h4 style="margin:0;font-size:13px;color:var(--accent);">📊 总持仓 <span style="font-size:10px;color:var(--text-muted);font-weight:400;">（点击行跳转至对应Tab）</span></h4>' +
+    '<span style="font-size:11px;">总市值 <strong style="color:var(--accent);">¥' + Math.round(totalValue).toLocaleString() + '</strong> | 总盈亏 <strong style="color:' + totalClr + ';">' + totalSign + '¥' + Math.round(totalPL).toLocaleString() + '</strong> | 今日 <strong style="color:' + dailyClr + ';">' + dailySign + '¥' + Math.round(totalDailyPL).toLocaleString() + '</strong></span>' +
+    '</div>' +
+    '<div class="investment-holding-row investment-holding-row-head">' +
+    '<span class="inv-h-symbol">代码</span><span class="inv-h-name">名称</span><span class="inv-h-qty">数量</span><span class="inv-h-price">均价</span><span class="inv-h-price">现价</span><span class="inv-h-value">市值</span><span class="inv-h-pl">盈亏</span>' +
+    '</div>' +
+    rowsHtml +
+    '</div>';
+
+  parent.appendChild(panel);
+
+  // 点击行跳转到对应Tab
+  setTimeout(function() {
+    panel.querySelectorAll(".unified-holding-row").forEach(function(rw) {
+      rw.addEventListener("click", function() {
+        var tab = this.dataset.tab;
+        var symbol = this.dataset.symbol;
+        // 切换到对应子Tab
+        var btns = parent.querySelectorAll(".sub-tab");
+        for (var i = 0; i < btns.length; i++) {
+          if (btns[i].dataset.stab === tab) {
+            btns[i].click();
+            // 滚动到对应卡片（如果是股票）
+            if (tab === "stocks") {
+              setTimeout(function() {
+                var card = document.getElementById("chart-" + symbol);
+                if (card) {
+                  card.scrollIntoView({ behavior: "smooth", block: "center" });
+                  card.style.transition = "box-shadow 0.3s, border-color 0.3s";
+                  card.style.boxShadow = "0 0 16px var(--accent)";
+                  card.style.borderColor = "var(--accent)";
+                  setTimeout(function() { card.style.boxShadow = ""; card.style.borderColor = ""; }, 1500);
+                }
+              }, 100);
+            }
+            break;
+          }
+        }
+      });
+    });
+  }, 0);
+}
+
 // [全系统自洽修复] 域E 增强: 每日投资损益汇总计算
 function calculateDailyPL(state) {
   var inv = state.investment;
@@ -199992,9 +200121,9 @@ function renderInvestmentTab(state, parent) {
     summaryCard("房产", assetSnapshot.groups.properties) +
     summaryCard("汽车", assetSnapshot.groups.cars) +
     "</div>" +
+    renderUnifiedHoldingsPanel(state, cont) +
     renderAssetAllocationPanel(assetSnapshot) +
     renderDrawdownIndicator(state) +
-    renderDailyPLPanel(state) +
     renderNewsInvestmentDrivers(state) +
     renderMarketSentiment(state, inv) +
     '<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;font-size:10px;color:var(--text-muted);flex-wrap:wrap;">' +
@@ -200448,7 +200577,7 @@ function renderStocks(area, inv, state, parent) {
         }
       }
       rowsHtml += `
-        <div class="stock-holding-row" data-symbol="${h.symbol}" style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.04);font-size:11px;gap:8px;cursor:pointer;" title="点击查看${stkName}逐笔成交记录">
+        <div class="stock-holding-row" data-symbol="${h.symbol}" style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.04);font-size:11px;gap:6px;cursor:pointer;" title="点击查看${stkName}逐笔成交记录">
           <span style="font-weight:600;min-width:50px;">${h.symbol}</span>
           <span style="color:var(--text-secondary);min-width:55px;font-size:10px;">${stkName}</span>
           <span style="min-width:40px;text-align:right;">${h.shares}股</span>
@@ -200457,14 +200586,20 @@ function renderStocks(area, inv, state, parent) {
           <span style="min-width:60px;text-align:right;">市值¥${Math.round(val).toLocaleString()}</span>
           <span style="min-width:70px;text-align:right;color:${plClr};font-weight:600;">${plSign}¥${Math.round(pl).toLocaleString()}</span>
           <span style="min-width:45px;text-align:right;color:${plClr};font-size:10px;">${plSign}${plPct.toFixed(1)}%</span>
+          <span class="holding-nav-btn" data-symbol="${h.symbol}" style="cursor:pointer;font-size:13px;padding:2px 4px;border-radius:3px;transition:background 0.15s;" title="定位到 ${stkName} 卡片">🔍</span>
         </div>`;
     }
     var totalClr = totalPL >= 0 ? "var(--danger)" : "var(--success)";
     var totalSign = totalPL >= 0 ? "+" : "";
+    // 计算今日股票损益
+    var dailyPL = typeof calculateDailyPL === "function" ? calculateDailyPL(state) : null;
+    var stockDailyPL = dailyPL ? dailyPL.stocks : 0;
+    var dailyClr = stockDailyPL >= 0 ? "var(--danger)" : "var(--success)";
+    var dailySign = stockDailyPL >= 0 ? "+" : "";
     portfolioDiv.innerHTML = `
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
-        <h4 style="margin:0;font-size:13px;color:var(--accent);">📊 我的持仓</h4>
-        <span style="font-size:11px;">总市值 <strong style="color:var(--accent);">¥${Math.round(totalValue).toLocaleString()}</strong> | 总盈亏 <strong style="color:${totalClr};">${totalSign}¥${Math.round(totalPL).toLocaleString()}</strong></span>
+        <h4 style="margin:0;font-size:13px;color:var(--accent);">📊 我的股票</h4>
+        <span style="font-size:11px;">总市值 <strong style="color:var(--accent);">¥${Math.round(totalValue).toLocaleString()}</strong> | 总盈亏 <strong style="color:${totalClr};">${totalSign}¥${Math.round(totalPL).toLocaleString()}</strong> | 今日 <strong style="color:${dailyClr};">${dailySign}¥${Math.round(stockDailyPL).toLocaleString()}</strong></span>
       </div>
       <div style="display:flex;justify-content:space-between;padding:4px 0;font-size:10px;color:var(--text-muted);border-bottom:2px solid var(--border);margin-bottom:4px;">
         <span style="min-width:50px;">代码</span><span style="min-width:55px;">名称</span><span style="min-width:40px;text-align:right;">数量</span><span style="min-width:55px;text-align:right;">均价</span><span style="min-width:55px;text-align:right;">现价</span><span style="min-width:60px;text-align:right;">市值</span><span style="min-width:70px;text-align:right;">盈亏</span><span style="min-width:45px;text-align:right;">幅度</span>
@@ -200474,16 +200609,36 @@ function renderStocks(area, inv, state, parent) {
     `;
     area.appendChild(portfolioDiv);
 
-    // 持仓行点击展开成交记录
+    // 持仓行点击展开成交记录 + 🔍 按钮定位到卡片
     setTimeout(function() {
       var logArea = document.getElementById("trade-log-area");
+      // 🔍 导航按钮：定位到对应股票卡片
+      portfolioDiv.querySelectorAll(".holding-nav-btn").forEach(function(btn){
+        btn.addEventListener("click", function(e) {
+          e.stopPropagation();
+          var sym = this.dataset.symbol;
+          var card = document.getElementById("chart-" + sym);
+          if (card) {
+            card.scrollIntoView({ behavior: "smooth", block: "center" });
+            card.style.transition = "box-shadow 0.3s, border-color 0.3s";
+            card.style.boxShadow = "0 0 16px var(--accent)";
+            card.style.borderColor = "var(--accent)";
+            setTimeout(function(){ card.style.boxShadow = ""; card.style.borderColor = ""; }, 1500);
+          } else {
+            StateManager.addMessage("⚠️ 未找到 " + sym + " 的卡片，请先切换到股票Tab。", "warning");
+          }
+        });
+      });
+      // 持仓行点击展开成交记录
       portfolioDiv.querySelectorAll(".stock-holding-row").forEach(function(rw){
         var sym = rw.dataset.symbol;
-        rw.onclick = function() {
+        rw.onclick = function(e) {
+          // 点击🔍按钮时不触发
+          if (e.target.classList.contains("holding-nav-btn")) return;
           if (this._expanded) {
             this._expanded = false;
             this.style.background = "transparent";
-            var existing = logArea.querySelector("[data-for-sym=\"" + sym + "\"]");
+            var existing = logArea.querySelector("[data-for-sym='" + sym + "']");
             if (existing) existing.remove();
             return;
           }
@@ -200494,7 +200649,7 @@ function renderStocks(area, inv, state, parent) {
           }
           this._expanded = true;
           this.style.background = "rgba(0,180,216,0.08)";
-          var prev = logArea.querySelector("[data-for-sym=\"" + sym + "\"]");
+          var prev = logArea.querySelector("[data-for-sym='" + sym + "']");
           if (prev) prev.remove();
           logs.sort(function(a,b){ return a.day - b.day; });
           var logRows = "";
@@ -234092,6 +234247,8 @@ function renderSkillsTab(state, parent) {
     accounting: "📊 会计",
     electrician: "⚡ 电工",
     welding: "🔥 焊接",
+    medicine: "💊 医学", // [全系统自洽修复] 域F R247 A类: state.skills 含medicine/social但skillNames无映射→UI显示原始ID
+    social: "🗣️ 社交",
   };
   var skillNamesCache = skillNames;
 
@@ -234614,6 +234771,37 @@ function renderSkillsTab(state, parent) {
     }
     certDiv.appendChild(certList);
     div.appendChild(certDiv);
+  }
+
+  // [全系统自洽修复] 域F R247 联动增强(F→C): 技能分支活跃概览
+  if (state.skillBranches) {
+    var _activeBranchCount = 0;
+    var _branchHtml = '<div style="margin-top:12px;padding:8px;background:rgba(74,158,92,0.04);border-radius:8px;font-size:11px;">';
+    _branchHtml += '<span style="font-weight:bold;color:var(--accent);">🌳 已选发展方向</span><br>';
+    for (var _bk in state.skillBranches) {
+      if (state.skillBranches[_bk]) {
+        _activeBranchCount++;
+        var _bl = typeof getSkillBranchLabel === "function" ? getSkillBranchLabel(_bk, state) : state.skillBranches[_bk];
+        _branchHtml += '<span style="display:inline-block;margin:2px 4px 2px 0;padding:2px 6px;background:rgba(74,158,92,0.1);border-radius:4px;">' + _bl + '</span>';
+      }
+    }
+    if (_activeBranchCount > 0) {
+      _branchHtml += '</div>';
+      div.innerHTML += _branchHtml;
+    }
+  }
+
+  // [全系统自洽修复] 域F R247 联动增强(F→E): 会计技能→投资分析能力提示
+  var _acctSkill = state.skills && state.skills.accounting;
+  if (_acctSkill && _acctSkill.level >= 20) {
+    var _acctDepth = _acctSkill.level >= 50 ? "深度分析" : (_acctSkill.level >= 30 ? "中级分析" : "基础分析");
+    div.innerHTML += '<div style="margin-top:8px;padding:6px 10px;background:rgba(255,193,7,0.06);border-radius:6px;font-size:10px;color:var(--text-secondary);">📊 会计Lv.' + _acctSkill.level + '：投资分析能力已达「' + _acctDepth + '」级别，可更准确判断市场趋势。</div>';
+  }
+
+  // [全系统自洽修复] 域F R247 联动增强(F→G): 医学技能→健康自检能力提示
+  var _medSkill = state.skills && state.skills.medicine;
+  if (_medSkill && _medSkill.level >= 15) {
+    div.innerHTML += '<div style="margin-top:6px;padding:6px 10px;background:rgba(46,204,113,0.06);border-radius:6px;font-size:10px;color:var(--text-secondary);">💊 医学Lv.' + _medSkill.level + '：具备基础健康自检能力，可提前发现健康风险。</div>';
   }
 
   parent.appendChild(div);

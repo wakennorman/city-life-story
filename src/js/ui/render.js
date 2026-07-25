@@ -4104,6 +4104,8 @@ function renderSkillsTab(state, parent) {
     accounting: "📊 会计",
     electrician: "⚡ 电工",
     welding: "🔥 焊接",
+    medicine: "💊 医学", // [全系统自洽修复] 域F R247 A类: state.skills 含medicine/social但skillNames无映射→UI显示原始ID
+    social: "🗣️ 社交",
   };
   var skillNamesCache = skillNames;
 
@@ -4626,6 +4628,37 @@ function renderSkillsTab(state, parent) {
     }
     certDiv.appendChild(certList);
     div.appendChild(certDiv);
+  }
+
+  // [全系统自洽修复] 域F R247 联动增强(F→C): 技能分支活跃概览
+  if (state.skillBranches) {
+    var _activeBranchCount = 0;
+    var _branchHtml = '<div style="margin-top:12px;padding:8px;background:rgba(74,158,92,0.04);border-radius:8px;font-size:11px;">';
+    _branchHtml += '<span style="font-weight:bold;color:var(--accent);">🌳 已选发展方向</span><br>';
+    for (var _bk in state.skillBranches) {
+      if (state.skillBranches[_bk]) {
+        _activeBranchCount++;
+        var _bl = typeof getSkillBranchLabel === "function" ? getSkillBranchLabel(_bk, state) : state.skillBranches[_bk];
+        _branchHtml += '<span style="display:inline-block;margin:2px 4px 2px 0;padding:2px 6px;background:rgba(74,158,92,0.1);border-radius:4px;">' + _bl + '</span>';
+      }
+    }
+    if (_activeBranchCount > 0) {
+      _branchHtml += '</div>';
+      div.innerHTML += _branchHtml;
+    }
+  }
+
+  // [全系统自洽修复] 域F R247 联动增强(F→E): 会计技能→投资分析能力提示
+  var _acctSkill = state.skills && state.skills.accounting;
+  if (_acctSkill && _acctSkill.level >= 20) {
+    var _acctDepth = _acctSkill.level >= 50 ? "深度分析" : (_acctSkill.level >= 30 ? "中级分析" : "基础分析");
+    div.innerHTML += '<div style="margin-top:8px;padding:6px 10px;background:rgba(255,193,7,0.06);border-radius:6px;font-size:10px;color:var(--text-secondary);">📊 会计Lv.' + _acctSkill.level + '：投资分析能力已达「' + _acctDepth + '」级别，可更准确判断市场趋势。</div>';
+  }
+
+  // [全系统自洽修复] 域F R247 联动增强(F→G): 医学技能→健康自检能力提示
+  var _medSkill = state.skills && state.skills.medicine;
+  if (_medSkill && _medSkill.level >= 15) {
+    div.innerHTML += '<div style="margin-top:6px;padding:6px 10px;background:rgba(46,204,113,0.06);border-radius:6px;font-size:10px;color:var(--text-secondary);">💊 医学Lv.' + _medSkill.level + '：具备基础健康自检能力，可提前发现健康风险。</div>';
   }
 
   parent.appendChild(div);
