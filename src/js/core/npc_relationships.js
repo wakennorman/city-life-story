@@ -19,14 +19,15 @@
  */
 
 // ====== 关系类型定义 ======
+// [全系统自洽修复] 域D: 移除死字段 baseAffinityMod(全库零消费者)→简化为 label+color
 const RELATION_TYPES = {
-  old_acquaintance: { label: "旧识", baseAffinityMod: -10, color: "#8B8050" },
-  competitor: { label: "竞争", baseAffinityMod: -15, color: "#C0392B" },
-  business: { label: "业务", baseAffinityMod: 5, color: "#2ECC71" },
-  classmate: { label: "老同学", baseAffinityMod: 10, color: "#3498DB" },
-  friendly: { label: "友善", baseAffinityMod: 5, color: "#F39C12" },
-  neutral: { label: "中立", baseAffinityMod: 0, color: "#95A5A6" },
-  strained: { label: "紧张", baseAffinityMod: -10, color: "#E74C3C" },
+  old_acquaintance: { label: "旧识", color: "#8B8050" },
+  competitor: { label: "竞争", color: "#C0392B" },
+  business: { label: "业务", color: "#2ECC71" },
+  classmate: { label: "老同学", color: "#3498DB" },
+  friendly: { label: "友善", color: "#F39C12" },
+  neutral: { label: "中立", color: "#95A5A6" },
+  strained: { label: "紧张", color: "#E74C3C" },
 };
 
 // ====== NPC关系矩阵 ======
