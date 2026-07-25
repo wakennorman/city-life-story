@@ -708,10 +708,21 @@ if (typeof window !== "undefined") {
 }
 
 // [全系统自洽修复] 域C 联动增强1: 获取活跃连携数（C→F 技能Tab展示）
+// [全系统自洽修复] 域C R269 修复:字段错链——state.skillSynergies 由 daily_pipeline:1981 写入
+// checkSkillSynergies 的结果对象(键为 dual/triple/theme)，从不存在 activeSynergies/activeThemes
+// →原实现恒返回 0，技能Tab「活跃连携数」永远显示 0（A类·读写字段名不匹配）。
+// 改为统计真实写入的 dual/triple/theme 键数；保留旧键兼容读取以防外部存档。
 function getActiveSynergiesCount(state) {
   if (!state || !state.skillSynergies) return 0;
+  var s = state.skillSynergies;
   var count = 0;
-  if (state.skillSynergies.activeSynergies) count += state.skillSynergies.activeSynergies.length;
-  if (state.skillSynergies.activeThemes) count += state.skillSynergies.activeThemes.length;
+  if (s.dual && typeof s.dual === "object") count += Object.keys(s.dual).length;
+  if (s.triple && typeof s.triple === "object") count += Object.keys(s.triple).length;
+  if (s.theme && typeof s.theme === "object") count += Object.keys(s.theme).length;
+  // 旧字段兼容（历史上从未写入，但防御外部/未来存档形态）
+  if (count === 0) {
+    if (Array.isArray(s.activeSynergies)) count += s.activeSynergies.length;
+    if (Array.isArray(s.activeThemes)) count += s.activeThemes.length;
+  }
   return count;
 }
