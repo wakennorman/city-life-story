@@ -287,3 +287,12 @@
 - **并发注意**: 执行期间并行窗口活跃（HEAD 由 6fa3dd12→b8242b97→db974396 演进，并重置工作树）。经验证 财务Tab 工作(investment/save/pricing) 已被 db974396 提交保全，未因 stash drop 丢失。工作树最终仅余并行在途 `skill_tree.js`(+2)，全程未触碰。
 - **终态**: HEAD=`db974396`==origin/main，工作树干净（仅 skill_tree.js 在途）。R251 已 push，本轮无新提交/push（避免与并发并行活动冲突）。
 - **下轮**: 域C（recency 243 除A外最薄弱；loop-state round251/next=C 正确，并行 R250/B 已占 round250）。
+
+## 最近执行（2026-07-26，Round 260 域E 经济/投资 — 已 push main df488537）
+
+- **开轮核对**: loop-state 严重滞后标 nextDomain=C，但 git log 显示并行窗口已推进 R252(C)/R253(D)/R257(H)/R258(A)/R259(B)。重算真实 recency：E=246 全局最薄弱 → 本轮=R260 域E。R260 轮次号未被占用。
+- **A类1（确证）**: stock.js renderStockCard 双除0 — pnlPct `(price-avgPrice)/avgPrice*100` 未守卫 avgPrice（赠股/旧档=0/undefined→Infinity/NaN·"Infinity%"）→补 `isFinite(avgPrice)&&avgPrice>0`；同函数 todayPct `(todayChange/prev)*100` 的 prev 可回退为 price（新上市/退市股=0→0/0=NaN）→补 `prev>0`。（Explore 审计 7 域E文件，其余干净，历轮已净尽主隐患。）
+- **联动3（新建 domain_e_linkage_r260.js，2 street+1 corporate，全||防御，[PLACEHOLDER]，前缀 e260_）**: e260_bull_return(E→G 牛市归来·**首个消费 R246 死flag _bearMarketWitness**·熊转牛对照定力)/e260_streak_review(E→C 连胜复盘·**首个叙事消费 investment.js 真实计数器 _consecutiveWins≥3**·过度自信警醒+accounting XP)/e260_market_wisdom(E→D 把盘感讲给熟人·投资阅历换好感·守域D铁律)。注册于 index.html r246.js 之后。
+- **验证**: node --check 通过；build dist app.js 9530.8KB（r260 flag 入 bundle count=2）；MC 6×400d EXIT=0·代码异常 grep=0（balanced 66.7%/corporate 33.3% 为既有 RNG 平衡阈值非回归）。
+- **并发注意**: 执行期间并行窗口极活跃（HEAD 6247f54a→d14a573f→1a044403→a1fb3466，跑到 R263）；本轮源码改动(stock.js/r260.js/index.html/CLAUDE.md/loop-state/round doc)被并行 `git add -A` 扫入 R261-R263 chore 提交、且并行 build 已把 r260 打进 dist（HEAD dist/app.js 含 r260 count=2）——验证无损。本窗口仅额外提交 MEMORY.md(eeca4563) + 回填 pushStatus(df488537) 两笔。
+- **终态**: HEAD=df488537==origin/main。**已 push origin main 成功**。下轮→F（recency 247 全局最薄弱）。
