@@ -221,6 +221,8 @@ function updateStockPrices(state, forceNews = false) {
         state,
       );
     }
+    // [全系统自洽修复] 域E R237:newsMul返回undefined→NaN崩溃守卫
+    if (!isFinite(newsMul)) newsMul = 1.0;
     const change = (1 + trend + noise + meanReversion) * newsMul;
     market.price = Math.max(0.5, market.price * change);
     market.price = Math.round(market.price * 100) / 100;
@@ -276,6 +278,11 @@ function buyStock(symbol, shares) {
   }
 
   const cost = Math.round(market.price * shares * 100) / 100;
+  // [全系统自洽修复] 域E R237:cost NaN守卫(价格异常时阻止交易+保护现金)
+  if (isNaN(cost) || !isFinite(cost)) {
+    StateManager.addMessage("⚠️ 价格异常，买入取消", "danger");
+    return false;
+  }
   if ((state.resources.cash || 0) < cost) {
     StateManager.addMessage(
       `⚠️ 需要 ¥${cost.toLocaleString()}，现金不足。`,
@@ -353,9 +360,14 @@ function sellStock(symbol, shares) {
   }
 
   const revenue = Math.round(market.price * shares * 100) / 100;
+  // [全系统自洽修复] 域E R237:revenue NaN守卫(价格异常时阻止交易+保护现金)
+  if (isNaN(revenue) || !isFinite(revenue)) {
+    StateManager.addMessage("⚠️ 价格异常，卖出取消", "danger");
+    return false;
+  }
   const profit = revenue - (holding.avgPrice || 0) * shares;
 
-  state.resources.cash = (state.resources.cash || 0) + revenue; // [全系统自洽修复] 域E A类: cash NaN守卫
+  state.resources.cash = (state.resources.cash || 0) + revenue;
   state.resources.totalEarned = (state.resources.totalEarned || 0) + Math.max(0, profit);
 
   holding.shares -= shares;
@@ -433,10 +445,11 @@ function renderKLine(history, currentPrice) {
   const w = 140; // svg width
   const h = 40; // svg height
   const stepX = w / (history.length - 1);
-  const points = history
+  // [全系统自洽修复] 域E R237:points使用过滤后的prices(原用未过滤history→NaN价格产生无效SVG)
+  const points = prices
     .map((p, i) => {
       const x = i * stepX;
-      const y = h - ((p.price - min) / range) * h;
+      const y = h - ((p - min) / range) * h;
       return `${x.toFixed(1)},${y.toFixed(1)}`;
     })
     .join(" ");

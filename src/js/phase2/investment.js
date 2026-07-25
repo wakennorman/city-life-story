@@ -1234,6 +1234,8 @@ function tickInvestmentDaily(state) {
       typeof getNewsEffectForInvestment === "function"
         ? getNewsEffectForInvestment(s.symbol, s.industry, s.category, state)
         : 1.0;
+    // [全系统自洽修复] 域E R237:newsMul返回undefined→NaN守卫(源头修复)
+    if (!isFinite(newsMul)) newsMul = 1.0;
 
     // [全系统自洽修复] 域E A类#1: 市场饱和度惩罚（从每日经济结算读取，按当前总资产动态计算，自修正）
     var _satPenalty = 1.0;
@@ -4253,8 +4255,9 @@ function renderProperties(area, inv, state, parent) {
       "</div>" +
       (typeof getPropertyVolatilityLabel === "function"
         ? getPropertyVolatilityLabel(propDef)
-        : '<div style="font-size:10px;color:var(--text-muted);">年增值: +' +
-          ((propDef.appreciation || 0.0001) * 365 * 100).toFixed(1) +
+        : // [全系统自洽修复] 域E R237:原引用已删除的appreciation字段→改用baseAppreciation
+          '<div style="font-size:10px;color:var(--text-muted);">年增值: +' +
+          ((propDef.baseAppreciation || 0.0001) * 365 * 100).toFixed(1) +
           "%</div>") +
       (owned
         ? '<div style="font-size:10px;color:var(--success);margin-top:4px;">✅ 已持有</div>'
