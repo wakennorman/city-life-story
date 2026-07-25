@@ -99683,11 +99683,12 @@ if (typeof window !== "undefined") {
           text: "📊 先做功课再决定",
           apply: function (st) {
             if (st.flags) st.flags._npcInvestTipCooldown = true;
-            if (typeof addSkillXp === "function") addSkillXp("finance", 8);
+            // [全系统自洽修复] 域C R243: addSkillXp("finance")不是真实技能键→映射到accounting
+            if (typeof addSkillXp === "function") addSkillXp("accounting", 8);
             if (st.player) st.player.mental = (st.player.mental || 50) + 2;
             if (typeof StateManager !== "undefined" && StateManager.addMessage)
               StateManager.addMessage(
-                "你花了几天研究相关行业的财报，finance+8。",
+                "你花了几天研究相关行业的财报，会计+8。",
                 "good",
               );
           },
@@ -160397,6 +160398,9 @@ var NEWS_EVENTS = [
         { symbols: ["CL"], mul: 1.08 },
         { industry: "消费", mul: 1.05 },
       ],
+      // [全系统自洽修复] 域B R244 联动增强(B→G): 高温天气增加疲劳、降低心情
+      fatiguePenalty: 5,
+      happinessBonus: -5,
       duration: 3,
     },
     type: "price",
@@ -160570,6 +160574,8 @@ var NEWS_EVENTS = [
         { industry: "消费", mul: 1.06 },
         { industry: "金融", mul: 0.96 },
       ],
+      // [全系统自洽修复] 域B R244 联动增强(B→C): 最低工资上调带动服务/消费行业职业路径薪资信心
+      sectorHeat: { 消费: 0.05, 金融: 0.03 },
       duration: 10,
     },
     type: "policy",
@@ -161383,6 +161389,20 @@ var NEWS_FOLLOWUP = {
         { symbols: ["COPPER", "NICKEL"], mul: 1.08 },
       ],
       duration: 3,
+    },
+  },
+  // [全系统自洽修复] 域B A类#1: scrap_price_surge_echo 缺失导致 scrap_price_surge 的 followUp 永不可达
+  // [全系统自洽修复] 域B A类#1: scrap_price_surge_echo 缺失导致 scrap_price_surge 的 followUp 永不可达
+  scrap_price_surge_echo: {
+    headline: "♻️ 废品回收价格持续走高！回收站排队卖货，市政清运压力增大",
+    effects: {
+      priceMod: { scrap_metal: 1.6, scrap_paper: 1.4, scrap_plastic: 1.3 },
+      // [全系统自洽修复] 域B R244 联动增强(B→E): 废品涨价联动循环经济板块投资热度
+      investmentEffect: [
+        { industry: "消费", mul: 1.04 },
+        { symbols: ["ALUM", "COPPER"], mul: 1.06 },
+      ],
+      duration: 4,
     },
   },
   tech_fair_echo: {
@@ -188124,7 +188144,6 @@ function addExtraActions(state, actions) {
   if (state.player.phase === "street") {
     addStreetExtras(state, actions);
     addAmenityActions(state, actions);
-    addHomeActions(state, actions);
     addClinicAction(state, actions);
     addLongDistanceTravelAction(state, actions);
     addLegalOfficeAction(state, actions);
@@ -188142,6 +188161,8 @@ function addExtraActions(state, actions) {
       addIllegalActions(state, actions);
     }
   }
+  // 回家行动 — 所有阶段均可用（只要有住所）
+  addHomeActions(state, actions);
   // 余额宝每日利息
   if (state.flags.yuEBao > 0) {
     const interest = Math.floor(state.flags.yuEBao * 0.0001);
@@ -261276,26 +261297,6 @@ function getAvailableActions(state) {
       });
     }
 
-    // 结束今天 — 行动力不足时主动结束（防止卡死在低AP无法继续）
-    if ((state.player.actionPoints || 0) > 0) {
-      actions.push({
-        id: "end_day",
-        category: "survival",
-        priority: 0,
-        name: "🛑 结束今天",
-        desc: "行动力不足以继续活动时，直接结束这一天，进入下一天。",
-        icon: "🛑",
-        apCost: 0,
-        handler: () => {
-          if (typeof endDay === "function") {
-            endDay();
-          } else {
-            StateManager.addMessage("⚠️ 无法结束今天，请刷新页面。", "error");
-          }
-        },
-      });
-    }
-
     actions.push({
       id: "eat",
       category: "survival",
@@ -262164,6 +262165,26 @@ function getAvailableActions(state) {
         }
       }
     }
+  }
+
+  // 结束今天 — 所有地点/阶段均可用
+  if ((state.player.actionPoints || 0) > 0) {
+    actions.push({
+      id: "end_day",
+      category: "survival",
+      priority: 0,
+      name: "🛑 结束今天",
+      desc: "行动力不足以继续活动时，直接结束这一天，进入下一天。",
+      icon: "🛑",
+      apCost: 0,
+      handler: () => {
+        if (typeof endDay === "function") {
+          endDay();
+        } else {
+          StateManager.addMessage("⚠️ 无法结束今天，请刷新页面。", "error");
+        }
+      },
+    });
   }
 
   // --- 注入扩展行动库（生存/社交/学习/生活/投资/梦想）---
