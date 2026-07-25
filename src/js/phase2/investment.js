@@ -1432,9 +1432,13 @@ function tickInvestmentDaily(state) {
         if (!state.flags._econAnxietyDay || state.flags._econAnxietyDay < state.player.day) {
           state.flags._econAnxietyDay = state.player.day;
           state.needs.fatigue = Math.min(100, (state.needs.fatigue || 0) + 2);
-          state.needs.health = Math.max(0, (state.needs.health || 100) - 1);
+          // [全系统自洽修复] 域E 修复:经济焦虑扣健康写死字段 state.needs.health(不存在)→真实 state.status.health,原每日焦虑健康惩罚静默丢失
+          if (state.status)
+            state.status.health = Math.max(0, (state.status.health || 100) - 1);
           if (_dd > 0.35) {
-            state.needs.mental = Math.max(0, (state.needs.mental || 50) - 3);
+            // [全系统自洽修复] 域E 修复:经济焦虑扣心智写死字段 state.needs.mental(不存在)→真实 state.player.mental,原深度回撤心智惩罚静默丢失
+            if (state.player)
+              state.player.mental = Math.max(0, (state.player.mental || 50) - 3);
           }
         }
       }

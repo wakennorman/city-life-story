@@ -71,7 +71,8 @@ const STOCK_LIST = [
   {
     symbol: "OIL",
     name: "黑金能源",
-    industry: "能源",
+    // [全系统自洽修复] 域E 修复:industry "能源" 不在 WORLD_SECTORS(科技/消费/金融/房地产/医药/新能源)→getSectorHeat/新闻板块匹配恒返回中性1.0,OIL 与游戏经济脱钩;改合法板块 "新能源"(油价与新能源替代强相关)
+    industry: "新能源",
     basePrice: 18,
     volatility: 0.15,
     baseTrend: 0.0,
