@@ -233,6 +233,27 @@ function bindHeaderButtons() {
 }
 
 /** 估算工作收入 */
+// [全系统自洽修复] 域A R242: 证书职业收入加成 — chefJobIncomeBonus/repairJobIncomeBonus/salesJobIncomeBonus
+// 此前全库零消费者(desc宣称"餐饮收入+20%/维修收入+25%/销售收入+20%"静默失效)。
+// 按 job.effects 主技能XP键匹配 _certJobIncomeBonus 映射,取最高一档,工资链乘性生效。
+function getCertJobIncomeMultiplier(job, state) {
+  try {
+    var m = state && state.flags && state.flags._certJobIncomeBonus;
+    if (!m || !job || !job.effects) return 1.0;
+    var best = 0;
+    if ((job.effects.cookingXp || 0) > 0 && m.cooking)
+      best = Math.max(best, m.cooking);
+    if ((job.effects.repairXp || 0) > 0 && m.repair)
+      best = Math.max(best, m.repair);
+    if ((job.effects.salesXp || 0) > 0 && m.sales)
+      best = Math.max(best, m.sales);
+    if (!isFinite(best) || best < 0) return 1.0;
+    return 1 + Math.min(best, 0.5);
+  } catch (e) {
+    return 1.0;
+  }
+}
+
 function estimateJobPay(job, state) {
   // 模拟3次取平均
   let total = 0;
@@ -260,6 +281,9 @@ function estimateJobPay(job, state) {
     if (typeof getNewsJobMultiplier === "function") {
       pay = Math.floor(pay * getNewsJobMultiplier(job.id, state));
     }
+    // [全系统自洽修复] 域A R242: 证书职业收入加成(估算与实发一致)
+    var certMultEst = getCertJobIncomeMultiplier(job, state);
+    if (certMultEst !== 1.0) pay = Math.floor(pay * certMultEst);
     // v3.1: 难度工资乘数
     if (typeof getDifficultyMultiplier === "function") {
       var wageMult = getDifficultyMultiplier(state, "wage");
@@ -291,6 +315,9 @@ function estimateJobPayRange(job, state) {
     }
     if (typeof getNewsJobMultiplier === "function")
       pay = Math.floor(pay * getNewsJobMultiplier(job.id, state));
+    // [全系统自洽修复] 域A R242: 证书职业收入加成(区间估算与实发一致)
+    var certMultRange = getCertJobIncomeMultiplier(job, state);
+    if (certMultRange !== 1.0) pay = Math.floor(pay * certMultRange);
     if (typeof getDifficultyMultiplier === "function") {
       var wageMult = getDifficultyMultiplier(state, "wage");
       if (wageMult !== 1.0) pay = Math.floor(pay * wageMult);
@@ -3977,6 +4004,59 @@ function getAvailableActions(state) {
               state.flags._certFatigueReduction =
                 (state.flags._certFatigueReduction || 0) +
                 cert.effects.fatigueReduction;
+            // [全系统自洽修复] 域A R242 修复:cooking_cert/repair_cert/sales_cert 三证书 effects 块
+            // (cookingXpBonus/repairXpBonus/salesXpBonus + chefJobIncomeBonus/repairJobIncomeBonus/salesJobIncomeBonus)
+            // 全库零消费者→desc宣称的"XP加成/收入+20~25%"静默失效。此处补消费:累积到 flags 映射,
+            // 由 addSkillXp(_certSkillXpBonus)与工资链(getCertJobIncomeMultiplier→_certJobIncomeBonus)真正生效。
+            // (*JobUnlock 三键语义由技能树Lv30分支/技能门槛承担,记C类不接线)
+            if (
+              cert.effects.cookingXpBonus ||
+              cert.effects.repairXpBonus ||
+              cert.effects.salesXpBonus
+            ) {
+              state.flags._certSkillXpBonus =
+                state.flags._certSkillXpBonus || {};
+              var _xpbMap = state.flags._certSkillXpBonus;
+              if (cert.effects.cookingXpBonus)
+                _xpbMap.cooking = Math.max(
+                  _xpbMap.cooking || 0,
+                  cert.effects.cookingXpBonus,
+                );
+              if (cert.effects.repairXpBonus)
+                _xpbMap.repair = Math.max(
+                  _xpbMap.repair || 0,
+                  cert.effects.repairXpBonus,
+                );
+              if (cert.effects.salesXpBonus)
+                _xpbMap.sales = Math.max(
+                  _xpbMap.sales || 0,
+                  cert.effects.salesXpBonus,
+                );
+            }
+            if (
+              cert.effects.chefJobIncomeBonus ||
+              cert.effects.repairJobIncomeBonus ||
+              cert.effects.salesJobIncomeBonus
+            ) {
+              state.flags._certJobIncomeBonus =
+                state.flags._certJobIncomeBonus || {};
+              var _incMap = state.flags._certJobIncomeBonus;
+              if (cert.effects.chefJobIncomeBonus)
+                _incMap.cooking = Math.max(
+                  _incMap.cooking || 0,
+                  cert.effects.chefJobIncomeBonus,
+                );
+              if (cert.effects.repairJobIncomeBonus)
+                _incMap.repair = Math.max(
+                  _incMap.repair || 0,
+                  cert.effects.repairJobIncomeBonus,
+                );
+              if (cert.effects.salesJobIncomeBonus)
+                _incMap.sales = Math.max(
+                  _incMap.sales || 0,
+                  cert.effects.salesJobIncomeBonus,
+                );
+            }
             StateManager.addMessage(
               `📜 恭喜！成功考取${cert.name}！`,
               "success",
@@ -4387,6 +4467,18 @@ function doStreetJob(job) {
     }
   }
 
+  // [全系统自洽修复] 域A R242: 证书职业收入加成(chefJobIncomeBonus等键此前全库零消费者)
+  if (typeof getCertJobIncomeMultiplier === "function") {
+    var certIncMulti = getCertJobIncomeMultiplier(job, state);
+    if (certIncMulti !== 1.0) {
+      pay = Math.floor(pay * certIncMulti);
+      StateManager.addMessage(
+        "📜 持证加成：+" + Math.round((certIncMulti - 1) * 100) + "%",
+        "success",
+      );
+    }
+  }
+
   // v3.1 第39轮：街坊声望收入加成
   if (typeof getRepPayMultiplier === "function") {
     var locKey =
@@ -4674,10 +4766,11 @@ function doStreetJob(job) {
     // 技能经验
     addSkillXp("cooking", job.effects.cookingXp || 0);
     addSkillXp("repair", job.effects.repairXp || 0);
-    addSkillXp("agility", job.effects.agilityXp || 0);
+    // [全系统自洽修复] 域A R242 修复:agility/physique/intelligence 非真实技能键
+    // (state.skills 仅 cooking/repair/coding/english/driving/sales/management/accounting/electrician/welding/medicine/social),
+    // addSkillXp 内部 state.skills[key] 未命中即静默 return→三行死调用移除。
+    // 三者的成长收益由下方「属性经验转化」块以 state.player.agility/physique/intelligence 属性承接(真实字段)。
     addSkillXp("sales", job.effects.salesXp || 0);
-    addSkillXp("physique", job.effects.physiqueXp || 0);
-    addSkillXp("intelligence", job.effects.intelligenceXp || 0);
     addSkillXp("english", job.effects.englishXp || 0);
     addSkillXp("welding", job.effects.weldingXp || 0);
     addSkillXp("medicine", job.effects.medicineXp || 0);
@@ -5095,7 +5188,13 @@ function addSkillXp(skillKey, amount) {
   if (!skill) return;
   // [域C联动] 天赋XP倍率生效
   var _talentMult = getTalentXpMultiplier(skillKey, state);
-  skill.xp += Math.round(amount * _talentMult);
+  // [全系统自洽修复] 域A R242: 证书技能XP加成生效(_certSkillXpBonus 由考证时写入,此前 cookingXpBonus 等键全库零消费者)
+  var _certXpBonus =
+    (state.flags &&
+      state.flags._certSkillXpBonus &&
+      state.flags._certSkillXpBonus[skillKey]) ||
+    0;
+  skill.xp += Math.round(amount * _talentMult * (1 + _certXpBonus));
   // v3.1 审查改进：XP 需求从线性改为指数，level 0=120 → level 50≈10,000（之前 6,120）
   // 让玩家在高级别感受更有意义的成长压力，同时保留早期快速升级的爽快感
   var xpNeeded = Math.floor(
