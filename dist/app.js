@@ -190251,11 +190251,14 @@ function runDailyPipeline(state) {
           "🌙 第" + state.player.day + "天在昏迷中过去了...",
           "danger",
         );
-        // 执行最后的核心步骤：财务、收支报告、存档
+        // 执行最后的核心步骤：财务、投资tick、收支报告、存档
+        // 投资tick必须执行，否则极端状态天跳过时股价永远不更新
         for (var j = i + 1; j < DAILY_PIPELINE.length; j++) {
           var lateStep = DAILY_PIPELINE[j];
           if (
             lateStep.name === "finance" ||
+            lateStep.name === "investment_tick" ||
+            lateStep.name === "property_market_tick" ||
             lateStep.name === "autosave" ||
             lateStep.name === "daily_report"
           ) {
