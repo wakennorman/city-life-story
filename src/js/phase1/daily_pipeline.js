@@ -229,6 +229,10 @@ const DAILY_PIPELINE = [
           state.needs.happiness = Math.min(100, (state.needs.happiness || 50) + _socialBonus);
         }
       }
+      // [R235 域E联动增强2] E→G 财富影响生活品质（净资产→疲劳/心情/健康调整）
+      if (typeof _applyWealthQualityOfLifeR235 === "function") {
+        _applyWealthQualityOfLifeR235(state);
+      }
     },
   },
 
@@ -613,6 +617,10 @@ const DAILY_PIPELINE = [
     name: "investment_tick",
     fn: function (state) {
       tickInvestmentDaily(state);
+      // [R235 域E联动增强1] E→B 市场异动叙事（股票波动≥5%触发新闻事件）
+      if (typeof _checkMarketVolatilityR235 === "function") {
+        _checkMarketVolatilityR235(state);
+      }
     },
   },
 

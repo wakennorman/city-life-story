@@ -445,6 +445,10 @@ function tickNpcRelationships(state) {
   if (typeof _checkNpcInvestmentTipR233 === "function") {
     _checkNpcInvestmentTipR233(state);
   }
+  // [R235 域E联动增强3] E→D 财富社交效应（现金/债务水平影响NPC好感）
+  if (typeof _applyWealthSocialEffectR235 === "function") {
+    _applyWealthSocialEffectR235(state);
+  }
 }
 
 /** [全系统自洽修复] 域D 修复:NPC id→中文名，替代 replace(/_/g," ") 展示的原始 id */
