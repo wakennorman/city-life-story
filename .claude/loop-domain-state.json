@@ -1,8 +1,8 @@
 {
-  "currentRound": 242,
-  "currentDomain": "A",
-  "nextDomain": "C",
-  "rotationIndex": 1,
+  "currentRound": 246,
+  "currentDomain": "E",
+  "nextDomain": "F",
+  "rotationIndex": 4,
   "domainOrder": [
     "A",
     "B",
@@ -15,30 +15,15 @@
   ],
   "domainRecency": {
     "A": 242,
-    "B": 231,
-    "C": 196,
-    "D": 230,
-    "E": 201,
-    "F": 198,
-    "G": 199,
-    "H": 200
+    "B": 244,
+    "C": 243,
+    "D": 245,
+    "E": 246,
+    "F": 238,
+    "G": 240,
+    "H": 241
   },
   "history": [
-    {
-      "round": 197,
-      "domain": "A",
-      "note": "域A: A类1类4键(skills.js 证书效果键 healthBonus/mentalBonus/illnessRiskReduction/fatigueReduction 全库无消费者→四证书 desc 宣称效果静默失效,main.js 发证循环补4消费分支)+联动3项(domain_a_linkage_r197.js: A→G健康档案基线/A→F收支明白账/A→H用数据争预算)。"
-    },
-    {
-      "round": 198,
-      "domain": "F",
-      "note": "域F: A类0项(Explore 17 UI文件逐行审计+死字段黑名单grep,UI层干净)+联动3项(domain_f_linkage_r198.js: F→E财务面板清晰/F→B生活手账/F→H清爽路演)。C类记录不修:investment.js:1435 needs.health / webapp_runtime_bridge player.health。"
-    },
-    {
-      "round": 199,
-      "domain": "G",
-      "note": "域G: A类0项(诚实报告,15核心文件审计+候选逐一证伪)+联动3项(domain_g_linkage_r199.js: G→B时代回望消费死flag _pendingEraEvent/G→E通胀避险读 _eraState.inflationIndex≥1.3/G→H久历周期经营定力)。"
-    },
     {
       "round": 200,
       "domain": "H",
@@ -47,18 +32,38 @@
     {
       "round": 201,
       "domain": "E",
-      "note": "域E: A类3处(investment.js 经济焦虑净值回撤块死字段 state.needs.health→state.status.health + state.needs.mental→state.player.mental,每日回撤的健康/心智惩罚此前静默丢失本轮起生效,A类#4 / stock.js OIL「黑金能源」industry \"能源\" 不在 WORLD_SECTORS→getSectorHeat 恒中性、OIL 与新闻板块经济脱钩,改合法板块 \"新能源\",A类#2)+联动3项(新建 domain_e_linkage_r201.js,1 street+2 corporate,全||防御,[PLACEHOLDER]): econ_r201_drawdown_reflect(E→G 净值回撤深夜自省·首次叙事消费本轮修复的经济焦虑回撤机制) / econ_r201_annual_ledger(E→A 年度投资总账·首个反思式消费真实字段 _totalInvestmentProfit·盈亏两态) / econ_r201_capital_backbone(E→H 投资底气反哺事业·_totalInvestmentProfit>0+在职→management XP+cash)。补齐历轮域E未用的 E→G/E→A/E→H 方向。网络中断恢复期并行窗口提交域C(e57c4534)/域D(0ddcae87),我的 index.html r201 注册与 dist 重建被并入其提交(已核 dist 含本轮全部改动),本窗口仅提交剩余 E 源文件与文档,不碰并行文件。MC 6×400d 0代码异常;构建9241.9KB。下轮R202→域F(recency 198;C/D 正被并行占用避让)。"
+      "note": "域E: A类3处(investment.js 经济焦虑净值回撤块死字段修复 / stock.js OIL industry 能源→新能源脱钩修复)+联动3项(domain_e_linkage_r201.js: E→G回撤自省/E→A年度总账/E→H投资底气)。"
     },
     {
       "round": 242,
       "domain": "A",
-      "note": "域A: A类2项(main.js 发证循环接通三证书 cooking_cert/repair_cert/sales_cert 的 XpBonus/JobIncomeBonus 死效果键→_certSkillXpBonus/_certJobIncomeBonus 映射,addSkillXp 接证书XP乘区,getCertJobIncomeMultiplier 接工资链实发/估算/区间三处,证书宣称效果本轮起真正生效 / doStreetJob 三处 addSkillXp(\"agility\"/\"physique\"/\"intelligence\") 非真实技能键静默丢弃→移除,属性成长由状态经验转化块承接)+联动3项(新建 domain_a_linkage_r242.js,2 street+1 corporate,全||防御,[PLACEHOLDER],id前缀 a242_ 不冲突): a242_cert_word_of_mouth(A→B 持证市井佳话·首补A→B方向·消费_certJobIncomeBonus→fame+mental+happiness)/a242_cert_study_circle(A→C 证书学习圈·消费_certSkillXpBonus→addSkillXp 被加成技能)/a242_cert_resume_weight(A→H 简历硬证书·certificates.length≥2+在职→management XP+cash)。MC 6×400d 0代码异常;构建9361.8KB。下轮R243→域C(recency 196 最薄弱,8域本轮循环完成重启轮换)。"
+      "note": "域A: A类2项(main.js 接通三证书 XpBonus/JobIncomeBonus 死效果键→_certSkillXpBonus/_certJobIncomeBonus,addSkillXp 证书XP乘区+getCertJobIncomeMultiplier 工资链三处 / doStreetJob 移除三处非真实技能键死调用)+联动3项(domain_a_linkage_r242.js: a242_cert_word_of_mouth A→B首补/a242_cert_study_circle A→C/a242_cert_resume_weight A→H)。MC 6×400d 0代码异常;构建9361.8KB。"
+    },
+    {
+      "round": 243,
+      "domain": "C",
+      "note": "域C(并行窗口 01fb17db/7e631b90): 6处非真实技能键 addSkillXp(finance→accounting×5/physique→repair)+联动3项(domain_c_linkage_r243.js: skill_street_echo C→B/skill_branch_recognition C→D/cert_life_shortcut C→A/E)。"
+    },
+    {
+      "round": 244,
+      "domain": "B",
+      "note": "域B(并行窗口 cbcfad8f): scrap_price_surge_echo 缺失跟进事件修复+联动3项(domain_b_linkage_r244.js: B→F事件记忆墙/B→D共同经历闲谈/B→E幸运连击投资信心)。注意:该轮漏注册 src/index.html,由 R246 补上。"
+    },
+    {
+      "round": 245,
+      "domain": "D",
+      "note": "域D(并行窗口 cc3c5319): old_ma 未入 NPC_RELATION_MATRIX/RELATION_PROPAGATION 修复+联动3项(D→C高好感职业推荐暗示/D→E交易情报提示/D→G社交圈心情回复)。"
+    },
+    {
+      "round": 246,
+      "domain": "E",
+      "note": "域E: A类3项(domain_e_linkage_r235.js:44 净资产漏算公司股——持仓无.price字段(stock.js:305建仓仅avgPrice)恒假→改 corporate.stockMarket[sym].price 权威取法(stock.js:570同源)+avgPrice回退+isFinite守卫 / :88 _downPct 声明滞后 var 提升恒 undefined→熊市 bear 分支永不可达且 _getMarketTrendR235 全库零调用方双料死函数→声明前置+导出 window / src/index.html 漏注册已提交的 domain_b_linkage_r244.js 悬空文件——build.py 按 script 序串接,dist 中 R244 内容系手改 dist 产物,任何重建都会静默剔除 R244 三事件必现回归→补注册)+联动3项(新建 domain_e_linkage_r246.js,2 street+1 corporate,全||防御,[PLACEHOLDER],id前缀 e246_): e246_bear_market_faces(E→B 熊市众生相·首个消费修复后可达的bear分支,双重复活死函数+死分支)/e246_wealth_treat_neighbors(E→D 宽裕请街坊·首个消费R235写入后全库零消费者死flag _wealthSocialBonus,守applyAffinityChange+met铁律)/e246_networth_backbone(E→H 身家底气·消费修复后首次含公司股市值的净资产→management XP+upward)。MC 6×400d EXIT=0·0代码异常(TypeError/ReferenceError/Uncaught/Infinity grep=0);构建9428.4KB。开轮核对:并行窗口已占 R243(C)/R244(B)/R245(D),本轮按真实recency取E(235最薄弱)。下轮R247→域F(recency 238 最薄弱)。"
     }
   ],
-  "lastDomain": "A",
-  "lastRound": 242,
-  "lastDate": "2026-07-25",
-  "lastCommit": "2971e821",
+  "lastDomain": "E",
+  "lastRound": 246,
+  "lastDate": "2026-07-26",
+  "lastCommit": "460fc3c4",
   "pushStatus": "PENDING",
   "completedDomains": [
     "A",
@@ -70,5 +75,5 @@
     "G",
     "H"
   ],
-  "description": "全系统优化 loop R242→域A(数据/数值平衡)。A类2项:三证书 XpBonus/JobIncomeBonus 死效果键接通技能链+工资链(证书宣称效果本轮起生效)/doStreetJob 移除三处非真实技能键死调用。联动3项(domain_a_linkage_r242.js,2 street+1 corporate:A→B持证市井佳话首补A→B/A→C证书学习圈/A→H简历硬证书)。下轮R243→域C(recency 196 最薄弱,8域本轮循环完成重启轮换)。"
+  "description": "全系统优化 loop R246→域E(经济/投资)。A类3项:净资产漏算公司股/熊市bear死分支+死函数/R244悬空注册补挂。联动3项(domain_e_linkage_r246.js: E→B熊市众生相/E→D宽裕请街坊消费死flag/E→H身家底气)。回填并行窗口 R243(C)/R244(B)/R245(D) recency。下轮R247→域F(recency 238 最薄弱)。"
 }
