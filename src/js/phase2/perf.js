@@ -20,12 +20,13 @@ function calculatePerfScore(state) {
   let score = 0;
   if (isLowRank) {
     // P5/P6 执行层: KPI(70%) + 向上管理(30%)
-    score += (c.kpi || 0) * 0.7;
-    score += (c.upwardMgmt || 0) * 0.3;
+    // [全系统自洽修复] 域C 修复:kpi/upwardMgmt加typeof守卫(非数字→NaN→错误S+评分)
+    score += (typeof c.kpi === "number" ? c.kpi : 0) * 0.7;
+    score += (typeof c.upwardMgmt === "number" ? c.upwardMgmt : 0) * 0.3;
   } else {
     // P7+ 管理层: KPI(40%) + 向上管理(60%)
-    score += (c.kpi || 0) * 0.4;
-    score += (c.upwardMgmt || 0) * 0.6;
+    score += (typeof c.kpi === "number" ? c.kpi : 0) * 0.4;
+    score += (typeof c.upwardMgmt === "number" ? c.upwardMgmt : 0) * 0.6;
   }
 
   // 团队贡献 (P7+)

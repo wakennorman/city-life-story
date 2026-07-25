@@ -2795,10 +2795,11 @@ var _SKILL_PATH_MAP = {
   charm: "player.charm",
   fame: "player.fame",
   morality: "player.morality",
-  // [全系统自洽修复] 域C R173 A类#1: design→player.intelligence, social→player.charm 映射补全
-  // 根因：_SKILL_PATH_MAP缺design/social条目 → _getSkillValue返回0 → CAREER_PATHS中design/edu路径所有reqSkills永不可达
+  // [全系统自洽修复] 域C R173 A类#1: design→player.intelligence 映射补全
+  // [全系统自洽修复] 域C 修复:social是真实训练技能(state.skills.social),不应映射到player.charm
+  // 原映射导致教育培训路径reqSkills:{social:N}静默读取charm属性(初始20)而非social技能(初始0)
   design: "player.intelligence",
-  social: "player.charm",
+  // social已移除: _getSkillValue对未映射key会回退到state.skills[skill].level(正确行为)
 };
 function _getSkillValue(state, skill) {
   var path = _SKILL_PATH_MAP[skill];
