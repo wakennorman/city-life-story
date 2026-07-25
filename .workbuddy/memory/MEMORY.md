@@ -34,6 +34,8 @@
 - 已知误报勿修：webapp_runtime_bridge getPlayerHealth（主路径正确）；establishMentorship/takeMentee 有平行实现。
 - 既有 C类不修：items.js skillStudy 无应用器；finance.js hasStreetStall flag 无 writer。
 
-## 近况（R260-R268）
+## 近况（R260-R271）
 - R260 域E：stock.js renderStockCard 双除0守卫 + e260_*（消费 _bearMarketWitness/_consecutiveWins）。
-- 并行窗口已推进 R261-R268：R263(F)/R264(G)/R265(H)/R266(B)/R267(A)/R268(D)；C 最后一轮为 R252 → R269=域C。
+- R271 域C（代码文件 domain_c_linkage_r269.js，R269/R270 编号被并行占为域E/域F）：修 skill_synergy.js getActiveSynergiesCount 字段错链（读 activeSynergies/activeThemes 从未写入，真实键 dual/triple/theme→技能Tab连携数恒0）+ c269_*（C→F消费修复计数/C→E首消费死flag _investReviewHabit/C→H复合技能变现）。
+- 教训：CLAUDE.md 是 CRLF——脚本改写须保留原换行符，否则整文件 diff；并行窗口会 add -A 扫走本轮源码并自行编号，账本轮次以 git log 实况为准重算。
+- recency 基准(R271 后)：A=267/B=266/C=271/D=268/E=269/F=270/G=264/H=265 → 下轮 G。

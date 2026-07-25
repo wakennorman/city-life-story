@@ -296,3 +296,13 @@
 - **验证**: node --check 通过；build dist app.js 9530.8KB（r260 flag 入 bundle count=2）；MC 6×400d EXIT=0·代码异常 grep=0（balanced 66.7%/corporate 33.3% 为既有 RNG 平衡阈值非回归）。
 - **并发注意**: 执行期间并行窗口极活跃（HEAD 6247f54a→d14a573f→1a044403→a1fb3466，跑到 R263）；本轮源码改动(stock.js/r260.js/index.html/CLAUDE.md/loop-state/round doc)被并行 `git add -A` 扫入 R261-R263 chore 提交、且并行 build 已把 r260 打进 dist（HEAD dist/app.js 含 r260 count=2）——验证无损。本窗口仅额外提交 MEMORY.md(eeca4563) + 回填 pushStatus(df488537) 两笔。
 - **终态**: HEAD=df488537==origin/main。**已 push origin main 成功**。下轮→F（recency 247 全局最薄弱）。
+
+
+## 最近执行（2026-07-26，R271 域C 职业/成长 — 已 push main 3b1d93e6）
+
+- 开轮：loop-state 滞后，按 git log 实况重算 recency 取 C(260 最薄弱)；MEMORY.md 超限已压缩重写。
+- A类1：skill_synergy.js:711 getActiveSynergiesCount 字段错链（读从未写入的 activeSynergies/activeThemes，真实键 dual/triple/theme）→技能Tab活跃连携数恒0，已修。
+- 联动3：domain_c_linkage_r269.js（c269_synergy_awakening C→F / c269_review_to_craft C→E 首消费死flag _investReviewHabit / c269_synergy_promotion C→H）。
+- 验证：node --check OK / build 9609.8KB / MC 6×400d EXIT=0 0代码异常。
+- 并发：源码被并行 55547797 add -A 扫入并 push（核验无损）；R269/R270 编号被并行占用→账本记 R271；本窗口账本提交 3b1d93e6 已 push。下轮→G(recency 264)。
+- 教训：CLAUDE.md 为 CRLF，脚本改写须保留换行符。
