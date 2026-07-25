@@ -306,3 +306,10 @@
 - 验证：node --check OK / build 9609.8KB / MC 6×400d EXIT=0 0代码异常。
 - 并发：源码被并行 55547797 add -A 扫入并 push（核验无损）；R269/R270 编号被并行占用→账本记 R271；本窗口账本提交 3b1d93e6 已 push。下轮→G(recency 264)。
 - 教训：CLAUDE.md 为 CRLF，脚本改写须保留换行符。
+
+## 最近执行（2026-07-26，账本R278 域A 数据/数值平衡·第二轮第十一次 — 已 push main e99c7ed0）
+- 开轮 loop-state 严重滞后(标R271/next=G)，据 git log 重算并行已推进 R272-R277→各域最新 A=267 最薄弱→本轮域A。
+- A类=0（诚实报告）：死字段黑名单(player.happiness/needs.health/certs/player.health)全库0命中；近期 r258/r267 联动干净。历轮 R14/R22/R197/R242/R251/R258/R267 已净尽域A。
+- 联动3（新建 domain_a_linkage_r277.js,2 street+1 corporate,全||防御,a277_）：A→C 识货砍价/A→D 街坊团购(守 rel.met)/A→H 成本控制报告。
+- 并发：源码被并行 ff32c31e chore-scoop 提交上 main（HEAD 核验 index.html+dist 均含 r277·count=2）；并行同时占用 R277 标签为域F(2d01102b)→本轮账本去冲突改记 R278。MC 6×400d EXIT=0·0代码异常；构建9677.3KB。
+- 提交2笔（docs bb7128ed / chore 回填 e99c7ed0），均 push origin main 成功。下轮→G(recency 271 最薄弱)。
