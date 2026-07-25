@@ -3303,13 +3303,19 @@ function renderInvestmentTab(state, parent) {
   };
 
   setTimeout(function () {
-    renderSub("stocks");
+    // 恢复上次的子Tab（购买/卖出后避免跳回股票）
+    var lastTab = state._investmentSubTab || "stocks";
+    renderSub(lastTab);
     var btns = cont.querySelectorAll(".sub-tab");
     for (var i = 0; i < btns.length; i++) {
+      // 高亮当前Tab
+      if (btns[i].dataset.stab === lastTab) btns[i].classList.add("active");
+      else btns[i].classList.remove("active");
       btns[i].addEventListener("click", function () {
         for (var j = 0; j < btns.length; j++)
           btns[j].classList.remove("active");
         this.classList.add("active");
+        state._investmentSubTab = this.dataset.stab;
         renderSub(this.dataset.stab);
       });
     }
