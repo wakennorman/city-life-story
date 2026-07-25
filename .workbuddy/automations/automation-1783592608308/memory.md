@@ -278,3 +278,12 @@
 - 联动3（新建 domain_e_linkage_r246.js IIFE→RANDOM_EVENTS，2 street+1 corporate，全||防御，[PLACEHOLDER]，id 前缀 e246_）：e246_bear_market_faces(E→B 首个消费修复后可达的 bear 分支双重复活死函数+死flag)/e246_wealth_treat_neighbors(E→D 首个消费死flag _wealthSocialBonus，守 applyAffinityChange+rel.met 铁律)/e246_networth_backbone(E→H 含公司股市值的净资产≥50000→management XP+upward)。
 - 验证：node --check 通过；build dist app.js 9428.4KB（R246 标志入 bundle）；MC 6×400d EXIT=0·0代码异常（TypeError/ReferenceError/Uncaught/Infinity grep=0；trader/corporate 存活率偏低为既有 RNG 平衡阈值非回归）。
 - 提交3笔（fix 460fc3c4 / loop-state cd363132 / 回填 pushStatus deb708da），**均 push origin main 成功**（cc3c5319..deb708da）。回填并行窗口 R243(C)/R244(B)/R245(D) recency。下轮→F（recency 238 最薄弱）。
+
+## 最近执行（2026-07-26，Round 251 域A — 已 push main + stash 清理续作）
+
+- **R251 主体（前轮已完成并 push）**: commit `6003dc92`(fix 域A A类=0诚实报告+3项联动 a251_*) + `03c594b1`(回填 pushStatus=PUSHED)，当时 HEAD=`03c594b1`==origin/main。域A 第五轮：A类0（历轮 R14/R22/R197/R242 已净尽）+ 联动3（a251_skill_neighbor_help A→D / a251_price_inflation_sense A→E / a251_ledger_year_review A→H）。loop-state=round251/A/next=C。
+- **本轮(清理续作·无新代码)**: 开轮发现并行窗口已将 R250 工作提交 `6fa3dd12`(fix [域B] R250：domain_b_linkage_r250.js/cross_system_events/moral_events/news/index.html/dist) 与 `db974396`(fix [域A] 联动增强R250：investment.js +225 财务Tab / save.js +10 / pricing.js +29 / dist / last_known_head)。原 `stash@{0}` "R251-isolate-parallel-R250" 内容已全部冗余（核心在 6fa3dd12、财务Tab 在 db974396），其唯一独有项 `r244→r249` 重命名为并行窗口已放弃的中间态（r244.js 仍存且 R246 已注册 index.html）。
+- **动作**: 安全 `git stash drop stash@{0}`（确认无独有内容损失）+ 同步 last_known_head=当前HEAD。刻意跳过还原 `domain_b_linkage_r249.js`（避免与已注册 r244.js 重复注册导致_double-fire）。
+- **并发注意**: 执行期间并行窗口活跃（HEAD 由 6fa3dd12→b8242b97→db974396 演进，并重置工作树）。经验证 财务Tab 工作(investment/save/pricing) 已被 db974396 提交保全，未因 stash drop 丢失。工作树最终仅余并行在途 `skill_tree.js`(+2)，全程未触碰。
+- **终态**: HEAD=`db974396`==origin/main，工作树干净（仅 skill_tree.js 在途）。R251 已 push，本轮无新提交/push（避免与并发并行活动冲突）。
+- **下轮**: 域C（recency 243 除A外最薄弱；loop-state round251/next=C 正确，并行 R250/B 已占 round250）。

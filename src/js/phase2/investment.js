@@ -2822,10 +2822,8 @@ function renderInvestmentHoldingPanel(area, inv, groupKeys, title, color) {
         e.stopPropagation();
         var sym = this.dataset.symbol;
         var tab = _tabName;
-        // 切换到对应子Tab
-        var parentEl = area.closest ? (area.closest("#inv-sub-area") || area.parentElement) : area.parentElement;
-        var cont = parentEl ? parentEl.closest ? parentEl.closest('[class*="investment"]') : null : null;
-        var btns = (cont || document).querySelectorAll(".sub-tab");
+        // 切换到对应子Tab（子Tab按钮在父容器中）
+        var btns = (area.parentElement || document).querySelectorAll(".sub-tab");
         var found = false;
         for (var bi = 0; bi < btns.length; bi++) {
           if (btns[bi].dataset.stab === tab) {
@@ -2836,15 +2834,20 @@ function renderInvestmentHoldingPanel(area, inv, groupKeys, title, color) {
         }
         // 滚动到对应卡片
         setTimeout(function() {
-          var card = document.getElementById("chart-" + sym);
+          var card = document.getElementById("card-" + sym);
           if (card) {
             card.scrollIntoView({ behavior: "smooth", block: "center" });
-            card.style.transition = "box-shadow 0.3s, border-color 0.3s";
-            card.style.boxShadow = "0 0 16px var(--accent)";
-            card.style.borderColor = "var(--accent)";
-            setTimeout(function() { card.style.boxShadow = ""; card.style.borderColor = ""; }, 1500);
+            card.style.transition = "background 0.5s, border-color 0.5s, box-shadow 0.5s";
+            card.style.background = "rgba(255, 215, 0, 0.25) !important";
+            card.style.borderColor = "#ffd700";
+            card.style.boxShadow = "0 0 24px rgba(255, 215, 0, 0.6)";
+            setTimeout(function() {
+              card.style.background = "";
+              card.style.borderColor = "";
+              card.style.boxShadow = "";
+            }, 2500);
           }
-        }, found ? 150 : 0);
+        }, found ? 200 : 0);
       });
     });
   }, 0);
@@ -2958,19 +2961,22 @@ function renderUnifiedHoldingsPanel(state, parent) {
         for (var i = 0; i < btns.length; i++) {
           if (btns[i].dataset.stab === tab) {
             btns[i].click();
-            // 滚动到对应卡片（如果是股票）
-            if (tab === "stocks") {
-              setTimeout(function() {
-                var card = document.getElementById("chart-" + symbol);
-                if (card) {
-                  card.scrollIntoView({ behavior: "smooth", block: "center" });
-                  card.style.transition = "box-shadow 0.3s, border-color 0.3s";
-                  card.style.boxShadow = "0 0 16px var(--accent)";
-                  card.style.borderColor = "var(--accent)";
-                  setTimeout(function() { card.style.boxShadow = ""; card.style.borderColor = ""; }, 1500);
-                }
-              }, 100);
-            }
+            // 滚动到对应卡片
+            setTimeout(function() {
+              var card = document.getElementById("card-" + symbol);
+              if (card) {
+                card.scrollIntoView({ behavior: "smooth", block: "center" });
+                card.style.transition = "background 0.5s, border-color 0.5s, box-shadow 0.5s";
+                card.style.background = "rgba(255, 215, 0, 0.25) !important";
+                card.style.borderColor = "#ffd700";
+                card.style.boxShadow = "0 0 24px rgba(255, 215, 0, 0.6)";
+                setTimeout(function() {
+                  card.style.background = "";
+                  card.style.borderColor = "";
+                  card.style.boxShadow = "";
+                }, 2500);
+              }
+            }, 200);
             break;
           }
         }
@@ -3756,13 +3762,18 @@ function renderStocks(area, inv, state, parent) {
         btn.addEventListener("click", function(e) {
           e.stopPropagation();
           var sym = this.dataset.symbol;
-          var card = document.getElementById("chart-" + sym);
+          var card = document.getElementById("card-" + sym);
           if (card) {
             card.scrollIntoView({ behavior: "smooth", block: "center" });
-            card.style.transition = "box-shadow 0.3s, border-color 0.3s";
-            card.style.boxShadow = "0 0 16px var(--accent)";
-            card.style.borderColor = "var(--accent)";
-            setTimeout(function(){ card.style.boxShadow = ""; card.style.borderColor = ""; }, 1500);
+            card.style.transition = "background 0.5s, border-color 0.5s, box-shadow 0.5s";
+            card.style.background = "rgba(255, 215, 0, 0.25) !important";
+            card.style.borderColor = "#ffd700";
+            card.style.boxShadow = "0 0 24px rgba(255, 215, 0, 0.6)";
+            setTimeout(function() {
+              card.style.background = "";
+              card.style.borderColor = "";
+              card.style.boxShadow = "";
+            }, 2500);
           } else {
             StateManager.addMessage("⚠️ 未找到 " + sym + " 的卡片，请先切换到股票Tab。", "warning");
           }
@@ -3875,6 +3886,7 @@ function renderStocks(area, inv, state, parent) {
 
     var card = document.createElement("div");
     card.className = "action-card";
+    card.id = "card-" + cid.replace("chart-", "");
     card.style.borderLeft = "3px solid " + clr;
     var sharesStr = h ? h.shares.toFixed(2) : "";
     // [优化] 技术指标：计算简单RSI信号（5日均价 vs 当前价）
@@ -4034,6 +4046,7 @@ function renderBtc(area, inv, state, parent) {
 
     var card = document.createElement("div");
     card.className = "action-card";
+    card.id = "card-" + cid.replace("chart-", "");
     card.style.borderLeft = "3px solid " + clr;
     var bq = s.basePrice > 1000 ? 0.001 : s.basePrice > 100 ? 0.1 : 10;
     var dec = s.basePrice > 1000 ? 4 : s.basePrice > 100 ? 2 : 0;
@@ -4180,6 +4193,7 @@ function renderPrecious(area, inv, state, parent) {
 
     var card = document.createElement("div");
     card.className = "action-card";
+    card.id = "card-" + cid.replace("chart-", "");
     card.style.borderLeft = "3px solid " + clr;
     var sharesStr = h ? h.shares.toFixed(2) : "";
     card.innerHTML =
@@ -4308,6 +4322,7 @@ function renderFutures(area, inv, state, parent) {
 
     var card = document.createElement("div");
     card.className = "action-card";
+    card.id = "card-" + cid.replace("chart-", "");
     card.style.borderLeft = "3px solid " + clr;
     card.innerHTML =
       '<div style="display:flex;justify-content:space-between;">' +
