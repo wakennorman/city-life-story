@@ -113,7 +113,7 @@ function doCorporateAction(actionId) {
     try {
       var _polKeys = Object.keys(OFFICE_POLITICS_EVENTS);
       if (_polKeys.length > 0) {
-        var _polType = _polKeys[Math.floor(Math.random() * _polKeys.length)];
+        var _polType = _polKeys[Random.int(0, _polKeys.length - 1)];
         triggerOfficePoliticsEvent(state, _polType);
       }
     } catch (e) {

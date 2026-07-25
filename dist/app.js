@@ -16942,7 +16942,7 @@ function registerNewsEventsToPool() {
             );
             const extra = Random.int(50, 99);
             st.resources.cash = (st.resources.cash || 0) + extra;
-            st.resources.totalEarned += extra;
+            st.resources.totalEarned = (st.resources.totalEarned || 0) + (extra || 0);
             StateManager.addMessage(
               `💪 加班加了一周，KPI+10，赚了 ¥${extra}。慢慢补回来。`,
               "info",
@@ -18064,7 +18064,7 @@ function registerNewsEventsToPool() {
             st.flags._founderOustSeen = true;
             st.flags._founderExited = true;
             st.resources.cash = (st.resources.cash || 0) + 150000;
-            st.resources.totalEarned += 150000;
+            st.resources.totalEarned = (st.resources.totalEarned || 0) + 150000;
             if (st.player && st.player.corporate) {
               (st.player.corporate || {}).dignity = Math.min(
                 100,
@@ -18323,7 +18323,7 @@ function registerNewsEventsToPool() {
             st.flags._formerCompanyCollapsed = true;
             var severance = Random.int(50000, 69999);
             st.resources.cash = (st.resources.cash || 0) + severance;
-            st.resources.totalEarned += severance;
+            st.resources.totalEarned = (st.resources.totalEarned || 0) + (severance || 0);
             st.player.mental = Math.max(0, st.player.mental - 5);
             StateManager.addMessage(
               "💀 你签了离职协议，拿了¥" +
@@ -196043,7 +196043,7 @@ function doCorporateAction(actionId) {
     try {
       var _polKeys = Object.keys(OFFICE_POLITICS_EVENTS);
       if (_polKeys.length > 0) {
-        var _polType = _polKeys[Math.floor(Math.random() * _polKeys.length)];
+        var _polType = _polKeys[Random.int(0, _polKeys.length - 1)];
         triggerOfficePoliticsEvent(state, _polType);
       }
     } catch (e) {
