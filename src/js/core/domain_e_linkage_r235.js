@@ -38,11 +38,16 @@
     var debt = (st.resources.villageDebt || 0) + (st.resources.fineDebt || 0) + (st.resources.bankDebt || 0);
     var stockVal = 0;
     // 股票市值
+    // [全系统自洽修复] 域E R246 修复:公司股持仓项无 .price 字段(stock.js:305 建仓仅
+    // {symbol,name,shares,avgPrice})→原 `&& _s.price` 恒假,公司股市值恒被漏算,净资产系统性低估。
+    // 改用权威取法 state.corporate.stockMarket[sym].price(与 stock.js:570 持仓概览同源),市场缺失回退 avgPrice。
     if (st.corporate && st.corporate.stocks) {
       for (var _si = 0; _si < st.corporate.stocks.length; _si++) {
         var _s = st.corporate.stocks[_si];
-        if (_s && _s.shares > 0 && _s.price) {
-          stockVal += _s.shares * _s.price;
+        if (_s && _s.shares > 0) {
+          var _cm = st.corporate.stockMarket && st.corporate.stockMarket[_s.symbol];
+          var _cp = (_cm && typeof _cm.price === "number" && isFinite(_cm.price)) ? _cm.price : (_s.avgPrice || 0);
+          stockVal += _s.shares * _cp;
         }
       }
     }
@@ -83,10 +88,13 @@
       }
     }
     if (_total === 0) return "stable";
+    // [全系统自洽修复] 域E R246 修复:_downPct 原在使用后(旧:88行读:89行才声明)才声明,
+    // var 提升后读取恒 undefined→`undefined>=0.7` 恒假→"bear" 分支永不可达(熊市判定死代码)。
+    // 声明前置修复;并导出 window 供联动事件消费(原函数全库零调用方=死函数,R246 事件复活)。
     var _upPct = _up / _total;
+    var _downPct = _down / _total;
     if (_upPct >= 0.7) return "bull";
     if (_downPct >= 0.7) return "bear";
-    var _downPct = _down / _total;
     return "mixed";
   }
 
@@ -336,6 +344,9 @@
     window._checkMarketVolatilityR235 = _checkMarketVolatilityR235;
     window._applyWealthQualityOfLifeR235 = _applyWealthQualityOfLifeR235;
     window._applyWealthSocialEffectR235 = _applyWealthSocialEffectR235;
+    // [全系统自洽修复] 域E R246: 导出市场趋势判定(原零调用方死函数),供 domain_e_linkage_r246.js 消费
+    window._getMarketTrendR235 = _getMarketTrendR235;
+    window._calcNetWorthR235 = _calcNetWorthR235;
   }
 
   // ============================================================
