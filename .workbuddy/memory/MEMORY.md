@@ -30,7 +30,7 @@
 - 模糊指令先 grep 确认存在；用户「无关」=停手。
 
 ## A类净尽结论（勿重复审）
-- 域A R14/R22/R197/R242/R251、域G R20/R192/R197/R199、域H R13/R21/R200、域F R19/R183/R186/R198 已净尽主隐患。
+- 域A R14/R22/R197/R242/R251/R258/R267/R277、域G R20/R192/R197/R199、域H R13/R21/R200、域F R19/R183/R186/R198 已净尽主隐患。
 - 已知误报勿修：webapp_runtime_bridge getPlayerHealth（主路径正确）；establishMentorship/takeMentee 有平行实现。
 - 既有 C类不修：items.js skillStudy 无应用器；finance.js hasStreetStall flag 无 writer。
 
@@ -38,4 +38,5 @@
 - R260 域E：stock.js renderStockCard 双除0守卫 + e260_*（消费 _bearMarketWitness/_consecutiveWins）。
 - R271 域C（代码文件 domain_c_linkage_r269.js，R269/R270 编号被并行占为域E/域F）：修 skill_synergy.js getActiveSynergiesCount 字段错链（读 activeSynergies/activeThemes 从未写入，真实键 dual/triple/theme→技能Tab连携数恒0）+ c269_*（C→F消费修复计数/C→E首消费死flag _investReviewHabit/C→H复合技能变现）。
 - 教训：CLAUDE.md 是 CRLF——脚本改写须保留原换行符，否则整文件 diff；并行窗口会 add -A 扫走本轮源码并自行编号，账本轮次以 git log 实况为准重算。
+- R277 域A（第二轮第十一次）：loop-state 曾严重滞后（标R271/next=G），并行已推进 R272-R276→据 git log 重算 recency 取 A(最新R267)为最薄弱→R277。A类=0 诚实报告（死字段黑名单全库0命中）+ a277_*（A→C识货砍价/A→D街坊团购守rel.met/A→H成本控制报告）。构建9670.3KB。recency 基准(账本R278后·R277编号被并行占为域F)：A=278/B=274/C=272/D=275/E=276/F=277/G=271/H=273 → 下轮 G(最薄弱)。
 - recency 基准(R271 后)：A=267/B=266/C=271/D=268/E=269/F=270/G=264/H=265 → 下轮 G。
