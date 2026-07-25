@@ -1109,7 +1109,12 @@ function initInvestment(state) {
   var initialized = false;
   for (var i = 0; i < INV_STOCKS.length; i++) {
     var s = INV_STOCKS[i];
-    if (!inv.stockMarket[s.symbol]) {
+    // 同时修复旧存档中价格异常过低（如旧版SHIB basePrice 0.00002→0.01）的数据
+    var existing = inv.stockMarket[s.symbol];
+    if (!existing || (existing.price <= 0.01 && s.basePrice > 1)) {
+      if (existing) {
+        delete inv.stockMarket[s.symbol];
+      }
       initialized = true;
       var mPrice = s.basePrice * Random.float(0.85, 1.15);
       var history = [];
@@ -3234,10 +3239,7 @@ function renderInvestmentTab(state, parent) {
     parent.innerHTML = "<p>投资系统初始化中...</p>";
     return;
   }
-  if (
-    Object.keys(inv.stockMarket).length === 0 &&
-    typeof initInvestment === "function"
-  )
+  if (typeof initInvestment === "function")
     initInvestment(state);
 
   var assetSnapshot = getInvestmentAssetSnapshot(state);
@@ -3266,7 +3268,6 @@ function renderInvestmentTab(state, parent) {
     summaryCard("房产", assetSnapshot.groups.properties) +
     summaryCard("汽车", assetSnapshot.groups.cars) +
     "</div>" +
-    renderUnifiedHoldingsPanel(state, cont) +
     renderAssetAllocationPanel(assetSnapshot) +
     renderDrawdownIndicator(state) +
     renderNewsInvestmentDrivers(state) +
@@ -3289,6 +3290,9 @@ function renderInvestmentTab(state, parent) {
     '</div><div id="inv-sub-area"></div>';
 
   parent.appendChild(cont);
+
+  // 总持仓面板（单独调用，不参与字符串拼接）
+  renderUnifiedHoldingsPanel(state, cont);
 
   var renderSub = function (stab) {
     var area = document.getElementById("inv-sub-area");
