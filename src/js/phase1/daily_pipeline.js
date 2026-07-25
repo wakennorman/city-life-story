@@ -1045,6 +1045,26 @@ const DAILY_PIPELINE = [
     },
   },
 
+  // [R238 域F联动增强1] F→B 事件结果可视化（消息中的数值自动着色+图标）
+  {
+    name: "message_visual_tick",
+    fn: function (state) {
+      if (typeof _applyMessageVisualEnhancementR238 === "function") {
+        _applyMessageVisualEnhancementR238(state);
+      }
+    },
+  },
+
+  // [R238 域F联动增强2] F→G 状态预警系统（需求/健康/现金危险阈值检测）
+  {
+    name: "status_alert_tick",
+    fn: function (state) {
+      if (typeof _updateStatusAlertsR238 === "function") {
+        _updateStatusAlertsR238(state);
+      }
+    },
+  },
+
   // === v3.24: 连续工作 Streak 检查 + 里程碑奖励 ===
   {
     name: "work_streak_check",
@@ -1589,6 +1609,10 @@ const DAILY_PIPELINE = [
       // [全系统自洽修复] 域D A类#1: npcRelationshipsTick 不存在，修正为 tickNpcRelationships
       if (typeof tickNpcRelationships === "function") {
         tickNpcRelationships(state);
+      }
+      // [R238 域F联动增强3] F→D NPC拜访提示（可拜访/即将衰减提醒）
+      if (typeof _updateNpcVisitRemindersR238 === "function") {
+        _updateNpcVisitRemindersR238(state);
       }
     },
   },
