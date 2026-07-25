@@ -41,6 +41,11 @@
 - **R201 脱钩修复**：stock.js OIL「黑金能源」`industry` 合法值须在 **WORLD_SECTORS**(科技/消费/金融/房地产/医药/**新能源**)内——原写 `"能源"` 不在表→getSectorHeat/新闻板块匹配对 OIL 恒返回中性、股价脱钩,R201 改 `"新能源"`。写股票 industry 前务必核 WORLD_SECTORS。
 - **R201 联动**：domain_e_linkage_r201.js(1 street+2 corporate,注册于 index.html r200 之后):econ_r201_drawdown_reflect(E→G·首次叙事消费本轮经济焦虑回撤机制)/econ_r201_annual_ledger(E→A·首个反思式消费 `_totalInvestmentProfit`·盈亏两态)/econ_r201_capital_backbone(E→H·_totalInvestmentProfit>0+在职→management XP+cash)。
 
+## 域A 数据/数值平衡
+- 三证书 cooking_cert/repair_cert/sales_cert 的 effects `cookingXpBonus/repairXpBonus/salesXpBonus/chefJobIncomeBonus/repairJobIncomeBonus/salesJobIncomeBonus` 曾全库零消费者(R242 修)：main.js 发证循环累积 `state.flags._certSkillXpBonus`(按 skill 键取最高)→addSkillXp 接证书 XP 乘区；`state.flags._certJobIncomeBonus`(按 job.effects 主技能匹配取最高)→`getCertJobIncomeMultiplier(job,state)` 接工资链(estimateJobPay/estimateJobPayRange/doStreetJob 实发三处)。
+- doStreetJob 旧有三处 `addSkillXp("agility"/"physique"/"intelligence")` 是非真实技能键(`state.skills` 仅 cooking/repair/coding/.../social)→静默丢弃；agility/physique/intelligence 是 `state.player` 属性，已由「状态经验转化」块承接(R242 移除死调用)。
+- 证书健康/心智/患病风险/疲劳效果键由 R197 接(healthBonus→status.health / mentalBonus→player.mental / illnessRiskReduction→_illnessRiskReduction / fatigueReduction→_certFatigueReduction)，已记录于 域E 段之上。
+
 ## 域F/G/H 要点
 - UI 安全区：#app 100dvh / viewport-fit=cover / tab-bar+mobile-hud safe-area padding，勿回退。
 - critical.js 延期惩罚阶梯、startup_crisis 危机链均已接线复活（R20/R21）；events_corp `.exp`→`.xp`（全库统一 .xp）。
