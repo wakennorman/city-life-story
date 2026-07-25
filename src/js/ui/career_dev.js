@@ -5568,7 +5568,7 @@ if (typeof document !== "undefined") {
           // 徒弟偶尔会带来收入
           if (typeof Random !== "undefined" && Random.chance(0.3)) {
             var apprenticeGift = Random.int(100, 500);
-            if (st.resources) st.resources.cash += apprenticeGift;
+            if (st.resources) st.resources.cash = (st.resources.cash || 0) + apprenticeGift;
             StateManager.addMessage(
               "📚 你花了半天时间给他讲解了要点。一周后，他寄来了¥" +
                 apprenticeGift +

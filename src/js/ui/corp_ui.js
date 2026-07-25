@@ -338,7 +338,7 @@ function downgradeToStreet(state, reason) {
   const severance = rankData.baseSalary * 3 * (1 + Random.int(0, 2));
   // [全系统自洽修复] 域H A类修复: state.resources 守卫
   if (!state.resources) state.resources = { cash: 0, bankBalance: 0, totalEarned: 0 };
-  state.resources.cash += severance;
+  state.resources.cash = (state.resources.cash || 0) + severance;
 
   // 保留职场期间累积的投资
   // 重置职场状态

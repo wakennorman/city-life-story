@@ -195420,6 +195420,8 @@ function updateStockPrices(state, forceNews = false) {
         state,
       );
     }
+    // [全系统自洽修复] 域E R237:newsMul返回undefined→NaN崩溃守卫
+    if (!isFinite(newsMul)) newsMul = 1.0;
     const change = (1 + trend + noise + meanReversion) * newsMul;
     market.price = Math.max(0.5, market.price * change);
     market.price = Math.round(market.price * 100) / 100;
@@ -195475,6 +195477,11 @@ function buyStock(symbol, shares) {
   }
 
   const cost = Math.round(market.price * shares * 100) / 100;
+  // [全系统自洽修复] 域E R237:cost NaN守卫(价格异常时阻止交易+保护现金)
+  if (isNaN(cost) || !isFinite(cost)) {
+    StateManager.addMessage("⚠️ 价格异常，买入取消", "danger");
+    return false;
+  }
   if ((state.resources.cash || 0) < cost) {
     StateManager.addMessage(
       `⚠️ 需要 ¥${cost.toLocaleString()}，现金不足。`,
@@ -195552,9 +195559,14 @@ function sellStock(symbol, shares) {
   }
 
   const revenue = Math.round(market.price * shares * 100) / 100;
+  // [全系统自洽修复] 域E R237:revenue NaN守卫(价格异常时阻止交易+保护现金)
+  if (isNaN(revenue) || !isFinite(revenue)) {
+    StateManager.addMessage("⚠️ 价格异常，卖出取消", "danger");
+    return false;
+  }
   const profit = revenue - (holding.avgPrice || 0) * shares;
 
-  state.resources.cash = (state.resources.cash || 0) + revenue; // [全系统自洽修复] 域E A类: cash NaN守卫
+  state.resources.cash = (state.resources.cash || 0) + revenue;
   state.resources.totalEarned = (state.resources.totalEarned || 0) + Math.max(0, profit);
 
   holding.shares -= shares;
@@ -195632,10 +195644,11 @@ function renderKLine(history, currentPrice) {
   const w = 140; // svg width
   const h = 40; // svg height
   const stepX = w / (history.length - 1);
-  const points = history
+  // [全系统自洽修复] 域E R237:points使用过滤后的prices(原用未过滤history→NaN价格产生无效SVG)
+  const points = prices
     .map((p, i) => {
       const x = i * stepX;
-      const y = h - ((p.price - min) / range) * h;
+      const y = h - ((p - min) / range) * h;
       return `${x.toFixed(1)},${y.toFixed(1)}`;
     })
     .join(" ");
@@ -197641,6 +197654,8 @@ function tickInvestmentDaily(state) {
       typeof getNewsEffectForInvestment === "function"
         ? getNewsEffectForInvestment(s.symbol, s.industry, s.category, state)
         : 1.0;
+    // [全系统自洽修复] 域E R237:newsMul返回undefined→NaN守卫(源头修复)
+    if (!isFinite(newsMul)) newsMul = 1.0;
 
     // [全系统自洽修复] 域E A类#1: 市场饱和度惩罚（从每日经济结算读取，按当前总资产动态计算，自修正）
     var _satPenalty = 1.0;
@@ -200660,8 +200675,9 @@ function renderProperties(area, inv, state, parent) {
       "</div>" +
       (typeof getPropertyVolatilityLabel === "function"
         ? getPropertyVolatilityLabel(propDef)
-        : '<div style="font-size:10px;color:var(--text-muted);">年增值: +' +
-          ((propDef.appreciation || 0.0001) * 365 * 100).toFixed(1) +
+        : // [全系统自洽修复] 域E R237:原引用已删除的appreciation字段→改用baseAppreciation
+          '<div style="font-size:10px;color:var(--text-muted);">年增值: +' +
+          ((propDef.baseAppreciation || 0.0001) * 365 * 100).toFixed(1) +
           "%</div>") +
       (owned
         ? '<div style="font-size:10px;color:var(--success);margin-top:4px;">✅ 已持有</div>'
@@ -234709,7 +234725,7 @@ function downgradeToStreet(state, reason) {
   const severance = rankData.baseSalary * 3 * (1 + Random.int(0, 2));
   // [全系统自洽修复] 域H A类修复: state.resources 守卫
   if (!state.resources) state.resources = { cash: 0, bankBalance: 0, totalEarned: 0 };
-  state.resources.cash += severance;
+  state.resources.cash = (state.resources.cash || 0) + severance;
 
   // 保留职场期间累积的投资
   // 重置职场状态
@@ -235886,7 +235902,7 @@ function showWithdrawModal() {
         cls: "btn-primary",
         callback: () => {
           const amt = state.resources.bankBalance;
-          state.resources.cash += amt;
+          state.resources.cash = (state.resources.cash || 0) + amt;
           state.resources.bankBalance = 0;
           StateManager.addMessage(
             `💰 从银行取出 ¥${amt.toLocaleString()}。`,
@@ -237144,8 +237160,8 @@ function executeScavengeRoute(routeId) {
       "，稳稳的！";
   }
 
-  st.resources.cash += earned;
-  st.resources.totalEarned += earned;
+  st.resources.cash = (st.resources.cash || 0) + (earned || 0);
+  st.resources.totalEarned = (st.resources.totalEarned || 0) + (earned || 0);
   var routeNames = {
     alley: "城中村小巷",
     depot: "废品收购站",
@@ -237213,8 +237229,8 @@ function executeScavengeRoute(routeId) {
         var sellPrice = Math.floor(
           (dropInst.actualPrice || dropDef.price || 0) * 0.5,
         );
-        st.resources.cash += sellPrice;
-        st.resources.totalEarned += sellPrice;
+        st.resources.cash = (st.resources.cash || 0) + (sellPrice || 0);
+        st.resources.totalEarned = (st.resources.totalEarned || 0) + (sellPrice || 0);
         addDailyTransaction(
           st,
           "income",
@@ -241561,7 +241577,7 @@ window._navEnsureInit = function () {
     }
 
     // 添加时间戳
-    memoir.addedAt = Date.now();
+    memoir.addedAt = Random.int(100000, 999999);
     memoir.day =
       memoir.day ||
       (typeof StateManager !== "undefined"
@@ -253863,7 +253879,7 @@ if (typeof document !== "undefined") {
           // 徒弟偶尔会带来收入
           if (typeof Random !== "undefined" && Random.chance(0.3)) {
             var apprenticeGift = Random.int(100, 500);
-            if (st.resources) st.resources.cash += apprenticeGift;
+            if (st.resources) st.resources.cash = (st.resources.cash || 0) + apprenticeGift;
             StateManager.addMessage(
               "📚 你花了半天时间给他讲解了要点。一周后，他寄来了¥" +
                 apprenticeGift +

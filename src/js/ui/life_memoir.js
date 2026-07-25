@@ -111,7 +111,7 @@
     }
 
     // 添加时间戳
-    memoir.addedAt = Date.now();
+    memoir.addedAt = Random.int(100000, 999999);
     memoir.day =
       memoir.day ||
       (typeof StateManager !== "undefined"

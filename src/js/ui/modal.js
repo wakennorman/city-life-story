@@ -434,7 +434,7 @@ function showWithdrawModal() {
         cls: "btn-primary",
         callback: () => {
           const amt = state.resources.bankBalance;
-          state.resources.cash += amt;
+          state.resources.cash = (state.resources.cash || 0) + amt;
           state.resources.bankBalance = 0;
           StateManager.addMessage(
             `💰 从银行取出 ¥${amt.toLocaleString()}。`,
@@ -1692,8 +1692,8 @@ function executeScavengeRoute(routeId) {
       "，稳稳的！";
   }
 
-  st.resources.cash += earned;
-  st.resources.totalEarned += earned;
+  st.resources.cash = (st.resources.cash || 0) + (earned || 0);
+  st.resources.totalEarned = (st.resources.totalEarned || 0) + (earned || 0);
   var routeNames = {
     alley: "城中村小巷",
     depot: "废品收购站",
@@ -1761,8 +1761,8 @@ function executeScavengeRoute(routeId) {
         var sellPrice = Math.floor(
           (dropInst.actualPrice || dropDef.price || 0) * 0.5,
         );
-        st.resources.cash += sellPrice;
-        st.resources.totalEarned += sellPrice;
+        st.resources.cash = (st.resources.cash || 0) + (sellPrice || 0);
+        st.resources.totalEarned = (st.resources.totalEarned || 0) + (sellPrice || 0);
         addDailyTransaction(
           st,
           "income",
