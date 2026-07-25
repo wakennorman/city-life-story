@@ -1917,6 +1917,15 @@ function loadExistingGame(slot) {
       return;
     }
     StateManager.importState(saveData);
+    // [全系统自洽修复] 域G R240 A类修复: 剧本标记传递（旧存档/早期存档可能缺失剧本flag，导致getNextGoals等场景分支静默失效）
+    if (saveData.flags && saveData.flags._scenarioId) {
+      var _st = StateManager.getState();
+      if (!_st.flags._isScenarioMode) _st.flags._isScenarioMode = true;
+      if (!_st.flags._scenarioId) _st.flags._scenarioId = saveData.flags._scenarioId;
+      if (!_st.flags._currentScenario) _st.flags._currentScenario = saveData.flags._currentScenario || saveData.flags._scenarioId;
+      if (!_st.flags._scenarioName) _st.flags._scenarioName = saveData.flags._scenarioName || "";
+      if (!_st.flags._scenarioTags) _st.flags._scenarioTags = saveData.flags._scenarioTags || [];
+    }
     // 显示读档回忆文案（P1 - 存档快照）— 必须在 importState 之后，否则 StateManager 未初始化
     if (saveData._snapshot && typeof getLoadMemoryText === "function") {
       var memoryText = getLoadMemoryText(saveData._snapshot);
@@ -4570,6 +4579,10 @@ function doStreetJob(job) {
         (state.flags._newbieBonusTotal || 0) + newbieBonus;
     }
   }
+  // [全系统自洽修复] 域G R240 A类修复: employment 守卫前置（原守卫在4616行，晚于4573/4580两处解引用，旧存档崩溃）
+  if (!state.employment) {
+    state.employment = { currentJob: null, jobStartDay: 0, completedShifts: {} };
+  }
   state.employment.completedShifts[job.id] =
     (state.employment.completedShifts[job.id] || 0) + 1;
   state.flags._completedShiftCount =
@@ -4611,11 +4624,7 @@ function doStreetJob(job) {
   if (titleBonus === 2) pay = Math.floor(pay * 1.08);
   else if (titleBonus === 3) pay = Math.floor(pay * 1.15);
 
-  // 应用效果
-  // [全系统自洽修复] 域G A类修复: employment 无守卫（旧存档缺失导致崩溃）
-  if (!state.employment) {
-    state.employment = { currentJob: null, jobStartDay: 0, completedShifts: {} };
-  }
+  // 应用效果（employment 守卫已前置到函数顶部，见 R240 A类修复）
   if (job.effects) {
     // [全系统自洽修复] 域C 联动增强1: 技能等级降低同领域工作疲劳(熟能生巧)
     var fatigueReduction = 0;
@@ -5216,14 +5225,13 @@ function consumeAP(cost) {
   if (typeof getApCostMultiplier === "function") {
     actualCost = Math.round(cost * getApCostMultiplier(state));
   }
-  // [全系统自洽修复] 域G B类修复: 防止NaN传播导致游戏软锁（AP=NaN → endDay永不触发）
+  // [全系统自洽修复] 域G R240 A类修复: 防止NaN传播导致游戏软锁（AP=NaN → endDay永不触发）
   if (isNaN(actualCost) || !isFinite(actualCost) || actualCost < 0) {
     actualCost = cost;
   }
-  state.player.actionPoints = Math.max(
-    0,
-    state.player.actionPoints - actualCost,
-  );
+  // [全系统自洽修复] 域G R240 A类修复: actionPoints 自身也需守卫（旧存档/损坏状态→NaN→永久软锁）
+  var _ap = (typeof state.player.actionPoints === "number" && isFinite(state.player.actionPoints)) ? state.player.actionPoints : 0;
+  state.player.actionPoints = Math.max(0, _ap - actualCost);
 
   // 更新显示用的时段
   // [全系统自洽修复] 域G A类#3: maxActionPoints 可能为0/NaN（旧存档/数据异常），兜底防除零

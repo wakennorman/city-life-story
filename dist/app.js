@@ -180729,6 +180729,8 @@ if (typeof window !== "undefined") {
 
 /** 每日需求衰减 (v3.2 蒙特卡洛平衡：饥饱衰减从18→13，防止开局饿死) */
 function applyNeedsDecay(state) {
+  // [全系统自洽修复] 域G R240 A类修复: state.needs 守卫（旧存档缺失→TypeError崩溃管线）
+  if (!state.needs) state.needs = { hunger: 50, fatigue: 30, hygiene: 60, happiness: 50 };
   const n = state.needs;
   // v3.1: 接入难度乘数 — 休闲档衰减慢，困难/地狱档衰减快
   var decayMul =
@@ -180765,6 +180767,9 @@ function applyNeedsDecay(state) {
 
 /** 检查需求阈值并施加惩罚 (v3.2 蒙特卡洛平衡：降低阈值惩罚，前30天减半) */
 function checkNeedsThresholds(state) {
+  // [全系统自洽修复] 域G R240 A类修复: state.needs + state.status 守卫（旧存档缺失→崩溃/NaN）
+  if (!state.needs) state.needs = { hunger: 50, fatigue: 30, hygiene: 60, happiness: 50 };
+  if (!state.status) state.status = { health: 80, illnesses: [] };
   const n = state.needs;
   const msgs = [];
   // v3.2 新手保护：前30天需求惩罚减半
@@ -180776,6 +180781,8 @@ function checkNeedsThresholds(state) {
       : 1.0;
   const combinedMul = dayMul * diffMul;
 
+  // [全系统自洽修复] 域G R240 A类修复: health 数值守卫（undefined/NaN → Math.max(0,NaN)=NaN 永久损坏）
+  if (typeof state.status.health !== "number" || !isFinite(state.status.health)) state.status.health = 80;
   if (n.hunger < 10) {
     const dmg = Math.round(2 * combinedMul);
     state.status.health = Math.max(0, state.status.health - dmg);
@@ -180810,10 +180817,14 @@ function checkNeedsThresholds(state) {
 
 /** 伤病每日结算 — 已迁移到 illness.js，遍历 status.illnesses 数组 */
 function tickHealthStatus(state) {
+  // [全系统自洽修复] 域G R240 A类修复: state.status 守卫（旧存档缺失→TypeError崩溃管线）
+  if (!state.status) state.status = { health: 80, illnesses: [] };
   // 新疾病系统：每日 tick illness（自然康复+症状结算+慢性病月费）
   if (typeof tickIllnessDecay === "function") {
     tickIllnessDecay(state);
   }
+  // [全系统自洽修复] 域G R240 A类修复: health 数值守卫（NaN/undefined → 恢复/损伤计算全坏）
+  if (typeof state.status.health !== "number" || !isFinite(state.status.health)) state.status.health = 80;
   var st = state.status;
   // 兼容：旧的 injured 字段（受伤还是单独保留，工作中可能受伤）
   if (st.injured) {
@@ -180842,6 +180853,10 @@ function tickHealthStatus(state) {
 
 /** 判定情绪状态（整合有效属性，状态互联系统） */
 function determineEmotionalState(state) {
+  // [全系统自洽修复] 域G R240 A类修复: state.needs + state.status 守卫（缺失→score=NaN→elated错误分支→1.5×收入bug）
+  if (!state.needs) state.needs = { hunger: 50, fatigue: 30, hygiene: 60, happiness: 50 };
+  if (!state.status) state.status = { health: 80, illnesses: [] };
+  if (typeof state.status.health !== "number" || !isFinite(state.status.health)) state.status.health = 80;
   // 使用有效属性（受状态交叉影响后的真实值）
   var effective =
     typeof getEffectiveStats === "function"
@@ -181730,6 +181745,10 @@ function recordIllnessCure(state, illnessId) {
 
 /** 每日：自然恢复 / 慢性病按月扣费 / 累计症状副作用 */
 function tickIllnessDecay(state) {
+  // [全系统自洽修复] 域G R240 A类修复: state.status 守卫（旧存档缺失→TypeError崩溃管线）
+  if (!state.status) state.status = { health: 80, illnesses: [] };
+  if (!state.needs) state.needs = { hunger: 50, fatigue: 30, hygiene: 60, happiness: 50 };
+  if (typeof state.status.health !== "number" || !isFinite(state.status.health)) state.status.health = 80;
   if (!state.status.illnesses) state.status.illnesses = [];
   var remaining = [];
   for (var i = 0; i < state.status.illnesses.length; i++) {
@@ -181745,7 +181764,8 @@ function tickIllnessDecay(state) {
     }
 
     // 已治疗：加速康复
-    var daysSince = state.player.day - inst.contractedDay;
+    // [全系统自洽修复] 域G R240 A类修复: contractedDay 缺失→daysSince=NaN→永不愈合（旧存档兼容）
+    var daysSince = state.player.day - (inst.contractedDay || state.player.day);
     var minDays =
       ill.naturalCureDays && ill.naturalCureDays[0]
         ? ill.naturalCureDays[0]
@@ -181912,6 +181932,8 @@ function _tickChronic(state, inst, ill) {
 /** 累计所有疾病症状对 needs/health 的每日影响（applyStatusInteractions 调用） */
 function getIllnessNeedsImpact(state) {
   var impact = { hunger: 0, fatigue: 0, hygiene: 0, happiness: 0, health: 0 };
+  // [全系统自洽修复] 域G R240 A类修复: state.status 守卫（旧存档缺失→TypeError）
+  if (!state.status) return impact;
   if (!state.status.illnesses) return impact;
   for (var i = 0; i < state.status.illnesses.length; i++) {
     var ill = ILLNESSES[state.status.illnesses[i].id];
@@ -181935,6 +181957,8 @@ function getIllnessAttrDebuffs(state) {
     apMult: 0,
     fatigueRecoveryMult: 1.0,
   };
+  // [全系统自洽修复] 域G R240 A类修复: state.status 守卫（旧存档缺失→TypeError）
+  if (!state.status) return d;
   if (!state.status.illnesses) return d;
   for (var i = 0; i < state.status.illnesses.length; i++) {
     var ill = ILLNESSES[state.status.illnesses[i].id];
@@ -182199,7 +182223,8 @@ function checkEvolutionRisk(state) {
         if (hk === "age") actual = state.player.age || 20;
 
         maxThreshold = Math.max(maxThreshold, threshold);
-        var ratio = actual / threshold;
+        // [全系统自洽修复] 域G R240 A类修复: threshold=0 除零→Infinity→误报高风险（守卫归0）
+        var ratio = threshold > 0 ? actual / threshold : 0;
 
         if (ratio >= 0.7) riskLevel = Math.max(riskLevel, 3);
         else if (ratio >= 0.5) riskLevel = Math.max(riskLevel, 2);
@@ -188162,6 +188187,9 @@ const DAILY_PIPELINE = [
   {
     name: "sleep_recovery",
     fn: function (state) {
+      // [全系统自洽修复] 域G R240 A类修复: state.needs + state.housing 守卫（旧存档缺失→TypeError崩溃管线）
+      if (!state.needs) state.needs = { hunger: 50, fatigue: 30, hygiene: 60, happiness: 50 };
+      if (!state.housing) state.housing = { tier: 0, storageCapacity: 0, storageRented: false };
       var house = getCurrentHousing(state);
       var recovery = house.fatigueRecovery;
       var penalty = state._fatigueRecoveryPenalty || 1.0;
@@ -188283,8 +188311,10 @@ const DAILY_PIPELINE = [
             "danger",
           );
           state.housing.tier = 0;
-          state.inventory.capacity =
-            20 + (state.housing ? state.housing.storageCapacity || 0 : 0);
+          // [全系统自洽修复] 域G R240 A类修复: 驱逐时重置 storageCapacity（原逻辑保留旧 tier 的 storageCapacity，tier=0 却带 500 容量=数据不一致）
+          state.housing.storageCapacity = 0;
+          state.housing.storageRented = false;
+          state.inventory.capacity = 20;
         }
       }
       if (
@@ -258959,6 +258989,15 @@ function loadExistingGame(slot) {
       return;
     }
     StateManager.importState(saveData);
+    // [全系统自洽修复] 域G R240 A类修复: 剧本标记传递（旧存档/早期存档可能缺失剧本flag，导致getNextGoals等场景分支静默失效）
+    if (saveData.flags && saveData.flags._scenarioId) {
+      var _st = StateManager.getState();
+      if (!_st.flags._isScenarioMode) _st.flags._isScenarioMode = true;
+      if (!_st.flags._scenarioId) _st.flags._scenarioId = saveData.flags._scenarioId;
+      if (!_st.flags._currentScenario) _st.flags._currentScenario = saveData.flags._currentScenario || saveData.flags._scenarioId;
+      if (!_st.flags._scenarioName) _st.flags._scenarioName = saveData.flags._scenarioName || "";
+      if (!_st.flags._scenarioTags) _st.flags._scenarioTags = saveData.flags._scenarioTags || [];
+    }
     // 显示读档回忆文案（P1 - 存档快照）— 必须在 importState 之后，否则 StateManager 未初始化
     if (saveData._snapshot && typeof getLoadMemoryText === "function") {
       var memoryText = getLoadMemoryText(saveData._snapshot);
@@ -261612,6 +261651,10 @@ function doStreetJob(job) {
         (state.flags._newbieBonusTotal || 0) + newbieBonus;
     }
   }
+  // [全系统自洽修复] 域G R240 A类修复: employment 守卫前置（原守卫在4616行，晚于4573/4580两处解引用，旧存档崩溃）
+  if (!state.employment) {
+    state.employment = { currentJob: null, jobStartDay: 0, completedShifts: {} };
+  }
   state.employment.completedShifts[job.id] =
     (state.employment.completedShifts[job.id] || 0) + 1;
   state.flags._completedShiftCount =
@@ -261653,11 +261696,7 @@ function doStreetJob(job) {
   if (titleBonus === 2) pay = Math.floor(pay * 1.08);
   else if (titleBonus === 3) pay = Math.floor(pay * 1.15);
 
-  // 应用效果
-  // [全系统自洽修复] 域G A类修复: employment 无守卫（旧存档缺失导致崩溃）
-  if (!state.employment) {
-    state.employment = { currentJob: null, jobStartDay: 0, completedShifts: {} };
-  }
+  // 应用效果（employment 守卫已前置到函数顶部，见 R240 A类修复）
   if (job.effects) {
     // [全系统自洽修复] 域C 联动增强1: 技能等级降低同领域工作疲劳(熟能生巧)
     var fatigueReduction = 0;
@@ -262258,14 +262297,13 @@ function consumeAP(cost) {
   if (typeof getApCostMultiplier === "function") {
     actualCost = Math.round(cost * getApCostMultiplier(state));
   }
-  // [全系统自洽修复] 域G B类修复: 防止NaN传播导致游戏软锁（AP=NaN → endDay永不触发）
+  // [全系统自洽修复] 域G R240 A类修复: 防止NaN传播导致游戏软锁（AP=NaN → endDay永不触发）
   if (isNaN(actualCost) || !isFinite(actualCost) || actualCost < 0) {
     actualCost = cost;
   }
-  state.player.actionPoints = Math.max(
-    0,
-    state.player.actionPoints - actualCost,
-  );
+  // [全系统自洽修复] 域G R240 A类修复: actionPoints 自身也需守卫（旧存档/损坏状态→NaN→永久软锁）
+  var _ap = (typeof state.player.actionPoints === "number" && isFinite(state.player.actionPoints)) ? state.player.actionPoints : 0;
+  state.player.actionPoints = Math.max(0, _ap - actualCost);
 
   // 更新显示用的时段
   // [全系统自洽修复] 域G A类#3: maxActionPoints 可能为0/NaN（旧存档/数据异常），兜底防除零

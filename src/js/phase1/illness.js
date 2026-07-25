@@ -258,6 +258,10 @@ function recordIllnessCure(state, illnessId) {
 
 /** 每日：自然恢复 / 慢性病按月扣费 / 累计症状副作用 */
 function tickIllnessDecay(state) {
+  // [全系统自洽修复] 域G R240 A类修复: state.status 守卫（旧存档缺失→TypeError崩溃管线）
+  if (!state.status) state.status = { health: 80, illnesses: [] };
+  if (!state.needs) state.needs = { hunger: 50, fatigue: 30, hygiene: 60, happiness: 50 };
+  if (typeof state.status.health !== "number" || !isFinite(state.status.health)) state.status.health = 80;
   if (!state.status.illnesses) state.status.illnesses = [];
   var remaining = [];
   for (var i = 0; i < state.status.illnesses.length; i++) {
@@ -273,7 +277,8 @@ function tickIllnessDecay(state) {
     }
 
     // 已治疗：加速康复
-    var daysSince = state.player.day - inst.contractedDay;
+    // [全系统自洽修复] 域G R240 A类修复: contractedDay 缺失→daysSince=NaN→永不愈合（旧存档兼容）
+    var daysSince = state.player.day - (inst.contractedDay || state.player.day);
     var minDays =
       ill.naturalCureDays && ill.naturalCureDays[0]
         ? ill.naturalCureDays[0]
@@ -440,6 +445,8 @@ function _tickChronic(state, inst, ill) {
 /** 累计所有疾病症状对 needs/health 的每日影响（applyStatusInteractions 调用） */
 function getIllnessNeedsImpact(state) {
   var impact = { hunger: 0, fatigue: 0, hygiene: 0, happiness: 0, health: 0 };
+  // [全系统自洽修复] 域G R240 A类修复: state.status 守卫（旧存档缺失→TypeError）
+  if (!state.status) return impact;
   if (!state.status.illnesses) return impact;
   for (var i = 0; i < state.status.illnesses.length; i++) {
     var ill = ILLNESSES[state.status.illnesses[i].id];
@@ -463,6 +470,8 @@ function getIllnessAttrDebuffs(state) {
     apMult: 0,
     fatigueRecoveryMult: 1.0,
   };
+  // [全系统自洽修复] 域G R240 A类修复: state.status 守卫（旧存档缺失→TypeError）
+  if (!state.status) return d;
   if (!state.status.illnesses) return d;
   for (var i = 0; i < state.status.illnesses.length; i++) {
     var ill = ILLNESSES[state.status.illnesses[i].id];
@@ -727,7 +736,8 @@ function checkEvolutionRisk(state) {
         if (hk === "age") actual = state.player.age || 20;
 
         maxThreshold = Math.max(maxThreshold, threshold);
-        var ratio = actual / threshold;
+        // [全系统自洽修复] 域G R240 A类修复: threshold=0 除零→Infinity→误报高风险（守卫归0）
+        var ratio = threshold > 0 ? actual / threshold : 0;
 
         if (ratio >= 0.7) riskLevel = Math.max(riskLevel, 3);
         else if (ratio >= 0.5) riskLevel = Math.max(riskLevel, 2);

@@ -176,6 +176,9 @@ const DAILY_PIPELINE = [
   {
     name: "sleep_recovery",
     fn: function (state) {
+      // [全系统自洽修复] 域G R240 A类修复: state.needs + state.housing 守卫（旧存档缺失→TypeError崩溃管线）
+      if (!state.needs) state.needs = { hunger: 50, fatigue: 30, hygiene: 60, happiness: 50 };
+      if (!state.housing) state.housing = { tier: 0, storageCapacity: 0, storageRented: false };
       var house = getCurrentHousing(state);
       var recovery = house.fatigueRecovery;
       var penalty = state._fatigueRecoveryPenalty || 1.0;
@@ -297,8 +300,10 @@ const DAILY_PIPELINE = [
             "danger",
           );
           state.housing.tier = 0;
-          state.inventory.capacity =
-            20 + (state.housing ? state.housing.storageCapacity || 0 : 0);
+          // [全系统自洽修复] 域G R240 A类修复: 驱逐时重置 storageCapacity（原逻辑保留旧 tier 的 storageCapacity，tier=0 却带 500 容量=数据不一致）
+          state.housing.storageCapacity = 0;
+          state.housing.storageRented = false;
+          state.inventory.capacity = 20;
         }
       }
       if (

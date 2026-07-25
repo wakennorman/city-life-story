@@ -4,6 +4,8 @@
 
 /** 每日需求衰减 (v3.2 蒙特卡洛平衡：饥饱衰减从18→13，防止开局饿死) */
 function applyNeedsDecay(state) {
+  // [全系统自洽修复] 域G R240 A类修复: state.needs 守卫（旧存档缺失→TypeError崩溃管线）
+  if (!state.needs) state.needs = { hunger: 50, fatigue: 30, hygiene: 60, happiness: 50 };
   const n = state.needs;
   // v3.1: 接入难度乘数 — 休闲档衰减慢，困难/地狱档衰减快
   var decayMul =
@@ -40,6 +42,9 @@ function applyNeedsDecay(state) {
 
 /** 检查需求阈值并施加惩罚 (v3.2 蒙特卡洛平衡：降低阈值惩罚，前30天减半) */
 function checkNeedsThresholds(state) {
+  // [全系统自洽修复] 域G R240 A类修复: state.needs + state.status 守卫（旧存档缺失→崩溃/NaN）
+  if (!state.needs) state.needs = { hunger: 50, fatigue: 30, hygiene: 60, happiness: 50 };
+  if (!state.status) state.status = { health: 80, illnesses: [] };
   const n = state.needs;
   const msgs = [];
   // v3.2 新手保护：前30天需求惩罚减半
@@ -51,6 +56,8 @@ function checkNeedsThresholds(state) {
       : 1.0;
   const combinedMul = dayMul * diffMul;
 
+  // [全系统自洽修复] 域G R240 A类修复: health 数值守卫（undefined/NaN → Math.max(0,NaN)=NaN 永久损坏）
+  if (typeof state.status.health !== "number" || !isFinite(state.status.health)) state.status.health = 80;
   if (n.hunger < 10) {
     const dmg = Math.round(2 * combinedMul);
     state.status.health = Math.max(0, state.status.health - dmg);
@@ -85,10 +92,14 @@ function checkNeedsThresholds(state) {
 
 /** 伤病每日结算 — 已迁移到 illness.js，遍历 status.illnesses 数组 */
 function tickHealthStatus(state) {
+  // [全系统自洽修复] 域G R240 A类修复: state.status 守卫（旧存档缺失→TypeError崩溃管线）
+  if (!state.status) state.status = { health: 80, illnesses: [] };
   // 新疾病系统：每日 tick illness（自然康复+症状结算+慢性病月费）
   if (typeof tickIllnessDecay === "function") {
     tickIllnessDecay(state);
   }
+  // [全系统自洽修复] 域G R240 A类修复: health 数值守卫（NaN/undefined → 恢复/损伤计算全坏）
+  if (typeof state.status.health !== "number" || !isFinite(state.status.health)) state.status.health = 80;
   var st = state.status;
   // 兼容：旧的 injured 字段（受伤还是单独保留，工作中可能受伤）
   if (st.injured) {
@@ -117,6 +128,10 @@ function tickHealthStatus(state) {
 
 /** 判定情绪状态（整合有效属性，状态互联系统） */
 function determineEmotionalState(state) {
+  // [全系统自洽修复] 域G R240 A类修复: state.needs + state.status 守卫（缺失→score=NaN→elated错误分支→1.5×收入bug）
+  if (!state.needs) state.needs = { hunger: 50, fatigue: 30, hygiene: 60, happiness: 50 };
+  if (!state.status) state.status = { health: 80, illnesses: [] };
+  if (typeof state.status.health !== "number" || !isFinite(state.status.health)) state.status.health = 80;
   // 使用有效属性（受状态交叉影响后的真实值）
   var effective =
     typeof getEffectiveStats === "function"
