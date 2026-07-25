@@ -150120,11 +150120,13 @@ function getBranchJobBonus(jobId, skillKey, state) {
     if (branch.incomeMult) mult = branch.incomeMult;
     // 叠加天赋节点效果
     var nodeEff = getTalentNodeEffects(state);
-    // 收集所有收入类加成
+    // 收集所有收入类加成(仅分数乘区,排除固定值加成如 passiveIncome:80/abilityFlatBonus:10)
+    // [全系统自洽修复] 域C A类: 原 substring 过滤(indexOf("Bonus")>0)误匹配固定值→收入×61-140倍经济崩溃→改为仅累加 0<val<1 的分数加成
     var totalBonus = 0;
     for (var key in nodeEff) {
-      if (key.indexOf("Bonus") > 0 || key.indexOf("Income") > 0) {
-        totalBonus += nodeEff[key];
+      var val = nodeEff[key];
+      if (typeof val === "number" && isFinite(val) && val > 0 && val < 1) {
+        totalBonus += val;
       }
     }
     return mult + totalBonus;
