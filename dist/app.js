@@ -199356,7 +199356,14 @@ function calculateDailyPL(state) {
     var h = holdings[i];
     var m = inv.stockMarket[h.symbol];
     if (!m || !m.history || m.history.length < 2) continue;
-    var prevPrice = m.history[m.history.length - 2] && isFinite(m.history[m.history.length - 2].price) ? m.history[m.history.length - 2].price : m.price; // [全系统自洽修复] 域E A类#3: prevPrice可能undefined→NaN传播
+    // [全系统自洽修复] 防止初始化产生的虚假历史数据导致"今日损益"虚高：
+    // 只有最后两个历史条目来自不同天（即真实经过了一次日切），才计算每日损益。
+    // 否则今天刚买入/刚初始化时，第二旧条目是回溯生成的假数据，算出的损益无意义。
+    var last = m.history[m.history.length - 1];
+    var prev = m.history[m.history.length - 2];
+    if (!last || !prev || !last.day || !prev.day) continue;
+    if (last.day === prev.day) continue; // 同一天未日切，跳过
+    var prevPrice = (prev && isFinite(prev.price)) ? prev.price : m.price;
     var change = (m.price - prevPrice) * h.shares;
     var group = getInvestmentAssetGroup(h.symbol);
     if (group === "stocks") dailyPL.stocks += change;
