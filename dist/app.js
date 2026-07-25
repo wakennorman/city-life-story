@@ -21330,9 +21330,9 @@ function registerNewsEventsToPool() {
 })();
 
 ;
-// ==== js/core/domain_b_linkage_r244.js ====
+// ==== js/core/domain_b_linkage_r250.js ====
 /**
- * 域B(事件/叙事) 联动增强 R244
+ * 域B(事件/叙事) 联动增强 R250
  * 主题：叙事回响可视化——事件不仅是文字泡，还在UI/社交/经济层面留下可追溯的痕迹。
  * 桥接：
  *   B→F  event_memory_wall       人生第N个事件里程碑 → 事件记录墙UI标记（峰终定律·记忆锚点）
@@ -21351,8 +21351,8 @@ function registerNewsEventsToPool() {
  */
 (function () {
   if (typeof RANDOM_EVENTS === "undefined") return;
-  if (RANDOM_EVENTS._domainBLinkageR244Loaded) return;
-  RANDOM_EVENTS._domainBLinkageR244Loaded = true;
+  if (RANDOM_EVENTS._domainBLinkageR250Loaded) return;
+  RANDOM_EVENTS._domainBLinkageR250Loaded = true;
 
   // 取首个已结识(met)且好感达阈值的 NPC id
   function firstMetNpcB244(st, minAff) {
@@ -21370,7 +21370,7 @@ function registerNewsEventsToPool() {
   function safeAffinityB244(st, npcId, change, reason) {
     if (!st || !npcId) return;
     if (typeof applyAffinityChange === "function") {
-      applyAffinityChange(st, npcId, change, reason || "R244域B联动");
+      applyAffinityChange(st, npcId, change, reason || "R250域B联动");
       return;
     }
     if (!st.relationships) st.relationships = {};
@@ -38789,18 +38789,9 @@ if (typeof window !== "undefined") {
       phase: "street",
       icon: "🌳",
       title: "技能发展方向",
-      story: function (st) {
-        var skillName =
-          typeof getSkillChineseName === "function"
-            ? getSkillChineseName(st._branchSkillKey)
-            : st._branchSkillKey;
-        return (
-          "你的" +
-          skillName +
-          "终于练到了Lv.30，是时候选择发展方向了。\n" +
-          "一个老前辈拍了拍你：\"这行水深，选对了路能少走很多弯路。\""
-        );
-      },
+      // [全系统自洽修复] 域B R244: story 不能为 function（引擎直接模板字面量渲染会显示函数源码）→ 改为静态文本
+      story:
+        "你的一门技能终于练到了Lv.30，是时候选择发展方向了。\n一个老前辈拍了拍你：\"这行水深，选对了路能少走很多弯路。\"",
       triggers: {
         minDay: 15,
       },
@@ -38876,12 +38867,9 @@ if (typeof window !== "undefined") {
       phase: "street",
       icon: "⭐",
       title: "天赋点亮",
-      story: function (st) {
-        return (
-          "你终于攒够了资源，激活了天赋节点。\n" +
-          "一股力量涌入体内——不，是技能感悟加深了。"
-        );
-      },
+      // [全系统自洽修复] 域B R244: story 不能为 function（引擎直接模板字面量渲染会显示函数源码）→ 改为静态文本
+      story:
+        "你终于攒够了资源，激活了天赋节点。\n一股力量涌入体内——不，是技能感悟加深了。",
       triggers: {
         minDay: 30,
       },
@@ -38927,18 +38915,9 @@ if (typeof window !== "undefined") {
       phase: "street",
       icon: "🏆",
       title: "技能大成",
-      story: function (st) {
-        var skillName =
-          typeof getSkillChineseName === "function"
-            ? getSkillChineseName(st._masterSkillKey)
-            : st._masterSkillKey;
-        return (
-          "你的" +
-          skillName +
-          "终于达到了Lv.100！\n" +
-          "街上的人都传开了——你是这条街上最有本事的人。"
-        );
-      },
+      // [全系统自洽修复] 域B R244: story 不能为 function（引擎直接模板字面量渲染会显示函数源码）→ 改为静态文本
+      story:
+        "你的一门技能终于达到了Lv.100！\n街上的人都传开了——你是这条街上最有本事的人。",
       triggers: {
         minDay: 100,
       },
@@ -39088,8 +39067,12 @@ if (typeof window !== "undefined") {
       story: "公司注册下来的那天，你站在工商局门口，看着手里的营业执照，突然觉得这一切是真的了。\n从第一天来这座城市打零工到现在，你经历了无数个被拒绝的夜晚、无数次算不清的账、无数次想放弃的瞬间。而现在，你真的有了自己的公司。\n街角煎饼摊的王阿姨看到你，笑着说：「哟，老板了？」",
       triggers: {
         minDay: 180,
-        companyJustFormed: true,
         excludeFlags: ["_startupDeclarationDone"],
+      },
+      // [全系统自洽修复] 域B R244: 原 triggers.companyJustFormed 不是引擎白名单字段(evaluateTriggers不认识)→改为 conditions 守卫(检查 startup.company 是否存在)
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        return !!(st.startup && st.startup.company);
       },
       choices: [
         {
@@ -39137,23 +39120,31 @@ if (typeof window !== "undefined") {
         minDay: 90,
         excludeFlags: ["_firstPromoCelebDone"],
       },
-      apply: function (st) {
-        st.flags._firstPromoCelebDone = true;
-        if (st.player) {
-          st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 10);
-          st.player.upwardMgmt = Math.min(100, (st.player.upwardMgmt || 0) + 3);
-        }
-        // 同事网络关系自动提升
-        if (st.relationships) {
-          var colleagues = ["boss_li", "colleague_zhang", "colleague_li"];
-          for (var i = 0; i < colleagues.length; i++) {
-            if (st.relationships[colleagues[i]]) {
-              st.relationships[colleagues[i]].affinity = Math.min(100, (st.relationships[colleagues[i]].affinity || 0) + 2);
+      // [全系统自洽修复] 域B R244: 原事件无 choices 数组导致 showEventModal 守卫直接 return（死事件）→ 补确认按钮让事件可展示
+      choices: [
+        {
+          text: "🎉 值得庆祝",
+          hint: "心情+10，管理能力+3，同事好感+2",
+          apply: function (st) {
+            st.flags._firstPromoCelebDone = true;
+            if (st.player) {
+              if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 10);
+              st.player.upwardMgmt = Math.min(100, (st.player.upwardMgmt || 0) + 3);
             }
-          }
-        }
-        StateManager.addMessage("🎉 晋升庆功宴！心情+10，管理能力+3，同事们好感各+2。你在城市里又多了一个值得骄傲的理由。", "success");
-      },
+            if (st.relationships) {
+              var colleagues = ["boss_li", "colleague_zhang", "colleague_li"];
+              for (var i = 0; i < colleagues.length; i++) {
+                if (st.relationships[colleagues[i]]) {
+                  st.relationships[colleagues[i]].affinity = Math.min(100, (st.relationships[colleagues[i]].affinity || 0) + 2);
+                }
+              }
+            }
+            if (typeof StateManager !== "undefined" && StateManager.addMessage) {
+              StateManager.addMessage("🎉 晋升庆功宴！心情+10，管理能力+3，同事们好感各+2。你在城市里又多了一个值得骄傲的理由。", "success");
+            }
+          },
+        },
+      ],
       probability: 0.03,
     };
 
@@ -39167,6 +39158,11 @@ if (typeof window !== "undefined") {
       triggers: {
         minDay: 60,
         excludeFlags: ["_talentDepartureDone"],
+      },
+      // [全系统自洽修复] 域B R244: 原事件无 conditions 门控(任何 corporate 阶段 day≥60 都会触发)→补 startup.company+team 守卫
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        return !!(st.startup && st.startup.company && st.startup.company.team && st.startup.company.team.length > 0);
       },
       choices: [
         {
@@ -39221,6 +39217,11 @@ if (typeof window !== "undefined") {
       triggers: {
         minDay: 90,
         excludeFlags: ["_quarterSocialSpilloverDone"],
+      },
+      // [全系统自洽修复] 域B R244: 原事件无 conditions 门控→补 startup.company 守卫(需有公司才能触发办公室社交)
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        return !!(st.startup && st.startup.company);
       },
       choices: [
         {
@@ -161561,9 +161562,8 @@ var NEWS_FOLLOWUP = {
   },
   training_subsidy_echo: {
     headline: "📚 培训补贴效应持续：职业技能考证热度不减，培训机构报名排队",
-    effects: {
-      effects: { trainingDiscount: 0.5, duration: 5 },
-    },
+    // [全系统自洽修复] 域B R250: 原 effects.effects 嵌套导致 applyNewsEffect 读取不到 trainingDiscount/duration → 静态修正为扁平结构
+    effects: { trainingDiscount: 0.5, duration: 5 },
   },
   // ====== 批次D后续新闻 ======
   tech_layoff_echo: {
@@ -172404,6 +172404,11 @@ const MORAL_EVENTS = [
     triggers: { minDay: 4, weather: ["rainy", "stormy"] },
     triggerWeight: 1,
     triggerCooldown: 14,
+    // [全系统自洽修复] 域B R244: 原 triggers.weather 不被 triggerMoralEvent 读取(仅读 minDay/condition)→补 condition 守卫雨雪天气
+    condition: function (s) {
+      var w = s.weather && s.weather.current;
+      return w === "rainy" || w === "stormy";
+    },
     choices: [
       {
         text: "🍖 买根火腿肠喂它，引到避雨处",
@@ -226416,6 +226421,237 @@ if (typeof window !== "undefined") {
 })();
 
 ;
+// ==== js/core/domain_b_linkage_r250.js ====
+/**
+ * 域B(事件/叙事) 联动增强 R250
+ * 主题：叙事回响可视化——事件不仅是文字泡，还在UI/社交/经济层面留下可追溯的痕迹。
+ * 桥接：
+ *   B→F  event_memory_wall       人生第N个事件里程碑 → 事件记录墙UI标记（峰终定律·记忆锚点）
+ *   B→D  event_npc_gossip         与已结识NPC聊起共同经历 → 好感升温（禀赋效应·共同记忆）
+ *   B→E  event_lucky_streak       连续好运事件触发 → 投资信心flag（心理账户·幸运偏差）
+ *
+ * 严格照 domain_b_linkage_r190.js 已验证 IIFE 注入范式：
+ *   显式 phase、RANDOM_EVENTS 守卫、triggers 用引擎白名单字段、
+ *   conditions 全字段防御、gameOver 闸门、apply 内自理副作用。
+ * 真实字段核实：
+ *   事件历史 st.flags._eventHistory（events_core.js:788 写入）；
+ *   NPC 好感走 applyAffinityChange 守 rel.met（域D铁律）；
+ *   投资信心 flag _eventLuckyStreak（供经济/投资域门控）；
+ *   心情 st.needs.happiness；心智 st.player.mental；现金 st.resources.cash。
+ *   数值标 [PLACEHOLDER] 待平衡组校准。
+ */
+(function () {
+  if (typeof RANDOM_EVENTS === "undefined") return;
+  if (RANDOM_EVENTS._domainBLinkageR250Loaded) return;
+  RANDOM_EVENTS._domainBLinkageR250Loaded = true;
+
+  // 取首个已结识(met)且好感达阈值的 NPC id
+  function firstMetNpcB244(st, minAff) {
+    minAff = minAff || 0;
+    if (!st || !st.relationships) return null;
+    for (var id in st.relationships) {
+      if (!Object.prototype.hasOwnProperty.call(st.relationships, id)) continue;
+      var r = st.relationships[id];
+      if (r && r.met && (r.affinity || 0) >= minAff) return id;
+    }
+    return null;
+  }
+
+  // 安全改好感：走 applyAffinityChange（自动 clamp）
+  function safeAffinityB244(st, npcId, change, reason) {
+    if (!st || !npcId) return;
+    if (typeof applyAffinityChange === "function") {
+      applyAffinityChange(st, npcId, change, reason || "R250域B联动");
+      return;
+    }
+    if (!st.relationships) st.relationships = {};
+    if (!st.relationships[npcId]) st.relationships[npcId] = { met: true, affinity: 0 };
+    st.relationships[npcId].affinity = (st.relationships[npcId].affinity || 0) + change;
+    st.relationships[npcId].met = true;
+  }
+
+  var EVENTS = [
+    {
+      // B→F: 人生第N个事件里程碑 → 事件记录墙UI标记（峰终定律·记忆锚点）
+      id: "event_memory_wall",
+      phase: "street",
+      _isChainEvent: false,
+      icon: "🖼️",
+      title: "记忆墙上的一格",
+      story:
+        "你翻开手机相册，看到一张几个月前的截图——那是你刚来这座城市时第一次赚到¥100的记录。\n\n从那天到现在，你已经经历了不少值得记住的瞬间。有些让你笑，有些让你失眠。每一个都是你在这座城市存在过的证据。\n\n你决定把今天的经历也截个图，存进「人生记忆墙」。",
+      triggers: { minDay: 30, excludeFlags: ["_eventMemoryWallSeen"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        // 至少经历过5个事件（有_eventHistory记录）
+        var history = (st.flags && st.flags._eventHistory) || [];
+        if (history.length < 5) return false;
+        // 每30天最多触发一次
+        if (st.flags && st.flags._eventMemoryWallLastDay) {
+          var lastDay = st.flags._eventMemoryWallLastDay;
+          if ((st.player && st.player.day ? st.player.day : 0) - lastDay < 30) return false;
+        }
+        return true;
+      },
+      choices: [
+        {
+          text: "📸 截图保存这一刻",
+          hint: "心智+3，心情+5，记录flag",
+          apply: function (st) {
+            if (!st.flags) st.flags = {};
+            st.flags._eventMemoryWallSeen = true;
+            st.flags._eventMemoryWallLastDay = st.player ? st.player.day : 0;
+            st.flags._memoryWallKeeper = true; // 标记为记忆墙习惯者
+            if (st.player) {
+              st.player.mental = Math.min(100, (st.player.mental || 50) + 3);
+            }
+            if (st.needs) {
+              st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 5);
+            }
+            if (typeof StateManager !== "undefined" && StateManager.addMessage) {
+              StateManager.addMessage("📸 你截下了今天的画面。记忆墙上又多了一格。心智+3，心情+5。", "success");
+            }
+          },
+        },
+        {
+          text: "📝 不截图，用心记住就好",
+          hint: "心智+5",
+          apply: function (st) {
+            if (!st.flags) st.flags = {};
+            st.flags._eventMemoryWallSeen = true;
+            st.flags._eventMemoryWallLastDay = st.player ? st.player.day : 0;
+            if (st.player) {
+              st.player.mental = Math.min(100, (st.player.mental || 50) + 5);
+            }
+            if (typeof StateManager !== "undefined" && StateManager.addMessage) {
+              StateManager.addMessage("📝 你笑了笑，放下手机。有些事不需要截图，心里记得就好。心智+5。", "info");
+            }
+          },
+        },
+      ],
+      probability: 0.5,
+      repeatable: false,
+    },
+    {
+      // B→D: 与已结识NPC聊起共同经历 → 好感升温（共同记忆）
+      id: "event_npc_gossip",
+      phase: "street",
+      _isChainEvent: false,
+      icon: "🗣️",
+      title: "你也经历过这种事？",
+      story:
+        "你在茶馆喝茶，隔壁桌一个熟悉的声音叫住了你。你们聊着聊起，发现彼此都经历过类似的困境——被房东催交租金、在街头被人白眼、加班到凌晨才回家。\n\n「原来你也是这么过来的。」对方感慨道。\n\n共同经历让两个人的距离一下子拉近了不少。",
+      triggers: { minDay: 14, excludeFlags: ["_eventNpcGossipSeen"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        // 需要至少一个已结识且好感≥20的NPC
+        var npc = firstMetNpcB244(st, 20);
+        if (!npc) return false;
+        // 需要至少经历过3个事件（有共同话题）
+        var history = (st.flags && st.flags._eventHistory) || [];
+        if (history.length < 3) return false;
+        return true;
+      },
+      choices: [
+        {
+          text: "🤝 是啊，咱们都不容易",
+          hint: "NPC好感+5，心情+3",
+          apply: function (st) {
+            if (!st.flags) st.flags = {};
+            st.flags._eventNpcGossipSeen = true;
+            var npc = firstMetNpcB244(st, 20);
+            if (npc) {
+              safeAffinityB244(st, npc, 5, "共同经历闲聊");
+            }
+            if (st.needs) {
+              st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 3);
+            }
+            if (typeof StateManager !== "undefined" && StateManager.addMessage) {
+              StateManager.addMessage("🤝 你们相视而笑。原来不是只有自己在咬牙坚持。好感+5，心情+3。", "success");
+            }
+          },
+        },
+        {
+          text: "🍵 喝茶喝茶，不提这些",
+          hint: "心智+2",
+          apply: function (st) {
+            if (!st.flags) st.flags = {};
+            st.flags._eventNpcGossipSeen = true;
+            if (st.player) {
+              st.player.mental = Math.min(100, (st.player.mental || 50) + 2);
+            }
+            if (typeof StateManager !== "undefined" && StateManager.addMessage) {
+              StateManager.addMessage("🍵 你岔开了话题。有些事，不说比说了更自在。心智+2。", "info");
+            }
+          },
+        },
+      ],
+      probability: 0.4,
+      repeatable: false,
+    },
+    {
+      // B→E: 连续好运事件触发 → 投资信心flag（心理账户·幸运偏差）
+      id: "event_lucky_streak",
+      phase: "street",
+      _isChainEvent: false,
+      icon: "🍀",
+      title: "运气来了？",
+      story:
+        "最近你总觉得运气不错——前几天捡到一笔钱，昨天抽奖又中了，今天买菜还多找了零钱。\n\n「是不是该去试试投资？运气这么旺，说不定能赚一笔。」你心里冒出一个念头。\n\n但你也听过一句话：运气这东西，来无影去无踪。",
+      triggers: { minDay: 20, excludeFlags: ["_eventLuckyStreakSeen"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        // 需要有至少3个正面事件记录（_history中含"success"类型标记）
+        var history = (st.flags && st.flags._eventHistory) || [];
+        if (history.length < 3) return false;
+        // 玩家现金不能太少（有投资本金意识的前提）
+        if (!st.resources || (st.resources.cash || 0) < 500) return false;
+        return true;
+      },
+      choices: [
+        {
+          text: "💰 小试牛刀，拿闲钱试试",
+          hint: "置投资信心flag，现金-200",
+          apply: function (st) {
+            if (!st.flags) st.flags = {};
+            st.flags._eventLuckyStreakSeen = true;
+            st.flags._eventLuckyStreak = true; // 投资信心flag（供经济/投资域门控）
+            if (st.resources) {
+              st.resources.cash = Math.max(0, (st.resources.cash || 0) - 200);
+            }
+            if (typeof StateManager !== "undefined" && StateManager.addMessage) {
+              StateManager.addMessage("💰 你拿出¥200准备试试投资。万一运气真的来了呢？", "info");
+            }
+          },
+        },
+        {
+          text: "🧊 运气不可靠，省着点花",
+          hint: "心智+3，储蓄意识flag",
+          apply: function (st) {
+            if (!st.flags) st.flags = {};
+            st.flags._eventLuckyStreakSeen = true;
+            st.flags._savingsDiscipline = true; // 储蓄意识flag
+            if (st.player) {
+              st.player.mental = Math.min(100, (st.player.mental || 50) + 3);
+            }
+            if (typeof StateManager !== "undefined" && StateManager.addMessage) {
+              StateManager.addMessage("🧊 你冷静下来。运气是假的，存下来的钱才是真的。心智+3。", "info");
+            }
+          },
+        },
+      ],
+      probability: 0.45,
+      repeatable: false,
+    },
+  ];
+
+  // 注入全局事件池
+  for (var i = 0; i < EVENTS.length; i++) {
+    RANDOM_EVENTS.push(EVENTS[i]);
+  }
+})();
+
+;
 // ==== js/core/domain_e_linkage_r246.js ====
 /*
  * 城市浮生记 — 域E（经济/投资）联动增强事件 · R246
@@ -226625,261 +226861,6 @@ if (typeof window !== "undefined") {
   ];
 
   for (var i = 0; i < E_EVENTS_R246.length; i++) RANDOM_EVENTS.push(E_EVENTS_R246[i]);
-})();
-
-;
-// ==== js/core/domain_a_linkage_r251.js ====
-/*
- * 城市浮生记 — 域A（数据/数值平衡）联动增强事件 · R251
- * loop R251 全系统优化·Domain A 数据/数值平衡 → 跨域桥接（A→D / A→E / A→H）
- *
- * 背景：域A 已在 R14/R22/R189/R197/R242 覆盖 A→B/A→C/A→F/A→G/A→H。
- * 本轮 A类审计结论：A类=0（新缺陷）——illnesses/illness/jobs/economy_v3.1/
- * skill_synergy/items/finance/needs/goods 各子系统经历轮加固（R14/R22/R197/R242）
- * 后已自洽：死字段 grep 干净、8 个 _synergy_ 与 6 个 referral flag 均有写入者、
- * 商品定价与描述一致（无 >3 倍错配）。故本轮聚焦联动增强。
- *
- * 三事件均使用「真实字段 + 真实机制」做跨域桥接，且补齐历轮域A 未做的方向：
- *  - A→D（NPC/社交·全新配对）：技能助邻 —— 用真实生活技能（维修/厨艺/医护）
- *      帮已结识的街坊，好感变更严守域D铁律走 applyAffinityChange。
- *  - A→E（经济/投资·全新配对）：物价通胀嗅觉 —— 读真实 _eraState.inflationIndex，
- *      从菜价数据里养出避险意识，置 _dataInvestorMindset（E域事件消费）。
- *  - A→H（Phase2/公司）：年终数据复盘 —— 用真实 accounting/management 技能做
- *      经营复盘，换来 management XP + 绩效。（角度区别于 R197 争预算 / R242 证书背书）
- * id 前缀 a251_ 与 a189_/a197_/a242_/data_ 既有前缀均不冲突。
- *
- * 设计约束（与历轮各域 linkage 一致）：
- *  - IIFE 注入全局 RANDOM_EVENTS（非 ES import），避免改主库既有事件文件。
- *  - 所有 state 访问均 || 防御；数值一律标 [PLACEHOLDER] 待数值组校准。
- *  - 引擎严格按 e.phase 过滤（state.player.phase 仅 "street"/"corporate"），故显式设 phase（2 street + 1 corporate）。
- *  - 里程碑/去重用 st.flags._xxxCooldown（conditions 与 apply 双重拦截）。
- *  - 域D铁律：只读 state.relationships / rel&&rel.met / applyAffinityChange / getNpcDisplayName。
- */
-(function () {
-  if (typeof RANDOM_EVENTS === "undefined" || !RANDOM_EVENTS) return;
-  if (RANDOM_EVENTS._domainALinkageR251Loaded) return;
-  RANDOM_EVENTS._domainALinkageR251Loaded = true;
-
-  var PRACTICAL_SKILLS_R251 = ["repair", "cooking", "medicine"];
-  var SKILL_CN_R251 = {
-    repair: "维修",
-    cooking: "厨艺",
-    medicine: "医护",
-    accounting: "会计",
-    management: "管理",
-  };
-
-  // 防御辅助：取玩家最高的一项实用生活技能（level>=minLv 才算数），无则 null
-  function topPracticalSkillR251(st, minLv) {
-    minLv = minLv || 0;
-    if (!st || !st.skills) return null;
-    var bestKey = null;
-    var bestLv = -1;
-    for (var i = 0; i < PRACTICAL_SKILLS_R251.length; i++) {
-      var k = PRACTICAL_SKILLS_R251[i];
-      var s = st.skills[k];
-      var lv = (s && s.level) || 0;
-      if (lv >= minLv && lv > bestLv) {
-        bestLv = lv;
-        bestKey = k;
-      }
-    }
-    return bestKey ? { key: bestKey, level: bestLv } : null;
-  }
-
-  // 防御辅助：取首个已结识且好感>=minAff 的 NPC id（域D铁律：只读 relationships + met 守卫）
-  function firstMetNpcR251(st, minAff) {
-    minAff = minAff || 0;
-    if (!st || !st.relationships) return null;
-    for (var id in st.relationships) {
-      if (!Object.prototype.hasOwnProperty.call(st.relationships, id)) continue;
-      var r = st.relationships[id];
-      if (r && r.met && (r.affinity || 0) >= minAff) return id;
-    }
-    return null;
-  }
-
-  // 防御辅助：好感变更一律走 applyAffinityChange（自动 clamp+记 _lastInteractionDay）
-  function bumpAffinityR251(st, npcId, delta, why) {
-    try {
-      if (typeof applyAffinityChange === "function") {
-        applyAffinityChange(st, npcId, delta, why || "R251联动");
-        return true;
-      }
-    } catch (e) {}
-    return false;
-  }
-
-  function npcNameR251(npcId) {
-    try {
-      if (typeof getNpcDisplayName === "function")
-        return getNpcDisplayName(npcId);
-    } catch (e) {}
-    return npcId || "街坊";
-  }
-
-  var A_EVENTS_R251 = [
-    // ===== 1. A→D：技能助邻 ↔ NPC/社交（历轮域A 全新配对；真实技能 + 域D铁律好感变更） =====
-    {
-      id: "a251_skill_neighbor_help",
-      title: "顺手帮个忙",
-      desc: "楼道里碰见街坊正对着坏掉的东西发愁。你搭眼一看，心里有数——这点活儿难不倒你。举手之劳的事，帮衬一把，邻里间的情分就是这么一点点攒起来的。",
-      phase: "street",
-      triggers: { minDay: 35 },
-      conditions: function (st) {
-        if (!st || !st.player) return false;
-        if (st.flags && st.flags._a251SkillHelpCooldown) return false;
-        // 门控：持有一项实用技能(level>=5) + 有已结识街坊(好感>=10)
-        if (!topPracticalSkillR251(st, 5)) return false;
-        return !!firstMetNpcR251(st, 10);
-      },
-      choices: [
-        {
-          text: "搭把手，把活儿干利索",
-          apply: function (st) {
-            var sk = topPracticalSkillR251(st, 5);
-            var npcId = firstMetNpcR251(st, 10);
-            if (npcId) bumpAffinityR251(st, npcId, 6, "技能助邻"); // [PLACEHOLDER] 好感
-            // A→C 顺带：帮忙也是练手，对应技能小幅长进（含证书加成乘区）
-            if (sk && sk.key && typeof addSkillXp === "function")
-              addSkillXp(sk.key, 5); // [PLACEHOLDER] 技能XP
-            if (st.player)
-              st.player.mental = Math.min(100, (st.player.mental || 50) + 3); // [PLACEHOLDER] 心智
-            if (st.needs)
-              st.needs.happiness = Math.min(
-                100,
-                (st.needs.happiness || 0) + 3,
-              ); // [PLACEHOLDER] 心情
-            if (st.flags) {
-              st.flags._a251SkillHelpCooldown = true;
-              st.flags._skillNeighborBond = true; // 技能睦邻 flag（D域后续叙事可消费）
-            }
-            if (typeof StateManager !== "undefined" && StateManager.addMessage)
-              StateManager.addMessage(
-                "🔧 " +
-                  (sk ? SKILL_CN_R251[sk.key] || "手艺" : "手艺") +
-                  "派上用场，帮了" +
-                  npcNameR251(npcId) +
-                  "一把。",
-                "good",
-              );
-          },
-        },
-        {
-          text: "点头示意，忙自己的去了",
-          apply: function (st) {
-            if (st.player)
-              st.player.mental = Math.min(100, (st.player.mental || 50) + 1);
-            if (st.flags) st.flags._a251SkillHelpCooldown = true;
-          },
-        },
-      ],
-      probability: 0.04,
-    },
-
-    // ===== 2. A→E：物价通胀嗅觉 ↔ 经济/投资（历轮域A 全新配对；读真实 _eraState.inflationIndex） =====
-    {
-      id: "a251_price_inflation_sense",
-      title: "菜篮子里的数字",
-      desc: "又去了趟菜市场，同样一篮子东西，比上个月贵了一截。你没急着抱怨，反倒摸出手机记了几笔——这半年菜价、房租、油钱的涨幅，心里渐渐有了本账。钱搁着不动就是在缩水，这个道理，从菜价里也能咂摸出来。",
-      phase: "street",
-      triggers: { minDay: 50 },
-      conditions: function (st) {
-        if (!st || !st.player) return false;
-        if (st.flags && st.flags._a251InflationSenseCooldown) return false;
-        // 门控：读真实 _eraState.inflationIndex（>=1.2 通胀有感），未消费过
-        var era = st._eraState;
-        if (!era || typeof era.inflationIndex !== "number") return false;
-        return era.inflationIndex >= 1.2;
-      },
-      choices: [
-        {
-          text: "记账、比价，琢磨怎么让钱保值",
-          apply: function (st) {
-            if (st.flags) {
-              st.flags._dataInvestorMindset = true; // A→E 桥接：投资/避险意识（E域事件消费）
-              st.flags._a251InflationSenseCooldown = true;
-            }
-            if (st.player)
-              st.player.mental = Math.min(100, (st.player.mental || 50) + 2); // [PLACEHOLDER] 心智
-            if (typeof addSkillXp === "function") addSkillXp("accounting", 4); // [PLACEHOLDER] 会计XP（记账练手）
-            if (typeof StateManager !== "undefined" && StateManager.addMessage)
-              StateManager.addMessage(
-                "📈 菜价里读出通胀，钱得想办法保值了。",
-                "good",
-              );
-          },
-        },
-        {
-          text: "贵就少买点，日子照过",
-          apply: function (st) {
-            if (st.needs)
-              st.needs.happiness = Math.max(
-                0,
-                (st.needs.happiness || 0) - 1,
-              ); // [PLACEHOLDER] 精打细算的小失落
-            if (st.flags) st.flags._a251InflationSenseCooldown = true;
-          },
-        },
-      ],
-      probability: 0.045,
-    },
-
-    // ===== 3. A→H：年终数据复盘 ↔ Phase2/公司（真实 accounting/management 技能做经营复盘） =====
-    {
-      id: "a251_ledger_year_review",
-      title: "年终复盘会",
-      desc: "部门年终复盘，一屋子人对着报表你一言我一语。轮到你，你把这一年的数字掰开揉碎讲——哪条线在涨、哪块成本虚高、明年该往哪使劲，条理清楚。散会时主管拍了拍你：「就爱听这种拿数据说话的。」",
-      phase: "corporate",
-      triggers: { minDay: 70 },
-      conditions: function (st) {
-        if (!st || !st.player) return false;
-        if (st.flags && st.flags._a251LedgerReviewCooldown) return false;
-        // 门控：在职（career.currentJob 或 corporate.company）+ 会计或管理技能 level>=8
-        var employed =
-          (st.career && st.career.currentJob) ||
-          (st.corporate && st.corporate.company);
-        if (!employed) return false;
-        var acc = (st.skills && st.skills.accounting && st.skills.accounting.level) || 0;
-        var mgt = (st.skills && st.skills.management && st.skills.management.level) || 0;
-        return acc >= 8 || mgt >= 8;
-      },
-      choices: [
-        {
-          text: "拿数据说话，把复盘讲透",
-          apply: function (st) {
-            if (typeof addSkillXp === "function") addSkillXp("management", 7); // [PLACEHOLDER] 管理XP
-            if (st.resources)
-              st.resources.cash = (st.resources.cash || 0) + 800; // [PLACEHOLDER] 复盘绩效
-            if (st.player)
-              st.player.mental = Math.min(100, (st.player.mental || 50) + 3); // [PLACEHOLDER] 心智
-            if (st.flags) {
-              st.flags._a251LedgerReviewCooldown = true;
-              st.flags._dataReviewCredibility = true; // 数据复盘口碑 flag（H域后续可消费）
-            }
-            if (typeof StateManager !== "undefined" && StateManager.addMessage)
-              StateManager.addMessage(
-                "📊 一场拿数据说话的复盘，给你挣足了印象分。",
-                "good",
-              );
-          },
-        },
-        {
-          text: "照本宣科念一遍就行",
-          apply: function (st) {
-            if (st.player)
-              st.player.mental = Math.min(100, (st.player.mental || 50) + 1);
-            if (st.flags) st.flags._a251LedgerReviewCooldown = true;
-          },
-        },
-      ],
-      probability: 0.04,
-    },
-  ];
-
-  for (var i = 0; i < A_EVENTS_R251.length; i++) {
-    RANDOM_EVENTS.push(A_EVENTS_R251[i]);
-  }
 })();
 
 ;

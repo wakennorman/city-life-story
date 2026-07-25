@@ -6215,18 +6215,9 @@
       phase: "street",
       icon: "🌳",
       title: "技能发展方向",
-      story: function (st) {
-        var skillName =
-          typeof getSkillChineseName === "function"
-            ? getSkillChineseName(st._branchSkillKey)
-            : st._branchSkillKey;
-        return (
-          "你的" +
-          skillName +
-          "终于练到了Lv.30，是时候选择发展方向了。\n" +
-          "一个老前辈拍了拍你：\"这行水深，选对了路能少走很多弯路。\""
-        );
-      },
+      // [全系统自洽修复] 域B R244: story 不能为 function（引擎直接模板字面量渲染会显示函数源码）→ 改为静态文本
+      story:
+        "你的一门技能终于练到了Lv.30，是时候选择发展方向了。\n一个老前辈拍了拍你：\"这行水深，选对了路能少走很多弯路。\"",
       triggers: {
         minDay: 15,
       },
@@ -6302,12 +6293,9 @@
       phase: "street",
       icon: "⭐",
       title: "天赋点亮",
-      story: function (st) {
-        return (
-          "你终于攒够了资源，激活了天赋节点。\n" +
-          "一股力量涌入体内——不，是技能感悟加深了。"
-        );
-      },
+      // [全系统自洽修复] 域B R244: story 不能为 function（引擎直接模板字面量渲染会显示函数源码）→ 改为静态文本
+      story:
+        "你终于攒够了资源，激活了天赋节点。\n一股力量涌入体内——不，是技能感悟加深了。",
       triggers: {
         minDay: 30,
       },
@@ -6353,18 +6341,9 @@
       phase: "street",
       icon: "🏆",
       title: "技能大成",
-      story: function (st) {
-        var skillName =
-          typeof getSkillChineseName === "function"
-            ? getSkillChineseName(st._masterSkillKey)
-            : st._masterSkillKey;
-        return (
-          "你的" +
-          skillName +
-          "终于达到了Lv.100！\n" +
-          "街上的人都传开了——你是这条街上最有本事的人。"
-        );
-      },
+      // [全系统自洽修复] 域B R244: story 不能为 function（引擎直接模板字面量渲染会显示函数源码）→ 改为静态文本
+      story:
+        "你的一门技能终于达到了Lv.100！\n街上的人都传开了——你是这条街上最有本事的人。",
       triggers: {
         minDay: 100,
       },
@@ -6514,8 +6493,12 @@
       story: "公司注册下来的那天，你站在工商局门口，看着手里的营业执照，突然觉得这一切是真的了。\n从第一天来这座城市打零工到现在，你经历了无数个被拒绝的夜晚、无数次算不清的账、无数次想放弃的瞬间。而现在，你真的有了自己的公司。\n街角煎饼摊的王阿姨看到你，笑着说：「哟，老板了？」",
       triggers: {
         minDay: 180,
-        companyJustFormed: true,
         excludeFlags: ["_startupDeclarationDone"],
+      },
+      // [全系统自洽修复] 域B R244: 原 triggers.companyJustFormed 不是引擎白名单字段(evaluateTriggers不认识)→改为 conditions 守卫(检查 startup.company 是否存在)
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        return !!(st.startup && st.startup.company);
       },
       choices: [
         {
@@ -6563,23 +6546,31 @@
         minDay: 90,
         excludeFlags: ["_firstPromoCelebDone"],
       },
-      apply: function (st) {
-        st.flags._firstPromoCelebDone = true;
-        if (st.player) {
-          st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 10);
-          st.player.upwardMgmt = Math.min(100, (st.player.upwardMgmt || 0) + 3);
-        }
-        // 同事网络关系自动提升
-        if (st.relationships) {
-          var colleagues = ["boss_li", "colleague_zhang", "colleague_li"];
-          for (var i = 0; i < colleagues.length; i++) {
-            if (st.relationships[colleagues[i]]) {
-              st.relationships[colleagues[i]].affinity = Math.min(100, (st.relationships[colleagues[i]].affinity || 0) + 2);
+      // [全系统自洽修复] 域B R244: 原事件无 choices 数组导致 showEventModal 守卫直接 return（死事件）→ 补确认按钮让事件可展示
+      choices: [
+        {
+          text: "🎉 值得庆祝",
+          hint: "心情+10，管理能力+3，同事好感+2",
+          apply: function (st) {
+            st.flags._firstPromoCelebDone = true;
+            if (st.player) {
+              if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 10);
+              st.player.upwardMgmt = Math.min(100, (st.player.upwardMgmt || 0) + 3);
             }
-          }
-        }
-        StateManager.addMessage("🎉 晋升庆功宴！心情+10，管理能力+3，同事们好感各+2。你在城市里又多了一个值得骄傲的理由。", "success");
-      },
+            if (st.relationships) {
+              var colleagues = ["boss_li", "colleague_zhang", "colleague_li"];
+              for (var i = 0; i < colleagues.length; i++) {
+                if (st.relationships[colleagues[i]]) {
+                  st.relationships[colleagues[i]].affinity = Math.min(100, (st.relationships[colleagues[i]].affinity || 0) + 2);
+                }
+              }
+            }
+            if (typeof StateManager !== "undefined" && StateManager.addMessage) {
+              StateManager.addMessage("🎉 晋升庆功宴！心情+10，管理能力+3，同事们好感各+2。你在城市里又多了一个值得骄傲的理由。", "success");
+            }
+          },
+        },
+      ],
       probability: 0.03,
     };
 
@@ -6593,6 +6584,11 @@
       triggers: {
         minDay: 60,
         excludeFlags: ["_talentDepartureDone"],
+      },
+      // [全系统自洽修复] 域B R244: 原事件无 conditions 门控(任何 corporate 阶段 day≥60 都会触发)→补 startup.company+team 守卫
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        return !!(st.startup && st.startup.company && st.startup.company.team && st.startup.company.team.length > 0);
       },
       choices: [
         {
@@ -6647,6 +6643,11 @@
       triggers: {
         minDay: 90,
         excludeFlags: ["_quarterSocialSpilloverDone"],
+      },
+      // [全系统自洽修复] 域B R244: 原事件无 conditions 门控→补 startup.company 守卫(需有公司才能触发办公室社交)
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        return !!(st.startup && st.startup.company);
       },
       choices: [
         {

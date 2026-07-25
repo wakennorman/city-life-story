@@ -1172,9 +1172,8 @@ var NEWS_FOLLOWUP = {
   },
   training_subsidy_echo: {
     headline: "📚 培训补贴效应持续：职业技能考证热度不减，培训机构报名排队",
-    effects: {
-      effects: { trainingDiscount: 0.5, duration: 5 },
-    },
+    // [全系统自洽修复] 域B R250: 原 effects.effects 嵌套导致 applyNewsEffect 读取不到 trainingDiscount/duration → 静态修正为扁平结构
+    effects: { trainingDiscount: 0.5, duration: 5 },
   },
   // ====== 批次D后续新闻 ======
   tech_layoff_echo: {

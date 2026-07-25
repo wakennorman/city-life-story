@@ -295,6 +295,11 @@ const MORAL_EVENTS = [
     triggers: { minDay: 4, weather: ["rainy", "stormy"] },
     triggerWeight: 1,
     triggerCooldown: 14,
+    // [全系统自洽修复] 域B R244: 原 triggers.weather 不被 triggerMoralEvent 读取(仅读 minDay/condition)→补 condition 守卫雨雪天气
+    condition: function (s) {
+      var w = s.weather && s.weather.current;
+      return w === "rainy" || w === "stormy";
+    },
     choices: [
       {
         text: "🍖 买根火腿肠喂它，引到避雨处",
