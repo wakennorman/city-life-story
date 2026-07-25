@@ -378,12 +378,13 @@
         },
         {
           text: "📖 停下来学习，补补投资知识",
-          hint: "finance技能+8，心智+3",
+          hint: "会计技能+8，心智+3",
           apply: function (st) {
             st.flags._invLossAnxiety = true;
-            if (typeof addSkillXp === "function") addSkillXp("finance", 8);
+            // [全系统自洽修复] 域C R243: addSkillXp("finance")不是真实技能键→映射到accounting
+            if (typeof addSkillXp === "function") addSkillXp("accounting", 8);
             st.player.mental = Math.min(100, (st.player.mental || 50) + 3);
-            StateManager.addMessage("📖 你翻出了《聪明的投资者》，决心把亏的钱变成学费。finance+8。", "good");
+            StateManager.addMessage("📖 你翻出了《聪明的投资者》，决心把亏的钱变成学费。会计+8。", "good");
           },
         },
         {
@@ -417,13 +418,14 @@
       choices: [
         {
           text: "🤝 融入规则，学习税务筹划",
-          hint: "心智+4，finance技能+5",
+          hint: "心智+4，会计技能+5",
           apply: function (st) {
             st.flags._wealthTaxNpc = true;
             st.player.mental = Math.min(100, (st.player.mental || 50) + 4);
-            if (typeof addSkillXp === "function") addSkillXp("finance", 5);
+            // [全系统自洽修复] 域C R243: addSkillXp("finance")不是真实技能键→映射到accounting
+            if (typeof addSkillXp === "function") addSkillXp("accounting", 5);
             st.flags._taxPlanning = true;
-            StateManager.addMessage("🤝 你没有抱怨，而是开始研究税务筹划。这是富人必修的课。心智+4，finance+5。", "good");
+            StateManager.addMessage("🤝 你没有抱怨，而是开始研究税务筹划。这是富人必修的课。心智+4，会计+5。", "good");
           },
         },
         {

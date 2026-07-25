@@ -266,11 +266,12 @@
           text: "📚 趁此机会学习投资知识",
           apply: function (st) {
             if (st.flags) st.flags._drawdownMoralCooldown = true;
-            if (typeof addSkillXp === "function") addSkillXp("finance", 10);
+            // [全系统自洽修复] 域C R243: addSkillXp("finance")不是真实技能键→映射到accounting
+            if (typeof addSkillXp === "function") addSkillXp("accounting", 10);
             if (st.player) st.player.mental = (st.player.mental || 50) + 4;
             if (typeof StateManager !== "undefined" && StateManager.addMessage)
               StateManager.addMessage(
-                "亏损是最好的老师。你翻开《股票作手回忆录》， finance+10。",
+                "亏损是最好的老师。你翻开《股票作手回忆录》，会计+10。",
                 "good",
               );
           },
@@ -324,7 +325,8 @@
             // [全系统自洽修复] 域E A类修复: Math.random→Random.chance 种子化RNG
             var isGood = Random.chance(0.7);
             if (isGood) {
-              if (typeof addSkillXp === "function") addSkillXp("finance", 5);
+              // [全系统自洽修复] 域C R243: addSkillXp("finance")不是真实技能键→映射到accounting
+              if (typeof addSkillXp === "function") addSkillXp("accounting", 5);
               if (st.player) st.player.mental = (st.player.mental || 50) + 3;
               if (
                 typeof StateManager !== "undefined" &&
@@ -387,11 +389,12 @@
           text: "📊 先做功课再决定",
           apply: function (st) {
             if (st.flags) st.flags._npcInvestTipCooldown = true;
-            if (typeof addSkillXp === "function") addSkillXp("finance", 8);
+            // [全系统自洽修复] 域C R243: addSkillXp("finance")不是真实技能键→映射到accounting
+            if (typeof addSkillXp === "function") addSkillXp("accounting", 8);
             if (st.player) st.player.mental = (st.player.mental || 50) + 2;
             if (typeof StateManager !== "undefined" && StateManager.addMessage)
               StateManager.addMessage(
-                "你花了几天研究相关行业的财报，finance+8。",
+                "你花了几天研究相关行业的财报，会计+8。",
                 "good",
               );
           },

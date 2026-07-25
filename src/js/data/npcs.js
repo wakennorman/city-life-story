@@ -3614,12 +3614,13 @@ var NPCS = [
       {
         threshold: 30,
         id: "old_ma_30",
-        desc: "老马教你砌墙技巧(体力XP+10)",
+        desc: "老马教你砌墙技巧(维修XP+10)",
         effect: function (st) {
           if (st.flags.oldMaSkillBonus) return;
-          if (typeof addSkillXp === "function") addSkillXp("physique", 10);
+          // [全系统自洽修复] 域C R243: addSkillXp("physique")不是真实技能键→映射到repair(砌墙是手艺活)
+          if (typeof addSkillXp === "function") addSkillXp("repair", 10);
           st.flags.oldMaSkillBonus = true;
-          StateManager.addMessage("💕 老马教你砌墙的窍门。体力XP+10。", "success");
+          StateManager.addMessage("💕 老马教你砌墙的窍门。维修XP+10。", "success");
         },
       },
     ],
