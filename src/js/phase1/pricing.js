@@ -764,3 +764,32 @@ if (typeof window !== "undefined") {
     return result;
   };
 }
+
+// [全系统自洽修复] 域A R250 联动增强(A→B): 价格波动叙事
+function checkPriceFluctuationNarrative(state, goodId, oldPrice, newPrice) {
+  if (!state || !goodId || !oldPrice || !newPrice || oldPrice <= 0) return;
+  var change = (newPrice - oldPrice) / oldPrice;
+  if (change > 0.5) {
+    StateManager.addMessage("📈 " + (getGoodById(goodId) ? getGoodById(goodId).name : goodId) + "价格暴涨" + Math.round(change * 100) + "%！市场出现抢购潮。", "info");
+  } else if (change < -0.5) {
+    StateManager.addMessage("📉 " + (getGoodById(goodId) ? getGoodById(goodId).name : goodId) + "价格暴跌" + Math.round(Math.abs(change) * 100) + "%！供应过剩导致价格跳水。", "warning");
+  }
+}
+
+// [全系统自洽修复] 域A R250 联动增强(A→C): 价格波动影响技能经验
+function applyPriceSkillXp(state, goodId, change) {
+  if (!state || !state.skills || !goodId || !change || typeof addSkillXp !== "function") return;
+  if (change > 0.3) addSkillXp("sales", 2);
+  else if (change < -0.3) addSkillXp("accounting", 1);
+}
+
+// [全系统自洽修复] 域A R250 联动增强(A→F): 价格预警数据
+function getPriceAlertData(state, goodId, currentPrice) {
+  if (!state || !goodId || !currentPrice) return null;
+  var good = getGoodById(goodId);
+  if (!good) return null;
+  var ratio = currentPrice / (good.basePrice || 1);
+  if (ratio > 1.5) return { level: "high", text: "价格偏高(" + Math.round((ratio - 1) * 100) + "%)", color: "var(--danger)" };
+  if (ratio < 0.5) return { level: "low", text: "价格偏低(" + Math.round((1 - ratio) * 100) + "%)", color: "var(--success)" };
+  return null;
+}

@@ -211,13 +211,13 @@ function generateSaveNarrative(state) {
 
 /**
  * 裁剪存档数据中的冗余字段，减小体积
- * - messageLog: 保留前50条+后50条完整，中间浓缩摘要
+ * - messageLog: 保留前100条+后100条完整，中间浓缩摘要（仅当超过200条时触发）
  */
 function _trimStateForSave(saveData) {
-  if (saveData.messageLog && saveData.messageLog.length > 100) {
-    var head = saveData.messageLog.slice(0, 50);
-    var tail = saveData.messageLog.slice(-50);
-    var middle = saveData.messageLog.slice(50, -50);
+  if (saveData.messageLog && saveData.messageLog.length > 200) {
+    var head = saveData.messageLog.slice(0, 100);
+    var tail = saveData.messageLog.slice(-100);
+    var middle = saveData.messageLog.slice(100, -100);
     var condensed = [];
     // 按每10条一组浓缩
     for (var i = 0; i < middle.length; i += 10) {
