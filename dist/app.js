@@ -200110,7 +200110,7 @@ function renderInvestmentHoldingPanel(area, inv, groupKeys, title, color) {
         }
         // 滚动到对应卡片
         setTimeout(function() {
-          var card = document.getElementById("chart-" + sym);
+          var card = document.getElementById("card-" + sym);
           if (card) {
             card.scrollIntoView({ behavior: "smooth", block: "center" });
             card.style.transition = "background 0.5s, border-color 0.5s, box-shadow 0.5s";
@@ -200239,7 +200239,7 @@ function renderUnifiedHoldingsPanel(state, parent) {
             btns[i].click();
             // 滚动到对应卡片
             setTimeout(function() {
-              var card = document.getElementById("chart-" + symbol);
+              var card = document.getElementById("card-" + symbol);
               if (card) {
                 card.scrollIntoView({ behavior: "smooth", block: "center" });
                 card.style.transition = "background 0.5s, border-color 0.5s, box-shadow 0.5s";
@@ -201038,7 +201038,7 @@ function renderStocks(area, inv, state, parent) {
         btn.addEventListener("click", function(e) {
           e.stopPropagation();
           var sym = this.dataset.symbol;
-          var card = document.getElementById("chart-" + sym);
+          var card = document.getElementById("card-" + sym);
           if (card) {
             card.scrollIntoView({ behavior: "smooth", block: "center" });
             card.style.transition = "background 0.5s, border-color 0.5s, box-shadow 0.5s";
