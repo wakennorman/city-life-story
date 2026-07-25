@@ -2292,7 +2292,6 @@ function addExtraActions(state, actions) {
   if (state.player.phase === "street") {
     addStreetExtras(state, actions);
     addAmenityActions(state, actions);
-    addHomeActions(state, actions);
     addClinicAction(state, actions);
     addLongDistanceTravelAction(state, actions);
     addLegalOfficeAction(state, actions);
@@ -2310,6 +2309,8 @@ function addExtraActions(state, actions) {
       addIllegalActions(state, actions);
     }
   }
+  // 回家行动 — 所有阶段均可用（只要有住所）
+  addHomeActions(state, actions);
   // 余额宝每日利息
   if (state.flags.yuEBao > 0) {
     const interest = Math.floor(state.flags.yuEBao * 0.0001);

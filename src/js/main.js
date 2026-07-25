@@ -3547,108 +3547,6 @@ function getAvailableActions(state) {
       });
     }
 
-    // 结束今天 — 行动力不足时主动结束（防止卡死在低AP无法继续）
-    if ((state.player.actionPoints || 0) > 0) {
-      actions.push({
-        id: "end_day",
-        category: "survival",
-        priority: 0,
-        name: "🛑 结束今天",
-        desc: "行动力不足以继续活动时，直接结束这一天，进入下一天。",
-        icon: "🛑",
-        apCost: 0,
-        handler: () => {
-          if (typeof endDay === "function") {
-            endDay();
-          } else {
-            StateManager.addMessage("⚠️ 无法结束今天，请刷新页面。", "error");
-          }
-        },
-      });
-    }
-
-    actions.push({
-      id: "eat",
-      category: "survival",
-      name: "吃顿饭",
-      desc: "在路边摊吃个快餐，填饱肚子。烹饪技能越高自己做越省钱。",
-      icon: "🍚",
-      apCost: 10,
-      costEstimate: 15,
-      effectEstimate: "饥饱+35, 心情+8",
-      disabled: (state.resources.cash || 0) < 8 ? true : false,
-      handler: () => {
-        const st = StateManager.getState();
-        const isNewbie = st.player.day <= 10;
-        // 烹饪技能减折扣：cooking 0→全价15, 50→9折, 100→3折（保底5元）
-        const cookingLvl = st.skills.cooking.level || 0;
-        const discount =
-          typeof getCookingDiscount === "function"
-            ? getCookingDiscount(cookingLvl)
-            : 0;
-        const baseCost = isNewbie ? 8 : 15;
-        // 陈师傅好感80解锁秘方：额外-20%食费
-        const recipeDiscount = st.flags.chefChenRecipe ? 0.2 : 0;
-        const totalDiscount = Math.min(0.85, discount + recipeDiscount);
-        const foodCost = Math.max(
-          5,
-          Math.round(baseCost * (1 - totalDiscount)),
-        );
-        if ((st.resources.cash || 0) < foodCost) {
-          StateManager.addMessage("⚠️ 钱不够吃饭了！", "danger");
-          return;
-        }
-        var saved = baseCost - foodCost;
-        var cookHint = "";
-        if (recipeDiscount > 0 && discount > 0) {
-          cookHint = `（烹饪Lv${cookingLvl}+陈师傅秘方共省¥${saved}）`;
-        } else if (recipeDiscount > 0) {
-          cookHint = `（陈师傅秘方省¥${saved}）`;
-        } else if (discount > 0) {
-          cookHint = `（烹饪Lv${cookingLvl}省了¥${saved}）`;
-        }
-
-        st.resources.cash = Math.max(0, (st.resources.cash || 0) - foodCost);
-        addDailyTransaction(
-          st,
-          "expense",
-          "food",
-          foodCost,
-          "吃饭" + (cookHint || ""),
-        );
-        st.needs.hunger = Math.min(100, st.needs.hunger + 35);
-        st.needs.happiness = Math.min(100, st.needs.happiness + 8);
-        StateManager.addMessage(
-          `🍚 你花¥${foodCost}吃了顿饭，肚子饱了。${cookHint}`,
-          "success",
-        );
-        consumeAP(10);
-      },
-    });
-
-    actions.push({
-      id: "shower",
-      category: "survival",
-      name: "洗澡",
-      desc: "花8元去公共澡堂洗个澡，卫生+40。",
-      apCost: 10,
-      icon: "🚿",
-      costEstimate: 8,
-      effectEstimate: "卫生+40",
-      disabled: (state.resources.cash || 0) < 8 ? true : false,
-      handler: () => {
-        const st = StateManager.getState();
-        if ((st.resources.cash || 0) < 8) {
-          StateManager.addMessage("⚠️ 不够钱洗澡。", "danger");
-          return;
-        }
-        st.resources.cash = Math.max(0, (st.resources.cash || 0) - 8);
-        st.needs.hygiene = Math.min(100, st.needs.hygiene + 40);
-        StateManager.addMessage("🚿 洗了个澡，神清气爽。", "success");
-        consumeAP(10);
-      },
-    });
-
     // 银行相关行动
     if (locKey === "bank") {
       actions.push({
@@ -4436,6 +4334,110 @@ function getAvailableActions(state) {
       }
     }
   }
+
+  // 结束今天 — 所有地点/阶段均可用
+  if ((state.player.actionPoints || 0) > 0) {
+    actions.push({
+      id: "end_day",
+      category: "survival",
+      priority: 0,
+      name: "🛑 结束今天",
+      desc: "行动力不足以继续活动时，直接结束这一天，进入下一天。",
+      icon: "🛑",
+      apCost: 0,
+      handler: () => {
+        if (typeof endDay === "function") {
+          endDay();
+        } else {
+          StateManager.addMessage("⚠️ 无法结束今天，请刷新页面。", "error");
+        }
+      },
+    });
+  }
+
+  // 吃顿饭 — 所有地点/阶段均可用（基本生存需求）
+  actions.push({
+    id: "eat",
+    category: "survival",
+    name: "吃顿饭",
+    desc: "填饱肚子，补充体力。烹饪技能越高越省钱。",
+    icon: "🍚",
+    apCost: 10,
+    costEstimate: 15,
+    effectEstimate: "饥饱+35, 心情+8",
+    disabled: (state.resources.cash || 0) < 8 ? true : false,
+    handler: () => {
+      const st = StateManager.getState();
+      const isNewbie = st.player.day <= 10;
+      // 烹饪技能减折扣：cooking 0→全价15, 50→9折, 100→3折（保底5元）
+      const cookingLvl = st.skills.cooking.level || 0;
+      const discount =
+        typeof getCookingDiscount === "function"
+          ? getCookingDiscount(cookingLvl)
+          : 0;
+      const baseCost = isNewbie ? 8 : 15;
+      // 陈师傅好感80解锁秘方：额外-20%食费
+      const recipeDiscount = st.flags.chefChenRecipe ? 0.2 : 0;
+      const totalDiscount = Math.min(0.85, discount + recipeDiscount);
+      const foodCost = Math.max(
+        5,
+        Math.round(baseCost * (1 - totalDiscount)),
+      );
+      if ((st.resources.cash || 0) < foodCost) {
+        StateManager.addMessage("⚠️ 钱不够吃饭了！", "danger");
+        return;
+      }
+      var saved = baseCost - foodCost;
+      var cookHint = "";
+      if (recipeDiscount > 0 && discount > 0) {
+        cookHint = `（烹饪Lv${cookingLvl}+陈师傅秘方共省¥${saved}）`;
+      } else if (recipeDiscount > 0) {
+        cookHint = `（陈师傅秘方省¥${saved}）`;
+      } else if (discount > 0) {
+        cookHint = `（烹饪Lv${cookingLvl}省了¥${saved}）`;
+      }
+
+      st.resources.cash = Math.max(0, (st.resources.cash || 0) - foodCost);
+      addDailyTransaction(
+        st,
+        "expense",
+        "food",
+        foodCost,
+        "吃饭" + (cookHint || ""),
+      );
+      st.needs.hunger = Math.min(100, st.needs.hunger + 35);
+      st.needs.happiness = Math.min(100, st.needs.happiness + 8);
+      StateManager.addMessage(
+        `🍚 你花¥${foodCost}吃了顿饭，肚子饱了。${cookHint}`,
+        "success",
+      );
+      consumeAP(10);
+    },
+  });
+
+  // 洗澡 — 所有地点/阶段均可用（基本卫生需求）
+  actions.push({
+    id: "shower",
+    category: "survival",
+    name: "洗澡",
+    desc: "花8元洗个澡，保持个人卫生。",
+    icon: "🚿",
+    apCost: 10,
+    costEstimate: 8,
+    effectEstimate: "卫生+40",
+    disabled: (state.resources.cash || 0) < 8 ? true : false,
+    handler: () => {
+      const st = StateManager.getState();
+      if ((st.resources.cash || 0) < 8) {
+        StateManager.addMessage("⚠️ 不够钱洗澡。", "danger");
+        return;
+      }
+      st.resources.cash = Math.max(0, (st.resources.cash || 0) - 8);
+      st.needs.hygiene = Math.min(100, st.needs.hygiene + 40);
+      StateManager.addMessage("🚿 洗了个澡，神清气爽。", "success");
+      consumeAP(10);
+    },
+  });
 
   // --- 注入扩展行动库（生存/社交/学习/生活/投资/梦想）---
   if (typeof addExtraActions === "function") {

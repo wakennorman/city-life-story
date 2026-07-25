@@ -45,6 +45,7 @@ const NPC_RELATION_MATRIX = {
     zhaojie: "neutral",
     chen_ge: "neutral",
     ajie: "neutral",
+      old_ma: "neutral",
   },
   old_zhou: {
     aunt_wang: "old_acquaintance",
@@ -60,6 +61,7 @@ const NPC_RELATION_MATRIX = {
     zhaojie: "neutral",
     chen_ge: "friendly",
     ajie: "neutral",
+      old_ma: "neutral",
   },
   boss_li: {
     aunt_wang: "neutral",
@@ -75,6 +77,7 @@ const NPC_RELATION_MATRIX = {
     zhaojie: "business",
     chen_ge: "neutral",
     ajie: "neutral",
+      old_ma: "neutral",
   },
   sister_zhang: {
     aunt_wang: "strained",
@@ -90,6 +93,7 @@ const NPC_RELATION_MATRIX = {
     zhaojie: "business",
     chen_ge: "neutral",
     ajie: "neutral",
+      old_ma: "neutral",
   },
   xiao_mei: {
     aunt_wang: "friendly",
@@ -105,6 +109,7 @@ const NPC_RELATION_MATRIX = {
     zhaojie: "neutral",
     chen_ge: "neutral",
     ajie: "neutral",
+      old_ma: "neutral",
   },
   chef_chen: {
     aunt_wang: "friendly",
@@ -120,6 +125,7 @@ const NPC_RELATION_MATRIX = {
     zhaojie: "neutral",
     chen_ge: "neutral",
     ajie: "neutral",
+      old_ma: "neutral",
   },
   auntie_lin: {
     aunt_wang: "friendly",
@@ -135,6 +141,7 @@ const NPC_RELATION_MATRIX = {
     zhaojie: "neutral",
     chen_ge: "neutral",
     ajie: "neutral",
+      old_ma: "neutral",
   },
   master_zhao: {
     aunt_wang: "neutral",
@@ -150,6 +157,7 @@ const NPC_RELATION_MATRIX = {
     zhaojie: "neutral",
     chen_ge: "neutral",
     ajie: "neutral",
+      old_ma: "neutral",
   },
   xiaoli: {
     aunt_wang: "neutral",
@@ -165,6 +173,7 @@ const NPC_RELATION_MATRIX = {
     zhaojie: "neutral",
     chen_ge: "neutral",
     ajie: "neutral",
+      old_ma: "neutral",
   },
   dr_wang: {
     aunt_wang: "neutral",
@@ -180,6 +189,7 @@ const NPC_RELATION_MATRIX = {
     zhaojie: "neutral",
     chen_ge: "neutral",
     ajie: "neutral",
+      old_ma: "neutral",
   },
   zhaojie: {
     aunt_wang: "neutral",
@@ -195,6 +205,7 @@ const NPC_RELATION_MATRIX = {
     dr_wang: "neutral",
     chen_ge: "neutral",
     ajie: "neutral",
+      old_ma: "neutral",
   },
   chen_ge: {
     aunt_wang: "neutral",
@@ -210,6 +221,7 @@ const NPC_RELATION_MATRIX = {
     dr_wang: "neutral",
     zhaojie: "neutral",
     ajie: "neutral",
+      old_ma: "neutral",
   },
   ajie: {
     aunt_wang: "neutral",
@@ -225,6 +237,7 @@ const NPC_RELATION_MATRIX = {
     dr_wang: "neutral",
     zhaojie: "neutral",
     chen_ge: "classmate",
+      old_ma: "neutral",
   },
   xiaochen: {
     aunt_wang: "friendly",
@@ -243,6 +256,7 @@ const NPC_RELATION_MATRIX = {
     uncle_chen_bank: "friendly",
     sister_wu: "neutral",
     brother_huang: "friendly",
+      old_ma: "neutral",
   },
   // [全系统自洽修复] 域D 联动增强: 3个之前缺失的NPC加入关系矩阵
   uncle_chen_bank: {
@@ -262,6 +276,7 @@ const NPC_RELATION_MATRIX = {
     ajie: "neutral",
     sister_wu: "neutral",
     brother_huang: "neutral",
+      old_ma: "neutral",
   },
   sister_wu: {
     xiaoli: "business",
@@ -280,6 +295,7 @@ const NPC_RELATION_MATRIX = {
     ajie: "neutral",
     uncle_chen_bank: "neutral",
     brother_huang: "neutral",
+      old_ma: "neutral",
   },
   brother_huang: {
     xiaochen: "friendly",
@@ -298,6 +314,27 @@ const NPC_RELATION_MATRIX = {
     ajie: "neutral",
     uncle_chen_bank: "neutral",
     sister_wu: "neutral",
+      old_ma: "neutral",
+  },
+  // [全系统自洽修复] 域D R245 A类: old_ma 已定义但未加入关系矩阵→关系系统永不初始化该NPC
+  old_ma: {
+    chen_ge: "neutral",
+    aunt_wang: "neutral",
+    old_zhou: "neutral",
+    boss_li: "neutral",
+    sister_zhang: "neutral",
+    xiao_mei: "neutral",
+    chef_chen: "neutral",
+    auntie_lin: "neutral",
+    master_zhao: "neutral",
+    xiaoli: "neutral",
+    xiaochen: "neutral",
+    dr_wang: "neutral",
+    zhaojie: "neutral",
+    ajie: "neutral",
+    uncle_chen_bank: "neutral",
+    sister_wu: "neutral",
+    brother_huang: "neutral",
   },
 };
 
@@ -326,6 +363,8 @@ const RELATION_PROPAGATION = {
   uncle_chen_bank: { dr_wang: 0.12, xiaochen: 0.15 },
   sister_wu: { xiaoli: 0.15, sister_zhang: 0.1 },
   brother_huang: { xiaochen: 0.15, aunt_wang: 0.1 },
+  // [全系统自洽修复] 域D R245 A类: old_ma 加入关系传播矩阵
+  old_ma: { chen_ge: 0.12, boss_li: 0.1, aunt_wang: 0.08 },
 };
 
 /** 初始化NPC关系状态 */

@@ -142300,6 +142300,7 @@ const NPC_RELATION_MATRIX = {
     zhaojie: "neutral",
     chen_ge: "neutral",
     ajie: "neutral",
+      old_ma: "neutral",
   },
   old_zhou: {
     aunt_wang: "old_acquaintance",
@@ -142315,6 +142316,7 @@ const NPC_RELATION_MATRIX = {
     zhaojie: "neutral",
     chen_ge: "friendly",
     ajie: "neutral",
+      old_ma: "neutral",
   },
   boss_li: {
     aunt_wang: "neutral",
@@ -142330,6 +142332,7 @@ const NPC_RELATION_MATRIX = {
     zhaojie: "business",
     chen_ge: "neutral",
     ajie: "neutral",
+      old_ma: "neutral",
   },
   sister_zhang: {
     aunt_wang: "strained",
@@ -142345,6 +142348,7 @@ const NPC_RELATION_MATRIX = {
     zhaojie: "business",
     chen_ge: "neutral",
     ajie: "neutral",
+      old_ma: "neutral",
   },
   xiao_mei: {
     aunt_wang: "friendly",
@@ -142360,6 +142364,7 @@ const NPC_RELATION_MATRIX = {
     zhaojie: "neutral",
     chen_ge: "neutral",
     ajie: "neutral",
+      old_ma: "neutral",
   },
   chef_chen: {
     aunt_wang: "friendly",
@@ -142375,6 +142380,7 @@ const NPC_RELATION_MATRIX = {
     zhaojie: "neutral",
     chen_ge: "neutral",
     ajie: "neutral",
+      old_ma: "neutral",
   },
   auntie_lin: {
     aunt_wang: "friendly",
@@ -142390,6 +142396,7 @@ const NPC_RELATION_MATRIX = {
     zhaojie: "neutral",
     chen_ge: "neutral",
     ajie: "neutral",
+      old_ma: "neutral",
   },
   master_zhao: {
     aunt_wang: "neutral",
@@ -142405,6 +142412,7 @@ const NPC_RELATION_MATRIX = {
     zhaojie: "neutral",
     chen_ge: "neutral",
     ajie: "neutral",
+      old_ma: "neutral",
   },
   xiaoli: {
     aunt_wang: "neutral",
@@ -142420,6 +142428,7 @@ const NPC_RELATION_MATRIX = {
     zhaojie: "neutral",
     chen_ge: "neutral",
     ajie: "neutral",
+      old_ma: "neutral",
   },
   dr_wang: {
     aunt_wang: "neutral",
@@ -142435,6 +142444,7 @@ const NPC_RELATION_MATRIX = {
     zhaojie: "neutral",
     chen_ge: "neutral",
     ajie: "neutral",
+      old_ma: "neutral",
   },
   zhaojie: {
     aunt_wang: "neutral",
@@ -142450,6 +142460,7 @@ const NPC_RELATION_MATRIX = {
     dr_wang: "neutral",
     chen_ge: "neutral",
     ajie: "neutral",
+      old_ma: "neutral",
   },
   chen_ge: {
     aunt_wang: "neutral",
@@ -142465,6 +142476,7 @@ const NPC_RELATION_MATRIX = {
     dr_wang: "neutral",
     zhaojie: "neutral",
     ajie: "neutral",
+      old_ma: "neutral",
   },
   ajie: {
     aunt_wang: "neutral",
@@ -142480,6 +142492,7 @@ const NPC_RELATION_MATRIX = {
     dr_wang: "neutral",
     zhaojie: "neutral",
     chen_ge: "classmate",
+      old_ma: "neutral",
   },
   xiaochen: {
     aunt_wang: "friendly",
@@ -142498,6 +142511,7 @@ const NPC_RELATION_MATRIX = {
     uncle_chen_bank: "friendly",
     sister_wu: "neutral",
     brother_huang: "friendly",
+      old_ma: "neutral",
   },
   // [全系统自洽修复] 域D 联动增强: 3个之前缺失的NPC加入关系矩阵
   uncle_chen_bank: {
@@ -142517,6 +142531,7 @@ const NPC_RELATION_MATRIX = {
     ajie: "neutral",
     sister_wu: "neutral",
     brother_huang: "neutral",
+      old_ma: "neutral",
   },
   sister_wu: {
     xiaoli: "business",
@@ -142535,6 +142550,7 @@ const NPC_RELATION_MATRIX = {
     ajie: "neutral",
     uncle_chen_bank: "neutral",
     brother_huang: "neutral",
+      old_ma: "neutral",
   },
   brother_huang: {
     xiaochen: "friendly",
@@ -142553,6 +142569,27 @@ const NPC_RELATION_MATRIX = {
     ajie: "neutral",
     uncle_chen_bank: "neutral",
     sister_wu: "neutral",
+      old_ma: "neutral",
+  },
+  // [全系统自洽修复] 域D R245 A类: old_ma 已定义但未加入关系矩阵→关系系统永不初始化该NPC
+  old_ma: {
+    chen_ge: "neutral",
+    aunt_wang: "neutral",
+    old_zhou: "neutral",
+    boss_li: "neutral",
+    sister_zhang: "neutral",
+    xiao_mei: "neutral",
+    chef_chen: "neutral",
+    auntie_lin: "neutral",
+    master_zhao: "neutral",
+    xiaoli: "neutral",
+    xiaochen: "neutral",
+    dr_wang: "neutral",
+    zhaojie: "neutral",
+    ajie: "neutral",
+    uncle_chen_bank: "neutral",
+    sister_wu: "neutral",
+    brother_huang: "neutral",
   },
 };
 
@@ -142581,6 +142618,8 @@ const RELATION_PROPAGATION = {
   uncle_chen_bank: { dr_wang: 0.12, xiaochen: 0.15 },
   sister_wu: { xiaoli: 0.15, sister_zhang: 0.1 },
   brother_huang: { xiaochen: 0.15, aunt_wang: 0.1 },
+  // [全系统自洽修复] 域D R245 A类: old_ma 加入关系传播矩阵
+  old_ma: { chen_ge: 0.12, boss_li: 0.1, aunt_wang: 0.08 },
 };
 
 /** 初始化NPC关系状态 */
@@ -249520,6 +249559,21 @@ function renderNpcRelationships(state, content) {
     "💡 对某个NPC的好感变化会通过关系网传导给其他人。关系越紧密，传导越强。";
   html += "</p>";
 
+  // [全系统自洽修复] 域D R245 联动增强(D→G): 社交圈健康回报 — 每3位好感≥30的NPC提供每日心情恢复
+  (function() {
+    var _metCount = 0;
+    for (var _ri = 0; _ri < npcIds.length; _ri++) {
+      var _r = state.relationships[npcIds[_ri]];
+      if (_r && _r.met && (_r.affinity || 0) >= 30) _metCount++;
+    }
+    if (_metCount >= 3) {
+      var _hpBonus = Math.min(3, Math.floor(_metCount / 3));
+      html += '<div style="font-size:11px;color:var(--success);margin:4px 0 8px;">💚 社交温暖：' + _metCount + '位好友环绕，每日心情+' + _hpBonus + '（社交圈越大，心灵越健康）</div>';
+    } else {
+      html += '<div style="font-size:11px;color:var(--text-muted);margin:4px 0 8px;">💚 再熟络' + (3 - _metCount) + '位NPC(好感≥30)即可激活社交温暖效果，每日心情恢复。</div>';
+    }
+  })();
+
   // [全系统自洽修复] 域F 联动:圈子归属感概览(桥接R8 D域机制→UI化,全守卫)
   var _met = 0,
     _close = 0,
@@ -249717,6 +249771,15 @@ function renderNpcRelationships(state, content) {
         '" data-nav-target=\'{\"type\":\"location\",\"key\":\"' +
         _loc +
         "\"}'>🚶 拜访</button>";
+    }
+
+    // [全系统自洽修复] 域D R245 联动增强(D→C): 高好感NPC提供职业推荐暗示
+    if (affinity >= 60 && _npcDef && (_npcDef.role === "工头" || _npcDef.role === "老板" || _npcDef.role === "房东" || _npcDef.role === "工友" || _npcDef.monthlyIncome >= 10000)) {
+      html += '<div style="font-size:10px;color:var(--accent);margin-top:4px;">💼 人脉推荐：这位' + _npcDef.name + '在行业内有不错的人脉，或许能帮你推荐工作。</div>';
+    }
+    // [全系统自洽修复] 域D R245 联动增强(D→E): 高好感NPC提供交易情报提示
+    if (affinity >= 30 && _npcDef && _npcDef.tradeInfo && _npcDef.tradeInfo.expertise && _npcDef.tradeInfo.expertise.length > 0) {
+      html += '<div style="font-size:10px;color:var(--info);margin-top:2px;">📊 交易情报：' + _npcDef.name + '在' + _npcDef.tradeInfo.expertise.join("、") + '领域有独到见解。</div>';
     }
 
     html += "</div>";

@@ -25,6 +25,21 @@ function renderNpcRelationships(state, content) {
     "💡 对某个NPC的好感变化会通过关系网传导给其他人。关系越紧密，传导越强。";
   html += "</p>";
 
+  // [全系统自洽修复] 域D R245 联动增强(D→G): 社交圈健康回报 — 每3位好感≥30的NPC提供每日心情恢复
+  (function() {
+    var _metCount = 0;
+    for (var _ri = 0; _ri < npcIds.length; _ri++) {
+      var _r = state.relationships[npcIds[_ri]];
+      if (_r && _r.met && (_r.affinity || 0) >= 30) _metCount++;
+    }
+    if (_metCount >= 3) {
+      var _hpBonus = Math.min(3, Math.floor(_metCount / 3));
+      html += '<div style="font-size:11px;color:var(--success);margin:4px 0 8px;">💚 社交温暖：' + _metCount + '位好友环绕，每日心情+' + _hpBonus + '（社交圈越大，心灵越健康）</div>';
+    } else {
+      html += '<div style="font-size:11px;color:var(--text-muted);margin:4px 0 8px;">💚 再熟络' + (3 - _metCount) + '位NPC(好感≥30)即可激活社交温暖效果，每日心情恢复。</div>';
+    }
+  })();
+
   // [全系统自洽修复] 域F 联动:圈子归属感概览(桥接R8 D域机制→UI化,全守卫)
   var _met = 0,
     _close = 0,
@@ -222,6 +237,15 @@ function renderNpcRelationships(state, content) {
         '" data-nav-target=\'{\"type\":\"location\",\"key\":\"' +
         _loc +
         "\"}'>🚶 拜访</button>";
+    }
+
+    // [全系统自洽修复] 域D R245 联动增强(D→C): 高好感NPC提供职业推荐暗示
+    if (affinity >= 60 && _npcDef && (_npcDef.role === "工头" || _npcDef.role === "老板" || _npcDef.role === "房东" || _npcDef.role === "工友" || _npcDef.monthlyIncome >= 10000)) {
+      html += '<div style="font-size:10px;color:var(--accent);margin-top:4px;">💼 人脉推荐：这位' + _npcDef.name + '在行业内有不错的人脉，或许能帮你推荐工作。</div>';
+    }
+    // [全系统自洽修复] 域D R245 联动增强(D→E): 高好感NPC提供交易情报提示
+    if (affinity >= 30 && _npcDef && _npcDef.tradeInfo && _npcDef.tradeInfo.expertise && _npcDef.tradeInfo.expertise.length > 0) {
+      html += '<div style="font-size:10px;color:var(--info);margin-top:2px;">📊 交易情报：' + _npcDef.name + '在' + _npcDef.tradeInfo.expertise.join("、") + '领域有独到见解。</div>';
     }
 
     html += "</div>";
