@@ -110043,6 +110043,401 @@ if (typeof window !== "undefined") {
   }
 })();
 ;
+// ==== js/core/domain_d_linkage_r382.js ====
+/**
+ * 域D(NPC/社交) 联动增强 R382
+ * 第十六轮循环——社交积累的多维回响。
+ * 桥接：
+ *   D→A  social_network_value       社交→网络价值（数据/数值·社交资本）
+ *   D→G  social_emotional_support    社交→情感支持（核心机制·心理健康）
+ *   D→B  social_life_story          社交→生活故事（事件/叙事·人物共鸣）
+ */
+(function () {
+  "use strict";
+
+  if (typeof RANDOM_EVENTS === "undefined") return;
+  if (RANDOM_EVENTS._domainDLinkageR382Loaded) return;
+  RANDOM_EVENTS._domainDLinkageR382Loaded = true;
+
+  function countMetNpcs(st) {
+    if (!st || !st.relationships) return 0;
+    var count = 0;
+    for (var id in st.relationships) {
+      if (Object.prototype.hasOwnProperty.call(st.relationships, id)) {
+        if (st.relationships[id] && st.relationships[id].met) count++;
+      }
+    }
+    return count;
+  }
+
+  var EVENTS = [
+    {
+      id: "social_network_value",
+      phase: "street",
+      _isChainEvent: false,
+      icon: "🔗",
+      title: "社交网络的价值",
+      story: "你开始计算自己的社交网络价值——你认识多少人、这些人的背景是什么、你们之间有什么样的联系。\n\n你发现，社交网络的价值不是由数量决定的，而是由「连接的质量」决定的。\n\n一个真正愿意帮你的朋友，比一百个点赞之交更有价值。\n\n「社交资本是最隐形的财富，但它确实存在。」",
+      triggers: { minDay: 45, excludeFlags: ["_socialNetworkValueSeen"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        return countMetNpcs(st) >= 4;
+      },
+      choices: [
+        {
+          text: "🔗 评估社交网络价值",
+          hint: "心智+5，社交资本flag",
+          apply: function (st) {
+            if (!st.flags) st.flags = {};
+            st.flags._socialNetworkValueSeen = true;
+            st.flags._socialCapitalAwareness = true;
+            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 5);
+            if (typeof StateManager !== "undefined" && StateManager.addMessage) {
+              StateManager.addMessage("🔗 你评估了社交网络价值。社交资本是最隐形的财富。心智+5。", "success");
+            }
+          },
+        },
+        {
+          text: "🤝 用心交友",
+          hint: "心智+2",
+          apply: function (st) {
+            if (!st.flags) st.flags = {};
+            st.flags._socialNetworkValueSeen = true;
+            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 2);
+            if (typeof StateManager !== "undefined" && StateManager.addMessage) {
+              StateManager.addMessage("🤝 你用心交友。心智+2。", "info");
+            }
+          },
+        },
+      ],
+      probability: 0.5,
+      repeatable: false,
+    },
+    {
+      id: "social_emotional_support",
+      phase: "street",
+      _isChainEvent: false,
+      icon: "💗",
+      title: "情感支持",
+      story: "你最近遇到了一些挫折，心情不太好。\n\n一个朋友看出了你的状态，默默地陪着你，什么也没说。\n\n有时候，最好的安慰不是言语，而是「我在」。\n\n「在这个城市里，有人在乎你的感受，就是最大的温暖。」",
+      triggers: { minDay: 20, excludeFlags: ["_socialEmotionalSupportSeen"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        if (countMetNpcs(st) < 2) return false;
+        return !!(st.needs && (st.needs.happiness || 50) < 45);
+      },
+      choices: [
+        {
+          text: "💗 接受朋友的关心",
+          hint: "心情+12，心智+4",
+          apply: function (st) {
+            if (!st.flags) st.flags = {};
+            st.flags._socialEmotionalSupportSeen = true;
+            if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 12);
+            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 4);
+            if (typeof StateManager !== "undefined" && StateManager.addMessage) {
+              StateManager.addMessage("💗 你接受了朋友的关心。有人在乎你的感受就是最大的温暖。心情+12，心智+4。", "success");
+            }
+          },
+        },
+        {
+          text: "😤 自己扛着",
+          hint: "心智+2",
+          apply: function (st) {
+            if (!st.flags) st.flags = {};
+            st.flags._socialEmotionalSupportSeen = true;
+            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 2);
+            if (typeof StateManager !== "undefined" && StateManager.addMessage) {
+              StateManager.addMessage("😤 你自己扛着。心智+2。", "info");
+            }
+          },
+        },
+      ],
+      probability: 0.5,
+      repeatable: false,
+    },
+    {
+      id: "social_life_story",
+      phase: "street",
+      _isChainEvent: false,
+      icon: "📖",
+      title: "每个人都有自己的故事",
+      story: "你在街头遇到了一个熟悉的面孔，你们聊起了各自的近况。\n\n你发现，每个人都有自己的故事——有人在为梦想奋斗，有人在为生活奔波，有人刚刚经历了人生的转折。\n\n你开始理解，这座城市里的每一个人，都是自己人生的主角。\n\n「倾听别人的故事，也是在丰富自己的人生。」",
+      triggers: { minDay: 30, excludeFlags: ["_socialLifeStorySeen"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        return countMetNpcs(st) >= 3;
+      },
+      choices: [
+        {
+          text: "📖 倾听朋友的故事",
+          hint: "心情+8，心智+5，好感+3",
+          apply: function (st) {
+            if (!st.flags) st.flags = {};
+            st.flags._socialLifeStorySeen = true;
+            if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 8);
+            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 5);
+            if (typeof StateManager !== "undefined" && StateManager.addMessage) {
+              StateManager.addMessage("📖 你倾听了朋友的故事。倾听别人的故事也在丰富自己的人生。心情+8，心智+5。", "success");
+            }
+          },
+        },
+        {
+          text: "☕ 一起喝杯茶",
+          hint: "心情+4",
+          apply: function (st) {
+            if (!st.flags) st.flags = {};
+            st.flags._socialLifeStorySeen = true;
+            if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 4);
+            if (typeof StateManager !== "undefined" && StateManager.addMessage) {
+              StateManager.addMessage("☕ 你们一起喝了杯茶。心情+4。", "info");
+            }
+          },
+        },
+      ],
+      probability: 0.5,
+      repeatable: false,
+    },
+  ];
+
+  for (var i = 0; i < EVENTS.length; i++) {
+    RANDOM_EVENTS.push(EVENTS[i]);
+  }
+})();
+;
+// ==== js/core/domain_d_linkage_r246.js ====
+/**
+ * 域D(NPC/社交) 联动增强 R246
+ * 背景：域D A类修复 — old_ma(老马)全库零met路径→补first_meet登场事件 + decreaseColleagueRelationship死函数复活。
+ *   此外，D域联动方向有显著缺口：
+ *   1) D→G NPC关系健康 → 没有事件消费relationships统计数据→人生健康反馈
+ *   2) D→A NPC网络价值量化 → 社交资本无叙事化呈现
+ *   3) D→C 职业人脉 → NPC推荐工作/晋升零事件覆盖
+ * 桥接：
+ *   D→G  social_health_dashboard   社交网络概览 → relationships统计→心智+心情,置 _socialNetworkKeeper
+ *   D→A  social_capital_insight    社交资本洞察 → 已结识NPC×affinity总和→cash+心智
+ *   D→C  npc_career_referral       NPC职业推荐 → 高好感NPC引荐工作机会,addSkillXp("management")
+ *
+ * 严格照 npc_activation_events.js / domain_c_linkage_r191.js 已验证 IIFE 注入范式。
+ */
+(function () {
+  if (typeof RANDOM_EVENTS === "undefined") return;
+  if (RANDOM_EVENTS._domainDLinkageR246Loaded) return;
+  RANDOM_EVENTS._domainDLinkageR246Loaded = true;
+
+  // 获取已结识NPC数量
+  function getMetNpcCount(st) {
+    if (!st || !st.relationships) return 0;
+    var count = 0;
+    for (var id in st.relationships) {
+      if (!Object.prototype.hasOwnProperty.call(st.relationships, id)) continue;
+      if (st.relationships[id] && st.relationships[id].met) count++;
+    }
+    return count;
+  }
+
+  // 获取总好感度
+  function getTotalAffinity(st) {
+    if (!st || !st.relationships) return 0;
+    var total = 0;
+    for (var id in st.relationships) {
+      if (!Object.prototype.hasOwnProperty.call(st.relationships, id)) continue;
+      var r = st.relationships[id];
+      if (r && r.met) total += (r.affinity || 0);
+    }
+    return total;
+  }
+
+  // 获取最高好感NPC的id和rel
+  function getTopAffinityNpc(st) {
+    if (!st || !st.relationships) return null;
+    var bestId = null;
+    var bestAff = -1;
+    for (var id in st.relationships) {
+      if (!Object.prototype.hasOwnProperty.call(st.relationships, id)) continue;
+      var r = st.relationships[id];
+      if (r && r.met && (r.affinity || 0) > bestAff) {
+        bestAff = r.affinity || 0;
+        bestId = id;
+      }
+    }
+    if (!bestId) return null;
+    return { id: bestId, rel: st.relationships[bestId] };
+  };
+
+  // 获取NPC中文名
+  function getNpcCn(id) {
+    var names = {
+      aunt_wang: "王婶", boss_li: "李工头", sister_zhang: "张姐", old_zhou: "老周",
+      xiao_mei: "小美", chef_chen: "陈师傅", worker_lao_li: "老李", auntie_lin: "林阿姨",
+      chen_ge: "陈哥", ajie: "阿杰", old_ma: "老马", uncle_chen_bank: "老陈",
+      sister_wu: "吴姐", brother_huang: "黄哥"
+    };
+    return names[id] || id;
+  }
+
+  var EVENTS = [
+    {
+      // D→G: 社交网络概览 — 首次叙事化消费 relationships 统计数据
+      id: "social_health_dashboard",
+      phase: "street",
+      _isChainEvent: false,
+      icon: "🤝",
+      title: "你的人际地图",
+      story:
+        "你数了数自己认识的人——{metCount}个人,总好感度{totalAff}。这座城市很大,但你的朋友圈让你不再孤单。有些人成了知己,有些人只是点头之交,但每个相遇都值得珍惜。",
+      triggers: { minDay: 30, excludeFlags: ["_socialHealthSeen"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        var met = getMetNpcCount(st);
+        return met >= 2; // 至少结识2个NPC才触发
+      },
+      renderStory: function (st) {
+        if (!st) return this.story;
+        var met = getMetNpcCount(st);
+        var total = getTotalAffinity(st);
+        return this.story.replace("{metCount}", met).replace("{totalAff}", total);
+      },
+      choices: [
+        {
+          text: "😊 感谢这些相遇",
+          hint: "心智+4,心情+4,置 _socialNetworkKeeper",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._socialNetworkKeeper = true; // G域可消费:持续社交网络
+            st.flags._socialHealthSeen = true;
+            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 4); // [PLACEHOLDER]
+            if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 4); // [PLACEHOLDER]
+            if (typeof StateManager !== "undefined" && StateManager.addMessage)
+              StateManager.addMessage("😊 你感谢生命中的每一次相遇——圈子不大,但都是真心实意。心智+4,心情+4。", "success");
+          }
+        },
+        {
+          text: "😅 人太多记不住名字",
+          hint: "平静面对,心智+2",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._socialNetworkKeeper = true;
+            st.flags._socialHealthSeen = true;
+            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 2);
+            if (typeof StateManager !== "undefined" && StateManager.addMessage)
+              StateManager.addMessage("😅 你觉得自己确实该好好记住这些人的名字。心智+2。", "info");
+          }
+        }
+      ]
+    },
+    {
+      // D→A: 社交资本洞察 — 已结识NPC×affinity总和转化为经济价值
+      id: "social_capital_insight",
+      phase: "street",
+      _isChainEvent: false,
+      icon: "💼",
+      title: "人脉就是钱脉",
+      story:
+        "今天跟{topNpcName}聊天的时候突然悟了——你在城里认识的这些人,不只是感情,更是实实在在的资源。他们知道哪里有好活儿、什么时候该跳槽、甚至能帮你介绍对象。",
+      triggers: { minDay: 45, excludeFlags: ["_socialCapitalSeen"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        if (!st.resources) return false;
+        // 至少有3个已结识NPC,且最高好感≥30
+        var top = getTopAffinityNpc(st);
+        if (!top || top.rel.affinity < 30) return false; // [PLACEHOLDER]
+        return getMetNpcCount(st) >= 3;
+      },
+      choices: [
+        {
+          text: "💰 开始经营人脉网络",
+          hint: "cash+[PLACEHOLDER],心智+3",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._socialCapitalSeen = true;
+            var top = getTopAffinityNpc(st);
+            var bonus = Math.round(getTotalAffinity(st) * 2 + 200); // [PLACEHOLDER]: 基于总好感×2+基础200
+            if (st.resources) st.resources.cash = (st.resources.cash || 0) + bonus;
+            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 3);
+            if (typeof StateManager !== "undefined" && StateManager.addMessage) {
+              var name = getNpcCn(top ? top.id : "王婶");
+              StateManager.addMessage("💰 你把人脉当资产来经营,今天收获了¥" + bonus + "的'人情回报'。人脉就是资源!心智+3。", "good");
+            }
+          }
+        },
+        {
+          text: "🤗 交情不是为了利用",
+          hint: "心情+5,心智+2",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._socialCapitalSeen = true;
+            if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 5);
+            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 2);
+            if (typeof StateManager !== "undefined" && StateManager.addMessage)
+              StateManager.addMessage("🤗 你觉得朋友归朋友,不能什么都往钱上看。真诚比什么都重要。心情+5。", "info");
+          }
+        }
+      ]
+    },
+    {
+      // D→C: NPC职业推荐 — 高好感NPC引荐工作/晋升机会
+      id: "npc_career_referral",
+      phase: "street",
+      _isChainEvent: false,
+      icon: "📞",
+      title: "熟人介绍的好活儿",
+      story:
+        "{topNpcName}给你打了个电话:「有个活儿,正缺人手,你先顶上。」有熟人引荐的机会,总觉得比海投简历靠谱多了。",
+      triggers: { minDay: 30, excludeFlags: ["_npcReferralSeen"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        if (!st.resources) return false;
+        var top = getTopAffinityNpc(st);
+        return !!top && top.rel.affinity >= 50; // [PLACEHOLDER]: 最高好感≥50才触发高级推荐
+      },
+      choices: [
+        {
+          text: "👍 马上联系那边",
+          hint: "管理技能XP+8,cash+300,置 _npcReferralActive",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._npcReferralSeen = true;
+            st.flags._npcReferralActive = true; // C域可消费:熟人推荐工作加成
+            if (typeof addSkillXp === "function") {
+              try { addSkillXp("management", 8); } catch(e) { /* safe */ }
+            }
+            if (st.resources) st.resources.cash = (st.resources.cash || 0) + 300; // [PLACEHOLDER]
+            var top = getTopAffinityNpc(st);
+            var name = getNpcCn(top ? top.id : "");
+            if (typeof StateManager !== "undefined" && StateManager.addMessage)
+              StateManager.addMessage("👍 " + name + "的介绍真管用！管理技能+8,收到介绍费¥300。", "success");
+          }
+        },
+        {
+          text: "🙏 先谢谢,回头再说",
+          hint: "人脉维持,心智+2",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._npcReferralSeen = true;
+            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 2);
+            var top = getTopAffinityNpc(st);
+            var name = getNpcCn(top ? top.id : "");
+            if (typeof StateManager !== "undefined" && StateManager.addMessage)
+              StateManager.addMessage("🙏 你婉拒了" + name + "的提议,但保持了良好关系。心智+2。", "info");
+          }
+        }
+      ]
+    }
+  ];
+
+  for (var i = 0; i < EVENTS.length; i++) {
+    RANDOM_EVENTS.push(EVENTS[i]);
+  }
+})();
+
+;
 // ==== js/core/domain_c_linkage_r269.js ====
 /**
  * 域C(职业/成长) 联动增强 R269
@@ -193286,6 +193681,9 @@ function applyWealthBasedOverhead(state) {
 
 /** 获取经状态修正后的有效属性值（工作时、技能判定时使用） */
 function getEffectiveStats(state) {
+  // [全系统自洽修复] 域D A类修复: state.needs/status 守卫(防止旧存档/极端初始化崩溃)
+  if (!state.needs) state.needs = { hunger: 100, fatigue: 0, happiness: 50, hygiene: 50 };
+  if (!state.status) state.status = { health: 100 };
   const n = state.needs,
     st = state.status,
     p = state.player;
@@ -273122,6 +273520,38 @@ function renderSocialOverviewTab(state, content) {
     html += '<div style="font-size:12px;color:var(--text-muted);margin-top:4px;">' + (_emoDesc[state.status.emotionalState] || "") + '</div>';
     html += '</div></div></div>';
   }
+
+  // [全系统自洽修复] 域D R382 联动增强: D→F NPC生日提醒(社交Tab显示近期生日的NPC)
+  try {
+    if (typeof NPCS !== "undefined" && NPCS.length > 0) {
+      var _today = state.player && state.player.day;
+      var _birthdayNpcs = [];
+      for (var _bi = 0; _bi < NPCS.length; _bi++) {
+        var _npc = NPCS[_bi];
+        if (_npc && _npc.birthday && _npc.id) {
+          var _rel = state.relationships && state.relationships[_npc.id];
+          if (_rel && _rel.met && _today) {
+            // birthday 是相对于游戏天数的偏移值(如45表示第45天)
+            if (_today === _npc.birthday) {
+              _birthdayNpcs.push({ name: _npc.name || _npc.id, icon: "🎂", id: _npc.id });
+            } else if (_today === _npc.birthday - 1) {
+              _birthdayNpcs.push({ name: _npc.name || _npc.id, icon: "⏰", id: _npc.id });
+            }
+          }
+        }
+      }
+      if (_birthdayNpcs.length > 0) {
+        html += '<div class="section"><h3>🎂 生日提醒</h3>';
+        html += '<div class="card" style="padding:10px;border:1px solid rgba(255,183,77,0.3);background:rgba(255,183,77,0.05);">';
+        for (var _bni = 0; _bni < _birthdayNpcs.length; _bni++) {
+          var _bn = _birthdayNpcs[_bni];
+          var _msg = _bn.icon === "🎂" ? "今天是" + _bn.name + "的生日！去拜访ta送上祝福吧" : _bn.name + "明天过生日，准备一份礼物吧";
+          html += '<div style="font-size:12px;margin:2px 0;">' + _bn.icon + " " + _msg + "</div>";
+        }
+        html += '</div></div>';
+      }
+    }
+  } catch (e) {}
 
   // 家庭摘要
   var family = state.family;
