@@ -1,9 +1,9 @@
 {
-  "lastRound": 390,
-  "lastDomain": "F",
+  "lastRound": 393,
+  "lastDomain": "H",
   "lastDate": "2026-07-27",
   "lastCommit": "PENDING",
-  "domainRecency": {"A":387,"B":389,"C":389,"D":389,"E":389,"F":390,"G":385,"H":386},
-  "nextDomain": "G",
-  "note": "R390 域F: A类=0(UI层历轮已净尽,Explore确证死字段仅存修复注释)+联动3(F→B进度回顾/F→D关系网问候/F→H一页看板). 下轮域G(recency=385最薄弱)"
+  "domainRecency": {"A":387,"B":389,"C":391,"D":389,"E":389,"F":390,"G":392,"H":393},
+  "nextDomain": "A",
+  "note": "R393 域H: A类修复1项(悬空引用 index.html:587 r389.js文件不存在→真实文件 r389b.js,恢复被build静默剔除的R389域B事件+挂载孤儿文件)+联动增强3项(并行窗口R393:H→F公司文化仪表盘/H→B里程碑周年/H→E公司反哺投资). 下轮域A(recency=387最薄弱). 开轮必 git log 重算真实 recency(并行窗口速度远快于本自动化)"
 }

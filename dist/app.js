@@ -23736,190 +23736,38 @@ function applyEventMarketEffect(state, eventId) {
 })();
 
 ;
-// ==== js/core/domain_b_linkage_r389b.js ====
+// ==== js/core/domain_b_linkage_r394.js ====
 /**
- * [全系统自洽修复] 域B R389(新号) 联动增强: Phase1→Phase2过渡叙事事件
- * 
- * 新增事件:
- * 1. first_corporate_day - 入职第一天认知冲击 (B→C/G/D)  
- * 2. street_experience_echo - 街头经验在公司回响 (B→C/D/H)
- */
-(function () {
-  if (typeof RANDOM_EVENTS === "undefined") return;
-
-  var _events = [
-    {
-      id: "first_corporate_day",
-      phase: "corporate",
-      icon: "🏢",
-      title: "你的第一份公司工作",
-      story:
-        "你穿上唯一一件像样的衬衫，第一次以「公司职员」的身份走进这栋写字楼。电梯里的显示屏跳动着楼层数字，前台小姐问你找谁——这种场景，三年前你还在街头帮人搬箱子。\n\n工牌挂在你胸前，沉甸甸的。这不是街头的日结工资了，这是一个真正的「工作」。\n\n你的带教师傅/直属领导拍了拍你的肩：「新来的？先把这边熟悉一下。」\n\n你摸了摸工牌上的名字，心里有点慌，但也有种说不出的踏实感。",
-      triggers: {
-        minDay: 60,
-        excludeFlags: ["_firstCorporatDaySeen"],
-        employment: "any",
-      },
-      conditions: function (st) {
-        if (!st.player || !st.player.corporate) return false;
-        if ((st.player.corporate || {}).daysInJob < 1) return true;
-        return false;
-      },
-      probability: 0.08,
-      choices: [
-        {
-          text: "📝 认真记下每个细节",
-          hint: "学习期",
-          apply: function (st) {
-            st.flags._firstCorporatDaySeen = true;
-            var corp = (st.player && st.player.corporate) ? st.player.corporate : {};
-            corp.kpi = Math.min(150, (corp.kpi || 0) + 3);
-            corp.upwardMgmt = Math.min(100, (corp.upwardMgmt || 0) + 2);
-            st.skills.coding.xp = (st.skills.coding.xp || 0) + Random.int(10, 20);
-            st.needs.fatigue = Math.min(100, (st.needs.fatigue || 0) + 10);
-            st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 5);
-            StateManager.addMessage("📝 你把工位、流程、每个人姓什么都记在心里。虽然累，但每一步都走得很扎实。", "success");
-          },
-        },
-        {
-          text: "👀 先观察，不急表现",
-          hint: "谨慎",
-          apply: function (st) {
-            st.flags._firstCorporatDaySeen = true;
-            st.player.intelligence = Math.min(100, (st.player.intelligence || 0) + 1);
-            st.player.mental = Math.min(100, (st.player.mental || 0) + 3);
-            st.needs.fatigue = Math.min(100, (st.needs.fatigue || 0) + 5);
-            StateManager.addMessage("👀 你先花了一上午看别人怎么干活。观察虽慢，但你学到了不少职场潜规则。", "info");
-          },
-        },
-        {
-          text: "😰 觉得自己搞不定",
-          hint: "焦虑",
-          apply: function (st) {
-            st.flags._firstCorporatDaySeen = true;
-            st.needs.happiness = Math.max(0, (st.needs.happiness || 0) - 5);
-            st.player.mental = Math.max(0, (st.player.mental || 0) - 3);
-            st.needs.fatigue = Math.min(100, (st.needs.fatigue || 0) + 8);
-            StateManager.addMessage("😰 第一天就手足无措。看着同事们熟练地打字聊天，你突然觉得自己可能选错了路。", "warning");
-          },
-        },
-      ],
-    },
-    {
-      id: "street_experience_echo",
-      phase: "corporate",
-      icon: "💡",
-      title: "街头教会你的事派上用场了",
-      story:
-        "今天公司出了个难题：一个客户项目要在地推一周内签下来，团队里几个白领大学生一筹莫展。\n\n你突然想起自己在批发市场摆摊、跟城管周旋、在工地找人干活的经验——这些都是街头磨出来的。",
-      triggers: {
-        minDay: 90,
-        excludeFlags: ["_streetEchoSeen"],
-        employment: "any",
-      },
-      conditions: function (st) {
-        if (!st.career || !st.career.currentJob) return false;
-        if (!st.stats || !st.stats.actionFreq) return false;
-        var manualExp =
-          (st.stats.actionFreq["manual_labor_construction"] || 0) +
-          (st.stats.actionFreq["food_stall"] || 0) +
-          (st.stats.actionFreq["street_vending"] || 0) +
-          (st.stats.actionFreq["scavenging"] || 0);
-        if (manualExp < 10) return false;
-        return true;
-      },
-      probability: 0.04,
-      choices: [
-        {
-          text: "🗣️ 主动请缨去地推",
-          hint: "发挥街头经验",
-          apply: function (st) {
-            st.flags._streetEchoSeen = true;
-            var corp = (st.player && st.player.corporate) ? st.player.corporate : {};
-            corp.kpi = Math.min(150, (corp.kpi || 0) + 8);
-            corp.popularity = Math.min(100, (corp.popularity || 0) + 6);
-            if (st.skills && st.skills.sales) {
-              st.skills.sales.xp = (st.skills.sales.xp || 0) + Random.int(15, 25);
-            }
-            st.resources.cash = (st.resources.cash || 0) + Random.int(500, 1500);
-            st.needs.fatigue = Math.min(100, (st.needs.fatigue || 0) + 15);
-            st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 8);
-            StateManager.addMessage("🗣️ 你在批发市场练就的嘴皮子和脸皮子派上大用场了！签了3单，KPI+8，现金+¥1000。同事们用新眼光看你。", "success");
-          },
-        },
-        {
-          text: "🤝 教同事一些街头方法",
-          hint: "分享经验",
-          apply: function (st) {
-            st.flags._streetEchoSeen = true;
-            var corp = (st.player && st.player.corporate) ? st.player.corporate : {};
-            corp.popularity = Math.min(100, (corp.popularity || 0) + 8);
-            corp.upwardMgmt = Math.min(100, (corp.upwardMgmt || 0) + 4);
-            st.player.social = Math.min(100, (st.player.social || 0) + 2);
-            st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 5);
-            StateManager.addMessage("🤝 你把摆摊时的心得整理了一下教给同事。大家听完直呼内行，你第一次觉得『读过的那些苦没白吃』。", "success");
-          },
-        },
-        {
-          text: "🙅 让大学生自己搞定",
-          hint: "各忙各的",
-          apply: function (st) {
-            st.flags._streetEchoSeen = true;
-            st.needs.fatigue = Math.min(100, (st.needs.fatigue || 0) + 5);
-            StateManager.addMessage("🙅 你决定不参与。各人有各人的难处，你又不是雷锋。但事后想想，也许帮一把也能攒点人脉。", "info");
-          },
-        },
-      ],
-    },
-  ];
-
-  for (var i = 0; i < _events.length; i++) {
-    RANDOM_EVENTS.push(_events[i]);
-  }
-})();
-
-;
-// ==== js/core/domain_b_linkage_r259.js ====
-/**
- * 域B(事件/叙事) 联动增强 R259
- * 叙事积累的多维回响——事件不仅是文字泡，还在人生节点/职业/社交层面留下痕迹。
+ * 域B(事件/叙事) 联动增强 R394
+ * 第十七轮循环——事件的叙事回响:把玩家的选择历史/世界状态转化为新的叙事体验。
  * 桥接：
- *   B→G  life_chapter_reflection  人生节点回顾→自我叙事（核心机制·生命主线）
- *   B→C  career_crossroads        同职业路径满N天→职业抉择叙事（职业/成长·人生十字路口）
- *   B→D  npc_reunion             许久未互动NPC→重逢叙事（社交·情感觉醒）
+ *   B→F  b394_event_memory_wall   事件记忆墙 → 消费 _eventHistory 数据,
+ *     把玩家经历过的关键事件转化为"人生故事墙"UI提示,mental+happiness
+ *   B→A  b394_data_driven_narrative 数据驱动叙事 → 消费 goods定价+news 数据,
+ *     市场价格波动触发"这个故事发生在特定经济背景下"的叙事风味
+ *   B→G  b394_life_chapter_echo     人生章节回响 → 消费 story_chapters+_narrativeChoices,
+ *     人生节点选择触发"当初的选择如何塑造了现在的你"的回顾叙事
+ *
+ * 严格照 domain_b_linkage_r388.js / r380.js 已验证IIFE注入范式。
  */
 (function () {
-  if (typeof RANDOM_EVENTS === "undefined") return;
-  if (RANDOM_EVENTS._domainBLinkageR259Loaded) return;
-  RANDOM_EVENTS._domainBLinkageR259Loaded = true;
+  "use strict";
 
-  function getMostNeglectedNpcB259(st) {
-    if (!st || !st.relationships || !st.player) return null;
-    var oldest = null;
-    var oldestDay = 9999;
-    for (var id in st.relationships) {
-      if (!Object.prototype.hasOwnProperty.call(st.relationships, id)) continue;
-      var r = st.relationships[id];
-      if (!r || !r.met) continue;
-      var lastDay = r._lastInteractionDay || 0;
-      var daysSince = st.player.day - lastDay;
-      if (daysSince > 30 && daysSince < oldestDay) {
-        oldestDay = daysSince;
-        oldest = id;
-      }
-    }
-    return oldest;
-  }
+  if (typeof RANDOM_EVENTS === "undefined" || !RANDOM_EVENTS) return;
+  if (RANDOM_EVENTS._domainBLinkageR394Loaded) return;
+  RANDOM_EVENTS._domainBLinkageR394Loaded = true;
 
   var EVENTS = [
     {
-      id: "life_chapter_reflection",
+      // B→F: 事件记忆墙 — 消费 _eventHistory 数据
+      id: "b394_event_memory_wall",
       phase: "street",
       _isChainEvent: false,
-      icon: "📖",
-      title: "人生章节",
-      story: "你坐在出租屋的床边，回顾这些年的日子。\n\n从初来乍到的窘迫，到现在的安稳——或者不安稳。你经历了无数个第一次：第一次赚到钱、第一次被解雇、第一次在深夜哭出来、第一次觉得自己长大了。\n\n人生没有重启键，但每一章都值得被记住。",
-      triggers: { minDay: 180, excludeFlags: ["_lifeChapterSeen"] },
+      icon: "🖼️",
+      title: "事件记忆墙",
+      story:
+        "你翻看手机里记录的生活片段——{memorySummary}。\n\neventCount个瞬间,构成了你在这座城市的记忆。",
+      triggers: { minDay: 75, excludeFlags: ["_b394MemoryWallCooldown"] },
       conditions: function (st) {
         if (st.gameOver) return false;
         var history = (st.flags && st.flags._eventHistory) || [];
@@ -23927,129 +23775,150 @@ function applyEventMarketEffect(state, eventId) {
       },
       choices: [
         {
-          text: "📖 写一篇日记记录下来",
-          hint: "心智+8，心情+5",
+          text: "📖 把这些记忆珍藏起来",
+          hint: "心智+4,心情+5,置 _b394MemoryWallCooldown(120天)",
           apply: function (st) {
-            if (!st.flags) st.flags = {};
-            st.flags._lifeChapterSeen = true;
-            st.flags._lifeJournalKeeper = true;
-            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 8);
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._b394MemoryWallCooldown = true;
+            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 4);
             if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 5);
-            if (typeof StateManager !== "undefined" && StateManager.addMessage) {
-              StateManager.addMessage("📖 你写下了一篇日记。文字让模糊的记忆变得清晰。心智+8，心情+5。", "success");
-            }
-          },
+            if (typeof StateManager !== "undefined" && StateManager.addMessage)
+              StateManager.addMessage("📖 你回顾了在这座城市的点点滴滴,每一段经历都是珍贵的记忆。心智+4,心情+5。", "success");
+          }
         },
         {
-          text: "🤫 不用记录，经历过就够了",
-          hint: "心智+4",
-          apply: function (st) {
-            if (!st.flags) st.flags = {};
-            st.flags._lifeChapterSeen = true;
-            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 4);
-            if (typeof StateManager !== "undefined" && StateManager.addMessage) {
-              StateManager.addMessage("🤫 你觉得不需要形式化，经历过就够了。心智+4。", "info");
-            }
-          },
-        },
-      ],
-      probability: 0.5,
-      repeatable: false,
-    },
-    {
-      id: "career_crossroads",
-      phase: "street",
-      _isChainEvent: false,
-      icon: "🔀",
-      title: "职业十字路口",
-      story: "你在这条路上走了很久了。每天重复着类似的工作，类似的人，类似的烦恼。\n\n有时候你会想：要不要换一条路？要不要回到学校？要不要试试那个一直想做但不敢做的事？\n\n十字路口并不可怕。可怕的是站在原地太久，忘了自己还能选择。",
-      triggers: { minDay: 200, excludeFlags: ["_careerCrossroadsSeen"] },
-      conditions: function (st) {
-        if (st.gameOver) return false;
-        var job = st.career && st.career.currentJob;
-        if (!job || !job.path) return false;
-        return (job.workDays || 0) >= 180;
-      },
-      choices: [
-        {
-          text: "🔀 认真考虑换条路",
-          hint: "心智+6，解锁职业探索flag",
-          apply: function (st) {
-            if (!st.flags) st.flags = {};
-            st.flags._careerCrossroadsSeen = true;
-            st.flags._careerExploration = true;
-            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 6);
-            if (typeof StateManager !== "undefined" && StateManager.addMessage) {
-              StateManager.addMessage("🔀 你开始认真考虑换条路。改变需要勇气，但停在原地需要更大的勇气。心智+6。", "info");
-            }
-          },
-        },
-        {
-          text: "💪 继续深耕，行行出状元",
-          hint: "心智+5",
-          apply: function (st) {
-            if (!st.flags) st.flags = {};
-            st.flags._careerCrossroadsSeen = true;
-            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 5);
-            if (typeof StateManager !== "undefined" && StateManager.addMessage) {
-              StateManager.addMessage("💪 你决定继续深耕。万事贵在坚持。心智+5。", "success");
-            }
-          },
-        },
-      ],
-      probability: 0.45,
-      repeatable: false,
-    },
-    {
-      id: "npc_reunion",
-      phase: "street",
-      _isChainEvent: false,
-      icon: "👋",
-      title: "好久不见",
-      story: "你在街上走着，一个熟悉的身影迎面走来。是好久没见的熟人。\n\n「哎呀，好久不见！最近怎么样？」对方笑着打招呼。\n\n你们站在路边聊了很久，从近况聊到过去，从过去聊到未来。分别的时候，你突然意识到——这座城市里，总有些人是在乎你的。",
-      triggers: { minDay: 60, excludeFlags: ["_npcReunionSeen"] },
-      conditions: function (st) {
-        if (st.gameOver) return false;
-        var npc = getMostNeglectedNpcB259(st);
-        return !!npc;
-      },
-      choices: [
-        {
-          text: "🤝 交换联系方式，保持联系",
-          hint: "NPC好感+5，心智+4",
-          apply: function (st) {
-            if (!st.flags) st.flags = {};
-            st.flags._npcReunionSeen = true;
-            var npc = getMostNeglectedNpcB259(st);
-            if (npc && typeof applyAffinityChange === "function") {
-              applyAffinityChange(st, npc, 5, "街头重逢");
-            }
-            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 4);
-            if (typeof StateManager !== "undefined" && StateManager.addMessage) {
-              StateManager.addMessage("🤝 你们交换了联系方式。有些人，不见面不代表忘记。好感+5，心智+4。", "success");
-            }
-          },
-        },
-        {
-          text: "👋 点头微笑，各自前行",
+          text: "💪 向前看,新的故事还在继续",
           hint: "心智+2",
           apply: function (st) {
-            if (!st.flags) st.flags = {};
-            st.flags._npcReunionSeen = true;
-            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 2);
-            if (typeof StateManager !== "undefined" && StateManager.addMessage) {
-              StateManager.addMessage("👋 你们点头微笑，各自前行。有些关系，淡淡的刚好。心智+2。", "info");
-            }
-          },
-        },
+            if (st && st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 2);
+          }
+        }
       ],
-      probability: 0.55,
-      repeatable: false,
+      text: function (st) {
+        if (!st) return null;
+        var history = (st.flags && st.flags._eventHistory) || [];
+        var count = history.length;
+        var summary = "从初来乍到到今天,你经历了许多";
+        if (count >= 30) summary = "满满的回忆——你在这座城市经历了数不清的故事";
+        else if (count >= 20) summary = "不少故事——这座城市给你留下了深刻的印记";
+        return "你翻看手机里记录的生活片段——" + summary + "。\n\n" + count + "个瞬间,构成了你在这座城市的记忆。";
+      }
     },
+    {
+      // B→A: 数据驱动叙事 — 消费 goods定价+news 数据
+      id: "b394_data_driven_narrative",
+      phase: "street",
+      _isChainEvent: false,
+      icon: "📊",
+      title: "数字背后的人生",
+      story:
+        "你注意到最近{priceObservation}。{connectionInsight}\n\n每一个价格背后,都是无数人的人生。",
+      triggers: { minDay: 50, excludeFlags: ["_b394DataNarrativeCooldown"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        if (!st.trade || !st.trade.currentLocation) return false;
+        // 需要有一定交易经验
+        var totalTrades = (st.trade._totalBought || 0) + (st.trade._totalSold || 0);
+        return totalTrades >= 5;
+      },
+      choices: [
+        {
+          text: "🤔 从数字中读出人情冷暖",
+          hint: "心智+3,accounting XP+3,置 _b394DataNarrativeCooldown(90天)",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._b394DataNarrativeCooldown = true;
+            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 3);
+            if (typeof addSkillXp === "function") {
+              try { addSkillXp("accounting", 3); } catch(e) { /* safe */ }
+            }
+            if (typeof StateManager !== "undefined" && StateManager.addMessage)
+              StateManager.addMessage("📊 你学会了从市场数据中读出人情冷暖。心智+3,会计XP+3。", "success");
+          }
+        },
+        {
+          text: "🤷 数字只是数字",
+          hint: "无奖励",
+          apply: function (st) { /* 无奖励选择 */ }
+        }
+      ],
+      text: function (st) {
+        if (!st || !st.trade) return null;
+        var obs = "市场价格的波动牵动着每个人的神经";
+        // 尝试读取当前新闻/市场事件
+        if (st.trade.marketEvents && st.trade.marketEvents.length > 0) {
+          var evt = st.trade.marketEvents[0];
+          obs = "「" + (evt.name || "市场异动") + "」正在影响商品价格";
+        }
+        var insight = "菜价涨了,可能是产地遭了灾;房价跌了,可能是政策在调整。";
+        if (st.flags && st.flags._eraState && st.flags._eraState.inflationIndex > 1.2) {
+          insight = "通胀压力下,每一分钱都要精打细算。";
+        }
+        return "你注意到最近" + obs + "。" + insight + "\n\n每一个价格背后,都是无数人的人生。";
+      }
+    },
+    {
+      // B→G: 人生章节回响 — 消费 story_chapters+_narrativeChoices
+      id: "b394_life_chapter_echo",
+      phase: "street",
+      _isChainEvent: false,
+      icon: "📜",
+      title: "人生章节的回响",
+      story:
+        "你回想起当初的一个选择——{choiceMemory}。\n\n当时的决定,如今看来{retrospectiveInsight}。",
+      triggers: { minDay: 100, excludeFlags: ["_b394ChapterEchoCooldown"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        // 需要有故事章节数据或叙事选择记录
+        var hasChoices = st.flags && (
+          (st.flags._narrativeChoices && st.flags._narrativeChoices.length > 0) ||
+          st.flags._lifeChoicesAcknowledged ||
+          (st.flags._eventHistory && st.flags._eventHistory.length >= 15)
+        );
+        return hasChoices ? true : false;
+      },
+      choices: [
+        {
+          text: "🌟 感恩当初的选择",
+          hint: "心智+5,心情+4,置 _b394ChapterEchoCooldown(150天)",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._b394ChapterEchoCooldown = true;
+            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 5);
+            if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 4);
+            if (typeof StateManager !== "undefined" && StateManager.addMessage)
+              StateManager.addMessage("🌟 你感恩当初的每一个选择——它们塑造了今天的你。心智+5,心情+4。", "achievement");
+          }
+        },
+        {
+          text: "😌 人生没有白走的路",
+          hint: "心情+3",
+          apply: function (st) {
+            if (st && st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 3);
+          }
+        }
+      ],
+      text: function (st) {
+        if (!st) return null;
+        var memory = "在那个十字路口你做出了自己的选择";
+        var insight = "时间证明了它的价值";
+        if (st.flags && st.flags._narrativeChoices && st.flags._narrativeChoices.length > 0) {
+          memory = "你曾经面临" + st.flags._narrativeChoices.length + "次重要抉择";
+          insight = "每一次选择都在悄然改变着人生的轨迹";
+        }
+        return "你回想起当初的一个选择——" + memory + "。\n\n当时的决定,如今看来" + insight + "。";
+      }
+    }
   ];
 
+  // 注入 RANDOM_EVENTS
   for (var i = 0; i < EVENTS.length; i++) {
-    RANDOM_EVENTS.push(EVENTS[i]);
+    var _e = EVENTS[i];
+    if (RANDOM_EVENTS.find(function (ev) { return ev.id === _e.id; })) continue;
+    RANDOM_EVENTS.push(_e);
   }
 })();
 
