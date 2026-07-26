@@ -628,6 +628,32 @@ const DAILY_PIPELINE = [
       if (state.player.day - state.trade.lastPriceUpdate >= 3) {
         updateAllPrices(state);
       }
+      // [全系统自洽修复] 域A R387 联动增强: A→B 价格波动叙事(每3天报告一次主要商品价格变动)
+      if (state.player.day % 3 === 0 && state.trade && state.trade.goodsPrices && state.flags) {
+        var _priceNews = [];
+        for (var _pl in state.trade.goodsPrices) {
+          if (!state.trade.goodsPrices.hasOwnProperty(_pl)) continue;
+          var _goods = state.trade.goodsPrices[_pl];
+          if (!_goods) continue;
+          for (var _gid in _goods) {
+            if (!_goods.hasOwnProperty(_gid) || _priceNews.length >= 3) continue;
+            var _cp = _goods[_gid];
+            if (typeof _cp !== "number" || !isFinite(_cp)) continue;
+            var _bp = typeof GOODS !== "undefined" && GOODS[_gid] ? GOODS[_gid].basePrice : 0;
+            if (_bp > 0) {
+              var _ratio = _cp / _bp;
+              if (_ratio > 1.5) {
+                _priceNews.push("📈 " + _gid + "价格飙升" + Math.round((_ratio - 1) * 100) + "%");
+              } else if (_ratio < 0.6) {
+                _priceNews.push("📉 " + _gid + "价格暴跌" + Math.round((1 - _ratio) * 100) + "%");
+              }
+            }
+          }
+        }
+        if (_priceNews.length > 0 && Random.chance(0.4)) {
+          StateManager.addMessage("🏪 市场行情：" + _priceNews.join("，"), "info");
+        }
+      }
     },
   },
 

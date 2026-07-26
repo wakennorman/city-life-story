@@ -362,3 +362,10 @@
 - MC 6×400d **EXIT=0·0代码异常**(前7天死亡率全0.0%<10%；balanced83.3%/skiller/trader/social100%/grinder33.3%(≥30%高风险)/corporate66.7%<80% 为既有RNG阈值非回归；RSS timeout=离线新闻回退)。
 - 提交 c8200485(loop-state round332→341/C/next=D + recency A339/B340/C341/D334/E335/F336/G337/H338 + round-339 doc + last_known_head)，`git pull --rebase`(up to date) 后 push 成功(cd57b15b..c8200485)，一并把并行 R340/R341 带上 origin(此前 origin 卡在 a7f2816e)。
 - **真实 recency(R341后)**: A=339/B=340/C=341/D=334/E=335/F=336/G=337/H=338 → **D(334) 最薄弱**，下轮=域D。开轮必 git log 重算(并行速度远快于本自动化)。
+
+## 最近执行（2026-07-27，R387 域A — P0崩溃热修复·已 push main ba9cadd1）
+- 开轮 loop-state 严重滞后(标 next=G/lastRound=384)；git log 重算真实 recency A=379..H=386→A(379)最薄弱→域A。
+- **P0 A类1(已在 main·游戏完全不可玩)**: events_core.js `rollStreetEvent` 用 `mod` 却从未声明 `let mod`(并行"域B守卫修复"漏加声明)→每日 daily_pipeline 抛 `ReferenceError:mod is not defined`→全策略100%死亡·MC 0.5s 硬崩溃。补 `let mod=0`。
+- 定位：MC 全0%存活+<1s=硬崩溃→临时给 harness catch 加 e.stack(还原)→events_core.js:125。stash 隔离并行在途后崩溃仍在 HEAD=已 push 回归。
+- 验证：build 10521.7KB；MC 6×400d EXIT=0·前7天死亡率全恢复0.0%(修复前100%)。
+- 提交2笔(fix 0105ce03 + chore 回填 ba9cadd1)均 push origin main 成功。并行 R387域A(pricing/trade A→D/A→G/A→B)在途 stash 隔离,push 后 pop 无损还原。下轮→B(recency 380)。

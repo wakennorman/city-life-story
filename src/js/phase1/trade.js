@@ -97,8 +97,18 @@ function buyGood(goodId, qty) {
   adjustPriceAfterTrade(locKey, goodId, buyDelta);
   const newPrice = getCurrentPrice(locKey, goodId);
 
+  // [全系统自洽修复] 域A R387: 极端价格影响心情
+  if (typeof applyPriceMoodEffect === "function") {
+    applyPriceMoodEffect(state, goodId, price, newPrice);
+  }
+
   // 记录购买支出
   addDailyTransaction(state, "expense", "shopping", totalCost, "购买" + good.name + "×" + qty);
+
+  // [全系统自洽修复] 域A R387: 累计交易额追踪+里程碑检查
+  if (!state.trade._totalSpent) state.trade._totalSpent = 0;
+  state.trade._totalSpent += totalCost;
+  if (typeof checkTradeMilestone === "function") checkTradeMilestone(state);
 
   // 交易获得销售经验
   if (typeof gainTradeXp === "function") {

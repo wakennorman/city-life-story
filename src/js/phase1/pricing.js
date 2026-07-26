@@ -793,3 +793,87 @@ function getPriceAlertData(state, goodId, currentPrice) {
   if (ratio < 0.5) return { level: "low", text: "价格偏低(" + Math.round((1 - ratio) * 100) + "%)", color: "var(--success)" };
   return null;
 }
+
+// [全系统自洽修复] 域A R387 联动增强(A→D): NPC交易情报—高好感NPC提供更准的买卖建议
+function getNpcTradeAdvice(state, goodId) {
+  if (!state || !goodId) return null;
+  var good = getGoodById(goodId);
+  if (!good || !good.buyLocations || !good.sellLocations) return null;
+  var rels = state.relationships || {};
+  var totalFavor = 0, count = 0;
+  for (var k in rels) {
+    if (rels[k] && rels[k].met) {
+      totalFavor += rels[k].favor || 0;
+      count++;
+    }
+  }
+  var avgFavor = count > 0 ? totalFavor / count : 0;
+  if (avgFavor < 30) return null;
+  var bestBuy, bestSell, bestMargin = 0;
+  for (var bi = 0; bi < good.buyLocations.length; bi++) {
+    for (var si = 0; si < good.sellLocations.length; si++) {
+      var from = good.buyLocations[bi], to = good.sellLocations[si];
+      if (from === to) continue;
+      var buyP = calcFinalPrice(state, from, goodId);
+      var sellP = calcFinalPrice(state, to, goodId);
+      if (buyP <= 0) continue;
+      var margin = (sellP - buyP) / buyP;
+      if (margin > bestMargin) {
+        bestMargin = margin;
+        bestBuy = from; bestSell = to;
+      }
+    }
+  }
+  if (!bestBuy || !bestSell) return null;
+  var locFrom = getLocation(bestBuy), locTo = getLocation(bestSell);
+  var advice = {
+    buyLoc: bestBuy, buyLocName: locFrom ? locFrom.name : bestBuy,
+    sellLoc: bestSell, sellLocName: locTo ? locTo.name : bestSell,
+    margin: Math.round(bestMargin * 100),
+    level: avgFavor >= 70 ? "expert" : (avgFavor >= 50 ? "good" : "basic"),
+  };
+  if (avgFavor >= 70 && state.trade && state.trade._routeUsage) {
+    var rk = bestBuy + "→" + bestSell + ":" + goodId;
+    var usage = state.trade._routeUsage[rk] || 0;
+    advice.saturationWarning = usage > 3 ? "该路线已使用" + usage + "次，利润可能下降" : null;
+  }
+  return advice;
+}
+
+// [全系统自洽修复] 域A R387 联动增强(A→G): 价格波动心情影响—极端价格影响玩家情绪
+function applyPriceMoodEffect(state, goodId, oldPrice, newPrice) {
+  if (!state || !goodId || !oldPrice || !newPrice || oldPrice <= 0) return;
+  if (!state.needs) return;
+  var change = (newPrice - oldPrice) / oldPrice;
+  if (change > 0.8) {
+    state.needs.happiness = Math.max(0, (state.needs.happiness || 50) - 3);
+    if (typeof StateManager !== "undefined" && StateManager.addMessage) {
+      StateManager.addMessage("😰 " + (getGoodById(goodId) ? getGoodById(goodId).name : goodId) + "价格暴涨让你感到焦虑。心情-3。", "warning");
+    }
+  } else if (change < -0.5) {
+    state.needs.happiness = Math.min(100, (state.needs.happiness || 50) + 2);
+    if (typeof StateManager !== "undefined" && StateManager.addMessage) {
+      StateManager.addMessage("😊 " + (getGoodById(goodId) ? getGoodById(goodId).name : goodId) + "价格大跌，你趁机囤货。心情+2。", "success");
+    }
+  }
+}
+
+// [全系统自洽修复] 域A R387 联动增强(A→B): 交易里程碑叙事—累计交易额触发成就事件
+function checkTradeMilestone(state) {
+  if (!state || !state.trade) return;
+  var totalSpent = state.trade._totalSpent || 0;
+  var milestones = [1000, 5000, 10000, 50000, 100000, 500000];
+  var triggered = state.flags._tradeMilestones || [];
+  for (var mi = 0; mi < milestones.length; mi++) {
+    var m = milestones[mi];
+    if (totalSpent >= m && triggered.indexOf(m) < 0) {
+      triggered.push(m);
+      if (!state.flags) state.flags = {};
+      state.flags._tradeMilestones = triggered;
+      if (typeof StateManager !== "undefined" && StateManager.addMessage) {
+        StateManager.addMessage("🏆 交易里程碑：累计交易额已达 ¥" + m.toLocaleString() + "！你在市场中越来越游刃有余。", "achievement");
+      }
+      break;
+    }
+  }
+}
