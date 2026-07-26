@@ -119,6 +119,8 @@ function rollStreetEvent(state) {
   // 触发率随天数递增（Day1 18% → Day365 ~35%），确保后期事件池充分出场
   const baseChance = Math.min(0.35, 0.18 + state.player.day * 0.0005);
   // 健康差或债务高时提高触发率
+  // [全系统自洽修复] 域A R387 修复:rollStreetEvent 缺失 mod 声明(并行域B守卫修复漏删声明→每日抛 ReferenceError:mod is not defined→全策略100%死亡),补 let mod=0 与 rollCorporateEvent(:150)一致
+  let mod = 0;
   // [全系统自洽修复] 域B A类修复: state.status/needs 守卫(防止旧存档崩溃)
   if (state.status && state.status.health < 50) mod += 0.1;
   if (state.resources && state.resources.debt > 3000) mod += 0.05;
