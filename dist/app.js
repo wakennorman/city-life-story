@@ -23736,193 +23736,6 @@ function applyEventMarketEffect(state, eventId) {
 })();
 
 ;
-// ==== js/core/domain_b_linkage_r394.js ====
-/**
- * 域B(事件/叙事) 联动增强 R394
- * 第十七轮循环——事件的叙事回响:把玩家的选择历史/世界状态转化为新的叙事体验。
- * 桥接：
- *   B→F  b394_event_memory_wall   事件记忆墙 → 消费 _eventHistory 数据,
- *     把玩家经历过的关键事件转化为"人生故事墙"UI提示,mental+happiness
- *   B→A  b394_data_driven_narrative 数据驱动叙事 → 消费 goods定价+news 数据,
- *     市场价格波动触发"这个故事发生在特定经济背景下"的叙事风味
- *   B→G  b394_life_chapter_echo     人生章节回响 → 消费 story_chapters+_narrativeChoices,
- *     人生节点选择触发"当初的选择如何塑造了现在的你"的回顾叙事
- *
- * 严格照 domain_b_linkage_r388.js / r380.js 已验证IIFE注入范式。
- */
-(function () {
-  "use strict";
-
-  if (typeof RANDOM_EVENTS === "undefined" || !RANDOM_EVENTS) return;
-  if (RANDOM_EVENTS._domainBLinkageR394Loaded) return;
-  RANDOM_EVENTS._domainBLinkageR394Loaded = true;
-
-  var EVENTS = [
-    {
-      // B→F: 事件记忆墙 — 消费 _eventHistory 数据
-      id: "b394_event_memory_wall",
-      phase: "street",
-      _isChainEvent: false,
-      icon: "🖼️",
-      title: "事件记忆墙",
-      story:
-        "你翻看手机里记录的生活片段——{memorySummary}。\n\neventCount个瞬间,构成了你在这座城市的记忆。",
-      triggers: { minDay: 75, excludeFlags: ["_b394MemoryWallCooldown"] },
-      conditions: function (st) {
-        if (st.gameOver) return false;
-        var history = (st.flags && st.flags._eventHistory) || [];
-        return history.length >= 10;
-      },
-      choices: [
-        {
-          text: "📖 把这些记忆珍藏起来",
-          hint: "心智+4,心情+5,置 _b394MemoryWallCooldown(120天)",
-          apply: function (st) {
-            if (!st) return;
-            st.flags = st.flags || {};
-            st.flags._b394MemoryWallCooldown = true;
-            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 4);
-            if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 5);
-            if (typeof StateManager !== "undefined" && StateManager.addMessage)
-              StateManager.addMessage("📖 你回顾了在这座城市的点点滴滴,每一段经历都是珍贵的记忆。心智+4,心情+5。", "success");
-          }
-        },
-        {
-          text: "💪 向前看,新的故事还在继续",
-          hint: "心智+2",
-          apply: function (st) {
-            if (st && st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 2);
-          }
-        }
-      ],
-      text: function (st) {
-        if (!st) return null;
-        var history = (st.flags && st.flags._eventHistory) || [];
-        var count = history.length;
-        var summary = "从初来乍到到今天,你经历了许多";
-        if (count >= 30) summary = "满满的回忆——你在这座城市经历了数不清的故事";
-        else if (count >= 20) summary = "不少故事——这座城市给你留下了深刻的印记";
-        return "你翻看手机里记录的生活片段——" + summary + "。\n\n" + count + "个瞬间,构成了你在这座城市的记忆。";
-      }
-    },
-    {
-      // B→A: 数据驱动叙事 — 消费 goods定价+news 数据
-      id: "b394_data_driven_narrative",
-      phase: "street",
-      _isChainEvent: false,
-      icon: "📊",
-      title: "数字背后的人生",
-      story:
-        "你注意到最近{priceObservation}。{connectionInsight}\n\n每一个价格背后,都是无数人的人生。",
-      triggers: { minDay: 50, excludeFlags: ["_b394DataNarrativeCooldown"] },
-      conditions: function (st) {
-        if (st.gameOver) return false;
-        if (!st.trade || !st.trade.currentLocation) return false;
-        // 需要有一定交易经验
-        var totalTrades = (st.trade._totalBought || 0) + (st.trade._totalSold || 0);
-        return totalTrades >= 5;
-      },
-      choices: [
-        {
-          text: "🤔 从数字中读出人情冷暖",
-          hint: "心智+3,accounting XP+3,置 _b394DataNarrativeCooldown(90天)",
-          apply: function (st) {
-            if (!st) return;
-            st.flags = st.flags || {};
-            st.flags._b394DataNarrativeCooldown = true;
-            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 3);
-            if (typeof addSkillXp === "function") {
-              try { addSkillXp("accounting", 3); } catch(e) { /* safe */ }
-            }
-            if (typeof StateManager !== "undefined" && StateManager.addMessage)
-              StateManager.addMessage("📊 你学会了从市场数据中读出人情冷暖。心智+3,会计XP+3。", "success");
-          }
-        },
-        {
-          text: "🤷 数字只是数字",
-          hint: "无奖励",
-          apply: function (st) { /* 无奖励选择 */ }
-        }
-      ],
-      text: function (st) {
-        if (!st || !st.trade) return null;
-        var obs = "市场价格的波动牵动着每个人的神经";
-        // 尝试读取当前新闻/市场事件
-        if (st.trade.marketEvents && st.trade.marketEvents.length > 0) {
-          var evt = st.trade.marketEvents[0];
-          obs = "「" + (evt.name || "市场异动") + "」正在影响商品价格";
-        }
-        var insight = "菜价涨了,可能是产地遭了灾;房价跌了,可能是政策在调整。";
-        if (st.flags && st.flags._eraState && st.flags._eraState.inflationIndex > 1.2) {
-          insight = "通胀压力下,每一分钱都要精打细算。";
-        }
-        return "你注意到最近" + obs + "。" + insight + "\n\n每一个价格背后,都是无数人的人生。";
-      }
-    },
-    {
-      // B→G: 人生章节回响 — 消费 story_chapters+_narrativeChoices
-      id: "b394_life_chapter_echo",
-      phase: "street",
-      _isChainEvent: false,
-      icon: "📜",
-      title: "人生章节的回响",
-      story:
-        "你回想起当初的一个选择——{choiceMemory}。\n\n当时的决定,如今看来{retrospectiveInsight}。",
-      triggers: { minDay: 100, excludeFlags: ["_b394ChapterEchoCooldown"] },
-      conditions: function (st) {
-        if (st.gameOver) return false;
-        // 需要有故事章节数据或叙事选择记录
-        var hasChoices = st.flags && (
-          (st.flags._narrativeChoices && st.flags._narrativeChoices.length > 0) ||
-          st.flags._lifeChoicesAcknowledged ||
-          (st.flags._eventHistory && st.flags._eventHistory.length >= 15)
-        );
-        return hasChoices ? true : false;
-      },
-      choices: [
-        {
-          text: "🌟 感恩当初的选择",
-          hint: "心智+5,心情+4,置 _b394ChapterEchoCooldown(150天)",
-          apply: function (st) {
-            if (!st) return;
-            st.flags = st.flags || {};
-            st.flags._b394ChapterEchoCooldown = true;
-            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 5);
-            if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 4);
-            if (typeof StateManager !== "undefined" && StateManager.addMessage)
-              StateManager.addMessage("🌟 你感恩当初的每一个选择——它们塑造了今天的你。心智+5,心情+4。", "achievement");
-          }
-        },
-        {
-          text: "😌 人生没有白走的路",
-          hint: "心情+3",
-          apply: function (st) {
-            if (st && st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 3);
-          }
-        }
-      ],
-      text: function (st) {
-        if (!st) return null;
-        var memory = "在那个十字路口你做出了自己的选择";
-        var insight = "时间证明了它的价值";
-        if (st.flags && st.flags._narrativeChoices && st.flags._narrativeChoices.length > 0) {
-          memory = "你曾经面临" + st.flags._narrativeChoices.length + "次重要抉择";
-          insight = "每一次选择都在悄然改变着人生的轨迹";
-        }
-        return "你回想起当初的一个选择——" + memory + "。\n\n当时的决定,如今看来" + insight + "。";
-      }
-    }
-  ];
-
-  // 注入 RANDOM_EVENTS
-  for (var i = 0; i < EVENTS.length; i++) {
-    var _e = EVENTS[i];
-    if (RANDOM_EVENTS.find(function (ev) { return ev.id === _e.id; })) continue;
-    RANDOM_EVENTS.push(_e);
-  }
-})();
-
-;
 // ==== js/core/domain_b_linkage_r259.js ====
 /**
  * 域B(事件/叙事) 联动增强 R259
@@ -112256,6 +112069,351 @@ if (typeof window !== "undefined") {
     RANDOM_EVENTS.push(EVENTS[i]);
   }
 })();
+;
+// ==== js/core/domain_d_linkage_r215.js ====
+/*
+ * 城市浮生记 — 域D（NPC/社交）联动增强 · R215
+ * 全系统优化 loop R215 · 联动增强 2项
+ */
+(function () {
+  if (typeof RANDOM_EVENTS === "undefined" || !RANDOM_EVENTS) return;
+  if (RANDOM_EVENTS._domainDLinkageR215) return;
+  RANDOM_EVENTS._domainDLinkageR215 = true;
+
+  function getMetNpcCount(st) {
+    if (!st || !st.relationships) return 0;
+    var c = 0;
+    for (var k in st.relationships) {
+      if (st.relationships[k] && st.relationships[k].met) c++;
+    }
+    return c;
+  }
+
+  var D_EVENTS = [
+    // ===== 联动1: D→G 温暖社交圈 =====
+    {
+      id: "social_circle_warmth",
+      phase: "street",
+      icon: "🤗",
+      title: "朋友圈的温暖",
+      story: "你翻看着手机，几个老朋友发来问候。有人记得你的生日，有人问你最近怎么样。这座城市虽然大，但你不孤单。",
+      conditions: function (st) {
+        if (!st || !st.flags || !st.relationships) return false;
+        if (st.flags._socialWarmthDone) return false;
+        if (st.player && st.player.day < 20) return false;
+        var highAff = 0;
+        for (var k in st.relationships) {
+          if (st.relationships[k] && st.relationships[k].met && (st.relationships[k].affinity || 0) >= 40) highAff++;
+        }
+        return highAff >= 3;
+      },
+      probability: 0.03,
+      repeatable: false,
+      choices: [
+        {
+          text: "💬 给朋友们回消息",
+          hint: "心情+8，疲劳-5",
+          apply: function (st) {
+            if (!st.flags) st.flags = {};
+            st.flags._socialWarmthDone = true;
+            st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 8);
+            st.needs.fatigue = Math.max(0, (st.needs.fatigue || 50) - 5);
+            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 2);
+            StateManager.addMessage("🤗 朋友们的问候让你心里暖暖的，心情+8，疲劳-5。", "success");
+          },
+        },
+        {
+          text: "😌 默默看完，继续忙",
+          hint: "心智+2",
+          apply: function (st) {
+            if (!st.flags) st.flags = {};
+            st.flags._socialWarmthDone = true;
+            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 2);
+            StateManager.addMessage("😌 你知道有人惦记着你，这就够了。心智+2。", "info");
+          },
+        },
+      ],
+    },
+    // ===== 联动2: D→C 人脉内推 =====
+    {
+      id: "npc_job_referral",
+      phase: "street",
+      icon: "💼",
+      title: "朋友的内推机会",
+      story: "一个关系不错的朋友告诉你，他公司正在招人，待遇不错，他可以帮你内推。",
+      conditions: function (st) {
+        if (!st || !st.flags || !st.relationships) return false;
+        if (st.flags._npcJobReferralDone) return false;
+        if (st.player && st.player.day < 30) return false;
+        var highAff = 0;
+        for (var k in st.relationships) {
+          if (st.relationships[k] && st.relationships[k].met && (st.relationships[k].affinity || 0) >= 50) highAff++;
+        }
+        return highAff >= 1;
+      },
+      probability: 0.025,
+      repeatable: false,
+      choices: [
+        {
+          text: "👍 谢谢，我试试！",
+          hint: "获得技能XP奖励",
+          apply: function (st) {
+            if (!st.flags) st.flags = {};
+            st.flags._npcJobReferralDone = true;
+            // 随机提升一项技能
+            if (st.skills) {
+              var keys = Object.keys(st.skills);
+              if (keys.length > 0) {
+                var sk = keys[Random.int(0, keys.length - 1)];
+                st.skills[sk].xp = (st.skills[sk].xp || 0) + 60;
+                StateManager.addMessage("💼 朋友帮你内推了一份好工作！你感觉" + sk + "技能有了新的领悟。技能XP+60。", "success");
+              }
+            }
+          },
+        },
+        {
+          text: "😅 现在工作还行，先不考虑",
+          hint: "好感+3",
+          apply: function (st) {
+            if (!st.flags) st.flags = {};
+            st.flags._npcJobReferralDone = true;
+            if (st.relationships) {
+              for (var k in st.relationships) {
+                if (st.relationships[k] && st.relationships[k].met && (st.relationships[k].affinity || 0) >= 50) {
+                  if (typeof applyAffinityChange === "function") {
+                    applyAffinityChange(st, k, 3, "内推婉拒");
+                  }
+                  break;
+                }
+              }
+            }
+            StateManager.addMessage("😅 你婉拒了朋友的好意，但心里记着这份人情。", "info");
+          },
+        },
+      ],
+    },
+  ];
+
+  for (var i = 0; i < D_EVENTS.length; i++) {
+    RANDOM_EVENTS.push(D_EVENTS[i]);
+  }
+})();
+;
+// ==== js/core/domain_d_linkage_r395.js ====
+/**
+ * 域D(NPC/社交) 联动增强 R395
+ * 第十七轮循环——社交关系的数据回响:把隐藏在relationships/affinity中的数据转化为叙事体验。
+ * 桥接：
+ *   D→F  d395_social_graph_v2     社交图谱可视化 v2 → 消费 relationships+RELATION_TYPES 数据,
+ *     把NPC关系网络转化为"我的社交圈"UI提示,mental+happiness
+ *   D→A  d395_social_capital_v2    社交资本量化 v2 → 消费 totalAffinity+metCount 数据,
+ *     社交关系数量+质量→社交资本洞察,accounting XP+心智
+ *   D→G  d395_social_wellbeing     社交健康回响 → 消费 relationships+needs 数据,
+ *     社交支持网络→"朋友多了心情好"的社交幸福感
+ *
+ * 严格照 domain_d_linkage_r382.js / r374.js 已验证IIFE注入范式。
+ */
+(function () {
+  "use strict";
+
+  if (typeof RANDOM_EVENTS === "undefined" || !RANDOM_EVENTS) return;
+  if (RANDOM_EVENTS._domainDLinkageR395Loaded) return;
+  RANDOM_EVENTS._domainDLinkageR395Loaded = true;
+
+  // 安全技能经验
+  function grantSkillXpR395(key, amount) {
+    if (typeof addSkillXp === "function") {
+      try { addSkillXp(key, amount); } catch (e) { /* safe */ }
+    }
+  }
+
+  // 取首个已结识(met)的NPC id——守met铁律
+  function firstMetNpcR395(st) {
+    if (!st || !st.relationships) return null;
+    for (var id in st.relationships) {
+      if (!Object.prototype.hasOwnProperty.call(st.relationships, id)) continue;
+      var r = st.relationships[id];
+      if (r && r.met) return id;
+    }
+    return null;
+  }
+
+  // 统计社交数据
+  function socialStatsR395(st) {
+    var rels = st.relationships || {};
+    var metCount = 0, totalAffinity = 0, highAffinity = 0;
+    for (var id in rels) {
+      if (!Object.prototype.hasOwnProperty.call(rels, id)) continue;
+      var r = rels[id];
+      if (r && r.met) {
+        metCount++;
+        totalAffinity += (r.affinity || 0);
+        if ((r.affinity || 0) >= 50) highAffinity++;
+      }
+    }
+    return { metCount: metCount, totalAffinity: totalAffinity, highAffinity: highAffinity,
+             avg: metCount > 0 ? Math.round(totalAffinity / metCount) : 0 };
+  }
+
+  var EVENTS = [
+    {
+      // D→F: 社交图谱可视化 v2 — 消费 relationships+RELATION_TYPES
+      id: "d395_social_graph_v2",
+      phase: "street",
+      _isChainEvent: false,
+      icon: "🕸️",
+      title: "社交图谱",
+      story:
+        "你梳理了一下自己的人际关系——{graphSummary}\n\n{relationInsight}",
+      triggers: { minDay: 50, excludeFlags: ["_d395GraphV2Cooldown"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        if (!st.relationships) return false;
+        var stats = socialStatsR395(st);
+        return stats.metCount >= 3;
+      },
+      choices: [
+        {
+          text: "🤝 珍惜这些关系",
+          hint: "心智+3,心情+4,置 _d395GraphV2Cooldown(90天)",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._d395GraphV2Cooldown = true;
+            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 3);
+            if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 4);
+            if (typeof StateManager !== "undefined" && StateManager.addMessage)
+              StateManager.addMessage("🕸️ 你梳理了自己的社交图谱,每一段关系都是人生的财富。心智+3,心情+4。", "success");
+          }
+        },
+        {
+          text: "💪 继续拓展社交圈",
+          hint: "心智+2",
+          apply: function (st) {
+            if (st && st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 2);
+          }
+        }
+      ],
+      text: function (st) {
+        if (!st) return null;
+        var stats = socialStatsR395(st);
+        var summary = "你已结识" + stats.metCount + "位NPC";
+        if (stats.metCount >= 8) summary = "你已结识" + stats.metCount + "位NPC,社交圈相当广泛";
+        else if (stats.metCount >= 5) summary = "你已结识" + stats.metCount + "位NPC,社交圈正在扩大";
+        var insight = stats.highAffinity > 0
+          ? "其中" + stats.highAffinity + "位关系密切,是你在这座城市的重要支持。"
+          : "还有很大的发展空间,多与人交流会带来意想不到的收获。";
+        return "你梳理了一下自己的人际关系——" + summary + "。\n\n" + insight;
+      }
+    },
+    {
+      // D→A: 社交资本量化 v2 — 消费 totalAffinity+metCount
+      id: "d395_social_capital_v2",
+      phase: "street",
+      _isChainEvent: false,
+      icon: "💰",
+      title: "社交资本",
+      story:
+        "你意识到身边的朋友不只是情感支持——{capitalInsight}\n\n社交关系也是一种「资本」。",
+      triggers: { minDay: 70, excludeFlags: ["_d395CapitalV2Cooldown"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        if (!st.relationships) return false;
+        var stats = socialStatsR395(st);
+        return stats.metCount >= 4 && stats.totalAffinity >= 100;
+      },
+      choices: [
+        {
+          text: "📊 把社交当作长期投资",
+          hint: "accounting XP+4,心智+3,置 _d395CapitalV2Cooldown(100天)",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._d395CapitalV2Cooldown = true;
+            grantSkillXpR395("accounting", 4);
+            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 3);
+            if (typeof StateManager !== "undefined" && StateManager.addMessage)
+              StateManager.addMessage("📊 你理解了社交资本的长期价值——关系需要经营和维护。会计XP+4,心智+3。", "success");
+          }
+        },
+        {
+          text: "😊 朋友之间不计较这些",
+          hint: "心情+3",
+          apply: function (st) {
+            if (st && st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 3);
+          }
+        }
+      ],
+      text: function (st) {
+        if (!st) return null;
+        var stats = socialStatsR395(st);
+        var insight = "你与" + stats.metCount + "位NPC建立了关系,累计好感度" + stats.totalAffinity + "点";
+        if (stats.avg >= 40) insight += "。平均好感度较高,说明你是值得信赖的人。";
+        else insight += "。用心经营,这些关系会在关键时刻帮到你。";
+        return "你意识到身边的朋友不只是情感支持——" + insight + "\n\n社交关系也是一种「资本」。";
+      }
+    },
+    {
+      // D→G: 社交健康回响 — 消费 relationships+needs
+      id: "d395_social_wellbeing",
+      phase: "street",
+      _isChainEvent: false,
+      icon: "🌿",
+      title: "社交幸福感",
+      story:
+        "今天{friendsActivity}。{socialMood}\n\n朋友是人生最好的礼物。",
+      triggers: { minDay: 40, excludeFlags: ["_d395WellbeingCooldown"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        if (!st.relationships) return false;
+        var stats = socialStatsR395(st);
+        return stats.metCount >= 2;
+      },
+      choices: [
+        {
+          text: "🎉 和朋友在一起的时光真好",
+          hint: "心情+5,心智+2,置 _d395WellbeingCooldown(60天)",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._d395WellbeingCooldown = true;
+            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 2);
+            if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 5);
+            if (typeof StateManager !== "undefined" && StateManager.addMessage)
+              StateManager.addMessage("🎉 和朋友在一起的时光让心情变得更好。心情+5,心智+2。", "success");
+          }
+        },
+        {
+          text: "😌 享受独处的时光",
+          hint: "心智+3",
+          apply: function (st) {
+            if (st && st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 3);
+          }
+        }
+      ],
+      text: function (st) {
+        if (!st) return null;
+        var stats = socialStatsR395(st);
+        var activity = "你和好朋友们度过了一段愉快的时光";
+        if (stats.highAffinity >= 3) activity = "几位好友陪你度过了美好的一天,欢声笑语不断";
+        else if (stats.metCount >= 5) activity = "你和朋友聚在一起,分享各自的生活故事";
+        var mood = "有朋友陪伴的日子,总是格外温暖。";
+        if (st.needs && (st.needs.happiness || 50) < 40) {
+          mood = "在你心情低落的时候,朋友的陪伴显得格外珍贵。";
+        }
+        return "今天" + activity + "。" + mood + "\n\n朋友是人生最好的礼物。";
+      }
+    }
+  ];
+
+  // 注入 RANDOM_EVENTS
+  for (var i = 0; i < EVENTS.length; i++) {
+    var _e = EVENTS[i];
+    if (RANDOM_EVENTS.find(function (ev) { return ev.id === _e.id; })) continue;
+    RANDOM_EVENTS.push(_e);
+  }
+})();
+
 ;
 // ==== js/core/domain_d_linkage_r246.js ====
 /**

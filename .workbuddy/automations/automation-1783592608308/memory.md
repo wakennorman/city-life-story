@@ -378,3 +378,14 @@
 - 提交：feat 1d4a0da2(7文件·纯本轮:r390.js+index.html+dist+loop-state+round-doc+last_known_head) + docs 9eac85b4(MEMORY.md 压缩 12750→5976字·--no-verify 纯文档)，均 push origin main 成功。
 - ⚠️ 并发教训：并行窗口 build 后又改 modal.js→pre-commit 报 dist 陈旧，须再 stash+重建+快速提交(原子链)beat race；stash pop/checkout 会把并行文件留在 index，随后 `git add <单文件> && commit`(无 pathspec)会误提交已暂存的并行文件(本轮 9eac85b4 误含 domain_a_linkage_r389.js/modal.js/render_core.js)——**经核验无悬空引用、dist 重建零漂移、tree 一致**，但今后 commit 前须 `git status` 确认 index 仅含本轮文件。
 - 下轮→G(recency 385 最薄弱)。开轮必 git log 重算。
+
+## 最近执行（2026-07-27，R392 域G + R393 域H — 均由并行窗口完成代码,本窗口权威 bookkeeping+A类定位+MC验证,已 push main）
+- **R392 域G(前轮)**: A类=0 诚实报告+联动3(domain_g_linkage_r391.js: G→D社区扎根/G→C职业长跑/G→H创始人回望)。被并行 add -A 提交 4624982d 并 push。
+- **R393 域H(本轮)**: 开轮 git log 重算 recency A=387/B=389/C=391/D=389/E=389/F=390/G=392/H=386→H(386)最薄弱→域H。
+  - 本窗口A类定位1: index.html:587 悬空引用 `domain_b_linkage_r389.js`(文件不存在,真实文件 r389b.js 未注册=孤儿)→build.py 静默跳过丢失R389域B事件。修 587→r389b.js(消除悬空+挂载孤儿)。被并行 add -A 扫入 7cf8c332 并 push(committed 587=r389b.js 即本窗口修复)。
+  - 域H 联动3(domain_h_linkage_r393.js 并行提供,本窗口审校): H→F公司文化仪表盘/H→B里程碑周年/H→E公司反哺投资(全 phase:corporate·||防御·excludeFlags冷却·id前缀h393_唯一)。
+  - 并行 R393 自带A类修复: events_corp.js TSLA守卫。
+  - 验证: node --check OK·build dist 10646.8KB(r393 flag count=2)·MC 6×400d **EXIT=0·0代码异常**(前7天死亡率全0.0%;balanced/social 66.7%·corporate 16.7%<80% 为既有RNG阈值非回归·非0%非硬崩溃)。
+  - 域B r389b→r394 后续清理为并行 in-flight,后由并行 f6463162([B389] r394路由)提交+push,悬空引用在 main 彻底消除。
+- **并发**: 单轮内 HEAD 连跳 4624982d→7cf8c332(并行R393代码)→f6463162(并行R394/B)→本窗口账本 33fb5b0。本窗口仅提交 .claude 权威账本(loop-state/round-393/last_known_head),push fast-forward 成功(f6463162..33fb5b02)。
+- recency(R393后): A=387/B=389+/C=391/D=389/E=389/F=390/G=392/H=393 → 下轮**域A(387最薄弱)**。开轮必 git log 重算(并行速度远快于本自动化)。
