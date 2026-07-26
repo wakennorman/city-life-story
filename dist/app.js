@@ -4538,7 +4538,7 @@ function rollStreetEvent(state) {
   }
 
   // 触发率随天数递增（Day1 18% → Day365 ~35%），确保后期事件池充分出场
-  const baseChance = Math.min(0.35, 0.18 + (state.player && state.player.day || 0) * 0.0005);
+  const baseChance = Math.min(0.35, 0.18 + state.player.day * 0.0005);
   // 健康差或债务高时提高触发率
   // [全系统自洽修复] 域A R387 修复:rollStreetEvent 缺失 mod 声明(并行域B守卫修复漏删声明→每日抛 ReferenceError:mod is not defined→全策略100%死亡),补 let mod=0 与 rollCorporateEvent(:150)一致
   let mod = 0;
@@ -4569,7 +4569,7 @@ function rollCorporateEvent(state) {
 
   // 职场触发率亦随天数递增（Day1 22% → Day365 ~40%）
   // [全系统自洽修复] 域B A类修复: state.player.corporate 守卫(防止旧存档/无职场状态崩溃)
-  const baseChance = Math.min(0.4, 0.22 + (state.player && state.player.day || 0) * 0.0005);
+  const baseChance = Math.min(0.4, 0.22 + state.player.day * 0.0005);
   let mod = 0;
   var _corp = state.player && state.player.corporate;
   if (_corp && _corp.risk > 50) mod += 0.1;
@@ -4864,12 +4864,12 @@ function queueRandomEvent(state, phase) {
     // 财富检查：太有钱时不出贫穷主题事件
     if (
       e.maxCash &&
-      (state.resources && state.resources.cash || 0) + (state.resources && state.resources.bankBalance || 0) > e.maxCash
+      (state.resources.cash || 0) + (state.resources.bankBalance || 0) > e.maxCash
     )
       return false;
     if (
       e.minCash &&
-      (state.resources && state.resources.cash || 0) + (state.resources && state.resources.bankBalance || 0) < e.minCash
+      (state.resources.cash || 0) + (state.resources.bankBalance || 0) < e.minCash
     )
       return false;
     return true;
@@ -4891,7 +4891,6 @@ function queueRandomEvent(state, phase) {
     // 世界参数反馈环：行业热度高的领域相关事件更易触发
     if (typeof getSectorEventWeightMod === "function" && e.sector) {
       w *= getSectorEventWeightMod(e.sector);
-      if (isNaN(w)) w = 1;
     }
     // [全系统自洽修复] 域B 联动增强1: 极端天气提升相关事件概率（B→G）
     if (e.weather && state.weather && state.weather.current) {
@@ -5056,7 +5055,7 @@ function showEventModal(evt) {
         : "";
       // 检查现金是否够
       let disabled = false;
-      if (ch.cost && (StateManager.getState().resources && StateManager.getState().resources.cash || 0) < ch.cost) {
+      if (ch.cost && (StateManager.getState().resources.cash || 0) < ch.cost) {
         disabled = true;
       }
       const costTag = ch.cost
@@ -5113,7 +5112,6 @@ function showEventModal(evt) {
               efKey === "hunger" ||
               efKey === "hygiene"
             ) {
-              if (!state.needs) state.needs = {};
               state.needs[efKey] = Math.min(
                 100,
                 Math.max(0, (state.needs[efKey] || 50) + choice.effects[efKey]),
@@ -5131,7 +5129,6 @@ function showEventModal(evt) {
           }
         }
         if (choice.flags && typeof choice.flags === "object") {
-          if (!state.flags) state.flags = {};
           for (var flKey in choice.flags) {
             state.flags[flKey] = choice.flags[flKey];
           }
@@ -5162,7 +5159,6 @@ function showEventModal(evt) {
         console.error("Event choice apply error:", e);
       }
       // [全系统自洽修复] 域B 联动增强#1 B→G: 记录最近事件(最多3个)，供UI展示和NPC话题引用
-      if (!state.flags) state.flags = {};
       state.flags._recentEvents = state.flags._recentEvents || [];
       state.flags._recentEvents.unshift({
         id: evt.id,
@@ -5285,7 +5281,6 @@ function showEventModal(evt) {
 /** 跳槽 offer 决策弹窗（被 corp_headhunter 事件调用） */
 function showJobOfferModal() {
   const state = StateManager.getState();
-  if (!state.corporate) return;
   const offer = state.corporate.jobOffer;
   if (!offer) return;
   showModal({
@@ -5300,10 +5295,8 @@ function showJobOfferModal() {
         text: `接受 Offer (¥${offer.salary.toLocaleString()})`,
         cls: "btn-success",
         callback: () => {
-          if (!state.resources) state.resources = {};
           // 简化版：直接加钱 + 重置属性
           state.resources.cash = (state.resources.cash || 0) + offer.salary;
-          if (!state.player.corporate) state.player.corporate = {};
           state.player.corporate.kpi = Math.max(
             0,
             state.player.corporate.kpi * 0.5,
@@ -5316,7 +5309,6 @@ function showJobOfferModal() {
             0,
             state.player.corporate.upwardMgmt - 30,
           );
-          if (!state.corporate) return;
           state.corporate.jobOffer = null;
           StateManager.addMessage(
             `💼 接受了新公司的 offer，拿到 ¥${offer.salary.toLocaleString()} 签字费！`,
@@ -5341,7 +5333,6 @@ function showJobOfferModal() {
  * @param {string} phase - "street" | "corporate"
  */
 function scheduleChainEvent(state, eventId, delayDays, phase) {
-  if (!state.flags) state.flags = {};
   if (!state.flags._chainEventQueue) {
     state.flags._chainEventQueue = [];
   }
@@ -5502,7 +5493,6 @@ function autoGenerateNewsDesc(news) {
 
 function showNewsBriefingModal(news, state) {
   if (!news || typeof document === "undefined") return;
-  if (!state.flags) state.flags = {};
   state.flags._newsPopupSeen = state.flags._newsPopupSeen || {};
   var key = news.id + "_" + state.player.day;
   if (state.flags._newsPopupSeen[key]) return;
@@ -5644,7 +5634,6 @@ function showNewsBriefingModal(news, state) {
 
 function rollDailyNews(state) {
   state.activeNews = state.activeNews || [];
-  if (!state.flags) state.flags = {};
   state.flags.seenNewsToday = state.flags.seenNewsToday || [];
 
   // 每日必出一条新闻（L1-L4 系统优先，fallback 旧池）
@@ -5713,7 +5702,7 @@ function _rollOneDailyNews(state) {
 function dailyCleanup(state) {
   cleanupExpiredNews(state);
   // 清理链式事件队列中已过期的条目
-  if (state.flags && state.flags._chainEventQueue && state.flags._chainEventQueue.length > 0) {
+  if (state.flags._chainEventQueue && state.flags._chainEventQueue.length > 0) {
     state.flags._chainEventQueue = state.flags._chainEventQueue.filter(
       function (entry) {
         return state.player.day < entry.triggerDay + 30;
@@ -44227,7 +44216,7 @@ if (typeof window !== "undefined") {
           apply: function (st) {
             st.flags._startupDeclarationDone = true;
             if (st.resources) { st.resources.cash = (st.resources.cash || 0) - 5000; }
-            if (st.player) { st.player.rationality = Math.min(100, (st.player.rationality || 0) + 5); }
+            if (st.player) { st.player.mental = Math.min(100, (st.player.mental || 50) + 5); } // [全系统自洽修复] 域H R417 修复:player.rationality 死字段(全库零读取,state.js无此字段)→真实心智字段 player.mental,「理智+5」不再静默丢失
             StateManager.addMessage("💰 你把5000块存进了定期，告诉自己：不管公司成败，这笔钱是底线。理智+5。", "info");
           },
         },
@@ -44254,7 +44243,9 @@ if (typeof window !== "undefined") {
             st.flags._firstPromoCelebDone = true;
             if (st.player) {
               if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 10);
-              st.player.upwardMgmt = Math.min(100, (st.player.upwardMgmt || 0) + 3);
+              // [全系统自洽修复] 域H R417 修复:st.player.upwardMgmt 死字段(全库读取方均走 st.player.corporate.upwardMgmt)→「管理能力+3」曾静默丢失
+              st.player.corporate = st.player.corporate || {};
+              st.player.corporate.upwardMgmt = Math.min(100, (st.player.corporate.upwardMgmt || 50) + 3);
             }
             if (st.relationships) {
               var colleagues = ["boss_li", "colleague_zhang", "colleague_li"];
@@ -52186,7 +52177,7 @@ if (typeof window !== "undefined") {
         apply: function (st) {
           st.flags._trainingCertScamSeen = true;
           st.player.morality = Math.min(100, (st.player.morality || 50) + 2);
-          st.player.ability = Math.min(100, (st.player.ability || 50) + 1);
+          st.player.mental = Math.min(100, (st.player.mental || 50) + 1); // [全系统自洽修复] 域H R417 修复:player.ability 死字段(街头阶段无此字段,真实 corporate.ability 仅Phase2)→按消息文案"心智+1"改真实字段 player.mental
           StateManager.addMessage(
             "🔍 你要求看政府批文和认证资质。销售支支吾吾，翻了半天只拿出一张过期的培训许可证。你明白了——这班根本不正规。\n道德+2，心智+1。",
             "success",
@@ -52202,10 +52193,11 @@ if (typeof window !== "undefined") {
             st.resources.cash = Math.max(0, (st.resources.cash || 0) - 2000);
             var legit = Random.chance(0.3);
             if (legit) {
-              st.player.ability = Math.min(100, (st.player.ability || 50) + 5);
-              st.player.knowledge = Math.min(
+              // [全系统自洽修复] 域H R417 修复:player.ability/player.knowledge 均为死字段(全库零读取)→"能力+5"改 player.mental、"知识+5"改真实智力字段 player.intelligence
+              st.player.mental = Math.min(100, (st.player.mental || 50) + 5);
+              st.player.intelligence = Math.min(
                 100,
-                (st.player.knowledge || 50) + 5,
+                (st.player.intelligence || 20) + 5,
               );
               st.needs.happiness = Math.min(
                 100,
@@ -107659,6 +107651,170 @@ if (typeof window !== "undefined") {
 })();
 
 ;
+// ==== js/core/domain_h_linkage_r417.js ====
+/**
+ * 域H(Phase2/公司) 联动增强 R417
+ * 第十七轮循环——把隐藏在startup/corp经营/团队管理中的数据转化为叙事体验。
+ * 桥接：
+ *   H→F  h417_corp_dashboard         公司仪表盘 → 消费 corporate+startup 数据,
+ *     把经营数据→"公司运营状况如何"的UI摘要
+ *   H→G  h417_founder_health          创始人健康v2 → 消费 corporate+needs+status 数据,
+ *     高压经营→"创业者也要关注身体"的健康回响
+ *   H→E  h417_corp_finance_v2        公司财务v2 → 消费 corporate+investment 数据,
+ *     公司财务→"公司理财vs个人理财"的经济联动
+ */
+(function () {
+  "use strict";
+  if (typeof RANDOM_EVENTS === "undefined" || !RANDOM_EVENTS) return;
+  if (RANDOM_EVENTS._domainHLinkageR417Loaded) return;
+  RANDOM_EVENTS._domainHLinkageR417Loaded = true;
+
+  function grantSkillXpR417(key, amount) {
+    if (typeof addSkillXp === "function") {
+      try { addSkillXp(key, amount); } catch (e) { /* safe */ }
+    }
+  }
+
+  var EVENTS = [
+    {
+      id: "h417_corp_dashboard",
+      phase: "corporate",
+      _isChainEvent: false,
+      icon: "📊",
+      title: "公司运营仪表盘",
+      story: "你审视了公司的整体运营状况——{dashboardDesc}\n\n数据驱动决策,是现代企业的核心竞争力。",
+      triggers: { minDay: 65, excludeFlags: ["_h417DashCooldown"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        return st.player && st.player.corporate;
+      },
+      choices: [
+        {
+          text: "📈 用数据驱动经营决策",
+          hint: "心智+4,management XP+4,置 _h417DashCooldown(80天)",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._h417DashCooldown = true;
+            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 4);
+            grantSkillXpR417("management", 4);
+            if (typeof StateManager !== "undefined" && StateManager.addMessage)
+              StateManager.addMessage("📊 你用数据审视公司运营——仪表盘是经营者的眼睛。心智+4,管理XP+4。", "success");
+          }
+        },
+        {
+          text: "🤷 凭经验管理就好",
+          hint: "无奖励",
+          apply: function (st) { /* 无奖励选择 */ }
+        }
+      ],
+      text: function (st) {
+        if (!st || !st.player || !st.player.corporate) return null;
+        var corp = st.player.corporate;
+        var desc = "公司运营正在步入正轨";
+        if (typeof corp.kpi === "number") {
+          desc = corp.kpi >= 80 ? "KPI表现优秀(" + corp.kpi + "分)" :
+                 corp.kpi >= 50 ? "KPI达标(" + corp.kpi + "分)" : "KPI偏低(" + corp.kpi + "分),需要关注";
+        }
+        return "你审视了公司的整体运营状况——" + desc + "。\n\n数据驱动决策,是现代企业的核心竞争力。";
+      }
+    },
+    {
+      id: "h417_founder_health",
+      phase: "corporate",
+      _isChainEvent: false,
+      icon: "❤️",
+      title: "创业者的身体",
+      story: "你意识到创业不能以牺牲健康为代价——{healthDesc}\n\n{healthAdvice}",
+      triggers: { minDay: 75, excludeFlags: ["_h417FounderCooldown"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        return st.player && st.player.corporate;
+      },
+      choices: [
+        {
+          text: "🧘 调整工作节奏,关注健康",
+          hint: "心智+4,心情+5,置 _h417FounderCooldown(90天)",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._h417FounderCooldown = true;
+            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 4);
+            if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 5);
+            if (typeof StateManager !== "undefined" && StateManager.addMessage)
+              StateManager.addMessage("❤️ 你调整工作节奏关注健康——创业者也是人,需要休息。心智+4,心情+5。", "success");
+          }
+        },
+        {
+          text: "💪 再拼一把,熬过这阵就好了",
+          hint: "无奖励",
+          apply: function (st) { /* 无奖励选择 */ }
+        }
+      ],
+      text: function (st) {
+        if (!st || !st.player) return null;
+        var desc = "长期高压经营,身体在发出警告";
+        var advice = "适当休息,才能走得更远";
+        if (st.needs) {
+          if ((st.needs.fatigue || 0) > 70) desc = "过度疲劳已经影响了工作效率";
+          if ((st.needs.happiness || 100) < 40) advice = "心情低落时,更要关注身心健康";
+        }
+        return "你意识到创业不能以牺牲健康为代价——" + desc + "。\n\n" + advice + "。";
+      }
+    },
+    {
+      id: "h417_corp_finance_v2",
+      phase: "corporate",
+      _isChainEvent: false,
+      icon: "💰",
+      title: "公司理财vs个人理财",
+      story: "你思考公司与个人的财务关系——{financeDesc}\n\n健康的财务分离,是创业的基本功。",
+      triggers: { minDay: 90, excludeFlags: ["_h417FinanceCooldown"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        return st.player && st.player.corporate && st.investment;
+      },
+      choices: [
+        {
+          text: "📊 做好公司与个人的财务分离",
+          hint: "accounting XP+5,心智+3,置 _h417FinanceCooldown(100天)",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._h417FinanceCooldown = true;
+            grantSkillXpR417("accounting", 5);
+            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 3);
+            if (typeof StateManager !== "undefined" && StateManager.addMessage)
+              StateManager.addMessage("💰 你做好公司个人财务分离——清晰的财务是企业的生命线。会计XP+5,心智+3。", "success");
+          }
+        },
+        {
+          text: "🤷 公司和个人分不开",
+          hint: "无奖励",
+          apply: function (st) { /* 无奖励选择 */ }
+        }
+      ],
+      text: function (st) {
+        if (!st) return null;
+        var desc = "公司财务和个人财务需要明确区分";
+        if (st.investment && st.investment._totalInvestmentProfit !== undefined) {
+          var profit = st.investment._totalInvestmentProfit;
+          desc = profit > 0 ? "个人投资盈利¥" + profit.toLocaleString() + ",财务状况良好" :
+                 "个人投资亏损¥" + Math.abs(profit).toLocaleString() + ",需要调整策略";
+        }
+        return "你思考公司与个人的财务关系——" + desc + "。\n\n健康的财务分离,是创业的基本功。";
+      }
+    }
+  ];
+
+  for (var i = 0; i < EVENTS.length; i++) {
+    var _e = EVENTS[i];
+    if (RANDOM_EVENTS.find(function (ev) { return ev.id === _e.id; })) continue;
+    RANDOM_EVENTS.push(_e);
+  }
+})();
+
+;
 // ==== js/core/domain_h_linkage_r83.js ====
 /*
  * 城市浮生记 — 域H（Phase2/公司）联动增强 · R83
@@ -124029,7 +124185,6 @@ const ERA_EVENTS = [
         apply: function (st) {
           st.flags._eraEvent_180 = true;
           st.flags.trendJobUnlocked = true;
-          if (!st.needs) st.needs = {};
           st.needs.fatigue = Math.min(100, (st.needs.fatigue || 0) + 15);
           StateManager.addMessage(
             "🔥 你进入了风口行业！日薪涨到¥300，但累得够呛。风口不是谁都能抓住的。",
@@ -124042,7 +124197,6 @@ const ERA_EVENTS = [
         hint: "心智+3，获得行业情报",
         apply: function (st) {
           st.flags._eraEvent_180 = true;
-          if (!st.player) st.player = {};
           st.player.mental = Math.min(100, (st.player.mental || 0) + 3);
           if (!st.flags) st.flags = {};
           st.flags.industryIntel = true;
@@ -124099,7 +124253,6 @@ const ERA_EVENTS = [
         hint: "消耗行动力，可能找到更便宜的",
         apply: function (st) {
           st.flags._eraEvent_270 = true;
-          if (!st.player) st.player = {};
           st.player.actionPoints = Math.max(
             0,
             (st.player.actionPoints || 100) - 20,
@@ -124186,7 +124339,6 @@ const ERA_EVENTS = [
         hint: "心智+5",
         apply: function (st) {
           st.flags._eraEvent_365 = true;
-          if (!st.player) st.player = {};
           st.player.mental = Math.min(100, (st.player.mental || 0) + 5);
           StateManager.addMessage(
             "😌 你平静地接受了一年的收获与失去。心智+5。",
@@ -124241,7 +124393,6 @@ const ERA_EVENTS = [
         hint: "心智+5，获得决策建议",
         apply: function (st) {
           st.flags._eraEvent_450 = true;
-          if (!st.player) st.player = {};
           st.player.mental = Math.min(100, (st.player.mental || 0) + 5);
           StateManager.addMessage(
             "📊 你分析了行业趋势，发现有些方向值得投入。心智+5。",
@@ -179204,7 +179355,6 @@ function getRandomNewsEvent(state) {
 /** 应用新闻效果 */
 function applyNewsEffect(news, state) {
   var effects = news.effects;
-  if (!state.trade) state.trade = {};
 
   // 价格修正（商品市场）
   if (effects.priceMod) {
@@ -179250,11 +179400,10 @@ function applyNewsEffect(news, state) {
   }
 
   // 需求
-  if (!state.needs) state.needs = {};
   if (effects.hungerBonus)
-    state.needs.hunger = Math.max(
-      0,
-      Math.min(100, state.needs.hunger + effects.hungerBonus),
+    state.needs.hunger = Math.min(
+      100,
+      state.needs.hunger + effects.hungerBonus,
     );
   if (effects.fatigueBonus)
     state.needs.fatigue = Math.max(
@@ -179262,23 +179411,21 @@ function applyNewsEffect(news, state) {
       state.needs.fatigue - effects.fatigueBonus,
     );
   if (effects.fatiguePenalty)
-    state.needs.fatigue = Math.max(
-      0,
-      Math.min(100, state.needs.fatigue + effects.fatiguePenalty),
+    state.needs.fatigue = Math.min(
+      100,
+      state.needs.fatigue + effects.fatiguePenalty,
     );
   if (effects.happinessBonus)
-    state.needs.happiness = Math.max(
-      0,
-      Math.min(100, state.needs.happiness + effects.happinessBonus),
+    state.needs.happiness = Math.min(
+      100,
+      state.needs.happiness + effects.happinessBonus,
     );
 
   // 技能经验
-  if (effects.skillXp && state.skills) {
+  if (effects.skillXp) {
     var skillKeys = Object.keys(state.skills);
-    if (skillKeys.length > 0) {
-      var key = Random.fromArray(skillKeys);
-      if (key && state.skills[key]) state.skills[key].xp += effects.skillXp;
-    }
+    var key = Random.fromArray(skillKeys);
+    state.skills[key].xp += effects.skillXp;
   }
 
   // ── 投资市场联动 ──────────────────────────────────────────────
@@ -189084,7 +189231,6 @@ const MORAL_EVENTS = [
         score: 12,
         immediate: function (s) {
           // [联动flag] 触发"失主感谢"后续事件
-          if (!s.flags) s.flags = {};
           s.flags.moralWalletReturner = true;
           s.player.fame = Math.min(100, (s.player.fame || 0) + 2);
           s.needs.happiness = Math.min(100, s.needs.happiness + 5);
@@ -189100,7 +189246,6 @@ const MORAL_EVENTS = [
         score: -15,
         immediate: function (s) {
           // [联动flag] 触发"昧下钱包的阴影"后续事件
-          if (!s.flags) s.flags = {};
           s.flags.moralWalletStolen = true;
           s.resources.cash = (s.resources.cash || 0) + 500;
           s.needs.happiness = Math.min(100, s.needs.happiness + 8);
@@ -189139,7 +189284,6 @@ const MORAL_EVENTS = [
         score: 8,
         immediate: function (s) {
           // [联动flag] 触发"乞丐的线报"后续事件
-          if (!s.flags) s.flags = {};
           s.flags.moralFedBeggar = true;
           s.resources.cash = Math.max(0, (s.resources.cash || 0) - 15);
           s.needs.happiness = Math.min(100, s.needs.happiness + 6);
@@ -189229,11 +189373,9 @@ const MORAL_EVENTS = [
         score: 15,
         immediate: function (s) {
           // [联动flag] 触发"被路人认出英雄"后续事件
-          if (!s.flags) s.flags = {};
           s.flags.moralStoppedThiefPublic = true;
           s.player.fame = Math.min(100, (s.player.fame || 0) + 5);
           s.needs.happiness = Math.min(100, s.needs.happiness + 8);
-          if (!s.status) s.status = {};
           s.status.health = Math.max(0, s.status.health - 2);
           StateManager.addMessage(
             "🗣️ 女士反应过来，扒手瞪了你一眼后混入人群跑了。",
@@ -189376,7 +189518,6 @@ const MORAL_EVENTS = [
         score: 8,
         immediate: function (s) {
           // [联动flag] 触发"流浪狗再次相遇"后续事件
-          if (!s.flags) s.flags = {};
           s.flags.moralFedDog = true;
           s.resources.cash = Math.max(0, (s.resources.cash || 0) - 3);
           s.needs.happiness = Math.min(100, s.needs.happiness + 8);
@@ -189413,7 +189554,6 @@ const MORAL_EVENTS = [
         score: 15,
         immediate: function (s) {
           // [联动flag] 触发"老人家属联系你"后续事件
-          if (!s.flags) s.flags = {};
           s.flags.moralHelpedElder = true;
           s.needs.happiness = Math.min(100, s.needs.happiness + 6);
           s.player.fame = Math.min(100, (s.player.fame || 0) + 4);
@@ -189507,7 +189647,6 @@ const MORAL_EVENTS = [
         score: 10,
         immediate: function (s) {
           // [联动flag] 触发"年轻妈妈再次相遇"后续事件
-          if (!s.flags) s.flags = {};
           s.flags.moralPushedCar = true;
           s.needs.fatigue = Math.min(100, s.needs.fatigue + 8);
           s.needs.happiness = Math.min(100, s.needs.happiness + 8);
@@ -189555,7 +189694,6 @@ const MORAL_EVENTS = [
         immediate: function (s) {
           s.needs.happiness = Math.min(100, s.needs.happiness + 10);
           s.player.fame = Math.min(100, (s.player.fame || 0) + 3);
-          if (!s.status) s.status = {};
           s.status.health = Math.max(0, s.status.health - 1);
           StateManager.addMessage(
             "😾 混混被你的气势吓跑了。猫舔了舔你的手。",
@@ -189604,7 +189742,6 @@ const MORAL_EVENTS = [
         flag: "moral_refuse_fraud",
         score: 12,
         immediate: function (s) {
-          if (!s.player.corporate) s.player.corporate = {};
           s.player.corporate.dignity = Math.min(
             100,
             (s.player.corporate.dignity || 60) + 10,
@@ -189633,7 +189770,6 @@ const MORAL_EVENTS = [
         score: -15,
         immediate: function (s) {
           s.resources.cash = (s.resources.cash || 0) + 200;
-          if (!s.player.corporate) s.player.corporate = {};
           s.player.corporate.risk = Math.min(
             100,
             (s.player.corporate.risk || 0) + 15,
@@ -189793,7 +189929,6 @@ const MORAL_EVENTS = [
         flag: "moral_colleague_ignore",
         score: 3,
         immediate: function (s) {
-          if (!s.flags) s.flags = {};
           s.flags._colleagueFavor = (s.flags._colleagueFavor || 0) + 1;
           StateManager.addMessage("🤫 你低头走开了，老张松了口气。", "info");
         },
@@ -189815,13 +189950,11 @@ const MORAL_EVENTS = [
         flag: "moral_colleague_snitch",
         score: -10,
         immediate: function (s) {
-          if (!s.player.corporate) s.player.corporate = {};
           s.player.corporate.upwardMgmt = Math.min(
             100,
             (s.player.corporate.upwardMgmt || 0) + 3,
           ); // [全系统自洽修复] 域B 修复: upward→upwardMgmt
           s.needs.happiness = Math.max(0, s.needs.happiness - 5);
-          if (!s.flags) s.flags = {};
           s.flags._colleagueFavor = (s.flags._colleagueFavor || 0) - 2;
           StateManager.addMessage(
             "📞 你匿名举报了。下午老张被叫到办公室谈话，你不敢看他的眼睛。",
@@ -190122,7 +190255,6 @@ const MORAL_EVENTS = [
         score: 5,
         immediate: function (s) {
           s.needs.happiness = Math.min(100, s.needs.happiness + 2);
-          if (!s.flags) s.flags = {};
           s.flags._friendCheatWarned = true;
           StateManager.addMessage(
             "🗣️ 你轻咳了一声，他赶紧收起手机。监考老师看了一眼，走过去了。",
@@ -190235,7 +190367,6 @@ const MORAL_EVENTS = [
           s.needs.fatigue = Math.min(100, s.needs.fatigue + 2);
           s.needs.happiness = Math.max(0, s.needs.happiness - 3);
           s.player.fame = Math.min(100, (s.player.fame || 0) + 3);
-          if (!s.flags) s.flags = {};
           s.flags._scrapeLeftNote = true;
           StateManager.addMessage(
             "📝 你写了张纸条夹在雨刮器下。虽然可能要赔钱，但至少睡得着觉。",
@@ -190261,7 +190392,6 @@ const MORAL_EVENTS = [
         score: 3,
         immediate: function (s) {
           s.needs.happiness = Math.min(100, s.needs.happiness + 1);
-          if (!s.flags) s.flags = {};
           s.flags._scrapeCheckCamera = true;
           StateManager.addMessage(
             "📸 你发现巷子里没有监控——但你知道自己做了什么。",
@@ -190285,7 +190415,6 @@ const MORAL_EVENTS = [
         immediate: function (s) {
           s.needs.happiness = Math.min(100, s.needs.happiness + 8);
           s.player.fame = Math.min(100, (s.player.fame || 0) + 5);
-          if (!s.flags) s.flags = {};
           s.flags._stoppedScam = true;
           StateManager.addMessage(
             "🚨 老奶奶半信半疑地挂了电话。银行保安也过来帮忙确认是诈骗，她差点转了¥30,000！",
@@ -190384,7 +190513,6 @@ const MORAL_EVENTS = [
         immediate: function (s) {
           s.resources.cash = Math.max(0, (s.resources.cash || 0) - 200);
           s.needs.happiness = Math.max(0, s.needs.happiness - 2);
-          if (!s.flags) s.flags = {};
           s.flags._neighborDebt = (s.flags._neighborDebt || 150) + 200;
           StateManager.addMessage(
             "💰 你借了¥200。他感激涕零，但你心里清楚这钱大概率回不来了。",
@@ -190398,7 +190526,6 @@ const MORAL_EVENTS = [
         score: -3,
         immediate: function (s) {
           s.needs.happiness = Math.max(0, s.needs.happiness - 3);
-          if (!s.flags) s.flags = {};
           s.flags._neighborRefused = true;
           StateManager.addMessage(
             "😅 你找了个借口拒绝了。他失望地走了，你有点不忍心。",
@@ -190412,7 +190539,6 @@ const MORAL_EVENTS = [
         score: 8,
         immediate: function (s) {
           s.resources.cash = Math.max(0, (s.resources.cash || 0) - 200);
-          if (!s.flags) s.flags = {};
           s.flags._neighborIOU = (s.flags._neighborIOU || 150) + 200;
           s.flags._neighborHasIOU = true;
           s.player.fame = Math.min(100, (s.player.fame || 0) + 2);
@@ -191278,9 +191404,6 @@ const EXTREME_MORAL_EVENTS = [
 ];
 
 function applyExtremeMoralDelta(state, choice) {
-  if (!state.needs) state.needs = {};
-  if (!state.status) state.status = {};
-  if (!state.player) state.player = {};
   if (typeof choice.cash === "number") {
     state.resources.cash = Math.max(
       0,
@@ -191356,7 +191479,6 @@ const MORAL_CONSEQUENCES = {
       if (!r) r = s.relationships.elderNeighbor = {};
       r.met = true;
       r.affinity = Math.min(100, (r.affinity || 0) + 6);
-      if (!s.flags) s.flags = {};
       s.flags._elderJobLead = true; // [联动flag] 求职/职业系统可消费（B→C 桥接）
       s.needs.happiness = Math.min(100, (s.needs.happiness || 0) + 4);
       StateManager.addMessage(
@@ -191539,7 +191661,6 @@ const MORAL_CONSEQUENCES = {
     },
     apply: function (s) {
       // [全系统自洽修复] 域D A类#2: wholesaler NPC不存在 → 改为批发折扣标志
-      if (!s.flags) s.flags = {};
       s.flags._wholesaleChannelTip = true;
       s.needs.happiness = Math.min(100, s.needs.happiness + 5);
       StateManager.addMessage(
@@ -191608,7 +191729,6 @@ const MORAL_CONSEQUENCES = {
         (s.player.corporate.dignity || 60) - 10,
       );
       s.needs.happiness = Math.max(0, s.needs.happiness - 8);
-      if (!s.status) s.status = {};
       s.status.emotionalState = "stressed";
       StateManager.addMessage("🔎 财务抽查开始了！你提心吊胆...", "danger");
     },
@@ -192161,7 +192281,6 @@ function triggerMoralEvent(state) {
       cls: "btn-primary",
       callback: function () {
         var s = StateManager.getState();
-        if (!s.flags) s.flags = {};
         if (!s.flags.moral.actions) s.flags.moral.actions = [];
         s.flags.moral.actions.push({
           id: evt.id,
@@ -192289,7 +192408,6 @@ const SIDE_HUSTLE_EVENTS = [
         cost: 130,
         apply: function (st) {
           // [联动flag] 触发"口碑传播"后续事件（v3.1 链式回响）
-          if (!st.flags) st.flags = {};
           st.flags.daigouHonestService = true;
           st.resources.cash = Math.max(0, (st.resources.cash || 0) - 130);
           if (typeof scheduleChainEvent === "function") {
@@ -192317,7 +192435,6 @@ const SIDE_HUSTLE_EVENTS = [
         text: "😤 拒绝赔偿",
         hint: "信誉下降，可能失去客户",
         apply: function (st) {
-          if (!st.flags) st.flags = {};
           st.flags.daigouBadReview = true;
           StateManager.addMessage(
             "😤 你拒绝赔偿。客户很生气，说再也不找你代购了。",
@@ -192353,7 +192470,6 @@ const SIDE_HUSTLE_EVENTS = [
         text: "📞 走保险",
         hint: "不影响现金，但保险记录+1",
         apply: function (st) {
-          if (!st.flags) st.flags = {};
           st.flags.rideInsuranceClaim = (st.flags.rideInsuranceClaim || 0) + 1;
           StateManager.addMessage(
             "📞 你走了保险。虽然不用自己赔钱，但保险记录多了1次，明年保费会上涨。",
@@ -192366,7 +192482,6 @@ const SIDE_HUSTLE_EVENTS = [
         hint: "高风险：可能被举报",
         apply: function (st) {
           if (Random.chance(0.3)) {
-            if (!st.flags) st.flags = {};
             st.flags.rideCaught = true;
             st.resources.cash = Math.max(0, (st.resources.cash || 0) - 1000);
             StateManager.addMessage(
@@ -192428,7 +192543,6 @@ const SIDE_HUSTLE_EVENTS = [
         hint: "可能被平台处罚",
         apply: function (st) {
           if (Random.chance(0.4)) {
-            if (!st.flags) st.flags = {};
             st.flags.deliveryBan = true;
             StateManager.addMessage(
               "😤 你和客户吵了起来。平台收到投诉，暂停了你接单权限。",
@@ -192458,7 +192572,6 @@ const SIDE_HUSTLE_EVENTS = [
         text: "📝 申诉",
         hint: "需要等待，可能解封也可能维持",
         apply: function (st) {
-          if (!st.flags) st.flags = {};
           st.flags.mediaAppeal = true;
           StateManager.addMessage(
             "📝 你提交了申诉。平台说会在3个工作日内回复。这段时间无法更新内容。",
@@ -192471,12 +192584,10 @@ const SIDE_HUSTLE_EVENTS = [
         hint: "粉丝清零，但获得新平台经验",
         apply: function (st) {
           // [联动flag] 触发"新平台品牌合作"后续事件
-          if (!st.flags) st.flags = {};
           st.flags.selfMediaPivoted = true;
           if (st._sideHustleData && st._sideHustleData.selfMedia) {
             st._sideHustleData.selfMedia.followers = 0;
           }
-          if (!st.player) st.player = {};
           st.player.mental = Math.min(100, (st.player.mental || 0) + 5);
           StateManager.addMessage(
             "🔄 你决定换平台重新起步。虽然粉丝清零，但你学到了教训。心智+5。",
@@ -192488,7 +192599,6 @@ const SIDE_HUSTLE_EVENTS = [
         text: "😞 放弃自媒体",
         hint: "失去自媒体副业",
         apply: function (st) {
-          if (!st.flags) st.flags = {};
           st.flags.gaveUpSelfMedia = true;
           StateManager.addMessage("😞 你觉得太累了，决定放弃自媒体。", "info");
         },
@@ -192521,7 +192631,6 @@ const SIDE_HUSTLE_EVENTS = [
         text: "📈 持有观望",
         hint: "等待反弹，可能回本也可能继续跌",
         apply: function (st) {
-          if (!st.flags) st.flags = {};
           st.flags.investHold = true;
           StateManager.addMessage(
             "📈 你选择持有观望。投资需要耐心，希望明天会好起来。",
@@ -192538,7 +192647,6 @@ const SIDE_HUSTLE_EVENTS = [
           if (Random.chance(0.4)) {
             var profit = Random.int(300, 800);
             // [联动flag] 触发"被人请教投资"后续事件
-            if (!st.flags) st.flags = {};
             st.flags.investBottomed = true;
             st.resources.cash = (st.resources.cash || 0) + profit; // [全系统自洽修复] 域B A类:cash NaN守卫
             StateManager.addMessage(
@@ -192588,7 +192696,6 @@ const SIDE_HUSTLE_EVENTS = [
         apply: function (st) {
           if (Random.chance(0.6)) {
             // [联动flag] 触发"教育机构挖角"后续事件（v3.1 链式回响）
-            if (!st.flags) st.flags = {};
             st.flags.tutorInnovative = true;
             if (typeof scheduleChainEvent === "function") {
               scheduleChainEvent(st, "side_tutor_recruit", 12, "street");
@@ -249346,6 +249453,170 @@ if (typeof window !== "undefined") {
   ];
 
   // 注入 RANDOM_EVENTS
+  for (var i = 0; i < EVENTS.length; i++) {
+    var _e = EVENTS[i];
+    if (RANDOM_EVENTS.find(function (ev) { return ev.id === _e.id; })) continue;
+    RANDOM_EVENTS.push(_e);
+  }
+})();
+
+;
+// ==== js/core/domain_h_linkage_r417.js ====
+/**
+ * 域H(Phase2/公司) 联动增强 R417
+ * 第十七轮循环——把隐藏在startup/corp经营/团队管理中的数据转化为叙事体验。
+ * 桥接：
+ *   H→F  h417_corp_dashboard         公司仪表盘 → 消费 corporate+startup 数据,
+ *     把经营数据→"公司运营状况如何"的UI摘要
+ *   H→G  h417_founder_health          创始人健康v2 → 消费 corporate+needs+status 数据,
+ *     高压经营→"创业者也要关注身体"的健康回响
+ *   H→E  h417_corp_finance_v2        公司财务v2 → 消费 corporate+investment 数据,
+ *     公司财务→"公司理财vs个人理财"的经济联动
+ */
+(function () {
+  "use strict";
+  if (typeof RANDOM_EVENTS === "undefined" || !RANDOM_EVENTS) return;
+  if (RANDOM_EVENTS._domainHLinkageR417Loaded) return;
+  RANDOM_EVENTS._domainHLinkageR417Loaded = true;
+
+  function grantSkillXpR417(key, amount) {
+    if (typeof addSkillXp === "function") {
+      try { addSkillXp(key, amount); } catch (e) { /* safe */ }
+    }
+  }
+
+  var EVENTS = [
+    {
+      id: "h417_corp_dashboard",
+      phase: "corporate",
+      _isChainEvent: false,
+      icon: "📊",
+      title: "公司运营仪表盘",
+      story: "你审视了公司的整体运营状况——{dashboardDesc}\n\n数据驱动决策,是现代企业的核心竞争力。",
+      triggers: { minDay: 65, excludeFlags: ["_h417DashCooldown"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        return st.player && st.player.corporate;
+      },
+      choices: [
+        {
+          text: "📈 用数据驱动经营决策",
+          hint: "心智+4,management XP+4,置 _h417DashCooldown(80天)",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._h417DashCooldown = true;
+            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 4);
+            grantSkillXpR417("management", 4);
+            if (typeof StateManager !== "undefined" && StateManager.addMessage)
+              StateManager.addMessage("📊 你用数据审视公司运营——仪表盘是经营者的眼睛。心智+4,管理XP+4。", "success");
+          }
+        },
+        {
+          text: "🤷 凭经验管理就好",
+          hint: "无奖励",
+          apply: function (st) { /* 无奖励选择 */ }
+        }
+      ],
+      text: function (st) {
+        if (!st || !st.player || !st.player.corporate) return null;
+        var corp = st.player.corporate;
+        var desc = "公司运营正在步入正轨";
+        if (typeof corp.kpi === "number") {
+          desc = corp.kpi >= 80 ? "KPI表现优秀(" + corp.kpi + "分)" :
+                 corp.kpi >= 50 ? "KPI达标(" + corp.kpi + "分)" : "KPI偏低(" + corp.kpi + "分),需要关注";
+        }
+        return "你审视了公司的整体运营状况——" + desc + "。\n\n数据驱动决策,是现代企业的核心竞争力。";
+      }
+    },
+    {
+      id: "h417_founder_health",
+      phase: "corporate",
+      _isChainEvent: false,
+      icon: "❤️",
+      title: "创业者的身体",
+      story: "你意识到创业不能以牺牲健康为代价——{healthDesc}\n\n{healthAdvice}",
+      triggers: { minDay: 75, excludeFlags: ["_h417FounderCooldown"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        return st.player && st.player.corporate;
+      },
+      choices: [
+        {
+          text: "🧘 调整工作节奏,关注健康",
+          hint: "心智+4,心情+5,置 _h417FounderCooldown(90天)",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._h417FounderCooldown = true;
+            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 4);
+            if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 5);
+            if (typeof StateManager !== "undefined" && StateManager.addMessage)
+              StateManager.addMessage("❤️ 你调整工作节奏关注健康——创业者也是人,需要休息。心智+4,心情+5。", "success");
+          }
+        },
+        {
+          text: "💪 再拼一把,熬过这阵就好了",
+          hint: "无奖励",
+          apply: function (st) { /* 无奖励选择 */ }
+        }
+      ],
+      text: function (st) {
+        if (!st || !st.player) return null;
+        var desc = "长期高压经营,身体在发出警告";
+        var advice = "适当休息,才能走得更远";
+        if (st.needs) {
+          if ((st.needs.fatigue || 0) > 70) desc = "过度疲劳已经影响了工作效率";
+          if ((st.needs.happiness || 100) < 40) advice = "心情低落时,更要关注身心健康";
+        }
+        return "你意识到创业不能以牺牲健康为代价——" + desc + "。\n\n" + advice + "。";
+      }
+    },
+    {
+      id: "h417_corp_finance_v2",
+      phase: "corporate",
+      _isChainEvent: false,
+      icon: "💰",
+      title: "公司理财vs个人理财",
+      story: "你思考公司与个人的财务关系——{financeDesc}\n\n健康的财务分离,是创业的基本功。",
+      triggers: { minDay: 90, excludeFlags: ["_h417FinanceCooldown"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        return st.player && st.player.corporate && st.investment;
+      },
+      choices: [
+        {
+          text: "📊 做好公司与个人的财务分离",
+          hint: "accounting XP+5,心智+3,置 _h417FinanceCooldown(100天)",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._h417FinanceCooldown = true;
+            grantSkillXpR417("accounting", 5);
+            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 3);
+            if (typeof StateManager !== "undefined" && StateManager.addMessage)
+              StateManager.addMessage("💰 你做好公司个人财务分离——清晰的财务是企业的生命线。会计XP+5,心智+3。", "success");
+          }
+        },
+        {
+          text: "🤷 公司和个人分不开",
+          hint: "无奖励",
+          apply: function (st) { /* 无奖励选择 */ }
+        }
+      ],
+      text: function (st) {
+        if (!st) return null;
+        var desc = "公司财务和个人财务需要明确区分";
+        if (st.investment && st.investment._totalInvestmentProfit !== undefined) {
+          var profit = st.investment._totalInvestmentProfit;
+          desc = profit > 0 ? "个人投资盈利¥" + profit.toLocaleString() + ",财务状况良好" :
+                 "个人投资亏损¥" + Math.abs(profit).toLocaleString() + ",需要调整策略";
+        }
+        return "你思考公司与个人的财务关系——" + desc + "。\n\n健康的财务分离,是创业的基本功。";
+      }
+    }
+  ];
+
   for (var i = 0; i < EVENTS.length; i++) {
     var _e = EVENTS[i];
     if (RANDOM_EVENTS.find(function (ev) { return ev.id === _e.id; })) continue;
