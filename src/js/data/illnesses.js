@@ -316,7 +316,8 @@ const ILLNESSES = {
     name: "猝死风险",
     icon: "💔",
     severity: 8,
-    naturalCureDays: [7, 14],
+    // [全系统自洽修复] 域A R245: 删除 naturalCureDays——每日2%死亡率、severity:8的致命风险不应能"自然痊愈"(A类)
+    isCritical: true,
     triggerHabit: { overworkCount: 1, age: 45 },
     triggerChance: 0.12,
     symptom: { dailyDeathChance: 0.02, mentalDebuff: 20, physiqueDebuff: 10 },
@@ -531,9 +532,8 @@ const ILLNESSES = {
     name: "肝癌",
     icon: "☠️",
     severity: 8,
-    naturalCureDays: [60, 120],
-    // [全系统自洽修复] 域A A类#4: 移除 hepatitisB:1（该计数器从未递增，原条件永假致肝癌永远无法触发）
-    // [全系统自洽修复] 域A A类#5: fattyLiverCount→liverCirrhosisCount（匹配 evolvesFrom: liver_cirrhosis，原字段致演化链断裂）
+    // [全系统自洽修复] 域A R245: 删除 naturalCureDays——肝癌 severity:8、treatCost:50000 却定义60-120天自然痊愈，与"手术是唯一可能根治的手段"严重矛盾(A类)
+    isCritical: true,
     triggerHabit: { liverCirrhosisCount: 1, age: 50 },
     triggerChance: 0.12,
     symptom: { health: -6, hunger: -8, physiqueDebuff: 10, liverFailure: true },
