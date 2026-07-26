@@ -314,6 +314,13 @@
 - 并发：源码被并行 ff32c31e chore-scoop 提交上 main（HEAD 核验 index.html+dist 均含 r277·count=2）；并行同时占用 R277 标签为域F(2d01102b)→本轮账本去冲突改记 R278。MC 6×400d EXIT=0·0代码异常；构建9677.3KB。
 - 提交2笔（docs bb7128ed / chore 回填 e99c7ed0），均 push origin main 成功。下轮→G(recency 271 最薄弱)。
 
+## 最近执行（2026-07-26，账本R296 域G 核心机制/生命周期·第五轮 — 已 push main 9d401d04）
+- 开轮 loop-state 滞后(标R284/next=F)，git log 重算并行已推进 R285-R295→G=286 最薄弱→域G；执行中并行又占 R294/R295→账本记 R296。
+- A类1: carry.js hireTransport 与天气断链（weather.js:789 getWeatherTransportRiskMod 零调用方死代码）→货损/交通意外掷骰乘天气倍率接线。另确证 scenario_start_chains.js 13个剧本死flag，r296 消费3个。
+- 联动3(domain_g_linkage_r296.js): G→B 复活 getWeatherEnhancedDesc 首调 / G→D 首消费 _hasToolkit 守 rel.met / G→C 首消费 _interviewPassed/_firstJobFound。
+- 验证: node --check OK / build 9822.9KB / MC 6×400d EXIT=0·0代码异常。源码被并行 ada29372/82f6ae83 扫入上 main；本窗口账本2笔(c38c9e89/9d401d04)均 push 成功。
+- ⚠️ 教训: Write 新 linkage 文件前必查编号是否被并行占用（本轮误覆盖已提交的 r294，git checkout -- 恢复）。下轮→A(recency 288)。
+
 ## 最近执行（2026-07-26，账本R284 域E 经济/投资·第四轮循环 — 已 push main 35694a98）
 - 开轮 loop-state 严重滞后(标R278/next=G)，据 git log 重算并行已推进 R278-R283(A=280/B=281/C=282/D=283/E=276/F=277/G=278/H=279)→E=276 全局最薄弱→本轮域E。
 - A类1(确证): investment.js buyBtc 与兄弟函数 sellBtc/buyInvStock 不对称守卫缺口——①缺 `if(!inv)return`(旧存档 state.investment 未初始化→`inv.btcPrice` 抛 TypeError 使买币崩溃)②缺 amount 校验(负数/NaN→cost 为负→凭空增币经济漏洞)③补 btcPrice 有限性判定。
