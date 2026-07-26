@@ -1326,12 +1326,14 @@
                     ((h.avgPrice * h.shares + 2000) / (h.shares + 10)) * 100,
                   ) / 100;
               } else {
+                // [全系统自洽修复] 域H R393: 守卫 inv.stockMarket(可能undefined)→防TypeError崩溃,与 line1256 trade_war_news 一致的防御模式
+                var _tslaPrice = (inv.stockMarket && inv.stockMarket.TSLA)
+                  ? inv.stockMarket.TSLA.price
+                  : 250;
                 inv.stockHoldings.push({
                   symbol: "TSLA",
                   shares: 10,
-                  avgPrice: inv.stockMarket.TSLA
-                    ? inv.stockMarket.TSLA.price
-                    : 250,
+                  avgPrice: _tslaPrice,
                 });
               }
               StateManager.addMessage(
