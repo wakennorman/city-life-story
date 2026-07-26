@@ -1,7 +1,7 @@
 {
-  "currentRound": 311,
-  "currentDomain": "G",
-  "nextDomain": "H",
+  "currentRound": 312,
+  "currentDomain": "H",
+  "nextDomain": "A",
   "rotationIndex": 0,
   "domainOrder": [
     "A",
@@ -21,30 +21,30 @@
     "E": 309,
     "F": 310,
     "G": 311,
-    "H": 303
+    "H": 312
   },
   "history": [
     {
+      "round": 312,
+      "domain": "H",
+      "note": "域H(Phase2/公司·第七轮循环完成!): 并行窗口推进 R312 域H(HEAD 9bd4532d,已 push origin/main)。本窗口未参与代码(domain_h_linkage_r312.js 由并行预建并提交),仅回填 recency+bookkeeping。域H 第七轮循环收官。"
+    },
+    {
       "round": 311,
       "domain": "G",
-      "note": "域G(核心机制/生命周期·第七轮循环·账本R311): 开轮 loop-state 严重滞后(标R296/next=A),据 git log 重算并行已推进 R297(B)-R310(F)→G recency 302 全局最薄弱→本轮域G。A类1(确证极端值崩溃): world_params.js 两处 Yahoo 财经解析器(parseYahooFinanceResponse/同步XHR版)未守卫 prevClose(与腾讯/新浪解析器护栏不一致)→prevClose=0/NaN 时 changePercent=Infinity/NaN 污染 world_params 市场情绪与增长假设;补齐一致护栏。联动3(承接并行窗口预建 domain_g_linkage_r311.js,已注册 src/index.html:965,经审校合规: G→E life_wealth_milestone_v2 总资产≥50万/G→H life_company_anniversary_v2 startup满730天/G→A life_data_comprehensive day≥500,全||防御,数值[PLACEHOLDER])。node --check OK;build 9949.3KB;MC 6×400d EXIT=0·0代码异常。下轮→H(recency 303 最薄弱)。"
+      "note": "域G(核心机制/生命周期·第七轮循环): 并行窗口推进 R311 域G——A类1(world_params.js Yahoo解析器prevClose护栏,与腾讯/新浪解析器一致化;本窗口亦独立定位同缺陷并写入磁盘,最终由并行 f56942d8 提交)+联动3(domain_g_linkage_r311.js G→E财富里程碑/G→H公司周年/G→A综合数据,已注册 src/index.html)。本窗口审校承接,MC 6×400d 0代码异常,构建9949.3KB。"
     },
     {
       "round": 310,
       "domain": "F",
-      "note": "域F(UI/UX·第七轮循环): 并行窗口推进 R310 域F(HEAD 22c6e032,本地领先 origin 388005b2 一commit)。本窗口未参与,仅据 git log 回填 recency。"
-    },
-    {
-      "round": 309,
-      "domain": "E",
-      "note": "域E(经济/投资·第七轮循环): 并行窗口推进 R309 域E(d1543ec4)。本窗口未参与,仅回填 recency。"
+      "note": "域F(UI/UX·第七轮循环): 并行窗口推进 R310 域F。本窗口未参与,仅回填 recency。"
     }
   ],
-  "lastDomain": "G",
-  "lastRound": 311,
+  "lastDomain": "H",
+  "lastRound": 312,
   "lastDate": "2026-07-26",
-  "lastCommit": "PENDING",
-  "pushStatus": "PENDING",
+  "lastCommit": "9bd4532d",
+  "pushStatus": "PUSHED",
   "completedDomains": [
     "A",
     "B",
@@ -55,5 +55,5 @@
     "G",
     "H"
   ],
-  "description": "全系统优化 loop R311→域G(核心机制/生命周期,第七轮循环)。A类1(world_params.js Yahoo解析器prevClose护栏,与腾讯/新浪解析器一致化)。联动3(domain_g_linkage_r311.js: G→E财富里程碑/G→H公司周年/G→A综合数据面板,承接并行预建文件)。下轮→H(recency 303 最薄弱)。"
+  "description": "全系统优化 loop R312→域H(Phase2/公司,第七轮循环完成!)。R311(域G)与R312(域H)均由并行窗口完成并push origin/main;本窗口提供权威bookkeeping+R311 MC验证(0代码异常)。下轮→A(recency 304 最薄弱)。"
 }
