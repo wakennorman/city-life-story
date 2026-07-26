@@ -4524,6 +4524,19 @@ function rollStreetEvent(state) {
   )
     return;
 
+  // [全系统自洽修复] 域B R388 联动增强: B→C 职业里程碑事件(入职特定天数触发叙事)
+  if (state.career && state.career.currentJob) {
+    var _jobWd = state.career.currentJob.workDays || 0;
+    var _path = state.career.currentJob.path;
+    if (_jobWd === 1 && !state.flags['_careerStartEvent_' + _path]) {
+      state.flags['_careerStartEvent_' + _path] = true;
+      // 入职第一天特殊叙事（已在 career_dev.js 的 applyCareerJob 中处理，但作为兜底）
+    } else if (_jobWd === 365 && !state.flags._careerAnniversaryEvent) {
+      state.flags._careerAnniversaryEvent = true;
+      // 一周年叙事已在 tickCareerJobDaily 中处理
+    }
+  }
+
   // 触发率随天数递增（Day1 18% → Day365 ~35%），确保后期事件池充分出场
   const baseChance = Math.min(0.35, 0.18 + state.player.day * 0.0005);
   // 健康差或债务高时提高触发率
