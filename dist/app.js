@@ -246693,6 +246693,182 @@ if (typeof window !== "undefined") {
 })();
 
 ;
+// ==== js/core/domain_g_linkage_r402.js ====
+/**
+ * 域G(核心机制/生命周期) 联动增强 R402
+ * 第十七轮循环——把隐藏在life_nodes/story_chapters/travel中的数据转化为叙事体验。
+ * 桥接：
+ *   G→A  g402_life_data_viz       人生数据可视化 → 消费 life_nodes+story_chapters 数据,
+ *     把人生节点选择+故事章节转化为"我的人生轨迹"数据画像
+ *   G→B  g402_story_echo          故事回响 → 消费 _eventHistory+flags 数据,
+ *     过往事件→"那些故事如何塑造了我"的叙事回响
+ *   G→D  g402_travel_social       旅行社交 → 消费 travel+relationships 数据,
+ *     旅行经历→"在路上遇到的人"社交叙事
+ *
+ * 严格照 domain_g_linkage_r391.js / r377.js 已验证IIFE注入范式。
+ */
+(function () {
+  "use strict";
+
+  if (typeof RANDOM_EVENTS === "undefined" || !RANDOM_EVENTS) return;
+  if (RANDOM_EVENTS._domainGLinkageR402Loaded) return;
+  RANDOM_EVENTS._domainGLinkageR402Loaded = true;
+
+  var EVENTS = [
+    {
+      // G→A: 人生数据可视化 — 消费 life_nodes+story_chapters
+      id: "g402_life_data_viz",
+      phase: "street",
+      _isChainEvent: false,
+      icon: "📊",
+      title: "人生轨迹",
+      story:
+        "你回顾自己的人生轨迹——{lifeSummary}\n\n每一个选择都指向了现在的你。",
+      triggers: { minDay: 100, excludeFlags: ["_g402LifeDataCooldown"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        return true;
+      },
+      choices: [
+        {
+          text: "🌟 数据让我更了解自己",
+          hint: "心智+4,心情+3,置 _g402LifeDataCooldown(120天)",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._g402LifeDataCooldown = true;
+            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 4);
+            if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 3);
+            if (typeof StateManager !== "undefined" && StateManager.addMessage)
+              StateManager.addMessage("📊 你回顾了自己的人生轨迹——数据是理解自己的镜子。心智+4,心情+3。", "success");
+          }
+        },
+        {
+          text: "💪 活在当下,不必回顾",
+          hint: "心智+2",
+          apply: function (st) {
+            if (st && st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 2);
+          }
+        }
+      ],
+      text: function (st) {
+        if (!st || !st.player) return null;
+        var day = st.player.day || 1;
+        var age = st.player.age || 20;
+        var summary = "来到这座城市第" + day + "天," + age + "岁";
+        if (st.flags && st.flags._eventHistory) {
+          summary += ",经历了" + st.flags._eventHistory.length + "个重要事件";
+        }
+        return "你回顾自己的人生轨迹——" + summary + "。\n\n每一个选择都指向了现在的你。";
+      }
+    },
+    {
+      // G→B: 故事回响 — 消费 _eventHistory+flags
+      id: "g402_story_echo",
+      phase: "street",
+      _isChainEvent: false,
+      icon: "📖",
+      title: "故事回响",
+      story:
+        "你想起那些经历过的故事——{storyEcho}\n\n{echoInsight}",
+      triggers: { minDay: 80, excludeFlags: ["_g402StoryEchoCooldown"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        var history = (st.flags && st.flags._eventHistory) || [];
+        return history.length >= 8;
+      },
+      choices: [
+        {
+          text: "📝 写下这些故事",
+          hint: "心智+5,置 _g402StoryEchoCooldown(100天)",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._g402StoryEchoCooldown = true;
+            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 5);
+            if (typeof StateManager !== "undefined" && StateManager.addMessage)
+              StateManager.addMessage("📖 你写下那些故事——记录是为了更好地前行。心智+5。", "success");
+          }
+        },
+        {
+          text: "😊 让故事留在心里",
+          hint: "心情+3",
+          apply: function (st) {
+            if (st && st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 3);
+          }
+        }
+      ],
+      text: function (st) {
+        if (!st) return null;
+        var history = (st.flags && st.flags._eventHistory) || [];
+        var echo = "每一个选择、每一次邂逅,都成为了你的一部分";
+        var insight = "故事不会消失,它们化作了你前行的力量";
+        if (history.length >= 20) {
+          echo = "无数的故事交织成了你丰富的人生";
+          insight = "你是自己故事的作者,下一章正待书写";
+        }
+        return "你想起那些经历过的故事——" + echo + "。\n\n" + insight + "。";
+      }
+    },
+    {
+      // G→D: 旅行社交 — 消费 travel+relationships
+      id: "g402_travel_social",
+      phase: "street",
+      _isChainEvent: false,
+      icon: "🧳",
+      title: "旅途中的缘分",
+      story:
+        "你想起旅途中遇到的人——{travelSocial}\n\n世界很大,缘分很美。",
+      triggers: { minDay: 70, excludeFlags: ["_g402TravelCooldown"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        // 需要有旅行记录或社交关系
+        var hasTravel = st.travel && st.travel.visited && st.travel.visited.length > 0;
+        var hasRels = st.relationships && Object.keys(st.relationships).length > 0;
+        return hasTravel || hasRels;
+      },
+      choices: [
+        {
+          text: "💌 联系一下旅途中的朋友",
+          hint: "心智+3,心情+4,置 _g402TravelCooldown(90天)",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._g402TravelCooldown = true;
+            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 3);
+            if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 4);
+            if (typeof StateManager !== "undefined" && StateManager.addMessage)
+              StateManager.addMessage("🧳 你联系了旅途中的朋友——距离割不断真正的缘分。心智+3,心情+4。", "success");
+          }
+        },
+        {
+          text: "😌 美好的回忆就够了",
+          hint: "心情+3",
+          apply: function (st) {
+            if (st && st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 3);
+          }
+        }
+      ],
+      text: function (st) {
+        if (!st) return null;
+        var social = "那些在路上相遇的面孔,有些成为了朋友";
+        if (st.travel && st.travel.visited && st.travel.visited.length > 0) {
+          social = "你已走过" + st.travel.visited.length + "个地方,每段旅程都有故事";
+        }
+        return "你想起旅途中遇到的人——" + social + "。\n\n世界很大,缘分很美。";
+      }
+    }
+  ];
+
+  // 注入 RANDOM_EVENTS
+  for (var i = 0; i < EVENTS.length; i++) {
+    var _e = EVENTS[i];
+    if (RANDOM_EVENTS.find(function (ev) { return ev.id === _e.id; })) continue;
+    RANDOM_EVENTS.push(_e);
+  }
+})();
+
+;
 // ==== js/core/domain_g_linkage_r296.js ====
 /**
  * 域G(核心机制/生命周期) 联动增强 R296
@@ -258217,10 +258393,10 @@ function renderGrowthTab(state, parent) {
   var statSummary = document.createElement("div");
   statSummary.style.cssText = "flex:1;min-width:0;padding-top:28px;";
   var stats = [
-    { label: "体质", value: p.physique, color: "#c4803a" },
-    { label: "智力", value: p.intelligence, color: "#5a8ab4" },
-    { label: "敏捷", value: p.agility, color: "#5aaa5a" },
-    { label: "能力", value: p.mental, color: "#9b74b8" },
+    { label: "体质", value: p.physique || 0, color: "#c4803a" },
+    { label: "智力", value: p.intelligence || 0, color: "#5a8ab4" },
+    { label: "敏捷", value: p.agility || 0, color: "#5aaa5a" },
+    { label: "能力", value: p.mental || 0, color: "#9b74b8" },
     { label: "魅力", value: (p && p.charm) || 20, color: "#e08aa8" },
     { label: "名气", value: (p && p.fame) || 0, color: "#d4a017" },
     { label: "道德", value: (p && p.morality) || 50, color: "#6ac49a" },
@@ -258258,11 +258434,12 @@ function renderGrowthTab(state, parent) {
       : null;
   var totalAsset = assetSnapshot
     ? Math.round(assetSnapshot.totalAssets)
-    : (state.resources.cash || 0) + (state.resources.bankBalance || 0);
-  var debt =
-    (state.resources.villageDebt || state.resources.debt || 0) +
-    (state.resources.fineDebt || 0) +
-    (state.resources.bankDebt || 0);
+    : (state.resources ? (state.resources.cash || 0) + (state.resources.bankBalance || 0) : 0);
+  var debt = state.resources
+    ? (state.resources.villageDebt || state.resources.debt || 0) +
+      (state.resources.fineDebt || 0) +
+      (state.resources.bankDebt || 0)
+    : 0;
   briefSection.innerHTML =
     '<h3 style="margin:0 0 10px;font-size:13px;color:var(--text-primary);">📊 我的数字</h3>' +
     '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:8px;">' +
@@ -259237,7 +259414,7 @@ function renderGuidanceBar(state, parent) {
     corporate: { icon: "🏢", label: "职场打拼" },
     advanced: { icon: "🏆", label: "有头有脸" },
   };
-  var p = state.player,
+  var p = state.player || {},
     r = state.resources || {};
   var cash = (r.cash || 0) + (r.bankBalance || 0);
   var debt = (r.villageDebt || r.debt || 0) + (r.fineDebt || 0) + (r.bankDebt || 0);
@@ -260125,7 +260302,7 @@ function renderTradeTab(state, parent) {
   if (!state.trade) { parent.innerHTML = '<p style="color:var(--text-muted);padding:20px;text-align:center;">📦 交易系统加载中...</p>'; return; }
   const locKey = state.trade && state.trade.currentLocation;
   const loc = getLocation(locKey);
-  const prices = state.trade.goodsPrices[locKey] || {};
+  const prices = (state.trade.goodsPrices && state.trade.goodsPrices[locKey]) || {};
   const isWholesale = locKey === "wholesaleMarket";
   // v3.0 BUGFIX: 原为 const goodsList，但下方 SortUtils.sortInteractiveList 会重新赋值，
   // 触发 "Assignment to constant variable" 错误导致整个交易Tab崩溃。改为 let。
@@ -260392,7 +260569,7 @@ function renderTradeTab(state, parent) {
   }
 
   // 背包中的商品（方便快速卖出）
-  const ownedGoods = state.inventory.items || [];
+  const ownedGoods = (state.inventory && state.inventory.items) || [];
   if (ownedGoods.length > 0) {
     const ownedDiv = document.createElement("div");
     ownedDiv.style.marginBottom = "16px";
@@ -261165,7 +261342,7 @@ function renderInventoryTab(state, parent) {
   }
 
   // 装备栏
-  const equip = state.inventory.equipment;
+  const equip = state.inventory && state.inventory.equipment;
   const equipDiv = document.createElement("div");
   equipDiv.style.marginTop = "16px";
   var equipTitle = document.createElement("h3");
@@ -261412,7 +261589,7 @@ function renderSkillsTab(state, parent) {
   };
   var skillNamesCache = skillNames;
 
-  var skillKeys = Object.keys(state.skills);
+  var skillKeys = Object.keys(state.skills || {});
   var skillTrainingLocationOk =
     state.trade && state.trade.currentLocation === "trainingCenter";
   if (!skillTrainingLocationOk) {
@@ -261475,6 +261652,7 @@ function renderSkillsTab(state, parent) {
   for (var ki = 0; ki < skillKeys.length; ki++) {
     var key = skillKeys[ki];
     var skill = state.skills[key];
+    if (!skill) continue;
     var name = skillNames[key] || key;
     var xpNeeded = (skill.level + 1) * 100;
     var xpPct = Math.min(100, Math.round((skill.xp / xpNeeded) * 100));
@@ -261678,6 +261856,8 @@ function renderSkillsTab(state, parent) {
     (function (skillKey) {
       card.addEventListener("click", function () {
         var st = StateManager.getState();
+        // [全系统AP守卫] 先消耗行动力再干活
+        if (typeof consumeAP === "function" && consumeAP(15) === false) return;
         var sk = st.skills[skillKey];
         if (!sk) return;
         if (!st.trade || st.trade.currentLocation !== "trainingCenter") {
@@ -261711,10 +261891,9 @@ function renderSkillsTab(state, parent) {
           return;
         }
         // 扣除资源
-        st.player.actionPoints = Math.max(0, (st.player.actionPoints || 0) - 15);
         st.resources.cash = Math.max(0, (st.resources.cash || 0) - 50);
         // 训练EXP（大幅降低，技能学习变难）
-        var baseGain = 5 + Random.int(0, 7); // 5~12
+        var baseGain = 5 + (typeof Random !== "undefined" && Random.int ? Random.int(0, 7) : 3); // 5~12
         var intBonus = Math.floor((st.player.intelligence || 0) / 20) * 2; // 智力加成减半
         var xpGain = baseGain + intBonus;
         // 心情加成
@@ -261729,6 +261908,7 @@ function renderSkillsTab(state, parent) {
         // 记录训练次数
         st.flags._dailyTrainingCounts[skillKey] = trained + 1;
         // 追踪训练频次（用于排序）
+        if (!st.stats) st.stats = {};
         if (!st.stats.trainFreq) st.stats.trainFreq = {};
         st.stats.trainFreq[skillKey] = (st.stats.trainFreq[skillKey] || 0) + 1;
         // 升级处理（新阈值：120）
@@ -261776,7 +261956,6 @@ function renderSkillsTab(state, parent) {
           "success",
         );
         if (typeof playSound === "function") playSound("train");
-        if (typeof consumeAP === "function") consumeAP(15);
         if (typeof renderAll === "function") renderAll(st);
       });
     })(key);
@@ -261969,6 +262148,10 @@ function renderSkillsTab(state, parent) {
 
 // ====== Corp Tab（职场中才有效） ======
 function renderCorpTab(state, parent) {
+  if (!state.corporate) {
+    parent.innerHTML = '<p style="color:var(--text-muted);text-align:center;padding:40px;">🔒 公司数据加载中...</p>';
+    return;
+  }
   if (state.player.phase !== "corporate") {
     parent.innerHTML =
       '<p style="color:var(--text-muted);text-align:center;padding:40px;">🔒 进入职场后解锁</p>';
@@ -262802,7 +262985,7 @@ function renderIllnessRow(state) {
   }
 
   // 第1天且无疾病记录（旧存档残留）→ 隐藏伤病栏
-  if (state.player.day <= 1 && illnesses.length === 0) {
+  if ((state.player && state.player.day || 0) <= 1 && illnesses.length === 0) {
     box.style.display = "none";
     state.status.injured = false;
     return;
@@ -263540,7 +263723,7 @@ window.__doTrainCore = function (trainId) {
   if (!t) return;
 
   // AP 检查
-  var ap = state.resources.actionPoints || 0;
+  var ap = (state.player && state.player.actionPoints) || 0;
   if (ap < t.apCost) {
     StateManager.addMessage(
       "⏱ 行动力不足，需要 " + t.apCost + " AP",
@@ -263575,8 +263758,8 @@ window.__doTrainCore = function (trainId) {
       "error",
     );
   } else {
-    var baseGain = t.gain[0] + Random.int(0, t.gain[1] - t.gain[0]);
-    var crit = Random.chance(0.1) ? 2 : 0;
+    var baseGain = t.gain[0] + (typeof Random !== "undefined" && Random.int ? Random.int(0, t.gain[1] - t.gain[0]) : 0);
+    var crit = (typeof Random !== "undefined" && Random.chance ? Random.chance(0.1) : false) ? 2 : 0;
     baseGain = Math.max(1, Math.round(baseGain * diminishingMult));
     var totalGain = baseGain + crit;
     _setTrainStatVal(p, t.stat, _getTrainStatVal(p, t.stat) + totalGain);
@@ -263629,10 +263812,10 @@ function renderPgCharts(state, content) {
   var statSummary = document.createElement("div");
   statSummary.style.cssText = "flex:1;min-width:0;padding-top:28px;";
   var stats = [
-    { label: "体质", value: p.physique, color: "#c4803a" },
-    { label: "智力", value: p.intelligence, color: "#5a8ab4" },
-    { label: "敏捷", value: p.agility, color: "#5aaa5a" },
-    { label: "能力", value: p.mental, color: "#9b74b8" },
+    { label: "体质", value: p.physique || 0, color: "#c4803a" },
+    { label: "智力", value: p.intelligence || 0, color: "#5a8ab4" },
+    { label: "敏捷", value: p.agility || 0, color: "#5aaa5a" },
+    { label: "能力", value: p.mental || 0, color: "#9b74b8" },
     { label: "魅力", value: (p && p.charm) || 20, color: "#e08aa8" },
     { label: "名气", value: (p && p.fame) || 0, color: "#d4a017" },
     { label: "道德", value: (p && p.morality) || 50, color: "#6ac49a" },
@@ -264023,7 +264206,7 @@ function renderFinanceTab(state, parent) {
   var bankDebt = r.bankDebt || 0;
   var totalDebt = villageDebt + fineDebt + bankDebt;
   var netWorth = cash + bankBalance - totalDebt;
-  var txs = state.flags._dailyTransactions || [];
+  var txs = (state.flags && state.flags._dailyTransactions) || [];
 
   // === 总览区 ===
   var overview = document.createElement("div");
