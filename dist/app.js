@@ -212337,7 +212337,9 @@ function calculateDailyPL(state) {
     if (!last || !prev || !last.day || !prev.day) continue;
     if (last.day === prev.day) continue; // 同一天未日切，跳过
     var prevPrice = (prev && isFinite(prev.price)) ? prev.price : m.price;
-    var change = (m.price - prevPrice) * h.shares;
+    // [全系统自洽修复] 域E A类: h.shares 可能 NaN(旧存档)→change=NaN 污染 dailyPL.total→UI 显示'今日 ¥NaN'
+    var _sharesDL = (typeof h.shares === "number" && isFinite(h.shares)) ? h.shares : 0;
+    var change = (m.price - prevPrice) * _sharesDL;
     var group = getInvestmentAssetGroup(h.symbol);
     if (group === "stocks") dailyPL.stocks += change;
     else if (group === "crypto") dailyPL.crypto += change;
@@ -213045,10 +213047,13 @@ function renderStocks(area, inv, state, parent) {
       var h = holdings[hIdx];
       var mkt = inv.stockMarket[h.symbol];
       var curPx = mkt ? mkt.price : 0;
-      var val = curPx * h.shares;
-      var pl = (curPx - h.avgPrice) * h.shares;
+      // [全系统自洽修复] 域E A类: avgPrice/shares 可能 NaN(旧存档/数据异常)→UI 显示'NaN股/均¥NaN'，兜底为 0
+      var _avgPx = (typeof h.avgPrice === "number" && isFinite(h.avgPrice)) ? h.avgPrice : 0;
+      var _shares = (typeof h.shares === "number" && isFinite(h.shares)) ? h.shares : 0;
+      var val = curPx * _shares;
+      var pl = (curPx - _avgPx) * _shares;
       var plPct =
-        h.avgPrice > 0 ? ((curPx - h.avgPrice) / h.avgPrice) * 100 : 0;
+        _avgPx > 0 ? ((curPx - _avgPx) / _avgPx) * 100 : 0;
       totalPL += pl;
       totalValue += val;
       var plClr = pl >= 0 ? "var(--danger)" : "var(--success)";
@@ -213065,8 +213070,8 @@ function renderStocks(area, inv, state, parent) {
         <div class="stock-holding-row" data-symbol="${h.symbol}" style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.04);font-size:11px;gap:6px;cursor:pointer;" title="点击查看${stkName}逐笔成交记录">
           <span style="font-weight:600;min-width:50px;">${h.symbol}</span>
           <span style="color:var(--text-secondary);min-width:55px;font-size:10px;">${stkName}</span>
-          <span style="min-width:40px;text-align:right;">${h.shares}股</span>
-          <span style="min-width:55px;text-align:right;font-size:10px;color:var(--text-muted);">均¥${h.avgPrice.toFixed(2)}</span>
+          <span style="min-width:40px;text-align:right;">${_shares}股</span>
+          <span style="min-width:55px;text-align:right;font-size:10px;color:var(--text-muted);">均¥${_avgPx.toFixed(2)}</span>
           <span style="min-width:55px;text-align:right;">现¥${curPx.toFixed(2)}</span>
           <span style="min-width:60px;text-align:right;">市值¥${Math.round(val).toLocaleString()}</span>
           <span style="min-width:70px;text-align:right;color:${plClr};font-weight:600;">${plSign}¥${Math.round(pl).toLocaleString()}</span>
@@ -251489,6 +251494,27 @@ function renderSidebar(state) {
   // renderEduSection(state);
   renderReputationBadge(state);
   renderMoralStatus(state);
+  // [全系统自洽修复] 域F R384 联动增强: F→E 侧栏显示投资组合市值(如有持仓)
+  try {
+    if (state.investment && state.investment.portfolio) {
+      var _pv = state.investment.portfolio.totalValue || 0;
+      if (_pv > 0) {
+        var _pvEl = document.getElementById("sidebar-invest-value");
+        if (!_pvEl) {
+          var _sidebarEl = document.getElementById("sidebar");
+          if (_sidebarEl) {
+            _pvEl = document.createElement("div");
+            _pvEl.id = "sidebar-invest-value";
+            _pvEl.style.cssText = "font-size:10px;padding:4px 12px;color:var(--accent);border-top:1px solid var(--border);margin-top:4px;";
+            _sidebarEl.appendChild(_pvEl);
+          }
+        }
+        if (_pvEl) {
+          _pvEl.textContent = "💰 投资市值 ¥" + _pv.toLocaleString();
+        }
+      }
+    }
+  } catch (e) {}
   renderAccountingIntel(state);
   renderLocation(state);
 
@@ -259385,11 +259411,12 @@ window.__doTrainCore = function (trainId) {
     curVal >= 90 ? 0.4 : curVal >= 80 ? 0.6 : curVal >= 70 ? 0.8 : 1.0;
 
   // 风险检查（整容）
+  // [全系统自洽修复] 域F A类修复: state.status/needs 守卫(防止旧存档崩溃)
   if (t.risky && Random.chance(0.2)) {
     var oldVal = _getTrainStatVal(p, t.stat);
     _setTrainStatVal(p, t.stat, oldVal - 5);
-    state.status.health = Math.max(20, (state.status.health || 100) - 15);
-    state.needs.happiness = Math.max(0, (state.needs.happiness || 0) - 10);
+    if (state.status) state.status.health = Math.max(20, (state.status.health || 100) - 15);
+    if (state.needs) state.needs.happiness = Math.max(0, (state.needs.happiness || 0) - 10);
     StateManager.addMessage(
       "💉 整容失败！魅力-5，健康-15，心情-10。医生技术不行...",
       "error",

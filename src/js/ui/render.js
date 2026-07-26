@@ -6261,11 +6261,12 @@ window.__doTrainCore = function (trainId) {
     curVal >= 90 ? 0.4 : curVal >= 80 ? 0.6 : curVal >= 70 ? 0.8 : 1.0;
 
   // 风险检查（整容）
+  // [全系统自洽修复] 域F A类修复: state.status/needs 守卫(防止旧存档崩溃)
   if (t.risky && Random.chance(0.2)) {
     var oldVal = _getTrainStatVal(p, t.stat);
     _setTrainStatVal(p, t.stat, oldVal - 5);
-    state.status.health = Math.max(20, (state.status.health || 100) - 15);
-    state.needs.happiness = Math.max(0, (state.needs.happiness || 0) - 10);
+    if (state.status) state.status.health = Math.max(20, (state.status.health || 100) - 15);
+    if (state.needs) state.needs.happiness = Math.max(0, (state.needs.happiness || 0) - 10);
     StateManager.addMessage(
       "💉 整容失败！魅力-5，健康-15，心情-10。医生技术不行...",
       "error",

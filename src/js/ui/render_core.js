@@ -487,6 +487,27 @@ function renderSidebar(state) {
   // renderEduSection(state);
   renderReputationBadge(state);
   renderMoralStatus(state);
+  // [全系统自洽修复] 域F R384 联动增强: F→E 侧栏显示投资组合市值(如有持仓)
+  try {
+    if (state.investment && state.investment.portfolio) {
+      var _pv = state.investment.portfolio.totalValue || 0;
+      if (_pv > 0) {
+        var _pvEl = document.getElementById("sidebar-invest-value");
+        if (!_pvEl) {
+          var _sidebarEl = document.getElementById("sidebar");
+          if (_sidebarEl) {
+            _pvEl = document.createElement("div");
+            _pvEl.id = "sidebar-invest-value";
+            _pvEl.style.cssText = "font-size:10px;padding:4px 12px;color:var(--accent);border-top:1px solid var(--border);margin-top:4px;";
+            _sidebarEl.appendChild(_pvEl);
+          }
+        }
+        if (_pvEl) {
+          _pvEl.textContent = "💰 投资市值 ¥" + _pv.toLocaleString();
+        }
+      }
+    }
+  } catch (e) {}
   renderAccountingIntel(state);
   renderLocation(state);
 
