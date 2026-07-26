@@ -414,3 +414,14 @@
 - **验证**: node --check 全过；build 10779.4KB；MC 6×400d 0代码异常
 - **竞态要点**: 开轮 loop-state 滞后3轮(git log实况为准)；执行中被并行抢号2次(R409/R410)改号R411；联动文件名保留 r410（挂载行已被并行 git add -A 扫入 main，改名反致悬空）；push 前须双向核对 git show HEAD:src/index.html 挂载完整性
 - **下轮**: 域F（recency=403 最薄弱），开轮必 git log 重算
+
+## 最近执行（2026-07-27 07:23 · R418/R419 账本轮 — 权威 bookkeeping + dist 修复，已 push main）
+
+- **起始**: 本窗口原计划 R418=域H（A类4处死字段修复 cross_system_events/cross_system_events_part2 + 3联动 domain_h_linkage_r418.js h418_*），源码已 staged。开轮 `git log` 重算发现并行窗口已连推 R412-R418 整轮（R412=E/413=F/414=A/415=G/416=C/417=H/418=B），R418 编号被并行占用并改标域B。
+- **竞态发现**: 并行 `ef239253`「域B R418」经 `git add -A` 把本窗口域H源码(含 domain_h_linkage_r418.js + 4处死字段修复) 一并扫入 main 已 push → 我的域H工作已落地。HEAD==origin/main==ef239253。
+- **悬空引用缺陷**: HEAD 的 `dist/app.js` grep 核验 0 处 `h418_*`（索引挂载 domain_h_linkage_r418.js 但 bundle 缺失）→ 运行时 h418 事件永不注册。本窗口 `python build.py` 重建 dist(app.js 10848KB)，h418_*=6 闭合悬空引用。
+- **并行接管**: 本窗口 rebuild 后 attempted commit，pre-commit 同步守卫(last_known_head≠HEAD) 拦截；期间并行提交并 push **R419=域D**(`f5e41f9a`) + 重建 dist（h418_*=6 随 R419 入 bundle，悬空引用由并行闭合）。并行 R419 未更新 loop-state(滞后 round418/H/nextDomain=B)。
+- **提交**: 本窗口账本 `7938de04`(loop-state 校正 round419/D + recency D=419 + nextDomain=A + r418悬空已由R419闭合) + 回填 `4ac98060`(pushStatus=PUSHED)，均 push origin main。期间并行又 push **R420=域E**(`3fe3e3b1`, 0 A类+3联动 E→D/E→F/E→C)。origin/main 终态=`4ac98060`。
+- **recency 基准(R420后)**: A=414/B=418/C=416/D=419/E=420/F=413/G=415/H=418 → **F(413) 全局最薄弱**，下轮=R421=域F（开轮必 git log 重算，勿信 loop-state）。
+- **教训**: 并行窗口速度极快(单轮内 R412→R420)，本窗口角色=权威 bookkeeping + MC验证 + 偶发A类定位；代码轮几乎总被并行抢先。提交纪律：pre-commit 守卫要求 last_known_head==HEAD，每次提交前必 `git rev-parse HEAD > .claude/last_known_head`；推送前 git pull --rebase(脏树则先隔离并行在途)，冲突则中止绝不 force。
+- 下轮→域F（recency 413 最薄弱）。
