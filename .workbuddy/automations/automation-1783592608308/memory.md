@@ -335,3 +335,13 @@
 - 本窗口贡献：① 审校承接 r311 联动(3事件 G→E/G→H/G→A,全||防御,id唯一) ② 运行 MC 6×400d 验证(EXIT=0·0代码异常,balanced/corporate 存活率<80% 为既有RNG平衡阈值非回归,前7天死亡率全0.0%) ③ 更新权威 bookkeeping: DEVELOPMENT.md(v3.125 域G R311 条目,被并行扫入提交)、MEMORY.md(R311+R312 笔记+recency基准 R312后 A=304/B=305/C=307/D=308/E=309/F=310/G=311/H=312→下轮A)、loop-domain-state.json(round312/H/next=A)、round-311 账本。
 - 提交2笔(docs 83087100 + 回填 chore e38048b5)，**均 push origin main 成功**(3ff50622..83087100..e38048b5)。下轮→A(recency 304 最薄弱)。
 - ⚠️ 教训: 并行窗口速度远快于本自动化(单轮内 R310→R313)，本窗口角色转为「权威 bookkeeping + MC 验证 + 偶发 A类定位」；代码轮次几乎总被并行窗口抢先并提交。开轮必须先 `git log`+`git rev-parse origin/main` 重算真实 recency，勿盲信 loop-state。
+
+## 最近执行（2026-07-26，R324 对账轮 — 权威 bookkeeping + MC 验证，非代码轮）
+
+- 起始：本自动化上一轮停在 R320(H) 账本待 push；但并行窗口极活跃，开轮 `git log` 重算已推进至 HEAD=41ce71fb(R324)。并行已完成 R313(A)-R320(H) 第八轮全8域联动增强 + R321(A, domain_a_linkage_r321.js, c4f49757) + R323(B, domain_b_linkage_r323.js, 4b547ae4 第九轮) + R324 sync chore。
+- 本窗口未参与代码：开轮时工作树 `M src/index.html` + `?? domain_b_linkage_r323.js` 均为并行正在准备的 R323=B 在途改动；MC 运行期间并行已将 R323 提交上 main。若本窗口抢做 R323=B 必与并行撞车(file/reg 冲突)，故按既定角色(权威 bookkeeping + MC 验证 + 偶发 A类定位)改为对账轮，不启动新代码轮。
+- 真实 recency(git log 重算): A=321/B=323/C=315/D=316/E=317/F=318/G=319/H=320 → **C(315) 全局最薄弱**，下轮 R325=域C。
+- ⚠️ 并行 loop-state 滞后 R320(仍标 round320/H/next=A，连 R312 之后都未更新)；本窗口修正为 round324/B/next=C，同时修掉了并行从未维护的陈旧 loop-state 基线。CLAUDE.md 迭代表并行也停在 R296(MEMORY.md 同)，本窗口不伪造 R297-R324 行，仅经 loop-state(权威)+MEMORY.md(recency 基准)跟踪。
+- MC 验证: `node --max-old-space-size=8192 tests/monte_carlo.cjs --trials 6 --days 400` → **MC_EXIT=0 · 0 代码异常**(TypeError/ReferenceError/NaN/Infinity grep=0；前7天死亡率全 0.0%<10% 无早期死亡崩溃回归)。存活率 50~100% 波动中 corporate/trader <80% 为既有 RNG 平衡阈值(harness 标"🔧 需要调整"非代码回归)；36氪/澎湃/TianAPI RSS timeout 为离线新闻网络回退，非代码异常。MC 在并行 R323 在途状态(含 domain_b_linkage_r323.js 已注册 src/index.html)下运行，覆盖至 R323=B。
+- 提交: loop-domain-state.json(round324/B/next=C, recency 修正) + MEMORY.md(recency 基准 R324) + 本文件 + last_known_head=41ce71fb。仅 `git add` 这些权威 bookkeeping 文件，绝不碰并行在途/已提交代码(src/index.html / domain_b_linkage_r323.js 等)。push 前 `git pull --rebase origin main`，冲突则中止报告，绝不 force。
+- 下轮: 域C(recency 315 最薄弱，第九轮 R325)。并行窗口可能已抢先推进 R325，开轮必 `git log` 重算真实 recency。

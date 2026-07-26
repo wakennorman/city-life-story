@@ -1,7 +1,7 @@
 {
-  "currentRound": 320,
-  "currentDomain": "H",
-  "nextDomain": "A",
+  "currentRound": 324,
+  "currentDomain": "B",
+  "nextDomain": "C",
   "rotationIndex": 0,
   "domainOrder": [
     "A",
@@ -14,8 +14,8 @@
     "H"
   ],
   "domainRecency": {
-    "A": 313,
-    "B": 314,
+    "A": 321,
+    "B": 323,
     "C": 315,
     "D": 316,
     "E": 317,
@@ -25,25 +25,25 @@
   },
   "history": [
     {
+      "round": 324,
+      "domain": "B",
+      "note": "对账轮(非代码轮): 并行窗口已完成 R313(A)-R320(H) 第八轮全8域联动增强 + R321(A,domain_a_linkage_r321.js) + R323(B,domain_b_linkage_r323.js,4b547ae4 第九轮) + R324 sync chore(41ce71fb)。本窗口未参与代码(工作树并行在途改动已随并行提交上 main), 仅做权威对账 + MC 6×400d 验证(0代码异常, 覆盖至 R323=B 在途状态) + 回填真实 recency。真实 recency: A=321/B=323/C=315/D=316/E=317/F=318/G=319/H=320 → C(315)全局最薄弱。并行 loop-state 仍滞后 R320, 本窗口修正为 R324。"
+    },
+    {
+      "round": 323,
+      "domain": "B",
+      "note": "域B(事件/叙事·第九轮循环): 并行窗口 4b547ae4 完成联动增强(3项)并 push origin/main。"
+    },
+    {
       "round": 320,
       "domain": "H",
-      "note": "域H(Phase2/公司·第八轮循环完成!): A类1 = startup.js _calculateQuarterlyKPIScore B轮 profitability.target=0.0(盈亏平衡)时原式分母 target*valuation*2=0 → netCash/0(>0恒满分1.0无梯度/<0恒0/=0时NaN污染 totalWeightedScore→finalScore=NaN→董事会评分崩溃),改比例式(盈亏平衡即满分,亏损按估值5%缩放递减)+正目标分支补分母>0守卫+isFinite兜底。本窗口独立定位并修复,被并行窗口 add-A 扫入 8f270dc7(R321)并 push origin/main。联动 domain_h_linkage_r320.js(H→A数据面板v2/H→G创始人健康v2/H→B公司历史书)由并行窗口 1803127b 完成并 push。MC 6×400d EXIT=0·0代码异常。"
-    },
-    {
-      "round": 319,
-      "domain": "G",
-      "note": "域G(核心机制/生命周期·第八轮): 并行窗口推进 R319(edbf5076,已 push)。本窗口未参与,仅回填 recency。"
-    },
-    {
-      "round": 318,
-      "domain": "F",
-      "note": "域F(UI/UX·第八轮): 并行窗口推进 R318(93eec6d3,已 push)。"
+      "note": "域H(Phase2/公司·第八轮循环完成!): 并行窗口 1803127b 完成联动增强(3项), 本窗口R320轮次曾独立定位+修复 startup.js B轮KPI除零/NaN, 被并行 8f270dc7 扫入上 main。MC 6×400d 0代码异常。"
     }
   ],
-  "lastDomain": "H",
-  "lastRound": 320,
+  "lastDomain": "B",
+  "lastRound": 324,
   "lastDate": "2026-07-26",
-  "lastCommit": "8f270dc7",
+  "lastCommit": "41ce71fb",
   "pushStatus": "PUSHED",
   "completedDomains": [
     "A",
@@ -55,5 +55,5 @@
     "G",
     "H"
   ],
-  "description": "全系统优化 loop R320→域H(Phase2/公司,第八轮循环完成!)。A类1(startup.js B轮KPI盈亏平衡目标 netCash/0 → NaN 污染董事会评分, 本窗口独立定位+修复, 随并行 8f270dc7/R321 push origin/main) + 联动3(domain_h_linkage_r320.js 由并行 1803127b 完成push)。MC 6×400d 0代码异常。下轮→A(recency 313 最薄弱)。"
+  "description": "对账轮 R324→域B(实际为权威 bookkeeping, 非代码轮)。据 git log 实况重算真实 recency: A=321/B=323/C=315/D=316/E=317/F=318/G=319/H=320 → C(315)全局最薄弱, 下轮 R325=域C。MC 6×400d 0代码异常(覆盖至 R323=B 在途状态)。本窗口修正并行滞后的 loop-state(R320→R324) + 回填 recency + 对账。下轮→C。"
 }
