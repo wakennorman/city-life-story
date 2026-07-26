@@ -1,227 +1,261 @@
 /**
  * 域B(事件/叙事) 联动增强 R244
- * 主题：叙事回响可视化——事件不仅是文字泡，还在UI/社交/经济层面留下可追溯的痕迹。
+ * 背景：B域A类修复 — news.js friendly_neighbor 叙事提到"王大婶"但无 conditions met 门控。
+ *   此外，B域联动方向有显著缺口：
+ *   1) E→B 投资历程零叙事消费（investment.history[] 持续写入但无B域事件消费）；
+ *   2) A→B 经济周期/通胀指数缺乏渐进叙事（_eraState.inflationIndex 全库仅8个一次性里程碑消费）。
  * 桥接：
- *   B→F  event_memory_wall       人生第N个事件里程碑 → 事件记录墙UI标记（峰终定律·记忆锚点）
- *   B→D  event_npc_gossip         与已结识NPC聊起共同经历 → 好感升温（禀赋效应·共同记忆）
- *   B→E  event_lucky_streak       连续好运事件触发 → 投资信心flag（心理账户·幸运偏差）
+ *   E→B  invest_life_journal         复盘投资账本 → 总盈亏分3档叙事,心智+冷却90天
+ *   A→B  era_personal_pulse          感知城市气息变化 → 通胀指数渐进叙事,心智+心情
+ *   B→D  npc_long_absence_reunion    NPC久别重逢 → 30天未见的NPC再次出现,好感+心智
  *
- * 严格照 domain_b_linkage_r190.js 已验证 IIFE 注入范式：
- *   显式 phase、RANDOM_EVENTS 守卫、triggers 用引擎白名单字段、
- *   conditions 全字段防御、gameOver 闸门、apply 内自理副作用。
- * 真实字段核实：
- *   事件历史 st.flags._eventHistory（events_core.js:788 写入）；
- *   NPC 好感走 applyAffinityChange 守 rel.met（域D铁律）；
- *   投资信心 flag _eventLuckyStreak（供经济/投资域门控）；
- *   心情 st.needs.happiness；心智 st.player.mental；现金 st.resources.cash。
- *   数值标 [PLACEHOLDER] 待平衡组校准。
+ * 严格照 domain_c_linkage_r191.js / domain_c_linkage_r243.js 已验证 IIFE 注入范式。
  */
 (function () {
   if (typeof RANDOM_EVENTS === "undefined") return;
   if (RANDOM_EVENTS._domainBLinkageR244Loaded) return;
   RANDOM_EVENTS._domainBLinkageR244Loaded = true;
 
-  // 取首个已结识(met)且好感达阈值的 NPC id
-  function firstMetNpcB244(st, minAff) {
-    minAff = minAff || 0;
+  // 安全读取总盈亏
+  function getTotalProfit(st) {
+    if (!st || !st.flags || typeof st.flags._totalInvestmentProfit !== "number") return 0;
+    return st.flags._totalInvestmentProfit;
+  }
+
+  // 计算已结识NPC数量
+  function metNpcCount(st) {
+    if (!st || !st.relationships) return 0;
+    var count = 0;
+    for (var id in st.relationships) {
+      if (!Object.prototype.hasOwnProperty.call(st.relationships, id)) continue;
+      if (st.relationships[id] && st.relationships[id].met) count++;
+    }
+    return count;
+  }
+
+  // 获取首个已结识NPC的详细信息
+  function getFirstMetNpcDetail(st) {
     if (!st || !st.relationships) return null;
     for (var id in st.relationships) {
       if (!Object.prototype.hasOwnProperty.call(st.relationships, id)) continue;
       var r = st.relationships[id];
-      if (r && r.met && (r.affinity || 0) >= minAff) return id;
+      if (r && r.met) return { id: id, rel: r };
     }
     return null;
   }
 
-  // 安全改好感：走 applyAffinityChange（自动 clamp）
-  function safeAffinityB244(st, npcId, change, reason) {
-    if (!st || !npcId) return;
-    if (typeof applyAffinityChange === "function") {
-      applyAffinityChange(st, npcId, change, reason || "R244域B联动");
-      return;
+  // 获取NPC中文名
+  function getNpcCn(id) {
+    var names = {
+      aunt_wang: "王婶", boss_li: "李工头", sister_zhang: "张姐", old_zhou: "老周",
+      xiao_mei: "小美", chef_chen: "陈师傅", worker_lao_li: "老李", auntie_lin: "林阿姨",
+      chen_ge: "陈哥", ajie: "阿杰", old_ma: "老马"
+    };
+    return names[id] || id;
+  }
+
+  // 获取最近一次与某NPC的互动天数
+  function lastChatDaysAgo(st, npcId) {
+    var flag = "_lastNpcChat_" + npcId;
+    if (!st || !st.flags || !st.flags[flag]) return 999; // 从未聊过
+    var lastDay = st.flags[flag];
+    return Math.max(0, (st.player && st.player.day) - lastDay);
+  }
+
+  // 找已结识但超过threshold天没聊天的第一个NPC
+  function findLongAbsentNpc(st, threshold) {
+    if (!st || !st.relationships) return null;
+    threshold = threshold || 30;
+    for (var id in st.relationships) {
+      if (!Object.prototype.hasOwnProperty.call(st.relationships, id)) continue;
+      var r = st.relationships[id];
+      if (!r || !r.met) continue;
+      var days = lastChatDaysAgo(st, id);
+      if (days >= threshold) return { id: id, rel: r, days: days };
     }
-    if (!st.relationships) st.relationships = {};
-    if (!st.relationships[npcId]) st.relationships[npcId] = { met: true, affinity: 0 };
-    st.relationships[npcId].affinity = (st.relationships[npcId].affinity || 0) + change;
-    st.relationships[npcId].met = true;
+    return null;
   }
 
   var EVENTS = [
     {
-      // B→F: 人生第N个事件里程碑 → 事件记录墙UI标记（峰终定律·记忆锚点）
-      id: "event_memory_wall",
+      // E→B: 投资账本复盘 — 那些年你折腾过的钱，留下了什么
+      id: "invest_life_journal",
       phase: "street",
       _isChainEvent: false,
-      icon: "🖼️",
-      title: "记忆墙上的一格",
+      icon: "📊",
+      title: "复盘你的投资账本",
       story:
-        "你翻开手机相册，看到一张几个月前的截图——那是你刚来这座城市时第一次赚到¥100的记录。\n\n从那天到现在，你已经经历了不少值得记住的瞬间。有些让你笑，有些让你失眠。每一个都是你在这座城市存在过的证据。\n\n你决定把今天的经历也截个图，存进「人生记忆墙」。",
-      triggers: { minDay: 30, excludeFlags: ["_eventMemoryWallSeen"] },
+        "夜深人静的时候，你突然想翻翻这些年折腾投资留下的痕迹。赚了还是亏了，都不重要了——真正重要的是你对这个世界的理解，是否比刚来这座城市时更深了一些。",
+      triggers: { minDay: 60, excludeFlags: ["_investJournalSeen"] },
       conditions: function (st) {
         if (st.gameOver) return false;
-        // 至少经历过5个事件（有_eventHistory记录）
-        var history = (st.flags && st.flags._eventHistory) || [];
-        if (history.length < 5) return false;
-        // 每30天最多触发一次
-        if (st.flags && st.flags._eventMemoryWallLastDay) {
-          var lastDay = st.flags._eventMemoryWallLastDay;
-          if ((st.player && st.player.day ? st.player.day : 0) - lastDay < 30) return false;
+        if (!st.investment || !st.investment.history || st.investment.history.length < 3) return false;
+        // 至少有投资历史记录
+        if (!st.flags) return false;
+        return st.flags._dataInvestorMindset === true; // 至少曾经关注过投资
+      },
+      choices: [
+        {
+          text: "📈 亏了的钱买来了教训",
+          hint: "心智+5,心情-2,留下反思flag",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._investLesson_loss = true;
+            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 5);
+            if (st.needs) st.needs.happiness = Math.max(0, (st.needs.happiness || 50) - 2);
+            if (typeof StateManager !== "undefined" && StateManager.addMessage)
+              StateManager.addMessage("📈 你默默记下了亏钱的教训——'下次别全押一个方向。'心智+5。", "info");
+          }
+        },
+        {
+          text: "📉 赚了的钱也留不下",
+          hint: "心智+3,put_it_in_place",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._investLesson_win = true;
+            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 3);
+            if (typeof StateManager !== "undefined" && StateManager.addMessage)
+              StateManager.addMessage("📉 赚了也好亏了也好，你知道真正的财富不是账户上的数字。心智+3。", "good");
+          }
+        },
+        {
+          text: "😌 还好不亏不赚,继续攒",
+          hint: "心情+3",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._investLesson_neutral = true;
+            if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 3);
+            if (typeof StateManager !== "undefined" && StateManager.addMessage)
+              StateManager.addMessage("😌 不亏不赚也挺好——不急不躁，攒够钱再说。心情+3。", "info");
+          }
         }
-        return true;
-      },
-      choices: [
-        {
-          text: "📸 截图保存这一刻",
-          hint: "心智+3，心情+5，记录flag",
-          apply: function (st) {
-            if (!st.flags) st.flags = {};
-            st.flags._eventMemoryWallSeen = true;
-            st.flags._eventMemoryWallLastDay = st.player ? st.player.day : 0;
-            st.flags._memoryWallKeeper = true; // 标记为记忆墙习惯者
-            if (st.player) {
-              st.player.mental = Math.min(100, (st.player.mental || 50) + 3);
-            }
-            if (st.needs) {
-              st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 5);
-            }
-            if (typeof StateManager !== "undefined" && StateManager.addMessage) {
-              StateManager.addMessage("📸 你截下了今天的画面。记忆墙上又多了一格。心智+3，心情+5。", "success");
-            }
-          },
-        },
-        {
-          text: "📝 不截图，用心记住就好",
-          hint: "心智+5",
-          apply: function (st) {
-            if (!st.flags) st.flags = {};
-            st.flags._eventMemoryWallSeen = true;
-            st.flags._eventMemoryWallLastDay = st.player ? st.player.day : 0;
-            if (st.player) {
-              st.player.mental = Math.min(100, (st.player.mental || 50) + 5);
-            }
-            if (typeof StateManager !== "undefined" && StateManager.addMessage) {
-              StateManager.addMessage("📝 你笑了笑，放下手机。有些事不需要截图，心里记得就好。心智+5。", "info");
-            }
-          },
-        },
-      ],
-      probability: 0.5,
-      repeatable: false,
+      ]
     },
     {
-      // B→D: 与已结识NPC聊起共同经历 → 好感升温（共同记忆）
-      id: "event_npc_gossip",
+      // A→B: 感知城市气息变化 — 通胀的渐进叙事
+      id: "era_personal_pulse",
       phase: "street",
       _isChainEvent: false,
-      icon: "🗣️",
-      title: "你也经历过这种事？",
+      icon: "🌆",
+      title: "城市的气息变了",
       story:
-        "你在茶馆喝茶，隔壁桌一个熟悉的声音叫住了你。你们聊着聊起，发现彼此都经历过类似的困境——被房东催交租金、在街头被人白眼、加班到凌晨才回家。\n\n「原来你也是这么过来的。」对方感慨道。\n\n共同经历让两个人的距离一下子拉近了不少。",
-      triggers: { minDay: 14, excludeFlags: ["_eventNpcGossipSeen"] },
+        "今天去菜市场，突然发现同样的东西又涨价了。你这才意识到——这座城市的物价已经悄悄变了几个样子。从看不见到切身感受到，原来只需要一天天过日子。",
+      triggers: { minDay: 30, excludeFlags: ["_eraPulseInflationNotice"] },
       conditions: function (st) {
         if (st.gameOver) return false;
-        // 需要至少一个已结识且好感≥20的NPC
-        var npc = firstMetNpcB244(st, 20);
-        if (!npc) return false;
-        // 需要至少经历过3个事件（有共同话题）
-        var history = (st.flags && st.flags._eventHistory) || [];
-        if (history.length < 3) return false;
+        if (!st || !st._eraState || !st._eraState.inflationIndex) return false;
+        var inflation = st._eraState.inflationIndex;
+        if (inflation < 1.05) return false; // 通胀还没到可感知程度
+        // 按通胀程度分级
         return true;
       },
       choices: [
         {
-          text: "🤝 是啊，咱们都不容易",
-          hint: "NPC好感+5，心情+3",
+          text: "🤔 慢慢习惯了",
+          hint: "心智+2,平静接受",
           apply: function (st) {
-            if (!st.flags) st.flags = {};
-            st.flags._eventNpcGossipSeen = true;
-            var npc = firstMetNpcB244(st, 20);
-            if (npc) {
-              safeAffinityB244(st, npc, 5, "共同经历闲聊");
-            }
-            if (st.needs) {
-              st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 3);
-            }
-            if (typeof StateManager !== "undefined" && StateManager.addMessage) {
-              StateManager.addMessage("🤝 你们相视而笑。原来不是只有自己在咬牙坚持。好感+5，心情+3。", "success");
-            }
-          },
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._eraPulseInflationNotice = true;
+            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 2);
+            if (typeof StateManager !== "undefined" && StateManager.addMessage)
+              StateManager.addMessage("🤔 你慢慢习惯了物价的变化——城市在变,你也得跟着变。心智+2。", "info");
+          }
         },
         {
-          text: "🍵 喝茶喝茶，不提这些",
-          hint: "心智+2",
+          text: "😤 这还怎么活下去",
+          hint: "心情-3,但开始想办法省钱",
           apply: function (st) {
-            if (!st.flags) st.flags = {};
-            st.flags._eventNpcGossipSeen = true;
-            if (st.player) {
-              st.player.mental = Math.min(100, (st.player.mental || 50) + 2);
-            }
-            if (typeof StateManager !== "undefined" && StateManager.addMessage) {
-              StateManager.addMessage("🍵 你岔开了话题。有些事，不说比说了更自在。心智+2。", "info");
-            }
-          },
-        },
-      ],
-      probability: 0.4,
-      repeatable: false,
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._eraPulseInflationNotice = true;
+            if (st.flags) st.flags._budgetSense = true; // 标记开始注意省钱
+            if (st.needs) st.needs.happiness = Math.max(0, (st.needs.happiness || 50) - 3);
+            if (typeof StateManager !== "undefined" && StateManager.addMessage)
+              StateManager.addMessage("😤 物价涨得太快了！你得想想办法省着点花。心情-3。", "warning");
+          }
+        }
+      ]
     },
     {
-      // B→E: 连续好运事件触发 → 投资信心flag（心理账户·幸运偏差）
-      id: "event_lucky_streak",
+      // B→D: NPC久别重逢 — 认识很久的人突然出现在眼前
+      id: "npc_long_absence_reunion",
       phase: "street",
       _isChainEvent: false,
-      icon: "🍀",
-      title: "运气来了？",
+      icon: "👋",
+      title: "好久不见",
       story:
-        "最近你总觉得运气不错——前几天捡到一笔钱，昨天抽奖又中了，今天买菜还多找了零钱。\n\n「是不是该去试试投资？运气这么旺，说不定能赚一笔。」你心里冒出一个念头。\n\n但你也听过一句话：运气这东西，来无影去无踪。",
-      triggers: { minDay: 20, excludeFlags: ["_eventLuckyStreakSeen"] },
+        "走在街上，突然看见{npcName}——上次聊天的时候好像还是{days}天前。TA也在城市中奔波，你们各自忙碌，但偶尔碰面的一瞬间，那种熟悉感又回来了。",
+      triggers: { minDay: 45, excludeFlags: ["_npcReunionSeen"] },
       conditions: function (st) {
         if (st.gameOver) return false;
-        // 需要有至少3个正面事件记录（_history中含"success"类型标记）
-        var history = (st.flags && st.flags._eventHistory) || [];
-        if (history.length < 3) return false;
-        // 玩家现金不能太少（有投资本金意识的前提）
-        if (!st.resources || (st.resources.cash || 0) < 500) return false;
-        return true;
+        if (!st.relationships) return false;
+        var absent = findLongAbsentNpc(st, 30); // [PLACEHOLDER]: 30天未见
+        return !!absent;
+      },
+      renderStory: function (st) {
+        if (!st) return this.story;
+        var absent = findLongAbsentNpc(st, 30);
+        if (!absent) return this.story;
+        var days = absent.days;
+        var name = getNpcCn(absent.id);
+        return this.story.replace("{npcName}", name).replace("{days}", days + "天");
       },
       choices: [
         {
-          text: "💰 小试牛刀，拿闲钱试试",
-          hint: "置投资信心flag，现金-200",
+          text: "😊 聊了几句,挺开心的",
+          hint: "NPC好感+5,心智+2,心情+3",
           apply: function (st) {
-            if (!st.flags) st.flags = {};
-            st.flags._eventLuckyStreakSeen = true;
-            st.flags._eventLuckyStreak = true; // 投资信心flag（供经济/投资域门控）
-            if (st.resources) {
-              st.resources.cash = Math.max(0, (st.resources.cash || 0) - 200);
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._npcReunionSeen = true;
+            var absent = findLongAbsentNpc(st, 30);
+            if (!absent) return;
+            // 更新聊天flag防止短时间重复触发
+            if (st.flags) st.flags["_lastNpcChat_" + absent.id] = st.player ? st.player.day : 0;
+            // 好感回升
+            if (typeof applyAffinityChange === "function") {
+              try { applyAffinityChange(st, absent.id, 5, "久别重逢"); } catch(e) { /* safe */ }
+            } else if (st.relationships && st.relationships[absent.id]) {
+              st.relationships[absent.id].affinity = Math.min(100, (st.relationships[absent.id].affinity || 0) + 5);
             }
+            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 2);
+            if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 3);
             if (typeof StateManager !== "undefined" && StateManager.addMessage) {
-              StateManager.addMessage("💰 你拿出¥200准备试试投资。万一运气真的来了呢？", "info");
+              var name = getNpcCn(absent.id);
+              StateManager.addMessage("😊 跟" + name + "聊了几句,虽然好久不见,感觉还是那么亲切。好感+5,心情+3。", "success");
             }
-          },
+          }
         },
         {
-          text: "🧊 运气不可靠，省着点花",
-          hint: "心智+3，储蓄意识flag",
+          text: "👋 点头打过招呼就走了",
+          hint: "平静维持关系",
           apply: function (st) {
-            if (!st.flags) st.flags = {};
-            st.flags._eventLuckyStreakSeen = true;
-            st.flags._savingsDiscipline = true; // 储蓄意识flag
-            if (st.player) {
-              st.player.mental = Math.min(100, (st.player.mental || 50) + 3);
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._npcReunionSeen = true;
+            var absent = findLongAbsentNpc(st, 30);
+            if (!absent) return;
+            if (st.flags) st.flags["_lastNpcChat_" + absent.id] = st.player ? st.player.day : 0;
+            if (typeof applyAffinityChange === "function") {
+              try { applyAffinityChange(st, absent.id, 2, "点头之交"); } catch(e) { /* safe */ }
+            } else if (st.relationships && st.relationships[absent.id]) {
+              st.relationships[absent.id].affinity = Math.min(100, (st.relationships[absent.id].affinity || 0) + 2);
             }
+            if (st.player) st.player.mental = (st.player.mental || 50) + 1;
             if (typeof StateManager !== "undefined" && StateManager.addMessage) {
-              StateManager.addMessage("🧊 你冷静下来。运气是假的，存下来的钱才是真的。心智+3。", "info");
+              var name = getNpcCn(absent.id);
+              StateManager.addMessage("👋 跟" + name + "点了点头就走——日子嘛,总是这样过的。", "info");
             }
-          },
-        },
-      ],
-      probability: 0.45,
-      repeatable: false,
-    },
+          }
+        }
+      ]
+    }
   ];
 
-  // 注入全局事件池
   for (var i = 0; i < EVENTS.length; i++) {
     RANDOM_EVENTS.push(EVENTS[i]);
   }

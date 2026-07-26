@@ -467,6 +467,10 @@ var NEWS_EVENTS = [
     desc: "邻里之间的小温暖，让生活多了几分人情味。",
     story:
       "楼上的王大婶给你送了些自家种的水果，说是一点心意。你最近和她关系还不错。",
+    condition: function(st) {
+      // [全系统自洽修复] 域B R244: 叙事提到"王大婶"需守met闸门,避免对不认识的人弹事件
+      return !!(st.relationships && st.relationships.aunt_wang && st.relationships.aunt_wang.met);
+    },
     choices: [
       {
         text: "🙏 收下并道谢",
