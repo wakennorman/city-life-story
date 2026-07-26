@@ -353,3 +353,12 @@
 - **验证**: `node --check domain_b_linkage_r332.js` 通过；`python build.py` 重建 dist 含 r332；MC 6×400d **MC_EXIT=0·0代码异常**(TypeError/ReferenceError/NaN/Infinity grep=0；前7天死亡率全 0.0%<10% 无早期死亡回归；survival 波动中 corporate/trader<80% 为既有 RNG 平衡阈值非回归)。R332 事件在 MC 下全路径可达且无崩溃。
 - **终态**: R331 账本已 push(cb2b23ea)；R332=域B 仍由并行窗口 in-flight(未提交)，本窗口未触碰、未抢。下一轮(并行提交 R332 后) recency B→332，全局最薄弱转为 **C(324)** → R333=域C。开轮须 `git log` 重算真实 recency。
 - ⚠️ 纪律: 并行 in-flight 改动全程 stash 隔离，本窗口仅提交自身 bookkeeping 文件，绝不 `-A`/抢并行轮次。
+
+## 最近执行（2026-07-26，R339-R341 对账轮 — 权威 bookkeeping + MC 验证，已 push main c8200485）
+
+- 开轮 loop-state 严重滞后(标 round332/next=C)。git log 重算：并行已完成第十轮 R333(C)→R338(H) 收官 + 第十一轮 R339(A,541ee403)。开轮 HEAD=a7f2816e=origin/main，R340=域B 由并行 in-flight(domain_b_linkage_r340.js 未提交)。
+- 执行期间并行极活跃：HEAD 连跳 a7f2816e→dbe0dda1(R340/B)→f5678d87(R341/C)→cd57b15b(R341 sync，`add -A` 扫入本窗口 round-doc+MEMORY.md)。R340/R341 开轮时 origin 仍在 a7f2816e(本地 ahead)。
+- 本窗口角色=权威 bookkeeping + MC 验证，不抢并行在途轮次。R340 in-flight 文件只读审校(3事件 event_data_v2 B→A/event_life_chapter_v3 B→G/event_company_culture_v2 B→H，node --check OK，三id全库唯一)。
+- MC 6×400d **EXIT=0·0代码异常**(前7天死亡率全0.0%<10%；balanced83.3%/skiller/trader/social100%/grinder33.3%(≥30%高风险)/corporate66.7%<80% 为既有RNG阈值非回归；RSS timeout=离线新闻回退)。
+- 提交 c8200485(loop-state round332→341/C/next=D + recency A339/B340/C341/D334/E335/F336/G337/H338 + round-339 doc + last_known_head)，`git pull --rebase`(up to date) 后 push 成功(cd57b15b..c8200485)，一并把并行 R340/R341 带上 origin(此前 origin 卡在 a7f2816e)。
+- **真实 recency(R341后)**: A=339/B=340/C=341/D=334/E=335/F=336/G=337/H=338 → **D(334) 最薄弱**，下轮=域D。开轮必 git log 重算(并行速度远快于本自动化)。
