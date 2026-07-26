@@ -124,13 +124,15 @@ function renderAll() {
 
 // ====== Header 渲染 ======
 function renderHeader(state) {
-  const p = state.player;
-  const r = state.resources;
+  const p = state.player || {};
+  const r = state.resources || {};
   const phaseLabel = p.phase === "corporate" ? "🏢 职场" : "🏘️ 街头";
 
   // [全系统自洽修复] 域F A类修复: 防止 NaN/undefined 显示在顶栏
-  document.getElementById("header-day").textContent = "第" + (isFinite(p.day) ? p.day : 1) + "天";
-  document.getElementById("header-age").textContent = isFinite(p.age) ? p.age : 20;
+  var dayEl = document.getElementById("header-day");
+  if (dayEl) dayEl.textContent = "第" + (isFinite(p.day) ? p.day : 1) + "天";
+  var ageEl = document.getElementById("header-age");
+  if (ageEl) ageEl.textContent = isFinite(p.age) ? p.age : 20;
   var phaseEl = document.getElementById("header-phase");
   if (phaseEl) phaseEl.textContent = phaseLabel;
 
@@ -173,10 +175,11 @@ function renderHeader(state) {
   if (festStat && festEl && typeof getCurrentFestival === "function") {
     var festival = getCurrentFestival(p.day);
     if (festival) {
-      var doy = p.day % 365;
+      var safeDay = isFinite(p.day) ? p.day : 1;
+      var doy = safeDay % 365;
       var daysLeft = festival.startDay + festival.duration - doy;
       festEl.textContent =
-        festival.icon + " " + festival.name + "（" + daysLeft + "天）";
+        festival.icon + " " + festival.name + "（" + (isFinite(daysLeft) ? daysLeft : 0) + "天）";
       festStat.style.display = "";
     } else {
       festStat.style.display = "none";
@@ -462,7 +465,7 @@ function initCashCarousel() {
 
 // ====== Sidebar 渲染 ======
 function renderSidebar(state) {
-  const p = state.player;
+  const p = state.player || {};
   var sidebar = document.getElementById("sidebar");
   if (sidebar) {
     sidebar.classList.toggle("phase-street", p.phase === "street");
@@ -814,7 +817,7 @@ function renderDebtInfo(state) {
 
 if(typeof renderStreetStats==="undefined"){
 function renderStreetStats(state) {
-  const p = state.player;
+  const p = state.player || {};
   setStatBar("stat-physique", p.physique, "physique");
   setStatBar("stat-intelligence", p.intelligence, "intelligence");
   setStatBar("stat-agility", p.agility, "agility");
@@ -884,11 +887,13 @@ function renderNeedsBars(state) {
   // 疾病列表（动态渲染到 stat-fame 之后）
   renderIllnessRow(state);
   // 行动力
-  const apPct = (p.actionPoints / (p.maxActionPoints || 100)) * 100;
+  const apCur = p.actionPoints || 0;
+  const apMax = p.maxActionPoints || 100;
+  const apPct = (apCur / apMax) * 100;
   setStatBar("stat-ap", apPct, "ap-bar");
   const apVal = document.querySelector("#stat-ap .stat-value");
   if (apVal)
-    apVal.textContent = p.actionPoints + "/" + (p.maxActionPoints || 100);
+    apVal.textContent = apCur + "/" + apMax;
 
   // === 紧凑型低数值预警 ===
   // 状态：饥饿≤15 疲劳≥85 卫生≤15 心情≤10 健康≤20 名气≤5
@@ -909,9 +914,13 @@ function renderLocation(state) {
   const locKey = state.trade.currentLocation;
   const loc = getLocation(locKey);
   if (loc) {
-    document.getElementById("location-name").textContent = loc.name;
-    document.getElementById("location-name").title = "📍 当前地点：" + loc.name + " — " + (loc.desc || "");
-    document.getElementById("location-desc").textContent = loc.desc;
+    var locNameEl = document.getElementById("location-name");
+    var locDescEl = document.getElementById("location-desc");
+    if (locNameEl) {
+      locNameEl.textContent = loc.name;
+      locNameEl.title = "📍 当前地点：" + loc.name + " — " + (loc.desc || "");
+    }
+    if (locDescEl) locDescEl.textContent = loc.desc;
   }
 
   // 天气显示
@@ -988,8 +997,8 @@ function getHousingUpgradeTip(state) {
   var locName = getLocationChineseName(locKey);
   var actualRent =
     typeof getHousingRentAtLocation === "function"
-      ? getHousingRentAtLocation(locKey, nextTier.tier)
-      : nextTier.rent;
+      ? getHousingRentAtLocation(locKey, nextTier.tier) || 0
+      : nextTier.rent || 0;
   return (
     "在" +
     locName +
@@ -1117,7 +1126,7 @@ function renderWeatherPanel(state) {
           : null;
       var icon = fDef ? fDef.icon : "🌤️";
       var fName = fDef ? fDef.name : "未知";
-      var pct = Math.round(f.confidence * 100);
+      var pct = Math.round((f.confidence || 0) * 100);
       html +=
         '<div style="flex:1;text-align:center;font-size:10px;padding:3px 2px;border-radius:4px;background:var(--bg-card);">';
       html += "<div>" + icon + "</div>";
