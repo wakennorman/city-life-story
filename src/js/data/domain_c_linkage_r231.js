@@ -220,17 +220,19 @@
         cap.burnout = Math.max(0, (cap.burnout || 0) - 30);
         st.careerCapital = cap;
         if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 10);
-        if (st.player) st.player.health = Math.min(100, (st.player.health || 50) + 5);
+        // [全系统自洽修复] 域C A类: st.player.health 死字段→st.status.health (健康真实路径)
+        if (st.status) st.status.health = Math.min(100, (st.status.health || 50) + 5);
         if (typeof StateManager !== "undefined" && StateManager.addMessage) {
           StateManager.addMessage("😴 你决定给自己放个假。倦怠-30，心情+10，健康+5。", "success");
         }
       } else {
         // 硬扛: 心智+5, 但健康-8, 道德-3
+        // [全系统自洽修复] 域C A类: st.player.health 死字段→st.status.health (健康真实路径)
         if (st.player) {
           st.player.mental = Math.min(100, (st.player.mental || 50) + 5);
-          st.player.health = Math.max(0, (st.player.health || 50) - 8);
           st.player.morality = Math.max(0, (st.player.morality || 50) - 3);
         }
+        if (st.status) st.status.health = Math.max(0, (st.status.health || 50) - 8);
         if (typeof StateManager !== "undefined" && StateManager.addMessage) {
           StateManager.addMessage("💪 你咬咬牙继续干。心智+5，但健康-8，道德-3。", "warning");
         }

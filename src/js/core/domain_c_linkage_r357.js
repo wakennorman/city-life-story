@@ -53,8 +53,12 @@
         // 总技能等级 ≥ 30 且至少有1个技能 ≥ 8 级
         if (totalSkillLevels(st) < 30) return false;
         if (maxSkillLevel(st) < 8) return false;
-        // 需要有一定的投资经验（至少买过股票/基金）
-        if (!st.flags || !st.flags._hasInvested) return false;
+        // [全系统自洽修复] 域C R357 A类:原读 _hasInvested flag(全库无写入方,恒false→事件永不可达)
+        // →改为读真实投资状态: 持有股票或BTC 即视为有投资经验
+        var inv = st.investment || {};
+        var hasStock = Array.isArray(inv.stockHoldings) && inv.stockHoldings.length > 0;
+        var hasBtc = inv.btcHoldings && inv.btcHoldings > 0;
+        if (!hasStock && !hasBtc) return false;
         return true;
       },
       choices: [
@@ -109,10 +113,12 @@
         var job = st.career && st.career.currentJob;
         if (!job || !job.path) return false;
         if ((job.workDays || 0) < 120) return false;
-        // 健康 < 50 或 心情 < 40
-        var lowHealth = (st.status && st.status.health || 100) < 50;
-        var lowMood = (st.needs && st.needs.happiness || 50) < 40;
-        return lowHealth || lowMood;
+        // [全系统自洽修复] 域C R357 A类:原写法 (st.status && st.status.health || 100)
+        // 运算符优先级歧义——health=0(濒死)时被||当作falsy→fallback 100→永不触发
+        // →改为显式 isFinite 守卫，health/happiness 缺失时才 fallback 默认值
+        var _hp = st.status && isFinite(st.status.health) ? st.status.health : 100;
+        var _hap = st.needs && isFinite(st.needs.happiness) ? st.needs.happiness : 50;
+        return _hp < 50 || _hap < 40;
       },
       choices: [
         {
