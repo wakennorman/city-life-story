@@ -116,6 +116,19 @@ function rollStreetEvent(state) {
   )
     return;
 
+  // [全系统自洽修复] 域B R388 联动增强: B→C 职业里程碑事件(入职特定天数触发叙事)
+  if (state.career && state.career.currentJob) {
+    var _jobWd = state.career.currentJob.workDays || 0;
+    var _path = state.career.currentJob.path;
+    if (_jobWd === 1 && !state.flags['_careerStartEvent_' + _path]) {
+      state.flags['_careerStartEvent_' + _path] = true;
+      // 入职第一天特殊叙事（已在 career_dev.js 的 applyCareerJob 中处理，但作为兜底）
+    } else if (_jobWd === 365 && !state.flags._careerAnniversaryEvent) {
+      state.flags._careerAnniversaryEvent = true;
+      // 一周年叙事已在 tickCareerJobDaily 中处理
+    }
+  }
+
   // 触发率随天数递增（Day1 18% → Day365 ~35%），确保后期事件池充分出场
   const baseChance = Math.min(0.35, 0.18 + state.player.day * 0.0005);
   // 健康差或债务高时提高触发率
@@ -503,6 +516,13 @@ function queueRandomEvent(state, phase) {
     if (s._pendingEvent && s._pendingEventId === evt.id) {
       showEventModal(evt);
       if (typeof playSound === "function") playSound("event");
+      // [全系统自洽修复] 域B R387: 事件日记记录+市场情绪影响
+      if (typeof recordEventToHistory === "function") {
+        recordEventToHistory(s, evt.id, evt.title);
+      }
+      if (typeof applyEventMarketEffect === "function") {
+        applyEventMarketEffect(s, evt.id);
+      }
       // 不再自动关闭——玩家必须手动点击选择（游戏设计决定）
     }
   }, 50);
@@ -1355,4 +1375,45 @@ function registerNewsEventsToPool() {
     };
     RANDOM_EVENTS.push(entry);
   }
+}
+
+// [全系统自洽修复] 域B R387 联动增强(B→F): 事件日记记录—每次事件触发后写入历史供UI展示
+function recordEventToHistory(state, eventId, eventTitle) {
+  if (!state || !eventId) return;
+  if (!state.flags) state.flags = {};
+  if (!state.flags._eventHistory) state.flags._eventHistory = [];
+  state.flags._eventHistory.push({
+    id: eventId,
+    title: eventTitle || eventId,
+    day: state.player ? state.player.day : 0,
+    phase: state.player ? state.player.phase : "street",
+  });
+  // 保持最近50条
+  if (state.flags._eventHistory.length > 50) {
+    state.flags._eventHistory = state.flags._eventHistory.slice(-50);
+  }
+}
+
+// [全系统自洽修复] 域B R387 联动增强(B→A): 事件市场情绪—特定事件影响商品价格
+function applyEventMarketEffect(state, eventId) {
+  if (!state || !eventId || !state.trade) return;
+  if (!state.trade.marketEvents) state.trade.marketEvents = [];
+  var effects = {
+    health_scam: { goodId: "cold_medicine", priceMod: 1.3, duration: 3, name: "保健品骗局冲击" },
+    community_group_buy: { goodId: "vegetables", priceMod: 0.8, duration: 5, name: "团购冲击菜价" },
+    scrap_surge_echo: { goodId: "scrap_metal", priceMod: 1.2, duration: 3, name: "废品涨价余波" },
+    inflation_cycle: { goodId: "*", priceMod: 1.1, duration: 5, name: "通胀预期升温" },
+  };
+  var effect = effects[eventId];
+  if (!effect) return;
+  // 避免重复
+  if (state.trade.marketEvents.find(function(e) { return e.id === "event_" + eventId; })) return;
+  state.trade.marketEvents.push({
+    id: "event_" + eventId,
+    name: effect.name,
+    goodId: effect.goodId,
+    priceMod: effect.priceMod,
+    remaining: effect.duration,
+    desc: "事件影响：" + (effect.name),
+  });
 }

@@ -1232,7 +1232,7 @@
             if ((st.resources.cash || 0) >= 500) { // [全系统自洽修复] 域B A类:cash NaN守卫
               st.resources.cash = Math.max(0, (st.resources.cash || 0) - 500); // [全系统自洽修复] 域B A类:cash NaN守卫
               var skillScore =
-                st.skills.sales.level + st.skills.management.level;
+                (st.skills.sales ? st.skills.sales.level || 0 : 0) + (st.skills.management ? st.skills.management.level || 0 : 0);
               if (Random.chance(0.2 + skillScore * 0.005)) {
                 st.resources.cash = (st.resources.cash || 0) + 50000; // [全系统自洽修复] 域B A类:cash NaN守卫
                 st.player.fame = Math.min(100, st.player.fame + 20);
@@ -3621,7 +3621,7 @@
           hint: "可能获得新工作机会",
           apply: function (st) {
             st.flags._mechanicRecruited = true;
-            if ((st.skills.repair.level || 0) >= 50) {
+            if (st.skills.repair && (st.skills.repair.level || 0) >= 50) {
               st.flags._factoryrepairJob = true;
               st.player.fame = Math.min(100, (st.player.fame || 0) + 3);
               StateManager.addMessage(

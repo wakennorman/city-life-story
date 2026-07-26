@@ -1098,6 +1098,22 @@ function generateDailyReportSummary(state, incomes, expenses) {
     }
   } catch (e) {}
 
+  // [全系统自洽修复] 域B R388 联动增强: B→F 事件探索进度(日报中显示已发现事件数)
+  try {
+    var _evtHistory = state.flags && state.flags._eventHistory;
+    if (_evtHistory && _evtHistory.length > 5) {
+      var _uniqueEvts = [];
+      for (var _uei = 0; _uei < _evtHistory.length; _uei++) {
+        if (_uniqueEvts.indexOf(_evtHistory[_uei].id) < 0) {
+          _uniqueEvts.push(_evtHistory[_uei].id);
+        }
+      }
+      if (_uniqueEvts.length > 5) {
+        highlights.push("📖 已见证 " + _uniqueEvts.length + " 个独特故事，城市万象尽收眼底");
+      }
+    }
+  } catch (e) {}
+
   // [全系统自洽修复] 域B R380 联动增强: B→F 最近事件展示(日报中回顾近3天事件)
   try {
     var _recentEvts = state.flags && state.flags._recentEvents;
