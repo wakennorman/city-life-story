@@ -37,7 +37,14 @@
 - `.claude/last_known_head` = a7f2816e（过 pre-commit 漂移检查）。
 - 提交前 `git stash` 隔离并行 in-flight（src/index.html + domain_b_linkage_r340.js），push 后 pop 无损还原。
 
+## 执行期间并行继续推进（HEAD 连跳）
+
+- 本窗口做 bookkeeping 期间，并行窗口把 in-flight R340 提交为 `dbe0dda1`（域B），并紧接完成 R341（域C, `f5678d87`）。
+- HEAD 演进：`a7f2816e`（开轮）→ `dbe0dda1`（R340/B）→ `f5678d87`（R341/C）。
+- 提交时 origin/main 仍在 `a7f2816e`（本地 ahead 2）；本窗口 push 将一并把 R340+R341 带上 origin。
+- 故本轮 loop-state 已修正到当前真实最新 = **R341（域C）**。
+
 ## 下轮
 
-- 真实最薄弱 = B(332)，并行 R340 正在做；其后 C(333)。
-- 开轮必须先 `git log` + `git rev-parse origin/main` 重算真实 recency，勿盲信 loop-state。
+- 真实 recency（R341 后）：A=339/B=340/C=341/D=334/E=335/F=336/G=337/H=338 → **D(334) 全局最薄弱**。
+- 开轮必须先 `git log` + `git rev-parse origin/main` 重算真实 recency，勿盲信 loop-state（并行速度远快于本自动化）。
