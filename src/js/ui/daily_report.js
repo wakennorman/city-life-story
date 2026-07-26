@@ -1068,6 +1068,48 @@ function generateDailyReportSummary(state, incomes, expenses) {
     }
   }
 
+  // [全系统自洽修复] 域B R380 联动增强: B→A 累计收入里程碑叙事(赋予财富积累叙事重量)
+  try {
+    var _totalEarned = state.resources && state.resources.totalEarned;
+    if (_totalEarned) {
+      if (_totalEarned >= 1000000 && !state.flags._milestoneEarned1M) {
+        state.flags._milestoneEarned1M = true;
+        highlights.push("🏆 累计收入突破¥1,000,000！这座城市见证了你的崛起");
+      } else if (_totalEarned >= 500000 && !state.flags._milestoneEarned500K) {
+        state.flags._milestoneEarned500K = true;
+        highlights.push("💎 累计收入突破¥500,000！你已经不是当年的自己了");
+      } else if (_totalEarned >= 100000 && !state.flags._milestoneEarned100K) {
+        state.flags._milestoneEarned100K = true;
+        highlights.push("🌟 累计收入突破¥100,000！你的努力正在开花结果");
+      }
+    }
+  } catch (e) {}
+
+  // [全系统自洽修复] 域B R380 联动增强: B→F 最近事件展示(日报中回顾近3天事件)
+  try {
+    var _recentEvts = state.flags && state.flags._recentEvents;
+    if (_recentEvts && _recentEvts.length > 0) {
+      highlights.push("📜 近期事件：" + _recentEvts.slice(0, 2).map(function(e) { return e.icon + " " + (e.title || e.id); }).join(" · "));
+    }
+  } catch (e) {}
+
+  // [全系统自洽修复] 域B R380 联动增强: B→G 天气叙事融入日报(让天气影响有情感反馈)
+  try {
+    var _weather = state.weather && state.weather.current;
+    var _season = state.weather && state.weather.season;
+    if (_weather && _season) {
+      if (_weather === "rainy" || _weather === "stormy") {
+        if (state.needs && state.needs.happiness < 40) {
+          highlights.push("🌧️ " + (_season === "summer" ? "夏雨绵绵" : "阴雨连绵") + "，心情也跟着低落了一些");
+        }
+      } else if (_weather === "sunny" && state.needs && state.needs.happiness > 60) {
+        highlights.push("☀️ 天气晴朗，心情也格外舒畅");
+      } else if (_weather === "snowy") {
+        highlights.push("❄️ 雪落无声，整座城市都安静了下来");
+      }
+    }
+  } catch (e) {}
+
   if (!highlights.length) highlights.push("🌛 平凡的一天，活着就是赢了");
 
   var summary = highlights.slice(0, 2).join("，") + "。";

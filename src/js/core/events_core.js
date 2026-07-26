@@ -119,10 +119,10 @@ function rollStreetEvent(state) {
   // 触发率随天数递增（Day1 18% → Day365 ~35%），确保后期事件池充分出场
   const baseChance = Math.min(0.35, 0.18 + state.player.day * 0.0005);
   // 健康差或债务高时提高触发率
-  let mod = 0;
-  if (state.status.health < 50) mod += 0.1;
-  if (state.resources.debt > 3000) mod += 0.05;
-  if (state.needs.happiness < 30) mod += 0.05;
+  // [全系统自洽修复] 域B A类修复: state.status/needs 守卫(防止旧存档崩溃)
+  if (state.status && state.status.health < 50) mod += 0.1;
+  if (state.resources && state.resources.debt > 3000) mod += 0.05;
+  if (state.needs && state.needs.happiness < 30) mod += 0.05;
   // 历史声誉幸运加成（P2.9）：积善之人事件触发率降低
   if (typeof getHistoryModifiers === "function") {
     var lk = getHistoryModifiers(state).luckBonus || 0;
@@ -145,11 +145,13 @@ function rollCorporateEvent(state) {
     return;
 
   // 职场触发率亦随天数递增（Day1 22% → Day365 ~40%）
+  // [全系统自洽修复] 域B A类修复: state.player.corporate 守卫(防止旧存档/无职场状态崩溃)
   const baseChance = Math.min(0.4, 0.22 + state.player.day * 0.0005);
   let mod = 0;
-  if (state.player.corporate.risk > 50) mod += 0.1;
-  if (state.player.corporate.popularity < 30) mod += 0.05;
-  if (state.player.corporate.upwardMgmt < 20) mod += 0.05;
+  var _corp = state.player && state.player.corporate;
+  if (_corp && _corp.risk > 50) mod += 0.1;
+  if (_corp && _corp.popularity < 30) mod += 0.05;
+  if (_corp && _corp.upwardMgmt < 20) mod += 0.05;
   if (Random.chance(baseChance + mod)) {
     queueRandomEvent(state, "corporate");
   }

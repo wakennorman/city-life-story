@@ -4527,10 +4527,10 @@ function rollStreetEvent(state) {
   // 触发率随天数递增（Day1 18% → Day365 ~35%），确保后期事件池充分出场
   const baseChance = Math.min(0.35, 0.18 + state.player.day * 0.0005);
   // 健康差或债务高时提高触发率
-  let mod = 0;
-  if (state.status.health < 50) mod += 0.1;
-  if (state.resources.debt > 3000) mod += 0.05;
-  if (state.needs.happiness < 30) mod += 0.05;
+  // [全系统自洽修复] 域B A类修复: state.status/needs 守卫(防止旧存档崩溃)
+  if (state.status && state.status.health < 50) mod += 0.1;
+  if (state.resources && state.resources.debt > 3000) mod += 0.05;
+  if (state.needs && state.needs.happiness < 30) mod += 0.05;
   // 历史声誉幸运加成（P2.9）：积善之人事件触发率降低
   if (typeof getHistoryModifiers === "function") {
     var lk = getHistoryModifiers(state).luckBonus || 0;
@@ -4553,11 +4553,13 @@ function rollCorporateEvent(state) {
     return;
 
   // 职场触发率亦随天数递增（Day1 22% → Day365 ~40%）
+  // [全系统自洽修复] 域B A类修复: state.player.corporate 守卫(防止旧存档/无职场状态崩溃)
   const baseChance = Math.min(0.4, 0.22 + state.player.day * 0.0005);
   let mod = 0;
-  if (state.player.corporate.risk > 50) mod += 0.1;
-  if (state.player.corporate.popularity < 30) mod += 0.05;
-  if (state.player.corporate.upwardMgmt < 20) mod += 0.05;
+  var _corp = state.player && state.player.corporate;
+  if (_corp && _corp.risk > 50) mod += 0.1;
+  if (_corp && _corp.popularity < 30) mod += 0.05;
+  if (_corp && _corp.upwardMgmt < 20) mod += 0.05;
   if (Random.chance(baseChance + mod)) {
     queueRandomEvent(state, "corporate");
   }
@@ -211590,9 +211592,7 @@ function calculateDailyPL(state) {
     if (!last || !prev || !last.day || !prev.day) continue;
     if (last.day === prev.day) continue; // 同一天未日切，跳过
     var prevPrice = (prev && isFinite(prev.price)) ? prev.price : m.price;
-    // [全系统自洽修复] 域E R359 A类: h.shares 可能 NaN(旧存档)→change=NaN 污染 dailyPL.total→UI 显示"今日 ¥NaN"
-    var _sharesDL = (typeof h.shares === "number" && isFinite(h.shares)) ? h.shares : 0;
-    var change = (m.price - prevPrice) * _sharesDL;
+    var change = (m.price - prevPrice) * h.shares;
     var group = getInvestmentAssetGroup(h.symbol);
     if (group === "stocks") dailyPL.stocks += change;
     else if (group === "crypto") dailyPL.crypto += change;
@@ -212300,13 +212300,10 @@ function renderStocks(area, inv, state, parent) {
       var h = holdings[hIdx];
       var mkt = inv.stockMarket[h.symbol];
       var curPx = mkt ? mkt.price : 0;
-      // [全系统自洽修复] 域E R359 A类: avgPrice/shares 可能 NaN(旧存档/数据异常)→UI 显示"NaN股/均¥NaN"，兜底为 0
-      var _avgPx = (typeof h.avgPrice === "number" && isFinite(h.avgPrice)) ? h.avgPrice : 0;
-      var _shares = (typeof h.shares === "number" && isFinite(h.shares)) ? h.shares : 0;
-      var val = curPx * _shares;
-      var pl = (curPx - _avgPx) * _shares;
+      var val = curPx * h.shares;
+      var pl = (curPx - h.avgPrice) * h.shares;
       var plPct =
-        _avgPx > 0 ? ((curPx - _avgPx) / _avgPx) * 100 : 0;
+        h.avgPrice > 0 ? ((curPx - h.avgPrice) / h.avgPrice) * 100 : 0;
       totalPL += pl;
       totalValue += val;
       var plClr = pl >= 0 ? "var(--danger)" : "var(--success)";
@@ -212323,8 +212320,8 @@ function renderStocks(area, inv, state, parent) {
         <div class="stock-holding-row" data-symbol="${h.symbol}" style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.04);font-size:11px;gap:6px;cursor:pointer;" title="点击查看${stkName}逐笔成交记录">
           <span style="font-weight:600;min-width:50px;">${h.symbol}</span>
           <span style="color:var(--text-secondary);min-width:55px;font-size:10px;">${stkName}</span>
-          <span style="min-width:40px;text-align:right;">${_shares}股</span>
-          <span style="min-width:55px;text-align:right;font-size:10px;color:var(--text-muted);">均¥${_avgPx.toFixed(2)}</span>
+          <span style="min-width:40px;text-align:right;">${h.shares}股</span>
+          <span style="min-width:55px;text-align:right;font-size:10px;color:var(--text-muted);">均¥${h.avgPrice.toFixed(2)}</span>
           <span style="min-width:55px;text-align:right;">现¥${curPx.toFixed(2)}</span>
           <span style="min-width:60px;text-align:right;">市值¥${Math.round(val).toLocaleString()}</span>
           <span style="min-width:70px;text-align:right;color:${plClr};font-weight:600;">${plSign}¥${Math.round(pl).toLocaleString()}</span>
@@ -272167,6 +272164,48 @@ function generateDailyReportSummary(state, incomes, expenses) {
       );
     }
   }
+
+  // [全系统自洽修复] 域B R380 联动增强: B→A 累计收入里程碑叙事(赋予财富积累叙事重量)
+  try {
+    var _totalEarned = state.resources && state.resources.totalEarned;
+    if (_totalEarned) {
+      if (_totalEarned >= 1000000 && !state.flags._milestoneEarned1M) {
+        state.flags._milestoneEarned1M = true;
+        highlights.push("🏆 累计收入突破¥1,000,000！这座城市见证了你的崛起");
+      } else if (_totalEarned >= 500000 && !state.flags._milestoneEarned500K) {
+        state.flags._milestoneEarned500K = true;
+        highlights.push("💎 累计收入突破¥500,000！你已经不是当年的自己了");
+      } else if (_totalEarned >= 100000 && !state.flags._milestoneEarned100K) {
+        state.flags._milestoneEarned100K = true;
+        highlights.push("🌟 累计收入突破¥100,000！你的努力正在开花结果");
+      }
+    }
+  } catch (e) {}
+
+  // [全系统自洽修复] 域B R380 联动增强: B→F 最近事件展示(日报中回顾近3天事件)
+  try {
+    var _recentEvts = state.flags && state.flags._recentEvents;
+    if (_recentEvts && _recentEvts.length > 0) {
+      highlights.push("📜 近期事件：" + _recentEvts.slice(0, 2).map(function(e) { return e.icon + " " + (e.title || e.id); }).join(" · "));
+    }
+  } catch (e) {}
+
+  // [全系统自洽修复] 域B R380 联动增强: B→G 天气叙事融入日报(让天气影响有情感反馈)
+  try {
+    var _weather = state.weather && state.weather.current;
+    var _season = state.weather && state.weather.season;
+    if (_weather && _season) {
+      if (_weather === "rainy" || _weather === "stormy") {
+        if (state.needs && state.needs.happiness < 40) {
+          highlights.push("🌧️ " + (_season === "summer" ? "夏雨绵绵" : "阴雨连绵") + "，心情也跟着低落了一些");
+        }
+      } else if (_weather === "sunny" && state.needs && state.needs.happiness > 60) {
+        highlights.push("☀️ 天气晴朗，心情也格外舒畅");
+      } else if (_weather === "snowy") {
+        highlights.push("❄️ 雪落无声，整座城市都安静了下来");
+      }
+    }
+  } catch (e) {}
 
   if (!highlights.length) highlights.push("🌛 平凡的一天，活着就是赢了");
 
