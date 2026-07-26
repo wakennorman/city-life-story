@@ -154,7 +154,8 @@
             st.flags = st.flags || {};
             st.flags._skillStreetEchoSeen = true;
             var scene = getSkillStreetScene(st);
-            var bonus = Math.round(scene.cashMin + Math.random() * (scene.cashMax - scene.cashMin)); // [PLACEHOLDER]
+            // [全系统自洽修复] 域C R400: Math.random()→Random.int()种子化随机(保证存档回放一致性)
+            var bonus = (typeof Random !== "undefined" && Random.int) ? Random.int(scene.cashMin, scene.cashMax) : scene.cashMin;
             if (st.resources) st.resources.cash = (st.resources.cash || 0) + bonus;
             if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 2);
             if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 3);
@@ -278,7 +279,8 @@
             var certId = findLifeCert(st);
             if (!certId || !CERT_SHORTCUT_MAP[certId]) return;
             var info = CERT_SHORTCUT_MAP[certId];
-            var bonus = Math.round(info.bonusMin + Math.random() * (info.bonusMax - info.bonusMin)); // [PLACEHOLDER]
+            // [全系统自洽修复] 域C R400: Math.random()→Random.int()种子化随机(保证存档回放一致性)
+            var bonus = (typeof Random !== "undefined" && Random.int) ? Random.int(info.bonusMin, info.bonusMax) : info.bonusMin;
             if (st.resources) st.resources.cash = (st.resources.cash || 0) + bonus;
             if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 2);
             if (typeof StateManager !== "undefined" && StateManager.addMessage)

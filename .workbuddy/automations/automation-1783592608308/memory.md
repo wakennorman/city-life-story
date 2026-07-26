@@ -389,3 +389,12 @@
   - 域B r389b→r394 后续清理为并行 in-flight,后由并行 f6463162([B389] r394路由)提交+push,悬空引用在 main 彻底消除。
 - **并发**: 单轮内 HEAD 连跳 4624982d→7cf8c332(并行R393代码)→f6463162(并行R394/B)→本窗口账本 33fb5b0。本窗口仅提交 .claude 权威账本(loop-state/round-393/last_known_head),push fast-forward 成功(f6463162..33fb5b02)。
 - recency(R393后): A=387/B=389+/C=391/D=389/E=389/F=390/G=392/H=393 → 下轮**域A(387最薄弱)**。开轮必 git log 重算(并行速度远快于本自动化)。
+
+## 最近执行（2026-07-27，R397 域F UI/UX — 已 push main 70dcf783）
+- 开轮 loop-state 严重滞后(标 round393/next=A)；git log 重算真实 recency：并行已推进 R395(D,2b2e4f20)→R396(E,353f13aa)→R398(A,1d09737a)→R399(C,d4655ca7)。并行将做 A(最薄弱)→本窗口选 **域F(R397，recency 390 次薄弱，避碰并行 R398=A)**。
+- A类=0（诚实报告）：审计域F，死字段黑名单仅命中历轮修复注释(无活代码死写)，除零候选均有守卫。
+- 跨域自洽修复1：注册孤儿文件 `domain_h_linkage_r83.js`(已存在但未挂 src/index.html→build.py 静默跳过其 2 个 corporate 事件 company_milestone_10_employees/corporate_npc_congratulation)→本轮起真正生效(与 R393 悬空引用同类缺陷，方向相反)。
+- 联动3（新建 domain_f_linkage_r397.js，全||防御+[PLACEHOLDER]冷却，id前缀 f397_）：f397_panel_clarity(F→A, street, happiness+mental)/f397_skill_showcase(F→C, street, addSkillXp("management",8)，需技能≥10)/f397_life_review_ui(F→G, corporate, 需 st.corporate.company)。
+- 验证：node --check OK；build dist app.js 10686.2KB(r397/r83/r398/r399 四 flag 均=2，补齐并行 R398/R399 dist 漏打 r398/r399 的不一致)；MC 6×400d **EXIT=0·0代码异常**(前7天死亡率全0.0%；corporate 66.7%<80% 为既有RNG阈值非回归)。
+- ⚠️ 并发：并行 `git add -A` 把本窗口对 src/index.html 的 r83+r397 注册扫入 R398/R399 提交；本窗口仅补提交 domain_f_linkage_r397.js 源 + 完整 dist(修正并行 dist 漏打)+ .claude 账本。提交 70dcf783(6文件·不含 src/index.html)，push fast-forward 成功(d4655ca7..70dcf783)。残留 domain_b_linkage_r364/r380.js 微改为并行 R400=B in-flight，未触碰。
+- recency(R397后): A=398/B=394/C=399/D=395/E=396/F=397/G=392/H=393 → 下轮**域G(392最薄弱)**。开轮必 git log 重算(并行速度远快于本自动化)。

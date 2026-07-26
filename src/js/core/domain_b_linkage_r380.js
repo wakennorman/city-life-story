@@ -38,7 +38,9 @@
             if (st.skills) {
               var keys = Object.keys(st.skills);
               if (keys.length > 0 && typeof addSkillXp === "function") {
-                addSkillXp(st, keys[Math.floor(Math.random() * keys.length)], 3);
+                // [全系统自洽修复] 域B R400: Math.random()→Random.fromArray()种子化随机
+                var _rSkill = (typeof Random !== "undefined" && Random.fromArray) ? Random.fromArray(keys) : keys[0];
+                addSkillXp(st, _rSkill, 3);
               }
             }
             if (typeof StateManager !== "undefined" && StateManager.addMessage) {
