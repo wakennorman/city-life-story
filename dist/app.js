@@ -245144,6 +245144,194 @@ if (typeof window !== "undefined") {
 })();
 
 ;
+// ==== js/core/domain_e_linkage_r359.js ====
+/**
+ * 域E(经济/投资) 联动增强 R359
+ * 第十三轮循环——投资积累的多维回响。
+ * 桥接：
+ *   E→F  investment_ui_insight       投资→UI洞察（UI/UX·投资可视化）
+ *   E→H  investment_company_v3       投资→公司反哺（公司·资本变现）
+ *   E→A  investment_data_v3          投资→数据沉淀（数据/数值·信息价值）
+ */
+(function () {
+  "use strict";
+
+  if (typeof RANDOM_EVENTS === "undefined") return;
+  if (RANDOM_EVENTS._domainELinkageR359Loaded) return;
+  RANDOM_EVENTS._domainELinkageR359Loaded = true;
+
+  // 计算总投资组合价值
+  function portfolioValue(st) {
+    if (!st || !st.investment) return 0;
+    var total = 0;
+    // 股票持仓
+    if (Array.isArray(st.investment.stockHoldings)) {
+      for (var i = 0; i < st.investment.stockHoldings.length; i++) {
+        var h = st.investment.stockHoldings[i];
+        if (h) total += (h.shares || 0) * (h.currentPrice || h.purchasePrice || 0);
+      }
+    }
+    // BTC
+    total += (st.investment.btcHoldings || 0) * (st.investment.btcPrice || 0);
+    return total;
+  }
+
+  var EVENTS = [
+    {
+      // E→F: 投资组合→UI洞察（UI/UX·投资可视化）
+      id: "investment_ui_insight",
+      phase: "street",
+      _isChainEvent: false,
+      icon: "📊",
+      title: "看懂你的投资",
+      story: "你打开投资账户，看着那些起起伏伏的数字。以前你只知道看涨了还是跌了，但现在你开始看得更深入——\n\n哪些资产在为你赚钱，哪些在拖后腿，你的持仓是否过于集中，风险是否分散。\n\n「投资不是赌博，是认知的变现。」你开始用数据审视自己的投资策略。",
+      triggers: { minDay: 60, excludeFlags: ["_investmentUiInsightSeen"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        // 需要有投资组合价值≥5000
+        if (portfolioValue(st) < 5000) return false;
+        // 需要有至少2类投资（股票+BTC 或 多种股票）
+        var types = 0;
+        if (st.investment && Array.isArray(st.investment.stockHoldings) && st.investment.stockHoldings.length > 0) types++;
+        if (st.investment && (st.investment.btcHoldings || 0) > 0) types++;
+        return types >= 2;
+      },
+      choices: [
+        {
+          text: "📊 审视持仓，优化配置",
+          hint: "心智+5，投资决策更清晰，flag投资洞察",
+          apply: function (st) {
+            if (!st.flags) st.flags = {};
+            st.flags._investmentUiInsightSeen = true;
+            st.flags._investmentPortfolioOptimized = true;
+            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 5);
+            if (typeof StateManager !== "undefined" && StateManager.addMessage) {
+              StateManager.addMessage("📊 你审视了自己的持仓，发现了一些优化的空间。投资是认知的变现。心智+5。", "success");
+            }
+          },
+        },
+        {
+          text: "📈 继续持有，相信长期",
+          hint: "心智+2",
+          apply: function (st) {
+            if (!st.flags) st.flags = {};
+            st.flags._investmentUiInsightSeen = true;
+            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 2);
+            if (typeof StateManager !== "undefined" && StateManager.addMessage) {
+              StateManager.addMessage("📈 你选择继续持有。长期主义是最好的策略。心智+2。", "info");
+            }
+          },
+        },
+      ],
+      probability: 0.5,
+      repeatable: false,
+    },
+    {
+      // E→H: 投资收益→公司反哺（公司·资本变现）
+      id: "investment_company_v3",
+      phase: "corporate",
+      _isChainEvent: false,
+      icon: "🏗️",
+      title: "投资反哺公司",
+      story: "你在公司的会议室里，看着财务报表。个人的投资收益为公司的扩张提供了额外的资本。\n\n「以前我是用劳动换钱，现在钱也在为我工作。」\n\n你决定把一部分投资收益注入公司，加速业务发展。",
+      triggers: { minDay: 120, excludeFlags: ["_investmentCompanyV3Seen"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        // 需要公司已成立
+        if (!st.startup || !st.startup.company) return false;
+        // 需要个人投资组合≥20000
+        if (portfolioValue(st) < 20000) return false;
+        return true;
+      },
+      choices: [
+        {
+          text: "🏗️ 注入资本，加速公司发展",
+          hint: "公司声誉+8，发展加速，心智+5",
+          apply: function (st) {
+            if (!st.flags) st.flags = {};
+            st.flags._investmentCompanyV3Seen = true;
+            if (st.startup && st.startup.company) {
+              st.startup.company.reputation = (st.startup.company.reputation || 0) + 8;
+            }
+            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 5);
+            if (typeof StateManager !== "undefined" && StateManager.addMessage) {
+              StateManager.addMessage("🏗️ 你把投资收益注入公司。钱在为你工作，公司也在成长。声誉+8，心智+5。", "success");
+            }
+          },
+        },
+        {
+          text: "💰 保持独立，个人继续投资",
+          hint: "心智+3",
+          apply: function (st) {
+            if (!st.flags) st.flags = {};
+            st.flags._investmentCompanyV3Seen = true;
+            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 3);
+            if (typeof StateManager !== "undefined" && StateManager.addMessage) {
+              StateManager.addMessage("💰 你决定保持个人投资独立。鸡蛋不放在一个篮子里。心智+3。", "info");
+            }
+          },
+        },
+      ],
+      probability: 0.5,
+      repeatable: false,
+    },
+    {
+      // E→A: 投资数据→数据沉淀（数据/数值·信息价值）
+      id: "investment_data_v3",
+      phase: "street",
+      _isChainEvent: false,
+      icon: "📋",
+      title: "投资数据的价值",
+      story: "你整理了自己的投资记录，发现这些数据本身就很有价值——\n\n哪些时间点买入胜率高？哪些行业你的判断最准？你的投资行为有什么规律？\n\n你开始用数据「复盘」自己的投资决策，而不是凭印象总结经验。",
+      triggers: { minDay: 90, excludeFlags: ["_investmentDataV3Seen"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        // 需要有投资记录（至少交易过5次）
+        var tradeCount = (st.flags && st.flags._investmentTradeCount) || 0;
+        if (tradeCount < 5) return false;
+        return true;
+      },
+      choices: [
+        {
+          text: "📋 整理投资日志，定期复盘",
+          hint: "心智+6，投资经验值+5，flag投资复盘",
+          apply: function (st) {
+            if (!st.flags) st.flags = {};
+            st.flags._investmentDataV3Seen = true;
+            st.flags._investmentReviewHabit = true;
+            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 6);
+            // 加投资经验（通过技能或flag）
+            if (st.skills && st.skills.accounting && typeof addSkillXp === "function") {
+              addSkillXp(st, "accounting", 5);
+            }
+            if (typeof StateManager !== "undefined" && StateManager.addMessage) {
+              StateManager.addMessage("📋 你建立了投资复盘习惯。数据是经验的沉淀，经验是直觉的来源。心智+6，会计经验+5。", "success");
+            }
+          },
+        },
+        {
+          text: "🤷 凭感觉就行，不搞那么复杂",
+          hint: "心智+2",
+          apply: function (st) {
+            if (!st.flags) st.flags = {};
+            st.flags._investmentDataV3Seen = true;
+            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 2);
+            if (typeof StateManager !== "undefined" && StateManager.addMessage) {
+              StateManager.addMessage("🤷 你觉得凭感觉就行。简单也是一种策略。心智+2。", "info");
+            }
+          },
+        },
+      ],
+      probability: 0.5,
+      repeatable: false,
+    },
+  ];
+
+  for (var i = 0; i < EVENTS.length; i++) {
+    RANDOM_EVENTS.push(EVENTS[i]);
+  }
+})();
+;
 // ==== js/core/domain_a_linkage_r277.js ====
 /**
  * 域A(数据/数值平衡) 联动增强 R277（第二轮循环·A 域第十一次）
@@ -271521,6 +271709,45 @@ function renderCareerOverview(state, parent) {
     html += "</div></div>";
   }
 
+  // === [全系统自洽修复] 域C R357 联动增强: C→F 技能提升进度(晋升所需技能XP缺口可视化) ===
+  if (job) {
+    var _nextLevel = getNextCareerLevel(job.path, job.levelId);
+    if (_nextLevel && _nextLevel.reqSkills) {
+      var _skillGapItems = [];
+      for (var _sgSkill in _nextLevel.reqSkills) {
+        var _sgReq = _nextLevel.reqSkills[_sgSkill];
+        var _sgCur = _getSkillValue(state, _sgSkill);
+        var _sgLabel = _careerLabelMap[_sgSkill] || _sgSkill;
+        var _sgSkillData = state.skills && state.skills[_sgSkill];
+        var _sgXp = _sgSkillData ? (_sgSkillData.xp || 0) : 0;
+        var _sgXpNeeded = Math.max(0, (_sgReq - _sgCur) * 100 - _sgXp);
+        _skillGapItems.push({
+          label: _sgLabel, current: _sgCur, required: _sgReq,
+          xp: _sgXp, xpNeeded: _sgXpNeeded, met: _sgCur >= _sgReq
+        });
+      }
+      if (_skillGapItems.length > 0) {
+        html += '<div class="section" style="margin-top:8px;"><h3>📈 技能提升进度</h3><div class="card" style="padding:10px;">';
+        html += '<div style="font-size:10px;color:var(--text-muted);margin-bottom:6px;">下一级「' + _nextLevel.name + '」所需技能 — 点击技能Tab查看详情</div>';
+        for (var _sgi = 0; _sgi < _skillGapItems.length; _sgi++) {
+          var _sg = _skillGapItems[_sgi];
+          var _sgColor = _sg.met ? 'var(--success)' : 'var(--warning)';
+          var _sgIcon = _sg.met ? '✅' : '⬆️';
+          html += '<div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;font-size:10px;">';
+          html += '<span style="color:' + _sgColor + ';">' + _sgIcon + ' ' + _sg.label + ' Lv.' + _sg.current + '/' + _sg.required + '</span>';
+          if (!_sg.met) {
+            html += '<span style="font-size:8px;color:var(--text-muted);">(约需' + _sg.xpNeeded + 'XP)</span>';
+          }
+          var _sgPct = Math.min(100, Math.round((_sg.current / Math.max(1, _sg.required)) * 100));
+          html += '<div style="flex:1;height:4px;background:rgba(255,255,255,0.1);border-radius:2px;overflow:hidden;">';
+          html += '<div style="height:100%;width:' + _sgPct + '%;background:' + _sgColor + ';border-radius:2px;"></div></div>';
+          html += '</div>';
+        }
+        html += '</div></div>';
+      }
+    }
+  }
+
   // === 二、职业资本雷达卡 ===
   html +=
     '<div class="section" style="margin-top:8px;"><h3>📊 职业资本</h3><div class="card" style="padding:10px;">';
@@ -273122,6 +273349,29 @@ function tickCareerJobDaily(state) {
         StateManager.addMessage("📈 月薪¥" + job.salary.toLocaleString() + "，除了消费，不妨考虑多元化资产配置。", "info");
       } else {
         StateManager.addMessage("💡 月薪¥" + job.salary.toLocaleString() + "，建议将20%收入用于储蓄或低风险投资。", "info");
+      }
+    }
+    // [全系统自洽修复] 域C R357 联动增强: C→E 职业路径专属投资洞察(基于职业背景推荐相关行业)
+    if (job.salary >= 15000 && state.player.day % 90 === 1) {
+      var _careerInvestTips = {
+        tech: "💻 你身处IT行业，对科技趋势有敏锐洞察。关注AI、云计算领域的成长股，利用行业认知优势。",
+        finance: "📊 金融从业者让你对宏观数据敏感。债券基金+蓝筹股的组合适合你稳健增值。",
+        sales: "🤝 销售让你懂市场冷暖。消费类ETF和地产REITs可以关注。",
+        operations: "⚙️ 运营管理培养了你对效率的敏感。关注自动化、物流行业的龙头股。",
+        design: "🎨 创意行业让你对消费趋势敏感。文创、IP经济相关题材值得关注。",
+        legal: "⚖️ 法律专业让你能识别合规风险。优先考虑监管完善的蓝筹板块。",
+        education: "📚 教育行业让你了解人才流向。教育培训、在线学习赛道有长期价值。",
+        logistics: "🚚 物流行业让你对经济脉动有直观感受。关注基建、交通类基金。",
+        catering: "🍜 餐饮经验让你对消费有深刻理解。消费类基金是合适的投资方向。",
+        medical: "🏥 医疗行业让你了解健康产业发展。医药ETF和医疗器械股值得配置。",
+        doctor: "👨‍⚕️ 医师视角让你看重长期价值。医疗健康类基金+固收组合是稳健选择。",
+        public_institution: "🏢 体制内工作让你偏好稳健。国债+高分红蓝筹股适合你的风险偏好。",
+        civil: "🏛️ 公务员视角让你关注政策风向。关注政策受益板块，避免高波动品种。"
+      };
+      var _careerTip = _careerInvestTips[job.path];
+      if (_careerTip && !state.flags['_careerInvestTip_' + job.path]) {
+        state.flags['_careerInvestTip_' + job.path] = true;
+        StateManager.addMessage(_careerTip, "info");
       }
     }
     var salaryMsg =
