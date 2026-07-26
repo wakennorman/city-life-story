@@ -154946,6 +154946,21 @@ function tickNpcRelationships(state) {
   if (typeof _applySocialBuffR233 === "function") {
     _applySocialBuffR233(state);
   }
+  // [全系统自洽修复] 域D R382 联动增强: D→G 高好感NPC提供每日心情恢复(社交圈归属感)
+  try {
+    var _highAffCount = 0;
+    for (var _haId in state.relationships) {
+      if (state.relationships[_haId] && state.relationships[_haId].met && (state.relationships[_haId].affinity || 0) >= 60) {
+        _highAffCount++;
+      }
+    }
+    if (_highAffCount >= 3 && state.needs) {
+      state.needs.happiness = Math.min(100, (state.needs.happiness || 50) + 1);
+    }
+    if (_highAffCount >= 6 && state.needs) {
+      state.needs.happiness = Math.min(100, (state.needs.happiness || 50) + 1);
+    }
+  } catch (e) {}
   // [R233 域D联动增强3] D→E 熟人投资情报（好感≥60的NPC提供投资建议）
   if (typeof _checkNpcInvestmentTipR233 === "function") {
     _checkNpcInvestmentTipR233(state);
