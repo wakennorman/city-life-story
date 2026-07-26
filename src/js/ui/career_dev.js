@@ -2508,7 +2508,10 @@ function careerTakePaidLeave() {
   cap.burnout = Math.max(0, burnout - 45);
   if (state.needs) {
     state.needs.happiness = Math.min(100, (state.needs.happiness || 50) + 25);
-    state.status.health = Math.min(100, (state.status.health || 70) + 8);
+    // [全系统自洽修复] 域C A类修复: state.status 守卫(防止旧存档崩溃)
+    if (state.status) {
+      state.status.health = Math.min(100, (state.status.health || 70) + 8);
+    }
   }
   p.mental = Math.min(100, (p.mental || 30) + 15);
   job._lastPaidLeaveDay = p.day;
@@ -3357,6 +3360,8 @@ function tickCareerJobDaily(state) {
     StateManager.addMessage(_milestoneMsg, "success");
     // [全系统自洽修复] 域C 联动增强#1: C→G 里程碑幸福感 — 重大里程碑给予心情/健康加成
     if (_newWd === 30 || _newWd === 90 || _newWd === 365 || _newWd % 365 === 0) {
+      // [全系统自洽修复] 域C A类修复: state.status 守卫(防止旧存档崩溃)
+      if (!state.status) state.status = {};
       if (state.needs) {
         state.needs.happiness = Math.min(100, (state.needs.happiness || 0) + 3);
         // [全系统自洽修复] 域F 修复:career_dev.js 里程碑健康加成写 state.needs.health 死字段
@@ -4328,11 +4333,13 @@ function enhancedApplyCareerJob(pathId, levelId) {
       penaltyLines.push("😴 疲劳 -6%");
       interviewChance -= 0.06;
     }
-    if ((state.status.health || 100) < 50) {
+    // [全系统自洽修复] 域C A类修复: state.status 守卫(防止旧存档面试崩溃)
+    var _health = state.status ? (state.status.health || 100) : 100;
+    if (_health < 50) {
       statePenaltyMessages.push("健康状况差");
       penaltyLines.push("🏥 健康状况差 -12%");
       interviewChance -= 0.12;
-    } else if ((state.status.health || 100) < 75) {
+    } else if (_health < 75) {
       statePenaltyMessages.push("亚健康");
       penaltyLines.push("🏥 亚健康 -4%");
       interviewChance -= 0.04;
