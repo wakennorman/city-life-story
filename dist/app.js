@@ -105842,6 +105842,161 @@ if (typeof window !== "undefined") {
 })();
 
 ;
+// ==== js/core/domain_h_linkage_r83.js ====
+/*
+ * 城市浮生记 — 域H（Phase2/公司）联动增强 · R83
+ * 全系统优化 loop R83 · 联动增强 2项
+ */
+(function () {
+  if (typeof RANDOM_EVENTS === "undefined" || !RANDOM_EVENTS) return;
+  if (RANDOM_EVENTS._domainHLinkageR83) return;
+  RANDOM_EVENTS._domainHLinkageR83 = true;
+
+  function safeAffinityH83(st, npcId, change, reason) {
+    if (!st || !npcId) return;
+    if (typeof applyAffinityChange === "function") {
+      applyAffinityChange(st, npcId, change, reason || "域H R83联动");
+      return;
+    }
+    if (!st.relationships) st.relationships = {};
+    if (!st.relationships[npcId])
+      st.relationships[npcId] = { met: true, affinity: 0 };
+    st.relationships[npcId].affinity =
+      (st.relationships[npcId].affinity || 0) + change;
+    st.relationships[npcId].met = true;
+  }
+
+  var H_EVENTS = [
+    // ===== 联动1: H→G 公司里程碑叙事 =====
+    // 设计意图：公司达到特定规模（员工数/估值）时触发叙事，让创业成长有情感回响。
+    {
+      id: "company_milestone_10_employees",
+      title: "十人团队",
+      desc: "你的公司终于突破了两位数员工。从一个人单枪匹马到十个人的团队，你回望来路，感慨万千。",
+      phase: "corporate",
+      triggers: { minDay: 60 },
+      conditions: function (st) {
+        if (!st || !st.corporate || !st.flags) return false;
+        if (st.flags._companyMilestone10Done) return false;
+        return st.corporate.team && st.corporate.team.length >= 10;
+      },
+      choices: [
+        {
+          text: "🎉 请大家吃顿好的，庆祝一下",
+          apply: function (st) {
+            if (st.flags) st.flags._companyMilestone10Done = true;
+            if (st.resources) {
+              st.resources.cash = (st.resources.cash || 0) - 2000;
+            }
+            if (st.corporate && st.corporate.team) {
+              for (var i = 0; i < st.corporate.team.length; i++) {
+                st.corporate.team[i].loyalty = Math.min(
+                  100,
+                  (st.corporate.team[i].loyalty || 50) + 5
+                );
+              }
+            }
+            if (st.player) {
+              st.player.mental = Math.min(100, (st.player.mental || 50) + 5);
+            }
+            if (typeof StateManager !== "undefined" && StateManager.addMessage)
+              StateManager.addMessage(
+                "🎉 十人庆功宴上，大家喝了不少酒，聊了不少真心话。团队凝聚力提升了！心智+5。",
+                "good"
+              );
+          },
+        },
+        {
+          text: "💼 低调处理，把预算投到业务上",
+          apply: function (st) {
+            if (st.flags) st.flags._companyMilestone10Done = true;
+            if (st.player) {
+              st.player.intelligence = Math.min(100, (st.player.intelligence || 50) + 3);
+            }
+            if (typeof StateManager !== "undefined" && StateManager.addMessage)
+              StateManager.addMessage(
+                "💼 你把庆功预算投到了业务上。员工们虽然没说什么，但心里都懂。智力+3。",
+                "info"
+              );
+          },
+        },
+      ],
+      probability: 0.04,
+    },
+
+    // ===== 联动2: H→D 公司阶段NPC社交圈 =====
+    // 设计意图：公司阶段与已结识NPC的社交互动，让NPC对玩家的创业经历有感知。
+    {
+      id: "corporate_npc_congratulation",
+      title: "老朋友的祝贺",
+      desc: "你创业的消息传开了。一位老朋友听说你现在当老板了，特意来找你聊聊。",
+      phase: "corporate",
+      triggers: { minDay: 45 },
+      conditions: function (st) {
+        if (!st || !st.player || !st.relationships || !st.flags) return false;
+        if (st.flags._corporateNpcCongratsDone) return false;
+        // 至少1个已结识且好感≥50的NPC
+        for (var id in st.relationships) {
+          if (!Object.prototype.hasOwnProperty.call(st.relationships, id)) continue;
+          var r = st.relationships[id];
+          if (r && r.met === true && (r.affinity || 0) >= 50) return true;
+        }
+        return false;
+      },
+      choices: [
+        {
+          text: "🤝 热情接待，分享创业故事",
+          apply: function (st) {
+            if (st.flags) st.flags._corporateNpcCongratsDone = true;
+            // 随机选一个高好感NPC好感+4
+            if (st.relationships) {
+              var best = null, bestAff = 50;
+              for (var id in st.relationships) {
+                if (!Object.prototype.hasOwnProperty.call(st.relationships, id)) continue;
+                var r = st.relationships[id];
+                if (r && r.met === true && (r.affinity || 0) > bestAff) {
+                  best = id; bestAff = r.affinity || 0;
+                }
+              }
+              if (best) safeAffinityH83(st, best, 4, "创业分享");
+            }
+            if (st.player) {
+              st.player.mental = Math.min(100, (st.player.mental || 50) + 3);
+              st.player.fame = Math.min(100, (st.player.fame || 0) + 2);
+            }
+            if (typeof StateManager !== "undefined" && StateManager.addMessage)
+              StateManager.addMessage(
+                "和老朋友聊了很久，创业的苦与乐都有人听。名气+2，心智+3。",
+                "good"
+              );
+          },
+        },
+        {
+          text: "😅 谦虚说还在摸索阶段",
+          apply: function (st) {
+            if (st.flags) st.flags._corporateNpcCongratsDone = true;
+            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 5);
+            if (typeof StateManager !== "undefined" && StateManager.addMessage)
+              StateManager.addMessage(
+                "你谦虚地说还在摸索。老朋友笑着说：「你从小就稳重。」心智+5。",
+                "info"
+              );
+          },
+        },
+      ],
+      probability: 0.03,
+    },
+  ];
+
+  for (var i = 0; i < H_EVENTS.length; i++) {
+    var evt = H_EVENTS[i];
+    if (!evt.choices || !evt.choices.length) continue;
+    if (!evt.conditions) evt.conditions = function () { return false; };
+    RANDOM_EVENTS.push(evt);
+  }
+})();
+
+;
 // ==== js/core/data_linkage_events.js ====
 /*
  * 城市浮生记 — 域A（数据/数值平衡）联动增强事件
@@ -242998,6 +243153,175 @@ if (typeof window !== "undefined") {
 
   for (var i = 0; i < EVENTS.length; i++) {
     RANDOM_EVENTS.push(EVENTS[i]);
+  }
+})();
+
+;
+// ==== js/core/domain_f_linkage_r397.js ====
+/**
+ * 域F(UI/UX) 联动增强 R397
+ * 背景：域F 经 R19/R183/R186/R198/R384/R390 多轮加固后 A类净尽(死字段/未声明变量/除零均修复)。
+ * 本轮聚焦3个历轮未覆盖的 UI→叙事桥接，优先命中当前最薄弱域：
+ *   A(387/389最薄弱) / C(391) / G(392)。
+ *   F→A f397_panel_clarity     收支面板一目了然 → 数据可视化的掌控感, mental + needs.happiness
+ *   F→C f397_skill_showcase     成果展示面板清晰 → 呈现即练达, addSkillXp("management") + mental
+ *   F→G f397_life_review_ui     季度复盘 PPT 清爽 → 创业回望人生阶段, mental + 生命周期叙事
+ *
+ * 严格照 domain_f_linkage_r390.js / domain_a_linkage_r389.js 已验证 IIFE 注入范式。
+ */
+(function () {
+  if (typeof RANDOM_EVENTS === "undefined" || !RANDOM_EVENTS) return;
+  if (RANDOM_EVENTS._domainFLinkageR397Loaded) return;
+  RANDOM_EVENTS._domainFLinkageR397Loaded = true;
+
+  // 安全技能经验（守真实键：management 为 state.skills 真实键）
+  function grantSkillXpR397(key, amount) {
+    if (typeof addSkillXp === "function") {
+      try { addSkillXp(key, amount); } catch (e) { /* safe */ }
+    }
+  }
+
+  // 安全消息（守全局 StateManager 可能未定义）
+  function msgR397(text, type) {
+    if (typeof StateManager !== "undefined" && StateManager && typeof StateManager.addMessage === "function") {
+      try { StateManager.addMessage(text, type || "success"); } catch (e) { /* safe */ }
+    }
+  }
+
+  // 安全心智/幸福（守真实字段 player.mental / needs.happiness）
+  function bumpMental(st, n) {
+    if (st && st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + (n || 0));
+  }
+  function bumpHappiness(st, n) {
+    if (st && st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + (n || 0));
+  }
+
+  var EVENTS = [
+    {
+      // F→A: 收支面板一目了然 — UI 让数据可读, 反馈到数值平衡掌控感
+      id: "f397_panel_clarity",
+      phase: "street",
+      _isChainEvent: false,
+      icon: "📊",
+      title: "一眼看懂的收支面板",
+      story:
+        "你打开生活面板，这个月收支第一次清清楚楚地摊在眼前——哪笔花得值、哪笔是冲动，一目了然。",
+      triggers: { minDay: 30, excludeFlags: ["_f397PanelClarityCooldown"] },
+      conditions: function (st) {
+        if (st && st.gameOver) return false;
+        if (!st || !st.resources) return false;
+        // 需要一定现金积累才谈得上"看面板理账"
+        if ((st.resources.cash || 0) < 50) return false;
+        return true;
+      },
+      choices: [
+        {
+          text: "🗒️ 顺手记一笔下月的预算",
+          hint: "心智+5, 幸福感+4, 置 _f397PanelClarityCooldown([PLACEHOLDER]天)",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._f397PanelClarityCooldown = true;
+            bumpMental(st, 5);
+            bumpHappiness(st, 4);
+            msgR397("📊 把账目看明白的那一刻，你对生活的掌控感回来了。心智+5，幸福感+4。", "success");
+          }
+        },
+        {
+          text: "🤷 看一眼就关了",
+          hint: "无奖励",
+          apply: function (st) { /* 无奖励选择 */ }
+        }
+      ]
+    },
+    {
+      // F→C: 成果展示面板清晰 — UI 呈现即练达, 反哺职业技能
+      id: "f397_skill_showcase",
+      phase: "street",
+      _isChainEvent: false,
+      icon: "🖼️",
+      title: "清爽的成果展示",
+      story:
+        "你把这段时间做的事整理进一个简洁的展示面板——原本零散的活儿，一下子有了条理和说服力。",
+      triggers: { minDay: 45, excludeFlags: ["_f397SkillShowcaseCooldown"] },
+      conditions: function (st) {
+        if (st && st.gameOver) return false;
+        if (!st || !st.skills) return false;
+        // 需要至少一门拿得出手的技能(等级≥10)才有的展示
+        var hasSkill = false;
+        for (var k in st.skills) {
+          if (!Object.prototype.hasOwnProperty.call(st.skills, k)) continue;
+          if (st.skills[k] && (st.skills[k].level || 0) >= 10) { hasSkill = true; break; }
+        }
+        if (!hasSkill) return false;
+        return true;
+      },
+      choices: [
+        {
+          text: "💡 借这版面跟人讲清楚自己的价值",
+          hint: "management XP+[PLACEHOLDER], 心智+3",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._f397SkillShowcaseCooldown = true;
+            grantSkillXpR397("management", 8);
+            bumpMental(st, 3);
+            msgR397("💡 把成果讲清楚，本身就是一种能力。管理经验+8，心智+3。", "success");
+          }
+        },
+        {
+          text: "📁 先存着, 以后再说",
+          hint: "无奖励",
+          apply: function (st) { /* 无奖励选择 */ }
+        }
+      ]
+    },
+    {
+      // F→G: 季度复盘 PPT 清爽 — 创业阶段的 UI 仪式感连接生命周期回望
+      id: "f397_life_review_ui",
+      phase: "corporate",
+      _isChainEvent: false,
+      icon: "📽️",
+      title: "一页纸的复盘",
+      story:
+        "季度结束，你用一页清爽的幻灯片把这段创业路复盘了一遍——从起头到眼下，竟已走了这么远。",
+      triggers: { minDay: 90, excludeFlags: ["_f397LifeReviewCooldown"] },
+      conditions: function (st) {
+        if (st && st.gameOver) return false;
+        if (!st || !st.corporate) return false;
+        // 需处于创业/公司阶段且有公司实体
+        if (!st.corporate.company) return false;
+        return true;
+      },
+      choices: [
+        {
+          text: "🌅 把复盘发给大家, 一起回望来路",
+          hint: "心智+5, 置 _f397LifeReviewCooldown([PLACEHOLDER]天)",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._f397LifeReviewCooldown = true;
+            bumpMental(st, 5);
+            msgR397("📽️ 一页纸的复盘让团队看见了来路。创业回望人生阶段，心智+5。", "success");
+          }
+        },
+        {
+          text: "📴 自己留着看就行",
+          hint: "心智+2",
+          apply: function (st) {
+            bumpMental(st, 2);
+            msgR397("📴 你独自翻着复盘页，心里默默给自己鼓了鼓劲。心智+2。", "info");
+          }
+        }
+      ]
+    }
+  ];
+
+  // 注入 RANDOM_EVENTS（带 id 去重守卫，避免与既有事件重复注册）
+  for (var i = 0; i < EVENTS.length; i++) {
+    var _e = EVENTS[i];
+    if (RANDOM_EVENTS.find && RANDOM_EVENTS.find(function (ev) { return ev && ev.id === _e.id; })) continue;
+    RANDOM_EVENTS.push(_e);
   }
 })();
 
