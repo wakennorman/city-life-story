@@ -461,6 +461,38 @@ function renderSocialOverviewTab(state, content) {
     html += '</div></div></div>';
   }
 
+  // [全系统自洽修复] 域D R382 联动增强: D→F NPC生日提醒(社交Tab显示近期生日的NPC)
+  try {
+    if (typeof NPCS !== "undefined" && NPCS.length > 0) {
+      var _today = state.player && state.player.day;
+      var _birthdayNpcs = [];
+      for (var _bi = 0; _bi < NPCS.length; _bi++) {
+        var _npc = NPCS[_bi];
+        if (_npc && _npc.birthday && _npc.id) {
+          var _rel = state.relationships && state.relationships[_npc.id];
+          if (_rel && _rel.met && _today) {
+            // birthday 是相对于游戏天数的偏移值(如45表示第45天)
+            if (_today === _npc.birthday) {
+              _birthdayNpcs.push({ name: _npc.name || _npc.id, icon: "🎂", id: _npc.id });
+            } else if (_today === _npc.birthday - 1) {
+              _birthdayNpcs.push({ name: _npc.name || _npc.id, icon: "⏰", id: _npc.id });
+            }
+          }
+        }
+      }
+      if (_birthdayNpcs.length > 0) {
+        html += '<div class="section"><h3>🎂 生日提醒</h3>';
+        html += '<div class="card" style="padding:10px;border:1px solid rgba(255,183,77,0.3);background:rgba(255,183,77,0.05);">';
+        for (var _bni = 0; _bni < _birthdayNpcs.length; _bni++) {
+          var _bn = _birthdayNpcs[_bni];
+          var _msg = _bn.icon === "🎂" ? "今天是" + _bn.name + "的生日！去拜访ta送上祝福吧" : _bn.name + "明天过生日，准备一份礼物吧";
+          html += '<div style="font-size:12px;margin:2px 0;">' + _bn.icon + " " + _msg + "</div>";
+        }
+        html += '</div></div>';
+      }
+    }
+  } catch (e) {}
+
   // 家庭摘要
   var family = state.family;
   if (family) {

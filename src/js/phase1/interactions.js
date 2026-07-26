@@ -8,6 +8,9 @@
 
 /** 获取经状态修正后的有效属性值（工作时、技能判定时使用） */
 function getEffectiveStats(state) {
+  // [全系统自洽修复] 域D A类修复: state.needs/status 守卫(防止旧存档/极端初始化崩溃)
+  if (!state.needs) state.needs = { hunger: 100, fatigue: 0, happiness: 50, hygiene: 50 };
+  if (!state.status) state.status = { health: 100 };
   const n = state.needs,
     st = state.status,
     p = state.player;
