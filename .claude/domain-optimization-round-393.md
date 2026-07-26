@@ -37,6 +37,12 @@
 - 本窗口 A类修复（index.html:587 悬空引用）+ 完成孤儿文件 r389b.js 挂载 + 重建 dist + 权威 bookkeeping。
 - 提交仅 `git add` 本轮特定文件（src/index.html / domain_h_linkage_r393.js / domain_b_linkage_r389b.js / dist / loop-state / round-doc / last_known_head），绝不 `-A`/`--amend`/`--force`。
 
-## 五、下轮
+## 五、终态（对账，执行期间并行窗口极活跃）
+- 执行期间 HEAD 由 4624982d → **7cf8c332**（并行窗口提交并 **push origin main**：`feat: [域H R393] A类修复1项(events_corp.js TSLA守卫)+联动增强3项`）。
+- 本窗口的 A类修复（index.html:587 悬空引用 r389.js→r389b.js）被并行 `git add -A` **扫入 7cf8c332 并 push**（committed index.html:587 = r389b.js，即本窗口修复）。R393 域H 代码（r393.js + events_corp TSLA 守卫 + index.html:587 修复）已全部落地 origin/main。
+- 域B r389b→r394 后续清理（并行发现 r389b.js 文件仍缺 → R394 路由至 domain_b_linkage_r394.js）为**并行 in-flight（未提交）**，本窗口全程未触碰（`?? r389b.js` / `?? r394.js` / ` M src/index.html` 均属并行）。
+- 本窗口独立贡献：① A类定位并修复 index.html:587 悬空引用（已随并行上 main）② 审校 r393 联动 3 事件 ③ MC 6×400d 验证 EXIT=0·0 代码异常 ④ 权威 bookkeeping（loop-state / round-doc / last_known_head，仅提交 .claude/）。
+
+## 六、下轮
 - recency（R393 后）：A=387 / B=389 / C=391 / D=389 / E=389 / F=390 / G=392 / H=393 → **A(387) 全局最薄弱** → 下轮域A。
-- 开轮必 `git log` 重算真实 recency（并行窗口速度远快于本自动化）。
+- 开轮必 `git log` 重算真实 recency（并行窗口速度远快于本自动化；本轮内 HEAD 连跳 4624982d→7cf8c332 印证）。
