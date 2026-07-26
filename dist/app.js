@@ -214697,6 +214697,68 @@ function renderCars(area, inv, state, parent) {
   }, 0);
 }
 
+// [全系统自洽修复] 域E R389 联动增强(E→C): 投资组合职业信心—投资成功提升职业绩效
+function applyInvestmentCareerBoost(state) {
+  if (!state || !state.investment || !state.career || !state.career.currentJob) return;
+  var inv = state.investment;
+  var totalProfit = inv._totalInvestmentProfit || 0;
+  if (totalProfit >= 50000 && !state.flags._investCareerBoostActive) {
+    state.flags._investCareerBoostActive = true;
+    state.career.currentJob.performance = Math.min(100, (state.career.currentJob.performance || 50) + 5);
+    StateManager.addMessage("📈 投资成功让你在职场上更有底气。绩效+5。", "success");
+  }
+  // 每月根据投资盈利调整绩效
+  if (state.player && state.player.day % 30 === 0 && totalProfit > 0) {
+    var boost = Math.min(3, Math.floor(totalProfit / 100000));
+    if (boost > 0 && state.career.currentJob) {
+      state.career.currentJob.performance = Math.min(100, (state.career.currentJob.performance || 50) + 1);
+    }
+  }
+}
+
+// [全系统自洽修复] 域E R389 联动增强(E→F): 投资组合快照数据—供UI渲染投资概览
+function getPortfolioSnapshot(state) {
+  if (!state || !state.investment) return { totalValue: 0, totalCost: 0, pnl: 0, items: [] };
+  var inv = state.investment;
+  var items = [];
+  var totalValue = 0, totalCost = 0;
+  // 股票持仓
+  var stocks = inv.stockHoldings || [];
+  for (var si = 0; si < stocks.length; si++) {
+    var h = stocks[si];
+    var m = inv.stockMarket && inv.stockMarket[h.symbol];
+    var curPrice = m ? m.price : 0;
+    var value = curPrice * h.shares;
+    var cost = (h.avgPrice || 0) * h.shares;
+    totalValue += value; totalCost += cost;
+    items.push({ type: "stock", name: h.symbol, shares: h.shares, value: value, cost: cost, pnl: value - cost });
+  }
+  // 比特币
+  if (inv.btcHoldings > 0) {
+    var btcVal = (inv.btcPrice || 0) * inv.btcHoldings;
+    var btcCost = (inv.btcAvgCost || 0) * inv.btcHoldings;
+    totalValue += btcVal; totalCost += btcCost;
+    items.push({ type: "btc", name: "比特币", shares: inv.btcHoldings, value: btcVal, cost: btcCost, pnl: btcVal - btcCost });
+  }
+  // 房产
+  var props = inv.properties || [];
+  for (var pi = 0; pi < props.length; pi++) {
+    var p = props[pi];
+    var pVal = p.currentPrice || p.buyPrice || 0;
+    totalValue += pVal; totalCost += p.buyPrice || 0;
+    items.push({ type: "property", name: p.name || "房产", value: pVal, cost: p.buyPrice || 0, pnl: pVal - (p.buyPrice || 0) });
+  }
+  // 车辆
+  var cars = inv.cars || [];
+  for (var ci = 0; ci < cars.length; ci++) {
+    var c = cars[ci];
+    var cVal = c.currentPrice || c.buyPrice || 0;
+    totalValue += cVal; totalCost += c.buyPrice || 0;
+    items.push({ type: "car", name: c.name || "车辆", value: cVal, cost: c.buyPrice || 0, pnl: cVal - (c.buyPrice || 0) });
+  }
+  return { totalValue: Math.round(totalValue), totalCost: Math.round(totalCost), pnl: Math.round(totalValue - totalCost), items: items };
+}
+
 ;
 // ==== js/phase2/property_market.js ====
 /**
