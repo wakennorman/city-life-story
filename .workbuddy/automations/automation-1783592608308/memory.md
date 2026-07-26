@@ -406,3 +406,11 @@
 - 验证：node --check OK；build dist app.js 10686.2KB(r397/r83/r398/r399 四 flag 均=2，补齐并行 R398/R399 dist 漏打 r398/r399 的不一致)；MC 6×400d **EXIT=0·0代码异常**(前7天死亡率全0.0%；corporate 66.7%<80% 为既有RNG阈值非回归)。
 - ⚠️ 并发：并行 `git add -A` 把本窗口对 src/index.html 的 r83+r397 注册扫入 R398/R399 提交；本窗口仅补提交 domain_f_linkage_r397.js 源 + 完整 dist(修正并行 dist 漏打)+ .claude 账本。提交 70dcf783(6文件·不含 src/index.html)，push fast-forward 成功(d4655ca7..70dcf783)。残留 domain_b_linkage_r364/r380.js 微改为并行 R400=B in-flight，未触碰。
 - recency(R397后): A=398/B=394/C=399/D=395/E=396/F=397/G=392/H=393 → 下轮**域G(392最薄弱)**。开轮必 git log 重算(并行速度远快于本自动化)。
+
+## 最近执行（2026-07-27 06:02 · R411 域B）
+
+- **提交**: fix+feat 3417ee8e + chore 86c41686，均已 push origin main
+- **本轮产出**: A类133处（part2~8 死字段大修 player.health.*×109/needs.health×21/数字型×2 → personalGrowth.health.*/status.health + 并行域H r410 孤儿挂载抢救）+ 联动3（domain_b_linkage_r410.js：stress首消费/booksRead激活/met倾诉）
+- **验证**: node --check 全过；build 10779.4KB；MC 6×400d 0代码异常
+- **竞态要点**: 开轮 loop-state 滞后3轮(git log实况为准)；执行中被并行抢号2次(R409/R410)改号R411；联动文件名保留 r410（挂载行已被并行 git add -A 扫入 main，改名反致悬空）；push 前须双向核对 git show HEAD:src/index.html 挂载完整性
+- **下轮**: 域F（recency=403 最薄弱），开轮必 git log 重算

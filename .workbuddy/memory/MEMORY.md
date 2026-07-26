@@ -41,8 +41,10 @@
 - build 后若并行又改了某 src 文件→pre-commit 报 dist 陈旧；须再 stash 该文件+重建+快速提交（原子链）beat the race。
 
 ## 近况与 recency 基准
-- R387 域A：**P0 热修复**（events_core.js rollStreetEvent 缺 `let mod` 声明→每日抛 ReferenceError 全策略100%死亡）+A→B 价格叙事。
-- R390 域F（本轮·已 push 1d4a0da2）：A类=0（Explore 18 UI文件确证死字段仅存修复注释、除零/空指针均守卫）+联动3(domain_f_linkage_r390.js：ui_r390_progress_review F→B进度回顾/ui_r390_relations_map F→D关系网问候守rel.met/ui_r390_data_pitch F→H一页看板)。构建 10554.3KB，MC 6×400d EXIT=0·0代码异常。并行在途 modal.js/render_core.js/domain_a/b_linkage_r389 全程 stash 隔离，push 后还原不碰。
-- R406 域E（已 push c093b1f0+b103f0a9）：A类=0（Explore 审计7域E文件+5联动文件全干净；setStopLoss 经核有 R195 调用方系 Explore 误报勿修；C类记录 investment.js:3913 渲染循环无||[]但 initInvestment 保证）。联动3(domain_e_linkage_r406.js)：e406_fear_greed_mirror(E→G 首消费 btcFearGreed 极值≥80/≤20+btcHoldings门控)/e406_policy_pulse(E→A 首消费 _propertyPolicyTightness abs≥0.05)/e406_trade_journal_review(E→C 首消费 tradeLog≥8笔·corporate)。构建10730.2KB，MC 6×400d EXIT=0·0代码异常（corporate 16.7% 既有RNG阈值）。并行在途 jobs/carry/trade/trade_intel 全程 stash 隔离无损还原。
-- 域E零消费素材已用尽 btcFearGreed/_propertyPolicyTightness/tradeLog；剩余候选：stopLossOrders 触发后叙事(R195 已部分)、investFreq 计数器。
-- **recency 基准(R406后)：A=398/B=401/C=399/D=405/E=406/F=403/G=402/H=404 → 下轮 A(398)最薄弱**。开轮必 git log 重算。
+- R387 域A：**P0 热修复**（events_core.js rollStreetEvent 缺 `let mod` 声明→每日 ReferenceError 全策略100%死亡）。
+- 域E零消费素材已用尽 btcFearGreed/_propertyPolicyTightness/tradeLog；剩余候选：stopLossOrders 触发叙事、investFreq。
+- R411 域B（已推 3417ee8e+86c41686）：**A类大修133处** — cross_system_events_part2~8 死字段批量修复（st.player.health.*×109 state无此对象守卫永false→压力系统全链静默失效→st.personalGrowth.health.*；st.needs.health×21→st.status.health；part8数字型×2）+并行域H r410 孤儿挂载抢救。联动3(domain_b_linkage_r410.js·文件名保留r410因挂载行已被并行扫入main)：b410_stress_boilover(B→G 首个stress≥60消费)/b410_bookworm_return(B→C 激活 learning.booksRead 死字段)/b410_confide_pressure(B→D met∩affinity≥30倾诉)。MC 6×400d 0代码异常(91.9s)。构建10779.4KB。
+- **personalGrowth 真实结构**：`health.{physical{score},mental{score,stress,anxiety,depression},metabolic}`+`learning{booksRead,courses,certificates}`+`image{style,skincare,fitness,plastic}`。stress 消费仅 b410_stress_boilover；**anxiety/depression/image 仍零消费**（下轮域B/F候选）。
+- **竞态双向教训(R411)**：并行 `git add -A` 把本窗口在途 index.html 编辑扫入其提交（js 文件在 main 悬空→提交该文件即闭合勿改名）；反之本窗口 stash index.html 卷走并行刚加的挂载行（其 js 成孤儿）。**push 前必双向核对：`git show HEAD:src/index.html | grep <近轮新文件>`**。
+- stash@{0}"R411隔离"保留未删：含并行 news.js 旧改动（工作区已有新版冲突未pop；events_core.js 已 checkout 恢复）。并行丢改动可从此找回。
+- **recency 基准(R411后)：A=408/B=411/C=409/D=411/E=406/F=403/G=408/H=410 → 下轮 F(403)最薄弱**。开轮必 git log 重算（本轮 loop-state 滞后3轮、执行中被抢号2次 R409/R410→改号R411）。

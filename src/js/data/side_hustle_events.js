@@ -20,6 +20,7 @@ const SIDE_HUSTLE_EVENTS = [
         cost: 130,
         apply: function (st) {
           // [联动flag] 触发"口碑传播"后续事件（v3.1 链式回响）
+          if (!st.flags) st.flags = {};
           st.flags.daigouHonestService = true;
           st.resources.cash = Math.max(0, (st.resources.cash || 0) - 130);
           if (typeof scheduleChainEvent === "function") {
@@ -47,6 +48,7 @@ const SIDE_HUSTLE_EVENTS = [
         text: "😤 拒绝赔偿",
         hint: "信誉下降，可能失去客户",
         apply: function (st) {
+          if (!st.flags) st.flags = {};
           st.flags.daigouBadReview = true;
           StateManager.addMessage(
             "😤 你拒绝赔偿。客户很生气，说再也不找你代购了。",
@@ -82,6 +84,7 @@ const SIDE_HUSTLE_EVENTS = [
         text: "📞 走保险",
         hint: "不影响现金，但保险记录+1",
         apply: function (st) {
+          if (!st.flags) st.flags = {};
           st.flags.rideInsuranceClaim = (st.flags.rideInsuranceClaim || 0) + 1;
           StateManager.addMessage(
             "📞 你走了保险。虽然不用自己赔钱，但保险记录多了1次，明年保费会上涨。",
@@ -94,6 +97,7 @@ const SIDE_HUSTLE_EVENTS = [
         hint: "高风险：可能被举报",
         apply: function (st) {
           if (Random.chance(0.3)) {
+            if (!st.flags) st.flags = {};
             st.flags.rideCaught = true;
             st.resources.cash = Math.max(0, (st.resources.cash || 0) - 1000);
             StateManager.addMessage(
@@ -155,6 +159,7 @@ const SIDE_HUSTLE_EVENTS = [
         hint: "可能被平台处罚",
         apply: function (st) {
           if (Random.chance(0.4)) {
+            if (!st.flags) st.flags = {};
             st.flags.deliveryBan = true;
             StateManager.addMessage(
               "😤 你和客户吵了起来。平台收到投诉，暂停了你接单权限。",
@@ -184,6 +189,7 @@ const SIDE_HUSTLE_EVENTS = [
         text: "📝 申诉",
         hint: "需要等待，可能解封也可能维持",
         apply: function (st) {
+          if (!st.flags) st.flags = {};
           st.flags.mediaAppeal = true;
           StateManager.addMessage(
             "📝 你提交了申诉。平台说会在3个工作日内回复。这段时间无法更新内容。",
@@ -196,10 +202,12 @@ const SIDE_HUSTLE_EVENTS = [
         hint: "粉丝清零，但获得新平台经验",
         apply: function (st) {
           // [联动flag] 触发"新平台品牌合作"后续事件
+          if (!st.flags) st.flags = {};
           st.flags.selfMediaPivoted = true;
           if (st._sideHustleData && st._sideHustleData.selfMedia) {
             st._sideHustleData.selfMedia.followers = 0;
           }
+          if (!st.player) st.player = {};
           st.player.mental = Math.min(100, (st.player.mental || 0) + 5);
           StateManager.addMessage(
             "🔄 你决定换平台重新起步。虽然粉丝清零，但你学到了教训。心智+5。",
@@ -211,6 +219,7 @@ const SIDE_HUSTLE_EVENTS = [
         text: "😞 放弃自媒体",
         hint: "失去自媒体副业",
         apply: function (st) {
+          if (!st.flags) st.flags = {};
           st.flags.gaveUpSelfMedia = true;
           StateManager.addMessage("😞 你觉得太累了，决定放弃自媒体。", "info");
         },
@@ -243,6 +252,7 @@ const SIDE_HUSTLE_EVENTS = [
         text: "📈 持有观望",
         hint: "等待反弹，可能回本也可能继续跌",
         apply: function (st) {
+          if (!st.flags) st.flags = {};
           st.flags.investHold = true;
           StateManager.addMessage(
             "📈 你选择持有观望。投资需要耐心，希望明天会好起来。",
@@ -259,6 +269,7 @@ const SIDE_HUSTLE_EVENTS = [
           if (Random.chance(0.4)) {
             var profit = Random.int(300, 800);
             // [联动flag] 触发"被人请教投资"后续事件
+            if (!st.flags) st.flags = {};
             st.flags.investBottomed = true;
             st.resources.cash = (st.resources.cash || 0) + profit; // [全系统自洽修复] 域B A类:cash NaN守卫
             StateManager.addMessage(
@@ -308,6 +319,7 @@ const SIDE_HUSTLE_EVENTS = [
         apply: function (st) {
           if (Random.chance(0.6)) {
             // [联动flag] 触发"教育机构挖角"后续事件（v3.1 链式回响）
+            if (!st.flags) st.flags = {};
             st.flags.tutorInnovative = true;
             if (typeof scheduleChainEvent === "function") {
               scheduleChainEvent(st, "side_tutor_recruit", 12, "street");

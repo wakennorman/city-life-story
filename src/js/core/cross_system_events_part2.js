@@ -1874,7 +1874,7 @@
         apply: function (st) {
           st.flags._trainingCertScamSeen = true;
           st.player.morality = Math.min(100, (st.player.morality || 50) + 2);
-          st.player.ability = Math.min(100, (st.player.ability || 50) + 1);
+          st.player.mental = Math.min(100, (st.player.mental || 50) + 1); // [全系统自洽修复] 域H R417 修复:player.ability 死字段(街头阶段无此字段,真实 corporate.ability 仅Phase2)→按消息文案"心智+1"改真实字段 player.mental
           StateManager.addMessage(
             "🔍 你要求看政府批文和认证资质。销售支支吾吾，翻了半天只拿出一张过期的培训许可证。你明白了——这班根本不正规。\n道德+2，心智+1。",
             "success",
@@ -1890,10 +1890,11 @@
             st.resources.cash = Math.max(0, (st.resources.cash || 0) - 2000);
             var legit = Random.chance(0.3);
             if (legit) {
-              st.player.ability = Math.min(100, (st.player.ability || 50) + 5);
-              st.player.knowledge = Math.min(
+              // [全系统自洽修复] 域H R417 修复:player.ability/player.knowledge 均为死字段(全库零读取)→"能力+5"改 player.mental、"知识+5"改真实智力字段 player.intelligence
+              st.player.mental = Math.min(100, (st.player.mental || 50) + 5);
+              st.player.intelligence = Math.min(
                 100,
-                (st.player.knowledge || 50) + 5,
+                (st.player.intelligence || 20) + 5,
               );
               st.needs.happiness = Math.min(
                 100,

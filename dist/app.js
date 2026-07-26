@@ -5826,6 +5826,46 @@ function applyEventMarketEffect(state, eventId) {
   });
 }
 
+// [全系统自洽修复] 域B R410 联动增强(B→A): 事件行为数据追踪
+function trackEventBehavior(state, eventId, choiceId) {
+  if (!state || !eventId) return;
+  if (!state.flags) state.flags = {};
+  if (!state.flags._eventBehaviorLog) state.flags._eventBehaviorLog = [];
+  state.flags._eventBehaviorLog.push({
+    eventId: eventId,
+    choice: choiceId || "unknown",
+    day: (state.player && state.player.day) || 0,
+  });
+  if (state.flags._eventBehaviorLog.length > 100) state.flags._eventBehaviorLog.shift();
+}
+
+// [全系统自洽修复] 域B R410 联动增强(B→F): 事件视觉提示 — 返回事件类型对应的emoji
+function getEventTypeIcon(eventType) {
+  var iconMap = {
+    price: "📈", job: "💼", policy: "📋", moral: "⚖️",
+    crisis: "🚨", achievement: "🏆", health: "🏥", social: "👥",
+    crime: "🚔", disaster: "🌪️", festival: "🎉", news: "📰",
+  };
+  return iconMap[eventType] || "📌";
+}
+
+// [全系统自洽修复] 域B R410 联动增强(B→G): 事件健康影响系数
+function getEventHealthImpact(state, eventId) {
+  if (!state || !eventId) return 0;
+  var impactMap = {
+    rain_storm: { fatigue: 15, health: -5 },
+    heatwave: { fatigue: 5, happiness: -5 },
+    cold_wave: { health: -3 },
+    pickpocket: { happiness: -5 },
+    food_poisoning: { health: -10, hunger: -10 },
+  };
+  var impact = impactMap[eventId];
+  if (!impact) return 0;
+  var total = 0;
+  for (var k in impact) total += Math.abs(impact[k]);
+  return total;
+}
+
 ;
 // ==== js/core/events_street_survival.js ====
 /**
@@ -124185,6 +124225,7 @@ const ERA_EVENTS = [
         apply: function (st) {
           st.flags._eraEvent_180 = true;
           st.flags.trendJobUnlocked = true;
+          if (!st.needs) st.needs = {};
           st.needs.fatigue = Math.min(100, (st.needs.fatigue || 0) + 15);
           StateManager.addMessage(
             "🔥 你进入了风口行业！日薪涨到¥300，但累得够呛。风口不是谁都能抓住的。",
@@ -124197,6 +124238,7 @@ const ERA_EVENTS = [
         hint: "心智+3，获得行业情报",
         apply: function (st) {
           st.flags._eraEvent_180 = true;
+          if (!st.player) st.player = {};
           st.player.mental = Math.min(100, (st.player.mental || 0) + 3);
           if (!st.flags) st.flags = {};
           st.flags.industryIntel = true;
@@ -124253,6 +124295,7 @@ const ERA_EVENTS = [
         hint: "消耗行动力，可能找到更便宜的",
         apply: function (st) {
           st.flags._eraEvent_270 = true;
+          if (!st.player) st.player = {};
           st.player.actionPoints = Math.max(
             0,
             (st.player.actionPoints || 100) - 20,
@@ -124312,6 +124355,7 @@ const ERA_EVENTS = [
         hint: "心情+10，获得「反思者」徽章",
         apply: function (st) {
           st.flags._eraEvent_365 = true;
+          if (!st.needs) st.needs = {};
           st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 10);
           st.flags.reflectorBadge = true;
           StateManager.addMessage(
@@ -124327,6 +124371,7 @@ const ERA_EVENTS = [
         apply: function (st) {
           st.flags._eraEvent_365 = true;
           st.resources.cash = Math.max(0, (st.resources.cash || 0) - 100);
+          if (!st.needs) st.needs = {};
           st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 15);
           StateManager.addMessage(
             "🎉 你请自己吃了一顿大餐。一年了，值得庆祝。心情+15。",
@@ -124339,6 +124384,7 @@ const ERA_EVENTS = [
         hint: "心智+5",
         apply: function (st) {
           st.flags._eraEvent_365 = true;
+          if (!st.player) st.player = {};
           st.player.mental = Math.min(100, (st.player.mental || 0) + 5);
           StateManager.addMessage(
             "😌 你平静地接受了一年的收获与失去。心智+5。",
@@ -124393,6 +124439,7 @@ const ERA_EVENTS = [
         hint: "心智+5，获得决策建议",
         apply: function (st) {
           st.flags._eraEvent_450 = true;
+          if (!st.player) st.player = {};
           st.player.mental = Math.min(100, (st.player.mental || 0) + 5);
           StateManager.addMessage(
             "📊 你分析了行业趋势，发现有些方向值得投入。心智+5。",
@@ -124426,6 +124473,7 @@ const ERA_EVENTS = [
         apply: function (st) {
           st.flags._eraEvent_540 = true;
           st.resources.cash = Math.max(0, (st.resources.cash || 0) - 150);
+          if (!st.needs) st.needs = {};
           st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 10);
           StateManager.addMessage(
             "✨ 你体验了高端消费。虽然贵，但感觉不错。心情+10。",
@@ -124438,6 +124486,7 @@ const ERA_EVENTS = [
         hint: "心智+3",
         apply: function (st) {
           st.flags._eraEvent_540 = true;
+          if (!st.player) st.player = {};
           st.player.mental = Math.min(100, (st.player.mental || 0) + 3);
           StateManager.addMessage(
             "🤔 你觉得高端消费不是必须的，先观望。心智+3。",
@@ -124557,7 +124606,9 @@ const ERA_EVENTS = [
         hint: "心情+15，道德+5",
         apply: function (st) {
           st.flags._eraEvent_900 = true;
+          if (!st.needs) st.needs = {};
           st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 15);
+          if (!st.player) st.player = {};
           st.player.morality = Math.min(100, (st.player.morality || 0) + 5);
           StateManager.addMessage(
             "📚 你决定回馈社会，帮助更多刚来这座城市的人。心情+15，道德+5。",
@@ -124570,6 +124621,7 @@ const ERA_EVENTS = [
         hint: "心情+10",
         apply: function (st) {
           st.flags._eraEvent_900 = true;
+          if (!st.needs) st.needs = {};
           st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 10);
           StateManager.addMessage(
             "🏠 你决定回家看看。三年的城市生活，让你更珍惜家乡。心情+10。",
@@ -189231,6 +189283,7 @@ const MORAL_EVENTS = [
         score: 12,
         immediate: function (s) {
           // [联动flag] 触发"失主感谢"后续事件
+          if (!s.flags) s.flags = {};
           s.flags.moralWalletReturner = true;
           s.player.fame = Math.min(100, (s.player.fame || 0) + 2);
           s.needs.happiness = Math.min(100, s.needs.happiness + 5);
@@ -189246,6 +189299,7 @@ const MORAL_EVENTS = [
         score: -15,
         immediate: function (s) {
           // [联动flag] 触发"昧下钱包的阴影"后续事件
+          if (!s.flags) s.flags = {};
           s.flags.moralWalletStolen = true;
           s.resources.cash = (s.resources.cash || 0) + 500;
           s.needs.happiness = Math.min(100, s.needs.happiness + 8);
@@ -189284,6 +189338,7 @@ const MORAL_EVENTS = [
         score: 8,
         immediate: function (s) {
           // [联动flag] 触发"乞丐的线报"后续事件
+          if (!s.flags) s.flags = {};
           s.flags.moralFedBeggar = true;
           s.resources.cash = Math.max(0, (s.resources.cash || 0) - 15);
           s.needs.happiness = Math.min(100, s.needs.happiness + 6);
@@ -189373,10 +189428,12 @@ const MORAL_EVENTS = [
         score: 15,
         immediate: function (s) {
           // [联动flag] 触发"被路人认出英雄"后续事件
+          if (!s.flags) s.flags = {};
           s.flags.moralStoppedThiefPublic = true;
           s.player.fame = Math.min(100, (s.player.fame || 0) + 5);
           s.needs.happiness = Math.min(100, s.needs.happiness + 8);
-          s.status.health = Math.max(0, s.status.health - 2);
+          if (!s.status) s.status = {};
+s.status.health = Math.max(0, s.status.health - 2);
           StateManager.addMessage(
             "🗣️ 女士反应过来，扒手瞪了你一眼后混入人群跑了。",
             "success",
@@ -189518,6 +189575,7 @@ const MORAL_EVENTS = [
         score: 8,
         immediate: function (s) {
           // [联动flag] 触发"流浪狗再次相遇"后续事件
+          if (!s.flags) s.flags = {};
           s.flags.moralFedDog = true;
           s.resources.cash = Math.max(0, (s.resources.cash || 0) - 3);
           s.needs.happiness = Math.min(100, s.needs.happiness + 8);
@@ -189554,6 +189612,7 @@ const MORAL_EVENTS = [
         score: 15,
         immediate: function (s) {
           // [联动flag] 触发"老人家属联系你"后续事件
+          if (!s.flags) s.flags = {};
           s.flags.moralHelpedElder = true;
           s.needs.happiness = Math.min(100, s.needs.happiness + 6);
           s.player.fame = Math.min(100, (s.player.fame || 0) + 4);
@@ -189647,6 +189706,7 @@ const MORAL_EVENTS = [
         score: 10,
         immediate: function (s) {
           // [联动flag] 触发"年轻妈妈再次相遇"后续事件
+          if (!s.flags) s.flags = {};
           s.flags.moralPushedCar = true;
           s.needs.fatigue = Math.min(100, s.needs.fatigue + 8);
           s.needs.happiness = Math.min(100, s.needs.happiness + 8);
@@ -189929,6 +189989,7 @@ const MORAL_EVENTS = [
         flag: "moral_colleague_ignore",
         score: 3,
         immediate: function (s) {
+          if (!s.flags) s.flags = {};
           s.flags._colleagueFavor = (s.flags._colleagueFavor || 0) + 1;
           StateManager.addMessage("🤫 你低头走开了，老张松了口气。", "info");
         },
@@ -189955,6 +190016,7 @@ const MORAL_EVENTS = [
             (s.player.corporate.upwardMgmt || 0) + 3,
           ); // [全系统自洽修复] 域B 修复: upward→upwardMgmt
           s.needs.happiness = Math.max(0, s.needs.happiness - 5);
+          if (!s.flags) s.flags = {};
           s.flags._colleagueFavor = (s.flags._colleagueFavor || 0) - 2;
           StateManager.addMessage(
             "📞 你匿名举报了。下午老张被叫到办公室谈话，你不敢看他的眼睛。",
@@ -190255,6 +190317,7 @@ const MORAL_EVENTS = [
         score: 5,
         immediate: function (s) {
           s.needs.happiness = Math.min(100, s.needs.happiness + 2);
+          if (!s.flags) s.flags = {};
           s.flags._friendCheatWarned = true;
           StateManager.addMessage(
             "🗣️ 你轻咳了一声，他赶紧收起手机。监考老师看了一眼，走过去了。",
@@ -190367,6 +190430,7 @@ const MORAL_EVENTS = [
           s.needs.fatigue = Math.min(100, s.needs.fatigue + 2);
           s.needs.happiness = Math.max(0, s.needs.happiness - 3);
           s.player.fame = Math.min(100, (s.player.fame || 0) + 3);
+          if (!s.flags) s.flags = {};
           s.flags._scrapeLeftNote = true;
           StateManager.addMessage(
             "📝 你写了张纸条夹在雨刮器下。虽然可能要赔钱，但至少睡得着觉。",
@@ -190392,6 +190456,7 @@ const MORAL_EVENTS = [
         score: 3,
         immediate: function (s) {
           s.needs.happiness = Math.min(100, s.needs.happiness + 1);
+          if (!s.flags) s.flags = {};
           s.flags._scrapeCheckCamera = true;
           StateManager.addMessage(
             "📸 你发现巷子里没有监控——但你知道自己做了什么。",
@@ -190415,6 +190480,7 @@ const MORAL_EVENTS = [
         immediate: function (s) {
           s.needs.happiness = Math.min(100, s.needs.happiness + 8);
           s.player.fame = Math.min(100, (s.player.fame || 0) + 5);
+          if (!s.flags) s.flags = {};
           s.flags._stoppedScam = true;
           StateManager.addMessage(
             "🚨 老奶奶半信半疑地挂了电话。银行保安也过来帮忙确认是诈骗，她差点转了¥30,000！",
@@ -190513,6 +190579,7 @@ const MORAL_EVENTS = [
         immediate: function (s) {
           s.resources.cash = Math.max(0, (s.resources.cash || 0) - 200);
           s.needs.happiness = Math.max(0, s.needs.happiness - 2);
+          if (!s.flags) s.flags = {};
           s.flags._neighborDebt = (s.flags._neighborDebt || 150) + 200;
           StateManager.addMessage(
             "💰 你借了¥200。他感激涕零，但你心里清楚这钱大概率回不来了。",
@@ -190526,6 +190593,7 @@ const MORAL_EVENTS = [
         score: -3,
         immediate: function (s) {
           s.needs.happiness = Math.max(0, s.needs.happiness - 3);
+          if (!s.flags) s.flags = {};
           s.flags._neighborRefused = true;
           StateManager.addMessage(
             "😅 你找了个借口拒绝了。他失望地走了，你有点不忍心。",
@@ -190539,6 +190607,7 @@ const MORAL_EVENTS = [
         score: 8,
         immediate: function (s) {
           s.resources.cash = Math.max(0, (s.resources.cash || 0) - 200);
+          if (!s.flags) s.flags = {};
           s.flags._neighborIOU = (s.flags._neighborIOU || 150) + 200;
           s.flags._neighborHasIOU = true;
           s.player.fame = Math.min(100, (s.player.fame || 0) + 2);
@@ -191410,6 +191479,9 @@ function applyExtremeMoralDelta(state, choice) {
       (state.resources.cash || 0) + choice.cash,
     );
   }
+  if (!state.needs) state.needs = {};
+  if (!state.status) state.status = {};
+  if (!state.player) state.player = {};
   if (typeof choice.happiness === "number") {
     state.needs.happiness = Math.max(
       0,
@@ -191729,7 +191801,8 @@ const MORAL_CONSEQUENCES = {
         (s.player.corporate.dignity || 60) - 10,
       );
       s.needs.happiness = Math.max(0, s.needs.happiness - 8);
-      s.status.emotionalState = "stressed";
+      if (!s.status) s.status = {};
+s.status.emotionalState = "stressed";
       StateManager.addMessage("🔎 财务抽查开始了！你提心吊胆...", "danger");
     },
   },
@@ -192408,6 +192481,7 @@ const SIDE_HUSTLE_EVENTS = [
         cost: 130,
         apply: function (st) {
           // [联动flag] 触发"口碑传播"后续事件（v3.1 链式回响）
+          if (!st.flags) st.flags = {};
           st.flags.daigouHonestService = true;
           st.resources.cash = Math.max(0, (st.resources.cash || 0) - 130);
           if (typeof scheduleChainEvent === "function") {
@@ -192435,6 +192509,7 @@ const SIDE_HUSTLE_EVENTS = [
         text: "😤 拒绝赔偿",
         hint: "信誉下降，可能失去客户",
         apply: function (st) {
+          if (!st.flags) st.flags = {};
           st.flags.daigouBadReview = true;
           StateManager.addMessage(
             "😤 你拒绝赔偿。客户很生气，说再也不找你代购了。",
@@ -192470,6 +192545,7 @@ const SIDE_HUSTLE_EVENTS = [
         text: "📞 走保险",
         hint: "不影响现金，但保险记录+1",
         apply: function (st) {
+          if (!st.flags) st.flags = {};
           st.flags.rideInsuranceClaim = (st.flags.rideInsuranceClaim || 0) + 1;
           StateManager.addMessage(
             "📞 你走了保险。虽然不用自己赔钱，但保险记录多了1次，明年保费会上涨。",
@@ -192482,6 +192558,7 @@ const SIDE_HUSTLE_EVENTS = [
         hint: "高风险：可能被举报",
         apply: function (st) {
           if (Random.chance(0.3)) {
+            if (!st.flags) st.flags = {};
             st.flags.rideCaught = true;
             st.resources.cash = Math.max(0, (st.resources.cash || 0) - 1000);
             StateManager.addMessage(
@@ -192543,6 +192620,7 @@ const SIDE_HUSTLE_EVENTS = [
         hint: "可能被平台处罚",
         apply: function (st) {
           if (Random.chance(0.4)) {
+            if (!st.flags) st.flags = {};
             st.flags.deliveryBan = true;
             StateManager.addMessage(
               "😤 你和客户吵了起来。平台收到投诉，暂停了你接单权限。",
@@ -192572,6 +192650,7 @@ const SIDE_HUSTLE_EVENTS = [
         text: "📝 申诉",
         hint: "需要等待，可能解封也可能维持",
         apply: function (st) {
+          if (!st.flags) st.flags = {};
           st.flags.mediaAppeal = true;
           StateManager.addMessage(
             "📝 你提交了申诉。平台说会在3个工作日内回复。这段时间无法更新内容。",
@@ -192584,10 +192663,12 @@ const SIDE_HUSTLE_EVENTS = [
         hint: "粉丝清零，但获得新平台经验",
         apply: function (st) {
           // [联动flag] 触发"新平台品牌合作"后续事件
+          if (!st.flags) st.flags = {};
           st.flags.selfMediaPivoted = true;
           if (st._sideHustleData && st._sideHustleData.selfMedia) {
             st._sideHustleData.selfMedia.followers = 0;
           }
+          if (!st.player) st.player = {};
           st.player.mental = Math.min(100, (st.player.mental || 0) + 5);
           StateManager.addMessage(
             "🔄 你决定换平台重新起步。虽然粉丝清零，但你学到了教训。心智+5。",
@@ -192599,6 +192680,7 @@ const SIDE_HUSTLE_EVENTS = [
         text: "😞 放弃自媒体",
         hint: "失去自媒体副业",
         apply: function (st) {
+          if (!st.flags) st.flags = {};
           st.flags.gaveUpSelfMedia = true;
           StateManager.addMessage("😞 你觉得太累了，决定放弃自媒体。", "info");
         },
@@ -192631,6 +192713,7 @@ const SIDE_HUSTLE_EVENTS = [
         text: "📈 持有观望",
         hint: "等待反弹，可能回本也可能继续跌",
         apply: function (st) {
+          if (!st.flags) st.flags = {};
           st.flags.investHold = true;
           StateManager.addMessage(
             "📈 你选择持有观望。投资需要耐心，希望明天会好起来。",
@@ -192647,6 +192730,7 @@ const SIDE_HUSTLE_EVENTS = [
           if (Random.chance(0.4)) {
             var profit = Random.int(300, 800);
             // [联动flag] 触发"被人请教投资"后续事件
+            if (!st.flags) st.flags = {};
             st.flags.investBottomed = true;
             st.resources.cash = (st.resources.cash || 0) + profit; // [全系统自洽修复] 域B A类:cash NaN守卫
             StateManager.addMessage(
@@ -192696,6 +192780,7 @@ const SIDE_HUSTLE_EVENTS = [
         apply: function (st) {
           if (Random.chance(0.6)) {
             // [联动flag] 触发"教育机构挖角"后续事件（v3.1 链式回响）
+            if (!st.flags) st.flags = {};
             st.flags.tutorInnovative = true;
             if (typeof scheduleChainEvent === "function") {
               scheduleChainEvent(st, "side_tutor_recruit", 12, "street");

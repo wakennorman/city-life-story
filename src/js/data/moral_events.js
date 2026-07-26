@@ -20,6 +20,7 @@ const MORAL_EVENTS = [
         score: 12,
         immediate: function (s) {
           // [联动flag] 触发"失主感谢"后续事件
+          if (!s.flags) s.flags = {};
           s.flags.moralWalletReturner = true;
           s.player.fame = Math.min(100, (s.player.fame || 0) + 2);
           s.needs.happiness = Math.min(100, s.needs.happiness + 5);
@@ -35,6 +36,7 @@ const MORAL_EVENTS = [
         score: -15,
         immediate: function (s) {
           // [联动flag] 触发"昧下钱包的阴影"后续事件
+          if (!s.flags) s.flags = {};
           s.flags.moralWalletStolen = true;
           s.resources.cash = (s.resources.cash || 0) + 500;
           s.needs.happiness = Math.min(100, s.needs.happiness + 8);
@@ -73,6 +75,7 @@ const MORAL_EVENTS = [
         score: 8,
         immediate: function (s) {
           // [联动flag] 触发"乞丐的线报"后续事件
+          if (!s.flags) s.flags = {};
           s.flags.moralFedBeggar = true;
           s.resources.cash = Math.max(0, (s.resources.cash || 0) - 15);
           s.needs.happiness = Math.min(100, s.needs.happiness + 6);
@@ -162,10 +165,12 @@ const MORAL_EVENTS = [
         score: 15,
         immediate: function (s) {
           // [联动flag] 触发"被路人认出英雄"后续事件
+          if (!s.flags) s.flags = {};
           s.flags.moralStoppedThiefPublic = true;
           s.player.fame = Math.min(100, (s.player.fame || 0) + 5);
           s.needs.happiness = Math.min(100, s.needs.happiness + 8);
-          s.status.health = Math.max(0, s.status.health - 2);
+          if (!s.status) s.status = {};
+s.status.health = Math.max(0, s.status.health - 2);
           StateManager.addMessage(
             "🗣️ 女士反应过来，扒手瞪了你一眼后混入人群跑了。",
             "success",
@@ -307,6 +312,7 @@ const MORAL_EVENTS = [
         score: 8,
         immediate: function (s) {
           // [联动flag] 触发"流浪狗再次相遇"后续事件
+          if (!s.flags) s.flags = {};
           s.flags.moralFedDog = true;
           s.resources.cash = Math.max(0, (s.resources.cash || 0) - 3);
           s.needs.happiness = Math.min(100, s.needs.happiness + 8);
@@ -343,6 +349,7 @@ const MORAL_EVENTS = [
         score: 15,
         immediate: function (s) {
           // [联动flag] 触发"老人家属联系你"后续事件
+          if (!s.flags) s.flags = {};
           s.flags.moralHelpedElder = true;
           s.needs.happiness = Math.min(100, s.needs.happiness + 6);
           s.player.fame = Math.min(100, (s.player.fame || 0) + 4);
@@ -436,6 +443,7 @@ const MORAL_EVENTS = [
         score: 10,
         immediate: function (s) {
           // [联动flag] 触发"年轻妈妈再次相遇"后续事件
+          if (!s.flags) s.flags = {};
           s.flags.moralPushedCar = true;
           s.needs.fatigue = Math.min(100, s.needs.fatigue + 8);
           s.needs.happiness = Math.min(100, s.needs.happiness + 8);
@@ -718,6 +726,7 @@ const MORAL_EVENTS = [
         flag: "moral_colleague_ignore",
         score: 3,
         immediate: function (s) {
+          if (!s.flags) s.flags = {};
           s.flags._colleagueFavor = (s.flags._colleagueFavor || 0) + 1;
           StateManager.addMessage("🤫 你低头走开了，老张松了口气。", "info");
         },
@@ -744,6 +753,7 @@ const MORAL_EVENTS = [
             (s.player.corporate.upwardMgmt || 0) + 3,
           ); // [全系统自洽修复] 域B 修复: upward→upwardMgmt
           s.needs.happiness = Math.max(0, s.needs.happiness - 5);
+          if (!s.flags) s.flags = {};
           s.flags._colleagueFavor = (s.flags._colleagueFavor || 0) - 2;
           StateManager.addMessage(
             "📞 你匿名举报了。下午老张被叫到办公室谈话，你不敢看他的眼睛。",
@@ -1044,6 +1054,7 @@ const MORAL_EVENTS = [
         score: 5,
         immediate: function (s) {
           s.needs.happiness = Math.min(100, s.needs.happiness + 2);
+          if (!s.flags) s.flags = {};
           s.flags._friendCheatWarned = true;
           StateManager.addMessage(
             "🗣️ 你轻咳了一声，他赶紧收起手机。监考老师看了一眼，走过去了。",
@@ -1156,6 +1167,7 @@ const MORAL_EVENTS = [
           s.needs.fatigue = Math.min(100, s.needs.fatigue + 2);
           s.needs.happiness = Math.max(0, s.needs.happiness - 3);
           s.player.fame = Math.min(100, (s.player.fame || 0) + 3);
+          if (!s.flags) s.flags = {};
           s.flags._scrapeLeftNote = true;
           StateManager.addMessage(
             "📝 你写了张纸条夹在雨刮器下。虽然可能要赔钱，但至少睡得着觉。",
@@ -1181,6 +1193,7 @@ const MORAL_EVENTS = [
         score: 3,
         immediate: function (s) {
           s.needs.happiness = Math.min(100, s.needs.happiness + 1);
+          if (!s.flags) s.flags = {};
           s.flags._scrapeCheckCamera = true;
           StateManager.addMessage(
             "📸 你发现巷子里没有监控——但你知道自己做了什么。",
@@ -1204,6 +1217,7 @@ const MORAL_EVENTS = [
         immediate: function (s) {
           s.needs.happiness = Math.min(100, s.needs.happiness + 8);
           s.player.fame = Math.min(100, (s.player.fame || 0) + 5);
+          if (!s.flags) s.flags = {};
           s.flags._stoppedScam = true;
           StateManager.addMessage(
             "🚨 老奶奶半信半疑地挂了电话。银行保安也过来帮忙确认是诈骗，她差点转了¥30,000！",
@@ -1302,6 +1316,7 @@ const MORAL_EVENTS = [
         immediate: function (s) {
           s.resources.cash = Math.max(0, (s.resources.cash || 0) - 200);
           s.needs.happiness = Math.max(0, s.needs.happiness - 2);
+          if (!s.flags) s.flags = {};
           s.flags._neighborDebt = (s.flags._neighborDebt || 150) + 200;
           StateManager.addMessage(
             "💰 你借了¥200。他感激涕零，但你心里清楚这钱大概率回不来了。",
@@ -1315,6 +1330,7 @@ const MORAL_EVENTS = [
         score: -3,
         immediate: function (s) {
           s.needs.happiness = Math.max(0, s.needs.happiness - 3);
+          if (!s.flags) s.flags = {};
           s.flags._neighborRefused = true;
           StateManager.addMessage(
             "😅 你找了个借口拒绝了。他失望地走了，你有点不忍心。",
@@ -1328,6 +1344,7 @@ const MORAL_EVENTS = [
         score: 8,
         immediate: function (s) {
           s.resources.cash = Math.max(0, (s.resources.cash || 0) - 200);
+          if (!s.flags) s.flags = {};
           s.flags._neighborIOU = (s.flags._neighborIOU || 150) + 200;
           s.flags._neighborHasIOU = true;
           s.player.fame = Math.min(100, (s.player.fame || 0) + 2);
@@ -2199,6 +2216,9 @@ function applyExtremeMoralDelta(state, choice) {
       (state.resources.cash || 0) + choice.cash,
     );
   }
+  if (!state.needs) state.needs = {};
+  if (!state.status) state.status = {};
+  if (!state.player) state.player = {};
   if (typeof choice.happiness === "number") {
     state.needs.happiness = Math.max(
       0,
@@ -2518,7 +2538,8 @@ const MORAL_CONSEQUENCES = {
         (s.player.corporate.dignity || 60) - 10,
       );
       s.needs.happiness = Math.max(0, s.needs.happiness - 8);
-      s.status.emotionalState = "stressed";
+      if (!s.status) s.status = {};
+s.status.emotionalState = "stressed";
       StateManager.addMessage("🔎 财务抽查开始了！你提心吊胆...", "danger");
     },
   },

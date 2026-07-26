@@ -95,6 +95,7 @@ const ERA_EVENTS = [
         apply: function (st) {
           st.flags._eraEvent_180 = true;
           st.flags.trendJobUnlocked = true;
+          if (!st.needs) st.needs = {};
           st.needs.fatigue = Math.min(100, (st.needs.fatigue || 0) + 15);
           StateManager.addMessage(
             "🔥 你进入了风口行业！日薪涨到¥300，但累得够呛。风口不是谁都能抓住的。",
@@ -107,6 +108,7 @@ const ERA_EVENTS = [
         hint: "心智+3，获得行业情报",
         apply: function (st) {
           st.flags._eraEvent_180 = true;
+          if (!st.player) st.player = {};
           st.player.mental = Math.min(100, (st.player.mental || 0) + 3);
           if (!st.flags) st.flags = {};
           st.flags.industryIntel = true;
@@ -163,6 +165,7 @@ const ERA_EVENTS = [
         hint: "消耗行动力，可能找到更便宜的",
         apply: function (st) {
           st.flags._eraEvent_270 = true;
+          if (!st.player) st.player = {};
           st.player.actionPoints = Math.max(
             0,
             (st.player.actionPoints || 100) - 20,
@@ -222,6 +225,7 @@ const ERA_EVENTS = [
         hint: "心情+10，获得「反思者」徽章",
         apply: function (st) {
           st.flags._eraEvent_365 = true;
+          if (!st.needs) st.needs = {};
           st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 10);
           st.flags.reflectorBadge = true;
           StateManager.addMessage(
@@ -237,6 +241,7 @@ const ERA_EVENTS = [
         apply: function (st) {
           st.flags._eraEvent_365 = true;
           st.resources.cash = Math.max(0, (st.resources.cash || 0) - 100);
+          if (!st.needs) st.needs = {};
           st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 15);
           StateManager.addMessage(
             "🎉 你请自己吃了一顿大餐。一年了，值得庆祝。心情+15。",
@@ -249,6 +254,7 @@ const ERA_EVENTS = [
         hint: "心智+5",
         apply: function (st) {
           st.flags._eraEvent_365 = true;
+          if (!st.player) st.player = {};
           st.player.mental = Math.min(100, (st.player.mental || 0) + 5);
           StateManager.addMessage(
             "😌 你平静地接受了一年的收获与失去。心智+5。",
@@ -303,6 +309,7 @@ const ERA_EVENTS = [
         hint: "心智+5，获得决策建议",
         apply: function (st) {
           st.flags._eraEvent_450 = true;
+          if (!st.player) st.player = {};
           st.player.mental = Math.min(100, (st.player.mental || 0) + 5);
           StateManager.addMessage(
             "📊 你分析了行业趋势，发现有些方向值得投入。心智+5。",
@@ -336,6 +343,7 @@ const ERA_EVENTS = [
         apply: function (st) {
           st.flags._eraEvent_540 = true;
           st.resources.cash = Math.max(0, (st.resources.cash || 0) - 150);
+          if (!st.needs) st.needs = {};
           st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 10);
           StateManager.addMessage(
             "✨ 你体验了高端消费。虽然贵，但感觉不错。心情+10。",
@@ -348,6 +356,7 @@ const ERA_EVENTS = [
         hint: "心智+3",
         apply: function (st) {
           st.flags._eraEvent_540 = true;
+          if (!st.player) st.player = {};
           st.player.mental = Math.min(100, (st.player.mental || 0) + 3);
           StateManager.addMessage(
             "🤔 你觉得高端消费不是必须的，先观望。心智+3。",
@@ -467,7 +476,9 @@ const ERA_EVENTS = [
         hint: "心情+15，道德+5",
         apply: function (st) {
           st.flags._eraEvent_900 = true;
+          if (!st.needs) st.needs = {};
           st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 15);
+          if (!st.player) st.player = {};
           st.player.morality = Math.min(100, (st.player.morality || 0) + 5);
           StateManager.addMessage(
             "📚 你决定回馈社会，帮助更多刚来这座城市的人。心情+15，道德+5。",
@@ -480,6 +491,7 @@ const ERA_EVENTS = [
         hint: "心情+10",
         apply: function (st) {
           st.flags._eraEvent_900 = true;
+          if (!st.needs) st.needs = {};
           st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 10);
           StateManager.addMessage(
             "🏠 你决定回家看看。三年的城市生活，让你更珍惜家乡。心情+10。",

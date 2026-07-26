@@ -1417,3 +1417,43 @@ function applyEventMarketEffect(state, eventId) {
     desc: "事件影响：" + (effect.name),
   });
 }
+
+// [全系统自洽修复] 域B R410 联动增强(B→A): 事件行为数据追踪
+function trackEventBehavior(state, eventId, choiceId) {
+  if (!state || !eventId) return;
+  if (!state.flags) state.flags = {};
+  if (!state.flags._eventBehaviorLog) state.flags._eventBehaviorLog = [];
+  state.flags._eventBehaviorLog.push({
+    eventId: eventId,
+    choice: choiceId || "unknown",
+    day: (state.player && state.player.day) || 0,
+  });
+  if (state.flags._eventBehaviorLog.length > 100) state.flags._eventBehaviorLog.shift();
+}
+
+// [全系统自洽修复] 域B R410 联动增强(B→F): 事件视觉提示 — 返回事件类型对应的emoji
+function getEventTypeIcon(eventType) {
+  var iconMap = {
+    price: "📈", job: "💼", policy: "📋", moral: "⚖️",
+    crisis: "🚨", achievement: "🏆", health: "🏥", social: "👥",
+    crime: "🚔", disaster: "🌪️", festival: "🎉", news: "📰",
+  };
+  return iconMap[eventType] || "📌";
+}
+
+// [全系统自洽修复] 域B R410 联动增强(B→G): 事件健康影响系数
+function getEventHealthImpact(state, eventId) {
+  if (!state || !eventId) return 0;
+  var impactMap = {
+    rain_storm: { fatigue: 15, health: -5 },
+    heatwave: { fatigue: 5, happiness: -5 },
+    cold_wave: { health: -3 },
+    pickpocket: { happiness: -5 },
+    food_poisoning: { health: -10, hunger: -10 },
+  };
+  var impact = impactMap[eventId];
+  if (!impact) return 0;
+  var total = 0;
+  for (var k in impact) total += Math.abs(impact[k]);
+  return total;
+}

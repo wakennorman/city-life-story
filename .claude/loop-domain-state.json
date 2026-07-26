@@ -1,1 +1,1 @@
-{"lastRound":411,"lastDomain":"B","lastDate":"2026-07-27","lastCommit":"3417ee8e","domainRecency":{"A":408,"B":411,"C":409,"D":411,"E":406,"F":403,"G":408,"H":410},"nextDomain":"F","note":"R411 域B: A类133处(part2~8死字段132+域H r410孤儿挂载抢救)+3联动. 已推3417ee8e ✅. 并行域D R411(ce2df31c)撞号已计入D=411. 下轮域F(403最薄弱). 开轮必git log重算"}
+{"lastRound":417,"lastDomain":"H","lastDate":"2026-07-27","lastCommit":"324d1a54","domainRecency":{"A":414,"B":411,"C":416,"D":411,"E":412,"F":413,"G":415,"H":417},"nextDomain":"D","note":"R417 域H: 0A类+3联动. 已推 ✅. 下轮域D(recency=411最薄弱,B被并行窗口占用)"}

@@ -6528,7 +6528,7 @@
           apply: function (st) {
             st.flags._startupDeclarationDone = true;
             if (st.resources) { st.resources.cash = (st.resources.cash || 0) - 5000; }
-            if (st.player) { st.player.rationality = Math.min(100, (st.player.rationality || 0) + 5); }
+            if (st.player) { st.player.mental = Math.min(100, (st.player.mental || 50) + 5); } // [全系统自洽修复] 域H R417 修复:player.rationality 死字段(全库零读取,state.js无此字段)→真实心智字段 player.mental,「理智+5」不再静默丢失
             StateManager.addMessage("💰 你把5000块存进了定期，告诉自己：不管公司成败，这笔钱是底线。理智+5。", "info");
           },
         },
@@ -6555,7 +6555,9 @@
             st.flags._firstPromoCelebDone = true;
             if (st.player) {
               if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 10);
-              st.player.upwardMgmt = Math.min(100, (st.player.upwardMgmt || 0) + 3);
+              // [全系统自洽修复] 域H R417 修复:st.player.upwardMgmt 死字段(全库读取方均走 st.player.corporate.upwardMgmt)→「管理能力+3」曾静默丢失
+              st.player.corporate = st.player.corporate || {};
+              st.player.corporate.upwardMgmt = Math.min(100, (st.player.corporate.upwardMgmt || 50) + 3);
             }
             if (st.relationships) {
               var colleagues = ["boss_li", "colleague_zhang", "colleague_li"];
