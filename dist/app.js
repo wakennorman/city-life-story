@@ -49859,6 +49859,7 @@ if (typeof window !== "undefined") {
 
 ;
 // ==== js/core/cross_system_events_part2.js ====
+// [全系统自洽修复] 域B R410 修复: 死字段 st.player.health.*(state无此对象,守卫永false压力效果静默失效)->st.personalGrowth.health.*; st.needs.health(needs无health)->st.status.health
 /**
  * 跨系统联动事件 — 拆分片段 2/8（原 cross_system_events.js 机械拆分，行为不变）
  * 仅含自包含的 RANDOM_EVENTS.push 语句；顺序无关（事件选择走 phase 过滤+概率）。
@@ -51370,7 +51371,7 @@ if (typeof window !== "undefined") {
             var fake = Random.chance(0.4);
             if (fake) {
               st.flags._boughtFakeMedicine = true;
-              st.needs.health = Math.max(0, (st.needs.health || 50) - 5);
+              st.status.health = Math.max(0, (st.status.health || 50) - 5);
               st.needs.happiness = Math.max(0, (st.needs.happiness || 50) - 8);
               StateManager.addMessage(
                 "💊 回家打开一看，药片颜色不对，闻着有股怪味——假药！\n健康-5，心情-8。¥50打了水漂。",
@@ -51530,7 +51531,7 @@ if (typeof window !== "undefined") {
             st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 5);
             var bad = Random.chance(0.25);
             if (bad) {
-              st.needs.health = Math.max(0, (st.needs.health || 50) - 3);
+              st.status.health = Math.max(0, (st.status.health || 50) - 3);
               StateManager.addMessage(
                 "🥬 回去发现蔫了的叶子不能吃，扔了一半。不过剩下的还算划算。\n饥饿+25，健康-3（吃了不新鲜的），心情+5。",
                 "warning",
@@ -51598,7 +51599,7 @@ if (typeof window !== "undefined") {
         hint: "健康+2，心情+3，休息恢复",
         apply: function (st) {
           st.flags._suburbStormShelterSeen = true;
-          st.needs.health = Math.min(100, (st.needs.health || 50) + 2);
+          st.status.health = Math.min(100, (st.status.health || 50) + 2);
           st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 3);
           st.needs.fatigue = Math.max(0, (st.needs.fatigue || 0) - 5);
           st.player.morality = Math.min(100, (st.player.morality || 50) + 1);
@@ -51613,7 +51614,7 @@ if (typeof window !== "undefined") {
         hint: "免费，但淋湿了",
         apply: function (st) {
           st.flags._suburbStormShelterSeen = true;
-          st.needs.health = Math.max(0, (st.needs.health || 50) - 1);
+          st.status.health = Math.max(0, (st.status.health || 50) - 1);
           st.needs.hygiene = Math.max(0, (st.needs.hygiene || 50) - 5);
           StateManager.addMessage(
             "🌳 你在树下缩着身子等雨小，衣服湿了大半。风一吹，冷得直哆嗦。\n健康-1，卫生-5。",
@@ -51626,7 +51627,7 @@ if (typeof window !== "undefined") {
         hint: "省时间，但全身湿透",
         apply: function (st) {
           st.flags._suburbStormShelterSeen = true;
-          st.needs.health = Math.max(0, (st.needs.health || 50) - 3);
+          st.status.health = Math.max(0, (st.status.health || 50) - 3);
           st.needs.hygiene = Math.max(0, (st.needs.hygiene || 50) - 10);
           st.needs.happiness = Math.max(0, (st.needs.happiness || 50) - 3);
           StateManager.addMessage(
@@ -52543,9 +52544,9 @@ if (typeof window !== "undefined") {
         hint: "省钱,心情-",
         apply: function (st) {
           st.needs.happiness = Math.max(0, (st.needs.happiness || 0) - 2);
-          if (st.player.health && st.player.health.mental)
-            st.player.health.mental.stress =
-              (st.player.health.mental.stress || 0) + 3;
+          if (st.personalGrowth.health && st.personalGrowth.health.mental)
+            st.personalGrowth.health.mental.stress =
+              (st.personalGrowth.health.mental.stress || 0) + 3;
           StateManager.addMessage(
             "🌃 你把手机扣在桌上，盯着天花板。有些情绪，只能自己消化。",
           );
@@ -52627,9 +52628,9 @@ if (typeof window !== "undefined") {
           var earn = Random.int(900, 1600);
           st.resources.cash = (st.resources.cash || 0) + earn;
           st.resources.totalEarned = (st.resources.totalEarned || 0) + earn;
-          if (st.player.health && st.player.health.mental)
-            st.player.health.mental.stress =
-              (st.player.health.mental.stress || 0) + 10;
+          if (st.personalGrowth.health && st.personalGrowth.health.mental)
+            st.personalGrowth.health.mental.stress =
+              (st.personalGrowth.health.mental.stress || 0) + 10;
           st.flags._codingTeamDone = true;
           StateManager.addMessage(
             "👥 你拉了两个靠谱朋友组队，把外包单啃下来了，账户厚了一截。",
@@ -52660,8 +52661,8 @@ if (typeof window !== "undefined") {
     // conditions：stress 心理健康阈值（health.mental.stress 空白区）
     conditions: function (st) {
       var stress =
-        st.player && st.player.health && st.player.health.mental
-          ? st.player.health.mental.stress
+        st.player && st.personalGrowth.health && st.personalGrowth.health.mental
+          ? st.personalGrowth.health.mental.stress
           : 0; // 检查 心理压力值
       if (stress < 80) return false; // 检查 压力≥80（临界）
       if (st.player.day < 15) return false; // 检查 中后期
@@ -52680,10 +52681,10 @@ if (typeof window !== "undefined") {
         text: "🏖️ 请几天假缓一缓",
         hint: "压力-,收入-",
         apply: function (st) {
-          if (st.player.health && st.player.health.mental)
-            st.player.health.mental.stress = Math.max(
+          if (st.personalGrowth.health && st.personalGrowth.health.mental)
+            st.personalGrowth.health.mental.stress = Math.max(
               0,
-              st.player.health.mental.stress - 25,
+              st.personalGrowth.health.mental.stress - 25,
             );
           st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 5);
           st.flags._stressBreakdownDay = st.player.day;
@@ -52696,13 +52697,13 @@ if (typeof window !== "undefined") {
         text: "⚡ 硬扛过去",
         hint: "收入保,健康-",
         apply: function (st) {
-          if (st.player.health && st.player.health.mental)
-            st.player.health.mental.stress =
-              (st.player.health.mental.stress || 0) + 5;
-          if (st.player.health && st.player.health.physical)
-            st.player.health.physical.score = Math.max(
+          if (st.personalGrowth.health && st.personalGrowth.health.mental)
+            st.personalGrowth.health.mental.stress =
+              (st.personalGrowth.health.mental.stress || 0) + 5;
+          if (st.personalGrowth.health && st.personalGrowth.health.physical)
+            st.personalGrowth.health.physical.score = Math.max(
               0,
-              st.player.health.physical.score - 8,
+              st.personalGrowth.health.physical.score - 8,
             );
           st.flags._stressBreakdownDay = st.player.day;
           StateManager.addMessage(
@@ -53155,7 +53156,7 @@ if (typeof window !== "undefined") {
       if (!st.relationships || !st.relationships.dr_wang) return false;
       if (!st.relationships.dr_wang.met) return false;
       if (!st.needs) return false;
-      var health = st.needs.health || 100;
+      var health = st.status.health || 100;
       if (health > 50) return false;
       if (st.flags._drWangWarningSeen) return false;
       if (st.player.day < 10) return false;
@@ -53169,7 +53170,7 @@ if (typeof window !== "undefined") {
         hint: "health+10",
         apply: function (st) {
           st.flags._drWangWarningSeen = true;
-          st.needs.health = Math.min(100, (st.needs.health || 0) + 10);
+          st.status.health = Math.min(100, (st.status.health || 0) + 10);
           st.relationships.dr_wang.affinity = Math.min(
             100,
             st.relationships.dr_wang.affinity + 3,
@@ -55700,6 +55701,7 @@ if (typeof window !== "undefined") {
 
 ;
 // ==== js/core/cross_system_events_part3.js ====
+// [全系统自洽修复] 域B R410 修复: 死字段 st.player.health.*(state无此对象,守卫永false压力效果静默失效)->st.personalGrowth.health.*; st.needs.health(needs无health)->st.status.health
 /**
  * 跨系统联动事件 — 拆分片段 3/8（原 cross_system_events.js 机械拆分，行为不变）
  * 仅含自包含的 RANDOM_EVENTS.push 语句；顺序无关（事件选择走 phase 过滤+概率）。
@@ -61091,10 +61093,10 @@ if (typeof window !== "undefined") {
 
           s.level = Math.min(100, s.level + 2);
 
-          st.player.health.mental.stress = Math.min(
+          st.personalGrowth.health.mental.stress = Math.min(
             100,
 
-            (st.player.health.mental.stress || 0) + 6,
+            (st.personalGrowth.health.mental.stress || 0) + 6,
           );
 
           st.flags._hwCodeSeen = true;
@@ -61113,10 +61115,10 @@ if (typeof window !== "undefined") {
         hint: "轻量 压力-",
 
         apply: function (st) {
-          st.player.health.mental.stress = Math.max(
+          st.personalGrowth.health.mental.stress = Math.max(
             0,
 
-            (st.player.health.mental.stress || 0) - 4,
+            (st.personalGrowth.health.mental.stress || 0) - 4,
           );
 
           st.flags._hwCodeSeen = true;
@@ -61528,6 +61530,7 @@ if (typeof window !== "undefined") {
 
 ;
 // ==== js/core/cross_system_events_part4.js ====
+// [全系统自洽修复] 域B R410 修复: 死字段 st.player.health.*(state无此对象,守卫永false压力效果静默失效)->st.personalGrowth.health.*; st.needs.health(needs无health)->st.status.health
 /**
  * 跨系统联动事件 — 拆分片段 4/8（原 cross_system_events.js 机械拆分，行为不变）
  * 仅含自包含的 RANDOM_EVENTS.push 语句；顺序无关（事件选择走 phase 过滤+概率）。
@@ -63128,8 +63131,8 @@ if (typeof window !== "undefined") {
 
     conditions: function (st) {
       var stress =
-        st.player.health && st.player.health.mental
-          ? st.player.health.mental.stress
+        st.personalGrowth.health && st.personalGrowth.health.mental
+          ? st.personalGrowth.health.mental.stress
           : 0; // 检查 心理压力
 
       if (stress < 50) return false; // 检查 压力>=50
@@ -63157,11 +63160,11 @@ if (typeof window !== "undefined") {
         hint: "压力- 幸福+",
 
         apply: function (st) {
-          if (st.player.health && st.player.health.mental)
-            st.player.health.mental.stress = Math.max(
+          if (st.personalGrowth.health && st.personalGrowth.health.mental)
+            st.personalGrowth.health.mental.stress = Math.max(
               0,
 
-              st.player.health.mental.stress - 20,
+              st.personalGrowth.health.mental.stress - 20,
             );
 
           st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 6);
@@ -63182,11 +63185,11 @@ if (typeof window !== "undefined") {
         hint: "轻量 压力-",
 
         apply: function (st) {
-          if (st.player.health && st.player.health.mental)
-            st.player.health.mental.stress = Math.max(
+          if (st.personalGrowth.health && st.personalGrowth.health.mental)
+            st.personalGrowth.health.mental.stress = Math.max(
               0,
 
-              st.player.health.mental.stress - 8,
+              st.personalGrowth.health.mental.stress - 8,
             );
 
           st.flags._stressCookSeen = true;
@@ -65027,9 +65030,9 @@ if (typeof window !== "undefined") {
     conditions: function (st) {
       var stress =
         st.player &&
-        st.player.health &&
-        st.player.health.mental &&
-        st.player.health.mental.stress; // 检查 心理压
+        st.personalGrowth.health &&
+        st.personalGrowth.health.mental &&
+        st.personalGrowth.health.mental.stress; // 检查 心理压
 
       if (typeof stress !== "number" || stress < 50) return false; // 检查 心理压>=50
 
@@ -65065,11 +65068,11 @@ if (typeof window !== "undefined") {
           if (st.skills && st.skills.management)
             st.skills.management.xp = (st.skills.management.xp || 0) + 30;
 
-          if (st.player && st.player.health && st.player.health.mental)
-            st.player.health.mental.stress = Math.max(
+          if (st.player && st.personalGrowth.health && st.personalGrowth.health.mental)
+            st.personalGrowth.health.mental.stress = Math.max(
               0,
 
-              (st.player.health.mental.stress || 0) - 15,
+              (st.personalGrowth.health.mental.stress || 0) - 15,
             );
 
           st.flags._stressMgmtSeen = true;
@@ -65088,11 +65091,11 @@ if (typeof window !== "undefined") {
         hint: "轻量 压力-",
 
         apply: function (st) {
-          if (st.player && st.player.health && st.player.health.mental)
-            st.player.health.mental.stress = Math.max(
+          if (st.player && st.personalGrowth.health && st.personalGrowth.health.mental)
+            st.personalGrowth.health.mental.stress = Math.max(
               0,
 
-              (st.player.health.mental.stress || 0) - 10,
+              (st.personalGrowth.health.mental.stress || 0) - 10,
             );
 
           st.flags._stressMgmtSeen = true;
@@ -65785,11 +65788,11 @@ if (typeof window !== "undefined") {
         apply: function (st) {
           st.resources.cash = Math.max(0, (st.resources.cash || 0) - 60);
 
-          if (st.player && st.player.health && st.player.health.mental)
-            st.player.health.mental.stress = Math.max(
+          if (st.player && st.personalGrowth.health && st.personalGrowth.health.mental)
+            st.personalGrowth.health.mental.stress = Math.max(
               0,
 
-              (st.player.health.mental.stress || 0) - 5,
+              (st.personalGrowth.health.mental.stress || 0) - 5,
             );
 
           st.flags._r75StormJob = true;
@@ -66009,11 +66012,11 @@ if (typeof window !== "undefined") {
         apply: function (st) {
           st.resources.cash = (st.resources.cash || 0) + 300;
 
-          if (st.player && st.player.health && st.player.health.mental)
-            st.player.health.mental.stress = Math.min(
+          if (st.player && st.personalGrowth.health && st.personalGrowth.health.mental)
+            st.personalGrowth.health.mental.stress = Math.min(
               100,
 
-              (st.player.health.mental.stress || 0) + 6,
+              (st.personalGrowth.health.mental.stress || 0) + 6,
             );
 
           st.flags._r76TalentJob = true;
@@ -66411,11 +66414,11 @@ if (typeof window !== "undefined") {
           if (st.needs)
             st.needs.fatigue = Math.min(100, (st.needs.fatigue || 0) + 12);
 
-          if (st.player && st.player.health && st.player.health.mental)
-            st.player.health.mental.stress = Math.min(
+          if (st.player && st.personalGrowth.health && st.personalGrowth.health.mental)
+            st.personalGrowth.health.mental.stress = Math.min(
               100,
 
-              (st.player.health.mental.stress || 0) + 8,
+              (st.personalGrowth.health.mental.stress || 0) + 8,
             );
 
           st.flags._r78FatJob = true;
@@ -67329,6 +67332,7 @@ if (typeof window !== "undefined") {
 
 ;
 // ==== js/core/cross_system_events_part5.js ====
+// [全系统自洽修复] 域B R410 修复: 死字段 st.player.health.*(state无此对象,守卫永false压力效果静默失效)->st.personalGrowth.health.*; st.needs.health(needs无health)->st.status.health
 /**
  * 跨系统联动事件 — 拆分片段 5/8（原 cross_system_events.js 机械拆分，行为不变）
  * 仅含自包含的 RANDOM_EVENTS.push 语句；顺序无关（事件选择走 phase 过滤+概率）。
@@ -71935,10 +71939,10 @@ if (typeof window !== "undefined") {
     // conditions：心理压力偏高（心理压力×事件空白区）
 
     conditions: function (st) {
-      if (!st.player || !st.player.health || !st.player.health.mental)
+      if (!st.player || !st.personalGrowth.health || !st.personalGrowth.health.mental)
         return false; // 检查 心理结构存在
 
-      if ((st.player.health.mental.stress || 0) <= 60) return false; // 检查 压力>60
+      if ((st.personalGrowth.health.mental.stress || 0) <= 60) return false; // 检查 压力>60
 
       if (st.flags && st.flags._r104Stress) return false; // 检查 未触发过
 
@@ -71956,10 +71960,10 @@ if (typeof window !== "undefined") {
         hint: "压力- 现金-",
 
         apply: function (st) {
-          st.player.health.mental.stress = Math.max(
+          st.personalGrowth.health.mental.stress = Math.max(
             0,
 
-            (st.player.health.mental.stress || 0) - 30,
+            (st.personalGrowth.health.mental.stress || 0) - 30,
           );
 
           st.resources.cash = Math.max(0, (st.resources.cash || 0) - 30);
@@ -71980,10 +71984,10 @@ if (typeof window !== "undefined") {
         hint: "轻量 压力- 健康-",
 
         apply: function (st) {
-          st.player.health.mental.stress = Math.max(
+          st.personalGrowth.health.mental.stress = Math.max(
             0,
 
-            (st.player.health.mental.stress || 0) - 10,
+            (st.personalGrowth.health.mental.stress || 0) - 10,
           );
 
           st.status.health = Math.max(0, (st.status.health || 0) - 4);
@@ -73111,6 +73115,7 @@ if (typeof window !== "undefined") {
 
 ;
 // ==== js/core/cross_system_events_part6.js ====
+// [全系统自洽修复] 域B R410 修复: 死字段 st.player.health.*(state无此对象,守卫永false压力效果静默失效)->st.personalGrowth.health.*; st.needs.health(needs无health)->st.status.health
 /**
  * 跨系统联动事件 — 拆分片段 6/8（原 cross_system_events.js 机械拆分，行为不变）
  * 仅含自包含的 RANDOM_EVENTS.push 语句；顺序无关（事件选择走 phase 过滤+概率）。
@@ -74078,10 +74083,10 @@ if (typeof window !== "undefined") {
     conditions: function (st) {
       if (!st.weather || st.weather.current !== "cloudy") return false; // 检查 阴天
 
-      if (!st.player || !st.player.health || !st.player.health.mental)
+      if (!st.player || !st.personalGrowth.health || !st.personalGrowth.health.mental)
         return false; // 检查 心理结构存在
 
-      if ((st.player.health.mental.stress || 0) <= 50) return false; // 检查 压力>50
+      if ((st.personalGrowth.health.mental.stress || 0) <= 50) return false; // 检查 压力>50
 
       if (st.flags && st.flags._r114Cloudy) return false; // 检查 未触发过
 
@@ -74099,9 +74104,9 @@ if (typeof window !== "undefined") {
         hint: "压力-",
 
         apply: function (st) {
-          st.player.health.mental.stress = Math.max(
+          st.personalGrowth.health.mental.stress = Math.max(
             0,
-            (st.player.health.mental.stress || 0) - 20,
+            (st.personalGrowth.health.mental.stress || 0) - 20,
           );
 
           st.flags._r114Cloudy = true;
@@ -74119,9 +74124,9 @@ if (typeof window !== "undefined") {
         hint: "轻量 压力- 疲劳+",
 
         apply: function (st) {
-          st.player.health.mental.stress = Math.max(
+          st.personalGrowth.health.mental.stress = Math.max(
             0,
-            (st.player.health.mental.stress || 0) - 10,
+            (st.personalGrowth.health.mental.stress || 0) - 10,
           );
 
           st.needs.fatigue = Math.min(100, (st.needs.fatigue || 0) + 6);
@@ -77667,9 +77672,9 @@ if (typeof window !== "undefined") {
     conditions: function (st) {
       var stress =
         (st.player &&
-          st.player.health &&
-          st.player.health.mental &&
-          st.player.health.mental.stress) ||
+          st.personalGrowth.health &&
+          st.personalGrowth.health.mental &&
+          st.personalGrowth.health.mental.stress) ||
         0; // 检查 心理压力
 
       if (stress < 50) return false; // 检查 压力>=50
@@ -77693,7 +77698,7 @@ if (typeof window !== "undefined") {
         hint: "压力- 道德+",
 
         apply: function (st) {
-          var m = st.player.health.mental;
+          var m = st.personalGrowth.health.mental;
 
           m.stress = Math.max(0, (m.stress || 0) - 15);
 
@@ -77714,7 +77719,7 @@ if (typeof window !== "undefined") {
         hint: "轻量 压力-",
 
         apply: function (st) {
-          var m = st.player.health.mental;
+          var m = st.personalGrowth.health.mental;
 
           m.stress = Math.max(0, (m.stress || 0) - 8);
 
@@ -78877,6 +78882,7 @@ if (typeof window !== "undefined") {
 
 ;
 // ==== js/core/cross_system_events_part7.js ====
+// [全系统自洽修复] 域B R410 修复: 死字段 st.player.health.*(state无此对象,守卫永false压力效果静默失效)->st.personalGrowth.health.*; st.needs.health(needs无health)->st.status.health
 /**
  * 跨系统联动事件 — 拆分片段 7/8（原 cross_system_events.js 机械拆分，行为不变）
  * 仅含自包含的 RANDOM_EVENTS.push 语句；顺序无关（事件选择走 phase 过滤+概率）。
@@ -79523,7 +79529,7 @@ if (typeof window !== "undefined") {
     // conditions：高心理压 + chef_chen 已结识 + cooking 技能（心理 ∩ NPC ∩ 技能）
 
     conditions: function (st) {
-      var st3 = st.player && st.player.health && st.player.health.mental; // 检查 心理
+      var st3 = st.player && st.personalGrowth.health && st.personalGrowth.health.mental; // 检查 心理
 
       if (!st3 || typeof st3.stress !== "number" || st3.stress < 50)
         return false; // 检查 高压力
@@ -79558,7 +79564,7 @@ if (typeof window !== "undefined") {
         hint: "压力- 幸福+ cooking+",
 
         apply: function (st) {
-          var st3 = st.player.health.mental;
+          var st3 = st.personalGrowth.health.mental;
 
           st3.stress = Math.max(0, st3.stress - 12);
 
@@ -79584,7 +79590,7 @@ if (typeof window !== "undefined") {
         hint: "轻量 压力- 幸福+",
 
         apply: function (st) {
-          var st3 = st.player.health.mental;
+          var st3 = st.personalGrowth.health.mental;
 
           st3.stress = Math.max(0, st3.stress - 8);
 
@@ -79613,9 +79619,9 @@ if (typeof window !== "undefined") {
 
     conditions: function (st) {
       var stress =
-        st.player.health &&
-        st.player.health.mental &&
-        st.player.health.mental.stress; // 检查 心理压
+        st.personalGrowth.health &&
+        st.personalGrowth.health.mental &&
+        st.personalGrowth.health.mental.stress; // 检查 心理压
 
       if (typeof stress !== "number" || stress < 60) return false; // 检查 压力>=60
 
@@ -79647,11 +79653,11 @@ if (typeof window !== "undefined") {
         apply: function (st) {
           var rel = st.relationships && st.relationships["brother_huang"];
 
-          if (st.player.health && st.player.health.mental)
-            st.player.health.mental.stress = Math.max(
+          if (st.personalGrowth.health && st.personalGrowth.health.mental)
+            st.personalGrowth.health.mental.stress = Math.max(
               0,
 
-              (st.player.health.mental.stress || 0) - 25,
+              (st.personalGrowth.health.mental.stress || 0) - 25,
             ); // 压力缓解
 
           if (rel) rel.affinity = Math.min(100, rel.affinity + 4);
@@ -79672,11 +79678,11 @@ if (typeof window !== "undefined") {
         hint: "轻量 压力-",
 
         apply: function (st) {
-          if (st.player.health && st.player.health.mental)
-            st.player.health.mental.stress = Math.max(
+          if (st.personalGrowth.health && st.personalGrowth.health.mental)
+            st.personalGrowth.health.mental.stress = Math.max(
               0,
 
-              (st.player.health.mental.stress || 0) - 10,
+              (st.personalGrowth.health.mental.stress || 0) - 10,
             ); // 压力缓解
 
           st.flags._stressHuangSeen = true;
@@ -79707,7 +79713,7 @@ if (typeof window !== "undefined") {
 
       if (typeof rel.affinity !== "number" || rel.affinity < 20) return false; // 检查 好感>=20
 
-      if ((st.player.health.mental.stress || 0) < 60) return false; // 检查 高精神压力
+      if ((st.personalGrowth.health.mental.stress || 0) < 60) return false; // 检查 高精神压力
 
       if (st.player.phase !== "street") return false; // 检查 街头阶段
 
@@ -79729,10 +79735,10 @@ if (typeof window !== "undefined") {
         hint: "压力- 好感+",
 
         apply: function (st) {
-          st.player.health.mental.stress = Math.max(
+          st.personalGrowth.health.mental.stress = Math.max(
             0,
 
-            (st.player.health.mental.stress || 0) - 20,
+            (st.personalGrowth.health.mental.stress || 0) - 20,
           );
 
           var rel = st.relationships && st.relationships["sister_zhang"];
@@ -79787,7 +79793,7 @@ if (typeof window !== "undefined") {
 
       if (typeof rel.affinity !== "number" || rel.affinity < 25) return false; // 检查 好感>=25
 
-      if ((st.player.health.mental.stress || 0) < 60) return false; // 检查 高精神压力
+      if ((st.personalGrowth.health.mental.stress || 0) < 60) return false; // 检查 高精神压力
 
       if (st.player.phase !== "street") return false; // 检查 街头阶段
 
@@ -79809,10 +79815,10 @@ if (typeof window !== "undefined") {
         hint: "压力- 现金+",
 
         apply: function (st) {
-          st.player.health.mental.stress = Math.max(
+          st.personalGrowth.health.mental.stress = Math.max(
             0,
 
-            (st.player.health.mental.stress || 0) - 15,
+            (st.personalGrowth.health.mental.stress || 0) - 15,
           );
 
           st.resources.cash = (st.resources.cash || 0) + 120;
@@ -79833,10 +79839,10 @@ if (typeof window !== "undefined") {
         hint: "轻量 压力-",
 
         apply: function (st) {
-          st.player.health.mental.stress = Math.max(
+          st.personalGrowth.health.mental.stress = Math.max(
             0,
 
-            (st.player.health.mental.stress || 0) - 8,
+            (st.personalGrowth.health.mental.stress || 0) - 8,
           );
 
           st.flags._stressBankSeen = true;
@@ -79860,7 +79866,7 @@ if (typeof window !== "undefined") {
     // conditions：低心理压 + xiao_mei 已结识+好感（心理 ∩ NPC ∩ 需求）
 
     conditions: function (st) {
-      var st3 = st.player && st.player.health && st.player.health.mental; // 检查 心理
+      var st3 = st.player && st.personalGrowth.health && st.personalGrowth.health.mental; // 检查 心理
 
       if (!st3 || typeof st3.stress !== "number" || st3.stress >= 30)
         return false; // 检查 低压力
@@ -82604,7 +82610,7 @@ if (typeof window !== "undefined") {
           st.flags._wealth1mSeen = true;
           st.resources.cash = Math.max(0, (st.resources.cash || 0) - 20000);
           st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 20);
-          st.needs.health = Math.min(100, (st.needs.health || 50) + 5);
+          st.status.health = Math.min(100, (st.status.health || 50) + 5);
           StateManager.addMessage(
             "✈️ 你请了一周假，去云南转了转。第一次不为省钱而旅行。回来时整个人都舒展了。心情+20，健康+5。",
             "success",
@@ -82647,7 +82653,7 @@ if (typeof window !== "undefined") {
         apply: function (st) {
           st.resources.cash = Math.max(0, (st.resources.cash || 0) - 10);
           st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 5);
-          st.needs.health = Math.min(100, (st.needs.health || 50) + 2);
+          st.status.health = Math.min(100, (st.status.health || 50) + 2);
           st.flags._summerHeatEventSeen = true;
           StateManager.addMessage(
             "🧊 你买了碗冰粉，冰冰凉凉的感觉让人活过来了。心情+5。",
@@ -82662,7 +82668,7 @@ if (typeof window !== "undefined") {
           var bonus = Random.int(40, 100);
           st.resources.cash = (st.resources.cash || 0) + bonus;
           st.needs.fatigue = Math.min(100, (st.needs.fatigue || 0) + 15);
-          st.needs.health = Math.max(0, (st.needs.health || 50) - 3);
+          st.status.health = Math.max(0, (st.status.health || 50) - 3);
           st.flags._summerHeatEventSeen = true;
           StateManager.addMessage(
             "💪 你顶着烈日干了半天活，赚了¥" +
@@ -82676,7 +82682,7 @@ if (typeof window !== "undefined") {
         text: "🏠 在家躲高温",
         hint: "避过最热时段",
         apply: function (st) {
-          st.needs.health = Math.min(100, (st.needs.health || 50) + 3);
+          st.status.health = Math.min(100, (st.status.health || 50) + 3);
           st.flags._summerHeatEventSeen = true;
           StateManager.addMessage(
             "🏠 你决定今天不出门，在家吹风扇、看书、睡午觉。健康+3。",
@@ -84657,6 +84663,7 @@ if (typeof window !== "undefined") {
 
 ;
 // ==== js/core/cross_system_events_part8.js ====
+// [全系统自洽修复] 域B R410 修复: 死字段 st.player.health.*(state无此对象,守卫永false压力效果静默失效)->st.personalGrowth.health.*; st.needs.health(needs无health)->st.status.health
 /**
  * 跨系统联动事件 — 拆分片段 8/8（原 cross_system_events.js 机械拆分，行为不变）
  * 仅含自包含的 RANDOM_EVENTS.push 语句；顺序无关（事件选择走 phase 过滤+概率）。
@@ -90020,7 +90027,7 @@ if (typeof window !== "undefined") {
           (st.weather.current !== "rainy" && st.weather.current !== "stormy")
         )
           return false;
-        if (st.player.health && st.player.health < 60) return false; // 健康太差自己走路都难
+        if (st.status.health && st.status.health < 60) return false; // 健康太差自己走路都难
         return st.player.day >= 10 && Random.chance(0.05);
       },
       probability: 0.04,
@@ -90031,7 +90038,7 @@ if (typeof window !== "undefined") {
           hint: "健康-8 道德+8 心情+15",
           apply: function (st) {
             st.flags._rainyUmbrellaSeen = true;
-            st.player.health = Math.max(0, (st.player.health || 70) - 8);
+            st.status.health = Math.max(0, (st.status.health || 70) - 8);
             st.player.morality = Math.min(100, (st.player.morality || 50) + 8);
             st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 15);
             st.flags._gaveUmbrella = true; // 供后续回响事件消费
@@ -106831,6 +106838,183 @@ if (typeof window !== "undefined") {
         var text = "从入职到今天,你已经在职场走了" + days + "天";
         if (days >= 365) text = "一年多的职场生涯,你从新人成长为独当一面的经营者";
         return "回望创业这条路——" + text + "。\n\n这段经历,已经成为你人生的一部分。";
+      }
+    }
+  ];
+
+  // 注入 RANDOM_EVENTS
+  for (var i = 0; i < EVENTS.length; i++) {
+    var _e = EVENTS[i];
+    if (RANDOM_EVENTS.find(function (ev) { return ev.id === _e.id; })) continue;
+    RANDOM_EVENTS.push(_e);
+  }
+})();
+
+;
+// ==== js/core/domain_h_linkage_r410.js ====
+/**
+ * 域H(Phase2/公司) 联动增强 R410
+ * 第十七轮循环——把隐藏在corp_ops/team/promo中的数据转化为叙事体验。
+ * 桥接：
+ *   H→C  h410_leadership_growth     领导力成长 → 消费 corporate+management 数据,
+ *     管理实践→"带团队带出领导力"的职业成长叙事
+ *   H→F  h410_team_viz              团队可视化 → 消费 team 数据,
+ *     把团队成员状态→"我的团队如何"的UI洞察
+ *   H→A  h410_corp_efficiency        企业效率 → 消费 corporate+perf 数据,
+ *     经营数据→"企业运转效率"的数据画像
+ *
+ * 严格照 domain_h_linkage_r404.js / r393.js 已验证IIFE注入范式。
+ */
+(function () {
+  "use strict";
+
+  if (typeof RANDOM_EVENTS === "undefined" || !RANDOM_EVENTS) return;
+  if (RANDOM_EVENTS._domainHLinkageR410Loaded) return;
+  RANDOM_EVENTS._domainHLinkageR410Loaded = true;
+
+  // 安全技能经验
+  function grantSkillXpR410(key, amount) {
+    if (typeof addSkillXp === "function") {
+      try { addSkillXp(key, amount); } catch (e) { /* safe */ }
+    }
+  }
+
+  var EVENTS = [
+    {
+      // H→C: 领导力成长 — 消费 corporate+management
+      id: "h410_leadership_growth",
+      phase: "corporate",
+      _isChainEvent: false,
+      icon: "👔",
+      title: "领导力成长",
+      story:
+        "带团队的经历让你成长——{leadershipText}\n\n管理是一门需要实践的艺术。",
+      triggers: { minDay: 80, excludeFlags: ["_h410LeadershipCooldown"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        if (!st.player || !st.player.corporate) return false;
+        return true;
+      },
+      choices: [
+        {
+          text: "📚 把实践转化为管理智慧",
+          hint: "management XP+6,心智+4,置 _h410LeadershipCooldown(100天)",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._h410LeadershipCooldown = true;
+            grantSkillXpR410("management", 6);
+            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 4);
+            if (typeof StateManager !== "undefined" && StateManager.addMessage)
+              StateManager.addMessage("👔 你把管理实践转化为智慧——领导力在实战中成长。管理XP+6,心智+4。", "success");
+          }
+        },
+        {
+          text: "😊 带团队就是责任心",
+          hint: "心智+2",
+          apply: function (st) {
+            if (st && st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 2);
+          }
+        }
+      ],
+      text: function (st) {
+        if (!st || !st.player || !st.player.corporate) return null;
+        var text = "从执行者到管理者,角色在变,责任在增";
+        if (st.player.corporate.daysInJob > 180) {
+          text = "带团队已超过半年,你逐渐找到了自己的管理风格";
+        }
+        return "带团队的经历让你成长——" + text + "。\n\n管理是一门需要实践的艺术。";
+      }
+    },
+    {
+      // H→F: 团队可视化 — 消费 team 数据
+      id: "h410_team_viz",
+      phase: "corporate",
+      _isChainEvent: false,
+      icon: "👥",
+      title: "团队概览",
+      story:
+        "你查看了团队状态——{teamSummary}\n\n团队是企业最重要的资产。",
+      triggers: { minDay: 70, excludeFlags: ["_h410TeamVizCooldown"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        return (st.corporate && st.corporate.team && st.corporate.team.length > 0) ||
+               (st.player && st.player.corporate);
+      },
+      choices: [
+        {
+          text: "📊 用数据管理团队",
+          hint: "心智+3,management XP+3,置 _h410TeamVizCooldown(80天)",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._h410TeamVizCooldown = true;
+            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 3);
+            grantSkillXpR410("management", 3);
+            if (typeof StateManager !== "undefined" && StateManager.addMessage)
+              StateManager.addMessage("👥 你用数据审视团队——人才是企业最重要的资产。心智+3,管理XP+3。", "success");
+          }
+        },
+        {
+          text: "🤷 用心感受团队就好",
+          hint: "无奖励",
+          apply: function (st) { /* 无奖励选择 */ }
+        }
+      ],
+      text: function (st) {
+        if (!st) return null;
+        var summary = "团队正在建设中";
+        if (st.corporate && st.corporate.team && st.corporate.team.length > 0) {
+          var cnt = st.corporate.team.length;
+          summary = "当前团队" + cnt + "人,是企业发展的基石";
+        }
+        return "你查看了团队状态——" + summary + "。\n\n团队是企业最重要的资产。";
+      }
+    },
+    {
+      // H→A: 企业效率 — 消费 corporate+perf
+      id: "h410_corp_efficiency",
+      phase: "corporate",
+      _isChainEvent: false,
+      icon: "⚙️",
+      title: "企业运转效率",
+      story:
+        "你分析了企业的运转效率——{efficiencyText}\n\n效率是企业的生命力。",
+      triggers: { minDay: 90, excludeFlags: ["_h410EffCooldown"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        if (!st.player || !st.player.corporate) return false;
+        return true;
+      },
+      choices: [
+        {
+          text: "📈 持续优化运营效率",
+          hint: "心智+4,accounting XP+3,置 _h410EffCooldown(90天)",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._h410EffCooldown = true;
+            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 4);
+            grantSkillXpR410("accounting", 3);
+            if (typeof StateManager !== "undefined" && StateManager.addMessage)
+              StateManager.addMessage("⚙️ 你分析企业效率——持续优化是经营者的必修课。心智+4,会计XP+3。", "success");
+          }
+        },
+        {
+          text: "😅 效率不是唯一目标",
+          hint: "无奖励",
+          apply: function (st) { /* 无奖励选择 */ }
+        }
+      ],
+      text: function (st) {
+        if (!st || !st.player || !st.player.corporate) return null;
+        var text = "企业运转正在步入正轨";
+        var corp = st.player.corporate;
+        if (typeof corp.kpi === "number") {
+          text = corp.kpi >= 80 ? "KPI表现优秀,企业运转良好" :
+                 corp.kpi >= 50 ? "KPI达标,仍有提升空间" : "KPI偏低,需要重点关注";
+        }
+        return "你分析了企业的运转效率——" + text + "。\n\n效率是企业的生命力。";
       }
     }
   ];
