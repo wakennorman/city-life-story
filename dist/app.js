@@ -106287,6 +106287,188 @@ if (typeof window !== "undefined") {
 })();
 
 ;
+// ==== js/core/domain_h_linkage_r404.js ====
+/**
+ * 域H(Phase2/公司) 联动增强 R404
+ * 第十七轮循环——把隐藏在startup/corp经营数据中的数字转化为叙事体验。
+ * 桥接：
+ *   H→A  h404_business_data_viz    经营数据可视化 → 消费 startup.company/corporate 数据,
+ *     把公司经营数字转化为"我的企业画像"数据摘要
+ *   H→G  h404_founder_lifestyle     创始人生活方式 → 消费 corporate+needs 数据,
+ *     高压经营→"创业者也是人"的身心回响
+ *   H→B  h404_corp_legacy           公司传承 → 消费 startup.history/flags 数据,
+ *     创业历程→"这段经历如何改变了我"的叙事
+ *
+ * 严格照 domain_h_linkage_r393.js / r386.js 已验证IIFE注入范式。
+ */
+(function () {
+  "use strict";
+
+  if (typeof RANDOM_EVENTS === "undefined" || !RANDOM_EVENTS) return;
+  if (RANDOM_EVENTS._domainHLinkageR404Loaded) return;
+  RANDOM_EVENTS._domainHLinkageR404Loaded = true;
+
+  // 安全技能经验
+  function grantSkillXpR404(key, amount) {
+    if (typeof addSkillXp === "function") {
+      try { addSkillXp(key, amount); } catch (e) { /* safe */ }
+    }
+  }
+
+  var EVENTS = [
+    {
+      // H→A: 经营数据可视化 — 消费 startup.company/corporate
+      id: "h404_business_data_viz",
+      phase: "corporate",
+      _isChainEvent: false,
+      icon: "📊",
+      title: "企业画像",
+      story:
+        "你审视了自己创办的企业——{bizSummary}\n\n数字背后,是一个活生生的组织。",
+      triggers: { minDay: 60, excludeFlags: ["_h404BizDataCooldown"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        if (!st.player || !st.player.corporate) return false;
+        return true;
+      },
+      choices: [
+        {
+          text: "📈 用数据驱动决策",
+          hint: "心智+4,management XP+3,置 _h404BizDataCooldown(90天)",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._h404BizDataCooldown = true;
+            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 4);
+            grantSkillXpR404("management", 3);
+            if (typeof StateManager !== "undefined" && StateManager.addMessage)
+              StateManager.addMessage("📊 你用数据审视企业——数字是决策的基石。心智+4,管理XP+3。", "success");
+          }
+        },
+        {
+          text: "🤷 感觉比数字更重要",
+          hint: "心智+2",
+          apply: function (st) {
+            if (st && st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 2);
+          }
+        }
+      ],
+      text: function (st) {
+        if (!st || !st.player || !st.player.corporate) return null;
+        var corp = st.player.corporate;
+        var summary = "在职" + (corp.daysInJob || 0) + "天";
+        if (corp.kpi !== undefined) summary += ",KPI " + corp.kpi + "分";
+        if (corp.rank) summary += ",职级" + corp.rank;
+        return "你审视了自己创办的企业——" + summary + "。\n\n数字背后,是一个活生生的组织。";
+      }
+    },
+    {
+      // H→G: 创始人生活方式 — 消费 corporate+needs
+      id: "h404_founder_lifestyle",
+      phase: "corporate",
+      _isChainEvent: false,
+      icon: "⚖️",
+      title: "创业者的生活",
+      story:
+        "你意识到创业不只是工作——{lifeInsight}\n\n{balanceAdvice}",
+      triggers: { minDay: 80, excludeFlags: ["_h404LifeCooldown"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        if (!st.player || !st.player.corporate) return false;
+        return true;
+      },
+      choices: [
+        {
+          text: "🧘 关注身心健康",
+          hint: "心智+4,心情+5,置 _h404LifeCooldown(100天)",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._h404LifeCooldown = true;
+            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 4);
+            if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 5);
+            if (typeof StateManager !== "undefined" && StateManager.addMessage)
+              StateManager.addMessage("⚖️ 你关注创业者生活平衡——身心健康是持久战的基础。心智+4,心情+5。", "success");
+          }
+        },
+        {
+          text: "💪 再拼一把",
+          hint: "心智+2",
+          apply: function (st) {
+            if (st && st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 2);
+          }
+        }
+      ],
+      text: function (st) {
+        if (!st || !st.player) return null;
+        var insight = "创业是一场马拉松,不是百米冲刺";
+        var advice = "注意休息,才能走得更远";
+        if (st.needs) {
+          var fatigue = st.needs.fatigue || 0;
+          if (fatigue > 70) {
+            insight = "最近工作强度很大,身体已经在发出警告";
+            advice = "适当休息,不是懈怠,是为了更好地前进";
+          }
+        }
+        return "你意识到创业不只是工作——" + insight + "。\n\n" + advice + "。";
+      }
+    },
+    {
+      // H→B: 公司传承 — 消费 startup.history/flags
+      id: "h404_corp_legacy",
+      phase: "corporate",
+      _isChainEvent: false,
+      icon: "📜",
+      title: "创业历程",
+      story:
+        "回望创业这条路——{legacyText}\n\n这段经历,已经成为你人生的一部分。",
+      triggers: { minDay: 100, excludeFlags: ["_h404LegacyCooldown"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        if (!st.player || !st.player.corporate) return false;
+        return true;
+      },
+      choices: [
+        {
+          text: "🌟 感恩这段经历",
+          hint: "心智+5,管理XP+4,置 _h404LegacyCooldown(120天)",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._h404LegacyCooldown = true;
+            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 5);
+            grantSkillXpR404("management", 4);
+            if (typeof StateManager !== "undefined" && StateManager.addMessage)
+              StateManager.addMessage("📜 你回望创业历程——这段经历塑造了今天的你。心智+5,管理XP+4。", "achievement");
+          }
+        },
+        {
+          text: "💪 继续书写新的篇章",
+          hint: "心智+2",
+          apply: function (st) {
+            if (st && st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 2);
+          }
+        }
+      ],
+      text: function (st) {
+        if (!st || !st.player || !st.player.corporate) return null;
+        var days = st.player.corporate.daysInJob || 0;
+        var text = "从入职到今天,你已经在职场走了" + days + "天";
+        if (days >= 365) text = "一年多的职场生涯,你从新人成长为独当一面的经营者";
+        return "回望创业这条路——" + text + "。\n\n这段经历,已经成为你人生的一部分。";
+      }
+    }
+  ];
+
+  // 注入 RANDOM_EVENTS
+  for (var i = 0; i < EVENTS.length; i++) {
+    var _e = EVENTS[i];
+    if (RANDOM_EVENTS.find(function (ev) { return ev.id === _e.id; })) continue;
+    RANDOM_EVENTS.push(_e);
+  }
+})();
+
+;
 // ==== js/core/domain_h_linkage_r83.js ====
 /*
  * 城市浮生记 — 域H（Phase2/公司）联动增强 · R83
@@ -215611,7 +215793,21 @@ function renderInvestmentTab(state, parent) {
     totalPLSign +
     "¥" +
     Math.round(totalPL).toLocaleString() +
-    '</span> <span style="font-size:11px;color:var(--text-muted);cursor:pointer;" onclick="showInvestmentAnalysisModal()" title="查看投资分析工具">📊 分析</span></h3>' +
+    '</span> <span style="font-size:11px;color:var(--text-muted);cursor:pointer;" onclick="showInvestmentAnalysisModal()" title="查看投资分析工具">📊 分析</span>' +
+    // [全系统自洽修复] 域F R390 联动增强(F→E): 投资组合风险仪表盘
+    (function() {
+      var _inv = state.investment;
+      if (!_inv) return '';
+      var _stocks = (_inv.stockHoldings || []).length;
+      var _crypto = (_inv.btcHoldings || 0) > 0 ? 1 : 0;
+      var _props = (_inv.properties || []).length;
+      var _riskScore = _stocks * 3 + _crypto * 5 - _props * 1;
+      var _riskLevel = _riskScore >= 10 ? '高' : _riskScore >= 5 ? '中' : '低';
+      var _riskColor = _riskScore >= 10 ? 'var(--danger)' : _riskScore >= 5 ? 'var(--warning)' : 'var(--success)';
+      var _riskIcon = _riskScore >= 10 ? '🔴' : _riskScore >= 5 ? '🟡' : '🟢';
+      return ' <span style="font-size:11px;color:' + _riskColor + ';cursor:pointer;" title="组合风险评分:' + _riskScore + '（股票×3+加密×5-房产×1）">' + _riskIcon + ' ' + _riskLevel + '风险</span>';
+    })() +
+    '</h3>' +
     '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;">' +
     summaryCard("股票", assetSnapshot.groups.stocks) +
     summaryCard("虚拟币", assetSnapshot.groups.crypto) +
@@ -255807,6 +256003,34 @@ function renderSidebar(state) {
       }
     }
   } catch (e) {}
+  // [全系统自洽修复] 域F R390 联动增强(F→G): 健康预警仪表盘 — 侧栏显示关键状态预警
+  try {
+    var _status = state.status;
+    var _needs = state.needs;
+    var _warnings = [];
+    if (_status && (_status.health || 100) < 30) _warnings.push('❤️健康' + (_status.health || 0));
+    if (_needs) {
+      if ((_needs.hunger || 100) < 20) _warnings.push('🍞饥饿' + (_needs.hunger || 0));
+      if ((_needs.fatigue || 0) > 80) _warnings.push('😫疲劳' + (_needs.fatigue || 0));
+      if ((_needs.happiness || 50) < 15) _warnings.push('😞心情' + (_needs.happiness || 0));
+    }
+    if (_warnings.length > 0) {
+      var _warnEl = document.getElementById("sidebar-health-warn");
+      if (!_warnEl) {
+        var _sidebar = document.getElementById("sidebar");
+        if (_sidebar) {
+          _warnEl = document.createElement("div");
+          _warnEl.id = "sidebar-health-warn";
+          _warnEl.style.cssText = "font-size:10px;padding:2px 12px;color:var(--danger);background:rgba(231,76,60,0.08);border-bottom:1px solid var(--border);";
+          _sidebar.insertBefore(_warnEl, _sidebar.firstChild);
+        }
+      }
+      if (_warnEl) _warnEl.textContent = '⚠️ ' + _warnings.join(' | ');
+    } else {
+      var _existingWarn = document.getElementById("sidebar-health-warn");
+      if (_existingWarn) _existingWarn.remove();
+    }
+  } catch (e) {}
   // 人生目标已移到内容区时间槽下方（renderCurrentTab 中渲染）
   // renderDreamSection(state);
   // 今日重点已整合到行动页的"今日智能建议"中
@@ -259419,7 +259643,7 @@ function renderGuidanceBar(state, parent) {
   var cash = (r.cash || 0) + (r.bankBalance || 0);
   var debt = (r.villageDebt || r.debt || 0) + (r.fineDebt || 0) + (r.bankDebt || 0);
   var stageId =
-    p.day <= 7
+    (p.day || 0) <= 7
       ? "survival"
       : debt > 0
         ? "debt"
@@ -260109,7 +260333,7 @@ function renderMapTab(state, parent) {
       </div>
       <div style="font-size:9px;color:var(--text-muted);margin-bottom:3px;">${mapLoc.type === "commercial" ? "🛒商业" : mapLoc.type === "industrial" ? "🏭工业" : mapLoc.type === "residential" ? "🏘️居住" : mapLoc.type === "service" ? "🏥服务" : mapLoc.type === "education" ? "📚教育" : mapLoc.type === "corporate" ? "🏢职场" : mapLoc.type === "recreation" ? "🌳休闲" : mapLoc.type === "institutional" ? "🏫机构" : ""}</div>
       <div style="display:flex;flex-wrap:wrap;gap:2px;justify-content:center;" class="map-node-badges">${badgeStr}</div>
-      ${canTravel ? '<div class="map-node-action" style="font-size:9px;color:var(--accent);margin-top:4px;">' + (state.player.transitMode === "walk" ? "🚶" : state.player.transitMode === "bike" ? "🚲" : state.player.transitMode === "metro" ? "🚇" : state.player.transitMode === "taxi" ? "🚕" : state.player.transitMode === "car" ? "🚗" : "👆") + ' 点击前往</div>' : ""}
+      ${canTravel ? '<div class="map-node-action" style="font-size:9px;color:var(--accent);margin-top:4px;">' + (state.player && state.player.transitMode === "walk" ? "🚶" : state.player && state.player.transitMode === "bike" ? "🚲" : state.player && state.player.transitMode === "metro" ? "🚇" : state.player && state.player.transitMode === "taxi" ? "🚕" : state.player && state.player.transitMode === "car" ? "🚗" : "👆") + ' 点击前往</div>' : ""}
       ${!isReachable && !isCurrent ? '<div class="map-node-action" style="font-size:9px;color:var(--text-muted);margin-top:2px;">🔒 未探索</div>' : ""}
     `;
 
@@ -260126,7 +260350,7 @@ function renderMapTab(state, parent) {
       });
       node.addEventListener("click", () => {
         const dest = getLocation(key);
-        const mode = state.player.transitMode || "walk";
+        const mode = (state.player && state.player.transitMode) || "walk";
         const hops = typeof getLocationHops === "function" ? getLocationHops(locKey, key) : 1;
         var ap = 15, price = 0, modeName = "🚶 步行", canReach = true;
         if (mode === "walk") {
@@ -260178,7 +260402,7 @@ function renderMapTab(state, parent) {
   const transitBar = document.createElement("div");
   transitBar.style.cssText =
     "display:flex;flex-direction:column;gap:2px;padding:8px 0 4px;";
-  const curMode = state.player.transitMode || "walk";
+  const curMode = (state.player && state.player.transitMode) || "walk";
   var hasCar = state.investment && state.investment.cars && state.investment.cars.length > 0;
   const TRANSIT_MODES = [
     { mode: "walk", label: "🚶 步行", desc: "免费" },
@@ -263748,7 +263972,7 @@ window.__doTrainCore = function (trainId) {
 
   // 风险检查（整容）
   // [全系统自洽修复] 域F A类修复: state.status/needs 守卫(防止旧存档崩溃)
-  if (t.risky && Random.chance(0.2)) {
+  if (t.risky && (typeof Random !== "undefined" && Random.chance ? Random.chance(0.2) : false)) {
     var oldVal = _getTrainStatVal(p, t.stat);
     _setTrainStatVal(p, t.stat, oldVal - 5);
     if (state.status) state.status.health = Math.max(20, (state.status.health || 100) - 15);
@@ -277794,6 +278018,9 @@ function renderNpcRelationships(state, content) {
     }
     html +=
       '<span style="margin-left:auto;">' + Math.round(affinity) + "</span>";
+    // [全系统自洽修复] 域F R390 联动增强(F→D): 好感度色条可视化
+    var _barColor = affinity >= 80 ? '#4caf50' : affinity >= 60 ? '#8bc34a' : affinity >= 30 ? '#ffc107' : affinity >= 0 ? '#ff9800' : '#f44336';
+    html += '<div style="width:40px;height:4px;background:var(--bg-input);border-radius:2px;margin-left:4px;overflow:hidden;"><div style="width:' + Math.min(100, Math.max(0, affinity)) + '%;height:100%;background:' + _barColor + ';border-radius:2px;"></div></div>';
     html += "</div>";
     html += "</div>";
     // v3.1 ⑥ 社会比较心理抓手：好感≥20 时透露对方月薪，制造羡慕/优越感
