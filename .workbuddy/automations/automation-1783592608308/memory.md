@@ -345,3 +345,11 @@
 - MC 验证: `node --max-old-space-size=8192 tests/monte_carlo.cjs --trials 6 --days 400` → **MC_EXIT=0 · 0 代码异常**(TypeError/ReferenceError/NaN/Infinity grep=0；前7天死亡率全 0.0%<10% 无早期死亡崩溃回归)。存活率 50~100% 波动中 corporate/trader <80% 为既有 RNG 平衡阈值(harness 标"🔧 需要调整"非代码回归)；36氪/澎湃/TianAPI RSS timeout 为离线新闻网络回退，非代码异常。MC 在并行 R323 在途状态(含 domain_b_linkage_r323.js 已注册 src/index.html)下运行，覆盖至 R323=B。
 - 提交: loop-domain-state.json(round324/B/next=C, recency 修正) + MEMORY.md(recency 基准 R324) + 本文件 + last_known_head=41ce71fb。仅 `git add` 这些权威 bookkeeping 文件，绝不碰并行在途/已提交代码(src/index.html / domain_b_linkage_r323.js 等)。push 前 `git pull --rebase origin main`，冲突则中止报告，绝不 force。
 - 下轮: 域C(recency 315 最薄弱，第九轮 R325)。并行窗口可能已抢先推进 R325，开轮必 `git log` 重算真实 recency。
+
+## 最近执行（2026-07-26，R331 账本回填 + R332 并行 in-flight 验证 — 本窗口权威 bookkeeping + MC 验证）
+
+- **R331 账本回填（独立提交 cb2b23ea，已 push origin main）**: 上轮 R331(域A) 代码被并行扫入 feat 2d18fa43/chore 3b4ebcd9 并已 push，但账本文件未提交。本窗口补齐：`.claude/loop-domain-state.json`(round331/A/next=B) + `.claude/domain-optimization-round-331.md` + `.workbuddy/memory/MEMORY.md`(R331 笔记 + recency 基准 R331后 A=331/B=323/C=324/D=325/E=326/F=327/G=329/H=330 → B 最薄弱) + `last_known_head`(同步 3b4ebcd9 过漂移检查)。push 前 `git stash push -- src/index.html src/js/core/domain_b_linkage_r332.js` 隔离并行 in-flight R332 改动，pull --rebase(already up to date)，push 成功，pop 还原并行在途。
+- **R332=域B 由并行窗口 in-flight 推进（本窗口不抢，仅验证）**: 开轮发现并行已在工作树建 `domain_b_linkage_r332.js`(3事件 event_company_legacy B→H / event_life_milestone_v2 B→G / event_data_pattern_v4 B→A；IIFE + `_domainBLinkageR332Loaded` 守卫 + 各设 phase + `||` 防御 + excludeFlags + StateManager.addMessage 守卫，格式规范) 并改 `src/index.html` 注册(583行后)。本窗口角色=权威 bookkeeping + MC 验证，不创建竞争文件。
+- **验证**: `node --check domain_b_linkage_r332.js` 通过；`python build.py` 重建 dist 含 r332；MC 6×400d **MC_EXIT=0·0代码异常**(TypeError/ReferenceError/NaN/Infinity grep=0；前7天死亡率全 0.0%<10% 无早期死亡回归；survival 波动中 corporate/trader<80% 为既有 RNG 平衡阈值非回归)。R332 事件在 MC 下全路径可达且无崩溃。
+- **终态**: R331 账本已 push(cb2b23ea)；R332=域B 仍由并行窗口 in-flight(未提交)，本窗口未触碰、未抢。下一轮(并行提交 R332 后) recency B→332，全局最薄弱转为 **C(324)** → R333=域C。开轮须 `git log` 重算真实 recency。
+- ⚠️ 纪律: 并行 in-flight 改动全程 stash 隔离，本窗口仅提交自身 bookkeeping 文件，绝不 `-A`/抢并行轮次。

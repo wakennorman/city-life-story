@@ -54,3 +54,4 @@
 - R331 域A（第十轮循环起点·代码被并行 add-A 扫入 feat 2d18fa43/chore 3b4ebcd9 并 push origin main）: A类1 = phase1/illness.js jobRiskMap 三死 job id(skilled_labor_construction/customer_service_tech/food_stall 全库0命中)→ steel_worker 复活 + 2 死键删除。联动3(domain_a_linkage_r331.js, A→G/A→D/A→H)。误报排除: jobs.js payCalc 读 state.skills.X.level 无可选链——state.js 全12键恒初始化非崩溃(B类防御一致性)。
 - ⚠️ 辅助函数签名确认(写 linkage 必守): `addSkillXp(skillKey,amount)` 全局读 state, **非** (state,key,amt); `applyAffinityChange(state,npcId,change,reason)`@npc_relationships.js —— 位置参数顺序固定, 误传 state 作首参会静默失效/崩。
 - recency 基准(R331后): A=331/B=323/C=324/D=325/E=326/F=327/G=329/H=330 → B(323)全局最薄弱, 下轮 R332=域B。
+- R332 域B 由并行窗口 in-flight 推进(domain_b_linkage_r332.js 已建+index.html 注册, 本窗口 node --check+MC 验证 0代码异常, 未抢)。R332 提交后 recency B→332, 下轮 R333=域C(324 最薄弱)。
