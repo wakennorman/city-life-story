@@ -1,5 +1,5 @@
 {
-  "currentRound": 312,
+  "currentRound": 320,
   "currentDomain": "H",
   "nextDomain": "A",
   "rotationIndex": 0,
@@ -14,36 +14,36 @@
     "H"
   ],
   "domainRecency": {
-    "A": 304,
-    "B": 305,
-    "C": 307,
-    "D": 308,
-    "E": 309,
-    "F": 310,
-    "G": 311,
-    "H": 312
+    "A": 313,
+    "B": 314,
+    "C": 315,
+    "D": 316,
+    "E": 317,
+    "F": 318,
+    "G": 319,
+    "H": 320
   },
   "history": [
     {
-      "round": 312,
+      "round": 320,
       "domain": "H",
-      "note": "域H(Phase2/公司·第七轮循环完成!): 并行窗口推进 R312 域H(HEAD 9bd4532d,已 push origin/main)。本窗口未参与代码(domain_h_linkage_r312.js 由并行预建并提交),仅回填 recency+bookkeeping。域H 第七轮循环收官。"
+      "note": "域H(Phase2/公司·第八轮循环完成!): A类1 = startup.js _calculateQuarterlyKPIScore B轮 profitability.target=0.0(盈亏平衡)时原式分母 target*valuation*2=0 → netCash/0(>0恒满分1.0无梯度/<0恒0/=0时NaN污染 totalWeightedScore→finalScore=NaN→董事会评分崩溃),改比例式(盈亏平衡即满分,亏损按估值5%缩放递减)+正目标分支补分母>0守卫+isFinite兜底。本窗口独立定位并修复,被并行窗口 add-A 扫入 8f270dc7(R321)并 push origin/main。联动 domain_h_linkage_r320.js(H→A数据面板v2/H→G创始人健康v2/H→B公司历史书)由并行窗口 1803127b 完成并 push。MC 6×400d EXIT=0·0代码异常。"
     },
     {
-      "round": 311,
+      "round": 319,
       "domain": "G",
-      "note": "域G(核心机制/生命周期·第七轮循环): 并行窗口推进 R311 域G——A类1(world_params.js Yahoo解析器prevClose护栏,与腾讯/新浪解析器一致化;本窗口亦独立定位同缺陷并写入磁盘,最终由并行 f56942d8 提交)+联动3(domain_g_linkage_r311.js G→E财富里程碑/G→H公司周年/G→A综合数据,已注册 src/index.html)。本窗口审校承接,MC 6×400d 0代码异常,构建9949.3KB。"
+      "note": "域G(核心机制/生命周期·第八轮): 并行窗口推进 R319(edbf5076,已 push)。本窗口未参与,仅回填 recency。"
     },
     {
-      "round": 310,
+      "round": 318,
       "domain": "F",
-      "note": "域F(UI/UX·第七轮循环): 并行窗口推进 R310 域F。本窗口未参与,仅回填 recency。"
+      "note": "域F(UI/UX·第八轮): 并行窗口推进 R318(93eec6d3,已 push)。"
     }
   ],
   "lastDomain": "H",
-  "lastRound": 312,
+  "lastRound": 320,
   "lastDate": "2026-07-26",
-  "lastCommit": "83087100",
+  "lastCommit": "8f270dc7",
   "pushStatus": "PUSHED",
   "completedDomains": [
     "A",
@@ -55,5 +55,5 @@
     "G",
     "H"
   ],
-  "description": "全系统优化 loop R312→域H(Phase2/公司,第七轮循环完成!)。R311(域G)与R312(域H)均由并行窗口完成并push origin/main;本窗口提供权威bookkeeping+R311 MC验证(0代码异常)。下轮→A(recency 304 最薄弱)。"
+  "description": "全系统优化 loop R320→域H(Phase2/公司,第八轮循环完成!)。A类1(startup.js B轮KPI盈亏平衡目标 netCash/0 → NaN 污染董事会评分, 本窗口独立定位+修复, 随并行 8f270dc7/R321 push origin/main) + 联动3(domain_h_linkage_r320.js 由并行 1803127b 完成push)。MC 6×400d 0代码异常。下轮→A(recency 313 最薄弱)。"
 }
