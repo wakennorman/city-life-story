@@ -1092,7 +1092,7 @@ function trackJobDiseaseRisk(jobId, state) {
   var jobRiskMap = {
     // 高体力消耗 → 过劳风险
     manual_labor_construction: { hf: 2, lh: 1, pb: 1 },
-    skilled_labor_construction: { hf: 1, lh: 1, pb: 1 },
+    steel_worker: { hf: 1, lh: 1, pb: 1 }, // [全系统自洽修复] 域A 修复:jobRiskMap 键 skilled_labor_construction 非真实job id(全库0命中,news.js/npcs.js 早已确证真实技能岗为 steel_worker)→过劳/职业病风险追踪对钢筋工永不生效(死数据),改真实 job id steel_worker(该工作此前无 jobRiskMap 覆盖,修复后风险正确计入)
     factory_overtime: { hf: 3, md: 1, pb: 1 },
     warehouse_worker: { hf: 2, pb: 1 },
     delivery_rider: { hf: 1 },
@@ -1101,11 +1101,11 @@ function trackJobDiseaseRisk(jobId, state) {
     cleaning_service: { lh: 1, pb: 1 },
     // 久坐 → 颈椎病
     data_entry: { ow: 2, md: 1 },
-    customer_service_tech: { ow: 2, md: 2 },
+    // [全系统自洽修复] 域A 修复:jobRiskMap 键 customer_service_tech 非真实job id(全库0命中,无任何对应久坐岗)→颈椎/久坐风险条目永不命中(死数据),已删除该死键(data_entry/content_writing/junior_analyst 已覆盖久坐岗位)
     content_writing: { ow: 1, md: 1 },
     junior_analyst: { ow: 2, md: 1 },
     // 餐饮 → 烹饪增益
-    food_stall: { jf: 1 },
+    // [全系统自洽修复] 域A 修复:jobRiskMap 键 food_stall 是行动id(actionFreq)非真实job id→作为 doStreetJob 传入的 jobId 永不命中(死数据),且与下方真实餐饮 job street_vending_food 风险完全重复,已删除死键
     street_vending_food: { jf: 1 },
     // 高压力
     factory_work_assembly: { md: 1 },
