@@ -264595,7 +264595,8 @@ function applyCareerPromotion(pathId, levelId) {
 
   // [全系统自洽修复] 域C R243 联动增强(C→B): 晋升管理级职位叙事 — 行业新闻风格
   if (level.reqSocial || (level.salary || 0) >= 20000) {
-    var _promoNews = "📰 行业动态：" + (CAREER_PATHS[job.path] ? CAREER_PATHS[job.path].name : "") + "领域" + level.name + "职位出现人事变动，业内关注薪资水平与职业发展空间。";
+    // [全系统自洽修复] 域C R306 A类: `job` 从未声明(ReferenceError,晋升管理级必崩)→改用本函数已声明的 path(=CAREER_PATHS[pathId])
+    var _promoNews = "📰 行业动态：" + (path && path.name ? path.name : "") + "领域" + level.name + "职位出现人事变动，业内关注薪资水平与职业发展空间。";
     StateManager.addMessage(_promoNews, "info");
   }
 
