@@ -23736,24 +23736,18 @@ function applyEventMarketEffect(state, eventId) {
 ;
 // ==== js/core/domain_b_linkage_r389.js ====
 /**
- * [全系统自洽修复] 域B R389(独立号) 联动增强: Phase1→Phase2过渡叙事事件
+ * [全系统自洽修复] 域B R389 联动增强: Phase1→Phase2过渡叙事事件
  *
- * 设计意图: 当前游戏在 enterCorporatePhase() 中完成阶段切换，但缺少随机事件
- * 来叙事化这个关键时刻。玩家从"打零工"变成"公司员工"的瞬间没有任何故事回响，
- * 这是重大叙事断裂(B类)。
- *
- * 新增事件：
- * 1. first_corporate_day — 入职第一天的认知冲击
- * 2. street_experience_echo — 街头经历在公司中的意外回响
- *
- * 联动域: B→C(职业)/B→D(NPC社交)/B→G(核心机制)
- * 防御: 全部条件门控，无裸访问，phase:"corporate"
+ * 设计意图: enterCorporatePhase()阶段切换缺少随机事件叙事化
+ * 
+ * 新增事件:
+ * 1. first_corporate_day — 入职第一天认知冲击 (B→C/G)
+ * 2. street_experience_echo — 街头经验在公司回响 (B→C/D/H)
  */
 (function () {
   if (typeof RANDOM_EVENTS === "undefined") return;
 
   var _events = [
-    // ====== 事件1: 入职第一天 ======
     {
       id: "first_corporate_day",
       phase: "corporate",
@@ -23784,10 +23778,7 @@ function applyEventMarketEffect(state, eventId) {
             st.skills.coding.xp = (st.skills.coding.xp || 0) + Random.int(10, 20);
             st.needs.fatigue = Math.min(100, (st.needs.fatigue || 0) + 10);
             st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 5);
-            StateManager.addMessage(
-              "📝 你把工位、流程、每个人姓什么都记在心里。虽然累，但每一步都走得很扎实。",
-              "success",
-            );
+            StateManager.addMessage("📝 你把工位、流程、每个人姓什么都记在心里。虽然累，但每一步都走得很扎实。", "success");
           },
         },
         {
@@ -23798,10 +23789,7 @@ function applyEventMarketEffect(state, eventId) {
             st.player.intelligence = Math.min(100, (st.player.intelligence || 0) + 1);
             st.player.mental = Math.min(100, (st.player.mental || 0) + 3);
             st.needs.fatigue = Math.min(100, (st.needs.fatigue || 0) + 5);
-            StateManager.addMessage(
-              "👀 你先花了一上午看别人怎么干活。观察虽慢，但你学到了不少职场潜规则。",
-              "info",
-            );
+            StateManager.addMessage("👀 你先花了一上午看别人怎么干活。观察虽慢，但你学到了不少职场潜规则。", "info");
           },
         },
         {
@@ -23812,16 +23800,11 @@ function applyEventMarketEffect(state, eventId) {
             st.needs.happiness = Math.max(0, (st.needs.happiness || 0) - 5);
             st.player.mental = Math.max(0, (st.player.mental || 0) - 3);
             st.needs.fatigue = Math.min(100, (st.needs.fatigue || 0) + 8);
-            StateManager.addMessage(
-              "😰 第一天就手足无措。看着同事们熟练地打字聊天，你突然觉得自己可能选错了路。",
-              "warning",
-            );
+            StateManager.addMessage("😰 第一天就手足无措。看着同事们熟练地打字聊天，你突然觉得自己可能选错了路。", "warning");
           },
         },
       ],
     },
-
-    // ====== 事件2: 街头经验的回响 ======
     {
       id: "street_experience_echo",
       phase: "corporate",
@@ -23861,10 +23844,7 @@ function applyEventMarketEffect(state, eventId) {
             st.resources.cash = (st.resources.cash || 0) + Random.int(500, 1500);
             st.needs.fatigue = Math.min(100, (st.needs.fatigue || 0) + 15);
             st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 8);
-            StateManager.addMessage(
-              "🗣️ 你在批发市场练就的嘴皮子和脸皮子派上大用场了！签了3单，KPI+8，现金+¥1000。同事们用新眼光看你。",
-              "success",
-            );
+            StateManager.addMessage("🗣️ 你在批发市场练就的嘴皮子和脸皮子派上大用场了！签了3单，KPI+8，现金+¥1000。同事们用新眼光看你。", "success");
           },
         },
         {
@@ -23877,10 +23857,7 @@ function applyEventMarketEffect(state, eventId) {
             corp.upwardMgmt = Math.min(100, (corp.upwardMgmt || 0) + 4);
             st.player.social = Math.min(100, (st.player.social || 0) + 2);
             st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 5);
-            StateManager.addMessage(
-              "🤝 你把摆摊时的心得整理了一下教给同事。大家听完直呼内行，你第一次觉得『读过的那些苦没白吃』。",
-              "success",
-            );
+            StateManager.addMessage("🤝 你把摆摊时的心得整理了一下教给同事。大家听完直呼内行，你第一次觉得『读过的那些苦没白吃』。", "success");
           },
         },
         {
@@ -23889,10 +23866,7 @@ function applyEventMarketEffect(state, eventId) {
           apply: function (st) {
             st.flags._streetEchoSeen = true;
             st.needs.fatigue = Math.min(100, (st.needs.fatigue || 0) + 5);
-            StateManager.addMessage(
-              "🙅 你决定不参与。各人有各人的难处，你又不是雷锋。但事后想想，也许帮一把也能攒点人脉。",
-              "info",
-            );
+            StateManager.addMessage("🙅 你决定不参与。各人有各人的难处，你又不是雷锋。但事后想想，也许帮一把也能攒点人脉。", "info");
           },
         },
       ],
@@ -23900,8 +23874,7 @@ function applyEventMarketEffect(state, eventId) {
   ];
 
   for (var i = 0; i < _events.length; i++) {
-    var evt = _events[i];
-    RANDOM_EVENTS.push(evt);
+    RANDOM_EVENTS.push(_events[i]);
   }
 })();
 
@@ -101529,6 +101502,145 @@ if (typeof window !== "undefined") {
   for (var i = 0; i < EVENTS.length; i++) {
     RANDOM_EVENTS.push(EVENTS[i]);
   }
+})();
+
+;
+// ==== js/core/domain_g_linkage_r192.js ====
+/*
+ * 城市浮生记 — 域G（核心机制/生命周期）联动增强事件
+ * v3.120 · loop R192 全系统优化·Domain G 第五轮
+ *
+ * 设计约束：
+ *  - IIFE 注入 RANDOM_EVENTS，phase:"street"/"corporate"
+ *  - 所有 state 访问均 || 防御；数值标 [PLACEHOLDER]
+ */
+(function () {
+  if (typeof RANDOM_EVENTS === "undefined" || !RANDOM_EVENTS) return;
+  if (RANDOM_EVENTS._domainG_linkage_r192) return;
+  RANDOM_EVENTS._domainG_linkage_r192 = true;
+
+  // ---- 本地助手 ----
+  function safeState(st, path) {
+    var parts = path.split('.');
+    var obj = st;
+    for (var i = 0; i < parts.length; i++) {
+      if (!obj || typeof obj !== 'object') return null;
+      obj = obj[parts[i]] || {};
+    }
+    return obj;
+  }
+
+  // ====== 联动1: G→D 极端天气生存记忆 — 长期极端天气后NPC关心 ======
+  // [联动意图] weather系统(极端天气)首次被社交消费——暴雨/台风后NPC主动问候，体现社交温度
+  RANDOM_EVENTS.push({
+    id: "g_weather_survival_memory",
+    phase: "street",
+    icon: "🌊",
+    title: "极端天气后的问候",
+    story: "连续几天的极端天气让你苦不堪言。但出乎意料的是，有几位熟人察觉到了你的困境，主动来关心你。",
+    conditions: function (st) {
+      var w = st && st.weather ? st.weather.current : null;
+      var extremeWeathers = ["stormy","snowy","typhoon","sandstorm","heavy_smog","heatwave"];
+      var isExtreme = extremeWeathers.indexOf(w) >= 0;
+      var recentStormyDays = st.flags._habits && st.flags._habits.extremeWeatherDays ? st.flags._habits.extremeWeatherDays : 0;
+      return (
+        st &&
+        st.player &&
+        st.player.day >= 30 &&
+        isExtreme &&
+        recentStormyDays >= 2 &&
+        (!st.flags || !st.flags._weatherSurvivalMemoryDone)
+      );
+    },
+    probability: 0.03,
+    repeatable: false,
+    choices: [
+      {
+        text: "🙏 感谢关心，继续奋斗",
+        hint: "心情+5 · 已结识NPC好感各+1",
+        apply: function (st) {
+          if (!st.flags) st.flags = {};
+          st.flags._weatherSurvivalMemoryDone = true;
+          if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 5);
+          // 给已结识的2个NPC广播好感+1
+          if (st.relationships) {
+            var count = 0;
+            for (var rid in st.relationships) {
+              var r = st.relationships[rid];
+              if (r && r.met && count < 2) {
+                if (typeof applyAffinityChange === "function") {
+                  applyAffinityChange(st, rid, 1, "天气问候");
+                } else {
+                  r.affinity = Math.min(100, (r.affinity || 0) + 1);
+                }
+                count++;
+              }
+            }
+          }
+          if (typeof StateManager !== "undefined" && StateManager.addMessage)
+            StateManager.addMessage("🌊 极端天气让人际温暖格外珍贵。有人记得你的处境，这本身就是一种力量。心情+5。", "success");
+        },
+      },
+      {
+        text: "😐 习惯了，没什么",
+        hint: "无变化",
+        apply: function (st) {
+          if (!st.flags) st.flags = {};
+          st.flags._weatherSurvivalMemoryDone = true;
+          if (typeof StateManager !== "undefined" && StateManager.addMessage)
+            StateManager.addMessage("😐 你已经习惯了这种天气。但内心深处，那些关心还是让你感到了一丝温暖。", "info");
+        },
+      },
+    ],
+  });
+
+  // ====== 联动2: G→B 季节更替叙事 — 每年季节轮换触发情感锚点 ======
+  // [联动意图] weather.season首次被事件消费，让玩家感受到「时间流逝」的情感重量
+  RANDOM_EVENTS.push({
+    id: "g_season_transition_narrative",
+    phase: "street",
+    icon: "🍂",
+    title: "又一个秋天",
+    story: function (st) {
+      var seasonNames = { spring: "春天", summer: "夏天", autumn: "秋天", winter: "冬天" };
+      var s = st && st.weather ? st.weather.season : "";
+      var sn = seasonNames[s] || s;
+      return "日历翻过了一页，城市进入了" + sn + "。空气中开始有" + (s === "spring" ? "花香" : s === "summer" ? "蝉鸣" : s === "autumn" ? "落叶的味道" : "寒意") + "了。\n\n这个季节让你想起了什么？";
+    },
+    conditions: function (st) {
+      // [全系统自洽修复] 域G A类修复: seasonChanged flag防止每日重复触发
+      if (!st.flags || st.flags._seasonTransitionSeenDay === (st.player && st.player.day)) return false;
+      return !!(st && st.player && st.player.day >= 30);
+    },
+    probability: 0.08,
+    repeatable: false,
+    choices: [
+      {
+        text: "🍁 想起了家乡的" + "🍃春风/☀️夏夜/🍂秋叶/❄️冬雪",
+        hint: "心情+3 · 心智+2 · 建立季节记忆flag",
+        apply: function (st) {
+          if (!st.flags) st.flags = {};
+          st.flags._seasonTransitionSeenDay = st.player.day;
+          st.flags._seasonNarrativeTriggered = true;
+          if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 3);
+          if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 2);
+          if (typeof StateManager !== "undefined" && StateManager.addMessage)
+            StateManager.addMessage("🍁 你停下脚步，想起家乡的季节。时光匆匆，但你已经在这座城市扎下了根。心情+3，心智+2。", "success");
+        },
+      },
+      {
+        text: "🚶 忙起来就没空想这些",
+        hint: "无变化",
+        apply: function (st) {
+          if (!st.flags) st.flags = {};
+          st.flags._seasonTransitionSeenDay = st.player.day;
+          if (typeof StateManager !== "undefined" && StateManager.addMessage)
+            StateManager.addMessage("🚶 你选择继续前行。城市永远在运转，没有人会因为季节更替而停下脚步。", "info");
+        },
+      },
+    ],
+  });
+
 })();
 
 ;
@@ -245361,6 +245473,206 @@ if (typeof window !== "undefined") {
     RANDOM_EVENTS.push(EVENTS[i]);
   }
 })();
+;
+// ==== js/core/domain_g_linkage_r391.js ====
+/**
+ * 域G(核心机制/生命周期) 联动增强 R391
+ * 第十七轮循环——时间的积累不仅推进状态机，也在社交/职业/公司层面沉淀出"人生资历"。
+ * 桥接：
+ *   G→D  life_community_roots_r391    在城市扎根久了→主动维系老邻里（守 rel.met 铁律，applyAffinityChange）
+ *   G→C  life_career_marathon_r391    职业长跑沉淀→经验转化为管理心得（addSkillXp management，真实键）
+ *   G→H  life_founder_retrospect_r391 创始人回望创业路→格局沉淀（management XP + upward，条件 corporate/startup 存在）
+ *
+ * 全事件：显式 phase、|| 防御、[PLACEHOLDER] 数值占位、id 唯一(g_r391_ 前缀)。
+ */
+(function () {
+  "use strict";
+
+  if (typeof RANDOM_EVENTS === "undefined") return;
+  if (RANDOM_EVENTS._domainGLinkageR391Loaded) return;
+  RANDOM_EVENTS._domainGLinkageR391Loaded = true;
+
+  // 取首个"已结识"的 NPC（严守域D铁律：rel && rel.met）
+  function firstMetNpcR391(st) {
+    var rels = st && st.relationships;
+    if (!rels || typeof rels !== "object") return null;
+    for (var id in rels) {
+      if (!Object.prototype.hasOwnProperty.call(rels, id)) continue;
+      var rel = rels[id];
+      if (rel && rel.met) return id;
+    }
+    return null;
+  }
+
+  // 安全好感变更：优先走 applyAffinityChange(state, npcId, change, reason)
+  function bumpAffinityR391(st, npcId, change, reason) {
+    if (!npcId) return;
+    if (typeof applyAffinityChange === "function") {
+      applyAffinityChange(st, npcId, change, reason || "");
+      return;
+    }
+    // 兜底：直接写（仅在 applyAffinityChange 不可用时）
+    var rel = st.relationships && st.relationships[npcId];
+    if (rel && rel.met) {
+      rel.affinity = Math.max(0, Math.min(100, (rel.affinity || 0) + change));
+    }
+  }
+
+  // 安全技能经验：addSkillXp(skillKey, amount) 读全局 state，假键静默丢弃
+  function grantSkillXpR391(key, amount) {
+    if (typeof addSkillXp === "function") {
+      addSkillXp(key, amount);
+    }
+  }
+
+  var EVENTS = [
+    {
+      // ---- G→D：核心机制(时间积累)→社交(老邻里维系) ----
+      id: "g_r391_life_community_roots",
+      phase: "street",
+      _isChainEvent: false,
+      icon: "🏘️",
+      title: "扎根这座城",
+      story: "不知不觉，你在这座城市已经住了很久。\n\n楼下小店的老板会跟你点头，隔壁的邻居见面会打招呼——你不再是那个刚来时谁都不认识的外乡人。\n\n你想，是时候主动去维系这些一点点攒下来的关系了。\n\n「城市很大，但真正让你觉得踏实的，是那几张熟悉的面孔。」",
+      triggers: { minDay: 40, excludeFlags: ["_lifeCommunityRootsR391Seen"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        var dayOk = !!(st.player && (st.player.day || 0) >= 40);
+        return dayOk && !!firstMetNpcR391(st);
+      },
+      choices: [
+        {
+          text: "🏘️ 主动串门维系老邻里",
+          hint: "老熟人好感提升，心情回暖",
+          apply: function (st) {
+            if (!st.flags) st.flags = {};
+            st.flags._lifeCommunityRootsR391Seen = true;
+            st.flags._communityRooted = true; // || 防御可读 flag
+            var npcId = firstMetNpcR391(st);
+            bumpAffinityR391(st, npcId, /* [PLACEHOLDER] */ 6, "扎根社区·主动维系老邻里");
+            if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + /* [PLACEHOLDER] */ 5);
+            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + /* [PLACEHOLDER] */ 3);
+            if (typeof StateManager !== "undefined" && StateManager.addMessage) {
+              StateManager.addMessage("🏘️ 你主动维系了老邻里的关系。这座城市，你已经扎下了根。好感提升，心情+5。", "success");
+            }
+          },
+        },
+        {
+          text: "🚶 顺其自然",
+          hint: "心情+2",
+          apply: function (st) {
+            if (!st.flags) st.flags = {};
+            st.flags._lifeCommunityRootsR391Seen = true;
+            if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + /* [PLACEHOLDER] */ 2);
+            if (typeof StateManager !== "undefined" && StateManager.addMessage) {
+              StateManager.addMessage("🚶 你选择顺其自然。缘分到了自然会亲近。心情+2。", "info");
+            }
+          },
+        },
+      ],
+      probability: 0.5,
+      repeatable: false,
+    },
+    {
+      // ---- G→C：核心机制(职业长跑)→职业成长(经验沉淀为管理心得) ----
+      id: "g_r391_life_career_marathon",
+      phase: "corporate",
+      _isChainEvent: false,
+      icon: "🎓",
+      title: "职业长跑",
+      story: "回头看，你在职业这条路上已经跑了很长一段。\n\n从最初的手忙脚乱，到如今能沉住气把事情一件件理清——那些踩过的坑、扛过的活，都变成了你身上看不见的功夫。\n\n有人问你诀窍，你笑了笑：「哪有什么诀窍，都是日子一天天熬出来的经验。」\n\n经验，正在悄悄沉淀成一种叫「管理」的心得。",
+      triggers: { minDay: 90, excludeFlags: ["_lifeCareerMarathonR391Seen"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        return !!(st.player && (st.player.day || 0) >= 90);
+      },
+      choices: [
+        {
+          text: "🎓 把经验梳理成方法",
+          hint: "管理经验提升，心智+4",
+          apply: function (st) {
+            if (!st.flags) st.flags = {};
+            st.flags._lifeCareerMarathonR391Seen = true;
+            st.flags._careerMarathonWisdom = true;
+            grantSkillXpR391("management", /* [PLACEHOLDER] */ 8);
+            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + /* [PLACEHOLDER] */ 4);
+            if (typeof StateManager !== "undefined" && StateManager.addMessage) {
+              StateManager.addMessage("🎓 你把多年经验梳理成了方法论。经验沉淀成管理心得。管理经验+8，心智+4。", "success");
+            }
+          },
+        },
+        {
+          text: "☕ 埋头继续干",
+          hint: "心智+2",
+          apply: function (st) {
+            if (!st.flags) st.flags = {};
+            st.flags._lifeCareerMarathonR391Seen = true;
+            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + /* [PLACEHOLDER] */ 2);
+            if (typeof StateManager !== "undefined" && StateManager.addMessage) {
+              StateManager.addMessage("☕ 你埋头继续干。经验会在不知不觉中沉淀。心智+2。", "info");
+            }
+          },
+        },
+      ],
+      probability: 0.5,
+      repeatable: false,
+    },
+    {
+      // ---- G→H：核心机制(创业生命周期)→公司(创始人格局沉淀) ----
+      id: "g_r391_life_founder_retrospect",
+      phase: "corporate",
+      _isChainEvent: false,
+      icon: "🏛️",
+      title: "创始人的回望",
+      story: "夜深了，办公室只剩你一个人。\n\n你翻着这一路走来的记录：第一笔订单、第一次发薪、第一次熬过危机……创业从来不是一条直线，而是无数个坎连成的路。\n\n回望走过的每一步，你忽然对「格局」这两个字有了新的理解——它不是喊出来的，是熬出来的。\n\n「能走到今天，靠的不是运气，是把每一个坎都当成台阶。」",
+      triggers: { minDay: 60, excludeFlags: ["_lifeFounderRetrospectR391Seen"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        var hasCorp = !!(st.corporate && st.corporate.company);
+        var hasStartup = !!(st.startup && st.startup.company);
+        return hasCorp || hasStartup;
+      },
+      choices: [
+        {
+          text: "🏛️ 沉淀经营格局",
+          hint: "管理经验提升，进取心增强，心智+4",
+          apply: function (st) {
+            if (!st.flags) st.flags = {};
+            st.flags._lifeFounderRetrospectR391Seen = true;
+            st.flags._founderRetrospected = true;
+            grantSkillXpR391("management", /* [PLACEHOLDER] */ 10);
+            if (st.player && st.player.corporate) {
+              st.player.corporate.upward = Math.min(100, (st.player.corporate.upward || 50) + /* [PLACEHOLDER] */ 4);
+            }
+            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + /* [PLACEHOLDER] */ 4);
+            if (typeof StateManager !== "undefined" && StateManager.addMessage) {
+              StateManager.addMessage("🏛️ 你回望了创业路，沉淀出经营格局。管理经验+10，进取心增强，心智+4。", "success");
+            }
+          },
+        },
+        {
+          text: "🌙 收拾东西回家",
+          hint: "心智+2",
+          apply: function (st) {
+            if (!st.flags) st.flags = {};
+            st.flags._lifeFounderRetrospectR391Seen = true;
+            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + /* [PLACEHOLDER] */ 2);
+            if (typeof StateManager !== "undefined" && StateManager.addMessage) {
+              StateManager.addMessage("🌙 你收拾东西回家了。路还长，明天继续。心智+2。", "info");
+            }
+          },
+        },
+      ],
+      probability: 0.5,
+      repeatable: false,
+    },
+  ];
+
+  for (var i = 0; i < EVENTS.length; i++) {
+    RANDOM_EVENTS.push(EVENTS[i]);
+  }
+})();
+
 ;
 // ==== js/core/domain_g_linkage_r296.js ====
 /**
