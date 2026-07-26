@@ -508,6 +508,12 @@ function getTransportService(serviceId) {
 /** 雇佣运输：将商品从当前地点运到目标地点 */
 function hireTransport(serviceId, goods, destKey) {
   var state = StateManager.getState();
+  // [全系统自洽修复] 域A A类: state.trade 守卫
+  if (!state || !state.trade) {
+    StateManager.addMessage("⚠️ 交易系统未就绪，无法雇佣运输。", "warning");
+    return false;
+  }
+  if (!state.needs) state.needs = {};
   var service = getTransportService(serviceId);
   if (!service) {
     StateManager.addMessage("⚠️ 不存在的运输服务。", "danger");
@@ -563,12 +569,12 @@ function hireTransport(serviceId, goods, destKey) {
     return false;
   }
 
-  // 扣费
-  state.resources.cash -= service.cost;
-  // 消耗 AP (硬编码 10)
+  // 消耗 AP (硬编码 10) — 先扣AP再扣费
   if (typeof consumeAP === "function") {
     if (!consumeAP(10)) return false;
   }
+  // 扣费
+  state.resources.cash = (state.resources.cash || 0) - service.cost;
 
   // 从背包移除
   for (var si = 0; si < toShip.length; si++) {
@@ -747,6 +753,8 @@ function retrieveFromStorage(goodId, qty) {
 
 // ====== 易腐商品变质系统 ======
 function tickPerishableGoods(state) {
+  if (!state) return;
+  if (!state.needs) state.needs = {};
   if (!state.inventory.items) return;
   var spoiled = [];
   for (var i = 0; i < state.inventory.items.length; i++) {

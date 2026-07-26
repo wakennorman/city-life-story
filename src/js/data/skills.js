@@ -274,6 +274,7 @@ function getSkillBranchById(skillKey, branchId) {
 function getAvailableCertificates(state) {
   // [全系统自洽修复] 域A A类#1: 旧存档 certificates 可能为 undefined → 空数组兜底，避免「全证书隐藏」死数据
   if (!state || !Array.isArray(state.certificates)) return [...CERTIFICATES];
+  if (!state.player) return [];
   return CERTIFICATES.filter((cert) => {
     // [全系统自洽修复] 域A A类#15: state.certificates 守卫
     if (state.certificates.includes(cert.id)) return false; // 已拥有
@@ -315,3 +316,22 @@ function getAvailableCertificates(state) {
 
 // P1-2 CLS 命名空间注册
 if (typeof window.CLS !== 'undefined' && window.CLS.data) window.CLS.data.CERTIFICATES = CERTIFICATES;
+
+// [全系统自洽修复] 域A R405 联动增强(A→C): 技能市场价值 — 基于当前职业市场返回技能价值评级
+function getSkillMarketValue(skillId) {
+  if (typeof STREET_JOBS === "undefined" || !Array.isArray(STREET_JOBS)) return 0;
+  var count = 0;
+  for (var _si = 0; _si < STREET_JOBS.length; _si++) {
+    var _job = STREET_JOBS[_si];
+    if (_job && _job.requirements && _job.requirements[skillId]) count++;
+    if (_job && _job.effects) {
+      for (var _effKey in _job.effects) {
+        if (_effKey.indexOf(skillId) >= 0 && _effKey.indexOf("Xp") > 0) count++;
+      }
+    }
+  }
+  if (count >= 10) return 3;  // 高需求
+  if (count >= 5) return 2;   // 中等需求
+  if (count >= 1) return 1;   // 低需求
+  return 0;                    // 无需求
+}

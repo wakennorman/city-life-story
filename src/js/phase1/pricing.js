@@ -877,3 +877,12 @@ function checkTradeMilestone(state) {
     }
   }
 }
+
+// [全系统自洽修复] 域A R405 联动增强(A→F): 价格波动可视化 — 返回商品价格趋势箭头
+function getPriceTrendIcon(locKey, goodId) {
+  if (typeof getDailyPriceShock !== "function") return "➡️";
+  var shock = getDailyPriceShock(locKey, goodId);
+  if (shock > 0.05) return "📈";
+  if (shock < -0.05) return "📉";
+  return "➡️";
+}

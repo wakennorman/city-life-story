@@ -390,6 +390,14 @@
 - **并发**: 单轮内 HEAD 连跳 4624982d→7cf8c332(并行R393代码)→f6463162(并行R394/B)→本窗口账本 33fb5b0。本窗口仅提交 .claude 权威账本(loop-state/round-393/last_known_head),push fast-forward 成功(f6463162..33fb5b02)。
 - recency(R393后): A=387/B=389+/C=391/D=389/E=389/F=390/G=392/H=393 → 下轮**域A(387最薄弱)**。开轮必 git log 重算(并行速度远快于本自动化)。
 
+## 最近执行（2026-07-27，R406 域E 经济/投资 — 已 push main c093b1f0+b103f0a9）
+- 开轮 loop-state 标 round404/next=A，git log 重算 recency A=398/B=401/C=399/D=395/E=396/F=403/G=402/H=404；并行正做 R405=域D(执行中提交 a596647a 并把 loop-state 更新 next=E，与本窗口判断一致)→本轮 R406=域E(396 最薄弱)。
+- A类=0（诚实报告）：Explore 审计 7 域E文件+5联动文件全干净；**setStopLoss 零调用方系 Explore 误报**（domain_e_linkage_r195.js:94 有真实事件调用），勿再重复审。C类记录：investment.js:3913 渲染循环无||[]（initInvestment 保证数组，不修）。
+- 联动3（domain_e_linkage_r406.js，2 street+1 corporate）：e406_fear_greed_mirror(E→G 首消费 btcFearGreed 极值≥80/≤20+btcHoldings>0 门控)/e406_policy_pulse(E→A 首消费 _propertyPolicyTightness abs≥0.05)/e406_trade_journal_review(E→C 首消费 tradeLog≥8笔→accounting XP)。字段先核实：btcHoldings(investment.js:1155)/btcFearGreed(state.js:217)/_propertyPolicyTightness(property_market.js:83)/tradeLog(investment.js:1697)。
+- 验证：build 10730.2KB(r406 flag count=2)；MC 6×400d EXIT=0·0代码异常·前7天死亡率全0.0%(corporate 16.7% 既有RNG阈值)。
+- 提交纪律：并行在途 jobs/carry/trade/trade_intel 4文件 stash 隔离→重建干净 dist→仅 add 本轮8文件→feat c093b1f0→pull --rebase(up to date)→push 成功(一并带上并行 R405)→chore 回填 b103f0a9→stash pop 无损还原。
+- 下轮→A(recency 398 最薄弱)。域E零消费素材已用尽，剩余候选 investFreq 计数器。
+
 ## 最近执行（2026-07-27，R397 域F UI/UX — 已 push main 70dcf783）
 - 开轮 loop-state 严重滞后(标 round393/next=A)；git log 重算真实 recency：并行已推进 R395(D,2b2e4f20)→R396(E,353f13aa)→R398(A,1d09737a)→R399(C,d4655ca7)。并行将做 A(最薄弱)→本窗口选 **域F(R397，recency 390 次薄弱，避碰并行 R398=A)**。
 - A类=0（诚实报告）：审计域F，死字段黑名单仅命中历轮修复注释(无活代码死写)，除零候选均有守卫。

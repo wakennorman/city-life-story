@@ -12,6 +12,7 @@ function buyGood(goodId, qty) {
     StateManager.addMessage("⚠️ 交易系统未就绪。", "warning");
     return false;
   }
+  if (!state.flags) state.flags = {};
   if (typeof qty !== "number" || !isFinite(qty) || qty <= 0) {
     StateManager.addMessage("⚠️ 无效的购买数量。", "danger");
     return false;
@@ -35,7 +36,9 @@ function buyGood(goodId, qty) {
   var histDiscount = 0;
   if (typeof getHistoryModifiers === "function") {
     var hm = getHistoryModifiers(state);
-    histDiscount = hm.priceDiscount < 1.0 ? 1.0 - hm.priceDiscount : 0;
+    if (hm && hm.priceDiscount != null) {
+      histDiscount = hm.priceDiscount < 1.0 ? 1.0 - hm.priceDiscount : 0;
+    }
   }
   // 批量折扣：买5件以上额外2%，买10件以上额外5%
   var bulkDiscount = 0;
@@ -159,6 +162,7 @@ function sellGood(goodId, qty) {
     StateManager.addMessage("⚠️ 交易系统未就绪。", "warning");
     return false;
   }
+  if (!state.flags) state.flags = {};
   if (typeof qty !== "number" || !isFinite(qty) || qty <= 0) {
     StateManager.addMessage("⚠️ 无效的卖出数量。", "danger");
     return false;
@@ -199,7 +203,7 @@ function sellGood(goodId, qty) {
   // 加钱
   // [全系统自洽修复] 域E A类#6: sellGood 收入NaN防护
   state.resources.cash = (state.resources.cash || 0) + totalEarned;
-  state.resources.totalEarned += totalEarned;
+  state.resources.totalEarned = (state.resources.totalEarned || 0) + totalEarned;
   addDailyTransaction(
     state,
     "income",
@@ -320,6 +324,7 @@ function buyWholesale(goodId, qty) {
     StateManager.addMessage("⚠️ 交易系统未初始化。", "danger");
     return false;
   }
+  if (!state.flags) state.flags = {};
   if (typeof qty !== "number" || !isFinite(qty) || qty <= 0) {
     StateManager.addMessage("⚠️ 无效的批发数量。", "danger");
     return false;

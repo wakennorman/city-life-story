@@ -51,6 +51,7 @@ function getPriceTier(price, basePrice) {
  * @param {string} locKey - 地点 ID
  */
 function recordLocationVisit(state, locKey) {
+  if (!state) return;
   var today = state.player && state.player.day ? state.player.day : 1;
   var visited = state.trade.visitedToday || {};
 
@@ -86,6 +87,7 @@ function recordLocationVisit(state, locKey) {
  * 将昨日精确记忆归档为模糊记忆（滚动保留3天）
  */
 function archiveYesterdayMemory(state) {
+  if (!state) return;
   var yesterday = state.trade._visitedDay;
   if (!yesterday) return;
 
@@ -468,6 +470,7 @@ var NPC_TRADE_INFO = {
  * @returns {object|null} { expertise, availableInfo: [...] }
  */
 function getNPCTradeInfo(npcId, state) {
+  if (!state) return null;
   var infoDef = NPC_TRADE_INFO[npcId];
   if (!infoDef) return null;
 
@@ -792,6 +795,7 @@ function generateInfoText(npcId, infoTypeId, state) {
  * @returns {string|null} 情报文本，如果没有则返回 null
  */
 function tryTriggerNPCInfoShare(npcId, state) {
+  if (!state) return null;
   var rel = state.relationships && state.relationships[npcId];
   if (!rel || !rel.met) return null;
   if (rel.affinity < 60) return null;
@@ -969,6 +973,7 @@ var DAILY_TRADE_XP_LIMIT = 30; // 每天通过交易获得的销售XP上限
  * @param {number} amount - 交易金额（用于计算，但实际限制每日上限）
  */
 function gainTradeXp(state) {
+  if (!state) return;
   if (!state.skills || !state.skills.sales) return;
   if (!state.trade) return;
 
@@ -984,6 +989,7 @@ function gainTradeXp(state) {
  * 每日重置交易XP计数器（每天第一次调用时执行）
  */
 function resetDailyTradeXp(state) {
+  if (!state) return;
   var today = state.player && state.player.day ? state.player.day : 1;
   if (state.trade._xpResetDay !== today) {
     state.trade._todayTradeXp = 0;

@@ -43,4 +43,6 @@
 ## 近况与 recency 基准
 - R387 域A：**P0 热修复**（events_core.js rollStreetEvent 缺 `let mod` 声明→每日抛 ReferenceError 全策略100%死亡）+A→B 价格叙事。
 - R390 域F（本轮·已 push 1d4a0da2）：A类=0（Explore 18 UI文件确证死字段仅存修复注释、除零/空指针均守卫）+联动3(domain_f_linkage_r390.js：ui_r390_progress_review F→B进度回顾/ui_r390_relations_map F→D关系网问候守rel.met/ui_r390_data_pitch F→H一页看板)。构建 10554.3KB，MC 6×400d EXIT=0·0代码异常。并行在途 modal.js/render_core.js/domain_a/b_linkage_r389 全程 stash 隔离，push 后还原不碰。
-- **recency 基准(R390后)：A=387/B=389/C=389/D=389/E=389/F=390/G=385/H=386 → 下轮 G(385)最薄弱**。开轮必 git log 重算。
+- R406 域E（已 push c093b1f0+b103f0a9）：A类=0（Explore 审计7域E文件+5联动文件全干净；setStopLoss 经核有 R195 调用方系 Explore 误报勿修；C类记录 investment.js:3913 渲染循环无||[]但 initInvestment 保证）。联动3(domain_e_linkage_r406.js)：e406_fear_greed_mirror(E→G 首消费 btcFearGreed 极值≥80/≤20+btcHoldings门控)/e406_policy_pulse(E→A 首消费 _propertyPolicyTightness abs≥0.05)/e406_trade_journal_review(E→C 首消费 tradeLog≥8笔·corporate)。构建10730.2KB，MC 6×400d EXIT=0·0代码异常（corporate 16.7% 既有RNG阈值）。并行在途 jobs/carry/trade/trade_intel 全程 stash 隔离无损还原。
+- 域E零消费素材已用尽 btcFearGreed/_propertyPolicyTightness/tradeLog；剩余候选：stopLossOrders 触发后叙事(R195 已部分)、investFreq 计数器。
+- **recency 基准(R406后)：A=398/B=401/C=399/D=405/E=406/F=403/G=402/H=404 → 下轮 A(398)最薄弱**。开轮必 git log 重算。

@@ -32,7 +32,7 @@ const STREET_JOBS = [
     payCalc(state) {
       // v3.53 修复：下限从¥20提升到¥25，避免"升级住房→入不敷出"死锁
       const base = Random.float(25, 55);
-      const multi = 1 + state.skills.sales.level * 0.005;
+      const multi = 1 + (state.skills.sales && state.skills.sales.level || 0) * 0.005;
       // v3.8 P1修复：zhouScrapBonus（老周好感奖励→废品+20%）
       const zhouBonus = state.flags && state.flags.zhouScrapBonus ? 1.2 : 1.0;
       return Math.floor(base * Math.min(multi, 2) * zhouBonus);
@@ -57,7 +57,7 @@ const STREET_JOBS = [
       return Math.floor(
         55 +
           state.player.physique * 0.6 +
-          state.skills.sales.level * 0.5 +
+          (state.skills.sales && state.skills.sales.level || 0) * 0.5 +
           Random.float(0, 30),
       );
     },
@@ -76,7 +76,7 @@ const STREET_JOBS = [
     payCalc(state) {
       const weldBonus =
         typeof getConstructionBonus === "function"
-          ? getConstructionBonus(state.skills.welding.level || 0)
+          ? getConstructionBonus((state.skills.welding && state.skills.welding.level || 0))
           : 0;
       const bossBonus = state.flags && state.flags.bossLiSkillJob ? 1.2 : 1.0;
       return Math.floor(
@@ -105,12 +105,12 @@ const STREET_JOBS = [
     payCalc(state) {
       const weldBonus =
         typeof getConstructionBonus === "function"
-          ? getConstructionBonus(state.skills.welding.level || 0)
+          ? getConstructionBonus((state.skills.welding && state.skills.welding.level || 0))
           : 0;
       return Math.floor(
         (220 +
           state.player.physique * 0.8 +
-          state.skills.repair.level * 1.5 +
+          (state.skills.repair && state.skills.repair.level || 0) * 1.5 +
           Random.float(0, 60)) *
           (1 + weldBonus),
       );
@@ -137,7 +137,7 @@ const STREET_JOBS = [
     payCalc(state) {
       const elecBonus =
         typeof getFactoryBonus === "function"
-          ? getFactoryBonus(state.skills.electrician.level || 0)
+          ? getFactoryBonus((state.skills.electrician && state.skills.electrician.level || 0))
           : 0;
       // v3.8 P1修复：zhangFactoryBonus（张姐好感80奖励→工厂+15%）
       const zhangBonus =
@@ -166,11 +166,11 @@ const STREET_JOBS = [
       socialXp: 2,
     },
     payCalc(state) {
-      const skillBonus = state.skills.cooking.level * 0.8;
+      const skillBonus = (state.skills.cooking && state.skills.cooking.level || 0) * 0.8;
       const base = Random.float(45 + skillBonus, 80 + skillBonus);
       const footfall =
         typeof getVendingFootfallMod === "function"
-          ? getVendingFootfallMod(state.trade.currentLocation, state)
+          ? getVendingFootfallMod((state.trade && state.trade.currentLocation), state)
           : 1.0;
       // v3.8 P1修复：bossLiStallBonus（李工头好感奖励→摊位+10%）
       const liBonus = state.flags && state.flags.bossLiStallBonus ? 1.1 : 1.0;
@@ -191,10 +191,10 @@ const STREET_JOBS = [
     payCalc(state) {
       var footfall =
         typeof getVendingFootfallMod === "function"
-          ? getVendingFootfallMod(state.trade.currentLocation, state)
+          ? getVendingFootfallMod((state.trade && state.trade.currentLocation), state)
           : 1.0;
       return Math.floor(
-        (80 + state.skills.sales.level * 1.2 + Random.float(0, 35)) *
+        (80 + (state.skills.sales && state.skills.sales.level || 0) * 1.2 + Random.float(0, 35)) *
           Math.min(footfall * 1.3, 3.0),
       );
     },
@@ -227,7 +227,7 @@ const STREET_JOBS = [
     payCalc(state) {
       const cookBonus =
         typeof getCookingDiscount === "function"
-          ? Math.floor(state.skills.cooking.level * 0.5)
+          ? Math.floor((state.skills.cooking && state.skills.cooking.level || 0) * 0.5)
           : 0;
       return Math.floor(50 + cookBonus + Random.float(0, 30));
     },
@@ -263,7 +263,7 @@ const STREET_JOBS = [
       return Math.floor(
         100 +
           state.player.intelligence * 0.8 +
-          state.skills.english.level * 0.6 +
+          (state.skills.english && state.skills.english.level || 0) * 0.6 +
           Random.float(0, 45),
       );
     },
@@ -288,7 +288,7 @@ const STREET_JOBS = [
     },
     payCalc(state) {
       const engBonus = state.skills.english
-        ? state.skills.english.level * 0.8
+        ? (state.skills.english && state.skills.english.level || 0) * 0.8
         : 0;
       const intBonus = state.player.intelligence * 0.7;
       return Math.floor(85 + intBonus + engBonus + Random.float(0, 50));
@@ -410,7 +410,7 @@ const STREET_JOBS = [
       effects: { fatigue: 14, hygiene: -3, happiness: 5, cookingXp: 6 },
       payCalc(state) {
         var base =
-          70 + (state.skills.cooking.level || 0) * 1.0 + Random.float(0, 35);
+          70 + ((state.skills.cooking && state.skills.cooking.level || 0)) * 1.0 + Random.float(0, 35);
         var branchBonus = 1.25;
         if (typeof getBranchJobBonus === "function") {
           branchBonus = getBranchJobBonus("cafeteria_worker", "cooking", state);
@@ -431,7 +431,7 @@ const STREET_JOBS = [
       effects: { fatigue: 12, repairXp: 8, happiness: 8, intelligenceXp: 2 },
       payCalc(state) {
         var base =
-          100 + (state.skills.repair.level || 0) * 2.5 + Random.float(0, 50);
+          100 + ((state.skills.repair && state.skills.repair.level || 0)) * 2.5 + Random.float(0, 50);
         var branchBonus =
           typeof getBranchJobBonus === "function"
             ? getBranchJobBonus("instrument_repair", "repair", state)
@@ -452,7 +452,7 @@ const STREET_JOBS = [
       effects: { fatigue: 10, repairXp: 6, happiness: 10, salesXp: 2 },
       payCalc(state) {
         var base =
-          80 + (state.skills.repair.level || 0) * 1.8 + Random.float(0, 40);
+          80 + ((state.skills.repair && state.skills.repair.level || 0)) * 1.8 + Random.float(0, 40);
         return Math.floor(
           base *
             (typeof getBranchJobBonus === "function"
@@ -474,7 +474,7 @@ const STREET_JOBS = [
       effects: { fatigue: 10, codingXp: 8, happiness: 12, intelligenceXp: 2 },
       payCalc(state) {
         var base =
-          110 + (state.skills.coding.level || 0) * 2.0 + Random.float(0, 55);
+          110 + ((state.skills.coding && state.skills.coding.level || 0)) * 2.0 + Random.float(0, 55);
         return Math.floor(
           base *
             (typeof getBranchJobBonus === "function"
@@ -496,7 +496,7 @@ const STREET_JOBS = [
       effects: { fatigue: 12, codingXp: 10, happiness: 5, intelligenceXp: 3 },
       payCalc(state) {
         var base =
-          130 + (state.skills.coding.level || 0) * 2.5 + Random.float(0, 50);
+          130 + ((state.skills.coding && state.skills.coding.level || 0)) * 2.5 + Random.float(0, 50);
         return Math.floor(
           base *
             (typeof getBranchJobBonus === "function"
@@ -518,7 +518,7 @@ const STREET_JOBS = [
       effects: { fatigue: 14, codingXp: 8, happiness: 8, mental: 1 },
       payCalc(state) {
         var base =
-          120 + (state.skills.coding.level || 0) * 2.2 + Random.float(0, 45);
+          120 + ((state.skills.coding && state.skills.coding.level || 0)) * 2.2 + Random.float(0, 45);
         return Math.floor(
           base *
             (typeof getBranchJobBonus === "function"
@@ -540,7 +540,7 @@ const STREET_JOBS = [
       effects: { fatigue: 14, englishXp: 7, happiness: 10, intelligenceXp: 2 },
       payCalc(state) {
         var base =
-          90 + (state.skills.english.level || 0) * 1.5 + Random.float(0, 40);
+          90 + ((state.skills.english && state.skills.english.level || 0)) * 1.5 + Random.float(0, 40);
         return Math.floor(
           base *
             (typeof getBranchJobBonus === "function"
@@ -562,7 +562,7 @@ const STREET_JOBS = [
       effects: { fatigue: 8, englishXp: 8, happiness: 15, intelligenceXp: 1 },
       payCalc(state) {
         var base =
-          80 + (state.skills.english.level || 0) * 2.0 + Random.float(0, 40);
+          80 + ((state.skills.english && state.skills.english.level || 0)) * 2.0 + Random.float(0, 40);
         return Math.floor(
           base *
             (typeof getBranchJobBonus === "function"
@@ -584,7 +584,7 @@ const STREET_JOBS = [
       effects: { fatigue: 28, drivingXp: 6, happiness: 3, agilityXp: 2 },
       payCalc(state) {
         var base =
-          70 + (state.skills.driving.level || 0) * 1.2 + Random.float(0, 45);
+          70 + ((state.skills.driving && state.skills.driving.level || 0)) * 1.2 + Random.float(0, 45);
         return Math.floor(
           base *
             (typeof getBranchJobBonus === "function"
@@ -606,7 +606,7 @@ const STREET_JOBS = [
       effects: { fatigue: 30, drivingXp: 5, physiqueXp: 3 },
       payCalc(state) {
         var base =
-          80 + (state.skills.driving.level || 0) * 1.0 + Random.float(0, 35);
+          80 + ((state.skills.driving && state.skills.driving.level || 0)) * 1.0 + Random.float(0, 35);
         return Math.floor(
           base *
             (typeof getBranchJobBonus === "function"
@@ -628,7 +628,7 @@ const STREET_JOBS = [
       effects: { fatigue: 16, salesXp: 6, happiness: 5 },
       payCalc(state) {
         var base =
-          55 + (state.skills.sales.level || 0) * 1.5 + Random.float(0, 35);
+          55 + ((state.skills.sales && state.skills.sales.level || 0)) * 1.5 + Random.float(0, 35);
         return Math.floor(
           base *
             (typeof getBranchJobBonus === "function"
@@ -650,7 +650,7 @@ const STREET_JOBS = [
       effects: { fatigue: 14, salesXp: 7, happiness: 8, intelligenceXp: 2 },
       payCalc(state) {
         var base =
-          75 + (state.skills.sales.level || 0) * 1.8 + Random.float(0, 40);
+          75 + ((state.skills.sales && state.skills.sales.level || 0)) * 1.8 + Random.float(0, 40);
         return Math.floor(
           base *
             (typeof getBranchJobBonus === "function"
@@ -672,7 +672,7 @@ const STREET_JOBS = [
       effects: { fatigue: 12, managementXp: 7, happiness: 8 },
       payCalc(state) {
         var base =
-          85 + (state.skills.management.level || 0) * 1.5 + Random.float(0, 35);
+          85 + ((state.skills.management && state.skills.management.level || 0)) * 1.5 + Random.float(0, 35);
         return Math.floor(
           base *
             (typeof getBranchJobBonus === "function"
@@ -699,7 +699,7 @@ const STREET_JOBS = [
       },
       payCalc(state) {
         var base =
-          95 + (state.skills.accounting.level || 0) * 2.0 + Random.float(0, 40);
+          95 + ((state.skills.accounting && state.skills.accounting.level || 0)) * 2.0 + Random.float(0, 40);
         return Math.floor(
           base *
             (typeof getBranchJobBonus === "function"
@@ -725,7 +725,7 @@ const STREET_JOBS = [
       payCalc(state) {
         var base =
           100 +
-          (state.skills.electrician.level || 0) * 2.0 +
+          ((state.skills.electrician && state.skills.electrician.level || 0)) * 2.0 +
           Random.float(0, 45);
         return Math.floor(
           base *
@@ -748,7 +748,7 @@ const STREET_JOBS = [
       effects: { fatigue: 32, weldingXp: 8, physiqueXp: 3, happiness: -5 },
       payCalc(state) {
         var base =
-          120 + (state.skills.welding.level || 0) * 2.5 + Random.float(0, 55);
+          120 + ((state.skills.welding && state.skills.welding.level || 0)) * 2.5 + Random.float(0, 55);
         return Math.floor(
           base *
             (typeof getBranchJobBonus === "function"
@@ -793,9 +793,9 @@ const STREET_JOBS = [
       payCalc(state) {
         return Math.floor(
           18 +
-            state.player.mental * 0.2 +
-            state.player.fame * 0.3 +
-            Random.float(0, 42),
+            (state.player.mental || 0) * 0.2 +
+            (state.player.fame || 0) * 0.3 +
+            (typeof Random !== "undefined" && Random.float ? Random.float(0, 42) : 21),
         );
       },
       risk: {},

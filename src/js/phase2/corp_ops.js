@@ -569,3 +569,26 @@ function enterCorporatePhase(companyId) {
   currentTab = "actions";
   renderAll();
 }
+
+// [全系统自洽修复] 域A R405 联动增强(A→H): 市场数据驱动的公司运营成本系数
+function getMarketCostMultiplier(state) {
+  try {
+    if (!state) return 1.0;
+    var base = 1.0;
+    // 通货膨胀: 游戏天数越久，成本越高
+    var dayFactor = 1 + ((state.player && state.player.day || 0) / 1000) * 0.15;
+    base *= dayFactor;
+    // 经济周期: 繁荣期成本上升，萧条期成本下降
+    if (state.economy && state.economy.cycle) {
+      if (state.economy.cycle === "boom") base *= 1.1;
+      else if (state.economy.cycle === "recession") base *= 0.9;
+    }
+    // 市场价格波动: 商品价格指数影响运营成本
+    if (state.trade && state.trade.priceIndex) {
+      base *= (0.8 + (state.trade.priceIndex || 1.0) * 0.2);
+    }
+    return Math.round(base * 100) / 100;
+  } catch (e) {
+    return 1.0;
+  }
+}
