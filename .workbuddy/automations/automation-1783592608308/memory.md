@@ -327,3 +327,11 @@
 - 联动3(新建 domain_e_linkage_r284.js,2 street+1 corporate,全||防御,e284_): E→G btc_cold_wallet 数字资产安全/E→A dip_buying_nerve 越跌越买定力/E→H seed_from_gains 收益变种子金。
 - 验证: node --check OK / build 9730.5KB / MC 6×400d EXIT=0·0代码异常(balanced/corporate 66.7% 既有RNG阈值)。
 - 并发: 源码(buyBtc/r284/index.html/dist)被并行窗口 f21054e3「feat [域E R284]」+ c9b5826a chore 扫入并已上 main(HEAD 核验全含);本窗口仅补账本(docs 085c1c30 + 回填 chore 35694a98)，均 push 成功。下轮→F(recency 277 最薄弱)。
+
+## 最近执行（2026-07-26，R311 域G / R312 域H — 并行窗口完成，本窗口只做权威 bookkeeping）
+
+- 开轮 loop-state 严重滞后(标R296/G/next=A)。据 git log 重算并行已推进 R297(B)-R312(H)，且 R311(域G)/R312(域H) 均由并行窗口完成并 push origin/main(HEAD 演进 22c6e032 R310→4f748380 R311→9bd4532d/3ff50622 R312→并行继续 R313)。
+- 本窗口独立定位并写入了 R311 的 A类缺陷(world_params.js 两处 Yahoo 财经解析器未守卫 prevClose，与腾讯/新浪解析器护栏不一致→Infinity/NaN 污染 world_params)，但并行窗口 f56942d8 已提交同修复；domain_g_linkage_r311.js 联动(域G第七轮)亦由并行 4f748380 提交。源码改动全部被并行 `git add -A` 扫入上 main。
+- 本窗口贡献：① 审校承接 r311 联动(3事件 G→E/G→H/G→A,全||防御,id唯一) ② 运行 MC 6×400d 验证(EXIT=0·0代码异常,balanced/corporate 存活率<80% 为既有RNG平衡阈值非回归,前7天死亡率全0.0%) ③ 更新权威 bookkeeping: DEVELOPMENT.md(v3.125 域G R311 条目,被并行扫入提交)、MEMORY.md(R311+R312 笔记+recency基准 R312后 A=304/B=305/C=307/D=308/E=309/F=310/G=311/H=312→下轮A)、loop-domain-state.json(round312/H/next=A)、round-311 账本。
+- 提交2笔(docs 83087100 + 回填 chore e38048b5)，**均 push origin main 成功**(3ff50622..83087100..e38048b5)。下轮→A(recency 304 最薄弱)。
+- ⚠️ 教训: 并行窗口速度远快于本自动化(单轮内 R310→R313)，本窗口角色转为「权威 bookkeeping + MC 验证 + 偶发 A类定位」；代码轮次几乎总被并行窗口抢先并提交。开轮必须先 `git log`+`git rev-parse origin/main` 重算真实 recency，勿盲信 loop-state。
