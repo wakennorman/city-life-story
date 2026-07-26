@@ -1,7 +1,7 @@
 {
-  "currentRound": 331,
-  "currentDomain": "A",
-  "nextDomain": "B",
+  "currentRound": 332,
+  "currentDomain": "B",
+  "nextDomain": "C",
   "rotationIndex": 0,
   "domainOrder": [
     "A",
@@ -15,7 +15,7 @@
   ],
   "domainRecency": {
     "A": 331,
-    "B": 323,
+    "B": 332,
     "C": 324,
     "D": 325,
     "E": 326,
@@ -25,9 +25,14 @@
   },
   "history": [
     {
+      "round": 332,
+      "domain": "B",
+      "note": "域B(事件/叙事·第十轮循环): 并行窗口 75a3be50 完成联动增强(3项: event_company_legacy B→H / event_life_milestone_v2 B→G / event_data_pattern_v4 B→A, domain_b_linkage_r332.js, IIFE+phase+||防御+excludeFlags+StateManager守卫)。本窗口作为权威 bookkeeping + MC 6×400d 验证(EXIT=0·0代码异常) 未抢轮次。"
+    },
+    {
       "round": 331,
       "domain": "A",
-      "note": "域A(数据/数值平衡·第十轮循环起点): A类1 = phase1/illness.js trackJobDiseaseRisk 的 jobRiskMap 三个死job id(skilled_labor_construction/customer_service_tech/food_stall 全库0命中→职业病风险追踪对这些键永不生效)。skilled_labor_construction→真实job steel_worker(news.js/npcs.js 早已确证,该工作此前无 jobRiskMap 覆盖,修复后风险正确计入); customer_service_tech(无对应久坐岗)+food_stall(行动id非job id,且 street_vending_food 已在map重复)两死键删除。联动3(domain_a_linkage_r331.js): a331_occupational_health_guard(A→G 消费_habits.highFatigueStreak/lateNightActions)/a331_price_data_neighbor(A→D 守 rel.met 走 applyAffinityChange)/a331_cost_structure_audit(A→H addSkillXp management+upward)。误报排除: jobs.js payCalc 读 state.skills.X.level 无可选链——但 state.js 全12技能键恒初始化,非A类崩溃(B类防御一致性)。node --check OK/build dist含r331 count=4/MC 6×400d EXIT=0·0代码异常。代码被并行 add-A 提交(feat 2d18fa43/chore 3b4ebcd9)并已 push origin main。"
+      "note": "域A(数据/数值平衡·第十轮循环起点): A类1 = phase1/illness.js jobRiskMap 三死 job id(skilled_labor_construction/customer_service_tech/food_stall 全库0命中→职业病风险追踪死数据)。skilled_labor_construction→真实job steel_worker(复活)+2死键删除。联动3(domain_a_linkage_r331.js, A→G/A→D/A→H)。代码被并行 add-A 扫入 feat 2d18fa43/chore 3b4ebcd9 并 push origin main。"
     },
     {
       "round": 330,
@@ -37,13 +42,13 @@
     {
       "round": 329,
       "domain": "G",
-      "note": "域G(核心机制/生命周期·第九轮): 并行窗口 7eb6890a 完成联动增强(3项,domain_g_linkage_r329.js)。"
+      "note": "域G(核心机制/生命周期·第九轮): 并行窗口 7eb6890a 完成联动增强(3项, domain_g_linkage_r329.js)。"
     }
   ],
-  "lastDomain": "A",
-  "lastRound": 331,
+  "lastDomain": "B",
+  "lastRound": 332,
   "lastDate": "2026-07-26",
-  "lastCommit": "3b4ebcd9",
+  "lastCommit": "d4b0590c",
   "pushStatus": "PUSHED",
   "completedDomains": [
     "A",
@@ -55,5 +60,5 @@
     "G",
     "H"
   ],
-  "description": "R331=域A(第十轮循环起点)。A类1修复 illness.js jobRiskMap 三死job id(steel_worker 复活+2死键删除)。联动3(A→G/A→D/A→H,domain_a_linkage_r331.js)。代码被并行 add-A 扫入 feat 2d18fa43/chore 3b4ebcd9 并 push origin main。MC 6×400d 0代码异常(corporate 50%<80% 为既有RNG平衡阈值非回归)。真实 recency: A=331/B=323/C=324/D=325/E=326/F=327/G=329/H=330 → B(323)全局最薄弱,下轮 R332=域B。"
+  "description": "R332=域B(第十轮循环) 由并行窗口 75a3be50 完成联动增强(3项)并 push origin main(d4b0590c=R333 sync chore)。A类=0(域B历轮 R7/R23/R191/R323 已净尽主隐患, 本轮纯联动增强)。本窗口权威 bookkeeping + MC 6×400d 验证(0代码异常)。真实 recency(R332后): A=331/B=332/C=324/D=325/E=326/F=327/G=329/H=330 → C(324)全局最薄弱, 下轮 R333=域C。并行窗口 R333(in-flight) 可能已抢先推进, 开轮必 git log 重算真实 recency。"
 }
