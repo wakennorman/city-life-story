@@ -51,3 +51,6 @@
 - ⚠️ 教训(R320)：判定 recency 必须同时看 feat 与 chore/文件落盘——并行窗口常以 chore「sync pending changes」名义提交某域轮次(如域B R314)，纯 `grep '[域X R]'` feat 会漏判该域最新轮次。
 - recency 基准(账本R320后)：A=313/B=314/C=315/D=316/E=317/F=318/G=319/H=320 → 下轮 A(recency 313 最薄弱,第九轮起点)。
 - recency 基准(对账轮R324·真实 git log 重算): A=321/B=323/C=315/D=316/E=317/F=318/G=319/H=320 → 下轮 C(recency 315 最薄弱, 第九轮 R325)。注: 并行 loop-state 滞后 R320, 本窗口已修正为 R324; 域B R323 由并行 4b547ae4 提交(B 314→323), 域A R321 由 c4f49757 提交(A 313→321)。本窗口角色=权威 bookkeeping+MC验证+偶发A类定位, 不抢并行在途代码轮次。
+- R331 域A（第十轮循环起点·代码被并行 add-A 扫入 feat 2d18fa43/chore 3b4ebcd9 并 push origin main）: A类1 = phase1/illness.js jobRiskMap 三死 job id(skilled_labor_construction/customer_service_tech/food_stall 全库0命中)→ steel_worker 复活 + 2 死键删除。联动3(domain_a_linkage_r331.js, A→G/A→D/A→H)。误报排除: jobs.js payCalc 读 state.skills.X.level 无可选链——state.js 全12键恒初始化非崩溃(B类防御一致性)。
+- ⚠️ 辅助函数签名确认(写 linkage 必守): `addSkillXp(skillKey,amount)` 全局读 state, **非** (state,key,amt); `applyAffinityChange(state,npcId,change,reason)`@npc_relationships.js —— 位置参数顺序固定, 误传 state 作首参会静默失效/崩。
+- recency 基准(R331后): A=331/B=323/C=324/D=325/E=326/F=327/G=329/H=330 → B(323)全局最薄弱, 下轮 R332=域B。

@@ -1,7 +1,7 @@
 {
-  "currentRound": 324,
-  "currentDomain": "B",
-  "nextDomain": "C",
+  "currentRound": 331,
+  "currentDomain": "A",
+  "nextDomain": "B",
   "rotationIndex": 0,
   "domainOrder": [
     "A",
@@ -14,36 +14,36 @@
     "H"
   ],
   "domainRecency": {
-    "A": 321,
+    "A": 331,
     "B": 323,
-    "C": 315,
-    "D": 316,
-    "E": 317,
-    "F": 318,
-    "G": 319,
-    "H": 320
+    "C": 324,
+    "D": 325,
+    "E": 326,
+    "F": 327,
+    "G": 329,
+    "H": 330
   },
   "history": [
     {
-      "round": 324,
-      "domain": "B",
-      "note": "对账轮(非代码轮): 并行窗口已完成 R313(A)-R320(H) 第八轮全8域联动增强 + R321(A,domain_a_linkage_r321.js) + R323(B,domain_b_linkage_r323.js,4b547ae4 第九轮) + R324 sync chore(41ce71fb)。本窗口未参与代码(工作树并行在途改动已随并行提交上 main), 仅做权威对账 + MC 6×400d 验证(0代码异常, 覆盖至 R323=B 在途状态) + 回填真实 recency。真实 recency: A=321/B=323/C=315/D=316/E=317/F=318/G=319/H=320 → C(315)全局最薄弱。并行 loop-state 仍滞后 R320, 本窗口修正为 R324。"
+      "round": 331,
+      "domain": "A",
+      "note": "域A(数据/数值平衡·第十轮循环起点): A类1 = phase1/illness.js trackJobDiseaseRisk 的 jobRiskMap 三个死job id(skilled_labor_construction/customer_service_tech/food_stall 全库0命中→职业病风险追踪对这些键永不生效)。skilled_labor_construction→真实job steel_worker(news.js/npcs.js 早已确证,该工作此前无 jobRiskMap 覆盖,修复后风险正确计入); customer_service_tech(无对应久坐岗)+food_stall(行动id非job id,且 street_vending_food 已在map重复)两死键删除。联动3(domain_a_linkage_r331.js): a331_occupational_health_guard(A→G 消费_habits.highFatigueStreak/lateNightActions)/a331_price_data_neighbor(A→D 守 rel.met 走 applyAffinityChange)/a331_cost_structure_audit(A→H addSkillXp management+upward)。误报排除: jobs.js payCalc 读 state.skills.X.level 无可选链——但 state.js 全12技能键恒初始化,非A类崩溃(B类防御一致性)。node --check OK/build dist含r331 count=4/MC 6×400d EXIT=0·0代码异常。代码被并行 add-A 提交(feat 2d18fa43/chore 3b4ebcd9)并已 push origin main。"
     },
     {
-      "round": 323,
-      "domain": "B",
-      "note": "域B(事件/叙事·第九轮循环): 并行窗口 4b547ae4 完成联动增强(3项)并 push origin/main。"
-    },
-    {
-      "round": 320,
+      "round": 330,
       "domain": "H",
-      "note": "域H(Phase2/公司·第八轮循环完成!): 并行窗口 1803127b 完成联动增强(3项), 本窗口R320轮次曾独立定位+修复 startup.js B轮KPI除零/NaN, 被并行 8f270dc7 扫入上 main。MC 6×400d 0代码异常。"
+      "note": "域H(Phase2/公司·第九轮循环完成!): 并行窗口 151a9216 完成联动增强(3项)。第九轮全8域(A321/B323/C324/D325/E326/F327/G329/H330)收官。"
+    },
+    {
+      "round": 329,
+      "domain": "G",
+      "note": "域G(核心机制/生命周期·第九轮): 并行窗口 7eb6890a 完成联动增强(3项,domain_g_linkage_r329.js)。"
     }
   ],
-  "lastDomain": "B",
-  "lastRound": 324,
+  "lastDomain": "A",
+  "lastRound": 331,
   "lastDate": "2026-07-26",
-  "lastCommit": "41ce71fb",
+  "lastCommit": "3b4ebcd9",
   "pushStatus": "PUSHED",
   "completedDomains": [
     "A",
@@ -55,5 +55,5 @@
     "G",
     "H"
   ],
-  "description": "对账轮 R324→域B(实际为权威 bookkeeping, 非代码轮)。据 git log 实况重算真实 recency: A=321/B=323/C=315/D=316/E=317/F=318/G=319/H=320 → C(315)全局最薄弱, 下轮 R325=域C。MC 6×400d 0代码异常(覆盖至 R323=B 在途状态)。本窗口修正并行滞后的 loop-state(R320→R324) + 回填 recency + 对账。下轮→C。"
+  "description": "R331=域A(第十轮循环起点)。A类1修复 illness.js jobRiskMap 三死job id(steel_worker 复活+2死键删除)。联动3(A→G/A→D/A→H,domain_a_linkage_r331.js)。代码被并行 add-A 扫入 feat 2d18fa43/chore 3b4ebcd9 并 push origin main。MC 6×400d 0代码异常(corporate 50%<80% 为既有RNG平衡阈值非回归)。真实 recency: A=331/B=323/C=324/D=325/E=326/F=327/G=329/H=330 → B(323)全局最薄弱,下轮 R332=域B。"
 }
