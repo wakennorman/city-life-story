@@ -96020,6 +96020,185 @@ if (typeof window !== "undefined") {
 })();
 
 ;
+// ==== js/core/domain_c_linkage_r306b.js ====
+/**
+ * 域C(职业/成长) 联动增强 R306b（并行窗口原创内容,因R306文件覆盖竞态丢失,R309轮恢复）
+ * 第七轮循环——技能积累的多维回响。
+ * 桥接：
+ *   C→E  skill_investment_insight     技能→投资洞察（经济·知识迁移）
+ *   C→B  career_event_catalyst_v2     职业→事件催化剂（事件/叙事·经历变现）
+ *   C→D  career_social_network        职业→社交网络（NPC/社交·职业人脉）
+ */
+(function () {
+  if (typeof RANDOM_EVENTS === "undefined") return;
+  if (RANDOM_EVENTS._domainCLinkageR306bLoaded) return;
+  RANDOM_EVENTS._domainCLinkageR306bLoaded = true;
+
+  function countHighSkillsC306(st, threshold) {
+    threshold = threshold || 40;
+    if (!st || !st.skills) return 0;
+    var count = 0;
+    for (var k in st.skills) {
+      if ((st.skills[k] && st.skills[k].level || 0) >= threshold) count++;
+    }
+    return count;
+  }
+
+  var EVENTS = [
+    {
+      id: "skill_investment_insight",
+      phase: "street",
+      _isChainEvent: false,
+      icon: "💡",
+      title: "技能洞察迁移投资",
+      story: "你发现，多年积累的专业技能开始影响你的投资判断。\n\n一个懂编程的人能看懂科技公司的技术壁垒，一个懂财务的人能分析上市公司的报表，一个懂销售的人能感知市场需求的微妙变化。\n\n你的专业，成了你投资的「护城河」。",
+      triggers: { minDay: 250, excludeFlags: ["_skillInvInsightSeen"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        if (!st.skills || !st.investment) return false;
+        return countHighSkillsC306(st, 50) >= 1;
+      },
+      choices: [
+        {
+          text: "💡 用专业眼光选投资标的",
+          hint: "心智+9，置投资洞察flag",
+          apply: function (st) {
+            if (!st.flags) st.flags = {};
+            st.flags._skillInvInsightSeen = true;
+            st.flags._skillDrivenInvestment = true;
+            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 9);
+            if (typeof StateManager !== "undefined" && StateManager.addMessage) {
+              StateManager.addMessage("💡 你用专业眼光选投资标的。知识就是最大的护城河。心智+9。", "success");
+            }
+          },
+        },
+        {
+          text: "🤷 投资归投资，专业归专业",
+          hint: "心智+3",
+          apply: function (st) {
+            if (!st.flags) st.flags = {};
+            st.flags._skillInvInsightSeen = true;
+            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 3);
+            if (typeof StateManager !== "undefined" && StateManager.addMessage) {
+              StateManager.addMessage("🤷 你觉得投资和专业应该分开。心智+3。", "info");
+            }
+          },
+        },
+      ],
+      probability: 0.45,
+      repeatable: false,
+    },
+    {
+      id: "career_event_catalyst_v2",
+      phase: "street",
+      _isChainEvent: false,
+      icon: "⚡",
+      title: "职业经历是事件的催化剂",
+      story: "你发现，职业积累的经历开始催化更多有趣的事件。\n\n一个手艺人会遇到更多「被认可」的故事，一个销售会遇到更多「被拒绝」的故事，一个管理者会遇到更多「被依赖」的故事。\n\n你的职业，成了你人生故事的「催化剂」。",
+      triggers: { minDay: 200, excludeFlags: ["_careerEventCatalystV2Seen"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        var job = st.career && st.career.currentJob;
+        if (!job || !job.path) return false;
+        var history = (st.flags && st.flags._eventHistory) || [];
+        return history.length >= 25;
+      },
+      choices: [
+        {
+          text: "⚡ 主动寻找职业相关的事件",
+          hint: "最高技能XP+12，心智+7",
+          apply: function (st) {
+            if (!st.flags) st.flags = {};
+            st.flags._careerEventCatalystV2Seen = true;
+            var topSkill = "", topLv = 0;
+            for (var k in st.skills) {
+              var lv = (st.skills[k] && st.skills[k].level) || 0;
+              if (lv > topLv) { topLv = lv; topSkill = k; }
+            }
+            if (topSkill && typeof addSkillXp === "function") addSkillXp(topSkill, 12);
+            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 7);
+            if (typeof StateManager !== "undefined" && StateManager.addMessage) {
+              StateManager.addMessage("⚡ 你主动寻找职业相关的事件。经历是故事的催化剂。技能XP+12，心智+7。", "success");
+            }
+          },
+        },
+        {
+          text: "🤷 事件是随机的，不用刻意寻找",
+          hint: "心智+3",
+          apply: function (st) {
+            if (!st.flags) st.flags = {};
+            st.flags._careerEventCatalystV2Seen = true;
+            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 3);
+            if (typeof StateManager !== "undefined" && StateManager.addMessage) {
+              StateManager.addMessage("🤷 你觉得事件是随机的。心智+3。", "info");
+            }
+          },
+        },
+      ],
+      probability: 0.5,
+      repeatable: false,
+    },
+    {
+      id: "career_social_network",
+      phase: "street",
+      _isChainEvent: false,
+      icon: "🕸️",
+      title: "职业社交网络",
+      story: "你发现，职业积累让你结识了很多有价值的人脉。\n\n前同事、客户、供应商、行业前辈——这些人不仅是职业资源，也是你在这座城市里的「社交资本」。\n\n你开始理解，「专业能力」和「社交网络」是职业发展的双翼。",
+      triggers: { minDay: 250, excludeFlags: ["_careerSocialNetworkSeen"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        if (!st.relationships || !st.career || !st.career.currentJob) return false;
+        var metNpcs = 0;
+        for (var id in st.relationships) {
+          if (st.relationships[id] && st.relationships[id].met && (st.relationships[id].affinity || 0) >= 35) metNpcs++;
+        }
+        return metNpcs >= 4;
+      },
+      choices: [
+        {
+          text: "🕸️ 主动经营职业社交网络",
+          hint: "NPC好感+4，心智+8",
+          apply: function (st) {
+            if (!st.flags) st.flags = {};
+            st.flags._careerSocialNetworkSeen = true;
+            if (typeof applyAffinityChange === "function") {
+              for (var id in st.relationships) {
+                if (st.relationships[id] && st.relationships[id].met && (st.relationships[id].affinity || 0) >= 35) {
+                  applyAffinityChange(st, id, 4, "职业社交");
+                }
+              }
+            }
+            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 8);
+            if (typeof StateManager !== "undefined" && StateManager.addMessage) {
+              StateManager.addMessage("🕸️ 你主动经营职业社交网络。专业能力和社交网络是职业发展的双翼。好感+4，心智+8。", "success");
+            }
+          },
+        },
+        {
+          text: "🤷 社交不用经营，本事最重要",
+          hint: "心智+3",
+          apply: function (st) {
+            if (!st.flags) st.flags = {};
+            st.flags._careerSocialNetworkSeen = true;
+            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 3);
+            if (typeof StateManager !== "undefined" && StateManager.addMessage) {
+              StateManager.addMessage("🤷 你觉得本事比社交重要。心智+3。", "info");
+            }
+          },
+        },
+      ],
+      probability: 0.5,
+      repeatable: false,
+    },
+  ];
+
+  for (var i = 0; i < EVENTS.length; i++) {
+    RANDOM_EVENTS.push(EVENTS[i]);
+  }
+})();
+
+;
 // ==== js/core/core_lifecycle_linkage_r192.js ====
 /**
  * 域G(核心机制/生命周期) 联动增强 R192
@@ -236986,6 +237165,181 @@ if (typeof window !== "undefined") {
         },
       ],
       probability: 0.5,
+      repeatable: false,
+    },
+  ];
+
+  for (var i = 0; i < EVENTS.length; i++) {
+    RANDOM_EVENTS.push(EVENTS[i]);
+  }
+})();
+
+;
+// ==== js/core/domain_e_linkage_r309.js ====
+/**
+ * 域E(经济/投资) 联动增强 R309
+ * 第七轮循环——投资积累的多维回响。
+ * 桥接：
+ *   E→A  investment_data_v2            投资→数据回馈（数据/数值·信息沉淀）
+ *   E→C  investment_career_v2         投资→职业联动（职业/成长·知识复用）
+ *   E→G  investment_wellbeing_v2       投资→幸福感（核心机制·心理健康）
+ */
+(function () {
+  if (typeof RANDOM_EVENTS === "undefined") return;
+  if (RANDOM_EVENTS._domainELinkageR309Loaded) return;
+  RANDOM_EVENTS._domainELinkageR309Loaded = true;
+
+  function calcTotalInvValueE309(st) {
+    if (!st || !st.investment) return 0;
+    var inv = st.investment;
+    var total = (inv.cash || 0) + (inv.bankBalance || 0);
+    if (inv.stockHoldings) {
+      for (var i = 0; i < inv.stockHoldings.length; i++) {
+        total += (inv.stockHoldings[i].shares || 0) * (inv.stockHoldings[i].currentPrice || inv.stockHoldings[i].avgPrice || 0);
+      }
+    }
+    total += (inv.btcHoldings || 0) * (inv.btcPrice || 0);
+    if (inv.properties) {
+      for (var j = 0; j < inv.properties.length; j++) {
+        total += inv.properties[j].currentPrice || inv.properties[j].buyPrice || 0;
+      }
+    }
+    return total;
+  }
+
+  var EVENTS = [
+    {
+      id: "investment_data_v2",
+      phase: "street",
+      _isChainEvent: false,
+      icon: "📊",
+      title: "投资数据回馈",
+      story: "你开始用数据审视自己的投资历程——收益率、最大回撤、持仓分布、交易频率。\n\n这些数字让你发现了一些有趣的规律：某些时段的投资决策质量更高，某些类型的资产更适合你的风险偏好。\n\n你开始用数据优化投资策略，而不是凭感觉。",
+      triggers: { minDay: 300, excludeFlags: ["_invDataV2Seen"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        if (!st.investment) return false;
+        return calcTotalInvValueE309(st) >= 40000;
+      },
+      choices: [
+        {
+          text: "📊 用数据优化投资策略",
+          hint: "心智+9，置投资数据flag",
+          apply: function (st) {
+            if (!st.flags) st.flags = {};
+            st.flags._invDataV2Seen = true;
+            st.flags._investmentDataDriven = true;
+            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 9);
+            if (typeof StateManager !== "undefined" && StateManager.addMessage) {
+              StateManager.addMessage("📊 你用数据优化投资策略。数据让决策更理性。心智+9。", "success");
+            }
+          },
+        },
+        {
+          text: "🤷 凭经验就行",
+          hint: "心智+3",
+          apply: function (st) {
+            if (!st.flags) st.flags = {};
+            st.flags._invDataV2Seen = true;
+            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 3);
+            if (typeof StateManager !== "undefined" && StateManager.addMessage) {
+              StateManager.addMessage("🤷 你觉得凭经验就行。心智+3。", "info");
+            }
+          },
+        },
+      ],
+      probability: 0.5,
+      repeatable: false,
+    },
+    {
+      id: "investment_career_v2",
+      phase: "street",
+      _isChainEvent: false,
+      icon: "🔄",
+      title: "投资经验迁移职场",
+      story: "你发现，投资中学到的经验开始在职场中发挥作用。\n\n「分散风险」让你不把所有希望押在一个客户身上，「长期主义」让你愿意花时间培养新人，「止损」让你及时放弃不靠谱的项目。\n\n投资不仅是赚钱，也是一种思维方式。",
+      triggers: { minDay: 250, excludeFlags: ["_invCareerV2Seen"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        if (!st.investment || !st.career || !st.career.currentJob) return false;
+        return calcTotalInvValueE309(st) >= 30000;
+      },
+      choices: [
+        {
+          text: "🔄 把投资思维带入职场",
+          hint: "最高技能XP+12，心智+8",
+          apply: function (st) {
+            if (!st.flags) st.flags = {};
+            st.flags._invCareerV2Seen = true;
+            var topSkill = "", topLv = 0;
+            for (var k in st.skills) {
+              var lv = (st.skills[k] && st.skills[k].level) || 0;
+              if (lv > topLv) { topLv = lv; topSkill = k; }
+            }
+            if (topSkill && typeof addSkillXp === "function") addSkillXp(topSkill, 12);
+            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 8);
+            if (typeof StateManager !== "undefined" && StateManager.addMessage) {
+              StateManager.addMessage("🔄 你把投资思维带入职场。投资不仅是赚钱，也是思维方式。技能XP+12，心智+8。", "success");
+            }
+          },
+        },
+        {
+          text: "🤷 投资归投资，工作归工作",
+          hint: "心智+3",
+          apply: function (st) {
+            if (!st.flags) st.flags = {};
+            st.flags._invCareerV2Seen = true;
+            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 3);
+            if (typeof StateManager !== "undefined" && StateManager.addMessage) {
+              StateManager.addMessage("🤷 你觉得投资和工作应该分开。心智+3。", "info");
+            }
+          },
+        },
+      ],
+      probability: 0.45,
+      repeatable: false,
+    },
+    {
+      id: "investment_wellbeing_v2",
+      phase: "street",
+      _isChainEvent: false,
+      icon: "😊",
+      title: "投资带来的幸福感",
+      story: "你发现，稳定的投资收益开始带来一种「安全感」。\n\n不是暴富的快乐，而是「即使今天不工作，也有收入」的踏实感。这种安全感让你更敢于追求自己真正想要的东西，而不是被生存压力推着走。\n\n你开始理解，「财务自由」不是有很多钱，而是有选择的自由。",
+      triggers: { minDay: 350, excludeFlags: ["_invWellbeingV2Seen"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        if (!st.investment || !st.needs) return false;
+        return calcTotalInvValueE309(st) >= 80000 && (st.investment.dailyInvIncome || 0) > 0;
+      },
+      choices: [
+        {
+          text: "😊 享受投资带来的安全感",
+          hint: "心情+15，心智+8",
+          apply: function (st) {
+            if (!st.flags) st.flags = {};
+            st.flags._invWellbeingV2Seen = true;
+            if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 15);
+            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 8);
+            if (typeof StateManager !== "undefined" && StateManager.addMessage) {
+              StateManager.addMessage("😊 你享受了投资带来的安全感。财务自由是有选择的自由。心情+15，心智+8。", "success");
+            }
+          },
+        },
+        {
+          text: "🤷 继续积累，延迟满足",
+          hint: "心智+4",
+          apply: function (st) {
+            if (!st.flags) st.flags = {};
+            st.flags._invWellbeingV2Seen = true;
+            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 4);
+            if (typeof StateManager !== "undefined" && StateManager.addMessage) {
+              StateManager.addMessage("🤷 你觉得继续积累更重要。心智+4。", "info");
+            }
+          },
+        },
+      ],
+      probability: 0.55,
       repeatable: false,
     },
   ];
