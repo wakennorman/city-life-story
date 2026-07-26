@@ -587,7 +587,23 @@ function hireTransport(serviceId, goods, destKey) {
   }
 
   // 运输随机事件
+  // [全系统自洽修复] 域G 修复:接线死函数 getWeatherTransportRiskMod——
+  // weather.js:789 定义的天气运输风险倍率全库无调用方（断链死代码），
+  // 恶劣天气（暴雨/台风/暴雪/冰冻等）本应提高货损与交通意外率却从未生效。
+  // 此处对"货物损坏"与"交通意外"两项掷骰乘上天气风险倍率（偷窃与天气无关不乘）。
+  var weatherRiskMod =
+    typeof getWeatherTransportRiskMod === "function"
+      ? getWeatherTransportRiskMod(state)
+      : 1.0;
+  if (!isFinite(weatherRiskMod) || weatherRiskMod <= 0) weatherRiskMod = 1.0;
   var events = [];
+  if (weatherRiskMod > 1.0) {
+    events.push(
+      "🌧️ 天气恶劣，运输风险上升约" +
+        Math.round((weatherRiskMod - 1.0) * 100) +
+        "%。",
+    );
+  }
   // 1. 偷窃
   if (Random.chance(service.theftRisk / 100)) {
     var target = Random.fromArray(toShip);
@@ -607,8 +623,10 @@ function hireTransport(serviceId, goods, destKey) {
     );
     state.needs.happiness = Math.max(0, state.needs.happiness - 8);
   }
-  // 2. 货物损坏
-  if (Random.chance(service.damageRisk / 100)) {
+  // 2. 货物损坏（[全系统自洽修复] 域G: 乘天气风险倍率，上限0.95防必然触发）
+  if (
+    Random.chance(Math.min(0.95, (service.damageRisk / 100) * weatherRiskMod))
+  ) {
     var fragileGoods = toShip.filter(function (g) {
       var p = getGoodPhysics(g.id);
       return p.fragile || p.tempSensitive;
@@ -622,8 +640,8 @@ function hireTransport(serviceId, goods, destKey) {
       );
     }
   }
-  // 3. 交通意外 (2%)
-  if (Random.chance(0.02)) {
+  // 3. 交通意外 (基准2%，[全系统自洽修复] 域G: 乘天气风险倍率——台风天最高3%)
+  if (Random.chance(Math.min(0.95, 0.02 * weatherRiskMod))) {
     var loss = Math.floor(totalQty * 0.15);
     if (loss > 0) {
       events.push("🚨 交通事故！约" + loss + "件货物损毁。");
