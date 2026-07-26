@@ -5099,9 +5099,31 @@ function doStreetJob(job) {
       state.certificates && state.certificates.includes("construction_safety")
         ? 0.5
         : 1.0;
+    // [全系统自洽修复] 域C R306 A类: injuryReduction 效果键(items.js 护膝0.08/equipment_suites 4处0.05-0.2,wiki 明示"受伤概率×(1-x)")全库零消费方→装备减伤宣称静默失效,此处接入掷骰
+    var gearInjuryCut = 0;
+    try {
+      if (typeof getEquippedInstance === "function" && typeof getItemById === "function") {
+        var _slots = ["head", "body", "feet", "hand", "accessory"];
+        for (var _gi = 0; _gi < _slots.length; _gi++) {
+          var _inst = getEquippedInstance(state, _slots[_gi]);
+          var _def = _inst && _inst.itemId ? getItemById(_inst.itemId) : null;
+          if (_def && _def.effects && isFinite(_def.effects.injuryReduction))
+            gearInjuryCut += _def.effects.injuryReduction;
+        }
+      }
+      if (state.equipmentSuites) {
+        for (var _sid in state.equipmentSuites) {
+          var _sr = state.equipmentSuites[_sid];
+          var _se = _sr && _sr.achievedTier && _sr.achievedTier.effects;
+          if (_se && isFinite(_se.injuryReduction))
+            gearInjuryCut += _se.injuryReduction;
+        }
+      }
+    } catch (e) { gearInjuryCut = 0; }
+    gearInjuryCut = Math.min(0.8, Math.max(0, gearInjuryCut)); // cap 80%，保底仍有风险
     if (
       job.risk.injury &&
-      Random.chance(Math.min(1, job.risk.injury * riskMod * certReduction))
+      Random.chance(Math.min(1, job.risk.injury * riskMod * certReduction * (1 - gearInjuryCut)))
     ) {
       state.status.injured = true;
       state.status.health = Math.max(0, state.status.health - 15);
