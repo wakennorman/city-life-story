@@ -142943,6 +142943,8 @@ function parseYahooFinanceResponse(text, params) {
       if (closes && closes.length >= 2) {
         var prevClose = closes[closes.length - 2];
         var latestClose = closes[closes.length - 1];
+        // [全系统自洽修复] 域G R311 A类: Yahoo 解析器未守卫 prevClose(与腾讯/新浪解析器不一致)→prevClose=0/NaN 时 changePercent=Infinity/NaN 污染 world_params 市场情绪与增长假设。补齐与兄弟解析器一致的护栏。
+        if (isNaN(prevClose) || isNaN(latestClose) || prevClose === 0) return false;
         var changePercent = (latestClose - prevClose) / prevClose;
 
         // 计算5日波动率
@@ -143120,6 +143122,8 @@ function fetchYahooFinanceData(params) {
       if (closes && closes.length >= 2) {
         var prevClose = closes[closes.length - 2];
         var latestClose = closes[closes.length - 1];
+        // [全系统自洽修复] 域G R311 A类: Yahoo 解析器未守卫 prevClose(与腾讯/新浪解析器不一致)→prevClose=0/NaN 时 changePercent=Infinity/NaN 污染 world_params 市场情绪与增长假设。补齐与兄弟解析器一致的护栏。
+        if (isNaN(prevClose) || isNaN(latestClose) || prevClose === 0) return false;
         var changePercent = (latestClose - prevClose) / prevClose;
 
         var n = Math.min(closes.length, 5);
