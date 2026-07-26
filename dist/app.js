@@ -273057,6 +273057,32 @@ function applyCareerJob(pathId, levelId) {
     }
   }
 
+  // [全系统自洽修复] 域C R357 联动增强: C→B 职业路径入职叙事(首次进入某路径时触发人生故事)
+  if (!state.flags) state.flags = {};
+  var _firstPathFlag = '_firstCareerPath_' + pathId;
+  if (!state.flags[_firstPathFlag]) {
+    state.flags[_firstPathFlag] = true;
+    var _pathStory = {
+      tech: "你坐在电脑前，第一次以程序员身份写代码。屏幕的光映在脸上，你想起小时候玩红白机的那个下午。",
+      finance: "你整理完第一张凭证，把数字对齐。财务人的路，从一分一厘开始。",
+      sales: "你拨出第一个客户电话，手心在冒汗。销售的世界，脸皮厚一点才能活下去。",
+      operations: "你打开第一份运营报表，密密麻麻的数据让你头晕。但你知道，这是看懂生意的开始。",
+      design: "你打开设计软件，画下第一根线条。从兴趣到职业，这条路你选择了。",
+      legal: "你翻开第一本案卷，密密麻麻的法条让你头大。但正义的种子，就在这些文字里。",
+      education: "你站上讲台，看着下面几十双眼睛。你深吸一口气——从此，你是老师了。",
+      logistics: "你穿上工装，开始第一天的分拣。物流是城市的血脉，而你，是血流中的一粒细胞。",
+      catering: "你系上围裙，握起菜刀。厨房里的烟火气，让你觉得踏实。",
+      medical: "你穿上白大褂，第一次走进病房。患者信任的目光，让你觉得这份工作有意义。",
+      doctor: "你穿上白大褂，胸前挂着听诊器。从医这条路，你选择了责任与担当。",
+      public_institution: "你坐在办公桌前，桌上堆着文件。体制内的工作，稳定但需要耐心。",
+      civil: "你穿上制服，为人民服务不是口号，而是每一天的具体工作。"
+    };
+    var _story = _pathStory[pathId];
+    if (_story) {
+      StateManager.addMessage("📖 " + _story, "narrative");
+    }
+  }
+
   cap.reputation = (cap.reputation || 0) + 2;
   cap.industryResources = (cap.industryResources || 0) + 1;
   clampCareerCapital(cap);

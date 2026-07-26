@@ -1818,6 +1818,45 @@ function renderCareerOverview(state, parent) {
     html += "</div></div>";
   }
 
+  // === [全系统自洽修复] 域C R357 联动增强: C→F 技能提升进度(晋升所需技能XP缺口可视化) ===
+  if (job) {
+    var _nextLevel = getNextCareerLevel(job.path, job.levelId);
+    if (_nextLevel && _nextLevel.reqSkills) {
+      var _skillGapItems = [];
+      for (var _sgSkill in _nextLevel.reqSkills) {
+        var _sgReq = _nextLevel.reqSkills[_sgSkill];
+        var _sgCur = _getSkillValue(state, _sgSkill);
+        var _sgLabel = _careerLabelMap[_sgSkill] || _sgSkill;
+        var _sgSkillData = state.skills && state.skills[_sgSkill];
+        var _sgXp = _sgSkillData ? (_sgSkillData.xp || 0) : 0;
+        var _sgXpNeeded = Math.max(0, (_sgReq - _sgCur) * 100 - _sgXp);
+        _skillGapItems.push({
+          label: _sgLabel, current: _sgCur, required: _sgReq,
+          xp: _sgXp, xpNeeded: _sgXpNeeded, met: _sgCur >= _sgReq
+        });
+      }
+      if (_skillGapItems.length > 0) {
+        html += '<div class="section" style="margin-top:8px;"><h3>📈 技能提升进度</h3><div class="card" style="padding:10px;">';
+        html += '<div style="font-size:10px;color:var(--text-muted);margin-bottom:6px;">下一级「' + _nextLevel.name + '」所需技能 — 点击技能Tab查看详情</div>';
+        for (var _sgi = 0; _sgi < _skillGapItems.length; _sgi++) {
+          var _sg = _skillGapItems[_sgi];
+          var _sgColor = _sg.met ? 'var(--success)' : 'var(--warning)';
+          var _sgIcon = _sg.met ? '✅' : '⬆️';
+          html += '<div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;font-size:10px;">';
+          html += '<span style="color:' + _sgColor + ';">' + _sgIcon + ' ' + _sg.label + ' Lv.' + _sg.current + '/' + _sg.required + '</span>';
+          if (!_sg.met) {
+            html += '<span style="font-size:8px;color:var(--text-muted);">(约需' + _sg.xpNeeded + 'XP)</span>';
+          }
+          var _sgPct = Math.min(100, Math.round((_sg.current / Math.max(1, _sg.required)) * 100));
+          html += '<div style="flex:1;height:4px;background:rgba(255,255,255,0.1);border-radius:2px;overflow:hidden;">';
+          html += '<div style="height:100%;width:' + _sgPct + '%;background:' + _sgColor + ';border-radius:2px;"></div></div>';
+          html += '</div>';
+        }
+        html += '</div></div>';
+      }
+    }
+  }
+
   // === 二、职业资本雷达卡 ===
   html +=
     '<div class="section" style="margin-top:8px;"><h3>📊 职业资本</h3><div class="card" style="padding:10px;">';
@@ -3127,6 +3166,32 @@ function applyCareerJob(pathId, levelId) {
     }
   }
 
+  // [全系统自洽修复] 域C R357 联动增强: C→B 职业路径入职叙事(首次进入某路径时触发人生故事)
+  if (!state.flags) state.flags = {};
+  var _firstPathFlag = '_firstCareerPath_' + pathId;
+  if (!state.flags[_firstPathFlag]) {
+    state.flags[_firstPathFlag] = true;
+    var _pathStory = {
+      tech: "你坐在电脑前，第一次以程序员身份写代码。屏幕的光映在脸上，你想起小时候玩红白机的那个下午。",
+      finance: "你整理完第一张凭证，把数字对齐。财务人的路，从一分一厘开始。",
+      sales: "你拨出第一个客户电话，手心在冒汗。销售的世界，脸皮厚一点才能活下去。",
+      operations: "你打开第一份运营报表，密密麻麻的数据让你头晕。但你知道，这是看懂生意的开始。",
+      design: "你打开设计软件，画下第一根线条。从兴趣到职业，这条路你选择了。",
+      legal: "你翻开第一本案卷，密密麻麻的法条让你头大。但正义的种子，就在这些文字里。",
+      education: "你站上讲台，看着下面几十双眼睛。你深吸一口气——从此，你是老师了。",
+      logistics: "你穿上工装，开始第一天的分拣。物流是城市的血脉，而你，是血流中的一粒细胞。",
+      catering: "你系上围裙，握起菜刀。厨房里的烟火气，让你觉得踏实。",
+      medical: "你穿上白大褂，第一次走进病房。患者信任的目光，让你觉得这份工作有意义。",
+      doctor: "你穿上白大褂，胸前挂着听诊器。从医这条路，你选择了责任与担当。",
+      public_institution: "你坐在办公桌前，桌上堆着文件。体制内的工作，稳定但需要耐心。",
+      civil: "你穿上制服，为人民服务不是口号，而是每一天的具体工作。"
+    };
+    var _story = _pathStory[pathId];
+    if (_story) {
+      StateManager.addMessage("📖 " + _story, "narrative");
+    }
+  }
+
   cap.reputation = (cap.reputation || 0) + 2;
   cap.industryResources = (cap.industryResources || 0) + 1;
   clampCareerCapital(cap);
@@ -3419,6 +3484,29 @@ function tickCareerJobDaily(state) {
         StateManager.addMessage("📈 月薪¥" + job.salary.toLocaleString() + "，除了消费，不妨考虑多元化资产配置。", "info");
       } else {
         StateManager.addMessage("💡 月薪¥" + job.salary.toLocaleString() + "，建议将20%收入用于储蓄或低风险投资。", "info");
+      }
+    }
+    // [全系统自洽修复] 域C R357 联动增强: C→E 职业路径专属投资洞察(基于职业背景推荐相关行业)
+    if (job.salary >= 15000 && state.player.day % 90 === 1) {
+      var _careerInvestTips = {
+        tech: "💻 你身处IT行业，对科技趋势有敏锐洞察。关注AI、云计算领域的成长股，利用行业认知优势。",
+        finance: "📊 金融从业者让你对宏观数据敏感。债券基金+蓝筹股的组合适合你稳健增值。",
+        sales: "🤝 销售让你懂市场冷暖。消费类ETF和地产REITs可以关注。",
+        operations: "⚙️ 运营管理培养了你对效率的敏感。关注自动化、物流行业的龙头股。",
+        design: "🎨 创意行业让你对消费趋势敏感。文创、IP经济相关题材值得关注。",
+        legal: "⚖️ 法律专业让你能识别合规风险。优先考虑监管完善的蓝筹板块。",
+        education: "📚 教育行业让你了解人才流向。教育培训、在线学习赛道有长期价值。",
+        logistics: "🚚 物流行业让你对经济脉动有直观感受。关注基建、交通类基金。",
+        catering: "🍜 餐饮经验让你对消费有深刻理解。消费类基金是合适的投资方向。",
+        medical: "🏥 医疗行业让你了解健康产业发展。医药ETF和医疗器械股值得配置。",
+        doctor: "👨‍⚕️ 医师视角让你看重长期价值。医疗健康类基金+固收组合是稳健选择。",
+        public_institution: "🏢 体制内工作让你偏好稳健。国债+高分红蓝筹股适合你的风险偏好。",
+        civil: "🏛️ 公务员视角让你关注政策风向。关注政策受益板块，避免高波动品种。"
+      };
+      var _careerTip = _careerInvestTips[job.path];
+      if (_careerTip && !state.flags['_careerInvestTip_' + job.path]) {
+        state.flags['_careerInvestTip_' + job.path] = true;
+        StateManager.addMessage(_careerTip, "info");
       }
     }
     var salaryMsg =
