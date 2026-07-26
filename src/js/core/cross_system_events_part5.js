@@ -1,3 +1,4 @@
+// [全系统自洽修复] 域B R410 修复: 死字段 st.player.health.*(state无此对象,守卫永false压力效果静默失效)->st.personalGrowth.health.*; st.needs.health(needs无health)->st.status.health
 /**
  * 跨系统联动事件 — 拆分片段 5/8（原 cross_system_events.js 机械拆分，行为不变）
  * 仅含自包含的 RANDOM_EVENTS.push 语句；顺序无关（事件选择走 phase 过滤+概率）。
@@ -4604,10 +4605,10 @@
     // conditions：心理压力偏高（心理压力×事件空白区）
 
     conditions: function (st) {
-      if (!st.player || !st.player.health || !st.player.health.mental)
+      if (!st.player || !st.personalGrowth.health || !st.personalGrowth.health.mental)
         return false; // 检查 心理结构存在
 
-      if ((st.player.health.mental.stress || 0) <= 60) return false; // 检查 压力>60
+      if ((st.personalGrowth.health.mental.stress || 0) <= 60) return false; // 检查 压力>60
 
       if (st.flags && st.flags._r104Stress) return false; // 检查 未触发过
 
@@ -4625,10 +4626,10 @@
         hint: "压力- 现金-",
 
         apply: function (st) {
-          st.player.health.mental.stress = Math.max(
+          st.personalGrowth.health.mental.stress = Math.max(
             0,
 
-            (st.player.health.mental.stress || 0) - 30,
+            (st.personalGrowth.health.mental.stress || 0) - 30,
           );
 
           st.resources.cash = Math.max(0, (st.resources.cash || 0) - 30);
@@ -4649,10 +4650,10 @@
         hint: "轻量 压力- 健康-",
 
         apply: function (st) {
-          st.player.health.mental.stress = Math.max(
+          st.personalGrowth.health.mental.stress = Math.max(
             0,
 
-            (st.player.health.mental.stress || 0) - 10,
+            (st.personalGrowth.health.mental.stress || 0) - 10,
           );
 
           st.status.health = Math.max(0, (st.status.health || 0) - 4);

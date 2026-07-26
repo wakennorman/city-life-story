@@ -1,3 +1,4 @@
+// [全系统自洽修复] 域B R410 修复: 死字段 st.player.health.*(state无此对象,守卫永false压力效果静默失效)->st.personalGrowth.health.*; st.needs.health(needs无health)->st.status.health
 /**
  * 跨系统联动事件 — 拆分片段 6/8（原 cross_system_events.js 机械拆分，行为不变）
  * 仅含自包含的 RANDOM_EVENTS.push 语句；顺序无关（事件选择走 phase 过滤+概率）。
@@ -965,10 +966,10 @@
     conditions: function (st) {
       if (!st.weather || st.weather.current !== "cloudy") return false; // 检查 阴天
 
-      if (!st.player || !st.player.health || !st.player.health.mental)
+      if (!st.player || !st.personalGrowth.health || !st.personalGrowth.health.mental)
         return false; // 检查 心理结构存在
 
-      if ((st.player.health.mental.stress || 0) <= 50) return false; // 检查 压力>50
+      if ((st.personalGrowth.health.mental.stress || 0) <= 50) return false; // 检查 压力>50
 
       if (st.flags && st.flags._r114Cloudy) return false; // 检查 未触发过
 
@@ -986,9 +987,9 @@
         hint: "压力-",
 
         apply: function (st) {
-          st.player.health.mental.stress = Math.max(
+          st.personalGrowth.health.mental.stress = Math.max(
             0,
-            (st.player.health.mental.stress || 0) - 20,
+            (st.personalGrowth.health.mental.stress || 0) - 20,
           );
 
           st.flags._r114Cloudy = true;
@@ -1006,9 +1007,9 @@
         hint: "轻量 压力- 疲劳+",
 
         apply: function (st) {
-          st.player.health.mental.stress = Math.max(
+          st.personalGrowth.health.mental.stress = Math.max(
             0,
-            (st.player.health.mental.stress || 0) - 10,
+            (st.personalGrowth.health.mental.stress || 0) - 10,
           );
 
           st.needs.fatigue = Math.min(100, (st.needs.fatigue || 0) + 6);
@@ -4554,9 +4555,9 @@
     conditions: function (st) {
       var stress =
         (st.player &&
-          st.player.health &&
-          st.player.health.mental &&
-          st.player.health.mental.stress) ||
+          st.personalGrowth.health &&
+          st.personalGrowth.health.mental &&
+          st.personalGrowth.health.mental.stress) ||
         0; // 检查 心理压力
 
       if (stress < 50) return false; // 检查 压力>=50
@@ -4580,7 +4581,7 @@
         hint: "压力- 道德+",
 
         apply: function (st) {
-          var m = st.player.health.mental;
+          var m = st.personalGrowth.health.mental;
 
           m.stress = Math.max(0, (m.stress || 0) - 15);
 
@@ -4601,7 +4602,7 @@
         hint: "轻量 压力-",
 
         apply: function (st) {
-          var m = st.player.health.mental;
+          var m = st.personalGrowth.health.mental;
 
           m.stress = Math.max(0, (m.stress || 0) - 8);
 

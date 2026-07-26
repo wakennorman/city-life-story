@@ -1,3 +1,4 @@
+// [全系统自洽修复] 域B R410 修复: 死字段 st.player.health.*(state无此对象,守卫永false压力效果静默失效)->st.personalGrowth.health.*; st.needs.health(needs无health)->st.status.health
 /**
  * 跨系统联动事件 — 拆分片段 2/8（原 cross_system_events.js 机械拆分，行为不变）
  * 仅含自包含的 RANDOM_EVENTS.push 语句；顺序无关（事件选择走 phase 过滤+概率）。
@@ -1509,7 +1510,7 @@
             var fake = Random.chance(0.4);
             if (fake) {
               st.flags._boughtFakeMedicine = true;
-              st.needs.health = Math.max(0, (st.needs.health || 50) - 5);
+              st.status.health = Math.max(0, (st.status.health || 50) - 5);
               st.needs.happiness = Math.max(0, (st.needs.happiness || 50) - 8);
               StateManager.addMessage(
                 "💊 回家打开一看，药片颜色不对，闻着有股怪味——假药！\n健康-5，心情-8。¥50打了水漂。",
@@ -1669,7 +1670,7 @@
             st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 5);
             var bad = Random.chance(0.25);
             if (bad) {
-              st.needs.health = Math.max(0, (st.needs.health || 50) - 3);
+              st.status.health = Math.max(0, (st.status.health || 50) - 3);
               StateManager.addMessage(
                 "🥬 回去发现蔫了的叶子不能吃，扔了一半。不过剩下的还算划算。\n饥饿+25，健康-3（吃了不新鲜的），心情+5。",
                 "warning",
@@ -1737,7 +1738,7 @@
         hint: "健康+2，心情+3，休息恢复",
         apply: function (st) {
           st.flags._suburbStormShelterSeen = true;
-          st.needs.health = Math.min(100, (st.needs.health || 50) + 2);
+          st.status.health = Math.min(100, (st.status.health || 50) + 2);
           st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 3);
           st.needs.fatigue = Math.max(0, (st.needs.fatigue || 0) - 5);
           st.player.morality = Math.min(100, (st.player.morality || 50) + 1);
@@ -1752,7 +1753,7 @@
         hint: "免费，但淋湿了",
         apply: function (st) {
           st.flags._suburbStormShelterSeen = true;
-          st.needs.health = Math.max(0, (st.needs.health || 50) - 1);
+          st.status.health = Math.max(0, (st.status.health || 50) - 1);
           st.needs.hygiene = Math.max(0, (st.needs.hygiene || 50) - 5);
           StateManager.addMessage(
             "🌳 你在树下缩着身子等雨小，衣服湿了大半。风一吹，冷得直哆嗦。\n健康-1，卫生-5。",
@@ -1765,7 +1766,7 @@
         hint: "省时间，但全身湿透",
         apply: function (st) {
           st.flags._suburbStormShelterSeen = true;
-          st.needs.health = Math.max(0, (st.needs.health || 50) - 3);
+          st.status.health = Math.max(0, (st.status.health || 50) - 3);
           st.needs.hygiene = Math.max(0, (st.needs.hygiene || 50) - 10);
           st.needs.happiness = Math.max(0, (st.needs.happiness || 50) - 3);
           StateManager.addMessage(
@@ -2682,9 +2683,9 @@
         hint: "省钱,心情-",
         apply: function (st) {
           st.needs.happiness = Math.max(0, (st.needs.happiness || 0) - 2);
-          if (st.player.health && st.player.health.mental)
-            st.player.health.mental.stress =
-              (st.player.health.mental.stress || 0) + 3;
+          if (st.personalGrowth.health && st.personalGrowth.health.mental)
+            st.personalGrowth.health.mental.stress =
+              (st.personalGrowth.health.mental.stress || 0) + 3;
           StateManager.addMessage(
             "🌃 你把手机扣在桌上，盯着天花板。有些情绪，只能自己消化。",
           );
@@ -2766,9 +2767,9 @@
           var earn = Random.int(900, 1600);
           st.resources.cash = (st.resources.cash || 0) + earn;
           st.resources.totalEarned = (st.resources.totalEarned || 0) + earn;
-          if (st.player.health && st.player.health.mental)
-            st.player.health.mental.stress =
-              (st.player.health.mental.stress || 0) + 10;
+          if (st.personalGrowth.health && st.personalGrowth.health.mental)
+            st.personalGrowth.health.mental.stress =
+              (st.personalGrowth.health.mental.stress || 0) + 10;
           st.flags._codingTeamDone = true;
           StateManager.addMessage(
             "👥 你拉了两个靠谱朋友组队，把外包单啃下来了，账户厚了一截。",
@@ -2799,8 +2800,8 @@
     // conditions：stress 心理健康阈值（health.mental.stress 空白区）
     conditions: function (st) {
       var stress =
-        st.player && st.player.health && st.player.health.mental
-          ? st.player.health.mental.stress
+        st.player && st.personalGrowth.health && st.personalGrowth.health.mental
+          ? st.personalGrowth.health.mental.stress
           : 0; // 检查 心理压力值
       if (stress < 80) return false; // 检查 压力≥80（临界）
       if (st.player.day < 15) return false; // 检查 中后期
@@ -2819,10 +2820,10 @@
         text: "🏖️ 请几天假缓一缓",
         hint: "压力-,收入-",
         apply: function (st) {
-          if (st.player.health && st.player.health.mental)
-            st.player.health.mental.stress = Math.max(
+          if (st.personalGrowth.health && st.personalGrowth.health.mental)
+            st.personalGrowth.health.mental.stress = Math.max(
               0,
-              st.player.health.mental.stress - 25,
+              st.personalGrowth.health.mental.stress - 25,
             );
           st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 5);
           st.flags._stressBreakdownDay = st.player.day;
@@ -2835,13 +2836,13 @@
         text: "⚡ 硬扛过去",
         hint: "收入保,健康-",
         apply: function (st) {
-          if (st.player.health && st.player.health.mental)
-            st.player.health.mental.stress =
-              (st.player.health.mental.stress || 0) + 5;
-          if (st.player.health && st.player.health.physical)
-            st.player.health.physical.score = Math.max(
+          if (st.personalGrowth.health && st.personalGrowth.health.mental)
+            st.personalGrowth.health.mental.stress =
+              (st.personalGrowth.health.mental.stress || 0) + 5;
+          if (st.personalGrowth.health && st.personalGrowth.health.physical)
+            st.personalGrowth.health.physical.score = Math.max(
               0,
-              st.player.health.physical.score - 8,
+              st.personalGrowth.health.physical.score - 8,
             );
           st.flags._stressBreakdownDay = st.player.day;
           StateManager.addMessage(
@@ -3294,7 +3295,7 @@
       if (!st.relationships || !st.relationships.dr_wang) return false;
       if (!st.relationships.dr_wang.met) return false;
       if (!st.needs) return false;
-      var health = st.needs.health || 100;
+      var health = st.status.health || 100;
       if (health > 50) return false;
       if (st.flags._drWangWarningSeen) return false;
       if (st.player.day < 10) return false;
@@ -3308,7 +3309,7 @@
         hint: "health+10",
         apply: function (st) {
           st.flags._drWangWarningSeen = true;
-          st.needs.health = Math.min(100, (st.needs.health || 0) + 10);
+          st.status.health = Math.min(100, (st.status.health || 0) + 10);
           st.relationships.dr_wang.affinity = Math.min(
             100,
             st.relationships.dr_wang.affinity + 3,

@@ -1,3 +1,4 @@
+// [全系统自洽修复] 域B R410 修复: 死字段 st.player.health.*(state无此对象,守卫永false压力效果静默失效)->st.personalGrowth.health.*; st.needs.health(needs无health)->st.status.health
 /**
  * 跨系统联动事件 — 拆分片段 3/8（原 cross_system_events.js 机械拆分，行为不变）
  * 仅含自包含的 RANDOM_EVENTS.push 语句；顺序无关（事件选择走 phase 过滤+概率）。
@@ -5389,10 +5390,10 @@
 
           s.level = Math.min(100, s.level + 2);
 
-          st.player.health.mental.stress = Math.min(
+          st.personalGrowth.health.mental.stress = Math.min(
             100,
 
-            (st.player.health.mental.stress || 0) + 6,
+            (st.personalGrowth.health.mental.stress || 0) + 6,
           );
 
           st.flags._hwCodeSeen = true;
@@ -5411,10 +5412,10 @@
         hint: "轻量 压力-",
 
         apply: function (st) {
-          st.player.health.mental.stress = Math.max(
+          st.personalGrowth.health.mental.stress = Math.max(
             0,
 
-            (st.player.health.mental.stress || 0) - 4,
+            (st.personalGrowth.health.mental.stress || 0) - 4,
           );
 
           st.flags._hwCodeSeen = true;

@@ -1,3 +1,4 @@
+// [全系统自洽修复] 域B R410 修复: 死字段 st.player.health.*(state无此对象,守卫永false压力效果静默失效)->st.personalGrowth.health.*; st.needs.health(needs无health)->st.status.health
 /**
  * 跨系统联动事件 — 拆分片段 4/8（原 cross_system_events.js 机械拆分，行为不变）
  * 仅含自包含的 RANDOM_EVENTS.push 语句；顺序无关（事件选择走 phase 过滤+概率）。
@@ -1598,8 +1599,8 @@
 
     conditions: function (st) {
       var stress =
-        st.player.health && st.player.health.mental
-          ? st.player.health.mental.stress
+        st.personalGrowth.health && st.personalGrowth.health.mental
+          ? st.personalGrowth.health.mental.stress
           : 0; // 检查 心理压力
 
       if (stress < 50) return false; // 检查 压力>=50
@@ -1627,11 +1628,11 @@
         hint: "压力- 幸福+",
 
         apply: function (st) {
-          if (st.player.health && st.player.health.mental)
-            st.player.health.mental.stress = Math.max(
+          if (st.personalGrowth.health && st.personalGrowth.health.mental)
+            st.personalGrowth.health.mental.stress = Math.max(
               0,
 
-              st.player.health.mental.stress - 20,
+              st.personalGrowth.health.mental.stress - 20,
             );
 
           st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 6);
@@ -1652,11 +1653,11 @@
         hint: "轻量 压力-",
 
         apply: function (st) {
-          if (st.player.health && st.player.health.mental)
-            st.player.health.mental.stress = Math.max(
+          if (st.personalGrowth.health && st.personalGrowth.health.mental)
+            st.personalGrowth.health.mental.stress = Math.max(
               0,
 
-              st.player.health.mental.stress - 8,
+              st.personalGrowth.health.mental.stress - 8,
             );
 
           st.flags._stressCookSeen = true;
@@ -3497,9 +3498,9 @@
     conditions: function (st) {
       var stress =
         st.player &&
-        st.player.health &&
-        st.player.health.mental &&
-        st.player.health.mental.stress; // 检查 心理压
+        st.personalGrowth.health &&
+        st.personalGrowth.health.mental &&
+        st.personalGrowth.health.mental.stress; // 检查 心理压
 
       if (typeof stress !== "number" || stress < 50) return false; // 检查 心理压>=50
 
@@ -3535,11 +3536,11 @@
           if (st.skills && st.skills.management)
             st.skills.management.xp = (st.skills.management.xp || 0) + 30;
 
-          if (st.player && st.player.health && st.player.health.mental)
-            st.player.health.mental.stress = Math.max(
+          if (st.player && st.personalGrowth.health && st.personalGrowth.health.mental)
+            st.personalGrowth.health.mental.stress = Math.max(
               0,
 
-              (st.player.health.mental.stress || 0) - 15,
+              (st.personalGrowth.health.mental.stress || 0) - 15,
             );
 
           st.flags._stressMgmtSeen = true;
@@ -3558,11 +3559,11 @@
         hint: "轻量 压力-",
 
         apply: function (st) {
-          if (st.player && st.player.health && st.player.health.mental)
-            st.player.health.mental.stress = Math.max(
+          if (st.player && st.personalGrowth.health && st.personalGrowth.health.mental)
+            st.personalGrowth.health.mental.stress = Math.max(
               0,
 
-              (st.player.health.mental.stress || 0) - 10,
+              (st.personalGrowth.health.mental.stress || 0) - 10,
             );
 
           st.flags._stressMgmtSeen = true;
@@ -4255,11 +4256,11 @@
         apply: function (st) {
           st.resources.cash = Math.max(0, (st.resources.cash || 0) - 60);
 
-          if (st.player && st.player.health && st.player.health.mental)
-            st.player.health.mental.stress = Math.max(
+          if (st.player && st.personalGrowth.health && st.personalGrowth.health.mental)
+            st.personalGrowth.health.mental.stress = Math.max(
               0,
 
-              (st.player.health.mental.stress || 0) - 5,
+              (st.personalGrowth.health.mental.stress || 0) - 5,
             );
 
           st.flags._r75StormJob = true;
@@ -4479,11 +4480,11 @@
         apply: function (st) {
           st.resources.cash = (st.resources.cash || 0) + 300;
 
-          if (st.player && st.player.health && st.player.health.mental)
-            st.player.health.mental.stress = Math.min(
+          if (st.player && st.personalGrowth.health && st.personalGrowth.health.mental)
+            st.personalGrowth.health.mental.stress = Math.min(
               100,
 
-              (st.player.health.mental.stress || 0) + 6,
+              (st.personalGrowth.health.mental.stress || 0) + 6,
             );
 
           st.flags._r76TalentJob = true;
@@ -4881,11 +4882,11 @@
           if (st.needs)
             st.needs.fatigue = Math.min(100, (st.needs.fatigue || 0) + 12);
 
-          if (st.player && st.player.health && st.player.health.mental)
-            st.player.health.mental.stress = Math.min(
+          if (st.player && st.personalGrowth.health && st.personalGrowth.health.mental)
+            st.personalGrowth.health.mental.stress = Math.min(
               100,
 
-              (st.player.health.mental.stress || 0) + 8,
+              (st.personalGrowth.health.mental.stress || 0) + 8,
             );
 
           st.flags._r78FatJob = true;

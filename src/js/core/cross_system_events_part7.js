@@ -1,3 +1,4 @@
+// [全系统自洽修复] 域B R410 修复: 死字段 st.player.health.*(state无此对象,守卫永false压力效果静默失效)->st.personalGrowth.health.*; st.needs.health(needs无health)->st.status.health
 /**
  * 跨系统联动事件 — 拆分片段 7/8（原 cross_system_events.js 机械拆分，行为不变）
  * 仅含自包含的 RANDOM_EVENTS.push 语句；顺序无关（事件选择走 phase 过滤+概率）。
@@ -644,7 +645,7 @@
     // conditions：高心理压 + chef_chen 已结识 + cooking 技能（心理 ∩ NPC ∩ 技能）
 
     conditions: function (st) {
-      var st3 = st.player && st.player.health && st.player.health.mental; // 检查 心理
+      var st3 = st.player && st.personalGrowth.health && st.personalGrowth.health.mental; // 检查 心理
 
       if (!st3 || typeof st3.stress !== "number" || st3.stress < 50)
         return false; // 检查 高压力
@@ -679,7 +680,7 @@
         hint: "压力- 幸福+ cooking+",
 
         apply: function (st) {
-          var st3 = st.player.health.mental;
+          var st3 = st.personalGrowth.health.mental;
 
           st3.stress = Math.max(0, st3.stress - 12);
 
@@ -705,7 +706,7 @@
         hint: "轻量 压力- 幸福+",
 
         apply: function (st) {
-          var st3 = st.player.health.mental;
+          var st3 = st.personalGrowth.health.mental;
 
           st3.stress = Math.max(0, st3.stress - 8);
 
@@ -734,9 +735,9 @@
 
     conditions: function (st) {
       var stress =
-        st.player.health &&
-        st.player.health.mental &&
-        st.player.health.mental.stress; // 检查 心理压
+        st.personalGrowth.health &&
+        st.personalGrowth.health.mental &&
+        st.personalGrowth.health.mental.stress; // 检查 心理压
 
       if (typeof stress !== "number" || stress < 60) return false; // 检查 压力>=60
 
@@ -768,11 +769,11 @@
         apply: function (st) {
           var rel = st.relationships && st.relationships["brother_huang"];
 
-          if (st.player.health && st.player.health.mental)
-            st.player.health.mental.stress = Math.max(
+          if (st.personalGrowth.health && st.personalGrowth.health.mental)
+            st.personalGrowth.health.mental.stress = Math.max(
               0,
 
-              (st.player.health.mental.stress || 0) - 25,
+              (st.personalGrowth.health.mental.stress || 0) - 25,
             ); // 压力缓解
 
           if (rel) rel.affinity = Math.min(100, rel.affinity + 4);
@@ -793,11 +794,11 @@
         hint: "轻量 压力-",
 
         apply: function (st) {
-          if (st.player.health && st.player.health.mental)
-            st.player.health.mental.stress = Math.max(
+          if (st.personalGrowth.health && st.personalGrowth.health.mental)
+            st.personalGrowth.health.mental.stress = Math.max(
               0,
 
-              (st.player.health.mental.stress || 0) - 10,
+              (st.personalGrowth.health.mental.stress || 0) - 10,
             ); // 压力缓解
 
           st.flags._stressHuangSeen = true;
@@ -828,7 +829,7 @@
 
       if (typeof rel.affinity !== "number" || rel.affinity < 20) return false; // 检查 好感>=20
 
-      if ((st.player.health.mental.stress || 0) < 60) return false; // 检查 高精神压力
+      if ((st.personalGrowth.health.mental.stress || 0) < 60) return false; // 检查 高精神压力
 
       if (st.player.phase !== "street") return false; // 检查 街头阶段
 
@@ -850,10 +851,10 @@
         hint: "压力- 好感+",
 
         apply: function (st) {
-          st.player.health.mental.stress = Math.max(
+          st.personalGrowth.health.mental.stress = Math.max(
             0,
 
-            (st.player.health.mental.stress || 0) - 20,
+            (st.personalGrowth.health.mental.stress || 0) - 20,
           );
 
           var rel = st.relationships && st.relationships["sister_zhang"];
@@ -908,7 +909,7 @@
 
       if (typeof rel.affinity !== "number" || rel.affinity < 25) return false; // 检查 好感>=25
 
-      if ((st.player.health.mental.stress || 0) < 60) return false; // 检查 高精神压力
+      if ((st.personalGrowth.health.mental.stress || 0) < 60) return false; // 检查 高精神压力
 
       if (st.player.phase !== "street") return false; // 检查 街头阶段
 
@@ -930,10 +931,10 @@
         hint: "压力- 现金+",
 
         apply: function (st) {
-          st.player.health.mental.stress = Math.max(
+          st.personalGrowth.health.mental.stress = Math.max(
             0,
 
-            (st.player.health.mental.stress || 0) - 15,
+            (st.personalGrowth.health.mental.stress || 0) - 15,
           );
 
           st.resources.cash = (st.resources.cash || 0) + 120;
@@ -954,10 +955,10 @@
         hint: "轻量 压力-",
 
         apply: function (st) {
-          st.player.health.mental.stress = Math.max(
+          st.personalGrowth.health.mental.stress = Math.max(
             0,
 
-            (st.player.health.mental.stress || 0) - 8,
+            (st.personalGrowth.health.mental.stress || 0) - 8,
           );
 
           st.flags._stressBankSeen = true;
@@ -981,7 +982,7 @@
     // conditions：低心理压 + xiao_mei 已结识+好感（心理 ∩ NPC ∩ 需求）
 
     conditions: function (st) {
-      var st3 = st.player && st.player.health && st.player.health.mental; // 检查 心理
+      var st3 = st.player && st.personalGrowth.health && st.personalGrowth.health.mental; // 检查 心理
 
       if (!st3 || typeof st3.stress !== "number" || st3.stress >= 30)
         return false; // 检查 低压力
@@ -3725,7 +3726,7 @@
           st.flags._wealth1mSeen = true;
           st.resources.cash = Math.max(0, (st.resources.cash || 0) - 20000);
           st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 20);
-          st.needs.health = Math.min(100, (st.needs.health || 50) + 5);
+          st.status.health = Math.min(100, (st.status.health || 50) + 5);
           StateManager.addMessage(
             "✈️ 你请了一周假，去云南转了转。第一次不为省钱而旅行。回来时整个人都舒展了。心情+20，健康+5。",
             "success",
@@ -3768,7 +3769,7 @@
         apply: function (st) {
           st.resources.cash = Math.max(0, (st.resources.cash || 0) - 10);
           st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 5);
-          st.needs.health = Math.min(100, (st.needs.health || 50) + 2);
+          st.status.health = Math.min(100, (st.status.health || 50) + 2);
           st.flags._summerHeatEventSeen = true;
           StateManager.addMessage(
             "🧊 你买了碗冰粉，冰冰凉凉的感觉让人活过来了。心情+5。",
@@ -3783,7 +3784,7 @@
           var bonus = Random.int(40, 100);
           st.resources.cash = (st.resources.cash || 0) + bonus;
           st.needs.fatigue = Math.min(100, (st.needs.fatigue || 0) + 15);
-          st.needs.health = Math.max(0, (st.needs.health || 50) - 3);
+          st.status.health = Math.max(0, (st.status.health || 50) - 3);
           st.flags._summerHeatEventSeen = true;
           StateManager.addMessage(
             "💪 你顶着烈日干了半天活，赚了¥" +
@@ -3797,7 +3798,7 @@
         text: "🏠 在家躲高温",
         hint: "避过最热时段",
         apply: function (st) {
-          st.needs.health = Math.min(100, (st.needs.health || 50) + 3);
+          st.status.health = Math.min(100, (st.status.health || 50) + 3);
           st.flags._summerHeatEventSeen = true;
           StateManager.addMessage(
             "🏠 你决定今天不出门，在家吹风扇、看书、睡午觉。健康+3。",

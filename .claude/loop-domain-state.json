@@ -1,1 +1,1 @@
-{"lastRound":407,"lastDomain":"A","lastDate":"2026-07-27","lastCommit":"394d6dc","domainRecency":{"A":407,"B":401,"C":399,"D":405,"E":406,"F":403,"G":402,"H":404},"nextDomain":"G","note":"R407 域A: 0A类+3联动. 已推 ✅. 下轮域G(recency=402最薄弱)"}
+{"lastRound":411,"lastDomain":"B","lastDate":"2026-07-27","lastCommit":"pending","domainRecency":{"A":408,"B":411,"C":409,"D":405,"E":406,"F":403,"G":408,"H":410},"nextDomain":"F","note":"R411 域B: A类133处死字段大修(part2~8 player.health/needs.health×132+并行域H r410孤儿挂载抢救)+3联动(stress首消费/booksRead激活/倾诉met守卫). 下轮域F(recency=403最薄弱). 开轮必git log重算"}

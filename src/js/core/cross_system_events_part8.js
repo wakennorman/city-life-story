@@ -1,3 +1,4 @@
+// [全系统自洽修复] 域B R410 修复: 死字段 st.player.health.*(state无此对象,守卫永false压力效果静默失效)->st.personalGrowth.health.*; st.needs.health(needs无health)->st.status.health
 /**
  * 跨系统联动事件 — 拆分片段 8/8（原 cross_system_events.js 机械拆分，行为不变）
  * 仅含自包含的 RANDOM_EVENTS.push 语句；顺序无关（事件选择走 phase 过滤+概率）。
@@ -5361,7 +5362,7 @@
           (st.weather.current !== "rainy" && st.weather.current !== "stormy")
         )
           return false;
-        if (st.player.health && st.player.health < 60) return false; // 健康太差自己走路都难
+        if (st.status.health && st.status.health < 60) return false; // 健康太差自己走路都难
         return st.player.day >= 10 && Random.chance(0.05);
       },
       probability: 0.04,
@@ -5372,7 +5373,7 @@
           hint: "健康-8 道德+8 心情+15",
           apply: function (st) {
             st.flags._rainyUmbrellaSeen = true;
-            st.player.health = Math.max(0, (st.player.health || 70) - 8);
+            st.status.health = Math.max(0, (st.status.health || 70) - 8);
             st.player.morality = Math.min(100, (st.player.morality || 50) + 8);
             st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 15);
             st.flags._gaveUmbrella = true; // 供后续回响事件消费
