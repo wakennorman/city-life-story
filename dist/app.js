@@ -212744,24 +212744,25 @@ function _calculateQuarterlyKPIScore(state, company) {
   // 盈利能力/净现金流
   if (kpiDef.profitability) {
     const netCash = company.cashReserve - (company.burnRate || 0) * 30;
-    const profitScore =
-      kpiDef.profitability.target <= 0
-        ? Math.min(
-            1.0,
-            Math.max(
-              0,
-              (netCash +
-                Math.abs(kpiDef.profitability.target * company.valuation)) /
-                (kpiDef.profitability.target * company.valuation * 2),
-            ),
-          )
-        : Math.min(
-            1.0,
-            Math.max(
-              0,
-              netCash / (kpiDef.profitability.target * company.valuation),
-            ),
-          );
+    // [全系统自洽修复] 域H 修复:B轮 profitability.target=0.0(盈亏平衡) 时原公式分母为 target*valuation*2=0 →
+    // netCash/0：净现金流>0恒得满分1.0(无梯度)、<0恒得0、恰为0时 0/0=NaN 污染 totalWeightedScore →
+    // finalScore=NaN → 董事会评分崩溃(passed恒false、UI显示NaN)。改比例式:盈亏平衡目标下 netCash>=0 即满分,
+    // 亏损以估值5%为负向缩放基准平滑递减;正目标分支补分母>0守卫;末尾 isFinite 兜底杜绝任何极端值污染。
+    const _profTarget = kpiDef.profitability.target;
+    const _valScale = Math.max(1, Math.abs(company.valuation || 0) * 0.05);
+    let profitScore;
+    if (_profTarget <= 0) {
+      profitScore = Math.min(1.0, Math.max(0, 1 + netCash / _valScale));
+    } else {
+      const _denom = _profTarget * (company.valuation || 0);
+      profitScore =
+        _denom > 0
+          ? Math.min(1.0, Math.max(0, netCash / _denom))
+          : netCash >= 0
+            ? 1.0
+            : 0;
+    }
+    if (!isFinite(profitScore)) profitScore = 0;
     scores.profitability = {
       achieved: netCash,
       target: kpiDef.profitability.targetDesc,
