@@ -1,9 +1,1 @@
-{
-  "lastRound": 393,
-  "lastDomain": "H",
-  "lastDate": "2026-07-27",
-  "lastCommit": "7cf8c332",
-  "domainRecency": {"A":387,"B":389,"C":391,"D":389,"E":389,"F":390,"G":392,"H":393},
-  "nextDomain": "A",
-  "note": "R393 域H(已 push origin main 7cf8c332,并行窗口完成代码): A类修复1项(events_corp.js TSLA守卫,并行)+本窗口A类修复(index.html:587 悬空引用 r389.js→r389b.js,被并行 add -A 扫入 7cf8c332)+联动增强3项(domain_h_linkage_r393.js:H→F公司文化仪表盘/H→B里程碑周年/H→E公司反哺投资). 本窗口:审校r393联动+MC 6x400d验证(EXIT=0·0代码异常). 注:域B r389b→r394 清理为并行 in-flight(未提交),本窗口未触碰. 下轮域A(recency=387最薄弱). 开轮必 git log 重算真实 recency(并行窗口速度远快于本自动化)."
-}
+{"lastRound":395,"lastDomain":"D","lastDate":"2026-07-27","lastCommit":"2b2e4f2","domainRecency":{"A":389,"B":394,"C":391,"D":395,"E":389,"F":390,"G":392,"H":393},"nextDomain":"E","note":"R395 域D: 1A类+3联动. 已推 ✅. 下轮域E(recency=389最薄弱)"}
