@@ -1,7 +1,7 @@
 {
-  "currentRound": 284,
-  "currentDomain": "E",
-  "nextDomain": "F",
+  "currentRound": 296,
+  "currentDomain": "G",
+  "nextDomain": "A",
   "rotationIndex": 0,
   "domainOrder": [
     "A",
@@ -14,32 +14,32 @@
     "H"
   ],
   "domainRecency": {
-    "A": 280,
-    "B": 281,
-    "C": 282,
-    "D": 283,
-    "E": 284,
-    "F": 277,
-    "G": 278,
-    "H": 279
+    "A": 288,
+    "B": 289,
+    "C": 290,
+    "D": 291,
+    "E": 292,
+    "F": 293,
+    "G": 296,
+    "H": 295
   },
   "history": [
     {
-      "round": 283,
-      "domain": "D",
-      "note": "域D(并行窗口·commit 944ff22b): 并行窗口执行,本窗口未参与,仅回填 recency。"
+      "round": 295,
+      "domain": "H",
+      "note": "域H(并行窗口·commit f50aeb8d): 并行窗口执行,本窗口未参与,仅回填 recency。R285-R295 均为并行窗口推进(F=285/G=286/H=287/A=288/B=289/C=290/D=291/E=292/F=293/G=294/H=295)。"
     },
     {
-      "round": 284,
-      "domain": "E",
-      "note": "域E(经济/投资·第四轮循环·账本R284): 开轮 loop-state 严重滞后(标R278/next=G),据 git log 重算并行已推进 R278-R283(A=280/B=281/C=282/D=283/E=276/F=277/G=278/H=279)→E=276 全局最薄弱→本轮域E。A类1(确证): investment.js buyBtc 与 sellBtc/buyInvStock 存在不对称守卫缺口——①缺 `if(!inv)return`(旧存档 state.investment 未初始化时 `inv.btcPrice` 直接抛 TypeError 使买币崩溃,兄弟函数均已守卫)②缺 amount 有效性校验(传入负数/NaN→cost 为负→`cash<cost` 恒假→凭空增币的经济漏洞)③补 btcPrice 有限性判定,与 sellBtc 对齐。联动3(新建 domain_e_linkage_r284.js,2 street+1 corporate,全||防御,[PLACEHOLDER],前缀 e284_): e284_btc_cold_wallet(E→G 数字资产安全意识·持币者→冷钱包备份→心智+置 _assetSecurityMindset)/e284_dip_buying_nerve(E→A 越跌越买的定力·持仓+市值门槛→心智+intelligence·置 _marketDisciplineForged)/e284_seed_from_gains(E→H 收益变种子金·在职 corporate.company+投资积累≥20000→management XP+晋升势能 upward)。node --check OK;build dist app.js 9733.0KB(r284 flag count=2 入 bundle);MC 6×400d EXIT=0·0代码异常(TypeError/ReferenceError/NaN/Infinity grep=0;balanced/corporate 66.7%<80% 为既有RNG平衡阈值非回归,trader 83.3%/social 100% 达标)。下轮→F(recency 277 最薄弱)。"
+      "round": 296,
+      "domain": "G",
+      "note": "域G(核心机制/生命周期·第五轮·账本R296): 开轮 loop-state 滞后(标R284/next=F),据 git log 重算并行已推进 R285-R295→G recency 286 全局最薄弱→本轮域G;执行中并行又占 R294(域G)/R295(域H)→账本记 R296。A类1(确证): carry.js hireTransport 运输随机事件与天气系统断链——weather.js:789 getWeatherTransportRiskMod 运输风险倍率表(暴雨1.05×/台风1.5×/暴雪1.3×等)全库零调用方死代码,恶劣天气从不影响货损/交通意外率。修复: 货物损坏+交通意外掷骰乘天气倍率(偷窃不乘),typeof+isFinite 双守卫+cap 0.95+风险提示播报(该修复被并行 ada29372 扫入已上 main)。另确证13个剧本死flag(scenario_start_chains.js 写入后全库无读取)。联动3(新建 domain_g_linkage_r296.js,2 street+1 corporate,全||防御,[PLACEHOLDER],前缀 g296_): g296_weather_survival_wisdom(G→B 读懂天空的人·复活死函数 getWeatherEnhancedDesc weather.js:927 全库首个调用方)/g296_toolkit_neighbor_fix(G→D 工具箱派上用场·首消费剧本死flag _hasToolkit·守 applyAffinityChange+rel.met 铁律)/g296_first_job_lookback(G→C 第一份工作的记忆·首消费剧本死flag _interviewPassed/_firstJobFound)。node --check OK;build 9822.9KB(r296 count=2);MC 6×400d EXIT=0·0代码异常(corporate 66.7%为既有RNG平衡阈值非回归,balanced 83.3%/trader 100%/social 100%达标)。下轮→A(recency 288 最薄弱)。"
     }
   ],
-  "lastDomain": "E",
-  "lastRound": 284,
+  "lastDomain": "G",
+  "lastRound": 296,
   "lastDate": "2026-07-26",
-  "lastCommit": "085c1c30",
-  "pushStatus": "PUSHED",
+  "lastCommit": "",
+  "pushStatus": "PENDING",
   "completedDomains": [
     "A",
     "B",
@@ -50,5 +50,5 @@
     "G",
     "H"
   ],
-  "description": "全系统优化 loop R284→域E(经济/投资,第四轮循环,账本R284)。A类1(buyBtc 不对称守卫缺口:补 !inv 守卫+amount 校验+btcPrice 有限性,防 TypeError 崩溃与负数增币漏洞)。联动3(domain_e_linkage_r284.js: E→G数字资产安全/E→A越跌越买定力/E→H收益变种子金)。下轮→F(recency 277 最薄弱)。"
+  "description": "全系统优化 loop R296→域G(核心机制/生命周期,第五轮,账本R296)。A类1(carry.js 天气-运输风险断链接线,复活死函数 getWeatherTransportRiskMod)。联动3(domain_g_linkage_r296.js: G→B复活getWeatherEnhancedDesc/G→D首消费_hasToolkit/G→C首消费_interviewPassed)。下轮→A(recency 288 最薄弱)。"
 }
