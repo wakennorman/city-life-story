@@ -2760,11 +2760,15 @@ var _SKILL_PATH_MAP = {
   // social已移除: _getSkillValue对未映射key会回退到state.skills[skill].level(正确行为)
 };
 function _getSkillValue(state, skill) {
+  if (!state) return 0;
   var path = _SKILL_PATH_MAP[skill];
   if (path) {
     var parts = path.split(".");
     var val = state;
-    for (var i = 0; i < parts.length; i++) val = val[parts[i]];
+    for (var i = 0; i < parts.length; i++) {
+      if (val == null) return 0;
+      val = val[parts[i]];
+    }
     return val || 0;
   }
   // 非属性技能（如编程/英语/会计等）
@@ -3433,6 +3437,10 @@ function tickCareerJobDaily(state) {
     _milestoneMsg = "🏆 入职" + _newWd / 365 + "周年！坚持就是胜利";
   if (_milestoneMsg) {
     StateManager.addMessage(_milestoneMsg, "success");
+    // [全系统自洽修复] 域C R389 联动增强(C→B): 工作里程碑叙事—记录事件历史供UI展示
+    if (typeof recordEventToHistory === "function") {
+      recordEventToHistory(state, "career_milestone_" + _newWd, _milestoneMsg);
+    }
     // [全系统自洽修复] 域C 联动增强#1: C→G 里程碑幸福感 — 重大里程碑给予心情/健康加成
     if (_newWd === 30 || _newWd === 90 || _newWd === 365 || _newWd % 365 === 0) {
       // [全系统自洽修复] 域C A类修复: state.status 守卫(防止旧存档崩溃)
@@ -5736,3 +5744,50 @@ if (typeof document !== "undefined") {
     RANDOM_EVENTS.push(SKILL_MAX_EVENTS[sme]);
   }
 })();
+
+// [全系统自洽修复] 域C R389 联动增强(C→F): 职业路径进度数据—UI展示各路径晋升条件
+function getCareerPathProgress(state) {
+  if (!state) return [];
+  var result = [];
+  for (var pathId in CAREER_PATHS) {
+    var path = CAREER_PATHS[pathId];
+    var levels = path.levels || [];
+    var currentLevel = -1;
+    if (state.career && state.career.currentJob && state.career.currentJob.path === pathId) {
+      currentLevel = levels.findIndex(function(l) { return l.id === state.career.currentJob.levelId; });
+    }
+    var nextLevel = currentLevel + 1 < levels.length ? levels[currentLevel + 1] : null;
+    var canPromote = nextLevel ? checkCareerPromotion(state, pathId, nextLevel) : false;
+    result.push({
+      pathId: pathId,
+      pathName: path.name,
+      icon: path.icon,
+      currentLevel: currentLevel,
+      totalLevels: levels.length,
+      nextLevelName: nextLevel ? nextLevel.name : null,
+      canPromote: canPromote,
+      salary: state.career && state.career.currentJob && state.career.currentJob.path === pathId ? state.career.currentJob.salary : 0,
+    });
+  }
+  return result;
+}
+
+// [全系统自洽修复] 域C R389 联动增强(C→G): 职业健康影响—高压工作对健康产生长期影响
+function applyCareerHealthEffect(state) {
+  if (!state || !state.career || !state.career.currentJob) return;
+  if (!state.status) return;
+  var job = state.career.currentJob;
+  var salary = job.salary || 0;
+  // 高薪高压工作: 月薪≥30000→每日健康微量损耗(熬夜/压力)
+  if (salary >= 30000 && state.player && state.player.day % 3 === 0) {
+    state.status.health = Math.max(0, (state.status.health || 80) - 1);
+    if (state.flags && !state.flags._highSalaryHealthWarn && state.status.health < 50) {
+      state.flags._highSalaryHealthWarn = true;
+      StateManager.addMessage("⚠️ 高薪工作的压力正在侵蚀你的健康。注意劳逸结合，定期体检。", "warning");
+    }
+  }
+  // 长期工作压力累积: 工作满1年且健康持续下降
+  if (job.workDays >= 365 && state.status.health < 40 && state.needs) {
+    state.needs.happiness = Math.max(0, (state.needs.happiness || 50) - 1);
+  }
+}

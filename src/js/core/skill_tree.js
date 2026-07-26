@@ -1184,7 +1184,7 @@ function getTalentNodeEffects(state) {
  * 获取分支工作的收入加成倍数
  */
 function getBranchJobBonus(jobId, skillKey, state) {
-  if (!state.skillBranches) return 1.0;
+  if (!state || !state.skillBranches) return 1.0;
   var branchId = state.skillBranches[skillKey];
   if (!branchId) return 1.0;
   var branch = getBranchById(skillKey, branchId);
