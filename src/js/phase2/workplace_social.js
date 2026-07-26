@@ -672,12 +672,14 @@ function treatColleagueMeal(state, colleagueId, tier) {
  * 社交行动：私下聊天
  */
 function chatWithColleague(state, colleagueId) {
+  if (typeof _ensureColleagues === "function") _ensureColleagues(state);
+  if (!state.corporate || !state.corporate.colleagues) return { success: false, message: "同事数据不可用" };
   const colleagues = state.corporate.colleagues.network;
   const colleague = colleagues.find((c) => c.id === colleagueId);
   if (!colleague) return { success: false, message: "找不到该同事" };
 
   const AP_COST = 10;
-  if (state.player.actionPoints < AP_COST) {
+  if ((state.player.actionPoints || 0) < AP_COST) {
     return { success: false, message: "行动力不足" };
   }
 
@@ -728,6 +730,8 @@ function chatWithColleague(state, colleagueId) {
  * 获取同事关系摘要
  */
 function getColleagueSummary(state) {
+  if (typeof _ensureColleagues === "function") _ensureColleagues(state);
+  if (!state.corporate || !state.corporate.colleagues) return null;
   const colleagues = state.corporate.colleagues.network;
   if (!colleagues || colleagues.length === 0) return null;
 

@@ -280,6 +280,7 @@ function checkExtremeConditions(state) {
   }
 
   // === 病危送医 ===
+  if (!state.flags) state.flags = {};
   if (st.health <= 5 && !state.flags._forcedHospital) {
     state.flags._forcedHospital = true;
     // [自洽修复] 域D A类: 补 cash ||0 守卫

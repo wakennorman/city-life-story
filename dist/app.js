@@ -175677,6 +175677,25 @@ function getJobById(jobId) {
 // P1-2 CLS 命名空间注册
 if (typeof window.CLS !== 'undefined' && window.CLS.data) window.CLS.data.STREET_JOBS = STREET_JOBS;
 
+// [全系统自洽修复] 域D R419 联动增强(D→C): NPC职业引荐 — 基于NPC关系提供职业推荐
+function getNpcJobRecommendation(state, limit) {
+  if (!state || !state.relationships) return [];
+  limit = limit || 3;
+  var recs = [];
+  for (var npcId in state.relationships) {
+    var rel = state.relationships[npcId];
+    if (rel && rel.met && (rel.affinity || 0) >= 40) {
+      if (typeof NPCS !== 'undefined' && NPCS) {
+        var npcDef = NPCS.find(function(n) { return n && n.id === npcId; });
+        if (npcDef && npcDef.recommendedJob) {
+          recs.push({ npc: npcDef.name || npcId, job: npcDef.recommendedJob });
+        }
+      }
+    }
+  }
+  return recs.slice(0, limit);
+}
+
 ;
 // ==== js/data/goods.js ====
 /**
@@ -198933,6 +198952,7 @@ function checkExtremeConditions(state) {
   }
 
   // === 病危送医 ===
+  if (!state.flags) state.flags = {};
   if (st.health <= 5 && !state.flags._forcedHospital) {
     state.flags._forcedHospital = true;
     // [自洽修复] 域D A类: 补 cash ||0 守卫
@@ -219340,6 +219360,24 @@ function getPortfolioSnapshot(state) {
   return { totalValue: Math.round(totalValue), totalCost: Math.round(totalCost), pnl: Math.round(totalValue - totalCost), items: items };
 }
 
+// [全系统自洽修复] 域D R419 联动增强(D→E): NPC投资建议 — 基于NPC好感度提供投资情报
+function getNpcInvestmentAdvice(state) {
+  if (!state || !state.relationships) return null;
+  var tips = [];
+  for (var npcId in state.relationships) {
+    var rel = state.relationships[npcId];
+    if (rel && rel.met && (rel.affinity || 0) >= 60) {
+      if (typeof NPCS !== 'undefined' && NPCS) {
+        var npcDef = NPCS.find(function(n) { return n && n.id === npcId; });
+        if (npcDef && npcDef.tradeInfo && npcDef.tradeInfo.expertise) {
+          tips.push({ npc: npcDef.name || npcId, expertise: npcDef.tradeInfo.expertise });
+        }
+      }
+    }
+  }
+  return tips.length > 0 ? tips : null;
+}
+
 ;
 // ==== js/phase2/property_market.js ====
 /**
@@ -236253,12 +236291,14 @@ function treatColleagueMeal(state, colleagueId, tier) {
  * 社交行动：私下聊天
  */
 function chatWithColleague(state, colleagueId) {
+  if (typeof _ensureColleagues === "function") _ensureColleagues(state);
+  if (!state.corporate || !state.corporate.colleagues) return { success: false, message: "同事数据不可用" };
   const colleagues = state.corporate.colleagues.network;
   const colleague = colleagues.find((c) => c.id === colleagueId);
   if (!colleague) return { success: false, message: "找不到该同事" };
 
   const AP_COST = 10;
-  if (state.player.actionPoints < AP_COST) {
+  if ((state.player.actionPoints || 0) < AP_COST) {
     return { success: false, message: "行动力不足" };
   }
 
@@ -236309,6 +236349,8 @@ function chatWithColleague(state, colleagueId) {
  * 获取同事关系摘要
  */
 function getColleagueSummary(state) {
+  if (typeof _ensureColleagues === "function") _ensureColleagues(state);
+  if (!state.corporate || !state.corporate.colleagues) return null;
   const colleagues = state.corporate.colleagues.network;
   if (!colleagues || colleagues.length === 0) return null;
 
@@ -249546,166 +249588,191 @@ if (typeof window !== "undefined") {
 })();
 
 ;
-// ==== js/core/domain_h_linkage_r417.js ====
+// ==== js/core/domain_h_linkage_r418.js ====
 /**
- * 域H(Phase2/公司) 联动增强 R417
- * 第十七轮循环——把隐藏在startup/corp经营/团队管理中的数据转化为叙事体验。
+ * 域H(Phase2/公司) 联动增强 R418
+ * （原编号R417执行中被并行窗口占用，本文件按SOP改号r418，事件id前缀h418_全库唯一）
+ * 设计基调（峰终定律+禀赋效应）：把玩家在 Phase1 的"沉没积累"在 Phase2 兑现为
+ * 可感知的高光时刻，强化跨阶段禀赋感；同时把公司数据转化为社交与财富叙事。
  * 桥接：
- *   H→F  h417_corp_dashboard         公司仪表盘 → 消费 corporate+startup 数据,
- *     把经营数据→"公司运营状况如何"的UI摘要
- *   H→G  h417_founder_health          创始人健康v2 → 消费 corporate+needs+status 数据,
- *     高压经营→"创业者也要关注身体"的健康回响
- *   H→E  h417_corp_finance_v2        公司财务v2 → 消费 corporate+investment 数据,
- *     公司财务→"公司理财vs个人理财"的经济联动
+ *   H→G  h418_street_roots    街头岁月回望 — 全库首个事件消费 flags._totalStreetDays
+ *     （此前仅 corp_legacy_bonus 入职定级 + career_dev UI 读取，事件层零消费）
+ *   H→D  h418_team_dinner     团队聚餐 — corporate.team 规模→老友好感传导
+ *     （守域D铁律：rel&&rel.met + applyAffinityChange 位置参数）
+ *   H→E  h418_expert_consult  外部咨询邀约 — corporate.ability 高能力→外快变现
+ *     （ability 此前只被 enterprise_fate 数值消费，无叙事包装）
+ *
+ * 严格照 domain_h_linkage_r410.js / r404.js 已验证 IIFE 注入范式。
  */
 (function () {
   "use strict";
-  if (typeof RANDOM_EVENTS === "undefined" || !RANDOM_EVENTS) return;
-  if (RANDOM_EVENTS._domainHLinkageR417Loaded) return;
-  RANDOM_EVENTS._domainHLinkageR417Loaded = true;
 
-  function grantSkillXpR417(key, amount) {
+  if (typeof RANDOM_EVENTS === "undefined" || !RANDOM_EVENTS) return;
+  if (RANDOM_EVENTS._domainHLinkageR418Loaded) return;
+  RANDOM_EVENTS._domainHLinkageR418Loaded = true;
+
+  // 安全技能经验（addSkillXp 全局读 state，签名 (skillKey, amount)）
+  function grantSkillXpR418(key, amount) {
     if (typeof addSkillXp === "function") {
       try { addSkillXp(key, amount); } catch (e) { /* safe */ }
     }
   }
 
+  // 找到首个已结识 NPC（域D铁律：必须 rel && rel.met）
+  function firstMetNpcR418(st) {
+    if (!st || !st.relationships) return null;
+    for (var id in st.relationships) {
+      var rel = st.relationships[id];
+      if (rel && rel.met === true) return id;
+    }
+    return null;
+  }
+
   var EVENTS = [
     {
-      id: "h417_corp_dashboard",
+      // H→G: 街头岁月回望 — 全库首个事件消费 flags._totalStreetDays
+      id: "h418_street_roots",
       phase: "corporate",
       _isChainEvent: false,
-      icon: "📊",
-      title: "公司运营仪表盘",
-      story: "你审视了公司的整体运营状况——{dashboardDesc}\n\n数据驱动决策,是现代企业的核心竞争力。",
-      triggers: { minDay: 65, excludeFlags: ["_h417DashCooldown"] },
+      icon: "🌆",
+      title: "街头岁月回望",
+      story:
+        "加班后的深夜，出租车驶过你曾经摆摊的街口。你摇下车窗——那些在街头讨生活的日子，成了今天坐进写字楼的底气。",
+      triggers: { minDay: 100, excludeFlags: ["_h418StreetRootsSeen"] },
       conditions: function (st) {
-        if (st.gameOver) return false;
-        return st.player && st.player.corporate;
+        if (!st || st.gameOver) return false;
+        if (!st.player || !st.player.corporate) return false;
+        var streetDays = (st.flags && st.flags._totalStreetDays) || 0;
+        return streetDays >= 60; // [PLACEHOLDER] 街头历练天数门槛
       },
       choices: [
         {
-          text: "📈 用数据驱动经营决策",
-          hint: "心智+4,management XP+4,置 _h417DashCooldown(80天)",
+          text: "🌆 那段日子塑造了今天的我",
+          hint: "心智+5,心情+4,置 _h418StreetRootsSeen(终身一次)",
           apply: function (st) {
             if (!st) return;
             st.flags = st.flags || {};
-            st.flags._h417DashCooldown = true;
-            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 4);
-            grantSkillXpR417("management", 4);
+            st.flags._h418StreetRootsSeen = true;
+            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 5); // [PLACEHOLDER]
+            if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 4); // [PLACEHOLDER]
+            var d = (st.flags._totalStreetDays || 0);
             if (typeof StateManager !== "undefined" && StateManager.addMessage)
-              StateManager.addMessage("📊 你用数据审视公司运营——仪表盘是经营者的眼睛。心智+4,管理XP+4。", "success");
+              StateManager.addMessage("🌆 " + d + "天街头历练不是弯路，是别人拿不走的底气。心智+5,心情+4。", "success");
           }
         },
         {
-          text: "🤷 凭经验管理就好",
-          hint: "无奖励",
-          apply: function (st) { /* 无奖励选择 */ }
+          text: "🚕 不想回头看，继续向前",
+          hint: "心智+2",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._h418StreetRootsSeen = true;
+            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 2); // [PLACEHOLDER]
+          }
         }
-      ],
-      text: function (st) {
-        if (!st || !st.player || !st.player.corporate) return null;
-        var corp = st.player.corporate;
-        var desc = "公司运营正在步入正轨";
-        if (typeof corp.kpi === "number") {
-          desc = corp.kpi >= 80 ? "KPI表现优秀(" + corp.kpi + "分)" :
-                 corp.kpi >= 50 ? "KPI达标(" + corp.kpi + "分)" : "KPI偏低(" + corp.kpi + "分),需要关注";
-        }
-        return "你审视了公司的整体运营状况——" + desc + "。\n\n数据驱动决策,是现代企业的核心竞争力。";
-      }
+      ]
     },
     {
-      id: "h417_founder_health",
+      // H→D: 团队聚餐 — corporate.team 规模→老友好感传导（守域D铁律）
+      id: "h418_team_dinner",
       phase: "corporate",
       _isChainEvent: false,
-      icon: "❤️",
-      title: "创业者的身体",
-      story: "你意识到创业不能以牺牲健康为代价——{healthDesc}\n\n{healthAdvice}",
-      triggers: { minDay: 75, excludeFlags: ["_h417FounderCooldown"] },
+      icon: "🍻",
+      title: "团队聚餐",
+      story:
+        "项目节点顺利交付，你张罗了一顿团队聚餐。饭桌上有人提议：把你城里的老朋友也叫来认识认识——人脉就是这样滚起来的。",
+      triggers: { minDay: 90, excludeFlags: ["_h418TeamDinnerCooldown"] },
       conditions: function (st) {
-        if (st.gameOver) return false;
-        return st.player && st.player.corporate;
+        if (!st || st.gameOver) return false;
+        if (!st.corporate || !st.corporate.team || st.corporate.team.length < 2) return false;
+        return !!firstMetNpcR418(st); // 必须已有结识的 NPC 才可传导好感
       },
       choices: [
         {
-          text: "🧘 调整工作节奏,关注健康",
-          hint: "心智+4,心情+5,置 _h417FounderCooldown(90天)",
+          text: "🍻 把老朋友也叫上",
+          hint: "老友好感+6,心情+3,置 _h418TeamDinnerCooldown",
           apply: function (st) {
             if (!st) return;
             st.flags = st.flags || {};
-            st.flags._h417FounderCooldown = true;
-            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 4);
-            if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 5);
+            st.flags._h418TeamDinnerCooldown = true;
+            var npcId = firstMetNpcR418(st);
+            var shown = npcId;
+            if (npcId && typeof applyAffinityChange === "function") {
+              try {
+                applyAffinityChange(st, npcId, 6, "团队聚餐引荐"); // [PLACEHOLDER] 位置参数固定 (state,npcId,change,reason)
+              } catch (e) { /* safe */ }
+              if (typeof getNpcDisplayName === "function") {
+                try { shown = getNpcDisplayName(npcId); } catch (e2) { /* safe */ }
+              }
+            }
+            if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 3); // [PLACEHOLDER]
             if (typeof StateManager !== "undefined" && StateManager.addMessage)
-              StateManager.addMessage("❤️ 你调整工作节奏关注健康——创业者也是人,需要休息。心智+4,心情+5。", "success");
+              StateManager.addMessage("🍻 你把" + (shown || "老朋友") + "介绍给了团队——两个圈子在饭桌上连成一片。好感+6,心情+3。", "success");
           }
         },
         {
-          text: "💪 再拼一把,熬过这阵就好了",
-          hint: "无奖励",
-          apply: function (st) { /* 无奖励选择 */ }
+          text: "👥 就团队内部聚聚",
+          hint: "心情+2",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._h418TeamDinnerCooldown = true;
+            if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 2); // [PLACEHOLDER]
+          }
         }
-      ],
-      text: function (st) {
-        if (!st || !st.player) return null;
-        var desc = "长期高压经营,身体在发出警告";
-        var advice = "适当休息,才能走得更远";
-        if (st.needs) {
-          if ((st.needs.fatigue || 0) > 70) desc = "过度疲劳已经影响了工作效率";
-          if ((st.needs.happiness || 100) < 40) advice = "心情低落时,更要关注身心健康";
-        }
-        return "你意识到创业不能以牺牲健康为代价——" + desc + "。\n\n" + advice + "。";
-      }
+      ]
     },
     {
-      id: "h417_corp_finance_v2",
+      // H→E: 外部咨询邀约 — corporate.ability 高能力→外快变现
+      id: "h418_expert_consult",
       phase: "corporate",
       _isChainEvent: false,
-      icon: "💰",
-      title: "公司理财vs个人理财",
-      story: "你思考公司与个人的财务关系——{financeDesc}\n\n健康的财务分离,是创业的基本功。",
-      triggers: { minDay: 90, excludeFlags: ["_h417FinanceCooldown"] },
+      icon: "💼",
+      title: "外部咨询邀约",
+      story:
+        "一家初创公司通过前同事找到你，想请你做一次付费业务咨询——你在公司里练出来的能力，市场上有人愿意真金白银地买单。",
+      triggers: { minDay: 120, excludeFlags: ["_h418ConsultCooldown"] },
       conditions: function (st) {
-        if (st.gameOver) return false;
-        return st.player && st.player.corporate && st.investment;
+        if (!st || st.gameOver) return false;
+        if (!st.player || !st.player.corporate) return false;
+        return ((st.player.corporate.ability || 0) >= 60); // [PLACEHOLDER] 能力门槛
       },
       choices: [
         {
-          text: "📊 做好公司与个人的财务分离",
-          hint: "accounting XP+5,心智+3,置 _h417FinanceCooldown(100天)",
+          text: "💼 接下这单咨询",
+          hint: "现金+1500,会计XP+6,置 _h418ConsultCooldown",
           apply: function (st) {
             if (!st) return;
             st.flags = st.flags || {};
-            st.flags._h417FinanceCooldown = true;
-            grantSkillXpR417("accounting", 5);
-            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 3);
+            st.flags._h418ConsultCooldown = true;
+            if (st.resources) st.resources.cash = (st.resources.cash || 0) + 1500; // [PLACEHOLDER] 咨询费
+            grantSkillXpR418("accounting", 6); // [PLACEHOLDER]
             if (typeof StateManager !== "undefined" && StateManager.addMessage)
-              StateManager.addMessage("💰 你做好公司个人财务分离——清晰的财务是企业的生命线。会计XP+5,心智+3。", "success");
+              StateManager.addMessage("💼 两小时咨询,对方付了¥1500——能力值钱的感觉真好。现金+1500,会计XP+6。", "success");
           }
         },
         {
-          text: "🤷 公司和个人分不开",
-          hint: "无奖励",
-          apply: function (st) { /* 无奖励选择 */ }
+          text: "🙅 精力有限，婉拒",
+          hint: "心智+2(专注主业)",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._h418ConsultCooldown = true;
+            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 2); // [PLACEHOLDER]
+          }
         }
-      ],
-      text: function (st) {
-        if (!st) return null;
-        var desc = "公司财务和个人财务需要明确区分";
-        if (st.investment && st.investment._totalInvestmentProfit !== undefined) {
-          var profit = st.investment._totalInvestmentProfit;
-          desc = profit > 0 ? "个人投资盈利¥" + profit.toLocaleString() + ",财务状况良好" :
-                 "个人投资亏损¥" + Math.abs(profit).toLocaleString() + ",需要调整策略";
-        }
-        return "你思考公司与个人的财务关系——" + desc + "。\n\n健康的财务分离,是创业的基本功。";
-      }
+      ]
     }
   ];
 
+  // 注入 RANDOM_EVENTS（id 去重防双载）
   for (var i = 0; i < EVENTS.length; i++) {
     var _e = EVENTS[i];
-    if (RANDOM_EVENTS.find(function (ev) { return ev.id === _e.id; })) continue;
-    RANDOM_EVENTS.push(_e);
+    var dup = false;
+    for (var j = 0; j < RANDOM_EVENTS.length; j++) {
+      if (RANDOM_EVENTS[j] && RANDOM_EVENTS[j].id === _e.id) { dup = true; break; }
+    }
+    if (!dup) RANDOM_EVENTS.push(_e);
   }
 })();
 
@@ -259945,6 +260012,21 @@ function appendLocationServicesStrip(container, state, locKey) {
   }
 
   container.appendChild(strip);
+}
+
+// [全系统自洽修复] 域D R419 联动增强(D→F): 社交关系统计 — 返回NPC关系网络摘要
+function getNpcRelationshipSummary(state) {
+  if (!state || !state.relationships) return { total: 0, close: 0, met: 0 };
+  var total = 0, close = 0, met = 0;
+  for (var key in state.relationships) {
+    var r = state.relationships[key];
+    if (r && r.met) {
+      met++;
+      total++;
+      if ((r.affinity || 0) >= 60) close++;
+    }
+  }
+  return { total: total, close: close, met: met };
 }
 
 ;
@@ -281247,7 +281329,7 @@ function renderNpcRelationships(state, content) {
           '<span style="color:' +
           (log.change > 0 ? "var(--success)" : "var(--danger)") +
           '">';
-        html += log.change > 0 ? "+" : "" + (log.change || 0).toFixed(1) + "</span> ";
+        html += (log.change > 0 ? "+" : "") + (log.change || 0).toFixed(1) + "</span> ";
         html +=
           '<span style="color:var(--text-muted);font-size:10px;">(' +
           _logTypeLabel +
@@ -281360,16 +281442,17 @@ function renderSocialOverviewTab(state, content) {
   try {
     if (typeof NPCS !== "undefined" && NPCS.length > 0) {
       var _today = state.player && state.player.day;
+      var _dayOfYear = _today ? ((_today - 1) % 365) + 1 : 0;
       var _birthdayNpcs = [];
       for (var _bi = 0; _bi < NPCS.length; _bi++) {
         var _npc = NPCS[_bi];
         if (_npc && _npc.birthday && _npc.id) {
           var _rel = state.relationships && state.relationships[_npc.id];
-          if (_rel && _rel.met && _today) {
-            // birthday 是相对于游戏天数的偏移值(如45表示第45天)
-            if (_today === _npc.birthday) {
+          if (_rel && _rel.met && _dayOfYear) {
+            // birthday 是年中第几天(1-365)
+            if (_dayOfYear === _npc.birthday) {
               _birthdayNpcs.push({ name: _npc.name || _npc.id, icon: "🎂", id: _npc.id });
-            } else if (_today === _npc.birthday - 1) {
+            } else if (_dayOfYear === _npc.birthday - 1) {
               _birthdayNpcs.push({ name: _npc.name || _npc.id, icon: "⏰", id: _npc.id });
             }
           }

@@ -1046,3 +1046,22 @@ function getJobById(jobId) {
 
 // P1-2 CLS 命名空间注册
 if (typeof window.CLS !== 'undefined' && window.CLS.data) window.CLS.data.STREET_JOBS = STREET_JOBS;
+
+// [全系统自洽修复] 域D R419 联动增强(D→C): NPC职业引荐 — 基于NPC关系提供职业推荐
+function getNpcJobRecommendation(state, limit) {
+  if (!state || !state.relationships) return [];
+  limit = limit || 3;
+  var recs = [];
+  for (var npcId in state.relationships) {
+    var rel = state.relationships[npcId];
+    if (rel && rel.met && (rel.affinity || 0) >= 40) {
+      if (typeof NPCS !== 'undefined' && NPCS) {
+        var npcDef = NPCS.find(function(n) { return n && n.id === npcId; });
+        if (npcDef && npcDef.recommendedJob) {
+          recs.push({ npc: npcDef.name || npcId, job: npcDef.recommendedJob });
+        }
+      }
+    }
+  }
+  return recs.slice(0, limit);
+}

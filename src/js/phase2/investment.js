@@ -4885,3 +4885,21 @@ function getPortfolioSnapshot(state) {
   }
   return { totalValue: Math.round(totalValue), totalCost: Math.round(totalCost), pnl: Math.round(totalValue - totalCost), items: items };
 }
+
+// [全系统自洽修复] 域D R419 联动增强(D→E): NPC投资建议 — 基于NPC好感度提供投资情报
+function getNpcInvestmentAdvice(state) {
+  if (!state || !state.relationships) return null;
+  var tips = [];
+  for (var npcId in state.relationships) {
+    var rel = state.relationships[npcId];
+    if (rel && rel.met && (rel.affinity || 0) >= 60) {
+      if (typeof NPCS !== 'undefined' && NPCS) {
+        var npcDef = NPCS.find(function(n) { return n && n.id === npcId; });
+        if (npcDef && npcDef.tradeInfo && npcDef.tradeInfo.expertise) {
+          tips.push({ npc: npcDef.name || npcId, expertise: npcDef.tradeInfo.expertise });
+        }
+      }
+    }
+  }
+  return tips.length > 0 ? tips : null;
+}

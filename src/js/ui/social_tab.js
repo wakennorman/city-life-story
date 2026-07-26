@@ -355,7 +355,7 @@ function renderNpcRelationships(state, content) {
           '<span style="color:' +
           (log.change > 0 ? "var(--success)" : "var(--danger)") +
           '">';
-        html += log.change > 0 ? "+" : "" + (log.change || 0).toFixed(1) + "</span> ";
+        html += (log.change > 0 ? "+" : "") + (log.change || 0).toFixed(1) + "</span> ";
         html +=
           '<span style="color:var(--text-muted);font-size:10px;">(' +
           _logTypeLabel +
@@ -468,16 +468,17 @@ function renderSocialOverviewTab(state, content) {
   try {
     if (typeof NPCS !== "undefined" && NPCS.length > 0) {
       var _today = state.player && state.player.day;
+      var _dayOfYear = _today ? ((_today - 1) % 365) + 1 : 0;
       var _birthdayNpcs = [];
       for (var _bi = 0; _bi < NPCS.length; _bi++) {
         var _npc = NPCS[_bi];
         if (_npc && _npc.birthday && _npc.id) {
           var _rel = state.relationships && state.relationships[_npc.id];
-          if (_rel && _rel.met && _today) {
-            // birthday 是相对于游戏天数的偏移值(如45表示第45天)
-            if (_today === _npc.birthday) {
+          if (_rel && _rel.met && _dayOfYear) {
+            // birthday 是年中第几天(1-365)
+            if (_dayOfYear === _npc.birthday) {
               _birthdayNpcs.push({ name: _npc.name || _npc.id, icon: "🎂", id: _npc.id });
-            } else if (_today === _npc.birthday - 1) {
+            } else if (_dayOfYear === _npc.birthday - 1) {
               _birthdayNpcs.push({ name: _npc.name || _npc.id, icon: "⏰", id: _npc.id });
             }
           }

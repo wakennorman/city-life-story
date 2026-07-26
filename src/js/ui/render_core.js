@@ -1417,3 +1417,18 @@ function appendLocationServicesStrip(container, state, locKey) {
 
   container.appendChild(strip);
 }
+
+// [全系统自洽修复] 域D R419 联动增强(D→F): 社交关系统计 — 返回NPC关系网络摘要
+function getNpcRelationshipSummary(state) {
+  if (!state || !state.relationships) return { total: 0, close: 0, met: 0 };
+  var total = 0, close = 0, met = 0;
+  for (var key in state.relationships) {
+    var r = state.relationships[key];
+    if (r && r.met) {
+      met++;
+      total++;
+      if ((r.affinity || 0) >= 60) close++;
+    }
+  }
+  return { total: total, close: close, met: met };
+}
