@@ -3292,6 +3292,16 @@ function resignCareerJob() {
       "warning",
     );
 
+    // [全系统自洽修复] 域C R357 联动增强: C→D 辞职影响NPC社交圈(离职后相关NPC好感下降)
+    if (state.relationships) {
+      var _resignNpcMap = { medical: "dr_wang", doctor: "dr_wang", legal: "zhaojie", education: "xiao_mei", finance: "uncle_chen_bank", tech: "xiaochen" };
+      var _resignNpcId = _resignNpcMap[oldPath];
+      if (_resignNpcId && state.relationships[_resignNpcId] && state.relationships[_resignNpcId].met) {
+        state.relationships[_resignNpcId].affinity = Math.max(0, (state.relationships[_resignNpcId].affinity || 0) - 5);
+        StateManager.addMessage("💔 辞职后，你与" + (state.relationships[_resignNpcId].name || _resignNpcId) + "的联系变淡了。", "info");
+      }
+    }
+
     // 自动切换到"上班族"子Tab，方便立刻找工作
     state._careerSubTab = "career_jobs";
 
