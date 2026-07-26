@@ -514,14 +514,16 @@ function applyNodeChoice(state, nodeId, choiceKey) {
       state.flags._career35Path = "transform";
       break;
     case "c35_hold":
-      state.status.health = Math.min(100, (state.status.health || 100) + 5);
+      // [全系统自洽修复] 域G A类修复: state.status 守卫(防止旧存档崩溃)
+      if (state.status) state.status.health = Math.min(100, (state.status.health || 100) + 5);
       state.flags._career35Path = "hold";
       break;
     case "c35_newpath":
       state.flags._career35Path = "newpath";
       break;
     case "c35_lieflat":
-      state.needs.happiness = Math.min(100, (state.needs.happiness || 50) + 10);
+      // [全系统自洽修复] 域G A类修复: state.needs 守卫(防止旧存档崩溃)
+      if (state.needs) state.needs.happiness = Math.min(100, (state.needs.happiness || 50) + 10);
       state.flags._career35Path = "lieflat";
       break;
 
@@ -531,7 +533,8 @@ function applyNodeChoice(state, nodeId, choiceKey) {
       state.flags._retired = true;
       var _empJob = (state.employment && state.employment.currentJob) ? state.employment.currentJob : null;
       state.flags._pensionBase = _empJob ? (_empJob.salary || 5000) : 5000;
-      state.needs.happiness = Math.min(100, (state.needs.happiness || 50) + 20);
+      // [全系统自洽修复] 域G A类修复: state.needs 守卫(防止旧存档崩溃)
+      if (state.needs) state.needs.happiness = Math.min(100, (state.needs.happiness || 50) + 20);
       break;
     case "retire_advisor":
       state.flags._retirementType = "advisor";

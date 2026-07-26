@@ -115486,14 +115486,16 @@ function applyNodeChoice(state, nodeId, choiceKey) {
       state.flags._career35Path = "transform";
       break;
     case "c35_hold":
-      state.status.health = Math.min(100, (state.status.health || 100) + 5);
+      // [全系统自洽修复] 域G A类修复: state.status 守卫(防止旧存档崩溃)
+      if (state.status) state.status.health = Math.min(100, (state.status.health || 100) + 5);
       state.flags._career35Path = "hold";
       break;
     case "c35_newpath":
       state.flags._career35Path = "newpath";
       break;
     case "c35_lieflat":
-      state.needs.happiness = Math.min(100, (state.needs.happiness || 50) + 10);
+      // [全系统自洽修复] 域G A类修复: state.needs 守卫(防止旧存档崩溃)
+      if (state.needs) state.needs.happiness = Math.min(100, (state.needs.happiness || 50) + 10);
       state.flags._career35Path = "lieflat";
       break;
 
@@ -115503,7 +115505,8 @@ function applyNodeChoice(state, nodeId, choiceKey) {
       state.flags._retired = true;
       var _empJob = (state.employment && state.employment.currentJob) ? state.employment.currentJob : null;
       state.flags._pensionBase = _empJob ? (_empJob.salary || 5000) : 5000;
-      state.needs.happiness = Math.min(100, (state.needs.happiness || 50) + 20);
+      // [全系统自洽修复] 域G A类修复: state.needs 守卫(防止旧存档崩溃)
+      if (state.needs) state.needs.happiness = Math.min(100, (state.needs.happiness || 50) + 20);
       break;
     case "retire_advisor":
       state.flags._retirementType = "advisor";
@@ -201615,6 +201618,27 @@ const DAILY_PIPELINE = [
       if (typeof _checkExtremeWeatherNarrativeR240 === "function") {
         _checkExtremeWeatherNarrativeR240(state);
       }
+      // [全系统自洽修复] 域G R385 联动增强: G→B 每日天气叙事(温和天气也提供风味文本)
+      if (state.weather && state.weather.current && state.player.day > 1) {
+        var _weatherNarratives = {
+          sunny: "☀️ 阳光明媚，整座城市都亮了起来。",
+          cloudy: "⛅ 云层遮住了部分阳光，不冷不热刚刚好。",
+          rainy: "🌧️ 细雨绵绵，空气里弥漫着潮湿的泥土味。",
+          stormy: "⛈️ 暴雨如注，街上的行人匆匆躲避。",
+          windy: "🌬️ 大风刮起，树叶沙沙作响。",
+          snowy: "❄️ 雪花飘落，城市被一层白色覆盖。",
+          foggy: "🌫️ 大雾弥漫，远处的建筑若隐若现。",
+          hot: "🌞 烈日当空，柏油路面泛着热浪。",
+          cold_snap: "🥶 寒潮来袭，冷得让人直打哆嗦。",
+          heatwave: "🔥 酷暑难耐，蝉鸣声此起彼伏。",
+          heavy_rain: "🌊 暴雨倾盆，路面积水严重。",
+          plum_rain: "🌦️ 梅雨时节，空气潮湿得能拧出水来。"
+        };
+        var _wn = _weatherNarratives[state.weather.current];
+        if (_wn && Random.chance(0.3)) {
+          StateManager.addMessage(_wn, "narrative");
+        }
+      }
     },
   },
 
@@ -251484,6 +251508,26 @@ function renderSidebar(state) {
 
   renderNeedsBars(state);
   renderDebtInfo(state);
+  // [全系统自洽修复] 域G R385 联动增强: G→F 侧栏显示人生阶段/年龄
+  try {
+    var _age = state.player && state.player.age;
+    if (_age) {
+      var _stageEl = document.getElementById("sidebar-life-stage");
+      if (!_stageEl) {
+        var _sidebarEl = document.getElementById("sidebar");
+        if (_sidebarEl) {
+          _stageEl = document.createElement("div");
+          _stageEl.id = "sidebar-life-stage";
+          _stageEl.style.cssText = "font-size:10px;padding:2px 12px;color:var(--text-muted);";
+          _sidebarEl.insertBefore(_stageEl, _sidebarEl.firstChild);
+        }
+      }
+      if (_stageEl) {
+        var _stageEmoji = _age < 18 ? "🧒" : _age < 25 ? "🧑" : _age < 35 ? "👨" : _age < 50 ? "👨‍🦱" : "👴";
+        _stageEl.textContent = _stageEmoji + " " + _age + "岁";
+      }
+    }
+  } catch (e) {}
   // 人生目标已移到内容区时间槽下方（renderCurrentTab 中渲染）
   // renderDreamSection(state);
   // 今日重点已整合到行动页的"今日智能建议"中

@@ -967,6 +967,27 @@ const DAILY_PIPELINE = [
       if (typeof _checkExtremeWeatherNarrativeR240 === "function") {
         _checkExtremeWeatherNarrativeR240(state);
       }
+      // [全系统自洽修复] 域G R385 联动增强: G→B 每日天气叙事(温和天气也提供风味文本)
+      if (state.weather && state.weather.current && state.player.day > 1) {
+        var _weatherNarratives = {
+          sunny: "☀️ 阳光明媚，整座城市都亮了起来。",
+          cloudy: "⛅ 云层遮住了部分阳光，不冷不热刚刚好。",
+          rainy: "🌧️ 细雨绵绵，空气里弥漫着潮湿的泥土味。",
+          stormy: "⛈️ 暴雨如注，街上的行人匆匆躲避。",
+          windy: "🌬️ 大风刮起，树叶沙沙作响。",
+          snowy: "❄️ 雪花飘落，城市被一层白色覆盖。",
+          foggy: "🌫️ 大雾弥漫，远处的建筑若隐若现。",
+          hot: "🌞 烈日当空，柏油路面泛着热浪。",
+          cold_snap: "🥶 寒潮来袭，冷得让人直打哆嗦。",
+          heatwave: "🔥 酷暑难耐，蝉鸣声此起彼伏。",
+          heavy_rain: "🌊 暴雨倾盆，路面积水严重。",
+          plum_rain: "🌦️ 梅雨时节，空气潮湿得能拧出水来。"
+        };
+        var _wn = _weatherNarratives[state.weather.current];
+        if (_wn && Random.chance(0.3)) {
+          StateManager.addMessage(_wn, "narrative");
+        }
+      }
     },
   },
 

@@ -477,6 +477,26 @@ function renderSidebar(state) {
 
   renderNeedsBars(state);
   renderDebtInfo(state);
+  // [全系统自洽修复] 域G R385 联动增强: G→F 侧栏显示人生阶段/年龄
+  try {
+    var _age = state.player && state.player.age;
+    if (_age) {
+      var _stageEl = document.getElementById("sidebar-life-stage");
+      if (!_stageEl) {
+        var _sidebarEl = document.getElementById("sidebar");
+        if (_sidebarEl) {
+          _stageEl = document.createElement("div");
+          _stageEl.id = "sidebar-life-stage";
+          _stageEl.style.cssText = "font-size:10px;padding:2px 12px;color:var(--text-muted);";
+          _sidebarEl.insertBefore(_stageEl, _sidebarEl.firstChild);
+        }
+      }
+      if (_stageEl) {
+        var _stageEmoji = _age < 18 ? "🧒" : _age < 25 ? "🧑" : _age < 35 ? "👨" : _age < 50 ? "👨‍🦱" : "👴";
+        _stageEl.textContent = _stageEmoji + " " + _age + "岁";
+      }
+    }
+  } catch (e) {}
   // 人生目标已移到内容区时间槽下方（renderCurrentTab 中渲染）
   // renderDreamSection(state);
   // 今日重点已整合到行动页的"今日智能建议"中
