@@ -4903,3 +4903,41 @@ function getNpcInvestmentAdvice(state) {
   }
   return tips.length > 0 ? tips : null;
 }
+
+// [全系统自洽修复] 域E R420 联动增强(E→D): 投资社交影响 — 基于投资表现调整NPC好感度
+function applyInvestmentSocialEffect(state, plAmount) {
+  if (!state || !plAmount || !state.relationships) return;
+  if (Math.abs(plAmount) < 1000) return;
+  var isGain = plAmount > 0;
+  var magnitude = Math.min(3, Math.floor(Math.abs(plAmount) / 5000));
+  for (var npcId in state.relationships) {
+    var rel = state.relationships[npcId];
+    if (rel && rel.met) {
+      if (isGain) rel.affinity = Math.min(100, (rel.affinity || 0) + magnitude);
+      else rel.affinity = Math.max(0, (rel.affinity || 0) - Math.floor(magnitude / 2));
+    }
+  }
+}
+
+// [全系统自洽修复] 域E R420 联动增强(E→F): 投资回报评级 — 返回投资表现的可视化评级
+function getInvestmentReturnRating(plPercent) {
+  if (plPercent == null || isNaN(plPercent)) return { icon: '➖', label: '持平', color: 'var(--text-muted)' };
+  if (plPercent >= 50) return { icon: '🚀', label: '暴涨', color: 'var(--success)' };
+  if (plPercent >= 20) return { icon: '📈', label: '大涨', color: 'var(--success)' };
+  if (plPercent >= 5) return { icon: '📊', label: '上涨', color: 'var(--accent)' };
+  if (plPercent >= -5) return { icon: '➖', label: '持平', color: 'var(--text-muted)' };
+  if (plPercent >= -20) return { icon: '📉', label: '下跌', color: 'var(--warning)' };
+  if (plPercent >= -50) return { icon: '📉', label: '大跌', color: 'var(--danger)' };
+  return { icon: '💥', label: '暴跌', color: 'var(--danger)' };
+}
+
+// [全系统自洽修复] 域E R420 联动增强(E→C): 投资技能成长 — 成功投资提升商业技能经验
+function grantInvestmentSkillXp(state, plAmount) {
+  if (!state || !plAmount || plAmount <= 0) return;
+  var xp = Math.min(20, Math.floor(plAmount / 1000));
+  if (xp <= 0) return;
+  if (state.skills) {
+    if (state.skills.accounting) state.skills.accounting.xp = (state.skills.accounting.xp || 0) + xp;
+    if (state.skills.management) state.skills.management.xp = (state.skills.management.xp || 0) + Math.floor(xp / 2);
+  }
+}
