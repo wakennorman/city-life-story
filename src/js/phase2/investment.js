@@ -3273,7 +3273,21 @@ function renderInvestmentTab(state, parent) {
     totalPLSign +
     "¥" +
     Math.round(totalPL).toLocaleString() +
-    '</span> <span style="font-size:11px;color:var(--text-muted);cursor:pointer;" onclick="showInvestmentAnalysisModal()" title="查看投资分析工具">📊 分析</span></h3>' +
+    '</span> <span style="font-size:11px;color:var(--text-muted);cursor:pointer;" onclick="showInvestmentAnalysisModal()" title="查看投资分析工具">📊 分析</span>' +
+    // [全系统自洽修复] 域F R390 联动增强(F→E): 投资组合风险仪表盘
+    (function() {
+      var _inv = state.investment;
+      if (!_inv) return '';
+      var _stocks = (_inv.stockHoldings || []).length;
+      var _crypto = (_inv.btcHoldings || 0) > 0 ? 1 : 0;
+      var _props = (_inv.properties || []).length;
+      var _riskScore = _stocks * 3 + _crypto * 5 - _props * 1;
+      var _riskLevel = _riskScore >= 10 ? '高' : _riskScore >= 5 ? '中' : '低';
+      var _riskColor = _riskScore >= 10 ? 'var(--danger)' : _riskScore >= 5 ? 'var(--warning)' : 'var(--success)';
+      var _riskIcon = _riskScore >= 10 ? '🔴' : _riskScore >= 5 ? '🟡' : '🟢';
+      return ' <span style="font-size:11px;color:' + _riskColor + ';cursor:pointer;" title="组合风险评分:' + _riskScore + '（股票×3+加密×5-房产×1）">' + _riskIcon + ' ' + _riskLevel + '风险</span>';
+    })() +
+    '</h3>' +
     '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;">' +
     summaryCard("股票", assetSnapshot.groups.stocks) +
     summaryCard("虚拟币", assetSnapshot.groups.crypto) +

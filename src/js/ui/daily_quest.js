@@ -584,6 +584,7 @@
 
   // ─── 渲染：今日目标卡 ──────────────────────────────────────────
   function renderDailyQuestCard(state, parent) {
+    if (!state || !state.player) return;
     var quests = generateDailyQuests(state);
     if (!quests || quests.length === 0) return;
 
@@ -692,7 +693,7 @@
       card.appendChild(_weatherTip);
     }
     // === G→F 联动: 时间/行动力状态 ===
-    var _apPct = state.player.actionPoints / (state.player.maxActionPoints || 100);
+    var _apPct = (state.player.actionPoints || 0) / (state.player.maxActionPoints || 100);
     var _timeSlotIcons = { morning: "🌅", afternoon: "☀️", evening: "🌆" };
     var _timeSlotNames = { morning: "上午", afternoon: "下午", evening: "傍晚" };
     var _tsIcon = _timeSlotIcons[state.player.timeSlot] || "⏰";
@@ -799,6 +800,7 @@
 
   // ─── 渲染：人生旅程弧 ─────────────────────────────────────────
   function renderLifeArcStrip(state, parent) {
+    if (!state) return;
     var stage = _getLifeStage(state);
     var idx = _getStageIdx(stage);
     var cur = LIFE_STAGES[idx];

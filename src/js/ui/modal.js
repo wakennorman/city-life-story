@@ -37,6 +37,8 @@ function showModal() {
 
 // ====== 模态对话框实现 ======
 function showModalImpl({ title, body, buttons = [] }) {
+  title = title || "提示";
+  body = body || "";
   // 如果已有弹窗，不覆盖（防止每日结算被新弹窗挤掉）
   const existingOverlay = document.querySelector(".modal-overlay");
   if (existingOverlay) {
@@ -710,7 +712,7 @@ function showRepayModal() {
         cls: "btn-primary",
         callback: () => {
           const input = document.getElementById("repay-loan-amount");
-          const amount = input ? parseInt(input.value) : 0;
+          const amount = input ? (parseInt(input.value) || 0) : 0;
           if (typeof repayLoan === "function") {
             repayLoan(state, amount);
             renderAll();
@@ -1901,7 +1903,11 @@ function showAcquisitionModal(state) {
       return;
     }
 
-    var company = state.startup.company;
+    var company = state.startup && state.startup.company;
+    if (!company) {
+      StateManager.addMessage("没有公司可供收购", "info");
+      return;
+    }
 
     showModal({
       title: "🤝 收购要约",
@@ -2245,11 +2251,11 @@ function showInheritanceSummaryModal(inheritanceData) {
         '<div style="font-size:20px;">' + (b.icon || "🏅") + "</div>";
       badgeHtml +=
         '<div style="font-weight:bold;color:var(--text-primary);margin-top:2px;">' +
-        b.name +
+        (b.name || "未知徽章") +
         "</div>";
       badgeHtml +=
         '<div style="color:var(--text-secondary);font-size:11px;margin-top:1px;">' +
-        b.effect +
+        (b.effect || "") +
         "</div>";
       badgeHtml += "</div>";
     }
@@ -2273,12 +2279,12 @@ function showInheritanceSummaryModal(inheritanceData) {
         " + 声誉加成: ¥" +
         cashInfo.bonus.toLocaleString() +
         " (+" +
-        cashInfo.bonusPercent +
+        (cashInfo.bonusPercent || 0) +
         "%)";
     }
     cashHtml +=
       ' <strong style="color:#4caf50;">= ¥' +
-      cashInfo.total.toLocaleString() +
+      (cashInfo.total || 0).toLocaleString() +
       "</strong>";
     cashHtml += "</div></div>";
   }
@@ -2372,12 +2378,12 @@ function showInheritanceSummaryModal(inheritanceData) {
       "(" +
       moralScore.label +
       ")";
-    if (moralScore.good > 0 || moralScore.bad > 0) {
+    if ((moralScore.good || 0) > 0 || (moralScore.bad || 0) > 0) {
       moralHtml +=
         ' <span style="color:var(--text-muted);">善行' +
-        moralScore.good +
+        (moralScore.good || 0) +
         " / 恶行" +
-        moralScore.bad +
+        (moralScore.bad || 0) +
         "</span>";
     }
     moralHtml += "</div></div>";
@@ -2398,7 +2404,7 @@ function showInheritanceSummaryModal(inheritanceData) {
         '<span style="background:var(--bg-input);padding:2px 8px;border-radius:4px;">' +
         npcId +
         " ❤️" +
-        pa.peakAffinity +
+        (pa.peakAffinity || 0) +
         "</span>";
     }
     peakHtml += "</div></div>";

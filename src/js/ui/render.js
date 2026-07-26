@@ -914,10 +914,10 @@ function renderGrowthTab(state, parent) {
   var statSummary = document.createElement("div");
   statSummary.style.cssText = "flex:1;min-width:0;padding-top:28px;";
   var stats = [
-    { label: "体质", value: p.physique, color: "#c4803a" },
-    { label: "智力", value: p.intelligence, color: "#5a8ab4" },
-    { label: "敏捷", value: p.agility, color: "#5aaa5a" },
-    { label: "能力", value: p.mental, color: "#9b74b8" },
+    { label: "体质", value: p.physique || 0, color: "#c4803a" },
+    { label: "智力", value: p.intelligence || 0, color: "#5a8ab4" },
+    { label: "敏捷", value: p.agility || 0, color: "#5aaa5a" },
+    { label: "能力", value: p.mental || 0, color: "#9b74b8" },
     { label: "魅力", value: (p && p.charm) || 20, color: "#e08aa8" },
     { label: "名气", value: (p && p.fame) || 0, color: "#d4a017" },
     { label: "道德", value: (p && p.morality) || 50, color: "#6ac49a" },
@@ -955,11 +955,12 @@ function renderGrowthTab(state, parent) {
       : null;
   var totalAsset = assetSnapshot
     ? Math.round(assetSnapshot.totalAssets)
-    : (state.resources.cash || 0) + (state.resources.bankBalance || 0);
-  var debt =
-    (state.resources.villageDebt || state.resources.debt || 0) +
-    (state.resources.fineDebt || 0) +
-    (state.resources.bankDebt || 0);
+    : (state.resources ? (state.resources.cash || 0) + (state.resources.bankBalance || 0) : 0);
+  var debt = state.resources
+    ? (state.resources.villageDebt || state.resources.debt || 0) +
+      (state.resources.fineDebt || 0) +
+      (state.resources.bankDebt || 0)
+    : 0;
   briefSection.innerHTML =
     '<h3 style="margin:0 0 10px;font-size:13px;color:var(--text-primary);">📊 我的数字</h3>' +
     '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:8px;">' +
@@ -1934,12 +1935,12 @@ function renderGuidanceBar(state, parent) {
     corporate: { icon: "🏢", label: "职场打拼" },
     advanced: { icon: "🏆", label: "有头有脸" },
   };
-  var p = state.player,
+  var p = state.player || {},
     r = state.resources || {};
   var cash = (r.cash || 0) + (r.bankBalance || 0);
   var debt = (r.villageDebt || r.debt || 0) + (r.fineDebt || 0) + (r.bankDebt || 0);
   var stageId =
-    p.day <= 7
+    (p.day || 0) <= 7
       ? "survival"
       : debt > 0
         ? "debt"
@@ -2629,7 +2630,7 @@ function renderMapTab(state, parent) {
       </div>
       <div style="font-size:9px;color:var(--text-muted);margin-bottom:3px;">${mapLoc.type === "commercial" ? "🛒商业" : mapLoc.type === "industrial" ? "🏭工业" : mapLoc.type === "residential" ? "🏘️居住" : mapLoc.type === "service" ? "🏥服务" : mapLoc.type === "education" ? "📚教育" : mapLoc.type === "corporate" ? "🏢职场" : mapLoc.type === "recreation" ? "🌳休闲" : mapLoc.type === "institutional" ? "🏫机构" : ""}</div>
       <div style="display:flex;flex-wrap:wrap;gap:2px;justify-content:center;" class="map-node-badges">${badgeStr}</div>
-      ${canTravel ? '<div class="map-node-action" style="font-size:9px;color:var(--accent);margin-top:4px;">' + (state.player.transitMode === "walk" ? "🚶" : state.player.transitMode === "bike" ? "🚲" : state.player.transitMode === "metro" ? "🚇" : state.player.transitMode === "taxi" ? "🚕" : state.player.transitMode === "car" ? "🚗" : "👆") + ' 点击前往</div>' : ""}
+      ${canTravel ? '<div class="map-node-action" style="font-size:9px;color:var(--accent);margin-top:4px;">' + (state.player && state.player.transitMode === "walk" ? "🚶" : state.player && state.player.transitMode === "bike" ? "🚲" : state.player && state.player.transitMode === "metro" ? "🚇" : state.player && state.player.transitMode === "taxi" ? "🚕" : state.player && state.player.transitMode === "car" ? "🚗" : "👆") + ' 点击前往</div>' : ""}
       ${!isReachable && !isCurrent ? '<div class="map-node-action" style="font-size:9px;color:var(--text-muted);margin-top:2px;">🔒 未探索</div>' : ""}
     `;
 
@@ -2646,7 +2647,7 @@ function renderMapTab(state, parent) {
       });
       node.addEventListener("click", () => {
         const dest = getLocation(key);
-        const mode = state.player.transitMode || "walk";
+        const mode = (state.player && state.player.transitMode) || "walk";
         const hops = typeof getLocationHops === "function" ? getLocationHops(locKey, key) : 1;
         var ap = 15, price = 0, modeName = "🚶 步行", canReach = true;
         if (mode === "walk") {
@@ -2698,7 +2699,7 @@ function renderMapTab(state, parent) {
   const transitBar = document.createElement("div");
   transitBar.style.cssText =
     "display:flex;flex-direction:column;gap:2px;padding:8px 0 4px;";
-  const curMode = state.player.transitMode || "walk";
+  const curMode = (state.player && state.player.transitMode) || "walk";
   var hasCar = state.investment && state.investment.cars && state.investment.cars.length > 0;
   const TRANSIT_MODES = [
     { mode: "walk", label: "🚶 步行", desc: "免费" },
@@ -2822,7 +2823,7 @@ function renderTradeTab(state, parent) {
   if (!state.trade) { parent.innerHTML = '<p style="color:var(--text-muted);padding:20px;text-align:center;">📦 交易系统加载中...</p>'; return; }
   const locKey = state.trade && state.trade.currentLocation;
   const loc = getLocation(locKey);
-  const prices = state.trade.goodsPrices[locKey] || {};
+  const prices = (state.trade.goodsPrices && state.trade.goodsPrices[locKey]) || {};
   const isWholesale = locKey === "wholesaleMarket";
   // v3.0 BUGFIX: 原为 const goodsList，但下方 SortUtils.sortInteractiveList 会重新赋值，
   // 触发 "Assignment to constant variable" 错误导致整个交易Tab崩溃。改为 let。
@@ -3089,7 +3090,7 @@ function renderTradeTab(state, parent) {
   }
 
   // 背包中的商品（方便快速卖出）
-  const ownedGoods = state.inventory.items || [];
+  const ownedGoods = (state.inventory && state.inventory.items) || [];
   if (ownedGoods.length > 0) {
     const ownedDiv = document.createElement("div");
     ownedDiv.style.marginBottom = "16px";
@@ -3862,7 +3863,7 @@ function renderInventoryTab(state, parent) {
   }
 
   // 装备栏
-  const equip = state.inventory.equipment;
+  const equip = state.inventory && state.inventory.equipment;
   const equipDiv = document.createElement("div");
   equipDiv.style.marginTop = "16px";
   var equipTitle = document.createElement("h3");
@@ -4109,7 +4110,7 @@ function renderSkillsTab(state, parent) {
   };
   var skillNamesCache = skillNames;
 
-  var skillKeys = Object.keys(state.skills);
+  var skillKeys = Object.keys(state.skills || {});
   var skillTrainingLocationOk =
     state.trade && state.trade.currentLocation === "trainingCenter";
   if (!skillTrainingLocationOk) {
@@ -4172,6 +4173,7 @@ function renderSkillsTab(state, parent) {
   for (var ki = 0; ki < skillKeys.length; ki++) {
     var key = skillKeys[ki];
     var skill = state.skills[key];
+    if (!skill) continue;
     var name = skillNames[key] || key;
     var xpNeeded = (skill.level + 1) * 100;
     var xpPct = Math.min(100, Math.round((skill.xp / xpNeeded) * 100));
@@ -4375,6 +4377,8 @@ function renderSkillsTab(state, parent) {
     (function (skillKey) {
       card.addEventListener("click", function () {
         var st = StateManager.getState();
+        // [全系统AP守卫] 先消耗行动力再干活
+        if (typeof consumeAP === "function" && consumeAP(15) === false) return;
         var sk = st.skills[skillKey];
         if (!sk) return;
         if (!st.trade || st.trade.currentLocation !== "trainingCenter") {
@@ -4408,10 +4412,9 @@ function renderSkillsTab(state, parent) {
           return;
         }
         // 扣除资源
-        st.player.actionPoints = Math.max(0, (st.player.actionPoints || 0) - 15);
         st.resources.cash = Math.max(0, (st.resources.cash || 0) - 50);
         // 训练EXP（大幅降低，技能学习变难）
-        var baseGain = 5 + Random.int(0, 7); // 5~12
+        var baseGain = 5 + (typeof Random !== "undefined" && Random.int ? Random.int(0, 7) : 3); // 5~12
         var intBonus = Math.floor((st.player.intelligence || 0) / 20) * 2; // 智力加成减半
         var xpGain = baseGain + intBonus;
         // 心情加成
@@ -4426,6 +4429,7 @@ function renderSkillsTab(state, parent) {
         // 记录训练次数
         st.flags._dailyTrainingCounts[skillKey] = trained + 1;
         // 追踪训练频次（用于排序）
+        if (!st.stats) st.stats = {};
         if (!st.stats.trainFreq) st.stats.trainFreq = {};
         st.stats.trainFreq[skillKey] = (st.stats.trainFreq[skillKey] || 0) + 1;
         // 升级处理（新阈值：120）
@@ -4473,7 +4477,6 @@ function renderSkillsTab(state, parent) {
           "success",
         );
         if (typeof playSound === "function") playSound("train");
-        if (typeof consumeAP === "function") consumeAP(15);
         if (typeof renderAll === "function") renderAll(st);
       });
     })(key);
@@ -4666,6 +4669,10 @@ function renderSkillsTab(state, parent) {
 
 // ====== Corp Tab（职场中才有效） ======
 function renderCorpTab(state, parent) {
+  if (!state.corporate) {
+    parent.innerHTML = '<p style="color:var(--text-muted);text-align:center;padding:40px;">🔒 公司数据加载中...</p>';
+    return;
+  }
   if (state.player.phase !== "corporate") {
     parent.innerHTML =
       '<p style="color:var(--text-muted);text-align:center;padding:40px;">🔒 进入职场后解锁</p>';
@@ -5499,7 +5506,7 @@ function renderIllnessRow(state) {
   }
 
   // 第1天且无疾病记录（旧存档残留）→ 隐藏伤病栏
-  if (state.player.day <= 1 && illnesses.length === 0) {
+  if ((state.player && state.player.day || 0) <= 1 && illnesses.length === 0) {
     box.style.display = "none";
     state.status.injured = false;
     return;
@@ -6237,7 +6244,7 @@ window.__doTrainCore = function (trainId) {
   if (!t) return;
 
   // AP 检查
-  var ap = state.resources.actionPoints || 0;
+  var ap = (state.player && state.player.actionPoints) || 0;
   if (ap < t.apCost) {
     StateManager.addMessage(
       "⏱ 行动力不足，需要 " + t.apCost + " AP",
@@ -6262,7 +6269,7 @@ window.__doTrainCore = function (trainId) {
 
   // 风险检查（整容）
   // [全系统自洽修复] 域F A类修复: state.status/needs 守卫(防止旧存档崩溃)
-  if (t.risky && Random.chance(0.2)) {
+  if (t.risky && (typeof Random !== "undefined" && Random.chance ? Random.chance(0.2) : false)) {
     var oldVal = _getTrainStatVal(p, t.stat);
     _setTrainStatVal(p, t.stat, oldVal - 5);
     if (state.status) state.status.health = Math.max(20, (state.status.health || 100) - 15);
@@ -6272,8 +6279,8 @@ window.__doTrainCore = function (trainId) {
       "error",
     );
   } else {
-    var baseGain = t.gain[0] + Random.int(0, t.gain[1] - t.gain[0]);
-    var crit = Random.chance(0.1) ? 2 : 0;
+    var baseGain = t.gain[0] + (typeof Random !== "undefined" && Random.int ? Random.int(0, t.gain[1] - t.gain[0]) : 0);
+    var crit = (typeof Random !== "undefined" && Random.chance ? Random.chance(0.1) : false) ? 2 : 0;
     baseGain = Math.max(1, Math.round(baseGain * diminishingMult));
     var totalGain = baseGain + crit;
     _setTrainStatVal(p, t.stat, _getTrainStatVal(p, t.stat) + totalGain);
@@ -6326,10 +6333,10 @@ function renderPgCharts(state, content) {
   var statSummary = document.createElement("div");
   statSummary.style.cssText = "flex:1;min-width:0;padding-top:28px;";
   var stats = [
-    { label: "体质", value: p.physique, color: "#c4803a" },
-    { label: "智力", value: p.intelligence, color: "#5a8ab4" },
-    { label: "敏捷", value: p.agility, color: "#5aaa5a" },
-    { label: "能力", value: p.mental, color: "#9b74b8" },
+    { label: "体质", value: p.physique || 0, color: "#c4803a" },
+    { label: "智力", value: p.intelligence || 0, color: "#5a8ab4" },
+    { label: "敏捷", value: p.agility || 0, color: "#5aaa5a" },
+    { label: "能力", value: p.mental || 0, color: "#9b74b8" },
     { label: "魅力", value: (p && p.charm) || 20, color: "#e08aa8" },
     { label: "名气", value: (p && p.fame) || 0, color: "#d4a017" },
     { label: "道德", value: (p && p.morality) || 50, color: "#6ac49a" },
@@ -6720,7 +6727,7 @@ function renderFinanceTab(state, parent) {
   var bankDebt = r.bankDebt || 0;
   var totalDebt = villageDebt + fineDebt + bankDebt;
   var netWorth = cash + bankBalance - totalDebt;
-  var txs = state.flags._dailyTransactions || [];
+  var txs = (state.flags && state.flags._dailyTransactions) || [];
 
   // === 总览区 ===
   var overview = document.createElement("div");

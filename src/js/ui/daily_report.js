@@ -102,7 +102,7 @@ function reconcileTransactions(state) {
   }
 
   var startCash = state.flags._dayStartCash || 0;
-  var actualDelta = (state.resources.cash || 0) - startCash;
+  var actualDelta = ((state.resources && state.resources.cash) || 0) - startCash;
   var discrepancy = Math.round((actualDelta - trackedDelta) * 100) / 100;
 
   if (Math.abs(discrepancy) <= 1) {
@@ -665,8 +665,8 @@ function generatePeakMomentHTML(state, incomes, expenses) {
       type: "warning",
     });
   }
-  var debt = state.resources.villageDebt || 0;
-  var fineDebt = state.resources.fineDebt || 0;
+  var debt = (state.resources && state.resources.villageDebt) || 0;
+  var fineDebt = (state.resources && state.resources.fineDebt) || 0;
   if (fineDebt > 0) {
     highlights.push({
       icon: "📋",
@@ -682,7 +682,7 @@ function generatePeakMomentHTML(state, incomes, expenses) {
       window.EconomySystem &&
       typeof window.EconomySystem.getDynamicLoanRate === "function"
     ) {
-      var ta = (state.resources.cash || 0) + (state.resources.bankBalance || 0);
+      var ta = (state.resources && (state.resources.cash || 0)) + (state.resources && state.resources.bankBalance || 0);
       ratePct = window.EconomySystem.getDynamicLoanRate(ta) * 100;
     }
     highlights.push({

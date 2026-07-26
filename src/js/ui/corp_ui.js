@@ -40,7 +40,9 @@ function getCompanyIndustryById(cid) {
 
 /** 渲染职场面板（替代街头行动面板） */
 function renderCorporateActions(state) {
+  if (!state.corporate) return;
   const area = document.getElementById("content-area");
+  if (!area) return;
   area.innerHTML = "";
 
   // 季度信息
@@ -125,7 +127,7 @@ function renderCorporateActions(state) {
         reqText = `需 ${action.requiresRank}+`;
       }
     }
-    if (action.cost && (state.resources.cash || 0) < action.cost) { // [全系统自洽修复] 域F A类: cash NaN守卫
+    if (action.cost && ((state.resources && state.resources.cash) || 0) < action.cost) { // [全系统自洽修复] 域F A类: cash NaN守卫
       disabled = true;
       reqText = `需 ¥${action.cost}`;
     }
@@ -1046,7 +1048,7 @@ function renderCompanyHistory(state) {
 function buildNgPlusData(state) {
   var data = { version: 1, victoryType: state.flags.victoryType || "normal" };
   // 起始现金奖励（基于上局总收入的1%，上限5000）
-  var totalEarned = state.resources.totalEarned || 0;
+  var totalEarned = (state.resources && state.resources.totalEarned) || 0;
   data.startCash = Math.min(5000, Math.floor(totalEarned * 0.01));
   // 继承最高技能（在新游戏中从20级开始）
   var topSkill = null,

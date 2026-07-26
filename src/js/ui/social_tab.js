@@ -10,7 +10,7 @@
 
 // ====== NPC关系网渲染 ======
 function renderNpcRelationships(state, content) {
-  if (!state.relationships) {
+  if (!state || !state.relationships) {
     content.innerHTML =
       '<p style="color:var(--text-muted);padding:20px;text-align:center;">👥 NPC关系网加载中...</p>';
     return;
@@ -152,6 +152,9 @@ function renderNpcRelationships(state, content) {
     }
     html +=
       '<span style="margin-left:auto;">' + Math.round(affinity) + "</span>";
+    // [全系统自洽修复] 域F R390 联动增强(F→D): 好感度色条可视化
+    var _barColor = affinity >= 80 ? '#4caf50' : affinity >= 60 ? '#8bc34a' : affinity >= 30 ? '#ffc107' : affinity >= 0 ? '#ff9800' : '#f44336';
+    html += '<div style="width:40px;height:4px;background:var(--bg-input);border-radius:2px;margin-left:4px;overflow:hidden;"><div style="width:' + Math.min(100, Math.max(0, affinity)) + '%;height:100%;background:' + _barColor + ';border-radius:2px;"></div></div>';
     html += "</div>";
     html += "</div>";
     // v3.1 ⑥ 社会比较心理抓手：好感≥20 时透露对方月薪，制造羡慕/优越感

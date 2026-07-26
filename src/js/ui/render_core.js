@@ -500,6 +500,34 @@ function renderSidebar(state) {
       }
     }
   } catch (e) {}
+  // [全系统自洽修复] 域F R390 联动增强(F→G): 健康预警仪表盘 — 侧栏显示关键状态预警
+  try {
+    var _status = state.status;
+    var _needs = state.needs;
+    var _warnings = [];
+    if (_status && (_status.health || 100) < 30) _warnings.push('❤️健康' + (_status.health || 0));
+    if (_needs) {
+      if ((_needs.hunger || 100) < 20) _warnings.push('🍞饥饿' + (_needs.hunger || 0));
+      if ((_needs.fatigue || 0) > 80) _warnings.push('😫疲劳' + (_needs.fatigue || 0));
+      if ((_needs.happiness || 50) < 15) _warnings.push('😞心情' + (_needs.happiness || 0));
+    }
+    if (_warnings.length > 0) {
+      var _warnEl = document.getElementById("sidebar-health-warn");
+      if (!_warnEl) {
+        var _sidebar = document.getElementById("sidebar");
+        if (_sidebar) {
+          _warnEl = document.createElement("div");
+          _warnEl.id = "sidebar-health-warn";
+          _warnEl.style.cssText = "font-size:10px;padding:2px 12px;color:var(--danger);background:rgba(231,76,60,0.08);border-bottom:1px solid var(--border);";
+          _sidebar.insertBefore(_warnEl, _sidebar.firstChild);
+        }
+      }
+      if (_warnEl) _warnEl.textContent = '⚠️ ' + _warnings.join(' | ');
+    } else {
+      var _existingWarn = document.getElementById("sidebar-health-warn");
+      if (_existingWarn) _existingWarn.remove();
+    }
+  } catch (e) {}
   // 人生目标已移到内容区时间槽下方（renderCurrentTab 中渲染）
   // renderDreamSection(state);
   // 今日重点已整合到行动页的"今日智能建议"中
