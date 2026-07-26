@@ -22635,6 +22635,197 @@ function applyEventMarketEffect(state, eventId) {
 })();
 
 ;
+// ==== js/core/domain_a_linkage_r407.js ====
+/**
+ * 域A(数据/数值平衡) 联动增强 R407
+ * 第十七轮循环——把隐藏在trade_intel/carry/jobs中的数据转化为叙事体验。
+ * 桥接：
+ *   A→B  a407_market_pulse          市场脉搏 → 消费 marketEvents+news+pricing 数据,
+ *     把市场价格波动→"市场正在发生什么"的叙事风味
+ *   A→C  a407_skill_demand_heatmap   技能需求热图 → 消费 jobs+skills 数据,
+ *     不同工作对技能的需求→"学什么最吃香"的决策洞察
+ *   A→G  a407_prevention_awakening   预防觉醒 → 消费 illnesses+needs 数据,
+ *     疾病预防数据→"防患于未然"的健康觉醒
+ *
+ * 严格照 domain_a_linkage_r398.js / r389.js 已验证IIFE注入范式。
+ */
+(function () {
+  "use strict";
+
+  if (typeof RANDOM_EVENTS === "undefined" || !RANDOM_EVENTS) return;
+  if (RANDOM_EVENTS._domainALinkageR407Loaded) return;
+  RANDOM_EVENTS._domainALinkageR407Loaded = true;
+
+  var EVENTS = [
+    {
+      // A→B: 市场脉搏 — 消费 marketEvents+news+pricing
+      id: "a407_market_pulse",
+      phase: "street",
+      _isChainEvent: false,
+      icon: "📈",
+      title: "市场脉搏",
+      story:
+        "你注意到市场上的变化——{marketPulse}\n\n读懂市场,是在这座城市生存的基本功。",
+      triggers: { minDay: 40, excludeFlags: ["_a407PulseCooldown"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        if (!st.trade) return false;
+        return true;
+      },
+      choices: [
+        {
+          text: "📊 做市场观察笔记",
+          hint: "心智+3,sales XP+3,置 _a407PulseCooldown(60天)",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._a407PulseCooldown = true;
+            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 3);
+            if (typeof addSkillXp === "function") {
+              try { addSkillXp("sales", 3); } catch(e) { /* safe */ }
+            }
+            if (typeof StateManager !== "undefined" && StateManager.addMessage)
+              StateManager.addMessage("📈 你记录了市场变化——观察力是商人最重要的品质。心智+3,销售XP+3。", "success");
+          }
+        },
+        {
+          text: "🤷 市场变化太难把握",
+          hint: "无奖励",
+          apply: function (st) { /* 无奖励选择 */ }
+        }
+      ],
+      text: function (st) {
+        if (!st || !st.trade) return null;
+        var pulse = "市场似乎在平静中酝酿着变化";
+        if (st.trade.marketEvents && st.trade.marketEvents.length > 0) {
+          var evt = st.trade.marketEvents[0];
+          pulse = "「" + (evt.name || "市场异动") + "」正在影响" + (evt.goodId || "相关商品") + "价格";
+        }
+        return "你注意到市场上的变化——" + pulse + "。\n\n读懂市场,是在这座城市生存的基本功。";
+      }
+    },
+    {
+      // A→C: 技能需求热图 — 消费 jobs+skills
+      id: "a407_skill_demand_heatmap",
+      phase: "street",
+      _isChainEvent: false,
+      icon: "🔥",
+      title: "什么技能最吃香",
+      story:
+        "你分析了市场上各工作的技能需求——{heatmapInsight}\n\n顺势而为,事半功倍。",
+      triggers: { minDay: 50, excludeFlags: ["_a407HeatmapCooldown"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        return (typeof STREET_JOBS !== "undefined" && st.skills);
+      },
+      choices: [
+        {
+          text: "🎯 按需学习,精准提升",
+          hint: "心智+4,accounting XP+3,置 _a407HeatmapCooldown(90天)",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._a407HeatmapCooldown = true;
+            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 4);
+            if (typeof addSkillXp === "function") {
+              try { addSkillXp("accounting", 3); } catch(e) { /* safe */ }
+            }
+            if (typeof StateManager !== "undefined" && StateManager.addMessage)
+              StateManager.addMessage("🔥 你分析了技能需求热图——按需学习是最优策略。心智+4,会计XP+3。", "success");
+          }
+        },
+        {
+          text: "😊 喜欢什么就学什么",
+          hint: "心情+3",
+          apply: function (st) {
+            if (st && st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 3);
+          }
+        }
+      ],
+      text: function (st) {
+        if (!st || typeof STREET_JOBS === "undefined") return null;
+        // 统计最常被工作要求的核心技能
+        var skillDemand = {};
+        for (var i = 0; i < STREET_JOBS.length; i++) {
+          var job = STREET_JOBS[i];
+          if (job.requirements) {
+            for (var key in job.requirements) {
+              if (key !== "minAge" && key !== "maxAge" && key !== "educationRequired") {
+                skillDemand[key] = (skillDemand[key] || 0) + 1;
+              }
+            }
+          }
+        }
+        // 找最高需求
+        var topSkill = null, topCount = 0;
+        for (var k in skillDemand) {
+          if (skillDemand[k] > topCount) { topCount = skillDemand[k]; topSkill = k; }
+        }
+        var cn = { cooking: "烹饪", repair: "维修", coding: "编程", english: "英语",
+          driving: "驾驶", sales: "销售", management: "管理", accounting: "会计",
+          intelligence: "智力", physique: "体质", agility: "敏捷", mental: "心智" };
+        var insight = topSkill
+          ? (cn[topSkill] || topSkill) + "是市场上最被需要的技能(top" + topCount + "个工作要求)"
+          : "各项技能都有需求,关键是找到自己的方向";
+        return "你分析了市场上各工作的技能需求——" + insight + "。\n\n顺势而为,事半功倍。";
+      }
+    },
+    {
+      // A→G: 预防觉醒 — 消费 illnesses+needs
+      id: "a407_prevention_awakening",
+      phase: "street",
+      _isChainEvent: false,
+      icon: "🛡️",
+      title: "预防胜于治疗",
+      story:
+        "你意识到健康需要提前关注——{preventionInsight}\n\n防患于未然,是最明智的健康投资。",
+      triggers: { minDay: 55, excludeFlags: ["_a407PreventCooldown"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        return true;
+      },
+      choices: [
+        {
+          text: "💪 养成健康习惯",
+          hint: "心智+4,置 _a407PreventCooldown(80天)",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._a407PreventCooldown = true;
+            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 4);
+            if (typeof StateManager !== "undefined" && StateManager.addMessage)
+              StateManager.addMessage("🛡️ 你理解了预防的重要性——健康是最好的投资。心智+4。", "success");
+          }
+        },
+        {
+          text: "😅 年轻就是本钱",
+          hint: "无奖励",
+          apply: function (st) { /* 无奖励选择 */ }
+        }
+      ],
+      text: function (st) {
+        if (!st) return null;
+        var insight = "很多疾病可以通过良好的生活习惯预防";
+        if (st.needs) {
+          var hygiene = st.needs.hygiene || 100;
+          var fatigue = st.needs.fatigue || 0;
+          if (hygiene < 40) insight = "卫生状况下降会显著增加患病风险,注意清洁";
+          else if (fatigue > 70) insight = "过度疲劳会削弱免疫系统,注意休息";
+        }
+        return "你意识到健康需要提前关注——" + insight + "。\n\n防患于未然,是最明智的健康投资。";
+      }
+    }
+  ];
+
+  // 注入 RANDOM_EVENTS
+  for (var i = 0; i < EVENTS.length; i++) {
+    var _e = EVENTS[i];
+    if (RANDOM_EVENTS.find(function (ev) { return ev.id === _e.id; })) continue;
+    RANDOM_EVENTS.push(_e);
+  }
+})();
+
+;
 // ==== js/core/domain_b_linkage_r172.js ====
 /*
  * 城市浮生记 — 域B（事件/叙事）联动增强 · R172
@@ -173050,7 +173241,7 @@ const STREET_JOBS = [
     payCalc(state) {
       // v3.53 修复：下限从¥20提升到¥25，避免"升级住房→入不敷出"死锁
       const base = Random.float(25, 55);
-      const multi = 1 + state.skills.sales.level * 0.005;
+      const multi = 1 + (state.skills.sales && state.skills.sales.level || 0) * 0.005;
       // v3.8 P1修复：zhouScrapBonus（老周好感奖励→废品+20%）
       const zhouBonus = state.flags && state.flags.zhouScrapBonus ? 1.2 : 1.0;
       return Math.floor(base * Math.min(multi, 2) * zhouBonus);
@@ -173075,7 +173266,7 @@ const STREET_JOBS = [
       return Math.floor(
         55 +
           state.player.physique * 0.6 +
-          state.skills.sales.level * 0.5 +
+          (state.skills.sales && state.skills.sales.level || 0) * 0.5 +
           Random.float(0, 30),
       );
     },
@@ -173094,7 +173285,7 @@ const STREET_JOBS = [
     payCalc(state) {
       const weldBonus =
         typeof getConstructionBonus === "function"
-          ? getConstructionBonus(state.skills.welding.level || 0)
+          ? getConstructionBonus((state.skills.welding && state.skills.welding.level || 0))
           : 0;
       const bossBonus = state.flags && state.flags.bossLiSkillJob ? 1.2 : 1.0;
       return Math.floor(
@@ -173123,12 +173314,12 @@ const STREET_JOBS = [
     payCalc(state) {
       const weldBonus =
         typeof getConstructionBonus === "function"
-          ? getConstructionBonus(state.skills.welding.level || 0)
+          ? getConstructionBonus((state.skills.welding && state.skills.welding.level || 0))
           : 0;
       return Math.floor(
         (220 +
           state.player.physique * 0.8 +
-          state.skills.repair.level * 1.5 +
+          (state.skills.repair && state.skills.repair.level || 0) * 1.5 +
           Random.float(0, 60)) *
           (1 + weldBonus),
       );
@@ -173155,7 +173346,7 @@ const STREET_JOBS = [
     payCalc(state) {
       const elecBonus =
         typeof getFactoryBonus === "function"
-          ? getFactoryBonus(state.skills.electrician.level || 0)
+          ? getFactoryBonus((state.skills.electrician && state.skills.electrician.level || 0))
           : 0;
       // v3.8 P1修复：zhangFactoryBonus（张姐好感80奖励→工厂+15%）
       const zhangBonus =
@@ -173184,7 +173375,7 @@ const STREET_JOBS = [
       socialXp: 2,
     },
     payCalc(state) {
-      const skillBonus = state.skills.cooking.level * 0.8;
+      const skillBonus = (state.skills.cooking && state.skills.cooking.level || 0) * 0.8;
       const base = Random.float(45 + skillBonus, 80 + skillBonus);
       const footfall =
         typeof getVendingFootfallMod === "function"
@@ -173743,7 +173934,7 @@ const STREET_JOBS = [
       payCalc(state) {
         var base =
           100 +
-          (state.skills.electrician.level || 0) * 2.0 +
+          ((state.skills.electrician && state.skills.electrician.level || 0)) * 2.0 +
           Random.float(0, 45);
         return Math.floor(
           base *
@@ -173766,7 +173957,7 @@ const STREET_JOBS = [
       effects: { fatigue: 32, weldingXp: 8, physiqueXp: 3, happiness: -5 },
       payCalc(state) {
         var base =
-          120 + (state.skills.welding.level || 0) * 2.5 + Random.float(0, 55);
+          120 + ((state.skills.welding && state.skills.welding.level || 0)) * 2.5 + Random.float(0, 55);
         return Math.floor(
           base *
             (typeof getBranchJobBonus === "function"
@@ -173811,9 +174002,9 @@ const STREET_JOBS = [
       payCalc(state) {
         return Math.floor(
           18 +
-            state.player.mental * 0.2 +
-            state.player.fame * 0.3 +
-            Random.float(0, 42),
+            (state.player.mental || 0) * 0.2 +
+            (state.player.fame || 0) * 0.3 +
+            (typeof Random !== "undefined" && Random.float ? Random.float(0, 42) : 21),
         );
       },
       risk: {},
@@ -195026,6 +195217,7 @@ function buyGood(goodId, qty) {
     StateManager.addMessage("⚠️ 交易系统未就绪。", "warning");
     return false;
   }
+  if (!state.flags) state.flags = {};
   if (typeof qty !== "number" || !isFinite(qty) || qty <= 0) {
     StateManager.addMessage("⚠️ 无效的购买数量。", "danger");
     return false;
@@ -195049,7 +195241,9 @@ function buyGood(goodId, qty) {
   var histDiscount = 0;
   if (typeof getHistoryModifiers === "function") {
     var hm = getHistoryModifiers(state);
-    histDiscount = hm.priceDiscount < 1.0 ? 1.0 - hm.priceDiscount : 0;
+    if (hm && hm.priceDiscount != null) {
+      histDiscount = hm.priceDiscount < 1.0 ? 1.0 - hm.priceDiscount : 0;
+    }
   }
   // 批量折扣：买5件以上额外2%，买10件以上额外5%
   var bulkDiscount = 0;
@@ -195173,6 +195367,7 @@ function sellGood(goodId, qty) {
     StateManager.addMessage("⚠️ 交易系统未就绪。", "warning");
     return false;
   }
+  if (!state.flags) state.flags = {};
   if (typeof qty !== "number" || !isFinite(qty) || qty <= 0) {
     StateManager.addMessage("⚠️ 无效的卖出数量。", "danger");
     return false;
@@ -195213,7 +195408,7 @@ function sellGood(goodId, qty) {
   // 加钱
   // [全系统自洽修复] 域E A类#6: sellGood 收入NaN防护
   state.resources.cash = (state.resources.cash || 0) + totalEarned;
-  state.resources.totalEarned += totalEarned;
+  state.resources.totalEarned = (state.resources.totalEarned || 0) + totalEarned;
   addDailyTransaction(
     state,
     "income",
@@ -195334,6 +195529,7 @@ function buyWholesale(goodId, qty) {
     StateManager.addMessage("⚠️ 交易系统未初始化。", "danger");
     return false;
   }
+  if (!state.flags) state.flags = {};
   if (typeof qty !== "number" || !isFinite(qty) || qty <= 0) {
     StateManager.addMessage("⚠️ 无效的批发数量。", "danger");
     return false;
@@ -195632,6 +195828,7 @@ function getPriceTier(price, basePrice) {
  * @param {string} locKey - 地点 ID
  */
 function recordLocationVisit(state, locKey) {
+  if (!state) return;
   var today = state.player && state.player.day ? state.player.day : 1;
   var visited = state.trade.visitedToday || {};
 
@@ -195667,6 +195864,7 @@ function recordLocationVisit(state, locKey) {
  * 将昨日精确记忆归档为模糊记忆（滚动保留3天）
  */
 function archiveYesterdayMemory(state) {
+  if (!state) return;
   var yesterday = state.trade._visitedDay;
   if (!yesterday) return;
 
@@ -196049,6 +196247,7 @@ var NPC_TRADE_INFO = {
  * @returns {object|null} { expertise, availableInfo: [...] }
  */
 function getNPCTradeInfo(npcId, state) {
+  if (!state) return null;
   var infoDef = NPC_TRADE_INFO[npcId];
   if (!infoDef) return null;
 
@@ -196373,6 +196572,7 @@ function generateInfoText(npcId, infoTypeId, state) {
  * @returns {string|null} 情报文本，如果没有则返回 null
  */
 function tryTriggerNPCInfoShare(npcId, state) {
+  if (!state) return null;
   var rel = state.relationships && state.relationships[npcId];
   if (!rel || !rel.met) return null;
   if (rel.affinity < 60) return null;
@@ -196550,6 +196750,7 @@ var DAILY_TRADE_XP_LIMIT = 30; // 每天通过交易获得的销售XP上限
  * @param {number} amount - 交易金额（用于计算，但实际限制每日上限）
  */
 function gainTradeXp(state) {
+  if (!state) return;
   if (!state.skills || !state.skills.sales) return;
   if (!state.trade) return;
 
@@ -196565,6 +196766,7 @@ function gainTradeXp(state) {
  * 每日重置交易XP计数器（每天第一次调用时执行）
  */
 function resetDailyTradeXp(state) {
+  if (!state) return;
   var today = state.player && state.player.day ? state.player.day : 1;
   if (state.trade._xpResetDay !== today) {
     state.trade._todayTradeXp = 0;
@@ -206780,6 +206982,12 @@ function getTransportService(serviceId) {
 /** 雇佣运输：将商品从当前地点运到目标地点 */
 function hireTransport(serviceId, goods, destKey) {
   var state = StateManager.getState();
+  // [全系统自洽修复] 域A A类: state.trade 守卫
+  if (!state || !state.trade) {
+    StateManager.addMessage("⚠️ 交易系统未就绪，无法雇佣运输。", "warning");
+    return false;
+  }
+  if (!state.needs) state.needs = {};
   var service = getTransportService(serviceId);
   if (!service) {
     StateManager.addMessage("⚠️ 不存在的运输服务。", "danger");
@@ -206835,12 +207043,12 @@ function hireTransport(serviceId, goods, destKey) {
     return false;
   }
 
-  // 扣费
-  state.resources.cash -= service.cost;
-  // 消耗 AP (硬编码 10)
+  // 消耗 AP (硬编码 10) — 先扣AP再扣费
   if (typeof consumeAP === "function") {
     if (!consumeAP(10)) return false;
   }
+  // 扣费
+  state.resources.cash = (state.resources.cash || 0) - service.cost;
 
   // 从背包移除
   for (var si = 0; si < toShip.length; si++) {
@@ -207019,6 +207227,8 @@ function retrieveFromStorage(goodId, qty) {
 
 // ====== 易腐商品变质系统 ======
 function tickPerishableGoods(state) {
+  if (!state) return;
+  if (!state.needs) state.needs = {};
   if (!state.inventory.items) return;
   var spoiled = [];
   for (var i = 0; i < state.inventory.items.length; i++) {
