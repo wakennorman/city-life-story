@@ -1,7 +1,7 @@
 {
-  "currentRound": 296,
+  "currentRound": 311,
   "currentDomain": "G",
-  "nextDomain": "A",
+  "nextDomain": "H",
   "rotationIndex": 0,
   "domainOrder": [
     "A",
@@ -14,32 +14,37 @@
     "H"
   ],
   "domainRecency": {
-    "A": 288,
-    "B": 289,
-    "C": 290,
-    "D": 291,
-    "E": 292,
-    "F": 293,
-    "G": 296,
-    "H": 295
+    "A": 304,
+    "B": 305,
+    "C": 307,
+    "D": 308,
+    "E": 309,
+    "F": 310,
+    "G": 311,
+    "H": 303
   },
   "history": [
     {
-      "round": 295,
-      "domain": "H",
-      "note": "域H(并行窗口·commit f50aeb8d): 并行窗口执行,本窗口未参与,仅回填 recency。R285-R295 均为并行窗口推进(F=285/G=286/H=287/A=288/B=289/C=290/D=291/E=292/F=293/G=294/H=295)。"
+      "round": 311,
+      "domain": "G",
+      "note": "域G(核心机制/生命周期·第七轮循环·账本R311): 开轮 loop-state 严重滞后(标R296/next=A),据 git log 重算并行已推进 R297(B)-R310(F)→G recency 302 全局最薄弱→本轮域G。A类1(确证极端值崩溃): world_params.js 两处 Yahoo 财经解析器(parseYahooFinanceResponse/同步XHR版)未守卫 prevClose(与腾讯/新浪解析器护栏不一致)→prevClose=0/NaN 时 changePercent=Infinity/NaN 污染 world_params 市场情绪与增长假设;补齐一致护栏。联动3(承接并行窗口预建 domain_g_linkage_r311.js,已注册 src/index.html:965,经审校合规: G→E life_wealth_milestone_v2 总资产≥50万/G→H life_company_anniversary_v2 startup满730天/G→A life_data_comprehensive day≥500,全||防御,数值[PLACEHOLDER])。node --check OK;build 9949.3KB;MC 6×400d EXIT=0·0代码异常。下轮→H(recency 303 最薄弱)。"
     },
     {
-      "round": 296,
-      "domain": "G",
-      "note": "域G(核心机制/生命周期·第五轮·账本R296): 开轮 loop-state 滞后(标R284/next=F),据 git log 重算并行已推进 R285-R295→G recency 286 全局最薄弱→本轮域G;执行中并行又占 R294(域G)/R295(域H)→账本记 R296。A类1(确证): carry.js hireTransport 运输随机事件与天气系统断链——weather.js:789 getWeatherTransportRiskMod 运输风险倍率表(暴雨1.05×/台风1.5×/暴雪1.3×等)全库零调用方死代码,恶劣天气从不影响货损/交通意外率。修复: 货物损坏+交通意外掷骰乘天气倍率(偷窃不乘),typeof+isFinite 双守卫+cap 0.95+风险提示播报(该修复被并行 ada29372 扫入已上 main)。另确证13个剧本死flag(scenario_start_chains.js 写入后全库无读取)。联动3(新建 domain_g_linkage_r296.js,2 street+1 corporate,全||防御,[PLACEHOLDER],前缀 g296_): g296_weather_survival_wisdom(G→B 读懂天空的人·复活死函数 getWeatherEnhancedDesc weather.js:927 全库首个调用方)/g296_toolkit_neighbor_fix(G→D 工具箱派上用场·首消费剧本死flag _hasToolkit·守 applyAffinityChange+rel.met 铁律)/g296_first_job_lookback(G→C 第一份工作的记忆·首消费剧本死flag _interviewPassed/_firstJobFound)。node --check OK;build 9822.9KB(r296 count=2);MC 6×400d EXIT=0·0代码异常(corporate 66.7%为既有RNG平衡阈值非回归,balanced 83.3%/trader 100%/social 100%达标)。下轮→A(recency 288 最薄弱)。"
+      "round": 310,
+      "domain": "F",
+      "note": "域F(UI/UX·第七轮循环): 并行窗口推进 R310 域F(HEAD 22c6e032,本地领先 origin 388005b2 一commit)。本窗口未参与,仅据 git log 回填 recency。"
+    },
+    {
+      "round": 309,
+      "domain": "E",
+      "note": "域E(经济/投资·第七轮循环): 并行窗口推进 R309 域E(d1543ec4)。本窗口未参与,仅回填 recency。"
     }
   ],
   "lastDomain": "G",
-  "lastRound": 296,
+  "lastRound": 311,
   "lastDate": "2026-07-26",
-  "lastCommit": "c38c9e89",
-  "pushStatus": "PUSHED",
+  "lastCommit": "PENDING",
+  "pushStatus": "PENDING",
   "completedDomains": [
     "A",
     "B",
@@ -50,5 +55,5 @@
     "G",
     "H"
   ],
-  "description": "全系统优化 loop R296→域G(核心机制/生命周期,第五轮,账本R296)。A类1(carry.js 天气-运输风险断链接线,复活死函数 getWeatherTransportRiskMod)。联动3(domain_g_linkage_r296.js: G→B复活getWeatherEnhancedDesc/G→D首消费_hasToolkit/G→C首消费_interviewPassed)。下轮→A(recency 288 最薄弱)。"
+  "description": "全系统优化 loop R311→域G(核心机制/生命周期,第七轮循环)。A类1(world_params.js Yahoo解析器prevClose护栏,与腾讯/新浪解析器一致化)。联动3(domain_g_linkage_r311.js: G→E财富里程碑/G→H公司周年/G→A综合数据面板,承接并行预建文件)。下轮→H(recency 303 最薄弱)。"
 }

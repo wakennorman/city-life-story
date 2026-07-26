@@ -30,7 +30,7 @@
 - 模糊指令先 grep 确认存在；用户「无关」=停手。
 
 ## A类净尽结论（勿重复审）
-- 域A R14/R22/R197/R242/R251/R258/R267/R277、域G R20/R192/R197/R199、域H R13/R21/R200、域F R19/R183/R186/R198 已净尽主隐患。
+- 域A R14/R22/R197/R242/R251/R258/R267/R277、域G R20/R192/R197/R199/R311、域H R13/R21/R200、域F R19/R183/R186/R198 已净尽主隐患（域G R311 为后续补充的 Yahoo 财经解析器 prevClose 护栏）。
 - 已知误报勿修：webapp_runtime_bridge getPlayerHealth（主路径正确）；establishMentorship/takeMentee 有平行实现。
 - 既有 C类不修：items.js skillStudy 无应用器；finance.js hasStreetStall flag 无 writer。
 
@@ -44,3 +44,5 @@
 - R296 域G（第五轮·账本R296）：A类1 = carry.js hireTransport 与天气断链——weather.js:789 getWeatherTransportRiskMod 全库零调用方死代码→货损/交通意外掷骰乘天气倍率接线（偷窃不乘，isFinite+cap0.95）。确证 scenario_start_chains.js 13个剧本死flag（写入无读取），r296 消费3个（_hasToolkit/_interviewPassed/_firstJobFound），余10个待后续消费：_restaurantConnection/_sleptRoughThreeDays/_triedStall/_tookLanguageClass/_stickToFactory/_familyFundUsed/_marketResearchDone/_startupDirection/_consultedLawyer/_familyBudgetDone。weather.js:927 getWeatherEnhancedDesc 由 g296_weather_survival_wisdom 首调复活。域G B类记录：life_nodes.js:205 `*5||200` 误给200XP / uni_engineering 提示与effect不符。
 - ⚠️ 教训(R296)：新建 linkage 文件前必须先 `ls src/js/core/*r{N}*` + grep index.html——并行窗口会预先占用编号并提交同名文件，Write 会静默覆盖已提交文件（本轮误覆盖 r294 后靠 git checkout -- 恢复）。
 - recency 基准(账本R296后)：A=288/B=289/C=290/D=291/E=292/F=293/G=296/H=295 → 下轮 A(最薄弱)。
+- R311 域G（第七轮循环·账本R311）：开轮 loop-state 严重滞后(标R296/next=A)，git log 重算并行已推进 R297(B)-R310(F)→各域最新 A=304/B=305/C=307/D=308/E=309/F=310/G=302/H=303 → G(302)全局最薄弱→本轮域G。A类1 = world_params.js 两处 Yahoo 财经解析器(parseYahooFinanceResponse/同步XHR版)未守卫 prevClose（与腾讯/新浪解析器护栏不一致）→prevClose=0/NaN 时 changePercent=Infinity/NaN 污染 world_params 市场情绪与增长假设（A类#3 极端值崩溃），补齐一致护栏。联动3(domain_g_linkage_r311.js 由并行窗口预建并注册 src/index.html:965：G→E life_wealth_milestone_v2 总资产≥50万/G→H life_company_anniversary_v2 startup满730天/G→A life_data_comprehensive day≥500，全||防御)。构建9949.3KB；MC 6×400d 0代码异常。
+- recency 基准(账本R311后)：A=304/B=305/C=307/D=308/E=309/F=310/G=311/H=303 → 下轮 H(最薄弱)。
