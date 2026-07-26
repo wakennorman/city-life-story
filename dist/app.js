@@ -21137,169 +21137,6 @@ function registerNewsEventsToPool() {
 })();
 
 ;
-// ==== js/core/domain_a_linkage_r363.js ====
-/**
- * 域A(数据/数值平衡) 联动增强 R363
- * 第十四轮循环——数据不仅是数字，还在叙事/UI/核心机制层面留下痕迹。
- * 桥接：
- *   A→B  quantified_life_v2         数据→量化人生v2（事件/叙事·数据故事）
- *   A→F  data_ui_insight            数据→UI洞察（UI/UX·数据可视化）
- *   A→G  precision_health_v2        数据→精确健康v2（核心机制·健康管理）
- */
-(function () {
-  "use strict";
-
-  if (typeof RANDOM_EVENTS === "undefined") return;
-  if (RANDOM_EVENTS._domainALinkageR363Loaded) return;
-  RANDOM_EVENTS._domainALinkageR363Loaded = true;
-
-  var EVENTS = [
-    {
-      // A→B: 数据→量化人生v2（事件/叙事·数据故事）
-      id: "quantified_life_v2",
-      phase: "street",
-      _isChainEvent: false,
-      icon: "📊",
-      title: "数据里的自己",
-      story: "你翻看了自己在这座城市积累的数据——总收入、总支出、工作天数、技能等级、社交圈大小……\n\n这些数字拼凑出一个你从未见过的自己：\n\n原来你已经工作了这么久，原来你认识了不少人，原来你的技能已经成长了这么多。\n\n「数据不会说谎，它就是你的另一面镜子。」",
-      triggers: { minDay: 30, excludeFlags: ["_quantifiedLifeV2Seen"] },
-      conditions: function (st) {
-        if (st.gameOver) return false;
-        return !!(st.player && st.player.day >= 30);
-      },
-      choices: [
-        {
-          text: "📊 看看自己的数据画像",
-          hint: "心智+5，心情+5，自我认知flag",
-          apply: function (st) {
-            if (!st.flags) st.flags = {};
-            st.flags._quantifiedLifeV2Seen = true;
-            st.flags._dataSelfAwareness = true;
-            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 5);
-            if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 5);
-            if (typeof StateManager !== "undefined" && StateManager.addMessage) {
-              StateManager.addMessage("📊 你看到了数据里的自己。数据不会说谎，它是你的另一面镜子。心智+5，心情+5。", "success");
-            }
-          },
-        },
-        {
-          text: "📝 数据和感觉都要看",
-          hint: "心智+3",
-          apply: function (st) {
-            if (!st.flags) st.flags = {};
-            st.flags._quantifiedLifeV2Seen = true;
-            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 3);
-            if (typeof StateManager !== "undefined" && StateManager.addMessage) {
-              StateManager.addMessage("📝 数据和感觉都要看，两者结合才是完整的自己。心智+3。", "info");
-            }
-          },
-        },
-      ],
-      probability: 0.5,
-      repeatable: false,
-    },
-    {
-      // A→F: 数据→UI洞察（UI/UX·数据可视化）
-      id: "data_ui_insight",
-      phase: "street",
-      _isChainEvent: false,
-      icon: "📈",
-      title: "数据的可视化",
-      story: "你看着满屏的数字，觉得应该有个更直观的方式来看待这些数据。\n\n如果把收入画成一条上升的曲线，把技能画成一张雷达图，把社交关系画成一个网络……\n\n数据就不仅仅是数字，而是一幅关于你生活的画卷。\n\n「可视化，是让数据说话的最好方式。」",
-      triggers: { minDay: 45, excludeFlags: ["_dataUiInsightSeen"] },
-      conditions: function (st) {
-        if (st.gameOver) return false;
-        var history = (st.flags && st.flags._eventHistory) || [];
-        return history.length >= 8;
-      },
-      choices: [
-        {
-          text: "📈 建立数据可视化看板",
-          hint: "心智+6，数据意识+5，flag数据可视化",
-          apply: function (st) {
-            if (!st.flags) st.flags = {};
-            st.flags._dataUiInsightSeen = true;
-            st.flags._dataVisualizationAware = true;
-            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 6);
-            if (st.skills && st.skills.coding && typeof addSkillXp === "function") {
-              addSkillXp(st, "coding", 5);
-            }
-            if (typeof StateManager !== "undefined" && StateManager.addMessage) {
-              StateManager.addMessage("📈 你建立了数据可视化看板。可视化让数据自己说话。心智+6，编程经验+5。", "success");
-            }
-          },
-        },
-        {
-          text: "🤷 数字心里有数就行",
-          hint: "心智+2",
-          apply: function (st) {
-            if (!st.flags) st.flags = {};
-            st.flags._dataUiInsightSeen = true;
-            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 2);
-            if (typeof StateManager !== "undefined" && StateManager.addMessage) {
-              StateManager.addMessage("🤷 你觉得数字心里有数就行。心智+2。", "info");
-            }
-          },
-        },
-      ],
-      probability: 0.5,
-      repeatable: false,
-    },
-    {
-      // A→G: 数据→精确健康v2（核心机制·健康管理）
-      id: "precision_health_v2",
-      phase: "street",
-      _isChainEvent: false,
-      icon: "💊",
-      title: "健康数据管理",
-      story: "你开始记录自己的健康数据——睡眠质量、饮食习惯、运动频率、身体指标变化。\n\n以前你只知道自己「不太舒服」，现在你有了数据，就能知道到底是哪里出了问题。\n\n「没有数据，健康管理就是凭感觉。」\n\n你决心用数据来管理自己的健康，而不是等生病了再去医院。",
-      triggers: { minDay: 60, excludeFlags: ["_precisionHealthV2Seen"] },
-      conditions: function (st) {
-        if (st.gameOver) return false;
-        // 需要至少经历过一些健康相关事件
-        var history = (st.flags && st.flags._eventHistory) || [];
-        if (history.length < 10) return false;
-        // 健康低于某个值才有意义
-        return !!(st.status && st.status.health < 70);
-      },
-      choices: [
-        {
-          text: "💊 建立健康数据档案",
-          hint: "健康+10，心智+5，flag健康管理",
-          apply: function (st) {
-            if (!st.flags) st.flags = {};
-            st.flags._precisionHealthV2Seen = true;
-            st.flags._healthDataManagement = true;
-            if (st.status) st.status.health = Math.min(100, (st.status.health || 50) + 10);
-            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 5);
-            if (typeof StateManager !== "undefined" && StateManager.addMessage) {
-              StateManager.addMessage("💊 你建立了健康数据档案。用数据管理健康，比等生病了再去医院强。健康+10，心智+5。", "success");
-            }
-          },
-        },
-        {
-          text: "🏃 多运动就好",
-          hint: "健康+5",
-          apply: function (st) {
-            if (!st.flags) st.flags = {};
-            st.flags._precisionHealthV2Seen = true;
-            if (st.status) st.status.health = Math.min(100, (st.status.health || 50) + 5);
-            if (typeof StateManager !== "undefined" && StateManager.addMessage) {
-              StateManager.addMessage("🏃 你决定多运动。有时候最简单的办法就是最好的。健康+5。", "info");
-            }
-          },
-        },
-      ],
-      probability: 0.5,
-      repeatable: false,
-    },
-  ];
-
-  for (var i = 0; i < EVENTS.length; i++) {
-    RANDOM_EVENTS.push(EVENTS[i]);
-  }
-})();
-;
 // ==== js/core/domain_b_linkage_r172.js ====
 /*
  * 城市浮生记 — 域B（事件/叙事）联动增强 · R172
@@ -21958,6 +21795,187 @@ function registerNewsEventsToPool() {
   }
 })();
 
+;
+// ==== js/core/domain_b_linkage_r364.js ====
+/**
+ * 域B(事件/叙事) 联动增强 R364
+ * 第十四轮循环——叙事积累的多维回响。
+ * 桥接：
+ *   B→H  event_company_impact        事件→公司影响（公司·品牌叙事）
+ *   B→C  event_career_inspiration    事件→职业灵感（职业/成长·人生选择）
+ *   B→G  event_life_weather          事件→生活节奏（核心机制·天气叙事）
+ */
+(function () {
+  "use strict";
+
+  if (typeof RANDOM_EVENTS === "undefined") return;
+  if (RANDOM_EVENTS._domainBLinkageR364Loaded) return;
+  RANDOM_EVENTS._domainBLinkageR364Loaded = true;
+
+  var EVENTS = [
+    {
+      // B→H: 事件→公司影响（公司·品牌叙事）
+      id: "event_company_impact",
+      phase: "corporate",
+      _isChainEvent: false,
+      icon: "🏢",
+      title: "故事就是品牌",
+      story: "你在公司里跟团队聊天，说起自己创业前在街头的经历。\n\n那些在雨中奔跑的日子、那些被客户拒绝的时刻、那些一个人加班到深夜的夜晚……\n\n这些故事让团队里的年轻人听得入神。他们开始理解，这家公司不是从天上掉下来的，是从泥土里长出来的。\n\n「没有这些故事，公司就只是一个名字。」",
+      triggers: { minDay: 90, excludeFlags: ["_eventCompanyImpactSeen"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        if (!st.startup || !st.startup.company) return false;
+        var history = (st.flags && st.flags._eventHistory) || [];
+        return history.length >= 10;
+      },
+      choices: [
+        {
+          text: "🏢 分享创业故事，塑造品牌文化",
+          hint: "公司声誉+8，员工忠诚+3，心智+4",
+          apply: function (st) {
+            if (!st.flags) st.flags = {};
+            st.flags._eventCompanyImpactSeen = true;
+            if (st.startup && st.startup.company) {
+              st.startup.company.reputation = (st.startup.company.reputation || 0) + 8;
+              if (st.startup.company.employees) {
+                for (var i = 0; i < st.startup.company.employees.length; i++) {
+                  if (st.startup.company.employees[i]) {
+                    st.startup.company.employees[i].loyalty = Math.min(100, (st.startup.company.employees[i].loyalty || 50) + 3);
+                  }
+                }
+              }
+            }
+            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 4);
+            if (typeof StateManager !== "undefined" && StateManager.addMessage) {
+              StateManager.addMessage("🏢 你分享了创业故事。故事让品牌有了温度。声誉+8，忠诚+3，心智+4。", "success");
+            }
+          },
+        },
+        {
+          text: "📋 保持专业形象",
+          hint: "心智+3",
+          apply: function (st) {
+            if (!st.flags) st.flags = {};
+            st.flags._eventCompanyImpactSeen = true;
+            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 3);
+            if (typeof StateManager !== "undefined" && StateManager.addMessage) {
+              StateManager.addMessage("📋 你保持专业形象。专业也是一种力量。心智+3。", "info");
+            }
+          },
+        },
+      ],
+      probability: 0.5,
+      repeatable: false,
+    },
+    {
+      // B→C: 事件→职业灵感（职业/成长·人生选择）
+      id: "event_career_inspiration",
+      phase: "street",
+      _isChainEvent: false,
+      icon: "💡",
+      title: "经历是最好的老师",
+      story: "你回顾自己最近经历的事情，发现每一件事都在教你一些东西——\n\n被解雇教会你职场不只看能力，还要看人际关系。\n\n创业失败教会你风险控制比激情更重要。\n\n帮朋友解决困难教会你，有些技能比你想象的有用。\n\n「经历不是浪费，它是你职业道路上最真实的老师。」",
+      triggers: { minDay: 45, excludeFlags: ["_eventCareerInspirationSeen"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        var history = (st.flags && st.flags._eventHistory) || [];
+        return history.length >= 8;
+      },
+      choices: [
+        {
+          text: "💡 从经历中提炼职业心得",
+          hint: "心智+5，随机技能+3XP，职业flag",
+          apply: function (st) {
+            if (!st.flags) st.flags = {};
+            st.flags._eventCareerInspirationSeen = true;
+            st.flags._careerInsightFromEvents = true;
+            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 5);
+            if (st.skills) {
+              var skillKeys = Object.keys(st.skills);
+              if (skillKeys.length > 0) {
+                var randSkill = skillKeys[Math.floor(Math.random() * skillKeys.length)];
+                if (typeof addSkillXp === "function") {
+                  addSkillXp(st, randSkill, 3);
+                }
+              }
+            }
+            if (typeof StateManager !== "undefined" && StateManager.addMessage) {
+              StateManager.addMessage("💡 你从经历中提炼了职业心得。经历是最好的老师。心智+5，随机技能+3XP。", "success");
+            }
+          },
+        },
+        {
+          text: "📝 记下来，以后用得上",
+          hint: "心智+2",
+          apply: function (st) {
+            if (!st.flags) st.flags = {};
+            st.flags._eventCareerInspirationSeen = true;
+            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 2);
+            if (typeof StateManager !== "undefined" && StateManager.addMessage) {
+              StateManager.addMessage("📝 你记了下来。有些经验现在用不上，但以后一定有用。心智+2。", "info");
+            }
+          },
+        },
+      ],
+      probability: 0.5,
+      repeatable: false,
+    },
+    {
+      // B→G: 事件→生活节奏（核心机制·天气叙事）
+      id: "event_life_weather",
+      phase: "street",
+      _isChainEvent: false,
+      icon: "🌤️",
+      title: "天气与心情",
+      story: "你推开窗户，今天的天气格外好。阳光洒在脸上，微风带着城市的气息。\n\n你突然意识到，你已经很久没有好好感受过天气了——每天都匆匆忙忙，在不同的地点之间奔波。\n\n也许，生活不只是从一个目标到另一个目标，而是在每一段路上，感受风的方向和阳光的温度。",
+      triggers: { minDay: 20, excludeFlags: ["_eventLifeWeatherSeen"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        // 需要天气系统存在
+        if (!st.weather || !st.weather.current) return false;
+        // 只在好天气触发
+        var w = st.weather.current;
+        return w === "sunny" || w === "cloudy";
+      },
+      choices: [
+        {
+          text: "🌤️ 出门走走，感受好天气",
+          hint: "心情+8，疲劳-5，心智+3",
+          apply: function (st) {
+            if (!st.flags) st.flags = {};
+            st.flags._eventLifeWeatherSeen = true;
+            if (st.needs) {
+              st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 8);
+              st.needs.fatigue = Math.max(0, (st.needs.fatigue || 0) - 5);
+            }
+            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 3);
+            if (typeof StateManager !== "undefined" && StateManager.addMessage) {
+              StateManager.addMessage("🌤️ 你出门走了走。好天气是最好的心情调节剂。心情+8，疲劳-5，心智+3。", "success");
+            }
+          },
+        },
+        {
+          text: "🏠 在窗边看看就好",
+          hint: "心情+3",
+          apply: function (st) {
+            if (!st.flags) st.flags = {};
+            st.flags._eventLifeWeatherSeen = true;
+            if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 3);
+            if (typeof StateManager !== "undefined" && StateManager.addMessage) {
+              StateManager.addMessage("🏠 你在窗边看了看。好天气看看就好，心里也是暖的。心情+3。", "info");
+            }
+          },
+        },
+      ],
+      probability: 0.4,
+      repeatable: false,
+    },
+  ];
+
+  for (var i = 0; i < EVENTS.length; i++) {
+    RANDOM_EVENTS.push(EVENTS[i]);
+  }
+})();
 ;
 // ==== js/core/domain_b_linkage_r259.js ====
 /**
