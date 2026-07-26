@@ -2,7 +2,8 @@
   "lastRound": 387,
   "lastDomain": "A",
   "lastDate": "2026-07-27",
-  "lastCommit": "PENDING",
+  "lastCommit": "0105ce03",
+  "pushStatus": "PUSHED",
   "domainRecency": {"A":387,"B":380,"C":381,"D":382,"E":383,"F":384,"G":385,"H":386},
   "nextDomain": "B",
   "note": "R387 域A: P0热修复 events_core.js rollStreetEvent 缺失 let mod 声明(并行域B守卫修复漏删声明→每日 rollDailyNews 抛 ReferenceError:mod is not defined→全策略100%死亡·游戏完全不可玩)。补 let mod=0 与 rollCorporateEvent 一致。MC 6×400d 前7天死亡率恢复全0.0%。并行 R387域A(pricing/trade A→D/A→G/A→B 联动)在途未提交,已 stash 隔离不碰。真实 recency A=387/B=380/C=381/D=382/E=383/F=384/G=385/H=386→下轮 B(380)最薄弱。"
