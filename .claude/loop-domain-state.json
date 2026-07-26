@@ -1,9 +1,9 @@
 {
-  "lastRound": 387,
-  "lastDomain": "A",
+  "lastRound": 390,
+  "lastDomain": "F",
   "lastDate": "2026-07-27",
-  "lastCommit": "03b6243c",
-  "domainRecency": {"A":387,"B":380,"C":381,"D":382,"E":383,"F":384,"G":385,"H":386},
-  "nextDomain": "B",
-  "note": "R387 域A: P0热修复(已推 ✅)+联动增强(1项:A→B). 下轮域B(recency=380)"
+  "lastCommit": "PENDING",
+  "domainRecency": {"A":387,"B":389,"C":389,"D":389,"E":389,"F":390,"G":385,"H":386},
+  "nextDomain": "G",
+  "note": "R390 域F: A类=0(UI层历轮已净尽,Explore确证死字段仅存修复注释)+联动3(F→B进度回顾/F→D关系网问候/F→H一页看板). 下轮域G(recency=385最薄弱)"
 }

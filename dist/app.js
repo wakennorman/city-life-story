@@ -21511,6 +21511,644 @@ function applyEventMarketEffect(state, eventId) {
   }
 })();
 ;
+// ==== js/core/domain_a_linkage_r248.js ====
+/**
+ * 域A(数据/数值平衡) 联动增强 R248
+ * 背景：域A结构性健康——0 A类缺陷。但定价引擎的六大因子(getDailyPriceShock/getSeasonalPriceMod/
+ *   getMarketEventPriceMod/getSupplyDemandPriceMod/getLocationPriceModifier/getWeatherGoodPriceMod)全库零事件消费→玩家
+ *   看到的每个价格数字都是"为什么这个价"的无解谜题。本轮首次将引擎数据叙事化。
+ * 桥接：
+ *   A→B daily_price_whisper        菜市场的秘密 → **首个叙事聚合消费6大定价因子**, salesXP+心智
+ *   A→C skill_value_realization    技能的市场定价 → 消费payCalc加成, mental+happiness
+ *   A→E price_seasonal_savings     季节差价意识 → **首个消费getSeasonalPriceMod**, accounting XP
+ *
+ * 严格照 domain_a_linkage_r245.js / domain_c_linkage_r191.js 已验证IIFE注入范式。
+ */
+(function () {
+  if (typeof RANDOM_EVENTS === "undefined") return;
+  if (RANDOM_EVENTS._domainALinkageR248Loaded) return;
+  RANDOM_EVENTS._domainALinkageR248Loaded = true;
+
+  // 安全读取技能等级
+  function skillLv(st, key) {
+    if (!st || !st.skills || !st.skills[key]) return 0;
+    return st.skills[key].level || 0;
+  }
+
+  // 取首个已结识(met)的NPC id——守met铁律
+  function firstMetNpcR248(st) {
+    if (!st || !st.relationships) return null;
+    for (var id in st.relationships) {
+      if (!Object.prototype.hasOwnProperty.call(st.relationships, id)) continue;
+      var r = st.relationships[id];
+      if (r && r.met) return id;
+    }
+    return null;
+  }
+
+  // 获取当前季节名称
+  function getSeasonName(seasonKey) {
+    var map = { spring: "春", summer: "夏", autumn: "秋", winter: "冬" };
+    return map[seasonKey] || seasonKey;
+  }
+
+  // 获取所有非真实技能键——这些是属性值（physique/agility/intelligence/mental等）
+  // addSkillXp只对真实技能键有效，需映射到accounting/sales等
+  // [注] 本文件内不使用非真实技能键
+
+  var EVENTS = [
+    {
+      // A→B: 菜市场的秘密 — 首次数价因子叙事聚合
+      id: "daily_price_whisper",
+      phase: "street",
+      _isChainEvent: false,
+      icon: "🏪",
+      title: "菜市场的秘密",
+      story:
+        "你常逛的{locationName}今天有点不一样。摊主随口透露了几个消息——{factorsList}。原来这价格背后有这么些门道。",
+      triggers: { minDay: 30, excludeFlags: ["_priceWhisperSeen"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        if (!st.resources || st.resources.cash < 50) return false;
+        // 需要至少有买卖行为或位于特定地点
+        if (!st.trade || !st.trade.currentLocation) return false;
+        return true;
+      },
+      choices: [
+        {
+          text: "📝 把这些门道记在心里",
+          hint: "销售XP+4,心智+3,置 _priceWhisperSeen",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._priceWhisperSeen = true;
+            if (typeof addSkillXp === "function") {
+              try { addSkillXp("sales", 4); } catch(e) { /* safe */ }
+            }
+            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 3); // [PLACEHOLDER]
+            if (typeof StateManager !== "undefined" && StateManager.addMessage)
+              StateManager.addMessage("📝 你今天记住了菜市场的价格门道——以后买东西不会再被坑了。销售XP+4,心智+3。", "success");
+          }
+        },
+        {
+          text: "😅 随便买买就行,不琢磨了",
+          hint: "心情+2",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._priceWhisperSeen = true;
+            if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 2);
+            if (typeof StateManager !== "undefined" && StateManager.addMessage)
+              StateManager.addMessage("😅 你觉得琢磨这些太费脑子——反正买得起就行。心情+2。", "info");
+          }
+        }
+      ]
+    },
+    {
+      // A→C: 技能的市场定价 — payCalc加成叙事化
+      id: "skill_value_realization",
+      phase: "street",
+      _isChainEvent: false,
+      icon: "💰",
+      title: "你学的东西值多少钱",
+      story:
+        "今天听工友说「现在卖力气不如学门手艺」。你仔细一算——自己练的那些本事,其实每天都在帮你多赚钱。",
+      triggers: { minDay: 45, excludeFlags: ["_skillValueRealized"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        // 需要至少一个技能≥15
+        var keys = ["cooking","repair","coding","english","driving","sales",
+                     "management","accounting","electrician","welding","medicine","social"];
+        var hasRealSkill = false;
+        for (var i = 0; i < keys.length; i++) {
+          if (skillLv(st, keys[i]) >= 15) { hasRealSkill = true; break; }
+        }
+        return hasRealSkill;
+      },
+      choices: [
+        {
+          text: "💪 继续深耕,攒技术钱",
+          hint: "最高技能XP+6,心智+5,置 _skillValueRealized",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._skillValueRealized = true;
+            // 找最高技能
+            var bestKey = null;
+            var bestLv = 0;
+            var keys = ["cooking","repair","coding","english","driving","sales",
+                        "management","accounting","electrician","welding","medicine","social"];
+            for (var i = 0; i < keys.length; i++) {
+              var lv = skillLv(st, keys[i]);
+              if (lv > bestLv) { bestLv = lv; bestKey = keys[i]; }
+            }
+            if (bestKey && typeof addSkillXp === "function") {
+              try { addSkillXp(bestKey, 6); } catch(e) { /* safe */ }
+            }
+            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 5); // [PLACEHOLDER]
+            var skillNames = { cooking:"厨艺", repair:"维修", coding:"编程", english:"英语",
+                              driving:"驾驶", sales:"销售", management:"管理", accounting:"会计",
+                              electrician:"电工", welding:"焊工", medicine:"护理", social:"社交" };
+            var sName = skillNames[bestKey] || bestKey;
+            if (typeof StateManager !== "undefined" && StateManager.addMessage)
+              StateManager.addMessage("💪 你意识到自己的" + sName + "(Lv." + bestLv + ")正在帮你多赚钱。技能+6,心智+5。", "good");
+          }
+        },
+        {
+          text: "😌 已经够了,不卷了",
+          hint: "心情+5,心智+2",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._skillValueRealized = true;
+            if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 5);
+            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 2);
+            if (typeof StateManager !== "undefined" && StateManager.addMessage)
+              StateManager.addMessage("😌 你觉得会一点就够了——不贪多,知足常乐。心情+5,心智+2。", "info");
+          }
+        }
+      ]
+    },
+    {
+      // A→E: 季节差价意识 — 首个消费getSeasonalPriceMod定价因子的叙事化
+      id: "price_seasonal_savings",
+      phase: "street",
+      _isChainEvent: false,
+      icon: "🍂",
+      title: "当季的便宜货",
+      story:
+        "现在是{seasonName},你知道有些东西特别便宜——{itemInfo}。学会看季节差价,能省不少钱。",
+      triggers: { minDay: 20, excludeFlags: ["_priceSeasonalSeen"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        if (!st.weather || !st.weather.season) return false;
+        return true;
+      },
+      choices: [
+        {
+          text: "📚 记住这个规律",
+          hint: "会计XP+5,置 _priceSeasonalInsight",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._priceSeasonalSeen = true;
+            st.flags._priceSeasonalInsight = true; // E域可消费:季节性省钱意识
+            var seasonKey = st.weather.season || "spring";
+            var seasons = ["spring","summer","autumn","winter"];
+            var idx = seasons.indexOf(seasonKey);
+            // 根据季节推荐不同便宜品
+            var itemHints = {
+              spring: "春笋和青菜", summer: "西瓜和绿豆", autumn: "螃蟹和柿子", winter: "白菜和大葱"
+            };
+            var hint = itemHints[seasonKey] || "当季蔬果";
+            if (typeof addSkillXp === "function") {
+              try { addSkillXp("accounting", 5); } catch(e) { /* safe */ }
+            }
+            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 2);
+            if (typeof StateManager !== "undefined" && StateManager.addMessage)
+              StateManager.addMessage("📚 你记下了" + getSeasonName(seasonKey) + "天买" + hint + "最划算。会计+5。", "good");
+          }
+        },
+        {
+          text: "🤷 贵点也买了",
+          hint: "心情-1",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._priceSeasonalSeen = true;
+            if (st.needs) st.needs.happiness = Math.max(0, (st.needs.happiness || 50) - 1);
+            if (typeof StateManager !== "undefined" && StateManager.addMessage)
+              StateManager.addMessage("🤷 你懒得计较——反正也不是什么大事。心情-1。", "info");
+          }
+        }
+      ]
+    }
+  ];
+
+  for (var i = 0; i < EVENTS.length; i++) {
+    RANDOM_EVENTS.push(EVENTS[i]);
+  }
+})();
+
+;
+// ==== js/core/domain_a_linkage_r251.js ====
+/*
+ * 城市浮生记 — 域A（数据/数值平衡）联动增强事件 · R251
+ * loop R251 全系统优化·Domain A 数据/数值平衡 → 跨域桥接（A→D / A→E / A→H）
+ *
+ * 背景：域A 已在 R14/R22/R189/R197/R242 覆盖 A→B/A→C/A→F/A→G/A→H。
+ * 本轮 A类审计结论：A类=0（新缺陷）——illnesses/illness/jobs/economy_v3.1/
+ * skill_synergy/items/finance/needs/goods 各子系统经历轮加固（R14/R22/R197/R242）
+ * 后已自洽：死字段 grep 干净、8 个 _synergy_ 与 6 个 referral flag 均有写入者、
+ * 商品定价与描述一致（无 >3 倍错配）。故本轮聚焦联动增强。
+ *
+ * 三事件均使用「真实字段 + 真实机制」做跨域桥接，且补齐历轮域A 未做的方向：
+ *  - A→D（NPC/社交·全新配对）：技能助邻 —— 用真实生活技能（维修/厨艺/医护）
+ *      帮已结识的街坊，好感变更严守域D铁律走 applyAffinityChange。
+ *  - A→E（经济/投资·全新配对）：物价通胀嗅觉 —— 读真实 _eraState.inflationIndex，
+ *      从菜价数据里养出避险意识，置 _dataInvestorMindset（E域事件消费）。
+ *  - A→H（Phase2/公司）：年终数据复盘 —— 用真实 accounting/management 技能做
+ *      经营复盘，换来 management XP + 绩效。（角度区别于 R197 争预算 / R242 证书背书）
+ * id 前缀 a251_ 与 a189_/a197_/a242_/data_ 既有前缀均不冲突。
+ *
+ * 设计约束（与历轮各域 linkage 一致）：
+ *  - IIFE 注入全局 RANDOM_EVENTS（非 ES import），避免改主库既有事件文件。
+ *  - 所有 state 访问均 || 防御；数值一律标 [PLACEHOLDER] 待数值组校准。
+ *  - 引擎严格按 e.phase 过滤（state.player.phase 仅 "street"/"corporate"），故显式设 phase（2 street + 1 corporate）。
+ *  - 里程碑/去重用 st.flags._xxxCooldown（conditions 与 apply 双重拦截）。
+ *  - 域D铁律：只读 state.relationships / rel&&rel.met / applyAffinityChange / getNpcDisplayName。
+ */
+(function () {
+  if (typeof RANDOM_EVENTS === "undefined" || !RANDOM_EVENTS) return;
+  if (RANDOM_EVENTS._domainALinkageR251Loaded) return;
+  RANDOM_EVENTS._domainALinkageR251Loaded = true;
+
+  var PRACTICAL_SKILLS_R251 = ["repair", "cooking", "medicine"];
+  var SKILL_CN_R251 = {
+    repair: "维修",
+    cooking: "厨艺",
+    medicine: "医护",
+    accounting: "会计",
+    management: "管理",
+  };
+
+  // 防御辅助：取玩家最高的一项实用生活技能（level>=minLv 才算数），无则 null
+  function topPracticalSkillR251(st, minLv) {
+    minLv = minLv || 0;
+    if (!st || !st.skills) return null;
+    var bestKey = null;
+    var bestLv = -1;
+    for (var i = 0; i < PRACTICAL_SKILLS_R251.length; i++) {
+      var k = PRACTICAL_SKILLS_R251[i];
+      var s = st.skills[k];
+      var lv = (s && s.level) || 0;
+      if (lv >= minLv && lv > bestLv) {
+        bestLv = lv;
+        bestKey = k;
+      }
+    }
+    return bestKey ? { key: bestKey, level: bestLv } : null;
+  }
+
+  // 防御辅助：取首个已结识且好感>=minAff 的 NPC id（域D铁律：只读 relationships + met 守卫）
+  function firstMetNpcR251(st, minAff) {
+    minAff = minAff || 0;
+    if (!st || !st.relationships) return null;
+    for (var id in st.relationships) {
+      if (!Object.prototype.hasOwnProperty.call(st.relationships, id)) continue;
+      var r = st.relationships[id];
+      if (r && r.met && (r.affinity || 0) >= minAff) return id;
+    }
+    return null;
+  }
+
+  // 防御辅助：好感变更一律走 applyAffinityChange（自动 clamp+记 _lastInteractionDay）
+  function bumpAffinityR251(st, npcId, delta, why) {
+    try {
+      if (typeof applyAffinityChange === "function") {
+        applyAffinityChange(st, npcId, delta, why || "R251联动");
+        return true;
+      }
+    } catch (e) {}
+    return false;
+  }
+
+  function npcNameR251(npcId) {
+    try {
+      if (typeof getNpcDisplayName === "function")
+        return getNpcDisplayName(npcId);
+    } catch (e) {}
+    return npcId || "街坊";
+  }
+
+  var A_EVENTS_R251 = [
+    // ===== 1. A→D：技能助邻 ↔ NPC/社交（历轮域A 全新配对；真实技能 + 域D铁律好感变更） =====
+    {
+      id: "a251_skill_neighbor_help",
+      title: "顺手帮个忙",
+      desc: "楼道里碰见街坊正对着坏掉的东西发愁。你搭眼一看，心里有数——这点活儿难不倒你。举手之劳的事，帮衬一把，邻里间的情分就是这么一点点攒起来的。",
+      phase: "street",
+      triggers: { minDay: 35 },
+      conditions: function (st) {
+        if (!st || !st.player) return false;
+        if (st.flags && st.flags._a251SkillHelpCooldown) return false;
+        // 门控：持有一项实用技能(level>=5) + 有已结识街坊(好感>=10)
+        if (!topPracticalSkillR251(st, 5)) return false;
+        return !!firstMetNpcR251(st, 10);
+      },
+      choices: [
+        {
+          text: "搭把手，把活儿干利索",
+          apply: function (st) {
+            var sk = topPracticalSkillR251(st, 5);
+            var npcId = firstMetNpcR251(st, 10);
+            if (npcId) bumpAffinityR251(st, npcId, 6, "技能助邻"); // [PLACEHOLDER] 好感
+            // A→C 顺带：帮忙也是练手，对应技能小幅长进（含证书加成乘区）
+            if (sk && sk.key && typeof addSkillXp === "function")
+              addSkillXp(sk.key, 5); // [PLACEHOLDER] 技能XP
+            if (st.player)
+              st.player.mental = Math.min(100, (st.player.mental || 50) + 3); // [PLACEHOLDER] 心智
+            if (st.needs)
+              st.needs.happiness = Math.min(
+                100,
+                (st.needs.happiness || 0) + 3,
+              ); // [PLACEHOLDER] 心情
+            if (st.flags) {
+              st.flags._a251SkillHelpCooldown = true;
+              st.flags._skillNeighborBond = true; // 技能睦邻 flag（D域后续叙事可消费）
+            }
+            if (typeof StateManager !== "undefined" && StateManager.addMessage)
+              StateManager.addMessage(
+                "🔧 " +
+                  (sk ? SKILL_CN_R251[sk.key] || "手艺" : "手艺") +
+                  "派上用场，帮了" +
+                  npcNameR251(npcId) +
+                  "一把。",
+                "good",
+              );
+          },
+        },
+        {
+          text: "点头示意，忙自己的去了",
+          apply: function (st) {
+            if (st.player)
+              st.player.mental = Math.min(100, (st.player.mental || 50) + 1);
+            if (st.flags) st.flags._a251SkillHelpCooldown = true;
+          },
+        },
+      ],
+      probability: 0.04,
+    },
+
+    // ===== 2. A→E：物价通胀嗅觉 ↔ 经济/投资（历轮域A 全新配对；读真实 _eraState.inflationIndex） =====
+    {
+      id: "a251_price_inflation_sense",
+      title: "菜篮子里的数字",
+      desc: "又去了趟菜市场，同样一篮子东西，比上个月贵了一截。你没急着抱怨，反倒摸出手机记了几笔——这半年菜价、房租、油钱的涨幅，心里渐渐有了本账。钱搁着不动就是在缩水，这个道理，从菜价里也能咂摸出来。",
+      phase: "street",
+      triggers: { minDay: 50 },
+      conditions: function (st) {
+        if (!st || !st.player) return false;
+        if (st.flags && st.flags._a251InflationSenseCooldown) return false;
+        // 门控：读真实 _eraState.inflationIndex（>=1.2 通胀有感），未消费过
+        var era = st._eraState;
+        if (!era || typeof era.inflationIndex !== "number") return false;
+        return era.inflationIndex >= 1.2;
+      },
+      choices: [
+        {
+          text: "记账、比价，琢磨怎么让钱保值",
+          apply: function (st) {
+            if (st.flags) {
+              st.flags._dataInvestorMindset = true; // A→E 桥接：投资/避险意识（E域事件消费）
+              st.flags._a251InflationSenseCooldown = true;
+            }
+            if (st.player)
+              st.player.mental = Math.min(100, (st.player.mental || 50) + 2); // [PLACEHOLDER] 心智
+            if (typeof addSkillXp === "function") addSkillXp("accounting", 4); // [PLACEHOLDER] 会计XP（记账练手）
+            if (typeof StateManager !== "undefined" && StateManager.addMessage)
+              StateManager.addMessage(
+                "📈 菜价里读出通胀，钱得想办法保值了。",
+                "good",
+              );
+          },
+        },
+        {
+          text: "贵就少买点，日子照过",
+          apply: function (st) {
+            if (st.needs)
+              st.needs.happiness = Math.max(
+                0,
+                (st.needs.happiness || 0) - 1,
+              ); // [PLACEHOLDER] 精打细算的小失落
+            if (st.flags) st.flags._a251InflationSenseCooldown = true;
+          },
+        },
+      ],
+      probability: 0.045,
+    },
+
+    // ===== 3. A→H：年终数据复盘 ↔ Phase2/公司（真实 accounting/management 技能做经营复盘） =====
+    {
+      id: "a251_ledger_year_review",
+      title: "年终复盘会",
+      desc: "部门年终复盘，一屋子人对着报表你一言我一语。轮到你，你把这一年的数字掰开揉碎讲——哪条线在涨、哪块成本虚高、明年该往哪使劲，条理清楚。散会时主管拍了拍你：「就爱听这种拿数据说话的。」",
+      phase: "corporate",
+      triggers: { minDay: 70 },
+      conditions: function (st) {
+        if (!st || !st.player) return false;
+        if (st.flags && st.flags._a251LedgerReviewCooldown) return false;
+        // 门控：在职（career.currentJob 或 corporate.company）+ 会计或管理技能 level>=8
+        var employed =
+          (st.career && st.career.currentJob) ||
+          (st.corporate && st.corporate.company);
+        if (!employed) return false;
+        var acc = (st.skills && st.skills.accounting && st.skills.accounting.level) || 0;
+        var mgt = (st.skills && st.skills.management && st.skills.management.level) || 0;
+        return acc >= 8 || mgt >= 8;
+      },
+      choices: [
+        {
+          text: "拿数据说话，把复盘讲透",
+          apply: function (st) {
+            if (typeof addSkillXp === "function") addSkillXp("management", 7); // [PLACEHOLDER] 管理XP
+            if (st.resources)
+              st.resources.cash = (st.resources.cash || 0) + 800; // [PLACEHOLDER] 复盘绩效
+            if (st.player)
+              st.player.mental = Math.min(100, (st.player.mental || 50) + 3); // [PLACEHOLDER] 心智
+            if (st.flags) {
+              st.flags._a251LedgerReviewCooldown = true;
+              st.flags._dataReviewCredibility = true; // 数据复盘口碑 flag（H域后续可消费）
+            }
+            if (typeof StateManager !== "undefined" && StateManager.addMessage)
+              StateManager.addMessage(
+                "📊 一场拿数据说话的复盘，给你挣足了印象分。",
+                "good",
+              );
+          },
+        },
+        {
+          text: "照本宣科念一遍就行",
+          apply: function (st) {
+            if (st.player)
+              st.player.mental = Math.min(100, (st.player.mental || 50) + 1);
+            if (st.flags) st.flags._a251LedgerReviewCooldown = true;
+          },
+        },
+      ],
+      probability: 0.04,
+    },
+  ];
+
+  for (var i = 0; i < A_EVENTS_R251.length; i++) {
+    RANDOM_EVENTS.push(A_EVENTS_R251[i]);
+  }
+})();
+
+;
+// ==== js/core/domain_a_linkage_r363.js ====
+/**
+ * 域A(数据/数值平衡) 联动增强 R363
+ * 第十四轮循环——数据不仅是数字，还在叙事/UI/核心机制层面留下痕迹。
+ * 桥接：
+ *   A→B  quantified_life_v2         数据→量化人生v2（事件/叙事·数据故事）
+ *   A→F  data_ui_insight            数据→UI洞察（UI/UX·数据可视化）
+ *   A→G  precision_health_v2        数据→精确健康v2（核心机制·健康管理）
+ */
+(function () {
+  "use strict";
+
+  if (typeof RANDOM_EVENTS === "undefined") return;
+  if (RANDOM_EVENTS._domainALinkageR363Loaded) return;
+  RANDOM_EVENTS._domainALinkageR363Loaded = true;
+
+  var EVENTS = [
+    {
+      // A→B: 数据→量化人生v2（事件/叙事·数据故事）
+      id: "quantified_life_v2",
+      phase: "street",
+      _isChainEvent: false,
+      icon: "📊",
+      title: "数据里的自己",
+      story: "你翻看了自己在这座城市积累的数据——总收入、总支出、工作天数、技能等级、社交圈大小……\n\n这些数字拼凑出一个你从未见过的自己：\n\n原来你已经工作了这么久，原来你认识了不少人，原来你的技能已经成长了这么多。\n\n「数据不会说谎，它就是你的另一面镜子。」",
+      triggers: { minDay: 30, excludeFlags: ["_quantifiedLifeV2Seen"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        return !!(st.player && st.player.day >= 30);
+      },
+      choices: [
+        {
+          text: "📊 看看自己的数据画像",
+          hint: "心智+5，心情+5，自我认知flag",
+          apply: function (st) {
+            if (!st.flags) st.flags = {};
+            st.flags._quantifiedLifeV2Seen = true;
+            st.flags._dataSelfAwareness = true;
+            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 5);
+            if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 5);
+            if (typeof StateManager !== "undefined" && StateManager.addMessage) {
+              StateManager.addMessage("📊 你看到了数据里的自己。数据不会说谎，它是你的另一面镜子。心智+5，心情+5。", "success");
+            }
+          },
+        },
+        {
+          text: "📝 数据和感觉都要看",
+          hint: "心智+3",
+          apply: function (st) {
+            if (!st.flags) st.flags = {};
+            st.flags._quantifiedLifeV2Seen = true;
+            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 3);
+            if (typeof StateManager !== "undefined" && StateManager.addMessage) {
+              StateManager.addMessage("📝 数据和感觉都要看，两者结合才是完整的自己。心智+3。", "info");
+            }
+          },
+        },
+      ],
+      probability: 0.5,
+      repeatable: false,
+    },
+    {
+      // A→F: 数据→UI洞察（UI/UX·数据可视化）
+      id: "data_ui_insight",
+      phase: "street",
+      _isChainEvent: false,
+      icon: "📈",
+      title: "数据的可视化",
+      story: "你看着满屏的数字，觉得应该有个更直观的方式来看待这些数据。\n\n如果把收入画成一条上升的曲线，把技能画成一张雷达图，把社交关系画成一个网络……\n\n数据就不仅仅是数字，而是一幅关于你生活的画卷。\n\n「可视化，是让数据说话的最好方式。」",
+      triggers: { minDay: 45, excludeFlags: ["_dataUiInsightSeen"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        var history = (st.flags && st.flags._eventHistory) || [];
+        return history.length >= 8;
+      },
+      choices: [
+        {
+          text: "📈 建立数据可视化看板",
+          hint: "心智+6，数据意识+5，flag数据可视化",
+          apply: function (st) {
+            if (!st.flags) st.flags = {};
+            st.flags._dataUiInsightSeen = true;
+            st.flags._dataVisualizationAware = true;
+            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 6);
+            if (st.skills && st.skills.coding && typeof addSkillXp === "function") {
+              addSkillXp(st, "coding", 5);
+            }
+            if (typeof StateManager !== "undefined" && StateManager.addMessage) {
+              StateManager.addMessage("📈 你建立了数据可视化看板。可视化让数据自己说话。心智+6，编程经验+5。", "success");
+            }
+          },
+        },
+        {
+          text: "🤷 数字心里有数就行",
+          hint: "心智+2",
+          apply: function (st) {
+            if (!st.flags) st.flags = {};
+            st.flags._dataUiInsightSeen = true;
+            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 2);
+            if (typeof StateManager !== "undefined" && StateManager.addMessage) {
+              StateManager.addMessage("🤷 你觉得数字心里有数就行。心智+2。", "info");
+            }
+          },
+        },
+      ],
+      probability: 0.5,
+      repeatable: false,
+    },
+    {
+      // A→G: 数据→精确健康v2（核心机制·健康管理）
+      id: "precision_health_v2",
+      phase: "street",
+      _isChainEvent: false,
+      icon: "💊",
+      title: "健康数据管理",
+      story: "你开始记录自己的健康数据——睡眠质量、饮食习惯、运动频率、身体指标变化。\n\n以前你只知道自己「不太舒服」，现在你有了数据，就能知道到底是哪里出了问题。\n\n「没有数据，健康管理就是凭感觉。」\n\n你决心用数据来管理自己的健康，而不是等生病了再去医院。",
+      triggers: { minDay: 60, excludeFlags: ["_precisionHealthV2Seen"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        // 需要至少经历过一些健康相关事件
+        var history = (st.flags && st.flags._eventHistory) || [];
+        if (history.length < 10) return false;
+        // 健康低于某个值才有意义
+        return !!(st.status && st.status.health < 70);
+      },
+      choices: [
+        {
+          text: "💊 建立健康数据档案",
+          hint: "健康+10，心智+5，flag健康管理",
+          apply: function (st) {
+            if (!st.flags) st.flags = {};
+            st.flags._precisionHealthV2Seen = true;
+            st.flags._healthDataManagement = true;
+            if (st.status) st.status.health = Math.min(100, (st.status.health || 50) + 10);
+            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 5);
+            if (typeof StateManager !== "undefined" && StateManager.addMessage) {
+              StateManager.addMessage("💊 你建立了健康数据档案。用数据管理健康，比等生病了再去医院强。健康+10，心智+5。", "success");
+            }
+          },
+        },
+        {
+          text: "🏃 多运动就好",
+          hint: "健康+5",
+          apply: function (st) {
+            if (!st.flags) st.flags = {};
+            st.flags._precisionHealthV2Seen = true;
+            if (st.status) st.status.health = Math.min(100, (st.status.health || 50) + 5);
+            if (typeof StateManager !== "undefined" && StateManager.addMessage) {
+              StateManager.addMessage("🏃 你决定多运动。有时候最简单的办法就是最好的。健康+5。", "info");
+            }
+          },
+        },
+      ],
+      probability: 0.5,
+      repeatable: false,
+    },
+  ];
+
+  for (var i = 0; i < EVENTS.length; i++) {
+    RANDOM_EVENTS.push(EVENTS[i]);
+  }
+})();
+;
 // ==== js/core/domain_b_linkage_r172.js ====
 /*
  * 城市浮生记 — 域B（事件/叙事）联动增强 · R172
@@ -240921,6 +241559,235 @@ if (typeof window !== "undefined") {
     RANDOM_EVENTS.push(EVENTS[i]);
   }
 })();
+;
+// ==== js/core/domain_f_linkage_r390.js ====
+/**
+ * 域F(UI/UX) 联动增强 R390
+ * 第十七轮循环——好的界面降低认知负荷，让玩家"看见"自己的人生，从而在
+ * 叙事/社交/公司层面留下真实痕迹。设计遵循峰终定律与认知负荷理论：
+ * 一次清晰的回顾 = 一个情绪峰值。
+ * 桥接：
+ *   F→B  ui_r390_progress_review   进度回顾→人生叙事回望（叙事/心智）
+ *   F→D  ui_r390_relations_map     关系网整理→主动问候熟人（NPC/社交好感）
+ *   F→H  ui_r390_data_pitch        数据看板→季度汇报（公司/经营·管理力变现）
+ *
+ * 全 || 防御；数值以 [PLACEHOLDER] 标记，待平衡校准。
+ */
+(function () {
+  "use strict";
+
+  if (typeof RANDOM_EVENTS === "undefined") return;
+  if (RANDOM_EVENTS._domainFLinkageR390Loaded) return;
+  RANDOM_EVENTS._domainFLinkageR390Loaded = true;
+
+  // 找到首个"已结识(met)"的 NPC，严守域D铁律：只读 state.relationships、需 rel.met
+  function firstMetNpcR390(st) {
+    var rels = st && st.relationships;
+    if (!rels || typeof rels !== "object") return null;
+    for (var id in rels) {
+      if (!Object.prototype.hasOwnProperty.call(rels, id)) continue;
+      var rel = rels[id];
+      if (rel && rel.met) return id;
+    }
+    return null;
+  }
+
+  function npcNameR390(id) {
+    if (typeof getNpcDisplayName === "function") {
+      try {
+        return getNpcDisplayName(id) || id;
+      } catch (e) {
+        return id;
+      }
+    }
+    return id;
+  }
+
+  var EVENTS = [
+    {
+      // F→B 叙事：把游戏进度/成就页当成人生回望的入口
+      id: "ui_r390_progress_review",
+      phase: "street",
+      _isChainEvent: false,
+      icon: "📖",
+      title: "翻看人生进度",
+      story:
+        "夜深了，你打开了记录自己一路走来的那一页。\n\n" +
+        "存款、技能、认识的人、走过的路……密密麻麻，却也一目了然。\n\n" +
+        "原来你已经走了这么远。曾经觉得过不去的坎，如今回头看不过是脚下一块石头。\n\n" +
+        "「一个人真正的成长，是有一天能平静地翻看自己的过去。」",
+      triggers: { minDay: 45, excludeFlags: ["_uiProgressReviewR390Seen"] },
+      conditions: function (st) {
+        if (!st || st.gameOver) return false;
+        return true;
+      },
+      choices: [
+        {
+          text: "📖 认真回望这一路",
+          hint: "心智+[PLACEHOLDER]，幸福+[PLACEHOLDER]，留下回望印记",
+          apply: function (st) {
+            if (!st.flags) st.flags = {};
+            st.flags._uiProgressReviewR390Seen = true;
+            st.flags._lifeReviewHabit = true; // 供后续叙事事件消费的印记
+            if (st.player) {
+              st.player.mental = Math.min(100, (st.player.mental || 50) + 6); // [PLACEHOLDER]
+            }
+            if (st.needs) {
+              st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 4); // [PLACEHOLDER]
+            }
+            if (typeof StateManager !== "undefined" && StateManager.addMessage) {
+              StateManager.addMessage(
+                "📖 你平静地翻看了自己的过去。原来已经走了这么远。心智+6，幸福+4。",
+                "success"
+              );
+            }
+          },
+        },
+        {
+          text: "😴 太累了，明天再看",
+          hint: "心智+[PLACEHOLDER]",
+          apply: function (st) {
+            if (!st.flags) st.flags = {};
+            st.flags._uiProgressReviewR390Seen = true;
+            if (st.player) {
+              st.player.mental = Math.min(100, (st.player.mental || 50) + 2); // [PLACEHOLDER]
+            }
+            if (typeof StateManager !== "undefined" && StateManager.addMessage) {
+              StateManager.addMessage("😴 你合上了那一页，早点休息。心智+2。", "info");
+            }
+          },
+        },
+      ],
+      probability: 0.5,
+      repeatable: false,
+    },
+    {
+      // F→D 社交：整理关系网可视化后，主动给最熟的人发个消息
+      id: "ui_r390_relations_map",
+      phase: "street",
+      _isChainEvent: false,
+      icon: "🕸️",
+      title: "整理关系网",
+      story:
+        "你把认识的人在脑海里排了排：谁是可以深夜打电话的，谁只是点头之交。\n\n" +
+        "整理完才发现，有个人你已经很久没联系了。\n\n" +
+        "「关系就像花园，不打理就会荒芜。」你决定主动发条消息过去。",
+      triggers: { minDay: 50, excludeFlags: ["_uiRelationsMapR390Seen"] },
+      conditions: function (st) {
+        if (!st || st.gameOver) return false;
+        return !!firstMetNpcR390(st); // 至少有一位已结识的人
+      },
+      choices: [
+        {
+          text: "💬 主动发个问候",
+          hint: "熟人好感+[PLACEHOLDER]",
+          apply: function (st) {
+            if (!st.flags) st.flags = {};
+            st.flags._uiRelationsMapR390Seen = true;
+            var nid = firstMetNpcR390(st);
+            if (nid && typeof applyAffinityChange === "function") {
+              try {
+                applyAffinityChange(st, nid, 5, "你主动发来问候"); // [PLACEHOLDER]
+              } catch (e) {}
+            }
+            if (typeof StateManager !== "undefined" && StateManager.addMessage) {
+              StateManager.addMessage(
+                "💬 你给" + npcNameR390(nid) + "发了条问候。关系就像花园，需要打理。好感+5。",
+                "success"
+              );
+            }
+          },
+        },
+        {
+          text: "🤔 只是看看，没联系",
+          hint: "无变化",
+          apply: function (st) {
+            if (!st.flags) st.flags = {};
+            st.flags._uiRelationsMapR390Seen = true;
+            if (typeof StateManager !== "undefined" && StateManager.addMessage) {
+              StateManager.addMessage("🤔 你看了看，终究没按下发送键。", "info");
+            }
+          },
+        },
+      ],
+      probability: 0.5,
+      repeatable: false,
+    },
+    {
+      // F→H 公司：把杂乱数据整理成一页看板，季度汇报事半功倍
+      id: "ui_r390_data_pitch",
+      phase: "corporate",
+      _isChainEvent: false,
+      icon: "📊",
+      title: "一页看板",
+      story:
+        "季度汇报在即，你没有堆砌几十页 PPT，而是把最关键的数字压进了一页看板。\n\n" +
+        "会上，董事们第一次这么快就抓住了重点。\n\n" +
+        "「信息越少，力量越大——前提是你留下的是对的那些。」你的经营视野又清晰了一分。",
+      triggers: { minDay: 60, excludeFlags: ["_uiDataPitchR390Seen"] },
+      conditions: function (st) {
+        if (!st || st.gameOver) return false;
+        var corp = st.corporate;
+        var hasCompany = !!(corp && corp.company);
+        var isFounder = !!(st.startup && st.startup.company);
+        return hasCompany || isFounder;
+      },
+      choices: [
+        {
+          text: "📊 打磨这页看板",
+          hint: "管理经验+[PLACEHOLDER]，现金+[PLACEHOLDER]，晋升势能+[PLACEHOLDER]",
+          apply: function (st) {
+            if (!st.flags) st.flags = {};
+            st.flags._uiDataPitchR390Seen = true;
+            if (typeof addSkillXp === "function") {
+              try {
+                addSkillXp("management", 10); // [PLACEHOLDER]
+              } catch (e) {}
+            }
+            if (st.resources) {
+              st.resources.cash = (st.resources.cash || 0) + 800; // [PLACEHOLDER]
+            }
+            if (st.player && st.player.corporate) {
+              st.player.corporate.upward = Math.min(
+                100,
+                (st.player.corporate.upward || 50) + 3 // [PLACEHOLDER]
+              );
+            }
+            if (typeof StateManager !== "undefined" && StateManager.addMessage) {
+              StateManager.addMessage(
+                "📊 你的一页看板让董事会抓住了重点。管理经验+10，现金+800，晋升势能+3。",
+                "success"
+              );
+            }
+          },
+        },
+        {
+          text: "📚 还是照旧堆材料",
+          hint: "管理经验+[PLACEHOLDER]",
+          apply: function (st) {
+            if (!st.flags) st.flags = {};
+            st.flags._uiDataPitchR390Seen = true;
+            if (typeof addSkillXp === "function") {
+              try {
+                addSkillXp("management", 3); // [PLACEHOLDER]
+              } catch (e) {}
+            }
+            if (typeof StateManager !== "undefined" && StateManager.addMessage) {
+              StateManager.addMessage("📚 你照旧堆了一沓材料，效果平平。管理经验+3。", "info");
+            }
+          },
+        },
+      ],
+      probability: 0.5,
+      repeatable: false,
+    },
+  ];
+
+  for (var i = 0; i < EVENTS.length; i++) {
+    RANDOM_EVENTS.push(EVENTS[i]);
+  }
+})();
+
 ;
 // ==== js/core/domain_g_linkage_r240.js ====
 /**
