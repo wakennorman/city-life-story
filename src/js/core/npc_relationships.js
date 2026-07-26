@@ -840,6 +840,71 @@ function checkNpcRelationEventTriggers(state) {
   return triggers;
 }
 
+// [全系统自洽修复] 域D R389 联动增强(D→C): NPC职业推荐—高好感NPC根据玩家技能推荐职业路径
+function getNpcCareerRecommendation(state) {
+  if (!state || !state.relationships || !state.player) return null;
+  var bestNpc = null, bestAff = 0;
+  for (var _rid in state.relationships) {
+    var _r = state.relationships[_rid];
+    if (_r && _r.met && (_r.affinity || 0) > bestAff) {
+      bestAff = _r.affinity;
+      bestNpc = _rid;
+    }
+  }
+  if (bestAff < 40 || !bestNpc) return null;
+  // 基于玩家最高技能推荐路径
+  var topSkill = "", topLevel = 0;
+  if (state.skills) {
+    for (var _sk in state.skills) {
+      var _sl = state.skills[_sk] && state.skills[_sk].level || 0;
+      if (_sl > topLevel) { topLevel = _sl; topSkill = _sk; }
+    }
+  }
+  var _pathMap = { coding: "tech", english: "education", accounting: "finance", cooking: "catering", repair: "civil", management: "operations", sales: "sales", medicine: "medical", driving: "logistics", electrician: "civil", welding: "civil" };
+  var recPath = _pathMap[topSkill] || null;
+  if (!recPath) return null;
+  var _npcName = getNpcDisplayName(bestNpc);
+  return { npc: bestNpc, npcName: _npcName, affinity: bestAff, recommendedPath: recPath, topSkill: topSkill, topLevel: topLevel };
+}
+
+// [全系统自洽修复] 域D R389 联动增强(D→F): 社交关系网络数据—提供可视化数据供UI渲染
+function getSocialNetworkGraphData(state) {
+  if (!state || !state.relationships) return { nodes: [], edges: [] };
+  var nodes = [], edges = [];
+  var npcIds = Object.keys(NPC_RELATION_MATRIX);
+  // 玩家节点
+  nodes.push({ id: "player", label: "你", type: "player", size: 20 });
+  // NPC节点
+  for (var _ni = 0; _ni < npcIds.length; _ni++) {
+    var _nid = npcIds[_ni];
+    var _rel = state.relationships[_nid];
+    if (!_rel || !_rel.met) continue;
+    var _aff = _rel.affinity || 0;
+    nodes.push({
+      id: _nid,
+      label: getNpcDisplayName(_nid),
+      type: "npc",
+      affinity: _aff,
+      size: Math.max(8, Math.min(18, 8 + Math.floor(Math.abs(_aff) / 10))),
+      color: _aff >= 60 ? "#4a9e5c" : (_aff >= 30 ? "#f1c40f" : (_aff >= 0 ? "#95a5a6" : "#e74c3c")),
+    });
+    // 玩家→NPC边
+    edges.push({ source: "player", target: _nid, weight: Math.abs(_aff) / 100, label: getAffinityLabel(_aff) });
+  }
+  // NPC间关系边
+  for (var _ni2 = 0; _ni2 < npcIds.length; _ni2++) {
+    var _nA = npcIds[_ni2];
+    var _rels = NPC_RELATION_MATRIX[_nA];
+    if (!_rels) continue;
+    for (var _nB in _rels) {
+      if (_nA < _nB) continue; // 只加一次(无向图)
+      var _relType = _rels[_nB];
+      edges.push({ source: _nA, target: _nB, weight: 0.5, label: getRelationTypeLabel(_relType), color: getRelationTypeColor(_relType) });
+    }
+  }
+  return { nodes: nodes, edges: edges };
+}
+
 // ====== 百科自更新 ======
 if (typeof window !== "undefined") {
   window.MECHANICS = window.MECHANICS || {};
