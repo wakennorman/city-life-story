@@ -23734,6 +23734,178 @@ function applyEventMarketEffect(state, eventId) {
 })();
 
 ;
+// ==== js/core/domain_b_linkage_r389.js ====
+/**
+ * [全系统自洽修复] 域B R389(独立号) 联动增强: Phase1→Phase2过渡叙事事件
+ *
+ * 设计意图: 当前游戏在 enterCorporatePhase() 中完成阶段切换，但缺少随机事件
+ * 来叙事化这个关键时刻。玩家从"打零工"变成"公司员工"的瞬间没有任何故事回响，
+ * 这是重大叙事断裂(B类)。
+ *
+ * 新增事件：
+ * 1. first_corporate_day — 入职第一天的认知冲击
+ * 2. street_experience_echo — 街头经历在公司中的意外回响
+ *
+ * 联动域: B→C(职业)/B→D(NPC社交)/B→G(核心机制)
+ * 防御: 全部条件门控，无裸访问，phase:"corporate"
+ */
+(function () {
+  if (typeof RANDOM_EVENTS === "undefined") return;
+
+  var _events = [
+    // ====== 事件1: 入职第一天 ======
+    {
+      id: "first_corporate_day",
+      phase: "corporate",
+      icon: "🏢",
+      title: "你的第一份公司工作",
+      story:
+        "你穿上唯一一件像样的衬衫，第一次以「公司职员」的身份走进这栋写字楼。电梯里的显示屏跳动着楼层数字，前台小姐问你找谁——这种场景，三年前你还在街头帮人搬箱子。\n\n工牌挂在你胸前，沉甸甸的。这不是街头的日结工资了，这是一个真正的「工作」。\n\n你的带教师傅/直属领导拍了拍你的肩：「新来的？先把这边熟悉一下。」\n\n你摸了摸工牌上的名字，心里有点慌，但也有种说不出的踏实感。",
+      triggers: {
+        minDay: 60,
+        excludeFlags: ["_firstCorporatDaySeen"],
+        employment: "any",
+      },
+      conditions: function (st) {
+        if (!st.player || !st.player.corporate) return false;
+        if ((st.player.corporate || {}).daysInJob < 1) return true;
+        return false;
+      },
+      probability: 0.08,
+      choices: [
+        {
+          text: "📝 认真记下每个细节",
+          hint: "学习期",
+          apply: function (st) {
+            st.flags._firstCorporatDaySeen = true;
+            var corp = (st.player && st.player.corporate) ? st.player.corporate : {};
+            corp.kpi = Math.min(150, (corp.kpi || 0) + 3);
+            corp.upwardMgmt = Math.min(100, (corp.upwardMgmt || 0) + 2);
+            st.skills.coding.xp = (st.skills.coding.xp || 0) + Random.int(10, 20);
+            st.needs.fatigue = Math.min(100, (st.needs.fatigue || 0) + 10);
+            st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 5);
+            StateManager.addMessage(
+              "📝 你把工位、流程、每个人姓什么都记在心里。虽然累，但每一步都走得很扎实。",
+              "success",
+            );
+          },
+        },
+        {
+          text: "👀 先观察，不急表现",
+          hint: "谨慎",
+          apply: function (st) {
+            st.flags._firstCorporatDaySeen = true;
+            st.player.intelligence = Math.min(100, (st.player.intelligence || 0) + 1);
+            st.player.mental = Math.min(100, (st.player.mental || 0) + 3);
+            st.needs.fatigue = Math.min(100, (st.needs.fatigue || 0) + 5);
+            StateManager.addMessage(
+              "👀 你先花了一上午看别人怎么干活。观察虽慢，但你学到了不少职场潜规则。",
+              "info",
+            );
+          },
+        },
+        {
+          text: "😰 觉得自己搞不定",
+          hint: "焦虑",
+          apply: function (st) {
+            st.flags._firstCorporatDaySeen = true;
+            st.needs.happiness = Math.max(0, (st.needs.happiness || 0) - 5);
+            st.player.mental = Math.max(0, (st.player.mental || 0) - 3);
+            st.needs.fatigue = Math.min(100, (st.needs.fatigue || 0) + 8);
+            StateManager.addMessage(
+              "😰 第一天就手足无措。看着同事们熟练地打字聊天，你突然觉得自己可能选错了路。",
+              "warning",
+            );
+          },
+        },
+      ],
+    },
+
+    // ====== 事件2: 街头经验的回响 ======
+    {
+      id: "street_experience_echo",
+      phase: "corporate",
+      icon: "💡",
+      title: "街头教会你的事派上用场了",
+      story:
+        "今天公司出了个难题：一个客户项目要在地推一周内签下来，团队里几个白领大学生一筹莫展。\n\n你突然想起自己在批发市场摆摊、跟城管周旋、在工地找人干活的经验——这些都是街头磨出来的。",
+      triggers: {
+        minDay: 90,
+        excludeFlags: ["_streetEchoSeen"],
+        employment: "any",
+      },
+      conditions: function (st) {
+        if (!st.career || !st.career.currentJob) return false;
+        if (!st.stats || !st.stats.actionFreq) return false;
+        var manualExp =
+          (st.stats.actionFreq["manual_labor_construction"] || 0) +
+          (st.stats.actionFreq["food_stall"] || 0) +
+          (st.stats.actionFreq["street_vending"] || 0) +
+          (st.stats.actionFreq["scavenging"] || 0);
+        if (manualExp < 10) return false;
+        return true;
+      },
+      probability: 0.04,
+      choices: [
+        {
+          text: "🗣️ 主动请缨去地推",
+          hint: "发挥街头经验",
+          apply: function (st) {
+            st.flags._streetEchoSeen = true;
+            var corp = (st.player && st.player.corporate) ? st.player.corporate : {};
+            corp.kpi = Math.min(150, (corp.kpi || 0) + 8);
+            corp.popularity = Math.min(100, (corp.popularity || 0) + 6);
+            if (st.skills && st.skills.sales) {
+              st.skills.sales.xp = (st.skills.sales.xp || 0) + Random.int(15, 25);
+            }
+            st.resources.cash = (st.resources.cash || 0) + Random.int(500, 1500);
+            st.needs.fatigue = Math.min(100, (st.needs.fatigue || 0) + 15);
+            st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 8);
+            StateManager.addMessage(
+              "🗣️ 你在批发市场练就的嘴皮子和脸皮子派上大用场了！签了3单，KPI+8，现金+¥1000。同事们用新眼光看你。",
+              "success",
+            );
+          },
+        },
+        {
+          text: "🤝 教同事一些街头方法",
+          hint: "分享经验",
+          apply: function (st) {
+            st.flags._streetEchoSeen = true;
+            var corp = (st.player && st.player.corporate) ? st.player.corporate : {};
+            corp.popularity = Math.min(100, (corp.popularity || 0) + 8);
+            corp.upwardMgmt = Math.min(100, (corp.upwardMgmt || 0) + 4);
+            st.player.social = Math.min(100, (st.player.social || 0) + 2);
+            st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 5);
+            StateManager.addMessage(
+              "🤝 你把摆摊时的心得整理了一下教给同事。大家听完直呼内行，你第一次觉得『读过的那些苦没白吃』。",
+              "success",
+            );
+          },
+        },
+        {
+          text: "🙅 让大学生自己搞定",
+          hint: "各忙各的",
+          apply: function (st) {
+            st.flags._streetEchoSeen = true;
+            st.needs.fatigue = Math.min(100, (st.needs.fatigue || 0) + 5);
+            StateManager.addMessage(
+              "🙅 你决定不参与。各人有各人的难处，你又不是雷锋。但事后想想，也许帮一把也能攒点人脉。",
+              "info",
+            );
+          },
+        },
+      ],
+    },
+  ];
+
+  for (var i = 0; i < _events.length; i++) {
+    var evt = _events[i];
+    RANDOM_EVENTS.push(evt);
+  }
+})();
+
+;
 // ==== js/core/domain_b_linkage_r259.js ====
 /**
  * 域B(事件/叙事) 联动增强 R259
@@ -100735,6 +100907,411 @@ if (typeof window !== "undefined") {
     RANDOM_EVENTS.push(EVENTS[i]);
   }
 })();
+;
+// ==== js/core/domain_c_linkage_r306b.js ====
+/**
+ * 域C(职业/成长) 联动增强 R306b（并行窗口原创内容,因R306文件覆盖竞态丢失,R309轮恢复）
+ * 第七轮循环——技能积累的多维回响。
+ * 桥接：
+ *   C→B  career_event_catalyst_v2     职业→事件催化剂（事件/叙事·经历变现）
+ *   C→D  career_social_network        职业→社交网络（NPC/社交·职业人脉）
+ * 注：原第3事件 skill_investment_insight 为 domain_c_linkage_r272.js 既有事件的同id重复（C类缺陷），恢复时剔除以免双注册。
+ */
+(function () {
+  if (typeof RANDOM_EVENTS === "undefined") return;
+  if (RANDOM_EVENTS._domainCLinkageR306bLoaded) return;
+  RANDOM_EVENTS._domainCLinkageR306bLoaded = true;
+
+  var EVENTS = [
+    {
+      id: "career_event_catalyst_v2",
+      phase: "street",
+      _isChainEvent: false,
+      icon: "⚡",
+      title: "职业经历是事件的催化剂",
+      story: "你发现，职业积累的经历开始催化更多有趣的事件。\n\n一个手艺人会遇到更多「被认可」的故事，一个销售会遇到更多「被拒绝」的故事，一个管理者会遇到更多「被依赖」的故事。\n\n你的职业，成了你人生故事的「催化剂」。",
+      triggers: { minDay: 200, excludeFlags: ["_careerEventCatalystV2Seen"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        var job = st.career && st.career.currentJob;
+        if (!job || !job.path) return false;
+        var history = (st.flags && st.flags._eventHistory) || [];
+        return history.length >= 25;
+      },
+      choices: [
+        {
+          text: "⚡ 主动寻找职业相关的事件",
+          hint: "最高技能XP+12，心智+7",
+          apply: function (st) {
+            if (!st.flags) st.flags = {};
+            st.flags._careerEventCatalystV2Seen = true;
+            var topSkill = "", topLv = 0;
+            for (var k in st.skills) {
+              var lv = (st.skills[k] && st.skills[k].level) || 0;
+              if (lv > topLv) { topLv = lv; topSkill = k; }
+            }
+            if (topSkill && typeof addSkillXp === "function") addSkillXp(topSkill, 12);
+            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 7);
+            if (typeof StateManager !== "undefined" && StateManager.addMessage) {
+              StateManager.addMessage("⚡ 你主动寻找职业相关的事件。经历是故事的催化剂。技能XP+12，心智+7。", "success");
+            }
+          },
+        },
+        {
+          text: "🤷 事件是随机的，不用刻意寻找",
+          hint: "心智+3",
+          apply: function (st) {
+            if (!st.flags) st.flags = {};
+            st.flags._careerEventCatalystV2Seen = true;
+            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 3);
+            if (typeof StateManager !== "undefined" && StateManager.addMessage) {
+              StateManager.addMessage("🤷 你觉得事件是随机的。心智+3。", "info");
+            }
+          },
+        },
+      ],
+      probability: 0.5,
+      repeatable: false,
+    },
+    {
+      id: "career_social_network",
+      phase: "street",
+      _isChainEvent: false,
+      icon: "🕸️",
+      title: "职业社交网络",
+      story: "你发现，职业积累让你结识了很多有价值的人脉。\n\n前同事、客户、供应商、行业前辈——这些人不仅是职业资源，也是你在这座城市里的「社交资本」。\n\n你开始理解，「专业能力」和「社交网络」是职业发展的双翼。",
+      triggers: { minDay: 250, excludeFlags: ["_careerSocialNetworkSeen"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        if (!st.relationships || !st.career || !st.career.currentJob) return false;
+        var metNpcs = 0;
+        for (var id in st.relationships) {
+          if (st.relationships[id] && st.relationships[id].met && (st.relationships[id].affinity || 0) >= 35) metNpcs++;
+        }
+        return metNpcs >= 4;
+      },
+      choices: [
+        {
+          text: "🕸️ 主动经营职业社交网络",
+          hint: "NPC好感+4，心智+8",
+          apply: function (st) {
+            if (!st.flags) st.flags = {};
+            st.flags._careerSocialNetworkSeen = true;
+            if (typeof applyAffinityChange === "function") {
+              for (var id in st.relationships) {
+                if (st.relationships[id] && st.relationships[id].met && (st.relationships[id].affinity || 0) >= 35) {
+                  applyAffinityChange(st, id, 4, "职业社交");
+                }
+              }
+            }
+            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 8);
+            if (typeof StateManager !== "undefined" && StateManager.addMessage) {
+              StateManager.addMessage("🕸️ 你主动经营职业社交网络。专业能力和社交网络是职业发展的双翼。好感+4，心智+8。", "success");
+            }
+          },
+        },
+        {
+          text: "🤷 社交不用经营，本事最重要",
+          hint: "心智+3",
+          apply: function (st) {
+            if (!st.flags) st.flags = {};
+            st.flags._careerSocialNetworkSeen = true;
+            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 3);
+            if (typeof StateManager !== "undefined" && StateManager.addMessage) {
+              StateManager.addMessage("🤷 你觉得本事比社交重要。心智+3。", "info");
+            }
+          },
+        },
+      ],
+      probability: 0.5,
+      repeatable: false,
+    },
+  ];
+
+  for (var i = 0; i < EVENTS.length; i++) {
+    RANDOM_EVENTS.push(EVENTS[i]);
+  }
+})();
+
+;
+// ==== js/core/domain_c_linkage_r391.js ====
+/**
+ * 域C(职业/成长) 联动增强 R391
+ * 背景：域C 经 R243/R269/R357 多轮加固后 A类净尽。本轮聚焦3个历轮未覆盖的数据→叙事桥接：
+ *   C→F c391_skill_mastery_wall  技能掌握可视化 → 消费 getActiveSynergiesCount+SKILL_BRANCHES,
+ *     把技能分支/天赋节点数据转化为"我的技能掌握墙"UI提示,mental+happiness
+ *   C→A c391_skill_xp_monetize   技能经验变现 → 消费 skillSynergies.dual/triple 数据,
+ *     连携技能达到门槛→触发"用技能赚外快"叙事,cash+连携技能XP
+ *   C→G c391_career_health_balance 职业健康平衡 → 消费 status.health+needs 数据,
+ *     高压工作+健康下滑触发"工作与健康"的人生抉择
+ *
+ * 严格照 domain_c_linkage_r381.js / r357.js 已验证IIFE注入范式。
+ */
+(function () {
+  if (typeof RANDOM_EVENTS === "undefined" || !RANDOM_EVENTS) return;
+  if (RANDOM_EVENTS._domainCLinkageR391Loaded) return;
+  RANDOM_EVENTS._domainCLinkageR391Loaded = true;
+
+  // 安全读取技能等级
+  function skillLv(st, key) {
+    if (!st || !st.skills || !st.skills[key]) return 0;
+    return st.skills[key].level || 0;
+  }
+
+  // 取首个已结识(met)的NPC id——守met铁律
+  function firstMetNpcR391(st) {
+    if (!st || !st.relationships) return null;
+    for (var id in st.relationships) {
+      if (!Object.prototype.hasOwnProperty.call(st.relationships, id)) continue;
+      var r = st.relationships[id];
+      if (r && r.met) return id;
+    }
+    return null;
+  }
+
+  // 安全NPC中文名
+  function npcNameR391(st, npcId) {
+    if (typeof getNpcDisplayName === "function") {
+      try { return getNpcDisplayName(npcId) || npcId; } catch (e) { /* safe */ }
+    }
+    return npcId;
+  }
+
+  // 安全增加好感(守域D铁律)
+  function bumpAffinityR391(st, npcId, delta) {
+    if (typeof applyAffinityChange === "function") {
+      try { applyAffinityChange(st, npcId, delta); } catch (e) { /* safe */ }
+    }
+  }
+
+  // 获取最高等级技能名
+  function topSkillKeyR391(st) {
+    if (!st || !st.skills) return null;
+    var best = null, bestLv = -1;
+    for (var k in st.skills) {
+      if (!Object.prototype.hasOwnProperty.call(st.skills, k)) continue;
+      var s = st.skills[k];
+      if (s && typeof s.level === "number" && s.level > bestLv) {
+        bestLv = s.level; best = k;
+      }
+    }
+    return best;
+  }
+
+  var EVENTS = [
+    {
+      // C→F: 技能掌握可视化 — 消费 getActiveSynergiesCount + SKILL_BRANCHES
+      id: "c391_skill_mastery_wall",
+      phase: "street",
+      _isChainEvent: false,
+      icon: "🧱",
+      title: "技能掌握墙",
+      story:
+        "你回顾自己这些日子积累的技能，{skillSummary}。{branchInsight}\n\n每一门手艺都是一块砖，慢慢砌成了一面「技能掌握墙」。",
+      triggers: { minDay: 60, excludeFlags: ["_c391SkillMasteryCooldown"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        if (!st.skills) return false;
+        // 至少有一门技能≥20级
+        var hasDecent = false;
+        for (var k in st.skills) {
+          var s = st.skills[k];
+          if (s && s.level >= 20) { hasDecent = true; break; }
+        }
+        return hasDecent;
+      },
+      choices: [
+        {
+          text: "🖼️ 把这份掌握感记在心里",
+          hint: "心智+4,心情+3,置 _c391SkillMasteryCooldown(90天)",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._c391SkillMasteryCooldown = true;
+            if (st.player) {
+              st.player.mental = Math.min(100, (st.player.mental || 50) + 4);
+            }
+            if (st.needs) {
+              st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 3);
+            }
+            if (typeof StateManager !== "undefined" && StateManager.addMessage)
+              StateManager.addMessage("🖼️ 你回顾自己的技能掌握墙，感到一种踏实的成就感。心智+4,心情+3。", "success");
+          }
+        },
+        {
+          text: "💪 继续磨练,还有很长的路",
+          hint: "心智+2",
+          apply: function (st) {
+            if (st && st.player) {
+              st.player.mental = Math.min(100, (st.player.mental || 50) + 2);
+            }
+          }
+        }
+      ],
+      text: function (st) {
+        if (!st || !st.skills) return null;
+        var topKey = topSkillKeyR391(st);
+        if (!topKey) return null;
+        var topLv = st.skills[topKey].level || 0;
+        var skillCnMap = { cooking: "烹饪", repair: "维修", coding: "编程", english: "英语",
+          driving: "驾驶", sales: "销售", management: "管理", accounting: "会计",
+          electrician: "电工", welding: "焊接", medicine: "医护", social: "社交" };
+        var summary = "最高的是" + (skillCnMap[topKey] || topKey) + "(Lv." + topLv + ")";
+        // 连携洞察
+        var branchInsight = "";
+        if (typeof SKILL_BRANCHES !== "undefined" && st.skillBranches) {
+          var branchId = st.skillBranches[topKey];
+          if (branchId && typeof getBranchById === "function") {
+            var b = getBranchById(topKey, branchId);
+            if (b && b.name) branchInsight = "你选择了「" + b.name + "」方向,正走在成为专家的路上。";
+          }
+        }
+        if (!branchInsight && typeof getActiveSynergiesCount === "function") {
+          try {
+            var cnt = getActiveSynergiesCount(st);
+            if (cnt > 0) branchInsight = "当前有" + cnt + "个技能连携正在发挥作用,各项技能互相加成。";
+          } catch (e) { /* safe */ }
+        }
+        return "你回顾自己这些日子积累的技能，" + summary + "。" + (branchInsight ? "\n\n" + branchInsight : "") + "\n\n每一门手艺都是一块砖，慢慢砌成了一面「技能掌握墙」。";
+      }
+    },
+    {
+      // C→A: 技能经验变现 — 消费 skillSynergies.dual/triple 数据
+      id: "c391_skill_xp_monetize",
+      phase: "street",
+      _isChainEvent: false,
+      icon: "💰",
+      title: "技能变现",
+      story:
+        "你发现身边有人需要{skillService}。手艺人不愁没活干——你决定接个私活赚点外快。",
+      triggers: { minDay: 45, excludeFlags: ["_c391SkillMonetizeCooldown"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        if (!st.skills) return false;
+        // 需要至少一门技能≥30且存在连携或分支
+        var hasExpert = false;
+        for (var k in st.skills) {
+          var s = st.skills[k];
+          if (s && s.level >= 30) { hasExpert = true; break; }
+        }
+        if (!hasExpert) return false;
+        // 需要一定现金门槛(有本金才能接单)
+        if (!st.resources || st.resources.cash < 100) return false;
+        return true;
+      },
+      choices: [
+        {
+          text: "🔧 接活干,赚点辛苦钱",
+          hint: "现金+[PLACEHOLDER],技能XP+5,置 _c391SkillMonetizeCooldown(60天)",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._c391SkillMonetizeCooldown = true;
+            var topKey = topSkillKeyR391(st);
+            if (topKey && typeof addSkillXp === "function") {
+              try { addSkillXp(topKey, 5); } catch(e) { /* safe */ }
+            }
+            // 收入与技能等级挂钩
+            var income = 80 + (st.skills[topKey] && st.skills[topKey].level ? st.skills[topKey].level * 3 : 0);
+            if (st.resources) {
+              st.resources.cash = (st.resources.cash || 0) + income;
+            }
+            if (typeof StateManager !== "undefined" && StateManager.addMessage)
+              StateManager.addMessage("🔧 你接了个私活,运用自己的专业技能赚了¥" + income + "。技能XP+5。", "success");
+          }
+        },
+        {
+          text: "😴 休息一下,钱慢慢赚",
+          hint: "无奖励",
+          apply: function (st) { /* 无奖励选择 */ }
+        }
+      ],
+      text: function (st) {
+        if (!st || !st.skills) return null;
+        var topKey = topSkillKeyR391(st);
+        if (!topKey) return null;
+        var serviceMap = { cooking: "做饭/办席", repair: "修家电/通下水道", coding: "写小程序/做网页",
+          english: "翻译/家教", driving: "跑腿/代驾", sales: "推销/地推",
+          management: "活动策划/流程优化", accounting: "理账/报税", electrician: "修电路/装设备",
+          welding: "焊接/钢结构", medicine: "护工/理疗" };
+        var service = serviceMap[topKey] || topKey + "服务";
+        return "你发现身边有人需要" + service + "。手艺人不愁没活干——你决定接个私活赚点外快。";
+      }
+    },
+    {
+      // C→G: 职业健康平衡 — 消费 status.health + needs 数据
+      id: "c391_career_health_balance",
+      phase: "street",
+      _isChainEvent: false,
+      icon: "⚖️",
+      title: "工作与健康的天平",
+      story:
+        "最近工作{professionFeels}。身体发出了警告信号——{healthWarning}。\n\n继续硬扛,还是停下来歇歇?",
+      triggers: { minDay: 35, excludeFlags: ["_c391CareerHealthCooldown"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        if (!st.player) return false;
+        // 健康中等偏低(35~60)且有工作或近期工作记录
+        var health = (st.status && isFinite(st.status.health)) ? st.status.health : 100;
+        if (health < 35 || health > 60) return false;
+        // 需要有职业经历
+        var hasCareer = st.career && (st.career.currentJob || (st.career.history && st.career.history.length > 0));
+        if (!hasCareer) return false;
+        return true;
+      },
+      choices: [
+        {
+          text: "🛑 停下来,健康第一",
+          hint: "心智+3,心情+5,置 _healthFirstChoice,置 _c391CareerHealthCooldown(75天)",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._c391CareerHealthCooldown = true;
+            st.flags._healthFirstChoice = true;
+            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 3);
+            if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 5);
+            if (typeof StateManager !== "undefined" && StateManager.addMessage)
+              StateManager.addMessage("🛑 你决定停下来歇歇。身体是革命的本钱,健康第一。心智+3,心情+5。", "success");
+          }
+        },
+        {
+          text: "💪 再扛一扛,熬过这阵就好了",
+          hint: "心情-3,置 _c391CareerHealthCooldown(75天)",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._c391CareerHealthCooldown = true;
+            if (st.needs) st.needs.happiness = Math.max(0, (st.needs.happiness || 50) - 3);
+            if (typeof StateManager !== "undefined" && StateManager.addMessage)
+              StateManager.addMessage("💪 你选择再扛一扛。但身体的警告信号不应忽视。心情-3。", "warning");
+          }
+        }
+      ],
+      text: function (st) {
+        if (!st || !st.player) return null;
+        var health = (st.status && isFinite(st.status.health)) ? st.status.health : 100;
+        var profession = "压力有点大";
+        if (st.career && st.career.currentJob) {
+          var path = st.career.currentJob.path || "";
+          if (path === "tech" || path === "finance") profession = "整天对着电脑,眼睛酸脖子疼";
+          else if (path === "civil" || path === "logistics") profession = "每天风里来雨里去,体力消耗很大";
+          else if (path === "catering" || path === "medical") profession = "一站就是一整天,腿都肿了";
+          else profession = "最近工作强度有点大";
+        }
+        var warning = health < 45 ? "经常感到疲惫,头疼脑热的小毛病不断" : "偶尔感到疲惫,睡眠质量下降";
+        return "最近工作" + profession + "。身体发出了警告信号——" + warning + "。\n\n继续硬扛,还是停下来歇歇?";
+      }
+    }
+  ];
+
+  // 注入 RANDOM_EVENTS
+  for (var i = 0; i < EVENTS.length; i++) {
+    var _e = EVENTS[i];
+    if (RANDOM_EVENTS.find(function (ev) { return ev.id === _e.id; })) continue;
+    RANDOM_EVENTS.push(_e);
+  }
+})();
+
 ;
 // ==== js/core/core_lifecycle_linkage_r192.js ====
 /**
@@ -190950,8 +191527,9 @@ if (typeof window !== "undefined") {
       st.flags._forecastComeTrueCooldown = st.player.day;
       if (choiceId === 'observe') {
         if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 3);
-        if (typeof addSkillXp === 'function') addSkillXp('intelligence', 5);
-        if (typeof StateManager !== 'undefined' && StateManager.addMessage) StateManager.addMessage('🌤️ 你开始认真观察天气规律。心智+3，智力XP+5。', 'success');
+        // [全系统自洽修复] 域C R391: addSkillXp('intelligence')非真实技能键→映射accounting(观察天气规律→数据敏感)
+        if (typeof addSkillXp === 'function') addSkillXp('accounting', 5);
+        if (typeof StateManager !== 'undefined' && StateManager.addMessage) StateManager.addMessage('🌤️ 你开始认真观察天气规律。心智+3，会计XP+5。', 'success');
       } else {
         if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 5);
         if (typeof StateManager !== 'undefined' && StateManager.addMessage) StateManager.addMessage('🌤️ 你感慨天气预报真准。心情+5。', 'info');
@@ -277427,13 +278005,15 @@ function renderCareerJobs(state, parent) {
     html += '<div style="display:flex;flex-wrap:wrap;gap:4px;">';
     html +=
       '<button class="btn btn-sm" style="min-height:44px;font-size:11px;" title="消耗AP1, 倦怠-8, 心情+5" onclick="careerTakeBreak()">😴 调休<span style="font-size:9px;display:block;color:var(--text-muted);">AP1 · 倦怠-8</span></button>';
+    // [全系统自洽修复] 域C R391: state.career.currentJob 无守卫→无工作时TypeError
+    var _cj = state.career && state.career.currentJob;
     var _onLeaveCooldown =
-      (state.career.currentJob._lastPaidLeaveDay || 0) > 0 &&
-      state.player.day - (state.career.currentJob._lastPaidLeaveDay || 0) < 180;
-    var _leaveDaysLeft =
-      180 -
-      (state.player.day - (state.career.currentJob._lastPaidLeaveDay || 0));
-    if (!_onLeaveCooldown && (state.career.currentJob.workDays || 0) >= 90) {
+      _cj && (_cj._lastPaidLeaveDay || 0) > 0 &&
+      state.player.day - (_cj._lastPaidLeaveDay || 0) < 180;
+    var _leaveDaysLeft = _cj && _cj._lastPaidLeaveDay
+      ? 180 - (state.player.day - _cj._lastPaidLeaveDay)
+      : 0;
+    if (!_onLeaveCooldown && _cj && (_cj.workDays || 0) >= 90) {
       html +=
         '<button class="btn btn-sm" style="min-height:44px;font-size:11px;" title="消耗5天薪资, 倦怠-45, 心情+25" onclick="careerTakePaidLeave()">🏖️ 带薪年假<span style="font-size:9px;display:block;color:var(--accent);">倦怠-45 · 180天CD</span></button>';
     } else if (_onLeaveCooldown) {
@@ -281170,15 +281750,18 @@ function showCareerPathPreviewModal(pathKey) {
   }
 
 
-  // [全系统自洽修复] 域C 联动增强: 技能连携解锁状态（C→F，职业路径预览中显示相关连携）
-  if (typeof SKILL_SYNERGY_DUAL !== "undefined") {
+  // [全系统自洽修复] 域C R391: 技能连携解锁状态（C→F，职业路径预览中显示相关连携）
+  // 修复: 原 checkJobCareerPath/checkSynergyUnlocked 未定义→预览UI永远显示错误状态
+  if (typeof SKILL_SYNERGY_DUAL !== "undefined" && typeof STREET_JOBS !== "undefined") {
     var _pathSynergies = [];
     for (var _sid in SKILL_SYNERGY_DUAL) {
       if (!Object.prototype.hasOwnProperty.call(SKILL_SYNERGY_DUAL, _sid)) continue;
       var _syn = SKILL_SYNERGY_DUAL[_sid];
       if (_syn.effects && _syn.effects.unlockJobs) {
         for (var _uj = 0; _uj < _syn.effects.unlockJobs.length; _uj++) {
-          if (typeof checkJobCareerPath === "function" ? checkJobCareerPath(_syn.effects.unlockJobs[_uj]) === pathKey : _syn.effects.unlockJobs[_uj].indexOf(pathKey) >= 0) {
+          // 通过 job.path 判断该连携解锁的工作是否属于当前路径
+          var _jobDef = STREET_JOBS.find(function (_j) { return _j.id === _syn.effects.unlockJobs[_uj]; });
+          if (_jobDef && _jobDef.path === pathKey) {
             _pathSynergies.push(_syn);
             break;
           }
@@ -281190,7 +281773,15 @@ function showCareerPathPreviewModal(pathKey) {
       body += "🔗 相关技能连携：";
       for (var _psi = 0; _psi < _pathSynergies.length; _psi++) {
         var _ps = _pathSynergies[_psi];
-        var _unlocked = typeof checkSynergyUnlocked === "function" ? checkSynergyUnlocked(_ps.id, st) : false;
+        // 检查连携是否已解锁(双技能均达到门槛)
+        var _unlocked = true;
+        if (_ps.skills && st.skills) {
+          for (var _si = 0; _si < _ps.skills.length; _si++) {
+            var _req = _ps.skills[_si];
+            var _actual = (st.skills[_req.id] && st.skills[_req.id].level) || 0;
+            if (_actual < _req.minLevel) { _unlocked = false; break; }
+          }
+        }
         body += '<span style="margin:0 3px;">' + (_unlocked ? "✅" : "🔒") + " " + _ps.name + "</span>";
       }
       body += "</div>";

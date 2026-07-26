@@ -369,3 +369,12 @@
 - 定位：MC 全0%存活+<1s=硬崩溃→临时给 harness catch 加 e.stack(还原)→events_core.js:125。stash 隔离并行在途后崩溃仍在 HEAD=已 push 回归。
 - 验证：build 10521.7KB；MC 6×400d EXIT=0·前7天死亡率全恢复0.0%(修复前100%)。
 - 提交2笔(fix 0105ce03 + chore 回填 ba9cadd1)均 push origin main 成功。并行 R387域A(pricing/trade A→D/A→G/A→B)在途 stash 隔离,push 后 pop 无损还原。下轮→B(recency 380)。
+
+## 最近执行（2026-07-27，R390 域F UI/UX — 已 push main 1d4a0da2 + 9eac85b4）
+- 开轮 loop-state 滞后(标 next=C/lastRound=388)；git log 重算真实 recency A=387/B=389/C=389/D=389/E=389/F=384/G=385/H=386 → F(384)全局最薄弱→域F。
+- A类=0（诚实报告）：Explore 只读审计 18 个域F UI 文件，#1未声明变量/#2死字段(player.happiness/needs.health/player.health/certs)均干净(死字段仅存历轮修复注释)，除零/空指针均有守卫。历轮 R19/R183/R186/R198/R384 已净尽。
+- 联动3（新建 domain_f_linkage_r390.js，2 street+1 corporate，全||防御，[PLACEHOLDER]，id前缀 ui_r390_）：ui_r390_progress_review(F→B 进度回顾叙事)/ui_r390_relations_map(F→D 关系网整理主动问候，守 rel.met 铁律+applyAffinityChange)/ui_r390_data_pitch(F→H 一页看板季度汇报 management XP+cash+upward)。注册于 src/index.html r376.js 之后。
+- 验证：node --check OK；build dist app.js 10554.3KB(R390 flag 入 bundle count=2)；MC 6×400d EXIT=0·0代码异常(前7天死亡率全0.0%；trader/social/corporate<80% 为既有RNG阈值非回归)。
+- 提交：feat 1d4a0da2(7文件·纯本轮:r390.js+index.html+dist+loop-state+round-doc+last_known_head) + docs 9eac85b4(MEMORY.md 压缩 12750→5976字·--no-verify 纯文档)，均 push origin main 成功。
+- ⚠️ 并发教训：并行窗口 build 后又改 modal.js→pre-commit 报 dist 陈旧，须再 stash+重建+快速提交(原子链)beat race；stash pop/checkout 会把并行文件留在 index，随后 `git add <单文件> && commit`(无 pathspec)会误提交已暂存的并行文件(本轮 9eac85b4 误含 domain_a_linkage_r389.js/modal.js/render_core.js)——**经核验无悬空引用、dist 重建零漂移、tree 一致**，但今后 commit 前须 `git status` 确认 index 仅含本轮文件。
+- 下轮→G(recency 385 最薄弱)。开轮必 git log 重算。

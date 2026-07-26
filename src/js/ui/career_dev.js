@@ -1212,13 +1212,15 @@ function renderCareerJobs(state, parent) {
     html += '<div style="display:flex;flex-wrap:wrap;gap:4px;">';
     html +=
       '<button class="btn btn-sm" style="min-height:44px;font-size:11px;" title="消耗AP1, 倦怠-8, 心情+5" onclick="careerTakeBreak()">😴 调休<span style="font-size:9px;display:block;color:var(--text-muted);">AP1 · 倦怠-8</span></button>';
+    // [全系统自洽修复] 域C R391: state.career.currentJob 无守卫→无工作时TypeError
+    var _cj = state.career && state.career.currentJob;
     var _onLeaveCooldown =
-      (state.career.currentJob._lastPaidLeaveDay || 0) > 0 &&
-      state.player.day - (state.career.currentJob._lastPaidLeaveDay || 0) < 180;
-    var _leaveDaysLeft =
-      180 -
-      (state.player.day - (state.career.currentJob._lastPaidLeaveDay || 0));
-    if (!_onLeaveCooldown && (state.career.currentJob.workDays || 0) >= 90) {
+      _cj && (_cj._lastPaidLeaveDay || 0) > 0 &&
+      state.player.day - (_cj._lastPaidLeaveDay || 0) < 180;
+    var _leaveDaysLeft = _cj && _cj._lastPaidLeaveDay
+      ? 180 - (state.player.day - _cj._lastPaidLeaveDay)
+      : 0;
+    if (!_onLeaveCooldown && _cj && (_cj.workDays || 0) >= 90) {
       html +=
         '<button class="btn btn-sm" style="min-height:44px;font-size:11px;" title="消耗5天薪资, 倦怠-45, 心情+25" onclick="careerTakePaidLeave()">🏖️ 带薪年假<span style="font-size:9px;display:block;color:var(--accent);">倦怠-45 · 180天CD</span></button>';
     } else if (_onLeaveCooldown) {
@@ -4955,15 +4957,18 @@ function showCareerPathPreviewModal(pathKey) {
   }
 
 
-  // [全系统自洽修复] 域C 联动增强: 技能连携解锁状态（C→F，职业路径预览中显示相关连携）
-  if (typeof SKILL_SYNERGY_DUAL !== "undefined") {
+  // [全系统自洽修复] 域C R391: 技能连携解锁状态（C→F，职业路径预览中显示相关连携）
+  // 修复: 原 checkJobCareerPath/checkSynergyUnlocked 未定义→预览UI永远显示错误状态
+  if (typeof SKILL_SYNERGY_DUAL !== "undefined" && typeof STREET_JOBS !== "undefined") {
     var _pathSynergies = [];
     for (var _sid in SKILL_SYNERGY_DUAL) {
       if (!Object.prototype.hasOwnProperty.call(SKILL_SYNERGY_DUAL, _sid)) continue;
       var _syn = SKILL_SYNERGY_DUAL[_sid];
       if (_syn.effects && _syn.effects.unlockJobs) {
         for (var _uj = 0; _uj < _syn.effects.unlockJobs.length; _uj++) {
-          if (typeof checkJobCareerPath === "function" ? checkJobCareerPath(_syn.effects.unlockJobs[_uj]) === pathKey : _syn.effects.unlockJobs[_uj].indexOf(pathKey) >= 0) {
+          // 通过 job.path 判断该连携解锁的工作是否属于当前路径
+          var _jobDef = STREET_JOBS.find(function (_j) { return _j.id === _syn.effects.unlockJobs[_uj]; });
+          if (_jobDef && _jobDef.path === pathKey) {
             _pathSynergies.push(_syn);
             break;
           }
@@ -4975,7 +4980,15 @@ function showCareerPathPreviewModal(pathKey) {
       body += "🔗 相关技能连携：";
       for (var _psi = 0; _psi < _pathSynergies.length; _psi++) {
         var _ps = _pathSynergies[_psi];
-        var _unlocked = typeof checkSynergyUnlocked === "function" ? checkSynergyUnlocked(_ps.id, st) : false;
+        // 检查连携是否已解锁(双技能均达到门槛)
+        var _unlocked = true;
+        if (_ps.skills && st.skills) {
+          for (var _si = 0; _si < _ps.skills.length; _si++) {
+            var _req = _ps.skills[_si];
+            var _actual = (st.skills[_req.id] && st.skills[_req.id].level) || 0;
+            if (_actual < _req.minLevel) { _unlocked = false; break; }
+          }
+        }
         body += '<span style="margin:0 3px;">' + (_unlocked ? "✅" : "🔒") + " " + _ps.name + "</span>";
       }
       body += "</div>";

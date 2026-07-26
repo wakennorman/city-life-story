@@ -129,8 +129,9 @@
       st.flags._forecastComeTrueCooldown = st.player.day;
       if (choiceId === 'observe') {
         if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 3);
-        if (typeof addSkillXp === 'function') addSkillXp('intelligence', 5);
-        if (typeof StateManager !== 'undefined' && StateManager.addMessage) StateManager.addMessage('🌤️ 你开始认真观察天气规律。心智+3，智力XP+5。', 'success');
+        // [全系统自洽修复] 域C R391: addSkillXp('intelligence')非真实技能键→映射accounting(观察天气规律→数据敏感)
+        if (typeof addSkillXp === 'function') addSkillXp('accounting', 5);
+        if (typeof StateManager !== 'undefined' && StateManager.addMessage) StateManager.addMessage('🌤️ 你开始认真观察天气规律。心智+3，会计XP+5。', 'success');
       } else {
         if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 5);
         if (typeof StateManager !== 'undefined' && StateManager.addMessage) StateManager.addMessage('🌤️ 你感慨天气预报真准。心情+5。', 'info');
