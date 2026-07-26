@@ -1085,6 +1085,19 @@ function generateDailyReportSummary(state, incomes, expenses) {
     }
   } catch (e) {}
 
+  // [全系统自洽修复] 域E R383 联动增强: E→F 投资组合摘要(日报中显示持仓市值变动)
+  try {
+    if (state.investment && state.investment.portfolio) {
+      var _pv = state.investment.portfolio.totalValue || 0;
+      if (_pv > 0) {
+        var _pvChange = state.investment.portfolio.totalPL || 0;
+        var _pvSign = _pvChange >= 0 ? "📈" : "📉";
+        var _pvColor = _pvChange >= 0 ? "var(--success)" : "var(--danger)";
+        highlights.push(_pvSign + " 投资市值 ¥" + _pv.toLocaleString() + " <span style=\"color:" + _pvColor + "\">(" + (_pvChange >= 0 ? "+" : "") + Math.round(_pvChange).toLocaleString() + ")</span>");
+      }
+    }
+  } catch (e) {}
+
   // [全系统自洽修复] 域B R380 联动增强: B→F 最近事件展示(日报中回顾近3天事件)
   try {
     var _recentEvts = state.flags && state.flags._recentEvents;

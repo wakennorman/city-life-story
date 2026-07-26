@@ -6618,7 +6618,10 @@ function bankrupt(state) {
   state.resources.cash = (state.resources.cash || 0) + assetRecovery;
 
   // 声誉损失
-  state.status.health = Math.max(0, state.status.health - 10);
+  // [全系统自洽修复] 域E A类修复: state.status 守卫(防止旧存档/极端初始化崩溃)
+  if (state.status) {
+    state.status.health = Math.max(0, state.status.health - 10);
+  }
   state.player.fame = Math.max(0, state.player.fame - 10);
 
   // [全系统自洽修复] 域H R170 H→G 联动增强: 创业破产心理创伤

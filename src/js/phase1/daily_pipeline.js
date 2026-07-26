@@ -829,8 +829,21 @@ const DAILY_PIPELINE = [
       if (inv.dividendDay && inv.dividendDay === state.player.day) hasIncome = true;
       if (inv.rentalIncome && inv.rentalIncome > 0) hasIncome = true;
       if (inv.lastDividend && inv.lastDividend > 0) hasIncome = true;
-      if (hasIncome) {
+      // [全系统自洽修复] 域E A类修复: state.needs 守卫(防止旧存档崩溃)
+      if (hasIncome && state.needs) {
         state.needs.happiness = Math.min(100, (state.needs.happiness || 50) + 2);
+      }
+      // [全系统自洽修复] 域E R383 联动增强: E→G 投资组合市值影响日常心情(财务安全感)
+      if (state.needs && state.investment.portfolio) {
+        var _pv = state.investment.portfolio.totalValue || 0;
+        if (_pv >= 1000000) {
+          state.needs.happiness = Math.min(100, (state.needs.happiness || 50) + 1);
+        } else if (_pv >= 500000) {
+          // 每3天+1心情(不每天叠加)
+          if (state.player.day % 3 === 0) {
+            state.needs.happiness = Math.min(100, (state.needs.happiness || 50) + 1);
+          }
+        }
       }
     },
   },
