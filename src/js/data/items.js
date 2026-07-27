@@ -1092,8 +1092,8 @@ const HOUSING_TIERS = [
   {
     tier: 2,
     name: "单间",
-    cost: 500,
-    rent: 22,
+    cost: 2000,
+    rent: 35,
     capacity: 100,
     fatigueRecovery: 70,
     hygieneBonus: 10,
@@ -1109,8 +1109,8 @@ const HOUSING_TIERS = [
   {
     tier: 3,
     name: "一居室",
-    cost: 1000,
-    rent: 40,
+    cost: 8000,
+    rent: 80,
     capacity: 200,
     fatigueRecovery: 75,
     hygieneBonus: 15,

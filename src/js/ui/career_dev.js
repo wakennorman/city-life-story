@@ -2112,7 +2112,10 @@ function renderCareerOverview(state, parent) {
         state.career.currentJob &&
         state.career.currentJob.workDays) ||
       0;
-    if (_totalCash >= 30000 && _workDays >= 90) {
+    // [MC平衡] 街头策略也可触发创业：总资产≥¥15,000 或 在职≥90天+总资产≥¥30,000
+    var _streetTotalEarned = (state.resources && state.resources.totalEarned) || 0;
+    var _canStartup = (_totalCash >= 15000 && _streetTotalEarned >= 20000) || (_totalCash >= 30000 && _workDays >= 90);
+    if (_canStartup) {
       state.flags._phase2RitualShown = true;
       // 异步弹仪式弹窗（避免 DOM 嵌套）
       setTimeout(function () {
