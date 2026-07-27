@@ -12690,3 +12690,4 @@ function manageInventoryAction(state, inventoryType, action, amount) {
 // [R464] 域H
 // [R488] 域H
 // [R512] 域H
+// [R536] 域H
