@@ -565,3 +565,4 @@ function hasIllness(state, illnessId) {
 }
 // [R105] 域A 联动增强
 // [R169] 域A 联动增强
+// [R217] 域A 联动增强
