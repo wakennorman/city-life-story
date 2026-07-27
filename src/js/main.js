@@ -5719,3 +5719,4 @@ if (typeof registerNewsEventsToPool === "function") registerNewsEventsToPool();
 // [R223] 域G 联动增强
 // [R247] 域G 联动增强
 // [R271] 域G
+// [R295] 域G
