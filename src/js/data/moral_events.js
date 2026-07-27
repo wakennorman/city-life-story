@@ -3195,3 +3195,4 @@ function getMoralEmoji(score) {
 }
 // [R394] 域B
 // [R474] 域B
+// [R562] 域B
