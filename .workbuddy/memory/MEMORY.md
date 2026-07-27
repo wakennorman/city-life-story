@@ -1,5 +1,12 @@
 # MEMORY — 城市浮生记 8域轮换优化循环（压缩版 2026-07-27 R535）
 
+## R589 增量要点（域E）
+- 域E三大写-only/欠消费投资flag已打通首消费：`_firstStockDay`(e589,investment.js:1752)/`_investCareerConfidence`(e589,investment.js:1415)/`_investSocialPerception`(e589,investment.js:1428)——勿重复选题。`_portfolioHighDay` 仍为域内自用冷却（非零消费选题）。
+- **假技能键第四次回潮已全库清剿（22处/19文件）**：新形态①6键假数组在 r574/r583/r586 复制；②5键含"trade"数组在 r468~r487 共12处（此前三轮清剿均漏掉此变体）；③"finance"数组变体 r570/r577/r588；④直接调用 technology r584。开轮复查命令升级：`grep -rnE 'var skills? *= *\[' src/js | grep -E '"trade"|"finance"|"marketing"|"technology"' | grep -v 修复`（旧命令 `marketing.*technology` 抓不到 trade/finance 变体）。
+- **轮号被并行在途活轮占用的处理**：R588 文件已 staged+挂载但未提交 → 本轮顺延 R589，不碰其事件逻辑，仅修其假键防落库回潮（修复注释标本轮号）。
+- 域E核心文件复审：stock.js avgPrice/finance.js dtI 除法守卫完好，无新A类——勿重复审。
+- 下轮 F(r580) 最陈旧（E589>D587>C586>B584>A583/G583>H581>F580）。
+
 ## R577 增量要点（域G）
 - 域G三大写-only/欠消费核心机制flag已打通首消费：`_hairStyleBoost`+`_hairStyleLastDay`(g577,actions_extra.js:356)/`_eraState.stageId`(g577)/`_eventEconomicImpact`(g577)——勿重复选题。
 - 域G三处经典A类已修：events_core 顶层死块(eventId恒undefined)已移入 recordEventToHistory；era_transform `getEraEvents()` 零调用已接入 eraTick（title/story/effect 进 _pendingEraEvent）；world_params cv=stddev/mean 除零×2已加守卫——勿重复审。
