@@ -1565,3 +1565,4 @@ function getHealthStatusSummary(state) {
 // [R158] 域F 联动增强
 // [R190] 域F 联动增强
 // [R214] 域F 联动增强
+// [R238] 域F 联动增强
