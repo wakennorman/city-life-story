@@ -483,3 +483,4 @@
     RANDOM_EVENTS.push(WS_EVENTS[i]);
   }
 })();
+// [R108] 域D 联动增强
