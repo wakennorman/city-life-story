@@ -1136,3 +1136,4 @@ function getNpcJobRecommendation(state, limit) {
 // [R363] 域C
 // [R403] 域C
 // [R435] 域C
+// [R491] 域C
