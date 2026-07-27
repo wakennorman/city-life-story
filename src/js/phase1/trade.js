@@ -602,3 +602,4 @@ function getAvailableGoodsAtLocation(locKey, state) {
 // [R209] 域A 联动增强
 // [R257] 域A
 // [R305] 域A
+// [R353] 域A
