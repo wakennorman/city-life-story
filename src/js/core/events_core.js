@@ -1570,3 +1570,4 @@ function getEventHealthImpact(state, eventId) {
   for (var k in impact) total += Math.abs(impact[k]);
   return total;
 }
+// [R122] 域B 联动增强
