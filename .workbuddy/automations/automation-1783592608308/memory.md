@@ -500,3 +500,11 @@
 - 并发：本窗口修复+重建 dist 后，并行窗口以 e16b2689「R555 sync state」将 r554.js(含修复)+dist+p0-hotfix.md+loop-state(R554/G/next=H) 一并扫入提交。本窗口仅补 bookkeeping（MEMORY.md R554 节 + round-554 doc）。
 - 教训：假技能键污染会回潮（新建 linkage 文件落库前必 grep 假键数组）；悬空引用新形态（并行先挂 index.html 再建源=源未提交即悬空）。
 - 下轮：DOMAIN_H（recency 最薄弱候选）；开轮必 git log 重算。push 仍因代理 down 失败→本地积压（本轮未新增未推提交，修复已由并行上本地 main）。
+
+## 2026-07-28 00:15 R577 域G(核心机制/生命周期) — 已 push (77f50c48)
+- 选域：linkage 轮号重算 recency，G(r540) 最陈旧；避开并行 R576(D)/R580(F)。
+- A类3处：events_core 顶层死块(_eventEconomicImpact 永不写入)移入 recordEventToHistory；era_transform getEraEvents() 零调用接入 eraTick；world_params cv 除零守卫×2。
+- 联动3项(domain_g_linkage_r577.js)：g577_fresh_look_confidence(G→D 首消费_hairStyleBoost)/g577_era_ride(G→E 首消费_eraState.stageId)/g577_eventwise_acumen(G→A 首消费_eventEconomicImpact)。
+- 验证：node --check 全过；build 11969.6KB flag=2；MC 6×400d EXIT=0·0硬异常·前7天死亡0%。
+- 并发：源码+dist 被并行 fa6b9ac8 扫入；账本(CLAUDE.md R577行+round-577.md)由本窗口 77f50c48 闭环提交并 push 成功（代理在线）。
+- 下轮：DOMAIN_H(r568 最陈旧)，loop-state 已更新。

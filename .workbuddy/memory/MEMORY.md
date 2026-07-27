@@ -1,5 +1,12 @@
 # MEMORY — 城市浮生记 8域轮换优化循环（压缩版 2026-07-27 R535）
 
+## R577 增量要点（域G）
+- 域G三大写-only/欠消费核心机制flag已打通首消费：`_hairStyleBoost`+`_hairStyleLastDay`(g577,actions_extra.js:356)/`_eraState.stageId`(g577)/`_eventEconomicImpact`(g577)——勿重复选题。
+- 域G三处经典A类已修：events_core 顶层死块(eventId恒undefined)已移入 recordEventToHistory；era_transform `getEraEvents()` 零调用已接入 eraTick（title/story/effect 进 _pendingEraEvent）；world_params cv=stddev/mean 除零×2已加守卫——勿重复审。
+- **并发新形态：并行「集成提交」扫入源码但留 staged 账本**——fa6b9ac8 扫入本轮全部源码+dist，CLAUDE.md 行+round doc 被 stage 未提交→接手直接 commit 账本即可，勿重做源码。开轮判断顺序：`git show HEAD:<文件> | grep 本轮标记` 先核实实质改动是否已落库。
+- 推送已恢复：77f50c48 push origin main 成功（代理在线时正常推）。下轮 H(r568) 最陈旧。
+- recency 权威判定法：`ls src/js/core/ | grep -oE "domain_[a-h]_linkage.*r[0-9]+"` 按域取最大轮号排序，比 git log 翻阅更快。
+
 ## R535 增量要点
 - 域C三大零消费career flag已全部打通首消费：`_careerMonthlySnapshots`(c535,{day,salary,cash,bankBalance}×24滚动,career_dev.js:3415)/`_crossPathJobhop`+`_careerPathsWorked`(c535)/`_careerMaxLevelCelebrated`(c535)——勿重复选题。
 - **假技能键模板污染已全库清零**：并行chore轮反复复制 `["accounting","management","marketing","technology","social","trade"]` 数组（3假键静默丢弃XP）。开域C轮建议 grep `marketing.*technology` 复查防再犯。真实12键见下方state.js节。
