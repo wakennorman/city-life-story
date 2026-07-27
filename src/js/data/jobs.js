@@ -320,7 +320,7 @@ const STREET_JOBS = [
     desc: "在银行大厅维持秩序，站一天挺累的，但胜在稳定。偶尔能遇上运钞车押运的额外任务。",
     location: "bank",
     requirements: { minAge: 20, maxAge: 50 },
-    effects: { fatigue: 8, happiness: -2, physiqueXp: 0 },
+    effects: { fatigue: 8, happiness: -2, physiqueXp: 1 },
     payCalc: function (state) {
       return Math.floor(Random.float(60, 90));
     },
@@ -358,7 +358,7 @@ const STREET_JOBS = [
     desc: "给中小学生辅导功课。智力要求不高，但需要耐心和责任心。",
     icon: "📚",
     location: "school",
-    requirements: { intelligence: 20, minAge: 18 },
+    requirements: { intelligence: 20, minAge: 18, maxAge: 60 },
     effects: { fatigue: 8, intelligenceXp: 2, happiness: 5 },
     payCalc(state) {
       return Math.floor(
