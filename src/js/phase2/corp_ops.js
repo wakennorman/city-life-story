@@ -662,3 +662,4 @@ function getMarketCostMultiplier(state) {
 // [R192] 域H 联动增强
 // [R232] 域H 联动增强
 // [R264] 域H
+// [R288] 域H
