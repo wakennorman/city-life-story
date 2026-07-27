@@ -3266,6 +3266,16 @@ function applyCareerPromotion(pathId, levelId) {
   cap.partnerTrust = (cap.partnerTrust || 0) + 2;
   clampCareerCapital(cap);
 
+  // [全系统自洽修复] 域C 联动增强(C→A): 晋升时主技能XP奖励 — 晋升路径所需技能获得经验加成
+  if (level.reqSkills && state.skills) {
+    for (var _ps in level.reqSkills) {
+      if (typeof addSkillXp === "function" && state.skills[_ps]) {
+        var _xpGain = 20 + Math.floor((level.salary || 0) / 1000);
+        addSkillXp(_ps, _xpGain);
+      }
+    }
+  }
+
   // [全系统自洽修复] 域C 增强:晋升时同事好感提升(C→D)
   var _promoNet = state.corporate && state.corporate.colleagues && state.corporate.colleagues.network;
   if (_promoNet && _promoNet.length > 0) {
