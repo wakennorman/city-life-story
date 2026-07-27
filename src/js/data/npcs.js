@@ -348,11 +348,23 @@ var NPCS = [
       "年轻人要敢于尝试,失败了再来!",
     ],
     giftPrefers: ["food", "cooking", "daily_use"],
-    affinityRewards: {
-      30: { type: "dialogue", label: "小薇教你烧烤技巧", effect: { cookingXp: 10 } },
-      60: { type: "discount", label: "小薇给你摊位折扣", effect: { flag: "_xiaoWeiDiscount" } },
-      80: { type: "recipe", label: "小薇传授招牌菜秘方", effect: { flag: "_xiaoWeiRecipe", cookingXp: 30 } },
-    },
+    // [全系统自洽修复] 域A R532: 原affinityRewards为对象格式(30/60/80键)但引擎只处理数组格式→所有好感奖励均未生效(含xiaoWeiReferred→夜市帮工死工作)
+    affinityRewards: [
+      { threshold: 30, id: "xiao_wei_30", desc: "小薇教你烧烤技巧", effect: function (st) {
+        if (typeof addSkillXp === "function") { try { addSkillXp("cooking", 10); } catch(e) {} }
+        st.flags.xiaoWeiReferred = true; // 解锁夜市帮工工作
+        StateManager.addMessage("💕 小薇：「来来来，我教你几招烧烤技巧！」好感到30，你学会了基础烹饪。", "success");
+      }},
+      { threshold: 60, id: "xiao_wei_60", desc: "小薇给你摊位折扣", effect: function (st) {
+        st.flags._xiaoWeiDiscount = true;
+        StateManager.addMessage("💕 小薇：「以后来我摊位，给你打折！」好感到60，获得摊位折扣。", "success");
+      }},
+      { threshold: 80, id: "xiao_wei_80", desc: "小薇传授招牌菜秘方", effect: function (st) {
+        st.flags._xiaoWeiRecipe = true;
+        if (typeof addSkillXp === "function") { try { addSkillXp("cooking", 30); } catch(e) {} }
+        StateManager.addMessage("💕 小薇：「这个秘方我只传给你一个人。」好感到80，烹饪EXP+30！", "success");
+      }},
+    ],
     met: false,
   },
   {
@@ -3720,3 +3732,4 @@ function getNpcsAtLocation(locKey) {
 
 // P1-2 CLS 命名空间注册
 if (typeof window.CLS !== 'undefined' && window.CLS.data) window.CLS.data.NPCS = NPCS;
+// [R92] 域D 联动增强
