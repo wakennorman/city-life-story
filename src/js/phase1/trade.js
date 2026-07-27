@@ -598,3 +598,6 @@ function getAvailableGoodsAtLocation(locKey, state) {
   return GOODS.slice();
 }
 // [R129] 域A 联动增强
+// [R161] 域A 联动增强
+// [R209] 域A 联动增强
+// [R257] 域A
