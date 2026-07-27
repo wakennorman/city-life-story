@@ -90,9 +90,9 @@
         return (st.flags && !st.flags._a497MarketFriendTipCooldown);
       },
       choices: [
-        { text: "🤫 试试水", hint: "贸易XP+4,好感+2", apply: function (st) {
+        { text: "🤫 试试水", hint: "销售XP+4,好感+2", apply: function (st) {
           if (!st) return; st.flags = st.flags || {}; st.flags._a497MarketFriendTipCooldown = true;
-          if (typeof addSkillXp === "function") { try { addSkillXp("trade", 4); } catch(e) {} }
+          if (typeof addSkillXp === "function") { try { addSkillXp("sales", 4); } catch(e) {} } // [全系统自洽修复] 域B R572 修复:addSkillXp("trade")非真实技能键(XP静默丢弃)→映射sales
           var nid = firstMetNpc(st); bumpAffinity(st, nid, 2, "分享了市场信息");
           if (typeof StateManager !== "undefined") StateManager.addMessage("🤫 你根据朋友的消息试了试——'真的挺好卖的！' 贸易XP+4,好感+2。", "success");
         }},

@@ -79,16 +79,16 @@
         return (st.flags && !st.flags._h434CorpStrategyCooldown);
       },
       choices: [
-        { text: "📈 全力扩张市场份额", hint: "营销XP+5,公司知名度+3", apply: function (st) {
+        { text: "📈 全力扩张市场份额", hint: "社交XP+5,公司知名度+3", apply: function (st) {
           if (!st) return; st.flags = st.flags || {}; st.flags._h434CorpStrategyCooldown = true;
-          grantXp("marketing", 5);
+          grantXp("social", 5); // [全系统自洽修复] 域B R572 修复:grantXp("marketing")非真实技能键(XP静默丢弃)→映射social(营销=社交)
           if (st.corporate) st.corporate.reputation = Math.min(100, (st.corporate.reputation || 0) + 3);
-          if (typeof StateManager !== "undefined") StateManager.addMessage("📋 '先占领市场再谈利润'——这个战略方向在业内引起了讨论。营销XP+5,公司知名度+3。", "success");
+          if (typeof StateManager !== "undefined") StateManager.addMessage("📋 '先占领市场再谈利润'——这个战略方向在业内引起了讨论。社交XP+5,公司知名度+3。", "success");
         }},
-        { text: "🔬 深耕产品研发", hint: "技术XP+5,产品质量+3", apply: function (st) {
+        { text: "🔬 深耕产品研发", hint: "编程XP+5,产品质量+3", apply: function (st) {
           if (!st) return; st.flags = st.flags || {}; st.flags._h434CorpStrategyCooldown = true;
-          grantXp("technology", 5);
-          if (typeof StateManager !== "undefined") StateManager.addMessage("📋 '产品为王'——你决定把资源砸在研发上。这条路慢，但扎实。技术XP+5。", "success");
+          grantXp("coding", 5); // [全系统自洽修复] 域B R572 修复:grantXp("technology")非真实技能键(XP静默丢弃)→映射coding(技术=编程)
+          if (typeof StateManager !== "undefined") StateManager.addMessage("📋 '产品为王'——你决定把资源砸在研发上。这条路慢，但扎实。编程XP+5。", "success");
         }},
         { text: "🤝 寻求战略合作", hint: "人脉+3,社交XP+3", apply: function (st) {
           if (!st) return; st.flags = st.flags || {}; st.flags._h434CorpStrategyCooldown = true;

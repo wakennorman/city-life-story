@@ -27,7 +27,7 @@
       choices: [
         { text: "📈 回顾技能成长", hint: "全技能XP+2,心智+2", apply: function (st) {
           if (!st) return; st.flags = st.flags || {}; st.flags._g495SkillMilestoneCooldown = true;
-          var skills = ["accounting", "management", "marketing", "technology", "social", "trade"];
+          var skills = ["accounting", "management", "social", "coding", "sales"]; // [全系统自洽修复] 域B R572 修复:marketing/technology/trade非真实技能键(addSkillXp静默丢弃XP)→映射social/coding/sales
           for (var i = 0; i < skills.length; i++) { if (typeof addSkillXp === "function") { try { addSkillXp(skills[i], 2); } catch(e) {} } }
           if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 2);
           if (typeof StateManager !== "undefined") StateManager.addMessage("📈 '工作这么多年，我的技能已经不可同日而语了。' 全技能XP+2,心智+2。", "success");

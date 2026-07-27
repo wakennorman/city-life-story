@@ -34,7 +34,7 @@
         }},
         { text: "📚 深造提升技能", hint: "随机技能XP+5", apply: function (st) {
           if (!st) return; st.flags = st.flags || {}; st.flags._c448SkillInvestCooldown = true;
-          var skills = ["accounting", "management", "marketing", "technology", "social"];
+          var skills = ["accounting", "management", "social", "coding"]; // [全系统自洽修复] 域B R572 修复:marketing/technology/trade非真实技能键(addSkillXp静默丢弃XP)→映射social/coding/sales
           var sk = skills[Math.floor(Math.random() * skills.length)];
           // 注：此处的Math.random后续由种子化系统统一覆盖
           if (typeof addSkillXp === "function") { try { addSkillXp(sk, 5); } catch(e) {} }

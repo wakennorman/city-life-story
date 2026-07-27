@@ -99,7 +99,7 @@
       choices: [
         { text: "🌱 制定学习计划", hint: "全技能XP+2,心智+2", apply: function (st) {
           if (!st) return; st.flags = st.flags || {}; st.flags._g456SkillEvolveCooldown = true;
-          var skills = ["accounting", "management", "marketing", "technology", "social", "trade"];
+          var skills = ["accounting", "management", "social", "coding", "sales"]; // [全系统自洽修复] 域B R572 修复:marketing/technology/trade非真实技能键(addSkillXp静默丢弃XP)→映射social/coding/sales
           for (var i = 0; i < skills.length; i++) { if (typeof addSkillXp === "function") { try { addSkillXp(skills[i], 2); } catch(e) {} } }
           if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 2);
           if (typeof StateManager !== "undefined") StateManager.addMessage("🌱 你制定了未来半年的学习计划——每个阶段学什么，达到什么水平，清清楚楚。全技能XP+2,心智+2。", "success");

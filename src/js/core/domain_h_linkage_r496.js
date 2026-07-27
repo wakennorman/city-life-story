@@ -70,7 +70,7 @@
         { text: "📚 定期培训", hint: "管理XP+5,全技能XP+2", apply: function (st) {
           if (!st) return; st.flags = st.flags || {}; st.flags._h496SkillSchoolCooldown = true;
           if (typeof addSkillXp === "function") { try { addSkillXp("management", 5); } catch(e) {} }
-          var skills = ["accounting", "management", "marketing", "technology", "social", "trade"];
+          var skills = ["accounting", "management", "social", "coding", "sales"]; // [全系统自洽修复] 域B R572 修复:marketing/technology/trade非真实技能键(addSkillXp静默丢弃XP)→映射social/coding/sales
           for (var i = 0; i < skills.length; i++) { if (typeof addSkillXp === "function") { try { addSkillXp(skills[i], 2); } catch(e) {} } }
           if (typeof StateManager !== "undefined") StateManager.addMessage("📚 你建立了公司内部培训体系——'最好的公司，是一所大学。' 管理XP+5,全技能XP+2。", "success");
         }},

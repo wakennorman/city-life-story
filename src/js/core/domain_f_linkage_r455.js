@@ -100,7 +100,7 @@
       choices: [
         { text: "📚 花时间练习", hint: "全技能XP+2,疲劳+2", apply: function (st) {
           if (!st) return; st.flags = st.flags || {}; st.flags._f455SkillProgressCooldown = true;
-          var skills = ["accounting", "management", "marketing", "technology", "social", "trade"];
+          var skills = ["accounting", "management", "social", "coding", "sales"]; // [全系统自洽修复] 域B R572 修复:marketing/technology/trade非真实技能键(addSkillXp静默丢弃XP)→映射social/coding/sales
           for (var i = 0; i < skills.length; i++) { if (typeof addSkillXp === "function") { try { addSkillXp(skills[i], 2); } catch(e) {} } }
           if (st.needs) st.needs.fatigue = Math.min(100, (st.needs.fatigue || 0) + 2);
           if (typeof StateManager !== "undefined") StateManager.addMessage("📈 你花了一整天练习技能——虽然累，但看着经验条往上涨，很有成就感。全技能XP+2,疲劳+2。", "success");
@@ -109,7 +109,7 @@
           if (!st) return; st.flags = st.flags || {}; st.flags._f455SkillProgressCooldown = true;
           if (st.resources && st.resources.cash >= 1000) {
             st.resources.cash -= 1000;
-            var skills = ["accounting", "management", "marketing", "technology", "social", "trade"];
+            var skills = ["accounting", "management", "social", "coding", "sales"]; // [全系统自洽修复] 域B R572 修复:marketing/technology/trade非真实技能键(addSkillXp静默丢弃XP)→映射social/coding/sales
             var sk = skills[Math.floor(Math.random() * skills.length)];
             if (typeof addSkillXp === "function") { try { addSkillXp(sk, 5); } catch(e) {} }
             if (typeof StateManager !== "undefined") StateManager.addMessage("📈 你报了个培训班——花钱投资自己，是最值的投资。随机技能XP+5,花费¥1000。", "success");

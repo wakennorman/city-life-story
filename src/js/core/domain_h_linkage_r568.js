@@ -59,7 +59,7 @@
         { text: "📚 开设课程", hint: "管理XP+5,全技能XP+2,团队忠诚+2", apply: function (st) {
           if (!st) return; st.flags = st.flags || {}; st.flags._h568SkillAcademyCooldown = true;
           if (typeof addSkillXp === "function") { try { addSkillXp("management", 5); } catch(e) {} }
-          var skills = ["accounting", "management", "marketing", "technology", "social", "trade"];
+          var skills = ["accounting", "management", "social", "coding", "sales"]; // [全系统自洽修复] 域B R572 修复:marketing/technology/trade非真实技能键(addSkillXp静默丢弃XP)→映射social/coding/sales
           for (var i = 0; i < skills.length; i++) { if (typeof addSkillXp === "function") { try { addSkillXp(skills[i], 2); } catch(e) {} } }
           var t = st.corporate && st.corporate.team;
           if (t) { for (var i = 0; i < t.length; i++) { if (t[i]) t[i].loyalty = Math.min(100, (t[i].loyalty || 50) + 2); } }
