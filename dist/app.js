@@ -167356,6 +167356,7 @@ if (typeof window !== "undefined") {
 // [R220] 域D 联动增强
 // [R244] 域D 联动增强
 // [R276] 域D
+// [R340] 域D
 
 ;
 // ==== js/core/enterprise_fate.js ====
@@ -173240,6 +173241,7 @@ function getSkillChineseName(skillKey) {
   };
   return names[skillKey] || skillKey;
 }
+// [R339] 域C
 
 ;
 // ==== js/core/equipment_suites.js ====
@@ -187370,6 +187372,7 @@ function getSkillMarketValue(skillId) {
 // [R201] 域A 联动增强
 // [R249] 域A 联动增强
 // [R297] 域A
+// [R345] 域A
 
 ;
 // ==== js/data/npcs.js ====
@@ -200956,6 +200959,7 @@ if (typeof window !== "undefined") {
     RANDOM_EVENTS.push(perf_s_streak_celebration, perf_lowpoint_reflection, perf_comeback_story);
   }
 })();
+// [R338] 域B
 
 ;
 // ==== js/data/domain_c_linkage_r173.js ====
@@ -221558,6 +221562,7 @@ function refreshStockMarket(state) {
 // [R221] 域E 联动增强
 // [R245] 域E 联动增强
 // [R317] 域E
+// [R341] 域E
 
 ;
 // ==== js/phase2/corp_ops.js ====
@@ -242707,6 +242712,7 @@ function manageInventoryAction(state, inventoryType, action, amount) {
 // [R272] 域H
 // [R296] 域H
 // [R320] 域H
+// [R344] 域H
 
 ;
 // ==== js/phase2/corp_legacy_bonus.js ====
@@ -286565,6 +286571,7 @@ function renderFinanceTab(state, parent) {
 // [R270] 域F
 // [R294] 域F
 // [R318] 域F
+// [R342] 域F
 
 ;
 // ==== js/ui/corp_ui.js ====
@@ -314592,6 +314599,7 @@ if (typeof registerNewsEventsToPool === "function") registerNewsEventsToPool();
 // [R271] 域G
 // [R295] 域G
 // [R319] 域G
+// [R343] 域G
 
 ;
 // ==== js/data/scenario_start_chains.js ====
