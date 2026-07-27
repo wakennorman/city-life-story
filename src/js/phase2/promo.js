@@ -192,3 +192,4 @@ function getPromotionProgress(state) {
   const allMet = checks.every((ch) => ch.current >= ch.target);
   return { done: allMet, checks, nextRank: rankData.next };
 }
+// [R112] 域H 联动增强
