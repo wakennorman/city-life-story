@@ -12,6 +12,9 @@
 
 // ====== 工具函数 ======
 
+// [全系统自洽修复] 域H R434 A类: 确定性计数器替代 Date.now() 生成ID
+var _domainHIdCounter = 0;
+
 // _esc 转义函数由 render.js 全局提供
 
 // ====== 办公地点系统 ======
@@ -2878,7 +2881,7 @@ function createPartner(company, partnerType, day) {
   const partnerTemplate = PARTNER_TYPES[partnerType];
 
   const partner = {
-    id: "partner_" + company.id + "_" + Date.now(),
+    id: "partner_" + company.id + "_" + (++_domainHIdCounter),
     type: partnerType,
     name:
       template.namePrefix + Random.fromArray(["科技", "集团", "控股", "股份"]),
@@ -3363,7 +3366,7 @@ function createSupplier(company, supplierType, day) {
   );
 
   const supplier = {
-    id: "supplier_" + company.id + "_" + Date.now(),
+    id: "supplier_" + company.id + "_" + (++_domainHIdCounter),
     type: supplierType,
     name:
       template.namePrefix + Random.fromArray(["科技", "实业", "集团", "材料"]),
