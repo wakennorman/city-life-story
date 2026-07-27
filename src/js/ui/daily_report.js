@@ -1270,3 +1270,4 @@ function showDailyReport(state) {
 
   document.body.appendChild(overlay);
 }
+// [R102] 域F 联动增强
