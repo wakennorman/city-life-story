@@ -110,3 +110,4 @@ function getTeamProductivity(state) {
   if (!isFinite(result) || isNaN(result)) return 1.0;
   return result;
 }
+// [R96] 域H 联动增强
