@@ -163975,7 +163975,7 @@ function generateNewCompany(industryOverride) {
   const culture = Random.fromArray(CULTURE_TAGS);
 
   const companyId =
-    "comp_" + Date.now() + "_" + Random.int(0, 0xffffff).toString(36);
+    "comp_" + Random.int(100000, 999999) + "_" + Random.int(0, 0xffffff).toString(36);
   const companyName = generateCompanyName();
   const stockSymbol = generateStockSymbol();
 
@@ -164177,7 +164177,7 @@ function spawnFromRuins(state, deceasedCompany) {
   var culture = Random.fromArray(CULTURE_TAGS);
 
   var companyId =
-    "comp_ruins_" + Date.now() + "_" + Random.int(0, 0xffffff).toString(36);
+    "comp_ruins_" + Random.int(100000, 999999) + "_" + Random.int(0, 0xffffff).toString(36);
   var companyName = generateCompanyName();
   var stockSymbol = generateStockSymbol();
 
@@ -197094,7 +197094,7 @@ function buyGood(goodId, qty) {
   // [全系统自洽修复] 域B R174 A类#1: cash裸访问→NaN防刷钱
   if ((Number(state.resources.cash) || 0) < totalCost) {
     StateManager.addMessage(
-      `⚠️ 钱不够！需要 ¥${totalCost.toFixed(1)}，你只有 ¥${state.resources.cash}。`,
+      `⚠️ 钱不够！需要 ¥${totalCost.toFixed(1)}，你只有 ¥${(state.resources.cash || 0).toFixed(1)}。`,
       "danger",
     );
     return false;
@@ -198188,14 +198188,14 @@ function buyInfoFromNpc(npcId, infoTypeId, state) {
     };
   }
 
-  if (state.resources.cash < cost) {
+  if ((state.resources.cash || 0) < cost) {
     return {
       success: false,
       message: "⚠️ 钱不够，需要 ¥" + cost + "。",
     };
   }
 
-  state.resources.cash -= cost;
+  state.resources.cash = Math.max(0, (state.resources.cash || 0) - cost);
 
   // 销售技能微量增长
   if (state.skills && state.skills.sales) {
@@ -209690,6 +209690,27 @@ function checkMarketEvents(state) {
       );
     }
   }
+
+  // [全系统自洽修复] 域A R51 联动增强(A→B): 价格波动周报
+  if (state.trade && state.trade.supplyDemand && state.player.day % 7 === 0) {
+    var _maxFluct = 0, _maxGood = "", _maxLoc = "";
+    for (var _loc in state.trade.supplyDemand) {
+      for (var _gid in state.trade.supplyDemand[_loc]) {
+        var _sd = state.trade.supplyDemand[_loc][_gid] || 0;
+        if (Math.abs(_sd) > Math.abs(_maxFluct)) {
+          _maxFluct = _sd;
+          _maxGood = _gid;
+          _maxLoc = _loc;
+        }
+      }
+    }
+    if (Math.abs(_maxFluct) >= 20) {
+      var _dir = _maxFluct > 0 ? "📈 涨价" : "📉 降价";
+      var _locName = (typeof getLocation === "function" && getLocation(_maxLoc)) ? getLocation(_maxLoc).name : _maxLoc;
+      var _goodName = (typeof getGoodById === "function" && getGoodById(_maxGood)) ? getGoodById(_maxGood).name : _maxGood;
+      StateManager.addMessage("📊 市场周报：" + _locName + "的" + _goodName + _dir + "显著（供需偏移" + _maxFluct + "点），精明商人正在调整策略。", "info");
+    }
+  }
 }
 
 /** 市场事件对某商品的价格修正 */
@@ -214708,9 +214729,12 @@ function endQuarter() {
       burnoutMsg += " 连续的高压工作让你开始怀疑自己是否还能撑下去。";
       state.needs.fatigue = Math.min(100, (state.needs.fatigue || 0) + 5);
       state.needs.happiness = Math.max(0, (state.needs.happiness || 50) - 5);
+      // [域H R416 联动增强] H→G: 高压职场→健康损耗
+      if (state.status) state.status.health = Math.max(0, (state.status.health || 100) - 2);
     } else {
       burnoutMsg += " 你告诉自己再坚持一下，但身体在发出警告。";
       state.needs.fatigue = Math.min(100, (state.needs.fatigue || 0) + 3);
+      if (state.status) state.status.health = Math.max(0, (state.status.health || 100) - 1);
     }
     StateManager.addMessage(burnoutMsg, "warning");
   }
@@ -214771,6 +214795,11 @@ function endQuarter() {
     if (_emp > 0) {
       StateManager.addMessage("🏢 公司状态：团队" + _emp + "人 · 现金¥" + Math.round(_cash).toLocaleString() + " · 可维持约" + _runway + "天", "info");
     }
+    // [域H R416 联动增强] H→A: 公司运营数据写入经济印记 — 供经济系统感知企业活力
+    if (!state.flags) state.flags = {};
+    state.flags._lastCorpQuarterRevenue = _company.revenue || 0;
+    state.flags._lastCorpQuarterEmployees = _emp;
+    state.flags._lastCorpQuarterBurn = _burn;
   }
 
   if (typeof autoSave === "function") autoSave("milestone");
@@ -269015,6 +269044,31 @@ function renderCorporateActions(state) {
     </div>
   `;
   area.appendChild(actBarDiv);
+
+  // [域H R416 联动增强] H→F: 公司健康度指示器 — 当玩家有创业公司时显示核心指标
+  if (state.startup && state.startup.company && state.startup.status !== "none") {
+    try {
+      var _sCo = state.startup.company;
+      var _sCash = _sCo.cashReserve || 0;
+      var _sEmp = (_sCo.employees || []).length;
+      var _sBurn = _sCo.burnRate || 0;
+      var _sRunway = _sBurn > 0 ? Math.round(_sCash / _sBurn * 30) : 999;
+      var _sRevenue = _sCo.revenue || 0;
+      var _sHealth = _sCo.health !== undefined ? _sCo.health : 70;
+      var _sHealthColor = _sHealth >= 70 ? "var(--success)" : _sHealth >= 40 ? "var(--warning)" : "var(--danger)";
+      var healthDiv = document.createElement("div");
+      healthDiv.style.cssText = "padding:8px 12px;margin:6px 0;background:rgba(0,180,216,0.06);border:1px solid rgba(0,180,216,0.15);border-radius:6px;font-size:11px;";
+      healthDiv.innerHTML = '<div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:4px;">' +
+        '<span><strong>🚀 创业公司</strong> ' + (_sCo.name || "未命名") + '</span>' +
+        '<span style="color:' + _sHealthColor + ';">健康度 ' + _sHealth + '%</span>' +
+        '<span>现金 ¥' + Math.round(_sCash).toLocaleString() + '</span>' +
+        '<span>团队 ' + _sEmp + '人</span>' +
+        '<span style="color:' + (_sRunway < 30 ? 'var(--danger)' : 'var(--text-muted)') + ';">⏳ ' + _sRunway + '天</span>' +
+        (_sRevenue > 0 ? '<span style="color:var(--success);">营收 ¥' + Math.round(_sRevenue / 90).toLocaleString() + '/天</span>' : '') +
+        '</div>';
+      area.appendChild(healthDiv);
+    } catch (e) { /* 静默 */ }
+  }
 
   // 晋升进度条 (Q3前显示)
   if (state.player.corpQuarter === 3 && state.corporate.rank !== "P10") {

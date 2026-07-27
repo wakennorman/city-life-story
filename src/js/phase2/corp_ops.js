@@ -402,9 +402,12 @@ function endQuarter() {
       burnoutMsg += " 连续的高压工作让你开始怀疑自己是否还能撑下去。";
       state.needs.fatigue = Math.min(100, (state.needs.fatigue || 0) + 5);
       state.needs.happiness = Math.max(0, (state.needs.happiness || 50) - 5);
+      // [域H R416 联动增强] H→G: 高压职场→健康损耗
+      if (state.status) state.status.health = Math.max(0, (state.status.health || 100) - 2);
     } else {
       burnoutMsg += " 你告诉自己再坚持一下，但身体在发出警告。";
       state.needs.fatigue = Math.min(100, (state.needs.fatigue || 0) + 3);
+      if (state.status) state.status.health = Math.max(0, (state.status.health || 100) - 1);
     }
     StateManager.addMessage(burnoutMsg, "warning");
   }
@@ -465,6 +468,11 @@ function endQuarter() {
     if (_emp > 0) {
       StateManager.addMessage("🏢 公司状态：团队" + _emp + "人 · 现金¥" + Math.round(_cash).toLocaleString() + " · 可维持约" + _runway + "天", "info");
     }
+    // [域H R416 联动增强] H→A: 公司运营数据写入经济印记 — 供经济系统感知企业活力
+    if (!state.flags) state.flags = {};
+    state.flags._lastCorpQuarterRevenue = _company.revenue || 0;
+    state.flags._lastCorpQuarterEmployees = _emp;
+    state.flags._lastCorpQuarterBurn = _burn;
   }
 
   if (typeof autoSave === "function") autoSave("milestone");

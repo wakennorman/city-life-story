@@ -1,1 +1,1 @@
-{"lastRound":428,"lastDomain":"E","lastDate":"2026-07-27","lastCommit":"0e56c873","domainRecency":{"A":423,"B":418,"C":424,"D":427,"E":428,"F":421,"G":422,"H":425},"nextDomain":"B","note":"R428 域E: 0A类+3联动. 已推 ✅. 下轮域B(recency=418)"}
+{"lastRound":429,"lastDomain":"B","lastDate":"2026-07-27","lastCommit":"8cd9f5f2","domainRecency":{"A":423,"B":429,"C":424,"D":427,"E":428,"F":421,"G":422,"H":425},"nextDirection":"F5_MC_CONTENT","note":"R429 域B: 0A类+3联动. 本地待推⚠️. 🔄战略转向:数据层优化已完成,后续loop自动进入三大方向:①本地F5玩法测试②MC蒙特卡洛平衡验证③新内容开发. 详见 memory/development-direction-pivot.md"}

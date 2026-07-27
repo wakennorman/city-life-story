@@ -435,6 +435,27 @@ function checkMarketEvents(state) {
       );
     }
   }
+
+  // [全系统自洽修复] 域A R51 联动增强(A→B): 价格波动周报
+  if (state.trade && state.trade.supplyDemand && state.player.day % 7 === 0) {
+    var _maxFluct = 0, _maxGood = "", _maxLoc = "";
+    for (var _loc in state.trade.supplyDemand) {
+      for (var _gid in state.trade.supplyDemand[_loc]) {
+        var _sd = state.trade.supplyDemand[_loc][_gid] || 0;
+        if (Math.abs(_sd) > Math.abs(_maxFluct)) {
+          _maxFluct = _sd;
+          _maxGood = _gid;
+          _maxLoc = _loc;
+        }
+      }
+    }
+    if (Math.abs(_maxFluct) >= 20) {
+      var _dir = _maxFluct > 0 ? "📈 涨价" : "📉 降价";
+      var _locName = (typeof getLocation === "function" && getLocation(_maxLoc)) ? getLocation(_maxLoc).name : _maxLoc;
+      var _goodName = (typeof getGoodById === "function" && getGoodById(_maxGood)) ? getGoodById(_maxGood).name : _maxGood;
+      StateManager.addMessage("📊 市场周报：" + _locName + "的" + _goodName + _dir + "显著（供需偏移" + _maxFluct + "点），精明商人正在调整策略。", "info");
+    }
+  }
 }
 
 /** 市场事件对某商品的价格修正 */
@@ -885,4 +906,31 @@ function getPriceTrendIcon(locKey, goodId) {
   if (shock > 0.05) return "📈";
   if (shock < -0.05) return "📉";
   return "➡️";
+}
+
+// [全系统自洽修复] 域A R51 联动增强(A→C): 技能驱动的市场分析 — 返回基于销售技能的价格洞察文本
+function getSkillPriceInsight(state, locKey, goodId) {
+  if (!state || !state.skills) return "";
+  var salesLevel = (state.skills.sales && state.skills.sales.level) || 0;
+  if (salesLevel < 20) return "";
+  var good = getGoodById(goodId);
+  if (!good) return "";
+  var basePrice = good.basePrice || 0;
+  var currentPrice = 0;
+  if (typeof calcFinalPrice === "function") {
+    currentPrice = calcFinalPrice(state, locKey, goodId);
+  }
+  if (currentPrice <= 0) return "";
+  var ratio = currentPrice / basePrice;
+  var insight = "";
+  if (ratio > 1.3) insight = "当前价格偏高，适合出货";
+  else if (ratio > 1.15) insight = "价格处于高位，可考虑卖出";
+  else if (ratio < 0.7) insight = "当前价格偏低，适合囤货";
+  else if (ratio < 0.85) insight = "价格处于低位，可考虑买入";
+  else insight = "价格在合理区间波动";
+  if (salesLevel >= 50) {
+    var trend = getPriceTrendIcon(locKey, goodId);
+    insight = trend + " " + insight + "（销售Lv." + salesLevel + "分析）";
+  }
+  return insight;
 }

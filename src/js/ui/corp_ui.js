@@ -80,6 +80,31 @@ function renderCorporateActions(state) {
   `;
   area.appendChild(actBarDiv);
 
+  // [域H R416 联动增强] H→F: 公司健康度指示器 — 当玩家有创业公司时显示核心指标
+  if (state.startup && state.startup.company && state.startup.status !== "none") {
+    try {
+      var _sCo = state.startup.company;
+      var _sCash = _sCo.cashReserve || 0;
+      var _sEmp = (_sCo.employees || []).length;
+      var _sBurn = _sCo.burnRate || 0;
+      var _sRunway = _sBurn > 0 ? Math.round(_sCash / _sBurn * 30) : 999;
+      var _sRevenue = _sCo.revenue || 0;
+      var _sHealth = _sCo.health !== undefined ? _sCo.health : 70;
+      var _sHealthColor = _sHealth >= 70 ? "var(--success)" : _sHealth >= 40 ? "var(--warning)" : "var(--danger)";
+      var healthDiv = document.createElement("div");
+      healthDiv.style.cssText = "padding:8px 12px;margin:6px 0;background:rgba(0,180,216,0.06);border:1px solid rgba(0,180,216,0.15);border-radius:6px;font-size:11px;";
+      healthDiv.innerHTML = '<div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:4px;">' +
+        '<span><strong>🚀 创业公司</strong> ' + (_sCo.name || "未命名") + '</span>' +
+        '<span style="color:' + _sHealthColor + ';">健康度 ' + _sHealth + '%</span>' +
+        '<span>现金 ¥' + Math.round(_sCash).toLocaleString() + '</span>' +
+        '<span>团队 ' + _sEmp + '人</span>' +
+        '<span style="color:' + (_sRunway < 30 ? 'var(--danger)' : 'var(--text-muted)') + ';">⏳ ' + _sRunway + '天</span>' +
+        (_sRevenue > 0 ? '<span style="color:var(--success);">营收 ¥' + Math.round(_sRevenue / 90).toLocaleString() + '/天</span>' : '') +
+        '</div>';
+      area.appendChild(healthDiv);
+    } catch (e) { /* 静默 */ }
+  }
+
   // 晋升进度条 (Q3前显示)
   if (state.player.corpQuarter === 3 && state.corporate.rank !== "P10") {
     const progress = getPromotionProgress(state);

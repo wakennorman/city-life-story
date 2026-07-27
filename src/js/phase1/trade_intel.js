@@ -572,14 +572,14 @@ function buyInfoFromNpc(npcId, infoTypeId, state) {
     };
   }
 
-  if (state.resources.cash < cost) {
+  if ((state.resources.cash || 0) < cost) {
     return {
       success: false,
       message: "⚠️ 钱不够，需要 ¥" + cost + "。",
     };
   }
 
-  state.resources.cash -= cost;
+  state.resources.cash = Math.max(0, (state.resources.cash || 0) - cost);
 
   // 销售技能微量增长
   if (state.skills && state.skills.sales) {
