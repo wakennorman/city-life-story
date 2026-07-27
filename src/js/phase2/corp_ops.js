@@ -673,3 +673,4 @@ function getMarketCostMultiplier(state) {
 // [R504] 域H
 // [R528] 域H
 // [R552] 域H
+// [R576] 域H
