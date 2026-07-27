@@ -1217,4 +1217,5 @@ if (typeof module !== "undefined" && module.exports) {
     triggerStartupEvent,
     showStartupEventModal,
   };
-}
+}// [R178] 域B 联动增强
+// [R274] 域B
