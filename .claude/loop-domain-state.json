@@ -1,1 +1,1 @@
-{"lastRound":421,"lastDomain":"F","lastDate":"2026-07-27","lastCommit":"f8f0369a","domainRecency":{"A":414,"B":418,"C":416,"D":419,"E":420,"F":421,"G":415,"H":417},"nextDomain":"G","note":"R421 域F: 0A类+3联动. 已推 ✅. 下轮域G(recency=415最薄弱)"}
+{"lastRound":426,"lastDomain":"B","lastDate":"2026-07-27","lastCommit":"d3cdcd96","domainRecency":{"A":423,"B":426,"C":424,"D":419,"E":420,"F":421,"G":422,"H":425},"nextDomain":"D","pushStatus":"PUSHED","note":"R426 域B: 3A类(needs.health死字段×2文件+image NaN)+3联动(image四维首消费). 下轮域D(recency=419最薄弱)"}
