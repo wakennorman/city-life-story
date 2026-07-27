@@ -547,10 +547,24 @@ function tickNpcRelationships(state) {
   if (typeof _checkNpcInvestmentTipR233 === "function") {
     _checkNpcInvestmentTipR233(state);
   }
-  // [R235 域E联动增强3] E→D 财富社交效应（现金/债务水平影响NPC好感）
+  // [R235 域E联动增强3] E→D 财富社交效应
   if (typeof _applyWealthSocialEffectR235 === "function") {
     _applyWealthSocialEffectR235(state);
   }
+  // 域D联动增强(D→G): 社交圈健康恢复 — 每天基于好友数给予被动健康恢复
+  try {
+    var _hrCount = 0;
+    for (var _hrId in state.relationships) {
+      var _hr = state.relationships[_hrId];
+      if (_hr && _hr.met && (_hr.affinity || 0) >= 40) _hrCount++;
+    }
+    if (_hrCount >= 3 && state.status) {
+      var _hrBonus = Math.min(2, Math.floor(_hrCount / 3));
+      if (_hrBonus > 0 && state.status.health < 100) {
+        state.status.health = Math.min(100, (state.status.health || 50) + _hrBonus);
+      }
+    }
+  } catch (e) {}
 }
 
 /** [全系统自洽修复] 域D 修复:NPC id→中文名，替代 replace(/_/g," ") 展示的原始 id */

@@ -727,7 +727,43 @@ function renderSocialOverviewTab(state, content) {
     '<p style="font-size:11px;color:var(--text-muted);">💡 人脉就是资源。维护好家庭关系和职场人脉，它们会在关键时刻帮到你。</p>';
   html +=
     '<p style="font-size:11px;color:var(--text-muted);margin-top:4px;">🔹 家庭关系影响心态稳定 · 🔹 职场关系影响晋升和绩效</p>';
-  html += "</div>";
+  // [全系统自洽修复] 域D 联动增强(D→F): 社交关系质量分布 — 按好感等级分组的可视化柱状图
+  try {
+    var _affLevels = { "挚友(≥80)": 0, "好友(≥60)": 0, "熟人(≥30)": 0, "初识(<30)": 0 };
+    var _affRels = state.relationships || {};
+    for (var _ari in _affRels) {
+      var _ar = _affRels[_ari];
+      if (_ar && _ar.met) {
+        var _a = _ar.affinity || 0;
+        if (_a >= 80) _affLevels["挚友(≥80)"]++;
+        else if (_a >= 60) _affLevels["好友(≥60)"]++;
+        else if (_a >= 30) _affLevels["熟人(≥30)"]++;
+        else _affLevels["初识(<30)"]++;
+      }
+    }
+    var _affTotal = Object.values(_affLevels).reduce(function(a,b){return a+b;}, 0);
+    if (_affTotal > 0) {
+      html += '<div class="section" style="margin-top:8px;"><h3>📊 好感分布</h3>';
+      html += '<div class="card" style="padding:10px;">';
+      html += '<div style="display:flex;gap:2px;height:32px;align-items:flex-end;margin-bottom:4px;">';
+      var _affColors = ["#4caf50", "#8bc34a", "#ffc107", "#9e9e9e"];
+      var _affKeys = Object.keys(_affLevels);
+      for (var _ai = 0; _ai < _affKeys.length; _ai++) {
+        var _cnt = _affLevels[_affKeys[_ai]];
+        var _pct = _affTotal > 0 ? _cnt / _affTotal * 100 : 0;
+        html += '<div style="flex:1;text-align:center;">';
+        html += '<div style="height:' + Math.max(3, _pct) + '%;background:' + _affColors[_ai] + ';border-radius:2px 2px 0 0;min-height:3px;"></div>';
+        html += '<div style="font-size:8px;color:var(--text-muted);margin-top:2px;">' + _cnt + '</div>';
+        html += '</div>';
+      }
+      html += '</div>';
+      html += '<div style="display:flex;justify-content:space-between;font-size:8px;color:var(--text-muted);">';
+      for (var _li = 0; _li < _affKeys.length; _li++) {
+        html += '<span>' + _affKeys[_li] + '</span>';
+      }
+      html += '</div></div></div>';
+    }
+  } catch (e) {}
 
   html += "</div>";
   content.innerHTML = html;
@@ -865,96 +901,4 @@ function renderSocialNetworkTab(state, parent) {
   html += "</div>";
   parent.innerHTML = html;
 
-  // ====== 公共：NPC 拜访按钮事件绑定（所有子Tab共享） ======
-  /** [全系统自洽修复] 域D 修复:将拜访按钮事件绑定提升为模块级公共函数，供所有社交子Tab共用 */
-  function _bindVisitBtns(state, parent) {
-    var btns = parent.querySelectorAll(".npc-visit-btn");
-    for (var bi = 0; bi < btns.length; bi++) {
-      (function (btn) {
-        btn.addEventListener("click", function (e) {
-          e.preventDefault();
-          e.stopPropagation();
-          var npcId = btn.dataset.npcId;
-          if (!npcId || !state.relationships || !state.relationships[npcId])
-            return;
-          var rel = state.relationships[npcId];
-          // 获取NPC中文名（先查，供后续所有消息使用）
-          var _npcName = "";
-          if (typeof NPCS !== "undefined") {
-            var _def = NPCS.find(function (n) {
-              return n.id === npcId;
-            });
-            _npcName = _def ? _def.name : npcId;
-          } else {
-            _npcName = npcId;
-          }
-          // 检查冷却（7天）
-          if (rel._lastVisit && state.player.day - rel._lastVisit < 7) {
-            var daysLeft = 7 - (state.player.day - rel._lastVisit);
-            if (typeof StateManager !== "undefined") {
-              StateManager.addMessage(
-                "⏳ 你刚拜访过" + _npcName + "，再等" + daysLeft + "天吧。",
-                "info",
-              );
-            }
-            return;
-          }
-          // 触发拜访互动（通过 applyAffinityChange 确保衰减系统识别）
-          var gain =
-            typeof Random !== "undefined" ? (Random.chance(0.5) ? 3 : 5) : 4;
-          if (typeof applyAffinityChange === "function") {
-            applyAffinityChange(state, npcId, gain, "拜访");
-          } else {
-            rel.affinity = Math.min(100, (rel.affinity || 0) + gain);
-          }
-          rel._lastVisit = state.player.day;
-          // [全系统自洽修复] 域D 联动增强: NPC拜访状态加成（根据角色类型给予不同加成）
-          (function () {
-            if (!state.needs && !state.player) return;
-            var _npcRole = "";
-            if (typeof NPCS !== "undefined") {
-              var _def = NPCS.find(function (n) { return n.id === npcId; });
-              if (_def) _npcRole = _def.role || "";
-            }
-            var _bonusMsg = "";
-            if (_npcRole.indexOf("医生") >= 0 || _npcRole.indexOf("健康") >= 0) {
-              if (state.status) { state.status.health = Math.min(100, (state.status.health || 50) + 1); _bonusMsg = "健康+1"; }
-            } else if (_npcRole.indexOf("厨师") >= 0 || _npcRole.indexOf("菜") >= 0 || _npcRole.indexOf("外卖") >= 0) {
-              if (state.needs) { state.needs.hunger = Math.min(100, (state.needs.hunger || 50) + 2); _bonusMsg = "饥饿+2"; }
-            } else if (_npcRole.indexOf("中介") >= 0 || _npcRole.indexOf("主播") >= 0 || _npcRole.indexOf("网红") >= 0) {
-              if (state.player) { state.player.mental = Math.min(100, (state.player.mental || 50) + 1); _bonusMsg = "心智+1"; }
-            } else if (_npcRole.indexOf("工头") >= 0 || _npcRole.indexOf("修车") >= 0 || _npcRole.indexOf("保安") >= 0) {
-              if (state.player) { state.player.physique = Math.min(100, (state.player.physique || 50) + 1); _bonusMsg = "体质+1"; }
-            } else if (_npcRole.indexOf("情报") >= 0 || _npcRole.indexOf("同学") >= 0) {
-              if (state.player) { state.player.intelligence = Math.min(100, (state.player.intelligence || 50) + 1); _bonusMsg = "智力+1"; }
-            } else {
-              if (state.needs) { state.needs.happiness = Math.min(100, (state.needs.happiness || 50) + 1); _bonusMsg = "心情+1"; }
-            }
-            if (_bonusMsg && typeof StateManager !== "undefined") {
-              StateManager.addMessage("✨ 与" + _npcName + "的会面让你感到充实，" + _bonusMsg + "。", "info");
-            }
-          })();
-          if (typeof StateManager !== "undefined") {
-            StateManager.addMessage(
-              "🤝 你找到了" + _npcName + "，聊了一会儿天。好感+" + gain + "。",
-              "success",
-            );
-          }
-          // 导航到 NPC 所在地点
-          if (typeof navigateTo === "function") {
-            var _loc = btn.dataset.navTarget;
-            try {
-              var target = JSON.parse(_loc);
-              target.type = "location";
-              navigateTo(state, target);
-            } catch (err) {
-              if (typeof StateManager !== "undefined") {
-                StateManager.addMessage("⚠️ 导航失败", "warning");
-              }
-            }
-          }
-        });
-      })(btns[bi]);
-    }
   }
-}
