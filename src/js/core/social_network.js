@@ -378,3 +378,4 @@ if (typeof window !== "undefined") {
 // [R372] 域D
 // [R428] 域D
 // [R468] 域D
+// [R508] 域D
