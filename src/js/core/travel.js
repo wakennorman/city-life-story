@@ -815,3 +815,4 @@ if (typeof window !== "undefined") {
     version: "v1",
   };
 }
+// [R103] 域G 联动增强
