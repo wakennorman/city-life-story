@@ -802,6 +802,19 @@ function applyAffinityChange(state, npcId, change, reason) {
   var newAffinity = Math.max(-100, Math.min(100, oldAffinity + _adjustedChange));
   state.relationships[npcId].affinity = newAffinity;
   state.relationships[npcId].met = true;
+
+  // [全系统自洽修复] 域D 联动增强(D→B): 首次达到好感里程碑时触发叙事
+  if (change > 0 && typeof StateManager !== "undefined") {
+    var _npcName = getNpcDisplayName(npcId);
+    if (oldAffinity < 60 && newAffinity >= 60 && !state.flags['_affMilestone60_' + npcId]) {
+      state.flags['_affMilestone60_' + npcId] = true;
+      StateManager.addMessage("💕 你和" + _npcName + "成了好朋友！在这个城市里，多了一个可以交心的人。", "success");
+    }
+    if (oldAffinity < 80 && newAffinity >= 80 && !state.flags['_affMilestone80_' + npcId]) {
+      state.flags['_affMilestone80_' + npcId] = true;
+      StateManager.addMessage("❤️ 你和" + _npcName + "成为了挚友！这份情谊是这座城市里最珍贵的财富。", "success");
+    }
+  }
   // [全系统自洽修复] 域D 联动增强1: 记录最近互动天数（即使change=0也记录，防止衰减系统误判）
   if (state.player && state.player.day) {
     state.relationships[npcId]._lastInteractionDay = state.player.day;
