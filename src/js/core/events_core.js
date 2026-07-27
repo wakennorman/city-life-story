@@ -1573,3 +1573,4 @@ function getEventHealthImpact(state, eventId) {
 // [R122] 域B 联动增强
 // [R378] 域B
 // [R458] 域B
+// [R546] 域B
