@@ -238,6 +238,26 @@ function sellGood(goodId, qty) {
     }
   }
 
+  // [全系统自洽修复] 域A 联动增强(A→D): 交易达人声望 — 每¥10k利润提升NPC好感
+  if (state.trade && state.trade.totalProfit > 0) {
+    var _traderM = Math.floor(state.trade.totalProfit / 10000);
+    if (_traderM > 0) {
+      var _traderFlag = '_traderPrestige_' + _traderM;
+      if (!state.flags[_traderFlag] && state.relationships) {
+        state.flags[_traderFlag] = true;
+        for (var _tId in state.relationships) {
+          var _tRel = state.relationships[_tId];
+          if (_tRel && _tRel.met) {
+            _tRel.affinity = Math.min(100, (_tRel.affinity || 0) + 1);
+          }
+        }
+        if (typeof StateManager !== "undefined") {
+          StateManager.addMessage("📈 累计交易利润突破¥" + (_traderM * 10000).toLocaleString() + "！市场上的名声让熟人对你刮目相看。", "success");
+        }
+      }
+    }
+  }
+
   // 从背包移除
   existing.qty -= qty;
   if (existing.qty <= 0) {
