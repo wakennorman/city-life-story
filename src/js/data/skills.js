@@ -338,3 +338,4 @@ function getSkillMarketValue(skillId) {
 // [R91] 域C 联动增强
 // [R153] 域A 联动增强
 // [R201] 域A 联动增强
+// [R249] 域A 联动增强
