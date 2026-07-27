@@ -1,1 +1,1 @@
-{"lastRound":471,"lastDirection":"DOMAIN_F","lastDate":"2026-07-27","lastCommit":"471a4d76","nextDirection":"DOMAIN_G","note":"域F第二十四轮·续 0 A类+3项联动(F→E/F→A/F→G)"}
+{"lastRound": 472, "lastDirection": "DOMAIN_B", "lastDate": "2026-07-27", "lastCommit": "pending", "nextDirection": "DOMAIN_G", "note": "R472 域B跨域linkage审计:4处A类假技能键trade->sales+dist悬空闭合(e470_=12)+联动3项(e470_car_* inv.cars首消费,已随并行f2457cbd落地). recency(R472后):B/E/F最新,最旧=D465->G464->... 下轮按git log重算", "pushStatus": "PENDING"}

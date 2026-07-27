@@ -35,11 +35,11 @@
         return (st.flags && !st.flags._a459MarketWhisperCooldown);
       },
       choices: [
-        { text: "👂 研究一下", hint: "贸易XP+4,心智+1", apply: function (st) {
+        { text: "👂 研究一下", hint: "销售XP+4,心智+1", apply: function (st) {
           if (!st) return; st.flags = st.flags || {}; st.flags._a459MarketWhisperCooldown = true;
-          if (typeof addSkillXp === "function") { try { addSkillXp("trade", 4); } catch(e) {} }
+          if (typeof addSkillXp === "function") { try { addSkillXp("sales", 4); } catch(e) {} } // [全系统自洽修复] 域B R469 修复:假技能键"trade"(state.skills无此键,XP静默丢弃)→真实键"sales"
           if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 1);
-          if (typeof StateManager !== "undefined") StateManager.addMessage("👂 你研究了最近的价格异常——发现每次涨价前都有征兆。市场在说话，只是需要你用心听。贸易XP+4,心智+1。", "success");
+          if (typeof StateManager !== "undefined") StateManager.addMessage("👂 你研究了最近的价格异常——发现每次涨价前都有征兆。市场在说话，只是需要你用心听。销售XP+4,心智+1。", "success");
         }},
         { text: "🛒 趁机囤货", hint: "获得随机商品+2", apply: function (st) {
           if (!st) return; st.flags = st.flags || {}; st.flags._a459MarketWhisperCooldown = true;

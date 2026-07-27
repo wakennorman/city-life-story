@@ -100,10 +100,10 @@
           st.flags._dataInvestorMindset = true;
           if (typeof StateManager !== "undefined") StateManager.addMessage("🔄 '低价买入、高价卖出'——倒卖和投资的本质是一样的。你决定把倒卖练出的眼光用到投资上。会计XP+5,解锁投资意识。", "success");
         }},
-        { text: "📝 继续专注倒卖", hint: "贸易XP+3", apply: function (st) {
+        { text: "📝 继续专注倒卖", hint: "销售XP+3", apply: function (st) {
           if (!st) return; st.flags = st.flags || {}; st.flags._a446TradeInvestCooldown = true;
-          if (typeof addSkillXp === "function") { try { addSkillXp("trade", 3); } catch(e) {} }
-          if (typeof StateManager !== "undefined") StateManager.addMessage("🔄 你决定先把倒卖这条路走透——投资有风险，倒卖虽然辛苦，但每一分钱都赚得踏实。贸易XP+3。", "success");
+          if (typeof addSkillXp === "function") { try { addSkillXp("sales", 3); } catch(e) {} } // [全系统自洽修复] 域B R469 修复:假技能键"trade"(state.skills无此键,XP静默丢弃)→真实键"sales"
+          if (typeof StateManager !== "undefined") StateManager.addMessage("🔄 你决定先把倒卖这条路走透——投资有风险，倒卖虽然辛苦，但每一分钱都赚得踏实。销售XP+3。", "success");
         }}
       ],
       text: function (st) {

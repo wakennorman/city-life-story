@@ -25,11 +25,11 @@
         return (st.flags && !st.flags._b460MarketShiftCooldown);
       },
       choices: [
-        { text: "🔄 调整策略", hint: "贸易XP+4,心智+1", apply: function (st) {
+        { text: "🔄 调整策略", hint: "销售XP+4,心智+1", apply: function (st) {
           if (!st) return; st.flags = st.flags || {}; st.flags._b460MarketShiftCooldown = true;
-          if (typeof addSkillXp === "function") { try { addSkillXp("trade", 4); } catch(e) {} }
+          if (typeof addSkillXp === "function") { try { addSkillXp("sales", 4); } catch(e) {} } // [全系统自洽修复] 域B R469 修复:假技能键"trade"→真实键"sales"
           if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 1);
-          if (typeof StateManager !== "undefined") StateManager.addMessage("🔄 你根据市场变化调整了策略——'风向变了，帆也要跟着转。' 贸易XP+4,心智+1。", "success");
+          if (typeof StateManager !== "undefined") StateManager.addMessage("🔄 你根据市场变化调整了策略——'风向变了，帆也要跟着转。' 销售XP+4,心智+1。", "success");
         }},
         { text: "👀 观望", hint: "心智+1", apply: function (st) {
           if (!st) return; st.flags = st.flags || {}; st.flags._b460MarketShiftCooldown = true;

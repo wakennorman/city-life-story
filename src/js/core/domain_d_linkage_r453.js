@@ -94,11 +94,11 @@
         return (st.flags && !st.flags._d453MarketKnowledgeCooldown);
       },
       choices: [
-        { text: "🧠 多听多记", hint: "心智+2,贸易XP+3", apply: function (st) {
+        { text: "🧠 多听多记", hint: "心智+2,销售XP+3", apply: function (st) {
           if (!st) return; st.flags = st.flags || {}; st.flags._d453MarketKnowledgeCooldown = true;
           if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 2);
-          if (typeof addSkillXp === "function") { try { addSkillXp("trade", 3); } catch(e) {} }
-          if (typeof StateManager !== "undefined") StateManager.addMessage("🧠 你从朋友们的闲聊中捕捉到了不少市场信息——这些信息，可能比钱还值钱。心智+2,贸易XP+3。", "success");
+          if (typeof addSkillXp === "function") { try { addSkillXp("sales", 3); } catch(e) {} } // [全系统自洽修复] 域B R469 修复:假技能键"trade"→真实键"sales"
+          if (typeof StateManager !== "undefined") StateManager.addMessage("🧠 你从朋友们的闲聊中捕捉到了不少市场信息——这些信息，可能比钱还值钱。心智+2,销售XP+3。", "success");
         }},
         { text: "🗣️ 分享自己的信息", hint: "好感+2,社交XP+2", apply: function (st) {
           if (!st) return; st.flags = st.flags || {}; st.flags._d453MarketKnowledgeCooldown = true;
