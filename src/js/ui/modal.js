@@ -798,7 +798,7 @@ function showRepayVillageModal() {
             );
           } else {
             StateManager.addMessage(
-              `🏘️ 还了村长 ¥${amt.toLocaleString()}。还剩 ¥${state.resources.villageDebt.toLocaleString()}。`,
+              `🏘️ 还了村长 ¥${amt.toLocaleString()}。还剩 ¥${(state.resources.villageDebt || 0).toLocaleString()}。`,
               "success",
             );
           }
@@ -853,7 +853,7 @@ function showPayFineModal() {
             );
           } else {
             StateManager.addMessage(
-              `📋 缴纳罚单 ¥${amt.toLocaleString()}。还剩 ¥${state.resources.fineDebt.toLocaleString()} 未缴。`,
+              `📋 缴纳罚单 ¥${amt.toLocaleString()}。还剩 ¥${(state.resources.fineDebt || 0).toLocaleString()} 未缴。`,
               "success",
             );
           }

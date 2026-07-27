@@ -205,7 +205,7 @@ function renderMoralStatus(state) {
 
 
 function renderStreetStats(state) {
-  const p = state.player;
+  const p = state.player || {};
   setStatBar("stat-physique", p.physique, "physique");
   setStatBar("stat-intelligence", p.intelligence, "intelligence");
   setStatBar("stat-agility", p.agility, "agility");
@@ -6451,6 +6451,41 @@ function renderPgHealth(state, content, pg) {
   }
   html += "</div></div>";
 
+  // [全系统自洽修复] 域F 联动增强 F→G: 人生阶段概览
+  var _age = state.player && state.player.age;
+  if (_age) {
+    var _stageEmoji = _age < 18 ? "🧒" : _age < 25 ? "🧑" : _age < 35 ? "👨" : _age < 50 ? "👨‍🦱" : "👴";
+    var _stageLabel = _age < 18 ? "少年" : _age < 25 ? "青年" : _age < 35 ? "壮年" : _age < 50 ? "中年" : "晚年";
+    html += '<div class="section"><h3>🌱 人生阶段</h3>';
+    html += '<div class="card" style="padding:12px;font-size:12px;">';
+    html += "<p>" + _stageEmoji + " " + _age + "岁 — <strong>" + _stageLabel + "</strong></p>";
+    var _nextMilestone = "";
+    if (_age < 18) _nextMilestone = "18岁成年，解锁更多人生选择";
+    else if (_age < 25) _nextMilestone = "25岁前是技能积累黄金期";
+    else if (_age < 35) _nextMilestone = "35岁前是职业发展的关键窗口";
+    else if (_age < 50) _nextMilestone = "50岁前做好养老规划，健康最重要";
+    else _nextMilestone = "珍惜当下，身体健康就是最大的财富";
+    html += '<p style="color:var(--text-muted);font-size:11px;margin-top:4px;">💡 ' + _nextMilestone + '</p>';
+    var _milestones = [
+      { age: 18, label: "成年独立", icon: "🎓" },
+      { age: 22, label: "大学毕业", icon: "🎓" },
+      { age: 30, label: "而立之年", icon: "🎯" },
+      { age: 40, label: "不惑之年", icon: "🧠" },
+      { age: 50, label: "知天命", icon: "🌅" },
+      { age: 60, label: "花甲之年", icon: "🏡" },
+    ];
+    var _msHtml = "";
+    for (var _mi = 0; _mi < _milestones.length; _mi++) {
+      var _m = _milestones[_mi];
+      var _reached = _age >= _m.age;
+      _msHtml += '<span style="display:inline-block;margin:2px 4px;padding:2px 8px;border-radius:10px;font-size:10px;' +
+        (_reached ? 'background:rgba(74,158,92,0.15);color:var(--success);' : 'background:var(--bg-input);color:var(--text-muted);') +
+        '">' + (_reached ? "✅ " : "⏳ ") + _m.icon + " " + _m.age + "岁" + (_reached ? " ✓" : "") + '</span>';
+    }
+    html += '<div style="margin-top:6px;">' + _msHtml + '</div>';
+    html += '</div></div>';
+  }
+
   if (pg.psychology) {
     html += '<div class="section"><h3>🧠 心理状态</h3>';
     html += '<div class="card" style="padding:12px;font-size:12px;">';
@@ -6461,6 +6496,34 @@ function renderPgHealth(state, content, pg) {
       "<p>😔 抑郁：" + Math.round(pg.psychology.depression || 0) + "/100</p>";
     html += "<p>😊 心情：" + Math.round(pg.psychology.mood || 0) + "/100</p>";
     html += "</div></div>";
+  }
+
+  // [全系统自洽修复] 域F 联动增强 F→D: 社交关系概况
+  var _rel = state.relationships;
+  if (_rel) {
+    var _totalMet = 0, _closeFriends = 0, _totalRel = 0;
+    for (var _rk in _rel) {
+      var _rv = _rel[_rk];
+      if (_rv && _rv.met) {
+        _totalMet++;
+        _totalRel += _rv.relationship || 0;
+        if ((_rv.relationship || 0) >= 60) _closeFriends++;
+      }
+    }
+    if (_totalMet > 0) {
+      var _avgRel = Math.round(_totalRel / _totalMet);
+      html += '<div class="section"><h3>🤝 社交关系</h3>';
+      html += '<div class="card" style="padding:12px;font-size:12px;">';
+      html += '<p>👥 已结识：<strong>' + _totalMet + '</strong>人</p>';
+      html += '<p>💚 密友(好感≥60)：<strong style="color:var(--success);">' + _closeFriends + '</strong>人</p>';
+      html += '<p>📊 平均好感：<strong>' + _avgRel + '</strong>/100</p>';
+      if (_closeFriends >= 3) {
+        html += '<p style="color:var(--accent);font-size:11px;margin-top:4px;">🌟 社交圈稳固，密友支持带来心理韧性</p>';
+      } else if (_totalMet >= 1 && _closeFriends === 0) {
+        html += '<p style="color:var(--warning);font-size:11px;margin-top:4px;">💡 试着深入交往几位NPC，建立真正的友谊</p>';
+      }
+      html += '</div></div>';
+    }
   }
 
   html += "</div>";
@@ -6510,6 +6573,30 @@ function renderPgGoals(state, content, pg) {
         "</div>";
     });
     html += "</div>";
+  }
+
+  // [全系统自洽修复] 域F 联动增强 F→E: 投资组合概览
+  var _inv = state.investment;
+  if (_inv) {
+    var _stockCount = (_inv.stockHoldings || []).length;
+    var _propCount = (_inv.properties || []).length;
+    var _btcAmt = _inv.btcHoldings || 0;
+    var _invTotal = (_inv.portfolio && _inv.portfolio.totalValue) || 0;
+    if (_stockCount > 0 || _propCount > 0 || _btcAmt > 0 || _invTotal > 0) {
+      html += '<div style="margin-top:16px;"><h3>💰 投资组合</h3>';
+      html += '<div class="card" style="padding:12px;font-size:12px;">';
+      html += '<p>📊 总市值：<strong style="color:var(--success);">¥' + _invTotal.toLocaleString() + '</strong></p>';
+      if (_stockCount > 0) html += '<p>📈 股票持仓：' + _stockCount + '支</p>';
+      if (_propCount > 0) html += '<p>🏠 房产：' + _propCount + '套</p>';
+      if (_btcAmt > 0) html += '<p>₿ BTC：' + _btcAmt.toFixed(4) + '</p>';
+      var _diversity = (_stockCount > 0 ? 1 : 0) + (_propCount > 0 ? 1 : 0) + (_btcAmt > 0 ? 1 : 0);
+      if (_diversity >= 2) {
+        html += '<p style="color:var(--accent);font-size:11px;margin-top:4px;">✅ 多元化投资组合（' + _diversity + '/3类资产）</p>';
+      } else if (_diversity === 1 && _invTotal > 100000) {
+        html += '<p style="color:var(--warning);font-size:11px;margin-top:4px;">💡 资产已超¥100,000，考虑多元化配置降低风险</p>';
+      }
+      html += '</div></div>';
+    }
   }
 
   html += "</div>";
