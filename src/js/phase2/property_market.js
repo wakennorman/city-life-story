@@ -596,3 +596,4 @@ if (typeof window !== "undefined") {
 // [R421] 域E
 // [R445] 域E
 // [R469] 域E
+// [R493] 域E
