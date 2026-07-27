@@ -97,12 +97,13 @@ function doCorporateAction(actionId) {
       Math.min(100, (c.popularity || 0) + (effects.popularity || 0)),
     );
   if (effects.risk) c.risk = Math.max(0, Math.min(100, (c.risk || 0) + (effects.risk || 0)));
-  if (effects.fatigue)
+  // [全系统自洽修复] 域H R512 P0: state.needs 守卫（旧存档/异常状态防崩溃）
+  if (effects.fatigue && state.needs)
     state.needs.fatigue = Math.max(
       0,
       Math.min(100, (state.needs.fatigue || 0) + (effects.fatigue || 0)),
     );
-  if (effects.happiness)
+  if (effects.happiness && state.needs)
     state.needs.happiness = Math.max(
       0,
       Math.min(100, (state.needs.happiness || 0) + (effects.happiness || 0)),
