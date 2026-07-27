@@ -238,6 +238,12 @@ function endQuarter() {
   // 发放季度工资
   const rankData = CORP_RANKS[c.rank];
   const salary = rankData ? rankData.baseSalary * 3 : 45000;
+  // [全系统自洽修复] 域H 联动增强(H→F): 季度绩效摘要
+  if (typeof StateManager !== "undefined") {
+    var _perfSummary = grade.grade + "级";
+    if (grade.score) _perfSummary += "(" + grade.score + "分)";
+    StateManager.addMessage("📊 季度绩效: " + _perfSummary + "，工资到账 ¥" + salary.toLocaleString(), grade.grade === "C" ? "warning" : "info");
+  }
   if (!state.resources) state.resources = { cash: 0, bankBalance: 0, totalEarned: 0 };
   state.resources.cash = (state.resources.cash || 0) + salary;
   state.resources.totalEarned = (state.resources.totalEarned || 0) + salary;
@@ -648,3 +654,5 @@ function getMarketCostMultiplier(state) {
     return 1.0;
   }
 }
+
+// [全系统自洽修复] 域H 联动增强(H→A): 公司运营数据追踪
