@@ -598,3 +598,4 @@ if (typeof window.CLS !== 'undefined' && window.CLS.data) window.CLS.data.GOODS 
 // [R273] 域A
 // [R321] 域A
 // [R369] 域A
+// [R417] 域A
