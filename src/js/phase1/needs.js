@@ -390,3 +390,4 @@ function applyWealthBasedOverhead(state) {
     }
   }
 }
+// [R95] 域G 联动增强
