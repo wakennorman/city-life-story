@@ -5924,3 +5924,4 @@ function applyCareerHealthEffect(state) {
 // [R347] 域C
 // [R395] 域C
 // [R443] 域C
+// [R499] 域C
