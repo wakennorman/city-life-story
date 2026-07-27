@@ -16,6 +16,7 @@ import {
   SKILL_SYNERGY_DUAL,
   SKILL_SYNERGY_TRIPLE,
   SKILL_SYNERGY_THEME,
+  SynergyEffectsDef,
 } from "./synergyData";
 
 // 显式再导出数据表（esbuild 对 `export *` 会按需裁剪，命名再导出可保真暴露给测试比对）
@@ -25,6 +26,13 @@ export {
   SKILL_SYNERGY_THEME,
 };
 
+export interface SynergyEffectsDef {
+  [key: string]: unknown;
+  unlockJobs?: string[];
+  unlockBusinesses?: string[];
+  unlockActions?: string[];
+  incomeMultiplier?: number;
+}
 export interface SynergyEffects {
   [key: string]: unknown;
 }
@@ -36,6 +44,23 @@ export interface SynergyEntry {
   desc: string;
   qualifiedSkills?: string[];
   effects: SynergyEffects;
+}
+export interface SynergyEntryData extends SynergyEntry {
+  skills: Array<{ id: string; minLevel: number }>;
+  effects: SynergyEffectsDef;
+}
+export interface SynergyThemeData {
+  id: string;
+  name: string;
+  icon: string;
+  theme: string;
+  skills: string[];
+  minSkills: number;
+  threshold: number;
+  effects: SynergyEffectsDef;
+  desc: string;
+  synergyId?: string;
+  qualifiedSkills?: string[];
 }
 export interface SynergyResult {
   dual: Record<string, SynergyEntry>;
@@ -103,8 +128,15 @@ function allSkillsMet(
 
 export function checkSkillSynergies(state: SynergyState): SynergyResult {
   if (!state || !state.skills) {
-    // 与 vanilla 早期返回严格一致：仅 4 键，不含 unlocked* 空数组
-    return { dual: {}, triple: {}, theme: {}, effects: {} };
+    return {
+      dual: {},
+      triple: {},
+      theme: {},
+      effects: {},
+      unlockedJobs: [],
+      unlockedBusinesses: [],
+      unlockedActions: [],
+    };
   }
 
   const skillLevels = getSkillLevels(state);

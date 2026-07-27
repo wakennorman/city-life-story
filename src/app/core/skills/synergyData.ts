@@ -6,8 +6,16 @@
  * 任何字段调整须同步两侧，并由 tests/skillSynergy.canonical.test.cjs 的数据保真断言守护。
  */
 
+export interface SynergyEffectsDef {
+  [key: string]: unknown;
+  unlockJobs?: string[];
+  unlockBusinesses?: string[];
+  unlockActions?: string[];
+  incomeMultiplier?: number;
+}
+
 // 双技能连携（2门技能达到阈值）
-export const SKILL_SYNERGY_DUAL = {
+export const SKILL_SYNERGY_DUAL: Record<string, SynergyEffectsDef & { id: string; name: string; icon: string; desc: string; skills: Array<{ id: string; minLevel: number }> }> = {
   // 烹饪 + 销售 = 餐饮创业加成
   cooking_sales: {
     id: "cooking_sales",
@@ -189,7 +197,7 @@ export const SKILL_SYNERGY_DUAL = {
 };
 
 // 三技能连携（3门技能达到阈值）
-export const SKILL_SYNERGY_TRIPLE = {
+export const SKILL_SYNERGY_TRIPLE: Record<string, SynergyEffectsDef & { id: string; name: string; icon: string; desc: string; skills: Array<{ id: string; minLevel: number }> }> = {
   // 烹饪 + 销售 + 管理 = 餐饮帝国
   cooking_sales_management: {
     id: "cooking_sales_management",
@@ -290,7 +298,7 @@ export const SKILL_SYNERGY_TRIPLE = {
 };
 
 // 主题连携（同主题多技能）
-export const SKILL_SYNERGY_THEME = {
+export const SKILL_SYNERGY_THEME: Record<string, { id: string; name: string; icon: string; theme: string; desc: string; skills: string[]; minSkills: number; threshold: number; effects: SynergyEffectsDef }> = {
   // 技术主题：编程 + 电工 + 维修
   tech_theme: {
     id: "tech_theme",

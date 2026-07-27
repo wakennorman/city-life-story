@@ -52,6 +52,7 @@ export function getIllnessNeedsImpact(
   illnessesConfig: IllnessesConfig
 ): NeedsImpact {
   const impact: NeedsImpact = { hunger: 0, fatigue: 0, hygiene: 0, happiness: 0, health: 0 };
+  if (!state.status) return impact;
   const illnesses = state.status.illnesses;
   if (!illnesses) return impact;
   for (let i = 0; i < illnesses.length; i++) {

@@ -4981,16 +4981,27 @@ function showCareerPathPreviewModal(pathKey) {
 
   // [全系统自洽修复] 域C R391: 技能连携解锁状态（C→F，职业路径预览中显示相关连携）
   // 修复: 原 checkJobCareerPath/checkSynergyUnlocked 未定义→预览UI永远显示错误状态
-  if (typeof SKILL_SYNERGY_DUAL !== "undefined" && typeof STREET_JOBS !== "undefined") {
+  // [全系统自洽修复] 域C A类: _jobDef.path 在 STREET_JOBS 上不存在(无path字段)→条件恒假→连携区块永不显示
+  // 改用 _jobToCareerPathMap 正向映射(工作ID→职业路径ID)
+  var _jobToCareerPathMap = {
+    food_truck_owner: 'catering',
+    remote_dev: 'tech',
+    master_repairman: 'operations',
+    sales_team_lead: 'sales',
+    long_haul_driver: 'logistics',
+    foreign_company_staff: 'tech',
+    finance_analyst: 'finance',
+    smart_home_tech: 'tech',
+  };
+  if (typeof SKILL_SYNERGY_DUAL !== "undefined") {
     var _pathSynergies = [];
     for (var _sid in SKILL_SYNERGY_DUAL) {
       if (!Object.prototype.hasOwnProperty.call(SKILL_SYNERGY_DUAL, _sid)) continue;
       var _syn = SKILL_SYNERGY_DUAL[_sid];
       if (_syn.effects && _syn.effects.unlockJobs) {
         for (var _uj = 0; _uj < _syn.effects.unlockJobs.length; _uj++) {
-          // 通过 job.path 判断该连携解锁的工作是否属于当前路径
-          var _jobDef = STREET_JOBS.find(function (_j) { return _j.id === _syn.effects.unlockJobs[_uj]; });
-          if (_jobDef && _jobDef.path === pathKey) {
+          var _jobId = _syn.effects.unlockJobs[_uj];
+          if (_jobToCareerPathMap[_jobId] === pathKey) {
             _pathSynergies.push(_syn);
             break;
           }
