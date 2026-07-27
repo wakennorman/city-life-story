@@ -908,3 +908,4 @@ function renderSocialNetworkTab(state, parent) {
 // [R404] 域D
 // [R444] 域D
 // [R484] 域D
+// [R524] 域D
