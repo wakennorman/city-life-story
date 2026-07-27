@@ -1,5 +1,12 @@
 # MEMORY — 城市浮生记 8域轮换优化循环（压缩版 2026-07-27 R535）
 
+## R594 增量要点（域B 事件/叙事）
+- **悬空挂载全量清理19处 + 孤儿救援1处 = A类20处**：index.html 挂载 `js/core/domain_*_linkage_r{N}.js` 但源文件 git log --all/history/磁盘四重核查 NEVER 创建（并行"先写挂载+注释、源永未建"模式）→ 逆向悬空，build.py 静默跳过、事件从未进 bundle → 安全摘除19行挂载。0功能损失。
+- **孤儿救援**：`domain_a_linkage_r571.js` 源已提交(R338期间)但从未挂载 → 复核字段全真实、id 全库唯一 → 挂载复活3事件(a571_corp_supply_chain/a571_skill_cert_value/a571_health_data_alerts)。
+- 联动3项（domain_b_linkage_r594.js，IIFE→RANDOM_EVENTS，3 street，全||防御，maxRepeats:1）：b594_elder_job_lead(B→C 首消费_elderJobLead→现金+900/销售XP+8/心情+4或心智+5+老人好感)/b594_scam_stopper_fame(B→D 首消费_stoppedScam，须firstMetNpc met守卫→好感+6或名望+3)/b594_wholesale_channel(B→E 首消费_wholesaleChannelTip，cash≥500→现金+700/会计XP+6)。
+- ⚠️ 遗留：moral_events.js 仍有7个写-only flag 未消费(_friendCheatWarned/_goodSleepToday/_moralAfterWorkLoaded/_neighborHasIOU/_neighborRefused/_scrapeCheckCamera/_scrapeLeftNote)；本轮只消费_elderJobLead/_stoppedScam/_wholesaleChannelTip三处，勿重复选题。
+- src/index.html+domain_b_linkage_r594.js 由并行窗口随 R505 提交落库(HEAD a6009eff)，本窗口仅提交 dist 重建+文档账本。下轮 C(r586 最陈旧；B594>A593>H592>G591>F590>E589>D587>C586)。
+
 ## R590 增量要点（域F UI/UX）
 - **悬空引用清理4处（逆向悬空）**：src/index.html 挂载 `domain_f_linkage_r530/r539/r556/r564.js` 但四文件 git ls-files/history/磁盘/dist 四重核查**从未创建**（属"并行先写挂载+注释、源始终未建"）→ build.py 静默跳过、事件从未进 bundle → 移除4行挂载。0功能损失。
 - 联动3项（domain_f_linkage_r590.js，IIFE→RANDOM_EVENTS，2 street+1 corporate，全||防御，maxRepeats:1）：f590_skill_balance_board(F→A 技能≥4项level≥10→智力+心智+心情)/f590_career_panel_praise(F→C ≥2项level≥20且有job→管理XP+cash800)/f590_watchlist_discipline(F→E stockHoldings≥3→复用_dataInvestorMindset+会计XP+心智)。
