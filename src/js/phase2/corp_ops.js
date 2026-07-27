@@ -657,3 +657,4 @@ function getMarketCostMultiplier(state) {
 }
 
 // [全系统自洽修复] 域H 联动增强(H→A): 公司运营数据追踪
+// [R128] 域H 联动增强
