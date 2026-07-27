@@ -2342,6 +2342,28 @@ function runDailyPipeline(state) {
   state.flags._dayStartHealth = (state.status && state.status.health) || 100;
   state.flags._dayStartHappiness = (state.needs && state.needs.happiness) || 0;
 
+  // [全系统自洽修复] 域G 联动增强(G→D): 人生阶段社交关系加成 — 关键年龄节点自动提升NPC好感
+  try {
+    var _age = state.player && state.player.age;
+    if (_age && (_age === 18 || _age === 20 || _age === 25 || _age === 30 || _age === 40 || _age === 50 || _age === 60)) {
+      var _milestoneFlag = '_lifeSocialMilestone_' + _age;
+      if (!state.flags[_milestoneFlag] && state.relationships) {
+        state.flags[_milestoneFlag] = true;
+        var _boostCount = 0;
+        for (var _rId in state.relationships) {
+          var _r = state.relationships[_rId];
+          if (_r && _r.met && _r.affinity >= 10) {
+            _r.affinity = Math.min(100, (_r.affinity || 0) + 1);
+            _boostCount++;
+          }
+        }
+        if (_boostCount > 0 && typeof StateManager !== "undefined") {
+          StateManager.addMessage("🎂 " + _age + "岁了！老朋友们的祝福让你感到温暖。关系略有加深。", "info");
+        }
+      }
+    }
+  } catch (e) {}
+
   for (var i = 0; i < DAILY_PIPELINE.length; i++) {
     var step = DAILY_PIPELINE[i];
 
@@ -2379,6 +2401,11 @@ function runDailyPipeline(state) {
       step.fn(state);
     }
   }
+
+  // [全系统自洽修复] 域G 联动增强: 每5年记录一次人生数据快照
+  if (typeof trackLifeDataSnapshot === "function") {
+    try { trackLifeDataSnapshot(state); } catch (e) {}
+  }
 }
 
 /**
@@ -2391,6 +2418,39 @@ function endDay() {
 
 // [全系统自洽修复] 域G R422 联动增强(G→A): 生命周期里程碑追踪
 function trackLifeMilestone(state, milestoneId, label) {
+  if (!state || !milestoneId) return;
+  if (!state.flags) state.flags = {};
+  if (!state.flags._lifeMilestones) state.flags._lifeMilestones = [];
+  if (state.flags._lifeMilestones.some(function(m) { return m.id === milestoneId; })) return;
+  state.flags._lifeMilestones.push({
+    id: milestoneId, label: label || milestoneId, day: state.player && state.player.day || 0
+  });
+}
+
+// [全系统自洽修复] 域G 联动增强(G→A): 人生阶段数据追踪 — 记录关键年龄点的资产/技能数据快照
+function trackLifeDataSnapshot(state) {
+  if (!state || !state.player || !state.flags) return;
+  var _age = state.player.age;
+  if (!_age || _age % 5 !== 0) return;
+  var _flag = '_lifeDataSnapshot_' + _age;
+  if (state.flags[_flag]) return;
+  state.flags[_flag] = true;
+  if (!state.flags._lifeDataSnapshots) state.flags._lifeDataSnapshots = [];
+  var _snapshot = { age: _age, day: state.player.day };
+  if (state.resources) {
+    _snapshot.cash = state.resources.cash || 0;
+    _snapshot.bankBalance = state.resources.bankBalance || 0;
+    _snapshot.totalEarned = state.resources.totalEarned || 0;
+  }
+  if (state.skills) {
+    _snapshot.skills = {};
+    for (var _sk in state.skills) {
+      if (state.skills[_sk] && state.skills[_sk].level) _snapshot.skills[_sk] = state.skills[_sk].level;
+    }
+  }
+  state.flags._lifeDataSnapshots.push(_snapshot);
+  if (state.flags._lifeDataSnapshots.length > 20) state.flags._lifeDataSnapshots.shift();
+}
   if (!state || !milestoneId) return;
   if (!state.flags) state.flags = {};
   if (!state.flags._lifeMilestones) state.flags._lifeMilestones = [];
