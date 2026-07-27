@@ -730,3 +730,4 @@ function getActiveSynergiesCount(state) {
 // [R227] 域C 联动增强
 // [R275] 域C
 // [R379] 域C
+// [R419] 域C
