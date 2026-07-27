@@ -200760,6 +200760,26 @@ function sellGood(goodId, qty) {
     }
   }
 
+  // [全系统自洽修复] 域A 联动增强(A→D): 交易达人声望 — 每¥10k利润提升NPC好感
+  if (state.trade && state.trade.totalProfit > 0) {
+    var _traderM = Math.floor(state.trade.totalProfit / 10000);
+    if (_traderM > 0) {
+      var _traderFlag = '_traderPrestige_' + _traderM;
+      if (!state.flags[_traderFlag] && state.relationships) {
+        state.flags[_traderFlag] = true;
+        for (var _tId in state.relationships) {
+          var _tRel = state.relationships[_tId];
+          if (_tRel && _tRel.met) {
+            _tRel.affinity = Math.min(100, (_tRel.affinity || 0) + 1);
+          }
+        }
+        if (typeof StateManager !== "undefined") {
+          StateManager.addMessage("📈 累计交易利润突破¥" + (_traderM * 10000).toLocaleString() + "！市场上的名声让熟人对你刮目相看。", "success");
+        }
+      }
+    }
+  }
+
   // 从背包移除
   existing.qty -= qty;
   if (existing.qty <= 0) {
@@ -251308,6 +251328,127 @@ if (typeof window !== "undefined") {
 })();
 
 ;
+// ==== js/core/domain_f_linkage_r485.js ====
+/**
+ * 域F(UI/UX) 联动增强 R485（第二十七轮循环）
+ * 桥接：
+ *   F→A  f485_wealth_dashboard    财富仪表盘 → 消费 resources 数据,
+ *     资产→"你有多少钱"的经济面板
+ *   F→E  f485_invest_overview     投资概览UI → 消费 investment 数据,
+ *     投资→"你的钱投在哪"的UI洞察
+ *   f485_quest_board(F→G 任务面板): daily_quest→"今天要做什么"
+ */
+(function () {
+  "use strict";
+  if (typeof RANDOM_EVENTS === "undefined" || !RANDOM_EVENTS) return;
+  if (RANDOM_EVENTS._domainFLinkageR485Loaded) return;
+  RANDOM_EVENTS._domainFLinkageR485Loaded = true;
+
+  var EVENTS = [
+    {
+      id: "f485_wealth_dashboard", phase: "street", _isChainEvent: false, icon: "💰",
+      title: "财富仪表盘",
+      story: "你查看了自己的财富仪表盘——{desc}",
+      triggers: { minDay: 30, interval: 50, maxRepeats: 5, excludeFlags: ["_f485WealthCooldown"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        if (!st.resources) return false;
+        return (st.flags && !st.flags._f485WealthCooldown);
+      },
+      choices: [
+        { text: "📊 分析资产", hint: "会计XP+3,智力+1", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._f485WealthCooldown = true;
+          if (typeof addSkillXp === "function") { try { addSkillXp("accounting", 3); } catch(e) {} }
+          if (st.player) st.player.intelligence = Math.min(100, (st.player.intelligence || 50) + 1);
+          if (typeof StateManager !== "undefined") StateManager.addMessage("📊 你分析了资产状况——'知道自己是多少钱。' 会计XP+3,智力+1。", "success");
+        }},
+        { text: "🎯 设定目标", hint: "心智+3", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._f485WealthCooldown = true;
+          if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 3);
+          if (typeof StateManager !== "undefined") StateManager.addMessage("🎯 你设定了财富目标——'有目标才有动力。' 心智+3。", "success");
+        }}
+      ],
+      text: function (st) {
+        if (!st) return null;
+        var cash = st.resources && st.resources.cash ? st.resources.cash : 0;
+        var bank = st.resources && st.resources.bankBalance ? st.resources.bankBalance : 0;
+        return "你查看了财富仪表盘——手头¥" + Math.round(cash) + "，银行¥" + Math.round(bank) + "。你的钱都在哪？";
+      }
+    },
+    {
+      id: "f485_invest_overview", phase: "street", _isChainEvent: false, icon: "📈",
+      title: "投资概览",
+      story: "你查看了自己的投资分布——{desc}",
+      triggers: { minDay: 50, interval: 70, maxRepeats: 4, excludeFlags: ["_f485InvestCooldown"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        if (!st.investment) return false;
+        return (st.flags && !st.flags._f485InvestCooldown);
+      },
+      choices: [
+        { text: "📊 分析分布", hint: "智力+2,会计XP+2", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._f485InvestCooldown = true;
+          if (st.player) st.player.intelligence = Math.min(100, (st.player.intelligence || 50) + 2);
+          if (typeof addSkillXp === "function") { try { addSkillXp("accounting", 2); } catch(e) {} }
+          if (typeof StateManager !== "undefined") StateManager.addMessage("📊 你分析了投资分布——'不要把所有鸡蛋放在一个篮子里。' 智力+2,会计XP+2。", "success");
+        }},
+        { text: "🎯 再平衡", hint: "心智+3,风险-3", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._f485InvestCooldown = true;
+          if (st.player) { st.player.mental = Math.min(100, (st.player.mental || 50) + 3); st.player.risk = Math.max(0, (st.player.risk || 0) - 3); }
+          if (typeof StateManager !== "undefined") StateManager.addMessage("🎯 你决定再平衡——'纪律胜于预测。' 心智+3,风险-3。", "success");
+        }}
+      ],
+      text: function (st) {
+        if (!st) return null;
+        var n = st.investment && st.investment.stockHoldings ? st.investment.stockHoldings.length : 0;
+        return "你查看了自己的投资分布——持有" + n + "只股票。你的钱都投在了哪里？";
+      }
+    },
+    {
+      id: "f485_quest_board", phase: "street", _isChainEvent: false, icon: "📋",
+      title: "任务面板",
+      story: "你查看了今天的任务面板——{desc}",
+      triggers: { minDay: 20, interval: 30, maxRepeats: 6, excludeFlags: ["_f485QuestCooldown"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        if (!st.dailyQuest || !st.dailyQuest.quests) return false;
+        return st.dailyQuest.quests.length >= 1 && (st.flags && !st.flags._f485QuestCooldown);
+      },
+      choices: [
+        { text: "🎯 优先完成", hint: "心智+3,全技能XP+1", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._f485QuestCooldown = true;
+          if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 3);
+          var skills = ["accounting", "management", "sales", "coding", "trade"];
+          for (var i = 0; i < skills.length; i++) { if (typeof addSkillXp === "function") { try { addSkillXp(skills[i], 1); } catch(e) {} } }
+          if (typeof StateManager !== "undefined") StateManager.addMessage("🎯 你优先完成了任务——'今日事今日毕。' 心智+3,全技能XP+1。", "success");
+        }},
+        { text: "😊 从易到难", hint: "心情+5,现金+100", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._f485QuestCooldown = true;
+          if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 5);
+          if (st.resources) st.resources.cash = (st.resources.cash || 0) + 100;
+          if (typeof StateManager !== "undefined") StateManager.addMessage("😊 你从简单的开始——'先赢一局。' 心情+5,现金+100。", "success");
+        }}
+      ],
+      text: function (st) {
+        if (!st) return null;
+        var n = st.dailyQuest && st.dailyQuest.quests ? st.dailyQuest.quests.length : 0;
+        return "你查看了今天的任务面板——" + n + "个待完成的目标在等着你。先做哪个？";
+      }
+    }
+  ];
+
+  for (var i = 0; i < EVENTS.length; i++) {
+    (function (ev) {
+      var exists = false;
+      for (var j = 0; j < RANDOM_EVENTS.length; j++) {
+        if (RANDOM_EVENTS[j] && RANDOM_EVENTS[j].id === ev.id) { exists = true; break; }
+      }
+      if (!exists) RANDOM_EVENTS.push(ev);
+    })(EVENTS[i]);
+  }
+})();
+
+;
 // ==== js/core/domain_b_linkage_r442.js ====
 /**
  * 域B(事件/叙事) 联动增强 R442
@@ -266560,6 +266701,124 @@ if (typeof window !== "undefined") {
         if (!st) return null;
         var n = st.investment && st.investment.properties ? st.investment.properties.length : 0;
         return "你回顾了自己买过的" + n + "套房子——每套都有故事，每套都是人生的一个章节。";
+      }
+    }
+  ];
+
+  for (var i = 0; i < EVENTS.length; i++) {
+    (function (ev) {
+      var exists = false;
+      for (var j = 0; j < RANDOM_EVENTS.length; j++) {
+        if (RANDOM_EVENTS[j] && RANDOM_EVENTS[j].id === ev.id) { exists = true; break; }
+      }
+      if (!exists) RANDOM_EVENTS.push(ev);
+    })(EVENTS[i]);
+  }
+})();
+
+;
+// ==== js/core/domain_e_linkage_r484.js ====
+/**
+ * 域E(经济/投资) 联动增强 R484（第二十六轮循环·续）
+ * 桥接：
+ *   E→F  e484_invest_tracker_ui    投资追踪UI → 消费 investment 数据,
+ *     投资→"你的钱在怎么动"的UI展示
+ *   E→E  e484_invest_journal       投资日记 → 消费 investment 数据,
+ *     投资→"你的投资心路历程"的自叙事
+ *   e484_crypto_narrative(E→B 加密货币叙事): btc→"数字黄金"的叙事
+ */
+(function () {
+  "use strict";
+  if (typeof RANDOM_EVENTS === "undefined" || !RANDOM_EVENTS) return;
+  if (RANDOM_EVENTS._domainELinkageR484Loaded) return;
+  RANDOM_EVENTS._domainELinkageR484Loaded = true;
+
+  var EVENTS = [
+    {
+      id: "e484_invest_tracker_ui", phase: "street", _isChainEvent: false, icon: "📈",
+      title: "投资追踪",
+      story: "你追踪了自己的投资走势——{desc}",
+      triggers: { minDay: 50, interval: 70, maxRepeats: 4, excludeFlags: ["_e484TrackerCooldown"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        if (!st.investment) return false;
+        var inv = st.investment;
+        return (inv.stockHoldings && inv.stockHoldings.length > 0) && (st.flags && !st.flags._e484TrackerCooldown);
+      },
+      choices: [
+        { text: "📊 分析走势", hint: "会计XP+3,智力+1", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._e484TrackerCooldown = true;
+          if (typeof addSkillXp === "function") { try { addSkillXp("accounting", 3); } catch(e) {} }
+          if (st.player) st.player.intelligence = Math.min(100, (st.player.intelligence || 50) + 1);
+          if (typeof StateManager !== "undefined") StateManager.addMessage("📊 你分析了投资走势——'趋势是你的朋友。' 会计XP+3,智力+1。", "success");
+        }},
+        { text: "🎯 调整策略", hint: "心智+3,风险-3", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._e484TrackerCooldown = true;
+          if (st.player) { st.player.mental = Math.min(100, (st.player.mental || 50) + 3); st.player.risk = Math.max(0, (st.player.risk || 0) - 3); }
+          if (typeof StateManager !== "undefined") StateManager.addMessage("🎯 你调整了投资策略——'灵活应变。' 心智+3,风险-3。", "success");
+        }}
+      ],
+      text: function (st) {
+        if (!st) return null;
+        var n = st.investment && st.investment.stockHoldings ? st.investment.stockHoldings.length : 0;
+        return "你追踪了自己的投资走势——持有" + n + "只股票。它们在怎么动？";
+      }
+    },
+    {
+      id: "e484_invest_journal", phase: "street", _isChainEvent: false, icon: "📔",
+      title: "投资日记",
+      story: "你写下了投资日记——{desc}",
+      triggers: { minDay: 60, interval: 90, maxRepeats: 3, excludeFlags: ["_e484JournalCooldown"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        if (!st.investment || !st.investment.tradeLog) return false;
+        return st.investment.tradeLog.length >= 5 && (st.flags && !st.flags._e484JournalCooldown);
+      },
+      choices: [
+        { text: "📖 记录心路", hint: "心智+4", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._e484JournalCooldown = true;
+          if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 4);
+          if (typeof StateManager !== "undefined") StateManager.addMessage("📖 你写下了投资日记——'记录是最好的复盘。' 心智+4。", "success");
+        }},
+        { text: "🎯 制定纪律", hint: "管理XP+3,风险-5", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._e484JournalCooldown = true;
+          if (typeof addSkillXp === "function") { try { addSkillXp("management", 3); } catch(e) {} }
+          if (st.player) st.player.risk = Math.max(0, (st.player.risk || 0) - 5);
+          if (typeof StateManager !== "undefined") StateManager.addMessage("🎯 你制定了投资纪律——'纪律胜于直觉。' 管理XP+3,风险-5。", "success");
+        }}
+      ],
+      text: function (st) {
+        if (!st) return null;
+        var n = st.investment && st.investment.tradeLog ? st.investment.tradeLog.length : 0;
+        return "你写下了投资日记——已经记录了" + n + "笔交易。每一笔都是一次决策，每一次决策都值得记录。";
+      }
+    },
+    {
+      id: "e484_crypto_narrative", phase: "street", _isChainEvent: false, icon: "₿",
+      title: "数字黄金",
+      story: "你了解了加密货币的世界——{desc}",
+      triggers: { minDay: 80, interval: 120, maxRepeats: 3, excludeFlags: ["_e484CryptoCooldown"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        if (!st.investment || !st.investment.btcHoldings) return false;
+        return st.investment.btcHoldings.length >= 1 && (st.flags && !st.flags._e484CryptoCooldown);
+      },
+      choices: [
+        { text: "📖 深入了解", hint: "智力+3,会计XP+2", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._e484CryptoCooldown = true;
+          if (st.player) st.player.intelligence = Math.min(100, (st.player.intelligence || 50) + 3);
+          if (typeof addSkillXp === "function") { try { addSkillXp("accounting", 2); } catch(e) {} }
+          if (typeof StateManager !== "undefined") StateManager.addMessage("📖 你深入了解了加密货币——'了解你投资的东西。' 智力+3,会计XP+2。", "success");
+        }},
+        { text: "🧘 谨慎观望", hint: "心智+3,风险-3", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._e484CryptoCooldown = true;
+          if (st.player) { st.player.mental = Math.min(100, (st.player.mental || 50) + 3); st.player.risk = Math.max(0, (st.player.risk || 0) - 3); }
+          if (typeof StateManager !== "undefined") StateManager.addMessage("🧘 你选择谨慎观望——'不懂不投。' 心智+3,风险-3。", "success");
+        }}
+      ],
+      text: function (st) {
+        if (!st) return null;
+        return "你了解了加密货币的世界——有人暴富，有人血本无归。这是一场关于信念和风险的游戏。";
       }
     }
   ];
