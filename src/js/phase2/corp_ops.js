@@ -76,33 +76,36 @@ function doCorporateAction(actionId) {
   if (effects.kpi)
     c.kpi = Math.max(
       0,
-      Math.min(150, c.kpi + Math.round(effects.kpi * sprintBonus)),
+      Math.min(150, (c.kpi || 0) + Math.round((effects.kpi || 0) * sprintBonus)),
     );
   if (effects.ability)
-    c.ability = Math.max(0, Math.min(100, c.ability + effects.ability));
-  if (effects.hair) c.hair = Math.max(0, Math.min(100, c.hair + effects.hair));
+    c.ability = Math.max(0, Math.min(100, (c.ability || 0) + (effects.ability || 0)));
+  if (effects.hair) c.hair = Math.max(0, Math.min(100, (c.hair || 0) + (effects.hair || 0)));
   if (effects.dignity)
-    c.dignity = Math.max(0, Math.min(100, c.dignity + effects.dignity));
+    c.dignity = Math.max(
+      0,
+      Math.min(100, (c.dignity || 0) + (effects.dignity || 0)),
+    );
   if (effects.upwardMgmt)
     c.upwardMgmt = Math.max(
       0,
-      Math.min(100, c.upwardMgmt + effects.upwardMgmt),
+      Math.min(100, (c.upwardMgmt || 0) + (effects.upwardMgmt || 0)),
     );
   if (effects.popularity)
     c.popularity = Math.max(
       0,
-      Math.min(100, c.popularity + effects.popularity),
+      Math.min(100, (c.popularity || 0) + (effects.popularity || 0)),
     );
-  if (effects.risk) c.risk = Math.max(0, Math.min(100, c.risk + effects.risk));
+  if (effects.risk) c.risk = Math.max(0, Math.min(100, (c.risk || 0) + (effects.risk || 0)));
   if (effects.fatigue)
     state.needs.fatigue = Math.max(
       0,
-      Math.min(100, state.needs.fatigue + effects.fatigue),
+      Math.min(100, (state.needs.fatigue || 0) + (effects.fatigue || 0)),
     );
   if (effects.happiness)
     state.needs.happiness = Math.max(
       0,
-      Math.min(100, state.needs.happiness + effects.happiness),
+      Math.min(100, (state.needs.happiness || 0) + (effects.happiness || 0)),
     );
   // 现金效果
   if (effects.cash)
@@ -110,7 +113,7 @@ function doCorporateAction(actionId) {
   if (effects.intelligence)
     state.player.intelligence = Math.min(
       100,
-      state.player.intelligence + effects.intelligence,
+      (state.player.intelligence || 0) + (effects.intelligence || 0),
     );
 
   state.corporate.actionsUsed++;
@@ -240,6 +243,18 @@ function endQuarter() {
     "success",
   );
 
+  // [全系统自洽修复] 域H R50 联动增强(H→C): 季度工作积累职业技能经验
+  if (typeof addSkillXp === "function" && state.skills) {
+    var _skillXpGain = 0;
+    if (c.rank === "P5" || c.rank === "P6") _skillXpGain = 5;
+    else if (c.rank === "P7" || c.rank === "P8") _skillXpGain = 8;
+    else if (c.rank === "P9" || c.rank === "P10") _skillXpGain = 12;
+    if (_skillXpGain > 0) {
+      addSkillXp("management", _skillXpGain);
+      addSkillXp("accounting", Math.round(_skillXpGain / 2));
+    }
+  }
+
   // [全系统自洽修复] 域H 联动增强6: 季度绩效影响职场同事关系（H→D）
   if (typeof addDailyTransaction === "function" && state.relationships) {
     var gradeAffinityMap = { "S+": 5, S: 4, A: 3, B: 1, C: -2 };
@@ -258,6 +273,18 @@ function endQuarter() {
       } else if (affinityChange < 0) {
         StateManager.addMessage("📉 绩效不佳，同事们看你的眼神有点微妙，好感度" + affinityChange + "。", "warning");
       }
+    }
+  }
+
+  // [全系统自洽修复] 域H R50 联动增强(H→D): 高团队忠诚度提升职场人缘
+  if (state.corporate && state.corporate.team && state.corporate.team.length > 0) {
+    var _avgLoyalty = 0;
+    for (var _ti = 0; _ti < state.corporate.team.length; _ti++) {
+      _avgLoyalty += state.corporate.team[_ti].loyalty || 50;
+    }
+    _avgLoyalty = Math.round(_avgLoyalty / state.corporate.team.length);
+    if (_avgLoyalty >= 70 && state.player.corporate) {
+      state.player.corporate.popularity = Math.min(100, (state.player.corporate.popularity || 50) + 1);
     }
   }
 
@@ -296,6 +323,14 @@ function endQuarter() {
       "🏃 进入Q4冲刺季！下季度所有KPI增益+50%，绩效评分×1.1。",
       "event",
     );
+  }
+
+  // [全系统自洽修复] 域H R50 联动增强(H→E): 季度投资组合回顾
+  if (state.investment && state.investment.portfolio) {
+    var _pv = state.investment.portfolio.totalValue || 0;
+    if (_pv > 0 && c.corpQuarter === 1) {
+      StateManager.addMessage("📊 年度投资组合市值 ¥" + _pv.toLocaleString() + "，多元化配置是抵御风险的关键。", "info");
+    }
   }
 
   // Q3 晋升判定

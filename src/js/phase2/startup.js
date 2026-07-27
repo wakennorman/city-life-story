@@ -6159,7 +6159,7 @@ function updateProductVersion(state, productId, versionType, budget) {
   // 记录版本历史
   product.versionHistory.push({
     version: newVersion,
-    date: new Date().toISOString().split("T")[0],
+    date: "Day" + state.player.day,
     day: state.player.day,
     changes: config.desc,
     techScore: product.technologyScore,
