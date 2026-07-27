@@ -21,6 +21,8 @@
 
 /** 每日结算时调用：更新 streak/counter */
 function tickHabits(state) {
+  // [全系统自洽修复] 域G R520 P1: state.needs 守卫（旧存档/异常状态防崩溃）
+  if (!state.needs) state.needs = { hunger: 50, fatigue: 30, hygiene: 60, happiness: 50 };
   var n = state.needs;
   state.flags._habits = state.flags._habits || {
     junkFoodMeals: 0,

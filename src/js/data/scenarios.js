@@ -111,6 +111,8 @@ const SCENARIOS = [
         desc: "有老乡介绍工头联系方式，魅力+5，心情+15",
         apply: function (s) {
           s.player.charm = Math.min(100, s.player.charm + 5);
+          // [全系统自洽修复] 域G R520 P1: s.needs 守卫
+          if (!s.needs) s.needs = { hunger: 50, fatigue: 30, hygiene: 60, happiness: 50 };
           s.needs.happiness = Math.min(100, s.needs.happiness + 15);
         },
       },
@@ -500,6 +502,7 @@ const SCENARIOS = [
         desc: "天生会和人打交道，魅力+10，心情+5",
         apply: function (s) {
           s.player.charm = Math.min(100, s.player.charm + 10);
+          if (!s.needs) s.needs = { hunger: 50, fatigue: 30, hygiene: 60, happiness: 50 };
           s.needs.happiness = Math.min(100, s.needs.happiness + 5);
         },
       },
@@ -906,6 +909,7 @@ const SCENARIOS = [
         desc: "大学人缘超好，魅力+10，心情+5",
         apply: function (s) {
           s.player.charm = Math.min(100, s.player.charm + 10);
+          if (!s.needs) s.needs = { hunger: 50, fatigue: 30, hygiene: 60, happiness: 50 };
           s.needs.happiness = Math.min(100, s.needs.happiness + 5);
         },
       },
