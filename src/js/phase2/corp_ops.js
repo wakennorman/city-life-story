@@ -222,6 +222,19 @@ function endQuarter() {
     c.consecutiveC = 0;
   }
 
+  // [全系统自洽修复] 域H 联动增强(H→C): 高绩效季度提供职业资本奖励
+  if (grade.grade === "S" || grade.grade === "S+") {
+    if (typeof ensureCareerCapital === "function") {
+      var _capH = ensureCareerCapital(state);
+      if (_capH) {
+        _capH.reputation = Math.min(100, (_capH.reputation || 0) + 3);
+        _capH.industryResources = Math.min(100, (_capH.industryResources || 0) + 2);
+        if (typeof clampCareerCapital === "function") clampCareerCapital(_capH);
+        StateManager.addMessage("🏆 " + grade.grade + "级绩效！你在行业内的声誉和资源大幅提升。", "success");
+      }
+    }
+  }
+
   // 发放季度工资
   const rankData = CORP_RANKS[c.rank];
   const salary = rankData ? rankData.baseSalary * 3 : 45000;
