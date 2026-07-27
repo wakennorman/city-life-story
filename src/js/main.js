@@ -642,9 +642,9 @@ function showScenarioDetail(scenarioId) {
   var resourceLines = "";
   resourceLines +=
     '<div class="scenario-detail-stat"><span class="scenario-detail-stat-label">💰 现金</span><span class="scenario-detail-stat-val" style="color:' +
-    (s.resources.cash >= 5000 ? "var(--success)" : "") +
+    ((s.resources.cash || 0) >= 5000 ? "var(--success)" : "") +
     '">¥' +
-    s.resources.cash.toLocaleString() +
+    (s.resources.cash || 0).toLocaleString() +
     "</span></div>";
   if (s.resources.bankBalance > 0) {
     resourceLines +=
@@ -960,7 +960,7 @@ function startScenarioGame(scenarioId) {
       );
     }
   }
-  var _cashBase = state.resources.cash;
+  var _cashBase = state.resources.cash || 0;
   var _cashF = 1 + (Random.float(0, 1) * 2 - 1) * 0.15;
   state.resources.cash = Math.round(
     Math.max(Math.floor(_cashBase * 0.7), _cashBase * _cashF),

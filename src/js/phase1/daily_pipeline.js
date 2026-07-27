@@ -457,6 +457,64 @@ const DAILY_PIPELINE = [
     },
   },
 
+  // [全系统自洽修复] 域G R49 联动增强(G→C): 技能匹配职业发展提示
+  {
+    name: "skill_career_hint",
+    fn: function (state) {
+      if (!state.player || !state.skills || !state.player.job) return;
+      var job = state.player.job;
+      if (job === "unemployed" || job === "street_ragpicker") return;
+      var topSkill = 0, topSkillKey = "";
+      for (var _skk in state.skills) {
+        var _slv = state.skills[_skk] && state.skills[_skk].level || 0;
+        if (_slv > topSkill) { topSkill = _slv; topSkillKey = _skk; }
+      }
+      if (topSkill >= 30 && state.player.day % 30 === 0) {
+        StateManager.addMessage("💡 你的" + (typeof getSkillChineseName === "function" ? getSkillChineseName(topSkillKey) : topSkillKey) + "技能已达到Lv." + topSkill + "，看看有没有更适合你的工作机会？", "info");
+      }
+    },
+  },
+
+  // [全系统自洽修复] 域G R49 联动增强(G→D): 社交关系缓解疲劳
+  {
+    name: "social_fatigue_relief",
+    fn: function (state) {
+      if (!state.needs || !state.relationships) return;
+      var _closeCount = 0;
+      for (var _rid2 in state.relationships) {
+        if (state.relationships[_rid2] && (state.relationships[_rid2].affinity || 0) >= 60) {
+          _closeCount++;
+        }
+      }
+      if (_closeCount >= 2 && state.needs.fatigue > 30) {
+        var _relief = Math.min(5, _closeCount);
+        state.needs.fatigue = Math.max(0, (state.needs.fatigue || 0) - _relief);
+        if (state.player.day % 7 === 0 && _closeCount >= 3) {
+          StateManager.addMessage("🤗 有朋友真好——和" + _closeCount + "位好友的交往让你感到身心放松。", "success");
+        }
+      }
+    },
+  },
+
+  // [全系统自洽修复] 域G R49 联动增强(G→E): 财富里程碑生活品质
+  {
+    name: "wealth_milestone_happiness",
+    fn: function (state) {
+      if (!state.resources || !state.needs) return;
+      var _netWorth = (state.resources.cash || 0) + (state.resources.bankBalance || 0);
+      var _milestone = 0;
+      if (_netWorth >= 500000) _milestone = 500000;
+      else if (_netWorth >= 200000) _milestone = 200000;
+      else if (_netWorth >= 100000) _milestone = 100000;
+      else if (_netWorth >= 50000) _milestone = 50000;
+      if (_milestone > 0 && !state.flags["_wealth_ms_" + _milestone]) {
+        state.flags["_wealth_ms_" + _milestone] = true;
+        state.needs.happiness = Math.min(100, (state.needs.happiness || 50) + 3);
+        StateManager.addMessage("💰 净资产突破¥" + _milestone.toLocaleString() + "！财富积累让生活更有底气。", "success");
+      }
+    },
+  },
+
   // === 临界值延期惩罚（在 extreme_check 之前）===
   {
     name: "critical_punish",
@@ -1940,7 +1998,7 @@ const DAILY_PIPELINE = [
           if (typeof StateManager !== "undefined") {
             StateManager.addMessage(
               "⚠️ 你的银行贷款已逾期超过90天，建议尽快还清以免影响信用。欠款: ¥" +
-                state.resources.bankDebt.toLocaleString(),
+                (state.resources.bankDebt || 0).toLocaleString(),
               "warning",
             );
           }

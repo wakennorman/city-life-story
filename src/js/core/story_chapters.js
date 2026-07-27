@@ -78,6 +78,15 @@ var STORY_CHAPTERS = [
         hint: "找人说说话、吃点好吃的，心情好起来脚步才会轻。",
       },
       {
+        id: "survive_career_milestone",
+        condition: function (st) {
+          var job = st.player.job;
+          return job && job !== "unemployed";
+        },
+        text: "你找到了一份工作，不再是这座城市的旁观者。每天早出晚归，虽然累，但心里踏实。",
+        hint: "把本职工作做好，积累技能和资源，为未来铺路。",
+      },
+      {
         id: "survive_default",
         condition: function () {
           return true;
