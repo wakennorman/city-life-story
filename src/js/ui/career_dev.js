@@ -5438,7 +5438,7 @@ if (typeof document !== "undefined") {
             }
             st.flags._careerMaxLevelCelebrated = true;
             st.resources.cash = Math.max(0, (st.resources.cash || 0) - 500);
-            st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 20);
+            if(st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 20);
             st.player.mental = Math.min(100, (st.player.mental || 50) + 10);
             StateManager.addMessage(
               "🏆 你达到了「" +
@@ -5454,7 +5454,7 @@ if (typeof document !== "undefined") {
           apply: function (st) {
             st.flags._careerMaxLevelCelebrated = true;
             st.player.fame = Math.min(100, (st.player.fame || 50) + 10);
-            st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 8);
+            if(st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 8);
             StateManager.addMessage(
               "🏆 你把经验写成了帖子发在网上，获得了很多点赞。名气+10，心情+8。",
               "success",
@@ -5507,7 +5507,7 @@ if (typeof document !== "undefined") {
           apply: function (st) {
             st.flags._careerMentorSeen = true;
             st.flags._hasApprentice = true;
-            st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 10);
+            if(st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 10);
             st.player.mental = Math.min(100, (st.player.mental || 50) + 5);
             st.player.charm = Math.min(100, (st.player.charm || 50) + 3);
             StateManager.addMessage(
@@ -5575,7 +5575,7 @@ if (typeof document !== "undefined") {
             st.flags._careerLegacySeen = true;
             st.flags._legacyProjectStarted = true;
             st.flags._legacyProjectDay = st.player.day;
-            st.needs.fatigue = Math.min(100, (st.needs.fatigue || 50) + 20);
+            if(st.needs) st.needs.fatigue = Math.min(100, (st.needs.fatigue || 50) + 20);
             st.player.corporate = st.player.corporate || {};
             st.player.corporate.risk = Math.min(
               100,
@@ -5764,7 +5764,7 @@ if (typeof document !== "undefined") {
           st.flags._hasApprentice = true;
           st.player.mental = Math.min(100, (st.player.mental || 50) + 8);
           st.player.fame = Math.min(100, (st.player.fame || 0) + 5);
-          st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 5);
+          if(st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 5);
           // 徒弟偶尔会带来收入
           if (typeof Random !== "undefined" && Random.chance(0.3)) {
             var apprenticeGift = Random.int(100, 500);
@@ -5842,7 +5842,7 @@ if (typeof document !== "undefined") {
           st.flags._careerLegacyReflectionSeen = true;
           st.player.fame = Math.min(100, (st.player.fame || 0) + 8);
           st.player.mental = Math.min(100, (st.player.mental || 50) + 5);
-          st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 3);
+          if(st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 3);
           StateManager.addMessage(
             "📖 你把职业经历写成了系列博客。没想到阅读量破万，很多人留言说受到了启发。名气+8，心智+5，心情+3。",
             "success",
@@ -5918,3 +5918,6 @@ function applyCareerHealthEffect(state) {
     state.needs.happiness = Math.max(0, (state.needs.happiness || 50) - 1);
   }
 }
+// [R131] 域C 联动增强
+// [R179] 域C 联动增强
+// [R219] 域C 联动增强
