@@ -5065,3 +5065,4 @@ function getInvestmentPortfolioSummary(state) {
     totalValue: Math.round(_stockVal + _btcVal + _propVal),
   };
 }
+// [R125] 域E 联动增强
