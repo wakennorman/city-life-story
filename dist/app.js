@@ -103324,6 +103324,181 @@ if (typeof window !== "undefined") {
   }
 })();
 ;
+// ==== js/core/domain_c_linkage_r453.js ====
+/**
+ * 域C(职业/成长) 联动增强 R453（第二轮循环·续）
+ * 桥接：
+ *   C→D  c453_colleague_competitor   职场竞争 → 消费 corporate.colleagues 数据,
+ *     同事晋升竞争→"既生瑜何生亮"的职场张力叙事
+ *   C→B  c453_workplace_milestone    职场里程碑 → 消费 employment 数据,
+ *     职业成就→"被看见"的叙事回响
+ *   C→G  c453_burnout_recovery       职业倦怠恢复 → 消费 career capital 数据,
+ *     高压工作后的身心恢复→"停下来才能走更远"的生命叙事
+ */
+(function () {
+  "use strict";
+  if (typeof RANDOM_EVENTS === "undefined" || !RANDOM_EVENTS) return;
+  if (RANDOM_EVENTS._domainCLinkageR453Loaded) return;
+  RANDOM_EVENTS._domainCLinkageR453Loaded = true;
+
+  function ensureCareerCapital(st) {
+    if (!st) return null;
+    if (!st.career) st.career = {};
+    if (!st.career.capital) st.career.capital = { burnout: 0, reputation: 0, industryResources: 0, clientLeads: 0 };
+    return st.career.capital;
+  }
+  function firstHighRelationColleague(st) {
+    if (!st || !st.corporate || !st.corporate.colleagues) return null;
+    var net = st.corporate.colleagues.network;
+    if (!net || !Array.isArray(net)) return null;
+    for (var i = 0; i < net.length; i++) {
+      if (net[i] && (net[i].relationship || 0) >= 50) return net[i];
+    }
+    return null;
+  }
+
+  var EVENTS = [
+    {
+      id: "c453_colleague_competitor", phase: "corporate", _isChainEvent: false, icon: "⚔️",
+      title: "职场对手",
+      story: "你和{name}同时竞争一个晋升机会——{desc}",
+      triggers: { minDay: 120, interval: 120, maxRepeats: 3, excludeFlags: ["_c453CompetitorCooldown"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        if (!st.corporate || !st.corporate.colleagues) return false;
+        if (!st.career || !st.career.currentJob) return false;
+        if ((st.career.currentJob.workDays || 0) < 90) return false;
+        var net = st.corporate.colleagues.network;
+        if (!net || !Array.isArray(net) || net.length < 2) return false;
+        return (st.flags && !st.flags._c453CompetitorCooldown);
+      },
+      choices: [
+        { text: "💪 正面竞争", hint: "业绩+8,关系-10", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._c453CompetitorCooldown = true;
+          if (st.career && st.career.currentJob) st.career.currentJob.performance = Math.min(100, (st.career.currentJob.performance || 50) + 8);
+          var c = firstHighRelationColleague(st);
+          if (c && typeof decreaseColleagueRelationship === "function") { try { decreaseColleagueRelationship(st, c.id, 10, "晋升竞争"); } catch(e) {} }
+          if (typeof StateManager !== "undefined") StateManager.addMessage("💪 你选择正面迎战——职场上没有退路，只有前进。业绩+8。", "success");
+        }},
+        { text: "🤝 合作共赢", hint: "关系+5,行业资源+3", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._c453CompetitorCooldown = true;
+          var c = firstHighRelationColleague(st);
+          if (c && typeof increaseColleagueRelationship === "function") { try { increaseColleagueRelationship(st, c.id, 5, "良性竞争"); } catch(e) {} }
+          var cap = ensureCareerCapital(st);
+          cap.industryResources = (cap.industryResources || 0) + 3;
+          if (typeof StateManager !== "undefined") StateManager.addMessage("🤝 你选择了良性竞争——职场不是零和博弈，一起进步才是双赢。行业资源+3。", "success");
+        }},
+        { text: "🧘 专注自身", hint: "心智+3,倦怠-5", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._c453CompetitorCooldown = true;
+          if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 3);
+          var cap = ensureCareerCapital(st);
+          cap.burnout = Math.max(0, (cap.burnout || 0) - 5);
+          if (typeof StateManager !== "undefined") StateManager.addMessage("🧘 你选择专注自身——与其盯着对手，不如做好自己。心智+3,倦怠-5。", "success");
+        }}
+      ],
+      text: function (st) {
+        if (!st) return null;
+        var c = firstHighRelationColleague(st);
+        var name = c ? c.name : "一位同事";
+        return "你和" + name + "同时竞争一个晋升机会——你们的业绩不相上下，但名额只有一个。这是职场最残酷的考场。";
+      }
+    },
+    {
+      id: "c453_workplace_milestone", phase: "corporate", _isChainEvent: false, icon: "🏆",
+      title: "被看见",
+      story: "你的职业成就引起了关注——{desc}",
+      triggers: { minDay: 200, interval: 150, maxRepeats: 2, excludeFlags: ["_c453MilestoneCooldown"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        if (!st.career || !st.career.currentJob) return false;
+        if ((st.career.currentJob.workDays || 0) < 180) return false;
+        var cap = ensureCareerCapital(st);
+        return (cap.reputation || 0) >= 20 && (st.flags && !st.flags._c453MilestoneCooldown);
+      },
+      choices: [
+        { text: "📢 接受采访", hint: "名望+5,心智+2", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._c453MilestoneCooldown = true;
+          if (st.player) { st.player.fame = Math.min(100, (st.player.fame || 0) + 5); st.player.mental = Math.min(100, (st.player.mental || 50) + 2); }
+          var cap = ensureCareerCapital(st); cap.reputation = (cap.reputation || 0) + 8;
+          if (typeof StateManager !== "undefined") StateManager.addMessage("📢 你接受了行业媒体的采访——'我只是做了该做的事。' 名望+5,心智+2,声誉+8。", "success");
+        }},
+        { text: "🙈 低调做事", hint: "行业资源+10", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._c453MilestoneCooldown = true;
+          var cap = ensureCareerCapital(st);
+          cap.industryResources = (cap.industryResources || 0) + 10;
+          if (typeof StateManager !== "undefined") StateManager.addMessage("🙈 你婉拒了采访——真正的高手不需要聚光灯。行业资源+10。", "success");
+        }}
+      ],
+      text: function (st) {
+        if (!st) return null;
+        var job = st.career && st.career.currentJob;
+        var pathName = "";
+        if (job && job.path && typeof CAREER_PATHS !== "undefined" && CAREER_PATHS[job.path]) {
+          pathName = CAREER_PATHS[job.path].name;
+        }
+        return "你在" + (pathName || "职场") + "的努力终于被看见了——行业媒体想采访你，朋友圈在传你的故事。你第一次感受到'被看见'的滋味。";
+      }
+    },
+    {
+      id: "c453_burnout_recovery", phase: "corporate", _isChainEvent: false, icon: "🌙",
+      title: "停下来",
+      story: "连续的加班让你身心俱疲——{desc}",
+      triggers: { minDay: 150, interval: 100, maxRepeats: 3, excludeFlags: ["_c453BurnoutCooldown"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        if (!st.career || !st.career.currentJob) return false;
+        var cap = ensureCareerCapital(st);
+        if ((cap.burnout || 0) < 50) return false;
+        return (st.flags && !st.flags._c453BurnoutCooldown);
+      },
+      choices: [
+        { text: "🛌 彻底休息", hint: "倦怠-30,健康+10,业绩-5", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._c453BurnoutCooldown = true;
+          var cap = ensureCareerCapital(st);
+          cap.burnout = Math.max(0, (cap.burnout || 0) - 30);
+          if (st.status) st.status.health = Math.min(100, (st.status.health || 70) + 10);
+          if (st.career && st.career.currentJob) st.career.currentJob.performance = Math.max(0, (st.career.currentJob.performance || 50) - 5);
+          if (typeof StateManager !== "undefined") StateManager.addMessage("🛌 你决定彻底休息几天——停下来，才能走得更远。倦怠-30,健康+10,业绩-5。", "success");
+        }},
+        { text: "🏃 运动解压", hint: "倦怠-15,健康+5,心智+3", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._c453BurnoutCooldown = true;
+          var cap = ensureCareerCapital(st);
+          cap.burnout = Math.max(0, (cap.burnout || 0) - 15);
+          if (st.status) st.status.health = Math.min(100, (st.status.health || 70) + 5);
+          if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 3);
+          if (typeof StateManager !== "undefined") StateManager.addMessage("🏃 你选择用运动解压——流汗是最好的减压方式。倦怠-15,健康+5,心智+3。", "success");
+        }},
+        { text: "☕ 硬扛到底", hint: "业绩+5,倦怠+10,健康-8", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._c453BurnoutCooldown = true;
+          if (st.career && st.career.currentJob) st.career.currentJob.performance = Math.min(100, (st.career.currentJob.performance || 50) + 5);
+          var cap = ensureCareerCapital(st);
+          cap.burnout = Math.min(100, (cap.burnout || 0) + 10);
+          if (st.status) st.status.health = Math.max(0, (st.status.health || 70) - 8);
+          if (typeof StateManager !== "undefined") StateManager.addMessage("☕ 你选择硬扛——再撑一撑就过去了。业绩+5,但倦怠+10,健康-8。", "warning");
+        }}
+      ],
+      text: function (st) {
+        if (!st) return null;
+        var cap = ensureCareerCapital(st);
+        var burnout = cap ? (cap.burnout || 0) : 0;
+        if (burnout >= 80) return "你已经连续加班好几个月了。今天早上照镜子，发现自己眼里全是血丝。身体在发出警告——你真的需要停下来了。";
+        return "连续的加班让你身心俱疲，桌上的咖啡杯已经堆成了小山。你知道这样下去不是办法，但手头的工作又放不下。";
+      }
+    }
+  ];
+
+  for (var i = 0; i < EVENTS.length; i++) {
+    (function (ev) {
+      var exists = false;
+      for (var j = 0; j < RANDOM_EVENTS.length; j++) {
+        if (RANDOM_EVENTS[j] && RANDOM_EVENTS[j].id === ev.id) { exists = true; break; }
+      }
+      if (!exists) RANDOM_EVENTS.push(ev);
+    })(EVENTS[i]);
+  }
+})();
+
+;
 // ==== js/core/core_lifecycle_linkage_r192.js ====
 /**
  * 域G(核心机制/生命周期) 联动增强 R192
@@ -252842,6 +253017,138 @@ if (typeof window !== "undefined") {
   }
 })();
 ;
+// ==== js/core/domain_g_linkage_r456.js ====
+/**
+ * 域G(核心机制/生命周期) 联动增强 R456（第三轮循环）
+ * 桥接：
+ *   G→D  g456_life_social_reflect  人生社交反思 → 消费 player.day+relationships 数据,
+ *     时间流逝→"这一年认识了谁"的社交反思
+ *   G→F  g456_life_ui_milestone   人生UI里程碑 → 消费 player.day+resources 数据,
+ *     重要节点→"你的人生大事记"的里程碑展示
+ *   G→C  g456_life_skill_evolve   人生技能进化 → 消费 player.age+skills 数据,
+ *     年龄增长→"每个年龄段该学什么"的技能进化建议
+ */
+(function () {
+  "use strict";
+  if (typeof RANDOM_EVENTS === "undefined" || !RANDOM_EVENTS) return;
+  if (RANDOM_EVENTS._domainGLinkageR456Loaded) return;
+  RANDOM_EVENTS._domainGLinkageR456Loaded = true;
+
+  function countMetNpcs(st) {
+    if (!st || !st.relationships) return 0;
+    var n = 0;
+    for (var id in st.relationships) { if (st.relationships[id] && st.relationships[id].met) n++; }
+    return n;
+  }
+
+  var EVENTS = [
+    {
+      id: "g456_life_social_reflect", phase: "street", _isChainEvent: false, icon: "🤔",
+      title: "这一年",
+      story: "夜深人静，你回想这一年认识的人——{desc}",
+      triggers: { minDay: 90, interval: 180, maxRepeats: 3, excludeFlags: ["_g456SocialReflectCooldown"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        return (st.flags && !st.flags._g456SocialReflectCooldown);
+      },
+      choices: [
+        { text: "🤔 珍惜眼前人", hint: "心情+3,好感+2", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._g456SocialReflectCooldown = true;
+          if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 3);
+          if (typeof applyAffinityChange === "function") {
+            for (var id in (st.relationships || {})) {
+              if (st.relationships[id] && st.relationships[id].met) {
+                try { applyAffinityChange(st, id, 2, "深夜感慨友情珍贵"); } catch(e) {}
+                break;
+              }
+            }
+          }
+          if (typeof StateManager !== "undefined") StateManager.addMessage("🤔 夜深人静，你回想这一年——在这座城市里，认识了一些人，也走散了一些人。留下的，都是值得珍惜的。心情+3,好感+2。", "success");
+        }},
+        { text: "📝 定个小目标", hint: "心智+2", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._g456SocialReflectCooldown = true;
+          if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 2);
+          if (typeof StateManager !== "undefined") StateManager.addMessage("🤔 你给自己定了下一年要完成的目标——'明年这个时候，我要成为更好的自己。' 心智+2。", "success");
+        }}
+      ],
+      text: function (st) {
+        if (!st) return null;
+        var n = countMetNpcs(st);
+        var day = (st.player && st.player.day) || 0;
+        return "夜深人静，你回想这一年认识的人——" + n + "个面孔在脑海中闪过。有些人还在，有些人已经走散了。";
+      }
+    },
+    {
+      id: "g456_life_ui_milestone", phase: "street", _isChainEvent: false, icon: "🏆",
+      title: "里程碑",
+      story: "你翻看自己的人生记录——{desc}",
+      triggers: { minDay: 60, interval: 120, maxRepeats: 3, excludeFlags: ["_g456MilestoneCooldown"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        return (st.flags && !st.flags._g456MilestoneCooldown);
+      },
+      choices: [
+        { text: "🏆 回顾高光时刻", hint: "心情+3,心智+1", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._g456MilestoneCooldown = true;
+          if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 3);
+          if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 1);
+          if (typeof StateManager !== "undefined") StateManager.addMessage("🏆 你翻看自己的人生记录——那些高光时刻，让你觉得自己没白活。心情+3,心智+1。", "success");
+        }},
+        { text: "📈 对比过去和现在", hint: "心智+2", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._g456MilestoneCooldown = true;
+          if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 2);
+          if (typeof StateManager !== "undefined") StateManager.addMessage("🏆 你对比了过去的自己和现在的自己——虽然还有很多不足，但确实在进步。心智+2。", "success");
+        }}
+      ],
+      text: function (st) {
+        if (!st) return null;
+        var day = (st.player && st.player.day) || 0;
+        var cash = (st.resources && st.resources.cash) || 0;
+        return "你翻看自己的人生记录——第" + day + "天，从当初的懵懂到现在的" + (cash >= 50000 ? "小有成就" : "继续努力") + "，每一步都算数。";
+      }
+    },
+    {
+      id: "g456_life_skill_evolve", phase: "corporate", _isChainEvent: false, icon: "🌱",
+      title: "活到老学到老",
+      story: "你发现自己在不同阶段需要不同的技能——{desc}",
+      triggers: { minDay: 50, interval: 120, maxRepeats: 3, excludeFlags: ["_g456SkillEvolveCooldown"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        return (st.flags && !st.flags._g456SkillEvolveCooldown);
+      },
+      choices: [
+        { text: "🌱 制定学习计划", hint: "全技能XP+2,心智+2", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._g456SkillEvolveCooldown = true;
+          var skills = ["accounting", "management", "marketing", "technology", "social", "trade"];
+          for (var i = 0; i < skills.length; i++) { if (typeof addSkillXp === "function") { try { addSkillXp(skills[i], 2); } catch(e) {} } }
+          if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 2);
+          if (typeof StateManager !== "undefined") StateManager.addMessage("🌱 你制定了未来半年的学习计划——每个阶段学什么，达到什么水平，清清楚楚。全技能XP+2,心智+2。", "success");
+        }},
+        { text: "🎯 专注一项核心技能", hint: "最高技能+5", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._g456SkillEvolveCooldown = true;
+          if (typeof StateManager !== "undefined") StateManager.addMessage("🌱 你决定把最擅长的技能练到极致——一招鲜，吃遍天。最高技能XP+5。", "success");
+        }}
+      ],
+      text: function (st) {
+        if (!st) return null;
+        var day = (st.player && st.player.day) || 0;
+        var age = Math.floor(day / 365) + 22;
+        return "你发现自己在不同阶段需要不同的技能——" + age + "岁了，每个年龄段都有该学的东西。活到老，学到老。";
+      }
+    }
+  ];
+
+  for (var i = 0; i < EVENTS.length; i++) {
+    (function (ev) {
+      var exists = false;
+      for (var j = 0; j < RANDOM_EVENTS.length; j++) {
+        if (RANDOM_EVENTS[j] && RANDOM_EVENTS[j].id === ev.id) { exists = true; break; }
+      }
+      if (!exists) RANDOM_EVENTS.push(ev);
+    })(EVENTS[i]);
+  }
+})();
+;
 // ==== js/core/domain_h_linkage_r418.js ====
 /**
  * 域H(Phase2/公司) 联动增强 R418
@@ -261158,6 +261465,268 @@ if (typeof window !== "undefined") {
     })(EVENTS[i]);
   }
 })();
+;
+// ==== js/core/domain_e_linkage_r453.js ====
+/**
+ * 域E(经济/投资) 联动增强 R453
+ * 三个"写入但零叙事消费"字段的首次叙事消费：
+ *   E→G  e453_property_phase_transition — 消费 propertyMarketPhase，房产阶段叙事
+ *   E→G  e453_btc_halving_anniversary  — 消费 btcHalvingDay，减半周年纪念
+ *   E→G  e453_profit_milestone        — 消费 _totalInvestmentProfit，盈利里程碑
+ *
+ * 严格遵循 IIFE 注入范式，全 || 防御，[PLACEHOLDER] 数值标记。
+ */
+(function () {
+  "use strict";
+
+  if (typeof RANDOM_EVENTS === "undefined" || !RANDOM_EVENTS) return;
+  if (RANDOM_EVENTS._domainERelayLinkageR453Loaded) return;
+  RANDOM_EVENTS._domainERelayLinkageR453Loaded = true;
+
+  function grantSkillXp(key, amt) {
+    if (typeof addSkillXp === "function") {
+      try { addSkillXp(key, amt); } catch (e) {}
+    }
+  }
+
+  function safeMsg(text, tone) {
+    if (typeof StateManager !== "undefined" && StateManager.addMessage) {
+      try { StateManager.addMessage(text, tone || "info"); } catch (e) {}
+    }
+  }
+
+  var EVENTS = [
+    {
+      // E→G: 房产市场阶段叙事 — 首个叙事消费 propertyMarketPhase
+      // propertyMarketPhase 此前仅用于价格计算和简单消息，无完整叙事事件
+      id: "e453_property_phase_transition",
+      phase: "street",
+      _isChainEvent: false,
+      icon: "🏠",
+      title: "房产市场的时节",
+      story: "你看着房产行情，房价涨跌和市场阶段的潮起潮落，让你想起老辈人的话：买卖房产，七分看天时。",
+      triggers: { minDay: 60, excludeFlags: ["_e453PhaseTransitionSeen"] },
+      conditions: function (st) {
+        if (!st || st.gameOver) return false;
+        var inv = st.investment;
+        if (!inv) return false;
+        var phase = inv.propertyMarketPhase;
+        if (typeof phase !== "string") return false;
+        return ["boom", "stable", "cooling", "bust"].includes(phase);
+      },
+      choices: [
+        {
+          text: "📈 趁火热赶紧加仓",
+          hint: "冒险: 现金-5000, 房产+1套(预期)",
+          apply: function (st) {
+            if (!st) return;
+            st.flags._e453PhaseTransitionSeen = true;
+            if (st.resources && (st.resources.cash || 0) >= 5000) {
+              st.resources.cash -= 5000;
+              safeMsg("📈 你咬牙加仓了一套房产，希望借着热度赚更多。现金-5000。", "warning");
+            } else {
+              safeMsg("📈 你想加仓但现金不足，只能观望。", "info");
+            }
+          }
+        },
+        {
+          text: "🤐 持币观望",
+          hint: "稳健: 无变动",
+          apply: function (st) {
+            if (!st) return;
+            st.flags._e453PhaseTransitionSeen = true;
+            safeMsg("🤐 你选择持币观望，不想在市场过热时冒险。", "info");
+          }
+        },
+        {
+          text: "📉 逢高卖出套现",
+          hint: "落袋: 现金+3000, 房产-1套",
+          apply: function (st) {
+            if (!st) return;
+            st.flags._e453PhaseTransitionSeen = true;
+            if (st.investment && st.investment.properties && st.investment.properties.length > 0) {
+              st.resources.cash = (st.resources.cash || 0) + 3000;
+              safeMsg("📉 你卖了一套房产落袋为安，现金+3000。", "success");
+            } else {
+              safeMsg("📉 你没有房产可卖，只能放弃。", "info");
+            }
+          }
+        }
+      ],
+      text: function (st) {
+        if (!st || !st.investment) return null;
+        var phase = st.investment.propertyMarketPhase || "stable";
+        var phaseName = {
+          boom: "火爆",
+          stable: "平稳",
+          cooling: "降温",
+          bust: "萧条"
+        }[phase] || "平稳";
+        return "房产市场当前处于" + phaseName + "阶段。你看着手中的房产，心里有了些主意。";
+      }
+    },
+    {
+      // E→G: 比特币减半周年纪念 — 首个叙事消费 btcHalvingDay
+      // btcHalvingDay 此前仅在 UI 中显示，无叙事事件
+      id: "e453_btc_halving_anniversary",
+      phase: "street",
+      _isChainEvent: false,
+      icon: "⛓️",
+      title: "比特币减半纪念日",
+      story: "今天是比特币减半的纪念日。群里有人在狂欢，有人在回忆上一次减半时的行情。你握着手里的BTC，忽然意识到这个数字背后，是密码学共识的壮丽实验。",
+      triggers: { minDay: 100, excludeFlags: ["_e453HalvingSeen"] },
+      conditions: function (st) {
+        if (!st || st.gameOver) return false;
+        var inv = st.investment;
+        if (!inv) return false;
+        if (!inv.btcHalvingDay) return false;
+        var halvingDay = inv.btcHalvingDay;
+        // 判断是否接近减半纪念日（±3天内）
+        var dayDiff = Math.abs(st.player.day - halvingDay);
+        return dayDiff <= 3;
+      },
+      choices: [
+        {
+          text: "🎉 在群里发个庆祝消息",
+          hint: "名气+5, 心情+3",
+          apply: function (st) {
+            if (!st) return;
+            st.flags._e453HalvingSeen = true;
+            if (st.player) {
+              st.player.fame = Math.min(100, (st.player.fame || 0) + 5);
+              st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 3);
+            }
+            safeMsg("🎉 你在群里发了条庆祝减半的消息，获得了一些点赞和关注。名气+5, 心情+3。", "success");
+          }
+        },
+        {
+          text: "📚 研究减半的历史数据",
+          hint: "会计XP+5, 心智+3",
+          apply: function (st) {
+            if (!st) return;
+            st.flags._e453HalvingSeen = true;
+            grantSkillXp("accounting", 5);
+            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 3);
+            safeMsg("📚 你研究了历史上几次减半的数据，发现了些规律。会计经验+5, 心智+3。", "info");
+          }
+        },
+        {
+          text: "🤷 静静看着",
+          hint: "无",
+          apply: function (st) {
+            if (!st) return;
+            st.flags._e453HalvingSeen = true;
+            safeMsg("🤷 你默默看着减半纪念日，什么也没做。", "info");
+          }
+        }
+      ],
+      text: function (st) {
+        if (!st || !st.investment) return null;
+        var halvingDay = st.investment.btcHalvingDay || 0;
+        var daysDiff = Math.abs(st.player.day - halvingDay);
+        return "今天是比特币减半的纪念日（距离上次减半还有" + daysDiff + "天）。群里气氛不错，有人兴奋，有人沉思。";
+      }
+    },
+    {
+      // E→G: 投资盈利里程碑 — 首个叙事消费 _totalInvestmentProfit
+      // _totalInvestmentProfit 此前仅在 UI 和内部计算中使用，无叙事里程碑事件
+      id: "e453_profit_milestone",
+      phase: "street",
+      _isChainEvent: false,
+      icon: "🎯",
+      title: "投资盈利里程碑",
+      story: "你翻看着投资账户的总盈利数字，一个里程碑悄然达成。这不是简单的数字增长，而是你财务人生的一个重要节点。",
+      triggers: { minDay: 50, excludeFlags: ["_e453ProfitMilestoneSeen"] },
+      conditions: function (st) {
+        if (!st || st.gameOver) return false;
+        var inv = st.investment;
+        if (!inv) return false;
+        var profit = inv._totalInvestmentProfit || 0;
+        return profit >= 10000; // 至少盈利1万元
+      },
+      applyMilestone: function (st, profit) {
+        st.flags._e453ProfitMilestoneSeen = true;
+        var msg = "";
+        if (profit >= 1000000) {
+          msg = "🎉 你的投资总盈利突破¥100万！你已经成为真正的投资高手，财富自由的大门似乎就在眼前。";
+          if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 10);
+          grantSkillXp("accounting", 10);
+        } else if (profit >= 500000) {
+          msg = "🎉 你的投资总盈利突破¥50万！这可不是小数目，你的投资能力已经得到了市场的认可。";
+          if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 8);
+          grantSkillXp("accounting", 8);
+        } else if (profit >= 100000) {
+          msg = "🎉 你的投资总盈利突破¥10万！从最初的懵懂到如今的盈利，你完成了投资之路的第一次飞跃。";
+          if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 5);
+          grantSkillXp("accounting", 5);
+        } else if (profit >= 10000) {
+          msg = "🎉 你的投资总盈利突破¥1万！第一桶金终于赚到了，这是你投资生涯的重要里程碑。";
+          if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 3);
+          grantSkillXp("accounting", 3);
+        }
+        safeMsg(msg, "success");
+      },
+      choices: [
+        {
+          text: "📊 继续投资",
+          hint: "再赚一笔",
+          apply: function (st) {
+            if (!st) return;
+            st.flags._e453ProfitMilestoneSeen = true;
+            safeMsg("📊 你决定继续投资，让盈利滚雪球。", "info");
+          }
+        },
+        {
+          text: "🎉 庆祝一下",
+          hint: "现金+5000, 心情+10",
+          apply: function (st) {
+            if (!st) return;
+            st.flags._e453ProfitMilestoneSeen = true;
+            if (st.resources) {
+              st.resources.cash = (st.resources.cash || 0) + 5000;
+              if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 10);
+            }
+            safeMsg("🎉 你给自己放了个大假，庆祝里程碑达成。现金+5000, 心情+10。", "success");
+          }
+        },
+        {
+          text: "💰 转入银行",
+          hint: "银行理财+盈利额",
+          apply: function (st) {
+            if (!st) return;
+            st.flags._e453ProfitMilestoneSeen = true;
+            var profit = st.investment._totalInvestmentProfit || 0;
+            if (st.resources && st.resources.bankBalance) {
+              st.resources.bankBalance = (st.resources.bankBalance || 0) + profit;
+              st.resources.cash = (st.resources.cash || 0) - profit;
+            }
+            safeMsg("💰 你把盈利转入银行理财，开始让钱继续睡得更安全。", "info");
+          }
+        }
+      ],
+      text: function (st) {
+        if (!st || !st.investment) return null;
+        var profit = st.investment._totalInvestmentProfit || 0;
+        if (profit < 10000) return null;
+        var milestoneText = "";
+        if (profit >= 1000000) milestoneText = "百万元盈利里程碑";
+        else if (profit >= 500000) milestoneText = "五十万元盈利里程碑";
+        else if (profit >= 100000) milestoneText = "十万元盈利里程碑";
+        else if (profit >= 10000) milestoneText = "万元盈利里程碑";
+        return "你的投资总盈利已经达到¥" + profit.toLocaleString() + "，触发了" + milestoneText + "。";
+      }
+    }
+  ];
+
+  // 注入 RANDOM_EVENTS (id 去重防御)
+  for (var i = 0; i < EVENTS.length; i++) {
+    var _e = EVENTS[i];
+    if (!RANDOM_EVENTS.find(function (ev) { return ev.id === _e.id; })) {
+      RANDOM_EVENTS.push(_e);
+    }
+  }
+})();
+
 ;
 // ==== js/core/domain_e_linkage_r454.js ====
 /**
