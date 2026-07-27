@@ -1246,3 +1246,4 @@ if (typeof window.CLS !== 'undefined' && window.CLS.data) window.CLS.data.ITEMS 
 // [R361] 域A
 // [R409] 域A
 // [R457] 域A
+// [R505] 域A
