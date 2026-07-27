@@ -193,3 +193,4 @@ function getPromotionProgress(state) {
   return { done: allMet, checks, nextRank: rankData.next };
 }
 // [R112] 域H 联动增强
+// [R144] 域H 联动增强
