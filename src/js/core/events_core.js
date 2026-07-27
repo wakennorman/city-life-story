@@ -127,6 +127,42 @@ function rollStreetEvent(state) {
       state.flags._careerAnniversaryEvent = true;
       // 一周年叙事已在 tickCareerJobDaily 中处理
     }
+    // [全系统自洽修复] 域B R52 联动增强(B→C): 工作满90天技能成长叙事
+    if (_jobWd === 90 && !state.flags._career90dSkillEvent) {
+      state.flags._career90dSkillEvent = true;
+      if (typeof addSkillXp === "function" && state.skills) {
+        addSkillXp(_path === "corporate" ? "management" : "sales", 10);
+        StateManager.addMessage("📚 工作满90天，你在实践中积累了宝贵的职业技能经验。", "success");
+      }
+    }
+    // [全系统自洽修复] 域B R52 联动增强(B→D): 工作满180天人脉拓展叙事
+    if (_jobWd === 180 && !state.flags._career180dSocialEvent) {
+      state.flags._career180dSocialEvent = true;
+      if (state.relationships) {
+        for (var _wpc = 0; _wpc < state.career.currentJob.workplaceNPCs.length; _wpc++) {
+          var _npcId = state.career.currentJob.workplaceNPCs[_wpc];
+          if (state.relationships[_npcId] && typeof applyAffinityChange === "function") {
+            applyAffinityChange(state, _npcId, 5, "长期共事");
+          }
+        }
+        StateManager.addMessage("🤝 工作半年，你和同事建立了深厚的默契和信任。", "success");
+      }
+    }
+  }
+
+  // [全系统自洽修复] 域B R52 联动增强(B→A): 叙事驱动的市场波动 — 活跃交易影响供需
+  if (state.trade && state.trade.supplyDemand && state.player.day % 15 === 0) {
+    var _tradeCount = state.flags._dailyTradeCount || 0;
+    if (_tradeCount >= 5) {
+      for (var _gid in state.trade.supplyDemand) {
+        for (var _lid in state.trade.supplyDemand[_gid]) {
+          if (Random.chance(0.3)) {
+            state.trade.supplyDemand[_gid][_lid] = (state.trade.supplyDemand[_gid][_lid] || 0) - 2;
+          }
+        }
+      }
+      StateManager.addMessage("📊 市场注意到你频繁交易的活跃度，部分商品供需关系正在调整。", "info");
+    }
   }
 
   // 触发率随天数递增（Day1 18% → Day365 ~35%），确保后期事件池充分出场
@@ -803,6 +839,37 @@ function showEventModal(evt) {
       }
       if (typeof state.resources.cash !== "number" || !isFinite(state.resources.cash)) state.resources.cash = 0;
       state.resources.cash = Math.max(0, state.resources.cash || 0);
+      // [域B R417 联动增强] B→A: 事件类型统计 — 累计moral/risk/news等事件计数，供经济系统感知
+      if (!state.stats) state.stats = {};
+      if (!state.stats.eventCounts) state.stats.eventCounts = {};
+      var _evtCat = "other";
+      if (evt.id.indexOf("moral_") === 0) _evtCat = "moral";
+      else if (evt.id.indexOf("risk_") === 0) _evtCat = "risk";
+      else if (evt._converted === "news") _evtCat = "news";
+      else if (evt._isChainEvent) _evtCat = "chain";
+      state.stats.eventCounts[_evtCat] = (state.stats.eventCounts[_evtCat] || 0) + 1;
+
+      // [域B R417 联动增强] B→G: 重大事件对心智的长期影响 — 连续负面事件降低心智韧性
+      if (evt._isChainEvent || evt.id.indexOf("moral_") === 0) {
+        if (!state.flags) state.flags = {};
+        state.flags._lastSeriousEventDay = state.player.day;
+        // 连续3天内第二次重大事件 → 心智-2（累积压力）
+        if (state.flags._lastSeriousEventDay && state.player.day - (state.flags._lastSeriousEventDay || 0) <= 3) {
+          if (state.player) state.player.mental = Math.max(0, (state.player.mental || 50) - 2);
+        }
+      }
+
+      // [域B R417 联动增强] B→F: 事件响应追踪 — 记录玩家选择模式，供UI显示决策风格
+      if (choice && !state.flags._eventChoiceTrack) state.flags._eventChoiceTrack = {};
+      if (choice && choice.text) {
+        var _choiceType = "other";
+        if (choice.text.indexOf("报警") >= 0 || choice.text.indexOf("举报") >= 0) _choiceType = "lawful";
+        else if (choice.text.indexOf("忍") >= 0 || choice.text.indexOf("算了") >= 0) _choiceType = "passive";
+        else if (choice.text.indexOf("拼") >= 0 || choice.text.indexOf("搏") >= 0 || choice.text.indexOf("赌") >= 0) _choiceType = "risky";
+        else if (choice.text.indexOf("帮") >= 0 || choice.text.indexOf("捐") >= 0 || choice.text.indexOf("救") >= 0) _choiceType = "helpful";
+        state.flags._eventChoiceTrack[_choiceType] = (state.flags._eventChoiceTrack[_choiceType] || 0) + 1;
+      }
+
       // [全系统自洽修复] 域B 联动增强: B→F 事件历史记录
       if (!state.flags) state.flags = {};
   if (!state.flags._eventHistory) state.flags._eventHistory = [];
@@ -878,13 +945,13 @@ function showJobOfferModal() {
   showModal({
     title: "💼 跳槽 Offer 决策",
     body: `
-      <p>另一家公司开出了 <strong style="color:var(--success);">年薪 ¥${offer.salary.toLocaleString()}</strong> 的条件挖你！</p>
+      <p>另一家公司开出了 <strong style="color:var(--success);">年薪 ¥${(offer.salary || 0).toLocaleString()}</strong> 的条件挖你！</p>
       <p style="font-size:12px;color:var(--text-secondary);">跳槽有风险：人缘归零、向上管理归零、KPI 减半、需重新建立关系。</p>
     `,
     buttons: [
       { text: "继续考虑", cls: "", callback: () => {} },
       {
-        text: `接受 Offer (¥${offer.salary.toLocaleString()})`,
+        text: `接受 Offer (¥${(offer.salary || 0).toLocaleString()})`,
         cls: "btn-success",
         callback: () => {
           // 简化版：直接加钱 + 重置属性
@@ -903,7 +970,7 @@ function showJobOfferModal() {
           );
           state.corporate.jobOffer = null;
           StateManager.addMessage(
-            `💼 接受了新公司的 offer，拿到 ¥${offer.salary.toLocaleString()} 签字费！`,
+            `💼 接受了新公司的 offer，拿到 ¥${(offer.salary || 0).toLocaleString()} 签字费！`,
             "event",
           );
           renderAll();

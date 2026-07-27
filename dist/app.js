@@ -5211,6 +5211,37 @@ function showEventModal(evt) {
       }
       if (typeof state.resources.cash !== "number" || !isFinite(state.resources.cash)) state.resources.cash = 0;
       state.resources.cash = Math.max(0, state.resources.cash || 0);
+      // [域B R417 联动增强] B→A: 事件类型统计 — 累计moral/risk/news等事件计数，供经济系统感知
+      if (!state.stats) state.stats = {};
+      if (!state.stats.eventCounts) state.stats.eventCounts = {};
+      var _evtCat = "other";
+      if (evt.id.indexOf("moral_") === 0) _evtCat = "moral";
+      else if (evt.id.indexOf("risk_") === 0) _evtCat = "risk";
+      else if (evt._converted === "news") _evtCat = "news";
+      else if (evt._isChainEvent) _evtCat = "chain";
+      state.stats.eventCounts[_evtCat] = (state.stats.eventCounts[_evtCat] || 0) + 1;
+
+      // [域B R417 联动增强] B→G: 重大事件对心智的长期影响 — 连续负面事件降低心智韧性
+      if (evt._isChainEvent || evt.id.indexOf("moral_") === 0) {
+        if (!state.flags) state.flags = {};
+        state.flags._lastSeriousEventDay = state.player.day;
+        // 连续3天内第二次重大事件 → 心智-2（累积压力）
+        if (state.flags._lastSeriousEventDay && state.player.day - (state.flags._lastSeriousEventDay || 0) <= 3) {
+          if (state.player) state.player.mental = Math.max(0, (state.player.mental || 50) - 2);
+        }
+      }
+
+      // [域B R417 联动增强] B→F: 事件响应追踪 — 记录玩家选择模式，供UI显示决策风格
+      if (choice && !state.flags._eventChoiceTrack) state.flags._eventChoiceTrack = {};
+      if (choice && choice.text) {
+        var _choiceType = "other";
+        if (choice.text.indexOf("报警") >= 0 || choice.text.indexOf("举报") >= 0) _choiceType = "lawful";
+        else if (choice.text.indexOf("忍") >= 0 || choice.text.indexOf("算了") >= 0) _choiceType = "passive";
+        else if (choice.text.indexOf("拼") >= 0 || choice.text.indexOf("搏") >= 0 || choice.text.indexOf("赌") >= 0) _choiceType = "risky";
+        else if (choice.text.indexOf("帮") >= 0 || choice.text.indexOf("捐") >= 0 || choice.text.indexOf("救") >= 0) _choiceType = "helpful";
+        state.flags._eventChoiceTrack[_choiceType] = (state.flags._eventChoiceTrack[_choiceType] || 0) + 1;
+      }
+
       // [全系统自洽修复] 域B 联动增强: B→F 事件历史记录
       if (!state.flags) state.flags = {};
   if (!state.flags._eventHistory) state.flags._eventHistory = [];
@@ -5286,13 +5317,13 @@ function showJobOfferModal() {
   showModal({
     title: "💼 跳槽 Offer 决策",
     body: `
-      <p>另一家公司开出了 <strong style="color:var(--success);">年薪 ¥${offer.salary.toLocaleString()}</strong> 的条件挖你！</p>
+      <p>另一家公司开出了 <strong style="color:var(--success);">年薪 ¥${(offer.salary || 0).toLocaleString()}</strong> 的条件挖你！</p>
       <p style="font-size:12px;color:var(--text-secondary);">跳槽有风险：人缘归零、向上管理归零、KPI 减半、需重新建立关系。</p>
     `,
     buttons: [
       { text: "继续考虑", cls: "", callback: () => {} },
       {
-        text: `接受 Offer (¥${offer.salary.toLocaleString()})`,
+        text: `接受 Offer (¥${(offer.salary || 0).toLocaleString()})`,
         cls: "btn-success",
         callback: () => {
           // 简化版：直接加钱 + 重置属性
@@ -5311,7 +5342,7 @@ function showJobOfferModal() {
           );
           state.corporate.jobOffer = null;
           StateManager.addMessage(
-            `💼 接受了新公司的 offer，拿到 ¥${offer.salary.toLocaleString()} 签字费！`,
+            `💼 接受了新公司的 offer，拿到 ¥${(offer.salary || 0).toLocaleString()} 签字费！`,
             "event",
           );
           renderAll();
@@ -210163,6 +210194,33 @@ function getPriceTrendIcon(locKey, goodId) {
   return "➡️";
 }
 
+// [全系统自洽修复] 域A R51 联动增强(A→C): 技能驱动的市场分析 — 返回基于销售技能的价格洞察文本
+function getSkillPriceInsight(state, locKey, goodId) {
+  if (!state || !state.skills) return "";
+  var salesLevel = (state.skills.sales && state.skills.sales.level) || 0;
+  if (salesLevel < 20) return "";
+  var good = getGoodById(goodId);
+  if (!good) return "";
+  var basePrice = good.basePrice || 0;
+  var currentPrice = 0;
+  if (typeof calcFinalPrice === "function") {
+    currentPrice = calcFinalPrice(state, locKey, goodId);
+  }
+  if (currentPrice <= 0) return "";
+  var ratio = currentPrice / basePrice;
+  var insight = "";
+  if (ratio > 1.3) insight = "当前价格偏高，适合出货";
+  else if (ratio > 1.15) insight = "价格处于高位，可考虑卖出";
+  else if (ratio < 0.7) insight = "当前价格偏低，适合囤货";
+  else if (ratio < 0.85) insight = "价格处于低位，可考虑买入";
+  else insight = "价格在合理区间波动";
+  if (salesLevel >= 50) {
+    var trend = getPriceTrendIcon(locKey, goodId);
+    insight = trend + " " + insight + "（销售Lv." + salesLevel + "分析）";
+  }
+  return insight;
+}
+
 ;
 // ==== js/data/domain_g_linkage_r180.js ====
 /**
@@ -263391,15 +263449,18 @@ function renderActiveNews(state, parent) {
 }
 
 // ====== Actions Tab ======
-var _esc = _esc || function _esc(str) {
-  if (!str) return "";
-  return String(str)
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#39;");
-};
+// [全系统自洽修复] 域F R430: 统一_esc守卫模式,避免与modal.js重复声明冲突
+if (typeof _esc === "undefined") {
+  function _esc(str) {
+    if (!str) return "";
+    return String(str)
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#39;");
+  }
+}
 
 /** 根据当前状态生成若干条行动建议（数量由心智决定） */
 function getDailyActionTips(state) {

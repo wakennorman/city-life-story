@@ -1380,15 +1380,18 @@ function renderActiveNews(state, parent) {
 }
 
 // ====== Actions Tab ======
-var _esc = _esc || function _esc(str) {
-  if (!str) return "";
-  return String(str)
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#39;");
-};
+// [全系统自洽修复] 域F R430: 统一_esc守卫模式,避免与modal.js重复声明冲突
+if (typeof _esc === "undefined") {
+  function _esc(str) {
+    if (!str) return "";
+    return String(str)
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#39;");
+  }
+}
 
 /** 根据当前状态生成若干条行动建议（数量由心智决定） */
 function getDailyActionTips(state) {
