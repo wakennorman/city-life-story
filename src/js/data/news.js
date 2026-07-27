@@ -10,6 +10,13 @@
  *   mul       - 价格乘数（>1 涨价，<1 跌价）
  */
 
+
+// [全系统自洽修复] 域B R529: needs 守卫辅助函数
+function _guardNeedsB(st) {
+  if (!st.needs) st.needs = { hunger: 50, fatigue: 30, hygiene: 60, happiness: 50 };
+  return st.needs;
+}
+
 var NEWS_EVENTS = [
   // === 价格影响事件 ===
   {
@@ -298,7 +305,7 @@ var NEWS_EVENTS = [
         hint: "拿钱走人",
         apply: (st) => {
           st.resources.cash = (st.resources.cash || 0) + 50;
-          st.needs.happiness = Math.max(0, st.needs.happiness - 3);
+          _guardNeedsB(st).needs.happiness = Math.max(0, _guardNeedsB(st).needs.happiness - 3);
           st.flags._keptWallet = true;
           StateManager.addMessage(
             "💰 钱包里翻出了¥50，但心里有点虚...",
@@ -310,7 +317,7 @@ var NEWS_EVENTS = [
         text: "🏛️ 交给派出所",
         hint: "良心选择",
         apply: (st) => {
-          st.needs.happiness = Math.min(100, st.needs.happiness + 5);
+          _guardNeedsB(st).needs.happiness = Math.min(100, _guardNeedsB(st).needs.happiness + 5);
           st.player.fame = Math.min(100, st.player.fame + 2);
           st.flags._returnedWallet = true;
           StateManager.addMessage(
@@ -342,7 +349,7 @@ var NEWS_EVENTS = [
         apply: (st) => {
           st.resources.cash = Math.max(0, (st.resources.cash || 0) - 100);
           st.player.fame = Math.min(100, st.player.fame + 1);
-          st.needs.happiness = Math.max(0, st.needs.happiness - 5);
+          _guardNeedsB(st).needs.happiness = Math.max(0, _guardNeedsB(st).needs.happiness - 5);
           StateManager.addMessage(
             "🚔 报了警，但警察说这种小案子很难查。钱追不回来了。",
             "info",
@@ -354,7 +361,7 @@ var NEWS_EVENTS = [
         hint: "长个教训",
         apply: (st) => {
           st.resources.cash = Math.max(0, (st.resources.cash || 0) - 100);
-          st.needs.happiness = Math.max(0, st.needs.happiness - 8);
+          _guardNeedsB(st).needs.happiness = Math.max(0, _guardNeedsB(st).needs.happiness - 8);
           st.player.mental = Math.min(100, st.player.mental + 2);
           StateManager.addMessage(
             "😤 自认倒霉吧。下次坐公交要注意保管财物。",
@@ -376,9 +383,9 @@ var NEWS_EVENTS = [
         text: "🍚 去排队吃",
         hint: "省饭钱但花时间",
         apply: (st) => {
-          st.needs.fatigue = Math.min(100, st.needs.fatigue + 8);
+          _guardNeedsB(st).needs.fatigue = Math.min(100, _guardNeedsB(st).needs.fatigue + 8);
           st.needs.hunger = Math.min(100, st.needs.hunger + 30);
-          st.needs.happiness = Math.min(100, st.needs.happiness + 2);
+          _guardNeedsB(st).needs.happiness = Math.min(100, _guardNeedsB(st).needs.happiness + 2);
           StateManager.addMessage(
             "🍚 排了半小时队吃了顿饱饭。虽然简单，但省了钱。",
             "info",
@@ -405,8 +412,8 @@ var NEWS_EVENTS = [
         text: "🏠 在家休息",
         hint: "恢复疲劳",
         apply: (st) => {
-          st.needs.fatigue = Math.max(0, st.needs.fatigue - 10);
-          st.needs.happiness = Math.min(100, st.needs.happiness + 3);
+          _guardNeedsB(st).needs.fatigue = Math.max(0, _guardNeedsB(st).needs.fatigue - 10);
+          _guardNeedsB(st).needs.happiness = Math.min(100, _guardNeedsB(st).needs.happiness + 3);
           StateManager.addMessage(
             "🏠 暴雨天在家休息，疲劳-10。雨天适合躺平。",
             "info",
@@ -417,9 +424,9 @@ var NEWS_EVENTS = [
         text: "🌂 冒雨出门工作",
         hint: "赚更多但健康风险",
         apply: (st) => {
-          st.needs.fatigue = Math.min(100, st.needs.fatigue + 15);
+          _guardNeedsB(st).needs.fatigue = Math.min(100, _guardNeedsB(st).needs.fatigue + 15);
           st.status.health = Math.max(0, st.status.health - 5);
-          st.needs.happiness = Math.max(0, st.needs.happiness - 5);
+          _guardNeedsB(st).needs.happiness = Math.max(0, _guardNeedsB(st).needs.happiness - 5);
           StateManager.addMessage(
             "🌂 冒雨出门了。虽然赚了钱，但淋得够呛，健康-5。",
             "warning",
@@ -439,8 +446,8 @@ var NEWS_EVENTS = [
         text: "💪 趁状态好去工作",
         hint: "效率加倍",
         apply: (st) => {
-          st.needs.fatigue = Math.min(100, st.needs.fatigue + 5);
-          st.needs.happiness = Math.min(100, st.needs.happiness + 5);
+          _guardNeedsB(st).needs.fatigue = Math.min(100, _guardNeedsB(st).needs.fatigue + 5);
+          _guardNeedsB(st).needs.happiness = Math.min(100, _guardNeedsB(st).needs.happiness + 5);
           // 标记今日效率加成
           st.flags._goodSleepToday = true;
           StateManager.addMessage(
@@ -453,8 +460,8 @@ var NEWS_EVENTS = [
         text: "😴 再睡个回笼觉",
         hint: "进一步恢复",
         apply: (st) => {
-          st.needs.fatigue = Math.max(0, st.needs.fatigue - 10);
-          st.needs.happiness = Math.min(100, st.needs.happiness + 2);
+          _guardNeedsB(st).needs.fatigue = Math.max(0, _guardNeedsB(st).needs.fatigue - 10);
+          _guardNeedsB(st).needs.happiness = Math.min(100, _guardNeedsB(st).needs.happiness + 2);
           StateManager.addMessage("😴 又睡了个回笼觉，疲劳再-10。", "info");
         },
       },
@@ -477,7 +484,7 @@ var NEWS_EVENTS = [
         hint: "提升好感",
         apply: (st) => {
           st.needs.hunger = Math.min(100, st.needs.hunger + 10);
-          st.needs.happiness = Math.min(100, st.needs.happiness + 8);
+          _guardNeedsB(st).needs.happiness = Math.min(100, _guardNeedsB(st).needs.happiness + 8);
           if (st.relationships && st.relationships.aunt_wang) {
             st.relationships.aunt_wang.affinity = Math.min(
               100,
@@ -500,7 +507,7 @@ var NEWS_EVENTS = [
             return;
           }
           st.resources.cash = Math.max(0, (st.resources.cash || 0) - 20);
-          st.needs.happiness = Math.min(100, st.needs.happiness + 5);
+          _guardNeedsB(st).needs.happiness = Math.min(100, _guardNeedsB(st).needs.happiness + 5);
           if (st.relationships && st.relationships.aunt_wang) {
             st.relationships.aunt_wang.affinity = Math.min(
               100,
@@ -517,7 +524,7 @@ var NEWS_EVENTS = [
         text: "🚶 礼貌拒绝",
         hint: "不想欠人情",
         apply: (st) => {
-          st.needs.happiness = Math.max(0, st.needs.happiness - 2);
+          _guardNeedsB(st).needs.happiness = Math.max(0, _guardNeedsB(st).needs.happiness - 2);
           if (st.relationships && st.relationships.aunt_wang) {
             st.relationships.aunt_wang.affinity = Math.max(
               0,
@@ -2216,3 +2223,4 @@ function cleanupExpiredNews(state) {
     }
   }
 }
+// [R90] 域B 联动增强
