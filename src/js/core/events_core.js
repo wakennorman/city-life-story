@@ -1571,3 +1571,4 @@ function getEventHealthImpact(state, eventId) {
   return total;
 }
 // [R122] 域B 联动增强
+// [R378] 域B
