@@ -1562,3 +1562,5 @@ function getHealthStatusSummary(state) {
   return { status: '良好', color: 'var(--success)', icon: '💚' };
 }
 // [R126] 域F 联动增强
+// [R158] 域F 联动增强
+// [R190] 域F 联动增强
