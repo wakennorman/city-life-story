@@ -1072,3 +1072,4 @@ if (typeof window !== "undefined") {
   window.JOB_MILESTONE_EVENTS = JOB_MILESTONE_EVENTS;
   window.checkJobMilestoneEvent = checkJobMilestoneEvent;
 }
+// [R459] 域C
