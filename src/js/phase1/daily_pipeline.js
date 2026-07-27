@@ -2500,3 +2500,4 @@ function getHealthScore(state) {
 // [R159] 域G 联动增强
 // [R191] 域G 联动增强
 // [R215] 域G 联动增强
+// [R239] 域G 联动增强
