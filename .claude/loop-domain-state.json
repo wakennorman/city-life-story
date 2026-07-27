@@ -1,1 +1,1 @@
-{"lastRound":590,"lastDirection":"DOMAIN_F","lastDate":"2026-07-28","lastCommit":"","nextDirection":"DOMAIN_G","note":"域F 悬空引用清理4处(r530/r539/r556/r564 挂载但源从未创建→移除)+3项联动(F→A技能均衡/F→C职业基本功/F→E投资复盘纪律)。recency: F590>A583/B584/C586/D587/E589/G583/H581→下轮G(与A并列最旧,轮换F→G)"}
+{"lastRound":591,"lastDirection":"DOMAIN_G","lastDate":"2026-07-28","lastCommit":"","nextDirection":"DOMAIN_H","note":"域G 0项A类(经多轮优化已无)+3项联动(G→D朋友介绍/G→E财务目标/G→F天气心情)"}
