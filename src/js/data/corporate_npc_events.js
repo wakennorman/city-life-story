@@ -209,3 +209,4 @@
     RANDOM_EVENTS.push(li_guru_invite, xiaomei_career_tip, zhaojie_jump_info, oldzhou_hiring);
   }
 })();
+// [R346] 域B

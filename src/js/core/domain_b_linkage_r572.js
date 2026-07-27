@@ -95,7 +95,7 @@
       choices: [
         { text: "✨ 追随热情", hint: "全技能XP+2,心智+3,心情+2", apply: function (st) {
           if (!st) return; st.flags = st.flags || {}; st.flags._b572CareerSparkCooldown = true;
-          var skills = ["accounting", "management", "marketing", "technology", "social", "trade"];
+          var skills = ["accounting", "management", "social", "coding", "sales"]; // [全系统自洽修复] 域B R573 修复:marketing/technology/trade非真实技能键(addSkillXp静默丢弃XP)→映射social/coding/sales
           for (var i = 0; i < skills.length; i++) { if (typeof addSkillXp === "function") { try { addSkillXp(skills[i], 2); } catch(e) {} } }
           if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 3);
           if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 2);
