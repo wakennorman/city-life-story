@@ -37,7 +37,7 @@
       choices: [
         { text: "💡 好好培养", hint: "全技能XP+3,心智+2", apply: function (st) {
           if (!st) return; st.flags = st.flags || {}; st.flags._b515SkillAwakeningCooldown = true;
-          var skills = ["accounting", "management", "marketing", "technology", "social", "trade"];
+          var skills = ["accounting", "management", "sales", "coding", "social", "driving"]; // [全系统自洽修复] 域C R535 修复:marketing/technology/trade非真实技能键(XP静默丢弃)→映射sales/coding/driving
           for (var i = 0; i < skills.length; i++) { if (typeof addSkillXp === "function") { try { addSkillXp(skills[i], 3); } catch(e) {} } }
           if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 2);
           if (typeof StateManager !== "undefined") StateManager.addMessage("💡 '原来我在这方面还有天赋！' 你决定好好培养这个技能。全技能XP+3,心智+2。", "success");

@@ -255,7 +255,7 @@ var NPCS = [
               100,
               st.relationships.aunt_wang.affinity + 10,
             );
-            st.needs.happiness = Math.min(100, st.needs.happiness + 20);
+            _guardNeedsD(st).happiness = Math.min(100, _guardNeedsD(st).happiness + 20);
             st.player.mental = Math.min(100, (st.player.mental || 0) + 8);
             st.flags.auntWangRecipe = true;
             StateManager.addMessage(
@@ -269,7 +269,7 @@ var NPCS = [
           hint: "好感不变，但王大婶有些落寞",
           apply: function (st) {
             st.flags._npcDeepTask_aunt_wang = true;
-            st.needs.happiness = Math.max(0, st.needs.happiness - 5);
+            _guardNeedsD(st).happiness = Math.max(0, _guardNeedsD(st).happiness - 5);
             StateManager.addMessage(
               "🤷 「没事，我就随便问问。」王大婶转身去厨房，你看到她擦了擦眼角。心情-5。",
               "warning",
@@ -528,7 +528,7 @@ var NPCS = [
             var reward = 150 + Random.int(0, 99);
             st.resources.cash = (st.resources.cash || 0) + (reward || 0);
             st.resources.totalEarned = (st.resources.totalEarned || 0) + (reward || 0);
-            st.needs.fatigue = Math.min(100, st.needs.fatigue + 20);
+            _guardNeedsD(st).fatigue = Math.min(100, _guardNeedsD(st).fatigue + 20);
             st.player.physique = Math.min(100, st.player.physique + 1);
             if (!st.relationships.boss_li)
               st.relationships.boss_li = { affinity: 0, met: true };
@@ -1034,7 +1034,7 @@ var NPCS = [
           apply: function (st) {
             st.flags._npcFavor_old_zhou = true;
             st.player.physique = Math.min(100, st.player.physique + 2);
-            st.needs.fatigue = Math.min(100, st.needs.fatigue + 15);
+            _guardNeedsD(st).fatigue = Math.min(100, _guardNeedsD(st).fatigue + 15);
             st.flags.oldZhouTips = true;
             if (!st.relationships.old_zhou)
               st.relationships.old_zhou = { affinity: 0, met: true };
@@ -1286,7 +1286,7 @@ var NPCS = [
           text: "🚚 帮你去取",
           apply: function (st) {
             st.flags._npcFavor_xiao_mei = true;
-            st.needs.happiness = Math.min(100, st.needs.happiness + 10);
+            _guardNeedsD(st).happiness = Math.min(100, _guardNeedsD(st).happiness + 10);
             st.skills.english && (st.skills.english.xp += 40);
             st.skills.coding && (st.skills.coding.xp += 40);
             if (!st.relationships.xiao_mei)
@@ -1335,7 +1335,7 @@ var NPCS = [
               100,
               st.relationships.xiao_mei.affinity + 10,
             );
-            st.needs.happiness = Math.min(100, st.needs.happiness + 15);
+            _guardNeedsD(st).happiness = Math.min(100, _guardNeedsD(st).happiness + 15);
             st.player.mental = Math.min(100, (st.player.mental || 0) + 5);
             st.player.fame = Math.min(100, st.player.fame + 12);
             st.flags.xiaoMeiSupport = true;
@@ -1558,7 +1558,7 @@ var NPCS = [
               100,
               st.relationships.chef_chen.affinity + 10,
             );
-            st.needs.happiness = Math.min(100, st.needs.happiness + 12);
+            _guardNeedsD(st).happiness = Math.min(100, _guardNeedsD(st).happiness + 12);
             st.flags.chefChenWillOpen = true;
             StateManager.addMessage(
               "💪 「我行吗？」「你行。」陈师傅沉默了一会儿，然后点头：「好。那我试试。」你不知道他是否真的会去做，但那个眼神里有什么东西亮了一下。好感+10，心情+12。未来某天，也许你会路过一家新开的小馆子。",
@@ -1702,7 +1702,7 @@ var NPCS = [
           apply: function (st) {
             st.flags._npcFavor_uncle_chen_bank = true;
             st.resources.cash = (st.resources.cash || 0) + 50 + Random.int(0, 30);
-            st.needs.fatigue = Math.min(100, st.needs.fatigue + 5);
+            _guardNeedsD(st).fatigue = Math.min(100, _guardNeedsD(st).fatigue + 5);
             if (!st.relationships.uncle_chen_bank)
               st.relationships.uncle_chen_bank = { affinity: 0, met: true };
             st.relationships.uncle_chen_bank.affinity = Math.min(
@@ -1903,7 +1903,7 @@ var NPCS = [
               100,
               st.relationships.sister_wu.affinity + 8,
             );
-            st.needs.happiness = Math.min(100, st.needs.happiness + 8);
+            _guardNeedsD(st).happiness = Math.min(100, _guardNeedsD(st).happiness + 8);
             StateManager.addMessage("💕 吴姐说'你说得对，我试试'。", "success");
           },
         },
@@ -2026,7 +2026,7 @@ var NPCS = [
           apply: function (st) {
             st.flags._npcFavor_brother_huang = true;
             st.resources.cash = (st.resources.cash || 0) + 80 + Random.int(0, 40);
-            st.needs.fatigue = Math.min(100, st.needs.fatigue + 15);
+            _guardNeedsD(st).fatigue = Math.min(100, _guardNeedsD(st).fatigue + 15);
             if (!st.relationships.brother_huang)
               st.relationships.brother_huang = { affinity: 0, met: true };
             st.relationships.brother_huang.affinity = Math.min(
@@ -3039,7 +3039,7 @@ var NPCS = [
               100,
               st.relationships.dr_wang.affinity + 8,
             );
-            st.needs.happiness = Math.min(100, st.needs.happiness + 10);
+            _guardNeedsD(st).happiness = Math.min(100, _guardNeedsD(st).happiness + 10);
             StateManager.addMessage("💕 王医生笑了笑：「谢谢你。」", "success");
           },
         },
@@ -3244,7 +3244,7 @@ var NPCS = [
               100,
               st.relationships.zhaojie.affinity + 10,
             );
-            st.needs.happiness = Math.min(100, st.needs.happiness + 10);
+            _guardNeedsD(st).happiness = Math.min(100, _guardNeedsD(st).happiness + 10);
             st.flags.zhaojieWillOpenStore = true;
             StateManager.addMessage(
               "💪 「你觉得我行吗？」「行。」赵姐沉默了一会儿，然后笑了：「你说得对，我试试。」好感+10，心情+10。也许某天，你会看到一家新开的中介门店，招牌上写着她的名字。",
@@ -3631,7 +3631,7 @@ var NPCS = [
               100,
               st.relationships.ajie.affinity + 15,
             );
-            st.needs.happiness = Math.min(100, st.needs.happiness + 10);
+            _guardNeedsD(st).happiness = Math.min(100, _guardNeedsD(st).happiness + 10);
             st.flags.ajieMovedOn = true;
             StateManager.addMessage(
               "💪 阿杰眼眶红了：「多谢你……我会重新开始。」好感+15，心情+10。阿杰似乎终于放下了过去。",
@@ -3733,3 +3733,9 @@ function getNpcsAtLocation(locKey) {
 // P1-2 CLS 命名空间注册
 if (typeof window.CLS !== 'undefined' && window.CLS.data) window.CLS.data.NPCS = NPCS;
 // [R92] 域D 联动增强
+// [全系统自洽修复] 域D R537: needs 守卫辅助函数
+function _guardNeedsD(st) {
+  if (!st.needs) st.needs = { hunger: 50, fatigue: 30, hygiene: 60, happiness: 50 };
+  return st.needs;
+}
+

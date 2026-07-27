@@ -65,7 +65,7 @@
       choices: [
         { text: "🤫 认真学习", hint: "贸易XP+5,心智+2,好感+2", apply: function (st) {
           if (!st) return; st.flags = st.flags || {}; st.flags._a525TradeSecretCooldown = true;
-          if (typeof addSkillXp === "function") { try { addSkillXp("trade", 5); } catch(e) {} }
+          if (typeof addSkillXp === "function") { try { addSkillXp("sales", 5); } catch(e) {} } // [全系统自洽修复] 域C R535 修复:addSkillXp("trade")非真实技能键(XP静默丢弃)→映射sales(交易秘诀=销售)
           if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 2);
           var nid = firstMetNpc(st); bumpAffinity(st, nid, 2, "传授交易秘诀");
           if (typeof StateManager !== "undefined") StateManager.addMessage("🤫 '低买高卖谁都会说，但真正的秘诀是...' 贸易XP+5,心智+2,好感+2。", "success");

@@ -68,7 +68,7 @@
       choices: [
         { text: "🔄 交换技能", hint: "全技能XP+2,好感+2", apply: function (st) {
           if (!st) return; st.flags = st.flags || {}; st.flags._d500SkillExchangeCooldown = true;
-          var skills = ["accounting", "management", "marketing", "technology", "social", "trade"];
+          var skills = ["accounting", "management", "sales", "coding", "social", "driving"]; // [全系统自洽修复] 域C R535 修复:marketing/technology/trade非真实技能键(XP静默丢弃)→映射sales/coding/driving
           for (var i = 0; i < skills.length; i++) { if (typeof addSkillXp === "function") { try { addSkillXp(skills[i], 2); } catch(e) {} } }
           var nid = firstMetNpc(st); bumpAffinity(st, nid, 2, "技能交换");
           if (typeof StateManager !== "undefined") StateManager.addMessage("🔄 '你教我英语，我教你编程，互利共赢！' 全技能XP+2,好感+2。", "success");

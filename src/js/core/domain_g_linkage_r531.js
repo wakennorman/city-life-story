@@ -91,7 +91,7 @@
       choices: [
         { text: "📈 突破瓶颈", hint: "全技能XP+3,心智+3", apply: function (st) {
           if (!st) return; st.flags = st.flags || {}; st.flags._g531SkillPlateauCooldown = true;
-          var skills = ["accounting", "management", "marketing", "technology", "social", "trade"];
+          var skills = ["accounting", "management", "sales", "coding", "social", "driving"]; // [全系统自洽修复] 域C R535 修复:marketing/technology/trade非真实技能键(XP静默丢弃)→映射sales/coding/driving
           for (var i = 0; i < skills.length; i++) { if (typeof addSkillXp === "function") { try { addSkillXp(skills[i], 3); } catch(e) {} } }
           if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 3);
           if (typeof StateManager !== "undefined") StateManager.addMessage("📈 '瓶颈期就是突破期，熬过去就是新的天地。' 全技能XP+3,心智+3。", "success");

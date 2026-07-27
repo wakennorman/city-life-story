@@ -67,7 +67,7 @@
       choices: [
         { text: "💬 多听多学", hint: "贸易XP+4,心智+1,好感+1", apply: function (st) {
           if (!st) return; st.flags = st.flags || {}; st.flags._d519MarketTalkCooldown = true;
-          if (typeof addSkillXp === "function") { try { addSkillXp("trade", 4); } catch(e) {} }
+          if (typeof addSkillXp === "function") { try { addSkillXp("sales", 4); } catch(e) {} } // [全系统自洽修复] 域C R535 修复:addSkillXp("trade")非真实技能键(XP静默丢弃)→映射sales(市场信息=销售)
           if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 1);
           var nid = firstMetNpc(st); bumpAffinity(st, nid, 1, "交流市场信息");
           if (typeof StateManager !== "undefined") StateManager.addMessage("💬 '听君一席话，胜读十年书。' 和业内人士交流，收获满满。贸易XP+4,心智+1,好感+1。", "success");

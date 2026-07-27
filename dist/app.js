@@ -26577,7 +26577,7 @@ function getEventHealthImpact(state, eventId) {
       choices: [
         { text: "🤫 认真学习", hint: "贸易XP+5,心智+2,好感+2", apply: function (st) {
           if (!st) return; st.flags = st.flags || {}; st.flags._a525TradeSecretCooldown = true;
-          if (typeof addSkillXp === "function") { try { addSkillXp("trade", 5); } catch(e) {} }
+          if (typeof addSkillXp === "function") { try { addSkillXp("sales", 5); } catch(e) {} } // [全系统自洽修复] 域C R535 修复:addSkillXp("trade")非真实技能键(XP静默丢弃)→映射sales(交易秘诀=销售)
           if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 2);
           var nid = firstMetNpc(st); bumpAffinity(st, nid, 2, "传授交易秘诀");
           if (typeof StateManager !== "undefined") StateManager.addMessage("🤫 '低买高卖谁都会说，但真正的秘诀是...' 贸易XP+5,心智+2,好感+2。", "success");
@@ -26839,7 +26839,7 @@ function getEventHealthImpact(state, eventId) {
         }},
         { text: "📈 提升匹配度", hint: "随机技能XP+3", apply: function (st) {
           if (!st) return; st.flags = st.flags || {}; st.flags._a533JobSkillMapCooldown = true;
-          var skills = ["accounting", "management", "marketing", "technology", "social", "trade"];
+          var skills = ["accounting", "management", "sales", "coding", "social", "driving"]; // [全系统自洽修复] 域C R535 修复:marketing/technology/trade非真实技能键(XP静默丢弃)→映射sales/coding/driving
           var sk = skills[Math.floor(Math.random() * skills.length)];
           if (typeof addSkillXp === "function") { try { addSkillXp(sk, 3); } catch(e) {} }
           if (typeof StateManager !== "undefined") StateManager.addMessage("🎯 '技能还差一点，再提升一下就能达到要求了。' 随机技能XP+3。", "success");
@@ -121194,7 +121194,7 @@ if (typeof window !== "undefined") {
       choices: [
         { text: "🔄 交换技能", hint: "全技能XP+2,好感+2", apply: function (st) {
           if (!st) return; st.flags = st.flags || {}; st.flags._d500SkillExchangeCooldown = true;
-          var skills = ["accounting", "management", "marketing", "technology", "social", "trade"];
+          var skills = ["accounting", "management", "sales", "coding", "social", "driving"]; // [全系统自洽修复] 域C R535 修复:marketing/technology/trade非真实技能键(XP静默丢弃)→映射sales/coding/driving
           for (var i = 0; i < skills.length; i++) { if (typeof addSkillXp === "function") { try { addSkillXp(skills[i], 2); } catch(e) {} } }
           var nid = firstMetNpc(st); bumpAffinity(st, nid, 2, "技能交换");
           if (typeof StateManager !== "undefined") StateManager.addMessage("🔄 '你教我英语，我教你编程，互利共赢！' 全技能XP+2,好感+2。", "success");
@@ -121447,7 +121447,7 @@ if (typeof window !== "undefined") {
       choices: [
         { text: "💬 多听多学", hint: "贸易XP+4,心智+1,好感+1", apply: function (st) {
           if (!st) return; st.flags = st.flags || {}; st.flags._d519MarketTalkCooldown = true;
-          if (typeof addSkillXp === "function") { try { addSkillXp("trade", 4); } catch(e) {} }
+          if (typeof addSkillXp === "function") { try { addSkillXp("sales", 4); } catch(e) {} } // [全系统自洽修复] 域C R535 修复:addSkillXp("trade")非真实技能键(XP静默丢弃)→映射sales(市场信息=销售)
           if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 1);
           var nid = firstMetNpc(st); bumpAffinity(st, nid, 1, "交流市场信息");
           if (typeof StateManager !== "undefined") StateManager.addMessage("💬 '听君一席话，胜读十年书。' 和业内人士交流，收获满满。贸易XP+4,心智+1,好感+1。", "success");
@@ -172855,6 +172855,7 @@ function getSkillChineseName(skillKey) {
   };
   return names[skillKey] || skillKey;
 }
+// [R139] 域C 联动增强
 
 ;
 // ==== js/core/equipment_suites.js ====
@@ -184391,6 +184392,7 @@ if (typeof window !== 'undefined' && window.location && window.location.hostname
 // P1-2 CLS 命名空间注册
 if (typeof window.CLS !== 'undefined' && window.CLS.data) window.CLS.data.ITEMS = ITEMS;
 // [R113] 域A 联动增强
+// [R145] 域A 联动增强
 
 ;
 // ==== js/data/news.js ====
@@ -187222,7 +187224,7 @@ var NPCS = [
               100,
               st.relationships.aunt_wang.affinity + 10,
             );
-            st.needs.happiness = Math.min(100, st.needs.happiness + 20);
+            _guardNeedsD(st).happiness = Math.min(100, _guardNeedsD(st).happiness + 20);
             st.player.mental = Math.min(100, (st.player.mental || 0) + 8);
             st.flags.auntWangRecipe = true;
             StateManager.addMessage(
@@ -187236,7 +187238,7 @@ var NPCS = [
           hint: "好感不变，但王大婶有些落寞",
           apply: function (st) {
             st.flags._npcDeepTask_aunt_wang = true;
-            st.needs.happiness = Math.max(0, st.needs.happiness - 5);
+            _guardNeedsD(st).happiness = Math.max(0, _guardNeedsD(st).happiness - 5);
             StateManager.addMessage(
               "🤷 「没事，我就随便问问。」王大婶转身去厨房，你看到她擦了擦眼角。心情-5。",
               "warning",
@@ -187495,7 +187497,7 @@ var NPCS = [
             var reward = 150 + Random.int(0, 99);
             st.resources.cash = (st.resources.cash || 0) + (reward || 0);
             st.resources.totalEarned = (st.resources.totalEarned || 0) + (reward || 0);
-            st.needs.fatigue = Math.min(100, st.needs.fatigue + 20);
+            _guardNeedsD(st).fatigue = Math.min(100, _guardNeedsD(st).fatigue + 20);
             st.player.physique = Math.min(100, st.player.physique + 1);
             if (!st.relationships.boss_li)
               st.relationships.boss_li = { affinity: 0, met: true };
@@ -188001,7 +188003,7 @@ var NPCS = [
           apply: function (st) {
             st.flags._npcFavor_old_zhou = true;
             st.player.physique = Math.min(100, st.player.physique + 2);
-            st.needs.fatigue = Math.min(100, st.needs.fatigue + 15);
+            _guardNeedsD(st).fatigue = Math.min(100, _guardNeedsD(st).fatigue + 15);
             st.flags.oldZhouTips = true;
             if (!st.relationships.old_zhou)
               st.relationships.old_zhou = { affinity: 0, met: true };
@@ -188253,7 +188255,7 @@ var NPCS = [
           text: "🚚 帮你去取",
           apply: function (st) {
             st.flags._npcFavor_xiao_mei = true;
-            st.needs.happiness = Math.min(100, st.needs.happiness + 10);
+            _guardNeedsD(st).happiness = Math.min(100, _guardNeedsD(st).happiness + 10);
             st.skills.english && (st.skills.english.xp += 40);
             st.skills.coding && (st.skills.coding.xp += 40);
             if (!st.relationships.xiao_mei)
@@ -188302,7 +188304,7 @@ var NPCS = [
               100,
               st.relationships.xiao_mei.affinity + 10,
             );
-            st.needs.happiness = Math.min(100, st.needs.happiness + 15);
+            _guardNeedsD(st).happiness = Math.min(100, _guardNeedsD(st).happiness + 15);
             st.player.mental = Math.min(100, (st.player.mental || 0) + 5);
             st.player.fame = Math.min(100, st.player.fame + 12);
             st.flags.xiaoMeiSupport = true;
@@ -188525,7 +188527,7 @@ var NPCS = [
               100,
               st.relationships.chef_chen.affinity + 10,
             );
-            st.needs.happiness = Math.min(100, st.needs.happiness + 12);
+            _guardNeedsD(st).happiness = Math.min(100, _guardNeedsD(st).happiness + 12);
             st.flags.chefChenWillOpen = true;
             StateManager.addMessage(
               "💪 「我行吗？」「你行。」陈师傅沉默了一会儿，然后点头：「好。那我试试。」你不知道他是否真的会去做，但那个眼神里有什么东西亮了一下。好感+10，心情+12。未来某天，也许你会路过一家新开的小馆子。",
@@ -188669,7 +188671,7 @@ var NPCS = [
           apply: function (st) {
             st.flags._npcFavor_uncle_chen_bank = true;
             st.resources.cash = (st.resources.cash || 0) + 50 + Random.int(0, 30);
-            st.needs.fatigue = Math.min(100, st.needs.fatigue + 5);
+            _guardNeedsD(st).fatigue = Math.min(100, _guardNeedsD(st).fatigue + 5);
             if (!st.relationships.uncle_chen_bank)
               st.relationships.uncle_chen_bank = { affinity: 0, met: true };
             st.relationships.uncle_chen_bank.affinity = Math.min(
@@ -188870,7 +188872,7 @@ var NPCS = [
               100,
               st.relationships.sister_wu.affinity + 8,
             );
-            st.needs.happiness = Math.min(100, st.needs.happiness + 8);
+            _guardNeedsD(st).happiness = Math.min(100, _guardNeedsD(st).happiness + 8);
             StateManager.addMessage("💕 吴姐说'你说得对，我试试'。", "success");
           },
         },
@@ -188993,7 +188995,7 @@ var NPCS = [
           apply: function (st) {
             st.flags._npcFavor_brother_huang = true;
             st.resources.cash = (st.resources.cash || 0) + 80 + Random.int(0, 40);
-            st.needs.fatigue = Math.min(100, st.needs.fatigue + 15);
+            _guardNeedsD(st).fatigue = Math.min(100, _guardNeedsD(st).fatigue + 15);
             if (!st.relationships.brother_huang)
               st.relationships.brother_huang = { affinity: 0, met: true };
             st.relationships.brother_huang.affinity = Math.min(
@@ -190006,7 +190008,7 @@ var NPCS = [
               100,
               st.relationships.dr_wang.affinity + 8,
             );
-            st.needs.happiness = Math.min(100, st.needs.happiness + 10);
+            _guardNeedsD(st).happiness = Math.min(100, _guardNeedsD(st).happiness + 10);
             StateManager.addMessage("💕 王医生笑了笑：「谢谢你。」", "success");
           },
         },
@@ -190211,7 +190213,7 @@ var NPCS = [
               100,
               st.relationships.zhaojie.affinity + 10,
             );
-            st.needs.happiness = Math.min(100, st.needs.happiness + 10);
+            _guardNeedsD(st).happiness = Math.min(100, _guardNeedsD(st).happiness + 10);
             st.flags.zhaojieWillOpenStore = true;
             StateManager.addMessage(
               "💪 「你觉得我行吗？」「行。」赵姐沉默了一会儿，然后笑了：「你说得对，我试试。」好感+10，心情+10。也许某天，你会看到一家新开的中介门店，招牌上写着她的名字。",
@@ -190598,7 +190600,7 @@ var NPCS = [
               100,
               st.relationships.ajie.affinity + 15,
             );
-            st.needs.happiness = Math.min(100, st.needs.happiness + 10);
+            _guardNeedsD(st).happiness = Math.min(100, _guardNeedsD(st).happiness + 10);
             st.flags.ajieMovedOn = true;
             StateManager.addMessage(
               "💪 阿杰眼眶红了：「多谢你……我会重新开始。」好感+15，心情+10。阿杰似乎终于放下了过去。",
@@ -190700,6 +190702,12 @@ function getNpcsAtLocation(locKey) {
 // P1-2 CLS 命名空间注册
 if (typeof window.CLS !== 'undefined' && window.CLS.data) window.CLS.data.NPCS = NPCS;
 // [R92] 域D 联动增强
+// [全系统自洽修复] 域D R537: needs 守卫辅助函数
+function _guardNeedsD(st) {
+  if (!st.needs) st.needs = { hunger: 50, fatigue: 30, hygiene: 60, happiness: 50 };
+  return st.needs;
+}
+
 
 ;
 // ==== js/data/scenarios.js ====
@@ -199976,6 +199984,7 @@ if (typeof window !== "undefined") {
     ],
   });
 })();
+// [R138] 域B 联动增强
 
 ;
 // ==== js/data/corporate_npc_events.js ====
@@ -220303,6 +220312,7 @@ function getPromotionProgress(state) {
   return { done: allMet, checks, nextRank: rankData.next };
 }
 // [R112] 域H 联动增强
+// [R144] 域H 联动增强
 
 ;
 // ==== js/phase2/team.js ====
@@ -227431,6 +227441,7 @@ if (typeof window !== "undefined") {
   };
 }
 // [R101] 域E 联动增强
+// [R141] 域E 联动增强
 
 ;
 // ==== js/phase2/startup_data.js ====
@@ -243904,6 +243915,7 @@ if (typeof window !== "undefined") {
     ],
   };
 }
+// [R140] 域D 联动增强
 
 ;
 // ==== js/phase2/investment_analysis.js ====
@@ -256887,7 +256899,7 @@ if (typeof window !== "undefined") {
       choices: [
         { text: "💡 好好培养", hint: "全技能XP+3,心智+2", apply: function (st) {
           if (!st) return; st.flags = st.flags || {}; st.flags._b515SkillAwakeningCooldown = true;
-          var skills = ["accounting", "management", "marketing", "technology", "social", "trade"];
+          var skills = ["accounting", "management", "sales", "coding", "social", "driving"]; // [全系统自洽修复] 域C R535 修复:marketing/technology/trade非真实技能键(XP静默丢弃)→映射sales/coding/driving
           for (var i = 0; i < skills.length; i++) { if (typeof addSkillXp === "function") { try { addSkillXp(skills[i], 3); } catch(e) {} } }
           if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 2);
           if (typeof StateManager !== "undefined") StateManager.addMessage("💡 '原来我在这方面还有天赋！' 你决定好好培养这个技能。全技能XP+3,心智+2。", "success");
@@ -257317,6 +257329,159 @@ if (typeof window !== "undefined") {
       text: function (st) {
         if (!st) return null;
         return "你发现曾经的经历正在帮助你的职业发展——'原来经历真的有用。' 你开始思考如何把经历转化为职业资本。";
+      }
+    }
+  ];
+
+  for (var i = 0; i < EVENTS.length; i++) {
+    (function (ev) {
+      var exists = false;
+      for (var j = 0; j < RANDOM_EVENTS.length; j++) {
+        if (RANDOM_EVENTS[j] && RANDOM_EVENTS[j].id === ev.id) { exists = true; break; }
+      }
+      if (!exists) RANDOM_EVENTS.push(ev);
+    })(EVENTS[i]);
+  }
+})();
+
+;
+// ==== js/core/domain_c_linkage_r535.js ====
+/**
+ * 域C(职业/成长) 联动增强 R535
+ * 桥接（三大零事件消费 career flag 全部打通首消费）：
+ *   C→G  c535_career_yearbook    职业年鉴 → 首消费 flags._careerMonthlySnapshots(career_dev.js:3415,24月滚动快照),
+ *     一年数据成型时对比首末薪资/存款——峰终定律的成长复盘叙事
+ *   C→D  c535_jobhop_storyteller 跨界者故事 → 首消费 flags._crossPathJobhop+_careerPathsWorked(career_dev.js:2718),
+ *     跨路径跳槽经历成为社交货币——向NPC分享职业转型故事换好感
+ *   C→E  c535_peak_wealth_pivot  巅峰之后 → 首消费 flags._careerMaxLevelCelebrated(career_dev.js),
+ *     职业到顶后收入曲线见顶——引导玩家从工资思维转向资产思维(职业-经济联动)
+ */
+(function () {
+  "use strict";
+  if (typeof RANDOM_EVENTS === "undefined" || !RANDOM_EVENTS) return;
+  if (RANDOM_EVENTS._domainCLinkageR535Loaded) return;
+  RANDOM_EVENTS._domainCLinkageR535Loaded = true;
+
+  function firstMetNpc(st) {
+    if (!st || !st.relationships) return null;
+    for (var id in st.relationships) { if (st.relationships[id] && st.relationships[id].met) return id; }
+    return null;
+  }
+  function bumpAffinity(st, npcId, amt, reason) {
+    if (!npcId) return;
+    if (typeof applyAffinityChange === "function") { try { applyAffinityChange(st, npcId, amt, reason); } catch (e) {} }
+  }
+  function npcName(st, npcId) {
+    if (!npcId) return "老朋友";
+    if (typeof getNpcDisplayName === "function") { try { return getNpcDisplayName(npcId) || "老朋友"; } catch (e) {} }
+    return "老朋友";
+  }
+
+  var EVENTS = [
+    {
+      // ---- C→G 联动：职业年鉴（首消费 _careerMonthlySnapshots）----
+      id: "c535_career_yearbook", phase: "street", _isChainEvent: false, icon: "📔",
+      title: "职业年鉴",
+      story: "翻开这一年的职业记录，数字背后是走过的路——{desc}",
+      triggers: { minDay: 360, interval: 180, maxRepeats: 3, excludeFlags: ["_c535YearbookCooldown"] },
+      conditions: function (st) {
+        if (!st || st.gameOver) return false;
+        if (st.flags && st.flags._c535YearbookCooldown) return false;
+        var snaps = st.flags && st.flags._careerMonthlySnapshots;
+        return Array.isArray(snaps) && snaps.length >= 12; // 满一年月度快照才有"年鉴"可翻
+      },
+      choices: [
+        { text: "📈 感慨成长", hint: "心情+2,心智+1", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._c535YearbookCooldown = true;
+          if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 2); // [PLACEHOLDER]
+          if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 1); // [PLACEHOLDER]
+          if (typeof StateManager !== "undefined") StateManager.addMessage("📔 '原来我已经走了这么远。' 一年的轨迹给了你继续向前的底气。心情+2,心智+1。", "success");
+        }},
+        { text: "🎯 定下一年目标", hint: "管理XP+4,心智+2", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._c535YearbookCooldown = true;
+          if (typeof addSkillXp === "function") { try { addSkillXp("management", 4); } catch (e) {} } // [PLACEHOLDER]
+          if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 2); // [PLACEHOLDER]
+          if (typeof StateManager !== "undefined") StateManager.addMessage("🎯 '明年这时候，我要比这条曲线更高。' 你把目标写在了年鉴末页。管理XP+4,心智+2。", "success");
+        }}
+      ],
+      text: function (st) {
+        if (!st || !st.flags) return null;
+        var snaps = st.flags._careerMonthlySnapshots;
+        if (!Array.isArray(snaps) || snaps.length < 2) return "你翻看着自己的职业记录，一段旅程正在成形。";
+        var first = snaps[0] || {}, last = snaps[snaps.length - 1] || {};
+        var s0 = (typeof first.salary === "number" && isFinite(first.salary)) ? first.salary : 0;
+        var s1 = (typeof last.salary === "number" && isFinite(last.salary)) ? last.salary : 0;
+        var b0 = (typeof first.bankBalance === "number" && isFinite(first.bankBalance)) ? first.bankBalance : 0;
+        var b1 = (typeof last.bankBalance === "number" && isFinite(last.bankBalance)) ? last.bankBalance : 0;
+        var salaryTxt = s1 > s0 ? ("日薪从¥" + Math.floor(s0) + "涨到了¥" + Math.floor(s1)) : (s1 < s0 ? ("日薪从¥" + Math.floor(s0) + "变成了¥" + Math.floor(s1) + "——起伏也是履历") : "薪水稳定如常");
+        var bankTxt = b1 > b0 ? ("存款多了¥" + Math.floor(b1 - b0)) : "存款经历了波动";
+        return "深夜整理旧物，你翻出这一年的职业记录：" + salaryTxt + "，" + bankTxt + "。" + snaps.length + "个月的数字连成一条线，那是别人看不见、只有你自己知道的路。";
+      }
+    },
+    {
+      // ---- C→D 联动：跨界者故事（首消费 _crossPathJobhop / _careerPathsWorked）----
+      id: "c535_jobhop_storyteller", phase: "street", _isChainEvent: false, icon: "🔀",
+      title: "跨界者",
+      story: "换过赛道的人，故事总是更多——{desc}",
+      triggers: { minDay: 60, interval: 90, maxRepeats: 4, excludeFlags: ["_c535JobhopStoryCooldown"] },
+      conditions: function (st) {
+        if (!st || st.gameOver) return false;
+        if (st.flags && st.flags._c535JobhopStoryCooldown) return false;
+        if (!st.flags || !st.flags._crossPathJobhop) return false; // 只有真正跨路径跳槽过的人才有"跨界故事"
+        return !!firstMetNpc(st); // 域D铁律：必须有已结识NPC才谈得上"分享"
+      },
+      choices: [
+        { text: "🗣️ 分享转型心得", hint: "好感+3,社交XP+3", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._c535JobhopStoryCooldown = true;
+          var nid = firstMetNpc(st); bumpAffinity(st, nid, 3, "分享跨行业转型经历"); // [PLACEHOLDER]
+          if (typeof addSkillXp === "function") { try { addSkillXp("social", 3); } catch (e) {} } // [PLACEHOLDER]
+          if (typeof StateManager !== "undefined") StateManager.addMessage("🔀 '换赛道最难的不是技能，是心态。' 你的故事让对方听得入神。好感+3,社交XP+3。", "success");
+        }},
+        { text: "🤐 轻描淡写", hint: "心智+2", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._c535JobhopStoryCooldown = true;
+          if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 2); // [PLACEHOLDER]
+          if (typeof StateManager !== "undefined") StateManager.addMessage("🤐 '也没什么，就是换了份工作。' 有些路，自己知道走过就好。心智+2。", "success");
+        }}
+      ],
+      text: function (st) {
+        if (!st) return null;
+        var paths = (st.flags && st.flags._careerPathsWorked) || {};
+        var n = 0; for (var k in paths) { if (paths[k]) n++; }
+        var nid = firstMetNpc(st);
+        var who = npcName(st, nid);
+        var cnt = n >= 2 ? ("你走过" + n + "条不同的职业路径") : "你换过职业赛道";
+        return who + "好奇地问起你的工作经历。" + cnt + "——从一个行业跳进另一个行业，这种经历在熟人眼里就是传奇。'讲讲呗，当初怎么敢换的？'";
+      }
+    },
+    {
+      // ---- C→E 联动：巅峰之后（首消费 _careerMaxLevelCelebrated）----
+      id: "c535_peak_wealth_pivot", phase: "street", _isChainEvent: false, icon: "⛰️",
+      title: "巅峰之后",
+      story: "职级到顶那天起，工资条就不会再有惊喜了——{desc}",
+      triggers: { minDay: 90, interval: 150, maxRepeats: 3, excludeFlags: ["_c535PeakPivotCooldown"] },
+      conditions: function (st) {
+        if (!st || st.gameOver) return false;
+        if (st.flags && st.flags._c535PeakPivotCooldown) return false;
+        if (!st.flags || !st.flags._careerMaxLevelCelebrated) return false; // 职业已到顶
+        return !!(st.resources && (st.resources.bankBalance || 0) >= 5000); // 有一定积蓄才谈得上资产配置 [PLACEHOLDER]
+      },
+      choices: [
+        { text: "📊 研究资产配置", hint: "会计XP+5,心智+2", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._c535PeakPivotCooldown = true;
+          if (typeof addSkillXp === "function") { try { addSkillXp("accounting", 5); } catch (e) {} } // [PLACEHOLDER]
+          if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 2); // [PLACEHOLDER]
+          if (typeof StateManager !== "undefined") StateManager.addMessage("📊 '工资是加法，资产是乘法。' 你开始认真研究投资页面里那些曾被忽略的选项。会计XP+5,心智+2。", "success");
+        }},
+        { text: "😌 知足常乐", hint: "心情+3", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._c535PeakPivotCooldown = true;
+          if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 3); // [PLACEHOLDER]
+          if (typeof StateManager !== "undefined") StateManager.addMessage("😌 '到顶了也挺好，稳稳当当。' 不是每个人都需要第二曲线。心情+3。", "success");
+        }}
+      ],
+      text: function (st) {
+        if (!st) return null;
+        var bank = (st.resources && st.resources.bankBalance) || 0;
+        return "发工资的日子，你盯着到账短信忽然意识到：职级已经到顶，这个数字以后大概就是它了。账上躺着¥" + Math.floor(bank) + "的存款——是让钱继续躺着，还是让它也开始'上班'？";
       }
     }
   ];
@@ -262767,7 +262932,7 @@ if (typeof window !== "undefined") {
       choices: [
         { text: "📈 突破瓶颈", hint: "全技能XP+3,心智+3", apply: function (st) {
           if (!st) return; st.flags = st.flags || {}; st.flags._g531SkillPlateauCooldown = true;
-          var skills = ["accounting", "management", "marketing", "technology", "social", "trade"];
+          var skills = ["accounting", "management", "sales", "coding", "social", "driving"]; // [全系统自洽修复] 域C R535 修复:marketing/technology/trade非真实技能键(XP静默丢弃)→映射sales/coding/driving
           for (var i = 0; i < skills.length; i++) { if (typeof addSkillXp === "function") { try { addSkillXp(skills[i], 3); } catch(e) {} } }
           if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 3);
           if (typeof StateManager !== "undefined") StateManager.addMessage("📈 '瓶颈期就是突破期，熬过去就是新的天地。' 全技能XP+3,心智+3。", "success");
@@ -291000,6 +291165,7 @@ if (typeof window !== "undefined") {
     SCENARIO_TUTORIAL_STEPS,
   });
 }
+// [R142] 域F 联动增强
 
 ;
 // ==== js/ui/navigation.js ====
