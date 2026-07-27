@@ -94,7 +94,8 @@ function applyPromotion(state, newRank) {
   c.dignity = Math.min(100, (c.dignity || 0) + 10);
   c.kpi = Math.min(150, (c.kpi || 0) + 15);
   // [全系统自洽修复] 域H 联动增强1: 晋升使人精神振奋→疲劳-10（H→G）
-  state.needs.fatigue = Math.max(0, (state.needs.fatigue || 0) - 10);
+  // [全系统自洽修复] 域H R512 P0: state.needs 守卫（旧存档/异常状态防崩溃）
+  if (state.needs) state.needs.fatigue = Math.max(0, (state.needs.fatigue || 0) - 10);
 
   // [全系统自洽修复] 域H 联动增强2: 晋升通知NPC社交圈，提升同事好感（H→D）
   if (state.relationships) {

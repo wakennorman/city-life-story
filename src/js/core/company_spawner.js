@@ -593,15 +593,15 @@ function spawnFromRuins(state, deceasedCompany) {
   };
 
   // 加入企业命运
-  var fate = state.enterpriseFate;
-  if (!fate)
+  // [全系统自洽修复] 域H R512 P0: 原逻辑 fate 局部变量在赋值后仍指向 null→fate.companies 崩溃
+  if (!state.enterpriseFate)
     state.enterpriseFate = {
       companies: {},
       fateEventCooldown: {},
       lastFateTick: 0,
     };
-  if (!fate.companies) fate.companies = {};
-  fate.companies[companyId] = newCompany;
+  if (!state.enterpriseFate.companies) state.enterpriseFate.companies = {};
+  state.enterpriseFate.companies[companyId] = newCompany;
 
   // 加入股票市场
   if (state.investment && state.investment.stockMarket) {

@@ -9,6 +9,13 @@
   if (typeof RANDOM_EVENTS === "undefined") return;
   if (RANDOM_EVENTS._corpLoaded) return;
   RANDOM_EVENTS._corpLoaded = true;
+
+  // [全系统自洽修复] 域H R512: needs 守卫辅助函数（防止旧存档 state.needs 未初始化时崩溃）
+  function _guardNeeds(st) {
+    if (!st.needs) st.needs = { hunger: 50, fatigue: 0, hygiene: 80, happiness: 50 };
+    return st.needs;
+  }
+
   var EVENTS = [
     {
       id: "insider_rumor_start",
@@ -29,6 +36,7 @@
           text: "📱 找朋友打听",
           hint: "验证消息",
           apply: (st) => {
+            _guardNeeds(st);
             st.flags._insiderRumorSeen = true;
             st.needs.fatigue = Math.min(100, st.needs.fatigue + 5);
             if ((st.resources.cash || 0) >= 100) { // [全系统自洽修复] 域H A类: cash NaN守卫
@@ -86,10 +94,13 @@
           text: "🚫 不听八卦，继续干活",
           hint: "专注本职",
           apply: (st) => {
+            _guardNeeds(st);
             st.flags._insiderRumorSeen = true;
-            (st.player.corporate || {}).kpi = Math.min(
+            // [全系统自洽修复] 域H R512 P1: 原 (st.player.corporate||{}).kpi=... 赋值到临时对象→静默丢失
+            if (!st.player.corporate) st.player.corporate = {};
+            st.player.corporate.kpi = Math.min(
               150,
-              (st.player.corporate || {}).kpi + 5,
+              (st.player.corporate.kpi || 0) + 5,
             );
             st.needs.happiness = Math.min(100, st.needs.happiness + 2);
             StateManager.addMessage(
@@ -114,6 +125,7 @@
           hint: "高风险高回报",
           cost: 3000,
           apply: (st) => {
+            _guardNeeds(st);
             if ((st.resources.cash || 0) < 3000) {
               StateManager.addMessage("💰 钱不够！", "warning");
               return;
@@ -162,6 +174,7 @@
           hint: "留条后路",
           cost: 1000,
           apply: (st) => {
+            _guardNeeds(st);
             if ((st.resources.cash || 0) < 1000) {
               StateManager.addMessage("💵 钱不够！", "warning");
               return;
@@ -189,6 +202,7 @@
           text: "🚫 不参与，太危险",
           hint: "远离灰色地带",
           apply: (st) => {
+            _guardNeeds(st);
             st.needs.happiness = Math.min(100, st.needs.happiness + 3);
             st.player.mental = Math.min(100, st.player.mental + 5);
             st.flags._insiderTradingRefused = true;
@@ -216,6 +230,7 @@
           text: "😰 赶紧撤，销毁记录",
           hint: "逃避",
           apply: (st) => {
+            _guardNeeds(st);
             st.needs.happiness = Math.max(0, st.needs.happiness - 10);
             st.player.mental = Math.max(0, st.player.mental - 8);
             // 80% 概率没事，20% 被盯上
@@ -241,6 +256,7 @@
           text: "🙋 主动说明情况",
           hint: "坦白从宽",
           apply: (st) => {
+            _guardNeeds(st);
             st.player.mental = Math.min(100, st.player.mental + 5);
             st.needs.happiness = Math.max(0, st.needs.happiness - 5);
             // 60% 没事，40% 被警告
@@ -266,6 +282,7 @@
           text: "😤 装不知道",
           hint: "赌运气",
           apply: (st) => {
+            _guardNeeds(st);
             const safe = Random.chance(0.5);
             if (safe) {
               StateManager.addMessage(
@@ -300,6 +317,7 @@
           text: "🚔 报警",
           hint: "走法律途径",
           apply: (st) => {
+            _guardNeeds(st);
             st.player.fame = Math.min(100, st.player.fame + 2);
             st.needs.happiness = Math.max(0, st.needs.happiness - 5);
             const recovered = Random.chance(0.15);
@@ -322,6 +340,7 @@
           text: "💪 加倍努力工作补回来",
           hint: "勤劳致富",
           apply: (st) => {
+            _guardNeeds(st);
             st.needs.fatigue = Math.min(100, st.needs.fatigue + 15);
             // [全系统自洽修复] 域H A类#19: chain event apply中 st.player.corporate 守卫
             if (!st.player || !st.player.corporate) return;
@@ -350,6 +369,7 @@
           text: "😞 自认倒霉，长个教训",
           hint: "接受现实",
           apply: (st) => {
+            _guardNeeds(st);
             st.needs.happiness = Math.max(0, st.needs.happiness - 8);
             st.player.mental = Math.min(100, st.player.mental + 3);
             StateManager.addMessage(
@@ -380,26 +400,14 @@
           text: "💪 咬牙加班",
           hint: "高风险高回报",
           apply: (st) => {
-            (st.player.corporate || {}).ability = Math.min(
-              100,
-              (st.player.corporate || {}).ability + 3,
-            );
-            (st.player.corporate || {}).kpi = Math.min(
-              150,
-              (st.player.corporate || {}).kpi + 12,
-            );
-            (st.player.corporate || {}).upwardMgmt = Math.min(
-              100,
-              (st.player.corporate || {}).upwardMgmt + 5,
-            );
-            (st.player.corporate || {}).hair = Math.max(
-              0,
-              (st.player.corporate || {}).hair - 8,
-            );
-            (st.player.corporate || {}).risk = Math.min(
-              100,
-              (st.player.corporate || {}).risk + 3,
-            );
+            _guardNeeds(st);
+            // [全系统自洽修复] 域H R512 P1: 原 (st.player.corporate||{}).xxx=... 赋值到临时对象→静默丢失
+            if (!st.player.corporate) st.player.corporate = {};
+            st.player.corporate.ability = Math.min(100, (st.player.corporate.ability || 0) + 3);
+            st.player.corporate.kpi = Math.min(150, (st.player.corporate.kpi || 0) + 12);
+            st.player.corporate.upwardMgmt = Math.min(100, (st.player.corporate.upwardMgmt || 0) + 5);
+            st.player.corporate.hair = Math.max(0, (st.player.corporate.hair || 0) - 8);
+            st.player.corporate.risk = Math.min(100, (st.player.corporate.risk || 0) + 3);
             st.needs.fatigue = Math.min(100, st.needs.fatigue + 20);
             StateManager.addMessage(
               "💪 周末连续加班！KPI+12，能力+3，发量-8，疲劳+20。",
@@ -411,6 +419,7 @@
           text: "😴 装病请假",
           hint: "需要演技",
           apply: (st) => {
+            _guardNeeds(st);
             if (Random.chance(0.5)) {
               (st.player.corporate || {}).upwardMgmt = Math.max(
                 0,
@@ -434,6 +443,7 @@
           text: "💬 提议平摊工作量",
           hint: "考验管理能力",
           apply: (st) => {
+            _guardNeeds(st);
             if (st.corporate && st.corporate.team && st.corporate.team.length > 0) { // [全系统自洽修复] 域H A类: team 守卫
               (st.player.corporate || {}).popularity = Math.min(
                 100,
@@ -562,6 +572,7 @@
           text: "🙏 忍气吞声道歉",
           hint: "保住 KPI",
           apply: (st) => {
+            _guardNeeds(st);
             (st.player.corporate || {}).kpi = Math.max(0, (st.player.corporate || {}).kpi - 5);
             (st.player.corporate || {}).dignity = Math.max(
               0,
@@ -578,6 +589,7 @@
           text: "📋 摆事实讲道理",
           hint: "考验智力",
           apply: (st) => {
+            _guardNeeds(st);
             if (Random.chance(0.4 + (st.player.intelligence - 20) * 0.02)) {
               (st.player.corporate || {}).kpi = Math.min(
                 150,
@@ -608,6 +620,7 @@
           text: "😡 直接挂电话",
           hint: "爽但有后果",
           apply: (st) => {
+            _guardNeeds(st);
             (st.player.corporate || {}).dignity = Math.min(
               100,
               (st.player.corporate || {}).dignity + 10,
@@ -647,6 +660,7 @@
           text: "💼 去面试看看",
           hint: "了解一下行情",
           apply: (st) => {
+            _guardNeeds(st);
             if (Random.chance(0.5)) {
               const offer = Math.round(
                 (st.resources.totalEarned /
@@ -723,6 +737,7 @@
           text: "🌙 熬夜做好",
           hint: "能力+向上管理",
           apply: (st) => {
+            _guardNeeds(st);
             (st.player.corporate || {}).ability = Math.min(
               100,
               (st.player.corporate || {}).ability + 4,
@@ -746,6 +761,7 @@
           text: "🤖 用AI生成",
           hint: "省力但有风险",
           apply: (st) => {
+            _guardNeeds(st);
             if (Random.chance(0.55)) {
               (st.player.corporate || {}).ability = Math.min(
                 100,
@@ -917,6 +933,7 @@
           text: "🍻 主动社交敬酒",
           hint: "提升社交属性",
           apply: (st) => {
+            _guardNeeds(st);
             (st.player.corporate || {}).upwardMgmt = Math.min(
               100,
               (st.player.corporate || {}).upwardMgmt + 8,
@@ -940,6 +957,7 @@
           text: "🎰 就等着抽奖",
           hint: "碰运气",
           apply: (st) => {
+            _guardNeeds(st);
             const roll = Random.float(0, 1);
             if (roll < 0.05) {
               st.resources.cash = (st.resources.cash || 0) + 10000;
@@ -961,6 +979,7 @@
           text: "😴 请假不去",
           hint: "省事但减分",
           apply: (st) => {
+            _guardNeeds(st);
             (st.player.corporate || {}).popularity = Math.max(
               0,
               (st.player.corporate || {}).popularity - 8,
@@ -1001,6 +1020,7 @@
           text: "📖 认真带教",
           hint: "培养管理能力",
           apply: (st) => {
+            _guardNeeds(st);
             (st.player.corporate || {}).ability = Math.min(
               100,
               (st.player.corporate || {}).ability + 2,
@@ -1070,6 +1090,7 @@
           hint: "FOMO了",
           cost: 5000,
           apply: function (st) {
+            _guardNeeds(st);
             if ((st.resources.cash || 0) >= 5000) {
               st.resources.cash = Math.max(0, (st.resources.cash || 0) - 5000);
               if (Random.chance(0.3)) {
@@ -1101,6 +1122,9 @@
           text: "📚 先学习区块链知识",
           hint: "理性",
           apply: function (st) {
+            // [全系统自洽修复] 域H R512 P0: skills.coding 守卫（旧存档/异常状态防崩溃）
+            if (!st.skills) st.skills = {};
+            if (!st.skills.coding) st.skills.coding = { level: 0, xp: 0 };
             st.skills.coding.xp += 30;
             st.player.intelligence = Math.min(100, st.player.intelligence + 1);
             StateManager.addMessage(
@@ -1135,6 +1159,7 @@
           hint: "员工福利",
           cost: 4000,
           apply: function (st) {
+            _guardNeeds(st);
             if ((st.resources.cash || 0) >= 4000) {
               st.resources.cash = Math.max(0, (st.resources.cash || 0) - 4000);
               var inv = st.investment || {};
@@ -1397,6 +1422,9 @@
           text: "📚 学习什么是减半",
           hint: "先搞懂",
           apply: function (st) {
+            // [全系统自洽修复] 域H R512 P0: skills.coding 守卫
+            if (!st.skills) st.skills = {};
+            if (!st.skills.coding) st.skills.coding = { level: 0, xp: 0 };
             st.skills.coding.xp += 40;
             st.player.intelligence = Math.min(100, st.player.intelligence + 2);
             StateManager.addMessage(
@@ -1584,6 +1612,7 @@
           text: "💢 受不了了，直接辞职",
           hint: "失去回购机会，但解脱",
           apply: function (st) {
+            _guardNeeds(st);
             st.flags._founderHumiliationSeen = true;
             st.flags._founderQuitInRage = true;
             st.flags._founderStayed = null; // 关闭后续 buyback
@@ -1674,6 +1703,7 @@
           text: "🤝 谢绝老陈，安心当员工",
           hint: "心理松一口气",
           apply: function (st) {
+            _guardNeeds(st);
             st.flags._founderBuybackSeen = true;
             st.flags._founderDeclinedBuyback = true;
             if (st.player && st.player.corporate) {
@@ -1832,6 +1862,7 @@
           text: "😔 默默接受批评",
           hint: "忍气吞声",
           apply: (st) => {
+            _guardNeeds(st);
             st.flags._workplaceScapegoatSeen = true;
             (st.player.corporate || {}).dignity = Math.max(
               0,
@@ -1914,6 +1945,7 @@
           text: "💪 把边缘项目做出彩",
           hint: "用实力说话",
           apply: (st) => {
+            _guardNeeds(st);
             st.needs.fatigue = Math.min(100, st.needs.fatigue + 15);
             const success = Random.chance(
               0.3 +
@@ -1958,6 +1990,7 @@
           text: "📱 找HR聊聊",
           hint: "寻求保护",
           apply: (st) => {
+            _guardNeeds(st);
             st.needs.fatigue = Math.min(100, st.needs.fatigue + 5);
             const success = Random.chance(
               0.4 + ((st.player.corporate || {}).popularity - 30) * 0.01,
@@ -1991,6 +2024,7 @@
           text: "🚪 准备跳槽",
           hint: "另谋出路",
           apply: (st) => {
+            _guardNeeds(st);
             st.needs.fatigue = Math.min(100, st.needs.fatigue + 8);
             (st.player.corporate || {}).dignity = Math.min(
               100,
@@ -2058,6 +2092,7 @@
           text: "💪 用业绩证明自己",
           hint: "实力碾压",
           apply: (st) => {
+            _guardNeeds(st);
             st.needs.fatigue = Math.min(100, st.needs.fatigue + 12);
             (st.player.corporate || {}).kpi = Math.min(
               150,
@@ -2081,6 +2116,7 @@
           text: "😔 保持沉默",
           hint: "忍",
           apply: (st) => {
+            _guardNeeds(st);
             (st.player.corporate || {}).dignity = Math.max(
               0,
               (st.player.corporate || {}).dignity - 8,
@@ -2111,6 +2147,7 @@
           text: "🚀 接受猎头offer跳槽",
           hint: "高薪但高风险",
           apply: (st) => {
+            _guardNeeds(st);
             st.corporate.rank = "P6";
             (st.player.corporate || {}).kpi = 30;
             (st.player.corporate || {}).upwardMgmt = 10;
@@ -2141,6 +2178,7 @@
           text: "💼 接受晋升，留下",
           hint: "稳定但委屈",
           apply: (st) => {
+            _guardNeeds(st);
             st.corporate.rank = "P6";
             (st.player.corporate || {}).kpi = 50;
             (st.player.corporate || {}).upwardMgmt = Math.min(
@@ -2166,6 +2204,7 @@
           text: "🤔 两边都再考虑下",
           hint: "拖延决策",
           apply: (st) => {
+            _guardNeeds(st);
             st.needs.happiness = Math.max(0, st.needs.happiness - 5);
             st.player.mental = Math.max(0, st.player.mental - 3);
             if (typeof scheduleChainEvent === "function") {
@@ -2192,6 +2231,7 @@
           text: "🚀 接受猎头offer",
           hint: "搏一把",
           apply: (st) => {
+            _guardNeeds(st);
             st.corporate.rank = "P6";
             (st.player.corporate || {}).kpi = 30;
             (st.player.corporate || {}).upwardMgmt = 10;
@@ -2220,6 +2260,7 @@
           text: "💼 留下接受晋升",
           hint: "求稳",
           apply: (st) => {
+            _guardNeeds(st);
             st.corporate.rank = "P6";
             (st.player.corporate || {}).kpi = 50;
             (st.player.corporate || {}).upwardMgmt = Math.min(
@@ -2719,6 +2760,7 @@
           text: "📢 找领导表忠心",
           hint: "降低被裁概率，但开始卷",
           apply: function (st) {
+            _guardNeeds(st);
             st.flags._siegeReversalSeen = true;
             st.flags._siegeKpiMode = true;
             st.needs.fatigue = Math.min(100, st.needs.fatigue + 15);
@@ -3013,6 +3055,7 @@
           text: "🏆 争取竞聘机会",
           hint: "找老张要晋升",
           apply: function (st) {
+            _guardNeeds(st);
             st.flags._officeFactionOutcomeDone = true;
             var bonus = st.flags._officeFactionWorker
               ? 15
@@ -3043,6 +3086,7 @@
           text: "😌 低调回归本职工作",
           hint: "远离是非",
           apply: function (st) {
+            _guardNeeds(st);
             st.flags._officeFactionOutcomeDone = true;
             if (st.player.corporate) {
               (st.player.corporate || {}).dignity = Math.min(
@@ -3116,6 +3160,7 @@
             text: "🤐 自己认了，不牵连别人",
             hint: "牺牲自己，保全团队",
             apply: function (st) {
+              _guardNeeds(st);
               st.flags._blameGameTookIt = true;
               (st.player.corporate || {}).dignity = Math.max(
                 0,
@@ -3137,6 +3182,7 @@
             text: "🔄 把球踢回去——建议成立调查组",
             hint: "各方不得罪，但显得没有担当",
             apply: function (st) {
+              _guardNeeds(st);
               st.flags._blameGameNeutral = true;
               (st.player.corporate || {}).upwardMgmt = Math.max(
                 0,
@@ -3173,6 +3219,7 @@
             hint: "花¥2000，晋升概率大幅提升",
             cost: 2000,
             apply: function (st) {
+              _guardNeeds(st);
               st.flags._promotionGiftGiven = true;
               st.resources.cash = Math.max(0, (st.resources.cash || 0) - 2000);
               (st.player.corporate || {}).popularity = Math.min(
@@ -3206,6 +3253,7 @@
             text: "🤫 匿名举报这个潜规则",
             hint: "高风险高回报",
             apply: function (st) {
+              _guardNeeds(st);
               st.flags._promotionReported = true;
               (st.player.corporate || {}).risk = Math.min(
                 100,
@@ -3259,6 +3307,7 @@
             text: "👴 保老赵，让他提前退休",
             hint: "人道主义，但小林可能怀恨",
             apply: function (st) {
+              _guardNeeds(st);
               st.flags._layoffChoseOldZhao = true;
               (st.player.corporate || {}).dignity = Math.min(
                 100,
@@ -3303,6 +3352,7 @@
             text: "🎲 让两人自己决定谁走",
             hint: "不干涉，把选择权还给当事人",
             apply: function (st) {
+              _guardNeeds(st);
               st.flags._layoffLetThemDecide = true;
               (st.player.corporate || {}).upwardMgmt = Math.min(
                 100,
