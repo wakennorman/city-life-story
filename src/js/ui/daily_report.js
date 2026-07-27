@@ -1276,3 +1276,4 @@ function showDailyReport(state) {
 // [R302] 域F
 // [R374] 域F
 // [R446] 域F
+// [R518] 域F
