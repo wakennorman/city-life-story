@@ -59,8 +59,9 @@ function calculatePerfScore(state) {
     score *= 1.1;
   }
 
-  // 随机方差 ±8%
-  score += Random.float(-score * 0.08, score * 0.08);
+  // 随机方差 ±8%（[全系统自洽修复] 域C R499 P1: score 为负时 min/max 反转→取绝对值保对称区间）
+  var _varianceBase = Math.abs(score);
+  score += Random.float(-_varianceBase * 0.08, _varianceBase * 0.08);
   score = Math.max(0, Math.min(100, score));
 
   return { score: Math.round(score) };

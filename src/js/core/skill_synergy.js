@@ -366,9 +366,9 @@ function checkSkillSynergies(state) {
         effects: synergy.effects,
       };
       // [全系统自洽修复] 域C 深度开发: 设置连携激活标记供工作系统读取
-      if (state.flags) {
-        state.flags["_synergy_" + synergyId] = true;
-      }
+      // [全系统自洽修复] 域C R499 P1: 旧存档 state.flags 可能未初始化→连携flag静默不写→8个连携工作永不可入职
+      state.flags = state.flags || {};
+      state.flags["_synergy_" + synergyId] = true;
       // 收集解锁内容
       if (synergy.effects.unlockJobs) {
         results.unlockedJobs = results.unlockedJobs.concat(
@@ -410,9 +410,9 @@ function checkSkillSynergies(state) {
       // [全系统自洽修复] 域C A类#3: TRIPLE 连携同步设置 _synergy_<id> 标记（与 DUAL 一致）。
       // 原逻辑只在 DUAL 分支置位，导致 driving_logistics_accounting→long_haul_driver、
       // repair_electrician_coding→smart_home_tech 的 requiredFlag 永不被满足 → 死工作。
-      if (state.flags) {
-        state.flags["_synergy_" + synergyId] = true;
-      }
+      // [全系统自洽修复] 域C R499 P1: 旧存档 state.flags 未初始化→连携flag静默不写
+      state.flags = state.flags || {};
+      state.flags["_synergy_" + synergyId] = true;
       if (synergy.effects.unlockJobs) {
         results.unlockedJobs = results.unlockedJobs.concat(
           synergy.effects.unlockJobs,
