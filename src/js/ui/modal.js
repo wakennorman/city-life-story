@@ -1762,7 +1762,7 @@ function executeScavengeRoute(routeId) {
     "拾荒 - " + (routeNames[routeId] || "未知路线"),
   );
   st.needs.hygiene = Math.max(0, st.needs.hygiene - hygieneCost);
-  st.needs.fatigue = Math.min(100, st.needs.fatigue + fatigueCost);
+  if(st.needs) st.needs.fatigue = Math.min(100, (st.needs.fatigue||0) + fatigueCost);
 
   // 装备掉落：拾荒偶尔捡到可用装备（捡破烂换钱/自用）
   var dropChance =

@@ -182945,6 +182945,7 @@ function getNpcJobRecommendation(state, limit) {
 // [R211] 域C 联动增强
 // [R243] 域C 联动增强
 // [R283] 域C
+// [R331] 域C
 
 ;
 // ==== js/data/goods.js ====
@@ -203753,6 +203754,7 @@ if (typeof window !== "undefined") {
 })();
 // [R146] 域B 联动增强
 // [R242] 域B 联动增强
+// [R330] 域B
 
 ;
 // ==== js/data/work_flavor.js ====
@@ -206477,6 +206479,7 @@ function getStatusSummary(state) {
 
   return warnings;
 }
+// [R332] 域D
 
 ;
 // ==== js/phase1/illness.js ====
@@ -215559,6 +215562,7 @@ function getHealthScore(state) {
 // [R239] 域G 联动增强
 // [R263] 域G
 // [R287] 域G
+// [R335] 域G
 
 ;
 // ==== js/phase1/carry.js ====
@@ -217373,6 +217377,7 @@ function getSkillPriceInsight(state, locKey, goodId) {
 // [R193] 域A 联动增强
 // [R241] 域A 联动增强
 // [R289] 域A
+// [R337] 域A
 
 ;
 // ==== js/data/domain_g_linkage_r180.js ====
@@ -222221,6 +222226,7 @@ function getMarketCostMultiplier(state) {
 // [R232] 域H 联动增强
 // [R264] 域H
 // [R288] 域H
+// [R336] 域H
 
 ;
 // ==== js/phase2/investment.js ====
@@ -227298,6 +227304,7 @@ function getInvestmentPortfolioSummary(state) {
 // [R237] 域E 联动增强
 // [R261] 域E
 // [R285] 域E
+// [R333] 域E
 
 ;
 // ==== js/phase2/property_market.js ====
@@ -278691,6 +278698,7 @@ function getHealthStatusSummary(state) {
 // [R238] 域F 联动增强
 // [R262] 域F
 // [R286] 域F
+// [R334] 域F
 
 ;
 // ==== js/ui/render_infra.js ====
@@ -289310,7 +289318,7 @@ function executeScavengeRoute(routeId) {
     "拾荒 - " + (routeNames[routeId] || "未知路线"),
   );
   st.needs.hygiene = Math.max(0, st.needs.hygiene - hygieneCost);
-  st.needs.fatigue = Math.min(100, st.needs.fatigue + fatigueCost);
+  if(st.needs) st.needs.fatigue = Math.min(100, (st.needs.fatigue||0) + fatigueCost);
 
   // 装备掉落：拾荒偶尔捡到可用装备（捡破烂换钱/自用）
   var dropChance =
@@ -291826,7 +291834,7 @@ var DYNAMIC_HINTS = [
     trigger: function (st) {
       return (
         st.needs &&
-        st.needs.fatigue >= 90 &&
+        st.needs && st.needs.fatigue >= 90 &&
         st.player.phase === "corporate" &&
         !st.flags._hint_first_corp_overtime
       );

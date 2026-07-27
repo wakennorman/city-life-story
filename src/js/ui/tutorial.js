@@ -1664,7 +1664,7 @@ var DYNAMIC_HINTS = [
     trigger: function (st) {
       return (
         st.needs &&
-        st.needs.fatigue >= 90 &&
+        st.needs && st.needs.fatigue >= 90 &&
         st.player.phase === "corporate" &&
         !st.flags._hint_first_corp_overtime
       );
