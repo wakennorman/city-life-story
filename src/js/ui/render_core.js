@@ -565,6 +565,59 @@ function renderSidebar(state) {
   // P3-3 城市记忆指示器：已结识NPC/总数
   renderCityMemory(state);
 
+  // [全系统自洽修复] 域F 联动增强(F→A): 市场数据面板 — 侧栏显示当日商品价格波动数
+  try {
+    if (state.trade && state.trade.goodsPrices) {
+      var _volCount = 0, _locCount = 0;
+      for (var _locKey in state.trade.goodsPrices) {
+        _locCount++;
+        var _gp = state.trade.goodsPrices[_locKey];
+        for (var _gId in _gp) {
+          if (_gp[_gId] && _gp[_gId].price && _gp[_gId].basePrice) {
+            var _ratio = _gp[_gId].price / _gp[_gId].basePrice;
+            if (_ratio > 1.2 || _ratio < 0.8) _volCount++;
+          }
+        }
+      }
+      if (_locCount > 0 && _volCount > 0) {
+        var _mktEl = document.getElementById("sidebar-market-vol");
+        if (!_mktEl) {
+          var _sEl = document.getElementById("sidebar");
+          if (_sEl) {
+            _mktEl = document.createElement("div");
+            _mktEl.id = "sidebar-market-vol";
+            _mktEl.style.cssText = "font-size:10px;padding:2px 12px;color:var(--text-muted);";
+            _sEl.appendChild(_mktEl);
+          }
+        }
+        if (_mktEl) _mktEl.textContent = "📊 " + _volCount + "种商品价格异常";
+      }
+    }
+  } catch (e) {}
+  // [全系统自洽修复] 域F 联动增强(F→G): 综合健康评分 — 侧栏显示健康状态摘要
+  try {
+    if (typeof getHealthScore === "function") {
+      var _hs = getHealthScore(state);
+      if (_hs > 0) {
+        var _hsEl = document.getElementById("sidebar-health-score");
+        if (!_hsEl) {
+          var _sEl = document.getElementById("sidebar");
+          if (_sEl) {
+            _hsEl = document.createElement("div");
+            _hsEl.id = "sidebar-health-score";
+            _hsEl.style.cssText = "font-size:10px;padding:2px 12px;";
+            _sEl.appendChild(_hsEl);
+          }
+        }
+        if (_hsEl) {
+          var _hsColor = _hs >= 70 ? "var(--success)" : _hs >= 40 ? "var(--warning)" : "var(--danger)";
+          _hsEl.style.color = _hsColor;
+          _hsEl.textContent = "❤️ 健康 " + _hs + "%";
+        }
+      }
+    }
+  } catch (e) {}
+
   // [全系统自洽修复] 域B 联动增强(B→F): 人生事件数量 — 侧栏显示经历的事件总数
   try {
     var _evtHistory = state.flags && state.flags._eventHistory;
