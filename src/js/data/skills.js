@@ -345,3 +345,4 @@ function getSkillMarketValue(skillId) {
 // [R441] 域A
 // [R489] 域A
 // [R537] 域A
+// [R585] 域A
