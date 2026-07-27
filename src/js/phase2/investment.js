@@ -1730,6 +1730,19 @@ function buyInvStock(symbol, shares) {
       "event",
     );
   }
+
+  // [域E R428 联动增强] E→D: 大额买入(≥¥5000)时高好感NPC有概率认可投资眼光
+  if (cost >= 5000 && state.relationships) {
+    var _invNpcs = [];
+    for (var _inid in state.relationships) {
+      var _inr = state.relationships[_inid];
+      if (_inr && _inr.met && (_inr.affinity || 0) >= 50) _invNpcs.push(_inid);
+    }
+    if (_invNpcs.length > 0 && Random.chance(0.2)) {
+      var _inpc = _invNpcs[Random.int(0, _invNpcs.length - 1)];
+      StateManager.addMessage("💬 你投资的消息在朋友圈里传开了，有人觉得你越来越有眼光。", "info");
+    }
+  }
 }
 
 function sellInvStock(symbol, shares) {
@@ -1795,6 +1808,15 @@ function sellInvStock(symbol, shares) {
     // [全系统自洽修复] 域E 联动增强4: E→C 盈利交易→销售经验+5
     if (state.skills && state.skills.sales && typeof state.skills.sales.xp === "number") {
       state.skills.sales.xp += 5;
+    }
+    // [域E R428 联动增强] E→H: 投资盈利→公司士气提振 — 老板赚钱团队信心+1
+    if (state.corporate && state.corporate.company && state.corporate.company.employees) {
+      for (var _eei = 0; _eei < state.corporate.company.employees.length; _eei++) {
+        var _eem = state.corporate.company.employees[_eei];
+        if (_eem && typeof _eem.loyalty === "number") {
+          _eem.loyalty = Math.min(100, _eem.loyalty + 0.5);
+        }
+      }
     }
   } else {
     inv._consecutiveWins = 0;
@@ -3087,6 +3109,38 @@ function renderDailyPLPanel(state) {
 }
 
 // ============================================================
+//  [域E R428 联动增强] E→B: 市场氛围叙事 — 根据当前市场情绪生成投资故事感
+// ============================================================
+function renderMarketNarrative(state, inv) {
+  if (!inv) return "";
+  var mood = inv._marketMood || "neutral";
+  var holdings = inv.stockHoldings || [];
+  if (holdings.length === 0) return "";
+  // 根据市场情绪和持仓生成叙事
+  var narratives = {
+    bullish: [
+      "📈 市场一片红火，你的持仓跟着水涨船高。走在街上都觉得步伐轻快了几分。",
+      "📈 最近行情不错，连茶馆里的大爷都在讨论股票。你暗自庆幸自己上车早。",
+      "📈 牛市来了，猪都能飞。你看着账户数字，提醒自己别太贪心。",
+    ],
+    bearish: [
+      "📉 市场持续走低，绿油油一片。你告诉自己：别人恐惧我贪婪。",
+      "📉 大盘连跌几天，朋友圈里一片哀嚎。你关掉行情页面，决定出去走走。",
+      "📉 熊市是最好的老师。你开始认真研究基本面，而不是追涨杀跌。",
+    ],
+    neutral: [
+      "➖ 市场波澜不惊，持仓不温不火。你耐心等待下一个机会。",
+      "➖ 行情平稳，没有惊喜也没有惊吓。这种日子适合学习和定投。",
+    ],
+  };
+  var pool = narratives[mood] || narratives.neutral;
+  var idx = (state.player.day + holdings.length) % pool.length;
+  var narrative = pool[idx];
+  return '<div style="padding:8px 12px;margin-bottom:8px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:6px;font-size:11px;color:var(--text-secondary);line-height:1.5;">' +
+    narrative + '</div>';
+}
+
+// ============================================================
 //  [全系统自洽修复] 域E 联动增强1: 投资组合回撤指示器（E→F）
 //  显示当前投资价值与历史峰值的回撤幅度，帮助玩家识别风险
 // ============================================================
@@ -3297,6 +3351,7 @@ function renderInvestmentTab(state, parent) {
     summaryCard("汽车", assetSnapshot.groups.cars) +
     "</div>" +
     renderAssetAllocationPanel(assetSnapshot) +
+    renderMarketNarrative(state, inv) +
     renderDrawdownIndicator(state) +
     renderNewsInvestmentDrivers(state) +
     renderMarketSentiment(state, inv) +

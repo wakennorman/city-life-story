@@ -425,3 +425,11 @@
 - **recency 基准(R420后)**: A=414/B=418/C=416/D=419/E=420/F=413/G=415/H=418 → **F(413) 全局最薄弱**，下轮=R421=域F（开轮必 git log 重算，勿信 loop-state）。
 - **教训**: 并行窗口速度极快(单轮内 R412→R420)，本窗口角色=权威 bookkeeping + MC验证 + 偶发A类定位；代码轮几乎总被并行抢先。提交纪律：pre-commit 守卫要求 last_known_head==HEAD，每次提交前必 `git rev-parse HEAD > .claude/last_known_head`；推送前 git pull --rebase(脏树则先隔离并行在途)，冲突则中止绝不 force。
 - 下轮→域F（recency 413 最薄弱）。
+
+## 最近执行（2026-07-27 09:05 · R426 域B）
+- 提交: d3cdcd96(主体) + 1635831d(账本)，已 push main ✅
+- A类3处/6点: domain_h_linkage_r170/r188 needs.health死字段→status.health（r188触发闸门健康分支此前永false）；phase2/personal_growth.js image.appearance/grooming/charisma NaN→||0守卫
+- 联动3: domain_b_linkage_r426.js — image四维零消费全部打破(B→D style首消费/B→G plastic首消费/B→E fitness×stockHoldings)
+- MC 10×500d 199.6s 0代码异常，前7天死亡率全0%（trader/corporate存活50-60%为既有RNG阈值）
+- 新B类记录: phase2 双结构分歧(health.physical对象vs数字/psychology vs mental)待专轮
+- 工作区遗留并行文件 domain_d_linkage_r427.js（未挂载未提交，未触碰）；下轮域D(recency=419)

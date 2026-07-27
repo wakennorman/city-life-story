@@ -50,7 +50,7 @@ function buyGood(goodId, qty) {
   // [全系统自洽修复] 域B R174 A类#1: cash裸访问→NaN防刷钱
   if ((Number(state.resources.cash) || 0) < totalCost) {
     StateManager.addMessage(
-      `⚠️ 钱不够！需要 ¥${totalCost.toFixed(1)}，你只有 ¥${state.resources.cash}。`,
+      `⚠️ 钱不够！需要 ¥${totalCost.toFixed(1)}，你只有 ¥${(state.resources.cash || 0).toFixed(1)}。`,
       "danger",
     );
     return false;
