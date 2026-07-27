@@ -441,3 +441,12 @@
 - MC 10×500d 199.6s 0代码异常，前7天死亡率全0%（trader/corporate存活50-60%为既有RNG阈值）
 - 新B类记录: phase2 双结构分歧(health.physical对象vs数字/psychology vs mental)待专轮
 - 工作区遗留并行文件 domain_d_linkage_r427.js（未挂载未提交，未触碰）；下轮域D(recency=419)
+
+## 最近执行（2026-07-27 11:05 · R442 域F UI/UX）
+- 提交: 47430468(源码,被并行扫入且IDENTICAL) + 985dd2ab(账本docs)，已 push main ✅
+- A类=0 诚实报告（ui/死字段黑名单0命中、data_viz/daily_report除零守卫干净、render/modal已被R48修）
+- 联动3: domain_f_linkage_r442.js — f442_neglect_reconnect(F→D 首消费rel._lastInteractionDay)/f442_asset_allocation(F→E)/f442_ops_dashboard(F→H)
+- 救援并行孤儿 domain_b_linkage_r442.js（源码已提交漏挂index.html→加挂载重建，b442_入bundle=6）
+- MC 6×400d 106s all pass·0代码异常·前7天死亡率全0%（corporate 66.7%既有RNG阈值）
+- 竞态：执行中并行连推 R443(域E)+开启R444；过时stash(startup/jobs/npcs) 核验后drop×3
+- 下轮 recency（git log时间序）：R442后 F/E 均最新，最旧待重算（域C/G/H 候选）

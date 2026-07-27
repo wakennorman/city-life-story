@@ -4567,6 +4567,9 @@ function renderProperties(area, inv, state, parent) {
                 return;
               }
               s.resources.cash = Math.max(0, (s.resources.cash || 0) - (highTier.cost || 0));
+              // [全系统自洽修复] 域E A类#1: housing/inventory 裸访问守卫 — 旧存档phase1阶段可能缺失 housing/inventory 对象
+              if (!s.housing) s.housing = {};
+              if (!s.inventory) s.inventory = {};
               s.housing.tier = 4;
               s.housing.rentedDay = s.player.day;
               s.inventory.capacity =
@@ -4721,7 +4724,7 @@ function renderProperties(area, inv, state, parent) {
         if (s.investment.selfLivePropertyId === propId) {
           // 切换为出租：退出自住，降级住所到合租床位（玩家可重新租房）
           s.investment.selfLivePropertyId = null;
-          if (typeof HOUSING_TIERS !== "undefined") {
+          if (typeof HOUSING_TIERS !== "undefined" && s.housing && s.inventory) {
             s.housing.tier = 1;
             s.inventory.capacity =
               HOUSING_TIERS[1].capacity + (s.housing.storageCapacity || 0);
@@ -4738,7 +4741,7 @@ function renderProperties(area, inv, state, parent) {
           ).find(function (pd) {
             return pd.id === propId;
           });
-          if (typeof HOUSING_TIERS !== "undefined") {
+          if (typeof HOUSING_TIERS !== "undefined" && s.housing && s.inventory) {
             // 使用精确的房产→住所映射表，不再按价格粗略分级
             var newTier = propDef
               ? typeof getPropertyHousingTier === "function"
