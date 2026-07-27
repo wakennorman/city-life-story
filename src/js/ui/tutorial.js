@@ -1343,7 +1343,7 @@ var DYNAMIC_HINTS = [
     trigger: function (st) {
       return (
         st.needs &&
-        st.needs.happiness < 25 &&
+        st.needs && st.needs.happiness < 25 &&
         st.player.day > 3 &&
         !st.flags._hint_first_happy_low
       );
@@ -2056,3 +2056,5 @@ if (typeof window !== "undefined") {
   });
 }
 // [R142] 域F 联动增强
+// [R206] 域F 联动增强
+// [R278] 域F
