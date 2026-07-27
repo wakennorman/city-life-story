@@ -1,1 +1,1 @@
-{"lastRound":519,"lastDirection":"DOMAIN_D","lastDate":"2026-07-27","lastCommit":"","nextDirection":"DOMAIN_E","note":"域D 0项A类(经多轮优化已无)+3项联动(D→H猎头/D→A市场谈/D→F社交动态)"}
+{"lastRound":530,"lastDirection":"DOMAIN_F","lastDate":"2026-07-27","lastCommit":"","nextDirection":"DOMAIN_G","pushStatus":"PENDING","note":"域F 0项A类(经多轮净尽,死字段黑名单0活命中)+3项联动首消费(F→D成就墙_unlockedAchievements/F→E资产曲线_cashHistory/F→B叙事图鉴_experiencedNarratives)；并行R529=域E在途已隔离；下轮按git log重算recency(G=R523候选最旧,避开在途)"}
