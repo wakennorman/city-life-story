@@ -1073,3 +1073,4 @@ if (typeof window !== "undefined") {
   window.checkJobMilestoneEvent = checkJobMilestoneEvent;
 }
 // [R459] 域C
+// [R571] 域C
