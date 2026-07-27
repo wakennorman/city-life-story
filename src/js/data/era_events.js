@@ -569,3 +569,4 @@ if (typeof window !== "undefined") {
   }
 })();
 // [R106] 域B 联动增强
+// [R490] 域B
