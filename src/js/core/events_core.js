@@ -714,7 +714,16 @@ function showEventModal(evt) {
         ${evt.weather ? '<span class="event-tag weather-tag" style="font-size:10px;padding:1px 6px;border-radius:3px;background:rgba(90,138,180,0.15);color:var(--info);margin-left:8px;">🌤️ 天气</span>' : ""}
         ${evt.sector ? '<span class="event-tag sector-tag" style="font-size:10px;padding:1px 6px;border-radius:3px;background:rgba(74,158,92,0.15);color:var(--success);margin-left:4px;">🏭 ' + evt.sector + '</span>' : ""}
       </div>
-      <p class="event-story ${isSpringFest ? "spring-fest-story" : ""}">${evt.story || evt.desc || ""}</p>
+      <p class="event-story ${isSpringFest ? "spring-fest-story" : ""}">${(function () {
+        // [全系统自洽修复] 域D R455 A类: 29个联动文件采用 text:function(st) 动态叙述惯例但渲染层从不调用→story中"{desc}"占位符原样泄漏给玩家。优先调用 text() 取动态叙述,失败/为空回退 story
+        if (typeof evt.text === "function") {
+          try {
+            var _dyn = evt.text(typeof StateManager !== "undefined" ? StateManager.getState() : null);
+            if (_dyn && typeof _dyn === "string") return _dyn;
+          } catch (e) { /* 动态文本失败回退story */ }
+        }
+        return evt.story || evt.desc || "";
+      })()}</p>
       <div class="event-choices">${choicesHtml}</div>
       <div style="text-align:center;margin-top:8px;font-size:10px;color:var(--accent);">
         ${isSpringFest ? "🧨 做出你的选择，迎接新的一年" : "⚡ 请选择一个选项继续"}

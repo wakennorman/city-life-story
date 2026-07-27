@@ -337,6 +337,50 @@ const NPC_RELATION_MATRIX = {
     sister_wu: "neutral",
     brother_huang: "neutral",
   },
+  // [全系统自洽修复] 域D R455 A类: lao_chen(R440新增)已定义但未加入关系矩阵→initNpcRelationships不建条目,关系链/传播/图谱全忽略
+  lao_chen: {
+    aunt_wang: "friendly",
+    old_zhou: "old_acquaintance",
+    xiaochen: "friendly",
+    chen_ge: "neutral",
+    boss_li: "neutral",
+    sister_zhang: "neutral",
+    xiao_mei: "neutral",
+    chef_chen: "neutral",
+    auntie_lin: "friendly",
+    master_zhao: "neutral",
+    xiaoli: "neutral",
+    dr_wang: "neutral",
+    zhaojie: "neutral",
+    ajie: "neutral",
+    uncle_chen_bank: "neutral",
+    sister_wu: "neutral",
+    brother_huang: "neutral",
+    old_ma: "neutral",
+    xiao_wei: "neutral",
+  },
+  // [全系统自洽修复] 域D R455 A类: xiao_wei(R442新增)已定义但未加入关系矩阵→同上
+  xiao_wei: {
+    chef_chen: "friendly",
+    aunt_wang: "friendly",
+    boss_li: "business",
+    old_zhou: "neutral",
+    sister_zhang: "neutral",
+    xiao_mei: "friendly",
+    auntie_lin: "neutral",
+    master_zhao: "neutral",
+    xiaoli: "neutral",
+    xiaochen: "neutral",
+    dr_wang: "neutral",
+    zhaojie: "neutral",
+    chen_ge: "neutral",
+    ajie: "neutral",
+    uncle_chen_bank: "neutral",
+    sister_wu: "neutral",
+    brother_huang: "neutral",
+    old_ma: "neutral",
+    lao_chen: "neutral",
+  },
 };
 
 // ====== 关系传播矩阵 ======
@@ -366,6 +410,9 @@ const RELATION_PROPAGATION = {
   brother_huang: { xiaochen: 0.15, aunt_wang: 0.1 },
   // [全系统自洽修复] 域D R245 A类: old_ma 加入关系传播矩阵
   old_ma: { chen_ge: 0.12, boss_li: 0.1, aunt_wang: 0.08 },
+  // [全系统自洽修复] 域D R455 A类: 新NPC接入传播矩阵(社区/夜市社交圈口碑扩散)
+  lao_chen: { aunt_wang: 0.1, old_zhou: 0.12, xiaochen: 0.08 },
+  xiao_wei: { chef_chen: 0.12, aunt_wang: 0.08, xiao_mei: 0.1 },
 };
 
 /** 初始化NPC关系状态 */
@@ -789,6 +836,8 @@ function checkNpcRelationEventTriggers(state) {
     var affA =
       (state.relationships[npcA] && state.relationships[npcA].affinity) || 0;
     if (affA < 30) continue;
+    // [全系统自洽修复] 域D R455 B类补齐: npcA 同样加 met 守卫(与 npcB 一致,防未结识NPC因初始好感溢出误触发关系链)
+    if (!state.relationships[npcA] || !state.relationships[npcA].met) continue;
 
     var relations = NPC_RELATION_MATRIX[npcA];
     for (var npcB in relations) {

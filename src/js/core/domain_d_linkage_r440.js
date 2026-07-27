@@ -48,6 +48,10 @@
             if (typeof addSkillXp === "function") {
               try { addSkillXp("accounting", 3); } catch (e) { /* safe */ }
             }
+            // [全系统自洽修复] 域D R455 A类: 老陈事件只写flag不接好感系统→NPC定义存在但永不进关系图谱(好感积累零回报),接入正规入口
+            if (typeof applyAffinityChange === "function") {
+              try { applyAffinityChange(st, "lao_chen", 8, "认真记录人生智慧"); } catch (e) { /* safe */ }
+            }
             if (typeof StateManager !== "undefined" && StateManager.addMessage)
               StateManager.addMessage("🧓 你认真记录了老陈的建议——规划让人生有方向。心智+5,会计XP+3。", "success");
           }
@@ -60,6 +64,10 @@
               st.flags = st.flags || {};
               st.flags._laoChenWisdomSeen = true;
               if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 2);
+              // [全系统自洽修复] 域D R455 A类: 见面即结识,接入met系统
+              if (typeof applyAffinityChange === "function") {
+                try { applyAffinityChange(st, "lao_chen", 3, "听老陈讲故事"); } catch (e) { /* safe */ }
+              }
             }
           }
         }
@@ -92,6 +100,10 @@
             if (typeof addSkillXp === "function") {
               try { addSkillXp("management", 8); } catch (e) { /* safe */ }
             }
+            // [全系统自洽修复] 域D R455 A类: 接入好感系统(同wisdom事件)
+            if (typeof applyAffinityChange === "function") {
+              try { applyAffinityChange(st, "lao_chen", 8, "接受职业指导"); } catch (e) { /* safe */ }
+            }
             if (typeof StateManager !== "undefined" && StateManager.addMessage)
               StateManager.addMessage("💼 老陈的职业指导让你找到了方向。管理XP+8,心智+4。", "success");
           }
@@ -104,6 +116,10 @@
               st.flags = st.flags || {};
               st.flags._laoChenCareerSeen = true;
               if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 2);
+              // [全系统自洽修复] 域D R455 A类: 见面即结识,接入met系统
+              if (typeof applyAffinityChange === "function") {
+                try { applyAffinityChange(st, "lao_chen", 2, "婉拒但记住了老陈"); } catch (e) { /* safe */ }
+              }
             }
           }
         }
@@ -134,6 +150,10 @@
             st.flags._laoChenTalkSeen = true;
             if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 8);
             if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 3);
+            // [全系统自洽修复] 域D R455 A类: 接入好感系统(同wisdom事件)
+            if (typeof applyAffinityChange === "function") {
+              try { applyAffinityChange(st, "lao_chen", 10, "喝茶深聊人生"); } catch (e) { /* safe */ }
+            }
             if (typeof StateManager !== "undefined" && StateManager.addMessage)
               StateManager.addMessage("🍵 和老陈喝茶聊天,心情平静了许多。心情+8,心智+3。", "success");
           }
@@ -146,6 +166,10 @@
               st.flags = st.flags || {};
               st.flags._laoChenTalkSeen = true;
               if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 4);
+              // [全系统自洽修复] 域D R455 A类: 见面即结识,接入met系统
+              if (typeof applyAffinityChange === "function") {
+                try { applyAffinityChange(st, "lao_chen", 4, "安静听老陈聊人生"); } catch (e) { /* safe */ }
+              }
             }
           }
         }

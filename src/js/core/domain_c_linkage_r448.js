@@ -90,7 +90,7 @@
       choices: [
         { text: "🔧 用技术创业", hint: "技术XP+5,公司资金+3000", apply: function (st) {
           if (!st) return; st.flags = st.flags || {}; st.flags._c448SkillStartupCooldown = true;
-          if (typeof addSkillXp === "function") { try { addSkillXp("technology", 5); } catch(e) {} }
+          if (typeof addSkillXp === "function") { try { addSkillXp("coding", 5); } catch(e) {} }
           if (st.corporate && st.corporate.company) st.corporate.company.funds = (st.corporate.company.funds || 0) + 3000;
           if (typeof StateManager !== "undefined") StateManager.addMessage("🔧 你决定用自己的技术创业——给别人打工不如给自己打工。技术XP+5,公司资金+¥3000。", "success");
         }},

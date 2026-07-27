@@ -75,6 +75,10 @@
             if (typeof addSkillXp === "function") {
               try { addSkillXp("cooking", 12); } catch (e) { /* safe */ }
             }
+            // [全系统自洽修复] 域D R455 A类: 小薇事件只写flag不接好感系统→NPC定义存在但永不进关系图谱,接入正规入口
+            if (typeof applyAffinityChange === "function") {
+              try { applyAffinityChange(st, "xiao_wei", 10, "认真学烹饪结缘"); } catch (e) { /* safe */ }
+            }
             if (typeof StateManager !== "undefined" && StateManager.addMessage)
               StateManager.addMessage("👩‍🍳 你跟小薇学了烹饪技巧——烟火气里藏着真本事。烹饪XP+12,心情+4。", "success");
           }
@@ -87,6 +91,10 @@
               st.flags = st.flags || {};
               st.flags._xiaoWeiMet = true;
               if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 2);
+              // [全系统自洽修复] 域D R455 A类: 见面即结识,接入met系统
+              if (typeof applyAffinityChange === "function") {
+                try { applyAffinityChange(st, "xiao_wei", 3, "夜市初见小薇"); } catch (e) { /* safe */ }
+              }
             }
           }
         }

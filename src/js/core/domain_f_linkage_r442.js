@@ -36,7 +36,7 @@
       // F→D 关系面板"久未联系"提醒：把关系网UI从只读升级为重连驱动
       id: "f442_neglect_reconnect", phase: "street", _isChainEvent: false, icon: "📇",
       title: "久未联系的老友",
-      story: "关系网面板顶部标出了一个提醒——{desc}",
+      story: "关系网面板顶部标出了一个提醒——有一位老朋友，你们已经很久没有联系了。面板上那行灰色小字像在轻声提醒：关系是需要经营的。", // [全系统自洽修复] 域D R455 A类: 渲染层(events_core.js:717)只读story不做模板替换也不调用text()→'{desc}'原样显示给玩家
       triggers: { minDay: 60, excludeFlags: ["_f442ReconnectCooldown"] },
       conditions: function (st) {
         return !st.gameOver && st.relationships && mostNeglectedNpcR442(st) !== null;
@@ -64,7 +64,7 @@
       // F→E 资产配置视图：财务面板从只读升级为投资意识养成
       id: "f442_asset_allocation", phase: "street", _isChainEvent: false, icon: "📊",
       title: "资产配置视图",
-      story: "你切到财务面板的资产配置视图——{desc}",
+      story: "你切到财务面板的资产配置视图——持仓分布一目了然。仓位是分散还是集中，风险是高是低，图表比直觉诚实得多。", // [全系统自洽修复] 域D R455 A类: 同上,{desc}占位符泄漏修复
       triggers: { minDay: 50, excludeFlags: ["_f442AllocCooldown"] },
       conditions: function (st) {
         return !st.gameOver && st.investment && Array.isArray(st.investment.stockHoldings) && st.investment.stockHoldings.length >= 1;
@@ -91,7 +91,7 @@
       // F→H 经营仪表盘：公司季度看板从只读展示升级为汇报变现
       id: "f442_ops_dashboard", phase: "corporate", _isChainEvent: false, icon: "🗂️",
       title: "经营仪表盘",
-      story: "你打开公司经营仪表盘，季度看板一目了然——{desc}",
+      story: "你打开公司经营仪表盘，季度看板一目了然——营收曲线、团队效能、项目进度都摆在眼前。数据不会说谎，它在等一个会讲故事的人。", // [全系统自洽修复] 域D R455 A类: 同上,{desc}占位符泄漏修复
       triggers: { minDay: 80, excludeFlags: ["_f442OpsCooldown"] },
       conditions: function (st) {
         return !st.gameOver && st.corporate && st.corporate.company;
