@@ -1576,13 +1576,26 @@ function tickInvestmentDaily(state) {
   // ================================================================
   // 投资里程碑检查（仅在有持仓时触发，每日最多一次）
   // ================================================================
-  if (
-    inv.stockHoldings &&
-    inv.stockHoldings.length > 0 &&
-    (!state.flags._invMilestoneDay ||
-      state.flags._invMilestoneDay < state.player.day)
-  ) {
-    checkInvestmentMilestones(state, inv);
+  if (inv.stockHoldings && inv.stockHoldings.length > 0) {
+    try {
+      for (var _mi = 0; _mi < inv.stockHoldings.length; _mi++) {
+        var _mh = inv.stockHoldings[_mi];
+        var _mm = inv.stockMarket && inv.stockMarket[_mh.symbol];
+        if (_mm && _mm.history && _mm.history.length >= 2) {
+          var _mLast = _mm.history[_mm.history.length - 1];
+          var _mPrev = _mm.history[_mm.history.length - 2];
+          if (_mPrev && _mPrev.price > 0) {
+            var _mDrop = (_mLast.price - _mPrev.price) / _mPrev.price;
+            if (_mDrop < -0.08 && typeof StateManager !== "undefined") {
+              StateManager.addMessage("📉 " + _mh.symbol + "今日暴跌 " + Math.round(Math.abs(_mDrop) * 100) + "%！市场情绪恐慌，建议关注后续走势。", "warning");
+            }
+          }
+        }
+      }
+    } catch (e) {}
+    if (!state.flags._invMilestoneDay || state.flags._invMilestoneDay < state.player.day) {
+      checkInvestmentMilestones(state, inv);
+    }
   }
 }
 
@@ -5024,4 +5037,31 @@ function grantInvestmentSkillXp(state, plAmount) {
     if (state.skills.accounting) state.skills.accounting.xp = (state.skills.accounting.xp || 0) + xp;
     if (state.skills.management) state.skills.management.xp = (state.skills.management.xp || 0) + Math.floor(xp / 2);
   }
+}
+
+// [全系统自洽修复] 域E 联动增强(E→A): 投资组合数据摘要 — 供经济分析系统消费
+function getInvestmentPortfolioSummary(state) {
+  if (!state || !state.investment) return null;
+  var inv = state.investment;
+  var _stocks = inv.stockHoldings || [];
+  var _stockVal = 0;
+  for (var _si = 0; _si < _stocks.length; _si++) {
+    var _h = _stocks[_si];
+    var _m = inv.stockMarket && inv.stockMarket[_h.symbol];
+    if (_m && isFinite(_m.price)) _stockVal += _m.price * (_h.shares || 0);
+  }
+  var _btcVal = (inv.btcPrice || 0) * (inv.btcHoldings || 0);
+  var _props = inv.properties || [];
+  var _propVal = 0;
+  for (var _pi = 0; _pi < _props.length; _pi++) {
+    _propVal += _props[_pi].currentPrice || _props[_pi].buyPrice || 0;
+  }
+  return {
+    stockCount: _stocks.length,
+    stockValue: Math.round(_stockVal),
+    btcValue: Math.round(_btcVal),
+    propertyCount: _props.length,
+    propertyValue: Math.round(_propVal),
+    totalValue: Math.round(_stockVal + _btcVal + _propVal),
+  };
 }
