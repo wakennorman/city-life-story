@@ -4,6 +4,14 @@
 > 分支策略：每轮 `git checkout -B loop/auto`（基于当前 HEAD），只 `git add` 本轮改动文件，绝不 `-A`/绝不 push。
 > 安全：提交前同步 `.claude/last_known_head` = `git rev-parse HEAD`；20 关键事件 id 每次改完 cross_system_events.js 后 grep 校验。
 
+## 最近执行（2026-07-28 02:5x · R590 域F UI/UX — 已 push main）
+- 选域：linkage recency 重算 F(r580) 全局最陈旧（A583/B584/C586/D587/E589/G583/H581）→ 域F，与 loop-state next=F 一致。R590 未被占用。
+- **A类=悬空引用清理4处（逆向悬空）**：src/index.html 挂载 `domain_f_linkage_r530/r539/r556/r564.js` 但四文件 git ls-files/history/磁盘/dist 四重核查从未创建（并行先写挂载+注释、源始终未建）→ build.py 静默跳过、事件从未进 bundle → 移除4行挂载。0功能损失。经典A类(死字段/未声明变量)经多轮净尽，死字段黑名单全库 grep 0 活命中→A类=0 诚实报告。
+- 联动3（domain_f_linkage_r590.js，IIFE→RANDOM_EVENTS，2 street+1 corporate，全||防御，maxRepeats:1）：f590_skill_balance_board(F→A 技能≥4项level≥10→智力+心智+心情)/f590_career_panel_praise(F→C ≥2项level≥20且有job→管理XP+cash800)/f590_watchlist_discipline(F→E stockHoldings≥3→复用_dataInvestorMindset+会计XP+心智)。
+- ⚠️ 关键坑：`state.skills[key]` 是对象{level,xp}，技能等级须读 `.level`（非数值）；误用 `st.skills.coding>=10` 让 condition 恒 false=死事件。
+- 验证：node --check OK；build 12059.7KB（r589 12051.6→+8.1，r590 flag=2，孤儿4挂载 bundle grep=0 彻底清除）；MC 6×400d EXIT=0·0代码异常·前7天死亡0%（social/corporate<80% 为既有RNG阈值非回归）。
+- 提交 feat+chore 并 push origin main 成功（HEAD==origin/main==aa91dae4 起）。下轮→G（r583 与 A 并列最旧，轮换 F→G）。
+
 ## 最近执行（2026-07-09 23:55）
 
 - **提交**: `bb03721b`（loop/auto）

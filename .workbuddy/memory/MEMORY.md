@@ -1,5 +1,12 @@
 # MEMORY — 城市浮生记 8域轮换优化循环（压缩版 2026-07-27 R535）
 
+## R590 增量要点（域F UI/UX）
+- **悬空引用清理4处（逆向悬空）**：src/index.html 挂载 `domain_f_linkage_r530/r539/r556/r564.js` 但四文件 git ls-files/history/磁盘/dist 四重核查**从未创建**（属"并行先写挂载+注释、源始终未建"）→ build.py 静默跳过、事件从未进 bundle → 移除4行挂载。0功能损失。
+- 联动3项（domain_f_linkage_r590.js，IIFE→RANDOM_EVENTS，2 street+1 corporate，全||防御，maxRepeats:1）：f590_skill_balance_board(F→A 技能≥4项level≥10→智力+心智+心情)/f590_career_panel_praise(F→C ≥2项level≥20且有job→管理XP+cash800)/f590_watchlist_discipline(F→E stockHoldings≥3→复用_dataInvestorMindset+会计XP+心智)。
+- ⚠️ 关键坑：`state.skills[key]` 是对象{level,xp}，技能等级须读 `.level`（非数值）；误用 `st.skills.coding>=10` 让 condition 恒 false=死事件。条件用 countSkillsAtOrAbove 遍历读 `.level`。
+- 域F 经典A类(死字段/未声明变量)经多轮净尽；本轮死字段黑名单全库 grep 0 活命中→A类=0 诚实报告。
+- 下轮 G(r583 与 A 并列最旧；轮换 F→G)。
+
 ## R589 增量要点（域E）
 - 域E三大写-only/欠消费投资flag已打通首消费：`_firstStockDay`(e589,investment.js:1752)/`_investCareerConfidence`(e589,investment.js:1415)/`_investSocialPerception`(e589,investment.js:1428)——勿重复选题。`_portfolioHighDay` 仍为域内自用冷却（非零消费选题）。
 - **假技能键第四次回潮已全库清剿（22处/19文件）**：新形态①6键假数组在 r574/r583/r586 复制；②5键含"trade"数组在 r468~r487 共12处（此前三轮清剿均漏掉此变体）；③"finance"数组变体 r570/r577/r588；④直接调用 technology r584。开轮复查命令升级：`grep -rnE 'var skills? *= *\[' src/js | grep -E '"trade"|"finance"|"marketing"|"technology"' | grep -v 修复`（旧命令 `marketing.*technology` 抓不到 trade/finance 变体）。
