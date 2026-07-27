@@ -217743,6 +217743,19 @@ function endQuarter() {
     c.consecutiveC = 0;
   }
 
+  // [全系统自洽修复] 域H 联动增强(H→C): 高绩效季度提供职业资本奖励
+  if (grade.grade === "S" || grade.grade === "S+") {
+    if (typeof ensureCareerCapital === "function") {
+      var _capH = ensureCareerCapital(state);
+      if (_capH) {
+        _capH.reputation = Math.min(100, (_capH.reputation || 0) + 3);
+        _capH.industryResources = Math.min(100, (_capH.industryResources || 0) + 2);
+        if (typeof clampCareerCapital === "function") clampCareerCapital(_capH);
+        StateManager.addMessage("🏆 " + grade.grade + "级绩效！你在行业内的声誉和资源大幅提升。", "success");
+      }
+    }
+  }
+
   // 发放季度工资
   const rankData = CORP_RANKS[c.rank];
   const salary = rankData ? rankData.baseSalary * 3 : 45000;
@@ -251684,6 +251697,134 @@ if (typeof window !== "undefined") {
 })();
 
 ;
+// ==== js/core/domain_b_linkage_r481.js ====
+/**
+ * 域B(事件/叙事) 联动增强 R481
+ * 桥接：
+ *   B→C  b481_career_inspiration   职业灵感 → 消费 flags+skills 数据,
+ *     他人故事→"我也想像TA一样"的职业启发
+ *   B→D  b481_story_bonding       故事纽带 → 消费 flags+relationships 数据,
+ *     分享经历→"原来你也有这样的故事"的共鸣
+ *   B→H  b481_corp_origin_story   公司起源故事 → 消费 flags+corporate 数据,
+ *     创业初心→"还记得为什么出发吗"的创始叙事
+ */
+(function () {
+  "use strict";
+  if (typeof RANDOM_EVENTS === "undefined" || !RANDOM_EVENTS) return;
+  if (RANDOM_EVENTS._domainBLinkageR481Loaded) return;
+  RANDOM_EVENTS._domainBLinkageR481Loaded = true;
+
+  function firstMetNpc(st) {
+    if (!st || !st.relationships) return null;
+    for (var id in st.relationships) { if (st.relationships[id] && st.relationships[id].met) return id; }
+    return null;
+  }
+  function bumpAffinity(st, npcId, amt, reason) {
+    if (!npcId) return;
+    if (typeof applyAffinityChange === "function") { try { applyAffinityChange(st, npcId, amt, reason); } catch(e) {} }
+  }
+
+  var EVENTS = [
+    {
+      id: "b481_career_inspiration", phase: "street", _isChainEvent: false, icon: "✨",
+      title: "榜样的力量",
+      story: "你听说了一个普通人的逆袭故事——{desc}",
+      triggers: { minDay: 20, interval: 90, maxRepeats: 3, excludeFlags: ["_b481InspirationCooldown"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        return (st.flags && !st.flags._b481InspirationCooldown);
+      },
+      choices: [
+        { text: "✨ 受到激励", hint: "管理XP+4,心智+2", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._b481InspirationCooldown = true;
+          if (typeof addSkillXp === "function") { try { addSkillXp("management", 4); } catch(e) {} }
+          if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 2);
+          if (typeof StateManager !== "undefined") StateManager.addMessage("✨ 'TA能做到，我也可以！' 这个普通人的逆袭故事，点燃了你心里的火。管理XP+4,心智+2。", "success");
+        }},
+        { text: "📝 写下自己的目标", hint: "心智+2", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._b481InspirationCooldown = true;
+          if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 2);
+          if (typeof StateManager !== "undefined") StateManager.addMessage("✨ 你写下自己的目标——'总有一天，我的故事也会激励别人。' 心智+2。", "success");
+        }}
+      ],
+      text: function (st) {
+        if (!st) return null;
+        return "你听说了一个普通人的逆袭故事——从负债累累到年入百万，TA只用了两年。'为什么不能是我？'";
+      }
+    },
+    {
+      id: "b481_story_bonding", phase: "street", _isChainEvent: false, icon: "💬",
+      title: "原来你也是",
+      story: "你跟朋友聊天时发现，TA也有过类似的经历——{desc}",
+      triggers: { minDay: 20, interval: 60, maxRepeats: 5, excludeFlags: ["_b481StoryBondingCooldown"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        var nid = firstMetNpc(st);
+        return !!nid && (st.flags && !st.flags._b481StoryBondingCooldown);
+      },
+      choices: [
+        { text: "💬 深聊下去", hint: "好感+4,心情+2", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._b481StoryBondingCooldown = true;
+          var nid = firstMetNpc(st);
+          bumpAffinity(st, nid, 4, "分享相似的经历");
+          if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 2);
+          if (typeof StateManager !== "undefined") StateManager.addMessage("💬 你们越聊越投机——'原来你也经历过这些！' 共同的经历让你们的距离一下子拉近了。好感+4,心情+2。", "success");
+        }},
+        { text: "☕ 约下次再聊", hint: "好感+2", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._b481StoryBondingCooldown = true;
+          var nid = firstMetNpc(st);
+          bumpAffinity(st, nid, 2, "聊得投机");
+          if (typeof StateManager !== "undefined") StateManager.addMessage("💬 '今天聊得很开心，下次再约！' 有些朋友，是在故事里认识的。好感+2。", "success");
+        }}
+      ],
+      text: function (st) {
+        if (!st) return null;
+        return "你跟朋友聊天时发现，TA也有过类似的经历——'真的吗？我以为只有我这样过！' 原来同病相怜的人，比你想象的要多。";
+      }
+    },
+    {
+      id: "b481_corp_origin_story", phase: "corporate", _isChainEvent: false, icon: "🚀",
+      title: "创业初心",
+      story: "你在整理旧物时，翻到了当初的创业计划书——{desc}",
+      triggers: { minDay: 70, interval: 180, maxRepeats: 3, excludeFlags: ["_b481OriginStoryCooldown"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        if (!st.corporate || !st.corporate.company) return false;
+        return (st.flags && !st.flags._b481OriginStoryCooldown);
+      },
+      choices: [
+        { text: "🚀 重温初心", hint: "管理XP+5,心情+3", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._b481OriginStoryCooldown = true;
+          if (typeof addSkillXp === "function") { try { addSkillXp("management", 5); } catch(e) {} }
+          if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 3);
+          if (typeof StateManager !== "undefined") StateManager.addMessage("🚀 你翻出当初的创业计划书——字迹已经褪色，但那份热情还在。'不忘初心，方得始终。' 管理XP+5,心情+3。", "success");
+        }},
+        { text: "📖 分享给团队", hint: "管理XP+3,团队忠诚+2", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._b481OriginStoryCooldown = true;
+          if (typeof addSkillXp === "function") { try { addSkillXp("management", 3); } catch(e) {} }
+          var t = st.corporate && st.corporate.team;
+          if (t) { for (var i = 0; i < t.length; i++) { if (t[i]) t[i].loyalty = Math.min(100, (t[i].loyalty || 50) + 2); } }
+          if (typeof StateManager !== "undefined") StateManager.addMessage("🚀 你把创业故事分享给了团队——'这就是我们为什么要做这件事。' 团队凝聚力更强了。管理XP+3,团队忠诚+2。", "success");
+        }}
+      ],
+      text: function (st) {
+        if (!st) return null;
+        return "你在整理旧物时，翻到了当初的创业计划书——泛黄的纸上写满了当时的雄心壮志。";
+      }
+    }
+  ];
+
+  for (var i = 0; i < EVENTS.length; i++) {
+    (function (ev) {
+      var exists = false;
+      for (var j = 0; j < RANDOM_EVENTS.length; j++) {
+        if (RANDOM_EVENTS[j] && RANDOM_EVENTS[j].id === ev.id) { exists = true; break; }
+      }
+      if (!exists) RANDOM_EVENTS.push(ev);
+    })(EVENTS[i]);
+  }
+})();
+;
 // ==== js/core/domain_e_linkage_r470.js ====
 /**
  * domain_e_linkage_r470.js — 域E(经济/投资) 联动增强 R470
@@ -257234,6 +257375,133 @@ if (typeof window !== "undefined") {
     })(EVENTS[i]);
   }
 })();
+;
+// ==== js/core/domain_h_linkage_r481.js ====
+/**
+ * 域H(Phase2/公司) 联动增强 R481（第六轮循环·续）
+ * 桥接：
+ *   H→F  h481_corp_transparency   公司透明度UI → 消费 corporate 数据,
+ *     职场→"公司运营状况"的UI展示
+ *   H→H  h481_corp_evolution       公司演化 → 消费 corporate 数据,
+ *     公司→"从创业到企业"的自叙事
+ *   h481_team_culture(H→C 团队文化v2): team→"团队氛围怎么样"的职业成长
+ */
+(function () {
+  "use strict";
+  if (typeof RANDOM_EVENTS === "undefined" || !RANDOM_EVENTS) return;
+  if (RANDOM_EVENTS._domainHLinkageR481Loaded) return;
+  RANDOM_EVENTS._domainHLinkageR481Loaded = true;
+
+  var EVENTS = [
+    {
+      id: "h481_corp_transparency", phase: "corporate", _isChainEvent: false, icon: "🔍",
+      title: "公司透明度",
+      story: "你向团队公开了公司的运营数据——{desc}",
+      triggers: { minDay: 100, interval: 150, maxRepeats: 3, excludeFlags: ["_h481TransparencyCooldown"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        if (!st.corporate || !st.corporate.company) return false;
+        if (!st.corporate.team || st.corporate.team.length < 2) return false;
+        return (st.flags && !st.flags._h481TransparencyCooldown);
+      },
+      choices: [
+        { text: "📊 全面公开", hint: "团队忠诚+10,人缘+5", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._h481TransparencyCooldown = true;
+          var t = st.corporate && st.corporate.team;
+          if (t) { for (var i = 0; i < t.length; i++) { if (t[i]) t[i].loyalty = Math.min(100, (t[i].loyalty || 50) + 10); } }
+          if (st.player && st.player.corporate) st.player.corporate.popularity = Math.min(100, (st.player.corporate.popularity || 50) + 5);
+          if (typeof StateManager !== "undefined") StateManager.addMessage("📊 你全面公开了公司数据——'透明建立信任。' 团队忠诚+10,人缘+5。", "success");
+        }},
+        { text: "🔒 选择性公开", hint: "心智+3,KPI+5", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._h481TransparencyCooldown = true;
+          if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 3);
+          if (st.player && st.player.corporate) st.player.corporate.kpi = Math.min(150, (st.player.corporate.kpi || 50) + 5);
+          if (typeof StateManager !== "undefined") StateManager.addMessage("🔒 你选择性地公开了数据——'信息需要过滤。' 心智+3,KPI+5。", "success");
+        }}
+      ],
+      text: function (st) {
+        if (!st) return null;
+        var n = st.corporate && st.corporate.team ? st.corporate.team.length : 0;
+        return "你向" + n + "个团队成员公开了公司的运营数据——透明度是团队信任的基石。";
+      }
+    },
+    {
+      id: "h481_corp_evolution", phase: "corporate", _isChainEvent: false, icon: "🦋",
+      title: "公司演化",
+      story: "你回顾了公司从创业到现在的历程——{desc}",
+      triggers: { minDay: 150, interval: 200, maxRepeats: 2, excludeFlags: ["_h481EvolutionCooldown"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        if (!st.corporate || !st.corporate.company) return false;
+        return (st.player && st.player.corpYear >= 3) && (st.flags && !st.flags._h481EvolutionCooldown);
+      },
+      choices: [
+        { text: "📖 记录公司史", hint: "心智+5,管理XP+4", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._h481EvolutionCooldown = true;
+          if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 5);
+          if (typeof addSkillXp === "function") { try { addSkillXp("management", 4); } catch(e) {} }
+          if (typeof StateManager !== "undefined") StateManager.addMessage("📖 你记录了公司史——'历史是最好的老师。' 心智+5,管理XP+4。", "success");
+        }},
+        { text: "🚀 规划未来", hint: "智力+3,KPI+10", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._h481EvolutionCooldown = true;
+          if (st.player) st.player.intelligence = Math.min(100, (st.player.intelligence || 50) + 3);
+          if (st.player && st.player.corporate) st.player.corporate.kpi = Math.min(150, (st.player.corporate.kpi || 50) + 10);
+          if (typeof StateManager !== "undefined") StateManager.addMessage("🚀 你规划了公司未来——'看到过去，才能看到未来。' 智力+3,KPI+10。", "success");
+        }}
+      ],
+      text: function (st) {
+        if (!st) return null;
+        var year = st.player && st.player.corpYear ? st.player.corpYear : 3;
+        return "公司已经走到第" + year + "年了——从最初的几个人到现在，公司经历了怎样的演化？";
+      }
+    },
+    {
+      id: "h481_team_culture", phase: "corporate", _isChainEvent: false, icon: "🎭",
+      title: "团队氛围",
+      story: "你关注了一下团队的氛围——{desc}",
+      triggers: { minDay: 80, interval: 120, maxRepeats: 3, excludeFlags: ["_h481CultureCooldown"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        if (!st.corporate || !st.corporate.company) return false;
+        if (!st.corporate.team || st.corporate.team.length < 2) return false;
+        return (st.flags && !st.flags._h481CultureCooldown);
+      },
+      choices: [
+        { text: "🎉 组织团建", hint: "团队忠诚+10,心情+5,现金-1000", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._h481CultureCooldown = true;
+          var t = st.corporate && st.corporate.team;
+          if (t) { for (var i = 0; i < t.length; i++) { if (t[i]) t[i].loyalty = Math.min(100, (t[i].loyalty || 50) + 10); } }
+          if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 5);
+          if (st.resources) st.resources.cash = Math.max(0, (st.resources.cash || 0) - 1000);
+          if (typeof StateManager !== "undefined") StateManager.addMessage("🎉 你组织了一次团建——'团队凝聚力需要经营。' 团队忠诚+10,心情+5,现金-1000。", "success");
+        }},
+        { text: "💬 一对一沟通", hint: "团队忠诚+5,心智+3", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._h481CultureCooldown = true;
+          var t = st.corporate && st.corporate.team;
+          if (t) { for (var i = 0; i < t.length; i++) { if (t[i]) t[i].loyalty = Math.min(100, (t[i].loyalty || 50) + 5); } }
+          if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 3);
+          if (typeof StateManager !== "undefined") StateManager.addMessage("💬 你进行了一对一沟通——'倾听是最好的管理。' 团队忠诚+5,心智+3。", "success");
+        }}
+      ],
+      text: function (st) {
+        if (!st) return null;
+        var n = st.corporate && st.corporate.team ? st.corporate.team.length : 0;
+        return "你关注了一下" + n + "个人的团队氛围——团队文化不是口号，是每天的选择。";
+      }
+    }
+  ];
+
+  for (var i = 0; i < EVENTS.length; i++) {
+    (function (ev) {
+      var exists = false;
+      for (var j = 0; j < RANDOM_EVENTS.length; j++) {
+        if (RANDOM_EVENTS[j] && RANDOM_EVENTS[j].id === ev.id) { exists = true; break; }
+      }
+      if (!exists) RANDOM_EVENTS.push(ev);
+    })(EVENTS[i]);
+  }
+})();
+
 ;
 // ==== js/core/domain_b_linkage_r426.js ====
 /**
