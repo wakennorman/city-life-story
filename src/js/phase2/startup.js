@@ -12676,3 +12676,5 @@ function manageInventoryAction(state, inventoryType, action, amount) {
 // [R120] 域H 联动增强
 // [R168] 域H 联动增强
 // [R200] 域H 联动增强
+// [R224] 域H 联动增强
+// [R240] 域H 联动增强
