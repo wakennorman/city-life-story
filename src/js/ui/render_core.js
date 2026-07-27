@@ -565,6 +565,25 @@ function renderSidebar(state) {
   // P3-3 城市记忆指示器：已结识NPC/总数
   renderCityMemory(state);
 
+  // [全系统自洽修复] 域B 联动增强(B→F): 人生事件数量 — 侧栏显示经历的事件总数
+  try {
+    var _evtHistory = state.flags && state.flags._eventHistory;
+    if (_evtHistory && _evtHistory.length > 0) {
+      var _evtCount = _evtHistory.length;
+      var _evtEl = document.getElementById("sidebar-event-count");
+      if (!_evtEl) {
+        var _sEl = document.getElementById("sidebar");
+        if (_sEl) {
+          _evtEl = document.createElement("div");
+          _evtEl.id = "sidebar-event-count";
+          _evtEl.style.cssText = "font-size:10px;padding:2px 12px;color:var(--text-muted);";
+          _sEl.appendChild(_evtEl);
+        }
+      }
+      if (_evtEl) _evtEl.textContent = "📖 " + _evtCount + "次人生事件";
+    }
+  } catch (e) {}
+
   // [全系统自洽修复] 域F 联动增强(F→C): 职业成长进度 — 侧栏显示当前职业的技能要求达标率
   try {
     if (state.career && state.career.currentJob && typeof CAREER_PATHS !== "undefined") {
