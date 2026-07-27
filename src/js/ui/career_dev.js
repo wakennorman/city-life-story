@@ -3409,6 +3409,18 @@ function resignCareerJob() {
 
 /** 每日固定工作结算 */
 function tickCareerJobDaily(state) {
+  // [全系统自洽修复] 域C 联动增强(C→A): 每月记录职业资产数据快照
+  if (state.player && state.player.day % 30 === 1) {
+    if (!state.flags) state.flags = {};
+    if (!state.flags._careerMonthlySnapshots) state.flags._careerMonthlySnapshots = [];
+    state.flags._careerMonthlySnapshots.push({
+      day: state.player.day,
+      salary: state.career && state.career.currentJob ? state.career.currentJob.salary || 0 : 0,
+      cash: (state.resources && state.resources.cash) || 0,
+      bankBalance: (state.resources && state.resources.bankBalance) || 0,
+    });
+    if (state.flags._careerMonthlySnapshots.length > 24) state.flags._careerMonthlySnapshots.shift();
+  }
   // ----- 退休人员只发养老金（P0-3） -----
   if (state.flags && state.flags._retired) {
     var pension =
