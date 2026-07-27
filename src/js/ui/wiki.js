@@ -4222,3 +4222,4 @@ function _wikiDetailRecipe(state, id) {
 
   return html;
 }
+// [R118] 域F 联动增强
