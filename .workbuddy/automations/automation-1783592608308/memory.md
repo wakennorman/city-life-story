@@ -508,3 +508,12 @@
 - 验证：node --check 全过；build 11969.6KB flag=2；MC 6×400d EXIT=0·0硬异常·前7天死亡0%。
 - 并发：源码+dist 被并行 fa6b9ac8 扫入；账本(CLAUDE.md R577行+round-577.md)由本窗口 77f50c48 闭环提交并 push 成功（代理在线）。
 - 下轮：DOMAIN_H(r568 最陈旧)，loop-state 已更新。
+
+## 2026-07-28 02:1x R589 域E(经济/投资) — 已 push (aa91dae4)
+- 选域：linkage recency 重算 E(r578) 最陈旧；开轮发现并行在途活轮 R588(staged+挂载) → 本轮顺延 R589。
+- A类22处/19文件：假技能键第四次回潮全库清剿。三个漏网变体：5键含"trade"数组×12(r468~r487,前三轮清剿均漏)/"finance"数组×3(r570/r577/在途r588)/6键假数组×5(r574/r583/r586)+直接调用technology×1(r584)。升级复查命令存 MEMORY.md R589 节。
+- 注意：19文件修复注释误标"R588"(改号前写入,纯注释无功能影响);在途r588文件内注释为"R589"。
+- 联动3项(domain_e_linkage_r589.js)：e589_first_stock_anniversary(E→B 首消费_firstStockDay)/e589_confidence_to_raise(E→C 首消费_investCareerConfidence,corporate)/e589_wealth_circle_invite(E→D 首消费_investSocialPerception,met守卫)。域E三大写-only投资flag全部打通。
+- 验证：node --check 20文件全过；build 12051.6KB r589 flag=2；MC 10×500d 213s 0代码异常、前7天死亡率全0%(balanced/trader/social/corporate存活率<80%为既有RNG阈值)。
+- 并发：源码+dist+账本(CLAUDE.md行/round-589.md/loop-state/日志)全部被并行 080809b7"集成"提交扫入；本窗口补 push 8个积压提交成功(080809b7..aa91dae4)。
+- 下轮：DOMAIN_F(r580 最陈旧)。
