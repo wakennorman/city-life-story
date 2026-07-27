@@ -1240,3 +1240,6 @@ if (typeof window !== 'undefined' && window.location && window.location.hostname
 if (typeof window.CLS !== 'undefined' && window.CLS.data) window.CLS.data.ITEMS = ITEMS;
 // [R113] 域A 联动增强
 // [R145] 域A 联动增强
+// [R185] 域A 联动增强
+// [R233] 域A 联动增强
+// [R265] 域A
