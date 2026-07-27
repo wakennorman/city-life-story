@@ -16,8 +16,9 @@ import {
   SKILL_SYNERGY_DUAL,
   SKILL_SYNERGY_TRIPLE,
   SKILL_SYNERGY_THEME,
-  SynergyEffectsDef,
 } from "./synergyData";
+import type { SynergyEffectsDef } from "./synergyData";
+export type { SynergyEffectsDef } from "./synergyData";
 
 // 显式再导出数据表（esbuild 对 `export *` 会按需裁剪，命名再导出可保真暴露给测试比对）
 export {
@@ -26,13 +27,6 @@ export {
   SKILL_SYNERGY_THEME,
 };
 
-export interface SynergyEffectsDef {
-  [key: string]: unknown;
-  unlockJobs?: string[];
-  unlockBusinesses?: string[];
-  unlockActions?: string[];
-  incomeMultiplier?: number;
-}
 export interface SynergyEffects {
   [key: string]: unknown;
 }
@@ -159,11 +153,11 @@ export function checkSkillSynergies(state: SynergyState): SynergyResult {
         name: syn.name,
         icon: syn.icon,
         desc: syn.desc,
-        effects: syn.effects,
+        effects: syn.effects as SynergyEffects,
       };
       // 双连携激活标记供工作系统以 requiredFlag 读取（与 vanilla 一致）
       if (state.flags) state.flags["_synergy_" + id] = true;
-      collectUnlocks(results, syn.effects);
+      collectUnlocks(results, syn.effects as SynergyEffects);
     }
   }
 
@@ -176,9 +170,9 @@ export function checkSkillSynergies(state: SynergyState): SynergyResult {
         name: syn.name,
         icon: syn.icon,
         desc: syn.desc,
-        effects: syn.effects,
+        effects: syn.effects as SynergyEffects,
       };
-      collectUnlocks(results, syn.effects);
+      collectUnlocks(results, syn.effects as SynergyEffects);
     }
   }
 
@@ -196,9 +190,9 @@ export function checkSkillSynergies(state: SynergyState): SynergyResult {
         icon: theme.icon,
         desc: theme.desc,
         qualifiedSkills: qualified,
-        effects: theme.effects,
+        effects: theme.effects as SynergyEffects,
       };
-      collectUnlocks(results, theme.effects);
+      collectUnlocks(results, theme.effects as SynergyEffects);
     }
   }
 
