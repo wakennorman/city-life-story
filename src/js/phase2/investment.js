@@ -1380,6 +1380,10 @@ function tickInvestmentDaily(state) {
     if (_pv > 0) {
       if (!(inv._portfolioPeak > 0) || _pv > inv._portfolioPeak)
         inv._portfolioPeak = _pv;
+      // [全系统自洽修复] 域E 联动增强(E→F): 记录组合市值历史用于趋势可视化
+      if (!inv._portfolioPeakHistory) inv._portfolioPeakHistory = [];
+      inv._portfolioPeakHistory.push({ day: state.player.day, value: _pv });
+      if (inv._portfolioPeakHistory.length > 30) inv._portfolioPeakHistory.shift();
       // [全系统自洽修复] 域E 联动增强: E→G 资产里程碑叙事 — 首次跨越¥1万/¥10万/¥50万/¥100万时触发自我反思
       var _milestones = [10000, 50000, 100000, 500000, 1000000];
       for (var _mi = 0; _mi < _milestones.length; _mi++) {
@@ -1410,6 +1414,14 @@ function tickInvestmentDaily(state) {
       if (_pv >= 100000 && !state.flags._investCareerConfidence) {
         state.flags._investCareerConfidence = true;
         StateManager.addMessage("💼 资产增值让你在职场上更有底气，敢于争取更好的机会和更高的薪资。", "info");
+      }
+      // [全系统自洽修复] 域E 联动增强(E→G): 投资组合突破¥50万→财务安全感健康加成
+      if (_pv >= 500000 && !state.flags._financialSecurityHealth500k) {
+        state.flags._financialSecurityHealth500k = true;
+        if (state.status) {
+          state.status.health = Math.min(100, (state.status.health || 0) + 3);
+          StateManager.addMessage("💰 资产突破¥50万，财务自由不再是梦。内心的安定让你容光焕发。健康+3。", "success");
+        }
       }
       // [全系统自洽修复] 域E R246 联动增强(E→D): 投资组合突破¥50万→社交圈感知
       if (_pv >= 500000 && !state.flags._investSocialPerception) {
@@ -3355,6 +3367,20 @@ function renderInvestmentTab(state, parent) {
     renderDrawdownIndicator(state) +
     renderNewsInvestmentDrivers(state) +
     renderMarketSentiment(state, inv) +
+    // [全系统自洽修复] 域E 联动增强(E→F): 组合表现趋势 — 基于最近3日组合市值变化显示方向
+    (function() {
+      try {
+        var _inv2 = state.investment;
+        if (!_inv2 || !_inv2._portfolioPeakHistory || _inv2._portfolioPeakHistory.length < 2) return '';
+        var _recent = _inv2._portfolioPeakHistory.slice(-3);
+        var _first = _recent[0], _last = _recent[_recent.length - 1];
+        if (_first === _last) return '';
+        var _trend = _last > _first ? '📈' : '📉';
+        var _pct = _first > 0 ? (((_last - _first) / _first) * 100).toFixed(1) : 0;
+        var _trendColor = _last > _first ? 'var(--danger)' : 'var(--success)';
+        return '<span style="font-size:10px;color:' + _trendColor + ';margin-left:8px;">' + _trend + ' 近3日 ' + (_last > _first ? '+' : '') + _pct + '%</span>';
+      } catch (e) { return ''; }
+    })() +
     '<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;font-size:10px;color:var(--text-muted);flex-wrap:wrap;">' +
     "<span>📉 跌</span>" +
     '<span style="color:var(--success);font-weight:bold;">🟢 绿</span>' +
