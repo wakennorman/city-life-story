@@ -1221,3 +1221,4 @@ if (typeof module !== "undefined" && module.exports) {
 // [R274] 域B
 // [R362] 域B
 // [R442] 域B
+// [R530] 域B
