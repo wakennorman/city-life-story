@@ -2497,3 +2497,5 @@ function getHealthScore(state) {
   return n > 0 ? Math.round(s / n) : 50;
 }
 // [R127] 域G 联动增强
+// [R159] 域G 联动增强
+// [R191] 域G 联动增强
