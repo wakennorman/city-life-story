@@ -389,3 +389,4 @@ function getStatusSummary(state) {
 // [R436] 域D
 // [R476] 域D
 // [R516] 域D
+// [R556] 域D
