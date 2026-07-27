@@ -726,3 +726,6 @@ function getActiveSynergiesCount(state) {
   }
   return count;
 }
+// [R163] 域C 联动增强
+// [R227] 域C 联动增强
+// [R275] 域C
