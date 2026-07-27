@@ -5732,3 +5732,4 @@ if (typeof registerNewsEventsToPool === "function") registerNewsEventsToPool();
 // [R535] 域G
 // [R559] 域G
 // [R583] 域G
+// [R607] 域G
