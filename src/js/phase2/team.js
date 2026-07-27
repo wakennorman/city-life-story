@@ -127,3 +127,4 @@ function getTeamProductivity(state) {
 // [R520] 域H
 // [R544] 域H
 // [R568] 域H
+// [R592] 域H
