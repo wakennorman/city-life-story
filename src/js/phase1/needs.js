@@ -394,3 +394,4 @@ function applyWealthBasedOverhead(state) {
 // [R175] 域G 联动增强
 // [R231] 域G 联动增强
 // [R255] 域G
+// [R303] 域G
