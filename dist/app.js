@@ -260154,6 +260154,27 @@ function getNpcRelationshipSummary(state) {
   }
   return { total: total, close: close, met: met };
 }
+// [全系统自洽修复] 域F R421 联动增强(F→C): 技能进度视觉提示 — 返回技能等级对应的颜色和标签
+function getSkillLevelDisplay(level) {
+  if (level == null) return { color: 'var(--text-muted)', label: '未学习', icon: '⚪' };
+  if (level >= 80) return { color: '#ffd700', label: '大师', icon: '👑' };
+  if (level >= 60) return { color: '#e040fb', label: '专家', icon: '💎' };
+  if (level >= 40) return { color: '#4caf50', label: '熟练', icon: '⭐' };
+  if (level >= 20) return { color: '#2196f3', label: '进阶', icon: '📈' };
+  return { color: '#9e9e9e', label: '入门', icon: '🌱' };
+}
+// [全系统自洽修复] 域F R421 联动增强(F→G): 健康状态快捷视图 — 返回健康状态摘要
+function getHealthStatusSummary(state) {
+  if (!state) return { status: 'unknown', color: 'var(--text-muted)', icon: '❓' };
+  var health = state.status && state.status.health || 100;
+  var hunger = state.needs && state.needs.hunger || 100;
+  var fatigue = state.needs && state.needs.fatigue || 0;
+  var happiness = state.needs && state.needs.happiness || 50;
+  if (health < 20 || hunger < 15 || happiness < 10) return { status: '危险', color: 'var(--danger)', icon: '🔴' };
+  if (health < 40 || hunger < 30 || fatigue > 80 || happiness < 25) return { status: '不佳', color: 'var(--warning)', icon: '🟡' };
+  if (health < 60 || fatigue > 60) return { status: '一般', color: 'var(--accent)', icon: '🟢' };
+  return { status: '良好', color: 'var(--success)', icon: '💚' };
+}
 
 ;
 // ==== js/ui/render_infra.js ====
