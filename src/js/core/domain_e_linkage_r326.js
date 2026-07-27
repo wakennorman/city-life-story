@@ -31,7 +31,7 @@
 
   var EVENTS = [
     {
-      id: "investment_life_balance",
+      id: "investment_life_balance_v2",
       phase: "street",
       _isChainEvent: false,
       icon: "⚖️",
@@ -117,7 +117,7 @@
       repeatable: false,
     },
     {
-      id: "investment_narrative",
+      id: "investment_narrative_v2",
       phase: "street",
       _isChainEvent: false,
       icon: "📖",

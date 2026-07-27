@@ -100,7 +100,8 @@
       repeatable: false,
     },
     {
-      id: "career_investment_confidence",
+      // [全系统自洽修复] R434: 重命名重复id career_investment_confidence→_v2 (R260已定义)
+      id: "career_investment_confidence_v2",
       phase: "street",
       _isChainEvent: false,
       icon: "💰",

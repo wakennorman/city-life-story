@@ -31,7 +31,7 @@
 
   var EVENTS = [
     {
-      id: "investment_career_v2",
+      id: "investment_career_v3",
       phase: "street",
       _isChainEvent: false,
       icon: "🔄",

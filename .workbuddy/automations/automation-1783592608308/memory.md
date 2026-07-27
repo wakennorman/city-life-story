@@ -426,6 +426,14 @@
 - **教训**: 并行窗口速度极快(单轮内 R412→R420)，本窗口角色=权威 bookkeeping + MC验证 + 偶发A类定位；代码轮几乎总被并行抢先。提交纪律：pre-commit 守卫要求 last_known_head==HEAD，每次提交前必 `git rev-parse HEAD > .claude/last_known_head`；推送前 git pull --rebase(脏树则先隔离并行在途)，冲突则中止绝不 force。
 - 下轮→域F（recency 413 最薄弱）。
 
+## 最近执行（2026-07-27 10:15 · R431 域A）
+- 提交: feat 5f8bd210(源码被并行扫入,内容完整) + docs 3ec77506(本窗口账本)，均已 push main ✅
+- A类=0 诚实报告：Explore定向审计 jobs payCalc技能键/requiredFlag-synergy匹配/goods-pricing-trade id链/illnesses极端值/economy_v3.1 全干净；死字段黑名单全库grep=0活命中（仅webapp_runtime_bridge已知误报）
+- 联动3: domain_a_linkage_r431.js — trade子系统三个零事件消费维度全部首消费（a431_route_regular A→D `state.trade._routeUsage`熟路线摊主结缘·met守卫 / a431_bulk_buyer_sense A→E `_totalSpent`≥8000盘感→_dataInvestorMindset / a431_ledger_to_career A→C corporate 死flag `_tradeLearnedInvest`复活·记账跨阶段继承）
+- MC 6×400d 114s EXIT=0·0代码异常·前7天死亡率全0%（balanced 33.3%/corporate 66.7%为既有RNG阈值非回归）；构建10934.6KB
+- ⚠️ 竞态新形态: 并行同时跑三套编号（正常R42x/小编号R48-50/滞后标签R415-418）且其 STATIC_AUDIT/F5 方向轮反复改写 loop-state（曾标lastRound434删domainRecency）→ **recency 只按 git log 提交时间序判**。工作区并行在途8个linkage文件(static-audit)全程stash隔离无损
+- 下轮: 域D（时间序最旧 56452adc R427）
+
 ## 最近执行（2026-07-27 09:05 · R426 域B）
 - 提交: d3cdcd96(主体) + 1635831d(账本)，已 push main ✅
 - A类3处/6点: domain_h_linkage_r170/r188 needs.health死字段→status.health（r188触发闸门健康分支此前永false）；phase2/personal_growth.js image.appearance/grooming/charisma NaN→||0守卫

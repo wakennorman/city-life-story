@@ -74,7 +74,7 @@
       repeatable: false,
     },
     {
-      id: "investment_career_v3",
+      id: "investment_career_r343",
       phase: "street",
       _isChainEvent: false,
       icon: "🔄",
@@ -122,7 +122,7 @@
       repeatable: false,
     },
     {
-      id: "investment_data_v2",
+      id: "investment_data_v3",
       phase: "street",
       _isChainEvent: false,
       icon: "📊",

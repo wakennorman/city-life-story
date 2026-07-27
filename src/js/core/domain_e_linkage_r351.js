@@ -128,7 +128,7 @@
       repeatable: false,
     },
     {
-      id: "investment_narrative_v2",
+      id: "investment_narrative_r351",
       phase: "street",
       _isChainEvent: false,
       icon: "📖",

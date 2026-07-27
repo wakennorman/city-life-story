@@ -20965,7 +20965,8 @@ function getEventHealthImpact(state, eventId) {
     // 数据源: skills.js CERTIFICATES[].salaryBonus
     // 设计意图: 让证书的"社会价值"从纯数字变为可感知的人际关系变化
     {
-      id: "cert_social_recognition",
+      // [全系统自洽修复] R434: 重命名重复id cert_social_recognition→_v2 (R171已定义)
+      id: "cert_social_recognition_v2",
       title: "🎓 你的证书被认可了",
       desc: "某次工作场合，他人注意到你持有某项专业证书，态度明显转变。",
       phase: "street",
@@ -23926,7 +23927,7 @@ function getEventHealthImpact(state, eventId) {
     },
     {
       // B→C: 事件→职业灵感（职业/成长·人生选择）
-      id: "event_career_inspiration",
+      id: "event_career_inspiration_v2",
       phase: "street",
       _isChainEvent: false,
       icon: "💡",
@@ -26349,7 +26350,7 @@ function getEventHealthImpact(state, eventId) {
 
   var EVENTS = [
     {
-      id: "event_data_accumulation",
+      id: "event_data_accumulation_v2",
       phase: "street",
       _isChainEvent: false,
       icon: "📊",
@@ -26813,7 +26814,7 @@ function getEventHealthImpact(state, eventId) {
 
   var EVENTS = [
     {
-      id: "event_milestone_narrative",
+      id: "event_milestone_narrative_v2",
       phase: "corporate",
       _isChainEvent: false,
       icon: "🎉",
@@ -100511,7 +100512,8 @@ if (typeof window !== "undefined") {
       repeatable: false,
     },
     {
-      id: "career_investment_confidence",
+      // [全系统自洽修复] R434: 重命名重复id career_investment_confidence→_v2 (R260已定义)
+      id: "career_investment_confidence_v2",
       phase: "street",
       _isChainEvent: false,
       icon: "💰",
@@ -112794,7 +112796,7 @@ if (typeof window !== "undefined") {
 
   var EVENTS = [
     {
-      id: "social_data_insight",
+      id: "social_data_insight_r299",
       phase: "street",
       _isChainEvent: false,
       icon: "📊",
@@ -113839,7 +113841,7 @@ if (typeof window !== "undefined") {
 
   var EVENTS = [
     {
-      id: "social_data_v2",
+      id: "social_data_r350",
       phase: "street",
       _isChainEvent: false,
       icon: "📊",
@@ -114586,7 +114588,7 @@ if (typeof window !== "undefined") {
 
   var EVENTS = [
     {
-      id: "social_network_value",
+      id: "social_network_value_v2",
       phase: "street",
       _isChainEvent: false,
       icon: "🔗",
@@ -114628,7 +114630,7 @@ if (typeof window !== "undefined") {
       repeatable: false,
     },
     {
-      id: "social_emotional_support",
+      id: "social_emotional_support_v2",
       phase: "street",
       _isChainEvent: false,
       icon: "💗",
@@ -249258,7 +249260,7 @@ if (typeof window !== "undefined") {
       repeatable: false,
     },
     {
-      id: "life_career_milestone_v4",
+      id: "life_career_milestone_v5",
       phase: "street",
       _isChainEvent: false,
       icon: "🎯",
@@ -249533,7 +249535,7 @@ if (typeof window !== "undefined") {
       repeatable: false,
     },
     {
-      id: "life_career_milestone_v5",
+      id: "life_career_milestone_v6",
       phase: "street",
       _isChainEvent: false,
       icon: "💼",
@@ -256434,7 +256436,7 @@ if (typeof window !== "undefined") {
 
   var EVENTS = [
     {
-      id: "investment_life_balance",
+      id: "investment_life_balance_v2",
       phase: "street",
       _isChainEvent: false,
       icon: "⚖️",
@@ -256520,7 +256522,7 @@ if (typeof window !== "undefined") {
       repeatable: false,
     },
     {
-      id: "investment_narrative",
+      id: "investment_narrative_v2",
       phase: "street",
       _isChainEvent: false,
       icon: "📖",
@@ -256604,7 +256606,7 @@ if (typeof window !== "undefined") {
 
   var EVENTS = [
     {
-      id: "investment_career_v2",
+      id: "investment_career_v3",
       phase: "street",
       _isChainEvent: false,
       icon: "🔄",
@@ -256828,7 +256830,7 @@ if (typeof window !== "undefined") {
       repeatable: false,
     },
     {
-      id: "investment_career_v3",
+      id: "investment_career_r343",
       phase: "street",
       _isChainEvent: false,
       icon: "🔄",
@@ -256876,7 +256878,7 @@ if (typeof window !== "undefined") {
       repeatable: false,
     },
     {
-      id: "investment_data_v2",
+      id: "investment_data_v3",
       phase: "street",
       _isChainEvent: false,
       icon: "📊",
@@ -257057,7 +257059,7 @@ if (typeof window !== "undefined") {
       repeatable: false,
     },
     {
-      id: "investment_narrative_v2",
+      id: "investment_narrative_r351",
       phase: "street",
       _isChainEvent: false,
       icon: "📖",
@@ -257240,7 +257242,7 @@ if (typeof window !== "undefined") {
     },
     {
       // E→A: 投资数据→数据沉淀（数据/数值·信息价值）
-      id: "investment_data_v3",
+      id: "investment_data_r359",
       phase: "street",
       _isChainEvent: false,
       icon: "📋",

@@ -58,7 +58,7 @@
       repeatable: false,
     },
     {
-      id: "life_career_milestone_v5",
+      id: "life_career_milestone_v6",
       phase: "street",
       _isChainEvent: false,
       icon: "💼",

@@ -70,7 +70,7 @@
     },
     {
       // B→C: 事件→职业灵感（职业/成长·人生选择）
-      id: "event_career_inspiration",
+      id: "event_career_inspiration_v2",
       phase: "street",
       _isChainEvent: false,
       icon: "💡",

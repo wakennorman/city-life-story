@@ -26,7 +26,7 @@
 
   var EVENTS = [
     {
-      id: "social_network_value",
+      id: "social_network_value_v2",
       phase: "street",
       _isChainEvent: false,
       icon: "🔗",
@@ -68,7 +68,7 @@
       repeatable: false,
     },
     {
-      id: "social_emotional_support",
+      id: "social_emotional_support_v2",
       phase: "street",
       _isChainEvent: false,
       icon: "💗",

@@ -130,7 +130,7 @@
     },
     {
       // E→A: 投资数据→数据沉淀（数据/数值·信息价值）
-      id: "investment_data_v3",
+      id: "investment_data_r359",
       phase: "street",
       _isChainEvent: false,
       icon: "📋",

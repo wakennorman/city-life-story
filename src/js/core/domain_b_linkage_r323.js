@@ -13,7 +13,7 @@
 
   var EVENTS = [
     {
-      id: "event_data_accumulation",
+      id: "event_data_accumulation_v2",
       phase: "street",
       _isChainEvent: false,
       icon: "📊",

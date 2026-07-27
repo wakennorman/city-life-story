@@ -13,7 +13,7 @@
 
   var EVENTS = [
     {
-      id: "event_milestone_narrative",
+      id: "event_milestone_narrative_v2",
       phase: "corporate",
       _isChainEvent: false,
       icon: "🎉",

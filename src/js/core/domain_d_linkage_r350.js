@@ -23,7 +23,7 @@
 
   var EVENTS = [
     {
-      id: "social_data_v2",
+      id: "social_data_r350",
       phase: "street",
       _isChainEvent: false,
       icon: "📊",

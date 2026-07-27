@@ -55,7 +55,8 @@
     // 数据源: skills.js CERTIFICATES[].salaryBonus
     // 设计意图: 让证书的"社会价值"从纯数字变为可感知的人际关系变化
     {
-      id: "cert_social_recognition",
+      // [全系统自洽修复] R434: 重命名重复id cert_social_recognition→_v2 (R171已定义)
+      id: "cert_social_recognition_v2",
       title: "🎓 你的证书被认可了",
       desc: "某次工作场合，他人注意到你持有某项专业证书，态度明显转变。",
       phase: "street",
