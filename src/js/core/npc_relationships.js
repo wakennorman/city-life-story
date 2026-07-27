@@ -566,6 +566,24 @@ function tickNpcRelationships(state) {
     }
   } catch (e) {}
 
+  // [全系统自洽修复] 域D 联动增强(D→F): NPC关系月报 — 每月初总结社交圈变化
+  if (state.player && state.player.day % 30 === 1 && state.relationships) {
+    if (!state.flags) state.flags = {};
+    if (!state.flags._lastSocialReportDay || state.flags._lastSocialReportDay < state.player.day) {
+      state.flags._lastSocialReportDay = state.player.day;
+      var _metCount = 0, _friendCount = 0;
+      for (var _srId in state.relationships) {
+        var _sr = state.relationships[_srId];
+        if (_sr && _sr.met) {
+          _metCount++;
+          if ((_sr.affinity || 0) >= 60) _friendCount++;
+        }
+      }
+      if (_metCount > 0 && typeof StateManager !== "undefined") {
+        StateManager.addMessage("📋 社交月报：已结识 " + _metCount + " 人，其中 " + _friendCount + " 位好友。", "info");
+      }
+    }
+  }
   // [全系统自洽修复] 域D 联动增强(D→E): 高收入NPC人脉投资洞察 — 好感≥60的高收入NPC提供市场洞察
   try {
     if (state.relationships && state.player && state.player.day % 30 === 0 && typeof NPCS !== "undefined") {
