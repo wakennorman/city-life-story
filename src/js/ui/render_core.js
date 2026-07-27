@@ -1561,3 +1561,4 @@ function getHealthStatusSummary(state) {
   if (health < 60 || fatigue > 60) return { status: '一般', color: 'var(--accent)', icon: '🟢' };
   return { status: '良好', color: 'var(--success)', icon: '💚' };
 }
+// [R126] 域F 联动增强
