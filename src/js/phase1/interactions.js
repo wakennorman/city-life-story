@@ -385,3 +385,4 @@ function getStatusSummary(state) {
   return warnings;
 }
 // [R332] 域D
+// [R380] 域D
