@@ -597,3 +597,4 @@ function getAvailableGoodsAtLocation(locKey, state) {
   // 降级：如果没有 trade_intel.js，返回全部商品
   return GOODS.slice();
 }
+// [R129] 域A 联动增强
