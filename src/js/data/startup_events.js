@@ -1219,3 +1219,4 @@ if (typeof module !== "undefined" && module.exports) {
   };
 }// [R178] 域B 联动增强
 // [R274] 域B
+// [R362] 域B
