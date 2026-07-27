@@ -228,7 +228,7 @@ var STORY_CHAPTERS = [
         condition: function (st) {
           return (
             st.flags._crisis35Path === "lieflat" ||
-            ((st.needs.fatigue || 0) <= 20 && (st.player.day || 0) >= 365)
+            ((st.needs && st.needs.fatigue || 0) <= 20 && (st.player.day || 0) >= 365)
           );
         },
         text: "你选择了不那么拼。这座城市教会你：不是所有事都值得拼命。",
