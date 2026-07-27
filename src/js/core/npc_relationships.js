@@ -1054,3 +1054,4 @@ if (typeof window !== "undefined") {
 // [R220] 域D 联动增强
 // [R244] 域D 联动增强
 // [R276] 域D
+// [R340] 域D
