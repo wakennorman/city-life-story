@@ -822,3 +822,4 @@ if (typeof window !== "undefined") {
 // [R460] 域D
 // [R500] 域D
 // [R540] 域D
+// [R580] 域D
