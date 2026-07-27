@@ -681,3 +681,4 @@ function refreshStockMarket(state) {
   updateStockPrices(state, true);
   bootstrapStockHistory(state);
 }
+// [R93] 域E 联动增强
