@@ -247685,6 +247685,155 @@ if (typeof window !== "undefined") {
 })();
 
 ;
+// ==== js/core/domain_b_linkage_r442.js ====
+/**
+ * 域B(事件/叙事) 联动增强 R442
+ * 第十七轮循环——新内容开发:小薇(夜市摊主)+夜市
+ * 桥接：
+ *   B→A  b442_night_market_discovery   夜市发现→数据认知
+ *   B→C  b442_xiao_wei_cooking         小薇教烹饪→技能成长
+ *   B→G  b442_night_market_vibe        夜市氛围→心情/社交
+ */
+(function () {
+  "use strict";
+  if (typeof RANDOM_EVENTS === "undefined" || !RANDOM_EVENTS) return;
+  if (RANDOM_EVENTS._domainBLinkageR442Loaded) return;
+  RANDOM_EVENTS._domainBLinkageR442Loaded = true;
+
+  var EVENTS = [
+    {
+      id: "b442_night_market_discovery",
+      phase: "street",
+      _isChainEvent: false,
+      icon: "🏮",
+      title: "夜市的烟火气",
+      story:
+        "傍晚时分,你路过一条热闹的街道——夜市开张了!\n\n五颜六色的摊位灯光亮起来,烤串的香气飘满整条街。摊主们热情地招呼着客人,讨价还价声此起彼伏。\n\n你第一次发现,原来这座城市还有这么有烟火气的一面。",
+      triggers: { minDay: 30, excludeFlags: ["_nightMarketDiscovered"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        return true;
+      },
+      choices: [
+        {
+          text: "🍢 逛一逛,感受夜市氛围",
+          hint: "心情+5,置 _nightMarketDiscovered",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._nightMarketDiscovered = true;
+            if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 5);
+            if (typeof StateManager !== "undefined" && StateManager.addMessage)
+              StateManager.addMessage("🏮 你逛了夜市,感受了城市的烟火气。心情+5。", "success");
+          }
+        },
+        {
+          text: "😅 人太多,不想挤",
+          hint: "无奖励",
+          apply: function (st) {
+            if (st) { st.flags = st.flags || {}; st.flags._nightMarketDiscovered = true; }
+          }
+        }
+      ],
+      probability: 0.1,
+      repeatable: false,
+    },
+    {
+      id: "b442_xiao_wei_cooking",
+      phase: "street",
+      _isChainEvent: false,
+      icon: "👩‍🍳",
+      title: "小薇的烹饪课",
+      story:
+        "你在夜市遇到了小薇,一个年轻活力的摊主。她的烧烤摊前排着长队,香味飘出老远。\n\n\"想学吗?我教你几招,以后自己也能摆摊!\"\n\n她热情地教你调酱料、控火候,你学到了不少实用的烹饪技巧。",
+      triggers: { minDay: 50, excludeFlags: ["_xiaoWeiMet"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        return true;
+      },
+      choices: [
+        {
+          text: "📝 认真学习烹饪技巧",
+          hint: "烹饪XP+12,心情+4,置 _xiaoWeiMet",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._xiaoWeiMet = true;
+            if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 4);
+            if (typeof addSkillXp === "function") {
+              try { addSkillXp("cooking", 12); } catch (e) { /* safe */ }
+            }
+            if (typeof StateManager !== "undefined" && StateManager.addMessage)
+              StateManager.addMessage("👩‍🍳 你跟小薇学了烹饪技巧——烟火气里藏着真本事。烹饪XP+12,心情+4。", "success");
+          }
+        },
+        {
+          text: "😊 随便看看,不麻烦人家",
+          hint: "心情+2,置 _xiaoWeiMet",
+          apply: function (st) {
+            if (st) {
+              st.flags = st.flags || {};
+              st.flags._xiaoWeiMet = true;
+              if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 2);
+            }
+          }
+        }
+      ],
+      probability: 0.07,
+      repeatable: false,
+    },
+    {
+      id: "b442_night_market_vibe",
+      phase: "street",
+      _isChainEvent: false,
+      icon: "🌙",
+      title: "夜市的温暖",
+      story:
+        "忙碌了一天,你来到夜市。霓虹灯下,摊主们热情地吆喝着,食客们围坐在一起有说有笑。\n\n你买了一份烤串,坐在路边看着人来人往。这座城市虽然陌生,但此刻你觉得——这里也有家的感觉。",
+      triggers: { minDay: 70, excludeFlags: ["_nightMarketVibeSeen"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        return st.needs && (st.needs.happiness || 50) < 65;
+      },
+      choices: [
+        {
+          text: "💛 感受这份温暖",
+          hint: "心情+6,心智+2,置 _nightMarketVibeSeen",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._nightMarketVibeSeen = true;
+            if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 6);
+            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 2);
+            if (typeof StateManager !== "undefined" && StateManager.addMessage)
+              StateManager.addMessage("🌙 夜市的温暖治愈了你——城市也有家的感觉。心情+6,心智+2。", "success");
+          }
+        },
+        {
+          text: "😌 安静地吃完回家",
+          hint: "心情+3",
+          apply: function (st) {
+            if (st) {
+              st.flags = st.flags || {};
+              st.flags._nightMarketVibeSeen = true;
+              if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 3);
+            }
+          }
+        }
+      ],
+      probability: 0.08,
+      repeatable: false,
+    },
+  ];
+
+  for (var i = 0; i < EVENTS.length; i++) {
+    var _e = EVENTS[i];
+    if (RANDOM_EVENTS.find(function (ev) { return ev.id === _e.id; })) continue;
+    RANDOM_EVENTS.push(_e);
+  }
+})();
+
+;
 // ==== js/core/domain_g_linkage_r240.js ====
 /**
  * 城市浮生记 — 域G（核心机制/生命周期）联动增强 · R240
@@ -259278,6 +259427,142 @@ if (typeof window !== "undefined") {
   for (var i = 0; i < EVENTS.length; i++) { if (!RANDOM_EVENTS.find(function (ev) { return ev.id === EVENTS[i].id; })) RANDOM_EVENTS.push(EVENTS[i]); }
 })();
 
+;
+// ==== js/core/domain_e_linkage_r443.js ====
+/**
+ * 域E(经济/投资) 联动增强 R443
+ * 桥接：
+ *   E→A  e443_invest_data_insight    投资数据洞察 → 消费 investment+portfolio 数据,
+ *     投资回报→"从数字里看趋势"的经济数据积累
+ *   E→H  e443_invest_fund_startup    投资反哺创业 → 消费 investment+portfolio 数据,
+ *     投资获利→"用投资赚的钱开公司"的创业资金
+ *   E→B  e443_market_news            市场波动叙事 → 消费 investment+stockMarket 数据,
+ *     股票涨跌→"今天股市又震荡了"的市井新闻
+ */
+(function () {
+  "use strict";
+  if (typeof RANDOM_EVENTS === "undefined" || !RANDOM_EVENTS) return;
+  if (RANDOM_EVENTS._domainELinkageR443Loaded) return;
+  RANDOM_EVENTS._domainELinkageR443Loaded = true;
+
+  function calcPortfolioValue(st) {
+    if (!st || !st.investment || !st.investment.portfolio) return 0;
+    var p = st.investment.portfolio;
+    var total = 0;
+    if (p.stocks) { for (var s in p.stocks) { total += (p.stocks[s].shares || 0) * (p.stocks[s].avgPrice || 0); } }
+    if (p.funds) { for (var f in p.funds) { total += (p.funds[f].shares || 0) * (p.funds[f].avgPrice || 0); } }
+    return total;
+  }
+  function portfolioStockCount(st) {
+    if (!st || !st.investment || !st.investment.portfolio || !st.investment.portfolio.stocks) return 0;
+    var n = 0;
+    for (var s in st.investment.portfolio.stocks) { if (st.investment.portfolio.stocks[s].shares > 0) n++; }
+    return n;
+  }
+
+  var EVENTS = [
+    // E→A: 投资数据洞察 → 经济数据积累
+    {
+      id: "e443_invest_data_insight", phase: "corporate", _isChainEvent: false, icon: "📊",
+      title: "投资复盘",
+      story: "你坐在电脑前，翻看着这个月的投资记录——{desc}",
+      triggers: { minDay: 50, interval: 60, maxRepeats: 5, excludeFlags: ["_e443DataInsightCooldown"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        if (portfolioStockCount(st) < 1) return false;
+        return (st.flags && !st.flags._e443DataInsightCooldown);
+      },
+      choices: [
+        { text: "📈 分析收益率曲线", hint: "会计XP+5,心智+2,投资洞察+1", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._e443DataInsightCooldown = true;
+          if (typeof addSkillXp === "function") { try { addSkillXp("accounting", 5); } catch(e) {} }
+          if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 2);
+          if (typeof StateManager !== "undefined") StateManager.addMessage("📊 你仔细分析了这个月的投资数据——收益率曲线里藏着市场的秘密。会计XP+5,心智+2。", "success");
+        }},
+        { text: "📝 记下心得", hint: "心智+1", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._e443DataInsightCooldown = true;
+          if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 1);
+          if (typeof StateManager !== "undefined") StateManager.addMessage("📊 你把投资心得记在本子上——好记性不如烂笔头。心智+1。", "success");
+        }}
+      ],
+      text: function (st) {
+        if (!st) return null;
+        var pv = Math.floor(calcPortfolioValue(st));
+        var sc = portfolioStockCount(st);
+        return "你坐在电脑前，翻看着这个月的投资记录——" + sc + "只股票的总市值约¥" + pv.toLocaleString() + "。数字背后是市场的脉搏。";
+      }
+    },
+    // E→H: 投资反哺创业
+    {
+      id: "e443_invest_fund_startup", phase: "corporate", _isChainEvent: false, icon: "🚀",
+      title: "用投资养创业",
+      story: "看着账户里的投资收益，你开始盘算——{desc}",
+      triggers: { minDay: 80, interval: 120, maxRepeats: 3, excludeFlags: ["_e443FundStartupCooldown"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        var pv = calcPortfolioValue(st);
+        if (pv < 30000) return false;
+        return (st.flags && !st.flags._e443FundStartupCooldown);
+      },
+      choices: [
+        { text: "💰 追加公司资金", hint: "公司资金+5000,管理XP+3", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._e443FundStartupCooldown = true;
+          if (st.corporate && st.corporate.company) {
+            st.corporate.company.funds = (st.corporate.company.funds || 0) + 5000;
+          }
+          if (typeof addSkillXp === "function") { try { addSkillXp("management", 3); } catch(e) {} }
+          if (typeof StateManager !== "undefined") StateManager.addMessage("🚀 你从投资收益里拿出一笔钱注入公司——'用投资养创业'，这是你给自己定的规矩。公司资金+¥5000,管理XP+3。", "success");
+        }},
+        { text: "📈 继续投资,扩大本金", hint: "会计XP+3", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._e443FundStartupCooldown = true;
+          if (typeof addSkillXp === "function") { try { addSkillXp("accounting", 3); } catch(e) {} }
+          if (typeof StateManager !== "undefined") StateManager.addMessage("🚀 你决定让钱继续生钱——现在还不是抽离的时候，等到雪球滚得足够大再考虑。会计XP+3。", "success");
+        }}
+      ],
+      text: function (st) {
+        if (!st) return null;
+        var pv = Math.floor(calcPortfolioValue(st));
+        return "看着账户里的投资收益（¥" + pv.toLocaleString() + "），你开始盘算——这笔钱能帮公司做多少事？还是说，钱生钱才是最好的路？";
+      }
+    },
+    // E→B: 市场波动 → 市井新闻
+    {
+      id: "e443_market_news", phase: "street", _isChainEvent: false, icon: "📰",
+      title: "股市风云",
+      story: "路边报摊的电视正播着财经新闻——{desc}",
+      triggers: { minDay: 30, interval: 45, maxRepeats: 10, excludeFlags: ["_e443MarketNewsCooldown"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        return (st.flags && !st.flags._e443MarketNewsCooldown);
+      },
+      choices: [
+        { text: "📰 驻足看一会儿", hint: "会计XP+2,心智+1", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._e443MarketNewsCooldown = true;
+          if (typeof addSkillXp === "function") { try { addSkillXp("accounting", 2); } catch(e) {} }
+          if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 1);
+          if (typeof StateManager !== "undefined") StateManager.addMessage("📰 财经新闻里说今天大盘震荡——你琢磨着这跟自己手里的股票有没有关系。会计XP+2,心智+1。", "success");
+        }},
+        { text: "🚶 匆匆走过", hint: "无奖励", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._e443MarketNewsCooldown = true;
+        }}
+      ],
+      text: function (st) {
+        if (!st) return null;
+        return "路边报摊的电视正播着财经新闻——今天股市又震荡了。有人驻足叹息，有人匆匆而过，只有你知道，这跟自己有没有关系。";
+      }
+    }
+  ];
+
+  for (var i = 0; i < EVENTS.length; i++) {
+    (function (ev) {
+      var exists = false;
+      for (var j = 0; j < RANDOM_EVENTS.length; j++) {
+        if (RANDOM_EVENTS[j] && RANDOM_EVENTS[j].id === ev.id) { exists = true; break; }
+      }
+      if (!exists) RANDOM_EVENTS.push(ev);
+    })(EVENTS[i]);
+  }
+})();
 ;
 // ==== js/core/domain_a_linkage_r277.js ====
 /**
