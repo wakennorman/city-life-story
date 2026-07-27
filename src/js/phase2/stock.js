@@ -687,3 +687,4 @@ function refreshStockMarket(state) {
 // [R197] 域E 联动增强
 // [R221] 域E 联动增强
 // [R245] 域E 联动增强
+// [R317] 域E
