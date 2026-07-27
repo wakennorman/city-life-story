@@ -596,3 +596,4 @@ if (typeof window.CLS !== 'undefined' && window.CLS.data) window.CLS.data.GOODS 
 // [R177] 域A 联动增强
 // [R225] 域A 联动增强
 // [R273] 域A
+// [R321] 域A
