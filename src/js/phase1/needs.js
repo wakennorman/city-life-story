@@ -399,3 +399,4 @@ function applyWealthBasedOverhead(state) {
 // [R375] 域G
 // [R423] 域G
 // [R447] 域G
+// [R495] 域G
