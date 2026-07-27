@@ -902,3 +902,4 @@ function renderSocialNetworkTab(state, parent) {
   parent.innerHTML = html;
 
   }
+// [R316] 域D
