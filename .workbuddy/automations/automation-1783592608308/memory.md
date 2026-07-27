@@ -450,3 +450,16 @@
 - MC 6×400d 106s all pass·0代码异常·前7天死亡率全0%（corporate 66.7%既有RNG阈值）
 - 竞态：执行中并行连推 R443(域E)+开启R444；过时stash(startup/jobs/npcs) 核验后drop×3
 - 下轮 recency（git log时间序）：R442后 F/E 均最新，最旧待重算（域C/G/H 候选）
+
+## 2026-07-27 R472 域B（本窗口）
+- A类4处修复：假技能键 addSkillXp("trade")→"sales"（r459/r460/r453/r446 四linkage文件）。联动3项=domain_e_linkage_r470.js（inv.cars首消费 E→G/E→D/E→C），源码随并行f2457cbd落地，本轮闭合dist e470_=12。
+- 已push：d2260769(fix) + 5f27b514(救援并行域G悬空dist g472_=0→6)。MC 6×400d 0异常。CLAUDE.md/round-472.md/loop-state/MEMORY.md 均更新。
+- 下轮：git log 重算 recency，避开 D(R473在途)/B/G(均R472)。
+
+## 最近执行（2026-07-27 15:36 · R489 域C）
+- 域选择：git log 实况 recency（D/H 在途避开）→ 域C 职业/成长，轮号 R489。
+- A类=0 诚实报告：addSkillXp 全库14键全真实；jobs requiredFlag↔synergy id 全匹配；死字段黑名单0命中。
+- 联动3（domain_c_linkage_r489.js·career_dev 死flag首消费）：c489_salary_alloc(C→E _highSalaryInvestor)/c489_burnout_share(C→D _burnoutSurvivor)/c489_occu_health_wakeup(C→G _hasOccupationalDisease)。
+- 竞态：源码+挂载写完3分钟被并行扫入 1285e69f 并 push（内容IDENTICAL）；并行同轮号异域 a489 在途→本窗口不提交 dist。本窗口提交=round doc+memory 账本。
+- 验证：node --check OK；build 11456.5KB c489_=12（顺带闭合 g487 悬空）；MC 6×400d 167.7s 0代码异常、前7天死亡0%。
+- 下轮：git log 重算 recency；同轮号双域已成新常态，轮号仅弱参考。
