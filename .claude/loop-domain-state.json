@@ -1,1 +1,1 @@
-{"lastRound":430,"lastDirection":"F5_TEST","lastDate":"2026-07-27","lastCommit":"f8f0369a","domainRecency":{"A":423,"B":429,"C":424,"D":427,"E":428,"F":421,"G":422,"H":418},"nextDirection":"F5_MC_CONTENT","note":"🔄战略转向:数据层优化已完成. 当前方向①F5玩法测试. 详见 memory/development-direction-pivot.md"}
+{"lastRound":430,"lastDirection":"MC_VERIFY","lastDate":"2026-07-27","lastCommit":"51e55ec1","domainRecency":{"A":423,"B":429,"C":424,"D":427,"E":428,"F":421,"G":422,"H":425},"nextDirection":"MC_CONTENT","note":"🔄方向②MC平衡验证. F5测试已完成(✅语法/构建/加载). 运行MC验证策略平衡."}

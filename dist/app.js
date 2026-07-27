@@ -4535,6 +4535,42 @@ function rollStreetEvent(state) {
       state.flags._careerAnniversaryEvent = true;
       // 一周年叙事已在 tickCareerJobDaily 中处理
     }
+    // [全系统自洽修复] 域B R52 联动增强(B→C): 工作满90天技能成长叙事
+    if (_jobWd === 90 && !state.flags._career90dSkillEvent) {
+      state.flags._career90dSkillEvent = true;
+      if (typeof addSkillXp === "function" && state.skills) {
+        addSkillXp(_path === "corporate" ? "management" : "sales", 10);
+        StateManager.addMessage("📚 工作满90天，你在实践中积累了宝贵的职业技能经验。", "success");
+      }
+    }
+    // [全系统自洽修复] 域B R52 联动增强(B→D): 工作满180天人脉拓展叙事
+    if (_jobWd === 180 && !state.flags._career180dSocialEvent) {
+      state.flags._career180dSocialEvent = true;
+      if (state.relationships) {
+        for (var _wpc = 0; _wpc < state.career.currentJob.workplaceNPCs.length; _wpc++) {
+          var _npcId = state.career.currentJob.workplaceNPCs[_wpc];
+          if (state.relationships[_npcId] && typeof applyAffinityChange === "function") {
+            applyAffinityChange(state, _npcId, 5, "长期共事");
+          }
+        }
+        StateManager.addMessage("🤝 工作半年，你和同事建立了深厚的默契和信任。", "success");
+      }
+    }
+  }
+
+  // [全系统自洽修复] 域B R52 联动增强(B→A): 叙事驱动的市场波动 — 活跃交易影响供需
+  if (state.trade && state.trade.supplyDemand && state.player.day % 15 === 0) {
+    var _tradeCount = state.flags._dailyTradeCount || 0;
+    if (_tradeCount >= 5) {
+      for (var _gid in state.trade.supplyDemand) {
+        for (var _lid in state.trade.supplyDemand[_gid]) {
+          if (Random.chance(0.3)) {
+            state.trade.supplyDemand[_gid][_lid] = (state.trade.supplyDemand[_gid][_lid] || 0) - 2;
+          }
+        }
+      }
+      StateManager.addMessage("📊 市场注意到你频繁交易的活跃度，部分商品供需关系正在调整。", "info");
+    }
   }
 
   // 触发率随天数递增（Day1 18% → Day365 ~35%），确保后期事件池充分出场
@@ -286826,6 +286862,28 @@ function tickCareerJobDaily(state) {
         "⚠️ 身体发出警告：长期高压工作正在消耗你的健康",
         "warning",
       );
+    }
+  }
+
+  // [域C R418 联动增强] C→D: 高技能等级→NPC社交尊重 — 每10级skills提升NPC初始好感
+  if (state.skills && state.player.day % 10 === 0) {
+    var _totalSkillLevel = 0;
+    for (var _sk in state.skills) {
+      if (state.skills[_sk] && typeof state.skills[_sk].level === "number") {
+        _totalSkillLevel += state.skills[_sk].level;
+      }
+    }
+    if (_totalSkillLevel >= 50 && state.relationships && !state.flags._skillRespectNotified) {
+      state.flags._skillRespectNotified = true;
+      StateManager.addMessage("🌟 你掌握的多项技能让周围人刮目相看，社交圈中获得了更多尊重。", "info");
+    }
+  }
+
+  // [域C R418 联动增强] C→G: 职业倦怠影响心情 — burnout>40时每日心情微降
+  if (cap && cap.burnout > 40 && state.needs) {
+    state.needs.happiness = Math.max(0, (state.needs.happiness || 50) - 0.5);
+    if (cap.burnout > 70 && state.needs) {
+      state.needs.fatigue = Math.min(100, (state.needs.fatigue || 0) + 0.5);
     }
   }
 

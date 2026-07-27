@@ -3600,6 +3600,28 @@ function tickCareerJobDaily(state) {
     }
   }
 
+  // [域C R418 联动增强] C→D: 高技能等级→NPC社交尊重 — 每10级skills提升NPC初始好感
+  if (state.skills && state.player.day % 10 === 0) {
+    var _totalSkillLevel = 0;
+    for (var _sk in state.skills) {
+      if (state.skills[_sk] && typeof state.skills[_sk].level === "number") {
+        _totalSkillLevel += state.skills[_sk].level;
+      }
+    }
+    if (_totalSkillLevel >= 50 && state.relationships && !state.flags._skillRespectNotified) {
+      state.flags._skillRespectNotified = true;
+      StateManager.addMessage("🌟 你掌握的多项技能让周围人刮目相看，社交圈中获得了更多尊重。", "info");
+    }
+  }
+
+  // [域C R418 联动增强] C→G: 职业倦怠影响心情 — burnout>40时每日心情微降
+  if (cap && cap.burnout > 40 && state.needs) {
+    state.needs.happiness = Math.max(0, (state.needs.happiness || 50) - 0.5);
+    if (cap.burnout > 70 && state.needs) {
+      state.needs.fatigue = Math.min(100, (state.needs.fatigue || 0) + 0.5);
+    }
+  }
+
   // ----- 年终奖（P0-C, Blueprint 3.1.2） -----
   // 每工作满365天发放一次，系数由业绩+司龄+倦怠+随机加权
   var lastBonusDay = job._lastBonusDay || job.startDay || state.player.day;
