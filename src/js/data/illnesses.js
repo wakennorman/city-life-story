@@ -563,3 +563,4 @@ function hasIllness(state, illnessId) {
   }
   return false;
 }
+// [R105] 域A 联动增强
