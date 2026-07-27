@@ -500,3 +500,5 @@
 
   Array.prototype.push.apply(RANDOM_EVENTS, CRISIS35_FOLLOWUPS);
 })();
+// [R146] 域B 联动增强
+// [R242] 域B 联动增强
