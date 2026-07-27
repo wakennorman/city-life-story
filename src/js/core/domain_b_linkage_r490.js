@@ -91,7 +91,7 @@
         { text: "🎯 设定新目标", hint: "智力+2,全技能XP+1", apply: function (st) {
           if (!st) return; st.flags = st.flags || {}; st.flags._b490MilestoneCooldown = true;
           if (st.player) st.player.intelligence = Math.min(100, (st.player.intelligence || 50) + 2);
-          var skills = ["accounting", "management", "sales", "coding", "trade"];
+          var skills = ["accounting", "management", "sales", "coding", "social"]; // [全系统自洽修复] 域E R588 修复:trade非真实技能键(addSkillXp静默丢弃XP)→映射social
           for (var i = 0; i < skills.length; i++) { if (typeof addSkillXp === "function") { try { addSkillXp(skills[i], 1); } catch(e) {} } }
           if (typeof StateManager !== "undefined") StateManager.addMessage("🎯 你设定了人生新目标——'每一个终点都是新的起点。' 智力+2,全技能XP+1。", "success");
         }}

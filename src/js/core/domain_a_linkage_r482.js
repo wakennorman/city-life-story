@@ -91,7 +91,7 @@
         }},
         { text: "💪 专注自身", hint: "全技能XP+2", apply: function (st) {
           if (!st) return; st.flags = st.flags || {}; st.flags._a482CycleCooldown = true;
-          var skills = ["accounting", "management", "sales", "coding", "trade"];
+          var skills = ["accounting", "management", "sales", "coding", "social"]; // [全系统自洽修复] 域E R588 修复:trade非真实技能键(addSkillXp静默丢弃XP)→映射social
           for (var i = 0; i < skills.length; i++) { if (typeof addSkillXp === "function") { try { addSkillXp(skills[i], 2); } catch(e) {} } }
           if (typeof StateManager !== "undefined") StateManager.addMessage("💪 你决定专注自身——'打铁还需自身硬。' 全技能XP+2。", "success");
         }}

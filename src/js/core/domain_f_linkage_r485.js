@@ -87,7 +87,7 @@
         { text: "🎯 优先完成", hint: "心智+3,全技能XP+1", apply: function (st) {
           if (!st) return; st.flags = st.flags || {}; st.flags._f485QuestCooldown = true;
           if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 3);
-          var skills = ["accounting", "management", "sales", "coding", "trade"];
+          var skills = ["accounting", "management", "sales", "coding", "social"]; // [全系统自洽修复] 域E R588 修复:trade非真实技能键(addSkillXp静默丢弃XP)→映射social
           for (var i = 0; i < skills.length; i++) { if (typeof addSkillXp === "function") { try { addSkillXp(skills[i], 1); } catch(e) {} } }
           if (typeof StateManager !== "undefined") StateManager.addMessage("🎯 你优先完成了任务——'今日事今日毕。' 心智+3,全技能XP+1。", "success");
         }},

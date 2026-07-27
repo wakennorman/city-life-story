@@ -64,7 +64,7 @@
       choices: [
         { text: "💡 学习新技术", hint: "技术XP+5,心智+2", apply: function (st) {
           if (!st) return; st.flags = st.flags || {}; st.flags._b584TechBreakthroughCooldown = true;
-          if (typeof addSkillXp === "function") { try { addSkillXp("technology", 5); } catch(e) {} }
+          if (typeof addSkillXp === "function") { try { addSkillXp("coding", 5); } catch(e) {} } // [全系统自洽修复] 域E R588 修复:technology非真实技能键(XP静默丢弃)→映射coding(学习新技术=编程)
           if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 2);
           if (typeof StateManager !== "undefined") StateManager.addMessage("💡 'AI技术又突破了，得跟上时代步伐。' 技术XP+5,心智+2。", "success");
         }},

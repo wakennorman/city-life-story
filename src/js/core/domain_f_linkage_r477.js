@@ -93,7 +93,7 @@
         }},
         { text: "🎯 聚焦成长", hint: "全技能XP+1,心情+3", apply: function (st) {
           if (!st) return; st.flags = st.flags || {}; st.flags._f477LifeDashCooldown = true;
-          var skills = ["accounting", "management", "sales", "coding", "trade"];
+          var skills = ["accounting", "management", "sales", "coding", "social"]; // [全系统自洽修复] 域E R588 修复:trade非真实技能键(addSkillXp静默丢弃XP)→映射social
           for (var i = 0; i < skills.length; i++) { if (typeof addSkillXp === "function") { try { addSkillXp(skills[i], 1); } catch(e) {} } }
           if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 3);
           if (typeof StateManager !== "undefined") StateManager.addMessage("🎯 你聚焦于成长——'每天进步一点点。' 全技能XP+1,心情+3。", "success");

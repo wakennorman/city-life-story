@@ -33,7 +33,7 @@
         { text: "🎯 追求新缎带", hint: "心情+5,全技能XP+1", apply: function (st) {
           if (!st) return; st.flags = st.flags || {}; st.flags._g472RibbonUiCooldown = true;
           if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 5);
-          var skills = ["accounting", "management", "sales", "coding", "trade"];
+          var skills = ["accounting", "management", "sales", "coding", "social"]; // [全系统自洽修复] 域E R588 修复:trade非真实技能键(addSkillXp静默丢弃XP)→映射social
           for (var i = 0; i < skills.length; i++) { if (typeof addSkillXp === "function") { try { addSkillXp(skills[i], 1); } catch(e) {} } }
           if (typeof StateManager !== "undefined") StateManager.addMessage("🎯 你决定追求新缎带——'人生需要新目标。' 心情+5,全技能XP+1。", "success");
         }}
