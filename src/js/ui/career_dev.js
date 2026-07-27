@@ -3472,6 +3472,50 @@ function tickCareerJobDaily(state) {
   if (state.player.day % 7 === 0) dailyBurnoutChange -= 2;
   cap.burnout = Math.max(0, (cap.burnout || 0) + dailyBurnoutChange);
 
+  // [全系统自洽修复] 域C 联动增强(C→G): 高压倦怠→健康侵蚀 — 每日最高-1健康(倦怠≥70时触发)
+  if (cap.burnout >= 70 && state.status && state.status.health > 10) {
+    state.status.health = Math.max(0, (state.status.health || 100) - 1);
+    if (cap.burnout >= 85 && state.player.day % 5 === 0) {
+      StateManager.addMessage("⚠️ 长期高压工作正在侵蚀你的健康，考虑调休或年假！", "warning");
+    }
+  }
+
+  // [全系统自洽修复] 域C 联动增强(C→D): 职业里程碑→社交网络扩展 — 在职180天/365天/730天时结识职场朋友
+  var _wd = job.workDays || 0;
+  if (_wd === 180 || _wd === 365 || _wd === 730) {
+    if (!state.flags) state.flags = {};
+    var _netFlag = '_careerNetworkExpanded_' + _wd;
+    if (!state.flags[_netFlag]) {
+      state.flags[_netFlag] = true;
+      // 给已有NPC关系加少量好感(模拟职场人脉积累)
+      if (state.relationships) {
+        var _relCount = 0;
+        for (var _nid in state.relationships) {
+          if (state.relationships[_nid] && state.relationships[_nid].met) {
+            state.relationships[_nid].affinity = Math.min(100, (state.relationships[_nid].affinity || 0) + 1);
+            _relCount++;
+          }
+        }
+        if (_relCount > 0) {
+          StateManager.addMessage("🤝 职场人脉扩展：长期积累的工作关系让你与" + _relCount + "位熟人联系更紧密了。", "info");
+        }
+      }
+    }
+  }
+
+  // [全系统自洽修复] 域C 联动增强(C→F): 职业绩效趋势提示 — 每月发薪日展示绩效变化趋势
+  if (state.player.day % 30 === 1 && job.workDays > 30) {
+    var _perfNow = job.performance || 50;
+    var _perfPrev = job._lastMonthPerf || _perfNow;
+    var _perfDiff = _perfNow - _perfPrev;
+    if (_perfDiff >= 5) {
+      StateManager.addMessage("📈 本月绩效上升 " + _perfDiff + " 分，保持势头！", "success");
+    } else if (_perfDiff <= -5) {
+      StateManager.addMessage("📉 本月绩效下降 " + Math.abs(_perfDiff) + " 分，需要加把劲了。", "warning");
+    }
+    job._lastMonthPerf = _perfNow;
+  }
+
   // 每月1日发薪
   if (state.player.day % 30 === 1) {
     var salary = calcActualSalary(state);
