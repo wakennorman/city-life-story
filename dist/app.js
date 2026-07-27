@@ -116201,6 +116201,10 @@ if (typeof window !== "undefined") {
               st.flags = st.flags || {};
               st.flags._laoChenCareerSeen = true;
               if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 2);
+              // [全系统自洽修复] 域D R451 A类: 见面即结识,接入met系统
+              if (typeof applyAffinityChange === "function") {
+                try { applyAffinityChange(st, "lao_chen", 2, "婉拒但记住了老陈"); } catch (e) { /* safe */ }
+              }
             }
           }
         }
@@ -116247,6 +116251,10 @@ if (typeof window !== "undefined") {
               st.flags = st.flags || {};
               st.flags._laoChenTalkSeen = true;
               if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 4);
+              // [全系统自洽修复] 域D R451 A类: 见面即结识,接入met系统
+              if (typeof applyAffinityChange === "function") {
+                try { applyAffinityChange(st, "lao_chen", 4, "安静听老陈聊人生"); } catch (e) { /* safe */ }
+              }
             }
           }
         }
@@ -161149,6 +161157,50 @@ const NPC_RELATION_MATRIX = {
     sister_wu: "neutral",
     brother_huang: "neutral",
   },
+  // [全系统自洽修复] 域D R451 A类: lao_chen(R440新增)已定义但未加入关系矩阵→initNpcRelationships不建条目,关系链/传播/图谱全忽略
+  lao_chen: {
+    aunt_wang: "friendly",
+    old_zhou: "old_acquaintance",
+    xiaochen: "friendly",
+    chen_ge: "neutral",
+    boss_li: "neutral",
+    sister_zhang: "neutral",
+    xiao_mei: "neutral",
+    chef_chen: "neutral",
+    auntie_lin: "friendly",
+    master_zhao: "neutral",
+    xiaoli: "neutral",
+    dr_wang: "neutral",
+    zhaojie: "neutral",
+    ajie: "neutral",
+    uncle_chen_bank: "neutral",
+    sister_wu: "neutral",
+    brother_huang: "neutral",
+    old_ma: "neutral",
+    xiao_wei: "neutral",
+  },
+  // [全系统自洽修复] 域D R451 A类: xiao_wei(R442新增)已定义但未加入关系矩阵→同上
+  xiao_wei: {
+    chef_chen: "friendly",
+    aunt_wang: "friendly",
+    boss_li: "business",
+    old_zhou: "neutral",
+    sister_zhang: "neutral",
+    xiao_mei: "friendly",
+    auntie_lin: "neutral",
+    master_zhao: "neutral",
+    xiaoli: "neutral",
+    xiaochen: "neutral",
+    dr_wang: "neutral",
+    zhaojie: "neutral",
+    chen_ge: "neutral",
+    ajie: "neutral",
+    uncle_chen_bank: "neutral",
+    sister_wu: "neutral",
+    brother_huang: "neutral",
+    old_ma: "neutral",
+    lao_chen: "neutral",
+  },
 };
 
 // ====== 关系传播矩阵 ======
@@ -161178,6 +161230,9 @@ const RELATION_PROPAGATION = {
   brother_huang: { xiaochen: 0.15, aunt_wang: 0.1 },
   // [全系统自洽修复] 域D R245 A类: old_ma 加入关系传播矩阵
   old_ma: { chen_ge: 0.12, boss_li: 0.1, aunt_wang: 0.08 },
+  // [全系统自洽修复] 域D R451 A类: 新NPC接入传播矩阵(社区/夜市社交圈口碑扩散)
+  lao_chen: { aunt_wang: 0.1, old_zhou: 0.12, xiaochen: 0.08 },
+  xiao_wei: { chef_chen: 0.12, aunt_wang: 0.08, xiao_mei: 0.1 },
 };
 
 /** 初始化NPC关系状态 */
@@ -161601,6 +161656,8 @@ function checkNpcRelationEventTriggers(state) {
     var affA =
       (state.relationships[npcA] && state.relationships[npcA].affinity) || 0;
     if (affA < 30) continue;
+    // [全系统自洽修复] 域D R451 B类补齐: npcA 同样加 met 守卫(与 npcB 一致,防未结识NPC因初始好感溢出误触发关系链)
+    if (!state.relationships[npcA] || !state.relationships[npcA].met) continue;
 
     var relations = NPC_RELATION_MATRIX[npcA];
     for (var npcB in relations) {
@@ -248245,7 +248302,7 @@ if (typeof window !== "undefined") {
       // F→D 关系面板"久未联系"提醒：把关系网UI从只读升级为重连驱动
       id: "f442_neglect_reconnect", phase: "street", _isChainEvent: false, icon: "📇",
       title: "久未联系的老友",
-      story: "关系网面板顶部标出了一个提醒——{desc}",
+      story: "关系网面板顶部标出了一个提醒——有一位老朋友，你们已经很久没有联系了。面板上那行灰色小字像在轻声提醒：关系是需要经营的。", // [全系统自洽修复] 域D R451 A类: 渲染层(events_core.js:717)只读story不做模板替换也不调用text()→'{desc}'原样显示给玩家
       triggers: { minDay: 60, excludeFlags: ["_f442ReconnectCooldown"] },
       conditions: function (st) {
         return !st.gameOver && st.relationships && mostNeglectedNpcR442(st) !== null;
@@ -248273,7 +248330,7 @@ if (typeof window !== "undefined") {
       // F→E 资产配置视图：财务面板从只读升级为投资意识养成
       id: "f442_asset_allocation", phase: "street", _isChainEvent: false, icon: "📊",
       title: "资产配置视图",
-      story: "你切到财务面板的资产配置视图——{desc}",
+      story: "你切到财务面板的资产配置视图——持仓分布一目了然。仓位是分散还是集中，风险是高是低，图表比直觉诚实得多。", // [全系统自洽修复] 域D R451 A类: 同上,{desc}占位符泄漏修复
       triggers: { minDay: 50, excludeFlags: ["_f442AllocCooldown"] },
       conditions: function (st) {
         return !st.gameOver && st.investment && Array.isArray(st.investment.stockHoldings) && st.investment.stockHoldings.length >= 1;
@@ -248300,7 +248357,7 @@ if (typeof window !== "undefined") {
       // F→H 经营仪表盘：公司季度看板从只读展示升级为汇报变现
       id: "f442_ops_dashboard", phase: "corporate", _isChainEvent: false, icon: "🗂️",
       title: "经营仪表盘",
-      story: "你打开公司经营仪表盘，季度看板一目了然——{desc}",
+      story: "你打开公司经营仪表盘，季度看板一目了然——营收曲线、团队效能、项目进度都摆在眼前。数据不会说谎，它在等一个会讲故事的人。", // [全系统自洽修复] 域D R451 A类: 同上,{desc}占位符泄漏修复
       triggers: { minDay: 80, excludeFlags: ["_f442OpsCooldown"] },
       conditions: function (st) {
         return !st.gameOver && st.corporate && st.corporate.company;
@@ -248537,6 +248594,10 @@ if (typeof window !== "undefined") {
             if (typeof addSkillXp === "function") {
               try { addSkillXp("cooking", 12); } catch (e) { /* safe */ }
             }
+            // [全系统自洽修复] 域D R451 A类: 小薇事件只写flag不接好感系统→NPC定义存在但永不进关系图谱,接入正规入口
+            if (typeof applyAffinityChange === "function") {
+              try { applyAffinityChange(st, "xiao_wei", 10, "认真学烹饪结缘"); } catch (e) { /* safe */ }
+            }
             if (typeof StateManager !== "undefined" && StateManager.addMessage)
               StateManager.addMessage("👩‍🍳 你跟小薇学了烹饪技巧——烟火气里藏着真本事。烹饪XP+12,心情+4。", "success");
           }
@@ -248549,6 +248610,10 @@ if (typeof window !== "undefined") {
               st.flags = st.flags || {};
               st.flags._xiaoWeiMet = true;
               if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 2);
+              // [全系统自洽修复] 域D R451 A类: 见面即结识,接入met系统
+              if (typeof applyAffinityChange === "function") {
+                try { applyAffinityChange(st, "xiao_wei", 3, "夜市初见小薇"); } catch (e) { /* safe */ }
+              }
             }
           }
         }
@@ -260811,6 +260876,145 @@ if (typeof window !== "undefined") {
       text: function (st) {
         if (!st) return null;
         return "路边报摊的电视正播着财经新闻——今天股市又震荡了。有人驻足叹息，有人匆匆而过，只有你知道，这跟自己有没有关系。";
+      }
+    }
+  ];
+
+  for (var i = 0; i < EVENTS.length; i++) {
+    (function (ev) {
+      var exists = false;
+      for (var j = 0; j < RANDOM_EVENTS.length; j++) {
+        if (RANDOM_EVENTS[j] && RANDOM_EVENTS[j].id === ev.id) { exists = true; break; }
+      }
+      if (!exists) RANDOM_EVENTS.push(ev);
+    })(EVENTS[i]);
+  }
+})();
+;
+// ==== js/core/domain_e_linkage_r454.js ====
+/**
+ * 域E(经济/投资) 联动增强 R454（第三轮循环）
+ * 桥接：
+ *   E→D  e454_invest_social_circle 投资社交圈 → 消费 investment+relationships 数据,
+ *     投资心得→"找到同频的人"的投资社交叙事
+ *   E→G  e454_invest_life_quality  投资生活品质 → 消费 investment+needs 数据,
+ *     投资收益→"钱让生活更好了吗"的生活品质反思
+ *   E→C  e454_invest_career_confidence 投资职业自信 → 消费 investment+skills 数据,
+ *     投资成功→"赚钱的能力让你更有底气"的职业自信
+ */
+(function () {
+  "use strict";
+  if (typeof RANDOM_EVENTS === "undefined" || !RANDOM_EVENTS) return;
+  if (RANDOM_EVENTS._domainELinkageR454Loaded) return;
+  RANDOM_EVENTS._domainELinkageR454Loaded = true;
+
+  function firstMetNpc(st) {
+    if (!st || !st.relationships) return null;
+    for (var id in st.relationships) { if (st.relationships[id] && st.relationships[id].met) return id; }
+    return null;
+  }
+  function bumpAffinity(st, npcId, amt, reason) {
+    if (!npcId) return;
+    if (typeof applyAffinityChange === "function") { try { applyAffinityChange(st, npcId, amt, reason); } catch(e) {} }
+  }
+  function calcPortfolioValue(st) {
+    if (!st || !st.investment || !st.investment.portfolio) return 0;
+    var p = st.investment.portfolio, total = 0;
+    if (p.stocks) { for (var s in p.stocks) { total += (p.stocks[s].shares || 0) * (p.stocks[s].avgPrice || 0); } }
+    if (p.funds) { for (var f in p.funds) { total += (p.funds[f].shares || 0) * (p.funds[f].avgPrice || 0); } }
+    return total;
+  }
+
+  var EVENTS = [
+    {
+      id: "e454_invest_social_circle", phase: "corporate", _isChainEvent: false, icon: "🤝",
+      title: "投资圈",
+      story: "你参加了一个投资交流会，遇到了几个同频的人——{desc}",
+      triggers: { minDay: 50, interval: 90, maxRepeats: 3, excludeFlags: ["_e454SocialCircleCooldown"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        var pv = calcPortfolioValue(st);
+        return pv >= 10000 && (st.flags && !st.flags._e454SocialCircleCooldown);
+      },
+      choices: [
+        { text: "🤝 加微信保持联系", hint: "社交XP+5,好感+2", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._e454SocialCircleCooldown = true;
+          if (typeof addSkillXp === "function") { try { addSkillXp("social", 5); } catch(e) {} }
+          var nid = firstMetNpc(st);
+          bumpAffinity(st, nid, 2, "投资交流会上认识");
+          if (typeof StateManager !== "undefined") StateManager.addMessage("🤝 你在投资交流会上认识了几位朋友——大家的投资理念相似，聊得很投机。社交XP+5,好感+2。", "success");
+        }},
+        { text: "📝 记下投资心得", hint: "会计XP+3", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._e454SocialCircleCooldown = true;
+          if (typeof addSkillXp === "function") { try { addSkillXp("accounting", 3); } catch(e) {} }
+          if (typeof StateManager !== "undefined") StateManager.addMessage("🤝 你把交流会上听到的投资心得记了下来——别人的经验，可以少走很多弯路。会计XP+3。", "success");
+        }}
+      ],
+      text: function (st) {
+        if (!st) return null;
+        var pv = Math.floor(calcPortfolioValue(st));
+        return "你参加了一个投资交流会，遇到了几个同频的人——大家聊着各自的投资组合（你的是¥" + pv.toLocaleString() + "），互相分享着心得。";
+      }
+    },
+    {
+      id: "e454_invest_life_quality", phase: "street", _isChainEvent: false, icon: "🏠",
+      title: "钱买得到什么",
+      story: "看着账户里的数字，你问自己——{desc}",
+      triggers: { minDay: 40, interval: 90, maxRepeats: 3, excludeFlags: ["_e454LifeQualityCooldown"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        var cash = (st.resources && st.resources.cash) || 0;
+        return cash >= 20000 && (st.flags && !st.flags._e454LifeQualityCooldown);
+      },
+      choices: [
+        { text: "🏠 改善居住环境", hint: "心情+3,健康+1,花费2000", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._e454LifeQualityCooldown = true;
+          if (st.resources && st.resources.cash >= 2000) {
+            st.resources.cash -= 2000;
+            if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 3);
+            if (st.status) st.status.health = Math.min(100, (st.status.health || 70) + 1);
+            if (typeof StateManager !== "undefined") StateManager.addMessage("🏠 你花钱把住的地方收拾了一下——换了新床单，买了盆绿植。生活品质提升了一点点。心情+3,健康+1,花费¥2000。", "success");
+          }
+        }},
+        { text: "💰 继续存着", hint: "心智+1", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._e454LifeQualityCooldown = true;
+          if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 1);
+          if (typeof StateManager !== "undefined") StateManager.addMessage("🏠 你决定继续存着——钱在手里，心里不慌。心智+1。", "success");
+        }}
+      ],
+      text: function (st) {
+        if (!st) return null;
+        var cash = (st.resources && st.resources.cash) || 0;
+        return "看着账户里的数字（¥" + Math.floor(cash).toLocaleString() + "），你问自己——钱买得到快乐吗？买得到，但买不到全部。";
+      }
+    },
+    {
+      id: "e454_invest_career_confidence", phase: "corporate", _isChainEvent: false, icon: "📈",
+      title: "底气",
+      story: "投资赚了钱之后，你发现自己整个人都更有底气了——{desc}",
+      triggers: { minDay: 45, interval: 90, maxRepeats: 3, excludeFlags: ["_e454CareerConfidenceCooldown"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        var pv = calcPortfolioValue(st);
+        return pv >= 20000 && (st.flags && !st.flags._e454CareerConfidenceCooldown);
+      },
+      choices: [
+        { text: "📈 跟老板谈加薪", hint: "管理XP+5,心智+2", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._e454CareerConfidenceCooldown = true;
+          if (typeof addSkillXp === "function") { try { addSkillXp("management", 5); } catch(e) {} }
+          if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 2);
+          if (typeof StateManager !== "undefined") StateManager.addMessage("📈 你有底气跟老板谈加薪了——'我有投资收入，不是非靠这份工资不可。' 心态变了，谈判的底气也足了。管理XP+5,心智+2。", "success");
+        }},
+        { text: "🚀 考虑创业", hint: "心智+3", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._e454CareerConfidenceCooldown = true;
+          if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 3);
+          if (typeof StateManager !== "undefined") StateManager.addMessage("📈 投资赚的钱给了你一条退路——'就算创业失败了，我还有投资兜底。' 这种安全感，是无价的。心智+3。", "success");
+        }}
+      ],
+      text: function (st) {
+        if (!st) return null;
+        var pv = Math.floor(calcPortfolioValue(st));
+        return "投资赚了钱之后，你发现自己整个人都更有底气了——¥" + pv.toLocaleString() + "的投资组合，是你跟这个世界谈判的筹码。";
       }
     }
   ];
