@@ -17,6 +17,12 @@
   if (typeof RANDOM_EVENTS === "undefined") return;
   if (RANDOM_EVENTS._crossSystemLoaded) return;
   RANDOM_EVENTS._crossSystemLoaded = true;
+  // [全系统自洽修复] 域B R534: needs 守卫辅助函数
+  function _guardNeedsB(st) {
+    if (!st.needs) st.needs = { hunger: 50, fatigue: 30, hygiene: 60, happiness: 50 };
+    return st.needs;
+  }
+
 
   var CROSS_EVENTS = [
     // === NPC关系联动事件 ===
@@ -126,7 +132,7 @@
           apply: function (st) {
             var bonus = Random.int(80, 200);
             st.resources.cash = (st.resources.cash || 0) + bonus;
-            st.needs.fatigue = Math.min(100, (st.needs.fatigue || 0) + 20);
+            _guardNeedsB(st).fatigue = Math.min(100, (_guardNeedsB(st).fatigue || 0) + 20);
             st.needs.hunger = Math.max(0, (st.needs.hunger || 0) - 15);
             StateManager.addMessage(
               "🔥 你趁热打铁多干了一轮，多赚¥" + bonus + "。但累得够呛。",
@@ -185,7 +191,7 @@
           cost: 2,
           apply: function (st) {
             st.player.mental = Math.min(100, (st.player.mental || 0) + 3);
-            st.needs.fatigue = Math.min(100, (st.needs.fatigue || 0) + 12);
+            _guardNeedsB(st).fatigue = Math.min(100, (_guardNeedsB(st).fatigue || 0) + 12);
             if (Random.chance(0.5)) {
               var tip = Random.int(20, 60);
               st.resources.cash = (st.resources.cash || 0) + tip;
@@ -207,7 +213,7 @@
           hint: "现金-30，保住客源",
           apply: function (st) {
             st.resources.cash = Math.max(0, (st.resources.cash || 0) - 30);
-            st.needs.happiness = Math.max(0, (st.needs.happiness || 0) - 6);
+            _guardNeedsB(st).happiness = Math.max(0, (_guardNeedsB(st).happiness || 0) - 6);
             StateManager.addMessage(
               "💰 行情差，你咬咬牙降价接活。少赚了¥30，但保住了几个老主顾。",
               "warning",
@@ -220,7 +226,7 @@
           hint: "心智+4，疲劳+8，为下一波风口做准备",
           apply: function (st) {
             st.player.mental = Math.min(100, (st.player.mental || 0) + 4);
-            st.needs.fatigue = Math.min(100, (st.needs.fatigue || 0) + 8);
+            _guardNeedsB(st).fatigue = Math.min(100, (_guardNeedsB(st).fatigue || 0) + 8);
             if (st.skills) {
               var keys = Object.keys(st.skills);
               if (keys.length > 0) {
@@ -385,7 +391,7 @@
           text: "🤝 安慰旁边的大爷",
           hint: "善有善报",
           apply: function (st) {
-            st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 8);
+            _guardNeedsB(st).happiness = Math.min(100, (_guardNeedsB(st).happiness || 0) + 8);
             st.flags._moralScore = (st.flags._moralScore || 0) + 1;
             st.player.fame = Math.min(100, (st.player.fame || 0) + 1);
             StateManager.addMessage(
@@ -417,7 +423,7 @@
             st.flags._foundATMCash = true;
             var amount = Random.int(300, 800);
             st.resources.cash = (st.resources.cash || 0) + amount;
-            st.needs.happiness = Math.max(0, (st.needs.happiness || 0) - 10);
+            _guardNeedsB(st).happiness = Math.max(0, (_guardNeedsB(st).happiness || 0) - 10);
             st.flags._moralScore = (st.flags._moralScore || 0) - 3;
             st.flags._keptFoundMoney = true;
             StateManager.addMessage(
@@ -433,7 +439,7 @@
           hint: "品德高尚",
           apply: function (st) {
             st.flags._foundATMCash = true;
-            st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 15);
+            _guardNeedsB(st).happiness = Math.min(100, (_guardNeedsB(st).happiness || 0) + 15);
             st.player.fame = Math.min(100, (st.player.fame || 0) + 5);
             st.flags._moralScore = (st.flags._moralScore || 0) + 3;
             st.flags._returnedFoundMoney = true;
@@ -448,7 +454,7 @@
           hint: "中间路线",
           apply: function (st) {
             st.flags._foundATMCash = true;
-            st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 5);
+            _guardNeedsB(st).happiness = Math.min(100, (_guardNeedsB(st).happiness || 0) + 5);
             st.flags._moralScore = (st.flags._moralScore || 0) + 1;
             StateManager.addMessage(
               "📸 你拍了照发到业主群。半天后有人来认领，给了你¥50感谢费。心情+5。",
@@ -481,7 +487,7 @@
             var profit = Random.int(150, 400);
             var zhouShare = Math.floor(profit * 0.3);
             st.resources.cash = (st.resources.cash || 0) + profit - zhouShare;
-            st.needs.fatigue = Math.min(100, (st.needs.fatigue || 0) + 25);
+            _guardNeedsB(st).fatigue = Math.min(100, (_guardNeedsB(st).fatigue || 0) + 25);
             st.relationships.old_zhou.affinity = Math.min(
               100,
               (st.relationships.old_zhou.affinity || 0) + 8,
@@ -786,7 +792,7 @@
             if ((st.resources.cash || 0) >= cost) {
               st.resources.cash = Math.max(0, (st.resources.cash || 0) - cost);
               st.player.fame = Math.min(100, (st.player.fame || 0) + 6);
-              st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 8);
+              _guardNeedsB(st).happiness = Math.min(100, (_guardNeedsB(st).happiness || 0) + 8);
               StateManager.addMessage(
                 "🍜 你给那个一脸迷茫的新来的点了一碗面。名气+6，心情+8。你在他眼里看到了两年前的自己。",
                 "success",
@@ -805,7 +811,7 @@
           apply: function (st) {
             st.flags._veteranWelcomeSeen = true;
             st.player.mental = Math.min(100, (st.player.mental || 0) + 5);
-            st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 5);
+            _guardNeedsB(st).happiness = Math.min(100, (_guardNeedsB(st).happiness || 0) + 5);
             StateManager.addMessage(
               "💬 你跟他说了哪些工靠谱、哪个摊的饭实惠、下雨天哪条街不涝。他听得很认真。心智+5，心情+5。",
               "success",
@@ -856,7 +862,7 @@
             var refund = Math.min(st.resources.cash, 200);
             st.resources.cash = Math.max(0, (st.resources.cash || 0) - refund);
             st.player.morality = Math.min(100, (st.player.morality || 50) + 8);
-            st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 10);
+            _guardNeedsB(st).happiness = Math.min(100, (_guardNeedsB(st).happiness || 0) + 10);
             StateManager.addMessage(
               "😰 你匿名把剩下的¥" +
                 refund +
@@ -889,7 +895,7 @@
           hint: "把秘密藏好",
           apply: function (st) {
             st.flags._walletCameraSeen = true;
-            st.needs.happiness = Math.max(0, (st.needs.happiness || 0) - 5);
+            _guardNeedsB(st).happiness = Math.max(0, (_guardNeedsB(st).happiness || 0) - 5);
             StateManager.addMessage(
               "🚶 你加快了步伐，不敢回头看。心情-5。",
               "warning",
@@ -938,7 +944,7 @@
             if ((st.resources.cash || 0) >= 15) {
               st.resources.cash = Math.max(0, (st.resources.cash || 0) - 15);
               st.status.health = Math.min(100, (st.status.health || 0) + 3);
-              st.needs.fatigue = Math.min(100, (st.needs.fatigue || 0) + 5);
+              _guardNeedsB(st).fatigue = Math.min(100, (_guardNeedsB(st).fatigue || 0) + 5);
               var pay = st.employment.currentJob.payCalc(st);
               st.resources.cash = (st.resources.cash || 0) + Math.floor(pay * 0.8);
               st.resources.totalEarned =
@@ -979,7 +985,7 @@
           hint: "零收入，健康+8，疲劳-10",
           apply: function (st) {
             st.status.health = Math.min(100, (st.status.health || 0) + 8);
-            st.needs.fatigue = Math.max(0, (st.needs.fatigue || 0) - 10);
+            _guardNeedsB(st).fatigue = Math.max(0, (_guardNeedsB(st).fatigue || 0) - 10);
             StateManager.addMessage(
               "🏠 你决定今天休息。身体是革命的本钱，健康+8。",
               "info",
@@ -1117,7 +1123,7 @@
             var bonus = Math.floor(pay * 1.5);
             st.resources.cash = (st.resources.cash || 0) + bonus;
             st.resources.totalEarned = (st.resources.totalEarned || 0) + bonus;
-            st.needs.fatigue = Math.min(100, (st.needs.fatigue || 0) + 20);
+            _guardNeedsB(st).fatigue = Math.min(100, (_guardNeedsB(st).fatigue || 0) + 20);
             if (Random.chance(0.3)) {
               st.status.health = Math.max(0, (st.status.health || 0) - 10);
               StateManager.addMessage(
@@ -1543,7 +1549,7 @@
           text: "💼 加倍努力工作保住饭碗",
           hint: "提前做好职业防御",
           apply: function (st) {
-            st.needs.fatigue = Math.min(100, st.needs.fatigue + 15);
+            _guardNeedsB(st).fatigue = Math.min(100, (_guardNeedsB(st).fatigue || 0) + 15);
             StateManager.addMessage(
               "😤 你开始主动加班、多做汇报。虽然累，但领导对你印象更深了。",
               "info",
@@ -1704,7 +1710,7 @@
           text: "🚶 找个地方避雨发呆",
           hint: "安全但没收益",
           apply: function (st) {
-            st.needs.happiness = Math.max(0, st.needs.happiness - 5);
+            _guardNeedsB(st).happiness = Math.max(0, (_guardNeedsB(st).happiness || 0) - 5);
             StateManager.addMessage(
               "🚶 你找了个屋檐蹲着等雨停，看着雨幕发呆。",
               "info",
@@ -1853,7 +1859,7 @@
           text: "💬 搭讪聊天",
           hint: "心情+10",
           apply: function (st) {
-            st.needs.happiness = Math.min(100, st.needs.happiness + 10);
+            _guardNeedsB(st).happiness = Math.min(100, (_guardNeedsB(st).happiness || 0) + 10);
             StateManager.addMessage(
               "💬 你陪老师傅聊了一下午，听他讲了几十年的见闻，心情大好。",
               "info",
@@ -2143,7 +2149,7 @@
           apply: function (st) {
             var earn = 500 + Random.int(0, 300);
             st.resources.cash = (st.resources.cash || 0) + earn;
-            st.needs.fatigue = Math.min(100, st.needs.fatigue + 20);
+            _guardNeedsB(st).fatigue = Math.min(100, (_guardNeedsB(st).fatigue || 0) + 20);
             if (st.skills && st.skills.repair) {
               st.skills.repair.level = Math.min(
                 100,
@@ -2428,7 +2434,7 @@
           text: "🙏 谢谢！太客气了",
           hint: "心情+12，获得实用礼物",
           apply: function (st) {
-            st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 12);
+            _guardNeedsB(st).happiness = Math.min(100, (_guardNeedsB(st).happiness || 50) + 12);
             // 礼物：一些食品，帮助缓解饥饿
             st.needs.hunger = Math.min(100, (st.needs.hunger || 50) + 15);
             // 随机给一点感谢费
@@ -2448,7 +2454,7 @@
           hint: "名气+3，给人留下好印象",
           apply: function (st) {
             st.player.fame = Math.min(100, (st.player.fame || 0) + 3);
-            st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 8);
+            _guardNeedsB(st).happiness = Math.min(100, (_guardNeedsB(st).happiness || 50) + 8);
             StateManager.addMessage(
               "😊 他坚持把点心塞给你：「拿着，别客气。现在像你这样认真做事的人不多了。」名气+3，心情+8。",
               "success",
@@ -2461,7 +2467,7 @@
           apply: function (st) {
             st.flags._regularClient = true;
             st.player.fame = Math.min(100, (st.player.fame || 0) + 2);
-            st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 5);
+            _guardNeedsB(st).happiness = Math.min(100, (_guardNeedsB(st).happiness || 50) + 5);
             StateManager.addMessage(
               "📱 你加了微信。他说：「好！我公司经常要送文件，以后优先找你。」名气+2，心情+5。未来可能偶尔有额外配送单。",
               "success",
@@ -2500,7 +2506,7 @@
           hint: "名气+5，但可能被记恨",
           apply: function (st) {
             st.player.fame = Math.min(100, (st.player.fame || 0) + 5);
-            st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 10);
+            _guardNeedsB(st).happiness = Math.min(100, (_guardNeedsB(st).happiness || 50) + 10);
             // 小概率被摊主找麻烦
             if (Random.chance(0.2)) {
               st.status.health = Math.max(0, (st.status.health || 70) - 3);
@@ -2586,7 +2592,7 @@
               100,
               (st.relationships.old_zhou.affinity || 0) + 8,
             );
-            st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 5);
+            _guardNeedsB(st).happiness = Math.min(100, (_guardNeedsB(st).happiness || 50) + 5);
             StateManager.addMessage(
               "🤝 老周跟铁皮棚里的人打了声招呼：「这是我小兄弟，以后他的货按内部价走。」你记下了地址，以后废品回收收入永久+30%。老周好感+8。",
               "success",
@@ -3022,7 +3028,7 @@
         )
           return false;
         // 当前也要疲劳高
-        if (!st.needs || (st.needs.fatigue || 0) < 75) return false;
+        if (!_guardNeedsB(st) || (_guardNeedsB(st).fatigue || 0) < 75) return false;
         return true;
       },
       probability: 0.15,
@@ -3055,7 +3061,7 @@
                 "info",
               );
             }
-            st.needs.fatigue = Math.max(0, (st.needs.fatigue || 0) - 30);
+            _guardNeedsB(st).fatigue = Math.max(0, (_guardNeedsB(st).fatigue || 0) - 30);
             st.status.health = Math.min(100, (st.status.health || 70) + 10);
             // 重置疲劳积累
             if (st.flags && st.flags._habits) {
@@ -3071,7 +3077,7 @@
           text: "😴 找个地方睡一觉",
           hint: "免费，恢复慢，疲劳-15",
           apply: function (st) {
-            st.needs.fatigue = Math.max(0, (st.needs.fatigue || 0) - 15);
+            _guardNeedsB(st).fatigue = Math.max(0, (_guardNeedsB(st).fatigue || 0) - 15);
             st.status.health = Math.min(100, (st.status.health || 70) + 3);
             // 小概率被驱赶（露宿街头时）
             if ((!st.housing || st.housing.tier === 0) && Random.chance(0.3)) {
@@ -3102,8 +3108,8 @@
               return;
             }
             st.resources.cash = Math.max(0, (st.resources.cash || 0) - 15);
-            st.needs.fatigue = Math.max(0, (st.needs.fatigue || 0) - 8);
-            st.needs.happiness = Math.max(0, (st.needs.happiness || 50) - 3);
+            _guardNeedsB(st).fatigue = Math.max(0, (_guardNeedsB(st).fatigue || 0) - 8);
+            _guardNeedsB(st).happiness = Math.max(0, (_guardNeedsB(st).happiness || 50) - 3);
             st.status.health = Math.max(0, (st.status.health || 70) - 3);
             StateManager.addMessage(
               "💊 你灌了一瓶功能饮料，苦涩的液体滑过喉咙。心跳又加速了，但你告诉自己还能撑。疲劳-8，健康-3，心情-3。你知道这只是在透支明天。",
@@ -3152,7 +3158,7 @@
           apply: function (st) {
             st.flags._skillComboInsightTriggered = true;
             st.player.mental = Math.min(100, (st.player.mental || 0) + 5);
-            st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 10);
+            _guardNeedsB(st).happiness = Math.min(100, (_guardNeedsB(st).happiness || 50) + 10);
             // 判断哪种组合触发
             var cooking = st.skills.cooking ? st.skills.cooking.level || 0 : 0;
             var management = st.skills.management
@@ -3244,7 +3250,7 @@
               100,
               (st.relationships.old_zhou.affinity || 0) + 5,
             );
-            st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 15);
+            _guardNeedsB(st).happiness = Math.min(100, (_guardNeedsB(st).happiness || 50) + 15);
             StateManager.addMessage(
               "🙏 你连声道谢。王大婶笑着说：「好好干，别给我们丢脸。」老周拍了拍你的肩膀：「物流园里活不重，比你在外面风吹日晒强。」心情+15，王大婶好感+5，老周好感+5。解锁了物流园固定工作机会。",
               "success",
@@ -3330,7 +3336,7 @@
             var reward = Random.int(50, 150);
             st.resources.cash = (st.resources.cash || 0) + reward;
             st.resources.totalEarned = (st.resources.totalEarned || 0) + reward;
-            st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 20);
+            _guardNeedsB(st).happiness = Math.min(100, (_guardNeedsB(st).happiness || 50) + 20);
             StateManager.addMessage(
               "😊 你摆摆手说不用。她硬是塞给你一袋水果和¥" +
                 reward +
@@ -3346,7 +3352,7 @@
           hint: "接受感谢，心情+15",
           apply: function (st) {
             st.flags._moralKarmaDay = st.player.day;
-            st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 15);
+            _guardNeedsB(st).happiness = Math.min(100, (_guardNeedsB(st).happiness || 50) + 15);
             // 对方给答谢
             var reward = Random.int(30, 100);
             st.resources.cash = (st.resources.cash || 0) + reward;
@@ -3366,7 +3372,7 @@
             st.flags._moralKarmaDay = st.player.day;
             st.player.morality = Math.min(100, (st.player.morality || 50) + 1);
             st.player.mental = Math.min(100, (st.player.mental || 0) + 1);
-            st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 10);
+            _guardNeedsB(st).happiness = Math.min(100, (_guardNeedsB(st).happiness || 50) + 10);
             StateManager.addMessage(
               "😅 你挠了挠头说：「那天也是碰巧遇到，换了谁都会帮忙的。」她说：「但帮了就是帮了，我记在心里。」道德+1，心智+1，心情+10。",
               "success",
@@ -3406,7 +3412,7 @@
           text: "😅 尴尬地快速吃完离开",
           hint: "心情-8，但省钱",
           apply: function (st) {
-            st.needs.happiness = Math.max(0, (st.needs.happiness || 50) - 8);
+            _guardNeedsB(st).happiness = Math.max(0, (_guardNeedsB(st).happiness || 50) - 8);
             st.player.mental = Math.max(0, (st.player.mental || 0) + 1);
             StateManager.addMessage(
               "😅 你低着头快速吃完面，放下钱就走了。走到门口你深吸一口气——下次一定记得洗澡。心情-8，但这段尴尬让你长了记性，心智+1。",
@@ -3419,12 +3425,10 @@
           hint: "心智+2，可能获得理解",
           apply: function (st) {
             st.player.mental = Math.min(100, (st.player.mental || 0) + 2);
-            st.needs.happiness = Math.max(0, (st.needs.happiness || 50) - 3);
+            _guardNeedsB(st).happiness = Math.max(0, (_guardNeedsB(st).happiness || 50) - 3);
             // 小概率获得理解
             if (Random.chance(0.4)) {
-              st.needs.happiness = Math.min(
-                100,
-                (st.needs.happiness || 50) + 5,
+              _guardNeedsB(st).happiness = Math.min(100, (_guardNeedsB(st).happiness || 50) + 5,
               );
               StateManager.addMessage(
                 "💪 你自嘲地笑了笑说：「老板，不好意思，最近忙得连澡都没洗。」老板愣了一下，反而笑了：「没事，年轻人谁没狼狈过。来，送你个荷包蛋。」心情-3，心智+2，但老板的善意让你稍微好受了些。",
@@ -3451,7 +3455,7 @@
             }
             st.resources.cash = Math.max(0, (st.resources.cash || 0) - 15);
             st.needs.hygiene = Math.min(100, (st.needs.hygiene || 0) + 30);
-            st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 8);
+            _guardNeedsB(st).happiness = Math.min(100, (_guardNeedsB(st).happiness || 50) + 8);
             // 重置卫生积累
             if (st.flags && st.flags._habits) {
               st.flags._habits.lowHygieneStreak = 0;
@@ -3501,7 +3505,7 @@
           apply: function (st) {
             st.flags._stormShelterDay = st.player.day;
             st.player.mental = Math.min(100, (st.player.mental || 0) + 2);
-            st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 8);
+            _guardNeedsB(st).happiness = Math.min(100, (_guardNeedsB(st).happiness || 50) + 8);
             if (Random.chance(0.3)) {
               st.flags._oldManTip = true;
               StateManager.addMessage(
@@ -3525,7 +3529,7 @@
               100,
               (st.player.intelligence || 0) + 1,
             );
-            st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 5);
+            _guardNeedsB(st).happiness = Math.min(100, (_guardNeedsB(st).happiness || 50) + 5);
             if (st.skills && st.skills.english) {
               st.skills.english.xp = (st.skills.english.xp || 0) + 25;
             }
@@ -3587,7 +3591,7 @@
               100,
               (st.relationships.chef_chen.affinity || 0) + 5,
             );
-            st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 10);
+            _guardNeedsB(st).happiness = Math.min(100, (_guardNeedsB(st).happiness || 50) + 10);
             StateManager.addMessage(
               "🙏 陈师傅手把手教你调酱：「辣椒先焙一下出香味，蒜末最后放才不苦。」你学了一手地道的麻辣调料配方，以后做饭效果更好了！烹饪XP+80，心情+10，陈师傅好感+5。",
               "success",
@@ -3603,7 +3607,7 @@
               100,
               (st.relationships.chef_chen.affinity || 0) + 3,
             );
-            st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 8);
+            _guardNeedsB(st).happiness = Math.min(100, (_guardNeedsB(st).happiness || 50) + 8);
             st.needs.hunger = Math.min(100, (st.needs.hunger || 50) + 10);
             StateManager.addMessage(
               "😋 你尝了一口——辣得直呼气但确实香！陈师傅得意地笑了：「是吧？我琢磨了一礼拜。」心情+8，好感+3，饥饿+10。",
@@ -3735,7 +3739,7 @@
                 );
               }
             }
-            st.needs.happiness = Math.min(100, (st.needs.happiness || 50) - 5);
+            _guardNeedsB(st).happiness = Math.min(100, (_guardNeedsB(st).happiness || 50) - 5);
             StateManager.addMessage(
               "💰 你花了¥" +
                 cost +
@@ -3749,7 +3753,7 @@
           hint: "免费，但效率降低",
           apply: function (st) {
             st.flags._equipBreakDay = st.player.day;
-            st.needs.happiness = Math.max(0, (st.needs.happiness || 50) - 5);
+            _guardNeedsB(st).happiness = Math.max(0, (_guardNeedsB(st).happiness || 50) - 5);
             StateManager.addMessage(
               "😤 你用胶带缠了缠勉强继续用。干活时总有点使不上劲，心里也烦躁。心情-5。你知道这样撑不了多久。",
               "warning",
@@ -3774,8 +3778,8 @@
         if (st.player.day < 20) return false;
         // 通过高疲劳和低心情间接判断倦怠
         if (!st.needs) return false;
-        if ((st.needs.happiness || 50) > 30) return false;
-        if ((st.needs.fatigue || 0) < 60) return false;
+        if ((_guardNeedsB(st).happiness || 50) > 30) return false;
+        if ((_guardNeedsB(st).fatigue || 0) < 60) return false;
         if (
           st.flags._jobBurnoutDay &&
           st.player.day - st.flags._jobBurnoutDay < 14
@@ -3792,8 +3796,8 @@
           apply: function (st) {
             st.flags._jobBurnoutDay = st.player.day;
             st.player.mental = Math.min(100, (st.player.mental || 0) + 3);
-            st.needs.fatigue = Math.max(0, (st.needs.fatigue || 0) - 10);
-            st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 5);
+            _guardNeedsB(st).fatigue = Math.max(0, (_guardNeedsB(st).fatigue || 0) - 10);
+            _guardNeedsB(st).happiness = Math.min(100, (_guardNeedsB(st).happiness || 50) + 5);
             StateManager.addMessage(
               "💪 你决定换个活法。去批发市场转了转，发现有个摊位在招临时搬运工。虽然也是体力活，但新鲜感让精神好了不少。心智+3，疲劳-10，心情+5。有时候换个环境比硬撑有用。",
               "success",
@@ -3806,7 +3810,7 @@
           apply: function (st) {
             st.flags._jobBurnoutDay = st.player.day;
             st.player.mental = Math.min(100, (st.player.mental || 0) + 4);
-            st.needs.fatigue = Math.min(100, (st.needs.fatigue || 0) + 5);
+            _guardNeedsB(st).fatigue = Math.min(100, (_guardNeedsB(st).fatigue || 0) + 5);
             if (st.skills) {
               var keys = Object.keys(st.skills);
               if (keys.length > 0) {
@@ -3836,7 +3840,7 @@
           hint: "心情-8，但今天收入+20%",
           apply: function (st) {
             st.flags._jobBurnoutDay = st.player.day;
-            st.needs.happiness = Math.max(0, (st.needs.happiness || 50) - 8);
+            _guardNeedsB(st).happiness = Math.max(0, (_guardNeedsB(st).happiness || 50) - 8);
             st.flags._burnoutHardWorkDay = st.player.day;
             StateManager.addMessage(
               "😤 你咬咬牙站起来接着干。虽然心里一万个不情愿，但手没停。今天比平时多干了一些——但你知道这样撑不了太久。心情-8。",
@@ -3925,7 +3929,7 @@
           apply: function (st) {
             st.flags._sickWorkDay = st.player.day;
             st.status.health = Math.min(100, (st.status.health || 70) + 5);
-            st.needs.fatigue = Math.max(0, (st.needs.fatigue || 0) - 15);
+            _guardNeedsB(st).fatigue = Math.max(0, (_guardNeedsB(st).fatigue || 0) - 15);
             StateManager.addMessage(
               "😅 你收了摊往回走。虽然今天没赚到钱，但身体是革命的本钱——你把这句话想了三遍才安心躺下。健康+5，疲劳-15。",
               "info",
@@ -3947,7 +3951,7 @@
         "你今天醒来就不想动。不是身体累，是心里空了一块。\n\n你盯着天花板想：每天醒来→干活→吃饭→睡觉→再醒来，到底图什么？这座城市有千万人，但没有一个人真的在意你。\n\n你翻了个身，把脸埋进枕头里。",
       conditions: function (st) {
         if (st.player.day < 15) return false;
-        if (!st.needs || (st.needs.happiness || 50) >= 20) return false;
+        if (!_guardNeedsB(st) || (_guardNeedsB(st).happiness || 50) >= 20) return false;
         if (!st.status || (st.status.health || 70) < 20) return false;
         if (st.flags._lowMoodDay && st.player.day - st.flags._lowMoodDay < 20)
           return false;
@@ -3962,11 +3966,9 @@
           apply: function (st) {
             st.flags._lowMoodDay = st.player.day;
             st.player.mental = Math.min(100, (st.player.mental || 0) + 4);
-            st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 10);
+            _guardNeedsB(st).happiness = Math.min(100, (_guardNeedsB(st).happiness || 50) + 10);
             if (Random.chance(0.35)) {
-              st.needs.happiness = Math.min(
-                100,
-                (st.needs.happiness || 50) + 8,
+              _guardNeedsB(st).happiness = Math.min(100, (_guardNeedsB(st).happiness || 50) + 8,
               );
               StateManager.addMessage(
                 "💪 你逼自己出了门，在街上漫无目的地走。路过公园时，一个追球跑的小女孩撞到你腿上摔倒了，她抬头看了看你，递给你半块饼干：「哥哥，给你吃。」你愣在原地，突然笑了出来。心智+4，心情+18。",
@@ -3985,7 +3987,7 @@
           hint: "心情-3，但不会更糟",
           apply: function (st) {
             st.flags._lowMoodDay = st.player.day;
-            st.needs.happiness = Math.max(0, (st.needs.happiness || 50) - 3);
+            _guardNeedsB(st).happiness = Math.max(0, (_guardNeedsB(st).happiness || 50) - 3);
             st.player.mental = Math.max(0, (st.player.mental || 0) + 1);
             StateManager.addMessage(
               "😐 你躺着盯着天花板，什么都不想干。迷迷糊糊睡了一觉，醒来时天已经暗了。虽然状态没变好，但至少休息了一下。心智+1，心情-3。有些日子，熬过去就是胜利。",
@@ -4006,16 +4008,14 @@
               );
             }
             if (Random.chance(0.4)) {
-              st.needs.happiness = Math.min(
-                100,
-                (st.needs.happiness || 50) + 5,
+              _guardNeedsB(st).happiness = Math.min(100, (_guardNeedsB(st).happiness || 50) + 5,
               );
               StateManager.addMessage(
                 "😠 你跑到小卖部跟老板吵了一架——因为一个¥2的打火机。老板被你吼懵了，反而给你递了根烟：「小伙子，有啥过不去的？来，抽根烟缓缓。」你突然觉得自己很可笑。道德-3，心情+5。",
                 "warning",
               );
             } else {
-              st.needs.happiness = Math.max(0, (st.needs.happiness || 50) - 5);
+              _guardNeedsB(st).happiness = Math.max(0, (_guardNeedsB(st).happiness || 50) - 5);
               st.player.fame = Math.max(0, (st.player.fame || 0) - 2);
               StateManager.addMessage(
                 "😠 你莫名其妙对着路边发传单的人吼了一通。那人愣愣地看着你走开，什么都没说。走远了你才觉得自己像个混蛋。道德-3，心情-5，名气-2。",
@@ -4067,7 +4067,7 @@
               100,
               (st.relationships.xiao_mei.affinity || 0) + 8,
             );
-            st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 10);
+            _guardNeedsB(st).happiness = Math.min(100, (_guardNeedsB(st).happiness || 50) + 10);
             StateManager.addMessage(
               "📚 你跟着小美和她的同学在图书馆泡了一下午。虽然一开始有点跟不上，但小美很有耐心地给你讲解。临走时她还借了你一本英语语法书。智力+3，英语XP+40，编程XP+40，心情+10。有同伴一起学，感觉没那么难了。",
               "success",
@@ -4135,7 +4135,7 @@
             st.flags._techparkIdeaDone = true;
             st.flags._techparkInspiration = true;
             st.player.mental = Math.min(100, (st.player.mental || 0) + 5);
-            st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 10);
+            _guardNeedsB(st).happiness = Math.min(100, (_guardNeedsB(st).happiness || 50) + 10);
             StateManager.addMessage(
               "💡 你找了个角落坐下，掏出手机记下了几个想法：帮小商家做外卖小程序、写一个二手物品交易工具……你越写越兴奋。心智+5，心情+10。获得创业灵感储备——以后创业项目选择时多一个选项。",
               "success",
@@ -4238,18 +4238,14 @@
                 100,
                 (st.relationships[bestNpc].affinity || 0) + 5,
               );
-              st.needs.happiness = Math.min(
-                100,
-                (st.needs.happiness || 50) + 10,
+              _guardNeedsB(st).happiness = Math.min(100, (_guardNeedsB(st).happiness || 50) + 10,
               );
               StateManager.addMessage(
                 "📱 你鼓起勇气发了一条消息。对方居然很快回复了——虽然只是寒暄了几句，但有人回应的感觉真好。心情+10，好感+5。",
                 "success",
               );
             } else {
-              st.needs.happiness = Math.min(
-                100,
-                (st.needs.happiness || 50) + 5,
+              _guardNeedsB(st).happiness = Math.min(100, (_guardNeedsB(st).happiness || 50) + 5,
               );
               StateManager.addMessage(
                 "📱 你翻了半天通讯录，最后给家里打了个电话。妈妈接了，问吃过饭没有。你说吃了，她说那就好。挂了电话，心里暖了一点。心情+5。",
@@ -4263,7 +4259,7 @@
           hint: "心情+5，可能遇到邻居",
           apply: function (st) {
             st.flags._lonelinessDay = st.player.day;
-            st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 5);
+            _guardNeedsB(st).happiness = Math.min(100, (_guardNeedsB(st).happiness || 50) + 5);
             if (Random.chance(0.3)) {
               st.flags._neighborMet = true;
               StateManager.addMessage(
@@ -4326,7 +4322,7 @@
             if ((st.resources.cash || 0) >= repay) {
               st.resources.cash = Math.max(0, (st.resources.cash || 0) - repay);
               st.resources.debt = Math.max(0, (st.resources.debt || 0) - repay);
-              st.needs.happiness = Math.max(0, (st.needs.happiness || 50) - 5);
+              _guardNeedsB(st).happiness = Math.max(0, (_guardNeedsB(st).happiness || 50) - 5);
               StateManager.addMessage(
                 "🙏 你数了¥" +
                   repay +
@@ -4388,7 +4384,7 @@
                 (st.flags.moral.score || 0) - 5,
               );
             }
-            st.needs.happiness = Math.max(0, (st.needs.happiness || 50) - 8);
+            _guardNeedsB(st).happiness = Math.max(0, (_guardNeedsB(st).happiness || 50) - 8);
             StateManager.addMessage(
               "🏃 你低头转身挤进人群。背后传来一声喊：「喂！我看到你了！」你加快脚步，直到听不见那个声音才停下来。道德-5，心情-8。你觉得自己像个逃犯。",
               "danger",
@@ -4542,7 +4538,7 @@
             st.player.physique = Math.min(100, (st.player.physique || 0) + 3);
             st.player.mental = Math.min(100, (st.player.mental || 0) + 3);
             st.status.health = Math.min(100, (st.status.health || 70) + 8);
-            st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 10);
+            _guardNeedsB(st).happiness = Math.min(100, (_guardNeedsB(st).happiness || 50) + 10);
             StateManager.addMessage(
               "🙏 大爷教你几招太极拳——野马分鬃、白鹤亮翅。一开始你手脚不协调，但大爷说你「筋骨不错」。打完一套，你感觉浑身舒畅。体质+3，心智+3，健康+8，心情+10。",
               "success",
@@ -4556,7 +4552,7 @@
             st.flags._parkHabitDay = st.player.day;
             st.player.physique = Math.min(100, (st.player.physique || 0) + 2);
             st.status.health = Math.min(100, (st.status.health || 70) + 5);
-            st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 5);
+            _guardNeedsB(st).happiness = Math.min(100, (_guardNeedsB(st).happiness || 50) + 5);
             StateManager.addMessage(
               "💪 你在公园跑了四圈。虽然没有大爷的太极那么有门道，但出了一身汗的感觉也不错。体质+2，健康+5，心情+5。",
               "success",
@@ -4678,16 +4674,14 @@
             if (hasPull) {
               st.flags._siteSafetyImproved = true;
               st.player.fame = Math.min(100, (st.player.fame || 0) + 5);
-              st.needs.happiness = Math.min(
-                100,
-                (st.needs.happiness || 50) + 8,
+              _guardNeedsB(st).happiness = Math.min(100, (_guardNeedsB(st).happiness || 50) + 8,
               );
               StateManager.addMessage(
                 "😤 你去找工头说了安全问题。他本来想打发你走，但看你态度坚决，加上认识你，同意了加强安全措施。工友们对你刮目相看。名气+5，心情+8，工地安全改善了。",
                 "success",
               );
             } else {
-              st.needs.happiness = Math.max(0, (st.needs.happiness || 50) - 5);
+              _guardNeedsB(st).happiness = Math.max(0, (_guardNeedsB(st).happiness || 50) - 5);
               StateManager.addMessage(
                 "😤 你去找工头反映，他没当回事：「干这行哪有不擦破皮的？不想干可以走。」心情-5。你站了一会儿，转身回去继续干活。",
                 "warning",
@@ -4751,7 +4745,7 @@
             st.resources.cash = (st.resources.cash || 0) + tip;
             st.resources.totalEarned = (st.resources.totalEarned || 0) + tip;
             st.player.fame = Math.min(100, (st.player.fame || 0) + 3);
-            st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 10);
+            _guardNeedsB(st).happiness = Math.min(100, (_guardNeedsB(st).happiness || 50) + 10);
             StateManager.addMessage(
               "🔧 你蹲下看了看，三两下就帮他装好了。他惊讶地说：「高手啊！比修车铺还快。」非要塞给你¥" +
                 tip +
@@ -4766,7 +4760,7 @@
           apply: function (st) {
             st.flags._skillNoticedDay = st.player.day;
             st.player.fame = Math.min(100, (st.player.fame || 0) + 1);
-            st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 3);
+            _guardNeedsB(st).happiness = Math.min(100, (_guardNeedsB(st).happiness || 50) + 3);
             StateManager.addMessage(
               "👀 你说自己也不太会，指了前面修车铺的位置给他。他道了谢推着车走了。名气+1，心情+3。",
               "info",
@@ -4819,7 +4813,7 @@
             );
             st.player.mental = Math.min(100, (st.player.mental || 0) + 3);
             st.flags._libraryMentorContact = true;
-            st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 12);
+            _guardNeedsB(st).happiness = Math.min(100, (_guardNeedsB(st).happiness || 50) + 12);
             StateManager.addMessage(
               "🙏 中年人姓方，是退休的大学老师。他花了半小时用最浅显的方式给你讲清楚了那个公式，还顺手帮你梳理了一章的知识框架。临走时他给了你一个微信号：「有问题可以问我，反正退休了没事。」智力+4，心智+3，心情+12。免费的导师，比黄金还珍贵。",
               "success",
@@ -4883,7 +4877,7 @@
             st.resources.cash = (st.resources.cash || 0) + Math.round(earn * 1.2);
             st.resources.totalEarned =
               (st.resources.totalEarned || 0) + Math.round(earn * 1.2);
-            st.needs.fatigue = Math.min(100, (st.needs.fatigue || 0) + 25);
+            _guardNeedsB(st).fatigue = Math.min(100, (_guardNeedsB(st).fatigue || 0) + 25);
             st.status.health = Math.max(0, (st.status.health || 70) - 6);
             StateManager.addMessage(
               "🔥 你顶着太阳干了一整天，赚了¥" +
@@ -4907,7 +4901,7 @@
             st.resources.cash = Math.max(0, (st.resources.cash || 0) - 10);
             var earn = Random.int(30, 80);
             st.resources.cash = (st.resources.cash || 0) + earn;
-            st.needs.fatigue = Math.min(100, (st.needs.fatigue || 0) + 10);
+            _guardNeedsB(st).fatigue = Math.min(100, (_guardNeedsB(st).fatigue || 0) + 10);
             StateManager.addMessage(
               "🏪 你花¥10买了个西瓜，边吃边找阴凉处做了点零活，赚了¥" +
                 earn +
@@ -4920,7 +4914,7 @@
           text: "💪 今天休息，在家避暑",
           hint: "保护身体，0收入",
           apply: function (st) {
-            st.needs.fatigue = Math.max(0, (st.needs.fatigue || 0) - 10);
+            _guardNeedsB(st).fatigue = Math.max(0, (_guardNeedsB(st).fatigue || 0) - 10);
             StateManager.addMessage(
               "💪 你选择在家里歇着。身体是革命的本钱，今天不进账也不亏。疲劳-10。",
               "info",
@@ -4958,7 +4952,7 @@
             var earn = Random.int(30, 60);
             st.resources.cash = (st.resources.cash || 0) + earn;
             st.resources.totalEarned = (st.resources.totalEarned || 0) + earn;
-            st.needs.fatigue = Math.min(100, (st.needs.fatigue || 0) + 15);
+            _guardNeedsB(st).fatigue = Math.min(100, (_guardNeedsB(st).fatigue || 0) + 15);
             StateManager.addMessage(
               "📦 你接了第一单调货单，跑了一下午赚了¥" +
                 earn +
@@ -5194,7 +5188,7 @@
           hint: "熟悉环境",
           apply: function (st) {
             st.flags._libraryDiscovered = true;
-            st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 5);
+            _guardNeedsB(st).happiness = Math.min(100, (_guardNeedsB(st).happiness || 50) + 5);
             StateManager.addMessage(
               "🔍 你在图书馆里逛了一圈，记住了各类书籍的位置。以后有需要可以来找资料。心情+5。",
               "info",
@@ -5247,7 +5241,7 @@
               100,
               (st.player.intelligence || 10) + 2,
             );
-            st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 8);
+            _guardNeedsB(st).happiness = Math.min(100, (_guardNeedsB(st).happiness || 50) + 8);
             StateManager.addMessage(
               "📕 你花了整个下午抄写笔记。这本旧书里全是真·生存智慧。智力+2，心情+8。获得了「城市生存指南」——街头工作收入+8%！",
               "success",
@@ -5259,7 +5253,7 @@
           hint: "收获心灵安慰",
           apply: function (st) {
             st.flags._libraryRareBookFound = true;
-            st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 15);
+            _guardNeedsB(st).happiness = Math.min(100, (_guardNeedsB(st).happiness || 50) + 15);
             st.status.health = Math.min(100, (st.status.health || 50) + 3);
             StateManager.addMessage(
               "🔖 你把纸条小心折好放进口袋。那句「你比它想象的更硬」让你心里一暖。心情+15，健康+3。",
@@ -5273,7 +5267,7 @@
           apply: function (st) {
             st.flags._libraryRareBookFound = true;
             st.player.fame = Math.min(100, (st.player.fame || 0) + 3);
-            st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 6);
+            _guardNeedsB(st).happiness = Math.min(100, (_guardNeedsB(st).happiness || 50) + 6);
             StateManager.addMessage(
               "📱 你把旧书和纸条拍了照发到网上，配文「来自2008年的城市生存指南」。收获了不少点赞和共鸣。名声+3，心情+6。",
               "success",
@@ -5376,7 +5370,7 @@
         hint: "心情+15，道德+1",
         apply: function (st) {
           if (st.flags) st.flags._depressionKindnessDone = true;
-          if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 15);
+          if (st.needs) _guardNeedsB(st).happiness = Math.min(100, (_guardNeedsB(st).happiness || 50) + 15);
           if (st.player) st.player.morality = Math.min(100, (st.player.morality || 50) + 1);
           if (st.needs) st.needs.hunger = Math.min(100, (st.needs.hunger || 50) + 10);
           StateManager.addMessage("☀️ 你接过红薯，咬了一口——很甜。大爷笑了笑：「这就对了，日子再难，也得吃口热乎的。」心情+15，道德+1。", "success");
@@ -5465,7 +5459,7 @@
             var saved = Random.int(10, 30);
             st.resources.cash = Math.max(0, (st.resources.cash || 0) - saved); // 交通费
             st.needs.hunger = Math.min(100, (st.needs.hunger || 0) + 20);
-            st.needs.fatigue = Math.min(100, (st.needs.fatigue || 0) + 8);
+            _guardNeedsB(st).fatigue = Math.min(100, (_guardNeedsB(st).fatigue || 0) + 8);
             StateManager.addMessage(
               "🛒 你跑到批发市场批了一堆菜，虽然路费花了¥" +
                 saved +
@@ -5481,7 +5475,7 @@
             var cheap = Random.int(3, 8);
             st.resources.cash = Math.max(0, (st.resources.cash || 0) - cheap);
             st.needs.hunger = Math.min(100, (st.needs.hunger || 0) + 12);
-            st.needs.happiness = Math.max(0, (st.needs.happiness || 50) - 3);
+            _guardNeedsB(st).happiness = Math.max(0, (_guardNeedsB(st).happiness || 50) - 3);
             StateManager.addMessage(
               "🥬 白菜豆腐对付一顿了。花了¥" +
                 cheap +
@@ -5530,8 +5524,8 @@
           text: "🍜 吃自带泡面，省钱又踏实",
           hint: "疲劳+5，心情-2，但省¥20+",
           apply: function (st) {
-            st.needs.fatigue = Math.min(100, (st.needs.fatigue || 0) + 5);
-            st.needs.happiness = Math.max(0, (st.needs.happiness || 50) - 2);
+            _guardNeedsB(st).fatigue = Math.min(100, (_guardNeedsB(st).fatigue || 0) + 5);
+            _guardNeedsB(st).happiness = Math.max(0, (_guardNeedsB(st).happiness || 50) - 2);
             StateManager.addMessage(
               "🍜 泡面泡了3分钟，虽然简单但热乎。雨天能安稳吃口热的就不错了。",
               "info",
@@ -5548,9 +5542,7 @@
             if ((st.resources.cash || 0) >= total) {
               st.resources.cash = Math.max(0, (st.resources.cash || 0) - total);
               st.needs.hunger = Math.min(100, (st.needs.hunger || 0) + 35);
-              st.needs.happiness = Math.min(
-                100,
-                (st.needs.happiness || 50) + 5,
+              _guardNeedsB(st).happiness = Math.min(100, (_guardNeedsB(st).happiness || 50) + 5,
               );
               StateManager.addMessage(
                 "📱 热腾腾的外卖到了！花了¥" +
@@ -5580,7 +5572,7 @@
               );
             } else {
               st.needs.hunger = Math.min(100, (st.needs.hunger || 0) + 20);
-              st.needs.fatigue = Math.min(100, (st.needs.fatigue || 0) + 10);
+              _guardNeedsB(st).fatigue = Math.min(100, (_guardNeedsB(st).fatigue || 0) + 10);
               StateManager.addMessage(
                 "🏪 你冒雨跑到了便利店，买了碗热汤面。虽然累但没生病。疲劳+10。",
                 "info",
@@ -5643,7 +5635,7 @@
           text: "😊 继续做自己认为对的事",
           hint: "心情+5，道德flag回声",
           apply: function (st) {
-            st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 5);
+            _guardNeedsB(st).happiness = Math.min(100, (_guardNeedsB(st).happiness || 50) + 5);
             st.player.mental = Math.min(100, (st.player.mental || 50) + 2);
             StateManager.addMessage(
               "😊 你笑了笑，继续往前走。不管别人怎么看，你知道自己做对了。心情+5，心智+2。",
@@ -5715,8 +5707,8 @@
         apply: function (st) {
           st.flags._hardModeSurvivalReflectionSeen = true;
           st.player.mental = Math.min(100, (st.player.mental || 0) + 8);
-          st.needs.fatigue = Math.min(100, (st.needs.fatigue || 0) + 10);
-          st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 5);
+          _guardNeedsB(st).fatigue = Math.min(100, (_guardNeedsB(st).fatigue || 0) + 10);
+          _guardNeedsB(st).happiness = Math.min(100, (_guardNeedsB(st).happiness || 0) + 5);
           StateManager.addMessage(
             "🌆 你站起来拍了拍裤子上的灰。旁边卖烤红薯的大爷看了你一眼，递过来一个：「拿着，不要钱。年轻人，别轻易说不信了。」你鼻子一酸，咬了口红薯，甜的。\n心智+8，疲劳+10，心情+5。",
             "success",
@@ -5728,7 +5720,7 @@
         hint: "亲情回血，心情+15",
         apply: function (st) {
           st.flags._hardModeSurvivalReflectionSeen = true;
-          st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 15);
+          _guardNeedsB(st).happiness = Math.min(100, (_guardNeedsB(st).happiness || 0) + 15);
           st.player.mental = Math.min(100, (st.player.mental || 0) + 3);
           st.resources.cash = Math.max(0, (st.resources.cash || 0) - 10);
           StateManager.addMessage(
@@ -5742,7 +5734,7 @@
         hint: "疲劳-20，心智-5，先活下来",
         apply: function (st) {
           st.flags._hardModeSurvivalReflectionSeen = true;
-          st.needs.fatigue = Math.max(0, (st.needs.fatigue || 0) - 20);
+          _guardNeedsB(st).fatigue = Math.max(0, (_guardNeedsB(st).fatigue || 0) - 20);
           st.player.mental = Math.max(0, (st.player.mental || 0) - 5);
           StateManager.addMessage(
             "😞 你找了个桥洞下面的避风处，把外套裹紧了些。今晚先活过去，明天的事明天想。\n疲劳-20，心智-5。活着才有翻盘的机会。",
@@ -5813,9 +5805,9 @@
         hint: "心情+15，心智+5",
         apply: function (st) {
           st.flags._investmentLossAnxietySeen = true;
-          st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 15);
+          _guardNeedsB(st).happiness = Math.min(100, (_guardNeedsB(st).happiness || 0) + 15);
           st.player.mental = Math.min(100, (st.player.mental || 0) + 5);
-          st.needs.fatigue = Math.min(100, (st.needs.fatigue || 0) + 5);
+          _guardNeedsB(st).fatigue = Math.min(100, (_guardNeedsB(st).fatigue || 0) + 5);
           StateManager.addMessage(
             "🧘 你沿着江边走了两个小时。风吹在脸上，慢慢把脑子里的K线吹散了。想明白一件事：只要人还在，钱可以再赚。\n心情+15，心智+5，疲劳+5。",
             "info",
@@ -5870,8 +5862,8 @@
             st.flags._skillBridgeRemoteSeen = true;
             st.flags._remoteWorkUnlocked = true;
             st.resources.cash = (st.resources.cash || 0) + 5000;
-            st.needs.fatigue = Math.min(100, (st.needs.fatigue || 0) + 25);
-            st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 12);
+            _guardNeedsB(st).fatigue = Math.min(100, (_guardNeedsB(st).fatigue || 0) + 25);
+            _guardNeedsB(st).happiness = Math.min(100, (_guardNeedsB(st).happiness || 0) + 12);
             st.player.mental = Math.min(100, (st.player.mental || 0) + 5);
             if (st.skills && st.skills.coding)
               st.skills.coding.xp = (st.skills.coding.xp || 0) + 50;
@@ -5889,7 +5881,7 @@
           apply: function (st) {
             st.flags._skillBridgeRemoteSeen = true;
             st.flags._remoteWorkDeferred = true;
-            st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 3);
+            _guardNeedsB(st).happiness = Math.min(100, (_guardNeedsB(st).happiness || 0) + 3);
             StateManager.addMessage(
               "📋 你收藏了那条私信，准备等英语再好一些再回复。机会在那里，不会自己跑掉。心情+3。",
               "info",
@@ -5940,7 +5932,7 @@
           st.flags._debtAnxietyDone = true;
           st.skills.mental = st.skills.mental || { level: 0, xp: 0 };
           st.skills.mental.xp = (st.skills.mental.xp || 0) + 20;
-          st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 5);
+          _guardNeedsB(st).happiness = Math.min(100, (_guardNeedsB(st).happiness || 50) + 5);
           StateManager.addMessage(
             "📝 你打开Excel，把债务拆分成12期。虽然数字还是那么大，但至少有了方向。心情+5，心智经验+20。",
             "success",
@@ -5952,8 +5944,8 @@
         hint: "疲劳+10，决心+3",
         apply: function (st) {
           st.flags._debtAnxietyDone = true;
-          st.needs.fatigue = Math.min(100, (st.needs.fatigue || 0) + 10);
-          st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 3);
+          _guardNeedsB(st).fatigue = Math.min(100, (_guardNeedsB(st).fatigue || 0) + 10);
+          _guardNeedsB(st).happiness = Math.min(100, (_guardNeedsB(st).happiness || 50) + 3);
           StateManager.addMessage(
             "💪 你咬着牙关掉手机，定了个五点的闹钟。多干一份活，就多还一份钱。疲劳+10，心情+3。",
             "info",
@@ -5966,7 +5958,7 @@
         apply: function (st) {
           st.flags._debtAnxietyDone = true;
           st.status.health = Math.max(0, (st.status.health || 100) - 3);
-          st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 2);
+          _guardNeedsB(st).happiness = Math.min(100, (_guardNeedsB(st).happiness || 50) + 2);
           StateManager.addMessage(
             "🍺 你买了瓶啤酒坐在路边喝。酒劲上来时，那些数字暂时模糊了。但明天醒来，它们还在。健康-3，心情+2。",
             "warning",
@@ -6019,7 +6011,7 @@
         apply: function (st) {
           st.flags._badWeatherBluesDone = true;
           st.resources.cash = (st.resources.cash || 0) - 10;
-          st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 5);
+          _guardNeedsB(st).happiness = Math.min(100, (_guardNeedsB(st).happiness || 50) + 5);
           StateManager.addMessage(
             "☕ 便利店的暖光灯下，一杯热奶茶下肚，整个人都活过来了。花费¥10，心情+5。",
             "success",
@@ -6043,8 +6035,8 @@
         hint: "疲劳-5，心情-3",
         apply: function (st) {
           st.flags._badWeatherBluesDone = true;
-          st.needs.fatigue = Math.max(0, (st.needs.fatigue || 0) - 5);
-          st.needs.happiness = Math.max(0, (st.needs.happiness || 50) - 3);
+          _guardNeedsB(st).fatigue = Math.max(0, (_guardNeedsB(st).fatigue || 0) - 5);
+          _guardNeedsB(st).happiness = Math.max(0, (_guardNeedsB(st).happiness || 50) - 3);
           StateManager.addMessage(
             "😴 你裹着被子听着雨声发呆。虽然状态恢复了一些，但心里总觉得在浪费时间。",
             "info",
@@ -6107,7 +6099,7 @@
         hint: "心情+，但会迟到",
         apply: function (st) {
           st.flags._stormyCommuteDone = true;
-          st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 5);
+          _guardNeedsB(st).happiness = Math.min(100, (_guardNeedsB(st).happiness || 50) + 5);
           st.resources.cash = (st.resources.cash || 0) - 8;
           StateManager.addMessage(
             "☕ 你在便利店买了杯热咖啡，看着窗外雨幕发呆。迟到了十五分钟，但至少人是干的。心情+5，花费¥8。",
@@ -6154,7 +6146,7 @@
       if (st.housing.tier >= 1) return false; // 只要有住处就触发不了
       if (st.flags && st.flags._homelessCrisisDone) return false;
       if ((st.status.health || 100) < 40) return true;
-      if ((st.needs.happiness || 50) < 15) return true;
+      if ((_guardNeedsB(st).happiness || 50) < 15) return true;
       if ((st.player.mental || 50) < 15) return true;
       return false;
     },
@@ -6166,7 +6158,7 @@
         apply: function (st) {
           st.flags._homelessCrisisDone = true;
           st.player.mental = Math.min(100, (st.player.mental || 50) + 5);
-          st.needs.fatigue = Math.min(100, (st.needs.fatigue || 50) + 15);
+          _guardNeedsB(st).fatigue = Math.min(100, (_guardNeedsB(st).fatigue || 50) + 15);
           StateManager.addMessage(
             "💪 你使劲搓了搓脸，迎着晨光走向劳务市场。不能再这样下去了——今天必须多赚点。心智+5，疲劳+15。",
             "info",
@@ -6192,7 +6184,7 @@
         apply: function (st) {
           st.flags._homelessCrisisDone = true;
           st.status.health = Math.max(0, (st.status.health || 100) - 8);
-          st.needs.happiness = Math.max(0, (st.needs.happiness || 50) - 10);
+          _guardNeedsB(st).happiness = Math.max(0, (_guardNeedsB(st).happiness || 50) - 10);
           StateManager.addMessage(
             "😞 你把报纸盖在脸上，假装什么都感觉不到。半夜被冻醒了一次，雨从桥缝漏下来打在脸上。天亮了，你还活着，但好像也没完全活着。健康-8，心情-10。",
             "danger",
@@ -6310,9 +6302,7 @@
       },
       apply: function (st) {
         st.flags._skillTalentFirstLightDone = true;
-        st.needs.happiness = Math.min(
-          100,
-          (st.needs.happiness || 50) + 5,
+        _guardNeedsB(st).happiness = Math.min(100, (_guardNeedsB(st).happiness || 50) + 5,
         );
         st.player.mental = Math.min(
           100,
@@ -6361,9 +6351,7 @@
       apply: function (st) {
         st.flags._skillMasteryDone = true;
         st.player.fame = (st.player.fame || 0) + 10;
-        st.needs.happiness = Math.min(
-          100,
-          (st.needs.happiness || 50) + 15,
+        _guardNeedsB(st).happiness = Math.min(100, (_guardNeedsB(st).happiness || 50) + 15,
         );
         st.player.mental = Math.min(
           100,
@@ -6463,7 +6451,7 @@
             hint: "心情+10，好感各+5",
             apply: function (st) {
               st.flags._npcInfoSwapDone = true;
-              st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 10);
+              _guardNeedsB(st).happiness = Math.min(100, (_guardNeedsB(st).happiness || 0) + 10);
               if (st.relationships.chen_ge) st.relationships.chen_ge.affinity = Math.min(100, (st.relationships.chen_ge.affinity || 0) + 5);
               if (st.relationships.old_zhou) st.relationships.old_zhou.affinity = Math.min(100, (st.relationships.old_zhou.affinity || 0) + 5);
               StateManager.addMessage("🍺 你坐下来，听两人聊城里的旧事和新鲜事。老周说他年轻时候也做过情报，陈哥哈哈大笑。夜市的灯火里，你觉得自己终于融入了这座城市的角落。心情+10，好感各+5。", "info");
@@ -6506,7 +6494,7 @@
           hint: "morality+3, mood+8, 公司reputation+5",
           apply: function (st) {
             st.flags._startupDeclarationDone = true;
-            if (st.player) { st.player.morality = Math.min(100, (st.player.morality || 0) + 3); st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 8); }
+            if (st.player) { st.player.morality = Math.min(100, (st.player.morality || 0) + 3); _guardNeedsB(st).happiness = Math.min(100, (_guardNeedsB(st).happiness || 0) + 8); }
             if (st.startup && st.startup.company) st.startup.company.reputation = (st.startup.company.reputation || 0) + 5;
             StateManager.addMessage("📝 你在一张纸上写下了自己的创业宣言：「从打零工到有尊严地赚钱，这条路我走了整整XX天。」贴在公司墙上，每次看到都提醒自己为什么出发。心情+8，道德+3。", "success");
           },
@@ -6516,7 +6504,7 @@
           hint: "心情+5, 老周/陈哥好感+8",
           apply: function (st) {
             st.flags._startupDeclarationDone = true;
-            if (st.player) st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 5);
+            if (st.player) _guardNeedsB(st).happiness = Math.min(100, (_guardNeedsB(st).happiness || 0) + 5);
             if (st.relationships && st.relationships.old_zhou) st.relationships.old_zhou.affinity = Math.min(100, (st.relationships.old_zhou.affinity || 0) + 8);
             if (st.relationships && st.relationships.chen_ge) st.relationships.chen_ge.affinity = Math.min(100, (st.relationships.chen_ge.affinity || 0) + 8);
             StateManager.addMessage("🍻 你约了老周和陈哥吃饭。老周拍着你的肩膀说：「早就看你不对劲了，你不是干一辈子临时工的料。」陈哥则默默给你倒了杯酒。心情+5，老周和陈哥好感各+8。", "info");
@@ -6554,7 +6542,7 @@
           apply: function (st) {
             st.flags._firstPromoCelebDone = true;
             if (st.player) {
-              if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 10);
+              if (st.needs) _guardNeedsB(st).happiness = Math.min(100, (_guardNeedsB(st).happiness || 0) + 10);
               // [全系统自洽修复] 域H R417 修复:st.player.upwardMgmt 死字段(全库读取方均走 st.player.corporate.upwardMgmt)→「管理能力+3」曾静默丢失
               st.player.corporate = st.player.corporate || {};
               st.player.corporate.upwardMgmt = Math.min(100, (st.player.corporate.upwardMgmt || 50) + 3);
@@ -6599,7 +6587,7 @@
           apply: function (st) {
             st.flags._talentDepartureDone = true;
             st.flags._talentDepartureBlessing = true;
-            if (st.player) { st.needs.happiness = Math.max(0, (st.needs.happiness || 0) - 3); st.player.morality = Math.min(100, (st.player.morality || 0) + 5); }
+            if (st.player) { _guardNeedsB(st).happiness = Math.max(0, (_guardNeedsB(st).happiness || 0) - 3); st.player.morality = Math.min(100, (st.player.morality || 0) + 5); }
             if (st.startup && st.startup.company) st.startup.company.reputation = (st.startup.company.reputation || 0) + 3;
             StateManager.addMessage("😢 你给小李发了一个红包：「出去好好干，以后有机会再合作。」小李回了个拥抱的表情。心情-3，道德+5，公司声誉+3。", "info");
           },
@@ -6611,7 +6599,7 @@
             st.flags._talentDepartureDone = true;
             st.flags._talentDepartureRetained = true;
             if (st.resources) st.resources.cash = (st.resources.cash || 0) - 3000;
-            if (st.player) st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 5);
+            if (st.player) _guardNeedsB(st).happiness = Math.min(100, (_guardNeedsB(st).happiness || 0) + 5);
             if (st.startup && st.startup.company && st.startup.company.team) {
               for (var i = 0; i < st.startup.company.team.length; i++) {
                 if (st.startup.company.team[i] && st.startup.company.team[i].morale) {
@@ -6659,7 +6647,7 @@
             st.flags._quarterSocialSpilloverDone = true;
             if (st.resources) st.resources.cash = (st.resources.cash || 0) - 500;
             if (st.relationships && st.relationships.boss_li) st.relationships.boss_li.affinity = Math.min(100, (st.relationships.boss_li.affinity || 0) + 10);
-            if (st.player) st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 3);
+            if (st.player) _guardNeedsB(st).happiness = Math.min(100, (_guardNeedsB(st).happiness || 0) + 3);
             StateManager.addMessage("🍔 你请老赵吃了顿火锅。他说他们组确实不容易，但你部门的项目他也帮忙了不少。现金-500，boss_li好感+10，心情+3。", "success");
           },
         },
@@ -6676,7 +6664,7 @@
           hint: "智力+2, 老赵好感+5, 团队协作↑",
           apply: function (st) {
             st.flags._quarterSocialSpilloverDone = true;
-            if (st.player) { st.player.intelligence = Math.min(100, (st.player.intelligence || 0) + 2); st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 2); }
+            if (st.player) { st.player.intelligence = Math.min(100, (st.player.intelligence || 0) + 2); _guardNeedsB(st).happiness = Math.min(100, (_guardNeedsB(st).happiness || 0) + 2); }
             if (st.relationships && st.relationships.boss_li) st.relationships.boss_li.affinity = Math.min(100, (st.relationships.boss_li.affinity || 0) + 5);
             StateManager.addMessage("💪 你把自己的工作方法分享给了老赵。他说：「你说得对，我们确实太闷头干了。」智力+2，boss_li好感+5。", "info");
           },
@@ -6757,7 +6745,7 @@
           hint: "心情-3, 但记住这个教训",
           apply: function (st) {
             st.flags._wealthTaxFirstNotice = true;
-            if (st.player) st.needs.happiness = Math.max(0, (st.needs.happiness || 0) - 3);
+            if (st.player) _guardNeedsB(st).happiness = Math.max(0, (_guardNeedsB(st).happiness || 0) - 3);
             StateManager.addMessage("😤 你心里一阵不爽，但不得不承认这是城市的规矩。心情-3。", "warning");
           },
         },
