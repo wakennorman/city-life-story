@@ -3058,7 +3058,7 @@
           var baseIncome = Random.int(200, 400);
           st.resources.cash = (st.resources.cash || 0) + baseIncome;
           st.resources.totalEarned += baseIncome;
-          st.skills.repair = Math.min(100, (st.skills.repair || 40) + 5);
+          if (typeof addSkillXp === "function") { try { addSkillXp("repair", 5); } catch (e) {} } // [全系统自洽修复] 域G R599 修复:st.skills.repair 是{level,xp}对象，对象+5→Math.min=NaN 摧毁技能→改走 addSkillXp
           _guardNeedsP2(st).happiness = Math.min(100, (_guardNeedsP2(st).happiness || 0) + 8);
           StateManager.addMessage(
             "🔧 你每周帮老王修三天物件，周入¥" +

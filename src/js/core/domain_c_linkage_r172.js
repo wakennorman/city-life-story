@@ -111,7 +111,7 @@
               var job = st.career.currentJob;
               var bonus = Math.round((job.salary || 0) * 2); // [PLACEHOLDER] 约2个月薪资
               if (st.resources) st.resources.cash = (st.resources.cash || 0) + bonus;
-              if (st.skills) st.skills.management = Math.min(100, (st.skills.management || 0) + 2);
+              if (st.skills) { try { addSkillXp("management", 2); } catch (e) {} } // [全系统自洽修复] 域G R599 修复:st.skills.management 是{level,xp}对象，对象+2→Math.min=NaN 摧毁技能→改走 addSkillXp
               if (st.flags) {
                 var yr = Math.floor((st.player.day || 0) / 360);
                 st.flags["_careerYEBonus_" + yr] = true;

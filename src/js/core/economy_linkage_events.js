@@ -536,11 +536,7 @@
       if (accept) {
         // 真实收益：圈层跟投首笔分红（现金）+ 管理技能（职场硬技能）兑现
         if (st.resources) st.resources.cash = (st.resources.cash || 0) + 30000; // [PLACEHOLDER] 跟投首笔分红
-        if (st.skills)
-          st.skills.management = Math.min(
-            100,
-            (st.skills.management || 0) + 3, // [PLACEHOLDER] 管理技能加成
-          );
+        if (st.skills) { try { addSkillXp("management", 3); } catch (e) {} } // [全系统自洽修复] 域G R599 修复:st.skills.management 是{level,xp}对象→Math.min=NaN 摧毁技能→改走 addSkillXp
         if (st.player) st.player.mental = (st.player.mental || 50) + 4;
         moodR27(st, 3);
         if (typeof StateManager !== "undefined" && StateManager.addMessage)

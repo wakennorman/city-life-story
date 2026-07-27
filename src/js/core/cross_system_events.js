@@ -5930,8 +5930,7 @@
         hint: "心智+2，压力-5",
         apply: function (st) {
           st.flags._debtAnxietyDone = true;
-          st.skills.mental = st.skills.mental || { level: 0, xp: 0 };
-          st.skills.mental.xp = (st.skills.mental.xp || 0) + 20;
+          if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 2); // [全系统自洽修复] 域G R599 修复:"mental"非真实技能键（skills 仅12键），假键对象无任何系统消费=奖励静默失效→改写真实字段 player.mental（与 hint"心智+2"一致）
           _guardNeedsB(st).happiness = Math.min(100, (_guardNeedsB(st).happiness || 50) + 5);
           StateManager.addMessage(
             "📝 你打开Excel，把债务拆分成12期。虽然数字还是那么大，但至少有了方向。心情+5，心智经验+20。",

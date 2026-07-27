@@ -1822,8 +1822,7 @@ var NPCS = [
         id: "sister_wu_30",
         desc: "吴姐给你免费做护理（美容XP+30）",
         effect: function (st) {
-          st.skills.beauty = st.skills.beauty || { level: 0, xp: 0 };
-          st.skills.beauty.xp += 30;
+          if (st.personalGrowth && st.personalGrowth.image) { st.personalGrowth.image.skincare = Math.min(100, (st.personalGrowth.image.skincare || 0) + 6); } // [全系统自洽修复] 域G R599 修复:"beauty"非真实技能键（skills 仅12键），假键XP无任何系统消费=奖励静默失效→改写真实形象维度 personalGrowth.image.skincare（0-100，有 R426 事件消费者）
           StateManager.addMessage(
             "💕 吴姐说'今天送你做个护理'，美容XP+30！",
             "success",
