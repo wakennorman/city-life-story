@@ -605,3 +605,4 @@ function getAvailableGoodsAtLocation(locKey, state) {
 // [R353] 域A
 // [R401] 域A
 // [R449] 域A
+// [R497] 域A
