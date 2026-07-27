@@ -3582,3 +3582,4 @@ function tickSupplyChain(state, company) {
   company.supplyChainRisk = risk.risk;
 }// [R186] 域B 联动增强
 // [R282] 域B
+// [R370] 域B
