@@ -24746,6 +24746,88 @@ function getEventHealthImpact(state, eventId) {
 })();
 
 ;
+// ==== js/core/domain_b_linkage_r429.js ====
+/**
+ * 域B(事件/叙事) 联动增强 R429
+ * 桥接：
+ *   B→C  b429_event_catalyst_v3         事件催化剂v3 → 经历→职业灵感
+ *   B→D  b429_shared_story               共同故事 → 事件→社交深化
+ *   B→G  b429_narrative_health           叙事健康 → 故事→身心健康
+ */
+(function () {
+  "use strict";
+  if (typeof RANDOM_EVENTS === "undefined" || !RANDOM_EVENTS) return;
+  if (RANDOM_EVENTS._domainBLinkageR429Loaded) return;
+  RANDOM_EVENTS._domainBLinkageR429Loaded = true;
+  function grantXp(key, amt) { if (typeof addSkillXp === "function") { try { addSkillXp(key, amt); } catch(e) {} } }
+  var EVENTS = [
+    {
+      id: "b429_event_catalyst_v3", phase: "street", _isChainEvent: false, icon: "⚡",
+      title: "经历是职业的催化剂",
+      story: "你发现经历在催化职业发展——{desc}",
+      triggers: { minDay: 75, excludeFlags: ["_b429CatalystCooldown"] },
+      conditions: function (st) { return !st.gameOver; },
+      choices: [
+        { text: "📚 把经历转化为能力", hint: "心智+4,management XP+3", apply: function (st) {
+          if (!st) return; st.flags._b429CatalystCooldown = true;
+          if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 4);
+          grantXp("management", 3);
+          if (typeof StateManager !== "undefined") StateManager.addMessage("⚡ 经历是职业的催化剂——每段故事都在塑造你的能力。心智+4,管理XP+3。", "success");
+        }},
+        { text: "🤷 经历就是经历", hint: "无奖励", apply: function () {} }
+      ],
+      text: function (st) {
+        if (!st) return null;
+        var desc = "每段经历都在悄然催化职业发展";
+        if (st.flags && st.flags._eventHistory && st.flags._eventHistory.length > 10) desc = "丰富的人生经历,正在成为你职业发展的独特优势";
+        return "你发现经历在催化职业发展——" + desc + "。";
+      }
+    },
+    {
+      id: "b429_shared_story", phase: "street", _isChainEvent: false, icon: "📖",
+      title: "共同的故事",
+      story: "你和朋友分享彼此的故事——{desc}",
+      triggers: { minDay: 60, excludeFlags: ["_b429StoryCooldown"] },
+      conditions: function (st) { return !st.gameOver && st.relationships && Object.keys(st.relationships).length > 0; },
+      choices: [
+        { text: "💕 共同故事深化关系", hint: "心情+5,心智+2", apply: function (st) {
+          if (!st) return; st.flags._b429StoryCooldown = true;
+          if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 5);
+          if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 2);
+          if (typeof StateManager !== "undefined") StateManager.addMessage("📖 共同故事深化关系——分享是友谊的催化剂。心情+5,心智+2。", "success");
+        }},
+        { text: "😊 故事留在心里", hint: "无奖励", apply: function () {} }
+      ],
+      text: function (st) {
+        if (!st) return null;
+        return "你和朋友分享彼此的故事——共同的经历是关系的纽带。";
+      }
+    },
+    {
+      id: "b429_narrative_health", phase: "street", _isChainEvent: false, icon: "💚",
+      title: "叙事与健康",
+      story: "你发现讲述故事对健康有益——{desc}",
+      triggers: { minDay: 70, excludeFlags: ["_b429HealthCooldown"] },
+      conditions: function (st) { return !st.gameOver && st.status; },
+      choices: [
+        { text: "💪 叙事是最好的疗愈", hint: "心智+3,心情+4", apply: function (st) {
+          if (!st) return; st.flags._b429HealthCooldown = true;
+          if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 3);
+          if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 4);
+          if (typeof StateManager !== "undefined") StateManager.addMessage("💚 叙事是最好的疗愈——讲述故事,治愈心灵。心智+3,心情+4。", "success");
+        }},
+        { text: "😅 健康靠锻炼", hint: "无奖励", apply: function () {} }
+      ],
+      text: function (st) {
+        if (!st) return null;
+        return "你发现讲述故事对健康有益——叙事疗法是身心健康的自然良药。";
+      }
+    }
+  ];
+  for (var i = 0; i < EVENTS.length; i++) { if (!RANDOM_EVENTS.find(function (ev) { return ev.id === EVENTS[i].id; })) RANDOM_EVENTS.push(EVENTS[i]); }
+})();
+
+;
 // ==== js/core/domain_b_linkage_r259.js ====
 /**
  * 域B(事件/叙事) 联动增强 R259
@@ -214300,33 +214382,36 @@ function doCorporateAction(actionId) {
   if (effects.kpi)
     c.kpi = Math.max(
       0,
-      Math.min(150, c.kpi + Math.round(effects.kpi * sprintBonus)),
+      Math.min(150, (c.kpi || 0) + Math.round((effects.kpi || 0) * sprintBonus)),
     );
   if (effects.ability)
-    c.ability = Math.max(0, Math.min(100, c.ability + effects.ability));
-  if (effects.hair) c.hair = Math.max(0, Math.min(100, c.hair + effects.hair));
+    c.ability = Math.max(0, Math.min(100, (c.ability || 0) + (effects.ability || 0)));
+  if (effects.hair) c.hair = Math.max(0, Math.min(100, (c.hair || 0) + (effects.hair || 0)));
   if (effects.dignity)
-    c.dignity = Math.max(0, Math.min(100, c.dignity + effects.dignity));
+    c.dignity = Math.max(
+      0,
+      Math.min(100, (c.dignity || 0) + (effects.dignity || 0)),
+    );
   if (effects.upwardMgmt)
     c.upwardMgmt = Math.max(
       0,
-      Math.min(100, c.upwardMgmt + effects.upwardMgmt),
+      Math.min(100, (c.upwardMgmt || 0) + (effects.upwardMgmt || 0)),
     );
   if (effects.popularity)
     c.popularity = Math.max(
       0,
-      Math.min(100, c.popularity + effects.popularity),
+      Math.min(100, (c.popularity || 0) + (effects.popularity || 0)),
     );
-  if (effects.risk) c.risk = Math.max(0, Math.min(100, c.risk + effects.risk));
+  if (effects.risk) c.risk = Math.max(0, Math.min(100, (c.risk || 0) + (effects.risk || 0)));
   if (effects.fatigue)
     state.needs.fatigue = Math.max(
       0,
-      Math.min(100, state.needs.fatigue + effects.fatigue),
+      Math.min(100, (state.needs.fatigue || 0) + (effects.fatigue || 0)),
     );
   if (effects.happiness)
     state.needs.happiness = Math.max(
       0,
-      Math.min(100, state.needs.happiness + effects.happiness),
+      Math.min(100, (state.needs.happiness || 0) + (effects.happiness || 0)),
     );
   // 现金效果
   if (effects.cash)
@@ -214334,7 +214419,7 @@ function doCorporateAction(actionId) {
   if (effects.intelligence)
     state.player.intelligence = Math.min(
       100,
-      state.player.intelligence + effects.intelligence,
+      (state.player.intelligence || 0) + (effects.intelligence || 0),
     );
 
   state.corporate.actionsUsed++;
@@ -214464,6 +214549,18 @@ function endQuarter() {
     "success",
   );
 
+  // [全系统自洽修复] 域H R50 联动增强(H→C): 季度工作积累职业技能经验
+  if (typeof addSkillXp === "function" && state.skills) {
+    var _skillXpGain = 0;
+    if (c.rank === "P5" || c.rank === "P6") _skillXpGain = 5;
+    else if (c.rank === "P7" || c.rank === "P8") _skillXpGain = 8;
+    else if (c.rank === "P9" || c.rank === "P10") _skillXpGain = 12;
+    if (_skillXpGain > 0) {
+      addSkillXp("management", _skillXpGain);
+      addSkillXp("accounting", Math.round(_skillXpGain / 2));
+    }
+  }
+
   // [全系统自洽修复] 域H 联动增强6: 季度绩效影响职场同事关系（H→D）
   if (typeof addDailyTransaction === "function" && state.relationships) {
     var gradeAffinityMap = { "S+": 5, S: 4, A: 3, B: 1, C: -2 };
@@ -214482,6 +214579,18 @@ function endQuarter() {
       } else if (affinityChange < 0) {
         StateManager.addMessage("📉 绩效不佳，同事们看你的眼神有点微妙，好感度" + affinityChange + "。", "warning");
       }
+    }
+  }
+
+  // [全系统自洽修复] 域H R50 联动增强(H→D): 高团队忠诚度提升职场人缘
+  if (state.corporate && state.corporate.team && state.corporate.team.length > 0) {
+    var _avgLoyalty = 0;
+    for (var _ti = 0; _ti < state.corporate.team.length; _ti++) {
+      _avgLoyalty += state.corporate.team[_ti].loyalty || 50;
+    }
+    _avgLoyalty = Math.round(_avgLoyalty / state.corporate.team.length);
+    if (_avgLoyalty >= 70 && state.player.corporate) {
+      state.player.corporate.popularity = Math.min(100, (state.player.corporate.popularity || 50) + 1);
     }
   }
 
@@ -214520,6 +214629,14 @@ function endQuarter() {
       "🏃 进入Q4冲刺季！下季度所有KPI增益+50%，绩效评分×1.1。",
       "event",
     );
+  }
+
+  // [全系统自洽修复] 域H R50 联动增强(H→E): 季度投资组合回顾
+  if (state.investment && state.investment.portfolio) {
+    var _pv = state.investment.portfolio.totalValue || 0;
+    if (_pv > 0 && c.corpQuarter === 1) {
+      StateManager.addMessage("📊 年度投资组合市值 ¥" + _pv.toLocaleString() + "，多元化配置是抵御风险的关键。", "info");
+    }
   }
 
   // Q3 晋升判定
@@ -216551,6 +216668,19 @@ function buyInvStock(symbol, shares) {
       "event",
     );
   }
+
+  // [域E R428 联动增强] E→D: 大额买入(≥¥5000)时高好感NPC有概率认可投资眼光
+  if (cost >= 5000 && state.relationships) {
+    var _invNpcs = [];
+    for (var _inid in state.relationships) {
+      var _inr = state.relationships[_inid];
+      if (_inr && _inr.met && (_inr.affinity || 0) >= 50) _invNpcs.push(_inid);
+    }
+    if (_invNpcs.length > 0 && Random.chance(0.2)) {
+      var _inpc = _invNpcs[Random.int(0, _invNpcs.length - 1)];
+      StateManager.addMessage("💬 你投资的消息在朋友圈里传开了，有人觉得你越来越有眼光。", "info");
+    }
+  }
 }
 
 function sellInvStock(symbol, shares) {
@@ -216616,6 +216746,15 @@ function sellInvStock(symbol, shares) {
     // [全系统自洽修复] 域E 联动增强4: E→C 盈利交易→销售经验+5
     if (state.skills && state.skills.sales && typeof state.skills.sales.xp === "number") {
       state.skills.sales.xp += 5;
+    }
+    // [域E R428 联动增强] E→H: 投资盈利→公司士气提振 — 老板赚钱团队信心+1
+    if (state.corporate && state.corporate.company && state.corporate.company.employees) {
+      for (var _eei = 0; _eei < state.corporate.company.employees.length; _eei++) {
+        var _eem = state.corporate.company.employees[_eei];
+        if (_eem && typeof _eem.loyalty === "number") {
+          _eem.loyalty = Math.min(100, _eem.loyalty + 0.5);
+        }
+      }
     }
   } else {
     inv._consecutiveWins = 0;
@@ -217908,6 +218047,38 @@ function renderDailyPLPanel(state) {
 }
 
 // ============================================================
+//  [域E R428 联动增强] E→B: 市场氛围叙事 — 根据当前市场情绪生成投资故事感
+// ============================================================
+function renderMarketNarrative(state, inv) {
+  if (!inv) return "";
+  var mood = inv._marketMood || "neutral";
+  var holdings = inv.stockHoldings || [];
+  if (holdings.length === 0) return "";
+  // 根据市场情绪和持仓生成叙事
+  var narratives = {
+    bullish: [
+      "📈 市场一片红火，你的持仓跟着水涨船高。走在街上都觉得步伐轻快了几分。",
+      "📈 最近行情不错，连茶馆里的大爷都在讨论股票。你暗自庆幸自己上车早。",
+      "📈 牛市来了，猪都能飞。你看着账户数字，提醒自己别太贪心。",
+    ],
+    bearish: [
+      "📉 市场持续走低，绿油油一片。你告诉自己：别人恐惧我贪婪。",
+      "📉 大盘连跌几天，朋友圈里一片哀嚎。你关掉行情页面，决定出去走走。",
+      "📉 熊市是最好的老师。你开始认真研究基本面，而不是追涨杀跌。",
+    ],
+    neutral: [
+      "➖ 市场波澜不惊，持仓不温不火。你耐心等待下一个机会。",
+      "➖ 行情平稳，没有惊喜也没有惊吓。这种日子适合学习和定投。",
+    ],
+  };
+  var pool = narratives[mood] || narratives.neutral;
+  var idx = (state.player.day + holdings.length) % pool.length;
+  var narrative = pool[idx];
+  return '<div style="padding:8px 12px;margin-bottom:8px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:6px;font-size:11px;color:var(--text-secondary);line-height:1.5;">' +
+    narrative + '</div>';
+}
+
+// ============================================================
 //  [全系统自洽修复] 域E 联动增强1: 投资组合回撤指示器（E→F）
 //  显示当前投资价值与历史峰值的回撤幅度，帮助玩家识别风险
 // ============================================================
@@ -218118,6 +218289,7 @@ function renderInvestmentTab(state, parent) {
     summaryCard("汽车", assetSnapshot.groups.cars) +
     "</div>" +
     renderAssetAllocationPanel(assetSnapshot) +
+    renderMarketNarrative(state, inv) +
     renderDrawdownIndicator(state) +
     renderNewsInvestmentDrivers(state) +
     renderMarketSentiment(state, inv) +
@@ -228633,7 +228805,7 @@ function updateProductVersion(state, productId, versionType, budget) {
   // 记录版本历史
   product.versionHistory.push({
     version: newVersion,
-    date: new Date().toISOString().split("T")[0],
+    date: "Day" + state.player.day,
     day: state.player.day,
     changes: config.desc,
     techScore: product.technologyScore,
