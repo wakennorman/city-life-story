@@ -2402,10 +2402,30 @@ function runDailyPipeline(state) {
     }
   }
 
+  // [全系统自洽修复] 域G 联动增强(G→F): 每日健康波动摘要 — 记录健康变化趋势供UI展示
+  try {
+    if (!state.flags) state.flags = {};
+    if (!state.flags._healthHistory) state.flags._healthHistory = [];
+    var _curHealth = state.status && state.status.health;
+    if (_curHealth && isFinite(_curHealth)) {
+      state.flags._healthHistory.push({ day: state.player.day, health: _curHealth });
+      if (state.flags._healthHistory.length > 30) state.flags._healthHistory.shift();
+    }
+  } catch (e) {}
   // [全系统自洽修复] 域G 联动增强: 每5年记录一次人生数据快照
   if (typeof trackLifeDataSnapshot === "function") {
     try { trackLifeDataSnapshot(state); } catch (e) {}
   }
+  // [全系统自洽修复] 域G 联动增强(G→E): 年龄增长投资经验加成 — 每10岁获得投资洞察
+  try {
+    var _age = state.player && state.player.age;
+    if (_age && _age > 0 && _age % 10 === 0 && state.investment && !state.flags['_ageInvestInsight_' + _age]) {
+      state.flags['_ageInvestInsight_' + _age] = true;
+      if (typeof StateManager !== "undefined") {
+        StateManager.addMessage("🎂 " + _age + "岁的阅历让你对市场的理解更深了一层。投资眼光更加老辣。", "info");
+      }
+    }
+  } catch (e) {}
 }
 
 /**
