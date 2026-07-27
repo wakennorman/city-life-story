@@ -565,6 +565,28 @@ function tickNpcRelationships(state) {
       }
     }
   } catch (e) {}
+
+  // [全系统自洽修复] 域D 联动增强(D→E): 高收入NPC人脉投资洞察 — 好感≥60的高收入NPC提供市场洞察
+  try {
+    if (state.relationships && state.player && state.player.day % 30 === 0 && typeof NPCS !== "undefined") {
+      var _wealthyContacts = 0;
+      for (var _wcId in state.relationships) {
+        var _wcRel = state.relationships[_wcId];
+        if (_wcRel && _wcRel.met && (_wcRel.affinity || 0) >= 60) {
+          var _wcDef = NPCS.find(function(n) { return n && n.id === _wcId; });
+          if (_wcDef && (_wcDef.monthlyIncome || 0) >= 15000) {
+            _wealthyContacts++;
+          }
+        }
+      }
+      if (_wealthyContacts >= 2 && !state.flags._wealthyContactTip) {
+        state.flags._wealthyContactTip = true;
+        if (typeof StateManager !== "undefined") {
+          StateManager.addMessage("💼 你认识" + _wealthyContacts + "位高收入的朋友，他们的消费和投资选择或许能给你一些市场启示。", "info");
+        }
+      }
+    }
+  } catch (e) {}
 }
 
 /** [全系统自洽修复] 域D 修复:NPC id→中文名，替代 replace(/_/g," ") 展示的原始 id */
