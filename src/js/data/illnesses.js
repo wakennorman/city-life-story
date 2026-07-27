@@ -569,3 +569,4 @@ function hasIllness(state, illnessId) {
 // [R281] 域A
 // [R377] 域A
 // [R425] 域A
+// [R473] 域A
