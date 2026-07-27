@@ -5122,7 +5122,16 @@ function showEventModal(evt) {
         ${evt.weather ? '<span class="event-tag weather-tag" style="font-size:10px;padding:1px 6px;border-radius:3px;background:rgba(90,138,180,0.15);color:var(--info);margin-left:8px;">🌤️ 天气</span>' : ""}
         ${evt.sector ? '<span class="event-tag sector-tag" style="font-size:10px;padding:1px 6px;border-radius:3px;background:rgba(74,158,92,0.15);color:var(--success);margin-left:4px;">🏭 ' + evt.sector + '</span>' : ""}
       </div>
-      <p class="event-story ${isSpringFest ? "spring-fest-story" : ""}">${evt.story || evt.desc || ""}</p>
+      <p class="event-story ${isSpringFest ? "spring-fest-story" : ""}">${(function () {
+        // [全系统自洽修复] 域D R455 A类: 29个联动文件采用 text:function(st) 动态叙述惯例但渲染层从不调用→story中"{desc}"占位符原样泄漏给玩家。优先调用 text() 取动态叙述,失败/为空回退 story
+        if (typeof evt.text === "function") {
+          try {
+            var _dyn = evt.text(typeof StateManager !== "undefined" ? StateManager.getState() : null);
+            if (_dyn && typeof _dyn === "string") return _dyn;
+          } catch (e) { /* 动态文本失败回退story */ }
+        }
+        return evt.story || evt.desc || "";
+      })()}</p>
       <div class="event-choices">${choicesHtml}</div>
       <div style="text-align:center;margin-top:8px;font-size:10px;color:var(--accent);">
         ${isSpringFest ? "🧨 做出你的选择，迎接新的一年" : "⚡ 请选择一个选项继续"}
@@ -102151,132 +102160,6 @@ if (typeof window !== "undefined") {
   }
 })();
 ;
-// ==== js/core/domain_c_linkage_r306b.js ====
-/**
- * 域C(职业/成长) 联动增强 R306b（并行窗口原创内容,因R306文件覆盖竞态丢失,R309轮恢复）
- * 第七轮循环——技能积累的多维回响。
- * 桥接：
- *   C→B  career_event_catalyst_v2     职业→事件催化剂（事件/叙事·经历变现）
- *   C→D  career_social_network        职业→社交网络（NPC/社交·职业人脉）
- * 注：原第3事件 skill_investment_insight 为 domain_c_linkage_r272.js 既有事件的同id重复（C类缺陷），恢复时剔除以免双注册。
- */
-(function () {
-  if (typeof RANDOM_EVENTS === "undefined") return;
-  if (RANDOM_EVENTS._domainCLinkageR306bLoaded) return;
-  RANDOM_EVENTS._domainCLinkageR306bLoaded = true;
-
-  var EVENTS = [
-    {
-      id: "career_event_catalyst_v2",
-      phase: "street",
-      _isChainEvent: false,
-      icon: "⚡",
-      title: "职业经历是事件的催化剂",
-      story: "你发现，职业积累的经历开始催化更多有趣的事件。\n\n一个手艺人会遇到更多「被认可」的故事，一个销售会遇到更多「被拒绝」的故事，一个管理者会遇到更多「被依赖」的故事。\n\n你的职业，成了你人生故事的「催化剂」。",
-      triggers: { minDay: 200, excludeFlags: ["_careerEventCatalystV2Seen"] },
-      conditions: function (st) {
-        if (st.gameOver) return false;
-        var job = st.career && st.career.currentJob;
-        if (!job || !job.path) return false;
-        var history = (st.flags && st.flags._eventHistory) || [];
-        return history.length >= 25;
-      },
-      choices: [
-        {
-          text: "⚡ 主动寻找职业相关的事件",
-          hint: "最高技能XP+12，心智+7",
-          apply: function (st) {
-            if (!st.flags) st.flags = {};
-            st.flags._careerEventCatalystV2Seen = true;
-            var topSkill = "", topLv = 0;
-            for (var k in st.skills) {
-              var lv = (st.skills[k] && st.skills[k].level) || 0;
-              if (lv > topLv) { topLv = lv; topSkill = k; }
-            }
-            if (topSkill && typeof addSkillXp === "function") addSkillXp(topSkill, 12);
-            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 7);
-            if (typeof StateManager !== "undefined" && StateManager.addMessage) {
-              StateManager.addMessage("⚡ 你主动寻找职业相关的事件。经历是故事的催化剂。技能XP+12，心智+7。", "success");
-            }
-          },
-        },
-        {
-          text: "🤷 事件是随机的，不用刻意寻找",
-          hint: "心智+3",
-          apply: function (st) {
-            if (!st.flags) st.flags = {};
-            st.flags._careerEventCatalystV2Seen = true;
-            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 3);
-            if (typeof StateManager !== "undefined" && StateManager.addMessage) {
-              StateManager.addMessage("🤷 你觉得事件是随机的。心智+3。", "info");
-            }
-          },
-        },
-      ],
-      probability: 0.5,
-      repeatable: false,
-    },
-    {
-      id: "career_social_network",
-      phase: "street",
-      _isChainEvent: false,
-      icon: "🕸️",
-      title: "职业社交网络",
-      story: "你发现，职业积累让你结识了很多有价值的人脉。\n\n前同事、客户、供应商、行业前辈——这些人不仅是职业资源，也是你在这座城市里的「社交资本」。\n\n你开始理解，「专业能力」和「社交网络」是职业发展的双翼。",
-      triggers: { minDay: 250, excludeFlags: ["_careerSocialNetworkSeen"] },
-      conditions: function (st) {
-        if (st.gameOver) return false;
-        if (!st.relationships || !st.career || !st.career.currentJob) return false;
-        var metNpcs = 0;
-        for (var id in st.relationships) {
-          if (st.relationships[id] && st.relationships[id].met && (st.relationships[id].affinity || 0) >= 35) metNpcs++;
-        }
-        return metNpcs >= 4;
-      },
-      choices: [
-        {
-          text: "🕸️ 主动经营职业社交网络",
-          hint: "NPC好感+4，心智+8",
-          apply: function (st) {
-            if (!st.flags) st.flags = {};
-            st.flags._careerSocialNetworkSeen = true;
-            if (typeof applyAffinityChange === "function") {
-              for (var id in st.relationships) {
-                if (st.relationships[id] && st.relationships[id].met && (st.relationships[id].affinity || 0) >= 35) {
-                  applyAffinityChange(st, id, 4, "职业社交");
-                }
-              }
-            }
-            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 8);
-            if (typeof StateManager !== "undefined" && StateManager.addMessage) {
-              StateManager.addMessage("🕸️ 你主动经营职业社交网络。专业能力和社交网络是职业发展的双翼。好感+4，心智+8。", "success");
-            }
-          },
-        },
-        {
-          text: "🤷 社交不用经营，本事最重要",
-          hint: "心智+3",
-          apply: function (st) {
-            if (!st.flags) st.flags = {};
-            st.flags._careerSocialNetworkSeen = true;
-            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 3);
-            if (typeof StateManager !== "undefined" && StateManager.addMessage) {
-              StateManager.addMessage("🤷 你觉得本事比社交重要。心智+3。", "info");
-            }
-          },
-        },
-      ],
-      probability: 0.5,
-      repeatable: false,
-    },
-  ];
-
-  for (var i = 0; i < EVENTS.length; i++) {
-    RANDOM_EVENTS.push(EVENTS[i]);
-  }
-})();
-
-;
 // ==== js/core/domain_c_linkage_r391.js ====
 /**
  * 域C(职业/成长) 联动增强 R391
@@ -103287,7 +103170,7 @@ if (typeof window !== "undefined") {
       choices: [
         { text: "🔧 用技术创业", hint: "技术XP+5,公司资金+3000", apply: function (st) {
           if (!st) return; st.flags = st.flags || {}; st.flags._c448SkillStartupCooldown = true;
-          if (typeof addSkillXp === "function") { try { addSkillXp("technology", 5); } catch(e) {} }
+          if (typeof addSkillXp === "function") { try { addSkillXp("coding", 5); } catch(e) {} }
           if (st.corporate && st.corporate.company) st.corporate.company.funds = (st.corporate.company.funds || 0) + 3000;
           if (typeof StateManager !== "undefined") StateManager.addMessage("🔧 你决定用自己的技术创业——给别人打工不如给自己打工。技术XP+5,公司资金+¥3000。", "success");
         }},
@@ -116133,7 +116016,7 @@ if (typeof window !== "undefined") {
             if (typeof addSkillXp === "function") {
               try { addSkillXp("accounting", 3); } catch (e) { /* safe */ }
             }
-            // [全系统自洽修复] 域D R451 A类: 老陈事件只写flag不接好感系统→NPC定义存在但永不进关系图谱(好感积累零回报),接入正规入口
+            // [全系统自洽修复] 域D R455 A类: 老陈事件只写flag不接好感系统→NPC定义存在但永不进关系图谱(好感积累零回报),接入正规入口
             if (typeof applyAffinityChange === "function") {
               try { applyAffinityChange(st, "lao_chen", 8, "认真记录人生智慧"); } catch (e) { /* safe */ }
             }
@@ -116149,7 +116032,7 @@ if (typeof window !== "undefined") {
               st.flags = st.flags || {};
               st.flags._laoChenWisdomSeen = true;
               if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 2);
-              // [全系统自洽修复] 域D R451 A类: 见面即结识,接入met系统
+              // [全系统自洽修复] 域D R455 A类: 见面即结识,接入met系统
               if (typeof applyAffinityChange === "function") {
                 try { applyAffinityChange(st, "lao_chen", 3, "听老陈讲故事"); } catch (e) { /* safe */ }
               }
@@ -116185,7 +116068,7 @@ if (typeof window !== "undefined") {
             if (typeof addSkillXp === "function") {
               try { addSkillXp("management", 8); } catch (e) { /* safe */ }
             }
-            // [全系统自洽修复] 域D R451 A类: 接入好感系统(同wisdom事件)
+            // [全系统自洽修复] 域D R455 A类: 接入好感系统(同wisdom事件)
             if (typeof applyAffinityChange === "function") {
               try { applyAffinityChange(st, "lao_chen", 8, "接受职业指导"); } catch (e) { /* safe */ }
             }
@@ -116201,7 +116084,7 @@ if (typeof window !== "undefined") {
               st.flags = st.flags || {};
               st.flags._laoChenCareerSeen = true;
               if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 2);
-              // [全系统自洽修复] 域D R451 A类: 见面即结识,接入met系统
+              // [全系统自洽修复] 域D R455 A类: 见面即结识,接入met系统
               if (typeof applyAffinityChange === "function") {
                 try { applyAffinityChange(st, "lao_chen", 2, "婉拒但记住了老陈"); } catch (e) { /* safe */ }
               }
@@ -116235,7 +116118,7 @@ if (typeof window !== "undefined") {
             st.flags._laoChenTalkSeen = true;
             if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 8);
             if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 3);
-            // [全系统自洽修复] 域D R451 A类: 接入好感系统(同wisdom事件)
+            // [全系统自洽修复] 域D R455 A类: 接入好感系统(同wisdom事件)
             if (typeof applyAffinityChange === "function") {
               try { applyAffinityChange(st, "lao_chen", 10, "喝茶深聊人生"); } catch (e) { /* safe */ }
             }
@@ -116251,7 +116134,7 @@ if (typeof window !== "undefined") {
               st.flags = st.flags || {};
               st.flags._laoChenTalkSeen = true;
               if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 4);
-              // [全系统自洽修复] 域D R451 A类: 见面即结识,接入met系统
+              // [全系统自洽修复] 域D R455 A类: 见面即结识,接入met系统
               if (typeof applyAffinityChange === "function") {
                 try { applyAffinityChange(st, "lao_chen", 4, "安静听老陈聊人生"); } catch (e) { /* safe */ }
               }
@@ -116544,6 +116427,254 @@ if (typeof window !== "undefined") {
     })(EVENTS[i]);
   }
 })();
+;
+// ==== js/core/domain_d_linkage_r455.js ====
+/**
+ * 域D(NPC/社交) 联动增强 R455
+ * 第二十三轮循环——社交网络系统三大「活跃但零事件消费」维度首消费
+ * 桥接：
+ *   D→E  d455_fans_micro_fame   playerFans粉丝数全库首事件消费→网红经济引导+现金变现
+ *   D→G  d455_crisis_ally       舆论危机全库首事件层消费→高好感NPC公开声援(社交资本兑现)
+ *   D→B  d455_npc_feed_comment  npcFeeds NPC动态全库首事件消费→线上互动反哺线下好感
+ * 设计原则：全字段||防御；met铁律；applyAffinityChange正规入口；数值[PLACEHOLDER]；
+ *          conditions全false时(无社交网络/无粉丝/无危机)不出场,叙事依然自洽。
+ */
+(function () {
+  "use strict";
+  if (typeof RANDOM_EVENTS === "undefined" || !RANDOM_EVENTS) return;
+  if (RANDOM_EVENTS._domainDLinkageR455Loaded) return;
+  RANDOM_EVENTS._domainDLinkageR455Loaded = true;
+
+  /** 找一位已结识且好感>=minAff的NPC id(遍历relationships,不依赖未实现NPC) */
+  function findTrustedNpc(st, minAff) {
+    if (!st || !st.relationships) return null;
+    var best = null;
+    var bestAff = -Infinity;
+    for (var id in st.relationships) {
+      if (!Object.prototype.hasOwnProperty.call(st.relationships, id)) continue;
+      var r = st.relationships[id];
+      if (r && r.met && (r.affinity || 0) >= minAff && (r.affinity || 0) > bestAff) {
+        best = id;
+        bestAff = r.affinity || 0;
+      }
+    }
+    return best;
+  }
+
+  function displayName(npcId) {
+    if (typeof getNpcDisplayName === "function") {
+      try { return getNpcDisplayName(npcId) || npcId; } catch (e) { return npcId; }
+    }
+    return npcId;
+  }
+
+  var EVENTS = [
+    // ===== 联动1: D→E playerFans 全库首事件消费——粉丝破百的微网红时刻 =====
+    {
+      id: "d455_fans_micro_fame",
+      phase: "street",
+      _isChainEvent: false,
+      icon: "📱",
+      title: "一百个陌生人的关注",
+      story:
+        "手机震了一下——你的粉丝数悄悄破了100。\n\n私信箱里躺着一条消息：\"你好,我们是本地一家小商铺,看你账号内容挺接地气,想请你发条推广,报酬从优。\"\n\n一百个粉丝不多,但这是一百个愿意听你说话的陌生人。",
+      triggers: { minDay: 20, excludeFlags: ["_d455FansMilestone"] },
+      conditions: function (st) {
+        if (!st || st.gameOver) return false;
+        if (!st.socialNetwork) return false;
+        return (st.socialNetwork.playerFans || 0) >= 100; // [PLACEHOLDER] micro网红门槛
+      },
+      choices: [
+        {
+          text: "💰 接下这单小推广",
+          hint: "现金+,名气+,但少量粉丝觉得变味了",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._d455FansMilestone = true;
+            st.resources = st.resources || { cash: 0 };
+            st.resources.cash = (st.resources.cash || 0) + 150; // [PLACEHOLDER]
+            if (st.player) st.player.fame = Math.min(100, (st.player.fame || 0) + 3); // [PLACEHOLDER]
+            if (st.socialNetwork) {
+              st.socialNetwork.playerFans = Math.max(0, (st.socialNetwork.playerFans || 0) - 5); // [PLACEHOLDER] 恰饭掉粉
+            }
+            if (typeof addDailyTransaction === "function") {
+              try { addDailyTransaction(st, "income", "influencer", 150, "粉丝推广收入"); } catch (e) { /* safe */ }
+            }
+            if (typeof StateManager !== "undefined" && StateManager.addMessage)
+              StateManager.addMessage("💰 你接下了第一单推广——现金+¥150,名气+3。评论区有人说\"恰饭了\",掉了5个粉丝。流量变现,有得有失。", "success");
+          },
+        },
+        {
+          text: "✍️ 婉拒,继续做真实内容",
+          hint: "心智+,粉丝稳步增长",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._d455FansMilestone = true;
+            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 4); // [PLACEHOLDER]
+            if (st.socialNetwork) {
+              st.socialNetwork.playerFans = (st.socialNetwork.playerFans || 0) + 10; // [PLACEHOLDER] 真实感涨粉
+            }
+            if (typeof StateManager !== "undefined" && StateManager.addMessage)
+              StateManager.addMessage("✍️ 你婉拒了推广,继续记录真实生活。有粉丝留言:\"就喜欢你这份真实。\"心智+4,粉丝+10。", "success");
+          },
+        },
+      ],
+      probability: 0.1,
+      repeatable: false,
+    },
+
+    // ===== 联动2: D→G 舆论危机全库首事件层消费——高好感NPC公开声援 =====
+    {
+      id: "d455_crisis_ally",
+      phase: "street",
+      _isChainEvent: false,
+      icon: "🛡️",
+      title: "风暴中有人为你说话",
+      story:
+        "舆论风暴还没过去,你已经两天不敢看手机了。\n\n这时朋友发来一张截图——一位和你走得很近的熟人在自己的账号上公开发声:\"我认识这个人,不是网上说的那样。日子还长,别急着下结论。\"\n\n评论区的风向,悄悄变了一点。",
+      triggers: { minDay: 30, excludeFlags: ["_d455CrisisAllySeen"] },
+      conditions: function (st) {
+        if (!st || st.gameOver) return false;
+        if (!st.socialNetwork || !st.socialNetwork["舆论危机"]) return false;
+        var crisis = st.socialNetwork["舆论危机"];
+        if (!crisis.active || (crisis.severity || 0) < 40) return false; // [PLACEHOLDER] 中度以上危机
+        return !!findTrustedNpc(st, 60); // met+好感>=60铁律
+      },
+      choices: [
+        {
+          text: "🙏 私下郑重道谢",
+          hint: "危机缓和,好感+,心情+",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._d455CrisisAllySeen = true;
+            var ally = findTrustedNpc(st, 60);
+            if (st.socialNetwork && st.socialNetwork["舆论危机"]) {
+              var c = st.socialNetwork["舆论危机"];
+              c.severity = Math.max(0, (c.severity || 0) - 20); // [PLACEHOLDER] 声援降温
+            }
+            if (ally && typeof applyAffinityChange === "function") {
+              try { applyAffinityChange(st, ally, 8, "危机中挺身声援"); } catch (e) { /* safe */ }
+            }
+            if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 6); // [PLACEHOLDER]
+            if (typeof StateManager !== "undefined" && StateManager.addMessage)
+              StateManager.addMessage("🙏 你郑重地向" + (ally ? displayName(ally) : "朋友") + "道了谢。患难见真情——舆论热度-20,好感+8,心情+6。", "success");
+          },
+        },
+        {
+          text: "😔 沉默,把这份情记在心里",
+          hint: "危机小幅缓和,心智+",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._d455CrisisAllySeen = true;
+            if (st.socialNetwork && st.socialNetwork["舆论危机"]) {
+              var c2 = st.socialNetwork["舆论危机"];
+              c2.severity = Math.max(0, (c2.severity || 0) - 10); // [PLACEHOLDER]
+            }
+            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 3); // [PLACEHOLDER]
+            if (typeof StateManager !== "undefined" && StateManager.addMessage)
+              StateManager.addMessage("😔 你没有回复,但把这份情记在了心里。有些感激不必说出口。舆论热度-10,心智+3。", "success");
+          },
+        },
+      ],
+      probability: 0.15,
+      repeatable: false,
+    },
+
+    // ===== 联动3: D→B npcFeeds 全库首事件消费——线上动态反哺线下关系 =====
+    {
+      id: "d455_npc_feed_comment",
+      phase: "street",
+      _isChainEvent: false,
+      icon: "💬",
+      title: "深夜刷到熟人的动态",
+      story:
+        "深夜睡不着,你随手刷起了朋友圈。\n\n一位熟识的朋友几小时前发了一条动态,配图是一碗热气腾腾的面条:\"忙了一天,总算能吃口热乎的。\"\n\n你的拇指悬在屏幕上——点个赞?还是认真评论两句?",
+      triggers: { minDay: 15, excludeFlags: ["_d455FeedCommentSeen"] },
+      conditions: function (st) {
+        if (!st || st.gameOver) return false;
+        if (!st.socialNetwork || !Array.isArray(st.socialNetwork.npcFeeds)) return false;
+        if (st.socialNetwork.npcFeeds.length === 0) return false;
+        // 至少有一条动态的作者是已结识NPC(met铁律)
+        for (var i = 0; i < st.socialNetwork.npcFeeds.length; i++) {
+          var f = st.socialNetwork.npcFeeds[i];
+          if (!f || !f.npcId) continue;
+          var rel = st.relationships && st.relationships[f.npcId];
+          if (rel && rel.met) return true;
+        }
+        return false;
+      },
+      choices: [
+        {
+          text: "💬 认真写一条走心评论",
+          hint: "好感+,社交XP+",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._d455FeedCommentSeen = true;
+            // 找到动态作者中已结识的NPC
+            var target = null;
+            if (st.socialNetwork && Array.isArray(st.socialNetwork.npcFeeds)) {
+              for (var i = 0; i < st.socialNetwork.npcFeeds.length; i++) {
+                var f = st.socialNetwork.npcFeeds[i];
+                if (!f || !f.npcId) continue;
+                var rel = st.relationships && st.relationships[f.npcId];
+                if (rel && rel.met) { target = f.npcId; break; }
+              }
+            }
+            if (target && typeof applyAffinityChange === "function") {
+              try { applyAffinityChange(st, target, 5, "深夜动态走心评论"); } catch (e) { /* safe */ }
+            }
+            if (typeof addSkillXp === "function") {
+              try { addSkillXp("social", 4); } catch (e) { /* safe */ } // [PLACEHOLDER]
+            }
+            if (typeof StateManager !== "undefined" && StateManager.addMessage)
+              StateManager.addMessage("💬 你认真评论了" + (target ? displayName(target) : "朋友") + "的动态,对方很快回复了一个笑脸。线上的一句话,暖了线下的关系。好感+5,社交XP+4。", "success");
+          },
+        },
+        {
+          text: "👍 点个赞就睡",
+          hint: "心情+,微量好感",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._d455FeedCommentSeen = true;
+            var target2 = null;
+            if (st.socialNetwork && Array.isArray(st.socialNetwork.npcFeeds)) {
+              for (var j = 0; j < st.socialNetwork.npcFeeds.length; j++) {
+                var f2 = st.socialNetwork.npcFeeds[j];
+                if (!f2 || !f2.npcId) continue;
+                var rel2 = st.relationships && st.relationships[f2.npcId];
+                if (rel2 && rel2.met) { target2 = f2.npcId; break; }
+              }
+            }
+            if (target2 && typeof applyAffinityChange === "function") {
+              try { applyAffinityChange(st, target2, 1, "动态点赞"); } catch (e) { /* safe */ }
+            }
+            if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 2); // [PLACEHOLDER]
+            if (typeof StateManager !== "undefined" && StateManager.addMessage)
+              StateManager.addMessage("👍 你点了个赞,放下手机。萍水相逢的日子里,一个赞也是一句\"我在\"。心情+2,好感+1。", "success");
+          },
+        },
+      ],
+      probability: 0.09,
+      repeatable: false,
+    },
+  ];
+
+  for (var i = 0; i < EVENTS.length; i++) {
+    var _e = EVENTS[i];
+    var _exists = false;
+    for (var j = 0; j < RANDOM_EVENTS.length; j++) {
+      if (RANDOM_EVENTS[j] && RANDOM_EVENTS[j].id === _e.id) { _exists = true; break; }
+    }
+    if (!_exists) RANDOM_EVENTS.push(_e);
+  }
+})();
+
 ;
 // ==== js/core/domain_d_linkage_r246.js ====
 /**
@@ -161157,7 +161288,7 @@ const NPC_RELATION_MATRIX = {
     sister_wu: "neutral",
     brother_huang: "neutral",
   },
-  // [全系统自洽修复] 域D R451 A类: lao_chen(R440新增)已定义但未加入关系矩阵→initNpcRelationships不建条目,关系链/传播/图谱全忽略
+  // [全系统自洽修复] 域D R455 A类: lao_chen(R440新增)已定义但未加入关系矩阵→initNpcRelationships不建条目,关系链/传播/图谱全忽略
   lao_chen: {
     aunt_wang: "friendly",
     old_zhou: "old_acquaintance",
@@ -161179,7 +161310,7 @@ const NPC_RELATION_MATRIX = {
     old_ma: "neutral",
     xiao_wei: "neutral",
   },
-  // [全系统自洽修复] 域D R451 A类: xiao_wei(R442新增)已定义但未加入关系矩阵→同上
+  // [全系统自洽修复] 域D R455 A类: xiao_wei(R442新增)已定义但未加入关系矩阵→同上
   xiao_wei: {
     chef_chen: "friendly",
     aunt_wang: "friendly",
@@ -161230,7 +161361,7 @@ const RELATION_PROPAGATION = {
   brother_huang: { xiaochen: 0.15, aunt_wang: 0.1 },
   // [全系统自洽修复] 域D R245 A类: old_ma 加入关系传播矩阵
   old_ma: { chen_ge: 0.12, boss_li: 0.1, aunt_wang: 0.08 },
-  // [全系统自洽修复] 域D R451 A类: 新NPC接入传播矩阵(社区/夜市社交圈口碑扩散)
+  // [全系统自洽修复] 域D R455 A类: 新NPC接入传播矩阵(社区/夜市社交圈口碑扩散)
   lao_chen: { aunt_wang: 0.1, old_zhou: 0.12, xiaochen: 0.08 },
   xiao_wei: { chef_chen: 0.12, aunt_wang: 0.08, xiao_mei: 0.1 },
 };
@@ -161656,7 +161787,7 @@ function checkNpcRelationEventTriggers(state) {
     var affA =
       (state.relationships[npcA] && state.relationships[npcA].affinity) || 0;
     if (affA < 30) continue;
-    // [全系统自洽修复] 域D R451 B类补齐: npcA 同样加 met 守卫(与 npcB 一致,防未结识NPC因初始好感溢出误触发关系链)
+    // [全系统自洽修复] 域D R455 B类补齐: npcA 同样加 met 守卫(与 npcB 一致,防未结识NPC因初始好感溢出误触发关系链)
     if (!state.relationships[npcA] || !state.relationships[npcA].met) continue;
 
     var relations = NPC_RELATION_MATRIX[npcA];
@@ -248302,7 +248433,7 @@ if (typeof window !== "undefined") {
       // F→D 关系面板"久未联系"提醒：把关系网UI从只读升级为重连驱动
       id: "f442_neglect_reconnect", phase: "street", _isChainEvent: false, icon: "📇",
       title: "久未联系的老友",
-      story: "关系网面板顶部标出了一个提醒——有一位老朋友，你们已经很久没有联系了。面板上那行灰色小字像在轻声提醒：关系是需要经营的。", // [全系统自洽修复] 域D R451 A类: 渲染层(events_core.js:717)只读story不做模板替换也不调用text()→'{desc}'原样显示给玩家
+      story: "关系网面板顶部标出了一个提醒——有一位老朋友，你们已经很久没有联系了。面板上那行灰色小字像在轻声提醒：关系是需要经营的。", // [全系统自洽修复] 域D R455 A类: 渲染层(events_core.js:717)只读story不做模板替换也不调用text()→'{desc}'原样显示给玩家
       triggers: { minDay: 60, excludeFlags: ["_f442ReconnectCooldown"] },
       conditions: function (st) {
         return !st.gameOver && st.relationships && mostNeglectedNpcR442(st) !== null;
@@ -248330,7 +248461,7 @@ if (typeof window !== "undefined") {
       // F→E 资产配置视图：财务面板从只读升级为投资意识养成
       id: "f442_asset_allocation", phase: "street", _isChainEvent: false, icon: "📊",
       title: "资产配置视图",
-      story: "你切到财务面板的资产配置视图——持仓分布一目了然。仓位是分散还是集中，风险是高是低，图表比直觉诚实得多。", // [全系统自洽修复] 域D R451 A类: 同上,{desc}占位符泄漏修复
+      story: "你切到财务面板的资产配置视图——持仓分布一目了然。仓位是分散还是集中，风险是高是低，图表比直觉诚实得多。", // [全系统自洽修复] 域D R455 A类: 同上,{desc}占位符泄漏修复
       triggers: { minDay: 50, excludeFlags: ["_f442AllocCooldown"] },
       conditions: function (st) {
         return !st.gameOver && st.investment && Array.isArray(st.investment.stockHoldings) && st.investment.stockHoldings.length >= 1;
@@ -248357,7 +248488,7 @@ if (typeof window !== "undefined") {
       // F→H 经营仪表盘：公司季度看板从只读展示升级为汇报变现
       id: "f442_ops_dashboard", phase: "corporate", _isChainEvent: false, icon: "🗂️",
       title: "经营仪表盘",
-      story: "你打开公司经营仪表盘，季度看板一目了然——营收曲线、团队效能、项目进度都摆在眼前。数据不会说谎，它在等一个会讲故事的人。", // [全系统自洽修复] 域D R451 A类: 同上,{desc}占位符泄漏修复
+      story: "你打开公司经营仪表盘，季度看板一目了然——营收曲线、团队效能、项目进度都摆在眼前。数据不会说谎，它在等一个会讲故事的人。", // [全系统自洽修复] 域D R455 A类: 同上,{desc}占位符泄漏修复
       triggers: { minDay: 80, excludeFlags: ["_f442OpsCooldown"] },
       conditions: function (st) {
         return !st.gameOver && st.corporate && st.corporate.company;
@@ -248516,6 +248647,143 @@ if (typeof window !== "undefined") {
   }
 })();
 ;
+// ==== js/core/domain_f_linkage_r455.js ====
+/**
+ * 域F(UI/UX) 联动增强 R455（第三轮循环）
+ * 桥接：
+ *   F→D  f455_social_reminder     社交提醒 → 消费 relationships+needs 数据,
+ *     社交面板→"好久没联系了"的主动社交提醒
+ *   F→E  f455_finance_overview    财务概览 → 消费 resources+investment 数据,
+ *     财务面板→"你的资产配置合理吗"的财务健康检查
+ *   F→C  f455_skill_progress      技能进度 → 消费 skills 数据,
+ *     技能面板→"离下一个等级还差多少"的进度可视化
+ */
+(function () {
+  "use strict";
+  if (typeof RANDOM_EVENTS === "undefined" || !RANDOM_EVENTS) return;
+  if (RANDOM_EVENTS._domainFLinkageR455Loaded) return;
+  RANDOM_EVENTS._domainFLinkageR455Loaded = true;
+
+  var EVENTS = [
+    {
+      id: "f455_social_reminder", phase: "street", _isChainEvent: false, icon: "📱",
+      title: "久未联系",
+      story: "手机弹出一条提醒——{desc}",
+      triggers: { minDay: 20, interval: 45, maxRepeats: 5, excludeFlags: ["_f455SocialReminderCooldown"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        return (st.flags && !st.flags._f455SocialReminderCooldown);
+      },
+      choices: [
+        { text: "📱 打个电话问候", hint: "好感+2,心情+2", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._f455SocialReminderCooldown = true;
+          if (typeof applyAffinityChange === "function") {
+            for (var id in (st.relationships || {})) {
+              if (st.relationships[id] && st.relationships[id].met) {
+                try { applyAffinityChange(st, id, 2, "主动联系问候"); } catch(e) {}
+                break;
+              }
+            }
+          }
+          if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 2);
+          if (typeof StateManager !== "undefined") StateManager.addMessage("📱 你打了个电话给老朋友——'喂，好久不见，最近怎么样？' 电话那头的声音，听起来还是那么熟悉。好感+2,心情+2。", "success");
+        }},
+        { text: "💬 发条微信", hint: "好感+1", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._f455SocialReminderCooldown = true;
+          if (typeof applyAffinityChange === "function") {
+            for (var id in (st.relationships || {})) {
+              if (st.relationships[id] && st.relationships[id].met) {
+                try { applyAffinityChange(st, id, 1, "微信问候"); } catch(e) {}
+                break;
+              }
+            }
+          }
+          if (typeof StateManager !== "undefined") StateManager.addMessage("📱 你发了条微信过去——'最近还好吗？' 对方很快回了：'挺好的！改天聚聚！' 好感+1。", "success");
+        }}
+      ],
+      text: function (st) {
+        if (!st) return null;
+        return "手机弹出一条提醒——'你已经很久没联系某些朋友了。' 在这座城市，别让距离拉远了人心。";
+      }
+    },
+    {
+      id: "f455_finance_overview", phase: "street", _isChainEvent: false, icon: "💰",
+      title: "财务体检",
+      story: "你打开记账软件，审视自己的财务状况——{desc}",
+      triggers: { minDay: 25, interval: 60, maxRepeats: 5, excludeFlags: ["_f455FinanceOverviewCooldown"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        return (st.flags && !st.flags._f455FinanceOverviewCooldown);
+      },
+      choices: [
+        { text: "💰 调整预算", hint: "会计XP+4,心智+1", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._f455FinanceOverviewCooldown = true;
+          if (typeof addSkillXp === "function") { try { addSkillXp("accounting", 4); } catch(e) {} }
+          if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 1);
+          if (typeof StateManager !== "undefined") StateManager.addMessage("💰 你调整了预算——减少了不必要的开支，增加了储蓄比例。会计XP+4,心智+1。", "success");
+        }},
+        { text: "🏦 存一笔定期", hint: "存款+2000", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._f455FinanceOverviewCooldown = true;
+          if (st.resources && st.resources.cash >= 2000) {
+            st.resources.cash -= 2000;
+            st.resources.bankBalance = (st.resources.bankBalance || 0) + 2000;
+          }
+          if (typeof StateManager !== "undefined") StateManager.addMessage("💰 你存了一笔定期——强制储蓄，积少成多。存款+¥2000。", "success");
+        }}
+      ],
+      text: function (st) {
+        if (!st) return null;
+        var cash = (st.resources && st.resources.cash) || 0;
+        var bank = (st.resources && st.resources.bankBalance) || 0;
+        return "你打开记账软件，审视自己的财务状况——现金¥" + Math.floor(cash).toLocaleString() + "，存款¥" + Math.floor(bank).toLocaleString() + "。你的财务状况健康吗？";
+      }
+    },
+    {
+      id: "f455_skill_progress", phase: "street", _isChainEvent: false, icon: "📈",
+      title: "技能进度",
+      story: "你在技能面板上看到，离下一个等级只差一点点——{desc}",
+      triggers: { minDay: 15, interval: 45, maxRepeats: 5, excludeFlags: ["_f455SkillProgressCooldown"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        return (st.flags && !st.flags._f455SkillProgressCooldown);
+      },
+      choices: [
+        { text: "📚 花时间练习", hint: "全技能XP+2,疲劳+2", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._f455SkillProgressCooldown = true;
+          var skills = ["accounting", "management", "marketing", "technology", "social", "trade"];
+          for (var i = 0; i < skills.length; i++) { if (typeof addSkillXp === "function") { try { addSkillXp(skills[i], 2); } catch(e) {} } }
+          if (st.needs) st.needs.fatigue = Math.min(100, (st.needs.fatigue || 0) + 2);
+          if (typeof StateManager !== "undefined") StateManager.addMessage("📈 你花了一整天练习技能——虽然累，但看着经验条往上涨，很有成就感。全技能XP+2,疲劳+2。", "success");
+        }},
+        { text: "🎯 报个培训班", hint: "随机技能XP+5,花费1000", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._f455SkillProgressCooldown = true;
+          if (st.resources && st.resources.cash >= 1000) {
+            st.resources.cash -= 1000;
+            var skills = ["accounting", "management", "marketing", "technology", "social", "trade"];
+            var sk = skills[Math.floor(Math.random() * skills.length)];
+            if (typeof addSkillXp === "function") { try { addSkillXp(sk, 5); } catch(e) {} }
+            if (typeof StateManager !== "undefined") StateManager.addMessage("📈 你报了个培训班——花钱投资自己，是最值的投资。随机技能XP+5,花费¥1000。", "success");
+          }
+        }}
+      ],
+      text: function (st) {
+        if (!st) return null;
+        return "你在技能面板上看到，离下一个等级只差一点点——就差那么一口气，就能升级了。";
+      }
+    }
+  ];
+
+  for (var i = 0; i < EVENTS.length; i++) {
+    (function (ev) {
+      var exists = false;
+      for (var j = 0; j < RANDOM_EVENTS.length; j++) {
+        if (RANDOM_EVENTS[j] && RANDOM_EVENTS[j].id === ev.id) { exists = true; break; }
+      }
+      if (!exists) RANDOM_EVENTS.push(ev);
+    })(EVENTS[i]);
+  }
+})();
+;
 // ==== js/core/domain_b_linkage_r442.js ====
 /**
  * 域B(事件/叙事) 联动增强 R442
@@ -248594,7 +248862,7 @@ if (typeof window !== "undefined") {
             if (typeof addSkillXp === "function") {
               try { addSkillXp("cooking", 12); } catch (e) { /* safe */ }
             }
-            // [全系统自洽修复] 域D R451 A类: 小薇事件只写flag不接好感系统→NPC定义存在但永不进关系图谱,接入正规入口
+            // [全系统自洽修复] 域D R455 A类: 小薇事件只写flag不接好感系统→NPC定义存在但永不进关系图谱,接入正规入口
             if (typeof applyAffinityChange === "function") {
               try { applyAffinityChange(st, "xiao_wei", 10, "认真学烹饪结缘"); } catch (e) { /* safe */ }
             }
@@ -248610,7 +248878,7 @@ if (typeof window !== "undefined") {
               st.flags = st.flags || {};
               st.flags._xiaoWeiMet = true;
               if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 2);
-              // [全系统自洽修复] 域D R451 A类: 见面即结识,接入met系统
+              // [全系统自洽修复] 域D R455 A类: 见面即结识,接入met系统
               if (typeof applyAffinityChange === "function") {
                 try { applyAffinityChange(st, "xiao_wei", 3, "夜市初见小薇"); } catch (e) { /* safe */ }
               }
