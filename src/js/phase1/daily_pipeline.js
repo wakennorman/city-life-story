@@ -2330,3 +2330,28 @@ function endDay() {
   var state = StateManager.getState();
   runDailyPipeline(state);
 }
+
+// [全系统自洽修复] 域G R422 联动增强(G→A): 生命周期里程碑追踪
+function trackLifeMilestone(state, milestoneId, label) {
+  if (!state || !milestoneId) return;
+  if (!state.flags) state.flags = {};
+  if (!state.flags._lifeMilestones) state.flags._lifeMilestones = [];
+  if (state.flags._lifeMilestones.some(function(m) { return m.id === milestoneId; })) return;
+  state.flags._lifeMilestones.push({
+    id: milestoneId, label: label || milestoneId, day: state.player && state.player.day || 0
+  });
+}
+
+// [全系统自洽修复] 域G R422 联动增强(G→F): 健康状态综合评分
+function getHealthScore(state) {
+  if (!state) return 50;
+  var s = 0, n = 0;
+  if (state.status && state.status.health != null) { s += state.status.health; n++; }
+  if (state.needs) {
+    if (state.needs.hunger != null) { s += state.needs.hunger; n++; }
+    if (state.needs.fatigue != null) { s += (100 - state.needs.fatigue); n++; }
+    if (state.needs.happiness != null) { s += state.needs.happiness; n++; }
+    if (state.needs.hygiene != null) { s += state.needs.hygiene; n++; }
+  }
+  return n > 0 ? Math.round(s / n) : 50;
+}

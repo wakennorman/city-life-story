@@ -925,6 +925,7 @@ function startScenarioGame(scenarioId) {
 
   // --- 需求 ---
   if (scenario.needs) {
+    if (!state.needs) state.needs = {};
     state.needs.hunger = scenario.needs.hunger || 70;
     state.needs.fatigue = scenario.needs.fatigue || 15;
     state.needs.hygiene = scenario.needs.hygiene || 75;
@@ -932,6 +933,7 @@ function startScenarioGame(scenarioId) {
   }
 
   // --- 健康 ---
+  if (!state.status) state.status = {};
   state.status.health = scenario.health || 100;
 
   // --- 住所 ---
