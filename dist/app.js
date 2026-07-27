@@ -96282,6 +96282,7 @@ if (typeof window !== "undefined") {
 })();
 // [R355] 域C
 // [R451] 域C
+// [R523] 域C
 
 ;
 // ==== js/core/news_driven_events.js ====
@@ -168407,6 +168408,7 @@ if (typeof window !== "undefined") {
 // [R420] 域D
 // [R452] 域D
 // [R492] 域D
+// [R532] 域D
 
 ;
 // ==== js/core/enterprise_fate.js ====
@@ -177192,6 +177194,7 @@ if (typeof module !== "undefined" && module.exports) {
 // [R274] 域B
 // [R362] 域B
 // [R442] 域B
+// [R530] 域B
 
 ;
 // ==== js/data/startup_competition.js ====
@@ -184013,6 +184016,7 @@ function getNpcJobRecommendation(state, limit) {
 // [R403] 域C
 // [R435] 域C
 // [R491] 域C
+// [R531] 域C
 
 ;
 // ==== js/data/goods.js ====
@@ -188451,6 +188455,7 @@ function getSkillMarketValue(skillId) {
 // [R393] 域A
 // [R441] 域A
 // [R489] 域A
+// [R537] 域A
 
 ;
 // ==== js/data/npcs.js ====
@@ -201866,6 +201871,7 @@ if (typeof window !== "undefined") {
 })();
 // [R354] 域B
 // [R434] 域B
+// [R522] 域B
 
 ;
 // ==== js/data/performance_legacy_events.js ====
@@ -216682,6 +216688,7 @@ function getHealthScore(state) {
 // [R455] 域G
 // [R479] 域G
 // [R503] 域G
+// [R527] 域G
 
 ;
 // ==== js/phase1/carry.js ====
@@ -218500,6 +218507,7 @@ function getSkillPriceInsight(state, locKey, goodId) {
 // [R385] 域A
 // [R433] 域A
 // [R481] 域A
+// [R529] 域A
 
 ;
 // ==== js/data/domain_g_linkage_r180.js ====
@@ -222700,6 +222708,7 @@ function refreshStockMarket(state) {
 // [R461] 域E
 // [R485] 域E
 // [R509] 域E
+// [R533] 域E
 
 ;
 // ==== js/phase2/corp_ops.js ====
@@ -223376,6 +223385,7 @@ function getMarketCostMultiplier(state) {
 // [R456] 域H
 // [R480] 域H
 // [R504] 域H
+// [R528] 域H
 
 ;
 // ==== js/phase2/investment.js ====
@@ -228461,6 +228471,7 @@ function getInvestmentPortfolioSummary(state) {
 // [R453] 域E
 // [R477] 域E
 // [R501] 域E
+// [R525] 域E
 
 ;
 // ==== js/phase2/property_market.js ====
@@ -243879,6 +243890,7 @@ function manageInventoryAction(state, inventoryType, action, amount) {
 // [R464] 域H
 // [R488] 域H
 // [R512] 域H
+// [R536] 域H
 
 ;
 // ==== js/phase2/corp_legacy_bonus.js ====
@@ -279527,6 +279539,123 @@ if (typeof window !== "undefined") {
 })();
 
 ;
+// ==== js/core/domain_e_linkage_r597.js ====
+/**
+ * 域E(经济/投资) 联动增强 R597
+ * 桥接：
+ *   E→G  e597_investment_life_balance  投资生活平衡 → 消费 investment+needs 数据,
+ *     投资→"财富与生活"的生命回响
+ *   E→C  e597_investment_career_confidence 投资职业信心 → 消费 investment+skills 数据,
+ *     投资→"投资收益增强职业信心"的职业回响
+ *   E→B  e597_investment_story         投资故事 → 消费 investment+event 数据,
+ *     投资→"投资人生章节"的叙事回响
+ */
+(function () {
+  "use strict";
+  if (typeof RANDOM_EVENTS === "undefined" || !RANDOM_EVENTS) return;
+  if (RANDOM_EVENTS._domainELinkageR597Loaded) return;
+  RANDOM_EVENTS._domainELinkageR597Loaded = true;
+
+  var EVENTS = [
+    {
+      id: "e597_investment_life_balance", phase: "street", _isChainEvent: false, icon: "⚖️",
+      title: "财富与生活",
+      story: "看着自己的投资收益，你开始思考——{desc}",
+      triggers: { minDay: 60, interval: 120, maxRepeats: 3, excludeFlags: ["_e597LifeBalanceCooldown"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        if (!st.flags || st.flags._e597LifeBalanceCooldown) return false;
+        return st.investment && (st.investment.stockHoldings && st.investment.stockHoldings.length > 0);
+      },
+      choices: [
+        { text: "🎉 犒劳自己", hint: "心情+5,现金-500", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._e597LifeBalanceCooldown = true;
+          if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 5);
+          if (st.resources) st.resources.cash = Math.max(0, (st.resources.cash || 0) - 500);
+          if (typeof StateManager !== "undefined") StateManager.addMessage("⚖️ '赚了钱也要享受生活。' 你好好犒劳了自己。心情+5,现金-¥500。", "success");
+        }},
+        { text: "📈 继续投资", hint: "会计XP+3", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._e597LifeBalanceCooldown = true;
+          if (typeof addSkillXp === "function") { try { addSkillXp("accounting", 3); } catch(e) {} }
+          if (typeof StateManager !== "undefined") StateManager.addMessage("⚖️ '让钱生钱。' 你选择继续投资。会计XP+3。", "success");
+        }}
+      ],
+      text: function (st) {
+        if (!st) return null;
+        return "看着自己的投资收益，你开始思考——'财富是为了更好的生活。' 你开始平衡投资与生活。";
+      }
+    },
+    {
+      id: "e597_investment_career_confidence", phase: "corporate", _isChainEvent: false, icon: "💼",
+      title: "投资收益增强职业信心",
+      story: "投资的成功让你对职业也更有信心——{desc}",
+      triggers: { minDay: 50, interval: 100, maxRepeats: 3, excludeFlags: ["_e597CareerConfCooldown"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        if (!st.flags || st.flags._e597CareerConfCooldown) return false;
+        return st.investment && (st.investment.stockHoldings && st.investment.stockHoldings.length > 0);
+      },
+      choices: [
+        { text: "💪 更有底气", hint: "管理XP+5", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._e597CareerConfCooldown = true;
+          if (typeof addSkillXp === "function") { try { addSkillXp("management", 5); } catch(e) {} }
+          if (typeof StateManager !== "undefined") StateManager.addMessage("💼 '投资成功让我更有底气。' 你在职场上更有信心。管理XP+5。", "success");
+        }},
+        { text: "📚 学习更多", hint: "随机技能XP+5", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._e597CareerConfCooldown = true;
+          var skills = ["coding", "sales", "accounting", "management", "finance"];
+          var sk = skills[Math.floor(Math.random() * skills.length)];
+          if (typeof addSkillXp === "function") { try { addSkillXp(sk, 5); } catch(e) {} }
+          if (typeof StateManager !== "undefined") StateManager.addMessage("💼 '学无止境。' " + sk + "XP+5。", "success");
+        }}
+      ],
+      text: function (st) {
+        if (!st) return null;
+        return "投资的成功让你对职业也更有信心——'财商就是智商。' 你开始思考如何将投资思维应用到职业中。";
+      }
+    },
+    {
+      id: "e597_investment_story", phase: "street", _isChainEvent: false, icon: "📖",
+      title: "投资人生章节",
+      story: "回顾自己的投资历程，你感慨万千——{desc}",
+      triggers: { minDay: 70, interval: 150, maxRepeats: 3, excludeFlags: ["_e597InvestStoryCooldown"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        if (!st.flags || st.flags._e597InvestStoryCooldown) return false;
+        return st.stats && st.stats.eventsTriggered >= 10;
+      },
+      choices: [
+        { text: "📝 记录下来", hint: "会计XP+5,心智+2", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._e597InvestStoryCooldown = true;
+          if (typeof addSkillXp === "function") { try { addSkillXp("accounting", 5); } catch(e) {} }
+          if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 2);
+          if (typeof StateManager !== "undefined") StateManager.addMessage("📖 '这些经历值得被记住。' 你把投资历程记录下来。会计XP+5,心智+2。", "success");
+        }},
+        { text: "🎯 规划未来", hint: "智力+3", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._e597InvestStoryCooldown = true;
+          if (st.player) st.player.intelligence = Math.min(100, (st.player.intelligence || 50) + 3);
+          if (typeof StateManager !== "undefined") StateManager.addMessage("📖 '下一章要写得更加精彩。' 你开始规划未来的投资计划。智力+3。", "success");
+        }}
+      ],
+      text: function (st) {
+        if (!st) return null;
+        return "回顾自己的投资历程，你感慨万千——'从第一笔投资到今天。' 你开始思考下一章该怎么写。";
+      }
+    }
+  ];
+
+  for (var i = 0; i < EVENTS.length; i++) {
+    (function (ev) {
+      var exists = false;
+      for (var j = 0; j < RANDOM_EVENTS.length; j++) {
+        if (RANDOM_EVENTS[j] && RANDOM_EVENTS[j].id === ev.id) { exists = true; break; }
+      }
+      if (!exists) RANDOM_EVENTS.push(ev);
+    })(EVENTS[i]);
+  }
+})();
+
+;
 // ==== js/components/companyHistory.js ====
 /**
  * 公司历史书组件（P1 企业命运系统 Phase 2）
@@ -282423,6 +282552,7 @@ function getHealthStatusSummary(state) {
 // [R454] 域F
 // [R478] 域F
 // [R502] 域F
+// [R526] 域F
 
 ;
 // ==== js/ui/render_infra.js ====
@@ -290175,6 +290305,7 @@ function renderFinanceTab(state, parent) {
 // [R462] 域F
 // [R486] 域F
 // [R510] 域F
+// [R534] 域F
 
 ;
 // ==== js/ui/corp_ui.js ====
@@ -304422,6 +304553,7 @@ function renderSocialNetworkTab(state, parent) {
 // [R404] 域D
 // [R444] 域D
 // [R484] 域D
+// [R524] 域D
 
 ;
 // ==== js/ui/career_dev.js ====
@@ -318228,6 +318360,7 @@ if (typeof registerNewsEventsToPool === "function") registerNewsEventsToPool();
 // [R463] 域G
 // [R487] 域G
 // [R511] 域G
+// [R535] 域G
 
 ;
 // ==== js/data/scenario_start_chains.js ====
