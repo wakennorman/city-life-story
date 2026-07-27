@@ -107,7 +107,10 @@ function buyGood(goodId, qty) {
 
   // 记录购买支出
   addDailyTransaction(state, "expense", "shopping", totalCost, "购买" + good.name + "×" + qty);
-
+  // [全系统自洽修复] 域A 联动增强(A→C): 批量采购→销售技能
+  if (qty >= 5 && typeof addSkillXp === "function") {
+    addSkillXp("sales", Math.min(3, Math.floor(qty / 5)));
+  }
   // [全系统自洽修复] 域A R387: 累计交易额追踪+里程碑检查
   if (!state.trade._totalSpent) state.trade._totalSpent = 0;
   state.trade._totalSpent += totalCost;
@@ -255,6 +258,13 @@ function sellGood(goodId, qty) {
           StateManager.addMessage("📈 累计交易利润突破¥" + (_traderM * 10000).toLocaleString() + "！市场上的名声让熟人对你刮目相看。", "success");
         }
       }
+    }
+  }
+  // [全系统自洽修复] 域A 联动增强(A→B): 高利润交易叙事
+  if (avgBuy > 0 && totalEarned > 0 && (totalEarned / qty / avgBuy - 1) > 0.5) {
+    var _profitPct = Math.round(((totalEarned / qty / avgBuy) - 1) * 100);
+    if (typeof StateManager !== "undefined") {
+      StateManager.addMessage("💡 这笔交易利润率 " + _profitPct + "%！低买高卖的直觉越来越准了。", "success");
     }
   }
 
