@@ -16836,6 +16836,12 @@ function getEventHealthImpact(state, eventId) {
   if (typeof RANDOM_EVENTS === "undefined") return;
   if (RANDOM_EVENTS._corpLoaded) return;
   RANDOM_EVENTS._corpLoaded = true;
+  // [全系统自洽修复] 域H R592: needs 守卫辅助函数
+  function _guardNeedsH(st) {
+    if (!st.needs) st.needs = { hunger: 50, fatigue: 30, hygiene: 60, happiness: 50 };
+    return st.needs;
+  }
+
 
   // [全系统自洽修复] 域H R512: needs 守卫辅助函数（防止旧存档 state.needs 未初始化时崩溃）
   function _guardNeeds(st) {
@@ -16865,7 +16871,7 @@ function getEventHealthImpact(state, eventId) {
           apply: (st) => {
             _guardNeeds(st);
             st.flags._insiderRumorSeen = true;
-            st.needs.fatigue = Math.min(100, st.needs.fatigue + 5);
+            _guardNeedsH(st).fatigue = Math.min(100, _guardNeedsH(st).fatigue + 5);
             if ((st.resources.cash || 0) >= 100) { // [全系统自洽修复] 域H A类: cash NaN守卫
               st.resources.cash = (st.resources.cash || 0) - 100;
               // 调度后续：验证结果
@@ -16929,7 +16935,7 @@ function getEventHealthImpact(state, eventId) {
               150,
               (st.player.corporate.kpi || 0) + 5,
             );
-            st.needs.happiness = Math.min(100, st.needs.happiness + 2);
+            _guardNeedsH(st).happiness = Math.min(100, _guardNeedsH(st).happiness + 2);
             StateManager.addMessage(
               "🚫 你摇摇头继续干活。八卦听听就好，不耽误正事。",
               "info",
@@ -16962,7 +16968,7 @@ function getEventHealthImpact(state, eventId) {
             if (success) {
               const profit = Random.int(4000, 5999);
               st.resources.cash = (st.resources.cash || 0) + profit;
-              st.needs.happiness = Math.min(100, st.needs.happiness + 12);
+              _guardNeedsH(st).happiness = Math.min(100, _guardNeedsH(st).happiness + 12);
               st.flags._insiderTradingWon = true;
               StateManager.addMessage(
                 `💰 合作如期宣布，股价大涨！你赚了 ¥${profit - 3000}！`,
@@ -16978,7 +16984,7 @@ function getEventHealthImpact(state, eventId) {
                 );
               }
             } else {
-              st.needs.happiness = Math.max(0, st.needs.happiness - 15);
+              _guardNeedsH(st).happiness = Math.max(0, _guardNeedsH(st).happiness - 15);
               st.player.mental = Math.max(0, st.player.mental - 10);
               st.flags._insiderTradingLost = true;
               StateManager.addMessage(
@@ -17011,13 +17017,13 @@ function getEventHealthImpact(state, eventId) {
             if (success) {
               const profit = Random.int(1300, 1899);
               st.resources.cash = (st.resources.cash || 0) + profit;
-              st.needs.happiness = Math.min(100, st.needs.happiness + 6);
+              _guardNeedsH(st).happiness = Math.min(100, _guardNeedsH(st).happiness + 6);
               StateManager.addMessage(
                 `💰 赌对了，小赚 ¥${profit - 1000}。`,
                 "success",
               );
             } else {
-              st.needs.happiness = Math.max(0, st.needs.happiness - 6);
+              _guardNeedsH(st).happiness = Math.max(0, _guardNeedsH(st).happiness - 6);
               StateManager.addMessage(
                 "💰 消息是假的，1000块打了水漂。",
                 "warning",
@@ -17030,7 +17036,7 @@ function getEventHealthImpact(state, eventId) {
           hint: "远离灰色地带",
           apply: (st) => {
             _guardNeeds(st);
-            st.needs.happiness = Math.min(100, st.needs.happiness + 3);
+            _guardNeedsH(st).happiness = Math.min(100, _guardNeedsH(st).happiness + 3);
             st.player.mental = Math.min(100, st.player.mental + 5);
             st.flags._insiderTradingRefused = true;
             StateManager.addMessage(
@@ -17058,7 +17064,7 @@ function getEventHealthImpact(state, eventId) {
           hint: "逃避",
           apply: (st) => {
             _guardNeeds(st);
-            st.needs.happiness = Math.max(0, st.needs.happiness - 10);
+            _guardNeedsH(st).happiness = Math.max(0, _guardNeedsH(st).happiness - 10);
             st.player.mental = Math.max(0, st.player.mental - 8);
             // 80% 概率没事，20% 被盯上
             const safe = Random.chance(0.8);
@@ -17085,7 +17091,7 @@ function getEventHealthImpact(state, eventId) {
           apply: (st) => {
             _guardNeeds(st);
             st.player.mental = Math.min(100, st.player.mental + 5);
-            st.needs.happiness = Math.max(0, st.needs.happiness - 5);
+            _guardNeedsH(st).happiness = Math.max(0, _guardNeedsH(st).happiness - 5);
             // 60% 没事，40% 被警告
             const ok = Random.chance(0.6);
             if (ok) {
@@ -17121,7 +17127,7 @@ function getEventHealthImpact(state, eventId) {
                 100,
                 (st.player.corporate || {}).risk + 25,
               );
-              st.needs.happiness = Math.max(0, st.needs.happiness - 15);
+              _guardNeedsH(st).happiness = Math.max(0, _guardNeedsH(st).happiness - 15);
               StateManager.addMessage(
                 "😤 被调查组点名了！虽然没被起诉，但心里一直悬着...",
                 "danger",
@@ -17146,7 +17152,7 @@ function getEventHealthImpact(state, eventId) {
           apply: (st) => {
             _guardNeeds(st);
             st.player.fame = Math.min(100, st.player.fame + 2);
-            st.needs.happiness = Math.max(0, st.needs.happiness - 5);
+            _guardNeedsH(st).happiness = Math.max(0, _guardNeedsH(st).happiness - 5);
             const recovered = Random.chance(0.15);
             if (recovered) {
               const back = Random.int(300, 499);
@@ -17168,7 +17174,7 @@ function getEventHealthImpact(state, eventId) {
           hint: "勤劳致富",
           apply: (st) => {
             _guardNeeds(st);
-            st.needs.fatigue = Math.min(100, st.needs.fatigue + 15);
+            _guardNeedsH(st).fatigue = Math.min(100, _guardNeedsH(st).fatigue + 15);
             // [全系统自洽修复] 域H A类#19: chain event apply中 st.player.corporate 守卫
             if (!st.player || !st.player.corporate) return;
             (st.player.corporate || {}).kpi = Math.min(
@@ -17197,7 +17203,7 @@ function getEventHealthImpact(state, eventId) {
           hint: "接受现实",
           apply: (st) => {
             _guardNeeds(st);
-            st.needs.happiness = Math.max(0, st.needs.happiness - 8);
+            _guardNeedsH(st).happiness = Math.max(0, _guardNeedsH(st).happiness - 8);
             st.player.mental = Math.min(100, st.player.mental + 3);
             StateManager.addMessage(
               "😞 自认倒霉吧。吃一堑长一智，下次再也不碰这种事了。",
@@ -17235,7 +17241,7 @@ function getEventHealthImpact(state, eventId) {
             st.player.corporate.upwardMgmt = Math.min(100, (st.player.corporate.upwardMgmt || 0) + 5);
             st.player.corporate.hair = Math.max(0, (st.player.corporate.hair || 0) - 8);
             st.player.corporate.risk = Math.min(100, (st.player.corporate.risk || 0) + 3);
-            st.needs.fatigue = Math.min(100, st.needs.fatigue + 20);
+            _guardNeedsH(st).fatigue = Math.min(100, _guardNeedsH(st).fatigue + 20);
             StateManager.addMessage(
               "💪 周末连续加班！KPI+12，能力+3，发量-8，疲劳+20。",
               "event",
@@ -17257,8 +17263,8 @@ function getEventHealthImpact(state, eventId) {
                 "warning",
               );
             } else {
-              st.needs.fatigue = Math.max(0, st.needs.fatigue - 15);
-              st.needs.happiness = Math.min(100, st.needs.happiness + 8);
+              _guardNeedsH(st).fatigue = Math.max(0, _guardNeedsH(st).fatigue - 15);
+              _guardNeedsH(st).happiness = Math.min(100, _guardNeedsH(st).happiness + 8);
               StateManager.addMessage(
                 "😴 成功装病！在家睡了一天，疲劳-15。",
                 "success",
@@ -17280,7 +17286,7 @@ function getEventHealthImpact(state, eventId) {
                 150,
                 (st.player.corporate || {}).kpi + 6,
               );
-              st.needs.fatigue = Math.min(100, st.needs.fatigue + 8);
+              _guardNeedsH(st).fatigue = Math.min(100, _guardNeedsH(st).fatigue + 8);
               StateManager.addMessage(
                 "💬 提议平摊工作！团队协作，效率还不错，KPI+6，疲劳+8。",
                 "success",
@@ -17405,7 +17411,7 @@ function getEventHealthImpact(state, eventId) {
               0,
               (st.player.corporate || {}).dignity - 8,
             );
-            st.needs.happiness = Math.max(0, st.needs.happiness - 5);
+            _guardNeedsH(st).happiness = Math.max(0, _guardNeedsH(st).happiness - 5);
             StateManager.addMessage(
               "🙏 忍了。KPI-5，尊严-8，心里憋屈。",
               "warning",
@@ -17426,7 +17432,7 @@ function getEventHealthImpact(state, eventId) {
                 100,
                 (st.player.corporate || {}).dignity + 5,
               );
-              st.needs.happiness = Math.min(100, st.needs.happiness + 8);
+              _guardNeedsH(st).happiness = Math.min(100, _guardNeedsH(st).happiness + 8);
               StateManager.addMessage(
                 "📋 讲得清清楚楚！客户心服口服道歉了，尊严+5，KPI+3。",
                 "success",
@@ -17457,7 +17463,7 @@ function getEventHealthImpact(state, eventId) {
               100,
               (st.player.corporate || {}).risk + 5,
             );
-            st.needs.happiness = Math.min(100, st.needs.happiness + 12);
+            _guardNeedsH(st).happiness = Math.min(100, _guardNeedsH(st).happiness + 12);
             StateManager.addMessage(
               "😡 直接挂了电话！爽是爽了，KPI-10，风险+5，尊严+10。",
               "event",
@@ -17495,7 +17501,7 @@ function getEventHealthImpact(state, eventId) {
                   1.5,
               );
               st.corporate.jobOffer = { salary: offer, company: "新公司" };
-              st.needs.happiness = Math.min(100, st.needs.happiness + 10);
+              _guardNeedsH(st).happiness = Math.min(100, _guardNeedsH(st).happiness + 10);
               (st.player.corporate || {}).upwardMgmt = Math.max(
                 0,
                 (st.player.corporate || {}).upwardMgmt - 5,
@@ -17507,7 +17513,7 @@ function getEventHealthImpact(state, eventId) {
               // 弹跳槽决策框
               setTimeout(() => showJobOfferModal(), 200);
             } else {
-              st.needs.fatigue = Math.min(100, st.needs.fatigue + 5);
+              _guardNeedsH(st).fatigue = Math.min(100, _guardNeedsH(st).fatigue + 5);
               (st.player.corporate || {}).upwardMgmt = Math.max(
                 0,
                 (st.player.corporate || {}).upwardMgmt - 3,
@@ -17577,7 +17583,7 @@ function getEventHealthImpact(state, eventId) {
               0,
               (st.player.corporate || {}).hair - 6,
             );
-            st.needs.fatigue = Math.min(100, st.needs.fatigue + 18);
+            _guardNeedsH(st).fatigue = Math.min(100, _guardNeedsH(st).fatigue + 18);
             StateManager.addMessage(
               "📊 连夜赶完PPT，领导表示很满意！向上管理+8，发量-6。",
               "success",
@@ -17594,7 +17600,7 @@ function getEventHealthImpact(state, eventId) {
                 100,
                 (st.player.corporate || {}).ability + 2,
               );
-              st.needs.fatigue = Math.min(100, st.needs.fatigue + 5);
+              _guardNeedsH(st).fatigue = Math.min(100, _guardNeedsH(st).fatigue + 5);
               StateManager.addMessage(
                 "🤖 AI生成的PPT还不错，加点修改就交差了。",
                 "success",
@@ -17773,7 +17779,7 @@ function getEventHealthImpact(state, eventId) {
               0,
               (st.player.corporate || {}).hair - 2,
             );
-            st.needs.happiness = Math.min(100, st.needs.happiness + 5);
+            _guardNeedsH(st).happiness = Math.min(100, _guardNeedsH(st).happiness + 5);
             StateManager.addMessage(
               "🍻 和各路大佬喝了一圈！向上管理+8，人缘+12。",
               "success",
@@ -17788,7 +17794,7 @@ function getEventHealthImpact(state, eventId) {
             const roll = Random.float(0, 1);
             if (roll < 0.05) {
               st.resources.cash = (st.resources.cash || 0) + 10000;
-              st.needs.happiness = Math.min(100, st.needs.happiness + 20);
+              _guardNeedsH(st).happiness = Math.min(100, _guardNeedsH(st).happiness + 20);
               StateManager.addMessage(
                 "🎰 中了大奖 ¥10,000！全场欢呼！",
                 "success",
@@ -17797,7 +17803,7 @@ function getEventHealthImpact(state, eventId) {
               st.resources.cash = (st.resources.cash || 0) + 500;
               StateManager.addMessage("🎰 中了小奖 ¥500。聊胜于无。", "info");
             } else {
-              st.needs.happiness = Math.max(0, st.needs.happiness - 3);
+              _guardNeedsH(st).happiness = Math.max(0, _guardNeedsH(st).happiness - 3);
               StateManager.addMessage("🎰 啥也没中。", "info");
             }
           },
@@ -17815,7 +17821,7 @@ function getEventHealthImpact(state, eventId) {
               0,
               (st.player.corporate || {}).upwardMgmt - 3,
             );
-            st.needs.fatigue = Math.max(0, st.needs.fatigue - 10);
+            _guardNeedsH(st).fatigue = Math.max(0, _guardNeedsH(st).fatigue - 10);
             StateManager.addMessage(
               "😴 在家躺平一晚。疲劳-10，但同事都觉得你不合群。",
               "warning",
@@ -17856,7 +17862,7 @@ function getEventHealthImpact(state, eventId) {
               100,
               (st.player.corporate || {}).popularity + 10,
             );
-            st.needs.fatigue = Math.min(100, st.needs.fatigue + 8);
+            _guardNeedsH(st).fatigue = Math.min(100, _guardNeedsH(st).fatigue + 8);
             (st.player.corporate || {}).kpi = Math.min(
               150,
               (st.player.corporate || {}).kpi + 5,
@@ -17922,7 +17928,7 @@ function getEventHealthImpact(state, eventId) {
               st.resources.cash = Math.max(0, (st.resources.cash || 0) - 5000);
               if (Random.chance(0.3)) {
                 st.resources.cash = (st.resources.cash || 0) + Random.int(8000, 22999);
-                st.needs.happiness = Math.min(100, st.needs.happiness + 20);
+                _guardNeedsH(st).happiness = Math.min(100, _guardNeedsH(st).happiness + 20);
                 StateManager.addMessage(
                   "🚀 运气爆棚追涨成功！大赚了一笔！",
                   "success",
@@ -17931,7 +17937,7 @@ function getEventHealthImpact(state, eventId) {
                 st.resources.cash = (st.resources.cash || 0) + Random.int(3000, 6999);
                 StateManager.addMessage("🚀 小赚一点就跑了，还行。", "info");
               } else {
-                st.needs.happiness = Math.max(0, st.needs.happiness - 25);
+                _guardNeedsH(st).happiness = Math.max(0, _guardNeedsH(st).happiness - 25);
                 StateManager.addMessage(
                   "🚀 追在山顶！亏惨了，¥5000打水漂大半。",
                   "danger",
@@ -17996,7 +18002,7 @@ function getEventHealthImpact(state, eventId) {
                 shares: 500,
                 avgPrice: 8,
               });
-              st.needs.happiness = Math.min(100, st.needs.happiness + 10);
+              _guardNeedsH(st).happiness = Math.min(100, _guardNeedsH(st).happiness + 10);
               StateManager.addMessage(
                 "🔔 认购了500股内部员工股，发行价¥8！期待IPO...",
                 "success",
@@ -18453,7 +18459,7 @@ function getEventHealthImpact(state, eventId) {
                 ((st.player.corporate || {}).hair || 50) + 10,
               );
             }
-            st.needs.happiness = Math.min(100, st.needs.happiness + 15);
+            _guardNeedsH(st).happiness = Math.min(100, _guardNeedsH(st).happiness + 15);
             StateManager.addMessage(
               "💢 在工位上摔了键盘走人。尊严+25、发量+10、心情+15——这一刻你觉得自己又活过来了。回购的可能性永远关闭了，但有些东西比公司重要。",
               "event",
@@ -18544,7 +18550,7 @@ function getEventHealthImpact(state, eventId) {
               );
             }
             st.player.mental = Math.min(100, st.player.mental + 10);
-            st.needs.happiness = Math.min(100, st.needs.happiness + 10);
+            _guardNeedsH(st).happiness = Math.min(100, _guardNeedsH(st).happiness + 10);
             StateManager.addMessage(
               "🤝 跟老陈说：“我已经不是当年的我了。” 尊严-5（不是没有遗憾），KPI+10（你彻底接受了员工身份），心智+10、心情+10——放下，也是一种力量。",
               "info",
@@ -18674,7 +18680,7 @@ function getEventHealthImpact(state, eventId) {
                 0,
                 (st.player.corporate || {}).kpi - 15,
               );
-              st.needs.happiness = Math.max(0, st.needs.happiness - 10);
+              _guardNeedsH(st).happiness = Math.max(0, _guardNeedsH(st).happiness - 10);
               if (typeof scheduleChainEvent === "function") {
                 scheduleChainEvent(st, "workplace_boss_grudge", 2, "corporate");
               }
@@ -18696,7 +18702,7 @@ function getEventHealthImpact(state, eventId) {
               (st.player.corporate || {}).dignity - 15,
             );
             (st.player.corporate || {}).kpi = Math.max(0, (st.player.corporate || {}).kpi - 10);
-            st.needs.happiness = Math.max(0, st.needs.happiness - 12);
+            _guardNeedsH(st).happiness = Math.max(0, _guardNeedsH(st).happiness - 12);
             (st.player.corporate || {}).upwardMgmt = Math.min(
               100,
               (st.player.corporate || {}).upwardMgmt + 5,
@@ -18773,7 +18779,7 @@ function getEventHealthImpact(state, eventId) {
           hint: "用实力说话",
           apply: (st) => {
             _guardNeeds(st);
-            st.needs.fatigue = Math.min(100, st.needs.fatigue + 15);
+            _guardNeedsH(st).fatigue = Math.min(100, _guardNeedsH(st).fatigue + 15);
             const success = Random.chance(
               0.3 +
                 ((st.player.corporate || {}).ability - 30) * 0.02 +
@@ -18805,7 +18811,7 @@ function getEventHealthImpact(state, eventId) {
                 0,
                 (st.player.corporate || {}).kpi - 5,
               );
-              st.needs.fatigue = Math.min(100, st.needs.fatigue + 5);
+              _guardNeedsH(st).fatigue = Math.min(100, _guardNeedsH(st).fatigue + 5);
               StateManager.addMessage(
                 "💪 虽然很努力，但项目本身没什么价值，老板还是不满意。",
                 "warning",
@@ -18818,7 +18824,7 @@ function getEventHealthImpact(state, eventId) {
           hint: "寻求保护",
           apply: (st) => {
             _guardNeeds(st);
-            st.needs.fatigue = Math.min(100, st.needs.fatigue + 5);
+            _guardNeedsH(st).fatigue = Math.min(100, _guardNeedsH(st).fatigue + 5);
             const success = Random.chance(
               0.4 + ((st.player.corporate || {}).popularity - 30) * 0.01,
             );
@@ -18852,7 +18858,7 @@ function getEventHealthImpact(state, eventId) {
           hint: "另谋出路",
           apply: (st) => {
             _guardNeeds(st);
-            st.needs.fatigue = Math.min(100, st.needs.fatigue + 8);
+            _guardNeedsH(st).fatigue = Math.min(100, _guardNeedsH(st).fatigue + 8);
             (st.player.corporate || {}).dignity = Math.min(
               100,
               (st.player.corporate || {}).dignity + 3,
@@ -18920,7 +18926,7 @@ function getEventHealthImpact(state, eventId) {
           hint: "实力碾压",
           apply: (st) => {
             _guardNeeds(st);
-            st.needs.fatigue = Math.min(100, st.needs.fatigue + 12);
+            _guardNeedsH(st).fatigue = Math.min(100, _guardNeedsH(st).fatigue + 12);
             (st.player.corporate || {}).kpi = Math.min(
               150,
               (st.player.corporate || {}).kpi + 10,
@@ -18948,7 +18954,7 @@ function getEventHealthImpact(state, eventId) {
               0,
               (st.player.corporate || {}).dignity - 8,
             );
-            st.needs.happiness = Math.max(0, st.needs.happiness - 10);
+            _guardNeedsH(st).happiness = Math.max(0, _guardNeedsH(st).happiness - 10);
             (st.player.corporate || {}).popularity = Math.max(
               0,
               (st.player.corporate || {}).popularity - 5,
@@ -18983,8 +18989,8 @@ function getEventHealthImpact(state, eventId) {
               100,
               (st.player.corporate || {}).dignity + 10,
             );
-            st.needs.happiness = Math.min(100, st.needs.happiness + 10);
-            st.needs.fatigue = Math.max(0, st.needs.fatigue - 10);
+            _guardNeedsH(st).happiness = Math.min(100, _guardNeedsH(st).happiness + 10);
+            _guardNeedsH(st).fatigue = Math.max(0, _guardNeedsH(st).fatigue - 10);
             (st.player.corporate || {}).risk = 15;
             StateManager.addMessage(
               "🚀 你跳槽了！新公司薪资高40%，职位也提升了。但一切从零开始，风险也不小。",
@@ -19020,7 +19026,7 @@ function getEventHealthImpact(state, eventId) {
               100,
               (st.player.corporate || {}).risk + 5,
             );
-            st.needs.happiness = Math.min(100, st.needs.happiness + 3);
+            _guardNeedsH(st).happiness = Math.min(100, _guardNeedsH(st).happiness + 3);
             StateManager.addMessage(
               "💼 你接受了晋升。职位上去了，但你知道这是用尊严换来的。",
               "warning",
@@ -19032,7 +19038,7 @@ function getEventHealthImpact(state, eventId) {
           hint: "拖延决策",
           apply: (st) => {
             _guardNeeds(st);
-            st.needs.happiness = Math.max(0, st.needs.happiness - 5);
+            _guardNeedsH(st).happiness = Math.max(0, _guardNeedsH(st).happiness - 5);
             st.player.mental = Math.max(0, st.player.mental - 3);
             if (typeof scheduleChainEvent === "function") {
               scheduleChainEvent(st, "workplace_deadline", 3, "corporate");
@@ -19067,7 +19073,7 @@ function getEventHealthImpact(state, eventId) {
               100,
               (st.player.corporate || {}).dignity + 10,
             );
-            st.needs.happiness = Math.min(100, st.needs.happiness + 8);
+            _guardNeedsH(st).happiness = Math.min(100, _guardNeedsH(st).happiness + 8);
             (st.player.corporate || {}).risk = 15;
             if (st.corporate) {
               st.corporate.team = [];
@@ -19098,7 +19104,7 @@ function getEventHealthImpact(state, eventId) {
               0,
               (st.player.corporate || {}).dignity - 5,
             );
-            st.needs.happiness = Math.min(100, st.needs.happiness + 2);
+            _guardNeedsH(st).happiness = Math.min(100, _guardNeedsH(st).happiness + 2);
             StateManager.addMessage(
               "💼 你选择留下。晋升了，但你知道这只是开始。",
               "warning",
@@ -19590,7 +19596,7 @@ function getEventHealthImpact(state, eventId) {
             _guardNeeds(st);
             st.flags._siegeReversalSeen = true;
             st.flags._siegeKpiMode = true;
-            st.needs.fatigue = Math.min(100, st.needs.fatigue + 15);
+            _guardNeedsH(st).fatigue = Math.min(100, _guardNeedsH(st).fatigue + 15);
             StateManager.addMessage(
               "主动接了大项目。领导满意——但你每天加班到11点。",
               "info",
@@ -97625,6 +97631,7 @@ if (typeof window !== "undefined") {
 // [R284] 域D
 // [R372] 域D
 // [R428] 域D
+// [R468] 域D
 
 ;
 // ==== js/core/insider_trading_events.js ====
@@ -187701,6 +187708,7 @@ function cleanupExpiredNews(state) {
 }
 // [R90] 域B 联动增强
 // [R386] 域B
+// [R466] 域B
 
 ;
 // ==== js/data/skills.js ====
@@ -194493,6 +194501,7 @@ function hasIllness(state, illnessId) {
 // [R281] 域A
 // [R377] 域A
 // [R425] 域A
+// [R473] 域A
 
 ;
 // ==== js/data/mechanics_registry.js ====
@@ -221252,6 +221261,7 @@ function getGradeBonus(grade) {
 // [R315] 域C
 // [R371] 域C
 // [R411] 域C
+// [R467] 域C
 
 ;
 // ==== js/phase2/promo.js ====
@@ -221578,6 +221588,7 @@ function getTeamProductivity(state) {
 // [R400] 域H
 // [R424] 域H
 // [R448] 域H
+// [R472] 域H
 
 ;
 // ==== js/phase2/stock.js ====
@@ -228634,6 +228645,7 @@ if (typeof window !== "undefined") {
 // [R397] 域E
 // [R421] 域E
 // [R445] 域E
+// [R469] 域E
 
 ;
 // ==== js/phase2/startup_data.js ====
@@ -268128,12 +268140,12 @@ if (typeof window !== "undefined") {
 /**
  * 域H(Phase2/公司) 联动增强 R592
  * 桥接：
- *   H→B  h592_corp_industry_rank 公司行业排名 → 消费 corporate 数据,
- *     排名→"公司行业排名提升"的成就叙事
- *   H→D  h592_corp_social_event 公司社交活动 → 消费 corporate+relationships 数据,
- *     活动→"公司组织的社交活动"的商务社交
- *   H→G  h592_corp_work_stress 公司工作压力 → 消费 corporate+needs 数据,
- *     压力→"工作压力管理"的健康叙事
+ *   H→G  h592_corp_life_balance  公司生活平衡 → 消费 corporate+needs 数据,
+ *     公司→"事业与健康"的生命回响
+ *   H→C  h592_corp_career_growth  公司职业成长 → 消费 corporate+skills 数据,
+ *     公司→"做项目积累职业资本"的职业回响
+ *   H→B  h592_corp_milestone_narrative 公司里程碑叙事 → 消费 corporate 数据,
+ *     公司→"从一间办公室到行业标杆"的叙事回响
  */
 (function () {
   "use strict";
@@ -268141,105 +268153,91 @@ if (typeof window !== "undefined") {
   if (RANDOM_EVENTS._domainHLinkageR592Loaded) return;
   RANDOM_EVENTS._domainHLinkageR592Loaded = true;
 
-  function firstMetNpc(st) {
-    if (!st || !st.relationships) return null;
-    for (var id in st.relationships) { if (st.relationships[id] && st.relationships[id].met) return id; }
-    return null;
-  }
-  function bumpAffinity(st, npcId, amt, reason) {
-    if (!npcId) return;
-    if (typeof applyAffinityChange === "function") { try { applyAffinityChange(st, npcId, amt, reason); } catch(e) {} }
-  }
-
   var EVENTS = [
     {
-      id: "h592_corp_industry_rank", phase: "corporate", _isChainEvent: false, icon: "🏆",
-      title: "行业排名",
-      story: "公司的行业排名上升了——{desc}",
-      triggers: { minDay: 50, interval: 180, maxRepeats: 3, excludeFlags: ["_h592IndustryRankCooldown"] },
+      id: "h592_corp_life_balance", phase: "corporate", _isChainEvent: false, icon: "⚖️",
+      title: "事业与健康",
+      story: "连续的高压工作让你开始反思——{desc}",
+      triggers: { minDay: 40, interval: 90, maxRepeats: 3, excludeFlags: ["_h592LifeBalanceCooldown"] },
       conditions: function (st) {
         if (st.gameOver) return false;
-        if (!st.corporate || !st.corporate.company) return false;
-        return (st.flags && !st.flags._h592IndustryRankCooldown);
+        if (!st.flags || st.flags._h592LifeBalanceCooldown) return false;
+        return st.needs && (st.needs.fatigue || 0) >= 40;
       },
       choices: [
-        { text: "🏆 庆祝成就", hint: "管理XP+5,公司知名度+3,心情+2", apply: function (st) {
-          if (!st) return; st.flags = st.flags || {}; st.flags._h592IndustryRankCooldown = true;
+        { text: "🧘 休息调整", hint: "疲劳-20,健康+5", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._h592LifeBalanceCooldown = true;
+          if (st.needs) st.needs.fatigue = Math.max(0, (st.needs.fatigue || 0) - 20);
+          if (st.status) st.status.health = Math.min(100, (st.status.health || 100) + 5);
+          if (typeof StateManager !== "undefined") StateManager.addMessage("⚖️ '身体是革命的本钱。' 你决定好好休息调整。疲劳-20,健康+5。", "success");
+        }},
+        { text: "💪 咬牙坚持", hint: "业绩+5,疲劳+10", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._h592LifeBalanceCooldown = true;
+          if (st.needs) st.needs.fatigue = Math.min(100, (st.needs.fatigue || 0) + 10);
+          if (typeof StateManager !== "undefined") StateManager.addMessage("⚖️ '再坚持一下，熬过这阵就好了。' 你选择继续拼搏。疲劳+10。", "warning");
+        }}
+      ],
+      text: function (st) {
+        if (!st) return null;
+        return "连续的高压工作让你开始反思——'我是不是该停下来休息一下？' 但手头的工作还在催着你。";
+      }
+    },
+    {
+      id: "h592_corp_career_growth", phase: "corporate", _isChainEvent: false, icon: "📈",
+      title: "做项目积累职业资本",
+      story: "你开始思考如何通过项目积累职业资本——{desc}",
+      triggers: { minDay: 50, interval: 100, maxRepeats: 3, excludeFlags: ["_h592CareerGrowthCooldown"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        if (!st.flags || st.flags._h592CareerGrowthCooldown) return false;
+        return st.corporate && st.corporate.company;
+      },
+      choices: [
+        { text: "💼 主动承担", hint: "管理XP+5", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._h592CareerGrowthCooldown = true;
           if (typeof addSkillXp === "function") { try { addSkillXp("management", 5); } catch(e) {} }
-          if (st.corporate) st.corporate.reputation = Math.min(100, (st.corporate.reputation || 0) + 3);
-          if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 2);
-          if (typeof StateManager !== "undefined") StateManager.addMessage("🏆 '公司在行业排名中上升了X位，这是大家共同努力的结果！' 管理XP+5,公司知名度+3,心情+2。", "success");
+          if (typeof StateManager !== "undefined") StateManager.addMessage("📈 '多做项目多积累。' 你主动承担了更多工作。管理XP+5。", "success");
         }},
-        { text: "📊 分析原因", hint: "会计XP+3,心智+2", apply: function (st) {
-          if (!st) return; st.flags = st.flags || {}; st.flags._h592IndustryRankCooldown = true;
-          if (typeof addSkillXp === "function") { try { addSkillXp("accounting", 3); } catch(e) {} }
-          if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 2);
-          if (typeof StateManager !== "undefined") StateManager.addMessage("🏆 '分析排名上升的原因，找出可以复制的成功经验。' 会计XP+3,心智+2。", "success");
+        { text: "📚 学习新技能", hint: "随机技能XP+5", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._h592CareerGrowthCooldown = true;
+          var skills = ["coding", "sales", "accounting", "management", "cooking", "repair"];
+          var sk = skills[Math.floor(Math.random() * skills.length)];
+          if (typeof addSkillXp === "function") { try { addSkillXp(sk, 5); } catch(e) {} }
+          if (typeof StateManager !== "undefined") StateManager.addMessage("📈 '学无止境。' " + sk + "XP+5。", "success");
         }}
       ],
       text: function (st) {
         if (!st) return null;
-        return "公司的行业排名上升了——'从第X名上升到了第X名！' 排名上升，是对团队努力的最好肯定。";
+        return "你开始思考如何通过项目积累职业资本——'项目是最好的成长机会。' 你开始主动寻找机会。";
       }
     },
     {
-      id: "h592_corp_social_event", phase: "corporate", _isChainEvent: false, icon: "🎪",
-      title: "商务社交活动",
-      story: "公司组织了一场商务社交活动——{desc}",
-      triggers: { minDay: 35, interval: 120, maxRepeats: 3, excludeFlags: ["_h592SocialEventCooldown"] },
+      id: "h592_corp_milestone_narrative", phase: "corporate", _isChainEvent: false, icon: "🏆",
+      title: "从一间办公室到行业标杆",
+      story: "回顾公司的发展历程——{desc}",
+      triggers: { minDay: 100, interval: 180, maxRepeats: 3, excludeFlags: ["_h592MilestoneNarrCooldown"] },
       conditions: function (st) {
         if (st.gameOver) return false;
-        if (!st.corporate) return false;
-        return (st.flags && !st.flags._h592SocialEventCooldown);
+        if (!st.flags || st.flags._h592MilestoneNarrCooldown) return false;
+        return st.corporate && st.corporate.company;
       },
       choices: [
-        { text: "🎪 积极参与", hint: "社交XP+5,公司知名度+3,好感+2", apply: function (st) {
-          if (!st) return; st.flags = st.flags || {}; st.flags._h592SocialEventCooldown = true;
-          if (typeof addSkillXp === "function") { try { addSkillXp("social", 5); } catch(e) {} }
-          if (st.corporate) st.corporate.reputation = Math.min(100, (st.corporate.reputation || 0) + 3);
-          var nid = firstMetNpc(st); bumpAffinity(st, nid, 2, "商务社交");
-          if (typeof StateManager !== "undefined") StateManager.addMessage("🎪 '商务社交活动上认识了很多潜在的合作伙伴。' 社交XP+5,公司知名度+3,好感+2。", "success");
+        { text: "📖 记录历程", hint: "管理XP+5,心智+3", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._h592MilestoneNarrCooldown = true;
+          if (typeof addSkillXp === "function") { try { addSkillXp("management", 5); } catch(e) {} }
+          if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 3);
+          if (typeof StateManager !== "undefined") StateManager.addMessage("🏆 '从一间小办公室，到今天的规模。' 你把公司的发展历程记录下来。管理XP+5,心智+3。", "success");
         }},
-        { text: "📋 组织活动", hint: "管理XP+3,社交XP+2", apply: function (st) {
-          if (!st) return; st.flags = st.flags || {}; st.flags._h592SocialEventCooldown = true;
+        { text: "🚀 继续前进", hint: "管理XP+3,现金+2000", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._h592MilestoneNarrCooldown = true;
           if (typeof addSkillXp === "function") { try { addSkillXp("management", 3); } catch(e) {} }
-          if (typeof addSkillXp === "function") { try { addSkillXp("social", 2); } catch(e) {} }
-          if (typeof StateManager !== "undefined") StateManager.addMessage("🎪 '你参与了活动的组织工作，活动很成功。' 管理XP+3,社交XP+2。", "success");
+          if (st.resources) st.resources.cash = (st.resources.cash || 0) + 2000;
+          if (typeof StateManager !== "undefined") StateManager.addMessage("🏆 '这只是开始。' 你选择把目光放在下一个目标上。管理XP+3,现金+¥2000。", "success");
         }}
       ],
       text: function (st) {
         if (!st) return null;
-        return "公司组织了一场商务社交活动——'邀请了行业内的合作伙伴和潜在客户。' 商务社交，是拓展业务的重要方式。";
-      }
-    },
-    {
-      id: "h592_corp_work_stress", phase: "corporate", _isChainEvent: false, icon: "😰",
-      title: "工作压力",
-      story: "你发现团队的工作压力有点大——{desc}",
-      triggers: { minDay: 25, interval: 60, maxRepeats: 5, excludeFlags: ["_h592WorkStressCooldown"] },
-      conditions: function (st) {
-        if (st.gameOver) return false;
-        if (!st.corporate) return false;
-        return (st.flags && !st.flags._h592WorkStressCooldown);
-      },
-      choices: [
-        { text: "😰 减压措施", hint: "管理XP+4,团队忠诚+2,心情+2", apply: function (st) {
-          if (!st) return; st.flags = st.flags || {}; st.flags._h592WorkStressCooldown = true;
-          if (typeof addSkillXp === "function") { try { addSkillXp("management", 4); } catch(e) {} }
-          var t = st.corporate && st.corporate.team;
-          if (t) { for (var i = 0; i < t.length; i++) { if (t[i]) t[i].loyalty = Math.min(100, (t[i].loyalty || 50) + 2); } }
-          if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 2);
-          if (typeof StateManager !== "undefined") StateManager.addMessage("😰 '给团队安排了减压活动，大家都很开心。' 管理XP+4,团队忠诚+2,心情+2。", "success");
-        }},
-        { text: "📊 评估工作量", hint: "管理XP+3", apply: function (st) {
-          if (!st) return; st.flags = st.flags || {}; st.flags._h592WorkStressCooldown = true;
-          if (typeof addSkillXp === "function") { try { addSkillXp("management", 3); } catch(e) {} }
-          if (typeof StateManager !== "undefined") StateManager.addMessage("😰 '重新评估工作量分配，避免过度加班。' 管理XP+3。", "success");
-        }}
-      ],
-      text: function (st) {
-        if (!st) return null;
-        return "你发现团队的工作压力有点大——'最近加班越来越多了，大家的情绪有些低落。' 工作压力管理，是管理者的重要职责。";
+        return "回顾公司的发展历程——'从一间小办公室，到今天的规模。' 这一路走来的故事，值得被记住。";
       }
     }
   ];
@@ -268254,6 +268252,7 @@ if (typeof window !== "undefined") {
     })(EVENTS[i]);
   }
 })();
+
 ;
 // ==== js/core/domain_h_linkage_r512.js ====
 /**
@@ -295274,6 +295273,7 @@ if (typeof window !== "undefined") {
 // [R206] 域F 联动增强
 // [R278] 域F
 // [R398] 域F
+// [R470] 域F
 
 ;
 // ==== js/ui/navigation.js ====

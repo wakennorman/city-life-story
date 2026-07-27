@@ -9,6 +9,12 @@
   if (typeof RANDOM_EVENTS === "undefined") return;
   if (RANDOM_EVENTS._corpLoaded) return;
   RANDOM_EVENTS._corpLoaded = true;
+  // [全系统自洽修复] 域H R592: needs 守卫辅助函数
+  function _guardNeedsH(st) {
+    if (!st.needs) st.needs = { hunger: 50, fatigue: 30, hygiene: 60, happiness: 50 };
+    return st.needs;
+  }
+
 
   // [全系统自洽修复] 域H R512: needs 守卫辅助函数（防止旧存档 state.needs 未初始化时崩溃）
   function _guardNeeds(st) {
@@ -38,7 +44,7 @@
           apply: (st) => {
             _guardNeeds(st);
             st.flags._insiderRumorSeen = true;
-            st.needs.fatigue = Math.min(100, st.needs.fatigue + 5);
+            _guardNeedsH(st).fatigue = Math.min(100, _guardNeedsH(st).fatigue + 5);
             if ((st.resources.cash || 0) >= 100) { // [全系统自洽修复] 域H A类: cash NaN守卫
               st.resources.cash = (st.resources.cash || 0) - 100;
               // 调度后续：验证结果
@@ -102,7 +108,7 @@
               150,
               (st.player.corporate.kpi || 0) + 5,
             );
-            st.needs.happiness = Math.min(100, st.needs.happiness + 2);
+            _guardNeedsH(st).happiness = Math.min(100, _guardNeedsH(st).happiness + 2);
             StateManager.addMessage(
               "🚫 你摇摇头继续干活。八卦听听就好，不耽误正事。",
               "info",
@@ -135,7 +141,7 @@
             if (success) {
               const profit = Random.int(4000, 5999);
               st.resources.cash = (st.resources.cash || 0) + profit;
-              st.needs.happiness = Math.min(100, st.needs.happiness + 12);
+              _guardNeedsH(st).happiness = Math.min(100, _guardNeedsH(st).happiness + 12);
               st.flags._insiderTradingWon = true;
               StateManager.addMessage(
                 `💰 合作如期宣布，股价大涨！你赚了 ¥${profit - 3000}！`,
@@ -151,7 +157,7 @@
                 );
               }
             } else {
-              st.needs.happiness = Math.max(0, st.needs.happiness - 15);
+              _guardNeedsH(st).happiness = Math.max(0, _guardNeedsH(st).happiness - 15);
               st.player.mental = Math.max(0, st.player.mental - 10);
               st.flags._insiderTradingLost = true;
               StateManager.addMessage(
@@ -184,13 +190,13 @@
             if (success) {
               const profit = Random.int(1300, 1899);
               st.resources.cash = (st.resources.cash || 0) + profit;
-              st.needs.happiness = Math.min(100, st.needs.happiness + 6);
+              _guardNeedsH(st).happiness = Math.min(100, _guardNeedsH(st).happiness + 6);
               StateManager.addMessage(
                 `💰 赌对了，小赚 ¥${profit - 1000}。`,
                 "success",
               );
             } else {
-              st.needs.happiness = Math.max(0, st.needs.happiness - 6);
+              _guardNeedsH(st).happiness = Math.max(0, _guardNeedsH(st).happiness - 6);
               StateManager.addMessage(
                 "💰 消息是假的，1000块打了水漂。",
                 "warning",
@@ -203,7 +209,7 @@
           hint: "远离灰色地带",
           apply: (st) => {
             _guardNeeds(st);
-            st.needs.happiness = Math.min(100, st.needs.happiness + 3);
+            _guardNeedsH(st).happiness = Math.min(100, _guardNeedsH(st).happiness + 3);
             st.player.mental = Math.min(100, st.player.mental + 5);
             st.flags._insiderTradingRefused = true;
             StateManager.addMessage(
@@ -231,7 +237,7 @@
           hint: "逃避",
           apply: (st) => {
             _guardNeeds(st);
-            st.needs.happiness = Math.max(0, st.needs.happiness - 10);
+            _guardNeedsH(st).happiness = Math.max(0, _guardNeedsH(st).happiness - 10);
             st.player.mental = Math.max(0, st.player.mental - 8);
             // 80% 概率没事，20% 被盯上
             const safe = Random.chance(0.8);
@@ -258,7 +264,7 @@
           apply: (st) => {
             _guardNeeds(st);
             st.player.mental = Math.min(100, st.player.mental + 5);
-            st.needs.happiness = Math.max(0, st.needs.happiness - 5);
+            _guardNeedsH(st).happiness = Math.max(0, _guardNeedsH(st).happiness - 5);
             // 60% 没事，40% 被警告
             const ok = Random.chance(0.6);
             if (ok) {
@@ -294,7 +300,7 @@
                 100,
                 (st.player.corporate || {}).risk + 25,
               );
-              st.needs.happiness = Math.max(0, st.needs.happiness - 15);
+              _guardNeedsH(st).happiness = Math.max(0, _guardNeedsH(st).happiness - 15);
               StateManager.addMessage(
                 "😤 被调查组点名了！虽然没被起诉，但心里一直悬着...",
                 "danger",
@@ -319,7 +325,7 @@
           apply: (st) => {
             _guardNeeds(st);
             st.player.fame = Math.min(100, st.player.fame + 2);
-            st.needs.happiness = Math.max(0, st.needs.happiness - 5);
+            _guardNeedsH(st).happiness = Math.max(0, _guardNeedsH(st).happiness - 5);
             const recovered = Random.chance(0.15);
             if (recovered) {
               const back = Random.int(300, 499);
@@ -341,7 +347,7 @@
           hint: "勤劳致富",
           apply: (st) => {
             _guardNeeds(st);
-            st.needs.fatigue = Math.min(100, st.needs.fatigue + 15);
+            _guardNeedsH(st).fatigue = Math.min(100, _guardNeedsH(st).fatigue + 15);
             // [全系统自洽修复] 域H A类#19: chain event apply中 st.player.corporate 守卫
             if (!st.player || !st.player.corporate) return;
             (st.player.corporate || {}).kpi = Math.min(
@@ -370,7 +376,7 @@
           hint: "接受现实",
           apply: (st) => {
             _guardNeeds(st);
-            st.needs.happiness = Math.max(0, st.needs.happiness - 8);
+            _guardNeedsH(st).happiness = Math.max(0, _guardNeedsH(st).happiness - 8);
             st.player.mental = Math.min(100, st.player.mental + 3);
             StateManager.addMessage(
               "😞 自认倒霉吧。吃一堑长一智，下次再也不碰这种事了。",
@@ -408,7 +414,7 @@
             st.player.corporate.upwardMgmt = Math.min(100, (st.player.corporate.upwardMgmt || 0) + 5);
             st.player.corporate.hair = Math.max(0, (st.player.corporate.hair || 0) - 8);
             st.player.corporate.risk = Math.min(100, (st.player.corporate.risk || 0) + 3);
-            st.needs.fatigue = Math.min(100, st.needs.fatigue + 20);
+            _guardNeedsH(st).fatigue = Math.min(100, _guardNeedsH(st).fatigue + 20);
             StateManager.addMessage(
               "💪 周末连续加班！KPI+12，能力+3，发量-8，疲劳+20。",
               "event",
@@ -430,8 +436,8 @@
                 "warning",
               );
             } else {
-              st.needs.fatigue = Math.max(0, st.needs.fatigue - 15);
-              st.needs.happiness = Math.min(100, st.needs.happiness + 8);
+              _guardNeedsH(st).fatigue = Math.max(0, _guardNeedsH(st).fatigue - 15);
+              _guardNeedsH(st).happiness = Math.min(100, _guardNeedsH(st).happiness + 8);
               StateManager.addMessage(
                 "😴 成功装病！在家睡了一天，疲劳-15。",
                 "success",
@@ -453,7 +459,7 @@
                 150,
                 (st.player.corporate || {}).kpi + 6,
               );
-              st.needs.fatigue = Math.min(100, st.needs.fatigue + 8);
+              _guardNeedsH(st).fatigue = Math.min(100, _guardNeedsH(st).fatigue + 8);
               StateManager.addMessage(
                 "💬 提议平摊工作！团队协作，效率还不错，KPI+6，疲劳+8。",
                 "success",
@@ -578,7 +584,7 @@
               0,
               (st.player.corporate || {}).dignity - 8,
             );
-            st.needs.happiness = Math.max(0, st.needs.happiness - 5);
+            _guardNeedsH(st).happiness = Math.max(0, _guardNeedsH(st).happiness - 5);
             StateManager.addMessage(
               "🙏 忍了。KPI-5，尊严-8，心里憋屈。",
               "warning",
@@ -599,7 +605,7 @@
                 100,
                 (st.player.corporate || {}).dignity + 5,
               );
-              st.needs.happiness = Math.min(100, st.needs.happiness + 8);
+              _guardNeedsH(st).happiness = Math.min(100, _guardNeedsH(st).happiness + 8);
               StateManager.addMessage(
                 "📋 讲得清清楚楚！客户心服口服道歉了，尊严+5，KPI+3。",
                 "success",
@@ -630,7 +636,7 @@
               100,
               (st.player.corporate || {}).risk + 5,
             );
-            st.needs.happiness = Math.min(100, st.needs.happiness + 12);
+            _guardNeedsH(st).happiness = Math.min(100, _guardNeedsH(st).happiness + 12);
             StateManager.addMessage(
               "😡 直接挂了电话！爽是爽了，KPI-10，风险+5，尊严+10。",
               "event",
@@ -668,7 +674,7 @@
                   1.5,
               );
               st.corporate.jobOffer = { salary: offer, company: "新公司" };
-              st.needs.happiness = Math.min(100, st.needs.happiness + 10);
+              _guardNeedsH(st).happiness = Math.min(100, _guardNeedsH(st).happiness + 10);
               (st.player.corporate || {}).upwardMgmt = Math.max(
                 0,
                 (st.player.corporate || {}).upwardMgmt - 5,
@@ -680,7 +686,7 @@
               // 弹跳槽决策框
               setTimeout(() => showJobOfferModal(), 200);
             } else {
-              st.needs.fatigue = Math.min(100, st.needs.fatigue + 5);
+              _guardNeedsH(st).fatigue = Math.min(100, _guardNeedsH(st).fatigue + 5);
               (st.player.corporate || {}).upwardMgmt = Math.max(
                 0,
                 (st.player.corporate || {}).upwardMgmt - 3,
@@ -750,7 +756,7 @@
               0,
               (st.player.corporate || {}).hair - 6,
             );
-            st.needs.fatigue = Math.min(100, st.needs.fatigue + 18);
+            _guardNeedsH(st).fatigue = Math.min(100, _guardNeedsH(st).fatigue + 18);
             StateManager.addMessage(
               "📊 连夜赶完PPT，领导表示很满意！向上管理+8，发量-6。",
               "success",
@@ -767,7 +773,7 @@
                 100,
                 (st.player.corporate || {}).ability + 2,
               );
-              st.needs.fatigue = Math.min(100, st.needs.fatigue + 5);
+              _guardNeedsH(st).fatigue = Math.min(100, _guardNeedsH(st).fatigue + 5);
               StateManager.addMessage(
                 "🤖 AI生成的PPT还不错，加点修改就交差了。",
                 "success",
@@ -946,7 +952,7 @@
               0,
               (st.player.corporate || {}).hair - 2,
             );
-            st.needs.happiness = Math.min(100, st.needs.happiness + 5);
+            _guardNeedsH(st).happiness = Math.min(100, _guardNeedsH(st).happiness + 5);
             StateManager.addMessage(
               "🍻 和各路大佬喝了一圈！向上管理+8，人缘+12。",
               "success",
@@ -961,7 +967,7 @@
             const roll = Random.float(0, 1);
             if (roll < 0.05) {
               st.resources.cash = (st.resources.cash || 0) + 10000;
-              st.needs.happiness = Math.min(100, st.needs.happiness + 20);
+              _guardNeedsH(st).happiness = Math.min(100, _guardNeedsH(st).happiness + 20);
               StateManager.addMessage(
                 "🎰 中了大奖 ¥10,000！全场欢呼！",
                 "success",
@@ -970,7 +976,7 @@
               st.resources.cash = (st.resources.cash || 0) + 500;
               StateManager.addMessage("🎰 中了小奖 ¥500。聊胜于无。", "info");
             } else {
-              st.needs.happiness = Math.max(0, st.needs.happiness - 3);
+              _guardNeedsH(st).happiness = Math.max(0, _guardNeedsH(st).happiness - 3);
               StateManager.addMessage("🎰 啥也没中。", "info");
             }
           },
@@ -988,7 +994,7 @@
               0,
               (st.player.corporate || {}).upwardMgmt - 3,
             );
-            st.needs.fatigue = Math.max(0, st.needs.fatigue - 10);
+            _guardNeedsH(st).fatigue = Math.max(0, _guardNeedsH(st).fatigue - 10);
             StateManager.addMessage(
               "😴 在家躺平一晚。疲劳-10，但同事都觉得你不合群。",
               "warning",
@@ -1029,7 +1035,7 @@
               100,
               (st.player.corporate || {}).popularity + 10,
             );
-            st.needs.fatigue = Math.min(100, st.needs.fatigue + 8);
+            _guardNeedsH(st).fatigue = Math.min(100, _guardNeedsH(st).fatigue + 8);
             (st.player.corporate || {}).kpi = Math.min(
               150,
               (st.player.corporate || {}).kpi + 5,
@@ -1095,7 +1101,7 @@
               st.resources.cash = Math.max(0, (st.resources.cash || 0) - 5000);
               if (Random.chance(0.3)) {
                 st.resources.cash = (st.resources.cash || 0) + Random.int(8000, 22999);
-                st.needs.happiness = Math.min(100, st.needs.happiness + 20);
+                _guardNeedsH(st).happiness = Math.min(100, _guardNeedsH(st).happiness + 20);
                 StateManager.addMessage(
                   "🚀 运气爆棚追涨成功！大赚了一笔！",
                   "success",
@@ -1104,7 +1110,7 @@
                 st.resources.cash = (st.resources.cash || 0) + Random.int(3000, 6999);
                 StateManager.addMessage("🚀 小赚一点就跑了，还行。", "info");
               } else {
-                st.needs.happiness = Math.max(0, st.needs.happiness - 25);
+                _guardNeedsH(st).happiness = Math.max(0, _guardNeedsH(st).happiness - 25);
                 StateManager.addMessage(
                   "🚀 追在山顶！亏惨了，¥5000打水漂大半。",
                   "danger",
@@ -1169,7 +1175,7 @@
                 shares: 500,
                 avgPrice: 8,
               });
-              st.needs.happiness = Math.min(100, st.needs.happiness + 10);
+              _guardNeedsH(st).happiness = Math.min(100, _guardNeedsH(st).happiness + 10);
               StateManager.addMessage(
                 "🔔 认购了500股内部员工股，发行价¥8！期待IPO...",
                 "success",
@@ -1626,7 +1632,7 @@
                 ((st.player.corporate || {}).hair || 50) + 10,
               );
             }
-            st.needs.happiness = Math.min(100, st.needs.happiness + 15);
+            _guardNeedsH(st).happiness = Math.min(100, _guardNeedsH(st).happiness + 15);
             StateManager.addMessage(
               "💢 在工位上摔了键盘走人。尊严+25、发量+10、心情+15——这一刻你觉得自己又活过来了。回购的可能性永远关闭了，但有些东西比公司重要。",
               "event",
@@ -1717,7 +1723,7 @@
               );
             }
             st.player.mental = Math.min(100, st.player.mental + 10);
-            st.needs.happiness = Math.min(100, st.needs.happiness + 10);
+            _guardNeedsH(st).happiness = Math.min(100, _guardNeedsH(st).happiness + 10);
             StateManager.addMessage(
               "🤝 跟老陈说：“我已经不是当年的我了。” 尊严-5（不是没有遗憾），KPI+10（你彻底接受了员工身份），心智+10、心情+10——放下，也是一种力量。",
               "info",
@@ -1847,7 +1853,7 @@
                 0,
                 (st.player.corporate || {}).kpi - 15,
               );
-              st.needs.happiness = Math.max(0, st.needs.happiness - 10);
+              _guardNeedsH(st).happiness = Math.max(0, _guardNeedsH(st).happiness - 10);
               if (typeof scheduleChainEvent === "function") {
                 scheduleChainEvent(st, "workplace_boss_grudge", 2, "corporate");
               }
@@ -1869,7 +1875,7 @@
               (st.player.corporate || {}).dignity - 15,
             );
             (st.player.corporate || {}).kpi = Math.max(0, (st.player.corporate || {}).kpi - 10);
-            st.needs.happiness = Math.max(0, st.needs.happiness - 12);
+            _guardNeedsH(st).happiness = Math.max(0, _guardNeedsH(st).happiness - 12);
             (st.player.corporate || {}).upwardMgmt = Math.min(
               100,
               (st.player.corporate || {}).upwardMgmt + 5,
@@ -1946,7 +1952,7 @@
           hint: "用实力说话",
           apply: (st) => {
             _guardNeeds(st);
-            st.needs.fatigue = Math.min(100, st.needs.fatigue + 15);
+            _guardNeedsH(st).fatigue = Math.min(100, _guardNeedsH(st).fatigue + 15);
             const success = Random.chance(
               0.3 +
                 ((st.player.corporate || {}).ability - 30) * 0.02 +
@@ -1978,7 +1984,7 @@
                 0,
                 (st.player.corporate || {}).kpi - 5,
               );
-              st.needs.fatigue = Math.min(100, st.needs.fatigue + 5);
+              _guardNeedsH(st).fatigue = Math.min(100, _guardNeedsH(st).fatigue + 5);
               StateManager.addMessage(
                 "💪 虽然很努力，但项目本身没什么价值，老板还是不满意。",
                 "warning",
@@ -1991,7 +1997,7 @@
           hint: "寻求保护",
           apply: (st) => {
             _guardNeeds(st);
-            st.needs.fatigue = Math.min(100, st.needs.fatigue + 5);
+            _guardNeedsH(st).fatigue = Math.min(100, _guardNeedsH(st).fatigue + 5);
             const success = Random.chance(
               0.4 + ((st.player.corporate || {}).popularity - 30) * 0.01,
             );
@@ -2025,7 +2031,7 @@
           hint: "另谋出路",
           apply: (st) => {
             _guardNeeds(st);
-            st.needs.fatigue = Math.min(100, st.needs.fatigue + 8);
+            _guardNeedsH(st).fatigue = Math.min(100, _guardNeedsH(st).fatigue + 8);
             (st.player.corporate || {}).dignity = Math.min(
               100,
               (st.player.corporate || {}).dignity + 3,
@@ -2093,7 +2099,7 @@
           hint: "实力碾压",
           apply: (st) => {
             _guardNeeds(st);
-            st.needs.fatigue = Math.min(100, st.needs.fatigue + 12);
+            _guardNeedsH(st).fatigue = Math.min(100, _guardNeedsH(st).fatigue + 12);
             (st.player.corporate || {}).kpi = Math.min(
               150,
               (st.player.corporate || {}).kpi + 10,
@@ -2121,7 +2127,7 @@
               0,
               (st.player.corporate || {}).dignity - 8,
             );
-            st.needs.happiness = Math.max(0, st.needs.happiness - 10);
+            _guardNeedsH(st).happiness = Math.max(0, _guardNeedsH(st).happiness - 10);
             (st.player.corporate || {}).popularity = Math.max(
               0,
               (st.player.corporate || {}).popularity - 5,
@@ -2156,8 +2162,8 @@
               100,
               (st.player.corporate || {}).dignity + 10,
             );
-            st.needs.happiness = Math.min(100, st.needs.happiness + 10);
-            st.needs.fatigue = Math.max(0, st.needs.fatigue - 10);
+            _guardNeedsH(st).happiness = Math.min(100, _guardNeedsH(st).happiness + 10);
+            _guardNeedsH(st).fatigue = Math.max(0, _guardNeedsH(st).fatigue - 10);
             (st.player.corporate || {}).risk = 15;
             StateManager.addMessage(
               "🚀 你跳槽了！新公司薪资高40%，职位也提升了。但一切从零开始，风险也不小。",
@@ -2193,7 +2199,7 @@
               100,
               (st.player.corporate || {}).risk + 5,
             );
-            st.needs.happiness = Math.min(100, st.needs.happiness + 3);
+            _guardNeedsH(st).happiness = Math.min(100, _guardNeedsH(st).happiness + 3);
             StateManager.addMessage(
               "💼 你接受了晋升。职位上去了，但你知道这是用尊严换来的。",
               "warning",
@@ -2205,7 +2211,7 @@
           hint: "拖延决策",
           apply: (st) => {
             _guardNeeds(st);
-            st.needs.happiness = Math.max(0, st.needs.happiness - 5);
+            _guardNeedsH(st).happiness = Math.max(0, _guardNeedsH(st).happiness - 5);
             st.player.mental = Math.max(0, st.player.mental - 3);
             if (typeof scheduleChainEvent === "function") {
               scheduleChainEvent(st, "workplace_deadline", 3, "corporate");
@@ -2240,7 +2246,7 @@
               100,
               (st.player.corporate || {}).dignity + 10,
             );
-            st.needs.happiness = Math.min(100, st.needs.happiness + 8);
+            _guardNeedsH(st).happiness = Math.min(100, _guardNeedsH(st).happiness + 8);
             (st.player.corporate || {}).risk = 15;
             if (st.corporate) {
               st.corporate.team = [];
@@ -2271,7 +2277,7 @@
               0,
               (st.player.corporate || {}).dignity - 5,
             );
-            st.needs.happiness = Math.min(100, st.needs.happiness + 2);
+            _guardNeedsH(st).happiness = Math.min(100, _guardNeedsH(st).happiness + 2);
             StateManager.addMessage(
               "💼 你选择留下。晋升了，但你知道这只是开始。",
               "warning",
@@ -2763,7 +2769,7 @@
             _guardNeeds(st);
             st.flags._siegeReversalSeen = true;
             st.flags._siegeKpiMode = true;
-            st.needs.fatigue = Math.min(100, st.needs.fatigue + 15);
+            _guardNeedsH(st).fatigue = Math.min(100, _guardNeedsH(st).fatigue + 15);
             StateManager.addMessage(
               "主动接了大项目。领导满意——但你每天加班到11点。",
               "info",
