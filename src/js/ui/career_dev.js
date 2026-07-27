@@ -5922,3 +5922,4 @@ function applyCareerHealthEffect(state) {
 // [R179] 域C 联动增强
 // [R219] 域C 联动增强
 // [R347] 域C
+// [R395] 域C
