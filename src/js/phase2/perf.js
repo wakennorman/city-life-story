@@ -122,3 +122,4 @@ function getGradeColor(grade) {
 function getGradeBonus(grade) {
   return { "S+": 3, S: 2, A: 1.5, B: 1, C: 0 }[grade] || 0;
 }
+// [R107] 域C 联动增强
