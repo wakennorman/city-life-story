@@ -1274,3 +1274,4 @@ function showDailyReport(state) {
 // [R174] 域F 联动增强
 // [R230] 域F 联动增强
 // [R302] 域F
+// [R374] 域F
