@@ -617,6 +617,8 @@
     <script src="js/core/domain_a_linkage_r489.js"></script>
     <!-- R497: 域A联动增强（A→E税务意识/A→B价格指数/A→D市场情报）-->
     <script src="js/core/domain_a_linkage_r497.js"></script>
+    <!-- R505: 域A联动增强（A→H定价策略/A→C技能需求预测/A→B市场周期）-->
+    <script src="js/core/domain_a_linkage_r505.js"></script>
     <!-- R259: 域B联动增强（街头经历→公司创始叙事B→H / 事件里程碑→人生回顾B→G / 困境→NPC支持B→D）-->
     <script src="js/core/domain_b_linkage_r259.js"></script>
     <!-- R266: 域B联动增强（B→E投资日记/B→C事件职业联动/B→F事件时间线）-->
@@ -778,6 +780,12 @@
     <script src="js/core/domain_c_linkage_r482.js"></script>
     <!-- R491: 域C联动增强（C→G工作生活平衡/C→D同事纽带/C→F技能徽章）-->
     <script src="js/core/domain_c_linkage_r491.js"></script>
+    <!-- R499: 域C联动增强（C→H创业/C→A薪资对标/C→E期权）-->
+    <script src="js/core/domain_c_linkage_r499.js"></script>
+    <!-- R502: 域C联动增强（C→D师徒情谊/C→B职业里程碑叙事/C→G倦怠恢复）-->
+    <script src="js/core/domain_c_linkage_r502.js"></script>
+    <!-- R507: 域C联动增强（C→D人脉进化/C→G倦怠恢复/C→B导师故事）-->
+    <script src="js/core/domain_c_linkage_r507.js"></script>
     <!-- R192: 域G联动增强（承接life_ribbon「房奴一生」缎带死字段修复/安家里程碑复活：G→D暖房/G→C安居乐业/G→A还贷精算）-->
     <script src="js/core/core_lifecycle_linkage_r192.js"></script>
     <!-- [全系统自洽修复] 域G R392: 注册未挂载的 domain_g_linkage_r192.js(天气运输风险+极端天气叙事)→事件本轮起真正生效 -->
@@ -920,6 +928,10 @@
     <script src="js/core/domain_d_linkage_r483.js"></script>
     <!-- R492: 域D联动增强（D→H生意推荐/D→A价格网络/D→G情绪提升）-->
     <script src="js/core/domain_d_linkage_r492.js"></script>
+    <!-- R500: 域D联动增强（D→E副业合作/D→C技能交换/D→B城市闲聊）-->
+    <script src="js/core/domain_d_linkage_r500.js"></script>
+    <!-- R508: 域D联动增强（D→F关系UI/D→E商业天使/D→G生活分享）-->
+    <script src="js/core/domain_d_linkage_r508.js"></script>
     <!-- R246: 域D联动增强（D→G社交网络概览/D→A社交资本洞察/D→C NPC职业推荐）-->
     <script src="js/core/domain_d_linkage_r246.js"></script>
     <!-- [全系统自洽修复] 域C R309 A类: 已删除悬空 script 标签 domain_d_linkage_r307.js（源文件已被 a9899456 删除但标签残留→运行时404）-->
@@ -1182,6 +1194,8 @@
     <script src="js/core/domain_f_linkage_r486.js"></script>
     <!-- R494: 域F联动增强（F→G生活舒适度/F→D社交连接/F→E资产净值）-->
     <script src="js/core/domain_f_linkage_r494.js"></script>
+    <!-- R502: 域F联动增强（F→H公司运营月报/F→D社交热力图/F→C职业路线图）-->
+    <script src="js/core/domain_f_linkage_r502.js"></script>
     <!-- [全系统自洽修复] 域F 修复:抢救并行R442孤儿文件domain_b_linkage_r442.js(已提交但未挂载→build静默剔除b442_夜市3事件) -->
     <script src="js/core/domain_b_linkage_r442.js"></script>
     <!-- R447: 域B联动增强（B→E事件经济涟漪/B→D事件友谊深化/B→H事件公司文化）-->
@@ -1202,6 +1216,8 @@
     <script src="js/core/domain_b_linkage_r490.js"></script>
     <!-- R498: 域B联动增强（B→A数据影响/B→G人生教训/B→C职业洞察）-->
     <script src="js/core/domain_b_linkage_r498.js"></script>
+    <!-- R506: 域B联动增强（B→D故事破冰/B→H公司适应/B→E新闻投资）-->
+    <script src="js/core/domain_b_linkage_r506.js"></script>
     <!-- R470: 域E联动增强（E→G座驾折旧课/E→D载友兜风/E→C养车账本）——inv.cars 叙事维度 travelBonus/depreciation/maintenance 全库首消费 -->
     <script src="js/core/domain_e_linkage_r470.js"></script>
     <!-- R240 域G联动（G→B极端天气叙事 / G→C健康影响职业 / G→D人生事件社交回响）；须在 main.js/weather.js 之后 -->
@@ -1264,6 +1280,8 @@
     <script src="js/core/domain_g_linkage_r487.js"></script>
     <!-- R495: 域G联动增强（G→C技能里程碑/G→H公司传承/G→E通胀影响）-->
     <script src="js/core/domain_g_linkage_r495.js"></script>
+    <!-- R503: 域G联动增强（G→D朋友四季/G→F年度总结/G→H公司四季）-->
+    <script src="js/core/domain_g_linkage_r503.js"></script>
     <!-- R418: 域H联动增强（H→G首消费_totalStreetDays街头回望/H→D团队聚餐好感传导守met铁律/H→E高能力咨询变现）[原R417编号被并行占用改号r418,并消除r417双重挂载] -->
     <script src="js/core/domain_h_linkage_r418.js"></script>
     <!-- R425: 域H联动增强（H→G公司可持续/H→A经营情报v2/H→C领导力v2）-->
@@ -1286,6 +1304,8 @@
     <script src="js/core/domain_h_linkage_r487.js"></script>
     <!-- R496: 域H联动增强（H→E股权激励/H→C技能学校/H→D行业酒会）-->
     <script src="js/core/domain_h_linkage_r496.js"></script>
+    <!-- R504: 域H联动增强（H→B爆款故事/H→A财报解读/H→G创业心得）-->
+    <script src="js/core/domain_h_linkage_r504.js"></script>
     <!-- R489: 域C联动增强（C→E _highSalaryInvestor死flag首消费/C→D _burnoutSurvivor首事件消费/C→G _hasOccupationalDisease首事件消费）-->
     <script src="js/core/domain_c_linkage_r489.js"></script>
     <!-- R426: 域B联动增强（B→D形象好感image.style首消费/B→G整容自我认同plastic首消费/B→E健身×投资fitness首消费）-->
@@ -1388,6 +1408,10 @@
     <script src="js/core/domain_e_linkage_r484.js"></script>
     <!-- R493: 域E联动增强（E→G健康权衡/E→C技能基金/E→D朋友借钱）-->
     <script src="js/core/domain_e_linkage_r493.js"></script>
+    <!-- R501: 域E联动增强（E→D帮朋友理财/E→B经济周期/E→C财务自由职业转变）-->
+    <script src="js/core/domain_e_linkage_r501.js"></script>
+    <!-- R509: 域E联动增强（E→F仪表盘提示/E→D社会证明/E→G人生改变）-->
+    <script src="js/core/domain_e_linkage_r509.js"></script>
     <!-- R277: 域A联动增强（A→C识货砍价/A→D街坊团购/A→H成本控制报告）-->
     <script src="js/core/domain_a_linkage_r277.js"></script>
 
