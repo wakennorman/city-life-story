@@ -1468,6 +1468,26 @@ function recordEventToHistory(state, eventId, eventTitle) {
   if (state.flags._eventHistory.length > 50) {
     state.flags._eventHistory = state.flags._eventHistory.slice(-50);
   }
+
+  // [全系统自洽修复] 域B 联动增强(B→D): 重大事件社交传播 — 每10个事件触发一次社交圈好感提升
+  var _evtCount = state.flags._eventHistory.length;
+  if (_evtCount > 0 && _evtCount % 10 === 0 && state.relationships) {
+    var _evtFlag = '_eventSocialBoost_' + _evtCount;
+    if (!state.flags[_evtFlag]) {
+      state.flags[_evtFlag] = true;
+      var _boosted = 0;
+      for (var _eId in state.relationships) {
+        var _eRel = state.relationships[_eId];
+        if (_eRel && _eRel.met) {
+          _eRel.affinity = Math.min(100, (_eRel.affinity || 0) + 1);
+          _boosted++;
+        }
+      }
+      if (_boosted > 0 && typeof StateManager !== "undefined") {
+        StateManager.addMessage("📖 经历了" + _evtCount + "次人生事件，你的故事成了街坊邻居的谈资，关系更近了。", "info");
+      }
+    }
+  }
 }
 
 // [全系统自洽修复] 域B R387 联动增强(B→A): 事件市场情绪—特定事件影响商品价格
