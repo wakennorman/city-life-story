@@ -1060,3 +1060,4 @@ if (typeof window !== "undefined") {
 // [R420] 域D
 // [R452] 域D
 // [R492] 域D
+// [R532] 域D
