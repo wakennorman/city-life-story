@@ -949,3 +949,4 @@ function getSkillPriceInsight(state, locKey, goodId) {
 }
 // [R121] 域A 联动增强
 // [R193] 域A 联动增强
+// [R241] 域A 联动增强
