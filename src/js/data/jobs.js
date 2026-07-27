@@ -1127,3 +1127,4 @@ function getNpcJobRecommendation(state, limit) {
   }
   return recs.slice(0, limit);
 }
+// [R123] 域C 联动增强
