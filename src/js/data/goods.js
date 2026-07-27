@@ -593,3 +593,4 @@ function getAllGoodIds() {
 if (typeof window.CLS !== 'undefined' && window.CLS.data) window.CLS.data.GOODS = GOODS;
 // [R97] 域A 联动增强
 // [R137] 域A 联动增强
+// [R177] 域A 联动增强
