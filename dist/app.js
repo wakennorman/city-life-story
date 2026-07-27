@@ -27649,6 +27649,131 @@ function getEventHealthImpact(state, eventId) {
 })();
 
 ;
+// ==== js/core/domain_a_linkage_r571.js ====
+/**
+ * 域A(数据/数值平衡) 联动增强 R571
+ * 桥接：
+ *   A→H  a571_corp_supply_chain 公司供应链 → 消费 goods 数据,
+ *     供应链→"原材料价格波动影响公司"的经营叙事
+ *   A→C  a571_skill_cert_value  技能证书价值 → 消费 skills 数据,
+ *     证书→"有证书和没证书的薪资差距"的数据分析
+ *   A→G  a571_health_data_alerts 健康数据预警 → 消费 goods 数据,
+ *     预警→"食品价格与健康数据的关系"的健康预警
+ */
+(function () {
+  "use strict";
+  if (typeof RANDOM_EVENTS === "undefined" || !RANDOM_EVENTS) return;
+  if (RANDOM_EVENTS._domainALinkageR571Loaded) return;
+  RANDOM_EVENTS._domainALinkageR571Loaded = true;
+
+  function firstMetNpc(st) {
+    if (!st || !st.relationships) return null;
+    for (var id in st.relationships) { if (st.relationships[id] && st.relationships[id].met) return id; }
+    return null;
+  }
+  function bumpAffinity(st, npcId, amt, reason) {
+    if (!npcId) return;
+    if (typeof applyAffinityChange === "function") { try { applyAffinityChange(st, npcId, amt, reason); } catch(e) {} }
+  }
+
+  var EVENTS = [
+    {
+      id: "a571_corp_supply_chain", phase: "corporate", _isChainEvent: false, icon: "🏭",
+      title: "供应链",
+      story: "原材料价格上涨，影响了公司的成本——{desc}",
+      triggers: { minDay: 40, interval: 90, maxRepeats: 3, excludeFlags: ["_a571SupplyChainCooldown"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        if (!st.corporate || !st.corporate.company) return false;
+        return (st.flags && !st.flags._a571SupplyChainCooldown);
+      },
+      choices: [
+        { text: "🏭 优化供应链", hint: "管理XP+5,公司资金+3000,心智+2", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._a571SupplyChainCooldown = true;
+          if (typeof addSkillXp === "function") { try { addSkillXp("management", 5); } catch(e) {} }
+          if (st.corporate && st.corporate.company) st.corporate.company.funds = (st.corporate.company.funds || 0) + 3000;
+          if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 2);
+          if (typeof StateManager !== "undefined") StateManager.addMessage("🏭 '原材料涨价了，得找新的供应商。' 管理XP+5,公司资金+¥3000,心智+2。", "success");
+        }},
+        { text: "📊 成本分析", hint: "会计XP+3", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._a571SupplyChainCooldown = true;
+          if (typeof addSkillXp === "function") { try { addSkillXp("accounting", 3); } catch(e) {} }
+          if (typeof StateManager !== "undefined") StateManager.addMessage("🏭 '分析成本结构，找出可以优化的环节。' 会计XP+3。", "success");
+        }}
+      ],
+      text: function (st) {
+        if (!st) return null;
+        return "原材料价格上涨，影响了公司的成本——'供应商说原材料涨价了，我们也要跟着涨。' 供应链，是公司运营的生命线。";
+      }
+    },
+    {
+      id: "a571_skill_cert_value", phase: "corporate", _isChainEvent: false, icon: "📜",
+      title: "证书价值",
+      story: "你发现持有证书的技能薪资更高——{desc}",
+      triggers: { minDay: 20, interval: 60, maxRepeats: 5, excludeFlags: ["_a571CertValueCooldown"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        return (st.flags && !st.flags._a571CertValueCooldown);
+      },
+      choices: [
+        { text: "📜 考证书", hint: "管理XP+4,心智+2", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._a571CertValueCooldown = true;
+          if (typeof addSkillXp === "function") { try { addSkillXp("management", 4); } catch(e) {} }
+          if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 2);
+          if (typeof StateManager !== "undefined") StateManager.addMessage("📜 '有证书的技能，薪资平均高30%。' 你决定考个证书。管理XP+4,心智+2。", "success");
+        }},
+        { text: "📈 用作品说话", hint: "心智+1", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._a571CertValueCooldown = true;
+          if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 1);
+          if (typeof StateManager !== "undefined") StateManager.addMessage("📜 '证书不如作品，但敲门砖还是需要的。' 心智+1。", "success");
+        }}
+      ],
+      text: function (st) {
+        if (!st) return null;
+        return "你发现持有证书的技能薪资更高——'同样的技能，有证书的比没证书的高30%。' 证书真的有用。";
+      }
+    },
+    {
+      id: "a571_health_data_alerts", phase: "street", _isChainEvent: false, icon: "⚠️",
+      title: "健康预警",
+      story: "食品价格数据暗示你的健康可能受影响——{desc}",
+      triggers: { minDay: 15, interval: 45, maxRepeats: 5, excludeFlags: ["_a571HealthAlertsCooldown"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        return (st.flags && !st.flags._a571HealthAlertsCooldown);
+      },
+      choices: [
+        { text: "⚠️ 注意饮食", hint: "健康+2,花费200", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._a571HealthAlertsCooldown = true;
+          if (st.resources && st.resources.cash >= 200) { st.resources.cash -= 200; }
+          if (st.status) st.status.health = Math.min(100, (st.status.health || 70) + 2);
+          if (typeof StateManager !== "undefined") StateManager.addMessage("⚠️ '水果涨价了，但还是要吃，健康更重要。' 健康+2,花费¥200。", "success");
+        }},
+        { text: "📊 分析数据", hint: "会计XP+2,心智+1", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._a571HealthAlertsCooldown = true;
+          if (typeof addSkillXp === "function") { try { addSkillXp("accounting", 2); } catch(e) {} }
+          if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 1);
+          if (typeof StateManager !== "undefined") StateManager.addMessage("⚠️ '食品价格涨了，意味着我的饮食质量可能下降。' 会计XP+2,心智+1。", "success");
+        }}
+      ],
+      text: function (st) {
+        if (!st) return null;
+        return "食品价格数据暗示你的健康可能受影响——'蔬菜水果价格连续上涨，这个月饮食支出增加了。' 物价和健康，息息相关。";
+      }
+    }
+  ];
+
+  for (var i = 0; i < EVENTS.length; i++) {
+    (function (ev) {
+      var exists = false;
+      for (var j = 0; j < RANDOM_EVENTS.length; j++) {
+        if (RANDOM_EVENTS[j] && RANDOM_EVENTS[j].id === ev.id) { exists = true; break; }
+      }
+      if (!exists) RANDOM_EVENTS.push(ev);
+    })(EVENTS[i]);
+  }
+})();
+;
 // ==== js/core/domain_b_linkage_r281.js ====
 /**
  * 域B(事件/叙事) 联动增强 R281
@@ -132492,6 +132617,7 @@ if (typeof window !== "undefined") {
   }
 })();
 // [R106] 域B 联动增强
+// [R490] 域B
 
 ;
 // ==== js/core/news_system.js ====
@@ -168150,6 +168276,7 @@ if (typeof window !== "undefined") {
 // [R396] 域D
 // [R420] 域D
 // [R452] 域D
+// [R492] 域D
 
 ;
 // ==== js/core/enterprise_fate.js ====
@@ -175707,6 +175834,7 @@ function getActiveSynergiesCount(state) {
 // [R275] 域C
 // [R379] 域C
 // [R419] 域C
+// [R483] 域C
 
 ;
 // ==== js/data/startup_events.js ====
@@ -183753,6 +183881,7 @@ function getNpcJobRecommendation(state, limit) {
 // [R363] 域C
 // [R403] 域C
 // [R435] 域C
+// [R491] 域C
 
 ;
 // ==== js/data/goods.js ====
@@ -188188,6 +188317,7 @@ function getSkillMarketValue(skillId) {
 // [R345] 域A
 // [R393] 域A
 // [R441] 域A
+// [R489] 域A
 
 ;
 // ==== js/data/npcs.js ====
@@ -201097,6 +201227,7 @@ if (typeof window !== "undefined") {
 }
 // [R314] 域B
 // [R402] 域B
+// [R482] 域B
 
 ;
 // ==== js/data/side_hustle_consequences.js ====
@@ -205517,6 +205648,7 @@ function getAvailableGoodsAtLocation(locKey, state) {
 // [R353] 域A
 // [R401] 域A
 // [R449] 域A
+// [R497] 域A
 
 ;
 // ==== js/phase1/trade_intel.js ====
@@ -206928,6 +207060,7 @@ function applyWealthBasedOverhead(state) {
 // [R375] 域G
 // [R423] 域G
 // [R447] 域G
+// [R495] 域G
 
 ;
 // ==== js/phase1/interactions.js ====
@@ -221724,6 +221857,7 @@ function getTeamProductivity(state) {
 // [R424] 域H
 // [R448] 域H
 // [R472] 域H
+// [R496] 域H
 
 ;
 // ==== js/phase2/stock.js ====
@@ -222423,6 +222557,7 @@ function refreshStockMarket(state) {
 // [R413] 域E
 // [R437] 域E
 // [R461] 域E
+// [R485] 域E
 
 ;
 // ==== js/phase2/corp_ops.js ====
@@ -228783,6 +228918,7 @@ if (typeof window !== "undefined") {
 // [R421] 域E
 // [R445] 域E
 // [R469] 域E
+// [R493] 域E
 
 ;
 // ==== js/phase2/startup_data.js ====
@@ -243596,6 +243732,7 @@ function manageInventoryAction(state, inventoryType, action, amount) {
 // [R416] 域H
 // [R440] 域H
 // [R464] 域H
+// [R488] 域H
 
 ;
 // ==== js/phase2/corp_legacy_bonus.js ====
@@ -259423,6 +259560,149 @@ if (typeof window !== "undefined") {
     })(EVENTS[i]);
   }
 })();
+;
+// ==== js/core/domain_b_linkage_r594.js ====
+/**
+ * 域B(事件/叙事) 联动增强 R594
+ * 选题：moral_events.js 三个写-only 道德抉择 flag 首消费（善行有回响，道德叙事闭环）
+ *   B→C  b594_elder_job_lead   首消费 _elderJobLead（帮老邻居 R7 写入，零读取）
+ *     → 老人牵线社区兼职：善意变成职业机会，销售XP+现金
+ *   B→D  b594_scam_stopper_fame 首消费 _stoppedScam（阻止骗局写入，零读取）
+ *     → 被拦下的街坊上门道谢：义举换来街坊情谊（守 rel.met 铁律 applyAffinityChange）
+ *   B→E  b594_wholesale_channel 首消费 _wholesaleChannelTip（批发渠道情报写入，零读取）
+ *     → 用批发商的进货价情报省下一笔钱：情报变现金+会计XP
+ * 峰终定律：道德抉择的"延迟回报"制造记忆峰值；损失厌恶：善行不再是纯支出。
+ */
+(function () {
+  "use strict";
+  if (typeof RANDOM_EVENTS === "undefined" || !RANDOM_EVENTS) return;
+  if (RANDOM_EVENTS._domainBLinkageR594Loaded) return;
+  RANDOM_EVENTS._domainBLinkageR594Loaded = true;
+
+  function firstMetNpcB594(st) {
+    if (!st || !st.relationships) return null;
+    for (var id in st.relationships) {
+      var rel = st.relationships[id];
+      if (rel && rel.met) return id;
+    }
+    return null;
+  }
+  function bumpAffinityB594(st, npcId, amt, reason) {
+    if (!npcId) return;
+    if (typeof applyAffinityChange === "function") {
+      try { applyAffinityChange(st, npcId, amt, reason); } catch (e) {}
+    }
+  }
+
+  var EVENTS = [
+    {
+      id: "b594_elder_job_lead", phase: "street", _isChainEvent: false, icon: "👴",
+      title: "老人的牵线",
+      story: "帮过的老邻居托人带话，社区服务站有份跑腿差事——{desc}",
+      triggers: { minDay: 12, interval: 999, maxRepeats: 1, excludeFlags: ["_b594ElderLeadUsed"] },
+      conditions: function (st) {
+        if (!st || st.gameOver) return false;
+        if (!st.flags || !st.flags._elderJobLead) return false; // 首消费 R7 写-only flag
+        return !st.flags._b594ElderLeadUsed;
+      },
+      choices: [
+        { text: "🏃 接下这份差事", hint: "现金+900,销售XP+8,心情+4", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._b594ElderLeadUsed = true;
+          if (st.resources) st.resources.cash = (st.resources.cash || 0) + 900; /* [PLACEHOLDER] */
+          if (typeof addSkillXp === "function") { try { addSkillXp("sales", 8); } catch (e) {} }
+          if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 4);
+          if (typeof StateManager !== "undefined") StateManager.addMessage("👴 '小伙子人靠得住，这活儿交给他我放心。' 老人的一句话比简历管用。现金+¥900,销售XP+8,心情+4。", "success");
+        }},
+        { text: "🙏 心领了，让给更需要的人", hint: "心智+5,老人好感+4", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._b594ElderLeadUsed = true;
+          if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 5);
+          var r = st.relationships && st.relationships.elderNeighbor;
+          if (r && r.met) bumpAffinityB594(st, "elderNeighbor", 4, "谢绝好意让给他人");
+          if (typeof StateManager !== "undefined") StateManager.addMessage("👴 '这孩子，心善。' 你把机会让了出去，心里反而更踏实。心智+5。", "success");
+        }}
+      ],
+      text: function (st) {
+        if (!st) return null;
+        return "帮过的老邻居托人带话：社区服务站缺个跑腿的，'我跟站长说了，你人实在。' 当初扶的一把，如今变成了递过来的一只手。";
+      }
+    },
+    {
+      id: "b594_scam_stopper_fame", phase: "street", _isChainEvent: false, icon: "🛡️",
+      title: "义举的回响",
+      story: "被你拦下骗局的街坊上门道谢——{desc}",
+      triggers: { minDay: 10, interval: 999, maxRepeats: 1, excludeFlags: ["_b594ScamThanksSeen"] },
+      conditions: function (st) {
+        if (!st || st.gameOver) return false;
+        if (!st.flags || !st.flags._stoppedScam) return false; // 首消费写-only flag
+        if (!firstMetNpcB594(st)) return false; // 守域D铁律:须有已结识NPC
+        return !st.flags._b594ScamThanksSeen;
+      },
+      choices: [
+        { text: "🍵 收下谢意坐一会儿", hint: "好感+6,心情+5", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._b594ScamThanksSeen = true;
+          var nid = firstMetNpcB594(st);
+          if (nid) bumpAffinityB594(st, nid, 6, "拦下骗局的义举传开了"); /* [PLACEHOLDER] */
+          if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 5);
+          if (typeof StateManager !== "undefined") StateManager.addMessage("🛡️ '那天要不是你，我这养老钱就没了。' 街坊的茶很烫，人心很暖。好感+6,心情+5。", "success");
+        }},
+        { text: "😅 举手之劳不必挂怀", hint: "名望+3,心智+3", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._b594ScamThanksSeen = true;
+          if (st.player) {
+            st.player.fame = Math.min(100, (st.player.fame || 0) + 3);
+            st.player.mental = Math.min(100, (st.player.mental || 50) + 3);
+          }
+          if (typeof StateManager !== "undefined") StateManager.addMessage("🛡️ '谁碰上都会管的。' 话虽这么说，这条街都记住了你。名望+3,心智+3。", "success");
+        }}
+      ],
+      text: function (st) {
+        if (!st) return null;
+        return "被你拦下骗局的街坊提着水果上门：'打听了好几天才找到你。' 你那天多问的一句话，保住了别人半辈子的积蓄。";
+      }
+    },
+    {
+      id: "b594_wholesale_channel", phase: "street", _isChainEvent: false, icon: "📦",
+      title: "渠道的价值",
+      story: "你想起批发商透露的进货渠道——{desc}",
+      triggers: { minDay: 15, interval: 999, maxRepeats: 1, excludeFlags: ["_b594WholesaleUsed"] },
+      conditions: function (st) {
+        if (!st || st.gameOver) return false;
+        if (!st.flags || !st.flags._wholesaleChannelTip) return false; // 首消费写-only flag
+        if (!st.resources || (st.resources.cash || 0) < 500) return false; // 有本金才谈得上进货
+        return !st.flags._b594WholesaleUsed;
+      },
+      choices: [
+        { text: "📦 按情报走一趟进货", hint: "现金+700,会计XP+6", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._b594WholesaleUsed = true;
+          if (st.resources) st.resources.cash = (st.resources.cash || 0) + 700; /* [PLACEHOLDER] 差价收益 */
+          if (typeof addSkillXp === "function") { try { addSkillXp("accounting", 6); } catch (e) {} }
+          if (typeof StateManager !== "undefined") StateManager.addMessage("📦 '同样的货，源头价便宜三成。' 情报变成了实打实的差价。现金+¥700,会计XP+6。", "success");
+        }},
+        { text: "🤝 把渠道分享给相熟的摊主", hint: "好感+5,心智+3", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._b594WholesaleUsed = true;
+          var nid = firstMetNpcB594(st);
+          if (nid) bumpAffinityB594(st, nid, 5, "分享批发渠道情报");
+          if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 3);
+          if (typeof StateManager !== "undefined") StateManager.addMessage("📦 '这渠道你留着用。' 你把情报送了人情，生意场上多了个盟友。好感+5,心智+3。", "success");
+        }}
+      ],
+      text: function (st) {
+        if (!st) return null;
+        return "整理记账本时你想起批发商那句'源头拿货能省三成'。这条渠道情报一直躺在记忆里，是时候用起来了。";
+      }
+    }
+  ];
+
+  for (var i = 0; i < EVENTS.length; i++) {
+    (function (ev) {
+      var exists = false;
+      for (var j = 0; j < RANDOM_EVENTS.length; j++) {
+        if (RANDOM_EVENTS[j] && RANDOM_EVENTS[j].id === ev.id) { exists = true; break; }
+      }
+      if (!exists) RANDOM_EVENTS.push(ev);
+    })(EVENTS[i]);
+  }
+})();
+
 ;
 // ==== js/core/domain_b_linkage_r573.js ====
 /**
@@ -289625,6 +289905,7 @@ function renderFinanceTab(state, parent) {
 // [R414] 域F
 // [R438] 域F
 // [R462] 域F
+// [R486] 域F
 
 ;
 // ==== js/ui/corp_ui.js ====
@@ -303870,6 +304151,7 @@ function renderSocialNetworkTab(state, parent) {
 // [R388] 域D
 // [R404] 域D
 // [R444] 域D
+// [R484] 域D
 
 ;
 // ==== js/ui/career_dev.js ====
@@ -310862,6 +311144,7 @@ if (typeof window !== "undefined") {
 // [R254] 域F
 // [R350] 域F
 // [R422] 域F
+// [R494] 域F
 
 ;
 // ==== js/data/job_milestone_events.js ====
@@ -317672,6 +317955,7 @@ if (typeof registerNewsEventsToPool === "function") registerNewsEventsToPool();
 // [R415] 域G
 // [R439] 域G
 // [R463] 域G
+// [R487] 域G
 
 ;
 // ==== js/data/scenario_start_chains.js ====
