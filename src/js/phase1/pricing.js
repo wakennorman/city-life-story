@@ -899,6 +899,19 @@ function checkTradeMilestone(state) {
   }
 }
 
+// [全系统自洽修复] 域A 联动增强(A→F): 价格极端预警 — 当前价格相对基准价偏离超过阈值时返回HTML提示
+function getPriceExtremeAlert(goodId, currentPrice) {
+  if (!goodId || currentPrice == null) return "";
+  var good = getGoodById(goodId);
+  if (!good || !good.basePrice) return "";
+  var ratio = currentPrice / good.basePrice;
+  if (ratio > 1.8) return '<span style="color:var(--danger);font-size:10px;">🔥 暴涨 ' + Math.round((ratio - 1) * 100) + '% 警惕回调</span>';
+  if (ratio > 1.4) return '<span style="color:var(--warning);font-size:10px;">📈 偏高 ' + Math.round((ratio - 1) * 100) + '% 注意风险</span>';
+  if (ratio < 0.4) return '<span style="color:var(--success);font-size:10px;">💎 低估 ' + Math.round((1 - ratio) * 100) + '% 可考虑入手</span>';
+  if (ratio < 0.6) return '<span style="color:var(--info);font-size:10px;">📉 偏低 ' + Math.round((1 - ratio) * 100) + '% 关注机会</span>';
+  return "";
+}
+
 // [全系统自洽修复] 域A R405 联动增强(A→F): 价格波动可视化 — 返回商品价格趋势箭头
 function getPriceTrendIcon(locKey, goodId) {
   if (typeof getDailyPriceShock !== "function") return "➡️";
