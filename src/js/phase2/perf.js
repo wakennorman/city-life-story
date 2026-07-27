@@ -127,3 +127,4 @@ function getGradeBonus(grade) {
 // [R371] 域C
 // [R411] 域C
 // [R467] 域C
+// [R507] 域C
