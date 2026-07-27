@@ -25945,6 +25945,131 @@ function getEventHealthImpact(state, eventId) {
 })();
 
 ;
+// ==== js/core/domain_a_linkage_r489.js ====
+/**
+ * 域A(数据/数值平衡) 联动增强 R489
+ * 桥接：
+ *   A→B  a489_economic_indicator  经济指标 → 消费 goods 数据,
+ *     物价指数→"经济数据说明了什么"的叙事
+ *   A→D  a489_npc_fair_price     NPC公平价 → 消费 goods 数据,
+ *     合理价格→"不给熟人添麻烦"的社交定价
+ *   A→C  a489_skill_roi          技能ROI → 消费 skills 数据,
+ *     投入产出→"学这个技能值不值"的成本分析
+ */
+(function () {
+  "use strict";
+  if (typeof RANDOM_EVENTS === "undefined" || !RANDOM_EVENTS) return;
+  if (RANDOM_EVENTS._domainALinkageR489Loaded) return;
+  RANDOM_EVENTS._domainALinkageR489Loaded = true;
+
+  function firstMetNpc(st) {
+    if (!st || !st.relationships) return null;
+    for (var id in st.relationships) { if (st.relationships[id] && st.relationships[id].met) return id; }
+    return null;
+  }
+  function bumpAffinity(st, npcId, amt, reason) {
+    if (!npcId) return;
+    if (typeof applyAffinityChange === "function") { try { applyAffinityChange(st, npcId, amt, reason); } catch(e) {} }
+  }
+
+  var EVENTS = [
+    {
+      id: "a489_economic_indicator", phase: "street", _isChainEvent: false, icon: "📊",
+      title: "经济风向标",
+      story: "你注意到最近的经济数据有些变化——{desc}",
+      triggers: { minDay: 20, interval: 45, maxRepeats: 5, excludeFlags: ["_a489EconIndicatorCooldown"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        return (st.flags && !st.flags._a489EconIndicatorCooldown);
+      },
+      choices: [
+        { text: "📊 研究趋势", hint: "会计XP+4,心智+2", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._a489EconIndicatorCooldown = true;
+          if (typeof addSkillXp === "function") { try { addSkillXp("accounting", 4); } catch(e) {} }
+          if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 2);
+          if (typeof StateManager !== "undefined") StateManager.addMessage("📊 你研究了经济数据的变化趋势——'CPI在涨，但工资也在涨，还能接受。' 会计XP+4,心智+2。", "success");
+        }},
+        { text: "📰 关注新闻", hint: "心智+1", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._a489EconIndicatorCooldown = true;
+          if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 1);
+          if (typeof StateManager !== "undefined") StateManager.addMessage("📊 你多关注了经济新闻——'了解宏观趋势，才能做好微观决策。' 心智+1。", "success");
+        }}
+      ],
+      text: function (st) {
+        if (!st) return null;
+        return "你注意到最近的经济数据有些变化——物价在涨，但有些东西在降价。经济就像天气，需要时刻关注。";
+      }
+    },
+    {
+      id: "a489_npc_fair_price", phase: "street", _isChainEvent: false, icon: "🤝",
+      title: "公道价",
+      story: "熟人想买你的东西，问你多少钱——{desc}",
+      triggers: { minDay: 15, interval: 45, maxRepeats: 5, excludeFlags: ["_a489FairPriceCooldown"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        return (st.flags && !st.flags._a489FairPriceCooldown);
+      },
+      choices: [
+        { text: "🤝 给个公道价", hint: "好感+3,现金+500", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._a489FairPriceCooldown = true;
+          var nid = firstMetNpc(st);
+          bumpAffinity(st, nid, 3, "给了公道价");
+          if (st.resources) st.resources.cash = (st.resources.cash || 0) + 500;
+          if (typeof StateManager !== "undefined") StateManager.addMessage("🤝 你给了个公道价——'熟人之间，不赚那么多。' 对方很开心，说以后多合作。好感+3,现金+¥500。", "success");
+        }},
+        { text: "📈 按市场价", hint: "现金+800", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._a489FairPriceCooldown = true;
+          if (st.resources) st.resources.cash = (st.resources.cash || 0) + 800;
+          if (typeof StateManager !== "undefined") StateManager.addMessage("🤝 你按市场价收了钱——'生意就是生意。' 虽然对方没说什么，但你知道这价格合理。现金+¥800。", "success");
+        }}
+      ],
+      text: function (st) {
+        if (!st) return null;
+        return "熟人想买你的东西，问你多少钱——'咱们这么熟了，给个优惠价呗？' 你笑了笑，心里开始算账。";
+      }
+    },
+    {
+      id: "a489_skill_roi", phase: "corporate", _isChainEvent: false, icon: "📈",
+      title: "技能投资回报",
+      story: "你在算花在技能上的时间和钱，值不值——{desc}",
+      triggers: { minDay: 30, interval: 60, maxRepeats: 5, excludeFlags: ["_a489SkillROICooldown"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        return (st.flags && !st.flags._a489SkillROICooldown);
+      },
+      choices: [
+        { text: "📈 算清楚", hint: "会计XP+5,心智+2", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._a489SkillROICooldown = true;
+          if (typeof addSkillXp === "function") { try { addSkillXp("accounting", 5); } catch(e) {} }
+          if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 2);
+          if (typeof StateManager !== "undefined") StateManager.addMessage("📈 你算了一笔账——'花在技能上的每一分钱，都赚回来了，还多赚了不少。' 会计XP+5,心智+2。", "success");
+        }},
+        { text: "📚 继续投资", hint: "随机技能XP+3", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._a489SkillROICooldown = true;
+          var skills = ["accounting", "management", "marketing", "technology", "social", "trade"];
+          var sk = skills[Math.floor(Math.random() * skills.length)];
+          if (typeof addSkillXp === "function") { try { addSkillXp(sk, 3); } catch(e) {} }
+          if (typeof StateManager !== "undefined") StateManager.addMessage("📈 你决定继续投资技能——'最好的投资，就是投资自己。' 随机技能XP+3。", "success");
+        }}
+      ],
+      text: function (st) {
+        if (!st) return null;
+        return "你在算花在技能上的时间和钱，值不值——答案是肯定的。技能是唯一不会贬值的资产。";
+      }
+    }
+  ];
+
+  for (var i = 0; i < EVENTS.length; i++) {
+    (function (ev) {
+      var exists = false;
+      for (var j = 0; j < RANDOM_EVENTS.length; j++) {
+        if (RANDOM_EVENTS[j] && RANDOM_EVENTS[j].id === ev.id) { exists = true; break; }
+      }
+      if (!exists) RANDOM_EVENTS.push(ev);
+    })(EVENTS[i]);
+  }
+})();
+;
 // ==== js/core/domain_b_linkage_r259.js ====
 /**
  * 域B(事件/叙事) 联动增强 R259
@@ -252892,6 +253017,125 @@ if (typeof window !== "undefined") {
     })(EVENTS[i]);
   }
 })();
+;
+// ==== js/core/domain_b_linkage_r490.js ====
+/**
+ * 域B(事件/叙事) 联动增强 R490（第二十六轮循环·续）
+ * 桥接：
+ *   B→F  b490_event_wall_ui         事件记忆墙UI → 消费 event_history 数据,
+ *     事件→"你经历了什么"的UI展示
+ *   B→B  b490_narrative_evolution    叙事演化 → 消费 events_core 数据,
+ *     事件→"故事如何演变"的叙事自我指涉
+ *   b490_life_milestone(G→B 人生里程碑v2): age+stats→"你的人生走到哪了"
+ */
+(function () {
+  "use strict";
+  if (typeof RANDOM_EVENTS === "undefined" || !RANDOM_EVENTS) return;
+  if (RANDOM_EVENTS._domainBLinkageR490Loaded) return;
+  RANDOM_EVENTS._domainBLinkageR490Loaded = true;
+
+  var EVENTS = [
+    {
+      id: "b490_event_wall_ui", phase: "street", _isChainEvent: false, icon: "🖼️",
+      title: "事件记忆墙",
+      story: "你制作了事件记忆墙——{desc}",
+      triggers: { minDay: 40, interval: 60, maxRepeats: 5, excludeFlags: ["_b490WallCooldown"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        if (!st.stats || !st.stats.eventHistory) return false;
+        return Object.keys(st.stats.eventHistory).length >= 3 && (st.flags && !st.flags._b490WallCooldown);
+      },
+      choices: [
+        { text: "📖 回顾历程", hint: "心智+3,心情+3", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._b490WallCooldown = true;
+          if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 3);
+          if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 3);
+          if (typeof StateManager !== "undefined") StateManager.addMessage("📖 你回顾了事件记忆墙——'每一个事件都是人生的一笔。' 心智+3,心情+3。", "success");
+        }},
+        { text: "🎯 提炼教训", hint: "智力+3", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._b490WallCooldown = true;
+          if (st.player) st.player.intelligence = Math.min(100, (st.player.intelligence || 50) + 3);
+          if (typeof StateManager !== "undefined") StateManager.addMessage("🎯 你提炼了经验教训——'经历不总结就是白经历。' 智力+3。", "success");
+        }}
+      ],
+      text: function (st) {
+        if (!st) return null;
+        var count = st.stats && st.stats.eventHistory ? Object.keys(st.stats.eventHistory).length : 0;
+        return "你制作了事件记忆墙——已经经历了" + count + "种不同的事件。每一个都是你人生故事的素材。";
+      }
+    },
+    {
+      id: "b490_narrative_evolution", phase: "street", _isChainEvent: false, icon: "🦋",
+      title: "叙事演化",
+      story: "你发现故事在传播中不断演变——{desc}",
+      triggers: { minDay: 80, interval: 100, maxRepeats: 3, excludeFlags: ["_b490NarrEvolveCooldown"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        if (!st.stats || !st.stats.eventHistory) return false;
+        return Object.keys(st.stats.eventHistory).length >= 6 && (st.flags && !st.flags._b490NarrEvolveCooldown);
+      },
+      choices: [
+        { text: "📊 分析演变", hint: "智力+3,心智+2", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._b490NarrEvolveCooldown = true;
+          if (st.player) { st.player.intelligence = Math.min(100, (st.player.intelligence || 50) + 3); st.player.mental = Math.min(100, (st.player.mental || 50) + 2); }
+          if (typeof StateManager !== "undefined") StateManager.addMessage("📊 你分析了故事演变——'传播就是再创作。' 智力+3,心智+2。", "success");
+        }},
+        { text: "🎨 引导叙事", hint: "魅力+3,心情+5", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._b490NarrEvolveCooldown = true;
+          if (st.player) st.player.charm = Math.min(100, (st.player.charm || 50) + 3);
+          if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 5);
+          if (typeof StateManager !== "undefined") StateManager.addMessage("🎨 你引导了叙事方向——'故事的力量在于共鸣。' 魅力+3,心情+5。", "success");
+        }}
+      ],
+      text: function (st) {
+        if (!st) return null;
+        return "你发现故事在传播中不断演变——同一个事件，在不同人嘴里有了不同的版本。这就是叙事的魔力。";
+      }
+    },
+    {
+      id: "b490_life_milestone", phase: "street", _isChainEvent: false, icon: "🏆",
+      title: "人生里程碑",
+      story: "你回顾了自己的人生走到哪了——{desc}",
+      triggers: { minDay: 60, interval: 90, maxRepeats: 4, excludeFlags: ["_b490MilestoneCooldown"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        if (!st.stats || !st.player) return false;
+        return (st.flags && !st.flags._b490MilestoneCooldown);
+      },
+      choices: [
+        { text: "📖 回顾成长", hint: "心智+4,心情+3", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._b490MilestoneCooldown = true;
+          if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 4);
+          if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 3);
+          if (typeof StateManager !== "undefined") StateManager.addMessage("📖 你回顾了人生成长——'每一段都值得铭记。' 心智+4,心情+3。", "success");
+        }},
+        { text: "🎯 设定新目标", hint: "智力+2,全技能XP+1", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._b490MilestoneCooldown = true;
+          if (st.player) st.player.intelligence = Math.min(100, (st.player.intelligence || 50) + 2);
+          var skills = ["accounting", "management", "sales", "coding", "trade"];
+          for (var i = 0; i < skills.length; i++) { if (typeof addSkillXp === "function") { try { addSkillXp(skills[i], 1); } catch(e) {} } }
+          if (typeof StateManager !== "undefined") StateManager.addMessage("🎯 你设定了人生新目标——'每一个终点都是新的起点。' 智力+2,全技能XP+1。", "success");
+        }}
+      ],
+      text: function (st) {
+        if (!st) return null;
+        var days = st.player && st.player.day ? st.player.day : 0;
+        return "你回顾了自己的人生——已经走过了" + days + "天。你走到哪了？下一站去哪？";
+      }
+    }
+  ];
+
+  for (var i = 0; i < EVENTS.length; i++) {
+    (function (ev) {
+      var exists = false;
+      for (var j = 0; j < RANDOM_EVENTS.length; j++) {
+        if (RANDOM_EVENTS[j] && RANDOM_EVENTS[j].id === ev.id) { exists = true; break; }
+      }
+      if (!exists) RANDOM_EVENTS.push(ev);
+    })(EVENTS[i]);
+  }
+})();
+
 ;
 // ==== js/core/domain_e_linkage_r470.js ====
 /**
