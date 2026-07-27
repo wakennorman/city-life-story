@@ -5714,3 +5714,4 @@ function triggerRandomEvent(state) {
 if (typeof registerMoralEventsToPool === "function") registerMoralEventsToPool();
 if (typeof registerNewsEventsToPool === "function") registerNewsEventsToPool();
 // [R135] 域G 联动增强
+// [R167] 域G 联动增强
