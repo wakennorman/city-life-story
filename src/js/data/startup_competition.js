@@ -3580,4 +3580,5 @@ function tickSupplyChain(state, company) {
   // 更新供应链风险
   const risk = getSupplyChainRisk(company);
   company.supplyChainRisk = risk.risk;
-}
+}// [R186] 域B 联动增强
+// [R282] 域B
