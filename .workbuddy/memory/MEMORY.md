@@ -48,5 +48,7 @@
 - **phase2/personal_growth.js 双结构分歧（B类待专轮）**：state.js 默认 health.physical={score} 对象 vs phase2 数字比较恒 false（healthStatus 恒"需要关注"）；pg.psychology(phase2惰性写) 与 health.mental(事件读) 双心理系统不互通。R426 已修其 image NaN（688/1057 加||0）。
 - **竞态双向教训(R411)**：并行 `git add -A` 把本窗口在途 index.html 编辑扫入其提交（js 文件在 main 悬空→提交该文件即闭合勿改名）；反之本窗口 stash index.html 卷走并行刚加的挂载行（其 js 成孤儿）。**push 前必双向核对：`git show HEAD:src/index.html | grep <近轮新文件>`**。
 - stash@{0}"R411隔离"保留未删：含并行 news.js 旧改动（工作区已有新版冲突未pop；events_core.js 已 checkout 恢复）。并行丢改动可从此找回。
-- R426 域B（本窗口）：A类3处/6点（domain_h_linkage_r170/r188 needs.health死字段→status.health，r188触发闸门健康分支此前永false；phase2/personal_growth.js image 缺字段 NaN→||0）。联动3=image四维首消费。工作区 loop-state 在途改动系 R425 正确账本（未随342aacb2提交），本轮一并闭合。
-- **recency 基准(R426后)：A=423/B=426/C=424/D=419/E=420/F=421/G=422/H=425 → 下轮 D(419)最薄弱**。开轮必 git log 重算（loop-state 常滞后）。
+- R426 域B（本窗口）：A类3处/6点（domain_h_linkage_r170/r188 needs.health死字段→status.health；phase2 image NaN→||0）。联动3=image四维首消费。
+- R431 域A（本窗口）：A类=0诚实报告（jobs payCalc技能键/synergy flag匹配/goods-pricing-trade id链/illnesses极端值/economy_v3.1 全干净）。联动3=trade子系统零事件消费维度首消费：`state.trade._routeUsage`(phase1/trade.js:311写)→a431_route_regular(A→D)；`state.trade._totalSpent`(trade.js:113)→a431_bulk_buyer_sense(A→E,_dataInvestorMindset)；死flag `flags._tradeLearnedInvest`(trade.js:235写后零读)→a431_ledger_to_career(A→C corporate,跨阶段继承)。源码被并行扫入 5f8bd210 已push（双向核验完整：挂载=1/dist a431_=6）。MC 6×400d EXIT=0·0异常·前7天死亡0%。
+- trade 剩余零消费候选：lastPriceUpdate(调度用叙事价值低)/_firstTradeDone(仅成就读)。域A/E 零消费素材趋枯竭。
+- **⚠️ recency 数字已失真(R431后)**：并行同时跑三套编号（正常R42x/小编号R48-50/滞后标签R415-418），并行 loop-state 被其 STATIC_AUDIT/F5_TEST 方向轮反复改写（曾标 lastRound434 且删 domainRecency）。**判 recency 只看 git log 提交时间序**：R431后最旧=域D(56452adc R427)→下轮域D。
