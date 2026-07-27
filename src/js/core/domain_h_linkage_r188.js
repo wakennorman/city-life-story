@@ -141,8 +141,9 @@
           (st.startup && st.startup.company);
         if (!inCorp) return false;
         // 触发闸门：身心已承压（健康偏低或疲劳偏高）
+        // [全系统自洽修复] 域B R426 修复: st.needs.health 死字段(永undefined→||100→健康分支永false，触发闸门只剩fatigue)，真实字段为 st.status.health
         var strained =
-          (st.needs.health || 100) < 55 || (st.needs.fatigue || 0) > 60; // [PLACEHOLDER] 承压阈值
+          ((st.status && st.status.health) || 100) < 55 || (st.needs.fatigue || 0) > 60; // [PLACEHOLDER] 承压阈值
         if (!strained) return false;
         return true;
       },
@@ -153,7 +154,8 @@
           apply: function (st) {
             st.flags._corpFounderBurnoutSeen = true;
             if (st.needs) {
-              st.needs.health = Math.min(100, (st.needs.health || 50) + 12); // [PLACEHOLDER]
+              // [全系统自洽修复] 域B R426 修复: st.needs.health 死字段→st.status.health
+              if (st.status) st.status.health = Math.min(100, (st.status.health || 50) + 12); // [PLACEHOLDER]
               st.needs.fatigue = Math.max(0, (st.needs.fatigue || 0) - 20);
               st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 6);
             }
@@ -173,7 +175,8 @@
             st.flags._corpFounderBurnoutSeen = true;
             if (st.needs) {
               st.needs.fatigue = Math.min(100, (st.needs.fatigue || 0) + 8); // [PLACEHOLDER]
-              st.needs.health = Math.max(0, (st.needs.health || 50) - 4);
+              // [全系统自洽修复] 域B R426 修复: st.needs.health 死字段→st.status.health
+              if (st.status) st.status.health = Math.max(0, (st.status.health || 50) - 4);
             }
             if (st.player) st.player.mental = Math.max(0, (st.player.mental || 50) - 3);
             if (typeof StateManager !== "undefined")

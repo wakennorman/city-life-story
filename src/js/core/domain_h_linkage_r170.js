@@ -36,7 +36,8 @@
             st.flags._execLifestyleSeen = true;
             st.resources.cash = Math.max(0, (st.resources.cash || 0) - 5000); // 引擎不自动扣，手动扣
             st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 15);
-            st.needs.health = Math.min(100, (st.needs.health || 50) + 8);
+            // [全系统自洽修复] 域B R426 修复: st.needs.health 死字段(state.needs 无 health)→写入静默丢弃，真实字段为 st.status.health
+            if (st.status) st.status.health = Math.min(100, (st.status.health || 50) + 8);
             st.flags._execLifestyleInflation = true; // H→A: 高生活标准，后续日常开销基线抬升（待 A 域消费系统读取）
             StateManager.addMessage("🥂 你给自己安排了一场久违的放松，身心都轻盈了不少。", "success");
           },

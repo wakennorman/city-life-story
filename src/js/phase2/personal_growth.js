@@ -685,8 +685,9 @@ function applyHobbyBenefits(state, hobby) {
     }
     if (benefit.includes("审美")) {
       const value = parseInt(benefit.match(/[\d-]+/)[0]);
-      pg.image.appearance = Math.min(100, pg.image.appearance + value);
-      pg.image.style = Math.min(100, pg.image.style + value);
+      // [全系统自洽修复] 域B R426 修复: state.js默认image结构为{style,skincare,fitness,plastic}无appearance→undefined+value=NaN污染，加||0守卫
+      pg.image.appearance = Math.min(100, (pg.image.appearance || 0) + value);
+      pg.image.style = Math.min(100, (pg.image.style || 0) + value);
     }
     if (benefit.includes("创造力")) {
       const value = parseInt(benefit.match(/[\d-]+/)[0]);
@@ -1053,12 +1054,13 @@ function getPersonalGrowthSummary(state) {
           ? "一般"
           : "需要关注",
     psychologicalState: getPsychologicalStateLabel(pg.psychology),
+    // [全系统自洽修复] 域B R426 修复: appearance/grooming/charisma在state.js默认image结构中不存在→均值NaN，加||0守卫
     imageScore: Math.round(
-      (pg.image.appearance +
-        pg.image.style +
-        pg.image.grooming +
-        pg.image.fitness +
-        pg.image.charisma) /
+      ((pg.image.appearance || 0) +
+        (pg.image.style || 0) +
+        (pg.image.grooming || 0) +
+        (pg.image.fitness || 0) +
+        (pg.image.charisma || 0)) /
         5,
     ),
     activeGoals: pg.lifeGoals.active.length,
