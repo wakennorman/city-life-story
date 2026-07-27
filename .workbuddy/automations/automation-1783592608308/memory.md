@@ -534,3 +534,12 @@
 - 提交链：918bfe2a(fix+feat+dist)→d4447b8f(last_known_head+MEMORY.md)→01164486(修正last_known_head)→43630ba4(loop-state PUSHED)；全程 pull --rebase + push 成功(代理在线)。
 - 并发：源码+dist+账本(CLAUDE.md行/round-589.md/loop-state/日志)全部被并行 080809b7"集成"提交扫入；本窗口补 push 8个积压提交成功(080809b7..aa91dae4)。
 - 下轮：DOMAIN_F(r580 最陈旧)。
+## 最近执行（2026-07-28 05:xx · R599 域G — 已 push main c5ce0269 + 9b4705bc）
+- 起始状态：上一轮自动化中断在 R599 域G 半成品（6 处 A类修复 + domain_g_linkage_r599.js 已写但**未挂载 index.html、未提交、未重建 dist**）。开轮 HEAD=9ce9d965(R569) 本地 ahead 8；并行窗口在本轮执行期间将 HEAD 推进至 63e47a00(R577) 并把我的 R599 源码(6 A类修复+r599.js+index.html挂载)经 `git add -A` 扫入 R570 提交（内容 IDENTICAL，CRLF 保留）。
+- ⚠️ 关键坑（本轮新发现）：Edit 工具将 CRLF 源文件存为 LF → `git diff` 显示 585KB 整文件 diff（仅 2 行真修复）。已用 Python 在 HEAD CRLF 内容上做精准字符串替换收敛为单行修复，避免与并行窗口冲突。教训写入 MEMORY.md「R599 增量要点」。
+- A类6处（跨文件·skills 对象当数值相加=NaN/假键静默失效）：cross_system_events_part2(repair→addSkillXp)/domain_c_linkage_r172(management→addSkillXp)/economy_linkage_events(management→addSkillXp)/cross_system_events(mental→player.mental 真实字段)/npcs(beauty→personalGrowth.image.skincare 真实形象维度)/domain_e_linkage_r597(finance假键→english)。
+- 联动3（domain_g_linkage_r599.js，已落库）：g599_shadow_behind(G→D 首消费_everDepressed)/g599_survivor_lesson(G→C 首消费_everHadIllness)/g599_chronic_ledger(G→E 首消费_chronicMonthlyPaid)。全||防御+rel&&rel.met+applyAffinityChange 铁律。
+- 悬空引用闭合：并行提交时 dist 未含 r599(flag=0)→本窗口 `python build.py` 重建 dist(app.js 12143.1KB，r599 flag 0→2)。
+- 验证：node --check 7文件全过；MC 6×400d EXIT=0·0代码异常·前7天死亡率全0.0%（balanced/corporate 66.7%<80% 为既有RNG平衡阈值非回归；RSS timeout=离线新闻回退）。
+- 提交 2 笔：c5ce0269(fix 域G 重建dist闭合r599悬空+账本) + 9b4705bc(chore 回填 pushStatus=PUSHED)，均 push origin main 成功。last_known_head 同步新 HEAD 过 pre-commit 漂移检查。
+- recency 基准(R599后)：H592<A593<B594<C595<D596<E597<F598<G600 → **下轮 DOMAIN_H（r592 全局最薄弱）**。开轮必 git log 重算真实 recency。
