@@ -538,3 +538,4 @@ if (typeof window !== "undefined") {
   window.getStoryChapterProgress = getStoryChapterProgress;
   window.getStoryChapterChecklist = getStoryChapterChecklist;
 }
+// [R111] 域G 联动增强
