@@ -1,4 +1,4 @@
-# MEMORY — 城市浮生记 8域轮换优化循环（压缩版 2026-07-28 R599前）
+# MEMORY — 城市浮生记 8域轮换优化循环（压缩版 2026-07-28 R599）
 
 ## 开轮流程（权威）
 - recency 权威判定：`ls src/js/core/ | grep -oE "domain_[a-h]_linkage.*r[0-9]+"` 按域取最大轮号；**勿信 loop-state（常严重滞后）**。开轮再 `git log -5` + `git rev-parse HEAD origin/main` 核对并行进度与轮号占用；Write 新 linkage 前必查编号未被占用。
@@ -42,6 +42,7 @@
 - 域A：trade._routeUsage/_totalSpent/_tradeLearnedInvest(a431)。
 
 ## A类净尽结论（勿重复审）
-- 各域历轮已净尽主隐患（域A×11轮/G×8/H×5/F×9/C×4/E×6/B×5，至 R594）。死字段黑名单(player.happiness/needs.health/player.health/certs) 全库 grep=0 活命中即诚实报 A类=0。
+- 各域历轮已净尽主隐患（域A×11轮/G×8/H×5/F×9/C×4/E×6/B×5，至 R599）。死字段黑名单(player.happiness/needs.health/player.health/certs) 全库 grep=0 活命中即诚实报 A类=0。
+- **R599 域G 增量**：跨文件 A类6处（skills对象{level,xp}当数值相加=NaN 摧毁技能 3处→改 addSkillXp；假键 finance/beauty/mental 静默失效 3处→english/真实形象维度 skincare/真实字段 player.mental）；3联动首消费 _everDepressed/_everHadIllness/_chronicMonthlyPaid（needs.js/illness.js 零读取 flag）。**Edit 工具存 CRLF→LF 致整文件 diff 教训**：改 CRLF 源文件须用 Python 在 HEAD CRLF 内容上精准替换，勿用 Edit 直接写（否则 585KB 假 diff 与并行窗口冲突）。源码被并行 R570 `git add -A` 扫入提交（CRLF 保留），本窗口重建 dist 闭合 r599 悬空引用(flag 0→2)。
 - 已修勿重复审：events_core 顶层死块/era_transform getEraEvents 接线/world_params cv 除零(g577)；stock.js avgPrice/finance.js dtI 守卫完好；setStopLoss 有真实调用方(r195)非死代码。
 - 误报勿修：webapp_runtime_bridge getPlayerHealth 主路径正确。C类不修：items.js skillStudy 无应用器；finance.js hasStreetStall flag 无 writer。
