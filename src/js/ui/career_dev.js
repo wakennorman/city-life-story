@@ -2096,6 +2096,18 @@ function renderCareerOverview(state, parent) {
     html += "<div>👥 " + (startup.company.employees || []).length + " 人</div>";
     html += "</div></div></div>";
   }
+  // [全系统自洽修复] 域C 联动增强(C→E): 职业收入→投资潜力估算
+  if (state.career && state.career.currentJob) {
+    var _job = state.career.currentJob;
+    var _salary = _job.salary || 0;
+    if (_salary >= 10000) {
+      var _investPotential = Math.round(_salary * 0.3);
+      html += '<div class="section" style="margin-top:8px;"><h3>📈 投资潜力</h3><div class="card" style="padding:10px;font-size:11px;">';
+      html += '<div>月薪 ¥' + _salary.toLocaleString() + '，建议每月 ' + Math.round(0.3 * 100) + '%（¥' + _investPotential.toLocaleString() + '）用于投资。</div>';
+      html += '<div style="font-size:10px;color:var(--text-muted);margin-top:4px;">💡 稳定的职业收入是投资的基石，建议先建立3-6个月生活费的应急储备金。</div>';
+      html += '</div></div>';
+    }
+  }
 
   // === 五、Phase2 过渡仪式（峰终定律·最后一峰）===
   // 打工末期达标 → 一次性引导弹窗，避免每天刷屏
