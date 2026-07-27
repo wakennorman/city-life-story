@@ -54,11 +54,11 @@
         return (st.flags && !st.flags._a505SkillDemandCooldown);
       },
       choices: [
-        { text: "🔮 提前学习", hint: "技术XP+5,心智+2", apply: function (st) {
+        { text: "🔮 提前学习", hint: "编程XP+5,心智+2", apply: function (st) {
           if (!st) return; st.flags = st.flags || {}; st.flags._a505SkillDemandCooldown = true;
-          if (typeof addSkillXp === "function") { try { addSkillXp("technology", 5); } catch(e) {} }
+          if (typeof addSkillXp === "function") { try { addSkillXp("coding", 5); } catch(e) {} } // [全系统自洽修复] 域C R517: addSkillXp("technology")非真实技能键(XP静默丢弃)→映射coding(技术=编程)
           if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 2);
-          if (typeof StateManager !== "undefined") StateManager.addMessage("🔮 '未来AI相关的技能需求会暴涨，现在学还来得及。' 技术XP+5,心智+2。", "success");
+          if (typeof StateManager !== "undefined") StateManager.addMessage("🔮 '未来AI相关的技能需求会暴涨，现在学还来得及。' 编程XP+5,心智+2。", "success");
         }},
         { text: "📈 关注趋势", hint: "心智+2", apply: function (st) {
           if (!st) return; st.flags = st.flags || {}; st.flags._a505SkillDemandCooldown = true;
@@ -81,11 +81,11 @@
         return (st.flags && !st.flags._a505MarketCycleCooldown);
       },
       choices: [
-        { text: "🎢 顺势而为", hint: "贸易XP+4,心智+1", apply: function (st) {
+        { text: "🎢 顺势而为", hint: "销售XP+4,心智+1", apply: function (st) {
           if (!st) return; st.flags = st.flags || {}; st.flags._a505MarketCycleCooldown = true;
-          if (typeof addSkillXp === "function") { try { addSkillXp("trade", 4); } catch(e) {} }
+          if (typeof addSkillXp === "function") { try { addSkillXp("sales", 4); } catch(e) {} } // [全系统自洽修复] 域C R517: addSkillXp("trade")非真实技能键(XP静默丢弃)→映射sales(市场买卖=销售)
           if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 1);
-          if (typeof StateManager !== "undefined") StateManager.addMessage("🎢 '市场就像过山车，有起有落。关键是在低谷时买入，在高点时卖出。' 贸易XP+4,心智+1。", "success");
+          if (typeof StateManager !== "undefined") StateManager.addMessage("🎢 '市场就像过山车，有起有落。关键是在低谷时买入，在高点时卖出。' 销售XP+4,心智+1。", "success");
         }},
         { text: "📊 研究规律", hint: "会计XP+3", apply: function (st) {
           if (!st) return; st.flags = st.flags || {}; st.flags._a505MarketCycleCooldown = true;
