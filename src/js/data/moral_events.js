@@ -3193,3 +3193,4 @@ function getMoralEmoji(score) {
   if (score >= -40) return "😒";
   return "👿";
 }
+// [R394] 域B
