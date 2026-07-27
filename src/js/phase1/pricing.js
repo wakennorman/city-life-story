@@ -953,3 +953,4 @@ function getSkillPriceInsight(state, locKey, goodId) {
 // [R289] 域A
 // [R337] 域A
 // [R385] 域A
+// [R433] 域A
