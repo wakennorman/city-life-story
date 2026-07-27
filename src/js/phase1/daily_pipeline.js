@@ -2510,3 +2510,4 @@ function getHealthScore(state) {
 // [R431] 域G
 // [R455] 域G
 // [R479] 域G
+// [R503] 域G
