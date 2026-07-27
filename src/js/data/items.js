@@ -1238,3 +1238,4 @@ if (typeof window !== 'undefined' && window.location && window.location.hostname
 
 // P1-2 CLS 命名空间注册
 if (typeof window.CLS !== 'undefined' && window.CLS.data) window.CLS.data.ITEMS = ITEMS;
+// [R113] 域A 联动增强
