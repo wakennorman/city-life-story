@@ -565,6 +565,42 @@ function renderSidebar(state) {
   // P3-3 城市记忆指示器：已结识NPC/总数
   renderCityMemory(state);
 
+  // [全系统自洽修复] 域F 联动增强(F→C): 职业成长进度 — 侧栏显示当前职业的技能要求达标率
+  try {
+    if (state.career && state.career.currentJob && typeof CAREER_PATHS !== "undefined") {
+      var _job = state.career.currentJob;
+      var _path = CAREER_PATHS[_job.path];
+      if (_path) {
+        var _level = _path.levels.find(function(l) { return l.id === _job.levelId; });
+        if (_level && _level.reqSkills) {
+          var _met = 0, _total = 0;
+          for (var _sk in _level.reqSkills) {
+            _total++;
+            var _cur = 0;
+            if (state.skills && state.skills[_sk]) _cur = state.skills[_sk].level || 0;
+            if (_cur >= _level.reqSkills[_sk]) _met++;
+          }
+          if (_total > 0) {
+            var _pct = Math.round(_met / _total * 100);
+            var _careerEl = document.getElementById("sidebar-career-progress");
+            if (!_careerEl) {
+              var _sEl = document.getElementById("sidebar");
+              if (_sEl) {
+                _careerEl = document.createElement("div");
+                _careerEl.id = "sidebar-career-progress";
+                _careerEl.style.cssText = "font-size:10px;padding:4px 12px;color:var(--text-muted);border-top:1px solid var(--border);";
+                _sEl.appendChild(_careerEl);
+              }
+            }
+            if (_careerEl) {
+              _careerEl.innerHTML = '📈 技能达标 ' + _pct + '%（' + _met + '/' + _total + '项）';
+            }
+          }
+        }
+      }
+    }
+  } catch (e) {}
+
   // P1-5 渐进式揭示：根据 _unlockedHints 隐藏未解锁元素
   applyProgressiveDisclosure(state);
 }
