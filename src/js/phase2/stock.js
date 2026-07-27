@@ -699,3 +699,4 @@ function refreshStockMarket(state) {
 // [R533] 域E
 // [R557] 域E
 // [R581] 域E
+// [R605] 域E
