@@ -27162,13 +27162,13 @@ function getEventHealthImpact(state, eventId) {
           if (!st) return; st.flags = st.flags || {}; st.flags._a583SkillGapCooldown = true;
           if (typeof addSkillXp === "function") { try { addSkillXp("management", 4); } catch(e) {} }
           if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 2);
-          var skills = ["accounting", "management", "marketing", "technology", "social", "trade"];
+          var skills = ["accounting", "management", "social", "coding", "sales"]; // [全系统自洽修复] 域E R588 修复:marketing/technology/trade非真实技能键(addSkillXp静默丢弃XP)→映射social/coding/sales
           for (var i = 0; i < skills.length; i++) { if (typeof addSkillXp === "function") { try { addSkillXp(skills[i], 1); } catch(e) {} } }
           if (typeof StateManager !== "undefined") StateManager.addMessage("🎯 '差距就是提升空间，制定计划，一步步赶上。' 管理XP+4,心智+2,全技能XP+1。", "success");
         }},
         { text: "📈 专注优势", hint: "随机技能XP+5", apply: function (st) {
           if (!st) return; st.flags = st.flags || {}; st.flags._a583SkillGapCooldown = true;
-          var skills = ["accounting", "management", "marketing", "technology", "social", "trade"];
+          var skills = ["accounting", "management", "social", "coding", "sales"]; // [全系统自洽修复] 域E R588 修复:marketing/technology/trade非真实技能键(addSkillXp静默丢弃XP)→映射social/coding/sales
           var sk = skills[Math.floor(Math.random() * skills.length)];
           if (typeof addSkillXp === "function") { try { addSkillXp(sk, 5); } catch(e) {} }
           if (typeof StateManager !== "undefined") StateManager.addMessage("🎯 '发挥优势，比弥补短板更容易出成绩。' 随机技能XP+5。", "success");
@@ -107087,7 +107087,7 @@ if (typeof window !== "undefined") {
         }},
         { text: "📈 提升价值", hint: "随机技能XP+3", apply: function (st) {
           if (!st) return; st.flags = st.flags || {}; st.flags._c574SkillMarketValueCooldown = true;
-          var skills = ["accounting", "management", "marketing", "technology", "social", "trade"];
+          var skills = ["accounting", "management", "social", "coding", "sales"]; // [全系统自洽修复] 域E R588 修复:marketing/technology/trade非真实技能键(addSkillXp静默丢弃XP)→映射social/coding/sales
           var sk = skills[Math.floor(Math.random() * skills.length)];
           if (typeof addSkillXp === "function") { try { addSkillXp(sk, 3); } catch(e) {} }
           if (typeof StateManager !== "undefined") StateManager.addMessage("📊 '提升技能，就是在提升自己的市场价值。' 随机技能XP+3。", "success");
@@ -107148,7 +107148,7 @@ if (typeof window !== "undefined") {
         }},
         { text: "📈 投资自己", hint: "随机技能XP+5", apply: function (st) {
           if (!st) return; st.flags = st.flags || {}; st.flags._c574FinancialCooldown = true;
-          var skills = ["accounting", "management", "marketing", "technology", "social", "trade"];
+          var skills = ["accounting", "management", "social", "coding", "sales"]; // [全系统自洽修复] 域E R588 修复:marketing/technology/trade非真实技能键(addSkillXp静默丢弃XP)→映射social/coding/sales
           var sk = skills[Math.floor(Math.random() * skills.length)];
           if (typeof addSkillXp === "function") { try { addSkillXp(sk, 5); } catch(e) {} }
           if (typeof StateManager !== "undefined") StateManager.addMessage("💰 '最好的投资，是投资自己的职业发展。' 随机技能XP+5。", "success");
@@ -120963,7 +120963,7 @@ if (typeof window !== "undefined") {
         { text: "🎯 从中学习", hint: "智力+2,全技能XP+1", apply: function (st) {
           if (!st) return; st.flags = st.flags || {}; st.flags._d479LifeStoryCooldown = true;
           if (st.player) st.player.intelligence = Math.min(100, (st.player.intelligence || 50) + 2);
-          var skills = ["accounting", "management", "sales", "coding", "trade"];
+          var skills = ["accounting", "management", "sales", "coding", "social"]; // [全系统自洽修复] 域E R588 修复:trade非真实技能键(addSkillXp静默丢弃XP)→映射social
           for (var i = 0; i < skills.length; i++) { if (typeof addSkillXp === "function") { try { addSkillXp(skills[i], 1); } catch(e) {} } }
           if (typeof StateManager !== "undefined") StateManager.addMessage("🎯 你从TA的人生中汲取了经验——'别人的经历是最好的教材。' 智力+2,全技能XP+1。", "success");
         }}
@@ -168008,6 +168008,7 @@ if (typeof window !== "undefined") {
 // [R340] 域D
 // [R364] 域D
 // [R396] 域D
+// [R420] 域D
 
 ;
 // ==== js/core/enterprise_fate.js ====
@@ -175562,6 +175563,7 @@ function getActiveSynergiesCount(state) {
 // [R227] 域C 联动增强
 // [R275] 域C
 // [R379] 域C
+// [R419] 域C
 
 ;
 // ==== js/data/startup_events.js ====
@@ -194479,6 +194481,7 @@ function hasIllness(state, illnessId) {
 // [R217] 域A 联动增强
 // [R281] 域A
 // [R377] 域A
+// [R425] 域A
 
 ;
 // ==== js/data/mechanics_registry.js ====
@@ -201629,6 +201632,7 @@ if (typeof window !== "undefined") {
   }
 })();
 // [R338] 域B
+// [R418] 域B
 
 ;
 // ==== js/data/domain_c_linkage_r173.js ====
@@ -206767,6 +206771,7 @@ function applyWealthBasedOverhead(state) {
 // [R303] 域G
 // [R351] 域G
 // [R375] 域G
+// [R423] 域G
 
 ;
 // ==== js/phase1/interactions.js ====
@@ -221552,6 +221557,7 @@ function getTeamProductivity(state) {
 // [R352] 域H
 // [R376] 域H
 // [R400] 域H
+// [R424] 域H
 
 ;
 // ==== js/phase2/stock.js ====
@@ -228600,6 +228606,7 @@ if (typeof window !== "undefined") {
 // [R349] 域E
 // [R373] 域E
 // [R397] 域E
+// [R421] 域E
 
 ;
 // ==== js/phase2/startup_data.js ====
@@ -255622,7 +255629,7 @@ if (typeof window !== "undefined") {
         { text: "🎯 优先完成最难的目标", hint: "心智+3,全技能XP+1", apply: function (st) {
           if (!st) return; st.flags = st.flags || {}; st.flags._f471QuestCooldown = true;
           if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 3);
-          var skills = ["accounting", "management", "sales", "coding", "trade"];
+          var skills = ["accounting", "management", "sales", "coding", "social"]; // [全系统自洽修复] 域E R588 修复:trade非真实技能键(addSkillXp静默丢弃XP)→映射social
           for (var i = 0; i < skills.length; i++) { if (typeof addSkillXp === "function") { try { addSkillXp(skills[i], 1); } catch(e) {} } }
           if (typeof StateManager !== "undefined") StateManager.addMessage("🎯 你决定先啃硬骨头——'最难的事最值得做。' 心智+3,全技能XP+1。", "success");
         }},
@@ -256109,7 +256116,7 @@ if (typeof window !== "undefined") {
         }},
         { text: "🎯 聚焦成长", hint: "全技能XP+1,心情+3", apply: function (st) {
           if (!st) return; st.flags = st.flags || {}; st.flags._f477LifeDashCooldown = true;
-          var skills = ["accounting", "management", "sales", "coding", "trade"];
+          var skills = ["accounting", "management", "sales", "coding", "social"]; // [全系统自洽修复] 域E R588 修复:trade非真实技能键(addSkillXp静默丢弃XP)→映射social
           for (var i = 0; i < skills.length; i++) { if (typeof addSkillXp === "function") { try { addSkillXp(skills[i], 1); } catch(e) {} } }
           if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 3);
           if (typeof StateManager !== "undefined") StateManager.addMessage("🎯 你聚焦于成长——'每天进步一点点。' 全技能XP+1,心情+3。", "success");
@@ -256225,7 +256232,7 @@ if (typeof window !== "undefined") {
         { text: "🎯 优先完成", hint: "心智+3,全技能XP+1", apply: function (st) {
           if (!st) return; st.flags = st.flags || {}; st.flags._f485QuestCooldown = true;
           if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 3);
-          var skills = ["accounting", "management", "sales", "coding", "trade"];
+          var skills = ["accounting", "management", "sales", "coding", "social"]; // [全系统自洽修复] 域E R588 修复:trade非真实技能键(addSkillXp静默丢弃XP)→映射social
           for (var i = 0; i < skills.length; i++) { if (typeof addSkillXp === "function") { try { addSkillXp(skills[i], 1); } catch(e) {} } }
           if (typeof StateManager !== "undefined") StateManager.addMessage("🎯 你优先完成了任务——'今日事今日毕。' 心智+3,全技能XP+1。", "success");
         }},
@@ -256350,7 +256357,7 @@ if (typeof window !== "undefined") {
         }},
         { text: "🎯 聚焦成长", hint: "全技能XP+2", apply: function (st) {
           if (!st) return; st.flags = st.flags || {}; st.flags._f486PortraitCooldown = true;
-          var skills = ["accounting", "management", "sales", "coding", "trade"];
+          var skills = ["accounting", "management", "sales", "coding", "social"]; // [全系统自洽修复] 域E R588 修复:trade非真实技能键(addSkillXp静默丢弃XP)→映射social
           for (var i = 0; i < skills.length; i++) { if (typeof addSkillXp === "function") { try { addSkillXp(skills[i], 2); } catch(e) {} } }
           if (typeof StateManager !== "undefined") StateManager.addMessage("🎯 你聚焦于成长——'每天进步一点点。' 全技能XP+2。", "success");
         }}
@@ -257729,7 +257736,7 @@ if (typeof window !== "undefined") {
         { text: "🎯 规划下一章", hint: "智力+2,全技能XP+1", apply: function (st) {
           if (!st) return; st.flags = st.flags || {}; st.flags._b483ChapterCooldown = true;
           if (st.player) st.player.intelligence = Math.min(100, (st.player.intelligence || 50) + 2);
-          var skills = ["accounting", "management", "sales", "coding", "trade"];
+          var skills = ["accounting", "management", "sales", "coding", "social"]; // [全系统自洽修复] 域E R588 修复:trade非真实技能键(addSkillXp静默丢弃XP)→映射social
           for (var i = 0; i < skills.length; i++) { if (typeof addSkillXp === "function") { try { addSkillXp(skills[i], 1); } catch(e) {} } }
           if (typeof StateManager !== "undefined") StateManager.addMessage("🎯 你规划了下一章——'人生需要新目标。' 智力+2,全技能XP+1。", "success");
         }}
@@ -257976,7 +257983,7 @@ if (typeof window !== "undefined") {
         { text: "🎯 设定新目标", hint: "智力+2,全技能XP+1", apply: function (st) {
           if (!st) return; st.flags = st.flags || {}; st.flags._b490MilestoneCooldown = true;
           if (st.player) st.player.intelligence = Math.min(100, (st.player.intelligence || 50) + 2);
-          var skills = ["accounting", "management", "sales", "coding", "trade"];
+          var skills = ["accounting", "management", "sales", "coding", "social"]; // [全系统自洽修复] 域E R588 修复:trade非真实技能键(addSkillXp静默丢弃XP)→映射social
           for (var i = 0; i < skills.length; i++) { if (typeof addSkillXp === "function") { try { addSkillXp(skills[i], 1); } catch(e) {} } }
           if (typeof StateManager !== "undefined") StateManager.addMessage("🎯 你设定了人生新目标——'每一个终点都是新的起点。' 智力+2,全技能XP+1。", "success");
         }}
@@ -259032,7 +259039,7 @@ if (typeof window !== "undefined") {
       choices: [
         { text: "💡 学习新技术", hint: "技术XP+5,心智+2", apply: function (st) {
           if (!st) return; st.flags = st.flags || {}; st.flags._b584TechBreakthroughCooldown = true;
-          if (typeof addSkillXp === "function") { try { addSkillXp("technology", 5); } catch(e) {} }
+          if (typeof addSkillXp === "function") { try { addSkillXp("coding", 5); } catch(e) {} } // [全系统自洽修复] 域E R588 修复:technology非真实技能键(XP静默丢弃)→映射coding(学习新技术=编程)
           if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 2);
           if (typeof StateManager !== "undefined") StateManager.addMessage("💡 'AI技术又突破了，得跟上时代步伐。' 技术XP+5,心智+2。", "success");
         }},
@@ -260821,7 +260828,7 @@ if (typeof window !== "undefined") {
         }},
         { text: "📈 提升自己", hint: "随机技能XP+3", apply: function (st) {
           if (!st) return; st.flags = st.flags || {}; st.flags._c586CareerCircleCooldown = true;
-          var skills = ["accounting", "management", "marketing", "technology", "social", "trade"];
+          var skills = ["accounting", "management", "social", "coding", "sales"]; // [全系统自洽修复] 域E R588 修复:marketing/technology/trade非真实技能键(addSkillXp静默丢弃XP)→映射social/coding/sales
           var sk = skills[Math.floor(Math.random() * skills.length)];
           if (typeof addSkillXp === "function") { try { addSkillXp(sk, 3); } catch(e) {} }
           if (typeof StateManager !== "undefined") StateManager.addMessage("🎯 '提升自己，才能进入更好的圈层。' 随机技能XP+3。", "success");
@@ -263903,7 +263910,7 @@ if (typeof window !== "undefined") {
         { text: "🎯 追求新缎带", hint: "心情+5,全技能XP+1", apply: function (st) {
           if (!st) return; st.flags = st.flags || {}; st.flags._g472RibbonUiCooldown = true;
           if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 5);
-          var skills = ["accounting", "management", "sales", "coding", "trade"];
+          var skills = ["accounting", "management", "sales", "coding", "social"]; // [全系统自洽修复] 域E R588 修复:trade非真实技能键(addSkillXp静默丢弃XP)→映射social
           for (var i = 0; i < skills.length; i++) { if (typeof addSkillXp === "function") { try { addSkillXp(skills[i], 1); } catch(e) {} } }
           if (typeof StateManager !== "undefined") StateManager.addMessage("🎯 你决定追求新缎带——'人生需要新目标。' 心情+5,全技能XP+1。", "success");
         }}
@@ -264078,7 +264085,7 @@ if (typeof window !== "undefined") {
       choices: [
         { text: "🌸 春耕夏耘", hint: "全技能XP+1,心情+3", apply: function (st) {
           if (!st) return; st.flags = st.flags || {}; st.flags._g478SeasonCooldown = true;
-          var skills = ["accounting", "management", "sales", "coding", "trade"];
+          var skills = ["accounting", "management", "sales", "coding", "social"]; // [全系统自洽修复] 域E R588 修复:trade非真实技能键(addSkillXp静默丢弃XP)→映射social
           for (var i = 0; i < skills.length; i++) { if (typeof addSkillXp === "function") { try { addSkillXp(skills[i], 1); } catch(e) {} } }
           if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 3);
           if (typeof StateManager !== "undefined") StateManager.addMessage("🌸 你决定春耕夏耘——'一年之计在于春。' 全技能XP+1,心情+3。", "success");
@@ -264426,7 +264433,7 @@ if (typeof window !== "undefined") {
         }},
         { text: "💪 专注自身", hint: "全技能XP+2", apply: function (st) {
           if (!st) return; st.flags = st.flags || {}; st.flags._g487EconHealthCooldown = true;
-          var skills = ["accounting", "management", "sales", "coding", "trade"];
+          var skills = ["accounting", "management", "sales", "coding", "social"]; // [全系统自洽修复] 域E R588 修复:trade非真实技能键(addSkillXp静默丢弃XP)→映射social
           for (var i = 0; i < skills.length; i++) { if (typeof addSkillXp === "function") { try { addSkillXp(skills[i], 2); } catch(e) {} } }
           if (typeof StateManager !== "undefined") StateManager.addMessage("💪 你决定专注自身——'打铁还需自身硬。' 全技能XP+2。", "success");
         }}
@@ -264458,7 +264465,7 @@ if (typeof window !== "undefined") {
         { text: "🎯 设定新年目标", hint: "智力+2,全技能XP+1", apply: function (st) {
           if (!st) return; st.flags = st.flags || {}; st.flags._g487BirthdayCooldown = true;
           if (st.player) st.player.intelligence = Math.min(100, (st.player.intelligence || 50) + 2);
-          var skills = ["accounting", "management", "sales", "coding", "trade"];
+          var skills = ["accounting", "management", "sales", "coding", "social"]; // [全系统自洽修复] 域E R588 修复:trade非真实技能键(addSkillXp静默丢弃XP)→映射social
           for (var i = 0; i < skills.length; i++) { if (typeof addSkillXp === "function") { try { addSkillXp(skills[i], 1); } catch(e) {} } }
           if (typeof StateManager !== "undefined") StateManager.addMessage("🎯 你设定了新年目标——'每一年都是新的开始。' 智力+2,全技能XP+1。", "success");
         }}
@@ -277827,7 +277834,7 @@ if (typeof window !== "undefined") {
         }},
         { text: "📚 学习更多", hint: "随机技能XP+5", apply: function (st) {
           if (!st) return; st.flags = st.flags || {}; st.flags._e570CareerConfCooldown = true;
-          var skills = ["coding", "sales", "accounting", "management", "finance"];
+          var skills = ["coding", "sales", "accounting", "management", "english"]; // [全系统自洽修复] 域E R588 修复:finance非真实技能键(addSkillXp静默丢弃XP)→映射english(理财进修=继续教育,accounting已在数组)
           var sk = skills[Math.floor(Math.random() * skills.length)];
           if (typeof addSkillXp === "function") { try { addSkillXp(sk, 5); } catch(e) {} }
           if (typeof StateManager !== "undefined") StateManager.addMessage("💼 '学无止境。' " + sk + "XP+5。", "success");
@@ -277944,7 +277951,7 @@ if (typeof window !== "undefined") {
         }},
         { text: "📚 学习更多", hint: "随机技能XP+5", apply: function (st) {
           if (!st) return; st.flags = st.flags || {}; st.flags._e577CareerConfCooldown = true;
-          var skills = ["coding", "sales", "accounting", "management", "finance"];
+          var skills = ["coding", "sales", "accounting", "management", "english"]; // [全系统自洽修复] 域E R588 修复:finance非真实技能键(addSkillXp静默丢弃XP)→映射english(理财进修=继续教育,accounting已在数组)
           var sk = skills[Math.floor(Math.random() * skills.length)];
           if (typeof addSkillXp === "function") { try { addSkillXp(sk, 5); } catch(e) {} }
           if (typeof StateManager !== "undefined") StateManager.addMessage("💼 '学无止境。' " + sk + "XP+5。", "success");
@@ -278130,6 +278137,123 @@ if (typeof window !== "undefined") {
     })(EVENTS[i]);
   }
 })();
+;
+// ==== js/core/domain_e_linkage_r588.js ====
+/**
+ * 域E(经济/投资) 联动增强 R588
+ * 桥接：
+ *   E→G  e588_investment_life_balance  投资生活平衡 → 消费 investment+needs 数据,
+ *     投资→"财富与生活"的生命回响
+ *   E→C  e588_investment_career_confidence 投资职业信心 → 消费 investment+skills 数据,
+ *     投资→"投资收益增强职业信心"的职业回响
+ *   E→B  e588_investment_story         投资故事 → 消费 investment+event 数据,
+ *     投资→"投资人生章节"的叙事回响
+ */
+(function () {
+  "use strict";
+  if (typeof RANDOM_EVENTS === "undefined" || !RANDOM_EVENTS) return;
+  if (RANDOM_EVENTS._domainELinkageR588Loaded) return;
+  RANDOM_EVENTS._domainELinkageR588Loaded = true;
+
+  var EVENTS = [
+    {
+      id: "e588_investment_life_balance", phase: "street", _isChainEvent: false, icon: "⚖️",
+      title: "财富与生活",
+      story: "看着自己的投资收益，你开始思考——{desc}",
+      triggers: { minDay: 60, interval: 120, maxRepeats: 3, excludeFlags: ["_e588LifeBalanceCooldown"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        if (!st.flags || st.flags._e588LifeBalanceCooldown) return false;
+        return st.investment && (st.investment.stockHoldings && st.investment.stockHoldings.length > 0);
+      },
+      choices: [
+        { text: "🎉 犒劳自己", hint: "心情+5,现金-500", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._e588LifeBalanceCooldown = true;
+          if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 5);
+          if (st.resources) st.resources.cash = Math.max(0, (st.resources.cash || 0) - 500);
+          if (typeof StateManager !== "undefined") StateManager.addMessage("⚖️ '赚了钱也要享受生活。' 你好好犒劳了自己。心情+5,现金-¥500。", "success");
+        }},
+        { text: "📈 继续投资", hint: "会计XP+3", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._e588LifeBalanceCooldown = true;
+          if (typeof addSkillXp === "function") { try { addSkillXp("accounting", 3); } catch(e) {} }
+          if (typeof StateManager !== "undefined") StateManager.addMessage("⚖️ '让钱生钱。' 你选择继续投资。会计XP+3。", "success");
+        }}
+      ],
+      text: function (st) {
+        if (!st) return null;
+        return "看着自己的投资收益，你开始思考——'财富是为了更好的生活。' 你开始平衡投资与生活。";
+      }
+    },
+    {
+      id: "e588_investment_career_confidence", phase: "corporate", _isChainEvent: false, icon: "💼",
+      title: "投资收益增强职业信心",
+      story: "投资的成功让你对职业也更有信心——{desc}",
+      triggers: { minDay: 50, interval: 100, maxRepeats: 3, excludeFlags: ["_e588CareerConfCooldown"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        if (!st.flags || st.flags._e588CareerConfCooldown) return false;
+        return st.investment && (st.investment.stockHoldings && st.investment.stockHoldings.length > 0);
+      },
+      choices: [
+        { text: "💪 更有底气", hint: "管理XP+5", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._e588CareerConfCooldown = true;
+          if (typeof addSkillXp === "function") { try { addSkillXp("management", 5); } catch(e) {} }
+          if (typeof StateManager !== "undefined") StateManager.addMessage("💼 '投资成功让我更有底气。' 你在职场上更有信心。管理XP+5。", "success");
+        }},
+        { text: "📚 学习更多", hint: "随机技能XP+5", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._e588CareerConfCooldown = true;
+          var skills = ["coding", "sales", "accounting", "management", "finance"];
+          var sk = skills[Math.floor(Math.random() * skills.length)];
+          if (typeof addSkillXp === "function") { try { addSkillXp(sk, 5); } catch(e) {} }
+          if (typeof StateManager !== "undefined") StateManager.addMessage("💼 '学无止境。' " + sk + "XP+5。", "success");
+        }}
+      ],
+      text: function (st) {
+        if (!st) return null;
+        return "投资的成功让你对职业也更有信心——'财商就是智商。' 你开始思考如何将投资思维应用到职业中。";
+      }
+    },
+    {
+      id: "e588_investment_story", phase: "street", _isChainEvent: false, icon: "📖",
+      title: "投资人生章节",
+      story: "回顾自己的投资历程，你感慨万千——{desc}",
+      triggers: { minDay: 70, interval: 150, maxRepeats: 3, excludeFlags: ["_e588InvestStoryCooldown"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        if (!st.flags || st.flags._e588InvestStoryCooldown) return false;
+        return st.stats && st.stats.eventsTriggered >= 10;
+      },
+      choices: [
+        { text: "📝 记录下来", hint: "会计XP+5,心智+2", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._e588InvestStoryCooldown = true;
+          if (typeof addSkillXp === "function") { try { addSkillXp("accounting", 5); } catch(e) {} }
+          if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 2);
+          if (typeof StateManager !== "undefined") StateManager.addMessage("📖 '这些经历值得被记住。' 你把投资历程记录下来。会计XP+5,心智+2。", "success");
+        }},
+        { text: "🎯 规划未来", hint: "智力+3", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._e588InvestStoryCooldown = true;
+          if (st.player) st.player.intelligence = Math.min(100, (st.player.intelligence || 50) + 3);
+          if (typeof StateManager !== "undefined") StateManager.addMessage("📖 '下一章要写得更加精彩。' 你开始规划未来的投资计划。智力+3。", "success");
+        }}
+      ],
+      text: function (st) {
+        if (!st) return null;
+        return "回顾自己的投资历程，你感慨万千——'从第一笔投资到今天。' 你开始思考下一章该怎么写。";
+      }
+    }
+  ];
+
+  for (var i = 0; i < EVENTS.length; i++) {
+    (function (ev) {
+      var exists = false;
+      for (var j = 0; j < RANDOM_EVENTS.length; j++) {
+        if (RANDOM_EVENTS[j] && RANDOM_EVENTS[j].id === ev.id) { exists = true; break; }
+      }
+      if (!exists) RANDOM_EVENTS.push(ev);
+    })(EVENTS[i]);
+  }
+})();
+
 ;
 // ==== js/components/companyHistory.js ====
 /**
@@ -310003,6 +310127,7 @@ if (typeof window !== "undefined") {
 // [R182] 域F 联动增强
 // [R254] 域F
 // [R350] 域F
+// [R422] 域F
 
 ;
 // ==== js/data/job_milestone_events.js ====
