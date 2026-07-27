@@ -463,3 +463,40 @@
 - 竞态：源码+挂载写完3分钟被并行扫入 1285e69f 并 push（内容IDENTICAL）；并行同轮号异域 a489 在途→本窗口不提交 dist。本窗口提交=round doc+memory 账本。
 - 验证：node --check OK；build 11456.5KB c489_=12（顺带闭合 g487 悬空）；MC 6×400d 167.7s 0代码异常、前7天死亡0%。
 - 下轮：git log 重算 recency；同轮号双域已成新常态，轮号仅弱参考。
+
+## 最近执行（2026-07-27 17:30 · R518 域C）
+
+- **起始状态（本窗口接手）**: HEAD=`0bdf3b27`(R516 集成并行窗口变更)。git status 显示上轮遗留脏树（域H R512 staged + 域C R515 unstaged + MEMORY.md 修改）→ 实际已被 R516 提交；仅余 untracked `domain-optimization-round-515.md`(陈旧)。工作树清理后本地链：`0bdf3b27(R516)→10d36948(R517域C)→ff52f300(R518集成)→3ebc2496(本窗口R518 fix)→94eeb615(R519域D并行)`。
+- **A类5处（假技能键静默丢弃，跨域 linkage 文件，原 R515 计划未落地）**: `addSkillXp("trade"/"technology",N)` 在 state.skills 无此键→XP 永久丢失（R472/R489 同模式）。修复映射 trade→sales / technology→coding，同步 hint/消息文本 + `// [全系统自洽修复]` 注释：r497 `trade`→`sales`；r505 `technology`→`coding`+`trade`→`sales`；r498 `technology`→`coding`；r493 `technology`→`coding`。4 文件均挂载 index.html(619/621/1226/1426)→确为活跃线上缺陷。
+- **联动3（新建 domain_c_linkage_r518.js，IIFE→RANDOM_EVENTS，全||防御，phase:"street"，id 前缀 c518_ 不冲突）**: c518_skill_respect_d(C→D **首消费死flag _skillRespectNotified** career_dev.js:3693 总技能≥50置位零读取·守 rel.met+applyAffinityChange)/c518_mentor_legacy_b(C→B **首消费死flag _hasApprentice** career_dev.js:5509 收徒置位零读取)/c518_career_clarity_f(C→F 职业清晰感·needs.happiness 真实字段)。index.html:794 之后挂载。
+- **验证**: node --check 5文件全过；build dist app.js 11693.3KB（r518 flag 入 bundle count=2）；MC 6×400d **EXIT=0·0代码异常·前7天死亡0%**（balanced 50%/grinder 0%/corporate 66.7% 存活率<80% 为既有 RNG 平衡阈值非代码回归，本轮改动不触及 grinder/平衡机制；RSS timeout=离线新闻回退）。
+- **提交**: `3ebc2496`(fix 域C R518，11文件/74增/57删) 已提交本地，**未 push**（代理 127.0.0.1:3067 未起→`git pull --rebase`/`git push` 均 fatal Connection reset）。仅 add 本轮文件，排除并行在途 domain_d_linkage_r519.js / push-via-api.mjs / 陈旧 round-515.md。
+- **关键发现**: R515 域C 与 R517 域C 均已由并行窗口完成并集成（domain_c_linkage_r515.js/r517.js 存在且挂载 792/794）→ 域C 已饱和；本轮 "R518=域C" 实际是补全 R515 遗留的假技能键修复 + 追加联动。并行窗口进行中已推 R519=域D(94eeb615) 落在本窗口提交之上，链路线性无分歧。
+- **下轮**: 域D（并行 R519 已做，本地下轮确为 D；开轮必 git log 重算真实 recency，勿信 loop-state）。代理未起期间改动累积本地，下轮继续。
+
+## 最近执行（2026-07-27 19:05 · R530 域F UI/UX）
+
+- 域选择：git log 实况 recency（R521=F 为在途外最旧；并行 R529=域E 在途避开）→ R530=域F。
+- A类=0 诚实报告：死字段黑名单全库 grep 0 活命中；域F 已历 R19-R463 多轮净尽。
+- 联动3（domain_f_linkage_r530.js·域F三大只读可视化数据源全部首事件消费）：f530_achievement_momentum(F→D _unlockedAchievements 成就墙分享·met守卫)/f530_cash_trend_review(F→E _cashHistory 7天趋势复盘·prev>0+isFinite除零守卫)/f530_narrative_collector(F→B _experiencedNarratives≥10 故事收藏家身份flag)。
+- 在途隔离新模式：mv r529 文件到 $TEMP + 摘除挂载行 → 干净 build(f530_=6/e529_=0) → 提交后还原。比 stash 更适合 untracked 在途文件。
+- 验证：node --check OK；build 11775.4KB；MC 6x400d 84.6s 0代码异常、前7天死亡率全0%（social 66.7%/corporate 33.3% 为既有RNG阈值）。
+- 提交：8cae6cbe（8文件/378增），已本地提交；push 失败（代理 127.0.0.1:3067 未起，Connection reset），本地积压 21 提交待推，下轮继续。
+- 下轮：git log 重算 recency，域G(R523) 为当前最旧候选（避开在途）。
+
+## 最近执行（2026-07-27 R535 域C 职业/成长）
+- A类6处修复：假技能键 trade/marketing/technology（addSkillXp静默丢弃）→ 映射真实键。涉及 r525/r519/r515/r500/r531/r533 六个联动文件的"全技能/随机技能"模板污染，全库清零。
+- 联动3项（domain_c_linkage_r535.js，均首消费）：职业年鉴(_careerMonthlySnapshots,C→G)/跨界者(_crossPathJobhop,C→D)/巅峰之后(_careerMaxLevelCelebrated,C→E)。
+- 防再犯：开域C轮 grep "marketing.*technology" 复查数组模板。
+- 下轮：DOMAIN_D。skillBranches/talentNodes已有消费者勿当零消费选题。
+- R535 push状态：git push/fetch 均 Connection reset（代理未起，已知问题）→ 本轮及并行R137-R153全部累积本地，下轮网络恢复后统一 pull --rebase + push。
+
+## 最近执行（2026-07-27 21:11 · R554 域G）
+- 域选择：loop-state 滞后标 round552/F/next=G；git log 重算并行已推进至 R553（域F R552 + 集成 chore e01105c8）→ 本轮=R554=域G。
+- P0 热修复（_guardNeedsP1/P3-P8）核验已由并行窗口提交（part1/part2.js grep 117/119 命中守卫），无需重复提交。
+- A类1（确证·假技能键回潮）：domain_g_linkage_r554.js:101 `g554_life_retrain` 数组 `["accounting","management","marketing","technology","social","trade"]` 重新引入 marketing/technology/trade 假键（R535 清零后新建文件再污染）→ 映射 marketing→social / technology→coding / trade→sales。node --check 通过。
+- 联动3（已就位·非本轮新建）：g554_life_old_friend(G→D)/g554_life_emergency_fund(G→E)/g554_life_retrain(G→C)，全 phase:"street"·||防御)。
+- 验证：全库 grep 假键数组 0 活命中；dead-field 黑名单 0 命中；build dist 11965.3KB（r554 flag=2 闭合悬空引用）；MC 6×400d EXIT=0·0硬异常·前7天死亡0%（grinder/trader/corporate<阈值为既有RNG平衡波动）。
+- 并发：本窗口修复+重建 dist 后，并行窗口以 e16b2689「R555 sync state」将 r554.js(含修复)+dist+p0-hotfix.md+loop-state(R554/G/next=H) 一并扫入提交。本窗口仅补 bookkeeping（MEMORY.md R554 节 + round-554 doc）。
+- 教训：假技能键污染会回潮（新建 linkage 文件落库前必 grep 假键数组）；悬空引用新形态（并行先挂 index.html 再建源=源未提交即悬空）。
+- 下轮：DOMAIN_H（recency 最薄弱候选）；开轮必 git log 重算。push 仍因代理 down 失败→本地积压（本轮未新增未推提交，修复已由并行上本地 main）。

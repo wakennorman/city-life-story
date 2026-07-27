@@ -1,63 +1,57 @@
-# MEMORY — 城市浮生记 8域轮换优化循环（压缩版 2026-07-27）
+# MEMORY — 城市浮生记 8域轮换优化循环（压缩版 2026-07-27 R535）
+
+## R535 增量要点
+- 域C三大零消费career flag已全部打通首消费：`_careerMonthlySnapshots`(c535,{day,salary,cash,bankBalance}×24滚动,career_dev.js:3415)/`_crossPathJobhop`+`_careerPathsWorked`(c535)/`_careerMaxLevelCelebrated`(c535)——勿重复选题。
+- **假技能键模板污染已全库清零**：并行chore轮反复复制 `["accounting","management","marketing","technology","social","trade"]` 数组（3假键静默丢弃XP）。开域C轮建议 grep `marketing.*technology` 复查防再犯。真实12键见下方state.js节。
+- `state.skillBranches={skillKey:branchId}`、`state.talentNodes={"skill_branch_node":true}` 已有消费者(r260/r391/r416+cross_system)，非零消费源。
+- 开轮 stash 报"No local changes"=并行窗口已自提交在途改动（本轮R138-R145），直接干净构建即可。
+
+## R554 增量要点（域G 联动文件）
+- **假技能键污染会回潮**：domain_g_linkage_r554.js 在 R535「全库清零」之后**再次引入**数组 `["accounting","management","marketing","technology","social","trade"]`（marketing/technology/trade 非真实键→XP 静默丢弃）。教训：**任何新/在途 linkage 文件落库前必 grep 假键数组**复核真实12键，否则清零会回潮。已修复映射 marketing→social / technology→coding / trade→sales。
+- r554.js 已挂 src/index.html:1352 但源文件曾 untracked（悬空引用风险）→ 落库后 `git show HEAD:dist/app.js | grep -c _domainGLinkageR554Loaded` 核验 bundle 含=2 闭合悬空。
+- MC 6×400d EXIT=0·0硬异常·前7天死亡0%；grinder/trader/corporate 存活率<阈值为既有RNG平衡波动非回归。源码+dist+loop-state 由并行窗口 R555「sync state」(e16b2689) 一并扫入提交，本窗口仅补 bookkeeping。
+
+## R530 增量要点
+- 域F三大只读可视化数据源已全部打通事件首消费：`_unlockedAchievements`(f530)/`_cashHistory`(f530)/`_experiencedNarratives`(f530)——后续勿重复"首消费"选题。
+- **在途源隔离模式**（比 stash 更稳）：`mv` 在途 linkage 文件到 $TEMP + Edit 摘除其 index.html 挂载行 → build 干净 dist → 提交后 mv 回+挂载还原（不再 build）。适用于 untracked 在途文件污染 bundle 场景。
+- `_cashHistory` 条目结构 `{day,value}`（daily_pipeline.js:629，90天滚动）；成就数组 `flags._unlockedAchievements`（achievements.js:2087）。
 
 ## 提交纪律（自动化：直接提交+push main）
-- 开轮先 `git log` 重算真实 recency（**勿信 loop-state，常严重滞后**）；`ls src/js/core/*r{N}*`+grep index.html 核对轮号未被并行占用。并行在途改动先 `git stash push -- <文件>` 隔离，push 后 pop。
-- 提交前 `git rev-parse HEAD > .claude/last_known_head`（须=当前HEAD 过 pre-commit 漂移检查）。改源后必 `python build.py`（dist 须比 src 新，pre-commit 会查）。只 add 本轮文件；绝不 `-A`/`--amend`/force。push 前 `git pull --rebase origin main`，冲突则中止报告绝不 force。
-- MC：`node --max-old-space-size=8192 tests/monte_carlo.cjs --trials 6 --days 400`。存活率<80% 多为既有 RNG 阈值，0 TypeError/ReferenceError/NaN/Infinity + 前7天死亡率0% 即过。
-- ⚠️ **MC "全策略0%存活+耗时<1s"=硬崩溃**（非RNG阈值）→立即抓 stack 热修复上 main（harness catch 加 e.stack 定位到行）。
+- 开轮先 `git log origin/main..HEAD` + `git log -N` 重算真实 recency（**勿信 loop-state，常严重滞后**）；`ls src/js/core/*r{N}*`+grep index.html 核对轮号未被并行占用。并行在途改动先 `git stash push -- <文件>` 隔离，push 后 pop。
+- 提交前 `git rev-parse HEAD > .claude/last_known_head`（须=当前HEAD 过 pre-commit 漂移检查）。改源后必 `python build.py`（dist 须比 src 新）。只 add 本轮文件；绝不 `-A`/`--amend`/force。push 前 `git pull --rebase origin main`，冲突则中止报告绝不 force。
+- MC：`node --max-old-space-size=8192 tests/monte_carlo.cjs --trials 6 --days 400`。0 TypeError/ReferenceError/NaN/Infinity + 前7天死亡率0% 即过；存活率<80% 多为既有 RNG 阈值。
+- ⚠️ MC "全策略0%存活+耗时<1s"=硬崩溃→立即抓 stack 热修复上 main（harness catch 加 e.stack）。
 - 新 linkage 文件必须挂 `src/index.html` `<script>`（漏挂=悬空 build 静默剔除）。
-- **并行窗口极活跃、速度远快于本自动化**：代码轮次常被并行 `git add -A` 扫入其提交并自行编号；本窗口角色偏「权威 bookkeeping + MC 验证 + 联动/偶发A类」，账本轮号以 git log 实况重算。判 recency 须同看 feat 与 chore(「sync pending changes」名义常藏某域轮次)。
+- **代理常 down**：`git push` 因 127.0.0.1:3067 未起常失败→本轮改动累积本地、下轮继续；勿 force。
 
 ## 事件系统（四套，全局 bundle 非 import）
 - moral_events.js：MORAL_EVENTS+MORAL_CONSEQUENCES，`condition`(单数)。
-- news.js：NEWS_EVENTS；followUpId 动态生成勿误报；effects 的 job id/symbol 必须真实存在。
+- news.js：NEWS_EVENTS；followUpId 动态生成勿误报。
 - events_core.js：RANDOM_EVENTS；**无 `phase` 字段=死事件**，linkage 必须显式 phase:"street"/"corporate"；门控 `conditions`(函数)。
 - startup_events.js：只认 `conditions:`(复数)；容器 `state.startup.company`；effect 走 STARTUP_FIELD_MAP 白名单。
 - 严禁重建已删旧文件；`subsidy` 为故意删除勿还原。
 
 ## state.js 真实字段（写条件前必核）
-- 幸福 `needs.happiness`（player.happiness 死字段）；心智 `player.mental`；健康 `status.health`（needs.health/player.health 死字段）；饥饿 `needs.hunger`；现金 `resources.cash`；存款 `resources.bankBalance`；流水 `flags._dailyTransactions`。
+- 幸福 `needs.happiness`（player.happiness 死）；心智 `player.mental`；健康 `status.health`（needs.health/player.health 死）；饥饿 `needs.hunger`；现金 `resources.cash`；存款 `resources.bankBalance`；流水 `flags._dailyTransactions`。
 - 证书 `state.certificates`（certs 死）；`player.corporate.upward` 真实惰性字段(||50)；`corporate.team/jobOffer/company` 顶层真实。
-- skills 真实键：cooking/repair/coding/english/driving/sales/management/accounting/electrician/welding/medicine/social（无 writing/design/agility）；`addSkillXp(skillKey,amount)` 全局读 state（**非** (state,key,amt)），假键静默丢弃；`st.skills[k].level/.xp`。
+- skills 真实键：cooking/repair/coding/english/driving/sales/management/accounting/electrician/welding/medicine/social（无 writing/design/agility/trade/technology）；`addSkillXp(skillKey,amount)` 全局读 state，假键静默丢弃。
 - reputation 顶层按地点 key；relationships 可 undefined；xiaoli/auntie_lin/master_zhao 仍 TODO→用 firstMetNpc 遍历。
 - investment：industry∈WORLD_SECTORS{科技,新能源,消费,金融,房地产,医药}；公司股持仓无 .price，价取 `corporate.stockMarket[sym].price`。
-- 真实活跃 flag/计数器：`_dataInvestorMindset`/`_consecutiveWins`/`_totalInvestmentProfit`/`_bearMarketWitness`/`_eraState.inflationIndex`。
 
 ## 域铁律
-- D：引用 NPC 须 `rel&&rel.met`；好感一律 `applyAffinityChange(state,npcId,change,reason)`（位置参数固定，误传顺序静默失效）；显名 getNpcDisplayName。
+- D：引用 NPC 须 `rel&&rel.met`；好感一律 `applyAffinityChange(state,npcId,change,reason)`（位置参数固定）；显名 getNpcDisplayName。
 - C：职业线唯一入口 CAREER_PATHS(ui/career_dev.js)；jobs.js `requiredFlag:"_synergy_<id>"` 须精确匹配 skill_synergy 真实 id（driving_logistics/driving_logistics_accounting，无 driving_accounting）。
 - E：持仓写入前 Array.isArray 守卫；除数(avgPrice/prev)须 isFinite+>0；股票 industry 必须在 WORLD_SECTORS。
-- G/H：daily_pipeline 无 slot 注册→用包装全局函数接线（如 tickInvestmentDaily 重赋值）；UI 安全区(100dvh/safe-area)勿回退。
-- 模糊指令先 grep 确认存在；用户「无关」=停手。
+- G/H：daily_pipeline 无 slot 注册→用包装全局函数接线；UI 安全区(100dvh/safe-area)勿回退。
 
 ## A类净尽结论（勿重复审）
-- 域A R14/R22/R197/R242/R251/R258/R267/R277/R331/R387、域G R20/R192/R197/R199/R296/R311、域H R13/R21/R200/R320、域F R19/R183/R186/R198/R384、域C R191/R271、域E R246/R260/R284 已净尽各自主隐患。
+- 域A R14/R22/R197/R242/R251/R258/R267/R277/R331/R387/R431、域G R20/R192/R197/R199/R296/R311/R392、域H R13/R21/R200/R320/R393、域F R19/R183/R186/R198/R384/R390/R397/R442、域C R191/R271/R489、域E R246/R260/R284/R406/R472、域B R411/R426/R472/R489 已净尽各自主隐患。
 - 死字段黑名单(player.happiness/needs.health/player.health/certs) 全库定期 grep=0 命中即诚实报 A类=0。
-- 误报勿修：webapp_runtime_bridge getPlayerHealth 主路径正确；establishMentorship/takeMentee 有平行实现。C类不修：items.js skillStudy 无应用器；finance.js hasStreetStall flag 无 writer。
+- 误报勿修：webapp_runtime_bridge getPlayerHealth 主路径正确。C类不修：items.js skillStudy 无应用器；finance.js hasStreetStall flag 无 writer。
 
-## 关键教训（历轮精华）
-- CLAUDE.md 是 CRLF——脚本改写须保留换行符否则整文件 diff；并行常持续重写它致无法干净暂存，权威轮号以 loop-state.json + round doc 追踪，不伪造迭代表行。
+## 关键教训
+- CLAUDE.md 是 CRLF——脚本改写须保留换行符否则整文件 diff；并行常持续重写它，权威轮号以 loop-state.json + round doc 追踪。
 - Write 新 linkage 前必查编号是否被并行占用（曾误覆盖已提交文件靠 git checkout -- 恢复）。
-- build 后若并行又改了某 src 文件→pre-commit 报 dist 陈旧；须再 stash 该文件+重建+快速提交（原子链）beat the race。
-
-## 近况与 recency 基准
-- R387 域A：**P0 热修复**（events_core.js rollStreetEvent 缺 `let mod` 声明→每日 ReferenceError 全策略100%死亡）。
-- 域E零消费素材已用尽 btcFearGreed/_propertyPolicyTightness/tradeLog；剩余候选：stopLossOrders 触发叙事、investFreq。
-- R411 域B（已推 3417ee8e+86c41686）：**A类大修133处** — cross_system_events_part2~8 死字段批量修复（st.player.health.*×109 state无此对象守卫永false→压力系统全链静默失效→st.personalGrowth.health.*；st.needs.health×21→st.status.health；part8数字型×2）+并行域H r410 孤儿挂载抢救。联动3(domain_b_linkage_r410.js·文件名保留r410因挂载行已被并行扫入main)：b410_stress_boilover(B→G 首个stress≥60消费)/b410_bookworm_return(B→C 激活 learning.booksRead 死字段)/b410_confide_pressure(B→D met∩affinity≥30倾诉)。MC 6×400d 0代码异常(91.9s)。构建10779.4KB。
-- **personalGrowth 真实结构**：`health.{physical{score},mental{score,stress,anxiety,depression},metabolic}`+`learning{booksRead,courses,certificates}`+`image{style,skincare,fitness,plastic}`。stress→b410_stress_boilover；anxiety→pg_burnout_warning；**image 四维已被 R426 全部首消费**（b426_style_notice/b426_plastic_mirror/b426_gym_invest_chat）。剩余零消费候选：depression 单独阈值叙事。
-- **phase2/personal_growth.js 双结构分歧（B类待专轮）**：state.js 默认 health.physical={score} 对象 vs phase2 数字比较恒 false（healthStatus 恒"需要关注"）；pg.psychology(phase2惰性写) 与 health.mental(事件读) 双心理系统不互通。R426 已修其 image NaN（688/1057 加||0）。
-- **竞态双向教训(R411)**：并行 `git add -A` 把本窗口在途 index.html 编辑扫入其提交（js 文件在 main 悬空→提交该文件即闭合勿改名）；反之本窗口 stash index.html 卷走并行刚加的挂载行（其 js 成孤儿）。**push 前必双向核对：`git show HEAD:src/index.html | grep <近轮新文件>`**。
-- stash@{0}"R411隔离"保留未删：含并行 news.js 旧改动（工作区已有新版冲突未pop；events_core.js 已 checkout 恢复）。并行丢改动可从此找回。
-- R426 域B（本窗口）：A类3处/6点（domain_h_linkage_r170/r188 needs.health死字段→status.health；phase2 image NaN→||0）。联动3=image四维首消费。
-- R431 域A（本窗口）：A类=0诚实报告（jobs payCalc技能键/synergy flag匹配/goods-pricing-trade id链/illnesses极端值/economy_v3.1 全干净）。联动3=trade子系统零事件消费维度首消费：`state.trade._routeUsage`(phase1/trade.js:311写)→a431_route_regular(A→D)；`state.trade._totalSpent`(trade.js:113)→a431_bulk_buyer_sense(A→E,_dataInvestorMindset)；死flag `flags._tradeLearnedInvest`(trade.js:235写后零读)→a431_ledger_to_career(A→C corporate,跨阶段继承)。源码被并行扫入 5f8bd210 已push（双向核验完整：挂载=1/dist a431_=6）。MC 6×400d EXIT=0·0异常·前7天死亡0%。
-- trade 剩余零消费候选：lastPriceUpdate(调度用叙事价值低)/_firstTradeDone(仅成就读)。域A/E 零消费素材趋枯竭。
-- **⚠️ recency 数字已失真(R431后)**：并行同时跑三套编号（正常R42x/小编号R48-50/滞后标签R415-418），并行 loop-state 被其 STATIC_AUDIT/F5_TEST 方向轮反复改写（曾标 lastRound434 且删 domainRecency）。**判 recency 只看 git log 提交时间序**：R431后最旧=域D(56452adc R427)→下轮域D。
-- R442 域F（本窗口）：A类=0诚实报告（ui/ 死字段黑名单0命中；data_viz/daily_report 除零守卫全干净；R48 已修 render/modal 3处）。联动3=domain_f_linkage_r442.js：f442_neglect_reconnect(F→D **首消费 `rel._lastInteractionDay`**·最久未联系NPC·applyAffinityChange)/f442_asset_allocation(F→E stockHoldings≥1 复盘·置_dataInvestorMindset)/f442_ops_dashboard(F→H corporate.company·management XP+upward)。源码被并行扫入 47430468(小薇+夜市 R442)且内容 IDENTICAL；同轮**救援并行孤儿 domain_b_linkage_r442.js**(源码已提交但漏挂 index.html→b442_在dist=0，加挂载重建后=6)。dist 10985.3KB。MC 6×400d all pass 0异常。域D 素材注意：R440(老陈)/R442(小薇) 并行已连做两轮新NPC。
-- 会话被压缩后后台 MC task_id 会丢失（"not found"）→ 直接重跑而非找回。
-- R472 域B（本窗口，d2260769 已push）：**A类4处=假技能键模式** `addSkillXp("trade",...)`（r459/r460/r453/r446 四文件，state.skills 无 trade 键 XP 静默丢弃）→ 改真实键 "sales"，文本同步。联动3=domain_e_linkage_r470.js（inv.cars 首消费：e470_car_depreciation_lesson E→G/e470_car_road_trip E→D/e470_car_ledger E→C maintenance→accounting XP），源码被并行 f2457cbd 扫入落地、本轮 build 闭合 e470_=0→12。**新增审计项：全库 grep `addSkillXp("` 核对键是否在真实 skills 列表**。
-- **悬空 dist 救援已成模式**（并行提交源+挂载但不重建 dist）：R442 b442_、R472 e470_、R472救援 g472_（fbaa8e63→5f27b514）。开轮例行检查：`git show HEAD:dist/app.js | grep -c <近轮事件前缀>` vs 源文件存在性。
-- stash 历史堆积 27 条：R472 相关3条隔离 stash（npc_relationships/social_tab/domain_e_linkage_r453 并行在途）**勿 pop**——并行已自行提交新版，pop 会用旧改动覆盖；仅作找回点保留。
-- R472 后 recency 基准（git log 实况）：B=d2260769、G=fbaa8e63 均 R472 已做；并行在途 domain_d_linkage_r473.js（域D R473）。下轮从 git log 重算，避开 D/B/G。
-- R489 域C（本窗口）：A类=0诚实报告（addSkillXp 14键全真实；jobs↔synergy 全匹配；certs为局部变量非死字段）。联动3=career_dev 死flag首消费：c489_salary_alloc(C→E `_highSalaryInvestor`→_dataInvestorMindset)/c489_burnout_share(C→D `_burnoutSurvivor`)/c489_occu_health_wakeup(C→G `_hasOccupationalDisease`)。域C剩余零消费：`_apprenticeList`/`_highSalaryHealthWarn`。
-- **⚠️ 竞态新形态：同轮号双域**——R489 同时=域C(本窗口,1285e69f已推)+域A(并行在途 domain_a_linkage_r489.js)。并行速度已达"写完3分钟即被扫入提交"级别；其扫入模式升级为**连 dist 一起重建提交**（悬空概率下降但 loop-state 被其改写为异域方向）。判 recency/轮号占用一律 git log 内容为准，loop-state 仅弱参考。
-- 本窗口 build 若含并行在途未提交源（如 a489_）→ **绝不提交 dist**，避免反向孤儿；round doc 由本窗口补写（并行只写 commit message 不写 round-N.md）。
+- **悬空 dist 救援模式**：并行提交源+挂载但不重建 dist→开轮 `git show HEAD:dist/app.js | grep -c <近轮前缀>` 核验，缺失则 rebuild。
+- **同轮号双域/并行扫入**：判 recency/轮号占用一律 git log 内容为准，loop-state 仅弱参考；build 含并行在途未提交源→绝不提交 dist。
+- **personalGrowth 真实结构**：`health.{physical{score},mental{score,stress,anxiety,depression},metabolic}`+`learning{booksRead,courses,certificates}`+`image{style,skincare,fitness,plastic}`。phase2/personal_growth.js 双结构分歧(health.physical对象 vs 数字/psychology vs mental)为已知 B类待专轮。
