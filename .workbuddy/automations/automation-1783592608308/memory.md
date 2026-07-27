@@ -523,5 +523,14 @@
 - 注意：19文件修复注释误标"R588"(改号前写入,纯注释无功能影响);在途r588文件内注释为"R589"。
 - 联动3项(domain_e_linkage_r589.js)：e589_first_stock_anniversary(E→B 首消费_firstStockDay)/e589_confidence_to_raise(E→C 首消费_investCareerConfidence,corporate)/e589_wealth_circle_invite(E→D 首消费_investSocialPerception,met守卫)。域E三大写-only投资flag全部打通。
 - 验证：node --check 20文件全过；build 12051.6KB r589 flag=2；MC 10×500d 213s 0代码异常、前7天死亡率全0%(balanced/trader/social/corporate存活率<80%为既有RNG阈值)。
+
+## 2026-07-28 03:2x R594 域B(事件/叙事) — 已 push (43630ba4)
+- 选域：linkage recency 重算 B(r584) 全局最陈旧 → 本轮 R594(域B)；下轮 C(r586)。
+- A类20处：悬空挂载全量清理19处(index.html 挂 js/core/domain_*_linkage_r{N}.js 但源 NEVER 创建，并行"先挂后不建"模式→逆向悬空，安全摘除0功能损失) + 孤儿救援1处(domain_a_linkage_r571.js 源已提交从未挂载→复核字段真实、id唯一→挂载复活3事件 a571_corp_supply_chain/a571_skill_cert_value/a571_health_data_alerts)。
+- 联动3项(domain_b_linkage_r594.js，IIFE→RANDOM_EVENTS，3 street，全||防御，maxRepeats:1)：b594_elder_job_lead(B→C 首消费_elderJobLead)/b594_scam_stopper_fame(B→D 首消费_stoppedScam，firstMetNpc met守卫)/b594_wholesale_channel(B→E 首消费_wholesaleChannelTip，cash≥500)。打通 moral_events 三大写-only flag 首消费。
+- 遗留：moral_events.js 仍7个写-only flag 未消费(_friendCheatWarned/_goodSleepToday/_moralAfterWorkLoaded/_neighborHasIOU/_neighborRefused/_scrapeCheckCamera/_scrapeLeftNote)，勿重复选题。
+- 验证：node --check 通过；build dist 12097.9KB 含6事件(3 r571+3 r594)及守卫 flag 各=2、悬空引用 dist grep=0；MC 10×500d 190.8s EXIT=0·0代码异常·前7天死亡率全0%(balanced/social/corporate 60%<80%为既有RNG阈值；RSS超时=离线新闻回退无碍)。
+- 并发：src/index.html + domain_b_linkage_r594.js 由并行窗口随 R505(a6009eff)提交落库；本窗口仅提交 dist 重建+文档账本+loop-state。last_known_head 曾被并行窗口以旧值(a6009eff) staged→修正对齐 HEAD 防下轮漂移钩子误 abort。
+- 提交链：918bfe2a(fix+feat+dist)→d4447b8f(last_known_head+MEMORY.md)→01164486(修正last_known_head)→43630ba4(loop-state PUSHED)；全程 pull --rebase + push 成功(代理在线)。
 - 并发：源码+dist+账本(CLAUDE.md行/round-589.md/loop-state/日志)全部被并行 080809b7"集成"提交扫入；本窗口补 push 8个积压提交成功(080809b7..aa91dae4)。
 - 下轮：DOMAIN_F(r580 最陈旧)。
