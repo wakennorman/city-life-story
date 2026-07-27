@@ -730,11 +730,11 @@ function applyWeatherDailyEffects(state) {
   state.status.comfort = comfort;
 
   if (comfort < 20)
-    state.needs.happiness = Math.max(0, state.needs.happiness - 5);
+    state.needs.happiness = Math.max(0, (state.needs.happiness || 50) - 5);
   else if (comfort < 40)
-    state.needs.happiness = Math.max(0, state.needs.happiness - 2);
+    state.needs.happiness = Math.max(0, (state.needs.happiness || 50) - 2);
   else if (comfort > 80)
-    state.needs.happiness = Math.min(100, state.needs.happiness + 2);
+    state.needs.happiness = Math.min(100, (state.needs.happiness || 50) + 2);
 }
 
 /** 获取天气对特定商品的价格影响（风/雨/雪天某些商品涨价） */
