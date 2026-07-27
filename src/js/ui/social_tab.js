@@ -410,6 +410,87 @@ function renderSocialTab(state, parent) {
   var content = document.createElement("div");
   content.style.cssText = "flex:1;overflow-y:auto;padding:8px;";
 
+  // [全系统自洽修复] 域D A类: _bindVisitBtns 原定义在 renderNpcRelationships 内部作用域，
+  // 但被 social_network/social_npc 子Tab在 renderSocialTab 作用域中调用→ReferenceError
+  // 提升至此作用域，使所有子Tab共享
+  function _bindVisitBtns(state, parent) {
+    var btns = parent.querySelectorAll(".npc-visit-btn");
+    for (var bi = 0; bi < btns.length; bi++) {
+      (function (btn) {
+        btn.addEventListener("click", function (e) {
+          e.preventDefault();
+          e.stopPropagation();
+          var npcId = btn.dataset.npcId;
+          if (!npcId || !state.relationships || !state.relationships[npcId])
+            return;
+          var rel = state.relationships[npcId];
+          // 获取NPC中文名
+          var _npcName = "";
+          if (typeof NPCS !== "undefined") {
+            var _def = NPCS.find(function (n) {
+              return n.id === npcId;
+            });
+            _npcName = _def ? _def.name : npcId;
+          } else {
+            _npcName = npcId;
+          }
+          // 检查冷却（7天）
+          if (rel._lastVisit && state.player.day - rel._lastVisit < 7) {
+            var daysLeft = 7 - (state.player.day - rel._lastVisit);
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage(
+                "⏳ 你刚拜访过" + _npcName + "，再等" + daysLeft + "天吧。",
+                "info",
+              );
+            }
+            return;
+          }
+          // 触发拜访互动
+          var gain = typeof Random !== "undefined" ? (Random.chance(0.5) ? 3 : 5) : 4;
+          if (typeof applyAffinityChange === "function") {
+            applyAffinityChange(state, npcId, gain, "拜访");
+          } else {
+            rel.affinity = Math.min(100, (rel.affinity || 0) + gain);
+          }
+          rel._lastVisit = state.player.day;
+          // 角色类型状态加成
+          (function () {
+            if (!state.needs && !state.player) return;
+            var _npcRole = "";
+            if (typeof NPCS !== "undefined") {
+              var _def = NPCS.find(function (n) { return n.id === npcId; });
+              if (_def) _npcRole = _def.role || "";
+            }
+            var _bonusMsg = "";
+            if (_npcRole.indexOf("医生") >= 0 || _npcRole.indexOf("健康") >= 0) {
+              if (state.status) { state.status.health = Math.min(100, (state.status.health || 50) + 1); _bonusMsg = "健康+1"; }
+            } else if (_npcRole.indexOf("厨师") >= 0 || _npcRole.indexOf("菜") >= 0 || _npcRole.indexOf("外卖") >= 0) {
+              if (state.needs) { state.needs.hunger = Math.min(100, (state.needs.hunger || 50) + 2); _bonusMsg = "饥饿+2"; }
+            } else if (_npcRole.indexOf("中介") >= 0 || _npcRole.indexOf("主播") >= 0 || _npcRole.indexOf("网红") >= 0) {
+              if (state.player) { state.player.mental = Math.min(100, (state.player.mental || 50) + 1); _bonusMsg = "心智+1"; }
+            } else if (_npcRole.indexOf("工头") >= 0 || _npcRole.indexOf("修车") >= 0 || _npcRole.indexOf("保安") >= 0) {
+              if (state.player) { state.player.physique = Math.min(100, (state.player.physique || 50) + 1); _bonusMsg = "体质+1"; }
+            } else if (_npcRole.indexOf("情报") >= 0 || _npcRole.indexOf("同学") >= 0) {
+              if (state.player) { state.player.intelligence = Math.min(100, (state.player.intelligence || 50) + 1); _bonusMsg = "智力+1"; }
+            } else {
+              if (state.needs) { state.needs.happiness = Math.min(100, (state.needs.happiness || 50) + 1); _bonusMsg = "心情+1"; }
+            }
+            if (_bonusMsg && typeof StateManager !== "undefined") {
+              StateManager.addMessage("✨ 与" + _npcName + "的会面让你感到充实，" + _bonusMsg + "。", "info");
+            }
+          })();
+          if (typeof StateManager !== "undefined") {
+            StateManager.addMessage(
+              "🤝 你找到了" + _npcName + "，聊了一会儿天。好感+" + gain + "。",
+              "success",
+            );
+          }
+          if (typeof renderAll === "function") renderAll();
+        });
+      })(btns[bi]);
+    }
+  }
+
   switch (currentSubTab) {
     case "social_family":
       renderSocialFamilyTab(state, content);

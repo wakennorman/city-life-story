@@ -115582,6 +115582,172 @@ if (typeof window !== "undefined") {
 })();
 
 ;
+// ==== js/core/domain_d_linkage_r440.js ====
+/**
+ * 域D(NPC/社交) 联动增强 R440
+ * 第十七轮循环——新内容开发:老陈(退休教师)+社区中心
+ * 桥接：
+ *   D→A  lao_chen_wisdom      老陈的人生智慧→数据素养成长
+ *   D→C  lao_chen_career_guide 老陈的职业指导→管理技能
+ *   D→G  lao_chen_life_talk    老陈的人生对话→心情/心智
+ */
+(function () {
+  "use strict";
+  if (typeof RANDOM_EVENTS === "undefined" || !RANDOM_EVENTS) return;
+  if (RANDOM_EVENTS._domainDLinkageR440Loaded) return;
+  RANDOM_EVENTS._domainDLinkageR440Loaded = true;
+
+  function firstMetNpcR440(st) {
+    if (!st || !st.relationships) return null;
+    for (var id in st.relationships) {
+      if (!Object.prototype.hasOwnProperty.call(st.relationships, id)) continue;
+      var r = st.relationships[id];
+      if (r && r.met) return id;
+    }
+    return null;
+  }
+
+  var EVENTS = [
+    {
+      id: "lao_chen_wisdom",
+      phase: "street",
+      _isChainEvent: false,
+      icon: "🧓",
+      title: "老陈的人生智慧",
+      story:
+        "你在社区中心遇到了老陈。他给你讲了一个故事——\n\n\"我教了四十年书,见过太多学生。成功的不是最聪明的,而是最会规划的。\"\n\n他拿出一张纸,帮你画了一张人生规划图。",
+      triggers: { minDay: 45, excludeFlags: ["_laoChenWisdomSeen"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        return true;
+      },
+      choices: [
+        {
+          text: "📝 认真记录老陈的建议",
+          hint: "心智+5,智力XP+3,置 _laoChenWisdomSeen",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._laoChenWisdomSeen = true;
+            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 5);
+            if (typeof addSkillXp === "function") {
+              try { addSkillXp("accounting", 3); } catch (e) { /* safe */ }
+            }
+            if (typeof StateManager !== "undefined" && StateManager.addMessage)
+              StateManager.addMessage("🧓 你认真记录了老陈的建议——规划让人生有方向。心智+5,会计XP+3。", "success");
+          }
+        },
+        {
+          text: "😊 听听就好,不必太认真",
+          hint: "心情+2",
+          apply: function (st) {
+            if (st) {
+              st.flags = st.flags || {};
+              st.flags._laoChenWisdomSeen = true;
+              if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 2);
+            }
+          }
+        }
+      ],
+      probability: 0.08,
+      repeatable: false,
+    },
+    {
+      id: "lao_chen_career_guide",
+      phase: "street",
+      _isChainEvent: false,
+      icon: "💼",
+      title: "老陈的职业指导",
+      story:
+        "老陈看你最近工作不顺,主动找你聊天。\n\n\"年轻人,职业不是越跳越好,关键是找到适合自己的赛道。来,我帮你分析一下。\"\n\n他帮你梳理了技能优势和职业方向,让你豁然开朗。",
+      triggers: { minDay: 90, excludeFlags: ["_laoChenCareerSeen"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        return st.career && (st.career.currentJob || (st.career.history && st.career.history.length > 0));
+      },
+      choices: [
+        {
+          text: "📊 按老陈的建议调整职业方向",
+          hint: "管理XP+8,心智+4,置 _laoChenCareerSeen",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._laoChenCareerSeen = true;
+            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 4);
+            if (typeof addSkillXp === "function") {
+              try { addSkillXp("management", 8); } catch (e) { /* safe */ }
+            }
+            if (typeof StateManager !== "undefined" && StateManager.addMessage)
+              StateManager.addMessage("💼 老陈的职业指导让你找到了方向。管理XP+8,心智+4。", "success");
+          }
+        },
+        {
+          text: "🤷 自己的路自己走",
+          hint: "心智+2",
+          apply: function (st) {
+            if (st) {
+              st.flags = st.flags || {};
+              st.flags._laoChenCareerSeen = true;
+              if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 2);
+            }
+          }
+        }
+      ],
+      probability: 0.06,
+      repeatable: false,
+    },
+    {
+      id: "lao_chen_life_talk",
+      phase: "street",
+      _isChainEvent: false,
+      icon: "💬",
+      title: "老陈的人生对话",
+      story:
+        "傍晚在社区中心,老陈泡了一壶茶,跟你聊起人生。\n\n\"年轻人,钱不是最重要的。健康、朋友、心态,这些才是真东西。\"\n\n他的话让你最近焦虑的心情平静了许多。",
+      triggers: { minDay: 60, excludeFlags: ["_laoChenTalkSeen"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        return st.needs && (st.needs.happiness || 50) < 60;
+      },
+      choices: [
+        {
+          text: "🍵 和老陈喝茶聊天",
+          hint: "心情+8,心智+3,置 _laoChenTalkSeen",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._laoChenTalkSeen = true;
+            if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 8);
+            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 3);
+            if (typeof StateManager !== "undefined" && StateManager.addMessage)
+              StateManager.addMessage("🍵 和老陈喝茶聊天,心情平静了许多。心情+8,心智+3。", "success");
+          }
+        },
+        {
+          text: "😌 安静地听老陈说",
+          hint: "心情+4",
+          apply: function (st) {
+            if (st) {
+              st.flags = st.flags || {};
+              st.flags._laoChenTalkSeen = true;
+              if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 4);
+            }
+          }
+        }
+      ],
+      probability: 0.07,
+      repeatable: false,
+    },
+  ];
+
+  for (var i = 0; i < EVENTS.length; i++) {
+    var _e = EVENTS[i];
+    if (RANDOM_EVENTS.find(function (ev) { return ev.id === _e.id; })) continue;
+    RANDOM_EVENTS.push(_e);
+  }
+})();
+
+;
 // ==== js/core/domain_d_linkage_r246.js ====
 /**
  * 域D(NPC/社交) 联动增强 R246
@@ -174482,6 +174648,25 @@ const LOCATIONS = {
     jobs: ["busking"],
     priceMod: {},
   },
+  community_center: {
+    id: "community_center",
+    name: "社区中心",
+    icon: "🏛️",
+    desc: "街道办下属的社区服务中心,提供免费讲座、职业咨询和邻里互助活动。",
+    type: "public",
+    wealthTier: 2,
+    footfall: 0.5,
+    vendingNote: "公共服务为主,少量便民摊位",
+    specialties: ["second_hand_book", "pen", "notebook_item"],
+    dailyProbability: 0.3,
+    specialCategory: ["stationery"],
+    jobs: ["community_volunteer", "career_counselor_assistant"],
+    priceMod: {
+      water: 0.8,
+      snacks: 0.9,
+      daily_use: 0.85,
+    },
+  },
   trainingCenter: {
     id: "trainingCenter",
     name: "培训中心",
@@ -175976,6 +176161,33 @@ const STREET_JOBS = [
         return Math.floor(base);
       },
       risk: { injury: 0.01 },
+    },
+
+    // ============================================================
+    // 社区中心地点工作
+    // 联动：locations.js community_center 地点 jobs
+    // ============================================================
+    {
+      id: "community_volunteer",
+      name: "社区志愿者",
+      desc: "在社区中心帮忙组织活动、服务居民。不赚钱但积人脉、长心智。",
+      icon: "🤝",
+      location: "community_center",
+      requirements: { mental: 20, minAge: 18 },
+      effects: { fatigue: 12, happiness: 8, socialXp: 3, mental: 1 },
+      payCalc(state) { return Math.floor(Random.float(0, 20)); },
+      risk: {},
+    },
+    {
+      id: "career_counselor_assistant",
+      name: "职业咨询助理",
+      desc: "协助老陈做职业咨询,整理资料。需要一定的心智和社交能力。",
+      icon: "📋",
+      location: "community_center",
+      requirements: { mental: 30, social: 15, minAge: 20 },
+      effects: { fatigue: 10, happiness: 5, managementXp: 2, socialXp: 2 },
+      payCalc(state) { return Math.floor(30 + state.player.mental * 0.3 + Random.float(0, 30)); },
+      risk: {},
     },
 
     // ============================================================
@@ -180948,6 +181160,44 @@ var NPCS = [
         },
       ],
     },
+  },
+  {
+    id: "lao_chen",
+    name: "老陈",
+    role: "退休教师·社区志愿者",
+    monthlyIncome: 3500,
+    avatar: "images/avatars/lao_chen.png",
+    location: "community_center",
+    schedule: {
+      morning: "community_center",
+      afternoon: "community_center",
+      evening: "park",
+      night: "community_center",
+    },
+    birthday: 120,
+    desc: "退休老教师,在社区中心义务辅导年轻人。阅历丰富,善于倾听,常给年轻人指点迷津。",
+    birthdayLine: "哈哈,我这么大岁数了还记得我生日?来,坐下喝杯茶,我给你讲讲我年轻时候的故事。",
+    festivalLines: {
+      spring_festival: "过年了,一个人在外面不容易。来社区中心,大家一起包饺子!",
+      mid_autumn: "中秋月圆,一个人在外想家了吧?来中心坐坐,咱们聊聊。",
+      dragon_boat: "端午节包粽子,我教你包,以后自己也能照顾自己。",
+      labor_day: "劳动节快乐!劳动最光荣,但也要注意身体。",
+      national_day: "国庆放假,社区中心有活动,来参加吧。",
+    },
+    talkLines: [
+      "年轻人,有什么烦心事跟我说说,我吃的盐比你吃的米还多。",
+      "做事要有规划,不能只看眼前。来,我帮你分析一下。",
+      "活到老学到老,我现在还在学智能手机呢!",
+      "社区中心有免费讲座,有时间来听听。",
+      "年轻人不要怕吃亏,吃亏是福。",
+    ],
+    giftPrefers: ["books", "stationery", "daily_use"],
+    affinityRewards: {
+      30: { type: "dialogue", label: "老陈分享人生经验", effect: { mental: 5 } },
+      60: { type: "referral", label: "老陈介绍社区资源", effect: { flag: "_laoChenCommunityHelp" } },
+      80: { type: "mentorship", label: "老陈成为你的人生导师", effect: { flag: "_laoChenMentorship", managementXp: 20 } },
+    },
+    met: false,
   },
   {
     id: "boss_li",

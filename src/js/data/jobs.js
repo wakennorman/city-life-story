@@ -779,6 +779,33 @@ const STREET_JOBS = [
     },
 
     // ============================================================
+    // 社区中心地点工作
+    // 联动：locations.js community_center 地点 jobs
+    // ============================================================
+    {
+      id: "community_volunteer",
+      name: "社区志愿者",
+      desc: "在社区中心帮忙组织活动、服务居民。不赚钱但积人脉、长心智。",
+      icon: "🤝",
+      location: "community_center",
+      requirements: { mental: 20, minAge: 18 },
+      effects: { fatigue: 12, happiness: 8, socialXp: 3, mental: 1 },
+      payCalc(state) { return Math.floor(Random.float(0, 20)); },
+      risk: {},
+    },
+    {
+      id: "career_counselor_assistant",
+      name: "职业咨询助理",
+      desc: "协助老陈做职业咨询,整理资料。需要一定的心智和社交能力。",
+      icon: "📋",
+      location: "community_center",
+      requirements: { mental: 30, social: 15, minAge: 20 },
+      effects: { fatigue: 10, happiness: 5, managementXp: 2, socialXp: 2 },
+      payCalc(state) { return Math.floor(30 + state.player.mental * 0.3 + Random.float(0, 30)); },
+      risk: {},
+    },
+
+    // ============================================================
     // 公园地点工作 — 街头表演
     // 联动：locations.js park 地点 jobs: ["busking"]
     // ============================================================
