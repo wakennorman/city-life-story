@@ -2114,4 +2114,4 @@ const PRODUCT_CATEGORIES = {
     churnRate: 0.02,
     description: "支付/借贷/理财科技，牌照是核心壁垒",
   },
-};
+};// [R117] 域E 联动增强
