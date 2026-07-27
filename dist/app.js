@@ -36836,6 +36836,15 @@ var STORY_CHAPTERS = [
         hint: "找人说说话、吃点好吃的，心情好起来脚步才会轻。",
       },
       {
+        id: "survive_career_milestone",
+        condition: function (st) {
+          var job = st.player.job;
+          return job && job !== "unemployed";
+        },
+        text: "你找到了一份工作，不再是这座城市的旁观者。每天早出晚归，虽然累，但心里踏实。",
+        hint: "把本职工作做好，积累技能和资源，为未来铺路。",
+      },
+      {
         id: "survive_default",
         condition: function () {
           return true;
@@ -206345,6 +206354,64 @@ const DAILY_PIPELINE = [
     },
   },
 
+  // [全系统自洽修复] 域G R49 联动增强(G→C): 技能匹配职业发展提示
+  {
+    name: "skill_career_hint",
+    fn: function (state) {
+      if (!state.player || !state.skills || !state.player.job) return;
+      var job = state.player.job;
+      if (job === "unemployed" || job === "street_ragpicker") return;
+      var topSkill = 0, topSkillKey = "";
+      for (var _skk in state.skills) {
+        var _slv = state.skills[_skk] && state.skills[_skk].level || 0;
+        if (_slv > topSkill) { topSkill = _slv; topSkillKey = _skk; }
+      }
+      if (topSkill >= 30 && state.player.day % 30 === 0) {
+        StateManager.addMessage("💡 你的" + (typeof getSkillChineseName === "function" ? getSkillChineseName(topSkillKey) : topSkillKey) + "技能已达到Lv." + topSkill + "，看看有没有更适合你的工作机会？", "info");
+      }
+    },
+  },
+
+  // [全系统自洽修复] 域G R49 联动增强(G→D): 社交关系缓解疲劳
+  {
+    name: "social_fatigue_relief",
+    fn: function (state) {
+      if (!state.needs || !state.relationships) return;
+      var _closeCount = 0;
+      for (var _rid2 in state.relationships) {
+        if (state.relationships[_rid2] && (state.relationships[_rid2].affinity || 0) >= 60) {
+          _closeCount++;
+        }
+      }
+      if (_closeCount >= 2 && state.needs.fatigue > 30) {
+        var _relief = Math.min(5, _closeCount);
+        state.needs.fatigue = Math.max(0, (state.needs.fatigue || 0) - _relief);
+        if (state.player.day % 7 === 0 && _closeCount >= 3) {
+          StateManager.addMessage("🤗 有朋友真好——和" + _closeCount + "位好友的交往让你感到身心放松。", "success");
+        }
+      }
+    },
+  },
+
+  // [全系统自洽修复] 域G R49 联动增强(G→E): 财富里程碑生活品质
+  {
+    name: "wealth_milestone_happiness",
+    fn: function (state) {
+      if (!state.resources || !state.needs) return;
+      var _netWorth = (state.resources.cash || 0) + (state.resources.bankBalance || 0);
+      var _milestone = 0;
+      if (_netWorth >= 500000) _milestone = 500000;
+      else if (_netWorth >= 200000) _milestone = 200000;
+      else if (_netWorth >= 100000) _milestone = 100000;
+      else if (_netWorth >= 50000) _milestone = 50000;
+      if (_milestone > 0 && !state.flags["_wealth_ms_" + _milestone]) {
+        state.flags["_wealth_ms_" + _milestone] = true;
+        state.needs.happiness = Math.min(100, (state.needs.happiness || 50) + 3);
+        StateManager.addMessage("💰 净资产突破¥" + _milestone.toLocaleString() + "！财富积累让生活更有底气。", "success");
+      }
+    },
+  },
+
   // === 临界值延期惩罚（在 extreme_check 之前）===
   {
     name: "critical_punish",
@@ -207828,7 +207895,7 @@ const DAILY_PIPELINE = [
           if (typeof StateManager !== "undefined") {
             StateManager.addMessage(
               "⚠️ 你的银行贷款已逾期超过90天，建议尽快还清以免影响信用。欠款: ¥" +
-                state.resources.bankDebt.toLocaleString(),
+                (state.resources.bankDebt || 0).toLocaleString(),
               "warning",
             );
           }
@@ -257908,6 +257975,90 @@ if (typeof window !== "undefined") {
 })();
 
 ;
+// ==== js/core/domain_e_linkage_r428.js ====
+/**
+ * 域E(经济/投资) 联动增强 R428
+ * 桥接：
+ *   E→C  e428_investment_mastery       投资精通 → 投资经验→职业自信
+ *   E→F  e428_risk_dashboard            风险仪表盘 → 持仓风险→UI
+ *   E→G  e428_wealth_wellbeing          财富健康 → 资产→身心健康
+ */
+(function () {
+  "use strict";
+  if (typeof RANDOM_EVENTS === "undefined" || !RANDOM_EVENTS) return;
+  if (RANDOM_EVENTS._domainELinkageR428Loaded) return;
+  RANDOM_EVENTS._domainELinkageR428Loaded = true;
+  function grantXp(key, amt) { if (typeof addSkillXp === "function") { try { addSkillXp(key, amt); } catch(e) {} } }
+  var EVENTS = [
+    {
+      id: "e428_investment_mastery", phase: "street", _isChainEvent: false, icon: "🎓",
+      title: "投资精通",
+      story: "你的投资经验日益丰富——{desc}",
+      triggers: { minDay: 90, excludeFlags: ["_e428MasteryCooldown"] },
+      conditions: function (st) { return !st.gameOver && st.investment; },
+      choices: [
+        { text: "📚 投资精通助力职业发展", hint: "management XP+5,心智+4", apply: function (st) {
+          if (!st) return; st.flags._e428MasteryCooldown = true;
+          if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 4);
+          grantXp("management", 5);
+          if (typeof StateManager !== "undefined") StateManager.addMessage("🎓 投资精通助力职业发展——财商是综合素质的重要组成。管理XP+5,心智+4。", "success");
+        }},
+        { text: "🤷 投资只是副业", hint: "无奖励", apply: function () {} }
+      ],
+      text: function (st) {
+        if (!st || !st.investment) return null;
+        var desc = "投资经验日益丰富,判断力不断提升";
+        if ((st.investment._totalInvestmentProfit || 0) > 50000) desc = "投资盈利超过5万,你已经具备出色的投资能力";
+        return "你的投资经验日益丰富——" + desc + "。";
+      }
+    },
+    {
+      id: "e428_risk_dashboard", phase: "street", _isChainEvent: false, icon: "⚠️",
+      title: "投资风险",
+      story: "你关注投资风险——{desc}",
+      triggers: { minDay: 65, excludeFlags: ["_e428RiskCooldown"] },
+      conditions: function (st) { return !st.gameOver && st.investment; },
+      choices: [
+        { text: "📊 分散投资降低风险", hint: "心智+3,accounting XP+3", apply: function (st) {
+          if (!st) return; st.flags._e428RiskCooldown = true;
+          if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 3);
+          grantXp("accounting", 3);
+          if (typeof StateManager !== "undefined") StateManager.addMessage("⚠️ 你关注投资风险——分散投资是稳健的基础。心智+3,会计XP+3。", "success");
+        }},
+        { text: "😅 高风险高回报", hint: "无奖励", apply: function () {} }
+      ],
+      text: function (st) {
+        if (!st || !st.investment) return null;
+        return "你关注投资风险——合理的资产配置能平衡收益与风险。";
+      }
+    },
+    {
+      id: "e428_wealth_wellbeing", phase: "street", _isChainEvent: false, icon: "💚",
+      title: "财富与健康",
+      story: "财富与健康相互影响——{desc}",
+      triggers: { minDay: 70, excludeFlags: ["_e428WellbeingCooldown"] },
+      conditions: function (st) { return !st.gameOver && st.status; },
+      choices: [
+        { text: "💪 健康是最大的财富", hint: "心智+4,心情+4", apply: function (st) {
+          if (!st) return; st.flags._e428WellbeingCooldown = true;
+          if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 4);
+          if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 4);
+          if (typeof StateManager !== "undefined") StateManager.addMessage("💚 你理解财富与健康的关系——健康是1,财富是0。心智+4,心情+4。", "success");
+        }},
+        { text: "🤷 财富更重要", hint: "无奖励", apply: function () {} }
+      ],
+      text: function (st) {
+        if (!st) return null;
+        var desc = "财富为健康提供保障,健康为财富提供基础";
+        if (st.status && typeof st.status.health === "number" && st.status.health < 50) desc = "近期健康下滑,需要更多关注身体状况";
+        return "财富与健康相互影响——" + desc + "。";
+      }
+    }
+  ];
+  for (var i = 0; i < EVENTS.length; i++) { if (!RANDOM_EVENTS.find(function (ev) { return ev.id === EVENTS[i].id; })) RANDOM_EVENTS.push(EVENTS[i]); }
+})();
+
+;
 // ==== js/core/domain_a_linkage_r277.js ====
 /**
  * 域A(数据/数值平衡) 联动增强 R277（第二轮循环·A 域第十一次）
@@ -261864,7 +262015,7 @@ function renderMoralStatus(state) {
 
 
 function renderStreetStats(state) {
-  const p = state.player;
+  const p = state.player || {};
   setStatBar("stat-physique", p.physique, "physique");
   setStatBar("stat-intelligence", p.intelligence, "intelligence");
   setStatBar("stat-agility", p.agility, "agility");
@@ -268110,6 +268261,41 @@ function renderPgHealth(state, content, pg) {
   }
   html += "</div></div>";
 
+  // [全系统自洽修复] 域F 联动增强 F→G: 人生阶段概览
+  var _age = state.player && state.player.age;
+  if (_age) {
+    var _stageEmoji = _age < 18 ? "🧒" : _age < 25 ? "🧑" : _age < 35 ? "👨" : _age < 50 ? "👨‍🦱" : "👴";
+    var _stageLabel = _age < 18 ? "少年" : _age < 25 ? "青年" : _age < 35 ? "壮年" : _age < 50 ? "中年" : "晚年";
+    html += '<div class="section"><h3>🌱 人生阶段</h3>';
+    html += '<div class="card" style="padding:12px;font-size:12px;">';
+    html += "<p>" + _stageEmoji + " " + _age + "岁 — <strong>" + _stageLabel + "</strong></p>";
+    var _nextMilestone = "";
+    if (_age < 18) _nextMilestone = "18岁成年，解锁更多人生选择";
+    else if (_age < 25) _nextMilestone = "25岁前是技能积累黄金期";
+    else if (_age < 35) _nextMilestone = "35岁前是职业发展的关键窗口";
+    else if (_age < 50) _nextMilestone = "50岁前做好养老规划，健康最重要";
+    else _nextMilestone = "珍惜当下，身体健康就是最大的财富";
+    html += '<p style="color:var(--text-muted);font-size:11px;margin-top:4px;">💡 ' + _nextMilestone + '</p>';
+    var _milestones = [
+      { age: 18, label: "成年独立", icon: "🎓" },
+      { age: 22, label: "大学毕业", icon: "🎓" },
+      { age: 30, label: "而立之年", icon: "🎯" },
+      { age: 40, label: "不惑之年", icon: "🧠" },
+      { age: 50, label: "知天命", icon: "🌅" },
+      { age: 60, label: "花甲之年", icon: "🏡" },
+    ];
+    var _msHtml = "";
+    for (var _mi = 0; _mi < _milestones.length; _mi++) {
+      var _m = _milestones[_mi];
+      var _reached = _age >= _m.age;
+      _msHtml += '<span style="display:inline-block;margin:2px 4px;padding:2px 8px;border-radius:10px;font-size:10px;' +
+        (_reached ? 'background:rgba(74,158,92,0.15);color:var(--success);' : 'background:var(--bg-input);color:var(--text-muted);') +
+        '">' + (_reached ? "✅ " : "⏳ ") + _m.icon + " " + _m.age + "岁" + (_reached ? " ✓" : "") + '</span>';
+    }
+    html += '<div style="margin-top:6px;">' + _msHtml + '</div>';
+    html += '</div></div>';
+  }
+
   if (pg.psychology) {
     html += '<div class="section"><h3>🧠 心理状态</h3>';
     html += '<div class="card" style="padding:12px;font-size:12px;">';
@@ -268120,6 +268306,34 @@ function renderPgHealth(state, content, pg) {
       "<p>😔 抑郁：" + Math.round(pg.psychology.depression || 0) + "/100</p>";
     html += "<p>😊 心情：" + Math.round(pg.psychology.mood || 0) + "/100</p>";
     html += "</div></div>";
+  }
+
+  // [全系统自洽修复] 域F 联动增强 F→D: 社交关系概况
+  var _rel = state.relationships;
+  if (_rel) {
+    var _totalMet = 0, _closeFriends = 0, _totalRel = 0;
+    for (var _rk in _rel) {
+      var _rv = _rel[_rk];
+      if (_rv && _rv.met) {
+        _totalMet++;
+        _totalRel += _rv.relationship || 0;
+        if ((_rv.relationship || 0) >= 60) _closeFriends++;
+      }
+    }
+    if (_totalMet > 0) {
+      var _avgRel = Math.round(_totalRel / _totalMet);
+      html += '<div class="section"><h3>🤝 社交关系</h3>';
+      html += '<div class="card" style="padding:12px;font-size:12px;">';
+      html += '<p>👥 已结识：<strong>' + _totalMet + '</strong>人</p>';
+      html += '<p>💚 密友(好感≥60)：<strong style="color:var(--success);">' + _closeFriends + '</strong>人</p>';
+      html += '<p>📊 平均好感：<strong>' + _avgRel + '</strong>/100</p>';
+      if (_closeFriends >= 3) {
+        html += '<p style="color:var(--accent);font-size:11px;margin-top:4px;">🌟 社交圈稳固，密友支持带来心理韧性</p>';
+      } else if (_totalMet >= 1 && _closeFriends === 0) {
+        html += '<p style="color:var(--warning);font-size:11px;margin-top:4px;">💡 试着深入交往几位NPC，建立真正的友谊</p>';
+      }
+      html += '</div></div>';
+    }
   }
 
   html += "</div>";
@@ -268169,6 +268383,30 @@ function renderPgGoals(state, content, pg) {
         "</div>";
     });
     html += "</div>";
+  }
+
+  // [全系统自洽修复] 域F 联动增强 F→E: 投资组合概览
+  var _inv = state.investment;
+  if (_inv) {
+    var _stockCount = (_inv.stockHoldings || []).length;
+    var _propCount = (_inv.properties || []).length;
+    var _btcAmt = _inv.btcHoldings || 0;
+    var _invTotal = (_inv.portfolio && _inv.portfolio.totalValue) || 0;
+    if (_stockCount > 0 || _propCount > 0 || _btcAmt > 0 || _invTotal > 0) {
+      html += '<div style="margin-top:16px;"><h3>💰 投资组合</h3>';
+      html += '<div class="card" style="padding:12px;font-size:12px;">';
+      html += '<p>📊 总市值：<strong style="color:var(--success);">¥' + _invTotal.toLocaleString() + '</strong></p>';
+      if (_stockCount > 0) html += '<p>📈 股票持仓：' + _stockCount + '支</p>';
+      if (_propCount > 0) html += '<p>🏠 房产：' + _propCount + '套</p>';
+      if (_btcAmt > 0) html += '<p>₿ BTC：' + _btcAmt.toFixed(4) + '</p>';
+      var _diversity = (_stockCount > 0 ? 1 : 0) + (_propCount > 0 ? 1 : 0) + (_btcAmt > 0 ? 1 : 0);
+      if (_diversity >= 2) {
+        html += '<p style="color:var(--accent);font-size:11px;margin-top:4px;">✅ 多元化投资组合（' + _diversity + '/3类资产）</p>';
+      } else if (_diversity === 1 && _invTotal > 100000) {
+        html += '<p style="color:var(--warning);font-size:11px;margin-top:4px;">💡 资产已超¥100,000，考虑多元化配置降低风险</p>';
+      }
+      html += '</div></div>';
+    }
   }
 
   html += "</div>";
@@ -270407,7 +270645,7 @@ function showRepayVillageModal() {
             );
           } else {
             StateManager.addMessage(
-              `🏘️ 还了村长 ¥${amt.toLocaleString()}。还剩 ¥${state.resources.villageDebt.toLocaleString()}。`,
+              `🏘️ 还了村长 ¥${amt.toLocaleString()}。还剩 ¥${(state.resources.villageDebt || 0).toLocaleString()}。`,
               "success",
             );
           }
@@ -270462,7 +270700,7 @@ function showPayFineModal() {
             );
           } else {
             StateManager.addMessage(
-              `📋 缴纳罚单 ¥${amt.toLocaleString()}。还剩 ¥${state.resources.fineDebt.toLocaleString()} 未缴。`,
+              `📋 缴纳罚单 ¥${amt.toLocaleString()}。还剩 ¥${(state.resources.fineDebt || 0).toLocaleString()} 未缴。`,
               "success",
             );
           }
@@ -291290,9 +291528,9 @@ function showScenarioDetail(scenarioId) {
   var resourceLines = "";
   resourceLines +=
     '<div class="scenario-detail-stat"><span class="scenario-detail-stat-label">💰 现金</span><span class="scenario-detail-stat-val" style="color:' +
-    (s.resources.cash >= 5000 ? "var(--success)" : "") +
+    ((s.resources.cash || 0) >= 5000 ? "var(--success)" : "") +
     '">¥' +
-    s.resources.cash.toLocaleString() +
+    (s.resources.cash || 0).toLocaleString() +
     "</span></div>";
   if (s.resources.bankBalance > 0) {
     resourceLines +=
@@ -291608,7 +291846,7 @@ function startScenarioGame(scenarioId) {
       );
     }
   }
-  var _cashBase = state.resources.cash;
+  var _cashBase = state.resources.cash || 0;
   var _cashF = 1 + (Random.float(0, 1) * 2 - 1) * 0.15;
   state.resources.cash = Math.round(
     Math.max(Math.floor(_cashBase * 0.7), _cashBase * _cashF),
