@@ -1308,3 +1308,4 @@ function getSkillChineseName(skillKey) {
 // [R427] 域C
 // [R475] 域C
 // [R515] 域C
+// [R563] 域C
