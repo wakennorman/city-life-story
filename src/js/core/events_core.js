@@ -1498,16 +1498,16 @@ function recordEventToHistory(state, eventId, eventTitle) {
         StateManager.addMessage("💪 经历了" + _evtCount + "次人生起落，你的心理韧性越来越强。健康+2。", "success");
       }
     }
+    // [全系统自洽修复] 域G R577 修复: 事件经济影响追踪(原顶层死块 eventId 恒 undefined→永不执行)→移入 recordEventToHistory 使其生效
+    if (eventId && state.investment) {
+      if (!state.flags) state.flags = {};
+      if (!state.flags._eventEconomicImpact) state.flags._eventEconomicImpact = {};
+      state.flags._eventEconomicImpact[eventId] = (state.flags._eventEconomicImpact[eventId] || 0) + 1;
+    }
   }
-}
+  }
 
-// [全系统自洽修复] 域B 联动增强(B→E): 事件经济影响 — 记录事件对经济数据的影响
-  if (eventId && state.investment) {
-    if (!state.flags) state.flags = {};
-    if (!state.flags._eventEconomicImpact) state.flags._eventEconomicImpact = {};
-    state.flags._eventEconomicImpact[eventId] = (state.flags._eventEconomicImpact[eventId] || 0) + 1;
-  }
-  // [全系统自洽修复] 域B R387 联动增强(B→A): 事件市场情绪—特定事件影响商品价格
+// [全系统自洽修复] 域B R387 联动增强(B→A): 事件市场情绪—特定事件影响商品价格
 function applyEventMarketEffect(state, eventId) {
   if (!state || !eventId || !state.trade) return;
   if (!state.trade.marketEvents) state.trade.marketEvents = [];

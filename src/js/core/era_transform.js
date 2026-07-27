@@ -134,9 +134,18 @@
 
     // 检查是否触发时代事件
     if (ERA_EVENTS_TRIGGER_DAYS.includes(day)) {
+      // [全系统自洽修复] 域G R577 修复: getEraEvents() 原全库零调用→纪元事件数值/叙事效果永不生效；接入为里程碑叙事唯一数据源
+      var _eraEvt = null;
+      var _eraEvts = getEraEvents();
+      for (var _ei2 = 0; _ei2 < _eraEvts.length; _ei2++) {
+        if (_eraEvts[_ei2].day === day) { _eraEvt = _eraEvts[_ei2]; break; }
+      }
       state._pendingEraEvent = {
         triggerDay: day,
         stage: eraMod.stageId,
+        title: _eraEvt ? _eraEvt.title : null,
+        story: _eraEvt ? _eraEvt.story : null,
+        effect: _eraEvt ? _eraEvt.effect : null,
       };
       // 调度 era_events.js 中的交互事件（如果有）
       if (

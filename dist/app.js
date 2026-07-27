@@ -5907,16 +5907,16 @@ function recordEventToHistory(state, eventId, eventTitle) {
         StateManager.addMessage("💪 经历了" + _evtCount + "次人生起落，你的心理韧性越来越强。健康+2。", "success");
       }
     }
+    // [全系统自洽修复] 域G R577 修复: 事件经济影响追踪(原顶层死块 eventId 恒 undefined→永不执行)→移入 recordEventToHistory 使其生效
+    if (eventId && state.investment) {
+      if (!state.flags) state.flags = {};
+      if (!state.flags._eventEconomicImpact) state.flags._eventEconomicImpact = {};
+      state.flags._eventEconomicImpact[eventId] = (state.flags._eventEconomicImpact[eventId] || 0) + 1;
+    }
   }
-}
+  }
 
-// [全系统自洽修复] 域B 联动增强(B→E): 事件经济影响 — 记录事件对经济数据的影响
-  if (eventId && state.investment) {
-    if (!state.flags) state.flags = {};
-    if (!state.flags._eventEconomicImpact) state.flags._eventEconomicImpact = {};
-    state.flags._eventEconomicImpact[eventId] = (state.flags._eventEconomicImpact[eventId] || 0) + 1;
-  }
-  // [全系统自洽修复] 域B R387 联动增强(B→A): 事件市场情绪—特定事件影响商品价格
+// [全系统自洽修复] 域B R387 联动增强(B→A): 事件市场情绪—特定事件影响商品价格
 function applyEventMarketEffect(state, eventId) {
   if (!state || !eventId || !state.trade) return;
   if (!state.trade.marketEvents) state.trade.marketEvents = [];
@@ -130086,9 +130086,18 @@ if (typeof window !== "undefined") {
 
     // 检查是否触发时代事件
     if (ERA_EVENTS_TRIGGER_DAYS.includes(day)) {
+      // [全系统自洽修复] 域G R577 修复: getEraEvents() 原全库零调用→纪元事件数值/叙事效果永不生效；接入为里程碑叙事唯一数据源
+      var _eraEvt = null;
+      var _eraEvts = getEraEvents();
+      for (var _ei2 = 0; _ei2 < _eraEvts.length; _ei2++) {
+        if (_eraEvts[_ei2].day === day) { _eraEvt = _eraEvts[_ei2]; break; }
+      }
       state._pendingEraEvent = {
         triggerDay: day,
         stage: eraMod.stageId,
+        title: _eraEvt ? _eraEvt.title : null,
+        story: _eraEvt ? _eraEvt.story : null,
+        effect: _eraEvt ? _eraEvt.effect : null,
       };
       // 调度 era_events.js 中的交互事件（如果有）
       if (
@@ -161790,7 +161799,7 @@ function parseYahooFinanceResponse(text, params) {
           variance += (closes[cj] - mean) * (closes[cj] - mean);
         }
         var stddev = Math.sqrt(variance / n);
-        var cv = stddev / mean;
+        var cv = mean !== 0 ? stddev / mean : 0; // [全系统自洽修复] 域G R577 修复: mean=0(异常行情源全0收盘价)→Infinity污染波动率
 
         applyMarketDataToParams(params, changePercent, cv);
         return true;
@@ -161967,7 +161976,7 @@ function fetchYahooFinanceData(params) {
           variance += (closes[cj] - mean) * (closes[cj] - mean);
         }
         var stddev = Math.sqrt(variance / n);
-        var cv = stddev / mean;
+        var cv = mean !== 0 ? stddev / mean : 0; // [全系统自洽修复] 域G R577 修复: mean=0(异常行情源全0收盘价)→Infinity污染波动率
 
         applyMarketDataToParams(params, changePercent, cv);
 
@@ -167614,6 +167623,7 @@ if (typeof window !== "undefined") {
 // [R244] 域D 联动增强
 // [R276] 域D
 // [R340] 域D
+// [R364] 域D
 
 ;
 // ==== js/core/enterprise_fate.js ====
@@ -176390,6 +176400,7 @@ if (typeof module !== "undefined" && module.exports) {
   };
 }// [R178] 域B 联动增强
 // [R274] 域B
+// [R362] 域B
 
 ;
 // ==== js/data/startup_competition.js ====
@@ -183205,6 +183216,7 @@ function getNpcJobRecommendation(state, limit) {
 // [R243] 域C 联动增强
 // [R283] 域C
 // [R331] 域C
+// [R363] 域C
 
 ;
 // ==== js/data/goods.js ====
@@ -183807,6 +183819,7 @@ if (typeof window.CLS !== 'undefined' && window.CLS.data) window.CLS.data.GOODS 
 // [R225] 域A 联动增强
 // [R273] 域A
 // [R321] 域A
+// [R369] 域A
 
 ;
 // ==== js/data/items.js ====
@@ -221827,6 +221840,7 @@ function refreshStockMarket(state) {
 // [R245] 域E 联动增强
 // [R317] 域E
 // [R341] 域E
+// [R365] 域E
 
 ;
 // ==== js/phase2/corp_ops.js ====
@@ -242980,6 +242994,7 @@ function manageInventoryAction(state, inventoryType, action, amount) {
 // [R296] 域H
 // [R320] 域H
 // [R344] 域H
+// [R368] 域H
 
 ;
 // ==== js/phase2/corp_legacy_bonus.js ====
@@ -264445,6 +264460,185 @@ if (typeof window !== "undefined") {
       if (!exists) RANDOM_EVENTS.push(ev);
     })(EVENTS[i]);
   }
+})();
+
+;
+// ==== js/core/domain_g_linkage_r577.js ====
+/**
+ * 域G(核心机制/生命周期) 联动增强 R577
+ * 选题：域G 三大写-only/欠消费核心机制 flag 全库首事件消费闭环（配套 A1 事件经济影响追踪复活）。
+ *   G→D  g577_fresh_look_confidence  首消费 _hairStyleBoost(actions_extra.js:356 写-only 死flag→NPC赞新造型好感)
+ *   G→E  g577_era_ride              首消费 _eraState.stageId(growth/mature 经济扩张期→投资信心+本金)
+ *   G→A  g577_eventwise_acumen       首消费 _eventEconomicImpact(A1 修复后 recordEventToHistory 实时累积→经济敏锐度)
+ * 全字段 || 防御；conditions 全 false 时事件静默不发火，机制仍自洽。
+ */
+(function () {
+  if (typeof RANDOM_EVENTS === "undefined") return;
+  if (RANDOM_EVENTS._domainGLinkageR577Loaded) return;
+  RANDOM_EVENTS._domainGLinkageR577Loaded = true;
+
+  // 本地助手：取第一个已结识 NPC（域D铁律：只读 relationships / rel.met 守卫）
+  function firstMetNpcR577(st) {
+    if (!st || !st.relationships) return null;
+    for (var id in st.relationships) {
+      var rel = st.relationships[id];
+      if (rel && rel.met) return id;
+    }
+    return null;
+  }
+
+  var EVENTS = [
+    // G→D：发型/造型焕新 → 街坊夸赞（消费 _hairStyleBoost，actions_extra.js:356 写-only 死flag）
+    {
+      id: "g577_fresh_look_confidence",
+      phase: "street",
+      _isChainEvent: false,
+      icon: "💇",
+      title: "新造型，被看见了",
+      story: "你刚换了发型（或是试了次形象改造），镜子里的人精神了不少。\n\n出门买早饭，常给你留热包子的摊主多看了两眼：「哎，今天精神嘛，像换了个人。」\n\n一句随口的夸奖，把你这几天的小心思照单全收了。",
+      triggers: { minDay: 20, interval: 140, maxRepeats: 3, excludeFlags: ["_g577FreshLookCooldown"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        if (!(st.flags && st.flags._hairStyleBoost > 0)) return false;
+        if (!(st.flags._hairStyleLastDay && st.player && st.player.day)) return false;
+        if ((st.player.day - st.flags._hairStyleLastDay) > 20) return false; // 仅造型新鲜期内
+        return !!firstMetNpcR577(st);
+      },
+      choices: [
+        {
+          text: "😊 笑着应下，心里美滋滋",
+          hint: "好感+5，心情+4",
+          apply: function (st) {
+            if (!st) return; st.flags = st.flags || {};
+            st.flags._g577FreshLookCooldown = true;
+            var nid = firstMetNpcR577(st);
+            if (nid && typeof applyAffinityChange === "function") {
+              applyAffinityChange(st, nid, 5, "新造型获赞");
+            }
+            if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 4);
+            if (typeof StateManager !== "undefined" && StateManager.addMessage) {
+              StateManager.addMessage("💇 被在意的人看见，是种很具体的幸福。你和「" + (nid || "熟人") + "」的关系更近了。好感+5，心情+4。", "success");
+            }
+          },
+        },
+        {
+          text: "🙈 有点不好意思地摸摸头",
+          hint: "心情+3",
+          apply: function (st) {
+            if (!st) return; st.flags = st.flags || {};
+            st.flags._g577FreshLookCooldown = true;
+            if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 3);
+            if (typeof StateManager !== "undefined" && StateManager.addMessage) {
+              StateManager.addMessage("🙈 你讪讪地摸了摸头，却把这句夸奖偷偷记了一整天。心情+3。", "info");
+            }
+          },
+        },
+      ],
+      probability: 0.5,
+      repeatable: true,
+    },
+
+    // G→E：经济扩张期顺风 → 投资信心（消费 _eraState.stageId=growth/mature）
+    {
+      id: "g577_era_ride",
+      phase: "street",
+      _isChainEvent: false,
+      icon: "🌊",
+      title: "顺风的日子",
+      story: "你翻看城市新闻：新兴行业在招人，街角新店一家接一家开张。时代变迁系统维护的阶段显示，眼下正是一个扩张期。\n\n钱在流动，机会在冒头。有人恐慌，有人贪婪——而你忽然觉得，或许该让闲钱去接一点时代的水花。",
+      triggers: { minDay: 180, interval: 200, maxRepeats: 3, excludeFlags: ["_g577EraRideCooldown"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        var stage = st._eraState && st._eraState.stageId;
+        if (stage !== "growth" && stage !== "mature") return false;
+        if (st.flags && st.flags._g577EraRideCooldown) return false;
+        return ((st.resources && st.resources.cash) || 0) >= 500;
+      },
+      choices: [
+        {
+          text: "💡 顺势布局，闲钱不躺着",
+          hint: "投资意识觉醒 · 现金+600 · 心智+4",
+          apply: function (st) {
+            if (!st) return; st.flags = st.flags || {};
+            st.flags._g577EraRideCooldown = true;
+            st.flags._dataInvestorMindset = true;
+            if (st.resources) st.resources.cash = (st.resources.cash || 0) + 600; // [PLACEHOLDER]
+            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 4);
+            if (typeof StateManager !== "undefined" && StateManager.addMessage) {
+              StateManager.addMessage("🌊 你没 all-in，只是把一部分闲钱放进了对的方向。时代给的贝塔，你接住了一点点。现金+600，心智+4。", "success");
+            }
+          },
+        },
+        {
+          text: "🛡️ 风向未明，先观望",
+          hint: "心智+3",
+          apply: function (st) {
+            if (!st) return; st.flags = st.flags || {};
+            st.flags._g577EraRideCooldown = true;
+            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 3);
+            if (typeof StateManager !== "undefined" && StateManager.addMessage) {
+              StateManager.addMessage("🛡️ 你见过太多风口变陷阱。不急着下注，也是一种纪律。心智+3。", "info");
+            }
+          },
+        },
+      ],
+      probability: 0.45,
+      repeatable: true,
+    },
+
+    // G→A：历经多起经济相关事件 → 经济敏锐度（消费 _eventEconomicImpact，A1 修复后实时累积）
+    {
+      id: "g577_eventwise_acumen",
+      phase: "street",
+      _isChainEvent: false,
+      icon: "🧠",
+      title: "看得懂这座城的钱流向了哪",
+      story: "保健品骗局、团购压价、废品涨价、通胀预期……你亲历过不少牵动钱包的事件。\n\n不知不觉，你不再是那个看到「内幕消息」就心跳加速的新人。你开始能嗅出哪阵风里带着机会，哪阵风里藏着镰刀。",
+      triggers: { minDay: 60, interval: 160, maxRepeats: 2, excludeFlags: ["_g577EventwiseCooldown"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        if (!(st.flags && st.flags._eventEconomicImpact)) return false;
+        var n = 0;
+        try { n = Object.keys(st.flags._eventEconomicImpact).length; } catch (e) {}
+        if (n < 3) return false; // 至少亲历 3 起经济相关事件
+        return !(st.flags._g577EventwiseCooldown);
+      },
+      choices: [
+        {
+          text: "📚 把经验提炼成判断框架",
+          hint: "智力+5，心智+4，心情+3",
+          apply: function (st) {
+            if (!st) return; st.flags = st.flags || {};
+            st.flags._g577EventwiseCooldown = true;
+            if (st.player) {
+              st.player.intelligence = Math.min(100, (st.player.intelligence || 20) + 5); // [PLACEHOLDER]
+              st.player.mental = Math.min(100, (st.player.mental || 50) + 4);
+            }
+            if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 3);
+            if (typeof StateManager !== "undefined" && StateManager.addMessage) {
+              StateManager.addMessage("🧠 「看不懂的钱流向，就是别人收割你的方向。」你把自己的踩坑史归纳成几条铁律。智力+5，心智+4，心情+3。", "success");
+            }
+          },
+        },
+        {
+          text: "🤫 道理懂，但懒得总结",
+          hint: "心智+2",
+          apply: function (st) {
+            if (!st) return; st.flags = st.flags || {};
+            st.flags._g577EventwiseCooldown = true;
+            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 2);
+            if (typeof StateManager !== "undefined" && StateManager.addMessage) {
+              StateManager.addMessage("🤫 你心里有数，就是懒得写下来。经验在，框架没成型。心智+2。", "info");
+            }
+          },
+        },
+      ],
+      probability: 0.4,
+      repeatable: true,
+    },
+  ];
+
+  for (var i = 0; i < EVENTS.length; i++) RANDOM_EVENTS.push(EVENTS[i]);
 })();
 
 ;

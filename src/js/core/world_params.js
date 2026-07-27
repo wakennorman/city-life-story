@@ -185,7 +185,7 @@ function parseYahooFinanceResponse(text, params) {
           variance += (closes[cj] - mean) * (closes[cj] - mean);
         }
         var stddev = Math.sqrt(variance / n);
-        var cv = stddev / mean;
+        var cv = mean !== 0 ? stddev / mean : 0; // [全系统自洽修复] 域G R577 修复: mean=0(异常行情源全0收盘价)→Infinity污染波动率
 
         applyMarketDataToParams(params, changePercent, cv);
         return true;
@@ -362,7 +362,7 @@ function fetchYahooFinanceData(params) {
           variance += (closes[cj] - mean) * (closes[cj] - mean);
         }
         var stddev = Math.sqrt(variance / n);
-        var cv = stddev / mean;
+        var cv = mean !== 0 ? stddev / mean : 0; // [全系统自洽修复] 域G R577 修复: mean=0(异常行情源全0收盘价)→Infinity污染波动率
 
         applyMarketDataToParams(params, changePercent, cv);
 
