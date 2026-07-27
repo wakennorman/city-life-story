@@ -124,3 +124,4 @@ function getGradeBonus(grade) {
 }
 // [R107] 域C 联动增强
 // [R315] 域C
+// [R371] 域C
