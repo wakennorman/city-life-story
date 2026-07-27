@@ -2451,6 +2451,9 @@ function trackLifeDataSnapshot(state) {
   state.flags._lifeDataSnapshots.push(_snapshot);
   if (state.flags._lifeDataSnapshots.length > 20) state.flags._lifeDataSnapshots.shift();
 }
+
+// [全系统自洽修复] R479 A类: 补充缺失的函数声明
+function recordLifeMilestone(state, milestoneId, label) {
   if (!state || !milestoneId) return;
   if (!state.flags) state.flags = {};
   if (!state.flags._lifeMilestones) state.flags._lifeMilestones = [];
