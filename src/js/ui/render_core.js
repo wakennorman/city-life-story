@@ -1575,3 +1575,4 @@ function getHealthStatusSummary(state) {
 // [R430] 域F
 // [R454] 域F
 // [R478] 域F
+// [R502] 域F
