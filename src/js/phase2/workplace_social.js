@@ -630,7 +630,7 @@ function applyPoliticsEffects(state, effects) {
     if (key === "风险" && p.hasOwnProperty("risk"))
       p.risk = Math.max(0, Math.min(100, p.risk + value));
     if (key === "声誉" && state.player.hasOwnProperty("fame"))
-      state.player.fame = Math.max(0, state.player.fame + value);
+      state.player.fame = Math.max(0, (state.player.fame || 0) + value);
   }
 }
 

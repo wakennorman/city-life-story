@@ -779,6 +779,41 @@ const STREET_JOBS = [
     },
 
     // ============================================================
+    // 夜市地点工作
+    // 联动：locations.js night_market 地点 jobs
+    // ============================================================
+    {
+      id: "night_market_vendor",
+      name: "夜市摆摊",
+      desc: "在夜市支个摊卖小吃或杂货。客流量大,赚钱快,但竞争激烈。",
+      icon: "🏮",
+      location: "night_market",
+      requirements: { minAge: 16, maxAge: 60 },
+      effects: { fatigue: 20, happiness: 5, cookingXp: 3, salesXp: 2 },
+      payCalc(state) {
+        const base = Random.float(60, 120);
+        const cookBonus = (state.skills.cooking && state.skills.cooking.level) ? state.skills.cooking.level * 0.8 : 0;
+        const salesBonus = (state.skills.sales && state.skills.sales.level) ? state.skills.sales.level * 0.5 : 0;
+        return Math.floor(base + cookBonus + salesBonus);
+      },
+      risk: { illness: 0.01 },
+    },
+    {
+      id: "night_market_helper",
+      name: "夜市帮工",
+      desc: "帮小薇或其他摊主打下手。学手艺、攒经验,收入稳定。",
+      icon: "🍢",
+      location: "night_market",
+      requirements: { minAge: 16 },
+      requiredFlag: "xiaoWeiReferred",
+      effects: { fatigue: 18, happiness: 6, cookingXp: 5 },
+      payCalc(state) {
+        return Math.floor(50 + ((state.skills.cooking && state.skills.cooking.level) || 0) * 0.6 + Random.float(0, 25));
+      },
+      risk: {},
+    },
+
+    // ============================================================
     // 社区中心地点工作
     // 联动：locations.js community_center 地点 jobs
     // ============================================================

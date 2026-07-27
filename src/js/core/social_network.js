@@ -66,7 +66,7 @@ function postToMoments(state, content, images, visibility) {
   };
   state.socialNetwork.posts.unshift(post);
   // 消耗AP
-  state.player.actionPoints = Math.max(0, state.player.actionPoints - 20);
+  state.player.actionPoints = Math.max(0, (state.player.actionPoints || 0) - 20);
   // 增加粉丝（如果公开）
   if (visibility === "public") {
     // 基础增长：内容长度影响
