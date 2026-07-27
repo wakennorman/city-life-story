@@ -97916,6 +97916,7 @@ if (typeof window !== "undefined") {
 // [R164] 域D 联动增强
 // [R196] 域D 联动增强
 // [R236] 域D 联动增强
+// [R284] 域D
 
 ;
 // ==== js/core/insider_trading_events.js ====
@@ -168209,6 +168210,7 @@ if (typeof window !== "undefined") {
 // [R188] 域D 联动增强
 // [R220] 域D 联动增强
 // [R244] 域D 联动增强
+// [R276] 域D
 
 ;
 // ==== js/core/enterprise_fate.js ====
@@ -174096,6 +174098,7 @@ function getSkillChineseName(skillKey) {
 // [R139] 域C 联动增强
 // [R195] 域C 联动增强
 // [R235] 域C 联动增强
+// [R291] 域C
 
 ;
 // ==== js/core/equipment_suites.js ====
@@ -175762,6 +175765,7 @@ function getActiveSynergiesCount(state) {
 }
 // [R163] 域C 联动增强
 // [R227] 域C 联动增强
+// [R275] 域C
 
 ;
 // ==== js/data/startup_events.js ====
@@ -176985,6 +176989,7 @@ if (typeof module !== "undefined" && module.exports) {
     showStartupEventModal,
   };
 }// [R178] 域B 联动增强
+// [R274] 域B
 
 ;
 // ==== js/data/startup_competition.js ====
@@ -180571,6 +180576,7 @@ function tickSupplyChain(state, company) {
   const risk = getSupplyChainRisk(company);
   company.supplyChainRisk = risk.risk;
 }// [R186] 域B 联动增强
+// [R282] 域B
 
 ;
 // ==== js/data/scenario_start_chains.js ====
@@ -183797,6 +183803,7 @@ function getNpcJobRecommendation(state, limit) {
 // [R171] 域C 联动增强
 // [R211] 域C 联动增强
 // [R243] 域C 联动增强
+// [R283] 域C
 
 ;
 // ==== js/data/goods.js ====
@@ -188221,6 +188228,7 @@ function getSkillMarketValue(skillId) {
 // [R153] 域A 联动增强
 // [R201] 域A 联动增强
 // [R249] 域A 联动增强
+// [R297] 域A
 
 ;
 // ==== js/data/npcs.js ====
@@ -194662,6 +194670,7 @@ function hasIllness(state, illnessId) {
 // [R105] 域A 联动增强
 // [R169] 域A 联动增强
 // [R217] 域A 联动增强
+// [R281] 域A
 
 ;
 // ==== js/data/mechanics_registry.js ====
@@ -216423,6 +216432,7 @@ function getHealthScore(state) {
 // [R215] 域G 联动增强
 // [R239] 域G 联动增强
 // [R263] 域G
+// [R287] 域G
 
 ;
 // ==== js/phase1/carry.js ====
@@ -218236,6 +218246,7 @@ function getSkillPriceInsight(state, locKey, goodId) {
 // [R121] 域A 联动增强
 // [R193] 域A 联动增强
 // [R241] 域A 联动增强
+// [R289] 域A
 
 ;
 // ==== js/data/domain_g_linkage_r180.js ====
@@ -221724,6 +221735,7 @@ function getTeamProductivity(state) {
 // [R176] 域H 联动增强
 // [R216] 域H 联动增强
 // [R248] 域H 联动增强
+// [R280] 域H
 
 ;
 // ==== js/phase2/stock.js ====
@@ -222417,6 +222429,7 @@ function refreshStockMarket(state) {
 // [R221] 域E 联动增强
 // [R245] 域E 联动增强
 // [R269] 域E
+// [R293] 域E
 
 ;
 // ==== js/phase2/corp_ops.js ====
@@ -223084,6 +223097,7 @@ function getMarketCostMultiplier(state) {
 // [R192] 域H 联动增强
 // [R232] 域H 联动增强
 // [R264] 域H
+// [R288] 域H
 
 ;
 // ==== js/phase2/investment.js ====
@@ -228160,6 +228174,7 @@ function getInvestmentPortfolioSummary(state) {
 // [R213] 域E 联动增强
 // [R237] 域E 联动增强
 // [R261] 域E
+// [R285] 域E
 
 ;
 // ==== js/phase2/property_market.js ====
@@ -228754,6 +228769,7 @@ if (typeof window !== "undefined") {
 // [R205] 域E 联动增强
 // [R229] 域E 联动增强
 // [R253] 域E
+// [R277] 域E
 
 ;
 // ==== js/phase2/startup_data.js ====
@@ -243560,6 +243576,7 @@ function manageInventoryAction(state, inventoryType, action, amount) {
 // [R240] 域H 联动增强
 // [R256] 域H
 // [R272] 域H
+// [R296] 域H
 
 ;
 // ==== js/phase2/corp_legacy_bonus.js ====
@@ -245237,6 +245254,7 @@ if (typeof window !== "undefined") {
 // [R140] 域D 联动增强
 // [R204] 域D 联动增强
 // [R252] 域D
+// [R292] 域D
 
 ;
 // ==== js/phase2/investment_analysis.js ====
@@ -259246,7 +259264,7 @@ if (typeof window !== "undefined") {
       choices: [
         { text: "💻 适应新方式", hint: "技术XP+4,管理XP+3,心智+1", apply: function (st) {
           if (!st) return; st.flags = st.flags || {}; st.flags._b559RemoteWorkCooldown = true;
-          if (typeof addSkillXp === "function") { try { addSkillXp("technology", 4); } catch(e) {} }
+          if (typeof addSkillXp === "function") { try { addSkillXp("coding", 4); } catch(e) {} } // [全系统自洽修复] 域G R565 修复:addSkillXp("technology")非真实技能键(XP静默丢弃,R547清零后第三次回潮)→映射coding(技术=编程)
           if (typeof addSkillXp === "function") { try { addSkillXp("management", 3); } catch(e) {} }
           if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 1);
           if (typeof StateManager !== "undefined") StateManager.addMessage("💻 '远程办公节省了通勤时间，工作效率反而更高了。' 技术XP+4,管理XP+3,心智+1。", "success");
@@ -265265,6 +265283,281 @@ if (typeof window !== "undefined") {
       text: function (st) {
         if (!st) return null;
         return "你发现年纪大了，但学习新技能也不晚——'种一棵树最好的时间是十年前，其次是现在。' 学习，永远不晚。";
+      }
+    }
+  ];
+
+  for (var i = 0; i < EVENTS.length; i++) {
+    (function (ev) {
+      var exists = false;
+      for (var j = 0; j < RANDOM_EVENTS.length; j++) {
+        if (RANDOM_EVENTS[j] && RANDOM_EVENTS[j].id === ev.id) { exists = true; break; }
+      }
+      if (!exists) RANDOM_EVENTS.push(ev);
+    })(EVENTS[i]);
+  }
+})();
+;
+// ==== js/core/domain_g_linkage_r565.js ====
+/**
+ * 域G(核心机制/生命周期) 联动增强 R565
+ * 三大零事件消费数据源全库首消费：
+ *   G→E  g565_pension_first     首笔养老金 → 消费 flags._pensionBase（life_nodes.js 退休时写入,全库0读取）,
+ *     退休叙事承诺"养老金基数"终于兑现为真实入账
+ *   G→D  g565_souvenir_memories 纪念品回忆 → 消费 travel.souvenirs（travel.js 归来时push,事件层0消费）,
+ *     旅行积累转化为社交馈赠与家的温度
+ *   G→B  g565_after_storm       雨过天晴 → 消费 weather._previousWeather（weather.js 内部对比字段,事件层0消费）,
+ *     恶劣天气→晴天的转变获得叙事包装（峰终定律:坏体验后的好转最值得强调）
+ * 防御：met守卫 / Array.isArray / isFinite / || 守卫全覆盖；数值 [PLACEHOLDER] 可调。
+ */
+(function () {
+  "use strict";
+  if (typeof RANDOM_EVENTS === "undefined" || !RANDOM_EVENTS) return;
+  if (RANDOM_EVENTS._domainGLinkageR565Loaded) return;
+  RANDOM_EVENTS._domainGLinkageR565Loaded = true;
+
+  function firstMetNpc(st) {
+    if (!st || !st.relationships) return null;
+    for (var id in st.relationships) { if (st.relationships[id] && st.relationships[id].met) return id; }
+    return null;
+  }
+  function bumpAffinity(st, npcId, amt, reason) {
+    if (!npcId) return;
+    if (typeof applyAffinityChange === "function") { try { applyAffinityChange(st, npcId, amt, reason); } catch(e) {} }
+  }
+  function npcName(id) {
+    if (typeof getNpcDisplayName === "function") { try { return getNpcDisplayName(id) || "老朋友"; } catch(e) {} }
+    return "老朋友";
+  }
+  function pensionAmount(st) {
+    var base = st && st.flags ? st.flags._pensionBase : 0;
+    if (!isFinite(base) || base <= 0) return 0;
+    var amt = Math.round(base * 0.45); // [PLACEHOLDER] 养老金替代率45%
+    return (isFinite(amt) && amt > 0) ? Math.min(amt, 50000) : 0; // [PLACEHOLDER] 单笔上限
+  }
+
+  var EVENTS = [
+    {
+      id: "g565_pension_first", phase: "street", _isChainEvent: false, icon: "🧧",
+      title: "第一笔养老金",
+      story: "银行短信提示：你的养老金到账了——{desc}",
+      triggers: { minDay: 60, interval: 30, maxRepeats: 3, excludeFlags: ["_g565PensionCooldown"] },
+      conditions: function (st) {
+        if (!st || st.gameOver) return false;
+        if (!st.flags || st.flags._g565PensionCooldown) return false;
+        if (!st.flags._retired) return false;
+        return pensionAmount(st) > 0;
+      },
+      choices: [
+        { text: "📒 精打细算过日子", hint: "养老金入账,会计XP+3,心智+2", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._g565PensionCooldown = true;
+          var amt = pensionAmount(st);
+          if (st.resources && amt > 0) st.resources.bankBalance = (st.resources.bankBalance || 0) + amt;
+          if (typeof addSkillXp === "function") { try { addSkillXp("accounting", 3); } catch(e) {} }
+          if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 2);
+          if (typeof StateManager !== "undefined") StateManager.addMessage("🧧 养老金¥" + amt + "存入银行。'工作了一辈子，这是国家和岁月给你的答卷。' 会计XP+3,心智+2。", "success");
+        }},
+        { text: "🍲 请老友吃顿好的", hint: "养老金入账,好感+4,心情+4", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._g565PensionCooldown = true;
+          var amt = pensionAmount(st);
+          if (st.resources && amt > 0) st.resources.bankBalance = (st.resources.bankBalance || 0) + amt;
+          var nid = firstMetNpc(st);
+          if (nid) bumpAffinity(st, nid, 4, "养老金请客");
+          if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 4);
+          if (typeof StateManager !== "undefined") StateManager.addMessage("🍲 养老金¥" + amt + "到账，你请" + (nid ? npcName(nid) : "邻居") + "搓了一顿。'钱是身外物，人才是根本。' 好感+4,心情+4。", "success");
+        }}
+      ],
+      text: function (st) {
+        var amt = st ? pensionAmount(st) : 0;
+        return "银行短信提示：你的养老金¥" + amt + "到账了——'从今天起，每一分钱都是过去几十年的回响。' 退休生活，正式开始了。";
+      }
+    },
+    {
+      id: "g565_souvenir_memories", phase: "street", _isChainEvent: false, icon: "🎁",
+      title: "纪念品的回忆",
+      story: "收拾屋子时，你翻出了旅行带回的纪念品——{desc}",
+      triggers: { minDay: 30, interval: 120, maxRepeats: 3, excludeFlags: ["_g565SouvenirCooldown"] },
+      conditions: function (st) {
+        if (!st || st.gameOver) return false;
+        if (!st.flags || st.flags._g565SouvenirCooldown) return false;
+        return !!(st.travel && Array.isArray(st.travel.souvenirs) && st.travel.souvenirs.length >= 2);
+      },
+      choices: [
+        { text: "🎁 送一件给朋友", hint: "好感+5,心情+2", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._g565SouvenirCooldown = true;
+          var nid = firstMetNpc(st);
+          var gift = null;
+          if (st.travel && Array.isArray(st.travel.souvenirs) && st.travel.souvenirs.length > 0) {
+            gift = st.travel.souvenirs.pop();
+          }
+          if (nid) bumpAffinity(st, nid, 5, "赠送旅行纪念品");
+          if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 2);
+          if (typeof StateManager !== "undefined") StateManager.addMessage("🎁 你把「" + (gift || "纪念品") + "」送给了" + (nid ? npcName(nid) : "邻居") + "。'礼轻情意重，这是我旅行时想着你带的。' 好感+5,心情+2。", "success");
+        }},
+        { text: "🏠 摆在家里最显眼处", hint: "心情+3,心智+2", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._g565SouvenirCooldown = true;
+          if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 3);
+          if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 2);
+          if (typeof StateManager !== "undefined") StateManager.addMessage("🏠 你把纪念品一件件摆好。'每一件都是一段路，看着它们，就像又走了一遍。' 心情+3,心智+2。", "success");
+        }}
+      ],
+      text: function (st) {
+        var n = (st && st.travel && Array.isArray(st.travel.souvenirs)) ? st.travel.souvenirs.length : 0;
+        return "收拾屋子时，你翻出了旅行带回的" + n + "件纪念品——每一件背后，都是一段舍不得忘的旅程。";
+      }
+    },
+    {
+      id: "g565_after_storm", phase: "street", _isChainEvent: false, icon: "🌈",
+      title: "雨过天晴",
+      story: "连日的坏天气终于过去，今天阳光很好——{desc}",
+      triggers: { minDay: 10, interval: 60, maxRepeats: 5, excludeFlags: ["_g565AfterStormCooldown"] },
+      conditions: function (st) {
+        if (!st || st.gameOver) return false;
+        if (!st.flags || st.flags._g565AfterStormCooldown) return false;
+        if (!st.weather) return false;
+        var prev = st.weather._previousWeather;
+        var cur = st.weather.current;
+        var bad = { stormy: true, cold_snap: true, heatwave: true, snowy: true };
+        return !!(prev && bad[prev] && cur === "sunny");
+      },
+      choices: [
+        { text: "🚶 出门走走", hint: "心情+4,健康+1", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._g565AfterStormCooldown = true;
+          if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 4);
+          if (st.status) st.status.health = Math.min(100, (st.status.health || 50) + 1);
+          if (typeof StateManager !== "undefined") StateManager.addMessage("🌈 '坏天气总会过去的，就像坏日子一样。' 你在阳光下走了很久。心情+4,健康+1。", "success");
+        }},
+        { text: "🧺 抓紧晒被子干活", hint: "心智+2,疲劳+3", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._g565AfterStormCooldown = true;
+          if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 2);
+          if (st.needs) st.needs.fatigue = Math.min(100, (st.needs.fatigue || 0) + 3);
+          if (typeof StateManager !== "undefined") StateManager.addMessage("🧺 你抓住难得的好天气把积攒的活全干了。'晴天不等人。' 心智+2,疲劳+3。", "success");
+        }}
+      ],
+      text: function (st) {
+        return "连日的坏天气终于过去，今天阳光很好——空气里有种被雨水洗过的干净味道。你深吸一口气，觉得什么都可以重新开始。";
+      }
+    }
+  ];
+
+  for (var i = 0; i < EVENTS.length; i++) {
+    (function (ev) {
+      var exists = false;
+      for (var j = 0; j < RANDOM_EVENTS.length; j++) {
+        if (RANDOM_EVENTS[j] && RANDOM_EVENTS[j].id === ev.id) { exists = true; break; }
+      }
+      if (!exists) RANDOM_EVENTS.push(ev);
+    })(EVENTS[i]);
+  }
+})();
+
+;
+// ==== js/core/domain_g_linkage_r566.js ====
+/**
+ * 域G(核心机制/生命周期) 联动增强 R566
+ * 桥接：
+ *   G→E  g566_life_wealth_health 人生财富健康 → 消费 player.day+resources 数据,
+ *     财富→"财富健康度检查"的财务评估
+ *   G→D  g566_life_social_cycle 人生社交循环 → 消费 player.day+relationships 数据,
+ *     社交→"社交圈的自然更替"的社交循环
+ *   G→F  g566_life_ui_rhythm_v2 人生UI节奏v2 → 消费 player.day+needs 数据,
+ *     节奏→"生活节奏的UI提示"的智能提醒
+ */
+(function () {
+  "use strict";
+  if (typeof RANDOM_EVENTS === "undefined" || !RANDOM_EVENTS) return;
+  if (RANDOM_EVENTS._domainGLinkageR566Loaded) return;
+  RANDOM_EVENTS._domainGLinkageR566Loaded = true;
+
+  function firstMetNpc(st) {
+    if (!st || !st.relationships) return null;
+    for (var id in st.relationships) { if (st.relationships[id] && st.relationships[id].met) return id; }
+    return null;
+  }
+  function bumpAffinity(st, npcId, amt, reason) {
+    if (!npcId) return;
+    if (typeof applyAffinityChange === "function") { try { applyAffinityChange(st, npcId, amt, reason); } catch(e) {} }
+  }
+
+  var EVENTS = [
+    {
+      id: "g566_life_wealth_health", phase: "street", _isChainEvent: false, icon: "💳",
+      title: "财富健康",
+      story: "你检查了一下自己的财富健康度——{desc}",
+      triggers: { minDay: 25, interval: 60, maxRepeats: 5, excludeFlags: ["_g566WealthHealthCooldown"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        return (st.flags && !st.flags._g566WealthHealthCooldown);
+      },
+      choices: [
+        { text: "💳 优化财务", hint: "会计XP+4,心智+2", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._g566WealthHealthCooldown = true;
+          if (typeof addSkillXp === "function") { try { addSkillXp("accounting", 4); } catch(e) {} }
+          if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 2);
+          if (typeof StateManager !== "undefined") StateManager.addMessage("💳 '财富健康度评分XX分，还有提升空间。' 会计XP+4,心智+2。", "success");
+        }},
+        { text: "💰 增加储蓄", hint: "会计XP+2", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._g566WealthHealthCooldown = true;
+          if (typeof addSkillXp === "function") { try { addSkillXp("accounting", 2); } catch(e) {} }
+          if (typeof StateManager !== "undefined") StateManager.addMessage("💳 '储蓄率是财富健康的重要指标。' 会计XP+2。", "success");
+        }}
+      ],
+      text: function (st) {
+        if (!st) return null;
+        return "你检查了一下自己的财富健康度——'储蓄率、负债率、投资回报率...' 财富健康，需要定期检查。";
+      }
+    },
+    {
+      id: "g566_life_social_cycle", phase: "street", _isChainEvent: false, icon: "🔄",
+      title: "社交循环",
+      story: "你发现社交圈在自然地更替——{desc}",
+      triggers: { minDay: 30, interval: 120, maxRepeats: 3, excludeFlags: ["_g566SocialCycleCooldown"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        return (st.flags && !st.flags._g566SocialCycleCooldown);
+      },
+      choices: [
+        { text: "🔄 珍惜当下", hint: "好感+2,心情+2,心智+1", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._g566SocialCycleCooldown = true;
+          var nid = firstMetNpc(st); bumpAffinity(st, nid, 2, "珍惜友谊");
+          if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 2);
+          if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 1);
+          if (typeof StateManager !== "undefined") StateManager.addMessage("🔄 '有些人走散了，有些人还在。珍惜还在身边的人。' 好感+2,心情+2,心智+1。", "success");
+        }},
+        { text: "📱 联系旧友", hint: "好感+2", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._g566SocialCycleCooldown = true;
+          var nid = firstMetNpc(st); bumpAffinity(st, nid, 2, "联系旧友");
+          if (typeof StateManager !== "undefined") StateManager.addMessage("🔄 '好久不见，最近还好吗？' 好感+2。", "success");
+        }}
+      ],
+      text: function (st) {
+        if (!st) return null;
+        return "你发现社交圈在自然地更替——'随着年龄增长，朋友越来越少，但越来越精。' 社交圈的质量比数量更重要。";
+      }
+    },
+    {
+      id: "g566_life_ui_rhythm_v2", phase: "street", _isChainEvent: false, icon: "⏱️",
+      title: "智能提醒",
+      story: "系统根据你的状态给出了建议——{desc}",
+      triggers: { minDay: 10, interval: 15, maxRepeats: 10, excludeFlags: ["_g566RhythmCooldown"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        return (st.flags && !st.flags._g566RhythmCooldown);
+      },
+      choices: [
+        { text: "⏱️ 采纳建议", hint: "健康+1,心情+1", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._g566RhythmCooldown = true;
+          if (st.status) st.status.health = Math.min(100, (st.status.health || 70) + 1);
+          if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 1);
+          if (typeof StateManager !== "undefined") StateManager.addMessage("⏱️ '系统建议你起来走走，活动一下筋骨。' 健康+1,心情+1。", "success");
+        }},
+        { text: "⏰ 稍后", hint: "无奖励", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._g566RhythmCooldown = true;
+        }}
+      ],
+      text: function (st) {
+        if (!st) return null;
+        return "系统根据你的状态给出了建议——'你已经连续工作4小时了，建议休息15分钟。' 智能提醒，让生活更健康。";
       }
     }
   ];
@@ -280751,6 +281044,7 @@ function getHealthStatusSummary(state) {
 // [R214] 域F 联动增强
 // [R238] 域F 联动增强
 // [R262] 域F
+// [R286] 域F
 
 ;
 // ==== js/ui/render_infra.js ====
@@ -288493,6 +288787,7 @@ function renderFinanceTab(state, parent) {
 // [R222] 域F 联动增强
 // [R246] 域F 联动增强
 // [R270] 域F
+// [R294] 域F
 
 ;
 // ==== js/ui/corp_ui.js ====
@@ -294277,6 +294572,7 @@ if (typeof window !== "undefined") {
 }
 // [R142] 域F 联动增强
 // [R206] 域F 联动增强
+// [R278] 域F
 
 ;
 // ==== js/ui/navigation.js ====
@@ -316522,6 +316818,7 @@ if (typeof registerNewsEventsToPool === "function") registerNewsEventsToPool();
 // [R223] 域G 联动增强
 // [R247] 域G 联动增强
 // [R271] 域G
+// [R295] 域G
 
 ;
 // ==== js/data/scenario_start_chains.js ====
