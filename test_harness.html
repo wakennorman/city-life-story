@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>Test Harness</title></head>
+<body>
+<pre id="output" style="font-family:monospace;font-size:12px;"></pre>
+<script src="dist/app.js"></script>
+<script>
+var out = document.getElementById('output');
+var results = [];
+try {
+  results.push('Game loaded: ' + (typeof StateManager !== 'undefined' ? 'OK' : 'FAIL'));
+  if (typeof startNewGame === 'function') {
+    startNewGame();
+    results.push('startNewGame: OK');
+  }
+  setTimeout(function() {
+    try {
+      var st = StateManager.getState();
+      results.push('Day: ' + (st.player ? st.player.day : 'N/A'));
+      results.push('Cash: ' + (st.resources ? st.resources.cash : 'N/A'));
+      results.push('Phase: ' + (st.player ? st.player.phase : 'N/A'));
+      if (typeof mc !== 'undefined' && mc.run) {
+        mc.run(50);
+        var r = mc.report();
+        results.push('MC: ' + JSON.stringify(r));
+      } else {
+        results.push('MC: not available');
+      }
+    } catch(e) {
+      results.push('ERROR: ' + e.message);
+    }
+    out.textContent = results.join('\n');
+  }, 3000);
+} catch(e) {
+  out.textContent = 'FATAL: ' + e.message;
+}
+</script>
+</body>
+</html>
