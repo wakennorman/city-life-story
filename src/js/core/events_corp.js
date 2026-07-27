@@ -3081,7 +3081,7 @@
             }
             st.player.fame = Math.max(0, (st.player.fame || 0) + fameGain);
             st.resources.cash = (st.resources.cash || 0) + 5000;
-            st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 12);
+            if(st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 12);
             StateManager.addMessage(
               "🏆 你成功获得了晋升机会！老张拍了拍你的肩：'我没看错人。'",
               "success",
@@ -3105,7 +3105,7 @@
               );
             }
             st.player.mental = Math.min(100, (st.player.mental || 50) + 8);
-            st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 5);
+            if(st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 5);
             StateManager.addMessage(
               "😌 你选择低调。远离风暴中心也是一种智慧。",
               "info",
@@ -3177,7 +3177,7 @@
                 ((st.player.corporate || {}).popularity || 50) + 10,
               );
               st.player.mental = Math.max(0, (st.player.mental || 50) - 8);
-              st.needs.happiness = Math.max(0, (st.needs.happiness || 50) - 10);
+              if(st.needs) st.needs.happiness = Math.max(0, (st.needs.happiness || 50) - 10);
               StateManager.addMessage(
                 "🤐 你默默认了。同事们松了一口气，但你知道这不公平。尊严-20，人缘+10，心智-8，心情-10。",
                 "danger",
@@ -3232,7 +3232,7 @@
                 100,
                 ((st.player.corporate || {}).popularity || 50) + 8,
               );
-              st.needs.happiness = Math.max(0, (st.needs.happiness || 50) - 5);
+              if(st.needs) st.needs.happiness = Math.max(0, (st.needs.happiness || 50) - 5);
               StateManager.addMessage(
                 "🎁 你送了份礼物。领导很开心，人缘+8。但事后想想，这事做得不太光明正大（心情-5）。",
                 "warning",

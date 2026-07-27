@@ -19909,7 +19909,7 @@ function getEventHealthImpact(state, eventId) {
             }
             st.player.fame = Math.max(0, (st.player.fame || 0) + fameGain);
             st.resources.cash = (st.resources.cash || 0) + 5000;
-            st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 12);
+            if(st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 12);
             StateManager.addMessage(
               "🏆 你成功获得了晋升机会！老张拍了拍你的肩：'我没看错人。'",
               "success",
@@ -19933,7 +19933,7 @@ function getEventHealthImpact(state, eventId) {
               );
             }
             st.player.mental = Math.min(100, (st.player.mental || 50) + 8);
-            st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 5);
+            if(st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 5);
             StateManager.addMessage(
               "😌 你选择低调。远离风暴中心也是一种智慧。",
               "info",
@@ -20005,7 +20005,7 @@ function getEventHealthImpact(state, eventId) {
                 ((st.player.corporate || {}).popularity || 50) + 10,
               );
               st.player.mental = Math.max(0, (st.player.mental || 50) - 8);
-              st.needs.happiness = Math.max(0, (st.needs.happiness || 50) - 10);
+              if(st.needs) st.needs.happiness = Math.max(0, (st.needs.happiness || 50) - 10);
               StateManager.addMessage(
                 "🤐 你默默认了。同事们松了一口气，但你知道这不公平。尊严-20，人缘+10，心智-8，心情-10。",
                 "danger",
@@ -20060,7 +20060,7 @@ function getEventHealthImpact(state, eventId) {
                 100,
                 ((st.player.corporate || {}).popularity || 50) + 8,
               );
-              st.needs.happiness = Math.max(0, (st.needs.happiness || 50) - 5);
+              if(st.needs) st.needs.happiness = Math.max(0, (st.needs.happiness || 50) - 5);
               StateManager.addMessage(
                 "🎁 你送了份礼物。领导很开心，人缘+8。但事后想想，这事做得不太光明正大（心情-5）。",
                 "warning",
@@ -168406,6 +168406,7 @@ if (typeof window !== "undefined") {
 // [R452] 域D
 // [R492] 域D
 // [R532] 域D
+// [R572] 域D
 
 ;
 // ==== js/core/enterprise_fate.js ====
@@ -188459,6 +188460,7 @@ function getSkillMarketValue(skillId) {
 // [R441] 域A
 // [R489] 域A
 // [R537] 域A
+// [R585] 域A
 
 ;
 // ==== js/data/npcs.js ====
@@ -201371,6 +201373,7 @@ if (typeof window !== "undefined") {
 // [R314] 域B
 // [R402] 域B
 // [R482] 域B
+// [R570] 域B
 
 ;
 // ==== js/data/side_hustle_consequences.js ====
@@ -201491,6 +201494,7 @@ if (typeof window !== "undefined") {
   });
 })();
 // [R410] 域B
+// [R578] 域B
 
 ;
 // ==== js/data/corporate_npc_events.js ====
@@ -216697,6 +216701,7 @@ function getHealthScore(state) {
 // [R503] 域G
 // [R527] 域G
 // [R551] 域G
+// [R575] 域G
 
 ;
 // ==== js/phase1/carry.js ====
@@ -218516,6 +218521,7 @@ function getSkillPriceInsight(state, locKey, goodId) {
 // [R433] 域A
 // [R481] 域A
 // [R529] 域A
+// [R577] 域A
 
 ;
 // ==== js/data/domain_g_linkage_r180.js ====
@@ -221687,6 +221693,7 @@ function getGradeBonus(grade) {
 // [R467] 域C
 // [R507] 域C
 // [R539] 域C
+// [R579] 域C
 
 ;
 // ==== js/phase2/promo.js ====
@@ -222721,6 +222728,7 @@ function refreshStockMarket(state) {
 // [R509] 域E
 // [R533] 域E
 // [R557] 域E
+// [R581] 域E
 
 ;
 // ==== js/phase2/corp_ops.js ====
@@ -223399,6 +223407,7 @@ function getMarketCostMultiplier(state) {
 // [R504] 域H
 // [R528] 域H
 // [R552] 域H
+// [R576] 域H
 
 ;
 // ==== js/phase2/investment.js ====
@@ -228486,6 +228495,7 @@ function getInvestmentPortfolioSummary(state) {
 // [R501] 域E
 // [R525] 域E
 // [R549] 域E
+// [R573] 域E
 
 ;
 // ==== js/phase2/property_market.js ====
@@ -243908,6 +243918,7 @@ function manageInventoryAction(state, inventoryType, action, amount) {
 // [R512] 域H
 // [R536] 域H
 // [R560] 域H
+// [R584] 域H
 
 ;
 // ==== js/phase2/corp_legacy_bonus.js ====
@@ -245587,6 +245598,7 @@ if (typeof window !== "undefined") {
 // [R460] 域D
 // [R500] 域D
 // [R540] 域D
+// [R580] 域D
 
 ;
 // ==== js/phase2/investment_analysis.js ====
@@ -269677,6 +269689,124 @@ if (typeof window !== "undefined") {
 })();
 
 ;
+// ==== js/core/domain_h_linkage_r601.js ====
+/**
+ * 域H(Phase2/公司) 联动增强 R601
+ * 桥接：
+ *   H→G  h601_corp_life_balance  公司生活平衡 → 消费 corporate+needs 数据,
+ *     公司→"事业与健康"的生命回响
+ *   H→C  h601_corp_career_growth  公司职业成长 → 消费 corporate+skills 数据,
+ *     公司→"做项目积累职业资本"的职业回响
+ *   H→B  h601_corp_milestone_narrative 公司里程碑叙事 → 消费 corporate 数据,
+ *     公司→"从一间办公室到行业标杆"的叙事回响
+ */
+(function () {
+  "use strict";
+  if (typeof RANDOM_EVENTS === "undefined" || !RANDOM_EVENTS) return;
+  if (RANDOM_EVENTS._domainHLinkageR601Loaded) return;
+  RANDOM_EVENTS._domainHLinkageR601Loaded = true;
+
+  var EVENTS = [
+    {
+      id: "h601_corp_life_balance", phase: "corporate", _isChainEvent: false, icon: "⚖️",
+      title: "事业与健康",
+      story: "连续的高压工作让你开始反思——{desc}",
+      triggers: { minDay: 40, interval: 90, maxRepeats: 3, excludeFlags: ["_h601LifeBalanceCooldown"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        if (!st.flags || st.flags._h601LifeBalanceCooldown) return false;
+        return st.needs && (st.needs.fatigue || 0) >= 40;
+      },
+      choices: [
+        { text: "🧘 休息调整", hint: "疲劳-20,健康+5", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._h601LifeBalanceCooldown = true;
+          if (st.needs) st.needs.fatigue = Math.max(0, (st.needs.fatigue || 0) - 20);
+          if (st.status) st.status.health = Math.min(100, (st.status.health || 100) + 5);
+          if (typeof StateManager !== "undefined") StateManager.addMessage("⚖️ '身体是革命的本钱。' 你决定好好休息调整。疲劳-20,健康+5。", "success");
+        }},
+        { text: "💪 咬牙坚持", hint: "业绩+5,疲劳+10", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._h601LifeBalanceCooldown = true;
+          if (st.needs) st.needs.fatigue = Math.min(100, (st.needs.fatigue || 0) + 10);
+          if (typeof StateManager !== "undefined") StateManager.addMessage("⚖️ '再坚持一下，熬过这阵就好了。' 你选择继续拼搏。疲劳+10。", "warning");
+        }}
+      ],
+      text: function (st) {
+        if (!st) return null;
+        return "连续的高压工作让你开始反思——'我是不是该停下来休息一下？' 但手头的工作还在催着你。";
+      }
+    },
+    {
+      id: "h601_corp_career_growth", phase: "corporate", _isChainEvent: false, icon: "📈",
+      title: "做项目积累职业资本",
+      story: "你开始思考如何通过项目积累职业资本——{desc}",
+      triggers: { minDay: 50, interval: 100, maxRepeats: 3, excludeFlags: ["_h601CareerGrowthCooldown"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        if (!st.flags || st.flags._h601CareerGrowthCooldown) return false;
+        return st.corporate && st.corporate.company;
+      },
+      choices: [
+        { text: "💼 主动承担", hint: "管理XP+5", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._h601CareerGrowthCooldown = true;
+          if (typeof addSkillXp === "function") { try { addSkillXp("management", 5); } catch(e) {} }
+          if (typeof StateManager !== "undefined") StateManager.addMessage("📈 '多做项目多积累。' 你主动承担了更多工作。管理XP+5。", "success");
+        }},
+        { text: "📚 学习新技能", hint: "随机技能XP+5", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._h601CareerGrowthCooldown = true;
+          var skills = ["coding", "sales", "accounting", "management", "cooking", "repair"];
+          var sk = skills[Math.floor(Math.random() * skills.length)];
+          if (typeof addSkillXp === "function") { try { addSkillXp(sk, 5); } catch(e) {} }
+          if (typeof StateManager !== "undefined") StateManager.addMessage("📈 '学无止境。' " + sk + "XP+5。", "success");
+        }}
+      ],
+      text: function (st) {
+        if (!st) return null;
+        return "你开始思考如何通过项目积累职业资本——'项目是最好的成长机会。' 你开始主动寻找机会。";
+      }
+    },
+    {
+      id: "h601_corp_milestone_narrative", phase: "corporate", _isChainEvent: false, icon: "🏆",
+      title: "从一间办公室到行业标杆",
+      story: "回顾公司的发展历程——{desc}",
+      triggers: { minDay: 100, interval: 180, maxRepeats: 3, excludeFlags: ["_h601MilestoneNarrCooldown"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        if (!st.flags || st.flags._h601MilestoneNarrCooldown) return false;
+        return st.corporate && st.corporate.company;
+      },
+      choices: [
+        { text: "📖 记录历程", hint: "管理XP+5,心智+3", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._h601MilestoneNarrCooldown = true;
+          if (typeof addSkillXp === "function") { try { addSkillXp("management", 5); } catch(e) {} }
+          if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 3);
+          if (typeof StateManager !== "undefined") StateManager.addMessage("🏆 '从一间小办公室，到今天的规模。' 你把公司的发展历程记录下来。管理XP+5,心智+3。", "success");
+        }},
+        { text: "🚀 继续前进", hint: "管理XP+3,现金+2000", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._h601MilestoneNarrCooldown = true;
+          if (typeof addSkillXp === "function") { try { addSkillXp("management", 3); } catch(e) {} }
+          if (st.resources) st.resources.cash = (st.resources.cash || 0) + 2000;
+          if (typeof StateManager !== "undefined") StateManager.addMessage("🏆 '这只是开始。' 你选择把目光放在下一个目标上。管理XP+3,现金+¥2000。", "success");
+        }}
+      ],
+      text: function (st) {
+        if (!st) return null;
+        return "回顾公司的发展历程——'从一间小办公室，到今天的规模。' 这一路走来的故事，值得被记住。";
+      }
+    }
+  ];
+
+  for (var i = 0; i < EVENTS.length; i++) {
+    (function (ev) {
+      var exists = false;
+      for (var j = 0; j < RANDOM_EVENTS.length; j++) {
+        if (RANDOM_EVENTS[j] && RANDOM_EVENTS[j].id === ev.id) { exists = true; break; }
+      }
+      if (!exists) RANDOM_EVENTS.push(ev);
+    })(EVENTS[i]);
+  }
+})();
+
+;
 // ==== js/core/domain_b_linkage_r426.js ====
 /**
  * 域B(事件/叙事) 联动增强 R426
@@ -283015,6 +283145,7 @@ function getHealthStatusSummary(state) {
 // [R502] 域F
 // [R526] 域F
 // [R550] 域F
+// [R574] 域F
 
 ;
 // ==== js/ui/render_infra.js ====
@@ -290769,6 +290900,7 @@ function renderFinanceTab(state, parent) {
 // [R510] 域F
 // [R534] 域F
 // [R558] 域F
+// [R582] 域F
 
 ;
 // ==== js/ui/corp_ui.js ====
@@ -313093,6 +313225,7 @@ if (typeof window !== "undefined") {
   window.checkJobMilestoneEvent = checkJobMilestoneEvent;
 }
 // [R459] 域C
+// [R571] 域C
 
 ;
 // ==== js/main.js ====
@@ -318829,6 +318962,7 @@ if (typeof registerNewsEventsToPool === "function") registerNewsEventsToPool();
 // [R511] 域G
 // [R535] 域G
 // [R559] 域G
+// [R583] 域G
 
 ;
 // ==== js/data/scenario_start_chains.js ====
