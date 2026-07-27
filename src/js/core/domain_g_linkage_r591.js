@@ -1,12 +1,12 @@
 /**
  * 域G(核心机制/生命周期) 联动增强 R591
  * 桥接：
- *   G→D  g591_life_friend_intro  人生朋友介绍 → 消费 player.day+relationships 数据,
- *     介绍→"朋友介绍新朋友"的社交扩展
- *   G→E  g591_life_financial_goal 人生财务目标 → 消费 player.day+resources 数据,
- *     目标→"设定财务目标并跟踪"的目标管理
- *   G→F  g591_life_ui_weather   人生UI天气 → 消费 player.day+needs 数据,
- *     天气→"天气影响心情的UI反馈"的天气UI
+ *   G→D  g591_life_social_milestone  人生社交里程碑 → 消费 player+relationships 数据,
+ *     生命→"老朋友是人生财富"的社交回响
+ *   G→E  g591_life_wealth_milestone  人生财富里程碑 → 消费 player+resources 数据,
+ *     生命→"攒下的钱就是安全感"的经济回响
+ *   G→C  g591_life_skill_milestone  人生技能里程碑 → 消费 player+skills 数据,
+ *     生命→"学到老活到老"的职业回响
  */
 (function () {
   "use strict";
@@ -14,97 +14,110 @@
   if (RANDOM_EVENTS._domainGLinkageR591Loaded) return;
   RANDOM_EVENTS._domainGLinkageR591Loaded = true;
 
-  function firstMetNpc(st) {
-    if (!st || !st.relationships) return null;
-    for (var id in st.relationships) { if (st.relationships[id] && st.relationships[id].met) return id; }
-    return null;
-  }
-  function bumpAffinity(st, npcId, amt, reason) {
-    if (!npcId) return;
-    if (typeof applyAffinityChange === "function") { try { applyAffinityChange(st, npcId, amt, reason); } catch(e) {} }
-  }
-
   var EVENTS = [
     {
-      id: "g591_life_friend_intro", phase: "street", _isChainEvent: false, icon: "🤝",
-      title: "朋友的朋友",
-      story: "朋友介绍了一个新朋友给你认识——{desc}",
-      triggers: { minDay: 20, interval: 60, maxRepeats: 5, excludeFlags: ["_g591FriendIntroCooldown"] },
+      id: "g591_life_social_milestone", phase: "street", _isChainEvent: false, icon: "👥",
+      title: "老朋友是人生财富",
+      story: "回首这些年，你发现有些朋友一直陪在身边——{desc}",
+      triggers: { minDay: 100, interval: 180, maxRepeats: 3, excludeFlags: ["_g591SocialMilestoneCooldown"] },
       conditions: function (st) {
         if (st.gameOver) return false;
-        return (st.flags && !st.flags._g591FriendIntroCooldown);
+        if (!st.flags || st.flags._g591SocialMilestoneCooldown) return false;
+        var metCount = 0;
+        if (st.relationships) {
+          for (var k in st.relationships) {
+            if (st.relationships[k] && st.relationships[k].met) metCount++;
+          }
+        }
+        return metCount >= 2;
       },
       choices: [
-        { text: "🤝 认识一下", hint: "社交XP+3,好感+1", apply: function (st) {
-          if (!st) return; st.flags = st.flags || {}; st.flags._g591FriendIntroCooldown = true;
+        { text: "💝 感谢陪伴", hint: "心智+3,心情+5", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._g591SocialMilestoneCooldown = true;
+          if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 3);
+          if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 5);
+          if (typeof StateManager !== "undefined") StateManager.addMessage("💝 '有你们在，这座城市不再陌生。' 你感激老朋友的陪伴。心智+3,心情+5。", "success");
+        }},
+        { text: "📖 记录回忆", hint: "智力+2,社交XP+3", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._g591SocialMilestoneCooldown = true;
+          if (st.player) st.player.intelligence = Math.min(100, (st.player.intelligence || 50) + 2);
           if (typeof addSkillXp === "function") { try { addSkillXp("social", 3); } catch(e) {} }
-          var nid = firstMetNpc(st); bumpAffinity(st, nid, 1, "介绍新朋友");
-          if (typeof StateManager !== "undefined") StateManager.addMessage("🤝 '你好！经常听XX提起你。' 社交XP+3,好感+1。", "success");
-        }},
-        { text: "📱 加微信", hint: "好感+2", apply: function (st) {
-          if (!st) return; st.flags = st.flags || {}; st.flags._g591FriendIntroCooldown = true;
-          var nid = firstMetNpc(st); bumpAffinity(st, nid, 2, "加微信");
-          if (typeof StateManager !== "undefined") StateManager.addMessage("🤝 '扫个微信，以后常联系！' 好感+2。", "success");
+          if (typeof StateManager !== "undefined") StateManager.addMessage("💝 '这些回忆值得被记住。' 你把友谊的故事写进日记。智力+2,社交XP+3。", "success");
         }}
       ],
       text: function (st) {
         if (!st) return null;
-        return "朋友介绍了一个新朋友给你认识——'这是我朋友XX，做XX行业的，你们应该聊得来。' 朋友的朋友，就是朋友。";
+        return "回首这些年，你发现有些朋友一直陪在身边——'老朋友是人生最大的财富。' 你决定好好珍惜。";
       }
     },
     {
-      id: "g591_life_financial_goal", phase: "street", _isChainEvent: false, icon: "🎯",
-      title: "财务目标",
-      story: "你设定了一个新的财务目标——{desc}",
-      triggers: { minDay: 20, interval: 60, maxRepeats: 5, excludeFlags: ["_g591FinancialGoalCooldown"] },
+      id: "g591_life_wealth_milestone", phase: "street", _isChainEvent: false, icon: "💰",
+      title: "攒下的钱就是安全感",
+      story: "看着存折上的数字，你感到一丝安心——{desc}",
+      triggers: { minDay: 60, interval: 120, maxRepeats: 3, excludeFlags: ["_g591WealthMilestoneCooldown"] },
       conditions: function (st) {
         if (st.gameOver) return false;
-        return (st.flags && !st.flags._g591FinancialGoalCooldown);
+        if (!st.flags || st.flags._g591WealthMilestoneCooldown) return false;
+        var totalAssets = (st.resources && st.resources.cash || 0) + (st.resources && st.resources.bankBalance || 0);
+        return totalAssets >= 50000;
       },
       choices: [
-        { text: "🎯 努力实现", hint: "会计XP+4,心智+2,心情+1", apply: function (st) {
-          if (!st) return; st.flags = st.flags || {}; st.flags._g591FinancialGoalCooldown = true;
-          if (typeof addSkillXp === "function") { try { addSkillXp("accounting", 4); } catch(e) {} }
+        { text: "🛡️ 继续攒钱", hint: "心智+2,会计XP+3", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._g591WealthMilestoneCooldown = true;
           if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 2);
-          if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 1);
-          if (typeof StateManager !== "undefined") StateManager.addMessage("🎯 '今年存够XX万，一步一步来。' 会计XP+4,心智+2,心情+1。", "success");
+          if (typeof addSkillXp === "function") { try { addSkillXp("accounting", 3); } catch(e) {} }
+          if (typeof StateManager !== "undefined") StateManager.addMessage("🛡️ '多攒一点，心里踏实。' 你决定继续积累。心智+2,会计XP+3。", "success");
         }},
-        { text: "📊 分解目标", hint: "会计XP+2", apply: function (st) {
-          if (!st) return; st.flags = st.flags || {}; st.flags._g591FinancialGoalCooldown = true;
-          if (typeof addSkillXp === "function") { try { addSkillXp("accounting", 2); } catch(e) {} }
-          if (typeof StateManager !== "undefined") StateManager.addMessage("🎯 '把大目标分解成每月的小目标，更容易实现。' 会计XP+2。", "success");
+        { text: "🎁 犒劳自己", hint: "心情+8,现金-1000", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._g591WealthMilestoneCooldown = true;
+          if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 8);
+          if (st.resources) st.resources.cash = Math.max(0, (st.resources.cash || 0) - 1000);
+          if (typeof StateManager !== "undefined") StateManager.addMessage("🎁 '辛苦了这么久，该奖励一下自己。' 你好好放松了一天。心情+8,现金-¥1000。", "success");
         }}
       ],
       text: function (st) {
         if (!st) return null;
-        return "你设定了一个新的财务目标——'今年要存够XX万，明年要买房...' 有目标的人生，才有方向。";
+        return "看着存折上的数字，你感到一丝安心——'攒下的钱，就是生活的底气。' 你开始思考这笔钱的用途。";
       }
     },
     {
-      id: "g591_life_ui_weather", phase: "street", _isChainEvent: false, icon: "🌤️",
-      title: "天气心情",
-      story: "今天的天气影响了你的心情——{desc}",
-      triggers: { minDay: 10, interval: 15, maxRepeats: 10, excludeFlags: ["_g591WeatherCooldown"] },
+      id: "g591_life_skill_milestone", phase: "street", _isChainEvent: false, icon: "📚",
+      title: "学到老活到老",
+      story: "回顾自己学会的技能，你感到欣慰——{desc}",
+      triggers: { minDay: 80, interval: 150, maxRepeats: 3, excludeFlags: ["_g591SkillMilestoneCooldown"] },
       conditions: function (st) {
         if (st.gameOver) return false;
-        return (st.flags && !st.flags._g591WeatherCooldown);
+        if (!st.flags || st.flags._g591SkillMilestoneCooldown) return false;
+        var skilledCount = 0;
+        if (st.skills) {
+          for (var k in st.skills) {
+            if (st.skills[k] && (st.skills[k].level || 0) >= 20) skilledCount++;
+          }
+        }
+        return skilledCount >= 2;
       },
       choices: [
-        { text: "🌤️ 出去走走", hint: "心情+2,健康+1", apply: function (st) {
-          if (!st) return; st.flags = st.flags || {}; st.flags._g591WeatherCooldown = true;
-          if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 2);
-          if (st.status) st.status.health = Math.min(100, (st.status.health || 70) + 1);
-          if (typeof StateManager !== "undefined") StateManager.addMessage("🌤️ '天气这么好，出去走走心情好多了。' 心情+2,健康+1。", "success");
+        { text: "🎯 继续精进", hint: "最高技能XP+5,心智+2", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._g591SkillMilestoneCooldown = true;
+          if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 2);
+          var topSkill = null, topLv = 0;
+          if (st.skills) {
+            for (var k in st.skills) {
+              if (st.skills[k] && (st.skills[k].level || 0) > topLv) { topLv = st.skills[k].level; topSkill = k; }
+            }
+          }
+          if (topSkill && typeof addSkillXp === "function") { try { addSkillXp(topSkill, 5); } catch(e) {} }
+          if (typeof StateManager !== "undefined") StateManager.addMessage("📚 '学无止境。' 你决定继续精进技能。心智+2,最高技能XP+5。", "success");
         }},
-        { text: "☕ 在家喝茶", hint: "心情+1", apply: function (st) {
-          if (!st) return; st.flags = st.flags || {}; st.flags._g591WeatherCooldown = true;
-          if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 1);
-          if (typeof StateManager !== "undefined") StateManager.addMessage("🌤️ '下雨天，适合在家喝茶看书。' 心情+1。", "success");
+        { text: "🎉 庆祝成就", hint: "心情+5", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._g591SkillMilestoneCooldown = true;
+          if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 5);
+          if (typeof StateManager !== "undefined") StateManager.addMessage("📚 '看看自己学会了这么多，真不容易。' 你为自己的成长感到骄傲。心情+5。", "success");
         }}
       ],
       text: function (st) {
         if (!st) return null;
-        return "今天的天气影响了你的心情——'阳光明媚，心情也跟着好了起来。' 天气和心情，总有一种奇妙的联系。";
+        return "回顾自己学会的技能，你感到欣慰——'学到老，活到老。' 每一项技能都是人生的积淀。";
       }
     }
   ];
