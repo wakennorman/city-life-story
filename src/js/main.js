@@ -3668,7 +3668,7 @@ function getAvailableActions(state) {
               "success",
             );
           }
-          st.needs.fatigue = Math.min(100, st.needs.fatigue + 8);
+          if(st.needs) st.needs.fatigue = Math.min(100, (st.needs.fatigue||0) + 8);
           if (Random.chance(0.1) && st.player.intelligence < 100) {
             st.player.intelligence = Math.min(
               100,
@@ -3696,8 +3696,8 @@ function getAvailableActions(state) {
         effectEstimate: "心情+20, 疲劳-10",
         handler: () => {
           const st = StateManager.getState();
-          st.needs.happiness = Math.min(100, st.needs.happiness + 20);
-          st.needs.fatigue = Math.max(0, st.needs.fatigue - 10);
+          if(st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness||0) + 20);
+          if(st.needs) st.needs.fatigue = Math.max(0, (st.needs.fatigue||0) - 10);
           StateManager.addMessage(
             "🌳 在公园散了会步，心情舒畅多了。",
             "success",
@@ -4408,7 +4408,7 @@ function getAvailableActions(state) {
         "吃饭" + (cookHint || ""),
       );
       st.needs.hunger = Math.min(100, st.needs.hunger + 35);
-      st.needs.happiness = Math.min(100, st.needs.happiness + 8);
+      if(st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness||0) + 8);
       StateManager.addMessage(
         `🍚 你花¥${foodCost}吃了顿饭，肚子饱了。${cookHint}`,
         "success",

@@ -162,7 +162,7 @@ const LIFE_NODES = {
         effect: function (st) {
           // [全系统自洽修复] 域G R520 P1: st.needs 守卫
           if (!st.needs) st.needs = { hunger: 50, fatigue: 30, hygiene: 60, happiness: 50 };
-          st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 10);
+          if(st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 10);
           st.flags._career35Path = "lieflat";
         },
       },
@@ -193,7 +193,7 @@ const LIFE_NODES = {
           st.flags._pensionBase = _empJob ? (_empJob.salary || 5000) : 5000;
           // [全系统自洽修复] 域G R520 P1: st.needs 守卫
           if (!st.needs) st.needs = { hunger: 50, fatigue: 30, hygiene: 60, happiness: 50 };
-          st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 20);
+          if(st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 20);
         },
       },
       {
@@ -230,7 +230,7 @@ const LIFE_NODES = {
           // 退而不休不设 _retired，继续正常工作
           // [全系统自洽修复] 域G R520 P1: st.needs 守卫
           if (!st.needs) st.needs = { hunger: 50, fatigue: 30, hygiene: 60, happiness: 50 };
-          st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 5);
+          if(st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 5);
         },
       },
     ],
@@ -724,3 +724,4 @@ if (typeof window !== "undefined") {
     version: "v1",
   };
 }
+// [R151] 域G 联动增强

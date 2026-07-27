@@ -43,9 +43,7 @@ const TRAVEL_DESTINATIONS = {
             text: "坐下来听一曲",
             hint: "心情+8，听懂大爷的故事",
             apply: function (st) {
-              st.needs.happiness = Math.min(
-                100,
-                (st.needs.happiness || 50) + 8,
+              if(st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 8,
               );
               st.player.mental = Math.min(100, (st.player.mental || 0) + 2);
             },
@@ -178,9 +176,7 @@ const TRAVEL_DESTINATIONS = {
             text: "跟老板聊聊天",
             hint: "了解成都生活，心情+5",
             apply: function (st) {
-              st.needs.happiness = Math.min(
-                100,
-                (st.needs.happiness || 50) + 5,
+              if(st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 5,
               );
               st.player.fame = Math.min(100, (st.player.fame || 0) + 1);
             },
@@ -297,9 +293,7 @@ const TRAVEL_DESTINATIONS = {
             text: "买一块扎染布做纪念",
             hint: "心情+5，道德+1",
             apply: function (st) {
-              st.needs.happiness = Math.min(
-                100,
-                (st.needs.happiness || 50) + 5,
+              if(st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 5,
               );
               st.player.morality = Math.min(100, (st.player.morality || 0) + 1);
             },
@@ -321,9 +315,7 @@ const TRAVEL_DESTINATIONS = {
             text: "继续骑行，不想被打扰",
             hint: "心情+8，安静享受",
             apply: function (st) {
-              st.needs.happiness = Math.min(
-                100,
-                (st.needs.happiness || 50) + 8,
+              if(st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 8,
               );
             },
             cost: 0,
