@@ -2026,6 +2026,7 @@ var DYNAMIC_HINTS = [
 
 /** 每日检查动态提示，触发后标记防重复 */
 function checkDynamicHints(state) {
+  if (!state.flags) state.flags = {};
   for (var i = 0; i < DYNAMIC_HINTS.length; i++) {
     var hint = DYNAMIC_HINTS[i];
     try {
