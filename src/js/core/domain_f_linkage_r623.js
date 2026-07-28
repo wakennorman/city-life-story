@@ -25,7 +25,7 @@
       icon: "📈",
       title: "市场价格脉搏",
       triggers: { minDay: 3 },
-      story: function (st) {
+      text: function (st) {
         var trade = st.trade || {};
         var location = trade.currentLocation || "commercialDist";
         var goods = (typeof GOODS !== "undefined" && GOODS) ? GOODS : [];
@@ -80,7 +80,7 @@
       icon: "💰",
       title: "投资组合概览",
       triggers: { minDay: 10 },
-      story: function (st) {
+      text: function (st) {
         var stocks = st.stockMarket || {};
         var holdings = st.investment || {};
         var stockCount = 0;
@@ -139,7 +139,7 @@
       icon: "🏢",
       title: "公司运营健康度",
       triggers: { minDay: 30 },
-      story: function (st) {
+      text: function (st) {
         var startup = st.startup;
         if (!startup || !startup.company) {
           return "你还没有创办公司。创业需要足够的资金、人脉和行业经验，做好准备后可以前往「事业发展」注册。";
