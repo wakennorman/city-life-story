@@ -171629,12 +171629,14 @@ function activateTalentNode(skillKey, nodeId, state) {
     return false;
   }
 
-  var branchId = state.skillBranches[skillKey];
+  var branchId = state.skillBranches && state.skillBranches[skillKey];
   var node = getTalentNodeDef(skillKey, branchId, nodeId);
   var nodeKey = skillKey + "_" + branchId + "_" + nodeId;
 
   state.player.actionPoints -= node.apCost;
   state.resources.cash = Math.max(0, (state.resources.cash || 0) - (node.cashCost || 0));
+  // [全系统自洽修复] 域C R677 A类: talentNodes 守卫(旧存档激活天赋时崩溃)
+  if (!state.talentNodes) state.talentNodes = {};
   state.talentNodes[nodeKey] = true;
 
   StateManager.addMessage(
@@ -213720,6 +213722,18 @@ const DAILY_PIPELINE = [
               "info",
             );
           }
+        }
+      }
+      // [全系统自洽修复] 域C R677b A类#1: 技能大师培训班被动收入每日兑现(career_dev.js hint承诺¥150/天,全库零读取→就此接线)
+      if (state.flags._skillMasterTrainer) {
+        var _trainRate = state.flags._trainerScaleUp ? 250 : 150;
+        state.resources.cash = (state.resources.cash || 0) + _trainRate;
+        state.flags._trainerIncomeTotal = (state.flags._trainerIncomeTotal || 0) + _trainRate;
+        if (day % 7 === 0 && typeof StateManager !== "undefined") {
+          StateManager.addMessage(
+            "👑 培训班本周运转良好，学费收入约¥" + _trainRate + "/天（累计¥" + state.flags._trainerIncomeTotal + "）。",
+            "info",
+          );
         }
       }
       // [全系统自洽修复] 域E 修复:贷款逾期90天警告
@@ -300384,7 +300398,9 @@ function applyJobhop(offerId) {
       CAREER_PATHS[offer.path].name +
       "）",
   });
-  // v3.51：跨路径跳槽成就标记
+  // [全系统自洽修复] 域C R677 A类: applyJobhop 缺少 state.flags 守卫→跨路径跳槽标记防崩溃
+  if (!state.flags) state.flags = {};
+  // 记录跨路径跳槽成就
   var _oldPath = job.path;
   if (_oldPath !== offer.path) {
     state.flags._crossPathJobhop = true;
@@ -301182,8 +301198,12 @@ function tickCareerJobDaily(state) {
   cap.burnout = Math.max(0, (cap.burnout || 0) + dailyBurnoutChange);
 
   // [全系统自洽修复] 域C 联动增强(C→G): 高压倦怠→健康侵蚀 — 每日最高-1健康(倦怠≥70时触发)
+  // [全系统自洽修复] 域C R677 增强(C→G): 倦怠≥70时额外增疲劳(日+1)
   if (cap.burnout >= 70 && state.status && state.status.health > 10) {
     state.status.health = Math.max(0, (state.status.health || 100) - 1);
+    if (state.needs) {
+      state.needs.fatigue = Math.min(100, (state.needs.fatigue || 0) + 1);
+    }
     if (cap.burnout >= 85 && state.player.day % 5 === 0) {
       StateManager.addMessage("⚠️ 长期高压工作正在侵蚀你的健康，考虑调休或年假！", "warning");
     }
@@ -303075,6 +303095,14 @@ if (typeof document !== "undefined") {
       title: "你做到了！",
       story:
         "你在 '{pathName}' 路径已经达到了最高职级 '{levelName}'。回头看这一路，从最初的不适应到现在的游刃有余，你已经走了很远。",
+      text: function (st) { // [全系统自洽修复] 域C R677b A类#2: 渲染层只调text()动态叙述(events_core R455),story内{占位符}原样泄漏给玩家
+        var job = (st && st.career && st.career.currentJob) || {};
+        var pd = (typeof CAREER_PATHS !== "undefined" && CAREER_PATHS[job.path]) || null;
+        var pn = job.pathName || (pd && pd.name) || "你的职业";
+        var ln = "最高职级";
+        if (pd && pd.levels) { for (var i = 0; i < pd.levels.length; i++) { if (pd.levels[i].id === job.levelId) { ln = pd.levels[i].name || ln; break; } } }
+        return "你在'" + pn + "'路径已经达到了最高职级'" + ln + "'。回头看这一路，从最初的不适应到现在的游刃有余，你已经走了很远。";
+      },
       triggers: { minDay: 180 },
       conditions: function (st) {
         var career = st.career || {};
@@ -303159,6 +303187,12 @@ if (typeof document !== "undefined") {
       title: "有人想拜你为师",
       story:
         "你在 '{pathName}' 达到了最高职级后，开始有人注意到你了。今天一个刚入行的年轻人找到你，说想跟你学习经验。",
+      text: function (st) { // [全系统自洽修复] 域C R677b A类#2: 渲染层只调text()动态叙述(events_core R455),story内{占位符}原样泄漏给玩家
+        var job = (st && st.career && st.career.currentJob) || {};
+        var pd = (typeof CAREER_PATHS !== "undefined" && CAREER_PATHS[job.path]) || null;
+        var pn = job.pathName || (pd && pd.name) || "你的行当";
+        return "你在'" + pn + "'达到了最高职级后，开始有人注意到你了。今天一个刚入行的年轻人找到你，说想跟你学习经验。";
+      },
       triggers: { minDay: 200 },
       conditions: function (st) {
         var career = st.career || {};
@@ -303222,6 +303256,12 @@ if (typeof document !== "undefined") {
       title: "一个改变行业的项目",
       story:
         "你在 '{pathName}' 达到了最高职级后，行业内出现了一个重大机会——一个需要你这种资深人士才能主导的项目。但它有风险：要么大获成功，要么一败涂地。",
+      text: function (st) { // [全系统自洽修复] 域C R677b A类#2: 渲染层只调text()动态叙述(events_core R455),story内{占位符}原样泄漏给玩家
+        var job = (st && st.career && st.career.currentJob) || {};
+        var pd = (typeof CAREER_PATHS !== "undefined" && CAREER_PATHS[job.path]) || null;
+        var pn = job.pathName || (pd && pd.name) || "你的行业";
+        return "你在'" + pn + "'达到了最高职级后，行业内出现了一个重大机会——一个需要你这种资深人士才能主导的项目。但它有风险：要么大获成功，要么一败涂地。";
+      },
       triggers: { minDay: 300 },
       conditions: function (st) {
         var career = st.career || {};
@@ -303301,6 +303341,12 @@ if (typeof document !== "undefined") {
       icon: "👑",
       title: "登峰造极！",
       story: "经过日复一日的练习和实战，你的'{skillName}'技能终于达到了Lv.100——人类所能达到的极限！\n\n你在这个领域已经是大师级别的人物了。消息传开后，有人慕名而来想请你指点，也有人想挖你去他们公司。",
+      text: function (st) { // [全系统自洽修复] 域C R677b A类#2: 渲染层只调text()动态叙述(events_core R455),story内{占位符}原样泄漏给玩家
+        var sn = "";
+        if (st && st.skills) { for (var k in st.skills) { if (st.skills[k] && st.skills[k].level >= 100) { sn = (typeof getSkillChineseName === "function") ? getSkillChineseName(k) : k; break; } } }
+        sn = sn || "你的看家本领";
+        return "经过日复一日的练习和实战，你的'" + sn + "'技能终于达到了Lv.100——人类所能达到的极限！\n\n你在这个领域已经是大师级别的人物了。消息传开后，有人慕名而来想请你指点，也有人想挖你去他们公司。";
+      },
       triggers: { minDay: 60 },
       conditions: function (st) {
         if (st.flags && st.flags._skillMaxLevelTriggered) return false;
@@ -303343,8 +303389,12 @@ if (typeof document !== "undefined") {
           apply: function (st) {
             st.flags._skillMaxLevelTriggered = true;
             st.flags._skillMasterTrainer = true;
+            // [全系统自洽修复] 域C R677b A类#1: hint承诺"被动收入+¥150/天"但_skillMasterTrainer全库零读取零兑现→记录开班日+扣前期投入,每日结算接线在daily_pipeline
+            st.flags._skillMasterTrainerDay = (st.player && st.player.day) || 0;
+            var _tuition = Math.min(2000, (st.resources && st.resources.cash) || 0);
+            if (st.resources && _tuition > 0) st.resources.cash = st.resources.cash - _tuition;
             StateManager.addMessage(
-              "👑 你决定用你的技能开办培训班。虽然前期投入大，但这是一条可持续的被动收入来源。",
+              "👑 你决定用你的技能开办培训班。前期投入¥" + _tuition + "，从明天起学费收入约¥150/天。",
               "event",
             );
           },
@@ -303357,6 +303407,12 @@ if (typeof document !== "undefined") {
       icon: "🎓",
       title: "慕名而来的学徒",
       story: "你在'{skillName}'上的造诣已经传遍了大街小巷。今天一个年轻人找到你，说想拜你为师，愿意免费给你打下手，只求学到真本事。",
+      text: function (st) { // [全系统自洽修复] 域C R677b A类#2: 渲染层只调text()动态叙述(events_core R455),story内{占位符}原样泄漏给玩家
+        var sn = "";
+        if (st && st.skills) { for (var k in st.skills) { if (st.skills[k] && st.skills[k].level >= 100) { sn = (typeof getSkillChineseName === "function") ? getSkillChineseName(k) : k; break; } } }
+        sn = sn || "你的手艺";
+        return "你在'" + sn + "'上的造诣已经传遍了大街小巷。今天一个年轻人找到你，说想拜你为师，愿意免费给你打下手，只求学到真本事。";
+      },
       triggers: { minDay: 90 },
       conditions: function (st) {
         if (st.flags && st.flags._skillMasterStudentSeen) return false;
@@ -303407,6 +303463,11 @@ if (typeof document !== "undefined") {
     title: "慕名而来的求教者",
     story:
       "你在街上走着，一个年轻人快步追上来：「请问您是{skillName}的{masterName}吗？我听说您在这方面已经达到顶尖水平了，能不能指点我两句？」\n\n你愣了一下，没想到自己的名声已经传出去了。",
+    text: function (st) { // [全系统自洽修复] 域C R677b A类#2: 渲染层只调text()动态叙述(events_core R455),story内{占位符}原样泄漏给玩家
+      var k = (st && st._skillMasterVisitorSkill) || null;
+      var sn = k ? ((typeof getSkillChineseName === "function") ? getSkillChineseName(k) : k) : "这门手艺";
+      return "你在街上走着，一个年轻人快步追上来：「请问您就是精通" + sn + "的那位高手吗？我听说您在这方面已经达到顶尖水平了，能不能指点我两句？」\n\n你愣了一下，没想到自己的名声已经传出去了。";
+    },
     triggers: { minDay: 365 },
     conditions: function (st) {
       if (!st.skills) return false;
@@ -303600,6 +303661,80 @@ function applyCareerHealthEffect(state) {
 // [R555] 域C
 // [R603] 域C
 // [R611] 域C
+
+// [全系统自洽修复] 域C R677 联动增强(C→G): 职业倦怠影响健康 — burnout≥70时每日健康损耗
+function applyCareerBurnoutHealthEffect(state) {
+  if (!state || !state.career || !state.career.currentJob) return;
+  if (!state.status || !state.needs) return;
+  var cap = typeof ensureCareerCapital === "function" ? ensureCareerCapital(state) : null;
+  if (!cap) return;
+  if (cap.burnout >= 70) {
+    if (state.player.day % 2 === 0) {
+      state.status.health = Math.max(0, (state.status.health || 100) - 1);
+    }
+    state.needs.happiness = Math.max(0, (state.needs.happiness || 50) - 1);
+    if (cap.burnout >= 85 && state.player.day % 3 === 0) {
+      state.needs.fatigue = Math.min(100, (state.needs.fatigue || 0) + 2);
+    }
+  }
+}
+
+// [全系统自洽修复] 域C R677 联动增强(C→F): 职业履历数据 — 供UI展示职业发展时间线
+function getCareerTimelineData(state) {
+  if (!state || !state.career) return [];
+  var timeline = [];
+  // 历史职位
+  if (state.career.history && Array.isArray(state.career.history)) {
+    for (var _hi = 0; _hi < state.career.history.length; _hi++) {
+      var _h = state.career.history[_hi];
+      timeline.push({
+        day: _h.day,
+        type: _h.event || "历史记录",
+        path: _h.path || "",
+        levelName: _h.levelName || "",
+        salary: _h.salary || 0,
+        icon: _h.event && _h.event.indexOf("晋升") >= 0 ? "🎉" : "📋",
+      });
+    }
+  }
+  // 当前职位
+  if (state.career.currentJob) {
+    var _job = state.career.currentJob;
+    timeline.push({
+      day: state.player.day,
+      type: "当前职位",
+      path: _job.path || "",
+      levelName: _job.levelName || "",
+      salary: _job.salary || 0,
+      icon: "💼",
+      isCurrent: true,
+    });
+  }
+  timeline.sort(function (a, b) { return a.day - b.day; });
+  return timeline;
+}
+
+// [全系统自洽修复] 域C R677 联动增强(C→D): 职业晋升社交圈通知 — 晋升时影响NPC关系
+function applyCareerPromotionSocialEffect(state) {
+  if (!state || !state.flags || !state.relationships) return;
+  var _promoCount = state.flags._careerPromotionCount || 0;
+  var _lastPromoEffect = state.flags._lastPromoSocialEffect || 0;
+  if (_promoCount > _lastPromoEffect && _promoCount > 0) {
+    state.flags._lastPromoSocialEffect = _promoCount;
+    // 晋升次数越多，社交圈影响越大
+    var _affChange = Math.min(3, _promoCount);
+    var _workplaceNPCs = ["boss_li", "xiao_mei", "zhaojie", "old_zhou"];
+    for (var _wi = 0; _wi < _workplaceNPCs.length; _wi++) {
+      var _npcRel = state.relationships[_workplaceNPCs[_wi]];
+      if (_npcRel && _npcRel.met && typeof applyAffinityChange === "function") {
+        applyAffinityChange(state, _workplaceNPCs[_wi], _affChange, "职业晋升影响");
+      }
+    }
+    if (typeof StateManager !== "undefined") {
+      StateManager.addMessage("📈 你的职业晋升在社交圈中传开，熟人对你更加尊重了。", "success");
+    }
+  }
+}
 
 ;
 // ==== js/ui/side_hustle_ui.js ====

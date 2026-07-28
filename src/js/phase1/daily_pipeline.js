@@ -1991,6 +1991,18 @@ const DAILY_PIPELINE = [
           }
         }
       }
+      // [全系统自洽修复] 域C R677b A类#1: 技能大师培训班被动收入每日兑现(career_dev.js hint承诺¥150/天,全库零读取→就此接线)
+      if (state.flags._skillMasterTrainer) {
+        var _trainRate = state.flags._trainerScaleUp ? 250 : 150;
+        state.resources.cash = (state.resources.cash || 0) + _trainRate;
+        state.flags._trainerIncomeTotal = (state.flags._trainerIncomeTotal || 0) + _trainRate;
+        if (day % 7 === 0 && typeof StateManager !== "undefined") {
+          StateManager.addMessage(
+            "👑 培训班本周运转良好，学费收入约¥" + _trainRate + "/天（累计¥" + state.flags._trainerIncomeTotal + "）。",
+            "info",
+          );
+        }
+      }
       // [全系统自洽修复] 域E 修复:贷款逾期90天警告
       if (
         (state.resources.bankDebt || 0) > 0 &&

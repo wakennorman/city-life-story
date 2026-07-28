@@ -1120,12 +1120,14 @@ function activateTalentNode(skillKey, nodeId, state) {
     return false;
   }
 
-  var branchId = state.skillBranches[skillKey];
+  var branchId = state.skillBranches && state.skillBranches[skillKey];
   var node = getTalentNodeDef(skillKey, branchId, nodeId);
   var nodeKey = skillKey + "_" + branchId + "_" + nodeId;
 
   state.player.actionPoints -= node.apCost;
   state.resources.cash = Math.max(0, (state.resources.cash || 0) - (node.cashCost || 0));
+  // [全系统自洽修复] 域C R677 A类: talentNodes 守卫(旧存档激活天赋时崩溃)
+  if (!state.talentNodes) state.talentNodes = {};
   state.talentNodes[nodeKey] = true;
 
   StateManager.addMessage(
