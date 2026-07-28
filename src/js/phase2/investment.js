@@ -5138,3 +5138,35 @@ function getInvestmentStory(state) {
 // [R573] 域E
 // [R597] 域E
 // [R613] 域E
+
+
+// [R726 第三轮 域E 联动增强 E→F]: 投资组合风险评级
+function getPortfolioRiskRating(state) {
+  if (!state || !state.investment) return { level: 'none', score: 0, label: '无投资' };
+  var inv = state.investment;
+  var stocks = inv.stockHoldings || [];
+  var btc = (inv.btcHoldings || 0) > 0;
+  var props = inv.properties || [];
+  var diversity = (stocks.length > 0 ? 1 : 0) + (btc ? 1 : 0) + (props.length > 0 ? 1 : 0);
+  var stockRisk = 0;
+  for (var _si = 0; _si < stocks.length; _si++) {
+    var s = stocks[_si];
+    var m = inv.stockMarket && inv.stockMarket[s.symbol];
+    if (m && m.volatility) stockRisk += m.volatility;
+  }
+  if (stocks.length > 0) stockRisk /= stocks.length;
+  var score = (diversity * 15) + (stockRisk * 50);
+  if (score < 30) return { level: 'conservative', score: Math.round(score), label: '保守型' };
+  if (score < 60) return { level: 'balanced', score: Math.round(score), label: '均衡型' };
+  return { level: 'aggressive', score: Math.round(score), label: '进取型' };
+}
+
+// [R726 第三轮 域E 联动增强 E→G]: 财务自由进度
+function getFinancialFreedomProgress(state) {
+  if (!state || !state.resources) return 0;
+  var cash = state.resources.cash || 0;
+  var bank = state.resources.bankBalance || 0;
+  var total = cash + bank;
+  var target = 500000;
+  return Math.min(100, Math.round((total / target) * 100));
+}
