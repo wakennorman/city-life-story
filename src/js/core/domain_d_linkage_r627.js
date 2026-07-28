@@ -35,7 +35,7 @@
       icon: "📈",
       title: "朋友的投资建议",
       triggers: { minDay: 10 },
-      story: function (st) {
+      text: function (st) {
         var npcs = metNpcsR627(st);
         if (npcs.length === 0) return "你还没有结识朋友，多出去走走认识些人吧。";
         var highAff = 0;
@@ -85,7 +85,7 @@
       icon: "🎯",
       title: "贵人的建议",
       triggers: { minDay: 15 },
-      story: function (st) {
+      text: function (st) {
         var npcs = metNpcsR627(st);
         if (npcs.length === 0) return "你还没有结识什么人，多出去走走，认识些不同行业的朋友。";
         var highAff = 0;
@@ -141,7 +141,7 @@
       icon: "🤗",
       title: "朋友的力量",
       triggers: { minDay: 8 },
-      story: function (st) {
+      text: function (st) {
         var npcs = metNpcsR627(st);
         if (npcs.length === 0) return "你还没有结识朋友，一个人在外打拼不容易，试着打开心扉认识些新朋友吧。";
         var happiness = st.needs && st.needs.happiness || 50;

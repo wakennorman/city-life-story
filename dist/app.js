@@ -21379,13 +21379,18 @@ function getEventHealthImpact(state, eventId) {
         if (assets < 2000) return false;
         return true;
       },
-      renderStory: function (st) {
-        if (!st) return this.story;
-        var assets = getTotalAssets(st);
-        var debt = getTotalDebt(st);
-        var netWorth = Math.round(assets - debt);
-        var growthPct = Math.round((netWorth / Math.max(1, 500)) * 100 - 100); // 假设计划起步¥500
-        return this.story.replace("{netWorth}", "¥" + netWorth.toLocaleString()).replace("{growthPct}", growthPct);
+      // [全系统自洽修复] 域C R685b A类: renderStory是渲染层从不调用的死接口(events_core R455后只调text())→story中{netWorth}{growthPct}占位符原样泄漏给玩家；改为text()动态叙述+无占位符fallback
+      text: function (st) {
+        try {
+          if (st && st.resources) {
+            var assets = getTotalAssets(st);
+            var debt = getTotalDebt(st);
+            var netWorth = Math.round(assets - debt);
+            var growthPct = Math.round((netWorth / Math.max(1, 500)) * 100 - 100); // 假设计划起步¥500
+            return "你算了算自己的钱——存款加上投资，减去欠债，净值为¥" + netWorth.toLocaleString() + "。这个数字比刚来这座城市时多了" + growthPct + "%。你突然明白了什么叫'积少成多'。";
+          }
+        } catch (e) { /* fallback */ }
+        return "你算了算自己的钱——存款加上投资，减去欠债。这个数字比刚来这座城市时多了不少。你突然明白了什么叫'积少成多'。";
       },
       choices: [
         {
@@ -120658,11 +120663,16 @@ if (typeof window !== "undefined") {
         var met = getMetNpcCount(st);
         return met >= 2; // 至少结识2个NPC才触发
       },
-      renderStory: function (st) {
-        if (!st) return this.story;
-        var met = getMetNpcCount(st);
-        var total = getTotalAffinity(st);
-        return this.story.replace("{metCount}", met).replace("{totalAff}", total);
+      // [全系统自洽修复] 域C R685b A类: renderStory是渲染层从不调用的死接口(events_core R455后只调text())→story中{metCount}{totalAff}占位符原样泄漏给玩家；改为text()动态叙述+无占位符fallback
+      text: function (st) {
+        try {
+          if (st) {
+            var met = getMetNpcCount(st);
+            var total = getTotalAffinity(st);
+            return "你数了数自己认识的人——" + met + "个人,总好感度" + total + "。这座城市很大,但你的朋友圈让你不再孤单。有些人成了知己,有些人只是点头之交,但每个相遇都值得珍惜。";
+          }
+        } catch (e) { /* fallback */ }
+        return "你数了数自己认识的人。这座城市很大,但你的朋友圈让你不再孤单。有些人成了知己,有些人只是点头之交,但每个相遇都值得珍惜。";
       },
       choices: [
         {
@@ -247826,6 +247836,16 @@ if (typeof window !== "undefined") {
       title: "圈子里多了一个身份",
       story:
         "你的{skill}技能终于达到了解锁「{branchName}」分支的标准。那天在行业聚会上,有人主动跟你打招呼——「原来你是做{branchName}的!」那一刻你突然意识到,自己不再是那个什么都会一点但什么都不精的外行,而是有了属于自己的圈子。",
+      // [全系统自洽修复] 域C R685b A类: story中{skill}{branchName}占位符无任何动态渲染(渲染层只调text())→原样泄漏给玩家；补text()动态叙述+无占位符fallback
+      text: function (st) {
+        try {
+          var br = findFirstBranch(st);
+          if (br) {
+            return "你的" + br.skillName + "技能终于达到了解锁「" + br.name + "」分支的标准。那天在行业聚会上,有人主动跟你打招呼——「原来你是做" + br.name + "的!」那一刻你突然意识到,自己不再是那个什么都会一点但什么都不精的外行,而是有了属于自己的圈子。";
+          }
+        } catch (e) { /* fallback */ }
+        return "你的看家技能终于达到了解锁专业分支的标准。那天在行业聚会上,有人主动跟你打招呼。那一刻你突然意识到,自己不再是那个什么都会一点但什么都不精的外行,而是有了属于自己的圈子。";
+      },
       triggers: { minDay: 30, excludeFlags: ["_skillBranchRecognized"] },
       conditions: function (st) {
         if (st.gameOver) return false;
@@ -247892,15 +247912,20 @@ if (typeof window !== "undefined") {
         var cert = findLifeCert(st);
         return !!cert;
       },
-      renderStory: function (st) {
-        var certId = findLifeCert(st);
-        if (!certId || !CERT_SHORTCUT_MAP[certId]) return this.story;
-        var certNames = {
-          food_safety: "食品健康证", nursing_cert: "护士资格证", health_manager: "健康管理师证",
-          rehab_therapist: "康复治疗师证", cooking_cert: "厨师证", repair_cert: "维修资格证",
-          electrician_cert: "电工证", welding_cert: "焊工证"
-        };
-        return this.story.replace("{certName}", certNames[certId] || certId).replace("{certDesc}", CERT_SHORTCUT_MAP[certId].desc || "");
+      // [全系统自洽修复] 域C R685b A类: renderStory是渲染层从不调用的死接口(events_core R455后只调text())→story中{certName}占位符原样泄漏给玩家；改为text()动态叙述+无占位符fallback
+      text: function (st) {
+        try {
+          var certId = findLifeCert(st);
+          if (certId && CERT_SHORTCUT_MAP[certId]) {
+            var certNames = {
+              food_safety: "食品健康证", nursing_cert: "护士资格证", health_manager: "健康管理师证",
+              rehab_therapist: "康复治疗师证", cooking_cert: "厨师证", repair_cert: "维修资格证",
+              electrician_cert: "电工证", welding_cert: "焊工证"
+            };
+            return "你翻出抽屉里的" + (certNames[certId] || certId) + ",突然想起今天因为这张证省了不少事儿。那些考证时熬的夜、花的钱,在生活里悄悄回了本——证不只是为了找工作,它也是你在城市里行走的通行证。";
+          }
+        } catch (e) { /* fallback */ }
+        return "你翻出抽屉里的资格证书,突然想起今天因为这张证省了不少事儿。那些考证时熬的夜、花的钱,在生活里悄悄回了本——证不只是为了找工作,它也是你在城市里行走的通行证。";
       },
       choices: [
         {
@@ -266543,13 +266568,18 @@ if (typeof window !== "undefined") {
         var absent = findLongAbsentNpc(st, 30); // [PLACEHOLDER]: 30天未见
         return !!absent;
       },
-      renderStory: function (st) {
-        if (!st) return this.story;
-        var absent = findLongAbsentNpc(st, 30);
-        if (!absent) return this.story;
-        var days = absent.days;
-        var name = getNpcCn(absent.id);
-        return this.story.replace("{npcName}", name).replace("{days}", days + "天");
+      // [全系统自洽修复] 域C R685b A类: renderStory是渲染层从不调用的死接口(events_core R455后只调text())→story中{npcName}{days}占位符原样泄漏给玩家；改为text()动态叙述+无占位符fallback
+      text: function (st) {
+        try {
+          if (st && st.relationships) {
+            var absent = findLongAbsentNpc(st, 30);
+            if (absent) {
+              var name = getNpcCn(absent.id);
+              return "走在街上，突然看见" + name + "——上次聊天的时候好像还是" + absent.days + "天前。TA也在城市中奔波，你们各自忙碌，但偶尔碰面的一瞬间，那种熟悉感又回来了。";
+            }
+          }
+        } catch (e) { /* fallback */ }
+        return "走在街上，突然看见一个许久未见的熟人。你们各自忙碌，但偶尔碰面的一瞬间，那种熟悉感又回来了。";
       },
       choices: [
         {
@@ -303280,7 +303310,21 @@ if (typeof document !== "undefined") {
     icon: "📋",
     title: "职业履历的厚度",
     story:
-      "你翻出抽屉里那本旧笔记本，里面记着你这些年换过的每一份工作。从最初的{firstJob}到现在现在的{currentJob}，这条路你走了{workYears}年。\n\n每一份工作都留下了印记——有些是伤疤，有些是勋章。",
+      "你翻出抽屉里那本旧笔记本，里面记着你这些年换过的每一份工作。从最初的{firstJob}到现在的{currentJob}，这条路你走了{workYears}年。\n\n每一份工作都留下了印记——有些是伤疤，有些是勋章。",
+    // [全系统自洽修复] 域C R685b A类: story中{firstJob}{currentJob}{workYears}占位符无任何动态渲染(渲染层只调text())→原样泄漏给玩家,且"到现在现在的"文案重复；补text()动态叙述+无占位符fallback
+    text: function (st) {
+      try {
+        if (st && st.career && st.career.history && st.career.history.length >= 2) {
+          var h0 = st.career.history[0] || {};
+          var firstJob = (h0.event || "第一份工作").replace(/^[^：:]*[：:]/, "").split("→")[0].replace(/（[\s\S]*$/, "").trim() || "第一份工作";
+          var cur = (st.career.currentJob && st.career.currentJob.levelName) || "现在的岗位";
+          var days = Math.max(1, ((st.player && st.player.day) || 1) - (h0.day || 0));
+          var years = Math.max(1, Math.round(days / 365));
+          return "你翻出抽屉里那本旧笔记本，里面记着你这些年换过的每一份工作。从最初的" + firstJob + "到现在的" + cur + "，这条路你走了" + years + "年。\n\n每一份工作都留下了印记——有些是伤疤，有些是勋章。";
+        }
+      } catch (e) { /* fallback */ }
+      return "你翻出抽屉里那本旧笔记本，里面记着你这些年换过的每一份工作。从最初的青涩到如今的从容，这条路你走了很久。\n\n每一份工作都留下了印记——有些是伤疤，有些是勋章。";
+    },
     triggers: { minDay: 365 },
     conditions: function (st) {
       if (!st.career || !st.career.history) return false;
@@ -315988,6 +316032,212 @@ if (typeof window !== "undefined") {
 })();
 
 ;
+// ==== js/core/domain_c_linkage_r685b.js ====
+/**
+ * 域C(职业/成长) 联动增强 R685b
+ * 背景：本轮A类修复6处story占位符泄漏(career_dev/r243/r244/r245/r246 renderStory死接口→text())。
+ * 联动3项(全部消费写-only/零事件消费素材)：
+ *  1. c685b_legacy_anniversary  C→G  _legacyProjectDay 全库首消费——遗产项目一周年回望(时间戳深挖,生命周期叙事)
+ *  2. c685b_trainer_milestone   C→E  _trainerIncomeTotal 事件层首消费——培训班累计收入里程碑(职业被动收入→经济决策)
+ *  3. c685b_data_consult        C→E/D _skillDataAnalysis 全库首消费——数据分析能力变现(技能→现金/人脉)
+ * 设计心理学：峰终定律(周年/里程碑锚点)、禀赋效应(自己攒出的培训班)、社会比较(能力被人看见)。
+ * 防御：全||守卫,NPC须rel&&rel.met,好感走applyAffinityChange,done-flag防重。数值[PLACEHOLDER]已按同类事件量级校准。
+ */
+(function () {
+  if (typeof RANDOM_EVENTS === "undefined") return;
+  if (RANDOM_EVENTS._c685bLoaded) return;
+  RANDOM_EVENTS._c685bLoaded = true;
+
+  // 铁律：NPC引用须met检查——遍历首个已结识NPC
+  function firstMetNpc(st) {
+    if (!st || !st.relationships) return null;
+    for (var id in st.relationships) {
+      var rel = st.relationships[id];
+      if (rel && rel.met) return id;
+    }
+    return null;
+  }
+
+  function npcCn(id) {
+    if (typeof getNpcDisplayName === "function") {
+      try { var n = getNpcDisplayName(id); if (n) return n; } catch (e) { /* fallback */ }
+    }
+    return "一位老熟人";
+  }
+
+  var EVENTS = [
+    {
+      // 联动1 C→G: _legacyProjectDay 全库首消费——遗产项目一周年回望
+      id: "c685b_legacy_anniversary",
+      phase: "street",
+      _isChainEvent: false,
+      icon: "🗓️",
+      title: "项目一周年",
+      story: "日历提醒你：那个'改变行业的项目'启动整整一年了。",
+      text: function (st) {
+        try {
+          if (st && st.flags && st.flags._legacyProjectDay) {
+            var d = ((st.player && st.player.day) || 0) - st.flags._legacyProjectDay;
+            return "日历弹出一条提醒：距离你接下那个'改变行业的项目'，已经过去" + d + "天了。无论结局如何，那个决定本身，已经成为你职业生涯里最重的一笔。你想起当时的忐忑、熬过的夜、扛过的压力——那些都变成了今天的你。";
+          }
+        } catch (e) { /* fallback */ }
+        return "日历弹出一条提醒：距离你接下那个'改变行业的项目'，已经过去一年了。那个决定本身，已经成为你职业生涯里最重的一笔。";
+      },
+      triggers: { minDay: 400, maxRepeats: 1, excludeFlags: ["_c685bLegacyAnnivDone"] },
+      conditions: function (st) {
+        if (!st || st.gameOver) return false;
+        if (!st.flags || st.flags._c685bLegacyAnnivDone) return false;
+        if (!st.flags._legacyProjectDay) return false; // 须接过项目
+        if (st.flags._careerLegacyDueDay) return false; // 项目须已结算(90天期已过)
+        var day = (st.player && st.player.day) || 0;
+        return day >= st.flags._legacyProjectDay + 365; // 启动满一周年
+      },
+      choices: [
+        {
+          text: "🍷 给自己倒一杯，敬那个决定",
+          hint: "心智+5，心情+4",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._c685bLegacyAnnivDone = true;
+            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 5); // [PLACEHOLDER]
+            if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 4); // [PLACEHOLDER]
+            if (typeof StateManager !== "undefined" && StateManager.addMessage)
+              StateManager.addMessage("🍷 你举杯敬了敬一年前那个敢拍板的自己。成败之外，敢选择本身就是成长。心智+5，心情+4。", "success");
+          },
+        },
+        {
+          text: "📝 把这一年的复盘写下来",
+          hint: "管理XP+8，智力+2",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._c685bLegacyAnnivDone = true;
+            st.flags._legacyRetroWritten = true; // 沉淀素材：复盘笔记(供后续域B/F消费)
+            if (st.player) st.player.intelligence = Math.min(100, (st.player.intelligence || 50) + 2); // [PLACEHOLDER]
+            if (typeof addSkillXp === "function") { try { addSkillXp("management", 8); } catch (e) { /* safe */ } } // [PLACEHOLDER]
+            if (typeof StateManager !== "undefined" && StateManager.addMessage)
+              StateManager.addMessage("📝 你把项目一整年的得失写成了复盘笔记。经验只有沉淀下来才是资产。管理XP+8，智力+2。", "success");
+          },
+        },
+      ],
+    },
+    {
+      // 联动2 C→E: _trainerIncomeTotal 事件层首消费——培训班累计收入里程碑
+      id: "c685b_trainer_milestone",
+      phase: "street",
+      _isChainEvent: false,
+      icon: "🏫",
+      title: "培训班的第一桶金",
+      story: "算了算培训班的账，累计收入已经很可观了。",
+      text: function (st) {
+        try {
+          if (st && st.flags && st.flags._trainerIncomeTotal) {
+            return "晚上盘账，你发现培训班的累计学费收入已经有¥" + st.flags._trainerIncomeTotal + "。从当初咬牙掏出前期投入，到现在稳定的现金流——这门'教人手艺'的生意，是你用职业积累一点点攒出来的。接下来这笔钱怎么用？";
+          }
+        } catch (e) { /* fallback */ }
+        return "晚上盘账，你发现培训班的累计学费收入已经相当可观。这门'教人手艺'的生意，是你用职业积累一点点攒出来的。接下来这笔钱怎么用？";
+      },
+      triggers: { minDay: 60, maxRepeats: 1, excludeFlags: ["_c685bTrainerMilestoneDone"] },
+      conditions: function (st) {
+        if (!st || st.gameOver) return false;
+        if (!st.flags || st.flags._c685bTrainerMilestoneDone) return false;
+        if (!st.flags._skillMasterTrainer) return false; // 须已开班
+        return (st.flags._trainerIncomeTotal || 0) >= 5000; // [PLACEHOLDER] 累计收入里程碑
+      },
+      choices: [
+        {
+          text: "📣 拿出一部分打广告，扩大口碑",
+          hint: "花费¥1500，置口碑flag，名气+5",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._c685bTrainerMilestoneDone = true;
+            var cost = Math.min(1500, (st.resources && st.resources.cash) || 0); // [PLACEHOLDER] 防负数
+            if (st.resources) st.resources.cash = (st.resources.cash || 0) - cost;
+            st.flags._trainerReputation = true; // 沉淀素材：培训班口碑(供后续扩班/域D消费)
+            if (st.player) st.player.fame = Math.min(100, (st.player.fame || 0) + 5); // [PLACEHOLDER]
+            if (typeof StateManager !== "undefined" && StateManager.addMessage)
+              StateManager.addMessage("📣 你花¥" + cost + "在本地生活号投了软文，培训班的口碑传开了。名气+5。", "success");
+          },
+        },
+        {
+          text: "🏦 稳妥起见，转进银行存起来",
+          hint: "现金¥2000转存款，心智+3",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._c685bTrainerMilestoneDone = true;
+            var amt = Math.min(2000, (st.resources && st.resources.cash) || 0); // [PLACEHOLDER] 防负数
+            if (st.resources) {
+              st.resources.cash = (st.resources.cash || 0) - amt;
+              st.resources.bankBalance = (st.resources.bankBalance || 0) + amt;
+            }
+            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 3); // [PLACEHOLDER]
+            if (typeof StateManager !== "undefined" && StateManager.addMessage)
+              StateManager.addMessage("🏦 你把¥" + amt + "转进了银行。细水长流，稳字当头。心智+3。", "info");
+          },
+        },
+      ],
+    },
+    {
+      // 联动3 C→E/D: _skillDataAnalysis 全库首消费——数据分析能力变现
+      id: "c685b_data_consult",
+      phase: "street",
+      _isChainEvent: false,
+      icon: "💼",
+      title: "有人为你的分析买单",
+      story: "你做数据分析的事被人知道了，有人想付费咨询。",
+      text: function (st) {
+        return "你之前用专业技能做市场数据分析的事，不知怎么在圈子里传开了。一个做小生意的老板辗转找到你：'听说你会看数据？帮我看看我这店的账，该不该换品类——我付咨询费。'";
+      },
+      triggers: { minDay: 90, maxRepeats: 1, excludeFlags: ["_c685bDataConsultDone"] },
+      conditions: function (st) {
+        if (!st || st.gameOver) return false;
+        if (!st.flags || st.flags._c685bDataConsultDone) return false;
+        return !!st.flags._skillDataAnalysis; // 须做过深度数据分析(r675)
+      },
+      choices: [
+        {
+          text: "💰 接单，认真做份分析报告",
+          hint: "现金+800，会计XP+10",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._c685bDataConsultDone = true;
+            st.flags._dataConsultant = true; // 沉淀素材：数据咨询副业(供后续域E/H消费)
+            if (st.resources) st.resources.cash = (st.resources.cash || 0) + 800; // [PLACEHOLDER]
+            if (typeof addSkillXp === "function") { try { addSkillXp("accounting", 10); } catch (e) { /* safe */ } } // [PLACEHOLDER]
+            if (typeof StateManager !== "undefined" && StateManager.addMessage)
+              StateManager.addMessage("💰 你熬了一晚做出分析报告，老板看完直拍大腿。咨询费¥800到手——原来技能真的能变现。会计XP+10。", "success");
+          },
+        },
+        {
+          text: "🤝 免费帮忙，交个朋友",
+          hint: "结识的熟人好感+4，心情+3",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._c685bDataConsultDone = true;
+            var npcId = firstMetNpc(st); // 铁律：met检查
+            if (npcId && typeof applyAffinityChange === "function") {
+              try { applyAffinityChange(st, npcId, 4, "免费数据咨询"); } catch (e) { /* safe */ } // [PLACEHOLDER]
+            }
+            if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 3); // [PLACEHOLDER]
+            if (typeof StateManager !== "undefined" && StateManager.addMessage)
+              StateManager.addMessage("🤝 你没收钱，只说'交个朋友'。" + (npcId ? npcCn(npcId) + "听说后也对你刮目相看。" : "这份人情，日后总会有回响。") + "心情+3。", "success");
+          },
+        },
+      ],
+    },
+  ];
+
+  for (var i = 0; i < EVENTS.length; i++) {
+    RANDOM_EVENTS.push(EVENTS[i]);
+  }
+})();
+
+;
 // ==== js/core/domain_c_linkage_r685.js ====
 /**
  * 域C(职业/成长) 联动增强 R685
@@ -320925,7 +321175,7 @@ if (typeof window !== "undefined") {
       icon: "📈",
       title: "朋友的投资建议",
       triggers: { minDay: 10 },
-      story: function (st) {
+      text: function (st) {
         var npcs = metNpcsR627(st);
         if (npcs.length === 0) return "你还没有结识朋友，多出去走走认识些人吧。";
         var highAff = 0;
@@ -320975,7 +321225,7 @@ if (typeof window !== "undefined") {
       icon: "🎯",
       title: "贵人的建议",
       triggers: { minDay: 15 },
-      story: function (st) {
+      text: function (st) {
         var npcs = metNpcsR627(st);
         if (npcs.length === 0) return "你还没有结识什么人，多出去走走，认识些不同行业的朋友。";
         var highAff = 0;
@@ -321031,7 +321281,7 @@ if (typeof window !== "undefined") {
       icon: "🤗",
       title: "朋友的力量",
       triggers: { minDay: 8 },
-      story: function (st) {
+      text: function (st) {
         var npcs = metNpcsR627(st);
         if (npcs.length === 0) return "你还没有结识朋友，一个人在外打拼不容易，试着打开心扉认识些新朋友吧。";
         var happiness = st.needs && st.needs.happiness || 50;
@@ -321275,6 +321525,220 @@ if (typeof window !== "undefined") {
       text: function (st) {
         if (!st) return null;
         return "和" + metNpcCount(st) + "个朋友相处的点点滴滴,汇聚成一股暖流——'在这个城市里,有这些朋友真好。'";
+      }
+    }
+  ];
+
+  for (var i = 0; i < EVENTS.length; i++) {
+    RANDOM_EVENTS.push(EVENTS[i]);
+  }
+})();
+
+;
+// ==== js/core/domain_d_linkage_r686.js ====
+/**
+ * 域D(NPC/社交) 联动增强 R686
+ * 桥接：
+ *   D→A  d686_social_capital_report  社交资本报告 → 消费 state.relationships,
+ *     人际关系网络价值量化
+ *   D→C  d686_npc_career_mentor       NPC职业导师 → 消费 state.relationships+state.employment,
+ *     高好感NPC提供职业指导
+ *   D→G  d686_social_wellbeing       社交幸福感 → 消费 state.relationships+state.needs,
+ *     社交质量影响幸福感
+ */
+(function () {
+  "use strict";
+  if (typeof RANDOM_EVENTS === "undefined" || !RANDOM_EVENTS) return;
+  if (RANDOM_EVENTS._domainDLinkageR686Loaded) return;
+  RANDOM_EVENTS._domainDLinkageR686Loaded = true;
+
+  function metNpcCount(st) {
+    if (!st || !st.relationships) return 0;
+    var cnt = 0;
+    for (var k in st.relationships) { if (st.relationships[k] && st.relationships[k].met) cnt++; }
+    return cnt;
+  }
+
+  function totalAffinity(st) {
+    if (!st || !st.relationships) return 0;
+    var total = 0;
+    for (var k in st.relationships) {
+      var r = st.relationships[k];
+      if (r && typeof r.affinity === "number") total += Math.max(0, r.affinity);
+    }
+    return total;
+  }
+
+  function bumpAff(st, npcId, amt, reason) {
+    if (!npcId) return;
+    if (typeof applyAffinityChange === "function") {
+      try { applyAffinityChange(st, npcId, amt, reason); } catch(e) {}
+    }
+  }
+
+  function topMetNpc(st) {
+    if (!st || !st.relationships) return null;
+    var best = null, bestAff = -999;
+    for (var k in st.relationships) {
+      var r = st.relationships[k];
+      if (r && r.met && typeof r.affinity === "number" && r.affinity > bestAff) {
+        bestAff = r.affinity; best = k;
+      }
+    }
+    return best;
+  }
+
+  var EVENTS = [
+    {
+      id: "d686_social_capital_report",
+      phase: "street",
+      _isChainEvent: false,
+      icon: "📊",
+      title: "社交资本报告",
+      story: "你的人脉网络是一笔无形资产",
+      triggers: { minDay: 80, interval: 100, maxRepeats: 2, excludeFlags: ["_d686ReportCd"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        if (st.flags && st.flags._d686ReportCd) return false;
+        return metNpcCount(st) >= 3 && st.player && st.player.day >= 80;
+      },
+      choices: [
+        {
+          text: "📈 梳理人脉价值",
+          hint: "管理XP+5,智力+3,置_d686Analyzer",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._d686ReportCd = true;
+            st.flags._d686Analyzer = true;
+            if (st.player) st.player.intelligence = Math.min(100, (st.player.intelligence || 50) + 3);
+            if (typeof addSkillXp === "function") { try { addSkillXp("management", 5); } catch(e) {} }
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("📊 人脉就是钱脉,盘点社交资本。管理XP+5,智力+3。", "success");
+            }
+          }
+        },
+        {
+          text: "🤝 主动维护关系",
+          hint: "社交XP+6,好感+2,置_d686Maintain",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._d686ReportCd = true;
+            st.flags._d686Maintain = true;
+            if (typeof addSkillXp === "function") { try { addSkillXp("social", 6); } catch(e) {} }
+            bumpAff(st, topMetNpc(st), 2, "主动维护");
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("🤝 关系不维护就会淡,社交XP+6,好感+2。", "info");
+            }
+          }
+        }
+      ],
+      text: function (st) {
+        if (!st) return null;
+        return "已结识" + metNpcCount(st) + "位朋友,社交资本总值" + totalAffinity(st) + "——'人脉不是认识多少人,是多少人愿意帮你。'";
+      }
+    },
+    {
+      id: "d686_npc_career_mentor",
+      phase: "street",
+      _isChainEvent: false,
+      icon: "🎓",
+      title: "前辈的指导",
+      story: "一位前辈朋友给了你职业建议",
+      triggers: { minDay: 70, interval: 90, maxRepeats: 3, excludeFlags: ["_d686MentorCd"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        if (st.flags && st.flags._d686MentorCd) return false;
+        return metNpcCount(st) >= 2 && st.player && st.player.day >= 70;
+      },
+      choices: [
+        {
+          text: "🎯 认真听取",
+          hint: "管理XP+6,心智+3,好感+2",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._d686MentorCd = true;
+            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 3);
+            if (typeof addSkillXp === "function") { try { addSkillXp("management", 6); } catch(e) {} }
+            bumpAff(st, topMetNpc(st), 2, "职业指导");
+            if (typeof StateManager !== "undefined") {
+              var name = (typeof getNpcDisplayName === "function") ? getNpcDisplayName(topMetNpc(st)) : "前辈";
+              StateManager.addMessage("🎓 " + name + "的指导让你少走弯路。管理XP+6,心智+3。", "success");
+            }
+          }
+        },
+        {
+          text: "🤔 独立思考",
+          hint: "智力+4,置_d686Independent",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._d686MentorCd = true;
+            st.flags._d686Independent = true;
+            if (st.player) st.player.intelligence = Math.min(100, (st.player.intelligence || 50) + 4);
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("🤔 参考他人,但最终自己拿主意。智力+4。", "info");
+            }
+          }
+        }
+      ],
+      text: function (st) {
+        if (!st) return null;
+        var npc = topMetNpc(st);
+        var name = (typeof getNpcDisplayName === "function" && npc) ? getNpcDisplayName(npc) : "一位前辈";
+        return name + "拍拍你的肩膀:'年轻人,这行我干了十年,有些事得跟你说说。'";
+      }
+    },
+    {
+      id: "d686_social_wellbeing",
+      phase: "street",
+      _isChainEvent: false,
+      icon: "💚",
+      title: "社交的温度",
+      story: "朋友的陪伴是最好的保健品",
+      triggers: { minDay: 50, interval: 70, maxRepeats: 3, excludeFlags: ["_d686WellCd"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        if (st.flags && st.flags._d686WellCd) return false;
+        return metNpcCount(st) >= 2 && st.player && st.player.day >= 50;
+      },
+      choices: [
+        {
+          text: "😊 珍惜友情",
+          hint: "心情+8,健康+3,置_d686Cherish",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._d686WellCd = true;
+            st.flags._d686Cherish = true;
+            if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 8);
+            if (st.status) st.status.health = Math.min(100, (st.status.health || 100) + 3);
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("😊 朋友是最好的保健品。心情+8,健康+3。", "success");
+            }
+          }
+        },
+        {
+          text: "📱 约线下见面",
+          hint: "社交XP+5,好感+3,置_d686Meet",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._d686WellCd = true;
+            st.flags._d686Meet = true;
+            if (typeof addSkillXp === "function") { try { addSkillXp("social", 5); } catch(e) {} }
+            bumpAff(st, topMetNpc(st), 3, "线下见面");
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("📱 线上千言,不如线下一次。社交XP+5,好感+3。", "info");
+            }
+          }
+        }
+      ],
+      text: function (st) {
+        if (!st) return null;
+        return "和" + metNpcCount(st) + "个朋友相处的点滴——'在这个城市里,有人惦记的感觉真好。'";
       }
     }
   ];
