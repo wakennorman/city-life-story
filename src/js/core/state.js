@@ -86,7 +86,7 @@ function createDefaultState() {
       actionFirstUse: {}, // { actionId: 首次点击天数 }
       tradeFreq: {}, // { goodId: 累计买卖次数 }
       trainFreq: {}, // { skillKey: 累计训练次数 }
-      investFreq: {}, // { symbol: 累计交易次数 }
+      investFreq: {}, // { symbol: 累计交易股数 } // [全系统自洽修复] 域E R621 B类:注释原写"次数"但phase2/investment.js买卖时实际累加shares(股数),修正语义防后续误用
     },
 
     // --- 基本需求 (0-100) ---
