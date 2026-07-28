@@ -714,7 +714,7 @@ function showEventModal(evt) {
       ${springFestProgressHtml}
       <div class="event-header">
         <div class="event-icon" title="${evt.title}">${evt.icon}</div>
-        <h2 class="event-title" title="${evt.story ? evt.story.replace(/<[^>]*>/g, '').substring(0, 100) : ''}">${evt.title}</h2>
+        <h2 class="event-title" title="${evt.story ? evt.story.replace(/<[^>]*>/g, '').replace(/\s*(——|—|-)?\s*\{[a-zA-Z]+\}/g, '').substring(0, 100) : ''}">${evt.title}</h2><!-- [全系统自洽修复] 域B R722b B类: tooltip取story原文致全库782处{desc}类占位符悬停泄漏,渲染层单点剥离 -->
         ${evt.weather ? '<span class="event-tag weather-tag" style="font-size:10px;padding:1px 6px;border-radius:3px;background:rgba(90,138,180,0.15);color:var(--info);margin-left:8px;">🌤️ 天气</span>' : ""}
         ${evt.sector ? '<span class="event-tag sector-tag" style="font-size:10px;padding:1px 6px;border-radius:3px;background:rgba(74,158,92,0.15);color:var(--success);margin-left:4px;">🏭 ' + evt.sector + '</span>' : ""}
       </div>

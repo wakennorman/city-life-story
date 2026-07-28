@@ -8,6 +8,7 @@
  *   B→G  b714_narrative_resilience_v2 叙事韧性v2 → 消费 事件历史+status,
  *     叙事影响心理健康
  */
+// [全系统自洽修复] 域B R722b B类: story{desc}占位符tooltip泄漏->干净回退句(text()仍为主叙述)
 (function () {
   "use strict";
   if (typeof RANDOM_EVENTS === "undefined" || !RANDOM_EVENTS) return;
@@ -18,7 +19,7 @@
     {
       id: "b714_event_data_v3", phase: "street", _isChainEvent: false, icon: "📜",
       title: "事件遗产",
-      story: "你经历的事件正在积累成遗产——{desc}",
+      story: "你经历的事件正在积累成遗产。",
       triggers: { minDay: 120, interval: 180, maxRepeats: 3, excludeFlags: ["_b714DataCd"] },
       conditions: function (st) {
         if (!st || st.gameOver) return false;
@@ -65,7 +66,7 @@
     {
       id: "b714_npc_story_echo", phase: "street", _isChainEvent: false, icon: "🗣️",
       title: "NPC故事回响",
-      story: "你讲给NPC的故事,正在产生回响——{desc}",
+      story: "你讲给NPC的故事,正在产生回响。",
       triggers: { minDay: 100, interval: 150, maxRepeats: 3, excludeFlags: ["_b714EchoCd"] },
       conditions: function (st) {
         if (!st || st.gameOver) return false;
@@ -108,7 +109,7 @@
     {
       id: "b714_narrative_resilience_v2", phase: "street", _isChainEvent: false, icon: "💪",
       title: "叙事韧性",
-      story: "你正在从经历中汲取力量——{desc}",
+      story: "你正在从经历中汲取力量。",
       triggers: { minDay: 80, interval: 120, maxRepeats: 4, excludeFlags: ["_b714ResilienceCd"] },
       conditions: function (st) {
         if (!st || st.gameOver) return false;

@@ -8,6 +8,7 @@
  *   B→G  b708_narrative_resilience        叙事韧性 → 消费 state.flags,
  *     故事让人成长，获得心智提升
  */
+// [全系统自洽修复] 域B R722b B类: story{desc}占位符tooltip泄漏->干净回退句(text()仍为主叙述)
 (function () {
   "use strict";
   if (typeof RANDOM_EVENTS === "undefined" || !RANDOM_EVENTS) return;
@@ -22,7 +23,7 @@
     {
       id: "b708_shared_memory", phase: "street", _isChainEvent: false, icon: "💭",
       title: "共同记忆",
-      story: "经历过的那些事,成了你和朋友之间的共同话题——{desc}",
+      story: "经历过的那些事,成了你和朋友之间的共同话题。",
       triggers: { minDay: 60, interval: 90, maxRepeats: 3, excludeFlags: ["_b708MemoryCd"] },
       conditions: function (st) {
         if (st.gameOver) return false;
@@ -69,7 +70,7 @@
     {
       id: "b708_event_economic_lesson", phase: "street", _isChainEvent: false, icon: "💡",
       title: "生活的经济学",
-      story: "每一次经历都在教你如何对待金钱——{desc}",
+      story: "每一次经历都在教你如何对待金钱。",
       triggers: { minDay: 45, interval: 80, maxRepeats: 3, excludeFlags: ["_b708EconCd"] },
       conditions: function (st) {
         if (st.gameOver) return false;
@@ -113,7 +114,7 @@
     {
       id: "b708_narrative_resilience", phase: "street", _isChainEvent: false, icon: "🌱",
       title: "故事的力量",
-      story: "那些艰难的日子,最终都化作了你的力量——{desc}",
+      story: "那些艰难的日子,最终都化作了你的力量。",
       triggers: { minDay: 80, interval: 100, maxRepeats: 2, excludeFlags: ["_b708ResilienceCd"] },
       conditions: function (st) {
         if (st.gameOver) return false;

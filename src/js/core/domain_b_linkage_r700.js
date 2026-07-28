@@ -6,6 +6,7 @@
  *   B→H  b700_story_corp_seed       故事公司种子 → 消费 state.flags._eventHistory+state.corporate 数据,
  *     叙事→"故事中的商机"公司回响
  */
+// [全系统自洽修复] 域B R722b B类: story{desc}占位符tooltip泄漏->干净回退句(text()仍为主叙述)
 (function () {
   "use strict";
   if (typeof RANDOM_EVENTS === "undefined" || !RANDOM_EVENTS) return;
@@ -16,7 +17,7 @@
     {
       id: "b700_story_life_stage", phase: "street", _isChainEvent: false, icon: "📖",
       title: "事件构成人生阶段",
-      story: "回顾这些事件,你发现它们构成了你的人生舞台——{desc}",
+      story: "回顾这些事件,你发现它们构成了你的人生舞台。",
       triggers: { minDay: 150, interval: 250, maxRepeats: 2, excludeFlags: ["_b700StageCooldown"] },
       conditions: function (st) {
         if (st.gameOver) return false;
@@ -47,7 +48,7 @@
     {
       id: "b700_story_corp_seed", phase: "street", _isChainEvent: false, icon: "🌱",
       title: "故事中的商机",
-      story: "你的经历中藏着创业的灵感——{desc}",
+      story: "你的经历中藏着创业的灵感。",
       triggers: { minDay: 200, interval: 300, maxRepeats: 1, excludeFlags: ["_b700CorpSeedDone"] },
       conditions: function (st) {
         if (st.gameOver) return false;
