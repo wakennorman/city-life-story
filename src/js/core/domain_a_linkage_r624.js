@@ -50,7 +50,7 @@
       _isChainEvent: false,
       icon: "🥗",
       title: "饮食健康分析",
-      minDay: 5,
+      triggers: { minDay: 5 },
       story: function (st) {
         var inventory = st.inventory || [];
         var foodItems = [];
@@ -104,7 +104,7 @@
           StateManager.addMessage("🍳 给自己做了一顿热乎饭，心情+3，饱食+15", "success");
         }},
       ],
-      condition: function (st) {
+      conditions: function (st) {
         return st.inventory && st.inventory.length > 0;
       },
       weight: 1,
@@ -119,7 +119,7 @@
       _isChainEvent: false,
       icon: "📊",
       title: "技能市场价值分析",
-      minDay: 10,
+      triggers: { minDay: 10 },
       story: function (st) {
         var skills = st.skills || {};
         var skillList = [];
@@ -173,7 +173,7 @@
           StateManager.addMessage("💼 查看当前技能匹配的职业方向", "info");
         }},
       ],
-      condition: function (st) {
+      conditions: function (st) {
         var skills = st.skills || {};
         var count = 0;
         for (var k in skills) {
@@ -193,7 +193,7 @@
       _isChainEvent: false,
       icon: "🏷️",
       title: "价格异动提醒",
-      minDay: 3,
+      triggers: { minDay: 3 },
       story: function (st) {
         var trade = st.trade || {};
         var location = trade.currentLocation || "commercialDist";
@@ -256,7 +256,7 @@
           StateManager.addMessage("📝 你记住了今天的价格异动，对市场规律更了解了", "info");
         }},
       ],
-      condition: function (st) {
+      conditions: function (st) {
         return st.trade && st.trade.currentLocation && (st.player.day || 0) % 3 === 0;
       },
       weight: 1,
