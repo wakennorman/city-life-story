@@ -257421,6 +257421,202 @@ if (typeof window !== "undefined") {
   }
 })();
 ;
+// ==== js/core/domain_f_linkage_r623.js ====
+/**
+ * 域F(UI/UX) 联动增强 R623
+ * 桥接：
+ *   F→A  f623_ui_price_trend  价格趋势可视化 → 消费 state.trade+state.player 数据,
+ *     UI→"看得见的价格脉搏"数据回响
+ *   F→E  f623_ui_invest_dashboard  投资仪表盘 → 消费 state.investment+state.stock 数据,
+ *     UI→"投资全景图"财务回响
+ *   F→H  f623_ui_corp_dashboard  公司运营仪表盘 → 消费 state.corporate+state.startup 数据,
+ *     UI→"公司健康度"经营回响
+ */
+(function () {
+  "use strict";
+  if (typeof RANDOM_EVENTS === "undefined" || !RANDOM_EVENTS) return;
+  if (RANDOM_EVENTS._domainFLinkageR623Loaded) return;
+  RANDOM_EVENTS._domainFLinkageR623Loaded = true;
+
+  var EVENTS = [
+    // ================================================================
+    // F→A: 价格趋势可视化 — 商品价格波动提醒
+    // ================================================================
+    {
+      id: "f623_ui_price_trend",
+      phase: "street",
+      _isChainEvent: false,
+      icon: "📈",
+      title: "市场价格脉搏",
+      minDay: 3,
+      story: function (st) {
+        var trade = st.trade || {};
+        var location = trade.currentLocation || "commercialDist";
+        var goods = (typeof GOODS !== "undefined" && GOODS) ? GOODS : [];
+        var priceChanges = [];
+        for (var gi = 0; gi < goods.length; gi++) {
+          var g = goods[gi];
+          if (!g || !g.id) continue;
+          var curPrice = (typeof getPrice === "function") ? getPrice(g.id, location, st) : 0;
+          var basePrice = g.basePrice || 100;
+          var ratio = curPrice > 0 ? Math.round((curPrice / basePrice) * 100) : 100;
+          if (ratio >= 120) priceChanges.push({ name: g.name || g.id, trend: "📈高", ratio: ratio });
+          else if (ratio <= 80) priceChanges.push({ name: g.name || g.id, trend: "📉低", ratio: ratio });
+        }
+        if (priceChanges.length === 0) {
+          return "今天市场行情平稳，各商品价格在正常范围内波动。没有特别明显的价格洼地或泡沫，适合按需采购。";
+        }
+        // 只显示前3个
+        var topChanges = priceChanges.slice(0, 3);
+        var parts = topChanges.map(function(p) { return p.name + p.trend + "(" + p.ratio + "%)"; });
+        return "今日市场价格波动：<br>" + parts.join("、") + "<br>" +
+          (priceChanges.length > 3 ? "还有" + (priceChanges.length - 3) + "种商品价格异常。" : "") +
+          "低价商品适合买入囤货，高价商品可考虑卖出获利。";
+      },
+      choices: [
+        { text: "🛒 去市场看看", next: null, handler: function(st) {
+          if (typeof showLocationNavModal === "function") {
+            showLocationNavModal(trade.currentLocation || "commercialDist", "🏪 市场行情", "trade");
+          } else {
+            StateManager.addMessage("🛒 前往商业区查看商品价格", "info");
+          }
+        }},
+        { text: "📊 记录价格", next: null, handler: function(st) {
+          st.flags = st.flags || {};
+          st.flags._f623_priceAware = (st.flags._f623_priceAware || 0) + 1;
+          StateManager.addMessage("📊 你记录了今天的市场价格，对行情更敏感了", "info");
+        }},
+      ],
+      condition: function (st) {
+        if (!st.trade || !st.trade.currentLocation) return false;
+        return (st.player.day || 0) % 5 === 0; // 每5天触发一次
+      },
+      weight: 1,
+    },
+
+    // ================================================================
+    // F→E: 投资仪表盘 — 投资组合表现概览
+    // ================================================================
+    {
+      id: "f623_ui_invest_dashboard",
+      phase: "street",
+      _isChainEvent: false,
+      icon: "💰",
+      title: "投资组合概览",
+      minDay: 10,
+      story: function (st) {
+        var stocks = st.stockMarket || {};
+        var holdings = st.investment || {};
+        var stockCount = 0;
+        var totalValue = 0;
+        for (var sym in stocks) {
+          if (stocks[sym] && stocks[sym].shares > 0) {
+            stockCount++;
+            totalValue += (stocks[sym].shares || 0) * (stocks[sym].currentPrice || 0);
+          }
+        }
+        var investmentTotal = (st.investment && st.investment.totalValue) || 0;
+        var totalPortfolio = totalValue + investmentTotal;
+
+        if (totalPortfolio <= 0) {
+          return "你目前没有持有任何投资标的。可以考虑从股票或基金开始，让钱为你工作。";
+        }
+        return "你的投资组合总市值约 ¥" + totalPortfolio.toLocaleString() + "。<br>" +
+          "持有 " + stockCount + " 只股票" +
+          (investmentTotal > 0 ? "，投资基金/理财 ¥" + investmentTotal.toLocaleString() : "") + "。<br>" +
+          (totalPortfolio >= 100000 ? "资产配置已初具规模，建议定期复盘调整比例。" :
+           totalPortfolio >= 10000 ? "投资组合正在成长，建议关注分散风险。" :
+           "小额投资是好的开始，持续积累才能看到复利的力量。");
+      },
+      choices: [
+        { text: "📈 查看股票", next: null, handler: function(st) {
+          if (typeof showStockTab === "function") {
+            showStockTab();
+          } else {
+            StateManager.addMessage("📈 前往「投资」Tab查看股票详情", "info");
+          }
+        }},
+        { text: "💹 查看基金", next: null, handler: function(st) {
+          StateManager.addMessage("💹 前往「投资」Tab查看基金/理财详情", "info");
+        }},
+      ],
+      condition: function (st) {
+        var hasStocks = false;
+        var sm = st.stockMarket;
+        if (sm) {
+          for (var sym in sm) {
+            if (sm[sym] && sm[sym].shares > 0) { hasStocks = true; break; }
+          }
+        }
+        return hasStocks || (st.investment && st.investment.totalValue > 0);
+      },
+      weight: 1,
+    },
+
+    // ================================================================
+    // F→H: 公司运营仪表盘 — 公司健康度提示
+    // ================================================================
+    {
+      id: "f623_ui_corp_dashboard",
+      phase: "corporate",
+      _isChainEvent: false,
+      icon: "🏢",
+      title: "公司运营健康度",
+      minDay: 30,
+      story: function (st) {
+        var startup = st.startup;
+        if (!startup || !startup.company) {
+          return "你还没有创办公司。创业需要足够的资金、人脉和行业经验，做好准备后可以前往「事业发展」注册。";
+        }
+        var co = startup.company;
+        var cash = co.cash || 0;
+        var employees = (co.employees || []).length;
+        var valuation = co.valuation || 0;
+        var revenue = co.revenue || 0;
+        var burnRate = co.burnRate || 0;
+
+        var warnings = [];
+        if (cash < 10000) warnings.push("⚠️ 现金储备不足¥10,000，需尽快融资");
+        else if (cash < 50000) warnings.push("⚡ 现金储备¥" + cash.toLocaleString() + "，建议谨慎运营");
+        else warnings.push("✅ 现金储备充足¥" + cash.toLocaleString());
+
+        if (burnRate > 0 && cash / burnRate < 3) {
+          warnings.push("⚠️ 现金流仅够支撑" + Math.floor(cash / burnRate) + "个月");
+        }
+        if (employees < 2) warnings.push("👤 团队规模较小，建议招聘核心岗位");
+        if (revenue <= 0 && (co.stage || "seed") === "seed") {
+          warnings.push("🌱 种子期公司，重点放在产品开发和市场验证");
+        }
+
+        return "【" + (co.name || "未命名") + "】运营报告<br>" +
+          "估值 ¥" + valuation.toLocaleString() + " · 月营收 ¥" + revenue.toLocaleString() + "<br>" +
+          warnings.join("<br>");
+      },
+      choices: [
+        { text: "🏢 查看公司详情", next: null, handler: function(st) {
+          if (typeof showStartupTab === "function") {
+            showStartupTab();
+          } else {
+            StateManager.addMessage("🏢 前往「公司」Tab查看详情", "info");
+          }
+        }},
+        { text: "💰 查看现金流", next: null, handler: function(st) {
+          StateManager.addMessage("💰 公司现金流 ¥" + ((st.startup && st.startup.company && st.startup.company.cash) || 0).toLocaleString(), "info");
+        }},
+      ],
+      condition: function (st) {
+        return st.startup && st.startup.status !== "none" && st.startup.company;
+      },
+      weight: 1,
+    },
+  ];
+
+  // 注册事件
+  for (var i = 0; i < EVENTS.length; i++) {
+    RANDOM_EVENTS.push(EVENTS[i]);
+  }
+})();
+;
 // ==== js/core/domain_g_linkage_r599.js ====
 /**
  * 域G(核心机制/生命周期) 联动增强 R599
@@ -272372,6 +272568,157 @@ if (typeof window !== "undefined") {
   }
 })();
 
+;
+// ==== js/core/domain_h_linkage_r602.js ====
+/**
+ * 域H(Phase2/公司) 联动增强 R602
+ * 桥接：
+ *   H→B  h602_company_milestone_story  公司里程碑叙事 → 消费 state.startup 数据,
+ *     公司→"公司成长故事"的叙事回响
+ *   H→D  h602_corp_team_bonding  公司团队建设 → 消费 state.corporate+state.relationships 数据,
+ *     公司→"团队即家人"的社交回响
+ *   H→G  h602_entrepreneur_health  创业者健康警示 → 消费 state.startup+state.status 数据,
+ *     公司→"创业者的身体代价"的生命回响
+ */
+(function () {
+  "use strict";
+  if (typeof RANDOM_EVENTS === "undefined" || !RANDOM_EVENTS) return;
+  if (RANDOM_EVENTS._domainHLinkageR602Loaded) return;
+  RANDOM_EVENTS._domainHLinkageR602Loaded = true;
+
+  var EVENTS = [
+    // ====== H→B: 公司里程碑叙事 ======
+    {
+      id: "h602_company_milestone_story", phase: "corporate", _isChainEvent: false, icon: "🏆",
+      title: "公司里程碑",
+      story: "你的公司达到了一个新的里程碑——{desc}",
+      triggers: { minDay: 60, interval: 120, maxRepeats: 5, excludeFlags: ["_h602MilestoneStoryCooldown"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        if (!st.flags || st.flags._h602MilestoneStoryCooldown) return false;
+        return st.startup && st.startup.company && (st.startup.company.valuation || 0) >= 100000;
+      },
+      choices: [
+        { text: "🎉 开个庆祝会", hint: "团队士气+10,现金-2000,名气+5", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._h602MilestoneStoryCooldown = true;
+          if (st.resources) st.resources.cash = Math.max(0, (st.resources.cash || 0) - 2000);
+          if (st.player) st.player.fame = Math.min(100, (st.player.fame || 0) + 5);
+          if (st.startup && st.startup.company) {
+            st.startup.company.morale = Math.min(100, (st.startup.company.morale || 50) + 10);
+          }
+          if (typeof StateManager !== "undefined") StateManager.addMessage("🏆 '为了公司的未来,干杯!' 庆祝会上,大家都很开心。团队士气+10,名气+5,现金-2000。", "success");
+        }},
+        { text: "📝 写篇文章记录", hint: "心智+5,名气+3", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._h602MilestoneStoryCooldown = true;
+          if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 5);
+          if (st.player) st.player.fame = Math.min(100, (st.player.fame || 0) + 3);
+          if (typeof StateManager !== "undefined") StateManager.addMessage("🏆 你写了一篇文章,记录公司从0到1的历程。'创业维艰,但每一步都值得。' 心智+5,名气+3。", "success");
+        }}
+      ],
+      text: function (st) {
+        if (!st) return null;
+        var val = (st.startup && st.startup.company && st.startup.company.valuation) || 0;
+        var name = (st.startup && st.startup.company && st.startup.company.name) || "你的公司";
+        return name + "的估值突破了¥" + val.toLocaleString() + "! 回想当初刚创办时的艰难,现在终于看到了成果。这个里程碑,值得好好纪念。";
+      }
+    },
+
+    // ====== H→D: 公司团队建设 ======
+    {
+      id: "h602_corp_team_bonding", phase: "corporate", _isChainEvent: false, icon: "🤗",
+      title: "团队建设",
+      story: "你的团队提议搞一次团建活动——{desc}",
+      triggers: { minDay: 45, interval: 90, maxRepeats: 8, excludeFlags: ["_h602TeamBondingCooldown"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        if (!st.flags || st.flags._h602TeamBondingCooldown) return false;
+        return st.corporate && st.corporate.colleagues && st.corporate.colleagues.length >= 2;
+      },
+      choices: [
+        { text: "🎳 去玩团建", hint: "团队关系+5,心情+8,现金-1500", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._h602TeamBondingCooldown = true;
+          if (st.resources) st.resources.cash = Math.max(0, (st.resources.cash || 0) - 1500);
+          if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 8);
+          if (st.corporate && st.corporate.colleagues) {
+            for (var ci = 0; ci < st.corporate.colleagues.length; ci++) {
+              if (st.corporate.colleagues[ci]) {
+                st.corporate.colleagues[ci].relationship = Math.min(100, (st.corporate.colleagues[ci].relationship || 50) + 5);
+              }
+            }
+          }
+          if (typeof StateManager !== "undefined") StateManager.addMessage("🤗 '老板大气!' 团建活动让大家玩得很开心,同事之间的关系也更紧密了。团队关系+5,心情+8,现金-1500。", "success");
+        }},
+        { text: "🍕 点个外卖一起吃饭", hint: "团队关系+3,心情+5,现金-500", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._h602TeamBondingCooldown = true;
+          if (st.resources) st.resources.cash = Math.max(0, (st.resources.cash || 0) - 500);
+          if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 5);
+          if (st.corporate && st.corporate.colleagues) {
+            for (var ci = 0; ci < st.corporate.colleagues.length; ci++) {
+              if (st.corporate.colleagues[ci]) {
+                st.corporate.colleagues[ci].relationship = Math.min(100, (st.corporate.colleagues[ci].relationship || 50) + 3);
+              }
+            }
+          }
+          if (typeof StateManager !== "undefined") StateManager.addMessage("🤗 大家围坐在一起吃外卖,聊工作聊生活,气氛很融洽。团队关系+3,心情+5,现金-500。", "success");
+        }}
+      ],
+      text: function (st) {
+        if (!st) return null;
+        return "你的团队提议:'老板,咱们好久没团建了,出去玩一次吧!' 你看了看团队的状态,确实需要一些团队建设活动来增强凝聚力。";
+      }
+    },
+
+    // ====== H→G: 创业者健康警示 ======
+    {
+      id: "h602_entrepreneur_health", phase: "corporate", _isChainEvent: false, icon: "💊",
+      title: "创业者的代价",
+      story: "连续的高强度工作让身体发出了警告——{desc}",
+      triggers: { minDay: 90, interval: 120, maxRepeats: 4, excludeFlags: ["_h602EntrepreneurHealthCooldown"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        if (!st.flags || st.flags._h602EntrepreneurHealthCooldown) return false;
+        if (!st.player) return false;
+        var fatigue = (st.needs && st.needs.fatigue) || 0;
+        var health = (st.status && st.status.health) || 100;
+        return (fatigue > 60 || health < 60) && st.startup && st.startup.company;
+      },
+      choices: [
+        { text: "📅 减少工作时长", hint: "疲劳-20,健康+5,公司效率-5%", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._h602EntrepreneurHealthCooldown = true;
+          if (st.needs) st.needs.fatigue = Math.max(0, (st.needs.fatigue || 0) - 20);
+          if (st.status) st.status.health = Math.min(100, (st.status.health || 100) + 5);
+          if (st.startup && st.startup.company) {
+            st.startup.company.efficiency = Math.max(50, (st.startup.company.efficiency || 100) - 5);
+          }
+          if (typeof StateManager !== "undefined") StateManager.addMessage("💊 你决定不再天天熬夜,把工作时间控制在10小时内。虽然效率略有下降,但身体要紧。疲劳-20,健康+5,效率-5%。", "success");
+        }},
+        { text: "👨‍💼 招个COO分担", hint: "健康+10,现金-3000/月", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._h602EntrepreneurHealthCooldown = true;
+          if (st.status) st.status.health = Math.min(100, (st.status.health || 100) + 10);
+          if (st.resources) st.resources.cash = Math.max(0, (st.resources.cash || 0) - 3000);
+          if (typeof StateManager !== "undefined") StateManager.addMessage("💊 你招了一个COO来分担管理工作。'专业的事交给专业的人。' 健康+10,现金-3000。", "success");
+        }},
+        { text: "💪 咬牙坚持", hint: "心智+5,健康-3", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._h602EntrepreneurHealthCooldown = true;
+          if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 5);
+          if (st.status) st.status.health = Math.max(0, (st.status.health || 100) - 3);
+          if (typeof StateManager !== "undefined") StateManager.addMessage("💊 '创业就没有不累的,咬咬牙就过去了!' 你继续坚持。心智+5,健康-3。", "warning");
+        }}
+      ],
+      text: function (st) {
+        if (!st) return null;
+        var health = (st.status && st.status.health) || 100;
+        var fatigue = (st.needs && st.needs.fatigue) || 0;
+        var val = (st.startup && st.startup.company && st.startup.company.valuation) || 0;
+        return "公司估值¥" + val.toLocaleString() + ",但你的健康值只剩" + health + ",疲劳度" + fatigue + "。'创业是场马拉松,不是百米冲刺。' 你开始思考:这样拼下去,值得吗?";
+      }
+    }
+  ];
+
+  for (var i = 0; i < EVENTS.length; i++) {
+    RANDOM_EVENTS.push(EVENTS[i]);
+  }
+})();
 ;
 // ==== js/core/domain_b_linkage_r426.js ====
 /**
