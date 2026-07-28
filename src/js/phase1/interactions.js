@@ -8,9 +8,11 @@
 
 /** 获取经状态修正后的有效属性值（工作时、技能判定时使用） */
 function getEffectiveStats(state) {
-  // [全系统自洽修复] 域D A类修复: state.needs/status 守卫(防止旧存档/极端初始化崩溃)
+  // [全系统自洽修复] 域D A类修复: state.needs/status/player 守卫(防止旧存档/极端初始化崩溃)
   if (!state.needs) state.needs = { hunger: 100, fatigue: 0, happiness: 50, hygiene: 50 };
   if (!state.status) state.status = { health: 100 };
+  // [全系统自洽修复] 域D R707: state.player 根守卫(防旧存档/异常状态崩溃)
+  if (!state.player) state.player = { physique: 22, intelligence: 20, agility: 20, mental: 20, charm: 20 };
   const n = state.needs,
     st = state.status,
     p = state.player;
@@ -119,6 +121,10 @@ function getEffectiveStats(state) {
 
 /** 获取当前AP消耗倍率（影响所有 consumeAP 调用的实际消耗） */
 function getApCostMultiplier(state) {
+  // [全系统自洽修复] 域D R707: state.player/status/needs 根守卫
+  if (!state.player) state.player = { physique: 22, intelligence: 20, agility: 20, mental: 20, charm: 20 };
+  if (!state.needs) state.needs = { hunger: 100, fatigue: 0, happiness: 50, hygiene: 50 };
+  if (!state.status) state.status = { health: 100 };
   var n = state.needs,
     st = state.status,
     p = state.player;
@@ -160,6 +166,10 @@ function getApCostMultiplier(state) {
 
 /** 每日结算时施加状态→状态的交叉影响（在applyNeedsDecay之后调用） */
 function applyStatusInteractions(state) {
+  // [全系统自洽修复] 域D R707: state.player/status/needs 根守卫
+  if (!state.player) state.player = { physique: 22, intelligence: 20, agility: 20, mental: 20, charm: 20 };
+  if (!state.needs) state.needs = { hunger: 100, fatigue: 0, happiness: 50, hygiene: 50 };
+  if (!state.status) state.status = { health: 100 };
   var n = state.needs,
     st = state.status,
     p = state.player;
@@ -329,6 +339,8 @@ function checkExtremeConditions(state) {
  * 返回 { payMultiplier, injuryRisk, skillXpMultiplier, apMultiplier }
  */
 function getWorkComprehensiveModifier(state) {
+  // [全系统自洽修复] 域D R707: state.player 根守卫
+  if (!state.player) state.player = { physique: 22, intelligence: 20, agility: 20, mental: 20, charm: 20 };
   var emoMod =
     typeof getEmotionWorkModifier === "function"
       ? getEmotionWorkModifier(state)

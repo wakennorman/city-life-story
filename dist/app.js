@@ -96874,6 +96874,8 @@ function ensureSocialNetworkState(state) {
 // ====== 发布朋友圈 ======
 function postToMoments(state, content, images, visibility) {
   ensureSocialNetworkState(state);
+  // [全系统自洽修复] 域D R707: state.player 根守卫
+  if (!state.player) return { ok: false, message: "游戏状态异常。" };
   if ((state.player.actionPoints || 0) < 20) {
     return { ok: false, message: "行动力不足，发布朋友圈需要20点行动力。" };
   }
@@ -97070,6 +97072,8 @@ function triggerPublicOpinionCrisis(state, topic, severity) {
 // ====== 每日tick ======
 function tickSocialNetwork(state) {
   ensureSocialNetworkState(state);
+  // [全系统自洽修复] 域D R707: state.player 根守卫
+  if (!state.player) return;
   // 刷新微博热搜（每3天）
   if (state.player.day - state.socialNetwork.lastWeiboRefresh >= 3) {
     refreshWeiboHotlist(state);
@@ -123958,9 +123962,16 @@ if (typeof window !== "undefined") {
  * 接入方式：与 cross_system_events.js 相同的 IIFE 注入模式
  */
 (function () {
+  "use strict";
   if (typeof RANDOM_EVENTS === "undefined") return;
   if (RANDOM_EVENTS._workplaceSocialEventsLoaded) return;
   RANDOM_EVENTS._workplaceSocialEventsLoaded = true;
+
+  // [全系统自洽修复] 域D R707: state.needs 守卫(Phase2事件防崩溃)
+  function _guardNeedsD(st) {
+    if (!st.needs) st.needs = { hunger: 50, fatigue: 30, hygiene: 60, happiness: 50 };
+    return st.needs;
+  }
 
   var WS_EVENTS = [
     // ===== 事件1：甩锅危机=====
@@ -123992,6 +124003,7 @@ if (typeof window !== "undefined") {
           text: "🛡️ 直接指出：是小赵负责的",
           hint: "得罪同事，但保住自己",
           apply: function (st) {
+            _guardNeedsD(st);
             st.flags = st.flags || {}; // [R16 域C修复]
             st.flags._blameSeen = true;
             var cols = st.corporate.colleagues.network;
@@ -124020,6 +124032,7 @@ if (typeof window !== "undefined") {
           text: "🤐 沉默不语，自己扛下来",
           hint: "关系维护，但背锅",
           apply: function (st) {
+            _guardNeedsD(st);
             st.flags = st.flags || {}; // [R16 域C修复]
             st.flags._blameSeen = true;
             var cols = st.corporate.colleagues.network;
@@ -124046,6 +124059,7 @@ if (typeof window !== "undefined") {
           text: "🧠 反将一军：提出解决方案",
           hint: "需要智力≥50",
           apply: function (st) {
+            _guardNeedsD(st);
             st.flags = st.flags || {}; // [R16 域C修复]
             st.flags._blameSeen = true;
             if ((st.player.intelligence || 0) >= 50) {
@@ -124195,6 +124209,7 @@ if (typeof window !== "undefined") {
           text: "😤 找源头对质",
           hint: "可能成功，也可能更糟",
           apply: function (st) {
+            _guardNeedsD(st);
             st.flags = st.flags || {}; // [R16 域C修复]
             st.flags._gossipBacklashSeen = true;
             if ((st.player.charm || 0) >= 30) {
@@ -124217,6 +124232,7 @@ if (typeof window !== "undefined") {
           text: "🧘 冷处理，时间会证明",
           hint: "等待，需要耐心",
           apply: function (st) {
+            _guardNeedsD(st);
             st.flags = st.flags || {}; // [R16 域C修复]
             st.flags._gossipBacklashSeen = true;
             st.needs.happiness = Math.max(0, (st.needs.happiness || 0) - 5);
@@ -124273,6 +124289,7 @@ if (typeof window !== "undefined") {
           text: "🍻 去，和所有人好好喝一杯",
           hint: "关系+5，但花钱+累",
           apply: function (st) {
+            _guardNeedsD(st);
             st.flags = st.flags || {}; // [R16 域C修复]
             st.flags._teamBuildingSeen = true;
             if (!st.resources) st.resources = { cash: 0 };
@@ -124296,6 +124313,7 @@ if (typeof window !== "undefined") {
           text: "🙏 找借口推掉",
           hint: "省事但关系-5",
           apply: function (st) {
+            _guardNeedsD(st);
             st.flags = st.flags || {}; // [R16 域C修复]
             st.flags._teamBuildingSeen = true;
             st.needs.fatigue = Math.min(100, (st.needs.fatigue || 0) + 5);
@@ -165318,6 +165336,8 @@ function initNpcRelationships(state) {
 
 /** 每日NPC关系tick — 蝴蝶效应传播 + 好感衰减 */
 function tickNpcRelationships(state) {
+  // [全系统自洽修复] 域D R707: state.player 根守卫(防旧存档/异常状态崩溃)
+  if (!state || !state.player) return;
   var day = state.player.day;
   if (!state.npcRelationshipLog) state.npcRelationshipLog = {};
   if (!state.npcRelationshipLog.lastPropagationDay) {
@@ -199086,7 +199106,7 @@ if (typeof window !== "undefined") {
     conditions: function (st) {
       if (!st.corporate || !st.corporate.active) return false;
       if (!npcMetCheck(st, "boss_li")) return false;
-      if (st.flags._liGuruInviteDone) return false;
+      if (st.flags && st.flags._liGuruInviteDone) return false;
       return (st.skills.coding && st.skills.coding.level || 0) >= 35;
     },
     probability: 0.03,
@@ -199096,6 +199116,7 @@ if (typeof window !== "undefined") {
       {
         text: "✅ 周末去看看（赚钱但累）",
         apply: function (st) {
+          if (!st.flags) st.flags = {};
           if (st.resources) st.resources.cash = (st.resources.cash || 0) + 3000;
           if (typeof addDailyTransaction === "function") addDailyTransaction(st, "income", "li_consulting", 3000, "周末技术咨询费（李工头）");
           st.player.physique = Math.max(0, (st.player.physique || 10) - 2);
@@ -199109,6 +199130,7 @@ if (typeof window !== "undefined") {
       {
         text: "❌ 太忙了，下次吧",
         apply: function (st) {
+          if (!st.flags) st.flags = {};
           st.flags._liGuruInviteDone = true;
           st.flags._liGuruInviteDeclined = true;
           StateManager.addMessage("🚫 你以加班为由婉拒了李工头。", "info");
@@ -199129,7 +199151,7 @@ if (typeof window !== "undefined") {
     conditions: function (st) {
       if (!st.corporate || !st.corporate.active) return false;
       if (!npcMetCheck(st, "xiao_mei")) return false;
-      if (st.flags._xiaomeiCareerTipDone) return false;
+      if (st.flags && st.flags._xiaomeiCareerTipDone) return false;
       return (st.player.day || 0) >= 120;
     },
     probability: 0.04,
@@ -199187,7 +199209,7 @@ if (typeof window !== "undefined") {
     conditions: function (st) {
       if (!st.corporate || !st.corporate.active) return false;
       if (!npcMetCheck(st, "zhaojie")) return false;
-      if (st.flags._zhaojieJumpInfoDone) return false;
+      if (st.flags && st.flags._zhaojieJumpInfoDone) return false;
       return (st.relationships.zhaojie && st.relationships.zhaojie.affinity || 0) >= 50;
     },
     probability: 0.035,
@@ -199230,7 +199252,7 @@ if (typeof window !== "undefined") {
     conditions: function (st) {
       if (!st.corporate || !st.corporate.active) return false;
       if (!npcMetCheck(st, "old_zhou")) return false;
-      if (st.flags._oldzhouHiringDone) return false;
+      if (st.flags && st.flags._oldzhouHiringDone) return false;
       return (st.player.physique || 0) >= 40;
     },
     probability: 0.025,
@@ -204798,9 +204820,11 @@ function applyWealthBasedOverhead(state) {
 
 /** 获取经状态修正后的有效属性值（工作时、技能判定时使用） */
 function getEffectiveStats(state) {
-  // [全系统自洽修复] 域D A类修复: state.needs/status 守卫(防止旧存档/极端初始化崩溃)
+  // [全系统自洽修复] 域D A类修复: state.needs/status/player 守卫(防止旧存档/极端初始化崩溃)
   if (!state.needs) state.needs = { hunger: 100, fatigue: 0, happiness: 50, hygiene: 50 };
   if (!state.status) state.status = { health: 100 };
+  // [全系统自洽修复] 域D R707: state.player 根守卫(防旧存档/异常状态崩溃)
+  if (!state.player) state.player = { physique: 22, intelligence: 20, agility: 20, mental: 20, charm: 20 };
   const n = state.needs,
     st = state.status,
     p = state.player;
@@ -204909,6 +204933,10 @@ function getEffectiveStats(state) {
 
 /** 获取当前AP消耗倍率（影响所有 consumeAP 调用的实际消耗） */
 function getApCostMultiplier(state) {
+  // [全系统自洽修复] 域D R707: state.player/status/needs 根守卫
+  if (!state.player) state.player = { physique: 22, intelligence: 20, agility: 20, mental: 20, charm: 20 };
+  if (!state.needs) state.needs = { hunger: 100, fatigue: 0, happiness: 50, hygiene: 50 };
+  if (!state.status) state.status = { health: 100 };
   var n = state.needs,
     st = state.status,
     p = state.player;
@@ -204950,6 +204978,10 @@ function getApCostMultiplier(state) {
 
 /** 每日结算时施加状态→状态的交叉影响（在applyNeedsDecay之后调用） */
 function applyStatusInteractions(state) {
+  // [全系统自洽修复] 域D R707: state.player/status/needs 根守卫
+  if (!state.player) state.player = { physique: 22, intelligence: 20, agility: 20, mental: 20, charm: 20 };
+  if (!state.needs) state.needs = { hunger: 100, fatigue: 0, happiness: 50, hygiene: 50 };
+  if (!state.status) state.status = { health: 100 };
   var n = state.needs,
     st = state.status,
     p = state.player;
@@ -205119,6 +205151,8 @@ function checkExtremeConditions(state) {
  * 返回 { payMultiplier, injuryRisk, skillXpMultiplier, apMultiplier }
  */
 function getWorkComprehensiveModifier(state) {
+  // [全系统自洽修复] 域D R707: state.player 根守卫
+  if (!state.player) state.player = { physique: 22, intelligence: 20, agility: 20, mental: 20, charm: 20 };
   var emoMod =
     typeof getEmotionWorkModifier === "function"
       ? getEmotionWorkModifier(state)
@@ -321100,6 +321134,231 @@ if (typeof window !== "undefined") {
       text: function (st) {
         if (!st) return null;
         return "工作" + getWorkDays(st) + "天，等级" + getJobLevel(st) + "——你的身体在提醒你：该歇歇了。";
+      }
+    }
+  ];
+
+  for (var i = 0; i < EVENTS.length; i++) {
+    RANDOM_EVENTS.push(EVENTS[i]);
+  }
+})();
+;
+// ==== js/core/domain_d_linkage_r708.js ====
+/**
+ * 域D(NPC/社交) 联动增强 R708
+ * 桥接：
+ *   D→A  d708_social_price_tip       社交价格情报 → 消费 state.relationships,
+ *     从NPC处获得商品价格波动情报，交易时获得价格优势
+ *   D→E  d708_social_invest_circle    社交投资圈 → 消费 state.relationships+state.resources,
+ *     社交圈中获取投资机会和理财建议
+ *   D→G  d708_social_health_effect    社交健康效应 → 消费 state.relationships+state.needs,
+ *     亲密社交关系带来健康加成和心情恢复
+ */
+(function () {
+  "use strict";
+  if (typeof RANDOM_EVENTS === "undefined" || !RANDOM_EVENTS) return;
+  if (RANDOM_EVENTS._domainDLinkageR708Loaded) return;
+  RANDOM_EVENTS._domainDLinkageR708Loaded = true;
+
+  function getMetNpcs(st, minAff) {
+    minAff = minAff || 0;
+    var out = [];
+    if (!st || !st.relationships) return out;
+    for (var id in st.relationships) {
+      if (!Object.prototype.hasOwnProperty.call(st.relationships, id)) continue;
+      var r = st.relationships[id];
+      if (r && r.met && (r.affinity || 0) >= minAff)
+        out.push({ id: id, rel: r });
+    }
+    return out;
+  }
+
+  function pickRandomNpc(st, minAff) {
+    var met = getMetNpcs(st, minAff || 0);
+    if (!met.length) return null;
+    var idx = (typeof Random !== "undefined" && Random.int) ? Random.int(0, met.length - 1) : 0;
+    return met[idx];
+  }
+
+  function hasCloseFriends(st) {
+    var close = getMetNpcs(st, 60);
+    return close.length >= 2;
+  }
+
+  var EVENTS = [
+    // === D→A 社交价格情报：从NPC处获得交易优势 ===
+    {
+      id: "d708_social_price_tip",
+      phase: "street",
+      _isChainEvent: false,
+      icon: "💬",
+      title: "朋友的消息",
+      story: "一位相熟的朋友匆匆找到你，神秘地说：「我刚听说城西的建材市场要涨价了，现在囤还来得及。」\n\n你仔细一想，这消息确实有价值——如果属实，能赚一笔差价。",
+      triggers: { minDay: 30, interval: 90, maxRepeats: 3, excludeFlags: ["_d708PriceCd"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        if (st.flags && st.flags._d708PriceCd) return false;
+        var npc = pickRandomNpc(st, 30);
+        return npc !== null && st.player && st.player.day >= 30;
+      },
+      choices: [
+        {
+          text: "📈 信了，赶紧囤货",
+          hint: "交易经验+10,随机获得¥500-1500,置_d708PriceInsider",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._d708PriceCd = true;
+            st.flags._d708PriceInsider = true;
+            var bonus = (typeof Random !== "undefined" && Random.int) ? Random.int(500, 1500) : 800;
+            st.resources.cash = (st.resources.cash || 0) + bonus;
+            st.resources.totalEarned = (st.resources.totalEarned || 0) + bonus;
+            if (typeof addSkillXp === "function") { try { addSkillXp("social", 5); } catch(e) {} }
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("📈 你趁着价格低点囤了一批货，转手赚了¥" + bonus + "！社交XP+5。", "success");
+            }
+          }
+        },
+        {
+          text: "🤔 先调查核实再决定",
+          hint: "智力+3,交易经验+5",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._d708PriceCd = true;
+            if (st.player) st.player.intelligence = Math.min(100, (st.player.intelligence || 50) + 3);
+            if (typeof addSkillXp === "function") { try { addSkillXp("social", 3); } catch(e) {} }
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("🤔 你谨慎核实了消息，虽然没有大赚一笔，但学到了分辨信息真伪的能力。智力+3。", "info");
+            }
+          }
+        }
+      ],
+      text: function (st) {
+        if (!st) return null;
+        var npc = pickRandomNpc(st, 30);
+        return "来自" + (npc ? npc.id : "朋友") + "的消息——在这个城市里，人脉就是信息，信息就是金钱。";
+      }
+    },
+    // === D→E 社交投资圈：从社交圈获得投资机会 ===
+    {
+      id: "d708_social_invest_circle",
+      phase: "street",
+      _isChainEvent: false,
+      icon: "💼",
+      title: "圈子里的机会",
+      story: "在一次朋友聚会上，有人聊起了一个投资机会——一个刚起步的本地小品牌正在寻找早期投资人。你知道这种机会可遇不可求，但也伴随着风险。",
+      triggers: { minDay: 90, interval: 150, maxRepeats: 2, excludeFlags: ["_d708InvestCd"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        if (st.flags && st.flags._d708InvestCd) return false;
+        var npc = pickRandomNpc(st, 40);
+        return npc !== null && st.player && st.player.day >= 90 && (st.resources.cash || 0) >= 5000;
+      },
+      choices: [
+        {
+          text: "💰 投了！机会难得",
+          hint: "投资¥3000,有机会获得高回报,置_d708AngelInvestor",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._d708InvestCd = true;
+            st.flags._d708AngelInvestor = true;
+            st.resources.cash = Math.max(0, (st.resources.cash || 0) - 3000);
+            // 50%概率获得回报
+            var success = (typeof Random !== "undefined" && Random.chance) ? Random.chance(0.5) : (Math.random() < 0.5);
+            if (success) {
+              var ret = (typeof Random !== "undefined" && Random.int) ? Random.int(5000, 12000) : 7000;
+              st.resources.cash = (st.resources.cash || 0) + ret;
+              st.resources.totalEarned = (st.resources.totalEarned || 0) + ret;
+              if (typeof StateManager !== "undefined") {
+                StateManager.addMessage("💰 投资大获成功！你投的¥3000变成了¥" + ret + "！人脉就是金钱！", "success");
+              }
+            } else {
+              if (typeof StateManager !== "undefined") {
+                StateManager.addMessage("💸 投资打了水漂，¥3000打了水漂。高风险高回报，下次要更谨慎。", "warning");
+              }
+            }
+          }
+        },
+        {
+          text: "📊 先做功课，不急于出手",
+          hint: "会计XP+8,智力+4,置_d708InvestSavy",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._d708InvestCd = true;
+            st.flags._d708InvestSavy = true;
+            if (st.player) st.player.intelligence = Math.min(100, (st.player.intelligence || 50) + 4);
+            if (typeof addSkillXp === "function") { try { addSkillXp("accounting", 8); } catch(e) {} }
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("📊 你花时间研究了那个品牌的财报和行业趋势。会计XP+8，智力+4。", "info");
+            }
+          }
+        }
+      ],
+      text: function (st) {
+        if (!st) return null;
+        return "社交圈里" + getMetNpcs(st, 40).length + "个好友——每一个都可能带来改变人生的机会。";
+      }
+    },
+    // === D→G 社交健康效应：高质量社交提升健康 ===
+    {
+      id: "d708_social_health_effect",
+      phase: "street",
+      _isChainEvent: false,
+      icon: "💚",
+      title: "友情的疗愈",
+      story: "最近你发现，每次和真正知心的朋友见面后，整个人都会轻松很多。好像那些压在心头的烦恼，在谈笑间就消散了。\n\n今天，一位老朋友约你出来散步——你决定赴约。",
+      triggers: { minDay: 60, interval: 120, maxRepeats: 3, excludeFlags: ["_d708HealthCd"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        if (st.flags && st.flags._d708HealthCd) return false;
+        return hasCloseFriends(st) && st.player && st.player.day >= 60;
+      },
+      choices: [
+        {
+          text: "🚶 一起去公园散步聊天",
+          hint: "心情+10,疲劳-10,健康+3,置_d708WalkFriend",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._d708HealthCd = true;
+            st.flags._d708WalkFriend = true;
+            if (st.needs) {
+              st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 10);
+              st.needs.fatigue = Math.max(0, (st.needs.fatigue || 0) - 10);
+            }
+            if (st.status) st.status.health = Math.min(100, (st.status.health || 100) + 3);
+            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 3);
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("🚶 和老朋友散步聊天，感觉身心都得到了治愈。心情+10，疲劳-10，健康+3。", "success");
+            }
+          }
+        },
+        {
+          text: "🍵 约在茶馆聊心事",
+          hint: "心智+5,心情+8,花费¥50,置_d708TeaFriend",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._d708HealthCd = true;
+            st.flags._d708TeaFriend = true;
+            if ((st.resources.cash || 0) >= 50) {
+              st.resources.cash = Math.max(0, (st.resources.cash || 0) - 50);
+            }
+            if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 8);
+            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 5);
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("🍵 在茶馆里，你第一次对朋友说出了心里话。心智+5，心情+8。", "success");
+            }
+          }
+        }
+      ],
+      text: function (st) {
+        if (!st) return null;
+        var close = getMetNpcs(st, 60);
+        return "在这个城市里，有" + close.length + "个知心朋友——他们是你在异乡最温暖的依靠。";
       }
     }
   ];

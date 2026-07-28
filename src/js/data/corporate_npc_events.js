@@ -22,7 +22,7 @@
     conditions: function (st) {
       if (!st.corporate || !st.corporate.active) return false;
       if (!npcMetCheck(st, "boss_li")) return false;
-      if (st.flags._liGuruInviteDone) return false;
+      if (st.flags && st.flags._liGuruInviteDone) return false;
       return (st.skills.coding && st.skills.coding.level || 0) >= 35;
     },
     probability: 0.03,
@@ -32,6 +32,7 @@
       {
         text: "✅ 周末去看看（赚钱但累）",
         apply: function (st) {
+          if (!st.flags) st.flags = {};
           if (st.resources) st.resources.cash = (st.resources.cash || 0) + 3000;
           if (typeof addDailyTransaction === "function") addDailyTransaction(st, "income", "li_consulting", 3000, "周末技术咨询费（李工头）");
           st.player.physique = Math.max(0, (st.player.physique || 10) - 2);
@@ -45,6 +46,7 @@
       {
         text: "❌ 太忙了，下次吧",
         apply: function (st) {
+          if (!st.flags) st.flags = {};
           st.flags._liGuruInviteDone = true;
           st.flags._liGuruInviteDeclined = true;
           StateManager.addMessage("🚫 你以加班为由婉拒了李工头。", "info");
@@ -65,7 +67,7 @@
     conditions: function (st) {
       if (!st.corporate || !st.corporate.active) return false;
       if (!npcMetCheck(st, "xiao_mei")) return false;
-      if (st.flags._xiaomeiCareerTipDone) return false;
+      if (st.flags && st.flags._xiaomeiCareerTipDone) return false;
       return (st.player.day || 0) >= 120;
     },
     probability: 0.04,
@@ -123,7 +125,7 @@
     conditions: function (st) {
       if (!st.corporate || !st.corporate.active) return false;
       if (!npcMetCheck(st, "zhaojie")) return false;
-      if (st.flags._zhaojieJumpInfoDone) return false;
+      if (st.flags && st.flags._zhaojieJumpInfoDone) return false;
       return (st.relationships.zhaojie && st.relationships.zhaojie.affinity || 0) >= 50;
     },
     probability: 0.035,
@@ -166,7 +168,7 @@
     conditions: function (st) {
       if (!st.corporate || !st.corporate.active) return false;
       if (!npcMetCheck(st, "old_zhou")) return false;
-      if (st.flags._oldzhouHiringDone) return false;
+      if (st.flags && st.flags._oldzhouHiringDone) return false;
       return (st.player.physique || 0) >= 40;
     },
     probability: 0.025,

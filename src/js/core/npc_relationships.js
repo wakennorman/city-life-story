@@ -433,6 +433,8 @@ function initNpcRelationships(state) {
 
 /** 每日NPC关系tick — 蝴蝶效应传播 + 好感衰减 */
 function tickNpcRelationships(state) {
+  // [全系统自洽修复] 域D R707: state.player 根守卫(防旧存档/异常状态崩溃)
+  if (!state || !state.player) return;
   var day = state.player.day;
   if (!state.npcRelationshipLog) state.npcRelationshipLog = {};
   if (!state.npcRelationshipLog.lastPropagationDay) {

@@ -51,6 +51,8 @@ function ensureSocialNetworkState(state) {
 // ====== 发布朋友圈 ======
 function postToMoments(state, content, images, visibility) {
   ensureSocialNetworkState(state);
+  // [全系统自洽修复] 域D R707: state.player 根守卫
+  if (!state.player) return { ok: false, message: "游戏状态异常。" };
   if ((state.player.actionPoints || 0) < 20) {
     return { ok: false, message: "行动力不足，发布朋友圈需要20点行动力。" };
   }
@@ -247,6 +249,8 @@ function triggerPublicOpinionCrisis(state, topic, severity) {
 // ====== 每日tick ======
 function tickSocialNetwork(state) {
   ensureSocialNetworkState(state);
+  // [全系统自洽修复] 域D R707: state.player 根守卫
+  if (!state.player) return;
   // 刷新微博热搜（每3天）
   if (state.player.day - state.socialNetwork.lastWeiboRefresh >= 3) {
     refreshWeiboHotlist(state);

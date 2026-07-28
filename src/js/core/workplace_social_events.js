@@ -16,9 +16,16 @@
  * 接入方式：与 cross_system_events.js 相同的 IIFE 注入模式
  */
 (function () {
+  "use strict";
   if (typeof RANDOM_EVENTS === "undefined") return;
   if (RANDOM_EVENTS._workplaceSocialEventsLoaded) return;
   RANDOM_EVENTS._workplaceSocialEventsLoaded = true;
+
+  // [全系统自洽修复] 域D R707: state.needs 守卫(Phase2事件防崩溃)
+  function _guardNeedsD(st) {
+    if (!st.needs) st.needs = { hunger: 50, fatigue: 30, hygiene: 60, happiness: 50 };
+    return st.needs;
+  }
 
   var WS_EVENTS = [
     // ===== 事件1：甩锅危机=====
@@ -50,6 +57,7 @@
           text: "🛡️ 直接指出：是小赵负责的",
           hint: "得罪同事，但保住自己",
           apply: function (st) {
+            _guardNeedsD(st);
             st.flags = st.flags || {}; // [R16 域C修复]
             st.flags._blameSeen = true;
             var cols = st.corporate.colleagues.network;
@@ -78,6 +86,7 @@
           text: "🤐 沉默不语，自己扛下来",
           hint: "关系维护，但背锅",
           apply: function (st) {
+            _guardNeedsD(st);
             st.flags = st.flags || {}; // [R16 域C修复]
             st.flags._blameSeen = true;
             var cols = st.corporate.colleagues.network;
@@ -104,6 +113,7 @@
           text: "🧠 反将一军：提出解决方案",
           hint: "需要智力≥50",
           apply: function (st) {
+            _guardNeedsD(st);
             st.flags = st.flags || {}; // [R16 域C修复]
             st.flags._blameSeen = true;
             if ((st.player.intelligence || 0) >= 50) {
@@ -253,6 +263,7 @@
           text: "😤 找源头对质",
           hint: "可能成功，也可能更糟",
           apply: function (st) {
+            _guardNeedsD(st);
             st.flags = st.flags || {}; // [R16 域C修复]
             st.flags._gossipBacklashSeen = true;
             if ((st.player.charm || 0) >= 30) {
@@ -275,6 +286,7 @@
           text: "🧘 冷处理，时间会证明",
           hint: "等待，需要耐心",
           apply: function (st) {
+            _guardNeedsD(st);
             st.flags = st.flags || {}; // [R16 域C修复]
             st.flags._gossipBacklashSeen = true;
             st.needs.happiness = Math.max(0, (st.needs.happiness || 0) - 5);
@@ -331,6 +343,7 @@
           text: "🍻 去，和所有人好好喝一杯",
           hint: "关系+5，但花钱+累",
           apply: function (st) {
+            _guardNeedsD(st);
             st.flags = st.flags || {}; // [R16 域C修复]
             st.flags._teamBuildingSeen = true;
             if (!st.resources) st.resources = { cash: 0 };
@@ -354,6 +367,7 @@
           text: "🙏 找借口推掉",
           hint: "省事但关系-5",
           apply: function (st) {
+            _guardNeedsD(st);
             st.flags = st.flags || {}; // [R16 域C修复]
             st.flags._teamBuildingSeen = true;
             st.needs.fatigue = Math.min(100, (st.needs.fatigue || 0) + 5);
@@ -420,6 +434,7 @@
           text: "📧 当场拿出邮件记录",
           hint: "需要证据链，智力≥40",
           apply: function (st) {
+            _guardNeedsD(st);
             st.flags = st.flags || {}; // [R16 域C修复]
             st.flags._creditStealingSeen = true;
             if ((st.player.intelligence || 0) >= 40) {
@@ -445,6 +460,7 @@
           text: "😌 算了，不争了",
           hint: "短期吃亏，长期观察",
           apply: function (st) {
+            _guardNeedsD(st);
             st.flags = st.flags || {}; // [R16 域C修复]
             st.flags._creditStealingSeen = true;
             var cols = st.corporate.colleagues.network;
@@ -461,6 +477,7 @@
           text: "🤔 下次提前留痕",
           hint: "学习经验，长期有益",
           apply: function (st) {
+            _guardNeedsD(st);
             st.flags = st.flags || {}; // [R16 域C修复]
             st.flags._creditStealingSeen = true;
             st.player.intelligence = Math.min(
