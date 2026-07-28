@@ -1,12 +1,12 @@
 /**
  * 域E(经济/投资) 联动增强 R710
  * 桥接：
- *   E→B  e710_investment_story          投资故事叙事 → 消费 state.investment,
- *     投资经历转化为叙事成长
- *   E→D  e710_investor_social_circle    投资者社交圈 → 消费 state.investment,
- *     投资成功带来社交圈层提升
- *   E→G  e710_wealth_life_balance       财富与生活平衡 → 消费 state.resources+state.needs,
- *     财富积累影响生活品质
+ *   E→A  e710_investment_data_driven 投资数据洞察 → 消费 state.investment 全量数据,
+ *     将隐形投资数据显性化为"投资智慧"
+ *   E→B  e710_market_narrative 市场叙事 → 消费 投资盈亏+市场趋势,
+ *     让经济波动产生叙事回响
+ *   E→G  e710_financial_wellbeing 财务幸福感 → 消费 财富数据+needs,
+ *     财务健康影响身心健康
  */
 (function () {
   "use strict";
@@ -14,169 +14,145 @@
   if (RANDOM_EVENTS._domainELinkageR710Loaded) return;
   RANDOM_EVENTS._domainELinkageR710Loaded = true;
 
-  function getTotalInvestValue(st) {
-    if (!st || !st.investment) return 0;
-    var inv = st.investment;
-    var total = 0;
-    var holdings = inv.stockHoldings || [];
-    for (var hi = 0; hi < holdings.length; hi++) {
-      var h = holdings[hi];
-      var m = inv.stockMarket && inv.stockMarket[h.symbol];
-      if (m) total += m.price * h.shares;
-    }
-    var props = inv.properties || [];
-    for (var pi = 0; pi < props.length; pi++) {
-      total += props[pi].currentPrice || props[pi].buyPrice || 0;
-    }
-    if (inv.btcHoldings && inv.btcHoldings > 0) {
-      total += (inv.btcPrice || 0) * inv.btcHoldings;
-    }
-    return total;
-  }
-
   var EVENTS = [
     {
-      id: "e710_investment_story", phase: "street", _isChainEvent: false, icon: "📖",
-      title: "投资故事",
-      story: "每一次投资都是一段故事——{desc}",
-      triggers: { minDay: 60, interval: 100, maxRepeats: 3, excludeFlags: ["_e710StoryCd"] },
+      id: "e710_investment_data_driven", phase: "corporate", _isChainEvent: false, icon: "📊",
+      title: "投资数据洞察",
+      story: "你回顾这段时间的投资——{desc}",
+      triggers: { minDay: 120, interval: 150, maxRepeats: 3, excludeFlags: ["_e710DataCd"] },
       conditions: function (st) {
-        if (st.gameOver) return false;
-        if (st.flags && st.flags._e710StoryCd) return false;
-        return st.player && st.player.day >= 60 && st.investment;
+        if (!st || st.gameOver) return false;
+        if (st.flags && st.flags._e710DataCd) return false;
+        return st.investment && st.investment.portfolio && st.player && st.player.day >= 120;
       },
       choices: [
         {
-          text: "📝 记录投资心得", hint: "会计XP+5,智力+3,置_e710Journal",
+          text: "📈 分析盈亏模式", hint: "会计XP+6,智力+3,置_e710Analyst",
           apply: function (st) {
             if (!st) return;
             st.flags = st.flags || {};
-            st.flags._e710StoryCd = true;
-            st.flags._e710Journal = true;
+            st.flags._e710DataCd = true;
+            st.flags._e710Analyst = true;
             if (st.player) st.player.intelligence = Math.min(100, (st.player.intelligence || 50) + 3);
-            if (typeof addSkillXp === "function") { try { addSkillXp("accounting", 5); } catch(e) {} }
+            if (typeof addSkillXp === "function") { try { addSkillXp("accounting", 6); } catch(e) {} }
             if (typeof StateManager !== "undefined") {
-              StateManager.addMessage("📝 记录投资心得,是最好的学习方式。会计XP+5,智力+3。", "success");
+              StateManager.addMessage("📊 '数据不说谎,但需要解读。' 会计XP+6,智力+3。", "success");
             }
           }
         },
         {
-          text: "🗣️ 分享经验", hint: "社交XP+4,心智+3,置_e710Share",
+          text: "💰 调整资产配置", hint: "管理XP+5,置_e710Allocator",
           apply: function (st) {
             if (!st) return;
             st.flags = st.flags || {};
-            st.flags._e710StoryCd = true;
-            st.flags._e710Share = true;
-            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 3);
-            if (typeof addSkillXp === "function") { try { addSkillXp("social", 4); } catch(e) {} }
+            st.flags._e710DataCd = true;
+            st.flags._e710Allocator = true;
+            if (typeof addSkillXp === "function") { try { addSkillXp("management", 5); } catch(e) {} }
             if (typeof StateManager !== "undefined") {
-              StateManager.addMessage("🗣️ 分享投资经验,在交流中成长。社交XP+4,心智+3。", "success");
+              StateManager.addMessage("💰 '分散风险,稳定收益。' 管理XP+5。", "info");
             }
           }
         }
       ],
       text: function (st) {
         if (!st) return null;
-        var total = getTotalInvestValue(st);
-        return "持仓市值¥" + Math.round(total).toLocaleString() + "——'每一分钱背后,都有一个故事。'";
+        var pv = st.investment && st.investment.portfolio ? st.investment.portfolio.totalValue || 0 : 0;
+        return "你的投资组合市值¥" + Math.round(pv).toLocaleString() + "——'这些数据,说明了什么?'";
       }
     },
     {
-      id: "e710_investor_social_circle", phase: "street", _isChainEvent: false, icon: "🤝",
-      title: "投资者社交圈",
-      story: "财富增长带来了新的社交圈层——{desc}",
-      triggers: { minDay: 90, interval: 120, maxRepeats: 2, excludeFlags: ["_e710SocialCd"] },
+      id: "e710_market_narrative", phase: "corporate", _isChainEvent: false, icon: "📰",
+      title: "市场叙事",
+      story: "市场的波动正在书写故事——{desc}",
+      triggers: { minDay: 90, interval: 120, maxRepeats: 3, excludeFlags: ["_e710NarrCd"] },
       conditions: function (st) {
-        if (st.gameOver) return false;
-        if (st.flags && st.flags._e710SocialCd) return false;
-        return st.player && st.player.day >= 90 && st.investment && getTotalInvestValue(st) >= 50000;
+        if (!st || st.gameOver) return false;
+        if (st.flags && st.flags._e710NarrCd) return false;
+        if (!st.investment) return false;
+        var inv = st.investment;
+        return (inv.stockHoldings && inv.stockHoldings.length > 0) || (inv.btcHoldings && inv.btcHoldings > 0);
       },
       choices: [
         {
-          text: "🎯 拓展人脉", hint: "社交XP+6,好感+2,置_e710Network",
+          text: "📖 记录市场感悟", hint: "心智+4,智力+2,置_e710Chronicler",
           apply: function (st) {
             if (!st) return;
             st.flags = st.flags || {};
-            st.flags._e710SocialCd = true;
-            st.flags._e710Network = true;
+            st.flags._e710NarrCd = true;
+            st.flags._e710Chronicler = true;
+            if (st.player) {
+              st.player.mental = Math.min(100, (st.player.mental || 50) + 4);
+              st.player.intelligence = Math.min(100, (st.player.intelligence || 50) + 2);
+            }
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("📖 '市场是最好的老师。' 心智+4,智力+2。", "success");
+            }
+          }
+        },
+        {
+          text: "🤝 分享投资心得", hint: "社交XP+6,置_e710Sharer",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._e710NarrCd = true;
+            st.flags._e710Sharer = true;
             if (typeof addSkillXp === "function") { try { addSkillXp("social", 6); } catch(e) {} }
-            if (typeof applyAffinityChange === "function") {
-              var npcs = ["boss_li", "xiao_mei", "zhaojie", "old_zhou"];
-              for (var _ni = 0; _ni < npcs.length; _ni++) {
-                try { applyAffinityChange(st, npcs[_ni], 2, "投资社交圈"); } catch(e) {}
-              }
-            }
             if (typeof StateManager !== "undefined") {
-              StateManager.addMessage("🎯 和优秀的人在一起,你也会变得更优秀。社交XP+6,好感+2。", "success");
-            }
-          }
-        },
-        {
-          text: "📚 低调学习", hint: "智力+5,管理XP+3,置_e710Learn",
-          apply: function (st) {
-            if (!st) return;
-            st.flags = st.flags || {};
-            st.flags._e710SocialCd = true;
-            st.flags._e710Learn = true;
-            if (st.player) st.player.intelligence = Math.min(100, (st.player.intelligence || 50) + 5);
-            if (typeof addSkillXp === "function") { try { addSkillXp("management", 3); } catch(e) {} }
-            if (typeof StateManager !== "undefined") {
-              StateManager.addMessage("📚 真正的投资者,永远在学习。智力+5,管理XP+3。", "info");
+              StateManager.addMessage("🤝 '分享让知识增值。' 社交XP+6。", "info");
             }
           }
         }
       ],
       text: function (st) {
         if (!st) return null;
-        var total = getTotalInvestValue(st);
-        return "持仓市值¥" + Math.round(total).toLocaleString() + "——'你的圈子,决定你的阶层。'";
+        return "市场的起起落落,正在书写属于你的投资故事——'这些波动,意味着什么?'";
       }
     },
     {
-      id: "e710_wealth_life_balance", phase: "street", _isChainEvent: false, icon: "⚖️",
-      title: "财富与生活",
-      story: "钱多了,生活就一定会变好吗——{desc}",
-      triggers: { minDay: 50, interval: 80, maxRepeats: 3, excludeFlags: ["_e710WealthCd"] },
+      id: "e710_financial_wellbeing", phase: "corporate", _isChainEvent: false, icon: "💚",
+      title: "财务幸福感",
+      story: "财务健康与身心健康息息相关——{desc}",
+      triggers: { minDay: 60, interval: 90, maxRepeats: 4, excludeFlags: ["_e710WellbeingCd"] },
       conditions: function (st) {
-        if (st.gameOver) return false;
-        if (st.flags && st.flags._e710WealthCd) return false;
-        return st.player && st.player.day >= 50;
+        if (!st || st.gameOver) return false;
+        if (st.flags && st.flags._e710WellbeingCd) return false;
+        if (!st.resources || !st.needs || !st.status) return false;
+        var totalAssets = (st.resources.cash || 0) + (st.resources.bankBalance || 0);
+        return totalAssets >= 50000 && st.player && st.player.day >= 60;
       },
       choices: [
         {
-          text: "🏥 投资健康", hint: "健康+5,现金-500,置_e710HealthInvest",
+          text: "😊 感恩财务安全", hint: "心情+8,健康+2,置_e710Secure",
           apply: function (st) {
             if (!st) return;
             st.flags = st.flags || {};
-            st.flags._e710WealthCd = true;
-            st.flags._e710HealthInvest = true;
-            if (st.status) st.status.health = Math.min(100, (st.status.health || 100) + 5);
-            if (st.resources) st.resources.cash = Math.max(0, (st.resources.cash || 0) - 500);
+            st.flags._e710WellbeingCd = true;
+            st.flags._e710Secure = true;
+            if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 8);
+            if (st.status) st.status.health = Math.min(100, (st.status.health || 100) + 2);
             if (typeof StateManager !== "undefined") {
-              StateManager.addMessage("🏥 健康是最大的财富。健康+5,花费¥500。", "success");
+              StateManager.addMessage("😊 '钱不是万能的,但没有钱是万万不能的。' 心情+8,健康+2。", "success");
             }
           }
         },
         {
-          text: "🎯 设定财务目标", hint: "心智+5,管理XP+3,置_e710Goal",
+          text: "🎯 设定新目标", hint: "心智+5,置_e710GoalSetter",
           apply: function (st) {
             if (!st) return;
             st.flags = st.flags || {};
-            st.flags._e710WealthCd = true;
-            st.flags._e710Goal = true;
+            st.flags._e710WellbeingCd = true;
+            st.flags._e710GoalSetter = true;
             if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 5);
-            if (typeof addSkillXp === "function") { try { addSkillXp("management", 3); } catch(e) {} }
             if (typeof StateManager !== "undefined") {
-              StateManager.addMessage("🎯 有目标的人生,才有方向。心智+5,管理XP+3。", "info");
+              StateManager.addMessage("🎯 '财务自由不是终点,而是新起点。' 心智+5。", "info");
             }
           }
         }
       ],
       text: function (st) {
         if (!st) return null;
-        var cash = (st.resources && st.resources.cash) || 0;
-        var health = (st.status && st.status.health) || 100;
-        return "存款¥" + cash.toLocaleString() + "·健康" + health + "%——'钱买不到健康,但可以买更好的医疗。'";
+        var totalAssets = (st.resources && st.resources.cash || 0) + (st.resources && st.resources.bankBalance || 0);
+        return "你的总资产¥" + Math.round(totalAssets).toLocaleString() + "——'财富,带来了安全感。'";
       }
     }
   ];
