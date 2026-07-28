@@ -2006,6 +2006,25 @@ const DAILY_PIPELINE = [
           );
         }
       }
+      // [全系统自洽修复] 域G R746b A类#1: 退休养老金月度兑现(life_nodes退休节点记录_pensionBase但全库零读取零发放,_retired还封锁副业/职业收入=纯惩罚→就此接线)
+      if (state.flags._retired && state.flags._pensionBase) {
+        if (day % 30 === 0) {
+          var _pBase = state.flags._pensionBase;
+          if (!isFinite(_pBase) || _pBase <= 0) _pBase = 5000;
+          var _pension = Math.round(Math.min(_pBase, 50000) * 0.6); // 替代率60%,基数封顶5万防极端值
+          state.resources.cash = (state.resources.cash || 0) + _pension;
+          state.flags._pensionTotal = (state.flags._pensionTotal || 0) + _pension;
+          var _pMsg = "🏖️ 本月养老金到账 ¥" + _pension.toLocaleString();
+          if (state.flags._retirementType === "advisor") {
+            var _advFee = Math.round(_pension * 0.5); // 返聘顾问费
+            state.resources.cash += _advFee;
+            _pMsg += "，返聘顾问费 ¥" + _advFee.toLocaleString();
+          }
+          if (typeof StateManager !== "undefined") {
+            StateManager.addMessage(_pMsg + "（累计 ¥" + state.flags._pensionTotal.toLocaleString() + "）。", "good");
+          }
+        }
+      }
       // [全系统自洽修复] 域E 修复:贷款逾期90天警告
       if (
         (state.resources.bankDebt || 0) > 0 &&
@@ -2058,6 +2077,10 @@ const DAILY_PIPELINE = [
     fn: function (state) {
       if (typeof checkStoryChapter === "function") {
         checkStoryChapter(state);
+      }
+      // [全系统自洽修复] 域G R746b A类#2: 年龄节点叙事兑现接线(R720函数悬空,8个_lifeNarrative_XX恒不触发)
+      if (typeof runLifeStageNarrative === "function") {
+        runLifeStageNarrative(state);
       }
     },
   },

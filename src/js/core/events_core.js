@@ -1678,8 +1678,29 @@ function getEventHealthImpact(state, eventId) {
   for (var k in impact) total += Math.abs(impact[k]);
   return total;
 }
-// [R122] 域B 联动增强
-// [R378] 域B
-// [R458] 域B
-// [R546] 域B
-// [R610] 域B
+// [R723 第三轮 域B 联动增强 B→F]: 事件历史摘要UI
+function renderEventHistoryWidget(state) {
+  if (!state || !state.flags) return '<div class="wiki-empty">暂无事件记录</div>';
+  var events = state.flags._eventHistory || [];
+  if (events.length === 0) return '<div class="wiki-empty">暂无事件记录</div>';
+  var html = '<div style="font-size:12px;line-height:1.6;">';
+  var count = Math.min(5, events.length);
+  for (var _ei = events.length - count; _ei < events.length; _ei++) {
+    var evt = events[_ei];
+    if (evt) html += '<div>📌 ' + (evt.title || evt.type || '事件') + '</div>';
+  }
+  html += '<div style="margin-top:4px;color:var(--text-muted);">共' + events.length + '条记录</div>';
+  html += '</div>';
+  return html;
+}
+
+// [R723 第三轮 域B 联动增强 B→C]: 事件职业灵感
+function getEventCareerInspiration(eventType, skills) {
+  if (!eventType || !skills) return null;
+  var map = { tech_talk: 'coding', business_forum: 'management', workshop: 'repair', trade_fair: 'sales', book_club: 'english', cooking_class: 'cooking' };
+  var skillKey = map[eventType];
+  if (!skillKey || !skills[skillKey]) return null;
+  var level = skills[skillKey].level || 0;
+  if (level >= 20) return { skill: skillKey, bonus: 0.1, label: '你已经具备了进阶' + skillKey + '的能力' };
+  return null;
+}

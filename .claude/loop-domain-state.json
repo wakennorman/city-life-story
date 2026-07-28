@@ -1,9 +1,9 @@
 {
-  "lastRound": "738b",
-  "lastDirection": "DOMAIN_E",
+  "lastRound": "746b",
+  "lastDirection": "DOMAIN_G",
   "lastDate": "2026-07-29",
-  "lastCommit": "06f88e73",
+  "lastCommit": "PENDING",
   "nextDirection": "DOMAIN_F",
-  "note": "R738b 域E(本窗口自动化): 选域=本窗口深审recency E最陈旧(R284后未深审,F=R442/G=R311次之)。A类2处(影响≈20死事件): ①investment.portfolio全库零写入方但11+文件以其为conditions门槛→r710/r718/r726/r734全12事件恒false死事件+r443系calcPortfolioValue恒0→investment.js每日tick单点维护{stocks,funds,totalValue}一次性复活; ②part7千万里程碑st.bankBalance死字段+Object.values(portfolio)容器当持仓map→投资贡献恒0。联动3(domain_e_linkage_r738b.js,3corporate): _portfolioMilestone_100000首读E→D/_portfolioPeakHistory 30日曲线首读E→G峰终定律/_portfolioMilestone_1000000首读E→C。竞态: 交付物被并行以[R714]6a246995(3源+挂载)+[R715]06f88e73(dist+round doc)分两笔扫入,四项核验全过闭合。域E剩余素材: _portfolioMilestone_10000/50000/500000中间三档仍零读取/propertyPhaseStartDay/_propertyPolicyTightness。并行两套编号(R71x小编号+R73x第五轮循环)同时活跃,同窗口10分钟内四笔提交。下轮git log重算,勿信本记录recency。",
+  "note": "R746b 域G(本窗口自动化 06:2x): 选域=git log实测本窗口深审recency G=R311全局最陈旧(F=R442次之)。A类2处: ①_pensionBase养老金承诺零兑现且_retired封锁副业/职业收入=选退休纯亏→daily_pipeline月度兑现(每30天min(基数,5万)×60%,advisor加发50%顾问费,_pensionTotal累计); ②R720 getLifeStageNarrativeEvent悬空(未调用/未导出/8个_lifeNarrative_XX零写入=8年龄节点叙事恒不触发)→story_chapters补8段叙事+runLifeStageNarrative+导出+story_chapter_check接线。联动3(domain_g_linkage_r746b.js,3street): _pensionTotal首读G→E禀赋效应/_lifeNarrative_XX首读G→B峰终/_lifeNode_choice首跨文件读G→C复利叙事。下轮候选F(R442)>D。开轮必git log重算勿信本记录。",
   "pushStatus": "PENDING"
 }

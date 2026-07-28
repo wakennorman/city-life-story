@@ -39184,6 +39184,9 @@ if (typeof window !== "undefined") {
   window.checkStoryChapter = checkStoryChapter;
   window.getStoryChapterProgress = getStoryChapterProgress;
   window.getStoryChapterChecklist = getStoryChapterChecklist;
+  // [全系统自洽修复] 域G R746b A类#2: 导出年龄叙事兑现函数（定义在文件尾部,函数声明有提升,此处引用安全）
+  window.getLifeStageNarrativeEvent = function (age, flags) { return getLifeStageNarrativeEvent(age, flags); };
+  window.runLifeStageNarrative = function (state) { return runLifeStageNarrative(state); };
 }
 // [R720 域G 联动增强 G→B]: 人生阶段叙事事件
 function getLifeStageNarrativeEvent(age, flags) {
@@ -39197,6 +39200,30 @@ function getLifeStageNarrativeEvent(age, flags) {
   if (age === 50 && flags && !flags._lifeNarrative_50) return "fifty_know";
   if (age === 60 && flags && !flags._lifeNarrative_60) return "sixty_ear";
   return null;
+}
+// [全系统自洽修复] 域G R746b A类#2: getLifeStageNarrativeEvent(R720) 定义后从未被调用/未导出/8个_lifeNarrative_XX flag全库零写入=8个年龄节点叙事恒不触发(pipeline断链)→补兑现函数+接线
+var LIFE_STAGE_NARRATIVES_R746B = {
+  coming_of_age: { age: 18, icon: "🎓", text: "十八岁了。成年的重量第一次落在肩上——从今天起，每一个选择都要自己负责。" },
+  youth_bloom: { age: 20, icon: "🌸", text: "二十岁的城市灯火通明。你一无所有，却拥有最贵的东西：大把的时间和不怕输的勇气。" },
+  quarter_life: { age: 25, icon: "🌗", text: "二十五岁，四分之一人生。身边有人结婚、有人升职、有人离开这座城市。你开始明白：人生不是赛跑，是各走各的路。" },
+  thirty_stand: { age: 30, icon: "🏔️", text: "三十而立。立的不是房子车子，是心里那杆秤——知道自己要什么，也知道自己不要什么。" },
+  mid_career: { age: 35, icon: "⚖️", text: "三十五岁。招聘启事上的年龄线像一道墙，但墙外的人不知道：你手里的经验和人脉，是二十岁的自己拿不出的筹码。" },
+  forty_awake: { age: 40, icon: "🕯️", text: "四十不惑。不是没有困惑，是终于学会与困惑共处。健康悄悄变成了最贵的资产。" },
+  fifty_know: { age: 50, icon: "🍂", text: "五十知天命。回头看，那些当年以为过不去的坎，都成了故事里的一行字。" },
+  sixty_ear: { age: 60, icon: "🌅", text: "六十耳顺。城市还是那座城市，你已经不是当年的你。往后的日子，为自己活。" }
+};
+function runLifeStageNarrative(state) {
+  if (!state || !state.player || !state.player.age) return;
+  if (!state.flags) state.flags = {};
+  var token = getLifeStageNarrativeEvent(state.player.age, state.flags);
+  if (!token) return;
+  var n = LIFE_STAGE_NARRATIVES_R746B[token];
+  if (!n) return;
+  state.flags["_lifeNarrative_" + n.age] = true;
+  state.player.mental = Math.min(100, (state.player.mental || 50) + 2);
+  if (typeof StateManager !== "undefined" && StateManager.addMessage) {
+    StateManager.addMessage(n.icon + " 【" + n.age + "岁】" + n.text + "（心智+2）", "info");
+  }
 }
 
 ;
@@ -214111,6 +214138,25 @@ const DAILY_PIPELINE = [
           );
         }
       }
+      // [全系统自洽修复] 域G R746b A类#1: 退休养老金月度兑现(life_nodes退休节点记录_pensionBase但全库零读取零发放,_retired还封锁副业/职业收入=纯惩罚→就此接线)
+      if (state.flags._retired && state.flags._pensionBase) {
+        if (day % 30 === 0) {
+          var _pBase = state.flags._pensionBase;
+          if (!isFinite(_pBase) || _pBase <= 0) _pBase = 5000;
+          var _pension = Math.round(Math.min(_pBase, 50000) * 0.6); // 替代率60%,基数封顶5万防极端值
+          state.resources.cash = (state.resources.cash || 0) + _pension;
+          state.flags._pensionTotal = (state.flags._pensionTotal || 0) + _pension;
+          var _pMsg = "🏖️ 本月养老金到账 ¥" + _pension.toLocaleString();
+          if (state.flags._retirementType === "advisor") {
+            var _advFee = Math.round(_pension * 0.5); // 返聘顾问费
+            state.resources.cash += _advFee;
+            _pMsg += "，返聘顾问费 ¥" + _advFee.toLocaleString();
+          }
+          if (typeof StateManager !== "undefined") {
+            StateManager.addMessage(_pMsg + "（累计 ¥" + state.flags._pensionTotal.toLocaleString() + "）。", "good");
+          }
+        }
+      }
       // [全系统自洽修复] 域E 修复:贷款逾期90天警告
       if (
         (state.resources.bankDebt || 0) > 0 &&
@@ -214163,6 +214209,10 @@ const DAILY_PIPELINE = [
     fn: function (state) {
       if (typeof checkStoryChapter === "function") {
         checkStoryChapter(state);
+      }
+      // [全系统自洽修复] 域G R746b A类#2: 年龄节点叙事兑现接线(R720函数悬空,8个_lifeNarrative_XX恒不触发)
+      if (typeof runLifeStageNarrative === "function") {
+        runLifeStageNarrative(state);
       }
     },
   },
@@ -216648,16 +216698,33 @@ function getSkillPriceInsight(state, locKey, goodId) {
   }
   return insight;
 }
-// [R121] 域A 联动增强
-// [R193] 域A 联动增强
-// [R241] 域A 联动增强
-// [R289] 域A
-// [R337] 域A
-// [R385] 域A
-// [R433] 域A
-// [R481] 域A
-// [R529] 域A
-// [R577] 域A
+// [R722 第三轮 域A 联动增强 A→B]: 价格波动叙事
+function getMarketNarrativeFromPrice(goodId, oldPrice, newPrice) {
+  if (!goodId || !oldPrice || !newPrice || oldPrice <= 0) return null;
+  var change = (newPrice - oldPrice) / oldPrice;
+  var name = (getGoodById && getGoodById(goodId) && getGoodById(goodId).name) || goodId;
+  if (change > 0.5) return { type: "price_surge", title: name + "暴涨", text: name + "价格暴涨" + Math.round(change * 100) + "%！市场一片恐慌。" };
+  if (change > 0.2) return { type: "price_rise", title: name + "上涨", text: name + "价格上涨" + Math.round(change * 100) + "%，行情看涨。" };
+  if (change < -0.3) return { type: "price_crash", title: name + "暴跌", text: name + "价格暴跌" + Math.round(Math.abs(change) * 100) + "%！抄底的机会？" };
+  if (change < -0.1) return { type: "price_drop", title: name + "下跌", text: name + "价格下跌" + Math.round(Math.abs(change) * 100) + "%，可以关注。" };
+  return null;
+}
+
+// [R722 第三轮 域A 联动增强 A→D]: 价格公平感知
+function getPriceFairnessReaction(state, goodId, price) {
+  if (!state || !goodId || !price) return 0;
+  var basePrice = 0;
+  var goods = typeof GOODS !== "undefined" ? GOODS : [];
+  for (var _gi = 0; _gi < goods.length; _gi++) {
+    if (goods[_gi] && goods[_gi].id === goodId) { basePrice = goods[_gi].basePrice || 0; break; }
+  }
+  if (basePrice <= 0) return 0;
+  var ratio = price / basePrice;
+  if (ratio > 2.5) return -2;
+  if (ratio > 1.5) return -1;
+  if (ratio < 0.6) return 1;
+  return 0;
+}
 
 ;
 // ==== js/data/domain_g_linkage_r180.js ====
@@ -342570,6 +342637,174 @@ if (typeof window !== "undefined") {
   for (var i = 0; i < EVENTS.length; i++) {
     RANDOM_EVENTS.push(EVENTS[i]);
   }
+})();
+
+;
+// ==== js/core/domain_g_linkage_r746b.js ====
+/**
+ * 域G(核心机制/生命周期) 联动增强 R746b
+ * 桥接：
+ *   G→E  g746b_pension_planning 养老金理财规划 → _pensionTotal(R746b A类#1新增)首个事件层读取
+ *   G→B  g746b_life_narrative_echo 年龄叙事深夜回响 → _lifeNarrative_XX(R746b A类#2复活)首个事件层读取,峰终定律
+ *   G→C  g746b_node_choice_legacy 人生选择的复利 → _lifeNode_choice 首个跨文件读取(此前life_nodes自写自读)
+ * 设计: 峰终定律(退休回望/深夜回响) + 禀赋效应(养老金是"自己挣来的") + 社会比较(同龄人叙事)
+ */
+(function () {
+  "use strict";
+  if (typeof RANDOM_EVENTS === "undefined" || !RANDOM_EVENTS) return;
+  if (RANDOM_EVENTS._domainGLinkageR746bLoaded) return;
+  RANDOM_EVENTS._domainGLinkageR746bLoaded = true;
+
+  var EVENTS = [
+    {
+      // [全系统自洽修复] 域G R746b 联动1 G→E: _pensionTotal 首读——退休后的钱怎么打理
+      id: "g746b_pension_planning", phase: "street", _isChainEvent: false, icon: "🏖️",
+      title: "养老金的去处",
+      story: "退休后的第一笔积蓄躺在账上——{desc}",
+      triggers: { minDay: 380, interval: 60, maxRepeats: 1, excludeFlags: ["_g746bPensionCd"] },
+      conditions: function (st) {
+        if (!st || st.gameOver) return false;
+        if (!st.flags || st.flags._g746bPensionCd) return false;
+        if (!st.flags._retired) return false;
+        return (st.flags._pensionTotal || 0) >= 3000; // [PLACEHOLDER] 至少领过一期养老金
+      },
+      choices: [
+        {
+          text: "🏦 稳字当头，存进银行", hint: "养老金转入存款,心智+5",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._g746bPensionCd = true;
+            st.flags._g746bPensionStyle = "safe";
+            var moved = Math.min((st.resources && st.resources.cash) || 0, 3000); // [PLACEHOLDER]
+            if (st.resources && moved > 0) {
+              st.resources.cash -= moved;
+              st.resources.bankBalance = (st.resources.bankBalance || 0) + moved;
+            }
+            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 5);
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("🏦 '这个岁数，本金安全比收益率重要。' 转存¥" + moved.toLocaleString() + "，心智+5。", "info");
+            }
+          }
+        },
+        {
+          text: "🎁 请老朋友们吃顿饭", hint: "花¥500,幸福+12",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._g746bPensionCd = true;
+            st.flags._g746bPensionStyle = "share";
+            if (st.resources) st.resources.cash = Math.max(0, (st.resources.cash || 0) - 500); // [PLACEHOLDER]
+            if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 12);
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("🎁 一桌老友，半生故事。'钱是挣不完的，人是聚一次少一次。' 幸福+12。", "success");
+            }
+          }
+        }
+      ],
+      text: function (st) {
+        var total = (st && st.flags && st.flags._pensionTotal) || 0;
+        return "账上已累计领到 ¥" + total.toLocaleString() + " 养老金——这是你工作半生挣来的底气。它该去哪？";
+      }
+    },
+    {
+      // [全系统自洽修复] 域G R746b 联动2 G→B: _lifeNarrative_XX 首读——年龄叙事的深夜回响(峰终定律)
+      id: "g746b_life_narrative_echo", phase: "street", _isChainEvent: false, icon: "🌙",
+      title: "深夜的年龄刻度",
+      story: "夜深了，白天那句关于年龄的感慨又浮上心头——{desc}",
+      triggers: { minDay: 365, interval: 200, maxRepeats: 2, excludeFlags: ["_g746bEchoCd"] },
+      conditions: function (st) {
+        if (!st || st.gameOver) return false;
+        if (!st.flags || st.flags._g746bEchoCd) return false;
+        var f = st.flags;
+        return !!(f._lifeNarrative_30 || f._lifeNarrative_35 || f._lifeNarrative_40 || f._lifeNarrative_50);
+      },
+      choices: [
+        {
+          text: "📔 写下这一页", hint: "心智+8,置_g746bDiarist",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._g746bEchoCd = true;
+            st.flags._g746bDiarist = true;
+            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 8);
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("📔 你把这个年纪的心事写进日记。'记下来的，才算真正活过。' 心智+8。", "info");
+            }
+          }
+        },
+        {
+          text: "😴 睡吧，明天还要生活", hint: "疲劳-10",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._g746bEchoCd = true;
+            if (st.needs) st.needs.fatigue = Math.max(0, (st.needs.fatigue || 30) - 10);
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("😴 想再多不如睡个好觉。疲劳-10。", "info");
+            }
+          }
+        }
+      ],
+      text: function (st) {
+        var f = (st && st.flags) || {};
+        if (f._lifeNarrative_50) return "五十岁那天的话还在耳边——那些过不去的坎，真的都成了故事。";
+        if (f._lifeNarrative_40) return "四十岁的体检单和二十岁的体检单，说的已经不是同一个身体。";
+        if (f._lifeNarrative_35) return "三十五岁这道线，别人拿它筛人，你拿它筛掉不重要的事。";
+        return "三十而立那晚你想了很久：立的到底是什么？现在似乎有点答案了。";
+      }
+    },
+    {
+      // [全系统自洽修复] 域G R746b 联动3 G→C: _lifeNode_choice 首个跨文件读取——人生选择的职业复利
+      id: "g746b_node_choice_legacy", phase: "street", _isChainEvent: false, icon: "🧭",
+      title: "选择的复利",
+      story: "回头看，当年那个人生节点的选择正在悄悄影响今天——{desc}",
+      triggers: { minDay: 200, interval: 300, maxRepeats: 1, excludeFlags: ["_g746bLegacyCd"] },
+      conditions: function (st) {
+        if (!st || st.gameOver) return false;
+        if (!st.flags || st.flags._g746bLegacyCd) return false;
+        return !!st.flags._lifeNode_choice; // 做过任一人生节点选择
+      },
+      choices: [
+        {
+          text: "🧭 沿着当年的方向再走一步", hint: "管理技能经验+60",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._g746bLegacyCd = true;
+            if (typeof addSkillXp === "function") addSkillXp("management", 60); // [PLACEHOLDER]
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("🧭 '人生的复利，来自在同一个方向上持续下注。' 管理经验+60。", "success");
+            }
+          }
+        },
+        {
+          text: "🔍 复盘当年的岔路", hint: "智力+5,心智+5",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._g746bLegacyCd = true;
+            if (st.player) {
+              st.player.intelligence = Math.min(100, (st.player.intelligence || 50) + 5);
+              st.player.mental = Math.min(100, (st.player.mental || 50) + 5);
+            }
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("🔍 '没选的那条路不必遗憾——你只能活出一种人生，把它活好。' 智力+5,心智+5。", "info");
+            }
+          }
+        }
+      ],
+      text: function (st) {
+        var c = (st && st.flags && st.flags._lifeNode_choice) || "";
+        if (c.indexOf("gaokao") === 0) return "高考那年的决定，塑造了你进入社会的姿势。";
+        if (c.indexOf("c35") === 0) return "35岁那次抉择之后，你对'稳定'和'冒险'有了自己的定义。";
+        if (c.indexOf("retire") === 0) return "退休方式的选择，决定了你如何与后半生相处。";
+        return "每一个节点上的选择，都在为今天的你投票。";
+      }
+    }
+  ];
+
+  for (var i = 0; i < EVENTS.length; i++) RANDOM_EVENTS.push(EVENTS[i]);
 })();
 
 ;

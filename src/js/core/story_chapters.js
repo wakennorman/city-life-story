@@ -537,6 +537,9 @@ if (typeof window !== "undefined") {
   window.checkStoryChapter = checkStoryChapter;
   window.getStoryChapterProgress = getStoryChapterProgress;
   window.getStoryChapterChecklist = getStoryChapterChecklist;
+  // [全系统自洽修复] 域G R746b A类#2: 导出年龄叙事兑现函数（定义在文件尾部,函数声明有提升,此处引用安全）
+  window.getLifeStageNarrativeEvent = function (age, flags) { return getLifeStageNarrativeEvent(age, flags); };
+  window.runLifeStageNarrative = function (state) { return runLifeStageNarrative(state); };
 }
 // [R720 域G 联动增强 G→B]: 人生阶段叙事事件
 function getLifeStageNarrativeEvent(age, flags) {
@@ -550,4 +553,28 @@ function getLifeStageNarrativeEvent(age, flags) {
   if (age === 50 && flags && !flags._lifeNarrative_50) return "fifty_know";
   if (age === 60 && flags && !flags._lifeNarrative_60) return "sixty_ear";
   return null;
+}
+// [全系统自洽修复] 域G R746b A类#2: getLifeStageNarrativeEvent(R720) 定义后从未被调用/未导出/8个_lifeNarrative_XX flag全库零写入=8个年龄节点叙事恒不触发(pipeline断链)→补兑现函数+接线
+var LIFE_STAGE_NARRATIVES_R746B = {
+  coming_of_age: { age: 18, icon: "🎓", text: "十八岁了。成年的重量第一次落在肩上——从今天起，每一个选择都要自己负责。" },
+  youth_bloom: { age: 20, icon: "🌸", text: "二十岁的城市灯火通明。你一无所有，却拥有最贵的东西：大把的时间和不怕输的勇气。" },
+  quarter_life: { age: 25, icon: "🌗", text: "二十五岁，四分之一人生。身边有人结婚、有人升职、有人离开这座城市。你开始明白：人生不是赛跑，是各走各的路。" },
+  thirty_stand: { age: 30, icon: "🏔️", text: "三十而立。立的不是房子车子，是心里那杆秤——知道自己要什么，也知道自己不要什么。" },
+  mid_career: { age: 35, icon: "⚖️", text: "三十五岁。招聘启事上的年龄线像一道墙，但墙外的人不知道：你手里的经验和人脉，是二十岁的自己拿不出的筹码。" },
+  forty_awake: { age: 40, icon: "🕯️", text: "四十不惑。不是没有困惑，是终于学会与困惑共处。健康悄悄变成了最贵的资产。" },
+  fifty_know: { age: 50, icon: "🍂", text: "五十知天命。回头看，那些当年以为过不去的坎，都成了故事里的一行字。" },
+  sixty_ear: { age: 60, icon: "🌅", text: "六十耳顺。城市还是那座城市，你已经不是当年的你。往后的日子，为自己活。" }
+};
+function runLifeStageNarrative(state) {
+  if (!state || !state.player || !state.player.age) return;
+  if (!state.flags) state.flags = {};
+  var token = getLifeStageNarrativeEvent(state.player.age, state.flags);
+  if (!token) return;
+  var n = LIFE_STAGE_NARRATIVES_R746B[token];
+  if (!n) return;
+  state.flags["_lifeNarrative_" + n.age] = true;
+  state.player.mental = Math.min(100, (state.player.mental || 50) + 2);
+  if (typeof StateManager !== "undefined" && StateManager.addMessage) {
+    StateManager.addMessage(n.icon + " 【" + n.age + "岁】" + n.text + "（心智+2）", "info");
+  }
 }
