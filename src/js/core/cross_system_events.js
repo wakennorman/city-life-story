@@ -6240,7 +6240,7 @@
             return "🌳 选择" + (st._branchSkillKey || "该技能") + "发展方向";
           },
           hint: "开启天赋树系统",
-          callback: function (st) {
+          apply: function (st) {
             if (typeof showModal === "function") {
               showModal({
                 title: "🌳 选择发展方向",
@@ -6317,7 +6317,7 @@
         {
           text: "🌟 继续挖掘潜能",
           hint: "前往技能Tab查看可激活节点",
-          callback: function (st) {
+          apply: function (st) {
             if (typeof switchTab === "function") switchTab("skills");
           },
         },

@@ -2907,7 +2907,7 @@
             st.flags._milestone30Path = "money";
             st.resources.cash = (st.resources.cash || 0) + 150;
             st.resources.totalEarned += 150;
-            st.needs.happiness = Math.min(100, st.needs.happiness + 10);
+            st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 10);
             StateManager.addMessage(
               "💪 你认清了方向：先把村长那5500还上，再图其他。得到了额外¥150的坚持奖励。",
               "success",
@@ -2938,7 +2938,7 @@
             st.flags._milestone30 = true;
             st.flags._milestone30Path = "network";
             st.player.fame = Math.min(100, st.player.fame + 15);
-            st.needs.happiness = Math.min(100, st.needs.happiness + 15);
+            st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 15);
             if (typeof NPCS !== "undefined") {
               NPCS.forEach(function (npc) {
                 if (!st.relationships[npc.id])

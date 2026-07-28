@@ -2276,11 +2276,16 @@ function resolveBoardPressureAction(state, optionIndex) {
         company.CEOReplaced = true;
         state.startup.flags.ceoReplaced = true;
       } else if (key === "crisisMitigation") {
+        if (!state.flags) state.flags = {};
         state.flags.boardCrisisResolved = true;
       } else if (key === "boardRevolt") {
+        if (!state.flags) state.flags = {};
         state.flags.boardRevolt = true;
       } else if (key === "playerRoleChange") {
-        state.player.corporate?.rank && (company.CEOReplaced = true);
+        // [全系统自洽修复] 域H R706: state.player 根守卫 + 逻辑修正（原 && 表达式结果丢弃→显式赋值）
+        if (state.player && state.player.corporate && state.player.corporate.rank) {
+          company.CEOReplaced = true;
+        }
       }
     }
   }
@@ -2604,6 +2609,7 @@ function tickStartup(state, tickType) {
     for (var _mi = 0; _mi < _milestones.length; _mi++) {
       var _m = _milestones[_mi];
       if (startup.history.peakValuation >= _m.threshold && _prevPeak < _m.threshold) {
+        if (!state.flags) state.flags = {};
         if (!state.flags[_m.flag]) {
           state.flags[_m.flag] = true;
           state.needs.happiness = Math.min(100, (state.needs.happiness || 50) + _m.h);
@@ -3791,8 +3797,9 @@ function _evaluateCrisisProbability(state, company) {
   baseChance *= 1 - company.mediaTrainingLevel / 200;
 
   // 品牌等级高降低危机概率
-  const brandLevel = _getCompanyBrandLevel(company);
-  if (brandLevel >= 4) {
+  // [全系统自洽修复] 域H R706: _getCompanyBrandLevel 未定义(ReferenceError)→改用真实函数 getBrandLevel(reputation)
+  const brandLevel = typeof getBrandLevel === "function" ? getBrandLevel(company.reputation || 0) : { level: 0 };
+  if (brandLevel && brandLevel.level >= 4) {
     baseChance *= 0.7;
   }
 

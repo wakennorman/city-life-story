@@ -3,6 +3,8 @@
  * G→H 联动增强 | [全系统自洽修复] 域H 联动增强1
  */
 function calculateStreetLegacyBonus(state) {
+  // [全系统自洽修复] 域H R706: state.player 根守卫（防旧存档/异常状态崩溃）
+  if (!state.player) return {};
   var p = state.player;
   var s = state.skills;
   var rel = state.relationships;
@@ -22,7 +24,8 @@ function calculateStreetLegacyBonus(state) {
   legacy.skipRank = skipRank;
 
   // 街头工作经验→KPI起点加成
-  var streetDays = state.flags._totalStreetDays || (p.day || 0);
+  // [全系统自洽修复] 域H R706: state.flags 守卫（防旧存档崩溃）
+  var streetDays = (state.flags && state.flags._totalStreetDays) || (p.day || 0);
   legacy.kpiBonus = Math.min(30, Math.floor(streetDays / 30));
 
   // 人脉积累→向上管理加成

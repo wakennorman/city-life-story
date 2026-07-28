@@ -11,7 +11,8 @@ function doCorporateAction(actionId) {
     return false;
   }
   // [全系统自洽修复] 域H A类#3: 检查 state.player.corporate 存在性（与 state.corporate 是不同路径）
-  if (!state.player.corporate) {
+  // [全系统自洽修复] 域H R706: 补 state.player 根守卫（防旧存档/异常状态崩溃）
+  if (!state.player || !state.player.corporate) {
     if (typeof StateManager !== "undefined") StateManager.addMessage("⚠️ 职场角色数据未初始化，无法执行职场行动。", "warning");
     return false;
   }
@@ -72,7 +73,7 @@ function doCorporateAction(actionId) {
   // 应用效果（Q4冲刺KPI+50%）
   const c = state.player.corporate;
   const effects = action.effects;
-  const sprintBonus = state.flags.q4Sprint ? 1.5 : 1;
+  const sprintBonus = (state.flags && state.flags.q4Sprint) ? 1.5 : 1;
   if (effects.kpi)
     c.kpi = Math.max(
       0,
@@ -330,11 +331,13 @@ function endQuarter() {
         "success",
       );
     }
+    if (!state.flags) state.flags = {};
     state.flags.q4Sprint = false;
   }
 
   // Q4 冲刺（下季度 KPI 增益 +50%）
   if (c.corpQuarter === 4) {
+    if (!state.flags) state.flags = {};
     state.flags.q4Sprint = true;
     // [全系统自洽修复] 域H 联动增强1: Q4冲刺积累疲劳（H→G）
     if (state.needs) {
@@ -376,6 +379,7 @@ function endQuarter() {
   ) {
     // [全系统自洽修复] 域H 联动增强2: 绩效影响股价（H→E）
     // S/S+级绩效→利好公司股价，C级→利空
+    if (!state.flags) state.flags = {};
     if (grade.grade === "S+" || grade.grade === "S") {
       state.flags._corpPerfStockBoost = true;
     } else if (grade.grade === "C") {
@@ -422,13 +426,19 @@ function endQuarter() {
     var burnoutMsg = "😰 职场风险等级已达" + riskLevel + "，你感到身心俱疲。";
     if (riskLevel > 85) {
       burnoutMsg += " 连续的高压工作让你开始怀疑自己是否还能撑下去。";
-      state.needs.fatigue = Math.min(100, (state.needs.fatigue || 0) + 5);
-      state.needs.happiness = Math.max(0, (state.needs.happiness || 50) - 5);
+      // [全系统自洽修复] 域H R706: state.needs 守卫（与 state.status 守卫一致，防旧存档崩溃）
+      if (state.needs) {
+        state.needs.fatigue = Math.min(100, (state.needs.fatigue || 0) + 5);
+        state.needs.happiness = Math.max(0, (state.needs.happiness || 50) - 5);
+      }
       // [域H R416 联动增强] H→G: 高压职场→健康损耗
       if (state.status) state.status.health = Math.max(0, (state.status.health || 100) - 2);
     } else {
       burnoutMsg += " 你告诉自己再坚持一下，但身体在发出警告。";
-      state.needs.fatigue = Math.min(100, (state.needs.fatigue || 0) + 3);
+      // [全系统自洽修复] 域H R706: state.needs 守卫
+      if (state.needs) {
+        state.needs.fatigue = Math.min(100, (state.needs.fatigue || 0) + 3);
+      }
       if (state.status) state.status.health = Math.max(0, (state.status.health || 100) - 1);
     }
     StateManager.addMessage(burnoutMsg, "warning");
