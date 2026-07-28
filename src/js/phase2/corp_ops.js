@@ -583,7 +583,7 @@ function enterCorporatePhase(companyId) {
   }
 
   // 张姐内推：入职时额外向上管理+10、人缘+10（有人脉就是不一样）
-  if (state.flags.zhangReferred) {
+  if (state.flags && state.flags.zhangReferred) {
     p.corporate.upwardMgmt = Math.min(100, p.corporate.upwardMgmt + 10);
     p.corporate.popularity = Math.min(100, p.corporate.popularity + 10);
     StateManager.addMessage(
@@ -592,7 +592,7 @@ function enterCorporatePhase(companyId) {
     );
   }
   // 小美实习引荐：入职时额外能力+15、KPI+10（实习经历是资本）
-  if (state.flags.xiaomeiInternship) {
+  if (state.flags && state.flags.xiaomeiInternship) {
     p.corporate.ability = Math.min(100, p.corporate.ability + 15);
     p.corporate.kpi = Math.min(150, p.corporate.kpi + 10);
     StateManager.addMessage(
