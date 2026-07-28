@@ -567,3 +567,12 @@
 - 并行协同：源码+dist 被扫入33d00557、账本(CLAUDE.md R631行/round-631.md/loop-state)被扫入18677055、last_known_head 被扫入35558832——本窗口零独立提交但全部交付物均落库推送，HEAD==origin/main。
 - 素材沉淀：域G仍余12个写-only flag(_debtFree/_everCuredIllness/_pensionBase/_streakMaster等,见round-631.md)。
 - 下轮：DOMAIN_H？开轮必重算——并行已做 R632 域H(18677055)，届时 A(r624) 或 B(r625) 可能最陈旧。
+
+## 2026-07-28 17:3x R658b 域B(事件/叙事) — 已push (01579324主体+768c6b0d收尾)
+- 选域：git log实测B=650全局最薄弱→R658b(并行同轮号避让b后缀)。
+- A类1处：news.js:452 good_sleep事件hint"效率加倍"零兑现+_goodSleepToday今日flag永不重置→_goodSleepDay当日语义+有工作就地兑现¥30-80(Random.int)。CRLF用Python newline=精准替换(R599教训)。
+- 联动3(domain_b_linkage_r658b.js,3street,done-flag防重)：b658b_bulk_channel(B→E _bulkSupplier死flag首消费)/b658b_liu_crew_callback(B→C _liuPartner首消费+repair XP15)/b658b_volunteer_echo(B→D _communityNetwork首消费,met+applyAffinityChange封顶4人)。
+- ⚠️竞态新形态x2(已写MEMORY.md)：①并行reset --hard冲掉本窗口已落盘news.js修复(不入stash无找回点)→并行自行staged IDENTICAL重做版；②全套交付物(源+挂载+dist+A类修复)被并行以[R658b] 01579324名义提交推送。对策：改关键文件后立即核验git status；被冲先查staged/HEAD含同内容则闭合。
+- 验证：node --check全过；build 12006.1KB b658b=6入包；MC 10x500 259s 0代码异常、前7天死亡率全0%(social/corporate 50%既有RNG阈值)。
+- 收尾提交768c6b0d(日志+last_known_head)遇push竞态(remote已在768c6b0d=并行共享仓库代推)，fetch核验HEAD==origin/main闭合。
+- 下轮：git log重算。R660域D已被并行做完(b2c47e1c)，届时预计E=653或A=657之外最陈旧者。域B剩余素材_gratitudeLetterSent(B→H跨阶段)。
