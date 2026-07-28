@@ -604,7 +604,7 @@ function getBestTradeRoutes(state) {
 
       // 从 fromKey 出发可以到哪些地方卖？
       var toKeys = (g.sellLocations || []).filter(function (tk) {
-        return tk !== fromKey && getLocationHops(fromKey, tk) < 99;
+        return tk !== fromKey && (typeof getLocationHops === "function" ? getLocationHops(fromKey, tk) : 1) < 99;
       });
       for (var ti = 0; ti < toKeys.length; ti++) {
         var toKey = toKeys[ti];
@@ -614,7 +614,7 @@ function getBestTradeRoutes(state) {
         var rawProfitRate = Math.round(
           ((toPrice - fromPrice) / fromPrice) * 100,
         );
-        var hops = getLocationHops(fromKey, toKey);
+        var hops = typeof getLocationHops === "function" ? getLocationHops(fromKey, toKey) : 1;
 
         // 综合成本：每跳 −2% 利润 + 疲劳消耗影响未来效率
         var transportCost = hops * 2.5;
