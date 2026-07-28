@@ -54,8 +54,8 @@
             st.flags._blameSeen = true;
             var cols = st.corporate.colleagues.network;
             var target = cols[Random.int(0, cols.length - 1)];
-            target.relationship = Math.max(0, target.relationship - 15);
-            target.trust = Math.max(0, target.trust - 20);
+            target.relationship = Math.max(0, (target.relationship || 0) - 15);
+            target.trust = Math.max(0, (target.trust || 0) - 20);
             st.player.fame = Math.min(100, (st.player.fame || 0) + 3);
             st.needs.happiness = Math.max(0, (st.needs.happiness || 0) - 5);
             if (!st.workplaceSocial) st.workplaceSocial = {};
@@ -82,7 +82,7 @@
             st.flags._blameSeen = true;
             var cols = st.corporate.colleagues.network;
             var target = cols[Random.int(0, cols.length - 1)];
-            target.relationship = Math.min(100, target.relationship + 8);
+            target.relationship = Math.min(100, (target.relationship || 0) + 8);
             st.needs.happiness = Math.max(0, (st.needs.happiness || 0) - 10);
             if (!st.workplaceSocial) st.workplaceSocial = {};
             if (!st.workplaceSocial.officePoliticsLog)
@@ -109,7 +109,7 @@
             if ((st.player.intelligence || 0) >= 50) {
               var cols = st.corporate.colleagues.network;
               var target = cols[Random.int(0, cols.length - 1)];
-              target.relationship = Math.max(0, target.relationship - 5);
+              target.relationship = Math.max(0, (target.relationship || 0) - 5);
               st.player.fame = Math.min(100, (st.player.fame || 0) + 5);
               st.player.intelligence = Math.min(
                 100,
@@ -175,7 +175,7 @@
             var cols = st.corporate.colleagues.network;
             var mentee = cols[Random.int(0, cols.length - 1)];
             mentee.role = "subordinate";
-            mentee.relationship = Math.min(100, mentee.relationship + 10);
+            mentee.relationship = Math.min(100, (mentee.relationship || 0) + 10);
             if (!st.corporate.colleagues.mentees)
               st.corporate.colleagues.mentees = [];
             st.corporate.colleagues.mentees.push({
@@ -199,7 +199,7 @@
             st.flags._mentorRequestSeen = true;
             var cols = st.corporate.colleagues.network;
             var mentee = cols[Random.int(0, cols.length - 1)];
-            mentee.relationship = Math.min(100, mentee.relationship + 5);
+            mentee.relationship = Math.min(100, (mentee.relationship || 0) + 5);
             StateManager.addMessage(
               "🙂 你说：「有问题随时来问。」小李很高兴。关系+5。",
               "info",
@@ -214,7 +214,7 @@
             st.flags._mentorRequestSeen = true;
             var cols = st.corporate.colleagues.network;
             var mentee = cols[Random.int(0, cols.length - 1)];
-            mentee.relationship = Math.max(0, mentee.relationship - 10);
+            mentee.relationship = Math.max(0, (mentee.relationship || 0) - 10);
             StateManager.addMessage(
               "🚫 你说：「我最近挺忙的。」小李脸垮了一下，说：「好吧。」关系-10。有些机会就这样错过了。",
               "warning",
@@ -340,7 +340,7 @@
             st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 8);
             var cols = st.corporate.colleagues.network;
             for (var i = 0; i < Math.min(cols.length, 3); i++) {
-              cols[i].relationship = Math.min(100, cols[i].relationship + 3);
+              cols[i].relationship = Math.min(100, (cols[i].relationship || 0) + 3);
             }
             StateManager.addMessage(
               "🍻 你去了。喝酒、唱歌、聊天，一直到凌晨1点。和小赵也聊了几句，关系缓和了不少。花了¥" +
@@ -359,7 +359,7 @@
             st.needs.fatigue = Math.min(100, (st.needs.fatigue || 0) + 5);
             var cols = st.corporate.colleagues.network;
             for (var i = 0; i < Math.min(cols.length, 2); i++) {
-              cols[i].relationship = Math.max(0, cols[i].relationship - 3);
+              cols[i].relationship = Math.max(0, (cols[i].relationship || 0) - 3);
             }
             StateManager.addMessage(
               "🙏 你说身体不舒服。老板没说什么，但你看得到他眼里的不悦。关系-5。",
@@ -378,7 +378,7 @@
             st.resources.cash = Math.max(0, (st.resources.cash || 0) - cost);
             var cols = st.corporate.colleagues.network;
             for (var i = 0; i < Math.min(cols.length, 2); i++) {
-              cols[i].relationship = Math.min(100, cols[i].relationship + 1);
+              cols[i].relationship = Math.min(100, (cols[i].relationship || 0) + 1);
             }
             StateManager.addMessage(
               "😌 你去了两小时，吃了几口就找了个理由走了。老板没注意到，同事也没说什么。花了¥" +
@@ -425,8 +425,8 @@
             if ((st.player.intelligence || 0) >= 40) {
               var cols = st.corporate.colleagues.network;
               var target = cols[Random.int(0, cols.length - 1)];
-              target.relationship = Math.max(0, target.relationship - 20);
-              target.trust = Math.max(0, target.trust - 15);
+              target.relationship = Math.max(0, (target.relationship || 0) - 20);
+              target.trust = Math.max(0, (target.trust || 0) - 15);
               st.player.fame = Math.min(100, (st.player.fame || 0) + 5);
               StateManager.addMessage(
                 "📧 你打开邮箱，把上周的邮件投屏了。老张脸红了，会议继续。你赢了，但也树了一个敌人。名声+5。",
@@ -449,7 +449,7 @@
             st.flags._creditStealingSeen = true;
             var cols = st.corporate.colleagues.network;
             var target = cols[Random.int(0, cols.length - 1)];
-            target.relationship = Math.max(0, target.relationship - 5);
+            target.relationship = Math.max(0, (target.relationship || 0) - 5);
             st.needs.happiness = Math.max(0, (st.needs.happiness || 0) - 5);
             StateManager.addMessage(
               "😌 你笑了笑：「哈哈，老张记得真清楚。」散会时你心里不舒服，但面上没表现出来。心情-5。有些仗不值得打。",

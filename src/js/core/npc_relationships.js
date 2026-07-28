@@ -811,6 +811,7 @@ function _getBirthdayBonus(state, npcId, change) {
 /** 应用NPC好感变化 */
 function applyAffinityChange(state, npcId, change, reason) {
   if (!state.relationships) state.relationships = {};
+  if (!state.flags) state.flags = {}; // [全系统自洽修复] 域D R691 A类: 防止state.flags未初始化致TypeError
   if (!state.relationships[npcId]) {
     state.relationships[npcId] = { affinity: 0, met: true };
   }

@@ -529,7 +529,7 @@ var NPCS = [
             st.resources.cash = (st.resources.cash || 0) + (reward || 0);
             st.resources.totalEarned = (st.resources.totalEarned || 0) + (reward || 0);
             _guardNeedsD(st).fatigue = Math.min(100, _guardNeedsD(st).fatigue + 20);
-            st.player.physique = Math.min(100, st.player.physique + 1);
+            st.player.physique = Math.min(100, (st.player.physique || 0) + 1);
             if (!st.relationships.boss_li)
               st.relationships.boss_li = { affinity: 0, met: true };
             st.relationships.boss_li.affinity = Math.min(
@@ -581,7 +581,7 @@ var NPCS = [
             var reward = 300 + Random.int(0, 199);
             st.resources.cash = (st.resources.cash || 0) + (reward || 0);
             st.resources.totalEarned = (st.resources.totalEarned || 0) + (reward || 0);
-            st.player.fame = Math.min(100, st.player.fame + 8);
+            st.player.fame = Math.min(100, (st.player.fame || 0) + 8);
             st.player.intelligence = Math.min(
               100,
               (st.player.intelligence || 0) + 2,
@@ -791,7 +791,7 @@ var NPCS = [
             var pay = 80 + Random.int(0, 59);
             st.resources.cash = (st.resources.cash || 0) + (pay || 0);
             st.resources.totalEarned = (st.resources.totalEarned || 0) + (pay || 0);
-            st.player.fame = Math.min(100, st.player.fame + 5);
+            st.player.fame = Math.min(100, (st.player.fame || 0) + 5);
             st.skills.sales && (st.skills.sales.xp += 20);
             if (!st.relationships.sister_zhang)
               st.relationships.sister_zhang = { affinity: 0, met: true };
@@ -840,7 +840,7 @@ var NPCS = [
             );
             st.resources.cash = (st.resources.cash || 0) + 600;
             st.resources.totalEarned = (st.resources.totalEarned || 0) + 600;
-            st.player.fame = Math.min(100, st.player.fame + 10);
+            st.player.fame = Math.min(100, (st.player.fame || 0) + 10);
             st.player.mental = Math.min(100, (st.player.mental || 0) + 5);
             st.flags.zhangDeepReferred = true;
             StateManager.addMessage(
@@ -1033,7 +1033,7 @@ var NPCS = [
           text: "💪 帮！搬就搬",
           apply: function (st) {
             st.flags._npcFavor_old_zhou = true;
-            st.player.physique = Math.min(100, st.player.physique + 2);
+            st.player.physique = Math.min(100, (st.player.physique || 0) + 2);
             _guardNeedsD(st).fatigue = Math.min(100, _guardNeedsD(st).fatigue + 15);
             st.flags.oldZhouTips = true;
             if (!st.relationships.old_zhou)
@@ -1337,7 +1337,7 @@ var NPCS = [
             );
             _guardNeedsD(st).happiness = Math.min(100, _guardNeedsD(st).happiness + 15);
             st.player.mental = Math.min(100, (st.player.mental || 0) + 5);
-            st.player.fame = Math.min(100, st.player.fame + 12);
+            st.player.fame = Math.min(100, (st.player.fame || 0) + 12);
             st.flags.xiaoMeiSupport = true;
             StateManager.addMessage(
               "🏫 你们坐了两小时公交到城郊，十几个孩子在破旧教室等着。你帮小美维持秩序，给孩子们讲了一些城市里的事情。回来的路上，小美说：「谢谢你陪我。这比我想的重要很多。」心情+15，心智+5，名气+12，好感+10。",
@@ -3196,7 +3196,7 @@ var NPCS = [
             var pay = 100 + Random.int(0, 99);
             st.resources.cash = (st.resources.cash || 0) + (pay || 0);
             st.resources.totalEarned = (st.resources.totalEarned || 0) + (pay || 0);
-            st.player.fame = Math.min(100, st.player.fame + 3);
+            st.player.fame = Math.min(100, (st.player.fame || 0) + 3);
             if (!st.relationships.zhaojie)
               st.relationships.zhaojie = { affinity: 0, met: true };
             st.relationships.zhaojie.affinity = Math.min(
@@ -3411,7 +3411,7 @@ var NPCS = [
             var pay = 80 + Random.int(0, 79);
             st.resources.cash = (st.resources.cash || 0) + (pay || 0);
             st.resources.totalEarned = (st.resources.totalEarned || 0) + (pay || 0);
-            st.player.fame = Math.min(100, st.player.fame + 2);
+            st.player.fame = Math.min(100, (st.player.fame || 0) + 2);
             if (!st.relationships.chen_ge)
               st.relationships.chen_ge = { affinity: 0, met: true };
             st.relationships.chen_ge.affinity = Math.min(
