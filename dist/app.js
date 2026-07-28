@@ -308036,6 +308036,710 @@ if (typeof window !== "undefined") {
   }
 })();
 ;
+// ==== js/core/domain_h_linkage_r524.js ====
+/**
+ * 域H(Phase2/公司) 联动增强 R524
+ * 桥接：
+ *   H→B  h524_corp_industry_voice 公司行业声音 → 消费 corporate 数据,
+ *     影响力→"公司成为行业标杆"的影响力叙事
+ *   H→D  h524_corp_partner_network 公司合作伙伴 → 消费 corporate+relationships 数据,
+ *     合作→"找到对的合作伙伴"的生态叙事
+ *   H→G  h524_corp_founder_story  创始人故事 → 消费 corporate+player 数据,
+ *     初心→"从0到1的创业故事"的完整叙事
+ */
+(function () {
+  "use strict";
+  if (typeof RANDOM_EVENTS === "undefined" || !RANDOM_EVENTS) return;
+  if (RANDOM_EVENTS._domainHLinkageR524Loaded) return;
+  RANDOM_EVENTS._domainHLinkageR524Loaded = true;
+
+  function firstMetNpc(st) {
+    if (!st || !st.relationships) return null;
+    for (var id in st.relationships) { if (st.relationships[id] && st.relationships[id].met) return id; }
+    return null;
+  }
+  function bumpAffinity(st, npcId, amt, reason) {
+    if (!npcId) return;
+    if (typeof applyAffinityChange === "function") { try { applyAffinityChange(st, npcId, amt, reason); } catch(e) {} }
+  }
+
+  var EVENTS = [
+    {
+      id: "h524_corp_industry_voice", phase: "corporate", _isChainEvent: false, icon: "📢",
+      title: "行业声音",
+      story: "公司在行业内的影响力越来越大了——{desc}",
+      triggers: { minDay: 65, interval: 180, maxRepeats: 3, excludeFlags: ["_h524IndustryVoiceCooldown"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        if (!st.corporate || !st.corporate.company) return false;
+        return (st.flags && !st.flags._h524IndustryVoiceCooldown);
+      },
+      choices: [
+        { text: "📢 发表观点", hint: "管理XP+5,公司知名度+5,名气+3", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._h524IndustryVoiceCooldown = true;
+          if (typeof addSkillXp === "function") { try { addSkillXp("management", 5); } catch(e) {} }
+          if (st.corporate) st.corporate.reputation = Math.min(100, (st.corporate.reputation || 0) + 5);
+          if (st.player) st.player.fame = Math.min(100, (st.player.fame || 0) + 3);
+          if (typeof StateManager !== "undefined") StateManager.addMessage("📢 '我们在行业峰会上发表了演讲，反响很好。' 管理XP+5,公司知名度+5,名气+3。", "success");
+        }},
+        { text: "📝 写行业文章", hint: "管理XP+3,心智+2", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._h524IndustryVoiceCooldown = true;
+          if (typeof addSkillXp === "function") { try { addSkillXp("management", 3); } catch(e) {} }
+          if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 2);
+          if (typeof StateManager !== "undefined") StateManager.addMessage("📢 你写了一篇行业分析文章——'分享知识，也是建立影响力。' 管理XP+3,心智+2。", "success");
+        }}
+      ],
+      text: function (st) {
+        if (!st) return null;
+        return "公司在行业内的影响力越来越大了——'最近好几个媒体来约采访。' 从无名小卒到行业标杆，这条路走了很久。";
+      }
+    },
+    {
+      id: "h524_corp_partner_network", phase: "corporate", _isChainEvent: false, icon: "🤝",
+      title: "合作伙伴",
+      story: "一家公司想和你建立战略合作——{desc}",
+      triggers: { minDay: 50, interval: 180, maxRepeats: 3, excludeFlags: ["_h524PartnerNetworkCooldown"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        if (!st.corporate || !st.corporate.company) return false;
+        return (st.flags && !st.flags._h524PartnerNetworkCooldown);
+      },
+      choices: [
+        { text: "🤝 达成合作", hint: "管理XP+5,社交XP+3,公司资金+5000", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._h524PartnerNetworkCooldown = true;
+          if (typeof addSkillXp === "function") { try { addSkillXp("management", 5); } catch(e) {} }
+          if (typeof addSkillXp === "function") { try { addSkillXp("social", 3); } catch(e) {} }
+          if (st.corporate && st.corporate.company) st.corporate.company.funds = (st.corporate.company.funds || 0) + 5000;
+          if (typeof StateManager !== "undefined") StateManager.addMessage("🤝 '合作共赢，一起把市场做大。' 管理XP+5,社交XP+3,公司资金+¥5000。", "success");
+        }},
+        { text: "📋 审慎评估", hint: "会计XP+3,心智+2", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._h524PartnerNetworkCooldown = true;
+          if (typeof addSkillXp === "function") { try { addSkillXp("accounting", 3); } catch(e) {} }
+          if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 2);
+          if (typeof StateManager !== "undefined") StateManager.addMessage("🤝 '先评估一下合作方的背景和实力，再决定。' 会计XP+3,心智+2。", "success");
+        }}
+      ],
+      text: function (st) {
+        if (!st) return null;
+        return "一家公司想和你建立战略合作——'我们优势互补，一起合作肯定能做大。' 你开始认真考虑这个提议。";
+      }
+    },
+    {
+      id: "h524_corp_founder_story", phase: "corporate", _isChainEvent: false, icon: "📖",
+      title: "创始人的故事",
+      story: "你回顾了从0到1的整个创业历程——{desc}",
+      triggers: { minDay: 75, interval: 360, maxRepeats: 2, excludeFlags: ["_h524FounderStoryCooldown"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        if (!st.corporate || !st.corporate.company) return false;
+        return (st.flags && !st.flags._h524FounderStoryCooldown);
+      },
+      choices: [
+        { text: "📖 写回忆录", hint: "管理XP+5,心智+4,心情+3", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._h524FounderStoryCooldown = true;
+          if (typeof addSkillXp === "function") { try { addSkillXp("management", 5); } catch(e) {} }
+          if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 4);
+          if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 3);
+          if (typeof StateManager !== "undefined") StateManager.addMessage("📖 '从0到1，从一个人到一群人，从想法到公司。' 你开始写自己的创业回忆录。管理XP+5,心智+4,心情+3。", "success");
+        }},
+        { text: "🗣️ 分享给团队", hint: "管理XP+3,团队忠诚+3", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._h524FounderStoryCooldown = true;
+          if (typeof addSkillXp === "function") { try { addSkillXp("management", 3); } catch(e) {} }
+          var t = st.corporate && st.corporate.team;
+          if (t) { for (var i = 0; i < t.length; i++) { if (t[i]) t[i].loyalty = Math.min(100, (t[i].loyalty || 50) + 3); } }
+          if (typeof StateManager !== "undefined") StateManager.addMessage("📖 '这是我的故事，也是公司的故事。' 你分享给了团队。管理XP+3,团队忠诚+3。", "success");
+        }}
+      ],
+      text: function (st) {
+        if (!st) return null;
+        return "你回顾了从0到1的整个创业历程——'当初只有一个想法，现在有了一个团队、一家公司。' 这条路，走得不容易，但值得。";
+      }
+    }
+  ];
+
+  for (var i = 0; i < EVENTS.length; i++) {
+    (function (ev) {
+      var exists = false;
+      for (var j = 0; j < RANDOM_EVENTS.length; j++) {
+        if (RANDOM_EVENTS[j] && RANDOM_EVENTS[j].id === ev.id) { exists = true; break; }
+      }
+      if (!exists) RANDOM_EVENTS.push(ev);
+    })(EVENTS[i]);
+  }
+})();
+;
+// ==== js/core/domain_h_linkage_r568.js ====
+/**
+ * 域H(Phase2/公司) 联动增强 R568
+ * 桥接：
+ *   H→E  h568_corp_ipo_plan    公司IPO计划 → 消费 corporate 数据,
+ *     上市→"公司要上市了"的IPO叙事
+ *   H→C  h568_corp_skill_academy 公司技能学院 → 消费 corporate+skills 数据,
+ *     培训→"公司内部技能培训"的成长叙事
+ *   H→G  h568_corp_founder_health_v2 创始人健康v2 → 消费 corporate+status 数据,
+ *     健康→"创业是一场马拉松"的健康管理
+ */
+(function () {
+  "use strict";
+  if (typeof RANDOM_EVENTS === "undefined" || !RANDOM_EVENTS) return;
+  if (RANDOM_EVENTS._domainHLinkageR568Loaded) return;
+  RANDOM_EVENTS._domainHLinkageR568Loaded = true;
+
+  var EVENTS = [
+    {
+      id: "h568_corp_ipo_plan", phase: "corporate", _isChainEvent: false, icon: "📈",
+      title: "IPO计划",
+      story: "公司在考虑上市计划——{desc}",
+      triggers: { minDay: 70, interval: 360, maxRepeats: 2, excludeFlags: ["_h568IPOPlanCooldown"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        if (!st.corporate || !st.corporate.company) return false;
+        return (st.flags && !st.flags._h568IPOPlanCooldown);
+      },
+      choices: [
+        { text: "📈 准备上市", hint: "管理XP+5,公司知名度+5,心智+2", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._h568IPOPlanCooldown = true;
+          if (typeof addSkillXp === "function") { try { addSkillXp("management", 5); } catch(e) {} }
+          if (st.corporate) st.corporate.reputation = Math.min(100, (st.corporate.reputation || 0) + 5);
+          if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 2);
+          if (typeof StateManager !== "undefined") StateManager.addMessage("📈 '公司要上市了，这是所有创业者的梦想！' 管理XP+5,公司知名度+5,心智+2。", "success");
+        }},
+        { text: "📊 评估时机", hint: "会计XP+3,心智+2", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._h568IPOPlanCooldown = true;
+          if (typeof addSkillXp === "function") { try { addSkillXp("accounting", 3); } catch(e) {} }
+          if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 2);
+          if (typeof StateManager !== "undefined") StateManager.addMessage("📈 '现在上市是不是最好的时机？需要评估一下。' 会计XP+3,心智+2。", "success");
+        }}
+      ],
+      text: function (st) {
+        if (!st) return null;
+        return "公司在考虑上市计划——'投行的人来了几次了，建议我们今年上市。' 上市，是公司发展的新起点。";
+      }
+    },
+    {
+      id: "h568_corp_skill_academy", phase: "corporate", _isChainEvent: false, icon: "📚",
+      title: "技能学院",
+      story: "你在公司内部成立了技能学院——{desc}",
+      triggers: { minDay: 40, interval: 180, maxRepeats: 3, excludeFlags: ["_h568SkillAcademyCooldown"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        if (!st.corporate || !st.corporate.company) return false;
+        return (st.flags && !st.flags._h568SkillAcademyCooldown);
+      },
+      choices: [
+        { text: "📚 开设课程", hint: "管理XP+5,全技能XP+2,团队忠诚+2", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._h568SkillAcademyCooldown = true;
+          if (typeof addSkillXp === "function") { try { addSkillXp("management", 5); } catch(e) {} }
+          var skills = ["accounting", "management", "social", "coding", "sales"]; // [全系统自洽修复] 域B R572 修复:marketing/technology/trade非真实技能键(addSkillXp静默丢弃XP)→映射social/coding/sales
+          for (var i = 0; i < skills.length; i++) { if (typeof addSkillXp === "function") { try { addSkillXp(skills[i], 2); } catch(e) {} } }
+          var t = st.corporate && st.corporate.team;
+          if (t) { for (var i = 0; i < t.length; i++) { if (t[i]) t[i].loyalty = Math.min(100, (t[i].loyalty || 50) + 2); } }
+          if (typeof StateManager !== "undefined") StateManager.addMessage("📚 '公司技能学院开课了，大家学习热情很高。' 管理XP+5,全技能XP+2,团队忠诚+2。", "success");
+        }},
+        { text: "👨‍🏫 请外部讲师", hint: "管理XP+3,社交XP+2", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._h568SkillAcademyCooldown = true;
+          if (typeof addSkillXp === "function") { try { addSkillXp("management", 3); } catch(e) {} }
+          if (typeof addSkillXp === "function") { try { addSkillXp("social", 2); } catch(e) {} }
+          if (typeof StateManager !== "undefined") StateManager.addMessage("📚 '请外部讲师来公司培训，开拓了大家的视野。' 管理XP+3,社交XP+2。", "success");
+        }}
+      ],
+      text: function (st) {
+        if (!st) return null;
+        return "你在公司内部成立了技能学院——'帮助员工成长，就是帮助公司成长。' 最好的投资，是投资员工的未来。";
+      }
+    },
+    {
+      id: "h568_corp_founder_health_v2", phase: "corporate", _isChainEvent: false, icon: "💪",
+      title: "创业者健康",
+      story: "你意识到创业者的健康是公司最大的资产——{desc}",
+      triggers: { minDay: 35, interval: 90, maxRepeats: 3, excludeFlags: ["_h568FounderHealthCooldown"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        if (!st.corporate) return false;
+        return (st.flags && !st.flags._h568FounderHealthCooldown);
+      },
+      choices: [
+        { text: "💪 开始健身", hint: "健康+3,疲劳+2,心情+2", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._h568FounderHealthCooldown = true;
+          if (st.status) st.status.health = Math.min(100, (st.status.health || 70) + 3);
+          if (st.needs) { st.needs.fatigue = Math.min(100, (st.needs.fatigue || 0) + 2); st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 2); }
+          if (typeof StateManager !== "undefined") StateManager.addMessage("💪 '身体是革命的本钱，开始健身！' 健康+3,疲劳+2,心情+2。", "success");
+        }},
+        { text: "🧘 减压", hint: "疲劳-3,心智+2", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._h568FounderHealthCooldown = true;
+          if (st.needs) st.needs.fatigue = Math.max(0, (st.needs.fatigue || 0) - 3);
+          if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 2);
+          if (typeof StateManager !== "undefined") StateManager.addMessage("💪 '创业压力大，要学会减压。' 疲劳-3,心智+2。", "success");
+        }}
+      ],
+      text: function (st) {
+        if (!st) return null;
+        return "你意识到创业者的健康是公司最大的资产——'如果我倒下了，公司怎么办？' 照顾好自己，是对公司最大的负责。";
+      }
+    }
+  ];
+
+  for (var i = 0; i < EVENTS.length; i++) {
+    (function (ev) {
+      var exists = false;
+      for (var j = 0; j < RANDOM_EVENTS.length; j++) {
+        if (RANDOM_EVENTS[j] && RANDOM_EVENTS[j].id === ev.id) { exists = true; break; }
+      }
+      if (!exists) RANDOM_EVENTS.push(ev);
+    })(EVENTS[i]);
+  }
+})();
+;
+// ==== js/core/domain_h_linkage_r581.js ====
+/**
+ * 域H(Phase2/公司) 联动增强 R581
+ * 桥接：
+ *   H→A  h581_corp_efficiency    公司运营效率 → 消费 corporate 数据,
+ *     效率→"公司运营效率分析"的数据洞察
+ *   H→D  h581_corp_team_spirit   公司团队精神 → 消费 corporate+team 数据,
+ *     精神→"团队精神的力量"的凝聚力叙事
+ *   H→F  h581_corp_office_mood   公司办公情绪 → 消费 corporate+needs 数据,
+ *     情绪→"办公室的情绪管理"的氛围叙事
+ */
+(function () {
+  "use strict";
+  if (typeof RANDOM_EVENTS === "undefined" || !RANDOM_EVENTS) return;
+  if (RANDOM_EVENTS._domainHLinkageR581Loaded) return;
+  RANDOM_EVENTS._domainHLinkageR581Loaded = true;
+
+  function firstMetNpc(st) {
+    if (!st || !st.relationships) return null;
+    for (var id in st.relationships) { if (st.relationships[id] && st.relationships[id].met) return id; }
+    return null;
+  }
+  function bumpAffinity(st, npcId, amt, reason) {
+    if (!npcId) return;
+    if (typeof applyAffinityChange === "function") { try { applyAffinityChange(st, npcId, amt, reason); } catch(e) {} }
+  }
+
+  var EVENTS = [
+    {
+      id: "h581_corp_efficiency", phase: "corporate", _isChainEvent: false, icon: "📊",
+      title: "运营效率",
+      story: "你分析了公司的运营效率数据——{desc}",
+      triggers: { minDay: 40, interval: 60, maxRepeats: 5, excludeFlags: ["_h581EfficiencyCooldown"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        if (!st.corporate || !st.corporate.company) return false;
+        return (st.flags && !st.flags._h581EfficiencyCooldown);
+      },
+      choices: [
+        { text: "📊 优化流程", hint: "管理XP+5,会计XP+3,心智+2", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._h581EfficiencyCooldown = true;
+          if (typeof addSkillXp === "function") { try { addSkillXp("management", 5); } catch(e) {} }
+          if (typeof addSkillXp === "function") { try { addSkillXp("accounting", 3); } catch(e) {} }
+          if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 2);
+          if (typeof StateManager !== "undefined") StateManager.addMessage("📊 '运营效率提升了20%，成本下降了15%。' 管理XP+5,会计XP+3,心智+2。", "success");
+        }},
+        { text: "📈 看趋势", hint: "管理XP+3", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._h581EfficiencyCooldown = true;
+          if (typeof addSkillXp === "function") { try { addSkillXp("management", 3); } catch(e) {} }
+          if (typeof StateManager !== "undefined") StateManager.addMessage("📊 '效率数据在稳步提升，方向对了。' 管理XP+3。", "success");
+        }}
+      ],
+      text: function (st) {
+        if (!st) return null;
+        return "你分析了公司的运营效率数据——'人均产出、周转率、响应时间...' 数据告诉你，公司在往哪个方向走。";
+      }
+    },
+    {
+      id: "h581_corp_team_spirit", phase: "corporate", _isChainEvent: false, icon: "🔥",
+      title: "团队精神",
+      story: "团队在困难面前展现了惊人的凝聚力——{desc}",
+      triggers: { minDay: 35, interval: 120, maxRepeats: 3, excludeFlags: ["_h581TeamSpiritCooldown"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        if (!st.corporate || !st.corporate.team || st.corporate.team.length < 2) return false;
+        return (st.flags && !st.flags._h581TeamSpiritCooldown);
+      },
+      choices: [
+        { text: "🔥 表扬团队", hint: "管理XP+5,团队忠诚+4,心情+2", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._h581TeamSpiritCooldown = true;
+          if (typeof addSkillXp === "function") { try { addSkillXp("management", 5); } catch(e) {} }
+          var t = st.corporate && st.corporate.team;
+          if (t) { for (var i = 0; i < t.length; i++) { if (t[i]) t[i].loyalty = Math.min(100, (t[i].loyalty || 50) + 4); } }
+          if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 2);
+          if (typeof StateManager !== "undefined") StateManager.addMessage("🔥 '团队在困难面前没有退缩，我为你们骄傲！' 管理XP+5,团队忠诚+4,心情+2。", "success");
+        }},
+        { text: "🏆 设立奖励", hint: "管理XP+3,团队忠诚+2", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._h581TeamSpiritCooldown = true;
+          if (typeof addSkillXp === "function") { try { addSkillXp("management", 3); } catch(e) {} }
+          var t = st.corporate && st.corporate.team;
+          if (t) { for (var i = 0; i < t.length; i++) { if (t[i]) t[i].loyalty = Math.min(100, (t[i].loyalty || 50) + 2); } }
+          if (typeof StateManager !== "undefined") StateManager.addMessage("🔥 '给团队设立了特别奖励，大家士气高涨。' 管理XP+3,团队忠诚+2。", "success");
+        }}
+      ],
+      text: function (st) {
+        if (!st) return null;
+        return "团队在困难面前展现了惊人的凝聚力——'没有人抱怨，大家都在想办法。' 这样的团队，没有什么困难能难倒。";
+      }
+    },
+    {
+      id: "h581_corp_office_mood", phase: "corporate", _isChainEvent: false, icon: "😊",
+      title: "办公室情绪",
+      story: "你注意到办公室的氛围有些变化——{desc}",
+      triggers: { minDay: 25, interval: 60, maxRepeats: 5, excludeFlags: ["_h581OfficeMoodCooldown"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        if (!st.corporate) return false;
+        return (st.flags && !st.flags._h581OfficeMoodCooldown);
+      },
+      choices: [
+        { text: "😊 改善氛围", hint: "管理XP+4,心情+2,团队忠诚+2", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._h581OfficeMoodCooldown = true;
+          if (typeof addSkillXp === "function") { try { addSkillXp("management", 4); } catch(e) {} }
+          if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 2);
+          var t = st.corporate && st.corporate.team;
+          if (t) { for (var i = 0; i < t.length; i++) { if (t[i]) t[i].loyalty = Math.min(100, (t[i].loyalty || 50) + 2); } }
+          if (typeof StateManager !== "undefined") StateManager.addMessage("😊 '办公室多了绿植和零食角，大家的笑容多了。' 管理XP+4,心情+2,团队忠诚+2。", "success");
+        }},
+        { text: "📋 调查满意度", hint: "管理XP+3,社交XP+2", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._h581OfficeMoodCooldown = true;
+          if (typeof addSkillXp === "function") { try { addSkillXp("management", 3); } catch(e) {} }
+          if (typeof addSkillXp === "function") { try { addSkillXp("social", 2); } catch(e) {} }
+          if (typeof StateManager !== "undefined") StateManager.addMessage("😊 '做了一次匿名满意度调查，了解大家的真实想法。' 管理XP+3,社交XP+2。", "success");
+        }}
+      ],
+      text: function (st) {
+        if (!st) return null;
+        return "你注意到办公室的氛围有些变化——'最近大家好像有点沉闷，是不是压力太大了？' 办公室的情绪，直接影响工作效率。";
+      }
+    }
+  ];
+
+  for (var i = 0; i < EVENTS.length; i++) {
+    (function (ev) {
+      var exists = false;
+      for (var j = 0; j < RANDOM_EVENTS.length; j++) {
+        if (RANDOM_EVENTS[j] && RANDOM_EVENTS[j].id === ev.id) { exists = true; break; }
+      }
+      if (!exists) RANDOM_EVENTS.push(ev);
+    })(EVENTS[i]);
+  }
+})();
+;
+// ==== js/core/domain_h_linkage_r592.js ====
+/**
+ * 域H(Phase2/公司) 联动增强 R592
+ * 桥接：
+ *   H→G  h592_corp_life_balance  公司生活平衡 → 消费 corporate+needs 数据,
+ *     公司→"事业与健康"的生命回响
+ *   H→C  h592_corp_career_growth  公司职业成长 → 消费 corporate+skills 数据,
+ *     公司→"做项目积累职业资本"的职业回响
+ *   H→B  h592_corp_milestone_narrative 公司里程碑叙事 → 消费 corporate 数据,
+ *     公司→"从一间办公室到行业标杆"的叙事回响
+ */
+(function () {
+  "use strict";
+  if (typeof RANDOM_EVENTS === "undefined" || !RANDOM_EVENTS) return;
+  if (RANDOM_EVENTS._domainHLinkageR592Loaded) return;
+  RANDOM_EVENTS._domainHLinkageR592Loaded = true;
+
+  var EVENTS = [
+    {
+      id: "h592_corp_life_balance", phase: "corporate", _isChainEvent: false, icon: "⚖️",
+      title: "事业与健康",
+      story: "连续的高压工作让你开始反思——{desc}",
+      triggers: { minDay: 40, interval: 90, maxRepeats: 3, excludeFlags: ["_h592LifeBalanceCooldown"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        if (!st.flags || st.flags._h592LifeBalanceCooldown) return false;
+        return st.needs && (st.needs.fatigue || 0) >= 40;
+      },
+      choices: [
+        { text: "🧘 休息调整", hint: "疲劳-20,健康+5", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._h592LifeBalanceCooldown = true;
+          if (st.needs) st.needs.fatigue = Math.max(0, (st.needs.fatigue || 0) - 20);
+          if (st.status) st.status.health = Math.min(100, (st.status.health || 100) + 5);
+          if (typeof StateManager !== "undefined") StateManager.addMessage("⚖️ '身体是革命的本钱。' 你决定好好休息调整。疲劳-20,健康+5。", "success");
+        }},
+        { text: "💪 咬牙坚持", hint: "业绩+5,疲劳+10", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._h592LifeBalanceCooldown = true;
+          if (st.needs) st.needs.fatigue = Math.min(100, (st.needs.fatigue || 0) + 10);
+          if (typeof StateManager !== "undefined") StateManager.addMessage("⚖️ '再坚持一下，熬过这阵就好了。' 你选择继续拼搏。疲劳+10。", "warning");
+        }}
+      ],
+      text: function (st) {
+        if (!st) return null;
+        return "连续的高压工作让你开始反思——'我是不是该停下来休息一下？' 但手头的工作还在催着你。";
+      }
+    },
+    {
+      id: "h592_corp_career_growth", phase: "corporate", _isChainEvent: false, icon: "📈",
+      title: "做项目积累职业资本",
+      story: "你开始思考如何通过项目积累职业资本——{desc}",
+      triggers: { minDay: 50, interval: 100, maxRepeats: 3, excludeFlags: ["_h592CareerGrowthCooldown"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        if (!st.flags || st.flags._h592CareerGrowthCooldown) return false;
+        return st.corporate && st.corporate.company;
+      },
+      choices: [
+        { text: "💼 主动承担", hint: "管理XP+5", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._h592CareerGrowthCooldown = true;
+          if (typeof addSkillXp === "function") { try { addSkillXp("management", 5); } catch(e) {} }
+          if (typeof StateManager !== "undefined") StateManager.addMessage("📈 '多做项目多积累。' 你主动承担了更多工作。管理XP+5。", "success");
+        }},
+        { text: "📚 学习新技能", hint: "随机技能XP+5", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._h592CareerGrowthCooldown = true;
+          var skills = ["coding", "sales", "accounting", "management", "cooking", "repair"];
+          var sk = Random.fromArray(skills); // [全系统自洽修复] 域H R400: Math.random()→Random.fromArray()
+          if (typeof addSkillXp === "function") { try { addSkillXp(sk, 5); } catch(e) {} }
+          if (typeof StateManager !== "undefined") StateManager.addMessage("📈 '学无止境。' " + sk + "XP+5。", "success");
+        }}
+      ],
+      text: function (st) {
+        if (!st) return null;
+        return "你开始思考如何通过项目积累职业资本——'项目是最好的成长机会。' 你开始主动寻找机会。";
+      }
+    },
+    {
+      id: "h592_corp_milestone_narrative", phase: "corporate", _isChainEvent: false, icon: "🏆",
+      title: "从一间办公室到行业标杆",
+      story: "回顾公司的发展历程——{desc}",
+      triggers: { minDay: 100, interval: 180, maxRepeats: 3, excludeFlags: ["_h592MilestoneNarrCooldown"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        if (!st.flags || st.flags._h592MilestoneNarrCooldown) return false;
+        return st.corporate && st.corporate.company;
+      },
+      choices: [
+        { text: "📖 记录历程", hint: "管理XP+5,心智+3", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._h592MilestoneNarrCooldown = true;
+          if (typeof addSkillXp === "function") { try { addSkillXp("management", 5); } catch(e) {} }
+          if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 3);
+          if (typeof StateManager !== "undefined") StateManager.addMessage("🏆 '从一间小办公室，到今天的规模。' 你把公司的发展历程记录下来。管理XP+5,心智+3。", "success");
+        }},
+        { text: "🚀 继续前进", hint: "管理XP+3,现金+2000", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._h592MilestoneNarrCooldown = true;
+          if (typeof addSkillXp === "function") { try { addSkillXp("management", 3); } catch(e) {} }
+          if (st.resources) st.resources.cash = (st.resources.cash || 0) + 2000;
+          if (typeof StateManager !== "undefined") StateManager.addMessage("🏆 '这只是开始。' 你选择把目光放在下一个目标上。管理XP+3,现金+¥2000。", "success");
+        }}
+      ],
+      text: function (st) {
+        if (!st) return null;
+        return "回顾公司的发展历程——'从一间小办公室，到今天的规模。' 这一路走来的故事，值得被记住。";
+      }
+    }
+  ];
+
+  for (var i = 0; i < EVENTS.length; i++) {
+    (function (ev) {
+      var exists = false;
+      for (var j = 0; j < RANDOM_EVENTS.length; j++) {
+        if (RANDOM_EVENTS[j] && RANDOM_EVENTS[j].id === ev.id) { exists = true; break; }
+      }
+      if (!exists) RANDOM_EVENTS.push(ev);
+    })(EVENTS[i]);
+  }
+})();
+
+;
+// ==== js/core/domain_h_linkage_r682.js ====
+/**
+ * 域H(Phase2/公司) 联动增强 R682
+ * 桥接：
+ *   H→G  h682_founder_life_balance  创始人生活平衡 → 消费 state.startup+state.player+state.needs,
+ *     创业与生活的平衡反思
+ *   H→A  h682_corp_data_legacy      公司数据遗产 → 消费 state.startup+state.resources,
+ *     公司经营数据转化为个人数据资产
+ *   H→D  h682_corp_culture_social   公司文化社交 → 消费 state.startup+state.relationships,
+ *     公司文化影响外部社交关系
+ */
+(function () {
+  "use strict";
+  if (typeof RANDOM_EVENTS === "undefined" || !RANDOM_EVENTS) return;
+  if (RANDOM_EVENTS._domainHLinkageR682Loaded) return;
+  RANDOM_EVENTS._domainHLinkageR682Loaded = true;
+
+  function hasCompany(st) {
+    return st && st.startup && st.startup.company && st.startup.active;
+  }
+
+  function bumpAff(st, npcId, amt, reason) {
+    if (!npcId) return;
+    if (typeof applyAffinityChange === "function") {
+      try { applyAffinityChange(st, npcId, amt, reason); } catch(e) {}
+    }
+  }
+
+  function topMetNpc(st) {
+    if (!st || !st.relationships) return null;
+    var best = null, bestAff = -999;
+    for (var k in st.relationships) {
+      var r = st.relationships[k];
+      if (r && r.met && typeof r.affinity === "number" && r.affinity > bestAff) {
+        bestAff = r.affinity; best = k;
+      }
+    }
+    return best;
+  }
+
+  var EVENTS = [
+    {
+      id: "h682_founder_life_balance",
+      phase: "corporate",
+      _isChainEvent: false,
+      icon: "⚖️",
+      title: "创始人的生活天平",
+      story: "创业不是生活的全部",
+      triggers: { minDay: 200, interval: 150, maxRepeats: 2, excludeFlags: ["_h682BalanceCd"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        if (st.flags && st.flags._h682BalanceCd) return false;
+        return hasCompany(st) && st.player && st.player.day >= 200;
+      },
+      choices: [
+        {
+          text: "🌿 给自己放个假",
+          hint: "心情+10,健康+5,置_h682Recharge",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._h682BalanceCd = true;
+            st.flags._h682Recharge = true;
+            if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 10);
+            if (st.status) st.status.health = Math.min(100, (st.status.health || 100) + 5);
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("🌿 休息是为了走更长远的路。心情+10,健康+5。", "success");
+            }
+          }
+        },
+        {
+          text: "🔥 继续冲刺",
+          hint: "管理XP+5,置_h682Hustle",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._h682BalanceCd = true;
+            st.flags._h682Hustle = true;
+            if (typeof addSkillXp === "function") { try { addSkillXp("management", 5); } catch(e) {} }
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("🔥 创业就是all in!管理XP+5。", "info");
+            }
+          }
+        }
+      ],
+      text: function (st) {
+        if (!st) return null;
+        return "每天16小时的工作,你问自己——'创业是为了生活更好,还是把生活搭进去了?'";
+      }
+    },
+    {
+      id: "h682_corp_data_legacy",
+      phase: "corporate",
+      _isChainEvent: false,
+      icon: "📊",
+      title: "公司的数据遗产",
+      story: "公司积累的数据是一笔财富",
+      triggers: { minDay: 250, interval: 200, maxRepeats: 2, excludeFlags: ["_h682DataCd"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        if (st.flags && st.flags._h682DataCd) return false;
+        return hasCompany(st) && st.player && st.player.day >= 250;
+      },
+      choices: [
+        {
+          text: "📈 把数据资产化",
+          hint: "智力+4,会计XP+5,置_h682DataAsset",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._h682DataCd = true;
+            st.flags._h682DataAsset = true;
+            if (st.player) st.player.intelligence = Math.min(100, (st.player.intelligence || 50) + 4);
+            if (typeof addSkillXp === "function") { try { addSkillXp("accounting", 5); } catch(e) {} }
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("📈 数据是新时代的石油。智力+4,会计XP+5。", "success");
+            }
+          }
+        },
+        {
+          text: "🔒 谨慎保护",
+          hint: "心智+5,置_h682DataPrivacy(风控)",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._h682DataCd = true;
+            st.flags._h682DataPrivacy = true;
+            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 5);
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("🔒 数据安全无小事。心智+5。", "info");
+            }
+          }
+        }
+      ],
+      text: function (st) {
+        if (!st) return null;
+        return "公司拥有的用户数据、交易记录、运营指标——'这些数据,是公司的无形资产,也是责任。'";
+      }
+    },
+    {
+      id: "h682_corp_culture_social",
+      phase: "corporate",
+      _isChainEvent: false,
+      icon: "🤝",
+      title: "公司文化的外溢",
+      story: "公司的文化影响了你的社交圈",
+      triggers: { minDay: 180, interval: 120, maxRepeats: 2, excludeFlags: ["_h682SocialCd"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        if (st.flags && st.flags._h682SocialCd) return false;
+        if (!hasCompany(st)) return false;
+        return st.relationships && topMetNpc(st) && st.player && st.player.day >= 180;
+      },
+      choices: [
+        {
+          text: "🎉 邀请朋友参观公司",
+          hint: "好感+3,社交XP+5,置_h682OpenDoor",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._h682SocialCd = true;
+            st.flags._h682OpenDoor = true;
+            if (typeof addSkillXp === "function") { try { addSkillXp("social", 5); } catch(e) {} }
+            bumpAff(st, topMetNpc(st), 3, "邀请参观公司");
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("🎉 朋友来参观,感受到你的成就感。社交XP+5,好感+3。", "success");
+            }
+          }
+        },
+        {
+          text: "🏢 保持工作和生活分开",
+          hint: "心智+4,置_h682Boundary",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._h682SocialCd = true;
+            st.flags._h682Boundary = true;
+            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 4);
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("🏢 工作是工作,生活是生活。心智+4。", "info");
+            }
+          }
+        }
+      ],
+      text: function (st) {
+        if (!st) return null;
+        var npc = topMetNpc(st);
+        var name = (typeof getNpcDisplayName === "function" && npc) ? getNpcDisplayName(npc) : "朋友";
+        return name + "说:'听说你开公司了?能不能带我去看看?'";
+      }
+    }
+  ];
+
+  for (var i = 0; i < EVENTS.length; i++) {
+    RANDOM_EVENTS.push(EVENTS[i]);
+  }
+})();
+
+;
 // ==== js/core/domain_a_linkage_r633.js ====
 /**
  * 域A(数据/数值平衡) 联动增强 R633
