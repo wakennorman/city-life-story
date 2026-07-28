@@ -52,6 +52,7 @@ var JOB_MILESTONE_EVENTS = {
           label: "签了！稳定收入更重要",
           desc: "收入稳定+20%，但需每日完成量",
           apply: function (state) {
+            if (!state.flags) state.flags = {};
             state.flags._wasteRecyclingContract = true;
             state.flags.oldZhouReferred = true;
             state.flags.zhouScrapBonus = true;
@@ -81,6 +82,7 @@ var JOB_MILESTONE_EVENTS = {
           label: "接了！这是真正的投资",
           desc: "花¥3000获得完整客源网，老周回收站解锁+收入+35%",
           apply: function (state) {
+            if (!state.flags) state.flags = {};
             var cash = state.resources.cash || 0;
             if (cash >= 3000) {
               state.resources.cash = Math.max(0, (state.resources.cash || 0) - 3000);
@@ -168,6 +170,7 @@ var JOB_MILESTONE_EVENTS = {
           label: "问他怎么备考",
           desc: "获得备考路径，智力+3，李工头解锁",
           apply: function (state) {
+            if (!state.flags) state.flags = {};
             state.flags._constructionCertPath = true;
             state.flags.bossLiReferred = true;
             state.player.intelligence = Math.min(
@@ -201,6 +204,7 @@ var JOB_MILESTONE_EVENTS = {
           label: "签！工资翻倍值了",
           desc: "正规工程队解锁，长期高薪",
           apply: function (state) {
+            if (!state.flags) state.flags = {};
             state.flags.bossLiReferred = true;
             state.flags.bossLiSkillJob = true;
             StateManager.addMessage(
@@ -457,6 +461,7 @@ var JOB_MILESTONE_EVENTS = {
           label: "去当大厨，稳定月薪",
           desc: "解锁陈师傅帮厨，转型正式厨师路径",
           apply: function (state) {
+            if (!state.flags) state.flags = {};
             state.flags.chefChenAssistant = true;
             StateManager.addMessage(
               "👨‍🍳 厨师之路开启！陈师傅帮厨岗位已解锁，稳定月薪等着你。",
@@ -629,6 +634,7 @@ var JOB_MILESTONE_EVENTS = {
           label: "加入机构，提高收入",
           desc: "精英家教岗解锁，时薪翻倍",
           apply: function (state) {
+            if (!state.flags) state.flags = {};
             state.flags.xiaoMeiReferred = true;
             StateManager.addMessage(
               "🎓 精英家教岗解锁！机构引荐，时薪翻倍。教育路径提速！",

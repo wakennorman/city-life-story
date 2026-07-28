@@ -1305,6 +1305,35 @@ function getSkillChineseName(skillKey) {
   };
   return names[skillKey] || skillKey;
 }
+
+// [R716 域C 联动增强 C→G]: 职业倦怠系数 — 高压工作累积职业倦怠影响健康
+function getJobBurnout(state, jobId) {
+  if (!state || !jobId) return 0;
+  var fatigueCost = 0;
+  var jobs = (typeof STREET_JOBS !== "undefined" ? STREET_JOBS : []).concat(typeof CORP_JOBS !== "undefined" ? CORP_JOBS : []);
+  for (var _ji = 0; _ji < jobs.length; _ji++) {
+    if (jobs[_ji] && jobs[_ji].id === jobId && jobs[_ji].effects) {
+      fatigueCost = jobs[_ji].effects.fatigue || 0;
+      break;
+    }
+  }
+  if (fatigueCost <= 0) return 0;
+  var workStreak = (state.flags && state.flags._workStreak) || 0;
+  if (workStreak >= 5 && fatigueCost > 20) {
+    return Math.min(5, Math.floor(workStreak / 5) * 2);
+  }
+  return 0;
+}
+
+// [R716 域C 联动增强 C→E]: 技能投资回报 — 高技能等级提升投资判断力
+function getSkillInvestmentBonus(state) {
+  if (!state || !state.skills) return 0;
+  var accounting = (state.skills.accounting && state.skills.accounting.level) || 0;
+  var management = (state.skills.management && state.skills.management.level) || 0;
+  var coding = (state.skills.coding && state.skills.coding.level) || 0;
+  var bonus = (accounting * 0.05) + (management * 0.03) + (coding * 0.02);
+  return Math.min(10, bonus);
+}
 // [R339] 域C
 // [R387] 域C
 // [R427] 域C

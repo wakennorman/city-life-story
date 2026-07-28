@@ -601,3 +601,12 @@
 - 提交3笔：62c28ad5(feat 联动3+悬空救援)+871a2ae5(chore 账本CLAUDE.md/round-712b/loop-state/memory)+06bf8a2e(LOCAL_ONLY回填)。**push受阻：TLS connect error(本地代理3067未起,用户级已知形态,并行同样推不出),本地ahead 3,网络恢复后任一窗口push即闭合。**
 - pre-commit坑：dist mtime早于src/index.html(并行touch)→内容核verified一致后touch dist重试过钩(勿盲目重build,先git diff HEAD --stat核内容)。
 - 域H富矿账更新：boardPressureLevel/mediaRelations/sentimentScore/crisisLevel全部打通；仅剩company.efficiency事件层薄弱。下轮git log重算(并行R713/R714连续在做域H/A)。
+
+## 2026-07-29 05:1x-05:3x R738b 域E(经济/投资) — 本地已提交34e9ffef, push受阻(TLS,本地ahead 41)
+- 选域：本窗口深审recency E最陈旧(R284后未深审)。b后缀避让并行R738。
+- **重大A类2处(影响≈20死事件)**：①investment.portfolio全库零写入方但11+文件(r443/r454/r493/r497/r501/r509/r520/r529/r710/r718/r726/r734/part7)以其为conditions门槛→r710系12事件恒false死事件+r443系calcPortfolioValue恒0→investment.js每日tick单点维护inv.portfolio={stocks:{symbol:{shares,avgPrice,avgCost}},funds:{},totalValue:含股/房/BTC}一次性复活；②part7:4149千万里程碑st.bankBalance死字段+Object.values(portfolio)容器当持仓map→改读resources.bankBalance+totalValue。
+- 联动3(domain_e_linkage_r738b.js,3corporate)：_portfolioMilestone_100000首读E→D(met铁律)/_portfolioPeakHistory 30日曲线首读E→G(峰终定律三态叙事)/_portfolioMilestone_1000000首读E→C(百万底气)。
+- 验证：node --check过/build 13518.6KB(e738b×6)/MC 10x500 196.1s 0代码异常前7天死亡全0%。
+- 竞态：并行10分钟四笔、两套编号活跃(R714/R715小编号+R738/R739循环)。交付物被[R714]6a246995(3源+挂载)+[R715]06f88e73(dist+round doc)分两笔扫入,四项核验闭合。第二次build(补r739)吸入并行在途job_milestone_events.js→按铁律不提交dist,留并行成对提交。
+- 素材账：域E剩_portfolioMilestone_10000/50000/500000三档零读取/propertyPhaseStartDay/_propertyPolicyTightness。
+- 下轮：git log重算；F(R442)/G(R311)为本窗口深审下两位候选。

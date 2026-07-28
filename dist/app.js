@@ -305112,6 +305112,7 @@ var JOB_MILESTONE_EVENTS = {
           label: "签了！稳定收入更重要",
           desc: "收入稳定+20%，但需每日完成量",
           apply: function (state) {
+            if (!state.flags) state.flags = {};
             state.flags._wasteRecyclingContract = true;
             state.flags.oldZhouReferred = true;
             state.flags.zhouScrapBonus = true;
@@ -305141,6 +305142,7 @@ var JOB_MILESTONE_EVENTS = {
           label: "接了！这是真正的投资",
           desc: "花¥3000获得完整客源网，老周回收站解锁+收入+35%",
           apply: function (state) {
+            if (!state.flags) state.flags = {};
             var cash = state.resources.cash || 0;
             if (cash >= 3000) {
               state.resources.cash = Math.max(0, (state.resources.cash || 0) - 3000);
@@ -305228,6 +305230,7 @@ var JOB_MILESTONE_EVENTS = {
           label: "问他怎么备考",
           desc: "获得备考路径，智力+3，李工头解锁",
           apply: function (state) {
+            if (!state.flags) state.flags = {};
             state.flags._constructionCertPath = true;
             state.flags.bossLiReferred = true;
             state.player.intelligence = Math.min(
