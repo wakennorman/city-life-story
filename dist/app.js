@@ -258414,6 +258414,196 @@ if (typeof window !== "undefined") {
   }
 })();
 ;
+// ==== js/core/domain_d_linkage_r627.js ====
+/**
+ * 域D(NPC/社交) 联动增强 R627
+ * 桥接：
+ *   D→E  d627_social_invest_tips  社交圈投资情报 → 消费 state.relationships+state.flags 数据,
+ *     社交→"朋友推荐的股票"经济回响
+ *   D→C  d627_npc_career_advice  NPC职业建议 → 消费 state.relationships+state.skills 数据,
+ *     社交→"高人指点"职业回响
+ *   D→G  d627_social_mental_boost  社交心情提振 → 消费 state.relationships+state.needs 数据,
+ *     社交→"朋友的力量"生命回响
+ */
+(function () {
+  "use strict";
+  if (typeof RANDOM_EVENTS === "undefined" || !RANDOM_EVENTS) return;
+  if (RANDOM_EVENTS._domainDLinkageR627Loaded) return;
+  RANDOM_EVENTS._domainDLinkageR627Loaded = true;
+
+  // 辅助：获取已结识NPC列表(守 rel.met 铁律)
+  function metNpcsR627(st) {
+    var out = [];
+    var rels = st.relationships || {};
+    for (var k in rels) {
+      if (rels[k] && rels[k].met) out.push({ id: k, affinity: rels[k].affinity || 0 });
+    }
+    return out;
+  }
+
+  var EVENTS = [
+    // ================================================================
+    // D→E: 社交圈投资情报 — 高好感NPC透露投资信息
+    // ================================================================
+    {
+      id: "d627_social_invest_tips",
+      phase: "street",
+      _isChainEvent: false,
+      icon: "📈",
+      title: "朋友的投资建议",
+      triggers: { minDay: 10 },
+      story: function (st) {
+        var npcs = metNpcsR627(st);
+        if (npcs.length === 0) return "你还没有结识朋友，多出去走走认识些人吧。";
+        var highAff = 0;
+        for (var i = 0; i < npcs.length; i++) {
+          if (npcs[i].affinity >= 40) highAff++;
+        }
+        if (highAff < 2) {
+          return "你的朋友还不多，交情也还不够深。多花时间维护关系，朋友多了路好走。" +
+            "有时候，朋友的一句建议可能比你自己研究半天还有价值。";
+        }
+        return "你有" + highAff + "位关系不错的朋友（好感≥40）。" +
+          "朋友之间不仅聊生活，偶尔也会聊聊投资理财。" +
+          "关系好的朋友可能会透露一些实用的投资信息——比如哪只股票最近有动静、哪个行业有政策利好。" +
+          "当然，投资决策还是要自己做，朋友的建议仅供参考。";
+      },
+      choices: [
+        { text: "💬 聊聊投资", apply: function(st) {
+          st.flags = st.flags || {};
+          st.flags._d627_investChat = (st.flags._d627_investChat || 0) + 1;
+          if (st.skills && st.skills.accounting) {
+            st.skills.accounting.xp = (st.skills.accounting.xp || 0) + 3;
+          }
+          StateManager.addMessage("💬 和朋友聊投资心得，会计经验+3", "success");
+        }},
+        { text: "📊 自己研究", apply: function(st) {
+          StateManager.addMessage("📊 你决定还是相信自己的判断，继续研究市场", "info");
+        }},
+      ],
+      conditions: function (st) {
+        var npcs = metNpcsR627(st);
+        var high = 0;
+        for (var i = 0; i < npcs.length; i++) {
+          if (npcs[i].affinity >= 40) high++;
+        }
+        return high >= 1;
+      },
+      weight: 1,
+    },
+
+    // ================================================================
+    // D→C: NPC职业建议 — 高好感NPC提供职业方向建议
+    // ================================================================
+    {
+      id: "d627_npc_career_advice",
+      phase: "street",
+      _isChainEvent: false,
+      icon: "🎯",
+      title: "贵人的建议",
+      triggers: { minDay: 15 },
+      story: function (st) {
+        var npcs = metNpcsR627(st);
+        if (npcs.length === 0) return "你还没有结识什么人，多出去走走，认识些不同行业的朋友。";
+        var highAff = 0;
+        for (var i = 0; i < npcs.length; i++) {
+          if (npcs[i].affinity >= 50) highAff++;
+        }
+        if (highAff >= 2) {
+          return "你身边有" + highAff + "位值得信赖的朋友（好感≥50）。" +
+            "他们了解你的为人和能力，给出的职业建议往往一针见血。" +
+            "有时候旁观者清——朋友可能比你更清楚你适合做什么。多听听他们的意见，或许能帮你找到职业方向。";
+        } else if (highAff >= 1) {
+          return "你有一位值得信赖的朋友，他/她似乎对你的职业发展有些想法。" +
+            "找个时间聊聊，听听他/她的建议——也许能帮你打开新的思路。";
+        }
+        return "你的朋友圈还不够深，继续维护关系，信任度上来后，朋友们会愿意给你更真诚的建议。";
+      },
+      choices: [
+        { text: "💼 听取建议", apply: function(st) {
+          st.flags = st.flags || {};
+          st.flags._d627_careerAdvice = (st.flags._d627_careerAdvice || 0) + 1;
+          if (typeof getRecommendedCareerPaths === "function") {
+            var recs = getRecommendedCareerPaths(st);
+            if (recs && recs.length > 0) {
+              StateManager.addMessage("🎯 朋友建议你试试" + recs[0].path.name + "方向，匹配度" + recs[0].score + "%", "info");
+            }
+          } else {
+            StateManager.addMessage("🎯 听取了朋友的建议，对职业规划有了新的认识", "info");
+          }
+        }},
+        { text: "🤝 感谢朋友", apply: function(st) {
+          if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 5);
+          StateManager.addMessage("🤝 感谢朋友的关心，心情+5", "success");
+        }},
+      ],
+      conditions: function (st) {
+        var npcs = metNpcsR627(st);
+        var high = 0;
+        for (var i = 0; i < npcs.length; i++) {
+          if (npcs[i].affinity >= 50) high++;
+        }
+        return high >= 1;
+      },
+      weight: 1,
+    },
+
+    // ================================================================
+    // D→G: 社交心情提振 — 与朋友互动提升心情
+    // ================================================================
+    {
+      id: "d627_social_mental_boost",
+      phase: "street",
+      _isChainEvent: false,
+      icon: "🤗",
+      title: "朋友的力量",
+      triggers: { minDay: 8 },
+      story: function (st) {
+        var npcs = metNpcsR627(st);
+        if (npcs.length === 0) return "你还没有结识朋友，一个人在外打拼不容易，试着打开心扉认识些新朋友吧。";
+        var happiness = st.needs && st.needs.happiness || 50;
+        var mental = st.player && st.player.mental || 50;
+
+        if (happiness < 30 || mental < 30) {
+          return "你最近状态不太好（心情" + Math.round(happiness) + "，心智" + Math.round(mental) + "）。" +
+            "你身边有" + npcs.length + "位朋友，也许该找他们聊聊了。" +
+            "有时候，一句关心、一顿饭、一次散步，就能让心情好起来。别一个人扛着。";
+        }
+        return "你身边有" + npcs.length + "位朋友，社交圈正在慢慢扩大。" +
+          "定期和朋友聚聚、聊聊近况，不仅能放松心情，还能从朋友那里获得新的视角和能量。" +
+          "研究表明，良好的社交关系是幸福感最重要的来源之一。";
+      },
+      choices: [
+        { text: "📞 约朋友见面", apply: function(st) {
+          if (st.needs) {
+            st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 8);
+          }
+          if (st.player) {
+            st.player.mental = Math.min(100, (st.player.mental || 50) + 3);
+          }
+          StateManager.addMessage("📞 约朋友出来聚了聚，心情+8，心智+3", "success");
+        }},
+        { text: "💬 发消息问候", apply: function(st) {
+          if (st.needs) {
+            st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 3);
+          }
+          StateManager.addMessage("💬 给朋友们发了问候消息，心情+3", "info");
+        }},
+      ],
+      conditions: function (st) {
+        var npcs = metNpcsR627(st);
+        return npcs.length >= 1;
+      },
+      weight: 1,
+    },
+  ];
+
+  // 注册事件
+  for (var i = 0; i < EVENTS.length; i++) {
+    RANDOM_EVENTS.push(EVENTS[i]);
+  }
+})();
+;
 // ==== js/core/domain_g_linkage_r599.js ====
 /**
  * 域G(核心机制/生命周期) 联动增强 R599
@@ -270823,6 +271013,147 @@ if (typeof window !== "undefined") {
   }
 })();
 
+;
+// ==== js/core/domain_d_linkage_r621.js ====
+/**
+ * 域D(NPC/社交) 联动增强 R621
+ * 桥接：
+ *   D→A  d621_social_market_intel  社交市场情报 → 消费 state.relationships 数据,
+ *     社交→"朋友口中的市场情报"的数值回响
+ *   D→F  d621_friend_suggestion_ui  好友推荐UI → 消费 state.relationships 数据,
+ *     社交→"社交关系可视化推荐"的UI回响
+ *   D→H  d621_npc_business_intro  NPC生意介绍 → 消费 state.relationships+state.startup 数据,
+ *     社交→"朋友介绍生意"的公司回响
+ */
+(function () {
+  "use strict";
+  if (typeof RANDOM_EVENTS === "undefined" || !RANDOM_EVENTS) return;
+  if (RANDOM_EVENTS._domainDLinkageR621Loaded) return;
+  RANDOM_EVENTS._domainDLinkageR621Loaded = true;
+
+  function metNpcsR621(st, minAff) {
+    var out = [];
+    var rels = st.relationships || {};
+    minAff = minAff || 0;
+    for (var k in rels) {
+      if (rels[k] && rels[k].met && (rels[k].affinity || 0) >= minAff) {
+        out.push({ id: k, affinity: rels[k].affinity || 0, name: (typeof getNpcDisplayName === "function") ? getNpcDisplayName(k) : k });
+      }
+    }
+    return out;
+  }
+
+  var EVENTS = [
+    // ====== D→A: 社交市场情报 ======
+    {
+      id: "d621_social_market_intel", phase: "street", _isChainEvent: false, icon: "🗣️",
+      title: "市井消息",
+      story: "你在和朋友的闲聊中得到了一个有用的信息——{desc}",
+      triggers: { minDay: 15, interval: 45, maxRepeats: 10, excludeFlags: ["_d621MarketIntelCooldown"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        if (!st.flags || st.flags._d621MarketIntelCooldown) return false;
+        return metNpcsR621(st, 30).length >= 1;
+      },
+      choices: [
+        { text: "💡 记下这个信息", hint: "智力+3,心智+2", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._d621MarketIntelCooldown = true;
+          if (st.player) st.player.intelligence = Math.min(100, (st.player.intelligence || 50) + 3);
+          if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 2);
+          if (typeof StateManager !== "undefined") StateManager.addMessage("🗣️ '听说XX东西要涨价了,赶紧囤点。' 你默默记下了这个信息。智力+3,心智+2。", "success");
+        }},
+        { text: "🔄 分享另一个消息", hint: "好感+5,心情+3", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._d621MarketIntelCooldown = true;
+          if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 3);
+          var met = metNpcsR621(st, 30);
+          if (met.length > 0 && typeof applyAffinityChange === "function") {
+            try { applyAffinityChange(st, met[0].id, 5, "信息交换"); } catch(e) {}
+          }
+          if (typeof StateManager !== "undefined") StateManager.addMessage("🗣️ '你知道吗,我也有个消息...' 你们交换了各自的情报,关系更近了。好感+5,心情+3。", "success");
+        }}
+      ],
+      text: function (st) {
+        if (!st) return null;
+        var met = metNpcsR621(st, 30);
+        var name = met.length > 0 ? met[0].name : "朋友";
+        return name + "神秘地说:'我刚得到一个内部消息,XX市场要变天了。' 你竖起耳朵,生怕漏掉一个字。";
+      }
+    },
+
+    // ====== D→F: 好友推荐UI ======
+    {
+      id: "d621_friend_suggestion_ui", phase: "street", _isChainEvent: false, icon: "👥",
+      title: "好友推荐",
+      story: "一个朋友想介绍TA的朋友给你认识——{desc}",
+      triggers: { minDay: 25, interval: 90, maxRepeats: 5, excludeFlags: ["_d621FriendSuggestionCooldown"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        if (!st.flags || st.flags._d621FriendSuggestionCooldown) return false;
+        return metNpcsR621(st, 50).length >= 1;
+      },
+      choices: [
+        { text: "🤝 认识新朋友", hint: "结识新NPC,心情+5", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._d621FriendSuggestionCooldown = true;
+          if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 5);
+          if (st.flags) st.flags._newFriendIntroduced = true;
+          if (typeof StateManager !== "undefined") StateManager.addMessage("👥 '这是我朋友XX,做XX行业的,你们一定聊得来!' 你认识了一个新朋友。心情+5。", "success");
+        }},
+        { text: "💬 先加个微信", hint: "心情+3", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._d621FriendSuggestionCooldown = true;
+          if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 3);
+          if (typeof StateManager !== "undefined") StateManager.addMessage("👥 你加了对方的微信。'保持联系,以后有机会合作。' 心情+3。", "success");
+        }}
+      ],
+      text: function (st) {
+        if (!st) return null;
+        var met = metNpcsR621(st, 50);
+        var name = met.length > 0 ? met[0].name : "朋友";
+        return name + "说:'我有个朋友,跟你挺像的,介绍你们认识?' 你犹豫了一下,多个朋友多条路。";
+      }
+    },
+
+    // ====== D→H: NPC生意介绍 ======
+    {
+      id: "d621_npc_business_intro", phase: "corporate", _isChainEvent: false, icon: "🤝",
+      title: "生意介绍",
+      story: "一个朋友给你介绍了一单生意——{desc}",
+      triggers: { minDay: 60, interval: 120, maxRepeats: 4, excludeFlags: ["_d621BusinessIntroCooldown"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        if (!st.flags || st.flags._d621BusinessIntroCooldown) return false;
+        if (!st.startup || !st.startup.company) return false;
+        return metNpcsR621(st, 60).length >= 1;
+      },
+      choices: [
+        { text: "💼 接下这单", hint: "收益¥5000-15000,公司声誉+10", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._d621BusinessIntroCooldown = true;
+          var earn = 5000 + Random.int(0, 10000);
+          if (st.resources) st.resources.cash = (st.resources.cash || 0) + earn;
+          if (st.startup && st.startup.company) {
+            st.startup.company.reputation = Math.min(100, (st.startup.company.reputation || 50) + 10);
+          }
+          if (typeof StateManager !== "undefined") StateManager.addMessage("🤝 '这单生意够你吃半年了!' 朋友介绍的大客户,让你赚了¥" + earn.toLocaleString() + "。公司声誉+10。", "success");
+        }},
+        { text: "🤔 先考察一下", hint: "心智+3,智力+2", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._d621BusinessIntroCooldown = true;
+          if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 3);
+          if (st.player) st.player.intelligence = Math.min(100, (st.player.intelligence || 50) + 2);
+          if (typeof StateManager !== "undefined") StateManager.addMessage("🤝 '小心驶得万年船。' 你决定先考察一下对方的背景。心智+3,智力+2。", "success");
+        }}
+      ],
+      text: function (st) {
+        if (!st) return null;
+        var met = metNpcsR621(st, 60);
+        var name = met.length > 0 ? met[0].name : "朋友";
+        return name + "打来电话:'我这边有个大客户,正好需要你们公司的服务,要不要接?' 这可能是公司的一个转折点。";
+      }
+    }
+  ];
+
+  for (var i = 0; i < EVENTS.length; i++) {
+    RANDOM_EVENTS.push(EVENTS[i]);
+  }
+})();
 ;
 // ==== js/core/domain_g_linkage_r622.js ====
 /**
