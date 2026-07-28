@@ -1574,3 +1574,4 @@ function getEventHealthImpact(state, eventId) {
 // [R378] 域B
 // [R458] 域B
 // [R546] 域B
+// [R610] 域B
