@@ -610,3 +610,12 @@
 - 竞态：并行10分钟四笔、两套编号活跃(R714/R715小编号+R738/R739循环)。交付物被[R714]6a246995(3源+挂载)+[R715]06f88e73(dist+round doc)分两笔扫入,四项核验闭合。第二次build(补r739)吸入并行在途job_milestone_events.js→按铁律不提交dist,留并行成对提交。
 - 素材账：域E剩_portfolioMilestone_10000/50000/500000三档零读取/propertyPhaseStartDay/_propertyPolicyTightness。
 - 下轮：git log重算；F(R442)/G(R311)为本窗口深审下两位候选。
+
+## 2026-07-29 06:2x-06:4x R746b 域G(核心机制/生命周期) — 本地已提交c43180c0+ae3552a2, push受阻(TLS,本地ahead 57)
+- 选域：本窗口深审recency G=R311全局最陈旧(F=R442次之)。b后缀避让并行R744/R745。
+- A类2处：①_pensionBase养老金承诺零兑现且_retired封锁副业/职业收入=选退休纯亏→daily_pipeline月度兑现(每30天min(基数,5万)×60%,advisor加发50%顾问费,_pensionTotal累计,isFinite守卫)；②R720 getLifeStageNarrativeEvent悬空(未调用/未导出/8个_lifeNarrative_XX全库零写入=18-60岁八个年龄节点叙事恒不触发)→story_chapters补8段叙事+runLifeStageNarrative(置flag+心智+2)+window导出+story_chapter_check slot接线。
+- 联动3(domain_g_linkage_r746b.js,3street,done-flag防重全||防御)：g746b_pension_planning(G→E _pensionTotal首读·禀赋效应)/g746b_life_narrative_echo(G→B _lifeNarrative首读·峰终定律динамик text)/g746b_node_choice_legacy(G→C _lifeNode_choice首跨文件读·选择复利)。
+- ⚠️新踩坑入MEMORY：window导出wrapper覆盖顶层函数声明→标识符解析到wrapper自身→无限递归爆栈→MC全策略0%存活1.9s硬崩溃；带bug版一度被并行扫入HEAD(30292e29)，修复版c43180c0热修复闭合(并行以"域G补遗"message接管本窗口staged，内容四项核验完整)。铁律：一律直接window.f=f。
+- 验证：node --check×3过/build 13593.4KB(g746b×6)/MC 10x500 159.6s 0代码异常前7天死亡全0%(trader60/social70/corporate50既有RNG阈值)。
+- 竞态：并行第三轮小编号(R722/R723)与第五轮循环(R744/R745)同时活跃；index.lock碰撞一次重试即过；本轮交付主体被并行扫入30292e29之前的提交链。
+- 下轮：git log重算；本窗口深审候选F(R442)>D。MEMORY.md已压缩重写(12.4KB→~6KB,v3)。

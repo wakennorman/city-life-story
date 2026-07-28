@@ -1336,8 +1336,23 @@ function getSkillInvestmentBonus(state) {
 }
 // [R339] 域C
 // [R387] 域C
-// [R427] 域C
-// [R475] 域C
-// [R515] 域C
-// [R563] 域C
-// [R595] 域C
+// [R724 第三轮 域C 联动增强 C→F]: 技能树可视化数据
+function getSkillTreeVisualData(state) {
+  if (!state || !state.skills) return [];
+  var data = [];
+  for (var key in state.skills) {
+    var s = state.skills[key];
+    if (s && typeof s.level === 'number') {
+      data.push({ id: key, name: getSkillChineseName ? getSkillChineseName(key) : key, level: s.level, xp: s.xp || 0 });
+    }
+  }
+  data.sort(function(a, b) { return b.level - a.level; });
+  return data;
+}
+
+// [R724 第三轮 域C 联动增强 C→A]: 技能市场价值指数
+function getSkillMarketIndex(skillId) {
+  if (!skillId) return 0;
+  var demand = { coding: 90, management: 85, accounting: 80, sales: 75, english: 70, electrician: 65, welding: 60, driving: 55, repair: 50, cooking: 45, medicine: 80, social: 60 };
+  return demand[skillId] || 50;
+}
