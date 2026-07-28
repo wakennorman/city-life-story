@@ -1278,3 +1278,23 @@ function showDailyReport(state) {
 // [R446] 域F
 // [R518] 域F
 // [R566] 域F
+
+
+// [R727 第三轮 域F 联动增强 F→G]: 健康趋势报告
+function renderHealthTrendReport(state) {
+  if (!state || !state.status) return '<div>暂无数据</div>';
+  var health = state.status.health || 100;
+  var prevHealth = state.flags && state.flags._dayStartHealth || 100;
+  var delta = health - prevHealth;
+  var icon = delta > 0 ? '↑' : delta < 0 ? '↓' : '→';
+  var color = delta > 0 ? 'var(--success)' : delta < 0 ? 'var(--danger)' : 'var(--text-muted)';
+  return '<div style="color:' + color + ';">❤️ 健康 ' + health + ' ' + icon + ' ' + Math.abs(delta) + '</div>';
+}
+
+// [R727 第三轮 域F 联动增强 F→A]: 价格趋势图表数据
+function getPriceTrendData(state, goodId) {
+  if (!state || !goodId || !state.trade || !state.trade._lastPrices) return [];
+  var prices = state.trade._lastPrices[goodId];
+  if (!prices || !Array.isArray(prices)) return [];
+  return prices.map(function(p, i) { return { day: i + 1, price: p }; });
+}
