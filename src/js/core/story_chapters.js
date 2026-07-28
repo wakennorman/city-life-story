@@ -537,9 +537,9 @@ if (typeof window !== "undefined") {
   window.checkStoryChapter = checkStoryChapter;
   window.getStoryChapterProgress = getStoryChapterProgress;
   window.getStoryChapterChecklist = getStoryChapterChecklist;
-  // [全系统自洽修复] 域G R746b A类#2: 导出年龄叙事兑现函数（定义在文件尾部,函数声明有提升,此处引用安全）
-  window.getLifeStageNarrativeEvent = function (age, flags) { return getLifeStageNarrativeEvent(age, flags); };
-  window.runLifeStageNarrative = function (state) { return runLifeStageNarrative(state); };
+  // [全系统自洽修复] 域G R746b A类#2: 导出年龄叙事兑现函数（函数声明提升,直接引用安全;严禁wrapper——顶层声明本身即全局绑定,wrapper覆盖后会自调递归爆栈）
+  window.getLifeStageNarrativeEvent = getLifeStageNarrativeEvent;
+  window.runLifeStageNarrative = runLifeStageNarrative;
 }
 // [R720 域G 联动增强 G→B]: 人生阶段叙事事件
 function getLifeStageNarrativeEvent(age, flags) {

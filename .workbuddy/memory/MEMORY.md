@@ -4,7 +4,8 @@
 - 开轮先 `git log` 重算真实 recency（**勿信 loop-state，常严重滞后**）；核对轮号未被占用，本窗口一律 **b后缀避让**。并行在途改动一律不碰。
 - 提交前 `git rev-parse HEAD > .claude/last_known_head`；**同窗口连续多笔提交每笔前都要重新同步**。改源后必 `python build.py`（dist 须比 src 新）。只 add 本轮文件；绝不 `-A`/`--amend`/force。push 前 `git pull --rebase origin main`，冲突则中止绝不 force。
 - MC：`node --max-old-space-size=8192 tests/monte_carlo.cjs --trials 10 --days 500`（OOM 回退 6x400）。0 TypeError/ReferenceError/NaN/Infinity + 前7天死亡率0% 即过；存活率<80%（trader60/social70/corporate50）为既有 RNG 阈值。**"全策略0%存活+耗时<1s"=硬崩溃**→harness catch 加 e.stack 定位热修复。
-- 新 linkage 文件必挂 `src/index.html` `<script>`（漏挂=悬空，build 静默剔除）。push 前双向核对：`git show HEAD:src/index.html | grep <新文件>` + `git show HEAD:dist/app.js | grep -c <事件前缀>`。
+- 新 linkage 文件必挂 `src/index.html` `<script>`（漏挂=悬空，build 静默剔除）。
+- ⚠️ **window 导出严禁 wrapper**：经典脚本顶层函数声明本身即全局绑定，`window.f=function(){return f(...)}` 会让 f 解析到 wrapper 自身→无限递归爆栈（R746b MC 全策略0%实锤）。一律直接 `window.f = f`。push 前双向核对：`git show HEAD:src/index.html | grep <新文件>` + `git show HEAD:dist/app.js | grep -c <事件前缀>`。
 - 本窗口 build 若吸入并行在途未提交源→**绝不提交 dist**。会话压缩后后台 MC task_id 丢失→直接重跑。
 - pre-commit 坑：dist mtime 早于 src（并行 touch）→先 `git diff HEAD --stat` 核内容一致后 touch dist 重试，勿盲目重 build。
 
