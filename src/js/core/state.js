@@ -953,6 +953,7 @@ if (typeof window !== "undefined") {
  * @param {string} description - 描述文本
  */
 function addDailyTransaction(state, type, category, amount, description) {
+  if (!state.flags) state.flags = {};
   if (!state.flags._dailyTransactions) {
     state.flags._dailyTransactions = [];
   }

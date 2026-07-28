@@ -182,6 +182,7 @@
             }
             if (st.player) st.player.mental = (st.player.mental || 50) + 4;
             if (st.flags) {
+              if (!st.flags) st.flags = {};
               st.flags._careerPromotionBonusDone = true;
               st.flags._dataInvestorMindset = true; // 与 R14 data_savings_milestone 复用同一投资心态 flag
             }
@@ -283,6 +284,7 @@
                 (st.needs.happiness || 50) + 5,
               );
             if (st.flags) {
+              if (!st.flags) st.flags = {};
               st.flags._careerLegacyTaleDone = true;
               st.flags._careerNarrativeSeen = true; // 供 B域叙事回调复用
             }
@@ -714,7 +716,8 @@
         text: "💡 我去事业Tab看看我的连携加成",
         hint: "引导探索",
         apply: function (st) {
-          st.flags._skillSynergyHintShown = true;
+          if (!st.flags) st.flags = {};
+              st.flags._skillSynergyHintShown = true;
           if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 2);
           if (typeof StateManager !== "undefined" && StateManager.addMessage)
             StateManager.addMessage("🔗 你开始关注自己的技能组合了。事业Tab里，系统会自动计算所有连携加成。心智+2。", "success");
@@ -772,6 +775,7 @@
         text: "🔄 换份更有挑战性的工作",
         hint: "换个环境重新开始",
         apply: function (st) {
+          if (!st.flags) st.flags = {};
           st.flags._careerStagnationSeen = true;
           st.player.mental = Math.max(0, (st.player.mental || 50) - 3);
           if (typeof StateManager !== "undefined" && StateManager.addMessage)
@@ -782,6 +786,7 @@
         text: "😤 继续干，日子总要过",
         hint: "拖延改变",
         apply: function (st) {
+          if (!st.flags) st.flags = {};
           st.flags._careerStagnationSeen = true;
           st.needs.happiness = Math.max(0, (st.needs.happiness || 50) - 8);
           if (typeof StateManager !== "undefined" && StateManager.addMessage)

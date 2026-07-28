@@ -885,6 +885,7 @@ function applyPriceMoodEffect(state, goodId, oldPrice, newPrice) {
 // [全系统自洽修复] 域A R387 联动增强(A→B): 交易里程碑叙事—累计交易额触发成就事件
 function checkTradeMilestone(state) {
   if (!state || !state.trade) return;
+  if (!state.flags) state.flags = {};
   var totalSpent = state.trade._totalSpent || 0;
   var milestones = [1000, 5000, 10000, 50000, 100000, 500000];
   var triggered = state.flags._tradeMilestones || [];

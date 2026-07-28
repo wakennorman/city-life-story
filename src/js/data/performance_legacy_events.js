@@ -163,7 +163,8 @@
       {
         text: "🔥 庆祝翻身（尊严+10/人缘+5/心情+10）",
         apply: function (st) {
-          st.flags._perfComebackCooldown = true;
+          st.flags = st.flags || {};
+            st.flags._perfComebackCooldown = true;
           var c = st.player.corporate;
           if (!c) return;
           c.dignity = Math.min(100, (c.dignity || 0) + 10);
