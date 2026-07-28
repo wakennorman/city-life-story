@@ -1,1 +1,9 @@
-{"lastRound": 677, "lastDirection": "DOMAIN_C", "lastDate": "2026-07-28", "lastCommit": "a6b054b2", "nextDirection": "DOMAIN_F", "note": "域C R677b(本窗口,b后缀避让): A类2处(①_skillMasterTrainer培训班承诺¥150/天零兑现→开班日+扣投入+daily_pipeline每日兑现接线150/扩班250;②career_dev 6事件story占位符{pathName}{levelName}{skillName}{masterName}泄漏→全部补text()动态叙述,CRLF Python字节级替换)。联动3(domain_c_linkage_r677b.js: _legacyProjectStarted/_legacyWatched死flag首消费C→E/B + 培训班扩班_trainerScaleUp C→E)。MC 10x500 253.5s 0代码异常/前7天死亡率全0%。交付物被并行以[R677]a6b054b2扫入推送(并行同提交含自有域C修复,同轮号同域双份互补新形态);账本被88e8ef1e/d028a87d扫入;本窗口收尾68e2fc7d。⚠️本文件曾被并行reset冲回R658旧版→本次重写重推。recency(19:55): E=678b/D=678/C=677/B=676/A=675/H=674/G=671/F=670→下轮F最薄弱(并行在途investment.js域E,重算时留意)。", "pushStatus": "PUSHED"}
+{
+  "lastRound": "685b",
+  "lastDirection": "DOMAIN_C",
+  "lastDate": "2026-07-28",
+  "lastCommit": "72ca54be23b47a1b9ccd4d915242d78894c361d8",
+  "nextDirection": "DOMAIN_E",
+  "note": "R685b 域C(本窗口): A类5处跨域story占位符泄漏→text()收口(career_dev/r243/r245/r244/r246)+补回r685b.js源(此前未跟踪=index.html挂载悬空); 联动3项 c685b_* 孤儿写-only死flag首消费. 本地提交 5465e851(fix A类)+72ca54be(feat 联动), 未推送(origin/main仍R681, 网络TLS中断). 并行在途R687(域E)编辑 src/index.html/r637/r687 未提交; 本窗口未碰并行文件、未重建dist(避免混入r687). recency(R686后): E=R679最陈旧→下轮DOMAIN_E. pushStatus=LOCAL_ONLY_待网络恢复.",
+  "pushStatus": "LOCAL_ONLY"
+}
