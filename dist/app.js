@@ -214188,6 +214188,81 @@ const DAILY_PIPELINE = [
       }
     },
   },
+
+  // === [R712] 域G 联动增强: G→E 年龄财务智慧 ===
+  // 每10岁里程碑解锁投资回报加成，模拟人生阅历带来的财务判断力提升
+  {
+    name: "age_financial_wisdom",
+    fn: function (state) {
+      if (!state.flags) state.flags = {};
+      if (!state.player) return;
+      var age = state.player.age || 0;
+      if (age < 25) return;
+      // 年龄阈值：25→1%, 30→2%, 40→3%, 50→5%, 60→8%
+      var wisdomBonus = 0;
+      if (age >= 60) wisdomBonus = 0.08;
+      else if (age >= 50) wisdomBonus = 0.05;
+      else if (age >= 40) wisdomBonus = 0.03;
+      else if (age >= 30) wisdomBonus = 0.02;
+      else if (age >= 25) wisdomBonus = 0.01;
+      var prevBonus = state.flags._ageFinWisdomBonus || 0;
+      if (wisdomBonus > prevBonus) {
+        state.flags._ageFinWisdomBonus = wisdomBonus;
+        if (typeof StateManager !== "undefined" && age % 10 === 0) {
+          StateManager.addMessage("📈 " + age + "岁的人生阅历让你对投资有了更深的领悟。投资回报+" + Math.round(wisdomBonus * 100) + "%", "success");
+        }
+      }
+    },
+  },
+
+  // === [R712] 域G 联动增强: G→D 年龄节点社交圈 ===
+  // 每5岁非关键年龄自动微调社交圈，模拟现实社交圈自然流动
+  {
+    name: "age_social_flow",
+    fn: function (state) {
+      if (!state.flags) state.flags = {};
+      if (!state.player || !state.relationships) return;
+      var age = state.player.age || 0;
+      if (age < 20 || age % 5 !== 0) return;
+      var flag = '_ageSocialFlow_' + age;
+      if (state.flags[flag]) return;
+      state.flags[flag] = true;
+      var adjusted = 0;
+      for (var _rid in state.relationships) {
+        var _r = state.relationships[_rid];
+        if (!_r || !_r.met) continue;
+        // 30岁前：社交圈扩张期，低好感也加深
+        if (age <= 30 && _r.affinity >= 5) {
+          _r.affinity = Math.min(100, (_r.affinity || 0) + 1);
+          adjusted++;
+        }
+        // 30-50岁：人脉黄金期，维护高好感关系
+        else if (age > 30 && age <= 50 && _r.affinity >= 30) {
+          _r.affinity = Math.min(100, (_r.affinity || 0) + 1);
+          adjusted++;
+        }
+        // 50岁后：知交半零落，仅深交(≥60)维持
+        else if (age > 50 && _r.affinity >= 60) {
+          _r.affinity = Math.min(100, (_r.affinity || 0) + 1);
+          adjusted++;
+        }
+      }
+      if (adjusted > 0 && typeof StateManager !== "undefined") {
+        var msgs = {
+          20: "🎂 20岁，青春正好，认识了不少新朋友。",
+          25: "🎂 25岁，同龄人都在打拼，圈子渐渐稳定。",
+          30: "🎂 30岁而立，身边留下的都是真朋友。",
+          35: "🎂 35岁，人脉即资源，社交圈进入黄金期。",
+          40: "🎂 40岁不惑，知交三五人足矣。",
+          45: "🎂 45岁，时间沉淀下来的都是值得珍惜的人。",
+          50: "🎂 50岁知天命，老友如酒，越陈越香。",
+          55: "🎂 55岁，开始珍惜每一次相聚。",
+          60: "🎂 60岁，回首望去，人生路上幸有友人相伴。",
+        };
+        StateManager.addMessage(msgs[age] || "🎂 " + age + "岁，社交圈悄然变化。", "info");
+      }
+    },
+  },
 ];
 
 /** 生成每日一句话总结 */
@@ -334882,6 +334957,163 @@ if (typeof window !== "undefined") {
 })();
 
 ;
+// ==== js/core/domain_f_linkage_r727.js ====
+/**
+ * 域F(UI/UX) 联动增强 R727 (第三轮循环)
+ * 桥接：
+ *   F→A  f727_data_story_v5 数据故事v5 → 消费 jobs/skills/wealth 数据
+ *   F→B  f727_event_memory_v5 事件记忆墙v5 → 消费 events_core+news 数据
+ *   F→G  f727_health_tracker_v5 健康追踪v5 → 消费 status/needs 数据
+ */
+(function () {
+  "use strict";
+  if (typeof RANDOM_EVENTS === "undefined" || !RANDOM_EVENTS) return;
+  if (RANDOM_EVENTS._domainFLinkageR727Loaded) return;
+  RANDOM_EVENTS._domainFLinkageR727Loaded = true;
+
+  var EVENTS = [
+    {
+      id: "f727_data_story_v5", phase: "street", _isChainEvent: false, icon: "📊",
+      title: "数据故事",
+      story: "你的数据正在讲述故事——{desc}",
+      triggers: { minDay: 180, interval: 240, maxRepeats: 3, excludeFlags: ["_f727DataCd"] },
+      conditions: function (st) {
+        if (!st || st.gameOver) return false;
+        if (st.flags && st.flags._f727DataCd) return false;
+        return st.player && st.player.day >= 180 && st.skills;
+      },
+      choices: [
+        {
+          text: "📈 回顾成长轨迹", hint: "心智+7,置_f727GrowthReviewer",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._f727DataCd = true;
+            st.flags._f727GrowthReviewer = true;
+            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 7);
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("📊 '数据背后,是成长的足迹。' 心智+7。", "success");
+            }
+          }
+        },
+        {
+          text: "🎯 设定数据目标", hint: "智力+6,置_f727DataGoalSetter",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._f727DataCd = true;
+            st.flags._f727DataGoalSetter = true;
+            if (st.player) st.player.intelligence = Math.min(100, (st.player.intelligence || 50) + 6);
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("🎯 '有目标,数据才有意义。' 智力+6。", "info");
+            }
+          }
+        }
+      ],
+      text: function (st) {
+        if (!st) return null;
+        var days = st.player && st.player.day ? st.player.day : 0;
+        return "你已度过" + days + "天——'这些数据,诉说着你的成长。'";
+      }
+    },
+    {
+      id: "f727_event_memory_v5", phase: "street", _isChainEvent: false, icon: "🖼️",
+      title: "事件记忆墙",
+      story: "你经历的事件正在组成记忆墙——{desc}",
+      triggers: { minDay: 200, interval: 250, maxRepeats: 3, excludeFlags: ["_f727MemoryCd"] },
+      conditions: function (st) {
+        if (!st || st.gameOver) return false;
+        if (st.flags && st.flags._f727MemoryCd) return false;
+        return st.player && st.player.day >= 200;
+      },
+      choices: [
+        {
+          text: "📜 回顾重要事件", hint: "心智+7,置_f727EventReviewer",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._f727MemoryCd = true;
+            st.flags._f727EventReviewer = true;
+            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 7);
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("🖼️ '记忆,是人生最珍贵的财富。' 心智+7。", "success");
+            }
+          }
+        },
+        {
+          text: "📖 书写人生故事", hint: "社交XP+8,置_f727LifeWriter",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._f727MemoryCd = true;
+            st.flags._f727LifeWriter = true;
+            if (typeof addSkillXp === "function") { try { addSkillXp("social", 8); } catch(e) {} }
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("📖 '书写,让记忆永存。' 社交XP+8。", "info");
+            }
+          }
+        }
+      ],
+      text: function (st) {
+        if (!st) return null;
+        var days = st.player && st.player.day ? st.player.day : 0;
+        return "你已度过" + days + "天——'这些记忆,构成了你的人生。'";
+      }
+    },
+    {
+      id: "f727_health_tracker_v5", phase: "street", _isChainEvent: false, icon: "💚",
+      title: "健康追踪",
+      story: "你的健康状况需要持续关注——{desc}",
+      triggers: { minDay: 120, interval: 180, maxRepeats: 4, excludeFlags: ["_f727HealthCd"] },
+      conditions: function (st) {
+        if (!st || st.gameOver) return false;
+        if (st.flags && st.flags._f727HealthCd) return false;
+        return st.status && st.needs && st.player && st.player.day >= 120;
+      },
+      choices: [
+        {
+          text: "🏃 制定健康计划", hint: "健康+6,疲劳-9,置_f727HealthPlan",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._f727HealthCd = true;
+            st.flags._f727HealthPlan = true;
+            if (st.status) st.status.health = Math.min(100, (st.status.health || 100) + 6);
+            if (st.needs) st.needs.fatigue = Math.max(0, (st.needs.fatigue || 0) - 9);
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("💚 '健康,需要持续管理。' 健康+6,疲劳-9。", "success");
+            }
+          }
+        },
+        {
+          text: "😴 调整作息", hint: "心情+9,置_f727SleepAdjust",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._f727HealthCd = true;
+            st.flags._f727SleepAdjust = true;
+            if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 9);
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("😴 '早睡早起,精神百倍。' 心情+9。", "info");
+            }
+          }
+        }
+      ],
+      text: function (st) {
+        if (!st) return null;
+        var health = st.status && st.status.health ? Math.round(st.status.health) : 100;
+        var fatigue = st.needs && st.needs.fatigue ? Math.round(st.needs.fatigue) : 0;
+        return "健康" + health + "%,疲劳" + fatigue + "——'身体,最诚实的仪表盘。'";
+      }
+    }
+  ];
+
+  for (var i = 0; i < EVENTS.length; i++) {
+    RANDOM_EVENTS.push(EVENTS[i]);
+  }
+})();
+
+;
 // ==== js/core/domain_g_linkage_r663.js ====
 /**
  * 域G(核心机制/生命周期) 联动增强 R663
@@ -343703,7 +343935,29 @@ function addSkillXp(skillKey, amount) {
       state.flags._certSkillXpBonus &&
       state.flags._certSkillXpBonus[skillKey]) ||
     0;
-  skill.xp += Math.round(amount * _talentMult * (1 + _certXpBonus));
+  // [R712 域G 联动增强 G→C]: 年龄阶段技能效率变化
+  // 青年(≤25)体力技能快,中年(26-40)均衡,中老年(41-50)脑力快,老年(>50)经验类加成
+  var _age = (state.player && state.player.age) || 20;
+  var _ageSkillMult = 1.0;
+  var _physicalSkills = ["welding", "repair", "electrician", "driving"];
+  var _mentalSkills = ["coding", "accounting", "management", "english", "sales"];
+  if (_age <= 25) {
+    // 青年: 体力技能+15%, 脑力技能-5%
+    if (_physicalSkills.indexOf(skillKey) !== -1) _ageSkillMult = 1.15;
+    else if (_mentalSkills.indexOf(skillKey) !== -1) _ageSkillMult = 0.95;
+  } else if (_age <= 40) {
+    // 中年: 均衡期, 所有技能+5%
+    _ageSkillMult = 1.05;
+  } else if (_age <= 55) {
+    // 中老年: 脑力技能+15%, 体力技能-10%
+    if (_mentalSkills.indexOf(skillKey) !== -1) _ageSkillMult = 1.15;
+    else if (_physicalSkills.indexOf(skillKey) !== -1) _ageSkillMult = 0.90;
+  } else {
+    // 老年: 经验类(管理/会计/销售)+20%, 体力-20%
+    if (skillKey === "management" || skillKey === "accounting" || skillKey === "sales") _ageSkillMult = 1.20;
+    else if (_physicalSkills.indexOf(skillKey) !== -1) _ageSkillMult = 0.80;
+  }
+  skill.xp += Math.round(amount * _talentMult * (1 + _certXpBonus) * _ageSkillMult);
   // v3.1 审查改进：XP 需求从线性改为指数，level 0=120 → level 50≈10,000（之前 6,120）
   // 让玩家在高级别感受更有意义的成长压力，同时保留早期快速升级的爽快感
   var xpNeeded = Math.floor(
