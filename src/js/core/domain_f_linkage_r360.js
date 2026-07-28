@@ -83,7 +83,7 @@
             st.flags._dataDrivenMindset = true;
             if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 6);
             if (st.skills && st.skills.accounting && typeof addSkillXp === "function") {
-              addSkillXp(st, "accounting", 5);
+              addSkillXp("accounting", 5); // [R620 A类修复] 原addSkillXp(st,...) state作首参→XP静默丢弃
             }
             if (typeof StateManager !== "undefined" && StateManager.addMessage) {
               StateManager.addMessage("📊 你建立了个人数据看板。数据是了解自己最好的方式。心智+6，会计经验+5。", "success");

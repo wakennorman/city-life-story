@@ -37,7 +37,7 @@
             st.flags._companyLeadershipV5Seen = true;
             if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 6);
             if (st.skills && st.skills.management && typeof addSkillXp === "function") {
-              addSkillXp(st, "management", 5);
+              addSkillXp("management", 5); // [R620 A类修复] 原addSkillXp(st,...) state作首参→XP静默丢弃
             }
             if (st.startup && st.startup.company && st.startup.company.employees) {
               for (var i = 0; i < st.startup.company.employees.length; i++) {
@@ -132,7 +132,7 @@
             st.flags._companyEconomicDashboardV2Seen = true;
             if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 5);
             if (st.skills && st.skills.accounting && typeof addSkillXp === "function") {
-              addSkillXp(st, "accounting", 5);
+              addSkillXp("accounting", 5); // [R620 A类修复] 原addSkillXp(st,...) state作首参→XP静默丢弃
             }
             if (typeof StateManager !== "undefined" && StateManager.addMessage) {
               StateManager.addMessage("📊 你完善了经济分析面板。没有数据支撑的决策就像没有导航的航行。心智+5，会计经验+5。", "success");

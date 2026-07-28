@@ -165,7 +165,11 @@
           if (!st) return; st.flags = st.flags || {}; st.flags._c596CareerHealthCooldown = true;
           if (st.resources) st.resources.cash = Math.max(0, (st.resources.cash || 0) - 500);
           if (st.status) st.status.health = Math.min(100, (st.status.health || 100) + 8);
-          if (typeof addSkillXp === "function") { try { addSkillXp("strength", 10); } catch(e) {} }
+          // [全系统自洽修复] 域E R621 修复: addSkillXp("strength") 假技能键(真实12键无strength)→XP静默丢弃,玩家花500现金承诺落空；改写真实形象维度 personalGrowth.image.fitness(同R599修复先例)
+          if (st.personalGrowth) {
+            st.personalGrowth.image = st.personalGrowth.image || { style: 30, skincare: 30, fitness: 30, plastic: 0 };
+            st.personalGrowth.image.fitness = Math.min(100, (st.personalGrowth.image.fitness || 30) + 10);
+          }
           if (typeof StateManager !== "undefined") StateManager.addMessage("⚕️ 你办了一张健身卡。虽然花了不少钱,但想到能拥有更好的身体,心里踏实多了。健康+8,体质XP+10,现金-500。", "success");
         }}
       ],

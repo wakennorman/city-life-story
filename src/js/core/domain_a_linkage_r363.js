@@ -82,7 +82,7 @@
             st.flags._dataVisualizationAware = true;
             if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 6);
             if (st.skills && st.skills.coding && typeof addSkillXp === "function") {
-              addSkillXp(st, "coding", 5);
+              addSkillXp("coding", 5); // [R620 A类修复] 原addSkillXp(st,...) state作首参→XP静默丢弃
             }
             if (typeof StateManager !== "undefined" && StateManager.addMessage) {
               StateManager.addMessage("📈 你建立了数据可视化看板。可视化让数据自己说话。心智+6，编程经验+5。", "success");

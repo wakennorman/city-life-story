@@ -62,7 +62,7 @@
         { text: "📚 学习更多", hint: "随机技能XP+5", apply: function (st) {
           if (!st) return; st.flags = st.flags || {}; st.flags._e597CareerConfCooldown = true;
           var skills = ["coding", "sales", "accounting", "management", "english"]; // [全系统自洽修复] 域G R599 修复:"finance"非真实技能键(XP静默丢弃)→映射english(真实12键)
-          var sk = skills[Math.floor(Math.random() * skills.length)];
+          var sk = Random.fromArray(skills); // [全系统自洽修复] 域E R400: Math.random()→Random.fromArray()
           if (typeof addSkillXp === "function") { try { addSkillXp(sk, 5); } catch(e) {} }
           if (typeof StateManager !== "undefined") StateManager.addMessage("💼 '学无止境。' " + sk + "XP+5。", "success");
         }}

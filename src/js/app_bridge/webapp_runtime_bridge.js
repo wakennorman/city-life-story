@@ -185,7 +185,8 @@
       state.status.health = Math.min(100, state.status.health + amount);
       return;
     }
-    state.player.health = Math.min(100, (state.player.health || 100) + amount);
+    state.status = state.status || {};
+    state.status.health = Math.min(100, (state.status.health || 100) + amount); // [R620 A类修复] state.player.health死字段→state.status.health
   }
 
   function applyCityService(actionId) {

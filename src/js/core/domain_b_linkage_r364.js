@@ -97,7 +97,7 @@
                 // [全系统自洽修复] 域B R400: Math.random()→Random.fromArray()种子化随机(保证存档回放一致性)
                 var randSkill = (typeof Random !== "undefined" && Random.fromArray) ? Random.fromArray(skillKeys) : skillKeys[0];
                 if (typeof addSkillXp === "function") {
-                  addSkillXp(st, randSkill, 3);
+                  addSkillXp(randSkill, 3); // [R620 A类修复] 原addSkillXp(st,...) state作首参→XP静默丢弃
                 }
               }
             }

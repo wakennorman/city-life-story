@@ -40,7 +40,7 @@
               if (keys.length > 0 && typeof addSkillXp === "function") {
                 // [全系统自洽修复] 域B R400: Math.random()→Random.fromArray()种子化随机
                 var _rSkill = (typeof Random !== "undefined" && Random.fromArray) ? Random.fromArray(keys) : keys[0];
-                addSkillXp(st, _rSkill, 3);
+                addSkillXp(_rSkill, 3); // [R620 A类修复] 原addSkillXp(st,...) state作首参→XP静默丢弃
               }
             }
             if (typeof StateManager !== "undefined" && StateManager.addMessage) {

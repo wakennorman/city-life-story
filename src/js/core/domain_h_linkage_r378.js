@@ -130,7 +130,7 @@
             st.flags._companyFinanceV2Seen = true;
             if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 5);
             if (st.skills && st.skills.accounting && typeof addSkillXp === "function") {
-              addSkillXp(st, "accounting", 5);
+              addSkillXp("accounting", 5); // [R620 A类修复] 原addSkillXp(st,...) state作首参→XP静默丢弃
             }
             if (typeof StateManager !== "undefined" && StateManager.addMessage) {
               StateManager.addMessage("💰 你优化了财务管理。会赚钱是本事，会管钱是智慧。心智+5，会计经验+5。", "success");

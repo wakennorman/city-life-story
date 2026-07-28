@@ -96,7 +96,7 @@
                 }
               }
               if (lowestSkill && typeof addSkillXp === "function") {
-                addSkillXp(st, lowestSkill, 5);
+                addSkillXp(lowestSkill, 5); // [全系统自洽修复] 域D R620 A类: 原 addSkillXp(st,lowestSkill,5) 误把state对象作首参→skillKey="[object Object]"→XP静默丢弃;修正为(skillKey,amount)
               }
             }
             var npc = firstHighAffNpc(st, 25);

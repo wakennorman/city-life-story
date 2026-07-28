@@ -231,7 +231,7 @@ function tickLegal(state) {
     } else {
       state.needs.happiness = Math.max(0, (state.needs.happiness || 50) - 10);
       // 败诉连锁：精神受损 + 产生额外诉讼债务（律师费尾款）
-      state.needs.mental = Math.max(0, (state.needs.mental || 50) - 8);
+      if (state.player) state.player.mental = Math.max(0, (state.player.mental || 50) - 8); // [R620 A类修复] state.needs.mental死字段→state.player.mental
       var extraDebt = caseData ? Math.round(caseData.cost * 0.2) : 500;
       state.resources.cash = Math.max(
         0,
