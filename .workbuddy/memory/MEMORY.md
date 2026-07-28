@@ -43,14 +43,15 @@
 - 域A R14/22/197/242/251/258/267/277/331/387/431、域B R411(133处死字段大修)/426/472、域C R191/271/489、域E R246/260/284、域F R19/183/186/198/384/442、域G R20/192/197/199/296/311、域H R13/21/200/320 已净尽各自主隐患。
 - 死字段黑名单(player.happiness/needs.health/player.health/certs) 全库 grep=0 活命中即诚实报 A类=0。
 - 误报勿修：webapp_runtime_bridge getPlayerHealth 主路径正确；establishMentorship/takeMentee 有平行实现；setStopLoss 有真实调用方(r195)。C类不修：items.js skillStudy 无应用器；finance.js hasStreetStall 无 writer。
-- **B类待专轮**：phase2/personal_growth.js 双结构分歧（health.physical 对象 vs 数字比较恒 false；pg.psychology 与 health.mental 双心理系统不互通）。
+- ~~personal_growth 双结构分歧~~ **R649b 已专修**（NaN污染/体检TypeError崩溃/恒false 共6处，init 加 _normalizeHealthR649b 每日迁移，读写一律 `_pgHealthScoreR649b` 双形态安全读分）。残余 B类：pg.psychology 与 health.mental 双心理系统数据层仍不互通（render.js:6495 读 pg.psychology，events part2-8 读 health.mental）——R649b 仅叙事层弥合（a649b_depression_shadow shiftDepression 双写），彻底统一需动两侧消费者。
 
 ## 零消费素材账
 - 域A/E 趋枯竭：trade 剩 lastPriceUpdate/_firstTradeDone(价值低)；E 剩 stopLossOrders 触发叙事/investFreq。
 - 域C 剩：`_apprenticeList`/`_highSalaryHealthWarn`。
 - 域D 注意：R440(老陈)/R442(小薇) 并行已连做新NPC。
 
-## 近况（R515-R640b）
+## 近况（R515-R649b）
+- R649b 域A(本窗口)：personal_growth 双结构分歧专修+健康素材激活（checkupHistory 首读/depression 首叙事/bmi 首写）。**新救援形态：并行在途源已落盘未提交+挂载已写共享 index.html→本窗口提交 index.html 时必须连带提交该源防悬空**（r649 即此例）。域A零消费素材更新：bmi/checkupHistory 已激活；dental/vision score 仍零事件消费。
 - 并行已推进至 R639（7-28 14:51，~5分钟/轮）。**同轮号冲突新形态：并行挂载先行、源未落盘**（R640 index.html:1473 挂 r640.js 无源文件）→本窗口同轮号时改 **b后缀**（r640b）避让，勿删并行在途挂载行。
 - R640b 域H(本窗口)：正向孤儿救援 r601/r602/r623（源提交于 R586 但从未挂载=12死事件；r592≡r601 并行重复生成不挂）；联动3=morale写-only闭环首读/burnRate跑道警报/董事会shareholderTrust首引。
 - **域H富矿**：company.efficiency（r602写入无读者）/boardPressureLevel/mediaRelations/sentimentScore/crisisLevel（P1-6/P1-7大系统事件层零引用）。
