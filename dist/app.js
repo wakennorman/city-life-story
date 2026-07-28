@@ -307024,6 +307024,134 @@ if (typeof window !== "undefined") {
 })();
 
 ;
+// ==== js/core/domain_h_linkage_r656.js ====
+/**
+ * 域H(Phase2/公司) 联动增强 R656
+ * 桥接：
+ *   H→A  h649_corp_performance_review  公司绩效回顾 → 消费 state.startup 数据,
+ *    公司→"绩效驱动成长"数据回响
+ *   H→D  h649_corp_social_responsibility  企业社会责任 → 消费 state.startup+state.relationships 数据,
+ *    公司→"企业公民"社交回响
+ *   H→G  h649_founder_life_balance_v2  创始人生活平衡v2 → 消费 state.startup+state.player+state.needs 数据,
+ *    公司→"工作不是全部"生命回响
+ */
+(function () {
+  "use strict";
+  if (typeof RANDOM_EVENTS === "undefined" || !RANDOM_EVENTS) return;
+  if (RANDOM_EVENTS._domainHLinkageR656Loaded) return;
+  RANDOM_EVENTS._domainHLinkageR656Loaded = true;
+
+  // 辅助：获取已结识NPC列表(守 rel.met 铁律)
+  function metNpcsR656(st) {
+    var out = [];
+    var rels = st.relationships || {};
+    for (var k in rels) {
+      if (rels[k] && rels[k].met) out.push({ id: k, affinity: rels[k].affinity || 0, name: (typeof getNpcDisplayName === "function") ? getNpcDisplayName(k) : k });
+    }
+    return out;
+  }
+
+  var EVENTS = [
+    {
+      id: "h649_corp_performance_review", phase: "corporate", _isChainEvent: false, icon: "📊",
+      title: "绩效驱动成长",
+      story: "你开始用绩效回顾来驱动团队成长——{desc}",
+      triggers: { minDay: 180, interval: 250, maxRepeats: 1, excludeFlags: ["_h649PerfDone"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        if (!st.flags || st.flags._h649PerfDone) return false;
+        return st.startup && st.startup.company && (st.startup.company.employees || 0) >= 4;
+      },
+      choices: [
+        { text: "📈 数据化考核", hint: "管理XP+6,智力+3", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._h649PerfDone = true;
+          if (st.player) st.player.intelligence = Math.min(100, (st.player.intelligence || 50) + 3);
+          if (typeof addSkillXp === "function") { try { addSkillXp("management", 6); } catch(e) {} }
+          if (typeof StateManager !== "undefined") StateManager.addMessage("📈 '绩效驱动成长,数据说话。' 你建立了绩效回顾制度。管理XP+6,智力+3。", "success");
+        }},
+        { text: "🎯 目标导向", hint: "心智+5", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._h649PerfDone = true;
+          if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 5);
+          if (typeof StateManager !== "undefined") StateManager.addMessage("🎯 '目标导向,结果说话。' 你设定了团队目标。心智+5。", "success");
+        }}
+      ],
+      text: function (st) {
+        if (!st) return null;
+        var empCount = (st.startup && st.startup.company && st.startup.company.employees) || 0;
+        return "你开始用绩效回顾来驱动团队成长——" + empCount + "名员工,需要明确的目标和反馈。'绩效驱动成长,数据说话。'";
+      }
+    },
+    {
+      id: "h649_corp_social_responsibility", phase: "corporate", _isChainEvent: false, icon: "🤲",
+      title: "企业公民",
+      story: "公司做大了,开始有人期待你承担更多社会责任——{desc}",
+      triggers: { minDay: 200, interval: 300, maxRepeats: 1, excludeFlags: ["_h649SocialDone"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        if (!st.flags || st.flags._h649SocialDone) return false;
+        return st.startup && st.startup.company && (st.startup.company.employees || 0) >= 6;
+      },
+      choices: [
+        { text: "💝 做公益", hint: "心智+6,好感+4", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._h649SocialDone = true;
+          if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 6);
+          var met = metNpcsR656(st);
+          if (met.length > 0 && typeof applyAffinityChange === "function") {
+            try { applyAffinityChange(st, met[0].id, 4, "企业公益"); } catch(e) {}
+          }
+          if (typeof StateManager !== "undefined") StateManager.addMessage("💝 '取之于社会,用之于社会。' 你组织了一次公益活动。心智+6,好感+4。", "success");
+        }},
+        { text: "💼 专注经营", hint: "管理XP+5", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._h649SocialDone = true;
+          if (typeof addSkillXp === "function") { try { addSkillXp("management", 5); } catch(e) {} }
+          if (typeof StateManager !== "undefined") StateManager.addMessage("💼 '把公司做好,就是最大的社会责任。' 你专注经营。管理XP+5。", "success");
+        }}
+      ],
+      text: function (st) {
+        if (!st) return null;
+        var empCount = (st.startup && st.startup.company && st.startup.company.employees) || 0;
+        return "公司做大了,开始有人期待你承担更多社会责任——" + empCount + "名员工背后,是" + empCount + "个家庭。'能力越大,责任越大。'";
+      }
+    },
+    {
+      id: "h649_founder_life_balance_v2", phase: "corporate", _isChainEvent: false, icon: "⚖️",
+      title: "工作不是全部",
+      story: "你开始追求工作与生活的平衡——{desc}",
+      triggers: { minDay: 150, interval: 200, maxRepeats: 1, excludeFlags: ["_h649BalanceDone"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        if (!st.flags || st.flags._h649BalanceDone) return false;
+        if (!st.startup || !st.startup.company) return false;
+        var happy = (st.needs && st.needs.happiness) || 50;
+        return happy < 35;
+      },
+      choices: [
+        { text: "🧘 调整节奏", hint: "心智+7,心情+6", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._h649BalanceDone = true;
+          if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 6);
+          if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 7);
+          if (typeof StateManager !== "undefined") StateManager.addMessage("🧘 '工作不是全部,生活才是。' 你调整了工作节奏。心智+7,心情+6。", "success");
+        }},
+        { text: "💪 坚持一下", hint: "心智+4", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._h649BalanceDone = true;
+          if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 4);
+          if (typeof StateManager !== "undefined") StateManager.addMessage("💪 '再坚持一下,就能看到曙光。' 你选择坚持。心智+4。", "success");
+        }}
+      ],
+      text: function (st) {
+        if (!st) return null;
+        var happy = (st.needs && st.needs.happiness) || 50;
+        return "你开始追求工作与生活的平衡——心情" + Math.round(happy) + "%,'工作不是全部,生活才是。'";
+      }
+    }
+  ];
+
+  for (var i = 0; i < EVENTS.length; i++) {
+    RANDOM_EVENTS.push(EVENTS[i]);
+  }
+})();
+
+;
 // ==== js/core/domain_a_linkage_r633.js ====
 /**
  * 域A(数据/数值平衡) 联动增强 R633
@@ -307596,6 +307724,122 @@ if (typeof window !== "undefined") {
   }
 })();
 
+;
+// ==== js/core/domain_a_linkage_r650.js ====
+/**
+ * 域A(数据/数值平衡) 联动增强 R650
+ * 桥接：
+ *   A→B  a650_market_whisper  市场低语 → 消费 state.resources+state.flags 数据,
+ *     数据→"市场数据中的故事"的叙事回响
+ *   A→F  a650_price_alarm_ui  价格预警UI → 消费 state.resources 数据,
+ *     数据→"价格变动提醒"的UI回响
+ *   A→D  a650_bargain_tip  砍价技巧 → 消费 state.relationships+state.skills 数据,
+ *     数据→"价格数据中的社交智慧"的社交回响
+ */
+(function () {
+  "use strict";
+  if (typeof RANDOM_EVENTS === "undefined" || !RANDOM_EVENTS) return;
+  if (RANDOM_EVENTS._domainALinkageR650Loaded) return;
+  RANDOM_EVENTS._domainALinkageR650Loaded = true;
+
+  var EVENTS = [
+    // ====== A→B: 市场低语 ======
+    {
+      id: "a650_market_whisper", phase: "street", _isChainEvent: false, icon: "🔮",
+      title: "市场低语",
+      story: "你从数据中嗅到了市场的变化——{desc}",
+      triggers: { minDay: 25, interval: 60, maxRepeats: 10, excludeFlags: ["_a650MarketWhisperCooldown"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        if (!st.flags || st.flags._a650MarketWhisperCooldown) return false;
+        return true;
+      },
+      choices: [
+        { text: "📈 相信直觉,提前布局", hint: "智力+5,收益¥300-800", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._a650MarketWhisperCooldown = true;
+          if (st.player) st.player.intelligence = Math.min(100, (st.player.intelligence || 50) + 5);
+          var earn = 300 + Random.int(0, 500);
+          if (st.resources) st.resources.cash = (st.resources.cash || 0) + earn;
+          if (typeof StateManager !== "undefined") StateManager.addMessage("🔮 '数据不会骗人,市场要变天了!' 你提前布局,小赚了一笔。智力+5,收益¥" + earn.toLocaleString() + "。", "success");
+        }},
+        { text: "📝 记录观察", hint: "心智+5", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._a650MarketWhisperCooldown = true;
+          if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 5);
+          if (typeof StateManager !== "undefined") StateManager.addMessage("🔮 你详细记录了市场的变化规律。'这些数据,以后一定用得上。' 心智+5。", "success");
+        }}
+      ],
+      text: function (st) {
+        if (!st) return null;
+        return "你盯着最近的价格走势图,发现了一个微妙的规律。'每次猪肉价格连续涨3天,鸡蛋就会跟着涨...' 市场的低语,你听懂了。";
+      }
+    },
+
+    // ====== A→F: 价格预警UI ======
+    {
+      id: "a650_price_alarm_ui", phase: "street", _isChainEvent: false, icon: "🔔",
+      title: "价格预警",
+      story: "手机弹出一条价格预警通知——{desc}",
+      triggers: { minDay: 15, interval: 45, maxRepeats: 10, excludeFlags: ["_a650PriceAlarmCooldown"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        if (!st.flags || st.flags._a650PriceAlarmCooldown) return false;
+        return true;
+      },
+      choices: [
+        { text: "🛒 趁涨价前囤货", hint: "省下¥200-500,现金-300", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._a650PriceAlarmCooldown = true;
+          if (st.resources) st.resources.cash = Math.max(0, (st.resources.cash || 0) - 300);
+          if (st.flags) st.flags._smartShopping = (st.flags._smartShopping || 0) + 1;
+          if (typeof StateManager !== "undefined") StateManager.addMessage("🔔 你赶在涨价前囤了一些日用品。'省到就是赚到!' 现金-300,省下了未来开支。", "success");
+        }},
+        { text: "📊 查看价格趋势图", hint: "智力+3", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._a650PriceAlarmCooldown = true;
+          if (st.player) st.player.intelligence = Math.min(100, (st.player.intelligence || 50) + 3);
+          if (typeof StateManager !== "undefined") StateManager.addMessage("🔔 你打开价格趋势图,仔细研究。'原来每次节日前都会涨价,下次就知道了。' 智力+3。", "success");
+        }}
+      ],
+      text: function (st) {
+        if (!st) return null;
+        return "手机弹出预警:'您关注的商品——鸡蛋,价格已上涨15%,达到¥8.5/斤。' 你叹了口气:'又涨了,得想想办法了。'";
+      }
+    },
+
+    // ====== A→D: 砍价技巧 ======
+    {
+      id: "a650_bargain_tip", phase: "street", _isChainEvent: false, icon: "🤝",
+      title: "砍价高手",
+      story: "你发现和摊主搞好关系,能拿到更好的价格——{desc}",
+      triggers: { minDay: 20, interval: 60, maxRepeats: 8, excludeFlags: ["_a650BargainTipCooldown"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        if (!st.flags || st.flags._a650BargainTipCooldown) return false;
+        return true;
+      },
+      choices: [
+        { text: "🤝 套近乎砍价", hint: "省下¥100-300,好感+3", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._a650BargainTipCooldown = true;
+          var saved = 100 + Random.int(0, 200);
+          if (st.resources) st.resources.cash = (st.resources.cash || 0) + saved;
+          if (typeof StateManager !== "undefined") StateManager.addMessage("🤝 '老板,老顾客了,便宜点呗!' 你成功砍下¥" + saved + "。'会说话,比会算账更重要。'", "success");
+        }},
+        { text: "📋 比较几家价格", hint: "智力+4,现金-100", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._a650BargainTipCooldown = true;
+          if (st.resources) st.resources.cash = Math.max(0, (st.resources.cash || 0) - 100);
+          if (st.player) st.player.intelligence = Math.min(100, (st.player.intelligence || 50) + 4);
+          if (typeof StateManager !== "undefined") StateManager.addMessage("🤝 你跑了几家店,比较了价格。'同样的东西,差价居然这么大!' 智力+4,现金-100。", "success");
+        }}
+      ],
+      text: function (st) {
+        if (!st) return null;
+        return "你发现小区门口的水果摊,老板对熟客总是便宜不少。'原来价格不只是数字,更是人情。' 你开始学着和摊主们套近乎。";
+      }
+    }
+  ];
+
+  for (var i = 0; i < EVENTS.length; i++) {
+    RANDOM_EVENTS.push(EVENTS[i]);
+  }
+})();
 ;
 // ==== js/core/domain_b_linkage_r634.js ====
 /**
