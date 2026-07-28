@@ -272060,151 +272060,6 @@ if (typeof window !== "undefined") {
 })();
 
 ;
-// ==== js/core/domain_g_linkage_r631.js ====
-/**
- * 域G(核心机制/生命周期) 联动增强 R631
- * 选题：daily_pipeline/needs 三大生存里程碑 flag 全库零消费(写-only)，本轮全部打通首消费：
- *   G→E  g631_rock_bottom_wisdom   谷底翻身的财务觉悟 → 首消费 flags._everBroke(daily_pipeline.js:620 现金归零时写入)
- *   G→D  g631_street_night_memory  露宿记忆与陌生人 → 首消费 flags._everHomeless(daily_pipeline.js:338 housing.tier==0 时写入)
- *   G→C  g631_hunger_never_again   饥饿的教训 → 首消费 flags._everStarved(needs.js:64 hunger<=0 时写入)
- * 设计：峰终定律——把玩家经历过的"最低谷"在翻身后回放为叙事峰值；损失厌恶——用曾经的失去驱动当下的防御性决策。
- * 铁律自查：全 || 防御；无 NPC 引用(泛化路人,不触 rel.met)；skills 真实键(cooking/accounting/social)；
- *   现金写 resources.cash / 存款 resources.bankBalance / 心智 player.mental / 幸福 needs.happiness / 健康 status.health。
- */
-(function () {
-  "use strict";
-  if (typeof RANDOM_EVENTS === "undefined" || !RANDOM_EVENTS) return;
-  if (RANDOM_EVENTS._domainGLinkageR631Loaded) return;
-  RANDOM_EVENTS._domainGLinkageR631Loaded = true;
-
-  var EVENTS = [
-    // ====== G→E: 谷底翻身的财务觉悟(首消费 _everBroke) ======
-    {
-      id: "g631_rock_bottom_wisdom", phase: "street", _isChainEvent: false, icon: "💸",
-      title: "谷底翻身",
-      story: "你想起那个钱包空空的日子——{desc}",
-      triggers: { minDay: 30, interval: 90, maxRepeats: 1, excludeFlags: ["_g631RockBottomDone"] },
-      conditions: function (st) {
-        if (!st || st.gameOver) return false;
-        if (!st.flags || !st.flags._everBroke) return false;
-        if (st.flags._g631RockBottomDone) return false;
-        var cash = (st.resources && st.resources.cash) || 0;
-        return cash >= 3000;
-      },
-      choices: [
-        { text: "🏦 建一笔应急基金", hint: "现金-1000,存款+1000,心智+3", apply: function (st) {
-          if (!st) return; st.flags = st.flags || {}; st.flags._g631RockBottomDone = true;
-          if (st.resources && (st.resources.cash || 0) >= 1000) {
-            st.resources.cash -= 1000;
-            st.resources.bankBalance = (st.resources.bankBalance || 0) + 1000;
-            st.flags._g631EmergencyFund = true;
-          }
-          if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 3);
-          if (typeof StateManager !== "undefined") StateManager.addMessage("🏦 '再也不想过身无分文的日子。' 你存下一笔不动的钱,心里踏实多了。存款+¥1000,心智+3。", "success");
-        }},
-        { text: "📒 从今天起记账", hint: "会计XP+6,心智+2", apply: function (st) {
-          if (!st) return; st.flags = st.flags || {}; st.flags._g631RockBottomDone = true;
-          if (typeof addSkillXp === "function") { try { addSkillXp("accounting", 6); } catch (e) {} }
-          if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 2);
-          if (typeof StateManager !== "undefined") StateManager.addMessage("📒 你翻开一个新本子,把每一笔开销都记下来。'钱要花在明处。' 会计XP+6,心智+2。", "success");
-        }},
-        { text: "🍻 好了伤疤忘了疼", hint: "幸福+3,现金-100", apply: function (st) {
-          if (!st) return; st.flags = st.flags || {}; st.flags._g631RockBottomDone = true;
-          if (st.resources) st.resources.cash = Math.max(0, (st.resources.cash || 0) - 100);
-          if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 3);
-          if (typeof StateManager !== "undefined") StateManager.addMessage("🍻 '人生嘛,过去了就过去了。' 你请自己吃了顿好的。幸福+3,现金-100。", "info");
-        }}
-      ],
-      text: function (st) {
-        if (!st) return null;
-        var cash = (st && st.resources && st.resources.cash) || 0;
-        return "曾经现金归零的滋味,你到现在还记得。如今口袋里躺着¥" + cash + ",你站在银行门口,忽然明白了什么叫'手里有粮,心里不慌'。";
-      }
-    },
-
-    // ====== G→D: 露宿记忆与陌生人(首消费 _everHomeless) ======
-    {
-      id: "g631_street_night_memory", phase: "street", _isChainEvent: false, icon: "🌃",
-      title: "桥洞下的身影",
-      story: "下班路上,你在天桥下看到一个蜷缩的身影——{desc}",
-      triggers: { minDay: 30, interval: 90, maxRepeats: 1, excludeFlags: ["_g631StreetNightDone"] },
-      conditions: function (st) {
-        if (!st || st.gameOver) return false;
-        if (!st.flags || !st.flags._everHomeless) return false;
-        if (st.flags._g631StreetNightDone) return false;
-        var tier = (st.housing && st.housing.tier) || 0;
-        return tier >= 1;
-      },
-      choices: [
-        { text: "🍱 买份热饭送过去", hint: "现金-30,幸福+4,社交XP+4", apply: function (st) {
-          if (!st) return; st.flags = st.flags || {}; st.flags._g631StreetNightDone = true;
-          if (st.resources) st.resources.cash = Math.max(0, (st.resources.cash || 0) - 30);
-          if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 4);
-          if (typeof addSkillXp === "function") { try { addSkillXp("social", 4); } catch (e) {} }
-          if (typeof StateManager !== "undefined") StateManager.addMessage("🍱 你递过去一份还冒着热气的盒饭。对方愣了一下,低声说了句谢谢。你想起了曾经的自己。幸福+4,社交XP+4,现金-30。", "success");
-        }},
-        { text: "📋 告诉他救助站的位置", hint: "心智+3", apply: function (st) {
-          if (!st) return; st.flags = st.flags || {}; st.flags._g631StreetNightDone = true;
-          if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 3);
-          if (typeof StateManager !== "undefined") StateManager.addMessage("📋 你把救助站的地址写在纸条上递给他。'那里至少有张床。' 这话你当年也听人说过。心智+3。", "success");
-        }},
-        { text: "🚶 快步走过", hint: "心智-2", apply: function (st) {
-          if (!st) return; st.flags = st.flags || {}; st.flags._g631StreetNightDone = true;
-          if (st.player) st.player.mental = Math.max(0, (st.player.mental || 50) - 2);
-          if (typeof StateManager !== "undefined") StateManager.addMessage("🚶 你低下头快步走过,身后的城市灯火通明。夜里你有点睡不着。心智-2。", "info");
-        }}
-      ],
-      text: function (st) {
-        if (!st) return null;
-        var days = (st && st.flags && st.flags._homelessDays) || 0;
-        return "你也曾在这座城市里无处可睡" + (days > 0 ? "(整整" + days + "天)" : "") + "。如今你有了自己的屋檐,而桥洞下的那个身影,像极了当年的你。";
-      }
-    },
-
-    // ====== G→C: 饥饿的教训(首消费 _everStarved) ======
-    {
-      id: "g631_hunger_never_again", phase: "street", _isChainEvent: false, icon: "🍚",
-      title: "饥饿的教训",
-      story: "路过一家餐馆,饭菜香味飘出来,你想起了那段饿肚子的日子——{desc}",
-      triggers: { minDay: 20, interval: 90, maxRepeats: 1, excludeFlags: ["_g631HungerLessonDone"] },
-      conditions: function (st) {
-        if (!st || st.gameOver) return false;
-        if (!st.flags || !st.flags._everStarved) return false;
-        if (st.flags._g631HungerLessonDone) return false;
-        var hunger = (st.needs && st.needs.hunger);
-        return typeof hunger === "number" && hunger >= 50;
-      },
-      choices: [
-        { text: "👨‍🍳 学做饭,把胃握在自己手里", hint: "厨艺XP+8", apply: function (st) {
-          if (!st) return; st.flags = st.flags || {}; st.flags._g631HungerLessonDone = true;
-          if (typeof addSkillXp === "function") { try { addSkillXp("cooking", 8); } catch (e) {} }
-          if (typeof StateManager !== "undefined") StateManager.addMessage("👨‍🍳 '会做饭的人,饿不死。' 你开始认真研究怎么用最少的钱做出一顿像样的饭。厨艺XP+8。", "success");
-        }},
-        { text: "🛒 囤一点应急干粮", hint: "现金-100,饥饿+5", apply: function (st) {
-          if (!st) return; st.flags = st.flags || {}; st.flags._g631HungerLessonDone = true;
-          if (st.resources) st.resources.cash = Math.max(0, (st.resources.cash || 0) - 100);
-          if (st.needs) st.needs.hunger = Math.min(100, (st.needs.hunger || 0) + 5);
-          if (typeof StateManager !== "undefined") StateManager.addMessage("🛒 你买了一箱泡面和几袋压缩饼干塞进柜子。'柜子里有粮,睡觉都香。' 饥饿+5,现金-100。", "success");
-        }},
-        { text: "😌 感慨一下,继续走路", hint: "幸福+2", apply: function (st) {
-          if (!st) return; st.flags = st.flags || {}; st.flags._g631HungerLessonDone = true;
-          if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 2);
-          if (typeof StateManager !== "undefined") StateManager.addMessage("😌 '能吃饱饭的日子,就是好日子。' 你笑了笑,脚步轻快了些。幸福+2。", "info");
-        }}
-      ],
-      text: function (st) {
-        if (!st) return null;
-        return "你曾经饿到胃里发疼,连一碗泡面都要犹豫半天。现在你站在餐馆门口,闻着饭菜香,忽然很感激如今能按时吃上热饭的自己。";
-      }
-    }
-  ];
-
-  for (var i = 0; i < EVENTS.length; i++) {
-    RANDOM_EVENTS.push(EVENTS[i]);
-  }
-})();
-
-;
 // ==== js/core/domain_h_linkage_r623.js ====
 /**
  * 域H(Phase2/公司) 联动增强 R623
@@ -272337,6 +272192,141 @@ if (typeof window !== "undefined") {
       text: function (st) {
         if (!st) return null;
         return "创业不是全部——'你有多久没有好好休息了?' 你开始审视自己的生活质量,是时候做出调整了。";
+      }
+    }
+  ];
+
+  for (var i = 0; i < EVENTS.length; i++) {
+    RANDOM_EVENTS.push(EVENTS[i]);
+  }
+})();
+
+;
+// ==== js/core/domain_h_linkage_r632.js ====
+/**
+ * 域H(Phase2/公司) 联动增强 R632
+ * 桥接：
+ *   H→A  h624_corp_data_monopoly  公司数据资产 → 消费 state.startup+state.trade 数据,
+ *    公司→"企业数据也是资产"数据回响
+ *   H→D  h624_corp_social_impact  公司社会影响 → 消费 state.startup+state.relationships 数据,
+ *    公司→"企业公民"社交回响
+ *   H→G  h624_founder_legacy  创始人传承 → 消费 state.startup+state.player 数据,
+ *    公司→"留下些什么"生命回响
+ */
+(function () {
+  "use strict";
+  if (typeof RANDOM_EVENTS === "undefined" || !RANDOM_EVENTS) return;
+  if (RANDOM_EVENTS._domainHLinkageR632Loaded) return;
+  RANDOM_EVENTS._domainHLinkageR632Loaded = true;
+
+  // 辅助：获取已结识NPC列表(守 rel.met 铁律)
+  function metNpcsR632(st) {
+    var out = [];
+    var rels = st.relationships || {};
+    for (var k in rels) {
+      if (rels[k] && rels[k].met) out.push({ id: k, affinity: rels[k].affinity || 0, name: (typeof getNpcDisplayName === "function") ? getNpcDisplayName(k) : k });
+    }
+    return out;
+  }
+
+  var EVENTS = [
+    {
+      id: "h624_corp_data_monopoly", phase: "corporate", _isChainEvent: false, icon: "💾",
+      title: "公司数据资产",
+      story: "公司积累的数据,本身就是一笔财富——{desc}",
+      triggers: { minDay: 150, interval: 200, maxRepeats: 1, excludeFlags: ["_h624DataAssetDone"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        if (!st.flags || st.flags._h624DataAssetDone) return false;
+        return st.startup && st.startup.company && (st.startup.company.revenue || 0) >= 10000;
+      },
+      choices: [
+        { text: "📊 数据变现", hint: "管理XP+5,现金+2000", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._h624DataAssetDone = true;
+          if (st.resources) st.resources.cash = (st.resources.cash || 0) + 2000;
+          if (typeof addSkillXp === "function") { try { addSkillXp("management", 5); } catch(e) {} }
+          if (typeof StateManager !== "undefined") StateManager.addMessage("📊 '数据就是新石油。' 你发现了公司数据的商业价值。管理XP+5,现金+¥2000。", "success");
+        }},
+        { text: "🔒 保护隐私", hint: "心智+5,置_h624PrivacyFirst", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._h624DataAssetDone = true;
+          st.flags._h624PrivacyFirst = true;
+          if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 5);
+          if (typeof StateManager !== "undefined") StateManager.addMessage("🔒 '数据有价值,但信任更珍贵。' 你选择保护客户隐私。心智+5。", "success");
+        }}
+      ],
+      text: function (st) {
+        if (!st) return null;
+        var rev = (st.startup && st.startup.company && st.startup.company.revenue) || 0;
+        return "公司积累的数据,本身就是一笔财富——月营收¥" + rev + "背后,是宝贵的客户洞察。'数据就是新石油。'";
+      }
+    },
+    {
+      id: "h624_corp_social_impact", phase: "corporate", _isChainEvent: false, icon: "🤲",
+      title: "企业公民",
+      story: "公司做大了,开始有人期待你承担更多社会责任——{desc}",
+      triggers: { minDay: 200, interval: 250, maxRepeats: 1, excludeFlags: ["_h624SocialDone"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        if (!st.flags || st.flags._h624SocialDone) return false;
+        return st.startup && st.startup.company && (st.startup.company.employees || 0) >= 5;
+      },
+      choices: [
+        { text: "💝 做公益", hint: "心智+5,好感+3", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._h624SocialDone = true;
+          if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 5);
+          var met = metNpcsR632(st);
+          if (met.length > 0 && typeof applyAffinityChange === "function") {
+            try { applyAffinityChange(st, met[0].id, 3, "企业公益"); } catch(e) {}
+          }
+          if (typeof StateManager !== "undefined") StateManager.addMessage("💝 '取之于社会,用之于社会。' 你组织了一次公益活动。心智+5,好感+3。", "success");
+        }},
+        { text: "💼 专注经营", hint: "管理XP+4", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._h624SocialDone = true;
+          if (typeof addSkillXp === "function") { try { addSkillXp("management", 4); } catch(e) {} }
+          if (typeof StateManager !== "undefined") StateManager.addMessage("💼 '把公司做好,就是最大的社会责任。' 你专注经营。管理XP+4。", "success");
+        }}
+      ],
+      text: function (st) {
+        if (!st) return null;
+        var empCount = (st.startup && st.startup.company && st.startup.company.employees) || 0;
+        return "公司做大了,开始有人期待你承担更多社会责任——" + empCount + "名员工背后,是" + empCount + "个家庭。'能力越大,责任越大。'";
+      }
+    },
+    {
+      id: "h624_founder_legacy", phase: "corporate", _isChainEvent: false, icon: "🏛️",
+      title: "留下什么",
+      story: "创业路上,你开始思考:这一切的终点是什么?——{desc}",
+      triggers: { minDay: 300, interval: 365, maxRepeats: 1, excludeFlags: ["_h624LegacyDone"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        if (!st.flags || st.flags._h624LegacyDone) return false;
+        return st.startup && st.startup.company && (st.startup.company.valuation || 0) >= 100000;
+      },
+      choices: [
+        { text: "📖 写创业笔记", hint: "智力+5,心智+5", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._h624LegacyDone = true;
+          if (st.player) {
+            st.player.intelligence = Math.min(100, (st.player.intelligence || 50) + 5);
+            st.player.mental = Math.min(100, (st.player.mental || 50) + 5);
+          }
+          if (typeof StateManager !== "undefined") StateManager.addMessage("📖 '把走过的路记下来,给后来者看。' 你写下了创业笔记。智力+5,心智+5。", "success");
+        }},
+        { text: "🚀 继续做大", hint: "心智+8,置_h624KeepGrowing", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._h624LegacyDone = true;
+          st.flags._h624KeepGrowing = true;
+          if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 8);
+          if (typeof StateManager !== "undefined") StateManager.addMessage("🚀 '这还不够,还能更大。' 你目光投向更远处。心智+8。", "success");
+        }},
+        { text: "😌 享受当下", hint: "心情+8", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._h624LegacyDone = true;
+          if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 8);
+          if (typeof StateManager !== "undefined") StateManager.addMessage("😌 '走到今天,已经很好了。' 你学会了享受当下。心情+8。", "success");
+        }}
+      ],
+      text: function (st) {
+        if (!st) return null;
+        var val = (st.startup && st.startup.company && st.startup.company.valuation) || 0;
+        return "创业路上,你开始思考:这一切的终点是什么?——公司估值¥" + val + ",但数字之外,你还想留下些什么。";
       }
     }
   ];
