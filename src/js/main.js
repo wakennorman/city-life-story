@@ -5283,7 +5283,29 @@ function addSkillXp(skillKey, amount) {
       state.flags._certSkillXpBonus &&
       state.flags._certSkillXpBonus[skillKey]) ||
     0;
-  skill.xp += Math.round(amount * _talentMult * (1 + _certXpBonus));
+  // [R712 域G 联动增强 G→C]: 年龄阶段技能效率变化
+  // 青年(≤25)体力技能快,中年(26-40)均衡,中老年(41-50)脑力快,老年(>50)经验类加成
+  var _age = (state.player && state.player.age) || 20;
+  var _ageSkillMult = 1.0;
+  var _physicalSkills = ["welding", "repair", "electrician", "driving"];
+  var _mentalSkills = ["coding", "accounting", "management", "english", "sales"];
+  if (_age <= 25) {
+    // 青年: 体力技能+15%, 脑力技能-5%
+    if (_physicalSkills.indexOf(skillKey) !== -1) _ageSkillMult = 1.15;
+    else if (_mentalSkills.indexOf(skillKey) !== -1) _ageSkillMult = 0.95;
+  } else if (_age <= 40) {
+    // 中年: 均衡期, 所有技能+5%
+    _ageSkillMult = 1.05;
+  } else if (_age <= 55) {
+    // 中老年: 脑力技能+15%, 体力技能-10%
+    if (_mentalSkills.indexOf(skillKey) !== -1) _ageSkillMult = 1.15;
+    else if (_physicalSkills.indexOf(skillKey) !== -1) _ageSkillMult = 0.90;
+  } else {
+    // 老年: 经验类(管理/会计/销售)+20%, 体力-20%
+    if (skillKey === "management" || skillKey === "accounting" || skillKey === "sales") _ageSkillMult = 1.20;
+    else if (_physicalSkills.indexOf(skillKey) !== -1) _ageSkillMult = 0.80;
+  }
+  skill.xp += Math.round(amount * _talentMult * (1 + _certXpBonus) * _ageSkillMult);
   // v3.1 审查改进：XP 需求从线性改为指数，level 0=120 → level 50≈10,000（之前 6,120）
   // 让玩家在高级别感受更有意义的成长压力，同时保留早期快速升级的爽快感
   var xpNeeded = Math.floor(

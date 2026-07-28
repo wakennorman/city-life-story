@@ -2225,6 +2225,81 @@ const DAILY_PIPELINE = [
       }
     },
   },
+
+  // === [R712] 域G 联动增强: G→E 年龄财务智慧 ===
+  // 每10岁里程碑解锁投资回报加成，模拟人生阅历带来的财务判断力提升
+  {
+    name: "age_financial_wisdom",
+    fn: function (state) {
+      if (!state.flags) state.flags = {};
+      if (!state.player) return;
+      var age = state.player.age || 0;
+      if (age < 25) return;
+      // 年龄阈值：25→1%, 30→2%, 40→3%, 50→5%, 60→8%
+      var wisdomBonus = 0;
+      if (age >= 60) wisdomBonus = 0.08;
+      else if (age >= 50) wisdomBonus = 0.05;
+      else if (age >= 40) wisdomBonus = 0.03;
+      else if (age >= 30) wisdomBonus = 0.02;
+      else if (age >= 25) wisdomBonus = 0.01;
+      var prevBonus = state.flags._ageFinWisdomBonus || 0;
+      if (wisdomBonus > prevBonus) {
+        state.flags._ageFinWisdomBonus = wisdomBonus;
+        if (typeof StateManager !== "undefined" && age % 10 === 0) {
+          StateManager.addMessage("📈 " + age + "岁的人生阅历让你对投资有了更深的领悟。投资回报+" + Math.round(wisdomBonus * 100) + "%", "success");
+        }
+      }
+    },
+  },
+
+  // === [R712] 域G 联动增强: G→D 年龄节点社交圈 ===
+  // 每5岁非关键年龄自动微调社交圈，模拟现实社交圈自然流动
+  {
+    name: "age_social_flow",
+    fn: function (state) {
+      if (!state.flags) state.flags = {};
+      if (!state.player || !state.relationships) return;
+      var age = state.player.age || 0;
+      if (age < 20 || age % 5 !== 0) return;
+      var flag = '_ageSocialFlow_' + age;
+      if (state.flags[flag]) return;
+      state.flags[flag] = true;
+      var adjusted = 0;
+      for (var _rid in state.relationships) {
+        var _r = state.relationships[_rid];
+        if (!_r || !_r.met) continue;
+        // 30岁前：社交圈扩张期，低好感也加深
+        if (age <= 30 && _r.affinity >= 5) {
+          _r.affinity = Math.min(100, (_r.affinity || 0) + 1);
+          adjusted++;
+        }
+        // 30-50岁：人脉黄金期，维护高好感关系
+        else if (age > 30 && age <= 50 && _r.affinity >= 30) {
+          _r.affinity = Math.min(100, (_r.affinity || 0) + 1);
+          adjusted++;
+        }
+        // 50岁后：知交半零落，仅深交(≥60)维持
+        else if (age > 50 && _r.affinity >= 60) {
+          _r.affinity = Math.min(100, (_r.affinity || 0) + 1);
+          adjusted++;
+        }
+      }
+      if (adjusted > 0 && typeof StateManager !== "undefined") {
+        var msgs = {
+          20: "🎂 20岁，青春正好，认识了不少新朋友。",
+          25: "🎂 25岁，同龄人都在打拼，圈子渐渐稳定。",
+          30: "🎂 30岁而立，身边留下的都是真朋友。",
+          35: "🎂 35岁，人脉即资源，社交圈进入黄金期。",
+          40: "🎂 40岁不惑，知交三五人足矣。",
+          45: "🎂 45岁，时间沉淀下来的都是值得珍惜的人。",
+          50: "🎂 50岁知天命，老友如酒，越陈越香。",
+          55: "🎂 55岁，开始珍惜每一次相聚。",
+          60: "🎂 60岁，回首望去，人生路上幸有友人相伴。",
+        };
+        StateManager.addMessage(msgs[age] || "🎂 " + age + "岁，社交圈悄然变化。", "info");
+      }
+    },
+  },
 ];
 
 /** 生成每日一句话总结 */

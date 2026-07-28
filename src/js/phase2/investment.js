@@ -1250,8 +1250,13 @@ function tickInvestmentDaily(state) {
       _satPenalty = state._economySettlement.marketSaturationPenalty;
     }
 
+    // [R712 域G 联动增强 G→E]: 年龄财务智慧 — 阅历越深,投资判断越稳
+    // 在 volatility 层面降低随机波动,而非直接提升收益(模拟"稳"而非"多")
+    var _ageWisdom = (state.flags && state.flags._ageFinWisdomBonus) || 0;
+    var _wisdomVolReduction = 1 - _ageWisdom * 0.5; // 8% wisdom → 4% volatility 降低
+
     var oldPrice = m.price;
-    m.price = Math.max(0.01, m.price * baseChange * newsMul * _satPenalty);
+    m.price = Math.max(0.01, m.price * baseChange * newsMul * _satPenalty * _wisdomVolReduction);
     m.price = Math.round(m.price * 10000) / 10000;
     m.history.push({ day: state.player.day, price: m.price });
     if (m.history.length > 20) m.history.shift();
