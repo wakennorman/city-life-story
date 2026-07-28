@@ -79,7 +79,8 @@
         }},
         { text: "💻 学编程", hint: "编程XP+8", apply: function (st) {
           if (!st) return; st.flags = st.flags || {}; st.flags._e493SkillFundCooldown = true;
-          if (typeof addSkillXp === "function") { try { addSkillXp("coding", 8); } catch(e) {} } // [全系统自洽修复] 域B R572 修复:addSkillXp("technology")非真实技能键(XP静默丢弃)→映射coding
+          // [全系统自洽修复] 域C R515 修复:addSkillXp("technology")非真实技能键(XP静默丢弃)→映射coding(编程培训班=coding)
+          if (typeof addSkillXp === "function") { try { addSkillXp("coding", 8); } catch(e) {} }
           if (typeof StateManager !== "undefined") StateManager.addMessage("🎓 你报了一个编程培训班——'未来是数字化的世界，不会编程就是新文盲。' 编程XP+8。", "success");
         }}
       ],

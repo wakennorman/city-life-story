@@ -92,9 +92,10 @@
       choices: [
         { text: "🤫 试试水", hint: "销售XP+4,好感+2", apply: function (st) {
           if (!st) return; st.flags = st.flags || {}; st.flags._a497MarketFriendTipCooldown = true;
-          if (typeof addSkillXp === "function") { try { addSkillXp("sales", 4); } catch(e) {} } // [全系统自洽修复] 域B R572 修复:addSkillXp("trade")非真实技能键(XP静默丢弃)→映射sales
+          // [全系统自洽修复] 域C R515 修复:addSkillXp("trade")非真实技能键(XP静默丢弃)→映射sales(市场买卖=销售)
+          if (typeof addSkillXp === "function") { try { addSkillXp("sales", 4); } catch(e) {} }
           var nid = firstMetNpc(st); bumpAffinity(st, nid, 2, "分享了市场信息");
-          if (typeof StateManager !== "undefined") StateManager.addMessage("🤫 你根据朋友的消息试了试——'真的挺好卖的！' 贸易XP+4,好感+2。", "success");
+          if (typeof StateManager !== "undefined") StateManager.addMessage("🤫 你根据朋友的消息试了试——'真的挺好卖的！' 销售XP+4,好感+2。", "success");
         }},
         { text: "📝 记下情报", hint: "心智+1", apply: function (st) {
           if (!st) return; st.flags = st.flags || {}; st.flags._a497MarketFriendTipCooldown = true;

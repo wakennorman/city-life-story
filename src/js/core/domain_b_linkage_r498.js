@@ -81,9 +81,10 @@
       choices: [
         { text: "🎯 学习新技能", hint: "编程XP+5,心智+1", apply: function (st) {
           if (!st) return; st.flags = st.flags || {}; st.flags._b498CareerInsightCooldown = true;
-          if (typeof addSkillXp === "function") { try { addSkillXp("coding", 5); } catch(e) {} } // [全系统自洽修复] 域B R572 修复:addSkillXp("technology")非真实技能键(XP静默丢弃)→映射coding
+          // [全系统自洽修复] 域C R515 修复:addSkillXp("technology")非真实技能键(XP静默丢弃)→映射coding(学新技术=编程)
+          if (typeof addSkillXp === "function") { try { addSkillXp("coding", 5); } catch(e) {} }
           if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 1);
-          if (typeof StateManager !== "undefined") StateManager.addMessage("🎯 'AI时代来了，不学点新技术就要被淘汰了。' 技术XP+5,心智+1。", "success");
+          if (typeof StateManager !== "undefined") StateManager.addMessage("🎯 'AI时代来了，不学点新技术就要被淘汰了。' 编程XP+5,心智+1。", "success");
         }},
         { text: "📈 关注行业动态", hint: "心智+2", apply: function (st) {
           if (!st) return; st.flags = st.flags || {}; st.flags._b498CareerInsightCooldown = true;
