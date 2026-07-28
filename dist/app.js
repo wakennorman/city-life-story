@@ -5777,6 +5777,7 @@ function showNewsBriefingModal(news, state) {
 }
 
 function rollDailyNews(state) {
+  if (!state.flags) state.flags = {};
   state.activeNews = state.activeNews || [];
   state.flags.seenNewsToday = state.flags.seenNewsToday || [];
 
@@ -6028,6 +6029,47 @@ function getEventTypeIcon(eventType) {
     crime: "🚔", disaster: "🌪️", festival: "🎉", news: "📰",
   };
   return iconMap[eventType] || "📌";
+}
+
+// [R715 域B 联动增强 B→G]: 逆境心理韧性 — 连续经历负面事件后提升心智,模拟逆境成长
+function applyAdversityResilience(state, eventType) {
+  if (!state || !eventType || !state.flags) return;
+  var negativeTypes = ["disaster", "crime", "illness", "accident", "loss"];
+  if (negativeTypes.indexOf(eventType) === -1) return;
+  state.flags._adversityStreak = (state.flags._adversityStreak || 0) + 1;
+  if (state.flags._adversityStreak >= 3) {
+    state.flags._adversityStreak = 0;
+    var mentalGain = 2;
+    if (state.player) {
+      state.player.mental = Math.min(100, (state.player.mental || 0) + mentalGain);
+    }
+    if (typeof StateManager !== "undefined") {
+      StateManager.addMessage("💪 经历风雨,你的心智更加坚韧了。心智+" + mentalGain + "。", "success");
+    }
+  }
+}
+
+// [R715 域B 联动增强 B→A]: 事件价格冲击 — 特定事件影响相关商品价格
+function applyEventPriceShock(state, eventId) {
+  if (!state || !eventId || !state.trade || !state.flags) return;
+  var priceShocks = {
+    flood: { goods: ["rice", "vegetable"], change: 0.25 },
+    drought: { goods: ["rice", "oil"], change: 0.30 },
+    typhoon: { goods: ["vegetable", "pork"], change: 0.20 },
+    war_news: { goods: ["oil", "gold"], change: 0.15 },
+    epidemic: { goods: ["mask", "medicine"], change: 0.40 },
+    stock_crash: { goods: ["gold"], change: 0.10 },
+    festival_boom: { goods: ["pork", "egg", "oil"], change: 0.08 },
+  };
+  var shock = priceShocks[eventId];
+  if (!shock || !state.trade._lastPrices) return;
+  for (var _gi = 0; _gi < shock.goods.length; _gi++) {
+    var _gid = shock.goods[_gi];
+    if (state.trade._lastPrices[_gid] && state.trade._lastPrices[_gid].length > 0) {
+      var _lastIdx = state.trade._lastPrices[_gid].length - 1;
+      state.trade._lastPrices[_gid][_lastIdx] = Math.round(state.trade._lastPrices[_gid][_lastIdx] * (1 + shock.change));
+    }
+  }
 }
 
 // [全系统自洽修复] 域B R410 联动增强(B→G): 事件健康影响系数
@@ -315417,6 +315459,163 @@ if (typeof window !== "undefined") {
             if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 10);
             if (typeof StateManager !== "undefined") {
               StateManager.addMessage("🧘 '正念,让心更平静。' 心情+10。", "info");
+            }
+          }
+        }
+      ],
+      text: function (st) {
+        if (!st) return null;
+        return "每一次挫折,都让你更强大——'这就是叙事成长的力量。'";
+      }
+    }
+  ];
+
+  for (var i = 0; i < EVENTS.length; i++) {
+    RANDOM_EVENTS.push(EVENTS[i]);
+  }
+})();
+
+;
+// ==== js/core/domain_b_linkage_r739.js ====
+/**
+ * 域B(事件/叙事) 联动增强 R739 (第五轮循环)
+ * 桥接：
+ *   B→A  b739_event_legacy_v4 事件遗产v4 → 消费 events_core 统计数据
+ *   B→D  b739_npc_bond_v3 NPC羁绊v3 → 消费 事件+NPC关系
+ *   B→G  b739_narrative_growth_v4 叙事成长v4 → 消费 事件历史+status
+ */
+(function () {
+  "use strict";
+  if (typeof RANDOM_EVENTS === "undefined" || !RANDOM_EVENTS) return;
+  if (RANDOM_EVENTS._domainBLinkageR739Loaded) return;
+  RANDOM_EVENTS._domainBLinkageR739Loaded = true;
+
+  var EVENTS = [
+    {
+      id: "b739_event_legacy_v4", phase: "street", _isChainEvent: false, icon: "📜",
+      title: "事件遗产",
+      story: "你经历的事件正在积累成遗产——{desc}",
+      triggers: { minDay: 250, interval: 300, maxRepeats: 3, excludeFlags: ["_b739LegacyCd"] },
+      conditions: function (st) {
+        if (!st || st.gameOver) return false;
+        if (st.flags && st.flags._b739LegacyCd) return false;
+        return st.player && st.player.day >= 250;
+      },
+      choices: [
+        {
+          text: "📊 回顾事件模式", hint: "智力+8,心智+6,置_b739PatternAnalyst",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._b739LegacyCd = true;
+            st.flags._b739PatternAnalyst = true;
+            if (st.player) {
+              st.player.intelligence = Math.min(100, (st.player.intelligence || 50) + 8);
+              st.player.mental = Math.min(100, (st.player.mental || 50) + 6);
+            }
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("📜 '每一个事件,都是人生的一块拼图。' 智力+8,心智+6。", "success");
+            }
+          }
+        },
+        {
+          text: "📖 书写人生故事", hint: "社交XP+10,置_b739LifeWriter",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._b739LegacyCd = true;
+            st.flags._b739LifeWriter = true;
+            if (typeof addSkillXp === "function") { try { addSkillXp("social", 10); } catch(e) {} }
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("📖 '记录,让记忆永存。' 社交XP+10。", "info");
+            }
+          }
+        }
+      ],
+      text: function (st) {
+        if (!st) return null;
+        var days = st.player && st.player.day ? st.player.day : 0;
+        return "你已度过" + days + "天——'这些经历,就是你的人生遗产。'";
+      }
+    },
+    {
+      id: "b739_npc_bond_v3", phase: "street", _isChainEvent: false, icon: "🤝",
+      title: "NPC羁绊",
+      story: "你和NPC之间的羁绊正在加深——{desc}",
+      triggers: { minDay: 200, interval: 250, maxRepeats: 3, excludeFlags: ["_b739BondCd"] },
+      conditions: function (st) {
+        if (!st || st.gameOver) return false;
+        if (st.flags && st.flags._b739BondCd) return false;
+        return st.player && st.player.day >= 200 && st.relationships;
+      },
+      choices: [
+        {
+          text: "💕 深化友谊", hint: "社交XP+10,置_b739DeepFriend",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._b739BondCd = true;
+            st.flags._b739DeepFriend = true;
+            if (typeof addSkillXp === "function") { try { addSkillXp("social", 10); } catch(e) {} }
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("🤝 '友谊,需要用心经营。' 社交XP+10。", "success");
+            }
+          }
+        },
+        {
+          text: "📖 记录羁绊故事", hint: "心智+8,置_b739BondChronicler",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._b739BondCd = true;
+            st.flags._b739BondChronicler = true;
+            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 8);
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("📖 '羁绊,是人生最珍贵的财富。' 心智+8。", "info");
+            }
+          }
+        }
+      ],
+      text: function (st) {
+        if (!st) return null;
+        return "你和NPC之间的羁绊正在加深——'这些关系,值得珍惜。'";
+      }
+    },
+    {
+      id: "b739_narrative_growth_v4", phase: "street", _isChainEvent: false, icon: "💪",
+      title: "叙事成长",
+      story: "你正在从经历中汲取力量——{desc}",
+      triggers: { minDay: 180, interval: 240, maxRepeats: 4, excludeFlags: ["_b739GrowthCd"] },
+      conditions: function (st) {
+        if (!st || st.gameOver) return false;
+        if (st.flags && st.flags._b739GrowthCd) return false;
+        return st.player && st.player.day >= 180 && st.status && st.needs;
+      },
+      choices: [
+        {
+          text: "💪 从挫折中学习", hint: "心智+9,健康+5,置_b739Resilient",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._b739GrowthCd = true;
+            st.flags._b739Resilient = true;
+            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 9);
+            if (st.status) st.status.health = Math.min(100, (st.status.health || 100) + 5);
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("💪 '挫折,是成长的垫脚石。' 心智+9,健康+5。", "success");
+            }
+          }
+        },
+        {
+          text: "🧘 正念反思", hint: "心情+12,置_b739Mindful",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._b739GrowthCd = true;
+            st.flags._b739Mindful = true;
+            if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 12);
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("🧘 '正念,让心更平静。' 心情+12。", "info");
             }
           }
         }
