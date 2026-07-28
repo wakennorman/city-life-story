@@ -1929,7 +1929,9 @@ function showIngredientShopModal() {
         priceMod =
           (LOCATIONS[here].priceMod && LOCATIONS[here].priceMod[g.id]) || 1.0;
       }
-      var price = Math.round(g.basePrice * priceMod * 100) / 100;
+            // [全系统自洽修复] 域D R730b 修复:林阿姨好感30奖励linCheapVeg承诺"食材价格-10%"写后全库零读取→展示与实付同源单点兜现
+      if (state.flags && state.flags.linCheapVeg) priceMod *= 0.9;
+var price = Math.round(g.basePrice * priceMod * 100) / 100;
 
       html +=
         '<div style="display:flex;align-items:center;gap:8px;padding:6px 8px;' +

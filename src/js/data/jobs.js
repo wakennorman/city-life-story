@@ -211,7 +211,13 @@ const STREET_JOBS = [
     requirements: { agility: 22, minAge: 18, maxAge: 45 },
     effects: { fatigue: 34, hygiene: -8, agilityXp: 5, happiness: -5 },
     payCalc(state) {
-      return Math.floor(50 + state.player.agility * 0.7 + Random.float(0, 50));
+      var base = 50 + state.player.agility * 0.7 + Random.float(0, 50);
+      // [全系统自洽修复] 域D R730b 修复:好感奖励承诺零兑现(huangPriorityOrders配送+10%/huangEbike+15%/xiaochenDeliveryTips+10%写后全库零读取)
+      var f = state.flags || {};
+      if (f.huangPriorityOrders) base *= 1.10;
+      if (f.huangEbike) base *= 1.15;
+      if (f.xiaochenDeliveryTips) base *= 1.10;
+      return Math.floor(base);
     },
     risk: { injury: 0.07 },
   },
@@ -1010,6 +1016,11 @@ const STREET_JOBS = [
           state.player.agility * 0.3 +
           (state.skills.driving?.level || 0) * 0.8 +
           Random.float(0, 35);
+        // [全系统自洽修复] 域D R730b 修复:配送类好感奖励同样作用于快递配送
+        var f = state.flags || {};
+        if (f.huangPriorityOrders) base *= 1.10;
+        if (f.huangEbike) base *= 1.15;
+        if (f.xiaochenDeliveryTips) base *= 1.10;
         return Math.floor(base);
       },
       risk: { injury: 0.03 },

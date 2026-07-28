@@ -140,6 +140,8 @@ function rollDailyIllness(state) {
     var _certIllnessCut =
       (state.flags && state.flags._illnessRiskReduction) || 0;
     if (_certIllnessCut > 0) ch *= 1 - Math.min(0.8, _certIllnessCut);
+    // [全系统自洽修复] 域D R730b 修复:王医生好感30奖励wangHealthTips承诺"生病概率-5%"写后全库零读取→乘性兜现
+    if (state.flags && state.flags.wangHealthTips) ch *= 0.95;
     // [全系统自洽修复] 域A A类#7: clamp ch 上限 0.95（地狱×冬季 seasonInfluence 可致 ch>1.0→Random.chance 必真，疾病100%触发=平衡崩溃）
     if (ch > 0.95) ch = 0.95;
     if (!Random.chance(ch)) continue;
