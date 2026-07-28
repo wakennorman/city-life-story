@@ -550,3 +550,12 @@
 - MC 10x500d: 0代码异常,前7天死亡0%(存活<80%为既有RNG阈值)。构建12277.1KB flag=2。
 - 并行协同: 源码+dist+账本被并行集成提交5c6517f6/40006240扫入,本窗口收尾提交d8042961(loop-state PUSHED)。HEAD==origin/main。
 - 教训: 悬空对账须扫core+data双目录(js/data/下11个domain文件真实存在,险误报)。下轮D(597最小,避让并行在途R622域G)。
+
+## 2026-07-28 13:5x R631 域G(核心机制/生命周期) — 已 push (经并行 33d00557/18677055/35558832)
+- 选域：ls core+data 双目录 recency，G(r622) 全局最陈旧 → R631。⚠️并行窗口同期以 [R631] 提交域F(203746e5,后因 SyntaxError 由 848266e0 修复)——**轮号撞用不同域**，开轮 build 撞到其在途半成品文件产生瞬态 SyntaxError('第')，复扫全部挂载 JS 确认非本轮问题。
+- A类1处：domain_g_linkage_r611.js:126 addSkillXp("strength") 假键**第3次同型回潮**(r596→R621修、r611→本轮修)→personalGrowth.image.fitness(||30守卫)。死字段黑名单/skills对象误用全库扫描=0。
+- 联动3项(domain_g_linkage_r631.js，3 street，maxRepeats:1，全||防御，无NPC引用)：g631_rock_bottom_wisdom(G→E 首消费_everBroke，cash≥3000谷底回放，沉淀_g631EmergencyFund)/g631_street_night_memory(G→D 首消费_everHomeless，联动_homelessDays计数叙事)/g631_hunger_never_again(G→C 首消费_everStarved→厨艺动机)。daily_pipeline/needs三大生存里程碑写-only flag全部打通。
+- 验证：node --check 全过；MC 10×500d 227.1s 0代码异常、前7天死亡率全0%(trader/social/corporate 60%为既有RNG阈值)；HEAD dist r631 flag=8 闭合。
+- 并行协同：源码+dist 被扫入33d00557、账本(CLAUDE.md R631行/round-631.md/loop-state)被扫入18677055、last_known_head 被扫入35558832——本窗口零独立提交但全部交付物均落库推送，HEAD==origin/main。
+- 素材沉淀：域G仍余12个写-only flag(_debtFree/_everCuredIllness/_pensionBase/_streakMaster等,见round-631.md)。
+- 下轮：DOMAIN_H？开轮必重算——并行已做 R632 域H(18677055)，届时 A(r624) 或 B(r625) 可能最陈旧。
