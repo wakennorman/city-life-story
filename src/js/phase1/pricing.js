@@ -708,6 +708,9 @@ if (typeof window !== "undefined") {
     calcFinalPrice: calcFinalPrice,
     calcTradeProfitRate: calcTradeProfitRate,
     getBestTradeRoutes: getBestTradeRoutes,
+    getPriceExtremeAlert: getPriceExtremeAlert,
+    getAllPriceAnomalies: getAllPriceAnomalies,
+    checkPriceAnomalyNarrative: checkPriceAnomalyNarrative,
   });
 
   // ====== 整合钩子：增强现有交易函数 ======
@@ -910,6 +913,63 @@ function getPriceExtremeAlert(goodId, currentPrice) {
   if (ratio < 0.4) return '<span style="color:var(--success);font-size:10px;">💎 低估 ' + Math.round((1 - ratio) * 100) + '% 可考虑入手</span>';
   if (ratio < 0.6) return '<span style="color:var(--info);font-size:10px;">📉 偏低 ' + Math.round((1 - ratio) * 100) + '% 关注机会</span>';
   return "";
+}
+
+// [全系统自洽修复] 域A R675 联动增强(A→F): 全城价格异常检测 — 返回所有地点的价格异常商品列表
+function getAllPriceAnomalies(state) {
+  if (!state || !state.trade || !state.trade.goodsPrices) return [];
+  var anomalies = [];
+  var seen = {};
+  for (var _locKey in state.trade.goodsPrices) {
+    if (!state.trade.goodsPrices.hasOwnProperty(_locKey)) continue;
+    var _prices = state.trade.goodsPrices[_locKey];
+    if (!_prices) continue;
+    for (var _gid in _prices) {
+      if (!_prices.hasOwnProperty(_gid)) continue;
+      var _pp = _prices[_gid];
+      if (seen[_gid]) continue;
+      var _good = getGoodById(_gid);
+      if (!_good || !_good.basePrice || _good.basePrice <= 0) continue;
+      var _ratio = _pp / _good.basePrice;
+      if (_ratio > 1.5 || _ratio < 0.5) {
+        seen[_gid] = true;
+        anomalies.push({
+          goodId: _gid,
+          goodName: _good.name,
+          location: _locKey,
+          ratio: Math.round(_ratio * 100) / 100,
+          level: _ratio > 1.5 ? "high" : "low",
+          price: _pp,
+          basePrice: _good.basePrice,
+        });
+      }
+    }
+  }
+  anomalies.sort(function (a, b) { return a.level === b.level ? b.ratio - a.ratio : a.level === "high" ? -1 : 1; });
+  return anomalies.slice(0, 10);
+}
+
+// [全系统自洽修复] 域A R675 联动增强(A→B): 价格异常叙事 — 检测到全城价格异常时触发市场叙事
+function checkPriceAnomalyNarrative(state) {
+  if (!state || !state.flags) return;
+  var anomalies = getAllPriceAnomalies(state);
+  if (anomalies.length === 0) return;
+  // 每30天最多触发一次，避免刷屏
+  var _lastNarrativeDay = state.flags._priceAnomalyNarrativeDay || 0;
+  if (state.player.day - _lastNarrativeDay < 30) return;
+  var _highCount = anomalies.filter(function (a) { return a.level === "high"; }).length;
+  var _lowCount = anomalies.filter(function (a) { return a.level === "low"; }).length;
+  if (_highCount >= 3) {
+    state.flags._priceAnomalyNarrativeDay = state.player.day;
+    if (typeof StateManager !== "undefined" && StateManager.addMessage) {
+      StateManager.addMessage("📊 市场观察：全城有 " + _highCount + " 种商品价格异常偏高，商贩们都在谈论这波涨价潮。", "event");
+    }
+  } else if (_lowCount >= 3) {
+    state.flags._priceAnomalyNarrativeDay = state.player.day;
+    if (typeof StateManager !== "undefined" && StateManager.addMessage) {
+      StateManager.addMessage("📊 市场观察：全城有 " + _lowCount + " 种商品价格异常偏低，精明的买家开始囤货。", "event");
+    }
+  }
 }
 
 // [全系统自洽修复] 域A R405 联动增强(A→F): 价格波动可视化 — 返回商品价格趋势箭头

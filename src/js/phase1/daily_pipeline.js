@@ -712,6 +712,10 @@ const DAILY_PIPELINE = [
           StateManager.addMessage("🏪 市场行情：" + _priceNews.join("，"), "info");
         }
       }
+      // [全系统自洽修复] 域A R675 联动增强(A→B): 价格异常叙事 — 全城价格异常触发市场观察叙事
+      if (typeof checkPriceAnomalyNarrative === "function") {
+        checkPriceAnomalyNarrative(state);
+      }
     },
   },
 
