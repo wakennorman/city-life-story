@@ -309899,6 +309899,97 @@ if (typeof window !== "undefined") {
   }
 })();
 ;
+// ==== js/core/domain_a_linkage_r682.js ====
+/**
+ * 域A(数据/数值平衡) 联动增强 R682
+ * 桥接：
+ *   A→B  a682_price_narrative_v2  价格叙事v2 → 消费 state.trade.goodsPrices 数据,
+ *     数据→"价格波动背后的人间故事"叙事回响
+ *   A→D  a682_npc_price_insight     NPC价格洞察 → 消费 state.relationships+state.trade 数据,
+ *     数据→"NPC眼中的价格秘密"社交回响
+ */
+(function () {
+  "use strict";
+  if (typeof RANDOM_EVENTS === "undefined" || !RANDOM_EVENTS) return;
+  if (RANDOM_EVENTS._domainALinkageR682Loaded) return;
+  RANDOM_EVENTS._domainALinkageR682Loaded = true;
+
+  var EVENTS = [
+    {
+      id: "a682_price_narrative_v2", phase: "street", _isChainEvent: false, icon: "📈",
+      title: "价格波动背后的人间故事",
+      story: "每一个商品价格的波动,都藏着这座城市的故事——{desc}",
+      triggers: { minDay: 80, interval: 150, maxRepeats: 3, excludeFlags: ["_a682PriceNarrativeCooldown"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        if (!st.flags || st.flags._a682PriceNarrativeCooldown) return false;
+        return st.trade && st.trade.goodsPrices;
+      },
+      choices: [
+        { text: "📖 了解市场故事", hint: "智力+4,社交XP+3", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._a682PriceNarrativeCooldown = true;
+          if (st.player) st.player.intelligence = Math.min(100, (st.player.intelligence || 50) + 4);
+          if (typeof addSkillXp === "function") { try { addSkillXp("social", 3); } catch(e) {} }
+          if (typeof StateManager !== "undefined") StateManager.addMessage("📖 '每个价格都有故事。' 你了解了市场背后的故事。智力+4,社交XP+3。", "success");
+        }},
+        { text: "📊 分析价格趋势", hint: "会计XP+5,管理XP+2", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._a682PriceNarrativeCooldown = true;
+          if (typeof addSkillXp === "function") {
+            try { addSkillXp("accounting", 5); } catch(e) {}
+            try { addSkillXp("management", 2); } catch(e) {}
+          }
+          if (typeof StateManager !== "undefined") StateManager.addMessage("📊 '价格趋势里有大智慧。' 你分析了价格走势。会计XP+5,管理XP+2。", "success");
+        }}
+      ],
+      text: function (st) {
+        if (!st) return null;
+        return "每一个商品价格的波动,都藏着这座城市的故事——'价格背后,是这座城市的人间烟火。'";
+      }
+    },
+    {
+      id: "a682_npc_price_insight", phase: "street", _isChainEvent: false, icon: "💬",
+      title: "NPC眼中的价格秘密",
+      story: "你从朋友那里听到了关于价格的秘密——{desc}",
+      triggers: { minDay: 60, interval: 120, maxRepeats: 3, excludeFlags: ["_a682NpcPriceCooldown"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        if (!st.flags || st.flags._a682NpcPriceCooldown) return false;
+        var rels = st.relationships || {};
+        var metCount = 0;
+        for (var k in rels) { if (rels[k] && rels[k].met) metCount++; }
+        return metCount >= 2 && st.trade;
+      },
+      choices: [
+        { text: "💡 采纳建议", hint: "销售XP+5,现金+800", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._a682NpcPriceCooldown = true;
+          if (st.resources) st.resources.cash = (st.resources.cash || 0) + 800;
+          if (typeof addSkillXp === "function") { try { addSkillXp("sales", 5); } catch(e) {} }
+          if (typeof StateManager !== "undefined") StateManager.addMessage("💡 '朋友的建议,就是最好的商机。' 你采纳了朋友的价格建议。销售XP+5,现金+¥800。", "success");
+        }},
+        { text: "🤝 分享信息", hint: "好感+4,社交XP+3", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._a682NpcPriceCooldown = true;
+          var rels = st.relationships || {};
+          var firstMet = null;
+          for (var k2 in rels) { if (rels[k2] && rels[k2].met) { firstMet = k2; break; } }
+          if (firstMet && typeof applyAffinityChange === "function") {
+            try { applyAffinityChange(st, firstMet, 4, "分享价格信息"); } catch(e) {}
+          }
+          if (typeof addSkillXp === "function") { try { addSkillXp("social", 3); } catch(e) {} }
+          if (typeof StateManager !== "undefined") StateManager.addMessage("🤝 '信息越分享越有价值。' 你和朋友分享了价格信息。好感+4,社交XP+3。", "success");
+        }}
+      ],
+      text: function (st) {
+        if (!st) return null;
+        return "你从朋友那里听到了关于价格的秘密——'这座城市的价格秘密,都藏在朋友的话里。'";
+      }
+    }
+  ];
+
+  for (var i = 0; i < EVENTS.length; i++) {
+    RANDOM_EVENTS.push(EVENTS[i]);
+  }
+})();
+;
 // ==== js/core/domain_b_linkage_r658.js ====
 /**
  * 域B(事件/叙事) 联动增强 R658
@@ -310544,6 +310635,1702 @@ if (typeof window !== "undefined") {
   }
 })();
 ;
+// ==== js/core/domain_b_linkage_r526.js ====
+/**
+ * 域B(事件/叙事) 联动增强 R526
+ * 桥接：
+ *   B→A  b526_event_data_wisdom  事件数据智慧 → 消费 flags 数据,
+ *     数据→"从数据中提取智慧"的量化叙事
+ *   B→D  b526_event_friendship_test 事件友谊考验 → 消费 flags+relationships 数据,
+ *     考验→"患难见真情"的友谊考验
+ *   B→G  b526_event_life_turning  事件人生转折 → 消费 flags 数据,
+ *     转折→"一个改变人生轨迹的事件"的转折叙事
+ */
+(function () {
+  "use strict";
+  if (typeof RANDOM_EVENTS === "undefined" || !RANDOM_EVENTS) return;
+  if (RANDOM_EVENTS._domainBLinkageR526Loaded) return;
+  RANDOM_EVENTS._domainBLinkageR526Loaded = true;
+
+  function firstMetNpc(st) {
+    if (!st || !st.relationships) return null;
+    for (var id in st.relationships) { if (st.relationships[id] && st.relationships[id].met) return id; }
+    return null;
+  }
+  function bumpAffinity(st, npcId, amt, reason) {
+    if (!npcId) return;
+    if (typeof applyAffinityChange === "function") { try { applyAffinityChange(st, npcId, amt, reason); } catch(e) {} }
+  }
+
+  var EVENTS = [
+    {
+      id: "b526_event_data_wisdom", phase: "street", _isChainEvent: false, icon: "📊",
+      title: "数据的智慧",
+      story: "你从一堆数据中发现了一个规律——{desc}",
+      triggers: { minDay: 20, interval: 60, maxRepeats: 5, excludeFlags: ["_b526DataWisdomCooldown"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        return (st.flags && !st.flags._b526DataWisdomCooldown);
+      },
+      choices: [
+        { text: "📊 验证规律", hint: "会计XP+4,心智+2", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._b526DataWisdomCooldown = true;
+          if (typeof addSkillXp === "function") { try { addSkillXp("accounting", 4); } catch(e) {} }
+          if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 2);
+          if (typeof StateManager !== "undefined") StateManager.addMessage("📊 '数据不会说谎，这个规律值得验证一下。' 会计XP+4,心智+2。", "success");
+        }},
+        { text: "📝 记录下来", hint: "心智+1", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._b526DataWisdomCooldown = true;
+          if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 1);
+          if (typeof StateManager !== "undefined") StateManager.addMessage("📊 '把这个规律记下来，以后可能用得上。' 心智+1。", "success");
+        }}
+      ],
+      text: function (st) {
+        if (!st) return null;
+        return "你从一堆数据中发现了一个规律——'原来周末和周一的市场表现有这么大的差异。' 数据里藏着智慧，只要你愿意找。";
+      }
+    },
+    {
+      id: "b526_event_friendship_test", phase: "street", _isChainEvent: false, icon: "💪",
+      title: "患难见真情",
+      story: "你遇到困难的时候，一个朋友站了出来——{desc}",
+      triggers: { minDay: 30, interval: 120, maxRepeats: 3, excludeFlags: ["_b526FriendshipTestCooldown"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        var nid = firstMetNpc(st);
+        return !!nid && (st.flags && !st.flags._b526FriendshipTestCooldown);
+      },
+      choices: [
+        { text: "💪 感激不尽", hint: "好感+5,心情+3", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._b526FriendshipTestCooldown = true;
+          var nid = firstMetNpc(st); bumpAffinity(st, nid, 5, "患难见真情");
+          if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 3);
+          if (typeof StateManager !== "undefined") StateManager.addMessage("💪 '在我最需要帮助的时候，你出现了。' 这份情谊，一辈子都不会忘。好感+5,心情+3。", "success");
+        }},
+        { text: "💝 回报TA", hint: "社交XP+3,好感+3", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._b526FriendshipTestCooldown = true;
+          if (typeof addSkillXp === "function") { try { addSkillXp("social", 3); } catch(e) {} }
+          var nid = firstMetNpc(st); bumpAffinity(st, nid, 3, "回报帮助");
+          if (typeof StateManager !== "undefined") StateManager.addMessage("💪 '你帮了我，我也要帮你。' 好感+3,社交XP+3。", "success");
+        }}
+      ],
+      text: function (st) {
+        if (!st) return null;
+        return "你遇到困难的时候，一个朋友站了出来——'别怕，有我在。' 简单的一句话，却让你热泪盈眶。";
+      }
+    },
+    {
+      id: "b526_event_life_turning", phase: "street", _isChainEvent: false, icon: "🔄",
+      title: "转折点",
+      story: "一件看似偶然的事，改变了你的人生轨迹——{desc}",
+      triggers: { minDay: 40, interval: 180, maxRepeats: 3, excludeFlags: ["_b526LifeTurningCooldown"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        return (st.flags && !st.flags._b526LifeTurningCooldown);
+      },
+      choices: [
+        { text: "🔄 拥抱变化", hint: "心智+4,管理XP+3,心情+2", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._b526LifeTurningCooldown = true;
+          if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 4);
+          if (typeof addSkillXp === "function") { try { addSkillXp("management", 3); } catch(e) {} }
+          if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 2);
+          if (typeof StateManager !== "undefined") StateManager.addMessage("🔄 '人生没有白走的路，每一步都算数。' 心智+4,管理XP+3,心情+2。", "success");
+        }},
+        { text: "💭 深度思考", hint: "心智+3", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._b526LifeTurningCooldown = true;
+          if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 3);
+          if (typeof StateManager !== "undefined") StateManager.addMessage("🔄 '如果当时没有发生那件事，我现在会在哪里？' 心智+3。", "success");
+        }}
+      ],
+      text: function (st) {
+        if (!st) return null;
+        return "一件看似偶然的事，改变了你的人生轨迹——'如果当时没有走进那家店，就不会有后来的故事。' 人生，充满了偶然。";
+      }
+    }
+  ];
+
+  for (var i = 0; i < EVENTS.length; i++) {
+    (function (ev) {
+      var exists = false;
+      for (var j = 0; j < RANDOM_EVENTS.length; j++) {
+        if (RANDOM_EVENTS[j] && RANDOM_EVENTS[j].id === ev.id) { exists = true; break; }
+      }
+      if (!exists) RANDOM_EVENTS.push(ev);
+    })(EVENTS[i]);
+  }
+})();
+;
+// ==== js/core/domain_b_linkage_r529.js ====
+/**
+ * 域B(事件/叙事) 联动增强 R529
+ * 桥接：
+ *   B→G  b520_weather_life_weather  天气人生回响 → 消费 weather+needs 数据,
+ *     事件→"天气影响心情"的生命体验
+ *   B→C  b520_event_career_inspiration 事件职业灵感 → 消费 event+skills 数据,
+ *     事件→"故事激发职业灵感"的成长回响
+ *   B→E  b520_event_investment_awakening 事件投资觉醒 → 消费 event+resources 数据,
+ *     事件→"新闻唤醒投资意识"的经济回响
+ */
+(function () {
+  "use strict";
+  if (typeof RANDOM_EVENTS === "undefined" || !RANDOM_EVENTS) return;
+  if (RANDOM_EVENTS._domainBLinkageR529Loaded) return;
+  RANDOM_EVENTS._domainBLinkageR529Loaded = true;
+
+  var EVENTS = [
+    {
+      id: "b529_weather_life_resonance", phase: "street", _isChainEvent: false, icon: "🌤️",
+      title: "天气与心情",
+      story: "今天的天气让你感慨万千——{desc}",
+      triggers: { minDay: 30, interval: 90, maxRepeats: 3, excludeFlags: ["_b529WeatherLifeCooldown"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        if (!st.flags || st.flags._b529WeatherLifeCooldown) return false;
+        return st.weather && st.weather.current;
+      },
+      choices: [
+        { text: "🌞 享受当下", hint: "心情+5,心智+2", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._b529WeatherLifeCooldown = true;
+          if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 5);
+          if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 2);
+          if (typeof StateManager !== "undefined") StateManager.addMessage("🌤️ '天气真好，心情也好了。' 你享受这美好的一天。心情+5,心智+2。", "success");
+        }},
+        { text: "📝 记录感受", hint: "智力+2,社交XP+2", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._b529WeatherLifeCooldown = true;
+          if (st.player) st.player.intelligence = Math.min(100, (st.player.intelligence || 50) + 2);
+          if (typeof addSkillXp === "function") { try { addSkillXp("social", 2); } catch(e) {} }
+          if (typeof StateManager !== "undefined") StateManager.addMessage("🌤️ '这种感受值得记录。' 你写下了一篇日记。智力+2,社交XP+2。", "success");
+        }}
+      ],
+      text: function (st) {
+        if (!st) return null;
+        var w = st.weather && st.weather.current ? st.weather.current : "sunny";
+        var desc = { sunny: "阳光明媚，心情也跟着好起来", rainy: "雨天让人沉思", snowy: "雪景让人平静", cloudy: "阴天适合思考" }[w] || "天气影响心情";
+        return "今天的天气让你感慨万千——'" + desc + "。' 你开始思考天气与人生的关系。";
+      }
+    },
+    {
+      id: "b529_event_career_inspiration", phase: "street", _isChainEvent: false, icon: "💡",
+      title: "故事激发的职业灵感",
+      story: "最近经历的事情让你对职业有了新的思考——{desc}",
+      triggers: { minDay: 50, interval: 120, maxRepeats: 3, excludeFlags: ["_b529CareerInspCooldown"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        if (!st.flags || st.flags._b529CareerInspCooldown) return false;
+        // 需要至少经历过一些事件
+        return st.stats && st.stats.eventsTriggered >= 5;
+      },
+      choices: [
+        { text: "🎯 投入学习", hint: "随机技能XP+5", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._b529CareerInspCooldown = true;
+          var skills = ["cooking", "repair", "sales", "coding", "accounting", "management"];
+          var sk = Random.fromArray(skills); // [全系统自洽修复] 域B R400: Math.random()→Random.fromArray()种子化随机
+          if (typeof addSkillXp === "function") { try { addSkillXp(sk, 5); } catch(e) {} }
+          if (typeof StateManager !== "undefined") StateManager.addMessage("💡 '这些经历让我想学更多。" + sk + "技能XP+5。'", "success");
+        }},
+        { text: "📖 写下来", hint: "智力+3", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._b529CareerInspCooldown = true;
+          if (st.player) st.player.intelligence = Math.min(100, (st.player.intelligence || 50) + 3);
+          if (typeof StateManager !== "undefined") StateManager.addMessage("💡 '好记性不如烂笔头。' 你把灵感记录下来。智力+3。", "success");
+        }}
+      ],
+      text: function (st) {
+        if (!st) return null;
+        return "最近经历的事情让你对职业有了新的思考——'原来还有这样的可能。' 你开始规划未来的方向。";
+      }
+    },
+    {
+      id: "b529_event_investment_awakening", phase: "street", _isChainEvent: false, icon: "📈",
+      title: "新闻唤醒投资意识",
+      story: "最近的市场新闻让你开始关注投资——{desc}",
+      triggers: { minDay: 40, interval: 100, maxRepeats: 3, excludeFlags: ["_b529InvestAwakeCooldown"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        if (!st.flags || st.flags._b529InvestAwakeCooldown) return false;
+        return (st.resources && (st.resources.cash || 0) >= 5000);
+      },
+      choices: [
+        { text: "💰 小额试水", hint: "现金-1000,置投资意识flag", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._b529InvestAwakeCooldown = true;
+          if (st.resources) st.resources.cash = Math.max(0, (st.resources.cash || 0) - 1000);
+          st.flags._dataInvestorMindset = true;
+          if (typeof StateManager !== "undefined") StateManager.addMessage("📈 '用小钱学投资。' 你决定小额试水。现金-¥1000,投资意识觉醒。", "success");
+        }},
+        { text: "📚 先学习", hint: "会计XP+3", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._b529InvestAwakeCooldown = true;
+          if (typeof addSkillXp === "function") { try { addSkillXp("accounting", 3); } catch(e) {} }
+          if (typeof StateManager !== "undefined") StateManager.addMessage("📈 '先学再投。' 你决定先学习投资知识。会计XP+3。", "success");
+        }}
+      ],
+      text: function (st) {
+        if (!st) return null;
+        return "最近的市场新闻让你开始关注投资——'钱存在银行会贬值。' 你开始思考如何让钱生钱。";
+      }
+    }
+  ];
+
+  for (var i = 0; i < EVENTS.length; i++) {
+    (function (ev) {
+      var exists = false;
+      for (var j = 0; j < RANDOM_EVENTS.length; j++) {
+        if (RANDOM_EVENTS[j] && RANDOM_EVENTS[j].id === ev.id) { exists = true; break; }
+      }
+      if (!exists) RANDOM_EVENTS.push(ev);
+    })(EVENTS[i]);
+  }
+})();
+
+;
+// ==== js/core/domain_b_linkage_r534.js ====
+/**
+ * 域B(事件/叙事) 联动增强 R534
+ * 桥接：
+ *   B→A  b534_story_data_wealth  故事数据财富 → 消费 event+resources 数据,
+ *     叙事→"你的故事就是财富"的数据沉淀
+ *   B→G  b534_story_life_chapter  故事人生章节 → 消费 event+player 数据,
+ *     叙事→"每个事件都是人生一章"的生命回响
+ *   B→C  b534_story_career_tale   故事职业传说 → 消费 event+skills 数据,
+ *     叙事→"经历成就职业"的成长回响
+ */
+(function () {
+  "use strict";
+  if (typeof RANDOM_EVENTS === "undefined" || !RANDOM_EVENTS) return;
+  if (RANDOM_EVENTS._domainBLinkageR534Loaded) return;
+  RANDOM_EVENTS._domainBLinkageR534Loaded = true;
+
+  var EVENTS = [
+    {
+      id: "b534_story_data_wealth", phase: "street", _isChainEvent: false, icon: "📖",
+      title: "你的故事就是财富",
+      story: "回顾这些年的经历，你发现每一段故事都有价值——{desc}",
+      triggers: { minDay: 60, interval: 120, maxRepeats: 3, excludeFlags: ["_b534StoryWealthCooldown"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        if (!st.flags || st.flags._b534StoryWealthCooldown) return false;
+        return st.stats && st.stats.eventsTriggered >= 10;
+      },
+      choices: [
+        { text: "📝 写成书", hint: "智力+3,现金+1000", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._b534StoryWealthCooldown = true;
+          if (st.player) st.player.intelligence = Math.min(100, (st.player.mental || 50) + 3);
+          if (st.resources) st.resources.cash = (st.resources.cash || 0) + 1000;
+          if (typeof StateManager !== "undefined") StateManager.addMessage("📖 '把经历写出来，竟然有人愿意看。' 你写了一本自传。智力+3,现金+¥1000。", "success");
+        }},
+        { text: "🗣️ 讲给后辈", hint: "社交XP+5,心情+5", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._b534StoryWealthCooldown = true;
+          if (typeof addSkillXp === "function") { try { addSkillXp("social", 5); } catch(e) {} }
+          if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 5);
+          if (typeof StateManager !== "undefined") StateManager.addMessage("📖 '年轻人，我跟你讲讲当年的故事。' 你把经历分享给后辈。社交XP+5,心情+5。", "success");
+        }}
+      ],
+      text: function (st) {
+        if (!st) return null;
+        return "回顾这些年的经历，你发现每一段故事都有价值——'这些经历，值得被记住。' 你开始思考如何把故事变成财富。";
+      }
+    },
+    {
+      id: "b534_story_life_chapter", phase: "street", _isChainEvent: false, icon: "📚",
+      title: "每个事件都是人生一章",
+      story: "你翻看人生篇章，发现已经经历了这么多——{desc}",
+      triggers: { minDay: 80, interval: 150, maxRepeats: 3, excludeFlags: ["_b534LifeChapterCooldown"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        if (!st.flags || st.flags._b534LifeChapterCooldown) return false;
+        return st.stats && st.stats.eventsTriggered >= 15;
+      },
+      choices: [
+        { text: "🎉 庆祝成长", hint: "心情+8", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._b534LifeChapterCooldown = true;
+          if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 8);
+          if (typeof StateManager !== "undefined") StateManager.addMessage("📚 '原来我已经走了这么远。' 你为自己的成长感到骄傲。心情+8。", "success");
+        }},
+        { text: "🎯 立下新目标", hint: "心智+3", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._b534LifeChapterCooldown = true;
+          if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 3);
+          if (typeof StateManager !== "undefined") StateManager.addMessage("📚 '下一章，要写得更加精彩。' 你立下新目标。心智+3。", "success");
+        }}
+      ],
+      text: function (st) {
+        if (!st) return null;
+        return "你翻看人生篇章，发现已经经历了这么多——'每一个事件，都是人生的一章。' 你开始思考下一章该怎么写。";
+      }
+    },
+    {
+      id: "b534_story_career_tale", phase: "street", _isChainEvent: false, icon: "🏆",
+      title: "经历成就职业",
+      story: "你发现曾经的经历正在帮助你的职业发展——{desc}",
+      triggers: { minDay: 50, interval: 100, maxRepeats: 3, excludeFlags: ["_b534CareerTaleCooldown"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        if (!st.flags || st.flags._b534CareerTaleCooldown) return false;
+        return st.stats && st.stats.eventsTriggered >= 8;
+      },
+      choices: [
+        { text: "💼 应用到工作", hint: "管理XP+5", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._b534CareerTaleCooldown = true;
+          if (typeof addSkillXp === "function") { try { addSkillXp("management", 5); } catch(e) {} }
+          if (typeof StateManager !== "undefined") StateManager.addMessage("🏆 '经历是最好的老师。' 你把经历应用到工作中。管理XP+5。", "success");
+        }},
+        { text: "📖 分享经验", hint: "社交XP+3,智力+2", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._b534CareerTaleCooldown = true;
+          if (typeof addSkillXp === "function") { try { addSkillXp("social", 3); } catch(e) {} }
+          if (st.player) st.player.intelligence = Math.min(100, (st.player.intelligence || 50) + 2);
+          if (typeof StateManager !== "undefined") StateManager.addMessage("🏆 '分享经验让大家少走弯路。' 社交XP+3,智力+2。", "success");
+        }}
+      ],
+      text: function (st) {
+        if (!st) return null;
+        return "你发现曾经的经历正在帮助你的职业发展——'原来经历真的有用。' 你开始思考如何把经历转化为职业资本。";
+      }
+    }
+  ];
+
+  for (var i = 0; i < EVENTS.length; i++) {
+    (function (ev) {
+      var exists = false;
+      for (var j = 0; j < RANDOM_EVENTS.length; j++) {
+        if (RANDOM_EVENTS[j] && RANDOM_EVENTS[j].id === ev.id) { exists = true; break; }
+      }
+      if (!exists) RANDOM_EVENTS.push(ev);
+    })(EVENTS[i]);
+  }
+})();
+
+;
+// ==== js/core/domain_b_linkage_r544.js ====
+/**
+ * 域B(事件/叙事) 联动增强 R544
+ * 桥接：
+ *   B→G  b544_story_life_milestone  故事人生里程碑 → 消费 event+player 数据,
+ *     叙事→"每个事件都是人生一章"的生命回响
+ *   B→C  b544_story_career_catalyst  故事职业催化剂 → 消费 event+skills 数据,
+ *     叙事→"经历成就职业"的成长回响
+ *   B→E  b544_story_economic_ripple  故事经济涟漪 → 消费 event+resources 数据,
+ *     叙事→"事件影响经济"的经济回响
+ */
+(function () {
+  "use strict";
+  if (typeof RANDOM_EVENTS === "undefined" || !RANDOM_EVENTS) return;
+  if (RANDOM_EVENTS._domainBLinkageR544Loaded) return;
+  RANDOM_EVENTS._domainBLinkageR544Loaded = true;
+
+  var EVENTS = [
+    {
+      id: "b544_story_life_milestone", phase: "street", _isChainEvent: false, icon: "📚",
+      title: "每个事件都是人生一章",
+      story: "你翻看人生篇章，发现已经经历了这么多——{desc}",
+      triggers: { minDay: 70, interval: 120, maxRepeats: 3, excludeFlags: ["_b544LifeMilestoneCooldown"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        if (!st.flags || st.flags._b544LifeMilestoneCooldown) return false;
+        return st.stats && st.stats.eventsTriggered >= 12;
+      },
+      choices: [
+        { text: "🎉 庆祝成长", hint: "心情+8", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._b544LifeMilestoneCooldown = true;
+          if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 8);
+          if (typeof StateManager !== "undefined") StateManager.addMessage("📚 '原来我已经走了这么远。' 你为自己的成长感到骄傲。心情+8。", "success");
+        }},
+        { text: "🎯 立下新目标", hint: "心智+3", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._b544LifeMilestoneCooldown = true;
+          if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 3);
+          if (typeof StateManager !== "undefined") StateManager.addMessage("📚 '下一章，要写得更加精彩。' 你立下新目标。心智+3。", "success");
+        }}
+      ],
+      text: function (st) {
+        if (!st) return null;
+        return "你翻看人生篇章，发现已经经历了这么多——'每一个事件，都是人生的一章。' 你开始思考下一章该怎么写。";
+      }
+    },
+    {
+      id: "b544_story_career_catalyst", phase: "street", _isChainEvent: false, icon: "💡",
+      title: "经历成就职业",
+      story: "你发现曾经的经历正在帮助你的职业发展——{desc}",
+      triggers: { minDay: 50, interval: 100, maxRepeats: 3, excludeFlags: ["_b544CareerCatalystCooldown"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        if (!st.flags || st.flags._b544CareerCatalystCooldown) return false;
+        return st.stats && st.stats.eventsTriggered >= 8;
+      },
+      choices: [
+        { text: "💼 应用到工作", hint: "管理XP+5", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._b544CareerCatalystCooldown = true;
+          if (typeof addSkillXp === "function") { try { addSkillXp("management", 5); } catch(e) {} }
+          if (typeof StateManager !== "undefined") StateManager.addMessage("💡 '经历是最好的老师。' 你把经历应用到工作中。管理XP+5。", "success");
+        }},
+        { text: "📖 分享经验", hint: "社交XP+3,智力+2", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._b544CareerCatalystCooldown = true;
+          if (typeof addSkillXp === "function") { try { addSkillXp("social", 3); } catch(e) {} }
+          if (st.player) st.player.intelligence = Math.min(100, (st.player.intelligence || 50) + 2);
+          if (typeof StateManager !== "undefined") StateManager.addMessage("💡 '分享经验让大家少走弯路。' 社交XP+3,智力+2。", "success");
+        }}
+      ],
+      text: function (st) {
+        if (!st) return null;
+        return "你发现曾经的经历正在帮助你的职业发展——'原来经历真的有用。' 你开始思考如何把经历转化为职业资本。";
+      }
+    },
+    {
+      id: "b544_story_economic_ripple", phase: "street", _isChainEvent: false, icon: "💰",
+      title: "事件影响经济",
+      story: "最近发生的事件对你的经济状况产生了影响——{desc}",
+      triggers: { minDay: 40, interval: 90, maxRepeats: 3, excludeFlags: ["_b544EconRippleCooldown"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        if (!st.flags || st.flags._b544EconRippleCooldown) return false;
+        return st.stats && st.stats.eventsTriggered >= 6;
+      },
+      choices: [
+        { text: "📈 抓住机会", hint: "现金+800", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._b544EconRippleCooldown = true;
+          if (st.resources) st.resources.cash = (st.resources.cash || 0) + 800;
+          if (typeof StateManager !== "undefined") StateManager.addMessage("💰 '危机就是转机。' 你抓住了机会。现金+¥800。", "success");
+        }},
+        { text: "🛡️ 谨慎行事", hint: "会计XP+3", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._b544EconRippleCooldown = true;
+          if (typeof addSkillXp === "function") { try { addSkillXp("accounting", 3); } catch(e) {} }
+          if (typeof StateManager !== "undefined") StateManager.addMessage("💰 '小心驶得万年船。' 你选择谨慎行事。会计XP+3。", "success");
+        }}
+      ],
+      text: function (st) {
+        if (!st) return null;
+        return "最近发生的事件对你的经济状况产生了影响——'事件的影响正在显现。' 你开始思考如何应对。";
+      }
+    }
+  ];
+
+  for (var i = 0; i < EVENTS.length; i++) {
+    (function (ev) {
+      var exists = false;
+      for (var j = 0; j < RANDOM_EVENTS.length; j++) {
+        if (RANDOM_EVENTS[j] && RANDOM_EVENTS[j].id === ev.id) { exists = true; break; }
+      }
+      if (!exists) RANDOM_EVENTS.push(ev);
+    })(EVENTS[i]);
+  }
+})();
+
+;
+// ==== js/core/domain_b_linkage_r572.js ====
+/**
+ * 域B(事件/叙事) 联动增强 R572
+ * 桥接：
+ *   B→H  b572_event_corp_crisis  事件公司危机 → 消费 flags+corporate 数据,
+ *     危机→"公司遇到了一个危机"的危机叙事
+ *   B→A  b572_event_data_reveal  事件数据揭示 → 消费 flags 数据,
+ *     数据→"事件背后的数据真相"的数据叙事
+ *   B→C  b572_event_career_spark 事件职业火花 → 消费 flags 数据,
+ *     火花→"一个事件点燃了职业热情"的职业叙事
+ */
+(function () {
+  "use strict";
+  if (typeof RANDOM_EVENTS === "undefined" || !RANDOM_EVENTS) return;
+  if (RANDOM_EVENTS._domainBLinkageR572Loaded) return;
+  RANDOM_EVENTS._domainBLinkageR572Loaded = true;
+
+  function firstMetNpc(st) {
+    if (!st || !st.relationships) return null;
+    for (var id in st.relationships) { if (st.relationships[id] && st.relationships[id].met) return id; }
+    return null;
+  }
+  function bumpAffinity(st, npcId, amt, reason) {
+    if (!npcId) return;
+    if (typeof applyAffinityChange === "function") { try { applyAffinityChange(st, npcId, amt, reason); } catch(e) {} }
+  }
+
+  var EVENTS = [
+    {
+      id: "b572_event_corp_crisis", phase: "corporate", _isChainEvent: false, icon: "⚠️",
+      title: "公司危机",
+      story: "公司遇到了一次突发危机——{desc}",
+      triggers: { minDay: 45, interval: 180, maxRepeats: 3, excludeFlags: ["_b572CorpCrisisCooldown"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        if (!st.corporate || !st.corporate.company) return false;
+        return (st.flags && !st.flags._b572CorpCrisisCooldown);
+      },
+      choices: [
+        { text: "⚠️ 从容应对", hint: "管理XP+5,心智+3,公司知名度+2", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._b572CorpCrisisCooldown = true;
+          if (typeof addSkillXp === "function") { try { addSkillXp("management", 5); } catch(e) {} }
+          if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 3);
+          if (st.corporate) st.corporate.reputation = Math.min(100, (st.corporate.reputation || 0) + 2);
+          if (typeof StateManager !== "undefined") StateManager.addMessage("⚠️ '危机也是机会，处理好了能赢得更多信任。' 管理XP+5,心智+3,公司知名度+2。", "success");
+        }},
+        { text: "📋 成立应急小组", hint: "管理XP+3,团队忠诚+2", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._b572CorpCrisisCooldown = true;
+          if (typeof addSkillXp === "function") { try { addSkillXp("management", 3); } catch(e) {} }
+          var t = st.corporate && st.corporate.team;
+          if (t) { for (var i = 0; i < t.length; i++) { if (t[i]) t[i].loyalty = Math.min(100, (t[i].loyalty || 50) + 2); } }
+          if (typeof StateManager !== "undefined") StateManager.addMessage("⚠️ '组建应急小组，各司其职，共渡难关。' 管理XP+3,团队忠诚+2。", "success");
+        }}
+      ],
+      text: function (st) {
+        if (!st) return null;
+        return "公司遇到了一次突发危机——'产品质量问题被曝光了！' 你深吸一口气，开始处理。";
+      }
+    },
+    {
+      id: "b572_event_data_reveal", phase: "street", _isChainEvent: false, icon: "📊",
+      title: "数据真相",
+      story: "一组数据揭开了事件的真相——{desc}",
+      triggers: { minDay: 20, interval: 60, maxRepeats: 5, excludeFlags: ["_b572DataRevealCooldown"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        return (st.flags && !st.flags._b572DataRevealCooldown);
+      },
+      choices: [
+        { text: "📊 深入挖掘", hint: "会计XP+4,心智+2", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._b572DataRevealCooldown = true;
+          if (typeof addSkillXp === "function") { try { addSkillXp("accounting", 4); } catch(e) {} }
+          if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 2);
+          if (typeof StateManager !== "undefined") StateManager.addMessage("📊 '数据背后的真相，往往比表面看到的更复杂。' 会计XP+4,心智+2。", "success");
+        }},
+        { text: "📝 记录发现", hint: "心智+1", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._b572DataRevealCooldown = true;
+          if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 1);
+          if (typeof StateManager !== "undefined") StateManager.addMessage("📊 '把数据揭示的真相记下来，以后可能用得上。' 心智+1。", "success");
+        }}
+      ],
+      text: function (st) {
+        if (!st) return null;
+        return "一组数据揭开了事件的真相——'原来XX事件的背后，是数据在说话。' 数据不会说谎。";
+      }
+    },
+    {
+      id: "b572_event_career_spark", phase: "street", _isChainEvent: false, icon: "✨",
+      title: "职业火花",
+      story: "一个偶然的事件点燃了你的职业热情——{desc}",
+      triggers: { minDay: 15, interval: 90, maxRepeats: 3, excludeFlags: ["_b572CareerSparkCooldown"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        return (st.flags && !st.flags._b572CareerSparkCooldown);
+      },
+      choices: [
+        { text: "✨ 追随热情", hint: "全技能XP+2,心智+3,心情+2", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._b572CareerSparkCooldown = true;
+          var skills = ["accounting", "management", "social", "coding", "sales"]; // [全系统自洽修复] 域B R573 修复:marketing/technology/trade非真实技能键(addSkillXp静默丢弃XP)→映射social/coding/sales
+          for (var i = 0; i < skills.length; i++) { if (typeof addSkillXp === "function") { try { addSkillXp(skills[i], 2); } catch(e) {} } }
+          if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 3);
+          if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 2);
+          if (typeof StateManager !== "undefined") StateManager.addMessage("✨ '原来这才是我真正想做的事！' 全技能XP+2,心智+3,心情+2。", "success");
+        }},
+        { text: "📝 认真规划", hint: "心智+2,管理XP+2", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._b572CareerSparkCooldown = true;
+          if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 2);
+          if (typeof addSkillXp === "function") { try { addSkillXp("management", 2); } catch(e) {} }
+          if (typeof StateManager !== "undefined") StateManager.addMessage("✨ '热情需要规划，才能变成事业。' 心智+2,管理XP+2。", "success");
+        }}
+      ],
+      text: function (st) {
+        if (!st) return null;
+        return "一个偶然的事件点燃了你的职业热情——'我从来没想过，这件事会让我这么兴奋！' 也许，这就是你一直在寻找的方向。";
+      }
+    }
+  ];
+
+  for (var i = 0; i < EVENTS.length; i++) {
+    (function (ev) {
+      var exists = false;
+      for (var j = 0; j < RANDOM_EVENTS.length; j++) {
+        if (RANDOM_EVENTS[j] && RANDOM_EVENTS[j].id === ev.id) { exists = true; break; }
+      }
+      if (!exists) RANDOM_EVENTS.push(ev);
+    })(EVENTS[i]);
+  }
+})();
+;
+// ==== js/core/domain_b_linkage_r573.js ====
+/**
+ * 域B(事件/叙事) 联动增强 R573
+ * 选题：R426 写入的三个叙事 flag 全库零读取（只写不读=玩家选择无后果，叙事断裂）——本轮全部首消费闭环。
+ *   B→G  b573_identity_reconcile   首消费 _b426IdentityDoubt（整容后自我认同动摇→和解/沉沦分叉，生命叙事闭环）
+ *   B→E  b573_info_literacy_payoff 首消费 _b426GymInvestInsight（场外信息素养→核实习惯变现，投资心态回报）
+ *   B→E  b573_fomo_temptation      首消费 _b426GymFomoUrge（FOMO倾向→追高诱惑测试，损失厌恶教学时刻）
+ * 全字段 || 防御；conditions 全 false 时事件静默不发火，叙事仍自洽。
+ */
+(function () {
+  if (typeof RANDOM_EVENTS === "undefined") return;
+  if (RANDOM_EVENTS._domainBLinkageR573Loaded) return;
+  RANDOM_EVENTS._domainBLinkageR573Loaded = true;
+
+  var EVENTS = [
+    // B→G：整容自我认同动摇 → 和解或沉沦（消费 _b426IdentityDoubt，此前零读取）
+    {
+      id: "b573_identity_reconcile",
+      phase: "street",
+      _isChainEvent: false,
+      icon: "🪞",
+      title: "镜子里的人",
+      story: "深夜洗漱，你又在镜子前停了很久。整容之后，那种「镜子里的人是不是我」的疑惑一直没有散去。\n\n今晚，你翻出了手术前的旧照片。照片里的人笑得有点拘谨，但眼神是熟悉的。\n\n「变的是脸，还是我自己？」你需要给自己一个答案。",
+      triggers: { minDay: 30, excludeFlags: ["_b573IdentityReconciled"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        return !!(st.flags && st.flags._b426IdentityDoubt && !st.flags._b573IdentityReconciled);
+      },
+      choices: [
+        {
+          text: "🤝 和过去的自己和解",
+          hint: "心智+8，心情+5",
+          apply: function (st) {
+            if (!st) return; st.flags = st.flags || {};
+            st.flags._b573IdentityReconciled = true;
+            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 8);
+            if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 5);
+            if (typeof StateManager !== "undefined" && StateManager.addMessage) {
+              StateManager.addMessage("🪞 「脸是名片，人是内容。」你把旧照片设成了手机相册的收藏——不是怀念，是承认。那份动摇终于落了地。心智+8，心情+5。", "success");
+            }
+          },
+        },
+        {
+          text: "😔 继续回避这个问题",
+          hint: "心智-3，疑惑仍在",
+          apply: function (st) {
+            if (!st) return; st.flags = st.flags || {};
+            st.flags._b573IdentityReconciled = true;
+            if (st.player) st.player.mental = Math.max(0, (st.player.mental || 50) - 3);
+            if (typeof StateManager !== "undefined" && StateManager.addMessage) {
+              StateManager.addMessage("😔 你把旧照片塞回了抽屉深处。有些问题不回答，它就一直在。心智-3。", "info");
+            }
+          },
+        },
+      ],
+      probability: 0.6,
+      repeatable: false,
+    },
+
+    // B→E：健身房场外信息素养 → 核实习惯的回报（消费 _b426GymInvestInsight，此前零读取）
+    {
+      id: "b573_info_literacy_payoff",
+      phase: "street",
+      _isChainEvent: false,
+      icon: "🔍",
+      title: "核实的习惯",
+      story: "健身房里那次听来的「内幕消息」你没有直接跟，而是回家查了公司财报——这个习惯救了你。\n\n今天你又刷到一条被疯转的「暴涨预告」，评论区一片狂热。换作以前你可能已经下单了，但现在你的第一反应是：消息源是谁？动机是什么？\n\n查完之后你发现：这是一场典型的拉高出货。",
+      triggers: { minDay: 30, interval: 120, maxRepeats: 2, excludeFlags: ["_b573InfoLiteracyCooldown"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        return !!(st.flags && st.flags._b426GymInvestInsight && !st.flags._b573InfoLiteracyCooldown);
+      },
+      choices: [
+        {
+          text: "📖 把方法记进投资笔记",
+          hint: "会计XP+6，投资意识觉醒",
+          apply: function (st) {
+            if (!st) return; st.flags = st.flags || {};
+            st.flags._b573InfoLiteracyCooldown = true;
+            st.flags._dataInvestorMindset = true;
+            if (typeof addSkillXp === "function") { try { addSkillXp("accounting", 6); } catch (e) {} }
+            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 4);
+            if (typeof StateManager !== "undefined" && StateManager.addMessage) {
+              StateManager.addMessage("🔍 「三步核实法：查消息源、查财报、查谁在卖。」你把它写进了投资笔记的第一页。会计XP+6，心智+4。", "success");
+            }
+          },
+        },
+        {
+          text: "💬 发帖提醒别人别追",
+          hint: "社交XP+5，心情+4",
+          apply: function (st) {
+            if (!st) return; st.flags = st.flags || {};
+            st.flags._b573InfoLiteracyCooldown = true;
+            if (typeof addSkillXp === "function") { try { addSkillXp("social", 5); } catch (e) {} }
+            if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 4);
+            if (typeof StateManager !== "undefined" && StateManager.addMessage) {
+              StateManager.addMessage("💬 你把查证过程整理成帖子发了出去，有人骂你挡财路，也有人私信道谢。社交XP+5，心情+4。", "success");
+            }
+          },
+        },
+      ],
+      probability: 0.55,
+      repeatable: true,
+    },
+
+    // B→E：FOMO 倾向 → 追高诱惑测试（消费 _b426GymFomoUrge，此前零读取；损失厌恶教学时刻）
+    {
+      id: "b573_fomo_temptation",
+      phase: "street",
+      _isChainEvent: false,
+      icon: "🔥",
+      title: "这次不一样？",
+      story: "那种「别人都在赚钱、只有我踏空」的焦灼感又来了。\n\n最近有支票连拉了好几天，群里天天有人晒收益截图。你的手指已经悬在「买入」按钮上——账户里的钱在烧你的手。\n\n理性的声音很小，但还在：「你是想投资，还是只是怕错过？」",
+      triggers: { minDay: 45, interval: 150, maxRepeats: 2, excludeFlags: ["_b573FomoCooldown"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        if (!(st.flags && st.flags._b426GymFomoUrge && !st.flags._b573FomoCooldown)) return false;
+        return ((st.resources && st.resources.cash) || 0) >= 2000;
+      },
+      choices: [
+        {
+          text: "🧊 关掉App，明天再说",
+          hint: "心智+7，克制成功",
+          apply: function (st) {
+            if (!st) return; st.flags = st.flags || {};
+            st.flags._b573FomoCooldown = true;
+            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 7);
+            if (typeof StateManager !== "undefined" && StateManager.addMessage) {
+              StateManager.addMessage("🧊 你把手机扣在桌上出门跑了两圈。第二天那支票开始回调——你没躲过所有诱惑，但躲过了这一次。心智+7。", "success");
+            }
+          },
+        },
+        {
+          text: "🔥 冲了，就买一手",
+          hint: "现金-2000，大概率买在山顶",
+          apply: function (st) {
+            if (!st) return; st.flags = st.flags || {};
+            st.flags._b573FomoCooldown = true;
+            if (st.resources) st.resources.cash = Math.max(0, (st.resources.cash || 0) - 2000);
+            var win = Random.chance(0.25); // [全系统自洽修复] 域B R400: Math.random()→Random.chance()种子化随机
+            if (win) {
+              if (st.resources) st.resources.cash = (st.resources.cash || 0) + 2600;
+              if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 3);
+              if (typeof StateManager !== "undefined" && StateManager.addMessage) {
+                StateManager.addMessage("🎲 这次居然赚了600块。但你心里清楚：靠运气赚的钱，迟早凭实力亏回去。现金+600。", "info");
+              }
+            } else {
+              if (st.resources) st.resources.cash = (st.resources.cash || 0) + 1300;
+              if (st.player) st.player.mental = Math.max(0, (st.player.mental || 50) - 4);
+              if (typeof addSkillXp === "function") { try { addSkillXp("accounting", 4); } catch (e) {} }
+              if (typeof StateManager !== "undefined" && StateManager.addMessage) {
+                StateManager.addMessage("📉 三天后你割肉离场，亏了700块。这700块买到一个教训：FOMO是市场收割散户的第一镰刀。心智-4，会计XP+4。", "warning");
+              }
+            }
+          },
+        },
+      ],
+      probability: 0.55,
+      repeatable: true,
+    },
+  ];
+
+  for (var i = 0; i < EVENTS.length; i++) RANDOM_EVENTS.push(EVENTS[i]);
+})();
+
+;
+// ==== js/core/domain_b_linkage_r584.js ====
+/**
+ * 域B(事件/叙事) 联动增强 R584
+ * 桥接：
+ *   B→D  b584_event_help_stranger 事件帮助陌生人 → 消费 flags 数据,
+ *     温暖→"帮助陌生人的善意"的城市温度
+ *   B→C  b584_event_tech_breakthrough 事件技术突破 → 消费 flags 数据,
+ *     科技→"技术突破带来的职业机会"的科技叙事
+ *   B→H  b584_event_social_responsibility 事件社会责任 → 消费 flags+corporate 数据,
+ *     责任→"企业社会责任"的公益叙事
+ */
+(function () {
+  "use strict";
+  if (typeof RANDOM_EVENTS === "undefined" || !RANDOM_EVENTS) return;
+  if (RANDOM_EVENTS._domainBLinkageR584Loaded) return;
+  RANDOM_EVENTS._domainBLinkageR584Loaded = true;
+
+  function firstMetNpc(st) {
+    if (!st || !st.relationships) return null;
+    for (var id in st.relationships) { if (st.relationships[id] && st.relationships[id].met) return id; }
+    return null;
+  }
+  function bumpAffinity(st, npcId, amt, reason) {
+    if (!npcId) return;
+    if (typeof applyAffinityChange === "function") { try { applyAffinityChange(st, npcId, amt, reason); } catch(e) {} }
+  }
+
+  var EVENTS = [
+    {
+      id: "b584_event_help_stranger", phase: "street", _isChainEvent: false, icon: "💛",
+      title: "举手之劳",
+      story: "你帮了一个陌生人一个小忙——{desc}",
+      triggers: { minDay: 10, interval: 30, maxRepeats: 5, excludeFlags: ["_b584HelpStrangerCooldown"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        return (st.flags && !st.flags._b584HelpStrangerCooldown);
+      },
+      choices: [
+        { text: "💛 举手之劳", hint: "心情+2,心智+1", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._b584HelpStrangerCooldown = true;
+          if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 2);
+          if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 1);
+          if (typeof StateManager !== "undefined") StateManager.addMessage("💛 '谢谢你！' 陌生人的微笑，是最好的回报。心情+2,心智+1。", "success");
+        }},
+        { text: "🙂 微微一笑", hint: "心情+1", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._b584HelpStrangerCooldown = true;
+          if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 1);
+          if (typeof StateManager !== "undefined") StateManager.addMessage("💛 你笑了笑——'没事，举手之劳。' 心情+1。", "success");
+        }}
+      ],
+      text: function (st) {
+        if (!st) return null;
+        return "你帮了一个陌生人一个小忙——'请问XX路怎么走？' 你耐心地指了路。帮助别人，快乐自己。";
+      }
+    },
+    {
+      id: "b584_event_tech_breakthrough", phase: "street", _isChainEvent: false, icon: "💡",
+      title: "技术突破",
+      story: "你听说了一项重大的技术突破——{desc}",
+      triggers: { minDay: 20, interval: 90, maxRepeats: 3, excludeFlags: ["_b584TechBreakthroughCooldown"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        return (st.flags && !st.flags._b584TechBreakthroughCooldown);
+      },
+      choices: [
+        { text: "💡 学习新技术", hint: "技术XP+5,心智+2", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._b584TechBreakthroughCooldown = true;
+          if (typeof addSkillXp === "function") { try { addSkillXp("coding", 5); } catch(e) {} } // [全系统自洽修复] 域E R588 修复:technology非真实技能键(XP静默丢弃)→映射coding(学习新技术=编程)
+          if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 2);
+          if (typeof StateManager !== "undefined") StateManager.addMessage("💡 'AI技术又突破了，得跟上时代步伐。' 技术XP+5,心智+2。", "success");
+        }},
+        { text: "📈 关注趋势", hint: "心智+2", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._b584TechBreakthroughCooldown = true;
+          if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 2);
+          if (typeof StateManager !== "undefined") StateManager.addMessage("💡 '技术变革带来了新的职业机会。' 心智+2。", "success");
+        }}
+      ],
+      text: function (st) {
+        if (!st) return null;
+        return "你听说了一项重大的技术突破——'XX公司研发出了新一代AI芯片，性能提升10倍！' 技术变革，正在改变世界。";
+      }
+    },
+    {
+      id: "b584_event_social_responsibility", phase: "corporate", _isChainEvent: false, icon: "🌍",
+      title: "企业责任",
+      story: "公司参与了一项公益活动——{desc}",
+      triggers: { minDay: 40, interval: 180, maxRepeats: 3, excludeFlags: ["_b584SocialResponsibilityCooldown"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        if (!st.corporate || !st.corporate.company) return false;
+        return (st.flags && !st.flags._b584SocialResponsibilityCooldown);
+      },
+      choices: [
+        { text: "🌍 积极参与", hint: "管理XP+5,公司知名度+3,心情+2", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._b584SocialResponsibilityCooldown = true;
+          if (typeof addSkillXp === "function") { try { addSkillXp("management", 5); } catch(e) {} }
+          if (st.corporate) st.corporate.reputation = Math.min(100, (st.corporate.reputation || 0) + 3);
+          if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 2);
+          if (typeof StateManager !== "undefined") StateManager.addMessage("🌍 '公司参与了公益活动，为社会贡献力量。' 管理XP+5,公司知名度+3,心情+2。", "success");
+        }},
+        { text: "📋 组织员工参与", hint: "管理XP+3,社交XP+2", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._b584SocialResponsibilityCooldown = true;
+          if (typeof addSkillXp === "function") { try { addSkillXp("management", 3); } catch(e) {} }
+          if (typeof addSkillXp === "function") { try { addSkillXp("social", 2); } catch(e) {} }
+          if (typeof StateManager !== "undefined") StateManager.addMessage("🌍 '组织员工一起参与，团队凝聚力更强了。' 管理XP+3,社交XP+2。", "success");
+        }}
+      ],
+      text: function (st) {
+        if (!st) return null;
+        return "公司参与了一项公益活动——'山区小学捐书活动，员工们都很积极。' 企业越大，责任越大。";
+      }
+    }
+  ];
+
+  for (var i = 0; i < EVENTS.length; i++) {
+    (function (ev) {
+      var exists = false;
+      for (var j = 0; j < RANDOM_EVENTS.length; j++) {
+        if (RANDOM_EVENTS[j] && RANDOM_EVENTS[j].id === ev.id) { exists = true; break; }
+      }
+      if (!exists) RANDOM_EVENTS.push(ev);
+    })(EVENTS[i]);
+  }
+})();
+;
+// ==== js/core/domain_b_linkage_r594.js ====
+/**
+ * 域B(事件/叙事) 联动增强 R594
+ * 选题：moral_events.js 三个写-only 道德抉择 flag 首消费（善行有回响，道德叙事闭环）
+ *   B→C  b594_elder_job_lead   首消费 _elderJobLead（帮老邻居 R7 写入，零读取）
+ *     → 老人牵线社区兼职：善意变成职业机会，销售XP+现金
+ *   B→D  b594_scam_stopper_fame 首消费 _stoppedScam（阻止骗局写入，零读取）
+ *     → 被拦下的街坊上门道谢：义举换来街坊情谊（守 rel.met 铁律 applyAffinityChange）
+ *   B→E  b594_wholesale_channel 首消费 _wholesaleChannelTip（批发渠道情报写入，零读取）
+ *     → 用批发商的进货价情报省下一笔钱：情报变现金+会计XP
+ * 峰终定律：道德抉择的"延迟回报"制造记忆峰值；损失厌恶：善行不再是纯支出。
+ */
+(function () {
+  "use strict";
+  if (typeof RANDOM_EVENTS === "undefined" || !RANDOM_EVENTS) return;
+  if (RANDOM_EVENTS._domainBLinkageR594Loaded) return;
+  RANDOM_EVENTS._domainBLinkageR594Loaded = true;
+
+  function firstMetNpcB594(st) {
+    if (!st || !st.relationships) return null;
+    for (var id in st.relationships) {
+      var rel = st.relationships[id];
+      if (rel && rel.met) return id;
+    }
+    return null;
+  }
+  function bumpAffinityB594(st, npcId, amt, reason) {
+    if (!npcId) return;
+    if (typeof applyAffinityChange === "function") {
+      try { applyAffinityChange(st, npcId, amt, reason); } catch (e) {}
+    }
+  }
+
+  var EVENTS = [
+    {
+      id: "b594_elder_job_lead", phase: "street", _isChainEvent: false, icon: "👴",
+      title: "老人的牵线",
+      story: "帮过的老邻居托人带话，社区服务站有份跑腿差事——{desc}",
+      triggers: { minDay: 12, interval: 999, maxRepeats: 1, excludeFlags: ["_b594ElderLeadUsed"] },
+      conditions: function (st) {
+        if (!st || st.gameOver) return false;
+        if (!st.flags || !st.flags._elderJobLead) return false; // 首消费 R7 写-only flag
+        return !st.flags._b594ElderLeadUsed;
+      },
+      choices: [
+        { text: "🏃 接下这份差事", hint: "现金+900,销售XP+8,心情+4", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._b594ElderLeadUsed = true;
+          if (st.resources) st.resources.cash = (st.resources.cash || 0) + 900; /* [PLACEHOLDER] */
+          if (typeof addSkillXp === "function") { try { addSkillXp("sales", 8); } catch (e) {} }
+          if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 4);
+          if (typeof StateManager !== "undefined") StateManager.addMessage("👴 '小伙子人靠得住，这活儿交给他我放心。' 老人的一句话比简历管用。现金+¥900,销售XP+8,心情+4。", "success");
+        }},
+        { text: "🙏 心领了，让给更需要的人", hint: "心智+5,老人好感+4", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._b594ElderLeadUsed = true;
+          if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 5);
+          var r = st.relationships && st.relationships.elderNeighbor;
+          if (r && r.met) bumpAffinityB594(st, "elderNeighbor", 4, "谢绝好意让给他人");
+          if (typeof StateManager !== "undefined") StateManager.addMessage("👴 '这孩子，心善。' 你把机会让了出去，心里反而更踏实。心智+5。", "success");
+        }}
+      ],
+      text: function (st) {
+        if (!st) return null;
+        return "帮过的老邻居托人带话：社区服务站缺个跑腿的，'我跟站长说了，你人实在。' 当初扶的一把，如今变成了递过来的一只手。";
+      }
+    },
+    {
+      id: "b594_scam_stopper_fame", phase: "street", _isChainEvent: false, icon: "🛡️",
+      title: "义举的回响",
+      story: "被你拦下骗局的街坊上门道谢——{desc}",
+      triggers: { minDay: 10, interval: 999, maxRepeats: 1, excludeFlags: ["_b594ScamThanksSeen"] },
+      conditions: function (st) {
+        if (!st || st.gameOver) return false;
+        if (!st.flags || !st.flags._stoppedScam) return false; // 首消费写-only flag
+        if (!firstMetNpcB594(st)) return false; // 守域D铁律:须有已结识NPC
+        return !st.flags._b594ScamThanksSeen;
+      },
+      choices: [
+        { text: "🍵 收下谢意坐一会儿", hint: "好感+6,心情+5", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._b594ScamThanksSeen = true;
+          var nid = firstMetNpcB594(st);
+          if (nid) bumpAffinityB594(st, nid, 6, "拦下骗局的义举传开了"); /* [PLACEHOLDER] */
+          if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 5);
+          if (typeof StateManager !== "undefined") StateManager.addMessage("🛡️ '那天要不是你，我这养老钱就没了。' 街坊的茶很烫，人心很暖。好感+6,心情+5。", "success");
+        }},
+        { text: "😅 举手之劳不必挂怀", hint: "名望+3,心智+3", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._b594ScamThanksSeen = true;
+          if (st.player) {
+            st.player.fame = Math.min(100, (st.player.fame || 0) + 3);
+            st.player.mental = Math.min(100, (st.player.mental || 50) + 3);
+          }
+          if (typeof StateManager !== "undefined") StateManager.addMessage("🛡️ '谁碰上都会管的。' 话虽这么说，这条街都记住了你。名望+3,心智+3。", "success");
+        }}
+      ],
+      text: function (st) {
+        if (!st) return null;
+        return "被你拦下骗局的街坊提着水果上门：'打听了好几天才找到你。' 你那天多问的一句话，保住了别人半辈子的积蓄。";
+      }
+    },
+    {
+      id: "b594_wholesale_channel", phase: "street", _isChainEvent: false, icon: "📦",
+      title: "渠道的价值",
+      story: "你想起批发商透露的进货渠道——{desc}",
+      triggers: { minDay: 15, interval: 999, maxRepeats: 1, excludeFlags: ["_b594WholesaleUsed"] },
+      conditions: function (st) {
+        if (!st || st.gameOver) return false;
+        if (!st.flags || !st.flags._wholesaleChannelTip) return false; // 首消费写-only flag
+        if (!st.resources || (st.resources.cash || 0) < 500) return false; // 有本金才谈得上进货
+        return !st.flags._b594WholesaleUsed;
+      },
+      choices: [
+        { text: "📦 按情报走一趟进货", hint: "现金+700,会计XP+6", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._b594WholesaleUsed = true;
+          if (st.resources) st.resources.cash = (st.resources.cash || 0) + 700; /* [PLACEHOLDER] 差价收益 */
+          if (typeof addSkillXp === "function") { try { addSkillXp("accounting", 6); } catch (e) {} }
+          if (typeof StateManager !== "undefined") StateManager.addMessage("📦 '同样的货，源头价便宜三成。' 情报变成了实打实的差价。现金+¥700,会计XP+6。", "success");
+        }},
+        { text: "🤝 把渠道分享给相熟的摊主", hint: "好感+5,心智+3", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._b594WholesaleUsed = true;
+          var nid = firstMetNpcB594(st);
+          if (nid) bumpAffinityB594(st, nid, 5, "分享批发渠道情报");
+          if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 3);
+          if (typeof StateManager !== "undefined") StateManager.addMessage("📦 '这渠道你留着用。' 你把情报送了人情，生意场上多了个盟友。好感+5,心智+3。", "success");
+        }}
+      ],
+      text: function (st) {
+        if (!st) return null;
+        return "整理记账本时你想起批发商那句'源头拿货能省三成'。这条渠道情报一直躺在记忆里，是时候用起来了。";
+      }
+    }
+  ];
+
+  for (var i = 0; i < EVENTS.length; i++) {
+    (function (ev) {
+      var exists = false;
+      for (var j = 0; j < RANDOM_EVENTS.length; j++) {
+        if (RANDOM_EVENTS[j] && RANDOM_EVENTS[j].id === ev.id) { exists = true; break; }
+      }
+      if (!exists) RANDOM_EVENTS.push(ev);
+    })(EVENTS[i]);
+  }
+})();
+
+;
+// ==== js/core/domain_b_linkage_r618.js ====
+/**
+ * 域B(事件/叙事) 联动增强 R618
+ * 桥接：
+ *   B→D  b618_rumor_mill  市井谣言 → 消费 state.relationships 数据,
+ *     事件→"三人成虎"的社交回响(好感越熟越易受谣言影响)
+ *   B→E  b618_windfall_gamble  意外之财的抉择 → 消费 state.resources+state.investment 数据,
+ *     事件→"横财是考验"的经济回响
+ *   B→G  b618_midnight_reverie  深夜自省 → 消费 state.player+state.needs+state.flags 数据,
+ *     事件→"夜阑卧听风吹雨"的生命回响
+ */
+(function () {
+  "use strict";
+  if (typeof RANDOM_EVENTS === "undefined" || !RANDOM_EVENTS) return;
+  if (RANDOM_EVENTS._domainBLinkageR618Loaded) return;
+  RANDOM_EVENTS._domainBLinkageR618Loaded = true;
+
+  // 辅助：获取已结识NPC列表(守 rel.met 铁律)
+  function metNpcsR618(st) {
+    var out = [];
+    var rels = st.relationships || {};
+    for (var k in rels) {
+      if (rels[k] && rels[k].met) out.push({ id: k, affinity: rels[k].affinity || 0, name: (typeof getNpcDisplayName === "function") ? getNpcDisplayName(k) : k });
+    }
+    return out;
+  }
+
+  var EVENTS = [
+    {
+      id: "b618_rumor_mill", phase: "street", _isChainEvent: false, icon: "🗣️",
+      title: "市井谣言",
+      story: "街头巷尾流传着一个关于你熟人的说法——{desc}",
+      triggers: { minDay: 45, interval: 90, maxRepeats: 3, excludeFlags: ["_b618RumorMillCooldown"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        if (!st.flags || st.flags._b618RumorMillCooldown) return false;
+        var met = metNpcsR618(st);
+        return met.length >= 2;
+      },
+      choices: [
+        { text: "🤫 不信谣不传谣", hint: "心智+3,心情+2", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._b618RumorMillCooldown = true;
+          if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 3);
+          if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 2);
+          if (typeof StateManager !== "undefined") StateManager.addMessage("🤫 '耳听为虚，眼见为实。' 你选择保持清醒。心智+3,心情+2。", "success");
+        }},
+        { text: "🤝 当面求证", hint: "好感±5,心智+1", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._b618RumorMillCooldown = true;
+          if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 1);
+          var met = metNpcsR618(st);
+          if (met.length > 0 && typeof applyAffinityChange === "function") {
+            var target = met[0];
+            try { applyAffinityChange(st, target.id, 5, "当面求证谣言"); } catch(e) {}
+          }
+          if (typeof StateManager !== "undefined") StateManager.addMessage("🤝 '有事当面说清楚。' 你选择直接沟通,反而拉近了距离。心智+1,好感+5。", "success");
+        }},
+        { text: "😤 愤然反驳", hint: "心情-3,好感-3", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._b618RumorMillCooldown = true;
+          if (st.needs) st.needs.happiness = Math.max(0, (st.needs.happiness || 50) - 3);
+          var met = metNpcsR618(st);
+          if (met.length > 0 && typeof applyAffinityChange === "function") {
+            var target = met[0];
+            try { applyAffinityChange(st, target.id, -3, "愤然反驳"); } catch(e) {}
+          }
+          if (typeof StateManager !== "undefined") StateManager.addMessage("😤 '岂有此理!' 你怒而反驳,但心情和关系都受了影响。心情-3,好感-3。", "warning");
+        }}
+      ],
+      text: function (st) {
+        if (!st) return null;
+        var met = metNpcsR618(st);
+        var target = met.length > 0 ? met[0].name : "一位熟人";
+        return "街头巷尾流传着一个关于" + target + "的说法——'听说TA最近出了点事,不知道真的假的。' 你决定怎么对待这个传言?";
+      }
+    },
+    {
+      id: "b618_windfall_gamble", phase: "street", _isChainEvent: false, icon: "🎰",
+      title: "意外之财的抉择",
+      story: "一笔意外之财从天而降——{desc}",
+      triggers: { minDay: 30, interval: 120, maxRepeats: 2, excludeFlags: ["_b618WindfallCooldown"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        if (!st.flags || st.flags._b618WindfallCooldown) return false;
+        var cash = (st.resources && st.resources.cash) || 0;
+        return cash >= 2000 && cash <= 30000;
+      },
+      choices: [
+        { text: "💰 稳稳存起来", hint: "心智+2,现金+800", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._b618WindfallCooldown = true;
+          if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 2);
+          if (st.resources) st.resources.cash = (st.resources.cash || 0) + 800;
+          if (typeof StateManager !== "undefined") StateManager.addMessage("💰 '飞来横财,稳字当头。' 你把钱存好,心里踏实。心智+2,现金+¥800。", "success");
+        }},
+        { text: "📈 拿去投资", hint: "会计XP+5,现金+500/-500", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._b618WindfallCooldown = true;
+          var gain = (typeof Random !== "undefined" && Random.chance(0.5)) ? 500 : -500;
+          if (st.resources) st.resources.cash = Math.max(0, (st.resources.cash || 0) + gain);
+          if (typeof addSkillXp === "function") { try { addSkillXp("accounting", 5); } catch(e) {} }
+          if (typeof StateManager !== "undefined") StateManager.addMessage(gain > 0 ? "📈 '小赌怡情!' 你小赚一笔,投资经验+5。现金+¥500。" : "📉 '市场有风。' 你小亏一点,但积累了经验。现金-¥500。", gain > 0 ? "success" : "warning");
+        }},
+        { text: "🎁 请客花掉", hint: "心情+8,现金-1000", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._b618WindfallCooldown = true;
+          if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 8);
+          if (st.resources) st.resources.cash = Math.max(0, (st.resources.cash || 0) - 1000);
+          if (typeof StateManager !== "undefined") StateManager.addMessage("🎁 '独乐乐不如众乐乐。' 你请朋友们吃了顿好的,心情+8,现金-¥1000。", "success");
+        }}
+      ],
+      text: function (st) {
+        if (!st) return null;
+        return "一笔意外之财从天而降——'这钱来得太突然,你有点不知所措。' 横财是考验,你怎么处理?";
+      }
+    },
+    {
+      id: "b618_midnight_reverie", phase: "street", _isChainEvent: false, icon: "🌙",
+      title: "深夜自省",
+      story: "夜深人静,你躺在床上回想这些日子的起起伏伏——{desc}",
+      triggers: { minDay: 60, interval: 150, maxRepeats: 2, excludeFlags: ["_b618ReverieCooldown"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        if (!st.flags || st.flags._b618ReverieCooldown) return false;
+        var mental = (st.player && st.player.mental) || 50;
+        var happy = (st.needs && st.needs.happiness) || 50;
+        return mental < 60 || happy < 50;
+      },
+      choices: [
+        { text: "📝 写下日记", hint: "智力+2,心智+3", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._b618ReverieCooldown = true;
+          if (st.player) {
+            st.player.intelligence = Math.min(100, (st.player.intelligence || 50) + 2);
+            st.player.mental = Math.min(100, (st.player.mental || 50) + 3);
+          }
+          if (typeof StateManager !== "undefined") StateManager.addMessage("📝 '把心事写下来,轻松多了。' 你记录下今天的感悟。智力+2,心智+3。", "success");
+        }},
+        { text: "🧘 静坐冥想", hint: "心情+6,心智+2", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._b618ReverieCooldown = true;
+          if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 6);
+          if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 2);
+          if (typeof StateManager !== "undefined") StateManager.addMessage("🧘 '呼吸,放空,一切都会好的。' 你静坐片刻,内心平静许多。心情+6,心智+2。", "success");
+        }},
+        { text: "💪 立下决心", hint: "心智+5,置_b618ResolveFlag", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._b618ReverieCooldown = true;
+          st.flags._b618ResolveFlag = true;
+          if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 5);
+          if (typeof StateManager !== "undefined") StateManager.addMessage("💪 '明天开始,不一样的活法。' 你暗下决心。心智+5。", "success");
+        }}
+      ],
+      text: function (st) {
+        if (!st) return null;
+        return "夜深人静,你躺在床上回想这些日子的起起伏伏——'走到今天不容易,但前面的路还长。' 你决定如何面对自己?";
+      }
+    }
+  ];
+
+  for (var i = 0; i < EVENTS.length; i++) {
+    RANDOM_EVENTS.push(EVENTS[i]);
+  }
+})();
+
+;
+// ==== js/core/domain_b_linkage_r619.js ====
+/**
+ * 域B(事件/叙事) 联动增强 R619
+ * 桥接：
+ *   B→D  b619_event_memory_share  事件记忆分享 → 消费 state.relationships+state.flags 数据,
+ *     事件→"共同记忆加固友谊"的社交回响
+ *   B→E  b619_news_invest_sentiment  新闻情绪传导 → 消费 state.activeNews+state.investment 数据,
+ *     事件→"新闻塑造投资情绪"的经济回响
+ *   B→C  b619_career_story_reflection  职业故事反思 → 消费 state.career+state.skills 数据,
+ *     事件→"职业经历塑造人生叙事"的成长回响
+ */
+(function () {
+  "use strict";
+  if (typeof RANDOM_EVENTS === "undefined" || !RANDOM_EVENTS) return;
+  if (RANDOM_EVENTS._domainBLinkageR619Loaded) return;
+  RANDOM_EVENTS._domainBLinkageR619Loaded = true;
+
+  // 辅助：获取已结识NPC列表
+  function metNpcsR619(st) {
+    var out = [];
+    var rels = st.relationships || {};
+    for (var k in rels) {
+      if (rels[k] && rels[k].met) out.push({ id: k, affinity: rels[k].affinity || 0, name: (typeof getNpcDisplayName === "function") ? getNpcDisplayName(k) : k });
+    }
+    return out;
+  }
+
+  // 辅助：获取最近经历的事件标志（用于社交对话素材）
+  function recentEventFlags(st) {
+    var flags = [];
+    var eventMarkers = ["_ch1Done", "_ch2Done", "_ch3Done", "_milestone60", "_firstJobDone", "_firstPromotion", "_firstInvestment", "_firstStartup"];
+    for (var i = 0; i < eventMarkers.length; i++) {
+      if (st.flags && st.flags[eventMarkers[i]]) flags.push(eventMarkers[i]);
+    }
+    return flags;
+  }
+
+  // 辅助：获取最近一条新闻的摘要
+  function recentNewsHeadline(st) {
+    if (!st.activeNews || !st.activeNews.length) return null;
+    for (var i = st.activeNews.length - 1; i >= 0; i--) {
+      var n = st.activeNews[i];
+      if (n && n.headline) return n.headline;
+    }
+    return null;
+  }
+
+  var EVENTS = [
+    // ====== B→D: 事件记忆分享 ======
+    {
+      id: "b619_event_memory_share", phase: "street", _isChainEvent: false, icon: "💭",
+      title: "往事如烟",
+      story: "你和一个老朋友聊起了过去的经历——{desc}",
+      triggers: { minDay: 60, interval: 90, maxRepeats: 5, excludeFlags: ["_b619EventMemoryCooldown"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        if (!st.flags || st.flags._b619EventMemoryCooldown) return false;
+        var events = recentEventFlags(st);
+        return events.length >= 1;
+      },
+      choices: [
+        { text: "📖 分享那段经历", hint: "好感+8,心情+5", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._b619EventMemoryCooldown = true;
+          if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 5);
+          var met = metNpcsR619(st);
+          if (met.length > 0 && typeof applyAffinityChange === "function") {
+            try { applyAffinityChange(st, met[0].id, 8, "往事分享"); } catch(e) {}
+          }
+          if (typeof StateManager !== "undefined") StateManager.addMessage("💭 '还记得那时候...' 你们聊起了过去的经历,笑声中满是感慨。好感+8,心情+5。", "success");
+        }},
+        { text: "🤝 默默倾听", hint: "好感+3,心智+2", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._b619EventMemoryCooldown = true;
+          if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 2);
+          var met = metNpcsR619(st);
+          if (met.length > 0 && typeof applyAffinityChange === "function") {
+            try { applyAffinityChange(st, met[0].id, 3, "默默倾听往事"); } catch(e) {}
+          }
+          if (typeof StateManager !== "undefined") StateManager.addMessage("💭 你静静地听老朋友讲述那些年的故事。有时候,最好的陪伴就是倾听。好感+3,心智+2。", "success");
+        }}
+      ],
+      text: function (st) {
+        if (!st) return null;
+        var met = metNpcsR619(st);
+        var name = met.length > 0 ? met[0].name : "老朋友";
+        var events = recentEventFlags(st);
+        var eventDesc = "那些一起走过的日子";
+        if (events.indexOf("_ch1Done") >= 0) eventDesc = "刚到这座城市打拼的日子";
+        else if (events.indexOf("_firstJobDone") >= 0) eventDesc = "你找到第一份工作的时候";
+        else if (events.indexOf("_firstPromotion") >= 0) eventDesc = "你第一次升职的时候";
+        return name + "突然提起往事:'你还记得" + eventDesc + "吗?' 那些回忆涌上心头,你感慨万千。";
+      }
+    },
+
+    // ====== B→E: 新闻情绪传导 ======
+    {
+      id: "b619_news_invest_sentiment", phase: "street", _isChainEvent: false, icon: "📊",
+      title: "市场情绪",
+      story: "最近的新闻让你对经济形势有了新的判断——{desc}",
+      triggers: { minDay: 30, interval: 60, maxRepeats: 10, excludeFlags: ["_b619NewsSentimentCooldown"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        if (!st.flags || st.flags._b619NewsSentimentCooldown) return false;
+        var headline = recentNewsHeadline(st);
+        return headline !== null;
+      },
+      choices: [
+        { text: "📈 看好后市,加大投入", hint: "心智+3,投资信心+5", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._b619NewsSentimentCooldown = true;
+          if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 3);
+          if (st.flags) st.flags._investConfidence = (st.flags._investConfidence || 0) + 5;
+          if (typeof StateManager !== "undefined") StateManager.addMessage("📊 '新闻里都是好消息,经济形势一片大好!' 你信心倍增。心智+3,投资信心+5。", "success");
+        }},
+        { text: "📉 保持谨慎,观望为主", hint: "心智+5", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._b619NewsSentimentCooldown = true;
+          if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 5);
+          if (typeof StateManager !== "undefined") StateManager.addMessage("📊 '市场有起有落,保持清醒最重要。' 你选择观望。心智+5。", "success");
+        }},
+        { text: "📰 深入研究新闻背景", hint: "智力+2,心智+2", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._b619NewsSentimentCooldown = true;
+          if (st.player) st.player.intelligence = Math.min(100, (st.player.intelligence || 50) + 2);
+          if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 2);
+          if (typeof StateManager !== "undefined") StateManager.addMessage("📊 你花时间研究了新闻背后的经济逻辑,对市场有了更深的理解。智力+2,心智+2。", "success");
+        }}
+      ],
+      text: function (st) {
+        if (!st) return null;
+        var headline = recentNewsHeadline(st) || "经济形势";
+        return "你看着最近的新闻——'" + headline + "'——心里盘算着这对自己的财务状况意味着什么。市场总是充满不确定性,但机会也藏在其中。";
+      }
+    },
+
+    // ====== B→C: 职业故事反思 ======
+    {
+      id: "b619_career_story_reflection", phase: "street", _isChainEvent: false, icon: "🛤️",
+      title: "职业岔路口",
+      story: "回想起自己的职业历程,你站在了一个新的岔路口——{desc}",
+      triggers: { minDay: 90, interval: 120, maxRepeats: 3, excludeFlags: ["_b619CareerReflectionCooldown"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        if (!st.flags || st.flags._b619CareerReflectionCooldown) return false;
+        return st.career && st.career.currentJob;
+      },
+      choices: [
+        { text: "🎯 深耕当前领域", hint: "当前职业技能XP+8,心智+3", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._b619CareerReflectionCooldown = true;
+          if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 3);
+          // 给当前职业对应的技能加经验
+          if (st.career && st.career.currentJob && typeof addSkillXp === "function") {
+            var job = st.career.currentJob;
+            var skillMap = { office_assistant: "accounting", programmer: "coding", teacher: "education", chef: "cooking", driver: "agility", waiter: "social", salesperson: "sales", security_guard: "strength", nurse: "medicine", electrician: "electrician", welder: "welding", repairman: "repair", construction_worker: "strength", street_vending_food: "cooking", street_vending_goods: "sales", courier: "agility", cleaner: "hygiene", busking: "art", tutor: "education", freelancer: "coding" };
+            var skill = skillMap[job.id || job.levelId];
+            if (skill) { try { addSkillXp(skill, 8); } catch(e) {} }
+          }
+          if (typeof StateManager !== "undefined") StateManager.addMessage("🛤️ '三百六十行,行行出状元。' 你决定继续深耕当前领域。职业技能XP+8,心智+3。", "success");
+        }},
+        { text: "🔭 探索新方向", hint: "随机技能XP+5,智力+3", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._b619CareerReflectionCooldown = true;
+          if (st.player) st.player.intelligence = Math.min(100, (st.player.intelligence || 50) + 3);
+          var allSkills = ["cooking", "repair", "sales", "coding", "accounting", "medicine", "education", "art", "electrician", "welding", "agility", "strength", "social"];
+          if (typeof Random !== "undefined" && typeof addSkillXp === "function") {
+            try { addSkillXp(Random.fromArray(allSkills), 5); } catch(e) {}
+          }
+          if (typeof StateManager !== "undefined") StateManager.addMessage("🛤️ '世界那么大,我想去看看。' 你开始探索新的职业可能性。随机技能XP+5,智力+3。", "success");
+        }},
+        { text: "📝 写下职业规划", hint: "心智+5,智力+2", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._b619CareerReflectionCooldown = true;
+          if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 5);
+          if (st.player) st.player.intelligence = Math.min(100, (st.player.intelligence || 50) + 2);
+          if (typeof StateManager !== "undefined") StateManager.addMessage("🛤️ 你认真写下了接下来三年的职业规划。有了方向,路就不会太难走。心智+5,智力+2。", "success");
+        }}
+      ],
+      text: function (st) {
+        if (!st) return null;
+        var jobName = (st.career && st.career.currentJob && st.career.currentJob.levelName) ? st.career.currentJob.levelName : "当前工作";
+        var days = st.player ? st.player.day : 0;
+        return "你已经做了" + days + "天的" + jobName + "。夜深人静时,你开始思考:这条路,还要继续走下去吗?还是该换个方向试试?";
+      }
+    }
+  ];
+
+  for (var i = 0; i < EVENTS.length; i++) {
+    RANDOM_EVENTS.push(EVENTS[i]);
+  }
+})();
+;
+// ==== js/core/domain_b_linkage_r620.js ====
+/**
+ * 域B(事件/叙事) 联动增强 R620
+ * 桥接：
+ *   B→H  b620_industry_news_impact  行业新闻冲击 → 消费 state.activeNews+state.startup 数据,
+ *     事件→"行业新闻影响公司决策"的公司回响
+ *   B→F  b620_event_diary_ui  事件日记UI → 消费 state.flags+state.player 数据,
+ *     事件→"事件记录可视化"的UI回响
+ *   B→A  b620_market_story_data  市场故事数据 → 消费 state.flags 数据,
+ *     事件→"故事中的市场数据"的数值回响
+ */
+(function () {
+  "use strict";
+  if (typeof RANDOM_EVENTS === "undefined" || !RANDOM_EVENTS) return;
+  if (RANDOM_EVENTS._domainBLinkageR620Loaded) return;
+  RANDOM_EVENTS._domainBLinkageR620Loaded = true;
+
+  var EVENTS = [
+    // ====== B→H: 行业新闻冲击 ======
+    {
+      id: "b620_industry_news_impact", phase: "corporate", _isChainEvent: false, icon: "📡",
+      title: "行业地震",
+      story: "一条行业新闻震动了整个市场——{desc}",
+      triggers: { minDay: 60, interval: 120, maxRepeats: 5, excludeFlags: ["_b620IndustryNewsCooldown"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        if (!st.flags || st.flags._b620IndustryNewsCooldown) return false;
+        return st.startup && st.startup.company && (st.startup.company.valuation || 0) >= 50000;
+      },
+      choices: [
+        { text: "🔄 调整战略方向", hint: "公司效率+10,心智+5,现金-1000", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._b620IndustryNewsCooldown = true;
+          if (st.resources) st.resources.cash = Math.max(0, (st.resources.cash || 0) - 1000);
+          if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 5);
+          if (st.startup && st.startup.company) {
+            st.startup.company.efficiency = Math.min(100, (st.startup.company.efficiency || 50) + 10);
+          }
+          if (typeof StateManager !== "undefined") StateManager.addMessage("📡 '行业风向变了,我们必须跟着变!' 你果断调整了公司战略。公司效率+10,心智+5,现金-1000。", "success");
+        }},
+        { text: "📊 分析市场影响", hint: "智力+5,心智+2", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._b620IndustryNewsCooldown = true;
+          if (st.player) st.player.intelligence = Math.min(100, (st.player.intelligence || 50) + 5);
+          if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 2);
+          if (typeof StateManager !== "undefined") StateManager.addMessage("📡 你花了几天时间分析这条新闻对行业的深远影响。'信息就是竞争力。' 智力+5,心智+2。", "success");
+        }}
+      ],
+      text: function (st) {
+        if (!st) return null;
+        return "你看到了一条行业新闻——'XX领域出台新政策,行业面临重新洗牌。' 你的公司也在这个行业中,这个新闻可能带来机遇,也可能带来挑战。";
+      }
+    },
+
+    // ====== B→F: 事件日记UI ======
+    {
+      id: "b620_event_diary_ui", phase: "street", _isChainEvent: false, icon: "📖",
+      title: "事件日记",
+      story: "你翻开日记,回顾最近发生的大事——{desc}",
+      triggers: { minDay: 30, interval: 90, maxRepeats: 8, excludeFlags: ["_b620EventDiaryCooldown"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        if (!st.flags || st.flags._b620EventDiaryCooldown) return false;
+        return true;
+      },
+      choices: [
+        { text: "📝 写下感悟", hint: "心智+5,心情+3", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._b620EventDiaryCooldown = true;
+          if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 5);
+          if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 3);
+          if (typeof StateManager !== "undefined") StateManager.addMessage("📖 你写下最近的感悟。'记录生活,才能看清自己走过的路。' 心智+5,心情+3。", "success");
+        }},
+        { text: "📸 拍张照片留念", hint: "心情+5", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._b620EventDiaryCooldown = true;
+          if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 5);
+          if (typeof StateManager !== "undefined") StateManager.addMessage("📖 你拍了一张照片,记录下这个瞬间。'以后回头看,一定很有意思。' 心情+5。", "success");
+        }}
+      ],
+      text: function (st) {
+        if (!st || !st.player) return null;
+        var day = st.player.day || 0;
+        return "你翻开日记本,已经记录到第" + day + "天了。'这座城市每天都在发生故事,而我是故事的一部分。' 你决定记录下今天的心情。";
+      }
+    },
+
+    // ====== B→A: 市场故事数据 ======
+    {
+      id: "b620_market_story_data", phase: "street", _isChainEvent: false, icon: "📈",
+      title: "市场故事",
+      story: "你从一件小事中发现了市场的规律——{desc}",
+      triggers: { minDay: 25, interval: 60, maxRepeats: 10, excludeFlags: ["_b620MarketStoryCooldown"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        if (!st.flags || st.flags._b620MarketStoryCooldown) return false;
+        return true;
+      },
+      choices: [
+        { text: "📊 记录数据规律", hint: "智力+4,心智+2", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._b620MarketStoryCooldown = true;
+          if (st.player) st.player.intelligence = Math.min(100, (st.player.intelligence || 50) + 4);
+          if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 2);
+          if (typeof StateManager !== "undefined") StateManager.addMessage("📈 '原来市场的规律就在这些日常小事里。' 你学到了宝贵的一课。智力+4,心智+2。", "success");
+        }},
+        { text: "💰 运用规律小赚一笔", hint: "收益¥300-800,智力+2", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._b620MarketStoryCooldown = true;
+          if (st.player) st.player.intelligence = Math.min(100, (st.player.intelligence || 50) + 2);
+          var earn = 300 + Random.int(0, 500);
+          if (st.resources) st.resources.cash = (st.resources.cash || 0) + earn;
+          if (typeof StateManager !== "undefined") StateManager.addMessage("📈 你运用发现的规律,做了一笔小买卖,赚了¥" + earn.toLocaleString() + "。'知识就是财富!' 智力+2。", "success");
+        }}
+      ],
+      text: function (st) {
+        if (!st) return null;
+        return "你注意到小区门口的水果摊,每天傍晚都会打折。'原来卖水果也有规律。' 你开始思考:生活中还有哪些隐藏的市场规律?";
+      }
+    }
+  ];
+
+  for (var i = 0; i < EVENTS.length; i++) {
+    RANDOM_EVENTS.push(EVENTS[i]);
+  }
+})();
+;
+// ==== js/core/domain_b_linkage_r625.js ====
+/**
+ * 域B(事件/叙事) 联动增强 R625
+ * 桥接：
+ *   B→E  b625_news_economic_insight  新闻经济洞察 → 消费 state.news+state.player 数据,
+ *     叙事→"新闻中看到经济信号"的经济回响
+ *   B→C  b625_event_career_spark  事件职业火花 → 消费 state.flags+state.skills 数据,
+ *     叙事→"事件激发职业灵感"的职业回响
+ *   B→G  b625_story_mental_resilience  故事心智韧性 → 消费 state.flags+state.needs 数据,
+ *     叙事→"故事带来心智成长"的生命回响
+ */
+(function () {
+  "use strict";
+  if (typeof RANDOM_EVENTS === "undefined" || !RANDOM_EVENTS) return;
+  if (RANDOM_EVENTS._domainBLinkageR625Loaded) return;
+  RANDOM_EVENTS._domainBLinkageR625Loaded = true;
+
+  var EVENTS = [
+    // ================================================================
+    // B→E: 新闻经济洞察 — 新闻事件触发经济意识
+    // ================================================================
+    {
+      id: "b625_news_economic_insight",
+      phase: "street",
+      _isChainEvent: false,
+      icon: "📰",
+      title: "新闻里的经济信号",
+      triggers: { minDay: 7 },
+      story: function (st) {
+        var newsRead = st.flags && st.flags._newsReadCount || 0;
+        var day = st.player.day || 0;
+
+        if (newsRead < 3) {
+          return "你最近没怎么关注新闻。其实新闻里藏着很多经济信号——" +
+            "政策变化影响房价、国际局势冲击股市、季节灾害推高物价。" +
+            "养成看新闻的习惯，对投资理财很有帮助。";
+        }
+
+        if (day > 90) {
+          return "你坚持看新闻已经" + day + "天了，读了" + newsRead + "条新闻。" +
+            "长期关注时事让你的经济嗅觉越来越敏锐——" +
+            "你能从政策调整中预判行业走向，从国际新闻中感知市场风险。";
+        }
+
+        return "你已经读了" + newsRead + "条新闻，继续保持。" +
+          "新闻不仅是了解世界的窗口，更是发现经济机会的雷达。";
+      },
+      choices: [
+        { text: "📰 看新闻", apply: function(st) {
+          if (typeof showNewsTab === "function") {
+            showNewsTab();
+          } else if (typeof StateManager !== "undefined") {
+            StateManager.addMessage("📰 前往新闻Tab查看今日要闻", "info");
+          }
+        }},
+        { text: "📊 分析经济", apply: function(st) {
+          st.flags = st.flags || {};
+          st.flags._b625_econAware = (st.flags._b625_econAware || 0) + 1;
+          if (typeof addSkillXp === "function") { try { addSkillXp("accounting", 5); } catch(e) {} }
+          if (typeof StateManager !== "undefined") StateManager.addMessage("📊 你分析了新闻中的经济信号，会计经验+5", "success");
+        }},
+      ],
+      conditions: function (st) {
+        return (st.player.day || 0) % 7 === 0;
+      },
+      weight: 1,
+    },
+
+    // ================================================================
+    // B→C: 事件职业火花 — 随机事件触发职业灵感
+    // ================================================================
+    {
+      id: "b625_event_career_spark",
+      phase: "street",
+      _isChainEvent: false,
+      icon: "💡",
+      title: "职业灵感",
+      triggers: { minDay: 14 },
+      story: function (st) {
+        var skills = st.skills || {};
+        var topSkill = null;
+        var topLevel = 0;
+        for (var k in skills) {
+          if (skills[k] && typeof skills[k].level === "number" && skills[k].level > topLevel) {
+            topLevel = skills[k].level;
+            topSkill = k;
+          }
+        }
+
+        if (!topSkill || topLevel < 10) {
+          return "你最近经历的一些事让你开始思考职业方向。" +
+            "也许可以尝试学习一门新技能，或者去培训中心看看有什么适合你的课程。";
+        }
+
+        var skillName = (typeof getSkillChineseName === "function") ? getSkillChineseName(topSkill) : topSkill;
+        var paths = [];
+        if (typeof CAREER_PATHS !== "undefined" && CAREER_PATHS) {
+          for (var p in CAREER_PATHS) {
+            var entry = CAREER_PATHS[p].levels && CAREER_PATHS[p].levels[0];
+            if (entry && entry.reqSkills && entry.reqSkills[topSkill]) {
+              paths.push(CAREER_PATHS[p].icon + " " + CAREER_PATHS[p].name);
+            }
+          }
+        }
+
+        if (paths.length > 0) {
+          return "你的" + skillName + "技能已达到Lv." + topLevel + "，在业内已经有一定竞争力。" +
+            "回顾最近经历的事，你发现这些技能可以应用到以下职业方向：<br>" +
+            paths.join("<br>") +
+            "<br>是时候考虑将兴趣转化为职业了。";
+        }
+        return "你的" + skillName + "技能已达到Lv." + topLevel + "。" +
+          "继续深耕这门技能，未来会有更多职业机会向你敞开。";
+      },
+      choices: [
+        { text: "💼 查看职业路线", apply: function(st) {
+          if (typeof switchCareerSubTab === "function") {
+            switchCareerSubTab("career_jobs");
+          }
+          if (typeof StateManager !== "undefined") StateManager.addMessage("💼 前往事业发展Tab查看职业路线", "info");
+        }},
+        { text: "📚 继续学习", apply: function(st) {
+          if (typeof StateManager !== "undefined") StateManager.addMessage("📚 你受到了启发，决定继续提升技能", "info");
+        }},
+      ],
+      conditions: function (st) {
+        var skills = st.skills || {};
+        var count = 0;
+        for (var k in skills) {
+          if (skills[k] && skills[k].level > 0) count++;
+        }
+        return count >= 1;
+      },
+      weight: 1,
+    },
+
+    // ================================================================
+    // B→G: 故事心智韧性 — 经历故事事件后心智成长
+    // ================================================================
+    {
+      id: "b625_story_mental_resilience",
+      phase: "street",
+      _isChainEvent: false,
+      icon: "🧠",
+      title: "心智成长",
+      triggers: { minDay: 20 },
+      story: function (st) {
+        var eventsExperienced = st.flags && st.flags._eventsExperienced || 0;
+        var mental = st.player && st.player.mental || 0;
+
+        if (eventsExperienced < 5) {
+          return "你经历的事情还不多，但每一次经历都在塑造你的心智。" +
+            "无论是好的还是坏的遭遇，都是人生宝贵的财富。";
+        }
+
+        if (mental >= 50) {
+          return "经历了" + eventsExperienced + "件事后，你的心智已经达到" + mental + "点。" +
+            "这些经历让你变得更加沉稳和坚韧——" +
+            "你学会了在压力下保持冷静，在挫折中寻找机会。";
+        }
+
+        return "你已经经历了" + eventsExperienced + "件事，心智" + mental + "点。" +
+          "继续在生活中积累经验，每一次挑战都是心智成长的契机。";
+      },
+      choices: [
+        { text: "🧘 反思沉淀", apply: function(st) {
+          if (st) {
+            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 2);
+            if (typeof StateManager !== "undefined") StateManager.addMessage("🧘 你静下心来反思最近的经历，心智+2", "success");
+          }
+        }},
+        { text: "📝 写日记", apply: function(st) {
+          if (st) {
+            st.flags = st.flags || {};
+            st.flags._b625_journal = (st.flags._b625_journal || 0) + 1;
+            if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 3);
+            if (typeof StateManager !== "undefined") StateManager.addMessage("📝 把经历写进日记，心情+3", "success");
+          }
+        }},
+      ],
+      conditions: function (st) {
+        return (st.flags && st.flags._eventsExperienced > 0) || (st.player && st.player.day > 30);
+      },
+      weight: 1,
+    },
+  ];
+
+  // 注册事件
+  for (var i = 0; i < EVENTS.length; i++) {
+    RANDOM_EVENTS.push(EVENTS[i]);
+  }
+})();
+;
 // ==== js/core/domain_b_linkage_r659.js ====
 /**
  * 域B(事件/叙事) 联动增强 R659
@@ -310777,6 +312564,1300 @@ if (typeof window !== "undefined") {
     }
   ];
 
+  for (var i = 0; i < EVENTS.length; i++) {
+    RANDOM_EVENTS.push(EVENTS[i]);
+  }
+})();
+;
+// ==== js/core/domain_a_linkage_r525.js ====
+/**
+ * 域A(数据/数值平衡) 联动增强 R525
+ * 桥接：
+ *   A→B  a525_economic_news_digest 经济新闻摘要 → 消费 goods 数据,
+ *     新闻→"一周经济要闻"的叙事摘要
+ *   A→D  a525_npc_trade_secret   NPC交易秘诀 → 消费 goods 数据,
+ *     经验→"老手教你怎么买卖"的交易智慧
+ *   A→C  a525_skill_certification 技能认证 → 消费 skills 数据,
+ *     证书→"有证书的技能更值钱"的认证价值
+ */
+(function () {
+  "use strict";
+  if (typeof RANDOM_EVENTS === "undefined" || !RANDOM_EVENTS) return;
+  if (RANDOM_EVENTS._domainALinkageR525Loaded) return;
+  RANDOM_EVENTS._domainALinkageR525Loaded = true;
+
+  function firstMetNpc(st) {
+    if (!st || !st.relationships) return null;
+    for (var id in st.relationships) { if (st.relationships[id] && st.relationships[id].met) return id; }
+    return null;
+  }
+  function bumpAffinity(st, npcId, amt, reason) {
+    if (!npcId) return;
+    if (typeof applyAffinityChange === "function") { try { applyAffinityChange(st, npcId, amt, reason); } catch(e) {} }
+  }
+
+  var EVENTS = [
+    {
+      id: "a525_economic_news_digest", phase: "street", _isChainEvent: false, icon: "📰",
+      title: "经济要闻",
+      story: "你看了看本周的经济要闻——{desc}",
+      triggers: { minDay: 15, interval: 30, maxRepeats: 5, excludeFlags: ["_a525NewsDigestCooldown"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        return (st.flags && !st.flags._a525NewsDigestCooldown);
+      },
+      choices: [
+        { text: "📰 仔细阅读", hint: "会计XP+3,心智+2", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._a525NewsDigestCooldown = true;
+          if (typeof addSkillXp === "function") { try { addSkillXp("accounting", 3); } catch(e) {} }
+          if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 2);
+          if (typeof StateManager !== "undefined") StateManager.addMessage("📰 '本周经济要闻：央行宣布降息，XX公司发布新品...' 会计XP+3,心智+2。", "success");
+        }},
+        { text: "📱 分享给朋友", hint: "心智+1,好感+1", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._a525NewsDigestCooldown = true;
+          if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 1);
+          var nid = firstMetNpc(st); bumpAffinity(st, nid, 1, "分享经济新闻");
+          if (typeof StateManager !== "undefined") StateManager.addMessage("📰 你分享了新闻给朋友——'这条新闻对我们行业有影响。' 心智+1,好感+1。", "success");
+        }}
+      ],
+      text: function (st) {
+        if (!st) return null;
+        return "你看了看本周的经济要闻——'这周发生了不少事啊。' 了解经济动态，是每个城市人的必修课。";
+      }
+    },
+    {
+      id: "a525_npc_trade_secret", phase: "street", _isChainEvent: false, icon: "🤫",
+      title: "交易秘诀",
+      story: "一个老手跟你分享了交易秘诀——{desc}",
+      triggers: { minDay: 25, interval: 90, maxRepeats: 3, excludeFlags: ["_a525TradeSecretCooldown"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        return (st.flags && !st.flags._a525TradeSecretCooldown);
+      },
+      choices: [
+        { text: "🤫 认真学习", hint: "贸易XP+5,心智+2,好感+2", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._a525TradeSecretCooldown = true;
+          if (typeof addSkillXp === "function") { try { addSkillXp("sales", 5); } catch(e) {} } // [全系统自洽修复] 域C R535 修复:addSkillXp("trade")非真实技能键(XP静默丢弃)→映射sales(交易秘诀=销售)
+          if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 2);
+          var nid = firstMetNpc(st); bumpAffinity(st, nid, 2, "传授交易秘诀");
+          if (typeof StateManager !== "undefined") StateManager.addMessage("🤫 '低买高卖谁都会说，但真正的秘诀是...' 贸易XP+5,心智+2,好感+2。", "success");
+        }},
+        { text: "📝 记下来", hint: "心智+1", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._a525TradeSecretCooldown = true;
+          if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 1);
+          if (typeof StateManager !== "undefined") StateManager.addMessage("🤫 你默默记下了秘诀——'这些经验，是花钱都买不到的。' 心智+1。", "success");
+        }}
+      ],
+      text: function (st) {
+        if (!st) return null;
+        return "一个老手跟你分享了交易秘诀——'看好了，我只说一次。' 你竖起耳朵，生怕漏掉一个字。";
+      }
+    },
+    {
+      id: "a525_skill_certification", phase: "corporate", _isChainEvent: false, icon: "📜",
+      title: "证书的价值",
+      story: "你发现有证书的技能在市场上更受欢迎——{desc}",
+      triggers: { minDay: 30, interval: 90, maxRepeats: 3, excludeFlags: ["_a525CertificationCooldown"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        return (st.flags && !st.flags._a525CertificationCooldown);
+      },
+      choices: [
+        { text: "📜 考个证书", hint: "管理XP+5,心智+2,花费2000", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._a525CertificationCooldown = true;
+          if (typeof addSkillXp === "function") { try { addSkillXp("management", 5); } catch(e) {} }
+          if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 2);
+          if (st.resources && st.resources.cash >= 2000) { st.resources.cash -= 2000; }
+          if (typeof StateManager !== "undefined") StateManager.addMessage("📜 '考个证书，给自己的技能一个官方认证。' 管理XP+5,心智+2,花费¥2000。", "success");
+        }},
+        { text: "📈 用作品说话", hint: "心智+2", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._a525CertificationCooldown = true;
+          if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 2);
+          if (typeof StateManager !== "undefined") StateManager.addMessage("📜 '证书不如作品有说服力。' 你决定用实际成果证明自己。心智+2。", "success");
+        }}
+      ],
+      text: function (st) {
+        if (!st) return null;
+        return "你发现有证书的技能在市场上更受欢迎——'同样的技能，有证书的薪资高30%。' 证书真的那么重要吗？";
+      }
+    }
+  ];
+
+  for (var i = 0; i < EVENTS.length; i++) {
+    (function (ev) {
+      var exists = false;
+      for (var j = 0; j < RANDOM_EVENTS.length; j++) {
+        if (RANDOM_EVENTS[j] && RANDOM_EVENTS[j].id === ev.id) { exists = true; break; }
+      }
+      if (!exists) RANDOM_EVENTS.push(ev);
+    })(EVENTS[i]);
+  }
+})();
+;
+// ==== js/core/domain_a_linkage_r532.js ====
+/**
+ * 域A(数据/数值平衡) 联动增强 R532
+ * 桥接：
+ *   A→G  a532_data_health_awareness  数据健康觉醒 → 消费 status+needs 数据,
+ *     数据→"健康数据提醒你关注身体"的生命回响
+ *   A→C  a532_data_skill_market      数据技能市场 → 消费 skills+jobs 数据,
+ *     数据→"你的技能在市场上值多少"的职业回响
+ *   A→E  a532_data_wealth_insight    数据财富洞察 → 消费 resources 数据,
+ *     数据→"你的资产增长趋势"的经济回响
+ */
+(function () {
+  "use strict";
+  if (typeof RANDOM_EVENTS === "undefined" || !RANDOM_EVENTS) return;
+  if (RANDOM_EVENTS._domainALinkageR532Loaded) return;
+  RANDOM_EVENTS._domainALinkageR532Loaded = true;
+
+  var EVENTS = [
+    {
+      id: "a532_data_health_awareness", phase: "street", _isChainEvent: false, icon: "❤️",
+      title: "健康数据的提醒",
+      story: "看着自己的健康数据，你开始反思——{desc}",
+      triggers: { minDay: 30, interval: 90, maxRepeats: 3, excludeFlags: ["_a532HealthAwareCooldown"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        if (!st.flags || st.flags._a532HealthAwareCooldown) return false;
+        return st.status && (st.status.health || 0) < 60;
+      },
+      choices: [
+        { text: "🏃 开始锻炼", hint: "健康+3,疲劳+5", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._a532HealthAwareCooldown = true;
+          if (st.status) st.status.health = Math.min(100, (st.status.health || 100) + 3);
+          if (st.needs) st.needs.fatigue = Math.min(100, (st.needs.fatigue || 0) + 5);
+          if (typeof StateManager !== "undefined") StateManager.addMessage("❤️ '身体是革命的本钱。' 你决定每天锻炼。健康+3,疲劳+5。", "success");
+        }},
+        { text: "😴 多休息", hint: "疲劳-10", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._a532HealthAwareCooldown = true;
+          if (st.needs) st.needs.fatigue = Math.max(0, (st.needs.fatigue || 0) - 10);
+          if (typeof StateManager !== "undefined") StateManager.addMessage("❤️ '今晚早点睡。' 你决定调整作息。疲劳-10。", "info");
+        }}
+      ],
+      text: function (st) {
+        if (!st) return null;
+        return "看着自己的健康数据，你开始反思——'我是不是该关注一下身体了？' 健康数据提醒你要注意休息。";
+      }
+    },
+    {
+      id: "a532_data_skill_market", phase: "street", _isChainEvent: false, icon: "📊",
+      title: "你的技能值多少",
+      story: "你查看了一下市场上对技能的需求——{desc}",
+      triggers: { minDay: 40, interval: 100, maxRepeats: 3, excludeFlags: ["_a532SkillMarketCooldown"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        if (!st.flags || st.flags._a532SkillMarketCooldown) return false;
+        // 需要至少一个技能达到一定等级
+        var hasSkill = false;
+        if (st.skills) {
+          for (var k in st.skills) {
+            if (st.skills[k] && (st.skills[k].level || 0) >= 10) { hasSkill = true; break; }
+          }
+        }
+        return hasSkill;
+      },
+      choices: [
+        { text: "📈 继续深耕", hint: "最高技能XP+5", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._a532SkillMarketCooldown = true;
+          var topSkill = null, topLv = 0;
+          if (st.skills) {
+            for (var k in st.skills) {
+              if (st.skills[k] && (st.skills[k].level || 0) > topLv) { topLv = st.skills[k].level; topSkill = k; }
+            }
+          }
+          if (topSkill && typeof addSkillXp === "function") { try { addSkillXp(topSkill, 5); } catch(e) {} }
+          if (typeof StateManager !== "undefined") StateManager.addMessage("📊 '" + topSkill + "技能在市场上很抢手，继续深耕！' " + topSkill + "XP+5。", "success");
+        }},
+        { text: "🔄 学习新技能", hint: "随机新技能XP+3", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._a532SkillMarketCooldown = true;
+          var skills = ["coding", "sales", "accounting", "management", "english", "driving"];
+          var sk = Random.fromArray(skills); // [全系统自洽修复] 域A R400: Math.random()→Random.fromArray()
+          if (typeof addSkillXp === "function") { try { addSkillXp(sk, 3); } catch(e) {} }
+          if (typeof StateManager !== "undefined") StateManager.addMessage("📊 '多学一门技能多一条路。' " + sk + "XP+3。", "success");
+        }}
+      ],
+      text: function (st) {
+        if (!st) return null;
+        return "你查看了一下市场上对技能的需求——'原来这项技能这么值钱！' 你开始思考如何提升自己的市场价值。";
+      }
+    },
+    {
+      id: "a532_data_wealth_insight", phase: "street", _isChainEvent: false, icon: "💰",
+      title: "资产增长趋势",
+      story: "看着自己的资产变化，你开始规划——{desc}",
+      triggers: { minDay: 50, interval: 120, maxRepeats: 3, excludeFlags: ["_a532WealthInsightCooldown"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        if (!st.flags || st.flags._a532WealthInsightCooldown) return false;
+        var totalAssets = (st.resources && st.resources.cash || 0) + (st.resources && st.resources.bankBalance || 0);
+        return totalAssets >= 10000;
+      },
+      choices: [
+        { text: "📈 投资理财", hint: "会计XP+3,现金+500", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._a532WealthInsightCooldown = true;
+          if (typeof addSkillXp === "function") { try { addSkillXp("accounting", 3); } catch(e) {} }
+          if (st.resources) st.resources.cash = (st.resources.cash || 0) + 500;
+          if (typeof StateManager !== "undefined") StateManager.addMessage("💰 '让钱生钱。' 你学会了基础理财。会计XP+3,现金+¥500。", "success");
+        }},
+        { text: "🛡️ 稳健储蓄", hint: "心情+5", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._a532WealthInsightCooldown = true;
+          if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 5);
+          if (typeof StateManager !== "undefined") StateManager.addMessage("💰 '稳稳当当最踏实。' 你决定继续储蓄。心情+5。", "success");
+        }}
+      ],
+      text: function (st) {
+        if (!st) return null;
+        return "看着自己的资产变化，你开始规划——'钱该怎么花才能发挥最大价值？' 你开始思考财富管理。";
+      }
+    }
+  ];
+
+  for (var i = 0; i < EVENTS.length; i++) {
+    (function (ev) {
+      var exists = false;
+      for (var j = 0; j < RANDOM_EVENTS.length; j++) {
+        if (RANDOM_EVENTS[j] && RANDOM_EVENTS[j].id === ev.id) { exists = true; break; }
+      }
+      if (!exists) RANDOM_EVENTS.push(ev);
+    })(EVENTS[i]);
+  }
+})();
+
+;
+// ==== js/core/domain_a_linkage_r533.js ====
+/**
+ * 域A(数据/数值平衡) 联动增强 R533
+ * 桥接：
+ *   A→D  a533_npc_compliment    NPC称赞 → 消费 goods 数据,
+ *     生意→"你的眼光真好"的社交称赞
+ *   A→C  a533_job_skill_map     工作技能地图 → 消费 jobs+skills 数据,
+ *     匹配→"你的技能适合什么工作"的匹配分析
+ *   A→G  a533_health_goods_ratio 健康商品比 → 消费 goods 数据,
+ *     健康→"买健康食品的性价比"的健康投资
+ */
+(function () {
+  "use strict";
+  if (typeof RANDOM_EVENTS === "undefined" || !RANDOM_EVENTS) return;
+  if (RANDOM_EVENTS._domainALinkageR533Loaded) return;
+  RANDOM_EVENTS._domainALinkageR533Loaded = true;
+
+  function firstMetNpc(st) {
+    if (!st || !st.relationships) return null;
+    for (var id in st.relationships) { if (st.relationships[id] && st.relationships[id].met) return id; }
+    return null;
+  }
+  function bumpAffinity(st, npcId, amt, reason) {
+    if (!npcId) return;
+    if (typeof applyAffinityChange === "function") { try { applyAffinityChange(st, npcId, amt, reason); } catch(e) {} }
+  }
+
+  var EVENTS = [
+    {
+      id: "a533_npc_compliment", phase: "street", _isChainEvent: false, icon: "😊",
+      title: "好眼光",
+      story: "摊主夸你选东西的眼光好——{desc}",
+      triggers: { minDay: 10, interval: 30, maxRepeats: 5, excludeFlags: ["_a533ComplimentCooldown"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        return (st.flags && !st.flags._a533ComplimentCooldown);
+      },
+      choices: [
+        { text: "😊 谦虚回应", hint: "好感+2,心情+1", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._a533ComplimentCooldown = true;
+          var nid = firstMetNpc(st); bumpAffinity(st, nid, 2, "被夸赞后谦虚回应");
+          if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 1);
+          if (typeof StateManager !== "undefined") StateManager.addMessage("😊 '哪里哪里，是你家的东西好。' 好感+2,心情+1。", "success");
+        }},
+        { text: "😎 自信接受", hint: "名气+1,好感+1", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._a533ComplimentCooldown = true;
+          if (st.player) st.player.fame = Math.min(100, (st.player.fame || 0) + 1);
+          var nid = firstMetNpc(st); bumpAffinity(st, nid, 1, "自信接受夸赞");
+          if (typeof StateManager !== "undefined") StateManager.addMessage("😎 '那当然，我可是很会挑的。' 名气+1,好感+1。", "success");
+        }}
+      ],
+      text: function (st) {
+        if (!st) return null;
+        return "摊主夸你选东西的眼光好——'小伙子/姑娘真会挑，这个品质最好！' 被夸的感觉，让一天都心情好。";
+      }
+    },
+    {
+      id: "a533_job_skill_map", phase: "street", _isChainEvent: false, icon: "🎯",
+      title: "技能匹配",
+      story: "你发现自己的技能很适合某个工作——{desc}",
+      triggers: { minDay: 20, interval: 60, maxRepeats: 5, excludeFlags: ["_a533JobSkillMapCooldown"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        return (st.flags && !st.flags._a533JobSkillMapCooldown);
+      },
+      choices: [
+        { text: "🎯 投简历", hint: "管理XP+4,心智+1", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._a533JobSkillMapCooldown = true;
+          if (typeof addSkillXp === "function") { try { addSkillXp("management", 4); } catch(e) {} }
+          if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 1);
+          if (typeof StateManager !== "undefined") StateManager.addMessage("🎯 '这个工作简直就是为我量身定做的！' 管理XP+4,心智+1。", "success");
+        }},
+        { text: "📈 提升匹配度", hint: "随机技能XP+3", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._a533JobSkillMapCooldown = true;
+          var skills = ["accounting", "management", "sales", "coding", "social", "driving"]; // [全系统自洽修复] 域C R535 修复:marketing/technology/trade非真实技能键(XP静默丢弃)→映射sales/coding/driving
+          var sk = Random.fromArray(skills); // [全系统自洽修复] 域A R400: Math.random()→Random.fromArray()
+          if (typeof addSkillXp === "function") { try { addSkillXp(sk, 3); } catch(e) {} }
+          if (typeof StateManager !== "undefined") StateManager.addMessage("🎯 '技能还差一点，再提升一下就能达到要求了。' 随机技能XP+3。", "success");
+        }}
+      ],
+      text: function (st) {
+        if (!st) return null;
+        return "你发现自己的技能很适合某个工作——'这个工作要求的能力，我刚好都有。' 原来技能真的能直接对接到工作。";
+      }
+    },
+    {
+      id: "a533_health_goods_ratio", phase: "street", _isChainEvent: false, icon: "🥗",
+      title: "健康投资",
+      story: "你算了算健康食品和普通食品的价格差——{desc}",
+      triggers: { minDay: 15, interval: 45, maxRepeats: 5, excludeFlags: ["_a533HealthRatioCooldown"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        return (st.flags && !st.flags._a533HealthRatioCooldown);
+      },
+      choices: [
+        { text: "🥗 买健康的", hint: "健康+2,花费300", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._a533HealthRatioCooldown = true;
+          if (st.resources && st.resources.cash >= 300) { st.resources.cash -= 300; }
+          if (st.status) st.status.health = Math.min(100, (st.status.health || 70) + 2);
+          if (typeof StateManager !== "undefined") StateManager.addMessage("🥗 '贵是贵了点，但健康是无价的。' 健康+2,花费¥300。", "success");
+        }},
+        { text: "📊 找性价比", hint: "会计XP+2", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._a533HealthRatioCooldown = true;
+          if (typeof addSkillXp === "function") { try { addSkillXp("accounting", 2); } catch(e) {} }
+          if (typeof StateManager !== "undefined") StateManager.addMessage("🥗 '找到了性价比最高的健康食品，既营养又不太贵。' 会计XP+2。", "success");
+        }}
+      ],
+      text: function (st) {
+        if (!st) return null;
+        return "你算了算健康食品和普通食品的价格差——'有机蔬菜比普通贵一倍，但真的值得吗？' 健康和经济，需要找到平衡。";
+      }
+    }
+  ];
+
+  for (var i = 0; i < EVENTS.length; i++) {
+    (function (ev) {
+      var exists = false;
+      for (var j = 0; j < RANDOM_EVENTS.length; j++) {
+        if (RANDOM_EVENTS[j] && RANDOM_EVENTS[j].id === ev.id) { exists = true; break; }
+      }
+      if (!exists) RANDOM_EVENTS.push(ev);
+    })(EVENTS[i]);
+  }
+})();
+;
+// ==== js/core/domain_a_linkage_r571.js ====
+/**
+ * 域A(数据/数值平衡) 联动增强 R571
+ * 桥接：
+ *   A→H  a571_corp_supply_chain 公司供应链 → 消费 goods 数据,
+ *     供应链→"原材料价格波动影响公司"的经营叙事
+ *   A→C  a571_skill_cert_value  技能证书价值 → 消费 skills 数据,
+ *     证书→"有证书和没证书的薪资差距"的数据分析
+ *   A→G  a571_health_data_alerts 健康数据预警 → 消费 goods 数据,
+ *     预警→"食品价格与健康数据的关系"的健康预警
+ */
+(function () {
+  "use strict";
+  if (typeof RANDOM_EVENTS === "undefined" || !RANDOM_EVENTS) return;
+  if (RANDOM_EVENTS._domainALinkageR571Loaded) return;
+  RANDOM_EVENTS._domainALinkageR571Loaded = true;
+
+  function firstMetNpc(st) {
+    if (!st || !st.relationships) return null;
+    for (var id in st.relationships) { if (st.relationships[id] && st.relationships[id].met) return id; }
+    return null;
+  }
+  function bumpAffinity(st, npcId, amt, reason) {
+    if (!npcId) return;
+    if (typeof applyAffinityChange === "function") { try { applyAffinityChange(st, npcId, amt, reason); } catch(e) {} }
+  }
+
+  var EVENTS = [
+    {
+      id: "a571_corp_supply_chain", phase: "corporate", _isChainEvent: false, icon: "🏭",
+      title: "供应链",
+      story: "原材料价格上涨，影响了公司的成本——{desc}",
+      triggers: { minDay: 40, interval: 90, maxRepeats: 3, excludeFlags: ["_a571SupplyChainCooldown"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        if (!st.corporate || !st.corporate.company) return false;
+        return (st.flags && !st.flags._a571SupplyChainCooldown);
+      },
+      choices: [
+        { text: "🏭 优化供应链", hint: "管理XP+5,公司资金+3000,心智+2", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._a571SupplyChainCooldown = true;
+          if (typeof addSkillXp === "function") { try { addSkillXp("management", 5); } catch(e) {} }
+          if (st.corporate && st.corporate.company) st.corporate.company.funds = (st.corporate.company.funds || 0) + 3000;
+          if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 2);
+          if (typeof StateManager !== "undefined") StateManager.addMessage("🏭 '原材料涨价了，得找新的供应商。' 管理XP+5,公司资金+¥3000,心智+2。", "success");
+        }},
+        { text: "📊 成本分析", hint: "会计XP+3", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._a571SupplyChainCooldown = true;
+          if (typeof addSkillXp === "function") { try { addSkillXp("accounting", 3); } catch(e) {} }
+          if (typeof StateManager !== "undefined") StateManager.addMessage("🏭 '分析成本结构，找出可以优化的环节。' 会计XP+3。", "success");
+        }}
+      ],
+      text: function (st) {
+        if (!st) return null;
+        return "原材料价格上涨，影响了公司的成本——'供应商说原材料涨价了，我们也要跟着涨。' 供应链，是公司运营的生命线。";
+      }
+    },
+    {
+      id: "a571_skill_cert_value", phase: "corporate", _isChainEvent: false, icon: "📜",
+      title: "证书价值",
+      story: "你发现持有证书的技能薪资更高——{desc}",
+      triggers: { minDay: 20, interval: 60, maxRepeats: 5, excludeFlags: ["_a571CertValueCooldown"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        return (st.flags && !st.flags._a571CertValueCooldown);
+      },
+      choices: [
+        { text: "📜 考证书", hint: "管理XP+4,心智+2", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._a571CertValueCooldown = true;
+          if (typeof addSkillXp === "function") { try { addSkillXp("management", 4); } catch(e) {} }
+          if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 2);
+          if (typeof StateManager !== "undefined") StateManager.addMessage("📜 '有证书的技能，薪资平均高30%。' 你决定考个证书。管理XP+4,心智+2。", "success");
+        }},
+        { text: "📈 用作品说话", hint: "心智+1", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._a571CertValueCooldown = true;
+          if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 1);
+          if (typeof StateManager !== "undefined") StateManager.addMessage("📜 '证书不如作品，但敲门砖还是需要的。' 心智+1。", "success");
+        }}
+      ],
+      text: function (st) {
+        if (!st) return null;
+        return "你发现持有证书的技能薪资更高——'同样的技能，有证书的比没证书的高30%。' 证书真的有用。";
+      }
+    },
+    {
+      id: "a571_health_data_alerts", phase: "street", _isChainEvent: false, icon: "⚠️",
+      title: "健康预警",
+      story: "食品价格数据暗示你的健康可能受影响——{desc}",
+      triggers: { minDay: 15, interval: 45, maxRepeats: 5, excludeFlags: ["_a571HealthAlertsCooldown"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        return (st.flags && !st.flags._a571HealthAlertsCooldown);
+      },
+      choices: [
+        { text: "⚠️ 注意饮食", hint: "健康+2,花费200", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._a571HealthAlertsCooldown = true;
+          if (st.resources && st.resources.cash >= 200) { st.resources.cash -= 200; }
+          if (st.status) st.status.health = Math.min(100, (st.status.health || 70) + 2);
+          if (typeof StateManager !== "undefined") StateManager.addMessage("⚠️ '水果涨价了，但还是要吃，健康更重要。' 健康+2,花费¥200。", "success");
+        }},
+        { text: "📊 分析数据", hint: "会计XP+2,心智+1", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._a571HealthAlertsCooldown = true;
+          if (typeof addSkillXp === "function") { try { addSkillXp("accounting", 2); } catch(e) {} }
+          if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 1);
+          if (typeof StateManager !== "undefined") StateManager.addMessage("⚠️ '食品价格涨了，意味着我的饮食质量可能下降。' 会计XP+2,心智+1。", "success");
+        }}
+      ],
+      text: function (st) {
+        if (!st) return null;
+        return "食品价格数据暗示你的健康可能受影响——'蔬菜水果价格连续上涨，这个月饮食支出增加了。' 物价和健康，息息相关。";
+      }
+    }
+  ];
+
+  for (var i = 0; i < EVENTS.length; i++) {
+    (function (ev) {
+      var exists = false;
+      for (var j = 0; j < RANDOM_EVENTS.length; j++) {
+        if (RANDOM_EVENTS[j] && RANDOM_EVENTS[j].id === ev.id) { exists = true; break; }
+      }
+      if (!exists) RANDOM_EVENTS.push(ev);
+    })(EVENTS[i]);
+  }
+})();
+;
+// ==== js/core/domain_a_linkage_r583.js ====
+/**
+ * 域A(数据/数值平衡) 联动增强 R583
+ * 桥接：
+ *   A→D  a583_npc_shopping_list  NPC购物清单 → 消费 goods 数据,
+ *     购物→"帮朋友带东西"的社交购物
+ *   A→G  a583_data_health_check 数据健康检查 → 消费 goods 数据,
+ *     健康→"用数据检查健康"的健康分析
+ *   A→C  a583_skill_gap_analysis 技能差距分析 → 消费 skills 数据,
+ *     差距→"你的技能差距分析"的职业规划
+ */
+(function () {
+  "use strict";
+  if (typeof RANDOM_EVENTS === "undefined" || !RANDOM_EVENTS) return;
+  if (RANDOM_EVENTS._domainALinkageR583Loaded) return;
+  RANDOM_EVENTS._domainALinkageR583Loaded = true;
+
+  function firstMetNpc(st) {
+    if (!st || !st.relationships) return null;
+    for (var id in st.relationships) { if (st.relationships[id] && st.relationships[id].met) return id; }
+    return null;
+  }
+  function bumpAffinity(st, npcId, amt, reason) {
+    if (!npcId) return;
+    if (typeof applyAffinityChange === "function") { try { applyAffinityChange(st, npcId, amt, reason); } catch(e) {} }
+  }
+
+  var EVENTS = [
+    {
+      id: "a583_npc_shopping_list", phase: "street", _isChainEvent: false, icon: "🛍️",
+      title: "帮带东西",
+      story: "朋友让你帮忙带点东西——{desc}",
+      triggers: { minDay: 10, interval: 30, maxRepeats: 5, excludeFlags: ["_a583ShoppingListCooldown"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        return (st.flags && !st.flags._a583ShoppingListCooldown);
+      },
+      choices: [
+        { text: "🛍️ 帮忙带", hint: "好感+2,心情+1", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._a583ShoppingListCooldown = true;
+          var nid = firstMetNpc(st); bumpAffinity(st, nid, 2, "帮带东西");
+          if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 1);
+          if (typeof StateManager !== "undefined") StateManager.addMessage("🛍️ '顺路的事，客气啥！' 好感+2,心情+1。", "success");
+        }},
+        { text: "📋 列清单", hint: "会计XP+2", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._a583ShoppingListCooldown = true;
+          if (typeof addSkillXp === "function") { try { addSkillXp("accounting", 2); } catch(e) {} }
+          if (typeof StateManager !== "undefined") StateManager.addMessage("🛍️ '列个清单，一次性买齐，省时省力。' 会计XP+2。", "success");
+        }}
+      ],
+      text: function (st) {
+        if (!st) return null;
+        return "朋友让你帮忙带点东西——'帮我带瓶酱油回来，顺便买点菜。' 邻里之间，互相帮忙是常事。";
+      }
+    },
+    {
+      id: "a583_data_health_check", phase: "street", _isChainEvent: false, icon: "📋",
+      title: "健康数据分析",
+      story: "你用数据分析了近期的健康状况——{desc}",
+      triggers: { minDay: 20, interval: 45, maxRepeats: 5, excludeFlags: ["_a583HealthCheckCooldown"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        return (st.flags && !st.flags._a583HealthCheckCooldown);
+      },
+      choices: [
+        { text: "📋 改善健康", hint: "健康+2,心智+1", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._a583HealthCheckCooldown = true;
+          if (st.status) st.status.health = Math.min(100, (st.status.health || 70) + 2);
+          if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 1);
+          if (typeof StateManager !== "undefined") StateManager.addMessage("📋 '数据显示你最近睡眠不足，建议早睡早起。' 健康+2,心智+1。", "success");
+        }},
+        { text: "📊 记录数据", hint: "会计XP+2", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._a583HealthCheckCooldown = true;
+          if (typeof addSkillXp === "function") { try { addSkillXp("accounting", 2); } catch(e) {} }
+          if (typeof StateManager !== "undefined") StateManager.addMessage("📋 '记录健康数据，才能更好地了解自己的身体。' 会计XP+2。", "success");
+        }}
+      ],
+      text: function (st) {
+        if (!st) return null;
+        return "你用数据分析了近期的健康状况——'平均睡眠6小时，运动频率每周1次，饮食质量中等。' 数据告诉你，健康需要改善。";
+      }
+    },
+    {
+      id: "a583_skill_gap_analysis", phase: "corporate", _isChainEvent: false, icon: "🎯",
+      title: "技能差距",
+      story: "你分析了目标岗位的技能要求，发现了差距——{desc}",
+      triggers: { minDay: 25, interval: 60, maxRepeats: 5, excludeFlags: ["_a583SkillGapCooldown"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        return (st.flags && !st.flags._a583SkillGapCooldown);
+      },
+      choices: [
+        { text: "🎯 制定学习计划", hint: "管理XP+4,心智+2,全技能XP+1", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._a583SkillGapCooldown = true;
+          if (typeof addSkillXp === "function") { try { addSkillXp("management", 4); } catch(e) {} }
+          if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 2);
+          var skills = ["accounting", "management", "social", "coding", "sales"]; // [全系统自洽修复] 域E R588 修复:marketing/technology/trade非真实技能键(addSkillXp静默丢弃XP)→映射social/coding/sales
+          for (var i = 0; i < skills.length; i++) { if (typeof addSkillXp === "function") { try { addSkillXp(skills[i], 1); } catch(e) {} } }
+          if (typeof StateManager !== "undefined") StateManager.addMessage("🎯 '差距就是提升空间，制定计划，一步步赶上。' 管理XP+4,心智+2,全技能XP+1。", "success");
+        }},
+        { text: "📈 专注优势", hint: "随机技能XP+5", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._a583SkillGapCooldown = true;
+          var skills = ["accounting", "management", "social", "coding", "sales"]; // [全系统自洽修复] 域E R588 修复:marketing/technology/trade非真实技能键(addSkillXp静默丢弃XP)→映射social/coding/sales
+          var sk = Random.fromArray(skills); // [全系统自洽修复] 域A R400: Math.random()→Random.fromArray()
+          if (typeof addSkillXp === "function") { try { addSkillXp(sk, 5); } catch(e) {} }
+          if (typeof StateManager !== "undefined") StateManager.addMessage("🎯 '发挥优势，比弥补短板更容易出成绩。' 随机技能XP+5。", "success");
+        }}
+      ],
+      text: function (st) {
+        if (!st) return null;
+        return "你分析了目标岗位的技能要求，发现了差距——'目标岗位需要XX技能，我还有差距。' 知道差距，才能有针对性地提升。";
+      }
+    }
+  ];
+
+  for (var i = 0; i < EVENTS.length; i++) {
+    (function (ev) {
+      var exists = false;
+      for (var j = 0; j < RANDOM_EVENTS.length; j++) {
+        if (RANDOM_EVENTS[j] && RANDOM_EVENTS[j].id === ev.id) { exists = true; break; }
+      }
+      if (!exists) RANDOM_EVENTS.push(ev);
+    })(EVENTS[i]);
+  }
+})();
+;
+// ==== js/core/domain_a_linkage_r593.js ====
+/**
+ * 域A(数据/数值平衡) 联动增强 R593
+ * 桥接：
+ *   A→G  a593_data_health_awareness  数据健康觉醒 → 消费 status+needs 数据,
+ *     数据→"健康数据提醒你关注身体"的生命回响
+ *   A→C  a593_data_skill_market      数据技能市场 → 消费 skills+jobs 数据,
+ *     数据→"你的技能在市场上值多少"的职业回响
+ *   A→E  a593_data_wealth_insight    数据财富洞察 → 消费 resources 数据,
+ *     数据→"你的资产增长趋势"的经济回响
+ */
+(function () {
+  "use strict";
+  if (typeof RANDOM_EVENTS === "undefined" || !RANDOM_EVENTS) return;
+  if (RANDOM_EVENTS._domainALinkageR593Loaded) return;
+  RANDOM_EVENTS._domainALinkageR593Loaded = true;
+
+  var EVENTS = [
+    {
+      id: "a593_data_health_awareness", phase: "street", _isChainEvent: false, icon: "❤️",
+      title: "健康数据的提醒",
+      story: "看着自己的健康数据，你开始反思——{desc}",
+      triggers: { minDay: 30, interval: 90, maxRepeats: 3, excludeFlags: ["_a593HealthAwareCooldown"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        if (!st.flags || st.flags._a593HealthAwareCooldown) return false;
+        return st.status && (st.status.health || 0) < 60;
+      },
+      choices: [
+        { text: "🏃 开始锻炼", hint: "健康+3,疲劳+5", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._a593HealthAwareCooldown = true;
+          if (st.status) st.status.health = Math.min(100, (st.status.health || 100) + 3);
+          if (st.needs) st.needs.fatigue = Math.min(100, (st.needs.fatigue || 0) + 5);
+          if (typeof StateManager !== "undefined") StateManager.addMessage("❤️ '身体是革命的本钱。' 你决定每天锻炼。健康+3,疲劳+5。", "success");
+        }},
+        { text: "😴 多休息", hint: "疲劳-10", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._a593HealthAwareCooldown = true;
+          if (st.needs) st.needs.fatigue = Math.max(0, (st.needs.fatigue || 0) - 10);
+          if (typeof StateManager !== "undefined") StateManager.addMessage("❤️ '今晚早点睡。' 你决定调整作息。疲劳-10。", "info");
+        }}
+      ],
+      text: function (st) {
+        if (!st) return null;
+        return "看着自己的健康数据，你开始反思——'我是不是该关注一下身体了？' 健康数据提醒你要注意休息。";
+      }
+    },
+    {
+      id: "a593_data_skill_market", phase: "street", _isChainEvent: false, icon: "📊",
+      title: "你的技能值多少",
+      story: "你查看了一下市场上对技能的需求——{desc}",
+      triggers: { minDay: 40, interval: 100, maxRepeats: 3, excludeFlags: ["_a593SkillMarketCooldown"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        if (!st.flags || st.flags._a593SkillMarketCooldown) return false;
+        var hasSkill = false;
+        if (st.skills) {
+          for (var k in st.skills) {
+            if (st.skills[k] && (st.skills[k].level || 0) >= 10) { hasSkill = true; break; }
+          }
+        }
+        return hasSkill;
+      },
+      choices: [
+        { text: "📈 继续深耕", hint: "最高技能XP+5", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._a593SkillMarketCooldown = true;
+          var topSkill = null, topLv = 0;
+          if (st.skills) {
+            for (var k in st.skills) {
+              if (st.skills[k] && (st.skills[k].level || 0) > topLv) { topLv = st.skills[k].level; topSkill = k; }
+            }
+          }
+          if (topSkill && typeof addSkillXp === "function") { try { addSkillXp(topSkill, 5); } catch(e) {} }
+          if (typeof StateManager !== "undefined") StateManager.addMessage("📊 '" + topSkill + "技能在市场上很抢手，继续深耕！' " + topSkill + "XP+5。", "success");
+        }},
+        { text: "🔄 学习新技能", hint: "随机新技能XP+3", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._a593SkillMarketCooldown = true;
+          var skills = ["coding", "sales", "accounting", "management", "english", "driving"];
+          var sk = Random.fromArray(skills); // [全系统自洽修复] 域A R400: Math.random()→Random.fromArray()
+          if (typeof addSkillXp === "function") { try { addSkillXp(sk, 3); } catch(e) {} }
+          if (typeof StateManager !== "undefined") StateManager.addMessage("📊 '多学一门技能多一条路。' " + sk + "XP+3。", "success");
+        }}
+      ],
+      text: function (st) {
+        if (!st) return null;
+        return "你查看了一下市场上对技能的需求——'原来这项技能这么值钱！' 你开始思考如何提升自己的市场价值。";
+      }
+    },
+    {
+      id: "a593_data_wealth_insight", phase: "street", _isChainEvent: false, icon: "💰",
+      title: "资产增长趋势",
+      story: "看着自己的资产变化，你开始规划——{desc}",
+      triggers: { minDay: 50, interval: 120, maxRepeats: 3, excludeFlags: ["_a593WealthInsightCooldown"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        if (!st.flags || st.flags._a593WealthInsightCooldown) return false;
+        var totalAssets = (st.resources && st.resources.cash || 0) + (st.resources && st.resources.bankBalance || 0);
+        return totalAssets >= 10000;
+      },
+      choices: [
+        { text: "📈 投资理财", hint: "会计XP+3,现金+500", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._a593WealthInsightCooldown = true;
+          if (typeof addSkillXp === "function") { try { addSkillXp("accounting", 3); } catch(e) {} }
+          if (st.resources) st.resources.cash = (st.resources.cash || 0) + 500;
+          if (typeof StateManager !== "undefined") StateManager.addMessage("💰 '让钱生钱。' 你学会了基础理财。会计XP+3,现金+¥500。", "success");
+        }},
+        { text: "🛡️ 稳健储蓄", hint: "心情+5", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._a593WealthInsightCooldown = true;
+          if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 5);
+          if (typeof StateManager !== "undefined") StateManager.addMessage("💰 '稳稳当当最踏实。' 你决定继续储蓄。心情+5。", "success");
+        }}
+      ],
+      text: function (st) {
+        if (!st) return null;
+        return "看着自己的资产变化，你开始规划——'钱该怎么花才能发挥最大价值？' 你开始思考财富管理。";
+      }
+    }
+  ];
+
+  for (var i = 0; i < EVENTS.length; i++) {
+    (function (ev) {
+      var exists = false;
+      for (var j = 0; j < RANDOM_EVENTS.length; j++) {
+        if (RANDOM_EVENTS[j] && RANDOM_EVENTS[j].id === ev.id) { exists = true; break; }
+      }
+      if (!exists) RANDOM_EVENTS.push(ev);
+    })(EVENTS[i]);
+  }
+})();
+
+;
+// ==== js/core/domain_a_linkage_r602.js ====
+/**
+ * 域A(数据/数值平衡) 联动增强 R602
+ * 桥接：
+ *   A→G  a602_data_health_awareness  数据健康觉醒 → 消费 status+needs 数据,
+ *     数据→"健康数据提醒你关注身体"的生命回响
+ *   A→C  a602_data_skill_market      数据技能市场 → 消费 skills+jobs 数据,
+ *     数据→"你的技能在市场上值多少"的职业回响
+ *   A→E  a602_data_wealth_insight    数据财富洞察 → 消费 resources 数据,
+ *     数据→"你的资产增长趋势"的经济回响
+ */
+(function () {
+  "use strict";
+  if (typeof RANDOM_EVENTS === "undefined" || !RANDOM_EVENTS) return;
+  if (RANDOM_EVENTS._domainALinkageR602Loaded) return;
+  RANDOM_EVENTS._domainALinkageR602Loaded = true;
+
+  var EVENTS = [
+    {
+      id: "a602_data_health_awareness", phase: "street", _isChainEvent: false, icon: "❤️",
+      title: "健康数据的提醒",
+      story: "看着自己的健康数据，你开始反思——{desc}",
+      triggers: { minDay: 30, interval: 90, maxRepeats: 3, excludeFlags: ["_a602HealthAwareCooldown"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        if (!st.flags || st.flags._a602HealthAwareCooldown) return false;
+        return st.status && (st.status.health || 0) < 60;
+      },
+      choices: [
+        { text: "🏃 开始锻炼", hint: "健康+3,疲劳+5", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._a602HealthAwareCooldown = true;
+          if (st.status) st.status.health = Math.min(100, (st.status.health || 100) + 3);
+          if (st.needs) st.needs.fatigue = Math.min(100, (st.needs.fatigue || 0) + 5);
+          if (typeof StateManager !== "undefined") StateManager.addMessage("❤️ '身体是革命的本钱。' 你决定每天锻炼。健康+3,疲劳+5。", "success");
+        }},
+        { text: "😴 多休息", hint: "疲劳-10", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._a602HealthAwareCooldown = true;
+          if (st.needs) st.needs.fatigue = Math.max(0, (st.needs.fatigue || 0) - 10);
+          if (typeof StateManager !== "undefined") StateManager.addMessage("❤️ '今晚早点睡。' 你决定调整作息。疲劳-10。", "info");
+        }}
+      ],
+      text: function (st) {
+        if (!st) return null;
+        return "看着自己的健康数据，你开始反思——'我是不是该关注一下身体了？' 健康数据提醒你要注意休息。";
+      }
+    },
+    {
+      id: "a602_data_skill_market", phase: "street", _isChainEvent: false, icon: "📊",
+      title: "你的技能值多少",
+      story: "你查看了一下市场上对技能的需求——{desc}",
+      triggers: { minDay: 40, interval: 100, maxRepeats: 3, excludeFlags: ["_a602SkillMarketCooldown"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        if (!st.flags || st.flags._a602SkillMarketCooldown) return false;
+        var hasSkill = false;
+        if (st.skills) {
+          for (var k in st.skills) {
+            if (st.skills[k] && (st.skills[k].level || 0) >= 10) { hasSkill = true; break; }
+          }
+        }
+        return hasSkill;
+      },
+      choices: [
+        { text: "📈 继续深耕", hint: "最高技能XP+5", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._a602SkillMarketCooldown = true;
+          var topSkill = null, topLv = 0;
+          if (st.skills) {
+            for (var k in st.skills) {
+              if (st.skills[k] && (st.skills[k].level || 0) > topLv) { topLv = st.skills[k].level; topSkill = k; }
+            }
+          }
+          if (topSkill && typeof addSkillXp === "function") { try { addSkillXp(topSkill, 5); } catch(e) {} }
+          if (typeof StateManager !== "undefined") StateManager.addMessage("📊 '" + topSkill + "技能在市场上很抢手，继续深耕！' " + topSkill + "XP+5。", "success");
+        }},
+        { text: "🔄 学习新技能", hint: "随机新技能XP+3", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._a602SkillMarketCooldown = true;
+          var skills = ["coding", "sales", "accounting", "management", "english", "driving"];
+          var sk = Random.fromArray(skills); // [全系统自洽修复] 域A R400: Math.random()→Random.fromArray()
+          if (typeof addSkillXp === "function") { try { addSkillXp(sk, 3); } catch(e) {} }
+          if (typeof StateManager !== "undefined") StateManager.addMessage("📊 '多学一门技能多一条路。' " + sk + "XP+3。", "success");
+        }}
+      ],
+      text: function (st) {
+        if (!st) return null;
+        return "你查看了一下市场上对技能的需求——'原来这项技能这么值钱！' 你开始思考如何提升自己的市场价值。";
+      }
+    },
+    {
+      id: "a602_data_wealth_insight", phase: "street", _isChainEvent: false, icon: "💰",
+      title: "资产增长趋势",
+      story: "看着自己的资产变化，你开始规划——{desc}",
+      triggers: { minDay: 50, interval: 120, maxRepeats: 3, excludeFlags: ["_a602WealthInsightCooldown"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        if (!st.flags || st.flags._a602WealthInsightCooldown) return false;
+        var totalAssets = (st.resources && st.resources.cash || 0) + (st.resources && st.resources.bankBalance || 0);
+        return totalAssets >= 10000;
+      },
+      choices: [
+        { text: "📈 投资理财", hint: "会计XP+3,现金+500", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._a602WealthInsightCooldown = true;
+          if (typeof addSkillXp === "function") { try { addSkillXp("accounting", 3); } catch(e) {} }
+          if (st.resources) st.resources.cash = (st.resources.cash || 0) + 500;
+          if (typeof StateManager !== "undefined") StateManager.addMessage("💰 '让钱生钱。' 你学会了基础理财。会计XP+3,现金+¥500。", "success");
+        }},
+        { text: "🛡️ 稳健储蓄", hint: "心情+5", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._a602WealthInsightCooldown = true;
+          if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 5);
+          if (typeof StateManager !== "undefined") StateManager.addMessage("💰 '稳稳当当最踏实。' 你决定继续储蓄。心情+5。", "success");
+        }}
+      ],
+      text: function (st) {
+        if (!st) return null;
+        return "看着自己的资产变化，你开始规划——'钱该怎么花才能发挥最大价值？' 你开始思考财富管理。";
+      }
+    }
+  ];
+
+  for (var i = 0; i < EVENTS.length; i++) {
+    (function (ev) {
+      var exists = false;
+      for (var j = 0; j < RANDOM_EVENTS.length; j++) {
+        if (RANDOM_EVENTS[j] && RANDOM_EVENTS[j].id === ev.id) { exists = true; break; }
+      }
+      if (!exists) RANDOM_EVENTS.push(ev);
+    })(EVENTS[i]);
+  }
+})();
+
+;
+// ==== js/core/domain_a_linkage_r603.js ====
+/**
+ * 域A(数据/数值平衡) 联动增强 R603
+ * 桥接：
+ *   A→G  a603_price_health_awareness  价格健康觉醒 → 消费 state.resources+state.status 数据,
+ *     数据→"物价影响健康选择"的生命回响
+ *   A→C  a603_job_skill_market  技能市场数据 → 消费 state.skills 数据,
+ *     数据→"技能市场需求导向"的职业回响
+ *   A→E  a603_market_trade_insight  市场交易洞察 → 消费 state.resources+state.flags 数据,
+ *     数据→"价格波动中的投资机会"的经济回响
+ */
+(function () {
+  "use strict";
+  if (typeof RANDOM_EVENTS === "undefined" || !RANDOM_EVENTS) return;
+  if (RANDOM_EVENTS._domainALinkageR603Loaded) return;
+  RANDOM_EVENTS._domainALinkageR603Loaded = true;
+
+  var EVENTS = [
+    // ====== A→G: 价格健康觉醒 ======
+    {
+      id: "a603_price_health_awareness", phase: "street", _isChainEvent: false, icon: "🥦",
+      title: "物价与健康",
+      story: "你去菜市场逛了一圈,发现物价又涨了——{desc}",
+      triggers: { minDay: 15, interval: 60, maxRepeats: 10, excludeFlags: ["_a603PriceHealthCooldown"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        if (!st.flags || st.flags._a603PriceHealthCooldown) return false;
+        return true;
+      },
+      choices: [
+        { text: "🥗 买新鲜食材自己做", hint: "健康+5,饥饿+30,现金-300", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._a603PriceHealthCooldown = true;
+          if (st.resources) st.resources.cash = Math.max(0, (st.resources.cash || 0) - 300);
+          if (st.status) st.status.health = Math.min(100, (st.status.health || 100) + 5);
+          if (st.needs) st.needs.hunger = Math.min(100, (st.needs.hunger || 50) + 30);
+          if (typeof StateManager !== "undefined") StateManager.addMessage("🥦 你买了新鲜蔬菜和肉,自己做了顿营养餐。'还是自己做饭实惠又健康。' 健康+5,饥饿+30,现金-300。", "success");
+        }},
+        { text: "🍜 凑合吃泡面", hint: "现金-50,健康-2,饥饿+15", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._a603PriceHealthCooldown = true;
+          if (st.resources) st.resources.cash = Math.max(0, (st.resources.cash || 0) - 50);
+          if (st.status) st.status.health = Math.max(0, (st.status.health || 100) - 2);
+          if (st.needs) st.needs.hunger = Math.min(100, (st.needs.hunger || 50) + 15);
+          if (typeof StateManager !== "undefined") StateManager.addMessage("🍜 '又涨价了...算了,吃泡面吧。' 你叹了口气。健康-2,现金-50。", "warning");
+        }}
+      ],
+      text: function (st) {
+        if (!st) return null;
+        return "菜市场的价格又涨了。猪肉¥35/斤,鸡蛋¥8/斤,连青菜都涨到了¥5/斤。你摸了摸钱包,开始思考:为了健康,值得多花这些钱吗?";
+      }
+    },
+
+    // ====== A→C: 技能市场数据 ======
+    {
+      id: "a603_job_skill_market", phase: "street", _isChainEvent: false, icon: "📊",
+      title: "技能市场行情",
+      story: "你研究了一下当前市场上什么技能最值钱——{desc}",
+      triggers: { minDay: 30, interval: 90, maxRepeats: 8, excludeFlags: ["_a603SkillMarketCooldown"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        if (!st.flags || st.flags._a603SkillMarketCooldown) return false;
+        return true;
+      },
+      choices: [
+        { text: "🎯 学习热门技能", hint: "random技能XP+10,智力+3,现金-500", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._a603SkillMarketCooldown = true;
+          if (st.resources) st.resources.cash = Math.max(0, (st.resources.cash || 0) - 500);
+          if (st.player) st.player.intelligence = Math.min(100, (st.player.intelligence || 50) + 3);
+          var hotSkills = ["coding", "accounting", "sales", "management", "electrician", "repair"];
+          if (typeof Random !== "undefined" && typeof addSkillXp === "function") {
+            try { addSkillXp(Random.fromArray(hotSkills), 10); } catch(e) {}
+          }
+          if (typeof StateManager !== "undefined") StateManager.addMessage("📊 你报了一个热门技能培训班。'市场需要的,就是我要学的!' random技能XP+10,智力+3,现金-500。", "success");
+        }},
+        { text: "📈 研究市场趋势", hint: "心智+5", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._a603SkillMarketCooldown = true;
+          if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 5);
+          if (typeof StateManager !== "undefined") StateManager.addMessage("📊 '知己知彼,百战不殆。' 你花了时间研究各行业的技能需求趋势。心智+5。", "success");
+        }}
+      ],
+      text: function (st) {
+        if (!st) return null;
+        return "你研究了当前的就业市场——编程、会计、销售、管理是最热门的方向。'技能学对了,收入翻倍不是梦。' 你盘算着该往哪个方向努力。";
+      }
+    },
+
+    // ====== A→E: 市场交易洞察 ======
+    {
+      id: "a603_market_trade_insight", phase: "street", _isChainEvent: false, icon: "💰",
+      title: "倒卖机会",
+      story: "你发现了一个价格差——{desc}",
+      triggers: { minDay: 20, interval: 60, maxRepeats: 8, excludeFlags: ["_a603TradeInsightCooldown"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        if (!st.flags || st.flags._a603TradeInsightCooldown) return false;
+        return (st.resources.cash || 0) >= 2000;
+      },
+      choices: [
+        { text: "💰 进货倒卖", hint: "收益¥500-2500,风险亏¥1000", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._a603TradeInsightCooldown = true;
+          var cost = Math.min(1000, (st.resources.cash || 0) * 0.2);
+          st.resources.cash = Math.max(0, (st.resources.cash || 0) - cost);
+          var win = Random.chance(0.6);
+          if (win) {
+            var profit = Math.round(cost * Random.float(0.5, 2.5));
+            st.resources.cash = (st.resources.cash || 0) + cost + profit;
+            if (typeof StateManager !== "undefined") StateManager.addMessage("💰 低价买入,高价卖出!你赚了¥" + profit.toLocaleString() + "。'做生意,就是低买高卖!'", "success");
+          } else {
+            var loss = Math.round(cost * Random.float(0.3, 0.8));
+            st.resources.cash = (st.resources.cash || 0) + loss;
+            if (typeof StateManager !== "undefined") StateManager.addMessage("💰 '看走眼了...' 这次倒卖亏了¥" + (cost - loss) + "。吃一堑长一智。", "warning");
+          }
+        }},
+        { text: "📝 记下价格信息", hint: "心智+3", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._a603TradeInsightCooldown = true;
+          if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 3);
+          if (typeof StateManager !== "undefined") StateManager.addMessage("💰 你记下了各种商品的价格信息。'信息就是财富,等时机成熟再出手。' 心智+3。", "success");
+        }}
+      ],
+      text: function (st) {
+        if (!st) return null;
+        return "你发现城西的电子产品比城东便宜不少。'这个差价,够我赚一笔了。' 你心里盘算着,要不要做一回倒爷。";
+      }
+    }
+  ];
+
+  for (var i = 0; i < EVENTS.length; i++) {
+    RANDOM_EVENTS.push(EVENTS[i]);
+  }
+})();
+;
+// ==== js/core/domain_a_linkage_r624.js ====
+/**
+ * 域A(数据/数值平衡) 联动增强 R624
+ * 桥接：
+ *   A→G  a624_food_health_awareness  食材健康自觉 → 消费 state.ingredients+state.needs 数据,
+ *     数据→"吃得健康"的生命回响
+ *   A→C  a624_skill_market_value  技能市场价值 → 消费 state.skills+state.jobs 数据,
+ *     数据→"技能值多少钱"的职业回响
+ *   A→F  a624_price_alert_ui  价格预警UI → 消费 state.trade+state.goods 数据,
+ *     数据→"价格异动"的UI回响
+ */
+(function () {
+  "use strict";
+  if (typeof RANDOM_EVENTS === "undefined" || !RANDOM_EVENTS) return;
+  if (RANDOM_EVENTS._domainALinkageR624Loaded) return;
+  RANDOM_EVENTS._domainALinkageR624Loaded = true;
+
+  // 辅助：获取食材健康评分
+  function _foodHealthScoreR624(ingredientId) {
+    if (typeof INGREDIENTS === "undefined" || !INGREDIENTS) return 0;
+    for (var i = 0; i < INGREDIENTS.length; i++) {
+      if (INGREDIENTS[i] && INGREDIENTS[i].id === ingredientId) {
+        var eff = INGREDIENTS[i].effects || {};
+        // 健康食材 = 加健康/心智的，减体制/卫生的
+        var score = 0;
+        if (eff.health > 0) score += eff.health;
+        if (eff.mental > 0) score += eff.mental * 0.5;
+        if (eff.fatigue > 0) score -= eff.fatigue * 0.3;
+        if (eff.hygiene < 0) score += Math.abs(eff.hygiene) * 0.2;
+        return score;
+      }
+    }
+    return 0;
+  }
+
+  // 辅助：获取技能市场需求度
+  function _skillDemandR624(skillId) {
+    if (typeof getSkillMarketValue === "function") {
+      return getSkillMarketValue(skillId);
+    }
+    return 0;
+  }
+
+  var EVENTS = [
+    // ================================================================
+    // A→G: 食材健康自觉 — 基于食材数据分析饮食健康
+    // ================================================================
+    {
+      id: "a624_food_health_awareness",
+      phase: "street",
+      _isChainEvent: false,
+      icon: "🥗",
+      title: "饮食健康分析",
+      triggers: { minDay: 5 },
+      story: function (st) {
+        var inventory = st.inventory || [];
+        var foodItems = [];
+        for (var i = 0; i < inventory.length; i++) {
+          var inv = inventory[i];
+          if (inv && inv.id && typeof INGREDIENTS !== "undefined") {
+            for (var j = 0; j < INGREDIENTS.length; j++) {
+              if (INGREDIENTS[j] && INGREDIENTS[j].id === inv.id) {
+                foodItems.push(INGREDIENTS[j]);
+                break;
+              }
+            }
+          }
+        }
+
+        if (foodItems.length === 0) {
+          return "你身上没有食材。去市场买些新鲜食材，自己做饭比外卖更健康省钱。";
+        }
+
+        var healthyCount = 0;
+        var unhealthyCount = 0;
+        for (var fi = 0; fi < foodItems.length; fi++) {
+          var score = _foodHealthScoreR624(foodItems[fi].id);
+          if (score >= 3) healthyCount++;
+          else if (score <= -1) unhealthyCount++;
+        }
+
+        var total = foodItems.length;
+        if (healthyCount > unhealthyCount && healthyCount >= total * 0.5) {
+          return "你背包里的食材整体比较健康（" + healthyCount + "/" + total + "份健康食材）。" +
+            "多吃蔬菜水果、少吃油炸食品，长期来看对体质和心智都有好处。";
+        } else if (unhealthyCount > healthyCount) {
+          return "你背包里不太健康的食材偏多（" + unhealthyCount + "/" + total + "份）。" +
+            "偶尔吃吃没问题，但长期依赖高油高盐食物会影响健康和心情。";
+        }
+        return "你背包里的食材营养搭配还算均衡。注意多吃不同种类的食物，保证营养全面。";
+      },
+      choices: [
+        { text: "🍎 去市场买食材", next: null, apply: function(st) {
+          if (typeof showLocationNavModal === "function") {
+            showLocationNavModal("commercialDist", "🏪 去市场买菜", "trade");
+          } else {
+            StateManager.addMessage("🍎 前往商业区购买食材", "info");
+          }
+        }},
+        { text: "🍳 做顿饭", next: null, apply: function(st) {
+          if (st.needs) {
+            st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 3);
+            st.needs.fullness = Math.min(100, (st.needs.fullness || 50) + 15);
+          }
+          StateManager.addMessage("🍳 给自己做了一顿热乎饭，心情+3，饱食+15", "success");
+        }},
+      ],
+      conditions: function (st) {
+        return st.inventory && st.inventory.length > 0;
+      },
+      weight: 1,
+    },
+
+    // ================================================================
+    // A→C: 技能市场价值 — 基于市场需求分析技能价值
+    // ================================================================
+    {
+      id: "a624_skill_market_value",
+      phase: "street",
+      _isChainEvent: false,
+      icon: "📊",
+      title: "技能市场价值分析",
+      triggers: { minDay: 10 },
+      story: function (st) {
+        var skills = st.skills || {};
+        var skillList = [];
+        for (var sk in skills) {
+          if (skills[sk] && typeof skills[sk].level === "number") {
+            var demand = _skillDemandR624(sk);
+            skillList.push({
+              id: sk,
+              level: skills[sk].level,
+              demand: demand,
+              name: (typeof getSkillChineseName === "function") ? getSkillChineseName(sk) : sk,
+            });
+          }
+        }
+
+        if (skillList.length === 0) {
+          return "你还没有学习任何技能。去培训中心或通过工作实践来提升技能吧。";
+        }
+
+        // 按市场需求排序
+        skillList.sort(function(a, b) { return b.demand - a.demand; });
+        var top = skillList.slice(0, 3);
+        var parts = top.map(function(s) {
+          var demandLabel = s.demand >= 3 ? "🔥高需求" : s.demand >= 2 ? "📈中等" : s.demand >= 1 ? "📋低需求" : "❓无需求";
+          return s.name + " Lv." + s.level + " (" + demandLabel + ")";
+        });
+
+        var totalSkills = skillList.length;
+        var highDemand = skillList.filter(function(s) { return s.demand >= 2; }).length;
+
+        return "根据当前市场分析，你的技能价值评估如下：<br>" +
+          top.map(function(s) {
+            var demandLabel = s.demand >= 3 ? "🔥" : s.demand >= 2 ? "📈" : s.demand >= 1 ? "📋" : "❓";
+            return demandLabel + " " + s.name + " Lv." + s.level;
+          }).join("<br>") +
+          "<br>共" + totalSkills + "项技能，" + highDemand + "项市场需求中等以上。" +
+          (highDemand < 2 ? "建议优先提升市场需求高的技能，以获得更好的职业发展。" : "你的技能组合不错，继续提升可以争取更高薪资。");
+      },
+      choices: [
+        { text: "🎓 去培训中心", next: null, apply: function(st) {
+          if (typeof showLocationNavModal === "function") {
+            showLocationNavModal("trainingCenter", "🎓 培训中心", "actions");
+          } else {
+            StateManager.addMessage("🎓 前往培训中心提升技能", "info");
+          }
+        }},
+        { text: "💼 查看相关工作", next: null, apply: function(st) {
+          if (typeof switchCareerSubTab === "function") {
+            switchCareerSubTab("career_jobs");
+          }
+          StateManager.addMessage("💼 查看当前技能匹配的职业方向", "info");
+        }},
+      ],
+      conditions: function (st) {
+        var skills = st.skills || {};
+        var count = 0;
+        for (var k in skills) {
+          if (skills[k] && skills[k].level > 0) count++;
+        }
+        return count >= 2;
+      },
+      weight: 1,
+    },
+
+    // ================================================================
+    // A→F: 价格预警UI — 商品价格异动提醒
+    // ================================================================
+    {
+      id: "a624_price_alert_ui",
+      phase: "street",
+      _isChainEvent: false,
+      icon: "🏷️",
+      title: "价格异动提醒",
+      triggers: { minDay: 3 },
+      story: function (st) {
+        var trade = st.trade || {};
+        var location = trade.currentLocation || "commercialDist";
+        var goods = (typeof GOODS !== "undefined" && GOODS) ? GOODS : [];
+        var alerts = [];
+
+        for (var gi = 0; gi < goods.length; gi++) {
+          var g = goods[gi];
+          if (!g || !g.id || !g.name) continue;
+          var curPrice = (typeof getPrice === "function") ? getPrice(g.id, location, st) : 0;
+          var basePrice = g.basePrice || 100;
+          var ratio = curPrice > 0 ? (curPrice / basePrice) : 1;
+
+          if (ratio >= 1.5) {
+            alerts.push({ name: g.name, trend: "📈暴涨", ratio: Math.round(ratio * 100), type: "sell" });
+          } else if (ratio <= 0.6) {
+            alerts.push({ name: g.name, trend: "📉暴跌", ratio: Math.round(ratio * 100), type: "buy" });
+          } else if (ratio >= 1.25) {
+            alerts.push({ name: g.name, trend: "📈偏高", ratio: Math.round(ratio * 100), type: "sell" });
+          } else if (ratio <= 0.75) {
+            alerts.push({ name: g.name, trend: "📉偏低", ratio: Math.round(ratio * 100), type: "buy" });
+          }
+        }
+
+        // 只显示最明显的3个
+        alerts.sort(function(a, b) { return Math.abs(b.ratio - 100) - Math.abs(a.ratio - 100); });
+        var topAlerts = alerts.slice(0, 3);
+
+        if (topAlerts.length === 0) {
+          return "今日市场价格平稳，没有明显异动。" +
+            "适合按需采购，也可以关注一下有没有你需要的商品在低价区间。";
+        }
+
+        var sellAlerts = topAlerts.filter(function(a) { return a.type === "sell"; });
+        var buyAlerts = topAlerts.filter(function(a) { return a.type === "buy"; });
+
+        var parts = [];
+        if (sellAlerts.length > 0) {
+          parts.push("📈 适合卖出：" + sellAlerts.map(function(a) { return a.name + "(" + a.ratio + "%)"; }).join("、"));
+        }
+        if (buyAlerts.length > 0) {
+          parts.push("📉 适合买入：" + buyAlerts.map(function(a) { return a.name + "(" + a.ratio + "%)"; }).join("、"));
+        }
+
+        return "今日价格异动提醒：<br>" + parts.join("<br>") + "<br>" +
+          (topAlerts.length > 3 ? "还有" + (alerts.length - 3) + "种商品价格异常。" : "") +
+          "低价买入、高价卖出是赚钱的基本法则。";
+      },
+      choices: [
+        { text: "🛒 去交易", next: null, apply: function(st) {
+          if (typeof showTradeTab === "function") {
+            showTradeTab();
+          } else {
+            StateManager.addMessage("🛒 前往交易界面查看详情", "info");
+          }
+        }},
+        { text: "📝 记住价格", next: null, apply: function(st) {
+          st.flags = st.flags || {};
+          st.flags._a624_priceAlert = (st.flags._a624_priceAlert || 0) + 1;
+          StateManager.addMessage("📝 你记住了今天的价格异动，对市场规律更了解了", "info");
+        }},
+      ],
+      conditions: function (st) {
+        return st.trade && st.trade.currentLocation && (st.player.day || 0) % 3 === 0;
+      },
+      weight: 1,
+    },
+  ];
+
+  // 注册事件
   for (var i = 0; i < EVENTS.length; i++) {
     RANDOM_EVENTS.push(EVENTS[i]);
   }
@@ -312533,6 +315614,2216 @@ if (typeof window !== "undefined") {
   for (var i = 0; i < EVENTS.length; i++) RANDOM_EVENTS.push(EVENTS[i]);
 })();
 
+;
+// ==== js/core/domain_c_linkage_r517.js ====
+/**
+ * 域C(职业/成长) 联动增强 R517
+ * 桥接：
+ *   C→H  c517_career_equity_plan 职业股权计划 → 消费 skills+corporate 数据,
+ *     股权→"用技能换股权"的合伙人路径
+ *   C→E  c517_career_salary_invest 职业薪资投资 → 消费 skills+resources 数据,
+ *     工资→"把工资的一部分拿来投资"的理财习惯
+ *   C→A  c517_career_tax_plan    职业税务规划 → 消费 skills+resources 数据,
+ *     税务→"工资越高，税越多"的税务规划
+ */
+(function () {
+  "use strict";
+  if (typeof RANDOM_EVENTS === "undefined" || !RANDOM_EVENTS) return;
+  if (RANDOM_EVENTS._domainCLinkageR517Loaded) return;
+  RANDOM_EVENTS._domainCLinkageR517Loaded = true;
+
+  var EVENTS = [
+    {
+      id: "c517_career_equity_plan", phase: "corporate", _isChainEvent: false, icon: "📜",
+      title: "技术入股",
+      story: "公司想用股权换你的技术——{desc}",
+      triggers: { minDay: 45, interval: 180, maxRepeats: 3, excludeFlags: ["_c517EquityPlanCooldown"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        if (!st.corporate || !st.corporate.company) return false;
+        return (st.flags && !st.flags._c517EquityPlanCooldown);
+      },
+      choices: [
+        { text: "📜 接受股权", hint: "管理XP+5,心智+2,公司知名度+2", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._c517EquityPlanCooldown = true;
+          if (typeof addSkillXp === "function") { try { addSkillXp("management", 5); } catch(e) {} }
+          if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 2);
+          if (st.corporate) st.corporate.reputation = Math.min(100, (st.corporate.reputation || 0) + 2);
+          if (typeof StateManager !== "undefined") StateManager.addMessage("📜 '技术换股权，这是最好的合作方式。' 你成了公司的合伙人之一。管理XP+5,心智+2,公司知名度+2。", "success");
+        }},
+        { text: "💰 要现金", hint: "现金+8000,会计XP+2", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._c517EquityPlanCooldown = true;
+          if (st.resources) st.resources.cash = (st.resources.cash || 0) + 8000;
+          if (typeof addSkillXp === "function") { try { addSkillXp("accounting", 2); } catch(e) {} }
+          if (typeof StateManager !== "undefined") StateManager.addMessage("📜 '现金更实在，风险更小。' 现金+¥8000,会计XP+2。", "success");
+        }}
+      ],
+      text: function (st) {
+        if (!st) return null;
+        return "公司想用股权换你的技术——'你的技术值这个价，我们想用股权绑住你。' 你陷入了沉思。";
+      }
+    },
+    {
+      id: "c517_career_salary_invest", phase: "corporate", _isChainEvent: false, icon: "💰",
+      title: "工资投资计划",
+      story: "你决定每个月从工资里拿一部分出来投资——{desc}",
+      triggers: { minDay: 30, interval: 90, maxRepeats: 3, excludeFlags: ["_c517SalaryInvestCooldown"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        if (!st.corporate) return false;
+        return (st.flags && !st.flags._c517SalaryInvestCooldown);
+      },
+      choices: [
+        { text: "💰 定投基金", hint: "会计XP+5,心智+1", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._c517SalaryInvestCooldown = true;
+          if (typeof addSkillXp === "function") { try { addSkillXp("accounting", 5); } catch(e) {} }
+          if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 1);
+          if (typeof StateManager !== "undefined") StateManager.addMessage("💰 '每个月工资到账，先转20%去投资账户。' 强制储蓄+投资，是最好的理财习惯。会计XP+5,心智+1。", "success");
+        }},
+        { text: "📈 学习投资知识", hint: "心智+2", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._c517SalaryInvestCooldown = true;
+          if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 2);
+          if (typeof StateManager !== "undefined") StateManager.addMessage("💰 '先学再投，不盲目。' 你买了几本投资书籍。心智+2。", "success");
+        }}
+      ],
+      text: function (st) {
+        if (!st) return null;
+        return "你决定每个月从工资里拿一部分出来投资——'工资是收入，投资是第二收入。'";
+      }
+    },
+    {
+      id: "c517_career_tax_plan", phase: "corporate", _isChainEvent: false, icon: "🧾",
+      title: "个税规划",
+      story: "你发现工资越高，税扣得越多——{desc}",
+      triggers: { minDay: 35, interval: 180, maxRepeats: 3, excludeFlags: ["_c517TaxPlanCooldown"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        if (!st.corporate) return false;
+        return (st.flags && !st.flags._c517TaxPlanCooldown);
+      },
+      choices: [
+        { text: "🧾 合理避税", hint: "会计XP+5,心智+2,现金+2000", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._c517TaxPlanCooldown = true;
+          if (typeof addSkillXp === "function") { try { addSkillXp("accounting", 5); } catch(e) {} }
+          if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 2);
+          if (st.resources) st.resources.cash = (st.resources.cash || 0) + 2000;
+          if (typeof StateManager !== "undefined") StateManager.addMessage("🧾 '合理避税和偷税漏税是两回事。' 你优化了税务结构。会计XP+5,心智+2,现金+¥2000。", "success");
+        }},
+        { text: "📋 找会计师", hint: "会计XP+3", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._c517TaxPlanCooldown = true;
+          if (typeof addSkillXp === "function") { try { addSkillXp("accounting", 3); } catch(e) {} }
+          if (typeof StateManager !== "undefined") StateManager.addMessage("🧾 '专业的事交给专业的人。' 你找了会计师帮忙规划。会计XP+3。", "success");
+        }}
+      ],
+      text: function (st) {
+        if (!st) return null;
+        return "你发现工资越高，税扣得越多——'到手工资比预期少了一大截。' 是时候认真考虑税务规划了。";
+      }
+    }
+  ];
+
+  for (var i = 0; i < EVENTS.length; i++) {
+    (function (ev) {
+      var exists = false;
+      for (var j = 0; j < RANDOM_EVENTS.length; j++) {
+        if (RANDOM_EVENTS[j] && RANDOM_EVENTS[j].id === ev.id) { exists = true; break; }
+      }
+      if (!exists) RANDOM_EVENTS.push(ev);
+    })(EVENTS[i]);
+  }
+})();
+;
+// ==== js/core/domain_c_linkage_r518.js ====
+/**
+ * 域C(职业/成长) 联动增强 R518
+ * 桥接（首消费两个死 flag + 1 个职业清晰度叙事）：
+ *   C→D  c518_skill_respect_d   技能被看见 → 首消费 career_dev.js:3693 写入的死 flag _skillRespectNotified(总技能≥50 置位却零读取) → 熟人敬重(守域D铁律)
+ *   C→B  c518_mentor_legacy_b   师徒传承 → 首消费 career_dev.js:5509 写入的死 flag _hasApprentice(收徒却零读取) → 匠人传奇叙事
+ *   C→F  c518_career_clarity_f  职业清晰感 → 心智+幸福感(double 防御)
+ */
+(function () {
+  "use strict";
+  if (typeof RANDOM_EVENTS === "undefined" || !RANDOM_EVENTS) return;
+  if (RANDOM_EVENTS._domainCLinkageR518Loaded) return;
+  RANDOM_EVENTS._domainCLinkageR518Loaded = true;
+
+  // ---- 辅助：域D 铁律兼容 ----
+  function firstMetNpcC518(st) {
+    if (!st || !st.relationships) return null;
+    for (var k in st.relationships) {
+      if (!st.relationships.hasOwnProperty(k)) continue;
+      var rel = st.relationships[k];
+      if (rel && rel.met) return k;
+    }
+    return null;
+  }
+  function npcNameC518(st, nid) {
+    if (typeof getNpcDisplayName === "function" && nid) {
+      try { return getNpcDisplayName(st, nid); } catch (e) {}
+    }
+    return nid || "熟人";
+  }
+  function bumpAffinityC518(st, nid, delta, reason) {
+    if (!st || !nid) return;
+    if (typeof applyAffinityChange === "function") {
+      try { applyAffinityChange(st, nid, delta, reason || "职业被认可"); } catch (e) {}
+    }
+  }
+
+  var EVENTS = [
+    {
+      id: "c518_skill_respect_d", phase: "street", _isChainEvent: false, icon: "🤝",
+      title: "手艺被人记在心里",
+      story: "你一门手艺练到炉火纯青，街坊邻里都听说了——{desc}",
+      triggers: { minDay: 30, interval: 120, maxRepeats: 3, excludeFlags: ["_c518SkillRespectCooldown"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        if (!st.flags || !st.flags._skillRespectNotified) return false; // 首消费死 flag：总技能≥50 置位
+        return !!firstMetNpcC518(st);
+      },
+      choices: [
+        { text: "🤝 谦逊受教", hint: "好感+6,心智+2", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._c518SkillRespectCooldown = true;
+          var nid = firstMetNpcC518(st);
+          bumpAffinityC518(st, nid, 6, "你的手艺让人佩服");
+          if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 2);
+          if (typeof StateManager !== "undefined") StateManager.addMessage("🤝 " + npcNameC518(st, nid) + "由衷地说：『你这手艺，是真功夫。』 好感+6,心智+2。", "success");
+        }},
+        { text: "📣 收个徒弟", hint: "心智+1", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._c518SkillRespectCooldown = true;
+          if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 1);
+          if (typeof StateManager !== "undefined") StateManager.addMessage("🤝 你寻思着：『这么好的手艺，得传下去。』 心智+1。", "success");
+        }}
+      ],
+      text: function (st) {
+        if (!st) return null;
+        return "你一门手艺练到炉火纯青，街坊邻里都听说了——『这年头，肯下苦功的人不多了。』";
+      }
+    },
+    {
+      id: "c518_mentor_legacy_b", phase: "street", _isChainEvent: false, icon: "📜",
+      title: "师徒一段缘",
+      story: "你带过的徒弟出师了，回来看你——{desc}",
+      triggers: { minDay: 60, interval: 200, maxRepeats: 2, excludeFlags: ["_c518MentorLegacyCooldown"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        if (!st.flags || !st.flags._hasApprentice) return false; // 首消费死 flag：收徒置位却零读取
+        return true;
+      },
+      choices: [
+        { text: "📜 感慨传承", hint: "名气+4,心智+3", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._c518MentorLegacyCooldown = true;
+          if (st.player) {
+            st.player.fame = Math.min(100, (st.player.fame || 0) + 4);
+            st.player.mental = Math.min(100, (st.player.mental || 50) + 3);
+          }
+          if (typeof StateManager !== "undefined") StateManager.addMessage("📜 『师傅领进门，修行在个人。』徒弟敬你一杯，你也成了别人生命里的贵人。名气+4,心智+3。", "success");
+        }},
+        { text: "💡 写本心得", hint: "心智+2", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._c518MentorLegacyCooldown = true;
+          if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 2);
+          if (typeof StateManager !== "undefined") StateManager.addMessage("📜 你把带徒的心得记下来——『经验不传下去，就烂在肚子里了。』 心智+2。", "success");
+        }}
+      ],
+      text: function (st) {
+        if (!st) return null;
+        return "你带过的徒弟出师了，回来看你——『师傅，我如今也能独当一面了。』";
+      }
+    },
+    {
+      id: "c518_career_clarity_f", phase: "street", _isChainEvent: false, icon: "🧭",
+      title: "忽然看清了方向",
+      story: "做了这么久，你头一回清楚自己想要什么——{desc}",
+      triggers: { minDay: 25, interval: 150, maxRepeats: 3, excludeFlags: ["_c518CareerClarityCooldown"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        if (!st.corporate && !st.career) return false;
+        return (st.flags && !st.flags._c518CareerClarityCooldown);
+      },
+      choices: [
+        { text: "🧭 定下目标", hint: "心智+5,幸福感+4", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._c518CareerClarityCooldown = true;
+          if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 5);
+          if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 4); // 真实幸福感字段(非 player.happiness 死字段)
+          if (typeof StateManager !== "undefined") StateManager.addMessage("🧭 你在本子上写下三年目标——『知道自己要去哪儿，走路都带风。』 心智+5,幸福感+4。", "success");
+        }},
+        { text: "📊 盘点能力", hint: "心智+3", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._c518CareerClarityCooldown = true;
+          if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 3);
+          if (typeof StateManager !== "undefined") StateManager.addMessage("🧭 你把会的、想学的列成清单——『原来我已经走了这么远。』 心智+3。", "success");
+        }}
+      ],
+      text: function (st) {
+        if (!st) return null;
+        return "做了这么久，你头一回清楚自己想要什么——『不再随波逐流了。』";
+      }
+    }
+  ];
+
+  for (var i = 0; i < EVENTS.length; i++) {
+    (function (ev) {
+      var exists = false;
+      for (var j = 0; j < RANDOM_EVENTS.length; j++) {
+        if (RANDOM_EVENTS[j] && RANDOM_EVENTS[j].id === ev.id) { exists = true; break; }
+      }
+      if (!exists) RANDOM_EVENTS.push(ev);
+    })(EVENTS[i]);
+  }
+})();
+
+;
+// ==== js/core/domain_c_linkage_r527.js ====
+/**
+ * 域C(职业/成长) 联动增强 R527
+ * 桥接：
+ *   C→F  c527_career_portfolio_ui 职业作品集UI → 消费 skills 数据,
+ *     展示→"你的职业作品集"的UI展示
+ *   C→D  c527_career_peer_review 职业同行评议 → 消费 skills+relationships 数据,
+ *     反馈→"同行眼中的你"的职业评价
+ *   C→G  c527_career_sabbatical  职业休假 → 消费 skills+needs 数据,
+ *     休息→"工作久了，给自己放个假"的休假叙事
+ */
+(function () {
+  "use strict";
+  if (typeof RANDOM_EVENTS === "undefined" || !RANDOM_EVENTS) return;
+  if (RANDOM_EVENTS._domainCLinkageR527Loaded) return;
+  RANDOM_EVENTS._domainCLinkageR527Loaded = true;
+
+  function firstMetNpc(st) {
+    if (!st || !st.relationships) return null;
+    for (var id in st.relationships) { if (st.relationships[id] && st.relationships[id].met) return id; }
+    return null;
+  }
+  function bumpAffinity(st, npcId, amt, reason) {
+    if (!npcId) return;
+    if (typeof applyAffinityChange === "function") { try { applyAffinityChange(st, npcId, amt, reason); } catch(e) {} }
+  }
+
+  var EVENTS = [
+    {
+      id: "c527_career_portfolio_ui", phase: "corporate", _isChainEvent: false, icon: "📁",
+      title: "作品集",
+      story: "你整理了自己的职业作品集——{desc}",
+      triggers: { minDay: 25, interval: 90, maxRepeats: 3, excludeFlags: ["_c527PortfolioCooldown"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        return (st.flags && !st.flags._c527PortfolioCooldown);
+      },
+      choices: [
+        { text: "📁 展示出来", hint: "管理XP+4,名气+2,心智+1", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._c527PortfolioCooldown = true;
+          if (typeof addSkillXp === "function") { try { addSkillXp("management", 4); } catch(e) {} }
+          if (st.player) st.player.fame = Math.min(100, (st.player.fame || 0) + 2);
+          if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 1);
+          if (typeof StateManager !== "undefined") StateManager.addMessage("📁 '我的作品集，就是最好的简历。' 管理XP+4,名气+2,心智+1。", "success");
+        }},
+        { text: "📝 补充完善", hint: "心智+2", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._c527PortfolioCooldown = true;
+          if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 2);
+          if (typeof StateManager !== "undefined") StateManager.addMessage("📁 '作品集还不够完善，再补充一些项目。' 心智+2。", "success");
+        }}
+      ],
+      text: function (st) {
+        if (!st) return null;
+        return "你整理了自己的职业作品集——'这些都是我做过的东西。' 看着过去的作品，你感慨万千。";
+      }
+    },
+    {
+      id: "c527_career_peer_review", phase: "corporate", _isChainEvent: false, icon: "👥",
+      title: "同行评价",
+      story: "同行对你的工作给出了评价——{desc}",
+      triggers: { minDay: 30, interval: 90, maxRepeats: 3, excludeFlags: ["_c527PeerReviewCooldown"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        if (!st.corporate) return false;
+        return (st.flags && !st.flags._c527PeerReviewCooldown);
+      },
+      choices: [
+        { text: "👥 虚心接受", hint: "管理XP+5,社交XP+3,好感+2", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._c527PeerReviewCooldown = true;
+          if (typeof addSkillXp === "function") { try { addSkillXp("management", 5); } catch(e) {} }
+          if (typeof addSkillXp === "function") { try { addSkillXp("social", 3); } catch(e) {} }
+          var nid = firstMetNpc(st); bumpAffinity(st, nid, 2, "同行交流");
+          if (typeof StateManager !== "undefined") StateManager.addMessage("👥 '你的这个项目做得很好，但如果在XX方面改进一下会更好。' 管理XP+5,社交XP+3,好感+2。", "success");
+        }},
+        { text: "📝 记下建议", hint: "心智+2", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._c527PeerReviewCooldown = true;
+          if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 2);
+          if (typeof StateManager !== "undefined") StateManager.addMessage("👥 '同行提的建议很有价值，记下来慢慢消化。' 心智+2。", "success");
+        }}
+      ],
+      text: function (st) {
+        if (!st) return null;
+        return "同行对你的工作给出了评价——'你们团队最近做的项目很有创意。' 被同行认可，是最好的成就感。";
+      }
+    },
+    {
+      id: "c527_career_sabbatical", phase: "corporate", _isChainEvent: false, icon: "🏖️",
+      title: "休假",
+      story: "你决定给自己放个长假——{desc}",
+      triggers: { minDay: 50, interval: 180, maxRepeats: 3, excludeFlags: ["_c527SabbaticalCooldown"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        if (!st.corporate) return false;
+        return (st.flags && !st.flags._c527SabbaticalCooldown);
+      },
+      choices: [
+        { text: "🏖️ 去旅行", hint: "心情+5,健康+2,疲劳-5", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._c527SabbaticalCooldown = true;
+          if (st.needs) { st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 5); st.needs.fatigue = Math.max(0, (st.needs.fatigue || 0) - 5); }
+          if (st.status) st.status.health = Math.min(100, (st.status.health || 70) + 2);
+          if (typeof StateManager !== "undefined") StateManager.addMessage("🏖️ '世界那么大，我想去看看。' 你踏上了旅途。心情+5,健康+2,疲劳-5。", "success");
+        }},
+        { text: "🏠 在家休息", hint: "疲劳-5,健康+1,心情+2", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._c527SabbaticalCooldown = true;
+          if (st.needs) { st.needs.fatigue = Math.max(0, (st.needs.fatigue || 0) - 5); st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 2); }
+          if (st.status) st.status.health = Math.min(100, (st.status.health || 70) + 1);
+          if (typeof StateManager !== "undefined") StateManager.addMessage("🏖️ '哪里都不去，就在家躺着。' 疲劳-5,健康+1,心情+2。", "success");
+        }}
+      ],
+      text: function (st) {
+        if (!st) return null;
+        return "你决定给自己放个长假——'工作这么多年，第一次给自己放这么长的假。' 休息，是为了走更远的路。";
+      }
+    }
+  ];
+
+  for (var i = 0; i < EVENTS.length; i++) {
+    (function (ev) {
+      var exists = false;
+      for (var j = 0; j < RANDOM_EVENTS.length; j++) {
+        if (RANDOM_EVENTS[j] && RANDOM_EVENTS[j].id === ev.id) { exists = true; break; }
+      }
+      if (!exists) RANDOM_EVENTS.push(ev);
+    })(EVENTS[i]);
+  }
+})();
+;
+// ==== js/core/domain_c_linkage_r535.js ====
+/**
+ * 域C(职业/成长) 联动增强 R535
+ * 桥接（三大零事件消费 career flag 全部打通首消费）：
+ *   C→G  c535_career_yearbook    职业年鉴 → 首消费 flags._careerMonthlySnapshots(career_dev.js:3415,24月滚动快照),
+ *     一年数据成型时对比首末薪资/存款——峰终定律的成长复盘叙事
+ *   C→D  c535_jobhop_storyteller 跨界者故事 → 首消费 flags._crossPathJobhop+_careerPathsWorked(career_dev.js:2718),
+ *     跨路径跳槽经历成为社交货币——向NPC分享职业转型故事换好感
+ *   C→E  c535_peak_wealth_pivot  巅峰之后 → 首消费 flags._careerMaxLevelCelebrated(career_dev.js),
+ *     职业到顶后收入曲线见顶——引导玩家从工资思维转向资产思维(职业-经济联动)
+ */
+(function () {
+  "use strict";
+  if (typeof RANDOM_EVENTS === "undefined" || !RANDOM_EVENTS) return;
+  if (RANDOM_EVENTS._domainCLinkageR535Loaded) return;
+  RANDOM_EVENTS._domainCLinkageR535Loaded = true;
+
+  function firstMetNpc(st) {
+    if (!st || !st.relationships) return null;
+    for (var id in st.relationships) { if (st.relationships[id] && st.relationships[id].met) return id; }
+    return null;
+  }
+  function bumpAffinity(st, npcId, amt, reason) {
+    if (!npcId) return;
+    if (typeof applyAffinityChange === "function") { try { applyAffinityChange(st, npcId, amt, reason); } catch (e) {} }
+  }
+  function npcName(st, npcId) {
+    if (!npcId) return "老朋友";
+    if (typeof getNpcDisplayName === "function") { try { return getNpcDisplayName(npcId) || "老朋友"; } catch (e) {} }
+    return "老朋友";
+  }
+
+  var EVENTS = [
+    {
+      // ---- C→G 联动：职业年鉴（首消费 _careerMonthlySnapshots）----
+      id: "c535_career_yearbook", phase: "street", _isChainEvent: false, icon: "📔",
+      title: "职业年鉴",
+      story: "翻开这一年的职业记录，数字背后是走过的路——{desc}",
+      triggers: { minDay: 360, interval: 180, maxRepeats: 3, excludeFlags: ["_c535YearbookCooldown"] },
+      conditions: function (st) {
+        if (!st || st.gameOver) return false;
+        if (st.flags && st.flags._c535YearbookCooldown) return false;
+        var snaps = st.flags && st.flags._careerMonthlySnapshots;
+        return Array.isArray(snaps) && snaps.length >= 12; // 满一年月度快照才有"年鉴"可翻
+      },
+      choices: [
+        { text: "📈 感慨成长", hint: "心情+2,心智+1", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._c535YearbookCooldown = true;
+          if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 2); // [PLACEHOLDER]
+          if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 1); // [PLACEHOLDER]
+          if (typeof StateManager !== "undefined") StateManager.addMessage("📔 '原来我已经走了这么远。' 一年的轨迹给了你继续向前的底气。心情+2,心智+1。", "success");
+        }},
+        { text: "🎯 定下一年目标", hint: "管理XP+4,心智+2", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._c535YearbookCooldown = true;
+          if (typeof addSkillXp === "function") { try { addSkillXp("management", 4); } catch (e) {} } // [PLACEHOLDER]
+          if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 2); // [PLACEHOLDER]
+          if (typeof StateManager !== "undefined") StateManager.addMessage("🎯 '明年这时候，我要比这条曲线更高。' 你把目标写在了年鉴末页。管理XP+4,心智+2。", "success");
+        }}
+      ],
+      text: function (st) {
+        if (!st || !st.flags) return null;
+        var snaps = st.flags._careerMonthlySnapshots;
+        if (!Array.isArray(snaps) || snaps.length < 2) return "你翻看着自己的职业记录，一段旅程正在成形。";
+        var first = snaps[0] || {}, last = snaps[snaps.length - 1] || {};
+        var s0 = (typeof first.salary === "number" && isFinite(first.salary)) ? first.salary : 0;
+        var s1 = (typeof last.salary === "number" && isFinite(last.salary)) ? last.salary : 0;
+        var b0 = (typeof first.bankBalance === "number" && isFinite(first.bankBalance)) ? first.bankBalance : 0;
+        var b1 = (typeof last.bankBalance === "number" && isFinite(last.bankBalance)) ? last.bankBalance : 0;
+        var salaryTxt = s1 > s0 ? ("日薪从¥" + Math.floor(s0) + "涨到了¥" + Math.floor(s1)) : (s1 < s0 ? ("日薪从¥" + Math.floor(s0) + "变成了¥" + Math.floor(s1) + "——起伏也是履历") : "薪水稳定如常");
+        var bankTxt = b1 > b0 ? ("存款多了¥" + Math.floor(b1 - b0)) : "存款经历了波动";
+        return "深夜整理旧物，你翻出这一年的职业记录：" + salaryTxt + "，" + bankTxt + "。" + snaps.length + "个月的数字连成一条线，那是别人看不见、只有你自己知道的路。";
+      }
+    },
+    {
+      // ---- C→D 联动：跨界者故事（首消费 _crossPathJobhop / _careerPathsWorked）----
+      id: "c535_jobhop_storyteller", phase: "street", _isChainEvent: false, icon: "🔀",
+      title: "跨界者",
+      story: "换过赛道的人，故事总是更多——{desc}",
+      triggers: { minDay: 60, interval: 90, maxRepeats: 4, excludeFlags: ["_c535JobhopStoryCooldown"] },
+      conditions: function (st) {
+        if (!st || st.gameOver) return false;
+        if (st.flags && st.flags._c535JobhopStoryCooldown) return false;
+        if (!st.flags || !st.flags._crossPathJobhop) return false; // 只有真正跨路径跳槽过的人才有"跨界故事"
+        return !!firstMetNpc(st); // 域D铁律：必须有已结识NPC才谈得上"分享"
+      },
+      choices: [
+        { text: "🗣️ 分享转型心得", hint: "好感+3,社交XP+3", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._c535JobhopStoryCooldown = true;
+          var nid = firstMetNpc(st); bumpAffinity(st, nid, 3, "分享跨行业转型经历"); // [PLACEHOLDER]
+          if (typeof addSkillXp === "function") { try { addSkillXp("social", 3); } catch (e) {} } // [PLACEHOLDER]
+          if (typeof StateManager !== "undefined") StateManager.addMessage("🔀 '换赛道最难的不是技能，是心态。' 你的故事让对方听得入神。好感+3,社交XP+3。", "success");
+        }},
+        { text: "🤐 轻描淡写", hint: "心智+2", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._c535JobhopStoryCooldown = true;
+          if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 2); // [PLACEHOLDER]
+          if (typeof StateManager !== "undefined") StateManager.addMessage("🤐 '也没什么，就是换了份工作。' 有些路，自己知道走过就好。心智+2。", "success");
+        }}
+      ],
+      text: function (st) {
+        if (!st) return null;
+        var paths = (st.flags && st.flags._careerPathsWorked) || {};
+        var n = 0; for (var k in paths) { if (paths[k]) n++; }
+        var nid = firstMetNpc(st);
+        var who = npcName(st, nid);
+        var cnt = n >= 2 ? ("你走过" + n + "条不同的职业路径") : "你换过职业赛道";
+        return who + "好奇地问起你的工作经历。" + cnt + "——从一个行业跳进另一个行业，这种经历在熟人眼里就是传奇。'讲讲呗，当初怎么敢换的？'";
+      }
+    },
+    {
+      // ---- C→E 联动：巅峰之后（首消费 _careerMaxLevelCelebrated）----
+      id: "c535_peak_wealth_pivot", phase: "street", _isChainEvent: false, icon: "⛰️",
+      title: "巅峰之后",
+      story: "职级到顶那天起，工资条就不会再有惊喜了——{desc}",
+      triggers: { minDay: 90, interval: 150, maxRepeats: 3, excludeFlags: ["_c535PeakPivotCooldown"] },
+      conditions: function (st) {
+        if (!st || st.gameOver) return false;
+        if (st.flags && st.flags._c535PeakPivotCooldown) return false;
+        if (!st.flags || !st.flags._careerMaxLevelCelebrated) return false; // 职业已到顶
+        return !!(st.resources && (st.resources.bankBalance || 0) >= 5000); // 有一定积蓄才谈得上资产配置 [PLACEHOLDER]
+      },
+      choices: [
+        { text: "📊 研究资产配置", hint: "会计XP+5,心智+2", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._c535PeakPivotCooldown = true;
+          if (typeof addSkillXp === "function") { try { addSkillXp("accounting", 5); } catch (e) {} } // [PLACEHOLDER]
+          if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 2); // [PLACEHOLDER]
+          if (typeof StateManager !== "undefined") StateManager.addMessage("📊 '工资是加法，资产是乘法。' 你开始认真研究投资页面里那些曾被忽略的选项。会计XP+5,心智+2。", "success");
+        }},
+        { text: "😌 知足常乐", hint: "心情+3", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._c535PeakPivotCooldown = true;
+          if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 3); // [PLACEHOLDER]
+          if (typeof StateManager !== "undefined") StateManager.addMessage("😌 '到顶了也挺好，稳稳当当。' 不是每个人都需要第二曲线。心情+3。", "success");
+        }}
+      ],
+      text: function (st) {
+        if (!st) return null;
+        var bank = (st.resources && st.resources.bankBalance) || 0;
+        return "发工资的日子，你盯着到账短信忽然意识到：职级已经到顶，这个数字以后大概就是它了。账上躺着¥" + Math.floor(bank) + "的存款——是让钱继续躺着，还是让它也开始'上班'？";
+      }
+    }
+  ];
+
+  for (var i = 0; i < EVENTS.length; i++) {
+    (function (ev) {
+      var exists = false;
+      for (var j = 0; j < RANDOM_EVENTS.length; j++) {
+        if (RANDOM_EVENTS[j] && RANDOM_EVENTS[j].id === ev.id) { exists = true; break; }
+      }
+      if (!exists) RANDOM_EVENTS.push(ev);
+    })(EVENTS[i]);
+  }
+})();
+
+;
+// ==== js/core/domain_c_linkage_r546.js ====
+/**
+ * 域C(职业/成长) 联动增强 R546
+ * 桥接：
+ *   C→D  c546_career_team_building 职业团队建设 → 消费 skills+relationships 数据,
+ *     团建→"工作中的团队活动"的职业社交
+ *   C→G  c546_career_work_anniversary 职业工作周年 → 消费 skills+player 数据,
+ *     周年→"入职一周年纪念"的里程碑
+ *   C→E  c546_career_freelance_income 职业自由职业收入 → 消费 skills+resources 数据,
+ *     自由→"做自由职业能赚多少"的收入对比
+ */
+(function () {
+  "use strict";
+  if (typeof RANDOM_EVENTS === "undefined" || !RANDOM_EVENTS) return;
+  if (RANDOM_EVENTS._domainCLinkageR546Loaded) return;
+  RANDOM_EVENTS._domainCLinkageR546Loaded = true;
+
+  function firstMetNpc(st) {
+    if (!st || !st.relationships) return null;
+    for (var id in st.relationships) { if (st.relationships[id] && st.relationships[id].met) return id; }
+    return null;
+  }
+  function bumpAffinity(st, npcId, amt, reason) {
+    if (!npcId) return;
+    if (typeof applyAffinityChange === "function") { try { applyAffinityChange(st, npcId, amt, reason); } catch(e) {} }
+  }
+
+  var EVENTS = [
+    {
+      id: "c546_career_team_building", phase: "corporate", _isChainEvent: false, icon: "🎳",
+      title: "团队活动",
+      story: "部门组织了一次团队建设活动——{desc}",
+      triggers: { minDay: 25, interval: 90, maxRepeats: 3, excludeFlags: ["_c546TeamBuildingCooldown"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        if (!st.corporate) return false;
+        return (st.flags && !st.flags._c546TeamBuildingCooldown);
+      },
+      choices: [
+        { text: "🎳 积极参加", hint: "管理XP+4,社交XP+3,好感+2", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._c546TeamBuildingCooldown = true;
+          if (typeof addSkillXp === "function") { try { addSkillXp("management", 4); } catch(e) {} }
+          if (typeof addSkillXp === "function") { try { addSkillXp("social", 3); } catch(e) {} }
+          var nid = firstMetNpc(st); bumpAffinity(st, nid, 2, "团队活动");
+          if (typeof StateManager !== "undefined") StateManager.addMessage("🎳 '团队活动让大家更了解彼此了。' 管理XP+4,社交XP+3,好感+2。", "success");
+        }},
+        { text: "📋 组织活动", hint: "管理XP+3,社交XP+2", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._c546TeamBuildingCooldown = true;
+          if (typeof addSkillXp === "function") { try { addSkillXp("management", 3); } catch(e) {} }
+          if (typeof addSkillXp === "function") { try { addSkillXp("social", 2); } catch(e) {} }
+          if (typeof StateManager !== "undefined") StateManager.addMessage("🎳 '你组织了这次活动，大家玩得很开心。' 管理XP+3,社交XP+2。", "success");
+        }}
+      ],
+      text: function (st) {
+        if (!st) return null;
+        return "部门组织了一次团队建设活动——'今天不聊工作，只聊感情！' 团队活动，是拉近同事关系的最好方式。";
+      }
+    },
+    {
+      id: "c546_career_work_anniversary", phase: "corporate", _isChainEvent: false, icon: "🎂",
+      title: "入职周年",
+      story: "今天是你入职X周年的日子——{desc}",
+      triggers: { minDay: 30, interval: 365, maxRepeats: 2, excludeFlags: ["_c546WorkAnniversaryCooldown"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        if (!st.corporate) return false;
+        return (st.flags && !st.flags._c546WorkAnniversaryCooldown);
+      },
+      choices: [
+        { text: "🎂 庆祝一下", hint: "管理XP+4,心智+2,心情+2", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._c546WorkAnniversaryCooldown = true;
+          if (typeof addSkillXp === "function") { try { addSkillXp("management", 4); } catch(e) {} }
+          if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 2);
+          if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 2);
+          if (typeof StateManager !== "undefined") StateManager.addMessage("🎂 '入职一周年了，时间过得真快。' 管理XP+4,心智+2,心情+2。", "success");
+        }},
+        { text: "📝 写总结", hint: "心智+2", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._c546WorkAnniversaryCooldown = true;
+          if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 2);
+          if (typeof StateManager !== "undefined") StateManager.addMessage("🎂 '这一年，我学到了很多，成长了很多。' 心智+2。", "success");
+        }}
+      ],
+      text: function (st) {
+        if (!st) return null;
+        var day = (st.player && st.player.day) || 0;
+        return "今天是你入职" + Math.floor(day / 365) + "周年的日子——'从新人到老人，从生疏到熟练。' 时间是最好的老师。";
+      }
+    },
+    {
+      id: "c546_career_freelance_income", phase: "corporate", _isChainEvent: false, icon: "💼",
+      title: "自由职业",
+      story: "你在想如果做自由职业能赚多少——{desc}",
+      triggers: { minDay: 35, interval: 120, maxRepeats: 3, excludeFlags: ["_c546FreelanceIncomeCooldown"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        return (st.flags && !st.flags._c546FreelanceIncomeCooldown);
+      },
+      choices: [
+        { text: "💼 算笔账", hint: "会计XP+5,心智+2", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._c546FreelanceIncomeCooldown = true;
+          if (typeof addSkillXp === "function") { try { addSkillXp("accounting", 5); } catch(e) {} }
+          if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 2);
+          if (typeof StateManager !== "undefined") StateManager.addMessage("💼 '自由职业虽然自由，但收入不稳定，还要自己交社保。' 会计XP+5,心智+2。", "success");
+        }},
+        { text: "📈 试试水", hint: "管理XP+3", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._c546FreelanceIncomeCooldown = true;
+          if (typeof addSkillXp === "function") { try { addSkillXp("management", 3); } catch(e) {} }
+          if (typeof StateManager !== "undefined") StateManager.addMessage("💼 '先接个小项目试试，看看自己能不能适应。' 管理XP+3。", "success");
+        }}
+      ],
+      text: function (st) {
+        if (!st) return null;
+        return "你在想如果做自由职业能赚多少——'时间自由、地点自由，但收入也自由...' 自由职业，是天堂还是地狱？";
+      }
+    }
+  ];
+
+  for (var i = 0; i < EVENTS.length; i++) {
+    (function (ev) {
+      var exists = false;
+      for (var j = 0; j < RANDOM_EVENTS.length; j++) {
+        if (RANDOM_EVENTS[j] && RANDOM_EVENTS[j].id === ev.id) { exists = true; break; }
+      }
+      if (!exists) RANDOM_EVENTS.push(ev);
+    })(EVENTS[i]);
+  }
+})();
+;
+// ==== js/core/domain_c_linkage_r550.js ====
+/**
+ * 域C(职业/成长) 联动增强 R550
+ * 桥接：
+ *   C→G  c550_career_life_balance  职业生活平衡 → 消费 skills+needs 数据,
+ *     职业→"工作与生活"的生命回响
+ *   C→E  c550_career_investment    职业投资 → 消费 skills+resources 数据,
+ *     职业→"技能变现投资"的经济回响
+ *   C→B  c550_career_story         职业故事 → 消费 skills+event 数据,
+ *     职业→"职业人生章节"的叙事回响
+ */
+(function () {
+  "use strict";
+  if (typeof RANDOM_EVENTS === "undefined" || !RANDOM_EVENTS) return;
+  if (RANDOM_EVENTS._domainCLinkageR550Loaded) return;
+  RANDOM_EVENTS._domainCLinkageR550Loaded = true;
+
+  var EVENTS = [
+    {
+      id: "c550_career_life_balance", phase: "corporate", _isChainEvent: false, icon: "⚖️",
+      title: "工作与生活",
+      story: "连续的高压工作让你开始反思——{desc}",
+      triggers: { minDay: 60, interval: 120, maxRepeats: 3, excludeFlags: ["_c550LifeBalanceCooldown"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        if (!st.flags || st.flags._c550LifeBalanceCooldown) return false;
+        return st.needs && (st.needs.fatigue || 0) >= 40;
+      },
+      choices: [
+        { text: "🧘 休息调整", hint: "疲劳-20,健康+5", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._c550LifeBalanceCooldown = true;
+          if (st.needs) st.needs.fatigue = Math.max(0, (st.needs.fatigue || 0) - 20);
+          if (st.status) st.status.health = Math.min(100, (st.status.health || 100) + 5);
+          if (typeof StateManager !== "undefined") StateManager.addMessage("⚖️ '身体是革命的本钱。' 你决定好好休息调整。疲劳-20,健康+5。", "success");
+        }},
+        { text: "💪 咬牙坚持", hint: "业绩+5,疲劳+10", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._c550LifeBalanceCooldown = true;
+          if (st.needs) st.needs.fatigue = Math.min(100, (st.needs.fatigue || 0) + 10);
+          if (typeof StateManager !== "undefined") StateManager.addMessage("⚖️ '再坚持一下，熬过这阵就好了。' 你选择继续拼搏。疲劳+10。", "warning");
+        }}
+      ],
+      text: function (st) {
+        if (!st) return null;
+        return "连续的高压工作让你开始反思——'我是不是该停下来休息一下？' 但手头的工作还在催着你。";
+      }
+    },
+    {
+      id: "c550_career_investment", phase: "corporate", _isChainEvent: false, icon: "📈",
+      title: "技能变现投资",
+      story: "你开始思考如何用技能创造被动收入——{desc}",
+      triggers: { minDay: 50, interval: 100, maxRepeats: 3, excludeFlags: ["_c550CareerInvestCooldown"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        if (!st.flags || st.flags._c550CareerInvestCooldown) return false;
+        return (st.resources && (st.resources.cash || 0) >= 5000);
+      },
+      choices: [
+        { text: "💰 投资自己", hint: "现金-2000,随机技能XP+8", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._c550CareerInvestCooldown = true;
+          if (st.resources) st.resources.cash = Math.max(0, (st.resources.cash || 0) - 2000);
+          var skills = ["coding", "sales", "accounting", "management", "cooking", "repair"];
+          var sk = Random.fromArray(skills); // [全系统自洽修复] 域C R400: Math.random()→Random.fromArray()
+          if (typeof addSkillXp === "function") { try { addSkillXp(sk, 8); } catch(e) {} }
+          if (typeof StateManager !== "undefined") StateManager.addMessage("📈 '投资自己是最划算的投资。' " + sk + "XP+8,现金-¥2000。", "success");
+        }},
+        { text: "📚 学习新技能", hint: "随机新技能XP+5", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._c550CareerInvestCooldown = true;
+          var skills = ["coding", "sales", "accounting", "management", "english", "driving"];
+          var sk = Random.fromArray(skills); // [全系统自洽修复] 域C R400: Math.random()→Random.fromArray()
+          if (typeof addSkillXp === "function") { try { addSkillXp(sk, 5); } catch(e) {} }
+          if (typeof StateManager !== "undefined") StateManager.addMessage("📈 '多学一门技能多一条路。' " + sk + "XP+5。", "success");
+        }}
+      ],
+      text: function (st) {
+        if (!st) return null;
+        return "你开始思考如何用技能创造被动收入——'技能不只是用来打工的。' 你开始探索副业可能。";
+      }
+    },
+    {
+      id: "c550_career_story", phase: "corporate", _isChainEvent: false, icon: "📖",
+      title: "职业人生章节",
+      story: "回顾自己的职业历程，你感慨万千——{desc}",
+      triggers: { minDay: 70, interval: 150, maxRepeats: 3, excludeFlags: ["_c550CareerStoryCooldown"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        if (!st.flags || st.flags._c550CareerStoryCooldown) return false;
+        return st.stats && st.stats.eventsTriggered >= 10;
+      },
+      choices: [
+        { text: "📝 记录下来", hint: "管理XP+5,心智+2", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._c550CareerStoryCooldown = true;
+          if (typeof addSkillXp === "function") { try { addSkillXp("management", 5); } catch(e) {} }
+          if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 2);
+          if (typeof StateManager !== "undefined") StateManager.addMessage("📖 '这些经历值得被记住。' 你把职业历程记录下来。管理XP+5,心智+2。", "success");
+        }},
+        { text: "🎯 规划未来", hint: "智力+3", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._c550CareerStoryCooldown = true;
+          if (st.player) st.player.intelligence = Math.min(100, (st.player.intelligence || 50) + 3);
+          if (typeof StateManager !== "undefined") StateManager.addMessage("📖 '下一章要写得更加精彩。' 你开始规划未来的职业道路。智力+3。", "success");
+        }}
+      ],
+      text: function (st) {
+        if (!st) return null;
+        return "回顾自己的职业历程，你感慨万千——'从职场小白到独当一面。' 你开始思考下一章该怎么写。";
+      }
+    }
+  ];
+
+  for (var i = 0; i < EVENTS.length; i++) {
+    (function (ev) {
+      var exists = false;
+      for (var j = 0; j < RANDOM_EVENTS.length; j++) {
+        if (RANDOM_EVENTS[j] && RANDOM_EVENTS[j].id === ev.id) { exists = true; break; }
+      }
+      if (!exists) RANDOM_EVENTS.push(ev);
+    })(EVENTS[i]);
+  }
+})();
+
+;
+// ==== js/core/domain_c_linkage_r574.js ====
+/**
+ * 域C(职业/成长) 联动增强 R574
+ * 桥接：
+ *   C→A  c574_skill_market_value 技能市场价值 → 消费 skills 数据,
+ *     市场→"你的技能在市场上的真实价值"的数据分析
+ *   C→D  c574_career_networking 职业社交网络 → 消费 skills+relationships 数据,
+ *     社交→"职业社交圈"的人脉拓展
+ *   C→E  c574_career_financial 职业财务规划 → 消费 skills+resources 数据,
+ *     财务→"职业发展中的财务决策"的财务规划
+ */
+(function () {
+  "use strict";
+  if (typeof RANDOM_EVENTS === "undefined" || !RANDOM_EVENTS) return;
+  if (RANDOM_EVENTS._domainCLinkageR574Loaded) return;
+  RANDOM_EVENTS._domainCLinkageR574Loaded = true;
+
+  function firstMetNpc(st) {
+    if (!st || !st.relationships) return null;
+    for (var id in st.relationships) { if (st.relationships[id] && st.relationships[id].met) return id; }
+    return null;
+  }
+  function bumpAffinity(st, npcId, amt, reason) {
+    if (!npcId) return;
+    if (typeof applyAffinityChange === "function") { try { applyAffinityChange(st, npcId, amt, reason); } catch(e) {} }
+  }
+
+  var EVENTS = [
+    {
+      id: "c574_skill_market_value", phase: "corporate", _isChainEvent: false, icon: "📊",
+      title: "技能估值",
+      story: "你算了一下自己的技能在市场上值多少钱——{desc}",
+      triggers: { minDay: 20, interval: 60, maxRepeats: 5, excludeFlags: ["_c574SkillMarketValueCooldown"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        return (st.flags && !st.flags._c574SkillMarketValueCooldown);
+      },
+      choices: [
+        { text: "📊 分析数据", hint: "会计XP+4,心智+2", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._c574SkillMarketValueCooldown = true;
+          if (typeof addSkillXp === "function") { try { addSkillXp("accounting", 4); } catch(e) {} }
+          if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 2);
+          if (typeof StateManager !== "undefined") StateManager.addMessage("📊 '你的技能组合在市场上估值¥XX万/年。' 会计XP+4,心智+2。", "success");
+        }},
+        { text: "📈 提升价值", hint: "随机技能XP+3", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._c574SkillMarketValueCooldown = true;
+          var skills = ["accounting", "management", "social", "coding", "sales"]; // [全系统自洽修复] 域E R588 修复:marketing/technology/trade非真实技能键(addSkillXp静默丢弃XP)→映射social/coding/sales
+          var sk = Random.fromArray(skills); // [全系统自洽修复] 域C R400: Math.random()→Random.fromArray()
+          if (typeof addSkillXp === "function") { try { addSkillXp(sk, 3); } catch(e) {} }
+          if (typeof StateManager !== "undefined") StateManager.addMessage("📊 '提升技能，就是在提升自己的市场价值。' 随机技能XP+3。", "success");
+        }}
+      ],
+      text: function (st) {
+        if (!st) return null;
+        return "你算了一下自己的技能在市场上值多少钱——'如果把所有技能变现，一年能赚...' 数字让你陷入了思考。";
+      }
+    },
+    {
+      id: "c574_career_networking", phase: "corporate", _isChainEvent: false, icon: "🤝",
+      title: "职业社交",
+      story: "你参加了一个职业社交活动——{desc}",
+      triggers: { minDay: 25, interval: 90, maxRepeats: 3, excludeFlags: ["_c574NetworkingCooldown"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        if (!st.corporate) return false;
+        return (st.flags && !st.flags._c574NetworkingCooldown);
+      },
+      choices: [
+        { text: "🤝 交换名片", hint: "社交XP+5,管理XP+3,好感+2", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._c574NetworkingCooldown = true;
+          if (typeof addSkillXp === "function") { try { addSkillXp("social", 5); } catch(e) {} }
+          if (typeof addSkillXp === "function") { try { addSkillXp("management", 3); } catch(e) {} }
+          var nid = firstMetNpc(st); bumpAffinity(st, nid, 2, "职业社交");
+          if (typeof StateManager !== "undefined") StateManager.addMessage("🤝 '认识了很多同行，人脉就是钱脉。' 社交XP+5,管理XP+3,好感+2。", "success");
+        }},
+        { text: "💬 深入交流", hint: "社交XP+3,心智+2", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._c574NetworkingCooldown = true;
+          if (typeof addSkillXp === "function") { try { addSkillXp("social", 3); } catch(e) {} }
+          if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 2);
+          if (typeof StateManager !== "undefined") StateManager.addMessage("🤝 '和几个同行深入交流了行业趋势，收获很大。' 社交XP+3,心智+2。", "success");
+        }}
+      ],
+      text: function (st) {
+        if (!st) return null;
+        return "你参加了一个职业社交活动——'来参加的人都是各行各业的精英。' 这种场合，是拓展人脉的好机会。";
+      }
+    },
+    {
+      id: "c574_career_financial", phase: "corporate", _isChainEvent: false, icon: "💰",
+      title: "职业财务",
+      story: "你开始规划职业发展的财务方面——{desc}",
+      triggers: { minDay: 30, interval: 90, maxRepeats: 3, excludeFlags: ["_c574FinancialCooldown"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        if (!st.corporate) return false;
+        return (st.flags && !st.flags._c574FinancialCooldown);
+      },
+      choices: [
+        { text: "💰 制定计划", hint: "会计XP+5,管理XP+2,心智+2", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._c574FinancialCooldown = true;
+          if (typeof addSkillXp === "function") { try { addSkillXp("accounting", 5); } catch(e) {} }
+          if (typeof addSkillXp === "function") { try { addSkillXp("management", 2); } catch(e) {} }
+          if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 2);
+          if (typeof StateManager !== "undefined") StateManager.addMessage("💰 '职业发展需要财务支持，提前规划。' 会计XP+5,管理XP+2,心智+2。", "success");
+        }},
+        { text: "📈 投资自己", hint: "随机技能XP+5", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._c574FinancialCooldown = true;
+          var skills = ["accounting", "management", "social", "coding", "sales"]; // [全系统自洽修复] 域E R588 修复:marketing/technology/trade非真实技能键(addSkillXp静默丢弃XP)→映射social/coding/sales
+          var sk = Random.fromArray(skills); // [全系统自洽修复] 域C R400: Math.random()→Random.fromArray()
+          if (typeof addSkillXp === "function") { try { addSkillXp(sk, 5); } catch(e) {} }
+          if (typeof StateManager !== "undefined") StateManager.addMessage("💰 '最好的投资，是投资自己的职业发展。' 随机技能XP+5。", "success");
+        }}
+      ],
+      text: function (st) {
+        if (!st) return null;
+        return "你开始规划职业发展的财务方面——'职业发展需要钱，但怎么花最值？' 职业财务规划，是每个职场人的必修课。";
+      }
+    }
+  ];
+
+  for (var i = 0; i < EVENTS.length; i++) {
+    (function (ev) {
+      var exists = false;
+      for (var j = 0; j < RANDOM_EVENTS.length; j++) {
+        if (RANDOM_EVENTS[j] && RANDOM_EVENTS[j].id === ev.id) { exists = true; break; }
+      }
+      if (!exists) RANDOM_EVENTS.push(ev);
+    })(EVENTS[i]);
+  }
+})();
+;
+// ==== js/core/domain_c_linkage_r585.js ====
+/**
+ * 域C(职业/成长) 联动增强 R585
+ * 桥接：
+ *   C→G  c585_career_life_balance  职业生活平衡 → 消费 skills+needs 数据,
+ *     职业→"工作与生活"的生命回响
+ *   C→E  c585_career_investment    职业投资 → 消费 skills+resources 数据,
+ *     职业→"技能变现投资"的经济回响
+ *   C→B  c585_career_story         职业故事 → 消费 skills+event 数据,
+ *     职业→"职业人生章节"的叙事回响
+ */
+(function () {
+  "use strict";
+  if (typeof RANDOM_EVENTS === "undefined" || !RANDOM_EVENTS) return;
+  if (RANDOM_EVENTS._domainCLinkageR585Loaded) return;
+  RANDOM_EVENTS._domainCLinkageR585Loaded = true;
+
+  var EVENTS = [
+    {
+      id: "c585_career_life_balance", phase: "corporate", _isChainEvent: false, icon: "⚖️",
+      title: "工作与生活",
+      story: "连续的高压工作让你开始反思——{desc}",
+      triggers: { minDay: 60, interval: 120, maxRepeats: 3, excludeFlags: ["_c585LifeBalanceCooldown"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        if (!st.flags || st.flags._c585LifeBalanceCooldown) return false;
+        return st.needs && (st.needs.fatigue || 0) >= 40;
+      },
+      choices: [
+        { text: "🧘 休息调整", hint: "疲劳-20,健康+5", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._c585LifeBalanceCooldown = true;
+          if (st.needs) st.needs.fatigue = Math.max(0, (st.needs.fatigue || 0) - 20);
+          if (st.status) st.status.health = Math.min(100, (st.status.health || 100) + 5);
+          if (typeof StateManager !== "undefined") StateManager.addMessage("⚖️ '身体是革命的本钱。' 你决定好好休息调整。疲劳-20,健康+5。", "success");
+        }},
+        { text: "💪 咬牙坚持", hint: "业绩+5,疲劳+10", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._c585LifeBalanceCooldown = true;
+          if (st.needs) st.needs.fatigue = Math.min(100, (st.needs.fatigue || 0) + 10);
+          if (typeof StateManager !== "undefined") StateManager.addMessage("⚖️ '再坚持一下，熬过这阵就好了。' 你选择继续拼搏。疲劳+10。", "warning");
+        }}
+      ],
+      text: function (st) {
+        if (!st) return null;
+        return "连续的高压工作让你开始反思——'我是不是该停下来休息一下？' 但手头的工作还在催着你。";
+      }
+    },
+    {
+      id: "c585_career_investment", phase: "corporate", _isChainEvent: false, icon: "📈",
+      title: "技能变现投资",
+      story: "你开始思考如何用技能创造被动收入——{desc}",
+      triggers: { minDay: 50, interval: 100, maxRepeats: 3, excludeFlags: ["_c585CareerInvestCooldown"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        if (!st.flags || st.flags._c585CareerInvestCooldown) return false;
+        return (st.resources && (st.resources.cash || 0) >= 5000);
+      },
+      choices: [
+        { text: "💰 投资自己", hint: "现金-2000,随机技能XP+8", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._c585CareerInvestCooldown = true;
+          if (st.resources) st.resources.cash = Math.max(0, (st.resources.cash || 0) - 2000);
+          var skills = ["coding", "sales", "accounting", "management", "cooking", "repair"];
+          var sk = Random.fromArray(skills); // [全系统自洽修复] 域C R400: Math.random()→Random.fromArray()
+          if (typeof addSkillXp === "function") { try { addSkillXp(sk, 8); } catch(e) {} }
+          if (typeof StateManager !== "undefined") StateManager.addMessage("📈 '投资自己是最划算的投资。' " + sk + "XP+8,现金-¥2000。", "success");
+        }},
+        { text: "📚 学习新技能", hint: "随机新技能XP+5", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._c585CareerInvestCooldown = true;
+          var skills = ["coding", "sales", "accounting", "management", "english", "driving"];
+          var sk = Random.fromArray(skills); // [全系统自洽修复] 域C R400: Math.random()→Random.fromArray()
+          if (typeof addSkillXp === "function") { try { addSkillXp(sk, 5); } catch(e) {} }
+          if (typeof StateManager !== "undefined") StateManager.addMessage("📈 '多学一门技能多一条路。' " + sk + "XP+5。", "success");
+        }}
+      ],
+      text: function (st) {
+        if (!st) return null;
+        return "你开始思考如何用技能创造被动收入——'技能不只是用来打工的。' 你开始探索副业可能。";
+      }
+    },
+    {
+      id: "c585_career_story", phase: "corporate", _isChainEvent: false, icon: "📖",
+      title: "职业人生章节",
+      story: "回顾自己的职业历程，你感慨万千——{desc}",
+      triggers: { minDay: 70, interval: 150, maxRepeats: 3, excludeFlags: ["_c585CareerStoryCooldown"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        if (!st.flags || st.flags._c585CareerStoryCooldown) return false;
+        return st.stats && st.stats.eventsTriggered >= 10;
+      },
+      choices: [
+        { text: "📝 记录下来", hint: "管理XP+5,心智+2", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._c585CareerStoryCooldown = true;
+          if (typeof addSkillXp === "function") { try { addSkillXp("management", 5); } catch(e) {} }
+          if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 2);
+          if (typeof StateManager !== "undefined") StateManager.addMessage("📖 '这些经历值得被记住。' 你把职业历程记录下来。管理XP+5,心智+2。", "success");
+        }},
+        { text: "🎯 规划未来", hint: "智力+3", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._c585CareerStoryCooldown = true;
+          if (st.player) st.player.intelligence = Math.min(100, (st.player.intelligence || 50) + 3);
+          if (typeof StateManager !== "undefined") StateManager.addMessage("📖 '下一章要写得更加精彩。' 你开始规划未来的职业道路。智力+3。", "success");
+        }}
+      ],
+      text: function (st) {
+        if (!st) return null;
+        return "回顾自己的职业历程，你感慨万千——'从职场小白到独当一面。' 你开始思考下一章该怎么写。";
+      }
+    }
+  ];
+
+  for (var i = 0; i < EVENTS.length; i++) {
+    (function (ev) {
+      var exists = false;
+      for (var j = 0; j < RANDOM_EVENTS.length; j++) {
+        if (RANDOM_EVENTS[j] && RANDOM_EVENTS[j].id === ev.id) { exists = true; break; }
+      }
+      if (!exists) RANDOM_EVENTS.push(ev);
+    })(EVENTS[i]);
+  }
+})();
+
+;
+// ==== js/core/domain_c_linkage_r586.js ====
+/**
+ * 域C(职业/成长) 联动增强 R586
+ * 桥接：
+ *   C→D  c586_career_circle    职业圈层 → 消费 skills+relationships 数据,
+ *     圈层→"职业圈层决定你的高度"的社交圈
+ *   C→E  c586_career_side_income_v2 职业副业收入v2 → 消费 skills+resources 数据,
+ *     副业→"多元化收入来源"的财务安全
+ *   C→G  c586_career_meaning   职业意义 → 消费 skills+needs 数据,
+ *     意义→"工作不只是为了钱"的使命感
+ */
+(function () {
+  "use strict";
+  if (typeof RANDOM_EVENTS === "undefined" || !RANDOM_EVENTS) return;
+  if (RANDOM_EVENTS._domainCLinkageR586Loaded) return;
+  RANDOM_EVENTS._domainCLinkageR586Loaded = true;
+
+  function firstMetNpc(st) {
+    if (!st || !st.relationships) return null;
+    for (var id in st.relationships) { if (st.relationships[id] && st.relationships[id].met) return id; }
+    return null;
+  }
+  function bumpAffinity(st, npcId, amt, reason) {
+    if (!npcId) return;
+    if (typeof applyAffinityChange === "function") { try { applyAffinityChange(st, npcId, amt, reason); } catch(e) {} }
+  }
+
+  var EVENTS = [
+    {
+      id: "c586_career_circle", phase: "corporate", _isChainEvent: false, icon: "🎯",
+      title: "职业圈层",
+      story: "你发现身边的人都和你差不多——{desc}",
+      triggers: { minDay: 25, interval: 90, maxRepeats: 3, excludeFlags: ["_c586CareerCircleCooldown"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        if (!st.corporate) return false;
+        return (st.flags && !st.flags._c586CareerCircleCooldown);
+      },
+      choices: [
+        { text: "🎯 拓展圈层", hint: "社交XP+5,心智+2,管理XP+2", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._c586CareerCircleCooldown = true;
+          if (typeof addSkillXp === "function") { try { addSkillXp("social", 5); } catch(e) {} }
+          if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 2);
+          if (typeof addSkillXp === "function") { try { addSkillXp("management", 2); } catch(e) {} }
+          if (typeof StateManager !== "undefined") StateManager.addMessage("🎯 '你的水平，取决于你身边最常接触的五个人。' 社交XP+5,心智+2,管理XP+2。", "success");
+        }},
+        { text: "📈 提升自己", hint: "随机技能XP+3", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._c586CareerCircleCooldown = true;
+          var skills = ["accounting", "management", "social", "coding", "sales"]; // [全系统自洽修复] 域E R588 修复:marketing/technology/trade非真实技能键(addSkillXp静默丢弃XP)→映射social/coding/sales
+          var sk = Random.fromArray(skills); // [全系统自洽修复] 域C R400: Math.random()→Random.fromArray()
+          if (typeof addSkillXp === "function") { try { addSkillXp(sk, 3); } catch(e) {} }
+          if (typeof StateManager !== "undefined") StateManager.addMessage("🎯 '提升自己，才能进入更好的圈层。' 随机技能XP+3。", "success");
+        }}
+      ],
+      text: function (st) {
+        if (!st) return null;
+        return "你发现身边的人都和你差不多——'我的圈层决定了我的视野。' 想变得更好，就要进入更好的圈层。";
+      }
+    },
+    {
+      id: "c586_career_side_income_v2", phase: "corporate", _isChainEvent: false, icon: "💰",
+      title: "多元收入",
+      story: "你开始思考如何创造多元化的收入来源——{desc}",
+      triggers: { minDay: 30, interval: 90, maxRepeats: 3, excludeFlags: ["_c586SideIncomeV2Cooldown"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        return (st.flags && !st.flags._c586SideIncomeV2Cooldown);
+      },
+      choices: [
+        { text: "💰 开始行动", hint: "会计XP+5,管理XP+2,现金+2000", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._c586SideIncomeV2Cooldown = true;
+          if (typeof addSkillXp === "function") { try { addSkillXp("accounting", 5); } catch(e) {} }
+          if (typeof addSkillXp === "function") { try { addSkillXp("management", 2); } catch(e) {} }
+          if (st.resources) st.resources.cash = (st.resources.cash || 0) + 2000;
+          if (typeof StateManager !== "undefined") StateManager.addMessage("💰 '开启副业，让收入来源多元化。' 会计XP+5,管理XP+2,现金+¥2000。", "success");
+        }},
+        { text: "📋 规划时间", hint: "管理XP+3", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._c586SideIncomeV2Cooldown = true;
+          if (typeof addSkillXp === "function") { try { addSkillXp("management", 3); } catch(e) {} }
+          if (typeof StateManager !== "undefined") StateManager.addMessage("💰 '副业需要时间，好好规划。' 管理XP+3。", "success");
+        }}
+      ],
+      text: function (st) {
+        if (!st) return null;
+        return "你开始思考如何创造多元化的收入来源——'如果只有一个收入来源，风险太大了。' 多元化收入，是财务安全的关键。";
+      }
+    },
+    {
+      id: "c586_career_meaning", phase: "corporate", _isChainEvent: false, icon: "💡",
+      title: "工作的意义",
+      story: "你在思考工作除了赚钱还有什么意义——{desc}",
+      triggers: { minDay: 35, interval: 120, maxRepeats: 3, excludeFlags: ["_c586MeaningCooldown"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        if (!st.corporate) return false;
+        return (st.flags && !st.flags._c586MeaningCooldown);
+      },
+      choices: [
+        { text: "💡 找到使命", hint: "心智+4,心情+3,管理XP+2", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._c586MeaningCooldown = true;
+          if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 4);
+          if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 3);
+          if (typeof addSkillXp === "function") { try { addSkillXp("management", 2); } catch(e) {} }
+          if (typeof StateManager !== "undefined") StateManager.addMessage("💡 '工作不只是为了钱，更是为了实现价值。' 心智+4,心情+3,管理XP+2。", "success");
+        }},
+        { text: "🧘 调整心态", hint: "心智+2", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._c586MeaningCooldown = true;
+          if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 2);
+          if (typeof StateManager !== "undefined") StateManager.addMessage("💡 '工作本身没有意义，意义是你赋予的。' 心智+2。", "success");
+        }}
+      ],
+      text: function (st) {
+        if (!st) return null;
+        return "你在思考工作除了赚钱还有什么意义——'我每天工作8小时，只是为了赚钱吗？' 也许，工作还有更深的意义。";
+      }
+    }
+  ];
+
+  for (var i = 0; i < EVENTS.length; i++) {
+    (function (ev) {
+      var exists = false;
+      for (var j = 0; j < RANDOM_EVENTS.length; j++) {
+        if (RANDOM_EVENTS[j] && RANDOM_EVENTS[j].id === ev.id) { exists = true; break; }
+      }
+      if (!exists) RANDOM_EVENTS.push(ev);
+    })(EVENTS[i]);
+  }
+})();
+;
+// ==== js/core/domain_c_linkage_r595.js ====
+/**
+ * 域C(职业/成长) 联动增强 R595
+ * 桥接：
+ *   C→G  c595_career_life_balance  职业生活平衡 → 消费 skills+needs 数据,
+ *     职业→"工作与生活"的生命回响
+ *   C→E  c595_career_investment    职业投资 → 消费 skills+resources 数据,
+ *     职业→"技能变现投资"的经济回响
+ *   C→B  c595_career_story         职业故事 → 消费 skills+event 数据,
+ *     职业→"职业人生章节"的叙事回响
+ */
+(function () {
+  "use strict";
+  if (typeof RANDOM_EVENTS === "undefined" || !RANDOM_EVENTS) return;
+  if (RANDOM_EVENTS._domainCLinkageR595Loaded) return;
+  RANDOM_EVENTS._domainCLinkageR595Loaded = true;
+
+  var EVENTS = [
+    {
+      id: "c595_career_life_balance", phase: "corporate", _isChainEvent: false, icon: "⚖️",
+      title: "工作与生活",
+      story: "连续的高压工作让你开始反思——{desc}",
+      triggers: { minDay: 60, interval: 120, maxRepeats: 3, excludeFlags: ["_c595LifeBalanceCooldown"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        if (!st.flags || st.flags._c595LifeBalanceCooldown) return false;
+        return st.needs && (st.needs.fatigue || 0) >= 40;
+      },
+      choices: [
+        { text: "🧘 休息调整", hint: "疲劳-20,健康+5", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._c595LifeBalanceCooldown = true;
+          if (st.needs) st.needs.fatigue = Math.max(0, (st.needs.fatigue || 0) - 20);
+          if (st.status) st.status.health = Math.min(100, (st.status.health || 100) + 5);
+          if (typeof StateManager !== "undefined") StateManager.addMessage("⚖️ '身体是革命的本钱。' 你决定好好休息调整。疲劳-20,健康+5。", "success");
+        }},
+        { text: "💪 咬牙坚持", hint: "业绩+5,疲劳+10", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._c595LifeBalanceCooldown = true;
+          if (st.needs) st.needs.fatigue = Math.min(100, (st.needs.fatigue || 0) + 10);
+          if (typeof StateManager !== "undefined") StateManager.addMessage("⚖️ '再坚持一下，熬过这阵就好了。' 你选择继续拼搏。疲劳+10。", "warning");
+        }}
+      ],
+      text: function (st) {
+        if (!st) return null;
+        return "连续的高压工作让你开始反思——'我是不是该停下来休息一下？' 但手头的工作还在催着你。";
+      }
+    },
+    {
+      id: "c595_career_investment", phase: "corporate", _isChainEvent: false, icon: "📈",
+      title: "技能变现投资",
+      story: "你开始思考如何用技能创造被动收入——{desc}",
+      triggers: { minDay: 50, interval: 100, maxRepeats: 3, excludeFlags: ["_c595CareerInvestCooldown"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        if (!st.flags || st.flags._c595CareerInvestCooldown) return false;
+        return (st.resources && (st.resources.cash || 0) >= 5000);
+      },
+      choices: [
+        { text: "💰 投资自己", hint: "现金-2000,随机技能XP+8", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._c595CareerInvestCooldown = true;
+          if (st.resources) st.resources.cash = Math.max(0, (st.resources.cash || 0) - 2000);
+          var skills = ["coding", "sales", "accounting", "management", "cooking", "repair"];
+          var sk = Random.fromArray(skills); // [全系统自洽修复] 域C R400: Math.random()→Random.fromArray()
+          if (typeof addSkillXp === "function") { try { addSkillXp(sk, 8); } catch(e) {} }
+          if (typeof StateManager !== "undefined") StateManager.addMessage("📈 '投资自己是最划算的投资。' " + sk + "XP+8,现金-¥2000。", "success");
+        }},
+        { text: "📚 学习新技能", hint: "随机新技能XP+5", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._c595CareerInvestCooldown = true;
+          var skills = ["coding", "sales", "accounting", "management", "english", "driving"];
+          var sk = Random.fromArray(skills); // [全系统自洽修复] 域C R400: Math.random()→Random.fromArray()
+          if (typeof addSkillXp === "function") { try { addSkillXp(sk, 5); } catch(e) {} }
+          if (typeof StateManager !== "undefined") StateManager.addMessage("📈 '多学一门技能多一条路。' " + sk + "XP+5。", "success");
+        }}
+      ],
+      text: function (st) {
+        if (!st) return null;
+        return "你开始思考如何用技能创造被动收入——'技能不只是用来打工的。' 你开始探索副业可能。";
+      }
+    },
+    {
+      id: "c595_career_story", phase: "corporate", _isChainEvent: false, icon: "📖",
+      title: "职业人生章节",
+      story: "回顾自己的职业历程，你感慨万千——{desc}",
+      triggers: { minDay: 70, interval: 150, maxRepeats: 3, excludeFlags: ["_c595CareerStoryCooldown"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        if (!st.flags || st.flags._c595CareerStoryCooldown) return false;
+        return st.stats && st.stats.eventsTriggered >= 10;
+      },
+      choices: [
+        { text: "📝 记录下来", hint: "管理XP+5,心智+2", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._c595CareerStoryCooldown = true;
+          if (typeof addSkillXp === "function") { try { addSkillXp("management", 5); } catch(e) {} }
+          if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 2);
+          if (typeof StateManager !== "undefined") StateManager.addMessage("📖 '这些经历值得被记住。' 你把职业历程记录下来。管理XP+5,心智+2。", "success");
+        }},
+        { text: "🎯 规划未来", hint: "智力+3", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._c595CareerStoryCooldown = true;
+          if (st.player) st.player.intelligence = Math.min(100, (st.player.intelligence || 50) + 3);
+          if (typeof StateManager !== "undefined") StateManager.addMessage("📖 '下一章要写得更加精彩。' 你开始规划未来的职业道路。智力+3。", "success");
+        }}
+      ],
+      text: function (st) {
+        if (!st) return null;
+        return "回顾自己的职业历程，你感慨万千——'从职场小白到独当一面。' 你开始思考下一章该怎么写。";
+      }
+    }
+  ];
+
+  for (var i = 0; i < EVENTS.length; i++) {
+    (function (ev) {
+      var exists = false;
+      for (var j = 0; j < RANDOM_EVENTS.length; j++) {
+        if (RANDOM_EVENTS[j] && RANDOM_EVENTS[j].id === ev.id) { exists = true; break; }
+      }
+      if (!exists) RANDOM_EVENTS.push(ev);
+    })(EVENTS[i]);
+  }
+})();
+
+;
+// ==== js/core/domain_c_linkage_r596.js ====
+/**
+ * 域C(职业/成长) 联动增强 R596
+ * 桥接：
+ *   C→D  c596_promotion_celebration  晋升庆祝 → 消费 state.career+state.relationships 数据,
+ *     职业→"晋升后朋友的祝贺"的社交回响
+ *   C→E  c596_skill_income_invest  技能变现投资 → 消费 state.skills+state.investment 数据,
+ *     职业→"技能提升带来投资洞察"的经济回响
+ *   C→G  c596_career_milestone_health  职业里程碑健康 → 消费 state.career+state.needs 数据,
+ *     职业→"长期高压职业影响健康"的生命周期回响
+ */
+(function () {
+  "use strict";
+  if (typeof RANDOM_EVENTS === "undefined" || !RANDOM_EVENTS) return;
+  if (RANDOM_EVENTS._domainCLinkageR596Loaded) return;
+  RANDOM_EVENTS._domainCLinkageR596Loaded = true;
+
+  // 辅助：获取已结识NPC列表
+  function metNpcsR596(st) {
+    var out = [];
+    var rels = st.relationships || {};
+    for (var k in rels) {
+      if (rels[k] && rels[k].met) out.push({ id: k, affinity: rels[k].affinity || 0, name: (typeof getNpcDisplayName === "function") ? getNpcDisplayName(k) : k });
+    }
+    return out;
+  }
+
+  function getJobSkillR596(job) {
+    var skillMap = { office_assistant: "accounting", programmer: "coding", teacher: "education", chef: "cooking", driver: "agility", waiter: "social", salesperson: "sales", security_guard: "strength", nurse: "medicine", electrician: "electrician", welder: "welding", repairman: "repair", construction_worker: "strength", street_vending_food: "cooking", street_vending_goods: "sales", courier: "agility", cleaner: "hygiene", busking: "art", tutor: "education", freelancer: "coding" };
+    if (!job) return "sales";
+    return skillMap[job.id || job.levelId] || "sales";
+  }
+
+  var EVENTS = [
+    // ====== C→D: 晋升庆祝 ======
+    {
+      id: "c596_promotion_celebration", phase: "street", _isChainEvent: false, icon: "🎉",
+      title: "晋升喜讯",
+      story: "你刚刚升职加薪的消息传开了——{desc}",
+      triggers: { minDay: 15, interval: 90, maxRepeats: 5, excludeFlags: ["_c596PromotionCelebrationCooldown"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        if (!st.flags || st.flags._c596PromotionCelebrationCooldown) return false;
+        // 需要有工作且工作天数≥30
+        if (!st.career || !st.career.currentJob) return false;
+        return (st.career.currentJob.workDays || 0) >= 30;
+      },
+      choices: [
+        { text: "🎊 请朋友们吃饭", hint: "好感+10,心情+8,现金-500", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._c596PromotionCelebrationCooldown = true;
+          if (st.resources) st.resources.cash = Math.max(0, (st.resources.cash || 0) - 500);
+          if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 8);
+          var met = metNpcsR596(st);
+          for (var mi = 0; mi < Math.min(met.length, 3); mi++) {
+            if (typeof applyAffinityChange === "function") {
+              try { applyAffinityChange(st, met[mi].id, 10, "晋升请客"); } catch(e) {}
+            }
+          }
+          if (typeof StateManager !== "undefined") StateManager.addMessage("🎉 '升职了!今晚我请客!' 你和朋友们开怀畅饮,笑声不断。好感+10,心情+8,现金-500。", "success");
+        }},
+        { text: "📱 发个朋友圈", hint: "名气+5,心情+3", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._c596PromotionCelebrationCooldown = true;
+          if (st.player) st.player.fame = Math.min(100, (st.player.fame || 0) + 5);
+          if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 3);
+          if (typeof StateManager !== "undefined") StateManager.addMessage("🎉 你发了条朋友圈:'新的开始。' 点赞和祝福纷至沓来。名气+5,心情+3。", "success");
+        }},
+        { text: "🙏 默默感激", hint: "心智+5", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._c596PromotionCelebrationCooldown = true;
+          if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 5);
+          if (typeof StateManager !== "undefined") StateManager.addMessage("🎉 你静静地坐在窗前,看着这座城市的灯火。一路走来不容易,但你知道,这只是开始。心智+5。", "success");
+        }}
+      ],
+      text: function (st) {
+        if (!st || !st.career || !st.career.currentJob) return null;
+        var jobName = st.career.currentJob.levelName || "新职位";
+        var salary = st.career.currentJob.salary || 0;
+        return "你升职了!现在是一名" + jobName + ",月薪¥" + salary + "。消息传开后,朋友们纷纷发来祝贺。你打算怎么庆祝?";
+      }
+    },
+
+    // ====== C→E: 技能变现投资 ======
+    {
+      id: "c596_skill_income_invest", phase: "street", _isChainEvent: false, icon: "📈",
+      title: "技能变现",
+      story: "你的专业技能引起了别人的注意——{desc}",
+      triggers: { minDay: 45, interval: 60, maxRepeats: 8, excludeFlags: ["_c596SkillIncomeCooldown"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        if (!st.flags || st.flags._c596SkillIncomeCooldown) return false;
+        // 需要至少有一项技能≥30
+        if (!st.skills) return false;
+        for (var sk in st.skills) {
+          if (st.skills[sk] && st.skills[sk].level >= 30) return true;
+        }
+        return false;
+      },
+      choices: [
+        { text: "💼 接私单赚外快", hint: "收入+¥800-1500,疲劳+10", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._c596SkillIncomeCooldown = true;
+          var earn = 800 + Random.int(0, 700);
+          if (st.resources) st.resources.cash = (st.resources.cash || 0) + earn;
+          if (st.needs) st.needs.fatigue = Math.min(100, (st.needs.fatigue || 0) + 10);
+          if (typeof StateManager !== "undefined") StateManager.addMessage("📈 你的技能帮别人解决了问题,赚了¥" + earn.toLocaleString() + "外快。虽然累,但很有成就感。疲劳+10。", "success");
+        }},
+        { text: "📚 投资自己,报班深造", hint: "随机技能XP+15,现金-500", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._c596SkillIncomeCooldown = true;
+          if (st.resources) st.resources.cash = Math.max(0, (st.resources.cash || 0) - 500);
+          var allSkills = ["cooking", "repair", "sales", "coding", "accounting", "medicine", "education", "art", "electrician", "welding", "agility", "strength", "social"];
+          if (typeof Random !== "undefined" && typeof addSkillXp === "function") {
+            try { addSkillXp(Random.fromArray(allSkills), 15); } catch(e) {}
+          }
+          if (typeof StateManager !== "undefined") StateManager.addMessage("📈 你报了一个培训班,花¥500。虽然肉疼,但学到的东西是自己的。随机技能XP+15。", "success");
+        }},
+        { text: "🤝 教别人赚课时费", hint: "收入+¥500,社交+3,名气+3", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._c596SkillIncomeCooldown = true;
+          var earn = 300 + Random.int(0, 200);
+          if (st.resources) st.resources.cash = (st.resources.cash || 0) + earn;
+          if (st.player) st.player.fame = Math.min(100, (st.player.fame || 0) + 3);
+          if (typeof StateManager !== "undefined") StateManager.addMessage("📈 '师父,这个怎么弄?' 你教别人掌握了新技能,赚了¥" + earn.toLocaleString() + "课时费。名气+3。", "success");
+        }}
+      ],
+      text: function (st) {
+        if (!st) return null;
+        var bestSkill = "专业技能";
+        var bestLevel = 0;
+        if (st.skills) {
+          for (var sk in st.skills) {
+            if (st.skills[sk] && st.skills[sk].level > bestLevel) {
+              bestSkill = sk;
+              bestLevel = st.skills[sk].level;
+            }
+          }
+        }
+        return "你的" + bestSkill + "技能(Lv." + bestLevel + ")在圈子里小有名气。有人找你帮忙,也有人想跟你学。你的技能,正在变成实实在在的价值。";
+      }
+    },
+
+    // ====== C→G: 职业里程碑健康 ======
+    {
+      id: "c596_career_milestone_health", phase: "street", _isChainEvent: false, icon: "⚕️",
+      title: "职业健康警示",
+      story: "长期的工作让你开始关注身体的变化——{desc}",
+      triggers: { minDay: 60, interval: 120, maxRepeats: 4, excludeFlags: ["_c596CareerHealthCooldown"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        if (!st.flags || st.flags._c596CareerHealthCooldown) return false;
+        if (!st.career || !st.career.currentJob) return false;
+        // 需要工作天数≥90天
+        return (st.career.currentJob.workDays || 0) >= 90;
+      },
+      choices: [
+        { text: "🏥 做个体检", hint: "健康+10,现金-300,心智+5", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._c596CareerHealthCooldown = true;
+          if (st.resources) st.resources.cash = Math.max(0, (st.resources.cash || 0) - 300);
+          if (st.status) st.status.health = Math.min(100, (st.status.health || 100) + 10);
+          if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 5);
+          if (typeof StateManager !== "undefined") StateManager.addMessage("⚕️ 体检结果显示:'整体健康,但需要注意颈椎和腰椎。' 你松了一口气。健康+10,心智+5,现金-300。", "success");
+        }},
+        { text: "🧘 调整工作节奏", hint: "疲劳-15,心智+3", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._c596CareerHealthCooldown = true;
+          if (st.needs) st.needs.fatigue = Math.max(0, (st.needs.fatigue || 0) - 15);
+          if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 3);
+          if (typeof StateManager !== "undefined") StateManager.addMessage("⚕️ 你决定不再熬夜加班,每天抽半小时散步。身体是革命的本钱。疲劳-15,心智+3。", "success");
+        }},
+        { text: "💪 办张健身卡", hint: "健康+8,现金-500,体质XP+10", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._c596CareerHealthCooldown = true;
+          if (st.resources) st.resources.cash = Math.max(0, (st.resources.cash || 0) - 500);
+          if (st.status) st.status.health = Math.min(100, (st.status.health || 100) + 8);
+          // [全系统自洽修复] 域E R621 修复: addSkillXp("strength") 假技能键(真实12键无strength)→XP静默丢弃,玩家花500现金承诺落空；改写真实形象维度 personalGrowth.image.fitness(同R599修复先例)
+          if (st.personalGrowth) {
+            st.personalGrowth.image = st.personalGrowth.image || { style: 30, skincare: 30, fitness: 30, plastic: 0 };
+            st.personalGrowth.image.fitness = Math.min(100, (st.personalGrowth.image.fitness || 30) + 10);
+          }
+          if (typeof StateManager !== "undefined") StateManager.addMessage("⚕️ 你办了一张健身卡。虽然花了不少钱,但想到能拥有更好的身体,心里踏实多了。健康+8,体质XP+10,现金-500。", "success");
+        }}
+      ],
+      text: function (st) {
+        if (!st || !st.career || !st.career.currentJob) return null;
+        var jobName = st.career.currentJob.levelName || "工作";
+        var days = st.career.currentJob.workDays || 0;
+        var health = (st.status && st.status.health) || 100;
+        var fatigue = (st.needs && st.needs.fatigue) || 0;
+        return "你已经做了" + days + "天的" + jobName + "了。最近总觉得腰酸背痛,精神状态也不如从前。健康值" + health + ",疲劳度" + fatigue + "。也许是时候关注一下自己的身体了。";
+      }
+    }
+  ];
+
+  for (var i = 0; i < EVENTS.length; i++) {
+    RANDOM_EVENTS.push(EVENTS[i]);
+  }
+})();
+;
+// ==== js/core/domain_c_linkage_r619.js ====
+/**
+ * 域C(职业/成长) 联动增强 R619
+ * 桥接：
+ *   C→D  c619_crossroads_whisper  职业十字路口的耳语 → 消费 state.relationships+state.skills 数据,
+ *     成长→"朋友看见你的变化"社交回响
+ *   C→E  c619_expertise_dividend  专业技能变现 → 消费 state.skills+state.resources 数据,
+ *     成长→"一技之长换真金白银"经济回响
+ *   C→G  c619_skill_milestone_life  技能里程碑的人生节点 → 消费 state.skills+state.player+state.flags 数据,
+ *     成长→"学有所成"生命回响
+ */
+(function () {
+  "use strict";
+  if (typeof RANDOM_EVENTS === "undefined" || !RANDOM_EVENTS) return;
+  if (RANDOM_EVENTS._domainCLinkageR619Loaded) return;
+  RANDOM_EVENTS._domainCLinkageR619Loaded = true;
+
+  // 辅助：获取已结识NPC列表(守 rel.met 铁律)
+  function metNpcsR619(st) {
+    var out = [];
+    var rels = st.relationships || {};
+    for (var k in rels) {
+      if (rels[k] && rels[k].met) out.push({ id: k, affinity: rels[k].affinity || 0, name: (typeof getNpcDisplayName === "function") ? getNpcDisplayName(k) : k });
+    }
+    return out;
+  }
+
+  // 辅助：获取最高等级真实技能键
+  function topSkillKeyR619(st) {
+    var skills = st.skills || {};
+    var best = null, bestLv = -1;
+    var realKeys = ["cooking","repair","coding","english","driving","sales","management","accounting","electrician","welding","medicine","social"];
+    for (var i = 0; i < realKeys.length; i++) {
+      var lv = skills[realKeys[i]] && typeof skills[realKeys[i]].level === "number" ? skills[realKeys[i]].level : 0;
+      if (lv > bestLv) { bestLv = lv; best = realKeys[i]; }
+    }
+    return { key: best, level: bestLv };
+  }
+
+  var EVENTS = [
+    {
+      id: "c619_crossroads_whisper", phase: "street", _isChainEvent: false, icon: "🛤️",
+      title: "职业十字路口的耳语",
+      story: "你的变化被身边的朋友看在眼里——{desc}",
+      triggers: { minDay: 90, interval: 150, maxRepeats: 2, excludeFlags: ["_c619CrossroadsCooldown"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        if (!st.flags || st.flags._c619CrossroadsCooldown) return false;
+        var top = topSkillKeyR619(st);
+        var met = metNpcsR619(st);
+        return top.level >= 30 && met.length >= 1;
+      },
+      choices: [
+        { text: "🤝 分享心得", hint: "好感+5,社交XP+4", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._c619CrossroadsCooldown = true;
+          var met = metNpcsR619(st);
+          if (met.length > 0 && typeof applyAffinityChange === "function") {
+            try { applyAffinityChange(st, met[0].id, 5, "分享成长心得"); } catch(e) {}
+          }
+          if (typeof addSkillXp === "function") { try { addSkillXp("social", 4); } catch(e) {} }
+          if (typeof StateManager !== "undefined") StateManager.addMessage("🤝 '我这些日子有点感悟,跟你说说。' 你把成长心得分享给朋友,彼此都受益。好感+5,社交XP+4。", "success");
+        }},
+        { text: "🤫 低调前行", hint: "心智+3,心情+2", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._c619CrossroadsCooldown = true;
+          if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 3);
+          if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 2);
+          if (typeof StateManager !== "undefined") StateManager.addMessage("🤫 '低调做人,高调做事。' 你选择默默前行。心智+3,心情+2。", "success");
+        }},
+        { text: "🎯 请教对方", hint: "好感+3,智力+2", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._c619CrossroadsCooldown = true;
+          var met = metNpcsR619(st);
+          if (met.length > 0 && typeof applyAffinityChange === "function") {
+            try { applyAffinityChange(st, met[0].id, 3, "虚心请教"); } catch(e) {}
+          }
+          if (st.player) st.player.intelligence = Math.min(100, (st.player.intelligence || 50) + 2);
+          if (typeof StateManager !== "undefined") StateManager.addMessage("🎯 '你比我见多识广,给我指指路。' 你虚心请教,对方很受用。好感+3,智力+2。", "success");
+        }}
+      ],
+      text: function (st) {
+        if (!st) return null;
+        var top = topSkillKeyR619(st);
+        var met = metNpcsR619(st);
+        var npcName = met.length > 0 ? met[0].name : "老朋友";
+        var skillNames = { cooking:"厨艺", repair:"修理", coding:"编程", english:"英语", driving:"驾驶", sales:"销售", management:"管理", accounting:"会计", electrician:"电工", welding:"焊接", medicine:"医术", social:"社交" };
+        var skillName = skillNames[top.key] || top.key;
+        return "你的" + skillName + "已经小有所成(Lv." + top.level + ")," + npcName + "看在眼里——'你最近进步不小啊,有什么打算?' 你站在职业的十字路口。";
+      }
+    },
+    {
+      id: "c619_expertise_dividend", phase: "street", _isChainEvent: false, icon: "💎",
+      title: "专业技能变现",
+      story: "一技之长终于换来了真金白银——{desc}",
+      triggers: { minDay: 60, interval: 120, maxRepeats: 3, excludeFlags: ["_c619DividendCooldown"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        if (!st.flags || st.flags._c619DividendCooldown) return false;
+        var top = topSkillKeyR619(st);
+        return top.level >= 20;
+      },
+      choices: [
+        { text: "💰 接私活赚外快", hint: "现金+1500,最高技能XP+3", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._c619DividendCooldown = true;
+          if (st.resources) st.resources.cash = (st.resources.cash || 0) + 1500;
+          var top = topSkillKeyR619(st);
+          if (top.key && typeof addSkillXp === "function") { try { addSkillXp(top.key, 3); } catch(e) {} }
+          if (typeof StateManager !== "undefined") StateManager.addMessage("💰 '手艺就是本钱。' 你接了个私活,赚到¥1500,技能也精进了。现金+1500,技能XP+3。", "success");
+        }},
+        { text: "📚 投资自己进修", hint: "现金-800,最高技能XP+8", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._c619DividendCooldown = true;
+          if (st.resources) st.resources.cash = Math.max(0, (st.resources.cash || 0) - 800);
+          var top = topSkillKeyR619(st);
+          if (top.key && typeof addSkillXp === "function") { try { addSkillXp(top.key, 8); } catch(e) {} }
+          if (typeof StateManager !== "undefined") StateManager.addMessage("📚 '磨刀不误砍柴工。' 你花钱进修,技能突飞猛进。现金-¥800,技能XP+8。", "success");
+        }},
+        { text: "🏦 存起来备不时之需", hint: "现金+1500,心情+3", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._c619DividendCooldown = true;
+          if (st.resources) st.resources.cash = (st.resources.cash || 0) + 1500;
+          if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 3);
+          if (typeof StateManager !== "undefined") StateManager.addMessage("🏦 '手中有粮,心中不慌。' 你把赚的钱存好,心里踏实。现金+1500,心情+3。", "success");
+        }}
+      ],
+      text: function (st) {
+        if (!st) return null;
+        var top = topSkillKeyR619(st);
+        var skillNames = { cooking:"厨艺", repair:"修理", coding:"编程", english:"英语", driving:"驾驶", sales:"销售", management:"管理", accounting:"会计", electrician:"电工", welding:"焊接", medicine:"医术", social:"社交" };
+        var skillName = skillNames[top.key] || top.key;
+        return "你的" + skillName + "已经小有所成(Lv." + top.level + "),有人愿意为你的技能买单——'一技之长,处处可变现。' 你打算怎么用这笔收入?";
+      }
+    },
+    {
+      id: "c619_skill_milestone_life", phase: "street", _isChainEvent: false, icon: "🏔️",
+      title: "技能里程碑的人生节点",
+      story: "当一门手艺练到某个境界,你看世界的方式也变了——{desc}",
+      triggers: { minDay: 120, interval: 200, maxRepeats: 1, excludeFlags: ["_c619MilestoneDone"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        if (!st.flags || st.flags._c619MilestoneDone) return false;
+        var top = topSkillKeyR619(st);
+        return top.level >= 50;
+      },
+      choices: [
+        { text: "🎉 庆祝突破", hint: "心情+10,置_c619MilestoneCelebrated", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._c619MilestoneDone = true;
+          st.flags._c619MilestoneCelebrated = true;
+          if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 10);
+          if (typeof StateManager !== "undefined") StateManager.addMessage("🎉 'Lv.50! 这一路走来不容易。' 你为自己的突破庆祝。心情+10。", "success");
+        }},
+        { text: "📖 写下感悟", hint: "智力+3,心智+5", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._c619MilestoneDone = true;
+          if (st.player) {
+            st.player.intelligence = Math.min(100, (st.player.intelligence || 50) + 3);
+            st.player.mental = Math.min(100, (st.player.mental || 50) + 5);
+          }
+          if (typeof StateManager !== "undefined") StateManager.addMessage("📖 '把走过的路记下来,给后来的自己看。' 你写下成长感悟。智力+3,心智+5。", "success");
+        }},
+        { text: "🚀 向更高峰进发", hint: "心智+8,置_c619HigherPeak", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._c619MilestoneDone = true;
+          st.flags._c619HigherPeak = true;
+          if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 8);
+          if (typeof StateManager !== "undefined") StateManager.addMessage("🚀 '这才哪到哪,继续往上走。' 你目光投向更高处。心智+8。", "success");
+        }}
+      ],
+      text: function (st) {
+        if (!st) return null;
+        var top = topSkillKeyR619(st);
+        var skillNames = { cooking:"厨艺", repair:"修理", coding:"编程", english:"英语", driving:"驾驶", sales:"销售", management:"管理", accounting:"会计", electrician:"电工", welding:"焊接", medicine:"医术", social:"社交" };
+        var skillName = skillNames[top.key] || top.key;
+        return "你的" + skillName + "突破了Lv.50——'当一门手艺练到深处,看世界的眼光都不一样了。' 这一刻值得被记住。";
+      }
+    }
+  ];
+
+  for (var i = 0; i < EVENTS.length; i++) {
+    RANDOM_EVENTS.push(EVENTS[i]);
+  }
+})();
+
+;
+// ==== js/core/domain_c_linkage_r620.js ====
+/**
+ * 域C(职业/成长) 联动增强 R620
+ * 桥接：
+ *   C→H  c620_career_corp_synergy  职业资本→公司运营加成 → 消费 state.career+state.skills 数据,
+ *     职业积累→"行业资源助力创业"公司回响
+ *   C→F  c620_career_milestone_ui  职业里程碑→UI面板反馈 → 消费 state.career+state.player 数据,
+ *     职业→"成长可视化"展示回响
+ *   C→D  c620_career_social_echo   职业晋升→社交圈回响 → 消费 state.career+state.relationships 数据,
+ *     职业→"升职加薪"NPC社交回响
+ */
+(function () {
+  "use strict";
+  if (typeof RANDOM_EVENTS === "undefined" || !RANDOM_EVENTS) return;
+  if (RANDOM_EVENTS._domainCLinkageR620Loaded) return;
+  RANDOM_EVENTS._domainCLinkageR620Loaded = true;
+
+  // 辅助：获取当前职业路径名称
+  function _pathNameR620(st) {
+    if (!st.career || !st.career.currentJob) return "无";
+    var path = CAREER_PATHS && CAREER_PATHS[st.career.currentJob.path];
+    return path ? path.icon + " " + path.name : st.career.currentJob.path;
+  }
+
+  // 辅助：计算技能总等级
+  function _totalSkillLevelR620(st) {
+    var total = 0;
+    var skills = st.skills || {};
+    for (var k in skills) {
+      if (skills[k] && typeof skills[k].level === "number") total += skills[k].level;
+    }
+    return total;
+  }
+
+  // 辅助：获取已结识NPC列表
+  function _metNpcsR620(st) {
+    var out = [];
+    var rels = st.relationships || {};
+    for (var k in rels) {
+      if (rels[k] && rels[k].met) out.push({ id: k, affinity: rels[k].affinity || 0 });
+    }
+    return out;
+  }
+
+  var EVENTS = [
+    // ================================================================
+    // C→H: 职业资本→公司运营加成
+    // 当玩家有固定工作且技能积累到一定程度时，提示创业优势
+    // ================================================================
+    {
+      id: "c620_career_corp_synergy",
+      phase: "corporate",
+      _isChainEvent: false,
+      icon: "🏢",
+      title: "职场积累",
+      minDay: 60,
+      story: function (st) {
+        var pathName = _pathNameR620(st);
+        var totalSkill = _totalSkillLevelR620(st);
+        var cap = (typeof ensureCareerCapital === "function") ? ensureCareerCapital(st) : null;
+        var industryRes = cap ? Math.round(cap.industryResources || 0) : 0;
+        var clientLeads = cap ? Math.round(cap.clientLeads || 0) : 0;
+
+        if (totalSkill >= 100 && industryRes >= 30) {
+          return "你在「" + pathName + "」深耕多年（技能总等级" + totalSkill + "），" +
+            "积累了" + industryRes + "点行业资源和" + clientLeads + "条客户线索。" +
+            "这些职场资本在创业时可直接转化为公司起步优势——行业资源越多，注册资金减免越多；" +
+            "客户线索越多，首月营收加成越高。";
+        } else if (totalSkill >= 50) {
+          return "你在「" + pathName + "」已经站稳了脚跟（技能总等级" + totalSkill + "）。" +
+            "继续积累行业资源和客户线索，未来创业时将获得可观的启动资金减免。";
+        }
+        return "你在「" + pathName + "」的工作正在积累宝贵的职场资本。" +
+          "行业资源、客户线索、职业声誉——这些都将成为你未来创业的基石。";
+      },
+      choices: [
+        { text: "💼 继续深耕职场", next: null },
+        { text: "📊 查看创业条件", next: null, handler: function (st) {
+          if (typeof showStartupRegisterModal === "function") {
+            showStartupRegisterModal();
+          } else {
+            StateManager.addMessage("🚀 前往「事业发展」查看创业条件", "info");
+          }
+        }},
+      ],
+      condition: function (st) {
+        return st.career && st.career.currentJob && (st.career.currentJob.workDays || 0) >= 60;
+      },
+      weight: 1,
+    },
+
+    // ================================================================
+    // C→F: 职业里程碑→UI面板反馈
+    // 在职天数达到特定里程碑时，弹出成就式反馈
+    // ================================================================
+    {
+      id: "c620_career_milestone_ui",
+      phase: "street",
+      _isChainEvent: false,
+      icon: "🎯",
+      title: "职业里程碑",
+      minDay: 7,
+      story: function (st) {
+        if (!st.career || !st.career.currentJob) return "你还没有固定工作，找一份工作开始你的职业之旅吧。";
+        var wd = st.career.currentJob.workDays || 0;
+        var pathName = _pathNameR620(st);
+        var perf = st.career.currentJob.performance || 50;
+        var salary = st.career.currentJob.salary || 0;
+
+        if (wd >= 365) {
+          return "你在「" + pathName + "」已经工作满一周年！在职" + wd + "天，绩效" + perf + "分，月薪¥" + salary.toLocaleString() + "。" +
+            "这一年的职场历练让你的技能和心智都得到了质的飞跃。年度考核将至，是争取晋升的好时机。";
+        } else if (wd >= 180) {
+          return "你在「" + pathName + "」已经工作了半年。在职" + wd + "天，绩效" + perf + "分。" +
+            "你已经完全适应了职场节奏，是时候考虑下一步的晋升或跳槽了。";
+        } else if (wd >= 90) {
+          return "你在「" + pathName + "」已经工作了三个月。在职" + wd + "天，绩效" + perf + "分。" +
+            "试用期已过，你已经成为团队中可靠的一员。继续积累业绩，为晋升做准备。";
+        } else if (wd >= 30) {
+          return "你在「" + pathName + "」满月了！在职" + wd + "天，绩效" + perf + "分。" +
+            "你已经基本熟悉了工作流程，接下来可以主动承担更多项目来提升绩效。";
+        }
+        return "你在「" + pathName + "」开始了新的职业生涯。在职" + wd + "天，绩效" + perf + "分。" +
+          "先熟悉工作环境，和同事建立良好关系，为长远发展打基础。";
+      },
+      choices: [
+        { text: "📈 查看晋升条件", next: null, handler: function (st) {
+          if (st.career && st.career.currentJob) {
+            var nextLevel = typeof getNextCareerLevel === "function" ? getNextCareerLevel(st.career.currentJob.path, st.career.currentJob.levelId) : null;
+            if (nextLevel) {
+              var reqHtml = typeof renderPromotionReqs === "function" ? renderPromotionReqs(st, st.career.currentJob.path, nextLevel) : "查看事业发展Tab";
+              StateManager.addMessage("⬆️ 下一级: " + nextLevel.name + " ¥" + (nextLevel.salary || 0).toLocaleString() + "/月 - " + reqHtml, "info");
+            } else {
+              StateManager.addMessage("🏆 已到达路径最高级！", "success");
+            }
+          }
+        }},
+        { text: "💪 继续努力", next: null },
+      ],
+      condition: function (st) {
+        if (!st.career || !st.career.currentJob) return false;
+        var wd = st.career.currentJob.workDays || 0;
+        // 在特定里程碑天数触发
+        return wd === 7 || wd === 30 || wd === 90 || wd === 180 || wd === 365;
+      },
+      weight: 2,
+    },
+
+    // ================================================================
+    // C→D: 职业晋升→社交圈回响
+    // 晋升或入职新工作时，已结识NPC会有反应
+    // ================================================================
+    {
+      id: "c620_career_social_echo",
+      phase: "street",
+      _isChainEvent: false,
+      icon: "🤝",
+      title: "职场社交圈",
+      minDay: 1,
+      story: function (st) {
+        var npcs = _metNpcsR620(st);
+        if (npcs.length === 0) return "你还没有结识任何人，多出去走走认识些朋友吧。";
+        if (!st.career || !st.career.currentJob) return "你还没有固定工作，找到工作后，朋友们会为你高兴的。";
+
+        var pathName = _pathNameR620(st);
+        var wd = st.career.currentJob.workDays || 0;
+        var salary = st.career.currentJob.salary || 0;
+
+        // 根据已结识NPC的数量和好感度，生成不同叙事
+        var highAffNpcs = 0;
+        for (var i = 0; i < npcs.length; i++) {
+          if (npcs[i].affinity >= 40) highAffNpcs++;
+        }
+
+        if (highAffNpcs >= 3 && wd >= 90) {
+          return "你的朋友们注意到了你在「" + pathName + "」的成就。在职" + wd + "天，月薪¥" + salary.toLocaleString() + "，" +
+            "有" + highAffNpcs + "位好友对你的职业发展表示赞赏。他们觉得你越来越靠谱了，愿意向你介绍更多人脉资源。";
+        } else if (highAffNpcs >= 1 && wd >= 30) {
+          return "你的几位好友听说你在「" + pathName + "」干得不错，都为你感到高兴。" +
+            "他们偶尔会向你打听职场见闻，也愿意在你有需要时提供帮助。";
+        }
+        return "你开始了在「" + pathName + "」的工作，朋友们知道后都表示支持。" +
+          "随着你的职业发展，你的社交圈也会越来越广。";
+      },
+      choices: [
+        { text: "🤝 维护关系", next: null, handler: function (st) {
+          if (st.needs) {
+            st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 3);
+          }
+          StateManager.addMessage("💬 和朋友们聊了聊近况，心情+3", "success");
+        }},
+        { text: "💼 专注工作", next: null },
+      ],
+      condition: function (st) {
+        if (!st.career || !st.career.currentJob) return false;
+        var wd = st.career.currentJob.workDays || 0;
+        // 入职第1天和每次晋升后触发（在职天数关键节点）
+        return wd === 1 || wd === 30 || wd === 90 || wd === 180;
+      },
+      weight: 2,
+    },
+  ];
+
+  // 注册事件
+  for (var i = 0; i < EVENTS.length; i++) {
+    RANDOM_EVENTS.push(EVENTS[i]);
+  }
+})();
+;
+// ==== js/core/domain_c_linkage_r621.js ====
+/**
+ * 域C(职业/成长) 联动增强 R621
+ * 桥接：
+ *   C→A  c621_skill_data_analysis  技能数据分析 → 消费 state.skills+state.career 数据,
+ *     职业→"技能数据指导职业选择"的数值回响
+ *   C→D  c621_mentor_appreciation  师恩难忘 → 消费 state.relationships+state.career 数据,
+ *     职业→"职业生涯中的贵人"的社交回响
+ *   C→F  c621_career_achievement_ui  职业成就UI → 消费 state.career 数据,
+ *     职业→"成就可视化展示"的UI回响
+ */
+(function () {
+  "use strict";
+  if (typeof RANDOM_EVENTS === "undefined" || !RANDOM_EVENTS) return;
+  if (RANDOM_EVENTS._domainCLinkageR621Loaded) return;
+  RANDOM_EVENTS._domainCLinkageR621Loaded = true;
+
+  var EVENTS = [
+    // ====== C→A: 技能数据分析 ======
+    {
+      id: "c621_skill_data_analysis", phase: "street", _isChainEvent: false, icon: "📊",
+      title: "技能分析报告",
+      story: "你对自己的技能做了一次全面分析——{desc}",
+      triggers: { minDay: 20, interval: 60, maxRepeats: 10, excludeFlags: ["_c621SkillAnalysisCooldown"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        if (!st.flags || st.flags._c621SkillAnalysisCooldown) return false;
+        return true;
+      },
+      choices: [
+        { text: "🔍 深度分析技能组合", hint: "智力+5,心智+3", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._c621SkillAnalysisCooldown = true;
+          if (st.player) st.player.intelligence = Math.min(100, (st.player.intelligence || 50) + 5);
+          if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 3);
+          if (typeof StateManager !== "undefined") StateManager.addMessage("📊 '我的技能组合是...' 你清晰地看到自己的优势和短板。智力+5,心智+3。", "success");
+        }},
+        { text: "📈 制定学习计划", hint: "weeklySkillXP+5,智力+2", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._c621SkillAnalysisCooldown = true;
+          if (st.player) st.player.intelligence = Math.min(100, (st.player.intelligence || 50) + 2);
+          if (st.flags) st.flags._weeklySkillBonus = (st.flags._weeklySkillBonus || 0) + 5;
+          if (typeof StateManager !== "undefined") StateManager.addMessage("📊 你制定了接下来一个月的学习计划。'有目标,才有动力。' 智力+2,每周技能XP+5。", "success");
+        }}
+      ],
+      text: function (st) {
+        if (!st || !st.skills) return null;
+        var best = "无", bestLv = 0;
+        for (var s in st.skills) {
+          if (st.skills[s] && st.skills[s].level > bestLv) { best = s; bestLv = st.skills[s].level; }
+        }
+        return "你打开技能面板,看着自己的数据。最强的" + best + "已经达到Lv." + bestLv + "了。'是继续强化优势,还是补齐短板?' 你陷入了思考。";
+      }
+    },
+
+    // ====== C→D: 师恩难忘 ======
+    {
+      id: "c621_mentor_appreciation", phase: "street", _isChainEvent: false, icon: "🙏",
+      title: "师恩难忘",
+      story: "你想起了一路走来帮助过你的人——{desc}",
+      triggers: { minDay: 40, interval: 120, maxRepeats: 5, excludeFlags: ["_c621MentorCooldown"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        if (!st.flags || st.flags._c621MentorCooldown) return false;
+        if (!st.relationships) return false;
+        for (var k in st.relationships) {
+          if (st.relationships[k] && st.relationships[k].met && (st.relationships[k].affinity || 0) >= 50) return true;
+        }
+        return false;
+      },
+      choices: [
+        { text: "🙏 登门道谢", hint: "好感+10,心情+5,心智+3", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._c621MentorCooldown = true;
+          if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 5);
+          if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 3);
+          // 找好感最高的NPC
+          var bestNpc = null, bestAff = 0;
+          for (var k in (st.relationships || {})) {
+            var r = st.relationships[k];
+            if (r && r.met && (r.affinity || 0) > bestAff) { bestAff = r.affinity || 0; bestNpc = k; }
+          }
+          if (bestNpc && typeof applyAffinityChange === "function") {
+            try { applyAffinityChange(st, bestNpc, 10, "登门道谢"); } catch(e) {}
+          }
+          if (typeof StateManager !== "undefined") StateManager.addMessage("🙏 '谢谢你当初的帮助,没有你就没有我的今天。' 你真诚地道谢。好感+10,心情+5,心智+3。", "success");
+        }},
+        { text: "📞 打个电话问候", hint: "好感+5,心情+3", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._c621MentorCooldown = true;
+          if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 3);
+          var bestNpc = null, bestAff = 0;
+          for (var k in (st.relationships || {})) {
+            var r = st.relationships[k];
+            if (r && r.met && (r.affinity || 0) > bestAff) { bestAff = r.affinity || 0; bestNpc = k; }
+          }
+          if (bestNpc && typeof applyAffinityChange === "function") {
+            try { applyAffinityChange(st, bestNpc, 5, "电话问候"); } catch(e) {}
+          }
+          if (typeof StateManager !== "undefined") StateManager.addMessage("🙏 一个简单的电话,让恩人感受到你的心意。'好孩子,有出息了还记得我。' 好感+5,心情+3。", "success");
+        }}
+      ],
+      text: function (st) {
+        if (!st) return null;
+        return "你突然想起,当初刚来这座城市时,有一个好心人给了你很多帮助。'没有TA,我可能走不到今天。' 你决定找个机会好好感谢TA。";
+      }
+    },
+
+    // ====== C→F: 职业成就UI ======
+    {
+      id: "c621_career_achievement_ui", phase: "street", _isChainEvent: false, icon: "🏅",
+      title: "职业成就",
+      story: "你回顾了自己的职业生涯,发现了一些值得骄傲的成就——{desc}",
+      triggers: { minDay: 50, interval: 90, maxRepeats: 5, excludeFlags: ["_c621CareerAchievementCooldown"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        if (!st.flags || st.flags._c621CareerAchievementCooldown) return false;
+        return st.career && st.career.history && st.career.history.length >= 2;
+      },
+      choices: [
+        { text: "🏆 分享成就", hint: "名气+5,心情+5", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._c621CareerAchievementCooldown = true;
+          if (st.player) st.player.fame = Math.min(100, (st.player.fame || 0) + 5);
+          if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 5);
+          if (typeof StateManager !== "undefined") StateManager.addMessage("🏅 '看看我这一路走来的成绩!' 你把自己的职业成就分享了出去。名气+5,心情+5。", "success");
+        }},
+        { text: "📝 记录在简历里", hint: "智力+3,心智+2", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._c621CareerAchievementCooldown = true;
+          if (st.player) st.player.intelligence = Math.min(100, (st.player.intelligence || 50) + 3);
+          if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 2);
+          if (typeof StateManager !== "undefined") StateManager.addMessage("🏅 你认真更新了简历。'这些经历,都是我的资本。' 智力+3,心智+2。", "success");
+        }}
+      ],
+      text: function (st) {
+        if (!st || !st.career || !st.career.history) return null;
+        var count = st.career.history.length;
+        var last = st.career.history[count - 1];
+        var event = (last && last.event) || "这段经历";
+        return "你翻看自己的职业历程,已经经历了" + count + "个重要节点。最新的一条是:'" + event + "'。'不知不觉,已经走了这么远。'";
+      }
+    }
+  ];
+
+  for (var i = 0; i < EVENTS.length; i++) {
+    RANDOM_EVENTS.push(EVENTS[i]);
+  }
+})();
+;
+// ==== js/core/domain_c_linkage_r626.js ====
+/**
+ * 域C(职业/成长) 联动增强 R626
+ * 桥接：
+ *   C→D  c626_career_colleague_circle  职业同事圈 → 消费 state.career+state.corporate 数据,
+ *     职业→"同事圈层"社交回响
+ *   C→E  c626_skill_side_income  技能副业收入 → 消费 state.skills+state.player 数据,
+ *     职业→"一技之长"经济回响
+ *   C→G  c626_career_health_warning  职业健康预警 → 消费 state.career+state.needs 数据,
+ *     职业→"高压工作"生命回响
+ */
+(function () {
+  "use strict";
+  if (typeof RANDOM_EVENTS === "undefined" || !RANDOM_EVENTS) return;
+  if (RANDOM_EVENTS._domainCLinkageR626Loaded) return;
+  RANDOM_EVENTS._domainCLinkageR626Loaded = true;
+
+  var EVENTS = [
+    // ================================================================
+    // C→D: 职业同事圈 — 同事网络社交提醒
+    // ================================================================
+    {
+      id: "c626_career_colleague_circle",
+      phase: "street",
+      _isChainEvent: false,
+      icon: "👥",
+      title: "同事圈",
+      triggers: { minDay: 5 },
+      story: function (st) {
+        var net = st.corporate && st.corporate.colleagues && st.corporate.colleagues.network;
+        if (!net || net.length === 0) {
+          return "你目前还没有固定工作或同事圈。上班后会和同事建立联系，这些人脉对你的职业发展很重要。";
+        }
+        var highRel = 0;
+        for (var i = 0; i < net.length; i++) {
+          if (net[i] && (net[i].relationship || 0) >= 60) highRel++;
+        }
+        var total = net.length;
+        if (highRel >= 2) {
+          return "你在同事中人缘不错！" + total + "位同事中有" + highRel + "位关系很好（好感≥60）。" +
+            "这些关系好的同事可能会在关键时刻帮你一把——比如内推、透露晋升信息、或者分担工作压力。";
+        } else if (highRel >= 1) {
+          return "你有一位关系不错的同事（好感≥60），" +
+            "平时多聊聊天、偶尔请客吃饭，职场路上有人帮衬很重要。";
+        }
+        return "你和同事们的关系一般（" + total + "位同事，最高好感" +
+          Math.max.apply(null, net.map(function(c) { return c.relationship || 0; })) + "）。" +
+          "俗话说「多个朋友多条路」，在职场中维护好同事关系，对晋升和跳槽都有帮助。";
+      },
+      choices: [
+        { text: "💬 和同事闲聊", apply: function(st) {
+          if (typeof careerSocialAction === "function") {
+            careerSocialAction("chat", null);
+          } else {
+            StateManager.addMessage("💬 找同事聊了聊，关系更近了一步", "info");
+          }
+        }},
+        { text: "🍚 请同事吃饭", apply: function(st) {
+          if (typeof careerSocialAction === "function") {
+            careerSocialAction("meal", null);
+          } else {
+            StateManager.addMessage("🍚 请同事吃了顿饭，关系升温", "info");
+          }
+        }},
+      ],
+      conditions: function (st) {
+        return st.career && st.career.currentJob;
+      },
+      weight: 1,
+    },
+
+    // ================================================================
+    // C→E: 技能副业收入 — 利用专业技能接私活
+    // ================================================================
+    {
+      id: "c626_skill_side_income",
+      phase: "street",
+      _isChainEvent: false,
+      icon: "💡",
+      title: "技能变现",
+      triggers: { minDay: 15 },
+      story: function (st) {
+        var skills = st.skills || {};
+        var topSkill = null;
+        var topLevel = 0;
+        for (var k in skills) {
+          if (skills[k] && typeof skills[k].level === "number" && skills[k].level > topLevel) {
+            topLevel = skills[k].level;
+            topSkill = k;
+          }
+        }
+
+        if (!topSkill || topLevel < 20) {
+          return "你的技能还不够熟练。当某项技能达到Lv.20以上时，就可以考虑接私活赚外快了。" +
+            "比如编程接外包、维修接私单、烹饪做私房菜。";
+        }
+
+        var skillName = (typeof getSkillChineseName === "function") ? getSkillChineseName(topSkill) : topSkill;
+        var income = Math.floor(topLevel * 2.5 + 20);
+
+        if (topLevel >= 50) {
+          return "你的" + skillName + "技能已经达到Lv." + topLevel + "，在业内算是专家水平了。" +
+            "以你的水平，接私活每月至少能赚 ¥" + income + " 额外收入。" +
+            "如果有时间，可以考虑在业余时间接一些相关项目，让技能变成实实在在的收入。";
+        }
+        return "你的" + skillName + "技能Lv." + topLevel + "，已经可以接一些入门级的私活了。" +
+          "预计每月能带来 ¥" + income + " 左右的额外收入。" +
+          "继续提升技能等级，收入会跟着水涨船高。";
+      },
+      choices: [
+        { text: "💰 接私活", apply: function(st) {
+          var skills = st.skills || {};
+          var topLv = 0;
+          for (var k in skills) {
+            if (skills[k] && typeof skills[k].level === "number" && skills[k].level > topLv) {
+              topLv = skills[k].level;
+            }
+          }
+          var earn = Math.floor(topLv * 2.5 + 20);
+          st.resources = st.resources || {};
+          st.resources.cash = (st.resources.cash || 0) + earn;
+          st.resources.totalEarned = (st.resources.totalEarned || 0) + earn;
+          StateManager.addMessage("💼 接了一单私活，赚了 ¥" + earn, "success");
+        }},
+        { text: "📚 继续提升", apply: function(st) {
+          StateManager.addMessage("📚 你决定先把技能练到更高水平再考虑变现", "info");
+        }},
+      ],
+      conditions: function (st) {
+        var skills = st.skills || {};
+        for (var k in skills) {
+          if (skills[k] && typeof skills[k].level === "number" && skills[k].level >= 20) return true;
+        }
+        return false;
+      },
+      weight: 1,
+    },
+
+    // ================================================================
+    // C→G: 职业健康预警 — 高压工作影响健康
+    // ================================================================
+    {
+      id: "c626_career_health_warning",
+      phase: "street",
+      _isChainEvent: false,
+      icon: "⚠️",
+      title: "健康预警",
+      triggers: { minDay: 20 },
+      story: function (st) {
+        if (!st.career || !st.career.currentJob) {
+          return "你目前没有固定工作，自由度较高，注意保持作息规律就好。";
+        }
+        var job = st.career.currentJob;
+        var wd = job.workDays || 0;
+        var perf = job.performance || 50;
+        var burnout = (typeof ensureCareerCapital === "function") ? (ensureCareerCapital(st).burnout || 0) : 0;
+        var health = st.status && st.status.health || 100;
+        var fatigue = st.needs && st.needs.fatigue || 0;
+
+        if (burnout >= 70 || health < 40) {
+          return "⚠️ 你的健康状况不容乐观！倦怠" + Math.round(burnout) + "%" +
+            (health < 60 ? "，健康仅" + Math.round(health) : "") +
+            "。在职" + wd + "天的高压工作正在透支你的身体。" +
+            "建议尽快安排调休或年假，否则可能引发健康危机。";
+        } else if (burnout >= 40 || fatigue >= 60) {
+          return "你的身体在发出警告——倦怠" + Math.round(burnout) + "%" +
+            (fatigue >= 50 ? "，疲劳度" + Math.round(fatigue) : "") +
+            "。在职" + wd + "天，绩效" + perf + "分。" +
+            "虽然还能坚持，但长期高负荷运转不是办法。适当休息反而能提高效率。";
+        }
+        return "你的身体状况良好（健康" + Math.round(health) + "，倦怠" + Math.round(burnout) + "%）。" +
+          "在职" + wd + "天，绩效" + perf + "分。" +
+          "继续保持良好的工作节奏，注意劳逸结合。";
+      },
+      choices: [
+        { text: "😴 调休一天", apply: function(st) {
+          if (typeof careerTakeBreak === "function") {
+            careerTakeBreak();
+          } else {
+            var cap = (typeof ensureCareerCapital === "function") ? ensureCareerCapital(st) : null;
+            if (cap) cap.burnout = Math.max(0, (cap.burnout || 0) - 20);
+            if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 3);
+            StateManager.addMessage("😴 休息了一天，倦怠-20，心情+3", "success");
+          }
+        }},
+        { text: "💪 坚持一下", apply: function(st) {
+          StateManager.addMessage("💪 你决定再坚持一下，但要注意身体发出的信号", "info");
+        }},
+      ],
+      conditions: function (st) {
+        return st.career && st.career.currentJob && (st.career.currentJob.workDays || 0) >= 30;
+      },
+      weight: 1,
+    },
+  ];
+
+  // 注册事件
+  for (var i = 0; i < EVENTS.length; i++) {
+    RANDOM_EVENTS.push(EVENTS[i]);
+  }
+})();
 ;
 // ==== js/core/domain_d_linkage_r636.js ====
 /**
