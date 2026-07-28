@@ -50,7 +50,9 @@
 - 域C 剩：`_apprenticeList`/`_highSalaryHealthWarn`。
 - 域D 注意：R440(老陈)/R442(小薇) 并行已连做新NPC。
 
-## 近况（R489-R515）
-- R489 域C(本窗口 1285e69f)：A类=0；c489_salary_alloc/burnout_share/occu_health_wakeup（career_dev 死flag首消费）。
-- 并行已连推 R498-R513 两整轮8域循环（17:22 R513 域H 收官）+ 小编号 R67-R88 系列。
-- R515 域C(本窗口)：见当轮 round doc。
+## 近况（R515-R640b）
+- 并行已推进至 R639（7-28 14:51，~5分钟/轮）。**同轮号冲突新形态：并行挂载先行、源未落盘**（R640 index.html:1473 挂 r640.js 无源文件）→本窗口同轮号时改 **b后缀**（r640b）避让，勿删并行在途挂载行。
+- R640b 域H(本窗口)：正向孤儿救援 r601/r602/r623（源提交于 R586 但从未挂载=12死事件；r592≡r601 并行重复生成不挂）；联动3=morale写-only闭环首读/burnRate跑道警报/董事会shareholderTrust首引。
+- **域H富矿**：company.efficiency（r602写入无读者）/boardPressureLevel/mediaRelations/sentimentScore/crisisLevel（P1-6/P1-7大系统事件层零引用）。
+- 域H结构速查：company 真实字段含 morale(惰性)/burnRate/cashReserve/monthsOfRunway/boardMembers[]/shareholderTrust/shareholderSatisfaction/revenue/valuation(52处消费)；corporate.colleagues=state.js:392真实；player.fame 真实。
+- startup_events.js 在 **src/js/data/**（非core）；STARTUP_FIELD_MAP 白名单={cashReserve,reputation,marketScore,technologyScore,revenue}，effect键全集已核对无越界。
