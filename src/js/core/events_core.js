@@ -1064,6 +1064,7 @@ function showJobOfferModal() {
  * @param {string} phase - "street" | "corporate"
  */
 function scheduleChainEvent(state, eventId, delayDays, phase) {
+  if (!state.flags) state.flags = {};
   if (!state.flags._chainEventQueue) {
     state.flags._chainEventQueue = [];
   }

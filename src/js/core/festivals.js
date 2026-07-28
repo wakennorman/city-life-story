@@ -731,6 +731,7 @@ function getCurrentFestival(day) {
 
 /** 判断是否处于剁手节余震清仓期（节日结束后3天） */
 function isShoppingClearancePeriod(state) {
+  if (!state.flags) return false;
   return !!(
     state.flags._shoppingClearanceEndDay &&
     state.player.day <= state.flags._shoppingClearanceEndDay
@@ -1361,6 +1362,7 @@ var MID_AUTUMN_DEEP_EVENTS = [
 /** v3.1: 检查清明/中秋深度事件 */
 function checkFestivalDeepEvents(state) {
   if (!state.player || !state.player.day) return false;
+  if (!state.flags) state.flags = {};
   if (state.flags.gameOver || state.flags.victory) return false;
   var doy = state.player.day % 365;
   var year = Math.floor(state.player.day / 365);
