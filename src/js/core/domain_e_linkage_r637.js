@@ -36,16 +36,17 @@
       title: "投资日记",
       triggers: { minDay: 12 },
       story: function (st) {
-        var stocks = st.stockMarket || {};
+        // [R637b A类修复] st.stockMarket不存在→改用st.investment.stockHoldings
+        var holdings = (st.investment && st.investment.stockHoldings) || [];
         var stockCount = 0;
         var totalPl = 0;
         var totalInvested = 0;
-        for (var sym in stocks) {
-          var s = stocks[sym];
-          if (s && s.shares > 0) {
+        for (var i = 0; i < holdings.length; i++) {
+          var h = holdings[i];
+          if (h && (h.shares || 0) > 0) {
             stockCount++;
-            totalInvested += (s.shares || 0) * (s.avgPrice || 0);
-            totalPl += ((s.currentPrice || 0) - (s.avgPrice || 0)) * (s.shares || 0);
+            totalInvested += (h.shares || 0) * (h.avgPrice || 0);
+            totalPl += ((h.currentPrice || h.avgPrice || 0) - (h.avgPrice || 0)) * (h.shares || 0);
           }
         }
         if (stockCount === 0) {
@@ -76,10 +77,9 @@
         }},
       ],
       conditions: function (st) {
-        var sm = st.stockMarket;
-        if (!sm) return false;
-        for (var sym in sm) {
-          if (sm[sym] && sm[sym].shares > 0) return true;
+        var holdings = (st.investment && st.investment.stockHoldings) || [];
+        for (var i = 0; i < holdings.length; i++) {
+          if (holdings[i] && (holdings[i].shares || 0) > 0) return true;
         }
         return false;
       },
@@ -152,13 +152,11 @@
         var totalEarned = st.resources && st.resources.totalEarned || 0;
         var dailyIncome = Math.round(totalEarned / Math.max(1, day));
         var passiveIncome = 0;
-        var stocks = st.stockMarket;
-        if (stocks) {
-          for (var sym in stocks) {
-            var s = stocks[sym];
-            if (s && s.shares > 0) {
-              passiveIncome += (s.shares || 0) * (s.currentPrice || 0) * 0.002; // 估算股息
-            }
+        var holdings = (st.investment && st.investment.stockHoldings) || [];
+        for (var i = 0; i < holdings.length; i++) {
+          var h = holdings[i];
+          if (h && (h.shares || 0) > 0) {
+            passiveIncome += (h.shares || 0) * (h.currentPrice || h.avgPrice || 0) * 0.002; // 估算股息
           }
         }
         var investVal = (st.investment && st.investment.totalValue) || 0;
