@@ -307870,6 +307870,133 @@ if (typeof window !== "undefined") {
 })();
 
 ;
+// ==== js/core/domain_a_linkage_r658.js ====
+/**
+ * 域A(数据/数值平衡) 联动增强 R658
+ * 桥接：
+ *   A→H  a658_cost_analysis  成本分析 → 消费 state.resources+state.startup 数据,
+ *     数据→"经营成本数据分析"的公司回响
+ *   A→B  a658_market_narrative  市场叙事 → 消费 state.flags+state.resources 数据,
+ *     数据→"价格波动中的故事"的叙事回响
+ *   A→D  a658_fair_price_friendship  公平价友谊 → 消费 state.relationships+state.skills 数据,
+ *     数据→"懂价格的人更受欢迎"的社交回响
+ */
+(function () {
+  "use strict";
+  if (typeof RANDOM_EVENTS === "undefined" || !RANDOM_EVENTS) return;
+  if (RANDOM_EVENTS._domainALinkageR658Loaded) return;
+  RANDOM_EVENTS._domainALinkageR658Loaded = true;
+
+  var EVENTS = [
+    // ====== A→H: 成本分析 ======
+    {
+      id: "a658_cost_analysis", phase: "corporate", _isChainEvent: false, icon: "📊",
+      title: "成本分析",
+      story: "你仔细分析了公司的各项成本——{desc}",
+      triggers: { minDay: 50, interval: 90, maxRepeats: 6, excludeFlags: ["_a658CostAnalysisCooldown"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        if (!st.flags || st.flags._a658CostAnalysisCooldown) return false;
+        return st.startup && st.startup.company;
+      },
+      choices: [
+        { text: "📉 优化成本结构", hint: "公司效率+8,月成本-5%,心智+3", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._a658CostAnalysisCooldown = true;
+          if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 3);
+          if (st.startup && st.startup.company) {
+            st.startup.company.efficiency = Math.min(100, (st.startup.company.efficiency || 50) + 8);
+          }
+          if (typeof StateManager !== "undefined") StateManager.addMessage("📊 你优化了公司的成本结构。'省下来的每一分钱,都是利润。' 公司效率+8,心智+3。", "success");
+        }},
+        { text: "📈 加大投入扩张", hint: "智力+5,现金-5000,月收入+10%", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._a658CostAnalysisCooldown = true;
+          if (st.resources) st.resources.cash = Math.max(0, (st.resources.cash || 0) - 5000);
+          if (st.player) st.player.intelligence = Math.min(100, (st.player.intelligence || 50) + 5);
+          if (typeof StateManager !== "undefined") StateManager.addMessage("📊 '舍不得孩子套不着狼。' 你决定加大投入,扩张业务。智力+5,现金-5000。", "success");
+        }}
+      ],
+      text: function (st) {
+        if (!st || !st.startup || !st.startup.company) return null;
+        var rev = st.startup.company.revenue || 0;
+        var cost = st.startup.company.monthlyCost || 0;
+        return "公司的月收入¥" + rev.toLocaleString() + ",月成本¥" + cost.toLocaleString() + "。'赚得多不如花得巧,该好好分析一下成本结构了。'";
+      }
+    },
+
+    // ====== A→B: 市场叙事 ======
+    {
+      id: "a658_market_narrative", phase: "street", _isChainEvent: false, icon: "📈",
+      title: "市场叙事",
+      story: "价格波动背后,总有故事——{desc}",
+      triggers: { minDay: 15, interval: 45, maxRepeats: 10, excludeFlags: ["_a658MarketNarrativeCooldown"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        if (!st.flags || st.flags._a658MarketNarrativeCooldown) return false;
+        return true;
+      },
+      choices: [
+        { text: "🔍 研究涨价原因", hint: "智力+4,心智+2", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._a658MarketNarrativeCooldown = true;
+          if (st.player) st.player.intelligence = Math.min(100, (st.player.intelligence || 50) + 4);
+          if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 2);
+          if (typeof StateManager !== "undefined") StateManager.addMessage("📈 '原来是因为天气原因导致减产...' 你找到了涨价背后的故事。智力+4,心智+2。", "success");
+        }},
+        { text: "🤔 想想怎么应对", hint: "心智+5", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._a658MarketNarrativeCooldown = true;
+          if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 5);
+          if (typeof StateManager !== "undefined") StateManager.addMessage("📈 '涨价有涨价的道理,我得想想怎么应对。' 你冷静地分析着形势。心智+5。", "success");
+        }}
+      ],
+      text: function (st) {
+        if (!st) return null;
+        return "菜市场的猪肉又涨价了。摊主说:'没办法,进货价就贵了,听说是因为饲料涨价了。' 你发现,每一次价格波动的背后,都有一个故事。";
+      }
+    },
+
+    // ====== A→D: 公平价友谊 ======
+    {
+      id: "a658_fair_price_friendship", phase: "street", _isChainEvent: false, icon: "🏷️",
+      title: "人情价格",
+      story: "你发现懂价格的人,在朋友中更受欢迎——{desc}",
+      triggers: { minDay: 20, interval: 60, maxRepeats: 8, excludeFlags: ["_a658FairPriceCooldown"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        if (!st.flags || st.flags._a658FairPriceCooldown) return false;
+        return true;
+      },
+      choices: [
+        { text: "🛍️ 帮朋友代购省钱", hint: "好感+8,心情+5,省下¥200", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._a658FairPriceCooldown = true;
+          if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 5);
+          if (st.resources) st.resources.cash = (st.resources.cash || 0) + 200;
+          if (typeof applyAffinityChange === "function" && st.relationships) {
+            for (var k in st.relationships) {
+              if (st.relationships[k] && st.relationships[k].met) {
+                try { applyAffinityChange(st, k, 8, "代购省钱"); } catch(e) {} break;
+              }
+            }
+          }
+          if (typeof StateManager !== "undefined") StateManager.addMessage("🏷️ '这家店的东西最便宜,跟我来!' 你帮朋友省了一大笔钱。好感+8,心情+5,省下¥200。", "success");
+        }},
+        { text: "📝 分享省钱攻略", hint: "名气+5,心智+3", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._a658FairPriceCooldown = true;
+          if (st.player) st.player.fame = Math.min(100, (st.player.fame || 0) + 5);
+          if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 3);
+          if (typeof StateManager !== "undefined") StateManager.addMessage("🏷️ 你在朋友圈分享了省钱攻略,朋友们纷纷点赞收藏。'实用!收藏了!' 名气+5,心智+3。", "success");
+        }}
+      ],
+      text: function (st) {
+        if (!st) return null;
+        return "朋友们都知道你对价格很了解,买什么东西都先来问你。'你帮我看看这个价格合理吗?' 你发现,懂价格的人,在朋友圈里特别受欢迎。";
+      }
+    }
+  ];
+
+  for (var i = 0; i < EVENTS.length; i++) {
+    RANDOM_EVENTS.push(EVENTS[i]);
+  }
+})();
+;
 // ==== js/core/domain_b_linkage_r658.js ====
 /**
  * 域B(事件/叙事) 联动增强 R658
@@ -311287,6 +311414,88 @@ if (typeof window !== "undefined") {
   }
 })();
 
+;
+// ==== js/core/domain_g_linkage_r663.js ====
+/**
+ * 域G(核心机制/生命周期) 联动增强 R663
+ * 桥接：
+ *   G→E  g663_daily_expense_awareness  日常开支意识 → 消费 state.resources+state.player 数据,
+ *     生命→"每天花多少钱"经济回响
+ *   G→D  g663_seasonal_social_rhythm  季节社交节奏 → 消费 state.player+state.relationships 数据,
+ *     生命→"四季更替中的社交"社交回响
+ *   G→F  g663_life_quality_index  生活品质指数 → 消费 state.needs+state.status+state.player 数据,
+ *     生命→"生活质量综合评分"UI回响
+ */
+(function () {
+  "use strict";
+  if (typeof RANDOM_EVENTS === "undefined" || !RANDOM_EVENTS) return;
+  if (RANDOM_EVENTS._domainGLinkageR663Loaded) return;
+  RANDOM_EVENTS._domainGLinkageR663Loaded = true;
+
+  function metNpcsR663(st) {
+    var out = []; var rels = st.relationships || {};
+    for (var k in rels) { if (rels[k] && rels[k].met) out.push({ id: k, affinity: rels[k].affinity || 0 }); }
+    return out;
+  }
+
+  var EVENTS = [
+    {
+      id: "g663_daily_expense_awareness", phase: "street", _isChainEvent: false, icon: "💰",
+      title: "日常开支", triggers: { minDay: 7 },
+      story: function(st) {
+        var day = st.player && st.player.day || 1;
+        var totalEarned = st.resources && st.resources.totalEarned || 0;
+        var cash = st.resources && st.resources.cash || 0;
+        var dailyAvg = Math.round(totalEarned / Math.max(1, day));
+        var spent = totalEarned - cash;
+        var dailySpend = Math.round(spent / Math.max(1, day));
+        if (day < 7) return "你刚来这座城市不久，先熟悉环境，慢慢就会知道每天的开销了。";
+        return "你在这座城市生活了" + day + "天，累计赚了¥" + totalEarned.toLocaleString() + "，日均收入¥" + dailyAvg + "。" + "日均开支约¥" + dailySpend + "，" + (dailySpend > dailyAvg * 0.8 ? "开支偏高，建议适当控制。" : "开支控制在合理范围内。") + "记账是理财的第一步。";
+      },
+      choices: [
+        { text: "📝 开始记账", apply: function(st) { st.flags=st.flags||{}; st.flags._g663_budget=(st.flags._g663_budget||0)+1; StateManager.addMessage("📝 开始记录每日开支", "info"); }},
+        { text: "💰 查看资产", apply: function(st) { StateManager.addMessage("💰 现金¥" + ((st.resources&&st.resources.cash)||0).toLocaleString(), "info"); }},
+      ],
+      conditions: function(st) { return st.resources && st.resources.totalEarned > 0; },
+      weight: 1,
+    },
+    {
+      id: "g663_seasonal_social_rhythm", phase: "street", _isChainEvent: false, icon: "🌸",
+      title: "季节社交", triggers: { minDay: 10 },
+      story: function(st) {
+        var npcs = metNpcsR663(st); if (npcs.length === 0) return "你还没有朋友，试着走出去认识些人。";
+        var day = st.player && st.player.day || 1;
+        var season = (day % 120 < 30) ? "春" : (day % 120 < 60) ? "夏" : (day % 120 < 90) ? "秋" : "冬";
+        var seasonTips = { "春": "春天适合踏青和户外活动", "夏": "夏天可以约朋友吃夜宵", "秋": "秋天适合一起喝茶赏景", "冬": "冬天约个火锅最暖心" };
+        return "现在是" + season + "天，你认识" + npcs.length + "位朋友。" + seasonTips[season] + "。" + "约朋友出来聚聚，维护关系的同时也能放松心情。";
+      },
+      choices: [
+        { text: "🌸 约朋友", apply: function(st) { if(st.needs) st.needs.happiness=Math.min(100,(st.needs.happiness||50)+5); StateManager.addMessage("🌸 约朋友出来聚了聚，心情+5", "success"); }},
+        { text: "🍵 独处", apply: function(st) { if(st.player) st.player.mental=Math.min(100,(st.player.mental||50)+2); StateManager.addMessage("🍵 享受独处时光，心智+2", "success"); }},
+      ],
+      conditions: function(st) { var npcs = metNpcsR663(st); return npcs.length >= 1; },
+      weight: 1,
+    },
+    {
+      id: "g663_life_quality_index", phase: "street", _isChainEvent: false, icon: "📊",
+      title: "生活质量", triggers: { minDay: 14 },
+      story: function(st) {
+        var h = st.status && st.status.health || 100; var ha = st.needs && st.needs.happiness || 50; var f = st.needs && st.needs.fullness || 50; var fa = st.needs && st.needs.fatigue || 0; var hy = st.needs && st.needs.hygiene || 50; var m = st.player && st.player.mental || 50;
+        var score = 0; score += (h >= 80 ? 20 : h >= 50 ? 10 : 0); score += (ha >= 60 ? 20 : ha >= 30 ? 10 : 0); score += (f >= 60 ? 15 : f >= 30 ? 8 : 0); score += (fa <= 30 ? 15 : fa <= 60 ? 8 : 0); score += (hy >= 60 ? 15 : hy >= 30 ? 8 : 0); score += (m >= 60 ? 15 : m >= 30 ? 8 : 0);
+        var grade = score >= 80 ? "优秀" : score >= 60 ? "良好" : score >= 40 ? "一般" : "需要改善";
+        return "生活质量综合评分：" + score + "/100（" + grade + "）<br>健康" + Math.round(h) + " 心情" + Math.round(ha) + " 饱食" + Math.round(f) + "<br>疲劳" + Math.round(fa) + " 卫生" + Math.round(hy) + " 心智" + Math.round(m) + "<br>" + (score < 60 ? "有几项指标偏低，需要注意调整。" : "继续保持良好的生活习惯。");
+      },
+      choices: [
+        { text: "🛌 休息", apply: function(st) { if(st.needs) st.needs.fatigue=Math.max(0,(st.needs.fatigue||0)-20); StateManager.addMessage("🛌 休息了一下，疲劳-20", "success"); }},
+        { text: "🚿 打理", apply: function(st) { if(st.needs) st.needs.hygiene=Math.min(100,(st.needs.hygiene||50)+15); StateManager.addMessage("🚿 打理了一下个人卫生，卫生+15", "success"); }},
+      ],
+      conditions: function(st) { return st.needs && (st.needs.happiness !== undefined); },
+      weight: 1,
+    },
+  ];
+
+  for (var i = 0; i < EVENTS.length; i++) { RANDOM_EVENTS.push(EVENTS[i]); }
+})();
 ;
 // ==== js/main.js ====
 /**
