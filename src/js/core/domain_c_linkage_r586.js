@@ -46,7 +46,7 @@
         { text: "📈 提升自己", hint: "随机技能XP+3", apply: function (st) {
           if (!st) return; st.flags = st.flags || {}; st.flags._c586CareerCircleCooldown = true;
           var skills = ["accounting", "management", "social", "coding", "sales"]; // [全系统自洽修复] 域E R588 修复:marketing/technology/trade非真实技能键(addSkillXp静默丢弃XP)→映射social/coding/sales
-          var sk = skills[Math.floor(Math.random() * skills.length)];
+          var sk = Random.fromArray(skills); // [全系统自洽修复] 域C R400: Math.random()→Random.fromArray()
           if (typeof addSkillXp === "function") { try { addSkillXp(sk, 3); } catch(e) {} }
           if (typeof StateManager !== "undefined") StateManager.addMessage("🎯 '提升自己，才能进入更好的圈层。' 随机技能XP+3。", "success");
         }}

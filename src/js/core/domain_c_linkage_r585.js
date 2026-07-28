@@ -58,14 +58,14 @@
           if (!st) return; st.flags = st.flags || {}; st.flags._c585CareerInvestCooldown = true;
           if (st.resources) st.resources.cash = Math.max(0, (st.resources.cash || 0) - 2000);
           var skills = ["coding", "sales", "accounting", "management", "cooking", "repair"];
-          var sk = skills[Math.floor(Math.random() * skills.length)];
+          var sk = Random.fromArray(skills); // [全系统自洽修复] 域C R400: Math.random()→Random.fromArray()
           if (typeof addSkillXp === "function") { try { addSkillXp(sk, 8); } catch(e) {} }
           if (typeof StateManager !== "undefined") StateManager.addMessage("📈 '投资自己是最划算的投资。' " + sk + "XP+8,现金-¥2000。", "success");
         }},
         { text: "📚 学习新技能", hint: "随机新技能XP+5", apply: function (st) {
           if (!st) return; st.flags = st.flags || {}; st.flags._c585CareerInvestCooldown = true;
           var skills = ["coding", "sales", "accounting", "management", "english", "driving"];
-          var sk = skills[Math.floor(Math.random() * skills.length)];
+          var sk = Random.fromArray(skills); // [全系统自洽修复] 域C R400: Math.random()→Random.fromArray()
           if (typeof addSkillXp === "function") { try { addSkillXp(sk, 5); } catch(e) {} }
           if (typeof StateManager !== "undefined") StateManager.addMessage("📈 '多学一门技能多一条路。' " + sk + "XP+5。", "success");
         }}

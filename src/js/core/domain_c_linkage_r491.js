@@ -104,7 +104,7 @@
         { text: "📈 继续提升", hint: "随机技能XP+3", apply: function (st) {
           if (!st) return; st.flags = st.flags || {}; st.flags._c491SkillBadgeCooldown = true;
           var skills = ["accounting", "management", "social", "coding", "sales"]; // [全系统自洽修复] 域B R572 修复:marketing/technology/trade非真实技能键(addSkillXp静默丢弃XP)→映射social/coding/sales
-          var sk = skills[Math.floor(Math.random() * skills.length)];
+          var sk = Random.fromArray(skills); // [全系统自洽修复] 域C R400: Math.random()→Random.fromArray()
           if (typeof addSkillXp === "function") { try { addSkillXp(sk, 3); } catch(e) {} }
           if (typeof StateManager !== "undefined") StateManager.addMessage("🏅 '一个徽章不够，我要集齐所有的。' 随机技能XP+3。", "success");
         }}

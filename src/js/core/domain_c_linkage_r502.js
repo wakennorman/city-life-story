@@ -44,7 +44,7 @@
           if (!st) return; st.flags = st.flags || {}; st.flags._c502MentorBondCooldown = true;
           if (st.player) st.player.intelligence = Math.min(100, (st.player.intelligence || 50) + 2);
           var skills = ["accounting", "management", "coding", "sales", "repair"];
-          var sk = skills[Math.floor(Math.random() * skills.length)];
+          var sk = Random.fromArray(skills); // [全系统自洽修复] 域C R400: Math.random()→Random.fromArray()
           if (typeof addSkillXp === "function") { try { addSkillXp(sk, 3); } catch(e) {} }
           if (typeof StateManager !== "undefined") StateManager.addMessage("🤝 '有些路还是要自己走。' 你选择独立思考。智力+2,随机技能XP+3。", "success");
         }}
