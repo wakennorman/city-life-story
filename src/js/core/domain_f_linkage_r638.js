@@ -25,7 +25,7 @@
       icon: "🔍",
       title: "社交发现",
       triggers: { minDay: 5 },
-      story: function (st) {
+      text: function (st) {
         var rels = st.relationships || {};
         var npcCount = 0;
         var dormantCount = 0;
@@ -80,7 +80,7 @@
       icon: "🗺️",
       title: "技能路线图",
       triggers: { minDay: 12 },
-      story: function (st) {
+      text: function (st) {
         var skills = st.skills || {};
         var skillList = [];
         for (var k in skills) {
@@ -143,7 +143,7 @@
       icon: "💳",
       title: "开支追踪",
       triggers: { minDay: 7 },
-      story: function (st) {
+      text: function (st) {
         var cash = st.resources && st.resources.cash || 0;
         var bank = st.resources && st.resources.bankBalance || 0;
         var totalEarned = st.resources && st.resources.totalEarned || 0;
