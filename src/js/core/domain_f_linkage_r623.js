@@ -24,7 +24,7 @@
       _isChainEvent: false,
       icon: "📈",
       title: "市场价格脉搏",
-      minDay: 3,
+      triggers: { minDay: 3 },
       story: function (st) {
         var trade = st.trade || {};
         var location = trade.currentLocation || "commercialDist";
@@ -63,7 +63,7 @@
           StateManager.addMessage("📊 你记录了今天的市场价格，对行情更敏感了", "info");
         }},
       ],
-      condition: function (st) {
+      conditions: function (st) {
         if (!st.trade || !st.trade.currentLocation) return false;
         return (st.player.day || 0) % 5 === 0; // 每5天触发一次
       },
@@ -79,7 +79,7 @@
       _isChainEvent: false,
       icon: "💰",
       title: "投资组合概览",
-      minDay: 10,
+      triggers: { minDay: 10 },
       story: function (st) {
         var stocks = st.stockMarket || {};
         var holdings = st.investment || {};
@@ -116,7 +116,7 @@
           StateManager.addMessage("💹 前往「投资」Tab查看基金/理财详情", "info");
         }},
       ],
-      condition: function (st) {
+      conditions: function (st) {
         var hasStocks = false;
         var sm = st.stockMarket;
         if (sm) {
@@ -138,7 +138,7 @@
       _isChainEvent: false,
       icon: "🏢",
       title: "公司运营健康度",
-      minDay: 30,
+      triggers: { minDay: 30 },
       story: function (st) {
         var startup = st.startup;
         if (!startup || !startup.company) {
@@ -180,7 +180,7 @@
           StateManager.addMessage("💰 公司现金流 ¥" + ((st.startup && st.startup.company && st.startup.company.cash) || 0).toLocaleString(), "info");
         }},
       ],
-      condition: function (st) {
+      conditions: function (st) {
         return st.startup && st.startup.status !== "none" && st.startup.company;
       },
       weight: 1,
