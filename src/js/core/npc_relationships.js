@@ -1096,3 +1096,25 @@ function getNpcReferralJobs(state) {
   }
   return referrals;
 }
+
+
+// [R725 第三轮 域D 联动增强 D→F]: NPC关系图谱数据
+function getNpcRelationGraphData(state) {
+  if (!state || !state.relationships) return [];
+  var data = [];
+  for (var id in state.relationships) {
+    var r = state.relationships[id];
+    if (r && r.met) {
+      data.push({ id: id, affinity: r.affinity || 0, met: true, daily: r.daily || 0 });
+    }
+  }
+  data.sort(function(a, b) { return b.affinity - a.affinity; });
+  return data;
+}
+
+// [R725 第三轮 域D 联动增强 D→E]: NPC投资偏好
+function getNpcInvestmentStyle(npcId) {
+  if (!npcId) return 'balanced';
+  var styles = { old_zhou: 'conservative', boss_li: 'aggressive', zhaojie: 'balanced', xiao_mei: 'growth', aunt_wang: 'conservative', sister_zhang: 'value', chef_chen: 'income' };
+  return styles[npcId] || 'balanced';
+}
