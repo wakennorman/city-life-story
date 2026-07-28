@@ -4222,4 +4222,47 @@ function _wikiDetailRecipe(state, id) {
 
   return html;
 }
-// [R118] 域F 联动增强
+// [R719 域F 联动增强 F→G]: 健康趋势预警UI
+function renderHealthTrendWidget(state) {
+  if (!state || !state.status) return '<div class="wiki-empty">暂无健康数据</div>';
+  var health = state.status.health || 100;
+  var needs = state.needs || {};
+  var html = '<div style="font-size:12px;line-height:1.6;">';
+  html += '<div>❤️ 健康: <b>' + health + '</b>/100</div>';
+  html += '<div>🍞 饥饱: ' + (needs.hunger || 0) + ' | 😴 疲劳: ' + (needs.fatigue || 0) + '</div>';
+  html += '<div>🧹 卫生: ' + (needs.hygiene || 0) + ' | 😊 心情: ' + (needs.happiness || 0) + '</div>';
+  if (health < 30) html += '<div style="color:var(--danger);">⚠️ 健康危险！请尽快就医或休息。</div>';
+  else if (health < 50) html += '<div style="color:var(--warning);">⚠️ 健康欠佳，注意休息。</div>';
+  if (state.status.illnesses && state.status.illnesses.length > 0) {
+    html += '<div style="color:var(--danger);">🏥 患病: ' + state.status.illnesses.length + '种</div>';
+  }
+  html += '</div>';
+  return html;
+}
+
+// [R719 域F 联动增强 F→E]: 投资组合概览UI
+function renderInvestmentWidget(state) {
+  if (!state || !state.investment) return '<div class="wiki-empty">暂无投资数据</div>';
+  var inv = state.investment;
+  var stockVal = 0;
+  var stocks = inv.stockHoldings || [];
+  for (var _si = 0; _si < stocks.length; _si++) {
+    var h = stocks[_si];
+    var m = inv.stockMarket && inv.stockMarket[h.symbol];
+    if (m && isFinite(m.price)) stockVal += m.price * (h.shares || 0);
+  }
+  var btcVal = (inv.btcPrice || 0) * (inv.btcHoldings || 0);
+  var props = inv.properties || [];
+  var propVal = 0;
+  for (var _pi = 0; _pi < props.length; _pi++) {
+    propVal += props[_pi].currentPrice || props[_pi].buyPrice || 0;
+  }
+  var total = stockVal + btcVal + propVal;
+  var html = '<div style="font-size:12px;line-height:1.6;">';
+  html += '<div>📈 股票: ¥' + Math.round(stockVal).toLocaleString() + '</div>';
+  html += '<div>₿ 比特币: ¥' + Math.round(btcVal).toLocaleString() + '</div>';
+  html += '<div>🏠 房产: ¥' + Math.round(propVal).toLocaleString() + '</div>';
+  html += '<div><b>💰 总投资: ¥' + Math.round(total).toLocaleString() + '</b></div>';
+  html += '</div>';
+  return html;
+}
