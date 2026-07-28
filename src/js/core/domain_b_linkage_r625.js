@@ -25,7 +25,7 @@
       icon: "📰",
       title: "新闻里的经济信号",
       triggers: { minDay: 7 },
-      story: function (st) {
+      text: function (st) {
         var newsRead = st.flags && st.flags._newsReadCount || 0;
         var day = st.player.day || 0;
 
@@ -75,7 +75,7 @@
       icon: "💡",
       title: "职业灵感",
       triggers: { minDay: 14 },
-      story: function (st) {
+      text: function (st) {
         var skills = st.skills || {};
         var topSkill = null;
         var topLevel = 0;
@@ -143,7 +143,7 @@
       icon: "🧠",
       title: "心智成长",
       triggers: { minDay: 20 },
-      story: function (st) {
+      text: function (st) {
         var eventsExperienced = st.flags && st.flags._eventsExperienced || 0;
         var mental = st.player && st.player.mental || 0;
 

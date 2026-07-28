@@ -128,7 +128,7 @@
       icon: "🪷",
       title: "人生反思",
       triggers: { minDay: 20 },
-      story: function (st) {
+      text: function (st) {
         var day = st.player.day || 0;
         var totalEarned = st.resources && st.resources.totalEarned || 0;
         var skills = st.skills || {};
