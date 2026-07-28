@@ -328567,6 +328567,89 @@ if (typeof window !== "undefined") {
   }
 })();
 ;
+// ==== js/core/domain_f_linkage_r696.js ====
+/**
+ * 域F(UI/UX) 联动增强 R696
+ * 桥接：
+ *   F→A  f696_ui_price_trend_dash  价格趋势仪表盘 → 消费 state.trade.goodsPrices 数据,
+ *     UI→价格趋势可视化展示
+ *   F→G  f696_ui_life_rhythm       生活节奏UI → 消费 state.needs+state.player 数据,
+ *     UI→生活节奏与作息可视化
+ */
+(function () {
+  "use strict";
+  if (typeof RANDOM_EVENTS === "undefined" || !RANDOM_EVENTS) return;
+  if (RANDOM_EVENTS._domainFLinkageR696Loaded) return;
+  RANDOM_EVENTS._domainFLinkageR696Loaded = true;
+
+  var EVENTS = [
+    {
+      id: "f696_ui_price_trend_dash", phase: "street", _isChainEvent: false, icon: "📈",
+      title: "价格趋势仪表盘",
+      story: "你制作了一个价格趋势仪表盘,市场变化一目了然——{desc}",
+      triggers: { minDay: 100, interval: 180, maxRepeats: 2, excludeFlags: ["_f696PriceTrendCooldown"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        if (!st.flags || st.flags._f696PriceTrendCooldown) return false;
+        return st.trade && st.trade.goodsPrices;
+      },
+      choices: [
+        { text: "📊 分析趋势", hint: "会计XP+5,智力+3", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._f696PriceTrendCooldown = true;
+          if (st.player) st.player.intelligence = Math.min(100, (st.player.intelligence || 50) + 3);
+          if (typeof addSkillXp === "function") { try { addSkillXp("accounting", 5); } catch(e) {} }
+          if (typeof StateManager !== "undefined") StateManager.addMessage("📊 '趋势是市场的语言。' 你分析了价格趋势。会计XP+5,智力+3。", "success");
+        }},
+        { text: "🛒 抓住机会", hint: "销售XP+4,现金+1000", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._f696PriceTrendCooldown = true;
+          if (st.resources) st.resources.cash = (st.resources.cash || 0) + 1000;
+          if (typeof addSkillXp === "function") { try { addSkillXp("sales", 4); } catch(e) {} }
+          if (typeof StateManager !== "undefined") StateManager.addMessage("🛒 '抓住价格趋势,就是抓住机会。' 销售XP+4,现金+¥1000。", "success");
+        }}
+      ],
+      text: function (st) {
+        if (!st) return null;
+        return "你制作了一个价格趋势仪表盘——'价格趋势仪表盘,市场变化一目了然。'";
+      }
+    },
+    {
+      id: "f696_ui_life_rhythm", phase: "street", _isChainEvent: false, icon: "🕰️",
+      title: "生活节奏可视化",
+      story: "你开始关注自己的生活节奏——{desc}",
+      triggers: { minDay: 80, interval: 150, maxRepeats: 3, excludeFlags: ["_f696RhythmCooldown"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        if (!st.flags || st.flags._f696RhythmCooldown) return false;
+        return st.player && (st.player.day || 0) >= 80;
+      },
+      choices: [
+        { text: "📋 优化作息", hint: "心智+5,健康+3", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._f696RhythmCooldown = true;
+          if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 5);
+          if (st.status) st.status.health = Math.min(100, (st.status.health || 100) + 3);
+          if (typeof StateManager !== "undefined") StateManager.addMessage("📋 '好的作息,是好的开始。' 心智+5,健康+3。", "success");
+        }},
+        { text: "📊 记录时间", hint: "管理XP+4,智力+2", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._f696RhythmCooldown = true;
+          if (st.player) st.player.intelligence = Math.min(100, (st.player.intelligence || 50) + 2);
+          if (typeof addSkillXp === "function") { try { addSkillXp("management", 4); } catch(e) {} }
+          if (typeof StateManager !== "undefined") StateManager.addMessage("📊 '记录时间,就是管理人生。' 管理XP+4,智力+2。", "success");
+        }}
+      ],
+      text: function (st) {
+        if (!st) return null;
+        var day = (st.player && st.player.day) || 0;
+        return "你开始关注自己的生活节奏——'第" + day + "天,生活节奏可视化,让每一天都更有意义。'";
+      }
+    }
+  ];
+
+  for (var i = 0; i < EVENTS.length; i++) {
+    RANDOM_EVENTS.push(EVENTS[i]);
+  }
+})();
+
+;
 // ==== js/core/domain_f_linkage_r680.js ====
 /**
  * 域F(UI/UX) 联动增强 R680
@@ -328937,12 +329020,10 @@ if (typeof window !== "undefined") {
 /**
  * 域F(UI/UX) 联动增强 R696
  * 桥接：
- *   F→A  f696_data_story_v3          数据故事v3 → 消费 state.resources+state.player,
- *     将数字转化为叙事
- *   F→C  f696_career_path_viz        职业路径可视化 → 消费 state.employment,
- *     职业发展轨迹展示
- *   F→G  f696_wellness_tracker       健康追踪 → 消费 state.status+state.needs,
- *     综合健康管理
+ *   F→A  f696_ui_price_trend_dash  价格趋势仪表盘 → 消费 state.trade.goodsPrices 数据,
+ *     UI→价格趋势可视化展示
+ *   F→G  f696_ui_life_rhythm       生活节奏UI → 消费 state.needs+state.player 数据,
+ *     UI→生活节奏与作息可视化
  */
 (function () {
   "use strict";
@@ -328952,155 +329033,62 @@ if (typeof window !== "undefined") {
 
   var EVENTS = [
     {
-      id: "f696_data_story_v3",
-      phase: "street",
-      _isChainEvent: false,
-      icon: "📖",
-      title: "数字背后的人生",
-      story: "你开始把生活中的数字变成故事",
-      triggers: { minDay: 60, interval: 80, maxRepeats: 3, excludeFlags: ["_f696StoryCd"] },
+      id: "f696_ui_price_trend_dash", phase: "street", _isChainEvent: false, icon: "📈",
+      title: "价格趋势仪表盘",
+      story: "你制作了一个价格趋势仪表盘,市场变化一目了然——{desc}",
+      triggers: { minDay: 100, interval: 180, maxRepeats: 2, excludeFlags: ["_f696PriceTrendCooldown"] },
       conditions: function (st) {
         if (st.gameOver) return false;
-        if (st.flags && st.flags._f696StoryCd) return false;
-        return st.player && st.player.day >= 60;
+        if (!st.flags || st.flags._f696PriceTrendCooldown) return false;
+        return st.trade && st.trade.goodsPrices;
       },
       choices: [
-        {
-          text: "📊 写生活总结",
-          hint: "心智+5,智力+2,置_f696Writer",
-          apply: function (st) {
-            if (!st) return;
-            st.flags = st.flags || {};
-            st.flags._f696StoryCd = true;
-            st.flags._f696Writer = true;
-            if (st.player) {
-              st.player.mental = Math.min(100, (st.player.mental || 50) + 5);
-              st.player.intelligence = Math.min(100, (st.player.intelligence || 50) + 2);
-            }
-            if (typeof StateManager !== "undefined") {
-              StateManager.addMessage("📖 把数字写成故事,就是赋予生活意义。心智+5,智力+2。", "success");
-            }
-          }
-        },
-        {
-          text: "📈 做数据图表",
-          hint: "会计XP+4,置_f696Chart",
-          apply: function (st) {
-            if (!st) return;
-            st.flags = st.flags || {};
-            st.flags._f696StoryCd = true;
-            st.flags._f696Chart = true;
-            if (typeof addSkillXp === "function") { try { addSkillXp("accounting", 4); } catch(e) {} }
-            if (typeof StateManager !== "undefined") {
-              StateManager.addMessage("📈 一图胜千言,数据可视化让规律一目了然。会计XP+4。", "info");
-            }
-          }
-        }
+        { text: "📊 分析趋势", hint: "会计XP+5,智力+3", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._f696PriceTrendCooldown = true;
+          if (st.player) st.player.intelligence = Math.min(100, (st.player.intelligence || 50) + 3);
+          if (typeof addSkillXp === "function") { try { addSkillXp("accounting", 5); } catch(e) {} }
+          if (typeof StateManager !== "undefined") StateManager.addMessage("📊 '趋势是市场的语言。' 你分析了价格趋势。会计XP+5,智力+3。", "success");
+        }},
+        { text: "🛒 抓住机会", hint: "销售XP+4,现金+1000", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._f696PriceTrendCooldown = true;
+          if (st.resources) st.resources.cash = (st.resources.cash || 0) + 1000;
+          if (typeof addSkillXp === "function") { try { addSkillXp("sales", 4); } catch(e) {} }
+          if (typeof StateManager !== "undefined") StateManager.addMessage("🛒 '抓住价格趋势,就是抓住机会。' 销售XP+4,现金+¥1000。", "success");
+        }}
+      ],
+      text: function (st) {
+        if (!st) return null;
+        return "你制作了一个价格趋势仪表盘——'价格趋势仪表盘,市场变化一目了然。'";
+      }
+    },
+    {
+      id: "f696_ui_life_rhythm", phase: "street", _isChainEvent: false, icon: "🕰️",
+      title: "生活节奏可视化",
+      story: "你开始关注自己的生活节奏——{desc}",
+      triggers: { minDay: 80, interval: 150, maxRepeats: 3, excludeFlags: ["_f696RhythmCooldown"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        if (!st.flags || st.flags._f696RhythmCooldown) return false;
+        return st.player && (st.player.day || 0) >= 80;
+      },
+      choices: [
+        { text: "📋 优化作息", hint: "心智+5,健康+3", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._f696RhythmCooldown = true;
+          if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 5);
+          if (st.status) st.status.health = Math.min(100, (st.status.health || 100) + 3);
+          if (typeof StateManager !== "undefined") StateManager.addMessage("📋 '好的作息,是好的开始。' 心智+5,健康+3。", "success");
+        }},
+        { text: "📊 记录时间", hint: "管理XP+4,智力+2", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._f696RhythmCooldown = true;
+          if (st.player) st.player.intelligence = Math.min(100, (st.player.intelligence || 50) + 2);
+          if (typeof addSkillXp === "function") { try { addSkillXp("management", 4); } catch(e) {} }
+          if (typeof StateManager !== "undefined") StateManager.addMessage("📊 '记录时间,就是管理人生。' 管理XP+4,智力+2。", "success");
+        }}
       ],
       text: function (st) {
         if (!st) return null;
         var day = (st.player && st.player.day) || 0;
-        return "第" + day + "天——'如果人生有仪表盘,现在各项指标如何?'";
-      }
-    },
-    {
-      id: "f696_career_path_viz",
-      phase: "street",
-      _isChainEvent: false,
-      icon: "🗺️",
-      title: "职业路径可视化",
-      story: "你的职业发展历程值得被记录",
-      triggers: { minDay: 90, interval: 100, maxRepeats: 2, excludeFlags: ["_f696CareerCd"] },
-      conditions: function (st) {
-        if (st.gameOver) return false;
-        if (st.flags && st.flags._f696CareerCd) return false;
-        return st.employment && st.employment.currentJob && st.player && st.player.day >= 90;
-      },
-      choices: [
-        {
-          text: "🎯 规划下一步",
-          hint: "管理XP+5,智力+3,置_f696Planner",
-          apply: function (st) {
-            if (!st) return;
-            st.flags = st.flags || {};
-            st.flags._f696CareerCd = true;
-            st.flags._f696Planner = true;
-            if (st.player) st.player.intelligence = Math.min(100, (st.player.intelligence || 50) + 3);
-            if (typeof addSkillXp === "function") { try { addSkillXp("management", 5); } catch(e) {} }
-            if (typeof StateManager !== "undefined") {
-              StateManager.addMessage("🗺️ 看到来路,才能规划去路。管理XP+5,智力+3。", "success");
-            }
-          }
-        },
-        {
-          text: "😊 感恩经历",
-          hint: "心情+8,置_f696Thankful",
-          apply: function (st) {
-            if (!st) return;
-            st.flags = st.flags || {};
-            st.flags._f696CareerCd = true;
-            st.flags._f696Thankful = true;
-            if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 8);
-            if (typeof StateManager !== "undefined") {
-              StateManager.addMessage("😊 每一步都算数,感恩一路走来。心情+8。", "success");
-            }
-          }
-        }
-      ],
-      text: function (st) {
-        if (!st) return null;
-        return "从第一份工作到现在——'职业发展不是直线,是螺旋上升。'";
-      }
-    },
-    {
-      id: "f696_wellness_tracker",
-      phase: "street",
-      _isChainEvent: false,
-      icon: "💚",
-      title: "健康追踪",
-      story: "你的健康数据一目了然",
-      triggers: { minDay: 50, interval: 70, maxRepeats: 3, excludeFlags: ["_f696WellCd"] },
-      conditions: function (st) {
-        if (st.gameOver) return false;
-        if (st.flags && st.flags._f696WellCd) return false;
-        return st.player && st.player.day >= 50;
-      },
-      choices: [
-        {
-          text: "🏃 制定运动计划",
-          hint: "健康+5,心智+3,置_f696Exercise",
-          apply: function (st) {
-            if (!st) return;
-            st.flags = st.flags || {};
-            st.flags._f696WellCd = true;
-            st.flags._f696Exercise = true;
-            if (st.status) st.status.health = Math.min(100, (st.status.health || 100) + 5);
-            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 3);
-            if (typeof StateManager !== "undefined") {
-              StateManager.addMessage("🏃 身体是革命的本钱。健康+5,心智+3。", "success");
-            }
-          }
-        },
-        {
-          text: "😴 关注睡眠",
-          hint: "健康+3,心情+6,置_f696Sleep",
-          apply: function (st) {
-            if (!st) return;
-            st.flags = st.flags || {};
-            st.flags._f696WellCd = true;
-            st.flags._f696Sleep = true;
-            if (st.status) st.status.health = Math.min(100, (st.status.health || 100) + 3);
-            if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 6);
-            if (typeof StateManager !== "undefined") {
-              StateManager.addMessage("😴 睡好觉,一切都好。健康+3,心情+6。", "success");
-            }
-          }
-        }
-      ],
-      text: function (st) {
-        if (!st) return null;
-        var health = (st.status && st.status.health) || 0;
-        return "健康" + health + "%——'看着仪表盘,今天该关注哪个指标?'";
+        return "你开始关注自己的生活节奏——'第" + day + "天,生活节奏可视化,让每一天都更有意义。'";
       }
     }
   ];
@@ -331757,6 +331745,189 @@ if (typeof window !== "undefined") {
       text: function (st) {
         if (!st) return null;
         return "存款终于突破一万——'记得第一次赚到¥500时的激动吗?这种成就感,值得铭记。'";
+      }
+    }
+  ];
+
+  for (var i = 0; i < EVENTS.length; i++) {
+    RANDOM_EVENTS.push(EVENTS[i]);
+  }
+})();
+
+;
+// ==== js/core/domain_g_linkage_r697.js ====
+/**
+ * 域G(核心机制/生命周期) 联动增强 R697
+ * 桥接：
+ *   G→D  g697_birthday_milestone      生日里程碑 → 消费 state.player+state.relationships,
+ *     生日与朋友分享
+ *   G→A  g697_life_data_portrait      人生数据画像 → 消费 state.player+state.status,
+ *     综合数据叙事
+ *   G→C  g697_skill_milestone_life    技能里程碑人生 → 消费 state.skills,
+ *     技能节点触发人生思考
+ */
+(function () {
+  "use strict";
+  if (typeof RANDOM_EVENTS === "undefined" || !RANDOM_EVENTS) return;
+  if (RANDOM_EVENTS._domainGLinkageR697Loaded) return;
+  RANDOM_EVENTS._domainGLinkageR697Loaded = true;
+
+  function metNpcCount(st) {
+    if (!st || !st.relationships) return 0;
+    var cnt = 0;
+    for (var k in st.relationships) { if (st.relationships[k] && st.relationships[k].met) cnt++; }
+    return cnt;
+  }
+
+  var EVENTS = [
+    {
+      id: "g697_birthday_milestone",
+      phase: "street",
+      _isChainEvent: false,
+      icon: "🎂",
+      title: "又长一岁",
+      story: "生日到了,你想和朋友分享",
+      triggers: { minDay: 100, interval: 120, maxRepeats: 2, excludeFlags: ["_g697BirthdayCd"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        if (st.flags && st.flags._g697BirthdayCd) return false;
+        return metNpcCount(st) >= 1 && st.player && st.player.day >= 100;
+      },
+      choices: [
+        {
+          text: "🎉 告诉朋友",
+          hint: "心情+8,好感+2,置_g697Shared",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._g697BirthdayCd = true;
+            st.flags._g697Shared = true;
+            if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 8);
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("🎂 生日快乐!有朋友记得,就是最好的礼物。心情+8,好感+2。", "success");
+            }
+          }
+        },
+        {
+          text: "🤫 默默度过",
+          hint: "心智+5,置_g697Quiet",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._g697BirthdayCd = true;
+            st.flags._g697Quiet = true;
+            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 5);
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("🤫 生日不一定要轰轰烈烈,平静也是力量。心智+5。", "info");
+            }
+          }
+        }
+      ],
+      text: function (st) {
+        if (!st) return null;
+        return "又长一岁——'在这个城市里,有人记得你的生日,就是温暖。'";
+      }
+    },
+    {
+      id: "g697_life_data_portrait",
+      phase: "street",
+      _isChainEvent: false,
+      icon: "🖼️",
+      title: "人生数据画像",
+      story: "用数据描绘自己的人生",
+      triggers: { minDay: 80, interval: 100, maxRepeats: 2, excludeFlags: ["_g697PortraitCd"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        if (st.flags && st.flags._g697PortraitCd) return false;
+        return st.player && st.player.day >= 80;
+      },
+      choices: [
+        {
+          text: "📊 做全面复盘",
+          hint: "心智+5,智力+3,置_g697Review",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._g697PortraitCd = true;
+            st.flags._g697Review = true;
+            if (st.player) {
+              st.player.mental = Math.min(100, (st.player.mental || 50) + 5);
+              st.player.intelligence = Math.min(100, (st.player.intelligence || 50) + 3);
+            }
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("📊 了解自己是改变的第一步。心智+5,智力+3。", "success");
+            }
+          }
+        },
+        {
+          text: "🎯 设定新目标",
+          hint: "管理XP+4,智力+2,置_g697Goal",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._g697PortraitCd = true;
+            st.flags._g697Goal = true;
+            if (st.player) st.player.intelligence = Math.min(100, (st.player.intelligence || 50) + 2);
+            if (typeof addSkillXp === "function") { try { addSkillXp("management", 4); } catch(e) {} }
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("🎯 没有目标就没有方向。管理XP+4,智力+2。", "info");
+            }
+          }
+        }
+      ],
+      text: function (st) {
+        if (!st) return null;
+        var day = (st.player && st.player.day) || 0;
+        return "第" + day + "天——'如果人生有仪表盘,现在各项指标如何?'";
+      }
+    },
+    {
+      id: "g697_skill_milestone_life",
+      phase: "street",
+      _isChainEvent: false,
+      icon: "🏆",
+      title: "技能里程碑",
+      story: "技能提升到新阶段,人生也随之改变",
+      triggers: { minDay: 90, interval: 110, maxRepeats: 2, excludeFlags: ["_g697SkillCd"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        if (st.flags && st.flags._g697SkillCd) return false;
+        return st.skills && Object.keys(st.skills).length > 0 && st.player && st.player.day >= 90;
+      },
+      choices: [
+        {
+          text: "🎉 庆祝成就",
+          hint: "心情+10,置_g697Celebrate(峰终定律)",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._g697SkillCd = true;
+            st.flags._g697Celebrate = true;
+            if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 10);
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("🎉 每一个里程碑都值得庆祝!心情+10。", "success");
+            }
+          }
+        },
+        {
+          text: "🚀 挑战更高",
+          hint: "智力+4,管理XP+3,置_g697Challenge",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._g697SkillCd = true;
+            st.flags._g697Challenge = true;
+            if (st.player) st.player.intelligence = Math.min(100, (st.player.intelligence || 50) + 4);
+            if (typeof addSkillXp === "function") { try { addSkillXp("management", 3); } catch(e) {} }
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("🚀 山外有山,继续攀登。智力+4,管理XP+3。", "info");
+            }
+          }
+        }
+      ],
+      text: function (st) {
+        if (!st) return null;
+        return "技能提升到新阶段——'本事长在身上,谁也拿不走。'";
       }
     }
   ];
