@@ -1,9 +1,9 @@
 {
-  "lastRound": "746b",
-  "lastDirection": "DOMAIN_G",
+  "lastRound": "747b",
+  "lastDirection": "DOMAIN_F",
   "lastDate": "2026-07-29",
-  "lastCommit": "c43180c0",
-  "nextDirection": "DOMAIN_F",
-  "note": "R746b 域G(本窗口自动化 06:2x): 选域=git log实测本窗口深审recency G=R311全局最陈旧(F=R442次之)。A类2处: ①_pensionBase养老金承诺零兑现且_retired封锁副业/职业收入=选退休纯亏→daily_pipeline月度兑现(每30天min(基数,5万)×60%,advisor加发50%顾问费,_pensionTotal累计); ②R720 getLifeStageNarrativeEvent悬空(未调用/未导出/8个_lifeNarrative_XX零写入=8年龄节点叙事恒不触发)→story_chapters补8段叙事+runLifeStageNarrative+导出+story_chapter_check接线。联动3(domain_g_linkage_r746b.js,3street): _pensionTotal首读G→E禀赋效应/_lifeNarrative_XX首读G→B峰终/_lifeNode_choice首跨文件读G→C复利叙事。下轮候选F(R442)>D。开轮必git log重算勿信本记录。 | MC 10x500 159.6s 0代码异常/前7天死亡全0%(trader60/social70/corporate50既有RNG阈值)。热修复插曲: wrapper导出致爆栈曾被并行扫入HEAD(30292e29处于硬崩溃), c43180c0修复闭合(并行以其message接管本窗口staged,内容核验完整)。push受TLS阻断,网络恢复任一窗口push即闭合。",
-  "pushStatus": "LOCAL_ONLY_TLS"
+  "lastCommit": "c7c4620c",
+  "nextDirection": "DOMAIN_D",
+  "note": "R747b 域F(本窗口自动化 07:4x): 选域=git log实测本窗口深审recency F=R442全局最陈旧(G刚被R746b做完)。A类=0诚实报(六项审计全净尽: 死字段黑名单/假技能键addSkillXp全库/onclick悬空23函数全有定义/wrapper导出反模式0/tutorial目标DOM/daily_report+daily_quest全部22个flag有写入方; pg.psychology为personal_growth.js真实活结构维持既有B类双心理系统记录; navigation.js:761 programmer为JSDoc注释示例不改)。联动3(domain_f_linkage_r747b.js,3street): f747b_peak_day_echo(F→B _maxEarnedMilestone日收入峰值档首读·峰终定律)/f747b_milestone_gathering(F→D _milestoneEarned100K/500K/1M首读·met铁律+applyAffinityChange)/f747b_streak_reputation(F→C _streakMaster劳模称号首读·禀赋效应)。域F零消费素材本轮清零。dist重建顺带闭合并行[R727]0d97b82d源已提交未重建dist的悬空。下轮候选D(并行R440/R442新NPC后未深审)>A。开轮必git log重算勿信本记录。 | MC 6x400 EXIT=0 0代码异常 grinder33.3%≥30% 前7天死亡全0%; 10x500 167.1s 0代码异常(grinder 500d 0%为RNG严苛度非崩溃签名,400d即恢复33.3%,历史16.7%-50%区间)。",
+  "pushStatus": "PENDING"
 }
