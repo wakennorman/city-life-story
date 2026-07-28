@@ -131,13 +131,18 @@
         if (assets < 2000) return false;
         return true;
       },
-      renderStory: function (st) {
-        if (!st) return this.story;
-        var assets = getTotalAssets(st);
-        var debt = getTotalDebt(st);
-        var netWorth = Math.round(assets - debt);
-        var growthPct = Math.round((netWorth / Math.max(1, 500)) * 100 - 100); // 假设计划起步¥500
-        return this.story.replace("{netWorth}", "¥" + netWorth.toLocaleString()).replace("{growthPct}", growthPct);
+      // [全系统自洽修复] 域C R685b A类: renderStory是渲染层从不调用的死接口(events_core R455后只调text())→story中{netWorth}{growthPct}占位符原样泄漏给玩家；改为text()动态叙述+无占位符fallback
+      text: function (st) {
+        try {
+          if (st && st.resources) {
+            var assets = getTotalAssets(st);
+            var debt = getTotalDebt(st);
+            var netWorth = Math.round(assets - debt);
+            var growthPct = Math.round((netWorth / Math.max(1, 500)) * 100 - 100); // 假设计划起步¥500
+            return "你算了算自己的钱——存款加上投资，减去欠债，净值为¥" + netWorth.toLocaleString() + "。这个数字比刚来这座城市时多了" + growthPct + "%。你突然明白了什么叫'积少成多'。";
+          }
+        } catch (e) { /* fallback */ }
+        return "你算了算自己的钱——存款加上投资，减去欠债。这个数字比刚来这座城市时多了不少。你突然明白了什么叫'积少成多'。";
       },
       choices: [
         {

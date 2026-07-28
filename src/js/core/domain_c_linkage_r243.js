@@ -193,6 +193,16 @@
       title: "圈子里多了一个身份",
       story:
         "你的{skill}技能终于达到了解锁「{branchName}」分支的标准。那天在行业聚会上,有人主动跟你打招呼——「原来你是做{branchName}的!」那一刻你突然意识到,自己不再是那个什么都会一点但什么都不精的外行,而是有了属于自己的圈子。",
+      // [全系统自洽修复] 域C R685b A类: story中{skill}{branchName}占位符无任何动态渲染(渲染层只调text())→原样泄漏给玩家；补text()动态叙述+无占位符fallback
+      text: function (st) {
+        try {
+          var br = findFirstBranch(st);
+          if (br) {
+            return "你的" + br.skillName + "技能终于达到了解锁「" + br.name + "」分支的标准。那天在行业聚会上,有人主动跟你打招呼——「原来你是做" + br.name + "的!」那一刻你突然意识到,自己不再是那个什么都会一点但什么都不精的外行,而是有了属于自己的圈子。";
+          }
+        } catch (e) { /* fallback */ }
+        return "你的看家技能终于达到了解锁专业分支的标准。那天在行业聚会上,有人主动跟你打招呼。那一刻你突然意识到,自己不再是那个什么都会一点但什么都不精的外行,而是有了属于自己的圈子。";
+      },
       triggers: { minDay: 30, excludeFlags: ["_skillBranchRecognized"] },
       conditions: function (st) {
         if (st.gameOver) return false;
@@ -259,15 +269,20 @@
         var cert = findLifeCert(st);
         return !!cert;
       },
-      renderStory: function (st) {
-        var certId = findLifeCert(st);
-        if (!certId || !CERT_SHORTCUT_MAP[certId]) return this.story;
-        var certNames = {
-          food_safety: "食品健康证", nursing_cert: "护士资格证", health_manager: "健康管理师证",
-          rehab_therapist: "康复治疗师证", cooking_cert: "厨师证", repair_cert: "维修资格证",
-          electrician_cert: "电工证", welding_cert: "焊工证"
-        };
-        return this.story.replace("{certName}", certNames[certId] || certId).replace("{certDesc}", CERT_SHORTCUT_MAP[certId].desc || "");
+      // [全系统自洽修复] 域C R685b A类: renderStory是渲染层从不调用的死接口(events_core R455后只调text())→story中{certName}占位符原样泄漏给玩家；改为text()动态叙述+无占位符fallback
+      text: function (st) {
+        try {
+          var certId = findLifeCert(st);
+          if (certId && CERT_SHORTCUT_MAP[certId]) {
+            var certNames = {
+              food_safety: "食品健康证", nursing_cert: "护士资格证", health_manager: "健康管理师证",
+              rehab_therapist: "康复治疗师证", cooking_cert: "厨师证", repair_cert: "维修资格证",
+              electrician_cert: "电工证", welding_cert: "焊工证"
+            };
+            return "你翻出抽屉里的" + (certNames[certId] || certId) + ",突然想起今天因为这张证省了不少事儿。那些考证时熬的夜、花的钱,在生活里悄悄回了本——证不只是为了找工作,它也是你在城市里行走的通行证。";
+          }
+        } catch (e) { /* fallback */ }
+        return "你翻出抽屉里的资格证书,突然想起今天因为这张证省了不少事儿。那些考证时熬的夜、花的钱,在生活里悄悄回了本——证不只是为了找工作,它也是你在城市里行走的通行证。";
       },
       choices: [
         {

@@ -196,13 +196,18 @@
         var absent = findLongAbsentNpc(st, 30); // [PLACEHOLDER]: 30天未见
         return !!absent;
       },
-      renderStory: function (st) {
-        if (!st) return this.story;
-        var absent = findLongAbsentNpc(st, 30);
-        if (!absent) return this.story;
-        var days = absent.days;
-        var name = getNpcCn(absent.id);
-        return this.story.replace("{npcName}", name).replace("{days}", days + "天");
+      // [全系统自洽修复] 域C R685b A类: renderStory是渲染层从不调用的死接口(events_core R455后只调text())→story中{npcName}{days}占位符原样泄漏给玩家；改为text()动态叙述+无占位符fallback
+      text: function (st) {
+        try {
+          if (st && st.relationships) {
+            var absent = findLongAbsentNpc(st, 30);
+            if (absent) {
+              var name = getNpcCn(absent.id);
+              return "走在街上，突然看见" + name + "——上次聊天的时候好像还是" + absent.days + "天前。TA也在城市中奔波，你们各自忙碌，但偶尔碰面的一瞬间，那种熟悉感又回来了。";
+            }
+          }
+        } catch (e) { /* fallback */ }
+        return "走在街上，突然看见一个许久未见的熟人。你们各自忙碌，但偶尔碰面的一瞬间，那种熟悉感又回来了。";
       },
       choices: [
         {

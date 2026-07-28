@@ -5870,7 +5870,21 @@ if (typeof document !== "undefined") {
     icon: "📋",
     title: "职业履历的厚度",
     story:
-      "你翻出抽屉里那本旧笔记本，里面记着你这些年换过的每一份工作。从最初的{firstJob}到现在现在的{currentJob}，这条路你走了{workYears}年。\n\n每一份工作都留下了印记——有些是伤疤，有些是勋章。",
+      "你翻出抽屉里那本旧笔记本，里面记着你这些年换过的每一份工作。从最初的{firstJob}到现在的{currentJob}，这条路你走了{workYears}年。\n\n每一份工作都留下了印记——有些是伤疤，有些是勋章。",
+    // [全系统自洽修复] 域C R685b A类: story中{firstJob}{currentJob}{workYears}占位符无任何动态渲染(渲染层只调text())→原样泄漏给玩家,且"到现在现在的"文案重复；补text()动态叙述+无占位符fallback
+    text: function (st) {
+      try {
+        if (st && st.career && st.career.history && st.career.history.length >= 2) {
+          var h0 = st.career.history[0] || {};
+          var firstJob = (h0.event || "第一份工作").replace(/^[^：:]*[：:]/, "").split("→")[0].replace(/（[\s\S]*$/, "").trim() || "第一份工作";
+          var cur = (st.career.currentJob && st.career.currentJob.levelName) || "现在的岗位";
+          var days = Math.max(1, ((st.player && st.player.day) || 1) - (h0.day || 0));
+          var years = Math.max(1, Math.round(days / 365));
+          return "你翻出抽屉里那本旧笔记本，里面记着你这些年换过的每一份工作。从最初的" + firstJob + "到现在的" + cur + "，这条路你走了" + years + "年。\n\n每一份工作都留下了印记——有些是伤疤，有些是勋章。";
+        }
+      } catch (e) { /* fallback */ }
+      return "你翻出抽屉里那本旧笔记本，里面记着你这些年换过的每一份工作。从最初的青涩到如今的从容，这条路你走了很久。\n\n每一份工作都留下了印记——有些是伤疤，有些是勋章。";
+    },
     triggers: { minDay: 365 },
     conditions: function (st) {
       if (!st.career || !st.career.history) return false;

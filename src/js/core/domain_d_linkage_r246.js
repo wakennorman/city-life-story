@@ -84,11 +84,16 @@
         var met = getMetNpcCount(st);
         return met >= 2; // 至少结识2个NPC才触发
       },
-      renderStory: function (st) {
-        if (!st) return this.story;
-        var met = getMetNpcCount(st);
-        var total = getTotalAffinity(st);
-        return this.story.replace("{metCount}", met).replace("{totalAff}", total);
+      // [全系统自洽修复] 域C R685b A类: renderStory是渲染层从不调用的死接口(events_core R455后只调text())→story中{metCount}{totalAff}占位符原样泄漏给玩家；改为text()动态叙述+无占位符fallback
+      text: function (st) {
+        try {
+          if (st) {
+            var met = getMetNpcCount(st);
+            var total = getTotalAffinity(st);
+            return "你数了数自己认识的人——" + met + "个人,总好感度" + total + "。这座城市很大,但你的朋友圈让你不再孤单。有些人成了知己,有些人只是点头之交,但每个相遇都值得珍惜。";
+          }
+        } catch (e) { /* fallback */ }
+        return "你数了数自己认识的人。这座城市很大,但你的朋友圈让你不再孤单。有些人成了知己,有些人只是点头之交,但每个相遇都值得珍惜。";
       },
       choices: [
         {
