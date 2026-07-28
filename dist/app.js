@@ -5124,7 +5124,7 @@ function showEventModal(evt) {
       ${springFestProgressHtml}
       <div class="event-header">
         <div class="event-icon" title="${evt.title}">${evt.icon}</div>
-        <h2 class="event-title" title="${evt.story ? evt.story.replace(/<[^>]*>/g, '').substring(0, 100) : ''}">${evt.title}</h2>
+        <h2 class="event-title" title="${evt.story ? evt.story.replace(/<[^>]*>/g, '').replace(/\s*(——|—|-)?\s*\{[a-zA-Z]+\}/g, '').substring(0, 100) : ''}">${evt.title}</h2><!-- [全系统自洽修复] 域B R722b B类: tooltip取story原文致全库782处{desc}类占位符悬停泄漏,渲染层单点剥离 -->
         ${evt.weather ? '<span class="event-tag weather-tag" style="font-size:10px;padding:1px 6px;border-radius:3px;background:rgba(90,138,180,0.15);color:var(--info);margin-left:8px;">🌤️ 天气</span>' : ""}
         ${evt.sector ? '<span class="event-tag sector-tag" style="font-size:10px;padding:1px 6px;border-radius:3px;background:rgba(74,158,92,0.15);color:var(--success);margin-left:4px;">🏭 ' + evt.sector + '</span>' : ""}
       </div>
@@ -312944,6 +312944,7 @@ if (typeof window !== "undefined") {
  *   B→H  b700_story_corp_seed       故事公司种子 → 消费 state.flags._eventHistory+state.corporate 数据,
  *     叙事→"故事中的商机"公司回响
  */
+// [全系统自洽修复] 域B R722b B类: story{desc}占位符tooltip泄漏->干净回退句(text()仍为主叙述)
 (function () {
   "use strict";
   if (typeof RANDOM_EVENTS === "undefined" || !RANDOM_EVENTS) return;
@@ -312954,7 +312955,7 @@ if (typeof window !== "undefined") {
     {
       id: "b700_story_life_stage", phase: "street", _isChainEvent: false, icon: "📖",
       title: "事件构成人生阶段",
-      story: "回顾这些事件,你发现它们构成了你的人生舞台——{desc}",
+      story: "回顾这些事件,你发现它们构成了你的人生舞台。",
       triggers: { minDay: 150, interval: 250, maxRepeats: 2, excludeFlags: ["_b700StageCooldown"] },
       conditions: function (st) {
         if (st.gameOver) return false;
@@ -312985,7 +312986,7 @@ if (typeof window !== "undefined") {
     {
       id: "b700_story_corp_seed", phase: "street", _isChainEvent: false, icon: "🌱",
       title: "故事中的商机",
-      story: "你的经历中藏着创业的灵感——{desc}",
+      story: "你的经历中藏着创业的灵感。",
       triggers: { minDay: 200, interval: 300, maxRepeats: 1, excludeFlags: ["_b700CorpSeedDone"] },
       conditions: function (st) {
         if (st.gameOver) return false;
@@ -313388,6 +313389,7 @@ if (typeof window !== "undefined") {
  *   B→H  b700_story_corp_seed       故事公司种子 → 消费 state.flags._eventHistory+state.corporate 数据,
  *     叙事→"故事中的商机"公司回响
  */
+// [全系统自洽修复] 域B R722b B类: story{desc}占位符tooltip泄漏->干净回退句(text()仍为主叙述)
 (function () {
   "use strict";
   if (typeof RANDOM_EVENTS === "undefined" || !RANDOM_EVENTS) return;
@@ -313398,7 +313400,7 @@ if (typeof window !== "undefined") {
     {
       id: "b700_story_life_stage", phase: "street", _isChainEvent: false, icon: "📖",
       title: "事件构成人生阶段",
-      story: "回顾这些事件,你发现它们构成了你的人生舞台——{desc}",
+      story: "回顾这些事件,你发现它们构成了你的人生舞台。",
       triggers: { minDay: 150, interval: 250, maxRepeats: 2, excludeFlags: ["_b700StageCooldown"] },
       conditions: function (st) {
         if (st.gameOver) return false;
@@ -313429,7 +313431,7 @@ if (typeof window !== "undefined") {
     {
       id: "b700_story_corp_seed", phase: "street", _isChainEvent: false, icon: "🌱",
       title: "故事中的商机",
-      story: "你的经历中藏着创业的灵感——{desc}",
+      story: "你的经历中藏着创业的灵感。",
       triggers: { minDay: 200, interval: 300, maxRepeats: 1, excludeFlags: ["_b700CorpSeedDone"] },
       conditions: function (st) {
         if (st.gameOver) return false;
@@ -313697,6 +313699,7 @@ if (typeof window !== "undefined") {
  *   B→G  b708_narrative_resilience        叙事韧性 → 消费 state.flags,
  *     故事让人成长，获得心智提升
  */
+// [全系统自洽修复] 域B R722b B类: story{desc}占位符tooltip泄漏->干净回退句(text()仍为主叙述)
 (function () {
   "use strict";
   if (typeof RANDOM_EVENTS === "undefined" || !RANDOM_EVENTS) return;
@@ -313711,7 +313714,7 @@ if (typeof window !== "undefined") {
     {
       id: "b708_shared_memory", phase: "street", _isChainEvent: false, icon: "💭",
       title: "共同记忆",
-      story: "经历过的那些事,成了你和朋友之间的共同话题——{desc}",
+      story: "经历过的那些事,成了你和朋友之间的共同话题。",
       triggers: { minDay: 60, interval: 90, maxRepeats: 3, excludeFlags: ["_b708MemoryCd"] },
       conditions: function (st) {
         if (st.gameOver) return false;
@@ -313758,7 +313761,7 @@ if (typeof window !== "undefined") {
     {
       id: "b708_event_economic_lesson", phase: "street", _isChainEvent: false, icon: "💡",
       title: "生活的经济学",
-      story: "每一次经历都在教你如何对待金钱——{desc}",
+      story: "每一次经历都在教你如何对待金钱。",
       triggers: { minDay: 45, interval: 80, maxRepeats: 3, excludeFlags: ["_b708EconCd"] },
       conditions: function (st) {
         if (st.gameOver) return false;
@@ -313802,7 +313805,7 @@ if (typeof window !== "undefined") {
     {
       id: "b708_narrative_resilience", phase: "street", _isChainEvent: false, icon: "🌱",
       title: "故事的力量",
-      story: "那些艰难的日子,最终都化作了你的力量——{desc}",
+      story: "那些艰难的日子,最终都化作了你的力量。",
       triggers: { minDay: 80, interval: 100, maxRepeats: 2, excludeFlags: ["_b708ResilienceCd"] },
       conditions: function (st) {
         if (st.gameOver) return false;
@@ -313862,6 +313865,7 @@ if (typeof window !== "undefined") {
  *   B→G  b714_narrative_resilience_v2 叙事韧性v2 → 消费 事件历史+status,
  *     叙事影响心理健康
  */
+// [全系统自洽修复] 域B R722b B类: story{desc}占位符tooltip泄漏->干净回退句(text()仍为主叙述)
 (function () {
   "use strict";
   if (typeof RANDOM_EVENTS === "undefined" || !RANDOM_EVENTS) return;
@@ -313872,7 +313876,7 @@ if (typeof window !== "undefined") {
     {
       id: "b714_event_data_v3", phase: "street", _isChainEvent: false, icon: "📜",
       title: "事件遗产",
-      story: "你经历的事件正在积累成遗产——{desc}",
+      story: "你经历的事件正在积累成遗产。",
       triggers: { minDay: 120, interval: 180, maxRepeats: 3, excludeFlags: ["_b714DataCd"] },
       conditions: function (st) {
         if (!st || st.gameOver) return false;
@@ -313919,7 +313923,7 @@ if (typeof window !== "undefined") {
     {
       id: "b714_npc_story_echo", phase: "street", _isChainEvent: false, icon: "🗣️",
       title: "NPC故事回响",
-      story: "你讲给NPC的故事,正在产生回响——{desc}",
+      story: "你讲给NPC的故事,正在产生回响。",
       triggers: { minDay: 100, interval: 150, maxRepeats: 3, excludeFlags: ["_b714EchoCd"] },
       conditions: function (st) {
         if (!st || st.gameOver) return false;
@@ -313962,7 +313966,7 @@ if (typeof window !== "undefined") {
     {
       id: "b714_narrative_resilience_v2", phase: "street", _isChainEvent: false, icon: "💪",
       title: "叙事韧性",
-      story: "你正在从经历中汲取力量——{desc}",
+      story: "你正在从经历中汲取力量。",
       triggers: { minDay: 80, interval: 120, maxRepeats: 4, excludeFlags: ["_b714ResilienceCd"] },
       conditions: function (st) {
         if (!st || st.gameOver) return false;
@@ -314001,6 +314005,368 @@ if (typeof window !== "undefined") {
       text: function (st) {
         if (!st) return null;
         return "每一次挫折,都让你更强大——'这就是叙事韧性。'";
+      }
+    }
+  ];
+
+  for (var i = 0; i < EVENTS.length; i++) {
+    RANDOM_EVENTS.push(EVENTS[i]);
+  }
+})();
+
+;
+// ==== js/core/domain_b_linkage_r722b.js ====
+/**
+ * 域B(事件/叙事) 联动增强 R722b（本窗口自动化轮，b后缀避让并行R722域A在途）
+ * 选题依据（写-only flag 首消费闭环）：
+ *   B→H  b722b_gratitude_echo   感谢信的回响 —— _gratitudeLetterSent(events_street_survival.js:3853
+ *        R586生成以来全库唯一写入、零读取)跨阶段首读：Phase1告别街头时写的感谢信,在Phase2公司阶段收到回音。
+ *        跨阶段继承叙事闭环(Phase1积累→Phase2兑现),峰终定律:把玩家早期善意变成后期情感峰值。
+ *   B→C/E b722b_pattern_dividend 模式红利 —— _b714PatternAnalyst/_b714Storyteller(并行R715刚写入,
+ *        写-only)首读：事件模式分析能力兑现为理财/社交实际收益。禀赋效应:玩家自选的身份标签产生持续回报。
+ *   B→G  b722b_resilience_proof 韧性的考验 —— _b714Resilient/_b714Mindful(并行R715写-only)首读：
+ *        健康低谷时叙事韧性兑现为恢复加成。损失厌恶缓冲:低健康期给予玩家自主感而非纯惩罚。
+ * 防御：全部 || 守卫；NPC引用一律 rel && rel.met(域D铁律)；好感走 applyAffinityChange；
+ *       显名走 getNpcDisplayName；健康读写 st.status.health(真实字段)；幸福 st.needs.happiness。
+ */
+(function () {
+  "use strict";
+  if (typeof RANDOM_EVENTS === "undefined" || !RANDOM_EVENTS) return;
+  if (RANDOM_EVENTS._domainBLinkageR722bLoaded) return;
+  RANDOM_EVENTS._domainBLinkageR722bLoaded = true;
+
+  var GRATEFUL_NPCS = ["aunt_wang", "boss_li", "old_zhou"];
+
+  function metGratefulNpcs(st) {
+    var out = [];
+    if (!st || !st.relationships) return out;
+    for (var i = 0; i < GRATEFUL_NPCS.length; i++) {
+      var rel = st.relationships[GRATEFUL_NPCS[i]];
+      if (rel && rel.met) out.push(GRATEFUL_NPCS[i]);
+    }
+    return out;
+  }
+
+  function npcName(nid) {
+    if (typeof getNpcDisplayName === "function") {
+      try { var n = getNpcDisplayName(nid); if (n) return n; } catch (e) {}
+    }
+    return "老朋友";
+  }
+
+  var EVENTS = [
+    // ============ 1. B→H 感谢信的回响（跨阶段继承, corporate） ============
+    {
+      id: "b722b_gratitude_echo", phase: "corporate", _isChainEvent: false, icon: "💌",
+      title: "感谢信的回响",
+      story: "一封来自过去的信,穿过岁月找到了现在的你。",
+      triggers: { minDay: 200, maxRepeats: 1, excludeFlags: ["_b722bGratitudeEcho"] },
+      conditions: function (st) {
+        if (!st || st.gameOver) return false;
+        if (!st.flags || !st.flags._gratitudeLetterSent) return false; // 写过感谢信才有回响
+        if (st.flags._b722bGratitudeEcho) return false;
+        return metGratefulNpcs(st).length > 0; // 铁律: 至少一位met的受谢NPC
+      },
+      choices: [
+        {
+          text: "🤝 登门拜访,当面道谢", hint: "受谢旧识好感+8,心情+8",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._b722bGratitudeEcho = true;
+            var mets = metGratefulNpcs(st);
+            for (var i = 0; i < mets.length; i++) {
+              if (typeof applyAffinityChange === "function") {
+                try { applyAffinityChange(st, mets[i], 8, "感谢信的回响·登门道谢"); } catch (e) {}
+              }
+            }
+            if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 8);
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("💌 你带着当年的感谢信登门拜访。" + npcName(mets[0]) + "看着信纸笑了：'没想到你还留着这个。' 旧识好感+8,心情+8。", "success");
+            }
+          }
+        },
+        {
+          text: "💰 匿名回馈一笔'感恩基金'", hint: "现金-2000,道德+5,心智+5",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._b722bGratitudeEcho = true;
+            st.flags._b722bAnonymousGiver = true;
+            if (st.resources) st.resources.cash = Math.max(0, (st.resources.cash || 0) - 2000);
+            if (st.player) {
+              st.player.morality = Math.min(100, (st.player.morality || 50) + 5);
+              st.player.mental = Math.min(100, (st.player.mental || 50) + 5);
+            }
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("💰 你以'一个曾被帮助过的人'名义,给社区捐了¥2,000。善意完成了它的循环。道德+5,心智+5。", "info");
+            }
+          }
+        }
+      ],
+      text: function (st) {
+        if (!st) return null;
+        var mets = metGratefulNpcs(st);
+        var who = mets.length > 0 ? npcName(mets[0]) : "一位旧识";
+        return "秘书递来一封手写信。拆开一看,竟是" + who + "托人转交的——'当年你留下的那封感谢信,我一直收在抽屉里。看到你现在的样子,真为你高兴。'你想起告别街头的那个清晨,想起那些在你最难的日子里伸过手的人。";
+      }
+    },
+
+    // ============ 2. B→C/E 模式红利（R715写-only flag首读, street） ============
+    {
+      id: "b722b_pattern_dividend", phase: "street", _isChainEvent: false, icon: "🧩",
+      title: "模式红利",
+      story: "你对事件模式的洞察,开始产生实际回报。",
+      triggers: { minDay: 140, interval: 160, maxRepeats: 2, excludeFlags: ["_b722bPatternCd"] },
+      conditions: function (st) {
+        if (!st || st.gameOver) return false;
+        if (!st.flags) return false;
+        if (st.flags._b722bPatternCd) return false;
+        return !!(st.flags._b714PatternAnalyst || st.flags._b714Storyteller); // R715身份标签首消费
+      },
+      choices: [
+        {
+          text: "📊 用模式洞察优化开支", hint: "现金+600,会计XP+5",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._b722bPatternCd = true;
+            if (st.resources) st.resources.cash = (st.resources.cash || 0) + 600;
+            if (typeof addSkillXp === "function") { try { addSkillXp("accounting", 5); } catch (e) {} }
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("📊 你按记录的消费模式砍掉了三笔重复开销,月底多出¥600。'数据不说谎。' 会计XP+5。", "success");
+            }
+          }
+        },
+        {
+          text: "🎙️ 把人生故事讲给街坊听", hint: "社交XP+7,心情+5",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._b722bPatternCd = true;
+            if (typeof addSkillXp === "function") { try { addSkillXp("social", 7); } catch (e) {} }
+            if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 5);
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("🎙️ 巷口的傍晚,你把这些年的经历讲成了故事,听的人越围越多。'讲故事的人,永远不缺朋友。' 社交XP+7,心情+5。", "info");
+            }
+          }
+        }
+      ],
+      text: function (st) {
+        if (!st) return null;
+        var isAnalyst = st.flags && st.flags._b714PatternAnalyst;
+        return isAnalyst
+          ? "翻看这几个月记下的事件笔记,你发现了一个规律：开销的峰值总跟着情绪低谷走。这个发现,也许值点钱。"
+          : "你记录的人生故事越攒越厚。街坊们开始好奇——那个总在写东西的人,到底经历过什么？";
+      }
+    },
+
+    // ============ 3. B→G 韧性的考验（R715写-only flag首读, street, 低健康窗口） ============
+    {
+      id: "b722b_resilience_proof", phase: "street", _isChainEvent: false, icon: "🌱",
+      title: "韧性的考验",
+      story: "生病的日子,才知道内心的力量有多真。",
+      triggers: { minDay: 90, interval: 130, maxRepeats: 3, excludeFlags: ["_b722bResilienceCd"] },
+      conditions: function (st) {
+        if (!st || st.gameOver) return false;
+        if (!st.flags) return false;
+        if (st.flags._b722bResilienceCd) return false;
+        if (!(st.flags._b714Resilient || st.flags._b714Mindful)) return false; // R715韧性身份首消费
+        var hp = st.status && typeof st.status.health === "number" ? st.status.health : 100;
+        return hp < 60; // 低健康窗口才触发,韧性在考验中兑现
+      },
+      choices: [
+        {
+          text: "🌱 靠韧性硬扛,规律作息自愈", hint: "健康+6,心智+4",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._b722bResilienceCd = true;
+            if (st.status) st.status.health = Math.min(100, (st.status.health || 100) + 6);
+            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 4);
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("🌱 你按正念练习的节奏调整作息,身体一点点回暖。'挫折教过你的,身体都记得。' 健康+6,心智+4。", "success");
+            }
+          }
+        },
+        {
+          text: "🏥 及时就医,不逞强", hint: "现金-300,健康+9",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._b722bResilienceCd = true;
+            if (st.resources) st.resources.cash = Math.max(0, (st.resources.cash || 0) - 300);
+            if (st.status) st.status.health = Math.min(100, (st.status.health || 100) + 9);
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("🏥 真正的韧性不是硬扛,是知道什么时候该求助。花¥300看了医生,健康+9。", "info");
+            }
+          }
+        }
+      ],
+      text: function (st) {
+        if (!st) return null;
+        var hp = st.status && typeof st.status.health === "number" ? Math.round(st.status.health) : 0;
+        var isMindful = st.flags && st.flags._b714Mindful;
+        return "健康跌到" + hp + ",身体在报警。" + (isMindful
+          ? "你想起正念反思时对自己说过的话——'心稳住了,身体才有得救。'"
+          : "你想起那些从挫折里爬起来的日子——'这一次,也一样能过去。'");
+      }
+    }
+  ];
+
+  for (var i = 0; i < EVENTS.length; i++) {
+    RANDOM_EVENTS.push(EVENTS[i]);
+  }
+})();
+
+;
+// ==== js/core/domain_b_linkage_r723.js ====
+/**
+ * 域B(事件/叙事) 联动增强 R723 (第三轮循环)
+ * 桥接：
+ *   B→A  b723_event_legacy_v2 事件遗产v2 → 消费 events_core 统计数据
+ *   B→D  b723_npc_bond_story NPC羁绊故事 → 消费 事件+NPC关系
+ *   B→G  b723_narrative_growth_v2 叙事成长v2 → 消费 事件历史+status
+ */
+(function () {
+  "use strict";
+  if (typeof RANDOM_EVENTS === "undefined" || !RANDOM_EVENTS) return;
+  if (RANDOM_EVENTS._domainBLinkageR723Loaded) return;
+  RANDOM_EVENTS._domainBLinkageR723Loaded = true;
+
+  var EVENTS = [
+    {
+      id: "b723_event_legacy_v2", phase: "street", _isChainEvent: false, icon: "📜",
+      title: "事件遗产",
+      story: "你经历的事件正在积累成遗产——{desc}",
+      triggers: { minDay: 150, interval: 200, maxRepeats: 3, excludeFlags: ["_b723LegacyCd"] },
+      conditions: function (st) {
+        if (!st || st.gameOver) return false;
+        if (st.flags && st.flags._b723LegacyCd) return false;
+        return st.player && st.player.day >= 150;
+      },
+      choices: [
+        {
+          text: "📊 回顾事件模式", hint: "智力+6,心智+4,置_b723PatternAnalyst",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._b723LegacyCd = true;
+            st.flags._b723PatternAnalyst = true;
+            if (st.player) {
+              st.player.intelligence = Math.min(100, (st.player.intelligence || 50) + 6);
+              st.player.mental = Math.min(100, (st.player.mental || 50) + 4);
+            }
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("📜 '每一个事件,都是人生的一块拼图。' 智力+6,心智+4。", "success");
+            }
+          }
+        },
+        {
+          text: "📖 书写人生故事", hint: "社交XP+8,置_b723LifeWriter",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._b723LegacyCd = true;
+            st.flags._b723LifeWriter = true;
+            if (typeof addSkillXp === "function") { try { addSkillXp("social", 8); } catch(e) {} }
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("📖 '记录,让记忆永存。' 社交XP+8。", "info");
+            }
+          }
+        }
+      ],
+      text: function (st) {
+        if (!st) return null;
+        var days = st.player && st.player.day ? st.player.day : 0;
+        return "你已度过" + days + "天——'这些经历,就是你的人生遗产。'";
+      }
+    },
+    {
+      id: "b723_npc_bond_story", phase: "street", _isChainEvent: false, icon: "🤝",
+      title: "NPC羁绊故事",
+      story: "你和NPC之间的羁绊正在加深——{desc}",
+      triggers: { minDay: 120, interval: 180, maxRepeats: 3, excludeFlags: ["_b723BondCd"] },
+      conditions: function (st) {
+        if (!st || st.gameOver) return false;
+        if (st.flags && st.flags._b723BondCd) return false;
+        return st.player && st.player.day >= 120 && st.relationships;
+      },
+      choices: [
+        {
+          text: "💕 深化友谊", hint: "社交XP+8,置_b723DeepFriend",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._b723BondCd = true;
+            st.flags._b723DeepFriend = true;
+            if (typeof addSkillXp === "function") { try { addSkillXp("social", 8); } catch(e) {} }
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("🤝 '友谊,需要用心经营。' 社交XP+8。", "success");
+            }
+          }
+        },
+        {
+          text: "📖 记录羁绊故事", hint: "心智+6,置_b723BondChronicler",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._b723BondCd = true;
+            st.flags._b723BondChronicler = true;
+            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 6);
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("📖 '羁绊,是人生最珍贵的财富。' 心智+6。", "info");
+            }
+          }
+        }
+      ],
+      text: function (st) {
+        if (!st) return null;
+        return "你和NPC之间的羁绊正在加深——'这些关系,值得珍惜。'";
+      }
+    },
+    {
+      id: "b723_narrative_growth_v2", phase: "street", _isChainEvent: false, icon: "💪",
+      title: "叙事成长",
+      story: "你正在从经历中汲取力量——{desc}",
+      triggers: { minDay: 100, interval: 150, maxRepeats: 4, excludeFlags: ["_b723GrowthCd"] },
+      conditions: function (st) {
+        if (!st || st.gameOver) return false;
+        if (st.flags && st.flags._b723GrowthCd) return false;
+        return st.player && st.player.day >= 100 && st.status && st.needs;
+      },
+      choices: [
+        {
+          text: "💪 从挫折中学习", hint: "心智+7,健康+3,置_b723Resilient",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._b723GrowthCd = true;
+            st.flags._b723Resilient = true;
+            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 7);
+            if (st.status) st.status.health = Math.min(100, (st.status.health || 100) + 3);
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("💪 '挫折,是成长的垫脚石。' 心智+7,健康+3。", "success");
+            }
+          }
+        },
+        {
+          text: "🧘 正念反思", hint: "心情+8,置_b723Mindful",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._b723GrowthCd = true;
+            st.flags._b723Mindful = true;
+            if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 8);
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("🧘 '正念,让心更平静。' 心情+8。", "info");
+            }
+          }
+        }
+      ],
+      text: function (st) {
+        if (!st) return null;
+        return "每一次挫折,都让你更强大——'这就是叙事成长的力量。'";
       }
     }
   ];
