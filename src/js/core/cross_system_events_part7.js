@@ -4146,11 +4146,9 @@
       if (st.flags._10mMilestoneDone) return false;
       var total =
         (st.resources.cash || 0) +
-        (st.bankBalance || 0) +
-        (st.investment && st.investment.portfolio
-          ? Object.values(st.investment.portfolio).reduce(function (s, h) {
-              return s + (h.shares || 0) * (h.avgCost || 0);
-            }, 0)
+        ((st.resources && st.resources.bankBalance) || 0) + // [全系统自洽修复] 域E R738b 修复: st.bankBalance 死字段(真实为 resources.bankBalance)→千万里程碑漏算银行存款
+        (st.investment && st.investment.portfolio && isFinite(st.investment.portfolio.totalValue)
+          ? st.investment.portfolio.totalValue // [全系统自洽修复] 域E R738b 修复: 原 Object.values(portfolio) 误把 {stocks,funds,totalValue} 容器当持仓map遍历(h.shares恒undefined→投资贡献恒0),改读 totalValue
           : 0);
       return total >= 10000000;
     },

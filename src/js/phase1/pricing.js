@@ -882,6 +882,68 @@ function applyPriceMoodEffect(state, goodId, oldPrice, newPrice) {
   }
 }
 
+// [R714 域A 联动增强 A→G]: 通货膨胀感知 — 跟踪商品价格指数,持续通胀影响生活成本感知
+function trackInflationPerception(state) {
+  if (!state || !state.trade) return;
+  if (!state.flags) state.flags = {};
+  var _inflationSample = state.flags._inflationSampleDay || 0;
+  var _day = state.player && state.player.day;
+  if (!_day || _day - _inflationSample < 5) return;
+  state.flags._inflationSampleDay = _day;
+  var _sampleGoods = ["rice", "egg", "oil", "vegetable", "pork"];
+  var _totalPrice = 0, _count = 0;
+  for (var _gi = 0; _gi < _sampleGoods.length; _gi++) {
+    var _prices = state.trade._lastPrices && state.trade._lastPrices[_sampleGoods[_gi]];
+    if (_prices && _prices.length > 0) {
+      _totalPrice += _prices[_prices.length - 1] || 0;
+      _count++;
+    }
+  }
+  if (_count < 3) return;
+  var _avgPrice = _totalPrice / _count;
+  var _prevAvg = state.flags._inflationBaseAvg || _avgPrice;
+  if (!state.flags._inflationBaseAvg) {
+    state.flags._inflationBaseAvg = _avgPrice;
+    return;
+  }
+  var _inflationRate = (_avgPrice - _prevAvg) / _prevAvg;
+  state.flags._inflationBaseAvg = _avgPrice;
+  state.flags._cumulativeInflation = (state.flags._cumulativeInflation || 0) + _inflationRate;
+  if (state.flags._cumulativeInflation > 0.15 && state.needs) {
+    state.needs.happiness = Math.max(0, (state.needs.happiness || 50) - 1);
+    if (typeof StateManager !== "undefined" && _day % 10 === 0) {
+      StateManager.addMessage("📈 物价持续上涨，生活成本越来越高。心情-1。", "warning");
+    }
+  }
+  if (state.flags._cumulativeInflation < -0.10 && state.needs) {
+    state.needs.happiness = Math.min(100, (state.needs.happiness || 50) + 1);
+  }
+}
+
+// [R714 域A 联动增强 A→H]: 经济周期信号 — 基于价格走势检测经济周期,为公司运营提供商业洞察
+function detectEconomicCycle(state) {
+  if (!state || !state.trade || !state.flags) return null;
+  if (!state.flags._inflationBaseAvg) return null;
+  var cumInflation = state.flags._cumulativeInflation || 0;
+  var cycle = "normal";
+  if (cumInflation > 0.25) cycle = "boom";
+  else if (cumInflation > 0.15) cycle = "inflation";
+  else if (cumInflation < -0.15) cycle = "recession";
+  else if (cumInflation < -0.08) cycle = "cooling";
+  if (cycle !== "normal" && state.flags._lastEconomicCycle !== cycle) {
+    state.flags._lastEconomicCycle = cycle;
+    if (typeof StateManager !== "undefined") {
+      var msgs = { boom: "📈 经济过热信号：物价持续上涨，投资需谨慎。", inflation: "📊 通胀加剧，生活成本上升，考虑增加收入来源。", recession: "📉 经济衰退信号：消费低迷，现金为王。", cooling: "🌡️ 经济降温，市场趋于理性，适合长期布局。" };
+      StateManager.addMessage(msgs[cycle] || "🔄 经济周期转换。", "info");
+      state.flags._economicCycle = cycle;
+    }
+  } else if (cycle === "normal" && state.flags._lastEconomicCycle !== "normal") {
+    state.flags._lastEconomicCycle = "normal";
+    state.flags._economicCycle = "normal";
+  }
+  return cycle;
+}
+
 // [全系统自洽修复] 域A R387 联动增强(A→B): 交易里程碑叙事—累计交易额触发成就事件
 function checkTradeMilestone(state) {
   if (!state || !state.trade) return;

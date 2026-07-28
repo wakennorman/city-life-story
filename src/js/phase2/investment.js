@@ -1384,6 +1384,18 @@ function tickInvestmentDaily(state) {
     }
     if ((inv.btcHoldings || 0) > 0)
       _pv += (inv.btcPrice || 0) * inv.btcHoldings;
+    // [全系统自洽修复] 域E R738b 修复: investment.portfolio 全库零写入方,但 11+ 文件(r443/r454/r493/r497/r501/r509/r520/r529/r710/r718/r726/r734/part7)以其为 conditions 门槛或估值来源→约20个事件恒false死事件/估值恒0。此处每日tick单点维护真实结构(stocks:{symbol:{shares,avgPrice,avgCost}},funds:{},totalValue:含股/房/BTC市值),一次性复活全部读取方
+    try {
+      var _pf = { stocks: {}, funds: {}, totalValue: isFinite(_pv) ? _pv : 0 };
+      for (var _pfi = 0; _pfi < _holdings.length; _pfi++) {
+        var _pfh = _holdings[_pfi];
+        if (_pfh && _pfh.symbol && isFinite(_pfh.shares) && _pfh.shares > 0) {
+          var _pfAvg = isFinite(_pfh.avgPrice) ? _pfh.avgPrice : 0;
+          _pf.stocks[_pfh.symbol] = { shares: _pfh.shares, avgPrice: _pfAvg, avgCost: _pfAvg };
+        }
+      }
+      inv.portfolio = _pf;
+    } catch (_pfe) { /* 静默:不拖垮主tick */ }
     if (_pv > 0) {
       if (!(inv._portfolioPeak > 0) || _pv > inv._portfolioPeak)
         inv._portfolioPeak = _pv;

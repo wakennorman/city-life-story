@@ -736,6 +736,9 @@ const DAILY_PIPELINE = [
       }
       if (typeof tickDailyPriceShocks === "function")
         tickDailyPriceShocks(state);
+      // [R714 域A 联动增强 A→G/H]: 通货膨胀感知+经济周期检测
+      if (typeof trackInflationPerception === "function") trackInflationPerception(state);
+      if (typeof detectEconomicCycle === "function") detectEconomicCycle(state);
     },
   },
   // [全系统自洽修复] 域A 联动增强#1: 每日经济结算（累进财富税/动态利率/市场饱和度）
