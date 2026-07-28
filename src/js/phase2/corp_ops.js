@@ -717,16 +717,43 @@ function getMarketCostMultiplier(state) {
   }
 }
 
-// [全系统自洽修复] 域H 联动增强(H→A): 公司运营数据追踪
-// [R128] 域H 联动增强
-// [R160] 域H 联动增强
-// [R192] 域H 联动增强
-// [R232] 域H 联动增强
-// [R264] 域H
-// [R288] 域H
-// [R336] 域H
-// [R360] 域H
-// [R384] 域H
+// [R721 域H 联动增强 H→A]: 公司数据影响市场
+function getCorporateMarketInfluence(state) {
+  if (!state || !state.corporate) return 1.0;
+  var c = state.corporate;
+  var teamSize = (c.team && Array.isArray(c.team)) ? c.team.length : 0;
+  var perfHistory = c.perfHistory || [];
+  var recentAvg = 50;
+  if (perfHistory.length > 0) {
+    var total = 0;
+    for (var _phi = 0; _phi < perfHistory.length; _phi++) {
+      total += perfHistory[_phi].score || 50;
+    }
+    recentAvg = total / perfHistory.length;
+  }
+  var influence = 1.0 + (teamSize * 0.005) + ((recentAvg - 50) * 0.001);
+  return Math.max(0.95, Math.min(1.10, influence));
+}
+
+// [R721 域H 联动增强 H→F]: 公司状态摘要UI
+function renderCorporateStatusWidget(state) {
+  if (!state || !state.corporate) return '<div class="wiki-empty">未入职</div>';
+  var c = state.corporate;
+  var rank = c.rank || "P5";
+  var teamSize = (c.team && Array.isArray(c.team)) ? c.team.length : 0;
+  var level = c.level || 1;
+  var html = '<div style="font-size:12px;line-height:1.6;">';
+  html += '<div>🏢 职级: ' + rank + ' (Lv.' + level + ')</div>';
+  html += '<div>👥 团队: ' + teamSize + '人</div>';
+  html += '<div>📊 季度: Q' + (c.corpQuarter || 1) + '</div>';
+  if (c.perfHistory && c.perfHistory.length > 0) {
+    var lastGrade = c.perfHistory[c.perfHistory.length - 1].grade || "?";
+    html += '<div>⭐ 最近绩效: ' + lastGrade + '</div>';
+  }
+  if (c.salary) html += '<div>💰 月薪: ¥' + c.salary.toLocaleString() + '</div>';
+  html += '</div>';
+  return html;
+}
 // [R408] 域H
 // [R432] 域H
 // [R456] 域H
