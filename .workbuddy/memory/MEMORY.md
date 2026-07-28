@@ -12,6 +12,7 @@
 
 ## 竞态形态（并行窗口速度远快于本自动化）
 - 本窗口角色偏「权威 bookkeeping + MC 验证 + 联动/偶发A类」；代码常在写完3分钟内被并行 `git add -A` 扫入其提交（多半 IDENTICAL，核验后即闭合勿改名）。
+- ⚠️ **R658b 新形态：reset --hard 冲毁+staged 接管**——并行会 `reset: moving to HEAD` 直接冲掉本窗口已落盘未提交的源修改（不入 stash，无找回点）！随后它可能自行 staged 一份 IDENTICAL 重做版。对策：改完关键文件立即核验 `git status`；发现被冲掉先查 staged/HEAD 是否已含同内容（含则闭合勿重做），不含才重写。本窗口甚至整轮交付物会被并行以本窗口轮号（如 [R658b]）名义提交推送——核验 HEAD 完整性（源+挂载+dist+A类修复四项 grep）后即视为已 push。
 - 并行同时跑多套编号（正常 R5xx/小编号 R7x-8x），**同轮号双域已成常态**；判 recency/占用一律 git log 提交时间序+内容为准。
 - stash 历史堆积 27+条，旧隔离 stash 勿 pop（并行已提交新版），仅作找回点。
 - CLAUDE.md 是 CRLF 且被并行持续重写——脚本改写须保留换行符；无法干净暂存时跳过迭代表，权威记录在 round doc+loop-state。
@@ -50,9 +51,10 @@
 - 域C 剩：`_apprenticeList`/`_highSalaryHealthWarn`。
 - 域D 注意：R440(老陈)/R442(小薇) 并行已连做新NPC。
 
-## 近况（R515-R649b）
-- R649b 域A(本窗口)：personal_growth 双结构分歧专修+健康素材激活（checkupHistory 首读/depression 首叙事/bmi 首写）。**新救援形态：并行在途源已落盘未提交+挂载已写共享 index.html→本窗口提交 index.html 时必须连带提交该源防悬空**（r649 即此例）。域A零消费素材更新：bmi/checkupHistory 已激活；dental/vision score 仍零事件消费。
-- 并行已推进至 R639（7-28 14:51，~5分钟/轮）。**同轮号冲突新形态：并行挂载先行、源未落盘**（R640 index.html:1473 挂 r640.js 无源文件）→本窗口同轮号时改 **b后缀**（r640b）避让，勿删并行在途挂载行。
+## 近况（R515-R658b）
+- R658b 域B(本窗口)：news.js:452 _goodSleepToday 承诺零兑现 A类修复（_goodSleepDay 当日语义+就地兑现，CRLF 用 Python 精准替换）+ events_street_survival 三大承诺型写-only死flag首消费（_bulkSupplier→E/_liuPartner→C/_communityNetwork→D，domain_b_linkage_r658b.js）。全套被并行以 [R658b] 01579324 提交推送。剩余域B素材：_gratitudeLetterSent（B→H跨阶段）。
+- R649b 域A(本窗口)：personal_growth 双结构分歧专修+健康素材激活（checkupHistory 首读/depression 首叙事/bmi 首写）。域A零消费素材更新：dental/vision score 仍零事件消费。
+- 并行已推进至 R660 在途（7-28 17:30，~1.5分钟/轮，愈发快）。**同轮号冲突对策：本窗口一律 b后缀避让**；并行挂载先行/源先行两种半成品形态都有，均不碰。
 - R640b 域H(本窗口)：正向孤儿救援 r601/r602/r623（源提交于 R586 但从未挂载=12死事件；r592≡r601 并行重复生成不挂）；联动3=morale写-only闭环首读/burnRate跑道警报/董事会shareholderTrust首引。
 - **域H富矿**：company.efficiency（r602写入无读者）/boardPressureLevel/mediaRelations/sentimentScore/crisisLevel（P1-6/P1-7大系统事件层零引用）。
 - 域H结构速查：company 真实字段含 morale(惰性)/burnRate/cashReserve/monthsOfRunway/boardMembers[]/shareholderTrust/shareholderSatisfaction/revenue/valuation(52处消费)；corporate.colleagues=state.js:392真实；player.fame 真实。
