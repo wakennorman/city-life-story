@@ -470,6 +470,7 @@
           text: "📖 写一本行业专著，留下你的思想",
           hint: "智力+10，名声+20，获得被动收入",
           apply: function (st) {
+            if (!st.flags) st.flags = {};
             st.flags._careerSkillCenturyDone = true;
             st.flags._skillMasterBookPublished = true;
             if (st.player) {
