@@ -4,6 +4,13 @@
 > 分支策略：每轮 `git checkout -B loop/auto`（基于当前 HEAD），只 `git add` 本轮改动文件，绝不 `-A`/绝不 push。
 > 安全：提交前同步 `.claude/last_known_head` = `git rev-parse HEAD`；20 关键事件 id 每次改完 cross_system_events.js 后 grep 校验。
 
+## 最近执行（2026-07-29 02:5x · R722b 域B 事件/叙事 — 已commit main, push待网络）
+- 选域：git log recency 并行八连发R714-721后 B=715 可选最陈旧（A名义最旧但并行r722在途→避让，后其自闭合R722+R723域B撞域）。
+- A类=0（假键16全注释/死字段0/无phase14全误报/八连发双向核对无悬空）。B类双层修复：events_core.js:717 tooltip泄漏782处{desc}→渲染层单点剥离+3文件源头8处。
+- 联动3（domain_b_linkage_r722b.js）：_gratitudeLetterSent B→H跨阶段首读/_b714系5个写-only flag B→C/E/G首读。
+- 验证：node --check 6文件过；build 13363.7KB b722b_×6入包；MC 10x500 164.2s 0代码异常/前7天死亡0%。
+- 提交：76a2a3f5(fix)+3d1ad64d(feat)+chore回填。竞态：R658b反向孤儿重现（并行扫dist+挂载漏4源）本轮闭合。push TLS阻断(代理3067)，ahead16，LOCAL_ONLY。下轮→域C(716最陈旧)。
+
 ## 最近执行（2026-07-28 15:1x · R640b 域H Phase2/公司 — 已 push main）
 - 选域：git log recency A=633/B=634/C=635/D=636/E=637/F=638/G=639/H=632 → 域H。⚠️并行同跑 R640 域H（挂载先行、源未落盘的新竞态形态）→本窗口改 **b后缀**（r640b）避让，勿删并行在途挂载行。
 - A类1处：**正向孤儿救援** r601/r602/r623 三 linkage 文件源提交于 R586 但从未挂载 index.html=12死事件→挂载复活9事件；r592≡r601（diff 仅轮号，并行重复生成）不挂载。审计通过项：startup_events.js（在 src/js/data/ 非core）effect 键全集⊆STARTUP_FIELD_MAP 白名单/假技能键0/死字段0。
@@ -584,3 +591,13 @@
 - 验证：node --check 3文件过；build 12335.1KB c677b=6/R677b注释=10入包；MC 10x500 253.5s 0代码异常/前7天死亡率全0%(social/corporate 70%既有RNG阈值)。
 - 竞态：①交付物3分钟内被并行以[R677]a6b054b2扫入推送；②loop-state更新被并行reset冲回R658旧版→重写重推8ed9d3e2；③账本被88e8ef1e/d028a87d扫入。MEMORY素材账修正：域C _apprenticeList/_highSalaryHealthWarn为r515已消费过期账。
 - 下轮：F=670最薄弱(E=679/D=678/C=677/B=676/A=675/H=674/G=671)。开轮必git log重算。
+
+## 2026-07-29 01:1x-01:4x R712b 域H(Phase2/公司) — 本地已提交, push受阻(TLS网络中断)
+- 选域：git log实测H=698全局最陈旧(E=710b/D=709b/C=709/B=708/A=707/G=705/F=704但并行R711刚交付)。b后缀避让并行同期R712域G。开轮时loop-state停在R685b(滞后27轮,再证勿信)。
+- A类=0(四项例行审计全净尽诚实报)：假键(finance/trade/technology/strength/physique)17命中全为历史修复注释活代码0/死字段黑名单0/域H事件占位符0/index.html双向悬空0/startup_events effect键白名单合规。
+- 联动3(domain_h_linkage_r712b.js,3corporate,done-flag防重,全||防御)：h712b_board_pressure_talk(H→D **boardPressureLevel P1-6事件层首消费**·firstMetNpc+applyAffinityChange铁律)/h712b_media_spotlight(H→B **mediaRelations+sentimentScore P1-7首消费**·写player.fame真实字段)/h712b_crisis_night(H→G **crisisLevel首消费+_h698Fitness死flag首读**=禀赋效应兑现)。字段全在state.startup.company经startup.js:575-600核实。
+- 验证：node --check过；build 13281.2→13288.5KB(h712b×22+r713入包)；MC 10x500d 224.1s 0代码异常/前7天死亡率全0%(social70%/corporate50%既有RNG阈值)。
+- ⚠️竞态三重悬空救援(新样本)：并行b25957e1(R712)/cb5d2bde(R713)先后扫走本窗口的index.html挂载+重建dist并推送，但**漏add未跟踪源文件**r712b.js+core/r360.js(其data→core迁移半成品)→HEAD悬空引用。本窗口62c28ad5一并入库闭合(r360与HEAD data版diff=IDENTICAL)。并行staged的r713/r714源+挂载被本窗口commit连带成对入库(无悬空,可接受)。
+- 提交3笔：62c28ad5(feat 联动3+悬空救援)+871a2ae5(chore 账本CLAUDE.md/round-712b/loop-state/memory)+06bf8a2e(LOCAL_ONLY回填)。**push受阻：TLS connect error(本地代理3067未起,用户级已知形态,并行同样推不出),本地ahead 3,网络恢复后任一窗口push即闭合。**
+- pre-commit坑：dist mtime早于src/index.html(并行touch)→内容核verified一致后touch dist重试过钩(勿盲目重build,先git diff HEAD --stat核内容)。
+- 域H富矿账更新：boardPressureLevel/mediaRelations/sentimentScore/crisisLevel全部打通；仅剩company.efficiency事件层薄弱。下轮git log重算(并行R713/R714连续在做域H/A)。

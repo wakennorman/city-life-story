@@ -2,7 +2,7 @@
 
 ## 提交纪律（自动化：直接提交+push main）
 - 开轮先 `git log` 重算真实 recency（**勿信 loop-state，常严重滞后/被并行改写**）；`ls src/js/core/*r{N}*`+grep index.html 核对轮号未被占用。并行在途改动 `git stash push -- <文件>` 隔离，push 后 pop（若并行已自行提交新版则**勿 pop**，仅留作找回点）。
-- 提交前 `git rev-parse HEAD > .claude/last_known_head`（过 pre-commit 漂移检查）。改源后必 `python build.py`（dist 须比 src 新）。只 add 本轮文件；绝不 `-A`/`--amend`/force。push 前 `git pull --rebase origin main`，冲突则中止绝不 force。
+- 提交前 `git rev-parse HEAD > .claude/last_known_head`（过 pre-commit 漂移检查）。⚠️同一窗口连续多笔提交：**每笔提交前都要重新同步**（第一笔落地后 HEAD 变化会拦截第二笔）。改源后必 `python build.py`（dist 须比 src 新）。只 add 本轮文件；绝不 `-A`/`--amend`/force。push 前 `git pull --rebase origin main`，冲突则中止绝不 force。
 - MC：`node --max-old-space-size=8192 tests/monte_carlo.cjs --trials 6 --days 400`。0 TypeError/ReferenceError/NaN/Infinity + 前7天死亡率0% 即过；存活率<80% 多为既有 RNG 阈值。
 - ⚠️ **MC "全策略0%存活+耗时<1s"=硬崩溃**→harness catch 加 e.stack 定位，立即热修复上 main。
 - 新 linkage 文件必挂 `src/index.html` `<script>`（漏挂=悬空，build 静默剔除）。
@@ -51,10 +51,11 @@
 - 域C：~~_apprenticeList/_highSalaryHealthWarn~~ 已被 r515 消费（旧账过期勿再选）；R677b 后剩 `_legacyProjectDay`（时间戳深挖）/`_careerMonthlySnapshots`/`_burnoutWasHigh`。
 - 域D 注意：R440(老陈)/R442(小薇) 并行已连做新NPC。
 
-## 近况（R515-R712b）
+## 近况（R515-R722b）
+- R722b 域B(本窗口自动化 07-29 02:5x)：A类=0(四项审计净尽)。**B类双层修复**：events_core.js:717 tooltip直取story→全库782处{desc}占位符悬停泄漏→渲染层单点正则剥离+r700/r708/r715源头8处。联动3(domain_b_linkage_r722b.js)：_gratitudeLetterSent(R586写-only)B→H跨阶段首读/_b714PatternAnalyst+Storyteller B→C/E首读/_b714Resilient+Mindful B→G低健康窗口首读。竞态：并行~1.5轮/10分钟仍在加速(R714-R723)，R658b反向孤儿形态重现(dist+挂载入HEAD、4源漏add)由本轮闭合。C类：并行r715/r721 id前缀误用(b714_/h713_)全库唯一不改。push仍TLS阻断ahead16。
 - R712b 域H(本窗口自动化 07-29 01:1x)：git log实测H=698全局最陈旧。A类=0（假键17命中全历史注释/占位符0/悬空0/effect白名单合规——四项例行审计净尽诚实报）。联动3(domain_h_linkage_r712b.js,3corporate)：boardPressureLevel≥2董事会阴影(H→D firstMetNpc铁律)/mediaRelations≥40+sentimentScore>0专访窗口期(H→B 写player.fame)/crisisLevel≥2危机深夜(H→G **_h698Fitness死flag首读**)。并行同期做R712域G(staged在途)——commit时机重估status，若并行r712仍staged会连带入本提交(挂载+文件成对无悬空,可接受)。构建13281.2KB。
 - R677b 域C(本窗口)：A类2处——①_skillMasterTrainer 培训班承诺¥150/天零兑现→开班日+扣投入+daily_pipeline 每日兑现(150/扩班250,_trainerScaleUp 由联动事件置位)；②career_dev 6事件 story 占位符 {pathName}{levelName}{skillName}{masterName} 泄漏（渲染层只调 text()）→全部补 text() 动态叙述。联动3(domain_c_linkage_r677b.js)：_legacyProjectStarted/_legacyWatched 死flag首消费 + 培训班扩班。交付物被并行以 [R677] a6b054b2 扫入推送（并行同提交含其自有域C修复——同轮号同域双份互补新形态）。
-- R658b 域B(本窗口)：news.js:452 _goodSleepToday 承诺零兑现 A类修复（_goodSleepDay 当日语义+就地兑现，CRLF 用 Python 精准替换）+ events_street_survival 三大承诺型写-only死flag首消费（_bulkSupplier→E/_liuPartner→C/_communityNetwork→D）。剩余域B素材：_gratitudeLetterSent（B→H跨阶段）。
+- R658b 域B(本窗口)：news.js:452 _goodSleepToday 承诺零兑现 A类修复（_goodSleepDay 当日语义+就地兑现，CRLF 用 Python 精准替换）+ events_street_survival 三大承诺型写-only死flag首消费（_bulkSupplier→E/_liuPartner→C/_communityNetwork→D）。剩余域B素材：~~_gratitudeLetterSent~~ 已被R722b消费(B→H跨阶段感谢信回响)；新写-only候选:_b722bAnonymousGiver/_b714Sharer/_b714Listener/_b722bPatternCd系。
 - R649b 域A(本窗口)：personal_growth 双结构分歧专修+健康素材激活（checkupHistory 首读/depression 首叙事/bmi 首写）。域A零消费素材更新：dental/vision score 仍零事件消费。
 - 并行已推进至 R660 在途（7-28 17:30，~1.5分钟/轮，愈发快）。**同轮号冲突对策：本窗口一律 b后缀避让**；并行挂载先行/源先行两种半成品形态都有，均不碰。
 - R640b 域H(本窗口)：正向孤儿救援 r601/r602/r623（源提交于 R586 但从未挂载=12死事件；r592≡r601 并行重复生成不挂）；联动3=morale写-only闭环首读/burnRate跑道警报/董事会shareholderTrust首引。

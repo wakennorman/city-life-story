@@ -209,7 +209,7 @@ const DAILY_PIPELINE = [
         Math.min(100, state.needs.happiness - 3 + (house.happinessBonus || 0)),
       );
       // 王大婶好感30解锁每日带饭（饥饱+15）
-      if (state.flags.auntWangMeal) {
+      if (state.flags && state.flags.auntWangMeal) {
         state.needs.hunger = Math.min(100, state.needs.hunger + 15);
         if (Random.chance(0.3)) {
           StateManager.addMessage(
@@ -282,7 +282,7 @@ const DAILY_PIPELINE = [
       if (house.rent > 0 && !selfLiving) {
         var rentAmount = house.rent;
         // 王大婶好感60解锁租房折扣（-¥50/天）
-        if (state.flags.auntWangRentDiscount && rentAmount >= 50) {
+        if (state.flags && state.flags.auntWangRentDiscount && rentAmount >= 50) {
           rentAmount -= 50;
         }
         if ((state.resources.cash || 0) >= rentAmount) { // [全系统自洽修复] 域G A类: cash NaN守卫

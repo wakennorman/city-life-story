@@ -3295,7 +3295,7 @@ function getAvailableActions(state) {
               earn,
               "本地名人效应",
             );
-            state.player.fame = Math.min(100, state.player.fame + 3);
+            state.player.fame = Math.min(100, (state.player.fame || 0) + 3);
             state.flags._fameVipUsedToday = state.flags._fameVipUsedToday || {};
             state.flags._fameVipUsedToday.commercialVip = true;
             consumeAP(15);
@@ -3319,8 +3319,8 @@ function getAvailableActions(state) {
           apCost: 5,
           handler: () => {
             state.needs.happiness = Math.min(100, state.needs.happiness + 20);
-            state.player.mental = Math.min(100, state.player.mental + 2);
-            state.player.fame = Math.min(100, state.player.fame + 2);
+            state.player.mental = Math.min(100, (state.player.mental || 0) + 2);
+            state.player.fame = Math.min(100, (state.player.fame || 0) + 2);
             state.flags._fameVipUsedToday = state.flags._fameVipUsedToday || {};
             state.flags._fameVipUsedToday.parkFan = true;
             consumeAP(5);
@@ -3415,8 +3415,8 @@ function getAvailableActions(state) {
               earn,
               "科技论坛演讲嘉宾",
             );
-            state.player.fame = Math.min(100, state.player.fame + 8);
-            state.player.mental = Math.min(100, state.player.mental + 2);
+            state.player.fame = Math.min(100, (state.player.fame || 0) + 8);
+            state.player.mental = Math.min(100, (state.player.mental || 0) + 2);
             state.flags._fameVipUsedToday = state.flags._fameVipUsedToday || {};
             state.flags._fameVipUsedToday.techTalkVip = true;
             consumeAP(25);
@@ -3912,12 +3912,12 @@ function getAvailableActions(state) {
             if (cert.effects.intelligence)
               state.player.intelligence = Math.min(
                 100,
-                state.player.intelligence + cert.effects.intelligence,
+                (state.player.intelligence || 0) + cert.effects.intelligence,
               );
             if (cert.effects.physique)
               state.player.physique = Math.min(
                 100,
-                state.player.physique + cert.effects.physique,
+                (state.player.physique || 0) + cert.effects.physique,
               );
             if (cert.effects.repair) addSkillXp("repair", cert.effects.repair);
             if (cert.effects.medicineXp)
@@ -4825,12 +4825,12 @@ function doStreetJob(job) {
     if (job.effects.mental)
       state.player.mental = Math.max(
         0,
-        Math.min(100, state.player.mental + job.effects.mental),
+        Math.min(100, (state.player.mental || 0) + job.effects.mental),
       );
     if (job.effects.fame)
       state.player.fame = Math.max(
         0,
-        Math.min(100, state.player.fame + job.effects.fame),
+        Math.min(100, (state.player.fame || 0) + job.effects.fame),
       );
 
     // 技能经验
@@ -4863,17 +4863,17 @@ function doStreetJob(job) {
     if (job.effects.agilityXp)
       state.player.agility = Math.min(
         100,
-        state.player.agility + job.effects.agilityXp * 0.1,
+        (state.player.agility || 0) + job.effects.agilityXp * 0.1,
       );
     if (job.effects.physiqueXp)
       state.player.physique = Math.min(
         100,
-        state.player.physique + job.effects.physiqueXp * 0.1,
+        (state.player.physique || 0) + job.effects.physiqueXp * 0.1,
       );
     if (job.effects.intelligenceXp)
       state.player.intelligence = Math.min(
         100,
-        state.player.intelligence + job.effects.intelligenceXp * 0.1,
+        (state.player.intelligence || 0) + job.effects.intelligenceXp * 0.1,
       );
   }
 
