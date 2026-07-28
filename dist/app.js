@@ -102988,6 +102988,157 @@ if (typeof window !== "undefined") {
   }
 })();
 ;
+// ==== js/core/domain_c_linkage_r360.js ====
+/**
+ * 域C联动增强 R360 — 技能连携解锁叙事化
+ * [全系统自洽修复] 域C R360: 连携工作解锁首次被事件叙事消费
+ *
+ * 3个新事件：
+ *   ① C→F: 连携解锁叙事 — 双技能连携解锁后获得新工作机会(消费flag _justUnlockedDual)
+ *   ② C→F: 三联携解锁叙事 — 三联携解锁后获得高端工作机会(消费flag _justUnlockedTriple)
+ *   ③ C→G: 连携生涯沉淀 — 持续使用连携技能获得职业沉淀(消费技能连携总数)
+ */
+(function () {
+  "use strict";
+  if (typeof window === "undefined") return;
+
+  // ===== ① C→F: 连携解锁叙事 =====
+  var synergy_unlock_dual_story = {
+    id: "synergy_unlock_dual_story",
+    title: "🔗 技能连携",
+    phase: "street",
+    repeatable: false,
+    priority: 75,
+    conditions: function (st) {
+      if (!st || !st.flags) return false;
+      if (!st.flags._justUnlockedDual || !st.flags._currentUnlockSynergyId) return false;
+      if (st.flags._synergyUnlockStoryShown) return false;
+      return true;
+    },
+    probability: 1.0,
+    getStory: function (st) {
+      var sid = st.flags && st.flags._currentUnlockSynergyId;
+      var syn = typeof SKILL_SYNERGY_DUAL !== "undefined" ? (SKILL_SYNERGY_DUAL[sid] || null) : null;
+      if (syn) {
+        return "你发现" + syn.name + "这门连携技能被解锁了！\n\n" +
+               "这两门技能同时使用，让你拥有了别人没有的优势。\n" +
+               "也许可以尝试一些新的工作机会？";
+      }
+      return "两门技能的交汇产生了奇妙的化学反应，你获得了新的职业视角。";
+    },
+    getText: function (st) { return this.getStory(st); },
+    apply: function (st, choiceId) {
+      if (!st) return;
+      st.flags._synergyUnlockStoryShown = st.player.day;
+      st.flags._justUnlockedDual = false;
+      st.flags._currentUnlockSynergyId = null;
+      if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 8);
+      if (typeof StateManager !== "undefined" && StateManager.addMessage) {
+        StateManager.addMessage("🔗 技能连携解锁！你获得了新的职业视角，心情+8。", "success");
+      }
+    },
+    choices: [],
+    icons: ["🔗", "连携"],
+  };
+
+  // ===== ② C→F: 三联携解锁叙事 =====
+  var synergy_unlock_triple_story = {
+    id: "synergy_unlock_triple_story",
+    title: "👑 三连携",
+    phase: "street",
+    repeatable: false,
+    priority: 85,
+    conditions: function (st) {
+      if (!st || !st.flags) return false;
+      if (!st.flags._justUnlockedTriple || !st.flags._currentUnlockSynergyId) return false;
+      if (st.flags._synergyTripleStoryShown) return false;
+      return true;
+    },
+    probability: 1.0,
+    getStory: function (st) {
+      var sid = st.flags && st.flags._currentUnlockSynergyId;
+      var syn = typeof SKILL_SYNERGY_TRIPLE !== "undefined" ? (SKILL_SYNERGY_TRIPLE[sid] || null) : null;
+      if (syn) {
+        return "你解锁了「" + syn.name + "」三连携！\n\n" +
+               "这是少数人能触及的境界——三门技能的完美融合。\n" +
+               "你已经具备了顶尖专业人士的能力，可以尝试更高阶的工作了。";
+      }
+      return "三门技能同时达到临界点，你感受到了前所未有的力量！";
+    },
+    getText: function (st) { return this.getStory(st); },
+    apply: function (st, choiceId) {
+      if (!st) return;
+      st.flags._synergyTripleStoryShown = st.player.day;
+      st.flags._justUnlockedTriple = false;
+      st.flags._currentUnlockSynergyId = null;
+      if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 12);
+      if (typeof addSkillXp === "function") addSkillXp("management", 5);
+      if (typeof StateManager !== "undefined" && StateManager.addMessage) {
+        StateManager.addMessage("👑 三连携解锁！你具备了顶尖专业能力，管理XP+5，心情+12。", "success");
+      }
+    },
+    choices: [],
+    icons: ["👑", "三连携"],
+  };
+
+  // ===== ③ C→G: 连携生涯沉淀 =====
+  var synergy_career_settling = {
+    id: "synergy_career_settling",
+    title: "📚 职业沉淀",
+    phase: "street",
+    repeatable: true,
+    cooldownDays: 90,
+    priority: 60,
+    conditions: function (st) {
+      if (!st || !st.flags) return false;
+      if (st.flags._synergyCareerSettlingCooldown) {
+        if ((st.player.day || 0) - st.flags._synergyCareerSettlingCooldown < 90) return false;
+      }
+      // 检查是否有双技能连携成就
+      if (typeof SKILL_SYNERGY_DUAL !== "undefined") {
+        var usedSynergies = 0;
+        for (var key in st.flags) {
+          if (key.startsWith("synergy_")) usedSynergies++;
+        }
+        if (usedSynergies < 3) return false; // 至少3次连携解锁
+      }
+      return true;
+    },
+    probability: 0.05,
+    getStory: function (st) {
+      var synergyCount = 0;
+      for (var key in st.flags) {
+        if (key.startsWith("synergy_")) synergyCount++;
+      }
+      return "回顾职业生涯，你已经解锁了" + synergyCount + "个技能连携。\n\n" +
+             "这些技能组合让你在工作中游刃有余，形成了独特的职业竞争力。\n" +
+             "是时候把这些经验沉淀下来，指导更年轻的同行？";
+    },
+    getText: function (st) { return this.getStory(st); },
+    apply: function (st, choiceId) {
+      if (!st) return;
+      st.flags._synergyCareerSettlingCooldown = st.player.day;
+      if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 10);
+      if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 5);
+      if (typeof addSkillXp === "function") addSkillXp("management", 8);
+      if (typeof StateManager !== "undefined" && StateManager.addMessage) {
+        StateManager.addMessage("📚 职业经验沉淀！心智+5，心情+10，管理XP+8。", "success");
+      }
+    },
+    choices: [],
+    icons: ["📚", "沉淀"],
+  };
+
+  // 注入事件
+  if (typeof RANDOM_EVENTS !== "undefined") {
+    RANDOM_EVENTS.push(synergy_unlock_dual_story, synergy_unlock_triple_story, synergy_career_settling);
+    if (typeof console !== "undefined" && console.log) {
+      console.log("[C R360] 3 synergy unlock narrative events registered");
+    }
+  }
+})();
+
+;
 // ==== js/core/domain_c_linkage_r365.js ====
 /**
  * 域C(职业/成长) 联动增强 R365
@@ -309427,6 +309578,174 @@ if (typeof window !== "undefined") {
   }
 })();
 ;
+// ==== js/core/domain_h_linkage_r713.js ====
+/**
+ * 域H(Phase2/公司) 联动增强 R713
+ * 桥接：
+ *   H→A  h713_corp_data_asset_v3 公司数据资产v3 → 消费 company 运营数据,
+ *     将隐形公司数据显性化为"经营者仪表盘"
+ *   H→B  h713_corp_legend_v2 公司传奇v2 → 消费 startup 估值+营收,
+ *     公司里程碑触发叙事回响
+ *   H→G  h713_founder_lifestyle_v3 创始人生活v3 → 消费 公司压力+needs,
+ *     经营压力传导至创始人健康
+ */
+(function () {
+  "use strict";
+  if (typeof RANDOM_EVENTS === "undefined" || !RANDOM_EVENTS) return;
+  if (RANDOM_EVENTS._domainHLinkageR713Loaded) return;
+  RANDOM_EVENTS._domainHLinkageR713Loaded = true;
+
+  function hasCompany(st) {
+    return st && st.startup && st.startup.company && st.startup.active;
+  }
+
+  var EVENTS = [
+    {
+      id: "h713_corp_data_asset_v3", phase: "corporate", _isChainEvent: false, icon: "📊",
+      title: "经营者仪表盘",
+      story: "公司的数据正在讲述经营故事——{desc}",
+      triggers: { minDay: 100, interval: 150, maxRepeats: 3, excludeFlags: ["_h713DataCd"] },
+      conditions: function (st) {
+        if (!st || st.gameOver) return false;
+        if (st.flags && st.flags._h713DataCd) return false;
+        return hasCompany(st) && st.player && st.player.day >= 100;
+      },
+      choices: [
+        {
+          text: "📈 分析经营数据", hint: "会计XP+6,智力+3,置_h713Analyst",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._h713DataCd = true;
+            st.flags._h713Analyst = true;
+            if (st.player) st.player.intelligence = Math.min(100, (st.player.intelligence || 50) + 3);
+            if (typeof addSkillXp === "function") { try { addSkillXp("accounting", 6); } catch(e) {} }
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("📊 '数据驱动决策。' 会计XP+6,智力+3。", "success");
+            }
+          }
+        },
+        {
+          text: "🎯 设定经营目标", hint: "管理XP+5,置_h713GoalSetter",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._h713DataCd = true;
+            st.flags._h713GoalSetter = true;
+            if (typeof addSkillXp === "function") { try { addSkillXp("management", 5); } catch(e) {} }
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("🎯 '目标明确,执行有力。' 管理XP+5。", "info");
+            }
+          }
+        }
+      ],
+      text: function (st) {
+        if (!st) return null;
+        var val = st.startup && st.startup.company && st.startup.company.valuation ? Math.round(st.startup.company.valuation) : 0;
+        return "公司估值¥" + val.toLocaleString() + "——'这些数据,就是你的经营成果。'";
+      }
+    },
+    {
+      id: "h713_corp_legend_v2", phase: "corporate", _isChainEvent: false, icon: "🏆",
+      title: "公司传奇",
+      story: "你的公司正在书写传奇——{desc}",
+      triggers: { minDay: 150, interval: 200, maxRepeats: 3, excludeFlags: ["_h713LegendCd"] },
+      conditions: function (st) {
+        if (!st || st.gameOver) return false;
+        if (st.flags && st.flags._h713LegendCd) return false;
+        return hasCompany(st) && st.startup.company.valuation >= 500000 && st.player && st.player.day >= 150;
+      },
+      choices: [
+        {
+          text: "📖 记录公司故事", hint: "心智+5,置_h713Storyteller",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._h713LegendCd = true;
+            st.flags._h713Storyteller = true;
+            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 5);
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("🏆 '每家公司都有自己的传奇。' 心智+5。", "success");
+            }
+          }
+        },
+        {
+          text: "🚀 展望未来发展", hint: "智力+4,魅力+3,置_h713Visionary",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._h713LegendCd = true;
+            st.flags._h713Visionary = true;
+            if (st.player) {
+              st.player.intelligence = Math.min(100, (st.player.intelligence || 50) + 4);
+              st.player.charm = Math.min(100, (st.player.charm || 50) + 3);
+            }
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("🚀 '心有多大,舞台就有多大。' 智力+4,魅力+3。", "info");
+            }
+          }
+        }
+      ],
+      text: function (st) {
+        if (!st) return null;
+        var val = st.startup && st.startup.company && st.startup.company.valuation ? Math.round(st.startup.company.valuation) : 0;
+        return "公司估值¥" + val.toLocaleString() + "——'这是一个值得讲述的故事。'";
+      }
+    },
+    {
+      id: "h713_founder_lifestyle_v3", phase: "corporate", _isChainEvent: false, icon: "💚",
+      title: "创始人生活平衡",
+      story: "经营公司不应以健康为代价——{desc}",
+      triggers: { minDay: 80, interval: 120, maxRepeats: 4, excludeFlags: ["_h713LifestyleCd"] },
+      conditions: function (st) {
+        if (!st || st.gameOver) return false;
+        if (st.flags && st.flags._h713LifestyleCd) return false;
+        return hasCompany(st) && st.needs && st.status && st.player && st.player.day >= 80;
+      },
+      choices: [
+        {
+          text: "🧘 调整工作节奏", hint: "健康+4,疲劳-8,置_h713Balanced",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._h713LifestyleCd = true;
+            st.flags._h713Balanced = true;
+            if (st.status) st.status.health = Math.min(100, (st.status.health || 100) + 4);
+            if (st.needs) st.needs.fatigue = Math.max(0, (st.needs.fatigue || 0) - 8);
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("💚 '创业是马拉松,不是百米冲刺。' 健康+4,疲劳-8。", "success");
+            }
+          }
+        },
+        {
+          text: "🏋️ 坚持锻炼", hint: "健康+6,置_h713Exerciser",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._h713LifestyleCd = true;
+            st.flags._h713Exerciser = true;
+            if (st.status) st.status.health = Math.min(100, (st.status.health || 100) + 6);
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("🏋️ '身体是革命的本钱。' 健康+6。", "info");
+            }
+          }
+        }
+      ],
+      text: function (st) {
+        if (!st) return null;
+        var health = st.status && st.status.health ? Math.round(st.status.health) : 100;
+        var fatigue = st.needs && st.needs.fatigue ? Math.round(st.needs.fatigue) : 0;
+        return "健康" + health + "%,疲劳" + fatigue + "——'创始人健康,才是最大的资产。'";
+      }
+    }
+  ];
+
+  for (var i = 0; i < EVENTS.length; i++) {
+    RANDOM_EVENTS.push(EVENTS[i]);
+  }
+})();
+
+;
 // ==== js/core/domain_a_linkage_r633.js ====
 /**
  * 域A(数据/数值平衡) 联动增强 R633
@@ -335472,6 +335791,266 @@ if (typeof window !== "undefined") {
         if (!st) return null;
         var age = st.player && st.player.age ? st.player.age : 20;
         return "你今年" + age + "岁——'人生的每个阶段,都值得反思。'";
+      }
+    }
+  ];
+
+  for (var i = 0; i < EVENTS.length; i++) {
+    RANDOM_EVENTS.push(EVENTS[i]);
+  }
+})();
+
+;
+// ==== js/core/domain_h_linkage_r712b.js ====
+/**
+ * 域H(Phase2/公司) 联动增强 R712b
+ * 富矿激活：P1-6/P1-7 大系统字段事件层零引用 → 首消费
+ *   H→D  h712b_board_pressure_talk   boardPressureLevel(0-4) 事件层首消费 → 董事会高压下的倾诉/硬扛，联动已见面NPC好感
+ *   H→B  h712b_media_spotlight       mediaRelations+sentimentScore 事件层首消费 → 媒体专访叙事，声望与情绪分联动
+ *   H→G  h712b_crisis_night          crisisLevel(0-4) 事件层首消费 + _h698Fitness 死flag首读 → 危机深夜的健康分岔
+ * 设计：峰终定律(危机夜是记忆峰值)+损失厌恶(压力具象化)。全||防御，rel&&rel.met铁律，done-flag防重。
+ */
+(function () {
+  "use strict";
+  if (typeof RANDOM_EVENTS === "undefined" || !RANDOM_EVENTS) return;
+  if (RANDOM_EVENTS._domainHLinkageR712bLoaded) return;
+  RANDOM_EVENTS._domainHLinkageR712bLoaded = true;
+
+  function co(st) {
+    if (!st || !st.startup || !st.startup.active) return null;
+    return st.startup.company || null;
+  }
+
+  // firstMetNpc 铁律遍历：只返回已见面NPC
+  function firstMetNpc(st) {
+    if (!st || !st.relationships) return null;
+    for (var id in st.relationships) {
+      var rel = st.relationships[id];
+      if (rel && rel.met) return id;
+    }
+    return null;
+  }
+
+  function npcName(st, id) {
+    if (typeof getNpcDisplayName === "function") {
+      try { return getNpcDisplayName(st, id) || "老朋友"; } catch (e) {}
+    }
+    return "老朋友";
+  }
+
+  var EVENTS = [
+    {
+      id: "h712b_board_pressure_talk",
+      phase: "corporate",
+      _isChainEvent: false,
+      icon: "🪑",
+      title: "董事会的阴影",
+      story: "压力等级亮起黄灯之后",
+      triggers: { minDay: 200, interval: 120, maxRepeats: 2, excludeFlags: ["_h712bBoardTalkDone"] },
+      conditions: function (st) {
+        if (!st || st.gameOver) return false;
+        if (st.flags && st.flags._h712bBoardTalkDone) return false;
+        var c = co(st);
+        // [联动] boardPressureLevel P1-6大系统字段事件层首消费
+        return !!c && (c.boardPressureLevel || 0) >= 2;
+      },
+      choices: [
+        {
+          text: "🗣️ 约朋友倾诉一晚",
+          hint: "心智+6,好感+4(须已见面),压力具象化",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._h712bBoardTalkDone = true;
+            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 6);
+            var nid = firstMetNpc(st);
+            if (nid && typeof applyAffinityChange === "function") {
+              try { applyAffinityChange(st, nid, 4, "董事会压力下的深夜倾诉"); } catch (e) {}
+            }
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage(
+                nid
+                  ? "🍻 和" + npcName(st, nid) + "聊到深夜，董事会的脸不再那么可怕。心智+6，好感+4。"
+                  : "🍻 你独自写完了一整页复盘，压力落在纸上就轻了一半。心智+6。",
+                "success"
+              );
+            }
+          }
+        },
+        {
+          text: "📊 连夜做KPI冲刺方案",
+          hint: "管理XP+8,股东信任+3,心智-4",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._h712bBoardTalkDone = true;
+            st.flags._h712bSprintPlan = true;
+            var c = co(st);
+            if (c) c.shareholderTrust = Math.min(100, (c.shareholderTrust || 50) + 3);
+            if (st.player) st.player.mental = Math.max(0, (st.player.mental || 50) - 4);
+            if (typeof addSkillXp === "function") { try { addSkillXp("management", 8); } catch (e) {} }
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("📊 凌晨三点的方案发进董事群，没人回复，但你知道他们看了。管理XP+8，股东信任+3，心智-4。", "info");
+            }
+          }
+        },
+        {
+          text: "😤 假装无事发生",
+          hint: "心智-6,压力不会自己消失",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._h712bBoardTalkDone = true;
+            if (st.player) st.player.mental = Math.max(0, (st.player.mental || 50) - 6);
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("😤 你关掉了董事会邮件提醒。提醒可以关掉，季度评估关不掉。心智-6。", "warning");
+            }
+          }
+        }
+      ],
+      text: function (st) {
+        var c = co(st);
+        var lv = c ? (c.boardPressureLevel || 0) : 2;
+        var trust = c ? Math.round(c.shareholderTrust || 50) : 50;
+        return "董事会压力等级已经升到 " + lv + " 级，股东信任度 " + trust +
+          "%。散会后走廊很长，你听见自己的脚步声——'他们是在给我时间，还是在给我倒计时？'";
+      }
+    },
+    {
+      id: "h712b_media_spotlight",
+      phase: "corporate",
+      _isChainEvent: false,
+      icon: "🎙️",
+      title: "聚光灯下",
+      story: "媒体关系度终于变成了一次专访",
+      triggers: { minDay: 220, interval: 150, maxRepeats: 2, excludeFlags: ["_h712bSpotlightDone"] },
+      conditions: function (st) {
+        if (!st || st.gameOver) return false;
+        if (st.flags && st.flags._h712bSpotlightDone) return false;
+        var c = co(st);
+        // [联动] mediaRelations+sentimentScore P1-7公关系统字段事件层首消费
+        return !!c && (c.mediaRelations || 0) >= 40 && (c.sentimentScore || 0) > 0;
+      },
+      choices: [
+        {
+          text: "🎙️ 接受深度专访",
+          hint: "媒体关系+8,情绪分+5,名气+3,社交XP+6",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._h712bSpotlightDone = true;
+            var c = co(st);
+            if (c) {
+              c.mediaRelations = Math.min(100, (c.mediaRelations || 0) + 8);
+              c.sentimentScore = Math.min(100, (c.sentimentScore || 0) + 5);
+            }
+            if (st.player) st.player.fame = (st.player.fame || 0) + 3;
+            if (typeof addSkillXp === "function") { try { addSkillXp("social", 6); } catch (e) {} }
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("🎙️ 专访标题是《从街头到写字楼》。你妈把链接转发了三个家族群。媒体关系+8，情绪分+5，名气+3。", "success");
+            }
+          }
+        },
+        {
+          text: "🤫 婉拒，闷声做事",
+          hint: "心智+4,媒体关系-3,低调也是策略",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._h712bSpotlightDone = true;
+            var c = co(st);
+            if (c) c.mediaRelations = Math.max(0, (c.mediaRelations || 0) - 3);
+            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 4);
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("🤫 '公司还小，先把事做好。'记者遗憾地合上本子。心智+4，媒体关系-3。", "info");
+            }
+          }
+        }
+      ],
+      text: function (st) {
+        var c = co(st);
+        var mr = c ? Math.round(c.mediaRelations || 0) : 40;
+        var senti = c ? Math.round(c.sentimentScore || 0) : 0;
+        return "一家商业媒体发来专访邀请。你的媒体关系度 " + mr + "，舆论情绪分 " + senti +
+          "——公关团队说这是'窗口期'。聚光灯已经架好，问题是你要不要走进去。";
+      }
+    },
+    {
+      id: "h712b_crisis_night",
+      phase: "corporate",
+      _isChainEvent: false,
+      icon: "🌒",
+      title: "危机中的深夜",
+      story: "危机等级不只是仪表盘上的数字",
+      triggers: { minDay: 200, interval: 100, maxRepeats: 2, excludeFlags: ["_h712bCrisisNightDone"] },
+      conditions: function (st) {
+        if (!st || st.gameOver) return false;
+        if (st.flags && st.flags._h712bCrisisNightDone) return false;
+        var c = co(st);
+        // [联动] crisisLevel 危机系统字段事件层首消费
+        return !!c && (c.crisisLevel || 0) >= 2;
+      },
+      choices: [
+        {
+          text: "🧘 按健康计划扛过去",
+          hint: "曾定健康计划(_h698Fitness)则健康+4心智+6,否则心智+3",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._h712bCrisisNightDone = true;
+            // [联动] _h698Fitness 死flag首读：R698健康计划在危机夜兑现回报(禀赋效应)
+            var hasPlan = !!(st.flags && st.flags._h698Fitness);
+            if (hasPlan) {
+              if (st.status) st.status.health = Math.min(100, (st.status.health || 100) + 4);
+              if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 6);
+            } else {
+              if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 3);
+            }
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage(
+                hasPlan
+                  ? "🧘 幸亏当初定了健康计划——晨跑、冥想、十一点睡。危机还在，但你睡得着。健康+4，心智+6。"
+                  : "🧘 你试着深呼吸。没有练过的深呼吸，效果打了对折。心智+3。",
+                hasPlan ? "success" : "info"
+              );
+            }
+          }
+        },
+        {
+          text: "🚬 咖啡因和烟熬通宵",
+          hint: "危机等级-1,健康-5,饮鸩止渴",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._h712bCrisisNightDone = true;
+            var c = co(st);
+            if (c) c.crisisLevel = Math.max(0, (c.crisisLevel || 0) - 1);
+            if (st.status) st.status.health = Math.max(1, (st.status.health || 100) - 5);
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("🚬 通宵压下了一波舆情，代价记在体检报告上。危机等级-1，健康-5。", "warning");
+            }
+          }
+        },
+        {
+          text: "📞 授权团队，自己去睡",
+          hint: "管理XP+6,心智+4,信任团队",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._h712bCrisisNightDone = true;
+            st.flags._h712bDelegated = true;
+            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 4);
+            if (typeof addSkillXp === "function") { try { addSkillXp("management", 6); } catch (e) {} }
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("📞 '按预案走，明早八点向我汇报。'挂断电话的那一刻，你才算真正当上了CEO。管理XP+6，心智+4。", "success");
+            }
+          }
+        }
+      ],
+      text: function (st) {
+        var c = co(st);
+        var lv = c ? (c.crisisLevel || 0) : 2;
+        return "凌晨一点，危机等级 " + lv + " 级。手机每隔十分钟震一次，公关群里的消息条数比你的心率还快。你盯着天花板——明天的你，需要今晚的你做个决定。";
       }
     }
   ];
