@@ -46,7 +46,7 @@ function calculateMonthlyIncome(state) {
     // === 街头阶段 ===
     // 街头收入来源：拾荒、摆摊、街头工作等
     // 计算方式：最近 7 天的日均收入 × 22 个工作日
-    const transactions = state.flags._dailyTransactions || [];
+    const transactions = (state.flags && state.flags._dailyTransactions) || [];
     const recentDays = {};
 
     // 聚合最近 7 天的收入
