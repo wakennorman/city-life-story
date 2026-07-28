@@ -136,7 +136,7 @@
             if (!st) return; st.flags = st.flags || {};
             st.flags._b573FomoCooldown = true;
             if (st.resources) st.resources.cash = Math.max(0, (st.resources.cash || 0) - 2000);
-            var win = Math.random() < 0.25;
+            var win = Random.chance(0.25); // [全系统自洽修复] 域B R400: Math.random()→Random.chance()种子化随机
             if (win) {
               if (st.resources) st.resources.cash = (st.resources.cash || 0) + 2600;
               if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 3);

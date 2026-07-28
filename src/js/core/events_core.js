@@ -859,13 +859,14 @@ function showEventModal(evt) {
       state.stats.eventCounts[_evtCat] = (state.stats.eventCounts[_evtCat] || 0) + 1;
 
       // [域B R417 联动增强] B→G: 重大事件对心智的长期影响 — 连续负面事件降低心智韧性
+      // [全系统自洽修复] 域B R618 A类: 原逻辑先写 _lastSeriousEventDay=day 再判断 day-last≤3 → 差值恒0 → 每次重大事件都扣心智-2(应为"3天内第二次"才触发)。修正: 先判断再写入
       if (evt._isChainEvent || evt.id.indexOf("moral_") === 0) {
         if (!state.flags) state.flags = {};
-        state.flags._lastSeriousEventDay = state.player.day;
         // 连续3天内第二次重大事件 → 心智-2（累积压力）
-        if (state.flags._lastSeriousEventDay && state.player.day - (state.flags._lastSeriousEventDay || 0) <= 3) {
+        if (state.flags._lastSeriousEventDay && state.player.day - state.flags._lastSeriousEventDay <= 3 && state.player.day !== state.flags._lastSeriousEventDay) {
           if (state.player) state.player.mental = Math.max(0, (state.player.mental || 50) - 2);
         }
+        state.flags._lastSeriousEventDay = state.player.day;
       }
 
       // [域B R417 联动增强] B→F: 事件响应追踪 — 记录玩家选择模式，供UI显示决策风格

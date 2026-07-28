@@ -1353,7 +1353,7 @@
                 "跳槽：从" + st.career.currentJob.levelName + "跳槽到新公司",
             });
             st.career.currentJob.salary = Math.round(
-              st.career.currentJob.salary * 1.35,
+              (st.career.currentJob.salary || 0) * 1.35,
             );
             st.career.currentJob.workDays = 0;
             // v3.1 修复：跳槽增加代价——人脉清零 + 30 天试用期薪资 80%
@@ -1395,7 +1395,7 @@
             });
             if (hasHighRel) {
               st.career.currentJob.salary = Math.round(
-                st.career.currentJob.salary * 1.4,
+                (st.career.currentJob.salary || 0) * 1.4,
               );
               StateManager.addMessage(
                 "💰 老板看到竞品offer，当场给你涨薪40%！月薪涨至¥" +
@@ -1522,7 +1522,7 @@
                 var h = inv.stockHoldings[i];
                 var curPrice =
                   inv.stockMarket && inv.stockMarket[h.symbol]
-                    ? inv.stockMarket[h.symbol].price
+                    ? (inv.stockMarket[h.symbol].price || 0)
                     : h.avgPrice || 0;
                 totalCashBack += Math.round(curPrice * (h.shares || 1) * 0.7);
               }

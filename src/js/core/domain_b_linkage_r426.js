@@ -22,7 +22,7 @@
       if (rel && rel.met) ids.push(nid);
     }
     if (!ids.length) return null;
-    return ids[Math.floor(Math.random() * ids.length)];
+    return Random.fromArray(ids); // [全系统自洽修复] 域B R400: Math.random()→Random.fromArray()种子化随机
   }
   function npcName(nid) {
     if (typeof getNpcDisplayName === "function") {
