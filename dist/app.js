@@ -246344,6 +246344,36 @@ function initPersonalGrowth(state) {
   pg.reading.readingList = Array.isArray(pg.reading.readingList)
     ? pg.reading.readingList
     : [];
+
+  // [全系统自洽修复] 域A R649b 修复:双结构分歧规范化(每日经daily_pipeline→tickPersonalGrowthDaily调用)
+  // state.js权威结构为 health.{physical:{score},mental:{score,stress,..},metabolic:{score,bmi}}(全事件系统part2-8+render.js均按此消费),
+  // 而本文件旧数字结构(physical:80)导致: 对象+数字=NaN / checkupHistory.push TypeError / >=70对象比较恒false。
+  // 统一迁移为对象结构,兼容旧存档数字形态。
+  (function _normalizeHealthR649b(h) {
+    if (!h || typeof h !== "object") return;
+    var defs = { physical: 80, mental: 70, metabolic: 75, dental: 85, vision: 70 };
+    for (var k in defs) {
+      var v = h[k];
+      if (typeof v === "number" && isFinite(v)) {
+        h[k] = { score: Math.max(0, Math.min(100, v)), lastCheckup: 0 };
+      } else if (!v || typeof v !== "object") {
+        h[k] = { score: defs[k], lastCheckup: 0 };
+      } else if (typeof v.score !== "number" || !isFinite(v.score)) {
+        v.score = defs[k];
+      }
+    }
+    if (typeof h.lastCheckup !== "number" || !isFinite(h.lastCheckup)) h.lastCheckup = 0;
+    if (!Array.isArray(h.checkupHistory)) h.checkupHistory = [];
+  })(pg.health);
+}
+
+/**
+ * [全系统自洽修复] 域A R649b: 双形态安全读分(数字/对象{score}均兼容,防NaN)
+ */
+function _pgHealthScoreR649b(v, def) {
+  if (typeof v === "number" && isFinite(v)) return v;
+  if (v && typeof v === "object" && typeof v.score === "number" && isFinite(v.score)) return v.score;
+  return def;
 }
 
 /**
@@ -246430,7 +246460,15 @@ function applyHobbyBenefits(state, hobby) {
   for (const benefit of hobby.benefits) {
     if (benefit.includes("健康")) {
       const value = parseInt(benefit.match(/[\d-]+/)[0]);
-      pg.health.physical = Math.min(100, pg.health.physical + value);
+      // [全系统自洽修复] 域A R649b 修复: state.js运行时physical为对象{score},旧代码 对象+数字=NaN永久污染 → 双形态兼容写入
+      if (pg.health) {
+        const hp = pg.health.physical;
+        if (hp && typeof hp === "object") {
+          hp.score = Math.min(100, _pgHealthScoreR649b(hp, 80) + value);
+        } else {
+          pg.health.physical = Math.min(100, _pgHealthScoreR649b(hp, 80) + value);
+        }
+      }
     }
     if (benefit.includes("压力")) {
       const value = parseInt(benefit.match(/[\d-]+/)[0]);
@@ -246551,13 +246589,15 @@ function healthCheckup(state) {
   const day = state.player.day;
 
   // 生成体检报告
+  // [全系统自洽修复] 域A R649b 修复: 运行时health各维为对象{score},旧代码 对象+数字 输出"[object Object]-3"垃圾文本且issues比较恒false;
+  // dental/vision在state.js权威结构中不存在→undefined+int=NaN → 全部经双形态安全读分
   const report = {
     day: day,
-    physical: pg.health.physical + Random.int(-5, 4),
-    mental: pg.health.mental + Random.int(-5, 4),
-    metabolic: pg.health.metabolic + Random.int(-5, 4),
-    dental: pg.health.dental + Random.int(-5, 4),
-    vision: pg.health.vision + Random.int(-5, 4),
+    physical: _pgHealthScoreR649b(pg.health.physical, 80) + Random.int(-5, 4),
+    mental: _pgHealthScoreR649b(pg.health.mental, 70) + Random.int(-5, 4),
+    metabolic: _pgHealthScoreR649b(pg.health.metabolic, 75) + Random.int(-5, 4),
+    dental: _pgHealthScoreR649b(pg.health.dental, 85) + Random.int(-5, 4),
+    vision: _pgHealthScoreR649b(pg.health.vision, 70) + Random.int(-5, 4),
     issues: [],
   };
 
@@ -246568,8 +246608,14 @@ function healthCheckup(state) {
   if (report.dental < 70) report.issues.push("牙齿需要护理");
   if (report.vision < 60) report.issues.push("视力下降，注意用眼");
 
+  // [全系统自洽修复] 域A R649b 修复: state.js权威结构无checkupHistory字段→.push直接TypeError崩溃(体检功能完全不可用) → 加守卫;
+  // 同时写入physical.lastCheckup使render.js:5793"上次体检"展示由恒'未体检'变为真实数据
   pg.health.lastCheckup = day;
+  if (!Array.isArray(pg.health.checkupHistory)) pg.health.checkupHistory = [];
   pg.health.checkupHistory.push(report);
+  if (pg.health.checkupHistory.length > 20) pg.health.checkupHistory.shift(); // 防存档膨胀
+  if (pg.health.physical && typeof pg.health.physical === "object") pg.health.physical.lastCheckup = day;
+  if (pg.health.metabolic && typeof pg.health.metabolic === "object") pg.health.metabolic.lastCheckup = day;
 
   // 保存并生成报告
   const issueText =
@@ -246839,10 +246885,11 @@ function getPersonalGrowthSummary(state) {
       0,
       ...Object.values(pg.hobbies).map((h) => h.level),
     ),
+    // [全系统自洽修复] 域A R649b 修复: 运行时physical为对象{score},对象>=70恒false→healthStatus恒"需要关注" → 双形态安全读分
     healthStatus:
-      pg.health.physical >= 70
+      _pgHealthScoreR649b(pg.health.physical, 80) >= 70
         ? "良好"
-        : pg.health.physical >= 50
+        : _pgHealthScoreR649b(pg.health.physical, 80) >= 50
           ? "一般"
           : "需要关注",
     psychologicalState: getPsychologicalStateLabel(pg.psychology),
@@ -246858,7 +246905,13 @@ function getPersonalGrowthSummary(state) {
     activeGoals: pg.lifeGoals.active.length,
     completedGoals: pg.lifeGoals.completed.length,
     booksRead: pg.reading.booksRead,
-    lastCheckup: pg.health.lastCheckup,
+    // [全系统自洽修复] 域A R649b 修复: state.js权威结构顶层无lastCheckup(在physical内)→undefined → 双来源兼容读取
+    lastCheckup:
+      pg.health.lastCheckup ||
+      (pg.health.physical && typeof pg.health.physical === "object"
+        ? pg.health.physical.lastCheckup
+        : 0) ||
+      0,
   };
 }
 
@@ -307085,6 +307138,140 @@ if (typeof window !== "undefined") {
         if (!st) return null;
         var health = (st.status && st.status.health) || 100;
         return "你开始用数据来优化自己的健康——健康" + Math.round(health) + "%,'数据不会说谎,身体也是。'";
+      }
+    }
+  ];
+
+  for (var i = 0; i < EVENTS.length; i++) {
+    RANDOM_EVENTS.push(EVENTS[i]);
+  }
+})();
+
+;
+// ==== js/core/domain_a_linkage_r649.js ====
+/**
+ * 域A(数据/数值平衡) 联动增强 R649
+ * 桥接：
+ *   A→B  a649_data_storytelling  数据故事化 → 消费 state.stats+state.player 数据,
+ *     数据→"用数据讲故事"叙事回响
+ *   A→D  a649_fair_price_movement  公平价格运动 → 消费 state.trade+state.relationships 数据,
+ *     数据→"价格公平关乎社会和谐"社交回响
+ *   A→G  a649_preventive_care  预防性保健 → 消费 state.status+state.needs 数据,
+ *     数据→"防患于未然"生命回响
+ */
+(function () {
+  "use strict";
+  if (typeof RANDOM_EVENTS === "undefined" || !RANDOM_EVENTS) return;
+  if (RANDOM_EVENTS._domainALinkageR649Loaded) return;
+  RANDOM_EVENTS._domainALinkageR649Loaded = true;
+
+  // 辅助：获取已结识NPC列表(守 rel.met 铁律)
+  function metNpcsR649(st) {
+    var out = [];
+    var rels = st.relationships || {};
+    for (var k in rels) {
+      if (rels[k] && rels[k].met) out.push({ id: k, affinity: rels[k].affinity || 0, name: (typeof getNpcDisplayName === "function") ? getNpcDisplayName(k) : k });
+    }
+    return out;
+  }
+
+  var EVENTS = [
+    {
+      id: "a649_data_storytelling", phase: "street", _isChainEvent: false, icon: "📖",
+      title: "用数据讲故事",
+      story: "你开始用数据来讲述自己的人生故事——{desc}",
+      triggers: { minDay: 365, interval: 365, maxRepeats: 1, excludeFlags: ["_a649StoryDone"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        if (!st.flags || st.flags._a649StoryDone) return false;
+        var day = (st.player && st.player.day) || 0;
+        return day >= 365;
+      },
+      choices: [
+        { text: "📊 制作数据故事", hint: "智力+6,心智+5", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._a649StoryDone = true;
+          if (st.player) {
+            st.player.intelligence = Math.min(100, (st.player.intelligence || 50) + 6);
+            st.player.mental = Math.min(100, (st.player.mental || 50) + 5);
+          }
+          if (typeof StateManager !== "undefined") StateManager.addMessage("📊 '数据是事实,故事是意义。' 你制作了个人数据故事。智力+6,心智+5。", "success");
+        }},
+        { text: "🎯 分享经验", hint: "社交XP+5,心情+4", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._a649StoryDone = true;
+          if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 4);
+          if (typeof addSkillXp === "function") { try { addSkillXp("social", 5); } catch(e) {} }
+          if (typeof StateManager !== "undefined") StateManager.addMessage("🎯 '分享经验,帮助他人。' 你分享了人生故事。社交XP+5,心情+4。", "success");
+        }}
+      ],
+      text: function (st) {
+        if (!st) return null;
+        var day = (st.player && st.player.day) || 0;
+        var totalEarned = (st.stats && st.stats.totalEarned) || 0;
+        return "你开始用数据来讲述自己的人生故事——" + day + "天,赚了¥" + totalEarned + "。'数据是事实,故事是意义。'";
+      }
+    },
+    {
+      id: "a649_fair_price_movement", phase: "street", _isChainEvent: false, icon: "⚖️",
+      title: "价格公平关乎社会和谐",
+      story: "你开始关注身边的价格公平问题——{desc}",
+      triggers: { minDay: 100, interval: 150, maxRepeats: 2, excludeFlags: ["_a649FairCooldown"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        if (!st.flags || st.flags._a649FairCooldown) return false;
+        var met = metNpcsR649(st);
+        return met.length >= 3;
+      },
+      choices: [
+        { text: "🤝 倡导公平", hint: "好感+4,社交XP+4", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._a649FairCooldown = true;
+          var met = metNpcsR649(st);
+          if (typeof applyAffinityChange === "function") {
+            for (var i = 0; i < met.length; i++) {
+              try { applyAffinityChange(st, met[i].id, 4, "倡导价格公平"); } catch(e) {}
+            }
+          }
+          if (typeof addSkillXp === "function") { try { addSkillXp("social", 4); } catch(e) {} }
+          if (typeof StateManager !== "undefined") StateManager.addMessage("🤝 '价格公平,关乎社会和谐。' 你倡导了价格公平。全NPC好感+4,社交XP+4。", "success");
+        }},
+        { text: "📊 用数据说话", hint: "智力+4", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._a649FairCooldown = true;
+          if (st.player) st.player.intelligence = Math.min(100, (st.player.intelligence || 50) + 4);
+          if (typeof StateManager !== "undefined") StateManager.addMessage("📊 '用数据说话,更有说服力。' 你收集了价格数据。智力+4。", "success");
+        }}
+      ],
+      text: function (st) {
+        if (!st) return null;
+        return "你开始关注身边的价格公平问题——'价格不公平,会伤害消费者,也会伤害商家。公平交易,才能长久。'";
+      }
+    },
+    {
+      id: "a649_preventive_care", phase: "street", _isChainEvent: false, icon: "🛡️",
+      title: "防患于未然",
+      story: "你开始用数据来预防健康问题——{desc}",
+      triggers: { minDay: 120, interval: 180, maxRepeats: 1, excludeFlags: ["_a649PreventDone"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        if (!st.flags || st.flags._a649PreventDone) return false;
+        var health = (st.status && st.status.health) || 100;
+        return health < 65;
+      },
+      choices: [
+        { text: "🏃 制定健康计划", hint: "心智+6,置_a649HealthPlan", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._a649PreventDone = true;
+          st.flags._a649HealthPlan = true;
+          if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 6);
+          if (typeof StateManager !== "undefined") StateManager.addMessage("🏃 '预防胜于治疗。' 你制定了健康计划。心智+6。", "success");
+        }},
+        { text: "😌 顺其自然", hint: "心情+5", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._a649PreventDone = true;
+          if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 5);
+          if (typeof StateManager !== "undefined") StateManager.addMessage("😌 '心态好,身体自然好。' 你选择顺其自然。心情+5。", "success");
+        }}
+      ],
+      text: function (st) {
+        if (!st) return null;
+        var health = (st.status && st.status.health) || 100;
+        return "你开始用数据来预防健康问题——健康" + Math.round(health) + "%,'防患于未然,才是聪明人。'";
       }
     }
   ];
