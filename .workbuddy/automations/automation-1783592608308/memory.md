@@ -619,3 +619,12 @@
 - 验证：node --check×3过/build 13593.4KB(g746b×6)/MC 10x500 159.6s 0代码异常前7天死亡全0%(trader60/social70/corporate50既有RNG阈值)。
 - 竞态：并行第三轮小编号(R722/R723)与第五轮循环(R744/R745)同时活跃；index.lock碰撞一次重试即过；本轮交付主体被并行扫入30292e29之前的提交链。
 - 下轮：git log重算；本窗口深审候选F(R442)>D。MEMORY.md已压缩重写(12.4KB→~6KB,v3)。
+
+## 2026-07-29 07:4x-07:5x R747b 域F(UI/UX) — 本地已提交c7c4620c, push受阻(TLS,本地ahead 64)
+- 选域：git log实测本窗口深审recency F=R442全局最陈旧(G刚被R746b完成)。b后缀避让并行R727/R743。
+- A类=0诚实报(六项审计全净尽)：死字段黑名单/假技能键addSkillXp全库/onclick悬空23函数全有定义/wrapper导出反模式0/tutorial目标DOM存在/daily_report+daily_quest全部22 flag有写入方。误报勿修新增：pg.psychology为personal_growth.js真实活结构(render.js读它正确,维持B类双心理系统记录)；navigation.js:761 entry:'programmer'为JSDoc注释示例非运行时引用。
+- 联动3(domain_f_linkage_r747b.js,3street)：f747b_peak_day_echo(F→B _maxEarnedMilestone日收入峰值档1000/5000/10000首读·峰终定律三档动态text)/f747b_milestone_gathering(F→D _milestoneEarned100K/500K/1M首读·社会比较+met铁律+applyAffinityChange+getNpcDisplayName兜底)/f747b_streak_reputation(F→C _streakMaster连续工作100天永久称号首读·禀赋效应变职业资产)。域F零消费素材清零。
+- 验证：node --check过/build 13614.6KB(f747b×24,dist新于src)/MC 6x400 EXIT=0 0代码异常 grinder33.3%≥30% 前7天死亡全0%；10x500 167.1s 0代码异常。**新阈值知识：grinder 500d存活0%属RNG严苛度(400d恢复33.3%,历史16.7%-50%),非硬崩溃签名(硬崩溃=全策略0%+<1s)——已写入MEMORY.md MC条目。**
+- 竞态：并行[R727]0d97b82d(07:44)提交daily_report.js源但未重建dist→本轮build顺带闭合悬空(其源已在HEAD,安全合规)。
+- 提交3笔：c7c4620c(feat联动3+dist+CLAUDE.md+round doc)+4d1bc8fd(chore loop-state)+8b667054(pushStatus=LOCAL_ONLY_TLS回填)。
+- 下轮：git log重算；本窗口深审候选D(并行R440/R442新NPC后未再深审)>A。

@@ -3,7 +3,7 @@
 ## 提交纪律（自动化：直接提交+push main）
 - 开轮先 `git log` 重算真实 recency（**勿信 loop-state，常严重滞后**）；核对轮号未被占用，本窗口一律 **b后缀避让**。并行在途改动一律不碰。
 - 提交前 `git rev-parse HEAD > .claude/last_known_head`；**同窗口连续多笔提交每笔前都要重新同步**。改源后必 `python build.py`（dist 须比 src 新）。只 add 本轮文件；绝不 `-A`/`--amend`/force。push 前 `git pull --rebase origin main`，冲突则中止绝不 force。
-- MC：`node --max-old-space-size=8192 tests/monte_carlo.cjs --trials 10 --days 500`（OOM 回退 6x400）。0 TypeError/ReferenceError/NaN/Infinity + 前7天死亡率0% 即过；存活率<80%（trader60/social70/corporate50）为既有 RNG 阈值。**"全策略0%存活+耗时<1s"=硬崩溃**→harness catch 加 e.stack 定位热修复。
+- MC：`node --max-old-space-size=8192 tests/monte_carlo.cjs --trials 10 --days 500`（OOM 回退 6x400）。0 TypeError/ReferenceError/NaN/Infinity + 前7天死亡率0% 即过；存活率<80%（trader60/social70/corporate50）为既有 RNG 阈值；grinder 500d 可低至 0%（400d 恢复 16.7-50%）亦属 RNG 严苛度非崩溃。**"全策略0%存活+耗时<1s"=硬崩溃**→harness catch 加 e.stack 定位热修复。
 - 新 linkage 文件必挂 `src/index.html` `<script>`（漏挂=悬空，build 静默剔除）。
 - ⚠️ **window 导出严禁 wrapper**：经典脚本顶层函数声明本身即全局绑定，`window.f=function(){return f(...)}` 会让 f 解析到 wrapper 自身→无限递归爆栈（R746b MC 全策略0%实锤）。一律直接 `window.f = f`。push 前双向核对：`git show HEAD:src/index.html | grep <新文件>` + `git show HEAD:dist/app.js | grep -c <事件前缀>`。
 - 本窗口 build 若吸入并行在途未提交源→**绝不提交 dist**。会话压缩后后台 MC task_id 丢失→直接重跑。
@@ -40,7 +40,8 @@
 - 模糊指令先 grep 确认存在；用户「无关」=停手。
 
 ## A类净尽结论（勿重复审）
-- 深审净尽轮：A=R649b、B=R722b(前R658b/R411大修)、C=R677b、E=R738b、F=R442、G=R311、H=R712b。域D 深审最陈旧（并行 R440/R442 做过新NPC）。
+- 深审净尽轮：A=R649b、B=R722b(前R658b/R411大修)、C=R677b、E=R738b、F=R747b(A类=0,六项审计净尽)、G=R746b、H=R712b。域D 深审最陈旧（并行 R440/R442 做过新NPC）。
+- 域F 附注：pg.psychology 为 personal_growth.js 真实活结构（render.js 读它正确，维持 B类双心理系统记录）；navigation.js:761 programmer 为 JSDoc 示例勿改。
 - 死字段黑名单全库 grep=0 活命中即诚实报 A类=0（R712b 域H 即如此）。
 - 误报勿修：webapp_runtime_bridge getPlayerHealth 主路径正确；establishMentorship/takeMentee 平行实现；setStopLoss 有调用方。C类不修：items.js skillStudy 无应用器；finance.js hasStreetStall 无 writer；并行 r715/r721 id前缀误用全库唯一不改。
 - personal_growth 双结构已 R649b 专修；残余 B类：pg.psychology 与 health.mental 双心理系统数据层不互通（render.js 读前者，events part2-8 读后者），彻底统一需动两侧。
@@ -59,4 +60,5 @@
 - R712b 域H：A类=0 诚实报；boardPressureLevel/mediaRelations/sentimentScore/crisisLevel 事件层全部打通。
 - R677b 域C：培训班承诺零兑现+6事件占位符泄漏修复；_legacyProjectStarted/_legacyWatched 首消费。
 - R649b 域A：personal_growth 双结构专修。R658b 域B：_goodSleepToday 承诺兑现。R640b 域H：孤儿救援 r601/r602/r623。
-- 本窗口深审下轮候选（07-29 06:2x 时点）：**G(R311) > F(R442) > D**。
+- R747b 域F(07-29 07:5x)：A类=0 诚实报；联动3 消费 _maxEarnedMilestone/_milestoneEarned系/_streakMaster（域F零消费清零）；提交 c7c4620c+4d1bc8fd+8b667054，push 仍 TLS 阻断(ahead 64)。
+- 本窗口深审下轮候选（07-29 07:5x 时点）：**D > A**。
