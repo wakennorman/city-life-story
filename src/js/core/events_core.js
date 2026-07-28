@@ -1367,6 +1367,7 @@ function showNewsBriefingModal(news, state) {
 }
 
 function rollDailyNews(state) {
+  if (!state.flags) state.flags = {};
   state.activeNews = state.activeNews || [];
   state.flags.seenNewsToday = state.flags.seenNewsToday || [];
 
@@ -1618,6 +1619,47 @@ function getEventTypeIcon(eventType) {
     crime: "🚔", disaster: "🌪️", festival: "🎉", news: "📰",
   };
   return iconMap[eventType] || "📌";
+}
+
+// [R715 域B 联动增强 B→G]: 逆境心理韧性 — 连续经历负面事件后提升心智,模拟逆境成长
+function applyAdversityResilience(state, eventType) {
+  if (!state || !eventType || !state.flags) return;
+  var negativeTypes = ["disaster", "crime", "illness", "accident", "loss"];
+  if (negativeTypes.indexOf(eventType) === -1) return;
+  state.flags._adversityStreak = (state.flags._adversityStreak || 0) + 1;
+  if (state.flags._adversityStreak >= 3) {
+    state.flags._adversityStreak = 0;
+    var mentalGain = 2;
+    if (state.player) {
+      state.player.mental = Math.min(100, (state.player.mental || 0) + mentalGain);
+    }
+    if (typeof StateManager !== "undefined") {
+      StateManager.addMessage("💪 经历风雨,你的心智更加坚韧了。心智+" + mentalGain + "。", "success");
+    }
+  }
+}
+
+// [R715 域B 联动增强 B→A]: 事件价格冲击 — 特定事件影响相关商品价格
+function applyEventPriceShock(state, eventId) {
+  if (!state || !eventId || !state.trade || !state.flags) return;
+  var priceShocks = {
+    flood: { goods: ["rice", "vegetable"], change: 0.25 },
+    drought: { goods: ["rice", "oil"], change: 0.30 },
+    typhoon: { goods: ["vegetable", "pork"], change: 0.20 },
+    war_news: { goods: ["oil", "gold"], change: 0.15 },
+    epidemic: { goods: ["mask", "medicine"], change: 0.40 },
+    stock_crash: { goods: ["gold"], change: 0.10 },
+    festival_boom: { goods: ["pork", "egg", "oil"], change: 0.08 },
+  };
+  var shock = priceShocks[eventId];
+  if (!shock || !state.trade._lastPrices) return;
+  for (var _gi = 0; _gi < shock.goods.length; _gi++) {
+    var _gid = shock.goods[_gi];
+    if (state.trade._lastPrices[_gid] && state.trade._lastPrices[_gid].length > 0) {
+      var _lastIdx = state.trade._lastPrices[_gid].length - 1;
+      state.trade._lastPrices[_gid][_lastIdx] = Math.round(state.trade._lastPrices[_gid][_lastIdx] * (1 + shock.change));
+    }
+  }
 }
 
 // [全系统自洽修复] 域B R410 联动增强(B→G): 事件健康影响系数
