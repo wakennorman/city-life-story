@@ -123,7 +123,10 @@
           if (!st) return; st.flags = st.flags || {}; st.flags._g611HealthSkillCooldown = true;
           if (st.status) st.status.health = Math.min(100, (st.status.health || 100) + 8);
           if (st.needs) st.needs.fatigue = Math.min(100, (st.needs.fatigue || 0) + 10);
-          if (typeof addSkillXp === "function") { try { addSkillXp("strength", 5); } catch(e) {} }
+          // [全系统自洽修复] 域G R631 修复: addSkillXp("strength") 假技能键(真实12键无strength)→XP静默丢弃,hint"体质XP+5"承诺落空；改写真实形象维度 personalGrowth.image.fitness(同R599/R621修复先例)
+          if (st.personalGrowth && st.personalGrowth.image) {
+            st.personalGrowth.image.fitness = Math.min(100, (st.personalGrowth.image.fitness || 30) + 5);
+          }
           if (typeof StateManager !== "undefined") StateManager.addMessage("🧠 '身体是革命的本钱!' 你出了一身汗,感觉整个人都精神了。健康+8,体质XP+5,疲劳+10。", "success");
         }},
         { text: "🧘 调整作息时间", hint: "健康+5,疲劳-10,心智+2", apply: function (st) {

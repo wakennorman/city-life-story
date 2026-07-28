@@ -257864,6 +257864,129 @@ if (typeof window !== "undefined") {
 })();
 
 ;
+// ==== js/core/domain_f_linkage_r631.js ====
+/**
+ * 域F(UI/UX) 联动增强 R631
+ * 桥接：
+ *   F→B  f631_ui_event_timeline  UI事件时间线 → 消费 state.flags+state.player 数据,
+ *     UI→"事件可视化时间线"的叙事回响
+ *   F→A  f631_ui_price_tracker  UI价格追踪 → 消费 state.resources 数据,
+ *     UI→"价格变动可视化追踪"的数值回响
+ *   F→H  f631_ui_company_dashboard  UI公司仪表盘 → 消费 state.startup 数据,
+ *     UI→"公司运营数据可视化"的公司回响
+ */
+(function () {
+  "use strict";
+  if (typeof RANDOM_EVENTS === "undefined" || !RANDOM_EVENTS) return;
+  if (RANDOM_EVENTS._domainFLinkageR631Loaded) return;
+  RANDOM_EVENTS._domainFLinkageR631Loaded = true;
+
+  var EVENTS = [
+    // ====== F→B: UI事件时间线 ======
+    {
+      id: "f631_ui_event_timeline", phase: "street", _isChainEvent: false, icon: "📅",
+      title: "时间线",
+      story: "你打开手机,看到一张照片让你想起了过去——{desc}",
+      triggers: { minDay: 30, interval: 90, maxRepeats: 8, excludeFlags: ["_f631EventTimelineCooldown"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        if (!st.flags || st.flags._f631EventTimelineCooldown) return false;
+        return true;
+      },
+      choices: [
+        { text: "📖 回忆那段时光", hint: "心情+5,心智+2", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._f631EventTimelineCooldown = true;
+          if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 5);
+          if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 2);
+          if (typeof StateManager !== "undefined") StateManager.addMessage("📅 '那时候虽然苦,但真的很充实。' 你看着照片,嘴角泛起微笑。心情+5,心智+2。", "success");
+        }},
+        { text: "🗑️ 清理旧照片", hint: "心智+3", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._f631EventTimelineCooldown = true;
+          if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 3);
+          if (typeof StateManager !== "undefined") StateManager.addMessage("📅 你清理了手机里的旧照片和文件。'该放下的就放下,轻装前行。' 心智+3。", "success");
+        }}
+      ],
+      text: function (st) {
+        if (!st || !st.player) return null;
+        var day = st.player.day || 0;
+        return "手机弹出「第" + day + "天回忆」——你第一天来到这座城市的照片。'时间过得真快,已经在这里生活了这么久。' 你感慨万千。";
+      }
+    },
+
+    // ====== F→A: UI价格追踪 ======
+    {
+      id: "f631_ui_price_tracker", phase: "street", _isChainEvent: false, icon: "🏷️",
+      title: "价格追踪",
+      story: "你注意到最近有些商品的价格波动很大——{desc}",
+      triggers: { minDay: 20, interval: 60, maxRepeats: 10, excludeFlags: ["_f631PriceTrackerCooldown"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        if (!st.flags || st.flags._f631PriceTrackerCooldown) return false;
+        return true;
+      },
+      choices: [
+        { text: "📊 记录价格走势", hint: "智力+4,心智+2", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._f631PriceTrackerCooldown = true;
+          if (st.player) st.player.intelligence = Math.min(100, (st.player.intelligence || 50) + 4);
+          if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 2);
+          if (typeof StateManager !== "undefined") StateManager.addMessage("🏷️ 你开始记录各种商品的价格波动。'掌握了价格的规律,就掌握了省钱的门道。' 智力+4,心智+2。", "success");
+        }},
+        { text: "💰 趁低价囤货", hint: "现金-500,省下未来开支", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._f631PriceTrackerCooldown = true;
+          if (st.resources) st.resources.cash = Math.max(0, (st.resources.cash || 0) - 500);
+          if (st.flags) st.flags._bulkPurchase = (st.flags._bulkPurchase || 0) + 1;
+          if (typeof StateManager !== "undefined") StateManager.addMessage("🏷️ '趁便宜多囤点,省得以后涨价心疼。' 你买了一些日用品囤着。现金-500。", "success");
+        }}
+      ],
+      text: function (st) {
+        if (!st) return null;
+        return "你注意到鸡蛋的价格从¥5涨到了¥8,猪肉也从¥25涨到了¥35。'最近物价涨得厉害,得精打细算过日子了。'";
+      }
+    },
+
+    // ====== F→H: UI公司仪表盘 ======
+    {
+      id: "f631_ui_company_dashboard", phase: "corporate", _isChainEvent: false, icon: "📋",
+      title: "公司看板",
+      story: "你打开公司运营看板,查看各项数据——{desc}",
+      triggers: { minDay: 60, interval: 90, maxRepeats: 8, excludeFlags: ["_f631CompanyDashboardCooldown"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        if (!st.flags || st.flags._f631CompanyDashboardCooldown) return false;
+        return st.startup && st.startup.company;
+      },
+      choices: [
+        { text: "📈 分析运营数据", hint: "智力+5,公司效率+5", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._f631CompanyDashboardCooldown = true;
+          if (st.player) st.player.intelligence = Math.min(100, (st.player.intelligence || 50) + 5);
+          if (st.startup && st.startup.company) {
+            st.startup.company.efficiency = Math.min(100, (st.startup.company.efficiency || 50) + 5);
+          }
+          if (typeof StateManager !== "undefined") StateManager.addMessage("📋 你仔细分析了公司的各项数据。'数据会说话,关键是要听懂。' 智力+5,公司效率+5。", "success");
+        }},
+        { text: "📊 制定下季度目标", hint: "心智+5,公司士气+5", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._f631CompanyDashboardCooldown = true;
+          if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 5);
+          if (st.startup && st.startup.company) {
+            st.startup.company.morale = Math.min(100, (st.startup.company.morale || 50) + 5);
+          }
+          if (typeof StateManager !== "undefined") StateManager.addMessage("📋 '有了清晰的目标,团队才有方向。' 你制定了明确的季度OKR。心智+5,团队士气+5。", "success");
+        }}
+      ],
+      text: function (st) {
+        if (!st || !st.startup || !st.startup.company) return null;
+        var val = st.startup.company.valuation || 0;
+        var rev = st.startup.company.revenue || 0;
+        return "公司看板显示:估值¥" + val.toLocaleString() + ",月收入¥" + rev.toLocaleString() + "。'数据是公司健康的晴雨表,该认真看看了。'";
+      }
+    }
+  ];
+
+  for (var i = 0; i < EVENTS.length; i++) {
+    RANDOM_EVENTS.push(EVENTS[i]);
+  }
+})();
+;
 // ==== js/core/domain_a_linkage_r624.js ====
 /**
  * 域A(数据/数值平衡) 联动增强 R624
@@ -270947,7 +271070,10 @@ if (typeof window !== "undefined") {
           if (!st) return; st.flags = st.flags || {}; st.flags._g611HealthSkillCooldown = true;
           if (st.status) st.status.health = Math.min(100, (st.status.health || 100) + 8);
           if (st.needs) st.needs.fatigue = Math.min(100, (st.needs.fatigue || 0) + 10);
-          if (typeof addSkillXp === "function") { try { addSkillXp("strength", 5); } catch(e) {} }
+          // [全系统自洽修复] 域G R631 修复: addSkillXp("strength") 假技能键(真实12键无strength)→XP静默丢弃,hint"体质XP+5"承诺落空；改写真实形象维度 personalGrowth.image.fitness(同R599/R621修复先例)
+          if (st.personalGrowth && st.personalGrowth.image) {
+            st.personalGrowth.image.fitness = Math.min(100, (st.personalGrowth.image.fitness || 30) + 5);
+          }
           if (typeof StateManager !== "undefined") StateManager.addMessage("🧠 '身体是革命的本钱!' 你出了一身汗,感觉整个人都精神了。健康+8,体质XP+5,疲劳+10。", "success");
         }},
         { text: "🧘 调整作息时间", hint: "健康+5,疲劳-10,心智+2", apply: function (st) {
@@ -271779,6 +271905,296 @@ if (typeof window !== "undefined") {
           }
         }
         return "回首技能树,你已练就" + highSkills.length + "门拿得出手的本事" + (highSkills.length > 0 ? "(" + highSkills.slice(0, 3).join(", ") + ")" : "") + "——'人到中年,你还有什么牌可打?'";
+      }
+    }
+  ];
+
+  for (var i = 0; i < EVENTS.length; i++) {
+    RANDOM_EVENTS.push(EVENTS[i]);
+  }
+})();
+
+;
+// ==== js/core/domain_g_linkage_r631.js ====
+/**
+ * 域G(核心机制/生命周期) 联动增强 R631
+ * 选题：daily_pipeline/needs 三大生存里程碑 flag 全库零消费(写-only)，本轮全部打通首消费：
+ *   G→E  g631_rock_bottom_wisdom   谷底翻身的财务觉悟 → 首消费 flags._everBroke(daily_pipeline.js:620 现金归零时写入)
+ *   G→D  g631_street_night_memory  露宿记忆与陌生人 → 首消费 flags._everHomeless(daily_pipeline.js:338 housing.tier==0 时写入)
+ *   G→C  g631_hunger_never_again   饥饿的教训 → 首消费 flags._everStarved(needs.js:64 hunger<=0 时写入)
+ * 设计：峰终定律——把玩家经历过的"最低谷"在翻身后回放为叙事峰值；损失厌恶——用曾经的失去驱动当下的防御性决策。
+ * 铁律自查：全 || 防御；无 NPC 引用(泛化路人,不触 rel.met)；skills 真实键(cooking/accounting/social)；
+ *   现金写 resources.cash / 存款 resources.bankBalance / 心智 player.mental / 幸福 needs.happiness / 健康 status.health。
+ */
+(function () {
+  "use strict";
+  if (typeof RANDOM_EVENTS === "undefined" || !RANDOM_EVENTS) return;
+  if (RANDOM_EVENTS._domainGLinkageR631Loaded) return;
+  RANDOM_EVENTS._domainGLinkageR631Loaded = true;
+
+  var EVENTS = [
+    // ====== G→E: 谷底翻身的财务觉悟(首消费 _everBroke) ======
+    {
+      id: "g631_rock_bottom_wisdom", phase: "street", _isChainEvent: false, icon: "💸",
+      title: "谷底翻身",
+      story: "你想起那个钱包空空的日子——{desc}",
+      triggers: { minDay: 30, interval: 90, maxRepeats: 1, excludeFlags: ["_g631RockBottomDone"] },
+      conditions: function (st) {
+        if (!st || st.gameOver) return false;
+        if (!st.flags || !st.flags._everBroke) return false;
+        if (st.flags._g631RockBottomDone) return false;
+        var cash = (st.resources && st.resources.cash) || 0;
+        return cash >= 3000;
+      },
+      choices: [
+        { text: "🏦 建一笔应急基金", hint: "现金-1000,存款+1000,心智+3", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._g631RockBottomDone = true;
+          if (st.resources && (st.resources.cash || 0) >= 1000) {
+            st.resources.cash -= 1000;
+            st.resources.bankBalance = (st.resources.bankBalance || 0) + 1000;
+            st.flags._g631EmergencyFund = true;
+          }
+          if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 3);
+          if (typeof StateManager !== "undefined") StateManager.addMessage("🏦 '再也不想过身无分文的日子。' 你存下一笔不动的钱,心里踏实多了。存款+¥1000,心智+3。", "success");
+        }},
+        { text: "📒 从今天起记账", hint: "会计XP+6,心智+2", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._g631RockBottomDone = true;
+          if (typeof addSkillXp === "function") { try { addSkillXp("accounting", 6); } catch (e) {} }
+          if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 2);
+          if (typeof StateManager !== "undefined") StateManager.addMessage("📒 你翻开一个新本子,把每一笔开销都记下来。'钱要花在明处。' 会计XP+6,心智+2。", "success");
+        }},
+        { text: "🍻 好了伤疤忘了疼", hint: "幸福+3,现金-100", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._g631RockBottomDone = true;
+          if (st.resources) st.resources.cash = Math.max(0, (st.resources.cash || 0) - 100);
+          if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 3);
+          if (typeof StateManager !== "undefined") StateManager.addMessage("🍻 '人生嘛,过去了就过去了。' 你请自己吃了顿好的。幸福+3,现金-100。", "info");
+        }}
+      ],
+      text: function (st) {
+        if (!st) return null;
+        var cash = (st && st.resources && st.resources.cash) || 0;
+        return "曾经现金归零的滋味,你到现在还记得。如今口袋里躺着¥" + cash + ",你站在银行门口,忽然明白了什么叫'手里有粮,心里不慌'。";
+      }
+    },
+
+    // ====== G→D: 露宿记忆与陌生人(首消费 _everHomeless) ======
+    {
+      id: "g631_street_night_memory", phase: "street", _isChainEvent: false, icon: "🌃",
+      title: "桥洞下的身影",
+      story: "下班路上,你在天桥下看到一个蜷缩的身影——{desc}",
+      triggers: { minDay: 30, interval: 90, maxRepeats: 1, excludeFlags: ["_g631StreetNightDone"] },
+      conditions: function (st) {
+        if (!st || st.gameOver) return false;
+        if (!st.flags || !st.flags._everHomeless) return false;
+        if (st.flags._g631StreetNightDone) return false;
+        var tier = (st.housing && st.housing.tier) || 0;
+        return tier >= 1;
+      },
+      choices: [
+        { text: "🍱 买份热饭送过去", hint: "现金-30,幸福+4,社交XP+4", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._g631StreetNightDone = true;
+          if (st.resources) st.resources.cash = Math.max(0, (st.resources.cash || 0) - 30);
+          if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 4);
+          if (typeof addSkillXp === "function") { try { addSkillXp("social", 4); } catch (e) {} }
+          if (typeof StateManager !== "undefined") StateManager.addMessage("🍱 你递过去一份还冒着热气的盒饭。对方愣了一下,低声说了句谢谢。你想起了曾经的自己。幸福+4,社交XP+4,现金-30。", "success");
+        }},
+        { text: "📋 告诉他救助站的位置", hint: "心智+3", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._g631StreetNightDone = true;
+          if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 3);
+          if (typeof StateManager !== "undefined") StateManager.addMessage("📋 你把救助站的地址写在纸条上递给他。'那里至少有张床。' 这话你当年也听人说过。心智+3。", "success");
+        }},
+        { text: "🚶 快步走过", hint: "心智-2", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._g631StreetNightDone = true;
+          if (st.player) st.player.mental = Math.max(0, (st.player.mental || 50) - 2);
+          if (typeof StateManager !== "undefined") StateManager.addMessage("🚶 你低下头快步走过,身后的城市灯火通明。夜里你有点睡不着。心智-2。", "info");
+        }}
+      ],
+      text: function (st) {
+        if (!st) return null;
+        var days = (st && st.flags && st.flags._homelessDays) || 0;
+        return "你也曾在这座城市里无处可睡" + (days > 0 ? "(整整" + days + "天)" : "") + "。如今你有了自己的屋檐,而桥洞下的那个身影,像极了当年的你。";
+      }
+    },
+
+    // ====== G→C: 饥饿的教训(首消费 _everStarved) ======
+    {
+      id: "g631_hunger_never_again", phase: "street", _isChainEvent: false, icon: "🍚",
+      title: "饥饿的教训",
+      story: "路过一家餐馆,饭菜香味飘出来,你想起了那段饿肚子的日子——{desc}",
+      triggers: { minDay: 20, interval: 90, maxRepeats: 1, excludeFlags: ["_g631HungerLessonDone"] },
+      conditions: function (st) {
+        if (!st || st.gameOver) return false;
+        if (!st.flags || !st.flags._everStarved) return false;
+        if (st.flags._g631HungerLessonDone) return false;
+        var hunger = (st.needs && st.needs.hunger);
+        return typeof hunger === "number" && hunger >= 50;
+      },
+      choices: [
+        { text: "👨‍🍳 学做饭,把胃握在自己手里", hint: "厨艺XP+8", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._g631HungerLessonDone = true;
+          if (typeof addSkillXp === "function") { try { addSkillXp("cooking", 8); } catch (e) {} }
+          if (typeof StateManager !== "undefined") StateManager.addMessage("👨‍🍳 '会做饭的人,饿不死。' 你开始认真研究怎么用最少的钱做出一顿像样的饭。厨艺XP+8。", "success");
+        }},
+        { text: "🛒 囤一点应急干粮", hint: "现金-100,饥饿+5", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._g631HungerLessonDone = true;
+          if (st.resources) st.resources.cash = Math.max(0, (st.resources.cash || 0) - 100);
+          if (st.needs) st.needs.hunger = Math.min(100, (st.needs.hunger || 0) + 5);
+          if (typeof StateManager !== "undefined") StateManager.addMessage("🛒 你买了一箱泡面和几袋压缩饼干塞进柜子。'柜子里有粮,睡觉都香。' 饥饿+5,现金-100。", "success");
+        }},
+        { text: "😌 感慨一下,继续走路", hint: "幸福+2", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._g631HungerLessonDone = true;
+          if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 2);
+          if (typeof StateManager !== "undefined") StateManager.addMessage("😌 '能吃饱饭的日子,就是好日子。' 你笑了笑,脚步轻快了些。幸福+2。", "info");
+        }}
+      ],
+      text: function (st) {
+        if (!st) return null;
+        return "你曾经饿到胃里发疼,连一碗泡面都要犹豫半天。现在你站在餐馆门口,闻着饭菜香,忽然很感激如今能按时吃上热饭的自己。";
+      }
+    }
+  ];
+
+  for (var i = 0; i < EVENTS.length; i++) {
+    RANDOM_EVENTS.push(EVENTS[i]);
+  }
+})();
+
+;
+// ==== js/core/domain_g_linkage_r631.js ====
+/**
+ * 域G(核心机制/生命周期) 联动增强 R631
+ * 选题：daily_pipeline/needs 三大生存里程碑 flag 全库零消费(写-only)，本轮全部打通首消费：
+ *   G→E  g631_rock_bottom_wisdom   谷底翻身的财务觉悟 → 首消费 flags._everBroke(daily_pipeline.js:620 现金归零时写入)
+ *   G→D  g631_street_night_memory  露宿记忆与陌生人 → 首消费 flags._everHomeless(daily_pipeline.js:338 housing.tier==0 时写入)
+ *   G→C  g631_hunger_never_again   饥饿的教训 → 首消费 flags._everStarved(needs.js:64 hunger<=0 时写入)
+ * 设计：峰终定律——把玩家经历过的"最低谷"在翻身后回放为叙事峰值；损失厌恶——用曾经的失去驱动当下的防御性决策。
+ * 铁律自查：全 || 防御；无 NPC 引用(泛化路人,不触 rel.met)；skills 真实键(cooking/accounting/social)；
+ *   现金写 resources.cash / 存款 resources.bankBalance / 心智 player.mental / 幸福 needs.happiness / 健康 status.health。
+ */
+(function () {
+  "use strict";
+  if (typeof RANDOM_EVENTS === "undefined" || !RANDOM_EVENTS) return;
+  if (RANDOM_EVENTS._domainGLinkageR631Loaded) return;
+  RANDOM_EVENTS._domainGLinkageR631Loaded = true;
+
+  var EVENTS = [
+    // ====== G→E: 谷底翻身的财务觉悟(首消费 _everBroke) ======
+    {
+      id: "g631_rock_bottom_wisdom", phase: "street", _isChainEvent: false, icon: "💸",
+      title: "谷底翻身",
+      story: "你想起那个钱包空空的日子——{desc}",
+      triggers: { minDay: 30, interval: 90, maxRepeats: 1, excludeFlags: ["_g631RockBottomDone"] },
+      conditions: function (st) {
+        if (!st || st.gameOver) return false;
+        if (!st.flags || !st.flags._everBroke) return false;
+        if (st.flags._g631RockBottomDone) return false;
+        var cash = (st.resources && st.resources.cash) || 0;
+        return cash >= 3000;
+      },
+      choices: [
+        { text: "🏦 建一笔应急基金", hint: "现金-1000,存款+1000,心智+3", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._g631RockBottomDone = true;
+          if (st.resources && (st.resources.cash || 0) >= 1000) {
+            st.resources.cash -= 1000;
+            st.resources.bankBalance = (st.resources.bankBalance || 0) + 1000;
+            st.flags._g631EmergencyFund = true;
+          }
+          if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 3);
+          if (typeof StateManager !== "undefined") StateManager.addMessage("🏦 '再也不想过身无分文的日子。' 你存下一笔不动的钱,心里踏实多了。存款+¥1000,心智+3。", "success");
+        }},
+        { text: "📒 从今天起记账", hint: "会计XP+6,心智+2", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._g631RockBottomDone = true;
+          if (typeof addSkillXp === "function") { try { addSkillXp("accounting", 6); } catch (e) {} }
+          if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 2);
+          if (typeof StateManager !== "undefined") StateManager.addMessage("📒 你翻开一个新本子,把每一笔开销都记下来。'钱要花在明处。' 会计XP+6,心智+2。", "success");
+        }},
+        { text: "🍻 好了伤疤忘了疼", hint: "幸福+3,现金-100", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._g631RockBottomDone = true;
+          if (st.resources) st.resources.cash = Math.max(0, (st.resources.cash || 0) - 100);
+          if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 3);
+          if (typeof StateManager !== "undefined") StateManager.addMessage("🍻 '人生嘛,过去了就过去了。' 你请自己吃了顿好的。幸福+3,现金-100。", "info");
+        }}
+      ],
+      text: function (st) {
+        if (!st) return null;
+        var cash = (st && st.resources && st.resources.cash) || 0;
+        return "曾经现金归零的滋味,你到现在还记得。如今口袋里躺着¥" + cash + ",你站在银行门口,忽然明白了什么叫'手里有粮,心里不慌'。";
+      }
+    },
+
+    // ====== G→D: 露宿记忆与陌生人(首消费 _everHomeless) ======
+    {
+      id: "g631_street_night_memory", phase: "street", _isChainEvent: false, icon: "🌃",
+      title: "桥洞下的身影",
+      story: "下班路上,你在天桥下看到一个蜷缩的身影——{desc}",
+      triggers: { minDay: 30, interval: 90, maxRepeats: 1, excludeFlags: ["_g631StreetNightDone"] },
+      conditions: function (st) {
+        if (!st || st.gameOver) return false;
+        if (!st.flags || !st.flags._everHomeless) return false;
+        if (st.flags._g631StreetNightDone) return false;
+        var tier = (st.housing && st.housing.tier) || 0;
+        return tier >= 1;
+      },
+      choices: [
+        { text: "🍱 买份热饭送过去", hint: "现金-30,幸福+4,社交XP+4", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._g631StreetNightDone = true;
+          if (st.resources) st.resources.cash = Math.max(0, (st.resources.cash || 0) - 30);
+          if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 4);
+          if (typeof addSkillXp === "function") { try { addSkillXp("social", 4); } catch (e) {} }
+          if (typeof StateManager !== "undefined") StateManager.addMessage("🍱 你递过去一份还冒着热气的盒饭。对方愣了一下,低声说了句谢谢。你想起了曾经的自己。幸福+4,社交XP+4,现金-30。", "success");
+        }},
+        { text: "📋 告诉他救助站的位置", hint: "心智+3", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._g631StreetNightDone = true;
+          if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 3);
+          if (typeof StateManager !== "undefined") StateManager.addMessage("📋 你把救助站的地址写在纸条上递给他。'那里至少有张床。' 这话你当年也听人说过。心智+3。", "success");
+        }},
+        { text: "🚶 快步走过", hint: "心智-2", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._g631StreetNightDone = true;
+          if (st.player) st.player.mental = Math.max(0, (st.player.mental || 50) - 2);
+          if (typeof StateManager !== "undefined") StateManager.addMessage("🚶 你低下头快步走过,身后的城市灯火通明。夜里你有点睡不着。心智-2。", "info");
+        }}
+      ],
+      text: function (st) {
+        if (!st) return null;
+        var days = (st && st.flags && st.flags._homelessDays) || 0;
+        return "你也曾在这座城市里无处可睡" + (days > 0 ? "(整整" + days + "天)" : "") + "。如今你有了自己的屋檐,而桥洞下的那个身影,像极了当年的你。";
+      }
+    },
+
+    // ====== G→C: 饥饿的教训(首消费 _everStarved) ======
+    {
+      id: "g631_hunger_never_again", phase: "street", _isChainEvent: false, icon: "🍚",
+      title: "饥饿的教训",
+      story: "路过一家餐馆,饭菜香味飘出来,你想起了那段饿肚子的日子——{desc}",
+      triggers: { minDay: 20, interval: 90, maxRepeats: 1, excludeFlags: ["_g631HungerLessonDone"] },
+      conditions: function (st) {
+        if (!st || st.gameOver) return false;
+        if (!st.flags || !st.flags._everStarved) return false;
+        if (st.flags._g631HungerLessonDone) return false;
+        var hunger = (st.needs && st.needs.hunger);
+        return typeof hunger === "number" && hunger >= 50;
+      },
+      choices: [
+        { text: "👨‍🍳 学做饭,把胃握在自己手里", hint: "厨艺XP+8", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._g631HungerLessonDone = true;
+          if (typeof addSkillXp === "function") { try { addSkillXp("cooking", 8); } catch (e) {} }
+          if (typeof StateManager !== "undefined") StateManager.addMessage("👨‍🍳 '会做饭的人,饿不死。' 你开始认真研究怎么用最少的钱做出一顿像样的饭。厨艺XP+8。", "success");
+        }},
+        { text: "🛒 囤一点应急干粮", hint: "现金-100,饥饿+5", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._g631HungerLessonDone = true;
+          if (st.resources) st.resources.cash = Math.max(0, (st.resources.cash || 0) - 100);
+          if (st.needs) st.needs.hunger = Math.min(100, (st.needs.hunger || 0) + 5);
+          if (typeof StateManager !== "undefined") StateManager.addMessage("🛒 你买了一箱泡面和几袋压缩饼干塞进柜子。'柜子里有粮,睡觉都香。' 饥饿+5,现金-100。", "success");
+        }},
+        { text: "😌 感慨一下,继续走路", hint: "幸福+2", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._g631HungerLessonDone = true;
+          if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 2);
+          if (typeof StateManager !== "undefined") StateManager.addMessage("😌 '能吃饱饭的日子,就是好日子。' 你笑了笑,脚步轻快了些。幸福+2。", "info");
+        }}
+      ],
+      text: function (st) {
+        if (!st) return null;
+        return "你曾经饿到胃里发疼,连一碗泡面都要犹豫半天。现在你站在餐馆门口,闻着饭菜香,忽然很感激如今能按时吃上热饭的自己。";
       }
     }
   ];
