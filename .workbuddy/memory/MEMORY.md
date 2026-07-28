@@ -1,9 +1,9 @@
-# MEMORY — 城市浮生记 8域轮换优化循环（压缩版 2026-07-28 R599）
+# MEMORY — 城市浮生记 8域轮换优化循环（压缩版 2026-07-28 R621）
 
 ## 开轮流程（权威）
 - recency 权威判定：`ls src/js/core/ | grep -oE "domain_[a-h]_linkage.*r[0-9]+"` 按域取最大轮号；**勿信 loop-state（常严重滞后）**。开轮再 `git log -5` + `git rev-parse HEAD origin/main` 核对并行进度与轮号占用；Write 新 linkage 前必查编号未被占用。
-- 假技能键回潮复查（每轮必跑）：`grep -rnE 'var skills? *= *\[' src/js | grep -E '"trade"|"finance"|"marketing"|"technology"' | grep -v 修复`。已四次回潮（R535/R554/R589 清剿），映射 marketing→social / technology→coding / trade→sales / finance→accounting。
-- 悬空/孤儿对账：挂载无源=逆向悬空（摘除挂载）；源无挂载=孤儿（复核后挂载复活）。R594 已全量清零一次。落库后 `git show HEAD:dist/app.js | grep -c <flag>` =2 核验闭合。
+- 假技能键回潮复查（每轮必跑）：`grep -rnE 'var skills? *= *\[' src/js | grep -E '"trade"|"finance"|"marketing"|"technology"' | grep -v 修复`。已四次回潮（R535/R554/R589 清剿），映射 marketing→social / technology→coding / trade→sales / finance→accounting。**R621 新变体：`addSkillXp("strength")`（r596）→改写 personalGrowth.image.fitness；复查 grep 应加 strength|beauty|mental|fitness 直接调用形态**（数组形态 grep 抓不到单发调用）。
+- 悬空/孤儿对账：挂载无源=逆向悬空（摘除挂载）；源无挂载=孤儿（复核后挂载复活）。R594 已全量清零一次。落库后 `git show HEAD:dist/app.js | grep -c <flag>` =2 核验闭合。**⚠️R621教训：对账必须同时扫 `src/js/core/`+`src/js/data/` 双目录**——index.html 有11个 domain_*(r173~r307) 挂在 js/data/ 路径，只扫 core 会全量误报悬空。recency 判定同理：`ls` 输出 grep 时注意 r598/r599 等被截断漏检，最终以 `sort -n` 全量对账为准。
 - 并行在途改动 `git stash push -- <文件>` 隔离（或 mv 到 $TEMP+摘挂载，适合 untracked），push 后还原。并行常"集成提交"扫入本轮源码→开轮 `git show HEAD:<文件> | grep 本轮标记` 判实质是否已落库，勿重做源码。
 
 ## 提交纪律（自动化：直接提交+push main）
@@ -36,7 +36,7 @@
 ## 已消费 flag（勿重复"首消费"选题）
 - 域B/moral：_elderJobLead/_stoppedScam/_wholesaleChannelTip(r594)。遗留7个写-only：_friendCheatWarned/_goodSleepToday/_moralAfterWorkLoaded/_neighborHasIOU/_neighborRefused/_scrapeCheckCamera/_scrapeLeftNote。
 - 域C：_careerMonthlySnapshots/_crossPathJobhop+_careerPathsWorked/_careerMaxLevelCelebrated(c535)/_skillRespectNotified/_hasApprentice(c518)/_highSalaryInvestor/_burnoutSurvivor/_hasOccupationalDisease(c489)。skillBranches/talentNodes 已有消费者。
-- 域E：_firstStockDay/_investCareerConfidence/_investSocialPerception(e589)/btcFearGreed/_propertyPolicyTightness/tradeLog(e406)/_bearMarketWitness(e260)/_consecutiveWins(e260)。域E零消费素材近耗尽，剩 investFreq。
+- 域E：_firstStockDay/_investCareerConfidence/_investSocialPerception(e589)/btcFearGreed/_propertyPolicyTightness/tradeLog(e406)/_bearMarketWitness(e260)/_consecutiveWins(e260)。**investFreq三维度已消费(e621:单标的深度/广度/总量)**，沉淀新写-only flag _e621BrokerContact/_e621TradeDiscipline 可作后续素材。域E零消费素材已耗尽，下次域E轮建议消费 e621 新flag或转向 startup/property 子系统对账。⚠️investFreq值=累计**股数**非次数(phase2/investment.js累加shares)。
 - 域F：_unlockedAchievements/_cashHistory/_experiencedNarratives(f530)/rel._lastInteractionDay(f442)。
 - 域G：_hairStyleBoost/_eraState.stageId/_eventEconomicImpact(g577)/_hasToolkit/_interviewPassed/_firstJobFound(r296)。
 - 域A：trade._routeUsage/_totalSpent/_tradeLearnedInvest(a431)。
