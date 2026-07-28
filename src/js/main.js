@@ -110,7 +110,7 @@ function checkJobRequirements(job, state) {
     return `管理技能不足 (需要${reqs.management})`;
   if (reqs.accounting && s.accounting.level < reqs.accounting)
     return `会计技能不足 (需要${reqs.accounting})`;
-  if (job.requiredFlag && !state.flags[job.requiredFlag])
+  if (job.requiredFlag && (!state.flags || !state.flags[job.requiredFlag]))
     return "尚未解锁（需要NPC好感度）";
   if (job.educationRequired && (p.education || 0) < job.educationRequired) {
     const eduNames = ["大专", "本科", "研究生"];

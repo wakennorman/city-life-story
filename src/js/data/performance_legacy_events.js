@@ -47,6 +47,7 @@
       {
         text: "🏖️ 休假一周（疲劳-20/心情+10）",
         apply: function (st) {
+          if (!st.flags) st.flags = {};
           if (!st.flags._perfSStrikeDone) st.flags._perfSStrikeDone = true;
           st.needs.fatigue = Math.max(0, (st.needs.fatigue || 50) - 20);
           st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 10);
@@ -56,6 +57,7 @@
       {
         text: "💰 ¥20000现金奖励",
         apply: function (st) {
+          if (!st.flags) st.flags = {};
           if (!st.flags._perfSStrikeDone) st.flags._perfSStrikeDone = true;
           if (st.resources) st.resources.cash = (st.resources.cash || 0) + 20000;
           if (typeof addDailyTransaction === "function") addDailyTransaction(st, "income", "perf_bonus", 20000, "S级绩效连续奖金");
@@ -65,6 +67,7 @@
       {
         text: "🍽️ 高管午餐会（向上+10/人缘+5）",
         apply: function (st) {
+          if (!st.flags) st.flags = {};
           if (!st.flags._perfSStrikeDone) st.flags._perfSStrikeDone = true;
           var c = st.player.corporate;
           if (!c) return;
@@ -97,6 +100,7 @@
       {
         text: "💪 继续拼（能力+5/疲劳+10）",
         apply: function (st) {
+          if (!st.flags) st.flags = {};
           if (!st.flags._perfLowPointDone) st.flags._perfLowPointDone = true;
           var c = st.player.corporate;
           if (!c) return;
@@ -109,6 +113,7 @@
       {
         text: "🧘 休息调整（疲劳-15/心情+5）",
         apply: function (st) {
+          if (!st.flags) st.flags = {};
           if (!st.flags._perfLowPointDone) st.flags._perfLowPointDone = true;
           var c = st.player.corporate;
           if (!c) return;
@@ -121,6 +126,7 @@
       {
         text: "🔄 换方向（向上+5/道德+3）",
         apply: function (st) {
+          if (!st.flags) st.flags = {};
           if (!st.flags._perfLowPointDone) st.flags._perfLowPointDone = true;
           var c = st.player.corporate;
           if (!c) return;
