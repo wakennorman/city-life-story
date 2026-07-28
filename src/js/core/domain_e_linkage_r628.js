@@ -35,7 +35,7 @@
       icon: "📊",
       title: "投资组合月报",
       triggers: { minDay: 15 },
-      story: function (st) {
+      text: function (st) {
         var stocks = st.stockMarket || {};
         var stockCount = 0;
         var totalValue = 0;
@@ -98,7 +98,7 @@
       icon: "📰",
       title: "市场消息",
       triggers: { minDay: 12 },
-      story: function (st) {
+      text: function (st) {
         var npcs = metNpcsR628(st);
         if (npcs.length === 0) return "市场最近有些波动，但你没找到可以聊这些的人。多认识些朋友，交流市场信息也是投资的一部分。";
         var highAff = 0;
@@ -153,7 +153,7 @@
       icon: "💎",
       title: "财务健康检查",
       triggers: { minDay: 20 },
-      story: function (st) {
+      text: function (st) {
         var cash = st.resources && st.resources.cash || 0;
         var bank = st.resources && st.resources.bankBalance || 0;
         var debt = st.resources && st.resources.debt || 0;

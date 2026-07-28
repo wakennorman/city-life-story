@@ -48,11 +48,12 @@
 
 ## 零消费素材账
 - 域A/E 趋枯竭：trade 剩 lastPriceUpdate/_firstTradeDone(价值低)；E 剩 stopLossOrders 触发叙事/investFreq。
-- 域C 剩：`_apprenticeList`/`_highSalaryHealthWarn`。
+- 域C：~~_apprenticeList/_highSalaryHealthWarn~~ 已被 r515 消费（旧账过期勿再选）；R677b 后剩 `_legacyProjectDay`（时间戳深挖）/`_careerMonthlySnapshots`/`_burnoutWasHigh`。
 - 域D 注意：R440(老陈)/R442(小薇) 并行已连做新NPC。
 
-## 近况（R515-R658b）
-- R658b 域B(本窗口)：news.js:452 _goodSleepToday 承诺零兑现 A类修复（_goodSleepDay 当日语义+就地兑现，CRLF 用 Python 精准替换）+ events_street_survival 三大承诺型写-only死flag首消费（_bulkSupplier→E/_liuPartner→C/_communityNetwork→D，domain_b_linkage_r658b.js）。全套被并行以 [R658b] 01579324 提交推送。剩余域B素材：_gratitudeLetterSent（B→H跨阶段）。
+## 近况（R515-R677b）
+- R677b 域C(本窗口)：A类2处——①_skillMasterTrainer 培训班承诺¥150/天零兑现→开班日+扣投入+daily_pipeline 每日兑现(150/扩班250,_trainerScaleUp 由联动事件置位)；②career_dev 6事件 story 占位符 {pathName}{levelName}{skillName}{masterName} 泄漏（渲染层只调 text()）→全部补 text() 动态叙述。联动3(domain_c_linkage_r677b.js)：_legacyProjectStarted/_legacyWatched 死flag首消费 + 培训班扩班。交付物被并行以 [R677] a6b054b2 扫入推送（并行同提交含其自有域C修复——同轮号同域双份互补新形态）。
+- R658b 域B(本窗口)：news.js:452 _goodSleepToday 承诺零兑现 A类修复（_goodSleepDay 当日语义+就地兑现，CRLF 用 Python 精准替换）+ events_street_survival 三大承诺型写-only死flag首消费（_bulkSupplier→E/_liuPartner→C/_communityNetwork→D）。剩余域B素材：_gratitudeLetterSent（B→H跨阶段）。
 - R649b 域A(本窗口)：personal_growth 双结构分歧专修+健康素材激活（checkupHistory 首读/depression 首叙事/bmi 首写）。域A零消费素材更新：dental/vision score 仍零事件消费。
 - 并行已推进至 R660 在途（7-28 17:30，~1.5分钟/轮，愈发快）。**同轮号冲突对策：本窗口一律 b后缀避让**；并行挂载先行/源先行两种半成品形态都有，均不碰。
 - R640b 域H(本窗口)：正向孤儿救援 r601/r602/r623（源提交于 R586 但从未挂载=12死事件；r592≡r601 并行重复生成不挂）；联动3=morale写-only闭环首读/burnRate跑道警报/董事会shareholderTrust首引。
