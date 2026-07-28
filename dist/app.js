@@ -4483,6 +4483,8 @@ function eTriggersMatch(event, state) {
 function rollStreetEvent(state) {
   // 基础 18% 触发率，已存在待弹事件时不重复触发
   if (state._pendingEvent) return;
+  // [全系统自洽修复] 域B R676 A类: state.flags 守卫(旧存档/异常初始化防 TypeError)
+  if (!state.flags) state.flags = {};
 
   // 心理危机事件：mental<20时优先检查，不占用随机事件槽
   var mentalCrisisIds = [
@@ -5178,7 +5180,9 @@ function showEventModal(evt) {
             }
           }
         }
+        // [全系统自洽修复] 域B R674 A类#6: state.flags 守卫,防止旧存档 flags 未初始化致 TypeError
         if (choice.flags && typeof choice.flags === "object") {
+          state.flags = state.flags || {};
           for (var flKey in choice.flags) {
             state.flags[flKey] = choice.flags[flKey];
           }
@@ -5217,6 +5221,60 @@ function showEventModal(evt) {
         day: state.player.day,
       });
       if (state.flags._recentEvents.length > 3) state.flags._recentEvents.length = 3;
+
+      // [全系统自洽修复] 域B R676 联动增强(B→G): 事件对健康的长期影响追踪
+      // 累计负面事件(道德/风险类)超过阈值时触发健康预警
+      try {
+        if (evt.id && (evt.id.indexOf("moral_") === 0 || evt.id.indexOf("risk") >= 0)) {
+          if (!state.flags) state.flags = {};
+          state.flags._negativeEventStreak = (state.flags._negativeEventStreak || 0) + 1;
+          state.flags._lastNegativeEventDay = state.player.day;
+          if (state.flags._negativeEventStreak >= 3 && state.status) {
+            state.status.health = Math.max(0, (state.status.health || 100) - 1);
+            state.flags._negativeEventStreak = 0;
+          }
+        } else if (evt.id && evt.id.indexOf("positive_") === 0) {
+          if (!state.flags) state.flags = {};
+          state.flags._negativeEventStreak = 0;
+        }
+      } catch (e) { /* 静默 */ }
+
+      // [全系统自洽修复] 域B R676 联动增强(B→F): 事件记录增强 — 添加类别标签
+      try {
+        if (!state.flags) state.flags = {};
+        if (!state.flags._eventHistory) state.flags._eventHistory = [];
+        var _evtCategory = "general";
+        if (evt.id && evt.id.indexOf("moral_") === 0) _evtCategory = "moral";
+        else if (evt.id && evt.id.indexOf("risk") >= 0) _evtCategory = "risk";
+        else if (evt.id && evt.id.indexOf("positive_") === 0) _evtCategory = "positive";
+        else if (evt.id && evt.id.indexOf("career_") === 0) _evtCategory = "career";
+        state.flags._eventHistory.push({
+          id: evt.id,
+          title: evt.title || evt.id,
+          icon: evt.icon || "📰",
+          day: state.player.day,
+          category: _evtCategory,
+          phase: state.player.phase || "street",
+        });
+        if (state.flags._eventHistory.length > 200) {
+          state.flags._eventHistory = state.flags._eventHistory.slice(-100);
+        }
+      } catch (e) { /* 静默 */ }
+
+      // [全系统自洽修复] 域B R676 联动增强(B→D): 事件社交涟漪 — 重大事件影响NPC社交互动
+      try {
+        if (evt.id && (evt.id.indexOf("moral_") === 0 || evt.id.indexOf("risk") >= 0 || evt.id.indexOf("positive_") === 0)) {
+          var _rels = state.relationships || {};
+          for (var _rId in _rels) {
+            if (_rels[_rId] && _rels[_rId].met && (_rels[_rId].affinity || 0) >= 50) {
+              var _affChange = evt.id.indexOf("positive_") === 0 ? 1 : -1;
+              if (typeof applyAffinityChange === "function") {
+                applyAffinityChange(state, _rId, _affChange, "事件涟漪");
+              }
+            }
+          }
+        }
+      } catch (e) { /* 静默 */ }
 
       // [全系统自洽修复] 域B 联动增强#2 B→D: 高风险事件后NPC安慰 — 亲近NPC会主动关心玩家
       try {
@@ -5441,6 +5499,8 @@ function scheduleChainEvent(state, eventId, delayDays, phase) {
  */
 function checkChainEventQueue(state, phase) {
   if (state._pendingEvent) return false;
+  // [全系统自洽修复] 域B R676 A类: state.flags 守卫(checkChainEventQueue 可能被无 flags 的旧存档调用)
+  if (!state.flags) return false;
   var queue = state.flags._chainEventQueue;
   if (!queue || queue.length === 0) return false;
 
@@ -31839,19 +31899,22 @@ function checkFestivalDeepEvents(state) {
   if (state.flags.gameOver || state.flags.victory) return false;
   var doy = state.player.day % 365;
   var year = Math.floor(state.player.day / 365);
+  // [全系统自洽修复] 域B R674 A类#7: showEventModal() 未传参→清明/中秋深度事件永不可达(引擎early-return清空_pendingEvent)
   if (doy === 104 && !state.flags["_qingming_y" + year]) {
     state.flags["_qingming_y" + year] = true;
     state._pendingEvent = QINGMING_EVENTS[0];
+    var _qingmingEvt = QINGMING_EVENTS[0];
     setTimeout(function () {
-      if (typeof showEventModal === "function") showEventModal();
+      if (typeof showEventModal === "function") showEventModal(_qingmingEvt);
     }, 100);
     return true;
   }
   if (doy === 257 && !state.flags["_midAutumnDeep_y" + year]) {
     state.flags["_midAutumnDeep_y" + year] = true;
     state._pendingEvent = MID_AUTUMN_DEEP_EVENTS[0];
+    var _midAutumnEvt = MID_AUTUMN_DEEP_EVENTS[0];
     setTimeout(function () {
-      if (typeof showEventModal === "function") showEventModal();
+      if (typeof showEventModal === "function") showEventModal(_midAutumnEvt);
     }, 100);
     return true;
   }
@@ -212380,6 +212443,10 @@ const DAILY_PIPELINE = [
           StateManager.addMessage("🏪 市场行情：" + _priceNews.join("，"), "info");
         }
       }
+      // [全系统自洽修复] 域A R675 联动增强(A→B): 价格异常叙事 — 全城价格异常触发市场观察叙事
+      if (typeof checkPriceAnomalyNarrative === "function") {
+        checkPriceAnomalyNarrative(state);
+      }
     },
   },
 
@@ -215755,6 +215822,9 @@ if (typeof window !== "undefined") {
     calcFinalPrice: calcFinalPrice,
     calcTradeProfitRate: calcTradeProfitRate,
     getBestTradeRoutes: getBestTradeRoutes,
+    getPriceExtremeAlert: getPriceExtremeAlert,
+    getAllPriceAnomalies: getAllPriceAnomalies,
+    checkPriceAnomalyNarrative: checkPriceAnomalyNarrative,
   });
 
   // ====== 整合钩子：增强现有交易函数 ======
@@ -215957,6 +216027,63 @@ function getPriceExtremeAlert(goodId, currentPrice) {
   if (ratio < 0.4) return '<span style="color:var(--success);font-size:10px;">💎 低估 ' + Math.round((1 - ratio) * 100) + '% 可考虑入手</span>';
   if (ratio < 0.6) return '<span style="color:var(--info);font-size:10px;">📉 偏低 ' + Math.round((1 - ratio) * 100) + '% 关注机会</span>';
   return "";
+}
+
+// [全系统自洽修复] 域A R675 联动增强(A→F): 全城价格异常检测 — 返回所有地点的价格异常商品列表
+function getAllPriceAnomalies(state) {
+  if (!state || !state.trade || !state.trade.goodsPrices) return [];
+  var anomalies = [];
+  var seen = {};
+  for (var _locKey in state.trade.goodsPrices) {
+    if (!state.trade.goodsPrices.hasOwnProperty(_locKey)) continue;
+    var _prices = state.trade.goodsPrices[_locKey];
+    if (!_prices) continue;
+    for (var _gid in _prices) {
+      if (!_prices.hasOwnProperty(_gid)) continue;
+      var _pp = _prices[_gid];
+      if (seen[_gid]) continue;
+      var _good = getGoodById(_gid);
+      if (!_good || !_good.basePrice || _good.basePrice <= 0) continue;
+      var _ratio = _pp / _good.basePrice;
+      if (_ratio > 1.5 || _ratio < 0.5) {
+        seen[_gid] = true;
+        anomalies.push({
+          goodId: _gid,
+          goodName: _good.name,
+          location: _locKey,
+          ratio: Math.round(_ratio * 100) / 100,
+          level: _ratio > 1.5 ? "high" : "low",
+          price: _pp,
+          basePrice: _good.basePrice,
+        });
+      }
+    }
+  }
+  anomalies.sort(function (a, b) { return a.level === b.level ? b.ratio - a.ratio : a.level === "high" ? -1 : 1; });
+  return anomalies.slice(0, 10);
+}
+
+// [全系统自洽修复] 域A R675 联动增强(A→B): 价格异常叙事 — 检测到全城价格异常时触发市场叙事
+function checkPriceAnomalyNarrative(state) {
+  if (!state || !state.flags) return;
+  var anomalies = getAllPriceAnomalies(state);
+  if (anomalies.length === 0) return;
+  // 每30天最多触发一次，避免刷屏
+  var _lastNarrativeDay = state.flags._priceAnomalyNarrativeDay || 0;
+  if (state.player.day - _lastNarrativeDay < 30) return;
+  var _highCount = anomalies.filter(function (a) { return a.level === "high"; }).length;
+  var _lowCount = anomalies.filter(function (a) { return a.level === "low"; }).length;
+  if (_highCount >= 3) {
+    state.flags._priceAnomalyNarrativeDay = state.player.day;
+    if (typeof StateManager !== "undefined" && StateManager.addMessage) {
+      StateManager.addMessage("📊 市场观察：全城有 " + _highCount + " 种商品价格异常偏高，商贩们都在谈论这波涨价潮。", "event");
+    }
+  } else if (_lowCount >= 3) {
+    state.flags._priceAnomalyNarrativeDay = state.player.day;
+    if (typeof StateManager !== "undefined" && StateManager.addMessage) {
+      StateManager.addMessage("📊 市场观察：全城有 " + _lowCount + " 种商品价格异常偏低，精明的买家开始囤货。", "event");
+    }
+  }
 }
 
 // [全系统自洽修复] 域A R405 联动增强(A→F): 价格波动可视化 — 返回商品价格趋势箭头
@@ -216283,6 +216410,304 @@ function getSkillPriceInsight(state, locKey, goodId) {
     };
   }
 })();
+;
+// ==== js/data/domain_a_linkage_r673.js ====
+/**
+ * 域A联动增强 R673 — 数据/数值平衡 × 跨域桥接
+ * [全系统自洽修复] 域A R673: 交易额记录/技能市场价值/NPC人情首次被事件消费
+ */
+(function () {
+  "use strict";
+  if (typeof window === 'undefined') return;
+  if (typeof RANDOM_EVENTS === 'undefined' || !RANDOM_EVENTS) return;
+
+  function _getMetNpcIds(st) {
+    var ids = [];
+    if (!st.relationships) return ids;
+    for (var k in st.relationships) {
+      if (Object.prototype.hasOwnProperty.call(st.relationships, k)) {
+        if (st.relationships[k] && st.relationships[k].met === true) ids.push(k);
+      }
+    }
+    return ids;
+  }
+
+  function _getBestAffinityNpc(st, minAffinity = 40) {
+    if (!st || !st.relationships) return null;
+    var bestNpc = null;
+    var bestAffinity = -1;
+    for (var k in st.relationships) {
+      if (Object.prototype.hasOwnProperty.call(st.relationships, k)) {
+        var rel = st.relationships[k];
+        if (rel && rel.met === true && (rel.affinity || 0) > bestAffinity) {
+          if ((rel.affinity || 0) >= minAffinity) {
+            bestAffinity = rel.affinity;
+            bestNpc = k;
+          }
+        }
+      }
+    }
+    return bestNpc;
+  }
+
+  function _getNpcName(npcId) {
+    if (typeof getNpcById === 'function') {
+      var n = getNpcById(npcId);
+      if (n && n.name) return n.name;
+    }
+    return npcId || '未知';
+  }
+
+  function _getSkillMarketValue(skillId) {
+    // Reuse getSkillMarketValue from skills.js if available
+    if (typeof getSkillMarketValue === 'function') {
+      return getSkillMarketValue(skillId);
+    }
+    // Fallback: count jobs requiring this skill
+    if (typeof STREET_JOBS === 'undefined' || !Array.isArray(STREET_JOBS)) return 0;
+    var count = 0;
+    for (var i = 0; i < STREET_JOBS.length; i++) {
+      var job = STREET_JOBS[i];
+      if (job && job.requirements && job.requirements[skillId]) count++;
+    }
+    if (count >= 10) return 3;
+    if (count >= 5) return 2;
+    if (count >= 1) return 1;
+    return 0;
+  }
+
+  // ============================================================
+  // Event A1: A→D NPC人情价差事件 — NPC高好感提供交易优惠
+  // ============================================================
+  var npc_trade_discount_event = {
+    id: 'npc_trade_discount',
+    title: '🤝 NPC熟人优惠',
+    phase: 'street',
+    repeatable: true,
+    priority: 75,
+    conditions: function (st) {
+      if (!st || !st.relationships || !st.trade) return false;
+      if (st.flags._npcTradeDiscountCooldown) {
+        var day = (st.player.day || 0);
+        if (day - st.flags._npcTradeDiscountCooldown < 7) return false;
+      }
+      // 查找是否有高好感已结识NPC
+      var bestNpc = _getBestAffinityNpc(st, 40);
+      if (!bestNpc) return false;
+      st._currentTradeNpc = bestNpc;
+      st.flags._npcTradeDiscountCooldown = st.player.day || 0;
+      return true;
+    },
+    probability: 0.08,
+    getStory: function (st) {
+      var npcId = st._currentTradeNpc;
+      var name = _getNpcName(npcId);
+      var affinity = (st.relationships[npcId].affinity || 0);
+      var L = [];
+      L.push('你在市场/摊位上遇到了熟人了。' + name + '看到你正在购物，主动走了过来。');
+      L.push('');
+      L.push('听说你最近在做生意，' + name + '说：' + (affinity >= 70 ? "老熟人了，给你个特别优惠！" : "大家都是朋友，给你便宜点吧。") + '');
+      L.push('');
+      L.push('因为你们关系不错，本次购物获得' + Math.floor(affinity / 10) + '%折扣。');
+      return L.join('\n');
+    },
+    getText: function (st) { return this.getStory(st); },
+    apply: function (st, choiceId) {
+      if (!st) return;
+      var npcId = st._currentTradeNpc;
+      var affinity = (st.relationships[npcId].affinity || 0);
+      var discount = Math.floor(affinity / 10);
+      
+      // 应用优惠效果
+      if (choiceId === 'accept') {
+        st.flags._npcTradeDiscountSeen = true;
+        delete st._currentTradeNpc;
+        if (typeof StateManager !== 'undefined' && StateManager.addMessage) {
+          StateManager.addMessage(
+            '🎉 ' + _getNpcName(npcId) + '给了你' + discount + '%的熟客优惠！下次再来还有可能更优惠。',
+            'success'
+          );
+        }
+        // [全系统自洽修复] 域A: 置 NPC 交易情报标志
+        if (st.flags) st.flags._npcTradeInfoBonus = true;
+      } else {
+        delete st._currentTradeNpc;
+        if (typeof StateManager !== 'undefined' && StateManager.addMessage) {
+          StateManager.addMessage('你礼貌地拒绝了。' + _getNpcName(npcId) + '有些失望。', 'info');
+        }
+      }
+    },
+    choices: [
+      { text: '🎉 接受优惠', id: 'accept' },
+      { text: '🙏 礼貌拒绝', id: 'decline' },
+    ],
+    icons: ['🤝', 'NPC'],
+  };
+
+  // ============================================================
+  // Event A2: A→B 交易里程碑叙事 — 累计交易额触发市场感悟事件
+  // ============================================================
+  var trade_milestone_event = {
+    id: 'trade_milestone',
+    title: '💰 交易里程碑',
+    phase: 'street',
+    repeatable: false,
+    priority: 80,
+    conditions: function (st) {
+      if (!st || !st.trade || !st.flags) return false;
+      if (st.flags._tradeMilestoneSeen) return false;
+      // 检查累计交易额是否达到门槛
+      var totalSpent = (st.trade._totalSpent || 0);
+      if (totalSpent >= 5000) { // ¥5000 门槛
+        st.flags._tradeMilestoneSeen = true;
+        st._milestoneSpent = totalSpent;
+        return true;
+      }
+      return false;
+    },
+    probability: 1.0, // 达到条件必触发
+    getStory: function (st) {
+      var spent = st._milestoneSpent || 5000;
+      var L = [];
+      L.push('回顾这段时间的交易活动，你发现自己已经累计花费了 ¥' + spent.toLocaleString() + ' 进行商品买卖。');
+      L.push('');
+      L.push('从最初的几块钱小打小闹，到现在几十元的交易，你对市场的理解越来越深刻。');
+      L.push('');
+      L.push('你意识到：买卖不仅仅是赚钱，更是对市场规律的掌握。每一次交易，都是在积累经验和认知。');
+      return L.join('\n');
+    },
+    getText: function (st) { return this.getStory(st); },
+    apply: function (st, choiceId) {
+      if (!st) return;
+      delete st._milestoneSpent;
+      if (choiceId === 'reflect') {
+        if (typeof addSkillXp === 'function') addSkillXp('sales', 5);
+        if (typeof StateManager !== 'undefined' && StateManager.addMessage) {
+          StateManager.addMessage(
+            '💡 你从交易经验中领悟到市场规律。销售XP+5。',
+            'success'
+          );
+        }
+        // 置交易敏锐度标志，供后续事件消费
+        if (st.flags) st.flags._tradeAcuity = true;
+      } else {
+        if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 5);
+        if (typeof StateManager !== 'undefined' && StateManager.addMessage) {
+          StateManager.addMessage('你点点头，继续你的交易事业。心情+5。', 'info');
+        }
+      }
+    },
+    choices: [
+      { text: '📖 认真反思交易经验', id: 'reflect' },
+      { text: '😊 简单庆祝一下', id: 'celebrate' },
+    ],
+    icons: ['💰', '交易'],
+  };
+
+  // ============================================================
+  // Event A3: A→C 技能市场价值觉醒 — 高需求技能触发价值认知事件
+  // ============================================================
+  var skill_market_awakening = {
+    id: 'skill_market_value',
+    title: '💡 技能市场价值',
+    phase: 'street',
+    repeatable: true,
+    priority: 70,
+    conditions: function (st) {
+      if (!st || !st.skills || !st.flags) return false;
+      if (st.flags._skillMarketValueCooldown) {
+        var day = (st.player.day || 0);
+        if (day - st.flags._skillMarketValueCooldown < 14) return false;
+      }
+      // 检查是否有高市场价值的技能
+      var skillsToCheck = ['sales', 'cooking', 'repair', 'accounting', 'coding'];
+      var foundHighValue = false;
+      var bestSkill = null;
+      var bestValue = 0;
+      for (var i = 0; i < skillsToCheck.length; i++) {
+        var skillKey = skillsToCheck[i];
+        if (st.skills[skillKey] && st.skills[skillKey].level > 0) {
+          var marketVal = _getSkillMarketValue(skillKey);
+          if (marketVal >= 2 && marketVal > bestValue) {
+            bestValue = marketVal;
+            bestSkill = skillKey;
+            foundHighValue = true;
+          }
+        }
+      }
+      if (foundHighValue) {
+        st.flags._skillMarketValueCooldown = st.player.day || 0;
+        st._currentMarketSkill = bestSkill;
+        st._currentMarketValue = bestValue;
+        return true;
+      }
+      return false;
+    },
+    probability: 0.15,
+    getStory: function (st) {
+      var skillKey = st._currentMarketSkill;
+      var marketVal = st._currentMarketValue || 0;
+      var skillName = '';
+      switch(skillKey) {
+        case 'sales': skillName = '销售'; break;
+        case 'cooking': skillName = '烹饪'; break;
+        case 'repair': skillName = '维修'; break;
+        case 'accounting': skillName = '会计'; break;
+        case 'coding': skillName = '编程'; break;
+        default: skillName = skillKey;
+      }
+      var L = [];
+      L.push('你突然意识到，自己在' + skillName + '方面的技能其实很有市场价值。');
+      L.push('');
+      L.push('从工作的要求、朋友的咨询，到各种技能证书的提升，越来越多的人需要用到这项技能。');
+      L.push('');
+      L.push('市场对你这项技能的需求等级为：' + (marketVal === 3 ? '很高（众多工作都需要）' : marketVal === 2 ? '较高（部分工作需要）' : '一般'));
+      return L.join('\n');
+    },
+    getText: function (st) { return this.getStory(st); },
+    apply: function (st, choiceId) {
+      if (!st) return;
+      var skillKey = st._currentMarketSkill;
+      var marketVal = st._currentMarketValue || 0;
+      delete st._currentMarketSkill;
+      delete st._currentMarketValue;
+      
+      if (choiceId === 'capitalize') {
+        if (typeof addSkillXp === 'function') addSkillXp(skillKey, 3);
+        if (typeof StateManager !== 'undefined' && StateManager.addMessage) {
+          StateManager.addMessage(
+            '🎯 你决定深化这项技能的应用。' + skillKey + 'XP+3。',
+            'success'
+          );
+        }
+        // 置技能市场关注标志
+        if (st.flags) st.flags._skillMarketAware = true;
+      } else {
+        if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 3);
+        if (typeof StateManager !== 'undefined' && StateManager.addMessage) {
+          StateManager.addMessage('你点点头，继续积累经验。心情+3。', 'info');
+        }
+      }
+    },
+    choices: [
+      { text: '🎯 专注提升该技能', id: 'capitalize' },
+      { text: '😊 先观望再说', id: 'wait' },
+    ],
+    icons: ['💡', '技能'],
+  };
+
+  // ============================================================
+  // 注册事件
+  // ============================================================
+  RANDOM_EVENTS.push(npc_trade_discount_event);
+  RANDOM_EVENTS.push(trade_milestone_event);
+  RANDOM_EVENTS.push(skill_market_awakening);
+
+  if (typeof console !== 'undefined' && console.log) {
+    console.log('[A R673] 3 linkage events registered: npc_trade_discount, trade_milestone, skill_market_value');
+  }
+})();
+
 ;
 // ==== js/phase1/reputation.js ====
 /**
@@ -308823,8 +309248,9 @@ if (typeof window !== "undefined") {
       _isChainEvent: false,
       icon: "💭",
       title: "共同回忆",
-      triggers: { minDay: 10 },
-      story: function (st) {
+      triggers: { minDay: 10, interval: 7, maxRepeats: 99, excludeFlags: ["_b658SharedCd"] },
+      // [全系统自洽修复] 域B R674 A类#8: story→text(引擎读text()渲染,story函数原样泄漏为源码字符串)
+      text: function (st) {
         var npcs = metNpcsR658(st);
         if (npcs.length === 0) return "你还没有结识朋友，一个人经历的事虽然多，但没有人分享总觉得少了点什么。";
         var day = st.player.day || 0;
@@ -308868,8 +309294,9 @@ if (typeof window !== "undefined") {
       _isChainEvent: false,
       icon: "🗣️",
       title: "街边经济学",
-      triggers: { minDay: 14 },
-      story: function (st) {
+      triggers: { minDay: 14, interval: 7, maxRepeats: 99, excludeFlags: ["_b658RumorCd"] },
+      // [全系统自洽修复] 域B R674 A类#8: story→text(引擎读text()渲染,story函数原样泄漏为源码字符串)
+      text: function (st) {
         var day = st.player.day || 0;
         var cash = st.resources && st.resources.cash || 0;
 
@@ -311156,6 +311583,158 @@ if (typeof window !== "undefined") {
   }
 })();
 
+;
+// ==== js/core/domain_c_linkage_r675.js ====
+/**
+ * 域C(职业/成长) 联动增强 R675
+ * 桥接：
+ *   C→A  c675_skill_data_value         技能数据价值 → 消费 state.skills+state.trade 数据,
+ *     技能等级提升交易数据分析能力
+ *   C→F  c675_career_dashboard_v2      职业仪表盘v2 → 消费 state.career+state.employment 数据,
+ *     职业发展数据可视化展示
+ *   C→H  c675_skill_venture_seed       技能创业种子 → 消费 state.skills+state.corporate 数据,
+ *     特定技能组合为创业打基础
+ */
+(function () {
+  "use strict";
+  if (typeof RANDOM_EVENTS === "undefined" || !RANDOM_EVENTS) return;
+  if (RANDOM_EVENTS._domainCLinkageR675Loaded) return;
+  RANDOM_EVENTS._domainCLinkageR675Loaded = true;
+
+  // 辅助：获取技能总等级
+  function totalSkillLevel(st) {
+    if (!st || !st.skills) return 0;
+    var total = 0;
+    for (var k in st.skills) {
+      var s = st.skills[k];
+      if (s && typeof s.level === "number") total += s.level;
+    }
+    return total;
+  }
+
+  // 辅助：获取最高技能等级
+  function maxSkillLevel(st) {
+    if (!st || !st.skills) return 0;
+    var max = 0;
+    for (var k in st.skills) {
+      var s = st.skills[k];
+      if (s && typeof s.level === "number" && s.level > max) max = s.level;
+    }
+    return max;
+  }
+
+  var EVENTS = [
+    {
+      id: "c675_skill_data_value", phase: "street", _isChainEvent: false, icon: "📊",
+      title: "技能数据价值",
+      story: "你的技能让你在交易中看到了别人看不到的数据——{desc}",
+      triggers: { minDay: 80, interval: 150, maxRepeats: 2, excludeFlags: ["_c675DataValueCooldown"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        if (!st.flags || st.flags._c675DataValueCooldown) return false;
+        var maxLvl = maxSkillLevel(st);
+        return maxLvl >= 25 && st.trade && st.trade.totalProfit > 0;
+      },
+      choices: [
+        { text: "📈 深度数据分析", hint: "会计XP+8,智力+3", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._c675DataValueCooldown = true;
+          st.flags._skillDataAnalysis = true;
+          if (st.player) st.player.intelligence = Math.min(100, (st.player.intelligence || 50) + 3);
+          if (typeof addSkillXp === "function") { try { addSkillXp("accounting", 8); } catch(e) {} }
+          if (typeof StateManager !== "undefined") StateManager.addMessage("📈 '技能是数据,数据是力量。' 你运用专业技能分析了市场数据。会计XP+8,智力+3。", "success");
+        }},
+        { text: "🛒 精准交易", hint: "销售XP+5,现金+500", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._c675DataValueCooldown = true;
+          if (st.resources) st.resources.cash = (st.resources.cash || 0) + 500;
+          if (typeof addSkillXp === "function") { try { addSkillXp("sales", 5); } catch(e) {} }
+          if (typeof StateManager !== "undefined") StateManager.addMessage("🛒 '数据驱动交易。' 你利用技能洞察完成了精准交易。销售XP+5,现金+¥500。", "success");
+        }}
+      ],
+      text: function (st) {
+        if (!st) return null;
+        var maxLvl = maxSkillLevel(st);
+        var total = totalSkillLevel(st);
+        return "你的技能让你在交易中看到了别人看不到的数据——'技能等级总合" + total + ",最高技能Lv." + maxLvl + "。用数据说话,用技能赚钱。'";
+      }
+    },
+    {
+      id: "c675_career_dashboard_v2", phase: "street", _isChainEvent: false, icon: "📋",
+      title: "职业仪表盘",
+      story: "回顾你的职业数据,一条清晰的成长轨迹浮现——{desc}",
+      triggers: { minDay: 150, interval: 200, maxRepeats: 2, excludeFlags: ["_c675DashCooldown"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        if (!st.flags || st.flags._c675DashCooldown) return false;
+        return st.employment && st.employment.currentJob && (st.employment.completedShifts || {});
+      },
+      choices: [
+        { text: "📊 分析成长轨迹", hint: "管理XP+6,智力+3", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._c675DashCooldown = true;
+          st.flags._careerDashboardAnalyzed = true;
+          if (st.player) st.player.intelligence = Math.min(100, (st.player.intelligence || 50) + 3);
+          if (typeof addSkillXp === "function") { try { addSkillXp("management", 6); } catch(e) {} }
+          if (typeof StateManager !== "undefined") StateManager.addMessage("📊 '成长需要数据,数据需要复盘。' 你分析了职业成长轨迹。管理XP+6,智力+3。", "success");
+        }},
+        { text: "🎯 设定新目标", hint: "心智+5,管理XP+3", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._c675DashCooldown = true;
+          st.flags._careerNewGoalSet = true;
+          if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 5);
+          if (typeof addSkillXp === "function") { try { addSkillXp("management", 3); } catch(e) {} }
+          if (typeof StateManager !== "undefined") StateManager.addMessage("🎯 '回顾过去,设定目标,持续前进。' 你设定了新的职业目标。心智+5,管理XP+3。", "success");
+        }}
+      ],
+      text: function (st) {
+        if (!st) return null;
+        var job = st.employment && st.employment.currentJob;
+        var shifts = job ? (st.employment.completedShifts[job.id] || 0) : 0;
+        return "回顾你的职业数据,一条清晰的成长轨迹浮现——'" + (job ? job.name : "未知") + "累计" + shifts + "天,数据会说话。'";
+      }
+    },
+    {
+      id: "c675_skill_venture_seed", phase: "corporate", _isChainEvent: false, icon: "🌱",
+      title: "技能创业种子",
+      story: "你的技能组合让你看到了创业的可能性——{desc}",
+      triggers: { minDay: 200, interval: 250, maxRepeats: 1, excludeFlags: ["_c675VentureSeedDone"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        if (!st.flags || st.flags._c675VentureSeedDone) return false;
+        var total = totalSkillLevel(st);
+        return total >= 100 && st.corporate && st.corporate.active;
+      },
+      choices: [
+        { text: "🚀 制定创业计划", hint: "管理XP+10,心智+5", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._c675VentureSeedDone = true;
+          st.flags._skillDrivenVenturePlan = true;
+          if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 5);
+          if (typeof addSkillXp === "function") { try { addSkillXp("management", 10); } catch(e) {} }
+          if (typeof StateManager !== "undefined") StateManager.addMessage("🚀 '技能是创业的种子。' 你制定了基于技能的创业计划。管理XP+10,心智+5。", "success");
+        }},
+        { text: "💼 积累更多经验", hint: "各技能XP+3,智力+2", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._c675VentureSeedDone = true;
+          if (st.player) st.player.intelligence = Math.min(100, (st.player.intelligence || 50) + 2);
+          // 给所有技能加少量经验
+          if (st.skills) {
+            for (var _sk in st.skills) {
+              if (st.skills[_sk] && typeof st.skills[_sk].xp === "number") {
+                st.skills[_sk].xp = (st.skills[_sk].xp || 0) + 3;
+              }
+            }
+          }
+          if (typeof StateManager !== "undefined") StateManager.addMessage("💼 '厚积薄发,技能越强,创业越稳。' 你继续积累经验。各技能XP+3,智力+2。", "success");
+        }}
+      ],
+      text: function (st) {
+        if (!st) return null;
+        var total = totalSkillLevel(st);
+        return "你的技能组合让你看到了创业的可能性——'技能总等级" + total + ",是时候让这些技能发挥更大的价值了。'";
+      }
+    }
+  ];
+
+  for (var i = 0; i < EVENTS.length; i++) {
+    RANDOM_EVENTS.push(EVENTS[i]);
+  }
+})();
 ;
 // ==== js/core/domain_d_linkage_r636.js ====
 /**
