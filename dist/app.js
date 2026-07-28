@@ -25360,7 +25360,7 @@ function getEventHealthImpact(state, eventId) {
         { text: "📚 继续提升技能", hint: "随机技能XP+3", apply: function (st) {
           if (!st) return; st.flags = st.flags || {}; st.flags._a450SkillValueCooldown = true;
           var skills = ["accounting", "management", "social", "coding", "sales"]; // [全系统自洽修复] 域B R572 修复:marketing/technology/trade非真实技能键(addSkillXp静默丢弃XP)→映射social/coding/sales
-          var sk = skills[Math.floor(Math.random() * skills.length)];
+          var sk = Random.fromArray(skills); // [全系统自洽修复] 域A R400: Math.random()→Random.fromArray()
           if (typeof addSkillXp === "function") { try { addSkillXp(sk, 3); } catch(e) {} }
           if (typeof StateManager !== "undefined") StateManager.addMessage("🎯 你决定先把技能练到顶尖——好工作自然会来找你。随机技能XP+3。", "success");
         }}
@@ -26127,7 +26127,7 @@ function getEventHealthImpact(state, eventId) {
         { text: "📚 继续投资", hint: "随机技能XP+3", apply: function (st) {
           if (!st) return; st.flags = st.flags || {}; st.flags._a489SkillROICooldown = true;
           var skills = ["accounting", "management", "social", "coding", "sales"]; // [全系统自洽修复] 域B R572 修复:marketing/technology/trade非真实技能键(addSkillXp静默丢弃XP)→映射social/coding/sales
-          var sk = skills[Math.floor(Math.random() * skills.length)];
+          var sk = Random.fromArray(skills); // [全系统自洽修复] 域A R400: Math.random()→Random.fromArray()
           if (typeof addSkillXp === "function") { try { addSkillXp(sk, 3); } catch(e) {} }
           if (typeof StateManager !== "undefined") StateManager.addMessage("📈 你决定继续投资技能——'最好的投资，就是投资自己。' 随机技能XP+3。", "success");
         }}
@@ -26723,7 +26723,7 @@ function getEventHealthImpact(state, eventId) {
         { text: "🔄 学习新技能", hint: "随机新技能XP+3", apply: function (st) {
           if (!st) return; st.flags = st.flags || {}; st.flags._a532SkillMarketCooldown = true;
           var skills = ["coding", "sales", "accounting", "management", "english", "driving"];
-          var sk = skills[Math.floor(Math.random() * skills.length)];
+          var sk = Random.fromArray(skills); // [全系统自洽修复] 域A R400: Math.random()→Random.fromArray()
           if (typeof addSkillXp === "function") { try { addSkillXp(sk, 3); } catch(e) {} }
           if (typeof StateManager !== "undefined") StateManager.addMessage("📊 '多学一门技能多一条路。' " + sk + "XP+3。", "success");
         }}
@@ -26851,7 +26851,7 @@ function getEventHealthImpact(state, eventId) {
         { text: "📈 提升匹配度", hint: "随机技能XP+3", apply: function (st) {
           if (!st) return; st.flags = st.flags || {}; st.flags._a533JobSkillMapCooldown = true;
           var skills = ["accounting", "management", "sales", "coding", "social", "driving"]; // [全系统自洽修复] 域C R535 修复:marketing/technology/trade非真实技能键(XP静默丢弃)→映射sales/coding/driving
-          var sk = skills[Math.floor(Math.random() * skills.length)];
+          var sk = Random.fromArray(skills); // [全系统自洽修复] 域A R400: Math.random()→Random.fromArray()
           if (typeof addSkillXp === "function") { try { addSkillXp(sk, 3); } catch(e) {} }
           if (typeof StateManager !== "undefined") StateManager.addMessage("🎯 '技能还差一点，再提升一下就能达到要求了。' 随机技能XP+3。", "success");
         }}
@@ -27179,7 +27179,7 @@ function getEventHealthImpact(state, eventId) {
         { text: "📈 专注优势", hint: "随机技能XP+5", apply: function (st) {
           if (!st) return; st.flags = st.flags || {}; st.flags._a583SkillGapCooldown = true;
           var skills = ["accounting", "management", "social", "coding", "sales"]; // [全系统自洽修复] 域E R588 修复:marketing/technology/trade非真实技能键(addSkillXp静默丢弃XP)→映射social/coding/sales
-          var sk = skills[Math.floor(Math.random() * skills.length)];
+          var sk = Random.fromArray(skills); // [全系统自洽修复] 域A R400: Math.random()→Random.fromArray()
           if (typeof addSkillXp === "function") { try { addSkillXp(sk, 5); } catch(e) {} }
           if (typeof StateManager !== "undefined") StateManager.addMessage("🎯 '发挥优势，比弥补短板更容易出成绩。' 随机技能XP+5。", "success");
         }}
@@ -27599,7 +27599,7 @@ function getEventHealthImpact(state, eventId) {
         { text: "🔄 学习新技能", hint: "随机新技能XP+3", apply: function (st) {
           if (!st) return; st.flags = st.flags || {}; st.flags._a593SkillMarketCooldown = true;
           var skills = ["coding", "sales", "accounting", "management", "english", "driving"];
-          var sk = skills[Math.floor(Math.random() * skills.length)];
+          var sk = Random.fromArray(skills); // [全系统自洽修复] 域A R400: Math.random()→Random.fromArray()
           if (typeof addSkillXp === "function") { try { addSkillXp(sk, 3); } catch(e) {} }
           if (typeof StateManager !== "undefined") StateManager.addMessage("📊 '多学一门技能多一条路。' " + sk + "XP+3。", "success");
         }}
@@ -28008,7 +28008,7 @@ function getEventHealthImpact(state, eventId) {
         { text: "🔄 学习新技能", hint: "随机新技能XP+3", apply: function (st) {
           if (!st) return; st.flags = st.flags || {}; st.flags._a602SkillMarketCooldown = true;
           var skills = ["coding", "sales", "accounting", "management", "english", "driving"];
-          var sk = skills[Math.floor(Math.random() * skills.length)];
+          var sk = Random.fromArray(skills); // [全系统自洽修复] 域A R400: Math.random()→Random.fromArray()
           if (typeof addSkillXp === "function") { try { addSkillXp(sk, 3); } catch(e) {} }
           if (typeof StateManager !== "undefined") StateManager.addMessage("📊 '多学一门技能多一条路。' " + sk + "XP+3。", "success");
         }}
@@ -28060,6 +28060,136 @@ function getEventHealthImpact(state, eventId) {
   }
 })();
 
+;
+// ==== js/core/domain_a_linkage_r603.js ====
+/**
+ * 域A(数据/数值平衡) 联动增强 R603
+ * 桥接：
+ *   A→G  a603_price_health_awareness  价格健康觉醒 → 消费 state.resources+state.status 数据,
+ *     数据→"物价影响健康选择"的生命回响
+ *   A→C  a603_job_skill_market  技能市场数据 → 消费 state.skills 数据,
+ *     数据→"技能市场需求导向"的职业回响
+ *   A→E  a603_market_trade_insight  市场交易洞察 → 消费 state.resources+state.flags 数据,
+ *     数据→"价格波动中的投资机会"的经济回响
+ */
+(function () {
+  "use strict";
+  if (typeof RANDOM_EVENTS === "undefined" || !RANDOM_EVENTS) return;
+  if (RANDOM_EVENTS._domainALinkageR603Loaded) return;
+  RANDOM_EVENTS._domainALinkageR603Loaded = true;
+
+  var EVENTS = [
+    // ====== A→G: 价格健康觉醒 ======
+    {
+      id: "a603_price_health_awareness", phase: "street", _isChainEvent: false, icon: "🥦",
+      title: "物价与健康",
+      story: "你去菜市场逛了一圈,发现物价又涨了——{desc}",
+      triggers: { minDay: 15, interval: 60, maxRepeats: 10, excludeFlags: ["_a603PriceHealthCooldown"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        if (!st.flags || st.flags._a603PriceHealthCooldown) return false;
+        return true;
+      },
+      choices: [
+        { text: "🥗 买新鲜食材自己做", hint: "健康+5,饥饿+30,现金-300", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._a603PriceHealthCooldown = true;
+          if (st.resources) st.resources.cash = Math.max(0, (st.resources.cash || 0) - 300);
+          if (st.status) st.status.health = Math.min(100, (st.status.health || 100) + 5);
+          if (st.needs) st.needs.hunger = Math.min(100, (st.needs.hunger || 50) + 30);
+          if (typeof StateManager !== "undefined") StateManager.addMessage("🥦 你买了新鲜蔬菜和肉,自己做了顿营养餐。'还是自己做饭实惠又健康。' 健康+5,饥饿+30,现金-300。", "success");
+        }},
+        { text: "🍜 凑合吃泡面", hint: "现金-50,健康-2,饥饿+15", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._a603PriceHealthCooldown = true;
+          if (st.resources) st.resources.cash = Math.max(0, (st.resources.cash || 0) - 50);
+          if (st.status) st.status.health = Math.max(0, (st.status.health || 100) - 2);
+          if (st.needs) st.needs.hunger = Math.min(100, (st.needs.hunger || 50) + 15);
+          if (typeof StateManager !== "undefined") StateManager.addMessage("🍜 '又涨价了...算了,吃泡面吧。' 你叹了口气。健康-2,现金-50。", "warning");
+        }}
+      ],
+      text: function (st) {
+        if (!st) return null;
+        return "菜市场的价格又涨了。猪肉¥35/斤,鸡蛋¥8/斤,连青菜都涨到了¥5/斤。你摸了摸钱包,开始思考:为了健康,值得多花这些钱吗?";
+      }
+    },
+
+    // ====== A→C: 技能市场数据 ======
+    {
+      id: "a603_job_skill_market", phase: "street", _isChainEvent: false, icon: "📊",
+      title: "技能市场行情",
+      story: "你研究了一下当前市场上什么技能最值钱——{desc}",
+      triggers: { minDay: 30, interval: 90, maxRepeats: 8, excludeFlags: ["_a603SkillMarketCooldown"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        if (!st.flags || st.flags._a603SkillMarketCooldown) return false;
+        return true;
+      },
+      choices: [
+        { text: "🎯 学习热门技能", hint: "random技能XP+10,智力+3,现金-500", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._a603SkillMarketCooldown = true;
+          if (st.resources) st.resources.cash = Math.max(0, (st.resources.cash || 0) - 500);
+          if (st.player) st.player.intelligence = Math.min(100, (st.player.intelligence || 50) + 3);
+          var hotSkills = ["coding", "accounting", "sales", "management", "electrician", "repair"];
+          if (typeof Random !== "undefined" && typeof addSkillXp === "function") {
+            try { addSkillXp(Random.fromArray(hotSkills), 10); } catch(e) {}
+          }
+          if (typeof StateManager !== "undefined") StateManager.addMessage("📊 你报了一个热门技能培训班。'市场需要的,就是我要学的!' random技能XP+10,智力+3,现金-500。", "success");
+        }},
+        { text: "📈 研究市场趋势", hint: "心智+5", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._a603SkillMarketCooldown = true;
+          if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 5);
+          if (typeof StateManager !== "undefined") StateManager.addMessage("📊 '知己知彼,百战不殆。' 你花了时间研究各行业的技能需求趋势。心智+5。", "success");
+        }}
+      ],
+      text: function (st) {
+        if (!st) return null;
+        return "你研究了当前的就业市场——编程、会计、销售、管理是最热门的方向。'技能学对了,收入翻倍不是梦。' 你盘算着该往哪个方向努力。";
+      }
+    },
+
+    // ====== A→E: 市场交易洞察 ======
+    {
+      id: "a603_market_trade_insight", phase: "street", _isChainEvent: false, icon: "💰",
+      title: "倒卖机会",
+      story: "你发现了一个价格差——{desc}",
+      triggers: { minDay: 20, interval: 60, maxRepeats: 8, excludeFlags: ["_a603TradeInsightCooldown"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        if (!st.flags || st.flags._a603TradeInsightCooldown) return false;
+        return (st.resources.cash || 0) >= 2000;
+      },
+      choices: [
+        { text: "💰 进货倒卖", hint: "收益¥500-2500,风险亏¥1000", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._a603TradeInsightCooldown = true;
+          var cost = Math.min(1000, (st.resources.cash || 0) * 0.2);
+          st.resources.cash = Math.max(0, (st.resources.cash || 0) - cost);
+          var win = Random.chance(0.6);
+          if (win) {
+            var profit = Math.round(cost * Random.float(0.5, 2.5));
+            st.resources.cash = (st.resources.cash || 0) + cost + profit;
+            if (typeof StateManager !== "undefined") StateManager.addMessage("💰 低价买入,高价卖出!你赚了¥" + profit.toLocaleString() + "。'做生意,就是低买高卖!'", "success");
+          } else {
+            var loss = Math.round(cost * Random.float(0.3, 0.8));
+            st.resources.cash = (st.resources.cash || 0) + loss;
+            if (typeof StateManager !== "undefined") StateManager.addMessage("💰 '看走眼了...' 这次倒卖亏了¥" + (cost - loss) + "。吃一堑长一智。", "warning");
+          }
+        }},
+        { text: "📝 记下价格信息", hint: "心智+3", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._a603TradeInsightCooldown = true;
+          if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 3);
+          if (typeof StateManager !== "undefined") StateManager.addMessage("💰 你记下了各种商品的价格信息。'信息就是财富,等时机成熟再出手。' 心智+3。", "success");
+        }}
+      ],
+      text: function (st) {
+        if (!st) return null;
+        return "你发现城西的电子产品比城东便宜不少。'这个差价,够我赚一笔了。' 你心里盘算着,要不要做一回倒爷。";
+      }
+    }
+  ];
+
+  for (var i = 0; i < EVENTS.length; i++) {
+    RANDOM_EVENTS.push(EVENTS[i]);
+  }
+})();
 ;
 // ==== js/core/domain_b_linkage_r289.js ====
 /**
@@ -257606,6 +257736,278 @@ if (typeof window !== "undefined") {
       ],
       condition: function (st) {
         return st.startup && st.startup.status !== "none" && st.startup.company;
+      },
+      weight: 1,
+    },
+  ];
+
+  // 注册事件
+  for (var i = 0; i < EVENTS.length; i++) {
+    RANDOM_EVENTS.push(EVENTS[i]);
+  }
+})();
+;
+// ==== js/core/domain_a_linkage_r624.js ====
+/**
+ * 域A(数据/数值平衡) 联动增强 R624
+ * 桥接：
+ *   A→G  a624_food_health_awareness  食材健康自觉 → 消费 state.ingredients+state.needs 数据,
+ *     数据→"吃得健康"的生命回响
+ *   A→C  a624_skill_market_value  技能市场价值 → 消费 state.skills+state.jobs 数据,
+ *     数据→"技能值多少钱"的职业回响
+ *   A→F  a624_price_alert_ui  价格预警UI → 消费 state.trade+state.goods 数据,
+ *     数据→"价格异动"的UI回响
+ */
+(function () {
+  "use strict";
+  if (typeof RANDOM_EVENTS === "undefined" || !RANDOM_EVENTS) return;
+  if (RANDOM_EVENTS._domainALinkageR624Loaded) return;
+  RANDOM_EVENTS._domainALinkageR624Loaded = true;
+
+  // 辅助：获取食材健康评分
+  function _foodHealthScoreR624(ingredientId) {
+    if (typeof INGREDIENTS === "undefined" || !INGREDIENTS) return 0;
+    for (var i = 0; i < INGREDIENTS.length; i++) {
+      if (INGREDIENTS[i] && INGREDIENTS[i].id === ingredientId) {
+        var eff = INGREDIENTS[i].effects || {};
+        // 健康食材 = 加健康/心智的，减体制/卫生的
+        var score = 0;
+        if (eff.health > 0) score += eff.health;
+        if (eff.mental > 0) score += eff.mental * 0.5;
+        if (eff.fatigue > 0) score -= eff.fatigue * 0.3;
+        if (eff.hygiene < 0) score += Math.abs(eff.hygiene) * 0.2;
+        return score;
+      }
+    }
+    return 0;
+  }
+
+  // 辅助：获取技能市场需求度
+  function _skillDemandR624(skillId) {
+    if (typeof getSkillMarketValue === "function") {
+      return getSkillMarketValue(skillId);
+    }
+    return 0;
+  }
+
+  var EVENTS = [
+    // ================================================================
+    // A→G: 食材健康自觉 — 基于食材数据分析饮食健康
+    // ================================================================
+    {
+      id: "a624_food_health_awareness",
+      phase: "street",
+      _isChainEvent: false,
+      icon: "🥗",
+      title: "饮食健康分析",
+      minDay: 5,
+      story: function (st) {
+        var inventory = st.inventory || [];
+        var foodItems = [];
+        for (var i = 0; i < inventory.length; i++) {
+          var inv = inventory[i];
+          if (inv && inv.id && typeof INGREDIENTS !== "undefined") {
+            for (var j = 0; j < INGREDIENTS.length; j++) {
+              if (INGREDIENTS[j] && INGREDIENTS[j].id === inv.id) {
+                foodItems.push(INGREDIENTS[j]);
+                break;
+              }
+            }
+          }
+        }
+
+        if (foodItems.length === 0) {
+          return "你身上没有食材。去市场买些新鲜食材，自己做饭比外卖更健康省钱。";
+        }
+
+        var healthyCount = 0;
+        var unhealthyCount = 0;
+        for (var fi = 0; fi < foodItems.length; fi++) {
+          var score = _foodHealthScoreR624(foodItems[fi].id);
+          if (score >= 3) healthyCount++;
+          else if (score <= -1) unhealthyCount++;
+        }
+
+        var total = foodItems.length;
+        if (healthyCount > unhealthyCount && healthyCount >= total * 0.5) {
+          return "你背包里的食材整体比较健康（" + healthyCount + "/" + total + "份健康食材）。" +
+            "多吃蔬菜水果、少吃油炸食品，长期来看对体质和心智都有好处。";
+        } else if (unhealthyCount > healthyCount) {
+          return "你背包里不太健康的食材偏多（" + unhealthyCount + "/" + total + "份）。" +
+            "偶尔吃吃没问题，但长期依赖高油高盐食物会影响健康和心情。";
+        }
+        return "你背包里的食材营养搭配还算均衡。注意多吃不同种类的食物，保证营养全面。";
+      },
+      choices: [
+        { text: "🍎 去市场买食材", next: null, handler: function(st) {
+          if (typeof showLocationNavModal === "function") {
+            showLocationNavModal("commercialDist", "🏪 去市场买菜", "trade");
+          } else {
+            StateManager.addMessage("🍎 前往商业区购买食材", "info");
+          }
+        }},
+        { text: "🍳 做顿饭", next: null, handler: function(st) {
+          if (st.needs) {
+            st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 3);
+            st.needs.fullness = Math.min(100, (st.needs.fullness || 50) + 15);
+          }
+          StateManager.addMessage("🍳 给自己做了一顿热乎饭，心情+3，饱食+15", "success");
+        }},
+      ],
+      condition: function (st) {
+        return st.inventory && st.inventory.length > 0;
+      },
+      weight: 1,
+    },
+
+    // ================================================================
+    // A→C: 技能市场价值 — 基于市场需求分析技能价值
+    // ================================================================
+    {
+      id: "a624_skill_market_value",
+      phase: "street",
+      _isChainEvent: false,
+      icon: "📊",
+      title: "技能市场价值分析",
+      minDay: 10,
+      story: function (st) {
+        var skills = st.skills || {};
+        var skillList = [];
+        for (var sk in skills) {
+          if (skills[sk] && typeof skills[sk].level === "number") {
+            var demand = _skillDemandR624(sk);
+            skillList.push({
+              id: sk,
+              level: skills[sk].level,
+              demand: demand,
+              name: (typeof getSkillChineseName === "function") ? getSkillChineseName(sk) : sk,
+            });
+          }
+        }
+
+        if (skillList.length === 0) {
+          return "你还没有学习任何技能。去培训中心或通过工作实践来提升技能吧。";
+        }
+
+        // 按市场需求排序
+        skillList.sort(function(a, b) { return b.demand - a.demand; });
+        var top = skillList.slice(0, 3);
+        var parts = top.map(function(s) {
+          var demandLabel = s.demand >= 3 ? "🔥高需求" : s.demand >= 2 ? "📈中等" : s.demand >= 1 ? "📋低需求" : "❓无需求";
+          return s.name + " Lv." + s.level + " (" + demandLabel + ")";
+        });
+
+        var totalSkills = skillList.length;
+        var highDemand = skillList.filter(function(s) { return s.demand >= 2; }).length;
+
+        return "根据当前市场分析，你的技能价值评估如下：<br>" +
+          top.map(function(s) {
+            var demandLabel = s.demand >= 3 ? "🔥" : s.demand >= 2 ? "📈" : s.demand >= 1 ? "📋" : "❓";
+            return demandLabel + " " + s.name + " Lv." + s.level;
+          }).join("<br>") +
+          "<br>共" + totalSkills + "项技能，" + highDemand + "项市场需求中等以上。" +
+          (highDemand < 2 ? "建议优先提升市场需求高的技能，以获得更好的职业发展。" : "你的技能组合不错，继续提升可以争取更高薪资。");
+      },
+      choices: [
+        { text: "🎓 去培训中心", next: null, handler: function(st) {
+          if (typeof showLocationNavModal === "function") {
+            showLocationNavModal("trainingCenter", "🎓 培训中心", "actions");
+          } else {
+            StateManager.addMessage("🎓 前往培训中心提升技能", "info");
+          }
+        }},
+        { text: "💼 查看相关工作", next: null, handler: function(st) {
+          if (typeof switchCareerSubTab === "function") {
+            switchCareerSubTab("career_jobs");
+          }
+          StateManager.addMessage("💼 查看当前技能匹配的职业方向", "info");
+        }},
+      ],
+      condition: function (st) {
+        var skills = st.skills || {};
+        var count = 0;
+        for (var k in skills) {
+          if (skills[k] && skills[k].level > 0) count++;
+        }
+        return count >= 2;
+      },
+      weight: 1,
+    },
+
+    // ================================================================
+    // A→F: 价格预警UI — 商品价格异动提醒
+    // ================================================================
+    {
+      id: "a624_price_alert_ui",
+      phase: "street",
+      _isChainEvent: false,
+      icon: "🏷️",
+      title: "价格异动提醒",
+      minDay: 3,
+      story: function (st) {
+        var trade = st.trade || {};
+        var location = trade.currentLocation || "commercialDist";
+        var goods = (typeof GOODS !== "undefined" && GOODS) ? GOODS : [];
+        var alerts = [];
+
+        for (var gi = 0; gi < goods.length; gi++) {
+          var g = goods[gi];
+          if (!g || !g.id || !g.name) continue;
+          var curPrice = (typeof getPrice === "function") ? getPrice(g.id, location, st) : 0;
+          var basePrice = g.basePrice || 100;
+          var ratio = curPrice > 0 ? (curPrice / basePrice) : 1;
+
+          if (ratio >= 1.5) {
+            alerts.push({ name: g.name, trend: "📈暴涨", ratio: Math.round(ratio * 100), type: "sell" });
+          } else if (ratio <= 0.6) {
+            alerts.push({ name: g.name, trend: "📉暴跌", ratio: Math.round(ratio * 100), type: "buy" });
+          } else if (ratio >= 1.25) {
+            alerts.push({ name: g.name, trend: "📈偏高", ratio: Math.round(ratio * 100), type: "sell" });
+          } else if (ratio <= 0.75) {
+            alerts.push({ name: g.name, trend: "📉偏低", ratio: Math.round(ratio * 100), type: "buy" });
+          }
+        }
+
+        // 只显示最明显的3个
+        alerts.sort(function(a, b) { return Math.abs(b.ratio - 100) - Math.abs(a.ratio - 100); });
+        var topAlerts = alerts.slice(0, 3);
+
+        if (topAlerts.length === 0) {
+          return "今日市场价格平稳，没有明显异动。" +
+            "适合按需采购，也可以关注一下有没有你需要的商品在低价区间。";
+        }
+
+        var sellAlerts = topAlerts.filter(function(a) { return a.type === "sell"; });
+        var buyAlerts = topAlerts.filter(function(a) { return a.type === "buy"; });
+
+        var parts = [];
+        if (sellAlerts.length > 0) {
+          parts.push("📈 适合卖出：" + sellAlerts.map(function(a) { return a.name + "(" + a.ratio + "%)"; }).join("、"));
+        }
+        if (buyAlerts.length > 0) {
+          parts.push("📉 适合买入：" + buyAlerts.map(function(a) { return a.name + "(" + a.ratio + "%)"; }).join("、"));
+        }
+
+        return "今日价格异动提醒：<br>" + parts.join("<br>") + "<br>" +
+          (topAlerts.length > 3 ? "还有" + (alerts.length - 3) + "种商品价格异常。" : "") +
+          "低价买入、高价卖出是赚钱的基本法则。";
+      },
+      choices: [
+        { text: "🛒 去交易", next: null, handler: function(st) {
+          if (typeof showTradeTab === "function") {
+            showTradeTab();
+          } else {
+            StateManager.addMessage("🛒 前往交易界面查看详情", "info");
+          }
+        }},
+        { text: "📝 记住价格", next: null, handler: function(st) {
+          st.flags = st.flags || {};
+          st.flags._a624_priceAlert = (st.flags._a624_priceAlert || 0) + 1;
+          StateManager.addMessage("📝 你记住了今天的价格异动，对市场规律更了解了", "info");
+        }},
+      ],
+      condition: function (st) {
+        return st.trade && st.trade.currentLocation && (st.player.day || 0) % 3 === 0;
       },
       weight: 1,
     },
