@@ -564,6 +564,10 @@ function tickNpcRelationships(state) {
         state.status.health = Math.min(100, (state.status.health || 50) + _hrBonus);
       }
     }
+    // [全系统自洽修复] 域D R694 联动增强(D→G): 社交疲劳恢复 — 好友(≥40)帮助缓解疲劳
+    if (_hrCount >= 2 && state.needs) {
+      state.needs.fatigue = Math.max(0, (state.needs.fatigue || 0) - Math.min(2, _hrCount));
+    }
   } catch (e) {}
 
   // [全系统自洽修复] 域D 联动增强(D→F): NPC关系月报 — 每月初总结社交圈变化

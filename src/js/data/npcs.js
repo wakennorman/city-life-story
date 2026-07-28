@@ -310,11 +310,12 @@ var NPCS = [
       "年轻人不要怕吃亏,吃亏是福。",
     ],
     giftPrefers: ["books", "stationery", "daily_use"],
-    affinityRewards: {
-      30: { type: "dialogue", label: "老陈分享人生经验", effect: { mental: 5 } },
-      60: { type: "referral", label: "老陈介绍社区资源", effect: { flag: "_laoChenCommunityHelp" } },
-      80: { type: "mentorship", label: "老陈成为你的人生导师", effect: { flag: "_laoChenMentorship", managementXp: 20 } },
-    },
+    // [全系统自洽修复] 域D R694 A类: 原对象格式引擎用forEach遍历→TypeError,改为数组格式
+    affinityRewards: [
+      { threshold: 30, id: "lao_chen_30", label: "老陈分享人生经验", effect: function(st) { st.player.mental = Math.min(100, (st.player.mental || 0) + 5); } },
+      { threshold: 60, id: "lao_chen_60", label: "老陈介绍社区资源", effect: function(st) { if (!st.flags) st.flags = {}; st.flags._laoChenCommunityHelp = true; } },
+      { threshold: 80, id: "lao_chen_80", label: "老陈成为你的人生导师", effect: function(st) { if (!st.flags) st.flags = {}; st.flags._laoChenMentorship = true; if (typeof addSkillXp === "function") addSkillXp("management", 20); } },
+    ],
     met: false,
   },
   {
