@@ -305315,6 +305315,129 @@ if (typeof window !== "undefined") {
 })();
 
 ;
+// ==== js/core/domain_f_linkage_r631.js ====
+/**
+ * 域F(UI/UX) 联动增强 R631
+ * 桥接：
+ *   F→B  f631_ui_event_timeline  UI事件时间线 → 消费 state.flags+state.player 数据,
+ *     UI→"事件可视化时间线"的叙事回响
+ *   F→A  f631_ui_price_tracker  UI价格追踪 → 消费 state.resources 数据,
+ *     UI→"价格变动可视化追踪"的数值回响
+ *   F→H  f631_ui_company_dashboard  UI公司仪表盘 → 消费 state.startup 数据,
+ *     UI→"公司运营数据可视化"的公司回响
+ */
+(function () {
+  "use strict";
+  if (typeof RANDOM_EVENTS === "undefined" || !RANDOM_EVENTS) return;
+  if (RANDOM_EVENTS._domainFLinkageR631Loaded) return;
+  RANDOM_EVENTS._domainFLinkageR631Loaded = true;
+
+  var EVENTS = [
+    // ====== F→B: UI事件时间线 ======
+    {
+      id: "f631_ui_event_timeline", phase: "street", _isChainEvent: false, icon: "📅",
+      title: "时间线",
+      story: "你打开手机,看到一张照片让你想起了过去——{desc}",
+      triggers: { minDay: 30, interval: 90, maxRepeats: 8, excludeFlags: ["_f631EventTimelineCooldown"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        if (!st.flags || st.flags._f631EventTimelineCooldown) return false;
+        return true;
+      },
+      choices: [
+        { text: "📖 回忆那段时光", hint: "心情+5,心智+2", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._f631EventTimelineCooldown = true;
+          if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 5);
+          if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 2);
+          if (typeof StateManager !== "undefined") StateManager.addMessage("📅 '那时候虽然苦,但真的很充实。' 你看着照片,嘴角泛起微笑。心情+5,心智+2。", "success");
+        }},
+        { text: "🗑️ 清理旧照片", hint: "心智+3", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._f631EventTimelineCooldown = true;
+          if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 3);
+          if (typeof StateManager !== "undefined") StateManager.addMessage("📅 你清理了手机里的旧照片和文件。'该放下的就放下,轻装前行。' 心智+3。", "success");
+        }}
+      ],
+      text: function (st) {
+        if (!st || !st.player) return null;
+        var day = st.player.day || 0;
+        return "手机弹出「第" + day + "天回忆」——你第一天来到这座城市的照片。'时间过得真快,已经在这里生活了这么久。' 你感慨万千。";
+      }
+    },
+
+    // ====== F→A: UI价格追踪 ======
+    {
+      id: "f631_ui_price_tracker", phase: "street", _isChainEvent: false, icon: "🏷️",
+      title: "价格追踪",
+      story: "你注意到最近有些商品的价格波动很大——{desc}",
+      triggers: { minDay: 20, interval: 60, maxRepeats: 10, excludeFlags: ["_f631PriceTrackerCooldown"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        if (!st.flags || st.flags._f631PriceTrackerCooldown) return false;
+        return true;
+      },
+      choices: [
+        { text: "📊 记录价格走势", hint: "智力+4,心智+2", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._f631PriceTrackerCooldown = true;
+          if (st.player) st.player.intelligence = Math.min(100, (st.player.intelligence || 50) + 4);
+          if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 2);
+          if (typeof StateManager !== "undefined") StateManager.addMessage("🏷️ 你开始记录各种商品的价格波动。'掌握了价格的规律,就掌握了省钱的门道。' 智力+4,心智+2。", "success");
+        }},
+        { text: "💰 趁低价囤货", hint: "现金-500,省下未来开支", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._f631PriceTrackerCooldown = true;
+          if (st.resources) st.resources.cash = Math.max(0, (st.resources.cash || 0) - 500);
+          if (st.flags) st.flags._bulkPurchase = (st.flags._bulkPurchase || 0) + 1;
+          if (typeof StateManager !== "undefined") StateManager.addMessage("🏷️ '趁便宜多囤点,省得以后涨价心疼。' 你买了一些日用品囤着。现金-500。", "success");
+        }}
+      ],
+      text: function (st) {
+        if (!st) return null;
+        return "你注意到鸡蛋的价格从¥5涨到了¥8,猪肉也从¥25涨到了¥35。'最近物价涨得厉害,得精打细算过日子了。'";
+      }
+    },
+
+    // ====== F→H: UI公司仪表盘 ======
+    {
+      id: "f631_ui_company_dashboard", phase: "corporate", _isChainEvent: false, icon: "📋",
+      title: "公司看板",
+      story: "你打开公司运营看板,查看各项数据——{desc}",
+      triggers: { minDay: 60, interval: 90, maxRepeats: 8, excludeFlags: ["_f631CompanyDashboardCooldown"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        if (!st.flags || st.flags._f631CompanyDashboardCooldown) return false;
+        return st.startup && st.startup.company;
+      },
+      choices: [
+        { text: "📈 分析运营数据", hint: "智力+5,公司效率+5", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._f631CompanyDashboardCooldown = true;
+          if (st.player) st.player.intelligence = Math.min(100, (st.player.intelligence || 50) + 5);
+          if (st.startup && st.startup.company) {
+            st.startup.company.efficiency = Math.min(100, (st.startup.company.efficiency || 50) + 5);
+          }
+          if (typeof StateManager !== "undefined") StateManager.addMessage("📋 你仔细分析了公司的各项数据。'数据会说话,关键是要听懂。' 智力+5,公司效率+5。", "success");
+        }},
+        { text: "📊 制定下季度目标", hint: "心智+5,公司士气+5", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._f631CompanyDashboardCooldown = true;
+          if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 5);
+          if (st.startup && st.startup.company) {
+            st.startup.company.morale = Math.min(100, (st.startup.company.morale || 50) + 5);
+          }
+          if (typeof StateManager !== "undefined") StateManager.addMessage("📋 '有了清晰的目标,团队才有方向。' 你制定了明确的季度OKR。心智+5,团队士气+5。", "success");
+        }}
+      ],
+      text: function (st) {
+        if (!st || !st.startup || !st.startup.company) return null;
+        var val = st.startup.company.valuation || 0;
+        var rev = st.startup.company.revenue || 0;
+        return "公司看板显示:估值¥" + val.toLocaleString() + ",月收入¥" + rev.toLocaleString() + "。'数据是公司健康的晴雨表,该认真看看了。'";
+      }
+    }
+  ];
+
+  for (var i = 0; i < EVENTS.length; i++) {
+    RANDOM_EVENTS.push(EVENTS[i]);
+  }
+})();
+;
 // ==== js/core/domain_g_linkage_r631.js ====
 /**
  * 域G(核心机制/生命周期) 联动增强 R631
@@ -305968,6 +306091,191 @@ if (typeof window !== "undefined") {
   }
 })();
 
+;
+// ==== js/core/domain_c_linkage_r635.js ====
+/**
+ * 域C(职业/成长) 联动增强 R635
+ * 桥接：
+ *   C→F  c635_career_portfolio_ui  职业作品集UI → 消费 state.career+state.skills 数据,
+ *     职业→"职场履历可视化"UI回响
+ *   C→D  c635_career_peer_recognition  职业同行认可 → 消费 state.career+state.relationships 数据,
+ *     职业→"同行敬重"社交回响
+ *   C→H  c635_career_entrepreneur_seed  职业创业种子 → 消费 state.career+state.resources 数据,
+ *     职业→"职场积累创业"公司回响
+ */
+(function () {
+  "use strict";
+  if (typeof RANDOM_EVENTS === "undefined" || !RANDOM_EVENTS) return;
+  if (RANDOM_EVENTS._domainCLinkageR635Loaded) return;
+  RANDOM_EVENTS._domainCLinkageR635Loaded = true;
+
+  // 辅助：获取已结识NPC列表
+  function metNpcsR635(st) {
+    var out = [];
+    var rels = st.relationships || {};
+    for (var k in rels) {
+      if (rels[k] && rels[k].met) out.push({ id: k, affinity: rels[k].affinity || 0 });
+    }
+    return out;
+  }
+
+  var EVENTS = [
+    // ================================================================
+    // C→F: 职业作品集UI — 职场履历回顾
+    // ================================================================
+    {
+      id: "c635_career_portfolio_ui",
+      phase: "street",
+      _isChainEvent: false,
+      icon: "📋",
+      title: "职场履历",
+      triggers: { minDay: 10 },
+      story: function (st) {
+        var career = st.career || {};
+        var job = career.currentJob;
+        var history = career.history || [];
+        if (!job && history.length === 0) {
+          return "你还没有职场履历。找一份固定工作，开始积累你的职业经历吧。" +
+            "每一份工作都是人生履历上的一笔。";
+        }
+        var totalWorkDays = 0;
+        if (job) totalWorkDays += job.workDays || 0;
+        for (var hi = 0; hi < history.length; hi++) {
+          totalWorkDays += history[hi].workDays || 0;
+        }
+        var pathName = job ? (typeof getCareerPathLabel === "function" ? getCareerPathLabel(job.path) : job.path) : "暂无";
+        var salary = job ? (job.salary || 0) : 0;
+        var totalJobs = history.length + (job ? 1 : 0);
+
+        if (totalWorkDays >= 365) {
+          return "你的职场履历已有一年以上的积累：在职" + totalWorkDays + "天，历经" + totalJobs + "个岗位。" +
+            "当前「" + pathName + "」，月薪¥" + salary.toLocaleString() + "。" +
+            "一年多的职场历练让你从新手变成了老手，是时候考虑更大的职业目标了。";
+        }
+        return "你的职场履历：在职" + totalWorkDays + "天，历经" + totalJobs + "个岗位。" +
+          "当前「" + pathName + "」，月薪¥" + salary.toLocaleString() + "。" +
+          "每一段经历都在为你的职业生涯添砖加瓦。";
+      },
+      choices: [
+        { text: "📈 查看晋升路线", apply: function(st) {
+          if (typeof switchCareerSubTab === "function") switchCareerSubTab("career_jobs");
+          StateManager.addMessage("📈 前往「上班族」Tab查看晋升路线", "info");
+        }},
+        { text: "💪 继续积累", apply: function(st) {
+          StateManager.addMessage("💪 继续在当前岗位上积累经验和业绩", "info");
+        }},
+      ],
+      conditions: function (st) {
+        return st.career && (st.career.currentJob || (st.career.history && st.career.history.length > 0));
+      },
+      weight: 1,
+    },
+
+    // ================================================================
+    // C→D: 职业同行认可 — 职场成就影响社交关系
+    // ================================================================
+    {
+      id: "c635_career_peer_recognition",
+      phase: "street",
+      _isChainEvent: false,
+      icon: "🏆",
+      title: "同行认可",
+      triggers: { minDay: 20 },
+      story: function (st) {
+        var npcs = metNpcsR635(st);
+        if (npcs.length === 0) return "你还没有结识什么同行朋友。多参加行业活动，认识一些志同道合的人。";
+        if (!st.career || !st.career.currentJob) {
+          return "你目前没有固定工作，但你的朋友们依然很关心你的职业发展。" +
+            "他们觉得以你的能力，一定能找到适合的方向。";
+        }
+        var job = st.career.currentJob;
+        var perf = job.performance || 50;
+        var wd = job.workDays || 0;
+        var highAff = 0;
+        for (var i = 0; i < npcs.length; i++) {
+          if (npcs[i].affinity >= 40) highAff++;
+        }
+        if (perf >= 70 && wd >= 90) {
+          return "你在「" + (typeof getCareerPathLabel === "function" ? getCareerPathLabel(job.path) : job.path) + "」的表现有目共睹。" +
+            "绩效" + perf + "分，在职" + wd + "天，身边有" + highAff + "位朋友对你的职业发展表示赞赏。" +
+            "同行之间的认可，有时候比薪资涨幅更让人有成就感。";
+        }
+        return "你在职场上稳步前进，朋友们都看在眼里。" +
+          "继续提升业绩和技能，同行认可度会越来越高。";
+      },
+      choices: [
+        { text: "🤝 维护人脉", apply: function(st) {
+          if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 3);
+          StateManager.addMessage("🤝 和行业朋友们保持联系，心情+3", "success");
+        }},
+        { text: "💼 专注工作", apply: function(st) {
+          StateManager.addMessage("💼 把精力放在工作上，业绩才是硬道理", "info");
+        }},
+      ],
+      conditions: function (st) {
+        var npcs = metNpcsR635(st);
+        return npcs.length >= 1;
+      },
+      weight: 1,
+    },
+
+    // ================================================================
+    // C→H: 职业创业种子 — 职场积累为创业打基础
+    // ================================================================
+    {
+      id: "c635_career_entrepreneur_seed",
+      phase: "corporate",
+      _isChainEvent: false,
+      icon: "🚀",
+      title: "创业种子",
+      triggers: { minDay: 30 },
+      story: function (st) {
+        var career = st.career || {};
+        var job = career.currentJob;
+        var cap = (typeof ensureCareerCapital === "function") ? ensureCareerCapital(st) : null;
+        var industryRes = cap ? Math.round(cap.industryResources || 0) : 0;
+        var clientLeads = cap ? Math.round(cap.clientLeads || 0) : 0;
+        var cash = st.resources && st.resources.cash || 0;
+        var startup = st.startup || {};
+
+        if (startup.status && startup.status !== "none") {
+          return "你已经开始了创业之旅。回想当初在职场积累的行业资源（" + industryRes + "点）和客户线索（" + clientLeads + "条），" +
+            "都为你的创业打下了坚实的基础。继续加油！";
+        }
+        if (!job) {
+          return "创业需要资本、经验和人脉。建议先找一份工作，在职场中积累行业资源和人脉。" +
+            "当你的职业资本足够雄厚时，创业就是水到渠成的事。";
+        }
+        var wd = job.workDays || 0;
+        if (industryRes >= 30 && clientLeads >= 15 && cash >= 30000) {
+          return "你在职场积累了" + industryRes + "点行业资源、" + clientLeads + "条客户线索，现金¥" + cash.toLocaleString() + "。" +
+            "各项创业条件已经基本成熟——行业资源可以帮你找到靠谱的供应商，客户线索意味着第一批客户，现金则是启动的燃料。" +
+            "是时候认真考虑创业的事了。";
+        }
+        return "你在职场积累了" + industryRes + "点行业资源、" + clientLeads + "条客户线索。" +
+          "继续积累，当行业资源≥30、客户线索≥15、现金≥¥30,000时，创业条件就基本成熟了。";
+      },
+      choices: [
+        { text: "🚀 查看创业条件", apply: function(st) {
+          if (typeof showStartupRegisterModal === "function") showStartupRegisterModal();
+          else StateManager.addMessage("🚀 前往「事业发展」查看创业条件", "info");
+        }},
+        { text: "💼 继续积累", apply: function(st) {
+          StateManager.addMessage("💼 继续在职场中积累经验和资本", "info");
+        }},
+      ],
+      conditions: function (st) {
+        return st.career && st.career.currentJob && (st.career.currentJob.workDays || 0) >= 30;
+      },
+      weight: 1,
+    },
+  ];
+
+  // 注册事件
+  for (var i = 0; i < EVENTS.length; i++) {
+    RANDOM_EVENTS.push(EVENTS[i]);
+  }
+})();
 ;
 // ==== js/main.js ====
 /**
