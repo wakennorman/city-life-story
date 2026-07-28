@@ -51,7 +51,7 @@
       icon: "🥗",
       title: "饮食健康分析",
       triggers: { minDay: 5 },
-      story: function (st) {
+      text: function (st) {
         var inventory = st.inventory || [];
         var foodItems = [];
         for (var i = 0; i < inventory.length; i++) {
@@ -120,7 +120,7 @@
       icon: "📊",
       title: "技能市场价值分析",
       triggers: { minDay: 10 },
-      story: function (st) {
+      text: function (st) {
         var skills = st.skills || {};
         var skillList = [];
         for (var sk in skills) {
@@ -194,7 +194,7 @@
       icon: "🏷️",
       title: "价格异动提醒",
       triggers: { minDay: 3 },
-      story: function (st) {
+      text: function (st) {
         var trade = st.trade || {};
         var location = trade.currentLocation || "commercialDist";
         var goods = (typeof GOODS !== "undefined" && GOODS) ? GOODS : [];
