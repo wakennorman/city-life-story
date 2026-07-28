@@ -309,6 +309,26 @@ function endQuarter() {
     if (_avgLoyalty >= 70 && state.player.corporate) {
       state.player.corporate.popularity = Math.min(100, (state.player.corporate.popularity || 50) + 1);
     }
+    // [R713 域H 联动增强 H→D]: 团队士气影响职场NPC好感
+    // 高忠诚度团队(avg≥80) → 职场NPC好感微增, 低忠诚度(avg<40) → 好感微降
+    if (state.relationships && state.corporate) {
+      var _workplaceNpcs = ["boss_li", "xiao_mei", "zhaojie", "old_zhou"];
+      if (_avgLoyalty >= 80) {
+        for (var _wni = 0; _wni < _workplaceNpcs.length; _wni++) {
+          var _rel = state.relationships[_workplaceNpcs[_wni]];
+          if (_rel && _rel.met) {
+            _rel.affinity = Math.min(100, (_rel.affinity || 0) + 1);
+          }
+        }
+      } else if (_avgLoyalty < 40) {
+        for (var _wni2 = 0; _wni2 < _workplaceNpcs.length; _wni2++) {
+          var _rel2 = state.relationships[_workplaceNpcs[_wni2]];
+          if (_rel2 && _rel2.met && _rel2.affinity > 10) {
+            _rel2.affinity = Math.max(0, _rel2.affinity - 1);
+          }
+        }
+      }
+    }
   }
 
   // Q1 年终奖（发放后清除冲刺标记）
@@ -344,6 +364,15 @@ function endQuarter() {
       state.needs.fatigue = Math.min(100, (state.needs.fatigue || 0) + 5);
       StateManager.addMessage("😰 冲刺季压力大，疲劳+5。", "warning");
     }
+    // [R713 域H 联动增强 H→G]: 高疲劳连续冲刺→健康风险
+    // 连续两个Q4冲刺且疲劳>80时额外扣健康，模拟长期过劳
+    if (state.needs && state.needs.fatigue > 80 && state.status) {
+      var _burnoutDmg = Math.round((state.needs.fatigue - 80) / 10);
+      state.status.health = Math.max(0, (state.status.health || 100) - _burnoutDmg);
+      if (_burnoutDmg > 0) {
+        StateManager.addMessage("💊 长期高强度工作让身体吃不消了，健康-" + _burnoutDmg + "。", "danger");
+      }
+    }
     StateManager.addMessage(
       "🏃 进入Q4冲刺季！下季度所有KPI增益+50%，绩效评分×1.1。",
       "event",
@@ -355,6 +384,22 @@ function endQuarter() {
     var _pv = state.investment.portfolio.totalValue || 0;
     if (_pv > 0 && c.corpQuarter === 1) {
       StateManager.addMessage("📊 年度投资组合市值 ¥" + _pv.toLocaleString() + "，多元化配置是抵御风险的关键。", "info");
+    }
+  }
+
+  // [R713 域H 联动增强 H→E]: 公司财务健康→个人投资情报加成
+  // 公司运营良好(团队>3人+季度绩效A以上)时,解锁内部投资情报,提升投资回报感知
+  if (c.corpQuarter === 1 && state.corporate && state.corporate.team && state.corporate.perfHistory) {
+    var _recentPerfs = state.corporate.perfHistory.slice(-2);
+    var _hasGoodPerf = _recentPerfs.some(function(p) { return p && (p.grade === "A" || p.grade === "S" || p.grade === "S+"); });
+    if (state.corporate.team.length >= 3 && _hasGoodPerf) {
+      if (!state.flags) state.flags = {};
+      state.flags._corpInvestmentIntel = true;
+      if (state.investment && state.investment.stockMarket) {
+        StateManager.addMessage("📈 公司内部情报：你注意到几个行业趋势，对投资判断有帮助。", "info");
+      }
+    } else {
+      if (state.flags) delete state.flags._corpInvestmentIntel;
     }
   }
 
