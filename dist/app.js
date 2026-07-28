@@ -330412,10 +330412,12 @@ if (typeof window !== "undefined") {
 /**
  * 域F(UI/UX) 联动增强 R704
  * 桥接：
- *   F→H  f704_corp_health_gauge     公司健康仪 → 消费 state.startup+state.corporate 数据,
- *     UI→公司健康度可视化仪表
- *   F→A  f704_price_heatmap          价格热力图 → 消费 state.trade.goodsPrices 数据,
- *     UI→商品价格热力图展示
+ *   F→A  f704_wealth_dashboard_v3      财富仪表盘v3 → 消费 state.resources,
+ *     财务数据可视化
+ *   F→B  f704_event_memory_wall_v2    事件记忆墙v2 → 消费 state.flags._eventHistory,
+ *     过往事件可视化
+ *   F→G  f704_health_tracker_v3        健康追踪v3 → 消费 state.status+state.needs,
+ *     综合健康管理
  */
 (function () {
   "use strict";
@@ -330423,65 +330425,159 @@ if (typeof window !== "undefined") {
   if (RANDOM_EVENTS._domainFLinkageR704Loaded) return;
   RANDOM_EVENTS._domainFLinkageR704Loaded = true;
 
+  function eventCount(st) {
+    return (st && st.flags && st.flags._eventHistory) ? st.flags._eventHistory.length : 0;
+  }
+
   var EVENTS = [
     {
-      id: "f704_corp_health_gauge", phase: "corporate", _isChainEvent: false, icon: "❤️‍🔥",
-      title: "公司健康度可视化",
-      story: "你制作了一个公司健康度仪表盘——{desc}",
-      triggers: { minDay: 180, interval: 250, maxRepeats: 1, excludeFlags: ["_f704HealthGaugeDone"] },
+      id: "f704_wealth_dashboard_v3",
+      phase: "street",
+      _isChainEvent: false,
+      icon: "💰",
+      title: "财富仪表盘",
+      story: "你的财务状况一目了然",
+      triggers: { minDay: 70, interval: 90, maxRepeats: 3, excludeFlags: ["_f704WealthCd"] },
       conditions: function (st) {
         if (st.gameOver) return false;
-        if (!st.flags || st.flags._f704HealthGaugeDone) return false;
-        return st.startup && st.startup.company;
+        if (st.flags && st.flags._f704WealthCd) return false;
+        return st.player && st.player.day >= 70;
       },
       choices: [
-        { text: "📊 全面体检", hint: "管理XP+7,智力+3", apply: function (st) {
-          if (!st) return; st.flags = st.flags || {}; st.flags._f704HealthGaugeDone = true;
-          if (st.player) st.player.intelligence = Math.min(100, (st.player.intelligence || 50) + 3);
-          if (typeof addSkillXp === "function") { try { addSkillXp("management", 7); } catch(e) {} }
-          if (typeof StateManager !== "undefined") StateManager.addMessage("📊 '健康度可视化,问题早发现。' 管理XP+7,智力+3。", "success");
-        }},
-        { text: "🔧 针对性改善", hint: "心智+5,效率+1", apply: function (st) {
-          if (!st) return; st.flags = st.flags || {}; st.flags._f704HealthGaugeDone = true;
-          if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 5);
-          if (st.startup && st.startup.company) {
-            st.startup.company.efficiency = Math.min(100, (st.startup.company.efficiency || 0) + 5);
+        {
+          text: "📊 详细复盘",
+          hint: "会计XP+5,智力+3,置_f704Review",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._f704WealthCd = true;
+            st.flags._f704Review = true;
+            if (st.player) st.player.intelligence = Math.min(100, (st.player.intelligence || 50) + 3);
+            if (typeof addSkillXp === "function") { try { addSkillXp("accounting", 5); } catch(e) {} }
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("📊 数据是发现规律的眼睛。会计XP+5,智力+3。", "success");
+            }
           }
-          if (typeof StateManager !== "undefined") StateManager.addMessage("🔧 '针对性改善,效率提升。' 心智+5,公司效率+5。", "success");
-        }}
+        },
+        {
+          text: "⚡ 快速扫一眼",
+          hint: "智力+2,置_f704Glance",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._f704WealthCd = true;
+            st.flags._f704Glance = true;
+            if (st.player) st.player.intelligence = Math.min(100, (st.player.intelligence || 50) + 2);
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("⚡ 大方向没问题就行。智力+2。", "info");
+            }
+          }
+        }
       ],
       text: function (st) {
         if (!st) return null;
-        return "你制作了一个公司健康度仪表盘——'公司健康度可视化,一目了然。'";
+        var cash = (st.resources && st.resources.cash) || 0;
+        return "存款¥" + cash + "——'看着仪表盘,今天该关注哪个指标?'";
       }
     },
     {
-      id: "f704_price_heatmap", phase: "street", _isChainEvent: false, icon: "🗺️",
-      title: "商品价格热力图",
-      story: "你把各地的价格数据做成了热力图——{desc}",
-      triggers: { minDay: 100, interval: 180, maxRepeats: 2, excludeFlags: ["_f704HeatmapCooldown"] },
+      id: "f704_event_memory_wall_v2",
+      phase: "street",
+      _isChainEvent: false,
+      icon: "🖼️",
+      title: "事件记忆墙",
+      story: "那些刻骨铭心的时刻值得被铭记",
+      triggers: { minDay: 80, interval: 100, maxRepeats: 3, excludeFlags: ["_f704WallCd"] },
       conditions: function (st) {
         if (st.gameOver) return false;
-        if (!st.flags || st.flags._f704HeatmapCooldown) return false;
-        return st.trade && st.trade.goodsPrices;
+        if (st.flags && st.flags._f704WallCd) return false;
+        return eventCount(st) >= 10 && st.player && st.player.day >= 80;
       },
       choices: [
-        { text: "📈 分析热力图", hint: "会计XP+5,智力+3", apply: function (st) {
-          if (!st) return; st.flags = st.flags || {}; st.flags._f704HeatmapCooldown = true;
-          if (st.player) st.player.intelligence = Math.min(100, (st.player.intelligence || 50) + 3);
-          if (typeof addSkillXp === "function") { try { addSkillXp("accounting", 5); } catch(e) {} }
-          if (typeof StateManager !== "undefined") StateManager.addMessage("📈 '热力图揭示市场真相。' 会计XP+5,智力+3。", "success");
-        }},
-        { text: "🛒 按图索骥", hint: "销售XP+4,现金+1200", apply: function (st) {
-          if (!st) return; st.flags = st.flags || {}; st.flags._f704HeatmapCooldown = true;
-          if (st.resources) st.resources.cash = (st.resources.cash || 0) + 1200;
-          if (typeof addSkillXp === "function") { try { addSkillXp("sales", 4); } catch(e) {} }
-          if (typeof StateManager !== "undefined") StateManager.addMessage("🛒 '按图索骥,精准交易。' 销售XP+4,现金+¥1200。", "success");
-        }}
+        {
+          text: "📖 回顾往事",
+          hint: "心智+5,心情+5,置_f704Nostalgia",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._f704WallCd = true;
+            st.flags._f704Nostalgia = true;
+            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 5);
+            if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 5);
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("📖 回忆是最美的礼物。心智+5,心情+5。", "success");
+            }
+          }
+        },
+        {
+          text: "🎯 向前看",
+          hint: "智力+4,置_f704Forward",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._f704WallCd = true;
+            st.flags._f704Forward = true;
+            if (st.player) st.player.intelligence = Math.min(100, (st.player.intelligence || 50) + 4);
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("🎯 过去是参考,不是枷锁。智力+4。", "info");
+            }
+          }
+        }
       ],
       text: function (st) {
         if (!st) return null;
-        return "你把各地的价格数据做成了热力图——'商品价格热力图,商机一目了然。'";
+        return "已经经历了" + eventCount(st) + "个事件——'如果有一面墙,每一块砖都是一段回忆。'";
+      }
+    },
+    {
+      id: "f704_health_tracker_v3",
+      phase: "street",
+      _isChainEvent: false,
+      icon: "💚",
+      title: "健康追踪",
+      story: "你的健康数据一目了然",
+      triggers: { minDay: 50, interval: 70, maxRepeats: 3, excludeFlags: ["_f704HealthCd"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        if (st.flags && st.flags._f704HealthCd) return false;
+        return st.player && st.player.day >= 50;
+      },
+      choices: [
+        {
+          text: "🏃 制定运动计划",
+          hint: "健康+5,心智+3,置_f704Exercise",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._f704HealthCd = true;
+            st.flags._f704Exercise = true;
+            if (st.status) st.status.health = Math.min(100, (st.status.health || 100) + 5);
+            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 3);
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("🏃 身体是革命的本钱。健康+5,心智+3。", "success");
+            }
+          }
+        },
+        {
+          text: "😴 关注睡眠",
+          hint: "健康+3,心情+6,置_f704Sleep",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._f704HealthCd = true;
+            st.flags._f704Sleep = true;
+            if (st.status) st.status.health = Math.min(100, (st.status.health || 100) + 3);
+            if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 6);
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("😴 睡好觉,一切都好。健康+3,心情+6。", "success");
+            }
+          }
+        }
+      ],
+      text: function (st) {
+        if (!st) return null;
+        var health = (st.status && st.status.health) || 0;
+        return "健康" + health + "%——'看着仪表盘,今天该关注哪个指标?'";
       }
     }
   ];
