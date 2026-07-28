@@ -35,7 +35,7 @@
       icon: "📊",
       title: "投资日记",
       triggers: { minDay: 12 },
-      story: function (st) {
+      text: function (st) {
         // [R637b A类修复] st.stockMarket不存在→改用st.investment.stockHoldings
         var holdings = (st.investment && st.investment.stockHoldings) || [];
         var stockCount = 0;
@@ -96,7 +96,7 @@
       icon: "💎",
       title: "财富与社交",
       triggers: { minDay: 15 },
-      story: function (st) {
+      text: function (st) {
         var npcs = metNpcsR637(st);
         if (npcs.length === 0) return "你还没有朋友可以分享你的成就。财富不只是数字，它也是你能力和努力的证明。";
         var cash = st.resources && st.resources.cash || 0;
@@ -144,7 +144,7 @@
       icon: "🕊️",
       title: "财务自由之路",
       triggers: { minDay: 25 },
-      story: function (st) {
+      text: function (st) {
         var cash = st.resources && st.resources.cash || 0;
         var bank = st.resources && st.resources.bankBalance || 0;
         var totalWealth = cash + bank;
