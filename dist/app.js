@@ -311830,6 +311830,93 @@ if (typeof window !== "undefined") {
   }
 })();
 ;
+// ==== js/core/domain_b_linkage_r700.js ====
+/**
+ * 域B(事件/叙事) 联动增强 R700
+ * 桥接：
+ *   B→G  b700_story_life_stage      故事人生阶段 → 消费 state.flags._eventHistory+state.player 数据,
+ *     叙事→"事件构成人生阶段"生命回响
+ *   B→H  b700_story_corp_seed       故事公司种子 → 消费 state.flags._eventHistory+state.corporate 数据,
+ *     叙事→"故事中的商机"公司回响
+ */
+(function () {
+  "use strict";
+  if (typeof RANDOM_EVENTS === "undefined" || !RANDOM_EVENTS) return;
+  if (RANDOM_EVENTS._domainBLinkageR700Loaded) return;
+  RANDOM_EVENTS._domainBLinkageR700Loaded = true;
+
+  var EVENTS = [
+    {
+      id: "b700_story_life_stage", phase: "street", _isChainEvent: false, icon: "📖",
+      title: "事件构成人生阶段",
+      story: "回顾这些事件,你发现它们构成了你的人生舞台——{desc}",
+      triggers: { minDay: 150, interval: 250, maxRepeats: 2, excludeFlags: ["_b700StageCooldown"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        if (!st.flags || st.flags._b700StageCooldown) return false;
+        var hist = st.flags._eventHistory || [];
+        return hist.length >= 20;
+      },
+      choices: [
+        { text: "📝 总结阶段", hint: "心智+5,智力+3", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._b700StageCooldown = true;
+          if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 5);
+          if (st.player) st.player.intelligence = Math.min(100, (st.player.intelligence || 50) + 3);
+          if (typeof StateManager !== "undefined") StateManager.addMessage("📝 '每个阶段都有独特的意义。' 心智+5,智力+3。", "success");
+        }},
+        { text: "🎯 规划新阶段", hint: "管理XP+5,心智+4", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._b700StageCooldown = true;
+          if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 4);
+          if (typeof addSkillXp === "function") { try { addSkillXp("management", 5); } catch(e) {} }
+          if (typeof StateManager !== "undefined") StateManager.addMessage("🎯 '规划下一个阶段,让人生更精彩。' 管理XP+5,心智+4。", "success");
+        }}
+      ],
+      text: function (st) {
+        if (!st) return null;
+        var hist = st.flags._eventHistory || [];
+        return "回顾这些事件,你发现它们构成了你的人生舞台——'经历了" + hist.length + "次事件,每一个事件都是人生舞台的一幕。'";
+      }
+    },
+    {
+      id: "b700_story_corp_seed", phase: "street", _isChainEvent: false, icon: "🌱",
+      title: "故事中的商机",
+      story: "你的经历中藏着创业的灵感——{desc}",
+      triggers: { minDay: 200, interval: 300, maxRepeats: 1, excludeFlags: ["_b700CorpSeedDone"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        if (!st.flags || st.flags._b700CorpSeedDone) return false;
+        var hist = st.flags._eventHistory || [];
+        return hist.length >= 30 && !(st.corporate && st.corporate.active);
+      },
+      choices: [
+        { text: "💡 记录创业想法", hint: "心智+5,管理XP+4", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._b700CorpSeedDone = true;
+          st.flags._storyCorpSeedRecorded = true;
+          if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 5);
+          if (typeof addSkillXp === "function") { try { addSkillXp("management", 4); } catch(e) {} }
+          if (typeof StateManager !== "undefined") StateManager.addMessage("💡 '经历是最好的创业导师。' 心智+5,管理XP+4。", "success");
+        }},
+        { text: "🤝 找人合伙", hint: "社交XP+6,现金+1000", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._b700CorpSeedDone = true;
+          if (st.resources) st.resources.cash = (st.resources.cash || 0) + 1000;
+          if (typeof addSkillXp === "function") { try { addSkillXp("social", 6); } catch(e) {} }
+          if (typeof StateManager !== "undefined") StateManager.addMessage("🤝 '好的合伙人是成功的一半。' 社交XP+6,现金+¥1000。", "success");
+        }}
+      ],
+      text: function (st) {
+        if (!st) return null;
+        var hist = st.flags._eventHistory || [];
+        return "你的经历中藏着创业的灵感——'经历了" + hist.length + "次事件,每一次经历都可能成为创业的种子。'";
+      }
+    }
+  ];
+
+  for (var i = 0; i < EVENTS.length; i++) {
+    RANDOM_EVENTS.push(EVENTS[i]);
+  }
+})();
+
+;
 // ==== js/core/domain_b_linkage_r684.js ====
 /**
  * 域B(事件/叙事) 联动增强 R684
@@ -312191,12 +312278,10 @@ if (typeof window !== "undefined") {
 /**
  * 域B(事件/叙事) 联动增强 R700
  * 桥接：
- *   B→A  b700_event_data_wealth       事件数据财富 → 消费 state.flags._eventHistory,
- *     经历转化为数据资产
- *   B→E  b700_story_financial_lesson  故事财务教训 → 消费 state.flags+state.resources,
- *     经历塑造财富观
- *   B→G  b700_narrative_growth        叙事成长 → 消费 state.flags+state.player,
- *     故事让人成长(心理韧性)
+ *   B→G  b700_story_life_stage      故事人生阶段 → 消费 state.flags._eventHistory+state.player 数据,
+ *     叙事→"事件构成人生阶段"生命回响
+ *   B→H  b700_story_corp_seed       故事公司种子 → 消费 state.flags._eventHistory+state.corporate 数据,
+ *     叙事→"故事中的商机"公司回响
  */
 (function () {
   "use strict";
@@ -312204,158 +312289,68 @@ if (typeof window !== "undefined") {
   if (RANDOM_EVENTS._domainBLinkageR700Loaded) return;
   RANDOM_EVENTS._domainBLinkageR700Loaded = true;
 
-  function eventCount(st) {
-    return (st && st.flags && st.flags._eventHistory) ? st.flags._eventHistory.length : 0;
-  }
-
   var EVENTS = [
     {
-      id: "b700_event_data_wealth",
-      phase: "street",
-      _isChainEvent: false,
-      icon: "💎",
-      title: "经历是最宝贵的数据",
-      story: "你开始把经历当作财富",
-      triggers: { minDay: 120, interval: 150, maxRepeats: 2, excludeFlags: ["_b700DataCd"] },
+      id: "b700_story_life_stage", phase: "street", _isChainEvent: false, icon: "📖",
+      title: "事件构成人生阶段",
+      story: "回顾这些事件,你发现它们构成了你的人生舞台——{desc}",
+      triggers: { minDay: 150, interval: 250, maxRepeats: 2, excludeFlags: ["_b700StageCooldown"] },
       conditions: function (st) {
         if (st.gameOver) return false;
-        if (st.flags && st.flags._b700DataCd) return false;
-        return eventCount(st) >= 25 && st.player && st.player.day >= 120;
+        if (!st.flags || st.flags._b700StageCooldown) return false;
+        var hist = st.flags._eventHistory || [];
+        return hist.length >= 20;
       },
       choices: [
-        {
-          text: "📖 写回忆录",
-          hint: "心智+6,智力+2,置_b700Writer",
-          apply: function (st) {
-            if (!st) return;
-            st.flags = st.flags || {};
-            st.flags._b700DataCd = true;
-            st.flags._b700Writer = true;
-            if (st.player) {
-              st.player.mental = Math.min(100, (st.player.mental || 50) + 6);
-              st.player.intelligence = Math.min(100, (st.player.intelligence || 50) + 2);
-            }
-            if (typeof StateManager !== "undefined") {
-              StateManager.addMessage("📖 把经历写下来,就是最好的传承。心智+6,智力+2。", "success");
-            }
-          }
-        },
-        {
-          text: "🤫 记在心里",
-          hint: "心智+4,置_b700Keeper",
-          apply: function (st) {
-            if (!st) return;
-            st.flags = st.flags || {};
-            st.flags._b700DataCd = true;
-            st.flags._b700Keeper = true;
-            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 4);
-            if (typeof StateManager !== "undefined") {
-              StateManager.addMessage("🤫 有些事,记在心里就好。心智+4。", "info");
-            }
-          }
-        }
+        { text: "📝 总结阶段", hint: "心智+5,智力+3", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._b700StageCooldown = true;
+          if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 5);
+          if (st.player) st.player.intelligence = Math.min(100, (st.player.intelligence || 50) + 3);
+          if (typeof StateManager !== "undefined") StateManager.addMessage("📝 '每个阶段都有独特的意义。' 心智+5,智力+3。", "success");
+        }},
+        { text: "🎯 规划新阶段", hint: "管理XP+5,心智+4", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._b700StageCooldown = true;
+          if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 4);
+          if (typeof addSkillXp === "function") { try { addSkillXp("management", 5); } catch(e) {} }
+          if (typeof StateManager !== "undefined") StateManager.addMessage("🎯 '规划下一个阶段,让人生更精彩。' 管理XP+5,心智+4。", "success");
+        }}
       ],
       text: function (st) {
         if (!st) return null;
-        return "经历了" + eventCount(st) + "次事件——'每一段经历,都是人生数据库里珍贵的记录。'";
+        var hist = st.flags._eventHistory || [];
+        return "回顾这些事件,你发现它们构成了你的人生舞台——'经历了" + hist.length + "次事件,每一个事件都是人生舞台的一幕。'";
       }
     },
     {
-      id: "b700_story_financial_lesson",
-      phase: "street",
-      _isChainEvent: false,
-      icon: "💰",
-      title: "经历教会你的财富课",
-      story: "每一段经历都藏着财富教训",
-      triggers: { minDay: 100, interval: 120, maxRepeats: 2, excludeFlags: ["_b700FinanceCd"] },
+      id: "b700_story_corp_seed", phase: "street", _isChainEvent: false, icon: "🌱",
+      title: "故事中的商机",
+      story: "你的经历中藏着创业的灵感——{desc}",
+      triggers: { minDay: 200, interval: 300, maxRepeats: 1, excludeFlags: ["_b700CorpSeedDone"] },
       conditions: function (st) {
         if (st.gameOver) return false;
-        if (st.flags && st.flags._b700FinanceCd) return false;
-        return eventCount(st) >= 20 && st.player && st.player.day >= 100;
+        if (!st.flags || st.flags._b700CorpSeedDone) return false;
+        var hist = st.flags._eventHistory || [];
+        return hist.length >= 30 && !(st.corporate && st.corporate.active);
       },
       choices: [
-        {
-          text: "📊 总结规律",
-          hint: "会计XP+5,智力+3,置_b700Analyst",
-          apply: function (st) {
-            if (!st) return;
-            st.flags = st.flags || {};
-            st.flags._b700FinanceCd = true;
-            st.flags._b700Analyst = true;
-            if (st.player) st.player.intelligence = Math.min(100, (st.player.intelligence || 50) + 3);
-            if (typeof addSkillXp === "function") { try { addSkillXp("accounting", 5); } catch(e) {} }
-            if (typeof StateManager !== "undefined") {
-              StateManager.addMessage("📊 经历是最好的老师。会计XP+5,智力+3。", "success");
-            }
-          }
-        },
-        {
-          text: "💡 应用到投资",
-          hint: "管理XP+4,置_b700Apply",
-          apply: function (st) {
-            if (!st) return;
-            st.flags = st.flags || {};
-            st.flags._b700FinanceCd = true;
-            st.flags._b700Apply = true;
-            if (typeof addSkillXp === "function") { try { addSkillXp("management", 4); } catch(e) {} }
-            if (typeof StateManager !== "undefined") {
-              StateManager.addMessage("💡 把经历转化为投资智慧。管理XP+4。", "info");
-            }
-          }
-        }
+        { text: "💡 记录创业想法", hint: "心智+5,管理XP+4", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._b700CorpSeedDone = true;
+          st.flags._storyCorpSeedRecorded = true;
+          if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 5);
+          if (typeof addSkillXp === "function") { try { addSkillXp("management", 4); } catch(e) {} }
+          if (typeof StateManager !== "undefined") StateManager.addMessage("💡 '经历是最好的创业导师。' 心智+5,管理XP+4。", "success");
+        }},
+        { text: "🤝 找人合伙", hint: "社交XP+6,现金+1000", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._b700CorpSeedDone = true;
+          if (st.resources) st.resources.cash = (st.resources.cash || 0) + 1000;
+          if (typeof addSkillXp === "function") { try { addSkillXp("social", 6); } catch(e) {} }
+          if (typeof StateManager !== "undefined") StateManager.addMessage("🤝 '好的合伙人是成功的一半。' 社交XP+6,现金+¥1000。", "success");
+        }}
       ],
       text: function (st) {
         if (!st) return null;
-        return "那些赚过的钱、亏过的本、遇到的人——'每一段经历,都是免费的财富课。'";
-      }
-    },
-    {
-      id: "b700_narrative_growth",
-      phase: "street",
-      _isChainEvent: false,
-      icon: "🌱",
-      title: "故事让人成长",
-      story: "回顾过往,你发现自己变了",
-      triggers: { minDay: 150, interval: 180, maxRepeats: 2, excludeFlags: ["_b700GrowthCd"] },
-      conditions: function (st) {
-        if (st.gameOver) return false;
-        if (st.flags && st.flags._b700GrowthCd) return false;
-        return eventCount(st) >= 30 && st.player && st.player.day >= 150;
-      },
-      choices: [
-        {
-          text: "🌟 感恩经历",
-          hint: "心情+8,心智+4,置_b700Grateful",
-          apply: function (st) {
-            if (!st) return;
-            st.flags = st.flags || {};
-            st.flags._b700GrowthCd = true;
-            st.flags._b700Grateful = true;
-            if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 8);
-            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 4);
-            if (typeof StateManager !== "undefined") {
-              StateManager.addMessage("🌟 每一次跌倒,都是站起来的力量。心情+8,心智+4。", "success");
-            }
-          }
-        },
-        {
-          text: "🎯 继续前行",
-          hint: "智力+4,置_b700MoveOn",
-          apply: function (st) {
-            if (!st) return;
-            st.flags = st.flags || {};
-            st.flags._b700GrowthCd = true;
-            st.flags._b700MoveOn = true;
-            if (st.player) st.player.intelligence = Math.min(100, (st.player.intelligence || 50) + 4);
-            if (typeof StateManager !== "undefined") {
-              StateManager.addMessage("🎯 前方还有更多故事等着。智力+4。", "info");
-            }
-          }
-        }
-      ],
-      text: function (st) {
-        if (!st) return null;
-        return "从最初的无措,到现在的从容——'" + eventCount(st) + "次事件,把你锻造成了今天的自己。'";
+        var hist = st.flags._eventHistory || [];
+        return "你的经历中藏着创业的灵感——'经历了" + hist.length + "次事件,每一次经历都可能成为创业的种子。'";
       }
     }
   ];
@@ -317918,6 +317913,192 @@ if (typeof window !== "undefined") {
       text: function (st) {
         if (!st) return null;
         return "又一个职业周年纪念日——'回头看,每一步都算数;向前看,路还长。'";
+      }
+    }
+  ];
+
+  for (var i = 0; i < EVENTS.length; i++) {
+    RANDOM_EVENTS.push(EVENTS[i]);
+  }
+})();
+
+;
+// ==== js/core/domain_c_linkage_r701.js ====
+/**
+ * 域C(职业/成长) 联动增强 R701
+ * 桥接：
+ *   C→A  c701_skill_data_insight     技能数据洞察 → 消费 state.skills,
+ *     技能等级数据分析
+ *   C→E  c701_career_finance_bridge  职业财务桥梁 → 消费 state.employment+state.resources,
+ *     职业收入与财务管理
+ *   C→G  c701_growth_milestone       成长里程碑 → 消费 state.skills+state.player,
+ *     技能成长节点叙事
+ */
+(function () {
+  "use strict";
+  if (typeof RANDOM_EVENTS === "undefined" || !RANDOM_EVENTS) return;
+  if (RANDOM_EVENTS._domainCLinkageR701Loaded) return;
+  RANDOM_EVENTS._domainCLinkageR701Loaded = true;
+
+  function topSkill(st) {
+    if (!st || !st.skills) return null;
+    var best = null, bestLv = -1;
+    for (var k in st.skills) {
+      var s = st.skills[k];
+      if (s && typeof s.level === "number" && s.level > bestLv) {
+        bestLv = s.level; best = k;
+      }
+    }
+    return best;
+  }
+
+  var EVENTS = [
+    {
+      id: "c701_skill_data_insight",
+      phase: "street",
+      _isChainEvent: false,
+      icon: "🔬",
+      title: "技能数据洞察",
+      story: "你的技能数据藏着成长的规律",
+      triggers: { minDay: 70, interval: 90, maxRepeats: 3, excludeFlags: ["_c701InsightCd"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        if (st.flags && st.flags._c701InsightCd) return false;
+        return topSkill(st) && st.player && st.player.day >= 70;
+      },
+      choices: [
+        {
+          text: "📊 分析成长曲线",
+          hint: "智力+4,会计XP+4,置_c701Analyst",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._c701InsightCd = true;
+            st.flags._c701Analyst = true;
+            if (st.player) st.player.intelligence = Math.min(100, (st.player.intelligence || 50) + 4);
+            if (typeof addSkillXp === "function") { try { addSkillXp("accounting", 4); } catch(e) {} }
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("📊 数据揭示成长的规律。智力+4,会计XP+4。", "success");
+            }
+          }
+        },
+        {
+          text: "🎯 设定新目标",
+          hint: "管理XP+5,智力+2,置_c701Goal",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._c701InsightCd = true;
+            st.flags._c701Goal = true;
+            if (st.player) st.player.intelligence = Math.min(100, (st.player.intelligence || 50) + 2);
+            if (typeof addSkillXp === "function") { try { addSkillXp("management", 5); } catch(e) {} }
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("🎯 没有目标就没有方向。管理XP+5,智力+2。", "info");
+            }
+          }
+        }
+      ],
+      text: function (st) {
+        if (!st) return null;
+        return "技能'" + (topSkill(st) || "无") + "'的积累越来越快——'数据告诉我,坚持是有回报的。'";
+      }
+    },
+    {
+      id: "c701_career_finance_bridge",
+      phase: "street",
+      _isChainEvent: false,
+      icon: "🌉",
+      title: "职业与财务的桥梁",
+      story: "工作收入是财务自由的基础",
+      triggers: { minDay: 80, interval: 100, maxRepeats: 2, excludeFlags: ["_c701BridgeCd"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        if (st.flags && st.flags._c701BridgeCd) return false;
+        return st.employment && st.employment.currentJob && st.player && st.player.day >= 80;
+      },
+      choices: [
+        {
+          text: "💰 规划工资分配",
+          hint: "会计XP+5,心智+3,置_c701Planner",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._c701BridgeCd = true;
+            st.flags._c701Planner = true;
+            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 3);
+            if (typeof addSkillXp === "function") { try { addSkillXp("accounting", 5); } catch(e) {} }
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("💰 工资到账,先规划再花。会计XP+5,心智+3。", "success");
+            }
+          }
+        },
+        {
+          text: "🎁 犒劳自己",
+          hint: "心情+8,置_c701Treat",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._c701BridgeCd = true;
+            st.flags._c701Treat = true;
+            if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 8);
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("🎁 辛苦赚钱,也要懂得享受。心情+8。", "info");
+            }
+          }
+        }
+      ],
+      text: function (st) {
+        if (!st) return null;
+        return "工资到账——'工作不只是为了钱,但钱是工作的基础。'";
+      }
+    },
+    {
+      id: "c701_growth_milestone",
+      phase: "street",
+      _isChainEvent: false,
+      icon: "🏆",
+      title: "成长里程碑",
+      story: "技能提升到一个新阶段",
+      triggers: { minDay: 100, interval: 120, maxRepeats: 2, excludeFlags: ["_c701MsCd"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        if (st.flags && st.flags._c701MsCd) return false;
+        return st.skills && Object.keys(st.skills).length > 0 && st.player && st.player.day >= 100;
+      },
+      choices: [
+        {
+          text: "🎉 庆祝成就",
+          hint: "心情+10,置_c701Celebrate(峰终定律)",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._c701MsCd = true;
+            st.flags._c701Celebrate = true;
+            if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 10);
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("🎉 每一个里程碑都值得庆祝!心情+10。", "success");
+            }
+          }
+        },
+        {
+          text: "🚀 继续前进",
+          hint: "管理XP+4,智力+3,置_c701Forward",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._c701MsCd = true;
+            st.flags._c701Forward = true;
+            if (st.player) st.player.intelligence = Math.min(100, (st.player.intelligence || 50) + 3);
+            if (typeof addSkillXp === "function") { try { addSkillXp("management", 4); } catch(e) {} }
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("🚀 路还长,继续前进。管理XP+4,智力+3。", "info");
+            }
+          }
+        }
+      ],
+      text: function (st) {
+        if (!st) return null;
+        return "技能提升到新阶段——'本事长在身上,谁也拿不走。'";
       }
     }
   ];

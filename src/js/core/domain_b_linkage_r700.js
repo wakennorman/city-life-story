@@ -1,12 +1,10 @@
 /**
  * 域B(事件/叙事) 联动增强 R700
  * 桥接：
- *   B→A  b700_event_data_wealth       事件数据财富 → 消费 state.flags._eventHistory,
- *     经历转化为数据资产
- *   B→E  b700_story_financial_lesson  故事财务教训 → 消费 state.flags+state.resources,
- *     经历塑造财富观
- *   B→G  b700_narrative_growth        叙事成长 → 消费 state.flags+state.player,
- *     故事让人成长(心理韧性)
+ *   B→G  b700_story_life_stage      故事人生阶段 → 消费 state.flags._eventHistory+state.player 数据,
+ *     叙事→"事件构成人生阶段"生命回响
+ *   B→H  b700_story_corp_seed       故事公司种子 → 消费 state.flags._eventHistory+state.corporate 数据,
+ *     叙事→"故事中的商机"公司回响
  */
 (function () {
   "use strict";
@@ -14,158 +12,68 @@
   if (RANDOM_EVENTS._domainBLinkageR700Loaded) return;
   RANDOM_EVENTS._domainBLinkageR700Loaded = true;
 
-  function eventCount(st) {
-    return (st && st.flags && st.flags._eventHistory) ? st.flags._eventHistory.length : 0;
-  }
-
   var EVENTS = [
     {
-      id: "b700_event_data_wealth",
-      phase: "street",
-      _isChainEvent: false,
-      icon: "💎",
-      title: "经历是最宝贵的数据",
-      story: "你开始把经历当作财富",
-      triggers: { minDay: 120, interval: 150, maxRepeats: 2, excludeFlags: ["_b700DataCd"] },
+      id: "b700_story_life_stage", phase: "street", _isChainEvent: false, icon: "📖",
+      title: "事件构成人生阶段",
+      story: "回顾这些事件,你发现它们构成了你的人生舞台——{desc}",
+      triggers: { minDay: 150, interval: 250, maxRepeats: 2, excludeFlags: ["_b700StageCooldown"] },
       conditions: function (st) {
         if (st.gameOver) return false;
-        if (st.flags && st.flags._b700DataCd) return false;
-        return eventCount(st) >= 25 && st.player && st.player.day >= 120;
+        if (!st.flags || st.flags._b700StageCooldown) return false;
+        var hist = st.flags._eventHistory || [];
+        return hist.length >= 20;
       },
       choices: [
-        {
-          text: "📖 写回忆录",
-          hint: "心智+6,智力+2,置_b700Writer",
-          apply: function (st) {
-            if (!st) return;
-            st.flags = st.flags || {};
-            st.flags._b700DataCd = true;
-            st.flags._b700Writer = true;
-            if (st.player) {
-              st.player.mental = Math.min(100, (st.player.mental || 50) + 6);
-              st.player.intelligence = Math.min(100, (st.player.intelligence || 50) + 2);
-            }
-            if (typeof StateManager !== "undefined") {
-              StateManager.addMessage("📖 把经历写下来,就是最好的传承。心智+6,智力+2。", "success");
-            }
-          }
-        },
-        {
-          text: "🤫 记在心里",
-          hint: "心智+4,置_b700Keeper",
-          apply: function (st) {
-            if (!st) return;
-            st.flags = st.flags || {};
-            st.flags._b700DataCd = true;
-            st.flags._b700Keeper = true;
-            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 4);
-            if (typeof StateManager !== "undefined") {
-              StateManager.addMessage("🤫 有些事,记在心里就好。心智+4。", "info");
-            }
-          }
-        }
+        { text: "📝 总结阶段", hint: "心智+5,智力+3", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._b700StageCooldown = true;
+          if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 5);
+          if (st.player) st.player.intelligence = Math.min(100, (st.player.intelligence || 50) + 3);
+          if (typeof StateManager !== "undefined") StateManager.addMessage("📝 '每个阶段都有独特的意义。' 心智+5,智力+3。", "success");
+        }},
+        { text: "🎯 规划新阶段", hint: "管理XP+5,心智+4", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._b700StageCooldown = true;
+          if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 4);
+          if (typeof addSkillXp === "function") { try { addSkillXp("management", 5); } catch(e) {} }
+          if (typeof StateManager !== "undefined") StateManager.addMessage("🎯 '规划下一个阶段,让人生更精彩。' 管理XP+5,心智+4。", "success");
+        }}
       ],
       text: function (st) {
         if (!st) return null;
-        return "经历了" + eventCount(st) + "次事件——'每一段经历,都是人生数据库里珍贵的记录。'";
+        var hist = st.flags._eventHistory || [];
+        return "回顾这些事件,你发现它们构成了你的人生舞台——'经历了" + hist.length + "次事件,每一个事件都是人生舞台的一幕。'";
       }
     },
     {
-      id: "b700_story_financial_lesson",
-      phase: "street",
-      _isChainEvent: false,
-      icon: "💰",
-      title: "经历教会你的财富课",
-      story: "每一段经历都藏着财富教训",
-      triggers: { minDay: 100, interval: 120, maxRepeats: 2, excludeFlags: ["_b700FinanceCd"] },
+      id: "b700_story_corp_seed", phase: "street", _isChainEvent: false, icon: "🌱",
+      title: "故事中的商机",
+      story: "你的经历中藏着创业的灵感——{desc}",
+      triggers: { minDay: 200, interval: 300, maxRepeats: 1, excludeFlags: ["_b700CorpSeedDone"] },
       conditions: function (st) {
         if (st.gameOver) return false;
-        if (st.flags && st.flags._b700FinanceCd) return false;
-        return eventCount(st) >= 20 && st.player && st.player.day >= 100;
+        if (!st.flags || st.flags._b700CorpSeedDone) return false;
+        var hist = st.flags._eventHistory || [];
+        return hist.length >= 30 && !(st.corporate && st.corporate.active);
       },
       choices: [
-        {
-          text: "📊 总结规律",
-          hint: "会计XP+5,智力+3,置_b700Analyst",
-          apply: function (st) {
-            if (!st) return;
-            st.flags = st.flags || {};
-            st.flags._b700FinanceCd = true;
-            st.flags._b700Analyst = true;
-            if (st.player) st.player.intelligence = Math.min(100, (st.player.intelligence || 50) + 3);
-            if (typeof addSkillXp === "function") { try { addSkillXp("accounting", 5); } catch(e) {} }
-            if (typeof StateManager !== "undefined") {
-              StateManager.addMessage("📊 经历是最好的老师。会计XP+5,智力+3。", "success");
-            }
-          }
-        },
-        {
-          text: "💡 应用到投资",
-          hint: "管理XP+4,置_b700Apply",
-          apply: function (st) {
-            if (!st) return;
-            st.flags = st.flags || {};
-            st.flags._b700FinanceCd = true;
-            st.flags._b700Apply = true;
-            if (typeof addSkillXp === "function") { try { addSkillXp("management", 4); } catch(e) {} }
-            if (typeof StateManager !== "undefined") {
-              StateManager.addMessage("💡 把经历转化为投资智慧。管理XP+4。", "info");
-            }
-          }
-        }
+        { text: "💡 记录创业想法", hint: "心智+5,管理XP+4", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._b700CorpSeedDone = true;
+          st.flags._storyCorpSeedRecorded = true;
+          if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 5);
+          if (typeof addSkillXp === "function") { try { addSkillXp("management", 4); } catch(e) {} }
+          if (typeof StateManager !== "undefined") StateManager.addMessage("💡 '经历是最好的创业导师。' 心智+5,管理XP+4。", "success");
+        }},
+        { text: "🤝 找人合伙", hint: "社交XP+6,现金+1000", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._b700CorpSeedDone = true;
+          if (st.resources) st.resources.cash = (st.resources.cash || 0) + 1000;
+          if (typeof addSkillXp === "function") { try { addSkillXp("social", 6); } catch(e) {} }
+          if (typeof StateManager !== "undefined") StateManager.addMessage("🤝 '好的合伙人是成功的一半。' 社交XP+6,现金+¥1000。", "success");
+        }}
       ],
       text: function (st) {
         if (!st) return null;
-        return "那些赚过的钱、亏过的本、遇到的人——'每一段经历,都是免费的财富课。'";
-      }
-    },
-    {
-      id: "b700_narrative_growth",
-      phase: "street",
-      _isChainEvent: false,
-      icon: "🌱",
-      title: "故事让人成长",
-      story: "回顾过往,你发现自己变了",
-      triggers: { minDay: 150, interval: 180, maxRepeats: 2, excludeFlags: ["_b700GrowthCd"] },
-      conditions: function (st) {
-        if (st.gameOver) return false;
-        if (st.flags && st.flags._b700GrowthCd) return false;
-        return eventCount(st) >= 30 && st.player && st.player.day >= 150;
-      },
-      choices: [
-        {
-          text: "🌟 感恩经历",
-          hint: "心情+8,心智+4,置_b700Grateful",
-          apply: function (st) {
-            if (!st) return;
-            st.flags = st.flags || {};
-            st.flags._b700GrowthCd = true;
-            st.flags._b700Grateful = true;
-            if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 8);
-            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 4);
-            if (typeof StateManager !== "undefined") {
-              StateManager.addMessage("🌟 每一次跌倒,都是站起来的力量。心情+8,心智+4。", "success");
-            }
-          }
-        },
-        {
-          text: "🎯 继续前行",
-          hint: "智力+4,置_b700MoveOn",
-          apply: function (st) {
-            if (!st) return;
-            st.flags = st.flags || {};
-            st.flags._b700GrowthCd = true;
-            st.flags._b700MoveOn = true;
-            if (st.player) st.player.intelligence = Math.min(100, (st.player.intelligence || 50) + 4);
-            if (typeof StateManager !== "undefined") {
-              StateManager.addMessage("🎯 前方还有更多故事等着。智力+4。", "info");
-            }
-          }
-        }
-      ],
-      text: function (st) {
-        if (!st) return null;
-        return "从最初的无措,到现在的从容——'" + eventCount(st) + "次事件,把你锻造成了今天的自己。'";
+        var hist = st.flags._eventHistory || [];
+        return "你的经历中藏着创业的灵感——'经历了" + hist.length + "次事件,每一次经历都可能成为创业的种子。'";
       }
     }
   ];
