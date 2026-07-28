@@ -35,7 +35,7 @@
       icon: "📋",
       title: "职场履历",
       triggers: { minDay: 10 },
-      story: function (st) {
+      text: function (st) {
         var career = st.career || {};
         var job = career.currentJob;
         var history = career.history || [];
@@ -86,7 +86,7 @@
       icon: "🏆",
       title: "同行认可",
       triggers: { minDay: 20 },
-      story: function (st) {
+      text: function (st) {
         var npcs = metNpcsR635(st);
         if (npcs.length === 0) return "你还没有结识什么同行朋友。多参加行业活动，认识一些志同道合的人。";
         if (!st.career || !st.career.currentJob) {
@@ -134,7 +134,7 @@
       icon: "🚀",
       title: "创业种子",
       triggers: { minDay: 30 },
-      story: function (st) {
+      text: function (st) {
         var career = st.career || {};
         var job = career.currentJob;
         var cap = (typeof ensureCareerCapital === "function") ? ensureCareerCapital(st) : null;

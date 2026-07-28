@@ -53,7 +53,7 @@
       icon: "🏢",
       title: "职场积累",
       minDay: 60,
-      story: function (st) {
+      text: function (st) {
         var pathName = _pathNameR620(st);
         var totalSkill = _totalSkillLevelR620(st);
         var cap = (typeof ensureCareerCapital === "function") ? ensureCareerCapital(st) : null;
@@ -99,7 +99,7 @@
       icon: "🎯",
       title: "职业里程碑",
       minDay: 7,
-      story: function (st) {
+      text: function (st) {
         if (!st.career || !st.career.currentJob) return "你还没有固定工作，找一份工作开始你的职业之旅吧。";
         var wd = st.career.currentJob.workDays || 0;
         var pathName = _pathNameR620(st);
@@ -156,7 +156,7 @@
       icon: "🤝",
       title: "职场社交圈",
       minDay: 1,
-      story: function (st) {
+      text: function (st) {
         var npcs = _metNpcsR620(st);
         if (npcs.length === 0) return "你还没有结识任何人，多出去走走认识些朋友吧。";
         if (!st.career || !st.career.currentJob) return "你还没有固定工作，找到工作后，朋友们会为你高兴的。";

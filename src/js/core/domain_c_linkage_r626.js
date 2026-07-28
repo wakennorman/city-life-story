@@ -25,7 +25,7 @@
       icon: "👥",
       title: "同事圈",
       triggers: { minDay: 5 },
-      story: function (st) {
+      text: function (st) {
         var net = st.corporate && st.corporate.colleagues && st.corporate.colleagues.network;
         if (!net || net.length === 0) {
           return "你目前还没有固定工作或同事圈。上班后会和同事建立联系，这些人脉对你的职业发展很重要。";
@@ -78,7 +78,7 @@
       icon: "💡",
       title: "技能变现",
       triggers: { minDay: 15 },
-      story: function (st) {
+      text: function (st) {
         var skills = st.skills || {};
         var topSkill = null;
         var topLevel = 0;
@@ -145,7 +145,7 @@
       icon: "⚠️",
       title: "健康预警",
       triggers: { minDay: 20 },
-      story: function (st) {
+      text: function (st) {
         if (!st.career || !st.career.currentJob) {
           return "你目前没有固定工作，自由度较高，注意保持作息规律就好。";
         }
