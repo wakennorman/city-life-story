@@ -543,3 +543,10 @@
 - 验证：node --check 7文件全过；MC 6×400d EXIT=0·0代码异常·前7天死亡率全0.0%（balanced/corporate 66.7%<80% 为既有RNG平衡阈值非回归；RSS timeout=离线新闻回退）。
 - 提交 2 笔：c5ce0269(fix 域G 重建dist闭合r599悬空+账本) + 9b4705bc(chore 回填 pushStatus=PUSHED)，均 push origin main 成功。last_known_head 同步新 HEAD 过 pre-commit 漂移检查。
 - recency 基准(R599后)：H592<A593<B594<C595<D596<E597<F598<G600 → **下轮 DOMAIN_H（r592 全局最薄弱）**。开轮必 git log 重算真实 recency。
+
+## 2026-07-28 12:50 R621 域E 经济/投资 — 完成已push
+- recency: E最陈旧(r598)→R621。A类1处跨文件(r596 strength假键→image.fitness)+B类1处(investFreq注释语义)。
+- 3联动 domain_e_linkage_r621.js: investFreq三大维度(深度/广度/总量)全库首事件消费 E→D/C/G。
+- MC 10x500d: 0代码异常,前7天死亡0%(存活<80%为既有RNG阈值)。构建12277.1KB flag=2。
+- 并行协同: 源码+dist+账本被并行集成提交5c6517f6/40006240扫入,本窗口收尾提交d8042961(loop-state PUSHED)。HEAD==origin/main。
+- 教训: 悬空对账须扫core+data双目录(js/data/下11个domain文件真实存在,险误报)。下轮D(597最小,避让并行在途R622域G)。
