@@ -42,7 +42,7 @@
       text: function (st) {
         if (!st || !st.player) return null;
         var day = st.player.day || 0;
-        return "手机弹出"第" + day + "天回忆"——你第一天来到这座城市的照片。'时间过得真快,已经在这里生活了这么久。' 你感慨万千。";
+        return "手机弹出「第" + day + "天回忆」——你第一天来到这座城市的照片。'时间过得真快,已经在这里生活了这么久。' 你感慨万千。";
       }
     },
 
