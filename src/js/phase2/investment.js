@@ -5100,17 +5100,35 @@ function getInvestmentPortfolioSummary(state) {
     totalValue: Math.round(_stockVal + _btcVal + _propVal),
   };
 }
-// [R125] 域E 联动增强
-// [R157] 域E 联动增强
-// [R189] 域E 联动增强
-// [R213] 域E 联动增强
-// [R237] 域E 联动增强
-// [R261] 域E
-// [R285] 域E
-// [R333] 域E
-// [R357] 域E
-// [R381] 域E
-// [R405] 域E
+// [R718 域E 联动增强 E→G]: 投资压力健康影响 — 大额亏损影响心情和健康
+function applyInvestmentStressEffect(state, dailyPL) {
+  if (!state || !state.needs || typeof dailyPL !== "number") return;
+  if (dailyPL < -5000) {
+    var stressLevel = Math.min(10, Math.floor(Math.abs(dailyPL) / 5000));
+    state.needs.happiness = Math.max(0, (state.needs.happiness || 50) - stressLevel);
+    if (state.status) {
+      state.status.health = Math.max(0, (state.status.health || 100) - Math.floor(stressLevel / 3));
+    }
+  }
+  if (dailyPL > 10000) {
+    var boostLevel = Math.min(5, Math.floor(dailyPL / 10000));
+    state.needs.happiness = Math.min(100, (state.needs.happiness || 50) + boostLevel);
+  }
+}
+
+// [R718 域E 联动增强 E→B]: 投资故事素材 — 基于投资表现生成市场叙事
+function getInvestmentStory(state) {
+  if (!state || !state.investment) return null;
+  var totalInvested = state.investment._totalInvested || 0;
+  var totalReturn = state.investment._totalReturn || 0;
+  if (totalInvested <= 0) return null;
+  var roi = (totalReturn - totalInvested) / totalInvested;
+  if (roi > 2) return { type: "investment_genius", title: "投资天才", text: "你在市场上的表现令人惊叹，收益率超过了200%！" };
+  if (roi > 0.5) return { type: "investment_steady", title: "稳健收益", text: "你的投资组合表现稳健，收益率超过50%。" };
+  if (roi < -0.5) return { type: "investment_loss", title: "投资亏损", text: "市场波动让你损失惨重，累计亏损超过50%。" };
+  if (roi < -0.8) return { type: "investment_disaster", title: "投资惨败", text: "你的投资几乎血本无归，是时候重新评估策略了。" };
+  return null;
+}
 // [R429] 域E
 // [R453] 域E
 // [R477] 域E
