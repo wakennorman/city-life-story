@@ -183789,12 +183789,23 @@ var NEWS_EVENTS = [
         apply: (st) => {
           _guardNeedsB(st).needs.fatigue = Math.min(100, _guardNeedsB(st).needs.fatigue + 5);
           _guardNeedsB(st).needs.happiness = Math.min(100, _guardNeedsB(st).needs.happiness + 5);
-          // 标记今日效率加成
-          st.flags._goodSleepToday = true;
-          StateManager.addMessage(
-            "💪 趁着精神好去工作，今天效率不错！",
-            "success",
-          );
+          // [全系统自洽修复] 域B 修复:_goodSleepToday hint承诺"效率加倍"但全库零读者零兑现,且"今日"flag永不重置
+          st.flags._goodSleepToday = true; // 兼容保留
+          st.flags._goodSleepDay = (st.player && st.player.day) || 0; // 当日语义可判断过期
+          if (st.career && st.career.currentJob && st.resources) {
+            var effBonusB658 = Random.int(30, 80);
+            st.resources.cash = (st.resources.cash || 0) + effBonusB658;
+            st.resources.totalEarned = (st.resources.totalEarned || 0) + effBonusB658;
+            StateManager.addMessage(
+              "💪 趁着精神好去工作，效率拉满，额外多赚了¥" + effBonusB658 + "！",
+              "success",
+            );
+          } else {
+            StateManager.addMessage(
+              "💪 趁着精神好，把手头的事都处理了，状态极佳！",
+              "success",
+            );
+          }
         },
       },
       {
@@ -307859,6 +307870,185 @@ if (typeof window !== "undefined") {
 })();
 
 ;
+// ==== js/core/domain_b_linkage_r658.js ====
+/**
+ * 域B(事件/叙事) 联动增强 R658
+ * 桥接：
+ *   B→D  b658_shared_experience  共同经历叙事 → 消费 state.flags+state.relationships 数据,
+ *     叙事→"一起经历过的事"社交回响
+ *   B→E  b658_economic_rumor  经济传言 → 消费 state.flags+state.resources 数据,
+ *     叙事→"街边经济学"经济回响
+ *   B→G  b658_life_reflection  人生反思 → 消费 state.flags+state.player 数据,
+ *     叙事→"停下来想一想"生命回响
+ */
+(function () {
+  "use strict";
+  if (typeof RANDOM_EVENTS === "undefined" || !RANDOM_EVENTS) return;
+  if (RANDOM_EVENTS._domainBLinkageR658Loaded) return;
+  RANDOM_EVENTS._domainBLinkageR658Loaded = true;
+
+  // 辅助：获取已结识NPC列表
+  function metNpcsR658(st) {
+    var out = [];
+    var rels = st.relationships || {};
+    for (var k in rels) {
+      if (rels[k] && rels[k].met) out.push({ id: k, affinity: rels[k].affinity || 0 });
+    }
+    return out;
+  }
+
+  var EVENTS = [
+    // ================================================================
+    // B→D: 共同经历叙事 — 和NPC的共同回忆
+    // ================================================================
+    {
+      id: "b658_shared_experience",
+      phase: "street",
+      _isChainEvent: false,
+      icon: "💭",
+      title: "共同回忆",
+      triggers: { minDay: 10 },
+      story: function (st) {
+        var npcs = metNpcsR658(st);
+        if (npcs.length === 0) return "你还没有结识朋友，一个人经历的事虽然多，但没有人分享总觉得少了点什么。";
+        var day = st.player.day || 0;
+        var recentEvents = st.flags && st.flags._eventsExperienced || 0;
+
+        if (npcs.length >= 2 && recentEvents > 5) {
+          var highAff = 0;
+          for (var i = 0; i < npcs.length; i++) { if (npcs[i].affinity >= 40) highAff++; }
+          return "你经历了" + recentEvents + "件事，身边有" + npcs.length + "位朋友（" + highAff + "位关系不错）。" +
+            "有些事你和朋友们一起经历过——那些共同的回忆，是友谊最牢固的纽带。" +
+            "偶尔和朋友们聊聊过去的事，能让人感到温暖和力量。";
+        }
+        if (npcs.length >= 1) {
+          return "你最近经历了一些事，和朋友们分享后，发现大家都有类似的感受。" +
+            "共同的经历让友谊更加深厚——无论是开心的事还是困难的事，有人分享总是好的。";
+        }
+        return "你经历了一些事，但还没来得及和朋友们分享。约个时间聊聊近况吧。";
+      },
+      choices: [
+        { text: "💬 分享经历", apply: function(st) {
+          if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 5);
+          StateManager.addMessage("💬 和朋友们分享了最近的经历，心情+5", "success");
+        }},
+        { text: "📝 记在心里", apply: function(st) {
+          StateManager.addMessage("📝 把这些经历记在心里，都是人生的财富", "info");
+        }},
+      ],
+      conditions: function (st) {
+        var npcs = metNpcsR658(st);
+        return npcs.length >= 1 && (st.flags && st.flags._eventsExperienced > 2);
+      },
+      weight: 1,
+    },
+
+    // ================================================================
+    // B→E: 经济传言 — 街头巷尾的经济消息
+    // ================================================================
+    {
+      id: "b658_economic_rumor",
+      phase: "street",
+      _isChainEvent: false,
+      icon: "🗣️",
+      title: "街边经济学",
+      triggers: { minDay: 14 },
+      story: function (st) {
+        var day = st.player.day || 0;
+        var cash = st.resources && st.resources.cash || 0;
+
+        if (day > 60) {
+          return "你在城市里生活了" + day + "天，渐渐学会了从街边消息中捕捉经济信号。" +
+            "菜市场的大妈知道哪家菜便宜，出租司机知道哪个片区在开发，摆摊的大哥知道什么货好卖。" +
+            "这些看似不起眼的街边消息，其实都是最接地气的经济情报。";
+        }
+        if (cash >= 5000) {
+          return "你手头有一些资金（¥" + cash.toLocaleString() + "），最近听到一些街边传言——" +
+            "有人说城东要建新商场，有人说某样东西最近缺货涨价了。" +
+            "这些传言真真假假，但有时候，最值钱的信息就藏在最不起眼的闲聊里。";
+        }
+        return "街头巷尾总是传着各种消息——「谁谁谁做生意赚了钱」、「最近什么东西涨价了」。" +
+          "虽然不一定每条都靠谱，但多听听总没错，说不定哪天就能用上。";
+      },
+      choices: [
+        { text: "👂 多听多看", apply: function(st) {
+          st.flags = st.flags || {};
+          st.flags._b658_econRumor = (st.flags._b658_econRumor || 0) + 1;
+          if (st.skills && st.skills.accounting) {
+            st.skills.accounting.xp = (st.skills.accounting.xp || 0) + 3;
+          }
+          StateManager.addMessage("👂 留意街边消息，会计经验+3", "success");
+        }},
+        { text: "📊 理性分析", apply: function(st) {
+          StateManager.addMessage("📊 传言不可尽信，你决定用数据和分析来验证", "info");
+        }},
+      ],
+      conditions: function (st) {
+        return (st.player.day || 0) >= 7;
+      },
+      weight: 1,
+    },
+
+    // ================================================================
+    // B→G: 人生反思 — 阶段性回顾
+    // ================================================================
+    {
+      id: "b658_life_reflection",
+      phase: "street",
+      _isChainEvent: false,
+      icon: "🪷",
+      title: "人生反思",
+      triggers: { minDay: 20 },
+      story: function (st) {
+        var day = st.player.day || 0;
+        var totalEarned = st.resources && st.resources.totalEarned || 0;
+        var skills = st.skills || {};
+        var skillCount = 0;
+        for (var k in skills) { if (skills[k] && skills[k].level > 0) skillCount++; }
+        var npcs = metNpcsR658(st);
+        var milestone = day % 30 === 0 ? "（满月）" : day % 100 === 0 ? "（百日）" : "";
+
+        if (day >= 90) {
+          return "你在这座城市已经生活了" + day + "天" + milestone + "。" +
+            "赚了¥" + totalEarned.toLocaleString() + "，学了" + skillCount + "项技能，认识了" + npcs.length + "位朋友。" +
+            "回首这段日子，有苦有甜，但每一步都算数。" +
+            "古人说「三十而立」——在这个城市里,你正在一步步立起来。";
+        }
+        if (day >= 30) {
+          return "你在这座城市已经生活了" + day + "天" + milestone + "。" +
+            "从最初的陌生和不安，到现在渐渐找到了自己的节奏。" +
+            "这一个月里，你赚了¥" + totalEarned.toLocaleString() + "，学了" + skillCount + "项技能。" +
+            "继续努力，未来会更好。";
+        }
+        return "你来到这座城市已经" + day + "天了。" +
+          "虽然时间不长，但每一天都在适应和成长。" +
+          "保持积极的心态，脚踏实地，你会在这里找到属于自己的位置。";
+      },
+      choices: [
+        { text: "🧘 静心冥想", apply: function(st) {
+          if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 3);
+          if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 3);
+          StateManager.addMessage("🧘 静下心来反思人生，心智+3，心情+3", "success");
+        }},
+        { text: "📝 写日记", apply: function(st) {
+          st.flags = st.flags || {};
+          st.flags._b658_journal = (st.flags._b658_journal || 0) + 1;
+          StateManager.addMessage("📝 把这段日子的感悟写进了日记", "info");
+        }},
+      ],
+      conditions: function (st) {
+        return st.player && (st.player.day || 0) > 0;
+      },
+      weight: 1,
+    },
+  ];
+
+  // 注册事件
+  for (var i = 0; i < EVENTS.length; i++) {
+    RANDOM_EVENTS.push(EVENTS[i]);
+  }
+})();
+;
 // ==== js/core/domain_a_linkage_r650.js ====
 /**
  * 域A(数据/数值平衡) 联动增强 R650
@@ -308330,6 +308520,155 @@ if (typeof window !== "undefined") {
   }
 })();
 
+;
+// ==== js/core/domain_b_linkage_r651.js ====
+/**
+ * 域B(事件/叙事) 联动增强 R651
+ * 桥接：
+ *   B→D  b651_event_friend_bond  事件友谊纽带 → 消费 state.flags+state.relationships 数据,
+ *     事件→"共同经历加深友谊"的社交回响
+ *   B→E  b651_news_economic_awareness  新闻经济意识 → 消费 state.activeNews+state.resources 数据,
+ *     事件→"新闻塑造经济观念"的经济回响
+ *   B→G  b651_weather_story_mood  天气故事心情 → 消费 state.player.day+state.needs 数据,
+ *     事件→"天气变化影响心情"的生命回响
+ */
+(function () {
+  "use strict";
+  if (typeof RANDOM_EVENTS === "undefined" || !RANDOM_EVENTS) return;
+  if (RANDOM_EVENTS._domainBLinkageR651Loaded) return;
+  RANDOM_EVENTS._domainBLinkageR651Loaded = true;
+
+  function metNpcsR651(st, minAff) {
+    var out = [];
+    var rels = st.relationships || {};
+    minAff = minAff || 0;
+    for (var k in rels) {
+      if (rels[k] && rels[k].met && (rels[k].affinity || 0) >= minAff) {
+        out.push({ id: k, affinity: rels[k].affinity || 0, name: (typeof getNpcDisplayName === "function") ? getNpcDisplayName(k) : k });
+      }
+    }
+    return out;
+  }
+
+  function getSeasonR651(st) {
+    var day = (st.player && st.player.day) || 1;
+    var doy = ((day - 1) % 365) + 1;
+    if (doy <= 90) return { name: "spring", label: "春天", icon: "🌸" };
+    if (doy <= 181) return { name: "summer", label: "夏天", icon: "🌻" };
+    if (doy <= 273) return { name: "autumn", label: "秋天", icon: "🍂" };
+    return { name: "winter", label: "冬天", icon: "❄️" };
+  }
+
+  var EVENTS = [
+    // ====== B→D: 事件友谊纽带 ======
+    {
+      id: "b651_event_friend_bond", phase: "street", _isChainEvent: false, icon: "🤝",
+      title: "共同经历",
+      story: "你和朋友聊起了一起经历过的那些事——{desc}",
+      triggers: { minDay: 20, interval: 60, maxRepeats: 8, excludeFlags: ["_b651FriendBondCooldown"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        if (!st.flags || st.flags._b651FriendBondCooldown) return false;
+        return metNpcsR651(st, 30).length >= 1;
+      },
+      choices: [
+        { text: "🤗 一起回忆", hint: "好感+8,心情+5", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._b651FriendBondCooldown = true;
+          if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 5);
+          var met = metNpcsR651(st, 30);
+          if (met.length > 0 && typeof applyAffinityChange === "function") {
+            try { applyAffinityChange(st, met[0].id, 8, "共同回忆"); } catch(e) {}
+          }
+          if (typeof StateManager !== "undefined") StateManager.addMessage("🤝 '还记得那次咱们一起...' 你们笑作一团。共同的回忆,是友谊最好的粘合剂。好感+8,心情+5。", "success");
+        }},
+        { text: "🍻 喝一杯", hint: "好感+5,心情+5,现金-200", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._b651FriendBondCooldown = true;
+          if (st.resources) st.resources.cash = Math.max(0, (st.resources.cash || 0) - 200);
+          if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 5);
+          var met = metNpcsR651(st, 30);
+          if (met.length > 0 && typeof applyAffinityChange === "function") {
+            try { applyAffinityChange(st, met[0].id, 5, "小酌叙旧"); } catch(e) {}
+          }
+          if (typeof StateManager !== "undefined") StateManager.addMessage("🤝 '来,走一个!' 一杯酒下肚,话匣子就打开了。好感+5,心情+5,现金-200。", "success");
+        }}
+      ],
+      text: function (st) {
+        if (!st) return null;
+        var met = metNpcsR651(st, 30);
+        var name = met.length > 0 ? met[0].name : "朋友";
+        return name + "突然说:'还记得咱们刚认识那会儿吗?' 你笑了笑,那段日子虽然苦,但现在想起来全是美好的回忆。";
+      }
+    },
+
+    // ====== B→E: 新闻经济意识 ======
+    {
+      id: "b651_news_economic_awareness", phase: "street", _isChainEvent: false, icon: "📰",
+      title: "新闻启发",
+      story: "一条经济新闻让你有了新的想法——{desc}",
+      triggers: { minDay: 20, interval: 60, maxRepeats: 10, excludeFlags: ["_b651NewsEconomicCooldown"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        if (!st.flags || st.flags._b651NewsEconomicCooldown) return false;
+        return true;
+      },
+      choices: [
+        { text: "💡 学点经济知识", hint: "智力+5,心智+2", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._b651NewsEconomicCooldown = true;
+          if (st.player) st.player.intelligence = Math.min(100, (st.player.intelligence || 50) + 5);
+          if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 2);
+          if (typeof StateManager !== "undefined") StateManager.addMessage("📰 '经济学的第一课:供需决定价格。' 你开始认真研究经济知识。智力+5,心智+2。", "success");
+        }},
+        { text: "📈 关注市场动态", hint: "智力+3,市场洞察+1", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._b651NewsEconomicCooldown = true;
+          if (st.player) st.player.intelligence = Math.min(100, (st.player.intelligence || 50) + 3);
+          if (st.flags) st.flags._marketAwareness = (st.flags._marketAwareness || 0) + 1;
+          if (typeof StateManager !== "undefined") StateManager.addMessage("📰 你开始每天关注市场动态。'信息就是金钱,这句话一点没错。' 智力+3,市场洞察+1。", "success");
+        }}
+      ],
+      text: function (st) {
+        if (!st) return null;
+        return "你看到一条新闻:'央行宣布降息,房贷利率创历史新低。' 你心里一动:'这对我的财务状况会有什么影响?'";
+      }
+    },
+
+    // ====== B→G: 天气故事心情 ======
+    {
+      id: "b651_weather_story_mood", phase: "street", _isChainEvent: false, icon: "🌤️",
+      title: "天气心情",
+      story: "天气的变化,让人的心情也跟着起伏——{desc}",
+      triggers: { minDay: 10, interval: 30, maxRepeats: 15, excludeFlags: ["_b651WeatherMoodCooldown"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        if (!st.flags || st.flags._b651WeatherMoodCooldown) return false;
+        return true;
+      },
+      choices: [
+        { text: "🚶 出去走走感受天气", hint: "心情+5,健康+2", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._b651WeatherMoodCooldown = true;
+          if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 5);
+          if (st.status) st.status.health = Math.min(100, (st.status.health || 100) + 2);
+          var season = getSeasonR651(st);
+          if (typeof StateManager !== "undefined") StateManager.addMessage("🌤️ " + season.icon + " " + season.label + "的街上,微风拂面。你深吸一口气,感觉整个人都活过来了。心情+5,健康+2。", "success");
+        }},
+        { text: "☕ 窝在家里喝杯热饮", hint: "心情+5,疲劳-5", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._b651WeatherMoodCooldown = true;
+          if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 5);
+          if (st.needs) st.needs.fatigue = Math.max(0, (st.needs.fatigue || 0) - 5);
+          if (typeof StateManager !== "undefined") StateManager.addMessage("🌤️ 你泡了一杯热茶,窝在窗边看外面的风景。'这样的日子,也挺好。' 心情+5,疲劳-5。", "success");
+        }}
+      ],
+      text: function (st) {
+        if (!st) return null;
+        var season = getSeasonR651(st);
+        return season.icon + " " + season.label + "的天气,总是让人思绪万千。'阳光好的时候,觉得世界充满希望;阴天的时候,又觉得孤独。' 天气和心情,原来这么像。";
+      }
+    }
+  ];
+
+  for (var i = 0; i < EVENTS.length; i++) {
+    RANDOM_EVENTS.push(EVENTS[i]);
+  }
+})();
 ;
 // ==== js/core/domain_c_linkage_r635.js ====
 /**

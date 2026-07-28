@@ -448,12 +448,23 @@ var NEWS_EVENTS = [
         apply: (st) => {
           _guardNeedsB(st).needs.fatigue = Math.min(100, _guardNeedsB(st).needs.fatigue + 5);
           _guardNeedsB(st).needs.happiness = Math.min(100, _guardNeedsB(st).needs.happiness + 5);
-          // 标记今日效率加成
-          st.flags._goodSleepToday = true;
-          StateManager.addMessage(
-            "💪 趁着精神好去工作，今天效率不错！",
-            "success",
-          );
+          // [全系统自洽修复] 域B 修复:_goodSleepToday hint承诺"效率加倍"但全库零读者零兑现,且"今日"flag永不重置
+          st.flags._goodSleepToday = true; // 兼容保留
+          st.flags._goodSleepDay = (st.player && st.player.day) || 0; // 当日语义可判断过期
+          if (st.career && st.career.currentJob && st.resources) {
+            var effBonusB658 = Random.int(30, 80);
+            st.resources.cash = (st.resources.cash || 0) + effBonusB658;
+            st.resources.totalEarned = (st.resources.totalEarned || 0) + effBonusB658;
+            StateManager.addMessage(
+              "💪 趁着精神好去工作，效率拉满，额外多赚了¥" + effBonusB658 + "！",
+              "success",
+            );
+          } else {
+            StateManager.addMessage(
+              "💪 趁着精神好，把手头的事都处理了，状态极佳！",
+              "success",
+            );
+          }
         },
       },
       {
