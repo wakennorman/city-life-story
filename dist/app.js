@@ -4528,7 +4528,8 @@ function rollStreetEvent(state) {
   // [全系统自洽修复] 域B R388 联动增强: B→C 职业里程碑事件(入职特定天数触发叙事)
   if (state.career && state.career.currentJob) {
     var _jobWd = state.career.currentJob.workDays || 0;
-    var _path = state.career.currentJob.path;
+    // [全系统自洽修复] 域B R674 A类#4: _path 守卫,防止无path字段job共享'_careerStartEvent_undefined' flag
+    var _path = state.career.currentJob.path || "unknown";
     if (_jobWd === 1 && !state.flags['_careerStartEvent_' + _path]) {
       state.flags['_careerStartEvent_' + _path] = true;
       // 入职第一天特殊叙事（已在 career_dev.js 的 applyCareerJob 中处理，但作为兜底）
@@ -4547,7 +4548,8 @@ function rollStreetEvent(state) {
     // [全系统自洽修复] 域B R52 联动增强(B→D): 工作满180天人脉拓展叙事
     if (_jobWd === 180 && !state.flags._career180dSocialEvent) {
       state.flags._career180dSocialEvent = true;
-      if (state.relationships) {
+      // [全系统自洽修复] 域B R674 A类#2: workplaceNPCs 守卫,防止无此字段的job导致 TypeError
+      if (state.relationships && Array.isArray(state.career.currentJob.workplaceNPCs)) {
         for (var _wpc = 0; _wpc < state.career.currentJob.workplaceNPCs.length; _wpc++) {
           var _npcId = state.career.currentJob.workplaceNPCs[_wpc];
           if (state.relationships[_npcId] && typeof applyAffinityChange === "function") {
@@ -4929,9 +4931,10 @@ function queueRandomEvent(state, phase) {
     if (typeof getSectorEventWeightMod === "function" && e.sector) {
       w *= getSectorEventWeightMod(e.sector);
     }
-    // [全系统自洽修复] 域B 联动增强1: 极端天气提升相关事件概率（B→G）
+    // [全系统自洽修复] 域B R674 A类#3: 天气权重提升支持数组声明(原===严格等导致数组永false→2.5倍永不触发)
     if (e.weather && state.weather && state.weather.current) {
-      if (e.weather === state.weather.current) w *= 2.5;
+      var _wArr = Array.isArray(e.weather) ? e.weather : [e.weather];
+      if (_wArr.indexOf(state.weather.current) >= 0) w *= 2.5;
     }
     // 35岁危机追访：路径已选且事件条件满足时，提高出场优先级
     if (isCrisis35FollowupEvent(e, state)) {
@@ -5051,10 +5054,9 @@ function showEventModal(evt) {
     // 进度指示器：春节7天（除夕→初六）
     var dayNames = ["除夕", "初一", "初二", "初三", "初四", "初五", "初六"];
     var dayIcons = ["🏠", "🧧", "👨‍👩‍👧", "🔴", "💰", "🔨", "🗑️"];
-    var currentDay = evt.id
-      ? parseInt(evt.id.replace("spring_fest_day", ""))
-      : 0;
-    currentDay = Math.max(0, Math.min(6, currentDay));
+    // [全系统自洽修复] 域B R674 A类#5: NaN守卫,防止无数字后缀时parseInt('')→NaN→UI显示"第NaN/7天"
+    var _parsedDay = parseInt((evt.id || "").replace("spring_fest_day", ""), 10);
+    var currentDay = isFinite(_parsedDay) ? Math.max(0, Math.min(6, _parsedDay)) : 0;
 
     var dotsHtml = "";
     for (var d = 0; d < 7; d++) {
@@ -5158,6 +5160,8 @@ function showEventModal(evt) {
               efKey === "hunger" ||
               efKey === "hygiene"
             ) {
+              // [全系统自洽修复] 域B R674 A类#1: state.needs 守卫,防止旧存档/初始化顺序导致 TypeError
+              state.needs = state.needs || {};
               state.needs[efKey] = Math.min(
                 100,
                 Math.max(0, (state.needs[efKey] || 50) + choice.effects[efKey]),
@@ -220408,6 +220412,8 @@ function endQuarter() {
     c.actionsUsed = 0;
     if (c.corpQuarter >= 4) { c.corpQuarter = 1; state.player.corpYear++; }
     else { c.corpQuarter++; }
+    // [全系统自洽修复] 域H R674 A类: 同步 state.player.corpQuarter，避免UI/Q2招聘季/Q3晋升进度条永远显示Q1
+    state.player.corpQuarter = c.corpQuarter;
     return;
   }
 
@@ -220425,7 +220431,7 @@ function endQuarter() {
   const grade = assignGrade(perfResult.score, state);
   c.perfHistory.push({
     year: state.player.corpYear,
-    quarter: state.player.corpQuarter,
+    quarter: c.corpQuarter, // [全系统自洽修复] 域H R674 A类: 用 c.corpQuarter 替代 state.player.corpQuarter（后者从未同步→永远Q1）
     grade: grade.grade,
     score: perfResult.score,
   });
@@ -220652,6 +220658,8 @@ function endQuarter() {
     c.corpQuarter = 1;
     state.player.corpYear++;
     state.player.age++;
+    // [全系统自洽修复] 域H R674 A类: 同步 state.player.corpQuarter，避免UI/Q2招聘季/Q3晋升进度条永远显示Q1
+    state.player.corpQuarter = 1;
     StateManager.addMessage(
       `🎂 又一年过去了，你现在${state.player.age}岁了。`,
       "event",
@@ -220679,6 +220687,8 @@ function endQuarter() {
     StateManager.addMessage("📋 " + reflection, "info");
   } else {
     c.corpQuarter++;
+    // [全系统自洽修复] 域H R674 A类: 同步 state.player.corpQuarter，避免UI/Q2招聘季/Q3晋升进度条永远显示Q1
+    state.player.corpQuarter = c.corpQuarter;
   }
 
   // 失败条件
@@ -231730,6 +231740,45 @@ function tickStartup(state, tickType) {
       state.needs.happiness = Math.max(0, (state.needs.happiness || 50) - 1);
     }
   }
+
+  // [全系统自洽修复] 域H R674 H→G 联动增强: 创业现金流压力影响健康
+  // 当 burnRate 高且现金储备少时，玩家承受身心压力
+  if (tickType === "daily" && state.needs && company.burnRate > 0) {
+    var _runwayDays = company.monthsOfRunway > 0 && company.monthsOfRunway < 999 ? company.monthsOfRunway * 30 : 999;
+    if (_runwayDays < 30) {
+      state.needs.fatigue = Math.min(100, (state.needs.fatigue || 0) + 1);
+      if (state.status) state.status.health = Math.max(0, (state.status.health || 100) - 0.5);
+    } else if (_runwayDays < 60) {
+      state.needs.fatigue = Math.min(100, (state.needs.fatigue || 0) + 0.5);
+    }
+  }
+
+  // [全系统自洽修复] 域H R674 H→D 联动增强: 创业员工士气影响职场社交好感
+  // 公司员工满意度高→玩家在社交场景中更有自信→提升NPC好感
+  if (tickType === "daily" && state.relationships && company.employees && company.employees.length > 0) {
+    var _avgSat = company.employees.reduce(function(_s, _e) { return _s + (_e.satisfaction || 50); }, 0) / company.employees.length;
+    if (_avgSat >= 70 && Random.chance(0.02)) {
+      var _workplaceNPCs = ["boss_li", "xiao_mei", "zhaojie", "old_zhou"];
+      for (var _wi = 0; _wi < _workplaceNPCs.length; _wi++) {
+        var _npcRel = state.relationships[_workplaceNPCs[_wi]];
+        if (_npcRel && _npcRel.met) {
+          if (typeof applyAffinityChange === "function") {
+            applyAffinityChange(state, _workplaceNPCs[_wi], 1, "创业团队士气感染");
+          }
+        }
+      }
+    }
+  }
+
+  // [全系统自洽修复] 域H R674 H→A 联动增强: 创业公司运营数据写入经济印记
+  // 供经济系统感知企业活力，影响市场价格
+  if (tickType === "quarterly") {
+    if (!state.flags) state.flags = {};
+    state.flags._startupQuarterRevenue = company.revenue || 0;
+    state.flags._startupQuarterEmployees = (company.employees || []).length;
+    state.flags._startupQuarterBurn = company.burnRate || 0;
+    state.flags._startupQuarterValuation = company.valuation || 0;
+  }
 }
 
 // ====== P1-8: 法律/合规风险系统核心函数 ======
@@ -233490,7 +233539,8 @@ function setQuarterlyOkr(state, objective, keyResults) {
   if (!company) return { success: false, message: "没有公司" };
 
   const year = state.player.corpYear || 1;
-  const quarter = state.player.corpQuarter || 1;
+  // [全系统自洽修复] 域H R674 A类: 创业公司用自己的季度计算（基于 foundedDay），不用 state.player.corpQuarter（始终=1）
+  const quarter = company && company.foundedDay ? Math.floor((state.player.day - company.foundedDay) / 90) + 1 : state.player.corpQuarter || 1;
 
   // 检查是否已有当前季度 OKR
   const existing = company.okrs.find(
@@ -233604,7 +233654,8 @@ function evaluateQuarterlyOkr(state) {
   if (!company) return { success: false, message: "没有公司" };
 
   const year = state.player.corpYear || 1;
-  const quarter = state.player.corpQuarter || 1;
+  // [全系统自洽修复] 域H R674 A类: 创业公司用自己的季度计算（基于 foundedDay），不用 state.player.corpQuarter（始终=1）
+  const quarter = company && company.foundedDay ? Math.floor((state.player.day - company.foundedDay) / 90) + 1 : state.player.corpQuarter || 1;
 
   // 找到当前季度 OKR
   const okr = company.okrs.find(
@@ -283017,6 +283068,7 @@ function renderCorporateActions(state) {
   area.appendChild(actBarDiv);
 
   // [域H R416 联动增强] H→F: 公司健康度指示器 — 当玩家有创业公司时显示核心指标
+  // [域H R674 联动增强] H→F: 增强版 — 追加 OKR 进度 + 董事会压力等级
   if (state.startup && state.startup.company && state.startup.status !== "none") {
     try {
       var _sCo = state.startup.company;
@@ -283027,6 +283079,10 @@ function renderCorporateActions(state) {
       var _sRevenue = _sCo.revenue || 0;
       var _sHealth = _sCo.health !== undefined ? _sCo.health : 70;
       var _sHealthColor = _sHealth >= 70 ? "var(--success)" : _sHealth >= 40 ? "var(--warning)" : "var(--danger)";
+      // [域H R674 增强] 董事会压力等级
+      var _sPressure = _sCo.boardPressureLevel || 0;
+      var _sPressureColor = _sPressure === 0 ? "var(--success)" : _sPressure <= 2 ? "var(--warning)" : "var(--danger)";
+      var _sPressureText = _sPressure === 0 ? "无压力" : _sPressure === 1 ? "温和提醒" : _sPressure === 2 ? "正式警告" : _sPressure === 3 ? "紧急会议" : "最后通牒";
       var healthDiv = document.createElement("div");
       healthDiv.style.cssText = "padding:8px 12px;margin:6px 0;background:rgba(0,180,216,0.06);border:1px solid rgba(0,180,216,0.15);border-radius:6px;font-size:11px;";
       healthDiv.innerHTML = '<div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:4px;">' +
@@ -283036,13 +283092,15 @@ function renderCorporateActions(state) {
         '<span>团队 ' + _sEmp + '人</span>' +
         '<span style="color:' + (_sRunway < 30 ? 'var(--danger)' : 'var(--text-muted)') + ';">⏳ ' + _sRunway + '天</span>' +
         (_sRevenue > 0 ? '<span style="color:var(--success);">营收 ¥' + Math.round(_sRevenue / 90).toLocaleString() + '/天</span>' : '') +
+        '<span style="color:' + _sPressureColor + ';">📊 ' + _sPressureText + '</span>' +
         '</div>';
       area.appendChild(healthDiv);
     } catch (e) { /* 静默 */ }
   }
 
   // 晋升进度条 (Q3前显示)
-  if (state.player.corpQuarter === 3 && state.corporate.rank !== "P10") {
+  // [全系统自洽修复] 域H R674 A类: 用 state.corporate.corpQuarter 替代 state.player.corpQuarter（后者始终=1→进度条永不显示）
+  if (state.corporate.corpQuarter === 3 && state.corporate.rank !== "P10") {
     const progress = getPromotionProgress(state);
     const progDiv = document.createElement("div");
     progDiv.style.cssText =
@@ -283159,7 +283217,8 @@ function renderCorporateActions(state) {
     teamDiv.appendChild(teamGrid);
 
     // 招聘按钮
-    if (state.player.corpQuarter === 2) {
+    // [全系统自洽修复] 域H R674 A类: 用 state.corporate.corpQuarter 替代 state.player.corpQuarter（后者始终=1→Q2招聘季永不触发）
+    if (state.corporate.corpQuarter === 2) {
       // Q2 招聘季
       const hireDiv = document.createElement("div");
       hireDiv.style.marginTop = "8px";
@@ -309220,6 +309279,155 @@ if (typeof window !== "undefined") {
   }
 })();
 
+;
+// ==== js/core/domain_b_linkage_r674.js ====
+/**
+ * 域B(事件/叙事) 联动增强 R674
+ * 桥接：
+ *   B→H  b674_story_corp_heritage   故事公司文化 → 消费 state.corporate+state.flags._eventHistory 数据,
+ *     职场故事沉淀为公司文化资产
+ *   B→E  b674_event_econ_wisdom     事件经济智慧 → 消费 state.flags._eventHistory+state.investment 数据,
+ *     经历重大事件后提升经济判断力
+ *   B→F  b674_event_life_milestone  事件人生里程碑 → 消费 state.flags._eventHistory 数据,
+ *     将重大事件标记为人生里程碑供UI展示
+ */
+(function () {
+  "use strict";
+  if (typeof RANDOM_EVENTS === "undefined" || !RANDOM_EVENTS) return;
+  if (RANDOM_EVENTS._domainBLinkageR674Loaded) return;
+  RANDOM_EVENTS._domainBLinkageR674Loaded = true;
+
+  // 辅助：获取事件历史中特定类型事件的数量
+  function countEventType(st, typePrefix) {
+    if (!st || !st.flags || !st.flags._eventHistory) return 0;
+    var count = 0;
+    for (var i = 0; i < st.flags._eventHistory.length; i++) {
+      var e = st.flags._eventHistory[i];
+      if (e && e.id && e.id.indexOf(typePrefix) === 0) count++;
+    }
+    return count;
+  }
+
+  // 辅助：获取事件历史总数
+  function totalEvents(st) {
+    if (!st || !st.flags || !st.flags._eventHistory) return 0;
+    return st.flags._eventHistory.length;
+  }
+
+  var EVENTS = [
+    {
+      id: "b674_story_corp_heritage", phase: "corporate", _isChainEvent: false, icon: "🏛️",
+      title: "故事公司文化",
+      story: "你在职场经历的风风雨雨，正在成为公司文化的一部分——{desc}",
+      triggers: { minDay: 200, interval: 250, maxRepeats: 1, excludeFlags: ["_b674CorpHertDone"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        if (!st.flags || st.flags._b674CorpHertDone) return false;
+        if (!st.corporate || !st.corporate.active) return false;
+        var evtCount = totalEvents(st);
+        return evtCount >= 30;
+      },
+      choices: [
+        { text: "📖 编写公司故事集", hint: "管理XP+10,公司文化+1", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._b674CorpHertDone = true;
+          st.flags._corpStoryBook = true;
+          if (typeof addSkillXp === "function") { try { addSkillXp("management", 10); } catch(e) {} }
+          if (st.corporate) st.corporate.culture = Math.min(100, (st.corporate.culture || 0) + 5);
+          if (typeof StateManager !== "undefined") StateManager.addMessage("📖 '每个公司都有自己的故事。' 你整理了公司发展历程中的关键时刻。管理XP+10,公司文化+5。", "success");
+        }},
+        { text: "🗣️ 开分享会", hint: "社交XP+6,团队凝聚力+1", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._b674CorpHertDone = true;
+          if (typeof addSkillXp === "function") {
+            try { addSkillXp("social", 6); } catch(e) {}
+            try { addSkillXp("management", 3); } catch(e) {}
+          }
+          if (st.corporate) st.corporate.morale = Math.min(100, (st.corporate.morale || 0) + 3);
+          if (typeof StateManager !== "undefined") StateManager.addMessage("🗣️ '分享经历,凝聚人心。' 你组织了团队分享会。社交XP+6,团队士气+3。", "success");
+        }}
+      ],
+      text: function (st) {
+        if (!st) return null;
+        var evtCount = totalEvents(st);
+        return "你在职场经历的风风雨雨,正在成为公司文化的一部分——'经历了" + evtCount + "次事件洗礼,你的故事就是公司的历史。'";
+      }
+    },
+    {
+      id: "b674_event_econ_wisdom", phase: "street", _isChainEvent: false, icon: "🧠",
+      title: "事件经济智慧",
+      story: "回顾过往经历,你发现每一次重大事件都藏着经济规律——{desc}",
+      triggers: { minDay: 120, interval: 200, maxRepeats: 2, excludeFlags: ["_b674EconWisdomCooldown"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        if (!st.flags || st.flags._b674EconWisdomCooldown) return false;
+        var evtCount = totalEvents(st);
+        return evtCount >= 15;
+      },
+      choices: [
+        { text: "📊 总结经济规律", hint: "会计XP+8,智力+3", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._b674EconWisdomCooldown = true;
+          st.flags._eventEconWisdom = true;
+          if (st.player) st.player.intelligence = Math.min(100, (st.player.intelligence || 50) + 3);
+          if (typeof addSkillXp === "function") { try { addSkillXp("accounting", 8); } catch(e) {} }
+          if (typeof StateManager !== "undefined") StateManager.addMessage("📊 '历史不会重复,但规律会。' 你从过往事件中总结出经济规律。会计XP+8,智力+3。", "success");
+        }},
+        { text: "💡 调整投资策略", hint: "投资分析+1,管理XP+4", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._b674EconWisdomCooldown = true;
+          st.flags._eventDrivenInvestor = true;
+          if (typeof addSkillXp === "function") { try { addSkillXp("management", 4); } catch(e) {} }
+          if (typeof StateManager !== "undefined") StateManager.addMessage("💡 '事件驱动投资,经验是最好的风控。' 你调整了投资策略。管理XP+4,投资分析能力提升。", "success");
+        }}
+      ],
+      text: function (st) {
+        if (!st) return null;
+        var evtCount = totalEvents(st);
+        var moralCount = countEventType(st, "moral_");
+        return "回顾过往经历,你发现每一次重大事件都藏着经济规律——'经历了" + evtCount + "次事件(其中" + moralCount + "次道德抉择),你开始从故事中读懂经济运行的逻辑。'";
+      }
+    },
+    {
+      id: "b674_event_life_milestone", phase: "street", _isChainEvent: false, icon: "🏆",
+      title: "人生里程碑",
+      story: "翻看记忆,那些刻骨铭心的时刻构成了你的人生轨迹——{desc}",
+      triggers: { minDay: 90, interval: 180, maxRepeats: 3, excludeFlags: ["_b674MilestoneCooldown"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        if (!st.flags || st.flags._b674MilestoneCooldown) return false;
+        var evtCount = totalEvents(st);
+        return evtCount >= 10;
+      },
+      choices: [
+        { text: "📝 写人生日记", hint: "心智+5,心情+5", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._b674MilestoneCooldown = true;
+          if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 5);
+          if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 5);
+          // 标记里程碑事件以供UI展示
+          if (!st.flags._milestoneEvents) st.flags._milestoneEvents = [];
+          st.flags._milestoneEvents.push({
+            id: "b674_milestone_" + (st.player.day || 0),
+            day: st.player.day || 0,
+            title: "人生里程碑·第" + (st.player.day || 0) + "天",
+          });
+          if (typeof StateManager !== "undefined") StateManager.addMessage("📝 '记录生活,就是记录成长。' 你写下了人生日记。心智+5,心情+5。", "success");
+        }},
+        { text: "🗺️ 规划未来", hint: "智力+4,管理XP+3", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._b674MilestoneCooldown = true;
+          if (st.player) st.player.intelligence = Math.min(100, (st.player.intelligence || 50) + 4);
+          if (typeof addSkillXp === "function") { try { addSkillXp("management", 3); } catch(e) {} }
+          if (typeof StateManager !== "undefined") StateManager.addMessage("🗺️ '回顾过去,才能更好地规划未来。' 你根据人生经历制定了新的目标。智力+4,管理XP+3。", "success");
+        }}
+      ],
+      text: function (st) {
+        if (!st) return null;
+        var evtCount = totalEvents(st);
+        return "翻看记忆,那些刻骨铭心的时刻构成了你的人生轨迹——'第" + (st.player ? st.player.day : 0) + "天,已经经历了" + evtCount + "次值得铭记的事件。'";
+      }
+    }
+  ];
+
+  for (var i = 0; i < EVENTS.length; i++) {
+    RANDOM_EVENTS.push(EVENTS[i]);
+  }
+})();
 ;
 // ==== js/core/domain_b_linkage_r659.js ====
 /**

@@ -34,8 +34,9 @@
       _isChainEvent: false,
       icon: "💭",
       title: "共同回忆",
-      triggers: { minDay: 10 },
-      story: function (st) {
+      triggers: { minDay: 10, interval: 7, maxRepeats: 99, excludeFlags: ["_b658SharedCd"] },
+      // [全系统自洽修复] 域B R674 A类#8: story→text(引擎读text()渲染,story函数原样泄漏为源码字符串)
+      text: function (st) {
         var npcs = metNpcsR658(st);
         if (npcs.length === 0) return "你还没有结识朋友，一个人经历的事虽然多，但没有人分享总觉得少了点什么。";
         var day = st.player.day || 0;
@@ -79,8 +80,9 @@
       _isChainEvent: false,
       icon: "🗣️",
       title: "街边经济学",
-      triggers: { minDay: 14 },
-      story: function (st) {
+      triggers: { minDay: 14, interval: 7, maxRepeats: 99, excludeFlags: ["_b658RumorCd"] },
+      // [全系统自洽修复] 域B R674 A类#8: story→text(引擎读text()渲染,story函数原样泄漏为源码字符串)
+      text: function (st) {
         var day = st.player.day || 0;
         var cash = st.resources && st.resources.cash || 0;
 

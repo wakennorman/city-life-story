@@ -1364,19 +1364,22 @@ function checkFestivalDeepEvents(state) {
   if (state.flags.gameOver || state.flags.victory) return false;
   var doy = state.player.day % 365;
   var year = Math.floor(state.player.day / 365);
+  // [全系统自洽修复] 域B R674 A类#7: showEventModal() 未传参→清明/中秋深度事件永不可达(引擎early-return清空_pendingEvent)
   if (doy === 104 && !state.flags["_qingming_y" + year]) {
     state.flags["_qingming_y" + year] = true;
     state._pendingEvent = QINGMING_EVENTS[0];
+    var _qingmingEvt = QINGMING_EVENTS[0];
     setTimeout(function () {
-      if (typeof showEventModal === "function") showEventModal();
+      if (typeof showEventModal === "function") showEventModal(_qingmingEvt);
     }, 100);
     return true;
   }
   if (doy === 257 && !state.flags["_midAutumnDeep_y" + year]) {
     state.flags["_midAutumnDeep_y" + year] = true;
     state._pendingEvent = MID_AUTUMN_DEEP_EVENTS[0];
+    var _midAutumnEvt = MID_AUTUMN_DEEP_EVENTS[0];
     setTimeout(function () {
-      if (typeof showEventModal === "function") showEventModal();
+      if (typeof showEventModal === "function") showEventModal(_midAutumnEvt);
     }, 100);
     return true;
   }

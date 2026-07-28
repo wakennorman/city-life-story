@@ -769,7 +769,9 @@ function showEventModal(evt) {
             }
           }
         }
+        // [全系统自洽修复] 域B R674 A类#6: state.flags 守卫,防止旧存档 flags 未初始化致 TypeError
         if (choice.flags && typeof choice.flags === "object") {
+          state.flags = state.flags || {};
           for (var flKey in choice.flags) {
             state.flags[flKey] = choice.flags[flKey];
           }
