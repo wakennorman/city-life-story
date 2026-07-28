@@ -1055,18 +1055,44 @@ if (typeof window !== "undefined") {
     ],
   };
 }
-// [R124] 域D 联动增强
-// [R156] 域D 联动增强
-// [R188] 域D 联动增强
-// [R220] 域D 联动增强
-// [R244] 域D 联动增强
-// [R276] 域D
-// [R340] 域D
-// [R364] 域D
-// [R396] 域D
-// [R420] 域D
-// [R452] 域D
-// [R492] 域D
-// [R532] 域D
-// [R572] 域D
-// [R612] 域D
+// [R717 域D 联动增强 D→G]: 社交支持健康恢复 — 高好感NPC数量决定每日健康恢复加成
+function getSocialHealthBonus(state) {
+  if (!state || !state.relationships) return 0;
+  var closeFriends = 0;
+  for (var _rk in state.relationships) {
+    var _r = state.relationships[_rk];
+    if (_r && _r.met && (_r.affinity || 0) >= 60) closeFriends++;
+  }
+  return Math.min(5, Math.floor(closeFriends / 3));
+}
+
+// [R717 域D 联动增强 D→E]: 社交圈投资情报 — 高好感NPC提供投资建议,降低投资风险
+function getSocialInvestmentIntel(state) {
+  if (!state || !state.relationships) return 0;
+  var intelLevel = 0;
+  var intelNpcs = ["boss_li", "zhaojie", "old_zhou", "xiao_mei"];
+  for (var _ini = 0; _ini < intelNpcs.length; _ini++) {
+    var _rel = state.relationships[intelNpcs[_ini]];
+    if (_rel && _rel.met && (_rel.affinity || 0) >= 50) intelLevel++;
+  }
+  return Math.min(8, intelLevel * 2);
+}
+
+// [R717 域D 联动增强 D→C]: 人脉推荐职业 — 通过NPC好感解锁隐藏职业机会
+function getNpcReferralJobs(state) {
+  if (!state || !state.relationships) return [];
+  var referrals = [];
+  if (state.relationships.old_zhou && (state.relationships.old_zhou.affinity || 0) >= 70) {
+    referrals.push({ jobId: "waste_recycling", bonus: 0.15, source: "old_zhou" });
+  }
+  if (state.relationships.boss_li && (state.relationships.boss_li.affinity || 0) >= 60) {
+    referrals.push({ jobId: "construction_foreman", bonus: 0.1, source: "boss_li" });
+  }
+  if (state.relationships.xiao_mei && (state.relationships.xiao_mei.affinity || 0) >= 65) {
+    referrals.push({ jobId: "elite_tutor", bonus: 0.12, source: "xiao_mei" });
+  }
+  if (state.relationships.zhaojie && (state.relationships.zhaojie.affinity || 0) >= 60) {
+    referrals.push({ jobId: "sales_manager", bonus: 0.1, source: "zhaojie" });
+  }
+  return referrals;
+}
