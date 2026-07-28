@@ -1070,13 +1070,30 @@ function getSkillPriceInsight(state, locKey, goodId) {
   }
   return insight;
 }
-// [R121] 域A 联动增强
-// [R193] 域A 联动增强
-// [R241] 域A 联动增强
-// [R289] 域A
-// [R337] 域A
-// [R385] 域A
-// [R433] 域A
-// [R481] 域A
-// [R529] 域A
-// [R577] 域A
+// [R722 第三轮 域A 联动增强 A→B]: 价格波动叙事
+function getMarketNarrativeFromPrice(goodId, oldPrice, newPrice) {
+  if (!goodId || !oldPrice || !newPrice || oldPrice <= 0) return null;
+  var change = (newPrice - oldPrice) / oldPrice;
+  var name = (getGoodById && getGoodById(goodId) && getGoodById(goodId).name) || goodId;
+  if (change > 0.5) return { type: "price_surge", title: name + "暴涨", text: name + "价格暴涨" + Math.round(change * 100) + "%！市场一片恐慌。" };
+  if (change > 0.2) return { type: "price_rise", title: name + "上涨", text: name + "价格上涨" + Math.round(change * 100) + "%，行情看涨。" };
+  if (change < -0.3) return { type: "price_crash", title: name + "暴跌", text: name + "价格暴跌" + Math.round(Math.abs(change) * 100) + "%！抄底的机会？" };
+  if (change < -0.1) return { type: "price_drop", title: name + "下跌", text: name + "价格下跌" + Math.round(Math.abs(change) * 100) + "%，可以关注。" };
+  return null;
+}
+
+// [R722 第三轮 域A 联动增强 A→D]: 价格公平感知
+function getPriceFairnessReaction(state, goodId, price) {
+  if (!state || !goodId || !price) return 0;
+  var basePrice = 0;
+  var goods = typeof GOODS !== "undefined" ? GOODS : [];
+  for (var _gi = 0; _gi < goods.length; _gi++) {
+    if (goods[_gi] && goods[_gi].id === goodId) { basePrice = goods[_gi].basePrice || 0; break; }
+  }
+  if (basePrice <= 0) return 0;
+  var ratio = price / basePrice;
+  if (ratio > 2.5) return -2;
+  if (ratio > 1.5) return -1;
+  if (ratio < 0.6) return 1;
+  return 0;
+}
