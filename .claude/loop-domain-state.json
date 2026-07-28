@@ -1,9 +1,9 @@
 {
-  "lastRound": "722b",
-  "lastDirection": "DOMAIN_B",
+  "lastRound": "730b",
+  "lastDirection": "DOMAIN_D",
   "lastDate": "2026-07-29",
-  "lastCommit": "3d1ad64d",
-  "nextDirection": "DOMAIN_C",
-  "note": "R722b 域B(本窗口自动化): git log实测B=715可选最陈旧(A名义714最旧但并行r722源02:31在途→避让,后其自闭合为R722)。A类=0(假键16全注释/死字段0/无phase14全误报/八连发双向核对无悬空,诚实报)。B类双层修复: events_core.js:717 tooltip直取story致全库782处{desc}占位符悬停泄漏→渲染层单点剥离+r700/r708/r715源头8处清理。联动3(domain_b_linkage_r722b.js): _gratitudeLetterSent(R586写-only)B→H跨阶段首读/_b714PatternAnalyst+Storyteller(并行R715刚写)B→C/E首读/_b714Resilient+Mindful B→G低健康窗口首读。MC 10x500 164.2s 0代码异常/前7天死亡0%。⚠️R658b反向孤儿形态重现: MC期间并行推R722(域A,自闭合)+R723(域B撞域,自闭合),并把本窗口r722b挂载+含全部修复的dist(b722b_×6+tooltip修复)扫入HEAD但4源文件(r722b/events_core/r700/r708/r715修复)全部漏add→本轮提交闭合。下轮recency: A=722/B=723/C=716/D=717/E=718/F=719/G=720/H=721→C最陈旧。push: TLS阻断确认(代理3067未起,ahead 15),LOCAL_ONLY;网络恢复后任一窗口 git push origin main 即闭合。",
-  "pushStatus": "LOCAL_ONLY"
+  "lastCommit": "7582b494",
+  "nextDirection": "DOMAIN_A",
+  "note": "R730b 域D(本窗口自动化): recency差距<7轮(并行第三轮循环A722-H729全刷),决胜=本窗口A类净尽账中域D唯一从未深审。核心发现: npcs.js affinityRewards 103奖励flag中27个写后全库零读取(好感积累零回报A类原型)。A类5处兑现: 配送三flag(huangPriorityOrders+10%/huangEbike+15%/xiaochenDeliveryTips+10%)入delivery_rider+package_delivery双payCalc/wangHealthTips生病-5%入illness.js/linCheapVeg食材-10%入actions_extra.js单点(显示实付同源)。联动3(domain_d_linkage_r730b.js,3street): 陈哥情报三层首读D→E/王医生体检首读D→G(接illness.js大病×0.5既有消费点)/赵姐改造内幕首读D→E(锁租)。B类记账~10解锁型(美容职业不存在/xiaochenDispatcher可一行桥接_logisticsJobOffer=下轮高价值)。交付物被并行以[R730b]7582b494扫入(四项核验全过:源+挂载+A类3文件+dist d730b18)。下轮git log重算,勿信本记录recency。",
+  "pushStatus": "PENDING"
 }
