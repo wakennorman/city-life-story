@@ -64,6 +64,8 @@ var NPCS = [
         id: "auntWangRecipe",
         desc: "学做拿手菜，获得1个食谱",
         effect: function (st) {
+          // [全系统自洽修复] 域D R707: state.flags 根守卫(防旧存档崩溃)
+          if (!st.flags) st.flags = {};
           if (st.flags._auntWangRecipe) return;
           st.flags._auntWangRecipe = true;
           if (st.skills.cooking)
@@ -417,6 +419,8 @@ var NPCS = [
         id: "bossLiStallBonus",
         desc: "学做生意技巧，摆摊收入+10%",
         effect: function (st) {
+          // [全系统自洽修复] 域D R707: state.flags 根守卫
+          if (!st.flags) st.flags = {};
           if (st.flags.bossLiStallBonus) return;
           st.flags.bossLiStallBonus = true;
           StateManager.addMessage(
@@ -664,6 +668,8 @@ var NPCS = [
         id: "zhangFactoryBonus",
         desc: "一起做计件工，factoryZone收入+15%",
         effect: function (st) {
+          // [全系统自洽修复] 域D R707: state.flags 根守卫
+          if (!st.flags) st.flags = {};
           if (st.flags.zhangFactoryBonus) return;
           st.flags.zhangFactoryBonus = true;
           StateManager.addMessage(
@@ -918,6 +924,8 @@ var NPCS = [
         id: "zhouScrapBonus",
         desc: "废品行家指点，construction拾荒效率+20%",
         effect: function (st) {
+          // [全系统自洽修复] 域D R707: state.flags 根守卫
+          if (!st.flags) st.flags = {};
           if (st.flags.zhouScrapBonus) return;
           st.flags.zhouScrapBonus = true;
           StateManager.addMessage(
@@ -3493,7 +3501,8 @@ var NPCS = [
     role: "老同学",
     monthlyIncome: 14000,
     avatar: "images/avatars/ajie.png",
-    location: "random", // 随机出现 — [全系统自洽修复] 域D A类#5: random值使位置偶遇系统无法定位，改为实际地点以便schedule匹配
+    // [全系统自洽修复] 域D R707: location "random"使位置偶遇系统无法定位(原comment说改但未改)→改为commercialDist匹配schedule主地点
+    location: "commercialDist",
     schedule: {
       morning: "slum",
       afternoon: "commercialDist",

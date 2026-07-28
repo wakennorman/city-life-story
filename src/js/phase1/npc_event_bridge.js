@@ -714,6 +714,8 @@ function rollLocationNpcInteraction(state, locationKey) {
   var _npcDef =
     typeof getNpcById === "function" ? getNpcById(locData.npcId) : null;
   // [全系统自洽修复] 域D A类修复: 修正 _dayInYear 计算（(day-1)%365+1 替代 day%365，支持年边界）
+  // [全系统自洽修复] 域D R707: state.flags 根守卫(防旧存档崩溃)
+  if (!state.flags) state.flags = {};
   var _dayInYear = ((state.player.day || 1) - 1) % 365 + 1;
   // [全系统自洽修复] 域D A类修复: _npcBirthdayGreeted 按年追踪，避免跨年无法重复祝贺
   if (!state.flags._npcBirthdayGreeted) state.flags._npcBirthdayGreeted = {};
@@ -1195,6 +1197,8 @@ function chatWithNpc(npcId, state) {
 
 /** 事件结算后调用 — 由 showEventModal 中的 apply 后续触发 */
 function afterEventApplied(eventId, state) {
+  // [全系统自洽修复] 域D R707: state.flags 根守卫(防旧存档崩溃)
+  if (!state.flags) state.flags = {};
   applyEventNpcEcho(eventId, state);
 
   // 追踪事件遭遇次数（用于事件多样性）
