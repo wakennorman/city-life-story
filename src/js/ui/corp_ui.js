@@ -81,6 +81,7 @@ function renderCorporateActions(state) {
   area.appendChild(actBarDiv);
 
   // [域H R416 联动增强] H→F: 公司健康度指示器 — 当玩家有创业公司时显示核心指标
+  // [域H R674 联动增强] H→F: 增强版 — 追加 OKR 进度 + 董事会压力等级
   if (state.startup && state.startup.company && state.startup.status !== "none") {
     try {
       var _sCo = state.startup.company;
@@ -91,6 +92,10 @@ function renderCorporateActions(state) {
       var _sRevenue = _sCo.revenue || 0;
       var _sHealth = _sCo.health !== undefined ? _sCo.health : 70;
       var _sHealthColor = _sHealth >= 70 ? "var(--success)" : _sHealth >= 40 ? "var(--warning)" : "var(--danger)";
+      // [域H R674 增强] 董事会压力等级
+      var _sPressure = _sCo.boardPressureLevel || 0;
+      var _sPressureColor = _sPressure === 0 ? "var(--success)" : _sPressure <= 2 ? "var(--warning)" : "var(--danger)";
+      var _sPressureText = _sPressure === 0 ? "无压力" : _sPressure === 1 ? "温和提醒" : _sPressure === 2 ? "正式警告" : _sPressure === 3 ? "紧急会议" : "最后通牒";
       var healthDiv = document.createElement("div");
       healthDiv.style.cssText = "padding:8px 12px;margin:6px 0;background:rgba(0,180,216,0.06);border:1px solid rgba(0,180,216,0.15);border-radius:6px;font-size:11px;";
       healthDiv.innerHTML = '<div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:4px;">' +
@@ -100,13 +105,15 @@ function renderCorporateActions(state) {
         '<span>团队 ' + _sEmp + '人</span>' +
         '<span style="color:' + (_sRunway < 30 ? 'var(--danger)' : 'var(--text-muted)') + ';">⏳ ' + _sRunway + '天</span>' +
         (_sRevenue > 0 ? '<span style="color:var(--success);">营收 ¥' + Math.round(_sRevenue / 90).toLocaleString() + '/天</span>' : '') +
+        '<span style="color:' + _sPressureColor + ';">📊 ' + _sPressureText + '</span>' +
         '</div>';
       area.appendChild(healthDiv);
     } catch (e) { /* 静默 */ }
   }
 
   // 晋升进度条 (Q3前显示)
-  if (state.player.corpQuarter === 3 && state.corporate.rank !== "P10") {
+  // [全系统自洽修复] 域H R674 A类: 用 state.corporate.corpQuarter 替代 state.player.corpQuarter（后者始终=1→进度条永不显示）
+  if (state.corporate.corpQuarter === 3 && state.corporate.rank !== "P10") {
     const progress = getPromotionProgress(state);
     const progDiv = document.createElement("div");
     progDiv.style.cssText =
@@ -223,7 +230,8 @@ function renderCorporateActions(state) {
     teamDiv.appendChild(teamGrid);
 
     // 招聘按钮
-    if (state.player.corpQuarter === 2) {
+    // [全系统自洽修复] 域H R674 A类: 用 state.corporate.corpQuarter 替代 state.player.corpQuarter（后者始终=1→Q2招聘季永不触发）
+    if (state.corporate.corpQuarter === 2) {
       // Q2 招聘季
       const hireDiv = document.createElement("div");
       hireDiv.style.marginTop = "8px";

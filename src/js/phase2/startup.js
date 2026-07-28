@@ -3019,6 +3019,45 @@ function tickStartup(state, tickType) {
       state.needs.happiness = Math.max(0, (state.needs.happiness || 50) - 1);
     }
   }
+
+  // [全系统自洽修复] 域H R674 H→G 联动增强: 创业现金流压力影响健康
+  // 当 burnRate 高且现金储备少时，玩家承受身心压力
+  if (tickType === "daily" && state.needs && company.burnRate > 0) {
+    var _runwayDays = company.monthsOfRunway > 0 && company.monthsOfRunway < 999 ? company.monthsOfRunway * 30 : 999;
+    if (_runwayDays < 30) {
+      state.needs.fatigue = Math.min(100, (state.needs.fatigue || 0) + 1);
+      if (state.status) state.status.health = Math.max(0, (state.status.health || 100) - 0.5);
+    } else if (_runwayDays < 60) {
+      state.needs.fatigue = Math.min(100, (state.needs.fatigue || 0) + 0.5);
+    }
+  }
+
+  // [全系统自洽修复] 域H R674 H→D 联动增强: 创业员工士气影响职场社交好感
+  // 公司员工满意度高→玩家在社交场景中更有自信→提升NPC好感
+  if (tickType === "daily" && state.relationships && company.employees && company.employees.length > 0) {
+    var _avgSat = company.employees.reduce(function(_s, _e) { return _s + (_e.satisfaction || 50); }, 0) / company.employees.length;
+    if (_avgSat >= 70 && Random.chance(0.02)) {
+      var _workplaceNPCs = ["boss_li", "xiao_mei", "zhaojie", "old_zhou"];
+      for (var _wi = 0; _wi < _workplaceNPCs.length; _wi++) {
+        var _npcRel = state.relationships[_workplaceNPCs[_wi]];
+        if (_npcRel && _npcRel.met) {
+          if (typeof applyAffinityChange === "function") {
+            applyAffinityChange(state, _workplaceNPCs[_wi], 1, "创业团队士气感染");
+          }
+        }
+      }
+    }
+  }
+
+  // [全系统自洽修复] 域H R674 H→A 联动增强: 创业公司运营数据写入经济印记
+  // 供经济系统感知企业活力，影响市场价格
+  if (tickType === "quarterly") {
+    if (!state.flags) state.flags = {};
+    state.flags._startupQuarterRevenue = company.revenue || 0;
+    state.flags._startupQuarterEmployees = (company.employees || []).length;
+    state.flags._startupQuarterBurn = company.burnRate || 0;
+    state.flags._startupQuarterValuation = company.valuation || 0;
+  }
 }
 
 // ====== P1-8: 法律/合规风险系统核心函数 ======
@@ -4779,7 +4818,8 @@ function setQuarterlyOkr(state, objective, keyResults) {
   if (!company) return { success: false, message: "没有公司" };
 
   const year = state.player.corpYear || 1;
-  const quarter = state.player.corpQuarter || 1;
+  // [全系统自洽修复] 域H R674 A类: 创业公司用自己的季度计算（基于 foundedDay），不用 state.player.corpQuarter（始终=1）
+  const quarter = company && company.foundedDay ? Math.floor((state.player.day - company.foundedDay) / 90) + 1 : state.player.corpQuarter || 1;
 
   // 检查是否已有当前季度 OKR
   const existing = company.okrs.find(
@@ -4893,7 +4933,8 @@ function evaluateQuarterlyOkr(state) {
   if (!company) return { success: false, message: "没有公司" };
 
   const year = state.player.corpYear || 1;
-  const quarter = state.player.corpQuarter || 1;
+  // [全系统自洽修复] 域H R674 A类: 创业公司用自己的季度计算（基于 foundedDay），不用 state.player.corpQuarter（始终=1）
+  const quarter = company && company.foundedDay ? Math.floor((state.player.day - company.foundedDay) / 90) + 1 : state.player.corpQuarter || 1;
 
   // 找到当前季度 OKR
   const okr = company.okrs.find(

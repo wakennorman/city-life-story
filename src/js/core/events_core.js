@@ -119,7 +119,8 @@ function rollStreetEvent(state) {
   // [全系统自洽修复] 域B R388 联动增强: B→C 职业里程碑事件(入职特定天数触发叙事)
   if (state.career && state.career.currentJob) {
     var _jobWd = state.career.currentJob.workDays || 0;
-    var _path = state.career.currentJob.path;
+    // [全系统自洽修复] 域B R674 A类#4: _path 守卫,防止无path字段job共享'_careerStartEvent_undefined' flag
+    var _path = state.career.currentJob.path || "unknown";
     if (_jobWd === 1 && !state.flags['_careerStartEvent_' + _path]) {
       state.flags['_careerStartEvent_' + _path] = true;
       // 入职第一天特殊叙事（已在 career_dev.js 的 applyCareerJob 中处理，但作为兜底）
@@ -138,7 +139,8 @@ function rollStreetEvent(state) {
     // [全系统自洽修复] 域B R52 联动增强(B→D): 工作满180天人脉拓展叙事
     if (_jobWd === 180 && !state.flags._career180dSocialEvent) {
       state.flags._career180dSocialEvent = true;
-      if (state.relationships) {
+      // [全系统自洽修复] 域B R674 A类#2: workplaceNPCs 守卫,防止无此字段的job导致 TypeError
+      if (state.relationships && Array.isArray(state.career.currentJob.workplaceNPCs)) {
         for (var _wpc = 0; _wpc < state.career.currentJob.workplaceNPCs.length; _wpc++) {
           var _npcId = state.career.currentJob.workplaceNPCs[_wpc];
           if (state.relationships[_npcId] && typeof applyAffinityChange === "function") {
@@ -520,9 +522,10 @@ function queueRandomEvent(state, phase) {
     if (typeof getSectorEventWeightMod === "function" && e.sector) {
       w *= getSectorEventWeightMod(e.sector);
     }
-    // [全系统自洽修复] 域B 联动增强1: 极端天气提升相关事件概率（B→G）
+    // [全系统自洽修复] 域B R674 A类#3: 天气权重提升支持数组声明(原===严格等导致数组永false→2.5倍永不触发)
     if (e.weather && state.weather && state.weather.current) {
-      if (e.weather === state.weather.current) w *= 2.5;
+      var _wArr = Array.isArray(e.weather) ? e.weather : [e.weather];
+      if (_wArr.indexOf(state.weather.current) >= 0) w *= 2.5;
     }
     // 35岁危机追访：路径已选且事件条件满足时，提高出场优先级
     if (isCrisis35FollowupEvent(e, state)) {
@@ -642,10 +645,9 @@ function showEventModal(evt) {
     // 进度指示器：春节7天（除夕→初六）
     var dayNames = ["除夕", "初一", "初二", "初三", "初四", "初五", "初六"];
     var dayIcons = ["🏠", "🧧", "👨‍👩‍👧", "🔴", "💰", "🔨", "🗑️"];
-    var currentDay = evt.id
-      ? parseInt(evt.id.replace("spring_fest_day", ""))
-      : 0;
-    currentDay = Math.max(0, Math.min(6, currentDay));
+    // [全系统自洽修复] 域B R674 A类#5: NaN守卫,防止无数字后缀时parseInt('')→NaN→UI显示"第NaN/7天"
+    var _parsedDay = parseInt((evt.id || "").replace("spring_fest_day", ""), 10);
+    var currentDay = isFinite(_parsedDay) ? Math.max(0, Math.min(6, _parsedDay)) : 0;
 
     var dotsHtml = "";
     for (var d = 0; d < 7; d++) {
@@ -749,6 +751,8 @@ function showEventModal(evt) {
               efKey === "hunger" ||
               efKey === "hygiene"
             ) {
+              // [全系统自洽修复] 域B R674 A类#1: state.needs 守卫,防止旧存档/初始化顺序导致 TypeError
+              state.needs = state.needs || {};
               state.needs[efKey] = Math.min(
                 100,
                 Math.max(0, (state.needs[efKey] || 50) + choice.effects[efKey]),

@@ -194,6 +194,8 @@ function endQuarter() {
     c.actionsUsed = 0;
     if (c.corpQuarter >= 4) { c.corpQuarter = 1; state.player.corpYear++; }
     else { c.corpQuarter++; }
+    // [全系统自洽修复] 域H R674 A类: 同步 state.player.corpQuarter，避免UI/Q2招聘季/Q3晋升进度条永远显示Q1
+    state.player.corpQuarter = c.corpQuarter;
     return;
   }
 
@@ -211,7 +213,7 @@ function endQuarter() {
   const grade = assignGrade(perfResult.score, state);
   c.perfHistory.push({
     year: state.player.corpYear,
-    quarter: state.player.corpQuarter,
+    quarter: c.corpQuarter, // [全系统自洽修复] 域H R674 A类: 用 c.corpQuarter 替代 state.player.corpQuarter（后者从未同步→永远Q1）
     grade: grade.grade,
     score: perfResult.score,
   });
@@ -438,6 +440,8 @@ function endQuarter() {
     c.corpQuarter = 1;
     state.player.corpYear++;
     state.player.age++;
+    // [全系统自洽修复] 域H R674 A类: 同步 state.player.corpQuarter，避免UI/Q2招聘季/Q3晋升进度条永远显示Q1
+    state.player.corpQuarter = 1;
     StateManager.addMessage(
       `🎂 又一年过去了，你现在${state.player.age}岁了。`,
       "event",
@@ -465,6 +469,8 @@ function endQuarter() {
     StateManager.addMessage("📋 " + reflection, "info");
   } else {
     c.corpQuarter++;
+    // [全系统自洽修复] 域H R674 A类: 同步 state.player.corpQuarter，避免UI/Q2招聘季/Q3晋升进度条永远显示Q1
+    state.player.corpQuarter = c.corpQuarter;
   }
 
   // 失败条件
