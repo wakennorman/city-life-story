@@ -2,8 +2,8 @@
   "lastRound": "746b",
   "lastDirection": "DOMAIN_G",
   "lastDate": "2026-07-29",
-  "lastCommit": "PENDING",
+  "lastCommit": "c43180c0",
   "nextDirection": "DOMAIN_F",
-  "note": "R746b 域G(本窗口自动化 06:2x): 选域=git log实测本窗口深审recency G=R311全局最陈旧(F=R442次之)。A类2处: ①_pensionBase养老金承诺零兑现且_retired封锁副业/职业收入=选退休纯亏→daily_pipeline月度兑现(每30天min(基数,5万)×60%,advisor加发50%顾问费,_pensionTotal累计); ②R720 getLifeStageNarrativeEvent悬空(未调用/未导出/8个_lifeNarrative_XX零写入=8年龄节点叙事恒不触发)→story_chapters补8段叙事+runLifeStageNarrative+导出+story_chapter_check接线。联动3(domain_g_linkage_r746b.js,3street): _pensionTotal首读G→E禀赋效应/_lifeNarrative_XX首读G→B峰终/_lifeNode_choice首跨文件读G→C复利叙事。下轮候选F(R442)>D。开轮必git log重算勿信本记录。",
-  "pushStatus": "PENDING"
+  "note": "R746b 域G(本窗口自动化 06:2x): 选域=git log实测本窗口深审recency G=R311全局最陈旧(F=R442次之)。A类2处: ①_pensionBase养老金承诺零兑现且_retired封锁副业/职业收入=选退休纯亏→daily_pipeline月度兑现(每30天min(基数,5万)×60%,advisor加发50%顾问费,_pensionTotal累计); ②R720 getLifeStageNarrativeEvent悬空(未调用/未导出/8个_lifeNarrative_XX零写入=8年龄节点叙事恒不触发)→story_chapters补8段叙事+runLifeStageNarrative+导出+story_chapter_check接线。联动3(domain_g_linkage_r746b.js,3street): _pensionTotal首读G→E禀赋效应/_lifeNarrative_XX首读G→B峰终/_lifeNode_choice首跨文件读G→C复利叙事。下轮候选F(R442)>D。开轮必git log重算勿信本记录。 | MC 10x500 159.6s 0代码异常/前7天死亡全0%(trader60/social70/corporate50既有RNG阈值)。热修复插曲: wrapper导出致爆栈曾被并行扫入HEAD(30292e29处于硬崩溃), c43180c0修复闭合(并行以其message接管本窗口staged,内容核验完整)。push受TLS阻断,网络恢复任一窗口push即闭合。",
+  "pushStatus": "LOCAL_ONLY_TLS"
 }

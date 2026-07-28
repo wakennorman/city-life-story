@@ -22,7 +22,7 @@ C类记录不改：`_lifeNode_choice` 此前 life_nodes 自写自读（本轮联
 
 ## 验证
 - node --check ×3 过；build 13592.1KB（g746b×6/R746b×12/runLifeStageNarrative×4 入包）；工作区无并行在途源→dist 可提交。
-- MC 10x500：见提交信息（0代码异常/前7天死亡率0%要求）。
+- MC 10x500：159.6s，0代码异常，前7天死亡率全0%（trader60/social70/corporate50为既有RNG阈值）。⚠️中途踩坑：window导出wrapper覆盖顶层函数声明→无限递归爆栈→全策略0%存活1.9s，带bug版一度被并行扫入HEAD(30292e29)，c43180c0热修复闭合。
 
 ## 竞态备注
 - 开轮时工作区干净（仅 last_known_head 漂移后被并行复位）；R746 编号未被 core 占用。
