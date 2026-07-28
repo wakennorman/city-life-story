@@ -576,3 +576,11 @@
 - 验证：node --check全过；build 12006.1KB b658b=6入包；MC 10x500 259s 0代码异常、前7天死亡率全0%(social/corporate 50%既有RNG阈值)。
 - 收尾提交768c6b0d(日志+last_known_head)遇push竞态(remote已在768c6b0d=并行共享仓库代推)，fetch核验HEAD==origin/main闭合。
 - 下轮：git log重算。R660域D已被并行做完(b2c47e1c)，届时预计E=653或A=657之外最陈旧者。域B剩余素材_gratitudeLetterSent(B→H跨阶段)。
+
+## 2026-07-28 19:5x R677b 域C(职业/成长) — 已push (a6b054b2主体+68e2fc7d/8ed9d3e2收尾)
+- 选域：git log实测C=667全局最薄弱→R677b(b后缀避让,并行同期也自做[R677]域C——同轮号同域双份互补新形态)。
+- A类2处：①career_dev.js:5673 _skillMasterTrainer培训班hint承诺被动收入¥150/天但全库零读取零兑现→apply记_skillMasterTrainerDay+扣前期投入min(2000,cash),daily_pipeline在_careerLegacyDueDay结算区后新增每日兑现(150/扩班250,_trainerIncomeTotal累计,每7天提示防刷屏)；②career_dev 6事件story占位符{pathName}{levelName}{skillName}{masterName}原样泄漏(渲染层R455后只调text())→6事件补text()动态叙述(CAREER_PATHS/getSkillChineseName全typeof守卫)。CRLF(career_dev含BOM)均Python字节级替换,diff收敛67/12行。
+- 联动3(domain_c_linkage_r677b.js,3street,done-flag防重,全||防御)：c677b_legacy_investor(C→E _legacyProjectStarted死flag首消费·顾问费2000-5000)/c677b_watched_regret(C→B _legacyWatched首消费·社会比较+损失厌恶)/c677b_training_scale(C→E 开班30天→¥3000扩班_trainerScaleUp)。
+- 验证：node --check 3文件过；build 12335.1KB c677b=6/R677b注释=10入包；MC 10x500 253.5s 0代码异常/前7天死亡率全0%(social/corporate 70%既有RNG阈值)。
+- 竞态：①交付物3分钟内被并行以[R677]a6b054b2扫入推送；②loop-state更新被并行reset冲回R658旧版→重写重推8ed9d3e2；③账本被88e8ef1e/d028a87d扫入。MEMORY素材账修正：域C _apprenticeList/_highSalaryHealthWarn为r515已消费过期账。
+- 下轮：F=670最薄弱(E=679/D=678/C=677/B=676/A=675/H=674/G=671)。开轮必git log重算。

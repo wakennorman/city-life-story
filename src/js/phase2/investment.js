@@ -1182,6 +1182,8 @@ function tickInvestmentDaily(state) {
   var inv = state.investment;
   if (!inv || inv.lastTickDay >= state.player.day) return;
   inv.lastTickDay = state.player.day;
+  // [全系统自洽修复] 域E R679 A类: state.flags 守卫(旧存档防 TypeError)
+  if (!state.flags) state.flags = {};
   state.flags._invSkillXpToday = false; // [全系统自洽修复] 域E 联动: 每日重置投资技能XP标记
 
   // ================================================================
@@ -1662,6 +1664,22 @@ function checkInvestmentMilestones(state, inv) {
                 : " 投资的第一步，永远是最难的。"),
       "success",
     );
+
+    // [全系统自洽修复] 域E R679 联动增强(E→G): 投资里程碑→心情提振
+    if (state.needs) {
+      state.needs.happiness = Math.min(100, (state.needs.happiness || 50) + 3);
+    }
+
+    // [全系统自洽修复] 域E R679 联动增强(E→D): 投资成功→社交圈正面影响(≥¥100k时)
+    if (state.relationships && milestone.level >= 100000) {
+      var _wpNpcs = ["boss_li", "xiao_mei", "zhaojie", "old_zhou"];
+      for (var _wi = 0; _wi < _wpNpcs.length; _wi++) {
+        var _npc = state.relationships[_wpNpcs[_wi]];
+        if (_npc && _npc.met && typeof applyAffinityChange === "function") {
+          applyAffinityChange(state, _wpNpcs[_wi], 2, "投资成功影响");
+        }
+      }
+    }
   }
 }
 
