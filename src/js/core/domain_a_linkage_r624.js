@@ -89,14 +89,14 @@
         return "你背包里的食材营养搭配还算均衡。注意多吃不同种类的食物，保证营养全面。";
       },
       choices: [
-        { text: "🍎 去市场买食材", next: null, handler: function(st) {
+        { text: "🍎 去市场买食材", next: null, apply: function(st) {
           if (typeof showLocationNavModal === "function") {
             showLocationNavModal("commercialDist", "🏪 去市场买菜", "trade");
           } else {
             StateManager.addMessage("🍎 前往商业区购买食材", "info");
           }
         }},
-        { text: "🍳 做顿饭", next: null, handler: function(st) {
+        { text: "🍳 做顿饭", next: null, apply: function(st) {
           if (st.needs) {
             st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 3);
             st.needs.fullness = Math.min(100, (st.needs.fullness || 50) + 15);
@@ -159,14 +159,14 @@
           (highDemand < 2 ? "建议优先提升市场需求高的技能，以获得更好的职业发展。" : "你的技能组合不错，继续提升可以争取更高薪资。");
       },
       choices: [
-        { text: "🎓 去培训中心", next: null, handler: function(st) {
+        { text: "🎓 去培训中心", next: null, apply: function(st) {
           if (typeof showLocationNavModal === "function") {
             showLocationNavModal("trainingCenter", "🎓 培训中心", "actions");
           } else {
             StateManager.addMessage("🎓 前往培训中心提升技能", "info");
           }
         }},
-        { text: "💼 查看相关工作", next: null, handler: function(st) {
+        { text: "💼 查看相关工作", next: null, apply: function(st) {
           if (typeof switchCareerSubTab === "function") {
             switchCareerSubTab("career_jobs");
           }
@@ -243,14 +243,14 @@
           "低价买入、高价卖出是赚钱的基本法则。";
       },
       choices: [
-        { text: "🛒 去交易", next: null, handler: function(st) {
+        { text: "🛒 去交易", next: null, apply: function(st) {
           if (typeof showTradeTab === "function") {
             showTradeTab();
           } else {
             StateManager.addMessage("🛒 前往交易界面查看详情", "info");
           }
         }},
-        { text: "📝 记住价格", next: null, handler: function(st) {
+        { text: "📝 记住价格", next: null, apply: function(st) {
           st.flags = st.flags || {};
           st.flags._a624_priceAlert = (st.flags._a624_priceAlert || 0) + 1;
           StateManager.addMessage("📝 你记住了今天的价格异动，对市场规律更了解了", "info");

@@ -50,14 +50,14 @@
           "低价商品适合买入囤货，高价商品可考虑卖出获利。";
       },
       choices: [
-        { text: "🛒 去市场看看", next: null, handler: function(st) {
+        { text: "🛒 去市场看看", next: null, apply: function(st) {
           if (typeof showLocationNavModal === "function") {
             showLocationNavModal(trade.currentLocation || "commercialDist", "🏪 市场行情", "trade");
           } else {
             StateManager.addMessage("🛒 前往商业区查看商品价格", "info");
           }
         }},
-        { text: "📊 记录价格", next: null, handler: function(st) {
+        { text: "📊 记录价格", next: null, apply: function(st) {
           st.flags = st.flags || {};
           st.flags._f623_priceAware = (st.flags._f623_priceAware || 0) + 1;
           StateManager.addMessage("📊 你记录了今天的市场价格，对行情更敏感了", "info");
@@ -105,14 +105,14 @@
            "小额投资是好的开始，持续积累才能看到复利的力量。");
       },
       choices: [
-        { text: "📈 查看股票", next: null, handler: function(st) {
+        { text: "📈 查看股票", next: null, apply: function(st) {
           if (typeof showStockTab === "function") {
             showStockTab();
           } else {
             StateManager.addMessage("📈 前往「投资」Tab查看股票详情", "info");
           }
         }},
-        { text: "💹 查看基金", next: null, handler: function(st) {
+        { text: "💹 查看基金", next: null, apply: function(st) {
           StateManager.addMessage("💹 前往「投资」Tab查看基金/理财详情", "info");
         }},
       ],
@@ -169,14 +169,14 @@
           warnings.join("<br>");
       },
       choices: [
-        { text: "🏢 查看公司详情", next: null, handler: function(st) {
+        { text: "🏢 查看公司详情", next: null, apply: function(st) {
           if (typeof showStartupTab === "function") {
             showStartupTab();
           } else {
             StateManager.addMessage("🏢 前往「公司」Tab查看详情", "info");
           }
         }},
-        { text: "💰 查看现金流", next: null, handler: function(st) {
+        { text: "💰 查看现金流", next: null, apply: function(st) {
           StateManager.addMessage("💰 公司现金流 ¥" + ((st.startup && st.startup.company && st.startup.company.cash) || 0).toLocaleString(), "info");
         }},
       ],

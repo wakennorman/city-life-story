@@ -257604,14 +257604,14 @@ if (typeof window !== "undefined") {
           "低价商品适合买入囤货，高价商品可考虑卖出获利。";
       },
       choices: [
-        { text: "🛒 去市场看看", next: null, handler: function(st) {
+        { text: "🛒 去市场看看", next: null, apply: function(st) {
           if (typeof showLocationNavModal === "function") {
             showLocationNavModal(trade.currentLocation || "commercialDist", "🏪 市场行情", "trade");
           } else {
             StateManager.addMessage("🛒 前往商业区查看商品价格", "info");
           }
         }},
-        { text: "📊 记录价格", next: null, handler: function(st) {
+        { text: "📊 记录价格", next: null, apply: function(st) {
           st.flags = st.flags || {};
           st.flags._f623_priceAware = (st.flags._f623_priceAware || 0) + 1;
           StateManager.addMessage("📊 你记录了今天的市场价格，对行情更敏感了", "info");
@@ -257659,14 +257659,14 @@ if (typeof window !== "undefined") {
            "小额投资是好的开始，持续积累才能看到复利的力量。");
       },
       choices: [
-        { text: "📈 查看股票", next: null, handler: function(st) {
+        { text: "📈 查看股票", next: null, apply: function(st) {
           if (typeof showStockTab === "function") {
             showStockTab();
           } else {
             StateManager.addMessage("📈 前往「投资」Tab查看股票详情", "info");
           }
         }},
-        { text: "💹 查看基金", next: null, handler: function(st) {
+        { text: "💹 查看基金", next: null, apply: function(st) {
           StateManager.addMessage("💹 前往「投资」Tab查看基金/理财详情", "info");
         }},
       ],
@@ -257723,14 +257723,14 @@ if (typeof window !== "undefined") {
           warnings.join("<br>");
       },
       choices: [
-        { text: "🏢 查看公司详情", next: null, handler: function(st) {
+        { text: "🏢 查看公司详情", next: null, apply: function(st) {
           if (typeof showStartupTab === "function") {
             showStartupTab();
           } else {
             StateManager.addMessage("🏢 前往「公司」Tab查看详情", "info");
           }
         }},
-        { text: "💰 查看现金流", next: null, handler: function(st) {
+        { text: "💰 查看现金流", next: null, apply: function(st) {
           StateManager.addMessage("💰 公司现金流 ¥" + ((st.startup && st.startup.company && st.startup.company.cash) || 0).toLocaleString(), "info");
         }},
       ],
@@ -257839,14 +257839,14 @@ if (typeof window !== "undefined") {
         return "你背包里的食材营养搭配还算均衡。注意多吃不同种类的食物，保证营养全面。";
       },
       choices: [
-        { text: "🍎 去市场买食材", next: null, handler: function(st) {
+        { text: "🍎 去市场买食材", next: null, apply: function(st) {
           if (typeof showLocationNavModal === "function") {
             showLocationNavModal("commercialDist", "🏪 去市场买菜", "trade");
           } else {
             StateManager.addMessage("🍎 前往商业区购买食材", "info");
           }
         }},
-        { text: "🍳 做顿饭", next: null, handler: function(st) {
+        { text: "🍳 做顿饭", next: null, apply: function(st) {
           if (st.needs) {
             st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 3);
             st.needs.fullness = Math.min(100, (st.needs.fullness || 50) + 15);
@@ -257909,14 +257909,14 @@ if (typeof window !== "undefined") {
           (highDemand < 2 ? "建议优先提升市场需求高的技能，以获得更好的职业发展。" : "你的技能组合不错，继续提升可以争取更高薪资。");
       },
       choices: [
-        { text: "🎓 去培训中心", next: null, handler: function(st) {
+        { text: "🎓 去培训中心", next: null, apply: function(st) {
           if (typeof showLocationNavModal === "function") {
             showLocationNavModal("trainingCenter", "🎓 培训中心", "actions");
           } else {
             StateManager.addMessage("🎓 前往培训中心提升技能", "info");
           }
         }},
-        { text: "💼 查看相关工作", next: null, handler: function(st) {
+        { text: "💼 查看相关工作", next: null, apply: function(st) {
           if (typeof switchCareerSubTab === "function") {
             switchCareerSubTab("career_jobs");
           }
@@ -257993,14 +257993,14 @@ if (typeof window !== "undefined") {
           "低价买入、高价卖出是赚钱的基本法则。";
       },
       choices: [
-        { text: "🛒 去交易", next: null, handler: function(st) {
+        { text: "🛒 去交易", next: null, apply: function(st) {
           if (typeof showTradeTab === "function") {
             showTradeTab();
           } else {
             StateManager.addMessage("🛒 前往交易界面查看详情", "info");
           }
         }},
-        { text: "📝 记住价格", next: null, handler: function(st) {
+        { text: "📝 记住价格", next: null, apply: function(st) {
           st.flags = st.flags || {};
           st.flags._a624_priceAlert = (st.flags._a624_priceAlert || 0) + 1;
           StateManager.addMessage("📝 你记住了今天的价格异动，对市场规律更了解了", "info");
@@ -258134,14 +258134,14 @@ if (typeof window !== "undefined") {
           "继续深耕这门技能，未来会有更多职业机会向你敞开。";
       },
       choices: [
-        { text: "💼 查看职业路线", next: null, handler: function(st) {
+        { text: "💼 查看职业路线", apply: function(st) {
           if (typeof switchCareerSubTab === "function") {
             switchCareerSubTab("career_jobs");
           }
-          StateManager.addMessage("💼 前往事业发展Tab查看职业路线", "info");
+          if (typeof StateManager !== "undefined") StateManager.addMessage("💼 前往事业发展Tab查看职业路线", "info");
         }},
-        { text: "📚 继续学习", next: null, handler: function(st) {
-          StateManager.addMessage("📚 你受到了启发，决定继续提升技能", "info");
+        { text: "📚 继续学习", apply: function(st) {
+          if (typeof StateManager !== "undefined") StateManager.addMessage("📚 你受到了启发，决定继续提升技能", "info");
         }},
       ],
       conditions: function (st) {
@@ -258184,19 +258184,19 @@ if (typeof window !== "undefined") {
           "继续在生活中积累经验，每一次挑战都是心智成长的契机。";
       },
       choices: [
-        { text: "🧘 反思沉淀", next: null, handler: function(st) {
-          if (st.player) {
-            st.player.mental = Math.min(100, (st.player.mental || 0) + 2);
+        { text: "🧘 反思沉淀", apply: function(st) {
+          if (st) {
+            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 2);
+            if (typeof StateManager !== "undefined") StateManager.addMessage("🧘 你静下心来反思最近的经历，心智+2", "success");
           }
-          StateManager.addMessage("🧘 你静下心来反思最近的经历，心智+2", "success");
         }},
-        { text: "📝 写日记", next: null, handler: function(st) {
-          st.flags = st.flags || {};
-          st.flags._b625_journal = (st.flags._b625_journal || 0) + 1;
-          if (st.needs) {
-            st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 3);
+        { text: "📝 写日记", apply: function(st) {
+          if (st) {
+            st.flags = st.flags || {};
+            st.flags._b625_journal = (st.flags._b625_journal || 0) + 1;
+            if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 3);
+            if (typeof StateManager !== "undefined") StateManager.addMessage("📝 把经历写进日记，心情+3", "success");
           }
-          StateManager.addMessage("📝 把经历写进日记，心情+3", "success");
         }},
       ],
       conditions: function (st) {
@@ -271654,6 +271654,150 @@ if (typeof window !== "undefined") {
   ];
 
   // 注册事件
+  for (var i = 0; i < EVENTS.length; i++) {
+    RANDOM_EVENTS.push(EVENTS[i]);
+  }
+})();
+;
+// ==== js/core/domain_c_linkage_r621.js ====
+/**
+ * 域C(职业/成长) 联动增强 R621
+ * 桥接：
+ *   C→A  c621_skill_data_analysis  技能数据分析 → 消费 state.skills+state.career 数据,
+ *     职业→"技能数据指导职业选择"的数值回响
+ *   C→D  c621_mentor_appreciation  师恩难忘 → 消费 state.relationships+state.career 数据,
+ *     职业→"职业生涯中的贵人"的社交回响
+ *   C→F  c621_career_achievement_ui  职业成就UI → 消费 state.career 数据,
+ *     职业→"成就可视化展示"的UI回响
+ */
+(function () {
+  "use strict";
+  if (typeof RANDOM_EVENTS === "undefined" || !RANDOM_EVENTS) return;
+  if (RANDOM_EVENTS._domainCLinkageR621Loaded) return;
+  RANDOM_EVENTS._domainCLinkageR621Loaded = true;
+
+  var EVENTS = [
+    // ====== C→A: 技能数据分析 ======
+    {
+      id: "c621_skill_data_analysis", phase: "street", _isChainEvent: false, icon: "📊",
+      title: "技能分析报告",
+      story: "你对自己的技能做了一次全面分析——{desc}",
+      triggers: { minDay: 20, interval: 60, maxRepeats: 10, excludeFlags: ["_c621SkillAnalysisCooldown"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        if (!st.flags || st.flags._c621SkillAnalysisCooldown) return false;
+        return true;
+      },
+      choices: [
+        { text: "🔍 深度分析技能组合", hint: "智力+5,心智+3", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._c621SkillAnalysisCooldown = true;
+          if (st.player) st.player.intelligence = Math.min(100, (st.player.intelligence || 50) + 5);
+          if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 3);
+          if (typeof StateManager !== "undefined") StateManager.addMessage("📊 '我的技能组合是...' 你清晰地看到自己的优势和短板。智力+5,心智+3。", "success");
+        }},
+        { text: "📈 制定学习计划", hint: "weeklySkillXP+5,智力+2", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._c621SkillAnalysisCooldown = true;
+          if (st.player) st.player.intelligence = Math.min(100, (st.player.intelligence || 50) + 2);
+          if (st.flags) st.flags._weeklySkillBonus = (st.flags._weeklySkillBonus || 0) + 5;
+          if (typeof StateManager !== "undefined") StateManager.addMessage("📊 你制定了接下来一个月的学习计划。'有目标,才有动力。' 智力+2,每周技能XP+5。", "success");
+        }}
+      ],
+      text: function (st) {
+        if (!st || !st.skills) return null;
+        var best = "无", bestLv = 0;
+        for (var s in st.skills) {
+          if (st.skills[s] && st.skills[s].level > bestLv) { best = s; bestLv = st.skills[s].level; }
+        }
+        return "你打开技能面板,看着自己的数据。最强的" + best + "已经达到Lv." + bestLv + "了。'是继续强化优势,还是补齐短板?' 你陷入了思考。";
+      }
+    },
+
+    // ====== C→D: 师恩难忘 ======
+    {
+      id: "c621_mentor_appreciation", phase: "street", _isChainEvent: false, icon: "🙏",
+      title: "师恩难忘",
+      story: "你想起了一路走来帮助过你的人——{desc}",
+      triggers: { minDay: 40, interval: 120, maxRepeats: 5, excludeFlags: ["_c621MentorCooldown"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        if (!st.flags || st.flags._c621MentorCooldown) return false;
+        if (!st.relationships) return false;
+        for (var k in st.relationships) {
+          if (st.relationships[k] && st.relationships[k].met && (st.relationships[k].affinity || 0) >= 50) return true;
+        }
+        return false;
+      },
+      choices: [
+        { text: "🙏 登门道谢", hint: "好感+10,心情+5,心智+3", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._c621MentorCooldown = true;
+          if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 5);
+          if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 3);
+          // 找好感最高的NPC
+          var bestNpc = null, bestAff = 0;
+          for (var k in (st.relationships || {})) {
+            var r = st.relationships[k];
+            if (r && r.met && (r.affinity || 0) > bestAff) { bestAff = r.affinity || 0; bestNpc = k; }
+          }
+          if (bestNpc && typeof applyAffinityChange === "function") {
+            try { applyAffinityChange(st, bestNpc, 10, "登门道谢"); } catch(e) {}
+          }
+          if (typeof StateManager !== "undefined") StateManager.addMessage("🙏 '谢谢你当初的帮助,没有你就没有我的今天。' 你真诚地道谢。好感+10,心情+5,心智+3。", "success");
+        }},
+        { text: "📞 打个电话问候", hint: "好感+5,心情+3", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._c621MentorCooldown = true;
+          if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 3);
+          var bestNpc = null, bestAff = 0;
+          for (var k in (st.relationships || {})) {
+            var r = st.relationships[k];
+            if (r && r.met && (r.affinity || 0) > bestAff) { bestAff = r.affinity || 0; bestNpc = k; }
+          }
+          if (bestNpc && typeof applyAffinityChange === "function") {
+            try { applyAffinityChange(st, bestNpc, 5, "电话问候"); } catch(e) {}
+          }
+          if (typeof StateManager !== "undefined") StateManager.addMessage("🙏 一个简单的电话,让恩人感受到你的心意。'好孩子,有出息了还记得我。' 好感+5,心情+3。", "success");
+        }}
+      ],
+      text: function (st) {
+        if (!st) return null;
+        return "你突然想起,当初刚来这座城市时,有一个好心人给了你很多帮助。'没有TA,我可能走不到今天。' 你决定找个机会好好感谢TA。";
+      }
+    },
+
+    // ====== C→F: 职业成就UI ======
+    {
+      id: "c621_career_achievement_ui", phase: "street", _isChainEvent: false, icon: "🏅",
+      title: "职业成就",
+      story: "你回顾了自己的职业生涯,发现了一些值得骄傲的成就——{desc}",
+      triggers: { minDay: 50, interval: 90, maxRepeats: 5, excludeFlags: ["_c621CareerAchievementCooldown"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        if (!st.flags || st.flags._c621CareerAchievementCooldown) return false;
+        return st.career && st.career.history && st.career.history.length >= 2;
+      },
+      choices: [
+        { text: "🏆 分享成就", hint: "名气+5,心情+5", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._c621CareerAchievementCooldown = true;
+          if (st.player) st.player.fame = Math.min(100, (st.player.fame || 0) + 5);
+          if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 5);
+          if (typeof StateManager !== "undefined") StateManager.addMessage("🏅 '看看我这一路走来的成绩!' 你把自己的职业成就分享了出去。名气+5,心情+5。", "success");
+        }},
+        { text: "📝 记录在简历里", hint: "智力+3,心智+2", apply: function (st) {
+          if (!st) return; st.flags = st.flags || {}; st.flags._c621CareerAchievementCooldown = true;
+          if (st.player) st.player.intelligence = Math.min(100, (st.player.intelligence || 50) + 3);
+          if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 2);
+          if (typeof StateManager !== "undefined") StateManager.addMessage("🏅 你认真更新了简历。'这些经历,都是我的资本。' 智力+3,心智+2。", "success");
+        }}
+      ],
+      text: function (st) {
+        if (!st || !st.career || !st.career.history) return null;
+        var count = st.career.history.length;
+        var last = st.career.history[count - 1];
+        var event = (last && last.event) || "这段经历";
+        return "你翻看自己的职业历程,已经经历了" + count + "个重要节点。最新的一条是:'" + event + "'。'不知不觉,已经走了这么远。'";
+      }
+    }
+  ];
+
   for (var i = 0; i < EVENTS.length; i++) {
     RANDOM_EVENTS.push(EVENTS[i]);
   }
