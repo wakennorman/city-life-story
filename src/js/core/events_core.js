@@ -74,6 +74,8 @@ function eTriggersMatch(event, state) {
 function rollStreetEvent(state) {
   // 基础 18% 触发率，已存在待弹事件时不重复触发
   if (state._pendingEvent) return;
+  // [全系统自洽修复] 域B R676 A类: state.flags 守卫(旧存档/异常初始化防 TypeError)
+  if (!state.flags) state.flags = {};
 
   // 心理危机事件：mental<20时优先检查，不占用随机事件槽
   var mentalCrisisIds = [
@@ -811,6 +813,60 @@ function showEventModal(evt) {
       });
       if (state.flags._recentEvents.length > 3) state.flags._recentEvents.length = 3;
 
+      // [全系统自洽修复] 域B R676 联动增强(B→G): 事件对健康的长期影响追踪
+      // 累计负面事件(道德/风险类)超过阈值时触发健康预警
+      try {
+        if (evt.id && (evt.id.indexOf("moral_") === 0 || evt.id.indexOf("risk") >= 0)) {
+          if (!state.flags) state.flags = {};
+          state.flags._negativeEventStreak = (state.flags._negativeEventStreak || 0) + 1;
+          state.flags._lastNegativeEventDay = state.player.day;
+          if (state.flags._negativeEventStreak >= 3 && state.status) {
+            state.status.health = Math.max(0, (state.status.health || 100) - 1);
+            state.flags._negativeEventStreak = 0;
+          }
+        } else if (evt.id && evt.id.indexOf("positive_") === 0) {
+          if (!state.flags) state.flags = {};
+          state.flags._negativeEventStreak = 0;
+        }
+      } catch (e) { /* 静默 */ }
+
+      // [全系统自洽修复] 域B R676 联动增强(B→F): 事件记录增强 — 添加类别标签
+      try {
+        if (!state.flags) state.flags = {};
+        if (!state.flags._eventHistory) state.flags._eventHistory = [];
+        var _evtCategory = "general";
+        if (evt.id && evt.id.indexOf("moral_") === 0) _evtCategory = "moral";
+        else if (evt.id && evt.id.indexOf("risk") >= 0) _evtCategory = "risk";
+        else if (evt.id && evt.id.indexOf("positive_") === 0) _evtCategory = "positive";
+        else if (evt.id && evt.id.indexOf("career_") === 0) _evtCategory = "career";
+        state.flags._eventHistory.push({
+          id: evt.id,
+          title: evt.title || evt.id,
+          icon: evt.icon || "📰",
+          day: state.player.day,
+          category: _evtCategory,
+          phase: state.player.phase || "street",
+        });
+        if (state.flags._eventHistory.length > 200) {
+          state.flags._eventHistory = state.flags._eventHistory.slice(-100);
+        }
+      } catch (e) { /* 静默 */ }
+
+      // [全系统自洽修复] 域B R676 联动增强(B→D): 事件社交涟漪 — 重大事件影响NPC社交互动
+      try {
+        if (evt.id && (evt.id.indexOf("moral_") === 0 || evt.id.indexOf("risk") >= 0 || evt.id.indexOf("positive_") === 0)) {
+          var _rels = state.relationships || {};
+          for (var _rId in _rels) {
+            if (_rels[_rId] && _rels[_rId].met && (_rels[_rId].affinity || 0) >= 50) {
+              var _affChange = evt.id.indexOf("positive_") === 0 ? 1 : -1;
+              if (typeof applyAffinityChange === "function") {
+                applyAffinityChange(state, _rId, _affChange, "事件涟漪");
+              }
+            }
+          }
+        }
+      } catch (e) { /* 静默 */ }
+
       // [全系统自洽修复] 域B 联动增强#2 B→D: 高风险事件后NPC安慰 — 亲近NPC会主动关心玩家
       try {
         if (evt._isChainEvent || evt.id.indexOf("moral_") === 0 || evt.id.indexOf("risk") >= 0) {
@@ -1034,6 +1090,8 @@ function scheduleChainEvent(state, eventId, delayDays, phase) {
  */
 function checkChainEventQueue(state, phase) {
   if (state._pendingEvent) return false;
+  // [全系统自洽修复] 域B R676 A类: state.flags 守卫(checkChainEventQueue 可能被无 flags 的旧存档调用)
+  if (!state.flags) return false;
   var queue = state.flags._chainEventQueue;
   if (!queue || queue.length === 0) return false;
 
