@@ -247,6 +247,8 @@ function showGameOverModal() {
   const state = StateManager.getState();
 
   // v3.1：人生缎带判定（游戏失败也记录缎带）
+  // [全系统自洽修复] 域F R681 A类: state.flags 守卫
+  if (!state.flags) state.flags = {};
   if (typeof determineLifeRibbon === "function" && !state.flags._lifeRibbon) {
     var result = determineLifeRibbon(state);
     state.flags._lifeRibbon = result.ribbon.id;

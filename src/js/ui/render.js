@@ -4340,6 +4340,8 @@ function renderSkillsTab(state, parent) {
       '<div style="margin-top:8px;font-size:11px;color:var(--warning);font-weight:bold;">⚡ 点击训练</div>';
 
     // === 训练次数限制（每种技能每天最多3次） ===
+    // [全系统自洽修复] 域F R681 A类: state.flags 守卫(旧存档防 TypeError)
+    if (!state.flags) state.flags = {};
     if (!state.flags._dailyTrainingCounts)
       state.flags._dailyTrainingCounts = {};
     var trainedToday = state.flags._dailyTrainingCounts[key] || 0;
