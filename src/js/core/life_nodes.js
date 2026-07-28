@@ -724,4 +724,24 @@ if (typeof window !== "undefined") {
     version: "v1",
   };
 }
-// [R151] 域G 联动增强
+// [R720 域G 联动增强 G→H]: 年龄与公司阶段
+function getLifeStageLabel(age) {
+  if (!age || age < 0) return "未知";
+  if (age < 18) return "少年期";
+  if (age < 25) return "青年期";
+  if (age < 35) return "奋斗期";
+  if (age < 45) return "成熟期";
+  if (age < 55) return "中年期";
+  if (age < 65) return "知命期";
+  return "老年期";
+}
+
+// [R720 域G 联动增强 G→F]: 生命周期进展摘要
+function getLifeProgressSummary(state) {
+  if (!state || !state.player) return null;
+  var p = state.player;
+  var age = p.age || 0;
+  var day = p.day || 0;
+  var milestones = (state.flags && state.flags._lifeMilestones) || [];
+  return { age: age, day: day, stage: getLifeStageLabel(age), milestones: milestones.length, progress: Math.min(100, Math.round((day / 365) * 100)) };
+}

@@ -538,4 +538,16 @@ if (typeof window !== "undefined") {
   window.getStoryChapterProgress = getStoryChapterProgress;
   window.getStoryChapterChecklist = getStoryChapterChecklist;
 }
-// [R111] 域G 联动增强
+// [R720 域G 联动增强 G→B]: 人生阶段叙事事件
+function getLifeStageNarrativeEvent(age, flags) {
+  if (!age) return null;
+  if (age === 18 && flags && !flags._lifeNarrative_18) return "coming_of_age";
+  if (age === 20 && flags && !flags._lifeNarrative_20) return "youth_bloom";
+  if (age === 25 && flags && !flags._lifeNarrative_25) return "quarter_life";
+  if (age === 30 && flags && !flags._lifeNarrative_30) return "thirty_stand";
+  if (age === 35 && flags && !flags._lifeNarrative_35) return "mid_career";
+  if (age === 40 && flags && !flags._lifeNarrative_40) return "forty_awake";
+  if (age === 50 && flags && !flags._lifeNarrative_50) return "fifty_know";
+  if (age === 60 && flags && !flags._lifeNarrative_60) return "sixty_ear";
+  return null;
+}
