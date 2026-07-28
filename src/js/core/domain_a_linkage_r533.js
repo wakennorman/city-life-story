@@ -72,7 +72,7 @@
         { text: "📈 提升匹配度", hint: "随机技能XP+3", apply: function (st) {
           if (!st) return; st.flags = st.flags || {}; st.flags._a533JobSkillMapCooldown = true;
           var skills = ["accounting", "management", "sales", "coding", "social", "driving"]; // [全系统自洽修复] 域C R535 修复:marketing/technology/trade非真实技能键(XP静默丢弃)→映射sales/coding/driving
-          var sk = skills[Math.floor(Math.random() * skills.length)];
+          var sk = Random.fromArray(skills); // [全系统自洽修复] 域A R400: Math.random()→Random.fromArray()
           if (typeof addSkillXp === "function") { try { addSkillXp(sk, 3); } catch(e) {} }
           if (typeof StateManager !== "undefined") StateManager.addMessage("🎯 '技能还差一点，再提升一下就能达到要求了。' 随机技能XP+3。", "success");
         }}

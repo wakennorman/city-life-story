@@ -74,7 +74,7 @@
         { text: "🔄 学习新技能", hint: "随机新技能XP+3", apply: function (st) {
           if (!st) return; st.flags = st.flags || {}; st.flags._a593SkillMarketCooldown = true;
           var skills = ["coding", "sales", "accounting", "management", "english", "driving"];
-          var sk = skills[Math.floor(Math.random() * skills.length)];
+          var sk = Random.fromArray(skills); // [全系统自洽修复] 域A R400: Math.random()→Random.fromArray()
           if (typeof addSkillXp === "function") { try { addSkillXp(sk, 3); } catch(e) {} }
           if (typeof StateManager !== "undefined") StateManager.addMessage("📊 '多学一门技能多一条路。' " + sk + "XP+3。", "success");
         }}
