@@ -552,6 +552,36 @@ function initPersonalGrowth(state) {
   pg.reading.readingList = Array.isArray(pg.reading.readingList)
     ? pg.reading.readingList
     : [];
+
+  // [全系统自洽修复] 域A R649b 修复:双结构分歧规范化(每日经daily_pipeline→tickPersonalGrowthDaily调用)
+  // state.js权威结构为 health.{physical:{score},mental:{score,stress,..},metabolic:{score,bmi}}(全事件系统part2-8+render.js均按此消费),
+  // 而本文件旧数字结构(physical:80)导致: 对象+数字=NaN / checkupHistory.push TypeError / >=70对象比较恒false。
+  // 统一迁移为对象结构,兼容旧存档数字形态。
+  (function _normalizeHealthR649b(h) {
+    if (!h || typeof h !== "object") return;
+    var defs = { physical: 80, mental: 70, metabolic: 75, dental: 85, vision: 70 };
+    for (var k in defs) {
+      var v = h[k];
+      if (typeof v === "number" && isFinite(v)) {
+        h[k] = { score: Math.max(0, Math.min(100, v)), lastCheckup: 0 };
+      } else if (!v || typeof v !== "object") {
+        h[k] = { score: defs[k], lastCheckup: 0 };
+      } else if (typeof v.score !== "number" || !isFinite(v.score)) {
+        v.score = defs[k];
+      }
+    }
+    if (typeof h.lastCheckup !== "number" || !isFinite(h.lastCheckup)) h.lastCheckup = 0;
+    if (!Array.isArray(h.checkupHistory)) h.checkupHistory = [];
+  })(pg.health);
+}
+
+/**
+ * [全系统自洽修复] 域A R649b: 双形态安全读分(数字/对象{score}均兼容,防NaN)
+ */
+function _pgHealthScoreR649b(v, def) {
+  if (typeof v === "number" && isFinite(v)) return v;
+  if (v && typeof v === "object" && typeof v.score === "number" && isFinite(v.score)) return v.score;
+  return def;
 }
 
 /**
@@ -638,7 +668,15 @@ function applyHobbyBenefits(state, hobby) {
   for (const benefit of hobby.benefits) {
     if (benefit.includes("健康")) {
       const value = parseInt(benefit.match(/[\d-]+/)[0]);
-      pg.health.physical = Math.min(100, pg.health.physical + value);
+      // [全系统自洽修复] 域A R649b 修复: state.js运行时physical为对象{score},旧代码 对象+数字=NaN永久污染 → 双形态兼容写入
+      if (pg.health) {
+        const hp = pg.health.physical;
+        if (hp && typeof hp === "object") {
+          hp.score = Math.min(100, _pgHealthScoreR649b(hp, 80) + value);
+        } else {
+          pg.health.physical = Math.min(100, _pgHealthScoreR649b(hp, 80) + value);
+        }
+      }
     }
     if (benefit.includes("压力")) {
       const value = parseInt(benefit.match(/[\d-]+/)[0]);
@@ -759,13 +797,15 @@ function healthCheckup(state) {
   const day = state.player.day;
 
   // 生成体检报告
+  // [全系统自洽修复] 域A R649b 修复: 运行时health各维为对象{score},旧代码 对象+数字 输出"[object Object]-3"垃圾文本且issues比较恒false;
+  // dental/vision在state.js权威结构中不存在→undefined+int=NaN → 全部经双形态安全读分
   const report = {
     day: day,
-    physical: pg.health.physical + Random.int(-5, 4),
-    mental: pg.health.mental + Random.int(-5, 4),
-    metabolic: pg.health.metabolic + Random.int(-5, 4),
-    dental: pg.health.dental + Random.int(-5, 4),
-    vision: pg.health.vision + Random.int(-5, 4),
+    physical: _pgHealthScoreR649b(pg.health.physical, 80) + Random.int(-5, 4),
+    mental: _pgHealthScoreR649b(pg.health.mental, 70) + Random.int(-5, 4),
+    metabolic: _pgHealthScoreR649b(pg.health.metabolic, 75) + Random.int(-5, 4),
+    dental: _pgHealthScoreR649b(pg.health.dental, 85) + Random.int(-5, 4),
+    vision: _pgHealthScoreR649b(pg.health.vision, 70) + Random.int(-5, 4),
     issues: [],
   };
 
@@ -776,8 +816,14 @@ function healthCheckup(state) {
   if (report.dental < 70) report.issues.push("牙齿需要护理");
   if (report.vision < 60) report.issues.push("视力下降，注意用眼");
 
+  // [全系统自洽修复] 域A R649b 修复: state.js权威结构无checkupHistory字段→.push直接TypeError崩溃(体检功能完全不可用) → 加守卫;
+  // 同时写入physical.lastCheckup使render.js:5793"上次体检"展示由恒'未体检'变为真实数据
   pg.health.lastCheckup = day;
+  if (!Array.isArray(pg.health.checkupHistory)) pg.health.checkupHistory = [];
   pg.health.checkupHistory.push(report);
+  if (pg.health.checkupHistory.length > 20) pg.health.checkupHistory.shift(); // 防存档膨胀
+  if (pg.health.physical && typeof pg.health.physical === "object") pg.health.physical.lastCheckup = day;
+  if (pg.health.metabolic && typeof pg.health.metabolic === "object") pg.health.metabolic.lastCheckup = day;
 
   // 保存并生成报告
   const issueText =
@@ -1047,10 +1093,11 @@ function getPersonalGrowthSummary(state) {
       0,
       ...Object.values(pg.hobbies).map((h) => h.level),
     ),
+    // [全系统自洽修复] 域A R649b 修复: 运行时physical为对象{score},对象>=70恒false→healthStatus恒"需要关注" → 双形态安全读分
     healthStatus:
-      pg.health.physical >= 70
+      _pgHealthScoreR649b(pg.health.physical, 80) >= 70
         ? "良好"
-        : pg.health.physical >= 50
+        : _pgHealthScoreR649b(pg.health.physical, 80) >= 50
           ? "一般"
           : "需要关注",
     psychologicalState: getPsychologicalStateLabel(pg.psychology),
@@ -1066,7 +1113,13 @@ function getPersonalGrowthSummary(state) {
     activeGoals: pg.lifeGoals.active.length,
     completedGoals: pg.lifeGoals.completed.length,
     booksRead: pg.reading.booksRead,
-    lastCheckup: pg.health.lastCheckup,
+    // [全系统自洽修复] 域A R649b 修复: state.js权威结构顶层无lastCheckup(在physical内)→undefined → 双来源兼容读取
+    lastCheckup:
+      pg.health.lastCheckup ||
+      (pg.health.physical && typeof pg.health.physical === "object"
+        ? pg.health.physical.lastCheckup
+        : 0) ||
+      0,
   };
 }
 
