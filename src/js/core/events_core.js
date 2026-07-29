@@ -1876,3 +1876,19 @@ function getEventRiskModifier(state) {
   if (_riskCount >= 5) return 0.95;
   return 1.0;
 }
+
+// [R819 域B 联动增强 B→C]: 事件触发职业灵感 — 特定事件增加职业技能XP
+function getEventCareerInspiration(state, evtId) {
+  if (!state || !evtId || !state.skills || typeof addSkillXp !== "function") return;
+  if (evtId.indexOf("tech_") === 0 && state.skills.coding) addSkillXp("coding", 5);
+  else if (evtId.indexOf("finance_") === 0 && state.skills.accounting) addSkillXp("accounting", 5);
+  else if (evtId.indexOf("sales_") === 0 && state.skills.sales) addSkillXp("sales", 5);
+}
+
+// [R819 域B 联动增强 B→H]: 事件影响公司文化 — 正面/负面事件改变公司氛围
+function getEventCompanyCulture(state, evtType) {
+  if (!state || !evtType || !state.startup || !state.startup.company) return;
+  var _co = state.startup.company;
+  if (evtType === "positive" && _co.reputation) _co.reputation = Math.min(100, _co.reputation + 1);
+  else if (evtType === "negative" && _co.reputation) _co.reputation = Math.max(0, _co.reputation - 1);
+}
