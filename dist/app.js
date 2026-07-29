@@ -223859,6 +223859,30 @@ function renderCorporateStatusWidget(state) {
 // [R600] 域H
 // [R616] 域H
 
+
+// [R729 第三轮 域H 联动增强 H→G]: 公司运营压力健康影响
+function getCorporateStressHealthImpact(state) {
+  if (!state || !state.player || !state.player.corporate) return 0;
+  var c = state.player.corporate;
+  var stress = 0;
+  if (c.risk > 70) stress += 2;
+  if (c.fatigue > 80) stress += 2;
+  if (c.popularity < 30) stress += 1;
+  return stress;
+}
+
+// [R729 第三轮 域H 联动增强 H→B]: 公司里程碑叙事
+function getCorporateMilestoneStory(state) {
+  if (!state || !state.corporate) return null;
+  var c = state.corporate;
+  var rank = c.rank || 'P5';
+  var teamSize = (c.team && Array.isArray(c.team)) ? c.team.length : 0;
+  if (rank === 'P10') return { type: 'peak', title: '职级巅峰', text: '你达到了职级巅峰P10，职业生涯的顶点。' };
+  if (teamSize >= 10) return { type: 'team_leader', title: '团队壮大', text: '你的团队已超过10人，管理半径越来越大。' };
+  if (rank === 'P7' || rank === 'P8') return { type: 'manager', title: '管理之路', text: '你已进入管理层，带领团队冲锋陷阵。' };
+  return null;
+}
+
 ;
 // ==== js/phase2/investment.js ====
 /**
@@ -316520,6 +316544,183 @@ if (typeof window !== "undefined") {
 })();
 
 ;
+// ==== js/core/domain_a_linkage_r758.js ====
+/**
+ * 域A(数据/数值平衡) 联动增强 R758 (第八轮循环)
+ * 桥接：
+ *   A→B  a758_market_whisper_v9 市场低语v9 → 消费 pricing 全量因子
+ *   A→G  a758_economic_wellbeing_v6 经济幸福感v6 → 消费 经济数据+needs
+ *   A→C  a758_skill_premium_v6 技能溢价v6 → 消费 skills+payCalc
+ */
+(function () {
+  "use strict";
+  if (typeof RANDOM_EVENTS === "undefined" || !RANDOM_EVENTS) return;
+  if (RANDOM_EVENTS._domainALinkageR758Loaded) return;
+  RANDOM_EVENTS._domainALinkageR758Loaded = true;
+
+  var EVENTS = [
+    {
+      id: "a758_market_whisper_v9", phase: "street", _isChainEvent: false, icon: "📉",
+      title: "市场低语",
+      story: "菜市场里的价格波动,藏着看不见的手——{desc}",
+      triggers: { minDay: 500, interval: 600, maxRepeats: 3, excludeFlags: ["_a758PriceCd"] },
+      conditions: function (st) {
+        if (!st || st.gameOver) return false;
+        if (st.flags && st.flags._a758PriceCd) return false;
+        return st.player && st.player.day >= 500 && st.trade;
+      },
+      choices: [
+        {
+          text: "📊 分析价格趋势", hint: "智力+15,会计XP+12,置_a758Analyst",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._a758PriceCd = true;
+            st.flags._a758Analyst = true;
+            if (st.player) st.player.intelligence = Math.min(100, (st.player.intelligence || 50) + 15);
+            if (typeof addSkillXp === "function") { try { addSkillXp("accounting", 12); } catch(e) {} }
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("📊 '价格背后,是供需的博弈。' 智力+15,会计XP+12。", "success");
+            }
+          }
+        },
+        {
+          text: "🤝 和摊主聊天", hint: "社交XP+15,置_a758Chatter",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._a758PriceCd = true;
+            st.flags._a758Chatter = true;
+            if (typeof addSkillXp === "function") { try { addSkillXp("social", 15); } catch(e) {} }
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("🤝 '聊天,是最好的情报收集。' 社交XP+15。", "info");
+            }
+          }
+        }
+      ],
+      text: function (st) {
+        if (!st) return null;
+        return "菜市场的价格每天都在变——'这些波动,藏着什么规律?'";
+      }
+    },
+    {
+      id: "a758_economic_wellbeing_v6", phase: "street", _isChainEvent: false, icon: "💚",
+      title: "经济幸福感",
+      story: "你的经济状况正在影响幸福感——{desc}",
+      triggers: { minDay: 400, interval: 500, maxRepeats: 4, excludeFlags: ["_a758WellbeingCd"] },
+      conditions: function (st) {
+        if (!st || st.gameOver) return false;
+        if (st.flags && st.flags._a758WellbeingCd) return false;
+        return st.player && st.player.day >= 400 && st.resources && st.needs && st.status;
+      },
+      choices: [
+        {
+          text: "💰 理财规划", hint: "心智+15,智力+12,置_a758Planner",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._a758WellbeingCd = true;
+            st.flags._a758Planner = true;
+            if (st.player) {
+              st.player.mental = Math.min(100, (st.player.mental || 50) + 15);
+              st.player.intelligence = Math.min(100, (st.player.intelligence || 50) + 12);
+            }
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("💰 '理财,就是理生活。' 心智+15,智力+12。", "success");
+            }
+          }
+        },
+        {
+          text: "🏃 运动减压", hint: "健康+12,疲劳-15,置_a758Exerciser",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._a758WellbeingCd = true;
+            st.flags._a758Exerciser = true;
+            if (st.status) st.status.health = Math.min(100, (st.status.health || 100) + 12);
+            if (st.needs) st.needs.fatigue = Math.max(0, (st.needs.fatigue || 0) - 15);
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("🏃 '运动,是最好的减压方式。' 健康+12,疲劳-15。", "info");
+            }
+          }
+        }
+      ],
+      text: function (st) {
+        if (!st) return null;
+        var cash = st.resources && st.resources.cash ? Math.round(st.resources.cash) : 0;
+        return "现金¥" + cash.toLocaleString() + "——'经济健康,是幸福的基础。'";
+      }
+    },
+    {
+      id: "a758_skill_premium_v6", phase: "street", _isChainEvent: false, icon: "🎓",
+      title: "技能溢价",
+      story: "高技能正在带来高回报——{desc}",
+      triggers: { minDay: 600, interval: 700, maxRepeats: 3, excludeFlags: ["_a758SkillCd"] },
+      conditions: function (st) {
+        if (!st || st.gameOver) return false;
+        if (st.flags && st.flags._a758SkillCd) return false;
+        if (!st.skills) return false;
+        var topLv = 0;
+        for (var k in st.skills) {
+          if (st.skills[k] && typeof st.skills[k].level === "number" && st.skills[k].level > topLv) {
+            topLv = st.skills[k].level;
+          }
+        }
+        return topLv >= 95 && st.player && st.player.day >= 600;
+      },
+      choices: [
+        {
+          text: "📈 评估技能价值", hint: "智力+15,置_a758SkillEvaluator",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._a758SkillCd = true;
+            st.flags._a758SkillEvaluator = true;
+            if (st.player) st.player.intelligence = Math.min(100, (st.player.intelligence || 50) + 15);
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("📈 '技能的价值,由市场决定。' 智力+15。", "success");
+            }
+          }
+        },
+        {
+          text: "💼 技能变现", hint: "管理XP+15,置_a758SkillMonetizer",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._a758SkillCd = true;
+            st.flags._a758SkillMonetizer = true;
+            if (typeof addSkillXp === "function") { try { addSkillXp("management", 15); } catch(e) {} }
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("💼 '让技能变成收入。' 管理XP+15。", "info");
+            }
+          }
+        }
+      ],
+      text: function (st) {
+        if (!st) return null;
+        var topSkill = "";
+        var topLv = 0;
+        if (st.skills) {
+          for (var k in st.skills) {
+            if (st.skills[k] && typeof st.skills[k].level === "number" && st.skills[k].level > topLv) {
+              topLv = st.skills[k].level;
+              topSkill = k;
+            }
+          }
+        }
+        var skillName = topSkill;
+        if (typeof getSkillChineseName === "function") skillName = getSkillChineseName(topSkill) || topSkill;
+        return "你的" + skillName + "已达Lv." + topLv + "——'这个技能,在市场上值多少钱?'";
+      }
+    }
+  ];
+
+  for (var i = 0; i < EVENTS.length; i++) {
+    RANDOM_EVENTS.push(EVENTS[i]);
+  }
+})();
+
+;
 // ==== js/core/domain_b_linkage_r658.js ====
 /**
  * 域B(事件/叙事) 联动增强 R658
@@ -347014,6 +347215,184 @@ if (typeof window !== "undefined") {
   ];
 
   for (var i = 0; i < EVENTS.length; i++) RANDOM_EVENTS.push(EVENTS[i]);
+})();
+
+;
+// ==== js/core/domain_d_linkage_events_r757b.js ====
+/**
+ * 域D(NPC/社交) 联动增强 R757b — 新NPC好感承诺兑现层
+ * 设计（峰终定律+禀赋效应+互惠原则）：
+ *   D→C  d757b_laochen_community_intro  消费 _laoChenCommunityHelp（R440老陈60好感承诺，此前全库零读取）→ 社区讲座技能成长
+ *   D→E  d757b_xiaowei_discount_meal    消费 _xiaoWeiDiscount（R442小薇60好感承诺，此前全库零读取）→ 夜市半价用餐经济兑现
+ *   D→C  d757b_laochen_mentor_guidance  消费 _laoChenMentorship（老陈80好感人生导师flag，此前零读取）→ 导师职业指点
+ * 防御：met铁律(rel&&rel.met) / done-flag防重 / ||守卫 / applyAffinityChange四参 / getNpcDisplayName兜底 / 显式phase:"street"
+ */
+(function () {
+  "use strict";
+  if (typeof RANDOM_EVENTS === "undefined" || !RANDOM_EVENTS) return;
+  if (RANDOM_EVENTS._domainDLinkageR757bLoaded) return;
+  RANDOM_EVENTS._domainDLinkageR757bLoaded = true;
+
+  function _npcName(id, fallback) {
+    if (typeof getNpcDisplayName === "function") {
+      try { var n = getNpcDisplayName(id); if (n) return n; } catch (e) {}
+    }
+    return fallback;
+  }
+  function _metRel(st, id) {
+    var rel = st && st.relationships ? st.relationships[id] : null;
+    return !!(rel && rel.met);
+  }
+
+  var EVENTS = [
+    {
+      id: "d757b_laochen_community_intro",
+      phase: "street",
+      icon: "🏘️",
+      title: "社区中心的免费讲座",
+      story: "路过社区中心，你想起老陈说过这里的资源随便用。公告栏上贴着本周免费讲座：《职场沟通的艺术》。",
+      conditions: function (st) {
+        if (!st || st.gameOver) return false;
+        if (!st.flags || !st.flags._laoChenCommunityHelp) return false;
+        if (st.flags._d757bLectureDone) return false;
+        return _metRel(st, "lao_chen");
+      },
+      choices: [
+        {
+          text: "📚 进去听讲座",
+          hint: "管理XP+10, 社交XP+8, 心智+3",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._d757bLectureDone = true;
+            if (typeof addSkillXp === "function") {
+              try { addSkillXp("management", 10); addSkillXp("social", 8); } catch (e) {}
+            }
+            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 0) + 3);
+            if (typeof applyAffinityChange === "function") {
+              try { applyAffinityChange(st, "lao_chen", 2, "使用社区资源"); } catch (e) {}
+            }
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("📚 讲座很实用。散场时" + _npcName("lao_chen", "老陈") + "冲你点头：「常来。」管理XP+10，社交XP+8，心智+3。", "success");
+            }
+          },
+        },
+        {
+          text: "🚶 下次再说",
+          hint: "无变化，机会保留",
+          apply: function (st) {
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("🚶 你记下了讲座时间，改天再来。", "info");
+            }
+          },
+        },
+      ],
+    },
+    {
+      id: "d757b_xiaowei_discount_meal",
+      phase: "street",
+      icon: "🍢",
+      title: "小薇摊位的老友价",
+      story: "夜市烟火气正浓，小薇远远就朝你招手：「老规矩，给你打折！」烤串的香味让你走不动路。",
+      conditions: function (st) {
+        if (!st || st.gameOver) return false;
+        if (!st.flags || !st.flags._xiaoWeiDiscount) return false;
+        if (st.flags._d757bDiscountMealCd) return false;
+        if (!st.resources || (st.resources.cash || 0) < 15) return false;
+        return _metRel(st, "xiao_wei");
+      },
+      choices: [
+        {
+          text: "🍢 来一顿半价烧烤",
+          hint: "现金-15(原价30), 饱腹+25, 心情+6",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._d757bDiscountMealCd = true;
+            if (st.resources) st.resources.cash = Math.max(0, (st.resources.cash || 0) - 15);
+            if (st.needs) {
+              st.needs.hunger = Math.min(100, (st.needs.hunger || 0) + 25);
+              st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 6);
+            }
+            if (typeof applyAffinityChange === "function") {
+              try { applyAffinityChange(st, "xiao_wei", 2, "照顾生意"); } catch (e) {}
+            }
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("🍢 " + _npcName("xiao_wei", "小薇") + "多送了你一串：「老朋友嘛！」半价15元吃到撑，饱腹+25，心情+6。", "success");
+            }
+          },
+        },
+        {
+          text: "💰 按原价付，支持她生意",
+          hint: "现金-30, 饱腹+25, 小薇好感+4",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._d757bDiscountMealCd = true;
+            if (st.resources) st.resources.cash = Math.max(0, (st.resources.cash || 0) - 30);
+            if (st.needs) st.needs.hunger = Math.min(100, (st.needs.hunger || 0) + 25);
+            if (typeof applyAffinityChange === "function") {
+              try { applyAffinityChange(st, "xiao_wei", 4, "拒收折扣支持生意"); } catch (e) {}
+            }
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("💰 你坚持付了全款。" + _npcName("xiao_wei", "小薇") + "愣了一下，笑得很真：「你这人，真讲究。」好感+4。", "success");
+            }
+          },
+        },
+      ],
+    },
+    {
+      id: "d757b_laochen_mentor_guidance",
+      phase: "street",
+      icon: "🧭",
+      title: "人生导师的深谈",
+      story: "傍晚的公园，老陈坐在长椅上冲你招手：「来，坐。我看你最近的状态，有几句话想跟你说。」",
+      conditions: function (st) {
+        if (!st || st.gameOver) return false;
+        if (!st.flags || !st.flags._laoChenMentorship) return false;
+        if (st.flags._d757bMentorTalkDone) return false;
+        return _metRel(st, "lao_chen");
+      },
+      choices: [
+        {
+          text: "🧭 认真请教职业方向",
+          hint: "管理XP+15, 心智+5",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._d757bMentorTalkDone = true;
+            if (typeof addSkillXp === "function") {
+              try { addSkillXp("management", 15); } catch (e) {}
+            }
+            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 0) + 5);
+            if (typeof applyAffinityChange === "function") {
+              try { applyAffinityChange(st, "lao_chen", 3, "深谈请教"); } catch (e) {}
+            }
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("🧭 " + _npcName("lao_chen", "老陈") + "：「路要自己走，但方向可以借别人的眼。」一席话让你豁然开朗。管理XP+15，心智+5。", "success");
+            }
+          },
+        },
+        {
+          text: "😅 聊聊家常就好",
+          hint: "心情+4",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._d757bMentorTalkDone = true;
+            if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 4);
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("😅 你们聊了会儿家常，夕阳把两个人的影子拉得很长。心情+4。", "info");
+            }
+          },
+        },
+      ],
+    },
+  ];
+
+  for (var i = 0; i < EVENTS.length; i++) {
+    RANDOM_EVENTS.push(EVENTS[i]);
+  }
 })();
 
 ;
