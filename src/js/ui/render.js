@@ -7034,3 +7034,53 @@ function renderLifeStageBadge(age) {
   var _colors = { "少年": "#4CAF50", "青年": "#2196F3", "壮年": "#FF9800", "中年": "#9C27B0", "中老年": "#607D8B", "老年": "#795548" };
   return '<span style="font-size:10px;color:' + (_colors[_stage] || "#999") + ';border:1px solid ' + (_colors[_stage] || "#999") + ";border-radius:3px;padding:1px 4px;margin-left:4px;\">" + _stage + "</span>";
 }
+
+// [R815 域F 联动增强 F→A]: 渲染商品价格趋势仪表盘
+function renderPriceTrendDashboard(state, container) {
+  if (!state || !container || !state.flags || !state.flags._priceTrendData) return;
+  var _html = '<div style="font-size:11px;padding:8px;background:var(--bg-card);border-radius:6px;">';
+  _html += '<div style="font-weight:bold;margin-bottom:6px;">📊 价格趋势</div>';
+  var _count = 0;
+  for (var _gid in state.flags._priceTrendData) {
+    if (_count >= 5) break;
+    var _data = state.flags._priceTrendData[_gid];
+    var _good = typeof getGoodById === "function" ? getGoodById(_gid) : null;
+    var _name = _good ? _good.name : _gid;
+    var _arrow = _data.direction === "up" ? "📈" : (_data.direction === "down" ? "📉" : "➡️");
+    _html += '<div style="display:flex;justify-content:space-between;padding:2px 0;">';
+    _html += '<span>' + _name + '</span><span>' + _arrow + ' ' + Math.abs(_data.change).toFixed(1) + '%</span></div>';
+    _count++;
+  }
+  _html += '</div>';
+  container.innerHTML += _html;
+}
+
+// [R815 域F 联动增强 F→E]: 渲染投资组合概览小部件
+function renderInvestmentWidget(state, container) {
+  if (!state || !container || !state.investment) return;
+  var _inv = state.investment;
+  var _stockVal = 0, _propVal = 0, _btcVal = 0;
+  if (_inv.stockHoldings && _inv.stockMarket) {
+    for (var _i = 0; _i < _inv.stockHoldings.length; _i++) {
+      var _h = _inv.stockHoldings[_i];
+      var _m = _inv.stockMarket[_h.symbol];
+      if (_m) _stockVal += _m.price * _h.shares;
+    }
+  }
+  if (_inv.properties) {
+    for (var _p = 0; _p < _inv.properties.length; _p++) {
+      _propVal += _inv.properties[_p].currentPrice || _inv.properties[_p].buyPrice || 0;
+    }
+  }
+  _btcVal = (_inv.btcHoldings || 0) * (_inv.btcPrice || 0);
+  var _total = _stockVal + _propVal + _btcVal;
+  if (_total <= 0) return;
+  var _html = '<div style="font-size:11px;padding:8px;background:var(--bg-card);border-radius:6px;margin-top:6px;">';
+  _html += '<div style="font-weight:bold;margin-bottom:6px;">💰 投资组合</div>';
+  _html += '<div>股票: ¥' + Math.round(_stockVal).toLocaleString() + '</div>';
+  _html += '<div>房产: ¥' + Math.round(_propVal).toLocaleString() + '</div>';
+  _html += '<div>BTC: ¥' + Math.round(_btcVal).toLocaleString() + '</div>';
+  _html += '<div style="font-weight:bold;border-top:1px solid var(--border);margin-top:4px;padding-top:4px;">总值: ¥' + Math.round(_total).toLocaleString() + '</div>';
+  _html += '</div>';
+  container.innerHTML += _html;
+}
