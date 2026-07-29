@@ -27,7 +27,7 @@
       if (rel && rel.met) ids.push(k);
     }
     if (ids.length === 0) return null;
-    return ids[Math.floor(Math.random() * ids.length)];
+    return ids[Random.int(0, ids.length - 1)];
   }
 
   function npcName(id) {

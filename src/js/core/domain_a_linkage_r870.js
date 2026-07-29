@@ -157,7 +157,36 @@
       repeatable: false,
       choices: [
         {
-          text: "📈 用技能/20. I should be
-The CLAUDE
-全系统/2
-全系统/CLAUDE system/
+          text: "📈 用技能兑换机会",
+          hint: "会计XP+20, 智力+18, 置_a870SkillMonetizer",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._a870SkillDemandDone = true;
+            st.flags._a870SkillMonetizer = true;
+            if (st.player) st.player.intelligence = Math.min(100, (st.player.intelligence || 50) + 18);
+            grantXp("accounting", 20);
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("📈 你用技能兑换到更好的机会——智力+18, 会计XP+20。", "success");
+            }
+          }
+        },
+        {
+          text: "😅 慢慢来，不急",
+          hint: "心智+3",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._a870SkillDemandDone = true;
+            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 3);
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("😅 慢慢来。心智+3。", "info");
+            }
+          }
+        }
+      ]
+    }
+  ];
+
+  for (var i = 0; i < EVENTS.length; i++) { RANDOM_EVENTS.push(EVENTS[i]); }
+})();
