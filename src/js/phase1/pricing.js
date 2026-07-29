@@ -918,6 +918,35 @@ function trackInflationPerception(state) {
   if (state.flags._cumulativeInflation < -0.10 && state.needs) {
     state.needs.happiness = Math.min(100, (state.needs.happiness || 50) + 1);
   }
+
+  // [R817 域A A→F 联动增强]: 记录价格指数供UI展示
+  if (state.flags) {
+    if (!state.flags._priceIndexHistory) state.flags._priceIndexHistory = [];
+    state.flags._priceIndexHistory.push({
+      day: _day,
+      avgPrice: _avgPrice,
+      inflation: _inflationRate,
+      cumulativeInflation: state.flags._cumulativeInflation || 0,
+    });
+    if (state.flags._priceIndexHistory.length > 90) {
+      state.flags._priceIndexHistory = state.flags._priceIndexHistory.slice(-90);
+    }
+  }
+
+  // [R817 域A A→D 联动增强]: 价格异常社交传播 — 持续通胀时NPC会谈论物价
+  if (state.flags && state.flags._cumulativeInflation && Math.abs(state.flags._cumulativeInflation) > 0.12 && state.relationships && state.player) {
+    if (!state.flags._inflationSocialTalkDay || state.flags._inflationSocialTalkDay < state.player.day - 7) {
+      state.flags._inflationSocialTalkDay = state.player.day;
+      if (typeof StateManager !== "undefined") {
+        var _dNpc = "老周";
+        if (state.flags._cumulativeInflation > 0) {
+          StateManager.addMessage("💬 在菜市场遇到" + _dNpc + "，他摇头叹气说物价涨得厉害，日子越来越紧巴了。", "hint");
+        } else {
+          StateManager.addMessage("💬 " + _dNpc + "高兴地说最近物价降了，能多买点肉了。", "hint");
+        }
+      }
+    }
+  }
 }
 
 // [R714 域A 联动增强 A→H]: 经济周期信号 — 基于价格走势检测经济周期,为公司运营提供商业洞察
