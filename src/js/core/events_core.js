@@ -1756,13 +1756,13 @@ function applyAdversityResilience(state, eventType) {
 function applyEventPriceShock(state, eventId) {
   if (!state || !eventId || !state.trade || !state.flags) return;
   var priceShocks = {
-    flood: { goods: ["rice", "vegetable"], change: 0.25 },
-    drought: { goods: ["rice", "oil"], change: 0.30 },
-    typhoon: { goods: ["vegetable", "pork"], change: 0.20 },
-    war_news: { goods: ["oil", "gold"], change: 0.15 },
-    epidemic: { goods: ["mask", "medicine"], change: 0.40 },
-    stock_crash: { goods: ["gold"], change: 0.10 },
-    festival_boom: { goods: ["pork", "egg", "oil"], change: 0.08 },
+    flood: { goods: ["rice", "vegetables"], change: 0.25 }, // [R870] vegetable→vegetables
+    drought: { goods: ["rice", "cooking_oil"], change: 0.30 }, // [R870] oil→cooking_oil
+    typhoon: { goods: ["vegetables", "pork"], change: 0.20 }, // [R870] vegetable→vegetables
+    war_news: { goods: ["cooking_oil", "cigarettes"], change: 0.15 }, // [R870] oil→cooking_oil, gold→cigarettes
+    epidemic: { goods: ["cold_medicine", "mask"], change: 0.40 }, // [R870] medicine→cold_medicine
+    stock_crash: { goods: ["vitamins_item"], change: 0.10 }, // [R870] gold→vitamins_item
+    festival_boom: { goods: ["pork", "egg", "cooking_oil"], change: 0.08 }, // [R870] oil→cooking_oil
   };
   var shock = priceShocks[eventId];
   if (!shock || !state.trade._lastPrices) return;

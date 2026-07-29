@@ -164,10 +164,8 @@ function renderNpcRelationships(state, content) {
         return n.id === npcId;
       });
     if (_npcDef && _npcDef.monthlyIncome && affinity >= 20) {
+      // [全系统自洽修复] 域D R870 A类: state.corporate.job 全库零写入(真实字段为 career.currentJob),移除死分支
       var _playerSalary =
-        (state.corporate &&
-          state.corporate.job &&
-          state.corporate.job.salary) ||
         (state.career &&
           state.career.currentJob &&
           state.career.currentJob.salary) ||
@@ -670,8 +668,8 @@ function renderSocialOverviewTab(state, content) {
   html += '<div class="section"><h3>📊 同龄人进度</h3>';
   html += "<div class='card' style='padding:12px;'>";
   // 计算玩家收入
+  // [全系统自洽修复] 域D R870 A类: state.corporate.job 全库零写入(真实字段为 career.currentJob),移除死分支
   var playerSalary =
-    (state.corporate && state.corporate.job && state.corporate.job.salary) ||
     (state.career && state.career.currentJob && state.career.currentJob.salary) ||
     0;
   // 从 NPC 数据计算平均月收入

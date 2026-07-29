@@ -548,6 +548,8 @@ function getAvgBuyPrice(state, goodId) {
 function updateAllPrices(state) {
   // [全系统自洽修复] 域A A类#14: state.trade 守卫
   if (!state || !state.trade) return;
+  // [全系统自洽修复] 域A R870 A类#1: 初始化 _lastPrices 价格历史记录
+  if (!state.trade._lastPrices) state.trade._lastPrices = {};
   for (const locKey of Object.keys(LOCATIONS)) {
     const loc = LOCATIONS[locKey];
     // 确保价格对象存在
@@ -579,6 +581,18 @@ function updateAllPrices(state) {
 
       state.trade.goodsPrices[locKey][good.id] = price;
     }
+  }
+  // [全系统自洽修复] 域A R870 A类#1: 记录各商品全城均价到 _lastPrices
+  for (var _gid870 of Object.keys(state.trade.goodsPrices[Object.keys(LOCATIONS)[0]] || {})) {
+    if (!state.trade._lastPrices[_gid870]) state.trade._lastPrices[_gid870] = [];
+    var _total = 0, _cnt = 0;
+    for (var _lk870 of Object.keys(LOCATIONS)) {
+      var _p870 = state.trade.goodsPrices[_lk870] && state.trade.goodsPrices[_lk870][_gid870];
+      if (_p870 != null) { _total += _p870; _cnt++; }
+    }
+    var _avg = _cnt > 0 ? Math.round((_total / _cnt) * 100) / 100 : 0;
+    state.trade._lastPrices[_gid870].push(_avg);
+    if (state.trade._lastPrices[_gid870].length > 30) state.trade._lastPrices[_gid870].shift();
   }
   state.trade.lastPriceUpdate = state.player.day;
 }

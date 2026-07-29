@@ -6866,6 +6866,17 @@ function renderFinanceTab(state, parent) {
   });
   div.appendChild(overview);
 
+  // [R870 域A 联动增强 A→F]: 价格指数展示
+  if (typeof getPriceIndexSummary === "function") {
+    var _ps = getPriceIndexSummary(state);
+    if (_ps) {
+      var _pic = document.createElement("div");
+      _pic.style.cssText = "background:var(--bg-card);border:1px solid var(--border);border-radius:8px;padding:8px 12px;margin-top:6px;display:flex;align-items:center;justify-content:space-between;";
+      _pic.innerHTML = '<span style="font-size:12px;color:var(--text-muted);">🏷️ 价格指数</span><span style="font-size:13px;font-weight:600;color:' + _ps.color + ';">' + _ps.text + '</span>';
+      div.appendChild(_pic);
+    }
+  }
+
   // === 今日收支明细 ===
   var sectionTitle = document.createElement("h3");
   sectionTitle.style.cssText = "margin:8px 0 4px;font-size:14px;color:var(--text-primary);";

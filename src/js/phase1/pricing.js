@@ -711,6 +711,9 @@ if (typeof window !== "undefined") {
     getPriceExtremeAlert: getPriceExtremeAlert,
     getAllPriceAnomalies: getAllPriceAnomalies,
     checkPriceAnomalyNarrative: checkPriceAnomalyNarrative,
+    getPriceIndexSummary: getPriceIndexSummary,
+    applyEconomicHealthToDaily: applyEconomicHealthToDaily,
+    triggerInflationNarrative: triggerInflationNarrative,
   });
 
   // ====== 整合钩子：增强现有交易函数 ======
@@ -890,7 +893,7 @@ function trackInflationPerception(state) {
   var _day = state.player && state.player.day;
   if (!_day || _day - _inflationSample < 5) return;
   state.flags._inflationSampleDay = _day;
-  var _sampleGoods = ["rice", "egg", "oil", "vegetable", "pork"];
+  var _sampleGoods = ["rice", "egg", "cooking_oil", "vegetables", "pork"]; // [全系统自洽修复] 域A R870 A类#2: "oil"→"cooking_oil", "vegetable"→"vegetables"
   var _totalPrice = 0, _count = 0;
   for (var _gi = 0; _gi < _sampleGoods.length; _gi++) {
     var _prices = state.trade._lastPrices && state.trade._lastPrices[_sampleGoods[_gi]];
@@ -1231,4 +1234,70 @@ function getPriceFairness(state, goodId, price) {
   if (_ratio > 1.5) return -1;
   if (_ratio < 0.5) return 1;
   return 0;
+}
+
+// [R870 域A 联动增强 A→F]: 价格指数摘要 — 供UI展示通胀/通缩/经济健康度
+function getPriceIndexSummary(state) {
+  if (!state || !state.flags) return { level: "normal", text: "📊 物价平稳", color: "var(--text-muted)" };
+  var cumInflation = state.flags._cumulativeInflation || 0;
+  var indexHistory = state.flags._priceIndexHistory || [];
+  var recentTrend = "stable";
+  if (indexHistory.length >= 5) {
+    var recent = indexHistory.slice(-5);
+    var first = recent[0].avgPrice || 0;
+    var last = recent[recent.length - 1].avgPrice || 0;
+    if (first > 0) {
+      var pct = (last - first) / first;
+      if (pct > 0.05) recentTrend = "up";
+      else if (pct < -0.05) recentTrend = "down";
+    }
+  }
+  if (cumInflation > 0.25) return { level: "boom", text: "📈 经济过热（通胀+" + Math.round(cumInflation * 100) + "%）", color: "var(--danger)", trend: recentTrend };
+  if (cumInflation > 0.1) return { level: "inflation", text: "📊 温和通胀（+" + Math.round(cumInflation * 100) + "%）", color: "var(--warning)", trend: recentTrend };
+  if (cumInflation < -0.15) return { level: "recession", text: "📉 经济衰退（通缩" + Math.round(Math.abs(cumInflation) * 100) + "%）", color: "#9c27b0", trend: recentTrend };
+  if (cumInflation < -0.05) return { level: "cooling", text: "🌡️ 经济降温（-" + Math.round(Math.abs(cumInflation) * 100) + "%）", color: "var(--info)", trend: recentTrend };
+  return { level: "normal", text: "📊 物价平稳", color: "var(--text-muted)", trend: recentTrend };
+}
+
+// [R870 域A 联动增强 A→G]: 经济健康度影响日常状态 — 经济不稳定时增加疲劳/降低心情
+function applyEconomicHealthToDaily(state) {
+  if (!state || !state.needs || !state.flags) return;
+  var healthIndex = typeof getEconomicHealthIndex === "function" ? getEconomicHealthIndex(state) : 50;
+  if (healthIndex < 30) {
+    state.needs.happiness = Math.max(0, (state.needs.happiness || 50) - 2);
+    state.needs.fatigue = Math.min(100, (state.needs.fatigue || 0) + 3);
+  } else if (healthIndex < 45) {
+    state.needs.happiness = Math.max(0, (state.needs.happiness || 50) - 1);
+    state.needs.fatigue = Math.min(100, (state.needs.fatigue || 0) + 1);
+  } else if (healthIndex > 70) {
+    state.needs.happiness = Math.min(100, (state.needs.happiness || 50) + 1);
+  }
+}
+
+// [R870 域A 联动增强 A→B]: 通胀/通缩叙事 — 基于累积通胀触发更丰富的市场叙事
+function triggerInflationNarrative(state) {
+  if (!state || !state.flags || !state.player) return;
+  var cumInflation = state.flags._cumulativeInflation || 0;
+  var lastNarrativeDay = state.flags._lastInflationNarrativeDay || 0;
+  var day = state.player.day || 0;
+  if (day - lastNarrativeDay < 15) return;
+  if (Math.abs(cumInflation) < 0.08) return;
+  state.flags._lastInflationNarrativeDay = day;
+  if (cumInflation > 0.2) {
+    if (typeof StateManager !== "undefined") {
+      StateManager.addMessage("🏪 菜市场里到处是抱怨声——" + (cumInflation > 0.3 ? "猪肉涨到买不起，连青菜都翻倍了。摊主说再这样下去只能改行。" : "物价涨得厉害，老主顾都少买了一半。卖菜大婶说今年的生意最难做。"), "event");
+    }
+  } else if (cumInflation > 0.1) {
+    if (typeof StateManager !== "undefined") {
+      StateManager.addMessage("💬 街坊邻居都在议论物价:" + (day % 2 === 0 ? "「昨天鸡蛋还3块，今天就3块5了!」" : "「米面油都涨了，工资怎么不涨啊!」"), "hint");
+    }
+  } else if (cumInflation < -0.15) {
+    if (typeof StateManager !== "undefined") {
+      StateManager.addMessage("🏪 市场格外冷清——" + (cumInflation < -0.2 ? "降价都没人买，经济确实不景气。一些店铺已经贴出了转让告示。" : "东西便宜了但买的人更少了，经济降温的寒意扑面而来。"), "warning");
+    }
+  } else if (cumInflation < -0.05) {
+    if (typeof StateManager !== "undefined") {
+      StateManager.addMessage("💬 超市打出促销牌:" + (day % 2 === 0 ? "「全场八折，抓紧囤货!」" : "「换季清仓，买一送一!」"), "hint");
+    }
+  }
 }
