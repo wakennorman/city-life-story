@@ -317794,6 +317794,192 @@ if (typeof window !== "undefined") {
 })();
 
 ;
+// ==== js/core/domain_a_linkage_r775.js ====
+/**
+ * 域A(数据/数值平衡) 联动增强 R775 (sensenova-exp 第三轮循环)
+ * 桥接：
+ *   A→H  a775_corp_cost_optimization 公司成本优化 → 消费 通胀+价格数据
+ *   A→E  a775_economic_cycle_invest 经济周期投资洞察 → 消费 经济周期数据
+ *   A→B  a775_price_volatility_story 价格波动叙事 → 消费 价格异常数据
+ */
+(function () {
+  "use strict";
+  if (typeof RANDOM_EVENTS === "undefined" || !RANDOM_EVENTS) return;
+  if (RANDOM_EVENTS._domainALinkageR775Loaded) return;
+  RANDOM_EVENTS._domainALinkageR775Loaded = true;
+
+  var EVENTS = [
+    // ====== A→H 公司成本优化 ======
+    {
+      id: "a775_corp_cost_optimization", phase: "corporate", _isChainEvent: false, icon: "💰",
+      title: "成本优化分析",
+      story: "通胀悄悄侵蚀着你的利润——{desc}",
+      triggers: { minDay: 640, interval: 700, maxRepeats: 3, excludeFlags: ["_a775CostCd"] },
+      conditions: function (st) {
+        if (!st || st.gameOver) return false;
+        if (st.flags && st.flags._a775CostCd) return false;
+        return st.player && st.player.day >= 640 && st.startup && st.startup.active && st.trade;
+      },
+      choices: [
+        {
+          text: "📊 分析成本结构", hint: "智力+15, 会计XP+20, 置_a775CostAnalyst",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._a775CostCd = true;
+            st.flags._a775CostAnalyst = true;
+            // 记录通胀/成本数据供H域消费
+            var _cumInflation = 0;
+            if (st.flags && st.flags._cumulativeInflation != null) {
+              _cumInflation = st.flags._cumulativeInflation;
+            } else if (typeof getCumulativeInflation === "function") {
+              try { _cumInflation = getCumulativeInflation(st); } catch(e) {}
+            }
+            st.flags._a775LastInflationCheck = _cumInflation;
+            if (_cumInflation > 0.1) {
+              st.flags._a775HighInflationWarning = true;
+            }
+            if (st.player) st.player.intelligence = Math.min(100, (st.player.intelligence || 50) + 15);
+            if (typeof addSkillXp === "function") { try { addSkillXp("accounting", 20); } catch(e) {} }
+            if (typeof StateManager !== "undefined") {
+              var _msg = "📊 当前累计通胀率 " + Math.round(_cumInflation * 100) + "%。";
+              if (_cumInflation > 0.1) _msg += " ⚠️ 高通胀环境，建议控制成本！";
+              else if (_cumInflation < -0.05) _msg += " 📉 通缩环境，现金为王。";
+              else _msg += " ✅ 物价稳定，适合扩张。";
+              StateManager.addMessage(_msg + " 智力+15, 会计XP+20。", "info");
+            }
+          }
+        },
+        {
+          text: "💡 优化供应链", hint: "智力+18, 管理XP+15, 置_a775SupplyChain",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._a775CostCd = true;
+            st.flags._a775SupplyChain = true;
+            if (st.player) st.player.intelligence = Math.min(100, (st.player.intelligence || 50) + 18);
+            if (typeof addSkillXp === "function") { try { addSkillXp("management", 15); } catch(e) {} }
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("💡 '供应链优化是永续的课题。' 智力+18, 管理XP+15。", "success");
+            }
+          }
+        }
+      ]
+    },
+
+    // ====== A→E 经济周期投资洞察 ======
+    {
+      id: "a775_economic_cycle_invest", phase: "street", _isChainEvent: false, icon: "📈",
+      title: "经济周期信号",
+      story: "市场有自己的心跳——{desc}",
+      triggers: { minDay: 540, interval: 600, maxRepeats: 3, excludeFlags: ["_a775CycleCd"] },
+      conditions: function (st) {
+        if (!st || st.gameOver) return false;
+        if (st.flags && st.flags._a775CycleCd) return false;
+        return st.player && st.player.day >= 540 && st.trade;
+      },
+      choices: [
+        {
+          text: "🔍 分析经济周期", hint: "智力+15, 会计XP+15, 置_a775CycleAnalyst",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._a775CycleCd = true;
+            st.flags._a775CycleAnalyst = true;
+            var _cumInflation = 0, _cycle = "normal";
+            if (st.flags && st.flags._cumulativeInflation != null) {
+              _cumInflation = st.flags._cumulativeInflation;
+            }
+            if (st.flags && st.flags._economicCycle) {
+              _cycle = st.flags._economicCycle;
+            }
+            st.flags._a775LastCycleCheck = _cycle;
+            st.flags._a775LastInflationForInvest = _cumInflation;
+            if (st.player) st.player.intelligence = Math.min(100, (st.player.intelligence || 50) + 15);
+            if (typeof addSkillXp === "function") { try { addSkillXp("accounting", 15); } catch(e) {} }
+            if (typeof StateManager !== "undefined") {
+              var _msg = "📈 经济周期: " + _cycle;
+              if (_cumInflation > 0.08) _msg += "。高通胀期，建议增持实物资产。";
+              else if (_cumInflation < -0.05) _msg += "。通缩期，现金为王，谨慎投资。";
+              else _msg += "。经济平稳，可适度投资。";
+              StateManager.addMessage(_msg + " 智力+15, 会计XP+15。", "info");
+            }
+          }
+        },
+        {
+          text: "📋 调整投资策略", hint: "智力+18, 置_a775CycleAdjuster",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._a775CycleCd = true;
+            st.flags._a775CycleAdjuster = true;
+            if (st.player) st.player.intelligence = Math.min(100, (st.player.intelligence || 50) + 18);
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("📋 '顺势而为，逆势而蓄。' 智力+18。", "success");
+            }
+          }
+        }
+      ]
+    },
+
+    // ====== A→B 价格波动叙事 ======
+    {
+      id: "a775_price_volatility_story", phase: "street", _isChainEvent: false, icon: "📉",
+      title: "市场价格异动",
+      story: "今天的市场有些反常——{desc}",
+      triggers: { minDay: 300, interval: 500, maxRepeats: 4, excludeFlags: ["_a775PriceStoryCd"] },
+      conditions: function (st) {
+        if (!st || st.gameOver) return false;
+        if (st.flags && st.flags._a775PriceStoryCd) return false;
+        return st.player && st.player.day >= 300 && st.trade && st.trade.goodsPrices;
+      },
+      choices: [
+        {
+          text: "📰 打听市场消息", hint: "智力+10, 魅力+5, 置_a775PriceReporter",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._a775PriceStoryCd = true;
+            st.flags._a775PriceReporter = true;
+            // 记录价格波动事件供B域消费
+            if (!st.flags._priceVolatilityEvents) st.flags._priceVolatilityEvents = [];
+            st.flags._priceVolatilityEvents.push({
+              day: st.player && st.player.day || 0,
+              type: "volatility"
+            });
+            if (st.flags._priceVolatilityEvents.length > 10) st.flags._priceVolatilityEvents.shift();
+            if (st.player) {
+              st.player.intelligence = Math.min(100, (st.player.intelligence || 50) + 10);
+              st.player.charm = Math.min(100, (st.player.charm || 50) + 5);
+            }
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("📰 '市场永远不缺故事。' 智力+10, 魅力+5。", "info");
+            }
+          }
+        },
+        {
+          text: "📊 记录价格异动", hint: "智力+15, 会计XP+10, 置_a775PriceRecorder",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._a775PriceStoryCd = true;
+            st.flags._a775PriceRecorder = true;
+            if (st.player) st.player.intelligence = Math.min(100, (st.player.intelligence || 50) + 15);
+            if (typeof addSkillXp === "function") { try { addSkillXp("accounting", 10); } catch(e) {} }
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("📊 '数据是故事的骨架。' 智力+15, 会计XP+10。", "success");
+            }
+          }
+        }
+      ]
+    }
+  ];
+
+  for (var i = 0; i < EVENTS.length; i++) {
+    RANDOM_EVENTS.push(EVENTS[i]);
+  }
+})();
+;
 // ==== js/core/domain_b_linkage_r658.js ====
 /**
  * 域B(事件/叙事) 联动增强 R658
@@ -320649,6 +320835,163 @@ if (typeof window !== "undefined") {
             if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 20);
             if (typeof StateManager !== "undefined") {
               StateManager.addMessage("🧘 '正念,让心更平静。' 心情+20。", "info");
+            }
+          }
+        }
+      ],
+      text: function (st) {
+        if (!st) return null;
+        return "每一次挫折,都让你更强大——'这就是叙事成长的力量。'";
+      }
+    }
+  ];
+
+  for (var i = 0; i < EVENTS.length; i++) {
+    RANDOM_EVENTS.push(EVENTS[i]);
+  }
+})();
+
+;
+// ==== js/core/domain_b_linkage_r776.js ====
+/**
+ * 域B(事件/叙事) 联动增强 R776 (第十轮循环)
+ * 桥接：
+ *   B→A  b776_event_legacy_v8 事件遗产v8 → 消费 events_core 统计数据
+ *   B→D  b776_npc_bond_v7 NPC羁绊v7 → 消费 事件+NPC关系
+ *   B→G  b776_narrative_growth_v8 叙事成长v8 → 消费 事件历史+status
+ */
+(function () {
+  "use strict";
+  if (typeof RANDOM_EVENTS === "undefined" || !RANDOM_EVENTS) return;
+  if (RANDOM_EVENTS._domainBLinkageR776Loaded) return;
+  RANDOM_EVENTS._domainBLinkageR776Loaded = true;
+
+  var EVENTS = [
+    {
+      id: "b776_event_legacy_v8", phase: "street", _isChainEvent: false, icon: "📜",
+      title: "事件遗产",
+      story: "你经历的事件正在积累成遗产——{desc}",
+      triggers: { minDay: 1000, interval: 1100, maxRepeats: 3, excludeFlags: ["_b776LegacyCd"] },
+      conditions: function (st) {
+        if (!st || st.gameOver) return false;
+        if (st.flags && st.flags._b776LegacyCd) return false;
+        return st.player && st.player.day >= 1000;
+      },
+      choices: [
+        {
+          text: "📊 回顾事件模式", hint: "智力+20,心智+18,置_b776PatternAnalyst",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._b776LegacyCd = true;
+            st.flags._b776PatternAnalyst = true;
+            if (st.player) {
+              st.player.intelligence = Math.min(100, (st.player.intelligence || 50) + 20);
+              st.player.mental = Math.min(100, (st.player.mental || 50) + 18);
+            }
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("📜 '每一个事件,都是人生的一块拼图。' 智力+20,心智+18。", "success");
+            }
+          }
+        },
+        {
+          text: "📖 书写人生故事", hint: "社交XP+20,置_b776LifeWriter",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._b776LegacyCd = true;
+            st.flags._b776LifeWriter = true;
+            if (typeof addSkillXp === "function") { try { addSkillXp("social", 20); } catch(e) {} }
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("📖 '记录,让记忆永存。' 社交XP+20。", "info");
+            }
+          }
+        }
+      ],
+      text: function (st) {
+        if (!st) return null;
+        var days = st.player && st.player.day ? st.player.day : 0;
+        return "你已度过" + days + "天——'这些经历,就是你的人生遗产。'";
+      }
+    },
+    {
+      id: "b776_npc_bond_v7", phase: "street", _isChainEvent: false, icon: "🤝",
+      title: "NPC羁绊",
+      story: "你和NPC之间的羁绊正在加深——{desc}",
+      triggers: { minDay: 900, interval: 1000, maxRepeats: 3, excludeFlags: ["_b776BondCd"] },
+      conditions: function (st) {
+        if (!st || st.gameOver) return false;
+        if (st.flags && st.flags._b776BondCd) return false;
+        return st.player && st.player.day >= 900 && st.relationships;
+      },
+      choices: [
+        {
+          text: "💕 深化友谊", hint: "社交XP+20,置_b776DeepFriend",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._b776BondCd = true;
+            st.flags._b776DeepFriend = true;
+            if (typeof addSkillXp === "function") { try { addSkillXp("social", 20); } catch(e) {} }
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("🤝 '友谊,需要用心经营。' 社交XP+20。", "success");
+            }
+          }
+        },
+        {
+          text: "📖 记录羁绊故事", hint: "心智+18,置_b776BondChronicler",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._b776BondCd = true;
+            st.flags._b776BondChronicler = true;
+            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 18);
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("📖 '羁绊,是人生最珍贵的财富。' 心智+18。", "info");
+            }
+          }
+        }
+      ],
+      text: function (st) {
+        if (!st) return null;
+        return "你和NPC之间的羁绊正在加深——'这些关系,值得珍惜。'";
+      }
+    },
+    {
+      id: "b776_narrative_growth_v8", phase: "street", _isChainEvent: false, icon: "💪",
+      title: "叙事成长",
+      story: "你正在从经历中汲取力量——{desc}",
+      triggers: { minDay: 800, interval: 900, maxRepeats: 4, excludeFlags: ["_b776GrowthCd"] },
+      conditions: function (st) {
+        if (!st || st.gameOver) return false;
+        if (st.flags && st.flags._b776GrowthCd) return false;
+        return st.player && st.player.day >= 800 && st.status && st.needs;
+      },
+      choices: [
+        {
+          text: "💪 从挫折中学习", hint: "心智+20,健康+12,置_b776Resilient",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._b776GrowthCd = true;
+            st.flags._b776Resilient = true;
+            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 20);
+            if (st.status) st.status.health = Math.min(100, (st.status.health || 100) + 12);
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("💪 '挫折,是成长的垫脚石。' 心智+20,健康+12。", "success");
+            }
+          }
+        },
+        {
+          text: "🧘 正念反思", hint: "心情+25,置_b776Mindful",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._b776GrowthCd = true;
+            st.flags._b776Mindful = true;
+            if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 25);
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("🧘 '正念,让心更平静。' 心情+25。", "info");
             }
           }
         }
