@@ -935,3 +935,25 @@ function applyCorporateSkillGrowth(state, grade) {
     addSkillXp("accounting", Math.round(_xp / 2));
   }
 }
+
+// [R809 域H 联动增强 H→E]: 公司现金流影响个人投资信心 — 公司运营良好时投资分析获加成
+function getCorpInvestmentConfidence(state) {
+  if (!state || !state.corporate) return 1.0;
+  var _salary = state.corporate.rank ? (CORP_RANKS[state.corporate.rank] ? CORP_RANKS[state.corporate.rank].baseSalary : 0) : 0;
+  if (_salary >= 30000) return 1.15;
+  if (_salary >= 15000) return 1.08;
+  return 1.0;
+}
+
+// [R809 域H 联动增强 H→F]: 公司运营摘要供UI侧边栏展示
+function getCorpStatusSummary(state) {
+  if (!state || !state.corporate) return null;
+  var _c = state.corporate;
+  return {
+    rank: _c.rank || "P5",
+    level: _c.level || 1,
+    quarter: _c.corpQuarter || 1,
+    teamSize: (_c.team && Array.isArray(_c.team)) ? _c.team.length : 0,
+    lastPerf: _c.perfHistory && _c.perfHistory.length > 0 ? _c.perfHistory[_c.perfHistory.length - 1].grade : null,
+  };
+}
