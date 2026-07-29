@@ -373,11 +373,32 @@ function endQuarter() {
         StateManager.addMessage("💊 长期高强度工作让身体吃不消了，健康-" + _burnoutDmg + "。", "danger");
       }
     }
+    // [R811 域H H→G 联动增强]: 连续冲刺累积健康损耗
+    if (state.flags && state.flags._lastYearSprint && state.status) {
+      state.status.health = Math.max(0, (state.status.health || 100) - 2);
+      StateManager.addMessage("😷 连续两年Q4冲刺，身体开始吃不消了。健康-2。", "warning");
+    }
+    state.flags._lastYearSprint = true;
     StateManager.addMessage(
       "🏃 进入Q4冲刺季！下季度所有KPI增益+50%，绩效评分×1.1。",
       "event",
     );
   }
+
+  // [R811 域H H→F 联动增强]: 季度运营数据摘要
+  try {
+    if (state.corporate && state.corporate.team && typeof StateManager !== "undefined") {
+      var _teamSize = state.corporate.team.length || 0;
+      var _avgProd = 0;
+      if (_teamSize > 0) {
+        for (var _ti = 0; _ti < _teamSize; _ti++) {
+          _avgProd += (state.corporate.team[_ti].productivity || 5);
+        }
+        _avgProd = Math.round(_avgProd / _teamSize);
+      }
+      StateManager.addMessage("🏢 季度运营：团队" + _teamSize + "人 · 平均产出" + _avgProd + " · 现金¥" + Math.round(state.resources.cash || 0).toLocaleString(), "info");
+    }
+  } catch (e) {}
 
   // [全系统自洽修复] 域H R50 联动增强(H→E): 季度投资组合回顾
   if (state.investment && state.investment.portfolio) {
