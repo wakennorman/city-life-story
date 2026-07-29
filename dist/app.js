@@ -314581,6 +314581,246 @@ if (typeof window !== "undefined") {
   }
 })();
 ;
+// ==== js/core/domain_h_linkage_events_r798b.js ====
+/**
+ * 域H(Phase2/公司) 联动增强 R798b — 写-only flag 清账轮
+ *   H→G  h798b_routine_payoff     _h698Sleep/_h698Focus(R698写-only)首读 → 作息/专注承诺在融资高压期兑现回报
+ *   H→E  h798b_sprint_feedback    _h712bSprintPlan(R712b写-only)首读 → 深夜KPI方案被董事会采纳，信任与营收落地
+ *   H→D  h798b_delegation_growth  _h712bDelegated(R712b写-only)首读 → 授权文化让团队独当一面，联动已见面NPC
+ * 设计：峰终定律(承诺兑现是记忆峰值)+禀赋效应(玩家为自己过去的选择被系统记住而产生拥有感)。
+ * 防御：st.startup.active 门控 / 全||守卫 / rel&&rel.met 铁律 / done-flag 防重 / morale typeof number 惰性守卫。
+ */
+(function () {
+  "use strict";
+  if (typeof RANDOM_EVENTS === "undefined" || !RANDOM_EVENTS) return;
+  if (RANDOM_EVENTS._domainHLinkageR798bLoaded) return;
+  RANDOM_EVENTS._domainHLinkageR798bLoaded = true;
+
+  function co(st) {
+    if (!st || !st.startup || !st.startup.active) return null;
+    return st.startup.company || null;
+  }
+
+  function firstMetNpc(st) {
+    if (!st || !st.relationships) return null;
+    for (var id in st.relationships) {
+      var rel = st.relationships[id];
+      if (rel && rel.met) return id;
+    }
+    return null;
+  }
+
+  function npcName(st, id) {
+    if (typeof getNpcDisplayName === "function") {
+      try { return getNpcDisplayName(st, id) || "老朋友"; } catch (e) {}
+    }
+    return "老朋友";
+  }
+
+  var EVENTS = [
+    // ========================================================================
+    // 联动1: H→G — _h698Sleep/_h698Focus 全库首读
+    // 设计意图：R698「创始人健康」事件里选择调整作息/专注工作法的玩家，
+    // 在融资尽调高压周得到生理与心智回报——承诺兑现，峰终定律。
+    // ========================================================================
+    {
+      id: "h798b_routine_payoff",
+      phase: "corporate",
+      icon: "🌅",
+      title: "尽调周的清晨六点半",
+      conditions: function (st) {
+        if (!st || !st.player || st.gameOver) return false;
+        if (!st.flags || (!st.flags._h698Sleep && !st.flags._h698Focus)) return false;
+        if (st.flags._h798bRoutineDone) return false;
+        var c = co(st);
+        return !!c && st.player.day >= 200;
+      },
+      probability: 0.12,
+      repeatable: false,
+      choices: [
+        {
+          text: "🌅 保持节奏，稳住这一周",
+          hint: "健康+5,心智+6,置_h798bSteadyFounder",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._h798bRoutineDone = true;
+            st.flags._h798bSteadyFounder = true;
+            if (st.status) st.status.health = Math.min(100, (st.status.health || 100) + 5);
+            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 6);
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("🌅 当年那个「先睡好觉」的决定，在尽调周救了你。健康+5，心智+6。", "success");
+            }
+          }
+        },
+        {
+          text: "📈 把状态红利押进谈判桌",
+          hint: "管理XP+8,心情+4",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._h798bRoutineDone = true;
+            if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 4);
+            if (typeof addSkillXp === "function") { try { addSkillXp("management", 8); } catch (e) {} }
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("📈 投资人熬红了眼，你却思路清晰——好状态本身就是谈判筹码。管理XP+8，心情+4。", "success");
+            }
+          }
+        }
+      ],
+      text: function (st) {
+        var byFocus = st && st.flags && st.flags._h698Focus && !st.flags._h698Sleep;
+        return "融资尽调第五天。对面的分析师连续熬了三个通宵，眼神涣散。而你——" +
+          (byFocus ? "靠着那套坚持了很久的深度专注工作法" : "靠着当年立下的规律作息") +
+          "，每天六点半自然醒，思路清爽得像刚擦过的玻璃。\n\n身体是最诚实的资产负债表，你很早就懂了。";
+      }
+    },
+
+    // ========================================================================
+    // 联动2: H→E — _h712bSprintPlan 全库首读
+    // 设计意图：R712b「连夜做KPI冲刺方案」当晚没人回复，此处补上后续——
+    // 方案被董事会采纳并落地，股东信任与营收兑现。损失厌恶的反面：付出被看见。
+    // ========================================================================
+    {
+      id: "h798b_sprint_feedback",
+      phase: "corporate",
+      icon: "📊",
+      title: "那份凌晨三点的方案",
+      conditions: function (st) {
+        if (!st || !st.player || st.gameOver) return false;
+        if (!st.flags || !st.flags._h712bSprintPlan) return false;
+        if (st.flags._h798bSprintFbDone) return false;
+        var c = co(st);
+        return !!c;
+      },
+      probability: 0.14,
+      repeatable: false,
+      choices: [
+        {
+          text: "🙏 归功团队执行",
+          hint: "股东信任+5,团队士气+4,心智+4",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._h798bSprintFbDone = true;
+            var c = co(st);
+            if (c) {
+              c.shareholderTrust = Math.min(100, (c.shareholderTrust || 50) + 5);
+              if (typeof c.morale === "number") c.morale = Math.min(100, c.morale + 4);
+            }
+            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 4);
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("🙏 「方案是我写的，但把它跑通的是团队。」董事们记住了这句话。股东信任+5，心智+4。", "success");
+            }
+          }
+        },
+        {
+          text: "💼 顺势争取更多授权",
+          hint: "股东信任+3,管理XP+10,名气+3",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._h798bSprintFbDone = true;
+            var c = co(st);
+            if (c) c.shareholderTrust = Math.min(100, (c.shareholderTrust || 50) + 3);
+            if (st.player) st.player.fame = Math.min(100, (st.player.fame || 0) + 3);
+            if (typeof addSkillXp === "function") { try { addSkillXp("management", 10); } catch (e) {} }
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("💼 你借着方案落地的东风，拿到了下季度更大的决策权。股东信任+3，管理XP+10，名气+3。", "success");
+            }
+          }
+        }
+      ],
+      text: function (st) {
+        var c = co(st);
+        var trust = c ? Math.round(c.shareholderTrust || 50) : 50;
+        return "季度董事会上，主席翻开一份文件：「这份KPI冲刺方案，是上季度执行得最彻底的一份。」\n\n你认出来了——那是你凌晨三点发进董事群、当晚没有一个人回复的那份。\n\n原来他们都看了。当前股东信任 " + trust + "。";
+      }
+    },
+
+    // ========================================================================
+    // 联动3: H→D — _h712bDelegated 全库首读
+    // 设计意图：R712b危机夜「授权团队自己去睡」的管理风格开花结果——
+    // 团队独立平掉一次小型舆情，创始人得以做真正重要的事。联动已见面NPC。
+    // ========================================================================
+    {
+      id: "h798b_delegation_growth",
+      phase: "corporate",
+      icon: "🤝",
+      title: "你不在场，团队赢了",
+      conditions: function (st) {
+        if (!st || !st.player || st.gameOver) return false;
+        if (!st.flags || !st.flags._h712bDelegated) return false;
+        if (st.flags._h798bDelegationDone) return false;
+        var c = co(st);
+        return !!c && Array.isArray(c.employees) && c.employees.length >= 2;
+      },
+      probability: 0.12,
+      repeatable: false,
+      choices: [
+        {
+          text: "🎉 给团队发个小红包庆功",
+          hint: "现金-800,团队士气+6,心情+5",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._h798bDelegationDone = true;
+            var cost = 800; // [PLACEHOLDER] 庆功红包
+            if (st.resources && (st.resources.cash || 0) >= cost) {
+              st.resources.cash -= cost;
+              var c = co(st);
+              if (c && typeof c.morale === "number") c.morale = Math.min(100, c.morale + 6);
+              if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 5);
+              if (typeof StateManager !== "undefined") {
+                StateManager.addMessage("🎉 红包不大，但「你们自己搞定的」这句话值钱。团队士气+6，心情+5。", "success");
+              }
+            } else {
+              var c2 = co(st);
+              if (c2 && typeof c2.morale === "number") c2.morale = Math.min(100, c2.morale + 3);
+              if (typeof StateManager !== "undefined") {
+                StateManager.addMessage("🎉 现金紧张，你在全员群里郑重致谢——心意到了。团队士气+3。", "info");
+              }
+            }
+          }
+        },
+        {
+          text: "🍵 约老朋友喝茶，聊聊放手的艺术",
+          hint: "好感+5,心智+5,管理XP+6",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._h798bDelegationDone = true;
+            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 5);
+            if (typeof addSkillXp === "function") { try { addSkillXp("management", 6); } catch (e) {} }
+            var nid = firstMetNpc(st);
+            if (nid && typeof applyAffinityChange === "function") {
+              try { applyAffinityChange(st, nid, 5, "分享放手管理的心得"); } catch (e) {}
+            }
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage(
+                nid
+                  ? "🍵 " + npcName(st, nid) + "听完笑了：「你终于学会当老板了。」好感+5，心智+5，管理XP+6。"
+                  : "🍵 你在笔记本上写下：管理的尽头是信任。心智+5，管理XP+6。",
+                "success"
+              );
+            }
+          }
+        }
+      ],
+      text: function (st) {
+        var c = co(st);
+        var n = c && Array.isArray(c.employees) ? c.employees.length : 0;
+        return "出差第三天，你落地开机，发现公司群里炸过一轮又平息了——一次小型舆情，团队按预案自己处理完了，复盘文档都写好了。\n\n" + n + " 名员工，没有一个打电话给你。\n\n那个危机深夜「授权团队，自己去睡」的决定，今天长成了一支不需要你盯着的队伍。";
+      }
+    }
+  ];
+
+  for (var i = 0; i < EVENTS.length; i++) {
+    RANDOM_EVENTS.push(EVENTS[i]);
+  }
+})();
+
+;
 // ==== js/core/domain_h_linkage_r795.js ====
 /*
  * 城市浮生记 — 域H(Phase2/公司) 联动增强 R795
@@ -335656,6 +335896,217 @@ if (typeof window !== "undefined") {
   // ---- 注入全局 RANDOM_EVENTS ----
   for (var i = 0; i < AFF100_EVENTS.length; i++) {
     RANDOM_EVENTS.push(AFF100_EVENTS[i]);
+  }
+})();
+
+;
+// ==== js/core/domain_d_linkage_r799.js ====
+/*
+ * 城市浮生记 — 域D(NPC/社交) 联动增强 R799
+ * 全系统优化·Domain D 第五十九轮循环
+ *
+ * 【联动增强3项】
+ *   1. D→A 社交资本量化 — NPC关系网络转化为数值平衡洞察
+ *   2. D→E 社交投资情报 — NPC关系提供经济/投资线索
+ *   3. D→G 社交健康恢复 — NPC关系反馈为身心状态恢复
+ *
+ * 设计约束（与历轮 IIFE linkage 文件一致）：
+ *  - IIFE 注入全局 RANDOM_EVENTS，避免改动 cross_system_events.js。
+ *  - 所有 state 访问均 || 防御；数值标 [PLACEHOLDER]。
+ *  - 严格遵守域D铁律：NPC引用须 rel && rel.met；好感传导走 applyAffinityChange。
+ */
+(function () {
+  "use strict";
+  if (typeof RANDOM_EVENTS === "undefined" || !RANDOM_EVENTS) return;
+  if (RANDOM_EVENTS._domainDLinkageR799Loaded) return;
+  RANDOM_EVENTS._domainDLinkageR799Loaded = true;
+
+  // ---- 本地助手 ----
+  function grantXp(key, amt) {
+    if (typeof addSkillXp === "function") { try { addSkillXp(key, amt); } catch(e) {} }
+  }
+
+  var EVENTS = [
+    // ========================================================================
+    // 联动增强1: D→A 社交资本量化 — NPC关系网络转化为数值洞察
+    // 设计意图：NPC关系网络应产生可量化的"社交资本"，供数值域消费。
+    // 本事件在玩家拥有≥5个已结识NPC时触发，给予"社交资本"标记。
+    // 心理学：禀赋效应 — 玩家感到"我的人脉是我的财富"。
+    // ========================================================================
+    {
+      id: "d799_social_capital_quant",
+      phase: "street",
+      icon: "💎",
+      title: "你的人脉，就是你的财富",
+      story: "你数了数——在这座城市里，你已经结识了不少人。\n\n每一个朋友，都是一份潜在的资源和帮助。经济学家管这叫「社交资本」，但你知道，这不只是数字。\n\n这是你在城市里的「安全网」。",
+      conditions: function (st) {
+        if (!st || !st.player || st.gameOver) return false;
+        if (st.flags && st.flags._d799SocCapDone) return false;
+        if (!st.relationships) return false;
+        var _metCount = 0;
+        for (var _id in st.relationships) {
+          if (st.relationships[_id] && st.relationships[_id].met) _metCount++;
+        }
+        return _metCount >= 5;
+      },
+      probability: 0.06,
+      repeatable: false,
+      choices: [
+        {
+          text: "💎 量化我的社交资本",
+          hint: "智力+5, 管理XP+8, 置_d799SocialCapital",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._d799SocCapDone = true;
+            st.flags._d799SocialCapital = true;
+            // 计算社交资本总值供A域消费
+            var _totalAff = 0;
+            for (var _id in st.relationships) {
+              var _r = st.relationships[_id];
+              if (_r && _r.met) _totalAff += (_r.affinity || 0);
+            }
+            st.flags._d799SocialCapitalValue = _totalAff;
+            if (st.player) st.player.intelligence = Math.min(100, (st.player.intelligence || 50) + 5);
+            grantXp("management", 8);
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("💎 你的社交资本总值：" + _totalAff + "。智力+5, 管理XP+8。", "success");
+            }
+          }
+        },
+        {
+          text: "😊 朋友不是用来量化的",
+          hint: "心智+3",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._d799SocCapDone = true;
+            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 3);
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("😊 朋友不是用来量化的。心智+3。", "info");
+            }
+          }
+        }
+      ]
+    },
+
+    // ========================================================================
+    // 联动增强2: D→E 社交投资情报 — NPC关系提供经济/投资线索
+    // 设计意图：高好感NPC应能提供投资/经济线索，让玩家感到"朋友有用"。
+    // 本事件在玩家拥有≥1个好感≥50的NPC时触发，给予"投资情报"标记。
+    // 心理学：互惠原则 — 玩家感到"帮朋友也是帮自己"。
+    // ========================================================================
+    {
+      id: "d799_social_invest_intel",
+      phase: "street",
+      icon: "💡",
+      title: "朋友的一句话，值千金",
+      story: "吃饭时，一个朋友无意间提起：「最近那个行业好像要火，好多人往里挤。」\n\n别人当八卦听，你却在心里盘算——这条信息，值多少钱？\n\n社交圈里的「软情报」，往往是投资决策的「硬依据」。",
+      conditions: function (st) {
+        if (!st || !st.player || st.gameOver) return false;
+        if (st.flags && st.flags._d799InvestIntelDone) return false;
+        if (!st.relationships) return false;
+        for (var _id in st.relationships) {
+          var _r = st.relationships[_id];
+          if (_r && _r.met && (_r.affinity || 0) >= 50) return true;
+        }
+        return false;
+      },
+      probability: 0.05,
+      repeatable: false,
+      choices: [
+        {
+          text: "💡 记录这条投资情报",
+          hint: "智力+8, 会计XP+8, 置_d799InvestIntel",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._d799InvestIntelDone = true;
+            st.flags._d799InvestIntel = true;
+            if (st.player) st.player.intelligence = Math.min(100, (st.player.intelligence || 50) + 8);
+            grantXp("accounting", 8);
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("💡 你记录了这条投资情报——智力+8, 会计XP+8。朋友的一句话，值千金。", "success");
+            }
+          }
+        },
+        {
+          text: "😅 听听而已，不当真",
+          hint: "心智+2",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._d799InvestIntelDone = true;
+            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 2);
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("😅 听听而已，不必当真。", "info");
+            }
+          }
+        }
+      ]
+    },
+
+    // ========================================================================
+    // 联动增强3: D→G 社交健康恢复 — NPC关系反馈为身心状态恢复
+    // 设计意图：NPC关系应提供被动的身心恢复，形成"社交→健康"正向循环。
+    // 本事件在玩家拥有≥3个好友(好感≥60)时触发，给予"社交支持"标记。
+    // 心理学：社会支持 — 被关爱感促进身心健康。
+    // ========================================================================
+    {
+      id: "d799_social_health_recovery",
+      phase: "street",
+      icon: "💚",
+      title: "朋友是最好的保健品",
+      story: "这天你心情不好，几个朋友约你出去坐坐。\n\n没有说什么大道理，就是一起吃顿饭、喝杯酒、聊聊天。\n\n但你感觉好多了——原来朋友，才是最好的保健品。",
+      conditions: function (st) {
+        if (!st || !st.player || st.gameOver) return false;
+        if (st.flags && st.flags._d799SocHealthDone) return false;
+        if (!st.relationships) return false;
+        var _closeFriends = 0;
+        for (var _id in st.relationships) {
+          var _r = st.relationships[_id];
+          if (_r && _r.met && (_r.affinity || 0) >= 60) _closeFriends++;
+        }
+        return _closeFriends >= 3;
+      },
+      probability: 0.06,
+      repeatable: false,
+      choices: [
+        {
+          text: "💚 感谢朋友的陪伴",
+          hint: "健康+8, 心情+10, 置_d799SocialSupport",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._d799SocHealthDone = true;
+            st.flags._d799SocialSupport = true;
+            if (st.status) st.status.health = Math.min(100, (st.status.health || 80) + 8);
+            if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 10);
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("💚 感谢朋友的陪伴——健康+8, 心情+10。朋友是最好的保健品。", "success");
+            }
+          }
+        },
+        {
+          text: "😊 自己调整就好",
+          hint: "心智+3",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._d799SocHealthDone = true;
+            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 3);
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("😊 自己调整就好。心智+3。", "info");
+            }
+          }
+        }
+      ]
+    }
+  ];
+
+  // ---- 注入全局 RANDOM_EVENTS ----
+  for (var i = 0; i < EVENTS.length; i++) {
+    RANDOM_EVENTS.push(EVENTS[i]);
   }
 })();
 
