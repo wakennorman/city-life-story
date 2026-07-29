@@ -1210,3 +1210,25 @@ function getCorpCostFromMarket(state) {
   if (_inf < -0.1) return 0.95;
   return 1.0;
 }
+
+// [R818 域A 联动增强 A→C]: 市场价格波动影响技能价值 — 高通胀时销售技能更值钱
+function getSkillValueByMarket(state, skillId) {
+  if (!state || !skillId || !state.flags) return 1.0;
+  var _inf = state.flags._cumulativeInflation || 0;
+  if (skillId === "sales" && _inf > 0.1) return 1.15;
+  if (skillId === "accounting" && _inf > 0.15) return 1.1;
+  if (skillId === "management" && _inf < -0.05) return 1.1;
+  return 1.0;
+}
+
+// [R818 域A 联动增强 A→D]: 价格公平感影响NPC好感 — 高价买入/低价卖出影响情绪
+function getPriceFairness(state, goodId, price) {
+  if (!state || !goodId || !price) return 0;
+  var _good = typeof getGoodById === "function" ? getGoodById(goodId) : null;
+  if (!_good || !_good.basePrice) return 0;
+  var _ratio = price / _good.basePrice;
+  if (_ratio > 2.0) return -2;
+  if (_ratio > 1.5) return -1;
+  if (_ratio < 0.5) return 1;
+  return 0;
+}
