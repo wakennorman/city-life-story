@@ -953,6 +953,41 @@ function showEventModal(evt) {
           if (state.flags._eventHistory.length > 100) state.flags._eventHistory = state.flags._eventHistory.slice(-100);
         }
       }
+      // [R795 域B 联动增强 B→C]: 重大事件影响职业资本 — 道德/风险事件触发职业声誉变化
+      try {
+        if (state.flags && (evt.id.indexOf("moral_") === 0 || evt.id.indexOf("risk") >= 0 || evt.id.indexOf("positive_") === 0) && typeof ensureCareerCapital === "function") {
+          var _capB = ensureCareerCapital(state);
+          if (_capB) {
+            if (evt.id.indexOf("positive_") === 0) {
+              _capB.reputation = Math.min(100, (_capB.reputation || 0) + 1);
+            } else if (evt.id.indexOf("moral_") === 0) {
+              _capB.reputation = Math.max(0, (_capB.reputation || 0) - 1);
+            }
+          }
+        }
+      } catch (e) { /* 静默 */ }
+
+      // [R795 域B 联动增强 B→G]: 事件类型影响疲劳恢复 — 正面事件减疲劳，负面事件增疲劳
+      try {
+        if (state.needs && state.flags) {
+          if (evt.id && evt.id.indexOf("positive_") === 0) {
+            state.needs.fatigue = Math.max(0, (state.needs.fatigue || 0) - 2);
+          } else if (evt.id && (evt.id.indexOf("moral_") === 0 || evt.id.indexOf("risk") >= 0)) {
+            state.needs.fatigue = Math.min(100, (state.needs.fatigue || 0) + 1);
+          }
+        }
+      } catch (e) { /* 静默 */ }
+
+      // [R795 域B 联动增强 B→H]: 道德事件影响公司声誉 — 创业阶段道德抉择影响公司声誉
+      try {
+        if (state.startup && state.startup.company && state.flags) {
+          if (evt.id && evt.id.indexOf("moral_") === 0) {
+            var _sCo = state.startup.company;
+            _sCo.reputation = Math.max(0, Math.min(100, (_sCo.reputation || 50) - 2));
+          }
+        }
+      } catch (e) { /* 静默 */ }
+
       // v3.1 ⑤ 难度惩罚倍率结算：休闲×0.7 / 标准×1.0 / 困难×1.3 / 地狱×1.6
       try {
         if (typeof getDifficultyMultiplier === "function") {

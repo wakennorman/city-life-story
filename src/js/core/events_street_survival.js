@@ -37,7 +37,7 @@
           hint: "良心选择",
           apply: (st) => {
             st.needs.happiness = Math.min(100, st.needs.happiness + 12);
-            st.player.fame = Math.min(100, st.player.fame + 3);
+            st.player.fame = Math.min(100, (st.player.fame || 0) + 3);
             st.flags._returnedWallet = true;
             StateManager.addMessage(
               "🏛️ 钱包交给了警察，警察夸你拾金不昧，心情大好！",
@@ -85,7 +85,7 @@
           text: "🏃 撒腿就跑",
           hint: "考验敏捷",
           apply: (st) => {
-            if (Random.chance(0.5 + (st.player.agility - 20) * 0.02)) {
+            if (Random.chance(0.5 + ((st.player.agility || 20) - 20) * 0.02)) {
               StateManager.addMessage(
                 "🏃 你转身就跑，甩开了混混，逃过一劫！",
                 "success",
@@ -176,7 +176,7 @@
           text: "📱 反手举报给警察",
           hint: "正义感",
           apply: (st) => {
-            st.player.fame = Math.min(100, st.player.fame + 5);
+            st.player.fame = Math.min(100, (st.player.fame || 0) + 5);
             st.needs.happiness = Math.min(100, st.needs.happiness + 6);
             StateManager.addMessage(
               "📱 警察抓到了诈骗团伙，给你点了个赞！",
@@ -205,7 +205,7 @@
             if (Random.chance(0.5)) {
               const reward = Random.int(50, 129);
               st.resources.cash = (st.resources.cash || 0) + reward; // [全系统自洽修复] 域B A类:cash NaN守卫
-              st.player.fame = Math.min(100, st.player.fame + 2);
+              st.player.fame = Math.min(100, (st.player.fame || 0) + 2);
               st.needs.happiness = Math.min(100, st.needs.happiness + 10);
               // 类似老周的性格，帮忙后老周好感微量提升
               if (st.relationships && st.relationships["old_zhou"]) {
@@ -383,9 +383,9 @@
           text: "🧠 理智劝和",
           hint: "考验智力",
           apply: (st) => {
-            if (Random.chance(0.4 + (st.player.intelligence - 20) * 0.02)) {
+            if (Random.chance(0.4 + ((st.player.intelligence || 20) - 20) * 0.02)) {
               st.needs.happiness = Math.min(100, st.needs.happiness + 10);
-              st.player.fame = Math.min(100, st.player.fame + 3);
+              st.player.fame = Math.min(100, (st.player.fame || 0) + 3);
               StateManager.addMessage(
                 "🧠 你一番话说得两人都服气了，握手言和！还夸你通情达理。",
                 "success",
@@ -426,7 +426,7 @@
             st.resources.cash = Math.max(0, (st.resources.cash || 0) - 30); // [全系统自洽修复] 域B A类:cash NaN守卫
             st.needs.happiness = Math.min(100, st.needs.happiness + 20);
             st.needs.fatigue = Math.max(0, st.needs.fatigue - 5);
-            st.player.fame = Math.min(100, st.player.fame + 1);
+            st.player.fame = Math.min(100, (st.player.fame || 0) + 1);
             StateManager.addMessage(
               "🐕 收养了一只小狗！花了 30 块买了狗粮，心情大好！疲劳-5。",
               "success",
@@ -440,7 +440,7 @@
           hint: "贴寻狗启事",
           apply: (st) => {
             st.needs.fatigue = Math.min(100, st.needs.fatigue + 8);
-            st.player.fame = Math.min(100, st.player.fame + 2);
+            st.player.fame = Math.min(100, (st.player.fame || 0) + 2);
             StateManager.addMessage(
               "📞 主人找到了！你好人有好报，心情不错。",
               "success",
@@ -550,7 +550,7 @@
             if (success) {
               const profit = Random.int(2500, 3999);
               st.resources.cash = (st.resources.cash || 0) + profit; // [全系统自洽修复] 域B A类:cash NaN守卫
-              st.player.fame = Math.min(100, st.player.fame + 5);
+              st.player.fame = Math.min(100, (st.player.fame || 0) + 5);
               st.needs.happiness = Math.min(100, st.needs.happiness + 15);
               // 标记已参与赌局成功
               st.flags._realEstateGambleWon = true;
@@ -569,7 +569,7 @@
               }
             } else {
               st.needs.happiness = Math.max(0, st.needs.happiness - 20);
-              st.player.mental = Math.max(0, st.player.mental - 8);
+              st.player.mental = Math.max(0, (st.player.mental || 50) - 8);
               st.flags._realEstateGambleLost = true;
               StateManager.addMessage(
                 "💰 收购泡汤了！消息是假的，2000块全砸里面了。那财务也不见了...",
@@ -622,7 +622,7 @@
           hint: "远离赌博",
           apply: (st) => {
             st.needs.happiness = Math.min(100, st.needs.happiness + 2);
-            st.player.mental = Math.min(100, st.player.mental + 3);
+            st.player.mental = Math.min(100, (st.player.mental || 50) + 3);
             st.flags._realEstateGambleRefused = true;
             StateManager.addMessage(
               "🚫 你拒绝了。这种内幕交易不靠谱，还是踏实赚钱更安心。",
@@ -662,10 +662,10 @@
           text: "👊 硬刚回去",
           hint: "看体质",
           apply: (st) => {
-            const win = Random.chance(0.3 + (st.player.physique - 20) * 0.02);
+            const win = Random.chance(0.3 + ((st.player.physique || 20) - 20) * 0.02);
             if (win) {
               st.needs.happiness = Math.min(100, st.needs.happiness + 5);
-              st.player.fame = Math.min(100, st.player.fame + 3);
+              st.player.fame = Math.min(100, (st.player.fame || 0) + 3);
               StateManager.addMessage(
                 "👊 你硬气地怼了回去，他们看你不好惹，骂骂咧咧走了。",
                 "success",
@@ -685,7 +685,7 @@
           text: "🚔 报警",
           hint: "走正规渠道",
           apply: (st) => {
-            st.player.fame = Math.min(100, st.player.fame + 4);
+            st.player.fame = Math.min(100, (st.player.fame || 0) + 4);
             st.needs.happiness = Math.min(100, st.needs.happiness + 3);
             StateManager.addMessage(
               "🚔 警察来了，把那几个混混带走了。这次运气不错。",
@@ -713,7 +713,7 @@
             st.resources.cash = (st.resources.cash || 0) + borrow; // [全系统自洽修复] 域B A类:cash NaN守卫
             st.resources.villageDebt = (st.resources.villageDebt || 0) + borrow;
             st.needs.happiness = Math.max(0, st.needs.happiness - 12);
-            st.player.mental = Math.max(0, st.player.mental - 5);
+            st.player.mental = Math.max(0, (st.player.mental || 50) - 5);
             StateManager.addMessage(
               `😔 只能再借 ¥${borrow}应急，债务雪上加霜...`,
               "danger",
@@ -740,7 +740,7 @@
           text: "😤 跟村长求情延期",
           hint: "看面子",
           apply: (st) => {
-            const success = Random.chance(0.3 + st.player.fame * 0.01);
+            const success = Random.chance(0.3 + (st.player.fame || 0) * 0.01);
             if (success) {
               st.needs.happiness = Math.min(100, st.needs.happiness + 5);
               StateManager.addMessage(
@@ -749,7 +749,7 @@
               );
             } else {
               st.needs.happiness = Math.max(0, st.needs.happiness - 8);
-              st.player.mental = Math.max(0, st.player.mental - 3);
+              st.player.mental = Math.max(0, (st.player.mental || 50) - 3);
               StateManager.addMessage(
                 "😤 村长不松口，说下个月必须还。心里更焦虑了。",
                 "warning",
@@ -801,7 +801,7 @@
           hint: "长期价值",
           apply: function (st) {
             st.needs.happiness = Math.max(0, st.needs.happiness - 65);
-            st.player.mental = Math.max(5, st.player.mental - 10);
+            st.player.mental = Math.max(5, (st.player.mental || 50) - 10);
             StateManager.addMessage(
               "💎 坚定持有！虽然账面惨了但没实际亏损。心情-65,心智-10。",
               "info",
@@ -1132,7 +1132,7 @@
           apply: function (st) {
             st.needs.hunger = Math.min(100, st.needs.hunger + 40);
             st.needs.happiness = Math.min(100, st.needs.happiness + 15);
-            st.player.fame = Math.min(100, st.player.fame - 2);
+            st.player.fame = Math.min(100, (st.player.fame || 0) - 2);
             StateManager.addMessage(
               "🍞 阿姨给你买了份盒饭还塞了50块。感激涕零但不能老靠别人。名气-2。",
               "success",
@@ -1284,7 +1284,7 @@
           hint: "先扶再说",
           apply: function (st) {
             st.needs.happiness = Math.min(100, st.needs.happiness + 15);
-            st.player.fame = Math.min(100, st.player.fame + 5);
+            st.player.fame = Math.min(100, (st.player.fame || 0) + 5);
             if (Random.chance(0.15)) {
               const fine = Random.int(300, 499);
               st.resources.cash = Math.max(0, (st.resources.cash || 0) - fine);
@@ -1308,7 +1308,7 @@
           hint: "保护自己也帮人",
           apply: function (st) {
             st.needs.happiness = Math.min(100, st.needs.happiness + 8);
-            st.player.fame = Math.min(100, st.player.fame + 2);
+            st.player.fame = Math.min(100, (st.player.fame || 0) + 2);
             StateManager.addMessage(
               "📱 拍下视频留证后扶起老人，理性与善意兼顾。",
               "success",
@@ -1454,7 +1454,7 @@
           hint: "道德选择，损失惨重",
           apply: function (st) {
             st.needs.happiness = Math.min(100, st.needs.happiness + 10);
-            st.player.fame = Math.min(100, st.player.fame + 5);
+            st.player.fame = Math.min(100, (st.player.fame || 0) + 5);
             st.flags._refusedFakeGoods = true;
             StateManager.addMessage(
               "🗑️ 你把假货全部扔掉，损失¥800。这钱是教训钱，名气+5。",
@@ -1775,7 +1775,7 @@
           apply: function (st) {
             if (Random.chance(0.7)) {
               st.resources.cash = Math.max(0, (st.resources.cash || 0) - 150);
-              st.player.fame = Math.min(100, st.player.fame + 2);
+              st.player.fame = Math.min(100, (st.player.fame || 0) + 2);
               // smartphone 是 accessory 装备：装备到槽位（带品质）
               var phoneDef =
                 typeof getItemById === "function"
@@ -2140,7 +2140,7 @@
           apply: function (st) {
             if ((st.resources.cash || 0) >= 200) {
               st.resources.cash = Math.max(0, (st.resources.cash || 0) - 200);
-              st.player.fame = Math.min(100, st.player.fame + 3);
+              st.player.fame = Math.min(100, (st.player.fame || 0) + 3);
               StateManager.addMessage(
                 "📋 花¥200办了临时证，城管来了直接亮证件，没事。名气+3。",
                 "success",
@@ -2315,7 +2315,7 @@
           hint: "仗义执言",
           apply: function (st) {
             if (Random.chance(0.6)) {
-              st.player.fame = Math.min(100, st.player.fame + 5);
+              st.player.fame = Math.min(100, (st.player.fame || 0) + 5);
               st.needs.happiness = Math.min(100, st.needs.happiness + 8);
               StateManager.addMessage(
                 "🗣️ 你提供了线索，失主追回了钱，大家都说你讲义气，名气+5。",
@@ -2371,7 +2371,7 @@
           hint: "对峙试试",
           apply: function (st) {
             if (st.player.agility >= 25 || st.player.physique >= 30) {
-              st.player.fame = Math.min(100, st.player.fame + 2);
+              st.player.fame = Math.min(100, (st.player.fame || 0) + 2);
               st.needs.happiness = Math.max(0, st.needs.happiness - 3);
               StateManager.addMessage(
                 "你死死盯着那个可疑的人，对方心虚地移开目光，没敢再靠近。虽然没找回东西，但震慑住了对方。",
@@ -2669,7 +2669,7 @@
           text: "😴 不接，保证休息",
           hint: "长线考量",
           apply: function (st) {
-            st.player.mental = Math.min(100, st.player.mental + 3);
+            st.player.mental = Math.min(100, (st.player.mental || 50) + 3);
             StateManager.addMessage(
               "😴 你克制住了短期诱惑，好好睡了一觉。细水长流，心智+3。",
               "info",
@@ -2760,7 +2760,7 @@
             var rewardB = Random.int(100, 299);
             st.resources.cash = (st.resources.cash || 0) + rewardB;
             st.resources.totalEarned += rewardB;
-            st.player.fame = Math.min(100, st.player.fame + 4);
+            st.player.fame = Math.min(100, (st.player.fame || 0) + 4);
             StateManager.addMessage(
               "📲 找到紧急联系人，家属赶来给了¥" + rewardB + " 感谢。名气+4。",
               "success",
@@ -2807,7 +2807,7 @@
           text: "📸 去打个卡拍照就走",
           hint: "刷存在感",
           apply: function (st) {
-            st.player.fame = Math.min(100, st.player.fame + 3);
+            st.player.fame = Math.min(100, (st.player.fame || 0) + 3);
             st.needs.happiness = Math.max(0, st.needs.happiness - 3);
             StateManager.addMessage(
               "📸 打了个卡拍了张照就溜走了。名气+3，但感觉有点空洞。",
@@ -2863,7 +2863,7 @@
           hint: "帮忙不担责",
           apply: function (st) {
             st.needs.happiness = Math.min(100, st.needs.happiness + 8);
-            st.player.fame = Math.min(100, st.player.fame + 5);
+            st.player.fame = Math.min(100, (st.player.fame || 0) + 5);
             StateManager.addMessage(
               "📞 你打了120再守在远处，救护车来了。帮了忙也保护了自己，名气+5。",
               "info",
@@ -2985,7 +2985,7 @@
                 ? "赚了¥" + totalEarned.toLocaleString() + "，成绩不错！"
                 : "虽然辛苦，但你坚持下来了。";
             st.needs.happiness = Math.min(100, st.needs.happiness + 20);
-            st.player.mental = Math.min(100, st.player.mental + 3);
+            st.player.mental = Math.min(100, (st.player.mental || 50) + 3);
             StateManager.addMessage(
               "🏆 " +
                 highlight +
@@ -3097,7 +3097,7 @@
             st.resources.cash = (st.resources.cash || 0) + pay;
             st.resources.totalEarned += pay;
             st.player.physique = Math.min(100, st.player.physique + 2);
-            st.player.fame = Math.min(100, st.player.fame + 5);
+            st.player.fame = Math.min(100, (st.player.fame || 0) + 5);
             StateManager.addMessage(
               "🤝 老刘的表弟给了你一单活，干完赚了¥" +
                 pay +
