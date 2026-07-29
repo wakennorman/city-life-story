@@ -736,6 +736,10 @@ function registerStartup(state, name, industry, description) {
   state.startup.status = "seed";
   state.startup.company = company;
   state.startup.flags.registered = true;
+  // [全系统自洽修复] 域H R795 A类: startup.active 从未被设为 true — 24个联动事件
+  // (domain_b/g/h_linkage_r*.js) 均检查 st.startup.active 作为公司阶段门控，
+  // 导致这些事件全部不可达。此处补写 startup.active = true。
+  state.startup.active = true;
   // [全系统自洽修复] 域A R231: startup.history 旧存档兼容守卫 — history 可能为 undefined（v1.5 以前存档未含创业字段）
   if (!state.startup.history) state.startup.history = {};
   state.startup.history.foundedDay = day;
