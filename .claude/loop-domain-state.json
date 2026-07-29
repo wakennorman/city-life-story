@@ -2,8 +2,8 @@
   "lastRound": "757b",
   "lastDirection": "DOMAIN_D",
   "lastDate": "2026-07-29",
-  "lastCommit": "PENDING_SET_AFTER_COMMIT",
+  "lastCommit": "dac2b81d",
   "nextDirection": "DOMAIN_A",
-  "note": "R757b 域D(本窗口自动化 08:4x-09:0x): 选域=git log实测本窗口深审recency D最陈旧(R440/R442新NPC老陈/小薇集成从未深审);b后缀避让并行R756/R757。A类2处: ①npcs.js lao_chen_60'介绍社区资源'只写_laoChenCommunityHelp全库零读取无消息无收益→补gainReputation(community_center,+10)+消息反馈; ②xiao_wei_60'摊位折扣'_xiaoWeiDiscount全库零读取→r757b夜市半价用餐事件真实兑现。B类1处: xiao_wei_30缺flags守卫。净尽项: 死字段黑名单0/关系矩阵R455已入/好感衰减存在/xiaoWeiReferred有jobs.js:814消费/community_center与night_market地点已定义。联动3(domain_d_linkage_events_r757b.js,3street,met铁律+applyAffinityChange四参+getNpcDisplayName兜底+done-flag防重): d757b_laochen_community_intro(D→C _laoChenCommunityHelp首读·社区讲座管理XP+10/社交XP+8·互惠原则)/d757b_xiaowei_discount_meal(D→E _xiaoWeiDiscount首读·半价烧烤15元vs按原价付好感+4双支线·禀赋效应)/d757b_laochen_mentor_guidance(D→C _laoChenMentorship首读·80好感导师深谈管理XP+15·峰终定律)。顺带救援并行反向孤儿domain_c_linkage_r374.js(HEAD已挂载/源未提交/node --check过)。⚠️dist本轮不提交: build吸入并行在途未提交源corp_ops.js(+24行)→按'绝不提交吸入在途源的dist'铁律,dist由并行下轮build闭合。MC 10x500 155.6s 0代码异常/前7天死亡全0%/存活60-70%属既有RNG阈值(trader60/social70/corporate50)。下轮候选A(R649b后未深审)>B。开轮必git log重算勿信本记录。",
-  "pushStatus": "PENDING"
+  "note": "R757b 域D(本窗口自动化 08:4x-09:0x): 选域=git log实测本窗口深审recency D最陈旧(R440/R442新NPC老陈/小薇集成从未深审);b后缀避让并行R756/R757。A类2处: ①npcs.js lao_chen_60'介绍社区资源'只写_laoChenCommunityHelp全库零读取无消息无收益→补gainReputation(community_center,+10)+消息反馈; ②xiao_wei_60'摊位折扣'_xiaoWeiDiscount全库零读取→r757b夜市半价用餐事件真实兑现。B类1处: xiao_wei_30缺flags守卫。净尽项: 死字段黑名单0/关系矩阵R455已入/好感衰减存在/xiaoWeiReferred有jobs.js:814消费/community_center与night_market地点已定义。联动3(domain_d_linkage_events_r757b.js,3street,met铁律+applyAffinityChange四参+getNpcDisplayName兜底+done-flag防重): d757b_laochen_community_intro(D→C _laoChenCommunityHelp首读·社区讲座管理XP+10/社交XP+8·互惠原则)/d757b_xiaowei_discount_meal(D→E _xiaoWeiDiscount首读·半价烧烤15元vs按原价付好感+4双支线·禀赋效应)/d757b_laochen_mentor_guidance(D→C _laoChenMentorship首读·80好感导师深谈管理XP+15·峰终定律)。顺带救援并行反向孤儿domain_c_linkage_r374.js(HEAD已挂载/源未提交/node --check过)。⚠️dist由并行[R758]fb0d80f8的build提交闭合(核验含d757b_x6+c374事件)。MC 10x500 155.6s 0代码异常/前7天死亡全0%/存活60-70%属既有RNG阈值(trader60/social70/corporate50)。下轮候选A(R649b后未深审)>B。开轮必git log重算勿信本记录。",
+  "pushStatus": "PUSHED"
 }
