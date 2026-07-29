@@ -6234,6 +6234,31 @@ function getEventSocialSpread(eventType) {
   return spreads[eventType] || null;
 }
 
+// [R803 域B 联动增强 B→G]: 事件活跃度影响疲劳恢复 — 事件越多越疲劳
+function getEventFatigueModifier(state) {
+  if (!state || !state.stats || !state.stats.eventCounts) return 1.0;
+  var _totalEvents = 0;
+  for (var _k in state.stats.eventCounts) {
+    _totalEvents += state.stats.eventCounts[_k] || 0;
+  }
+  if (_totalEvents > 50) return 1.15;
+  if (_totalEvents > 20) return 1.08;
+  return 1.0;
+}
+
+// [R803 域B 联动增强 B→F]: 事件类型统计摘要 — 返回各类事件计数供UI展示
+function getEventStatsSummary(state) {
+  if (!state || !state.stats || !state.stats.eventCounts) return {};
+  var _counts = state.stats.eventCounts;
+  return {
+    total: (_counts.moral || 0) + (_counts.risk || 0) + (_counts.news || 0) + (_counts.chain || 0) + (_counts.other || 0),
+    moral: _counts.moral || 0,
+    risk: _counts.risk || 0,
+    news: _counts.news || 0,
+    chain: _counts.chain || 0,
+  };
+}
+
 ;
 // ==== js/core/events_street_survival.js ====
 /**
@@ -317660,6 +317685,73 @@ if (typeof window !== "undefined") {
   for (var i = 0; i < EVENTS.length; i++) { RANDOM_EVENTS.push(EVENTS[i]); }
 })();
 ;
+// ==== js/core/domain_h_linkage_r848.js ====
+/**
+ * 域H(Phase2/公司) 联动增强 R848 (第十七轮循环)
+ * 桥接：
+ *   H→A  h848_corp_data_v16 经营数据v16 → 消费 company 运营数据
+ *   H→B  h848_corp_legend_v17 公司传奇v17 → 消费 startup 估值+里程碑
+ *   H→G  h848_founder_health_v16 创始人健康v16 → 消费 公司压力+健康
+ */
+(function () {
+  "use strict";
+  if (typeof RANDOM_EVENTS === "undefined" || !RANDOM_EVENTS) return;
+  if (RANDOM_EVENTS._domainHLinkageR848Loaded) return;
+  RANDOM_EVENTS._domainHLinkageR848Loaded = true;
+
+  function hasCo(st) { return st && st.startup && st.startup.company && st.startup.active; }
+
+  var EVENTS = [
+    {
+      id: "h848_corp_data_v16", phase: "corporate", _isChainEvent: false, icon: "📊",
+      title: "经营数据洞察", story: "公司的运营数据正在揭示经营真相——数据驱动决策,才能走得更远。",
+      triggers: { minDay: 400, interval: 500, maxRepeats: 3, excludeFlags: ["_h848DataCd"] },
+      conditions: function (st) { if (!st || st.gameOver) return false; if (st.flags && st.flags._h848DataCd) return false; return hasCo(st) && st.player && st.player.day >= 400; },
+      text: function (st) { if (!st) return null; var c = st.startup && st.startup.company; if (!c) return "数据驱动决策。"; var r = isFinite(c.revenue) ? Math.round(c.revenue) : 0; var e = (c.employees && c.employees.length) || 0; return "营收¥" + r.toLocaleString() + ",团队" + e + "人——'数据驱动决策,才能走得更远。'"; },
+      choices: [
+        { text: "📈 分析", hint: "管理XP+30,会计XP+20,置_h848Analyst",
+          apply: function (st) { if (!st) return; st.flags = st.flags || {}; st.flags._h848DataCd = true; st.flags._h848Analyst = true; if (typeof addSkillXp === "function") { try { addSkillXp("management", 30); } catch(e) {} } if (typeof addSkillXp === "function") { try { addSkillXp("accounting", 20); } catch(e) {} } if (typeof StateManager !== "undefined") { StateManager.addMessage("📊 '数据不会说谎。' 管理XP+30,会计XP+20。", "success"); } }
+        },
+        { text: "🎯 优化", hint: "管理XP+35,置_h848Strategist",
+          apply: function (st) { if (!st) return; st.flags = st.flags || {}; st.flags._h848DataCd = true; st.flags._h848Strategist = true; if (typeof addSkillXp === "function") { try { addSkillXp("management", 35); } catch(e) {} } if (typeof StateManager !== "undefined") { StateManager.addMessage("🎯 '好的策略来自数据。' 管理XP+35。", "info"); } }
+        }
+      ]
+    },
+    {
+      id: "h848_corp_legend_v17", phase: "corporate", _isChainEvent: false, icon: "🏆",
+      title: "公司传奇", story: "你的公司正在书写属于自己的传奇故事——每一个里程碑,都值得被铭记。",
+      triggers: { minDay: 500, interval: 600, maxRepeats: 3, excludeFlags: ["_h848LegendCd"] },
+      conditions: function (st) { if (!st || st.gameOver) return false; if (st.flags && st.flags._h848LegendCd) return false; return hasCo(st) && st.player && st.player.day >= 500; },
+      text: function (st) { if (!st) return null; var c = st.startup && st.startup.company; if (!c) return "你的公司正在书写传奇。"; var v = isFinite(c.valuation) ? Math.round(c.valuation) : 0; return "估值¥" + v.toLocaleString() + "——'每一个里程碑都值得被铭记。'"; },
+      choices: [
+        { text: "📜 记录", hint: "心智+25,魅力+20,置_h848Chronicler",
+          apply: function (st) { if (!st) return; st.flags = st.flags || {}; st.flags._h848LegendCd = true; st.flags._h848Chronicler = true; if (st.player) { st.player.mental = Math.min(100, (st.player.mental || 50) + 25); st.player.charm = Math.min(100, (st.player.charm || 50) + 20); } if (typeof StateManager !== "undefined") { StateManager.addMessage("🏆 '每一步都值得铭记。' 心智+25,魅力+20。", "success"); } }
+        },
+        { text: "📢 分享", hint: "社交XP+25,置_h848Storyteller",
+          apply: function (st) { if (!st) return; st.flags = st.flags || {}; st.flags._h848LegendCd = true; st.flags._h848Storyteller = true; if (typeof addSkillXp === "function") { try { addSkillXp("social", 25); } catch(e) {} } if (typeof StateManager !== "undefined") { StateManager.addMessage("📢 '故事比数字更有感染力。' 社交XP+25。", "info"); } }
+        }
+      ]
+    },
+    {
+      id: "h848_founder_health_v16", phase: "corporate", _isChainEvent: false, icon: "💚",
+      title: "创始人健康管理", story: "创业是一场马拉松,不是短跑——身体健康,才是最大的资产。",
+      triggers: { minDay: 300, interval: 400, maxRepeats: 4, excludeFlags: ["_h848HealthCd"] },
+      conditions: function (st) { if (!st || st.gameOver) return false; if (st.flags && st.flags._h848HealthCd) return false; return hasCo(st) && st.player && st.player.day >= 300 && st.status && st.needs; },
+      text: function (st) { if (!st) return null; var h = st.status && isFinite(st.status.health) ? Math.round(st.status.health) : 100; var f = st.needs && isFinite(st.needs.fatigue) ? Math.round(st.needs.fatigue) : 0; return "健康" + h + "%,疲劳" + f + "——'健康才是最大的资产。'"; },
+      choices: [
+        { text: "🏃 锻炼", hint: "健康+20,疲劳-20,置_h848Fitness",
+          apply: function (st) { if (!st) return; st.flags = st.flags || {}; st.flags._h848HealthCd = true; st.flags._h848Fitness = true; if (st.status) st.status.health = Math.min(100, (st.status.health || 100) + 20); if (st.needs) st.needs.fatigue = Math.max(0, (st.needs.fatigue || 0) - 20); if (typeof StateManager !== "undefined") { StateManager.addMessage("💚 '身体是革命的本钱。' 健康+20,疲劳-20。", "success"); } }
+        },
+        { text: "🧘 减压", hint: "疲劳-25,心情+20,置_h848DeStress",
+          apply: function (st) { if (!st) return; st.flags = st.flags || {}; st.flags._h848HealthCd = true; st.flags._h848DeStress = true; if (st.needs) { st.needs.fatigue = Math.max(0, (st.needs.fatigue || 0) - 25); st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 20); } if (typeof StateManager !== "undefined") { StateManager.addMessage("🧘 '创业再忙也要照顾自己。' 疲劳-25,心情+20。", "info"); } }
+        }
+      ]
+    }
+  ];
+
+  for (var i = 0; i < EVENTS.length; i++) { RANDOM_EVENTS.push(EVENTS[i]); }
+})();
+;
 // ==== js/core/domain_h_linkage_r771.js ====
 /**
  * 域H(Phase2/公司) 联动增强 R771 (sensenova-exp 第三轮循环)
@@ -369944,6 +370036,207 @@ if (typeof window !== "undefined") {
             if (!st) return;
             st.flags = st.flags || {};
             st.flags._g844StartupDone = true;
+            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 3);
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("😅 再等等看。心智+3。", "info");
+            }
+          }
+        }
+      ]
+    }
+  ];
+
+  // ---- 注入全局 RANDOM_EVENTS ----
+  for (var i = 0; i < EVENTS.length; i++) {
+    RANDOM_EVENTS.push(EVENTS[i]);
+  }
+})();
+
+;
+// ==== js/core/domain_g_linkage_r852.js ====
+/*
+ * 城市浮生记 — 域G(核心机制/生命周期) 联动增强 R852
+ * 全系统优化·Domain G 第六十四轮循环
+ *
+ * 【联动增强3项】
+ *   1. G→A 人生数据v17 — 核心机制数据转化为数值平衡洞察
+ *   2. G→D 人生社交v15 — 人生节点触发NPC社交事件
+ *   3. G→H 生命阶段公司v5 — 年龄/阶段引导创业时机
+ *
+ * 设计约束（与历轮 IIFE linkage 文件一致）：
+ *  - IIFE 注入全局 RANDOM_EVENTS，避免改动 cross_system_events.js。
+ *  - 所有 state 访问均 || 防御；数值标 [PLACEHOLDER]。
+ */
+(function () {
+  "use strict";
+  if (typeof RANDOM_EVENTS === "undefined" || !RANDOM_EVENTS) return;
+  if (RANDOM_EVENTS._domainGLinkageR852Loaded) return;
+  RANDOM_EVENTS._domainGLinkageR852Loaded = true;
+
+  // ---- 本地助手 ----
+  function grantXp(key, amt) {
+    if (typeof addSkillXp === "function") { try { addSkillXp(key, amt); } catch(e) {} }
+  }
+
+  var EVENTS = [
+    // ========================================================================
+    // 联动增强1: G→A 人生数据v17 — 核心机制数据转化为数值洞察
+    // 设计意图：核心机制产生的数据(健康/需求/状态)应成为数值域可消费的资产。
+    // 本事件在玩家生存≥350天时触发，给予"人生数据v17"标记。
+    // 心理学：认知负荷 — 综合数据评分降低玩家信息处理负担。
+    // ========================================================================
+    {
+      id: "g852_life_data_v17",
+      phase: "street",
+      icon: "📊",
+      title: "人生数据报告",
+      story: "你的每一天都在积累数据——这些数字,就是你的人生故事。",
+      conditions: function (st) {
+        if (!st || !st.player || st.gameOver) return false;
+        if (st.flags && st.flags._g852LifeDataDone) return false;
+        return st.player.day >= 350 && st.status && st.needs;
+      },
+      probability: 0.05,
+      repeatable: false,
+      choices: [
+        {
+          text: "📈 分析人生轨迹",
+          hint: "智力+18, 心智+15, 置_g852Analyst",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._g852LifeDataDone = true;
+            st.flags._g852Analyst = true;
+            if (st.player) {
+              st.player.intelligence = Math.min(100, (st.player.intelligence || 50) + 18);
+              st.player.mental = Math.min(100, (st.player.mental || 50) + 15);
+            }
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("📈 '数据是过去的见证,也是未来的指引。' 智力+18, 心智+15。", "success");
+            }
+          }
+        },
+        {
+          text: "🎯 设定人生目标",
+          hint: "心智+18, 置_g852GoalSetter",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._g852LifeDataDone = true;
+            st.flags._g852GoalSetter = true;
+            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 18);
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("🎯 '有目标,人生才有方向。' 心智+18。", "info");
+            }
+          }
+        }
+      ]
+    },
+
+    // ========================================================================
+    // 联动增强2: G→D 人生社交v15 — 人生节点触发NPC社交事件
+    // 设计意图：人生节点(年龄/阶段)应触发NPC社交事件，让玩家感到"朋友陪我成长"。
+    // 本事件在玩家年龄≥35且拥有≥7个好友时触发。
+    // 心理学：社会支持 — 被朋友陪伴的满足感。
+    // ========================================================================
+    {
+      id: "g852_life_social_v15",
+      phase: "street",
+      icon: "🎉",
+      title: "朋友们陪你走过人生节点",
+      story: "你发现——每当你走到人生的一个重要节点，总有一些朋友在你身边。\n\n他们不一定能帮你解决问题，但他们的陪伴，本身就是一种力量。",
+      conditions: function (st) {
+        if (!st || !st.player || st.gameOver) return false;
+        if (st.flags && st.flags._g852LifeSocialDone) return false;
+        if (!st.relationships) return false;
+        var _age = st.player.age || 18;
+        if (_age < 35) return false;
+        var _friends = 0;
+        for (var _id in st.relationships) {
+          var _r = st.relationships[_id];
+          if (_r && _r.met && (_r.affinity || 0) >= 60) _friends++;
+        }
+        return _friends >= 7;
+      },
+      probability: 0.06,
+      repeatable: false,
+      choices: [
+        {
+          text: "🎉 感谢朋友的陪伴",
+          hint: "心情+20, 置_g852FriendCompanion",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._g852LifeSocialDone = true;
+            st.flags._g852FriendCompanion = true;
+            if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 20);
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("🎉 感谢朋友的陪伴——心情+20。人生的路上，有朋友同行，是一种幸运。", "success");
+            }
+          }
+        },
+        {
+          text: "😊 自己走也挺好",
+          hint: "心智+3",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._g852LifeSocialDone = true;
+            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 3);
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("😊 自己走也挺好。心智+3。", "info");
+            }
+          }
+        }
+      ]
+    },
+
+    // ========================================================================
+    // 联动增强3: G→H 生命阶段公司v5 — 年龄/阶段引导创业时机
+    // 设计意图：不同年龄阶段应引导不同的创业时机，让玩家感到"阶段不同时机不同"。
+    // 本事件在玩家年龄≥40且总资产≥¥35万时触发。
+    // 心理学：禀赋效应 — 玩家感到"准备就绪后的自然选择"。
+    // ========================================================================
+    {
+      id: "g852_life_stage_startup_v5",
+      phase: "street",
+      icon: "🚀",
+      title: "这个年纪，该创业了吗？",
+      story: "你算了算——已经四十岁了，在职场摸爬滚打了好几年。\n\n一个念头开始浮现：是时候创业了吗？",
+      conditions: function (st) {
+        if (!st || !st.player || st.gameOver) return false;
+        if (st.flags && st.flags._g852StartupDone) return false;
+        if (!st.resources) return false;
+        var _age = st.player.age || 18;
+        if (_age < 40) return false;
+        var _total = (st.resources.cash || 0) + (st.resources.bankBalance || 0);
+        return _total >= 350000;
+      },
+      probability: 0.06,
+      repeatable: false,
+      choices: [
+        {
+          text: "🚀 认真评估创业时机",
+          hint: "智力+18, 管理XP+20, 置_g852StartupReady",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._g852StartupDone = true;
+            st.flags._g852StartupReady = true;
+            if (st.player) st.player.intelligence = Math.min(100, (st.player.intelligence || 50) + 18);
+            grantXp("management", 20);
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("🚀 你认真评估了创业时机——智力+18, 管理XP+20。", "success");
+            }
+          }
+        },
+        {
+          text: "😅 再等等看",
+          hint: "心智+3",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._g852StartupDone = true;
             if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 3);
             if (typeof StateManager !== "undefined") {
               StateManager.addMessage("😅 再等等看。心智+3。", "info");
