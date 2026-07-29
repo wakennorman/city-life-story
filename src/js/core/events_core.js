@@ -1878,7 +1878,7 @@ function getEventRiskModifier(state) {
 }
 
 // [R819 域B 联动增强 B→C]: 事件触发职业灵感 — 特定事件增加职业技能XP
-function getEventCareerInspiration(state, evtId) {
+function getEventCareerInspirationR819(state, evtId) {
   if (!state || !evtId || !state.skills || typeof addSkillXp !== "function") return;
   if (evtId.indexOf("tech_") === 0 && state.skills.coding) addSkillXp("coding", 5);
   else if (evtId.indexOf("finance_") === 0 && state.skills.accounting) addSkillXp("accounting", 5);
