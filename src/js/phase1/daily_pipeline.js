@@ -2744,3 +2744,22 @@ function getSocialEfficiencyByAge(age) {
   if (age < 55) return 0.85; // 中年社交减少
   return 0.7;                 // 老年社交有限
 }
+
+// [R816 域G 联动增强 G→H]: 年龄阶段影响创业成功率 — 不同年龄创业成功率不同
+function getStartupAgeModifier(age) {
+  if (!age) return 1.0;
+  if (age < 25) return 0.8;  // 经验不足
+  if (age < 35) return 1.15; // 黄金创业期
+  if (age < 45) return 1.1;  // 经验丰富
+  if (age < 55) return 0.9;  // 精力下降
+  return 0.7;                 // 退休年龄
+}
+
+// [R816 域G 联动增强 G→C]: 年龄阶段影响职业转型成本 — 年龄越大转型成本越高
+function getCareerChangeCost(age) {
+  if (!age) return 1.0;
+  if (age < 25) return 0.7;
+  if (age < 35) return 1.0;
+  if (age < 45) return 1.3;
+  return 1.5;
+}
