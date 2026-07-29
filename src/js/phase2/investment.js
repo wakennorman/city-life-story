@@ -1804,7 +1804,6 @@ function buyInvStock(symbol, shares) {
   }
   // 其他类别保留小数（虚拟币精确到小数位，贵金属按g/kg可小数，期货/基金按份/桶可小数）
 
-  var state = StateManager.getState();
   var inv = state.investment;
   // [全系统自洽修复] 域E A类#3: inv/stockMarket 守卫
   if (!inv || !inv.stockMarket) {
@@ -1910,7 +1909,7 @@ function sellInvStock(symbol, shares) {
     shares = Math.floor(shares);
   }
 
-  var state = StateManager.getState();
+    var inv = state.investation;
   var inv = state.investment;
   // [全系统自洽修复] 域E A类#4: inv/stockHoldings 守卫
   if (!inv || !inv.stockHoldings) {
@@ -2044,7 +2043,7 @@ function sellInvStock(symbol, shares) {
 }
 
 function buyBtc(amount) {
-  var state = StateManager.getState();
+    var inv = state.investation;
   var inv = state.investment;
   // [全系统自洽修复] 域E 修复:buyBtc 与 sellBtc/buyInvStock 存在不对称守卫缺口——
   //   ① 缺 `if(!inv)return`：旧存档 state.investment 未初始化时 `inv.btcPrice` 直接抛 TypeError 使买币崩溃(兄弟函数均已守卫)；
@@ -2085,7 +2084,7 @@ function buyBtc(amount) {
 }
 
 function sellBtc(amount) {
-  var state = StateManager.getState();
+    var inv = state.investation;
   var inv = state.investment;
   // [全系统自洽修复] 域E 修复:buyBtc 有 isNaN(cost) 守卫而 sellBtc 缺——
   //   btcPrice/btcHoldings 为 undefined(旧存档) 时 `undefined < amount` 为 false 不拦截，
@@ -2131,7 +2130,7 @@ function sellBtc(amount) {
 }
 
 function buyProperty(propId) {
-  var state = StateManager.getState();
+    var inv = state.investation;
   var inv = state.investment;
   var prop = PROPERTIES.find(function (p) {
     return p.id === propId;
@@ -2176,7 +2175,7 @@ function buyProperty(propId) {
 }
 
 function sellProperty(propId) {
-  var state = StateManager.getState();
+    var inv = state.investation;
   var inv = state.investment;
   // [全系统自洽修复] 域E 修复:旧存档缺 properties 时读 .length 抛 TypeError。
   if (!inv || !Array.isArray(inv.properties)) return;
@@ -2223,7 +2222,7 @@ function sellProperty(propId) {
 }
 
 function buyCar(carId) {
-  var state = StateManager.getState();
+    var inv = state.investation;
   var inv = state.investment;
   var car = CAR_TYPES.find(function (c) {
     return c.id === carId;
