@@ -2685,3 +2685,43 @@ function getHealthScore(state) {
 // [R575] 域G
 // [R599] 域G
 // [R615] 域G
+
+// [R800 域G 联动增强 G→B]: 年龄里程碑叙事 — 关键年龄节点触发人生反思
+function checkAgeMilestoneNarrative(state) {
+  if (!state || !state.player || !state.flags) return;
+  var _age = state.player.age || 0;
+  var _milestones = [18, 20, 25, 30, 35, 40, 45, 50, 55, 60];
+  for (var _i = 0; _i < _milestones.length; _i++) {
+    var _m = _milestones[_i];
+    if (_age === _m && !state.flags["_ageMilestone_" + _m]) {
+      state.flags["_ageMilestone_" + _m] = true;
+      if (typeof StateManager !== "undefined") {
+        var _msgs = {
+          18: "🎂 18岁了！你正式成年，这座城市充满了无限可能。",
+          20: "🎂 20岁——青春正当时，你开始思考自己想要怎样的人生。",
+          25: "🎂 25岁，四分之一世纪。你不再是那个初来乍到的少年了。",
+          30: "🎂 三十而立。你回头看看走过的路，有遗憾也有收获。",
+          35: "🎂 35岁——人生半程将至，你开始认真思考未来的方向。",
+          40: "🎂 四十不惑。你越来越清楚什么对自己最重要。",
+          45: "🎂 45岁，时间过得真快。你开始珍惜每一个当下。",
+          50: "🎂 五十知天命。你学会了与生活和解。",
+          55: "🎂 55岁——你开始计划退休后的生活。",
+          60: "🎂 六十耳顺。这座城市见证了你的一生。",
+        };
+        StateManager.addMessage(_msgs[_m] || "🎂 " + _age + "岁了。", "event");
+      }
+      break;
+    }
+  }
+}
+
+// [R800 域G 联动增强 G→F]: 生命阶段标签 — 根据年龄返回阶段标签供UI展示
+function getLifeStageLabel(age) {
+  if (!age) return "未知";
+  if (age < 18) return "少年";
+  if (age < 25) return "青年";
+  if (age < 35) return "壮年";
+  if (age < 50) return "中年";
+  if (age < 60) return "中老年";
+  return "老年";
+}
