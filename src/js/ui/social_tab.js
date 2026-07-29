@@ -585,6 +585,60 @@ function renderSocialOverviewTab(state, content) {
     }
   } catch (e) {}
 
+  // [R791 域D 联动增强 D→F]: NPC在场可视化面板 — 显示今日在场的NPC及其加成
+  try {
+    if (typeof NPCS !== "undefined" && NPCS.length > 0 && state.player && state.relationships) {
+      var _dayNow = state.player.day;
+      var _presentNpcs = [];
+      for (var _pi = 0; _pi < NPCS.length; _pi++) {
+        var _pnpc = NPCS[_pi];
+        if (!_pnpc || !_pnpc.id) continue;
+        var _prel = state.relationships[_pnpc.id];
+        if (!_prel || !_prel.met) continue;
+        // 检查NPC是否在场（基于schedule+presenceChance）
+        var _isPresent = false;
+        if (typeof isNpcPresent === "function") {
+          _isPresent = isNpcPresent(_pnpc.id, _dayNow);
+        } else {
+          // 兜底：基于presenceChance的确定性哈希
+          var _hash = (_dayNow * 31 + _pnpc.id.charCodeAt(0)) % 100;
+          _isPresent = _hash < ((_pnpc.presenceChance || 0.7) * 100);
+        }
+        if (!_isPresent) continue;
+        // 计算该NPC对当前工作的加成
+        var _bonusStr = "";
+        if (_pnpc.presenceBonus && _pnpc.presenceBonus.length) {
+          var _aff = _prel.affinity || 0;
+          for (var _bi2 = 0; _bi2 < _pnpc.presenceBonus.length; _bi2++) {
+            var _pb = _pnpc.presenceBonus[_bi2];
+            if (_aff >= (_pb.minAffinity || 0) && !_pb.jobs) {
+              _bonusStr = "+" + Math.round((_pb.multiplier - 1) * 100) + "%";
+              break;
+            }
+          }
+        }
+        _presentNpcs.push({ name: _pnpc.name || _pnpc.id, role: _pnpc.role || "", affinity: _prel.affinity || 0, bonus: _bonusStr, id: _pnpc.id });
+      }
+      if (_presentNpcs.length > 0) {
+        html += '<div class="section"><h3>📍 今日在场NPC</h3>';
+        html += '<div class="card" style="padding:10px;border:1px solid rgba(76,175,80,0.3);background:rgba(76,175,80,0.05);">';
+        html += '<div style="font-size:11px;color:var(--text-muted);margin-bottom:6px;">以下NPC今天可能在附近出现，已结识的NPC会提供在场加成：</div>';
+        for (var _pni = 0; _pni < _presentNpcs.length; _pni++) {
+          var _pnp = _presentNpcs[_pni];
+          var _affColor = _pnp.affinity >= 60 ? '#4caf50' : _pnp.affinity >= 30 ? '#ff9800' : '#95a5a6';
+          html += '<div style="display:flex;align-items:center;gap:6px;padding:4px 0;font-size:12px;">';
+          html += '<span>' + (_pnp.affinity >= 60 ? '😊' : _pnp.affinity >= 30 ? '🙂' : '👤') + '</span>';
+          html += '<span style="font-weight:600;">' + _pnp.name + '</span>';
+          html += '<span style="color:var(--text-muted);font-size:10px;">(' + _pnp.role + ')</span>';
+          html += '<span style="margin-left:auto;color:' + _affColor + ';font-size:11px;">好感' + Math.round(_pnp.affinity) + '</span>';
+          if (_pnp.bonus) html += '<span style="color:var(--success);font-size:10px;font-weight:600;">' + _pnp.bonus + '</span>';
+          html += '</div>';
+        }
+        html += '</div></div>';
+      }
+    }
+  } catch (e) {}
+
   // 家庭摘要
   var family = state.family;
   if (family) {

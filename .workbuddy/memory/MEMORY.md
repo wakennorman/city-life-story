@@ -40,18 +40,19 @@
 - 模糊指令先 grep 确认存在；用户「无关」=停手。
 
 ## A类净尽结论（勿重复审）
-- 深审净尽轮：A=R649b、B=R722b(前R658b/R411大修)、C=R677b、D=R757b(新NPC集成专审)、E=R738b、F=R747b(A类=0,六项审计净尽)、G=R746b、H=R712b。下轮最陈旧：**A(R649b) > B**。
+- 深审净尽轮：A=R770b(住房effects死数据兑现)、B=R785b(story兜底占位符剥离)、C=R792b(job_milestone承诺零兑现4处)、D=R757b(新NPC集成专审)、E=R738b、F=R747b(A类=0)、G=R746b、H=R712b。下轮最陈旧：**H(R712b) > A(R770b)**。
+- 域C 附注(R792b净尽项)：假技能键(finance/trade/technology/strength/intelligence/physique/health)全库活代码=0全为历史修复注释；jobs.js synergy requiredFlag 8处全精确匹配；并行r685-r790共15个域C文件phase+挂载完整；r777/r779/r790引用的player.charm/intelligence/education、needs.fatigue经state.js核验全真实；CAREER_PATHS无缺失job id；_jobMultipliers在main.js有真实消费方(收入乘区可放心用)。
 - 域D 附注(R757b净尽项)：新NPC关系矩阵R455已入/好感衰减存在/xiaoWeiReferred有jobs.js:814消费/night_market+community_center地点已定义；affinityRewards引擎只认数组格式(R694/R532修)。
 - 域F 附注：pg.psychology 为 personal_growth.js 真实活结构（render.js 读它正确，维持 B类双心理系统记录）；navigation.js:761 programmer 为 JSDoc 示例勿改。
 - 死字段黑名单全库 grep=0 活命中即诚实报 A类=0（R712b 域H 即如此）。
 - 误报勿修：webapp_runtime_bridge getPlayerHealth 主路径正确；establishMentorship/takeMentee 平行实现；setStopLoss 有调用方。C类不修：items.js skillStudy 无应用器；finance.js hasStreetStall 无 writer；并行 r715/r721 id前缀误用全库唯一不改。
 - personal_growth 双结构已 R649b 专修；残余 B类：pg.psychology 与 health.mental 双心理系统数据层不互通（render.js 读前者，events part2-8 读后者），彻底统一需动两侧。
-- 事件 story 占位符泄漏已 R722b 渲染层单点正则剥离+源头8处修复。
+- 事件 story 占位符泄漏三层已全闭合：R455 text()优先/R722b tooltip剥离/R785b story兜底路径剥离(events_core.js:729同款正则)。勿再重复审。
 
 ## 零消费素材账
 - 域A：dental/vision score 零事件。域A/E trade 剩 lastPriceUpdate/_firstTradeDone(价值低)。
-- 域B：_b722bAnonymousGiver/_b714Sharer/_b714Listener/_b722bPatternCd系。
-- 域C：_legacyProjectDay/_careerMonthlySnapshots/_burnoutWasHigh。
+- 域B：已清零(R785b消费_b722bAnonymousGiver/_b714Sharer/_b714Listener)；剩_b722bPatternCd系冷却flag(低价值)。
+- 域C(R792b重算，旧账全失效：_legacyProjectDay已被R685b消费/_careerMonthlySnapshots已被R535消费/_burnoutWasHigh有自读)：job_milestone写-only剩 _buskingVenue/_constructionCertPath/_factoryReskilling/_gaokaoTutoring/_laoGuanFriend/_tutoringReputation/_vendingLoyalty/_wasteRecyclingContract(均有即时收益非A类)。
 - 域E：_portfolioMilestone_10000/50000/500000 三档零读取/propertyPhaseStartDay/_propertyPolicyTightness/stopLossOrders 触发叙事。
 - 域H：company.efficiency 事件层薄弱；写-only待读 _h698Sleep/_h698Focus/_h712bSprintPlan/_h712bDelegated。
 
@@ -62,5 +63,7 @@
 - R677b 域C：培训班承诺零兑现+6事件占位符泄漏修复；_legacyProjectStarted/_legacyWatched 首消费。
 - R649b 域A：personal_growth 双结构专修。R658b 域B：_goodSleepToday 承诺兑现。R640b 域H：孤儿救援 r601/r602/r623。
 - R747b 域F(07-29 07:5x)：A类=0 诚实报；联动3 消费 _maxEarnedMilestone/_milestoneEarned系/_streakMaster（域F零消费清零）。
+- R785b 域B(07-29 12:0x)：A类1处=story兜底占位符剥离；C类=r747为r750同版本冗余副本勿挂载勿删除；联动3(b785b_×3,域B写-only flag首消费清零)。竞态新形态：并行连round doc都会扫走(7114e9d7挂名R785b但message描述错位)，四项核验IDENTICAL即闭合只补账本。push又遇TLS阻断(ahead 7)。
 - R757b 域D(07-29 08:4x-09:0x)：A类2处=新NPC好感承诺零兑现（lao_chen_60社区资源/xiao_wei_60摊位折扣，flag全库零读取）→npcs.js补即时收益+domain_d_linkage_events_r757b.js 3事件首消费(_laoChenCommunityHelp/_xiaoWeiDiscount/_laoChenMentorship)；救援反向孤儿c374(HEAD挂载源未提交)。提交dac2b81d+ec092dfa 均已PUSH（TLS已恢复，push通了）；dist由并行R758闭合。⚠️新坑：`git commit`不带路径吸入并行刚staged文件(接管r758)→竞态窗口建议`git commit -- <本轮路径>`；pre-commit "dist过期"若因并行touch src且内容一致→touch dist重试即过。
-- 本窗口深审下轮候选（07-29 09:0x 时点）：**A > B**。
+- R792b 域C(07-29 13:2x)：A类4处全为 job_milestone_events.js 承诺零兑现（工地头目人脉/骑手站长薪资/内容签约月保底/MCN月薪→daily_pipeline 月度兑现,day%30+仍在职条件,_contentSalaryTotal 累计）；联动3(c792b_×3: C→D工地人脉回报/C→E签约收入理财·_contentSalaryTotal首读/C→G站长管理双面性)。承诺零兑现审计法固化：grep 里程碑事件写入flag→全库读取扫描→desc/hint承诺 vs apply 实效逐项对照。
+- 本窗口深审下轮候选（07-29 13:2x 时点）：**H(R712b) > A(R770b)**。

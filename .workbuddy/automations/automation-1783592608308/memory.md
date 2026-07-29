@@ -637,3 +637,23 @@
 - 验证：node --check过/build 13781.1KB(d757b_x6)/MC 10x500 155.6s 0代码异常前7天死亡全0%存活60-70%既有RNG阈值。
 - 竞态：①git commit不带路径吸入并行staged r758源+挂载(内容无损message失真)→以后`git commit -- <路径>`；②pre-commit dist过期=并行touch src内容一致→touch dist重试即过；③dist未随feat提交(吸入在途corp_ops)→并行[R758]fb0d80f8的build闭合(核验过)。
 - push：TLS已恢复，dac2b81d与ec092dfa均上origin/main。下轮候选：A(R649b后未深审)>B。开轮必git log重算。
+
+## 2026-07-29 12:0x-12:3x R785b 域B(事件/叙事) — 本地已提交,push受TLS阻断(ahead 7)
+- 选域：git log实测B最陈旧(R722b后未深审)；b后缀避让并行R784/R785/R786。
+- A类1处：events_core.js:729 story兜底路径无占位符剥离——28个活事件(story含{xxx}且无text())正文原样泄漏给玩家(R722b只修tooltip/R455只修text()优先路径)→复用同款正则单点剥离。三层占位符防线全闭合,勿再重复审。
+- C类1处：domain_a_linkage_r747.js为r750完全同版本冗余副本(v8/v5,仅id前缀异),挂载会双份出场→不挂载不删除仅记录。
+- 净尽项：假技能键活代码0/死字段黑名单0/无phase死事件10命中全误报/新并行文件phase+挂载完整。
+- 联动3(domain_b_linkage_events_r785b.js,3street,写-only flag首消费)：b785b_sharer_echo(B→D _b714Sharer·met铁律)/b785b_listener_return(B→D/G _b714Listener·心智<55)/b785b_anonymous_karma(B→A/E _b722bAnonymousGiver·gainReputation(state,locKey,amount,reason)四参守卫)。自纠：初稿sister_hong假NPC id→sister_zhang(提交前grep npcs.js真实id核验的重要性)。
+- 验证：node --check过/build 14078.3KB b785b×6入包/MC 10x500 200.4s 0代码异常,前7天死亡率全0%(trader60/social50既有RNG阈值)。
+- 竞态新形态：并行7114e9d7把本轮源+挂载+events_core修复+dist+甚至round doc全部add -A扫走,且commit message挂名"[R785b]"但描述错位(写成r777主题)——同名轮号也会被并行占用,四项核验IDENTICAL即闭合。本窗口只补账本：7ab3ce4b(CLAUDE.md+loop-state)+cd3a47b7(pushStatus回填)。
+- push：TLS阻断(本地代理3067未起),本地ahead 7,pushStatus=LOCAL_ONLY_TLS,网络恢复任一窗口push即闭合。
+- 下轮候选：C(R677b后未深审) > H(R712b)。开轮必git log重算。
+
+## 2026-07-29 13:2x-13:4x R792b 域C(职业/成长) — bd11629f+74372634+4c71358d 全部已PUSH
+- 选域：git log实测C深审最陈旧(R677b后未深审)；b后缀避让并行R791/R792(域E r792开轮后14分钟内出现在途,并行节奏依旧分钟级)。
+- A类4处(全为job_milestone_events.js承诺零兑现,"承诺审计法":grep flag写入→全库读取扫描→desc承诺vs apply实效对照)：①_constructionForeman"人脉+1"零兑现→魅力+1+social XP15；②_deliveryStationManager"底薪5500"无收入变化且拒绝支线反+15%(选晋升纯亏)→_jobMultipliers×1.3；③_contentPlatformSigned月保底2000只发首月；④_mcnEmployee月薪6000只发买断→③④daily_pipeline月度兑现(day%30+仍从事content_writing+isFinite+_contentSalaryTotal累计,MCN优先不叠加)。
+- 净尽：假技能键活代码0/synergy flag 8处全匹配/死字段0/并行r685-r790十五文件phase+挂载完整/r777-r790字段全真实/CAREER_PATHS完整。⚠️MEMORY旧素材账全失效已纠(_legacyProjectDay R685b已耗/_careerMonthlySnapshots R535已耗/_burnoutWasHigh有自读)——素材账必须先grep再信。
+- 联动3(domain_c_linkage_events_r792b.js,3street)：c792b_foreman_gratitude(C→D带过的新工道谢·峰终定律)/c792b_content_salary_check(C→E _contentSalaryTotal全库首读破2万→储蓄/理财课)/c792b_station_pressure(C→G站长裁决时刻·管理XP+疲劳vs人情台阶)。
+- 验证：node --check×3过/build 14141.7KB c792b×6入包/MC 10x500 191.6s 0代码异常前7天死亡全0%(存活50-60%/grinder20%既有RNG阈值)。
+- 竞态：dist因build(13:34)吸入并行在途social_tab.js(13:26改,+63行未提交)→按铁律dist不提交,由并行下次build闭合；src/index.html被并行13:40 touch(内容仅我的4行)→pre-commit拦截,touch dist重试即过；push直推成功(TLS已恢复)。
+- 下轮候选：H(R712b) > A(R770b)。开轮必git log重算。
