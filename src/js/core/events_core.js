@@ -1602,6 +1602,29 @@ function recordEventToHistory(state, eventId, eventTitle) {
       _lastEvt.sentiment = _hasNeg ? 'negative' : (_hasPos ? 'positive' : 'neutral');
     }
   }
+
+  // [R817 域B B→A 联动增强]: 事件价格冲击 — 负面事件推高相关商品价格
+  if (eventId && state.flags && state.trade && typeof applyEventMarketEffect === "function") {
+    applyEventMarketEffect(state, eventId);
+  }
+
+  // [R817 域B B→G 联动增强]: 连续负面事件健康预警
+  if (state.flags && state.flags._eventHistory && state.status) {
+    var _negCount = 0;
+    var _recentEvents = state.flags._eventHistory.slice(-5);
+    for (var _rei = 0; _rei < _recentEvents.length; _rei++) {
+      if (_recentEvents[_rei].sentiment === 'negative') _negCount++;
+    }
+    if (_negCount >= 3 && !state.flags._negEventHealthWarned) {
+      state.flags._negEventHealthWarned = true;
+      state.status.health = Math.max(0, (state.status.health || 100) - 3);
+      if (typeof StateManager !== "undefined") {
+        StateManager.addMessage("💔 最近接连发生的不顺心的事让你的身心都受到了影响。健康-3。", "danger");
+      }
+    } else if (_negCount < 3) {
+      state.flags._negEventHealthWarned = false;
+    }
+  }
   }
 
 // [全系统自洽修复] 域B R387 联动增强(B→A): 事件市场情绪—特定事件影响商品价格
