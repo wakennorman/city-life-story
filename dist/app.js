@@ -307763,6 +307763,7 @@ var JOB_MILESTONE_EVENTS = {
           label: "谢谢大妈，以后常过来",
           desc: "建立关系，获得稳定情报，收入+10%",
           apply: function (state) {
+            if (!state.flags) state.flags = {};
             state.flags._wasteRecyclingNetwork = true;
             state.flags._jobMultipliers = state.flags._jobMultipliers || {};
             state.flags._jobMultipliers["waste_recycling"] =
@@ -321010,6 +321011,172 @@ if (typeof window !== "undefined") {
 })();
 
 ;
+// ==== js/core/domain_b_linkage_r777.js ====
+/**
+ * 域B(事件/叙事) 联动增强 R777 (sensenova-exp 第三轮循环)
+ * 桥接：
+ *   B→A  b777_event_data_legacy 事件数据沉淀 → 消费 事件统计数据
+ *   B→D  b777_event_social_ripple 事件社交涟漪 → 消费 事件+NPC关系
+ *   B→G  b777_narrative_resilience 叙事韧性 → 消费 事件历史+心智
+ */
+(function () {
+  "use strict";
+  if (typeof RANDOM_EVENTS === "undefined" || !RANDOM_EVENTS) return;
+  if (RANDOM_EVENTS._domainBLinkageR777Loaded) return;
+  RANDOM_EVENTS._domainBLinkageR777Loaded = true;
+
+  var EVENTS = [
+    // ====== B→A 事件数据沉淀 ======
+    {
+      id: "b777_event_data_legacy", phase: "street", _isChainEvent: false, icon: "📊",
+      title: "事件数据沉淀",
+      story: "每一段经历都在数据中留下痕迹——{desc}",
+      triggers: { minDay: 480, interval: 600, maxRepeats: 3, excludeFlags: ["_b777DataCd"] },
+      conditions: function (st) {
+        if (!st || st.gameOver) return false;
+        if (st.flags && st.flags._b777DataCd) return false;
+        return st.player && st.player.day >= 480;
+      },
+      choices: [
+        {
+          text: "📋 回顾经历事件", hint: "心智+12, 智力+8, 置_b777EventReviewer",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._b777DataCd = true;
+            st.flags._b777EventReviewer = true;
+            // 记录事件数据供A域消费
+            if (!st.flags._eventDataMilestones) st.flags._eventDataMilestones = [];
+            st.flags._eventDataMilestones.push({
+              day: st.player && st.player.day || 0,
+              type: "review"
+            });
+            if (st.flags._eventDataMilestones.length > 15) st.flags._eventDataMilestones.shift();
+            if (st.player) {
+              st.player.mental = Math.min(100, (st.player.mental || 50) + 12);
+              st.player.intelligence = Math.min(100, (st.player.intelligence || 50) + 8);
+            }
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("📋 '经历是最好的老师。' 心智+12, 智力+8。", "info");
+            }
+          }
+        },
+        {
+          text: "📈 分析事件模式", hint: "智力+15, 会计XP+10, 置_b777EventPattern",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._b777DataCd = true;
+            st.flags._b777EventPattern = true;
+            if (st.player) st.player.intelligence = Math.min(100, (st.player.intelligence || 50) + 15);
+            if (typeof addSkillXp === "function") { try { addSkillXp("accounting", 10); } catch(e) {} }
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("📈 '数据中藏着答案。' 智力+15, 会计XP+10。", "success");
+            }
+          }
+        }
+      ]
+    },
+
+    // ====== B→D 事件社交涟漪 ======
+    {
+      id: "b777_event_social_ripple", phase: "street", _isChainEvent: false, icon: "🔄",
+      title: "事件社交涟漪",
+      story: "你经历的大事，也在影响身边的人——{desc}",
+      triggers: { minDay: 600, interval: 500, maxRepeats: 3, excludeFlags: ["_b777SocialCd"] },
+      conditions: function (st) {
+        if (!st || st.gameOver) return false;
+        if (st.flags && st.flags._b777SocialCd) return false;
+        return st.player && st.player.day >= 600 && st.relationships;
+      },
+      choices: [
+        {
+          text: "💬 与朋友分享经历", hint: "魅力+10, 心智+8, 置_b777StoryTeller",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._b777SocialCd = true;
+            st.flags._b777StoryTeller = true;
+            // 记录社交涟漪事件供D域消费
+            st.flags._b777LastSocialRipple = st.player && st.player.day || 0;
+            if (st.player) {
+              st.player.charm = Math.min(100, (st.player.charm || 50) + 10);
+              st.player.mental = Math.min(100, (st.player.mental || 50) + 8);
+            }
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("💬 '分享让快乐加倍，让痛苦减半。' 魅力+10, 心智+8。", "info");
+            }
+          }
+        },
+        {
+          text: "📝 写下经历感悟", hint: "心智+15, 魅力+5, 置_b777DiaryWriter",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._b777SocialCd = true;
+            st.flags._b777DiaryWriter = true;
+            if (st.player) {
+              st.player.mental = Math.min(100, (st.player.mental || 50) + 15);
+              st.player.charm = Math.min(100, (st.player.charm || 50) + 5);
+            }
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("📝 '文字是思想的锚。' 心智+15, 魅力+5。", "success");
+            }
+          }
+        }
+      ]
+    },
+
+    // ====== B→G 叙事韧性 ======
+    {
+      id: "b777_narrative_resilience", phase: "street", _isChainEvent: false, icon: "🛡️",
+      title: "叙事韧性",
+      story: "每一次挫折都在塑造更强大的你——{desc}",
+      triggers: { minDay: 720, interval: 600, maxRepeats: 3, excludeFlags: ["_b777ResilienceCd"] },
+      conditions: function (st) {
+        if (!st || st.gameOver) return false;
+        if (st.flags && st.flags._b777ResilienceCd) return false;
+        return st.player && st.player.day >= 720 && st.status;
+      },
+      choices: [
+        {
+          text: "💪 从经历中汲取力量", hint: "心智+18, 健康+5, 置_b777Resilient",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._b777ResilienceCd = true;
+            st.flags._b777Resilient = true;
+            // 记录叙事韧性供G域消费
+            st.flags._b777NarrativeResilience = true;
+            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 18);
+            if (st.status) st.status.health = Math.min(100, (st.status.health || 80) + 5);
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("🛡️ '杀不死你的，终将使你更强大。' 心智+18, 健康+5。", "success");
+            }
+          }
+        },
+        {
+          text: "🧘 反思人生教训", hint: "心智+20, 置_b777LifeReflector",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._b777ResilienceCd = true;
+            st.flags._b777LifeReflector = true;
+            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 20);
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("🧘 '反思是最好的成长。' 心智+20。", "success");
+            }
+          }
+        }
+      ]
+    }
+  ];
+
+  for (var i = 0; i < EVENTS.length; i++) {
+    RANDOM_EVENTS.push(EVENTS[i]);
+  }
+})();
+;
 // ==== js/core/domain_b_linkage_r526.js ====
 /**
  * 域B(事件/叙事) 联动增强 R526
@@ -332296,6 +332463,171 @@ if (typeof window !== "undefined") {
             if (typeof addSkillXp === "function") { try { addSkillXp("social", 15); } catch(e) {} }
             if (typeof StateManager !== "undefined") {
               StateManager.addMessage("🤝 '互惠,让关系更持久。' 社交XP+15。", "info");
+            }
+          }
+        }
+      ],
+      text: function (st) {
+        if (!st) return null;
+        return "NPC朋友带来的情报,让你在市场上更有优势——'信息,就是财富。'";
+      }
+    }
+  ];
+
+  for (var i = 0; i < EVENTS.length; i++) {
+    RANDOM_EVENTS.push(EVENTS[i]);
+  }
+})();
+
+;
+// ==== js/core/domain_d_linkage_r778.js ====
+/**
+ * 域D(NPC/社交) 联动增强 R778 (第十轮循环)
+ * 桥接：
+ *   D→B  d778_npc_event_story_v7 NPC事件故事v7 → 消费 事件+NPC关系
+ *   D→G  d778_social_wellness_v8 社交健康v8 → 消费 社交数据+needs
+ *   D→A  d778_social_capital_v8 社交资本v8 → 消费 NPC关系+pricing
+ */
+(function () {
+  "use strict";
+  if (typeof RANDOM_EVENTS === "undefined" || !RANDOM_EVENTS) return;
+  if (RANDOM_EVENTS._domainDLinkageR778Loaded) return;
+  RANDOM_EVENTS._domainDLinkageR778Loaded = true;
+
+  var EVENTS = [
+    {
+      id: "d778_npc_event_story_v7", phase: "street", _isChainEvent: false, icon: "🗣️",
+      title: "NPC事件故事",
+      story: "你和NPC共同经历的事件,正在产生回响——{desc}",
+      triggers: { minDay: 1000, interval: 1100, maxRepeats: 3, excludeFlags: ["_d778EchoCd"] },
+      conditions: function (st) {
+        if (!st || st.gameOver) return false;
+        if (st.flags && st.flags._d778EchoCd) return false;
+        return st.player && st.player.day >= 1000 && st.relationships;
+      },
+      choices: [
+        {
+          text: "📖 分享故事", hint: "社交XP+25,置_d778StorySharer",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._d778EchoCd = true;
+            st.flags._d778StorySharer = true;
+            if (typeof addSkillXp === "function") { try { addSkillXp("social", 25); } catch(e) {} }
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("🗣️ '故事,让关系更有温度。' 社交XP+25。", "success");
+            }
+          }
+        },
+        {
+          text: "🤝 深化友谊", hint: "心智+20,置_d778DeepFriend",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._d778EchoCd = true;
+            st.flags._d778DeepFriend = true;
+            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 20);
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("🤝 '友谊,需要用心经营。' 心智+20。", "info");
+            }
+          }
+        }
+      ],
+      text: function (st) {
+        if (!st) return null;
+        return "你和NPC之间的故事,正在加深你们的友谊——'共同经历,是最好的纽带。'";
+      }
+    },
+    {
+      id: "d778_social_wellness_v8", phase: "street", _isChainEvent: false, icon: "💚",
+      title: "社交健康",
+      story: "良好的社交关系让身心更健康——{desc}",
+      triggers: { minDay: 900, interval: 1000, maxRepeats: 4, excludeFlags: ["_d778HealthCd"] },
+      conditions: function (st) {
+        if (!st || st.gameOver) return false;
+        if (st.flags && st.flags._d778HealthCd) return false;
+        return st.player && st.player.day >= 900 && st.needs && st.status && st.relationships;
+      },
+      choices: [
+        {
+          text: "😊 感恩社交圈", hint: "心情+25,健康+15,置_d778Thankful",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._d778HealthCd = true;
+            st.flags._d778Thankful = true;
+            if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 25);
+            if (st.status) st.status.health = Math.min(100, (st.status.health || 100) + 15);
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("💚 '有朋友,真好。' 心情+25,健康+15。", "success");
+            }
+          }
+        },
+        {
+          text: "🏃 独处充电", hint: "心智+18,疲劳-18,置_d778SoloRecharger",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._d778HealthCd = true;
+            st.flags._d778SoloRecharger = true;
+            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 18);
+            if (st.needs) st.needs.fatigue = Math.max(0, (st.needs.fatigue || 0) - 18);
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("🏃 '独处,也是一种自我关爱。' 心智+18,疲劳-18。", "info");
+            }
+          }
+        }
+      ],
+      text: function (st) {
+        if (!st) return null;
+        if (!st.relationships) return "社交关系,是健康的重要支柱...";
+        var metCount = 0;
+        for (var k in st.relationships) {
+          if (st.relationships[k] && st.relationships[k].met) metCount++;
+        }
+        return "你有" + metCount + "位结识的朋友——'社交,是最好的保健品。'";
+      }
+    },
+    {
+      id: "d778_social_capital_v8", phase: "street", _isChainEvent: false, icon: "💰",
+      title: "社交资本",
+      story: "NPC朋友带来的情报,让你占了先机——{desc}",
+      triggers: { minDay: 1100, interval: 1200, maxRepeats: 3, excludeFlags: ["_d778CapitalCd"] },
+      conditions: function (st) {
+        if (!st || st.gameOver) return false;
+        if (st.flags && st.flags._d778CapitalCd) return false;
+        if (!st.relationships || !st.trade) return false;
+        var highAff = 0;
+        for (var k in st.relationships) {
+          if (st.relationships[k] && st.relationships[k].met && (st.relationships[k].affinity || 0) >= 95) highAff++;
+        }
+        return highAff >= 8 && st.player && st.player.day >= 1100;
+      },
+      choices: [
+        {
+          text: "📊 利用信息优势", hint: "智力+18,会计XP+18,置_d778InfoAdvantager",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._d778CapitalCd = true;
+            st.flags._d778InfoAdvantager = true;
+            if (st.player) st.player.intelligence = Math.min(100, (st.player.intelligence || 50) + 18);
+            if (typeof addSkillXp === "function") { try { addSkillXp("accounting", 18); } catch(e) {} }
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("💰 '人脉就是钱脉。' 智力+18,会计XP+18。", "success");
+            }
+          }
+        },
+        {
+          text: "🤝 回馈朋友", hint: "社交XP+18,置_d778Reciprocator",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._d778CapitalCd = true;
+            st.flags._d778Reciprocator = true;
+            if (typeof addSkillXp === "function") { try { addSkillXp("social", 18); } catch(e) {} }
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("🤝 '互惠,让关系更持久。' 社交XP+18。", "info");
             }
           }
         }
