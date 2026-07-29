@@ -315,7 +315,8 @@ var NPCS = [
     // [全系统自洽修复] 域D R694 A类: 原对象格式引擎用forEach遍历→TypeError,改为数组格式
     affinityRewards: [
       { threshold: 30, id: "lao_chen_30", label: "老陈分享人生经验", effect: function(st) { st.player.mental = Math.min(100, (st.player.mental || 0) + 5); } },
-      { threshold: 60, id: "lao_chen_60", label: "老陈介绍社区资源", effect: function(st) { if (!st.flags) st.flags = {}; st.flags._laoChenCommunityHelp = true; } },
+      // [全系统自洽修复] 域D R757b A类: 原effect只写_laoChenCommunityHelp且全库零读取、无消息无收益→好感60承诺"介绍社区资源"零兑现;补即时收益(社区中心声望+10+消息反馈),flag由domain_d_linkage_events_r757b.js首消费
+      { threshold: 60, id: "lao_chen_60", label: "老陈介绍社区资源", effect: function(st) { if (!st.flags) st.flags = {}; st.flags._laoChenCommunityHelp = true; if (typeof gainReputation === "function") { try { gainReputation(st, "community_center", 10, "老陈引荐"); } catch(e) {} } if (typeof StateManager !== "undefined") { StateManager.addMessage("🏘️ 老陈：「社区中心的免费讲座、图书角、就业辅导，你都可以用。」好感到60，社区中心声望+10。", "success"); } } },
       { threshold: 80, id: "lao_chen_80", label: "老陈成为你的人生导师", effect: function(st) { if (!st.flags) st.flags = {}; st.flags._laoChenMentorship = true; if (typeof addSkillXp === "function") addSkillXp("management", 20); } },
     ],
     met: false,
@@ -355,10 +356,13 @@ var NPCS = [
     affinityRewards: [
       { threshold: 30, id: "xiao_wei_30", desc: "小薇教你烧烤技巧", effect: function (st) {
         if (typeof addSkillXp === "function") { try { addSkillXp("cooking", 10); } catch(e) {} }
+        if (!st.flags) st.flags = {}; // [全系统自洽修复] 域D R757b B类: 缺flags守卫(同文件lao_chen effect均有)
         st.flags.xiaoWeiReferred = true; // 解锁夜市帮工工作
         StateManager.addMessage("💕 小薇：「来来来，我教你几招烧烤技巧！」好感到30，你学会了基础烹饪。", "success");
       }},
+      // [全系统自洽修复] 域D R757b A类: _xiaoWeiDiscount全库零读取→好感60承诺"摊位折扣"从未兑现;flag由domain_d_linkage_events_r757b.js夜市用餐事件首消费(半价兑现)
       { threshold: 60, id: "xiao_wei_60", desc: "小薇给你摊位折扣", effect: function (st) {
+        if (!st.flags) st.flags = {};
         st.flags._xiaoWeiDiscount = true;
         StateManager.addMessage("💕 小薇：「以后来我摊位，给你打折！」好感到60，获得摊位折扣。", "success");
       }},

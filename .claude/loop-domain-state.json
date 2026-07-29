@@ -1,9 +1,9 @@
 {
-  "lastRound": "747b",
-  "lastDirection": "DOMAIN_F",
+  "lastRound": "757b",
+  "lastDirection": "DOMAIN_D",
   "lastDate": "2026-07-29",
-  "lastCommit": "c7c4620c",
-  "nextDirection": "DOMAIN_D",
-  "note": "R747b 域F(本窗口自动化 07:4x): 选域=git log实测本窗口深审recency F=R442全局最陈旧(G刚被R746b做完)。A类=0诚实报(六项审计全净尽: 死字段黑名单/假技能键addSkillXp全库/onclick悬空23函数全有定义/wrapper导出反模式0/tutorial目标DOM/daily_report+daily_quest全部22个flag有写入方; pg.psychology为personal_growth.js真实活结构维持既有B类双心理系统记录; navigation.js:761 programmer为JSDoc注释示例不改)。联动3(domain_f_linkage_r747b.js,3street): f747b_peak_day_echo(F→B _maxEarnedMilestone日收入峰值档首读·峰终定律)/f747b_milestone_gathering(F→D _milestoneEarned100K/500K/1M首读·met铁律+applyAffinityChange)/f747b_streak_reputation(F→C _streakMaster劳模称号首读·禀赋效应)。域F零消费素材本轮清零。dist重建顺带闭合并行[R727]0d97b82d源已提交未重建dist的悬空。下轮候选D(并行R440/R442新NPC后未深审)>A。开轮必git log重算勿信本记录。 | MC 6x400 EXIT=0 0代码异常 grinder33.3%≥30% 前7天死亡全0%; 10x500 167.1s 0代码异常(grinder 500d 0%为RNG严苛度非崩溃签名,400d即恢复33.3%,历史16.7%-50%区间)。",
-  "pushStatus": "LOCAL_ONLY_TLS"
+  "lastCommit": "PENDING_SET_AFTER_COMMIT",
+  "nextDirection": "DOMAIN_A",
+  "note": "R757b 域D(本窗口自动化 08:4x-09:0x): 选域=git log实测本窗口深审recency D最陈旧(R440/R442新NPC老陈/小薇集成从未深审);b后缀避让并行R756/R757。A类2处: ①npcs.js lao_chen_60'介绍社区资源'只写_laoChenCommunityHelp全库零读取无消息无收益→补gainReputation(community_center,+10)+消息反馈; ②xiao_wei_60'摊位折扣'_xiaoWeiDiscount全库零读取→r757b夜市半价用餐事件真实兑现。B类1处: xiao_wei_30缺flags守卫。净尽项: 死字段黑名单0/关系矩阵R455已入/好感衰减存在/xiaoWeiReferred有jobs.js:814消费/community_center与night_market地点已定义。联动3(domain_d_linkage_events_r757b.js,3street,met铁律+applyAffinityChange四参+getNpcDisplayName兜底+done-flag防重): d757b_laochen_community_intro(D→C _laoChenCommunityHelp首读·社区讲座管理XP+10/社交XP+8·互惠原则)/d757b_xiaowei_discount_meal(D→E _xiaoWeiDiscount首读·半价烧烤15元vs按原价付好感+4双支线·禀赋效应)/d757b_laochen_mentor_guidance(D→C _laoChenMentorship首读·80好感导师深谈管理XP+15·峰终定律)。顺带救援并行反向孤儿domain_c_linkage_r374.js(HEAD已挂载/源未提交/node --check过)。⚠️dist本轮不提交: build吸入并行在途未提交源corp_ops.js(+24行)→按'绝不提交吸入在途源的dist'铁律,dist由并行下轮build闭合。MC 10x500 155.6s 0代码异常/前7天死亡全0%/存活60-70%属既有RNG阈值(trader60/social70/corporate50)。下轮候选A(R649b后未深审)>B。开轮必git log重算勿信本记录。",
+  "pushStatus": "PENDING"
 }
