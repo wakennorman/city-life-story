@@ -554,6 +554,51 @@ function renderSidebar(state) {
       state.flags._lastHealthDay = _healthToday;
     }
   } catch (e) {}
+
+  // [R817 域F F→D 联动增强]: 社交关系变化提醒
+  try {
+    if (state.flags && state.flags._pendingSocialAlert) {
+      var _alertEl = document.getElementById("sidebar-social-alert");
+      if (!_alertEl) {
+        var _sSidebar = document.getElementById("sidebar");
+        if (_sSidebar) {
+          _alertEl = document.createElement("div");
+          _alertEl.id = "sidebar-social-alert";
+          _alertEl.style.cssText = "font-size:10px;padding:3px 12px;background:rgba(255,152,0,0.1);color:var(--warning);border-top:1px solid var(--border);";
+          _sSidebar.appendChild(_alertEl);
+        }
+      }
+      if (_alertEl) {
+        _alertEl.textContent = "👥 " + state.flags._pendingSocialAlert;
+        _alertEl.style.display = "block";
+      }
+    } else {
+      var _existingAlert = document.getElementById("sidebar-social-alert");
+      if (_existingAlert) _existingAlert.style.display = "none";
+    }
+  } catch (e) {}
+
+  // [R817 域F F→G 联动增强]: 健康低值就医提醒
+  try {
+    if (state.status && state.status.health !== undefined && state.status.health < 25) {
+      var _medEl = document.getElementById("sidebar-medical-alert");
+      if (!_medEl) {
+        var _medSidebar = document.getElementById("sidebar");
+        if (_medSidebar) {
+          _medEl = document.createElement("div");
+          _medEl.id = "sidebar-medical-alert";
+          _medEl.style.cssText = "font-size:10px;padding:4px 12px;background:rgba(244,67,54,0.1);color:var(--danger);border-top:1px solid var(--border);cursor:pointer;";
+          _medEl.innerHTML = "🏥 健康危险(" + state.status.health + "%)！<span style='text-decoration:underline;'>点击就医</span>";
+          _medEl.onclick = function() { if (typeof openLifeSystemsMedicalTreatment === "function") openLifeSystemsMedicalTreatment(); };
+          _medSidebar.appendChild(_medEl);
+        }
+      }
+    } else {
+      var _existingMed = document.getElementById("sidebar-medical-alert");
+      if (_existingMed) _existingMed.remove();
+    }
+  } catch (e) {}
+
   // 人生目标已移到内容区时间槽下方（renderCurrentTab 中渲染）
   // renderDreamSection(state);
   // 今日重点已整合到行动页的"今日智能建议"中
