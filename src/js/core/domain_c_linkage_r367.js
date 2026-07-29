@@ -67,7 +67,7 @@
         }
       }
       if (skillsToImprove.length > 0) {
-        var randomSkill = skillsToImprove[Math.floor(Math.random() * skillsToImprove.length)];
+        var randomSkill = Random.fromArray(skillsToImprove);
         if (typeof addSkillXp === "function") addSkillXp(randomSkill, 10);
         if (typeof StateManager !== "undefined" && StateManager.addMessage) {
           StateManager.addMessage("👨‍🏫 导师指点！心情+12，心智+8，随机技能XP+10。", "success");

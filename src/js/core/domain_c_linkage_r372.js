@@ -88,7 +88,7 @@
           }
         }
         if (highSkills.length > 0) {
-          var randomSkill = highSkills[Math.floor(Math.random() * highSkills.length)];
+          var randomSkill = Random.fromArray(highSkills);
           addSkillXp(randomSkill, 5);
         }
       }
