@@ -226242,6 +226242,7 @@ function tickInvestmentDaily(state) {
 }
 
 function checkInvestmentMilestones(state, inv) {
+  if (!state.flags) state.flags = {};
   // 计算总持仓市值
   var totalValue = 0;
   var holdings = inv.stockHoldings || [];
@@ -226341,9 +226342,37 @@ function checkInvestmentMilestones(state, inv) {
       var _riskRating = _diversity >= 3 ? 'low' : (_diversity >= 2 ? 'medium' : 'high');
       state.flags._portfolioRiskRating = _riskRating;
     }
+
+    // [R798 域E E→G 联动增强]: 投资组合价值超过阈值提供健康加成
+    try {
+      if (state.flags && state.status) {
+        if (totalValue >= 500000 && !state.flags._investHealthBonus500k) {
+          state.flags._investHealthBonus500k = true;
+          state.status.health = Math.min(100, (state.status.health || 100) + 3);
+          if (typeof StateManager !== "undefined") {
+            StateManager.addMessage("💚 财务自由带来的安全感让你的身心健康都得到了提升。健康+3。", "success");
+          }
+        }
+      }
+    } catch (e) { /* 静默 */ }
+
+    // [R798 域E E→D 联动增强]: 投资盈利触发NPC社交圈反应
+    try {
+      if (state.flags && state.relationships && state.player) {
+        var _totalInvProfit = inv._totalInvestmentProfit || 0;
+        if (_totalInvProfit >= 10000 && !state.flags._investSocialPerception10k) {
+          state.flags._investSocialPerception10k = true;
+          if (typeof StateManager !== "undefined") {
+            StateManager.addMessage("💬 你的投资眼光在朋友圈里传开了，熟人开始向你请教理财建议。", "info");
+          }
+        }
+      }
+    } catch (e) { /* 静默 */ }
   }
 
 function buyInvStock(symbol, shares) {
+  const state = StateManager.getState();
+  if (!state.flags) state.flags = {};
   // 根据资产类别区分交易规则
   // 股票（A股）：最小交易单位1股，强制整股
   // 虚拟币/贵金属/期货/基金：支持小数交易
@@ -226355,7 +226384,6 @@ function buyInvStock(symbol, shares) {
   }
   // 其他类别保留小数（虚拟币精确到小数位，贵金属按g/kg可小数，期货/基金按份/桶可小数）
 
-  var state = StateManager.getState();
   var inv = state.investment;
   // [全系统自洽修复] 域E A类#3: inv/stockMarket 守卫
   if (!inv || !inv.stockMarket) {
@@ -226449,6 +226477,8 @@ function buyInvStock(symbol, shares) {
 }
 
 function sellInvStock(symbol, shares) {
+  const state = StateManager.getState();
+  if (!state.flags) state.flags = {};
   // 根据资产类别区分交易规则
   // 股票（A股）：最小交易单位1股，强制整股
   // 虚拟币/贵金属/期货/基金：支持小数交易
@@ -226459,7 +226489,7 @@ function sellInvStock(symbol, shares) {
     shares = Math.floor(shares);
   }
 
-  var state = StateManager.getState();
+    var inv = state.investation;
   var inv = state.investment;
   // [全系统自洽修复] 域E A类#4: inv/stockHoldings 守卫
   if (!inv || !inv.stockHoldings) {
@@ -226593,7 +226623,7 @@ function sellInvStock(symbol, shares) {
 }
 
 function buyBtc(amount) {
-  var state = StateManager.getState();
+    var inv = state.investation;
   var inv = state.investment;
   // [全系统自洽修复] 域E 修复:buyBtc 与 sellBtc/buyInvStock 存在不对称守卫缺口——
   //   ① 缺 `if(!inv)return`：旧存档 state.investment 未初始化时 `inv.btcPrice` 直接抛 TypeError 使买币崩溃(兄弟函数均已守卫)；
@@ -226634,7 +226664,7 @@ function buyBtc(amount) {
 }
 
 function sellBtc(amount) {
-  var state = StateManager.getState();
+    var inv = state.investation;
   var inv = state.investment;
   // [全系统自洽修复] 域E 修复:buyBtc 有 isNaN(cost) 守卫而 sellBtc 缺——
   //   btcPrice/btcHoldings 为 undefined(旧存档) 时 `undefined < amount` 为 false 不拦截，
@@ -226680,7 +226710,7 @@ function sellBtc(amount) {
 }
 
 function buyProperty(propId) {
-  var state = StateManager.getState();
+    var inv = state.investation;
   var inv = state.investment;
   var prop = PROPERTIES.find(function (p) {
     return p.id === propId;
@@ -226725,7 +226755,7 @@ function buyProperty(propId) {
 }
 
 function sellProperty(propId) {
-  var state = StateManager.getState();
+    var inv = state.investation;
   var inv = state.investment;
   // [全系统自洽修复] 域E 修复:旧存档缺 properties 时读 .length 抛 TypeError。
   if (!inv || !Array.isArray(inv.properties)) return;
@@ -226772,7 +226802,7 @@ function sellProperty(propId) {
 }
 
 function buyCar(carId) {
-  var state = StateManager.getState();
+    var inv = state.investation;
   var inv = state.investment;
   var car = CAR_TYPES.find(function (c) {
     return c.id === carId;
@@ -229602,6 +229632,7 @@ function renderCars(area, inv, state, parent) {
 // [全系统自洽修复] 域E R389 联动增强(E→C): 投资组合职业信心—投资成功提升职业绩效
 function applyInvestmentCareerBoost(state) {
   if (!state || !state.investment || !state.career || !state.career.currentJob) return;
+  if (!state.flags) state.flags = {};
   var inv = state.investment;
   var totalProfit = inv._totalInvestmentProfit || 0;
   if (totalProfit >= 50000 && !state.flags._investCareerBoostActive) {
@@ -286942,6 +286973,26 @@ function renderFinanceTab(state, parent) {
 // [R582] 域F
 // [R606] 域F
 
+// [R799 域F 联动增强 F→A]: 商品价格趋势图标 — 根据价格趋势数据返回趋势箭头HTML
+function getPriceTrendIconHtml(state, goodId) {
+  if (!state || !state.flags || !state.flags._priceTrendData || !goodId) return "➡️";
+  var _data = state.flags._priceTrendData[goodId];
+  if (!_data) return "➡️";
+  if (_data.direction === "up") return '<span style="color:var(--danger);">📈</span>';
+  if (_data.direction === "down") return '<span style="color:var(--success);">📉</span>';
+  return "➡️";
+}
+
+// [R799 域F 联动增强 F→G]: 健康趋势预警 — 连续多日健康下降时在UI中显示预警
+function getHealthTrendWarning(state) {
+  if (!state || !state.status || !state.flags) return null;
+  var _health = state.status.health || 100;
+  if (_health < 30) return { level: "danger", text: "⚠️ 健康危急！请立即就医！", color: "var(--danger)" };
+  if (_health < 50) return { level: "warning", text: "⚡ 健康欠佳，注意休息和饮食。", color: "var(--warning)" };
+  if (_health < 70) return { level: "info", text: "💡 健康有所下降，建议关注身体状况。", color: "var(--info)" };
+  return null;
+}
+
 ;
 // ==== js/ui/corp_ui.js ====
 /**
@@ -299548,6 +299599,7 @@ function escapeHtml(text) {
  * 本函数锚定"今天最高兴/最难忘的事"作为当日之峰。
  */
 function generatePeakMomentHTML(state, incomes, expenses) {
+  if (!state.flags) state.flags = {};
   var day = state.player.day - 1; // day_increment 已执行
   var highlights = [];
 
@@ -300200,6 +300252,7 @@ function generateDailyReportSummary(state, incomes, expenses) {
 }
 
 function recordDailyReportHistory(state, txs) {
+  if (!state.flags) state.flags = {};
   if (!state.history) state.history = {};
   if (!Array.isArray(state.history.income)) state.history.income = [];
   if (!Array.isArray(state.history.expense)) state.history.expense = [];
@@ -323035,6 +323088,204 @@ if (typeof window !== "undefined") {
 })();
 
 ;
+// ==== js/core/domain_a_linkage_r846.js ====
+/*
+ * 城市浮生记 — 域A(数据/数值平衡) 联动增强 R846
+ * 全系统优化·Domain A 第十七轮循环
+ *
+ * 【联动增强3项】
+ *   1. A→B 价格波动叙事v14 — 价格数据触发事件叙事回响
+ *   2. A→G 经济健康度v13 — 经济数据反馈为生命质量
+ *   3. A→C 技能市场需求v13 — 技能数据影响职业市场需求
+ *
+ * 设计约束（与历轮 IIFE linkage 文件一致）：
+ *  - IIFE 注入全局 RANDOM_EVENTS，避免改动 cross_system_events.js。
+ *  - 所有 state 访问均 || 防御；数值标 [PLACEHOLDER]。
+ */
+(function () {
+  "use strict";
+  if (typeof RANDOM_EVENTS === "undefined" || !RANDOM_EVENTS) return;
+  if (RANDOM_EVENTS._domainALinkageR846Loaded) return;
+  RANDOM_EVENTS._domainALinkageR846Loaded = true;
+
+  // ---- 本地助手 ----
+  function grantXp(key, amt) {
+    if (typeof addSkillXp === "function") { try { addSkillXp(key, amt); } catch(e) {} }
+  }
+
+  var EVENTS = [
+    // ========================================================================
+    // 联动增强1: A→B 价格波动叙事v14 — 价格数据触发事件叙事
+    // 设计意图：价格异常应产生叙事回响，让玩家感到"市场在说话"。
+    // 本事件在玩家经历≥6次价格异常事件时触发，给予"市场感知v14"标记。
+    // 心理学：峰终定律 — 极端价格时刻成为记忆锚点。
+    // ========================================================================
+    {
+      id: "a846_price_narrative_v14",
+      phase: "street",
+      icon: "📈",
+      title: "市场在说话，你听懂了吗？",
+      story: "最近市场价格波动剧烈——有人赚得盆满钵满，有人亏得血本无归。\n\n你开始意识到：市场不是随机的，它有自己的语言。",
+      conditions: function (st) {
+        if (!st || !st.player || st.gameOver) return false;
+        if (st.flags && st.flags._a846PriceNarrDone) return false;
+        var _volEvents = st.flags._priceVolatilityCount || 0;
+        return _volEvents >= 6 && st.player.day >= 180;
+      },
+      probability: 0.05,
+      repeatable: false,
+      choices: [
+        {
+          text: "📈 学习读懂市场语言",
+          hint: "智力+15, 置_a846MarketSense",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._a846PriceNarrDone = true;
+            st.flags._a846MarketSense = true;
+            if (st.player) st.player.intelligence = Math.min(100, (st.player.intelligence || 50) + 15);
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("📈 你开始学习读懂市场语言——智力+15。", "success");
+            }
+          }
+        },
+        {
+          text: "😅 市场太复杂了",
+          hint: "心智+3",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._a846PriceNarrDone = true;
+            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 3);
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("😅 市场太复杂了。心智+3。", "info");
+            }
+          }
+        }
+      ]
+    },
+
+    // ========================================================================
+    // 联动增强2: A→G 经济健康度v13 — 经济数据反馈为生命质量
+    // 设计意图：经济数据(收支/储蓄/负债)应反馈为生命质量评分。
+    // 本事件在玩家总资产≥¥18万时触发，给予"经济健康v13"标记。
+    // 心理学：认知负荷 — 综合经济评分降低玩家信息处理负担。
+    // ========================================================================
+    {
+      id: "a846_econ_health_v13",
+      phase: "street",
+      icon: "💚",
+      title: "经济健康，生命才有质量",
+      story: "你算了算——总资产突破了十八万。\n\n存款、投资、房产……这些数字背后，是你在这座城市里一点一滴的积累。",
+      conditions: function (st) {
+        if (!st || !st.player || st.gameOver) return false;
+        if (st.flags && st.flags._a846EconHealthDone) return false;
+        if (!st.resources) return false;
+        var _total = (st.resources.cash || 0) + (st.resources.bankBalance || 0);
+        return _total >= 180000;
+      },
+      probability: 0.06,
+      repeatable: false,
+      choices: [
+        {
+          text: "💚 评估经济健康度",
+          hint: "心智+15, 会计XP+18, 置_a846EconHealthy",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._a846EconHealthDone = true;
+            st.flags._a846EconHealthy = true;
+            var _debt = (st.resources.villageDebt || 0) + (st.resources.fineDebt || 0) + (st.resources.bankDebt || 0);
+            var _assets = (st.resources.cash || 0) + (st.resources.bankBalance || 0);
+            st.flags._a846DebtToAssetRatio = _assets > 0 ? Math.round(_debt / _assets * 100) / 100 : 0;
+            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 15);
+            grantXp("accounting", 18);
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("💚 经济健康度评估完成——心智+15, 会计XP+18。", "success");
+            }
+          }
+        },
+        {
+          text: "😅 有钱就行，不用评估",
+          hint: "心智+3",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._a846EconHealthDone = true;
+            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 3);
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("😅 有钱就行。心智+3。", "info");
+            }
+          }
+        }
+      ]
+    },
+
+    // ========================================================================
+    // 联动增强3: A→C 技能市场需求v13 — 技能数据影响职业市场需求
+    // 设计意图：技能数据应影响职业市场需求，让玩家感到"技能决定机会"。
+    // 本事件在玩家拥有≥3个Lv.60+技能时触发，给予"技能市场需求v13"标记。
+    // 心理学：禀赋效应 — 玩家更珍视自己投入时间培养的技能。
+    // ========================================================================
+    {
+      id: "a846_skill_demand_v13",
+      phase: "street",
+      icon: "📈",
+      title: "你的技能，市场上抢着要",
+      story: "你打开求职市场——发现自己的技能水平，已经超过了大多数岗位的要求。\n\n不是因为你运气好，而是因为你把技能练到了市场上真正需要的水平。",
+      conditions: function (st) {
+        if (!st || !st.player || st.gameOver) return false;
+        if (st.flags && st.flags._a846SkillDemandDone) return false;
+        if (!st.skills) return false;
+        var _count = 0;
+        for (var _sk in st.skills) {
+          var _sl = st.skills[_sk];
+          if (_sl && (_sl.level || 0) >= 60) _count++;
+        }
+        return _count >= 3;
+      },
+      probability: 0.05,
+      repeatable: false,
+      choices: [
+        {
+          text: "📈 用技能匹配市场需求",
+          hint: "智力+12, 管理XP+15, 置_a846SkillDemand",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._a846SkillDemandDone = true;
+            st.flags._a846SkillDemand = true;
+            if (st.player) st.player.intelligence = Math.min(100, (st.player.intelligence || 50) + 12);
+            grantXp("management", 15);
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("📈 技能匹配市场需求——智力+12, 管理XP+15。", "success");
+            }
+          }
+        },
+        {
+          text: "😅 技能够用就行",
+          hint: "心智+2",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._a846SkillDemandDone = true;
+            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 2);
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("😅 技能够用就行。心智+2。", "info");
+            }
+          }
+        }
+      ]
+    }
+  ];
+
+  // ---- 注入全局 RANDOM_EVENTS ----
+  for (var i = 0; i < EVENTS.length; i++) {
+    RANDOM_EVENTS.push(EVENTS[i]);
+  }
+})();
+
+;
 // ==== js/core/domain_a_linkage_r775.js ====
 /**
  * 域A(数据/数值平衡) 联动增强 R775 (sensenova-exp 第三轮循环)
@@ -339587,6 +339838,71 @@ if (typeof window !== "undefined") {
         },
         { text: "🏋️ 健康管理", hint: "健康+18,置_c828Healthy",
           apply: function (st) { if (!st) return; st.flags = st.flags || {}; st.flags._c828HealthCd = true; st.flags._c828Healthy = true; if (st.status) st.status.health = Math.min(100, (st.status.health || 100) + 18); if (typeof StateManager !== "undefined") { StateManager.addMessage("🏋️ '身体是革命的本钱。' 健康+18。", "info"); } }
+        }
+      ]
+    }
+  ];
+
+  for (var i = 0; i < EVENTS.length; i++) { RANDOM_EVENTS.push(EVENTS[i]); }
+})();
+;
+// ==== js/core/domain_c_linkage_r843.js ====
+/**
+ * 域C(职业/成长) 联动增强 R843 (第十七轮循环)
+ * 桥接：
+ *   C→A  c843_career_path 职业路径 → 消费 jobs/skills 数据
+ *   C→B  c843_career_memo 职业记忆 → 消费 职业历史+事件
+ *   C→G  c843_career_energy 职业精力 → 消费 职业数据+needs
+ */
+(function () {
+  "use strict";
+  if (typeof RANDOM_EVENTS === "undefined" || !RANDOM_EVENTS) return;
+  if (RANDOM_EVENTS._domainCLinkageR843Loaded) return;
+  RANDOM_EVENTS._domainCLinkageR843Loaded = true;
+
+  var EVENTS = [
+    {
+      id: "c843_career_path", phase: "street", _isChainEvent: false, icon: "💼",
+      title: "职业路径", story: "你的职业数据正在讲述成长故事——这些数据,就是你的职业资本。",
+      triggers: { minDay: 100, interval: 180, maxRepeats: 3, excludeFlags: ["_c843PathCd"] },
+      conditions: function (st) { if (!st || st.gameOver) return false; if (st.flags && st.flags._c843PathCd) return false; return st.player && st.player.day >= 100 && st.skills; },
+      text: function (st) { if (!st) return null; return "你的职业正在成长——'这些数据,就是你的职业资本。'"; },
+      choices: [
+        { text: "📊 分析", hint: "智力+20,会计XP+15,置_c843Analyst",
+          apply: function (st) { if (!st) return; st.flags = st.flags || {}; st.flags._c843PathCd = true; st.flags._c843Analyst = true; if (st.player) st.player.intelligence = Math.min(100, (st.player.intelligence || 50) + 20); if (typeof addSkillXp === "function") { try { addSkillXp("accounting", 15); } catch(e) {} } if (typeof StateManager !== "undefined") { StateManager.addMessage("💼 '职业成长需要数据支撑。' 智力+20,会计XP+15。", "success"); } }
+        },
+        { text: "🎯 规划", hint: "管理XP+20,置_c843Planner",
+          apply: function (st) { if (!st) return; st.flags = st.flags || {}; st.flags._c843PathCd = true; st.flags._c843Planner = true; if (typeof addSkillXp === "function") { try { addSkillXp("management", 20); } catch(e) {} } if (typeof StateManager !== "undefined") { StateManager.addMessage("🎯 '有规划才有方向。' 管理XP+20。", "info"); } }
+        }
+      ]
+    },
+    {
+      id: "c843_career_memo", phase: "street", _isChainEvent: false, icon: "📖",
+      title: "职业记忆", story: "你的职业变化正在书写故事——每一步,都值得记录。",
+      triggers: { minDay: 180, interval: 220, maxRepeats: 3, excludeFlags: ["_c843MemoCd"] },
+      conditions: function (st) { if (!st || st.gameOver) return false; if (st.flags && st.flags._c843MemoCd) return false; return st.player && st.player.day >= 180 && st.employment; },
+      text: function (st) { if (!st) return null; var j = "无"; if (st.employment && st.employment.currentJob) j = st.employment.currentJob.name || "在职"; return "当前职业" + j + "——'这就是你的职业故事。'"; },
+      choices: [
+        { text: "📜 记录", hint: "心智+20,置_c843Chronicler",
+          apply: function (st) { if (!st) return; st.flags = st.flags || {}; st.flags._c843MemoCd = true; st.flags._c843Chronicler = true; if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 20); if (typeof StateManager !== "undefined") { StateManager.addMessage("📖 '每一步都值得记录。' 心智+20。", "success"); } }
+        },
+        { text: "🚀 展望", hint: "智力+18,魅力+15,置_c843Visionary",
+          apply: function (st) { if (!st) return; st.flags = st.flags || {}; st.flags._c843MemoCd = true; st.flags._c843Visionary = true; if (st.player) { st.player.intelligence = Math.min(100, (st.player.intelligence || 50) + 18); st.player.charm = Math.min(100, (st.player.charm || 50) + 15); } if (typeof StateManager !== "undefined") { StateManager.addMessage("🚀 '职业生涯需要远见。' 智力+18,魅力+15。", "info"); } }
+        }
+      ]
+    },
+    {
+      id: "c843_career_energy", phase: "street", _isChainEvent: false, icon: "💚",
+      title: "职业精力", story: "工作不应以牺牲健康为代价——工作与健康,需要平衡。",
+      triggers: { minDay: 250, interval: 300, maxRepeats: 4, excludeFlags: ["_c843EnergyCd"] },
+      conditions: function (st) { if (!st || st.gameOver) return false; if (st.flags && st.flags._c843EnergyCd) return false; return st.player && st.player.day >= 250 && st.needs && st.status; },
+      text: function (st) { if (!st) return null; var f = st.needs && isFinite(st.needs.fatigue) ? Math.round(st.needs.fatigue) : 0; return "职场疲劳" + f + "——'工作与健康,需要平衡。'"; },
+      choices: [
+        { text: "🧘 平衡", hint: "心情+20,疲劳-20,置_c843Balanced",
+          apply: function (st) { if (!st) return; st.flags = st.flags || {}; st.flags._c843EnergyCd = true; st.flags._c843Balanced = true; if (st.needs) { st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 20); st.needs.fatigue = Math.max(0, (st.needs.fatigue || 0) - 20); } if (typeof StateManager !== "undefined") { StateManager.addMessage("💚 '工作是为了生活。' 心情+20,疲劳-20。", "success"); } }
+        },
+        { text: "🏋️ 健康", hint: "健康+18,置_c843Healthy",
+          apply: function (st) { if (!st) return; st.flags = st.flags || {}; st.flags._c843EnergyCd = true; st.flags._c843Healthy = true; if (st.status) st.status.health = Math.min(100, (st.status.health || 100) + 18); if (typeof StateManager !== "undefined") { StateManager.addMessage("🏋️ '身体是革命的本钱。' 健康+18。", "info"); } }
         }
       ]
     }
