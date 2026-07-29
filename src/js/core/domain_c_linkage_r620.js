@@ -52,7 +52,7 @@
       _isChainEvent: false,
       icon: "🏢",
       title: "职场积累",
-      minDay: 60,
+      triggers: { minDay: 60 },
       text: function (st) {
         var pathName = _pathNameR620(st);
         var totalSkill = _totalSkillLevelR620(st);
@@ -82,7 +82,7 @@
           }
         }},
       ],
-      condition: function (st) {
+      conditions: function (st) {
         return st.career && st.career.currentJob && (st.career.currentJob.workDays || 0) >= 60;
       },
       weight: 1,
@@ -98,7 +98,7 @@
       _isChainEvent: false,
       icon: "🎯",
       title: "职业里程碑",
-      minDay: 7,
+      triggers: { minDay: 7 },
       text: function (st) {
         if (!st.career || !st.career.currentJob) return "你还没有固定工作，找一份工作开始你的职业之旅吧。";
         var wd = st.career.currentJob.workDays || 0;
@@ -136,7 +136,7 @@
         }},
         { text: "💪 继续努力", next: null },
       ],
-      condition: function (st) {
+      conditions: function (st) {
         if (!st.career || !st.career.currentJob) return false;
         var wd = st.career.currentJob.workDays || 0;
         // 在特定里程碑天数触发
@@ -155,7 +155,7 @@
       _isChainEvent: false,
       icon: "🤝",
       title: "职场社交圈",
-      minDay: 1,
+      triggers: { minDay: 1 },
       text: function (st) {
         var npcs = _metNpcsR620(st);
         if (npcs.length === 0) return "你还没有结识任何人，多出去走走认识些朋友吧。";
@@ -190,7 +190,7 @@
         }},
         { text: "💼 专注工作", next: null },
       ],
-      condition: function (st) {
+      conditions: function (st) {
         if (!st.career || !st.career.currentJob) return false;
         var wd = st.career.currentJob.workDays || 0;
         // 入职第1天和每次晋升后触发（在职天数关键节点）
