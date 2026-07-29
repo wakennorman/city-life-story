@@ -1,0 +1,188 @@
+/**
+ * 域G(核心机制/生命周期) 联动增强 R770 (sensenova-exp 第三轮循环)
+ * 桥接：
+ *   G→A  g770_health_lifespan 健康寿命追踪 → 消费 健康+年龄数据
+ *   G→D  g770_age_social_efficiency 年龄社交效率 → 消费 年龄+关系数据
+ *   G→C  g770_age_skill_curve 年龄技能效率 → 消费 年龄+技能数据
+ */
+(function () {
+  "use strict";
+  if (typeof RANDOM_EVENTS === "undefined" || !RANDOM_EVENTS) return;
+  if (RANDOM_EVENTS._domainGLinkageR770Loaded) return;
+  RANDOM_EVENTS._domainGLinkageR770Loaded = true;
+
+  var EVENTS = [
+    // ====== G→A 健康寿命追踪 ======
+    {
+      id: "g770_health_lifespan", phase: "street", _isChainEvent: false, icon: "❤️",
+      title: "健康寿命报告",
+      story: "你的身体会说话——{desc}",
+      triggers: { minDay: 365, interval: 365, maxRepeats: 5, excludeFlags: ["_g770HealthCd"] },
+      conditions: function (st) {
+        if (!st || st.gameOver) return false;
+        if (st.flags && st.flags._g770HealthCd) return false;
+        return st.player && st.player.day >= 365 && st.status && st.needs;
+      },
+      choices: [
+        {
+          text: "📋 查看健康寿命评估", hint: "心智+10",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            var _age = st.player && st.player.age || 20;
+            var _health = (st.status && st.status.health) || 100;
+            var _happiness = (st.needs && st.needs.happiness) || 50;
+            if (!st.flags._healthLifespanRecords) st.flags._healthLifespanRecords = [];
+            st.flags._healthLifespanRecords.push({
+              age: _age, day: st.player && st.player.day || 0, health: _health, happiness: _happiness
+            });
+            if (st.flags._healthLifespanRecords.length > 20) st.flags._healthLifespanRecords.shift();
+            st.flags._g770HealthCd = true;
+            st.flags._g770HealthChecked = true;
+            var _msg = "❤️ 健康寿命评估（" + _age + "岁）：健康值" + _health + "，心情" + _happiness + "。";
+            if (_health >= 80) _msg += "身体状态良好，继续保持！";
+            else if (_health >= 50) _msg += "健康状况一般，需要多关注身体。";
+            else _msg += "健康亮红灯，请立即采取行动！";
+            if (st.player) {
+              st.player.mental = Math.min(100, (st.player.mental || 50) + 10);
+            }
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage(_msg, _health >= 80 ? "success" : _health >= 50 ? "info" : "danger");
+            }
+          }
+        },
+        {
+          text: "💪 制定健康改善计划", hint: "心智+12, 体质+8",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._g770HealthCd = true;
+            st.flags._g770HealthPlanner = true;
+            if (st.player) {
+              st.player.mental = Math.min(100, (st.player.mental || 50) + 12);
+              st.player.physique = Math.min(100, (st.player.physique || 50) + 8);
+            }
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("💪 '健康是一生的投资。' 心智+12, 体质+8。", "success");
+            }
+          }
+        }
+      ]
+    },
+
+    // ====== G→D 年龄社交效率 ======
+    {
+      id: "g770_age_social_efficiency", phase: "street", _isChainEvent: false, icon: "👥",
+      title: "社交圈变迁",
+      story: "不同年纪，交朋友的方式也不一样——{desc}",
+      triggers: { minDay: 540, interval: 360, maxRepeats: 3, excludeFlags: ["_g770SocialCd"] },
+      conditions: function (st) {
+        if (!st || st.gameOver) return false;
+        if (st.flags && st.flags._g770SocialCd) return false;
+        return st.player && st.player.day >= 540 && st.relationships;
+      },
+      choices: [
+        {
+          text: "🔄 重新审视社交圈", hint: "心智+8, 魅力+6",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            var _age = st.player && st.player.age || 20;
+            st.flags._g770SocialCd = true;
+            st.flags._g770SocialReflect = true;
+            if (_age < 25) {
+              st.flags._g770AgeSocialBonus = "young";
+            } else if (_age < 40) {
+              st.flags._g770AgeSocialBonus = "prime";
+            } else {
+              st.flags._g770AgeSocialBonus = "mature";
+            }
+            if (st.player) {
+              st.player.mental = Math.min(100, (st.player.mental || 50) + 8);
+              st.player.charm = Math.min(100, (st.player.charm || 50) + 6);
+            }
+            if (typeof StateManager !== "undefined") {
+              var _stageMsg = _age < 25 ? "年轻时朋友多，真心少。" : _age < 40 ? "人到壮年，社交变为资源交换。" : "年纪渐长，留下的都是真朋友。";
+              StateManager.addMessage("👥 " + _stageMsg + " 心智+8, 魅力+6。", "info");
+            }
+          }
+        },
+        {
+          text: "🤝 主动拓展人脉", hint: "魅力+12, 名气+5",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._g770SocialCd = true;
+            st.flags._g770Networker = true;
+            if (st.player) {
+              st.player.charm = Math.min(100, (st.player.charm || 50) + 12);
+              st.player.fame = Math.min(100, (st.player.fame || 0) + 5);
+            }
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("🤝 '人脉不是认识多少人，是多少人认可你。' 魅力+12, 名气+5。", "success");
+            }
+          }
+        }
+      ]
+    },
+
+    // ====== G→C 年龄技能效率 ======
+    {
+      id: "g770_age_skill_curve", phase: "street", _isChainEvent: false, icon: "📈",
+      title: "技能成长曲线",
+      story: "不同年龄，学习效率大不相同——{desc}",
+      triggers: { minDay: 720, interval: 360, maxRepeats: 3, excludeFlags: ["_g770SkillCd"] },
+      conditions: function (st) {
+        if (!st || st.gameOver) return false;
+        if (st.flags && st.flags._g770SkillCd) return false;
+        return st.player && st.player.day >= 720 && st.skills;
+      },
+      choices: [
+        {
+          text: "📊 分析技能成长", hint: "智力+15, 心智+10",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            var _age = st.player && st.player.age || 20;
+            st.flags._g770SkillCd = true;
+            st.flags._g770SkillAnalyst = true;
+            if (_age < 25) {
+              st.flags._g770AgeSkillBonus = "learning";
+            } else if (_age < 45) {
+              st.flags._g770AgeSkillBonus = "working";
+            } else {
+              st.flags._g770AgeSkillBonus = "teaching";
+            }
+            if (st.player) {
+              st.player.intelligence = Math.min(100, (st.player.intelligence || 50) + 15);
+              st.player.mental = Math.min(100, (st.player.mental || 50) + 10);
+            }
+            if (typeof StateManager !== "undefined") {
+              var _curveMsg = _age < 25 ? "年轻是学东西最快的年纪，别浪费。" : _age < 45 ? "壮年是把技能变现的黄金期。" : "经验是最好的老师，分享出去更有价值。";
+              StateManager.addMessage("📈 " + _curveMsg + " 智力+15, 心智+10。", "info");
+            }
+          }
+        },
+        {
+          text: "🎯 专注核心技能", hint: "智力+18",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._g770SkillCd = true;
+            st.flags._g770SkillFocused = true;
+            if (st.player) {
+              st.player.intelligence = Math.min(100, (st.player.intelligence || 50) + 18);
+            }
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("🎯 '一招鲜，吃遍天。' 智力+18。", "success");
+            }
+          }
+        }
+      ]
+    }
+  ];
+
+  for (var i = 0; i < EVENTS.length; i++) {
+    RANDOM_EVENTS.push(EVENTS[i]);
+  }
+})();

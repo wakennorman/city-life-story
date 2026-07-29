@@ -2536,7 +2536,7 @@ function runDailyPipeline(state) {
   // [全系统自洽修复] 域G 联动增强(G→E): 年龄增长投资经验加成 — 每10岁获得投资洞察
   try {
     var _age = state.player && state.player.age;
-    if (_age && _age > 0 && _age % 10 === 0 && state.investment && !state.flags['_ageInvestInsight_' + _age]) {
+    if (_age && _age > 0 && _age % 10 === 0 && state.investment && state.flags && !state.flags['_ageInvestInsight_' + _age]) {
       state.flags['_ageInvestInsight_' + _age] = true;
       if (typeof StateManager !== "undefined") {
         StateManager.addMessage("🎂 " + _age + "岁的阅历让你对市场的理解更深了一层。投资眼光更加老辣。", "info");
