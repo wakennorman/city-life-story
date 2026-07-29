@@ -1,9 +1,15 @@
 /**
- * 域G(核心机制/生命周期) 联动增强 R824 (第十四轮循环)
- * 桥接：
- *   G→A  g824_life_data_v13 人生数据v13 → 消费 全维度状态
- *   G→B  g824_life_chapter_v12 人生章节v12 → 消费 年龄+里程碑
- *   G→D  g824_life_social_v12 人生社交v12 → 消费 年龄+关系
+ * 域G(核心机制/生命周期) 联动增强 R824
+ * 全系统优化·Domain G 第六十七轮循环
+ *
+ * 【联动增强3项】
+ *   1. G→A 人生数据v20 — 核心机制数据转化为数值洞察资产
+ *   2. G→D 人生社交v18 — 人生节点触发NPC社交回响
+ *   3. G→E 财富健康v9 — 生命周期数据反馈为经济洞察
+ *
+ * 设计约束（与历轮 IIFE linkage 文件一致）：
+ *  - IIFE 注入全局 RANDOM_EVENTS，避免改动 cross_system_events.js。
+ *  - 所有 state 访问均 || 防御；使用 Random.fromArray/Random.int 保持种子RNG。
  */
 (function () {
   "use strict";
@@ -11,119 +17,179 @@
   if (RANDOM_EVENTS._domainGLinkageR824Loaded) return;
   RANDOM_EVENTS._domainGLinkageR824Loaded = true;
 
+  function grantXp(key, amt) {
+    if (typeof addSkillXp === "function") { try { addSkillXp(key, amt); } catch(e) {} }
+  }
+
   var EVENTS = [
     {
-      id: "g824_life_data_v13", phase: "street", _isChainEvent: false, icon: "📊",
-      title: "人生数据报告",
-      story: "你的每一天都在积累数据——这些数字,就是你的人生故事。",
-      triggers: { minDay: 350, interval: 450, maxRepeats: 3, excludeFlags: ["_g824DataCd"] },
+      id: "g824_life_data_v20",
+      phase: "street",
+      icon: "📊",
+      title: "人生数据，是一部编年史",
+      story: "你翻开自己的生存记录——每一天的喜怒哀乐，都变成了数据。这些数字背后，是你在这座城市里走过的每一步。",
       conditions: function (st) {
-        if (!st || st.gameOver) return false;
-        if (st.flags && st.flags._g824DataCd) return false;
-        return st.player && st.player.day >= 350 && st.status && st.needs;
+        if (!st || !st.player || st.gameOver) return false;
+        if (st.flags && st.flags._g824LifeDataDone) return false;
+        return st.player.day >= 500 && st.status && st.needs;
       },
-      text: function (st) {
-        if (!st) return null;
-        var days = st.player && st.player.day ? st.player.day : 0;
-        var health = st.status && isFinite(st.status.health) ? Math.round(st.status.health) : 100;
-        return "你已度过" + days + "天,健康" + health + "%——'这些数字,就是你的人生故事。'";
-      },
+      probability: 0.05,
+      repeatable: false,
       choices: [
         {
-          text: "📈 分析轨迹", hint: "智力+22,心智+20,置_g824Analyst",
+          text: "📈 分析人生轨迹",
+          hint: "智力+24, 心智+22, 置_g824Analyst",
           apply: function (st) {
             if (!st) return;
-            st.flags = st.flags || {}; st.flags._g824DataCd = true; st.flags._g824Analyst = true;
-            if (st.player) { st.player.intelligence = Math.min(100, (st.player.intelligence || 50) + 22); st.player.mental = Math.min(100, (st.player.mental || 50) + 20); }
-            if (typeof StateManager !== "undefined") { StateManager.addMessage("📈 '数据是未来的指引。' 智力+22,心智+20。", "success"); }
+            st.flags = st.flags || {};
+            st.flags._g824LifeDataDone = true;
+            st.flags._g824Analyst = true;
+            if (st.status && st.needs) {
+              var h = st.status.health || 100;
+              var hap = st.needs.happiness || 50;
+              st.flags._g824QualityScore = Math.min(100, Math.round(h * 0.6 + hap * 0.4));
+            }
+            if (st.player) {
+              st.player.intelligence = Math.min(100, (st.player.intelligence || 50) + 24);
+              st.player.mental = Math.min(100, (st.player.mental || 50) + 22);
+            }
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("📈 '数据是过去的见证,也是未来的指引.' 智力+24, 心智+22。", "success");
+            }
           }
         },
         {
-          text: "🎯 设定目标", hint: "心智+25,置_g824Goal",
+          text: "🎯 设定新的人生目标",
+          hint: "心智+22, 置_g824GoalSetter",
           apply: function (st) {
             if (!st) return;
-            st.flags = st.flags || {}; st.flags._g824DataCd = true; st.flags._g824Goal = true;
-            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 25);
-            if (typeof StateManager !== "undefined") { StateManager.addMessage("🎯 '有目标才有方向。' 心智+25。", "info"); }
-          }
-        }
-      ]
-    },
-    {
-      id: "g824_life_chapter_v12", phase: "street", _isChainEvent: false, icon: "📖",
-      title: "人生章节",
-      story: "你的人生正在翻开新的篇章——每一个阶段,都值得被铭记。",
-      triggers: { minDay: 450, interval: 500, maxRepeats: 3, excludeFlags: ["_g824ChapterCd"] },
-      conditions: function (st) {
-        if (!st || st.gameOver) return false;
-        if (st.flags && st.flags._g824ChapterCd) return false;
-        return st.player && st.player.day >= 450;
-      },
-      text: function (st) {
-        if (!st) return null;
-        var days = st.player && st.player.day ? st.player.day : 0;
-        var years = Math.floor(days / 365) + 1;
-        return "你已度过" + years + "年——'人生如书,每一章都值得回味。'";
-      },
-      choices: [
-        {
-          text: "📜 回顾过往", hint: "心智+25,置_g824Reviewer",
-          apply: function (st) {
-            if (!st) return;
-            st.flags = st.flags || {}; st.flags._g824ChapterCd = true; st.flags._g824Reviewer = true;
-            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 25);
-            if (typeof StateManager !== "undefined") { StateManager.addMessage("📖 '回望来路,方知归处。' 心智+25。", "success"); }
-          }
-        },
-        {
-          text: "✍️ 书写新章", hint: "智力+20,魅力+18,置_g824Writer",
-          apply: function (st) {
-            if (!st) return;
-            st.flags = st.flags || {}; st.flags._g824ChapterCd = true; st.flags._g824Writer = true;
-            if (st.player) { st.player.intelligence = Math.min(100, (st.player.intelligence || 50) + 20); st.player.charm = Math.min(100, (st.player.charm || 50) + 18); }
-            if (typeof StateManager !== "undefined") { StateManager.addMessage("✍️ '人生如书,每一页都值得期待。' 智力+20,魅力+18。", "info"); }
-          }
-        }
-      ]
-    },
-    {
-      id: "g824_life_social_v12", phase: "street", _isChainEvent: false, icon: "🎉",
-      title: "人生社交里程碑",
-      story: "在这个人生阶段,你的社交关系值得庆祝——朋友,是人生最珍贵的财富。",
-      triggers: { minDay: 550, interval: 600, maxRepeats: 3, excludeFlags: ["_g824SocialCd"] },
-      conditions: function (st) {
-        if (!st || st.gameOver) return false;
-        if (st.flags && st.flags._g824SocialCd) return false;
-        return st.player && st.player.day >= 550 && st.relationships;
-      },
-      text: function (st) {
-        if (!st) return null;
-        var rels = st.relationships ? Object.keys(st.relationships).length : 0;
-        return "你已结识" + rels + "位朋友——'朋友,是人生最珍贵的财富。'";
-      },
-      choices: [
-        {
-          text: "🤝 庆祝友谊", hint: "心情+25,社交XP+25,置_g824Celebrator",
-          apply: function (st) {
-            if (!st) return;
-            st.flags = st.flags || {}; st.flags._g824SocialCd = true; st.flags._g824Celebrator = true;
-            if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 25);
-            if (typeof addSkillXp === "function") { try { addSkillXp("social", 25); } catch(e) {} }
-            if (typeof StateManager !== "undefined") { StateManager.addMessage("🎉 '友谊是人生最珍贵的财富。' 心情+25,社交XP+25。", "success"); }
-          }
-        },
-        {
-          text: "💭 反思社交", hint: "心智+22,置_g824Thinker",
-          apply: function (st) {
-            if (!st) return;
-            st.flags = st.flags || {}; st.flags._g824SocialCd = true; st.flags._g824Thinker = true;
+            st.flags = st.flags || {};
+            st.flags._g824LifeDataDone = true;
+            st.flags._g824GoalSetter = true;
             if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 22);
-            if (typeof StateManager !== "undefined") { StateManager.addMessage("💭 '反思让关系更深刻。' 心智+22。", "info"); }
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("🎯 '有目标,人生才有方向.' 心智+22。", "info");
+            }
+          }
+        }
+      ]
+    },
+    {
+      id: "g824_life_social_v18",
+      phase: "street",
+      icon: "🎉",
+      title: "半百之年，朋友相伴",
+      story: "你发现——每当你走到人生的一个重要节点，总有一些朋友在你身边。他们不一定能帮你解决问题，但他们的陪伴，本身就是一种力量。",
+      conditions: function (st) {
+        if (!st || !st.player || st.gameOver) return false;
+        if (st.flags && st.flags._g824LifeSocialDone) return false;
+        if (!st.relationships) return false;
+        var _age = st.player.age || 18;
+        if (_age < 50) return false;
+        var _friends = 0;
+        for (var _id in st.relationships) {
+          var _r = st.relationships[_id];
+          if (_r && _r.met && (_r.affinity || 0) >= 60) _friends++;
+        }
+        return _friends >= 10;
+      },
+      probability: 0.06,
+      repeatable: false,
+      choices: [
+        {
+          text: "🎉 感谢朋友的陪伴",
+          hint: "心情+30, 社交XP+25, 置_g824FriendCompanion",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._g824LifeSocialDone = true;
+            st.flags._g824FriendCompanion = true;
+            if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 30);
+            grantXp("social", 25);
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("🎉 感谢朋友的陪伴——心情+30, 社交XP+25。人生的路上,有朋友同行,是一种幸运。", "success");
+            }
+          }
+        },
+        {
+          text: "😊 自己走也挺好",
+          hint: "心智+5",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._g824LifeSocialDone = true;
+            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 5);
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("😊 自己走也挺好。心智+5。", "info");
+            }
+          }
+        }
+      ]
+    },
+    {
+      id: "g824_wealth_health_v9",
+      phase: "street",
+      icon: "💰",
+      title: "年过半百，财富策略该调整了",
+      story: "你坐在桌前，看着自己的资产清单。五十五岁了，距离退休还有十年。现在的财富策略，还适合你吗？也许该考虑更稳健的资产配置了。",
+      conditions: function (st) {
+        if (!st || !st.player || st.gameOver) return false;
+        if (st.flags && st.flags._g824WealthHealthDone) return false;
+        if (!st.resources) return false;
+        var _age = st.player.age || 18;
+        if (_age < 55) return false;
+        var _total = (st.resources.cash || 0) + (st.resources.bankBalance || 0);
+        if (st.investment) {
+          var holdings = st.investment.stockHoldings || [];
+          var market = st.investment.stockMarket || {};
+          for (var i = 0; i < holdings.length; i++) {
+            var h = holdings[i];
+            var m = market[h.symbol];
+            if (m && isFinite(m.price) && isFinite(h.shares)) _total += m.price * h.shares;
+          }
+        }
+        return _total >= 600000;
+      },
+      probability: 0.06,
+      repeatable: false,
+      choices: [
+        {
+          text: "💰 调整财富策略",
+          hint: "会计XP+30, 智力+20, 置_g824WealthReady",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._g824WealthHealthDone = true;
+            st.flags._g824WealthReady = true;
+            grantXp("accounting", 30);
+            if (st.player) st.player.intelligence = Math.min(100, (st.player.intelligence || 50) + 20);
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("💰 你重新评估了财富策略——年龄不是负担,是经验的沉淀。会计XP+30, 智力+20。", "success");
+            }
+          }
+        },
+        {
+          text: "😅 维持现状就好",
+          hint: "心智+5",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._g824WealthHealthDone = true;
+            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 5);
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("😅 维持现状就好。心智+5。", "info");
+            }
           }
         }
       ]
     }
   ];
 
-  for (var i = 0; i < EVENTS.length; i++) { RANDOM_EVENTS.push(EVENTS[i]); }
+  for (var i = 0; i < EVENTS.length; i++) {
+    var exists = false;
+    for (var j = 0; j < RANDOM_EVENTS.length; j++) {
+      if (RANDOM_EVENTS[j] && RANDOM_EVENTS[j].id === EVENTS[i].id) { exists = true; break; }
+    }
+    if (!exists) RANDOM_EVENTS.push(EVENTS[i]);
+  }
 })();
