@@ -222,10 +222,63 @@ const EconomySystem = (function () {
     // [R822 域A A→B 联动增强]: 每月经济叙事
     if (state.flags && state.player && state.player.day % 30 === 1) {
       var _inf = state.flags._cumulativeInflation || 0;
-      if (Math.abs(_inf) > 0.1 && !state.flags._econNarrativeMonth || state.flags._econNarrativeMonth < state.player.day - 25) {
+      if (Math.abs(_inf) > 0.1 && (!state.flags._econNarrativeMonth || state.flags._econNarrativeMonth < state.player.day - 25)) {
         state.flags._econNarrativeMonth = state.player.day;
         if (typeof StateManager !== "undefined") {
           StateManager.addMessage(_inf > 0 ? "📊 经济月报：物价持续上涨，通货压力加大。" : "📊 经济月报：物价下行，通货紧缩风险显现。", "info");
+        }
+      }
+    }
+
+    // [R794 域A A→G 联动增强]: 经济健康度影响疲劳恢复 — 高通胀/高税负环境降低生活质量
+    if (state.needs && state.flags) {
+      var _econFatigueMod = 0;
+      if (Math.abs(state.flags._cumulativeInflation || 0) > 0.15) _econFatigueMod += 1;
+      if (wealthTax > 1000) _econFatigueMod += 1;
+      if (getMarketSaturationPenalty(totalAssets, 10000000, difficulty) < 0.8) _econFatigueMod += 1;
+      if (_econFatigueMod > 0) {
+        state.needs.fatigue = Math.min(100, (state.needs.fatigue || 0) + _econFatigueMod);
+        if (state.player && state.player.day % 5 === 0 && _econFatigueMod >= 2) {
+          if (typeof StateManager !== "undefined") {
+            StateManager.addMessage("📉 经济环境不佳，生活压力让你感到格外疲惫。", "warning");
+          }
+        }
+      }
+    }
+
+    // [R794 域A A→F 联动增强]: 记录价格趋势数据供UI展示
+    if (state.flags && state.trade && state.trade._lastPrices) {
+      if (!state.flags._priceTrendData) state.flags._priceTrendData = {};
+      if (state.player) {
+        var _trendDay = state.player.day || 0;
+        for (var _tgid in state.trade._lastPrices) {
+          if (state.trade._lastPrices.hasOwnProperty(_tgid)) {
+            var _arr = state.trade._lastPrices[_tgid];
+            if (_arr && _arr.length >= 2) {
+              var _trend = _arr[_arr.length - 1] - _arr[0];
+              state.flags._priceTrendData[_tgid] = {
+                direction: _trend > 0.5 ? "up" : (_trend < -0.5 ? "down" : "stable"),
+                change: Math.round(_trend * 100) / 100,
+                day: _trendDay,
+              };
+            }
+          }
+        }
+      }
+    }
+
+    // [R794 域A A→D 联动增强]: 经济周期影响NPC社交对话氛围
+    if (state.flags && state.relationships && state.player) {
+      if (!state.flags._econSocialDay || state.flags._econSocialDay < state.player.day - 10) {
+        var _cumInf = state.flags._cumulativeInflation || 0;
+        if (Math.abs(_cumInf) > 0.12) {
+          state.flags._econSocialDay = state.player.day;
+          if (typeof StateManager !== "undefined") {
+            var _econMsg = _cumInf > 0
+              ? "💬 街坊邻居都在抱怨物价又涨了，连老张小卖部的茶叶蛋都贵了5毛。"
+              : "💬 菜市场的大妈高兴地说最近菜价便宜了不少，日子好过些了。";
+            StateManager.addMessage(_econMsg, "hint");
+          }
         }
       }
     }
