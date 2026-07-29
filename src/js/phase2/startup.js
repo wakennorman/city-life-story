@@ -701,13 +701,12 @@ function registerStartup(state, name, industry, description) {
   };
 
   // ====== 创业前街头技能联动：初始分数受玩家街头技能影响 ======
-  // [全系统自洽修复] 域H 联动增强: 技能→创业初始属性
-  var codingLvl = state.skills.coding ? state.skills.coding.level : 0;
-  var salesLvl = state.skills.sales ? state.skills.sales.level : 0;
-  var mgmtLvl = state.skills.management ? state.skills.management.level : 0;
-  var accountingLvl = state.skills.accounting
-    ? state.skills.accounting.level
-    : 0;
+  // [R792 域E A类修复]: state.skills 守卫(旧存档/异常存档防TypeError)
+  var _skills = state.skills || {};
+  var codingLvl = _skills.coding ? _skills.coding.level : 0;
+  var salesLvl = _skills.sales ? _skills.sales.level : 0;
+  var mgmtLvl = _skills.management ? _skills.management.level : 0;
+  var accountingLvl = _skills.accounting ? _skills.accounting.level : 0;
   company.technologyScore = Math.min(
     80,
     Math.max(10, company.technologyScore + Math.floor(codingLvl * 0.3)),

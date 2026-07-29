@@ -1616,6 +1616,49 @@ function tickInvestmentDaily(state) {
       checkInvestmentMilestones(state, inv);
     }
   }
+
+  // [R792 域E E→G 联动增强]: 每日盈亏心情微调
+  try {
+    if (state.needs && state.investment && state.investment.stockHoldings) {
+      var _dailyPnl = 0;
+      var _smDG = state.investment.stockMarket || {};
+      for (var _hiDG = 0; _hiDG < state.investment.stockHoldings.length; _hiDG++) {
+        var _hDG = state.investment.stockHoldings[_hiDG];
+        var _mDG = _smDG[_hDG.symbol];
+        if (_mDG && _mDG.history && _mDG.history.length >= 2) {
+          var _lastDG = _mDG.history[_mDG.history.length - 1];
+          var _prevDG = _mDG.history[_mDG.history.length - 2];
+          if (_prevDG && _prevDG.price > 0 && _hDG.shares) {
+            _dailyPnl += (_lastDG.price - _prevDG.price) * _hDG.shares;
+          }
+        }
+      }
+      if (_dailyPnl > 1000) {
+        state.needs.happiness = Math.min(100, (state.needs.happiness || 50) + 1);
+      } else if (_dailyPnl < -1000) {
+        state.needs.happiness = Math.max(0, (state.needs.happiness || 50) - 1);
+      }
+    }
+  } catch (e) {}
+
+  // [R792 域E E→D 联动增强]: 投资高手社交标签
+  try {
+    if (state.investment && state.flags) {
+      var _totalInv = 0;
+      var _holdingInv = state.investment.stockHoldings || [];
+      for (var _hiINV = 0; _hiINV < _holdingInv.length; _hiINV++) {
+        var _hINV = _holdingInv[_hiINV];
+        var _mINV = (state.investment.stockMarket || {})[_hINV.symbol];
+        if (_mINV && _mINV.price && _hINV.shares) _totalInv += _mINV.price * _hINV.shares;
+      }
+      if (_totalInv >= 300000 && !state.flags._investorReputation) {
+        state.flags._investorReputation = true;
+        if (typeof StateManager !== "undefined") {
+          StateManager.addMessage("🏆 你的投资眼光在朋友圈里传开了，熟人开始叫你「投资高手」。社交圈对你的看法发生了微妙的变化。", "success");
+        }
+      }
+    }
+  } catch (e) {}
 }
 
 function checkInvestmentMilestones(state, inv) {
