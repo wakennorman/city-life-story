@@ -1592,6 +1592,52 @@ function renderCareerJobs(state, parent) {
   }
 
   html += "</div>";
+
+  // [R811 域C C→A 联动增强]: 技能市场价值概览
+  try {
+    if (state.skills) {
+      var _topSkills = [];
+      for (var _skId in state.skills) {
+        var _sk = state.skills[_skId];
+        if (_sk && _sk.level && _sk.level >= 20) {
+          _topSkills.push({ id: _skId, level: _sk.level });
+        }
+      }
+      _topSkills.sort(function(a, b) { return b.level - a.level; });
+      if (_topSkills.length > 0) {
+        html += '<div class="section" style="margin-top:12px;"><h4>📈 技能市场价值</h4>';
+        html += '<div style="font-size:11px;color:var(--text-muted);padding:8px;background:var(--bg-secondary);border-radius:6px;">';
+        html += '你的核心竞争力：<strong>' + _topSkills[0].id + '</strong> Lv.' + _topSkills[0].level;
+        if (_topSkills.length > 1) {
+          html += ' · ' + _topSkills[1].id + ' Lv.' + _topSkills[1].level;
+        }
+        if (_topSkills[0].level >= 50) {
+          html += ' — 已达专家级，市场价值极高！';
+        } else if (_topSkills[0].level >= 30) {
+          html += ' — 具备专业水平，有较好的议价能力。';
+        } else {
+          html += ' — 继续提升技能可提高收入上限。';
+        }
+        html += '</div></div>';
+      }
+    }
+  } catch (e) {}
+
+  // [R811 域C C→G 联动增强]: 职业倦怠健康预警
+  try {
+    if (state.player && state.player.day) {
+      var _consecutiveWork = 0;
+      if (state.flags && state.flags._consecutiveWorkDays) {
+        _consecutiveWork = state.flags._consecutiveWorkDays;
+      }
+      if (_consecutiveWork >= 7 && state.status) {
+        html += '<div class="section" style="margin-top:8px;"><div style="font-size:11px;padding:6px 10px;background:rgba(255,152,0,0.08);border:1px solid rgba(255,152,0,0.2);border-radius:6px;color:var(--warning);">';
+        html += '⚠️ 已连续工作' + _consecutiveWork + '天未休息，职业倦怠风险较高！建议适当放松。';
+        html += '</div></div>';
+      }
+    }
+  } catch (e) {}
+
   parent.innerHTML = html;
 }
 
@@ -2245,6 +2291,52 @@ function renderCareerOverview(state, parent) {
     "</div>";
 
   html += "</div>";
+
+  // [R811 域C C→A 联动增强]: 技能市场价值概览
+  try {
+    if (state.skills) {
+      var _topSkills = [];
+      for (var _skId in state.skills) {
+        var _sk = state.skills[_skId];
+        if (_sk && _sk.level && _sk.level >= 20) {
+          _topSkills.push({ id: _skId, level: _sk.level });
+        }
+      }
+      _topSkills.sort(function(a, b) { return b.level - a.level; });
+      if (_topSkills.length > 0) {
+        html += '<div class="section" style="margin-top:12px;"><h4>📈 技能市场价值</h4>';
+        html += '<div style="font-size:11px;color:var(--text-muted);padding:8px;background:var(--bg-secondary);border-radius:6px;">';
+        html += '你的核心竞争力：<strong>' + _topSkills[0].id + '</strong> Lv.' + _topSkills[0].level;
+        if (_topSkills.length > 1) {
+          html += ' · ' + _topSkills[1].id + ' Lv.' + _topSkills[1].level;
+        }
+        if (_topSkills[0].level >= 50) {
+          html += ' — 已达专家级，市场价值极高！';
+        } else if (_topSkills[0].level >= 30) {
+          html += ' — 具备专业水平，有较好的议价能力。';
+        } else {
+          html += ' — 继续提升技能可提高收入上限。';
+        }
+        html += '</div></div>';
+      }
+    }
+  } catch (e) {}
+
+  // [R811 域C C→G 联动增强]: 职业倦怠健康预警
+  try {
+    if (state.player && state.player.day) {
+      var _consecutiveWork = 0;
+      if (state.flags && state.flags._consecutiveWorkDays) {
+        _consecutiveWork = state.flags._consecutiveWorkDays;
+      }
+      if (_consecutiveWork >= 7 && state.status) {
+        html += '<div class="section" style="margin-top:8px;"><div style="font-size:11px;padding:6px 10px;background:rgba(255,152,0,0.08);border:1px solid rgba(255,152,0,0.2);border-radius:6px;color:var(--warning);">';
+        html += '⚠️ 已连续工作' + _consecutiveWork + '天未休息，职业倦怠风险较高！建议适当放松。';
+        html += '</div></div>';
+      }
+    }
+  } catch (e) {}
+
   parent.innerHTML = html;
 }
 
