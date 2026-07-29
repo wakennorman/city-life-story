@@ -494,6 +494,7 @@ function escapeHtml(text) {
  * 本函数锚定"今天最高兴/最难忘的事"作为当日之峰。
  */
 function generatePeakMomentHTML(state, incomes, expenses) {
+  if (!state.flags) state.flags = {};
   var day = state.player.day - 1; // day_increment 已执行
   var highlights = [];
 
@@ -1146,6 +1147,7 @@ function generateDailyReportSummary(state, incomes, expenses) {
 }
 
 function recordDailyReportHistory(state, txs) {
+  if (!state.flags) state.flags = {};
   if (!state.history) state.history = {};
   if (!Array.isArray(state.history.income)) state.history.income = [];
   if (!Array.isArray(state.history.expense)) state.history.expense = [];

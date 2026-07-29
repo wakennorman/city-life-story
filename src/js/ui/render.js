@@ -6996,3 +6996,23 @@ function renderFinanceTab(state, parent) {
 // [R558] 域F
 // [R582] 域F
 // [R606] 域F
+
+// [R799 域F 联动增强 F→A]: 商品价格趋势图标 — 根据价格趋势数据返回趋势箭头HTML
+function getPriceTrendIconHtml(state, goodId) {
+  if (!state || !state.flags || !state.flags._priceTrendData || !goodId) return "➡️";
+  var _data = state.flags._priceTrendData[goodId];
+  if (!_data) return "➡️";
+  if (_data.direction === "up") return '<span style="color:var(--danger);">📈</span>';
+  if (_data.direction === "down") return '<span style="color:var(--success);">📉</span>';
+  return "➡️";
+}
+
+// [R799 域F 联动增强 F→G]: 健康趋势预警 — 连续多日健康下降时在UI中显示预警
+function getHealthTrendWarning(state) {
+  if (!state || !state.status || !state.flags) return null;
+  var _health = state.status.health || 100;
+  if (_health < 30) return { level: "danger", text: "⚠️ 健康危急！请立即就医！", color: "var(--danger)" };
+  if (_health < 50) return { level: "warning", text: "⚡ 健康欠佳，注意休息和饮食。", color: "var(--warning)" };
+  if (_health < 70) return { level: "info", text: "💡 健康有所下降，建议关注身体状况。", color: "var(--info)" };
+  return null;
+}
