@@ -6314,3 +6314,23 @@ function getCareerSocialRespect(jobLevel) {
   };
   return _levelMap[jobLevel] || 0;
 }
+
+// [R804 域C 联动增强 C→E]: 职业级别影响投资额度 — 高职位解锁更大投资额度
+function getCareerInvestmentLimit(state) {
+  if (!state || !state.career || !state.career.currentJob) return 50000;
+  var _salary = state.career.currentJob.salary || 0;
+  if (_salary >= 50000) return 500000;
+  if (_salary >= 30000) return 300000;
+  if (_salary >= 20000) return 200000;
+  if (_salary >= 10000) return 100000;
+  return 50000;
+}
+
+// [R804 域C 联动增强 C→G]: 职业倦怠影响健康 — 连续工作天数过长降低健康
+function getCareerBurnoutHealthImpact(state) {
+  if (!state || !state.career || !state.career.currentJob) return 0;
+  var _workDays = state.career.currentJob.workDays || 0;
+  if (_workDays > 365) return -2;
+  if (_workDays > 180) return -1;
+  return 0;
+}
