@@ -1206,7 +1206,7 @@ function getNpcMarketIntel(state, goodId) {
 }
 
 // [R797 域D 联动增强 D→G]: 社交活跃度影响健康恢复 — 好友越多健康恢复越快
-function getSocialHealthBonus(state) {
+function getSocialHealthBonusR797(state) {
   if (!state || !state.relationships) return 0;
   var _closeFriends = 0;
   for (var _k in state.relationships) {

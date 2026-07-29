@@ -168804,6 +168804,32 @@ function getNpcInvestmentStyle(npcId) {
   return styles[npcId] || 'balanced';
 }
 
+// [R797 域D 联动增强 D→A]: NPC市场情报 — 高好感NPC提供商品价格折扣
+function getNpcMarketIntel(state, goodId) {
+  if (!state || !goodId || !state.relationships) return null;
+  var _totalAff = 0, _count = 0;
+  for (var _k in state.relationships) {
+    var _r = state.relationships[_k];
+    if (_r && _r.met) { _totalAff += _r.affinity || 0; _count++; }
+  }
+  if (_count < 2) return null;
+  var _avgAff = _totalAff / _count;
+  if (_avgAff < 30) return null;
+  var _discount = Math.min(0.15, _avgAff * 0.001);
+  return { discount: 1 - _discount, source: "社交情报", level: _avgAff >= 60 ? "精准" : "大致" };
+}
+
+// [R797 域D 联动增强 D→G]: 社交活跃度影响健康恢复 — 好友越多健康恢复越快
+function getSocialHealthBonusR797(state) {
+  if (!state || !state.relationships) return 0;
+  var _closeFriends = 0;
+  for (var _k in state.relationships) {
+    var _r = state.relationships[_k];
+    if (_r && _r.met && (_r.affinity || 0) >= 60) _closeFriends++;
+  }
+  return Math.min(3, Math.floor(_closeFriends / 2));
+}
+
 ;
 // ==== js/core/enterprise_fate.js ====
 /**
@@ -208097,10 +208123,10 @@ function getWorkComprehensiveModifier(state) {
   // 有效属性影响收入（能力打折→收入打折）
   var avgEff = (eff.physique + eff.intelligence + eff.agility + eff.mental) / 4;
   var avgNominal =
-    (state.player.physique +
-      state.player.intelligence +
-      state.player.agility +
-      state.player.mental) /
+    ((state.player.physique || 22) +
+      (state.player.intelligence || 20) +
+      (state.player.agility || 20) +
+      (state.player.mental || 20)) /
     4;
   var statPenalty = avgNominal > 0 ? Math.min(1.0, avgEff / avgNominal) : 1.0;
 
@@ -208108,8 +208134,8 @@ function getWorkComprehensiveModifier(state) {
     payMultiplier: emoMod.pay * Math.max(0.3, statPenalty),
     injuryRisk:
       emoMod.injury *
-      (state.status.sick ? 1.5 : 1) *
-      (state.status.injured ? 1.5 : 1),
+      (state.status && state.status.sick ? 1.5 : 1) *
+      (state.status && state.status.injured ? 1.5 : 1),
     skillXpMultiplier: emoMod.skillXp * Math.max(0.3, statPenalty),
     apMultiplier: apMult,
   };
@@ -328011,6 +328037,71 @@ if (typeof window !== "undefined") {
         },
         { text: "📈 总结", hint: "智力+20,置_b834Learn",
           apply: function (st) { if (!st) return; st.flags = st.flags || {}; st.flags._b834GrowCd = true; st.flags._b834Learn = true; if (st.player) st.player.intelligence = Math.min(100, (st.player.intelligence || 50) + 20); if (typeof StateManager !== "undefined") { StateManager.addMessage("📈 '经验是最好的老师。' 智力+20。", "info"); } }
+        }
+      ]
+    }
+  ];
+
+  for (var i = 0; i < EVENTS.length; i++) { RANDOM_EVENTS.push(EVENTS[i]); }
+})();
+;
+// ==== js/core/domain_b_linkage_r842.js ====
+/**
+ * 域B(事件/叙事) 联动增强 R842 (第十七轮循环)
+ * 桥接：
+ *   B→D  b842_event_bond 事件纽带 → 消费 事件+NPC关系
+ *   B→E  b842_event_econ_view 事件经济视角 → 消费 事件+经济
+ *   B→G  b842_event_grow_insight 事件成长洞察 → 消费 事件历史+心智
+ */
+(function () {
+  "use strict";
+  if (typeof RANDOM_EVENTS === "undefined" || !RANDOM_EVENTS) return;
+  if (RANDOM_EVENTS._domainBLinkageR842Loaded) return;
+  RANDOM_EVENTS._domainBLinkageR842Loaded = true;
+
+  var EVENTS = [
+    {
+      id: "b842_event_bond", phase: "street", _isChainEvent: false, icon: "💬",
+      title: "事件纽带", story: "你经历的事,在朋友间传开了——每一件事,都在编织你的社交网。",
+      triggers: { minDay: 80, interval: 150, maxRepeats: 3, excludeFlags: ["_b842BondCd"] },
+      conditions: function (st) { if (!st || st.gameOver) return false; if (st.flags && st.flags._b842BondCd) return false; return st.player && st.player.day >= 80 && st.relationships; },
+      text: function (st) { if (!st) return null; return "你经历的事,在朋友间传开了——'每一件事,都在编织你的社交网。'"; },
+      choices: [
+        { text: "💬 分享", hint: "社交XP+25,魅力+15,置_b842Share",
+          apply: function (st) { if (!st) return; st.flags = st.flags || {}; st.flags._b842BondCd = true; st.flags._b842Share = true; if (st.player) st.player.charm = Math.min(100, (st.player.charm || 50) + 15); if (typeof addSkillXp === "function") { try { addSkillXp("social", 25); } catch(e) {} } if (typeof StateManager !== "undefined") { StateManager.addMessage("💬 '分享让快乐加倍。' 社交XP+25,魅力+15。", "success"); } }
+        },
+        { text: "📝 记录", hint: "心智+20,置_b842Record",
+          apply: function (st) { if (!st) return; st.flags = st.flags || {}; st.flags._b842BondCd = true; st.flags._b842Record = true; if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 20); if (typeof StateManager !== "undefined") { StateManager.addMessage("📝 '有些事适合自己品味。' 心智+20。", "info"); } }
+        }
+      ]
+    },
+    {
+      id: "b842_event_econ_view", phase: "street", _isChainEvent: false, icon: "🌊",
+      title: "事件经济视角", story: "事件会改变市场——每一次波动,都是重新布局的机会。",
+      triggers: { minDay: 150, interval: 200, maxRepeats: 3, excludeFlags: ["_b842EconCd"] },
+      conditions: function (st) { if (!st || st.gameOver) return false; if (st.flags && st.flags._b842EconCd) return false; return st.player && st.player.day >= 150 && st.trade; },
+      text: function (st) { if (!st) return null; return "每一次波动,都是重新布局的机会。"; },
+      choices: [
+        { text: "📊 分析", hint: "智力+22,会计XP+18,置_b842Analyst",
+          apply: function (st) { if (!st) return; st.flags = st.flags || {}; st.flags._b842EconCd = true; st.flags._b842Analyst = true; if (st.player) st.player.intelligence = Math.min(100, (st.player.intelligence || 50) + 22); if (typeof addSkillXp === "function") { try { addSkillXp("accounting", 18); } catch(e) {} } if (typeof StateManager !== "undefined") { StateManager.addMessage("📊 '事件驱动市场。' 智力+22,会计XP+18。", "success"); } }
+        },
+        { text: "💰 机会", hint: "智力+18,置_b842Opportunist",
+          apply: function (st) { if (!st) return; st.flags = st.flags || {}; st.flags._b842EconCd = true; st.flags._b842Opportunist = true; if (st.player) st.player.intelligence = Math.min(100, (st.player.intelligence || 50) + 18); if (typeof StateManager !== "undefined") { StateManager.addMessage("💰 '危机中总有机会。' 智力+18。", "info"); } }
+        }
+      ]
+    },
+    {
+      id: "b842_event_grow_insight", phase: "street", _isChainEvent: false, icon: "🌱",
+      title: "事件成长洞察", story: "每一次经历,都在塑造更强大的你——成长,就在这些事件中。",
+      triggers: { minDay: 220, interval: 280, maxRepeats: 4, excludeFlags: ["_b842GrowCd"] },
+      conditions: function (st) { if (!st || st.gameOver) return false; if (st.flags && st.flags._b842GrowCd) return false; return st.player && st.player.day >= 220 && st.status; },
+      text: function (st) { if (!st) return null; var d = st.player && st.player.day ? st.player.day : 0; var m = st.player && isFinite(st.player.mental) ? Math.round(st.player.mental) : 50; return "你已度过" + d + "天,心智" + m + "——'成长就在每一次经历中。'"; },
+      choices: [
+        { text: "🧘 反思", hint: "心智+25,健康+10,置_b842Reflect",
+          apply: function (st) { if (!st) return; st.flags = st.flags || {}; st.flags._b842GrowCd = true; st.flags._b842Reflect = true; if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 25); if (st.status) st.status.health = Math.min(100, (st.status.health || 100) + 10); if (typeof StateManager !== "undefined") { StateManager.addMessage("🧘 '每一次反思都是一次成长。' 心智+25,健康+10。", "success"); } }
+        },
+        { text: "📈 总结", hint: "智力+20,置_b842Learn",
+          apply: function (st) { if (!st) return; st.flags = st.flags || {}; st.flags._b842GrowCd = true; st.flags._b842Learn = true; if (st.player) st.player.intelligence = Math.min(100, (st.player.intelligence || 50) + 20); if (typeof StateManager !== "undefined") { StateManager.addMessage("📈 '经验是最好的老师。' 智力+20。", "info"); } }
         }
       ]
     }
