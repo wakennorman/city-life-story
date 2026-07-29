@@ -891,3 +891,47 @@ function getCorporateMilestoneStory(state) {
   if (rank === 'P7' || rank === 'P8') return { type: 'manager', title: '管理之路', text: '你已进入管理层，带领团队冲锋陷阵。' };
   return null;
 }
+
+// [R801 域H 联动增强 H→A]: 公司绩效数据影响市场价格感知 — 高绩效公司员工对市场更敏感
+function getCorporatePriceInsight(state) {
+  if (!state || !state.corporate) return null;
+  var _perf = state.corporate.perfHistory || [];
+  if (_perf.length < 2) return null;
+  var _recent = _perf.slice(-2);
+  var _goodCount = 0;
+  for (var _i = 0; _i < _recent.length; _i++) {
+    if (_recent[_i] && (_recent[_i].grade === "A" || _recent[_i].grade === "S" || _recent[_i].grade === "S+")) _goodCount++;
+  }
+  if (_goodCount >= 2) return { level: "expert", insight: "持续高绩效让你对市场变化更敏锐" };
+  if (_goodCount >= 1) return { level: "adept", insight: "不错的绩效让你对市场有了更多理解" };
+  return null;
+}
+
+// [R801 域H 联动增强 H→B]: 公司季度里程碑叙事 — 每季度根据公司表现生成叙事
+function getCorporateQuarterStory(state) {
+  if (!state || !state.corporate) return null;
+  var _perf = state.corporate.perfHistory || [];
+  if (_perf.length === 0) return null;
+  var _last = _perf[_perf.length - 1];
+  if (!_last) return null;
+  var _grade = _last.grade || "C";
+  var _stories = {
+    "S+": { icon: "👑", text: "季度绩效S+！你在公司内部名声大噪，连VP都记住了你的名字。" },
+    "S": { icon: "🌟", text: "季度绩效S！你的表现令人印象深刻，晋升前景一片光明。" },
+    "A": { icon: "📈", text: "季度绩效A，稳扎稳打的表现让领导对你很放心。" },
+    "B": { icon: "📊", text: "季度绩效B，中规中矩，还有提升空间。" },
+    "C": { icon: "⚠️", text: "季度绩效C，需要加倍努力才能在下季度追上来。" },
+  };
+  return _stories[_grade] || null;
+}
+
+// [R801 域H 联动增强 H→C]: 公司运营经验促进职业技能成长 — 季度结算时根据绩效给技能XP
+function applyCorporateSkillGrowth(state, grade) {
+  if (!state || !grade || !state.skills || typeof addSkillXp !== "function") return;
+  var _xpMap = { "S+": 15, "S": 10, "A": 5, "B": 2, "C": 0 };
+  var _xp = _xpMap[grade] || 0;
+  if (_xp > 0) {
+    addSkillXp("management", _xp);
+    addSkillXp("accounting", Math.round(_xp / 2));
+  }
+}
