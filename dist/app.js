@@ -219622,6 +219622,26 @@ function getTradeSkillBonus(state) {
   return { sales: _salesBonus, accounting: _accountingBonus };
 }
 
+// [R810 域A 联动增强 A→B]: 价格异常触发市场传闻 — 极端价格波动生成叙事素材
+function getPriceAnomalyStory(goodId, change) {
+  if (!goodId || !change) return null;
+  var _good = typeof getGoodById === "function" ? getGoodById(goodId) : null;
+  var _name = _good ? _good.name : goodId;
+  if (change > 0.8) return { type: "panic", title: _name + "暴涨", text: _name + "价格暴涨" + Math.round(change * 100) + "%！市场恐慌情绪蔓延。" };
+  if (change < -0.5) return { type: "opportunity", title: _name + "暴跌", text: _name + "价格暴跌" + Math.round(Math.abs(change) * 100) + "%！精明的买家开始行动。" };
+  return null;
+}
+
+// [R810 域A 联动增强 A→H]: 市场价格波动影响公司运营成本 — 通胀/通缩影响公司成本
+function getCorpCostFromMarket(state) {
+  if (!state || !state.flags) return 1.0;
+  var _inf = state.flags._cumulativeInflation || 0;
+  if (_inf > 0.2) return 1.1;
+  if (_inf > 0.1) return 1.05;
+  if (_inf < -0.1) return 0.95;
+  return 1.0;
+}
+
 ;
 // ==== js/data/domain_g_linkage_r180.js ====
 /**
@@ -372429,6 +372449,207 @@ if (typeof window !== "undefined") {
             if (!st) return;
             st.flags = st.flags || {};
             st.flags._g852StartupDone = true;
+            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 3);
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("😅 再等等看。心智+3。", "info");
+            }
+          }
+        }
+      ]
+    }
+  ];
+
+  // ---- 注入全局 RANDOM_EVENTS ----
+  for (var i = 0; i < EVENTS.length; i++) {
+    RANDOM_EVENTS.push(EVENTS[i]);
+  }
+})();
+
+;
+// ==== js/core/domain_g_linkage_r860.js ====
+/*
+ * 城市浮生记 — 域G(核心机制/生命周期) 联动增强 R860
+ * 全系统优化·Domain G 第六十五轮循环
+ *
+ * 【联动增强3项】
+ *   1. G→A 人生数据v18 — 核心机制数据转化为数值平衡洞察
+ *   2. G→D 人生社交v16 — 人生节点触发NPC社交事件
+ *   3. G→H 生命阶段公司v6 — 年龄/阶段引导创业时机
+ *
+ * 设计约束（与历轮 IIFE linkage 文件一致）：
+ *  - IIFE 注入全局 RANDOM_EVENTS，避免改动 cross_system_events.js。
+ *  - 所有 state 访问均 || 防御；数值标 [PLACEHOLDER]。
+ */
+(function () {
+  "use strict";
+  if (typeof RANDOM_EVENTS === "undefined" || !RANDOM_EVENTS) return;
+  if (RANDOM_EVENTS._domainGLinkageR860Loaded) return;
+  RANDOM_EVENTS._domainGLinkageR860Loaded = true;
+
+  // ---- 本地助手 ----
+  function grantXp(key, amt) {
+    if (typeof addSkillXp === "function") { try { addSkillXp(key, amt); } catch(e) {} }
+  }
+
+  var EVENTS = [
+    // ========================================================================
+    // 联动增强1: G→A 人生数据v18 — 核心机制数据转化为数值洞察
+    // 设计意图：核心机制产生的数据(健康/需求/状态)应成为数值域可消费的资产。
+    // 本事件在玩家生存≥400天时触发，给予"人生数据v18"标记。
+    // 心理学：认知负荷 — 综合数据评分降低玩家信息处理负担。
+    // ========================================================================
+    {
+      id: "g860_life_data_v18",
+      phase: "street",
+      icon: "📊",
+      title: "人生数据报告",
+      story: "你的每一天都在积累数据——这些数字,就是你的人生故事。",
+      conditions: function (st) {
+        if (!st || !st.player || st.gameOver) return false;
+        if (st.flags && st.flags._g860LifeDataDone) return false;
+        return st.player.day >= 400 && st.status && st.needs;
+      },
+      probability: 0.05,
+      repeatable: false,
+      choices: [
+        {
+          text: "📈 分析人生轨迹",
+          hint: "智力+20, 心智+18, 置_g860Analyst",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._g860LifeDataDone = true;
+            st.flags._g860Analyst = true;
+            if (st.player) {
+              st.player.intelligence = Math.min(100, (st.player.intelligence || 50) + 20);
+              st.player.mental = Math.min(100, (st.player.mental || 50) + 18);
+            }
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("📈 '数据是过去的见证,也是未来的指引。' 智力+20, 心智+18。", "success");
+            }
+          }
+        },
+        {
+          text: "🎯 设定人生目标",
+          hint: "心智+20, 置_g860GoalSetter",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._g860LifeDataDone = true;
+            st.flags._g860GoalSetter = true;
+            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 20);
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("🎯 '有目标,人生才有方向。' 心智+20。", "info");
+            }
+          }
+        }
+      ]
+    },
+
+    // ========================================================================
+    // 联动增强2: G→D 人生社交v16 — 人生节点触发NPC社交事件
+    // 设计意图：人生节点(年龄/阶段)应触发NPC社交事件，让玩家感到"朋友陪我成长"。
+    // 本事件在玩家年龄≥38且拥有≥8个好友时触发。
+    // 心理学：社会支持 — 被朋友陪伴的满足感。
+    // ========================================================================
+    {
+      id: "g860_life_social_v16",
+      phase: "street",
+      icon: "🎉",
+      title: "朋友们陪你走过人生节点",
+      story: "你发现——每当你走到人生的一个重要节点，总有一些朋友在你身边。\n\n他们不一定能帮你解决问题，但他们的陪伴，本身就是一种力量。",
+      conditions: function (st) {
+        if (!st || !st.player || st.gameOver) return false;
+        if (st.flags && st.flags._g860LifeSocialDone) return false;
+        if (!st.relationships) return false;
+        var _age = st.player.age || 18;
+        if (_age < 38) return false;
+        var _friends = 0;
+        for (var _id in st.relationships) {
+          var _r = st.relationships[_id];
+          if (_r && _r.met && (_r.affinity || 0) >= 60) _friends++;
+        }
+        return _friends >= 8;
+      },
+      probability: 0.06,
+      repeatable: false,
+      choices: [
+        {
+          text: "🎉 感谢朋友的陪伴",
+          hint: "心情+25, 置_g860FriendCompanion",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._g860LifeSocialDone = true;
+            st.flags._g860FriendCompanion = true;
+            if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 25);
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("🎉 感谢朋友的陪伴——心情+25。人生的路上，有朋友同行，是一种幸运。", "success");
+            }
+          }
+        },
+        {
+          text: "😊 自己走也挺好",
+          hint: "心智+3",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._g860LifeSocialDone = true;
+            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 3);
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("😊 自己走也挺好。心智+3。", "info");
+            }
+          }
+        }
+      ]
+    },
+
+    // ========================================================================
+    // 联动增强3: G→H 生命阶段公司v6 — 年龄/阶段引导创业时机
+    // 设计意图：不同年龄阶段应引导不同的创业时机，让玩家感到"阶段不同时机不同"。
+    // 本事件在玩家年龄≥42且总资产≥¥40万时触发。
+    // 心理学：禀赋效应 — 玩家感到"准备就绪后的自然选择"。
+    // ========================================================================
+    {
+      id: "g860_life_stage_startup_v6",
+      phase: "street",
+      icon: "🚀",
+      title: "这个年纪，该创业了吗？",
+      story: "你算了算——已经四十二岁了，在职场摸爬滚打了好几年。\n\n一个念头开始浮现：是时候创业了吗？",
+      conditions: function (st) {
+        if (!st || !st.player || st.gameOver) return false;
+        if (st.flags && st.flags._g860StartupDone) return false;
+        if (!st.resources) return false;
+        var _age = st.player.age || 18;
+        if (_age < 42) return false;
+        var _total = (st.resources.cash || 0) + (st.resources.bankBalance || 0);
+        return _total >= 400000;
+      },
+      probability: 0.06,
+      repeatable: false,
+      choices: [
+        {
+          text: "🚀 认真评估创业时机",
+          hint: "智力+20, 管理XP+22, 置_g860StartupReady",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._g860StartupDone = true;
+            st.flags._g860StartupReady = true;
+            if (st.player) st.player.intelligence = Math.min(100, (st.player.intelligence || 50) + 20);
+            grantXp("management", 22);
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("🚀 你认真评估了创业时机——智力+20, 管理XP+22。", "success");
+            }
+          }
+        },
+        {
+          text: "😅 再等等看",
+          hint: "心智+3",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._g860StartupDone = true;
             if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 3);
             if (typeof StateManager !== "undefined") {
               StateManager.addMessage("😅 再等等看。心智+3。", "info");
