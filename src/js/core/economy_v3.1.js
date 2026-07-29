@@ -213,6 +213,23 @@ const EconomySystem = (function () {
       };
     }
 
+    // [R822 域A A→H 联动增强]: 经济周期影响公司运营成本
+    if (state.flags && state.corporate) {
+      var _econCycle = state.flags._economicCycle || "normal";
+      state.flags._corpCostMod = _econCycle === "recession" ? 1.15 : _econCycle === "boom" ? 0.9 : 1.0;
+    }
+
+    // [R822 域A A→B 联动增强]: 每月经济叙事
+    if (state.flags && state.player && state.player.day % 30 === 1) {
+      var _inf = state.flags._cumulativeInflation || 0;
+      if (Math.abs(_inf) > 0.1 && !state.flags._econNarrativeMonth || state.flags._econNarrativeMonth < state.player.day - 25) {
+        state.flags._econNarrativeMonth = state.player.day;
+        if (typeof StateManager !== "undefined") {
+          StateManager.addMessage(_inf > 0 ? "📊 经济月报：物价持续上涨，通货压力加大。" : "📊 经济月报：物价下行，通货紧缩风险显现。", "info");
+        }
+      }
+    }
+
     const effectiveCash = Math.max(0, cash - wealthTax);
 
     return {
