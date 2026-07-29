@@ -6334,3 +6334,29 @@ function getCareerBurnoutHealthImpact(state) {
   if (_workDays > 180) return -1;
   return 0;
 }
+
+// [R812 域C 联动增强 C→A]: 职业数据贡献市场洞察 — 职业经验提供商品价格判断加成
+function getCareerMarketInsight(state) {
+  if (!state || !state.career || !state.career.currentJob) return 0;
+  var _workDays = state.career.currentJob.workDays || 0;
+  if (_workDays > 365) return 3;
+  if (_workDays > 180) return 2;
+  if (_workDays > 60) return 1;
+  return 0;
+}
+
+// [R812 域C 联动增强 C→B]: 职业里程碑触发叙事事件 — 长期从事同一工作触发职业故事
+function getCareerStoryTrigger(state) {
+  if (!state || !state.career || !state.career.currentJob || !state.flags) return null;
+  var _wd = state.career.currentJob.workDays || 0;
+  var _path = state.career.currentJob.path || "unknown";
+  if (_wd === 365 && !state.flags["_careerStory_" + _path + "_1y"]) {
+    state.flags["_careerStory_" + _path + "_1y"] = true;
+    return { type: "anniversary", title: "入职一周年", text: "你在" + _path + "岗位工作满一年了，回顾这一年的成长，感慨良多。" };
+  }
+  if (_wd === 730 && !state.flags["_careerStory_" + _path + "_2y"]) {
+    state.flags["_careerStory_" + _path + "_2y"] = true;
+    return { type: "milestone", title: "两年磨一剑", text: "两年在同一条路上深耕，你已经成为这个领域的熟手。" };
+  }
+  return null;
+}
