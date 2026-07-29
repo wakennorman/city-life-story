@@ -103239,6 +103239,345 @@ if (typeof window !== "undefined") {
 })();
 
 ;
+// ==== js/core/domain_c_linkage_r361.js ====
+/**
+ * 域C联动增强 R361 — 技能等级里程碑叙事化
+ * [全系统自洽修复] 域C R361: 技能等级首次被事件叙事消费
+ *
+ * 3个新事件：
+ *   ① C→F: 技能Lv.30里程碑 — 技能达30级获得职业飞跃反馈
+ *   ② C→F: 技能Lv.50里程碑 — 技能达50级获得专家级认可反馈
+ *   ③ C→F: 技能Lv.70里程碑 — 技能达70级获得大师级地位反馈
+ */
+(function () {
+  "use strict";
+  if (typeof window === "undefined") return;
+
+  // ===== ① C→F: 技能Lv.30里程碑 =====
+  var skill_level_30_milestone = {
+    id: "skill_level_30_milestone",
+    title: "🎯 30级里程碑",
+    phase: "street",
+    repeatable: false,
+    priority: 70,
+    conditions: function (st) {
+      if (!st || !st.flags) return false;
+      if (st.flags._skillLevel30StoryShown) return false;
+      // 检查是否有任意技能达到30级
+      if (typeof state === "undefined" || !state || !state.skills) return false;
+      for (var skillKey in state.skills) {
+        var skill = state.skills[skillKey];
+        if (skill && skill.level && skill.level >= 30) {
+          return true;
+        }
+      }
+      return false;
+    },
+    probability: 0.5,
+    getStory: function (st) {
+      var reachedSkills = [];
+      for (var skillKey in state.skills) {
+        var skill = state.skills[skillKey];
+        if (skill && skill.level && skill.level >= 30) {
+          var skillName = getSkillChineseName(skillKey);
+          reachedSkills.push(skillName + " Lv." + skill.level);
+        }
+      }
+      return "你的" + reachedSkills.join("、") + "已经达到30级！\n\n" +
+             "这个级别已经让你在行业里小有建树了，\n" +
+             "许多雇主都对你刮目相看。是时候考虑更专业的路线了？";
+    },
+    getText: function (st) { return this.getStory(st); },
+    apply: function (st, choiceId) {
+      if (!st) return;
+      st.flags._skillLevel30StoryShown = st.player.day;
+      // 记录达到的技能
+      st.flags._skillLevel30Skills = [];
+      for (var skillKey in state.skills) {
+        var skill = state.skills[skillKey];
+        if (skill && skill.level && skill.level >= 30) {
+          st.flags._skillLevel30Skills.push(skillKey);
+        }
+      }
+      if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 10);
+      if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 5);
+      if (typeof addSkillXp === "function") addSkillXp("management", 3);
+      if (typeof StateManager !== "undefined" && StateManager.addMessage) {
+        StateManager.addMessage("🎯 技能30级里程碑！心智+5，心情+10，管理XP+3。", "success");
+      }
+    },
+    choices: [],
+    icons: ["🎯", "30级"],
+  };
+
+  // ===== ② C→F: 技能Lv.50里程碑 =====
+  var skill_level_50_milestone = {
+    id: "skill_level_50_milestone",
+    title: "🏆 50级里程碑",
+    phase: "street",
+    repeatable: false,
+    priority: 80,
+    conditions: function (st) {
+      if (!st || !st.flags) return false;
+      if (st.flags._skillLevel50StoryShown) return false;
+      if (typeof state === "undefined" || !state || !state.skills) return false;
+      for (var skillKey in state.skills) {
+        var skill = state.skills[skillKey];
+        if (skill && skill.level && skill.level >= 50) {
+          return true;
+        }
+      }
+      return false;
+    },
+    probability: 0.3,
+    getStory: function (st) {
+      var reachedSkills = [];
+      for (var skillKey in state.skills) {
+        var skill = state.skills[skillKey];
+        if (skill && skill.level && skill.level >= 50) {
+          var skillName = getSkillChineseName(skillKey);
+          reachedSkills.push(skillName + " Lv." + skill.level);
+        }
+      }
+      return "你的" + reachedSkills.join("、") + "已经达到50级！\n\n" +
+             "这已经是行业专家的水平了，\n" +
+             "同行们开始向你请教，客户也主动找你合作。\n" +
+             "你是选择继续深耕，还是尝试跨界发展？";
+    },
+    getText: function (st) { return this.getStory(st); },
+    apply: function (st, choiceId) {
+      if (!st) return;
+      st.flags._skillLevel50StoryShown = st.player.day;
+      st.flags._skillLevel50Skills = [];
+      for (var skillKey in state.skills) {
+        var skill = state.skills[skillKey];
+        if (skill && skill.level && skill.level >= 50) {
+          st.flags._skillLevel50Skills.push(skillKey);
+        }
+      }
+      if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 15);
+      if (st.player) st.player.charm = Math.min(100, (st.player.charm || 50) + 5);
+      if (typeof addSkillXp === "function") addSkillXp("management", 8);
+      if (typeof StateManager !== "undefined" && StateManager.addMessage) {
+        StateManager.addMessage("🏆 技能50级里程碑！魅力+5，心智+15，管理XP+8。", "success");
+      }
+    },
+    choices: [],
+    icons: ["🏆", "50级"],
+  };
+
+  // ===== ③ C→F: 技能Lv.70里程碑 =====
+  var skill_level_70_milestone = {
+    id: "skill_level_70_milestone",
+    title: "⭐ 70级里程碑",
+    phase: "street",
+    repeatable: false,
+    priority: 90,
+    conditions: function (st) {
+      if (!st || !st.flags) return false;
+      if (st.flags._skillLevel70StoryShown) return false;
+      if (typeof state === "undefined" || !state || !state.skills) return false;
+      for (var skillKey in state.skills) {
+        var skill = state.skills[skillKey];
+        if (skill && skill.level && skill.level >= 70) {
+          return true;
+        }
+      }
+      return false;
+    },
+    probability: 0.1,
+    getStory: function (st) {
+      var reachedSkills = [];
+      for (var skillKey in state.skills) {
+        var skill = state.skills[skillKey];
+        if (skill && skill.level && skill.level >= 70) {
+          var skillName = getSkillChineseName(skillKey);
+          reachedSkills.push(skillName + " Lv." + skill.level);
+        }
+      }
+      return "你的" + reachedSkills.join("、") + "已经达到70级！\n\n" +
+             "这是顶尖大师的水平，\n" +
+             "行业内的权威人物，你的经验可以影响整个领域。\n" +
+             "许多年轻人向你拜师学艺，你也面临着传承的选择。";
+    },
+    getText: function (st) { return this.getStory(st); },
+    apply: function (st, choiceId) {
+      if (!st) return;
+      st.flags._skillLevel70StoryShown = st.player.day;
+      st.flags._skillLevel70Skills = [];
+      for (var skillKey in state.skills) {
+        var skill = state.skills[skillKey];
+        if (skill && skill.level && skill.level >= 70) {
+          st.flags._skillLevel70Skills.push(skillKey);
+        }
+      }
+      if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 20);
+      if (st.player) st.player.fame = Math.min(100, (st.player.fame || 50) + 10);
+      if (typeof addSkillXp === "function") addSkillXp("management", 15);
+      if (typeof StateManager !== "undefined" && StateManager.addMessage) {
+        StateManager.addMessage("⭐ 技能70级里程碑！ Fame+10，心智+20，管理XP+15。你已成为行业大师！", "success");
+      }
+    },
+    choices: [],
+    icons: ["⭐", "70级"],
+  };
+
+  // 注入事件
+  if (typeof RANDOM_EVENTS !== "undefined") {
+    RANDOM_EVENTS.push(skill_level_30_milestone, skill_level_50_milestone, skill_level_70_milestone);
+    if (typeof console !== "undefined" && console.log) {
+      console.log("[C R361] 3 skill level milestone events registered");
+    }
+  }
+})();
+
+;
+// ==== js/core/domain_c_linkage_r362.js ====
+/**
+ * 域C联动增强 R362 — 跳槽里程碑叙事化
+ * [全系统自洽修复] 域C R362: 跳槽次数首次被事件叙事消费
+ *
+ * 3个新事件：
+ *   ① C→B: 首次跳槽叙事 — 第1次跳槽时的职业选择反思
+ *   ② C→B: 第5次跳槽叙事 — 中期职业选择的十字路口
+ *   ③ C→G: 第10次跳槽叙事 — 频繁跳槽的职业代价与反思
+ */
+(function () {
+  "use strict";
+  if (typeof window === "undefined") return;
+
+  // ===== ① C→B: 首次跳槽叙事 =====
+  var first_job_change = {
+    id: "first_job_change",
+    title: "🔄 第一份工作变动",
+    phase: "street",
+    repeatable: false,
+    priority: 60,
+    conditions: function (st) {
+      if (!st || !st.flags) return false;
+      if (st.flags._firstJobChangeShown) return false;
+      // 检查是否至少跳槽过一次
+      var career = st.career || {};
+      var history = career.jobHistory || [];
+      return history.length >= 2; // 至少有2份工作经历才算跳槽1次
+    },
+    probability: 0.8,
+    getStory: function (st) {
+      var career = st.career || {};
+      var history = career.jobHistory || [];
+      var current = history[history.length - 1] || {};
+      var previous = history[history.length - 2] || {};
+      return "这是你职业生涯的第一次变动。\n\n" +
+             "你从「" + (previous.name || "旧职位") + "」跳槽到了「" + (current.name || "新职位") + "」。\n\n" +
+             "选择背后有你的考量：更高的薪水？更好的发展？还是对现状的不满？\n" +
+             "无论原因如何，这都是你职业成长的第一步。";
+    },
+    getText: function (st) { return this.getStory(st); },
+    apply: function (st, choiceId) {
+      if (!st) return;
+      st.flags._firstJobChangeShown = st.player.day;
+      if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 8);
+      if (typeof addSkillXp === "function") addSkillXp("management", 2);
+      if (typeof StateManager !== "undefined" && StateManager.addMessage) {
+        StateManager.addMessage("🔄 首次跳槽经历！心智+2，心情+8，你迈出了职业探索的第一步。", "info");
+      }
+    },
+    choices: [],
+    icons: ["🔄", "首次"],
+  };
+
+  // ===== ② C→B: 第5次跳槽叙事 =====
+  var fifth_job_change = {
+    id: "fifth_job_change",
+    title: "🎯 第五次职业转折",
+    phase: "street",
+    repeatable: false,
+    priority: 75,
+    conditions: function (st) {
+      if (!st || !st.flags) return false;
+      if (st.flags._fifthJobChangeShown) return false;
+      var career = st.career || {};
+      var history = career.jobHistory || [];
+      // 检查是否跳槽了至少5次（即至少有6份工作）
+      return history.length >= 6;
+    },
+    probability: 0.5,
+    getStory: function (st) {
+      var career = st.career || {};
+      var history = career.jobHistory || [];
+      var current = history[history.length - 1] || {};
+      return "这是你职业生涯的第5次变动。\n\n" +
+             "频繁的选择让你开始思考：\n" +
+             "「我到底在追求什么？」\n" +
+             "是不断跳动的薪水，还是真正的职业成长？\n" +
+             "或许，是时候找到一个能让你长期发展的方向了？";
+    },
+    getText: function (st) { return this.getStory(st); },
+    apply: function (st, choiceId) {
+      if (!st) return;
+      st.flags._fifthJobChangeShown = st.player.day;
+      if (st.needs) st.needs.happiness = Math.max(0, (st.needs.happiness || 50) - 10);
+      if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 5);
+      if (typeof addSkillXp === "function") addSkillXp("management", 5);
+      if (typeof StateManager !== "undefined" && StateManager.addMessage) {
+        StateManager.addMessage("🎯 第5次职业转折！心智+5，管理XP+5，但心情-10。你开始反思职业道路的选择。", "warning");
+      }
+    },
+    choices: [],
+    icons: ["🎯", "第五次"],
+  };
+
+  // ===== ③ C→G: 第10次跳槽叙事 =====
+  var tenth_job_change = {
+    id: "tenth_job_change",
+    title: "⚠️ 第十次频繁跳槽",
+    phase: "street",
+    repeatable: false,
+    priority: 85,
+    conditions: function (st) {
+      if (!st || !st.flags) return false;
+      if (st.flags._tenthJobChangeShown) return false;
+      var career = st.career || {};
+      var history = career.jobHistory || [];
+      // 检查是否跳槽了至少10次（即至少有11份工作）
+      return history.length >= 11;
+    },
+    probability: 0.3,
+    getStory: function (st) {
+      var career = st.career || {};
+      var history = career.jobHistory || [];
+      var current = history[history.length - 1] || {};
+      return "这是你职业生涯的第10次变动！\n\n" +
+             "雇主们开始对你的频繁跳槽产生疑虑：\n" +
+             "「他/她是不是缺乏稳定性？」「真的能在这里长久发展吗？」\n\n" +
+             "频繁跳槽虽然让你接触了多种工作，\n" +
+             "但也可能让你在某个领域难以深耕。\n" +
+             "是时候认真考虑下一份工作了，找到一个既能发挥你多种经验，又能让你长期发展的平台。";
+    },
+    getText: function (st) { return this.getStory(st); },
+    apply: function (st, choiceId) {
+      if (!st) return;
+      st.flags._tenthJobChangeShown = st.player.day;
+      if (st.needs) st.needs.happiness = Math.max(0, (st.needs.happiness || 50) - 20);
+      if (st.player) st.player.mental = Math.max(0, (st.player.mental || 50) - 10);
+      if (typeof StateManager !== "undefined" && StateManager.addMessage) {
+        StateManager.addMessage("⚠️ 第10次频繁跳槽！心智-10，心情-20。你的职业稳定性受到雇主的质疑。建议慎重选择下一份工作！", "error");
+      }
+    },
+    choices: [],
+    icons: ["⚠️", "第十次"],
+  };
+
+  // 注入事件
+  if (typeof RANDOM_EVENTS !== "undefined") {
+    RANDOM_EVENTS.push(first_job_change, fifth_job_change, tenth_job_change);
+    if (typeof console !== "undefined" && console.log) {
+      console.log("[C R362] 3 job change milestone events registered");
+    }
+  }
+})();
+
+;
 // ==== js/core/domain_c_linkage_r365.js ====
 /**
  * 域C(职业/成长) 联动增强 R365
@@ -342431,6 +342770,173 @@ if (typeof window !== "undefined") {
             if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 10);
             if (typeof StateManager !== "undefined") {
               StateManager.addMessage("💭 '反思,让关系更深刻。' 心智+10。", "info");
+            }
+          }
+        }
+      ],
+      text: function (st) {
+        if (!st) return null;
+        if (!st.relationships) return "社交关系,是人生的重要组成部分...";
+        var metCount = 0;
+        for (var k in st.relationships) {
+          if (st.relationships[k] && st.relationships[k].met) metCount++;
+        }
+        return "你有" + metCount + "位结识的朋友——'这些关系,值得庆祝。'";
+      }
+    }
+  ];
+
+  for (var i = 0; i < EVENTS.length; i++) {
+    RANDOM_EVENTS.push(EVENTS[i]);
+  }
+})();
+
+;
+// ==== js/core/domain_g_linkage_r748.js ====
+/**
+ * 域G(核心机制/生命周期) 联动增强 R748 (第六轮循环)
+ * 桥接：
+ *   G→A  g748_life_data_v6 人生数据v6 → 消费 全维度状态
+ *   G→B  g748_life_chapter_v5 人生章节v5 → 消费 life_nodes+story_chapters
+ *   G→D  g748_life_social_v5 人生社交v5 → 消费 年龄+关系
+ */
+(function () {
+  "use strict";
+  if (typeof RANDOM_EVENTS === "undefined" || !RANDOM_EVENTS) return;
+  if (RANDOM_EVENTS._domainGLinkageR748Loaded) return;
+  RANDOM_EVENTS._domainGLinkageR748Loaded = true;
+
+  var EVENTS = [
+    {
+      id: "g748_life_data_v6", phase: "street", _isChainEvent: false, icon: "📊",
+      title: "人生数据报告",
+      story: "你的每一天都在积累数据——{desc}",
+      triggers: { minDay: 500, interval: 600, maxRepeats: 3, excludeFlags: ["_g748DataCd"] },
+      conditions: function (st) {
+        if (!st || st.gameOver) return false;
+        if (st.flags && st.flags._g748DataCd) return false;
+        return st.player && st.player.day >= 500 && st.status && st.needs;
+      },
+      choices: [
+        {
+          text: "📈 分析人生数据", hint: "智力+12,心智+10,置_g748Analyst",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._g748DataCd = true;
+            st.flags._g748Analyst = true;
+            if (st.player) {
+              st.player.intelligence = Math.min(100, (st.player.intelligence || 50) + 12);
+              st.player.mental = Math.min(100, (st.player.mental || 50) + 10);
+            }
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("📊 '数据,是人生的刻度。' 智力+12,心智+10。", "success");
+            }
+          }
+        },
+        {
+          text: "🎯 设定人生目标", hint: "心智+12,置_g748GoalSetter",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._g748DataCd = true;
+            st.flags._g748GoalSetter = true;
+            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 12);
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("🎯 '有目标,人生才有方向。' 心智+12。", "info");
+            }
+          }
+        }
+      ],
+      text: function (st) {
+        if (!st) return null;
+        var days = st.player && st.player.day ? st.player.day : 0;
+        return "你已度过" + days + "天——'这些数据,就是你的人生。'";
+      }
+    },
+    {
+      id: "g748_life_chapter_v5", phase: "street", _isChainEvent: false, icon: "📖",
+      title: "人生章节",
+      story: "你的人生正在翻开新的篇章——{desc}",
+      triggers: { minDay: 400, interval: 500, maxRepeats: 3, excludeFlags: ["_g748ChapterCd"] },
+      conditions: function (st) {
+        if (!st || st.gameOver) return false;
+        if (st.flags && st.flags._g748ChapterCd) return false;
+        return st.player && st.player.day >= 400;
+      },
+      choices: [
+        {
+          text: "📜 回顾过往", hint: "心智+12,置_g748Reviewer",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._g748ChapterCd = true;
+            st.flags._g748Reviewer = true;
+            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 12);
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("📖 '回望来路,方知归处。' 心智+12。", "success");
+            }
+          }
+        },
+        {
+          text: "✍️ 书写新篇章", hint: "智力+10,魅力+8,置_g748Writer",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._g748ChapterCd = true;
+            st.flags._g748Writer = true;
+            if (st.player) {
+              st.player.intelligence = Math.min(100, (st.player.intelligence || 50) + 10);
+              st.player.charm = Math.min(100, (st.player.charm || 50) + 8);
+            }
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("✍️ '人生如书,每一页都值得期待。' 智力+10,魅力+8。", "info");
+            }
+          }
+        }
+      ],
+      text: function (st) {
+        if (!st) return null;
+        var days = st.player && st.player.day ? st.player.day : 0;
+        var years = Math.floor(days / 365) + 1;
+        return "你已度过" + years + "年——'人生如书,每一章都值得回味。'";
+      }
+    },
+    {
+      id: "g748_life_social_v5", phase: "street", _isChainEvent: false, icon: "🎉",
+      title: "人生社交里程碑",
+      story: "在这个人生阶段,你的社交关系值得庆祝——{desc}",
+      triggers: { minDay: 365, interval: 400, maxRepeats: 3, excludeFlags: ["_g748SocialCd"] },
+      conditions: function (st) {
+        if (!st || st.gameOver) return false;
+        if (st.flags && st.flags._g748SocialCd) return false;
+        return st.player && st.player.day >= 365 && st.relationships;
+      },
+      choices: [
+        {
+          text: "🤝 庆祝友谊", hint: "心情+18,社交XP+15,置_g748Celebrator",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._g748SocialCd = true;
+            st.flags._g748Celebrator = true;
+            if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 18);
+            if (typeof addSkillXp === "function") { try { addSkillXp("social", 15); } catch(e) {} }
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("🎉 '友谊,是人生最珍贵的财富。' 心情+18,社交XP+15。", "success");
+            }
+          }
+        },
+        {
+          text: "💭 反思社交", hint: "心智+12,置_g748SocialThinker",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._g748SocialCd = true;
+            st.flags._g748SocialThinker = true;
+            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 12);
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("💭 '反思,让关系更深刻。' 心智+12。", "info");
             }
           }
         }
