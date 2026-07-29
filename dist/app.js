@@ -105046,6 +105046,157 @@ if (typeof window !== "undefined") {
 })();
 
 ;
+// ==== js/core/domain_c_linkage_r373.js ====
+/**
+ * 域C(职业/成长) 联动增强 R373
+ * 第十五轮循环——技能积累的多维回响。
+ * 桥接：
+ *   C→A  career_data_v4             职业→数据v4（数据/数值·信息沉淀）
+ *   C→D  career_social_v3           职业→社交v3（NPC/社交·职业人脉）
+ *   C→F  career_skill_ui            职业→技能UI（UI/UX·技能可视化）
+ */
+(function () {
+  "use strict";
+
+  if (typeof RANDOM_EVENTS === "undefined") return;
+  if (RANDOM_EVENTS._domainCLinkageR373Loaded) return;
+  RANDOM_EVENTS._domainCLinkageR373Loaded = true;
+
+  var EVENTS = [
+    {
+      id: "career_data_v4",
+      phase: "street",
+      _isChainEvent: false,
+      icon: "📊",
+      title: "职业数据的价值",
+      story: "你整理了自己的职业数据——工作时间、收入变化、技能成长、晋升记录。\n\n这些数据告诉你一个故事：你从什么都不会的新手，成长为现在独当一面的专业人士。\n\n「数据不仅是记录，更是你职业生涯的见证者。」",
+      triggers: { minDay: 60, excludeFlags: ["_careerDataV4Seen"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        var job = st.career && st.career.currentJob;
+        return !!(job && job.path && (job.workDays || 0) >= 60);
+      },
+      choices: [
+        {
+          text: "📊 分析职业数据",
+          hint: "心智+5，职业洞察flag",
+          apply: function (st) {
+            if (!st.flags) st.flags = {};
+            st.flags._careerDataV4Seen = true;
+            st.flags._careerDataAwareness = true;
+            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 5);
+            if (typeof StateManager !== "undefined" && StateManager.addMessage) {
+              StateManager.addMessage("📊 你分析了职业数据。数据是职业生涯的见证者。心智+5。", "success");
+            }
+          },
+        },
+        {
+          text: "📝 继续工作",
+          hint: "心智+2",
+          apply: function (st) {
+            if (!st.flags) st.flags = {};
+            st.flags._careerDataV4Seen = true;
+            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 2);
+            if (typeof StateManager !== "undefined" && StateManager.addMessage) {
+              StateManager.addMessage("📝 你继续工作。心智+2。", "info");
+            }
+          },
+        },
+      ],
+      probability: 0.5,
+      repeatable: false,
+    },
+    {
+      id: "career_social_v3",
+      phase: "street",
+      _isChainEvent: false,
+      icon: "🤝",
+      title: "职场人脉",
+      story: "你在工作中认识了一些志同道合的人。\n\n有些人成了你的良师益友，有些人给你带来了新的机会，有些人只是点头之交但也让你觉得这个城市不那么陌生。\n\n「职场不仅是谋生的地方，也是建立关系的地方。」",
+      triggers: { minDay: 45, excludeFlags: ["_careerSocialV3Seen"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        var job = st.career && st.career.currentJob;
+        return !!(job && job.path);
+      },
+      choices: [
+        {
+          text: "🤝 拓展职场人脉",
+          hint: "心智+5，好感+3",
+          apply: function (st) {
+            if (!st.flags) st.flags = {};
+            st.flags._careerSocialV3Seen = true;
+            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 5);
+            if (typeof StateManager !== "undefined" && StateManager.addMessage) {
+              StateManager.addMessage("🤝 你拓展了职场人脉。职场不仅是谋生的地方，也是建立关系的地方。心智+5。", "success");
+            }
+          },
+        },
+        {
+          text: "💼 专注工作",
+          hint: "心智+2",
+          apply: function (st) {
+            if (!st.flags) st.flags = {};
+            st.flags._careerSocialV3Seen = true;
+            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 2);
+            if (typeof StateManager !== "undefined" && StateManager.addMessage) {
+              StateManager.addMessage("💼 你专注工作。心智+2。", "info");
+            }
+          },
+        },
+      ],
+      probability: 0.5,
+      repeatable: false,
+    },
+    {
+      id: "career_skill_ui",
+      phase: "street",
+      _isChainEvent: false,
+      icon: "📚",
+      title: "技能图谱",
+      story: "你画了一张自己的技能图谱，看看自己会什么、不会什么、想学什么。\n\n你发现，有些技能在工作中很常用，有些技能虽然不常用但在关键时刻很有用，还有些技能你一直想学但没有机会。\n\n「技能图谱就是你的职业地图，知道自己在哪，才能知道要去哪。」",
+      triggers: { minDay: 30, excludeFlags: ["_careerSkillUiSeen"] },
+      conditions: function (st) {
+        if (st.gameOver) return false;
+        return !!(st.skills);
+      },
+      choices: [
+        {
+          text: "📚 规划技能成长路线",
+          hint: "心智+5，技能规划flag",
+          apply: function (st) {
+            if (!st.flags) st.flags = {};
+            st.flags._careerSkillUiSeen = true;
+            st.flags._skillPlanMade = true;
+            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 5);
+            if (typeof StateManager !== "undefined" && StateManager.addMessage) {
+              StateManager.addMessage("📚 你规划了技能成长路线。技能图谱就是你的职业地图。心智+5。", "success");
+            }
+          },
+        },
+        {
+          text: "📖 边学边看",
+          hint: "心智+2",
+          apply: function (st) {
+            if (!st.flags) st.flags = {};
+            st.flags._careerSkillUiSeen = true;
+            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 2);
+            if (typeof StateManager !== "undefined" && StateManager.addMessage) {
+              StateManager.addMessage("📖 你边学边看。心智+2。", "info");
+            }
+          },
+        },
+      ],
+      probability: 0.5,
+      repeatable: false,
+    },
+  ];
+
+  for (var i = 0; i < EVENTS.length; i++) {
+    RANDOM_EVENTS.push(EVENTS[i]);
+  }
+})();
+;
 // ==== js/core/domain_c_linkage_r374.js ====
 /**
  * 域C联动增强 R374 — 职业发展里程碑完整叙事链
@@ -105235,156 +105386,85 @@ if (typeof window !== "undefined") {
 })();
 
 ;
-// ==== js/core/domain_c_linkage_r373.js ====
+// ==== js/core/domain_c_linkage_r375.js ====
 /**
- * 域C(职业/成长) 联动增强 R373
- * 第十五轮循环——技能积累的多维回响。
- * 桥接：
- *   C→A  career_data_v4             职业→数据v4（数据/数值·信息沉淀）
- *   C→D  career_social_v3           职业→社交v3（NPC/社交·职业人脉）
- *   C→F  career_skill_ui            职业→技能UI（UI/UX·技能可视化）
+ * 域C联动增强 R375 — 年度调薪叙事化
+ * [全系统自洽修复] 域C R375: 年度调薪首次被事件叙事消费
+ *
+ * 1个新事件：
+ *   C→E: 年度调薪感悟 — 每年获得薪资调整时的财务感悟
  */
 (function () {
   "use strict";
+  if (typeof window === "undefined") return;
 
-  if (typeof RANDOM_EVENTS === "undefined") return;
-  if (RANDOM_EVENTS._domainCLinkageR373Loaded) return;
-  RANDOM_EVENTS._domainCLinkageR373Loaded = true;
+  // ===== C→E: 年度调薪感悟 =====
+  var annual_salary_review = {
+    id: "annual_salary_review",
+    title: "📈 年度调薪",
+    phase: "street",
+    repeatable: true,
+    cooldownDays: 365,
+    priority: 75,
+    conditions: function (st) {
+      if (!st || !st.flags) return false;
+      // 冷却检查：每年只触发一次
+      if (st.flags._annualSalaryReviewLastYear) {
+        if ((st.player.day || 0) - st.flags._annualSalaryReviewLastYear < 365) return false;
+      }
+      // 检查有当前工作
+      if (!st.career || !st.career.currentJob) return false;
+      // 检查在职至少90天（半年以上才有资格调薪）
+      if (!st.career.currentJob.startDate) return false;
+      var daysInJob = (st.player.day || 0) - st.career.currentJob.startDate;
+      if (daysInJob < 90) return false;
+      
+      // 设置最后一年标记
+      st.flags._annualSalaryReviewLastYear = st.player.day;
+      return true;
+    },
+    probability: 0.6,
+    getStory: function (st) {
+      var job = st.career.currentJob;
+      var oldSalary = job.__oldSalary || job.salary || 0;
+      var newSalary = job.salary || 0;
+      var increase = newSalary - oldSalary;
+      var percent = oldSalary > 0 ? Math.round((increase / oldSalary) * 100) : 0;
+      
+      // 模拟薪资增长（实际游戏中由后端决定，这里做叙事展示）
+      job.__oldSalary = newSalary; // 记录为新薪资的旧值
+      
+      return "又到了一年一度的薪资调整时间。\n\n" +
+             "你的月薪从「¥" + oldSalary.toLocaleString() + "」调整为「¥" + newSalary.toLocaleString() + "」，\n" +
+             "涨幅「+" + percent + "%」（+¥" + increase.toLocaleString() + "）。\n\n" +
+              "这份涨薪是对过去一年工作的认可，\n" +
+              "也意味着你的经济状况有了实质性改善。\n" +
+              "是时候重新规划你的财务了。\n" +
+              "多出来的收入，是用于提升生活品质，还是投资未来？";
+    },
+    getText: function (st) { return this.getStory(st); },
+    apply: function (st, choiceId) {
+      if (!st) return;
+      st.flags._annualSalaryReviewLastYear = st.player.day;
+      if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 10);
+      if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 3);
+      if (typeof StateManager !== "undefined" && StateManager.addMessage) {
+        StateManager.addMessage("📈 年度调薪！心情+10，心智+3。你的薪资获得了上涨，经济状况改善。", "success");
+      }
+    },
+    choices: [],
+    icons: ["📈", "调薪"],
+  };
 
-  var EVENTS = [
-    {
-      id: "career_data_v4",
-      phase: "street",
-      _isChainEvent: false,
-      icon: "📊",
-      title: "职业数据的价值",
-      story: "你整理了自己的职业数据——工作时间、收入变化、技能成长、晋升记录。\n\n这些数据告诉你一个故事：你从什么都不会的新手，成长为现在独当一面的专业人士。\n\n「数据不仅是记录，更是你职业生涯的见证者。」",
-      triggers: { minDay: 60, excludeFlags: ["_careerDataV4Seen"] },
-      conditions: function (st) {
-        if (st.gameOver) return false;
-        var job = st.career && st.career.currentJob;
-        return !!(job && job.path && (job.workDays || 0) >= 60);
-      },
-      choices: [
-        {
-          text: "📊 分析职业数据",
-          hint: "心智+5，职业洞察flag",
-          apply: function (st) {
-            if (!st.flags) st.flags = {};
-            st.flags._careerDataV4Seen = true;
-            st.flags._careerDataAwareness = true;
-            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 5);
-            if (typeof StateManager !== "undefined" && StateManager.addMessage) {
-              StateManager.addMessage("📊 你分析了职业数据。数据是职业生涯的见证者。心智+5。", "success");
-            }
-          },
-        },
-        {
-          text: "📝 继续工作",
-          hint: "心智+2",
-          apply: function (st) {
-            if (!st.flags) st.flags = {};
-            st.flags._careerDataV4Seen = true;
-            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 2);
-            if (typeof StateManager !== "undefined" && StateManager.addMessage) {
-              StateManager.addMessage("📝 你继续工作。心智+2。", "info");
-            }
-          },
-        },
-      ],
-      probability: 0.5,
-      repeatable: false,
-    },
-    {
-      id: "career_social_v3",
-      phase: "street",
-      _isChainEvent: false,
-      icon: "🤝",
-      title: "职场人脉",
-      story: "你在工作中认识了一些志同道合的人。\n\n有些人成了你的良师益友，有些人给你带来了新的机会，有些人只是点头之交但也让你觉得这个城市不那么陌生。\n\n「职场不仅是谋生的地方，也是建立关系的地方。」",
-      triggers: { minDay: 45, excludeFlags: ["_careerSocialV3Seen"] },
-      conditions: function (st) {
-        if (st.gameOver) return false;
-        var job = st.career && st.career.currentJob;
-        return !!(job && job.path);
-      },
-      choices: [
-        {
-          text: "🤝 拓展职场人脉",
-          hint: "心智+5，好感+3",
-          apply: function (st) {
-            if (!st.flags) st.flags = {};
-            st.flags._careerSocialV3Seen = true;
-            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 5);
-            if (typeof StateManager !== "undefined" && StateManager.addMessage) {
-              StateManager.addMessage("🤝 你拓展了职场人脉。职场不仅是谋生的地方，也是建立关系的地方。心智+5。", "success");
-            }
-          },
-        },
-        {
-          text: "💼 专注工作",
-          hint: "心智+2",
-          apply: function (st) {
-            if (!st.flags) st.flags = {};
-            st.flags._careerSocialV3Seen = true;
-            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 2);
-            if (typeof StateManager !== "undefined" && StateManager.addMessage) {
-              StateManager.addMessage("💼 你专注工作。心智+2。", "info");
-            }
-          },
-        },
-      ],
-      probability: 0.5,
-      repeatable: false,
-    },
-    {
-      id: "career_skill_ui",
-      phase: "street",
-      _isChainEvent: false,
-      icon: "📚",
-      title: "技能图谱",
-      story: "你画了一张自己的技能图谱，看看自己会什么、不会什么、想学什么。\n\n你发现，有些技能在工作中很常用，有些技能虽然不常用但在关键时刻很有用，还有些技能你一直想学但没有机会。\n\n「技能图谱就是你的职业地图，知道自己在哪，才能知道要去哪。」",
-      triggers: { minDay: 30, excludeFlags: ["_careerSkillUiSeen"] },
-      conditions: function (st) {
-        if (st.gameOver) return false;
-        return !!(st.skills);
-      },
-      choices: [
-        {
-          text: "📚 规划技能成长路线",
-          hint: "心智+5，技能规划flag",
-          apply: function (st) {
-            if (!st.flags) st.flags = {};
-            st.flags._careerSkillUiSeen = true;
-            st.flags._skillPlanMade = true;
-            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 5);
-            if (typeof StateManager !== "undefined" && StateManager.addMessage) {
-              StateManager.addMessage("📚 你规划了技能成长路线。技能图谱就是你的职业地图。心智+5。", "success");
-            }
-          },
-        },
-        {
-          text: "📖 边学边看",
-          hint: "心智+2",
-          apply: function (st) {
-            if (!st.flags) st.flags = {};
-            st.flags._careerSkillUiSeen = true;
-            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 2);
-            if (typeof StateManager !== "undefined" && StateManager.addMessage) {
-              StateManager.addMessage("📖 你边学边看。心智+2。", "info");
-            }
-          },
-        },
-      ],
-      probability: 0.5,
-      repeatable: false,
-    },
-  ];
-
-  for (var i = 0; i < EVENTS.length; i++) {
-    RANDOM_EVENTS.push(EVENTS[i]);
+  // 注入事件
+  if (typeof RANDOM_EVENTS !== "undefined") {
+    RANDOM_EVENTS.push(annual_salary_review);
+    if (typeof console !== "undefined" && console.log) {
+      console.log("[C R375] 1 annual salary review event registered");
+    }
   }
 })();
+
 ;
 // ==== js/core/domain_c_linkage_r381.js ====
 /**
@@ -341508,6 +341588,163 @@ if (typeof window !== "undefined") {
             if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 12);
             if (typeof StateManager !== "undefined") {
               StateManager.addMessage("😴 '早睡早起,精神百倍。' 心情+12。", "info");
+            }
+          }
+        }
+      ],
+      text: function (st) {
+        if (!st) return null;
+        var health = st.status && st.status.health ? Math.round(st.status.health) : 100;
+        var fatigue = st.needs && st.needs.fatigue ? Math.round(st.needs.fatigue) : 0;
+        return "健康" + health + "%,疲劳" + fatigue + "——'身体,最诚实的仪表盘。'";
+      }
+    }
+  ];
+
+  for (var i = 0; i < EVENTS.length; i++) {
+    RANDOM_EVENTS.push(EVENTS[i]);
+  }
+})();
+
+;
+// ==== js/core/domain_f_linkage_r755.js ====
+/**
+ * 域F(UI/UX) 联动增强 R755 (第七轮循环)
+ * 桥接：
+ *   F→A  f755_data_story_v8 数据故事v8 → 消费 jobs/skills/wealth 数据
+ *   F→B  f755_event_memory_v8 事件记忆墙v8 → 消费 events_core+news 数据
+ *   F→G  f755_health_tracker_v8 健康追踪v8 → 消费 status/needs 数据
+ */
+(function () {
+  "use strict";
+  if (typeof RANDOM_EVENTS === "undefined" || !RANDOM_EVENTS) return;
+  if (RANDOM_EVENTS._domainFLinkageR755Loaded) return;
+  RANDOM_EVENTS._domainFLinkageR755Loaded = true;
+
+  var EVENTS = [
+    {
+      id: "f755_data_story_v8", phase: "street", _isChainEvent: false, icon: "📊",
+      title: "数据故事",
+      story: "你的数据正在讲述故事——{desc}",
+      triggers: { minDay: 500, interval: 600, maxRepeats: 3, excludeFlags: ["_f755DataCd"] },
+      conditions: function (st) {
+        if (!st || st.gameOver) return false;
+        if (st.flags && st.flags._f755DataCd) return false;
+        return st.player && st.player.day >= 500 && st.skills;
+      },
+      choices: [
+        {
+          text: "📈 回顾成长轨迹", hint: "心智+12,置_f755GrowthReviewer",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._f755DataCd = true;
+            st.flags._f755GrowthReviewer = true;
+            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 12);
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("📊 '数据背后,是成长的足迹。' 心智+12。", "success");
+            }
+          }
+        },
+        {
+          text: "🎯 设定数据目标", hint: "智力+10,置_f755DataGoalSetter",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._f755DataCd = true;
+            st.flags._f755DataGoalSetter = true;
+            if (st.player) st.player.intelligence = Math.min(100, (st.player.intelligence || 50) + 10);
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("🎯 '有目标,数据才有意义。' 智力+10。", "info");
+            }
+          }
+        }
+      ],
+      text: function (st) {
+        if (!st) return null;
+        var days = st.player && st.player.day ? st.player.day : 0;
+        return "你已度过" + days + "天——'这些数据,诉说着你的成长。'";
+      }
+    },
+    {
+      id: "f755_event_memory_v8", phase: "street", _isChainEvent: false, icon: "🖼️",
+      title: "事件记忆墙",
+      story: "你经历的事件正在组成记忆墙——{desc}",
+      triggers: { minDay: 400, interval: 500, maxRepeats: 3, excludeFlags: ["_f755MemoryCd"] },
+      conditions: function (st) {
+        if (!st || st.gameOver) return false;
+        if (st.flags && st.flags._f755MemoryCd) return false;
+        return st.player && st.player.day >= 400;
+      },
+      choices: [
+        {
+          text: "📜 回顾重要事件", hint: "心智+12,置_f755EventReviewer",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._f755MemoryCd = true;
+            st.flags._f755EventReviewer = true;
+            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 12);
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("🖼️ '记忆,是人生最珍贵的财富。' 心智+12。", "success");
+            }
+          }
+        },
+        {
+          text: "📖 书写人生故事", hint: "社交XP+12,置_f755LifeWriter",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._f755MemoryCd = true;
+            st.flags._f755LifeWriter = true;
+            if (typeof addSkillXp === "function") { try { addSkillXp("social", 12); } catch(e) {} }
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("📖 '书写,让记忆永存。' 社交XP+12。", "info");
+            }
+          }
+        }
+      ],
+      text: function (st) {
+        if (!st) return null;
+        var days = st.player && st.player.day ? st.player.day : 0;
+        return "你已度过" + days + "天——'这些记忆,构成了你的人生。'";
+      }
+    },
+    {
+      id: "f755_health_tracker_v8", phase: "street", _isChainEvent: false, icon: "💚",
+      title: "健康追踪",
+      story: "你的健康状况需要持续关注——{desc}",
+      triggers: { minDay: 365, interval: 400, maxRepeats: 4, excludeFlags: ["_f755HealthCd"] },
+      conditions: function (st) {
+        if (!st || st.gameOver) return false;
+        if (st.flags && st.flags._f755HealthCd) return false;
+        return st.status && st.needs && st.player && st.player.day >= 365;
+      },
+      choices: [
+        {
+          text: "🏃 制定健康计划", hint: "健康+10,疲劳-15,置_f755HealthPlan",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._f755HealthCd = true;
+            st.flags._f755HealthPlan = true;
+            if (st.status) st.status.health = Math.min(100, (st.status.health || 100) + 10);
+            if (st.needs) st.needs.fatigue = Math.max(0, (st.needs.fatigue || 0) - 15);
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("💚 '健康,需要持续管理。' 健康+10,疲劳-15。", "success");
+            }
+          }
+        },
+        {
+          text: "😴 调整作息", hint: "心情+15,置_f755SleepAdjust",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._f755HealthCd = true;
+            st.flags._f755SleepAdjust = true;
+            if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 15);
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("😴 '早睡早起,精神百倍。' 心情+15。", "info");
             }
           }
         }
