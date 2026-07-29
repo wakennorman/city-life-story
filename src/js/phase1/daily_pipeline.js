@@ -2502,6 +2502,37 @@ function runDailyPipeline(state) {
     }
   } catch (e) {}
 
+  // [R815 域G G→E 联动增强]: 年龄风险偏好 — 年龄越大投资波动感知越低
+  try {
+    if (state.player && state.player.age && state.flags) {
+      var _ageVal = state.player.age;
+      var _ageWisdomBonus = Math.min(15, Math.floor((_ageVal - 20) / 3));
+      if (_ageWisdomBonus > 0) {
+        state.flags._ageFinWisdomBonus = _ageWisdomBonus;
+      }
+    }
+  } catch (e) {}
+
+  // [R815 域G G→F 联动增强]: 每10岁记录一次人生阶段摘要
+  try {
+    if (state.player && state.player.age && state.flags) {
+      var _ageY = state.player.age;
+      if (_ageY > 0 && _ageY % 10 === 0) {
+        var _ageFlag = '_lifeDecadeSummary_' + _ageY;
+        if (!state.flags[_ageFlag]) {
+          state.flags[_ageFlag] = true;
+          if (!state.flags._lifeDecades) state.flags._lifeDecades = [];
+          state.flags._lifeDecades.push({
+            age: _ageY,
+            day: state.player.day,
+            cash: (state.resources && state.resources.cash) || 0,
+            health: (state.status && state.status.health) || 0,
+          });
+        }
+      }
+    }
+  } catch (e) {}
+
   for (var i = 0; i < DAILY_PIPELINE.length; i++) {
     var step = DAILY_PIPELINE[i];
 

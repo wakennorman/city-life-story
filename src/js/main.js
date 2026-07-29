@@ -3129,6 +3129,7 @@ function getAvailableActions(state) {
             handler: function () {
               consumeAP(20);
               var progress = Random.int(5, 15);
+              if (!state.flags) state.flags = {};
               if (!state.flags._phdResearchProgress)
                 state.flags._phdResearchProgress = 0;
               state.flags._phdResearchProgress =
@@ -4490,6 +4491,7 @@ function doStreetJob(job) {
   }
 
   // [全系统自洽修复] 跟踪唯一街头工作天数（用于显示和经验计算）
+  if (!state.flags) state.flags = {};
   if (!state.flags._workedToday) {
     state.flags._totalStreetDays = (state.flags._totalStreetDays || 0) + 1;
   }
@@ -4690,6 +4692,7 @@ function doStreetJob(job) {
     }
   }
   // 连续工作奖励（P3.4）：同一工作连续N天，熟练度加成
+  if (!state.flags) state.flags = {};
   if (!state.flags._jobStreaks) state.flags._jobStreaks = {};
   var streakData = state.flags._jobStreaks[job.id] || { count: 0, lastDay: 0 };
   var yesterday = state.player.day - 1;
@@ -4751,6 +4754,7 @@ function doStreetJob(job) {
     (state.flags._completedShiftCount || 0) + 1; // 成就：第一份工作
 
   // 职业称号系统：同一工作累计天数解锁称号加成
+  if (!state.flags) state.flags = {};
   if (!state.flags._jobTitles) state.flags._jobTitles = {};
   var totalShifts = state.employment.completedShifts[job.id];
   var currentTitle = state.flags._jobTitles[job.id] || 0;
@@ -5220,6 +5224,7 @@ function doStreetJob(job) {
 
   // ====== 连续工作天数追踪（全局 Work Streak）======
   // 在 doStreetJob 末尾记录，用于 daily_pipeline 的连续工作奖励判断
+  if (!state.flags) state.flags = {};
   if (!state.flags._workStreak) state.flags._workStreak = 0;
   if (!state.flags._lastWorkDay) state.flags._lastWorkDay = 0;
   if (state.flags._lastWorkDay === state.player.day - 1) {
@@ -5697,7 +5702,7 @@ function checkDebtCeiling(state) {
   const avg =
     recent.length > 0 ? recent.reduce((a, b) => a + b, 0) / recent.length : 0;
   const ratio = avg > 0 ? debt / (avg * 30) : Infinity;
-  if (ratio > 2 && !state.flags._debtCeilingWarned) {
+  if (ratio > 2 && (!state.flags || !state.flags._debtCeilingWarned)) {
     StateManager.addMessage(
       `⚠️ 债务已达月收入的${ratio.toFixed(1)}倍，利滚利正在吞噬现金流。建议优先还债。`,
       "danger",
