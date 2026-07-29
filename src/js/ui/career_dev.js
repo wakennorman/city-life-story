@@ -6360,3 +6360,25 @@ function getCareerStoryTrigger(state) {
   }
   return null;
 }
+
+// [R820 域C 联动增强 C→E]: 职业技能提升投资回报 — 管理/会计技能影响投资收益率
+function getCareerInvestReturn(state) {
+  if (!state || !state.skills) return 1.0;
+  var _mgmt = (state.skills.management && state.skills.management.level) || 0;
+  var _acct = (state.skills.accounting && state.skills.accounting.level) || 0;
+  var _bonus = (_mgmt * 0.001) + (_acct * 0.001);
+  return 1.0 + Math.min(0.15, _bonus);
+}
+
+// [R820 域C 联动增强 C→F]: 职业路径可视化数据 — 返回职业路径完整信息供UI渲染
+function getCareerPathVisualData(state) {
+  if (!state || !state.career || !state.career.currentJob) return null;
+  var _job = state.career.currentJob;
+  var _path = CAREER_PATHS[_job.path];
+  if (!_path) return null;
+  var _currentIdx = -1;
+  for (var _i = 0; _i < _path.levels.length; _i++) {
+    if (_path.levels[_i].id === _job.levelId) { _currentIdx = _i; break; }
+  }
+  return { pathName: _path.name, icon: _path.icon, levels: _path.levels, currentIdx: _currentIdx, workDays: _job.workDays || 0 };
+}
