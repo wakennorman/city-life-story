@@ -216488,6 +216488,27 @@ const DAILY_PIPELINE = [
           }
         }
       }
+      // [全系统自洽修复] 域C R792b 修复:内容创作签约承诺零兑现——job_milestone t2"保底每月¥2000"只发首月一次(_contentPlatformSigned全库零读取)、t3"月薪¥6000"只发一次性买断(_mcnEmployee全库零读取)→月度兑现,条件:仍从事content_writing(离职即停,叙事自洽)
+      if (
+        state.player && state.player.job === "content_writing" &&
+        (state.flags._mcnEmployee || state.flags._contentPlatformSigned) &&
+        day % 30 === 0
+      ) {
+        var _cwPay = state.flags._mcnEmployee ? 6000 : 2000; // MCN月薪优先(买断后独家,保底不叠加)
+        if (isFinite(_cwPay) && _cwPay > 0) {
+          state.resources.cash = (state.resources.cash || 0) + _cwPay;
+          state.flags._contentSalaryTotal = (state.flags._contentSalaryTotal || 0) + _cwPay;
+          if (typeof StateManager !== "undefined") {
+            StateManager.addMessage(
+              (state.flags._mcnEmployee
+                ? "🏢 MCN月薪到账 ¥" + _cwPay.toLocaleString()
+                : "📱 平台保底分成到账 ¥" + _cwPay.toLocaleString()) +
+                "（累计 ¥" + state.flags._contentSalaryTotal.toLocaleString() + "）。",
+              "good",
+            );
+          }
+        }
+      }
       // [全系统自洽修复] 域E 修复:贷款逾期90天警告
       if (
         (state.resources.bankDebt || 0) > 0 &&
@@ -307943,8 +307964,13 @@ var JOB_MILESTONE_EVENTS = {
               100,
               (state.player.mental || 10) + 3,
             );
+            // [全系统自洽修复] 域C R792b 修复:desc承诺"人脉+1"零兑现(选项文案写了人脉但apply无任何社交收益)→魅力+1+社交技能XP兑现带新人的人脉积累
+            state.player.charm = Math.min(100, (state.player.charm || 20) + 1);
+            if (typeof addSkillXp === "function") {
+              try { addSkillXp("social", 15); } catch (e) {}
+            }
             StateManager.addMessage(
-              "🧤 工地小头目！你开始带人，疲劳-10，精神+3。",
+              "🧤 工地小头目！你开始带人，疲劳-10，精神+3，魅力+1，社交经验+15。",
               "success",
             );
           },
@@ -308366,8 +308392,12 @@ var JOB_MILESTONE_EVENTS = {
               state.skills.management.xp =
                 (state.skills.management.xp || 0) + 80;
             }
+            // [全系统自洽修复] 域C R792b 修复:desc承诺"底薪¥5500+管理奖金"但apply无任何收入变化(拒绝支线反而+15%,选晋升纯亏)→站长岗收入永久+30%(高于拒绝支线15%,兑现"更高的位置")
+            state.flags._jobMultipliers = state.flags._jobMultipliers || {};
+            state.flags._jobMultipliers["delivery_rider"] =
+              (state.flags._jobMultipliers["delivery_rider"] || 1) * 1.3;
             StateManager.addMessage(
-              "🏆 骑手站长诞生！管理技能+80XP，走向物流管理路径！",
+              "🏆 骑手站长诞生！管理技能+80XP，站长岗收入永久+30%，走向物流管理路径！",
               "success",
             );
           },
@@ -332590,6 +332620,217 @@ if (typeof window !== "undefined") {
   }
 })();
 ;
+// ==== js/core/domain_c_linkage_events_r792b.js ====
+/**
+ * 域C(职业/成长) 联动增强 R792b
+ * 背景：本轮A类修复4处职业里程碑承诺零兑现(_constructionForeman人脉/_deliveryStationManager站长薪资/
+ *       _contentPlatformSigned月保底/_mcnEmployee月薪→daily_pipeline月度兑现)。
+ * 联动3项(全部消费本轮深审确认的写-only/零事件消费素材)：
+ *  1. c792b_foreman_gratitude    C→D  _constructionForeman 事件层首消费——带过的新工回来道谢(人脉回报闭环,峰终定律)
+ *  2. c792b_content_salary_check C→E  _contentSalaryTotal 全库首读——签约收入累计破2万→理财意识觉醒(职业收入→经济决策)
+ *  3. c792b_station_pressure     C→G  _deliveryStationManager 事件层首消费——管理20个骑手的成长与代价(晋升的双面性)
+ * 设计心理学：峰终定律(被感谢的瞬间)、禀赋效应(自己攒出的签约收入)、损失厌恶(管理压力的取舍)。
+ * 防御：全||守卫,NPC须rel&&rel.met,好感走applyAffinityChange四参,getNpcDisplayName兜底,done-flag防重,显式phase:"street"。
+ * 数值[PLACEHOLDER]已按同类事件量级校准。
+ */
+(function () {
+  if (typeof RANDOM_EVENTS === "undefined") return;
+  if (RANDOM_EVENTS._c792bLoaded) return;
+  RANDOM_EVENTS._c792bLoaded = true;
+
+  // 铁律：NPC引用须met检查——遍历首个已结识NPC
+  function firstMetNpc(st) {
+    if (!st || !st.relationships) return null;
+    for (var id in st.relationships) {
+      var rel = st.relationships[id];
+      if (rel && rel.met) return id;
+    }
+    return null;
+  }
+
+  function npcCn(id) {
+    if (typeof getNpcDisplayName === "function") {
+      try { var n = getNpcDisplayName(id); if (n) return n; } catch (e) { /* fallback */ }
+    }
+    return "一位老熟人";
+  }
+
+  var EVENTS = [
+    {
+      // 联动1 C→D: _constructionForeman 事件层首消费——带过的新工回来道谢
+      id: "c792b_foreman_gratitude",
+      phase: "street",
+      _isChainEvent: false,
+      icon: "🧤",
+      title: "新工的道谢",
+      story: "一个你在工地带过的新工找到你，手里拎着两瓶酒。",
+      text: function (st) {
+        try {
+          if (st && st.flags && st.flags._constructionForeman) {
+            return "路口有人喊你。回头一看，是当初你在工地带过的那个新工——他现在也带徒弟了。他把两瓶酒塞到你手里：「师傅，当年要不是你教我怎么留孔怎么加固，我早就被工地劝退了。这杯我敬你。」你忽然明白，老李那双手套传下来的东西，不止是活计。";
+          }
+        } catch (e) { /* fallback */ }
+        return "一个你在工地带过的新工找到你道谢，说当年多亏你带他入行。";
+      },
+      triggers: { minDay: 60, maxRepeats: 1, excludeFlags: ["_c792bForemanThanksDone"] },
+      conditions: function (st) {
+        if (!st || st.gameOver) return false;
+        if (!st.flags || st.flags._c792bForemanThanksDone) return false;
+        if (!st.flags._constructionForeman) return false; // 须当过工地小头目
+        var day = (st.player && st.player.day) || 0;
+        return day >= 60;
+      },
+      choices: [
+        {
+          text: "🍺 收下酒，跟他喝一顿",
+          hint: "心情+8，心智+3",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._c792bForemanThanksDone = true;
+            if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 8); // [PLACEHOLDER]
+            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 3); // [PLACEHOLDER]
+            if (typeof StateManager !== "undefined" && StateManager.addMessage)
+              StateManager.addMessage("🍺 你们蹲在路边喝到天黑。他说的每一句'谢谢师傅'，都是你职业生涯里最实在的回报。心情+8，心智+3。", "success");
+          },
+        },
+        {
+          text: "🤝 把他介绍进自己的人脉圈",
+          hint: "社交XP+20，结识的熟人好感+3",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._c792bForemanThanksDone = true;
+            if (typeof addSkillXp === "function") { try { addSkillXp("social", 20); } catch (e) { /* safe */ } } // [PLACEHOLDER]
+            var npcId = firstMetNpc(st); // 铁律：met检查
+            if (npcId && typeof applyAffinityChange === "function") {
+              try { applyAffinityChange(st, npcId, 3, "工地人脉互相引荐"); } catch (e) { /* safe */ } // [PLACEHOLDER]
+            }
+            if (typeof StateManager !== "undefined" && StateManager.addMessage)
+              StateManager.addMessage("🤝 你把他拉进了自己的圈子。" + (npcId ? npcCn(npcId) + "也夸你带出来的人靠谱。" : "人脉就是这样一环扣一环攒起来的。") + "社交XP+20。", "success");
+          },
+        },
+      ],
+    },
+    {
+      // 联动2 C→E: _contentSalaryTotal 全库首读——签约收入累计破2万→理财意识觉醒
+      id: "c792b_content_salary_check",
+      phase: "street",
+      _isChainEvent: false,
+      icon: "💰",
+      title: "签约收入的账本",
+      story: "你翻了翻账本：签约以来的稳定收入，已经悄悄攒下了一笔。",
+      text: function (st) {
+        try {
+          if (st && st.flags && st.flags._contentSalaryTotal) {
+            var t = st.flags._contentSalaryTotal;
+            return "深夜写完稿，你顺手翻了翻账本——签约以来的月度收入，累计已经有 ¥" + (isFinite(t) ? t.toLocaleString() : "20,000") + " 了。当初纠结要不要签的那个晚上还历历在目，如今这笔稳定的现金流，成了你敢继续写下去的底气。也许，该想想怎么让这笔钱生钱了。";
+          }
+        } catch (e) { /* fallback */ }
+        return "你翻了翻账本，签约以来的稳定收入已经攒下了一笔。也许该想想怎么让钱生钱了。";
+      },
+      triggers: { minDay: 90, maxRepeats: 1, excludeFlags: ["_c792bSalaryCheckDone"] },
+      conditions: function (st) {
+        if (!st || st.gameOver) return false;
+        if (!st.flags || st.flags._c792bSalaryCheckDone) return false;
+        var t = st.flags._contentSalaryTotal;
+        if (!t || !isFinite(t)) return false; // 须有签约收入(本轮A类修复的月度兑现产物)
+        return t >= 20000; // 累计破2万 [PLACEHOLDER]
+      },
+      choices: [
+        {
+          text: "🏦 转一半进银行，强制储蓄",
+          hint: "现金→存款，心智+4",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._c792bSalaryCheckDone = true;
+            if (st.resources) {
+              var cash = st.resources.cash || 0;
+              var move = Math.floor(cash / 2);
+              if (isFinite(move) && move > 0) {
+                st.resources.cash = cash - move;
+                st.resources.bankBalance = (st.resources.bankBalance || 0) + move;
+              }
+            }
+            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 4); // [PLACEHOLDER]
+            if (typeof StateManager !== "undefined" && StateManager.addMessage)
+              StateManager.addMessage("🏦 你把一半现金转进了银行。写字的人也要懂钱——稳定收入+强制储蓄，才是抗风险的组合。心智+4。", "success");
+          },
+        },
+        {
+          text: "📚 花¥500报个理财课",
+          hint: "会计XP+25，为投资打底",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._c792bSalaryCheckDone = true;
+            if (st.resources && (st.resources.cash || 0) >= 500) {
+              st.resources.cash -= 500; // [PLACEHOLDER]
+              if (typeof addSkillXp === "function") { try { addSkillXp("accounting", 25); } catch (e) { /* safe */ } } // [PLACEHOLDER]
+              if (typeof StateManager !== "undefined" && StateManager.addMessage)
+                StateManager.addMessage("📚 你报了理财入门课。搞懂复利那一刻，你意识到稿费只是起点。会计XP+25。", "success");
+            } else {
+              if (typeof StateManager !== "undefined" && StateManager.addMessage)
+                StateManager.addMessage("💸 现金不足¥500，课先收藏了。知识不会跑，钱得先攒。", "warning");
+            }
+          },
+        },
+      ],
+    },
+    {
+      // 联动3 C→G: _deliveryStationManager 事件层首消费——管理20个骑手的成长与代价
+      id: "c792b_station_pressure",
+      phase: "street",
+      _isChainEvent: false,
+      icon: "🛵",
+      title: "站长的深夜",
+      story: "站里两个骑手吵起来了，一个说单被抢了，一个说系统派的。都在等你裁决。",
+      text: "晚上十点，站里两个骑手吵得不可开交——一个咬定好单被同事截了，另一个说是系统派单。二十双眼睛看着你。当骑手的时候，你只要对路况负责；当了站长，你要对人心负责。这就是那¥5500底薪背后真正的价码。",
+      triggers: { minDay: 30, maxRepeats: 1, excludeFlags: ["_c792bStationPressureDone"] },
+      conditions: function (st) {
+        if (!st || st.gameOver) return false;
+        if (!st.flags || st.flags._c792bStationPressureDone) return false;
+        if (!st.flags._deliveryStationManager) return false; // 须当过骑手站长
+        return true;
+      },
+      choices: [
+        {
+          text: "⚖️ 调出后台记录，公开裁决",
+          hint: "管理XP+30，疲劳+8",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._c792bStationPressureDone = true;
+            if (typeof addSkillXp === "function") { try { addSkillXp("management", 30); } catch (e) { /* safe */ } } // [PLACEHOLDER]
+            if (st.needs) st.needs.fatigue = Math.min(100, (st.needs.fatigue || 0) + 8); // [PLACEHOLDER]
+            if (typeof StateManager !== "undefined" && StateManager.addMessage)
+              StateManager.addMessage("⚖️ 你当着所有人调出派单记录，一条条对——系统派的。吵架的两人握手言和，站里从此服你。管理XP+30，疲劳+8。管人比送单累，但你在长本事。", "success");
+          },
+        },
+        {
+          text: "🍜 先带他俩去吃宵夜，缓一缓",
+          hint: "心情+5，社交XP+15",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._c792bStationPressureDone = true;
+            if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 5); // [PLACEHOLDER]
+            if (typeof addSkillXp === "function") { try { addSkillXp("social", 15); } catch (e) { /* safe */ } } // [PLACEHOLDER]
+            if (typeof StateManager !== "undefined" && StateManager.addMessage)
+              StateManager.addMessage("🍜 三碗牛肉面下肚，火气全消。他俩不好意思地互相递了根烟。有时候管理不是讲道理，是给台阶。心情+5，社交XP+15。", "success");
+          },
+        },
+      ],
+    },
+  ];
+
+  for (var i = 0; i < EVENTS.length; i++) {
+    RANDOM_EVENTS.push(EVENTS[i]);
+  }
+})();
+
+;
 // ==== js/core/domain_d_linkage_r708.js ====
 /**
  * 域D(NPC/社交) 联动增强 R708
@@ -343955,6 +344196,230 @@ if (typeof window !== "undefined") {
     RANDOM_EVENTS.push(EVENTS[i]);
   }
 })();
+;
+// ==== js/core/domain_e_linkage_r792.js ====
+/*
+ * 城市浮生记 — 域E(经济/投资) 联动增强 R792
+ * 全系统优化·Domain E 第六轮循环
+ *
+ * 【联动增强3项】
+ *   1. E→F 投资复盘UI — 投资组合历史曲线可视化+券商顾问引导调仓
+ *   2. E→C 投资眼光→会计技能 — 投资经验迁移为职场会计能力
+ *   3. E→H 财富变种子金 — 个人投资收益反哺创业启动资金
+ *
+ * 设计约束（与历轮 IIFE linkage 文件一致）：
+ *  - IIFE 注入全局 RANDOM_EVENTS，避免改动 cross_system_events.js。
+ *  - 所有 state 访问均 || 防御；数值标 [PLACEHOLDER]。
+ *  - 严格遵守域E铁律：金融计算必 isFinite 守卫。
+ */
+(function () {
+  "use strict";
+  if (typeof RANDOM_EVENTS === "undefined" || !RANDOM_EVENTS) return;
+  if (RANDOM_EVENTS._domainELinkageR792Loaded) return;
+  RANDOM_EVENTS._domainELinkageR792Loaded = true;
+
+  // ---- 本地助手 ----
+  function grantXp(key, amt) {
+    if (typeof addSkillXp === "function") { try { addSkillXp(key, amt); } catch(e) {} }
+  }
+  function getPortfolioValue(st) {
+    if (!st || !st.investment) return 0;
+    var _pv = st.resources ? (st.resources.cash || 0) + (st.resources.bankBalance || 0) : 0;
+    var _inv = st.investment;
+    if (_inv.stockHoldings && _inv.stockMarket) {
+      for (var _s in _inv.stockHoldings) {
+        var _h = _inv.stockHoldings[_s];
+        var _m = _inv.stockMarket[_s];
+        _pv += (_m ? _m.price : 0) * (_h.shares || 0);
+      }
+    }
+    if ((_inv.btcHoldings || 0) > 0) _pv += (_inv.btcPrice || 0) * _inv.btcHoldings;
+    var _props = _inv.properties || [];
+    for (var _pi = 0; _pi < _props.length; _pi++) {
+      _pv += _props[_pi].currentPrice || _props[_pi].buyPrice || 0;
+    }
+    return isFinite(_pv) ? _pv : 0;
+  }
+
+  var EVENTS = [
+    // ========================================================================
+    // 联动增强1: E→F 投资复盘UI — 投资组合历史曲线+券商顾问引导调仓
+    // 设计意图：portfolioPeakHistory 已有数据但缺少UI层的"复盘行动"。
+    // 本事件在组合总市值首次突破¥5万时触发，引导玩家查看曲线+获得调仓建议。
+    // 心理学：禀赋效应 — 看到自己的投资曲线会产生"这是我的成果"的满足感。
+    // ========================================================================
+    {
+      id: "e792_portfolio_review_ui",
+      phase: "street",
+      icon: "📊",
+      title: "券商顾问的一个建议",
+      story: "你打开了投资账户，看着那条曲折的市值曲线——它记录了你在这座城市里每一次买入和卖出的决定。\n\n一个券商顾问看了看你的账户，说：「你的组合已经初具规模了。但有些地方可以优化。」",
+      conditions: function (st) {
+        if (!st || !st.player || st.gameOver) return false;
+        if (st.flags && st.flags._e792PortfolioReviewDone) return false;
+        if (!st.investment) return false;
+        var _pv = getPortfolioValue(st);
+        return _pv >= 50000 && st.player.day >= 60;
+      },
+      probability: 0.06,
+      repeatable: false,
+      choices: [
+        {
+          text: "📊 认真复盘，听取建议",
+          hint: "心智+8, 会计XP+10, 置_e792ReviewDone",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._e792PortfolioReviewDone = true;
+            st.flags._e792AdvisorConsulted = true;
+            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 8);
+            grantXp("accounting", 10);
+            // 记录复盘数据供UI消费
+            var _pv = getPortfolioValue(st);
+            st.flags._e792LastReviewValue = _pv;
+            st.flags._e792LastReviewDay = st.player.day;
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("📊 你认真审视了每一条投资曲线。经验是最好的老师——心智+8, 会计XP+10。", "success");
+            }
+          }
+        },
+        {
+          text: "🤷 看看就行，不急着调",
+          hint: "心智+3",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._e792PortfolioReviewDone = true;
+            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 3);
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("🤷 你瞥了一眼曲线，关上了APP。也许下次吧。", "info");
+            }
+          }
+        }
+      ]
+    },
+
+    // ========================================================================
+    // 联动增强2: E→C 投资眼光→会计技能 — 投资经验迁移为职场能力
+    // 设计意图：投资系统中的分析经验（看财报、判断价值）应能迁移到职业技能。
+    // 本事件在玩家持有≥3个不同标的且总资产≥¥3万时触发。
+    // 心理学：技能协同 — 不同领域的分析能力互相强化。
+    // ========================================================================
+    {
+      id: "e792_invest_to_career_skill",
+      phase: "street",
+      icon: "🎓",
+      title: "投资教会你的事",
+      story: "今天在工作中遇到一个财务分析的问题，你忽然发现——过去几个月看财报、分析投资标的的经验，让你对数字有了天然的敏感。\n\n那些K线图、市盈率、现金流，不再只是投资术语，而是变成了你理解商业的语言。",
+      conditions: function (st) {
+        if (!st || !st.player || st.gameOver) return false;
+        if (st.flags && st.flags._e792InvestCareerDone) return false;
+        if (!st.investment) return false;
+        // 持有≥3个不同标的（股票+BTC+房产合计）
+        var _holdings = st.investment.stockHoldings || [];
+        var _stockCount = 0;
+        for (var _s in _holdings) { if (_holdings[_s] && _holdings[_s].shares > 0) _stockCount++; }
+        var _totalTypes = _stockCount + (st.investment.btcHoldings > 0 ? 1 : 0) + (st.investment.properties.length > 0 ? 1 : 0);
+        if (_totalTypes < 3) return false;
+        var _pv = getPortfolioValue(st);
+        return _pv >= 30000 && st.player.day >= 45;
+      },
+      probability: 0.05,
+      repeatable: false,
+      choices: [
+        {
+          text: "📈 把投资分析方法用到工作中",
+          hint: "会计XP+15, 管理XP+8, 置_e792InvestCareer",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._e792InvestCareerDone = true;
+            st.flags._e792InvestCareer = true;
+            grantXp("accounting", 15);
+            grantXp("management", 8);
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("🎓 投资视野迁移为职场能力——会计XP+15, 管理XP+8。", "success");
+            }
+          }
+        },
+        {
+          text: "😊 投资和工作是两回事",
+          hint: "心智+3",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._e792InvestCareerDone = true;
+            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 3);
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("😊 你觉得投资和工作还是分开比较好。", "info");
+            }
+          }
+        }
+      ]
+    },
+
+    // ========================================================================
+    // 联动增强3: E→H 财富变种子金 — 个人投资收益反哺创业启动资金
+    // 设计意图：个人投资积累的财富应能反哺创业阶段。
+    // 本事件在投资总收益首次突破¥10万时触发，给予"创业者种子金"标记。
+    // 心理学：禀赋效应 — 玩家感到投资积累没有白费，为创业铺路。
+    // ========================================================================
+    {
+      id: "e792_wealth_to_seed",
+      phase: "street",
+      icon: "🌱",
+      title: "第一桶金的种子",
+      story: "你算了算——投资账户里的总收益，已经突破了十万。\n\n这笔钱，不再只是数字。它是你未来创业的种子金，是你从「打工者」走向「经营者」的底气。\n\n也许有一天，你会用这笔钱，开启一段全新的人生。",
+      conditions: function (st) {
+        if (!st || !st.player || st.gameOver) return false;
+        if (st.flags && st.flags._e792WealthSeedDone) return false;
+        if (!st.investment) return false;
+        var _profit = st.investment._totalInvestmentProfit || 0;
+        return _profit >= 100000 && st.player.day >= 90;
+      },
+      probability: 0.08,
+      repeatable: false,
+      choices: [
+        {
+          text: "🌱 标记为创业种子金",
+          hint: "置_e792SeedFund标记,H→E解锁创业初始资金加成",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._e792WealthSeedDone = true;
+            st.flags._e792SeedFund = true;
+            // 将部分投资收益锁定为创业种子金（记录数值供H域消费）
+            var _seed = Math.min((st.investment._totalInvestmentProfit || 0) * 0.5, 200000);
+            st.flags._e792SeedAmount = isFinite(_seed) ? Math.round(_seed) : 0;
+            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 10);
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("🌱 你将¥" + st.flags._e792SeedAmount.toLocaleString() + "标记为创业种子金。这笔钱，终将开花结果。心智+10。", "success");
+            }
+          }
+        },
+        {
+          text: "💰 继续滚动投资",
+          hint: "心智+5, 保留收益继续增长",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._e792WealthSeedDone = true;
+            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 5);
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("💰 你决定让收益继续滚动。种子金，不急。", "info");
+            }
+          }
+        }
+      ]
+    }
+  ];
+
+  // ---- 注入全局 RANDOM_EVENTS ----
+  for (var i = 0; i < EVENTS.length; i++) {
+    RANDOM_EVENTS.push(EVENTS[i]);
+  }
+})();
+
 ;
 // ==== js/core/domain_e_linkage_r738b.js ====
 /**
