@@ -1189,3 +1189,29 @@ function getNpcInvestmentStyle(npcId) {
   var styles = { old_zhou: 'conservative', boss_li: 'aggressive', zhaojie: 'balanced', xiao_mei: 'growth', aunt_wang: 'conservative', sister_zhang: 'value', chef_chen: 'income' };
   return styles[npcId] || 'balanced';
 }
+
+// [R797 域D 联动增强 D→A]: NPC市场情报 — 高好感NPC提供商品价格折扣
+function getNpcMarketIntel(state, goodId) {
+  if (!state || !goodId || !state.relationships) return null;
+  var _totalAff = 0, _count = 0;
+  for (var _k in state.relationships) {
+    var _r = state.relationships[_k];
+    if (_r && _r.met) { _totalAff += _r.affinity || 0; _count++; }
+  }
+  if (_count < 2) return null;
+  var _avgAff = _totalAff / _count;
+  if (_avgAff < 30) return null;
+  var _discount = Math.min(0.15, _avgAff * 0.001);
+  return { discount: 1 - _discount, source: "社交情报", level: _avgAff >= 60 ? "精准" : "大致" };
+}
+
+// [R797 域D 联动增强 D→G]: 社交活跃度影响健康恢复 — 好友越多健康恢复越快
+function getSocialHealthBonus(state) {
+  if (!state || !state.relationships) return 0;
+  var _closeFriends = 0;
+  for (var _k in state.relationships) {
+    var _r = state.relationships[_k];
+    if (_r && _r.met && (_r.affinity || 0) >= 60) _closeFriends++;
+  }
+  return Math.min(3, Math.floor(_closeFriends / 2));
+}

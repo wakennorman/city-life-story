@@ -352,10 +352,10 @@ function getWorkComprehensiveModifier(state) {
   // 有效属性影响收入（能力打折→收入打折）
   var avgEff = (eff.physique + eff.intelligence + eff.agility + eff.mental) / 4;
   var avgNominal =
-    (state.player.physique +
-      state.player.intelligence +
-      state.player.agility +
-      state.player.mental) /
+    ((state.player.physique || 22) +
+      (state.player.intelligence || 20) +
+      (state.player.agility || 20) +
+      (state.player.mental || 20)) /
     4;
   var statPenalty = avgNominal > 0 ? Math.min(1.0, avgEff / avgNominal) : 1.0;
 
@@ -363,8 +363,8 @@ function getWorkComprehensiveModifier(state) {
     payMultiplier: emoMod.pay * Math.max(0.3, statPenalty),
     injuryRisk:
       emoMod.injury *
-      (state.status.sick ? 1.5 : 1) *
-      (state.status.injured ? 1.5 : 1),
+      (state.status && state.status.sick ? 1.5 : 1) *
+      (state.status && state.status.injured ? 1.5 : 1),
     skillXpMultiplier: emoMod.skillXp * Math.max(0.3, statPenalty),
     apMultiplier: apMult,
   };
