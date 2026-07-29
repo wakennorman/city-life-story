@@ -1625,6 +1625,20 @@ function recordEventToHistory(state, eventId, eventTitle) {
       state.flags._negEventHealthWarned = false;
     }
   }
+
+  // [R822 域B B→H 联动增强]: 重大事件影响公司运营
+  if (eventId && state.flags && state.player && state.player.phase === "corporate" && state.corporate) {
+    if (!state.flags._corpEventImpact) state.flags._corpEventImpact = {};
+    state.flags._corpEventImpact[eventId] = (state.flags._corpEventImpact[eventId] || 0) + 1;
+  }
+
+  // [R822 域B B→F 联动增强]: 事件侧栏通知
+  if (state.flags && eventId && state.player) {
+    if (!state.flags._lastEventNotified || state.flags._lastEventNotified < state.player.day) {
+      state.flags._lastEventNotified = state.player.day;
+      state.flags._pendingSocialAlert = "新事件: " + (eventTitle || eventId);
+    }
+  }
   }
 
 // [全系统自洽修复] 域B R387 联动增强(B→A): 事件市场情绪—特定事件影响商品价格
