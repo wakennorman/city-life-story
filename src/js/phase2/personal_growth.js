@@ -984,7 +984,7 @@ function completeGoal(state, goal) {
   // 给予奖励
   const reward = Random.int(1000, 2999);
   state.resources.cash = (state.resources.cash || 0) + reward;
-  state.player.fame = Math.min(100, state.player.fame + 5);
+  state.player.fame = Math.min(100, (state.player.fame || 0) + 5);
 
   StateManager.addMessage(`💰 目标达成奖励：¥${reward}，名气+5`, "success");
 }
@@ -1005,7 +1005,7 @@ function readBook(state, bookTitle) {
   pg.reading.booksThisYear++;
 
   // 智力提升
-  state.player.intelligence = Math.min(100, state.player.intelligence + 1);
+  state.player.intelligence = Math.min(100, (state.player.intelligence || 0) + 1);
 
   // 压力减轻
   pg.psychology.stress = Math.max(0, pg.psychology.stress - 2);

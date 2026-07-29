@@ -154,7 +154,7 @@
               }
             } else {
               st.needs.happiness = Math.max(0, st.needs.happiness - 15);
-              st.player.mental = Math.max(0, st.player.mental - 10);
+              st.player.mental = Math.max(0, (st.player.mental || 50) - 10);
               st.flags._insiderTradingLost = true;
               StateManager.addMessage(
                 "💰 合作泡汤了！消息是假的，3000块全没了。",
@@ -206,7 +206,7 @@
           apply: (st) => {
             _guardNeeds(st);
             st.needs.happiness = Math.min(100, st.needs.happiness + 3);
-            st.player.mental = Math.min(100, st.player.mental + 5);
+            st.player.mental = Math.min(100, (st.player.mental || 50) + 5);
             st.flags._insiderTradingRefused = true;
             StateManager.addMessage(
               "🚫 你拒绝了。内幕交易是违法的，不值得冒这个险。",
@@ -234,7 +234,7 @@
           apply: (st) => {
             _guardNeeds(st);
             st.needs.happiness = Math.max(0, st.needs.happiness - 10);
-            st.player.mental = Math.max(0, st.player.mental - 8);
+            st.player.mental = Math.max(0, (st.player.mental || 50) - 8);
             // 80% 概率没事，20% 被盯上
             const safe = Random.chance(0.8);
             if (safe) {
@@ -259,7 +259,7 @@
           hint: "坦白从宽",
           apply: (st) => {
             _guardNeeds(st);
-            st.player.mental = Math.min(100, st.player.mental + 5);
+            st.player.mental = Math.min(100, (st.player.mental || 50) + 5);
             st.needs.happiness = Math.max(0, st.needs.happiness - 5);
             // 60% 没事，40% 被警告
             const ok = Random.chance(0.6);
@@ -320,7 +320,7 @@
           hint: "走法律途径",
           apply: (st) => {
             _guardNeeds(st);
-            st.player.fame = Math.min(100, st.player.fame + 2);
+            st.player.fame = Math.min(100, (st.player.fame || 0) + 2);
             st.needs.happiness = Math.max(0, st.needs.happiness - 5);
             const recovered = Random.chance(0.15);
             if (recovered) {
@@ -373,7 +373,7 @@
           apply: (st) => {
             _guardNeeds(st);
             st.needs.happiness = Math.max(0, st.needs.happiness - 8);
-            st.player.mental = Math.min(100, st.player.mental + 3);
+            st.player.mental = Math.min(100, (st.player.mental || 50) + 3);
             StateManager.addMessage(
               "😞 自认倒霉吧。吃一堑长一智，下次再也不碰这种事了。",
               "info",
@@ -1128,7 +1128,7 @@
             if (!st.skills) st.skills = {};
             if (!st.skills.coding) st.skills.coding = { level: 0, xp: 0 };
             st.skills.coding.xp += 30;
-            st.player.intelligence = Math.min(100, st.player.intelligence + 1);
+            st.player.intelligence = Math.min(100, (st.player.intelligence || 0) + 1);
             StateManager.addMessage(
               "📚 买了一本区块链入门书自学，编程EXP+30。",
               "success",
@@ -1139,7 +1139,7 @@
           text: "🚶 不碰这种赌博",
           hint: "稳健",
           apply: function (st) {
-            st.player.mental = Math.min(100, st.player.mental + 2);
+            st.player.mental = Math.min(100, (st.player.mental || 50) + 2);
             StateManager.addMessage("🚶 理性克制，心智+2。", "info");
           },
         },
@@ -1428,7 +1428,7 @@
             if (!st.skills) st.skills = {};
             if (!st.skills.coding) st.skills.coding = { level: 0, xp: 0 };
             st.skills.coding.xp += 40;
-            st.player.intelligence = Math.min(100, st.player.intelligence + 2);
+            st.player.intelligence = Math.min(100, (st.player.intelligence || 0) + 2);
             StateManager.addMessage(
               "📚 研究了比特币白皮书和减半机制，编程EXP+40。",
               "success",
@@ -1694,7 +1694,7 @@
               );
             }
             st.player.fame = Math.min(100, (st.player.fame || 0) + 20);
-            st.player.mental = Math.min(100, st.player.mental + 20);
+            st.player.mental = Math.min(100, (st.player.mental || 50) + 20);
             StateManager.addMessage(
               "♟️ 砸下¥300,000——你回来了。尊严+40、发量+25、能力+10、KPI+20、向上管理+30、人缘+15、名气+20、心智+20。这次你知道：公司不是属于资本的，是属于愿意为它流血的人的。",
               "success",
@@ -1718,7 +1718,7 @@
                 ((st.player.corporate || {}).kpi || 50) + 10,
               );
             }
-            st.player.mental = Math.min(100, st.player.mental + 10);
+            st.player.mental = Math.min(100, (st.player.mental || 50) + 10);
             st.needs.happiness = Math.min(100, st.needs.happiness + 10);
             StateManager.addMessage(
               "🤝 跟老陈说：“我已经不是当年的我了。” 尊严-5（不是没有遗憾），KPI+10（你彻底接受了员工身份），心智+10、心情+10——放下，也是一种力量。",
@@ -1755,7 +1755,7 @@
             var severance = Random.int(50000, 69999);
             st.resources.cash = (st.resources.cash || 0) + severance;
             st.resources.totalEarned = (st.resources.totalEarned || 0) + (severance || 0);
-            st.player.mental = Math.max(0, st.player.mental - 5);
+            st.player.mental = Math.max(0, (st.player.mental || 50) - 5);
             StateManager.addMessage(
               "💀 你签了离职协议，拿了¥" +
                 severance.toLocaleString() +
@@ -1769,7 +1769,7 @@
           hint: "如果公司挺过去，你的忠诚会得到回报",
           apply: function (st) {
             st.flags._fateCollapseSeen = true;
-            st.player.mental = Math.min(100, st.player.mental + 5);
+            st.player.mental = Math.min(100, (st.player.mental || 50) + 5);
             StateManager.addMessage(
               "💪 你拒绝了HR的约谈，告诉总监你要留下。他愣了一下，拍了拍你的肩膀。心智+5。",
               "event",
@@ -1781,7 +1781,7 @@
           hint: "骑驴找马，留一手",
           apply: function (st) {
             st.flags._fateCollapseSeen = true;
-            st.player.mental = Math.min(100, st.player.mental + 2);
+            st.player.mental = Math.min(100, (st.player.mental || 50) + 2);
             st.flags._fateJobHunting = true;
             StateManager.addMessage(
               "🚪 你请了三天假，偷偷去了字节龙面试。不管公司能不能活，你得为自己留条后路。心智+2。",
@@ -2208,7 +2208,7 @@
           apply: (st) => {
             _guardNeeds(st);
             st.needs.happiness = Math.max(0, st.needs.happiness - 5);
-            st.player.mental = Math.max(0, st.player.mental - 3);
+            st.player.mental = Math.max(0, (st.player.mental || 50) - 3);
             if (typeof scheduleChainEvent === "function") {
               scheduleChainEvent(st, "workplace_deadline", 3, "corporate");
             }

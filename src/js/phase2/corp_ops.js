@@ -604,6 +604,61 @@ function endQuarter() {
     state.flags._lastCorpQuarterBurn = _burn;
   }
 
+  // [R793 域H 联动增强 H→G]: 创业各阶段影响疲劳恢复 — 种子期最忙，疲劳恢复减慢
+  try {
+    if (state.startup && state.startup.status && state.needs) {
+      var _startupPhase = state.startup.status;
+      if (_startupPhase === "seed") {
+        state.needs.fatigue = Math.min(100, (state.needs.fatigue || 0) + 2);
+        StateManager.addMessage("🌱 创业种子期每天忙得脚不沾地，疲劳+2。", "warning");
+      } else if (_startupPhase === "growth") {
+        state.needs.fatigue = Math.min(100, (state.needs.fatigue || 0) + 1);
+      } else if (_startupPhase === "ipo_preparing") {
+        state.needs.fatigue = Math.min(100, (state.needs.fatigue || 0) + 3);
+        StateManager.addMessage("📊 IPO准备期压力巨大，疲劳+3。", "warning");
+      }
+    }
+  } catch (e) {}
+
+  // [R793 域H 联动增强 H→D]: 公司季度里程碑触发NPC社交反响
+  try {
+    if (state.startup && state.startup.company && state.relationships) {
+      var _sCompany = state.startup.company;
+      var _sRep = _sCompany.reputation || 0;
+      var _sEmp = (_sCompany.employees || []).length;
+      // 公司声誉好+团队壮大时，提升职场NPC好感
+      if (_sRep >= 50 && _sEmp >= 3) {
+        var _workNpcs = ["boss_li", "xiao_mei", "zhaojie", "old_zhou"];
+        for (var _sni = 0; _sni < _workNpcs.length; _sni++) {
+          var _sRel = state.relationships[_workNpcs[_sni]];
+          if (_sRel && _sRel.met) {
+            _sRel.affinity = Math.min(100, (_sRel.affinity || 50) + 1);
+          }
+        }
+        if (_sRep >= 70 && _sEmp >= 5) {
+          StateManager.addMessage("🏢 公司口碑不错，职场同事对你刮目相看，社交圈好感微增。", "info");
+        }
+      }
+    }
+  } catch (e) {}
+
+  // [R793 域H 联动增强 H→F]: 创始人心态/压力指标更新
+  try {
+    if (state.startup && state.startup.company && state.player) {
+      if (!state.flags) state.flags = {};
+      var _founderStress = 0;
+      var _sCo = state.startup.company;
+      if ((_sCo.cashReserve || 0) < 50000) _founderStress += 3;
+      if ((_sCo.employees || []).length < 2) _founderStress += 2;
+      if ((_sCo.reputation || 0) < 30) _founderStress += 2;
+      if ((_sCo.valuation || 0) < 500000) _founderStress += 1;
+      state.flags._founderStressLevel = Math.min(10, _founderStress);
+      if (_founderStress >= 5) {
+        StateManager.addMessage("😰 创业压力较大（压力指数" + _founderStress + "/10），需要注意身心健康。", "warning");
+      }
+    }
+  } catch (e) {}
+
   if (typeof autoSave === "function") autoSave("milestone");
 }
 

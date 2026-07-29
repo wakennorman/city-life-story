@@ -17197,7 +17197,7 @@ function getEventSocialSpread(eventType) {
               }
             } else {
               st.needs.happiness = Math.max(0, st.needs.happiness - 15);
-              st.player.mental = Math.max(0, st.player.mental - 10);
+              st.player.mental = Math.max(0, (st.player.mental || 50) - 10);
               st.flags._insiderTradingLost = true;
               StateManager.addMessage(
                 "💰 合作泡汤了！消息是假的，3000块全没了。",
@@ -17249,7 +17249,7 @@ function getEventSocialSpread(eventType) {
           apply: (st) => {
             _guardNeeds(st);
             st.needs.happiness = Math.min(100, st.needs.happiness + 3);
-            st.player.mental = Math.min(100, st.player.mental + 5);
+            st.player.mental = Math.min(100, (st.player.mental || 50) + 5);
             st.flags._insiderTradingRefused = true;
             StateManager.addMessage(
               "🚫 你拒绝了。内幕交易是违法的，不值得冒这个险。",
@@ -17277,7 +17277,7 @@ function getEventSocialSpread(eventType) {
           apply: (st) => {
             _guardNeeds(st);
             st.needs.happiness = Math.max(0, st.needs.happiness - 10);
-            st.player.mental = Math.max(0, st.player.mental - 8);
+            st.player.mental = Math.max(0, (st.player.mental || 50) - 8);
             // 80% 概率没事，20% 被盯上
             const safe = Random.chance(0.8);
             if (safe) {
@@ -17302,7 +17302,7 @@ function getEventSocialSpread(eventType) {
           hint: "坦白从宽",
           apply: (st) => {
             _guardNeeds(st);
-            st.player.mental = Math.min(100, st.player.mental + 5);
+            st.player.mental = Math.min(100, (st.player.mental || 50) + 5);
             st.needs.happiness = Math.max(0, st.needs.happiness - 5);
             // 60% 没事，40% 被警告
             const ok = Random.chance(0.6);
@@ -17363,7 +17363,7 @@ function getEventSocialSpread(eventType) {
           hint: "走法律途径",
           apply: (st) => {
             _guardNeeds(st);
-            st.player.fame = Math.min(100, st.player.fame + 2);
+            st.player.fame = Math.min(100, (st.player.fame || 0) + 2);
             st.needs.happiness = Math.max(0, st.needs.happiness - 5);
             const recovered = Random.chance(0.15);
             if (recovered) {
@@ -17416,7 +17416,7 @@ function getEventSocialSpread(eventType) {
           apply: (st) => {
             _guardNeeds(st);
             st.needs.happiness = Math.max(0, st.needs.happiness - 8);
-            st.player.mental = Math.min(100, st.player.mental + 3);
+            st.player.mental = Math.min(100, (st.player.mental || 50) + 3);
             StateManager.addMessage(
               "😞 自认倒霉吧。吃一堑长一智，下次再也不碰这种事了。",
               "info",
@@ -18171,7 +18171,7 @@ function getEventSocialSpread(eventType) {
             if (!st.skills) st.skills = {};
             if (!st.skills.coding) st.skills.coding = { level: 0, xp: 0 };
             st.skills.coding.xp += 30;
-            st.player.intelligence = Math.min(100, st.player.intelligence + 1);
+            st.player.intelligence = Math.min(100, (st.player.intelligence || 0) + 1);
             StateManager.addMessage(
               "📚 买了一本区块链入门书自学，编程EXP+30。",
               "success",
@@ -18182,7 +18182,7 @@ function getEventSocialSpread(eventType) {
           text: "🚶 不碰这种赌博",
           hint: "稳健",
           apply: function (st) {
-            st.player.mental = Math.min(100, st.player.mental + 2);
+            st.player.mental = Math.min(100, (st.player.mental || 50) + 2);
             StateManager.addMessage("🚶 理性克制，心智+2。", "info");
           },
         },
@@ -18471,7 +18471,7 @@ function getEventSocialSpread(eventType) {
             if (!st.skills) st.skills = {};
             if (!st.skills.coding) st.skills.coding = { level: 0, xp: 0 };
             st.skills.coding.xp += 40;
-            st.player.intelligence = Math.min(100, st.player.intelligence + 2);
+            st.player.intelligence = Math.min(100, (st.player.intelligence || 0) + 2);
             StateManager.addMessage(
               "📚 研究了比特币白皮书和减半机制，编程EXP+40。",
               "success",
@@ -18737,7 +18737,7 @@ function getEventSocialSpread(eventType) {
               );
             }
             st.player.fame = Math.min(100, (st.player.fame || 0) + 20);
-            st.player.mental = Math.min(100, st.player.mental + 20);
+            st.player.mental = Math.min(100, (st.player.mental || 50) + 20);
             StateManager.addMessage(
               "♟️ 砸下¥300,000——你回来了。尊严+40、发量+25、能力+10、KPI+20、向上管理+30、人缘+15、名气+20、心智+20。这次你知道：公司不是属于资本的，是属于愿意为它流血的人的。",
               "success",
@@ -18761,7 +18761,7 @@ function getEventSocialSpread(eventType) {
                 ((st.player.corporate || {}).kpi || 50) + 10,
               );
             }
-            st.player.mental = Math.min(100, st.player.mental + 10);
+            st.player.mental = Math.min(100, (st.player.mental || 50) + 10);
             st.needs.happiness = Math.min(100, st.needs.happiness + 10);
             StateManager.addMessage(
               "🤝 跟老陈说：“我已经不是当年的我了。” 尊严-5（不是没有遗憾），KPI+10（你彻底接受了员工身份），心智+10、心情+10——放下，也是一种力量。",
@@ -18798,7 +18798,7 @@ function getEventSocialSpread(eventType) {
             var severance = Random.int(50000, 69999);
             st.resources.cash = (st.resources.cash || 0) + severance;
             st.resources.totalEarned = (st.resources.totalEarned || 0) + (severance || 0);
-            st.player.mental = Math.max(0, st.player.mental - 5);
+            st.player.mental = Math.max(0, (st.player.mental || 50) - 5);
             StateManager.addMessage(
               "💀 你签了离职协议，拿了¥" +
                 severance.toLocaleString() +
@@ -18812,7 +18812,7 @@ function getEventSocialSpread(eventType) {
           hint: "如果公司挺过去，你的忠诚会得到回报",
           apply: function (st) {
             st.flags._fateCollapseSeen = true;
-            st.player.mental = Math.min(100, st.player.mental + 5);
+            st.player.mental = Math.min(100, (st.player.mental || 50) + 5);
             StateManager.addMessage(
               "💪 你拒绝了HR的约谈，告诉总监你要留下。他愣了一下，拍了拍你的肩膀。心智+5。",
               "event",
@@ -18824,7 +18824,7 @@ function getEventSocialSpread(eventType) {
           hint: "骑驴找马，留一手",
           apply: function (st) {
             st.flags._fateCollapseSeen = true;
-            st.player.mental = Math.min(100, st.player.mental + 2);
+            st.player.mental = Math.min(100, (st.player.mental || 50) + 2);
             st.flags._fateJobHunting = true;
             StateManager.addMessage(
               "🚪 你请了三天假，偷偷去了字节龙面试。不管公司能不能活，你得为自己留条后路。心智+2。",
@@ -19251,7 +19251,7 @@ function getEventSocialSpread(eventType) {
           apply: (st) => {
             _guardNeeds(st);
             st.needs.happiness = Math.max(0, st.needs.happiness - 5);
-            st.player.mental = Math.max(0, st.player.mental - 3);
+            st.player.mental = Math.max(0, (st.player.mental || 50) - 3);
             if (typeof scheduleChainEvent === "function") {
               scheduleChainEvent(st, "workplace_deadline", 3, "corporate");
             }
@@ -224174,6 +224174,61 @@ function endQuarter() {
     state.flags._lastCorpQuarterBurn = _burn;
   }
 
+  // [R793 域H 联动增强 H→G]: 创业各阶段影响疲劳恢复 — 种子期最忙，疲劳恢复减慢
+  try {
+    if (state.startup && state.startup.status && state.needs) {
+      var _startupPhase = state.startup.status;
+      if (_startupPhase === "seed") {
+        state.needs.fatigue = Math.min(100, (state.needs.fatigue || 0) + 2);
+        StateManager.addMessage("🌱 创业种子期每天忙得脚不沾地，疲劳+2。", "warning");
+      } else if (_startupPhase === "growth") {
+        state.needs.fatigue = Math.min(100, (state.needs.fatigue || 0) + 1);
+      } else if (_startupPhase === "ipo_preparing") {
+        state.needs.fatigue = Math.min(100, (state.needs.fatigue || 0) + 3);
+        StateManager.addMessage("📊 IPO准备期压力巨大，疲劳+3。", "warning");
+      }
+    }
+  } catch (e) {}
+
+  // [R793 域H 联动增强 H→D]: 公司季度里程碑触发NPC社交反响
+  try {
+    if (state.startup && state.startup.company && state.relationships) {
+      var _sCompany = state.startup.company;
+      var _sRep = _sCompany.reputation || 0;
+      var _sEmp = (_sCompany.employees || []).length;
+      // 公司声誉好+团队壮大时，提升职场NPC好感
+      if (_sRep >= 50 && _sEmp >= 3) {
+        var _workNpcs = ["boss_li", "xiao_mei", "zhaojie", "old_zhou"];
+        for (var _sni = 0; _sni < _workNpcs.length; _sni++) {
+          var _sRel = state.relationships[_workNpcs[_sni]];
+          if (_sRel && _sRel.met) {
+            _sRel.affinity = Math.min(100, (_sRel.affinity || 50) + 1);
+          }
+        }
+        if (_sRep >= 70 && _sEmp >= 5) {
+          StateManager.addMessage("🏢 公司口碑不错，职场同事对你刮目相看，社交圈好感微增。", "info");
+        }
+      }
+    }
+  } catch (e) {}
+
+  // [R793 域H 联动增强 H→F]: 创始人心态/压力指标更新
+  try {
+    if (state.startup && state.startup.company && state.player) {
+      if (!state.flags) state.flags = {};
+      var _founderStress = 0;
+      var _sCo = state.startup.company;
+      if ((_sCo.cashReserve || 0) < 50000) _founderStress += 3;
+      if ((_sCo.employees || []).length < 2) _founderStress += 2;
+      if ((_sCo.reputation || 0) < 30) _founderStress += 2;
+      if ((_sCo.valuation || 0) < 500000) _founderStress += 1;
+      state.flags._founderStressLevel = Math.min(10, _founderStress);
+      if (_founderStress >= 5) {
+        StateManager.addMessage("😰 创业压力较大（压力指数" + _founderStress + "/10），需要注意身心健康。", "warning");
+      }
+    }
+  } catch (e) {}
+
   if (typeof autoSave === "function") autoSave("milestone");
 }
 
@@ -250514,7 +250569,7 @@ function completeGoal(state, goal) {
   // 给予奖励
   const reward = Random.int(1000, 2999);
   state.resources.cash = (state.resources.cash || 0) + reward;
-  state.player.fame = Math.min(100, state.player.fame + 5);
+  state.player.fame = Math.min(100, (state.player.fame || 0) + 5);
 
   StateManager.addMessage(`💰 目标达成奖励：¥${reward}，名气+5`, "success");
 }
@@ -250535,7 +250590,7 @@ function readBook(state, bookTitle) {
   pg.reading.booksThisYear++;
 
   // 智力提升
-  state.player.intelligence = Math.min(100, state.player.intelligence + 1);
+  state.player.intelligence = Math.min(100, (state.player.intelligence || 0) + 1);
 
   // 压力减轻
   pg.psychology.stress = Math.max(0, pg.psychology.stress - 2);
