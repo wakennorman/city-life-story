@@ -1215,3 +1215,34 @@ function getSocialHealthBonusR797(state) {
   }
   return Math.min(3, Math.floor(_closeFriends / 2));
 }
+
+// [R805 域D 联动增强 D→E]: NPC社交圈提供投资情报 — 高好感NPC分享投资机会
+function getNpcInvestmentTips(state) {
+  if (!state || !state.relationships) return null;
+  var _totalAff = 0, _count = 0;
+  for (var _k in state.relationships) {
+    var _r = state.relationships[_k];
+    if (_r && _r.met) { _totalAff += _r.affinity || 0; _count++; }
+  }
+  if (_count < 3) return null;
+  var _avg = _totalAff / _count;
+  if (_avg >= 60) return { level: "expert", tip: "朋友圈里有投资高手，建议多交流" };
+  if (_avg >= 40) return { level: "basic", tip: "朋友们偶尔会聊到投资话题" };
+  return null;
+}
+
+// [R805 域D 联动增强 D→C]: NPC社交圈推荐职业机会 — 高好感NPC提供职业推荐
+function getNpcCareerReferral(state) {
+  if (!state || !state.relationships) return null;
+  var _bestNpc = null, _bestAff = 0;
+  for (var _k in state.relationships) {
+    var _r = state.relationships[_k];
+    if (_r && _r.met && (_r.affinity || 0) > _bestAff) {
+      _bestAff = _r.affinity || 0;
+      _bestNpc = _k;
+    }
+  }
+  if (_bestAff >= 70) return { npcId: _bestNpc, level: "strong", bonus: "高好感NPC可能为你推荐工作" };
+  if (_bestAff >= 50) return { npcId: _bestNpc, level: "moderate", bonus: "熟人有合适机会会想到你" };
+  return null;
+}
