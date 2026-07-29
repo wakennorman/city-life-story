@@ -1190,3 +1190,23 @@ function getTradeSkillBonus(state) {
   var _accountingBonus = Math.floor(_totalTrades / 200) * 2;
   return { sales: _salesBonus, accounting: _accountingBonus };
 }
+
+// [R810 域A 联动增强 A→B]: 价格异常触发市场传闻 — 极端价格波动生成叙事素材
+function getPriceAnomalyStory(goodId, change) {
+  if (!goodId || !change) return null;
+  var _good = typeof getGoodById === "function" ? getGoodById(goodId) : null;
+  var _name = _good ? _good.name : goodId;
+  if (change > 0.8) return { type: "panic", title: _name + "暴涨", text: _name + "价格暴涨" + Math.round(change * 100) + "%！市场恐慌情绪蔓延。" };
+  if (change < -0.5) return { type: "opportunity", title: _name + "暴跌", text: _name + "价格暴跌" + Math.round(Math.abs(change) * 100) + "%！精明的买家开始行动。" };
+  return null;
+}
+
+// [R810 域A 联动增强 A→H]: 市场价格波动影响公司运营成本 — 通胀/通缩影响公司成本
+function getCorpCostFromMarket(state) {
+  if (!state || !state.flags) return 1.0;
+  var _inf = state.flags._cumulativeInflation || 0;
+  if (_inf > 0.2) return 1.1;
+  if (_inf > 0.1) return 1.05;
+  if (_inf < -0.1) return 0.95;
+  return 1.0;
+}
