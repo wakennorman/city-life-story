@@ -1161,3 +1161,32 @@ function getGoodsIntelStory(goodId, state) {
   if (trend < 0) return { type: 'downtrend', title: name + '下行', text: name + '价格连续下跌，观望为宜。' };
   return null;
 }
+
+// [R802 域A 联动增强 A→E]: 价格波动率影响投资风险评估 — 高波动市场提示风险
+function getMarketVolatilityRisk(state) {
+  if (!state || !state.trade || !state.trade._lastPrices) return "normal";
+  var _volCount = 0, _totalCount = 0;
+  for (var _gid in state.trade._lastPrices) {
+    var _arr = state.trade._lastPrices[_gid];
+    if (_arr && _arr.length >= 3) {
+      _totalCount++;
+      var _min = Math.min.apply(null, _arr);
+      var _max = Math.max.apply(null, _arr);
+      if (_min > 0 && (_max - _min) / _min > 0.3) _volCount++;
+    }
+  }
+  if (_totalCount === 0) return "normal";
+  var _ratio = _volCount / _totalCount;
+  if (_ratio > 0.5) return "high";
+  if (_ratio > 0.25) return "medium";
+  return "low";
+}
+
+// [R802 域A 联动增强 A→C]: 交易次数积累提升职业技能 — 每交易100次提升销售/会计技能
+function getTradeSkillBonus(state) {
+  if (!state || !state.trade) return { sales: 0, accounting: 0 };
+  var _totalTrades = (state.trade._totalBuyCount || 0) + (state.trade._totalSellCount || 0);
+  var _salesBonus = Math.floor(_totalTrades / 100) * 2;
+  var _accountingBonus = Math.floor(_totalTrades / 200) * 2;
+  return { sales: _salesBonus, accounting: _accountingBonus };
+}
