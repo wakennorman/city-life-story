@@ -197,6 +197,22 @@ const EconomySystem = (function () {
       "baseSalaryMult",
     );
 
+    // [R811 域A A→G 联动增强]: 高额税负心情影响
+    if (wealthTax > 500 && state.needs) {
+      state.needs.happiness = Math.max(0, (state.needs.happiness || 50) - 1);
+    }
+
+    // [R811 域A A→F 联动增强]: 记录经济健康度供UI展示
+    if (state.flags) {
+      state.flags._econHealth = {
+        day: state.player ? state.player.day : 0,
+        wealthTax: wealthTax,
+        totalAssets: totalAssets,
+        loanRate: loanRate,
+        saturationPenalty: saturationPenalty,
+      };
+    }
+
     const effectiveCash = Math.max(0, cash - wealthTax);
 
     return {
