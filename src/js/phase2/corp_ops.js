@@ -764,3 +764,27 @@ function renderCorporateStatusWidget(state) {
 // [R576] 域H
 // [R600] 域H
 // [R616] 域H
+
+
+// [R729 第三轮 域H 联动增强 H→G]: 公司运营压力健康影响
+function getCorporateStressHealthImpact(state) {
+  if (!state || !state.player || !state.player.corporate) return 0;
+  var c = state.player.corporate;
+  var stress = 0;
+  if (c.risk > 70) stress += 2;
+  if (c.fatigue > 80) stress += 2;
+  if (c.popularity < 30) stress += 1;
+  return stress;
+}
+
+// [R729 第三轮 域H 联动增强 H→B]: 公司里程碑叙事
+function getCorporateMilestoneStory(state) {
+  if (!state || !state.corporate) return null;
+  var c = state.corporate;
+  var rank = c.rank || 'P5';
+  var teamSize = (c.team && Array.isArray(c.team)) ? c.team.length : 0;
+  if (rank === 'P10') return { type: 'peak', title: '职级巅峰', text: '你达到了职级巅峰P10，职业生涯的顶点。' };
+  if (teamSize >= 10) return { type: 'team_leader', title: '团队壮大', text: '你的团队已超过10人，管理半径越来越大。' };
+  if (rank === 'P7' || rank === 'P8') return { type: 'manager', title: '管理之路', text: '你已进入管理层，带领团队冲锋陷阵。' };
+  return null;
+}

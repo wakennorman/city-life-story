@@ -628,3 +628,12 @@
 - 竞态：并行[R727]0d97b82d(07:44)提交daily_report.js源但未重建dist→本轮build顺带闭合悬空(其源已在HEAD,安全合规)。
 - 提交3笔：c7c4620c(feat联动3+dist+CLAUDE.md+round doc)+4d1bc8fd(chore loop-state)+8b667054(pushStatus=LOCAL_ONLY_TLS回填)。
 - 下轮：git log重算；本窗口深审候选D(并行R440/R442新NPC后未再深审)>A。
+
+## 2026-07-29 08:4x-09:0x R757b 域D(NPC/社交) — dac2b81d+ec092dfa 均已PUSH(TLS恢复)
+- 选域：git log实测D深审最陈旧(R440老陈/R442小薇新NPC集成从未深审)；b后缀避让并行R756/R757。
+- A类2处：npcs.js新NPC好感承诺零兑现——①lao_chen_60"介绍社区资源"只写_laoChenCommunityHelp全库零读取无消息→补gainReputation(community_center,+10)+消息；②xiao_wei_60"摊位折扣"_xiaoWeiDiscount零读取→事件层半价兑现。B类1处xiao_wei_30补flags守卫。净尽项：死字段0/关系矩阵R455已入/好感衰减存在/xiaoWeiReferred有jobs消费/地点已定义。
+- 联动3(domain_d_linkage_events_r757b.js,3street,met铁律+四参好感+兜底显名+done-flag)：laochen_community_intro(D→C讲座)/xiaowei_discount_meal(D→E半价vs原价付双支线)/laochen_mentor_guidance(D→C导师深谈)。三flag首消费。
+- 救援反向孤儿domain_c_linkage_r374.js(HEAD挂载/源未提交)。
+- 验证：node --check过/build 13781.1KB(d757b_x6)/MC 10x500 155.6s 0代码异常前7天死亡全0%存活60-70%既有RNG阈值。
+- 竞态：①git commit不带路径吸入并行staged r758源+挂载(内容无损message失真)→以后`git commit -- <路径>`；②pre-commit dist过期=并行touch src内容一致→touch dist重试即过；③dist未随feat提交(吸入在途corp_ops)→并行[R758]fb0d80f8的build闭合(核验过)。
+- push：TLS已恢复，dac2b81d与ec092dfa均上origin/main。下轮候选：A(R649b后未深审)>B。开轮必git log重算。

@@ -40,7 +40,8 @@
 - 模糊指令先 grep 确认存在；用户「无关」=停手。
 
 ## A类净尽结论（勿重复审）
-- 深审净尽轮：A=R649b、B=R722b(前R658b/R411大修)、C=R677b、E=R738b、F=R747b(A类=0,六项审计净尽)、G=R746b、H=R712b。域D 深审最陈旧（并行 R440/R442 做过新NPC）。
+- 深审净尽轮：A=R649b、B=R722b(前R658b/R411大修)、C=R677b、D=R757b(新NPC集成专审)、E=R738b、F=R747b(A类=0,六项审计净尽)、G=R746b、H=R712b。下轮最陈旧：**A(R649b) > B**。
+- 域D 附注(R757b净尽项)：新NPC关系矩阵R455已入/好感衰减存在/xiaoWeiReferred有jobs.js:814消费/night_market+community_center地点已定义；affinityRewards引擎只认数组格式(R694/R532修)。
 - 域F 附注：pg.psychology 为 personal_growth.js 真实活结构（render.js 读它正确，维持 B类双心理系统记录）；navigation.js:761 programmer 为 JSDoc 示例勿改。
 - 死字段黑名单全库 grep=0 活命中即诚实报 A类=0（R712b 域H 即如此）。
 - 误报勿修：webapp_runtime_bridge getPlayerHealth 主路径正确；establishMentorship/takeMentee 平行实现；setStopLoss 有调用方。C类不修：items.js skillStudy 无应用器；finance.js hasStreetStall 无 writer；并行 r715/r721 id前缀误用全库唯一不改。
@@ -60,5 +61,6 @@
 - R712b 域H：A类=0 诚实报；boardPressureLevel/mediaRelations/sentimentScore/crisisLevel 事件层全部打通。
 - R677b 域C：培训班承诺零兑现+6事件占位符泄漏修复；_legacyProjectStarted/_legacyWatched 首消费。
 - R649b 域A：personal_growth 双结构专修。R658b 域B：_goodSleepToday 承诺兑现。R640b 域H：孤儿救援 r601/r602/r623。
-- R747b 域F(07-29 07:5x)：A类=0 诚实报；联动3 消费 _maxEarnedMilestone/_milestoneEarned系/_streakMaster（域F零消费清零）；提交 c7c4620c+4d1bc8fd+8b667054，push 仍 TLS 阻断(ahead 64)。
-- 本窗口深审下轮候选（07-29 07:5x 时点）：**D > A**。
+- R747b 域F(07-29 07:5x)：A类=0 诚实报；联动3 消费 _maxEarnedMilestone/_milestoneEarned系/_streakMaster（域F零消费清零）。
+- R757b 域D(07-29 08:4x-09:0x)：A类2处=新NPC好感承诺零兑现（lao_chen_60社区资源/xiao_wei_60摊位折扣，flag全库零读取）→npcs.js补即时收益+domain_d_linkage_events_r757b.js 3事件首消费(_laoChenCommunityHelp/_xiaoWeiDiscount/_laoChenMentorship)；救援反向孤儿c374(HEAD挂载源未提交)。提交dac2b81d+ec092dfa 均已PUSH（TLS已恢复，push通了）；dist由并行R758闭合。⚠️新坑：`git commit`不带路径吸入并行刚staged文件(接管r758)→竞态窗口建议`git commit -- <本轮路径>`；pre-commit "dist过期"若因并行touch src且内容一致→touch dist重试即过。
+- 本窗口深审下轮候选（07-29 09:0x 时点）：**A > B**。
