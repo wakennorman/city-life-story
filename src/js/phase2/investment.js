@@ -1751,6 +1751,16 @@ function checkInvestmentMilestones(state, inv) {
       state.flags._investHealthBonus = true;
       state.status.health = Math.min(100, (state.status.health || 100) + 3);
     }
+    // [R822 域E E→B 联动增强]: 投资里程碑叙事
+    if (milestone && milestone.level >= 100000 && state.flags && !state.flags._investMilestoneNarrative) {
+      state.flags._investMilestoneNarrative = true;
+    }
+    // [R822 域E E→F 联动增强]: 投资组合风险评级
+    if (state.flags) {
+      var _diversity = (holdings.length > 0 ? 1 : 0) + (props.length > 0 ? 1 : 0) + (inv.btcHoldings > 0 ? 1 : 0);
+      var _riskRating = _diversity >= 3 ? 'low' : (_diversity >= 2 ? 'medium' : 'high');
+      state.flags._portfolioRiskRating = _riskRating;
+    }
   }
 
 function buyInvStock(symbol, shares) {
