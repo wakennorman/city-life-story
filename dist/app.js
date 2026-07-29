@@ -307503,6 +307503,72 @@ function applyCareerPromotionSocialEffect(state) {
   }
 }
 
+// [R796 域C 联动增强 C→A]: 职业路径影响商品价格感知 — 金融/IT/餐饮等职业对相关商品价格更敏感
+function getCareerPriceInsight(state, goodId) {
+  if (!state || !state.career || !state.career.currentJob || !goodId) return null;
+  var _jobPath = state.career.currentJob.path || "";
+  var _priceInsights = {
+    finance: { stocks: 0.9, electronics: 1.05, luxury: 0.95 },
+    tech: { electronics: 0.85, books: 0.9 },
+    design: { clothing: 0.85, electronics: 0.95 },
+    legal: { books: 0.85, daily_use: 0.95 },
+    medical: { medicine: 0.8, vitamins_item: 0.85, cold_medicine: 0.8 },
+    education: { books: 0.8, stationery: 0.85 },
+    catering: { food: 0.85, vegetables: 0.85, beer: 0.9 },
+  };
+  var _pathInsights = _priceInsights[_jobPath];
+  if (!_pathInsights) return null;
+  for (var _key in _pathInsights) {
+    if (goodId.indexOf(_key) >= 0) {
+      return { discount: _pathInsights[_key], source: "职业经验" };
+    }
+  }
+  for (var _key2 in _pathInsights) {
+    var _good = typeof getGoodById === "function" ? getGoodById(goodId) : null;
+    if (_good && _good.category === _key2) {
+      return { discount: _pathInsights[_key2], source: "行业认知" };
+    }
+  }
+  return null;
+}
+
+// [R796 域C 联动增强 C→F]: 记录职业晋升路径供UI展示
+function trackCareerPathProgress(state) {
+  if (!state || !state.career || !state.career.currentJob) return;
+  if (!state.flags) state.flags = {};
+  if (!state.flags._careerPathProgress) state.flags._careerPathProgress = {};
+  var _job = state.career.currentJob;
+  var _path = _job.path || "unknown";
+  if (!state.flags._careerPathProgress[_path]) {
+    state.flags._careerPathProgress[_path] = {
+      currentLevel: _job.levelId || "",
+      workDays: _job.workDays || 0,
+      salary: _job.salary || 0,
+      lastUpdate: state.player ? state.player.day : 0,
+    };
+  } else {
+    state.flags._careerPathProgress[_path].currentLevel = _job.levelId || "";
+    state.flags._careerPathProgress[_path].workDays = _job.workDays || 0;
+    state.flags._careerPathProgress[_path].salary = _job.salary || 0;
+    state.flags._careerPathProgress[_path].lastUpdate = state.player ? state.player.day : 0;
+  }
+}
+
+// [R796 域C 联动增强 C→D]: 职业级别影响NPC社交初始好感 — 高职位获得更多社交尊重
+function getCareerSocialRespect(jobLevel) {
+  if (!jobLevel) return 0;
+  var _levelMap = {
+    tech_junior: 1, tech_mid: 2, tech_senior: 3, tech_lead: 5,
+    fin_junior: 1, fin_mid: 2, fin_senior: 3, fin_manager: 4,
+    edu_junior: 1, edu_mid: 2, edu_senior: 3,
+    medical_junior: 1, medical_mid: 2, medical_senior: 3, medical_director: 5,
+    catering_junior: 1, catering_mid: 2, catering_chef: 3,
+    legal_junior: 1, legal_mid: 2, legal_senior: 3, legal_partner: 5,
+    design_junior: 1, design_mid: 2, design_senior: 3, design_director: 4,
+  };
+  return _levelMap[jobLevel] || 0;
+}
+
 ;
 // ==== js/ui/side_hustle_ui.js ====
 /**
@@ -360797,6 +360863,201 @@ if (typeof window !== "undefined") {
             if (!st) return;
             st.flags = st.flags || {};
             st.flags._f835FinanceDashDone = true;
+            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 3);
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("😅 大概知道就行。心智+3。", "info");
+            }
+          }
+        }
+      ]
+    }
+  ];
+
+  // ---- 注入全局 RANDOM_EVENTS ----
+  for (var i = 0; i < EVENTS.length; i++) {
+    RANDOM_EVENTS.push(EVENTS[i]);
+  }
+})();
+
+;
+// ==== js/core/domain_f_linkage_r843.js ====
+/*
+ * 城市浮生记 — 域F(UI/UX) 联动增强 R843
+ * 全系统优化·Domain F 第六十五轮循环
+ *
+ * 【联动增强3项】
+ *   1. F→A 数据可视化v5 — UI层展示数值平衡数据(价格趋势/行业热度)
+ *   2. F→B 事件记忆墙v5 — UI层展示历史事件回顾+叙事回响
+ *   3. F→E 财务仪表盘v5 — UI层展示投资组合+收益曲线
+ *
+ * 设计约束（与历轮 IIFE linkage 文件一致）：
+ *  - IIFE 注入全局 RANDOM_EVENTS，避免改动 cross_system_events.js。
+ *  - 所有 state 访问均 || 防御；数值标 [PLACEHOLDER]。
+ */
+(function () {
+  "use strict";
+  if (typeof RANDOM_EVENTS === "undefined" || !RANDOM_EVENTS) return;
+  if (RANDOM_EVENTS._domainFLinkageR843Loaded) return;
+  RANDOM_EVENTS._domainFLinkageR843Loaded = true;
+
+  // ---- 本地助手 ----
+  function grantXp(key, amt) {
+    if (typeof addSkillXp === "function") { try { addSkillXp(key, amt); } catch(e) {} }
+  }
+
+  var EVENTS = [
+    // ========================================================================
+    // 联动增强1: F→A 数据可视化v5 — UI层展示数值平衡数据
+    // 设计意图：数值域的数据(价格/行业/供需)应在UI层有可视化展示入口。
+    // 本事件在玩家生存≥150天时触发，给予"数据觉醒v5"标记。
+    // 心理学：认知负荷 — 可视化降低信息处理负担。
+    // ========================================================================
+    {
+      id: "f843_data_viz_v5",
+      phase: "street",
+      icon: "📊",
+      title: "数据可视化，让数字说话",
+      story: "你打开数据面板——价格曲线、行业热度、供需状态……\n\n这些数字不再枯燥，它们变成了图表、颜色、趋势线。",
+      conditions: function (st) {
+        if (!st || !st.player || st.gameOver) return false;
+        if (st.flags && st.flags._f843DataVizDone) return false;
+        return st.player.day >= 150;
+      },
+      probability: 0.06,
+      repeatable: false,
+      choices: [
+        {
+          text: "📊 启用数据可视化",
+          hint: "智力+12, 会计XP+15, 置_f843DataViz",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._f843DataVizDone = true;
+            st.flags._f843DataViz = true;
+            if (st.player) st.player.intelligence = Math.min(100, (st.player.intelligence || 50) + 12);
+            grantXp("accounting", 15);
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("📊 数据可视化启用——智力+12, 会计XP+15。让数字说话。", "success");
+            }
+          }
+        },
+        {
+          text: "😅 数字看看就行",
+          hint: "心智+3",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._f843DataVizDone = true;
+            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 3);
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("😅 数字看看就行。心智+3。", "info");
+            }
+          }
+        }
+      ]
+    },
+
+    // ========================================================================
+    // 联动增强2: F→B 事件记忆墙v5 — UI层展示历史事件回顾
+    // 设计意图：玩家经历的事件应在UI层有"记忆墙"展示，强化叙事体验。
+    // 本事件在玩家经历≥40个事件时触发，给予"记忆墙v5"标记。
+    // 心理学：峰终定律 — 回顾美好时刻产生积极情绪。
+    // ========================================================================
+    {
+      id: "f843_memory_wall_v5",
+      phase: "street",
+      icon: "🖼️",
+      title: "记忆墙上的故事",
+      story: "你打开记忆墙——那些经历过的事件，像照片一样排列在眼前。\n\n有欢笑，有泪水，有抉择，有后果。",
+      conditions: function (st) {
+        if (!st || !st.player || st.gameOver) return false;
+        if (st.flags && st.flags._f843MemoryWallDone) return false;
+        var _eventCount = st.flags._eventCount || 0;
+        return _eventCount >= 40;
+      },
+      probability: 0.05,
+      repeatable: false,
+      choices: [
+        {
+          text: "🖼️ 回顾我的故事",
+          hint: "心情+18, 心智+12, 置_f843MemoryWall",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._f843MemoryWallDone = true;
+            st.flags._f843MemoryWall = true;
+            if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 18);
+            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 12);
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("🖼️ 记忆墙上的故事——心情+18, 心智+12。这些都是你的人生。", "success");
+            }
+          }
+        },
+        {
+          text: "😊 向前看，不回头",
+          hint: "心智+3",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._f843MemoryWallDone = true;
+            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 3);
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("😊 向前看，不回头。心智+3。", "info");
+            }
+          }
+        }
+      ]
+    },
+
+    // ========================================================================
+    // 联动增强3: F→E 财务仪表盘v5 — UI层展示投资组合+收益曲线
+    // 设计意图：投资数据应在UI层有直观的仪表盘展示。
+    // 本事件在玩家持有≥5个不同标的且总资产≥¥12万时触发。
+    // 心理学：禀赋效应 — 看到自己的投资成果产生满足感。
+    // ========================================================================
+    {
+      id: "f843_finance_dash_v5",
+      phase: "street",
+      icon: "💰",
+      title: "你的财务仪表盘",
+      story: "你打开财务仪表盘——投资组合、收益曲线、盈亏比例……\n\n所有数据一目了然。你终于看清了自己的财务状况。",
+      conditions: function (st) {
+        if (!st || !st.player || st.gameOver) return false;
+        if (st.flags && st.flags._f843FinanceDashDone) return false;
+        if (!st.investment || !st.resources) return false;
+        var _total = (st.resources.cash || 0) + (st.resources.bankBalance || 0);
+        if (_total < 120000) return false;
+        var _holdings = st.investment.stockHoldings || [];
+        var _stockCount = 0;
+        for (var _s in _holdings) { if (_holdings[_s] && _holdings[_s].shares > 0) _stockCount++; }
+        var _types = _stockCount + (st.investment.btcHoldings > 0 ? 1 : 0) + (st.investment.properties.length > 0 ? 1 : 0);
+        return _types >= 5;
+      },
+      probability: 0.06,
+      repeatable: false,
+      choices: [
+        {
+          text: "💰 查看财务仪表盘",
+          hint: "智力+15, 会计XP+18, 置_f843FinanceDash",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._f843FinanceDashDone = true;
+            st.flags._f843FinanceDash = true;
+            if (st.player) st.player.intelligence = Math.min(100, (st.player.intelligence || 50) + 15);
+            grantXp("accounting", 18);
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("💰 财务仪表盘已启用——智力+15, 会计XP+18。", "success");
+            }
+          }
+        },
+        {
+          text: "😅 大概知道就行",
+          hint: "心智+3",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._f843FinanceDashDone = true;
             if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 3);
             if (typeof StateManager !== "undefined") {
               StateManager.addMessage("😅 大概知道就行。心智+3。", "info");
