@@ -1573,6 +1573,35 @@ function recordEventToHistory(state, eventId, eventTitle) {
       state.flags._eventEconomicImpact[eventId] = (state.flags._eventEconomicImpact[eventId] || 0) + 1;
     }
   }
+
+  // [R811 域B B→G 联动增强]: 事件心智沉淀 — 每30个事件额外心智成长
+  if (_evtCount > 0 && _evtCount % 30 === 0 && state.player) {
+    var _mentalFlag = '_eventMentalGrowth_' + _evtCount;
+    if (!state.flags[_mentalFlag]) {
+      state.flags[_mentalFlag] = true;
+      state.player.mental = Math.min(100, (state.player.mental || 50) + 2);
+      if (typeof StateManager !== "undefined") {
+        StateManager.addMessage("🧠 经历了" + _evtCount + "件事的洗礼，你对人生有了更深的理解。心智+2。", "success");
+      }
+    }
+  }
+
+  // [R811 域B B→F 联动增强]: 事件情感标签分类
+  if (state.flags && state.flags._eventHistory) {
+    var _lastEvt = state.flags._eventHistory[state.flags._eventHistory.length - 1];
+    if (_lastEvt && !_lastEvt.sentiment) {
+      var _negKeywords = ["危机", "暴跌", "失败", "开除", "生病", "受伤", "事故", "争吵", "拘留", "罚款", "破产"];
+      var _posKeywords = ["晋升", "加薪", "成功", "获奖", "突破", "里程碑", "祝贺", "恋爱", "结婚", "投资"];
+      var _hasNeg = false, _hasPos = false;
+      for (var _ni = 0; _ni < _negKeywords.length; _ni++) {
+        if ((_lastEvt.title || '').indexOf(_negKeywords[_ni]) >= 0) { _hasNeg = true; break; }
+      }
+      for (var _pi = 0; _pi < _posKeywords.length; _pi++) {
+        if ((_lastEvt.title || '').indexOf(_posKeywords[_pi]) >= 0) { _hasPos = true; break; }
+      }
+      _lastEvt.sentiment = _hasNeg ? 'negative' : (_hasPos ? 'positive' : 'neutral');
+    }
+  }
   }
 
 // [全系统自洽修复] 域B R387 联动增强(B→A): 事件市场情绪—特定事件影响商品价格
