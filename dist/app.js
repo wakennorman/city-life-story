@@ -354823,6 +354823,261 @@ if (typeof window !== "undefined") {
 })();
 
 ;
+// ==== js/core/domain_e_linkage_r880.js ====
+/*
+ * 城市浮生记 — 域E(经济/投资) 联动增强 R880
+ * 全系统优化·Domain E 第六十八轮循环
+ *
+ * 【联动增强3项 — E→D 方向(仅7次,历轮薄弱)】
+ *   1. E→D 投资成功时朋友的祝贺v1 — 投资收益后朋友的态度
+ *   2. E→D 投资失败时朋友的安慰v1 — 投资亏损后朋友的支持
+ *   3. E→D 投资俱乐部社交v1 — 投资者圈子的人脉拓展
+ *
+ * 设计约束（与历轮 IIFE linkage 文件一致）：
+ *  - IIFE 注入全局 RANDOM_EVENTS,避免改动 cross_system_events.js。
+ *  - 所有 state 访问均 || 防御；数值标 [PLACEHOLDER]。
+ *  - 严格遵守域D铁律：NPC引用须 rel && rel.met；好感传导走 applyAffinityChange。
+ *  - E→D 核心设计理念：投资不是孤立的数字游戏,
+ *    赚了钱有人恭喜,亏了钱有人安慰——社会认同+社会支持。
+ */
+(function () {
+  "use strict";
+  if (typeof RANDOM_EVENTS === "undefined" || !RANDOM_EVENTS) return;
+  if (RANDOM_EVENTS._domainELinkageR880Loaded) return;
+  RANDOM_EVENTS._domainELinkageR880Loaded = true;
+
+  // ---- 本地助手 ----
+  function grantXp(key, amt) {
+    if (typeof addSkillXp === "function") { try { addSkillXp(key, amt); } catch(e) {} }
+  }
+
+  var EVENTS = [
+    // ========================================================================
+    // 联动增强1: E→D 投资成功时朋友的祝贺v1
+    // 设计意图：投资获得收益后,已结识NPC主动祝贺——社会认同+峰终定律。
+    // 触发：投资总收益≥50000 + ≥1个好感≥50的NPC
+    // 心理学：社会认同(被朋友认可)+峰终定律(赚钱时刻的记忆)
+    // ========================================================================
+    {
+      id: "e880_invest_success_congrats_v1",
+      phase: "street",
+      icon: "🎉",
+      title: "投资赚了,朋友们都知道了",
+      story: "最近投资赚了一笔,心情大好。\n\n朋友们纷纷发来祝贺——「听说你最近混得不错啊,请客请客！」\n\n被朋友认可的感觉,真好。",
+      triggers: { minDay: 100, interval: 240, maxRepeats: 1, excludeFlags: ["_e880SuccessCd"] },
+      conditions: function (st) {
+        if (!st || !st.player || st.gameOver) return false;
+        if (st.flags && st.flags._e880SuccessCd) return false;
+        // 需投资总收益≥50000
+        if (!st.investment) return false;
+        var _inv = st.investment;
+        var _profit = (typeof _inv._totalInvestmentProfit === "number") ? _inv._totalInvestmentProfit : 0;
+        if (_profit < 50000) return false;
+        // 需有至少1个好感≥50的已结识NPC
+        if (!st.relationships) return false;
+        var _hasFriend = false;
+        for (var _id in st.relationships) {
+          var _r = st.relationships[_id];
+          if (_r && _r.met && (_r.affinity || 0) >= 50) { _hasFriend = true; break; }
+        }
+        return _hasFriend;
+      },
+      probability: 0.04,
+      repeatable: false,
+      choices: [
+        {
+          text: "🎉 请客,大家一起开心",
+          hint: "社交XP+18, 所有已结识NPC好感+5, 置_e880Celebrate",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._e880SuccessCd = true;
+            st.flags._e880Celebrate = true;
+            grantXp("social", 18);
+            if (st.relationships && typeof applyAffinityChange === "function") {
+              for (var _mid in st.relationships) {
+                var _mr = st.relationships[_mid];
+                if (_mr && _mr.met) applyAffinityChange(st, _mid, 5, "投资成功祝贺");
+              }
+            }
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("🎉 请客,大家一起开心——社交XP+18, 所有朋友好感+5。", "success");
+            }
+          }
+        },
+        {
+          text: "😅 谦虚一下,继续努力",
+          hint: "心智+10, 管理XP+10, 置_e880Humble",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._e880SuccessCd = true;
+            st.flags._e880Humble = true;
+            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 10);
+            grantXp("management", 10);
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("😅 谦虚一下——心智+10, 管理XP+10。", "info");
+            }
+          }
+        }
+      ]
+    },
+
+    // ========================================================================
+    // 联动增强2: E→D 投资失败时朋友的安慰v1
+    // 设计意图：投资亏损后,已结识NPC主动安慰——社会支持+峰终定律。
+    // 触发：投资总亏损≥20000 + ≥1个好感≥40的NPC
+    // 心理学：社会支持(低谷时的温暖)+峰终定律(危机时刻的记忆)
+    // ========================================================================
+    {
+      id: "e880_invest_loss_comfort_v1",
+      phase: "street",
+      icon: "💚",
+      title: "投资亏了,朋友怎么看你",
+      story: "最近投资亏了不少,心情低落。\n\n这时候,一个朋友找到了你——他没有嘲笑,也没有说教,只是默默陪你喝了一杯。\n\n患难见真情。",
+      triggers: { minDay: 120, interval: 280, maxRepeats: 1, excludeFlags: ["_e880LossCd"] },
+      conditions: function (st) {
+        if (!st || !st.player || st.gameOver) return false;
+        if (st.flags && st.flags._e880LossCd) return false;
+        // 需投资总亏损≥20000
+        if (!st.investment) return false;
+        var _inv = st.investment;
+        var _profit = (typeof _inv._totalInvestmentProfit === "number") ? _inv._totalInvestmentProfit : 0;
+        if (_profit > -20000) return false; // 必须亏损≥20000
+        // 需有至少1个好感≥40的已结识NPC
+        if (!st.relationships) return false;
+        var _hasFriend = false;
+        for (var _id in st.relationships) {
+          var _r = st.relationships[_id];
+          if (_r && _r.met && (_r.affinity || 0) >= 40) { _hasFriend = true; break; }
+        }
+        return _hasFriend;
+      },
+      probability: 0.04,
+      repeatable: false,
+      choices: [
+        {
+          text: "💚 感谢朋友的陪伴",
+          hint: "社交XP+15, 朋友好感+8, 心情+10, 置_e880Grateful",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._e880LossCd = true;
+            st.flags._e880Grateful = true;
+            grantXp("social", 15);
+            // 找到最高好感NPC并提升
+            var _bestNpc = null, _bestAff = -1;
+            if (st.relationships) {
+              for (var _id in st.relationships) {
+                var _r = st.relationships[_id];
+                if (_r && _r.met && (_r.affinity || 0) > _bestAff) { _bestAff = _r.affinity || 0; _bestNpc = _id; }
+              }
+            }
+            if (_bestNpc && typeof applyAffinityChange === "function") {
+              applyAffinityChange(st, _bestNpc, 8, "投资亏损安慰");
+            }
+            if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 10);
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("💚 感谢朋友的陪伴——社交XP+15, 朋友好感+8, 心情+10。", "success");
+            }
+          }
+        },
+        {
+          text: "😅 自己消化,不让朋友担心",
+          hint: "心智+12, 置_e880SoloProcess",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._e880LossCd = true;
+            st.flags._e880SoloProcess = true;
+            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 12);
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("😅 自己消化——心智+12。", "info");
+            }
+          }
+        }
+      ]
+    },
+
+    // ========================================================================
+    // 联动增强3: E→D 投资俱乐部社交v1
+    // 设计意图：投资者圈子的人脉拓展——弱连接理论+社会认同。
+    // 触发：持有投资 + ≥2个已结识NPC + 冷却期已过
+    // 心理学：弱连接理论(泛泛之交的信息价值)+社会认同(圈子归属感)
+    // ========================================================================
+    {
+      id: "e880_investor_club_social_v1",
+      phase: "street",
+      icon: "🥂",
+      title: "投资者聚会",
+      story: "一个投资者交流会的邀请函摆在你面前——同行们聚在一起,聊聊市场动态,分享投资心得。\n\n这种聚会,是结识行业人脉的好机会。",
+      triggers: { minDay: 150, interval: 300, maxRepeats: 1, excludeFlags: ["_e880ClubCd"] },
+      conditions: function (st) {
+        if (!st || !st.player || st.gameOver) return false;
+        if (st.flags && st.flags._e880ClubCd) return false;
+        // 需持有投资
+        if (!st.investment) return false;
+        var _inv = st.investment;
+        var _hasInvestment = (_inv.stockHoldings && Object.keys(_inv.stockHoldings).length > 0) ||
+                             (_inv.btcHoldings && _inv.btcHoldings > 0) ||
+                             (_inv.properties && _inv.properties.length > 0);
+        if (!_hasInvestment) return false;
+        // 需有至少2个已结识NPC
+        if (!st.relationships) return false;
+        var _metCount = 0;
+        for (var _id in st.relationships) {
+          var _r = st.relationships[_id];
+          if (_r && _r.met) _metCount++;
+        }
+        return _metCount >= 2;
+      },
+      probability: 0.04,
+      repeatable: false,
+      choices: [
+        {
+          text: "🥂 积极参加,扩展人脉",
+          hint: "社交XP+18, 魅力+12, 所有已结识NPC好感+3, 置_e880Mixer",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._e880ClubCd = true;
+            st.flags._e880Mixer = true;
+            grantXp("social", 18);
+            if (st.player) st.player.charm = Math.min(100, (st.player.charm || 50) + 12);
+            if (st.relationships && typeof applyAffinityChange === "function") {
+              for (var _mid in st.relationships) {
+                var _mr = st.relationships[_mid];
+                if (_mr && _mr.met) applyAffinityChange(st, _mid, 3, "投资者聚会");
+              }
+            }
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("🥂 积极参加投资者聚会——社交XP+18, 魅力+12, 所有朋友好感+3。", "success");
+            }
+          }
+        },
+        {
+          text: "😅 独自研究,不凑热闹",
+          hint: "智力+12, 会计XP+10, 置_e880SoloStudy",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._e880ClubCd = true;
+            st.flags._e880SoloStudy = true;
+            if (st.player) st.player.intelligence = Math.min(100, (st.player.intelligence || 50) + 12);
+            grantXp("accounting", 10);
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("😅 独自研究——智力+12, 会计XP+10。", "info");
+            }
+          }
+        }
+      ]
+    }
+  ];
+
+  for (var i = 0; i < EVENTS.length; i++) { RANDOM_EVENTS.push(EVENTS[i]); }
+})();
+
+;
 // ==== js/core/domain_e_linkage_r822.js ====
 /**
  * 域E(经济/投资) 联动增强 R822 (第二十二轮循环)
@@ -379517,6 +379772,184 @@ if (typeof window !== "undefined") {
   ];
 
   for (var i = 0; i < EVENTS.length; i++) { RANDOM_EVENTS.push(EVENTS[i]); }
+})();
+;
+// ==== js/core/domain_f_linkage_r837.js ====
+/**
+ * 域F(UI/UX) 联动增强 R837
+ * 全系统优化·Domain F 第七十一轮循环
+ *
+ * 【联动增强3项】
+ *   1. F→A 数据可视化v11 — UI数据消费转化为数值洞察资产
+ *   2. F→B 事件记忆墙v11 — UI事件历史触发叙事回响
+ *   3. F→E 财务仪表盘v11 — UI财务数据反馈为投资洞察
+ *
+ * 设计约束（与历轮 IIFE linkage 文件一致）：
+ *  - IIFE 注入全局 RANDOM_EVENTS，避免改动 cross_system_events.js。
+ *  - 所有 state 访问均 || 防御；使用 Random.fromArray/Random.int 保持种子RNG。
+ */
+(function () {
+  "use strict";
+  if (typeof RANDOM_EVENTS === "undefined" || !RANDOM_EVENTS) return;
+  if (RANDOM_EVENTS._domainFLinkageR837Loaded) return;
+  RANDOM_EVENTS._domainFLinkageR837Loaded = true;
+
+  function grantXp(key, amt) {
+    if (typeof addSkillXp === "function") { try { addSkillXp(key, amt); } catch(e) {} }
+  }
+
+  var EVENTS = [
+    {
+      id: "f837_data_viz_v11",
+      phase: "street",
+      icon: "📊",
+      title: "数据可视化，洞察先机",
+      story: "你盯着各种数据面板——价格走势、资产分布、技能雷达……这些图表把枯燥的数字变成了直观的图形。你发现，当数据变得可视化，决策也变得更容易了。",
+      conditions: function (st) {
+        if (!st || !st.player || st.gameOver) return false;
+        if (st.flags && st.flags._f837DataVizDone) return false;
+        return st.player.day >= 150;
+      },
+      probability: 0.05,
+      repeatable: false,
+      choices: [
+        {
+          text: "📊 深入分析可视化数据",
+          hint: "智力+25, 会计XP+30, 置_f837DataVizInsight",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._f837DataVizDone = true;
+            st.flags._f837DataVizInsight = true;
+            if (st.player) st.player.intelligence = Math.min(100, (st.player.intelligence || 50) + 25);
+            grantXp("accounting", 30);
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("📊 数据可视化分析完成——智力+25, 会计XP+30。", "success");
+            }
+          }
+        },
+        {
+          text: "📝 简单记下关键数字",
+          hint: "心智+8",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._f837DataVizDone = true;
+            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 8);
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("📝 记下了几个关键数字。心智+8。", "info");
+            }
+          }
+        }
+      ]
+    },
+    {
+      id: "f837_event_memory_v11",
+      phase: "street",
+      icon: "📖",
+      title: "记忆墙，人生回放",
+      story: "你在事件日志里翻看过去的记录——那些曾经让你开心、难过、紧张、兴奋的瞬间，现在都变成了文字，静静地躺在记忆墙上。",
+      conditions: function (st) {
+        if (!st || !st.player || st.gameOver) return false;
+        if (st.flags && st.flags._f837EventMemoryDone) return false;
+        return st.player.day >= 250;
+      },
+      probability: 0.06,
+      repeatable: false,
+      choices: [
+        {
+          text: "📖 翻阅记忆墙，写下感悟",
+          hint: "心智+28, 魅力+20, 置_f837EventMemory",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._f837EventMemoryDone = true;
+            st.flags._f837EventMemory = true;
+            if (st.player) {
+              st.player.mental = Math.min(100, (st.player.mental || 50) + 28);
+              st.player.charm = Math.min(100, (st.player.charm || 50) + 20);
+            }
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("📖 记忆墙上每一行字,都是你走过的路。心智+28, 魅力+20。", "success");
+            }
+          }
+        },
+        {
+          text: "😊 回味一下就好",
+          hint: "心情+10",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._f837EventMemoryDone = true;
+            if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 10);
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("😊 过去的就让它过去吧。心情+10。", "info");
+            }
+          }
+        }
+      ]
+    },
+    {
+      id: "f837_finance_dashboard_v11",
+      phase: "street",
+      icon: "💰",
+      title: "财务仪表盘，看清钱袋子",
+      story: "你打开财务仪表盘——收入、支出、储蓄、投资……一张图看清你所有的钱。你发现，当财务数据以可视化的方式呈现时，那些模糊的焦虑变成了清晰的数字。",
+      conditions: function (st) {
+        if (!st || !st.player || st.gameOver) return false;
+        if (st.flags && st.flags._f837FinanceDashboardDone) return false;
+        if (!st.resources) return false;
+        var cash = (st.resources.cash || 0) + (st.resources.bankBalance || 0);
+        return cash >= 100000 && st.player.day >= 120;
+      },
+      probability: 0.06,
+      repeatable: false,
+      choices: [
+        {
+          text: "💰 深度分析财务数据",
+          hint: "会计XP+32, 智力+22, 置_f837FinanceDashboard",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._f837FinanceDashboardDone = true;
+            st.flags._f837FinanceDashboard = true;
+            if (st.resources) {
+              var income = st.flags._dailyIncome || 0;
+              var expense = st.flags._dailyExpense || 0;
+              st.flags._f837SaveRatio = (income > 0 && isFinite(income) && isFinite(expense))
+                ? Math.round((1 - expense / income) * 100) : 0;
+            }
+            grantXp("accounting", 32);
+            if (st.player) st.player.intelligence = Math.min(100, (st.player.intelligence || 50) + 22);
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("💰 财务仪表盘分析完成——储蓄率约" + (st.flags._f837SaveRatio || 0) + "%。会计XP+32, 智力+22。", "success");
+            }
+          }
+        },
+        {
+          text: "😅 知道有钱就行",
+          hint: "心情+5",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._f837FinanceDashboardDone = true;
+            if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 5);
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("😅 有钱就行。心情+5。", "info");
+            }
+          }
+        }
+      ]
+    }
+  ];
+
+  for (var i = 0; i < EVENTS.length; i++) {
+    var exists = false;
+    for (var j = 0; j < RANDOM_EVENTS.length; j++) {
+      if (RANDOM_EVENTS[j] && RANDOM_EVENTS[j].id === EVENTS[i].id) { exists = true; break; }
+    }
+    if (!exists) RANDOM_EVENTS.push(EVENTS[i]);
+  }
 })();
 ;
 // ==== js/core/domain_f_linkage_r867.js ====
