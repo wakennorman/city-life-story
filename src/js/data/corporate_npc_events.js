@@ -23,6 +23,7 @@
       if (!st.corporate || !st.corporate.active) return false;
       if (!npcMetCheck(st, "boss_li")) return false;
       if (st.flags && st.flags._liGuruInviteDone) return false;
+      if (!st.skills) return false;
       return (st.skills.coding && st.skills.coding.level || 0) >= 35;
     },
     probability: 0.03,
