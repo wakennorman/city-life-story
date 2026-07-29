@@ -78,6 +78,7 @@
       {
         text: "🤖 关注AI赛道（向上管理+KPI）",
         apply: function (st) {
+          if (!st.flags) st.flags = {}; // [全系统自洽修复] 域D: state.flags守卫(旧存档防TypeError)
           var c = st.player.corporate;
           if (!c) return;
           c.upwardMgmt = Math.min(100, (c.upwardMgmt || 0) + 5);
@@ -92,6 +93,7 @@
       {
         text: "🌱 转向新能源（人缘+能力）",
         apply: function (st) {
+          if (!st.flags) st.flags = {}; // [全系统自洽修复] 域D: state.flags守卫(旧存档防TypeError)
           var c = st.player.corporate;
           if (!c) return;
           c.popularity = Math.min(100, (c.popularity || 0) + 5);
@@ -105,6 +107,7 @@
       {
         text: "⏸️ 先稳住再说",
         apply: function (st) {
+          if (!st.flags) st.flags = {}; // [全系统自洽修复] 域D: state.flags守卫(旧存档防TypeError)
           if (!st.relationships.xiao_mei) st.relationships.xiao_mei = { met: true, affinity: 0 };
           st.relationships.xiao_mei.affinity = Math.min(100, (st.relationships.xiao_mei.affinity || 0) + 5);
           st.flags._xiaomeiCareerTipDone = true;
@@ -136,6 +139,7 @@
       {
         text: "📝 好好准备（锁定内部推荐）",
         apply: function (st) {
+          if (!st.flags) st.flags = {}; // [全系统自洽修复] 域D: state.flags守卫(旧存档防TypeError)
           var c = st.player.corporate;
           if (!c) return;
           st.flags._zhaojieJumpPrepared = true;
@@ -148,6 +152,7 @@
       {
         text: "🙅 暂时不跳（礼貌拒绝）",
         apply: function (st) {
+          if (!st.flags) st.flags = {}; // [全系统自洽修复] 域D: state.flags守卫(旧存档防TypeError)
           st.flags._zhaojieJumpPassed = true;
           st.relationships.zhaojie.affinity = Math.min(100, (st.relationships.zhaojie.affinity || 0) + 3);
           st.flags._zhaojieJumpInfoDone = true;
@@ -179,6 +184,7 @@
       {
         text: "👥 介绍工人给他（赚咨询费）",
         apply: function (st) {
+          if (!st.flags) st.flags = {}; // [全系统自洽修复] 域D: state.flags守卫(旧存档防TypeError)
           if (st.resources) st.resources.cash = (st.resources.cash || 0) + 2000;
           if (typeof addDailyTransaction === "function") addDailyTransaction(st, "income", "oldzhou_referral", 2000, "工程外包咨询费");
           if (!st.relationships.old_zhou) st.relationships.old_zhou = { met: true, affinity: 0 };
@@ -191,6 +197,7 @@
       {
         text: "👷 跟着老周跑工程（锻炼管理）",
         apply: function (st) {
+          if (!st.flags) st.flags = {}; // [全系统自洽修复] 域D: state.flags守卫(旧存档防TypeError)
           st.flags._oldzhouSelfManage = true;
           st.player.charm = Math.min(100, (st.player.charm || 10) + 3);
           st.flags._oldzhouHiringDone = true;
@@ -200,6 +207,7 @@
       {
         text: "🚫 专心大厂工作",
         apply: function (st) {
+          if (!st.flags) st.flags = {}; // [全系统自洽修复] 域D: state.flags守卫(旧存档防TypeError)
           st.flags._oldzhouHiringDone = true;
           StateManager.addMessage("🤝 你感谢老周抬爱，但现在在大厂干得还不错。", "info");
         },

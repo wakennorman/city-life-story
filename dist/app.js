@@ -202275,6 +202275,7 @@ if (typeof window !== "undefined") {
       {
         text: "🤖 关注AI赛道（向上管理+KPI）",
         apply: function (st) {
+          if (!st.flags) st.flags = {}; // [全系统自洽修复] 域D: state.flags守卫(旧存档防TypeError)
           var c = st.player.corporate;
           if (!c) return;
           c.upwardMgmt = Math.min(100, (c.upwardMgmt || 0) + 5);
@@ -202289,6 +202290,7 @@ if (typeof window !== "undefined") {
       {
         text: "🌱 转向新能源（人缘+能力）",
         apply: function (st) {
+          if (!st.flags) st.flags = {}; // [全系统自洽修复] 域D: state.flags守卫(旧存档防TypeError)
           var c = st.player.corporate;
           if (!c) return;
           c.popularity = Math.min(100, (c.popularity || 0) + 5);
@@ -202302,6 +202304,7 @@ if (typeof window !== "undefined") {
       {
         text: "⏸️ 先稳住再说",
         apply: function (st) {
+          if (!st.flags) st.flags = {}; // [全系统自洽修复] 域D: state.flags守卫(旧存档防TypeError)
           if (!st.relationships.xiao_mei) st.relationships.xiao_mei = { met: true, affinity: 0 };
           st.relationships.xiao_mei.affinity = Math.min(100, (st.relationships.xiao_mei.affinity || 0) + 5);
           st.flags._xiaomeiCareerTipDone = true;
@@ -202333,6 +202336,7 @@ if (typeof window !== "undefined") {
       {
         text: "📝 好好准备（锁定内部推荐）",
         apply: function (st) {
+          if (!st.flags) st.flags = {}; // [全系统自洽修复] 域D: state.flags守卫(旧存档防TypeError)
           var c = st.player.corporate;
           if (!c) return;
           st.flags._zhaojieJumpPrepared = true;
@@ -202345,6 +202349,7 @@ if (typeof window !== "undefined") {
       {
         text: "🙅 暂时不跳（礼貌拒绝）",
         apply: function (st) {
+          if (!st.flags) st.flags = {}; // [全系统自洽修复] 域D: state.flags守卫(旧存档防TypeError)
           st.flags._zhaojieJumpPassed = true;
           st.relationships.zhaojie.affinity = Math.min(100, (st.relationships.zhaojie.affinity || 0) + 3);
           st.flags._zhaojieJumpInfoDone = true;
@@ -202376,6 +202381,7 @@ if (typeof window !== "undefined") {
       {
         text: "👥 介绍工人给他（赚咨询费）",
         apply: function (st) {
+          if (!st.flags) st.flags = {}; // [全系统自洽修复] 域D: state.flags守卫(旧存档防TypeError)
           if (st.resources) st.resources.cash = (st.resources.cash || 0) + 2000;
           if (typeof addDailyTransaction === "function") addDailyTransaction(st, "income", "oldzhou_referral", 2000, "工程外包咨询费");
           if (!st.relationships.old_zhou) st.relationships.old_zhou = { met: true, affinity: 0 };
@@ -202388,6 +202394,7 @@ if (typeof window !== "undefined") {
       {
         text: "👷 跟着老周跑工程（锻炼管理）",
         apply: function (st) {
+          if (!st.flags) st.flags = {}; // [全系统自洽修复] 域D: state.flags守卫(旧存档防TypeError)
           st.flags._oldzhouSelfManage = true;
           st.player.charm = Math.min(100, (st.player.charm || 10) + 3);
           st.flags._oldzhouHiringDone = true;
@@ -202397,6 +202404,7 @@ if (typeof window !== "undefined") {
       {
         text: "🚫 专心大厂工作",
         apply: function (st) {
+          if (!st.flags) st.flags = {}; // [全系统自洽修复] 域D: state.flags守卫(旧存档防TypeError)
           st.flags._oldzhouHiringDone = true;
           StateManager.addMessage("🤝 你感谢老周抬爱，但现在在大厂干得还不错。", "info");
         },
@@ -354398,6 +354406,217 @@ if (typeof window !== "undefined") {
   for (var i = 0; i < EVENTS.length; i++) { RANDOM_EVENTS.push(EVENTS[i]); }
 })();
 ;
+// ==== js/core/domain_e_linkage_r836.js ====
+/**
+ * 域E(经济/投资) 联动增强 R836
+ * 全系统优化·Domain E 第七十轮循环
+ *
+ * 【联动增强3项】
+ *   1. E→A 投资数据沉淀v9 — 投资经验转化为数值数据资产
+ *   2. E→B 投资故事叙事v9 — 投资事件触发叙事回响
+ *   3. E→G 财富健康v9 — 经济数据反馈为生命质量
+ *
+ * 设计约束（与历轮 IIFE linkage 文件一致）：
+ *  - IIFE 注入全局 RANDOM_EVENTS，避免改动 cross_system_events.js。
+ *  - 所有 state 访问均 || 防御；使用 Random.fromArray/Random.int 保持种子RNG。
+ */
+(function () {
+  "use strict";
+  if (typeof RANDOM_EVENTS === "undefined" || !RANDOM_EVENTS) return;
+  if (RANDOM_EVENTS._domainELinkageR836Loaded) return;
+  RANDOM_EVENTS._domainELinkageR836Loaded = true;
+
+  function grantXp(key, amt) {
+    if (typeof addSkillXp === "function") { try { addSkillXp(key, amt); } catch(e) {} }
+  }
+
+  function calcPortfolioValue(st) {
+    if (!st || !st.investment) return 0;
+    var v = 0;
+    var inv = st.investment;
+    var holdings = inv.stockHoldings || [];
+    var market = inv.stockMarket || {};
+    for (var i = 0; i < holdings.length; i++) {
+      var h = holdings[i];
+      var m = market[h.symbol];
+      if (m && isFinite(m.price) && isFinite(h.shares)) v += m.price * h.shares;
+    }
+    var props = inv.properties || [];
+    for (var i = 0; i < props.length; i++) {
+      v += props[i].currentPrice || props[i].buyPrice || 0;
+    }
+    if ((inv.btcHoldings || 0) > 0 && isFinite(inv.btcPrice || 0)) {
+      v += inv.btcPrice * inv.btcHoldings;
+    }
+    return v;
+  }
+
+  var EVENTS = [
+    {
+      id: "e836_invest_data_v9",
+      phase: "street",
+      icon: "📊",
+      title: "交易记录，是一座数据金矿",
+      story: "你翻了翻交易记录——买入、卖出、盈亏、持仓……这些看似枯燥的数字，实际上记录了你的每一次决策和结果。",
+      conditions: function (st) {
+        if (!st || !st.player || st.gameOver) return false;
+        if (st.flags && st.flags._e836InvestDataDone) return false;
+        if (!st.investment) return false;
+        var _log = st.investment.tradeLog || [];
+        return _log.length >= 50 && st.player.day >= 300;
+      },
+      probability: 0.05,
+      repeatable: false,
+      choices: [
+        {
+          text: "📊 分析我的交易数据",
+          hint: "智力+25, 会计XP+28, 置_e836InvestDataAsset",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._e836InvestDataDone = true;
+            st.flags._e836InvestDataAsset = true;
+            var _log = st.investment.tradeLog || [];
+            var _wins = 0, _total = _log.length;
+            for (var _i = 0; _i < _total; _i++) {
+              if ((_log[_i].pnl || 0) > 0) _wins++;
+            }
+            st.flags._e836TradeWinRate = _total > 0 ? Math.round(_wins / _total * 100) : 0;
+            if (st.player) st.player.intelligence = Math.min(100, (st.player.intelligence || 50) + 25);
+            grantXp("accounting", 28);
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("📊 交易数据分析完成。胜率:" + (st.flags._e836TradeWinRate || 0) + "%。智力+25, 会计XP+28。", "success");
+            }
+          }
+        },
+        {
+          text: "😅 交易记录没什么好看的",
+          hint: "心智+5",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._e836InvestDataDone = true;
+            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 5);
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("😅 交易记录没什么好看的。心智+5。", "info");
+            }
+          }
+        }
+      ]
+    },
+    {
+      id: "e836_invest_story_v9",
+      phase: "street",
+      icon: "📖",
+      title: "这笔交易，值得记一辈子",
+      story: "你盯着账户里的数字——这一笔，赚/亏了你平时几个月的工资。不管结果如何，这一刻你永远记得：市场的残酷与魅力，都在这一笔交易中体现得淋漓尽致。",
+      conditions: function (st) {
+        if (!st || !st.player || st.gameOver) return false;
+        if (st.flags && st.flags._e836InvestStoryDone) return false;
+        if (!st.investment) return false;
+        var _log = st.investment.tradeLog || [];
+        for (var _i = 0; _i < _log.length; _i++) {
+          var _pnl = _log[_i].pnl || 0;
+          if (_pnl >= 25000 || _pnl <= -18000) return true;
+        }
+        var _totalProfit = st.investment._totalInvestmentProfit || 0;
+        return _totalProfit >= 100000 || _totalProfit <= -50000;
+      },
+      probability: 0.06,
+      repeatable: false,
+      choices: [
+        {
+          text: "📖 记录这笔交易的故事",
+          hint: "心智+25, 魅力+18, 置_e836InvestStory",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._e836InvestStoryDone = true;
+            st.flags._e836InvestStory = true;
+            if (st.player) {
+              st.player.mental = Math.min(100, (st.player.mental || 50) + 25);
+              st.player.charm = Math.min(100, (st.player.charm || 50) + 18);
+            }
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("📖 这笔交易的故事，值得记一辈子。心智+25, 魅力+18。", "success");
+            }
+          }
+        },
+        {
+          text: "😊 过去就过去了",
+          hint: "心情+5",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._e836InvestStoryDone = true;
+            if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 5);
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("😊 过去就过去了。心情+5。", "info");
+            }
+          }
+        }
+      ]
+    },
+    {
+      id: "e836_wealth_health_v9",
+      phase: "street",
+      icon: "💚",
+      title: "财富健康，生命才有质量",
+      story: "你算了算——总资产突破了五十万。存款、投资、房产……这些数字背后，是你在这座城市里一点一滴的积累。",
+      conditions: function (st) {
+        if (!st || !st.player || st.gameOver) return false;
+        if (st.flags && st.flags._e836WealthHealthDone) return false;
+        if (!st.resources) return false;
+        var _total = (st.resources.cash || 0) + (st.resources.bankBalance || 0);
+        return _total >= 500000;
+      },
+      probability: 0.06,
+      repeatable: false,
+      choices: [
+        {
+          text: "💚 评估财富健康度",
+          hint: "心智+25, 会计XP+28, 置_e836WealthHealthy",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._e836WealthHealthDone = true;
+            st.flags._e836WealthHealthy = true;
+            var _debt = (st.resources.villageDebt || 0) + (st.resources.fineDebt || 0) + (st.resources.bankDebt || 0);
+            var _assets = (st.resources.cash || 0) + (st.resources.bankBalance || 0);
+            st.flags._e836DebtToAssetRatio = _assets > 0 ? Math.round(_debt / _assets * 100) / 100 : 0;
+            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 25);
+            grantXp("accounting", 28);
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("💚 财富健康度评估完成——心智+25, 会计XP+28。", "success");
+            }
+          }
+        },
+        {
+          text: "😅 有钱就行，不用评估",
+          hint: "心智+3",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._e836WealthHealthDone = true;
+            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 3);
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("😅 有钱就行。心智+3。", "info");
+            }
+          }
+        }
+      ]
+    }
+  ];
+
+  for (var i = 0; i < EVENTS.length; i++) {
+    var exists = false;
+    for (var j = 0; j < RANDOM_EVENTS.length; j++) {
+      if (RANDOM_EVENTS[j] && RANDOM_EVENTS[j].id === EVENTS[i].id) { exists = true; break; }
+    }
+    if (!exists) RANDOM_EVENTS.push(EVENTS[i]);
+  }
+})();
+;
 // ==== js/core/domain_e_linkage_r866.js ====
 /*
  * 城市浮生记 — 域E(经济/投资) 联动增强 R866
@@ -370157,6 +370376,224 @@ if (typeof window !== "undefined") {
 })();
 
 ;
+// ==== js/core/domain_d_linkage_r835.js ====
+/**
+ * 域D(NPC/社交) 联动增强 R835
+ * 全系统优化·Domain D 第六十四轮循环
+ *
+ * 【联动增强3项】
+ *   1. D→A 社交资本数据v8 — NPC社交关系转化为数值洞察
+ *   2. D→E 社交投资情报v7 — 社交圈情报影响投资决策
+ *   3. D→G 社交健康恢复v7 — 社交活动反馈为健康恢复
+ *
+ * 设计约束（与历轮 IIFE linkage 文件一致）：
+ *  - IIFE 注入全局 RANDOM_EVENTS，避免改动 cross_system_events.js。
+ *  - 所有 state 访问均 || 防御；使用 Random.fromArray/Random.int 保持种子RNG。
+ *  - NPC引用一律 rel && rel.met(域D铁律)；好感走 applyAffinityChange。
+ */
+(function () {
+  "use strict";
+  if (typeof RANDOM_EVENTS === "undefined" || !RANDOM_EVENTS) return;
+  if (RANDOM_EVENTS._domainDLinkageR835Loaded) return;
+  RANDOM_EVENTS._domainDLinkageR835Loaded = true;
+
+  function grantXp(key, amt) {
+    if (typeof addSkillXp === "function") { try { addSkillXp(key, amt); } catch(e) {} }
+  }
+  function safeAffinity(st, nid, amt, reason) {
+    if (typeof applyAffinityChange === "function") {
+      try { applyAffinityChange(st, nid, amt, reason); } catch (e) {}
+    }
+  }
+  function pickMetNpc(st) {
+    if (!st || !st.relationships) return null;
+    var ids = [];
+    for (var k in st.relationships) {
+      if (st.relationships[k] && st.relationships[k].met) ids.push(k);
+    }
+    return ids.length > 0 ? ids[Random.int(0, ids.length - 1)] : null;
+  }
+  function npcName(id) {
+    if (typeof getNpcDisplayName === "function") {
+      try { return getNpcDisplayName(id) || "老友"; } catch (e) { return "老友"; }
+    }
+    return "老友";
+  }
+
+  var EVENTS = [
+    {
+      id: "d835_social_capital_v8",
+      phase: "street",
+      icon: "📊",
+      title: "你的社交圈，是一张价值网",
+      story: "你翻了翻通讯录——不知不觉已经认识了这么多人。每个名字背后，都是一段故事。而这张社交网络，本身就是一种资本。",
+      conditions: function (st) {
+        if (!st || !st.player || st.gameOver) return false;
+        if (st.flags && st.flags._d835SocialCapitalDone) return false;
+        if (!st.relationships) return false;
+        var _met = 0;
+        for (var k in st.relationships) {
+          if (st.relationships[k] && st.relationships[k].met) _met++;
+        }
+        return _met >= 10 && st.player.day >= 200;
+      },
+      probability: 0.05,
+      repeatable: false,
+      choices: [
+        {
+          text: "📊 量化社交资本价值",
+          hint: "心智+24, 社交XP+28, 置_d835SocialCapital",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._d835SocialCapitalDone = true;
+            st.flags._d835SocialCapital = true;
+            var _met = 0, _highAff = 0;
+            for (var k in st.relationships) {
+              var r = st.relationships[k];
+              if (r && r.met) { _met++; if ((r.affinity || 0) >= 60) _highAff++; }
+            }
+            st.flags._d835SocialNetworkSize = _met;
+            st.flags._d835HighAffinityCount = _highAff;
+            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 24);
+            grantXp("social", 28);
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("📊 社交资本量化完成——认识" + _met + "人,深交" + _highAff + "人。心智+24, 社交XP+28。", "success");
+            }
+          }
+        },
+        {
+          text: "😊 朋友不是用来算的",
+          hint: "心情+10",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._d835SocialCapitalDone = true;
+            if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 10);
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("😊 朋友不是用来算的。心情+10。", "info");
+            }
+          }
+        }
+      ]
+    },
+    {
+      id: "d835_invest_tip_v7",
+      phase: "street",
+      icon: "💬",
+      title: "朋友一句话，投资新思路",
+      story: "你和一个老友聊天时，他无意中提起最近某个行业很火。说者无心，听者有意——也许这就是你一直在等的投资线索。",
+      conditions: function (st) {
+        if (!st || !st.player || st.gameOver) return false;
+        if (st.flags && st.flags._d835InvestTipDone) return false;
+        if (!st.relationships) return false;
+        var _met = 0;
+        for (var k in st.relationships) {
+          if (st.relationships[k] && st.relationships[k].met) _met++;
+        }
+        return _met >= 6 && st.player.day >= 220;
+      },
+      probability: 0.06,
+      repeatable: false,
+      choices: [
+        {
+          text: "💬 认真记下这个线索",
+          hint: "智力+22, 会计XP+22, 置_d835InvestTip",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._d835InvestTipDone = true;
+            st.flags._d835InvestTip = true;
+            if (st.player) st.player.intelligence = Math.min(100, (st.player.intelligence || 50) + 22);
+            grantXp("accounting", 22);
+            st.flags._d835InvestmentHint = true;
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("💬 你认真记下了朋友的投资线索——智力+22, 会计XP+22。", "success");
+            }
+          }
+        },
+        {
+          text: "😅 听过就算了",
+          hint: "心智+3",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._d835InvestTipDone = true;
+            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 3);
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("😅 听过就算了。心智+3。", "info");
+            }
+          }
+        }
+      ]
+    },
+    {
+      id: "d835_social_health_v7",
+      phase: "street",
+      icon: "🎉",
+      title: "好友聚会，治愈身心",
+      story: "你最近太累了。一个老朋友打来电话，约你周末聚聚。你犹豫了一下——手上的工作还没做完，但身体确实需要休息了。",
+      conditions: function (st) {
+        if (!st || !st.player || st.gameOver) return false;
+        if (st.flags && st.flags._d835SocialHealthDone) return false;
+        if (!st.relationships || !st.needs) return false;
+        var _fatigue = st.needs.fatigue || 0;
+        var _happiness = st.needs.happiness || 50;
+        return _fatigue >= 55 && _happiness <= 35 && st.player.day >= 120;
+      },
+      probability: 0.07,
+      repeatable: false,
+      choices: [
+        {
+          text: "🎉 赴约，好好放松一下",
+          hint: "疲劳-22, 心情+20, 健康+10, 置_d835SocialHealed",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._d835SocialHealthDone = true;
+            st.flags._d835SocialHealed = true;
+            if (st.needs) {
+              st.needs.fatigue = Math.max(0, (st.needs.fatigue || 0) - 22);
+              st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 20);
+            }
+            if (st.status) st.status.health = Math.min(100, (st.status.health || 50) + 10);
+            var nid = pickMetNpc(st);
+            if (nid) safeAffinity(st, nid, 3, "聚会放松");
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("🎉 聚会很愉快——疲劳-22, 心情+20, 健康+10。", "success");
+            }
+          }
+        },
+        {
+          text: "😅 下次吧，工作还没做完",
+          hint: "疲劳+5, 心情-5, 置_d835SocialSkip",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._d835SocialHealthDone = true;
+            st.flags._d835SocialSkip = true;
+            if (st.needs) {
+              st.needs.fatigue = Math.min(100, (st.needs.fatigue || 0) + 5);
+              st.needs.happiness = Math.max(0, (st.needs.happiness || 50) - 5);
+            }
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("😅 下次吧。工作永远做不完，但身体会累垮。", "warning");
+            }
+          }
+        }
+      ]
+    }
+  ];
+
+  for (var i = 0; i < EVENTS.length; i++) {
+    var exists = false;
+    for (var j = 0; j < RANDOM_EVENTS.length; j++) {
+      if (RANDOM_EVENTS[j] && RANDOM_EVENTS[j].id === EVENTS[i].id) { exists = true; break; }
+    }
+    if (!exists) RANDOM_EVENTS.push(EVENTS[i]);
+  }
+})();
+;
 // ==== js/core/domain_d_linkage_r836.js ====
 /**
  * 域D(NPC/社交) 联动增强 R836 (第十六轮循环)
@@ -371695,6 +372132,252 @@ if (typeof window !== "undefined") {
             if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 8);
             if (typeof StateManager !== "undefined") {
               StateManager.addMessage("😊 先让朋友别欠人情——社交XP+10, 心智+8。", "info");
+            }
+          }
+        }
+      ]
+    }
+  ];
+
+  for (var i = 0; i < EVENTS.length; i++) { RANDOM_EVENTS.push(EVENTS[i]); }
+})();
+
+;
+// ==== js/core/domain_a_linkage_r878.js ====
+/*
+ * 城市浮生记 — 域A(数据/数值平衡) 联动增强 R878
+ * 全系统优化·Domain A 第六十六轮循环
+ *
+ * 【联动增强3项 — A→D 方向(仅4次,历轮最薄弱)】
+ *   1. A→D 价格波动影响NPC关系v1 — 市场波动导致NPC关系变化
+ *   2. A→D 职业数据影响社交地位v1 — 职业数据影响NPC对玩家态度
+ *   3. A→D 健康数据影响社交互动v1 — 健康数据影响NPC互动意愿
+ *
+ * 设计约束（与历轮 IIFE linkage 文件一致）：
+ *  - IIFE 注入全局 RANDOM_EVENTS,避免改动 cross_system_events.js。
+ *  - 所有 state 访问均 || 防御；数值标 [PLACEHOLDER]。
+ *  - 严格遵守域D铁律：NPC引用须 rel && rel.met；好感传导走 applyAffinityChange。
+ *  - A→D 核心设计理念：数据不应只是后台数值,
+ *    应影响NPC对玩家的态度——社会比较+禀赋效应。
+ */
+(function () {
+  "use strict";
+  if (typeof RANDOM_EVENTS === "undefined" || !RANDOM_EVENTS) return;
+  if (RANDOM_EVENTS._domainALinkageR878Loaded) return;
+  RANDOM_EVENTS._domainALinkageR878Loaded = true;
+
+  // ---- 本地助手 ----
+  function grantXp(key, amt) {
+    if (typeof addSkillXp === "function") { try { addSkillXp(key, amt); } catch(e) {} }
+  }
+
+  var EVENTS = [
+    // ========================================================================
+    // 联动增强1: A→D 价格波动影响NPC关系v1
+    // 设计意图：市场大幅波动时,NPC对玩家的态度发生变化——
+    //    社会比较(有人羡慕有人同情)+禀赋效应(拥有感)。
+    // 触发：市场价格波动≥20% + ≥2个已结识NPC
+    // 心理学：社会比较(有人羡慕有人同情)+峰终定律(极端价格时刻的记忆)
+    // ========================================================================
+    {
+      id: "a878_price_npc_reaction_v1",
+      phase: "street",
+      icon: "📈",
+      title: "市场波动,朋友们怎么看",
+      story: "最近市场价格波动剧烈——有人赚得盆满钵满,有人亏得血本无归。\n\n朋友们对这件事的反应各不相同：有人羡慕,有人担忧,还有人想跟着你一起投。",
+      triggers: { minDay: 80, interval: 200, maxRepeats: 1, excludeFlags: ["_a878PriceNpcCd"] },
+      conditions: function (st) {
+        if (!st || !st.player || st.gameOver) return false;
+        if (st.flags && st.flags._a878PriceNpcCd) return false;
+        // 需有至少2个已结识NPC
+        if (!st.relationships) return false;
+        var _metCount = 0;
+        for (var _id in st.relationships) {
+          var _r = st.relationships[_id];
+          if (_r && _r.met) _metCount++;
+        }
+        return _metCount >= 2;
+      },
+      probability: 0.05,
+      repeatable: false,
+      choices: [
+        {
+          text: "📈 分享经验,大家一起赚",
+          hint: "社交XP+18, 所有已结识NPC好感+4, 置_a878Share",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._a878PriceNpcCd = true;
+            st.flags._a878Share = true;
+            grantXp("social", 18);
+            if (st.relationships && typeof applyAffinityChange === "function") {
+              for (var _mid in st.relationships) {
+                var _mr = st.relationships[_mid];
+                if (_mr && _mr.met) applyAffinityChange(st, _mid, 4, "分享市场经验");
+              }
+            }
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("📈 分享经验,大家一起赚——社交XP+18, 所有朋友好感+4。", "success");
+            }
+          }
+        },
+        {
+          text: "😅 低调,不张扬",
+          hint: "心智+10, 置_a878LowKey",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._a878PriceNpcCd = true;
+            st.flags._a878LowKey = true;
+            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 10);
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("😅 低调,不张扬——心智+10。", "info");
+            }
+          }
+        }
+      ]
+    },
+
+    // ========================================================================
+    // 联动增强2: A→D 职业数据影响社交地位v1
+    // 设计意图：职业数据(薪资/职级)影响NPC对玩家的态度——
+    //    社会比较+禀赋效应。
+    // 触发：在职≥180天 + ≥2个已结识NPC
+    // 心理学：社会比较(职业成就被认可)+禀赋效应(拥有感)
+    // ========================================================================
+    {
+      id: "a878_career_social_status_v1",
+      phase: "street",
+      icon: "💼",
+      title: "职业成就,朋友们看在眼里",
+      story: "你在职场的表现已经引起了朋友们的注意——升职加薪,职业成就让他们对你刮目相看。",
+      triggers: { minDay: 120, interval: 240, maxRepeats: 1, excludeFlags: ["_a878CareerNpcCd"] },
+      conditions: function (st) {
+        if (!st || !st.player || st.gameOver) return false;
+        if (st.flags && st.flags._a878CareerNpcCd) return false;
+        // 需有固定工作且在职≥180天
+        if (!st.career || !st.career.currentJob) return false;
+        if ((st.career.currentJob.workDays || 0) < 180) return false;
+        // 需有至少2个已结识NPC
+        if (!st.relationships) return false;
+        var _metCount = 0;
+        for (var _id in st.relationships) {
+          var _r = st.relationships[_id];
+          if (_r && _r.met) _metCount++;
+        }
+        return _metCount >= 2;
+      },
+      probability: 0.04,
+      repeatable: false,
+      choices: [
+        {
+          text: "💼 谦虚,继续努力",
+          hint: "社交XP+15, 心智+10, 所有已结识NPC好感+5, 置_a878Humble",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._a878CareerNpcCd = true;
+            st.flags._a878Humble = true;
+            grantXp("social", 15);
+            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 10);
+            if (st.relationships && typeof applyAffinityChange === "function") {
+              for (var _mid in st.relationships) {
+                var _mr = st.relationships[_mid];
+                if (_mr && _mr.met) applyAffinityChange(st, _mid, 5, "职业成就");
+              }
+            }
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("💼 谦虚,继续努力——社交XP+15, 心智+10, 所有朋友好感+5。", "success");
+            }
+          }
+        },
+        {
+          text: "😅 成就还小,不算什么",
+          hint: "智力+12, 置_a878Understate",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._a878CareerNpcCd = true;
+            st.flags._a878Understate = true;
+            if (st.player) st.player.intelligence = Math.min(100, (st.player.intelligence || 50) + 12);
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("😅 成就还小,不算什么——智力+12。", "info");
+            }
+          }
+        }
+      ]
+    },
+
+    // ========================================================================
+    // 联动增强3: A→D 健康数据影响社交互动v1
+    // 设计意图：健康数据影响NPC与玩家的互动意愿——
+    //    社会支持(健康时朋友更愿互动)+损失厌恶(生病时朋友担忧)。
+    // 触发：健康<40或≥80 + ≥1个好感≥40的NPC
+    // 心理学：社会支持(健康时朋友更愿互动)+损失厌恶(生病时朋友担忧)
+    // ========================================================================
+    {
+      id: "a878_health_social_impact_v1",
+      phase: "street",
+      icon: "❤️",
+      title: "健康,影响了你的社交",
+      story: "最近身体不太好——朋友们看出来了,有的劝你休息,有的默默帮你分担。\n\n健康,也是社交的一部分。",
+      triggers: { minDay: 60, interval: 180, maxRepeats: 2, excludeFlags: ["_a878HealthNpcCd"] },
+      conditions: function (st) {
+        if (!st || !st.player || st.gameOver) return false;
+        if (st.flags && st.flags._a878HealthNpcCd) return false;
+        // 需健康显著异常(<40或≥80)
+        if (!st.status) return false;
+        var _health = st.status.health || 50;
+        if (_health >= 40 && _health < 80) return false;
+        // 需有至少1个好感≥40的已结识NPC
+        if (!st.relationships) return false;
+        var _hasCloseFriend = false;
+        for (var _id in st.relationships) {
+          var _r = st.relationships[_id];
+          if (_r && _r.met && (_r.affinity || 0) >= 40) { _hasCloseFriend = true; break; }
+        }
+        return _hasCloseFriend;
+      },
+      probability: 0.05,
+      repeatable: false,
+      choices: [
+        {
+          text: "❤️ 感谢朋友的关心",
+          hint: "社交XP+15, 朋友好感+8, 心情+10, 置_a878Thankful",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._a878HealthNpcCd = true;
+            st.flags._a878Thankful = true;
+            grantXp("social", 15);
+            // 找到最高好感NPC并提升
+            var _bestNpc = null, _bestAff = -1;
+            if (st.relationships) {
+              for (var _id in st.relationships) {
+                var _r = st.relationships[_id];
+                if (_r && _r.met && (_r.affinity || 0) > _bestAff) { _bestAff = _r.affinity || 0; _bestNpc = _id; }
+              }
+            }
+            if (_bestNpc && typeof applyAffinityChange === "function") {
+              applyAffinityChange(st, _bestNpc, 8, "健康关怀");
+            }
+            if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 10);
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("❤️ 感谢朋友的关心——社交XP+15, 朋友好感+8, 心情+10。", "success");
+            }
+          }
+        },
+        {
+          text: "😅 自己会注意,不让朋友担心",
+          hint: "心智+10, 置_a878SelfCare",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._a878HealthNpcCd = true;
+            st.flags._a878SelfCare = true;
+            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 10);
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("😅 自己会注意——心智+10。", "info");
             }
           }
         }
