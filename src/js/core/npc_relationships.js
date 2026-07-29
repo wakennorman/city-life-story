@@ -1271,3 +1271,35 @@ function getNpcGossipTrigger(state, eventId) {
   state.flags._npcGossipEvents[eventId] = true;
   return { type: "gossip", text: "街头巷尾都在议论最近发生的事..." };
 }
+
+// [R821 域D 联动增强 D→C]: NPC社交圈提供职业发展建议 — 高好感NPC推荐技能提升方向
+function getNpcCareerAdvice(state) {
+  if (!state || !state.relationships || !state.skills) return null;
+  var _bestSkill = null, _bestLevel = 999;
+  for (var _k in state.skills) {
+    var _s = state.skills[_k];
+    if (_s && typeof _s.level === "number" && _s.level < _bestLevel) {
+      _bestLevel = _s.level;
+      _bestSkill = _k;
+    }
+  }
+  if (!_bestSkill) return null;
+  var _totalAff = 0, _count = 0;
+  for (var _rk in state.relationships) {
+    var _r = state.relationships[_rk];
+    if (_r && _r.met) { _totalAff += _r.affinity || 0; _count++; }
+  }
+  if (_count < 2 || _totalAff / _count < 30) return null;
+  return { skill: _bestSkill, level: _bestLevel, advice: "朋友建议你提升" + _bestSkill + "技能，对未来的发展有帮助。" };
+}
+
+// [R821 域D 联动增强 D→G]: 社交活跃度影响心理健康 — 好友多提升心智恢复
+function getSocialMentalBonus(state) {
+  if (!state || !state.relationships) return 0;
+  var _closeFriends = 0;
+  for (var _k in state.relationships) {
+    var _r = state.relationships[_k];
+    if (_r && _r.met && (_r.affinity || 0) >= 60) _closeFriends++;
+  }
+  return Math.min(3, Math.floor(_closeFriends / 3));
+}
