@@ -5471,6 +5471,22 @@ if (typeof window !== "undefined") {
   // v3.11 跨系统联动暴露
   window.getCareerMedicalDiscount = getCareerMedicalDiscount;
   window.getCareerLegalDiscount = getCareerLegalDiscount;
+  window.getCareerPathProgress = getCareerPathProgress;
+  window.applyCareerHealthEffect = applyCareerHealthEffect;
+  window.getCareerTimelineData = getCareerTimelineData;
+  window.applyCareerPromotionSocialEffect = applyCareerPromotionSocialEffect;
+  window.getCareerSocialRespect = getCareerSocialRespect;
+  window.getCareerInvestmentLimit = getCareerInvestmentLimit;
+  window.getCareerBurnoutHealthImpact = getCareerBurnoutHealthImpact;
+  window.getCareerMarketInsight = getCareerMarketInsight;
+  window.getCareerStoryTrigger = getCareerStoryTrigger;
+  window.getCareerInvestReturn = getCareerInvestReturn;
+  window.getCareerPathVisualData = getCareerPathVisualData;
+  window.getCareerRequirementText = getCareerRequirementText;
+  window.tickCareerFiringRisk = tickCareerFiringRisk;
+  window.tickCareerHealthBonus = tickCareerHealthBonus;
+  window.getSkillHealthBonus = getSkillHealthBonus;
+  window.getSkillMarketPricingInsight = getSkillMarketPricingInsight;
   window.enhancedApplyCareerJob = enhancedApplyCareerJob;
   window.clampCareerCapital = clampCareerCapital;
   window.showCareerNavModal = showCareerNavModal;

@@ -1356,3 +1356,24 @@ function getSkillMarketIndex(skillId) {
   var demand = { coding: 90, management: 85, accounting: 80, sales: 75, english: 70, electrician: 65, welding: 60, driving: 55, repair: 50, cooking: 45, medicine: 80, social: 60 };
   return demand[skillId] || 50;
 }
+
+// [R872 域C A类#1]: 导出函数到window，解决函数从未被调用的问题
+if (typeof window !== "undefined") {
+  window.getAvailableBranches = getAvailableBranches;
+  window.getTalentNodeDef = getTalentNodeDef;
+  window.canChooseBranch = canChooseBranch;
+  window.switchSkillBranch = switchSkillBranch;
+  window.canActivateTalentNode = canActivateTalentNode;
+  window.getJobBurnout = getJobBurnout;
+  window.getSkillInvestmentBonus = getSkillInvestmentBonus;
+  window.getSkillTreeVisualData = getSkillTreeVisualData;
+  window.getSkillMarketIndex = getSkillMarketIndex;
+  window.getBranchJobBonus = getBranchJobBonus;
+  window.getTalentNodeEffects = getTalentNodeEffects;
+  window.getSkillBranchLabel = getSkillBranchLabel;
+  window.getUnlockedTalentNodes = getUnlockedTalentNodes;
+  window.getSkillChineseName = getSkillChineseName;
+  window.getBranchCorpPromotionModifier = getBranchCorpPromotionModifier;
+  window.chooseSkillBranch = chooseSkillBranch;
+  window.activateTalentNode = activateTalentNode;
+}
