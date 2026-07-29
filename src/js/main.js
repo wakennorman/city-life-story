@@ -5305,7 +5305,17 @@ function addSkillXp(skillKey, amount) {
     if (skillKey === "management" || skillKey === "accounting" || skillKey === "sales") _ageSkillMult = 1.20;
     else if (_physicalSkills.indexOf(skillKey) !== -1) _ageSkillMult = 0.80;
   }
-  skill.xp += Math.round(amount * _talentMult * (1 + _certXpBonus) * _ageSkillMult);
+  // [全系统自洽修复] 域A R770b 修复: HOUSING_TIERS tier5/6 effects.skillStudyBonus(别墅+10%/豪宅+20%书房学习加成)全库零应用器,¥50000/¥200000高价住房承诺静默失效→单点接线
+  var _housingStudyMult = 1.0;
+  try {
+    if (typeof getCurrentHousing === "function") {
+      var _house = getCurrentHousing(state);
+      if (_house && _house.effects && typeof _house.effects.skillStudyBonus === "number" && isFinite(_house.effects.skillStudyBonus)) {
+        _housingStudyMult = 1 + Math.max(0, Math.min(0.5, _house.effects.skillStudyBonus));
+      }
+    }
+  } catch (e) {}
+  skill.xp += Math.round(amount * _talentMult * (1 + _certXpBonus) * _ageSkillMult * _housingStudyMult);
   // v3.1 审查改进：XP 需求从线性改为指数，level 0=120 → level 50≈10,000（之前 6,120）
   // 让玩家在高级别感受更有意义的成长压力，同时保留早期快速升级的爽快感
   var xpNeeded = Math.floor(

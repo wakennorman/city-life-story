@@ -122,9 +122,12 @@
       if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 6);
       // 略微增加倦怠恢复速度作为奖励
       if (st.careerCapital) st.careerCapital._preventionBonus = (st.careerCapital._preventionBonus || 0) + 1;
-      if (typeof addSkillXp === "function") addSkillXp("health", 3);
+      // [全系统自洽修复] 域A R770b 修复: addSkillXp("health") 假技能键(真实12键无health,XP静默丢弃)→改写真实健康字段 st.status.health(同R621/R631假键修复先例)
+      if (st.status && typeof st.status.health === "number") {
+        st.status.health = Math.min(100, st.status.health + 3);
+      }
       if (typeof StateManager !== "undefined" && StateManager.addMessage) {
-        StateManager.addMessage("🛡️ 预防策略！心情+8，心智+6，健康XP+3。你掌握了职业倦怠的预防方法。", "success");
+        StateManager.addMessage("🛡️ 预防策略！心情+8，心智+6，健康+3。你掌握了职业倦怠的预防方法。", "success");
       }
     },
     choices: [],
