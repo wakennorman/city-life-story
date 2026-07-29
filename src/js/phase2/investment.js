@@ -1662,6 +1662,7 @@ function tickInvestmentDaily(state) {
 }
 
 function checkInvestmentMilestones(state, inv) {
+  if (!state.flags) state.flags = {};
   // 计算总持仓市值
   var totalValue = 0;
   var holdings = inv.stockHoldings || [];
@@ -1761,9 +1762,37 @@ function checkInvestmentMilestones(state, inv) {
       var _riskRating = _diversity >= 3 ? 'low' : (_diversity >= 2 ? 'medium' : 'high');
       state.flags._portfolioRiskRating = _riskRating;
     }
+
+    // [R798 域E E→G 联动增强]: 投资组合价值超过阈值提供健康加成
+    try {
+      if (state.flags && state.status) {
+        if (totalValue >= 500000 && !state.flags._investHealthBonus500k) {
+          state.flags._investHealthBonus500k = true;
+          state.status.health = Math.min(100, (state.status.health || 100) + 3);
+          if (typeof StateManager !== "undefined") {
+            StateManager.addMessage("💚 财务自由带来的安全感让你的身心健康都得到了提升。健康+3。", "success");
+          }
+        }
+      }
+    } catch (e) { /* 静默 */ }
+
+    // [R798 域E E→D 联动增强]: 投资盈利触发NPC社交圈反应
+    try {
+      if (state.flags && state.relationships && state.player) {
+        var _totalInvProfit = inv._totalInvestmentProfit || 0;
+        if (_totalInvProfit >= 10000 && !state.flags._investSocialPerception10k) {
+          state.flags._investSocialPerception10k = true;
+          if (typeof StateManager !== "undefined") {
+            StateManager.addMessage("💬 你的投资眼光在朋友圈里传开了，熟人开始向你请教理财建议。", "info");
+          }
+        }
+      }
+    } catch (e) { /* 静默 */ }
   }
 
 function buyInvStock(symbol, shares) {
+  const state = StateManager.getState();
+  if (!state.flags) state.flags = {};
   // 根据资产类别区分交易规则
   // 股票（A股）：最小交易单位1股，强制整股
   // 虚拟币/贵金属/期货/基金：支持小数交易
@@ -1869,6 +1898,8 @@ function buyInvStock(symbol, shares) {
 }
 
 function sellInvStock(symbol, shares) {
+  const state = StateManager.getState();
+  if (!state.flags) state.flags = {};
   // 根据资产类别区分交易规则
   // 股票（A股）：最小交易单位1股，强制整股
   // 虚拟币/贵金属/期货/基金：支持小数交易
@@ -5022,6 +5053,7 @@ function renderCars(area, inv, state, parent) {
 // [全系统自洽修复] 域E R389 联动增强(E→C): 投资组合职业信心—投资成功提升职业绩效
 function applyInvestmentCareerBoost(state) {
   if (!state || !state.investment || !state.career || !state.career.currentJob) return;
+  if (!state.flags) state.flags = {};
   var inv = state.investment;
   var totalProfit = inv._totalInvestmentProfit || 0;
   if (totalProfit >= 50000 && !state.flags._investCareerBoostActive) {
