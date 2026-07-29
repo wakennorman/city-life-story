@@ -876,17 +876,18 @@ function showSaveMenu() {
   // 获取自动存档信息
   const autoInfo = getSlotInfo("_auto");
   let autoLine = "";
-  if (autoInfo) {
+  if (autoInfo && autoInfo.savedAt) {
     const d = new Date(autoInfo.savedAt);
-    autoLine =
-      '<div style="padding:8px 12px;margin-bottom:8px;background:rgba(39,174,96,0.06);border:1px solid rgba(39,174,96,0.2);border-radius:6px;font-size:12px;color:var(--text-secondary);display:flex;justify-content:space-between;align-items:center;">' +
-      "<span>📅 上次自动存档</span>" +
-      '<span style="color:#27ae60;">第<strong>' +
-      autoInfo.day +
-      "</strong>天 · " +
-      d.toLocaleString("zh-CN") +
-      "</span>" +
-      "</div>";
+    if (d instanceof Date && !isNaN(d.getTime())) {
+      autoLine = '<div style="padding:8px 12px;margin-bottom:8px;background:rgba(39,174,96,0.06);border:1px solid rgba(39,174,96,0.2);border-radius:6px;font-size:12px;color:var(--text-secondary);display:flex;justify-content:space-between;align-items:center;">' +
+        "<span>📅 上次自动存档</span>" +
+        '<span style="color:#27ae60;">第<strong>' +
+        autoInfo.day +
+        "</strong>天 · " +
+        d.toLocaleString("zh-CN") +
+        "</span>" +
+        "</div>";
+    }
   }
 
   // 存储空间状态

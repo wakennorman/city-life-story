@@ -6591,6 +6591,27 @@ function renderPgGoals(state, content, pg) {
       html += '<div style="margin-top:16px;"><h3>💰 投资组合</h3>';
       html += '<div class="card" style="padding:12px;font-size:12px;">';
       html += '<p>📊 总市值：<strong style="color:var(--success);">¥' + _invTotal.toLocaleString() + '</strong></p>';
+	      // [R792 域F F→E 联动增强]: 今日投资盈亏
+	      try {
+	        var _dailyPnl = 0;
+	        var _smPL = _inv.stockMarket || {};
+	        for (var _piPL = 0; _piPL < _inv.stockHoldings.length; _piPL++) {
+	          var _hPL = _inv.stockHoldings[_piPL];
+	          var _mPL = _smPL[_hPL.symbol];
+	          if (_mPL && _mPL.history && _mPL.history.length >= 2 && _hPL.shares) {
+	            var _lastPL = _mPL.history[_mPL.history.length - 1];
+	            var _prevPL = _mPL.history[_mPL.history.length - 2];
+	            if (_prevPL && _prevPL.price > 0) {
+	              _dailyPnl += (_lastPL.price - _prevPL.price) * _hPL.shares;
+	            }
+	          }
+	        }
+	        if (_dailyPnl !== 0) {
+	          var _pnlColor = _dailyPnl > 0 ? 'var(--success)' : 'var(--danger)';
+	          var _pnlSign = _dailyPnl > 0 ? '+' : '';
+	          html += '<p style="font-size:11px;color:' + _pnlColor + ';">📊 今日盈亏：' + _pnlSign + '¥' + Math.round(_dailyPnl).toLocaleString() + '</p>';
+	        }
+	      } catch (e) {}
       if (_stockCount > 0) html += '<p>📈 股票持仓：' + _stockCount + '支</p>';
       if (_propCount > 0) html += '<p>🏠 房产：' + _propCount + '套</p>';
       if (_btcAmt > 0) html += '<p>₿ BTC：' + _btcAmt.toFixed(4) + '</p>';

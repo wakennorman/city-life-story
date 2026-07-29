@@ -528,6 +528,32 @@ function renderSidebar(state) {
       if (_existingWarn) _existingWarn.remove();
     }
   } catch (e) {}
+  // [R792 域F F→G 联动增强]: 健康趋势指示器
+  try {
+    if (state.status && state.flags) {
+      var _healthToday = state.status.health || 100;
+      var _healthYesterday = state.flags._lastHealthDay || 0;
+      if (_healthYesterday > 0 && _healthToday !== _healthYesterday) {
+        var _trendEl = document.getElementById("sidebar-health-trend");
+        if (!_trendEl) {
+          var _sidebarHT = document.getElementById("sidebar");
+          if (_sidebarHT) {
+            _trendEl = document.createElement("div");
+            _trendEl.id = "sidebar-health-trend";
+            _trendEl.style.cssText = "font-size:10px;padding:2px 12px;border-top:1px solid var(--border);";
+            _sidebarHT.appendChild(_trendEl);
+          }
+        }
+        if (_trendEl) {
+          var _diff = _healthToday - _healthYesterday;
+          var _trendIcon = _diff > 0 ? "↑" : "↓";
+          var _trendColor = _diff > 0 ? "var(--success)" : "var(--danger)";
+          _trendEl.innerHTML = '❤️ 健康趋势: <span style="color:' + _trendColor + ';">' + _trendIcon + ' ' + Math.abs(_diff) + '</span>';
+        }
+      }
+      state.flags._lastHealthDay = _healthToday;
+    }
+  } catch (e) {}
   // 人生目标已移到内容区时间槽下方（renderCurrentTab 中渲染）
   // renderDreamSection(state);
   // 今日重点已整合到行动页的"今日智能建议"中
