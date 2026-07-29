@@ -402,3 +402,28 @@ function applyWealthBasedOverhead(state) {
 // [R495] 域G
 // [R543] 域G
 // [R591] 域G
+
+
+// [R728 第三轮 域G 联动增强 G→E]: 需求状态影响消费决策
+function getNeedsDrivenSpending(state) {
+  if (!state || !state.needs) return 0;
+  var n = state.needs;
+  var urgency = 0;
+  if (n.hunger < 20) urgency += 3;
+  else if (n.hunger < 40) urgency += 1;
+  if (n.hygiene < 20) urgency += 2;
+  else if (n.hygiene < 40) urgency += 1;
+  if (n.fatigue > 80) urgency += 2;
+  if (n.happiness < 20) urgency += 2;
+  return urgency;
+}
+
+// [R728 第三轮 域G 联动增强 G→D]: 需求状态社交提示
+function getNeedsSocialHint(state) {
+  if (!state || !state.needs) return null;
+  var n = state.needs;
+  if (n.hunger < 15) return { npc: 'aunt_wang', text: '你饿得肚子咕咕叫，想去王大婶那里找点吃的。' };
+  if (n.hygiene < 15) return { npc: 'sister_zhang', text: '你身上有味道了，张姐皱着眉走开。' };
+  if (n.happiness < 20) return { npc: 'xiao_mei', text: '你心情低落，想找小美聊聊天。' };
+  return null;
+}
