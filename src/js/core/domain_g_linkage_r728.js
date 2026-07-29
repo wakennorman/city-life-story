@@ -1,9 +1,9 @@
 /**
- * 域G(核心机制/生命周期) 联动增强 R728 (第三轮循环)
+ * 域G(核心机制/生命周期) 联动增强 R728 (sensenova-exp 第三轮循环)
  * 桥接：
- *   G→A  g728_life_data_v3 人生数据v3 → 消费 全维度状态
- *   G→B  g728_life_chapter_v2 人生章节v2 → 消费 life_nodes+story_chapters
- *   G→D  g728_life_social_v2 人生社交v2 → 消费 年龄+关系
+ *   G→A  g728_health_lifespan 健康寿命追踪 → 消费 健康+年龄数据
+ *   G→D  g728_age_social_efficiency 年龄社交效率 → 消费 年龄+关系数据
+ *   G→C  g728_age_skill_curve 年龄技能效率 → 消费 年龄+技能数据
  */
 (function () {
   "use strict";
@@ -12,152 +12,181 @@
   RANDOM_EVENTS._domainGLinkageR728Loaded = true;
 
   var EVENTS = [
+    // ====== G→A 健康寿命追踪 ======
     {
-      id: "g728_life_data_v3", phase: "street", _isChainEvent: false, icon: "📊",
-      title: "人生数据报告",
-      story: "你的每一天都在积累数据——{desc}",
-      triggers: { minDay: 250, interval: 300, maxRepeats: 3, excludeFlags: ["_g728DataCd"] },
+      id: "g728_health_lifespan", phase: "street", _isChainEvent: false, icon: "❤️",
+      title: "健康寿命报告",
+      story: "你的身体会说话——{desc}",
+      triggers: { minDay: 365, interval: 365, maxRepeats: 5, excludeFlags: ["_g728HealthCd"] },
       conditions: function (st) {
         if (!st || st.gameOver) return false;
-        if (st.flags && st.flags._g728DataCd) return false;
-        return st.player && st.player.day >= 250 && st.status && st.needs;
+        if (st.flags && st.flags._g728HealthCd) return false;
+        return st.player && st.player.day >= 365 && st.status && st.needs;
       },
       choices: [
         {
-          text: "📈 分析人生数据", hint: "智力+7,心智+5,置_g728Analyst",
+          text: "📋 查看健康寿命评估", hint: "心智+10, 健康意识+1",
           apply: function (st) {
             if (!st) return;
             st.flags = st.flags || {};
-            st.flags._g728DataCd = true;
-            st.flags._g728Analyst = true;
+            var _age = st.player && st.player.age || 20;
+            var _health = (st.status && st.status.health) || 100;
+            var _happiness = (st.needs && st.needs.happiness) || 50;
+            // 记录健康寿命数据
+            if (!st.flags._healthLifespanRecords) st.flags._healthLifespanRecords = [];
+            st.flags._healthLifespanRecords.push({
+              age: _age, day: st.player && st.player.day || 0, health: _health, happiness: _happiness
+            });
+            if (st.flags._healthLifespanRecords.length > 20) st.flags._healthLifespanRecords.shift();
+            st.flags._g728HealthCd = true;
+            st.flags._g728HealthChecked = true;
+            // 根据健康水平给出反馈
+            var _msg = "❤️ 健康寿命评估（" + _age + "岁）：健康值" + _health + "，心情" + _happiness + "。";
+            if (_health >= 80) _msg += "身体状态良好，继续保持！";
+            else if (_health >= 50) _msg += "健康状况一般，需要多关注身体。";
+            else _msg += "健康亮红灯，请立即采取行动！";
             if (st.player) {
-              st.player.intelligence = Math.min(100, (st.player.intelligence || 50) + 7);
-              st.player.mental = Math.min(100, (st.player.mental || 50) + 5);
+              st.player.mental = Math.min(100, (st.player.mental || 50) + 10);
             }
             if (typeof StateManager !== "undefined") {
-              StateManager.addMessage("📊 '数据,是人生的刻度。' 智力+7,心智+5。", "success");
+              StateManager.addMessage(_msg, _health >= 80 ? "success" : _health >= 50 ? "info" : "danger");
             }
           }
         },
         {
-          text: "🎯 设定人生目标", hint: "心智+8,置_g728GoalSetter",
+          text: "💪 制定健康改善计划", hint: "心智+12, 体质+8, 置_g728HealthPlanner",
           apply: function (st) {
             if (!st) return;
             st.flags = st.flags || {};
-            st.flags._g728DataCd = true;
-            st.flags._g728GoalSetter = true;
-            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 8);
-            if (typeof StateManager !== "undefined") {
-              StateManager.addMessage("🎯 '有目标,人生才有方向。' 心智+8。", "info");
-            }
-          }
-        }
-      ],
-      text: function (st) {
-        if (!st) return null;
-        var days = st.player && st.player.day ? st.player.day : 0;
-        return "你已度过" + days + "天——'这些数据,就是你的人生。'";
-      }
-    },
-    {
-      id: "g728_life_chapter_v2", phase: "street", _isChainEvent: false, icon: "📖",
-      title: "人生章节",
-      story: "你的人生正在翻开新的篇章——{desc}",
-      triggers: { minDay: 200, interval: 250, maxRepeats: 3, excludeFlags: ["_g728ChapterCd"] },
-      conditions: function (st) {
-        if (!st || st.gameOver) return false;
-        if (st.flags && st.flags._g728ChapterCd) return false;
-        return st.player && st.player.day >= 200;
-      },
-      choices: [
-        {
-          text: "📜 回顾过往", hint: "心智+7,置_g728Reviewer",
-          apply: function (st) {
-            if (!st) return;
-            st.flags = st.flags || {};
-            st.flags._g728ChapterCd = true;
-            st.flags._g728Reviewer = true;
-            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 7);
-            if (typeof StateManager !== "undefined") {
-              StateManager.addMessage("📖 '回望来路,方知归处。' 心智+7。", "success");
-            }
-          }
-        },
-        {
-          text: "✍️ 书写新篇章", hint: "智力+6,魅力+4,置_g728Writer",
-          apply: function (st) {
-            if (!st) return;
-            st.flags = st.flags || {};
-            st.flags._g728ChapterCd = true;
-            st.flags._g728Writer = true;
+            st.flags._g728HealthCd = true;
+            st.flags._g728HealthPlanner = true;
             if (st.player) {
-              st.player.intelligence = Math.min(100, (st.player.intelligence || 50) + 6);
-              st.player.charm = Math.min(100, (st.player.charm || 50) + 4);
+              st.player.mental = Math.min(100, (st.player.mental || 50) + 12);
+              st.player.physique = Math.min(100, (st.player.physique || 50) + 8);
             }
             if (typeof StateManager !== "undefined") {
-              StateManager.addMessage("✍️ '人生如书,每一页都值得期待。' 智力+6,魅力+4。", "info");
+              StateManager.addMessage("💪 '健康是一生的投资。' 心智+12, 体质+8。", "success");
             }
           }
         }
-      ],
-      text: function (st) {
-        if (!st) return null;
-        var days = st.player && st.player.day ? st.player.day : 0;
-        var years = Math.floor(days / 365) + 1;
-        return "你已度过" + years + "年——'人生如书,每一章都值得回味。'";
-      }
+      ]
     },
+
+    // ====== G→D 年龄社交效率 ======
     {
-      id: "g728_life_social_v2", phase: "street", _isChainEvent: false, icon: "🎉",
-      title: "人生社交里程碑",
-      story: "在这个人生阶段,你的社交关系值得庆祝——{desc}",
-      triggers: { minDay: 180, interval: 220, maxRepeats: 3, excludeFlags: ["_g728SocialCd"] },
+      id: "g728_age_social_efficiency", phase: "street", _isChainEvent: false, icon: "👥",
+      title: "社交圈变迁",
+      story: "不同年纪，交朋友的方式也不一样——{desc}",
+      triggers: { minDay: 540, interval: 360, maxRepeats: 3, excludeFlags: ["_g728SocialCd"] },
       conditions: function (st) {
         if (!st || st.gameOver) return false;
         if (st.flags && st.flags._g728SocialCd) return false;
-        return st.player && st.player.day >= 180 && st.relationships;
+        return st.player && st.player.day >= 540 && st.relationships;
       },
       choices: [
         {
-          text: "🤝 庆祝友谊", hint: "心情+10,社交XP+8,置_g728Celebrator",
+          text: "🔄 重新审视社交圈", hint: "心智+8, 魅力+6, 置_g728SocialReflect",
           apply: function (st) {
             if (!st) return;
             st.flags = st.flags || {};
+            var _age = st.player && st.player.age || 20;
             st.flags._g728SocialCd = true;
-            st.flags._g728Celebrator = true;
-            if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 10);
-            if (typeof addSkillXp === "function") { try { addSkillXp("social", 8); } catch(e) {} }
+            st.flags._g728SocialReflect = true;
+            // 记录年龄社交效率标记（供D域消费）
+            if (_age < 25) {
+              st.flags._g728AgeSocialBonus = "young";
+            } else if (_age < 40) {
+              st.flags._g728AgeSocialBonus = "prime";
+            } else {
+              st.flags._g728AgeSocialBonus = "mature";
+            }
+            if (st.player) {
+              st.player.mental = Math.min(100, (st.player.mental || 50) + 8);
+              st.player.charm = Math.min(100, (st.player.charm || 50) + 6);
+            }
             if (typeof StateManager !== "undefined") {
-              StateManager.addMessage("🎉 '友谊,是人生最珍贵的财富。' 心情+10,社交XP+8。", "success");
+              var _stageMsg = _age < 25 ? "年轻时朋友多，真心少。" : _age < 40 ? "人到壮年，社交变为资源交换。" : "年纪渐长，留下的都是真朋友。";
+              StateManager.addMessage("👥 " + _stageMsg + " 心智+8, 魅力+6。", "info");
             }
           }
         },
         {
-          text: "💭 反思社交", hint: "心智+7,置_g728SocialThinker",
+          text: "🤝 主动拓展人脉", hint: "魅力+12, 名气+5, 置_g728Networker",
           apply: function (st) {
             if (!st) return;
             st.flags = st.flags || {};
             st.flags._g728SocialCd = true;
-            st.flags._g728SocialThinker = true;
-            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 7);
+            st.flags._g728Networker = true;
+            if (st.player) {
+              st.player.charm = Math.min(100, (st.player.charm || 50) + 12);
+              st.player.fame = Math.min(100, (st.player.fame || 0) + 5);
+            }
             if (typeof StateManager !== "undefined") {
-              StateManager.addMessage("💭 '反思,让关系更深刻。' 心智+7。", "info");
+              StateManager.addMessage("🤝 '人脉不是认识多少人，是多少人认可你。' 魅力+12, 名气+5。", "success");
             }
           }
         }
-      ],
-      text: function (st) {
-        if (!st) return null;
-        if (!st.relationships) return "社交关系,是人生的重要组成部分...";
-        var metCount = 0;
-        for (var k in st.relationships) {
-          if (st.relationships[k] && st.relationships[k].met) metCount++;
+      ]
+    },
+
+    // ====== G→C 年龄技能效率 ======
+    {
+      id: "g728_age_skill_curve", phase: "street", _isChainEvent: false, icon: "📈",
+      title: "技能成长曲线",
+      story: "不同年龄，学习效率大不相同——{desc}",
+      triggers: { minDay: 720, interval: 360, maxRepeats: 3, excludeFlags: ["_g728SkillCd"] },
+      conditions: function (st) {
+        if (!st || st.gameOver) return false;
+        if (st.flags && st.flags._g728SkillCd) return false;
+        return st.player && st.player.day >= 720 && st.skills;
+      },
+      choices: [
+        {
+          text: "📊 分析技能成长", hint: "智力+15, 心智+10, 置_g728SkillAnalyst",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            var _age = st.player && st.player.age || 20;
+            st.flags._g728SkillCd = true;
+            st.flags._g728SkillAnalyst = true;
+            // 记录年龄技能效率标记（供C域消费）
+            if (_age < 25) {
+              st.flags._g728AgeSkillBonus = "learning";
+            } else if (_age < 45) {
+              st.flags._g728AgeSkillBonus = "working";
+            } else {
+              st.flags._g728AgeSkillBonus = "teaching";
+            }
+            if (st.player) {
+              st.player.intelligence = Math.min(100, (st.player.intelligence || 50) + 15);
+              st.player.mental = Math.min(100, (st.player.mental || 50) + 10);
+            }
+            if (typeof StateManager !== "undefined") {
+              var _curveMsg = _age < 25 ? "年轻是学东西最快的年纪，别浪费。" : _age < 45 ? "壮年是把技能变现的黄金期。" : "经验是最好的老师，分享出去更有价值。";
+              StateManager.addMessage("📈 " + _curveMsg + " 智力+15, 心智+10。", "info");
+            }
+          }
+        },
+        {
+          text: "🎯 专注核心技能", hint: "智力+18, 专注+1, 置_g728SkillFocused",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._g728SkillCd = true;
+            st.flags._g728SkillFocused = true;
+            if (st.player) {
+              st.player.intelligence = Math.min(100, (st.player.intelligence || 50) + 18);
+            }
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("🎯 '一招鲜，吃遍天。' 智力+18。", "success");
+            }
+          }
         }
-        return "你有" + metCount + "位结识的朋友——'这些关系,值得庆祝。'";
-      }
+      ]
     }
   ];
 
+  // 注册事件
   for (var i = 0; i < EVENTS.length; i++) {
     RANDOM_EVENTS.push(EVENTS[i]);
   }
