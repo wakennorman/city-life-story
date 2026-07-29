@@ -597,6 +597,17 @@ function showEventModal(evt) {
     return;
   }
 
+  // [全系统自洽修复] 域F R826: 事件计数器 _eventCount 写入点。
+  // 此前 15+ 文件(r801/r827/r835/r843/r851 等)读 st.flags._eventCount 做记忆墙门槛，
+  // 但全库无写入方→恒 undefined→0→条件永假→死代码。本行是唯一的权威写入点。
+  (function () {
+    try {
+      var _s = StateManager.getState();
+      _s.flags = _s.flags || {};
+      _s.flags._eventCount = (_s.flags._eventCount || 0) + 1;
+    } catch (e) {}
+  })();
+
   var choicesArr = evt.choices;
 // [全系统自洽修复] 域B 联动增强: B→G 情绪状态影响事件选择 — 情绪低落时"消极"选项标记
   if (typeof choicesArr === "object" && choicesArr.length > 0) {
