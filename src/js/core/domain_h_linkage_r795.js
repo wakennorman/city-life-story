@@ -92,9 +92,11 @@
         if (!st || !st.player || st.gameOver) return false;
         if (st.flags && st.flags._h795LegendDone) return false;
         if (st.player.phase !== "corporate" || !st.startup || !st.startup.company) return false;
-        // B轮及以上
-        var _round = st.startup.company.fundingRound || "seed";
-        return (_round === "series_a" || _round === "series_b" || _round === "ipo");
+        // [全系统自洽修复] 域H R798b 修复:fundingRound(单数)全库不存在——真实字段是
+        // fundingRounds 数组(startup.js:552/1601)，轮次由 length 推导(startup.js:1742-1750:
+        // >=2 即 B 轮)。原条件 _round 恒为兜底 "seed" → 事件永不可达(死事件)。
+        var _rounds = st.startup.company.fundingRounds;
+        return Array.isArray(_rounds) && _rounds.length >= 2;
       },
       probability: 0.1,
       repeatable: false,

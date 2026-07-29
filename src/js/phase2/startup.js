@@ -6343,6 +6343,9 @@ function processIPOResult(state, approved) {
     company.valuation = Math.round(ipoValuation);
 
     startup.flags.exited = true;
+    // [全系统自洽修复] 域H R798b 修复:R795 补写 active=true 后三条退出路径(ipo/acquired/bankrupt)
+    // 均未复位 → 公司退出后仍有 24+ 个门控 st.startup.active 的联动事件持续触发"创业中"叙事。
+    startup.active = false;
     startup.flags.exitType = "ipo";
     startup.flags.exitDay = state.player.day;
     startup.flags.exitValue = Math.round(
@@ -6602,6 +6605,8 @@ function acceptAcquisition(state, offer) {
 
   // 执行收购
   startup.flags.exited = true;
+  // [全系统自洽修复] 域H R798b 修复:退出路径复位 active，防公司已被收购仍触发创业活跃事件。
+  startup.active = false;
   startup.flags.exitType = "acquired";
   startup.flags.exitDay = state.player.day;
   startup.flags.exitValue = offer.playerShareValue;
@@ -6653,6 +6658,8 @@ function bankrupt(state) {
   if (!company) return;
 
   startup.flags.exited = true;
+  // [全系统自洽修复] 域H R798b 修复:破产后复位 active，防"创业传奇/招聘扩张"类活跃事件在清算后触发。
+  startup.active = false;
   startup.flags.exitType = "bankrupt";
   startup.flags.exitDay = state.player.day;
   startup.flags.exitValue = 0;
