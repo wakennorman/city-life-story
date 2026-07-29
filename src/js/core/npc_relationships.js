@@ -1246,3 +1246,28 @@ function getNpcCareerReferral(state) {
   if (_bestAff >= 50) return { npcId: _bestNpc, level: "moderate", bonus: "熟人有合适机会会想到你" };
   return null;
 }
+
+// [R813 域D 联动增强 D→A]: NPC好感度影响交易价格 — 高好感NPC提供交易折扣
+function getNpcTradeDiscount(state) {
+  if (!state || !state.relationships) return 1.0;
+  var _totalAff = 0, _count = 0;
+  for (var _k in state.relationships) {
+    var _r = state.relationships[_k];
+    if (_r && _r.met) { _totalAff += _r.affinity || 0; _count++; }
+  }
+  if (_count === 0) return 1.0;
+  var _avg = _totalAff / _count;
+  if (_avg >= 70) return 0.92;
+  if (_avg >= 50) return 0.95;
+  if (_avg >= 30) return 0.98;
+  return 1.0;
+}
+
+// [R813 域D 联动增强 D→B]: NPC社交圈传播事件 — 事件发生后NPC会讨论
+function getNpcGossipTrigger(state, eventId) {
+  if (!state || !eventId || !state.flags) return null;
+  if (!state.flags._npcGossipEvents) state.flags._npcGossipEvents = {};
+  if (state.flags._npcGossipEvents[eventId]) return null;
+  state.flags._npcGossipEvents[eventId] = true;
+  return { type: "gossip", text: "街头巷尾都在议论最近发生的事..." };
+}
