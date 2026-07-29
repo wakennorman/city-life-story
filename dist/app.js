@@ -321522,6 +321522,194 @@ if (typeof window !== "undefined") {
   }
 })();
 ;
+// ==== js/core/domain_b_linkage_events_r785b.js ====
+/**
+ * 域B(事件/叙事) 联动增强 R785b（本窗口自动化轮，b后缀避让并行R784/R785小编号轮）
+ * 选题依据（域B写-only flag 首消费闭环，全库grep确认零读取）：
+ *   B→D  b785b_sharer_echo      分享者的回响 —— _b714Sharer(domain_b_linkage_r715.js:83
+ *        R715写入以来全库唯一写入、零读取)首消费：你在互助会分享的经历被人记住,回到你身上。
+ *        峰终定律:把玩家的叙事选择变成延迟的社交峰值回报。
+ *   B→D/G b785b_listener_return 倾听者的回礼 —— _b714Listener(domain_b_linkage_r715.js:96
+ *        写-only)首消费：曾被你倾听的人,在你心智低谷时回来支撑你。互惠原则+损失厌恶缓冲:
+ *        低心智期给玩家的不是惩罚而是早期善意的兑现。
+ *   B→A/E b785b_anonymous_karma 匿名善举的回声 —— _b722bAnonymousGiver(domain_b_linkage_r722b.js:77
+ *        写-only)首消费：匿名"感恩基金"辗转产生涟漪,以口碑与一笔小生意机会回到你身上。
+ *        禀赋效应:玩家自己花钱做的善举获得可感知的长尾回报,强化道德抉择的意义感。
+ * 防御：全部 || 守卫；NPC引用一律 rel && rel.met(域D铁律)；好感走 applyAffinityChange(四参)；
+ *       显名走 getNpcDisplayName 兜底；心智 st.player.mental；幸福 st.needs.happiness；
+ *       现金 st.resources.cash；口碑走 gainReputation(state,locKey,amount,reason) typeof守卫。
+ */
+(function () {
+  "use strict";
+  if (typeof RANDOM_EVENTS === "undefined" || !RANDOM_EVENTS) return;
+  if (RANDOM_EVENTS._domainBLinkageR785bLoaded) return;
+  RANDOM_EVENTS._domainBLinkageR785bLoaded = true;
+
+  var ECHO_NPCS = ["aunt_wang", "old_zhou", "boss_li", "sister_zhang"]; // 自检修正: sister_hong非真实id(npcs.js无)→sister_zhang
+
+  function metEchoNpcs(st) {
+    var out = [];
+    if (!st || !st.relationships) return out;
+    for (var i = 0; i < ECHO_NPCS.length; i++) {
+      var rel = st.relationships[ECHO_NPCS[i]];
+      if (rel && rel.met) out.push(ECHO_NPCS[i]);
+    }
+    return out;
+  }
+
+  function npcName(nid) {
+    if (typeof getNpcDisplayName === "function") {
+      try { var n = getNpcDisplayName(nid); if (n) return n; } catch (e) {}
+    }
+    return "老熟人";
+  }
+
+  var EVENTS = [
+    // ============ 1. B→D 分享者的回响（_b714Sharer 首消费, street） ============
+    {
+      id: "b785b_sharer_echo", phase: "street", _isChainEvent: false, icon: "🗣️",
+      title: "分享者的回响",
+      story: "街角有人叫住你：'你就是那次互助会上分享经历的人吧？你那番话,我记到现在。'",
+      triggers: { minDay: 60, maxRepeats: 1, excludeFlags: ["_b785bSharerEcho"] },
+      conditions: function (st) {
+        if (!st || st.gameOver) return false;
+        if (!st.flags || !st.flags._b714Sharer) return false; // R715分享过经历才有回响
+        if (st.flags._b785bSharerEcho) return false;
+        return metEchoNpcs(st).length > 0; // 铁律: 至少一位met的NPC在场牵线
+      },
+      choices: [
+        {
+          text: "🤝 停下来聊聊近况", hint: "旧识好感+6,心情+6",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._b785bSharerEcho = true;
+            var mets = metEchoNpcs(st);
+            for (var i = 0; i < mets.length && i < 2; i++) {
+              if (typeof applyAffinityChange === "function") {
+                try { applyAffinityChange(st, mets[i], 6, "分享者的回响·街头重逢"); } catch (e) {}
+              }
+            }
+            if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 6);
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("🗣️ 他说那次分享让他撑过了最难的日子。" + npcName(mets[0]) + "在旁边直点头。你忽然觉得,说出来的经历没有白说。旧识好感+6,心情+6。", "success");
+            }
+          }
+        },
+        {
+          text: "😳 摆摆手匆匆走开", hint: "心智+3(被记住本身就是安慰)",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._b785bSharerEcho = true;
+            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 3);
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("😳 你不太习惯被认出来,但走出老远,嘴角还是翘了起来。心智+3。", "info");
+            }
+          }
+        }
+      ]
+    },
+
+    // ============ 2. B→D/G 倾听者的回礼（_b714Listener 首消费, street） ============
+    {
+      id: "b785b_listener_return", phase: "street", _isChainEvent: false, icon: "👂",
+      title: "倾听者的回礼",
+      story: "最近你状态不太好。有人敲开你的门——是当初那个被你安静听完整个故事的人,手里拎着一袋水果：'这次换我听你说。'",
+      triggers: { minDay: 60, maxRepeats: 1, excludeFlags: ["_b785bListenerReturn"] },
+      conditions: function (st) {
+        if (!st || st.gameOver) return false;
+        if (!st.flags || !st.flags._b714Listener) return false; // R715倾听过他人才有回礼
+        if (st.flags._b785bListenerReturn) return false;
+        if (!st.player || (st.player.mental || 50) >= 55) return false; // 心智低谷期触发,损失厌恶缓冲
+        return true;
+      },
+      choices: [
+        {
+          text: "🛋️ 把心里的事说出来", hint: "心智+8,心情+5",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._b785bListenerReturn = true;
+            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 8);
+            if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 5);
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("👂 你说了很久,他一直没打断——就像当年的你一样。原来倾听真的会传染。心智+8,心情+5。", "success");
+            }
+          }
+        },
+        {
+          text: "🍎 收下水果,只聊些轻松的", hint: "心智+4,饱食+5",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._b785bListenerReturn = true;
+            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 4);
+            if (st.needs) st.needs.hunger = Math.min(100, (st.needs.hunger || 50) + 5);
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("🍎 有些安慰不需要语言,一袋水果和半小时闲聊就够了。心智+4,饱食+5。", "info");
+            }
+          }
+        }
+      ]
+    },
+
+    // ============ 3. B→A/E 匿名善举的回声（_b722bAnonymousGiver 首消费, street） ============
+    {
+      id: "b785b_anonymous_karma", phase: "street", _isChainEvent: false, icon: "🌱",
+      title: "匿名善举的回声",
+      story: "社区公告栏贴出一张感谢信：'感谢那位匿名捐出感恩基金的好心人,这笔钱帮三个孩子交上了学费。'没人知道是你——但故事开始在街坊间流传。",
+      triggers: { minDay: 220, maxRepeats: 1, excludeFlags: ["_b785bAnonymousKarma"] },
+      conditions: function (st) {
+        if (!st || st.gameOver) return false;
+        if (!st.flags || !st.flags._b722bAnonymousGiver) return false; // R722b匿名捐过感恩基金
+        if (st.flags._b785bAnonymousKarma) return false;
+        return true;
+      },
+      choices: [
+        {
+          text: "🤫 继续保持匿名", hint: "道德+5,心智+6,社区口碑+8",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._b785bAnonymousKarma = true;
+            if (st.player) {
+              st.player.morality = Math.min(100, (st.player.morality || 50) + 5);
+              st.player.mental = Math.min(100, (st.player.mental || 50) + 6);
+            }
+            if (typeof gainReputation === "function") {
+              try { gainReputation(st, "community_center", 8, "匿名善举的回声"); } catch (e) {}
+            }
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("🌱 你路过公告栏,像个陌生人一样看完那封感谢信,然后笑着走开。有些满足感,只属于自己。道德+5,心智+6,社区口碑+8。", "success");
+            }
+          }
+        },
+        {
+          text: "💼 顺水推舟,接下街坊介绍的小生意", hint: "现金+800,社区口碑+4",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._b785bAnonymousKarma = true;
+            if (st.resources) st.resources.cash = (st.resources.cash || 0) + 800;
+            if (typeof gainReputation === "function") {
+              try { gainReputation(st, "community_center", 4, "善名带来的生意"); } catch (e) {}
+            }
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("💼 '听说这一片有位热心人……'街坊辗转把一单跑腿生意介绍给了你。善意兜兜转转,变成了饭碗。现金+800,社区口碑+4。", "success");
+            }
+          }
+        }
+      ]
+    }
+  ];
+
+  for (var i = 0; i < EVENTS.length; i++) {
+    RANDOM_EVENTS.push(EVENTS[i]);
+  }
+})();
+
+;
 // ==== js/core/domain_b_linkage_r526.js ====
 /**
  * 域B(事件/叙事) 联动增强 R526
@@ -351889,6 +352077,198 @@ if (typeof window !== "undefined") {
   }
 })();
 
+;
+// ==== js/core/domain_g_linkage_r786.js ====
+/**
+ * 域G(核心机制/生命周期) 联动增强 R786 (sensenova-exp 第三轮循环)
+ * 桥接：
+ *   G→H  g786_life_stage_corp 生命阶段公司协同 → 消费 年龄+公司数据
+ *   G→E  g786_life_wealth_milestone 人生财富里程碑 → 消费 年龄+资产数据
+ *   G→C  g786_age_skill_rebalance 年龄技能再平衡 → 消费 年龄+技能数据
+ */
+(function () {
+  "use strict";
+  if (typeof RANDOM_EVENTS === "undefined" || !RANDOM_EVENTS) return;
+  if (RANDOM_EVENTS._domainGLinkageR786Loaded) return;
+  RANDOM_EVENTS._domainGLinkageR786Loaded = true;
+
+  var EVENTS = [
+    // ====== G→H 生命阶段公司协同 ======
+    {
+      id: "g786_life_stage_corp", phase: "corporate", _isChainEvent: false, icon: "🏢",
+      title: "生命阶段与公司",
+      story: "不同年纪，做公司的思路也不一样——{desc}",
+      triggers: { minDay: 680, interval: 700, maxRepeats: 3, excludeFlags: ["_g786CorpCd"] },
+      conditions: function (st) {
+        if (!st || st.gameOver) return false;
+        if (st.flags && st.flags._g786CorpCd) return false;
+        return st.player && st.player.day >= 680 && st.startup && st.startup.active;
+      },
+      choices: [
+        {
+          text: "📊 评估年龄与公司匹配度", hint: "智力+12, 管理XP+15, 置_g786CorpMatcher",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._g786CorpCd = true;
+            st.flags._g786CorpMatcher = true;
+            var _age = st.player && st.player.age || 20;
+            // 记录生命阶段公司协同数据供H域消费
+            if (_age < 25) st.flags._g786LifeStageCorp = "youth"; // 年轻创业: 高风险高回报
+            else if (_age < 40) st.flags._g786LifeStageCorp = "prime"; // 壮年创业: 稳健扩张
+            else st.flags._g786LifeStageCorp = "mature"; // 中年创业: 经验优势
+            if (st.player) st.player.intelligence = Math.min(100, (st.player.intelligence || 50) + 12);
+            if (typeof addSkillXp === "function") { try { addSkillXp("management", 15); } catch(e) {} }
+            if (typeof StateManager !== "undefined") {
+              var _msg = _age < 25 ? "🏢 年轻就是资本，敢闯敢拼。" : _age < 40 ? "🏢 壮年创业，经验和精力兼备。" : "🏢 经验是最好的护城河。";
+              StateManager.addMessage(_msg + " 智力+12, 管理XP+15。", "info");
+            }
+          }
+        },
+        {
+          text: "🎯 制定年龄适配策略", hint: "心智+15, 管理XP+12, 置_g786CorpStrategist",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._g786CorpCd = true;
+            st.flags._g786CorpStrategist = true;
+            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 15);
+            if (typeof addSkillXp === "function") { try { addSkillXp("management", 12); } catch(e) {} }
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("🎯 '知天命，尽人事。' 心智+15, 管理XP+12。", "success");
+            }
+          }
+        }
+      ]
+    },
+
+    // ====== G→E 人生财富里程碑 ======
+    {
+      id: "g786_life_wealth_milestone", phase: "street", _isChainEvent: false, icon: "🏆",
+      title: "人生财富里程碑",
+      story: "人生过半，财富几何？——{desc}",
+      triggers: { minDay: 460, interval: 600, maxRepeats: 3, excludeFlags: ["_g786WealthCd"] },
+      conditions: function (st) {
+        if (!st || st.gameOver) return false;
+        if (st.flags && st.flags._g786WealthCd) return false;
+        return st.player && st.player.day >= 460 && st.resources;
+      },
+      choices: [
+        {
+          text: "💰 审视财富状况", hint: "智力+12, 心智+10, 置_g786WealthReviewer",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._g786WealthCd = true;
+            st.flags._g786WealthReviewer = true;
+            var _age = st.player && st.player.age || 20;
+            var _cash = (st.resources && st.resources.cash) || 0;
+            var _bank = (st.resources && st.resources.bankBalance) || 0;
+            var _totalAssets = _cash + _bank;
+            // 按年龄评估财富水平
+            var _wealthLevel = "low";
+            if (_age >= 40 && _totalAssets >= 500000) _wealthLevel = "high";
+            else if (_age >= 30 && _totalAssets >= 200000) _wealthLevel = "mid";
+            else if (_totalAssets >= 100000) _wealthLevel = "mid";
+            st.flags._g786WealthLevel = _wealthLevel;
+            st.flags._g786TotalAssets = _totalAssets;
+            if (st.player) {
+              st.player.intelligence = Math.min(100, (st.player.intelligence || 50) + 12);
+              st.player.mental = Math.min(100, (st.player.mental || 50) + 10);
+            }
+            if (typeof StateManager !== "undefined") {
+              var _msg = "💰 " + _age + "岁，总资产¥" + _totalAssets + "。";
+              if (_wealthLevel === "high") _msg += "财富自由可期！";
+              else if (_wealthLevel === "mid") _msg += "中产水平，继续努力。";
+              else _msg += "还需积累，加油！";
+              StateManager.addMessage(_msg + " 智力+12, 心智+10。", _wealthLevel === "high" ? "success" : _wealthLevel === "mid" ? "info" : "warning");
+            }
+          }
+        },
+        {
+          text: "🎯 设定财富目标", hint: "心智+15, 会计XP+10, 置_g786WealthGoalSetter",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._g786WealthCd = true;
+            st.flags._g786WealthGoalSetter = true;
+            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 15);
+            if (typeof addSkillXp === "function") { try { addSkillXp("accounting", 10); } catch(e) {} }
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("🎯 '有目标的人生，不会迷路。' 心智+15, 会计XP+10。", "success");
+            }
+          }
+        }
+      ]
+    },
+
+    // ====== G→C 年龄技能再平衡 ======
+    {
+      id: "g786_age_skill_rebalance", phase: "street", _isChainEvent: false, icon: "🔄",
+      title: "技能再平衡",
+      story: "年龄不是学习的障碍——{desc}",
+      triggers: { minDay: 580, interval: 600, maxRepeats: 3, excludeFlags: ["_g786SkillCd"] },
+      conditions: function (st) {
+        if (!st || st.gameOver) return false;
+        if (st.flags && st.flags._g786SkillCd) return false;
+        return st.player && st.player.day >= 580 && st.skills;
+      },
+      choices: [
+        {
+          text: "📊 评估技能结构", hint: "智力+15, 心智+8, 置_g786SkillEvaluator",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._g786SkillCd = true;
+            st.flags._g786SkillEvaluator = true;
+            var _age = st.player && st.player.age || 20;
+            // 统计技能分布
+            var _skillCount = 0, _totalLevel = 0, _maxLevel = 0;
+            if (st.skills) {
+              for (var _sk in st.skills) {
+                var _lv = st.skills[_sk] && st.skills[_sk].level || 0;
+                if (_lv > 0) { _skillCount++; _totalLevel += _lv; }
+                if (_lv > _maxLevel) _maxLevel = _lv;
+              }
+            }
+            var _avgLevel = _skillCount > 0 ? Math.round(_totalLevel / _skillCount) : 0;
+            st.flags._g786SkillCount = _skillCount;
+            st.flags._g786AvgSkillLevel = _avgLevel;
+            st.flags._g786MaxSkillLevel = _maxLevel;
+            // 按年龄给出技能策略建议
+            if (_age < 25) st.flags._g786SkillStrategy = "broad"; // 青年: 广撒网
+            else if (_age < 45) st.flags._g786SkillStrategy = "deep"; // 壮年: 深耕耘
+            else st.flags._g786SkillStrategy = "teach"; // 中年: 传帮带
+            if (st.player) {
+              st.player.intelligence = Math.min(100, (st.player.intelligence || 50) + 15);
+              st.player.mental = Math.min(100, (st.player.mental || 50) + 8);
+            }
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("📊 " + _skillCount + "项技能，平均" + _avgLevel + "级。最高" + _maxLevel + "级。智力+15, 心智+8。", "info");
+            }
+          }
+        },
+        {
+          text: "📚 学习新技能", hint: "智力+18, 置_g786SkillLearner",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._g786SkillCd = true;
+            st.flags._g786SkillLearner = true;
+            if (st.player) st.player.intelligence = Math.min(100, (st.player.intelligence || 50) + 18);
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("📚 '活到老，学到老。' 智力+18。", "success");
+            }
+          }
+        }
+      ]
+    }
+  ];
+
+  for (var i = 0; i < EVENTS.length; i++) {
+    RANDOM_EVENTS.push(EVENTS[i]);
+  }
+})();
 ;
 // ==== js/core/domain_g_linkage_r770.js ====
 /**
