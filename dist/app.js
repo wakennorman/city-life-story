@@ -168106,6 +168106,40 @@ function tickNpcRelationships(state) {
       }
     }
   } catch (e) {}
+
+  // [R817 域D D→H 联动增强]: 职场人脉推荐 — 高好感NPC在Phase2提供入职推荐
+  try {
+    if (state.player && state.player.phase === "corporate" && state.flags && state.relationships) {
+      var _highAffNpcs = 0;
+      for (var _hrId in state.relationships) {
+        var _hr = state.relationships[_hrId];
+        if (_hr && _hr.met && (_hr.affinity || 0) >= 70) _highAffNpcs++;
+      }
+      if (_highAffNpcs >= 2 && !state.flags._npcReferralNetwork) {
+        state.flags._npcReferralNetwork = true;
+        if (typeof StateManager !== "undefined") {
+          StateManager.addMessage("🤝 你在城市里积累的人脉开始发挥作用了，有" + _highAffNpcs + "位挚友在职场中为你说话。", "success");
+        }
+      }
+    }
+  } catch (e) {}
+
+  // [R817 域D D→B 联动增强]: NPC社交叙事 — 好友数量里程碑触发叙事
+  try {
+    if (state.relationships && state.flags) {
+      var _friendCount = 0;
+      for (var _fcId in state.relationships) {
+        var _fc = state.relationships[_fcId];
+        if (_fc && _fc.met && (_fc.affinity || 0) >= 60) _friendCount++;
+      }
+      if (_friendCount >= 5 && !state.flags._friendCircleNarrative) {
+        state.flags._friendCircleNarrative = true;
+        if (typeof StateManager !== "undefined") {
+          StateManager.addMessage("🎉 你已经有" + _friendCount + "位好友了！在这座城市里，你不再是孤身一人。", "success");
+        }
+      }
+    }
+  } catch (e) {}
 }
 
 /** [全系统自洽修复] 域D 修复:NPC id→中文名，替代 replace(/_/g," ") 展示的原始 id */
