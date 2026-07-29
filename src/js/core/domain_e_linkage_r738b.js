@@ -37,7 +37,7 @@
       if (rel && rel.met) ids.push(k);
     }
     if (ids.length === 0) return null;
-    return ids[Math.floor(Math.random() * ids.length)];
+    return ids[Random.int(0, ids.length - 1)];
   }
   // 安全读取30日市值曲线趋势：返回 {ok, firstV, lastV, ratio}
   function curveTrend(st) {
