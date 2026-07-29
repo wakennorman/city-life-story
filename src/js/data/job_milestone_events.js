@@ -144,8 +144,13 @@ var JOB_MILESTONE_EVENTS = {
               100,
               (state.player.mental || 10) + 3,
             );
+            // [全系统自洽修复] 域C R792b 修复:desc承诺"人脉+1"零兑现(选项文案写了人脉但apply无任何社交收益)→魅力+1+社交技能XP兑现带新人的人脉积累
+            state.player.charm = Math.min(100, (state.player.charm || 20) + 1);
+            if (typeof addSkillXp === "function") {
+              try { addSkillXp("social", 15); } catch (e) {}
+            }
             StateManager.addMessage(
-              "🧤 工地小头目！你开始带人，疲劳-10，精神+3。",
+              "🧤 工地小头目！你开始带人，疲劳-10，精神+3，魅力+1，社交经验+15。",
               "success",
             );
           },
@@ -567,8 +572,12 @@ var JOB_MILESTONE_EVENTS = {
               state.skills.management.xp =
                 (state.skills.management.xp || 0) + 80;
             }
+            // [全系统自洽修复] 域C R792b 修复:desc承诺"底薪¥5500+管理奖金"但apply无任何收入变化(拒绝支线反而+15%,选晋升纯亏)→站长岗收入永久+30%(高于拒绝支线15%,兑现"更高的位置")
+            state.flags._jobMultipliers = state.flags._jobMultipliers || {};
+            state.flags._jobMultipliers["delivery_rider"] =
+              (state.flags._jobMultipliers["delivery_rider"] || 1) * 1.3;
             StateManager.addMessage(
-              "🏆 骑手站长诞生！管理技能+80XP，走向物流管理路径！",
+              "🏆 骑手站长诞生！管理技能+80XP，站长岗收入永久+30%，走向物流管理路径！",
               "success",
             );
           },

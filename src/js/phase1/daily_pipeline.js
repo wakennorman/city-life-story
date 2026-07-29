@@ -2025,6 +2025,27 @@ const DAILY_PIPELINE = [
           }
         }
       }
+      // [全系统自洽修复] 域C R792b 修复:内容创作签约承诺零兑现——job_milestone t2"保底每月¥2000"只发首月一次(_contentPlatformSigned全库零读取)、t3"月薪¥6000"只发一次性买断(_mcnEmployee全库零读取)→月度兑现,条件:仍从事content_writing(离职即停,叙事自洽)
+      if (
+        state.player && state.player.job === "content_writing" &&
+        (state.flags._mcnEmployee || state.flags._contentPlatformSigned) &&
+        day % 30 === 0
+      ) {
+        var _cwPay = state.flags._mcnEmployee ? 6000 : 2000; // MCN月薪优先(买断后独家,保底不叠加)
+        if (isFinite(_cwPay) && _cwPay > 0) {
+          state.resources.cash = (state.resources.cash || 0) + _cwPay;
+          state.flags._contentSalaryTotal = (state.flags._contentSalaryTotal || 0) + _cwPay;
+          if (typeof StateManager !== "undefined") {
+            StateManager.addMessage(
+              (state.flags._mcnEmployee
+                ? "🏢 MCN月薪到账 ¥" + _cwPay.toLocaleString()
+                : "📱 平台保底分成到账 ¥" + _cwPay.toLocaleString()) +
+                "（累计 ¥" + state.flags._contentSalaryTotal.toLocaleString() + "）。",
+              "good",
+            );
+          }
+        }
+      }
       // [全系统自洽修复] 域E 修复:贷款逾期90天警告
       if (
         (state.resources.bankDebt || 0) > 0 &&
