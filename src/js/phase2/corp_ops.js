@@ -957,3 +957,23 @@ function getCorpStatusSummary(state) {
     lastPerf: _c.perfHistory && _c.perfHistory.length > 0 ? _c.perfHistory[_c.perfHistory.length - 1].grade : null,
   };
 }
+
+// [R817 域H 联动增强 H→G]: 公司职级影响健康管理 — 高管压力大但资源多
+function getCorpHealthMod(state) {
+  if (!state || !state.corporate) return { stress: 0, recovery: 0 };
+  var _rank = state.corporate.rank || "P5";
+  var _stress = _rank === "P9" || _rank === "P10" ? 2 : _rank === "P7" || _rank === "P8" ? 1 : 0;
+  var _recovery = _rank === "P9" || _rank === "P10" ? 3 : _rank === "P7" || _rank === "P8" ? 2 : 0;
+  return { stress: _stress, recovery: _recovery };
+}
+
+// [R817 域H 联动增强 H→D]: 职级影响社交圈质量 — 高管接触更高层社交圈
+function getCorpSocialLevel(state) {
+  if (!state || !state.corporate) return 0;
+  var _rank = state.corporate.rank || "P5";
+  if (_rank === "P10") return 5;
+  if (_rank === "P9") return 4;
+  if (_rank === "P8") return 3;
+  if (_rank === "P7") return 2;
+  return 1;
+}
