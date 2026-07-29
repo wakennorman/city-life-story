@@ -121,6 +121,33 @@ function doCorporateAction(actionId) {
   state.corporate.actionsUsed++;
   StateManager.addMessage(`${action.icon} ${action.name}完成！`, "success");
 
+  // [R815 域H H→A 联动增强]: 公司运营数据记录
+  try {
+    if (state.flags && state.corporate) {
+      if (!state.flags._corpOpsLog) state.flags._corpOpsLog = [];
+      state.flags._corpOpsLog.push({
+        day: state.player ? state.player.day : 0,
+        action: actionId,
+        cash: state.resources ? state.resources.cash : 0,
+      });
+      if (state.flags._corpOpsLog.length > 100) state.flags._corpOpsLog = state.flags._corpOpsLog.slice(-100);
+    }
+  } catch (e) {}
+
+  // [R815 域H H→G 联动增强]: 高强度工作累积疲劳
+  try {
+    if (action.effects && action.effects.fatigue && state.needs) {
+      if (!state.flags) state.flags = {};
+      if (!state.flags._corpFatigueTotal) state.flags._corpFatigueTotal = 0;
+      state.flags._corpFatigueTotal += action.effects.fatigue;
+      if (state.flags._corpFatigueTotal >= 50 && state.status) {
+        state.status.health = Math.max(0, (state.status.health || 100) - 2);
+        StateManager.addMessage("😷 长期高强度工作让你的身体发出了警报。健康-2。", "warning");
+        state.flags._corpFatigueTotal = 0;
+      }
+    }
+  } catch (e) {}
+
   // [全系统自洽修复] 域H 修复:办公室政治互动事件系统死机制接线 ——
   // triggerOfficePoliticsEvent/handlePoliticsChoice/applyPoliticsEffects + OFFICE_POLITICS_EVENTS(5事件)
   // 全库零调用方（office_politics 行动此前只走上方静态 effects，互动分支从未触发）。
