@@ -7016,3 +7016,21 @@ function getHealthTrendWarning(state) {
   if (_health < 70) return { level: "info", text: "💡 健康有所下降，建议关注身体状况。", color: "var(--info)" };
   return null;
 }
+
+// [R807 域F 联动增强 F→A]: 生成商品价格走势HTML片段
+function renderPriceTrendWidget(state, goodId) {
+  if (!state || !goodId || !state.flags || !state.flags._priceTrendData) return "";
+  var _data = state.flags._priceTrendData[goodId];
+  if (!_data) return "";
+  var _arrow = _data.direction === "up" ? "📈" : (_data.direction === "down" ? "📉" : "➡️");
+  var _color = _data.direction === "up" ? "var(--danger)" : (_data.direction === "down" ? "var(--success)" : "var(--text-muted)");
+  return '<span style="color:' + _color + ';font-size:11px;">' + _arrow + " " + Math.abs(_data.change).toFixed(1) + "%</span>";
+}
+
+// [R807 域F 联动增强 F→G]: 渲染生命阶段标签
+function renderLifeStageBadge(age) {
+  if (!age) return "";
+  var _stage = age < 18 ? "少年" : age < 25 ? "青年" : age < 35 ? "壮年" : age < 50 ? "中年" : age < 60 ? "中老年" : "老年";
+  var _colors = { "少年": "#4CAF50", "青年": "#2196F3", "壮年": "#FF9800", "中年": "#9C27B0", "中老年": "#607D8B", "老年": "#795548" };
+  return '<span style="font-size:10px;color:' + (_colors[_stage] || "#999") + ';border:1px solid ' + (_colors[_stage] || "#999") + ";border-radius:3px;padding:1px 4px;margin-left:4px;\">" + _stage + "</span>";
+}
