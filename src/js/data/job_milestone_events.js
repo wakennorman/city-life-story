@@ -22,6 +22,7 @@ var JOB_MILESTONE_EVENTS = {
           label: "谢谢大妈，以后常过来",
           desc: "建立关系，获得稳定情报，收入+10%",
           apply: function (state) {
+            if (!state.flags) state.flags = {};
             state.flags._wasteRecyclingNetwork = true;
             state.flags._jobMultipliers = state.flags._jobMultipliers || {};
             state.flags._jobMultipliers["waste_recycling"] =
