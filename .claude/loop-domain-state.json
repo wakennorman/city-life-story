@@ -5,5 +5,5 @@
   "lastCommit": "7114e9d7",
   "nextDirection": "DOMAIN_C",
   "note": "R785b 域B(本窗口自动化 12:0x-12:2x): 选域=git log实测本窗口深审recency B最陈旧(R722b后未深审);b后缀避让并行R784/R785/R786。A类1处: events_core.js:729 story兜底路径无占位符剥离——全库28个活事件(story含{xxx}且无text())正文原样泄漏{desc}类占位符给玩家(R722b只修tooltip/R455只修text()优先路径,兜底裸奔)→复用R722b同款正则单点剥离。C类1处: domain_a_linkage_r747.js为r750完全同版本冗余副本(v8/v5,仅id前缀异),挂载会双份出场→不挂载不删除仅记录。自纠1处: 新文件初稿sister_hong假NPC id(npcs.js无)→sister_zhang。净尽项: 假技能键活代码0/死字段黑名单0/无phase死事件扫描10命中全误报/新并行文件r77x-r784 phase+挂载完整。联动3(domain_b_linkage_events_r785b.js,3street,域B写-only flag首消费闭环): b785b_sharer_echo(B→D _b714Sharer R715以来零读取首消费·met铁律·峰终定律)/b785b_listener_return(B→D/G _b714Listener首消费·心智<55低谷触发·损失厌恶缓冲)/b785b_anonymous_karma(B→A/E _b722bAnonymousGiver首消费·gainReputation(state,locKey,amount,reason)四参守卫·禀赋效应)。域B零消费素材清零(剩_b722bPatternCd系冷却flag)。验证: node --check过/build 14069→14078.3KB b785b×6入包/MC 10x500 200.4s 0代码异常前7天死亡率全0%(trader60/social50既有RNG阈值)。竞态实录: 本轮源+挂载+events_core修复+dist+round doc全部被并行7114e9d7(挂名R785b但message描述错位为r777主题)add -A扫入HEAD,内容IDENTICAL四项核验过→本窗口只补账本(CLAUDE.md迭代行+loop-state+last_known_head)。下轮候选: C(R677b后未深审)>D。开轮必git log重算勿信本记录。",
-  "pushStatus": "PUSHED"
+  "pushStatus": "LOCAL_ONLY_TLS(本地代理3067未起,push受阻;本地ahead 7,网络恢复任一窗口push即闭合)"
 }
