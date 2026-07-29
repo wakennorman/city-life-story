@@ -645,6 +645,43 @@ function tickNpcRelationships(state) {
       }
     }
   } catch (e) {}
+
+  // [R822 域D D→F 联动增强]: NPC关系变化侧栏通知
+  try {
+    if (state.flags && state.relationships) {
+      var _relChanged = false;
+      for (var _rcId in state.relationships) {
+        var _rc = state.relationships[_rcId];
+        if (_rc && _rc.met && _rc._lastDecay && _rc._lastDecay > 0) {
+          _relChanged = true;
+          break;
+        }
+      }
+      if (_relChanged && !state.flags._relDecayNotified) {
+        state.flags._relDecayNotified = true;
+        state.flags._pendingSocialAlert = "有NPC好感度下降，去社交Tab看看吧";
+      } else if (!_relChanged) {
+        state.flags._relDecayNotified = false;
+      }
+    }
+  } catch (e) {}
+
+  // [R822 域D D→G 联动增强]: 社交圈健康恢复 — 好友数>=3每日额外健康恢复
+  try {
+    if (state.relationships && state.status) {
+      var _hrCount = 0;
+      for (var _hrId in state.relationships) {
+        var _hr = state.relationships[_hrId];
+        if (_hr && _hr.met && (_hr.affinity || 0) >= 40) _hrCount++;
+      }
+      if (_hrCount >= 3) {
+        var _hrBonus = Math.min(1, Math.floor(_hrCount / 5));
+        if (_hrBonus > 0 && state.status.health < 100) {
+          state.status.health = Math.min(100, (state.status.health || 50) + _hrBonus);
+        }
+      }
+    }
+  } catch (e) {}
 }
 
 /** [全系统自洽修复] 域D 修复:NPC id→中文名，替代 replace(/_/g," ") 展示的原始 id */
