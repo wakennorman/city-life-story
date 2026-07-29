@@ -17197,7 +17197,7 @@ function getEventSocialSpread(eventType) {
               }
             } else {
               st.needs.happiness = Math.max(0, st.needs.happiness - 15);
-              st.player.mental = Math.max(0, (st.player.mental || 50) - 10);
+              st.player.mental = Math.max(0, st.player.mental - 10);
               st.flags._insiderTradingLost = true;
               StateManager.addMessage(
                 "💰 合作泡汤了！消息是假的，3000块全没了。",
@@ -17249,7 +17249,7 @@ function getEventSocialSpread(eventType) {
           apply: (st) => {
             _guardNeeds(st);
             st.needs.happiness = Math.min(100, st.needs.happiness + 3);
-            st.player.mental = Math.min(100, (st.player.mental || 50) + 5);
+            st.player.mental = Math.min(100, st.player.mental + 5);
             st.flags._insiderTradingRefused = true;
             StateManager.addMessage(
               "🚫 你拒绝了。内幕交易是违法的，不值得冒这个险。",
@@ -17277,7 +17277,7 @@ function getEventSocialSpread(eventType) {
           apply: (st) => {
             _guardNeeds(st);
             st.needs.happiness = Math.max(0, st.needs.happiness - 10);
-            st.player.mental = Math.max(0, (st.player.mental || 50) - 8);
+            st.player.mental = Math.max(0, st.player.mental - 8);
             // 80% 概率没事，20% 被盯上
             const safe = Random.chance(0.8);
             if (safe) {
@@ -17302,7 +17302,7 @@ function getEventSocialSpread(eventType) {
           hint: "坦白从宽",
           apply: (st) => {
             _guardNeeds(st);
-            st.player.mental = Math.min(100, (st.player.mental || 50) + 5);
+            st.player.mental = Math.min(100, st.player.mental + 5);
             st.needs.happiness = Math.max(0, st.needs.happiness - 5);
             // 60% 没事，40% 被警告
             const ok = Random.chance(0.6);
@@ -17363,7 +17363,7 @@ function getEventSocialSpread(eventType) {
           hint: "走法律途径",
           apply: (st) => {
             _guardNeeds(st);
-            st.player.fame = Math.min(100, (st.player.fame || 0) + 2);
+            st.player.fame = Math.min(100, st.player.fame + 2);
             st.needs.happiness = Math.max(0, st.needs.happiness - 5);
             const recovered = Random.chance(0.15);
             if (recovered) {
@@ -17416,7 +17416,7 @@ function getEventSocialSpread(eventType) {
           apply: (st) => {
             _guardNeeds(st);
             st.needs.happiness = Math.max(0, st.needs.happiness - 8);
-            st.player.mental = Math.min(100, (st.player.mental || 50) + 3);
+            st.player.mental = Math.min(100, st.player.mental + 3);
             StateManager.addMessage(
               "😞 自认倒霉吧。吃一堑长一智，下次再也不碰这种事了。",
               "info",
@@ -18171,7 +18171,7 @@ function getEventSocialSpread(eventType) {
             if (!st.skills) st.skills = {};
             if (!st.skills.coding) st.skills.coding = { level: 0, xp: 0 };
             st.skills.coding.xp += 30;
-            st.player.intelligence = Math.min(100, (st.player.intelligence || 0) + 1);
+            st.player.intelligence = Math.min(100, st.player.intelligence + 1);
             StateManager.addMessage(
               "📚 买了一本区块链入门书自学，编程EXP+30。",
               "success",
@@ -18182,7 +18182,7 @@ function getEventSocialSpread(eventType) {
           text: "🚶 不碰这种赌博",
           hint: "稳健",
           apply: function (st) {
-            st.player.mental = Math.min(100, (st.player.mental || 50) + 2);
+            st.player.mental = Math.min(100, st.player.mental + 2);
             StateManager.addMessage("🚶 理性克制，心智+2。", "info");
           },
         },
@@ -18471,7 +18471,7 @@ function getEventSocialSpread(eventType) {
             if (!st.skills) st.skills = {};
             if (!st.skills.coding) st.skills.coding = { level: 0, xp: 0 };
             st.skills.coding.xp += 40;
-            st.player.intelligence = Math.min(100, (st.player.intelligence || 0) + 2);
+            st.player.intelligence = Math.min(100, st.player.intelligence + 2);
             StateManager.addMessage(
               "📚 研究了比特币白皮书和减半机制，编程EXP+40。",
               "success",
@@ -18737,7 +18737,7 @@ function getEventSocialSpread(eventType) {
               );
             }
             st.player.fame = Math.min(100, (st.player.fame || 0) + 20);
-            st.player.mental = Math.min(100, (st.player.mental || 50) + 20);
+            st.player.mental = Math.min(100, st.player.mental + 20);
             StateManager.addMessage(
               "♟️ 砸下¥300,000——你回来了。尊严+40、发量+25、能力+10、KPI+20、向上管理+30、人缘+15、名气+20、心智+20。这次你知道：公司不是属于资本的，是属于愿意为它流血的人的。",
               "success",
@@ -18761,7 +18761,7 @@ function getEventSocialSpread(eventType) {
                 ((st.player.corporate || {}).kpi || 50) + 10,
               );
             }
-            st.player.mental = Math.min(100, (st.player.mental || 50) + 10);
+            st.player.mental = Math.min(100, st.player.mental + 10);
             st.needs.happiness = Math.min(100, st.needs.happiness + 10);
             StateManager.addMessage(
               "🤝 跟老陈说：“我已经不是当年的我了。” 尊严-5（不是没有遗憾），KPI+10（你彻底接受了员工身份），心智+10、心情+10——放下，也是一种力量。",
@@ -18798,7 +18798,7 @@ function getEventSocialSpread(eventType) {
             var severance = Random.int(50000, 69999);
             st.resources.cash = (st.resources.cash || 0) + severance;
             st.resources.totalEarned = (st.resources.totalEarned || 0) + (severance || 0);
-            st.player.mental = Math.max(0, (st.player.mental || 50) - 5);
+            st.player.mental = Math.max(0, st.player.mental - 5);
             StateManager.addMessage(
               "💀 你签了离职协议，拿了¥" +
                 severance.toLocaleString() +
@@ -18812,7 +18812,7 @@ function getEventSocialSpread(eventType) {
           hint: "如果公司挺过去，你的忠诚会得到回报",
           apply: function (st) {
             st.flags._fateCollapseSeen = true;
-            st.player.mental = Math.min(100, (st.player.mental || 50) + 5);
+            st.player.mental = Math.min(100, st.player.mental + 5);
             StateManager.addMessage(
               "💪 你拒绝了HR的约谈，告诉总监你要留下。他愣了一下，拍了拍你的肩膀。心智+5。",
               "event",
@@ -18824,7 +18824,7 @@ function getEventSocialSpread(eventType) {
           hint: "骑驴找马，留一手",
           apply: function (st) {
             st.flags._fateCollapseSeen = true;
-            st.player.mental = Math.min(100, (st.player.mental || 50) + 2);
+            st.player.mental = Math.min(100, st.player.mental + 2);
             st.flags._fateJobHunting = true;
             StateManager.addMessage(
               "🚪 你请了三天假，偷偷去了字节龙面试。不管公司能不能活，你得为自己留条后路。心智+2。",
@@ -19251,7 +19251,7 @@ function getEventSocialSpread(eventType) {
           apply: (st) => {
             _guardNeeds(st);
             st.needs.happiness = Math.max(0, st.needs.happiness - 5);
-            st.player.mental = Math.max(0, (st.player.mental || 50) - 3);
+            st.player.mental = Math.max(0, st.player.mental - 3);
             if (typeof scheduleChainEvent === "function") {
               scheduleChainEvent(st, "workplace_deadline", 3, "corporate");
             }
@@ -341255,6 +341255,71 @@ if (typeof window !== "undefined") {
   for (var i = 0; i < EVENTS.length; i++) {
     RANDOM_EVENTS.push(EVENTS[i]);
   }
+})();
+;
+// ==== js/core/domain_d_linkage_r829.js ====
+/**
+ * 域D(NPC/社交) 联动增强 R829 (第十五轮循环)
+ * 桥接：
+ *   D→B  d829_npc_tale NPC故事 → 消费 NPC关系+事件
+ *   D→G  d829_social_health_v11 社交健康v11 → 消费 社交数据+needs
+ *   D→A  d829_social_value_v10 社交价值v10 → 消费 社交关系+经济
+ */
+(function () {
+  "use strict";
+  if (typeof RANDOM_EVENTS === "undefined" || !RANDOM_EVENTS) return;
+  if (RANDOM_EVENTS._domainDLinkageR829Loaded) return;
+  RANDOM_EVENTS._domainDLinkageR829Loaded = true;
+
+  var EVENTS = [
+    {
+      id: "d829_npc_tale", phase: "street", _isChainEvent: false, icon: "🗣️",
+      title: "NPC故事", story: "你认识的人,都有自己的故事——倾听,是最好的社交。",
+      triggers: { minDay: 100, interval: 180, maxRepeats: 3, excludeFlags: ["_d829StoryCd"] },
+      conditions: function (st) { if (!st || st.gameOver) return false; if (st.flags && st.flags._d829StoryCd) return false; return st.player && st.player.day >= 100 && st.relationships; },
+      text: function (st) { if (!st) return null; var r = st.relationships ? Object.keys(st.relationships).length : 0; return "你已结识" + r + "位朋友——'倾听,是最好的社交。'"; },
+      choices: [
+        { text: "💬 倾听故事", hint: "社交XP+25,魅力+15,置_d829Listener",
+          apply: function (st) { if (!st) return; st.flags = st.flags || {}; st.flags._d829StoryCd = true; st.flags._d829Listener = true; if (st.player) st.player.charm = Math.min(100, (st.player.charm || 50) + 15); if (typeof addSkillXp === "function") { try { addSkillXp("social", 25); } catch(e) {} } if (typeof StateManager !== "undefined") { StateManager.addMessage("💬 '倾听是最好的社交。' 社交XP+25,魅力+15。", "success"); } }
+        },
+        { text: "📖 记录故事", hint: "心智+20,置_d829Scribe",
+          apply: function (st) { if (!st) return; st.flags = st.flags || {}; st.flags._d829StoryCd = true; st.flags._d829Scribe = true; if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 20); if (typeof StateManager !== "undefined") { StateManager.addMessage("📖 '每个人都是一本书。' 心智+20。", "info"); } }
+        }
+      ]
+    },
+    {
+      id: "d829_social_health_v11", phase: "street", _isChainEvent: false, icon: "💚",
+      title: "社交健康", story: "良好的社交关系,是健康生活的重要组成部分。",
+      triggers: { minDay: 180, interval: 220, maxRepeats: 4, excludeFlags: ["_d829HealthCd"] },
+      conditions: function (st) { if (!st || st.gameOver) return false; if (st.flags && st.flags._d829HealthCd) return false; return st.player && st.player.day >= 180 && st.relationships && st.needs; },
+      text: function (st) { if (!st) return null; var r = st.relationships ? Object.keys(st.relationships).length : 0; var h = st.needs && isFinite(st.needs.happiness) ? Math.round(st.needs.happiness) : 50; return "你已结识" + r + "位朋友,心情" + h + "——'朋友是最好的良药。'"; },
+      choices: [
+        { text: "🤝 主动社交", hint: "心情+25,社交XP+20,置_d829Socializer",
+          apply: function (st) { if (!st) return; st.flags = st.flags || {}; st.flags._d829HealthCd = true; st.flags._d829Socializer = true; if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 25); if (typeof addSkillXp === "function") { try { addSkillXp("social", 20); } catch(e) {} } if (typeof StateManager !== "undefined") { StateManager.addMessage("🤝 '主动社交让生活更精彩。' 心情+25,社交XP+20。", "success"); } }
+        },
+        { text: "🧘 独处充电", hint: "心智+20,疲劳-15,置_d829Recharge",
+          apply: function (st) { if (!st) return; st.flags = st.flags || {}; st.flags._d829HealthCd = true; st.flags._d829Recharge = true; if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 20); if (st.needs) st.needs.fatigue = Math.max(0, (st.needs.fatigue || 0) - 15); if (typeof StateManager !== "undefined") { StateManager.addMessage("🧘 '独处是为了更好地相处。' 心智+20,疲劳-15。", "info"); } }
+        }
+      ]
+    },
+    {
+      id: "d829_social_value_v10", phase: "street", _isChainEvent: false, icon: "🏦",
+      title: "社交价值", story: "人脉就是财富——你的社交圈,正在变成你的经济资本。",
+      triggers: { minDay: 250, interval: 300, maxRepeats: 3, excludeFlags: ["_d829ValueCd"] },
+      conditions: function (st) { if (!st || st.gameOver) return false; if (st.flags && st.flags._d829ValueCd) return false; return st.player && st.player.day >= 250 && st.relationships && st.resources; },
+      text: function (st) { if (!st) return null; var r = st.relationships ? Object.keys(st.relationships).length : 0; var c = st.resources && isFinite(st.resources.cash) ? Math.round(st.resources.cash) : 0; return r + "位朋友,存款¥" + c.toLocaleString() + "——'人脉就是财富。'"; },
+      choices: [
+        { text: "📈 扩展社交圈", hint: "社交XP+30,魅力+20,置_d829Networker",
+          apply: function (st) { if (!st) return; st.flags = st.flags || {}; st.flags._d829ValueCd = true; st.flags._d829Networker = true; if (st.player) st.player.charm = Math.min(100, (st.player.charm || 50) + 20); if (typeof addSkillXp === "function") { try { addSkillXp("social", 30); } catch(e) {} } if (typeof StateManager !== "undefined") { StateManager.addMessage("📈 '人脉是最大的财富。' 社交XP+30,魅力+20。", "success"); } }
+        },
+        { text: "💡 利用人脉", hint: "智力+20,管理XP+15,置_d829Connector",
+          apply: function (st) { if (!st) return; st.flags = st.flags || {}; st.flags._d829ValueCd = true; st.flags._d829Connector = true; if (st.player) st.player.intelligence = Math.min(100, (st.player.intelligence || 50) + 20); if (typeof addSkillXp === "function") { try { addSkillXp("management", 15); } catch(e) {} } if (typeof StateManager !== "undefined") { StateManager.addMessage("💡 '人脉不是名片夹而是关系网。' 智力+20,管理XP+15。", "info"); } }
+        }
+      ]
+    }
+  ];
+
+  for (var i = 0; i < EVENTS.length; i++) { RANDOM_EVENTS.push(EVENTS[i]); }
 })();
 ;
 // ==== js/core/domain_d_linkage_r636.js ====
