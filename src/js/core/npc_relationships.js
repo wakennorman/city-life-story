@@ -1303,3 +1303,22 @@ function getSocialMentalBonus(state) {
   }
   return Math.min(3, Math.floor(_closeFriends / 3));
 }
+
+// [R877 域D A类#1]: 导出函数到window，解决死代码问题
+if (typeof window !== "undefined") {
+  window.getNpcCareerRecommendation = getNpcCareerRecommendation;
+  window.getSocialNetworkGraphData = getSocialNetworkGraphData;
+  window.getSocialHealthBonus = getSocialHealthBonus;
+  window.getSocialInvestmentIntel = getSocialInvestmentIntel;
+  window.getNpcReferralJobs = getNpcReferralJobs;
+  window.getNpcRelationGraphData = getNpcRelationGraphData;
+  window.getNpcInvestmentStyle = getNpcInvestmentStyle;
+  window.getNpcMarketIntel = getNpcMarketIntel;
+  window.getAffinityLabel = getAffinityLabel;
+  window.getRelationTypeLabel = getRelationTypeLabel;
+  window.getRelationTypeColor = getRelationTypeColor;
+  window.getNpcTradeDiscount = getNpcTradeDiscount;
+  window.getNpcInvestmentTips = getNpcInvestmentTips;
+  window.getSocialMentalBonus = getSocialMentalBonus;
+  window.getSocialHealthBonusR797 = getSocialHealthBonusR797;
+}
