@@ -1823,3 +1823,28 @@ function getEventSocialSpread(eventType) {
   var spreads = { disaster: 'old_zhou', crime: 'boss_li', festival: 'xiao_mei', celebration: 'zhaojie', accident: 'aunt_wang', windfall: 'sister_zhang' };
   return spreads[eventType] || null;
 }
+
+// [R803 域B 联动增强 B→G]: 事件活跃度影响疲劳恢复 — 事件越多越疲劳
+function getEventFatigueModifier(state) {
+  if (!state || !state.stats || !state.stats.eventCounts) return 1.0;
+  var _totalEvents = 0;
+  for (var _k in state.stats.eventCounts) {
+    _totalEvents += state.stats.eventCounts[_k] || 0;
+  }
+  if (_totalEvents > 50) return 1.15;
+  if (_totalEvents > 20) return 1.08;
+  return 1.0;
+}
+
+// [R803 域B 联动增强 B→F]: 事件类型统计摘要 — 返回各类事件计数供UI展示
+function getEventStatsSummary(state) {
+  if (!state || !state.stats || !state.stats.eventCounts) return {};
+  var _counts = state.stats.eventCounts;
+  return {
+    total: (_counts.moral || 0) + (_counts.risk || 0) + (_counts.news || 0) + (_counts.chain || 0) + (_counts.other || 0),
+    moral: _counts.moral || 0,
+    risk: _counts.risk || 0,
+    news: _counts.news || 0,
+    chain: _counts.chain || 0,
+  };
+}
