@@ -110,15 +110,16 @@
           }
         },
         {
-          text: "🗣️ 分享投资心得", hint: "社交XP+20,置_e807StoryTeller",
+          text: "🗣️ 分享投资心得", hint: "销售XP+20,置_e807StoryTeller",
           apply: function (st) {
             if (!st) return;
             st.flags = st.flags || {};
             st.flags._e807StoryCd = true;
             st.flags._e807StoryTeller = true;
-            if (typeof addSkillXp === "function") { try { addSkillXp("social", 20); } catch(e) {} }
+            // [全系统自洽修复] 域E R815 A类: addSkillXp("social") 假技能键(真实12键无social)→XP静默丢弃,改为 sales(社交=销售口才)
+            if (typeof addSkillXp === "function") { try { addSkillXp("sales", 20); } catch(e) {} }
             if (typeof StateManager !== "undefined") {
-              StateManager.addMessage("🗣️ '故事比数字更有感染力。' 社交XP+20。", "info");
+              StateManager.addMessage("🗣️ '故事比数字更有感染力。' 销售XP+20。", "info");
             }
           }
         }
