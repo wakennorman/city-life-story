@@ -5363,6 +5363,41 @@ function showEventModal(evt) {
           if (state.flags._eventHistory.length > 100) state.flags._eventHistory = state.flags._eventHistory.slice(-100);
         }
       }
+      // [R795 域B 联动增强 B→C]: 重大事件影响职业资本 — 道德/风险事件触发职业声誉变化
+      try {
+        if (state.flags && (evt.id.indexOf("moral_") === 0 || evt.id.indexOf("risk") >= 0 || evt.id.indexOf("positive_") === 0) && typeof ensureCareerCapital === "function") {
+          var _capB = ensureCareerCapital(state);
+          if (_capB) {
+            if (evt.id.indexOf("positive_") === 0) {
+              _capB.reputation = Math.min(100, (_capB.reputation || 0) + 1);
+            } else if (evt.id.indexOf("moral_") === 0) {
+              _capB.reputation = Math.max(0, (_capB.reputation || 0) - 1);
+            }
+          }
+        }
+      } catch (e) { /* 静默 */ }
+
+      // [R795 域B 联动增强 B→G]: 事件类型影响疲劳恢复 — 正面事件减疲劳，负面事件增疲劳
+      try {
+        if (state.needs && state.flags) {
+          if (evt.id && evt.id.indexOf("positive_") === 0) {
+            state.needs.fatigue = Math.max(0, (state.needs.fatigue || 0) - 2);
+          } else if (evt.id && (evt.id.indexOf("moral_") === 0 || evt.id.indexOf("risk") >= 0)) {
+            state.needs.fatigue = Math.min(100, (state.needs.fatigue || 0) + 1);
+          }
+        }
+      } catch (e) { /* 静默 */ }
+
+      // [R795 域B 联动增强 B→H]: 道德事件影响公司声誉 — 创业阶段道德抉择影响公司声誉
+      try {
+        if (state.startup && state.startup.company && state.flags) {
+          if (evt.id && evt.id.indexOf("moral_") === 0) {
+            var _sCo = state.startup.company;
+            _sCo.reputation = Math.max(0, Math.min(100, (_sCo.reputation || 50) - 2));
+          }
+        }
+      } catch (e) { /* 静默 */ }
+
       // v3.1 ⑤ 难度惩罚倍率结算：休闲×0.7 / 标准×1.0 / 困难×1.3 / 地狱×1.6
       try {
         if (typeof getDifficultyMultiplier === "function") {
@@ -6240,7 +6275,7 @@ function getEventSocialSpread(eventType) {
           hint: "良心选择",
           apply: (st) => {
             st.needs.happiness = Math.min(100, st.needs.happiness + 12);
-            st.player.fame = Math.min(100, st.player.fame + 3);
+            st.player.fame = Math.min(100, (st.player.fame || 0) + 3);
             st.flags._returnedWallet = true;
             StateManager.addMessage(
               "🏛️ 钱包交给了警察，警察夸你拾金不昧，心情大好！",
@@ -6288,7 +6323,7 @@ function getEventSocialSpread(eventType) {
           text: "🏃 撒腿就跑",
           hint: "考验敏捷",
           apply: (st) => {
-            if (Random.chance(0.5 + (st.player.agility - 20) * 0.02)) {
+            if (Random.chance(0.5 + ((st.player.agility || 20) - 20) * 0.02)) {
               StateManager.addMessage(
                 "🏃 你转身就跑，甩开了混混，逃过一劫！",
                 "success",
@@ -6379,7 +6414,7 @@ function getEventSocialSpread(eventType) {
           text: "📱 反手举报给警察",
           hint: "正义感",
           apply: (st) => {
-            st.player.fame = Math.min(100, st.player.fame + 5);
+            st.player.fame = Math.min(100, (st.player.fame || 0) + 5);
             st.needs.happiness = Math.min(100, st.needs.happiness + 6);
             StateManager.addMessage(
               "📱 警察抓到了诈骗团伙，给你点了个赞！",
@@ -6408,7 +6443,7 @@ function getEventSocialSpread(eventType) {
             if (Random.chance(0.5)) {
               const reward = Random.int(50, 129);
               st.resources.cash = (st.resources.cash || 0) + reward; // [全系统自洽修复] 域B A类:cash NaN守卫
-              st.player.fame = Math.min(100, st.player.fame + 2);
+              st.player.fame = Math.min(100, (st.player.fame || 0) + 2);
               st.needs.happiness = Math.min(100, st.needs.happiness + 10);
               // 类似老周的性格，帮忙后老周好感微量提升
               if (st.relationships && st.relationships["old_zhou"]) {
@@ -6586,9 +6621,9 @@ function getEventSocialSpread(eventType) {
           text: "🧠 理智劝和",
           hint: "考验智力",
           apply: (st) => {
-            if (Random.chance(0.4 + (st.player.intelligence - 20) * 0.02)) {
+            if (Random.chance(0.4 + ((st.player.intelligence || 20) - 20) * 0.02)) {
               st.needs.happiness = Math.min(100, st.needs.happiness + 10);
-              st.player.fame = Math.min(100, st.player.fame + 3);
+              st.player.fame = Math.min(100, (st.player.fame || 0) + 3);
               StateManager.addMessage(
                 "🧠 你一番话说得两人都服气了，握手言和！还夸你通情达理。",
                 "success",
@@ -6629,7 +6664,7 @@ function getEventSocialSpread(eventType) {
             st.resources.cash = Math.max(0, (st.resources.cash || 0) - 30); // [全系统自洽修复] 域B A类:cash NaN守卫
             st.needs.happiness = Math.min(100, st.needs.happiness + 20);
             st.needs.fatigue = Math.max(0, st.needs.fatigue - 5);
-            st.player.fame = Math.min(100, st.player.fame + 1);
+            st.player.fame = Math.min(100, (st.player.fame || 0) + 1);
             StateManager.addMessage(
               "🐕 收养了一只小狗！花了 30 块买了狗粮，心情大好！疲劳-5。",
               "success",
@@ -6643,7 +6678,7 @@ function getEventSocialSpread(eventType) {
           hint: "贴寻狗启事",
           apply: (st) => {
             st.needs.fatigue = Math.min(100, st.needs.fatigue + 8);
-            st.player.fame = Math.min(100, st.player.fame + 2);
+            st.player.fame = Math.min(100, (st.player.fame || 0) + 2);
             StateManager.addMessage(
               "📞 主人找到了！你好人有好报，心情不错。",
               "success",
@@ -6753,7 +6788,7 @@ function getEventSocialSpread(eventType) {
             if (success) {
               const profit = Random.int(2500, 3999);
               st.resources.cash = (st.resources.cash || 0) + profit; // [全系统自洽修复] 域B A类:cash NaN守卫
-              st.player.fame = Math.min(100, st.player.fame + 5);
+              st.player.fame = Math.min(100, (st.player.fame || 0) + 5);
               st.needs.happiness = Math.min(100, st.needs.happiness + 15);
               // 标记已参与赌局成功
               st.flags._realEstateGambleWon = true;
@@ -6772,7 +6807,7 @@ function getEventSocialSpread(eventType) {
               }
             } else {
               st.needs.happiness = Math.max(0, st.needs.happiness - 20);
-              st.player.mental = Math.max(0, st.player.mental - 8);
+              st.player.mental = Math.max(0, (st.player.mental || 50) - 8);
               st.flags._realEstateGambleLost = true;
               StateManager.addMessage(
                 "💰 收购泡汤了！消息是假的，2000块全砸里面了。那财务也不见了...",
@@ -6825,7 +6860,7 @@ function getEventSocialSpread(eventType) {
           hint: "远离赌博",
           apply: (st) => {
             st.needs.happiness = Math.min(100, st.needs.happiness + 2);
-            st.player.mental = Math.min(100, st.player.mental + 3);
+            st.player.mental = Math.min(100, (st.player.mental || 50) + 3);
             st.flags._realEstateGambleRefused = true;
             StateManager.addMessage(
               "🚫 你拒绝了。这种内幕交易不靠谱，还是踏实赚钱更安心。",
@@ -6865,10 +6900,10 @@ function getEventSocialSpread(eventType) {
           text: "👊 硬刚回去",
           hint: "看体质",
           apply: (st) => {
-            const win = Random.chance(0.3 + (st.player.physique - 20) * 0.02);
+            const win = Random.chance(0.3 + ((st.player.physique || 20) - 20) * 0.02);
             if (win) {
               st.needs.happiness = Math.min(100, st.needs.happiness + 5);
-              st.player.fame = Math.min(100, st.player.fame + 3);
+              st.player.fame = Math.min(100, (st.player.fame || 0) + 3);
               StateManager.addMessage(
                 "👊 你硬气地怼了回去，他们看你不好惹，骂骂咧咧走了。",
                 "success",
@@ -6888,7 +6923,7 @@ function getEventSocialSpread(eventType) {
           text: "🚔 报警",
           hint: "走正规渠道",
           apply: (st) => {
-            st.player.fame = Math.min(100, st.player.fame + 4);
+            st.player.fame = Math.min(100, (st.player.fame || 0) + 4);
             st.needs.happiness = Math.min(100, st.needs.happiness + 3);
             StateManager.addMessage(
               "🚔 警察来了，把那几个混混带走了。这次运气不错。",
@@ -6916,7 +6951,7 @@ function getEventSocialSpread(eventType) {
             st.resources.cash = (st.resources.cash || 0) + borrow; // [全系统自洽修复] 域B A类:cash NaN守卫
             st.resources.villageDebt = (st.resources.villageDebt || 0) + borrow;
             st.needs.happiness = Math.max(0, st.needs.happiness - 12);
-            st.player.mental = Math.max(0, st.player.mental - 5);
+            st.player.mental = Math.max(0, (st.player.mental || 50) - 5);
             StateManager.addMessage(
               `😔 只能再借 ¥${borrow}应急，债务雪上加霜...`,
               "danger",
@@ -6943,7 +6978,7 @@ function getEventSocialSpread(eventType) {
           text: "😤 跟村长求情延期",
           hint: "看面子",
           apply: (st) => {
-            const success = Random.chance(0.3 + st.player.fame * 0.01);
+            const success = Random.chance(0.3 + (st.player.fame || 0) * 0.01);
             if (success) {
               st.needs.happiness = Math.min(100, st.needs.happiness + 5);
               StateManager.addMessage(
@@ -6952,7 +6987,7 @@ function getEventSocialSpread(eventType) {
               );
             } else {
               st.needs.happiness = Math.max(0, st.needs.happiness - 8);
-              st.player.mental = Math.max(0, st.player.mental - 3);
+              st.player.mental = Math.max(0, (st.player.mental || 50) - 3);
               StateManager.addMessage(
                 "😤 村长不松口，说下个月必须还。心里更焦虑了。",
                 "warning",
@@ -7004,7 +7039,7 @@ function getEventSocialSpread(eventType) {
           hint: "长期价值",
           apply: function (st) {
             st.needs.happiness = Math.max(0, st.needs.happiness - 65);
-            st.player.mental = Math.max(5, st.player.mental - 10);
+            st.player.mental = Math.max(5, (st.player.mental || 50) - 10);
             StateManager.addMessage(
               "💎 坚定持有！虽然账面惨了但没实际亏损。心情-65,心智-10。",
               "info",
@@ -7335,7 +7370,7 @@ function getEventSocialSpread(eventType) {
           apply: function (st) {
             st.needs.hunger = Math.min(100, st.needs.hunger + 40);
             st.needs.happiness = Math.min(100, st.needs.happiness + 15);
-            st.player.fame = Math.min(100, st.player.fame - 2);
+            st.player.fame = Math.min(100, (st.player.fame || 0) - 2);
             StateManager.addMessage(
               "🍞 阿姨给你买了份盒饭还塞了50块。感激涕零但不能老靠别人。名气-2。",
               "success",
@@ -7487,7 +7522,7 @@ function getEventSocialSpread(eventType) {
           hint: "先扶再说",
           apply: function (st) {
             st.needs.happiness = Math.min(100, st.needs.happiness + 15);
-            st.player.fame = Math.min(100, st.player.fame + 5);
+            st.player.fame = Math.min(100, (st.player.fame || 0) + 5);
             if (Random.chance(0.15)) {
               const fine = Random.int(300, 499);
               st.resources.cash = Math.max(0, (st.resources.cash || 0) - fine);
@@ -7511,7 +7546,7 @@ function getEventSocialSpread(eventType) {
           hint: "保护自己也帮人",
           apply: function (st) {
             st.needs.happiness = Math.min(100, st.needs.happiness + 8);
-            st.player.fame = Math.min(100, st.player.fame + 2);
+            st.player.fame = Math.min(100, (st.player.fame || 0) + 2);
             StateManager.addMessage(
               "📱 拍下视频留证后扶起老人，理性与善意兼顾。",
               "success",
@@ -7657,7 +7692,7 @@ function getEventSocialSpread(eventType) {
           hint: "道德选择，损失惨重",
           apply: function (st) {
             st.needs.happiness = Math.min(100, st.needs.happiness + 10);
-            st.player.fame = Math.min(100, st.player.fame + 5);
+            st.player.fame = Math.min(100, (st.player.fame || 0) + 5);
             st.flags._refusedFakeGoods = true;
             StateManager.addMessage(
               "🗑️ 你把假货全部扔掉，损失¥800。这钱是教训钱，名气+5。",
@@ -7978,7 +8013,7 @@ function getEventSocialSpread(eventType) {
           apply: function (st) {
             if (Random.chance(0.7)) {
               st.resources.cash = Math.max(0, (st.resources.cash || 0) - 150);
-              st.player.fame = Math.min(100, st.player.fame + 2);
+              st.player.fame = Math.min(100, (st.player.fame || 0) + 2);
               // smartphone 是 accessory 装备：装备到槽位（带品质）
               var phoneDef =
                 typeof getItemById === "function"
@@ -8343,7 +8378,7 @@ function getEventSocialSpread(eventType) {
           apply: function (st) {
             if ((st.resources.cash || 0) >= 200) {
               st.resources.cash = Math.max(0, (st.resources.cash || 0) - 200);
-              st.player.fame = Math.min(100, st.player.fame + 3);
+              st.player.fame = Math.min(100, (st.player.fame || 0) + 3);
               StateManager.addMessage(
                 "📋 花¥200办了临时证，城管来了直接亮证件，没事。名气+3。",
                 "success",
@@ -8518,7 +8553,7 @@ function getEventSocialSpread(eventType) {
           hint: "仗义执言",
           apply: function (st) {
             if (Random.chance(0.6)) {
-              st.player.fame = Math.min(100, st.player.fame + 5);
+              st.player.fame = Math.min(100, (st.player.fame || 0) + 5);
               st.needs.happiness = Math.min(100, st.needs.happiness + 8);
               StateManager.addMessage(
                 "🗣️ 你提供了线索，失主追回了钱，大家都说你讲义气，名气+5。",
@@ -8574,7 +8609,7 @@ function getEventSocialSpread(eventType) {
           hint: "对峙试试",
           apply: function (st) {
             if (st.player.agility >= 25 || st.player.physique >= 30) {
-              st.player.fame = Math.min(100, st.player.fame + 2);
+              st.player.fame = Math.min(100, (st.player.fame || 0) + 2);
               st.needs.happiness = Math.max(0, st.needs.happiness - 3);
               StateManager.addMessage(
                 "你死死盯着那个可疑的人，对方心虚地移开目光，没敢再靠近。虽然没找回东西，但震慑住了对方。",
@@ -8872,7 +8907,7 @@ function getEventSocialSpread(eventType) {
           text: "😴 不接，保证休息",
           hint: "长线考量",
           apply: function (st) {
-            st.player.mental = Math.min(100, st.player.mental + 3);
+            st.player.mental = Math.min(100, (st.player.mental || 50) + 3);
             StateManager.addMessage(
               "😴 你克制住了短期诱惑，好好睡了一觉。细水长流，心智+3。",
               "info",
@@ -8963,7 +8998,7 @@ function getEventSocialSpread(eventType) {
             var rewardB = Random.int(100, 299);
             st.resources.cash = (st.resources.cash || 0) + rewardB;
             st.resources.totalEarned += rewardB;
-            st.player.fame = Math.min(100, st.player.fame + 4);
+            st.player.fame = Math.min(100, (st.player.fame || 0) + 4);
             StateManager.addMessage(
               "📲 找到紧急联系人，家属赶来给了¥" + rewardB + " 感谢。名气+4。",
               "success",
@@ -9010,7 +9045,7 @@ function getEventSocialSpread(eventType) {
           text: "📸 去打个卡拍照就走",
           hint: "刷存在感",
           apply: function (st) {
-            st.player.fame = Math.min(100, st.player.fame + 3);
+            st.player.fame = Math.min(100, (st.player.fame || 0) + 3);
             st.needs.happiness = Math.max(0, st.needs.happiness - 3);
             StateManager.addMessage(
               "📸 打了个卡拍了张照就溜走了。名气+3，但感觉有点空洞。",
@@ -9066,7 +9101,7 @@ function getEventSocialSpread(eventType) {
           hint: "帮忙不担责",
           apply: function (st) {
             st.needs.happiness = Math.min(100, st.needs.happiness + 8);
-            st.player.fame = Math.min(100, st.player.fame + 5);
+            st.player.fame = Math.min(100, (st.player.fame || 0) + 5);
             StateManager.addMessage(
               "📞 你打了120再守在远处，救护车来了。帮了忙也保护了自己，名气+5。",
               "info",
@@ -9188,7 +9223,7 @@ function getEventSocialSpread(eventType) {
                 ? "赚了¥" + totalEarned.toLocaleString() + "，成绩不错！"
                 : "虽然辛苦，但你坚持下来了。";
             st.needs.happiness = Math.min(100, st.needs.happiness + 20);
-            st.player.mental = Math.min(100, st.player.mental + 3);
+            st.player.mental = Math.min(100, (st.player.mental || 50) + 3);
             StateManager.addMessage(
               "🏆 " +
                 highlight +
@@ -9300,7 +9335,7 @@ function getEventSocialSpread(eventType) {
             st.resources.cash = (st.resources.cash || 0) + pay;
             st.resources.totalEarned += pay;
             st.player.physique = Math.min(100, st.player.physique + 2);
-            st.player.fame = Math.min(100, st.player.fame + 5);
+            st.player.fame = Math.min(100, (st.player.fame || 0) + 5);
             StateManager.addMessage(
               "🤝 老刘的表弟给了你一单活，干完赚了¥" +
                 pay +
@@ -327113,6 +327148,216 @@ if (typeof window !== "undefined") {
             if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 5);
             if (typeof StateManager !== "undefined") {
               StateManager.addMessage("😊 路还长，继续走。心智+5。", "success");
+            }
+          }
+        }
+      ]
+    }
+  ];
+
+  // ---- 注入全局 RANDOM_EVENTS ----
+  for (var i = 0; i < EVENTS.length; i++) {
+    RANDOM_EVENTS.push(EVENTS[i]);
+  }
+})();
+
+;
+// ==== js/core/domain_b_linkage_r839.js ====
+/*
+ * 城市浮生记 — 域B(事件/叙事) 联动增强 R839
+ * 全系统优化·Domain B 第三十轮循环
+ *
+ * 【联动增强3项】
+ *   1. B→A 事件数据遗产v3 — 事件积累的数据转化为数值平衡洞察
+ *   2. B→F 事件UI回响v4 — 事件选择在UI层的展示更新
+ *   3. B→C 事件职业催化剂v4 — 事件选择触发职业技能成长
+ *
+ * 设计约束（与历轮 IIFE linkage 文件一致）：
+ *  - IIFE 注入全局 RANDOM_EVENTS，避免改动 cross_system_events.js。
+ *  - 所有 state 访问均 || 防御；数值标 [PLACEHOLDER]。
+ *  - 严格遵守域B铁律：NPC事件须 rel && rel.met；天气事件须 weather 守卫。
+ */
+(function () {
+  "use strict";
+  if (typeof RANDOM_EVENTS === "undefined" || !RANDOM_EVENTS) return;
+  if (RANDOM_EVENTS._domainBLinkageR839Loaded) return;
+  RANDOM_EVENTS._domainBLinkageR839Loaded = true;
+
+  // ---- 本地助手 ----
+  function grantXp(key, amt) {
+    if (typeof addSkillXp === "function") { try { addSkillXp(key, amt); } catch(e) {} }
+  }
+
+  var EVENTS = [
+    // ========================================================================
+    // 联动增强1: B→A 事件数据遗产v3 — 事件积累的数据转化为数值洞察
+    // 设计意图：玩家经历的事件(选择/结果)应积累为"人生经验数据"，供数值域消费。
+    // 本事件在玩家经历≥45个事件后触发，给予"人生经验数据v3"标记。
+    // 心理学：禀赋效应 — 玩家感到"这些经历塑造了现在的我"。
+    // ========================================================================
+    {
+      id: "b839_event_data_v3",
+      phase: "street",
+      icon: "📚",
+      title: "你经历的一切，都是数据",
+      story: "你回顾了来这座城市后的点点滴滴——那些做出的选择、那些遇到的人、那些成功与失败。\n\n每一个事件，都在你身上留下了痕迹。它们不只是故事，更是你独有的「人生经验数据」。",
+      conditions: function (st) {
+        if (!st || !st.player || st.gameOver) return false;
+        if (st.flags && st.flags._b839EventDataDone) return false;
+        var _eventCount = st.flags._eventCount || 0;
+        return _eventCount >= 45 && st.player.day >= 150;
+      },
+      probability: 0.05,
+      repeatable: false,
+      choices: [
+        {
+          text: "📚 深度分析人生数据",
+          hint: "智力+12, 心智+10, 置_b839LifeDataV3",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._b839EventDataDone = true;
+            st.flags._b839LifeDataV3 = true;
+            if (st.player) {
+              st.player.intelligence = Math.min(100, (st.player.intelligence || 50) + 12);
+              st.player.mental = Math.min(100, (st.player.mental || 50) + 10);
+            }
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("📚 你深度分析了人生数据——智力+12, 心智+10。经历是最宝贵的财富。", "success");
+            }
+          }
+        },
+        {
+          text: "😊 活在当下",
+          hint: "心情+5",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._b839EventDataDone = true;
+            if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 5);
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("😊 活在当下，也是一种智慧。心情+5。", "success");
+            }
+          }
+        }
+      ]
+    },
+
+    // ========================================================================
+    // 联动增强2: B→F 事件UI回响v4 — 事件选择在UI层的展示更新
+    // 设计意图：事件中的选择应在UI层有反馈，让玩家感到"我的选择被看见"。
+    // 本事件在玩家经历≥35个事件后触发，给予"选择回响UIv4"标记。
+    // 心理学：认知负荷 — UI反馈降低玩家信息处理负担。
+    // ========================================================================
+    {
+      id: "b839_event_ui_v4",
+      phase: "street",
+      icon: "🖼️",
+      title: "你的选择，都记录在案",
+      story: "你打开事件历史面板——每一个选择、每一个结果，都清晰地记录在案。\n\n这些不是枯燥的日志，而是你人生的「选择轨迹」。",
+      conditions: function (st) {
+        if (!st || !st.player || st.gameOver) return false;
+        if (st.flags && st.flags._b839EventUIDone) return false;
+        var _eventCount = st.flags._eventCount || 0;
+        return _eventCount >= 35;
+      },
+      probability: 0.05,
+      repeatable: false,
+      choices: [
+        {
+          text: "🖼️ 查看选择轨迹",
+          hint: "心智+12, 置_b839ChoiceTrackerV4",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._b839EventUIDone = true;
+            st.flags._b839ChoiceTrackerV4 = true;
+            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 12);
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("🖼️ 选择轨迹已可视化——心智+12。看到自己的选择被记录，你会更认真地对待每一个决定。", "success");
+            }
+          }
+        },
+        {
+          text: "😅 过去就过去了",
+          hint: "心情+3",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._b839EventUIDone = true;
+            if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 3);
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("😅 过去就过去了。心情+3。", "info");
+            }
+          }
+        }
+      ]
+    },
+
+    // ========================================================================
+    // 联动增强3: B→C 事件职业催化剂v4 — 事件选择触发职业技能成长
+    // 设计意图：事件中的选择应触发职业技能成长，让玩家感到"经历就是能力"。
+    // 本事件在玩家经历≥30个事件且拥有≥2个Lv.30+技能时触发。
+    // 心理学：技能协同 — 不同领域的经历互相强化。
+    // ========================================================================
+    {
+      id: "b839_event_career_v4",
+      phase: "street",
+      icon: "🚀",
+      title: "经历，是更好的老师",
+      story: "你发现——那些经历过的事件，不知不觉中提升了你的职业技能。\n\n不是刻意的学习，而是「做中学」的自然成长。\n\n经历，是更好的老师。",
+      conditions: function (st) {
+        if (!st || !st.player || st.gameOver) return false;
+        if (st.flags && st.flags._b839CareerCatalystDone) return false;
+        if (!st.skills) return false;
+        var _eventCount = st.flags._eventCount || 0;
+        if (_eventCount < 30) return false;
+        var _count = 0;
+        for (var _sk in st.skills) {
+          var _sl = st.skills[_sk];
+          if (_sl && (_sl.level || 0) >= 30) _count++;
+        }
+        return _count >= 2;
+      },
+      probability: 0.05,
+      repeatable: false,
+      choices: [
+        {
+          text: "🚀 将经历转化为能力",
+          hint: "最高技能XP+15, 置_b839ExperienceToSkill",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._b839CareerCatalystDone = true;
+            st.flags._b839ExperienceToSkill = true;
+            var _topSkill = "", _topLevel = 0;
+            if (st.skills) {
+              for (var _sk in st.skills) {
+                var _sl = st.skills[_sk];
+                if (_sl && (_sl.level || 0) > _topLevel) {
+                  _topLevel = _sl.level || 0;
+                  _topSkill = _sk;
+                }
+              }
+            }
+            if (_topSkill && typeof addSkillXp === "function") {
+              try { addSkillXp(_topSkill, 15); } catch(e) {}
+            }
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("🚀 经历转化为职业能力——" + (_topSkill || "技能") + "XP+15。", "success");
+            }
+          }
+        },
+        {
+          text: "😊 经历就是经历",
+          hint: "心智+3",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._b839CareerCatalystDone = true;
+            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 3);
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("😊 经历就是经历。心智+3。", "info");
             }
           }
         }
