@@ -104553,6 +104553,294 @@ if (typeof window !== "undefined") {
 })();
 
 ;
+// ==== js/core/domain_c_linkage_r370.js ====
+/**
+ * 域C联动增强 R370 — 技能树分支选择深化叙事化
+ * [全系统自洽修复] 域C R370: 分支选择仪式首次被事件深化叙事消费
+ *
+ * 2个新事件：
+ *   C→F: 分支深化认可 — 在分支方向上取得显著进展获得认可
+ *   C→G: 分支专精心法 — 深入某个分支后领悟的心法/心得
+ */
+(function () {
+  "use strict";
+  if (typeof window === "undefined") return;
+
+  // ===== C→F: 分支深化认可 =====
+  var branch_deepening_recognition = {
+    id: "branch_deepening_recognition",
+    title: "📖 分支深化",
+    phase: "street",
+    repeatable: true,
+    cooldownDays: 90,
+    priority: 65,
+    conditions: function (st) {
+      if (!st || !st.flags) return false;
+      // 冷却检查
+      if (st.flags._branchDeepeningCooldown) {
+        if ((st.player.day || 0) - st.flags._branchDeepeningCooldown < 90) return false;
+      }
+      // 检查是否有选择的分支
+      if (!st.skillBranches || !st.skillBranches._lastChosen) return false;
+      // 检查该分支相关技能的等级
+      var lastBranch = st.skillBranches._lastChosen;
+      var allBranches = typeof SKILL_BRANCHES === "object" ? SKILL_BRANCHES : {};
+      var skillKey = null;
+      // 找到这个分支所属的技能
+      for (var sk in allBranches) {
+        var brs = allBranches[sk];
+        if (brs && Array.isArray(brs)) {
+          for (var bi = 0; bi < brs.length; bi++) {
+            if (brs[bi].id === lastBranch) {
+              skillKey = sk;
+              break;
+            }
+          }
+        }
+        if (skillKey) break;
+      }
+      if (!skillKey || !st.skills || !st.skills[skillKey]) return false;
+      // 技能等级需要达到一定深度（比如 >= 40）
+      if (st.skills[skillKey].level < 40) return false;
+      // 检查是否已经有过分支深化的记录（防重复）
+      if (st.flags._branchDeepeningLevel && st.flags._branchDeepeningLevel === st.skills[skillKey].level) return false;
+      
+      // 更新记录
+      st.flags._branchDeepeningLevel = st.skills[skillKey].level;
+      st.flags._branchDeepeningCooldown = st.player.day;
+      return true;
+    },
+    probability: 0.3,
+    getStory: function (st) {
+      var lastBranch = st.skillBranches && st.skillBranches._lastChosen;
+      var allBranches = typeof SKILL_BRANCHES === "object" ? SKILL_BRANCHES : {};
+      var label = "";
+      var skillKey = "";
+      for (var sk in allBranches) {
+        var brs = allBranches[sk];
+        if (brs && Array.isArray(brs)) {
+          for (var bi = 0; bi < brs.length; bi++) {
+            if (brs[bi].id === lastBranch) {
+              label = (brs[bi].icon || "") + brs[bi].name;
+              skillKey = sk;
+              break;
+            }
+          }
+        }
+        if (label) break;
+      }
+      var level = st.skills[skillKey] && st.skills[skillKey].level || 0;
+      return "你在「" + label + "」方向上已经达到 Lv." + level + "的深度，\n" +
+             "同行们开始认可你的专业度。\n\n" +
+             "有人向你请教问题，你的经验开始被重视；\n" +
+             "有些工作机会只向有这个深度的人开放。\n" +
+             "深耕必有回响，这条路没有选错。";
+    },
+    getText: function (st) { return this.getStory(st); },
+    apply: function (st, choiceId) {
+      if (!st) return;
+      if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 10);
+      if (st.player) st.player.fame = Math.min(100, (st.player.fame || 50) + 3);
+      if (typeof addSkillXp === "function") addSkillXp("social", 5);
+      if (typeof StateManager !== "undefined" && StateManager.addMessage) {
+        StateManager.addMessage("📖 分支深化认可！心情+10， Fame +3，社交XP+5。你的专业深度得到了行业认可。", "success");
+      }
+    },
+    choices: [],
+    icons: ["📖", "深化"],
+  };
+
+  // ===== C→G: 分支专精心法 =====
+  var branch_mastery_art = {
+    id: "branch_mastery_art",
+    title: "💡 心法领悟",
+    phase: "street",
+    repeatable: false,
+    priority: 90,
+    conditions: function (st) {
+      if (!st || !st.flags) return false;
+      if (st.flags._branchMasteryArtShown) return false;
+      // 检查是否有选择的分支
+      if (!st.skillBranches || !st.skillBranches._lastChosen) return false;
+      // 检查该分支相关技能的等级是否非常高（>= 70）
+      var lastBranch = st.skillBranches._lastChosen;
+      var allBranches = typeof SKILL_BRANCHES === "object" ? SKILL_BRANCHES : {};
+      var skillKey = null;
+      for (var sk in allBranches) {
+        var brs = allBranches[sk];
+        if (brs && Array.isArray(brs)) {
+          for (var bi = 0; bi < brs.length; bi++) {
+            if (brs[bi].id === lastBranch) {
+              skillKey = sk;
+              break;
+            }
+          }
+        }
+        if (skillKey) break;
+      }
+      if (!skillKey || !st.skills || !st.skills[skillKey]) return false;
+      if (st.skills[skillKey].level < 70) return false;
+      return true;
+    },
+    probability: 1.0,
+    getStory: function (st) {
+      var lastBranch = st.skillBranches && st.skillBranches._lastChosen;
+      var allBranches = typeof SKILL_BRANCHES === "object" ? SKILL_BRANCHES : {};
+      var label = "";
+      var skillKey = "";
+      for (var sk in allBranches) {
+        var brs = allBranches[sk];
+        if (brs && Array.isArray(brs)) {
+          for (var bi = 0; bi < brs.length; bi++) {
+            if (brs[bi].id === lastBranch) {
+              label = (brs[bi].icon || "") + brs[bi].name;
+              skillKey = sk;
+              break;
+            }
+          }
+        }
+        if (label) break;
+      }
+      var level = st.skills[skillKey] && st.skills[skillKey].level || 0;
+      return "在「" + label + "」方向深耕至 Lv." + level + "，你终于领悟了这门技能的「心法」。\n\n" +
+             "这不仅仅是技术的堆砌，而是对底层逻辑的深刻理解。\n" +
+             "现在你看待问题的视角已经不同：\n" +
+             "• 别人看到的是表象，你看得到本质\n" +
+             "• 别人只能按部就班，你能举一反三\n" +
+             "• 别人解决问题靠技巧，你解决问题靠直觉\n\n" +
+             "这就是大师与普通人的差距。";
+    },
+    getText: function (st) { return this.getStory(st); },
+    apply: function (st, choiceId) {
+      if (!st) return;
+      st.flags._branchMasteryArtShown = st.player.day;
+      if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 25);
+      if (st.player) {
+        st.player.mental = Math.min(100, (st.player.mental || 50) + 15);
+        st.player.charm = Math.min(100, (st.player.charm || 50) + 5);
+      }
+      if (typeof addSkillXp === "function") {
+        addSkillXp(skillKey, 20); // 给予分支技能大量 XP
+        addSkillXp("management", 10);
+      }
+      if (typeof StateManager !== "undefined" && StateManager.addMessage) {
+        StateManager.addMessage("💡 心法领悟！心情+25，心智+15，魅力+5，分支技能 XP+20，管理XP+10。你进入了大师境界！", "success");
+      }
+    },
+    choices: [],
+    icons: ["💡", "心法"],
+  };
+
+  // 注入事件
+  if (typeof RANDOM_EVENTS !== "undefined") {
+    RANDOM_EVENTS.push(branch_deepening_recognition, branch_mastery_art);
+    if (typeof console !== "undefined" && console.log) {
+      console.log("[C R370] 2 branch mastery narrative events registered");
+    }
+  }
+})();
+
+;
+// ==== js/core/domain_c_linkage_r371.js ====
+/**
+ * 域C联动增强 R371 — 热爱工作叙事化
+ * [全系统自洽修复] 域C R371: 热爱工作首次被事件叙事消费
+ *
+ * 1个新事件：
+ *   C→G: 找到热爱工作 — 通过多段工作经历找到真正热爱的方向，获得职业幸福
+ */
+(function () {
+  "use strict";
+  if (typeof window === "undefined") return;
+
+  // ===== C→G: 找到热爱工作 =====
+  var found_passion_work = {
+    id: "found_passion_work",
+    title: "❤️ 热爱工作",
+    phase: "street",
+    repeatable: false,
+    priority: 95,
+    conditions: function (st) {
+      if (!st || !st.flags) return false;
+      if (st.flags._foundPassionWorkShown) return false;
+      // 检查是否有足够的工作经历（至少5段，表明经过多次尝试）
+      if (!st.career || !st.career.jobHistory) return false;
+      if (st.career.jobHistory.length < 5) return false; // 至少尝试过5份工作
+      // 检查当前工作是否是分支工作或高技能要求的工作
+      if (!st.career.currentJob) return false;
+      var job = st.career.currentJob;
+      // 检查是否有分支要求（表明是经过选择的专长方向）
+      var hasBranchRequirement = false;
+      if (typeof STREET_JOBS !== "undefined" && Array.isArray(STREET_JOBS)) {
+        for (var i = 0; i < STREET_JOBS.length; i++) {
+          if (STREET_JOBS[i].id === job.id && STREET_JOBS[i].branchRequirement) {
+            hasBranchRequirement = true;
+            break;
+          }
+        }
+      }
+      // 或者高技能要求的工作（技能等级>=30）
+      var hasHighSkill = false;
+      if (st.skills) {
+        for (var skillKey in st.skills) {
+          var skill = st.skills[skillKey];
+          if (skill && skill.level >= 30) {
+            hasHighSkill = true;
+            break;
+          }
+        }
+      }
+      if (!hasBranchRequirement && !hasHighSkill) return false;
+      // 检查倦怠值很低（表明工作让人享受而非痛苦）
+      if (!st.careerCapital) return false;
+      var burnout = (st.careerCapital.burnout || 0);
+      if (burnout > 30) return false; // 倦怠值不能太高
+      
+      return true;
+    },
+    probability: 1.0,
+    getStory: function (st) {
+      var job = st.career.currentJob;
+      return "经过「" + (st.career.jobHistory.length - 1) + "」次的工作尝试，\n" +
+             "你终于找到了一份真正热爱的「" + job.name + "」。\n\n" +
+             "这份工作不再是谋生的手段，而是你施展才华、实现价值的舞台。\n" +
+             "每天上班不再是煎熬，而是一种期待；\n" +
+             "付出的努力有了意义，收获的成就感源源不断。\n\n" +
+             "这就是职业幸福的真正来源——\n" +
+             "做你喜欢的事，并且为此获得回报。";
+    },
+    getText: function (st) { return this.getStory(st); },
+    apply: function (st, choiceId) {
+      if (!st) return;
+      st.flags._foundPassionWorkShown = st.player.day;
+      if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 30);
+      if (st.player) {
+        st.player.mental = Math.min(100, (st.player.mental || 50) + 20);
+        st.player.fame = Math.min(100, (st.player.fame || 50) + 15);
+      }
+      // 大幅降低倦怠值
+      if (st.careerCapital) {
+        st.careerCapital.burnout = Math.max(0, (st.careerCapital.burnout || 0) - 50);
+      }
+      if (typeof addSkillXp === "function") addSkillXp("management", 20);
+      if (typeof StateManager !== "undefined" && StateManager.addMessage) {
+        StateManager.addMessage("❤️ 找到热爱工作！心情+30，心智+20， Fame +15，倦怠-50，管理XP+20。你找到了职业幸福的真谛！", "success");
+      }
+    },
+    choices: [],
+    icons: ["❤️", "热爱"],
+  };
+
+  // 注入事件
+  if (typeof RANDOM_EVENTS !== "undefined") {
+    RANDOM_EVENTS.push(found_passion_work);
+    if (typeof console !== "undefined" && console.log) {
+      console.log("[C R371] 1 passion work event registered");
+    }
+  }
+})();
+
+;
 // ==== js/core/domain_c_linkage_r373.js ====
 /**
  * 域C(职业/成长) 联动增强 R373
@@ -328209,6 +328497,171 @@ if (typeof window !== "undefined") {
             if (typeof addSkillXp === "function") { try { addSkillXp("social", 9); } catch(e) {} }
             if (typeof StateManager !== "undefined") {
               StateManager.addMessage("🤝 '互惠,让关系更持久。' 社交XP+9。", "info");
+            }
+          }
+        }
+      ],
+      text: function (st) {
+        if (!st) return null;
+        return "NPC朋友带来的情报,让你在市场上更有优势——'信息,就是财富。'";
+      }
+    }
+  ];
+
+  for (var i = 0; i < EVENTS.length; i++) {
+    RANDOM_EVENTS.push(EVENTS[i]);
+  }
+})();
+
+;
+// ==== js/core/domain_d_linkage_r753.js ====
+/**
+ * 域D(NPC/社交) 联动增强 R753 (第七轮循环)
+ * 桥接：
+ *   D→B  d753_npc_event_story_v4 NPC事件故事v4 → 消费 事件+NPC关系
+ *   D→G  d753_social_wellness_v5 社交健康v5 → 消费 社交数据+needs
+ *   D→A  d753_social_capital_v5 社交资本v5 → 消费 NPC关系+pricing
+ */
+(function () {
+  "use strict";
+  if (typeof RANDOM_EVENTS === "undefined" || !RANDOM_EVENTS) return;
+  if (RANDOM_EVENTS._domainDLinkageR753Loaded) return;
+  RANDOM_EVENTS._domainDLinkageR753Loaded = true;
+
+  var EVENTS = [
+    {
+      id: "d753_npc_event_story_v4", phase: "street", _isChainEvent: false, icon: "🗣️",
+      title: "NPC事件故事",
+      story: "你和NPC共同经历的事件,正在产生回响——{desc}",
+      triggers: { minDay: 365, interval: 500, maxRepeats: 3, excludeFlags: ["_d753EchoCd"] },
+      conditions: function (st) {
+        if (!st || st.gameOver) return false;
+        if (st.flags && st.flags._d753EchoCd) return false;
+        return st.player && st.player.day >= 365 && st.relationships;
+      },
+      choices: [
+        {
+          text: "📖 分享故事", hint: "社交XP+15,置_d753StorySharer",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._d753EchoCd = true;
+            st.flags._d753StorySharer = true;
+            if (typeof addSkillXp === "function") { try { addSkillXp("social", 15); } catch(e) {} }
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("🗣️ '故事,让关系更有温度。' 社交XP+15。", "success");
+            }
+          }
+        },
+        {
+          text: "🤝 深化友谊", hint: "心智+12,置_d753DeepFriend",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._d753EchoCd = true;
+            st.flags._d753DeepFriend = true;
+            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 12);
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("🤝 '友谊,需要用心经营。' 心智+12。", "info");
+            }
+          }
+        }
+      ],
+      text: function (st) {
+        if (!st) return null;
+        return "你和NPC之间的故事,正在加深你们的友谊——'共同经历,是最好的纽带。'";
+      }
+    },
+    {
+      id: "d753_social_wellness_v5", phase: "street", _isChainEvent: false, icon: "💚",
+      title: "社交健康",
+      story: "良好的社交关系让身心更健康——{desc}",
+      triggers: { minDay: 300, interval: 365, maxRepeats: 4, excludeFlags: ["_d753HealthCd"] },
+      conditions: function (st) {
+        if (!st || st.gameOver) return false;
+        if (st.flags && st.flags._d753HealthCd) return false;
+        return st.player && st.player.day >= 300 && st.needs && st.status && st.relationships;
+      },
+      choices: [
+        {
+          text: "😊 感恩社交圈", hint: "心情+15,健康+8,置_d753Thankful",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._d753HealthCd = true;
+            st.flags._d753Thankful = true;
+            if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 15);
+            if (st.status) st.status.health = Math.min(100, (st.status.health || 100) + 8);
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("💚 '有朋友,真好。' 心情+15,健康+8。", "success");
+            }
+          }
+        },
+        {
+          text: "🏃 独处充电", hint: "心智+10,疲劳-10,置_d753SoloRecharger",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._d753HealthCd = true;
+            st.flags._d753SoloRecharger = true;
+            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 10);
+            if (st.needs) st.needs.fatigue = Math.max(0, (st.needs.fatigue || 0) - 10);
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("🏃 '独处,也是一种自我关爱。' 心智+10,疲劳-10。", "info");
+            }
+          }
+        }
+      ],
+      text: function (st) {
+        if (!st) return null;
+        if (!st.relationships) return "社交关系,是健康的重要支柱...";
+        var metCount = 0;
+        for (var k in st.relationships) {
+          if (st.relationships[k] && st.relationships[k].met) metCount++;
+        }
+        return "你有" + metCount + "位结识的朋友——'社交,是最好的保健品。'";
+      }
+    },
+    {
+      id: "d753_social_capital_v5", phase: "street", _isChainEvent: false, icon: "💰",
+      title: "社交资本",
+      story: "NPC朋友带来的情报,让你占了先机——{desc}",
+      triggers: { minDay: 400, interval: 500, maxRepeats: 3, excludeFlags: ["_d753CapitalCd"] },
+      conditions: function (st) {
+        if (!st || st.gameOver) return false;
+        if (st.flags && st.flags._d753CapitalCd) return false;
+        if (!st.relationships || !st.trade) return false;
+        var highAff = 0;
+        for (var k in st.relationships) {
+          if (st.relationships[k] && st.relationships[k].met && (st.relationships[k].affinity || 0) >= 80) highAff++;
+        }
+        return highAff >= 5 && st.player && st.player.day >= 400;
+      },
+      choices: [
+        {
+          text: "📊 利用信息优势", hint: "智力+10,会计XP+10,置_d753InfoAdvantager",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._d753CapitalCd = true;
+            st.flags._d753InfoAdvantager = true;
+            if (st.player) st.player.intelligence = Math.min(100, (st.player.intelligence || 50) + 10);
+            if (typeof addSkillXp === "function") { try { addSkillXp("accounting", 10); } catch(e) {} }
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("💰 '人脉就是钱脉。' 智力+10,会计XP+10。", "success");
+            }
+          }
+        },
+        {
+          text: "🤝 回馈朋友", hint: "社交XP+10,置_d753Reciprocator",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._d753CapitalCd = true;
+            st.flags._d753Reciprocator = true;
+            if (typeof addSkillXp === "function") { try { addSkillXp("social", 10); } catch(e) {} }
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("🤝 '互惠,让关系更持久。' 社交XP+10。", "info");
             }
           }
         }
