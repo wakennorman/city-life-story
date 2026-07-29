@@ -1704,3 +1704,20 @@ function getEventCareerInspiration(eventType, skills) {
   if (level >= 20) return { skill: skillKey, bonus: 0.1, label: '你已经具备了进阶' + skillKey + '的能力' };
   return null;
 }
+
+
+// [R731 第四轮 域B 联动增强 B→G]: 事件韧性成长追踪
+function getEventResilienceGrowth(state) {
+  if (!state || !state.flags) return 0;
+  var adversityCount = state.flags._adversityStreak || 0;
+  var totalEvents = (state.flags._eventHistory && state.flags._eventHistory.length) || 0;
+  if (totalEvents === 0) return 0;
+  return Math.min(10, Math.floor((adversityCount / totalEvents) * 20));
+}
+
+// [R731 第四轮 域B 联动增强 B→D]: 事件社交传播
+function getEventSocialSpread(eventType) {
+  if (!eventType) return null;
+  var spreads = { disaster: 'old_zhou', crime: 'boss_li', festival: 'xiao_mei', celebration: 'zhaojie', accident: 'aunt_wang', windfall: 'sister_zhang' };
+  return spreads[eventType] || null;
+}

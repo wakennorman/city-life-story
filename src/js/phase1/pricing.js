@@ -1097,3 +1097,38 @@ function getPriceFairnessReaction(state, goodId, price) {
   if (ratio < 0.6) return 1;
   return 0;
 }
+
+
+// [R730 第四轮 域A 联动增强 A→G]: 经济健康度指数
+function getEconomicHealthIndex(state) {
+  if (!state || !state.trade) return 50;
+  var priceStability = 1.0;
+  var count = 0;
+  if (state.trade._lastPrices) {
+    for (var gid in state.trade._lastPrices) {
+      var arr = state.trade._lastPrices[gid];
+      if (arr && arr.length >= 2) {
+        var recent = arr.slice(-5);
+        var avg = recent.reduce(function(s, v) { return s + v; }, 0) / recent.length;
+        var variance = recent.reduce(function(s, v) { return s + Math.abs(v - avg); }, 0) / avg;
+        priceStability += Math.max(0, 1 - variance);
+        count++;
+      }
+    }
+  }
+  var score = count > 0 ? Math.round((priceStability / count) * 50) : 50;
+  return Math.max(0, Math.min(100, score));
+}
+
+// [R730 第四轮 域A 联动增强 A→B]: 商品情报叙事
+function getGoodsIntelStory(goodId, state) {
+  if (!goodId || !state || !state.trade) return null;
+  var prices = state.trade._lastPrices && state.trade._lastPrices[goodId];
+  if (!prices || prices.length < 3) return null;
+  var recent = prices.slice(-3);
+  var trend = recent[2] - recent[0];
+  var name = (getGoodById && getGoodById(goodId) && getGoodById(goodId).name) || goodId;
+  if (trend > 0) return { type: 'uptrend', title: name + '上行', text: name + '价格连续上涨，市场看好。' };
+  if (trend < 0) return { type: 'downtrend', title: name + '下行', text: name + '价格连续下跌，观望为宜。' };
+  return null;
+}
