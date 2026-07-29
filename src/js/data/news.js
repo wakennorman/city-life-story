@@ -1705,6 +1705,7 @@ function getNpcIntelSourceName(npcId) {
 }
 
 function hasIntelNewsQueued(state, newsId) {
+  if (!state || !state.flags) return false;
   var active = state.activeNews || [];
   for (var i = 0; i < active.length; i++) {
     if (active[i].id === newsId) return true;
