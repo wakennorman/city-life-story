@@ -327464,210 +327464,6 @@ if (typeof window !== "undefined") {
   for (var i = 0; i < EVENTS.length; i++) { RANDOM_EVENTS.push(EVENTS[i]); }
 })();
 ;
-// ==== js/core/domain_b_linkage_r863.js ====
-/*
- * 城市浮生记 — 域B(事件/叙事) 联动增强 R863
- * 全系统优化·Domain B 第三十轮循环
- *
- * 【联动增强3项】
- *   1. B→H 事件公司文化v7 — 事件选择影响公司文化氛围（历轮域B全新方向）
- *   2. B→D 事件友谊深化v7 — 事件选择导致NPC关系深度变化
- *   3. B→G 事件人生影响v7 — 事件选择触发核心机制状态回响
- *
- * 设计约束（与历轮 IIFE linkage 文件一致）：
- *  - IIFE 注入全局 RANDOM_EVENTS，避免改动 cross_system_events.js。
- *  - 所有 state 访问均 || 防御；数值标 [PLACEHOLDER]。
- *  - 严格遵守域B铁律：NPC事件须 rel && rel.met；天气事件须 weather 守卫。
- */
-(function () {
-  "use strict";
-  if (typeof RANDOM_EVENTS === "undefined" || !RANDOM_EVENTS) return;
-  if (RANDOM_EVENTS._domainBLinkageR863Loaded) return;
-  RANDOM_EVENTS._domainBLinkageR863Loaded = true;
-
-  // ---- 本地助手 ----
-  function grantXp(key, amt) {
-    if (typeof addSkillXp === "function") { try { addSkillXp(key, amt); } catch(e) {} }
-  }
-
-  var EVENTS = [
-    // ========================================================================
-    // 联动增强1: B→H 事件公司文化v7 — 事件选择影响公司文化氛围
-    // 设计意图：玩家在事件中的道德/管理选择应影响公司文化，形成"选择→文化"反馈环。
-    // 本事件在corporate阶段且玩家经历≥20个事件时触发，给予"公司文化"标记。
-    // 心理学：禀赋效应 — 玩家感到"公司文化是我塑造的"。
-    // ========================================================================
-    {
-      id: "b863_event_corporate_culture_v7",
-      phase: "corporate",
-      icon: "🏢",
-      title: "你的选择，塑造了公司文化",
-      story: "回想这一路走来的抉择——那些坚持原则的时刻，那些灵活变通的瞬间。\n\n这些选择，不知不觉中成了一种「文化」。你的团队在模仿你，你的公司在反映你。",
-      conditions: function (st) {
-        if (!st || !st.player || st.gameOver) return false;
-        if (st.flags && st.flags._b863CorpCultureDone) return false;
-        if (st.player.phase !== "corporate") return false;
-        var _eventCount = st.flags._eventCount || 0;
-        return _eventCount >= 20 && st.player.day >= 150;
-      },
-      probability: 0.06,
-      repeatable: false,
-      choices: [
-        {
-          text: "🏢 坚持以身作则，强化文化",
-          hint: "管理XP+15, 置_b863CultureShaper",
-          apply: function (st) {
-            if (!st) return;
-            st.flags = st.flags || {};
-            st.flags._b863CorpCultureDone = true;
-            st.flags._b863CultureShaper = true;
-            grantXp("management", 15);
-            if (typeof StateManager !== "undefined") {
-              StateManager.addMessage("🏢 你的坚持让团队有了灵魂——管理XP+15。", "success");
-            }
-          }
-        },
-        {
-          text: "😊 文化是自然形成的",
-          hint: "心情+5",
-          apply: function (st) {
-            if (!st) return;
-            st.flags = st.flags || {};
-            st.flags._b863CorpCultureDone = true;
-            if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 5);
-            if (typeof StateManager !== "undefined") {
-              StateManager.addMessage("😊 顺其自然，也是一种智慧。心情+5。", "info");
-            }
-          }
-        }
-      ]
-    },
-
-    // ========================================================================
-    // 联动增强2: B→D 事件友谊深化v7 — 事件选择导致NPC关系深度变化
-    // 设计意图：事件中的选择应影响NPC关系，让玩家感到"选择有后果"。
-    // 本事件在玩家拥有≥2个好友(好感≥60)时触发。
-    // 心理学：社会比较 — 被朋友认可的满足感。
-    // ========================================================================
-    {
-      id: "b863_event_friendship_v7",
-      phase: "street",
-      icon: "💕",
-      title: "那些选择，让你和某些人更近了",
-      story: "你发现——那些曾经帮助过的朋友，现在成了你最坚实的后盾。\n\n不是因为你帮了他们，而是因为在每一个选择面前，你都选择了善良。",
-      conditions: function (st) {
-        if (!st || !st.player || st.gameOver) return false;
-        if (st.flags && st.flags._b863FriendshipDone) return false;
-        if (!st.relationships) return false;
-        var _closeCount = 0;
-        for (var _id in st.relationships) {
-          var _r = st.relationships[_id];
-          if (_r && _r.met && (_r.affinity || 0) >= 60) _closeCount++;
-        }
-        return _closeCount >= 2;
-      },
-      probability: 0.05,
-      repeatable: false,
-      choices: [
-        {
-          text: "💕 珍惜这份友谊",
-          hint: "所有好友(≥60)好感+5, 置_b863DeepFriendship",
-          apply: function (st) {
-            if (!st) return;
-            st.flags = st.flags || {};
-            st.flags._b863FriendshipDone = true;
-            st.flags._b863DeepFriendship = true;
-            for (var _id in st.relationships) {
-              var _r = st.relationships[_id];
-              if (_r && _r.met && (_r.affinity || 0) >= 60) {
-                if (typeof applyAffinityChange === "function") {
-                  applyAffinityChange(st, _id, 5, "友谊深化");
-                }
-              }
-            }
-            if (typeof StateManager !== "undefined") {
-              StateManager.addMessage("💕 你珍惜了每一份友谊——所有好友好感+5。", "success");
-            }
-          }
-        },
-        {
-          text: "😊 朋友不用刻意维护",
-          hint: "心智+3",
-          apply: function (st) {
-            if (!st) return;
-            st.flags = st.flags || {};
-            st.flags._b863FriendshipDone = true;
-            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 3);
-            if (typeof StateManager !== "undefined") {
-              StateManager.addMessage("😊 朋友不用刻意维护。心智+3。", "info");
-            }
-          }
-        }
-      ]
-    },
-
-    // ========================================================================
-    // 联动增强3: B→G 事件人生影响v7 — 事件选择触发核心机制状态回响
-    // 设计意图：事件中的选择应触发核心机制状态变化，让玩家感到"选择有后果"。
-    // 本事件在玩家经历≥30个事件且健康<50时触发。
-    // 心理学：损失厌恶 — 玩家更害怕因选择不当而失去健康。
-    // ========================================================================
-    {
-      id: "b863_event_life_impact_v7",
-      phase: "street",
-      icon: "🌟",
-      title: "那些选择，改变了你的人生",
-      story: "你回想起那些关键的时刻——\n\n选择帮王大婶修水管，还是选择旁观？\n\n选择揭发工头的违规，还是选择沉默？\n\n每一个选择，都把你推向了不同的人生轨道。",
-      conditions: function (st) {
-        if (!st || !st.player || st.gameOver) return false;
-        if (st.flags && st.flags._b863LifeImpactDone) return false;
-        var _eventCount = st.flags._eventCount || 0;
-        if (_eventCount < 30) return false;
-        var _health = st.status ? st.status.health : 100;
-        return _health < 50;
-      },
-      probability: 0.06,
-      repeatable: false,
-      choices: [
-        {
-          text: "🌟 每一个选择都值得",
-          hint: "健康+15, 心情+15, 置_b863LifeChoicesAcknowledged",
-          apply: function (st) {
-            if (!st) return;
-            st.flags = st.flags || {};
-            st.flags._b863LifeImpactDone = true;
-            st.flags._b863LifeChoicesAcknowledged = true;
-            if (st.status) st.status.health = Math.min(100, (st.status.health || 50) + 15);
-            if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 15);
-            if (typeof StateManager !== "undefined") {
-              StateManager.addMessage("🌟 每一个选择都值得——健康+15, 心情+15。这就是你的人生。", "success");
-            }
-          }
-        },
-        {
-          text: "😊 路还长，继续走",
-          hint: "心智+5",
-          apply: function (st) {
-            if (!st) return;
-            st.flags = st.flags || {};
-            st.flags._b863LifeImpactDone = true;
-            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 5);
-            if (typeof StateManager !== "undefined") {
-              StateManager.addMessage("😊 路还长，继续走。心智+5。", "success");
-            }
-          }
-        }
-      ]
-    }
-  ];
-
-  // ---- 注入全局 RANDOM_EVENTS ----
-  for (var i = 0; i < EVENTS.length; i++) {
-    RANDOM_EVENTS.push(EVENTS[i]);
-  }
-})();
-
-;
 // ==== js/core/domain_b_linkage_r797.js ====
 /*
  * 城市浮生记 — 域B(事件/叙事) 联动增强 R797
@@ -336621,2235 +336417,6 @@ if (typeof window !== "undefined") {
   }
 })();
 ;
-// ==== js/core/domain_c_linkage_r798.js ====
-/*
- * 城市浮生记 — 域C(职业/成长) 联动增强 R798
- * 全系统优化·Domain C 第五十八轮循环
- *
- * 【联动增强3项】
- *   1. C→A 技能市场定价 — 技能等级转化为商品定价加成
- *   2. C→E 职业收入→投资本金 — 工资积累引导投资意识觉醒
- *   3. C→G 职业倦怠→健康 — 工作压力反馈为身心状态回响
- *
- * 设计约束（与历轮 IIFE linkage 文件一致）：
- *  - IIFE 注入全局 RANDOM_EVENTS，避免改动 cross_system_events.js。
- *  - 所有 state 访问均 || 防御；数值标 [PLACEHOLDER]。
- */
-(function () {
-  "use strict";
-  if (typeof RANDOM_EVENTS === "undefined" || !RANDOM_EVENTS) return;
-  if (RANDOM_EVENTS._domainCLinkageR798Loaded) return;
-  RANDOM_EVENTS._domainCLinkageR798Loaded = true;
-
-  // ---- 本地助手 ----
-  function grantXp(key, amt) {
-    if (typeof addSkillXp === "function") { try { addSkillXp(key, amt); } catch(e) {} }
-  }
-
-  var EVENTS = [
-    // ========================================================================
-    // 联动增强1: C→A 技能市场定价 — 技能等级转化为商品定价加成
-    // 设计意图：技能等级应影响商品定价/交易效率，让玩家感到"技能有用"。
-    // 本事件在玩家拥有≥1个Lv.30+技能时触发，给予"技能定价加成"标记。
-    // 心理学：禀赋效应 — 玩家更珍视自己投入时间培养的技能。
-    // ========================================================================
-    {
-      id: "c798_skill_pricing_bonus",
-      phase: "street",
-      icon: "🏷️",
-      title: "你的技能，让你买卖更有优势",
-      story: "你在市场上讨价还价，发现自己对商品价值的判断比别人准得多。\n\n那些练起来的技能——会计让你看懂成本，销售让你砍价有术，维修让你识别货好坏。\n\n技能不只是找工作的敲门砖，更是日常生活中的「定价权」。",
-      conditions: function (st) {
-        if (!st || !st.player || st.gameOver) return false;
-        if (st.flags && st.flags._c798SkillPricingDone) return false;
-        if (!st.skills) return false;
-        // 至少1个技能≥Lv.30
-        for (var _sk in st.skills) {
-          var _sl = st.skills[_sk];
-          if (_sl && (_sl.level || 0) >= 30) return true;
-        }
-        return false;
-      },
-      probability: 0.05,
-      repeatable: false,
-      choices: [
-        {
-          text: "🏷️ 用技能获取定价优势",
-          hint: "智力+5, 销售XP+8, 置_c798SkillPricing",
-          apply: function (st) {
-            if (!st) return;
-            st.flags = st.flags || {};
-            st.flags._c798SkillPricingDone = true;
-            st.flags._c798SkillPricing = true;
-            if (st.player) st.player.intelligence = Math.min(100, (st.player.intelligence || 50) + 5);
-            grantXp("sales", 8);
-            if (typeof StateManager !== "undefined") {
-              StateManager.addMessage("🏷️ 技能让你在市场上更有优势——智力+5, 销售XP+8。", "success");
-            }
-          }
-        },
-        {
-          text: "😊 技能用在哪都行",
-          hint: "心智+2",
-          apply: function (st) {
-            if (!st) return;
-            st.flags = st.flags || {};
-            st.flags._c798SkillPricingDone = true;
-            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 2);
-            if (typeof StateManager !== "undefined") {
-              StateManager.addMessage("😊 技能用在哪都行，开心就好。", "info");
-            }
-          }
-        }
-      ]
-    },
-
-    // ========================================================================
-    // 联动增强2: C→E 职业收入→投资本金 — 工资积累引导投资意识觉醒
-    // 设计意图：职业收入应引导玩家关注投资，形成"赚钱→理财"的正向循环。
-    // 本事件在玩家总资产≥¥5万且已就业≥30天时触发。
-    // 心理学：禀赋效应 — 玩家感到"辛苦赚来的钱应该增值"。
-    // ========================================================================
-    {
-      id: "c798_career_to_investment",
-      phase: "street",
-      icon: "💰",
-      title: "工资躺着贬值，还是让它工作？",
-      story: "你算了算——存在银行的工资，利息跑不赢通胀。\n\n辛苦赚来的钱，每天都在悄悄缩水。\n\n是时候让钱为你工作了。",
-      conditions: function (st) {
-        if (!st || !st.player || st.gameOver) return false;
-        if (st.flags && st.flags._c798CareerInvestDone) return false;
-        if (!st.resources) return false;
-        var _total = (st.resources.cash || 0) + (st.resources.bankBalance || 0);
-        // 总资产≥5万且已就业≥30天
-        return _total >= 50000 && st.player.day >= 30;
-      },
-      probability: 0.06,
-      repeatable: false,
-      choices: [
-        {
-          text: "💰 学习让钱为自己工作",
-          hint: "智力+8, 会计XP+10, 置_c798InvestMindset",
-          apply: function (st) {
-            if (!st) return;
-            st.flags = st.flags || {};
-            st.flags._c798CareerInvestDone = true;
-            st.flags._c798InvestMindset = true;
-            if (st.player) st.player.intelligence = Math.min(100, (st.player.intelligence || 50) + 8);
-            grantXp("accounting", 10);
-            if (typeof StateManager !== "undefined") {
-              StateManager.addMessage("💰 你开始学习投资——智力+8, 会计XP+10。让钱为你工作。", "success");
-            }
-          }
-        },
-        {
-          text: "😅 存银行最安全",
-          hint: "心智+3",
-          apply: function (st) {
-            if (!st) return;
-            st.flags = st.flags || {};
-            st.flags._c798CareerInvestDone = true;
-            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 3);
-            if (typeof StateManager !== "undefined") {
-              StateManager.addMessage("😅 存银行最安全，不求大富大贵。", "info");
-            }
-          }
-        }
-      ]
-    },
-
-    // ========================================================================
-    // 联动增强3: C→G 职业倦怠→健康 — 工作压力反馈为身心状态回响
-    // 设计意图：职业倦怠应反馈为健康/心情下降，形成"工作→健康"反馈环。
-    // 本事件在玩家倦怠≥60且健康<50时触发，警示"身体是革命的本钱"。
-    // 心理学：损失厌恶 — 玩家更害怕因健康问题失去工作能力。
-    // ========================================================================
-    {
-      id: "c798_career_burnout_health",
-      phase: "street",
-      icon: "😮‍💨",
-      title: "工作压垮了你",
-      story: "你连续加班第三周了。头痛、胃痛、失眠……身体的警告信号越来越明显。\n\n但工作还在继续——业绩要冲、项目要赶、领导要汇报。\n\n你咬了咬牙，继续撑。但身体，不会陪你硬扛。",
-      conditions: function (st) {
-        if (!st || !st.player || st.gameOver) return false;
-        if (st.flags && st.flags._c798BurnoutHealthDone) return false;
-        // 倦怠≥60且健康<50
-        var _burnout = st.player.corporate ? (st.player.corporate.burnout || 0) : (st.needs ? st.needs.fatigue : 0);
-        var _health = st.status ? st.status.health : 100;
-        return _burnout >= 60 && _health < 50;
-      },
-      probability: 0.08,
-      repeatable: false,
-      choices: [
-        {
-          text: "💪 调整节奏，健康第一",
-          hint: "健康+15, 疲劳-20, 置_c798HealthFirst",
-          apply: function (st) {
-            if (!st) return;
-            st.flags = st.flags || {};
-            st.flags._c798BurnoutHealthDone = true;
-            st.flags._c798HealthFirst = true;
-            if (st.status) st.status.health = Math.min(100, (st.status.health || 50) + 15);
-            if (st.needs) st.needs.fatigue = Math.max(0, (st.needs.fatigue || 0) - 20);
-            if (typeof StateManager !== "undefined") {
-              StateManager.addMessage("💪 你决定调整节奏——健康+15, 疲劳-20。身体是革命的本钱。", "success");
-            }
-          }
-        },
-        {
-          text: "🔥 再撑一阵子就好了",
-          hint: "健康-10, 置_c798BurnoutRisk",
-          apply: function (st) {
-            if (!st) return;
-            st.flags = st.flags || {};
-            st.flags._c798BurnoutHealthDone = true;
-            st.flags._c798BurnoutRisk = true;
-            if (st.status) st.status.health = Math.max(0, (st.status.health || 50) - 10);
-            if (typeof StateManager !== "undefined") {
-              StateManager.addMessage("🔥 你选择继续硬撑——健康-10。注意身体！", "warning");
-            }
-          }
-        }
-      ]
-    }
-  ];
-
-  // ---- 注入全局 RANDOM_EVENTS ----
-  for (var i = 0; i < EVENTS.length; i++) {
-    RANDOM_EVENTS.push(EVENTS[i]);
-  }
-})();
-
-;
-// ==== js/core/domain_c_linkage_r806.js ====
-/*
- * 城市浮生记 — 域C(职业/成长) 联动增强 R806
- * 全系统优化·Domain C 第五十九轮循环
- *
- * 【联动增强3项】
- *   1. C→B 职业故事叙事 — 职业选择触发事件叙事回响
- *   2. C→D 职业人脉网络 — 职业环境拓展NPC社交圈
- *   3. C→H 职业到创业 — 职业积累引导创业时机
- *
- * 设计约束（与历轮 IIFE linkage 文件一致）：
- *  - IIFE 注入全局 RANDOM_EVENTS，避免改动 cross_system_events.js。
- *  - 所有 state 访问均 || 防御；数值标 [PLACEHOLDER]。
- */
-(function () {
-  "use strict";
-  if (typeof RANDOM_EVENTS === "undefined" || !RANDOM_EVENTS) return;
-  if (RANDOM_EVENTS._domainCLinkageR806Loaded) return;
-  RANDOM_EVENTS._domainCLinkageR806Loaded = true;
-
-  // ---- 本地助手 ----
-  function grantXp(key, amt) {
-    if (typeof addSkillXp === "function") { try { addSkillXp(key, amt); } catch(e) {} }
-  }
-
-  var EVENTS = [
-    // ========================================================================
-    // 联动增强1: C→B 职业故事叙事 — 职业选择触发事件叙事回响
-    // 设计意图：职业路径中的关键选择应产生叙事回响，让玩家感到"职业有故事"。
-    // 本事件在玩家晋升≥3次时触发，给予"职业故事"标记。
-    // 心理学：峰终定律 — 晋升时刻成为职业记忆锚点。
-    // ========================================================================
-    {
-      id: "c806_career_story_narrative",
-      phase: "street",
-      icon: "📖",
-      title: "每一步晋升，都是一段故事",
-      story: "你回顾了这一路走来的职业历程——从最初的打工人，到现在的岗位。\n\n每一次晋升，都是一次挑战；每一次挑战，都让你成长。\n\n这些经历，构成了你独有的「职业故事」。",
-      conditions: function (st) {
-        if (!st || !st.player || st.gameOver) return false;
-        if (st.flags && st.flags._c806CareerStoryDone) return false;
-        var _promotions = st.flags._promotionCount || 0;
-        return _promotions >= 3 && st.player.day >= 120;
-      },
-      probability: 0.05,
-      repeatable: false,
-      choices: [
-        {
-          text: "📖 记录我的职业故事",
-          hint: "心智+8, 置_c806CareerNarrative",
-          apply: function (st) {
-            if (!st) return;
-            st.flags = st.flags || {};
-            st.flags._c806CareerStoryDone = true;
-            st.flags._c806CareerNarrative = true;
-            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 8);
-            if (typeof StateManager !== "undefined") {
-              StateManager.addMessage("📖 职业故事记录完成——心智+8。每一步晋升，都是一段故事。", "success");
-            }
-          }
-        },
-        {
-          text: "😊 过去就过去了",
-          hint: "心情+3",
-          apply: function (st) {
-            if (!st) return;
-            st.flags = st.flags || {};
-            st.flags._c806CareerStoryDone = true;
-            if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 3);
-            if (typeof StateManager !== "undefined") {
-              StateManager.addMessage("😊 过去就过去了。心情+3。", "info");
-            }
-          }
-        }
-      ]
-    },
-
-    // ========================================================================
-    // 联动增强2: C→D 职业人脉网络 — 职业环境拓展NPC社交圈
-    // 设计意图：职业环境应带来社交机会，让玩家感到"工作中有朋友"。
-    // 本事件在玩家在职≥60天且已结识NPC<8时触发。
-    // 心理学：社会认同 — 被同事认同的满足感。
-    // ========================================================================
-    {
-      id: "c806_career_network",
-      phase: "street",
-      icon: "🤝",
-      title: "工作中，也能遇到对的人",
-      story: "你发现——每天一起工作的同事，有些人慢慢成了朋友。\n\n他们不只是工作伙伴，更是可以交心的人。\n\n职场里能遇到这样的伙伴，是一种幸运。",
-      conditions: function (st) {
-        if (!st || !st.player || st.gameOver) return false;
-        if (st.flags && st.flags._c806CareerNetDone) return false;
-        if (!st.relationships) return false;
-        var _metCount = 0;
-        for (var _id in st.relationships) {
-          if (st.relationships[_id] && st.relationships[_id].met) _metCount++;
-        }
-        return _metCount < 8 && st.player.day >= 60;
-      },
-      probability: 0.06,
-      repeatable: false,
-      choices: [
-        {
-          text: "🤝 主动结识职场朋友",
-          hint: "魅力+5, 社交XP+8, 置_c806WorkFriend",
-          apply: function (st) {
-            if (!st) return;
-            st.flags = st.flags || {};
-            st.flags._c806CareerNetDone = true;
-            st.flags._c806WorkFriend = true;
-            if (st.player) st.player.charm = Math.min(100, (st.player.charm || 50) + 5);
-            grantXp("social", 8);
-            if (typeof StateManager !== "undefined") {
-              StateManager.addMessage("🤝 主动结识职场朋友——魅力+5, 社交XP+8。", "success");
-            }
-          }
-        },
-        {
-          text: "😊 保持职场距离",
-          hint: "心智+2",
-          apply: function (st) {
-            if (!st) return;
-            st.flags = st.flags || {};
-            st.flags._c806CareerNetDone = true;
-            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 2);
-            if (typeof StateManager !== "undefined") {
-              StateManager.addMessage("😊 保持职场距离。心智+2。", "info");
-            }
-          }
-        }
-      ]
-    },
-
-    // ========================================================================
-    // 联动增强3: C→H 职业到创业 — 职业积累引导创业时机
-    // 设计意图：职业积累应引导玩家考虑创业，形成"打工→创业"的叙事弧线。
-    // 本事件在玩家在职≥365天且总资产≥¥20万时触发。
-    // 心理学：禀赋效应 — 玩家感到"职业积累为创业铺路"。
-    // ========================================================================
-    {
-      id: "c806_career_to_startup",
-      phase: "street",
-      icon: "🚀",
-      title: "打工，还是创业？",
-      story: "你算了算——在职场摸爬滚打了一年多，积累了经验、人脉、资金。\n\n一个念头开始浮现：是时候创业了吗？\n\n还是，继续打工更安全？\n\n这是一个需要认真思考的问题。",
-      conditions: function (st) {
-        if (!st || !st.player || st.gameOver) return false;
-        if (st.flags && st.flags._c806StartupPrepDone) return false;
-        if (!st.resources) return false;
-        var _total = (st.resources.cash || 0) + (st.resources.bankBalance || 0);
-        return _total >= 200000 && st.player.day >= 365;
-      },
-      probability: 0.07,
-      repeatable: false,
-      choices: [
-        {
-          text: "🚀 认真考虑创业",
-          hint: "智力+10, 管理XP+12, 置_c806StartupReady",
-          apply: function (st) {
-            if (!st) return;
-            st.flags = st.flags || {};
-            st.flags._c806StartupPrepDone = true;
-            st.flags._c806StartupReady = true;
-            if (st.player) st.player.intelligence = Math.min(100, (st.player.intelligence || 50) + 10);
-            grantXp("management", 12);
-            if (typeof StateManager !== "undefined") {
-              StateManager.addMessage("🚀 你开始认真考虑创业——智力+10, 管理XP+12。", "success");
-            }
-          }
-        },
-        {
-          text: "😅 打工更稳定",
-          hint: "心智+3",
-          apply: function (st) {
-            if (!st) return;
-            st.flags = st.flags || {};
-            st.flags._c806StartupPrepDone = true;
-            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 3);
-            if (typeof StateManager !== "undefined") {
-              StateManager.addMessage("😅 打工更稳定。心智+3。", "info");
-            }
-          }
-        }
-      ]
-    }
-  ];
-
-  // ---- 注入全局 RANDOM_EVENTS ----
-  for (var i = 0; i < EVENTS.length; i++) {
-    RANDOM_EVENTS.push(EVENTS[i]);
-  }
-})();
-
-;
-// ==== js/core/domain_c_linkage_r813.js ====
-/*
- * 城市浮生记 — 域C(职业/成长) 联动增强 R813
- * 全系统优化·Domain C 第六十轮循环
- *
- * 【联动增强3项】
- *   1. C→A 技能市场数据 — 技能等级转化为数值平衡数据资产
- *   2. C→E 职业技能→投资 — 职业技能引导经济/投资决策
- *   3. C→G 职业健康→生命质量 — 职业状态反馈为身心恢复
- *
- * 设计约束（与历轮 IIFE linkage 文件一致）：
- *  - IIFE 注入全局 RANDOM_EVENTS，避免改动 cross_system_events.js。
- *  - 所有 state 访问均 || 防御；数值标 [PLACEHOLDER]。
- */
-(function () {
-  "use strict";
-  if (typeof RANDOM_EVENTS === "undefined" || !RANDOM_EVENTS) return;
-  if (RANDOM_EVENTS._domainCLinkageR813Loaded) return;
-  RANDOM_EVENTS._domainCLinkageR813Loaded = true;
-
-  // ---- 本地助手 ----
-  function grantXp(key, amt) {
-    if (typeof addSkillXp === "function") { try { addSkillXp(key, amt); } catch(e) {} }
-  }
-
-  var EVENTS = [
-    // ========================================================================
-    // 联动增强1: C→A 技能市场数据 — 技能等级转化为数值平衡数据资产
-    // 设计意图：技能数据应成为数值域可消费的资产，让玩家感到"技能有价值"。
-    // 本事件在玩家拥有≥2个Lv.50+技能时触发，给予"技能市场数据"标记。
-    // 心理学：禀赋效应 — 玩家更珍视自己投入时间培养的技能。
-    // ========================================================================
-    {
-      id: "c813_skill_market_data",
-      phase: "street",
-      icon: "📊",
-      title: "你的技能，在市场上值多少钱？",
-      story: "你查看了技能市场报告——自己的技能水平，在市场上的定价一目了然。\n\n技能越高，市场定价越高。这不是抽象的感觉，而是真实的数据。\n\n数据告诉你：技能就是钱。",
-      conditions: function (st) {
-        if (!st || !st.player || st.gameOver) return false;
-        if (st.flags && st.flags._c813SkillDataDone) return false;
-        if (!st.skills) return false;
-        var _count = 0;
-        for (var _sk in st.skills) {
-          var _sl = st.skills[_sk];
-          if (_sl && (_sl.level || 0) >= 50) _count++;
-        }
-        return _count >= 2;
-      },
-      probability: 0.05,
-      repeatable: false,
-      choices: [
-        {
-          text: "📊 查看技能市场数据",
-          hint: "智力+5, 会计XP+8, 置_c813SkillValueData",
-          apply: function (st) {
-            if (!st) return;
-            st.flags = st.flags || {};
-            st.flags._c813SkillDataDone = true;
-            st.flags._c813SkillValueData = true;
-            if (st.player) st.player.intelligence = Math.min(100, (st.player.intelligence || 50) + 5);
-            grantXp("accounting", 8);
-            if (typeof StateManager !== "undefined") {
-              StateManager.addMessage("📊 技能市场数据已生成——智力+5, 会计XP+8。技能就是钱。", "success");
-            }
-          }
-        },
-        {
-          text: "😅 技能不用数据衡量",
-          hint: "心智+2",
-          apply: function (st) {
-            if (!st) return;
-            st.flags = st.flags || {};
-            st.flags._c813SkillDataDone = true;
-            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 2);
-            if (typeof StateManager !== "undefined") {
-              StateManager.addMessage("😅 技能不用数据衡量。心智+2。", "info");
-            }
-          }
-        }
-      ]
-    },
-
-    // ========================================================================
-    // 联动增强2: C→E 职业技能→投资 — 职业技能引导经济/投资决策
-    // 设计意图：职业技能应引导玩家关注投资，形成"技能→投资"决策链。
-    // 本事件在玩家拥有≥1个Lv.40+技能且总资产≥¥5万时触发。
-    // 心理学：禀赋效应 — 玩家感到"技能应该变现"。
-    // ========================================================================
-    {
-      id: "c813_skill_to_invest",
-      phase: "street",
-      icon: "💰",
-      title: "用技能赚钱，让钱生钱",
-      story: "你发现——自己的技能水平已经足够高了，但收入增长却遇到了瓶颈。\n\n是时候考虑：如何让技能赚到的钱，继续为你赚钱？\n\n从「打工者」到「投资者」，是人生的重要跨越。",
-      conditions: function (st) {
-        if (!st || !st.player || st.gameOver) return false;
-        if (st.flags && st.flags._c813SkillInvestDone) return false;
-        if (!st.skills || !st.resources) return false;
-        var _total = (st.resources.cash || 0) + (st.resources.bankBalance || 0);
-        if (_total < 50000) return false;
-        for (var _sk in st.skills) {
-          var _sl = st.skills[_sk];
-          if (_sl && (_sl.level || 0) >= 40) return true;
-        }
-        return false;
-      },
-      probability: 0.06,
-      repeatable: false,
-      choices: [
-        {
-          text: "💰 学习用技能收益投资",
-          hint: "智力+8, 会计XP+10, 置_c813SkillInvestor",
-          apply: function (st) {
-            if (!st) return;
-            st.flags = st.flags || {};
-            st.flags._c813SkillInvestDone = true;
-            st.flags._c813SkillInvestor = true;
-            if (st.player) st.player.intelligence = Math.min(100, (st.player.intelligence || 50) + 8);
-            grantXp("accounting", 10);
-            if (typeof StateManager !== "undefined") {
-              StateManager.addMessage("💰 你开始学习用技能收益投资——智力+8, 会计XP+10。", "success");
-            }
-          }
-        },
-        {
-          text: "😅 技能赚钱就够了",
-          hint: "心智+3",
-          apply: function (st) {
-            if (!st) return;
-            st.flags = st.flags || {};
-            st.flags._c813SkillInvestDone = true;
-            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 3);
-            if (typeof StateManager !== "undefined") {
-              StateManager.addMessage("😅 技能赚钱就够了。心智+3。", "info");
-            }
-          }
-        }
-      ]
-    },
-
-    // ========================================================================
-    // 联动增强3: C→G 职业健康→生命质量 — 职业状态反馈为身心恢复
-    // 设计意图：职业状态(倦怠/压力)应反馈为身心恢复需求，形成"工作→健康"反馈环。
-    // 本事件在玩家倦怠≥50时触发，给予"职业健康"标记。
-    // 心理学：损失厌恶 — 玩家更害怕因工作失去健康。
-    // ========================================================================
-    {
-      id: "c813_career_health_recovery",
-      phase: "street",
-      icon: "💚",
-      title: "工作再忙，也要照顾好自己",
-      story: "你感到疲惫——长时间的工作让身体发出了警告。\n\n健康不是无限的资源，它需要被照顾、被恢复。\n\n工作再忙，也要照顾好自己。",
-      conditions: function (st) {
-        if (!st || !st.player || st.gameOver) return false;
-        if (st.flags && st.flags._c813CareerHealthDone) return false;
-        var _burnout = st.player.corporate ? (st.player.corporate.burnout || 0) : (st.needs ? st.needs.fatigue : 0);
-        return _burnout >= 50;
-      },
-      probability: 0.07,
-      repeatable: false,
-      choices: [
-        {
-          text: "💚 主动恢复身心健康",
-          hint: "健康+10, 疲劳-15, 置_c813CareerHealthRecovery",
-          apply: function (st) {
-            if (!st) return;
-            st.flags = st.flags || {};
-            st.flags._c813CareerHealthDone = true;
-            st.flags._c813CareerHealthRecovery = true;
-            if (st.status) st.status.health = Math.min(100, (st.status.health || 50) + 10);
-            if (st.needs) st.needs.fatigue = Math.max(0, (st.needs.fatigue || 0) - 15);
-            if (typeof StateManager !== "undefined") {
-              StateManager.addMessage("💚 你主动恢复了身心健康——健康+10, 疲劳-15。", "success");
-            }
-          }
-        },
-        {
-          text: "🔥 再撑一阵子就好了",
-          hint: "健康-5, 置_c813BurnoutRisk",
-          apply: function (st) {
-            if (!st) return;
-            st.flags = st.flags || {};
-            st.flags._c813CareerHealthDone = true;
-            st.flags._c813BurnoutRisk = true;
-            if (st.status) st.status.health = Math.max(0, (st.status.health || 50) - 5);
-            if (typeof StateManager !== "undefined") {
-              StateManager.addMessage("🔥 你选择继续硬撑——健康-5。注意身体！", "warning");
-            }
-          }
-        }
-      ]
-    }
-  ];
-
-  // ---- 注入全局 RANDOM_EVENTS ----
-  for (var i = 0; i < EVENTS.length; i++) {
-    RANDOM_EVENTS.push(EVENTS[i]);
-  }
-})();
-
-;
-// ==== js/core/domain_c_linkage_r818.js ====
-/*
- * 城市浮生记 — 域C(职业/成长) 联动增强 R818
- * 全系统优化·Domain C 第六十一轮循环
- *
- * 【联动增强3项】
- *   1. C→D 职业人脉网络v2 — 职业环境深度拓展NPC社交圈
- *   2. C→H 职业到创业v2 — 职业积累深度引导创业时机
- *   3. C→F 职业技能展示UI — 技能面板展示职业成长轨迹
- *
- * 设计约束（与历轮 IIFE linkage 文件一致）：
- *  - IIFE 注入全局 RANDOM_EVENTS，避免改动 cross_system_events.js。
- *  - 所有 state 访问均 || 防御；数值标 [PLACEHOLDER]。
- */
-(function () {
-  "use strict";
-  if (typeof RANDOM_EVENTS === "undefined" || !RANDOM_EVENTS) return;
-  if (RANDOM_EVENTS._domainCLinkageR818Loaded) return;
-  RANDOM_EVENTS._domainCLinkageR818Loaded = true;
-
-  // ---- 本地助手 ----
-  function grantXp(key, amt) {
-    if (typeof addSkillXp === "function") { try { addSkillXp(key, amt); } catch(e) {} }
-  }
-
-  var EVENTS = [
-    // ========================================================================
-    // 联动增强1: C→D 职业人脉网络v2 — 职业环境深度拓展NPC社交圈
-    // 设计意图：职业环境应带来更深层的社交机会，让玩家感到"同事变朋友"。
-    // 本事件在玩家在职≥90天且已结识NPC<10时触发。
-    // 心理学：社会认同 — 被同事认同的满足感。
-    // ========================================================================
-    {
-      id: "c818_career_network_v2",
-      phase: "street",
-      icon: "🤝",
-      title: "职场朋友，是最稳固的人脉",
-      story: "你发现——那些一起扛过项目的同事，成了你最稳固的人脉。\n\n职场朋友不同于酒肉朋友，他们见过你的能力、了解你的为人。\n\n这种关系，经得起时间考验。",
-      conditions: function (st) {
-        if (!st || !st.player || st.gameOver) return false;
-        if (st.flags && st.flags._c818CareerNetDone) return false;
-        if (!st.relationships) return false;
-        var _metCount = 0;
-        for (var _id in st.relationships) {
-          if (st.relationships[_id] && st.relationships[_id].met) _metCount++;
-        }
-        return _metCount < 10 && st.player.day >= 90;
-      },
-      probability: 0.06,
-      repeatable: false,
-      choices: [
-        {
-          text: "🤝 深化职场友谊",
-          hint: "魅力+5, 社交XP+10, 置_c818DeepWorkFriend",
-          apply: function (st) {
-            if (!st) return;
-            st.flags = st.flags || {};
-            st.flags._c818CareerNetDone = true;
-            st.flags._c818DeepWorkFriend = true;
-            if (st.player) st.player.charm = Math.min(100, (st.player.charm || 50) + 5);
-            grantXp("social", 10);
-            if (typeof StateManager !== "undefined") {
-              StateManager.addMessage("🤝 你深化了职场友谊——魅力+5, 社交XP+10。职场朋友，是最稳固的人脉。", "success");
-            }
-          }
-        },
-        {
-          text: "😊 保持职场距离",
-          hint: "心智+3",
-          apply: function (st) {
-            if (!st) return;
-            st.flags = st.flags || {};
-            st.flags._c818CareerNetDone = true;
-            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 3);
-            if (typeof StateManager !== "undefined") {
-              StateManager.addMessage("😊 保持职场距离。心智+3。", "info");
-            }
-          }
-        }
-      ]
-    },
-
-    // ========================================================================
-    // 联动增强2: C→H 职业到创业v2 — 职业积累深度引导创业时机
-    // 设计意图：职业积累应深度引导玩家考虑创业，形成"打工→创业"的叙事弧线。
-    // 本事件在玩家在职≥500天且总资产≥¥30万时触发。
-    // 心理学：禀赋效应 — 玩家感到"职业积累为创业铺路"。
-    // ========================================================================
-    {
-      id: "c818_career_to_startup_v2",
-      phase: "street",
-      icon: "🚀",
-      title: "时机成熟了吗？",
-      story: "你在职场摸爬滚打了一年半多，积累了丰富的经验、人脉、资金。\n\n一个越来越清晰的声音在问：是时候创业了吗？\n\n这不是冲动，而是准备就绪后的自然选择。",
-      conditions: function (st) {
-        if (!st || !st.player || st.gameOver) return false;
-        if (st.flags && st.flags._c818StartupV2Done) return false;
-        if (!st.resources) return false;
-        var _total = (st.resources.cash || 0) + (st.resources.bankBalance || 0);
-        return _total >= 300000 && st.player.day >= 500;
-      },
-      probability: 0.07,
-      repeatable: false,
-      choices: [
-        {
-          text: "🚀 认真评估创业时机",
-          hint: "智力+10, 管理XP+15, 置_c818StartupReady",
-          apply: function (st) {
-            if (!st) return;
-            st.flags = st.flags || {};
-            st.flags._c818StartupV2Done = true;
-            st.flags._c818StartupReady = true;
-            if (st.player) st.player.intelligence = Math.min(100, (st.player.intelligence || 50) + 10);
-            grantXp("management", 15);
-            if (typeof StateManager !== "undefined") {
-              StateManager.addMessage("🚀 你认真评估了创业时机——智力+10, 管理XP+15。时机成熟了吗？", "success");
-            }
-          }
-        },
-        {
-          text: "😅 再等等看",
-          hint: "心智+3",
-          apply: function (st) {
-            if (!st) return;
-            st.flags = st.flags || {};
-            st.flags._c818StartupV2Done = true;
-            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 3);
-            if (typeof StateManager !== "undefined") {
-              StateManager.addMessage("😅 再等等看。心智+3。", "info");
-            }
-          }
-        }
-      ]
-    },
-
-    // ========================================================================
-    // 联动增强3: C→F 职业技能展示UI — 技能面板展示职业成长轨迹
-    // 设计意图：技能面板应展示职业成长轨迹和市场需求，让玩家感到"成长可见"。
-    // 本事件在玩家拥有≥3个Lv.30+技能时触发，给予"技能成长可视化"标记。
-    // 心理学：禀赋效应 — 玩家更珍视自己投入时间培养的技能。
-    // ========================================================================
-    {
-      id: "c818_skill_growth_ui",
-      phase: "street",
-      icon: "📊",
-      title: "你的技能成长，一目了然",
-      story: "你打开技能面板——每一个技能的成长轨迹、市场需求、职业关联都清晰可见。\n\n从最初的生疏，到现在的熟练。每一点进步，都记录在案。\n\n成长，最好的证明就是数据。",
-      conditions: function (st) {
-        if (!st || !st.player || st.gameOver) return false;
-        if (st.flags && st.flags._c818SkillUIDone) return false;
-        if (!st.skills) return false;
-        var _count = 0;
-        for (var _sk in st.skills) {
-          var _sl = st.skills[_sk];
-          if (_sl && (_sl.level || 0) >= 30) _count++;
-        }
-        return _count >= 3;
-      },
-      probability: 0.05,
-      repeatable: false,
-      choices: [
-        {
-          text: "📊 查看技能成长轨迹",
-          hint: "智力+5, 置_c818SkillGrowthViz",
-          apply: function (st) {
-            if (!st) return;
-            st.flags = st.flags || {};
-            st.flags._c818SkillUIDone = true;
-            st.flags._c818SkillGrowthViz = true;
-            if (st.player) st.player.intelligence = Math.min(100, (st.player.intelligence || 50) + 5);
-            if (typeof StateManager !== "undefined") {
-              StateManager.addMessage("📊 技能成长轨迹已可视化——智力+5。成长，最好的证明就是数据。", "success");
-            }
-          }
-        },
-        {
-          text: "😅 技能够用就行",
-          hint: "心智+2",
-          apply: function (st) {
-            if (!st) return;
-            st.flags = st.flags || {};
-            st.flags._c818SkillUIDone = true;
-            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 2);
-            if (typeof StateManager !== "undefined") {
-              StateManager.addMessage("😅 技能够用就行。心智+2。", "info");
-            }
-          }
-        }
-      ]
-    }
-  ];
-
-  // ---- 注入全局 RANDOM_EVENTS ----
-  for (var i = 0; i < EVENTS.length; i++) {
-    RANDOM_EVENTS.push(EVENTS[i]);
-  }
-})();
-
-;
-// ==== js/core/domain_c_linkage_r821.js ====
-/**
- * 域C(职业/成长) 联动增强 R821 (第十四轮循环)
- * 桥接：
- *   C→A  c821_career_data_v9 职业数据v9 → 消费 jobs/skills/employment 数据
- *   C→B  c821_career_story_v9 职业故事v9 → 消费 职业历史+事件
- *   C→G  c821_career_health_v9 职业健康v9 → 消费 职业数据+needs
- */
-(function () {
-  "use strict";
-  if (typeof RANDOM_EVENTS === "undefined" || !RANDOM_EVENTS) return;
-  if (RANDOM_EVENTS._domainCLinkageR821Loaded) return;
-  RANDOM_EVENTS._domainCLinkageR821Loaded = true;
-
-  var EVENTS = [
-    {
-      id: "c821_career_data_v9", phase: "street", _isChainEvent: false, icon: "💼",
-      title: "职业数据报告",
-      story: "你的职业数据正在讲述成长故事——这些数据,就是你的职业资本。",
-      triggers: { minDay: 200, interval: 300, maxRepeats: 3, excludeFlags: ["_c821DataCd"] },
-      conditions: function (st) {
-        if (!st || st.gameOver) return false;
-        if (st.flags && st.flags._c821DataCd) return false;
-        return st.player && st.player.day >= 200 && st.skills;
-      },
-      text: function (st) {
-        if (!st) return null;
-        return "你的职业正在成长——'这些数据,就是你的职业资本。'";
-      },
-      choices: [
-        {
-          text: "📊 分析职业轨迹", hint: "智力+20,会计XP+15,置_c821Analyst",
-          apply: function (st) {
-            if (!st) return;
-            st.flags = st.flags || {};
-            st.flags._c821DataCd = true;
-            st.flags._c821Analyst = true;
-            if (st.player) st.player.intelligence = Math.min(100, (st.player.intelligence || 50) + 20);
-            if (typeof addSkillXp === "function") { try { addSkillXp("accounting", 15); } catch(e) {} }
-            if (typeof StateManager !== "undefined") {
-              StateManager.addMessage("💼 '职业成长,需要数据支撑。' 智力+20,会计XP+15。", "success");
-            }
-          }
-        },
-        {
-          text: "🎯 规划职业路径", hint: "管理XP+20,置_c821Planner",
-          apply: function (st) {
-            if (!st) return;
-            st.flags = st.flags || {};
-            st.flags._c821DataCd = true;
-            st.flags._c821Planner = true;
-            if (typeof addSkillXp === "function") { try { addSkillXp("management", 20); } catch(e) {} }
-            if (typeof StateManager !== "undefined") {
-              StateManager.addMessage("🎯 '有规划,才有方向。' 管理XP+20。", "info");
-            }
-          }
-        }
-      ]
-    },
-    {
-      id: "c821_career_story_v9", phase: "street", _isChainEvent: false, icon: "📖",
-      title: "职业故事",
-      story: "你的职业变化正在书写故事——每一步,都值得被记录。",
-      triggers: { minDay: 300, interval: 350, maxRepeats: 3, excludeFlags: ["_c821NarrCd"] },
-      conditions: function (st) {
-        if (!st || st.gameOver) return false;
-        if (st.flags && st.flags._c821NarrCd) return false;
-        return st.player && st.player.day >= 300 && st.employment;
-      },
-      text: function (st) {
-        if (!st) return null;
-        var jobName = "无";
-        if (st.employment && st.employment.currentJob) jobName = st.employment.currentJob.name || "在职";
-        return "当前职业" + jobName + "——'这就是你的职业故事。'";
-      },
-      choices: [
-        {
-          text: "📜 记录职业历程", hint: "心智+20,置_c821Chronicler",
-          apply: function (st) {
-            if (!st) return;
-            st.flags = st.flags || {};
-            st.flags._c821NarrCd = true;
-            st.flags._c821Chronicler = true;
-            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 20);
-            if (typeof StateManager !== "undefined") {
-              StateManager.addMessage("📖 '每一步,都值得记录。' 心智+20。", "success");
-            }
-          }
-        },
-        {
-          text: "🚀 展望未来发展", hint: "智力+18,魅力+15,置_c821Visionary",
-          apply: function (st) {
-            if (!st) return;
-            st.flags = st.flags || {};
-            st.flags._c821NarrCd = true;
-            st.flags._c821Visionary = true;
-            if (st.player) {
-              st.player.intelligence = Math.min(100, (st.player.intelligence || 50) + 18);
-              st.player.charm = Math.min(100, (st.player.charm || 50) + 15);
-            }
-            if (typeof StateManager !== "undefined") {
-              StateManager.addMessage("🚀 '职业生涯,需要远见。' 智力+18,魅力+15。", "info");
-            }
-          }
-        }
-      ]
-    },
-    {
-      id: "c821_career_health_v9", phase: "street", _isChainEvent: false, icon: "💚",
-      title: "职业健康",
-      story: "工作不应以牺牲健康为代价——工作与健康,需要平衡。",
-      triggers: { minDay: 400, interval: 450, maxRepeats: 4, excludeFlags: ["_c821HealthCd"] },
-      conditions: function (st) {
-        if (!st || st.gameOver) return false;
-        if (st.flags && st.flags._c821HealthCd) return false;
-        return st.player && st.player.day >= 400 && st.needs && st.status;
-      },
-      text: function (st) {
-        if (!st) return null;
-        var fatigue = st.needs && isFinite(st.needs.fatigue) ? Math.round(st.needs.fatigue) : 0;
-        return "职场疲劳" + fatigue + "——'工作与健康,需要平衡。'";
-      },
-      choices: [
-        {
-          text: "🧘 工作生活平衡", hint: "心情+20,疲劳-20,置_c821Balanced",
-          apply: function (st) {
-            if (!st) return;
-            st.flags = st.flags || {};
-            st.flags._c821HealthCd = true;
-            st.flags._c821Balanced = true;
-            if (st.needs) {
-              st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 20);
-              st.needs.fatigue = Math.max(0, (st.needs.fatigue || 0) - 20);
-            }
-            if (typeof StateManager !== "undefined") {
-              StateManager.addMessage("💚 '工作是为了生活。' 心情+20,疲劳-20。", "success");
-            }
-          }
-        },
-        {
-          text: "🏋️ 职场健康管理", hint: "健康+18,置_c821Healthy",
-          apply: function (st) {
-            if (!st) return;
-            st.flags = st.flags || {};
-            st.flags._c821HealthCd = true;
-            st.flags._c821Healthy = true;
-            if (st.status) st.status.health = Math.min(100, (st.status.health || 100) + 18);
-            if (typeof StateManager !== "undefined") {
-              StateManager.addMessage("🏋️ '身体是革命的本钱。' 健康+18。", "info");
-            }
-          }
-        }
-      ]
-    }
-  ];
-
-  for (var i = 0; i < EVENTS.length; i++) {
-    RANDOM_EVENTS.push(EVENTS[i]);
-  }
-})();
-;
-// ==== js/core/domain_c_linkage_r824.js ====
-/*
- * 城市浮生记 — 域C(职业/成长) 联动增强 R824
- * 全系统优化·Domain C 第六十二轮循环
- *
- * 【联动增强3项】
- *   1. C→A 技能市场数据v2 — 技能等级转化为数值平衡数据资产
- *   2. C→E 职业技能→投资v3 — 职业技能深度引导投资决策
- *   3. C→G 职业健康→生命质量v2 — 职业状态深度反馈为身心恢复
- *
- * 设计约束（与历轮 IIFE linkage 文件一致）：
- *  - IIFE 注入全局 RANDOM_EVENTS，避免改动 cross_system_events.js。
- *  - 所有 state 访问均 || 防御；数值标 [PLACEHOLDER]。
- */
-(function () {
-  "use strict";
-  if (typeof RANDOM_EVENTS === "undefined" || !RANDOM_EVENTS) return;
-  if (RANDOM_EVENTS._domainCLinkageR824Loaded) return;
-  RANDOM_EVENTS._domainCLinkageR824Loaded = true;
-
-  // ---- 本地助手 ----
-  function grantXp(key, amt) {
-    if (typeof addSkillXp === "function") { try { addSkillXp(key, amt); } catch(e) {} }
-  }
-
-  var EVENTS = [
-    // ========================================================================
-    // 联动增强1: C→A 技能市场数据v2 — 技能等级转化为数值平衡数据资产
-    // 设计意图：技能数据应成为数值域可消费的资产，让玩家感到"技能有价值"。
-    // 本事件在玩家拥有≥2个Lv.60+技能时触发，给予"技能市场数据v2"标记。
-    // 心理学：禀赋效应 — 玩家更珍视自己投入时间培养的技能。
-    // ========================================================================
-    {
-      id: "c824_skill_market_data_v2",
-      phase: "street",
-      icon: "📊",
-      title: "你的技能，在市场上值多少钱？",
-      story: "你查看了技能市场报告——自己的技能水平，在市场上的定价一目了然。\n\n技能越高，市场定价越高。这不是抽象的感觉，而是真实的数据。",
-      conditions: function (st) {
-        if (!st || !st.player || st.gameOver) return false;
-        if (st.flags && st.flags._c824SkillDataDone) return false;
-        if (!st.skills) return false;
-        var _count = 0;
-        for (var _sk in st.skills) {
-          var _sl = st.skills[_sk];
-          if (_sl && (_sl.level || 0) >= 60) _count++;
-        }
-        return _count >= 2;
-      },
-      probability: 0.05,
-      repeatable: false,
-      choices: [
-        {
-          text: "📊 查看技能市场数据",
-          hint: "智力+8, 会计XP+10, 置_c824SkillValueData",
-          apply: function (st) {
-            if (!st) return;
-            st.flags = st.flags || {};
-            st.flags._c824SkillDataDone = true;
-            st.flags._c824SkillValueData = true;
-            if (st.player) st.player.intelligence = Math.min(100, (st.player.intelligence || 50) + 8);
-            grantXp("accounting", 10);
-            if (typeof StateManager !== "undefined") {
-              StateManager.addMessage("📊 技能市场数据已生成——智力+8, 会计XP+10。技能就是钱。", "success");
-            }
-          }
-        },
-        {
-          text: "😅 技能不用数据衡量",
-          hint: "心智+2",
-          apply: function (st) {
-            if (!st) return;
-            st.flags = st.flags || {};
-            st.flags._c824SkillDataDone = true;
-            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 2);
-            if (typeof StateManager !== "undefined") {
-              StateManager.addMessage("😅 技能不用数据衡量。心智+2。", "info");
-            }
-          }
-        }
-      ]
-    },
-
-    // ========================================================================
-    // 联动增强2: C→E 职业技能→投资v3 — 职业技能深度引导投资决策
-    // 设计意图：职业技能应深度引导玩家关注投资，形成"技能→投资"决策链。
-    // 本事件在玩家拥有≥1个Lv.50+技能且总资产≥¥10万时触发。
-    // 心理学：禀赋效应 — 玩家感到"技能应该变现"。
-    // ========================================================================
-    {
-      id: "c824_skill_to_invest_v3",
-      phase: "street",
-      icon: "💰",
-      title: "用技能赚钱，让钱生钱",
-      story: "你发现——自己的技能水平已经足够高了，但收入增长却遇到了瓶颈。\n\n是时候考虑：如何让技能赚到的钱，继续为你赚钱？",
-      conditions: function (st) {
-        if (!st || !st.player || st.gameOver) return false;
-        if (st.flags && st.flags._c824SkillInvestDone) return false;
-        if (!st.skills || !st.resources) return false;
-        var _total = (st.resources.cash || 0) + (st.resources.bankBalance || 0);
-        if (_total < 100000) return false;
-        for (var _sk in st.skills) {
-          var _sl = st.skills[_sk];
-          if (_sl && (_sl.level || 0) >= 50) return true;
-        }
-        return false;
-      },
-      probability: 0.06,
-      repeatable: false,
-      choices: [
-        {
-          text: "💰 学习用技能收益投资",
-          hint: "智力+10, 会计XP+12, 置_c824SkillInvestor",
-          apply: function (st) {
-            if (!st) return;
-            st.flags = st.flags || {};
-            st.flags._c824SkillInvestDone = true;
-            st.flags._c824SkillInvestor = true;
-            if (st.player) st.player.intelligence = Math.min(100, (st.player.intelligence || 50) + 10);
-            grantXp("accounting", 12);
-            if (typeof StateManager !== "undefined") {
-              StateManager.addMessage("💰 你开始学习用技能收益投资——智力+10, 会计XP+12。", "success");
-            }
-          }
-        },
-        {
-          text: "😅 技能赚钱就够了",
-          hint: "心智+3",
-          apply: function (st) {
-            if (!st) return;
-            st.flags = st.flags || {};
-            st.flags._c824SkillInvestDone = true;
-            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 3);
-            if (typeof StateManager !== "undefined") {
-              StateManager.addMessage("😅 技能赚钱就够了。心智+3。", "info");
-            }
-          }
-        }
-      ]
-    },
-
-    // ========================================================================
-    // 联动增强3: C→G 职业健康→生命质量v2 — 职业状态深度反馈为身心恢复
-    // 设计意图：职业状态(倦怠/压力)应深度反馈为身心恢复需求。
-    // 本事件在玩家倦怠≥60且健康<50时触发，给予"职业健康v2"标记。
-    // 心理学：损失厌恶 — 玩家更害怕因工作失去健康。
-    // ========================================================================
-    {
-      id: "c824_career_health_v2",
-      phase: "street",
-      icon: "💚",
-      title: "工作再忙，也要照顾好自己",
-      story: "你感到疲惫——长时间的工作让身体发出了警告。\n\n健康不是无限的资源，它需要被照顾、被恢复。",
-      conditions: function (st) {
-        if (!st || !st.player || st.gameOver) return false;
-        if (st.flags && st.flags._c824CareerHealthDone) return false;
-        var _burnout = st.player.corporate ? (st.player.corporate.burnout || 0) : (st.needs ? st.needs.fatigue : 0);
-        if (_burnout < 60) return false;
-        var _health = st.status ? st.status.health : 100;
-        return _health < 50;
-      },
-      probability: 0.07,
-      repeatable: false,
-      choices: [
-        {
-          text: "💚 主动恢复身心健康",
-          hint: "健康+15, 疲劳-20, 置_c824CareerHealthRecovery",
-          apply: function (st) {
-            if (!st) return;
-            st.flags = st.flags || {};
-            st.flags._c824CareerHealthDone = true;
-            st.flags._c824CareerHealthRecovery = true;
-            if (st.status) st.status.health = Math.min(100, (st.status.health || 50) + 15);
-            if (st.needs) st.needs.fatigue = Math.max(0, (st.needs.fatigue || 0) - 20);
-            if (typeof StateManager !== "undefined") {
-              StateManager.addMessage("💚 你主动恢复了身心健康——健康+15, 疲劳-20。", "success");
-            }
-          }
-        },
-        {
-          text: "🔥 再撑一阵子就好了",
-          hint: "健康-5, 置_c824BurnoutRisk",
-          apply: function (st) {
-            if (!st) return;
-            st.flags = st.flags || {};
-            st.flags._c824CareerHealthDone = true;
-            st.flags._c824BurnoutRisk = true;
-            if (st.status) st.status.health = Math.max(0, (st.status.health || 50) - 5);
-            if (typeof StateManager !== "undefined") {
-              StateManager.addMessage("🔥 你选择继续硬撑——健康-5。注意身体！", "warning");
-            }
-          }
-        }
-      ]
-    }
-  ];
-
-  // ---- 注入全局 RANDOM_EVENTS ----
-  for (var i = 0; i < EVENTS.length; i++) {
-    RANDOM_EVENTS.push(EVENTS[i]);
-  }
-})();
-
-;
-// ==== js/core/domain_c_linkage_r828.js ====
-/**
- * 域C(职业/成长) 联动增强 R828 (第十五轮循环)
- * 桥接：
- *   C→A  c828_career_insight 职业洞察 → 消费 jobs/skills 数据
- *   C→B  c828_career_narrative 职业叙事 → 消费 职业历史+事件
- *   C→G  c828_career_wellness 职业健康 → 消费 职业数据+needs
- */
-(function () {
-  "use strict";
-  if (typeof RANDOM_EVENTS === "undefined" || !RANDOM_EVENTS) return;
-  if (RANDOM_EVENTS._domainCLinkageR828Loaded) return;
-  RANDOM_EVENTS._domainCLinkageR828Loaded = true;
-
-  var EVENTS = [
-    {
-      id: "c828_career_insight", phase: "street", _isChainEvent: false, icon: "💼",
-      title: "职业洞察", story: "你的职业数据正在讲述成长故事——这些数据,就是你的职业资本。",
-      triggers: { minDay: 150, interval: 250, maxRepeats: 3, excludeFlags: ["_c828DataCd"] },
-      conditions: function (st) { if (!st || st.gameOver) return false; if (st.flags && st.flags._c828DataCd) return false; return st.player && st.player.day >= 150 && st.skills; },
-      text: function (st) { if (!st) return null; return "你的职业正在成长——'这些数据,就是你的职业资本。'"; },
-      choices: [
-        { text: "📊 分析轨迹", hint: "智力+20,会计XP+15,置_c828Analyst",
-          apply: function (st) { if (!st) return; st.flags = st.flags || {}; st.flags._c828DataCd = true; st.flags._c828Analyst = true; if (st.player) st.player.intelligence = Math.min(100, (st.player.intelligence || 50) + 20); if (typeof addSkillXp === "function") { try { addSkillXp("accounting", 15); } catch(e) {} } if (typeof StateManager !== "undefined") { StateManager.addMessage("💼 '职业成长需要数据支撑。' 智力+20,会计XP+15。", "success"); } }
-        },
-        { text: "🎯 规划路径", hint: "管理XP+20,置_c828Planner",
-          apply: function (st) { if (!st) return; st.flags = st.flags || {}; st.flags._c828DataCd = true; st.flags._c828Planner = true; if (typeof addSkillXp === "function") { try { addSkillXp("management", 20); } catch(e) {} } if (typeof StateManager !== "undefined") { StateManager.addMessage("🎯 '有规划才有方向。' 管理XP+20。", "info"); } }
-        }
-      ]
-    },
-    {
-      id: "c828_career_narrative", phase: "street", _isChainEvent: false, icon: "📖",
-      title: "职业叙事", story: "你的职业变化正在书写故事——每一步,都值得记录。",
-      triggers: { minDay: 250, interval: 300, maxRepeats: 3, excludeFlags: ["_c828NarrCd"] },
-      conditions: function (st) { if (!st || st.gameOver) return false; if (st.flags && st.flags._c828NarrCd) return false; return st.player && st.player.day >= 250 && st.employment; },
-      text: function (st) { if (!st) return null; var j = "无"; if (st.employment && st.employment.currentJob) j = st.employment.currentJob.name || "在职"; return "当前职业" + j + "——'这就是你的职业故事。'"; },
-      choices: [
-        { text: "📜 记录历程", hint: "心智+20,置_c828Chronicler",
-          apply: function (st) { if (!st) return; st.flags = st.flags || {}; st.flags._c828NarrCd = true; st.flags._c828Chronicler = true; if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 20); if (typeof StateManager !== "undefined") { StateManager.addMessage("📖 '每一步都值得记录。' 心智+20。", "success"); } }
-        },
-        { text: "🚀 展望未来", hint: "智力+18,魅力+15,置_c828Visionary",
-          apply: function (st) { if (!st) return; st.flags = st.flags || {}; st.flags._c828NarrCd = true; st.flags._c828Visionary = true; if (st.player) { st.player.intelligence = Math.min(100, (st.player.intelligence || 50) + 18); st.player.charm = Math.min(100, (st.player.charm || 50) + 15); } if (typeof StateManager !== "undefined") { StateManager.addMessage("🚀 '职业生涯需要远见。' 智力+18,魅力+15。", "info"); } }
-        }
-      ]
-    },
-    {
-      id: "c828_career_wellness", phase: "street", _isChainEvent: false, icon: "💚",
-      title: "职业健康", story: "工作不应以牺牲健康为代价——工作与健康,需要平衡。",
-      triggers: { minDay: 350, interval: 400, maxRepeats: 4, excludeFlags: ["_c828HealthCd"] },
-      conditions: function (st) { if (!st || st.gameOver) return false; if (st.flags && st.flags._c828HealthCd) return false; return st.player && st.player.day >= 350 && st.needs && st.status; },
-      text: function (st) { if (!st) return null; var f = st.needs && isFinite(st.needs.fatigue) ? Math.round(st.needs.fatigue) : 0; return "职场疲劳" + f + "——'工作与健康,需要平衡。'"; },
-      choices: [
-        { text: "🧘 平衡生活", hint: "心情+20,疲劳-20,置_c828Balanced",
-          apply: function (st) { if (!st) return; st.flags = st.flags || {}; st.flags._c828HealthCd = true; st.flags._c828Balanced = true; if (st.needs) { st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 20); st.needs.fatigue = Math.max(0, (st.needs.fatigue || 0) - 20); } if (typeof StateManager !== "undefined") { StateManager.addMessage("💚 '工作是为了生活。' 心情+20,疲劳-20。", "success"); } }
-        },
-        { text: "🏋️ 健康管理", hint: "健康+18,置_c828Healthy",
-          apply: function (st) { if (!st) return; st.flags = st.flags || {}; st.flags._c828HealthCd = true; st.flags._c828Healthy = true; if (st.status) st.status.health = Math.min(100, (st.status.health || 100) + 18); if (typeof StateManager !== "undefined") { StateManager.addMessage("🏋️ '身体是革命的本钱。' 健康+18。", "info"); } }
-        }
-      ]
-    }
-  ];
-
-  for (var i = 0; i < EVENTS.length; i++) { RANDOM_EVENTS.push(EVENTS[i]); }
-})();
-;
-// ==== js/core/domain_c_linkage_r832.js ====
-/*
- * 城市浮生记 — 域C(职业/成长) 联动增强 R832
- * 全系统优化·Domain C 第六十三轮循环
- *
- * 【联动增强3项】
- *   1. C→B 职业故事叙事v3 — 职业选择触发事件叙事回响
- *   2. C→D 职业人脉网络v3 — 职业环境深度拓展NPC社交圈
- *   3. C→H 职业到创业v3 — 职业积累深度引导创业时机
- *
- * 设计约束（与历轮 IIFE linkage 文件一致）：
- *  - IIFE 注入全局 RANDOM_EVENTS，避免改动 cross_system_events.js。
- *  - 所有 state 访问均 || 防御；数值标 [PLACEHOLDER]。
- */
-(function () {
-  "use strict";
-  if (typeof RANDOM_EVENTS === "undefined" || !RANDOM_EVENTS) return;
-  if (RANDOM_EVENTS._domainCLinkageR832Loaded) return;
-  RANDOM_EVENTS._domainCLinkageR832Loaded = true;
-
-  // ---- 本地助手 ----
-  function grantXp(key, amt) {
-    if (typeof addSkillXp === "function") { try { addSkillXp(key, amt); } catch(e) {} }
-  }
-
-  var EVENTS = [
-    // ========================================================================
-    // 联动增强1: C→B 职业故事叙事v3 — 职业选择触发事件叙事回响
-    // 设计意图：职业路径中的关键选择应产生叙事回响，让玩家感到"职业有故事"。
-    // 本事件在玩家晋升≥4次时触发，给予"职业故事v3"标记。
-    // 心理学：峰终定律 — 晋升时刻成为职业记忆锚点。
-    // ========================================================================
-    {
-      id: "c832_career_story_v3",
-      phase: "street",
-      icon: "📖",
-      title: "每一步晋升，都是一段故事",
-      story: "你回顾了这一路走来的职业历程——从最初的打工人，到现在的岗位。\n\n每一次晋升，都是一次挑战；每一次挑战，都让你成长。",
-      conditions: function (st) {
-        if (!st || !st.player || st.gameOver) return false;
-        if (st.flags && st.flags._c832CareerStoryDone) return false;
-        var _promotions = st.flags._promotionCount || 0;
-        return _promotions >= 4 && st.player.day >= 150;
-      },
-      probability: 0.05,
-      repeatable: false,
-      choices: [
-        {
-          text: "📖 记录我的职业故事",
-          hint: "心智+10, 置_c832CareerNarrative",
-          apply: function (st) {
-            if (!st) return;
-            st.flags = st.flags || {};
-            st.flags._c832CareerStoryDone = true;
-            st.flags._c832CareerNarrative = true;
-            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 10);
-            if (typeof StateManager !== "undefined") {
-              StateManager.addMessage("📖 职业故事记录完成——心智+10。每一步晋升，都是一段故事。", "success");
-            }
-          }
-        },
-        {
-          text: "😊 过去就过去了",
-          hint: "心情+3",
-          apply: function (st) {
-            if (!st) return;
-            st.flags = st.flags || {};
-            st.flags._c832CareerStoryDone = true;
-            if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 3);
-            if (typeof StateManager !== "undefined") {
-              StateManager.addMessage("😊 过去就过去了。心情+3。", "info");
-            }
-          }
-        }
-      ]
-    },
-
-    // ========================================================================
-    // 联动增强2: C→D 职业人脉网络v3 — 职业环境深度拓展NPC社交圈
-    // 设计意图：职业环境应带来更深层的社交机会，让玩家感到"同事变朋友"。
-    // 本事件在玩家在职≥120天且已结识NPC<12时触发。
-    // 心理学：社会认同 — 被同事认同的满足感。
-    // ========================================================================
-    {
-      id: "c832_career_network_v3",
-      phase: "street",
-      icon: "🤝",
-      title: "职场朋友，是最稳固的人脉",
-      story: "你发现——那些一起扛过项目的同事，成了你最稳固的人脉。\n\n职场朋友不同于酒肉朋友，他们见过你的能力、了解你的为人。",
-      conditions: function (st) {
-        if (!st || !st.player || st.gameOver) return false;
-        if (st.flags && st.flags._c832CareerNetDone) return false;
-        if (!st.relationships) return false;
-        var _metCount = 0;
-        for (var _id in st.relationships) {
-          if (st.relationships[_id] && st.relationships[_id].met) _metCount++;
-        }
-        return _metCount < 12 && st.player.day >= 120;
-      },
-      probability: 0.06,
-      repeatable: false,
-      choices: [
-        {
-          text: "🤝 深化职场友谊",
-          hint: "魅力+8, 社交XP+12, 置_c832DeepWorkFriend",
-          apply: function (st) {
-            if (!st) return;
-            st.flags = st.flags || {};
-            st.flags._c832CareerNetDone = true;
-            st.flags._c832DeepWorkFriend = true;
-            if (st.player) st.player.charm = Math.min(100, (st.player.charm || 50) + 8);
-            grantXp("social", 12);
-            if (typeof StateManager !== "undefined") {
-              StateManager.addMessage("🤝 你深化了职场友谊——魅力+8, 社交XP+12。", "success");
-            }
-          }
-        },
-        {
-          text: "😊 保持职场距离",
-          hint: "心智+3",
-          apply: function (st) {
-            if (!st) return;
-            st.flags = st.flags || {};
-            st.flags._c832CareerNetDone = true;
-            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 3);
-            if (typeof StateManager !== "undefined") {
-              StateManager.addMessage("😊 保持职场距离。心智+3。", "info");
-            }
-          }
-        }
-      ]
-    },
-
-    // ========================================================================
-    // 联动增强3: C→H 职业到创业v3 — 职业积累深度引导创业时机
-    // 设计意图：职业积累应深度引导玩家考虑创业，形成"打工→创业"的叙事弧线。
-    // 本事件在玩家在职≥600天且总资产≥¥40万时触发。
-    // 心理学：禀赋效应 — 玩家感到"职业积累为创业铺路"。
-    // ========================================================================
-    {
-      id: "c832_career_to_startup_v3",
-      phase: "street",
-      icon: "🚀",
-      title: "时机成熟了吗？",
-      story: "你在职场摸爬滚打了一年半多，积累了丰富的经验、人脉、资金。\n\n一个越来越清晰的声音在问：是时候创业了吗？",
-      conditions: function (st) {
-        if (!st || !st.player || st.gameOver) return false;
-        if (st.flags && st.flags._c832StartupV3Done) return false;
-        if (!st.resources) return false;
-        var _total = (st.resources.cash || 0) + (st.resources.bankBalance || 0);
-        return _total >= 400000 && st.player.day >= 600;
-      },
-      probability: 0.07,
-      repeatable: false,
-      choices: [
-        {
-          text: "🚀 认真评估创业时机",
-          hint: "智力+12, 管理XP+15, 置_c832StartupReady",
-          apply: function (st) {
-            if (!st) return;
-            st.flags = st.flags || {};
-            st.flags._c832StartupV3Done = true;
-            st.flags._c832StartupReady = true;
-            if (st.player) st.player.intelligence = Math.min(100, (st.player.intelligence || 50) + 12);
-            grantXp("management", 15);
-            if (typeof StateManager !== "undefined") {
-              StateManager.addMessage("🚀 你认真评估了创业时机——智力+12, 管理XP+15。", "success");
-            }
-          }
-        },
-        {
-          text: "😅 再等等看",
-          hint: "心智+3",
-          apply: function (st) {
-            if (!st) return;
-            st.flags = st.flags || {};
-            st.flags._c832StartupV3Done = true;
-            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 3);
-            if (typeof StateManager !== "undefined") {
-              StateManager.addMessage("😅 再等等看。心智+3。", "info");
-            }
-          }
-        }
-      ]
-    }
-  ];
-
-  // ---- 注入全局 RANDOM_EVENTS ----
-  for (var i = 0; i < EVENTS.length; i++) {
-    RANDOM_EVENTS.push(EVENTS[i]);
-  }
-})();
-
-;
-// ==== js/core/domain_c_linkage_r835.js ====
-/**
- * 域C(职业/成长) 联动增强 R835 (第十六轮循环)
- * 桥接：
- *   C→A  c835_career_track 职业轨迹 → 消费 jobs/skills 数据
- *   C→B  c835_career_tale 职业故事 → 消费 职业历史+事件
- *   C→G  c835_career_vitality 职业活力 → 消费 职业数据+needs
- */
-(function () {
-  "use strict";
-  if (typeof RANDOM_EVENTS === "undefined" || !RANDOM_EVENTS) return;
-  if (RANDOM_EVENTS._domainCLinkageR835Loaded) return;
-  RANDOM_EVENTS._domainCLinkageR835Loaded = true;
-
-  var EVENTS = [
-    {
-      id: "c835_career_track", phase: "street", _isChainEvent: false, icon: "💼",
-      title: "职业轨迹", story: "你的职业数据正在讲述成长故事——这些数据,就是你的职业资本。",
-      triggers: { minDay: 120, interval: 200, maxRepeats: 3, excludeFlags: ["_c835TrackCd"] },
-      conditions: function (st) { if (!st || st.gameOver) return false; if (st.flags && st.flags._c835TrackCd) return false; return st.player && st.player.day >= 120 && st.skills; },
-      text: function (st) { if (!st) return null; return "你的职业正在成长——'这些数据,就是你的职业资本。'"; },
-      choices: [
-        { text: "📊 分析轨迹", hint: "智力+20,会计XP+15,置_c835Analyst",
-          apply: function (st) { if (!st) return; st.flags = st.flags || {}; st.flags._c835TrackCd = true; st.flags._c835Analyst = true; if (st.player) st.player.intelligence = Math.min(100, (st.player.intelligence || 50) + 20); if (typeof addSkillXp === "function") { try { addSkillXp("accounting", 15); } catch(e) {} } if (typeof StateManager !== "undefined") { StateManager.addMessage("💼 '职业成长需要数据支撑。' 智力+20,会计XP+15。", "success"); } }
-        },
-        { text: "🎯 规划路径", hint: "管理XP+20,置_c835Planner",
-          apply: function (st) { if (!st) return; st.flags = st.flags || {}; st.flags._c835TrackCd = true; st.flags._c835Planner = true; if (typeof addSkillXp === "function") { try { addSkillXp("management", 20); } catch(e) {} } if (typeof StateManager !== "undefined") { StateManager.addMessage("🎯 '有规划才有方向。' 管理XP+20。", "info"); } }
-        }
-      ]
-    },
-    {
-      id: "c835_career_tale", phase: "street", _isChainEvent: false, icon: "📖",
-      title: "职业故事", story: "你的职业变化正在书写故事——每一步,都值得记录。",
-      triggers: { minDay: 200, interval: 250, maxRepeats: 3, excludeFlags: ["_c835TaleCd"] },
-      conditions: function (st) { if (!st || st.gameOver) return false; if (st.flags && st.flags._c835TaleCd) return false; return st.player && st.player.day >= 200 && st.employment; },
-      text: function (st) { if (!st) return null; var j = "无"; if (st.employment && st.employment.currentJob) j = st.employment.currentJob.name || "在职"; return "当前职业" + j + "——'这就是你的职业故事。'"; },
-      choices: [
-        { text: "📜 记录历程", hint: "心智+20,置_c835Chronicler",
-          apply: function (st) { if (!st) return; st.flags = st.flags || {}; st.flags._c835TaleCd = true; st.flags._c835Chronicler = true; if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 20); if (typeof StateManager !== "undefined") { StateManager.addMessage("📖 '每一步都值得记录。' 心智+20。", "success"); } }
-        },
-        { text: "🚀 展望未来", hint: "智力+18,魅力+15,置_c835Visionary",
-          apply: function (st) { if (!st) return; st.flags = st.flags || {}; st.flags._c835TaleCd = true; st.flags._c835Visionary = true; if (st.player) { st.player.intelligence = Math.min(100, (st.player.intelligence || 50) + 18); st.player.charm = Math.min(100, (st.player.charm || 50) + 15); } if (typeof StateManager !== "undefined") { StateManager.addMessage("🚀 '职业生涯需要远见。' 智力+18,魅力+15。", "info"); } }
-        }
-      ]
-    },
-    {
-      id: "c835_career_vitality", phase: "street", _isChainEvent: false, icon: "💚",
-      title: "职业活力", story: "工作不应以牺牲健康为代价——工作与健康,需要平衡。",
-      triggers: { minDay: 300, interval: 350, maxRepeats: 4, excludeFlags: ["_c835VitalCd"] },
-      conditions: function (st) { if (!st || st.gameOver) return false; if (st.flags && st.flags._c835VitalCd) return false; return st.player && st.player.day >= 300 && st.needs && st.status; },
-      text: function (st) { if (!st) return null; var f = st.needs && isFinite(st.needs.fatigue) ? Math.round(st.needs.fatigue) : 0; return "职场疲劳" + f + "——'工作与健康,需要平衡。'"; },
-      choices: [
-        { text: "🧘 平衡生活", hint: "心情+20,疲劳-20,置_c835Balanced",
-          apply: function (st) { if (!st) return; st.flags = st.flags || {}; st.flags._c835VitalCd = true; st.flags._c835Balanced = true; if (st.needs) { st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 20); st.needs.fatigue = Math.max(0, (st.needs.fatigue || 0) - 20); } if (typeof StateManager !== "undefined") { StateManager.addMessage("💚 '工作是为了生活。' 心情+20,疲劳-20。", "success"); } }
-        },
-        { text: "🏋️ 健康管理", hint: "健康+18,置_c835Healthy",
-          apply: function (st) { if (!st) return; st.flags = st.flags || {}; st.flags._c835VitalCd = true; st.flags._c835Healthy = true; if (st.status) st.status.health = Math.min(100, (st.status.health || 100) + 18); if (typeof StateManager !== "undefined") { StateManager.addMessage("🏋️ '身体是革命的本钱。' 健康+18。", "info"); } }
-        }
-      ]
-    }
-  ];
-
-  for (var i = 0; i < EVENTS.length; i++) { RANDOM_EVENTS.push(EVENTS[i]); }
-})();
-;
-// ==== js/core/domain_c_linkage_r840.js ====
-/*
- * 城市浮生记 — 域C(职业/成长) 联动增强 R840
- * 全系统优化·Domain C 第六十四轮循环
- *
- * 【联动增强3项】
- *   1. C→A 技能市场数据v3 — 技能等级转化为数值平衡数据资产
- *   2. C→E 职业技能→投资v4 — 职业技能深度引导投资决策
- *   3. C→G 职业健康→生命质量v3 — 职业状态深度反馈为身心恢复
- *
- * 设计约束（与历轮 IIFE linkage 文件一致）：
- *  - IIFE 注入全局 RANDOM_EVENTS，避免改动 cross_system_events.js。
- *  - 所有 state 访问均 || 防御；数值标 [PLACEHOLDER]。
- */
-(function () {
-  "use strict";
-  if (typeof RANDOM_EVENTS === "undefined" || !RANDOM_EVENTS) return;
-  if (RANDOM_EVENTS._domainCLinkageR840Loaded) return;
-  RANDOM_EVENTS._domainCLinkageR840Loaded = true;
-
-  // ---- 本地助手 ----
-  function grantXp(key, amt) {
-    if (typeof addSkillXp === "function") { try { addSkillXp(key, amt); } catch(e) {} }
-  }
-
-  var EVENTS = [
-    // ========================================================================
-    // 联动增强1: C→A 技能市场数据v3 — 技能等级转化为数值平衡数据资产
-    // 设计意图：技能数据应成为数值域可消费的资产，让玩家感到"技能有价值"。
-    // 本事件在玩家拥有≥3个Lv.60+技能时触发，给予"技能市场数据v3"标记。
-    // 心理学：禀赋效应 — 玩家更珍视自己投入时间培养的技能。
-    // ========================================================================
-    {
-      id: "c840_skill_data_v3",
-      phase: "street",
-      icon: "📊",
-      title: "你的技能，在市场上值多少钱？",
-      story: "你查看了技能市场报告——自己的技能水平，在市场上的定价一目了然。\n\n技能越高，市场定价越高。这不是抽象的感觉，而是真实的数据。",
-      conditions: function (st) {
-        if (!st || !st.player || st.gameOver) return false;
-        if (st.flags && st.flags._c840SkillDataDone) return false;
-        if (!st.skills) return false;
-        var _count = 0;
-        for (var _sk in st.skills) {
-          var _sl = st.skills[_sk];
-          if (_sl && (_sl.level || 0) >= 60) _count++;
-        }
-        return _count >= 3;
-      },
-      probability: 0.05,
-      repeatable: false,
-      choices: [
-        {
-          text: "📊 查看技能市场数据",
-          hint: "智力+10, 会计XP+12, 置_c840SkillValueData",
-          apply: function (st) {
-            if (!st) return;
-            st.flags = st.flags || {};
-            st.flags._c840SkillDataDone = true;
-            st.flags._c840SkillValueData = true;
-            if (st.player) st.player.intelligence = Math.min(100, (st.player.intelligence || 50) + 10);
-            grantXp("accounting", 12);
-            if (typeof StateManager !== "undefined") {
-              StateManager.addMessage("📊 技能市场数据已生成——智力+10, 会计XP+12。技能就是钱。", "success");
-            }
-          }
-        },
-        {
-          text: "😅 技能不用数据衡量",
-          hint: "心智+2",
-          apply: function (st) {
-            if (!st) return;
-            st.flags = st.flags || {};
-            st.flags._c840SkillDataDone = true;
-            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 2);
-            if (typeof StateManager !== "undefined") {
-              StateManager.addMessage("😅 技能不用数据衡量。心智+2。", "info");
-            }
-          }
-        }
-      ]
-    },
-
-    // ========================================================================
-    // 联动增强2: C→E 职业技能→投资v4 — 职业技能深度引导投资决策
-    // 设计意图：职业技能应深度引导玩家关注投资，形成"技能→投资"决策链。
-    // 本事件在玩家拥有≥2个Lv.50+技能且总资产≥¥12万时触发。
-    // 心理学：禀赋效应 — 玩家感到"技能应该变现"。
-    // ========================================================================
-    {
-      id: "c840_skill_to_invest_v4",
-      phase: "street",
-      icon: "💰",
-      title: "用技能赚钱，让钱生钱",
-      story: "你发现——自己的技能水平已经足够高了，但收入增长却遇到了瓶颈。\n\n是时候考虑：如何让技能赚到的钱，继续为你赚钱？",
-      conditions: function (st) {
-        if (!st || !st.player || st.gameOver) return false;
-        if (st.flags && st.flags._c840SkillInvestDone) return false;
-        if (!st.skills || !st.resources) return false;
-        var _total = (st.resources.cash || 0) + (st.resources.bankBalance || 0);
-        if (_total < 120000) return false;
-        var _count = 0;
-        for (var _sk in st.skills) {
-          var _sl = st.skills[_sk];
-          if (_sl && (_sl.level || 0) >= 50) _count++;
-        }
-        return _count >= 2;
-      },
-      probability: 0.06,
-      repeatable: false,
-      choices: [
-        {
-          text: "💰 学习用技能收益投资",
-          hint: "智力+12, 会计XP+15, 置_c840SkillInvestor",
-          apply: function (st) {
-            if (!st) return;
-            st.flags = st.flags || {};
-            st.flags._c840SkillInvestDone = true;
-            st.flags._c840SkillInvestor = true;
-            if (st.player) st.player.intelligence = Math.min(100, (st.player.intelligence || 50) + 12);
-            grantXp("accounting", 15);
-            if (typeof StateManager !== "undefined") {
-              StateManager.addMessage("💰 你开始学习用技能收益投资——智力+12, 会计XP+15。", "success");
-            }
-          }
-        },
-        {
-          text: "😅 技能赚钱就够了",
-          hint: "心智+3",
-          apply: function (st) {
-            if (!st) return;
-            st.flags = st.flags || {};
-            st.flags._c840SkillInvestDone = true;
-            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 3);
-            if (typeof StateManager !== "undefined") {
-              StateManager.addMessage("😅 技能赚钱就够了。心智+3。", "info");
-            }
-          }
-        }
-      ]
-    },
-
-    // ========================================================================
-    // 联动增强3: C→G 职业健康→生命质量v3 — 职业状态深度反馈为身心恢复
-    // 设计意图：职业状态(倦怠/压力)应深度反馈为身心恢复需求。
-    // 本事件在玩家倦怠≥70且健康<45时触发，给予"职业健康v3"标记。
-    // 心理学：损失厌恶 — 玩家更害怕因工作失去健康。
-    // ========================================================================
-    {
-      id: "c840_career_health_v3",
-      phase: "street",
-      icon: "💚",
-      title: "工作再忙，也要照顾好自己",
-      story: "你感到疲惫——长时间的工作让身体发出了警告。\n\n健康不是无限的资源，它需要被照顾、被恢复。",
-      conditions: function (st) {
-        if (!st || !st.player || st.gameOver) return false;
-        if (st.flags && st.flags._c840CareerHealthDone) return false;
-        var _burnout = st.player.corporate ? (st.player.corporate.burnout || 0) : (st.needs ? st.needs.fatigue : 0);
-        if (_burnout < 70) return false;
-        var _health = st.status ? st.status.health : 100;
-        return _health < 45;
-      },
-      probability: 0.07,
-      repeatable: false,
-      choices: [
-        {
-          text: "💚 主动恢复身心健康",
-          hint: "健康+18, 疲劳-25, 置_c840CareerHealthRecovery",
-          apply: function (st) {
-            if (!st) return;
-            st.flags = st.flags || {};
-            st.flags._c840CareerHealthDone = true;
-            st.flags._c840CareerHealthRecovery = true;
-            if (st.status) st.status.health = Math.min(100, (st.status.health || 50) + 18);
-            if (st.needs) st.needs.fatigue = Math.max(0, (st.needs.fatigue || 0) - 25);
-            if (typeof StateManager !== "undefined") {
-              StateManager.addMessage("💚 你主动恢复了身心健康——健康+18, 疲劳-25。", "success");
-            }
-          }
-        },
-        {
-          text: "🔥 再撑一阵子就好了",
-          hint: "健康-8, 置_c840BurnoutRisk",
-          apply: function (st) {
-            if (!st) return;
-            st.flags = st.flags || {};
-            st.flags._c840CareerHealthDone = true;
-            st.flags._c840BurnoutRisk = true;
-            if (st.status) st.status.health = Math.max(0, (st.status.health || 50) - 8);
-            if (typeof StateManager !== "undefined") {
-              StateManager.addMessage("🔥 你选择继续硬撑——健康-8。注意身体！", "warning");
-            }
-          }
-        }
-      ]
-    }
-  ];
-
-  // ---- 注入全局 RANDOM_EVENTS ----
-  for (var i = 0; i < EVENTS.length; i++) {
-    RANDOM_EVENTS.push(EVENTS[i]);
-  }
-})();
-
-;
-// ==== js/core/domain_c_linkage_r843.js ====
-/**
- * 域C(职业/成长) 联动增强 R843 (第十七轮循环)
- * 桥接：
- *   C→A  c843_career_path 职业路径 → 消费 jobs/skills 数据
- *   C→B  c843_career_memo 职业记忆 → 消费 职业历史+事件
- *   C→G  c843_career_energy 职业精力 → 消费 职业数据+needs
- */
-(function () {
-  "use strict";
-  if (typeof RANDOM_EVENTS === "undefined" || !RANDOM_EVENTS) return;
-  if (RANDOM_EVENTS._domainCLinkageR843Loaded) return;
-  RANDOM_EVENTS._domainCLinkageR843Loaded = true;
-
-  var EVENTS = [
-    {
-      id: "c843_career_path", phase: "street", _isChainEvent: false, icon: "💼",
-      title: "职业路径", story: "你的职业数据正在讲述成长故事——这些数据,就是你的职业资本。",
-      triggers: { minDay: 100, interval: 180, maxRepeats: 3, excludeFlags: ["_c843PathCd"] },
-      conditions: function (st) { if (!st || st.gameOver) return false; if (st.flags && st.flags._c843PathCd) return false; return st.player && st.player.day >= 100 && st.skills; },
-      text: function (st) { if (!st) return null; return "你的职业正在成长——'这些数据,就是你的职业资本。'"; },
-      choices: [
-        { text: "📊 分析", hint: "智力+20,会计XP+15,置_c843Analyst",
-          apply: function (st) { if (!st) return; st.flags = st.flags || {}; st.flags._c843PathCd = true; st.flags._c843Analyst = true; if (st.player) st.player.intelligence = Math.min(100, (st.player.intelligence || 50) + 20); if (typeof addSkillXp === "function") { try { addSkillXp("accounting", 15); } catch(e) {} } if (typeof StateManager !== "undefined") { StateManager.addMessage("💼 '职业成长需要数据支撑。' 智力+20,会计XP+15。", "success"); } }
-        },
-        { text: "🎯 规划", hint: "管理XP+20,置_c843Planner",
-          apply: function (st) { if (!st) return; st.flags = st.flags || {}; st.flags._c843PathCd = true; st.flags._c843Planner = true; if (typeof addSkillXp === "function") { try { addSkillXp("management", 20); } catch(e) {} } if (typeof StateManager !== "undefined") { StateManager.addMessage("🎯 '有规划才有方向。' 管理XP+20。", "info"); } }
-        }
-      ]
-    },
-    {
-      id: "c843_career_memo", phase: "street", _isChainEvent: false, icon: "📖",
-      title: "职业记忆", story: "你的职业变化正在书写故事——每一步,都值得记录。",
-      triggers: { minDay: 180, interval: 220, maxRepeats: 3, excludeFlags: ["_c843MemoCd"] },
-      conditions: function (st) { if (!st || st.gameOver) return false; if (st.flags && st.flags._c843MemoCd) return false; return st.player && st.player.day >= 180 && st.employment; },
-      text: function (st) { if (!st) return null; var j = "无"; if (st.employment && st.employment.currentJob) j = st.employment.currentJob.name || "在职"; return "当前职业" + j + "——'这就是你的职业故事。'"; },
-      choices: [
-        { text: "📜 记录", hint: "心智+20,置_c843Chronicler",
-          apply: function (st) { if (!st) return; st.flags = st.flags || {}; st.flags._c843MemoCd = true; st.flags._c843Chronicler = true; if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 20); if (typeof StateManager !== "undefined") { StateManager.addMessage("📖 '每一步都值得记录。' 心智+20。", "success"); } }
-        },
-        { text: "🚀 展望", hint: "智力+18,魅力+15,置_c843Visionary",
-          apply: function (st) { if (!st) return; st.flags = st.flags || {}; st.flags._c843MemoCd = true; st.flags._c843Visionary = true; if (st.player) { st.player.intelligence = Math.min(100, (st.player.intelligence || 50) + 18); st.player.charm = Math.min(100, (st.player.charm || 50) + 15); } if (typeof StateManager !== "undefined") { StateManager.addMessage("🚀 '职业生涯需要远见。' 智力+18,魅力+15。", "info"); } }
-        }
-      ]
-    },
-    {
-      id: "c843_career_energy", phase: "street", _isChainEvent: false, icon: "💚",
-      title: "职业精力", story: "工作不应以牺牲健康为代价——工作与健康,需要平衡。",
-      triggers: { minDay: 250, interval: 300, maxRepeats: 4, excludeFlags: ["_c843EnergyCd"] },
-      conditions: function (st) { if (!st || st.gameOver) return false; if (st.flags && st.flags._c843EnergyCd) return false; return st.player && st.player.day >= 250 && st.needs && st.status; },
-      text: function (st) { if (!st) return null; var f = st.needs && isFinite(st.needs.fatigue) ? Math.round(st.needs.fatigue) : 0; return "职场疲劳" + f + "——'工作与健康,需要平衡。'"; },
-      choices: [
-        { text: "🧘 平衡", hint: "心情+20,疲劳-20,置_c843Balanced",
-          apply: function (st) { if (!st) return; st.flags = st.flags || {}; st.flags._c843EnergyCd = true; st.flags._c843Balanced = true; if (st.needs) { st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 20); st.needs.fatigue = Math.max(0, (st.needs.fatigue || 0) - 20); } if (typeof StateManager !== "undefined") { StateManager.addMessage("💚 '工作是为了生活。' 心情+20,疲劳-20。", "success"); } }
-        },
-        { text: "🏋️ 健康", hint: "健康+18,置_c843Healthy",
-          apply: function (st) { if (!st) return; st.flags = st.flags || {}; st.flags._c843EnergyCd = true; st.flags._c843Healthy = true; if (st.status) st.status.health = Math.min(100, (st.status.health || 100) + 18); if (typeof StateManager !== "undefined") { StateManager.addMessage("🏋️ '身体是革命的本钱。' 健康+18。", "info"); } }
-        }
-      ]
-    }
-  ];
-
-  for (var i = 0; i < EVENTS.length; i++) { RANDOM_EVENTS.push(EVENTS[i]); }
-})();
-;
-// ==== js/core/domain_c_linkage_r848.js ====
-/*
- * 城市浮生记 — 域C(职业/成长) 联动增强 R848
- * 全系统优化·Domain C 第六十五轮循环
- *
- * 【联动增强3项】
- *   1. C→A 技能市场数据v4 — 技能等级转化为数值平衡数据资产
- *   2. C→E 职业技能→投资v5 — 职业技能深度引导投资决策
- *   3. C→G 职业健康→生命质量v4 — 职业状态深度反馈为身心恢复
- *
- * 设计约束（与历轮 IIFE linkage 文件一致）：
- *  - IIFE 注入全局 RANDOM_EVENTS，避免改动 cross_system_events.js。
- *  - 所有 state 访问均 || 防御；数值标 [PLACEHOLDER]。
- */
-(function () {
-  "use strict";
-  if (typeof RANDOM_EVENTS === "undefined" || !RANDOM_EVENTS) return;
-  if (RANDOM_EVENTS._domainCLinkageR848Loaded) return;
-  RANDOM_EVENTS._domainCLinkageR848Loaded = true;
-
-  // ---- 本地助手 ----
-  function grantXp(key, amt) {
-    if (typeof addSkillXp === "function") { try { addSkillXp(key, amt); } catch(e) {} }
-  }
-
-  var EVENTS = [
-    // ========================================================================
-    // 联动增强1: C→A 技能市场数据v4 — 技能等级转化为数值平衡数据资产
-    // 设计意图：技能数据应成为数值域可消费的资产，让玩家感到"技能有价值"。
-    // 本事件在玩家拥有≥4个Lv.60+技能时触发，给予"技能市场数据v4"标记。
-    // 心理学：禀赋效应 — 玩家更珍视自己投入时间培养的技能。
-    // ========================================================================
-    {
-      id: "c848_skill_data_v4",
-      phase: "street",
-      icon: "📊",
-      title: "你的技能，在市场上值多少钱？",
-      story: "你查看了技能市场报告——自己的技能水平，在市场上的定价一目了然。\n\n技能越高，市场定价越高。这不是抽象的感觉，而是真实的数据。",
-      conditions: function (st) {
-        if (!st || !st.player || st.gameOver) return false;
-        if (st.flags && st.flags._c848SkillDataDone) return false;
-        if (!st.skills) return false;
-        var _count = 0;
-        for (var _sk in st.skills) {
-          var _sl = st.skills[_sk];
-          if (_sl && (_sl.level || 0) >= 60) _count++;
-        }
-        return _count >= 4;
-      },
-      probability: 0.05,
-      repeatable: false,
-      choices: [
-        {
-          text: "📊 查看技能市场数据",
-          hint: "智力+12, 会计XP+15, 置_c848SkillValueData",
-          apply: function (st) {
-            if (!st) return;
-            st.flags = st.flags || {};
-            st.flags._c848SkillDataDone = true;
-            st.flags._c848SkillValueData = true;
-            if (st.player) st.player.intelligence = Math.min(100, (st.player.intelligence || 50) + 12);
-            grantXp("accounting", 15);
-            if (typeof StateManager !== "undefined") {
-              StateManager.addMessage("📊 技能市场数据已生成——智力+12, 会计XP+15。技能就是钱。", "success");
-            }
-          }
-        },
-        {
-          text: "😅 技能不用数据衡量",
-          hint: "心智+3",
-          apply: function (st) {
-            if (!st) return;
-            st.flags = st.flags || {};
-            st.flags._c848SkillDataDone = true;
-            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 3);
-            if (typeof StateManager !== "undefined") {
-              StateManager.addMessage("😅 技能不用数据衡量。心智+3。", "info");
-            }
-          }
-        }
-      ]
-    },
-
-    // ========================================================================
-    // 联动增强2: C→E 职业技能→投资v5 — 职业技能深度引导投资决策
-    // 设计意图：职业技能应深度引导玩家关注投资，形成"技能→投资"决策链。
-    // 本事件在玩家拥有≥3个Lv.50+技能且总资产≥¥15万时触发。
-    // 心理学：禀赋效应 — 玩家感到"技能应该变现"。
-    // ========================================================================
-    {
-      id: "c848_skill_to_invest_v5",
-      phase: "street",
-      icon: "💰",
-      title: "用技能赚钱，让钱生钱",
-      story: "你发现——自己的技能水平已经足够高了，但收入增长却遇到了瓶颈。\n\n是时候考虑：如何让技能赚到的钱，继续为你赚钱？",
-      conditions: function (st) {
-        if (!st || !st.player || st.gameOver) return false;
-        if (st.flags && st.flags._c848SkillInvestDone) return false;
-        if (!st.skills || !st.resources) return false;
-        var _total = (st.resources.cash || 0) + (st.resources.bankBalance || 0);
-        if (_total < 150000) return false;
-        var _count = 0;
-        for (var _sk in st.skills) {
-          var _sl = st.skills[_sk];
-          if (_sl && (_sl.level || 0) >= 50) _count++;
-        }
-        return _count >= 3;
-      },
-      probability: 0.06,
-      repeatable: false,
-      choices: [
-        {
-          text: "💰 学习用技能收益投资",
-          hint: "智力+15, 会计XP+18, 置_c848SkillInvestor",
-          apply: function (st) {
-            if (!st) return;
-            st.flags = st.flags || {};
-            st.flags._c848SkillInvestDone = true;
-            st.flags._c848SkillInvestor = true;
-            if (st.player) st.player.intelligence = Math.min(100, (st.player.intelligence || 50) + 15);
-            grantXp("accounting", 18);
-            if (typeof StateManager !== "undefined") {
-              StateManager.addMessage("💰 你开始学习用技能收益投资——智力+15, 会计XP+18。", "success");
-            }
-          }
-        },
-        {
-          text: "😅 技能赚钱就够了",
-          hint: "心智+3",
-          apply: function (st) {
-            if (!st) return;
-            st.flags = st.flags || {};
-            st.flags._c848SkillInvestDone = true;
-            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 3);
-            if (typeof StateManager !== "undefined") {
-              StateManager.addMessage("😅 技能赚钱就够了。心智+3。", "info");
-            }
-          }
-        }
-      ]
-    },
-
-    // ========================================================================
-    // 联动增强3: C→G 职业健康→生命质量v4 — 职业状态深度反馈为身心恢复
-    // 设计意图：职业状态(倦怠/压力)应深度反馈为身心恢复需求。
-    // 本事件在玩家倦怠≥75且健康<40时触发，给予"职业健康v4"标记。
-    // 心理学：损失厌恶 — 玩家更害怕因工作失去健康。
-    // ========================================================================
-    {
-      id: "c848_career_health_v4",
-      phase: "street",
-      icon: "💚",
-      title: "工作再忙，也要照顾好自己",
-      story: "你感到疲惫——长时间的工作让身体发出了警告。\n\n健康不是无限的资源，它需要被照顾、被恢复。",
-      conditions: function (st) {
-        if (!st || !st.player || st.gameOver) return false;
-        if (st.flags && st.flags._c848CareerHealthDone) return false;
-        var _burnout = st.player.corporate ? (st.player.corporate.burnout || 0) : (st.needs ? st.needs.fatigue : 0);
-        if (_burnout < 75) return false;
-        var _health = st.status ? st.status.health : 100;
-        return _health < 40;
-      },
-      probability: 0.07,
-      repeatable: false,
-      choices: [
-        {
-          text: "💚 主动恢复身心健康",
-          hint: "健康+20, 疲劳-30, 置_c848CareerHealthRecovery",
-          apply: function (st) {
-            if (!st) return;
-            st.flags = st.flags || {};
-            st.flags._c848CareerHealthDone = true;
-            st.flags._c848CareerHealthRecovery = true;
-            if (st.status) st.status.health = Math.min(100, (st.status.health || 50) + 20);
-            if (st.needs) st.needs.fatigue = Math.max(0, (st.needs.fatigue || 0) - 30);
-            if (typeof StateManager !== "undefined") {
-              StateManager.addMessage("💚 你主动恢复了身心健康——健康+20, 疲劳-30。", "success");
-            }
-          }
-        },
-        {
-          text: "🔥 再撑一阵子就好了",
-          hint: "健康-10, 置_c848BurnoutRisk",
-          apply: function (st) {
-            if (!st) return;
-            st.flags = st.flags || {};
-            st.flags._c848CareerHealthDone = true;
-            st.flags._c848BurnoutRisk = true;
-            if (st.status) st.status.health = Math.max(0, (st.status.health || 50) - 10);
-            if (typeof StateManager !== "undefined") {
-              StateManager.addMessage("🔥 你选择继续硬撑——健康-10。注意身体！", "warning");
-            }
-          }
-        }
-      ]
-    }
-  ];
-
-  // ---- 注入全局 RANDOM_EVENTS ----
-  for (var i = 0; i < EVENTS.length; i++) {
-    RANDOM_EVENTS.push(EVENTS[i]);
-  }
-})();
-
-;
-// ==== js/core/domain_c_linkage_r851.js ====
-/**
- * 域C(职业/成长) 联动增强 R851 (第十八轮循环)
- * 桥接：
- *   C→A  c851_career_mile 职业里程 → 消费 jobs/skills 数据
- *   C→B  c851_career_note 职业笔记 → 消费 职业历史+事件
- *   C→G  c851_career_stamina 职业耐力 → 消费 职业数据+needs
- */
-(function () {
-  "use strict";
-  if (typeof RANDOM_EVENTS === "undefined" || !RANDOM_EVENTS) return;
-  if (RANDOM_EVENTS._domainCLinkageR851Loaded) return;
-  RANDOM_EVENTS._domainCLinkageR851Loaded = true;
-
-  var EVENTS = [
-    {
-      id: "c851_career_mile", phase: "street", _isChainEvent: false, icon: "💼",
-      title: "职业里程", story: "你的职业数据正在讲述成长故事——这些数据,就是你的职业资本。",
-      triggers: { minDay: 90, interval: 160, maxRepeats: 3, excludeFlags: ["_c851MileCd"] },
-      conditions: function (st) { if (!st || st.gameOver) return false; if (st.flags && st.flags._c851MileCd) return false; return st.player && st.player.day >= 90 && st.skills; },
-      text: function (st) { if (!st) return null; return "你的职业正在成长——'这些数据,就是你的职业资本。'"; },
-      choices: [
-        { text: "📊 分析", hint: "智力+20,会计XP+15,置_c851Analyst",
-          apply: function (st) { if (!st) return; st.flags = st.flags || {}; st.flags._c851MileCd = true; st.flags._c851Analyst = true; if (st.player) st.player.intelligence = Math.min(100, (st.player.intelligence || 50) + 20); if (typeof addSkillXp === "function") { try { addSkillXp("accounting", 15); } catch(e) {} } if (typeof StateManager !== "undefined") { StateManager.addMessage("💼 '职业成长需要数据支撑。' 智力+20,会计XP+15。", "success"); } }
-        },
-        { text: "🎯 规划", hint: "管理XP+20,置_c851Planner",
-          apply: function (st) { if (!st) return; st.flags = st.flags || {}; st.flags._c851MileCd = true; st.flags._c851Planner = true; if (typeof addSkillXp === "function") { try { addSkillXp("management", 20); } catch(e) {} } if (typeof StateManager !== "undefined") { StateManager.addMessage("🎯 '有规划才有方向。' 管理XP+20。", "info"); } }
-        }
-      ]
-    },
-    {
-      id: "c851_career_note", phase: "street", _isChainEvent: false, icon: "📖",
-      title: "职业笔记", story: "你的职业变化正在书写故事——每一步,都值得记录。",
-      triggers: { minDay: 160, interval: 200, maxRepeats: 3, excludeFlags: ["_c851NoteCd"] },
-      conditions: function (st) { if (!st || st.gameOver) return false; if (st.flags && st.flags._c851NoteCd) return false; return st.player && st.player.day >= 160 && st.employment; },
-      text: function (st) { if (!st) return null; var j = "无"; if (st.employment && st.employment.currentJob) j = st.employment.currentJob.name || "在职"; return "当前职业" + j + "——'这就是你的职业故事。'"; },
-      choices: [
-        { text: "📜 记录", hint: "心智+20,置_c851Chronicler",
-          apply: function (st) { if (!st) return; st.flags = st.flags || {}; st.flags._c851NoteCd = true; st.flags._c851Chronicler = true; if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 20); if (typeof StateManager !== "undefined") { StateManager.addMessage("📖 '每一步都值得记录。' 心智+20。", "success"); } }
-        },
-        { text: "🚀 展望", hint: "智力+18,魅力+15,置_c851Visionary",
-          apply: function (st) { if (!st) return; st.flags = st.flags || {}; st.flags._c851NoteCd = true; st.flags._c851Visionary = true; if (st.player) { st.player.intelligence = Math.min(100, (st.player.intelligence || 50) + 18); st.player.charm = Math.min(100, (st.player.charm || 50) + 15); } if (typeof StateManager !== "undefined") { StateManager.addMessage("🚀 '职业生涯需要远见。' 智力+18,魅力+15。", "info"); } }
-        }
-      ]
-    },
-    {
-      id: "c851_career_stamina", phase: "street", _isChainEvent: false, icon: "💚",
-      title: "职业耐力", story: "工作不应以牺牲健康为代价——工作与健康,需要平衡。",
-      triggers: { minDay: 220, interval: 280, maxRepeats: 4, excludeFlags: ["_c851StaminaCd"] },
-      conditions: function (st) { if (!st || st.gameOver) return false; if (st.flags && st.flags._c851StaminaCd) return false; return st.player && st.player.day >= 220 && st.needs && st.status; },
-      text: function (st) { if (!st) return null; var f = st.needs && isFinite(st.needs.fatigue) ? Math.round(st.needs.fatigue) : 0; return "职场疲劳" + f + "——'工作与健康,需要平衡。'"; },
-      choices: [
-        { text: "🧘 平衡", hint: "心情+20,疲劳-20,置_c851Balanced",
-          apply: function (st) { if (!st) return; st.flags = st.flags || {}; st.flags._c851StaminaCd = true; st.flags._c851Balanced = true; if (st.needs) { st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 20); st.needs.fatigue = Math.max(0, (st.needs.fatigue || 0) - 20); } if (typeof StateManager !== "undefined") { StateManager.addMessage("💚 '工作是为了生活。' 心情+20,疲劳-20。", "success"); } }
-        },
-        { text: "🏋️ 健康", hint: "健康+18,置_c851Healthy",
-          apply: function (st) { if (!st) return; st.flags = st.flags || {}; st.flags._c851StaminaCd = true; st.flags._c851Healthy = true; if (st.status) st.status.health = Math.min(100, (st.status.health || 100) + 18); if (typeof StateManager !== "undefined") { StateManager.addMessage("🏋️ '身体是革命的本钱。' 健康+18。", "info"); } }
-        }
-      ]
-    }
-  ];
-
-  for (var i = 0; i < EVENTS.length; i++) { RANDOM_EVENTS.push(EVENTS[i]); }
-})();
-;
-// ==== js/core/domain_c_linkage_r856.js ====
-/*
- * 城市浮生记 — 域C(职业/成长) 联动增强 R856
- * 全系统优化·Domain C 第六十六轮循环
- *
- * 【联动增强3项】
- *   1. C→A 技能市场数据v5 — 技能等级转化为数值平衡数据资产
- *   2. C→E 职业技能→投资v6 — 职业技能深度引导投资决策
- *   3. C→G 职业健康→生命质量v5 — 职业状态深度反馈为身心恢复
- *
- * 设计约束（与历轮 IIFE linkage 文件一致）：
- *  - IIFE 注入全局 RANDOM_EVENTS，避免改动 cross_system_events.js。
- *  - 所有 state 访问均 || 防御；数值标 [PLACEHOLDER]。
- */
-(function () {
-  "use strict";
-  if (typeof RANDOM_EVENTS === "undefined" || !RANDOM_EVENTS) return;
-  if (RANDOM_EVENTS._domainCLinkageR856Loaded) return;
-  RANDOM_EVENTS._domainCLinkageR856Loaded = true;
-
-  // ---- 本地助手 ----
-  function grantXp(key, amt) {
-    if (typeof addSkillXp === "function") { try { addSkillXp(key, amt); } catch(e) {} }
-  }
-
-  var EVENTS = [
-    // ========================================================================
-    // 联动增强1: C→A 技能市场数据v5 — 技能等级转化为数值平衡数据资产
-    // 设计意图：技能数据应成为数值域可消费的资产，让玩家感到"技能有价值"。
-    // 本事件在玩家拥有≥5个Lv.70+技能时触发，给予"技能市场数据v5"标记。
-    // 心理学：禀赋效应 — 玩家更珍视自己投入时间培养的技能。
-    // ========================================================================
-    {
-      id: "c856_skill_data_v5",
-      phase: "street",
-      icon: "📊",
-      title: "你的技能，在市场上值多少钱？",
-      story: "你查看了技能市场报告——自己的技能水平，在市场上的定价一目了然。\n\n技能越高，市场定价越高。这不是抽象的感觉，而是真实的数据。",
-      conditions: function (st) {
-        if (!st || !st.player || st.gameOver) return false;
-        if (st.flags && st.flags._c856SkillDataDone) return false;
-        if (!st.skills) return false;
-        var _count = 0;
-        for (var _sk in st.skills) {
-          var _sl = st.skills[_sk];
-          if (_sl && (_sl.level || 0) >= 70) _count++;
-        }
-        return _count >= 5;
-      },
-      probability: 0.05,
-      repeatable: false,
-      choices: [
-        {
-          text: "📊 查看技能市场数据",
-          hint: "智力+15, 会计XP+18, 置_c856SkillValueData",
-          apply: function (st) {
-            if (!st) return;
-            st.flags = st.flags || {};
-            st.flags._c856SkillDataDone = true;
-            st.flags._c856SkillValueData = true;
-            if (st.player) st.player.intelligence = Math.min(100, (st.player.intelligence || 50) + 15);
-            grantXp("accounting", 18);
-            if (typeof StateManager !== "undefined") {
-              StateManager.addMessage("📊 技能市场数据已生成——智力+15, 会计XP+18。技能就是钱。", "success");
-            }
-          }
-        },
-        {
-          text: "😅 技能不用数据衡量",
-          hint: "心智+3",
-          apply: function (st) {
-            if (!st) return;
-            st.flags = st.flags || {};
-            st.flags._c856SkillDataDone = true;
-            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 3);
-            if (typeof StateManager !== "undefined") {
-              StateManager.addMessage("😅 技能不用数据衡量。心智+3。", "info");
-            }
-          }
-        }
-      ]
-    },
-
-    // ========================================================================
-    // 联动增强2: C→E 职业技能→投资v6 — 职业技能深度引导投资决策
-    // 设计意图：职业技能应深度引导玩家关注投资，形成"技能→投资"决策链。
-    // 本事件在玩家拥有≥4个Lv.60+技能且总资产≥¥18万时触发。
-    // 心理学：禀赋效应 — 玩家感到"技能应该变现"。
-    // ========================================================================
-    {
-      id: "c856_skill_to_invest_v6",
-      phase: "street",
-      icon: "💰",
-      title: "用技能赚钱，让钱生钱",
-      story: "你发现——自己的技能水平已经足够高了，但收入增长却遇到了瓶颈。\n\n是时候考虑：如何让技能赚到的钱，继续为你赚钱？",
-      conditions: function (st) {
-        if (!st || !st.player || st.gameOver) return false;
-        if (st.flags && st.flags._c856SkillInvestDone) return false;
-        if (!st.skills || !st.resources) return false;
-        var _total = (st.resources.cash || 0) + (st.resources.bankBalance || 0);
-        if (_total < 180000) return false;
-        var _count = 0;
-        for (var _sk in st.skills) {
-          var _sl = st.skills[_sk];
-          if (_sl && (_sl.level || 0) >= 60) _count++;
-        }
-        return _count >= 4;
-      },
-      probability: 0.06,
-      repeatable: false,
-      choices: [
-        {
-          text: "💰 学习用技能收益投资",
-          hint: "智力+18, 会计XP+20, 置_c856SkillInvestor",
-          apply: function (st) {
-            if (!st) return;
-            st.flags = st.flags || {};
-            st.flags._c856SkillInvestDone = true;
-            st.flags._c856SkillInvestor = true;
-            if (st.player) st.player.intelligence = Math.min(100, (st.player.intelligence || 50) + 18);
-            grantXp("accounting", 20);
-            if (typeof StateManager !== "undefined") {
-              StateManager.addMessage("💰 你开始学习用技能收益投资——智力+18, 会计XP+20。", "success");
-            }
-          }
-        },
-        {
-          text: "😅 技能赚钱就够了",
-          hint: "心智+3",
-          apply: function (st) {
-            if (!st) return;
-            st.flags = st.flags || {};
-            st.flags._c856SkillInvestDone = true;
-            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 3);
-            if (typeof StateManager !== "undefined") {
-              StateManager.addMessage("😅 技能赚钱就够了。心智+3。", "info");
-            }
-          }
-        }
-      ]
-    },
-
-    // ========================================================================
-    // 联动增强3: C→G 职业健康→生命质量v5 — 职业状态深度反馈为身心恢复
-    // 设计意图：职业状态(倦怠/压力)应深度反馈为身心恢复需求。
-    // 本事件在玩家倦怠≥80且健康<35时触发，给予"职业健康v5"标记。
-    // 心理学：损失厌恶 — 玩家更害怕因工作失去健康。
-    // ========================================================================
-    {
-      id: "c856_career_health_v5",
-      phase: "street",
-      icon: "💚",
-      title: "工作再忙，也要照顾好自己",
-      story: "你感到疲惫——长时间的工作让身体发出了警告。\n\n健康不是无限的资源，它需要被照顾、被恢复。",
-      conditions: function (st) {
-        if (!st || !st.player || st.gameOver) return false;
-        if (st.flags && st.flags._c856CareerHealthDone) return false;
-        var _burnout = st.player.corporate ? (st.player.corporate.burnout || 0) : (st.needs ? st.needs.fatigue : 0);
-        if (_burnout < 80) return false;
-        var _health = st.status ? st.status.health : 100;
-        return _health < 35;
-      },
-      probability: 0.07,
-      repeatable: false,
-      choices: [
-        {
-          text: "💚 主动恢复身心健康",
-          hint: "健康+25, 疲劳-35, 置_c856CareerHealthRecovery",
-          apply: function (st) {
-            if (!st) return;
-            st.flags = st.flags || {};
-            st.flags._c856CareerHealthDone = true;
-            st.flags._c856CareerHealthRecovery = true;
-            if (st.status) st.status.health = Math.min(100, (st.status.health || 50) + 25);
-            if (st.needs) st.needs.fatigue = Math.max(0, (st.needs.fatigue || 0) - 35);
-            if (typeof StateManager !== "undefined") {
-              StateManager.addMessage("💚 你主动恢复了身心健康——健康+25, 疲劳-35。", "success");
-            }
-          }
-        },
-        {
-          text: "🔥 再撑一阵子就好了",
-          hint: "健康-12, 置_c856BurnoutRisk",
-          apply: function (st) {
-            if (!st) return;
-            st.flags = st.flags || {};
-            st.flags._c856CareerHealthDone = true;
-            st.flags._c856BurnoutRisk = true;
-            if (st.status) st.status.health = Math.max(0, (st.status.health || 50) - 12);
-            if (typeof StateManager !== "undefined") {
-              StateManager.addMessage("🔥 你选择继续硬撑——健康-12。注意身体！", "warning");
-            }
-          }
-        }
-      ]
-    }
-  ];
-
-  // ---- 注入全局 RANDOM_EVENTS ----
-  for (var i = 0; i < EVENTS.length; i++) {
-    RANDOM_EVENTS.push(EVENTS[i]);
-  }
-})();
-
-;
 // ==== js/core/domain_c_linkage_events_r792b.js ====
 /**
  * 域C(职业/成长) 联动增强 R792b
@@ -341552,6 +339119,2288 @@ if (typeof window !== "undefined") {
     }
   ];
 
+  for (var i = 0; i < EVENTS.length; i++) {
+    RANDOM_EVENTS.push(EVENTS[i]);
+  }
+})();
+
+;
+// ==== js/core/domain_c_linkage_r859.js ====
+/**
+ * 域C(职业/成长) 联动增强 R859 (第十九轮循环)
+ * 桥接：
+ *   C→A  c859_career_step 职业步伐 → 消费 jobs/skills 数据
+ *   C→B  c859_career_log 职业日志 → 消费 职业历史+事件
+ *   C→G  c859_career_vigor 职业活力 → 消费 职业数据+needs
+ */
+(function () {
+  "use strict";
+  if (typeof RANDOM_EVENTS === "undefined" || !RANDOM_EVENTS) return;
+  if (RANDOM_EVENTS._domainCLinkageR859Loaded) return;
+  RANDOM_EVENTS._domainCLinkageR859Loaded = true;
+
+  var EVENTS = [
+    {
+      id: "c859_career_step", phase: "street", _isChainEvent: false, icon: "💼",
+      title: "职业步伐", story: "你的职业数据正在讲述成长故事——这些数据,就是你的职业资本。",
+      triggers: { minDay: 80, interval: 140, maxRepeats: 3, excludeFlags: ["_c859StepCd"] },
+      conditions: function (st) { if (!st || st.gameOver) return false; if (st.flags && st.flags._c859StepCd) return false; return st.player && st.player.day >= 80 && st.skills; },
+      text: function (st) { if (!st) return null; return "你的职业正在成长——'这些数据,就是你的职业资本。'"; },
+      choices: [
+        { text: "📊 分析", hint: "智力+20,会计XP+15,置_c859Analyst", apply: function (st) { if (!st) return; st.flags = st.flags || {}; st.flags._c859StepCd = true; st.flags._c859Analyst = true; if (st.player) st.player.intelligence = Math.min(100, (st.player.intelligence || 50) + 20); if (typeof addSkillXp === "function") { try { addSkillXp("accounting", 15); } catch(e) {} } if (typeof StateManager !== "undefined") { StateManager.addMessage("💼 '职业成长需要数据支撑。' 智力+20,会计XP+15。", "success"); } } },
+        { text: "🎯 规划", hint: "管理XP+20,置_c859Planner", apply: function (st) { if (!st) return; st.flags = st.flags || {}; st.flags._c859StepCd = true; st.flags._c859Planner = true; if (typeof addSkillXp === "function") { try { addSkillXp("management", 20); } catch(e) {} } if (typeof StateManager !== "undefined") { StateManager.addMessage("🎯 '有规划才有方向。' 管理XP+20。", "info"); } } }
+      ]
+    },
+    {
+      id: "c859_career_log", phase: "street", _isChainEvent: false, icon: "📖",
+      title: "职业日志", story: "你的职业变化正在书写故事——每一步,都值得记录。",
+      triggers: { minDay: 140, interval: 180, maxRepeats: 3, excludeFlags: ["_c859LogCd"] },
+      conditions: function (st) { if (!st || st.gameOver) return false; if (st.flags && st.flags._c859LogCd) return false; return st.player && st.player.day >= 140 && st.employment; },
+      text: function (st) { if (!st) return null; var j = "无"; if (st.employment && st.employment.currentJob) j = st.employment.currentJob.name || "在职"; return "当前职业" + j + "——'这就是你的职业故事。'"; },
+      choices: [
+        { text: "📜 记录", hint: "心智+20,置_c859Chronicler", apply: function (st) { if (!st) return; st.flags = st.flags || {}; st.flags._c859LogCd = true; st.flags._c859Chronicler = true; if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 20); if (typeof StateManager !== "undefined") { StateManager.addMessage("📖 '每一步都值得记录。' 心智+20。", "success"); } } },
+        { text: "🚀 展望", hint: "智力+18,魅力+15,置_c859Visionary", apply: function (st) { if (!st) return; st.flags = st.flags || {}; st.flags._c859LogCd = true; st.flags._c859Visionary = true; if (st.player) { st.player.intelligence = Math.min(100, (st.player.intelligence || 50) + 18); st.player.charm = Math.min(100, (st.player.charm || 50) + 15); } if (typeof StateManager !== "undefined") { StateManager.addMessage("🚀 '职业生涯需要远见。' 智力+18,魅力+15。", "info"); } } }
+      ]
+    },
+    {
+      id: "c859_career_vigor", phase: "street", _isChainEvent: false, icon: "💚",
+      title: "职业活力", story: "工作不应以牺牲健康为代价——工作与健康,需要平衡。",
+      triggers: { minDay: 200, interval: 250, maxRepeats: 4, excludeFlags: ["_c859VigorCd"] },
+      conditions: function (st) { if (!st || st.gameOver) return false; if (st.flags && st.flags._c859VigorCd) return false; return st.player && st.player.day >= 200 && st.needs && st.status; },
+      text: function (st) { if (!st) return null; var f = st.needs && isFinite(st.needs.fatigue) ? Math.round(st.needs.fatigue) : 0; return "职场疲劳" + f + "——'工作与健康,需要平衡。'"; },
+      choices: [
+        { text: "🧘 平衡", hint: "心情+20,疲劳-20,置_c859Balanced", apply: function (st) { if (!st) return; st.flags = st.flags || {}; st.flags._c859VigorCd = true; st.flags._c859Balanced = true; if (st.needs) { st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 20); st.needs.fatigue = Math.max(0, (st.needs.fatigue || 0) - 20); } if (typeof StateManager !== "undefined") { StateManager.addMessage("💚 '工作是为了生活。' 心情+20,疲劳-20。", "success"); } } },
+        { text: "🏋️ 健康", hint: "健康+18,置_c859Healthy", apply: function (st) { if (!st) return; st.flags = st.flags || {}; st.flags._c859VigorCd = true; st.flags._c859Healthy = true; if (st.status) st.status.health = Math.min(100, (st.status.health || 100) + 18); if (typeof StateManager !== "undefined") { StateManager.addMessage("🏋️ '身体是革命的本钱。' 健康+18。", "info"); } } }
+      ]
+    }
+  ];
+
+  for (var i = 0; i < EVENTS.length; i++) { RANDOM_EVENTS.push(EVENTS[i]); }
+})();
+;
+// ==== js/core/domain_c_linkage_r798.js ====
+/*
+ * 城市浮生记 — 域C(职业/成长) 联动增强 R798
+ * 全系统优化·Domain C 第五十八轮循环
+ *
+ * 【联动增强3项】
+ *   1. C→A 技能市场定价 — 技能等级转化为商品定价加成
+ *   2. C→E 职业收入→投资本金 — 工资积累引导投资意识觉醒
+ *   3. C→G 职业倦怠→健康 — 工作压力反馈为身心状态回响
+ *
+ * 设计约束（与历轮 IIFE linkage 文件一致）：
+ *  - IIFE 注入全局 RANDOM_EVENTS，避免改动 cross_system_events.js。
+ *  - 所有 state 访问均 || 防御；数值标 [PLACEHOLDER]。
+ */
+(function () {
+  "use strict";
+  if (typeof RANDOM_EVENTS === "undefined" || !RANDOM_EVENTS) return;
+  if (RANDOM_EVENTS._domainCLinkageR798Loaded) return;
+  RANDOM_EVENTS._domainCLinkageR798Loaded = true;
+
+  // ---- 本地助手 ----
+  function grantXp(key, amt) {
+    if (typeof addSkillXp === "function") { try { addSkillXp(key, amt); } catch(e) {} }
+  }
+
+  var EVENTS = [
+    // ========================================================================
+    // 联动增强1: C→A 技能市场定价 — 技能等级转化为商品定价加成
+    // 设计意图：技能等级应影响商品定价/交易效率，让玩家感到"技能有用"。
+    // 本事件在玩家拥有≥1个Lv.30+技能时触发，给予"技能定价加成"标记。
+    // 心理学：禀赋效应 — 玩家更珍视自己投入时间培养的技能。
+    // ========================================================================
+    {
+      id: "c798_skill_pricing_bonus",
+      phase: "street",
+      icon: "🏷️",
+      title: "你的技能，让你买卖更有优势",
+      story: "你在市场上讨价还价，发现自己对商品价值的判断比别人准得多。\n\n那些练起来的技能——会计让你看懂成本，销售让你砍价有术，维修让你识别货好坏。\n\n技能不只是找工作的敲门砖，更是日常生活中的「定价权」。",
+      conditions: function (st) {
+        if (!st || !st.player || st.gameOver) return false;
+        if (st.flags && st.flags._c798SkillPricingDone) return false;
+        if (!st.skills) return false;
+        // 至少1个技能≥Lv.30
+        for (var _sk in st.skills) {
+          var _sl = st.skills[_sk];
+          if (_sl && (_sl.level || 0) >= 30) return true;
+        }
+        return false;
+      },
+      probability: 0.05,
+      repeatable: false,
+      choices: [
+        {
+          text: "🏷️ 用技能获取定价优势",
+          hint: "智力+5, 销售XP+8, 置_c798SkillPricing",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._c798SkillPricingDone = true;
+            st.flags._c798SkillPricing = true;
+            if (st.player) st.player.intelligence = Math.min(100, (st.player.intelligence || 50) + 5);
+            grantXp("sales", 8);
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("🏷️ 技能让你在市场上更有优势——智力+5, 销售XP+8。", "success");
+            }
+          }
+        },
+        {
+          text: "😊 技能用在哪都行",
+          hint: "心智+2",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._c798SkillPricingDone = true;
+            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 2);
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("😊 技能用在哪都行，开心就好。", "info");
+            }
+          }
+        }
+      ]
+    },
+
+    // ========================================================================
+    // 联动增强2: C→E 职业收入→投资本金 — 工资积累引导投资意识觉醒
+    // 设计意图：职业收入应引导玩家关注投资，形成"赚钱→理财"的正向循环。
+    // 本事件在玩家总资产≥¥5万且已就业≥30天时触发。
+    // 心理学：禀赋效应 — 玩家感到"辛苦赚来的钱应该增值"。
+    // ========================================================================
+    {
+      id: "c798_career_to_investment",
+      phase: "street",
+      icon: "💰",
+      title: "工资躺着贬值，还是让它工作？",
+      story: "你算了算——存在银行的工资，利息跑不赢通胀。\n\n辛苦赚来的钱，每天都在悄悄缩水。\n\n是时候让钱为你工作了。",
+      conditions: function (st) {
+        if (!st || !st.player || st.gameOver) return false;
+        if (st.flags && st.flags._c798CareerInvestDone) return false;
+        if (!st.resources) return false;
+        var _total = (st.resources.cash || 0) + (st.resources.bankBalance || 0);
+        // 总资产≥5万且已就业≥30天
+        return _total >= 50000 && st.player.day >= 30;
+      },
+      probability: 0.06,
+      repeatable: false,
+      choices: [
+        {
+          text: "💰 学习让钱为自己工作",
+          hint: "智力+8, 会计XP+10, 置_c798InvestMindset",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._c798CareerInvestDone = true;
+            st.flags._c798InvestMindset = true;
+            if (st.player) st.player.intelligence = Math.min(100, (st.player.intelligence || 50) + 8);
+            grantXp("accounting", 10);
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("💰 你开始学习投资——智力+8, 会计XP+10。让钱为你工作。", "success");
+            }
+          }
+        },
+        {
+          text: "😅 存银行最安全",
+          hint: "心智+3",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._c798CareerInvestDone = true;
+            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 3);
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("😅 存银行最安全，不求大富大贵。", "info");
+            }
+          }
+        }
+      ]
+    },
+
+    // ========================================================================
+    // 联动增强3: C→G 职业倦怠→健康 — 工作压力反馈为身心状态回响
+    // 设计意图：职业倦怠应反馈为健康/心情下降，形成"工作→健康"反馈环。
+    // 本事件在玩家倦怠≥60且健康<50时触发，警示"身体是革命的本钱"。
+    // 心理学：损失厌恶 — 玩家更害怕因健康问题失去工作能力。
+    // ========================================================================
+    {
+      id: "c798_career_burnout_health",
+      phase: "street",
+      icon: "😮‍💨",
+      title: "工作压垮了你",
+      story: "你连续加班第三周了。头痛、胃痛、失眠……身体的警告信号越来越明显。\n\n但工作还在继续——业绩要冲、项目要赶、领导要汇报。\n\n你咬了咬牙，继续撑。但身体，不会陪你硬扛。",
+      conditions: function (st) {
+        if (!st || !st.player || st.gameOver) return false;
+        if (st.flags && st.flags._c798BurnoutHealthDone) return false;
+        // 倦怠≥60且健康<50
+        var _burnout = st.player.corporate ? (st.player.corporate.burnout || 0) : (st.needs ? st.needs.fatigue : 0);
+        var _health = st.status ? st.status.health : 100;
+        return _burnout >= 60 && _health < 50;
+      },
+      probability: 0.08,
+      repeatable: false,
+      choices: [
+        {
+          text: "💪 调整节奏，健康第一",
+          hint: "健康+15, 疲劳-20, 置_c798HealthFirst",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._c798BurnoutHealthDone = true;
+            st.flags._c798HealthFirst = true;
+            if (st.status) st.status.health = Math.min(100, (st.status.health || 50) + 15);
+            if (st.needs) st.needs.fatigue = Math.max(0, (st.needs.fatigue || 0) - 20);
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("💪 你决定调整节奏——健康+15, 疲劳-20。身体是革命的本钱。", "success");
+            }
+          }
+        },
+        {
+          text: "🔥 再撑一阵子就好了",
+          hint: "健康-10, 置_c798BurnoutRisk",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._c798BurnoutHealthDone = true;
+            st.flags._c798BurnoutRisk = true;
+            if (st.status) st.status.health = Math.max(0, (st.status.health || 50) - 10);
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("🔥 你选择继续硬撑——健康-10。注意身体！", "warning");
+            }
+          }
+        }
+      ]
+    }
+  ];
+
+  // ---- 注入全局 RANDOM_EVENTS ----
+  for (var i = 0; i < EVENTS.length; i++) {
+    RANDOM_EVENTS.push(EVENTS[i]);
+  }
+})();
+
+;
+// ==== js/core/domain_c_linkage_r806.js ====
+/*
+ * 城市浮生记 — 域C(职业/成长) 联动增强 R806
+ * 全系统优化·Domain C 第五十九轮循环
+ *
+ * 【联动增强3项】
+ *   1. C→B 职业故事叙事 — 职业选择触发事件叙事回响
+ *   2. C→D 职业人脉网络 — 职业环境拓展NPC社交圈
+ *   3. C→H 职业到创业 — 职业积累引导创业时机
+ *
+ * 设计约束（与历轮 IIFE linkage 文件一致）：
+ *  - IIFE 注入全局 RANDOM_EVENTS，避免改动 cross_system_events.js。
+ *  - 所有 state 访问均 || 防御；数值标 [PLACEHOLDER]。
+ */
+(function () {
+  "use strict";
+  if (typeof RANDOM_EVENTS === "undefined" || !RANDOM_EVENTS) return;
+  if (RANDOM_EVENTS._domainCLinkageR806Loaded) return;
+  RANDOM_EVENTS._domainCLinkageR806Loaded = true;
+
+  // ---- 本地助手 ----
+  function grantXp(key, amt) {
+    if (typeof addSkillXp === "function") { try { addSkillXp(key, amt); } catch(e) {} }
+  }
+
+  var EVENTS = [
+    // ========================================================================
+    // 联动增强1: C→B 职业故事叙事 — 职业选择触发事件叙事回响
+    // 设计意图：职业路径中的关键选择应产生叙事回响，让玩家感到"职业有故事"。
+    // 本事件在玩家晋升≥3次时触发，给予"职业故事"标记。
+    // 心理学：峰终定律 — 晋升时刻成为职业记忆锚点。
+    // ========================================================================
+    {
+      id: "c806_career_story_narrative",
+      phase: "street",
+      icon: "📖",
+      title: "每一步晋升，都是一段故事",
+      story: "你回顾了这一路走来的职业历程——从最初的打工人，到现在的岗位。\n\n每一次晋升，都是一次挑战；每一次挑战，都让你成长。\n\n这些经历，构成了你独有的「职业故事」。",
+      conditions: function (st) {
+        if (!st || !st.player || st.gameOver) return false;
+        if (st.flags && st.flags._c806CareerStoryDone) return false;
+        var _promotions = st.flags._promotionCount || 0;
+        return _promotions >= 3 && st.player.day >= 120;
+      },
+      probability: 0.05,
+      repeatable: false,
+      choices: [
+        {
+          text: "📖 记录我的职业故事",
+          hint: "心智+8, 置_c806CareerNarrative",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._c806CareerStoryDone = true;
+            st.flags._c806CareerNarrative = true;
+            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 8);
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("📖 职业故事记录完成——心智+8。每一步晋升，都是一段故事。", "success");
+            }
+          }
+        },
+        {
+          text: "😊 过去就过去了",
+          hint: "心情+3",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._c806CareerStoryDone = true;
+            if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 3);
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("😊 过去就过去了。心情+3。", "info");
+            }
+          }
+        }
+      ]
+    },
+
+    // ========================================================================
+    // 联动增强2: C→D 职业人脉网络 — 职业环境拓展NPC社交圈
+    // 设计意图：职业环境应带来社交机会，让玩家感到"工作中有朋友"。
+    // 本事件在玩家在职≥60天且已结识NPC<8时触发。
+    // 心理学：社会认同 — 被同事认同的满足感。
+    // ========================================================================
+    {
+      id: "c806_career_network",
+      phase: "street",
+      icon: "🤝",
+      title: "工作中，也能遇到对的人",
+      story: "你发现——每天一起工作的同事，有些人慢慢成了朋友。\n\n他们不只是工作伙伴，更是可以交心的人。\n\n职场里能遇到这样的伙伴，是一种幸运。",
+      conditions: function (st) {
+        if (!st || !st.player || st.gameOver) return false;
+        if (st.flags && st.flags._c806CareerNetDone) return false;
+        if (!st.relationships) return false;
+        var _metCount = 0;
+        for (var _id in st.relationships) {
+          if (st.relationships[_id] && st.relationships[_id].met) _metCount++;
+        }
+        return _metCount < 8 && st.player.day >= 60;
+      },
+      probability: 0.06,
+      repeatable: false,
+      choices: [
+        {
+          text: "🤝 主动结识职场朋友",
+          hint: "魅力+5, 社交XP+8, 置_c806WorkFriend",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._c806CareerNetDone = true;
+            st.flags._c806WorkFriend = true;
+            if (st.player) st.player.charm = Math.min(100, (st.player.charm || 50) + 5);
+            grantXp("social", 8);
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("🤝 主动结识职场朋友——魅力+5, 社交XP+8。", "success");
+            }
+          }
+        },
+        {
+          text: "😊 保持职场距离",
+          hint: "心智+2",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._c806CareerNetDone = true;
+            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 2);
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("😊 保持职场距离。心智+2。", "info");
+            }
+          }
+        }
+      ]
+    },
+
+    // ========================================================================
+    // 联动增强3: C→H 职业到创业 — 职业积累引导创业时机
+    // 设计意图：职业积累应引导玩家考虑创业，形成"打工→创业"的叙事弧线。
+    // 本事件在玩家在职≥365天且总资产≥¥20万时触发。
+    // 心理学：禀赋效应 — 玩家感到"职业积累为创业铺路"。
+    // ========================================================================
+    {
+      id: "c806_career_to_startup",
+      phase: "street",
+      icon: "🚀",
+      title: "打工，还是创业？",
+      story: "你算了算——在职场摸爬滚打了一年多，积累了经验、人脉、资金。\n\n一个念头开始浮现：是时候创业了吗？\n\n还是，继续打工更安全？\n\n这是一个需要认真思考的问题。",
+      conditions: function (st) {
+        if (!st || !st.player || st.gameOver) return false;
+        if (st.flags && st.flags._c806StartupPrepDone) return false;
+        if (!st.resources) return false;
+        var _total = (st.resources.cash || 0) + (st.resources.bankBalance || 0);
+        return _total >= 200000 && st.player.day >= 365;
+      },
+      probability: 0.07,
+      repeatable: false,
+      choices: [
+        {
+          text: "🚀 认真考虑创业",
+          hint: "智力+10, 管理XP+12, 置_c806StartupReady",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._c806StartupPrepDone = true;
+            st.flags._c806StartupReady = true;
+            if (st.player) st.player.intelligence = Math.min(100, (st.player.intelligence || 50) + 10);
+            grantXp("management", 12);
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("🚀 你开始认真考虑创业——智力+10, 管理XP+12。", "success");
+            }
+          }
+        },
+        {
+          text: "😅 打工更稳定",
+          hint: "心智+3",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._c806StartupPrepDone = true;
+            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 3);
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("😅 打工更稳定。心智+3。", "info");
+            }
+          }
+        }
+      ]
+    }
+  ];
+
+  // ---- 注入全局 RANDOM_EVENTS ----
+  for (var i = 0; i < EVENTS.length; i++) {
+    RANDOM_EVENTS.push(EVENTS[i]);
+  }
+})();
+
+;
+// ==== js/core/domain_c_linkage_r813.js ====
+/*
+ * 城市浮生记 — 域C(职业/成长) 联动增强 R813
+ * 全系统优化·Domain C 第六十轮循环
+ *
+ * 【联动增强3项】
+ *   1. C→A 技能市场数据 — 技能等级转化为数值平衡数据资产
+ *   2. C→E 职业技能→投资 — 职业技能引导经济/投资决策
+ *   3. C→G 职业健康→生命质量 — 职业状态反馈为身心恢复
+ *
+ * 设计约束（与历轮 IIFE linkage 文件一致）：
+ *  - IIFE 注入全局 RANDOM_EVENTS，避免改动 cross_system_events.js。
+ *  - 所有 state 访问均 || 防御；数值标 [PLACEHOLDER]。
+ */
+(function () {
+  "use strict";
+  if (typeof RANDOM_EVENTS === "undefined" || !RANDOM_EVENTS) return;
+  if (RANDOM_EVENTS._domainCLinkageR813Loaded) return;
+  RANDOM_EVENTS._domainCLinkageR813Loaded = true;
+
+  // ---- 本地助手 ----
+  function grantXp(key, amt) {
+    if (typeof addSkillXp === "function") { try { addSkillXp(key, amt); } catch(e) {} }
+  }
+
+  var EVENTS = [
+    // ========================================================================
+    // 联动增强1: C→A 技能市场数据 — 技能等级转化为数值平衡数据资产
+    // 设计意图：技能数据应成为数值域可消费的资产，让玩家感到"技能有价值"。
+    // 本事件在玩家拥有≥2个Lv.50+技能时触发，给予"技能市场数据"标记。
+    // 心理学：禀赋效应 — 玩家更珍视自己投入时间培养的技能。
+    // ========================================================================
+    {
+      id: "c813_skill_market_data",
+      phase: "street",
+      icon: "📊",
+      title: "你的技能，在市场上值多少钱？",
+      story: "你查看了技能市场报告——自己的技能水平，在市场上的定价一目了然。\n\n技能越高，市场定价越高。这不是抽象的感觉，而是真实的数据。\n\n数据告诉你：技能就是钱。",
+      conditions: function (st) {
+        if (!st || !st.player || st.gameOver) return false;
+        if (st.flags && st.flags._c813SkillDataDone) return false;
+        if (!st.skills) return false;
+        var _count = 0;
+        for (var _sk in st.skills) {
+          var _sl = st.skills[_sk];
+          if (_sl && (_sl.level || 0) >= 50) _count++;
+        }
+        return _count >= 2;
+      },
+      probability: 0.05,
+      repeatable: false,
+      choices: [
+        {
+          text: "📊 查看技能市场数据",
+          hint: "智力+5, 会计XP+8, 置_c813SkillValueData",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._c813SkillDataDone = true;
+            st.flags._c813SkillValueData = true;
+            if (st.player) st.player.intelligence = Math.min(100, (st.player.intelligence || 50) + 5);
+            grantXp("accounting", 8);
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("📊 技能市场数据已生成——智力+5, 会计XP+8。技能就是钱。", "success");
+            }
+          }
+        },
+        {
+          text: "😅 技能不用数据衡量",
+          hint: "心智+2",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._c813SkillDataDone = true;
+            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 2);
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("😅 技能不用数据衡量。心智+2。", "info");
+            }
+          }
+        }
+      ]
+    },
+
+    // ========================================================================
+    // 联动增强2: C→E 职业技能→投资 — 职业技能引导经济/投资决策
+    // 设计意图：职业技能应引导玩家关注投资，形成"技能→投资"决策链。
+    // 本事件在玩家拥有≥1个Lv.40+技能且总资产≥¥5万时触发。
+    // 心理学：禀赋效应 — 玩家感到"技能应该变现"。
+    // ========================================================================
+    {
+      id: "c813_skill_to_invest",
+      phase: "street",
+      icon: "💰",
+      title: "用技能赚钱，让钱生钱",
+      story: "你发现——自己的技能水平已经足够高了，但收入增长却遇到了瓶颈。\n\n是时候考虑：如何让技能赚到的钱，继续为你赚钱？\n\n从「打工者」到「投资者」，是人生的重要跨越。",
+      conditions: function (st) {
+        if (!st || !st.player || st.gameOver) return false;
+        if (st.flags && st.flags._c813SkillInvestDone) return false;
+        if (!st.skills || !st.resources) return false;
+        var _total = (st.resources.cash || 0) + (st.resources.bankBalance || 0);
+        if (_total < 50000) return false;
+        for (var _sk in st.skills) {
+          var _sl = st.skills[_sk];
+          if (_sl && (_sl.level || 0) >= 40) return true;
+        }
+        return false;
+      },
+      probability: 0.06,
+      repeatable: false,
+      choices: [
+        {
+          text: "💰 学习用技能收益投资",
+          hint: "智力+8, 会计XP+10, 置_c813SkillInvestor",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._c813SkillInvestDone = true;
+            st.flags._c813SkillInvestor = true;
+            if (st.player) st.player.intelligence = Math.min(100, (st.player.intelligence || 50) + 8);
+            grantXp("accounting", 10);
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("💰 你开始学习用技能收益投资——智力+8, 会计XP+10。", "success");
+            }
+          }
+        },
+        {
+          text: "😅 技能赚钱就够了",
+          hint: "心智+3",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._c813SkillInvestDone = true;
+            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 3);
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("😅 技能赚钱就够了。心智+3。", "info");
+            }
+          }
+        }
+      ]
+    },
+
+    // ========================================================================
+    // 联动增强3: C→G 职业健康→生命质量 — 职业状态反馈为身心恢复
+    // 设计意图：职业状态(倦怠/压力)应反馈为身心恢复需求，形成"工作→健康"反馈环。
+    // 本事件在玩家倦怠≥50时触发，给予"职业健康"标记。
+    // 心理学：损失厌恶 — 玩家更害怕因工作失去健康。
+    // ========================================================================
+    {
+      id: "c813_career_health_recovery",
+      phase: "street",
+      icon: "💚",
+      title: "工作再忙，也要照顾好自己",
+      story: "你感到疲惫——长时间的工作让身体发出了警告。\n\n健康不是无限的资源，它需要被照顾、被恢复。\n\n工作再忙，也要照顾好自己。",
+      conditions: function (st) {
+        if (!st || !st.player || st.gameOver) return false;
+        if (st.flags && st.flags._c813CareerHealthDone) return false;
+        var _burnout = st.player.corporate ? (st.player.corporate.burnout || 0) : (st.needs ? st.needs.fatigue : 0);
+        return _burnout >= 50;
+      },
+      probability: 0.07,
+      repeatable: false,
+      choices: [
+        {
+          text: "💚 主动恢复身心健康",
+          hint: "健康+10, 疲劳-15, 置_c813CareerHealthRecovery",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._c813CareerHealthDone = true;
+            st.flags._c813CareerHealthRecovery = true;
+            if (st.status) st.status.health = Math.min(100, (st.status.health || 50) + 10);
+            if (st.needs) st.needs.fatigue = Math.max(0, (st.needs.fatigue || 0) - 15);
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("💚 你主动恢复了身心健康——健康+10, 疲劳-15。", "success");
+            }
+          }
+        },
+        {
+          text: "🔥 再撑一阵子就好了",
+          hint: "健康-5, 置_c813BurnoutRisk",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._c813CareerHealthDone = true;
+            st.flags._c813BurnoutRisk = true;
+            if (st.status) st.status.health = Math.max(0, (st.status.health || 50) - 5);
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("🔥 你选择继续硬撑——健康-5。注意身体！", "warning");
+            }
+          }
+        }
+      ]
+    }
+  ];
+
+  // ---- 注入全局 RANDOM_EVENTS ----
+  for (var i = 0; i < EVENTS.length; i++) {
+    RANDOM_EVENTS.push(EVENTS[i]);
+  }
+})();
+
+;
+// ==== js/core/domain_c_linkage_r818.js ====
+/*
+ * 城市浮生记 — 域C(职业/成长) 联动增强 R818
+ * 全系统优化·Domain C 第六十一轮循环
+ *
+ * 【联动增强3项】
+ *   1. C→D 职业人脉网络v2 — 职业环境深度拓展NPC社交圈
+ *   2. C→H 职业到创业v2 — 职业积累深度引导创业时机
+ *   3. C→F 职业技能展示UI — 技能面板展示职业成长轨迹
+ *
+ * 设计约束（与历轮 IIFE linkage 文件一致）：
+ *  - IIFE 注入全局 RANDOM_EVENTS，避免改动 cross_system_events.js。
+ *  - 所有 state 访问均 || 防御；数值标 [PLACEHOLDER]。
+ */
+(function () {
+  "use strict";
+  if (typeof RANDOM_EVENTS === "undefined" || !RANDOM_EVENTS) return;
+  if (RANDOM_EVENTS._domainCLinkageR818Loaded) return;
+  RANDOM_EVENTS._domainCLinkageR818Loaded = true;
+
+  // ---- 本地助手 ----
+  function grantXp(key, amt) {
+    if (typeof addSkillXp === "function") { try { addSkillXp(key, amt); } catch(e) {} }
+  }
+
+  var EVENTS = [
+    // ========================================================================
+    // 联动增强1: C→D 职业人脉网络v2 — 职业环境深度拓展NPC社交圈
+    // 设计意图：职业环境应带来更深层的社交机会，让玩家感到"同事变朋友"。
+    // 本事件在玩家在职≥90天且已结识NPC<10时触发。
+    // 心理学：社会认同 — 被同事认同的满足感。
+    // ========================================================================
+    {
+      id: "c818_career_network_v2",
+      phase: "street",
+      icon: "🤝",
+      title: "职场朋友，是最稳固的人脉",
+      story: "你发现——那些一起扛过项目的同事，成了你最稳固的人脉。\n\n职场朋友不同于酒肉朋友，他们见过你的能力、了解你的为人。\n\n这种关系，经得起时间考验。",
+      conditions: function (st) {
+        if (!st || !st.player || st.gameOver) return false;
+        if (st.flags && st.flags._c818CareerNetDone) return false;
+        if (!st.relationships) return false;
+        var _metCount = 0;
+        for (var _id in st.relationships) {
+          if (st.relationships[_id] && st.relationships[_id].met) _metCount++;
+        }
+        return _metCount < 10 && st.player.day >= 90;
+      },
+      probability: 0.06,
+      repeatable: false,
+      choices: [
+        {
+          text: "🤝 深化职场友谊",
+          hint: "魅力+5, 社交XP+10, 置_c818DeepWorkFriend",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._c818CareerNetDone = true;
+            st.flags._c818DeepWorkFriend = true;
+            if (st.player) st.player.charm = Math.min(100, (st.player.charm || 50) + 5);
+            grantXp("social", 10);
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("🤝 你深化了职场友谊——魅力+5, 社交XP+10。职场朋友，是最稳固的人脉。", "success");
+            }
+          }
+        },
+        {
+          text: "😊 保持职场距离",
+          hint: "心智+3",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._c818CareerNetDone = true;
+            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 3);
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("😊 保持职场距离。心智+3。", "info");
+            }
+          }
+        }
+      ]
+    },
+
+    // ========================================================================
+    // 联动增强2: C→H 职业到创业v2 — 职业积累深度引导创业时机
+    // 设计意图：职业积累应深度引导玩家考虑创业，形成"打工→创业"的叙事弧线。
+    // 本事件在玩家在职≥500天且总资产≥¥30万时触发。
+    // 心理学：禀赋效应 — 玩家感到"职业积累为创业铺路"。
+    // ========================================================================
+    {
+      id: "c818_career_to_startup_v2",
+      phase: "street",
+      icon: "🚀",
+      title: "时机成熟了吗？",
+      story: "你在职场摸爬滚打了一年半多，积累了丰富的经验、人脉、资金。\n\n一个越来越清晰的声音在问：是时候创业了吗？\n\n这不是冲动，而是准备就绪后的自然选择。",
+      conditions: function (st) {
+        if (!st || !st.player || st.gameOver) return false;
+        if (st.flags && st.flags._c818StartupV2Done) return false;
+        if (!st.resources) return false;
+        var _total = (st.resources.cash || 0) + (st.resources.bankBalance || 0);
+        return _total >= 300000 && st.player.day >= 500;
+      },
+      probability: 0.07,
+      repeatable: false,
+      choices: [
+        {
+          text: "🚀 认真评估创业时机",
+          hint: "智力+10, 管理XP+15, 置_c818StartupReady",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._c818StartupV2Done = true;
+            st.flags._c818StartupReady = true;
+            if (st.player) st.player.intelligence = Math.min(100, (st.player.intelligence || 50) + 10);
+            grantXp("management", 15);
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("🚀 你认真评估了创业时机——智力+10, 管理XP+15。时机成熟了吗？", "success");
+            }
+          }
+        },
+        {
+          text: "😅 再等等看",
+          hint: "心智+3",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._c818StartupV2Done = true;
+            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 3);
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("😅 再等等看。心智+3。", "info");
+            }
+          }
+        }
+      ]
+    },
+
+    // ========================================================================
+    // 联动增强3: C→F 职业技能展示UI — 技能面板展示职业成长轨迹
+    // 设计意图：技能面板应展示职业成长轨迹和市场需求，让玩家感到"成长可见"。
+    // 本事件在玩家拥有≥3个Lv.30+技能时触发，给予"技能成长可视化"标记。
+    // 心理学：禀赋效应 — 玩家更珍视自己投入时间培养的技能。
+    // ========================================================================
+    {
+      id: "c818_skill_growth_ui",
+      phase: "street",
+      icon: "📊",
+      title: "你的技能成长，一目了然",
+      story: "你打开技能面板——每一个技能的成长轨迹、市场需求、职业关联都清晰可见。\n\n从最初的生疏，到现在的熟练。每一点进步，都记录在案。\n\n成长，最好的证明就是数据。",
+      conditions: function (st) {
+        if (!st || !st.player || st.gameOver) return false;
+        if (st.flags && st.flags._c818SkillUIDone) return false;
+        if (!st.skills) return false;
+        var _count = 0;
+        for (var _sk in st.skills) {
+          var _sl = st.skills[_sk];
+          if (_sl && (_sl.level || 0) >= 30) _count++;
+        }
+        return _count >= 3;
+      },
+      probability: 0.05,
+      repeatable: false,
+      choices: [
+        {
+          text: "📊 查看技能成长轨迹",
+          hint: "智力+5, 置_c818SkillGrowthViz",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._c818SkillUIDone = true;
+            st.flags._c818SkillGrowthViz = true;
+            if (st.player) st.player.intelligence = Math.min(100, (st.player.intelligence || 50) + 5);
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("📊 技能成长轨迹已可视化——智力+5。成长，最好的证明就是数据。", "success");
+            }
+          }
+        },
+        {
+          text: "😅 技能够用就行",
+          hint: "心智+2",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._c818SkillUIDone = true;
+            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 2);
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("😅 技能够用就行。心智+2。", "info");
+            }
+          }
+        }
+      ]
+    }
+  ];
+
+  // ---- 注入全局 RANDOM_EVENTS ----
+  for (var i = 0; i < EVENTS.length; i++) {
+    RANDOM_EVENTS.push(EVENTS[i]);
+  }
+})();
+
+;
+// ==== js/core/domain_c_linkage_r821.js ====
+/**
+ * 域C(职业/成长) 联动增强 R821 (第十四轮循环)
+ * 桥接：
+ *   C→A  c821_career_data_v9 职业数据v9 → 消费 jobs/skills/employment 数据
+ *   C→B  c821_career_story_v9 职业故事v9 → 消费 职业历史+事件
+ *   C→G  c821_career_health_v9 职业健康v9 → 消费 职业数据+needs
+ */
+(function () {
+  "use strict";
+  if (typeof RANDOM_EVENTS === "undefined" || !RANDOM_EVENTS) return;
+  if (RANDOM_EVENTS._domainCLinkageR821Loaded) return;
+  RANDOM_EVENTS._domainCLinkageR821Loaded = true;
+
+  var EVENTS = [
+    {
+      id: "c821_career_data_v9", phase: "street", _isChainEvent: false, icon: "💼",
+      title: "职业数据报告",
+      story: "你的职业数据正在讲述成长故事——这些数据,就是你的职业资本。",
+      triggers: { minDay: 200, interval: 300, maxRepeats: 3, excludeFlags: ["_c821DataCd"] },
+      conditions: function (st) {
+        if (!st || st.gameOver) return false;
+        if (st.flags && st.flags._c821DataCd) return false;
+        return st.player && st.player.day >= 200 && st.skills;
+      },
+      text: function (st) {
+        if (!st) return null;
+        return "你的职业正在成长——'这些数据,就是你的职业资本。'";
+      },
+      choices: [
+        {
+          text: "📊 分析职业轨迹", hint: "智力+20,会计XP+15,置_c821Analyst",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._c821DataCd = true;
+            st.flags._c821Analyst = true;
+            if (st.player) st.player.intelligence = Math.min(100, (st.player.intelligence || 50) + 20);
+            if (typeof addSkillXp === "function") { try { addSkillXp("accounting", 15); } catch(e) {} }
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("💼 '职业成长,需要数据支撑。' 智力+20,会计XP+15。", "success");
+            }
+          }
+        },
+        {
+          text: "🎯 规划职业路径", hint: "管理XP+20,置_c821Planner",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._c821DataCd = true;
+            st.flags._c821Planner = true;
+            if (typeof addSkillXp === "function") { try { addSkillXp("management", 20); } catch(e) {} }
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("🎯 '有规划,才有方向。' 管理XP+20。", "info");
+            }
+          }
+        }
+      ]
+    },
+    {
+      id: "c821_career_story_v9", phase: "street", _isChainEvent: false, icon: "📖",
+      title: "职业故事",
+      story: "你的职业变化正在书写故事——每一步,都值得被记录。",
+      triggers: { minDay: 300, interval: 350, maxRepeats: 3, excludeFlags: ["_c821NarrCd"] },
+      conditions: function (st) {
+        if (!st || st.gameOver) return false;
+        if (st.flags && st.flags._c821NarrCd) return false;
+        return st.player && st.player.day >= 300 && st.employment;
+      },
+      text: function (st) {
+        if (!st) return null;
+        var jobName = "无";
+        if (st.employment && st.employment.currentJob) jobName = st.employment.currentJob.name || "在职";
+        return "当前职业" + jobName + "——'这就是你的职业故事。'";
+      },
+      choices: [
+        {
+          text: "📜 记录职业历程", hint: "心智+20,置_c821Chronicler",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._c821NarrCd = true;
+            st.flags._c821Chronicler = true;
+            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 20);
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("📖 '每一步,都值得记录。' 心智+20。", "success");
+            }
+          }
+        },
+        {
+          text: "🚀 展望未来发展", hint: "智力+18,魅力+15,置_c821Visionary",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._c821NarrCd = true;
+            st.flags._c821Visionary = true;
+            if (st.player) {
+              st.player.intelligence = Math.min(100, (st.player.intelligence || 50) + 18);
+              st.player.charm = Math.min(100, (st.player.charm || 50) + 15);
+            }
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("🚀 '职业生涯,需要远见。' 智力+18,魅力+15。", "info");
+            }
+          }
+        }
+      ]
+    },
+    {
+      id: "c821_career_health_v9", phase: "street", _isChainEvent: false, icon: "💚",
+      title: "职业健康",
+      story: "工作不应以牺牲健康为代价——工作与健康,需要平衡。",
+      triggers: { minDay: 400, interval: 450, maxRepeats: 4, excludeFlags: ["_c821HealthCd"] },
+      conditions: function (st) {
+        if (!st || st.gameOver) return false;
+        if (st.flags && st.flags._c821HealthCd) return false;
+        return st.player && st.player.day >= 400 && st.needs && st.status;
+      },
+      text: function (st) {
+        if (!st) return null;
+        var fatigue = st.needs && isFinite(st.needs.fatigue) ? Math.round(st.needs.fatigue) : 0;
+        return "职场疲劳" + fatigue + "——'工作与健康,需要平衡。'";
+      },
+      choices: [
+        {
+          text: "🧘 工作生活平衡", hint: "心情+20,疲劳-20,置_c821Balanced",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._c821HealthCd = true;
+            st.flags._c821Balanced = true;
+            if (st.needs) {
+              st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 20);
+              st.needs.fatigue = Math.max(0, (st.needs.fatigue || 0) - 20);
+            }
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("💚 '工作是为了生活。' 心情+20,疲劳-20。", "success");
+            }
+          }
+        },
+        {
+          text: "🏋️ 职场健康管理", hint: "健康+18,置_c821Healthy",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._c821HealthCd = true;
+            st.flags._c821Healthy = true;
+            if (st.status) st.status.health = Math.min(100, (st.status.health || 100) + 18);
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("🏋️ '身体是革命的本钱。' 健康+18。", "info");
+            }
+          }
+        }
+      ]
+    }
+  ];
+
+  for (var i = 0; i < EVENTS.length; i++) {
+    RANDOM_EVENTS.push(EVENTS[i]);
+  }
+})();
+;
+// ==== js/core/domain_c_linkage_r824.js ====
+/*
+ * 城市浮生记 — 域C(职业/成长) 联动增强 R824
+ * 全系统优化·Domain C 第六十二轮循环
+ *
+ * 【联动增强3项】
+ *   1. C→A 技能市场数据v2 — 技能等级转化为数值平衡数据资产
+ *   2. C→E 职业技能→投资v3 — 职业技能深度引导投资决策
+ *   3. C→G 职业健康→生命质量v2 — 职业状态深度反馈为身心恢复
+ *
+ * 设计约束（与历轮 IIFE linkage 文件一致）：
+ *  - IIFE 注入全局 RANDOM_EVENTS，避免改动 cross_system_events.js。
+ *  - 所有 state 访问均 || 防御；数值标 [PLACEHOLDER]。
+ */
+(function () {
+  "use strict";
+  if (typeof RANDOM_EVENTS === "undefined" || !RANDOM_EVENTS) return;
+  if (RANDOM_EVENTS._domainCLinkageR824Loaded) return;
+  RANDOM_EVENTS._domainCLinkageR824Loaded = true;
+
+  // ---- 本地助手 ----
+  function grantXp(key, amt) {
+    if (typeof addSkillXp === "function") { try { addSkillXp(key, amt); } catch(e) {} }
+  }
+
+  var EVENTS = [
+    // ========================================================================
+    // 联动增强1: C→A 技能市场数据v2 — 技能等级转化为数值平衡数据资产
+    // 设计意图：技能数据应成为数值域可消费的资产，让玩家感到"技能有价值"。
+    // 本事件在玩家拥有≥2个Lv.60+技能时触发，给予"技能市场数据v2"标记。
+    // 心理学：禀赋效应 — 玩家更珍视自己投入时间培养的技能。
+    // ========================================================================
+    {
+      id: "c824_skill_market_data_v2",
+      phase: "street",
+      icon: "📊",
+      title: "你的技能，在市场上值多少钱？",
+      story: "你查看了技能市场报告——自己的技能水平，在市场上的定价一目了然。\n\n技能越高，市场定价越高。这不是抽象的感觉，而是真实的数据。",
+      conditions: function (st) {
+        if (!st || !st.player || st.gameOver) return false;
+        if (st.flags && st.flags._c824SkillDataDone) return false;
+        if (!st.skills) return false;
+        var _count = 0;
+        for (var _sk in st.skills) {
+          var _sl = st.skills[_sk];
+          if (_sl && (_sl.level || 0) >= 60) _count++;
+        }
+        return _count >= 2;
+      },
+      probability: 0.05,
+      repeatable: false,
+      choices: [
+        {
+          text: "📊 查看技能市场数据",
+          hint: "智力+8, 会计XP+10, 置_c824SkillValueData",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._c824SkillDataDone = true;
+            st.flags._c824SkillValueData = true;
+            if (st.player) st.player.intelligence = Math.min(100, (st.player.intelligence || 50) + 8);
+            grantXp("accounting", 10);
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("📊 技能市场数据已生成——智力+8, 会计XP+10。技能就是钱。", "success");
+            }
+          }
+        },
+        {
+          text: "😅 技能不用数据衡量",
+          hint: "心智+2",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._c824SkillDataDone = true;
+            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 2);
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("😅 技能不用数据衡量。心智+2。", "info");
+            }
+          }
+        }
+      ]
+    },
+
+    // ========================================================================
+    // 联动增强2: C→E 职业技能→投资v3 — 职业技能深度引导投资决策
+    // 设计意图：职业技能应深度引导玩家关注投资，形成"技能→投资"决策链。
+    // 本事件在玩家拥有≥1个Lv.50+技能且总资产≥¥10万时触发。
+    // 心理学：禀赋效应 — 玩家感到"技能应该变现"。
+    // ========================================================================
+    {
+      id: "c824_skill_to_invest_v3",
+      phase: "street",
+      icon: "💰",
+      title: "用技能赚钱，让钱生钱",
+      story: "你发现——自己的技能水平已经足够高了，但收入增长却遇到了瓶颈。\n\n是时候考虑：如何让技能赚到的钱，继续为你赚钱？",
+      conditions: function (st) {
+        if (!st || !st.player || st.gameOver) return false;
+        if (st.flags && st.flags._c824SkillInvestDone) return false;
+        if (!st.skills || !st.resources) return false;
+        var _total = (st.resources.cash || 0) + (st.resources.bankBalance || 0);
+        if (_total < 100000) return false;
+        for (var _sk in st.skills) {
+          var _sl = st.skills[_sk];
+          if (_sl && (_sl.level || 0) >= 50) return true;
+        }
+        return false;
+      },
+      probability: 0.06,
+      repeatable: false,
+      choices: [
+        {
+          text: "💰 学习用技能收益投资",
+          hint: "智力+10, 会计XP+12, 置_c824SkillInvestor",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._c824SkillInvestDone = true;
+            st.flags._c824SkillInvestor = true;
+            if (st.player) st.player.intelligence = Math.min(100, (st.player.intelligence || 50) + 10);
+            grantXp("accounting", 12);
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("💰 你开始学习用技能收益投资——智力+10, 会计XP+12。", "success");
+            }
+          }
+        },
+        {
+          text: "😅 技能赚钱就够了",
+          hint: "心智+3",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._c824SkillInvestDone = true;
+            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 3);
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("😅 技能赚钱就够了。心智+3。", "info");
+            }
+          }
+        }
+      ]
+    },
+
+    // ========================================================================
+    // 联动增强3: C→G 职业健康→生命质量v2 — 职业状态深度反馈为身心恢复
+    // 设计意图：职业状态(倦怠/压力)应深度反馈为身心恢复需求。
+    // 本事件在玩家倦怠≥60且健康<50时触发，给予"职业健康v2"标记。
+    // 心理学：损失厌恶 — 玩家更害怕因工作失去健康。
+    // ========================================================================
+    {
+      id: "c824_career_health_v2",
+      phase: "street",
+      icon: "💚",
+      title: "工作再忙，也要照顾好自己",
+      story: "你感到疲惫——长时间的工作让身体发出了警告。\n\n健康不是无限的资源，它需要被照顾、被恢复。",
+      conditions: function (st) {
+        if (!st || !st.player || st.gameOver) return false;
+        if (st.flags && st.flags._c824CareerHealthDone) return false;
+        var _burnout = st.player.corporate ? (st.player.corporate.burnout || 0) : (st.needs ? st.needs.fatigue : 0);
+        if (_burnout < 60) return false;
+        var _health = st.status ? st.status.health : 100;
+        return _health < 50;
+      },
+      probability: 0.07,
+      repeatable: false,
+      choices: [
+        {
+          text: "💚 主动恢复身心健康",
+          hint: "健康+15, 疲劳-20, 置_c824CareerHealthRecovery",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._c824CareerHealthDone = true;
+            st.flags._c824CareerHealthRecovery = true;
+            if (st.status) st.status.health = Math.min(100, (st.status.health || 50) + 15);
+            if (st.needs) st.needs.fatigue = Math.max(0, (st.needs.fatigue || 0) - 20);
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("💚 你主动恢复了身心健康——健康+15, 疲劳-20。", "success");
+            }
+          }
+        },
+        {
+          text: "🔥 再撑一阵子就好了",
+          hint: "健康-5, 置_c824BurnoutRisk",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._c824CareerHealthDone = true;
+            st.flags._c824BurnoutRisk = true;
+            if (st.status) st.status.health = Math.max(0, (st.status.health || 50) - 5);
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("🔥 你选择继续硬撑——健康-5。注意身体！", "warning");
+            }
+          }
+        }
+      ]
+    }
+  ];
+
+  // ---- 注入全局 RANDOM_EVENTS ----
+  for (var i = 0; i < EVENTS.length; i++) {
+    RANDOM_EVENTS.push(EVENTS[i]);
+  }
+})();
+
+;
+// ==== js/core/domain_c_linkage_r828.js ====
+/**
+ * 域C(职业/成长) 联动增强 R828 (第十五轮循环)
+ * 桥接：
+ *   C→A  c828_career_insight 职业洞察 → 消费 jobs/skills 数据
+ *   C→B  c828_career_narrative 职业叙事 → 消费 职业历史+事件
+ *   C→G  c828_career_wellness 职业健康 → 消费 职业数据+needs
+ */
+(function () {
+  "use strict";
+  if (typeof RANDOM_EVENTS === "undefined" || !RANDOM_EVENTS) return;
+  if (RANDOM_EVENTS._domainCLinkageR828Loaded) return;
+  RANDOM_EVENTS._domainCLinkageR828Loaded = true;
+
+  var EVENTS = [
+    {
+      id: "c828_career_insight", phase: "street", _isChainEvent: false, icon: "💼",
+      title: "职业洞察", story: "你的职业数据正在讲述成长故事——这些数据,就是你的职业资本。",
+      triggers: { minDay: 150, interval: 250, maxRepeats: 3, excludeFlags: ["_c828DataCd"] },
+      conditions: function (st) { if (!st || st.gameOver) return false; if (st.flags && st.flags._c828DataCd) return false; return st.player && st.player.day >= 150 && st.skills; },
+      text: function (st) { if (!st) return null; return "你的职业正在成长——'这些数据,就是你的职业资本。'"; },
+      choices: [
+        { text: "📊 分析轨迹", hint: "智力+20,会计XP+15,置_c828Analyst",
+          apply: function (st) { if (!st) return; st.flags = st.flags || {}; st.flags._c828DataCd = true; st.flags._c828Analyst = true; if (st.player) st.player.intelligence = Math.min(100, (st.player.intelligence || 50) + 20); if (typeof addSkillXp === "function") { try { addSkillXp("accounting", 15); } catch(e) {} } if (typeof StateManager !== "undefined") { StateManager.addMessage("💼 '职业成长需要数据支撑。' 智力+20,会计XP+15。", "success"); } }
+        },
+        { text: "🎯 规划路径", hint: "管理XP+20,置_c828Planner",
+          apply: function (st) { if (!st) return; st.flags = st.flags || {}; st.flags._c828DataCd = true; st.flags._c828Planner = true; if (typeof addSkillXp === "function") { try { addSkillXp("management", 20); } catch(e) {} } if (typeof StateManager !== "undefined") { StateManager.addMessage("🎯 '有规划才有方向。' 管理XP+20。", "info"); } }
+        }
+      ]
+    },
+    {
+      id: "c828_career_narrative", phase: "street", _isChainEvent: false, icon: "📖",
+      title: "职业叙事", story: "你的职业变化正在书写故事——每一步,都值得记录。",
+      triggers: { minDay: 250, interval: 300, maxRepeats: 3, excludeFlags: ["_c828NarrCd"] },
+      conditions: function (st) { if (!st || st.gameOver) return false; if (st.flags && st.flags._c828NarrCd) return false; return st.player && st.player.day >= 250 && st.employment; },
+      text: function (st) { if (!st) return null; var j = "无"; if (st.employment && st.employment.currentJob) j = st.employment.currentJob.name || "在职"; return "当前职业" + j + "——'这就是你的职业故事。'"; },
+      choices: [
+        { text: "📜 记录历程", hint: "心智+20,置_c828Chronicler",
+          apply: function (st) { if (!st) return; st.flags = st.flags || {}; st.flags._c828NarrCd = true; st.flags._c828Chronicler = true; if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 20); if (typeof StateManager !== "undefined") { StateManager.addMessage("📖 '每一步都值得记录。' 心智+20。", "success"); } }
+        },
+        { text: "🚀 展望未来", hint: "智力+18,魅力+15,置_c828Visionary",
+          apply: function (st) { if (!st) return; st.flags = st.flags || {}; st.flags._c828NarrCd = true; st.flags._c828Visionary = true; if (st.player) { st.player.intelligence = Math.min(100, (st.player.intelligence || 50) + 18); st.player.charm = Math.min(100, (st.player.charm || 50) + 15); } if (typeof StateManager !== "undefined") { StateManager.addMessage("🚀 '职业生涯需要远见。' 智力+18,魅力+15。", "info"); } }
+        }
+      ]
+    },
+    {
+      id: "c828_career_wellness", phase: "street", _isChainEvent: false, icon: "💚",
+      title: "职业健康", story: "工作不应以牺牲健康为代价——工作与健康,需要平衡。",
+      triggers: { minDay: 350, interval: 400, maxRepeats: 4, excludeFlags: ["_c828HealthCd"] },
+      conditions: function (st) { if (!st || st.gameOver) return false; if (st.flags && st.flags._c828HealthCd) return false; return st.player && st.player.day >= 350 && st.needs && st.status; },
+      text: function (st) { if (!st) return null; var f = st.needs && isFinite(st.needs.fatigue) ? Math.round(st.needs.fatigue) : 0; return "职场疲劳" + f + "——'工作与健康,需要平衡。'"; },
+      choices: [
+        { text: "🧘 平衡生活", hint: "心情+20,疲劳-20,置_c828Balanced",
+          apply: function (st) { if (!st) return; st.flags = st.flags || {}; st.flags._c828HealthCd = true; st.flags._c828Balanced = true; if (st.needs) { st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 20); st.needs.fatigue = Math.max(0, (st.needs.fatigue || 0) - 20); } if (typeof StateManager !== "undefined") { StateManager.addMessage("💚 '工作是为了生活。' 心情+20,疲劳-20。", "success"); } }
+        },
+        { text: "🏋️ 健康管理", hint: "健康+18,置_c828Healthy",
+          apply: function (st) { if (!st) return; st.flags = st.flags || {}; st.flags._c828HealthCd = true; st.flags._c828Healthy = true; if (st.status) st.status.health = Math.min(100, (st.status.health || 100) + 18); if (typeof StateManager !== "undefined") { StateManager.addMessage("🏋️ '身体是革命的本钱。' 健康+18。", "info"); } }
+        }
+      ]
+    }
+  ];
+
+  for (var i = 0; i < EVENTS.length; i++) { RANDOM_EVENTS.push(EVENTS[i]); }
+})();
+;
+// ==== js/core/domain_c_linkage_r832.js ====
+/*
+ * 城市浮生记 — 域C(职业/成长) 联动增强 R832
+ * 全系统优化·Domain C 第六十三轮循环
+ *
+ * 【联动增强3项】
+ *   1. C→B 职业故事叙事v3 — 职业选择触发事件叙事回响
+ *   2. C→D 职业人脉网络v3 — 职业环境深度拓展NPC社交圈
+ *   3. C→H 职业到创业v3 — 职业积累深度引导创业时机
+ *
+ * 设计约束（与历轮 IIFE linkage 文件一致）：
+ *  - IIFE 注入全局 RANDOM_EVENTS，避免改动 cross_system_events.js。
+ *  - 所有 state 访问均 || 防御；数值标 [PLACEHOLDER]。
+ */
+(function () {
+  "use strict";
+  if (typeof RANDOM_EVENTS === "undefined" || !RANDOM_EVENTS) return;
+  if (RANDOM_EVENTS._domainCLinkageR832Loaded) return;
+  RANDOM_EVENTS._domainCLinkageR832Loaded = true;
+
+  // ---- 本地助手 ----
+  function grantXp(key, amt) {
+    if (typeof addSkillXp === "function") { try { addSkillXp(key, amt); } catch(e) {} }
+  }
+
+  var EVENTS = [
+    // ========================================================================
+    // 联动增强1: C→B 职业故事叙事v3 — 职业选择触发事件叙事回响
+    // 设计意图：职业路径中的关键选择应产生叙事回响，让玩家感到"职业有故事"。
+    // 本事件在玩家晋升≥4次时触发，给予"职业故事v3"标记。
+    // 心理学：峰终定律 — 晋升时刻成为职业记忆锚点。
+    // ========================================================================
+    {
+      id: "c832_career_story_v3",
+      phase: "street",
+      icon: "📖",
+      title: "每一步晋升，都是一段故事",
+      story: "你回顾了这一路走来的职业历程——从最初的打工人，到现在的岗位。\n\n每一次晋升，都是一次挑战；每一次挑战，都让你成长。",
+      conditions: function (st) {
+        if (!st || !st.player || st.gameOver) return false;
+        if (st.flags && st.flags._c832CareerStoryDone) return false;
+        var _promotions = st.flags._promotionCount || 0;
+        return _promotions >= 4 && st.player.day >= 150;
+      },
+      probability: 0.05,
+      repeatable: false,
+      choices: [
+        {
+          text: "📖 记录我的职业故事",
+          hint: "心智+10, 置_c832CareerNarrative",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._c832CareerStoryDone = true;
+            st.flags._c832CareerNarrative = true;
+            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 10);
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("📖 职业故事记录完成——心智+10。每一步晋升，都是一段故事。", "success");
+            }
+          }
+        },
+        {
+          text: "😊 过去就过去了",
+          hint: "心情+3",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._c832CareerStoryDone = true;
+            if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 3);
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("😊 过去就过去了。心情+3。", "info");
+            }
+          }
+        }
+      ]
+    },
+
+    // ========================================================================
+    // 联动增强2: C→D 职业人脉网络v3 — 职业环境深度拓展NPC社交圈
+    // 设计意图：职业环境应带来更深层的社交机会，让玩家感到"同事变朋友"。
+    // 本事件在玩家在职≥120天且已结识NPC<12时触发。
+    // 心理学：社会认同 — 被同事认同的满足感。
+    // ========================================================================
+    {
+      id: "c832_career_network_v3",
+      phase: "street",
+      icon: "🤝",
+      title: "职场朋友，是最稳固的人脉",
+      story: "你发现——那些一起扛过项目的同事，成了你最稳固的人脉。\n\n职场朋友不同于酒肉朋友，他们见过你的能力、了解你的为人。",
+      conditions: function (st) {
+        if (!st || !st.player || st.gameOver) return false;
+        if (st.flags && st.flags._c832CareerNetDone) return false;
+        if (!st.relationships) return false;
+        var _metCount = 0;
+        for (var _id in st.relationships) {
+          if (st.relationships[_id] && st.relationships[_id].met) _metCount++;
+        }
+        return _metCount < 12 && st.player.day >= 120;
+      },
+      probability: 0.06,
+      repeatable: false,
+      choices: [
+        {
+          text: "🤝 深化职场友谊",
+          hint: "魅力+8, 社交XP+12, 置_c832DeepWorkFriend",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._c832CareerNetDone = true;
+            st.flags._c832DeepWorkFriend = true;
+            if (st.player) st.player.charm = Math.min(100, (st.player.charm || 50) + 8);
+            grantXp("social", 12);
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("🤝 你深化了职场友谊——魅力+8, 社交XP+12。", "success");
+            }
+          }
+        },
+        {
+          text: "😊 保持职场距离",
+          hint: "心智+3",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._c832CareerNetDone = true;
+            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 3);
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("😊 保持职场距离。心智+3。", "info");
+            }
+          }
+        }
+      ]
+    },
+
+    // ========================================================================
+    // 联动增强3: C→H 职业到创业v3 — 职业积累深度引导创业时机
+    // 设计意图：职业积累应深度引导玩家考虑创业，形成"打工→创业"的叙事弧线。
+    // 本事件在玩家在职≥600天且总资产≥¥40万时触发。
+    // 心理学：禀赋效应 — 玩家感到"职业积累为创业铺路"。
+    // ========================================================================
+    {
+      id: "c832_career_to_startup_v3",
+      phase: "street",
+      icon: "🚀",
+      title: "时机成熟了吗？",
+      story: "你在职场摸爬滚打了一年半多，积累了丰富的经验、人脉、资金。\n\n一个越来越清晰的声音在问：是时候创业了吗？",
+      conditions: function (st) {
+        if (!st || !st.player || st.gameOver) return false;
+        if (st.flags && st.flags._c832StartupV3Done) return false;
+        if (!st.resources) return false;
+        var _total = (st.resources.cash || 0) + (st.resources.bankBalance || 0);
+        return _total >= 400000 && st.player.day >= 600;
+      },
+      probability: 0.07,
+      repeatable: false,
+      choices: [
+        {
+          text: "🚀 认真评估创业时机",
+          hint: "智力+12, 管理XP+15, 置_c832StartupReady",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._c832StartupV3Done = true;
+            st.flags._c832StartupReady = true;
+            if (st.player) st.player.intelligence = Math.min(100, (st.player.intelligence || 50) + 12);
+            grantXp("management", 15);
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("🚀 你认真评估了创业时机——智力+12, 管理XP+15。", "success");
+            }
+          }
+        },
+        {
+          text: "😅 再等等看",
+          hint: "心智+3",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._c832StartupV3Done = true;
+            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 3);
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("😅 再等等看。心智+3。", "info");
+            }
+          }
+        }
+      ]
+    }
+  ];
+
+  // ---- 注入全局 RANDOM_EVENTS ----
+  for (var i = 0; i < EVENTS.length; i++) {
+    RANDOM_EVENTS.push(EVENTS[i]);
+  }
+})();
+
+;
+// ==== js/core/domain_c_linkage_r835.js ====
+/**
+ * 域C(职业/成长) 联动增强 R835 (第十六轮循环)
+ * 桥接：
+ *   C→A  c835_career_track 职业轨迹 → 消费 jobs/skills 数据
+ *   C→B  c835_career_tale 职业故事 → 消费 职业历史+事件
+ *   C→G  c835_career_vitality 职业活力 → 消费 职业数据+needs
+ */
+(function () {
+  "use strict";
+  if (typeof RANDOM_EVENTS === "undefined" || !RANDOM_EVENTS) return;
+  if (RANDOM_EVENTS._domainCLinkageR835Loaded) return;
+  RANDOM_EVENTS._domainCLinkageR835Loaded = true;
+
+  var EVENTS = [
+    {
+      id: "c835_career_track", phase: "street", _isChainEvent: false, icon: "💼",
+      title: "职业轨迹", story: "你的职业数据正在讲述成长故事——这些数据,就是你的职业资本。",
+      triggers: { minDay: 120, interval: 200, maxRepeats: 3, excludeFlags: ["_c835TrackCd"] },
+      conditions: function (st) { if (!st || st.gameOver) return false; if (st.flags && st.flags._c835TrackCd) return false; return st.player && st.player.day >= 120 && st.skills; },
+      text: function (st) { if (!st) return null; return "你的职业正在成长——'这些数据,就是你的职业资本。'"; },
+      choices: [
+        { text: "📊 分析轨迹", hint: "智力+20,会计XP+15,置_c835Analyst",
+          apply: function (st) { if (!st) return; st.flags = st.flags || {}; st.flags._c835TrackCd = true; st.flags._c835Analyst = true; if (st.player) st.player.intelligence = Math.min(100, (st.player.intelligence || 50) + 20); if (typeof addSkillXp === "function") { try { addSkillXp("accounting", 15); } catch(e) {} } if (typeof StateManager !== "undefined") { StateManager.addMessage("💼 '职业成长需要数据支撑。' 智力+20,会计XP+15。", "success"); } }
+        },
+        { text: "🎯 规划路径", hint: "管理XP+20,置_c835Planner",
+          apply: function (st) { if (!st) return; st.flags = st.flags || {}; st.flags._c835TrackCd = true; st.flags._c835Planner = true; if (typeof addSkillXp === "function") { try { addSkillXp("management", 20); } catch(e) {} } if (typeof StateManager !== "undefined") { StateManager.addMessage("🎯 '有规划才有方向。' 管理XP+20。", "info"); } }
+        }
+      ]
+    },
+    {
+      id: "c835_career_tale", phase: "street", _isChainEvent: false, icon: "📖",
+      title: "职业故事", story: "你的职业变化正在书写故事——每一步,都值得记录。",
+      triggers: { minDay: 200, interval: 250, maxRepeats: 3, excludeFlags: ["_c835TaleCd"] },
+      conditions: function (st) { if (!st || st.gameOver) return false; if (st.flags && st.flags._c835TaleCd) return false; return st.player && st.player.day >= 200 && st.employment; },
+      text: function (st) { if (!st) return null; var j = "无"; if (st.employment && st.employment.currentJob) j = st.employment.currentJob.name || "在职"; return "当前职业" + j + "——'这就是你的职业故事。'"; },
+      choices: [
+        { text: "📜 记录历程", hint: "心智+20,置_c835Chronicler",
+          apply: function (st) { if (!st) return; st.flags = st.flags || {}; st.flags._c835TaleCd = true; st.flags._c835Chronicler = true; if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 20); if (typeof StateManager !== "undefined") { StateManager.addMessage("📖 '每一步都值得记录。' 心智+20。", "success"); } }
+        },
+        { text: "🚀 展望未来", hint: "智力+18,魅力+15,置_c835Visionary",
+          apply: function (st) { if (!st) return; st.flags = st.flags || {}; st.flags._c835TaleCd = true; st.flags._c835Visionary = true; if (st.player) { st.player.intelligence = Math.min(100, (st.player.intelligence || 50) + 18); st.player.charm = Math.min(100, (st.player.charm || 50) + 15); } if (typeof StateManager !== "undefined") { StateManager.addMessage("🚀 '职业生涯需要远见。' 智力+18,魅力+15。", "info"); } }
+        }
+      ]
+    },
+    {
+      id: "c835_career_vitality", phase: "street", _isChainEvent: false, icon: "💚",
+      title: "职业活力", story: "工作不应以牺牲健康为代价——工作与健康,需要平衡。",
+      triggers: { minDay: 300, interval: 350, maxRepeats: 4, excludeFlags: ["_c835VitalCd"] },
+      conditions: function (st) { if (!st || st.gameOver) return false; if (st.flags && st.flags._c835VitalCd) return false; return st.player && st.player.day >= 300 && st.needs && st.status; },
+      text: function (st) { if (!st) return null; var f = st.needs && isFinite(st.needs.fatigue) ? Math.round(st.needs.fatigue) : 0; return "职场疲劳" + f + "——'工作与健康,需要平衡。'"; },
+      choices: [
+        { text: "🧘 平衡生活", hint: "心情+20,疲劳-20,置_c835Balanced",
+          apply: function (st) { if (!st) return; st.flags = st.flags || {}; st.flags._c835VitalCd = true; st.flags._c835Balanced = true; if (st.needs) { st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 20); st.needs.fatigue = Math.max(0, (st.needs.fatigue || 0) - 20); } if (typeof StateManager !== "undefined") { StateManager.addMessage("💚 '工作是为了生活。' 心情+20,疲劳-20。", "success"); } }
+        },
+        { text: "🏋️ 健康管理", hint: "健康+18,置_c835Healthy",
+          apply: function (st) { if (!st) return; st.flags = st.flags || {}; st.flags._c835VitalCd = true; st.flags._c835Healthy = true; if (st.status) st.status.health = Math.min(100, (st.status.health || 100) + 18); if (typeof StateManager !== "undefined") { StateManager.addMessage("🏋️ '身体是革命的本钱。' 健康+18。", "info"); } }
+        }
+      ]
+    }
+  ];
+
+  for (var i = 0; i < EVENTS.length; i++) { RANDOM_EVENTS.push(EVENTS[i]); }
+})();
+;
+// ==== js/core/domain_c_linkage_r840.js ====
+/*
+ * 城市浮生记 — 域C(职业/成长) 联动增强 R840
+ * 全系统优化·Domain C 第六十四轮循环
+ *
+ * 【联动增强3项】
+ *   1. C→A 技能市场数据v3 — 技能等级转化为数值平衡数据资产
+ *   2. C→E 职业技能→投资v4 — 职业技能深度引导投资决策
+ *   3. C→G 职业健康→生命质量v3 — 职业状态深度反馈为身心恢复
+ *
+ * 设计约束（与历轮 IIFE linkage 文件一致）：
+ *  - IIFE 注入全局 RANDOM_EVENTS，避免改动 cross_system_events.js。
+ *  - 所有 state 访问均 || 防御；数值标 [PLACEHOLDER]。
+ */
+(function () {
+  "use strict";
+  if (typeof RANDOM_EVENTS === "undefined" || !RANDOM_EVENTS) return;
+  if (RANDOM_EVENTS._domainCLinkageR840Loaded) return;
+  RANDOM_EVENTS._domainCLinkageR840Loaded = true;
+
+  // ---- 本地助手 ----
+  function grantXp(key, amt) {
+    if (typeof addSkillXp === "function") { try { addSkillXp(key, amt); } catch(e) {} }
+  }
+
+  var EVENTS = [
+    // ========================================================================
+    // 联动增强1: C→A 技能市场数据v3 — 技能等级转化为数值平衡数据资产
+    // 设计意图：技能数据应成为数值域可消费的资产，让玩家感到"技能有价值"。
+    // 本事件在玩家拥有≥3个Lv.60+技能时触发，给予"技能市场数据v3"标记。
+    // 心理学：禀赋效应 — 玩家更珍视自己投入时间培养的技能。
+    // ========================================================================
+    {
+      id: "c840_skill_data_v3",
+      phase: "street",
+      icon: "📊",
+      title: "你的技能，在市场上值多少钱？",
+      story: "你查看了技能市场报告——自己的技能水平，在市场上的定价一目了然。\n\n技能越高，市场定价越高。这不是抽象的感觉，而是真实的数据。",
+      conditions: function (st) {
+        if (!st || !st.player || st.gameOver) return false;
+        if (st.flags && st.flags._c840SkillDataDone) return false;
+        if (!st.skills) return false;
+        var _count = 0;
+        for (var _sk in st.skills) {
+          var _sl = st.skills[_sk];
+          if (_sl && (_sl.level || 0) >= 60) _count++;
+        }
+        return _count >= 3;
+      },
+      probability: 0.05,
+      repeatable: false,
+      choices: [
+        {
+          text: "📊 查看技能市场数据",
+          hint: "智力+10, 会计XP+12, 置_c840SkillValueData",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._c840SkillDataDone = true;
+            st.flags._c840SkillValueData = true;
+            if (st.player) st.player.intelligence = Math.min(100, (st.player.intelligence || 50) + 10);
+            grantXp("accounting", 12);
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("📊 技能市场数据已生成——智力+10, 会计XP+12。技能就是钱。", "success");
+            }
+          }
+        },
+        {
+          text: "😅 技能不用数据衡量",
+          hint: "心智+2",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._c840SkillDataDone = true;
+            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 2);
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("😅 技能不用数据衡量。心智+2。", "info");
+            }
+          }
+        }
+      ]
+    },
+
+    // ========================================================================
+    // 联动增强2: C→E 职业技能→投资v4 — 职业技能深度引导投资决策
+    // 设计意图：职业技能应深度引导玩家关注投资，形成"技能→投资"决策链。
+    // 本事件在玩家拥有≥2个Lv.50+技能且总资产≥¥12万时触发。
+    // 心理学：禀赋效应 — 玩家感到"技能应该变现"。
+    // ========================================================================
+    {
+      id: "c840_skill_to_invest_v4",
+      phase: "street",
+      icon: "💰",
+      title: "用技能赚钱，让钱生钱",
+      story: "你发现——自己的技能水平已经足够高了，但收入增长却遇到了瓶颈。\n\n是时候考虑：如何让技能赚到的钱，继续为你赚钱？",
+      conditions: function (st) {
+        if (!st || !st.player || st.gameOver) return false;
+        if (st.flags && st.flags._c840SkillInvestDone) return false;
+        if (!st.skills || !st.resources) return false;
+        var _total = (st.resources.cash || 0) + (st.resources.bankBalance || 0);
+        if (_total < 120000) return false;
+        var _count = 0;
+        for (var _sk in st.skills) {
+          var _sl = st.skills[_sk];
+          if (_sl && (_sl.level || 0) >= 50) _count++;
+        }
+        return _count >= 2;
+      },
+      probability: 0.06,
+      repeatable: false,
+      choices: [
+        {
+          text: "💰 学习用技能收益投资",
+          hint: "智力+12, 会计XP+15, 置_c840SkillInvestor",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._c840SkillInvestDone = true;
+            st.flags._c840SkillInvestor = true;
+            if (st.player) st.player.intelligence = Math.min(100, (st.player.intelligence || 50) + 12);
+            grantXp("accounting", 15);
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("💰 你开始学习用技能收益投资——智力+12, 会计XP+15。", "success");
+            }
+          }
+        },
+        {
+          text: "😅 技能赚钱就够了",
+          hint: "心智+3",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._c840SkillInvestDone = true;
+            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 3);
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("😅 技能赚钱就够了。心智+3。", "info");
+            }
+          }
+        }
+      ]
+    },
+
+    // ========================================================================
+    // 联动增强3: C→G 职业健康→生命质量v3 — 职业状态深度反馈为身心恢复
+    // 设计意图：职业状态(倦怠/压力)应深度反馈为身心恢复需求。
+    // 本事件在玩家倦怠≥70且健康<45时触发，给予"职业健康v3"标记。
+    // 心理学：损失厌恶 — 玩家更害怕因工作失去健康。
+    // ========================================================================
+    {
+      id: "c840_career_health_v3",
+      phase: "street",
+      icon: "💚",
+      title: "工作再忙，也要照顾好自己",
+      story: "你感到疲惫——长时间的工作让身体发出了警告。\n\n健康不是无限的资源，它需要被照顾、被恢复。",
+      conditions: function (st) {
+        if (!st || !st.player || st.gameOver) return false;
+        if (st.flags && st.flags._c840CareerHealthDone) return false;
+        var _burnout = st.player.corporate ? (st.player.corporate.burnout || 0) : (st.needs ? st.needs.fatigue : 0);
+        if (_burnout < 70) return false;
+        var _health = st.status ? st.status.health : 100;
+        return _health < 45;
+      },
+      probability: 0.07,
+      repeatable: false,
+      choices: [
+        {
+          text: "💚 主动恢复身心健康",
+          hint: "健康+18, 疲劳-25, 置_c840CareerHealthRecovery",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._c840CareerHealthDone = true;
+            st.flags._c840CareerHealthRecovery = true;
+            if (st.status) st.status.health = Math.min(100, (st.status.health || 50) + 18);
+            if (st.needs) st.needs.fatigue = Math.max(0, (st.needs.fatigue || 0) - 25);
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("💚 你主动恢复了身心健康——健康+18, 疲劳-25。", "success");
+            }
+          }
+        },
+        {
+          text: "🔥 再撑一阵子就好了",
+          hint: "健康-8, 置_c840BurnoutRisk",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._c840CareerHealthDone = true;
+            st.flags._c840BurnoutRisk = true;
+            if (st.status) st.status.health = Math.max(0, (st.status.health || 50) - 8);
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("🔥 你选择继续硬撑——健康-8。注意身体！", "warning");
+            }
+          }
+        }
+      ]
+    }
+  ];
+
+  // ---- 注入全局 RANDOM_EVENTS ----
+  for (var i = 0; i < EVENTS.length; i++) {
+    RANDOM_EVENTS.push(EVENTS[i]);
+  }
+})();
+
+;
+// ==== js/core/domain_c_linkage_r843.js ====
+/**
+ * 域C(职业/成长) 联动增强 R843 (第十七轮循环)
+ * 桥接：
+ *   C→A  c843_career_path 职业路径 → 消费 jobs/skills 数据
+ *   C→B  c843_career_memo 职业记忆 → 消费 职业历史+事件
+ *   C→G  c843_career_energy 职业精力 → 消费 职业数据+needs
+ */
+(function () {
+  "use strict";
+  if (typeof RANDOM_EVENTS === "undefined" || !RANDOM_EVENTS) return;
+  if (RANDOM_EVENTS._domainCLinkageR843Loaded) return;
+  RANDOM_EVENTS._domainCLinkageR843Loaded = true;
+
+  var EVENTS = [
+    {
+      id: "c843_career_path", phase: "street", _isChainEvent: false, icon: "💼",
+      title: "职业路径", story: "你的职业数据正在讲述成长故事——这些数据,就是你的职业资本。",
+      triggers: { minDay: 100, interval: 180, maxRepeats: 3, excludeFlags: ["_c843PathCd"] },
+      conditions: function (st) { if (!st || st.gameOver) return false; if (st.flags && st.flags._c843PathCd) return false; return st.player && st.player.day >= 100 && st.skills; },
+      text: function (st) { if (!st) return null; return "你的职业正在成长——'这些数据,就是你的职业资本。'"; },
+      choices: [
+        { text: "📊 分析", hint: "智力+20,会计XP+15,置_c843Analyst",
+          apply: function (st) { if (!st) return; st.flags = st.flags || {}; st.flags._c843PathCd = true; st.flags._c843Analyst = true; if (st.player) st.player.intelligence = Math.min(100, (st.player.intelligence || 50) + 20); if (typeof addSkillXp === "function") { try { addSkillXp("accounting", 15); } catch(e) {} } if (typeof StateManager !== "undefined") { StateManager.addMessage("💼 '职业成长需要数据支撑。' 智力+20,会计XP+15。", "success"); } }
+        },
+        { text: "🎯 规划", hint: "管理XP+20,置_c843Planner",
+          apply: function (st) { if (!st) return; st.flags = st.flags || {}; st.flags._c843PathCd = true; st.flags._c843Planner = true; if (typeof addSkillXp === "function") { try { addSkillXp("management", 20); } catch(e) {} } if (typeof StateManager !== "undefined") { StateManager.addMessage("🎯 '有规划才有方向。' 管理XP+20。", "info"); } }
+        }
+      ]
+    },
+    {
+      id: "c843_career_memo", phase: "street", _isChainEvent: false, icon: "📖",
+      title: "职业记忆", story: "你的职业变化正在书写故事——每一步,都值得记录。",
+      triggers: { minDay: 180, interval: 220, maxRepeats: 3, excludeFlags: ["_c843MemoCd"] },
+      conditions: function (st) { if (!st || st.gameOver) return false; if (st.flags && st.flags._c843MemoCd) return false; return st.player && st.player.day >= 180 && st.employment; },
+      text: function (st) { if (!st) return null; var j = "无"; if (st.employment && st.employment.currentJob) j = st.employment.currentJob.name || "在职"; return "当前职业" + j + "——'这就是你的职业故事。'"; },
+      choices: [
+        { text: "📜 记录", hint: "心智+20,置_c843Chronicler",
+          apply: function (st) { if (!st) return; st.flags = st.flags || {}; st.flags._c843MemoCd = true; st.flags._c843Chronicler = true; if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 20); if (typeof StateManager !== "undefined") { StateManager.addMessage("📖 '每一步都值得记录。' 心智+20。", "success"); } }
+        },
+        { text: "🚀 展望", hint: "智力+18,魅力+15,置_c843Visionary",
+          apply: function (st) { if (!st) return; st.flags = st.flags || {}; st.flags._c843MemoCd = true; st.flags._c843Visionary = true; if (st.player) { st.player.intelligence = Math.min(100, (st.player.intelligence || 50) + 18); st.player.charm = Math.min(100, (st.player.charm || 50) + 15); } if (typeof StateManager !== "undefined") { StateManager.addMessage("🚀 '职业生涯需要远见。' 智力+18,魅力+15。", "info"); } }
+        }
+      ]
+    },
+    {
+      id: "c843_career_energy", phase: "street", _isChainEvent: false, icon: "💚",
+      title: "职业精力", story: "工作不应以牺牲健康为代价——工作与健康,需要平衡。",
+      triggers: { minDay: 250, interval: 300, maxRepeats: 4, excludeFlags: ["_c843EnergyCd"] },
+      conditions: function (st) { if (!st || st.gameOver) return false; if (st.flags && st.flags._c843EnergyCd) return false; return st.player && st.player.day >= 250 && st.needs && st.status; },
+      text: function (st) { if (!st) return null; var f = st.needs && isFinite(st.needs.fatigue) ? Math.round(st.needs.fatigue) : 0; return "职场疲劳" + f + "——'工作与健康,需要平衡。'"; },
+      choices: [
+        { text: "🧘 平衡", hint: "心情+20,疲劳-20,置_c843Balanced",
+          apply: function (st) { if (!st) return; st.flags = st.flags || {}; st.flags._c843EnergyCd = true; st.flags._c843Balanced = true; if (st.needs) { st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 20); st.needs.fatigue = Math.max(0, (st.needs.fatigue || 0) - 20); } if (typeof StateManager !== "undefined") { StateManager.addMessage("💚 '工作是为了生活。' 心情+20,疲劳-20。", "success"); } }
+        },
+        { text: "🏋️ 健康", hint: "健康+18,置_c843Healthy",
+          apply: function (st) { if (!st) return; st.flags = st.flags || {}; st.flags._c843EnergyCd = true; st.flags._c843Healthy = true; if (st.status) st.status.health = Math.min(100, (st.status.health || 100) + 18); if (typeof StateManager !== "undefined") { StateManager.addMessage("🏋️ '身体是革命的本钱。' 健康+18。", "info"); } }
+        }
+      ]
+    }
+  ];
+
+  for (var i = 0; i < EVENTS.length; i++) { RANDOM_EVENTS.push(EVENTS[i]); }
+})();
+;
+// ==== js/core/domain_c_linkage_r848.js ====
+/*
+ * 城市浮生记 — 域C(职业/成长) 联动增强 R848
+ * 全系统优化·Domain C 第六十五轮循环
+ *
+ * 【联动增强3项】
+ *   1. C→A 技能市场数据v4 — 技能等级转化为数值平衡数据资产
+ *   2. C→E 职业技能→投资v5 — 职业技能深度引导投资决策
+ *   3. C→G 职业健康→生命质量v4 — 职业状态深度反馈为身心恢复
+ *
+ * 设计约束（与历轮 IIFE linkage 文件一致）：
+ *  - IIFE 注入全局 RANDOM_EVENTS，避免改动 cross_system_events.js。
+ *  - 所有 state 访问均 || 防御；数值标 [PLACEHOLDER]。
+ */
+(function () {
+  "use strict";
+  if (typeof RANDOM_EVENTS === "undefined" || !RANDOM_EVENTS) return;
+  if (RANDOM_EVENTS._domainCLinkageR848Loaded) return;
+  RANDOM_EVENTS._domainCLinkageR848Loaded = true;
+
+  // ---- 本地助手 ----
+  function grantXp(key, amt) {
+    if (typeof addSkillXp === "function") { try { addSkillXp(key, amt); } catch(e) {} }
+  }
+
+  var EVENTS = [
+    // ========================================================================
+    // 联动增强1: C→A 技能市场数据v4 — 技能等级转化为数值平衡数据资产
+    // 设计意图：技能数据应成为数值域可消费的资产，让玩家感到"技能有价值"。
+    // 本事件在玩家拥有≥4个Lv.60+技能时触发，给予"技能市场数据v4"标记。
+    // 心理学：禀赋效应 — 玩家更珍视自己投入时间培养的技能。
+    // ========================================================================
+    {
+      id: "c848_skill_data_v4",
+      phase: "street",
+      icon: "📊",
+      title: "你的技能，在市场上值多少钱？",
+      story: "你查看了技能市场报告——自己的技能水平，在市场上的定价一目了然。\n\n技能越高，市场定价越高。这不是抽象的感觉，而是真实的数据。",
+      conditions: function (st) {
+        if (!st || !st.player || st.gameOver) return false;
+        if (st.flags && st.flags._c848SkillDataDone) return false;
+        if (!st.skills) return false;
+        var _count = 0;
+        for (var _sk in st.skills) {
+          var _sl = st.skills[_sk];
+          if (_sl && (_sl.level || 0) >= 60) _count++;
+        }
+        return _count >= 4;
+      },
+      probability: 0.05,
+      repeatable: false,
+      choices: [
+        {
+          text: "📊 查看技能市场数据",
+          hint: "智力+12, 会计XP+15, 置_c848SkillValueData",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._c848SkillDataDone = true;
+            st.flags._c848SkillValueData = true;
+            if (st.player) st.player.intelligence = Math.min(100, (st.player.intelligence || 50) + 12);
+            grantXp("accounting", 15);
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("📊 技能市场数据已生成——智力+12, 会计XP+15。技能就是钱。", "success");
+            }
+          }
+        },
+        {
+          text: "😅 技能不用数据衡量",
+          hint: "心智+3",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._c848SkillDataDone = true;
+            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 3);
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("😅 技能不用数据衡量。心智+3。", "info");
+            }
+          }
+        }
+      ]
+    },
+
+    // ========================================================================
+    // 联动增强2: C→E 职业技能→投资v5 — 职业技能深度引导投资决策
+    // 设计意图：职业技能应深度引导玩家关注投资，形成"技能→投资"决策链。
+    // 本事件在玩家拥有≥3个Lv.50+技能且总资产≥¥15万时触发。
+    // 心理学：禀赋效应 — 玩家感到"技能应该变现"。
+    // ========================================================================
+    {
+      id: "c848_skill_to_invest_v5",
+      phase: "street",
+      icon: "💰",
+      title: "用技能赚钱，让钱生钱",
+      story: "你发现——自己的技能水平已经足够高了，但收入增长却遇到了瓶颈。\n\n是时候考虑：如何让技能赚到的钱，继续为你赚钱？",
+      conditions: function (st) {
+        if (!st || !st.player || st.gameOver) return false;
+        if (st.flags && st.flags._c848SkillInvestDone) return false;
+        if (!st.skills || !st.resources) return false;
+        var _total = (st.resources.cash || 0) + (st.resources.bankBalance || 0);
+        if (_total < 150000) return false;
+        var _count = 0;
+        for (var _sk in st.skills) {
+          var _sl = st.skills[_sk];
+          if (_sl && (_sl.level || 0) >= 50) _count++;
+        }
+        return _count >= 3;
+      },
+      probability: 0.06,
+      repeatable: false,
+      choices: [
+        {
+          text: "💰 学习用技能收益投资",
+          hint: "智力+15, 会计XP+18, 置_c848SkillInvestor",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._c848SkillInvestDone = true;
+            st.flags._c848SkillInvestor = true;
+            if (st.player) st.player.intelligence = Math.min(100, (st.player.intelligence || 50) + 15);
+            grantXp("accounting", 18);
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("💰 你开始学习用技能收益投资——智力+15, 会计XP+18。", "success");
+            }
+          }
+        },
+        {
+          text: "😅 技能赚钱就够了",
+          hint: "心智+3",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._c848SkillInvestDone = true;
+            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 3);
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("😅 技能赚钱就够了。心智+3。", "info");
+            }
+          }
+        }
+      ]
+    },
+
+    // ========================================================================
+    // 联动增强3: C→G 职业健康→生命质量v4 — 职业状态深度反馈为身心恢复
+    // 设计意图：职业状态(倦怠/压力)应深度反馈为身心恢复需求。
+    // 本事件在玩家倦怠≥75且健康<40时触发，给予"职业健康v4"标记。
+    // 心理学：损失厌恶 — 玩家更害怕因工作失去健康。
+    // ========================================================================
+    {
+      id: "c848_career_health_v4",
+      phase: "street",
+      icon: "💚",
+      title: "工作再忙，也要照顾好自己",
+      story: "你感到疲惫——长时间的工作让身体发出了警告。\n\n健康不是无限的资源，它需要被照顾、被恢复。",
+      conditions: function (st) {
+        if (!st || !st.player || st.gameOver) return false;
+        if (st.flags && st.flags._c848CareerHealthDone) return false;
+        var _burnout = st.player.corporate ? (st.player.corporate.burnout || 0) : (st.needs ? st.needs.fatigue : 0);
+        if (_burnout < 75) return false;
+        var _health = st.status ? st.status.health : 100;
+        return _health < 40;
+      },
+      probability: 0.07,
+      repeatable: false,
+      choices: [
+        {
+          text: "💚 主动恢复身心健康",
+          hint: "健康+20, 疲劳-30, 置_c848CareerHealthRecovery",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._c848CareerHealthDone = true;
+            st.flags._c848CareerHealthRecovery = true;
+            if (st.status) st.status.health = Math.min(100, (st.status.health || 50) + 20);
+            if (st.needs) st.needs.fatigue = Math.max(0, (st.needs.fatigue || 0) - 30);
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("💚 你主动恢复了身心健康——健康+20, 疲劳-30。", "success");
+            }
+          }
+        },
+        {
+          text: "🔥 再撑一阵子就好了",
+          hint: "健康-10, 置_c848BurnoutRisk",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._c848CareerHealthDone = true;
+            st.flags._c848BurnoutRisk = true;
+            if (st.status) st.status.health = Math.max(0, (st.status.health || 50) - 10);
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("🔥 你选择继续硬撑——健康-10。注意身体！", "warning");
+            }
+          }
+        }
+      ]
+    }
+  ];
+
+  // ---- 注入全局 RANDOM_EVENTS ----
+  for (var i = 0; i < EVENTS.length; i++) {
+    RANDOM_EVENTS.push(EVENTS[i]);
+  }
+})();
+
+;
+// ==== js/core/domain_c_linkage_r851.js ====
+/**
+ * 域C(职业/成长) 联动增强 R851 (第十八轮循环)
+ * 桥接：
+ *   C→A  c851_career_mile 职业里程 → 消费 jobs/skills 数据
+ *   C→B  c851_career_note 职业笔记 → 消费 职业历史+事件
+ *   C→G  c851_career_stamina 职业耐力 → 消费 职业数据+needs
+ */
+(function () {
+  "use strict";
+  if (typeof RANDOM_EVENTS === "undefined" || !RANDOM_EVENTS) return;
+  if (RANDOM_EVENTS._domainCLinkageR851Loaded) return;
+  RANDOM_EVENTS._domainCLinkageR851Loaded = true;
+
+  var EVENTS = [
+    {
+      id: "c851_career_mile", phase: "street", _isChainEvent: false, icon: "💼",
+      title: "职业里程", story: "你的职业数据正在讲述成长故事——这些数据,就是你的职业资本。",
+      triggers: { minDay: 90, interval: 160, maxRepeats: 3, excludeFlags: ["_c851MileCd"] },
+      conditions: function (st) { if (!st || st.gameOver) return false; if (st.flags && st.flags._c851MileCd) return false; return st.player && st.player.day >= 90 && st.skills; },
+      text: function (st) { if (!st) return null; return "你的职业正在成长——'这些数据,就是你的职业资本。'"; },
+      choices: [
+        { text: "📊 分析", hint: "智力+20,会计XP+15,置_c851Analyst",
+          apply: function (st) { if (!st) return; st.flags = st.flags || {}; st.flags._c851MileCd = true; st.flags._c851Analyst = true; if (st.player) st.player.intelligence = Math.min(100, (st.player.intelligence || 50) + 20); if (typeof addSkillXp === "function") { try { addSkillXp("accounting", 15); } catch(e) {} } if (typeof StateManager !== "undefined") { StateManager.addMessage("💼 '职业成长需要数据支撑。' 智力+20,会计XP+15。", "success"); } }
+        },
+        { text: "🎯 规划", hint: "管理XP+20,置_c851Planner",
+          apply: function (st) { if (!st) return; st.flags = st.flags || {}; st.flags._c851MileCd = true; st.flags._c851Planner = true; if (typeof addSkillXp === "function") { try { addSkillXp("management", 20); } catch(e) {} } if (typeof StateManager !== "undefined") { StateManager.addMessage("🎯 '有规划才有方向。' 管理XP+20。", "info"); } }
+        }
+      ]
+    },
+    {
+      id: "c851_career_note", phase: "street", _isChainEvent: false, icon: "📖",
+      title: "职业笔记", story: "你的职业变化正在书写故事——每一步,都值得记录。",
+      triggers: { minDay: 160, interval: 200, maxRepeats: 3, excludeFlags: ["_c851NoteCd"] },
+      conditions: function (st) { if (!st || st.gameOver) return false; if (st.flags && st.flags._c851NoteCd) return false; return st.player && st.player.day >= 160 && st.employment; },
+      text: function (st) { if (!st) return null; var j = "无"; if (st.employment && st.employment.currentJob) j = st.employment.currentJob.name || "在职"; return "当前职业" + j + "——'这就是你的职业故事。'"; },
+      choices: [
+        { text: "📜 记录", hint: "心智+20,置_c851Chronicler",
+          apply: function (st) { if (!st) return; st.flags = st.flags || {}; st.flags._c851NoteCd = true; st.flags._c851Chronicler = true; if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 20); if (typeof StateManager !== "undefined") { StateManager.addMessage("📖 '每一步都值得记录。' 心智+20。", "success"); } }
+        },
+        { text: "🚀 展望", hint: "智力+18,魅力+15,置_c851Visionary",
+          apply: function (st) { if (!st) return; st.flags = st.flags || {}; st.flags._c851NoteCd = true; st.flags._c851Visionary = true; if (st.player) { st.player.intelligence = Math.min(100, (st.player.intelligence || 50) + 18); st.player.charm = Math.min(100, (st.player.charm || 50) + 15); } if (typeof StateManager !== "undefined") { StateManager.addMessage("🚀 '职业生涯需要远见。' 智力+18,魅力+15。", "info"); } }
+        }
+      ]
+    },
+    {
+      id: "c851_career_stamina", phase: "street", _isChainEvent: false, icon: "💚",
+      title: "职业耐力", story: "工作不应以牺牲健康为代价——工作与健康,需要平衡。",
+      triggers: { minDay: 220, interval: 280, maxRepeats: 4, excludeFlags: ["_c851StaminaCd"] },
+      conditions: function (st) { if (!st || st.gameOver) return false; if (st.flags && st.flags._c851StaminaCd) return false; return st.player && st.player.day >= 220 && st.needs && st.status; },
+      text: function (st) { if (!st) return null; var f = st.needs && isFinite(st.needs.fatigue) ? Math.round(st.needs.fatigue) : 0; return "职场疲劳" + f + "——'工作与健康,需要平衡。'"; },
+      choices: [
+        { text: "🧘 平衡", hint: "心情+20,疲劳-20,置_c851Balanced",
+          apply: function (st) { if (!st) return; st.flags = st.flags || {}; st.flags._c851StaminaCd = true; st.flags._c851Balanced = true; if (st.needs) { st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 20); st.needs.fatigue = Math.max(0, (st.needs.fatigue || 0) - 20); } if (typeof StateManager !== "undefined") { StateManager.addMessage("💚 '工作是为了生活。' 心情+20,疲劳-20。", "success"); } }
+        },
+        { text: "🏋️ 健康", hint: "健康+18,置_c851Healthy",
+          apply: function (st) { if (!st) return; st.flags = st.flags || {}; st.flags._c851StaminaCd = true; st.flags._c851Healthy = true; if (st.status) st.status.health = Math.min(100, (st.status.health || 100) + 18); if (typeof StateManager !== "undefined") { StateManager.addMessage("🏋️ '身体是革命的本钱。' 健康+18。", "info"); } }
+        }
+      ]
+    }
+  ];
+
+  for (var i = 0; i < EVENTS.length; i++) { RANDOM_EVENTS.push(EVENTS[i]); }
+})();
+;
+// ==== js/core/domain_c_linkage_r856.js ====
+/*
+ * 城市浮生记 — 域C(职业/成长) 联动增强 R856
+ * 全系统优化·Domain C 第六十六轮循环
+ *
+ * 【联动增强3项】
+ *   1. C→A 技能市场数据v5 — 技能等级转化为数值平衡数据资产
+ *   2. C→E 职业技能→投资v6 — 职业技能深度引导投资决策
+ *   3. C→G 职业健康→生命质量v5 — 职业状态深度反馈为身心恢复
+ *
+ * 设计约束（与历轮 IIFE linkage 文件一致）：
+ *  - IIFE 注入全局 RANDOM_EVENTS，避免改动 cross_system_events.js。
+ *  - 所有 state 访问均 || 防御；数值标 [PLACEHOLDER]。
+ */
+(function () {
+  "use strict";
+  if (typeof RANDOM_EVENTS === "undefined" || !RANDOM_EVENTS) return;
+  if (RANDOM_EVENTS._domainCLinkageR856Loaded) return;
+  RANDOM_EVENTS._domainCLinkageR856Loaded = true;
+
+  // ---- 本地助手 ----
+  function grantXp(key, amt) {
+    if (typeof addSkillXp === "function") { try { addSkillXp(key, amt); } catch(e) {} }
+  }
+
+  var EVENTS = [
+    // ========================================================================
+    // 联动增强1: C→A 技能市场数据v5 — 技能等级转化为数值平衡数据资产
+    // 设计意图：技能数据应成为数值域可消费的资产，让玩家感到"技能有价值"。
+    // 本事件在玩家拥有≥5个Lv.70+技能时触发，给予"技能市场数据v5"标记。
+    // 心理学：禀赋效应 — 玩家更珍视自己投入时间培养的技能。
+    // ========================================================================
+    {
+      id: "c856_skill_data_v5",
+      phase: "street",
+      icon: "📊",
+      title: "你的技能，在市场上值多少钱？",
+      story: "你查看了技能市场报告——自己的技能水平，在市场上的定价一目了然。\n\n技能越高，市场定价越高。这不是抽象的感觉，而是真实的数据。",
+      conditions: function (st) {
+        if (!st || !st.player || st.gameOver) return false;
+        if (st.flags && st.flags._c856SkillDataDone) return false;
+        if (!st.skills) return false;
+        var _count = 0;
+        for (var _sk in st.skills) {
+          var _sl = st.skills[_sk];
+          if (_sl && (_sl.level || 0) >= 70) _count++;
+        }
+        return _count >= 5;
+      },
+      probability: 0.05,
+      repeatable: false,
+      choices: [
+        {
+          text: "📊 查看技能市场数据",
+          hint: "智力+15, 会计XP+18, 置_c856SkillValueData",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._c856SkillDataDone = true;
+            st.flags._c856SkillValueData = true;
+            if (st.player) st.player.intelligence = Math.min(100, (st.player.intelligence || 50) + 15);
+            grantXp("accounting", 18);
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("📊 技能市场数据已生成——智力+15, 会计XP+18。技能就是钱。", "success");
+            }
+          }
+        },
+        {
+          text: "😅 技能不用数据衡量",
+          hint: "心智+3",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._c856SkillDataDone = true;
+            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 3);
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("😅 技能不用数据衡量。心智+3。", "info");
+            }
+          }
+        }
+      ]
+    },
+
+    // ========================================================================
+    // 联动增强2: C→E 职业技能→投资v6 — 职业技能深度引导投资决策
+    // 设计意图：职业技能应深度引导玩家关注投资，形成"技能→投资"决策链。
+    // 本事件在玩家拥有≥4个Lv.60+技能且总资产≥¥18万时触发。
+    // 心理学：禀赋效应 — 玩家感到"技能应该变现"。
+    // ========================================================================
+    {
+      id: "c856_skill_to_invest_v6",
+      phase: "street",
+      icon: "💰",
+      title: "用技能赚钱，让钱生钱",
+      story: "你发现——自己的技能水平已经足够高了，但收入增长却遇到了瓶颈。\n\n是时候考虑：如何让技能赚到的钱，继续为你赚钱？",
+      conditions: function (st) {
+        if (!st || !st.player || st.gameOver) return false;
+        if (st.flags && st.flags._c856SkillInvestDone) return false;
+        if (!st.skills || !st.resources) return false;
+        var _total = (st.resources.cash || 0) + (st.resources.bankBalance || 0);
+        if (_total < 180000) return false;
+        var _count = 0;
+        for (var _sk in st.skills) {
+          var _sl = st.skills[_sk];
+          if (_sl && (_sl.level || 0) >= 60) _count++;
+        }
+        return _count >= 4;
+      },
+      probability: 0.06,
+      repeatable: false,
+      choices: [
+        {
+          text: "💰 学习用技能收益投资",
+          hint: "智力+18, 会计XP+20, 置_c856SkillInvestor",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._c856SkillInvestDone = true;
+            st.flags._c856SkillInvestor = true;
+            if (st.player) st.player.intelligence = Math.min(100, (st.player.intelligence || 50) + 18);
+            grantXp("accounting", 20);
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("💰 你开始学习用技能收益投资——智力+18, 会计XP+20。", "success");
+            }
+          }
+        },
+        {
+          text: "😅 技能赚钱就够了",
+          hint: "心智+3",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._c856SkillInvestDone = true;
+            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 3);
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("😅 技能赚钱就够了。心智+3。", "info");
+            }
+          }
+        }
+      ]
+    },
+
+    // ========================================================================
+    // 联动增强3: C→G 职业健康→生命质量v5 — 职业状态深度反馈为身心恢复
+    // 设计意图：职业状态(倦怠/压力)应深度反馈为身心恢复需求。
+    // 本事件在玩家倦怠≥80且健康<35时触发，给予"职业健康v5"标记。
+    // 心理学：损失厌恶 — 玩家更害怕因工作失去健康。
+    // ========================================================================
+    {
+      id: "c856_career_health_v5",
+      phase: "street",
+      icon: "💚",
+      title: "工作再忙，也要照顾好自己",
+      story: "你感到疲惫——长时间的工作让身体发出了警告。\n\n健康不是无限的资源，它需要被照顾、被恢复。",
+      conditions: function (st) {
+        if (!st || !st.player || st.gameOver) return false;
+        if (st.flags && st.flags._c856CareerHealthDone) return false;
+        var _burnout = st.player.corporate ? (st.player.corporate.burnout || 0) : (st.needs ? st.needs.fatigue : 0);
+        if (_burnout < 80) return false;
+        var _health = st.status ? st.status.health : 100;
+        return _health < 35;
+      },
+      probability: 0.07,
+      repeatable: false,
+      choices: [
+        {
+          text: "💚 主动恢复身心健康",
+          hint: "健康+25, 疲劳-35, 置_c856CareerHealthRecovery",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._c856CareerHealthDone = true;
+            st.flags._c856CareerHealthRecovery = true;
+            if (st.status) st.status.health = Math.min(100, (st.status.health || 50) + 25);
+            if (st.needs) st.needs.fatigue = Math.max(0, (st.needs.fatigue || 0) - 35);
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("💚 你主动恢复了身心健康——健康+25, 疲劳-35。", "success");
+            }
+          }
+        },
+        {
+          text: "🔥 再撑一阵子就好了",
+          hint: "健康-12, 置_c856BurnoutRisk",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._c856CareerHealthDone = true;
+            st.flags._c856BurnoutRisk = true;
+            if (st.status) st.status.health = Math.max(0, (st.status.health || 50) - 12);
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("🔥 你选择继续硬撑——健康-12。注意身体！", "warning");
+            }
+          }
+        }
+      ]
+    }
+  ];
+
+  // ---- 注入全局 RANDOM_EVENTS ----
   for (var i = 0; i < EVENTS.length; i++) {
     RANDOM_EVENTS.push(EVENTS[i]);
   }

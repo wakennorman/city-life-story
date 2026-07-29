@@ -5298,3 +5298,28 @@ function getInvestmentSummary(state) {
   var _btcValue = (inv.btcHoldings || 0) * (inv.btcPrice || 0);
   return { stocks: _stockValue, properties: _propValue, btc: _btcValue, total: _stockValue + _propValue + _btcValue };
 }
+
+// [R814 域E 联动增强 E→A]: 投资数据贡献市场分析 — 投资经验提升价格判断力
+function getInvestPriceInsight(state) {
+  if (!state || !state.investment) return 0;
+  var _trades = (state.investment._totalTrades || 0);
+  if (_trades > 100) return 3;
+  if (_trades > 50) return 2;
+  if (_trades > 20) return 1;
+  return 0;
+}
+
+// [R814 域E 联动增强 E→B]: 投资里程碑触发叙事 — 盈利/亏损里程碑生成故事
+function getInvestStory(state) {
+  if (!state || !state.investment || !state.flags) return null;
+  var _profit = state.investment._totalInvestmentProfit || 0;
+  if (_profit >= 100000 && !state.flags._investStory100k) {
+    state.flags._investStory100k = true;
+    return { type: "profit", title: "投资高手", text: "你的累计投资收益突破¥100,000！在朋友眼中你已成投资专家。" };
+  }
+  if (_profit <= -50000 && !state.flags._investStoryLoss50k) {
+    state.flags._investStoryLoss50k = true;
+    return { type: "loss", title: "市场教训", text: "投资亏损超过¥50,000，你深刻体会到风险控制的重要性。" };
+  }
+  return null;
+}
