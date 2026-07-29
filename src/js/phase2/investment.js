@@ -5264,3 +5264,37 @@ function getFinancialFreedomProgress(state) {
   var target = 500000;
   return Math.min(100, Math.round((total / target) * 100));
 }
+
+// [R806 域E 联动增强 E→G]: 投资组合健康度 — 分散投资提升健康恢复
+function getInvestmentHealthBonus(state) {
+  if (!state || !state.investment) return 0;
+  var _diversity = 0;
+  var inv = state.investment;
+  if (inv.stockHoldings && inv.stockHoldings.length > 0) _diversity++;
+  if (inv.properties && inv.properties.length > 0) _diversity++;
+  if (inv.btcHoldings > 0) _diversity++;
+  if (inv.cars && inv.cars.length > 0) _diversity++;
+  return Math.min(3, _diversity);
+}
+
+// [R806 域E 联动增强 E→F]: 投资组合摘要供UI展示
+function getInvestmentSummary(state) {
+  if (!state || !state.investment) return null;
+  var inv = state.investment;
+  var _stockValue = 0;
+  if (inv.stockHoldings && inv.stockMarket) {
+    for (var _i = 0; _i < inv.stockHoldings.length; _i++) {
+      var _h = inv.stockHoldings[_i];
+      var _m = inv.stockMarket[_h.symbol];
+      if (_m) _stockValue += _m.price * _h.shares;
+    }
+  }
+  var _propValue = 0;
+  if (inv.properties) {
+    for (var _p = 0; _p < inv.properties.length; _p++) {
+      _propValue += inv.properties[_p].currentPrice || inv.properties[_p].buyPrice || 0;
+    }
+  }
+  var _btcValue = (inv.btcHoldings || 0) * (inv.btcPrice || 0);
+  return { stocks: _stockValue, properties: _propValue, btc: _btcValue, total: _stockValue + _propValue + _btcValue };
+}
