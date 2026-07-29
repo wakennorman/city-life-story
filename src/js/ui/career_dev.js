@@ -6248,3 +6248,69 @@ function applyCareerPromotionSocialEffect(state) {
     }
   }
 }
+
+// [R796 域C 联动增强 C→A]: 职业路径影响商品价格感知 — 金融/IT/餐饮等职业对相关商品价格更敏感
+function getCareerPriceInsight(state, goodId) {
+  if (!state || !state.career || !state.career.currentJob || !goodId) return null;
+  var _jobPath = state.career.currentJob.path || "";
+  var _priceInsights = {
+    finance: { stocks: 0.9, electronics: 1.05, luxury: 0.95 },
+    tech: { electronics: 0.85, books: 0.9 },
+    design: { clothing: 0.85, electronics: 0.95 },
+    legal: { books: 0.85, daily_use: 0.95 },
+    medical: { medicine: 0.8, vitamins_item: 0.85, cold_medicine: 0.8 },
+    education: { books: 0.8, stationery: 0.85 },
+    catering: { food: 0.85, vegetables: 0.85, beer: 0.9 },
+  };
+  var _pathInsights = _priceInsights[_jobPath];
+  if (!_pathInsights) return null;
+  for (var _key in _pathInsights) {
+    if (goodId.indexOf(_key) >= 0) {
+      return { discount: _pathInsights[_key], source: "职业经验" };
+    }
+  }
+  for (var _key2 in _pathInsights) {
+    var _good = typeof getGoodById === "function" ? getGoodById(goodId) : null;
+    if (_good && _good.category === _key2) {
+      return { discount: _pathInsights[_key2], source: "行业认知" };
+    }
+  }
+  return null;
+}
+
+// [R796 域C 联动增强 C→F]: 记录职业晋升路径供UI展示
+function trackCareerPathProgress(state) {
+  if (!state || !state.career || !state.career.currentJob) return;
+  if (!state.flags) state.flags = {};
+  if (!state.flags._careerPathProgress) state.flags._careerPathProgress = {};
+  var _job = state.career.currentJob;
+  var _path = _job.path || "unknown";
+  if (!state.flags._careerPathProgress[_path]) {
+    state.flags._careerPathProgress[_path] = {
+      currentLevel: _job.levelId || "",
+      workDays: _job.workDays || 0,
+      salary: _job.salary || 0,
+      lastUpdate: state.player ? state.player.day : 0,
+    };
+  } else {
+    state.flags._careerPathProgress[_path].currentLevel = _job.levelId || "";
+    state.flags._careerPathProgress[_path].workDays = _job.workDays || 0;
+    state.flags._careerPathProgress[_path].salary = _job.salary || 0;
+    state.flags._careerPathProgress[_path].lastUpdate = state.player ? state.player.day : 0;
+  }
+}
+
+// [R796 域C 联动增强 C→D]: 职业级别影响NPC社交初始好感 — 高职位获得更多社交尊重
+function getCareerSocialRespect(jobLevel) {
+  if (!jobLevel) return 0;
+  var _levelMap = {
+    tech_junior: 1, tech_mid: 2, tech_senior: 3, tech_lead: 5,
+    fin_junior: 1, fin_mid: 2, fin_senior: 3, fin_manager: 4,
+    edu_junior: 1, edu_mid: 2, edu_senior: 3,
+    medical_junior: 1, medical_mid: 2, medical_senior: 3, medical_director: 5,
+    catering_junior: 1, catering_mid: 2, catering_chef: 3,
+    legal_junior: 1, legal_mid: 2, legal_senior: 3, legal_partner: 5,
+    design_junior: 1, design_mid: 2, design_senior: 3, design_director: 4,
+  };
+  return _levelMap[jobLevel] || 0;
+}
