@@ -1157,6 +1157,8 @@ const HOUSING_TIERS = [
     homeType: "villa",
     upgradeTip: "💡¥200000升🏰豪宅（私人电梯+江景）",
     extraFeatures: { canHostNPC: true, garden: true, garage: true },
+    // [全系统自洽修复] 域A R770b: effects 四键此前全库零应用器(高价住房承诺静默失效)→已接线:
+    // skillStudyBonus→main.js addSkillXp / healthRecovery→r770b每日管线包装 / npcVisitBonus,fameGain→r770b事件层(domain_a_linkage_events_r770b.js)
     effects: {
       healthRecovery: 5,
       skillStudyBonus: 0.1,
