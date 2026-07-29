@@ -1,9 +1,9 @@
 {
-  "lastRound": "757b",
-  "lastDirection": "DOMAIN_D",
+  "lastRound": "770b",
+  "lastDirection": "DOMAIN_A",
   "lastDate": "2026-07-29",
-  "lastCommit": "dac2b81d",
-  "nextDirection": "DOMAIN_A",
-  "note": "R757b 域D(本窗口自动化 08:4x-09:0x): 选域=git log实测本窗口深审recency D最陈旧(R440/R442新NPC老陈/小薇集成从未深审);b后缀避让并行R756/R757。A类2处: ①npcs.js lao_chen_60'介绍社区资源'只写_laoChenCommunityHelp全库零读取无消息无收益→补gainReputation(community_center,+10)+消息反馈; ②xiao_wei_60'摊位折扣'_xiaoWeiDiscount全库零读取→r757b夜市半价用餐事件真实兑现。B类1处: xiao_wei_30缺flags守卫。净尽项: 死字段黑名单0/关系矩阵R455已入/好感衰减存在/xiaoWeiReferred有jobs.js:814消费/community_center与night_market地点已定义。联动3(domain_d_linkage_events_r757b.js,3street,met铁律+applyAffinityChange四参+getNpcDisplayName兜底+done-flag防重): d757b_laochen_community_intro(D→C _laoChenCommunityHelp首读·社区讲座管理XP+10/社交XP+8·互惠原则)/d757b_xiaowei_discount_meal(D→E _xiaoWeiDiscount首读·半价烧烤15元vs按原价付好感+4双支线·禀赋效应)/d757b_laochen_mentor_guidance(D→C _laoChenMentorship首读·80好感导师深谈管理XP+15·峰终定律)。顺带救援并行反向孤儿domain_c_linkage_r374.js(HEAD已挂载/源未提交/node --check过)。⚠️dist由并行[R758]fb0d80f8的build提交闭合(核验含d757b_x6+c374事件)。MC 10x500 155.6s 0代码异常/前7天死亡全0%/存活60-70%属既有RNG阈值(trader60/social70/corporate50)。下轮候选A(R649b后未深审)>B。开轮必git log重算勿信本记录。",
-  "pushStatus": "PUSHED"
+  "lastCommit": "PENDING",
+  "nextDirection": "DOMAIN_B",
+  "note": "R770b 域A(本窗口自动化 10:4x-11:0x): 选域=git log实测本窗口深审recency A最陈旧(R649b后未深审);b后缀避让并行R770域G(开轮期间刚提交14c85c73)。A类2处: ①r366 addSkillXp('health')假技能键XP静默丢弃→改写st.status.health+3(同R621/R631先例); ②items.js HOUSING_TIERS tier5别墅50000/tier6豪宅200000 effects四键(healthRecovery/skillStudyBonus/npcVisitBonus/fameGain)全库零应用器+extraFeatures(canHostNPC/party/garden/view/staff)全库零引用=高价住房承诺全部静默失效→三路接线: skillStudyBonus→main.js addSkillXp单点乘(1+bonus,clamp0~0.5,isFinite守卫); healthRecovery→r770b包装runDailyPipeline每日兑现(day防重+100上限+20clamp+首次提示;daily_pipeline并行在途不碰走包装全局函数铁律;wrapper保存_origRunDailyPipeline绝不自引用,_a770bPipelineWrapped防重包); npcVisitBonus/fameGain→事件层首消费。净尽项:死字段黑名单0活命中/假技能键全库仅r366一处活代码/goods53条目0极端价/illnesses29id正常/jobs无requiredCert悬空。联动3(domain_a_linkage_events_r770b.js,3street): a770b_villa_study(A→C tier≥5书房14天冷却·禀赋效应)/a770b_mansion_party(A→D tier6家宴800元·canHostNPC/party首兑现·npcVisitBonus放大好感4×1.2·met铁律+四参好感+DisplayName兜底·社会比较)/a770b_view_interview(A→B/G tier6+fame≥30一次性·view/fameGain首消费6×1.1·player.fame真实字段·峰终定律)。顺带救援并行反向孤儿domain_e_linkage_r770.js(HEAD index.html:1837已挂载+dist已含e770内容+node --check过/源未提交,R757b救援c374先例)。构建13916.2KB a770b×8+_housingStudyMult×3入包。下轮候选B(R722b后未深审)。开轮必git log重算勿信本记录。",
+  "pushStatus": "PENDING"
 }
