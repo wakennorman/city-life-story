@@ -458,10 +458,11 @@ function tickColleagueRelationships(state) {
 
   for (const colleague of colleagues) {
     // 自然衰减（不互动的话关系会慢慢下降）
-    if (day - colleague.lastInteraction > 30) {
-      colleague.relationship = Math.max(0, colleague.relationship - 2);
-    } else if (day - colleague.lastInteraction > 60) {
+    // [全系统自洽修复] 域D R791 A类: 原 if/else if 结构致 >60 分支恒不可达(>60 必>30 被首分支截获),-5 强衰减永不生效
+    if (day - colleague.lastInteraction > 60) {
       colleague.relationship = Math.max(0, colleague.relationship - 5);
+    } else if (day - colleague.lastInteraction > 30) {
+      colleague.relationship = Math.max(0, colleague.relationship - 2);
     }
 
     // 导师每日指导
