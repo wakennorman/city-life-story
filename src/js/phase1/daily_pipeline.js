@@ -2725,3 +2725,22 @@ function getLifeStageLabel(age) {
   if (age < 60) return "中老年";
   return "老年";
 }
+
+// [R808 域G 联动增强 G→A]: 每日生活成本指数 — 根据住房/健康/需求计算基础生活成本
+function getDailyCostOfLiving(state) {
+  if (!state || !state.player) return 50;
+  var _base = 50;
+  var _housing = state.housing ? (state.housing.tier || 0) * 10 : 0;
+  var _health = state.status && state.status.health ? Math.max(0, 100 - state.status.health) * 0.5 : 0;
+  var _needs = state.needs ? (100 - (state.needs.hunger || 50)) * 0.3 : 0;
+  return Math.round(_base + _housing + _health + _needs);
+}
+
+// [R808 域G 联动增强 G→D]: 年龄阶段影响社交效率 — 壮年社交效率最高
+function getSocialEfficiencyByAge(age) {
+  if (!age) return 1.0;
+  if (age < 25) return 1.2;  // 青年社交活跃
+  if (age < 40) return 1.0;  // 壮年社交稳定
+  if (age < 55) return 0.85; // 中年社交减少
+  return 0.7;                 // 老年社交有限
+}
