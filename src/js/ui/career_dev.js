@@ -1666,6 +1666,33 @@ function renderCareerJobs(state, parent) {
     }
   } catch (e) {}
 
+  // [R822 域C C→H 联动增强]: 职业人脉创业推荐
+  try {
+    if (state.career && state.career.currentJob && state.flags) {
+      var _workDays = state.career.currentJob.workDays || 0;
+      if (_workDays >= 730 && !state.flags._careerNetworkBuilt) {
+        state.flags._careerNetworkBuilt = true;
+        html += '<div class="section" style="margin-top:8px;"><div style="font-size:11px;padding:6px 10px;background:rgba(33,150,243,0.08);border:1px solid rgba(33,150,243,0.2);border-radius:6px;color:var(--info);">';
+        html += '🤝 两年职场积累，你已建立起广泛的人脉网络。创业时将有更多资源可用。';
+        html += '</div></div>';
+      }
+    }
+  } catch (e) {}
+
+  // [R822 域C C→F 联动增强]: 职业路径可视化数据
+  try {
+    if (state.flags && state.career && state.career.pathHistory) {
+      var _pathCount = state.career.pathHistory.length || 0;
+      if (_pathCount > 0) {
+        html += '<div class="section" style="margin-top:8px;"><h4>🗺️ 职业路径</h4>';
+        html += '<div style="font-size:11px;padding:8px;background:var(--bg-secondary);border-radius:6px;">';
+        html += '已探索 ' + _pathCount + ' 条职业路径';
+        if (_pathCount >= 3) html += ' — 多元化的职业经历让你的履历更加丰富。';
+        html += '</div></div>';
+      }
+    }
+  } catch (e) {}
+
   parent.innerHTML = html;
 }
 
@@ -2388,6 +2415,33 @@ function renderCareerOverview(state, parent) {
         state.flags._careerYearNarrative = true;
         html += '<div class="section" style="margin-top:8px;"><div style="font-size:11px;padding:6px 10px;background:rgba(76,175,80,0.08);border:1px solid rgba(76,175,80,0.2);border-radius:6px;color:var(--success);">';
         html += '🎉 你在当前岗位工作满一年了！这一年的经历让你成长了许多。';
+        html += '</div></div>';
+      }
+    }
+  } catch (e) {}
+
+  // [R822 域C C→H 联动增强]: 职业人脉创业推荐
+  try {
+    if (state.career && state.career.currentJob && state.flags) {
+      var _workDays = state.career.currentJob.workDays || 0;
+      if (_workDays >= 730 && !state.flags._careerNetworkBuilt) {
+        state.flags._careerNetworkBuilt = true;
+        html += '<div class="section" style="margin-top:8px;"><div style="font-size:11px;padding:6px 10px;background:rgba(33,150,243,0.08);border:1px solid rgba(33,150,243,0.2);border-radius:6px;color:var(--info);">';
+        html += '🤝 两年职场积累，你已建立起广泛的人脉网络。创业时将有更多资源可用。';
+        html += '</div></div>';
+      }
+    }
+  } catch (e) {}
+
+  // [R822 域C C→F 联动增强]: 职业路径可视化数据
+  try {
+    if (state.flags && state.career && state.career.pathHistory) {
+      var _pathCount = state.career.pathHistory.length || 0;
+      if (_pathCount > 0) {
+        html += '<div class="section" style="margin-top:8px;"><h4>🗺️ 职业路径</h4>';
+        html += '<div style="font-size:11px;padding:8px;background:var(--bg-secondary);border-radius:6px;">';
+        html += '已探索 ' + _pathCount + ' 条职业路径';
+        if (_pathCount >= 3) html += ' — 多元化的职业经历让你的履历更加丰富。';
         html += '</div></div>';
       }
     }
