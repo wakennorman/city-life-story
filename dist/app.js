@@ -104294,6 +104294,265 @@ if (typeof window !== "undefined") {
 })();
 
 ;
+// ==== js/core/domain_c_linkage_r368.js ====
+/**
+ * 域C联动增强 R368 — 职业成就墙叙事化
+ * [全系统自洽修复] 域C R368: 职业成就墙首次被事件叙事消费
+ *
+ * 3个新事件：
+ *   C→F: 职业成就墙更新 — 获得新成就时在成就墙上展示
+ *   C→F: 连续工作纪念日 — 在职某公司的纪念日的成就感
+ *   C→G: 职业路径选择反思 — 回顾职业道路时的成长感悟
+ */
+(function () {
+  "use strict";
+  if (typeof window === "undefined") return;
+
+  // ===== C→F: 职业成就墙更新 =====
+  var career_wall_update = {
+    id: "career_wall_update",
+    title: "🏆 成就更新",
+    phase: "street",
+    repeatable: true,
+    cooldownDays: 15,
+    priority: 50,
+    conditions: function (st) {
+      if (!st || !st.flags) return false;
+      // 冷却检查
+      if (st.flags._careerWallCooldown) {
+        if ((st.player.day || 0) - st.flags._careerWallCooldown < 15) return false;
+      }
+      // 检查是否有新的成就（成就数增加）
+      if (!st.player || !st.player.achievements) return false;
+      var currentCount = st.player.achievements.length;
+      // 检查是否有记录上次成就数
+      if (st.flags._lastAchievementCount === undefined) {
+        st.flags._lastAchievementCount = currentCount;
+        return false; // 第一次记录，不触发
+      }
+      if (currentCount <= st.flags._lastAchievementCount) return false; // 没有新成就
+      st.flags._lastAchievementCount = currentCount;
+      return true;
+    },
+    probability: 0.8,
+    getStory: function (st) {
+      var achievements = st.player.achievements || [];
+      var latest = achievements[achievements.length - 1];
+      return "你的职业成就墙上又新增了一个成就：「" + (latest.name || "未知成就") + "」。\n\n" +
+             "这些成就记录了你职业道路上的重要时刻，\n" +
+             "每一个都是你努力和成长的见证。";
+    },
+    getText: function (st) { return this.getStory(st); },
+    apply: function (st, choiceId) {
+      if (!st) return;
+      st.flags._careerWallCooldown = st.player.day;
+      if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 5);
+      if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 2);
+      if (typeof StateManager !== "undefined" && StateManager.addMessage) {
+        StateManager.addMessage("🏆 成就墙更新！心情+5，心智+2。你获得了一个新职业成就。", "info");
+      }
+    },
+    choices: [],
+    icons: ["🏆", "成就"],
+  };
+
+  // ===== C→F: 连续工作纪念日 =====
+  var work_anniversary = {
+    id: "work_anniversary",
+    title: "📅 工作周年",
+    phase: "street",
+    repeatable: true,
+    cooldownDays: 365,
+    priority: 60,
+    conditions: function (st) {
+      if (!st || !st.flags) return false;
+      // 冷却检查：每年只触发一次
+      if (st.flags._workAnniversaryLastDay) {
+        var daysPassed = (st.player.day || 0) - st.flags._workAnniversaryLastDay;
+        if (daysPassed < 365) return false;
+      }
+      // 检查是否有当前工作
+      if (!st.career || !st.career.currentJob) return false;
+      // 检查当前工作是否已经持续至少30天
+      if (!st.career.currentJob.startDate) return false;
+      var daysInJob = (st.player.day || 0) - st.career.currentJob.startDate;
+      if (daysInJob < 30) return false;
+      // 设置纪念日标志
+      st.flags._workAnniversaryLastDay = st.player.day;
+      return true;
+    },
+    probability: 0.5,
+    getStory: function (st) {
+      var job = st.career.currentJob;
+      var daysInJob = (st.player.day || 0) - job.startDate;
+      var years = Math.floor(daysInJob / 365);
+      var remaining = daysInJob % 365;
+      return "你在「" + job.name + "」已经工作了「" + daysInJob + "」天（约" + years + "年" + remaining + "天）。\n\n" +
+             "连续工作的经历让你对这家公司和工作内容有了深刻的理解，\n" +
+             "也许你已经成为了团队中的骨干力量。";
+    },
+    getText: function (st) { return this.getStory(st); },
+    apply: function (st, choiceId) {
+      if (!st) return;
+      st.flags._workAnniversaryLastDay = st.player.day;
+      if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 10);
+      if (st.player) st.player.fame = Math.min(100, (st.player.fame || 50) + 5);
+      if (typeof addSkillXp === "function") addSkillXp("management", 5);
+      // 发放一些奖金作为纪念
+      if (st.resources) {
+        st.resources.cash = (st.resources.cash || 0) + (st.career.currentJob.salary || 0) * 0.1;
+      }
+      if (typeof StateManager !== "undefined" && StateManager.addMessage) {
+        StateManager.addMessage("📅 工作周年纪念日！心情+10， Fame +5，管理XP+5，获得相当于10%月薪的奖金。", "success");
+      }
+    },
+    choices: [],
+    icons: ["📅", "周年"],
+  };
+
+  // ===== C→G: 职业路径选择反思 =====
+  var career_path_reflection = {
+    id: "career_path_reflection",
+    title: "🗺️ 职业路标",
+    phase: "street",
+    repeatable: true,
+    cooldownDays: 180,
+    priority: 70,
+    conditions: function (st) {
+      if (!st || !st.flags) return false;
+      // 冷却检查
+      if (st.flags._careerReflectionCooldown) {
+        if ((st.player.day || 0) - st.flags._careerReflectionCooldown < 180) return false;
+      }
+      // 检查是否有至少2段不同的工作经历（跳槽过）
+      if (!st.career || !st.career.jobHistory) return false;
+      if (st.career.jobHistory.length < 2) return false;
+      // 检查当前工作年限是否达到一定长度（避免刚跳槽就反思）
+      if (st.career.currentJob && st.career.currentJob.startDate) {
+        var daysInCurrentJob = (st.player.day || 0) - st.career.currentJob.startDate;
+        if (daysInCurrentJob < 90) return false; // 至少工作90天
+      }
+      st.flags._careerReflectionCooldown = st.player.day;
+      return true;
+    },
+    probability: 0.2,
+    getStory: function (st) {
+      var history = st.career.jobHistory || [];
+      var current = history[history.length - 1] || {};
+      var previous = history[history.length - 2] || {};
+      return "回顾你的职业道路，从「" + (previous.name || "起点") + "」到「" + (current.name || "当前") + "」，\n" +
+             "你已经走过了相当长的路。\n\n" +
+             "每次选择都塑造了今天的你，\n" +
+             "是时候思考：下一站，你想去哪里？";
+    },
+    getText: function (st) { return this.getStory(st); },
+    apply: function (st, choiceId) {
+      if (!st) return;
+      st.flags._careerReflectionCooldown = st.player.day;
+      if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 8);
+      if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 6);
+      if (typeof addSkillXp === "function") addSkillXp("management", 3);
+      if (typeof StateManager !== "undefined" && StateManager.addMessage) {
+        StateManager.addMessage("🗺️ 职业路标反思！心情+8，心智+6，管理XP+3。你开始规划职业发展方向。", "info");
+      }
+    },
+    choices: [],
+    icons: ["🗺️", "反思"],
+  };
+
+  // 注入事件
+  if (typeof RANDOM_EVENTS !== "undefined") {
+    RANDOM_EVENTS.push(career_wall_update, work_anniversary, career_path_reflection);
+    if (typeof console !== "undefined" && console.log) {
+      console.log("[C R368] 3 career wall narrative events registered");
+    }
+  }
+})();
+
+;
+// ==== js/core/domain_c_linkage_r369.js ====
+/**
+ * 域C联动增强 R369 — 倦怠后工作调整叙事化
+ * [全系统自洽修复] 域C R369: 工作调整首次被事件叙事消费
+ *
+ * 1个新事件：
+ *   C→G: 倦怠后工作转型 — 经历倦怠后主动调整工作内容获得成长
+ */
+(function () {
+  "use strict";
+  if (typeof window === "undefined") return;
+
+  // ===== C→G: 倦怠后工作转型 =====
+  var burnout_work_transition = {
+    id: "burnout_work_transition",
+    title: "🔄 工作转型",
+    phase: "street",
+    repeatable: false,
+    priority: 80,
+    conditions: function (st) {
+      if (!st || !st.flags) return false;
+      // 检查是否已经触发过这个事件
+      if (st.flags._burnoutWorkTransitionShown) return false;
+      // 检查是否有高的倦怠历史
+      if (!st.careerCapital) return false;
+      var cap = st.careerCapital;
+      // 曾经倦怠值 >= 70
+      if (!cap._maxBurnout || cap._maxBurnout < 70) return false;
+      // 当前倦怠值已经下降到一定程度
+      var currentBurnout = (cap.burnout || 0);
+      if (currentBurnout > 50) return false; // 还没降到50以下
+      // 检查工作类型发生了变化（从高压到低压，或跨行业）
+      if (!st.career || !st.career.currentJob) return false;
+      // 至少要有跳槽记录且最近一次跳槽是在倦怠缓解之后
+      var jobHistory = st.career.jobHistory || [];
+      if (jobHistory.length < 2) return false; // 必须有至少两次工作经历
+      
+      return true;
+    },
+    probability: 1.0,
+    getStory: function (st) {
+      var cap = st.careerCapital || {};
+      var maxBurnout = cap._maxBurnout || 80;
+      var currentBurnout = Math.round(cap.burnout || 0);
+      var job = st.career.currentJob;
+      return "曾经你的倦怠值高达「" + maxBurnout + "」，经历了那段艰难时光后，\n" +
+             "你意识到不能再让重复高压的工作消耗自己。\n\n" +
+             "经过调整后，现在的倦怠值降到了「" + currentBurnout + "」。\n" +
+             "你从「" + (job.previousName || "原工作") + "」转到了「" + (job.name || "新工作") + "」，\n" +
+             "这次选择更注重工作与生活的平衡，虽然薪水可能不是最高的，\n" +
+             "但你的身心健康得到了更好的保障。这段经历让你明白：\n" +
+             "「适合自己的工作，才是最好的工作。」";
+    },
+    getText: function (st) { return this.getStory(st); },
+    apply: function (st, choiceId) {
+      if (!st) return;
+      st.flags._burnoutWorkTransitionShown = st.player.day;
+      if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 15);
+      if (st.player) {
+        st.player.mental = Math.min(100, (st.player.mental || 50) + 10);
+        st.player.morality = Math.max(0, (st.player.morality || 50) + 5);
+      }
+      if (typeof addSkillXp === "function") addSkillXp("management", 10);
+      // 增加一个标志，表示玩家学会了工作生活平衡
+      st.flags._workLifeBalanceAchieved = true;
+      if (typeof StateManager !== "undefined" && StateManager.addMessage) {
+        StateManager.addMessage("🔄 工作转型成功！心情+15，心智+10，道德+5，管理XP+10。你找到了更适合自己的职业道路。", "success");
+      }
+    },
+    choices: [],
+    icons: ["🔄", "转型"],
+  };
+
+  // 注入事件
+  if (typeof RANDOM_EVENTS !== "undefined") {
+    RANDOM_EVENTS.push(burnout_work_transition);
+    if (typeof console !== "undefined" && console.log) {
+      console.log("[C R369] 1 burnout work transition event registered");
+    }
+  }
+})();
+
+;
 // ==== js/core/domain_c_linkage_r373.js ====
 /**
  * 域C(职业/成长) 联动增强 R373
@@ -326899,6 +327158,168 @@ if (typeof window !== "undefined") {
             if (st.status) st.status.health = Math.min(100, (st.status.health || 100) + 8);
             if (typeof StateManager !== "undefined") {
               StateManager.addMessage("🏋️ '身体是革命的本钱。' 健康+8。", "info");
+            }
+          }
+        }
+      ],
+      text: function (st) {
+        if (!st) return null;
+        var fatigue = st.needs && st.needs.fatigue ? Math.round(st.needs.fatigue) : 0;
+        return "职场疲劳" + fatigue + "——'工作与健康,需要平衡。'";
+      }
+    }
+  ];
+
+  for (var i = 0; i < EVENTS.length; i++) {
+    RANDOM_EVENTS.push(EVENTS[i]);
+  }
+})();
+
+;
+// ==== js/core/domain_c_linkage_r752.js ====
+/**
+ * 域C(职业/成长) 联动增强 R752 (第七轮循环)
+ * 桥接：
+ *   C→A  c752_career_capital_v5 职业资本v5 → 消费 jobs/skills/employment 数据
+ *   C→B  c752_career_story_v5 职业故事v5 → 消费 职业历史+事件
+ *   C→G  c752_career_health_v5 职业健康v5 → 消费 职业数据+needs
+ */
+(function () {
+  "use strict";
+  if (typeof RANDOM_EVENTS === "undefined" || !RANDOM_EVENTS) return;
+  if (RANDOM_EVENTS._domainCLinkageR752Loaded) return;
+  RANDOM_EVENTS._domainCLinkageR752Loaded = true;
+
+  var EVENTS = [
+    {
+      id: "c752_career_capital_v5", phase: "street", _isChainEvent: false, icon: "💼",
+      title: "职业资本报告",
+      story: "你的职业数据正在讲述成长故事——{desc}",
+      triggers: { minDay: 365, interval: 500, maxRepeats: 3, excludeFlags: ["_c752DataCd"] },
+      conditions: function (st) {
+        if (!st || st.gameOver) return false;
+        if (st.flags && st.flags._c752DataCd) return false;
+        return st.player && st.player.day >= 365 && st.skills;
+      },
+      choices: [
+        {
+          text: "📊 分析职业轨迹", hint: "智力+15,会计XP+10,置_c752Analyst",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._c752DataCd = true;
+            st.flags._c752Analyst = true;
+            if (st.player) st.player.intelligence = Math.min(100, (st.player.intelligence || 50) + 15);
+            if (typeof addSkillXp === "function") { try { addSkillXp("accounting", 10); } catch(e) {} }
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("💼 '职业成长,需要数据支撑。' 智力+15,会计XP+10。", "success");
+            }
+          }
+        },
+        {
+          text: "🎯 规划职业路径", hint: "管理XP+15,置_c752Planner",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._c752DataCd = true;
+            st.flags._c752Planner = true;
+            if (typeof addSkillXp === "function") { try { addSkillXp("management", 15); } catch(e) {} }
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("🎯 '有规划,才有方向。' 管理XP+15。", "info");
+            }
+          }
+        }
+      ],
+      text: function (st) {
+        if (!st) return null;
+        return "你的职业正在成长——'这些数据,就是你的职业资本。'";
+      }
+    },
+    {
+      id: "c752_career_story_v5", phase: "street", _isChainEvent: false, icon: "📖",
+      title: "职业故事",
+      story: "你的职业变化正在书写故事——{desc}",
+      triggers: { minDay: 400, interval: 500, maxRepeats: 3, excludeFlags: ["_c752NarrCd"] },
+      conditions: function (st) {
+        if (!st || st.gameOver) return false;
+        if (st.flags && st.flags._c752NarrCd) return false;
+        return st.player && st.player.day >= 400 && st.employment;
+      },
+      choices: [
+        {
+          text: "📜 记录职业历程", hint: "心智+15,置_c752Chronicler",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._c752NarrCd = true;
+            st.flags._c752Chronicler = true;
+            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 15);
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("📖 '每一步,都值得记录。' 心智+15。", "success");
+            }
+          }
+        },
+        {
+          text: "🚀 展望未来发展", hint: "智力+10,魅力+8,置_c752Visionary",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._c752NarrCd = true;
+            st.flags._c752Visionary = true;
+            if (st.player) {
+              st.player.intelligence = Math.min(100, (st.player.intelligence || 50) + 10);
+              st.player.charm = Math.min(100, (st.player.charm || 50) + 8);
+            }
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("🚀 '职业生涯,需要远见。' 智力+10,魅力+8。", "info");
+            }
+          }
+        }
+      ],
+      text: function (st) {
+        if (!st) return null;
+        var jobName = "无";
+        if (st.employment && st.employment.currentJob) jobName = st.employment.currentJob.name || "在职";
+        return "当前职业" + jobName + "——'这就是你的职业故事。'";
+      }
+    },
+    {
+      id: "c752_career_health_v5", phase: "corporate", _isChainEvent: false, icon: "💚",
+      title: "职业健康",
+      story: "工作不应以牺牲健康为代价——{desc}",
+      triggers: { minDay: 300, interval: 365, maxRepeats: 4, excludeFlags: ["_c752HealthCd"] },
+      conditions: function (st) {
+        if (!st || st.gameOver) return false;
+        if (st.flags && st.flags._c752HealthCd) return false;
+        return st.player && st.player.day >= 300 && st.needs && st.status && st.corporate;
+      },
+      choices: [
+        {
+          text: "🧘 工作生活平衡", hint: "心情+15,疲劳-15,置_c752Balanced",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._c752HealthCd = true;
+            st.flags._c752Balanced = true;
+            if (st.needs) {
+              st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 15);
+              st.needs.fatigue = Math.max(0, (st.needs.fatigue || 0) - 15);
+            }
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("💚 '工作是为了生活,不是为了牺牲生活。' 心情+15,疲劳-15。", "success");
+            }
+          }
+        },
+        {
+          text: "🏋️ 职场健康管理", hint: "健康+10,置_c752Healthy",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._c752HealthCd = true;
+            st.flags._c752Healthy = true;
+            if (st.status) st.status.health = Math.min(100, (st.status.health || 100) + 10);
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("🏋️ '身体是革命的本钱。' 健康+10。", "info");
             }
           }
         }
