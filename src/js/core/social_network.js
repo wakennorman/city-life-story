@@ -314,11 +314,20 @@ function tickSocialNetwork(state) {
       }
     }
     state.npcRelationshipLog._lastSocialDay = _lastSocial;
+    // [R792 域D D→G 联动增强]: 挚友孤独缓冲 — 有≥1个挚友(affinity≥80)时，孤独感伤害减半
+    var _hasConfidant = false;
+    if (state.relationships) {
+      for (var _cfId in state.relationships) {
+        var _cf = state.relationships[_cfId];
+        if (_cf && _cf.met && (_cf.affinity || 0) >= 80) { _hasConfidant = true; break; }
+      }
+    }
+    var _lonelyMult = _hasConfidant ? 0.5 : 1.0;
     var _daysSinceSocial = state.player.day - _lastSocial;
     if (_daysSinceSocial >= 14 && _lastSocial > 0) {
       // 14天无社交 → 孤独感加深
-      state.needs.happiness = Math.max(0, (state.needs.happiness || 50) - 3);
-      if (state.status) state.status.health = Math.max(0, (state.status.health || 50) - 1);
+      state.needs.happiness = Math.max(0, (state.needs.happiness || 50) - Math.round(3 * _lonelyMult));
+      if (state.status) state.status.health = Math.max(0, (state.status.health || 50) - Math.round(1 * _lonelyMult));
       if (typeof StateManager !== "undefined") {
         StateManager.addMessage(
           "💔 你已经很久没有跟人好好说话了。这座城市人来人往，你却觉得自己像个孤岛（心情-3，健康-1）",
@@ -327,7 +336,7 @@ function tickSocialNetwork(state) {
       }
     } else if (_daysSinceSocial >= 7 && _lastSocial > 0) {
       // 7天无社交 → 轻度孤独感
-      state.needs.happiness = Math.max(0, (state.needs.happiness || 50) - 1);
+      state.needs.happiness = Math.max(0, (state.needs.happiness || 50) - Math.round(1 * _lonelyMult));
       if (typeof StateManager !== "undefined") {
         StateManager.addMessage(
           "😔 你翻了翻手机通讯录，发现好几天没跟人聊过天了。也许该去找个朋友说说话（心情-1）",

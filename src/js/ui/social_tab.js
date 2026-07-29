@@ -206,6 +206,13 @@ function renderNpcRelationships(state, content) {
       html += "</div>";
     }
 
+	    // [R792 域D D→F 联动增强]: 上次互动天数显示
+	if (rel.met && rel._lastInteractionDay) {
+	  var _daysSinceInteraction = state.player.day - rel._lastInteractionDay;
+	  var _intColor = _daysSinceInteraction >= 7 ? "var(--danger)" : (_daysSinceInteraction >= 4 ? "var(--warning)" : "var(--text-muted)");
+	  html += '<div style="font-size:10px;color:' + _intColor + ';margin-top:2px;">👋 ' + _daysSinceInteraction + '天前互动过' + (_daysSinceInteraction >= 7 ? '，关系正在变淡…' : (_daysSinceInteraction >= 4 ? '，有空去打个招呼' : '')) + '</div>';
+	}
+
     // [全系统自洽修复] 域D 联动增强: 衰减倒计时+引导
     if (rel.met && rel.affinity > 0) {
       var _lastInt = rel._lastInteractionDay || 0;
