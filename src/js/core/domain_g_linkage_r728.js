@@ -16,7 +16,13 @@
     {
       id: "g728_health_lifespan", phase: "street", _isChainEvent: false, icon: "❤️",
       title: "健康寿命报告",
-      story: "你的身体会说话——{desc}",
+      // [全系统自洽修复] 域G R871 A类: story含{desc}占位符但无text()→补text()动态叙述
+      story: "健康寿命报告",
+      text: function (st) {
+        var _age = (st.player && st.player.age) || 20;
+        var _health = (st.status && st.status.health) || 100;
+        return "你的身体会说话——" + _age + "岁的身体，健康值" + _health + "。每年给自己做一次全面评估，是对未来最好的投资。";
+      },
       triggers: { minDay: 365, interval: 365, maxRepeats: 5, excludeFlags: ["_g728HealthCd"] },
       conditions: function (st) {
         if (!st || st.gameOver) return false;
@@ -76,7 +82,14 @@
     {
       id: "g728_age_social_efficiency", phase: "street", _isChainEvent: false, icon: "👥",
       title: "社交圈变迁",
-      story: "不同年纪，交朋友的方式也不一样——{desc}",
+      // [全系统自洽修复] 域G R871 A类: story含{desc}占位符但无text()→补text()动态叙述
+      story: "社交圈变迁",
+      text: function (st) {
+        var _age = (st.player && st.player.age) || 20;
+        var _metCount = 0;
+        if (st.relationships) { for (var _rid in st.relationships) { var _rr = st.relationships[_rid]; if (_rr && _rr.met) _metCount++; } }
+        return "不同年纪，交朋友的方式也不一样——你今年" + _age + "岁，已结识" + _metCount + "位朋友。年轻时靠热情，中年时靠价值，老年时靠真心。";
+      },
       triggers: { minDay: 540, interval: 360, maxRepeats: 3, excludeFlags: ["_g728SocialCd"] },
       conditions: function (st) {
         if (!st || st.gameOver) return false;
@@ -133,7 +146,15 @@
     {
       id: "g728_age_skill_curve", phase: "street", _isChainEvent: false, icon: "📈",
       title: "技能成长曲线",
-      story: "不同年龄，学习效率大不相同——{desc}",
+      // [全系统自洽修复] 域G R871 A类: story含{desc}占位符但无text()→补text()动态叙述
+      story: "技能成长曲线",
+      text: function (st) {
+        var _age = (st.player && st.player.age) || 20;
+        var _topSkill = "";
+        var _topLv = 0;
+        if (st.skills) { for (var _sk in st.skills) { var _sl = st.skills[_sk]; if (_sl && (_sl.level || 0) > _topLv) { _topLv = _sl.level || 0; _topSkill = _sk; } } }
+        return "不同年龄，学习效率大不相同——你今年" + _age + "岁，最高技能" + (_topSkill || "无") + "(Lv." + _topLv + ")。青年靠体力，中年靠经验，老年靠智慧。";
+      },
       triggers: { minDay: 720, interval: 360, maxRepeats: 3, excludeFlags: ["_g728SkillCd"] },
       conditions: function (st) {
         if (!st || st.gameOver) return false;

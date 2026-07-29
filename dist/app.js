@@ -6166,13 +6166,13 @@ function applyAdversityResilience(state, eventType) {
 function applyEventPriceShock(state, eventId) {
   if (!state || !eventId || !state.trade || !state.flags) return;
   var priceShocks = {
-    flood: { goods: ["rice", "vegetable"], change: 0.25 },
-    drought: { goods: ["rice", "oil"], change: 0.30 },
-    typhoon: { goods: ["vegetable", "pork"], change: 0.20 },
-    war_news: { goods: ["oil", "gold"], change: 0.15 },
-    epidemic: { goods: ["mask", "medicine"], change: 0.40 },
-    stock_crash: { goods: ["gold"], change: 0.10 },
-    festival_boom: { goods: ["pork", "egg", "oil"], change: 0.08 },
+    flood: { goods: ["rice", "vegetables"], change: 0.25 }, // [R870] vegetable→vegetables
+    drought: { goods: ["rice", "cooking_oil"], change: 0.30 }, // [R870] oil→cooking_oil
+    typhoon: { goods: ["vegetables", "pork"], change: 0.20 }, // [R870] vegetable→vegetables
+    war_news: { goods: ["cooking_oil", "cigarettes"], change: 0.15 }, // [R870] oil→cooking_oil, gold→cigarettes
+    epidemic: { goods: ["cold_medicine", "mask"], change: 0.40 }, // [R870] medicine→cold_medicine
+    stock_crash: { goods: ["vitamins_item"], change: 0.10 }, // [R870] gold→vitamins_item
+    festival_boom: { goods: ["pork", "egg", "cooking_oil"], change: 0.08 }, // [R870] oil→cooking_oil
   };
   var shock = priceShocks[eventId];
   if (!shock || !state.trade._lastPrices) return;
@@ -206423,6 +206423,8 @@ function getAvgBuyPrice(state, goodId) {
 function updateAllPrices(state) {
   // [全系统自洽修复] 域A A类#14: state.trade 守卫
   if (!state || !state.trade) return;
+  // [全系统自洽修复] 域A R870 A类#1: 初始化 _lastPrices 价格历史记录
+  if (!state.trade._lastPrices) state.trade._lastPrices = {};
   for (const locKey of Object.keys(LOCATIONS)) {
     const loc = LOCATIONS[locKey];
     // 确保价格对象存在
@@ -206454,6 +206456,18 @@ function updateAllPrices(state) {
 
       state.trade.goodsPrices[locKey][good.id] = price;
     }
+  }
+  // [全系统自洽修复] 域A R870 A类#1: 记录各商品全城均价到 _lastPrices
+  for (var _gid870 of Object.keys(state.trade.goodsPrices[Object.keys(LOCATIONS)[0]] || {})) {
+    if (!state.trade._lastPrices[_gid870]) state.trade._lastPrices[_gid870] = [];
+    var _total = 0, _cnt = 0;
+    for (var _lk870 of Object.keys(LOCATIONS)) {
+      var _p870 = state.trade.goodsPrices[_lk870] && state.trade.goodsPrices[_lk870][_gid870];
+      if (_p870 != null) { _total += _p870; _cnt++; }
+    }
+    var _avg = _cnt > 0 ? Math.round((_total / _cnt) * 100) / 100 : 0;
+    state.trade._lastPrices[_gid870].push(_avg);
+    if (state.trade._lastPrices[_gid870].length > 30) state.trade._lastPrices[_gid870].shift();
   }
   state.trade.lastPriceUpdate = state.player.day;
 }
@@ -215653,6 +215667,10 @@ const DAILY_PIPELINE = [
       // [R714 域A 联动增强 A→G/H]: 通货膨胀感知+经济周期检测
       if (typeof trackInflationPerception === "function") trackInflationPerception(state);
       if (typeof detectEconomicCycle === "function") detectEconomicCycle(state);
+      // [R870 域A 联动增强 A→G]: 经济健康度影响日常状态
+      if (typeof applyEconomicHealthToDaily === "function") applyEconomicHealthToDaily(state);
+      // [R870 域A 联动增强 A→B]: 通胀/通缩叙事
+      if (typeof triggerInflationNarrative === "function") triggerInflationNarrative(state);
     },
   },
   // [全系统自洽修复] 域A 联动增强#1: 每日经济结算（累进财富税/动态利率/市场饱和度）
@@ -219251,6 +219269,9 @@ if (typeof window !== "undefined") {
     getPriceExtremeAlert: getPriceExtremeAlert,
     getAllPriceAnomalies: getAllPriceAnomalies,
     checkPriceAnomalyNarrative: checkPriceAnomalyNarrative,
+    getPriceIndexSummary: getPriceIndexSummary,
+    applyEconomicHealthToDaily: applyEconomicHealthToDaily,
+    triggerInflationNarrative: triggerInflationNarrative,
   });
 
   // ====== 整合钩子：增强现有交易函数 ======
@@ -219430,7 +219451,7 @@ function trackInflationPerception(state) {
   var _day = state.player && state.player.day;
   if (!_day || _day - _inflationSample < 5) return;
   state.flags._inflationSampleDay = _day;
-  var _sampleGoods = ["rice", "egg", "oil", "vegetable", "pork"];
+  var _sampleGoods = ["rice", "egg", "cooking_oil", "vegetables", "pork"]; // [全系统自洽修复] 域A R870 A类#2: "oil"→"cooking_oil", "vegetable"→"vegetables"
   var _totalPrice = 0, _count = 0;
   for (var _gi = 0; _gi < _sampleGoods.length; _gi++) {
     var _prices = state.trade._lastPrices && state.trade._lastPrices[_sampleGoods[_gi]];
@@ -219771,6 +219792,72 @@ function getPriceFairness(state, goodId, price) {
   if (_ratio > 1.5) return -1;
   if (_ratio < 0.5) return 1;
   return 0;
+}
+
+// [R870 域A 联动增强 A→F]: 价格指数摘要 — 供UI展示通胀/通缩/经济健康度
+function getPriceIndexSummary(state) {
+  if (!state || !state.flags) return { level: "normal", text: "📊 物价平稳", color: "var(--text-muted)" };
+  var cumInflation = state.flags._cumulativeInflation || 0;
+  var indexHistory = state.flags._priceIndexHistory || [];
+  var recentTrend = "stable";
+  if (indexHistory.length >= 5) {
+    var recent = indexHistory.slice(-5);
+    var first = recent[0].avgPrice || 0;
+    var last = recent[recent.length - 1].avgPrice || 0;
+    if (first > 0) {
+      var pct = (last - first) / first;
+      if (pct > 0.05) recentTrend = "up";
+      else if (pct < -0.05) recentTrend = "down";
+    }
+  }
+  if (cumInflation > 0.25) return { level: "boom", text: "📈 经济过热（通胀+" + Math.round(cumInflation * 100) + "%）", color: "var(--danger)", trend: recentTrend };
+  if (cumInflation > 0.1) return { level: "inflation", text: "📊 温和通胀（+" + Math.round(cumInflation * 100) + "%）", color: "var(--warning)", trend: recentTrend };
+  if (cumInflation < -0.15) return { level: "recession", text: "📉 经济衰退（通缩" + Math.round(Math.abs(cumInflation) * 100) + "%）", color: "#9c27b0", trend: recentTrend };
+  if (cumInflation < -0.05) return { level: "cooling", text: "🌡️ 经济降温（-" + Math.round(Math.abs(cumInflation) * 100) + "%）", color: "var(--info)", trend: recentTrend };
+  return { level: "normal", text: "📊 物价平稳", color: "var(--text-muted)", trend: recentTrend };
+}
+
+// [R870 域A 联动增强 A→G]: 经济健康度影响日常状态 — 经济不稳定时增加疲劳/降低心情
+function applyEconomicHealthToDaily(state) {
+  if (!state || !state.needs || !state.flags) return;
+  var healthIndex = typeof getEconomicHealthIndex === "function" ? getEconomicHealthIndex(state) : 50;
+  if (healthIndex < 30) {
+    state.needs.happiness = Math.max(0, (state.needs.happiness || 50) - 2);
+    state.needs.fatigue = Math.min(100, (state.needs.fatigue || 0) + 3);
+  } else if (healthIndex < 45) {
+    state.needs.happiness = Math.max(0, (state.needs.happiness || 50) - 1);
+    state.needs.fatigue = Math.min(100, (state.needs.fatigue || 0) + 1);
+  } else if (healthIndex > 70) {
+    state.needs.happiness = Math.min(100, (state.needs.happiness || 50) + 1);
+  }
+}
+
+// [R870 域A 联动增强 A→B]: 通胀/通缩叙事 — 基于累积通胀触发更丰富的市场叙事
+function triggerInflationNarrative(state) {
+  if (!state || !state.flags || !state.player) return;
+  var cumInflation = state.flags._cumulativeInflation || 0;
+  var lastNarrativeDay = state.flags._lastInflationNarrativeDay || 0;
+  var day = state.player.day || 0;
+  if (day - lastNarrativeDay < 15) return;
+  if (Math.abs(cumInflation) < 0.08) return;
+  state.flags._lastInflationNarrativeDay = day;
+  if (cumInflation > 0.2) {
+    if (typeof StateManager !== "undefined") {
+      StateManager.addMessage("🏪 菜市场里到处是抱怨声——" + (cumInflation > 0.3 ? "猪肉涨到买不起，连青菜都翻倍了。摊主说再这样下去只能改行。" : "物价涨得厉害，老主顾都少买了一半。卖菜大婶说今年的生意最难做。"), "event");
+    }
+  } else if (cumInflation > 0.1) {
+    if (typeof StateManager !== "undefined") {
+      StateManager.addMessage("💬 街坊邻居都在议论物价:" + (day % 2 === 0 ? "「昨天鸡蛋还3块，今天就3块5了!」" : "「米面油都涨了，工资怎么不涨啊!」"), "hint");
+    }
+  } else if (cumInflation < -0.15) {
+    if (typeof StateManager !== "undefined") {
+      StateManager.addMessage("🏪 市场格外冷清——" + (cumInflation < -0.2 ? "降价都没人买，经济确实不景气。一些店铺已经贴出了转让告示。" : "东西便宜了但买的人更少了，经济降温的寒意扑面而来。"), "warning");
+    }
+  } else if (cumInflation < -0.05) {
+    if (typeof StateManager !== "undefined") {
+      StateManager.addMessage("💬 超市打出促销牌:" + (day % 2 === 0 ? "「全场八折，抓紧囤货!」" : "「换季清仓，买一送一!」"), "hint");
+    }
+  }
 }
 
 ;
@@ -287286,6 +287373,17 @@ function renderFinanceTab(state, parent) {
     overview.appendChild(card);
   });
   div.appendChild(overview);
+
+  // [R870 域A 联动增强 A→F]: 价格指数展示
+  if (typeof getPriceIndexSummary === "function") {
+    var _ps = getPriceIndexSummary(state);
+    if (_ps) {
+      var _pic = document.createElement("div");
+      _pic.style.cssText = "background:var(--bg-card);border:1px solid var(--border);border-radius:8px;padding:8px 12px;margin-top:6px;display:flex;align-items:center;justify-content:space-between;";
+      _pic.innerHTML = '<span style="font-size:12px;color:var(--text-muted);">🏷️ 价格指数</span><span style="font-size:13px;font-weight:600;color:' + _ps.color + ';">' + _ps.text + '</span>';
+      div.appendChild(_pic);
+    }
+  }
 
   // === 今日收支明细 ===
   var sectionTitle = document.createElement("h3");
@@ -365127,11 +365225,17 @@ if (typeof window !== "undefined") {
 ;
 // ==== js/core/domain_h_linkage_r825.js ====
 /**
- * 域H(Phase2/公司) 联动增强 R825 (第十四轮循环)
- * 桥接：
- *   H→A  h825_corp_data_v13 经营数据v13 → 消费 company 运营数据
- *   H→B  h825_corp_legend_v14 公司传奇v14 → 消费 startup 估值+里程碑
- *   H→G  h825_founder_health_v13 创始人健康v13 → 消费 公司压力+健康
+ * 域H(Phase2/公司) 联动增强 R825
+ * 全系统优化·Domain H 第六十六轮循环
+ *
+ * 【联动增强3项】
+ *   1. H→A 企业数据资产v8 — 公司运营数据转化为数值洞察
+ *   2. H→B 公司传奇叙事v8 — 公司里程碑成为城内叙事事件
+ *   3. H→G 创始人健康v8 — 创业者身心状态影响公司决策
+ *
+ * 设计约束（与历轮 IIFE linkage 文件一致）：
+ *  - IIFE 注入全局 RANDOM_EVENTS，避免改动 cross_system_events.js。
+ *  - 所有 state 访问均 || 防御；使用 Random.fromArray/Random.int 保持种子RNG。
  */
 (function () {
   "use strict";
@@ -365139,98 +365243,168 @@ if (typeof window !== "undefined") {
   if (RANDOM_EVENTS._domainHLinkageR825Loaded) return;
   RANDOM_EVENTS._domainHLinkageR825Loaded = true;
 
-  function hasCo(st) { return st && st.startup && st.startup.company && st.startup.active; }
+  function grantXp(key, amt) {
+    if (typeof addSkillXp === "function") { try { addSkillXp(key, amt); } catch(e) {} }
+  }
 
   var EVENTS = [
     {
-      id: "h825_corp_data_v13", phase: "corporate", _isChainEvent: false, icon: "📊",
-      title: "经营数据洞察",
-      story: "公司的运营数据正在揭示经营真相——数据驱动决策,才能走得更远。",
-      triggers: { minDay: 600, interval: 700, maxRepeats: 3, excludeFlags: ["_h825DataCd"] },
+      id: "h825_corporate_data_v8",
+      phase: "corporate",
+      icon: "\U0001f4ca",
+      title: "公司数据，是决策的基石",
+      story: "你翻开公司的季度报表——营收增长、成本控制、团队效率、客户留存……这些数据背后，是每一个决策的痕迹。",
       conditions: function (st) {
-        if (!st || st.gameOver) return false;
-        if (st.flags && st.flags._h825DataCd) return false;
-        return hasCo(st) && st.player && st.player.day >= 600;
+        if (!st || !st.player || st.gameOver) return false;
+        if (st.flags && st.flags._h825CorpDataDone) return false;
+        if (st.player.phase !== "corporate" || !st.startup || !st.startup.company) return false;
+        var _valuation = st.startup.company.valuation || 0;
+        return _valuation >= 50000000 && st.player.day >= 400;
       },
-      text: function (st) {
-        if (!st) return null;
-        var c = st.startup && st.startup.company; if (!c) return "数据驱动决策。";
-        var r = isFinite(c.revenue) ? Math.round(c.revenue) : 0;
-        var e = (c.employees && c.employees.length) || 0;
-        return "营收¥" + r.toLocaleString() + ",团队" + e + "人——'数据驱动决策,才能走得更远。'";
-      },
+      probability: 0.07,
+      repeatable: false,
       choices: [
-        { text: "📈 分析财务", hint: "管理XP+30,会计XP+20,置_h825Analyst",
+        {
+          text: "\U0001f4ca 建立数据驱动的决策体系",
+          hint: "智力+24, 管理XP+30, 置_h825DataDriven",
           apply: function (st) {
-            if (!st) return; st.flags = st.flags || {}; st.flags._h825DataCd = true; st.flags._h825Analyst = true;
-            if (typeof addSkillXp === "function") { try { addSkillXp("management", 30); } catch(e) {} }
-            if (typeof addSkillXp === "function") { try { addSkillXp("accounting", 20); } catch(e) {} }
-            if (typeof StateManager !== "undefined") { StateManager.addMessage("📊 '数据不会说谎。' 管理XP+30,会计XP+20。", "success"); }
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._h825CorpDataDone = true;
+            st.flags._h825DataDriven = true;
+            if (st.player) st.player.intelligence = Math.min(100, (st.player.intelligence || 50) + 24);
+            grantXp("management", 30);
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("\U0001f4ca 数据驱动的决策体系建立——智力+24, 管理XP+30。", "success");
+            }
           }
         },
-        { text: "🎯 优化策略", hint: "管理XP+35,置_h825Strategist",
+        {
+          text: "\U0001f4bc 凭直觉就够了",
+          hint: "心智+5",
           apply: function (st) {
-            if (!st) return; st.flags = st.flags || {}; st.flags._h825DataCd = true; st.flags._h825Strategist = true;
-            if (typeof addSkillXp === "function") { try { addSkillXp("management", 35); } catch(e) {} }
-            if (typeof StateManager !== "undefined") { StateManager.addMessage("🎯 '好的策略来自数据。' 管理XP+35。", "info"); }
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._h825CorpDataDone = true;
+            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 5);
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("\U0001f4bc 凭直觉就够了。心智+5。", "info");
+            }
           }
         }
       ]
     },
     {
-      id: "h825_corp_legend_v14", phase: "corporate", _isChainEvent: false, icon: "🏆",
-      title: "公司传奇",
-      story: "你的公司正在书写属于自己的传奇故事——每一个里程碑,都值得被铭记。",
-      triggers: { minDay: 700, interval: 800, maxRepeats: 3, excludeFlags: ["_h825LegendCd"] },
-      conditions: function (st) { if (!st || st.gameOver) return false; if (st.flags && st.flags._h825LegendCd) return false; return hasCo(st) && st.player && st.player.day >= 700; },
-      text: function (st) {
-        if (!st) return null; var c = st.startup && st.startup.company; if (!c) return "你的公司正在书写传奇。";
-        var v = isFinite(c.valuation) ? Math.round(c.valuation) : 0; return "估值¥" + v.toLocaleString() + "——'每一个里程碑都值得被铭记。'";
+      id: "h825_corporate_legend_v8",
+      phase: "corporate",
+      icon: "\U0001f3c6",
+      title: "公司传奇，城市为你侧目",
+      story: "消息传开了——你的公司成了行业标杆。街头巷尾的茶馆里，有人在议论你公司的名字。",
+      conditions: function (st) {
+        if (!st || !st.player || st.gameOver) return false;
+        if (st.flags && st.flags._h825LegendDone) return false;
+        if (st.player.phase !== "corporate" || !st.startup || !st.startup.company) return false;
+        var _rounds = st.startup.company.fundingRounds;
+        return Array.isArray(_rounds) && _rounds.length >= 3;
       },
+      probability: 0.1,
+      repeatable: false,
       choices: [
-        { text: "📜 记录历史", hint: "心智+25,魅力+20,置_h825Chronicler",
-          apply: function (st) { if (!st) return; st.flags = st.flags || {}; st.flags._h825LegendCd = true; st.flags._h825Chronicler = true;
-            if (st.player) { st.player.mental = Math.min(100, (st.player.mental || 50) + 25); st.player.charm = Math.min(100, (st.player.charm || 50) + 20); }
-            if (typeof StateManager !== "undefined") { StateManager.addMessage("🏆 '每一步都值得铭记。' 心智+25,魅力+20。", "success"); }
+        {
+          text: "\U0001f3c6 谦虚回应，继续前行",
+          hint: "名气+24, 心智+20, 置_h825CityLegend",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._h825LegendDone = true;
+            st.flags._h825CityLegend = true;
+            if (st.player) {
+              st.player.fame = Math.min(100, (st.player.fame || 0) + 24);
+              st.player.mental = Math.min(100, (st.player.mental || 50) + 20);
+            }
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("\U0001f3c6 你的公司成了这座城市的创业传奇——名气+24, 心智+20。", "success");
+            }
           }
         },
-        { text: "📢 分享故事", hint: "社交XP+25,置_h825Storyteller",
-          apply: function (st) { if (!st) return; st.flags = st.flags || {}; st.flags._h825LegendCd = true; st.flags._h825Storyteller = true;
-            if (typeof addSkillXp === "function") { try { addSkillXp("social", 25); } catch(e) {} }
-            if (typeof StateManager !== "undefined") { StateManager.addMessage("📢 '故事比数字更有感染力。' 社交XP+25。", "info"); }
+        {
+          text: "\U0001f60a 只是开始，路还长",
+          hint: "心智+22",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._h825LegendDone = true;
+            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 22);
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("\U0001f60a 你告诉自己：这只是开始。心智+22。", "success");
+            }
           }
         }
       ]
     },
     {
-      id: "h825_founder_health_v13", phase: "corporate", _isChainEvent: false, icon: "💚",
-      title: "创始人健康管理",
-      story: "创业是一场马拉松,不是短跑——身体健康,才是最大的资产。",
-      triggers: { minDay: 500, interval: 600, maxRepeats: 4, excludeFlags: ["_h825HealthCd"] },
-      conditions: function (st) { if (!st || st.gameOver) return false; if (st.flags && st.flags._h825HealthCd) return false; return hasCo(st) && st.player && st.player.day >= 500 && st.status && st.needs; },
-      text: function (st) {
-        if (!st) return null; var h = st.status && isFinite(st.status.health) ? Math.round(st.status.health) : 100;
-        var f = st.needs && isFinite(st.needs.fatigue) ? Math.round(st.needs.fatigue) : 0; return "健康" + h + "%,疲劳" + f + "——'健康才是最大的资产。'";
+      id: "h825_founder_health_v8",
+      phase: "corporate",
+      icon: "\U0001f4aa",
+      title: "创始人健康，是公司最大的资产",
+      story: "你连续高强度工作了一个月。身体的警告信号越来越明显。但公司正处于关键期——产品迭代、市场扩张、团队扩充。",
+      conditions: function (st) {
+        if (!st || !st.player || st.gameOver) return false;
+        if (st.flags && st.flags._h825FounderHealthDone) return false;
+        if (st.player.phase !== "corporate") return false;
+        var _health = st.status ? st.status.health : 100;
+        return _health < 20 && st.player.day >= 120;
       },
+      probability: 0.12,
+      repeatable: false,
       choices: [
-        { text: "🏃 锻炼", hint: "健康+20,疲劳-20,置_h825Fitness",
-          apply: function (st) { if (!st) return; st.flags = st.flags || {}; st.flags._h825HealthCd = true; st.flags._h825Fitness = true;
-            if (st.status) st.status.health = Math.min(100, (st.status.health || 100) + 20); if (st.needs) st.needs.fatigue = Math.max(0, (st.needs.fatigue || 0) - 20);
-            if (typeof StateManager !== "undefined") { StateManager.addMessage("💚 '身体是革命的本钱。' 健康+20,疲劳-20。", "success"); }
+        {
+          text: "\U0001f4aa 调整节奏，健康第一",
+          hint: "健康+35, KPI-15, 置_h825HealthFirst",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._h825FounderHealthDone = true;
+            st.flags._h825HealthFirst = true;
+            if (st.status) st.status.health = Math.min(100, (st.status.health || 50) + 35);
+            if (st.player && st.player.corporate) {
+              st.player.corporate.kpi = Math.max(0, (st.player.corporate.kpi || 0) - 15);
+            }
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("\U0001f4aa 你调整了生活节奏——健康+35, KPI-15。身体是创业的本钱。", "success");
+            }
           }
         },
-        { text: "🧘 减压", hint: "疲劳-25,心情+20,置_h825DeStress",
-          apply: function (st) { if (!st) return; st.flags = st.flags || {}; st.flags._h825HealthCd = true; st.flags._h825DeStress = true;
-            if (st.needs) { st.needs.fatigue = Math.max(0, (st.needs.fatigue || 0) - 25); st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 20); }
-            if (typeof StateManager !== "undefined") { StateManager.addMessage("🧘 '创业再忙也要照顾自己。' 疲劳-25,心情+20。", "info"); }
+        {
+          text: "\U0001f525 再拼一把，等公司稳定了再说",
+          hint: "健康-20, KPI+30, 置_h825BurnoutRisk",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._h825FounderHealthDone = true;
+            st.flags._h825BurnoutRisk = true;
+            if (st.status) st.status.health = Math.max(0, (st.status.health || 50) - 20);
+            if (st.player && st.player.corporate) {
+              st.player.corporate.kpi = Math.min(150, (st.player.corporate.kpi || 0) + 30);
+            }
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("\U0001f525 你选择再拼一把——健康-20, KPI+30。注意身体！", "warning");
+            }
           }
         }
       ]
     }
   ];
 
-  for (var i = 0; i < EVENTS.length; i++) { RANDOM_EVENTS.push(EVENTS[i]); }
+  for (var i = 0; i < EVENTS.length; i++) {
+    var exists = false;
+    for (var j = 0; j < RANDOM_EVENTS.length; j++) {
+      if (RANDOM_EVENTS[j] && RANDOM_EVENTS[j].id === EVENTS[i].id) { exists = true; break; }
+    }
+    if (!exists) RANDOM_EVENTS.push(EVENTS[i]);
+  }
 })();
+
 ;
 // ==== js/core/domain_h_linkage_r829.js ====
 /*
@@ -366735,6 +366909,189 @@ if (typeof window !== "undefined") {
   // ---- 注入全局 RANDOM_EVENTS ----
   for (var i = 0; i < EVENTS.length; i++) {
     RANDOM_EVENTS.push(EVENTS[i]);
+  }
+})();
+
+;
+// ==== js/core/domain_h_linkage_r825.js ====
+/**
+ * 域H(Phase2/公司) 联动增强 R825
+ * 全系统优化·Domain H 第六十六轮循环
+ *
+ * 【联动增强3项】
+ *   1. H→A 企业数据资产v8 — 公司运营数据转化为数值洞察
+ *   2. H→B 公司传奇叙事v8 — 公司里程碑成为城内叙事事件
+ *   3. H→G 创始人健康v8 — 创业者身心状态影响公司决策
+ *
+ * 设计约束（与历轮 IIFE linkage 文件一致）：
+ *  - IIFE 注入全局 RANDOM_EVENTS，避免改动 cross_system_events.js。
+ *  - 所有 state 访问均 || 防御；使用 Random.fromArray/Random.int 保持种子RNG。
+ */
+(function () {
+  "use strict";
+  if (typeof RANDOM_EVENTS === "undefined" || !RANDOM_EVENTS) return;
+  if (RANDOM_EVENTS._domainHLinkageR825Loaded) return;
+  RANDOM_EVENTS._domainHLinkageR825Loaded = true;
+
+  function grantXp(key, amt) {
+    if (typeof addSkillXp === "function") { try { addSkillXp(key, amt); } catch(e) {} }
+  }
+
+  var EVENTS = [
+    {
+      id: "h825_corporate_data_v8",
+      phase: "corporate",
+      icon: "\U0001f4ca",
+      title: "公司数据，是决策的基石",
+      story: "你翻开公司的季度报表——营收增长、成本控制、团队效率、客户留存……这些数据背后，是每一个决策的痕迹。",
+      conditions: function (st) {
+        if (!st || !st.player || st.gameOver) return false;
+        if (st.flags && st.flags._h825CorpDataDone) return false;
+        if (st.player.phase !== "corporate" || !st.startup || !st.startup.company) return false;
+        var _valuation = st.startup.company.valuation || 0;
+        return _valuation >= 50000000 && st.player.day >= 400;
+      },
+      probability: 0.07,
+      repeatable: false,
+      choices: [
+        {
+          text: "\U0001f4ca 建立数据驱动的决策体系",
+          hint: "智力+24, 管理XP+30, 置_h825DataDriven",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._h825CorpDataDone = true;
+            st.flags._h825DataDriven = true;
+            if (st.player) st.player.intelligence = Math.min(100, (st.player.intelligence || 50) + 24);
+            grantXp("management", 30);
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("\U0001f4ca 数据驱动的决策体系建立——智力+24, 管理XP+30。", "success");
+            }
+          }
+        },
+        {
+          text: "\U0001f4bc 凭直觉就够了",
+          hint: "心智+5",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._h825CorpDataDone = true;
+            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 5);
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("\U0001f4bc 凭直觉就够了。心智+5。", "info");
+            }
+          }
+        }
+      ]
+    },
+    {
+      id: "h825_corporate_legend_v8",
+      phase: "corporate",
+      icon: "\U0001f3c6",
+      title: "公司传奇，城市为你侧目",
+      story: "消息传开了——你的公司成了行业标杆。街头巷尾的茶馆里，有人在议论你公司的名字。",
+      conditions: function (st) {
+        if (!st || !st.player || st.gameOver) return false;
+        if (st.flags && st.flags._h825LegendDone) return false;
+        if (st.player.phase !== "corporate" || !st.startup || !st.startup.company) return false;
+        var _rounds = st.startup.company.fundingRounds;
+        return Array.isArray(_rounds) && _rounds.length >= 3;
+      },
+      probability: 0.1,
+      repeatable: false,
+      choices: [
+        {
+          text: "\U0001f3c6 谦虚回应，继续前行",
+          hint: "名气+24, 心智+20, 置_h825CityLegend",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._h825LegendDone = true;
+            st.flags._h825CityLegend = true;
+            if (st.player) {
+              st.player.fame = Math.min(100, (st.player.fame || 0) + 24);
+              st.player.mental = Math.min(100, (st.player.mental || 50) + 20);
+            }
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("\U0001f3c6 你的公司成了这座城市的创业传奇——名气+24, 心智+20。", "success");
+            }
+          }
+        },
+        {
+          text: "\U0001f60a 只是开始，路还长",
+          hint: "心智+22",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._h825LegendDone = true;
+            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 22);
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("\U0001f60a 你告诉自己：这只是开始。心智+22。", "success");
+            }
+          }
+        }
+      ]
+    },
+    {
+      id: "h825_founder_health_v8",
+      phase: "corporate",
+      icon: "\U0001f4aa",
+      title: "创始人健康，是公司最大的资产",
+      story: "你连续高强度工作了一个月。身体的警告信号越来越明显。但公司正处于关键期——产品迭代、市场扩张、团队扩充。",
+      conditions: function (st) {
+        if (!st || !st.player || st.gameOver) return false;
+        if (st.flags && st.flags._h825FounderHealthDone) return false;
+        if (st.player.phase !== "corporate") return false;
+        var _health = st.status ? st.status.health : 100;
+        return _health < 20 && st.player.day >= 120;
+      },
+      probability: 0.12,
+      repeatable: false,
+      choices: [
+        {
+          text: "\U0001f4aa 调整节奏，健康第一",
+          hint: "健康+35, KPI-15, 置_h825HealthFirst",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._h825FounderHealthDone = true;
+            st.flags._h825HealthFirst = true;
+            if (st.status) st.status.health = Math.min(100, (st.status.health || 50) + 35);
+            if (st.player && st.player.corporate) {
+              st.player.corporate.kpi = Math.max(0, (st.player.corporate.kpi || 0) - 15);
+            }
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("\U0001f4aa 你调整了生活节奏——健康+35, KPI-15。身体是创业的本钱。", "success");
+            }
+          }
+        },
+        {
+          text: "\U0001f525 再拼一把，等公司稳定了再说",
+          hint: "健康-20, KPI+30, 置_h825BurnoutRisk",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._h825FounderHealthDone = true;
+            st.flags._h825BurnoutRisk = true;
+            if (st.status) st.status.health = Math.max(0, (st.status.health || 50) - 20);
+            if (st.player && st.player.corporate) {
+              st.player.corporate.kpi = Math.min(150, (st.player.corporate.kpi || 0) + 30);
+            }
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("\U0001f525 你选择再拼一把——健康-20, KPI+30。注意身体！", "warning");
+            }
+          }
+        }
+      ]
+    }
+  ];
+
+  for (var i = 0; i < EVENTS.length; i++) {
+    var exists = false;
+    for (var j = 0; j < RANDOM_EVENTS.length; j++) {
+      if (RANDOM_EVENTS[j] && RANDOM_EVENTS[j].id === EVENTS[i].id) { exists = true; break; }
+    }
+    if (!exists) RANDOM_EVENTS.push(EVENTS[i]);
   }
 })();
 
@@ -371027,11 +371384,17 @@ if (typeof window !== "undefined") {
 ;
 // ==== js/core/domain_g_linkage_r824.js ====
 /**
- * 域G(核心机制/生命周期) 联动增强 R824 (第十四轮循环)
- * 桥接：
- *   G→A  g824_life_data_v13 人生数据v13 → 消费 全维度状态
- *   G→B  g824_life_chapter_v12 人生章节v12 → 消费 年龄+里程碑
- *   G→D  g824_life_social_v12 人生社交v12 → 消费 年龄+关系
+ * 域G(核心机制/生命周期) 联动增强 R824
+ * 全系统优化·Domain G 第六十七轮循环
+ *
+ * 【联动增强3项】
+ *   1. G→A 人生数据v20 — 核心机制数据转化为数值洞察资产
+ *   2. G→D 人生社交v18 — 人生节点触发NPC社交回响
+ *   3. G→E 财富健康v9 — 生命周期数据反馈为经济洞察
+ *
+ * 设计约束（与历轮 IIFE linkage 文件一致）：
+ *  - IIFE 注入全局 RANDOM_EVENTS，避免改动 cross_system_events.js。
+ *  - 所有 state 访问均 || 防御；使用 Random.fromArray/Random.int 保持种子RNG。
  */
 (function () {
   "use strict";
@@ -371039,122 +371402,183 @@ if (typeof window !== "undefined") {
   if (RANDOM_EVENTS._domainGLinkageR824Loaded) return;
   RANDOM_EVENTS._domainGLinkageR824Loaded = true;
 
+  function grantXp(key, amt) {
+    if (typeof addSkillXp === "function") { try { addSkillXp(key, amt); } catch(e) {} }
+  }
+
   var EVENTS = [
     {
-      id: "g824_life_data_v13", phase: "street", _isChainEvent: false, icon: "📊",
-      title: "人生数据报告",
-      story: "你的每一天都在积累数据——这些数字,就是你的人生故事。",
-      triggers: { minDay: 350, interval: 450, maxRepeats: 3, excludeFlags: ["_g824DataCd"] },
+      id: "g824_life_data_v20",
+      phase: "street",
+      icon: "📊",
+      title: "人生数据，是一部编年史",
+      story: "你翻开自己的生存记录——每一天的喜怒哀乐，都变成了数据。这些数字背后，是你在这座城市里走过的每一步。",
       conditions: function (st) {
-        if (!st || st.gameOver) return false;
-        if (st.flags && st.flags._g824DataCd) return false;
-        return st.player && st.player.day >= 350 && st.status && st.needs;
+        if (!st || !st.player || st.gameOver) return false;
+        if (st.flags && st.flags._g824LifeDataDone) return false;
+        return st.player.day >= 500 && st.status && st.needs;
       },
-      text: function (st) {
-        if (!st) return null;
-        var days = st.player && st.player.day ? st.player.day : 0;
-        var health = st.status && isFinite(st.status.health) ? Math.round(st.status.health) : 100;
-        return "你已度过" + days + "天,健康" + health + "%——'这些数字,就是你的人生故事。'";
-      },
+      probability: 0.05,
+      repeatable: false,
       choices: [
         {
-          text: "📈 分析轨迹", hint: "智力+22,心智+20,置_g824Analyst",
+          text: "📈 分析人生轨迹",
+          hint: "智力+24, 心智+22, 置_g824Analyst",
           apply: function (st) {
             if (!st) return;
-            st.flags = st.flags || {}; st.flags._g824DataCd = true; st.flags._g824Analyst = true;
-            if (st.player) { st.player.intelligence = Math.min(100, (st.player.intelligence || 50) + 22); st.player.mental = Math.min(100, (st.player.mental || 50) + 20); }
-            if (typeof StateManager !== "undefined") { StateManager.addMessage("📈 '数据是未来的指引。' 智力+22,心智+20。", "success"); }
+            st.flags = st.flags || {};
+            st.flags._g824LifeDataDone = true;
+            st.flags._g824Analyst = true;
+            if (st.status && st.needs) {
+              var h = st.status.health || 100;
+              var hap = st.needs.happiness || 50;
+              st.flags._g824QualityScore = Math.min(100, Math.round(h * 0.6 + hap * 0.4));
+            }
+            if (st.player) {
+              st.player.intelligence = Math.min(100, (st.player.intelligence || 50) + 24);
+              st.player.mental = Math.min(100, (st.player.mental || 50) + 22);
+            }
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("📈 '数据是过去的见证,也是未来的指引.' 智力+24, 心智+22。", "success");
+            }
           }
         },
         {
-          text: "🎯 设定目标", hint: "心智+25,置_g824Goal",
+          text: "🎯 设定新的人生目标",
+          hint: "心智+22, 置_g824GoalSetter",
           apply: function (st) {
             if (!st) return;
-            st.flags = st.flags || {}; st.flags._g824DataCd = true; st.flags._g824Goal = true;
-            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 25);
-            if (typeof StateManager !== "undefined") { StateManager.addMessage("🎯 '有目标才有方向。' 心智+25。", "info"); }
-          }
-        }
-      ]
-    },
-    {
-      id: "g824_life_chapter_v12", phase: "street", _isChainEvent: false, icon: "📖",
-      title: "人生章节",
-      story: "你的人生正在翻开新的篇章——每一个阶段,都值得被铭记。",
-      triggers: { minDay: 450, interval: 500, maxRepeats: 3, excludeFlags: ["_g824ChapterCd"] },
-      conditions: function (st) {
-        if (!st || st.gameOver) return false;
-        if (st.flags && st.flags._g824ChapterCd) return false;
-        return st.player && st.player.day >= 450;
-      },
-      text: function (st) {
-        if (!st) return null;
-        var days = st.player && st.player.day ? st.player.day : 0;
-        var years = Math.floor(days / 365) + 1;
-        return "你已度过" + years + "年——'人生如书,每一章都值得回味。'";
-      },
-      choices: [
-        {
-          text: "📜 回顾过往", hint: "心智+25,置_g824Reviewer",
-          apply: function (st) {
-            if (!st) return;
-            st.flags = st.flags || {}; st.flags._g824ChapterCd = true; st.flags._g824Reviewer = true;
-            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 25);
-            if (typeof StateManager !== "undefined") { StateManager.addMessage("📖 '回望来路,方知归处。' 心智+25。", "success"); }
-          }
-        },
-        {
-          text: "✍️ 书写新章", hint: "智力+20,魅力+18,置_g824Writer",
-          apply: function (st) {
-            if (!st) return;
-            st.flags = st.flags || {}; st.flags._g824ChapterCd = true; st.flags._g824Writer = true;
-            if (st.player) { st.player.intelligence = Math.min(100, (st.player.intelligence || 50) + 20); st.player.charm = Math.min(100, (st.player.charm || 50) + 18); }
-            if (typeof StateManager !== "undefined") { StateManager.addMessage("✍️ '人生如书,每一页都值得期待。' 智力+20,魅力+18。", "info"); }
-          }
-        }
-      ]
-    },
-    {
-      id: "g824_life_social_v12", phase: "street", _isChainEvent: false, icon: "🎉",
-      title: "人生社交里程碑",
-      story: "在这个人生阶段,你的社交关系值得庆祝——朋友,是人生最珍贵的财富。",
-      triggers: { minDay: 550, interval: 600, maxRepeats: 3, excludeFlags: ["_g824SocialCd"] },
-      conditions: function (st) {
-        if (!st || st.gameOver) return false;
-        if (st.flags && st.flags._g824SocialCd) return false;
-        return st.player && st.player.day >= 550 && st.relationships;
-      },
-      text: function (st) {
-        if (!st) return null;
-        var rels = st.relationships ? Object.keys(st.relationships).length : 0;
-        return "你已结识" + rels + "位朋友——'朋友,是人生最珍贵的财富。'";
-      },
-      choices: [
-        {
-          text: "🤝 庆祝友谊", hint: "心情+25,社交XP+25,置_g824Celebrator",
-          apply: function (st) {
-            if (!st) return;
-            st.flags = st.flags || {}; st.flags._g824SocialCd = true; st.flags._g824Celebrator = true;
-            if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 25);
-            if (typeof addSkillXp === "function") { try { addSkillXp("social", 25); } catch(e) {} }
-            if (typeof StateManager !== "undefined") { StateManager.addMessage("🎉 '友谊是人生最珍贵的财富。' 心情+25,社交XP+25。", "success"); }
-          }
-        },
-        {
-          text: "💭 反思社交", hint: "心智+22,置_g824Thinker",
-          apply: function (st) {
-            if (!st) return;
-            st.flags = st.flags || {}; st.flags._g824SocialCd = true; st.flags._g824Thinker = true;
+            st.flags = st.flags || {};
+            st.flags._g824LifeDataDone = true;
+            st.flags._g824GoalSetter = true;
             if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 22);
-            if (typeof StateManager !== "undefined") { StateManager.addMessage("💭 '反思让关系更深刻。' 心智+22。", "info"); }
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("🎯 '有目标,人生才有方向.' 心智+22。", "info");
+            }
+          }
+        }
+      ]
+    },
+    {
+      id: "g824_life_social_v18",
+      phase: "street",
+      icon: "🎉",
+      title: "半百之年，朋友相伴",
+      story: "你发现——每当你走到人生的一个重要节点，总有一些朋友在你身边。他们不一定能帮你解决问题，但他们的陪伴，本身就是一种力量。",
+      conditions: function (st) {
+        if (!st || !st.player || st.gameOver) return false;
+        if (st.flags && st.flags._g824LifeSocialDone) return false;
+        if (!st.relationships) return false;
+        var _age = st.player.age || 18;
+        if (_age < 50) return false;
+        var _friends = 0;
+        for (var _id in st.relationships) {
+          var _r = st.relationships[_id];
+          if (_r && _r.met && (_r.affinity || 0) >= 60) _friends++;
+        }
+        return _friends >= 10;
+      },
+      probability: 0.06,
+      repeatable: false,
+      choices: [
+        {
+          text: "🎉 感谢朋友的陪伴",
+          hint: "心情+30, 社交XP+25, 置_g824FriendCompanion",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._g824LifeSocialDone = true;
+            st.flags._g824FriendCompanion = true;
+            if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 30);
+            grantXp("social", 25);
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("🎉 感谢朋友的陪伴——心情+30, 社交XP+25。人生的路上,有朋友同行,是一种幸运。", "success");
+            }
+          }
+        },
+        {
+          text: "😊 自己走也挺好",
+          hint: "心智+5",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._g824LifeSocialDone = true;
+            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 5);
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("😊 自己走也挺好。心智+5。", "info");
+            }
+          }
+        }
+      ]
+    },
+    {
+      id: "g824_wealth_health_v9",
+      phase: "street",
+      icon: "💰",
+      title: "年过半百，财富策略该调整了",
+      story: "你坐在桌前，看着自己的资产清单。五十五岁了，距离退休还有十年。现在的财富策略，还适合你吗？也许该考虑更稳健的资产配置了。",
+      conditions: function (st) {
+        if (!st || !st.player || st.gameOver) return false;
+        if (st.flags && st.flags._g824WealthHealthDone) return false;
+        if (!st.resources) return false;
+        var _age = st.player.age || 18;
+        if (_age < 55) return false;
+        var _total = (st.resources.cash || 0) + (st.resources.bankBalance || 0);
+        if (st.investment) {
+          var holdings = st.investment.stockHoldings || [];
+          var market = st.investment.stockMarket || {};
+          for (var i = 0; i < holdings.length; i++) {
+            var h = holdings[i];
+            var m = market[h.symbol];
+            if (m && isFinite(m.price) && isFinite(h.shares)) _total += m.price * h.shares;
+          }
+        }
+        return _total >= 600000;
+      },
+      probability: 0.06,
+      repeatable: false,
+      choices: [
+        {
+          text: "💰 调整财富策略",
+          hint: "会计XP+30, 智力+20, 置_g824WealthReady",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._g824WealthHealthDone = true;
+            st.flags._g824WealthReady = true;
+            grantXp("accounting", 30);
+            if (st.player) st.player.intelligence = Math.min(100, (st.player.intelligence || 50) + 20);
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("💰 你重新评估了财富策略——年龄不是负担,是经验的沉淀。会计XP+30, 智力+20。", "success");
+            }
+          }
+        },
+        {
+          text: "😅 维持现状就好",
+          hint: "心智+5",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._g824WealthHealthDone = true;
+            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 5);
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("😅 维持现状就好。心智+5。", "info");
+            }
           }
         }
       ]
     }
   ];
 
-  for (var i = 0; i < EVENTS.length; i++) { RANDOM_EVENTS.push(EVENTS[i]); }
+  for (var i = 0; i < EVENTS.length; i++) {
+    var exists = false;
+    for (var j = 0; j < RANDOM_EVENTS.length; j++) {
+      if (RANDOM_EVENTS[j] && RANDOM_EVENTS[j].id === EVENTS[i].id) { exists = true; break; }
+    }
+    if (!exists) RANDOM_EVENTS.push(EVENTS[i]);
+  }
 })();
+
 ;
 // ==== js/core/domain_g_linkage_r828.js ====
 /*
@@ -372853,6 +373277,204 @@ if (typeof window !== "undefined") {
   // ---- 注入全局 RANDOM_EVENTS ----
   for (var i = 0; i < EVENTS.length; i++) {
     RANDOM_EVENTS.push(EVENTS[i]);
+  }
+})();
+
+;
+// ==== js/core/domain_g_linkage_r824.js ====
+/**
+ * 域G(核心机制/生命周期) 联动增强 R824
+ * 全系统优化·Domain G 第六十七轮循环
+ *
+ * 【联动增强3项】
+ *   1. G→A 人生数据v20 — 核心机制数据转化为数值洞察资产
+ *   2. G→D 人生社交v18 — 人生节点触发NPC社交回响
+ *   3. G→E 财富健康v9 — 生命周期数据反馈为经济洞察
+ *
+ * 设计约束（与历轮 IIFE linkage 文件一致）：
+ *  - IIFE 注入全局 RANDOM_EVENTS，避免改动 cross_system_events.js。
+ *  - 所有 state 访问均 || 防御；使用 Random.fromArray/Random.int 保持种子RNG。
+ */
+(function () {
+  "use strict";
+  if (typeof RANDOM_EVENTS === "undefined" || !RANDOM_EVENTS) return;
+  if (RANDOM_EVENTS._domainGLinkageR824Loaded) return;
+  RANDOM_EVENTS._domainGLinkageR824Loaded = true;
+
+  function grantXp(key, amt) {
+    if (typeof addSkillXp === "function") { try { addSkillXp(key, amt); } catch(e) {} }
+  }
+
+  var EVENTS = [
+    {
+      id: "g824_life_data_v20",
+      phase: "street",
+      icon: "📊",
+      title: "人生数据，是一部编年史",
+      story: "你翻开自己的生存记录——每一天的喜怒哀乐，都变成了数据。这些数字背后，是你在这座城市里走过的每一步。",
+      conditions: function (st) {
+        if (!st || !st.player || st.gameOver) return false;
+        if (st.flags && st.flags._g824LifeDataDone) return false;
+        return st.player.day >= 500 && st.status && st.needs;
+      },
+      probability: 0.05,
+      repeatable: false,
+      choices: [
+        {
+          text: "📈 分析人生轨迹",
+          hint: "智力+24, 心智+22, 置_g824Analyst",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._g824LifeDataDone = true;
+            st.flags._g824Analyst = true;
+            if (st.status && st.needs) {
+              var h = st.status.health || 100;
+              var hap = st.needs.happiness || 50;
+              st.flags._g824QualityScore = Math.min(100, Math.round(h * 0.6 + hap * 0.4));
+            }
+            if (st.player) {
+              st.player.intelligence = Math.min(100, (st.player.intelligence || 50) + 24);
+              st.player.mental = Math.min(100, (st.player.mental || 50) + 22);
+            }
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("📈 '数据是过去的见证,也是未来的指引.' 智力+24, 心智+22。", "success");
+            }
+          }
+        },
+        {
+          text: "🎯 设定新的人生目标",
+          hint: "心智+22, 置_g824GoalSetter",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._g824LifeDataDone = true;
+            st.flags._g824GoalSetter = true;
+            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 22);
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("🎯 '有目标,人生才有方向.' 心智+22。", "info");
+            }
+          }
+        }
+      ]
+    },
+    {
+      id: "g824_life_social_v18",
+      phase: "street",
+      icon: "🎉",
+      title: "半百之年，朋友相伴",
+      story: "你发现——每当你走到人生的一个重要节点，总有一些朋友在你身边。他们不一定能帮你解决问题，但他们的陪伴，本身就是一种力量。",
+      conditions: function (st) {
+        if (!st || !st.player || st.gameOver) return false;
+        if (st.flags && st.flags._g824LifeSocialDone) return false;
+        if (!st.relationships) return false;
+        var _age = st.player.age || 18;
+        if (_age < 50) return false;
+        var _friends = 0;
+        for (var _id in st.relationships) {
+          var _r = st.relationships[_id];
+          if (_r && _r.met && (_r.affinity || 0) >= 60) _friends++;
+        }
+        return _friends >= 10;
+      },
+      probability: 0.06,
+      repeatable: false,
+      choices: [
+        {
+          text: "🎉 感谢朋友的陪伴",
+          hint: "心情+30, 社交XP+25, 置_g824FriendCompanion",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._g824LifeSocialDone = true;
+            st.flags._g824FriendCompanion = true;
+            if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 30);
+            grantXp("social", 25);
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("🎉 感谢朋友的陪伴——心情+30, 社交XP+25。人生的路上,有朋友同行,是一种幸运。", "success");
+            }
+          }
+        },
+        {
+          text: "😊 自己走也挺好",
+          hint: "心智+5",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._g824LifeSocialDone = true;
+            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 5);
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("😊 自己走也挺好。心智+5。", "info");
+            }
+          }
+        }
+      ]
+    },
+    {
+      id: "g824_wealth_health_v9",
+      phase: "street",
+      icon: "💰",
+      title: "年过半百，财富策略该调整了",
+      story: "你坐在桌前，看着自己的资产清单。五十五岁了，距离退休还有十年。现在的财富策略，还适合你吗？也许该考虑更稳健的资产配置了。",
+      conditions: function (st) {
+        if (!st || !st.player || st.gameOver) return false;
+        if (st.flags && st.flags._g824WealthHealthDone) return false;
+        if (!st.resources) return false;
+        var _age = st.player.age || 18;
+        if (_age < 55) return false;
+        var _total = (st.resources.cash || 0) + (st.resources.bankBalance || 0);
+        if (st.investment) {
+          var holdings = st.investment.stockHoldings || [];
+          var market = st.investment.stockMarket || {};
+          for (var i = 0; i < holdings.length; i++) {
+            var h = holdings[i];
+            var m = market[h.symbol];
+            if (m && isFinite(m.price) && isFinite(h.shares)) _total += m.price * h.shares;
+          }
+        }
+        return _total >= 600000;
+      },
+      probability: 0.06,
+      repeatable: false,
+      choices: [
+        {
+          text: "💰 调整财富策略",
+          hint: "会计XP+30, 智力+20, 置_g824WealthReady",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._g824WealthHealthDone = true;
+            st.flags._g824WealthReady = true;
+            grantXp("accounting", 30);
+            if (st.player) st.player.intelligence = Math.min(100, (st.player.intelligence || 50) + 20);
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("💰 你重新评估了财富策略——年龄不是负担,是经验的沉淀。会计XP+30, 智力+20。", "success");
+            }
+          }
+        },
+        {
+          text: "😅 维持现状就好",
+          hint: "心智+5",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._g824WealthHealthDone = true;
+            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 5);
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("😅 维持现状就好。心智+5。", "info");
+            }
+          }
+        }
+      ]
+    }
+  ];
+
+  for (var i = 0; i < EVENTS.length; i++) {
+    var exists = false;
+    for (var j = 0; j < RANDOM_EVENTS.length; j++) {
+      if (RANDOM_EVENTS[j] && RANDOM_EVENTS[j].id === EVENTS[i].id) { exists = true; break; }
+    }
+    if (!exists) RANDOM_EVENTS.push(EVENTS[i]);
   }
 })();
 
@@ -375544,6 +376166,209 @@ if (typeof window !== "undefined") {
   }
 })();
 
+;
+// ==== js/core/domain_f_linkage_r823.js ====
+/**
+ * 域F(UI/UX) 联动增强 R823
+ * 全系统优化·Domain F 第六十九轮循环
+ *
+ * 【联动增强3项】
+ *   1. F→A 数据可视化v9 — UI数据消费转化为数值洞察资产
+ *   2. F→B 事件记忆墙v9 — UI事件历史触发叙事回响
+ *   3. F→E 财务仪表盘v9 — UI财务数据反馈为投资洞察
+ *
+ * 设计约束（与历轮 IIFE linkage 文件一致）：
+ *  - IIFE 注入全局 RANDOM_EVENTS，避免改动 cross_system_events.js。
+ *  - 所有 state 访问均 || 防御；使用 Random.fromArray/Random.int 保持种子RNG。
+ */
+(function () {
+  "use strict";
+  if (typeof RANDOM_EVENTS === "undefined" || !RANDOM_EVENTS) return;
+  if (RANDOM_EVENTS._domainFLinkageR823Loaded) return;
+  RANDOM_EVENTS._domainFLinkageR823Loaded = true;
+
+  // ---- 本地助手 ----
+  function grantXp(key, amt) {
+    if (typeof addSkillXp === "function") { try { addSkillXp(key, amt); } catch(e) {} }
+  }
+
+  var EVENTS = [
+    // ========================================================================
+    // 联动增强1: F→A 数据可视化v9 — UI数据消费转化为数值洞察资产
+    // 设计意图：玩家在UI中查看数据的行为应产生可量化的洞察资产。
+    // 本事件在玩家查看过多次数据面板后触发，给予"数据可视化v9"标记。
+    // 心理学：认知负荷 — 数据可视化降低信息处理成本，提升决策质量。
+    // ========================================================================
+    {
+      id: "f823_data_viz_v9",
+      phase: "street",
+      icon: "📊",
+      title: "数据可视化，让数字会说话",
+      story: "你盯着各种数据面板——价格走势、资产分布、技能雷达……\n\n这些图表把枯燥的数字变成了直观的图形。你发现，当数据变得可视化，决策也变得更容易了。",
+      conditions: function (st) {
+        if (!st || !st.player || st.gameOver) return false;
+        if (st.flags && st.flags._f823DataVizDone) return false;
+        // 玩家至少触发了3次数据面板查看（通过检查是否有足够多的知情决策）
+        return st.player.day >= 100;
+      },
+      probability: 0.05,
+      repeatable: false,
+      choices: [
+        {
+          text: "📊 深入分析可视化数据",
+          hint: "智力+22, 会计XP+25, 置_f823DataVizInsight",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._f823DataVizDone = true;
+            st.flags._f823DataVizInsight = true;
+            if (st.player) st.player.intelligence = Math.min(100, (st.player.intelligence || 50) + 22);
+            grantXp("accounting", 25);
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("📊 数据可视化分析完成——数字会说话,但图表讲得更清楚。智力+22, 会计XP+25。", "success");
+            }
+          }
+        },
+        {
+          text: "📝 简单记下关键数字",
+          hint: "心智+8",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._f823DataVizDone = true;
+            if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 8);
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("📝 记下了几个关键数字。心智+8。", "info");
+            }
+          }
+        }
+      ]
+    },
+
+    // ========================================================================
+    // 联动增强2: F→B 事件记忆墙v9 — UI事件历史触发叙事回响
+    // 设计意图：玩家在UI中回顾事件历史时，应触发叙事回响。
+    // 本事件在玩家经历过足够多的事件后触发，唤醒记忆墙中的故事。
+    // 心理学：峰终定律 — 汇聚的记忆墙上每一条记录都是人生故事的锚点。
+    // ========================================================================
+    {
+      id: "f823_event_memory_v9",
+      phase: "street",
+      icon: "📖",
+      title: "记忆墙上的故事",
+      story: "你在事件日志里翻看过去的记录——\n\n那些曾经让你开心、难过、紧张、兴奋的瞬间，现在都变成了文字，静静地躺在记忆墙上。每一段文字背后，都是一个故事。",
+      conditions: function (st) {
+        if (!st || !st.player || st.gameOver) return false;
+        if (st.flags && st.flags._f823EventMemoryDone) return false;
+        // 玩家至少经历过一些事件 (通过检查 day 推断)
+        return st.player.day >= 150;
+      },
+      probability: 0.06,
+      repeatable: false,
+      choices: [
+        {
+          text: "📖 翻阅记忆墙，写下感悟",
+          hint: "心智+25, 魅力+15, 置_f823EventMemory",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._f823EventMemoryDone = true;
+            st.flags._f823EventMemory = true;
+            if (st.player) {
+              st.player.mental = Math.min(100, (st.player.mental || 50) + 25);
+              st.player.charm = Math.min(100, (st.player.charm || 50) + 15);
+            }
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("📖 记忆墙上每一行字,都是你走过的路。心智+25, 魅力+15。", "success");
+            }
+          }
+        },
+        {
+          text: "😊 回味一下就好",
+          hint: "心情+8",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._f823EventMemoryDone = true;
+            if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 8);
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("😊 过去的就让它过去吧。心情+8。", "info");
+            }
+          }
+        }
+      ]
+    },
+
+    // ========================================================================
+    // 联动增强3: F→E 财务仪表盘v9 — UI财务数据反馈为投资洞察
+    // 设计意图：玩家在财务仪表盘中查看数据，应产生投资洞察。
+    // 本事件在玩家查看过财务数据后触发，给予"财务仪表盘v9"标记。
+    // 心理学：社会比较 — 看到自己的财务数据可视化，激发更强的财务规划意识。
+    // ========================================================================
+    {
+      id: "f823_finance_dashboard_v9",
+      phase: "street",
+      icon: "💰",
+      title: "财务仪表盘，看清你的钱袋子",
+      story: "你打开财务仪表盘——收入、支出、储蓄、投资……\n\n一张图看清你所有的钱。你发现，当财务数据以可视化的方式呈现时，那些模糊的焦虑变成了清晰的数字，反而没那么可怕了。",
+      conditions: function (st) {
+        if (!st || !st.player || st.gameOver) return false;
+        if (st.flags && st.flags._f823FinanceDashboardDone) return false;
+        if (!st.resources) return false;
+        var cash = (st.resources.cash || 0) + (st.resources.bankBalance || 0);
+        return cash >= 50000 && st.player.day >= 80;
+      },
+      probability: 0.06,
+      repeatable: false,
+      choices: [
+        {
+          text: "💰 深度分析财务数据",
+          hint: "会计XP+30, 智力+18, 置_f823FinanceDashboard",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._f823FinanceDashboardDone = true;
+            st.flags._f823FinanceDashboard = true;
+            // 计算收支比率
+            if (st.resources) {
+              var income = st.flags._dailyIncome || 0;
+              var expense = st.flags._dailyExpense || 0;
+              st.flags._f823SaveRatio = (income > 0 && isFinite(income) && isFinite(expense))
+                ? Math.round((1 - expense / income) * 100) : 0;
+            }
+            grantXp("accounting", 30);
+            if (st.player) st.player.intelligence = Math.min(100, (st.player.intelligence || 50) + 18);
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("💰 财务仪表盘分析完成——储蓄率约" + (st.flags._f823SaveRatio || 0) + "%。会计XP+30, 智力+18。", "success");
+            }
+          }
+        },
+        {
+          text: "😅 知道有钱就行",
+          hint: "心情+5",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._f823FinanceDashboardDone = true;
+            if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 5);
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("😅 有钱就有底气。心情+5。", "info");
+            }
+          }
+        }
+      ]
+    }
+  ];
+
+  // ---- 注入全局 RANDOM_EVENTS（去重） ----
+  for (var i = 0; i < EVENTS.length; i++) {
+    var exists = false;
+    for (var j = 0; j < RANDOM_EVENTS.length; j++) {
+      if (RANDOM_EVENTS[j] && RANDOM_EVENTS[j].id === EVENTS[i].id) { exists = true; break; }
+    }
+    if (!exists) RANDOM_EVENTS.push(EVENTS[i]);
+  }
+})();
 ;
 // ==== js/core/domain_d_linkage_events_r757b.js ====
 /**

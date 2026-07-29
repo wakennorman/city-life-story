@@ -75,8 +75,13 @@
       _isChainEvent: false,
       icon: "🔙",
       title: "那些选择，都算数",
-      story:
-        "今天整理旧物，翻出了你刚来这座城市时做过的一些事。{flagCount}件。那些当时觉得只是随便选选的决定——{flagsList}——原来都在悄悄改变你的路。",
+      // [全系统自洽修复] 域G R871 A类: story含{flagCount}/{flagsList}占位符但无text()→占位符被剥离致乱码,补text()动态叙述
+      story: "那些选择，都算数",
+      text: function (st) {
+        var consumed = getConsumedFlagNames(st);
+        var flagStr = consumed.slice(0, 5).join("、");
+        return "今天整理旧物，翻出了你刚来这座城市时做过的一些事。" + consumed.length + "件。那些当时觉得只是随便选选的决定——" + (flagStr || "那些过往") + "——原来都在悄悄改变你的路。";
+      },
       triggers: { minDay: 90, excludeFlags: ["_scenarioEchoSeen"] },
       conditions: function (st) {
         if (st.gameOver) return false;
@@ -125,8 +130,12 @@
       _isChainEvent: false,
       icon: "💼",
       title: "创业的那段日子",
-      story:
-        "你想起自己当初{dir}的方向，还咨询过律师。现在想起来，那条路虽然没走完，但每一步都让你多了些见识。",
+      // [全系统自洽修复] 域G R871 A类: story含{dir}占位符但无text()→占位符被剥离致乱码,补text()动态叙述
+      story: "创业的那段日子",
+      text: function (st) {
+        var dir = (st.flags && st.flags._startupDirection) ? st.flags._startupDirection : "创业";
+        return "你想起自己当初" + dir + "的方向，还咨询过律师。现在想起来，那条路虽然没走完，但每一步都让你多了些见识。";
+      },
       triggers: { minDay: 60, excludeFlags: ["_startupStorySeen"] },
       conditions: function (st) {
         if (st.gameOver) return false;

@@ -16,7 +16,12 @@
     {
       id: "g786_life_stage_corp", phase: "corporate", _isChainEvent: false, icon: "🏢",
       title: "生命阶段与公司",
-      story: "不同年纪，做公司的思路也不一样——{desc}",
+      // [全系统自洽修复] 域G R871 A类: story含{desc}占位符但无text()→补text()动态叙述
+      story: "生命阶段与公司",
+      text: function (st) {
+        var _age = (st.player && st.player.age) || 20;
+        return "不同年纪，做公司的思路也不一样——你今年" + _age + "岁。年轻创业靠冲劲，壮年创业靠资源，中年创业靠经验。每个阶段都有独特的优势。";
+      },
       triggers: { minDay: 680, interval: 700, maxRepeats: 3, excludeFlags: ["_g786CorpCd"] },
       conditions: function (st) {
         if (!st || st.gameOver) return false;
@@ -65,7 +70,15 @@
     {
       id: "g786_life_wealth_milestone", phase: "street", _isChainEvent: false, icon: "🏆",
       title: "人生财富里程碑",
-      story: "人生过半，财富几何？——{desc}",
+      // [全系统自洽修复] 域G R871 A类: story含{desc}占位符但无text()→补text()动态叙述
+      story: "人生财富里程碑",
+      text: function (st) {
+        var _age = (st.player && st.player.age) || 20;
+        var _cash = (st.resources && st.resources.cash) || 0;
+        var _bank = (st.resources && st.resources.bankBalance) || 0;
+        var _total = _cash + _bank;
+        return "人生过半，财富几何？——你今年" + _age + "岁，总资产¥" + _total.toLocaleString() + "。数字是过去的积累,也是未来的底气。";
+      },
       triggers: { minDay: 460, interval: 600, maxRepeats: 3, excludeFlags: ["_g786WealthCd"] },
       conditions: function (st) {
         if (!st || st.gameOver) return false;
@@ -125,7 +138,15 @@
     {
       id: "g786_age_skill_rebalance", phase: "street", _isChainEvent: false, icon: "🔄",
       title: "技能再平衡",
-      story: "年龄不是学习的障碍——{desc}",
+      // [全系统自洽修复] 域G R871 A类: story含{desc}占位符但无text()→补text()动态叙述
+      story: "技能再平衡",
+      text: function (st) {
+        var _age = (st.player && st.player.age) || 20;
+        var _topSkill = "";
+        var _topLv = 0;
+        if (st.skills) { for (var _sk in st.skills) { var _sl = st.skills[_sk]; if (_sl && (_sl.level || 0) > _topLv) { _topLv = _sl.level || 0; _topSkill = _sk; } } }
+        return "年龄不是学习的障碍——你今年" + _age + "岁，最高技能" + (_topSkill || "无") + "(Lv." + _topLv + ")。学习是一辈子的事,什么时候开始都不晚。";
+      },
       triggers: { minDay: 580, interval: 600, maxRepeats: 3, excludeFlags: ["_g786SkillCd"] },
       conditions: function (st) {
         if (!st || st.gameOver) return false;

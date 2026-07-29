@@ -817,6 +817,10 @@ function showEventModal(evt) {
       }
       // [全系统自洽修复] 域B 联动增强#1 B→G: 记录最近事件(最多3个)，供UI展示和NPC话题引用
       state.flags._recentEvents = state.flags._recentEvents || [];
+      // [R871 域B A类#2]: 调用事件行为追踪(原函数全库零调用→死代码)
+      if (typeof trackEventBehavior === "function") {
+        trackEventBehavior(state, evt.id, choice && choice.id);
+      }
       state.flags._recentEvents.unshift({
         id: evt.id,
         title: evt.title || evt.id,
@@ -835,6 +839,10 @@ function showEventModal(evt) {
           if (state.flags._negativeEventStreak >= 3 && state.status) {
             state.status.health = Math.max(0, (state.status.health || 100) - 1);
             state.flags._negativeEventStreak = 0;
+          }
+          // [R871 域B A类#1]: 调用逆境心理韧性(原函数全库零调用→死代码)
+          if (typeof applyAdversityResilience === "function") {
+            applyAdversityResilience(state, "crime");
           }
         } else if (evt.id && evt.id.indexOf("positive_") === 0) {
           if (!state.flags) state.flags = {};
