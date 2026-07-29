@@ -874,6 +874,11 @@ function renderSocialNetworkTab(state, parent) {
   html += "<p>🏅 等级：" + levelName + "</p>";
   html += "<p>💰 日收入：¥" + income + "</p>";
   if (sn.舆论危机 && sn.舆论危机.active) {
+  html += '<div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap;">';
+  // [全系统自洽修复] 域F: 修复并行窗口引入的字符串转义错误(单引号嵌套)
+  html += '<button class="btn btn-sm" onclick="var _s=StateManager.getState();window.postToMoments(_s,\'今天天气不错\',null,\'朋友\');renderAll();">📝 发朋友圈</button>';
+  html += '<button class="btn btn-sm" onclick="window.refreshWeiboHotlist(StateManager.getState());renderAll();">🔄 刷新热搜</button>';
+  html += '</div>';
     html +=
       '<p style="color:var(--danger);">⚠️ 舆论危机中（严重度' +
       sn.舆论危机.severity +
