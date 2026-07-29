@@ -1859,3 +1859,20 @@ function getEventStatsSummary(state) {
     chain: _counts.chain || 0,
   };
 }
+
+// [R811 域B 联动增强 B→A]: 事件经济影响追踪 — 记录事件对现金/资源的影响统计
+function trackEventEconomicImpact(state, evtId, cashChange) {
+  if (!state || !state.flags || !evtId) return;
+  if (!state.flags._eventEconomicImpact) state.flags._eventEconomicImpact = {};
+  if (!state.flags._eventEconomicImpact[evtId]) state.flags._eventEconomicImpact[evtId] = 0;
+  state.flags._eventEconomicImpact[evtId] += cashChange || 0;
+}
+
+// [R811 域B 联动增强 B→E]: 高风险事件影响投资风险偏好 — 经历风险事件后投资更谨慎
+function getEventRiskModifier(state) {
+  if (!state || !state.stats || !state.stats.eventCounts) return 1.0;
+  var _riskCount = (state.stats.eventCounts.risk || 0) + (state.stats.eventCounts.moral || 0);
+  if (_riskCount >= 10) return 0.9;
+  if (_riskCount >= 5) return 0.95;
+  return 1.0;
+}
