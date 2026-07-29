@@ -1729,6 +1729,7 @@ function checkInvestmentMilestones(state, inv) {
     if (state.needs) {
       state.needs.happiness = Math.min(100, (state.needs.happiness || 50) + 3);
     }
+  }
 
     // [全系统自洽修复] 域E R679 联动增强(E→D): 投资成功→社交圈正面影响(≥¥100k时)
     if (state.relationships && milestone.level >= 100000) {
@@ -1740,8 +1741,17 @@ function checkInvestmentMilestones(state, inv) {
         }
       }
     }
+    // [R817 域E E→F 联动增强]: 投资组合多元化评分
+    if (state.flags) {
+      state.flags._portfolioDiversity = (holdings.length > 0 ? 1 : 0) + (props.length > 0 ? 1 : 0) + (inv.btcHoldings > 0 ? 1 : 0);
+      state.flags._portfolioTotalValue = totalValue;
+    }
+    // [R817 域E E→G 联动增强]: 持续盈利健康加成
+    if (totalValue >= 100000 && state.status && state.flags && !state.flags._investHealthBonus) {
+      state.flags._investHealthBonus = true;
+      state.status.health = Math.min(100, (state.status.health || 100) + 3);
+    }
   }
-}
 
 function buyInvStock(symbol, shares) {
   // 根据资产类别区分交易规则
