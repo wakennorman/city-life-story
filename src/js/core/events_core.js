@@ -726,7 +726,8 @@ function showEventModal(evt) {
             if (_dyn && typeof _dyn === "string") return _dyn;
           } catch (e) { /* 动态文本失败回退story */ }
         }
-        return evt.story || evt.desc || "";
+        // [全系统自洽修复] 域B R785b A类#1: story兜底路径无占位符剥离——全库28个活事件(story含{xxx}且无text())正文原样泄漏"{desc}"类占位符给玩家；复用R722b tooltip同款正则单点剥离(仅剥{纯字母}占位符,不伤正文花括号语义)
+        return (evt.story || evt.desc || "").replace(/\s*(——|—|-)?\s*\{[a-zA-Z]+\}/g, "");
       })()}</p>
       <div class="event-choices">${choicesHtml}</div>
       <div style="text-align:center;margin-top:8px;font-size:10px;color:var(--accent);">

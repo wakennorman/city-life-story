@@ -19,7 +19,7 @@
     {
       id: "h783_corp_intelligence_v11", phase: "corporate", _isChainEvent: false, icon: "📊",
       title: "经营者智慧",
-      story: "公司的数据正在讲述经营故事——{desc}",
+      story: "公司的数据正在讲述经营故事——数据驱动决策,才能走得更远。",
       triggers: { minDay: 1000, interval: 1100, maxRepeats: 3, excludeFlags: ["_h783IntelCd"] },
       conditions: function (st) {
         if (!st || st.gameOver) return false;
@@ -57,19 +57,19 @@
       ],
       text: function (st) {
         if (!st) return null;
-        var val = st.startup && st.startup.company && st.startup.company.valuation ? Math.round(st.startup.company.valuation) : 0;
+        var val = st.startup && st.startup.company && st.startup.company.valuation && isFinite(st.startup.company.valuation) ? Math.round(st.startup.company.valuation) : 0;
         return "公司估值¥" + val.toLocaleString() + "——'这些数据,就是你的经营智慧。'";
       }
     },
     {
       id: "h783_corp_legend_v12", phase: "corporate", _isChainEvent: false, icon: "🏆",
       title: "公司传奇",
-      story: "你的公司正在书写传奇——{desc}",
+      story: "你的公司正在书写传奇——每一个里程碑,都值得被铭记。",
       triggers: { minDay: 1200, interval: 1300, maxRepeats: 3, excludeFlags: ["_h783LegendCd"] },
       conditions: function (st) {
         if (!st || st.gameOver) return false;
         if (st.flags && st.flags._h783LegendCd) return false;
-        return hasCompany(st) && st.startup.company.valuation >= 1000000000 && st.player && st.player.day >= 1200;
+        return hasCompany(st) && st.player && st.player.day >= 900 && st.startup.company.valuation && isFinite(st.startup.company.valuation) && st.startup.company.valuation >= 1000000;
       },
       choices: [
         {
@@ -104,14 +104,14 @@
       ],
       text: function (st) {
         if (!st) return null;
-        var val = st.startup && st.startup.company && st.startup.company.valuation ? Math.round(st.startup.company.valuation) : 0;
+        var val = st.startup && st.startup.company && st.startup.company.valuation && isFinite(st.startup.company.valuation) ? Math.round(st.startup.company.valuation) : 0;
         return "公司估值¥" + val.toLocaleString() + "——'这是一个值得讲述的故事。'";
       }
     },
     {
       id: "h783_founder_wellbeing_v11", phase: "corporate", _isChainEvent: false, icon: "💚",
       title: "创始人幸福感",
-      story: "经营公司不应以健康为代价——{desc}",
+      story: "经营公司不应以健康为代价——创业是马拉松,健康才是最大的资产。",
       triggers: { minDay: 900, interval: 1000, maxRepeats: 4, excludeFlags: ["_h783WellbeingCd"] },
       conditions: function (st) {
         if (!st || st.gameOver) return false;
@@ -149,8 +149,8 @@
       ],
       text: function (st) {
         if (!st) return null;
-        var health = st.status && st.status.health ? Math.round(st.status.health) : 100;
-        var fatigue = st.needs && st.needs.fatigue ? Math.round(st.needs.fatigue) : 0;
+        var health = st.status && isFinite(st.status.health) ? Math.round(st.status.health) : 100;
+        var fatigue = st.needs && isFinite(st.needs.fatigue) ? Math.round(st.needs.fatigue) : 0;
         return "健康" + health + "%,疲劳" + fatigue + "——'创始人健康,才是最大的资产。'";
       }
     }

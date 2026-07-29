@@ -37,6 +37,7 @@
           hint: "验证消息",
           apply: (st) => {
             _guardNeeds(st);
+            if (!st.flags) st.flags = {};
             st.flags._insiderRumorSeen = true;
             st.needs.fatigue = Math.min(100, st.needs.fatigue + 5);
             if ((st.resources.cash || 0) >= 100) { // [全系统自洽修复] 域H A类: cash NaN守卫
@@ -95,6 +96,7 @@
           hint: "专注本职",
           apply: (st) => {
             _guardNeeds(st);
+            if (!st.flags) st.flags = {};
             st.flags._insiderRumorSeen = true;
             // [全系统自洽修复] 域H R512 P1: 原 (st.player.corporate||{}).kpi=... 赋值到临时对象→静默丢失
             if (!st.player.corporate) st.player.corporate = {};
