@@ -1638,6 +1638,34 @@ function renderCareerJobs(state, parent) {
     }
   } catch (e) {}
 
+  // [R817 域C C→E 联动增强]: 技能投资回报概览
+  try {
+    if (state.skills) {
+      var _acctLv = state.skills.accounting ? state.skills.accounting.level || 0 : 0;
+      var _mgmtLv = state.skills.management ? state.skills.management.level || 0 : 0;
+      if (_acctLv >= 20 || _mgmtLv >= 20) {
+        var _investBonus = Math.floor((_acctLv + _mgmtLv) / 20);
+        html += '<div class="section" style="margin-top:8px;"><h4>📈 技能投资回报</h4>';
+        html += '<div style="font-size:11px;padding:8px;background:var(--bg-secondary);border-radius:6px;">';
+        html += '会计Lv.' + _acctLv + ' + 管理Lv.' + _mgmtLv + ' → 投资分析加成+' + _investBonus;
+        html += '</div></div>';
+      }
+    }
+  } catch (e) {}
+
+  // [R817 域C C→B 联动增强]: 职业叙事里程碑
+  try {
+    if (state.career && state.career.currentJob && state.flags) {
+      var _wd = state.career.currentJob.workDays || 0;
+      if (_wd >= 365 && !state.flags._careerYearNarrative) {
+        state.flags._careerYearNarrative = true;
+        html += '<div class="section" style="margin-top:8px;"><div style="font-size:11px;padding:6px 10px;background:rgba(76,175,80,0.08);border:1px solid rgba(76,175,80,0.2);border-radius:6px;color:var(--success);">';
+        html += '🎉 你在当前岗位工作满一年了！这一年的经历让你成长了许多。';
+        html += '</div></div>';
+      }
+    }
+  } catch (e) {}
+
   parent.innerHTML = html;
 }
 
@@ -2332,6 +2360,34 @@ function renderCareerOverview(state, parent) {
       if (_consecutiveWork >= 7 && state.status) {
         html += '<div class="section" style="margin-top:8px;"><div style="font-size:11px;padding:6px 10px;background:rgba(255,152,0,0.08);border:1px solid rgba(255,152,0,0.2);border-radius:6px;color:var(--warning);">';
         html += '⚠️ 已连续工作' + _consecutiveWork + '天未休息，职业倦怠风险较高！建议适当放松。';
+        html += '</div></div>';
+      }
+    }
+  } catch (e) {}
+
+  // [R817 域C C→E 联动增强]: 技能投资回报概览
+  try {
+    if (state.skills) {
+      var _acctLv = state.skills.accounting ? state.skills.accounting.level || 0 : 0;
+      var _mgmtLv = state.skills.management ? state.skills.management.level || 0 : 0;
+      if (_acctLv >= 20 || _mgmtLv >= 20) {
+        var _investBonus = Math.floor((_acctLv + _mgmtLv) / 20);
+        html += '<div class="section" style="margin-top:8px;"><h4>📈 技能投资回报</h4>';
+        html += '<div style="font-size:11px;padding:8px;background:var(--bg-secondary);border-radius:6px;">';
+        html += '会计Lv.' + _acctLv + ' + 管理Lv.' + _mgmtLv + ' → 投资分析加成+' + _investBonus;
+        html += '</div></div>';
+      }
+    }
+  } catch (e) {}
+
+  // [R817 域C C→B 联动增强]: 职业叙事里程碑
+  try {
+    if (state.career && state.career.currentJob && state.flags) {
+      var _wd = state.career.currentJob.workDays || 0;
+      if (_wd >= 365 && !state.flags._careerYearNarrative) {
+        state.flags._careerYearNarrative = true;
+        html += '<div class="section" style="margin-top:8px;"><div style="font-size:11px;padding:6px 10px;background:rgba(76,175,80,0.08);border:1px solid rgba(76,175,80,0.2);border-radius:6px;color:var(--success);">';
+        html += '🎉 你在当前岗位工作满一年了！这一年的经历让你成长了许多。';
         html += '</div></div>';
       }
     }
