@@ -3796,6 +3796,8 @@ function renderTradeTab(state, parent) {
 
 // ====== Inventory Tab ======
 function renderInventoryTab(state, parent) {
+  // [R883 域F A类#1]: state.player 守卫
+  if (!state || !state.player) { parent.innerHTML = '<p style="color:var(--text-muted);text-align:center;">🎒 加载中...</p>'; return; }
   parent.innerHTML = "";
   const div = document.createElement("div");
   // 计算负重信息
