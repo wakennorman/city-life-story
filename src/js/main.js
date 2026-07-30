@@ -5772,3 +5772,15 @@ if (typeof registerNewsEventsToPool === "function") registerNewsEventsToPool();
 // [R559] 域G
 // [R583] 域G
 // [R607] 域G
+
+// [R901 域G A类#1]: 导出函数到window
+if (typeof window !== "undefined") {
+  window.consumeAP = consumeAP;
+  window.getNpcContextDialogue = getNpcContextDialogue;
+  window.checkJobRequirements = checkJobRequirements;
+  window.estimateJobPay = estimateJobPay;
+  window.estimateJobPayRange = estimateJobPayRange;
+  window.estimateJobPayDetailed = estimateJobPayDetailed;
+  window.startNewGame = startNewGame;
+  window.showWelcome = showWelcome;
+}
