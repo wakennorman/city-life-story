@@ -76,6 +76,8 @@ function getNpcContextDialogue(npcId, state) {
 /** 检查工作需求是否满足 */
 function checkJobRequirements(job, state) {
   const reqs = job.requirements || {};
+  // [R884 域G A类#1]: state.player/skills 守卫
+  if (!state || !state.player || !state.skills) return "游戏状态异常";
   const p = state.player;
   const s = state.skills;
 
