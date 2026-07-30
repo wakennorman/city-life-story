@@ -1,0 +1,23 @@
+/**
+ * 域C(职业/成长) 联动增强 R858 — C→A技能市场数据v12 / C→E职业技能→投资v12 / C→G职业健康→生命质量v11
+ */
+(function(){"use strict";if(typeof RANDOM_EVENTS==="undefined"||!RANDOM_EVENTS)return;if(RANDOM_EVENTS._domainCLinkageR858Loaded)return;RANDOM_EVENTS._domainCLinkageR858Loaded=true;
+function gx(k,a){if(typeof addSkillXp==="function"){try{addSkillXp(k,a)}catch(e){}}}
+var E=[
+{id:"c858_skill_market_v12",phase:"street",icon:"📊",title:"技能市场价值",story:"你打开行业薪酬报告——发现自己的技能组合，在市场上有明确的定价。",
+conditions:function(st){if(!st||!st.player||st.gameOver)return false;if(st.flags&&st.flags._c858SkillMarketDone)return false;if(!st.skills)return false;var _c=0;for(var _sk in st.skills){if(st.skills[_sk]&&(st.skills[_sk].level||0)>=80)_c++}return _c>=5&&st.player.day>=400},
+probability:0.05,repeatable:false,
+choices:[{text:"📊 评估技能市场价值",hint:"智力+30,会计XP+35,置_c858SkillMarketValue",apply:function(st){if(!st)return;st.flags=st.flags||{};st.flags._c858SkillMarketDone=true;st.flags._c858SkillMarketValue=true;var _t=0,_c=0;for(var _sk in st.skills){if(st.skills[_sk]&&(st.skills[_sk].level||0)>0){_t+=st.skills[_sk].level;_c++}}st.flags._c858AvgSkillLevel=_c>0?Math.round(_t/_c):0;if(st.player)st.player.intelligence=Math.min(100,(st.player.intelligence||50)+30);gx("accounting",35);if(typeof StateManager!=="undefined")StateManager.addMessage("📊 技能市场价值评估完成——平均Lv."+(st.flags._c858AvgSkillLevel||0)+"。智力+30,会计XP+35。","success")}},
+{text:"😅 技能够用就行",hint:"心智+5",apply:function(st){if(!st)return;st.flags=st.flags||{};st.flags._c858SkillMarketDone=true;if(st.player)st.player.mental=Math.min(100,(st.player.mental||50)+5);if(typeof StateManager!=="undefined")StateManager.addMessage("😅 技能够用就行。心智+5。","info")}}]},
+{id:"c858_career_invest_v12",phase:"street",icon:"💼",title:"职业技能，也是投资资本",story:"你发现——职场上学到的技能，在投资场上也能用。",
+conditions:function(st){if(!st||!st.player||st.gameOver)return false;if(st.flags&&st.flags._c858CareerInvestDone)return false;if(!st.skills)return false;return((st.skills.management&&st.skills.management.level)||0)>=60||((st.skills.accounting&&st.skills.accounting.level)||0)>=60)&&st.player.day>=450},
+probability:0.06,repeatable:false,
+choices:[{text:"💼 将职业技能用于投资",hint:"智力+28,管理XP+35,置_c858CareerInvestor",apply:function(st){if(!st)return;st.flags=st.flags||{};st.flags._c858CareerInvestDone=true;st.flags._c858CareerInvestor=true;if(st.player)st.player.intelligence=Math.min(100,(st.player.intelligence||50)+28);gx("management",35);if(typeof StateManager!=="undefined")StateManager.addMessage("💼 你将职业技能用于投资分析——智力+28,管理XP+35。","success")}},
+{text:"😅 职场和投资是两回事",hint:"心智+3",apply:function(st){if(!st)return;st.flags=st.flags||{};st.flags._c858CareerInvestDone=true;if(st.player)st.player.mental=Math.min(100,(st.player.mental||50)+3);if(typeof StateManager!=="undefined")StateManager.addMessage("😅 职场和投资是两回事。心智+3。","info")}}]},
+{id:"c858_career_health_v11",phase:"street",icon:"💪",title:"职业倦怠，身体在报警",story:"连续加班、高压KPI……你的身体在发出警告。",
+conditions:function(st){if(!st||!st.player||st.gameOver)return false;if(st.flags&&st.flags._c858CareerHealthDone)return false;if(!st.needs||!st.status)return false;return(st.needs.fatigue||0)>=90&&(st.status.health||100)<=20&&st.player.day>=300},
+probability:0.08,repeatable:false,
+choices:[{text:"💪 调整工作节奏，关注健康",hint:"疲劳-40,健康+30,心智+25,置_c858HealthFirst",apply:function(st){if(!st)return;st.flags=st.flags||{};st.flags._c858CareerHealthDone=true;st.flags._c858HealthFirst=true;if(st.needs)st.needs.fatigue=Math.max(0,(st.needs.fatigue||0)-40);if(st.status)st.status.health=Math.min(100,(st.status.health||50)+30);if(st.player)st.player.mental=Math.min(100,(st.player.mental||50)+25);if(typeof StateManager!=="undefined")StateManager.addMessage("💪 你调整了工作节奏——疲劳-40,健康+30,心智+25。","success")}},
+{text:"🔥 再坚持一下",hint:"疲劳+25,健康-20,心智+8,置_c858BurnoutRisk",apply:function(st){if(!st)return;st.flags=st.flags||{};st.flags._c858CareerHealthDone=true;st.flags._c858BurnoutRisk=true;if(st.needs)st.needs.fatigue=Math.min(100,(st.needs.fatigue||0)+25);if(st.status)st.status.health=Math.max(0,(st.status.health||50)-20);if(st.player)st.player.mental=Math.min(100,(st.player.mental||50)+8);if(typeof StateManager!=="undefined")StateManager.addMessage("🔥 你选择再坚持一下——疲劳+25,健康-20,心智+8。注意身体！","warning")}}]}
+];
+for(var i=0;i<E.length;i++){var exists=false;for(var j=0;j<RANDOM_EVENTS.length;j++){if(RANDOM_EVENTS[j]&&RANDOM_EVENTS[j].id===E[i].id){exists=true;break}}if(!exists)RANDOM_EVENTS.push(E[i])}})();
