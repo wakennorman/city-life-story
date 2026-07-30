@@ -988,3 +988,9 @@ if (typeof document !== "undefined") {
 window._navEnsureInit = function () {
   initTabNavigation();
 };
+
+// [R891 域F A类#2]: 导出导航函数到window
+if (typeof window !== "undefined") {
+  window.navigateTo = navigateTo;
+  window.NAV_TYPES = NAV_TYPES;
+}

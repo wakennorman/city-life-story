@@ -2062,3 +2062,12 @@ if (typeof window !== "undefined") {
 // [R398] 域F
 // [R470] 域F
 // [R542] 域F
+
+// [R891 域F A类#1]: 导出函数到window
+if (typeof window !== "undefined") {
+  window.startTutorial = startTutorial;
+  window.isTutorialDone = isTutorialDone;
+  window.markTutorialDone = markTutorialDone;
+  window.resetTutorial = resetTutorial;
+  window.showTutorialStep = showTutorialStep;
+}
