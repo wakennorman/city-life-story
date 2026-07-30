@@ -3922,6 +3922,12 @@ function getAvailableActions(state) {
                 100,
                 (state.player.physique || 0) + cert.effects.physique,
               );
+            // [全系统自洽修复] 域A R903b A类#1: driver_license effects.agility:1 全库零消费者(主应用开关仅处理physique,无cert.effects.agility分支)→驾照承诺的+1敏捷静默失效;agility为真实玩家属性(req.agility等门控消费),此处补齐
+            if (cert.effects.agility)
+              state.player.agility = Math.min(
+                100,
+                (state.player.agility || 0) + cert.effects.agility,
+              );
             if (cert.effects.repair) addSkillXp("repair", cert.effects.repair);
             if (cert.effects.medicineXp)
               addSkillXp("medicine", cert.effects.medicineXp);

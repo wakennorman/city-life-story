@@ -195,10 +195,41 @@ const DAILY_PIPELINE = [
           "warning",
         );
       }
+      // [全系统自洽修复] 域A R903b A类#2/#3: 物品 effects.fatigue_reduction(自行车:10)/comfort(厚棉衣:5) 全库零消费者→装备的数值承诺静默失效;此处接入每日恢复(库存+已装备双源,与R306 injuryReduction同构)
+      var _itemFatigueCut = 0, _itemComfort = 0;
+      try {
+        if (typeof getItemById === "function") {
+          var _inv = (state.inventory && state.inventory.items) || [];
+          for (var _ii = 0; _ii < _inv.length; _ii++) {
+            var _id = _inv[_ii] && _inv[_ii].id;
+            var _d = _id ? getItemById(_id) : null;
+            if (_d && _d.effects) {
+              if (isFinite(_d.effects.fatigue_reduction)) _itemFatigueCut += _d.effects.fatigue_reduction;
+              if (isFinite(_d.effects.comfort)) _itemComfort += _d.effects.comfort;
+            }
+          }
+          if (typeof getEquippedInstance === "function") {
+            var _slots = ["head", "body", "feet", "hand", "accessory"];
+            for (var _si = 0; _si < _slots.length; _si++) {
+              var _inst = getEquippedInstance(state, _slots[_si]);
+              var _ed = _inst && _inst.itemId ? getItemById(_inst.itemId) : null;
+              if (_ed && _ed.effects) {
+                if (isFinite(_ed.effects.fatigue_reduction)) _itemFatigueCut += _ed.effects.fatigue_reduction;
+                if (isFinite(_ed.effects.comfort)) _itemComfort += _ed.effects.comfort;
+              }
+            }
+          }
+        }
+      } catch (e) { _itemFatigueCut = 0; _itemComfort = 0; }
+      _itemFatigueCut = Math.min(20, Math.max(0, _itemFatigueCut));
+      _itemComfort = Math.min(10, Math.max(0, _itemComfort));
       state.needs.fatigue = Math.max(
         0,
-        state.needs.fatigue - Math.round(recovery * penalty),
+        state.needs.fatigue - Math.round((recovery + _itemFatigueCut) * penalty),
       );
+      if (_itemComfort > 0 && state.needs && typeof state.needs.happiness === "number") {
+        state.needs.happiness = Math.min(100, state.needs.happiness + _itemComfort);
+      }
       delete state._fatigueRecoveryPenalty;
       state.needs.hygiene = Math.min(
         100,
