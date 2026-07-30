@@ -1251,3 +1251,14 @@ if (typeof window.CLS !== 'undefined' && window.CLS.data) window.CLS.data.ITEMS 
 // [R505] 域A
 // [R553] 域A
 // [R601] 域A
+
+// [R895 域A A类#3]: 导出函数到window
+if (typeof window !== "undefined") {
+  window.getItemById = getItemById;
+  window.isItemNpcGift = isItemNpcGift;
+  window.getCurrentHousing = getCurrentHousing;
+  window.getHousingRentAtLocation = getHousingRentAtLocation;
+  window.getAvailableHousingTiersAtLocation = getAvailableHousingTiersAtLocation;
+  window.getLocationChineseName = getLocationChineseName;
+  window.validateIngredientPrices = validateIngredientPrices;
+}

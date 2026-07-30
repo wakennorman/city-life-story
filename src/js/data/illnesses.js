@@ -572,3 +572,10 @@ function hasIllness(state, illnessId) {
 // [R473] 域A
 // [R521] 域A
 // [R569] 域A
+
+// [R895 域A A类#5]: 导出函数到window
+if (typeof window !== "undefined") {
+  window.getIllnessById = getIllnessById;
+  window.getIllnessData = getIllnessData;
+  window.hasIllness = hasIllness;
+}

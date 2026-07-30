@@ -1149,3 +1149,9 @@ function getNpcJobRecommendation(state, limit) {
 // [R435] 域C
 // [R491] 域C
 // [R531] 域C
+
+// [R895 域A A类#2]: 导出函数到window
+if (typeof window !== "undefined") {
+  window.getJobById = getJobById;
+  window.getNpcJobRecommendation = getNpcJobRecommendation;
+}

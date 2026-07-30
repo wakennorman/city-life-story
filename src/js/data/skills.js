@@ -346,3 +346,12 @@ function getSkillMarketValue(skillId) {
 // [R489] 域A
 // [R537] 域A
 // [R585] 域A
+
+// [R895 域A A类#4]: 导出函数到window
+if (typeof window !== "undefined") {
+  window.getCertificateById = getCertificateById;
+  window.getSkillBranches = getSkillBranches;
+  window.getSkillBranchById = getSkillBranchById;
+  window.getAvailableCertificates = getAvailableCertificates;
+  window.getSkillMarketValue = getSkillMarketValue;
+}
