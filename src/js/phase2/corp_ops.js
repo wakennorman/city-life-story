@@ -977,3 +977,22 @@ function getCorpSocialLevel(state) {
   if (_rank === "P7") return 2;
   return 1;
 }
+
+// [R885 域H A类#1]: 导出函数到window，解决死代码问题
+if (typeof window !== "undefined") {
+  window.doCorporateAction = doCorporateAction;
+  window.endQuarter = endQuarter;
+  window.enterCorporatePhase = enterCorporatePhase;
+  window.getMarketCostMultiplier = getMarketCostMultiplier;
+  window.getCorporateMarketInfluence = getCorporateMarketInfluence;
+  window.renderCorporateStatusWidget = renderCorporateStatusWidget;
+  window.getCorporateStressHealthImpact = getCorporateStressHealthImpact;
+  window.getCorporateMilestoneStory = getCorporateMilestoneStory;
+  window.getCorporatePriceInsight = getCorporatePriceInsight;
+  window.getCorporateQuarterStory = getCorporateQuarterStory;
+  window.applyCorporateSkillGrowth = applyCorporateSkillGrowth;
+  window.getCorpInvestmentConfidence = getCorpInvestmentConfidence;
+  window.getCorpStatusSummary = getCorpStatusSummary;
+  window.getCorpHealthMod = getCorpHealthMod;
+  window.getCorpSocialLevel = getCorpSocialLevel;
+}

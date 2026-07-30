@@ -128,3 +128,10 @@ function getTeamProductivity(state) {
 // [R544] 域H
 // [R568] 域H
 // [R592] 域H
+
+// [R885 域H A类#2]: 导出函数到window
+if (typeof window !== "undefined") {
+  window.hireTeamMember = hireTeamMember;
+  window.fireTeamMember = fireTeamMember;
+  window.getTeamProductivity = getTeamProductivity;
+}
