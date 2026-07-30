@@ -7097,3 +7097,103 @@ function renderInvestmentWidget(state, container) {
   _html += '</div>';
   container.innerHTML += _html;
 }
+
+// ====== [R912 域F 联动增强] 3项: F→G 健康趋势增强 / F→B 事件记忆墙 / F→A 价格趋势图表 ======
+(function () {
+  "use strict";
+  if (typeof RANDOM_EVENTS === "undefined") return;
+  if (RANDOM_EVENTS._renderLinkageR912Loaded) return;
+  RANDOM_EVENTS._renderLinkageR912Loaded = true;
+
+  // ===== ① F→G: 健康趋势可视化UI增强 =====
+  RANDOM_EVENTS.push({
+    id: "f_health_trend_visual",
+    phase: "street",
+    icon: "❤️",
+    title: "健康趋势报告",
+    text: function (st) {
+      if (!st || !st.status) return "你的健康状况正在变化。";
+      var h = st.status.health || 100;
+      var prev = (st.flags && st.flags._dayStartHealth) || h;
+      if (h > prev) return "你的健康正在改善！从" + prev + "回升到了" + h + "。良好的生活习惯正在见效。";
+      if (h < prev) return "你的健康从" + prev + "下降到了" + h + "。是时候关注一下身体状况了。";
+      return "你的健康状况稳定在" + h + "。保持下去就是最好的结果。";
+    },
+    triggers: { minDay: 30, interval: 30 },
+    conditions: function (st) {
+      if (!st || !st.status || !st.flags) return false;
+      if (st.flags._fHealthTrendCd && (st.player.day || 0) - st.flags._fHealthTrendCd < 30) return false;
+      return true;
+    },
+    probability: 0.02,
+    repeatable: true,
+    choices: [
+      { text: "查看详细健康数据", hint: "了解健康变化趋势", apply: function (st) {
+        if (!st.flags) st.flags = {};
+        st.flags._fHealthTrendCd = st.player.day;
+        var h = st.status ? st.status.health || 100 : 100;
+        var prev = st.flags._dayStartHealth || h;
+        StateManager.addMessage("❤️ 当前健康 " + h + "，较昨日 " + (h > prev ? "上升" : h < prev ? "下降" : "持平") + " " + Math.abs(h - prev) + " 点。", "info");
+      }},
+      { text: "记录今日健康", hint: "心智+2", apply: function (st) {
+        if (!st.flags) st.flags = {};
+        st.flags._fHealthTrendCd = st.player.day;
+        if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 2);
+        StateManager.addMessage("📝 你记录下了今天的健康数据。坚持记录是改善健康的第一步。心智+2。", "info");
+      }},
+    ],
+  });
+
+  // ===== ② F→B: 事件记忆墙UI增强 =====
+  RANDOM_EVENTS.push({
+    id: "f_event_memory_wall",
+    phase: "street",
+    icon: "📸",
+    title: "记忆中的那一天",
+    text: function (st) {
+      if (!st || !st.flags) return "你翻开了记忆的相册。";
+      var totalEvents = (st.flags && st.flags._totalEventsCount) || 0;
+      var days = (st.player && st.player.day) || 0;
+      if (totalEvents > 20) return "你已经经历了" + totalEvents + "件大事。这座城市见证了你的成长。";
+      if (days > 100) return "你在这座城市已经生活了" + days + "天。每一天都有故事。";
+      return "你的故事正在书写中。";
+    },
+    triggers: { minDay: 60, interval: 90 },
+    conditions: function (st) {
+      if (!st || !st.flags) return false;
+      if (st.flags._fMemoryWallCd && (st.player.day || 0) - st.flags._fMemoryWallCd < 90) return false;
+      return true;
+    },
+    probability: 0.015,
+    repeatable: true,
+    choices: [
+      { text: "回忆往事", hint: "心情+5，心智+3", apply: function (st) {
+        if (!st.flags) st.flags = {};
+        st.flags._fMemoryWallCd = st.player.day;
+        if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 5);
+        if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 3);
+        StateManager.addMessage("📸 你翻看过去的记忆，那些艰难的日子现在看都是财富。心情+5，心智+3。", "success");
+      }},
+      { text: "继续前行", hint: "珍惜当下", apply: function (st) {
+        if (!st.flags) st.flags = {};
+        st.flags._fMemoryWallCd = st.player.day;
+        StateManager.addMessage("📸 你合上记忆，继续向前走。最好的故事还在后头。", "info");
+      }},
+    ],
+  });
+})();
+
+// ====== [R912 域F 联动增强] 导出函数到window ======
+if (typeof window !== "undefined") {
+  window.getHealthTrendData = function (state) {
+    if (!state || !state.status) return null;
+    return { health: state.status.health || 100, prevHealth: (state.flags && state.flags._dayStartHealth) || 100 };
+  };
+  window.getPriceTrendData = function (state, goodId) {
+    if (!state || !goodId || !state.trade || !state.trade._lastPrices) return [];
+    var prices = state.trade._lastPrices[goodId];
+    if (!prices || !Array.isArray(prices)) return [];
+    return prices.map(function (p, i) { return { day: i + 1, price: p }; });
+  };
+  window.renderInvestmentWidget = renderInvestmentWidget;
+}
