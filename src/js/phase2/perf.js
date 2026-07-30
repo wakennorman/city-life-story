@@ -130,3 +130,11 @@ function getGradeBonus(grade) {
 // [R507] 域C
 // [R539] 域C
 // [R579] 域C
+
+// [R888 域C A类#1]: 导出函数到window
+if (typeof window !== "undefined") {
+  window.calculatePerfScore = calculatePerfScore;
+  window.assignGrade = assignGrade;
+  window.getGradeColor = getGradeColor;
+  window.getGradeBonus = getGradeBonus;
+}
