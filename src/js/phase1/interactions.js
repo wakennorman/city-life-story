@@ -403,3 +403,13 @@ function getStatusSummary(state) {
 // [R516] 域D
 // [R556] 域D
 // [R596] 域D
+
+// [R898 域D A类#1]: 导出函数到window
+if (typeof window !== "undefined") {
+  window.getEffectiveStats = getEffectiveStats;
+  window.getApCostMultiplier = getApCostMultiplier;
+  window.applyStatusInteractions = applyStatusInteractions;
+  window.checkExtremeConditions = checkExtremeConditions;
+  window.getWorkComprehensiveModifier = getWorkComprehensiveModifier;
+  window.getStatusSummary = getStatusSummary;
+}
