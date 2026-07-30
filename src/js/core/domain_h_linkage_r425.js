@@ -20,7 +20,7 @@
       conditions: function (st) { return !st.gameOver && st.player && st.player.corporate; },
       choices: [
         { text: "🌱 平衡利润与社会责任", hint: "心智+4,management XP+3", apply: function (st) {
-          if (!st) return; st.flags._h425SusCooldown = true;
+          if (!st) return; st.flags = st.flags || {}; st.flags._h425SusCooldown = true;
           if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 4);
           grantXp("management", 3);
           if (typeof StateManager !== "undefined") StateManager.addMessage("🌱 你关注公司可持续发展——长期价值大于短期利润。心智+4,管理XP+3。", "success");
