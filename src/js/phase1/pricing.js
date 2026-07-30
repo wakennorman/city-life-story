@@ -714,6 +714,14 @@ if (typeof window !== "undefined") {
     getPriceIndexSummary: getPriceIndexSummary,
     applyEconomicHealthToDaily: applyEconomicHealthToDaily,
     triggerInflationNarrative: triggerInflationNarrative,
+    getSkillPriceInsight: getSkillPriceInsight,
+    getPriceFairness: getPriceFairness,
+    getPriceAnomalyStory: getPriceAnomalyStory,
+    getCorpCostFromMarket: getCorpCostFromMarket,
+    getSkillValueByMarket: getSkillValueByMarket,
+    getTradeSkillBonus: getTradeSkillBonus,
+    getMarketVolatilityRisk: getMarketVolatilityRisk,
+    getGoodsIntelStory: getGoodsIntelStory,
   });
 
   // ====== 整合钩子：增强现有交易函数 ======
