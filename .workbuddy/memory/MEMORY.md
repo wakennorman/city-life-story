@@ -40,9 +40,10 @@
 - 模糊指令先 grep 确认存在；用户「无关」=停手。
 
 ## A类净尽结论（勿重复审）
-- 深审净尽轮：A=R770b(住房effects死数据兑现)、B=R785b(story兜底占位符剥离)、C=R792b(job_milestone承诺零兑现4处)、D=R757b(新NPC集成专审)、E=R819b(并行b轮联动刷新)、F=R826b(并行b轮刷新)、G=R894b(advisor养老金陷阱+杂散t+双挂载)、H=R798b(fundingRound死字段+active复位)。下轮最陈旧：**D(R757b) > A(R770b) > B(R785b)**。
+- 深审净尽轮：A=R770b(住房effects死数据兑现)、B=R785b(story兜底占位符剥离)、C=R792b(job_milestone承诺零兑现4处)、D=R900b(社交网络三处互锁死链复活)、E=R819b(并行b轮联动刷新)、F=R826b(并行b轮刷新)、G=R894b(advisor养老金陷阱+杂散t+双挂载)、H=R798b(fundingRound死字段+active复位)。下轮最陈旧：**A(R770b) > B(R785b) > C(R792b)**。
 - 域C 附注(R792b净尽项)：假技能键(finance/trade/technology/strength/intelligence/physique/health)全库活代码=0全为历史修复注释；jobs.js synergy requiredFlag 8处全精确匹配；并行r685-r790共15个域C文件phase+挂载完整；r777/r779/r790引用的player.charm/intelligence/education、needs.fatigue经state.js核验全真实；CAREER_PATHS无缺失job id；_jobMultipliers在main.js有真实消费方(收入乘区可放心用)。
 - 域D 附注(R757b净尽项)：新NPC关系矩阵R455已入/好感衰减存在/xiaoWeiReferred有jobs.js:814消费/night_market+community_center地点已定义；affinityRewards引擎只认数组格式(R694/R532修)。
+- 域D 附注(R900b净尽项)：social_network.js 全链已通——①发朋友圈按钮原锁死在舆论危机.active块内+visibility'朋友'非法枚举(非public不涨粉)双重锁→已移出+改public；②triggerPublicOpinionCrisis原零调用→tick接线(粉丝≥1000日1.5%)+危机代价(粉丝流失+收入折损)；③npcPostFeed原零调用→tick接线(已met NPC日30%发动态)。r455两事件因此复活。pickMomentText已导出(直接赋值)。UI visibility 合法枚举仅'public'/'friends'/'private'。
 - 域F 附注：pg.psychology 为 personal_growth.js 真实活结构（render.js 读它正确，维持 B类双心理系统记录）；navigation.js:761 programmer 为 JSDoc 示例勿改。
 - 死字段黑名单全库 grep=0 活命中即诚实报 A类=0（R712b 域H 即如此）。
 - 误报勿修：webapp_runtime_bridge getPlayerHealth 主路径正确；establishMentorship/takeMentee 平行实现；setStopLoss 有调用方。C类不修：items.js skillStudy 无应用器；finance.js hasStreetStall 无 writer；并行 r715/r721 id前缀误用全库唯一不改。
