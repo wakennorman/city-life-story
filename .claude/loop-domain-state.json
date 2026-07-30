@@ -1,9 +1,9 @@
 {
-  "lastRound": "900b",
-  "lastDirection": "DOMAIN_D",
+  "lastRound": "903b",
+  "lastDirection": "DOMAIN_A",
   "lastDate": "2026-07-30",
-  "lastCommit": "1edd21ee",
-  "nextDirection": "DOMAIN_A",
-  "note": "R900b 域D(本窗口自动化 11:3x-11:5x): 选域=git log实测本窗口深审recency D最陈旧(R757b只专审npcs.js新NPC,social_network.js从未深审);b后缀避让并行R898-R901。A类3处互锁死链=社交网络系统整体死透: ①social_tab.js:876 发朋友圈/刷新热搜按钮被误包在舆论危机.active块内(危机永不激活→按钮永不可达),且visibility='朋友'非法枚举(合法public/friends/private,非public不涨粉)双重锁死→移出危机块+改public+接pickMomentText动态文案; ②triggerPublicOpinionCrisis全库零调用→危机永不激活→wiki'负面事件可触发危机'零兑现+r455声援事件/危机UI全死,且危机active期间无任何实际代价(网红恒赚无风险)→tick接线: 粉丝≥1000日1.5%触发(树大招风·损失厌恶)+危机期间粉丝日流失(severity×3%)+收入折损(最低3折); ③npcPostFeed全库零调用→npcFeeds永空→NPC动态UI永显'暂无'→tick接线已met NPC日30%发日常动态(met铁律)。死链全貌: 粉丝唯一增长源=发朋友圈→按钮锁死→粉丝恒0→网红经济/接广告承诺/r455两事件(d455_fans_micro_fame/d455_crisis_ally)全部死透,396行系统只剩热搜展示活着。B类: r694双挂载再去重(R894b去重过又被并行加回);开轮例行杂散t清扫10处(r890-r899挂载行全带病→9文件悬空dist,本轮build全部复活入包)。联动3(domain_d_linkage_events_r900b.js,3street,done-flag): d900b_crisis_pr(D→E危机公关抉择¥4000消灾vs硬扛·损失厌恶)/d900b_feed_resonance(D→B npcFeeds复活后首事件消费·met铁律+applyAffinityChange四参+getNpcDisplayName兜底·峰终定律)/d900b_fans_ad_offer(D→E,C兑现wiki粉丝≥1000接广告承诺·报价=粉丝×2·_d898/_d890SocialCapital全库首读+20%谈判溢价·社会比较)。验证: node--check×3过/build 15525.2KB d900b×6+r890-r899十文件全入包/MC 10x500 217.0s 0代码异常前7天死亡全0%(balanced60/corporate60既有RNG阈值)。竞态: 源码修复11:40被并行aa1c939d+bcd24193扫走(IDENTICAL),联动文件+挂载+dist+round doc+CLAUDE.md又被并行1edd21ee(挂名'R900b并行窗口合并')全部扫走,本窗口仅闭合loop-state;并行同窗口期连发R898-R901四轮,节奏~5分钟/轮。下轮候选: A(R770b) > B(R785b) > C(R792b)。开轮必git log重算勿信本记录。",
+  "lastCommit": "77370c8f",
+  "nextDirection": "DOMAIN_B",
+  "note": "R903b 域A(本窗口自动化 11:5x-12:2x): 选域=git log实测A最陈旧(R895)且深审recency A=R770b最旧。A类3处全为「数据/数值承诺静默失效」死数据: ①skills.js driver_license effects.agility:1 全库零消费者(main.js证书开关仅physique无agility分支)→驾照+1敏捷永不发放,agility为真实属性(req.agility门控消费)→main.js:3920补cert.effects.agility分支; ②items.js bicycle effects.fatigue_reduction:10 零消费者→daily_pipeline.js疲劳恢复fn接入(库存+已装备双源,与R306 injuryReduction同构,封顶20); ③items.js warm_coat effects.comfort:5 零消费者(coldProtection有weather.js消费但comfort死)→同处接入幸福加成(封顶10)。误报勿修2处: dental/vision score系MEMORY.md陈旧记录(字段不存在,已清账); construction_safety injuryReduction:0.5 由main.js:5106硬编码certReduction=0.5兑现(非A类)。联动3(domain_a_linkage_events_r903b.js,3street,done-flag): a903b_portfolio_first_seed/steady_growth/half_million 消费investment.js:1410动态写入的_portfolioMilestone_10000/50000/500000三档写-only死flag(A→E,R738b只消费过100000/1000000)——域E零消费账三档就此清零。B类例行: index.html杂散t清扫4处(r900-r903挂载行)。验证: node--check×3过/build 15553.2KB a903b×6+_itemFatigueCut×6+cert.effects.agility×3全入包/MC 10x500 247.1s 0代码异常前7天死亡全0%(corporate40/grinder40既有RNG阈值)。竞态: 全部改动被并行a568cc0c+77370c8f(挂名R903b并行窗口合并)扫走IDENTICAL,四项核验HEAD完整(源+挂载1+dist a903b×6+修复grep 3/6)通过即闭合,本窗口仅补loop-state;并行同期连发R903/R904,注意R904已占域B——下轮开轮必git log重算。深审recency更新: A=R903b,下轮候选 B(R785b) > C(R792b) > E(R819b)。push: TLS代理3067未起,ahead 2,origin停在7f9ba5dc。",
   "pushStatus": "LOCAL_ONLY_TLS"
 }
