@@ -336,3 +336,8 @@ if (typeof window !== "undefined") {
     ],
   };
 }
+
+// [R903 域A A类#1]: 导出函数到window
+if (typeof window !== "undefined") {
+  window.getAvailableActions = getAvailableActions;
+}
