@@ -667,3 +667,12 @@ if (typeof window !== "undefined") {
   };
 }
 // [R104] 域H 联动增强
+
+// [R902 域H A类#1]: 导出函数到window
+if (typeof window !== "undefined") {
+  window.checkStartupCrises = checkStartupCrises;
+  window.checkCrisisTriggerConditions = checkCrisisTriggerConditions;
+  window.showCrisisModal = showCrisisModal;
+  window.handleCrisisChoice = handleCrisisChoice;
+  window.applyCrisisChoice = applyCrisisChoice;
+}
