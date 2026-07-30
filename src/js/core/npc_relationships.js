@@ -1345,3 +1345,77 @@ if (typeof window !== "undefined") {
   window.getNpcInvestmentTips = getNpcInvestmentTips;
   window.getSocialMentalBonus = getSocialMentalBonus;
 }
+
+// ====== [R926 域D 联动增强] 2项: D→A/D→C ======
+(function () {
+  "use strict";
+  if (typeof RANDOM_EVENTS === "undefined") return;
+  if (RANDOM_EVENTS._npcLinkageR926Loaded) return;
+  RANDOM_EVENTS._npcLinkageR926Loaded = true;
+
+  RANDOM_EVENTS.push({
+    id: "d_npc_market_tip",
+    phase: "street",
+    icon: "👂",
+    title: "朋友的生意经",
+    text: function (st) {
+      if (!st || !st.relationships) return "从朋友那里可以听到很多有用的信息。";
+      return "有人最近城西的批发市场进了批好货，价格比平时低两成。";
+    },
+    triggers: { minDay: 45, interval: 45 },
+    conditions: function (st) {
+      if (!st || !st.flags) return false;
+      if (st.flags._dMarketTipCd && (st.player.day || 0) - st.flags._dMarketTipCd < 45) return false;
+      return true;
+    },
+    probability: 0.025,
+    repeatable: true,
+    choices: [
+      { text: "去批发市场看看", hint: "批发折扣消息", apply: function (st) {
+        if (!st.flags) st.flags = {};
+        st.flags._dMarketTipCd = st.player.day;
+        st.flags._wholesaleTipActive = true;
+        StateManager.addMessage("你去了批发市场，果然找到了便宜货！", "success");
+      }},
+      { text: "先记着", hint: "心智+2", apply: function (st) {
+        if (!st.flags) st.flags = {};
+        st.flags._dMarketTipCd = st.player.day;
+        if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 2);
+        StateManager.addMessage("你把这个消息记在心里。心智+2。", "info");
+      }},
+    ],
+  });
+
+  RANDOM_EVENTS.push({
+    id: "d_npc_career_intro",
+    phase: "street",
+    icon: "🤝",
+    title: "朋友介绍工作",
+    text: function (st) {
+      return "一个朋友听说你在找工作，说他认识一个老板正好缺人。";
+    },
+    triggers: { minDay: 30, interval: 90 },
+    conditions: function (st) {
+      if (!st || !st.flags) return false;
+      if (st.flags._dCareerIntroCd && (st.player.day || 0) - st.flags._dCareerIntroCd < 90) return false;
+      if (!st.career || !st.career.currentJob) return true;
+      return false;
+    },
+    probability: 0.03,
+    repeatable: true,
+    choices: [
+      { text: "去面试", hint: "获得工作机会", apply: function (st) {
+        if (!st.flags) st.flags = {};
+        st.flags._dCareerIntroCd = st.player.day;
+        st.flags._npcIntroducedJob = true;
+        StateManager.addMessage("你去了面试，对方对你挺满意的！", "success");
+      }},
+      { text: "暂时不考虑", hint: "心智+2", apply: function (st) {
+        if (!st.flags) st.flags = {};
+        st.flags._dCareerIntroCd = st.player.day;
+        if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 2);
+        StateManager.addMessage("你婉拒了朋友的好意。心智+2。", "info");
+      }},
+    ],
+  });
+})();
