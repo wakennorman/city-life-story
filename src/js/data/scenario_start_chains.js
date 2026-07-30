@@ -14,6 +14,10 @@
 
 (function () {
   "use strict";
+  // [全系统自洽修复] 域G R894b B类顺手: 该文件曾被index.html双挂载且无加载守卫(IIFE双执行)——
+  // 挂载已去重，此处补幂等守卫防未来重复挂载
+  if (typeof window !== "undefined" && window._scenarioStartChainsLoaded) return;
+  if (typeof window !== "undefined") window._scenarioStartChainsLoaded = true;
 
   // ====== 开局事件链定义 ======
   // key: scenarioId, value: 按天索引的事件数组（dayOffset: 1/2/3/4）

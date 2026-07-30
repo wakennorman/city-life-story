@@ -204,12 +204,21 @@ const LIFE_NODES = {
         effect: function (st) {
           st.flags._retirementType = "advisor";
           st.flags._retired = true;
+          // [全系统自洽修复] 域G R894b A类#1: advisor inline effect 漏设 _pensionBase——
+          // applyNodeChoice 中 inline effect 优先、switch兜底被跳过(_inlineApplied)，
+          // 导致"返聘做顾问"路径 _retired=true 但养老金+顾问费(daily_pipeline:2014块要求
+          // _retired&&_pensionBase 双真)永不发放=纯惩罚陷阱→与兜底路径对齐补基数
+          var _advEmpJob = (st.employment && st.employment.currentJob) ? st.employment.currentJob : null;
+          st.flags._pensionBase = _advEmpJob ? (_advEmpJob.salary || 5000) : 5000;
           var skillXp = Math.min(
             500,
             (st.status && Math.max(0, st.status.health - 30)) * 5 || 200,
           );
-          if (st.skills) {
-            var bestSkill = Object.keys(st.skills).reduce(function (a, b) {
+          // [全系统自洽修复] 域G R894b A类#2: Object.keys(空对象).reduce 无初始值抛
+          // TypeError(被外层try吞掉→advisor全部效果静默丢失)→补 keys.length 守卫
+          var _skillKeys = st.skills ? Object.keys(st.skills) : [];
+          if (_skillKeys.length > 0) {
+            var bestSkill = _skillKeys.reduce(function (a, b) {
               return ((st.skills[a] && st.skills[a].level) || 0) >
                 ((st.skills[b] && st.skills[b].level) || 0)
                 ? a
