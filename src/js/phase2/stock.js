@@ -700,3 +700,17 @@ function refreshStockMarket(state) {
 // [R557] 域E
 // [R581] 域E
 // [R605] 域E
+
+// [R890 域E A类#1]: 导出函数到window
+if (typeof window !== "undefined") {
+  window.initStockMarket = initStockMarket;
+  window.bootstrapStockHistory = bootstrapStockHistory;
+  window.updateStockPrices = updateStockPrices;
+  window.buyStock = buyStock;
+  window.sellStock = sellStock;
+  window.calcMaxBuyShares = calcMaxBuyShares;
+  window.renderKLine = renderKLine;
+  window.renderStockCard = renderStockCard;
+  window.showStockTradeModal = showStockTradeModal;
+  window.refreshStockMarket = refreshStockMarket;
+}
