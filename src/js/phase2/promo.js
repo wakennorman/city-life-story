@@ -194,3 +194,11 @@ function getPromotionProgress(state) {
 }
 // [R112] 域H 联动增强
 // [R144] 域H 联动增强
+
+// [R893 域H A类#1]: 导出函数到window
+if (typeof window !== "undefined") {
+  window.checkPromotion = checkPromotion;
+  window.applyPromotion = applyPromotion;
+  window.gradeMeetsMin = gradeMeetsMin;
+  window.getPromotionProgress = getPromotionProgress;
+}
