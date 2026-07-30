@@ -2799,7 +2799,7 @@ function getCareerChangeCost(age) {
   return 1.5;
 }
 
-// ====== [R913 域G A类#1]: 导出函数到window ======
+// ====== [R913/R929 域G]: 导出函数到window ======
 if (typeof window !== "undefined") {
   window.runDailyPipeline = runDailyPipeline;
   window.endDay = endDay;
@@ -2985,7 +2985,7 @@ if (typeof window !== "undefined") {
     ],
   });
 })();
-// ====== [R913 域G A类#1]: 导出函数到window ======
+// ====== [R913/R929 域G]: 导出函数到window ======
 if (typeof window !== "undefined") {
   window.runDailyPipeline = runDailyPipeline;
   window.endDay = endDay;
