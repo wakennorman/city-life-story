@@ -170,3 +170,12 @@ function hasStrongNewsEffect(state) {
   }
   return false;
 }
+
+// [R899 域E A类#1]: 导出函数到window
+if (typeof window !== "undefined") {
+  window.getNewsEffectForInvestment = getNewsEffectForInvestment;
+  window.getNewsEffectForBtc = getNewsEffectForBtc;
+  window.getNewsEffectForProperty = getNewsEffectForProperty;
+  window.applyNewsToPropertyPolicy = applyNewsToPropertyPolicy;
+  window.getNewsInvestmentSummary = getNewsInvestmentSummary;
+}
