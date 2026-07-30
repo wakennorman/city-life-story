@@ -2816,6 +2816,87 @@ if (typeof window !== "undefined") {
   window.getCareerChangeCost = getCareerChangeCost;
 }
 
+// ====== [R921 域G 联动增强] 2项: G→B/G→E ======
+(function () {
+  "use strict";
+  if (typeof RANDOM_EVENTS === "undefined") return;
+  if (RANDOM_EVENTS._pipelineLinkageR921Loaded) return;
+  RANDOM_EVENTS._pipelineLinkageR921Loaded = true;
+
+  RANDOM_EVENTS.push({
+    id: "g_life_milestone_celebration",
+    phase: "street",
+    icon: "🎯",
+    title: "人生里程碑",
+    text: function (st) {
+      if (!st || !st.player) return "你达成了一个人生里程碑。";
+      var day = st.player.day || 0;
+      if (day >= 365) return "你在这座城市已经生活了一整年！365天，经历了无数风雨。这座城市见证了你的成长。";
+      if (day >= 180) return "半年了！180天前你来到这座城市，如今已经站稳了脚跟。";
+      return "每一天都是新的开始。";
+    },
+    triggers: { minDay: 180, interval: 180 },
+    conditions: function (st) {
+      if (!st || !st.player || !st.flags) return false;
+      if (st.flags._gMilestoneCd && (st.player.day || 0) - st.flags._gMilestoneCd < 180) return false;
+      return true;
+    },
+    probability: 0.02,
+    repeatable: true,
+    choices: [
+      { text: "回顾来路", hint: "心智+5，心情+5", apply: function (st) {
+        if (!st.flags) st.flags = {};
+        st.flags._gMilestoneCd = st.player.day;
+        if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 5);
+        if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 5);
+        StateManager.addMessage("🎯 你回顾了这段时间的经历，感慨万千。心智+5，心情+5。", "success");
+      }},
+      { text: "继续前行", hint: "展望未来", apply: function (st) {
+        if (!st.flags) st.flags = {};
+        st.flags._gMilestoneCd = st.player.day;
+        StateManager.addMessage("🎯 你整理好心情，继续向前走。未来还有更多可能。", "info");
+      }},
+    ],
+  });
+
+  RANDOM_EVENTS.push({
+    id: "g_life_cost_awareness",
+    phase: "street",
+    icon: "💰",
+    title: "生活成本意识",
+    text: function (st) {
+      if (!st || !st.resources) return "生活成本是每天都要面对的现实。";
+      var cash = st.resources.cash || 0;
+      var debt = st.resources.debt || 0;
+      if (debt > 0) return "你还有¥" + debt.toLocaleString() + "的债务需要偿还。每天的开销都在提醒你理财的重要性。";
+      if (cash < 1000) return "手头有点紧，只剩¥" + cash.toLocaleString() + "了。需要精打细算过日子。";
+      return "财务状况还算健康，但生活成本永远在涨，需要保持警惕。";
+    },
+    triggers: { minDay: 30, interval: 30 },
+    conditions: function (st) {
+      if (!st || !st.player || !st.flags) return false;
+      if (st.flags._gCostCd && (st.player.day || 0) - st.flags._gCostCd < 30) return false;
+      return true;
+    },
+    probability: 0.025,
+    repeatable: true,
+    choices: [
+      { text: "记账理财", hint: "会计XP+8", apply: function (st) {
+        if (!st.flags) st.flags = {};
+        st.flags._gCostCd = st.player.day;
+        if (typeof addSkillXp === "function") addSkillXp("accounting", 8);
+        StateManager.addMessage("💰 你开始认真记账，每一笔开销都清清楚楚。会计XP+8。", "info");
+      }},
+      { text: "节省开支", hint: "心智+3", apply: function (st) {
+        if (!st.flags) st.flags = {};
+        st.flags._gCostCd = st.player.day;
+        if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 3);
+        StateManager.addMessage("💰 你决定节省开支，精打细算。心智+3。", "info");
+      }},
+    ],
+  });
+})();
+
 // ====== [R913 域G 联动增强] 3项: G→A/G→D/G→F ======
 (function () {
   "use strict";
