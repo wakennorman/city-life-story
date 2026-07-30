@@ -981,3 +981,20 @@ function initWeather(state) {
 
   return w;
 }
+
+// [R892 域G A类#1]: 导出函数到window
+if (typeof window !== "undefined") {
+  window.getSeason = getSeason;
+  window.rollWeather = rollWeather;
+  window.getWeatherWorkMod = getWeatherWorkMod;
+  window.getWeatherFatigue = getWeatherFatigue;
+  window.getWeatherHappiness = getWeatherHappiness;
+  window.getWeatherFootTrafficMod = getWeatherFootTrafficMod;
+  window.getWeatherDemandBonus = getWeatherDemandBonus;
+  window.getWeatherGoodPriceMod = getWeatherGoodPriceMod;
+  window.getWeatherTransportRiskMod = getWeatherTransportRiskMod;
+  window.getWeatherTravelApMod = getWeatherTravelApMod;
+  window.getWeatherModForLocation = getWeatherModForLocation;
+  window.getWeatherIllnessAdjustedProb = getWeatherIllnessAdjustedProb;
+  window.getWeatherEnhancedDesc = getWeatherEnhancedDesc;
+}
