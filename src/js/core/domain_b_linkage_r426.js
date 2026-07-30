@@ -80,13 +80,13 @@
       },
       choices: [
         { text: "🪞 接纳它——这也是我的选择", hint: "心智+5，幸福+3", apply: function (st) {
-          if (!st) return; st.flags._b426PlasticMirrorSeen = true;
+          if (!st) return; st.flags = st.flags || {}; st.flags._b426PlasticMirrorSeen = true;
           if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 5);
           if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 3);
           if (typeof StateManager !== "undefined") StateManager.addMessage("🪞 你和镜子里的自己和解了——改变外表是选择，接纳自己是能力。心智+5。", "success");
         }},
         { text: "😔 越看越陌生", hint: "心智-3，开启自我认同支线flag", apply: function (st) {
-          if (!st) return; st.flags._b426PlasticMirrorSeen = true;
+          if (!st) return; st.flags = st.flags || {}; st.flags._b426PlasticMirrorSeen = true;
           st.flags._b426IdentityDoubt = true; // B→G: 自我认同动摇，供后续生命节点/叙事读取
           if (st.player) st.player.mental = Math.max(0, (st.player.mental || 50) - 3);
           if (typeof StateManager !== "undefined") StateManager.addMessage("😔 镜子里的人很好看，但你一时认不出那是谁。也许需要一点时间。", "warning");
@@ -113,13 +113,13 @@
       },
       choices: [
         { text: "🧠 只听思路，不抄作业", hint: "心智+4，理性投资者心态", apply: function (st) {
-          if (!st) return; st.flags._b426GymInvestCooldown = true;
+          if (!st) return; st.flags = st.flags || {}; st.flags._b426GymInvestCooldown = true;
           st.flags._b426GymInvestInsight = true; // B→E: 场外信息素养flag，供投资域叙事读取
           if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 4);
           if (typeof StateManager !== "undefined") StateManager.addMessage("🏋️ 你把对话当成免费的思维碰撞——别人的代码你抄不来，但思路可以借。心智+4。", "success");
         }},
         { text: "📱 掏出手机想跟单", hint: "幸福+2，但冲动交易倾向", apply: function (st) {
-          if (!st) return; st.flags._b426GymInvestCooldown = true;
+          if (!st) return; st.flags = st.flags || {}; st.flags._b426GymInvestCooldown = true;
           st.flags._b426GymFomoUrge = true; // B→E: FOMO倾向flag，供投资域风险事件读取
           if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 2);
           if (typeof StateManager !== "undefined") StateManager.addMessage("📱 你差点当场下单——健身房练的是肌肉，考验的却是心态。", "warning");
