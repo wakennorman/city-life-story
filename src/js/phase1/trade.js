@@ -623,3 +623,18 @@ function getAvailableGoodsAtLocation(locKey, state) {
 // [R545] 域A
 // [R593] 域A
 // [R617] 域A
+
+// ====== [R915 域A A类#1]: 导出函数到window（供pricing.js包装器消费）======
+if (typeof window !== "undefined") {
+  window.getCurrentPrice = getCurrentPrice;
+  window.buyGood = buyGood;
+  window.sellGood = sellGood;
+  window.getLowestPrice = getLowestPrice;
+  window.getHighestPrice = getHighestPrice;
+  window.getAvgBuyPrice = getAvgBuyPrice;
+  window.updateAllPrices = updateAllPrices;
+  window.getAvailableGoodsAtLocation = getAvailableGoodsAtLocation;
+  window.adjustPriceAfterTrade = adjustPriceAfterTrade;
+  window.buyWholesale = buyWholesale;
+  window.quickSell = quickSell;
+}

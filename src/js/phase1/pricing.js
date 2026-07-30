@@ -1309,3 +1309,80 @@ function triggerInflationNarrative(state) {
     }
   }
 }
+
+// ====== [R915 域A 联动增强] 3项: A→B/A→C/A→G ======
+(function () {
+  "use strict";
+  if (typeof RANDOM_EVENTS === "undefined") return;
+  if (RANDOM_EVENTS._pricingLinkageR915Loaded) return;
+  RANDOM_EVENTS._pricingLinkageR915Loaded = true;
+
+  RANDOM_EVENTS.push({
+    id: "a_price_wave_story",
+    phase: "street",
+    icon: "📈",
+    title: "市场价格波动",
+    text: function (st) {
+      if (!st || !st.flags) return "市场正在波动。";
+      var inf = st.flags._cumulativeInflation || 0;
+      if (inf > 0.15) return "菜市场的摊主们都在抱怨进货价一天比一天高。";
+      if (inf < -0.1) return "物价持续下跌，街上冷冷清清的。";
+      return "市场价格基本稳定。";
+    },
+    triggers: { minDay: 45, interval: 45 },
+    conditions: function (st) {
+      if (!st || !st.flags) return false;
+      if (st.flags._aPriceWaveCd && (st.player.day || 0) - st.flags._aPriceWaveCd < 45) return false;
+      return true;
+    },
+    probability: 0.025,
+    repeatable: true,
+    choices: [
+      { text: "囤点必需品", hint: "抵御通胀", apply: function (st) {
+        if (!st.flags) st.flags = {};
+        st.flags._aPriceWaveCd = st.player.day;
+        var cash = st.resources ? (st.resources.cash || 0) : 0;
+        if (cash >= 500) { st.resources.cash = cash - 500; if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 3); }
+        StateManager.addMessage("你囤了一些米面油。心情+3。", "info");
+      }},
+      { text: "记录价格变化", hint: "心智+3", apply: function (st) {
+        if (!st.flags) st.flags = {};
+        st.flags._aPriceWaveCd = st.player.day;
+        if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 3);
+        StateManager.addMessage("你记录了价格变化。心智+3。", "info");
+      }},
+    ],
+  });
+
+  RANDOM_EVENTS.push({
+    id: "a_skill_market_demand",
+    phase: "street",
+    icon: "💼",
+    title: "技能市场风向",
+    text: function (st) {
+      return "编程和会计技能需求旺盛，传统手艺活市场在萎缩。";
+    },
+    triggers: { minDay: 60, interval: 60 },
+    conditions: function (st) {
+      if (!st || !st.flags) return false;
+      if (st.flags._aSkillDemandCd && (st.player.day || 0) - st.flags._aSkillDemandCd < 60) return false;
+      return true;
+    },
+    probability: 0.02,
+    repeatable: true,
+    choices: [
+      { text: "研究市场趋势", hint: "会计XP+10", apply: function (st) {
+        if (!st.flags) st.flags = {};
+        st.flags._aSkillDemandCd = st.player.day;
+        if (typeof addSkillXp === "function") addSkillXp("accounting", 10);
+        StateManager.addMessage("你研究了技能市场报告。会计XP+10。", "info");
+      }},
+      { text: "扫一眼", hint: "心智+2", apply: function (st) {
+        if (!st.flags) st.flags = {};
+        st.flags._aSkillDemandCd = st.player.day;
+        if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 2);
+        StateManager.addMessage("你心里有数了。心智+2。", "info");
+      }},
+    ],
+  });
+})();
