@@ -873,11 +873,14 @@ function renderSocialNetworkTab(state, parent) {
   html += "<p>👥 粉丝：<strong>" + (sn.playerFans || 0) + "</strong></p>";
   html += "<p>🏅 等级：" + levelName + "</p>";
   html += "<p>💰 日收入：¥" + income + "</p>";
-  if (sn.舆论危机 && sn.舆论危机.active) {
+  // [全系统自洽修复] 域D R900b A类#3: 发朋友圈/刷新热搜按钮原被误包在 舆论危机.active 块内，
+  // 危机永不激活(触发器全库零调用)→发朋友圈永久不可达→粉丝恒0→网红经济/NPC动态全线死链。移出危机块。
+  // 附带修复: 原 visibility='朋友' 非法枚举(合法:'public'/'friends'/'private')且非public不涨粉→双重锁死，改'public'。
   html += '<div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap;">';
-  html += '<button class="btn btn-sm" onclick="var _s=StateManager.getState();window.postToMoments(_s,\'今天天气不错\',null,\'朋友\');renderAll();">📝 发朋友圈</button>';
+  html += '<button class="btn btn-sm" onclick="var _s=StateManager.getState();var _r=window.postToMoments(_s,(typeof pickMomentText===\'function\'?pickMomentText(_s):\'今天天气不错\'),null,\'public\');if(_r&&!_r.ok&&typeof StateManager!==\'undefined\')StateManager.addMessage(_r.message||\'发布失败\',\'warning\');renderAll();">📝 发朋友圈(20AP)</button>';
   html += '<button class="btn btn-sm" onclick="window.refreshWeiboHotlist(StateManager.getState());renderAll();">🔄 刷新热搜</button>';
   html += '</div>';
+  if (sn.舆论危机 && sn.舆论危机.active) {
     html +=
       '<p style="color:var(--danger);">⚠️ 舆论危机中（严重度' +
       sn.舆论危机.severity +
