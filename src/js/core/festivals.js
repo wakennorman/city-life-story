@@ -1387,3 +1387,10 @@ function checkFestivalDeepEvents(state) {
   }
   return false;
 }
+
+// [R904 域B A类#1]: 导出函数到window
+if (typeof window !== "undefined") {
+  window.getCurrentFestival = getCurrentFestival;
+  window.getFestivalPriceMod = getFestivalPriceMod;
+  window.getFestivalWorkMod = getFestivalWorkMod;
+}
