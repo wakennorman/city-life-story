@@ -734,3 +734,8 @@ function getActiveSynergiesCount(state) {
 // [R483] 域C
 // [R547] 域C
 // [R587] 域C
+
+// [R897 域C A类#1]: 导出函数到window
+if (typeof window !== "undefined") {
+  window.checkSkillSynergies = checkSkillSynergies;
+}
