@@ -1322,3 +1322,26 @@ if (typeof window !== "undefined") {
   window.getSocialMentalBonus = getSocialMentalBonus;
   window.getSocialHealthBonusR797 = getSocialHealthBonusR797;
 }
+
+// [R889 域D A类#1]: 导出函数到window
+if (typeof window !== "undefined") {
+  window.initNpcRelationships = initNpcRelationships;
+  window.tickNpcRelationships = tickNpcRelationships;
+  window.getNpcDisplayName = getNpcDisplayName;
+  window.applyAffinityChange = applyAffinityChange;
+  window.getAffinityLabel = getAffinityLabel;
+  window.getRelationTypeLabel = getRelationTypeLabel;
+  window.getRelationTypeColor = getRelationTypeColor;
+  window.checkNpcRelationEventTriggers = checkNpcRelationEventTriggers;
+  window.getNpcCareerRecommendation = getNpcCareerRecommendation;
+  window.getSocialNetworkGraphData = getSocialNetworkGraphData;
+  window.getSocialHealthBonus = getSocialHealthBonus;
+  window.getSocialInvestmentIntel = getSocialInvestmentIntel;
+  window.getNpcReferralJobs = getNpcReferralJobs;
+  window.getNpcRelationGraphData = getNpcRelationGraphData;
+  window.getNpcInvestmentStyle = getNpcInvestmentStyle;
+  window.getNpcMarketIntel = getNpcMarketIntel;
+  window.getNpcTradeDiscount = getNpcTradeDiscount;
+  window.getNpcInvestmentTips = getNpcInvestmentTips;
+  window.getSocialMentalBonus = getSocialMentalBonus;
+}
