@@ -5459,3 +5459,96 @@ if (typeof window !== "undefined") {
     };
   }
 })();
+
+// ====== [R919 域E 联动增强] 2项: E→B/E→D ======
+(function () {
+  "use strict";
+  if (typeof RANDOM_EVENTS === "undefined") return;
+  if (RANDOM_EVENTS._investLinkageR919Loaded) return;
+  RANDOM_EVENTS._investLinkageR919Loaded = true;
+
+  RANDOM_EVENTS.push({
+    id: "e_invest_market_trend",
+    phase: "street",
+    icon: "📊",
+    title: "市场趋势分析",
+    text: function (st) {
+      if (!st || !st.investment) return "市场永远在变化。";
+      var inv = st.investment;
+      var stocks = inv.stockHoldings || [];
+      if (stocks.length > 0) {
+        var totalPL = 0;
+        for (var i = 0; i < stocks.length; i++) {
+          var h = stocks[i];
+          var m = inv.stockMarket && inv.stockMarket[h.symbol];
+          if (m && h.buyPrice) totalPL += (m.price - h.buyPrice) * h.shares;
+        }
+        if (totalPL > 0) return "你的投资组合目前盈利中。市场趋势对你有利。";
+        if (totalPL < 0) return "你的投资组合目前亏损。市场波动是正常的。";
+      }
+      return "市场整体平稳。";
+    },
+    triggers: { minDay: 60, interval: 60 },
+    conditions: function (st) {
+      if (!st || !st.investment || !st.flags) return false;
+      if (st.flags._eMarketTrendCd && (st.player.day || 0) - st.flags._eMarketTrendCd < 60) return false;
+      return true;
+    },
+    probability: 0.02,
+    repeatable: true,
+    choices: [
+      { text: "研究市场数据", hint: "会计XP+10", apply: function (st) {
+        if (!st.flags) st.flags = {};
+        st.flags._eMarketTrendCd = st.player.day;
+        if (typeof addSkillXp === "function") addSkillXp("accounting", 10);
+        StateManager.addMessage("你研究了市场数据。会计XP+10。", "info");
+      }},
+      { text: "平常心", hint: "心智+3", apply: function (st) {
+        if (!st.flags) st.flags = {};
+        st.flags._eMarketTrendCd = st.player.day;
+        if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 3);
+        StateManager.addMessage("你保持平常心。心智+3。", "info");
+      }},
+    ],
+  });
+
+  RANDOM_EVENTS.push({
+    id: "e_invest_social_talk",
+    phase: "street",
+    icon: "💬",
+    title: "投资话题社交",
+    text: function (st) {
+      return "朋友们都在谈论最近的股市行情。你分享了一些投资心得。";
+    },
+    triggers: { minDay: 45, interval: 45 },
+    conditions: function (st) {
+      if (!st || !st.investment || !st.flags) return false;
+      if (st.flags._eSocialTalkCd && (st.player.day || 0) - st.flags._eSocialTalkCd < 45) return false;
+      return true;
+    },
+    probability: 0.025,
+    repeatable: true,
+    choices: [
+      { text: "分享投资心得", hint: "好感+5", apply: function (st) {
+        if (!st.flags) st.flags = {};
+        st.flags._eSocialTalkCd = st.player.day;
+        if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 5);
+        if (st.relationships) {
+          for (var id in st.relationships) {
+            if (st.relationships[id] && st.relationships[id].met) {
+              if (typeof applyAffinityChange === "function") applyAffinityChange(st, id, 5, "投资分享");
+              break;
+            }
+          }
+        }
+        StateManager.addMessage("你分享了投资心得。心情+5。", "success");
+      }},
+      { text: "听听就好", hint: "心智+2", apply: function (st) {
+        if (!st.flags) st.flags = {};
+        st.flags._eSocialTalkCd = st.player.day;
+        if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 2);
+        StateManager.addMessage("你听了大家的讨论。心智+2。", "info");
+      }},
+    ],
+  });
+})();
