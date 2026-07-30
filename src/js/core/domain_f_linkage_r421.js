@@ -20,7 +20,7 @@
       conditions: function (st) { return !st.gameOver; },
       choices: [
         { text: "📋 记录事件模式", hint: "心智+3,sales XP+2", apply: function (st) {
-          if (!st) return; st.flags._f421EventCooldown = true;
+          if (!st) return; st.flags = st.flags || {}; st.flags._f421EventCooldown = true;
           if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 3);
           grantXp("sales", 2);
           if (typeof StateManager !== "undefined") StateManager.addMessage("🔔 你追踪事件模式——发现规律是进步的开始。心智+3,销售XP+2。", "success");
@@ -42,7 +42,7 @@
       conditions: function (st) { return !st.gameOver && st.relationships && Object.keys(st.relationships).length > 0; },
       choices: [
         { text: "💕 主动维护关系", hint: "心情+4,心智+2", apply: function (st) {
-          if (!st) return; st.flags._f421BondCooldown = true;
+          if (!st) return; st.flags = st.flags || {}; st.flags._f421BondCooldown = true;
           if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 4);
           if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 2);
           if (typeof StateManager !== "undefined") StateManager.addMessage("🔗 你主动维护社交关系——纽带需要用心经营。心情+4,心智+2。", "success");
@@ -73,7 +73,7 @@
       conditions: function (st) { return !st.gameOver && st.resources; },
       choices: [
         { text: "📊 关注资产配置", hint: "心智+3,accounting XP+3", apply: function (st) {
-          if (!st) return; st.flags._f421FinanceCooldown = true;
+          if (!st) return; st.flags = st.flags || {}; st.flags._f421FinanceCooldown = true;
           if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 3);
           grantXp("accounting", 3);
           if (typeof StateManager !== "undefined") StateManager.addMessage("💰 你关注财务状况——清晰的财务意识是成功的基础。心智+3,会计XP+3。", "success");
