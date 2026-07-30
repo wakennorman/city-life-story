@@ -6457,7 +6457,7 @@ function getCareerPathVisualData(state) {
             if (st.relationships[id] && st.relationships[id].met) metList.push(id);
           }
           if (metList.length > 0) {
-            var pick = metList[Math.floor(Math.random() * metList.length)];
+            var pick = metList[Random.int(0, metList.length - 1)];
             if (typeof applyAffinityChange === "function") {
               applyAffinityChange(st, pick, 8, "career_achievement_share");
             }
@@ -6476,7 +6476,7 @@ function getCareerPathVisualData(state) {
             if (st.relationships[id] && st.relationships[id].met) metList.push(id);
           }
           if (metList.length > 0) {
-            var pick = metList[Math.floor(Math.random() * metList.length)];
+            var pick = metList[Random.int(0, metList.length - 1)];
             if (typeof applyAffinityChange === "function") {
               applyAffinityChange(st, pick, 4, "career_achievement_share_humble");
             }
@@ -6528,7 +6528,7 @@ function getCareerPathVisualData(state) {
           if (cash >= cost) {
             st.resources.cash = cash - cost;
             // 投资回报：随机收益
-            var profit = 3000 + Math.floor(Math.random() * 4000);
+            var profit = 3000 + Random.int(0, 3999);
             st.resources.cash = (st.resources.cash || 0) + profit;
             if (typeof addSkillXp === "function") {
               addSkillXp("accounting", 20);
