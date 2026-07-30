@@ -6405,6 +6405,93 @@ function getCareerPathVisualData(state) {
   return { pathName: _path.name, icon: _path.icon, levels: _path.levels, currentIdx: _currentIdx, workDays: _job.workDays || 0 };
 }
 
+// ====== [R917 域C 联动增强] 2项: C→D/C→E ======
+(function () {
+  "use strict";
+  if (typeof RANDOM_EVENTS === "undefined") return;
+  if (RANDOM_EVENTS._careerLinkageR917Loaded) return;
+  RANDOM_EVENTS._careerLinkageR917Loaded = true;
+
+  RANDOM_EVENTS.push({
+    id: "c_career_network_event",
+    phase: "street",
+    icon: "🤝",
+    title: "职场人脉活动",
+    text: function (st) {
+      if (!st || !st.career || !st.career.currentJob) return "参加行业活动是拓展人脉的好机会。";
+      var path = st.career.currentJob.pathName || "你的行业";
+      return "公司组织了一场" + path + "行业交流会，邀请了许多同行和潜在客户。";
+    },
+    triggers: { minDay: 90, interval: 90 },
+    conditions: function (st) {
+      if (!st || !st.career || !st.career.currentJob || !st.flags) return false;
+      if (st.flags._cNetworkEventCd && (st.player.day || 0) - st.flags._cNetworkEventCd < 90) return false;
+      return (st.career.currentJob.workDays || 0) >= 60;
+    },
+    probability: 0.03,
+    repeatable: true,
+    choices: [
+      { text: "积极参加", hint: "客户线索+5", apply: function (st) {
+        if (!st.flags) st.flags = {};
+        st.flags._cNetworkEventCd = st.player.day;
+        var cap = typeof ensureCareerCapital === "function" ? ensureCareerCapital(st) : null;
+        if (cap) cap.clientLeads = Math.min(100, (cap.clientLeads || 0) + 5);
+        StateManager.addMessage("🤝 你在交流会上认识了不少新朋友。客户线索+5。", "success");
+      }},
+      { text: "露个面就走", hint: "行业资源+1", apply: function (st) {
+        if (!st.flags) st.flags = {};
+        st.flags._cNetworkEventCd = st.player.day;
+        var cap = typeof ensureCareerCapital === "function" ? ensureCareerCapital(st) : null;
+        if (cap) cap.industryResources = Math.min(100, (cap.industryResources || 0) + 1);
+        StateManager.addMessage("🤝 你露了个面就离开了。行业资源+1。", "info");
+      }},
+    ],
+  });
+
+  RANDOM_EVENTS.push({
+    id: "c_skill_income_boost",
+    phase: "street",
+    icon: "💡",
+    title: "技能变现机会",
+    text: function (st) {
+      if (!st || !st.skills) return "你的技能可能有变现的机会。";
+      var topSkill = "", topLevel = 0;
+      for (var k in st.skills) {
+        var lv = (st.skills[k] && st.skills[k].level) || 0;
+        if (lv > topLevel) { topLevel = lv; topSkill = k; }
+      }
+      if (topLevel >= 30) return "你在" + topSkill + "领域的水平已经达到了专业级。有人愿意出高价请你做兼职。";
+      return "你的技能有一定的市场价值。";
+    },
+    triggers: { minDay: 60, interval: 60 },
+    conditions: function (st) {
+      if (!st || !st.skills || !st.flags) return false;
+      if (st.flags._cSkillIncomeCd && (st.player.day || 0) - st.flags._cSkillIncomeCd < 60) return false;
+      for (var k in st.skills) {
+        if ((st.skills[k] && st.skills[k].level) || 0 >= 30) return true;
+      }
+      return false;
+    },
+    probability: 0.025,
+    repeatable: true,
+    choices: [
+      { text: "接兼职", hint: "获得¥3000", apply: function (st) {
+        if (!st.flags) st.flags = {};
+        st.flags._cSkillIncomeCd = st.player.day;
+        if (st.resources) st.resources.cash = (st.resources.cash || 0) + 3000;
+        if (st.needs) st.needs.fatigue = Math.min(100, (st.needs.fatigue || 0) + 10);
+        StateManager.addMessage("💡 你接了一个兼职项目，赚了¥3000。", "success");
+      }},
+      { text: "保持专注", hint: "心智+3", apply: function (st) {
+        if (!st.flags) st.flags = {};
+        st.flags._cSkillIncomeCd = st.player.day;
+        if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 3);
+        StateManager.addMessage("💡 你决定专注于当前工作。心智+3。", "info");
+      }},
+    ],
+  });
+})();
+
 // ====== [R906 域C 联动增强] 3项: C→D 职业成就分享增进友谊 / C→E 技能突破投资机会 / C→F 职业路径可视进度条 ======
 (function () {
   if (typeof RANDOM_EVENTS === "undefined") return;
