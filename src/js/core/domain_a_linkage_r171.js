@@ -385,6 +385,8 @@
       },
       getStory: function (st) { return this.getText(st); },
       apply: function (st) {
+        if (!st) return;
+        st.flags = st.flags || {};
         var c = st.player.corporate;
         if (!c) return;
         c.popularity = Math.min(100, (c.popularity || 0) + 5);
