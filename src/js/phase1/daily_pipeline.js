@@ -2798,3 +2798,19 @@ function getCareerChangeCost(age) {
   if (age < 45) return 1.3;
   return 1.5;
 }
+// ====== [R913 域G A类#1]: 导出函数到window ======
+if (typeof window !== "undefined") {
+  window.runDailyPipeline = runDailyPipeline;
+  window.endDay = endDay;
+  window.generateDailySummary = generateDailySummary;
+  window.trackLifeMilestone = trackLifeMilestone;
+  window.trackLifeDataSnapshot = trackLifeDataSnapshot;
+  window.recordLifeMilestone = recordLifeMilestone;
+  window.getHealthScore = getHealthScore;
+  window.checkAgeMilestoneNarrative = checkAgeMilestoneNarrative;
+  window.getLifeStageLabel = getLifeStageLabel;
+  window.getDailyCostOfLiving = getDailyCostOfLiving;
+  window.getSocialEfficiencyByAge = getSocialEfficiencyByAge;
+  window.getStartupAgeModifier = getStartupAgeModifier;
+  window.getCareerChangeCost = getCareerChangeCost;
+}
