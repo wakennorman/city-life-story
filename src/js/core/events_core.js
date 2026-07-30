@@ -1917,4 +1917,99 @@ if (typeof window !== "undefined") {
   window.applyEventMarketEffect = applyEventMarketEffect;
   window.trackEventBehavior = trackEventBehavior;
   window.applyAdversityResilience = applyAdversityResilience;
+  window.rollStreetEvent = rollStreetEvent;
+  window.rollCorporateEvent = rollCorporateEvent;
+  window.queueRandomEvent = queueRandomEvent;
+  window.getEventStatsSummary = getEventStatsSummary;
+  window.getEventSocialSpread = getEventSocialSpread;
+  window.getEventRiskModifier = getEventRiskModifier;
+  window.getEventResilienceGrowth = getEventResilienceGrowth;
+  window.renderEventHistoryWidget = renderEventHistoryWidget;
 }
+
+// ====== [R916 域B 联动增强] 3项: B→A/B→D/B→G ======
+(function () {
+  "use strict";
+  if (typeof RANDOM_EVENTS === "undefined") return;
+  if (RANDOM_EVENTS._eventsCoreLinkageR916Loaded) return;
+  RANDOM_EVENTS._eventsCoreLinkageR916Loaded = true;
+
+  RANDOM_EVENTS.push({
+    id: "b_event_economic_ripple",
+    phase: "street",
+    icon: "🌊",
+    title: "事件的涟漪",
+    text: function (st) {
+      if (!st || !st.flags) return "每一个事件都会在市场上留下痕迹。";
+      var ecoEvents = st.flags._eventEconomicImpact || {};
+      var count = Object.keys(ecoEvents).length;
+      if (count >= 5) return "你经历过的" + count + "个重大事件，每一个都在城市经济中留下了印记。有些改变了你，有些改变了这座城市。";
+      return "每一个事件都是经济中的一块石头，投入水中就会泛起涟漪。";
+    },
+    triggers: { minDay: 90, interval: 90 },
+    conditions: function (st) {
+      if (!st || !st.flags) return false;
+      if (st.flags._bEventRippleCd && (st.player.day || 0) - st.flags._bEventRippleCd < 90) return false;
+      var eco = st.flags._eventEconomicImpact || {};
+      return Object.keys(eco).length >= 3;
+    },
+    probability: 0.02,
+    repeatable: true,
+    choices: [
+      { text: "回顾这些事件", hint: "心智+5", apply: function (st) {
+        if (!st.flags) st.flags = {};
+        st.flags._bEventRippleCd = st.player.day;
+        if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 5);
+        StateManager.addMessage("🌊 你回顾了这些年的风风雨雨。心智+5。", "success");
+      }},
+      { text: "向前看", hint: "继续前行", apply: function (st) {
+        if (!st.flags) st.flags = {};
+        st.flags._bEventRippleCd = st.player.day;
+        StateManager.addMessage("🌊 你放下过去，继续向前走。", "info");
+      }},
+    ],
+  });
+
+  RANDOM_EVENTS.push({
+    id: "b_event_social_bond",
+    phase: "street",
+    icon: "🤝",
+    title: "患难见真情",
+    text: function (st) {
+      if (!st || !st.flags) return "经历风雨后，方知真情可贵。";
+      var negStreak = st.flags._negativeEventStreak || 0;
+      if (negStreak >= 3) return "最近一连串的打击让你身心俱疲。但正是这种时候，你才看清谁是真朋友。";
+      return "生活总是起起落落，但每一次跌倒后站起来，你都会变得更强大。";
+    },
+    triggers: { minDay: 60, interval: 60 },
+    conditions: function (st) {
+      if (!st || !st.flags) return false;
+      if (st.flags._bSocialBondCd && (st.player.day || 0) - st.flags._bSocialBondCd < 60) return false;
+      return (st.flags._negativeEventStreak || 0) >= 2;
+    },
+    probability: 0.03,
+    repeatable: true,
+    choices: [
+      { text: "找朋友倾诉", hint: "心情+8，好感+5", apply: function (st) {
+        if (!st.flags) st.flags = {};
+        st.flags._bSocialBondCd = st.player.day;
+        if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 8);
+        if (st.relationships) {
+          for (var id in st.relationships) {
+            if (st.relationships[id] && st.relationships[id].met) {
+              if (typeof applyAffinityChange === "function") applyAffinityChange(st, id, 5, "患难倾诉");
+              break;
+            }
+          }
+        }
+        StateManager.addMessage("🤝 你找朋友倾诉了烦恼。心情+8。", "success");
+      }},
+      { text: "独自消化", hint: "心智+5", apply: function (st) {
+        if (!st.flags) st.flags = {};
+        st.flags._bSocialBondCd = st.player.day;
+        if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 5);
+        StateManager.addMessage("🤝 你选择独自消化。心智+5。", "info");
+      }},
+    ],
+  });
+})();
