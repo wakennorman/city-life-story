@@ -657,3 +657,14 @@
 - 验证：node --check×3过/build 14141.7KB c792b×6入包/MC 10x500 191.6s 0代码异常前7天死亡全0%(存活50-60%/grinder20%既有RNG阈值)。
 - 竞态：dist因build(13:34)吸入并行在途social_tab.js(13:26改,+63行未提交)→按铁律dist不提交,由并行下次build闭合；src/index.html被并行13:40 touch(内容仅我的4行)→pre-commit拦截,touch dist重试即过；push直推成功(TLS已恢复)。
 - 下轮候选：H(R712b) > A(R770b)。开轮必git log重算。
+
+## R903b 域A 数据/数值平衡（2026-07-30 11:5x-12:2x 本窗口自动化）
+- 选域：git log 实测 A 最陈旧(R895)+深审 recency A=R770b 最旧；b后缀避让并行 R903/R904。
+- A类3处全为「数值承诺静默失效」死数据：①driver_license effects.agility:1 零消费（证书开关无agility分支）→main.js:3920 补分支；②bicycle effects.fatigue_reduction:10 零消费→daily_pipeline 疲劳恢复接入（库存+装备双源,同构R306,封顶20）；③warm_coat effects.comfort:5 零消费→同处接幸福加成（封顶10）。
+- 误报勿修2处：dental/vision（MEMORY陈旧记录,字段不存在,已清账）；construction_safety injuryReduction 由 main.js:5106 硬编码兑现。
+- 联动3（domain_a_linkage_events_r903b.js,3street,done-flag）：a903b_portfolio_first_seed/steady_growth/half_million 消费 investment.js:1410 动态写入的 _portfolioMilestone_10000/50000/500000 三档写-only死flag（A→E,域E该三档零消费账清零）。
+- B类例行：index.html 杂散t清扫4处(r900-r903挂载行)。
+- 验证：node --check×3过/build 15553.2KB a903b×6+_itemFatigueCut×6+cert.effects.agility×3 全入包/MC 10x500 247.1s 0代码异常前7天死亡全0%（corporate40/grinder40 既有RNG阈值）。
+- 竞态：全部改动被并行 a568cc0c+77370c8f 扫走 IDENTICAL,四项核验HEAD完整即闭合;本窗口仅提交 loop-state 回填(b5e4d52b)。并行同期连发 R903/R904(域B已被占)。
+- push：TLS代理3067未起,LOCAL_ONLY_TLS,ahead 3(origin停7f9ba5dc)。
+- 下轮候选：B(R785b) > C(R792b) > E(R819b)。开轮必 git log 重算(R904已占域B需核实其深审性质)。
