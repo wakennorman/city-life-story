@@ -2798,6 +2798,112 @@ function getCareerChangeCost(age) {
   if (age < 45) return 1.3;
   return 1.5;
 }
+
+// ====== [R913 域G A类#1]: 导出函数到window ======
+if (typeof window !== "undefined") {
+  window.runDailyPipeline = runDailyPipeline;
+  window.endDay = endDay;
+  window.generateDailySummary = generateDailySummary;
+  window.trackLifeMilestone = trackLifeMilestone;
+  window.trackLifeDataSnapshot = trackLifeDataSnapshot;
+  window.recordLifeMilestone = recordLifeMilestone;
+  window.getHealthScore = getHealthScore;
+  window.checkAgeMilestoneNarrative = checkAgeMilestoneNarrative;
+  window.getLifeStageLabel = getLifeStageLabel;
+  window.getDailyCostOfLiving = getDailyCostOfLiving;
+  window.getSocialEfficiencyByAge = getSocialEfficiencyByAge;
+  window.getStartupAgeModifier = getStartupAgeModifier;
+  window.getCareerChangeCost = getCareerChangeCost;
+}
+
+// ====== [R913 域G 联动增强] 3项: G→A/G→D/G→F ======
+(function () {
+  "use strict";
+  if (typeof RANDOM_EVENTS === "undefined") return;
+  if (RANDOM_EVENTS._pipelineLinkageR913Loaded) return;
+  RANDOM_EVENTS._pipelineLinkageR913Loaded = true;
+
+  RANDOM_EVENTS.push({
+    id: "g_life_data_snapshot",
+    phase: "street",
+    icon: "📊",
+    title: "人生数据快照",
+    text: function (st) {
+      if (!st || !st.player) return "回顾你的人生数据。";
+      var age = st.player.age || 20;
+      var day = st.player.day || 0;
+      var health = st.status ? st.status.health || 100 : 100;
+      var cash = st.resources ? (st.resources.cash || 0) : 0;
+      return "第" + day + "天，你" + age + "岁。\n健康状况：" + health + "，现金：¥" + cash.toLocaleString() + "。\n这就是你到目前为止的人生答卷。";
+    },
+    triggers: { minDay: 90, interval: 90 },
+    conditions: function (st) {
+      if (!st || !st.player || !st.flags) return false;
+      if (st.flags._gLifeDataCd && (st.player.day || 0) - st.flags._gLifeDataCd < 90) return false;
+      return true;
+    },
+    probability: 0.02,
+    repeatable: true,
+    choices: [
+      { text: "记录数据", hint: "心智+5", apply: function (st) {
+        if (!st.flags) st.flags = {};
+        st.flags._gLifeDataCd = st.player.day;
+        if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 5);
+        StateManager.addMessage("📊 你认真记录下了当前的人生数据。心智+5。", "info");
+      }},
+      { text: "继续前行", hint: "珍惜当下", apply: function (st) {
+        if (!st.flags) st.flags = {};
+        st.flags._gLifeDataCd = st.player.day;
+        StateManager.addMessage("📊 你看了一眼数据，继续向前走。", "info");
+      }},
+    ],
+  });
+
+  RANDOM_EVENTS.push({
+    id: "g_life_stage_social",
+    phase: "street",
+    icon: "🎂",
+    title: "岁月如歌",
+    text: function (st) {
+      if (!st || !st.player) return "你感慨时光飞逝。";
+      var age = st.player.age || 20;
+      if (age >= 50) return "你已经" + age + "岁了。年轻时认识的朋友，有些已经走散，有些还在身边。\n这座城市记录了你半辈子的故事。";
+      if (age >= 35) return "你" + age + "岁了。这个年纪，朋友聚会越来越少，大家都在为生活奔波。\n偶尔的问候，弥足珍贵。";
+      if (age >= 25) return "你" + age + "岁了。二十多岁是最精彩的年纪，朋友多，机会也多。";
+      return "你" + age + "岁。年轻就是最大的资本，去认识更多的人吧。";
+    },
+    triggers: { minDay: 60, interval: 180 },
+    conditions: function (st) {
+      if (!st || !st.player || !st.flags) return false;
+      if (st.flags._gLifeStageCd && (st.player.day || 0) - st.flags._gLifeStageCd < 180) return false;
+      return true;
+    },
+    probability: 0.015,
+    repeatable: true,
+    choices: [
+      { text: "联系老朋友", hint: "心情+5，好感+3", apply: function (st) {
+        if (!st.flags) st.flags = {};
+        st.flags._gLifeStageCd = st.player.day;
+        if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 5);
+        if (st.relationships) {
+          for (var id in st.relationships) {
+            if (st.relationships[id] && st.relationships[id].met) {
+              if (typeof applyAffinityChange === "function") applyAffinityChange(st, id, 3, "岁月问候");
+              break;
+            }
+          }
+        }
+        StateManager.addMessage("🎂 你联系了一位老朋友。心情+5。", "success");
+      }},
+      { text: "珍惜当下", hint: "心智+3", apply: function (st) {
+        if (!st.flags) st.flags = {};
+        st.flags._gLifeStageCd = st.player.day;
+        if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 3);
+        StateManager.addMessage("🎂 你感慨时光飞逝，但更珍惜当下的每一刻。心智+3。", "info");
+      }},
+    ],
+  });
+})();
 // ====== [R913 域G A类#1]: 导出函数到window ======
 if (typeof window !== "undefined") {
   window.runDailyPipeline = runDailyPipeline;
