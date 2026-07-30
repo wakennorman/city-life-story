@@ -2239,3 +2239,10 @@ function cleanupExpiredNews(state) {
 // [R386] 域B
 // [R466] 域B
 // [R554] 域B
+
+// [R896 域B A类#1]: 导出函数到window
+if (typeof window !== 'undefined') {
+  window.applyNewsEffect = applyNewsEffect;
+  window.getRandomNewsByLevel = getRandomNewsByLevel;
+  window.rollDailyNews = rollDailyNews;
+}
