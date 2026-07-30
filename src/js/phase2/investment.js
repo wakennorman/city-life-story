@@ -5327,3 +5327,135 @@ if (typeof window !== "undefined") {
   window.getInvestmentAssetSnapshot = getInvestmentAssetSnapshot;
   window.getInvestmentSummary = getInvestmentSummary;
 }
+
+// ====== [R911 域E 联动增强] 3项: E→B投资里程碑叙事 / E→G财富健康加成 / E→F投资组合可视数据 ======
+
+(function () {
+  "use strict";
+  if (typeof RANDOM_EVENTS === "undefined") return;
+  if (RANDOM_EVENTS._investmentLinkageR911Loaded) return;
+  RANDOM_EVENTS._investmentLinkageR911Loaded = true;
+  RANDOM_EVENTS.push({
+    id: "invest_milestone_100k_story",
+    phase: "street",
+    icon: "📈",
+    title: "投资人的自信",
+    text: function (st) {
+      var totalVal = 0;
+      if (st && st.investment) {
+        var inv = st.investment;
+        if (inv.stockHoldings) {
+          for (var i = 0; i < inv.stockHoldings.length; i++) {
+            var h = inv.stockHoldings[i];
+            var m = inv.stockMarket && inv.stockMarket[h.symbol];
+            if (m) totalVal += m.price * h.shares;
+          }
+        }
+        if (inv.btcHoldings) totalVal += (inv.btcPrice || 0) * inv.btcHoldings;
+        if (inv.properties) {
+          for (var pi = 0; pi < inv.properties.length; pi++) {
+            totalVal += inv.properties[pi].currentPrice || inv.properties[pi].buyPrice || 0;
+          }
+        }
+      }
+      return "你的投资组合总价值突破了 ¥" + totalVal.toLocaleString() + "！";
+    },
+    triggers: { minDay: 120 },
+    conditions: function (st) {
+      if (!st || !st.investment || !st.flags) return false;
+      if (st.flags._investMilestone100kStoryDone) return false;
+      var totalVal = 0;
+      var inv = st.investment;
+      if (inv.stockHoldings) {
+        for (var i = 0; i < inv.stockHoldings.length; i++) {
+          var h = inv.stockHoldings[i];
+          var m = inv.stockMarket && inv.stockMarket[h.symbol];
+          if (m) totalVal += m.price * h.shares;
+        }
+      }
+      if (inv.btcHoldings) totalVal += (inv.btcPrice || 0) * inv.btcHoldings;
+      if (inv.properties) {
+        for (var pi = 0; pi < inv.properties.length; pi++) {
+          totalVal += inv.properties[pi].currentPrice || inv.properties[pi].buyPrice || 0;
+        }
+      }
+      return totalVal >= 100000;
+    },
+    probability: 0.04,
+    repeatable: false,
+    choices: [
+      { text: "复盘投资策略", hint: "会计XP+20，心智+8", apply: function (st) {
+        st.flags._investMilestone100kStoryDone = true;
+        if (typeof addSkillXp === "function") { addSkillXp("accounting", 20); addSkillXp("management", 10); }
+        if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 8);
+        StateManager.addMessage("你花了一整晚复盘投资策略。会计XP+20，管理XP+10，心智+8。", "success");
+      }},
+      { text: "小小庆祝一下", hint: "心情+15", apply: function (st) {
+        st.flags._investMilestone100kStoryDone = true;
+        var cash = st.resources ? (st.resources.cash || 0) : 0;
+        if (cash >= 500) { st.resources.cash = cash - 500; if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 15); }
+        StateManager.addMessage("你给自己加了个菜。心情+15。", "success");
+      }},
+    ],
+  });
+  RANDOM_EVENTS.push({
+    id: "invest_wealth_quality_life",
+    phase: "street",
+    icon: "💰",
+    title: "财富带来的从容",
+    text: function (st) {
+      var totalVal = 0;
+      if (st && st.investment) {
+        var inv = st.investment;
+        if (inv.stockHoldings) for (var i = 0; i < inv.stockHoldings.length; i++) { var h = inv.stockHoldings[i]; var m = inv.stockMarket && inv.stockMarket[h.symbol]; if (m) totalVal += m.price * h.shares; }
+        if (inv.btcHoldings) totalVal += (inv.btcPrice || 0) * inv.btcHoldings;
+        if (inv.properties) for (var pi = 0; pi < inv.properties.length; pi++) { totalVal += inv.properties[pi].currentPrice || inv.properties[pi].buyPrice || 0; }
+      }
+      if (totalVal >= 500000) return "你的投资组合已经超过50万。钱不再是每天焦虑的来源。";
+      if (totalVal >= 200000) return "你的投资组合超过了20万。你已经有了说不的底气。";
+      return "你的投资组合在稳步增长。你对未来更有信心了。";
+    },
+    triggers: { minDay: 60, interval: 90 },
+    conditions: function (st) {
+      if (!st || !st.investment) return false;
+      if (st.flags && st.flags._investQualityLifeCd) { if ((st.player.day || 0) - st.flags._investQualityLifeCd < 90) return false; }
+      var totalVal = 0;
+      var inv = st.investment;
+      if (inv.stockHoldings) for (var i = 0; i < inv.stockHoldings.length; i++) { var h = inv.stockHoldings[i]; var m = inv.stockMarket && inv.stockMarket[h.symbol]; if (m) totalVal += m.price * h.shares; }
+      if (inv.btcHoldings) totalVal += (inv.btcPrice || 0) * inv.btcHoldings;
+      if (inv.properties) for (var pi = 0; pi < inv.properties.length; pi++) { totalVal += inv.properties[pi].currentPrice || inv.properties[pi].buyPrice || 0; }
+      return totalVal >= 50000;
+    },
+    probability: 0.03,
+    repeatable: true,
+    choices: [
+      { text: "感恩这份安全感", hint: "心情+8，心智+5，健康+3", apply: function (st) {
+        if (!st.flags) st.flags = {};
+        st.flags._investQualityLifeCd = st.player.day;
+        if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 8);
+        if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 5);
+        if (st.status) st.status.health = Math.min(100, (st.status.health || 50) + 3);
+        StateManager.addMessage("财富带来内心的从容。心情+8，心智+5，健康+3。", "success");
+      }},
+      { text: "继续优化投资组合", hint: "会计XP+15，管理XP+10", apply: function (st) {
+        if (!st.flags) st.flags = {};
+        st.flags._investQualityLifeCd = st.player.day;
+        if (typeof addSkillXp === "function") { addSkillXp("accounting", 15); addSkillXp("management", 10); }
+        StateManager.addMessage("你重新平衡了投资组合。会计XP+15，管理XP+10。", "info");
+      }},
+    ],
+  });
+  if (typeof window !== "undefined") {
+    window.getInvestPortfolioForDisplay = function (state) {
+      if (!state || !state.investment) return null;
+      var inv = state.investment;
+      var data = { totalValue: 0, stocks: [], btc: null, properties: [], allocation: {}, dailyPL: 0 };
+      if (inv.stockHoldings) for (var i = 0; i < inv.stockHoldings.length; i++) { var h = inv.stockHoldings[i]; var m = inv.stockMarket && inv.stockMarket[h.symbol]; var price = m ? m.price : 0; var value = price * h.shares; data.totalValue += value; data.stocks.push({ symbol: h.symbol, shares: h.shares, price: price, value: value, buyPrice: h.buyPrice || 0 }); }
+      if (inv.btcHoldings && inv.btcHoldings > 0) { var btcVal = (inv.btcPrice || 0) * inv.btcHoldings; data.totalValue += btcVal; data.btc = { holdings: inv.btcHoldings, price: inv.btcPrice || 0, value: btcVal }; }
+      if (inv.properties) for (var pi = 0; pi < inv.properties.length; pi++) { var p = inv.properties[pi]; var pVal = p.currentPrice || p.buyPrice || 0; data.totalValue += pVal; data.properties.push({ id: p.id, name: p.name || '房产', value: pVal, buyPrice: p.buyPrice || 0 }); }
+      if (data.totalValue > 0) { var stockVal = data.stocks.reduce(function(a, b) { return a + b.value; }, 0); var propVal = data.properties.reduce(function(a, b) { return a + b.value; }, 0); var btcVal = data.btc ? data.btc.value : 0; data.allocation = { '股票': Math.round((stockVal / data.totalValue) * 100), '房产': Math.round((propVal / data.totalValue) * 100), '虚拟币': Math.round((btcVal / data.totalValue) * 100), '现金': Math.max(0, 100 - Math.round((stockVal + propVal + btcVal) / data.totalValue * 100)) }; }
+      if (typeof calculateDailyPL === 'function') data.dailyPL = calculateDailyPL(state);
+      return data;
+    };
+  }
+})();
