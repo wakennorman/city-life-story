@@ -1900,3 +1900,21 @@ function getEventCompanyCulture(state, evtType) {
   if (evtType === "positive" && _co.reputation) _co.reputation = Math.min(100, _co.reputation + 1);
   else if (evtType === "negative" && _co.reputation) _co.reputation = Math.max(0, _co.reputation - 1);
 }
+
+// [R887 域B A类#1]: 导出函数到window
+if (typeof window !== "undefined") {
+  window.getEventTypeIcon = getEventTypeIcon;
+  window.applyEventPriceShock = applyEventPriceShock;
+  window.getEventHealthImpact = getEventHealthImpact;
+  window.scaleAmount = scaleAmount;
+  window.queueChainEvent = queueChainEvent;
+  window.eTriggersMatch = eTriggersMatch;
+  window.evaluateTriggers = evaluateTriggers;
+  window.showEventModal = showEventModal;
+  window.scheduleChainEvent = scheduleChainEvent;
+  window.checkChainEventQueue = checkChainEventQueue;
+  window.recordEventToHistory = recordEventToHistory;
+  window.applyEventMarketEffect = applyEventMarketEffect;
+  window.trackEventBehavior = trackEventBehavior;
+  window.applyAdversityResilience = applyAdversityResilience;
+}
