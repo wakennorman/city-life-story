@@ -5594,6 +5594,12 @@ if (typeof window !== "undefined") {
   };
   if (typeof window !== "undefined") {
     window.careerSocialAction = careerSocialAction;
+    window.careerWorkAction = careerWorkAction;
+    window.careerTakeBreak = careerTakeBreak;
+    window.careerTakePaidLeave = careerTakePaidLeave;
+    window.applyJobhop = applyJobhop;
+    window.resignCareerJob = resignCareerJob;
+    window.applyCareerPromotion = applyCareerPromotion;
   }
 }
 
@@ -6398,3 +6404,170 @@ function getCareerPathVisualData(state) {
   }
   return { pathName: _path.name, icon: _path.icon, levels: _path.levels, currentIdx: _currentIdx, workDays: _job.workDays || 0 };
 }
+
+// ====== [R906 域C 联动增强] 3项: C→D 职业成就分享增进友谊 / C→E 技能突破投资机会 / C→F 职业路径可视进度条 ======
+(function () {
+  if (typeof RANDOM_EVENTS === "undefined") return;
+  if (RANDOM_EVENTS._careerLinkageR906Loaded) return;
+  RANDOM_EVENTS._careerLinkageR906Loaded = true;
+
+  // ===== ① C→D: 职业成就分享增进友谊 =====
+  // 玩家晋升到中级职位后，与NPC分享喜悦增进友谊
+  RANDOM_EVENTS.push({
+    id: "career_achievement_share",
+    phase: "street",
+    icon: "🎉",
+    title: "分享你的成就",
+    story: "你刚刚在工作上取得了不错的成绩。走在街上，迎面遇到了一个熟悉的面孔——好久没联系的老朋友。要不要跟他说说近况？",
+    text: function (st) {
+      return "你刚刚在工作上取得了不错的成绩。走在街上，迎面遇到了一个熟悉的面孔——好久没联系的老朋友。要不要跟他说说近况？";
+    },
+    triggers: { minDay: 60 },
+    conditions: function (st) {
+      if (!st || !st.career || !st.career.currentJob) return false;
+      if (st.flags && st.flags._careerAchievementShareDone) return false;
+      // 需要已晋升到中级(level index >= 1)
+      var job = st.career.currentJob;
+      var path = CAREER_PATHS && CAREER_PATHS[job.path];
+      if (!path || !path.levels) return false;
+      var idx = -1;
+      for (var i = 0; i < path.levels.length; i++) {
+        if (path.levels[i].id === job.levelId) { idx = i; break; }
+      }
+      if (idx < 1) return false;
+      // 需要至少有一个已结识NPC
+      if (!st.relationships) return false;
+      var hasFriend = false;
+      for (var id in st.relationships) {
+        if (st.relationships[id] && st.relationships[id].met) { hasFriend = true; break; }
+      }
+      return hasFriend;
+    },
+    probability: 0.04,
+    repeatable: false,
+    choices: [
+      {
+        text: "📣 热情分享自己的成就",
+        hint: "好感+8，心情+5，但可能被当作炫耀",
+        apply: function (st) {
+          st.flags._careerAchievementShareDone = true;
+          // 随机选一个已结识NPC加好感
+          var metList = [];
+          for (var id in st.relationships) {
+            if (st.relationships[id] && st.relationships[id].met) metList.push(id);
+          }
+          if (metList.length > 0) {
+            var pick = metList[Math.floor(Math.random() * metList.length)];
+            if (typeof applyAffinityChange === "function") {
+              applyAffinityChange(st, pick, 8, "career_achievement_share");
+            }
+          }
+          if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 5);
+          StateManager.addMessage("🎉 你热情地分享了最近的成就，朋友为你感到高兴。好感+8，心情+5。", "success");
+        },
+      },
+      {
+        text: "🙂 谦虚地说「还行」",
+        hint: "好感+4，给人稳重印象",
+        apply: function (st) {
+          st.flags._careerAchievementShareDone = true;
+          var metList = [];
+          for (var id in st.relationships) {
+            if (st.relationships[id] && st.relationships[id].met) metList.push(id);
+          }
+          if (metList.length > 0) {
+            var pick = metList[Math.floor(Math.random() * metList.length)];
+            if (typeof applyAffinityChange === "function") {
+              applyAffinityChange(st, pick, 4, "career_achievement_share_humble");
+            }
+          }
+          StateManager.addMessage("🙂 你谦虚地回应了朋友的关心。稳重的人总是更受欢迎。好感+4。", "info");
+        },
+      },
+    ],
+  });
+
+  // ===== ② C→E: 技能等级突破触发投资机会 =====
+  // 管理/会计/编程技能达到Lv.50时解锁特殊投资洞察
+  RANDOM_EVENTS.push({
+    id: "career_skill_invest_opportunity",
+    phase: "street",
+    icon: "📈",
+    title: "专业视角的投资机会",
+    story: "凭借你在{skillName}领域的深厚积累，你发现了一个别人看不到的投资机会——这个领域的技术趋势让你确信，现在是入场的好时机。",
+    text: function (st) {
+      var sk = (st && st._skillInvestSkill) || "management";
+      var sn = (typeof getSkillChineseName === "function") ? getSkillChineseName(sk) : sk;
+      return "凭借你在" + sn + "领域的深厚积累，你发现了一个别人看不到的投资机会——这个领域的技术趋势让你确信，现在是入场的好时机。";
+    },
+    triggers: { minDay: 120 },
+    conditions: function (st) {
+      if (!st || !st.skills || !st.flags) return false;
+      if (st.flags._careerSkillInvestDone) return false;
+      // 管理/会计/编程 任一达到Lv.50
+      var investSkills = ["management", "accounting", "coding", "sales"];
+      for (var i = 0; i < investSkills.length; i++) {
+        var sk = st.skills[investSkills[i]];
+        if (sk && sk.level >= 50) {
+          st._skillInvestSkill = investSkills[i];
+          return true;
+        }
+      }
+      return false;
+    },
+    probability: 0.05,
+    repeatable: false,
+    choices: [
+      {
+        text: "💰 投资这个方向",
+        hint: "花¥2000，预期收益+¥5000，会计/管理XP+20",
+        apply: function (st) {
+          st.flags._careerSkillInvestDone = true;
+          var cost = 2000;
+          var cash = st.resources ? (st.resources.cash || 0) : 0;
+          if (cash >= cost) {
+            st.resources.cash = cash - cost;
+            // 投资回报：随机收益
+            var profit = 3000 + Math.floor(Math.random() * 4000);
+            st.resources.cash = (st.resources.cash || 0) + profit;
+            if (typeof addSkillXp === "function") {
+              addSkillXp("accounting", 20);
+              addSkillXp("management", 10);
+            }
+            StateManager.addMessage("📈 你凭借专业技能做出了精准的投资判断！投入¥" + cost + "，获得¥" + profit + "回报。会计XP+20，管理XP+10。", "success");
+          } else {
+            StateManager.addMessage("⚠️ 现金不足¥" + cost + "，无法投资。", "warning");
+          }
+        },
+      },
+      {
+        text: "📝 记录下来，以后再说",
+        hint: "心智+5，错过当前机会",
+        apply: function (st) {
+          st.flags._careerSkillInvestDone = true;
+          st.player.mental = Math.min(100, (st.player.mental || 50) + 5);
+          StateManager.addMessage("📝 你把这个机会记在了笔记本上。虽然现在没行动，但专业视野本身就是财富。心智+5。", "info");
+        },
+      },
+    ],
+  });
+
+  // ===== ③ C→F: 职业路径可视化进度条 =====
+  // 在职业总览中展示当前路径的整体进度百分比
+  function getCareerPathProgressPercent(state) {
+    if (!state || !state.career || !state.career.currentJob) return 0;
+    var job = state.career.currentJob;
+    var path = CAREER_PATHS && CAREER_PATHS[job.path];
+    if (!path || !path.levels || path.levels.length < 2) return 0;
+    var curIdx = -1;
+    for (var i = 0; i < path.levels.length; i++) {
+      if (path.levels[i].id === job.levelId) { curIdx = i; break; }
+    }
+    if (curIdx < 0) return 0;
+    return Math.round((curIdx / (path.levels.length - 1)) * 100);
+  }
+
+  if (typeof window !== "undefined") {
+    window.getCareerPathProgressPercent = getCareerPathProgressPercent;
+  }
+})();
