@@ -246,6 +246,30 @@ function triggerPublicOpinionCrisis(state, topic, severity) {
   };
 }
 
+// ====== 朋友圈文案池（供UI发朋友圈按钮取材，联动游戏状态）======
+// [全系统自洽修复] 域D R900b A类#3附属: 原按钮硬编码单一文案，复用感强；按状态取材增强代入感
+function pickMomentText(state) {
+  var pool = [
+    "今天天气不错，出来走走。",
+    "生活不止眼前的苟且，还有明天的早高峰。",
+    "又是努力搬砖的一天。",
+    "深夜的城市，每一盏灯背后都有一个故事。",
+    "记录一下平凡又真实的一天。",
+  ];
+  try {
+    if (state && state.resources && (state.resources.cash || 0) > 50000) {
+      pool.push("小小犒劳一下自己，最近状态不错。");
+    }
+    if (state && state.needs && (state.needs.happiness || 50) < 30) {
+      pool.push("emo了，谁来陪我说说话。");
+    }
+    if (state && state.player && state.player.phase === "corporate") {
+      pool.push("会议一个接一个，咖啡续到第三杯。");
+    }
+  } catch (e) {}
+  return pool[Random.int(0, pool.length - 1)];
+}
+
 // ====== 每日tick ======
 function tickSocialNetwork(state) {
   ensureSocialNetworkState(state);
@@ -256,8 +280,53 @@ function tickSocialNetwork(state) {
     refreshWeiboHotlist(state);
   }
 
+  // [全系统自洽修复] 域D R900b A类#1: triggerPublicOpinionCrisis 原全库零调用方→舆论危机永不激活，
+  // wiki承诺"负面事件可触发危机"零兑现、r455声援事件与危机UI全部死链。接线：树大招风——
+  // 粉丝≥1000(medium+)后每日1.5%概率被卷入舆论风暴（损失厌恶：影响力越大风险越高）。
+  if (
+    !state.socialNetwork.舆论危机.active &&
+    (state.socialNetwork.playerFans || 0) >= 1000 &&
+    Random.int(1, 1000) <= 15
+  ) {
+    var _crisisTopics = [
+      "旧动态被翻出断章取义",
+      "带货商品被质疑质量问题",
+      "言论被恶意剪辑传播",
+      "被竞争对手买水军抹黑",
+    ];
+    var _topic = _crisisTopics[Random.int(0, _crisisTopics.length - 1)];
+    triggerPublicOpinionCrisis(state, _topic);
+    if (typeof StateManager !== "undefined") {
+      StateManager.addMessage(
+        "🔥 你被卷入舆论风暴：「" + _topic + "」！危机期间粉丝流失、网红收入受挫。",
+        "danger",
+      );
+    }
+  }
+
+  // [全系统自洽修复] 域D R900b A类#1附属: 危机active期间原先只有severity衰减、无任何实际负面效果
+  // (网红经济恒赚无风险)。兑现代价：每日粉丝流失+收入折损，与UI"危机中"警示一致。
+  var _crisisPenaltyMult = 1;
+  if (state.socialNetwork.舆论危机.active) {
+    var _sev = state.socialNetwork.舆论危机.severity || 0;
+    var _fanLoss = Math.floor(
+      (state.socialNetwork.playerFans || 0) * (_sev / 100) * 0.03,
+    ); // [PLACEHOLDER] 严重度100时每日流失3%
+    if (_fanLoss > 0 && isFinite(_fanLoss)) {
+      state.socialNetwork.playerFans = Math.max(
+        0,
+        state.socialNetwork.playerFans - _fanLoss,
+      );
+    }
+    _crisisPenaltyMult = Math.max(0.3, 1 - _sev / 150); // [PLACEHOLDER] 收入最低打3折
+  }
+
   // 网红收入结算（每天发放到现金）
   var incomeResult = calculateInfluencerIncome(state);
+  if (incomeResult && incomeResult.income > 0 && _crisisPenaltyMult < 1) {
+    incomeResult.income = Math.round(incomeResult.income * _crisisPenaltyMult);
+    state.socialNetwork.influencerIncome = incomeResult.income;
+  }
   if (incomeResult && incomeResult.income > 0) {
     state.resources = state.resources || { cash: 0 }; // [全系统自洽修复] 域D 修复: state.resources守卫（原缺失致管线崩溃）
     state.resources.cash = (state.resources.cash || 0) + incomeResult.income;
@@ -345,6 +414,36 @@ function tickSocialNetwork(state) {
       }
     }
   }
+
+  // [全系统自洽修复] 域D R900b A类#2: npcPostFeed 原全库零调用方→npcFeeds永远为空，
+  // social_tab"NPC动态"区永显"暂无"、wiki承诺"NPC动态写入动态流"零兑现。接线：
+  // 每日30%概率由一位已met的NPC发一条日常动态（met铁律：只有认识的人才出现在你的信息流）。
+  if (state.relationships && Random.int(1, 100) <= 30) {
+    var _feedCandidates = [];
+    for (var _fid in state.relationships) {
+      if (!Object.prototype.hasOwnProperty.call(state.relationships, _fid)) continue;
+      var _fr = state.relationships[_fid];
+      if (_fr && _fr.met) _feedCandidates.push(_fid);
+    }
+    if (_feedCandidates.length > 0) {
+      var _pickId = _feedCandidates[Random.int(0, _feedCandidates.length - 1)];
+      var _feedPool = [
+        "今天路过老街，想起以前的日子了。",
+        "分享一首最近单曲循环的歌。",
+        "这家小店的味道真不错，推荐！",
+        "忙碌的一天结束，晚安。",
+        "天气转凉了，大家注意保暖。",
+        "周末打算去公园走走，有人一起吗？",
+        "生活嘛，开心最重要。",
+      ];
+      npcPostFeed(
+        state,
+        _pickId,
+        _feedPool[Random.int(0, _feedPool.length - 1)],
+        "daily",
+      );
+    }
+  }
 }
 
 // ====== 全局挂载 ======
@@ -357,6 +456,7 @@ if (typeof window !== "undefined") {
   window.calculateInfluencerIncome = calculateInfluencerIncome;
   window.triggerPublicOpinionCrisis = triggerPublicOpinionCrisis;
   window.tickSocialNetwork = tickSocialNetwork;
+  window.pickMomentText = pickMomentText; // [全系统自洽修复] 域D R900b: 直接赋值导出(严禁wrapper)
   window.MECHANICS = window.MECHANICS || {};
   window.MECHANICS.social_network = {
     id: "social_network",

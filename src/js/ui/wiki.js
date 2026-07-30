@@ -4266,3 +4266,9 @@ function renderInvestmentWidget(state) {
   html += '</div>';
   return html;
 }
+
+// [R900 域F A类#1]: 导出函数到window
+if (typeof window !== "undefined") {
+  window.wikiNavigate = wikiNavigate;
+  window.renderWikiTab = renderWikiTab;
+}
