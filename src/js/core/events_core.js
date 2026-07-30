@@ -2013,3 +2013,81 @@ if (typeof window !== "undefined") {
     ],
   });
 })();
+
+// ====== [R924 域B 联动增强] 2项: B→C/B→F ======
+(function () {
+  "use strict";
+  if (typeof RANDOM_EVENTS === "undefined") return;
+  if (RANDOM_EVENTS._eventsCoreLinkageR924Loaded) return;
+  RANDOM_EVENTS._eventsCoreLinkageR924Loaded = true;
+
+  RANDOM_EVENTS.push({
+    id: "b_event_career_insight",
+    phase: "street",
+    icon: "💡",
+    title: "事件中的职业启发",
+    text: function (st) {
+      if (!st || !st.flags) return "每一个经历都是一堂课。";
+      var evtCount = (st.flags._eventHistory && st.flags._eventHistory.length) || 0;
+      if (evtCount >= 20) return "你已经经历了" + evtCount + "次事件。这些经验是别人学不到的。";
+      return "每一次经历都在塑造你的职业观。";
+    },
+    triggers: { minDay: 60, interval: 60 },
+    conditions: function (st) {
+      if (!st || !st.flags) return false;
+      if (st.flags._bCareerInsightCd && (st.player.day || 0) - st.flags._bCareerInsightCd < 60) return false;
+      return true;
+    },
+    probability: 0.02,
+    repeatable: true,
+    choices: [
+      { text: "总结教训", hint: "管理XP+8", apply: function (st) {
+        if (!st.flags) st.flags = {};
+        st.flags._bCareerInsightCd = st.player.day;
+        if (typeof addSkillXp === "function") addSkillXp("management", 8);
+        StateManager.addMessage("你从经历中总结了经验。管理XP+8。", "info");
+      }},
+      { text: "记在心里", hint: "心智+3", apply: function (st) {
+        if (!st.flags) st.flags = {};
+        st.flags._bCareerInsightCd = st.player.day;
+        if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 3);
+        StateManager.addMessage("你把这些体会记在心里。心智+3。", "info");
+      }},
+    ],
+  });
+
+  RANDOM_EVENTS.push({
+    id: "b_event_visual_flashback",
+    phase: "street",
+    icon: "📸",
+    title: "记忆闪回",
+    text: function (st) {
+      if (!st || !st.flags) return "你的记忆在闪烁。";
+      var evtCount = (st.flags._eventHistory && st.flags._eventHistory.length) || 0;
+      if (evtCount >= 10) return "你闭上眼睛，过去的一幕幕在脑海中闪过。";
+      return "每一天的经历都在积累。";
+    },
+    triggers: { minDay: 90, interval: 90 },
+    conditions: function (st) {
+      if (!st || !st.flags) return false;
+      if (st.flags._bFlashbackCd && (st.player.day || 0) - st.flags._bFlashbackCd < 90) return false;
+      return true;
+    },
+    probability: 0.015,
+    repeatable: true,
+    choices: [
+      { text: "重温记忆", hint: "心情+8，心智+5", apply: function (st) {
+        if (!st.flags) st.flags = {};
+        st.flags._bFlashbackCd = st.player.day;
+        if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 8);
+        if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 5);
+        StateManager.addMessage("你重温了那些珍贵记忆。心情+8，心智+5。", "success");
+      }},
+      { text: "继续向前", hint: "珍惜当下", apply: function (st) {
+        if (!st.flags) st.flags = {};
+        st.flags._bFlashbackCd = st.player.day;
+        StateManager.addMessage("你微微一笑，继续向前走。", "info");
+      }},
+    ],
+  });
+})();
