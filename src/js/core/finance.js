@@ -19,6 +19,8 @@ const EDUCATION_MULTIPLIER = [1.0, 1.2, 1.4]; // 0=大专, 1=本科, 2=研究生
  * @returns {number} 月收入（元）
  */
 function calculateMonthlyIncome(state) {
+  // [R882 域E A类#1]: state.player 守卫
+  if (!state || !state.player) return 0;
   const player = state.player;
   const phase = player.phase;
 

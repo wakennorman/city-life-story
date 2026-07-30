@@ -868,3 +868,17 @@ if (typeof window !== "undefined") {
   };
   tickInvestmentDaily._stopLossWiredR195 = true;
 })();
+
+// [R882 域E A类#2]: 导出分析函数到window，供UI和其他模块调用
+if (typeof window !== "undefined") {
+  window.calculateMA = calculateMA;
+  window.calculateEMA = calculateEMA;
+  window.calculateMACD = calculateMACD;
+  window.calculateRSI = calculateRSI;
+  window.calculateBollinger = calculateBollinger;
+  window.analyzeStockTechnicals = analyzeStockTechnicals;
+  window.generateTechnicalSummary = generateTechnicalSummary;
+  window.analyzePortfolio = analyzePortfolio;
+  window.setStopLoss = setStopLoss;
+  window.checkStopLoss = checkStopLoss;
+}

@@ -5317,3 +5317,13 @@ function getInvestStory(state) {
   }
   return null;
 }
+
+// [R882 域E A类#3]: 导出函数到window
+if (typeof window !== "undefined") {
+  window.getPropertyHousingTier = getPropertyHousingTier;
+  window.drawPriceChart = drawPriceChart;
+  window.initInvestment = initInvestment;
+  window.checkInvestmentMilestones = checkInvestmentMilestones;
+  window.getInvestmentAssetSnapshot = getInvestmentAssetSnapshot;
+  window.getInvestmentSummary = getInvestmentSummary;
+}
