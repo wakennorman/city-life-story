@@ -179,7 +179,7 @@
               if (st.relationships[_id2] && st.relationships[_id2].met) _metIds.push(_id2);
             }
             if (_metIds.length > 0 && typeof applyAffinityChange === "function") {
-              var _pick = _metIds[typeof Random !== "undefined" ? Random.int(0, _metIds.length - 1) : Math.floor(Math.random() * _metIds.length)];
+              var _pick = _metIds[Random.int(0, _metIds.length - 1)];
               applyAffinityChange(st, _pick, 3, "交易经验分享");
             }
             grantXp("sales", 15);
