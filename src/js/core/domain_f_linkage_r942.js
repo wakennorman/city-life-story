@@ -1,4 +1,5 @@
 /**
+// [全系统自洽修复] 域B R1016b 修复:IIFE缺少函数体闭合花括号x1
  * 域F(UI/UX) 联动增强 R942 — F→A数据可视化 / F→B事件记忆墙 / F→E财务仪表盘
  *
  * 设计约束：
@@ -26,7 +27,7 @@ choices:[{text:"🏆 整理人生成就清单",hint:"心智+28,魅力+18,系统�
 {text:"😔 往事如烟",hint:"心智+5",apply:function(st){if(!st)return;st.flags=st.flags||{};st.flags._f942MilestoneReviewDone=true;if(st.player)st.player.mental=Math.min(100,(st.player.mental||50)+5);if(typeof StateManager!=="undefined")StateManager.addMessage("😔 心智+5。","info")}}]},
 // 3. F→E: 财务仪表盘 — 查看总资产时，触发财务自由思考
 {id:"f942_wealth_dashboard",phase:"street",icon:"💎",title:"财富的里程碑",
-story:"你打开资产总览，数字让你有些恍惚。\n\n"+(function(){try{var _s=typeof StateManager!=="undefined"?StateManager.getState():null;if(_s&&_s.resources){var _c=_s.resources.cash||0,_b=_s.resources.bankBalance||0;return "现金: ¥"+Math.floor(_c).toLocaleString()+"\n存款: ¥"+Math.floor(_b).toLocaleString()+"\n总资产: ¥"+Math.floor(_c+_b).toLocaleString()}return""}catch(e){return""})()+"\n\n你想起刚来这座城市时兜里只有¥300。现在，你开始思考——多少钱才算真正的财务自由？",
+story:"你打开资产总览，数字让你有些恍惚。\n\n"+(function(){try{var _s=typeof StateManager!=="undefined"?StateManager.getState():null;if(_s&&_s.resources){var _c=_s.resources.cash||0,_b=_s.resources.bankBalance||0;return "现金: ¥"+Math.floor(_c).toLocaleString()+"\n存款: ¥"+Math.floor(_b).toLocaleString()+"\n总资产: ¥"+Math.floor(_c+_b).toLocaleString()}return""}catch(e){return""}})()+"\n\n你想起刚来这座城市时兜里只有¥300。现在，你开始思考——多少钱才算真正的财务自由？",
 conditions:function(st){if(!st||!st.player||st.gameOver)return false;if(st.flags&&st.flags._f942WealthDashDone)return false;if(!st.resources)return false;var _t=(st.resources.cash||0)+(st.resources.bankBalance||0);return _t>=500000&&st.player.day>=300},
 probability:0.05,repeatable:false,
 choices:[{text:"💎 制定财务自由计划",hint:"智力+25,会计XP+35,系统标记财务自由计划",apply:function(st){if(!st)return;st.flags=st.flags||{};st.flags._f942WealthDashDone=true;st.flags._f942FinFreedomPlan=true;if(st.player)st.player.intelligence=Math.min(100,(st.player.intelligence||50)+25);gx("accounting",35);if(typeof StateManager!=="undefined")StateManager.addMessage("💎 智力+25,会计XP+35。你制定了财务自由计划——目标清晰，脚步坚定。","success")}},

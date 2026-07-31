@@ -1,4 +1,5 @@
 /**
+// [全系统自洽修复] 域B R1016b 修复:字符串内嵌未转义双引号
  * 域A(数据/数值平衡) 联动增强 R932 — A→B市场情绪叙事 / A→G经济健康度 / A→E通胀投资觉醒
  *
  * 设计约束：
@@ -19,7 +20,7 @@ choices:[{text:"📰 收集各方信息，判断市场走向",hint:"智力+18,�
 {text:"😅 不管那么多，照常做买卖",hint:"心智+5",apply:function(st){if(!st)return;st.flags=st.flags||{};st.flags._a932SentimentDone=true;if(st.player)st.player.mental=Math.min(100,(st.player.mental||50)+5);if(typeof StateManager!=="undefined")StateManager.addMessage("😅 心智+5。","info")}}]},
 // 2. A→G: 经济健康度 — 长期通胀/通缩影响玩家日常生活质量
 {id:"a932_econ_health_life",phase:"street",icon:"💊",title:"经济的呼吸",
-story:"你站在超市货架前，默默比较着两个品牌的价格。\n\n这半年来，同样的东西越来越贵了——工资没涨多少，但生活成本却在悄悄攀升。\n\n你开始理解为什么老一辈总说"钱不值钱了"。",
+story:"你站在超市货架前，默默比较着两个品牌的价格。\n\n这半年来，同样的东西越来越贵了——工资没涨多少，但生活成本却在悄悄攀升。\n\n你开始理解为什么老一辈总说“钱不值钱了”。",
 conditions:function(st){if(!st||!st.player||st.gameOver)return false;if(st.flags&&st.flags._a932EconHealthDone)return false;var _inf=Math.abs(st.flags._cumulativeInflation||0);return _inf>0.08&&st.player.day>=120},
 probability:0.06,repeatable:false,
 choices:[{text:"💊 精打细算，降低生活成本",hint:"心智+20,会计XP+30,系统标记精打细算者",apply:function(st){if(!st)return;st.flags=st.flags||{};st.flags._a932EconHealthDone=true;st.flags._a932Thrifty=true;if(st.player)st.player.mental=Math.min(100,(st.player.mental||50)+20);gx("accounting",30);if(typeof StateManager!=="undefined")StateManager.addMessage("💊 心智+20,会计XP+30。你学会了精打细算——这是通货膨胀时代最重要的生存技能。","success")}},

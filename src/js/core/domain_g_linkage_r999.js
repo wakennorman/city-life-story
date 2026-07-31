@@ -13,7 +13,8 @@ choices:[{text:"📊 继续书写人生账本",hint:"智力+30,心智+30,系统�
 {text:"😅 活在当下",hint:"心智+5",apply:function(st){if(!st)return;st.flags=st.flags||{};st.flags._g999AccountDone=true;if(st.player)st.player.mental=Math.min(100,(st.player.mental||50)+5);if(typeof StateManager!=="undefined")StateManager.addMessage("😅 心智+5。","info")}}]},
 // 2. G→B: 人生章节—回顾人生重要转折
 {id:"g999_life_meaning",phase:"street",icon:"📖",title:"人生的意义",
-story":"你开始思考一个深刻的问题:人生的意义是什么？\n\n是为了赚钱吗？是为了成功吗？是为了让别人看得起吗？\n\n你想了很久，然后得到了一个答案:人生的意义不在于你拥有什么，而在于你成为了什么样的人。",
+// [全系统自洽修复] 域B R1016b 修复:story 键名残缺引号导致整文件 SyntaxError
+story:"你开始思考一个深刻的问题:人生的意义是什么？\n\n是为了赚钱吗？是为了成功吗？是为了让别人看得起吗？\n\n你想了很久，然后得到了一个答案:人生的意义不在于你拥有什么，而在于你成为了什么样的人。",
 conditions:function(st){if(!st||!st.player||st.gameOver)return false;if(st.flags&&st.flags._g999MeaningDone)return false;return st.player.day>=500&&(st.flags._lifeMilestones||[]).length>=5},
 probability:0.03,repeatable:false,
 choices:[{text:"📖 写下人生意义",hint:"心智+38,魅力+22,系统标记人生意义",apply:function(st){if(!st)return;st.flags=st.flags||{};st.flags._g999MeaningDone=true;st.flags._g999MeaningFound=true;if(st.player){st.player.mental=Math.min(100,(st.player.mental||50)+38);st.player.charm=Math.min(100,(st.player.charm||20)+22)}if(typeof StateManager!=="undefined")StateManager.addMessage("📖 心智+38,魅力+22。人生的意义不在于拥有什么——而在于你成为了什么样的人。","success")}},

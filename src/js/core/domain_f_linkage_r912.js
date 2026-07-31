@@ -14,7 +14,8 @@ conditions:function(st){if(!st||!st.player||st.gameOver)return false;if(st.flags
 probability:0.06,repeatable:false,
 choices:[{text:"📊 深入学习数据可视化",hint:"智力+22,会计XP+30,系统标记数据可视化意识",apply:function(st){if(!st)return;st.flags=st.flags||{};st.flags._f912DataVizDone=true;st.flags._f912DataVizAwareness=true;if(st.player)st.player.intelligence=Math.min(100,(st.player.intelligence||50)+22);gx("accounting",30);if(typeof StateManager!=="undefined")StateManager.addMessage("📊 智力+22,会计XP+30。数据可视化思维建立！","success")}},
 {text:"😅 太复杂了，看不懂",hint:"心智+5",apply:function(st){if(!st)return;st.flags=st.flags||{};st.flags._f912DataVizDone=true;if(st.player)st.player.mental=Math.min(100,(st.player.mental||50)+5);if(typeof StateManager!=="undefined")StateManager.addMessage("😅 心智+5。","info")}}]},
-{id:"f912_memory_wall_v21",phase:"street",icon:"🖼️",title:"记忆墙上的故事",story":"你翻看自己记录的日记，那些曾经经历的画面浮现在眼前。\n\n「第一天来到这座城市，口袋里只有200块。现在，你有了朋友、工作和属于自己的一席之地。」\n\n每一段经历都是你人生故事的一页。有些让你笑，有些让你哭，但都是你。",
+// [全系统自洽修复] 域B R1016b 修复:story": 键名残缺引号→整文件SyntaxError,IIFE永不执行且阻断全站build
+{id:"f912_memory_wall_v21",phase:"street",icon:"🖼️",title:"记忆墙上的故事",story:"你翻看自己记录的日记，那些曾经经历的画面浮现在眼前。\n\n「第一天来到这座城市，口袋里只有200块。现在，你有了朋友、工作和属于自己的一席之地。」\n\n每一段经历都是你人生故事的一页。有些让你笑，有些让你哭，但都是你。",
 conditions:function(st){if(!st||!st.player||st.gameOver)return false;if(st.flags&&st.flags._f912MemoryWallDone)return false;var _eh=st.eventHistory||[];return _eh.length>=30&&st.player.day>=400},
 probability:0.06,repeatable:false,
 choices:[{text:"🖼️ 整理记忆墙",hint:"心智+20,心情+25,系统标记记忆整理者",apply:function(st){if(!st)return;st.flags=st.flags||{};st.flags._f912MemoryWallDone=true;st.flags._f912MemoryCurator=true;if(st.player)st.player.mental=Math.min(100,(st.player.mental||50)+20);if(st.needs)st.needs.happiness=Math.min(100,(st.needs.happiness||50)+25);if(typeof StateManager!=="undefined")StateManager.addMessage("🖼️ 心智+20,心情+25。回忆也是一种力量！","success")}},

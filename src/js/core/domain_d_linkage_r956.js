@@ -6,7 +6,8 @@ function gx(k,a){if(typeof addSkillXp==="function"){try{addSkillXp(k,a)}catch(e)
 var E=[
 // 1. D→B: 朋友回忆 — 老朋友提起共同经历，触发回忆
 {id:"d956_old_friend_story",phase:"street",icon:"💬",title:"那些年，一起走过的路",
-story":"你收到一条老友的消息:「嘿，还记得咱们当年在工地搬砖的日子吗？」\n\n你笑了。那时候你们俩一天干十二个小时，晚上蹲在路边吃盒饭，还互相打气说总有一天会出头。\n\n现在你们都有了各自的生活，但那段日子永远刻在记忆里。",
+// [全系统自洽修复] 域B R1016b 修复:story 键名残缺引号导致整文件 SyntaxError
+story:"你收到一条老友的消息:「嘿，还记得咱们当年在工地搬砖的日子吗？」\n\n你笑了。那时候你们俩一天干十二个小时，晚上蹲在路边吃盒饭，还互相打气说总有一天会出头。\n\n现在你们都有了各自的生活，但那段日子永远刻在记忆里。",
 conditions:function(st){if(!st||!st.player||st.gameOver)return false;if(st.flags&&st.flags._d956OldFriendDone)return false;if(!st.relationships)return false;var _hc=0;for(var _ni in st.relationships){var _r=st.relationships[_ni];if(_r&&_r.met&&(_r.affinity||0)>=40)_hc++}return _hc>=2&&st.player.day>=100},
 probability:0.04,repeatable:false,
 choices:[{text:"💬 和老友叙旧",hint:"心情+20,社交XP+25,系统标记老友记",apply:function(st){if(!st)return;st.flags=st.flags||{};st.flags._d956OldFriendDone=true;st.flags._d956OldFriendship=true;if(st.needs)st.needs.happiness=Math.min(100,(st.needs.happiness||50)+20);gx("social",25);if(typeof StateManager!=="undefined")StateManager.addMessage("💬 心情+20,社交XP+25。一起吃苦的朋友，是一辈子的财富。","success")}},

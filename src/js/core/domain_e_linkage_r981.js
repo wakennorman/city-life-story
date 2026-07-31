@@ -13,14 +13,16 @@ choices:[{text:"📖 记录投资成长",hint:"心智+28,会计XP+35,系统标�
 {text:"😅 不堪回首",hint:"心智+5",apply:function(st){if(!st)return;st.flags=st.flags||{};st.flags._e981JourneyDone=true;if(st.player)st.player.mental=Math.min(100,(st.player.mental||50)+5);if(typeof StateManager!=="undefined")StateManager.addMessage("😅 心智+5。","info")}}]},
 // 2. E→C: 技能投资回报 — 投资知识带来收益
 {id:"e981_invest_knowledge",phase:"street",icon:"📈",title:"知识就是财富",
-story":"你发现那些花在学习投资上的时间，都变成了实实在在的回报。\n\n以前看不懂K线图，现在能分析趋势了。以前听消息买股票，现在有自己的判断体系了。\n\n知识不会辜负你——它只是需要时间发酵。",
+// [全系统自洽修复] 域B R1016b 修复:story 键名残缺引号导致整文件 SyntaxError
+story:"你发现那些花在学习投资上的时间，都变成了实实在在的回报。\n\n以前看不懂K线图，现在能分析趋势了。以前听消息买股票，现在有自己的判断体系了。\n\n知识不会辜负你——它只是需要时间发酵。",
 conditions:function(st){if(!st||!st.player||st.gameOver)return false;if(st.flags&&st.flags._e981KnowledgeDone)return false;return st.player.day>=200&&(st.skills.accounting.level||0)>=25},
 probability:0.04,repeatable:false,
 choices:[{text:"📈 继续学习投资",hint:"智力+28,会计XP+38,系统标记知识投资",apply:function(st){if(!st)return;st.flags=st.flags||{};st.flags._e981KnowledgeDone=true;st.flags._e981KnowledgeInvestor=true;if(st.player)st.player.intelligence=Math.min(100,(st.player.intelligence||50)+28);gx("accounting",38);if(typeof StateManager!=="undefined")StateManager.addMessage("📈 智力+28,会计XP+38。知识是最好的投资——它永远不会贬值。","success")}},
 {text:"😅 够用了",hint:"现金+10000",apply:function(st){if(!st)return;st.flags=st.flags||{};st.flags._e981KnowledgeDone=true;if(st.resources)st.resources.cash=(st.resources.cash||0)+10000;if(typeof StateManager!=="undefined")StateManager.addMessage("😅 现金+10000。","info")}}]},
 // 3. E→D: 投资者社交圈 — 投资带来社交圈变化
 {id:"e981_invest_network",phase:"street",icon:"👥",title:"投资者的圈子",
-story":"你参加了一个投资俱乐部，里面的人来自各行各业。\n\n有退休教师、程序员、小老板、甚至还有外卖骑手——但他们都有一个共同点:对投资充满热情。\n\n在这里，身份不重要，重要的是你的投资逻辑和独立思考能力。",
+// [全系统自洽修复] 域B R1016b 修复:story 键名残缺引号导致整文件 SyntaxError
+story:"你参加了一个投资俱乐部，里面的人来自各行各业。\n\n有退休教师、程序员、小老板、甚至还有外卖骑手——但他们都有一个共同点:对投资充满热情。\n\n在这里，身份不重要，重要的是你的投资逻辑和独立思考能力。",
 conditions:function(st){if(!st||!st.player||st.gameOver)return false;if(st.flags&&st.flags._e981NetworkDone)return false;return st.player.day>=150&&(st.resources.cash||0)>=30000},
 probability:0.03,repeatable:false,
 choices:[{text:"👥 加入投资俱乐部",hint:"魅力+22,社交XP+35,系统标记投资俱乐部",apply:function(st){if(!st)return;st.flags=st.flags||{};st.flags._e981NetworkDone=true;st.flags._e981InvClub=true;if(st.player)st.player.charm=Math.min(100,(st.player.charm||20)+22);gx("social",35);if(typeof StateManager!=="undefined")StateManager.addMessage("👥 魅力+22,社交XP+35。你加入了投资俱乐部——圈子对了，赚钱就对了。","success")}},

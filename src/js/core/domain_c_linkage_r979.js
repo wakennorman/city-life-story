@@ -13,7 +13,8 @@ choices:[{text:"💊 给自己放个假",hint:"健康+28,疲劳-25,心情+22,系
 {text:"🔥 咬牙坚持",hint:"健康-8,疲劳+15,系统标记硬撑者",apply:function(st){if(!st)return;st.flags=st.flags||{};st.flags._c979StressDone=true;st.flags._c979Gritter=true;if(st.status)st.status.health=Math.max(0,(st.status.health||50)-8);if(st.needs)st.needs.fatigue=Math.min(100,(st.needs.fatigue||0)+15);if(typeof StateManager!=="undefined")StateManager.addMessage("🔥 健康-8,疲劳+15。你选择了咬牙坚持——但身体的承受能力是有限的。","warning")}}]},
 // 2. C→E: 技能投资回报 — 技能提升带来经济收益
 {id:"c979_skill_value",phase:"street",icon:"📈",title:"技能的价值",
-story":"你算了一笔账——那些你花在学习和提升上的时间，到底值不值。\n\n结果让你很欣慰:每一分投入，都以更高的收入回报了你。\n\n技能不是成本，是投资。而且是这个世界上唯一稳赚不赔的投资。",
+// [全系统自洽修复] 域B R1016b 修复:story 键名残缺引号导致整文件 SyntaxError
+story:"你算了一笔账——那些你花在学习和提升上的时间，到底值不值。\n\n结果让你很欣慰:每一分投入，都以更高的收入回报了你。\n\n技能不是成本，是投资。而且是这个世界上唯一稳赚不赔的投资。",
 conditions:function(st){if(!st||!st.player||st.gameOver)return false;if(st.flags&&st.flags._c979SkillValueDone)return false;if(!st.skills)return false;var _maxLv=0;for(var _sk in st.skills){if(st.skills[_sk]&&st.skills[_sk].level>_maxLv)_maxLv=st.skills[_sk].level}return _maxLv>=35&&st.player.day>=200},
 probability:0.04,repeatable:false,
 choices:[{text:"📈 继续投资技能",hint:"智力+25,会计XP+32,系统标记技能投资者",apply:function(st){if(!st)return;st.flags=st.flags||{};st.flags._c979SkillValueDone=true;st.flags._c979SkillInvestor2=true;if(st.player)st.player.intelligence=Math.min(100,(st.player.intelligence||50)+25);gx("accounting",32);if(typeof StateManager!=="undefined")StateManager.addMessage("📈 智力+25,会计XP+32。技能是唯一不会贬值的资产——继续投资自己。","success")}},

@@ -13,7 +13,8 @@ choices:[{text:"📰 理性分析市场情绪",hint:"智力+20,销售XP+25,系�
 {text:"😅 跟风买点",hint:"现金-2000,系统标记从众者",apply:function(st){if(!st)return;st.flags=st.flags||{};st.flags._a969MarketMoodDone=true;st.flags._a969Follower=true;if(st.resources)st.resources.cash=Math.max(0,(st.resources.cash||0)-2000);if(typeof StateManager!=="undefined")StateManager.addMessage("😅 现金-2000。你跟着人群买了——但人群往往是错的。","warning")}}]},
 // 2. A→G: 经济健康度 — 长期通胀影响生活成本
 {id:"a969_living_cost",phase:"street",icon:"💊",title:"生活的成本",
-story":"你算了算这个月的开销，比上个月又多了。\n\n房租涨了、菜价涨了、连公交都涨价了。但工资没涨。\n\n你开始理解为什么老一辈总说「钱越来越不经花了」——通胀就像温水煮青蛙，等你发现的时候，已经晚了。",
+// [全系统自洽修复] 域B R1016b 修复:story 键名残缺引号导致整文件 SyntaxError
+story:"你算了算这个月的开销，比上个月又多了。\n\n房租涨了、菜价涨了、连公交都涨价了。但工资没涨。\n\n你开始理解为什么老一辈总说「钱越来越不经花了」——通胀就像温水煮青蛙，等你发现的时候，已经晚了。",
 conditions:function(st){if(!st||!st.player||st.gameOver)return false;if(st.flags&&st.flags._a969LivingCostDone)return false;return st.player.day>=150&&(st.flags._cumulativeInflation||0)>0.05},
 probability:0.04,repeatable:false,
 choices:[{text:"💊 调整消费结构，对抗通胀",hint:"心智+22,会计XP+28,系统标记抗通胀者",apply:function(st){if(!st)return;st.flags=st.flags||{};st.flags._a969LivingCostDone=true;st.flags._a969AntiInflation=true;if(st.player)st.player.mental=Math.min(100,(st.player.mental||50)+22);gx("accounting",28);if(typeof StateManager!=="undefined")StateManager.addMessage("💊 心智+22,会计XP+28。通胀不可怕——可怕的是你不知道如何应对。","success")}},

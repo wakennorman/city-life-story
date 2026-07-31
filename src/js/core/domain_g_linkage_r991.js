@@ -20,7 +20,8 @@ choices:[{text:"📖 写下人生感悟",hint:"心智+35,魅力+20,系统标记�
 {text:"😔 往事如烟",hint:"心智+8",apply:function(st){if(!st)return;st.flags=st.flags||{};st.flags._g991ReflectDone=true;if(st.player)st.player.mental=Math.min(100,(st.player.mental||50)+8);if(typeof StateManager!=="undefined")StateManager.addMessage("😔 心智+8。","info")}}]},
 // 3. G→D: 社交里程碑—年龄增长带来社交圈变化
 {id:"g991_social_wisdom",phase:"street",icon:"👥",title:"社交的智慧",
-story":"你发现随着年龄增长，自己对社交的理解越来越深刻了。\n\n年轻时觉得朋友多就是本事，现在觉得能维持一段长久的关系才是本事。\n\n真正的朋友不需要天天联系，但你需要的时候，他们一定在。",
+// [全系统自洽修复] 域B R1016b 修复:story 键名残缺引号导致整文件 SyntaxError
+story:"你发现随着年龄增长，自己对社交的理解越来越深刻了。\n\n年轻时觉得朋友多就是本事，现在觉得能维持一段长久的关系才是本事。\n\n真正的朋友不需要天天联系，但你需要的时候，他们一定在。",
 conditions:function(st){if(!st||!st.player||st.gameOver)return false;if(st.flags&&st.flags._g991SocialWisdomDone)return false;if(!st.relationships)return false;return(st.player.age||20)>=30&&st.player.day>=250},
 probability:0.04,repeatable:false,
 choices:[{text:"👥 经营长久的关系",hint:"心情+28,社交XP+30,系统标记社交智慧",apply:function(st){if(!st)return;st.flags=st.flags||{};st.flags._g991SocialWisdomDone=true;st.flags._g991SocialWise=true;if(st.needs)st.needs.happiness=Math.min(100,(st.needs.happiness||50)+28);gx("social",30);if(typeof StateManager!=="undefined")StateManager.addMessage("👥 心情+28,社交XP+30。真正的朋友不需要多——几个真心的，胜过一百个泛泛之交。","success")}},

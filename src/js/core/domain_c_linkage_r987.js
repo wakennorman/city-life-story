@@ -13,7 +13,8 @@ choices:[{text:"💊 好好休息一天",hint:"健康+30,疲劳-28,心情+20,系
 {text:"🔥 再扛一扛",hint:"健康-10,疲劳+15,系统标记硬撑者",apply:function(st){if(!st)return;st.flags=st.flags||{};st.flags._c987OverworkDone=true;st.flags._c987Overworker=true;if(st.status)st.status.health=Math.max(0,(st.status.health||50)-10);if(st.needs)st.needs.fatigue=Math.min(100,(st.needs.fatigue||0)+15);if(typeof StateManager!=="undefined")StateManager.addMessage("🔥 健康-10,疲劳+15。你选择了硬撑——但身体不会永远配合你。","warning")}}]},
 // 2. C→E: 技能投资回报 — 技能提升带来经济收益
 {id:"c987_skill_worth",phase:"street",icon:"📈",title:"技能的价值",
-story":"你发现了一个规律:每次技能提升后，收入都会跟着涨。\n\n这不是巧合——技能和收入之间，存在着正相关。\n\n你掌握了一项稀缺技能，就等于掌握了一个定价权。这就是为什么有些人靠一门手艺吃一辈子饭。",
+// [全系统自洽修复] 域B R1016b 修复:story 键名残缺引号导致整文件 SyntaxError
+story:"你发现了一个规律:每次技能提升后，收入都会跟着涨。\n\n这不是巧合——技能和收入之间，存在着正相关。\n\n你掌握了一项稀缺技能，就等于掌握了一个定价权。这就是为什么有些人靠一门手艺吃一辈子饭。",
 conditions:function(st){if(!st||!st.player||st.gameOver)return false;if(st.flags&&st.flags._c987SkillWorthDone)return false;if(!st.skills)return false;var _maxLv=0;for(var _sk in st.skills){if(st.skills[_sk]&&st.skills[_sk].level>_maxLv)_maxLv=st.skills[_sk].level}return _maxLv>=30&&st.player.day>=180},
 probability:0.04,repeatable:false,
 choices:[{text:"📈 深耕高价值技能",hint:"智力+25,会计XP+30,系统标记技能深耕",apply:function(st){if(!st)return;st.flags=st.flags||{};st.flags._c987SkillWorthDone=true;st.flags._c987SkillDeep=true;if(st.player)st.player.intelligence=Math.min(100,(st.player.intelligence||50)+25);gx("accounting",30);if(typeof StateManager!=="undefined")StateManager.addMessage("📈 智力+25,会计XP+30。技能是铁饭碗——真正的铁饭碗不是在一个地方吃一辈子，而是到哪里都有饭吃。","success")}},

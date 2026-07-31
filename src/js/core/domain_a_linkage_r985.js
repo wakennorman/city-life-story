@@ -6,14 +6,16 @@ function gx(k,a){if(typeof addSkillXp==="function"){try{addSkillXp(k,a)}catch(e)
 var E=[
 // 1. A→B: 市场情绪叙事 — 价格波动触发市场情绪故事
 {id:"a985_market_feel",phase:"street",icon:"📰",title:"市场的温度",
-story":"你走在菜市场里，感受到了一种微妙的氛围。\n\n今天买菜的人比往常多了不少，而且每个人都在往篮子里多塞东西。\n\n你问了一下菜贩才知道——听说要涨价了，大家都在囤货。市场情绪这东西，有时候比数据更真实。",
+// [全系统自洽修复] 域B R1016b 修复:story 键名残缺引号导致整文件 SyntaxError
+story:"你走在菜市场里，感受到了一种微妙的氛围。\n\n今天买菜的人比往常多了不少，而且每个人都在往篮子里多塞东西。\n\n你问了一下菜贩才知道——听说要涨价了，大家都在囤货。市场情绪这东西，有时候比数据更真实。",
 conditions:function(st){if(!st||!st.player||st.gameOver)return false;if(st.flags&&st.flags._a985MarketFeelDone)return false;if(!st.trade)return false;return(st.flags._priceVolatilityCount||0)>=3&&st.player.day>=40},
 probability:0.04,repeatable:false,
 choices:[{text:"📰 理性分析市场情绪",hint:"智力+22,销售XP+25,系统标记市场感知者",apply:function(st){if(!st)return;st.flags=st.flags||{};st.flags._a985MarketFeelDone=true;st.flags._a985MarketFeeler=true;if(st.player)st.player.intelligence=Math.min(100,(st.player.intelligence||50)+22);gx("sales",25);if(typeof StateManager!=="undefined")StateManager.addMessage("📰 智力+22,销售XP+25。你学会了感知市场情绪——冷清时买入，狂热时卖出。","success")}},
 {text:"😅 跟风囤货",hint:"现金-2000,系统标记从众者",apply:function(st){if(!st)return;st.flags=st.flags||{};st.flags._a985MarketFeelDone=true;st.flags._a985Follower2=true;if(st.resources)st.resources.cash=Math.max(0,(st.resources.cash||0)-2000);if(typeof StateManager!=="undefined")StateManager.addMessage("😅 现金-2000。你跟着人群囤货——但市场情绪不总是对的。","warning")}}]},
 // 2. A→G: 经济健康度 — 长期通胀影响生活成本
 {id:"a985_living_pressure",phase:"street",icon:"💊",title:"生活的压力",
-story":"你掏出手机，打开记账软件，发现这个月的支出又超了。\n\n房租涨了200，水电涨了50，连楼下早餐店的豆浆都涨了5毛。\n\n每一项涨得都不多，但加起来——你的工资却一分没涨。你开始认真思考:是该涨工资了，还是该换城市了。",
+// [全系统自洽修复] 域B R1016b 修复:story 键名残缺引号导致整文件 SyntaxError
+story:"你掏出手机，打开记账软件，发现这个月的支出又超了。\n\n房租涨了200，水电涨了50，连楼下早餐店的豆浆都涨了5毛。\n\n每一项涨得都不多，但加起来——你的工资却一分没涨。你开始认真思考:是该涨工资了，还是该换城市了。",
 conditions:function(st){if(!st||!st.player||st.gameOver)return false;if(st.flags&&st.flags._a985LivingPressureDone)return false;return st.player.day>=100&&(st.flags._cumulativeInflation||0)>0.05},
 probability:0.04,repeatable:false,
 choices:[{text:"💊 精打细算，努力增收",hint:"心智+25,会计XP+28,系统标记抗压者",apply:function(st){if(!st)return;st.flags=st.flags||{};st.flags._a985LivingPressureDone=true;st.flags._a985PressureFighter=true;if(st.player)st.player.mental=Math.min(100,(st.player.mental||50)+25);gx("accounting",28);if(typeof StateManager!=="undefined")StateManager.addMessage("💊 心智+25,会计XP+28。生活压力是最好的动力——它逼着你变得更强。","success")}},

@@ -594,6 +594,25 @@ function updateAllPrices(state) {
     state.trade._lastPrices[_gid870].push(_avg);
     if (state.trade._lastPrices[_gid870].length > 30) state.trade._lastPrices[_gid870].shift();
   }
+  // [全系统自洽修复] 域B R1016b 修复:_priceEventCount/_priceVolatilityCount 全库零写入方
+  // → 30个价格叙事事件(a804/a811/a826...a1009)的 conditions 门控恒为0,永不出场。
+  // 此处为价格刷新唯一单点(daily_pipeline 每3天调用),在此如实累计经历过的价格周期/波动周期。
+  try {
+    state.flags = state.flags || {};
+    state.flags._priceEventCount = (state.flags._priceEventCount || 0) + 1;
+    // 波动周期判定:任一商品全城均价较上一周期偏离≥5% 记一次波动
+    var _volHit = false;
+    for (var _gidV in state.trade._lastPrices) {
+      var _hist = state.trade._lastPrices[_gidV];
+      if (!Array.isArray(_hist) || _hist.length < 2) continue;
+      var _cur = _hist[_hist.length - 1], _prev = _hist[_hist.length - 2];
+      if (!isFinite(_cur) || !isFinite(_prev) || _prev <= 0) continue;
+      if (Math.abs(_cur - _prev) / _prev >= 0.05) { _volHit = true; break; }
+    }
+    if (_volHit) {
+      state.flags._priceVolatilityCount = (state.flags._priceVolatilityCount || 0) + 1;
+    }
+  } catch (e) { /* 计数失败不影响价格刷新主流程 */ }
   state.trade.lastPriceUpdate = state.player.day;
 }
 

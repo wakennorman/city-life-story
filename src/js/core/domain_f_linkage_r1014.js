@@ -1,4 +1,5 @@
 /**
+// [全系统自洽修复] 域B R1016b 修复:IIFE缺少函数体闭合花括号x1
  * 域F(UI/UX) 联动增强 R1014 — F→A数据可视化 / F→B事件记忆墙 / F→E财务仪表盘
  */
 (function(){"use strict";if(typeof RANDOM_EVENTS==="undefined"||!RANDOM_EVENTS)return;if(RANDOM_EVENTS._domainFLinkageR1014Loaded)return;RANDOM_EVENTS._domainFLinkageR1014Loaded=true;
@@ -20,7 +21,7 @@ choices:[{text:"📖 回顾记忆小径",hint:"心智+30,魅力+18,系统标记�
 {text:"😔 继续往前走",hint:"心智+5",apply:function(st){if(!st)return;st.flags=st.flags||{};st.flags._f1014PathDone=true;if(st.player)st.player.mental=Math.min(100,(st.player.mental||50)+5);if(typeof StateManager!=="undefined")StateManager.addMessage("😔 心智+5。","info")}}]},
 // 3. F→E: 财务仪表盘 — 总资产达到一定规模
 {id:"f1014_wealth_overview",phase:"street",icon:"💎",title:"财富全景",
-story:"你打开财务总览，第一次对自己的资产有了完整的认识。\n\n"+(function(){try{var _s=typeof StateManager!=="undefined"?StateManager.getState():null;if(_s&&_s.resources){var _c=_s.resources.cash||0,_b=_s.resources.bankBalance||0,_e=_s.resources.totalEarned||0;return "现金: ¥"+Math.floor(_c).toLocaleString()+"\n存款: ¥"+Math.floor(_b).toLocaleString()+"\n终身收入: ¥"+Math.floor(_e).toLocaleString()}return""}catch(e){return""})()+"\n\n你不再只是看数字——你看到了这些数字背后，是自己这些年的努力和成长。",
+story:"你打开财务总览，第一次对自己的资产有了完整的认识。\n\n"+(function(){try{var _s=typeof StateManager!=="undefined"?StateManager.getState():null;if(_s&&_s.resources){var _c=_s.resources.cash||0,_b=_s.resources.bankBalance||0,_e=_s.resources.totalEarned||0;return "现金: ¥"+Math.floor(_c).toLocaleString()+"\n存款: ¥"+Math.floor(_b).toLocaleString()+"\n终身收入: ¥"+Math.floor(_e).toLocaleString()}return""}catch(e){return""}})()+"\n\n你不再只是看数字——你看到了这些数字背后，是自己这些年的努力和成长。",
 conditions:function(st){if(!st||!st.player||st.gameOver)return false;if(st.flags&&st.flags._f1014OverviewDone)return false;if(!st.resources)return false;return(st.resources.totalEarned||0)>=500000&&st.player.day>=300},
 probability:0.04,repeatable:false,
 choices:[{text:"💎 规划下一步",hint:"智力+25,会计XP+35,系统标记财富全景",apply:function(st){if(!st)return;st.flags=st.flags||{};st.flags._f1014OverviewDone=true;st.flags._f1014Overview=true;if(st.player)st.player.intelligence=Math.min(100,(st.player.intelligence||50)+25);gx("accounting",35);if(typeof StateManager!=="undefined")StateManager.addMessage("💎 智力+25,会计XP+35。你看到了财富的全景——数字背后是努力和成长。","success")}},

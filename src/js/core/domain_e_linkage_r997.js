@@ -13,14 +13,16 @@ choices:[{text:"📖 总结教训，建立纪律",hint:"心智+28,会计XP+32,�
 {text:"😅 不堪回首",hint:"心智+5",apply:function(st){if(!st)return;st.flags=st.flags||{};st.flags._e997MistakeDone=true;if(st.player)st.player.mental=Math.min(100,(st.player.mental||50)+5);if(typeof StateManager!=="undefined")StateManager.addMessage("😅 心智+5。","info")}}]},
 // 2. E→C: 技能投资回报 — 投资知识带来收益
 {id:"e997_invest_skill",phase:"street",icon:"📈",title:"投资技能树",
-story":"你发现投资能力就像一棵技能树。\n\n从最基础的会计知识，到进阶的财报分析，再到高级的资产配置——每一点进步，都让你在市场中多一分胜算。\n\n投资不是赌博，是一项技能。既然是技能，就可以通过学习和练习来提升。",
+// [全系统自洽修复] 域B R1016b 修复:story 键名残缺引号导致整文件 SyntaxError
+story:"你发现投资能力就像一棵技能树。\n\n从最基础的会计知识，到进阶的财报分析，再到高级的资产配置——每一点进步，都让你在市场中多一分胜算。\n\n投资不是赌博，是一项技能。既然是技能，就可以通过学习和练习来提升。",
 conditions:function(st){if(!st||!st.player||st.gameOver)return false;if(st.flags&&st.flags._e997SkillDone)return false;return st.player.day>=200&&(st.skills.accounting.level||0)>=22},
 probability:0.04,repeatable:false,
 choices:[{text:"📈 点亮投资技能树",hint:"智力+28,会计XP+35,系统标记投资技能树",apply:function(st){if(!st)return;st.flags=st.flags||{};st.flags._e997SkillDone=true;st.flags._e997SkillTreeInv=true;if(st.player)st.player.intelligence=Math.min(100,(st.player.intelligence||50)+28);gx("accounting",35);if(typeof StateManager!=="undefined")StateManager.addMessage("📈 智力+28,会计XP+35。你的投资技能树在成长——每一分学习都不会白费。","success")}},
 {text:"😅 够用了",hint:"现金+10000",apply:function(st){if(!st)return;st.flags=st.flags||{};st.flags._e997SkillDone=true;if(st.resources)st.resources.cash=(st.resources.cash||0)+10000;if(typeof StateManager!=="undefined")StateManager.addMessage("😅 现金+10000。","info")}}]},
 // 3. E→D: 投资者社交圈 — 投资带来社交圈变化
 {id:"e997_invest_tribe",phase:"street",icon:"👥",title:"投资者的部落",
-story":"你参加了一个投资社群，发现这里的人都有一个共同点。\n\n他们不抱怨市场、不骂庄家、不幻想一夜暴富。他们只做一件事:学习、思考、执行。\n\n你终于找到了自己的部落——一群和你一样，相信理性投资的人。",
+// [全系统自洽修复] 域B R1016b 修复:story 键名残缺引号导致整文件 SyntaxError
+story:"你参加了一个投资社群，发现这里的人都有一个共同点。\n\n他们不抱怨市场、不骂庄家、不幻想一夜暴富。他们只做一件事:学习、思考、执行。\n\n你终于找到了自己的部落——一群和你一样，相信理性投资的人。",
 conditions:function(st){if(!st||!st.player||st.gameOver)return false;if(st.flags&&st.flags._e997TribeDone)return false;return st.player.day>=150&&(st.resources.cash||0)>=25000},
 probability:0.03,repeatable:false,
 choices:[{text:"👥 融入投资部落",hint:"魅力+22,社交XP+35,系统标记投资部落",apply:function(st){if(!st)return;st.flags=st.flags||{};st.flags._e997TribeDone=true;st.flags._e997InvTribe=true;if(st.player)st.player.charm=Math.min(100,(st.player.charm||20)+22);gx("social",35);if(typeof StateManager!=="undefined")StateManager.addMessage("👥 魅力+22,社交XP+35。你找到了自己的部落——和优秀的人在一起，你也会变得优秀。","success")}},

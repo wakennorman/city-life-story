@@ -6,7 +6,8 @@ function gx(k,a){if(typeof addSkillXp==="function"){try{addSkillXp(k,a)}catch(e)
 var E=[
 // 1. A→B: 市场趋势 — 价格波动触发市场洞察
 {id:"a1009_market_eye",phase:"street",icon:"📈",title:"市场的眼睛",
-story":"你开始用不同的眼光看市场了。\n\n以前你看到的是价格，现在你看到的是供需、情绪、周期。\n\n你发现市场就像一面镜子——它反映的是所有人的贪婪和恐惧。而你要做的，就是在别人贪婪时保持冷静，在别人恐惧时保持勇气。",
+// [全系统自洽修复] 域B R1016b 修复:story 键名残缺引号导致整文件 SyntaxError
+story:"你开始用不同的眼光看市场了。\n\n以前你看到的是价格，现在你看到的是供需、情绪、周期。\n\n你发现市场就像一面镜子——它反映的是所有人的贪婪和恐惧。而你要做的，就是在别人贪婪时保持冷静，在别人恐惧时保持勇气。",
 conditions:function(st){if(!st||!st.player||st.gameOver)return false;if(st.flags&&st.flags._a1009EyeDone)return false;if(!st.trade)return false;return(st.flags._priceVolatilityCount||0)>=3&&st.player.day>=30},
 probability:0.04,repeatable:false,
 choices:[{text:"📈 培养市场眼光",hint:"智力+25,销售XP+28,系统标记市场眼光",apply:function(st){if(!st)return;st.flags=st.flags||{};st.flags._a1009EyeDone=true;st.flags._a1009MarketEye=true;if(st.player)st.player.intelligence=Math.min(100,(st.player.intelligence||50)+25);gx("sales",28);if(typeof StateManager!=="undefined")StateManager.addMessage("📈 智力+25,销售XP+28。你开始用不一样的眼光看市场——看到的不再是价格，而是规律。","success")}},

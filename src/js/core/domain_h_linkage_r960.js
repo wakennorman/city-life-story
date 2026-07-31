@@ -20,7 +20,8 @@ choices:[{text:"📖 将经验传承给新一代创业者",hint:"名气+35,心�
 {text:"😌 低调前行",hint:"智力+28",apply:function(st){if(!st)return;st.flags=st.flags||{};st.flags._h960CorpLegendDone=true;if(st.player)st.player.intelligence=Math.min(100,(st.player.intelligence||50)+28);if(typeof StateManager!=="undefined")StateManager.addMessage("😌 智力+28。真正的传奇不在于被多少人知道——而在于改变了多少人的生活。","info")}}]},
 // 3. H→G: 创始人健康 — 长期高压工作导致健康问题
 {id:"h960_founder_wellness",phase:"corporate",icon:"🧘",title:"身心的平衡",
-story":"你终于意识到，创业不是百米冲刺，而是马拉松。\n\n连续多年的高强度工作，让你的身体和心灵都到了极限。\n\n你开始学习冥想、规律作息、定期体检——不是为了活得更久，而是为了在这条路上走得更远。",
+// [全系统自洽修复] 域B R1016b 修复:story 键名残缺引号导致整文件 SyntaxError
+story:"你终于意识到，创业不是百米冲刺，而是马拉松。\n\n连续多年的高强度工作，让你的身体和心灵都到了极限。\n\n你开始学习冥想、规律作息、定期体检——不是为了活得更久，而是为了在这条路上走得更远。",
 conditions:function(st){if(!st||!st.player||st.gameOver)return false;if(st.flags&&st.flags._h960WellnessDone)return false;if(!st.status||!st.needs)return false;var _st=st.startup||{};return(st.status.health||100)<=30&&st.player.day>=600&&_st.status==="running"},
 probability:0.05,repeatable:false,
 choices:[{text:"🧘 建立健康管理体系",hint:"健康+45,疲劳-35,心情+30,系统标记健康管理",apply:function(st){if(!st)return;st.flags=st.flags||{};st.flags._h960WellnessDone=true;st.flags._h960WellnessPlan=true;if(st.status)st.status.health=Math.min(100,(st.status.health||50)+45);if(st.needs){st.needs.fatigue=Math.max(0,(st.needs.fatigue||0)-35);st.needs.happiness=Math.min(100,(st.needs.happiness||50)+30)}if(typeof StateManager!=="undefined")StateManager.addMessage("🧘 健康+45,疲劳-35,心情+30。你学会了平衡——健康才是最大的财富。","success")}},

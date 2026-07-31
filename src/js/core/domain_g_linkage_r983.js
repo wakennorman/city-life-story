@@ -20,7 +20,8 @@ choices:[{text:"📖 写下人生感悟",hint:"心智+32,魅力+18,系统标记�
 {text:"😔 继续前行",hint:"心智+8",apply:function(st){if(!st)return;st.flags=st.flags||{};st.flags._g983ChapterDone=true;if(st.player)st.player.mental=Math.min(100,(st.player.mental||50)+8);if(typeof StateManager!=="undefined")StateManager.addMessage("😔 心智+8。","info")}}]},
 // 3. G→D: 社交里程碑—年龄增长带来社交圈变化
 {id:"g983_social_ring",phase:"street",icon:"👥",title:"社交圈的进化",
-story":"你发现自己的社交圈在悄悄变化。\n\n以前喜欢热闹，哪里人多往哪去。现在更喜欢和三五知己小聚，聊一些有深度的话题。\n\n这不是变得孤僻了，而是你开始懂得——高质量的独处，胜过低质量的社交。",
+// [全系统自洽修复] 域B R1016b 修复:story 键名残缺引号导致整文件 SyntaxError
+story:"你发现自己的社交圈在悄悄变化。\n\n以前喜欢热闹，哪里人多往哪去。现在更喜欢和三五知己小聚，聊一些有深度的话题。\n\n这不是变得孤僻了，而是你开始懂得——高质量的独处，胜过低质量的社交。",
 conditions:function(st){if(!st||!st.player||st.gameOver)return false;if(st.flags&&st.flags._g983SocialRingDone)return false;if(!st.relationships)return false;return(st.player.age||20)>=28&&st.player.day>=180},
 probability:0.04,repeatable:false,
 choices:[{text:"👥 享受高质量社交",hint:"心情+25,社交XP+28,系统标记高质量社交",apply:function(st){if(!st)return;st.flags=st.flags||{};st.flags._g983SocialRingDone=true;st.flags._g983QualitySocial=true;if(st.needs)st.needs.happiness=Math.min(100,(st.needs.happiness||50)+25);gx("social",28);if(typeof StateManager!=="undefined")StateManager.addMessage("👥 心情+25,社交XP+28。高质量的社交，胜过一百个泛泛之交。","success")}},

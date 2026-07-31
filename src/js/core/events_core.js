@@ -815,6 +815,15 @@ function showEventModal(evt) {
       } catch (e) {
         console.error("Event choice apply error:", e);
       }
+      // [全系统自洽修复] 域B R1016b 修复:_majorChoiceCount 全库零写入方 → b797_event_life_impact
+      // 经历≥10个重大选择事件门控恒为0,永不出场。此处为事件选项结算唯一单点:
+      // 有≥2个选项的事件才算重大选择(单选项事件只是叙事确认,不构成抉择)。
+      try {
+        if (evt && Array.isArray(evt.choices) && evt.choices.length >= 2) {
+          state.flags = state.flags || {};
+          state.flags._majorChoiceCount = (state.flags._majorChoiceCount || 0) + 1;
+        }
+      } catch (e) { /* 计数失败不影响选项结算主流程 */ }
       // [全系统自洽修复] 域B 联动增强#1 B→G: 记录最近事件(最多3个)，供UI展示和NPC话题引用
       state.flags._recentEvents = state.flags._recentEvents || [];
       // [R871 域B A类#2]: 调用事件行为追踪(原函数全库零调用→死代码)
@@ -1590,6 +1599,25 @@ function recordEventToHistory(state, eventId, eventTitle) {
   if (state.flags._eventHistory.length > 50) {
     state.flags._eventHistory = state.flags._eventHistory.slice(-50);
   }
+
+  // [全系统自洽修复] 域B R1016b 修复:_eventsExperienced/_economicEventCount/_managementEventCount
+  // 三个计数器全库零写入方 → b625/b658/b805 等事件的 conditions 门控恒为0,永不出场。
+  // recordEventToHistory 是所有事件入库的唯一单点,在此累计(不受 _eventHistory 50条截断影响)。
+  try {
+    state.flags._eventsExperienced = (state.flags._eventsExperienced || 0) + 1;
+    var _idLow = String(eventId || '').toLowerCase();
+    var _titleStr = String(eventTitle || '');
+    // 经济类:投资/理财/债务/收入/亏损
+    if (/invest|econ|money|cash|debt|loan|salary|wage|market|price|trade|stock|fund|wealth|save/.test(_idLow) ||
+        /投资|理财|债|亏|赚|收入|工资|存款|股|市场|价格|财/.test(_titleStr)) {
+      state.flags._economicEventCount = (state.flags._economicEventCount || 0) + 1;
+    }
+    // 管理类:公司/团队/晋升/下属/绩效
+    if (/corp|company|team|manage|boss|promo|leader|staff|kpi|perf/.test(_idLow) ||
+        /公司|团队|管理|晋升|下属|绩效|领导|老板/.test(_titleStr)) {
+      state.flags._managementEventCount = (state.flags._managementEventCount || 0) + 1;
+    }
+  } catch (e) { /* 计数失败不影响事件入库主流程 */ }
 
   // [全系统自洽修复] 域B 联动增强(B→D): 重大事件社交传播 — 每10个事件触发一次社交圈好感提升
   var _evtCount = state.flags._eventHistory.length;

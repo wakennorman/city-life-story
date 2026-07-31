@@ -20,7 +20,8 @@ choices:[{text:"📖 与自己和解",hint:"心智+35,魅力+20,系统标记内�
 {text:"😔 还在路上",hint:"心智+10",apply:function(st){if(!st)return;st.flags=st.flags||{};st.flags._g1007PeaceDone=true;st.flags._g1007OnWay=true;if(st.player)st.player.mental=Math.min(100,(st.player.mental||50)+10);if(typeof StateManager!=="undefined")StateManager.addMessage("😔 心智+10。与自己和解是一生的课题——你已经在路上。","info")}}]},
 // 3. G→D: 社交里程碑—社交圈的变化
 {id:"g1007_social_circle",phase:"street",icon:"👥",title:"社交圈的沉淀",
-story":"你发现经过时间的沉淀，身边的社交圈越来越清晰了。\n\n那些酒肉朋友渐渐淡出了你的生活，留下的是那些真正关心你的人。\n\n你不再为了社交而社交，而是把时间和精力留给那些值得的人。",
+// [全系统自洽修复] 域B R1016b 修复:story 键名残缺引号导致整文件 SyntaxError
+story:"你发现经过时间的沉淀，身边的社交圈越来越清晰了。\n\n那些酒肉朋友渐渐淡出了你的生活，留下的是那些真正关心你的人。\n\n你不再为了社交而社交，而是把时间和精力留给那些值得的人。",
 conditions:function(st){if(!st||!st.player||st.gameOver)return false;if(st.flags&&st.flags._g1007CircleDone)return false;if(!st.relationships)return false;return(st.player.age||20)>=30&&st.player.day>=250},
 probability:0.04,repeatable:false,
 choices:[{text:"👥 珍惜沉淀的友情",hint:"心情+28,社交XP+30,系统标记友情沉淀",apply:function(st){if(!st)return;st.flags=st.flags||{};st.flags._g1007CircleDone=true;st.flags._g1007CirclePure=true;if(st.needs)st.needs.happiness=Math.min(100,(st.needs.happiness||50)+28);gx("social",30);if(typeof StateManager!=="undefined")StateManager.addMessage("👥 心情+28,社交XP+30。时间会沉淀最真的友情——留下的都是值得珍惜的。","success")}},
