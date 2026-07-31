@@ -1392,5 +1392,8 @@ function checkFestivalDeepEvents(state) {
 if (typeof window !== "undefined") {
   window.getCurrentFestival = getCurrentFestival;
   window.getFestivalPriceMod = getFestivalPriceMod;
-  window.getFestivalWorkMod = getFestivalWorkMod;
+  // [全系统自洽修复] 域H 修复:getFestivalWorkMod 全库无定义,裸引用抛 ReferenceError 中断本文件后续执行 → typeof 守卫
+  if (typeof getFestivalWorkMod !== "undefined") {
+    window.getFestivalWorkMod = getFestivalWorkMod;
+  }
 }

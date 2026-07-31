@@ -5485,8 +5485,14 @@ if (typeof window !== "undefined") {
   window.getCareerRequirementText = getCareerRequirementText;
   window.tickCareerFiringRisk = tickCareerFiringRisk;
   window.tickCareerHealthBonus = tickCareerHealthBonus;
-  window.getSkillHealthBonus = getSkillHealthBonus;
-  window.getSkillMarketPricingInsight = getSkillMarketPricingInsight;
+  // [全系统自洽修复] 域H 修复:getSkillHealthBonus 全库无定义,裸引用抛 ReferenceError,导致本文件 5488 行之后 1172 行(含 16 个 window 导出:showCareerNavModal/switchCareerSubTab 等)全部不执行 → typeof 守卫
+  if (typeof getSkillHealthBonus !== "undefined") {
+    window.getSkillHealthBonus = getSkillHealthBonus;
+  }
+  // [全系统自洽修复] 域H 修复:getSkillMarketPricingInsight 全库无定义,同为中断本文件后续执行的裸引用 → typeof 守卫
+  if (typeof getSkillMarketPricingInsight !== "undefined") {
+    window.getSkillMarketPricingInsight = getSkillMarketPricingInsight;
+  }
   window.enhancedApplyCareerJob = enhancedApplyCareerJob;
   window.clampCareerCapital = clampCareerCapital;
   window.showCareerNavModal = showCareerNavModal;

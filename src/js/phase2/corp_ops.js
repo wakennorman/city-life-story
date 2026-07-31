@@ -427,6 +427,54 @@ function endQuarter() {
     }
   } catch (e) {}
 
+  // [全系统自洽修复] 域H R1017b A类#4 修复：TEAM_MEMBERS[].skill（coding/politics/endurance/learning/general）
+  // 全库零消费方——6 种成员 desc 承诺的「技术能力极强」「向上管理一流」「加班到死的高压输出」在机制上毫无区别，
+  // 招谁都只是 productivity/loyalty 两个数字。此处按团队专长做季度差异化结算（每种专长每季度只兑现一次，防叠加膨胀）。
+  try {
+    if (
+      state.corporate &&
+      Array.isArray(state.corporate.team) &&
+      state.corporate.team.length > 0 &&
+      state.player
+    ) {
+      if (!state.player.corporate) state.player.corporate = {};
+      var _pcR1017b = state.player.corporate;
+      var _seenSkillR1017b = {};
+      var _skillGainsR1017b = [];
+      for (var _tsi = 0; _tsi < state.corporate.team.length; _tsi++) {
+        var _tmR = state.corporate.team[_tsi] || {};
+        var _skR = _tmR.skill || "general";
+        if (_seenSkillR1017b[_skR]) continue;
+        _seenSkillR1017b[_skR] = true;
+        if (_skR === "coding") {
+          if (typeof addSkillXp === "function") addSkillXp("coding", 25); // [PLACEHOLDER: 技术骨干带教 编程EXP 25]
+          _skillGainsR1017b.push("技术骨干带教 · 编程EXP+25");
+        } else if (_skR === "politics") {
+          _pcR1017b.upwardMgmt = Math.min(100, (_pcR1017b.upwardMgmt || 50) + 2); // [PLACEHOLDER: 向上管理 +2]
+          _skillGainsR1017b.push("关系网协调 · 向上管理+2");
+        } else if (_skR === "endurance") {
+          _pcR1017b.kpi = Math.min(100, (_pcR1017b.kpi || 20) + 2); // [PLACEHOLDER: KPI +2]
+          _skillGainsR1017b.push("高压输出 · KPI+2");
+        } else if (_skR === "learning") {
+          state.player.intelligence = Math.min(
+            100,
+            (state.player.intelligence || 0) + 1,
+          ); // [PLACEHOLDER: 智力 +1]
+          _skillGainsR1017b.push("带新人复盘 · 智力+1");
+        } else {
+          _pcR1017b.ability = Math.min(100, (_pcR1017b.ability || 30) + 1); // [PLACEHOLDER: 能力 +1]
+          _skillGainsR1017b.push("稳定输出 · 能力+1");
+        }
+      }
+      if (_skillGainsR1017b.length > 0 && typeof StateManager !== "undefined") {
+        StateManager.addMessage(
+          "🧩 团队专长季度结算：" + _skillGainsR1017b.join("；"),
+          "success",
+        );
+      }
+    }
+  } catch (e) {}
+
   // [全系统自洽修复] 域H R50 联动增强(H→E): 季度投资组合回顾
   if (state.investment && state.investment.portfolio) {
     var _pv = state.investment.portfolio.totalValue || 0;

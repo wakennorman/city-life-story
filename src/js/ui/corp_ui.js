@@ -235,8 +235,9 @@ function renderCorporateActions(state) {
       // Q2 招聘季
       const hireDiv = document.createElement("div");
       hireDiv.style.marginTop = "8px";
+      // [全系统自洽修复] 域H R1017b A类#3：招聘价随月薪浮动，标题不再写死 ¥10,000
       hireDiv.innerHTML =
-        '<p style="font-size:11px;color:var(--accent);margin-bottom:4px;">🎯 Q2招聘季 — 可招聘新成员 (¥10,000/人)</p>';
+        '<p style="font-size:11px;color:var(--accent);margin-bottom:4px;">🎯 Q2招聘季 — 招聘成本随目标月薪浮动</p>';
       const hireGrid = document.createElement("div");
       hireGrid.className = "action-cards";
       hireGrid.style.gridTemplateColumns =
@@ -245,11 +246,16 @@ function renderCorporateActions(state) {
       for (const tmpl of TEAM_MEMBERS) {
         const hCard = document.createElement("div");
         hCard.className = "action-card";
+        // [全系统自洽修复] 域H R1017b A类#3：与 team.js getTeamHireCost 同源，杜绝「显示价 ≠ 实收价」
+        const hireCost =
+          typeof getTeamHireCost === "function"
+            ? getTeamHireCost(tmpl)
+            : 10000;
         hCard.innerHTML = `
           <div class="card-title">${tmpl.name}</div>
           <div class="card-desc">${tmpl.role} — ${tmpl.desc}</div>
-          <div style="font-size:10px;color:var(--text-muted);">产出:${tmpl.productivity} | 薪资:¥${tmpl.salary.toLocaleString()}</div>
-          <button class="btn btn-sm btn-success mt-2 hire-member" data-type="${tmpl.id}">招聘 ¥10,000</button>
+          <div style="font-size:10px;color:var(--text-muted);">产出:${tmpl.productivity} | 月薪:¥${tmpl.salary.toLocaleString()} | 专长:${tmpl.skill || "general"}</div>
+          <button class="btn btn-sm btn-success mt-2 hire-member" data-type="${tmpl.id}">招聘 ¥${hireCost.toLocaleString()}</button>
         `;
         hireGrid.appendChild(hCard);
       }

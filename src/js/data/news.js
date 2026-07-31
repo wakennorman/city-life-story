@@ -2243,6 +2243,12 @@ function cleanupExpiredNews(state) {
 // [R896 域B A类#1]: 导出函数到window
 if (typeof window !== 'undefined') {
   window.applyNewsEffect = applyNewsEffect;
-  window.getRandomNewsByLevel = getRandomNewsByLevel;
-  window.rollDailyNews = rollDailyNews;
+  // [全系统自洽修复] 域H 修复:getRandomNewsByLevel(定义于 news_system.js)/rollDailyNews(定义于 events_core.js) 均为跨文件裸引用,
+  // 一旦加载序变动即抛 ReferenceError 并中断本文件尾部执行 → typeof 守卫加固
+  if (typeof getRandomNewsByLevel !== "undefined") {
+    window.getRandomNewsByLevel = getRandomNewsByLevel;
+  }
+  if (typeof rollDailyNews !== "undefined") {
+    window.rollDailyNews = rollDailyNews;
+  }
 }

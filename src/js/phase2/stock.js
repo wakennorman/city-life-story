@@ -194,8 +194,68 @@ function bootstrapStockHistory(state) {
   }
 }
 
+/**
+ * [全系统自洽修复] 域H R1017b A类#1 辅助：定位「玩家所在公司」对应的上市股票代码。
+ * corp.js COMPANIES 与 STOCK_LIST 之间此前无任何映射，导致「绩效→股价」的联动无处落地。
+ * 三级匹配：公司全名精确 → 名称前缀互含（安信金融科技 ⊃ 安信金融）→ 行业板块兜底。
+ */
+function _employerStockSymbolR1017b(state) {
+  try {
+    if (typeof STOCK_LIST === "undefined" || !Array.isArray(STOCK_LIST)) return null;
+    var co = state && state.corporate && state.corporate.company;
+    if (!co) return null;
+    var nm = co.name || "";
+    var i;
+    for (i = 0; i < STOCK_LIST.length; i++) {
+      if (STOCK_LIST[i] && STOCK_LIST[i].name === nm) return STOCK_LIST[i].symbol;
+    }
+    for (i = 0; i < STOCK_LIST.length; i++) {
+      var sn = (STOCK_LIST[i] && STOCK_LIST[i].name) || "";
+      if (nm && sn && (nm.indexOf(sn) === 0 || sn.indexOf(nm) === 0))
+        return STOCK_LIST[i].symbol;
+    }
+    var ind = co.industry || "";
+    var sector = /金融/.test(ind)
+      ? "金融"
+      : /医药|生物/.test(ind)
+        ? "医药"
+        : /新能源|能源|环保/.test(ind)
+          ? "新能源"
+          : /地产|房/.test(ind)
+            ? "房地产"
+            : /消费|食品|零售/.test(ind)
+              ? "消费"
+              : "科技";
+    for (i = 0; i < STOCK_LIST.length; i++) {
+      if (STOCK_LIST[i] && STOCK_LIST[i].industry === sector)
+        return STOCK_LIST[i].symbol;
+    }
+  } catch (e) {}
+  return null;
+}
+
 /** 更新股市价格（每日 / 季末） */
 function updateStockPrices(state, forceNews = false) {
+  // [全系统自洽修复] 域H R1017b A类#1 修复：corp_ops.js:477/479 写入的
+  // _corpPerfStockBoost / _corpPerfStockDrag（注释明确承诺「绩效影响股价（H→E）」）全库零消费方，
+  // S/S+ 与 C 级绩效对自家股价的承诺此前完全静默失效。此处在股价刷新入口消费并清除标记。
+  var _perfSymR1017b = null;
+  var _perfMulR1017b = 1.0;
+  var _perfUpR1017b = false;
+  try {
+    if (
+      state &&
+      state.flags &&
+      (state.flags._corpPerfStockBoost || state.flags._corpPerfStockDrag)
+    ) {
+      _perfUpR1017b = !!state.flags._corpPerfStockBoost;
+      _perfSymR1017b = _employerStockSymbolR1017b(state);
+      _perfMulR1017b = _perfUpR1017b ? 1.06 : 0.95; // [PLACEHOLDER: 绩效利好 +6% / 利空 -5%]
+      delete state.flags._corpPerfStockBoost;
+      delete state.flags._corpPerfStockDrag;
+    }
+  } catch (e) {}
+
   for (const stock of STOCK_LIST) {
     const market = state.corporate.stockMarket[stock.symbol];
     if (!market) continue;
@@ -241,6 +301,27 @@ function updateStockPrices(state, forceNews = false) {
         StateManager.addMessage(
           `📊 [${stock.symbol}] ${news.text}`,
           news.impact > 0 ? "success" : "danger",
+        );
+      }
+    }
+
+    // [全系统自洽修复] 域H R1017b A类#1：季度绩效对自家公司股价的一次性冲击（承诺兑现点）
+    if (_perfSymR1017b && stock.symbol === _perfSymR1017b) {
+      var _pBefore = market.price;
+      market.price = Math.max(0.5, market.price * _perfMulR1017b);
+      market.price = Math.round(market.price * 100) / 100;
+      if (isFinite(market.price) && typeof StateManager !== "undefined") {
+        StateManager.addMessage(
+          "📊 [" +
+            stock.symbol +
+            "] 你所在公司的季度业绩" +
+            (_perfUpR1017b ? "超预期，股价被推高" : "不及预期，股价承压") +
+            "（¥" +
+            _pBefore.toFixed(2) +
+            " → ¥" +
+            market.price.toFixed(2) +
+            "）。",
+          _perfUpR1017b ? "success" : "warning",
         );
       }
     }

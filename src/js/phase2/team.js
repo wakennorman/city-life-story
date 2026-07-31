@@ -2,6 +2,17 @@
  * 团队管理系统 (P7+ 专属)
  */
 
+/**
+ * [全系统自洽修复] 域H R1017b A类#3 辅助：按成员月薪计算招聘成本（UI 与结算共用同一口径，避免二次漂移）
+ */
+function getTeamHireCost(template) {
+  var sal =
+    template && typeof template.salary === "number" && isFinite(template.salary)
+      ? template.salary
+      : 10000;
+  return Math.max(8000, Math.round((sal * 0.6) / 100) * 100); // [PLACEHOLDER: 招聘成本 = 月薪 × 0.6]
+}
+
 /** 招聘团队成员 */
 function hireTeamMember(memberTypeId) {
   const state = StateManager.getState();
@@ -25,8 +36,11 @@ function hireTeamMember(memberTypeId) {
   const template = TEAM_MEMBERS.find((m) => m.id === memberTypeId);
   if (!template) return false;
 
-  // 招聘成本
-  const cost = 10000;
+  // [全系统自洽修复] 域H R1017b A类#3 修复：TEAM_MEMBERS[].salary（8000~28000，3.5 倍差价）
+  // 全库零消费方——招聘面板逐个展示「薪资:¥28,000 / ¥8,000」却一律只收固定 ¥10,000，
+  // 「应届生便宜能干活」「房贷战神高压输出」的定价叙事完全不兑现。
+  // 改为招聘成本 = 月薪 × 系数（猎头/背调/签字费口径），保留 8000 下限避免早期不可达。
+  const cost = getTeamHireCost(template);
   if ((state.resources.cash || 0) < cost) {
     StateManager.addMessage(
       `⚠️ 招聘需要 ¥${cost.toLocaleString()}。`,
@@ -53,7 +67,7 @@ function hireTeamMember(memberTypeId) {
   }
 
   StateManager.addMessage(
-    `👥 招聘了 ${member.name}（${member.role}）加入团队！`,
+    `👥 招聘了 ${member.name}（${member.role}）加入团队！招聘成本 ¥${cost.toLocaleString()}（月薪 ¥${(member.salary || 0).toLocaleString()}）`,
     "success",
   );
   return true;
@@ -131,6 +145,7 @@ function getTeamProductivity(state) {
 
 // [R885 域H A类#2]: 导出函数到window
 if (typeof window !== "undefined") {
+  window.getTeamHireCost = getTeamHireCost; // [全系统自洽修复] 域H R1017b A类#3
   window.hireTeamMember = hireTeamMember;
   window.fireTeamMember = fireTeamMember;
   window.getTeamProductivity = getTeamProductivity;

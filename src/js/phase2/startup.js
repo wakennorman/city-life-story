@@ -1608,6 +1608,17 @@ function raiseFunding(state, roundId) {
 
   state.startup.flags.hasInvestors = true;
 
+  // [全系统自洽修复] 域H R1017b A类#2 修复：events_corp.js:1455 的 founder_oust（投资人要换团队）
+  // 以 st.flags._acceptedVCFunding 作为「接受过 VC 投资」的主门控，但该 flag 全库零写入方，
+  // 主路径永久失效、只能靠 kpi>70 && day>200 的模拟兜底触发——真正拿过融资的创始人反而进不去这条叙事。
+  // 此处在唯一的融资成功点补写，把「拿了 VC 的钱」与「被投资人换掉」的因果闭环接上。
+  try {
+    if (!state.flags) state.flags = {};
+    state.flags._acceptedVCFunding = true;
+    state.flags._vcFundingRoundsR1017b =
+      (state.flags._vcFundingRoundsR1017b || 0) + 1;
+  } catch (e) {}
+
   // 更新企业命运系统中的公司
   if (state.enterpriseFate && state.enterpriseFate.companies && company.id) {
     const fateCo = state.enterpriseFate.companies[company.id];

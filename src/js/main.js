@@ -5789,4 +5789,6 @@ if (typeof window !== "undefined") {
   window.estimateJobPayDetailed = estimateJobPayDetailed;
   window.startNewGame = startNewGame;
   window.showWelcome = showWelcome;
+  // [全系统自洽修复] 域H 修复:getAvailableActions 定义在本文件,原导出误写在 actions.js(加载序在前)致 ReferenceError → 移至定义所在文件真实导出
+  window.getAvailableActions = getAvailableActions;
 }

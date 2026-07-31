@@ -339,5 +339,8 @@ if (typeof window !== "undefined") {
 
 // [R903 域A A类#1]: 导出函数到window
 if (typeof window !== "undefined") {
-  window.getAvailableActions = getAvailableActions;
+  // [全系统自洽修复] 域H 修复:getAvailableActions 实际定义在 main.js(加载序在后),此处裸引用抛 ReferenceError → typeof 守卫,真实导出改由 main.js 承担
+  if (typeof getAvailableActions !== "undefined") {
+    window.getAvailableActions = getAvailableActions;
+  }
 }
