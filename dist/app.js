@@ -32435,7 +32435,10 @@ function checkFestivalDeepEvents(state) {
 if (typeof window !== "undefined") {
   window.getCurrentFestival = getCurrentFestival;
   window.getFestivalPriceMod = getFestivalPriceMod;
-  window.getFestivalWorkMod = getFestivalWorkMod;
+  // [全系统自洽修复] 域H 修复:getFestivalWorkMod 全库无定义,裸引用抛 ReferenceError 中断本文件后续执行 → typeof 守卫
+  if (typeof getFestivalWorkMod !== "undefined") {
+    window.getFestivalWorkMod = getFestivalWorkMod;
+  }
 }
 
 ;
@@ -189304,8 +189307,14 @@ function cleanupExpiredNews(state) {
 // [R896 域B A类#1]: 导出函数到window
 if (typeof window !== 'undefined') {
   window.applyNewsEffect = applyNewsEffect;
-  window.getRandomNewsByLevel = getRandomNewsByLevel;
-  window.rollDailyNews = rollDailyNews;
+  // [全系统自洽修复] 域H 修复:getRandomNewsByLevel(定义于 news_system.js)/rollDailyNews(定义于 events_core.js) 均为跨文件裸引用,
+  // 一旦加载序变动即抛 ReferenceError 并中断本文件尾部执行 → typeof 守卫加固
+  if (typeof getRandomNewsByLevel !== "undefined") {
+    window.getRandomNewsByLevel = getRandomNewsByLevel;
+  }
+  if (typeof rollDailyNews !== "undefined") {
+    window.rollDailyNews = rollDailyNews;
+  }
 }
 
 ;
@@ -213051,7 +213060,10 @@ if (typeof window !== "undefined") {
 
 // [R903 域A A类#1]: 导出函数到window
 if (typeof window !== "undefined") {
-  window.getAvailableActions = getAvailableActions;
+  // [全系统自洽修复] 域H 修复:getAvailableActions 实际定义在 main.js(加载序在后),此处裸引用抛 ReferenceError → typeof 守卫,真实导出改由 main.js 承担
+  if (typeof getAvailableActions !== "undefined") {
+    window.getAvailableActions = getAvailableActions;
+  }
 }
 
 ;
@@ -224192,6 +224204,17 @@ if (typeof window !== "undefined") {
  * 团队管理系统 (P7+ 专属)
  */
 
+/**
+ * [全系统自洽修复] 域H R1017b A类#3 辅助：按成员月薪计算招聘成本（UI 与结算共用同一口径，避免二次漂移）
+ */
+function getTeamHireCost(template) {
+  var sal =
+    template && typeof template.salary === "number" && isFinite(template.salary)
+      ? template.salary
+      : 10000;
+  return Math.max(8000, Math.round((sal * 0.6) / 100) * 100); // [PLACEHOLDER: 招聘成本 = 月薪 × 0.6]
+}
+
 /** 招聘团队成员 */
 function hireTeamMember(memberTypeId) {
   const state = StateManager.getState();
@@ -224215,8 +224238,11 @@ function hireTeamMember(memberTypeId) {
   const template = TEAM_MEMBERS.find((m) => m.id === memberTypeId);
   if (!template) return false;
 
-  // 招聘成本
-  const cost = 10000;
+  // [全系统自洽修复] 域H R1017b A类#3 修复：TEAM_MEMBERS[].salary（8000~28000，3.5 倍差价）
+  // 全库零消费方——招聘面板逐个展示「薪资:¥28,000 / ¥8,000」却一律只收固定 ¥10,000，
+  // 「应届生便宜能干活」「房贷战神高压输出」的定价叙事完全不兑现。
+  // 改为招聘成本 = 月薪 × 系数（猎头/背调/签字费口径），保留 8000 下限避免早期不可达。
+  const cost = getTeamHireCost(template);
   if ((state.resources.cash || 0) < cost) {
     StateManager.addMessage(
       `⚠️ 招聘需要 ¥${cost.toLocaleString()}。`,
@@ -224243,7 +224269,7 @@ function hireTeamMember(memberTypeId) {
   }
 
   StateManager.addMessage(
-    `👥 招聘了 ${member.name}（${member.role}）加入团队！`,
+    `👥 招聘了 ${member.name}（${member.role}）加入团队！招聘成本 ¥${cost.toLocaleString()}（月薪 ¥${(member.salary || 0).toLocaleString()}）`,
     "success",
   );
   return true;
@@ -224321,6 +224347,7 @@ function getTeamProductivity(state) {
 
 // [R885 域H A类#2]: 导出函数到window
 if (typeof window !== "undefined") {
+  window.getTeamHireCost = getTeamHireCost; // [全系统自洽修复] 域H R1017b A类#3
   window.hireTeamMember = hireTeamMember;
   window.fireTeamMember = fireTeamMember;
   window.getTeamProductivity = getTeamProductivity;
@@ -224524,8 +224551,68 @@ function bootstrapStockHistory(state) {
   }
 }
 
+/**
+ * [全系统自洽修复] 域H R1017b A类#1 辅助：定位「玩家所在公司」对应的上市股票代码。
+ * corp.js COMPANIES 与 STOCK_LIST 之间此前无任何映射，导致「绩效→股价」的联动无处落地。
+ * 三级匹配：公司全名精确 → 名称前缀互含（安信金融科技 ⊃ 安信金融）→ 行业板块兜底。
+ */
+function _employerStockSymbolR1017b(state) {
+  try {
+    if (typeof STOCK_LIST === "undefined" || !Array.isArray(STOCK_LIST)) return null;
+    var co = state && state.corporate && state.corporate.company;
+    if (!co) return null;
+    var nm = co.name || "";
+    var i;
+    for (i = 0; i < STOCK_LIST.length; i++) {
+      if (STOCK_LIST[i] && STOCK_LIST[i].name === nm) return STOCK_LIST[i].symbol;
+    }
+    for (i = 0; i < STOCK_LIST.length; i++) {
+      var sn = (STOCK_LIST[i] && STOCK_LIST[i].name) || "";
+      if (nm && sn && (nm.indexOf(sn) === 0 || sn.indexOf(nm) === 0))
+        return STOCK_LIST[i].symbol;
+    }
+    var ind = co.industry || "";
+    var sector = /金融/.test(ind)
+      ? "金融"
+      : /医药|生物/.test(ind)
+        ? "医药"
+        : /新能源|能源|环保/.test(ind)
+          ? "新能源"
+          : /地产|房/.test(ind)
+            ? "房地产"
+            : /消费|食品|零售/.test(ind)
+              ? "消费"
+              : "科技";
+    for (i = 0; i < STOCK_LIST.length; i++) {
+      if (STOCK_LIST[i] && STOCK_LIST[i].industry === sector)
+        return STOCK_LIST[i].symbol;
+    }
+  } catch (e) {}
+  return null;
+}
+
 /** 更新股市价格（每日 / 季末） */
 function updateStockPrices(state, forceNews = false) {
+  // [全系统自洽修复] 域H R1017b A类#1 修复：corp_ops.js:477/479 写入的
+  // _corpPerfStockBoost / _corpPerfStockDrag（注释明确承诺「绩效影响股价（H→E）」）全库零消费方，
+  // S/S+ 与 C 级绩效对自家股价的承诺此前完全静默失效。此处在股价刷新入口消费并清除标记。
+  var _perfSymR1017b = null;
+  var _perfMulR1017b = 1.0;
+  var _perfUpR1017b = false;
+  try {
+    if (
+      state &&
+      state.flags &&
+      (state.flags._corpPerfStockBoost || state.flags._corpPerfStockDrag)
+    ) {
+      _perfUpR1017b = !!state.flags._corpPerfStockBoost;
+      _perfSymR1017b = _employerStockSymbolR1017b(state);
+      _perfMulR1017b = _perfUpR1017b ? 1.06 : 0.95; // [PLACEHOLDER: 绩效利好 +6% / 利空 -5%]
+      delete state.flags._corpPerfStockBoost;
+      delete state.flags._corpPerfStockDrag;
+    }
+  } catch (e) {}
+
   for (const stock of STOCK_LIST) {
     const market = state.corporate.stockMarket[stock.symbol];
     if (!market) continue;
@@ -224571,6 +224658,27 @@ function updateStockPrices(state, forceNews = false) {
         StateManager.addMessage(
           `📊 [${stock.symbol}] ${news.text}`,
           news.impact > 0 ? "success" : "danger",
+        );
+      }
+    }
+
+    // [全系统自洽修复] 域H R1017b A类#1：季度绩效对自家公司股价的一次性冲击（承诺兑现点）
+    if (_perfSymR1017b && stock.symbol === _perfSymR1017b) {
+      var _pBefore = market.price;
+      market.price = Math.max(0.5, market.price * _perfMulR1017b);
+      market.price = Math.round(market.price * 100) / 100;
+      if (isFinite(market.price) && typeof StateManager !== "undefined") {
+        StateManager.addMessage(
+          "📊 [" +
+            stock.symbol +
+            "] 你所在公司的季度业绩" +
+            (_perfUpR1017b ? "超预期，股价被推高" : "不及预期，股价承压") +
+            "（¥" +
+            _pBefore.toFixed(2) +
+            " → ¥" +
+            market.price.toFixed(2) +
+            "）。",
+          _perfUpR1017b ? "success" : "warning",
         );
       }
     }
@@ -225473,6 +225581,54 @@ function endQuarter() {
         _avgProd = Math.round(_avgProd / _teamSize);
       }
       StateManager.addMessage("🏢 季度运营：团队" + _teamSize + "人 · 平均产出" + _avgProd + " · 现金¥" + Math.round(state.resources.cash || 0).toLocaleString(), "info");
+    }
+  } catch (e) {}
+
+  // [全系统自洽修复] 域H R1017b A类#4 修复：TEAM_MEMBERS[].skill（coding/politics/endurance/learning/general）
+  // 全库零消费方——6 种成员 desc 承诺的「技术能力极强」「向上管理一流」「加班到死的高压输出」在机制上毫无区别，
+  // 招谁都只是 productivity/loyalty 两个数字。此处按团队专长做季度差异化结算（每种专长每季度只兑现一次，防叠加膨胀）。
+  try {
+    if (
+      state.corporate &&
+      Array.isArray(state.corporate.team) &&
+      state.corporate.team.length > 0 &&
+      state.player
+    ) {
+      if (!state.player.corporate) state.player.corporate = {};
+      var _pcR1017b = state.player.corporate;
+      var _seenSkillR1017b = {};
+      var _skillGainsR1017b = [];
+      for (var _tsi = 0; _tsi < state.corporate.team.length; _tsi++) {
+        var _tmR = state.corporate.team[_tsi] || {};
+        var _skR = _tmR.skill || "general";
+        if (_seenSkillR1017b[_skR]) continue;
+        _seenSkillR1017b[_skR] = true;
+        if (_skR === "coding") {
+          if (typeof addSkillXp === "function") addSkillXp("coding", 25); // [PLACEHOLDER: 技术骨干带教 编程EXP 25]
+          _skillGainsR1017b.push("技术骨干带教 · 编程EXP+25");
+        } else if (_skR === "politics") {
+          _pcR1017b.upwardMgmt = Math.min(100, (_pcR1017b.upwardMgmt || 50) + 2); // [PLACEHOLDER: 向上管理 +2]
+          _skillGainsR1017b.push("关系网协调 · 向上管理+2");
+        } else if (_skR === "endurance") {
+          _pcR1017b.kpi = Math.min(100, (_pcR1017b.kpi || 20) + 2); // [PLACEHOLDER: KPI +2]
+          _skillGainsR1017b.push("高压输出 · KPI+2");
+        } else if (_skR === "learning") {
+          state.player.intelligence = Math.min(
+            100,
+            (state.player.intelligence || 0) + 1,
+          ); // [PLACEHOLDER: 智力 +1]
+          _skillGainsR1017b.push("带新人复盘 · 智力+1");
+        } else {
+          _pcR1017b.ability = Math.min(100, (_pcR1017b.ability || 30) + 1); // [PLACEHOLDER: 能力 +1]
+          _skillGainsR1017b.push("稳定输出 · 能力+1");
+        }
+      }
+      if (_skillGainsR1017b.length > 0 && typeof StateManager !== "undefined") {
+        StateManager.addMessage(
+          "🧩 团队专长季度结算：" + _skillGainsR1017b.join("；"),
+          "success",
+        );
+      }
     }
   } catch (e) {}
 
@@ -235940,6 +236096,17 @@ function raiseFunding(state, roundId) {
   });
 
   state.startup.flags.hasInvestors = true;
+
+  // [全系统自洽修复] 域H R1017b A类#2 修复：events_corp.js:1455 的 founder_oust（投资人要换团队）
+  // 以 st.flags._acceptedVCFunding 作为「接受过 VC 投资」的主门控，但该 flag 全库零写入方，
+  // 主路径永久失效、只能靠 kpi>70 && day>200 的模拟兜底触发——真正拿过融资的创始人反而进不去这条叙事。
+  // 此处在唯一的融资成功点补写，把「拿了 VC 的钱」与「被投资人换掉」的因果闭环接上。
+  try {
+    if (!state.flags) state.flags = {};
+    state.flags._acceptedVCFunding = true;
+    state.flags._vcFundingRoundsR1017b =
+      (state.flags._vcFundingRoundsR1017b || 0) + 1;
+  } catch (e) {}
 
   // 更新企业命运系统中的公司
   if (state.enterpriseFate && state.enterpriseFate.companies && company.id) {
@@ -289203,8 +289370,9 @@ function renderCorporateActions(state) {
       // Q2 招聘季
       const hireDiv = document.createElement("div");
       hireDiv.style.marginTop = "8px";
+      // [全系统自洽修复] 域H R1017b A类#3：招聘价随月薪浮动，标题不再写死 ¥10,000
       hireDiv.innerHTML =
-        '<p style="font-size:11px;color:var(--accent);margin-bottom:4px;">🎯 Q2招聘季 — 可招聘新成员 (¥10,000/人)</p>';
+        '<p style="font-size:11px;color:var(--accent);margin-bottom:4px;">🎯 Q2招聘季 — 招聘成本随目标月薪浮动</p>';
       const hireGrid = document.createElement("div");
       hireGrid.className = "action-cards";
       hireGrid.style.gridTemplateColumns =
@@ -289213,11 +289381,16 @@ function renderCorporateActions(state) {
       for (const tmpl of TEAM_MEMBERS) {
         const hCard = document.createElement("div");
         hCard.className = "action-card";
+        // [全系统自洽修复] 域H R1017b A类#3：与 team.js getTeamHireCost 同源，杜绝「显示价 ≠ 实收价」
+        const hireCost =
+          typeof getTeamHireCost === "function"
+            ? getTeamHireCost(tmpl)
+            : 10000;
         hCard.innerHTML = `
           <div class="card-title">${tmpl.name}</div>
           <div class="card-desc">${tmpl.role} — ${tmpl.desc}</div>
-          <div style="font-size:10px;color:var(--text-muted);">产出:${tmpl.productivity} | 薪资:¥${tmpl.salary.toLocaleString()}</div>
-          <button class="btn btn-sm btn-success mt-2 hire-member" data-type="${tmpl.id}">招聘 ¥10,000</button>
+          <div style="font-size:10px;color:var(--text-muted);">产出:${tmpl.productivity} | 月薪:¥${tmpl.salary.toLocaleString()} | 专长:${tmpl.skill || "general"}</div>
+          <button class="btn btn-sm btn-success mt-2 hire-member" data-type="${tmpl.id}">招聘 ¥${hireCost.toLocaleString()}</button>
         `;
         hireGrid.appendChild(hCard);
       }
@@ -308869,8 +309042,14 @@ if (typeof window !== "undefined") {
   window.getCareerRequirementText = getCareerRequirementText;
   window.tickCareerFiringRisk = tickCareerFiringRisk;
   window.tickCareerHealthBonus = tickCareerHealthBonus;
-  window.getSkillHealthBonus = getSkillHealthBonus;
-  window.getSkillMarketPricingInsight = getSkillMarketPricingInsight;
+  // [全系统自洽修复] 域H 修复:getSkillHealthBonus 全库无定义,裸引用抛 ReferenceError,导致本文件 5488 行之后 1172 行(含 16 个 window 导出:showCareerNavModal/switchCareerSubTab 等)全部不执行 → typeof 守卫
+  if (typeof getSkillHealthBonus !== "undefined") {
+    window.getSkillHealthBonus = getSkillHealthBonus;
+  }
+  // [全系统自洽修复] 域H 修复:getSkillMarketPricingInsight 全库无定义,同为中断本文件后续执行的裸引用 → typeof 守卫
+  if (typeof getSkillMarketPricingInsight !== "undefined") {
+    window.getSkillMarketPricingInsight = getSkillMarketPricingInsight;
+  }
   window.enhancedApplyCareerJob = enhancedApplyCareerJob;
   window.clampCareerCapital = clampCareerCapital;
   window.showCareerNavModal = showCareerNavModal;
@@ -387298,6 +387477,314 @@ for(var i=0;i<E.length;i++){var exists=false;for(var j=0;j<RANDOM_EVENTS.length;
 })();
 
 ;
+// ==== js/core/domain_h_linkage_events_r1017b.js ====
+/**
+ * 域H(Phase2/公司) 联动增强 R1017b
+ * — H→G 创始人压力体检 / H→E 季度经营账本复盘 / H→C 猎头开价里的自我定价
+ *
+ * 设计意图：本轮 A类修复把域H 长期「写完就扔」的经营数据接回了主循环
+ *   （绩效→自家股价、VC 融资→创始人被换掉的叙事门控、团队月薪→招聘定价、团队专长→季度成长）。
+ *   本联动继续吃掉域H 仅剩的三批写-only 数据，把冷冰冰的经营数字翻译成「人」的体感：
+ *     ① corp_ops.js:655 `_founderStressLevel`（0~10 压力指数，此前全库零消费方，只有一句提示语）
+ *        → 首个真实消费方：压力体检，兑现为健康/心智的真实代价与回报（H→G）。
+ *     ② startup.js:3065 `_startupQuarterRevenue/_startupQuarterEmployees/_startupQuarterBurn/_startupQuarterValuation`
+ *        与 corp_ops.js `_lastCorpQuarterRevenue/_lastCorpQuarterEmployees/_lastCorpQuarterBurn`
+ *        （七个季度快照 flag 全部写-only）→ 首个真实消费方：年度账本复盘，迁移为个人理财意识（H→E）。
+ *     ③ 本轮 A类#3 让招聘成本随月薪浮动，玩家第一次亲手为「一个人值多少钱」付账
+ *        → 反身投射到自己的市场标价，沉淀管理经验（H→C）。
+ *
+ * 约束：IIFE 注册 RANDOM_EVENTS；显式 phase:"corporate"；全 || 防御；done-flag 防重复；
+ *       真实字段：现金 st.resources.cash / 心智 st.player.mental / 健康 st.status.health /
+ *       幸福 st.needs.happiness / 创业公司 st.startup.company / 职场团队 st.corporate.team。
+ *       数值一律 [PLACEHOLDER]。
+ */
+(function () {
+  "use strict";
+  if (typeof RANDOM_EVENTS === "undefined" || !RANDOM_EVENTS) return;
+  if (RANDOM_EVENTS._domainHLinkageR1017bLoaded) return;
+  RANDOM_EVENTS._domainHLinkageR1017bLoaded = true;
+
+  function gx(k, a) {
+    if (typeof addSkillXp === "function") {
+      try {
+        addSkillXp(k, a);
+      } catch (e) {}
+    }
+  }
+  function msg(t, k) {
+    if (typeof StateManager !== "undefined" && StateManager.addMessage) {
+      StateManager.addMessage(t, k || "info");
+    }
+  }
+  function num(v, d) {
+    return typeof v === "number" && isFinite(v) ? v : d || 0;
+  }
+  // 七个季度快照 flag 里任取一份「有内容」的经营数据（职场版优先，创业版兜底）
+  function quarterSnapshot(st) {
+    if (!st || !st.flags) return null;
+    var f = st.flags;
+    var corpRev = num(f._lastCorpQuarterRevenue, 0);
+    var upRev = num(f._startupQuarterRevenue, 0);
+    if (corpRev > 0 || num(f._lastCorpQuarterEmployees, 0) > 0) {
+      return {
+        source: "corp",
+        revenue: corpRev,
+        employees: num(f._lastCorpQuarterEmployees, 0),
+        burn: num(f._lastCorpQuarterBurn, 0),
+        valuation: 0,
+      };
+    }
+    if (upRev > 0 || num(f._startupQuarterEmployees, 0) > 0) {
+      return {
+        source: "startup",
+        revenue: upRev,
+        employees: num(f._startupQuarterEmployees, 0),
+        burn: num(f._startupQuarterBurn, 0),
+        valuation: num(f._startupQuarterValuation, 0),
+      };
+    }
+    return null;
+  }
+
+  var E = [
+    // ① H→G：创始人压力体检 —— _founderStressLevel 的首个真实消费方
+    {
+      id: "h1017b_founder_stress_checkup",
+      phase: "corporate",
+      icon: "🩺",
+      title: "体检报告上的那行小字",
+      story:
+        "公司年度体检，你是最后一个进检查室的。\n\n医生翻着报告，抬头看了你一眼：“你这个心率和血压，不像是这个年纪该有的。最近压力很大？”\n\n你想说“还好”，但话到嘴边卡住了。现金流、工资条、下个月的房租、投资人下周要看的数字——它们不是压力，它们是你每天醒来的第一件事。\n\n医生在报告末尾写了一行小字：建议减少持续性应激源。你盯着那行字看了很久。",
+      conditions: function (st) {
+        if (!st || !st.player || st.gameOver) return false;
+        if (st.flags && st.flags._h1017bStressCheckupDone) return false;
+        var lv = num(st.flags && st.flags._founderStressLevel, 0);
+        return lv >= 5 && num(st.player.day, 0) >= 90; // [PLACEHOLDER: 压力指数≥5 且第90天后]
+      },
+      probability: 0.06,
+      repeatable: false,
+      choices: [
+        {
+          text: "🩺 听医生的，砍掉一部分事情",
+          hint: "健康+8, 心智+6, 现金-1500（请人分担）",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._h1017bStressCheckupDone = true;
+            st.flags._h1017bStressManaged = true;
+            if (st.status) {
+              st.status.health = Math.min(
+                100,
+                num(st.status.health, 70) + 8,
+              ); // [PLACEHOLDER: 健康 +8]
+            }
+            if (st.player) {
+              st.player.mental = Math.min(100, num(st.player.mental, 50) + 6); // [PLACEHOLDER: 心智 +6]
+            }
+            if (st.resources) {
+              st.resources.cash = Math.max(
+                0,
+                num(st.resources.cash, 0) - 1500,
+              ); // [PLACEHOLDER: 请人分担 -1500]
+            }
+            // 压力指数被真实缓解——写回源 flag，让后续季度结算从更低的基线累积
+            st.flags._founderStressLevel = Math.max(
+              0,
+              num(st.flags._founderStressLevel, 5) - 3,
+            ); // [PLACEHOLDER: 压力 -3]
+            msg(
+              "🩺 你把两件事交了出去。第一次觉得，公司离了你也能转半天。健康+8，心智+6。",
+              "success",
+            );
+          },
+        },
+        {
+          text: "💪 报告收进抽屉，这阵子熬过去再说",
+          hint: "健康-5, 心智-4, KPI+3（短期硬扛）",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._h1017bStressCheckupDone = true;
+            st.flags._h1017bStressIgnored = true;
+            if (st.status) {
+              st.status.health = Math.max(
+                1,
+                num(st.status.health, 70) - 5,
+              ); // [PLACEHOLDER: 健康 -5]
+            }
+            if (st.player) {
+              st.player.mental = Math.max(0, num(st.player.mental, 50) - 4); // [PLACEHOLDER: 心智 -4]
+              if (!st.player.corporate) st.player.corporate = {};
+              st.player.corporate.kpi = Math.min(
+                100,
+                num(st.player.corporate.kpi, 20) + 3,
+              ); // [PLACEHOLDER: KPI +3]
+            }
+            st.flags._founderStressLevel = Math.min(
+              10,
+              num(st.flags._founderStressLevel, 5) + 1,
+            );
+            msg(
+              "💪 你把报告折好放进抽屉。数字漂亮了一点，人差了一点。健康-5，心智-4，KPI+3。",
+              "warning",
+            );
+          },
+        },
+      ],
+    },
+
+    // ② H→E：季度账本复盘 —— 七个季度快照 flag 的首个真实消费方
+    {
+      id: "h1017b_quarter_ledger_review",
+      phase: "corporate",
+      icon: "📒",
+      title: "把公司的账，读成自己的账",
+      story:
+        "深夜，你把这几个季度的经营数据拉在一张表里：收入、人头、烧钱速度。\n\n以前你只关心“这个季度过没过”。今晚你第一次把它们连起来看——原来收入的曲线和烧钱的曲线，从来不是同一条节奏。\n\n你忽然想到自己的钱包：每个月进多少、出多少、剩下的那点去了哪里，你居然从来没这么认真算过。\n\n公司的账你算得清清楚楚，自己的账却是一笔糊涂账。",
+      conditions: function (st) {
+        if (!st || !st.player || st.gameOver) return false;
+        if (st.flags && st.flags._h1017bLedgerReviewDone) return false;
+        return !!quarterSnapshot(st) && num(st.player.day, 0) >= 120; // [PLACEHOLDER: 第120天后]
+      },
+      probability: 0.06,
+      repeatable: false,
+      choices: [
+        {
+          text: "📒 用同一套方法，给自己也做一张表",
+          hint: "会计XP+40, 心智+5, 置_dataInvestorMindset",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._h1017bLedgerReviewDone = true;
+            st.flags._dataInvestorMindset = true;
+            st.flags._h1017bPersonalLedger = true;
+            gx("accounting", 40); // [PLACEHOLDER: 会计XP +40]
+            if (st.player) {
+              st.player.mental = Math.min(100, num(st.player.mental, 50) + 5); // [PLACEHOLDER: 心智 +5]
+            }
+            var snap = quarterSnapshot(st);
+            if (snap) {
+              msg(
+                "📒 上季经营：营收¥" +
+                  Math.round(snap.revenue).toLocaleString() +
+                  " · " +
+                  snap.employees +
+                  "人 · 烧钱¥" +
+                  Math.round(snap.burn).toLocaleString() +
+                  "。你照着做了一张自己的现金流表。会计EXP+40，心智+5。",
+                "success",
+              );
+            } else {
+              msg("📒 你照着公司的口径，给自己做了一张现金流表。会计EXP+40。", "success");
+            }
+          },
+        },
+        {
+          text: "😮‍💨 公司的账够累了，自己的先算了吧",
+          hint: "心情+4（放过自己）",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._h1017bLedgerReviewDone = true;
+            if (st.needs) {
+              st.needs.happiness = Math.min(
+                100,
+                num(st.needs.happiness, 50) + 4,
+              ); // [PLACEHOLDER: 心情 +4]
+            }
+            msg("😮‍💨 你合上电脑。有些账，不算也罢。心情+4。", "info");
+          },
+        },
+      ],
+    },
+
+    // ③ H→C：猎头开价里的自我定价 —— 承接本轮 A类#3「招聘成本随月薪浮动」
+    {
+      id: "h1017b_headhunter_pricing",
+      phase: "corporate",
+      icon: "🏷️",
+      title: "你付过的那笔招聘费",
+      story:
+        "又一轮招人。你盯着预算表上那个数字发呆——为了一个人，公司愿意先掏出这么多。\n\n然后你想到一个从没想过的问题：如果换成是别人来挖你，他们愿意为你掏多少？\n\n你打开自己的简历，第一次不是以“求职者”的眼光，而是以“买方”的眼光去读它。有几行看起来很唬人，其实不值钱；有几行你一直觉得不值一提，反而是别人最想买的。",
+      conditions: function (st) {
+        if (!st || !st.player || st.gameOver) return false;
+        if (st.flags && st.flags._h1017bPricingDone) return false;
+        var team = st.corporate && st.corporate.team;
+        return (
+          !!team &&
+          team.length >= 2 && // [PLACEHOLDER: 团队≥2人]
+          num(st.player.day, 0) >= 100
+        );
+      },
+      probability: 0.06,
+      repeatable: false,
+      choices: [
+        {
+          text: "🏷️ 按“买方视角”重写一遍简历",
+          hint: "管理XP+35, 向上管理+3, 置_h1017bMarketPriced",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._h1017bPricingDone = true;
+            st.flags._h1017bMarketPriced = true;
+            gx("management", 35); // [PLACEHOLDER: 管理XP +35]
+            if (st.player) {
+              if (!st.player.corporate) st.player.corporate = {};
+              st.player.corporate.upwardMgmt = Math.min(
+                100,
+                num(st.player.corporate.upwardMgmt, 50) + 3,
+              ); // [PLACEHOLDER: 向上管理 +3]
+            }
+            msg(
+              "🏷️ 你删掉三行漂亮话，补上两行别人真正在买的东西。管理EXP+35，向上管理+3。",
+              "success",
+            );
+          },
+        },
+        {
+          text: "💼 顺手把团队薪资结构也捋一遍",
+          hint: "管理XP+20, 团队忠诚+3, 现金-800",
+          apply: function (st) {
+            if (!st) return;
+            st.flags = st.flags || {};
+            st.flags._h1017bPricingDone = true;
+            gx("management", 20); // [PLACEHOLDER: 管理XP +20]
+            var team = st.corporate && st.corporate.team;
+            if (team && team.length > 0) {
+              for (var i = 0; i < team.length; i++) {
+                if (!team[i]) continue;
+                team[i].loyalty = Math.min(
+                  100,
+                  num(team[i].loyalty, 50) + 3,
+                ); // [PLACEHOLDER: 忠诚 +3]
+              }
+            }
+            if (st.resources) {
+              st.resources.cash = Math.max(0, num(st.resources.cash, 0) - 800); // [PLACEHOLDER: 请团队吃饭 -800]
+            }
+            msg(
+              "💼 你把每个人的价码摊开来看了一遍，也请大家吃了顿饭。管理EXP+20，团队忠诚+3。",
+              "success",
+            );
+          },
+        },
+      ],
+    },
+  ];
+
+  for (var i = 0; i < E.length; i++) {
+    var exists = false;
+    for (var j = 0; j < RANDOM_EVENTS.length; j++) {
+      if (RANDOM_EVENTS[j] && RANDOM_EVENTS[j].id === E[i].id) {
+        exists = true;
+        break;
+      }
+    }
+    if (!exists) RANDOM_EVENTS.push(E[i]);
+  }
+})();
+
+;
 // ==== js/core/domain_g_linkage_r935.js ====
 /*
  * 城市浮生记 — 域G(核心机制/生命周期) 联动增强 R935
@@ -401002,6 +401489,8 @@ if (typeof window !== "undefined") {
   window.estimateJobPayDetailed = estimateJobPayDetailed;
   window.startNewGame = startNewGame;
   window.showWelcome = showWelcome;
+  // [全系统自洽修复] 域H 修复:getAvailableActions 定义在本文件,原导出误写在 actions.js(加载序在前)致 ReferenceError → 移至定义所在文件真实导出
+  window.getAvailableActions = getAvailableActions;
 }
 
 ;

@@ -11,6 +11,7 @@
 
 ## 验证
 - **语法体检（R1016b 起纳入例行）**：单进程 `vm.Script` 全量扫 `src/js/**/*.js`（1151 文件约 2 秒）。逐文件 spawn `node --check` >3min 不可用。
+- **导出裸引用体检（R1017b 起纳入例行）**：`node .claude/_export_audit_r1017b.cjs` 扫全库 `window.X = X;` 中本文件未定义的标识符。语法正确但顶层求值抛 ReferenceError → **中断该文件此行之后全部顶层代码**（R1017b career_dev.js 一处吃掉 1172 行 + 16 个导出）。误报只有 `window.X = true;` 与形参名。同源快检：MC harness 头部 `[HEADLESS] LOAD ERROR` 与 `加载: xxms, 错误: N`，N 必须为 0。
 - MC：`node --max-old-space-size=8192 tests/monte_carlo.cjs --trials 10 --days 500`（OOM 回退 6x400）。判过：0 TypeError/ReferenceError/NaN/Infinity + 前 7 天死亡率 0%。存活率 <80%（trader60/social70/corporate50）、grinder 500d 可低至 0% 均为既有 RNG 严苛度，非崩溃。**"全策略 0% 存活 + 耗时 <1s" = 硬崩溃** → harness catch 打 e.stack 定位。
 - 开轮例行 `grep -cE '^t' src/index.html` 清扫杂散 t 字符（并行挂载模板会产病）。
 
@@ -44,8 +45,8 @@
 - 模糊指令先 grep 确认存在；用户「无关」= 停手。
 
 ## A类净尽结论（勿重复审）
-最近深审轮：**A=R903b · B=R1016b · C=R792b · D=R900b · E=R819b · F=R826b · G=R894b · H=R798b**。
-下轮最陈旧：**H(R798b) > E(R819b) > F(R826b)**。
+最近深审轮：**A=R903b · B=R1016b · C=R792b · D=R900b · E=R819b · F=R826b · G=R894b · H=R1017b**。
+下轮最陈旧：**E(R819b) > F(R826b) > C(R792b)**。
 
 - 域A(R903b)：CERTIFICATES 18 证 effects 已逐项对账，driver_license.agility / bicycle.fatigue_reduction / warm_coat.comfort 三处死数据已接入 daily_pipeline。construction_safety.injuryReduction 硬编码 0.5 已兑现，非死数据勿修。dental/vision score 不存在（误报已清）。
 - 域B(R1016b)：详见下方"近况"。story 占位符泄漏三层已全闭合（R455 text()优先 / R722b tooltip 剥离 / R785b story 兜底剥离），勿重复审。
@@ -60,9 +61,10 @@
 - 域A/E：trade 剩 lastPriceUpdate/_firstTradeDone（低价值）。_portfolioMilestone 全档已消费。propertyPhaseStartDay / _propertyPolicyTightness / stopLossOrders 待接叙事。
 - 域B：R1016b 后清零，剩 `_b722bPatternCd`（冷却 flag，低价值）。
 - 域C：job_milestone 写-only 剩 _buskingVenue/_constructionCertPath/_factoryReskilling/_gaokaoTutoring/_laoGuanFriend/_tutoringReputation/_vendingLoyalty/_wasteRecyclingContract（均有即时收益，非 A 类）。
-- 域H：company.efficiency 事件层薄弱；写-only 待读 _h698Sleep/_h698Focus/_h712bSprintPlan/_h712bDelegated。
+- 域H：company.efficiency 事件层薄弱；写-only 待读 _h698Sleep/_h698Focus/_h712bSprintPlan/_h712bDelegated。R1017b 后 _corpPerfStockBoost/_corpPerfStockDrag/_acceptedVCFunding 已闭环，TEAM_MEMBERS.salary/.skill 已接入定价与季度结算。
 
 ## 近况
+- **R1017b 域H(07-31)**：A类 4 项均为「写-only/读-only 断链」型死数据。①`_corpPerfStockBoost/_corpPerfStockDrag` corp_ops.js 写-only → stock.js `updateStockPrices` 消费+清除，配 `_employerStockSymbolR1017b()` 三级映射（全名精确→名称前缀互含→行业板块兜底）。②`_acceptedVCFunding` events_corp.js 读但全库零写入 → startup.js `fundingRounds.push` 后补写。③招聘价写死 ¥10,000 忽略 TEAM_MEMBERS.salary（3.5 倍差价无解释）→ 新增 `getTeamHireCost()`=max(8000, salary*0.6)，corp_ui.js 同步真实价+展示专长。④TEAM_MEMBERS[].skill 全库零消费 → corp_ops.js endQuarter 按专长差异化结算（coding/politics/endurance/learning/general，每专长每季一次防叠加）。联动 3（founder_stress_checkup H→G 首消费 _founderStressLevel / quarter_ledger_review H→E 首消费 7 个季度快照 flag / headhunter_pricing H→C）。**外加 3 项跨域全站型 A 类**（MC harness `LOAD ERROR` 暴露，加载错误 3→0）：career_dev.js:5488 `window.getSkillHealthBonus = getSkillHealthBonus`（全库无此函数）抛 ReferenceError **吃掉该文件后 1172 行 + 16 个 window 导出**（showCareerNavModal/switchCareerSubTab 等）；festivals.js:1395 getFestivalWorkMod 同型；actions.js:342 getAvailableActions **导出误位**（真实定义在 main.js，加载序在后）→ 全部 typeof 守卫 + main.js 补真实导出。news.js 两处跨文件裸引用预防性加固（B类）。**审计法沉淀**：`.claude/_h_audit.cjs` flags 写-only/读-only 双向对账 + company.<field> 有读无写对账；`.claude/_export_audit_r1017b.cjs` 导出裸引用全库扫描。
 - **R1016b 域B(07-31)**：史上最大范围 A 类。①**全库 22 个已挂载 linkage 文件 SyntaxError**（三形态：`story":"` 键名残缺引号 24 处 / r932 字符串内嵌未转义双引号 / `catch(e){return""})()` 缺函数体闭合 `}` 6 处）→ 整 IIFE 永不执行 + 阻断全站 build，跨 A/B/C/D/E/F/G/H 八域，已全修，全库语法错误归零。②**6 个计数器全库零写入方门控 35 事件**（_priceVolatilityCount 30 / _priceEventCount 2 / _eventsExperienced 2 / _economicEventCount 1 / _managementEventCount 1 / _majorChoiceCount 1）→ 在 trade.js `updateAllPrices` 与 events_core.js `recordEventToHistory`+选项结算点两处单点补写。③r840/r848 域A 悬空 6 事件补挂载。联动 3（b1016b_volatility_veteran B→A / b1016b_decision_weight B→G / b1016b_story_teller B→D）。
 - R894b 域G：retire_advisor 漏设 _pensionBase（inline 优先兜底被 _inlineApplied 跳过）/ 空 skills.reduce 无初始值 / 杂散 t 字符 54 处 / 14 脚本双挂载去重。
 - R792b 域C：job_milestone 承诺零兑现 4 处 → daily_pipeline 月度兑现。**承诺零兑现审计法**：grep 里程碑事件写入 flag → 全库读取扫描 → desc/hint 承诺 vs apply 实效逐项对照。
