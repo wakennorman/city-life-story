@@ -2,7 +2,7 @@
   "lastRound": "1017b",
   "lastDirection": "DOMAIN_H",
   "lastDate": "2026-07-31",
-  "lastCommit": "PENDING",
+  "lastCommit": "d1578141 (fix d37a1954 / feat a4723cd1 / chore d1578141)",
   "nextDirection": "DOMAIN_E",
   "domainRecency": {
     "A": "R903b",
@@ -15,5 +15,5 @@
     "H": "R1017b"
   },
   "note": "R1017b 域H(本窗口自动化 15:5x-16:2x): 选域=git log重算recency,八域深审最陈旧=H(R798b)。开轮体检: tests/syntax_sweep.cjs 全库1151文件语法错误=0, index.html 杂散t字符=0, baseline干净。审计法=新建 .claude/_h_audit.cjs 做 flags 写-only/读-only 双向对账 + company.<field> 有读无写对账。A类4项(全部为断链型死数据): ①_corpPerfStockBoost/_corpPerfStockDrag 在 corp_ops.js 季度结算写入但全库零消费方,公司业绩对自家股价的影响承诺完全落空 → src/js/phase2/stock.js updateStockPrices 开头消费并清除两 flag(利好x1.06/利空x0.95),新增辅助函数 _employerStockSymbolR1017b(state) 三级映射定位雇主股票代码(公司全名精确匹配 → 名称前缀互含如'安信金融科技'⊃'安信金融' → 行业板块兜底 金融/医药/新能源/房地产/消费/科技),命中后一次性冲击并播报涨跌。②_acceptedVCFunding 被 events_corp.js 读取用作门控但全库零写入方,VC融资后续事件链永不解锁 → src/js/phase2/startup.js company.fundingRounds.push 之后补写 flags._acceptedVCFunding=true 及 _vcFundingRoundsR1017b 计数。③招聘成本写死 ¥10,000/人,完全忽略 TEAM_MEMBERS[].salary(2800~9500 区间,最高3.5倍差价且无任何解释),ui 标题亦写死 → src/js/phase2/team.js 新增 getTeamHireCost(template)=Math.max(8000, round(salary*0.6/100)*100) 并导出 window,hireTeamMember 改用之且成功消息附成本+月薪; src/js/ui/corp_ui.js Q2招聘季标题去掉写死价、卡片改用 getTeamHireCost(tmpl) 显示真实价并补展示专长 tmpl.skill。④TEAM_MEMBERS[].skill 字段(coding/politics/endurance/learning/general)全库零消费,团队专长纯装饰 → src/js/phase2/corp_ops.js endQuarter 季度摘要后新增专长差异化结算(coding→addSkillXp coding 25 / politics→upwardMgmt+2 / endurance→kpi+2 / learning→intelligence+1 / general→ability+1),每种专长每季度只结一次防叠加,附播报。联动3(src/js/core/domain_h_linkage_events_r1017b.js,3事件全显式 phase:'corporate',IIFE+done-flag): h1017b_founder_stress_checkup(H→G,首消费 _founderStressLevel>=5 且 day>=90,两选项写回源flag) / h1017b_quarter_ledger_review(H→E,首消费7个季度快照flag,置 _dataInvestorMindset + addSkillXp accounting 40) / h1017b_headhunter_pricing(H→C,承接A类#3,团队>=2,addSkillXp management 35 + upwardMgmt+3)。验证: node --check 5文件全过; syntax_sweep 1152文件(含新增)语法错误=0; python build.py 成功(3m22s, app.js 16608.5KB, dist 16:14 新于 src 16:11); dist 入包 grep 确认 h1017b=3/employerSym=2/hireCost=6/vcflag=3; 蒙特卡洛 10x500。深审recency更新: H=R1017b,下轮候选 E(R819b) > F(R826b) > C(R792b)。",
-  "pushStatus": "PENDING"
+  "pushStatus": "LOCAL_ONLY_GH_TOKEN_INVALID (ahead=98; git pull --rebase origin main 成功无冲突; git push 报 could not read Username; 根因 credential.helper=!gh auth git-credential 且 gh token 失效 account wakennorman → 需用户执行 gh auth login -h github.com)"
 }
