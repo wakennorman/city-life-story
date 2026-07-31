@@ -4,6 +4,15 @@
 > 分支策略：每轮 `git checkout -B loop/auto`（基于当前 HEAD），只 `git add` 本轮改动文件，绝不 `-A`/绝不 push。
 > 安全：提交前同步 `.claude/last_known_head` = `git rev-parse HEAD`；20 关键事件 id 每次改完 cross_system_events.js 后 grep 校验。
 
+## 最近执行（2026-07-31 15:5x-16:4x · R1017b 域H Phase2/公司 — 已commit main, push见下）
+- 选域：git log 重算 recency，八域深审最陈旧 H(R798b)。开轮体检 syntax_sweep 1151 文件语法错误 0、index.html 杂散 t 字符 0。
+- A类 7 项。域H 4 项（审计法：新建 `.claude/_h_audit.cjs` 做 flags 写-only/读-only 双向对账 + company.field 有读无写对账）：_corpPerfStockBoost/_corpPerfStockDrag 零消费→stock.js 三级映射定位雇主股票并施加冲击；_acceptedVCFunding 零写入→startup.js 融资点补写；TEAM_MEMBERS.salary 3.5 倍差价却实收固定 ¥10,000→getTeamHireCost 单点定价 team.js/corp_ui.js 共用；TEAM_MEMBERS.skill 五种专长零消费→endQuarter 差异化结算。
+- **意外收获（跨域全站型 3 项）**：MC harness 头部 `[HEADLESS] LOAD ERROR` 暴露 3 处 window 导出裸引用 ReferenceError，其中 career_dev.js:5488 一处吃掉该文件之后 **1172 行 + 16 个 window 导出**（showCareerNavModal/switchCareerSubTab 等）。已 typeof 守卫 + main.js 补真实导出，加载错误 3→0。沉淀 `.claude/_export_audit_r1017b.cjs`（1152 文件约 1 秒），建议纳入开轮例行体检。
+- 联动 3（domain_h_linkage_events_r1017b.js，全 phase:corporate）：founder_stress_checkup H→G / quarter_ledger_review H→E / headhunter_pricing H→C。
+- 验证：node --check 全过；syntax_sweep 1152 文件 0 错；build 16610.0 KB（dist 16:29 新于 src 16:25）；MC 10×500 247.8s 前 7 天死亡率全 0%、无 TypeError/ReferenceError（balanced 60%→90%）。
+- 坑：Edit 写 news.js 把整文件 CRLF 压成 LF → diff 4492 行噪音，用 Python 字节级转回 CRLF 后收敛到 20 行。**改 CRLF 文件后务必 `git diff --cached --stat` 核对行数**。
+- 提交：d37a1954(fix 7个) + a4723cd1(feat 3项)。下轮→域E（R819b 最陈旧）。
+
 ## 最近执行（2026-07-29 02:5x · R722b 域B 事件/叙事 — 已commit main, push待网络）
 - 选域：git log recency 并行八连发R714-721后 B=715 可选最陈旧（A名义最旧但并行r722在途→避让，后其自闭合R722+R723域B撞域）。
 - A类=0（假键16全注释/死字段0/无phase14全误报/八连发双向核对无悬空）。B类双层修复：events_core.js:717 tooltip泄漏782处{desc}→渲染层单点剥离+3文件源头8处。
@@ -668,3 +677,18 @@
 - 竞态：全部改动被并行 a568cc0c+77370c8f 扫走 IDENTICAL,四项核验HEAD完整即闭合;本窗口仅提交 loop-state 回填(b5e4d52b)。并行同期连发 R903/R904(域B已被占)。
 - push：TLS代理3067未起,LOCAL_ONLY_TLS,ahead 3(origin停7f9ba5dc)。
 - 下轮候选：B(R785b) > C(R792b) > E(R819b)。开轮必 git log 重算(R904已占域B需核实其深审性质)。
+
+
+## R1016b 域B 事件/叙事 (2026-07-31 14:2x-15:1x)
+
+- 选域: git log 重算 recency——loop-state 滞后在 R903b，实际并行已推到 R1015；八域深审最陈旧 = B(R785b)。
+- A类 3 项，本循环史上最大范围:
+  1. 【全站级】全库 22 个【已挂载】linkage 文件 SyntaxError，整个 IIFE 永不执行 + 阻断 build。三形态: story":" 键名残缺引号 24 处 / r932 字符串内嵌未转义双引号 / catch(e){return""})() 缺函数体闭合花括号 6 处。跨 A~H 八域。修后 1151 文件语法错误 = 0。
+  2. 6 个计数器全库零写入方，门控 35 个已挂载事件→ trade.js updateAllPrices 与 events_core.js recordEventToHistory + 选项结算点两处单点补写。
+  3. domain_a_linkage_r840/r848 悬空未挂载 6 事件 → 补挂载。
+- 联动 3: b1016b_volatility_veteran(B→A) / b1016b_decision_weight(B→G) / b1016b_story_teller(B→D)。
+- 验证: 语法 1151/0；build app.js 16586.9KB；MC 10x500 197.0s 六策略全跑完、前7天死亡率全 0%；加载期 3 个 ReferenceError(getFestivalWorkMod/getAvailableActions/getSkillHealthBonus, 定义在 main.js)属 headless harness 加载顺序既有问题，与本轮无关。
+- 提交 4 笔: 7fb62124(A类) / b4214fd0(联动+dist+文档) / cf433b7e(tests/syntax_sweep.cjs 工具固化) / 2a0e7c6f(push 阻断记录)。工作区已清空。
+- ⚠ push 失败新形态: 不是 TLS。网络正常(github 直连与 3067 代理均 200)，但 credential.helper="!gh auth git-credential" 且 gh token 失效 → could not read Username。需用户 gh auth login -h github.com。本地 ahead=94。
+- 方法论: 逐文件 spawn node --check 全量体检 >3min 不可用 → 单进程 vm.Script 扫描 1151 文件约 2 秒，已固化为 tests/syntax_sweep.cjs，纳入开轮例行体检。
+- 深审 recency: A=R903b B=R1016b C=R792b D=R900b E=R819b F=R826b G=R894b H=R798b。下轮候选 H(R798b) > E(R819b) > F(R826b)。
