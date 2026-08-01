@@ -24,9 +24,9 @@ var JOB_MILESTONE_EVENTS = {
           apply: function (state) {
             if (!state.flags) state.flags = {};
             state.flags._wasteRecyclingNetwork = true;
-            state.flags._jobMultipliers = state.flags._jobMultipliers || {};
-            state.flags._jobMultipliers["waste_recycling"] =
-              (state.flags._jobMultipliers["waste_recycling"] || 1) * 1.1;
+            state._jobMultipliers = state._jobMultipliers || {};
+            state._jobMultipliers["waste_recycling"] =
+              (state._jobMultipliers["waste_recycling"] || 1) * 1.1;
             StateManager.addMessage(
               "🗣️ 大妈的情报让你如鱼得水！废品回收收入永久+10%。",
               "success",
@@ -89,9 +89,9 @@ var JOB_MILESTONE_EVENTS = {
               state.resources.cash = Math.max(0, (state.resources.cash || 0) - 3000);
               state.flags.oldZhouReferred = true;
               state.flags.zhouScrapBonus = true;
-              state.flags._jobMultipliers = state.flags._jobMultipliers || {};
-              state.flags._jobMultipliers["waste_recycling"] =
-                (state.flags._jobMultipliers["waste_recycling"] || 1) * 1.35;
+              state._jobMultipliers = state._jobMultipliers || {};
+              state._jobMultipliers["waste_recycling"] =
+                (state._jobMultipliers["waste_recycling"] || 1) * 1.35;
               StateManager.addMessage(
                 "🏆 你接手了老张的版图！废品收入+35%，正规回收站已解锁！",
                 "success",
@@ -387,9 +387,9 @@ var JOB_MILESTONE_EVENTS = {
           apply: function (state) {
             state.resources.cash = Math.max(0, (state.resources.cash || 0) - 3);
             state.flags._vendingLoyalty = true;
-            state.flags._jobMultipliers = state.flags._jobMultipliers || {};
-            state.flags._jobMultipliers["street_vending_food"] =
-              (state.flags._jobMultipliers["street_vending_food"] || 1) * 1.1;
+            state._jobMultipliers = state._jobMultipliers || {};
+            state._jobMultipliers["street_vending_food"] =
+              (state._jobMultipliers["street_vending_food"] || 1) * 1.1;
             StateManager.addMessage(
               "❤️ 口碑建立！摆摊收入永久+10%。一个回头客的价值，不止三块钱。",
               "success",
@@ -483,9 +483,9 @@ var JOB_MILESTONE_EVENTS = {
               100,
               (state.needs.happiness || 50) + 15,
             );
-            state.flags._jobMultipliers = state.flags._jobMultipliers || {};
-            state.flags._jobMultipliers["street_vending_food"] =
-              (state.flags._jobMultipliers["street_vending_food"] || 1) * 1.15;
+            state._jobMultipliers = state._jobMultipliers || {};
+            state._jobMultipliers["street_vending_food"] =
+              (state._jobMultipliers["street_vending_food"] || 1) * 1.15;
             StateManager.addMessage(
               "🏪 你的摊，你的骄傲！心情+15，摊位收入永久+15%。",
               "success",
@@ -506,9 +506,9 @@ var JOB_MILESTONE_EVENTS = {
           label: "继续冲单，追求钻石级",
           desc: "外卖收入永久+8%",
           apply: function (state) {
-            state.flags._jobMultipliers = state.flags._jobMultipliers || {};
-            state.flags._jobMultipliers["delivery_rider"] =
-              (state.flags._jobMultipliers["delivery_rider"] || 1) * 1.08;
+            state._jobMultipliers = state._jobMultipliers || {};
+            state._jobMultipliers["delivery_rider"] =
+              (state._jobMultipliers["delivery_rider"] || 1) * 1.08;
             StateManager.addMessage(
               "🛵 金牌骑手！外卖收入永久+8%！冲！",
               "success",
@@ -573,9 +573,9 @@ var JOB_MILESTONE_EVENTS = {
                 (state.skills.management.xp || 0) + 80;
             }
             // [全系统自洽修复] 域C R792b 修复:desc承诺"底薪¥5500+管理奖金"但apply无任何收入变化(拒绝支线反而+15%,选晋升纯亏)→站长岗收入永久+30%(高于拒绝支线15%,兑现"更高的位置")
-            state.flags._jobMultipliers = state.flags._jobMultipliers || {};
-            state.flags._jobMultipliers["delivery_rider"] =
-              (state.flags._jobMultipliers["delivery_rider"] || 1) * 1.3;
+            state._jobMultipliers = state._jobMultipliers || {};
+            state._jobMultipliers["delivery_rider"] =
+              (state._jobMultipliers["delivery_rider"] || 1) * 1.3;
             StateManager.addMessage(
               "🏆 骑手站长诞生！管理技能+80XP，站长岗收入永久+30%，走向物流管理路径！",
               "success",
@@ -586,9 +586,9 @@ var JOB_MILESTONE_EVENTS = {
           label: "我永远是骑手",
           desc: "拒绝但平台给涨薪，收入+15%",
           apply: function (state) {
-            state.flags._jobMultipliers = state.flags._jobMultipliers || {};
-            state.flags._jobMultipliers["delivery_rider"] =
-              (state.flags._jobMultipliers["delivery_rider"] || 1) * 1.15;
+            state._jobMultipliers = state._jobMultipliers || {};
+            state._jobMultipliers["delivery_rider"] =
+              (state._jobMultipliers["delivery_rider"] || 1) * 1.15;
             StateManager.addMessage(
               "🛵 你拒绝了站长职位。作为补偿，平台给你永久提薪+15%。不错！",
               "success",
@@ -614,9 +614,9 @@ var JOB_MILESTONE_EVENTS = {
               (state.player.intelligence || 10) + 3,
             );
             state.flags._tutoringReputation = true;
-            state.flags._jobMultipliers = state.flags._jobMultipliers || {};
-            state.flags._jobMultipliers["tutoring"] =
-              (state.flags._jobMultipliers["tutoring"] || 1) * 1.1;
+            state._jobMultipliers = state._jobMultipliers || {};
+            state._jobMultipliers["tutoring"] =
+              (state._jobMultipliers["tutoring"] || 1) * 1.1;
             StateManager.addMessage(
               "📚 口碑教师！智力+3，家教收入永久+10%。真正的成就感。",
               "success",
@@ -716,9 +716,9 @@ var JOB_MILESTONE_EVENTS = {
             if (state.skills && state.skills.english) {
               state.skills.english.xp = (state.skills.english.xp || 0) + 25;
             }
-            state.flags._jobMultipliers = state.flags._jobMultipliers || {};
-            state.flags._jobMultipliers["content_writing"] =
-              (state.flags._jobMultipliers["content_writing"] || 1) * 1.1;
+            state._jobMultipliers = state._jobMultipliers || {};
+            state._jobMultipliers["content_writing"] =
+              (state._jobMultipliers["content_writing"] || 1) * 1.1;
             StateManager.addMessage(
               "✍️ 破万爆文！名气+5，英语技能+25XP，写作收入永久+10%！",
               "success",
@@ -788,9 +788,9 @@ var JOB_MILESTONE_EVENTS = {
           desc: "名气+15，写作收入+20%",
           apply: function (state) {
             state.player.fame = Math.min(100, (state.player.fame || 0) + 15);
-            state.flags._jobMultipliers = state.flags._jobMultipliers || {};
-            state.flags._jobMultipliers["content_writing"] =
-              (state.flags._jobMultipliers["content_writing"] || 1) * 1.2;
+            state._jobMultipliers = state._jobMultipliers || {};
+            state._jobMultipliers["content_writing"] =
+              (state._jobMultipliers["content_writing"] || 1) * 1.2;
             StateManager.addMessage(
               "🌟 保持独立！名气+15，写作收入永久+20%。内容人的尊严！",
               "success",
@@ -848,9 +848,9 @@ var JOB_MILESTONE_EVENTS = {
           desc: "演出收入永久+25%",
           apply: function (state) {
             state.flags._buskingVenue = true;
-            state.flags._jobMultipliers = state.flags._jobMultipliers || {};
-            state.flags._jobMultipliers["busking"] =
-              (state.flags._jobMultipliers["busking"] || 1) * 1.25;
+            state._jobMultipliers = state._jobMultipliers || {};
+            state._jobMultipliers["busking"] =
+              (state._jobMultipliers["busking"] || 1) * 1.25;
             StateManager.addMessage(
               "🎙️ 餐厅驻唱签约！演出收入永久+25%。",
               "success",
@@ -941,9 +941,9 @@ var JOB_MILESTONE_EVENTS = {
           label: "谢谢队长，继续努力",
           desc: "收入+5%，职业晋升积分",
           apply: function (state) {
-            state.flags._jobMultipliers = state.flags._jobMultipliers || {};
-            state.flags._jobMultipliers["bank_security"] =
-              (state.flags._jobMultipliers["bank_security"] || 1) * 1.05;
+            state._jobMultipliers = state._jobMultipliers || {};
+            state._jobMultipliers["bank_security"] =
+              (state._jobMultipliers["bank_security"] || 1) * 1.05;
             state.needs.happiness = Math.min(
               100,
               (state.needs.happiness || 50) + 8,
@@ -1012,9 +1012,9 @@ var JOB_MILESTONE_EVENTS = {
           label: "接！向上走",
           desc: "收入大幅提升，管理技能+50XP",
           apply: function (state) {
-            state.flags._jobMultipliers = state.flags._jobMultipliers || {};
-            state.flags._jobMultipliers["bank_security"] =
-              (state.flags._jobMultipliers["bank_security"] || 1) * 1.4;
+            state._jobMultipliers = state._jobMultipliers || {};
+            state._jobMultipliers["bank_security"] =
+              (state._jobMultipliers["bank_security"] || 1) * 1.4;
             if (state.skills && state.skills.management) {
               state.skills.management.xp =
                 (state.skills.management.xp || 0) + 50;
