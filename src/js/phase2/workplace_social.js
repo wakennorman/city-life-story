@@ -817,6 +817,28 @@ if (typeof window !== "undefined") {
       },
     ],
   };
+
+  // [R1044 域D 联动增强 D→A]: 职场社交经济数据 — 同事关系数据供经济系统
+  window.getColleagueEconomicData = function (state) {
+    if (!state || !state.corporate || !Array.isArray(state.corporate.colleagues)) return null;
+    return { colleagueCount: state.corporate.colleagues.length };
+  };
+
+  // [R1044 域D 联动增强 D→E]: 职场社交投资数据 — 同事关系影响投资信息
+  window.getColleagueInvestData = function (state) {
+    if (!state || !state.corporate || !Array.isArray(state.corporate.colleagues)) return null;
+    var _high = 0;
+    for (var _ci = 0; _ci < state.corporate.colleagues.length; _ci++) {
+      if ((state.corporate.colleagues[_ci].relationship || 0) >= 60) _high++;
+    }
+    return { highRelationCount: _high, total: state.corporate.colleagues.length };
+  };
+
+  // [R1044 域D 联动增强 D→F]: 职场社交UI数据 — 同事数据供UI渲染
+  window.getColleagueUIData = function (state) {
+    if (!state || !state.corporate || !Array.isArray(state.corporate.colleagues)) return null;
+    return { count: state.corporate.colleagues.length };
+  };
 }
 // [R356] 域D
 // [R412] 域D

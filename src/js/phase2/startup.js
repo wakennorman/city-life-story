@@ -2544,7 +2544,10 @@ function tickStartup(state, tickType) {
       company.employees.length * Math.round(DAILY_RENT_PER_EMP * timeMult);
   }
   // [全系统自洽修复] 域H R61: 删除员工空间租金重复计算（原L2509重复累加）
-  totalExpenses += rent;
+  // [R1018 域A A→H 联动增强]: 通胀/通缩影响租金 — 复活零调用函数 getCorpCostFromMarket（pricing.js:1216，按 _cumulativeInflation 返回 1.1/1.05/0.95/1.0）
+  const rentInflationMod =
+    typeof getCorpCostFromMarket === "function" ? getCorpCostFromMarket(state) : 1;
+  totalExpenses += Math.round(rent * rentInflationMod);
   // 研发成本
   const rAndD =
     (Array.isArray(company.products) ? company.products.filter((p) => p.status === "developing") : []).length *
@@ -2557,21 +2560,25 @@ function tickStartup(state, tickType) {
   totalExpenses += marketing;
 
   // ====== 新增运营成本（使创业更难更真实）=======
+  // [R1018 域A A→H 联动增强]: 经济周期影响公司运营成本 — 消费 economy_v3.1.js:219 写入的 _corpCostMod
+  // (recession×1.15 / boom×0.9 / normal×1.0，daily_pipeline economy_v3_tick 每日维护)
+  const corpCostMod = (state.flags && state.flags._corpCostMod) || 1;
+
   // 水电网络费 ~¥50/天
-  const utilities = Math.round(50 * timeMult);
+  const utilities = Math.round(50 * timeMult * corpCostMod);
   totalExpenses += utilities;
 
   // 法律合规费 ~¥30/天（工商年检、商标、许可证等）
-  const legalCompliance = Math.round(30 * timeMult);
+  const legalCompliance = Math.round(30 * timeMult * corpCostMod);
   totalExpenses += legalCompliance;
 
   // 杂项（办公耗材、茶水、清洁等）~¥25/天
-  const miscOps = Math.round(25 * timeMult);
+  const miscOps = Math.round(25 * timeMult * corpCostMod);
   totalExpenses += miscOps;
 
-  // 社保公积金（每个员工额外40%用工成本）
+  // 社保公积金（每个员工额外40%用工成本，随经济周期同向波动）
   const socialInsurance = company.employees.reduce(function (sum, emp) {
-    return sum + Math.round((emp.salary / DAILY_SALARY_DIV) * 0.4 * timeMult);
+    return sum + Math.round((emp.salary / DAILY_SALARY_DIV) * 0.4 * timeMult * corpCostMod);
   }, 0);
   totalExpenses += socialInsurance;
 
@@ -10555,40 +10562,6 @@ function renderStartupTab(state, parent) {
       "</div>";
     parent.appendChild(offerDiv);
   }
-}
-
-// ====== 导出 ======
-if (typeof module !== "undefined" && module.exports) {
-  module.exports = {
-    STARTUP_INDUSTRIES,
-    EMPLOYEE_ROLES,
-    FUNDING_ROUNDS,
-    INVESTOR_TYPES,
-    PRODUCT_CATEGORIES,
-    registerStartup,
-    createProduct,
-    developProduct,
-    launchProduct,
-    hireEmployee,
-    fireEmployee,
-    getEligibleRounds,
-    raiseFunding,
-    tickStartup,
-    prepareIPO,
-    processIPOResult,
-    getAcquisitionOffer,
-    acceptAcquisition,
-    showAcquisitionModal,
-    bankrupt,
-    getStartupSummary,
-    getAvailableStartupActions,
-    executeStartupAction,
-    renderStartupTab,
-    // P0-1: 版本迭代弹窗
-    showVersionUpdateModal,
-    // P0-1: 退市弹窗
-    showRetireProductModal,
-  };
 }
 
 // ====== P0-1: 版本迭代弹窗 ======

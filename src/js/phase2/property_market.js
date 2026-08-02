@@ -583,7 +583,28 @@ if (typeof window !== "undefined") {
     ],
   };
 }
-// [R101] 域E 联动增强
+
+// [R1045 域E 联动增强 E→A]: 房产经济数据 — 房产数据供经济系统
+window.getPropertyEconomicData = function (state) {
+  if (!state || !state.investment || !state.investment.properties) return null;
+  var _tv = 0;
+  for (var _pi = 0; _pi < state.investment.properties.length; _pi++) {
+    _tv += state.investment.properties[_pi].currentPrice || state.investment.properties[_pi].buyPrice || 0;
+  }
+  return { count: state.investment.properties.length, totalValue: _tv };
+};
+
+// [R1045 域E 联动增强 E→C]: 房产技能数据 — 房产投资提供管理经验
+window.getPropertySkillXP = function (state) {
+  if (!state || !state.investment || !state.investment.properties) return 0;
+  return Math.min(10, state.investment.properties.length * 2);
+};
+
+// [R1045 域E 联动增强 E→F]: 房产UI数据 — 房产数据供UI渲染
+window.getPropertyCount = function (state) {
+  if (!state || !state.investment || !state.investment.properties) return 0;
+  return state.investment.properties.length;
+};
 // [R141] 域E 联动增强
 // [R173] 域E 联动增强
 // [R205] 域E 联动增强

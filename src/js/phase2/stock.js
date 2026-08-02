@@ -794,4 +794,39 @@ if (typeof window !== "undefined") {
   window.renderStockCard = renderStockCard;
   window.showStockTradeModal = showStockTradeModal;
   window.refreshStockMarket = refreshStockMarket;
+
+  // [R1037 域E 联动增强 E→A]: 股票市场数据 — 市场整体涨跌数据供经济系统
+  window.getStockMarketSummary = function (state) {
+    if (!state || !state.investment || !state.investment.stockMarket) return null;
+    var _up = 0, _down = 0, _total = 0;
+    for (var _sym in state.investment.stockMarket) {
+      var _s = state.investment.stockMarket[_sym];
+      if (_s && _s.history && _s.history.length >= 2) {
+        var _last = _s.history[_s.history.length - 1].price;
+        var _prev = _s.history[_s.history.length - 2].price;
+        if (_prev > 0) { _last > _prev ? _up++ : _down++; _total++; }
+      }
+    }
+    return { upCount: _up, downCount: _down, totalCount: _total, mood: (state.investment._marketMood || "neutral") };
+  };
+
+  // [R1037 域E 联动增强 E→C]: 股票技能经验 — 股票交易提供会计/管理技能经验
+  window.getStockSkillXP = function (state) {
+    if (!state || !state.investment) return 0;
+    var _holdings = state.investment.stockHoldings || [];
+    return Math.min(10, Math.floor(_holdings.length / 2));
+  };
+
+  // [R1037 域E 联动增强 E→F]: 股票市场UI数据 — 供UI渲染股票市场概览
+  window.getStockMarketUI = function (state) {
+    if (!state || !state.investment || !state.investment.stockMarket) return null;
+    var _holdings = state.investment.stockHoldings || [];
+    var _totalValue = 0;
+    for (var _hi = 0; _hi < _holdings.length; _hi++) {
+      var _h = _holdings[_hi];
+      var _m = state.investment.stockMarket[_h.symbol];
+      if (_m && _m.price && _h.shares) _totalValue += _m.price * _h.shares;
+    }
+    return { holdingCount: _holdings.length, totalValue: _totalValue, mood: state.investment._marketMood || "neutral" };
+  };
 }

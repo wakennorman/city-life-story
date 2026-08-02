@@ -682,6 +682,73 @@ function tickNpcRelationships(state) {
       }
     }
   } catch (e) {}
+
+  // [R1020 域D 联动增强 D→B]: 老友意外消息 — 好感≥60的NPC每隔30天触发老友消息叙事
+  try {
+    if (state.relationships && state.flags && state.player && typeof NPCS !== "undefined") {
+      var _friendList = [];
+      for (var _frId in state.relationships) {
+        var _fr = state.relationships[_frId];
+        if (_fr && _fr.met && (_fr.affinity || 0) >= 60) _friendList.push(_frId);
+      }
+      if (_friendList.length >= 2 && state.player.day % 30 === 0) {
+        if (!state.flags._oldFriendMsgDay || state.flags._oldFriendMsgDay < state.player.day - 25) {
+          state.flags._oldFriendMsgDay = state.player.day;
+          var _randFriend = Random.fromArray(_friendList);
+          var _friendName = typeof getNpcDisplayName === "function" ? getNpcDisplayName(_randFriend) : _randFriend;
+          if (typeof StateManager !== "undefined") {
+            StateManager.addMessage("💬 " + _friendName + "给你带来了老家的消息，说以前的邻居都还记得你。异乡听到故人音讯，心头一暖。", "info");
+          }
+        }
+      }
+    }
+  } catch (e) {}
+
+  // [R1020 域D 联动增强 D→E]: 朋友投资建议 — 好感≥50的NPC偶尔提供投资提示
+  try {
+    if (state.relationships && state.flags && state.player && state.player.day % 15 === 0 && state.investment) {
+      var _adviceFriends = [];
+      for (var _ai in state.relationships) {
+        var _ar = state.relationships[_ai];
+        if (_ar && _ar.met && (_ar.affinity || 0) >= 50) _adviceFriends.push(_ai);
+      }
+      if (_adviceFriends.length >= 1 && Random.chance(0.12)) {
+        var _randAdvice = Random.fromArray(_adviceFriends);
+        var _adviceName = typeof getNpcDisplayName === "function" ? getNpcDisplayName(_randAdvice) : _randAdvice;
+        if (typeof StateManager !== "undefined" && !state.flags["_investAdvice_" + state.player.day]) {
+          state.flags["_investAdvice_" + state.player.day] = true;
+          var _adviceMsgs = [
+            "最近听说房价在涨，你要不要考虑看看？",
+            "我表哥炒股赚了不少，不过他运气好，你可别学。",
+            "银行定期利率好像又降了，钱放里面不划算。",
+            "听说批发市场那边有个新商机，要不要一起去看看？",
+          ];
+          StateManager.addMessage("💬 " + _adviceName + "告诉你：" + Random.fromArray(_adviceMsgs), "info");
+        }
+      }
+    }
+  } catch (e) {}
+
+  // [R1020 域D 联动增强 D→G]: 朋友关心健康 — 健康<30时好友主动关心
+  try {
+    if (state.relationships && state.status && state.flags && state.player) {
+      if (state.status.health < 30 && state.player.day % 5 === 0) {
+        var _concernFriends = [];
+        for (var _ci in state.relationships) {
+          var _cr = state.relationships[_ci];
+          if (_cr && _cr.met && (_cr.affinity || 0) >= 40) _concernFriends.push(_ci);
+        }
+        if (_concernFriends.length >= 1 && !state.flags["_healthConcern_" + state.player.day]) {
+          state.flags["_healthConcern_" + state.player.day] = true;
+          var _randConcern = Random.fromArray(_concernFriends);
+          var _concernName = typeof getNpcDisplayName === "function" ? getNpcDisplayName(_randConcern) : _randConcern;
+          if (typeof StateManager !== "undefined") {
+            StateManager.addMessage("💚 " + _concernName + "看你脸色不太好，关切地问你要不要去医院看看。", "info");
+          }
+        }
+      }
+    }
+  } catch (e) {}
 }
 
 /** [全系统自洽修复] 域D 修复:NPC id→中文名，替代 replace(/_/g," ") 展示的原始 id */
@@ -1321,6 +1388,40 @@ if (typeof window !== "undefined") {
   window.getNpcInvestmentTips = getNpcInvestmentTips;
   window.getSocialMentalBonus = getSocialMentalBonus;
   window.getSocialHealthBonusR797 = getSocialHealthBonusR797;
+
+  // [R1020 域D 联动增强 D→A]: 社交圈价格情报 — 高好感NPC提供商品价格折扣信息
+  window.getSocialPriceIntel = function (state) {
+    if (!state || !state.relationships) return null;
+    var _discount = 0;
+    var _count = 0;
+    for (var _rid in state.relationships) {
+      var _r = state.relationships[_rid];
+      if (_r && _r.met && (_r.affinity || 0) >= 60) { _discount += 0.5; _count++; }
+    }
+    return { discount: Math.min(3, _discount), friendCount: _count, totalDiscount: Math.min(0.03, _discount * 0.005) };
+  };
+
+  // [R1020 域D 联动增强 D→B]: 社交事件传播 — 高好感NPC社交事件传播概率
+  window.getSocialSpreadChance = function (state) {
+    if (!state || !state.relationships) return 0;
+    var _highAffinity = 0;
+    for (var _rid in state.relationships) {
+      if (state.relationships[_rid] && (state.relationships[_rid].affinity || 0) >= 70) _highAffinity++;
+    }
+    return Math.min(0.5, _highAffinity * 0.05);
+  };
+
+  // [R1020 域D 联动增强 D→G]: 社交健康恢复 — 社交活跃度影响健康恢复速率
+  window.getSocialHealthRecovery = function (state) {
+    if (!state || !state.relationships || !state.status) return 0;
+    var _activeFriends = 0;
+    for (var _rid in state.relationships) {
+      if (state.relationships[_rid] && state.relationships[_rid].met && (state.relationships[_rid].affinity || 0) >= 40) _activeFriends++;
+    }
+    if (_activeFriends >= 5) return 2;
+    if (_activeFriends >= 3) return 1;
+    return 0;
+  };
 }
 
 // [R889 域D A类#1]: 导出函数到window
@@ -1344,6 +1445,48 @@ if (typeof window !== "undefined") {
   window.getNpcTradeDiscount = getNpcTradeDiscount;
   window.getNpcInvestmentTips = getNpcInvestmentTips;
   window.getSocialMentalBonus = getSocialMentalBonus;
+
+  // [R1028 域D 联动增强 D→A]: 社交价格情报 — 好友好感度提供商品折扣
+  window.getSocialPriceIntel = function (state) {
+    if (!state || !state.relationships) return 0;
+    var _maxDiscount = 0;
+    for (var _id in state.relationships) {
+      var _rel = state.relationships[_id];
+      if (_rel && _rel.met) {
+        var _aff = _rel.affinity || 0;
+        if (_aff >= 80) _maxDiscount = Math.max(_maxDiscount, 0.08);
+        else if (_aff >= 60) _maxDiscount = Math.max(_maxDiscount, 0.05);
+        else if (_aff >= 40) _maxDiscount = Math.max(_maxDiscount, 0.03);
+      }
+    }
+    return _maxDiscount;
+  };
+
+  // [R1028 域D 联动增强 D→E]: 社交投资网络 — 好友数量影响投资信息质量
+  window.getSocialInvestNetwork = function (state) {
+    if (!state || !state.relationships) return { networkSize: 0, quality: "none" };
+    var _highAffCount = 0;
+    for (var _id in state.relationships) {
+      var _rel = state.relationships[_id];
+      if (_rel && _rel.met && (_rel.affinity || 0) >= 50) _highAffCount++;
+    }
+    var _quality = "none";
+    if (_highAffCount >= 5) _quality = "elite";
+    else if (_highAffCount >= 3) _quality = "good";
+    else if (_highAffCount >= 1) _quality = "basic";
+    return { networkSize: _highAffCount, quality: _quality };
+  };
+
+  // [R1028 域D 联动增强 D→G]: 社交健康恢复 — 好友每日提供健康恢复加成
+  window.getSocialHealthRegen = function (state) {
+    if (!state || !state.relationships || !state.status) return 0;
+    var _closeFriends = 0;
+    for (var _id in state.relationships) {
+      var _rel = state.relationships[_id];
+      if (_rel && _rel.met && (_rel.affinity || 0) >= 60) _closeFriends++;
+    }
+    return Math.min(3, Math.floor(_closeFriends / 2));
+  };
 }
 
 // ====== [R926 域D 联动增强] 2项: D→A/D→C ======
@@ -1415,6 +1558,171 @@ if (typeof window !== "undefined") {
         st.flags._dCareerIntroCd = st.player.day;
         if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 2);
         StateManager.addMessage("你婉拒了朋友的好意。心智+2。", "info");
+      }},
+    ],
+  });
+})();
+
+// ====== [R1042 域D 第二轮 联动增强] 2项: D→E/D→F ======
+(function () {
+  "use strict";
+  if (typeof RANDOM_EVENTS === "undefined") return;
+  if (RANDOM_EVENTS._npcLinkageR1042Loaded) return;
+  RANDOM_EVENTS._npcLinkageR1042Loaded = true;
+
+  // [R1042 域D 第二轮 D→E]: 朋友的投资建议 — 高好感NPC提供投资建议
+  RANDOM_EVENTS.push({
+    id: "d_npc_invest_tip",
+    phase: "street",
+    icon: "💡",
+    title: "朋友的投资建议",
+    text: function (st) {
+      if (!st || !st.relationships) return "朋友的建议有时比专家更靠谱。";
+      return "一个懂行的朋友建议你关注最近的科技股行情。";
+    },
+    triggers: { minDay: 30, interval: 45 },
+    conditions: function (st) {
+      if (!st || !st.flags || !st.relationships) return false;
+      if (st.flags._dInvestTipCd && (st.player.day || 0) - st.flags._dInvestTipCd < 45) return false;
+      return true;
+    },
+    probability: 0.025,
+    repeatable: true,
+    choices: [
+      { text: "研究科技股", hint: "会计XP+8", apply: function (st) {
+        if (!st.flags) st.flags = {};
+        st.flags._dInvestTipCd = st.player.day;
+        if (typeof addSkillXp === "function") addSkillXp("accounting", 8);
+        StateManager.addMessage("你研究了科技股行情。会计XP+8。", "success");
+      }},
+      { text: "先观察", hint: "心智+2", apply: function (st) {
+        if (!st.flags) st.flags = {};
+        st.flags._dInvestTipCd = st.player.day;
+        if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 2);
+        StateManager.addMessage("你决定先观察一下。心智+2。", "info");
+      }},
+    ],
+  });
+
+  // [R1042 域D 第二轮 D→F]: 社交圈动态 — 好友动态在UI中展示
+  RANDOM_EVENTS.push({
+    id: "d_npc_social_feed",
+    phase: "street",
+    icon: "📱",
+    title: "朋友圈动态",
+    text: function (st) {
+      if (!st || !st.relationships) return "你的朋友们在分享生活。";
+      var _count = 0;
+      for (var _id in st.relationships) {
+        if (st.relationships[_id] && st.relationships[_id].met) _count++;
+      }
+      if (_count >= 5) return "你的朋友圈越来越热闹了。大家都在分享自己的生活。";
+      return "偶尔刷到朋友的动态，感觉生活还不错。";
+    },
+    triggers: { minDay: 20, interval: 30 },
+    conditions: function (st) {
+      if (!st || !st.flags) return false;
+      if (st.flags._dSocialFeedCd && (st.player.day || 0) - st.flags._dSocialFeedCd < 30) return false;
+      return true;
+    },
+    probability: 0.02,
+    repeatable: true,
+    choices: [
+      { text: "点赞互动", hint: "心情+5", apply: function (st) {
+        if (!st.flags) st.flags = {};
+        st.flags._dSocialFeedCd = st.player.day;
+        if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 5);
+        StateManager.addMessage("你给朋友点了赞。心情+5。", "success");
+      }},
+      { text: "发条动态", hint: "社交灵感", apply: function (st) {
+        if (!st.flags) st.flags = {};
+        st.flags._dSocialFeedCd = st.player.day;
+        StateManager.addMessage("你发了一条动态，朋友们纷纷点赞。", "info");
+      }},
+    ],
+  });
+})();
+
+// ====== [R1034 域D 联动增强] 2项: D→B/D→G ======
+(function () {
+  "use strict";
+  if (typeof RANDOM_EVENTS === "undefined") return;
+  if (RANDOM_EVENTS._npcLinkageR1034Loaded) return;
+  RANDOM_EVENTS._npcLinkageR1034Loaded = true;
+
+  // [R1034 域D 联动增强 D→B]: NPC好感叙事 — 与关键NPC好感达到一定值后触发专属叙事
+  RANDOM_EVENTS.push({
+    id: "d_npc_friendship_story",
+    phase: "street",
+    icon: "💝",
+    title: "友谊的故事",
+    text: function (st) {
+      if (!st || !st.relationships) return "每一段友谊都有它的故事。";
+      var bestNpc = null, bestAff = 0;
+      for (var _id in st.relationships) {
+        var _r = st.relationships[_id];
+        if (_r && _r.met && (_r.affinity || 0) > bestAff) { bestAff = _r.affinity || 0; bestNpc = _id; }
+      }
+      if (bestNpc && bestAff >= 70) return "你和" + (getNpcDisplayName(bestNpc) || bestNpc) + "已经是老朋友了，这座城市因为有ta而温暖。";
+      if (bestNpc && bestAff >= 50) return "你和" + (getNpcDisplayName(bestNpc) || bestNpc) + "的关系越来越好了。";
+      return "在这个城市里，朋友就是你的家人。";
+    },
+    triggers: { minDay: 30, interval: 60 },
+    conditions: function (st) {
+      if (!st || !st.flags) return false;
+      if (st.flags._dFriendshipStoryCd && (st.player.day || 0) - st.flags._dFriendshipStoryCd < 60) return false;
+      return true;
+    },
+    probability: 0.02,
+    repeatable: true,
+    choices: [
+      { text: "回忆过去", hint: "心情+5", apply: function (st) {
+        if (!st.flags) st.flags = {};
+        st.flags._dFriendshipStoryCd = st.player.day;
+        if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 5);
+        StateManager.addMessage("💝 你想起了一起走过的日子。心情+5。", "success");
+      }},
+      { text: "珍惜当下", hint: "心智+3", apply: function (st) {
+        if (!st.flags) st.flags = {};
+        st.flags._dFriendshipStoryCd = st.player.day;
+        if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 3);
+        StateManager.addMessage("💝 你决定好好珍惜身边的朋友。心智+3。", "info");
+      }},
+    ],
+  });
+
+  // [R1034 域D 联动增强 D→G]: 社交圈健康关怀 — 好友关心影响健康恢复
+  RANDOM_EVENTS.push({
+    id: "d_npc_health_care",
+    phase: "street",
+    icon: "🏥",
+    title: "朋友的关心",
+    text: function (st) {
+      if (!st || !st.relationships || !st.status) return "朋友会在你需要的时候出现。";
+      if (st.status.health < 40) return "你最近身体不太好，朋友们都看在眼里，纷纷来关心你。";
+      if (st.status.health < 60) return "朋友提醒你注意身体，不要太拼了。";
+      return "你的朋友们都为你感到高兴。";
+    },
+    triggers: { minDay: 20, interval: 45 },
+    conditions: function (st) {
+      if (!st || !st.flags || !st.status) return false;
+      if (st.flags._dHealthCareCd && (st.player.day || 0) - st.flags._dHealthCareCd < 45) return false;
+      return st.status.health < 60;
+    },
+    probability: 0.03,
+    repeatable: true,
+    choices: [
+      { text: "接受关心", hint: "健康+5", apply: function (st) {
+        if (!st.flags) st.flags = {};
+        st.flags._dHealthCareCd = st.player.day;
+        if (st.status) st.status.health = Math.min(100, (st.status.health || 80) + 5);
+        StateManager.addMessage("🏥 朋友的关心让你心里暖暖的。健康+5。", "success");
+      }},
+      { text: "说没事", hint: "心智+3", apply: function (st) {
+        if (!st.flags) st.flags = {};
+        st.flags._dHealthCareCd = st.player.day;
+        if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 3);
+        StateManager.addMessage("🏥 你笑着说没事，但心里很感动。心智+3。", "info");
       }},
     ],
   });

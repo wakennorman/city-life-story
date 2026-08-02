@@ -408,8 +408,9 @@ function checkMarketEvents(state) {
     return evt.remaining > 0;
   });
   // 随机触发新事件
+  // [全系统自洽修复] 域A A类: state.player 守卫(防旧存档崩溃)
   var season =
-    typeof getSeason === "function" ? getSeason(state.player.day) : "spring";
+    typeof getSeason === "function" && state && state.player ? getSeason(state.player.day) : "spring";
   var seasonId = season && season.id ? season.id : season;
   for (var i = 0; i < MARKET_EVENTS.length; i++) {
     var template = MARKET_EVENTS[i];
@@ -437,7 +438,7 @@ function checkMarketEvents(state) {
   }
 
   // [全系统自洽修复] 域A R51 联动增强(A→B): 价格波动周报
-  if (state.trade && state.trade.supplyDemand && state.player.day % 7 === 0) {
+  if (state.trade && state.trade.supplyDemand && state.player && state.player.day % 7 === 0) {
     var _maxFluct = 0, _maxGood = "", _maxLoc = "";
     for (var _loc in state.trade.supplyDemand) {
       for (var _gid in state.trade.supplyDemand[_loc]) {
@@ -547,12 +548,13 @@ function calcFinalPrice(state, locKey, goodId) {
     price *= getWeatherGoodPriceMod(state, goodId);
   // 每日随机价格冲击
   price *= getDailyPriceShock(locKey, goodId);
-  // [全系统自洽修复] 域A 联动增强1: 季节性物价（goods.js seasonal 字段原dead data，现接入计算）
-  if (good.seasonal && state.weather && state.weather.season) {
+  // [全系统自洽修复] 域A R1045 A类#1: state 守卫 — 防止极端情况下 state 为 null/undefined 时抛 TypeError
+  if (state && good.seasonal && state.weather && state.weather.season) {
     var sMod = good.seasonal[state.weather.season];
     if (isFinite(sMod) && sMod > 0) price *= sMod;
   }
-  var rl = state.relationships
+  // [全系统自洽修复] 域A R1045 A类#2: state 守卫 — 防止极端情况下 state 为 null/undefined 时抛 TypeError
+  var rl = state && state.relationships
     ? Object.keys(state.relationships).filter(function (k) {
         return state.relationships[k] && state.relationships[k].met;
       }).length
@@ -565,14 +567,18 @@ function calcFinalPrice(state, locKey, goodId) {
     if (priceMult !== 1.0) price *= priceMult;
   }
   price = Math.max(good.basePrice * 0.2, Math.min(good.basePrice * 6, price));
+  // [全系统自洽修复] 域A R1023: NaN 兜底 — 任何修正因子返回 NaN 时防止污染下游
+  if (!isFinite(price) || isNaN(price)) price = good.basePrice;
   return Math.round(price * 100) / 100;
 }
 
-/** 计算两地差价利润率（用于UI提示） */
+/** 计算两地差价利润率（用于UI提示）— 使用 calcFinalPrice 综合所有因素 */
 function calcTradeProfitRate(fromLoc, toLoc, goodId) {
-  var fromPrice = getLocationPriceModifier(fromLoc, goodId);
-  var toPrice = getLocationPriceModifier(toLoc, goodId);
-  if (fromPrice === 0) return 0;
+  var state = (typeof StateManager !== "undefined") ? StateManager.getState() : null;
+  if (!state) return 0;
+  var fromPrice = calcFinalPrice(state, fromLoc, goodId);
+  var toPrice = calcFinalPrice(state, toLoc, goodId);
+  if (fromPrice <= 0) return 0;
   return Math.round(((toPrice - fromPrice) / fromPrice) * 100);
 }
 
@@ -1054,7 +1060,7 @@ function getAllPriceAnomalies(state) {
 
 // [全系统自洽修复] 域A R675 联动增强(A→B): 价格异常叙事 — 检测到全城价格异常时触发市场叙事
 function checkPriceAnomalyNarrative(state) {
-  if (!state || !state.flags) return;
+  if (!state || !state.flags || !state.player) return;
   var anomalies = getAllPriceAnomalies(state);
   if (anomalies.length === 0) return;
   // 每30天最多触发一次，避免刷屏
@@ -1150,13 +1156,17 @@ function getEconomicHealthIndex(state) {
       if (arr && arr.length >= 2) {
         var recent = arr.slice(-5);
         var avg = recent.reduce(function(s, v) { return s + v; }, 0) / recent.length;
+        // [R1045 域A A类#2]: avg 为0时 variance 计算 NaN 风险 — 加 isFinite 守卫
+        if (!isFinite(avg) || avg <= 0) continue;
         var variance = recent.reduce(function(s, v) { return s + Math.abs(v - avg); }, 0) / avg;
+        if (!isFinite(variance)) continue;
         priceStability += Math.max(0, 1 - variance);
         count++;
       }
     }
   }
   var score = count > 0 ? Math.round((priceStability / count) * 50) : 50;
+  if (!isFinite(score)) score = 50;
   return Math.max(0, Math.min(100, score));
 }
 
@@ -1386,3 +1396,316 @@ function triggerInflationNarrative(state) {
     ],
   });
 })();
+
+// ====== [R1023 域A 联动增强] 2项: A→E/A→F ======
+
+// [R1023 域A 联动增强 A→E]: 价格波动指数影响投资信心
+// 当市场价格波动剧烈时，玩家获得风险感知加成，投资决策更理性
+function getPriceVolatilityInvestmentMod(state) {
+  if (!state || !state.trade) return 0;
+  var _events = state.trade.marketEvents || [];
+  var _volatility = 0;
+  for (var _ei = 0; _ei < _events.length; _ei++) {
+    var _evt = _events[_ei];
+    var _mod = _evt.priceMod || 1.0;
+    _volatility += Math.abs(_mod - 1.0);
+  }
+  var _sd = state.trade.supplyDemand || {};
+  for (var _lk in _sd) {
+    for (var _gi in _sd[_lk]) {
+      var _val = _sd[_lk][_gi] || 0;
+      _volatility += Math.abs(_val) * 0.005;
+    }
+  }
+  // 波动指数 0-1，越高表示市场越不稳定，玩家对投资风险更敏感
+  return Math.min(1, _volatility);
+}
+
+// [R1023 域A 联动增强 A→F]: 价格异常摘要 — 供UI展示当前价格异常概况
+function getPriceAnomalySummary(state) {
+  if (!state || !state.trade) return [];
+  var _anomalies = [];
+  var _events = state.trade.marketEvents || [];
+  for (var _ei = 0; _ei < _events.length; _ei++) {
+    var _evt = _events[_ei];
+    var _good = _evt.goodId === "*" ? null : getGoodById(_evt.goodId);
+    _anomalies.push({
+      name: _evt.name || "市场事件",
+      goodName: _good ? _good.name : "全品类",
+      icon: (_evt.priceMod || 1) > 1 ? "📈" : "📉",
+      desc: _evt.desc || "",
+      remaining: _evt.remaining || 0,
+    });
+  }
+  return _anomalies;
+}
+
+// ====== [R1031 域A 联动增强] 2项: A→H/A→C ======
+
+// [R1031 域A 联动增强 A→H]: 价格波动影响公司招聘成本
+// 当市场波动剧烈时，公司招聘成本上升（人才更难招）；
+// 当市场低迷时，招聘成本下降（求职者更多）
+function getRecruitCostFromMarket(state) {
+  // [全系统自洽修复] 域A R1045 A类#3: state 守卫 — 防止 state 为 null/undefined 时抛 TypeError
+  if (!state || !state.flags) return 1.0;
+  var _vol = 0;
+  // 用市场事件数量+价格波动率估算人才市场竞争程度
+  if (state.trade && state.trade.marketEvents) {
+    _vol = state.trade.marketEvents.length * 0.05;
+  }
+  var _inf = Math.abs(state.flags._cumulativeInflation || 0);
+  if (_inf > 0.15) _vol += 0.1;
+  var _econCycle = state.flags._economicCycle || "normal";
+  if (_econCycle === "boom") _vol += 0.15;
+  else if (_econCycle === "recession") _vol = Math.max(0, _vol - 0.1);
+  // 招聘成本乘数: 0.8~1.3
+  return Math.max(0.8, Math.min(1.3, 1.0 + _vol));
+}
+
+// [R1031 域A 联动增强 A→C]: 技能市场价值动态 — 经济周期影响特定技能的市场溢价
+// 通胀期：销售/会计技能更值钱；通缩期：管理/技术技能更稳定
+function getDynamicSkillMarketValue(state, skillId) {
+  if (!state || !state.flags || !skillId) return 1.0;
+  var _inf = state.flags._cumulativeInflation || 0;
+  if (_inf > 0.15) {
+    // 通胀期 — 销售溢价
+    if (skillId === "sales") return 1.2;
+    if (skillId === "accounting") return 1.15;
+    if (skillId === "cooking") return 1.1; // 通胀期自己做饭更省钱
+  } else if (_inf < -0.1) {
+    // 通缩期 — 技术/管理更稳定
+    if (skillId === "coding") return 1.15;
+    if (skillId === "management") return 1.1;
+    if (skillId === "repair") return 1.1;
+  } else {
+    // 平稳期 — 技能价值回归基准
+    return 1.0;
+  }
+  return 1.0;
+}
+
+// 导出到window
+if (typeof window !== "undefined") {
+  window.getPriceVolatilityInvestmentMod = getPriceVolatilityInvestmentMod;
+  window.getPriceAnomalySummary = getPriceAnomalySummary;
+  window.getRecruitCostFromMarket = getRecruitCostFromMarket;
+  window.getDynamicSkillMarketValue = getDynamicSkillMarketValue;
+
+  // [R1039 域A 第二轮 联动增强 A→B]: 极端价格波动叙事 — 价格异常时生成市场传闻
+  window.getPriceAnomalyNarrative = function (state) {
+    if (!state || !state.trade || !state.trade.marketEvents) return null;
+    var _events = state.trade.marketEvents;
+    for (var _ei = 0; _ei < _events.length; _ei++) {
+      var _evt = _events[_ei];
+      if (_evt && (_evt.priceMod || 1) > 1.5) {
+        return { type: "surge", title: _evt.name + "暴涨", text: _evt.desc + "。市场上的货被抢购一空。" };
+      }
+      if (_evt && (_evt.priceMod || 1) < 0.6) {
+        return { type: "crash", title: _evt.name + "暴跌", text: _evt.desc + "。到处都是跳楼价。" };
+      }
+    }
+    return null;
+  };
+
+  // [R1039 域A 第二轮 联动增强 A→F]: 价格趋势可视化 — 供UI渲染价格走势折线图
+  window.getPriceTrendsForUI = function (state, days) {
+    if (!state || !state.trade || !state.trade._lastPrices) return [];
+    days = days || 14;
+    var _result = [];
+    for (var _gid in state.trade._lastPrices) {
+      var _arr = state.trade._lastPrices[_gid];
+      if (_arr && Array.isArray(_arr) && _arr.length >= 2) {
+        _result.push({
+          goodId: _gid,
+          goodName: (typeof getGoodById === "function" && getGoodById(_gid)) ? getGoodById(_gid).name : _gid,
+          prices: _arr.slice(-days),
+          trend: _arr[_arr.length - 1] > _arr[0] ? "up" : (_arr[_arr.length - 1] < _arr[0] ? "down" : "stable"),
+          change: _arr.length >= 2 ? Math.round(((_arr[_arr.length - 1] - _arr[0]) / _arr[0]) * 100) : 0,
+        });
+      }
+    }
+    _result.sort(function (a, b) { return Math.abs(b.change) - Math.abs(a.change); });
+    return _result.slice(0, 8);
+  };
+
+  // [R1025 域A 联动增强 A→B]: 市场数据叙事 — 基于价格波动/供需数据触发市场叙事
+  window.getMarketDataNarrative = function (state) {
+    if (!state || !state.trade || !state.trade.supplyDemand) return null;
+    var _narratives = [];
+    var _topFluct = 0, _topGood = "", _topLoc = "";
+    for (var _loc in state.trade.supplyDemand) {
+      for (var _gid in state.trade.supplyDemand[_loc]) {
+        var _sd = state.trade.supplyDemand[_loc][_gid] || 0;
+        if (Math.abs(_sd) > Math.abs(_topFluct)) {
+          _topFluct = _sd;
+          _topGood = _gid;
+          _topLoc = _loc;
+        }
+      }
+    }
+    if (Math.abs(_topFluct) >= 15) {
+      var _dir = _topFluct > 0 ? "供大于求" : "供不应求";
+      _narratives.push({ good: _topGood, location: _topLoc, direction: _dir, intensity: Math.abs(_topFluct) });
+    }
+    return _narratives.length > 0 ? _narratives : null;
+  };
+
+  // [R1025 域A 联动增强 A→C]: 技能市场价值排名 — 注意：不与 skills.js 的 getSkillMarketValue(skillId) 冲突
+// [R1045 域A A类#1]: 命名冲突修复 — 原为 getSkillMarketValue 覆盖 skills.js 同名函数
+  window.getSkillMarketValueRanking = function (state) {
+    if (!state || !state.skills) return null;
+    var _topSkills = [];
+    for (var _sk in state.skills) {
+      if (state.skills[_sk] && state.skills[_sk].level) {
+        _topSkills.push({ id: _sk, level: state.skills[_sk].level });
+      }
+    }
+    _topSkills.sort(function (a, b) { return b.level - a.level; });
+    return _topSkills.slice(0, 3);
+  };
+
+  // [R1025 域A 联动增强 A→F]: 价格趋势图表 — 供UI渲染的价格趋势数据
+  window.getPriceTrendChartData = function (state, goodId, days) {
+    if (!state || !goodId || !state.trade || !state.trade._lastPrices) return [];
+    days = days || 14;
+    var _prices = state.trade._lastPrices[goodId];
+    if (!_prices || !Array.isArray(_prices)) return [];
+    return _prices.slice(-days).map(function (p, i) {
+      return { day: i + 1, price: p };
+    });
+  };
+
+  // ====== [R1045 域A 联动增强] 2项: A→B/A→G ======
+
+  // [R1045 域A 联动增强 A→B]: 价格波动日报叙事 — 每日价格波动生成市场简短叙事
+  window.getPriceDailyNarrative = function (state) {
+    if (!state || !state.trade || !state.trade._lastPrices) return null;
+    var _goods = state.trade._lastPrices;
+    var _upCount = 0, _downCount = 0, _topGood = "", _topChange = 0;
+    for (var _gid in _goods) {
+      var _arr = _goods[_gid];
+      if (!Array.isArray(_arr) || _arr.length < 2) continue;
+      var _change = _arr[_arr.length - 1] - _arr[_arr.length - 2];
+      if (_change > 0) { _upCount++; if (_change > _topChange) { _topChange = _change; _topGood = _gid; } }
+      else if (_change < 0) { _downCount++; if (Math.abs(_change) > _topChange) { _topChange = Math.abs(_change); _topGood = _gid; } }
+    }
+    if (_upCount === 0 && _downCount === 0) return null;
+    var _goodName = (typeof getGoodById === "function" && getGoodById(_topGood)) ? getGoodById(_topGood).name : _topGood;
+    if (_upCount > _downCount * 2) return { type: "bullish", text: "📈 今日" + _upCount + "种商品涨价，市场情绪偏多。其中" + _goodName + "涨幅最大。" };
+    if (_downCount > _upCount * 2) return { type: "bearish", text: "📉 今日" + _downCount + "种商品降价，市场情绪偏空。" + _goodName + "跌幅领先。" };
+    if (_upCount > _downCount) return { type: "slight_up", text: "📊 今日" + _upCount + "涨" + _downCount + "跌，市场整体平稳偏强。" };
+    if (_downCount > _upCount) return { type: "slight_down", text: "📊 今日" + _downCount + "跌" + _upCount + "涨，市场整体偏弱。" };
+    return { type: "stable", text: "📊 今日市场价格波动不大，整体平稳。" };
+  };
+
+  // [R1045 域A 联动增强 A→G]: 经济健康度影响睡眠质量 — 高通胀/高税负环境降低疲劳恢复
+  window.getSleepQualityFromEconomy = function (state) {
+    if (!state || !state.flags || !state.needs) return 1.0;
+    var _penalty = 0;
+    if (Math.abs(state.flags._cumulativeInflation || 0) > 0.15) _penalty += 0.15;
+    if (state.flags._sleepQualityPenalty) _penalty += state.flags._sleepQualityPenalty * 0.05;
+    var _econDashboard = state.flags._econDashboard;
+    if (_econDashboard && _econDashboard.wealthTax > 1000) _penalty += 0.1;
+    if (_penalty <= 0) return 1.0;
+    return Math.max(0.65, 1.0 - _penalty);
+  };
+
+  // [R1045 域A 联动增强 A→E #3]: 市场波动影响投资风险提示 — 价格波动剧烈时投资系统获得风险感知加成
+  window.getMarketVolatilityRiskLevel = function (state) {
+    if (!state || !state.trade) return "normal";
+    var _events = state.trade.marketEvents || [];
+    var _volScore = 0;
+    for (var _ei = 0; _ei < _events.length; _ei++) {
+      var _evt = _events[_ei];
+      _volScore += Math.abs((_evt.priceMod || 1.0) - 1.0);
+    }
+    if (_volScore > 1.0) return "high";
+    if (_volScore > 0.5) return "medium";
+    return "low";
+  };
+
+  // [R1045 域A 联动增强 A→F #4]: 价格异常摘要UI — 返回当前市场事件列表供UI顶部提示条渲染
+  window.getMarketEventSummaryForUI = function (state) {
+    if (!state || !state.trade || !state.trade.marketEvents) return [];
+    return state.trade.marketEvents.map(function (evt) {
+      return {
+        name: evt.name || "市场事件",
+        icon: (evt.priceMod || 1) > 1 ? "📈" : "📉",
+        desc: evt.desc || "",
+        remaining: evt.remaining || 0,
+      };
+    });
+  };
+
+  // [R1045 域A 联动增强 A→G #5]: 经济压力影响AP消耗 — 经济不稳定时日常行动消耗增加
+  window.getEconomyActionApCost = function (state, baseCost) {
+    if (!state || !state.flags || typeof baseCost !== "number") return baseCost;
+    var _penalty = 0;
+    var _inf = Math.abs(state.flags._cumulativeInflation || 0);
+    if (_inf > 0.2) _penalty = 2;
+    else if (_inf > 0.1) _penalty = 1;
+    var _sleep = state.flags._sleepQualityPenalty || 0;
+    if (_sleep > 2) _penalty += 1;
+    return Math.max(0, baseCost + _penalty);
+  };
+
+  // [R1017 域A 联动增强 A→D]: 价格公平NPC好感影响 — 异常价格影响NPC社交情绪
+  window.getPriceFairnessSocialEffect = function (state, price, basePrice) {
+    if (!state || typeof price !== "number" || typeof basePrice !== "number" || basePrice <= 0) return 0;
+    var _ratio = price / basePrice;
+    if (_ratio > 2.0) return -2;
+    if (_ratio > 1.5) return -1;
+    if (_ratio < 0.5) return 1;
+    return 0;
+  };
+
+  // [R1017 域A 联动增强 A→B]: 季节性价格波动叙事 — 季节变化对价格的影响文本
+  window.getSeasonalPriceNarrative = function (state, goodId) {
+    if (!state || !goodId) return null;
+    var _good = typeof getGoodById === "function" ? getGoodById(goodId) : null;
+    if (!_good || !_good.seasonal) return null;
+    var _season = (state.weather && state.weather.season) || "spring";
+    var _mod = _good.seasonal[_season];
+    if (!isFinite(_mod) || _mod === 1.0) return null;
+    var _name = _good.name || goodId;
+    if (_mod > 1.3) return { icon: "📈", text: _name + "因季节原因价格偏高（旺季倍率×" + _mod.toFixed(1) + "）" };
+    if (_mod < 0.7) return { icon: "📉", text: _name + "正值当季，价格比平时便宜（淡季倍率×" + _mod.toFixed(1) + "）" };
+    return { icon: "🌤️", text: _name + "的季节性价格波动在正常范围内（×" + _mod.toFixed(1) + "）" };
+  };
+
+  // [R1017 域A 联动增强 A→F]: 价格热力图数据 — 商品价格相对基准偏离程度
+  window.getPriceHeatmapData = function (state) {
+    if (!state || !state.trade || !state.trade.goodsPrices) return [];
+    var _result = [];
+    for (var _locKey in state.trade.goodsPrices) {
+      if (!state.trade.goodsPrices.hasOwnProperty(_locKey)) continue;
+      var _goods = state.trade.goodsPrices[_locKey];
+      if (!_goods) continue;
+      for (var _gid in _goods) {
+        if (!_goods.hasOwnProperty(_gid)) continue;
+        var _price = _goods[_gid];
+        if (typeof _price !== "number" || !isFinite(_price)) continue;
+        var _good = typeof getGoodById === "function" ? getGoodById(_gid) : null;
+        var _base = _good ? (_good.basePrice || 1) : 1;
+        if (_base <= 0) _base = 1;
+        var _ratio = _price / _base;
+        var _level = "normal";
+        if (_ratio > 1.5) _level = "high";
+        else if (_ratio > 1.2) _level = "elevated";
+        else if (_ratio < 0.6) _level = "low";
+        else if (_ratio < 0.8) _level = "discount";
+        _result.push({
+          location: _locKey,
+          goodId: _gid,
+          goodName: _good ? _good.name : _gid,
+          currentPrice: _price,
+          basePrice: _base,
+          ratio: Math.round(_ratio * 100) / 100,
+          level: _level,
+        });
+      }
+    }
+    _result.sort(function (a, b) { return a.ratio - b.ratio; });
+    return _result;
+  };
+}

@@ -137,4 +137,26 @@ if (typeof window !== "undefined") {
   window.assignGrade = assignGrade;
   window.getGradeColor = getGradeColor;
   window.getGradeBonus = getGradeBonus;
+
+  // [R1043 域C 联动增强 C→A]: 绩效经济数据 — 绩效评分/奖金数据供经济系统
+  window.getPerfEconomicData = function (state) {
+    if (!state || !state.player || !state.player.corporate) return null;
+    var _c = state.player.corporate;
+    return { kpi: _c.kpi || 0, ability: _c.ability || 0, popularity: _c.popularity || 0 };
+  };
+
+  // [R1043 域C 联动增强 C→E]: 绩效投资数据 — 绩效评分影响投资信心
+  window.getPerfInvestData = function (state) {
+    if (!state || !state.player || !state.player.corporate) return null;
+    var _score = typeof calculatePerfScore === "function" ? calculatePerfScore(state) : { score: 50 };
+    return { score: _score.score || 50, grade: _score.grade || "C" };
+  };
+
+  // [R1043 域C 联动增强 C→F]: 绩效UI数据 — 绩效数据供UI渲染
+  window.getPerfUIData = function (state) {
+    if (!state || !state.player || !state.player.corporate) return null;
+    var _c = state.player.corporate;
+    var _grade = (typeof calculatePerfScore === "function" ? calculatePerfScore(state) : {}).grade || "C";
+    return { kpi: _c.kpi || 0, ability: _c.ability || 0, grade: _grade };
+  };
 }

@@ -62,8 +62,9 @@ function renderNpcRelationships(state, content) {
     _avg;
   if (_close >= 3) html += " · 圈子归属感已激活✨(每日+心情)";
   else html += " · 再熟络 " + (3 - _close) + " 位即可激活圈子归属感";
-  // [全系统自洽修复] 域F 联动增强1: 显示今日可拜访NPC数
+  // [全系统自洽修复] 域D A类: state.player 守卫(防旧存档崩溃)
   (function () {
+    if (!state.player || typeof state.player.day !== "number") return;
     var _today = state.player.day;
     var _visitables = 0;
     for (var _ki = 0; _ki < npcIds.length; _ki++) {
@@ -205,14 +206,15 @@ function renderNpcRelationships(state, content) {
     }
 
 	    // [R792 域D D→F 联动增强]: 上次互动天数显示
-	if (rel.met && rel._lastInteractionDay) {
+	// [全系统自洽修复] 域D A类: state.player守卫
+	if (rel.met && rel._lastInteractionDay && state.player) {
 	  var _daysSinceInteraction = state.player.day - rel._lastInteractionDay;
 	  var _intColor = _daysSinceInteraction >= 7 ? "var(--danger)" : (_daysSinceInteraction >= 4 ? "var(--warning)" : "var(--text-muted)");
 	  html += '<div style="font-size:10px;color:' + _intColor + ';margin-top:2px;">👋 ' + _daysSinceInteraction + '天前互动过' + (_daysSinceInteraction >= 7 ? '，关系正在变淡…' : (_daysSinceInteraction >= 4 ? '，有空去打个招呼' : '')) + '</div>';
 	}
 
-    // [全系统自洽修复] 域D 联动增强: 衰减倒计时+引导
-    if (rel.met && rel.affinity > 0) {
+    // [全系统自洽修复] 域D A类: state.player守卫(防旧存档/异常状态崩溃)
+    if (rel.met && rel.affinity > 0 && state.player) {
       var _lastInt = rel._lastInteractionDay || 0;
       var _daysSinceInt = state.player.day - _lastInt;
       if (_daysSinceInt >= 7) {
@@ -977,3 +979,43 @@ function renderSocialNetworkTab(state, parent) {
 // [R524] 域D
 // [R564] 域D
 // [R604] 域D
+
+// [R1036 域D 联动增强 D→A]: NPC社交折扣 — 好感度对应商品折扣系数
+window.getNpcDiscountRate = function (state) {
+  if (!state || !state.relationships) return 0;
+  var _max = 0;
+  for (var _id in state.relationships) {
+    var _r = state.relationships[_id];
+    if (_r && _r.met) {
+      var _aff = _r.affinity || 0;
+      if (_aff >= 80) _max = Math.max(_max, 0.10);
+      else if (_aff >= 60) _max = Math.max(_max, 0.06);
+      else if (_aff >= 40) _max = Math.max(_max, 0.03);
+    }
+  }
+  return _max;
+};
+
+// [R1036 域D 联动增强 D→E]: NPC投资情报 — 好感度对应投资情报质量
+window.getNpcInvestIntel = function (state) {
+  if (!state || !state.relationships) return { quality: "none", contacts: 0 };
+  var _high = 0;
+  for (var _id in state.relationships) {
+    if (state.relationships[_id] && state.relationships[_id].met && (state.relationships[_id].affinity || 0) >= 50) _high++;
+  }
+  var _q = "none";
+  if (_high >= 5) _q = "elite";
+  else if (_high >= 3) _q = "good";
+  else if (_high >= 1) _q = "basic";
+  return { quality: _q, contacts: _high };
+};
+
+// [R1036 域D 联动增强 D→G]: NPC社交支持 — 好友数量对应心情恢复加成
+window.getNpcSocialSupport = function (state) {
+  if (!state || !state.relationships) return 0;
+  var _friends = 0;
+  for (var _id in state.relationships) {
+    if (state.relationships[_id] && state.relationships[_id].met && (state.relationships[_id].affinity || 0) >= 40) _friends++;
+  }
+  return Math.min(5, Math.floor(_friends / 2));
+};

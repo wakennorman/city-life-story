@@ -1300,3 +1300,40 @@ function getPriceTrendData(state, goodId) {
   if (!prices || !Array.isArray(prices)) return [];
   return prices.map(function(p, i) { return { day: i + 1, price: p }; });
 }
+
+// [R1038 域F 联动增强 F→A]: 报告收支数据 — 每日收支摘要
+window.getDailyReportFinance = function (state) {
+  if (!state || !state.flags) return { income: 0, expense: 0, net: 0 };
+  var _txs = state.flags._dailyTransactions || [];
+  var _income = 0, _expense = 0;
+  for (var _ti = 0; _ti < _txs.length; _ti++) {
+    var _t = _txs[_ti];
+    if (_t.type === "income") _income += _t.amount || 0;
+    else if (_t.type === "expense") _expense += _t.amount || 0;
+  }
+  return { income: _income, expense: _expense, net: _income - _expense };
+};
+
+// [R1038 域F 联动增强 F→B]: 报告里程碑数据 — 里程碑事件摘要
+window.getDailyReportMilestones = function (state) {
+  if (!state || !state.flags) return [];
+  var _ms = [];
+  if (state.flags._everStarved) _ms.push("曾经饿到极限");
+  if (state.flags._everHomeless) _ms.push("曾经流落街头");
+  if (state.flags._debtFree) _ms.push("还清所有债务");
+  if (state.flags._streakMaster) _ms.push("连续工作100天");
+  return _ms;
+};
+
+// [R1038 域F 联动增强 F→E]: 报告投资摘要 — 投资组合变动摘要
+window.getDailyReportInvestSummary = function (state) {
+  if (!state || !state.investment) return null;
+  var _holdings = state.investment.stockHoldings || [];
+  var _totalValue = 0;
+  for (var _hi = 0; _hi < _holdings.length; _hi++) {
+    var _h = _holdings[_hi];
+    var _m = (state.investment.stockMarket || {})[_h.symbol];
+    if (_m && _m.price && _h.shares) _totalValue += _m.price * _h.shares;
+  }
+  return { totalValue: _totalValue, holdingCount: _holdings.length };
+};

@@ -161,7 +161,7 @@
   var g_true_friendship = {
     id: 'g_true_friendship',
     title: '患难见真情',
-    phase: 'any',
+    phase: 'street',
     repeatable: false,
     priority: 80,
     conditions: function (st) {

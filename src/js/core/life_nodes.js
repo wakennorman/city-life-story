@@ -678,6 +678,11 @@ if (typeof window !== "undefined") {
   window.getGaokaoNarrative = getGaokaoNarrative;
   window.applyNodeChoice = applyNodeChoice;
   window.showLifeNodeModal = showLifeNodeModal;
+  window.getLifeStageLabel = getLifeStageLabel;
+  window.getLifeProgressSummary = getLifeProgressSummary;
+  window.getAgePriceSensitivity = getAgePriceSensitivity;
+  window.getHealthSocialModifier = getHealthSocialModifier;
+  window.getLifeStageUIData = getLifeStageUIData;
 
   window.MECHANICS = window.MECHANICS || {};
   window.MECHANICS.life_nodes = {
@@ -753,4 +758,68 @@ function getLifeProgressSummary(state) {
   var day = p.day || 0;
   var milestones = (state.flags && state.flags._lifeMilestones) || [];
   return { age: age, day: day, stage: getLifeStageLabel(age), milestones: milestones.length, progress: Math.min(100, Math.round((day / 365) * 100)) };
+}
+
+// [R1053 域G 联动增强 G→A]: 年龄阶段影响交易价格敏感度
+// 青年期(18-25)价格敏感度低,更容易接受高价; 成熟期(35-55)价格敏感度高,谈判更有经验
+// 老年期(65+)经验丰富,知晓历史价格区间,能更准确判断价格合理性
+function getAgePriceSensitivity(state) {
+  if (!state || !state.player) return 1.0;
+  var age = state.player.age || 20;
+  if (age < 18) return 0.9;    // 少年期: 价格敏感度低,容易被坑
+  if (age < 25) return 0.95;   // 青年期: 略低
+  if (age < 35) return 1.0;    // 奋斗期: 基准
+  if (age < 45) return 1.05;   // 成熟期: 经验丰富,敏感度高
+  if (age < 55) return 1.08;   // 中年期: 精打细算
+  if (age < 65) return 1.1;    // 知命期: 价格判断精准
+  return 1.15;                  // 老年期: 见多识广,价格判断极准
+}
+
+// [R1053 域G 联动增强 G→D]: 健康状态影响NPC互动效果
+// 健康过低(<30)时NPC对话好感度增益减半——模拟生病时社交表现下降
+// 健康良好(>80)时NPC对话好感度增益+20%——状态好给人印象更好
+function getHealthSocialModifier(state) {
+  if (!state || !state.status) return 1.0;
+  var health = state.status.health;
+  if (typeof health !== "number" || !isFinite(health)) return 1.0;
+  if (health < 20) return 0.4;   // 濒危: 社交效果大幅降低
+  if (health < 30) return 0.5;   // 极差: 减半
+  if (health < 50) return 0.8;   // 较差: 打八折
+  if (health > 90) return 1.2;   // 极佳: +20%
+  if (health > 80) return 1.1;   // 良好: +10%
+  return 1.0;                     // 正常: 基准
+}
+
+// [R1053 域G 联动增强 G→F]: 生命周期阶段UI数据
+// 为UI侧栏提供当前人生阶段标签、颜色高亮、阶段描述
+function getLifeStageUIData(state) {
+  if (!state || !state.player) return null;
+  var age = state.player.age || 0;
+  var stage = getLifeStageLabel(age);
+  var stageColors = {
+    "少年期": { color: "#7ec8e3", icon: "🌱" },
+    "青年期": { color: "#4ecdc4", icon: "🌿" },
+    "奋斗期": { color: "#ffd93d", icon: "🔥" },
+    "成熟期": { color: "#e17055", icon: "🌳" },
+    "中年期": { color: "#6c5ce7", icon: "🏔️" },
+    "知命期": { color: "#a29bfe", icon: "🎋" },
+    "老年期": { color: "#dfe6e9", icon: "🏖️" },
+  };
+  var stageData = stageColors[stage] || { color: "#fff", icon: "❓" };
+  var stageDescs = {
+    "少年期": "人生刚刚开始,一切皆有可能。",
+    "青年期": "充满活力,学习能力最强的年纪。",
+    "奋斗期": "拼搏的黄金期,事业和财富快速积累。",
+    "成熟期": "经验和体力达到平衡,是人生的收获期。",
+    "中年期": "上有老下有小,责任最重但也最稳重的时期。",
+    "知命期": "知天命之年,看淡了很多事,也更懂珍惜。",
+    "老年期": "历经沧桑,静看云卷云舒。",
+  };
+  return {
+    age: age,
+    stage: stage,
+    icon: stageData.icon,
+    color: stageData.color,
+    desc: stageDescs[stage] || "",
+  };
 }

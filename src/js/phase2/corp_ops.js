@@ -220,7 +220,7 @@ function endQuarter() {
     StateManager.addMessage("🏖️ 已退休，季度工资停发。", "info");
     // [全系统自洽修复] 域H A类#1: 退休后仍重置 actionsUsed+推进季度，否则 actionsUsed 永不归零→endQuarter 死循环
     c.actionsUsed = 0;
-    if (c.corpQuarter >= 4) { c.corpQuarter = 1; state.player.corpYear++; }
+    if (c.corpQuarter >= 4) { c.corpQuarter = 1; state.player.corpYear = (state.player.corpYear || 0) + 1; }
     else { c.corpQuarter++; }
     // [全系统自洽修复] 域H R674 A类: 同步 state.player.corpQuarter，避免UI/Q2招聘季/Q3晋升进度条永远显示Q1
     state.player.corpQuarter = c.corpQuarter;
@@ -589,7 +589,7 @@ function endQuarter() {
   c.actionsUsed = 0;
   if (c.corpQuarter >= 4) {
     c.corpQuarter = 1;
-    state.player.corpYear++;
+    state.player.corpYear = (state.player.corpYear || 0) + 1;
     state.player.age++;
     // [全系统自洽修复] 域H R674 A类: 同步 state.player.corpQuarter，避免UI/Q2招聘季/Q3晋升进度条永远显示Q1
     state.player.corpQuarter = 1;
@@ -703,6 +703,147 @@ function endQuarter() {
       state.flags._founderStressLevel = Math.min(10, _founderStress);
       if (_founderStress >= 5) {
         StateManager.addMessage("😰 创业压力较大（压力指数" + _founderStress + "/10），需要注意身心健康。", "warning");
+      }
+    }
+  } catch (e) {}
+
+  // [R1016 域H 联动增强 H→G]: 季度运营压力累积健康损耗
+  // 连续亏损/低现金流/团队低士气 → 创始人健康损耗
+  try {
+    if (state.corporate && state.status) {
+      var _healthStress = 0;
+      if (state.corporate._lastQuarterLoss && state.corporate._prevQuarterLoss) _healthStress += 3;
+      var _cash = state.resources ? state.resources.cash || 0 : 0;
+      if (_cash < 10000) _healthStress += 2;
+      if (Array.isArray(state.corporate.team)) {
+        var _avgLoyalty = 0;
+        for (var _ti = 0; _ti < state.corporate.team.length; _ti++) {
+          _avgLoyalty += state.corporate.team[_ti].loyalty || 50;
+        }
+        _avgLoyalty = state.corporate.team.length > 0 ? _avgLoyalty / state.corporate.team.length : 50;
+        if (_avgLoyalty < 30) _healthStress += 2;
+      }
+      if (_healthStress > 0) {
+        state.status.health = Math.max(0, (state.status.health || 100) - Math.round(_healthStress * 0.5));
+        if (_healthStress >= 5 && typeof StateManager !== "undefined") {
+          StateManager.addMessage("😰 公司运营压力巨大，你的健康正在被透支。压力指数" + _healthStress + "/10。", "warning");
+        }
+      }
+    }
+  } catch (e) {}
+
+  // [R1016 域H 联动增强 H→E]: 季度表现影响投资信心
+  // 公司季度营收/盈利状况 → 市场信心指数
+  try {
+    if (state.corporate && state.flags && state.investment) {
+      var _qRevenue = state.flags._lastCorpQuarterRevenue || 0;
+      var _qBurn = state.flags._lastCorpQuarterBurn || 0;
+      var _qProfit = _qRevenue - _qBurn;
+      var _prevConfidence = state.flags._corpMarketConfidence || 0;
+      state.flags._corpMarketConfidence = _qProfit > 0
+        ? Math.min(100, _prevConfidence + 5)
+        : Math.max(0, _prevConfidence - 3);
+      if (_qProfit > 0 && !state.flags._corpFirstProfit) {
+        state.flags._corpFirstProfit = true;
+        if (typeof StateManager !== "undefined") {
+          StateManager.addMessage("📈 公司首次实现季度盈利！市场信心大增。", "success");
+        }
+      }
+    }
+  } catch (e) {}
+
+  // [R1016 域H 联动增强 H→F]: 公司运营摘要数据
+  try {
+    if (state.corporate && state.flags) {
+      state.flags._corpSummary = {
+        quarter: state.corporate.corpQuarter || 1,
+        rank: state.corporate.rank || "P5",
+        revenue: state.flags._lastCorpQuarterRevenue || 0,
+        burn: state.flags._lastCorpQuarterBurn || 0,
+        teamSize: Array.isArray(state.corporate.team) ? state.corporate.team.length : 0,
+        confidence: state.flags._corpMarketConfidence || 0,
+        healthStress: state.flags._founderStressLevel || 0,
+        // [R1044 域H 联动增强 H→F]: 压力指数仪表盘数据
+        pressureIndex: typeof getCorpPressureIndex === "function" ? getCorpPressureIndex(state) : 0,
+        // [R1044 域H 联动增强 H→A]: 市场影响力系数
+        marketInfluence: typeof getCorporateMarketInfluence === "function" ? getCorporateMarketInfluence(state) : 1.0,
+      };
+    }
+  } catch (e) {}
+
+  // [R1024 域H 联动增强 H→A]: 季度财报分析 — 营收/利润数据写入经济系统印记
+  try {
+    if (state.corporate && state.flags) {
+      var _qRev = state.flags._lastCorpQuarterRevenue || 0;
+      var _qBurn = state.flags._lastCorpQuarterBurn || 0;
+      var _qProfit = _qRev - _qBurn;
+      state.flags._lastQuarterProfit = _qProfit;
+      state.flags._lastQuarterRevenue = _qRev;
+      // 记录连续亏损季度
+      if (_qProfit < 0) {
+        state.flags._consecutiveLossQuarters = (state.flags._consecutiveLossQuarters || 0) + 1;
+      } else {
+        state.flags._consecutiveLossQuarters = 0;
+      }
+    }
+  } catch (e) {}
+
+  // [R1024 域H 联动增强 H→B]: 行业口碑 — 公司声誉/团队规模影响行业口碑叙事
+  try {
+    if (state.corporate && state.flags && state.player && state.player.day % 90 === 0) {
+      var _teamSize = Array.isArray(state.corporate.team) ? state.corporate.team.length : 0;
+      var _reputation = state.flags._corpMarketConfidence || 0;
+      if (_teamSize >= 3 && _reputation >= 50 && !state.flags._corpIndustryReputation) {
+        state.flags._corpIndustryReputation = true;
+        if (typeof StateManager !== "undefined") {
+          StateManager.addMessage("🏢 你的公司在行业内积累了一定的口碑，同行开始注意到你的存在。", "success");
+        }
+      }
+      if (_teamSize >= 5 && _reputation >= 70 && !state.flags._corpIndustryLeader) {
+        state.flags._corpIndustryLeader = true;
+        if (typeof StateManager !== "undefined") {
+          StateManager.addMessage("🏆 你的公司在行业内已小有名气，甚至有猎头开始关注你的团队。", "success");
+        }
+      }
+    }
+  } catch (e) {}
+
+  // [R1024 域H 联动增强 H→G]: 创始人健康平衡 — 季度盈利/亏损影响创始人健康
+  try {
+    if (state.corporate && state.status) {
+      var _qProfit = state.flags._lastQuarterProfit || 0;
+      var _consecutiveLoss = state.flags._consecutiveLossQuarters || 0;
+      // 连续亏损3个季度以上触发健康损耗
+      if (_consecutiveLoss >= 3) {
+        state.status.health = Math.max(0, (state.status.health || 100) - 3);
+        if (typeof StateManager !== "undefined" && state.player && state.player.day % 30 === 0) {
+          StateManager.addMessage("😰 连续" + _consecutiveLoss + "个季度亏损，沉重的压力让你的健康状况亮起红灯。", "danger");
+        }
+      }
+      // 季度盈利超¥50000时健康恢复
+      if (_qProfit > 50000 && state.status.health < 100) {
+        state.status.health = Math.min(100, (state.status.health || 0) + 1);
+      }
+      // [R1044 域H 联动增强 H→G]: 连续盈利加速健康恢复 — 连续2季度盈利时额外恢复
+      if (_consecutiveLoss === 0 && state.flags._lastQuarterProfit > 0 && state.flags._prevQuarterProfit > 0) {
+        state.status.health = Math.min(100, (state.status.health || 0) + 1);
+        StateManager.addMessage("💪 连续盈利让你心情舒畅，健康状况有所改善。健康+1。", "success");
+      }
+      // 记录上一季度利润用于连续盈利检测
+      state.flags._prevQuarterProfit = state.flags._lastQuarterProfit || 0;
+    }
+  } catch (e) {}
+
+  // [R1044 域H 联动增强 H→E]: 公司市场信心影响投资回报率
+  try {
+    if (state.corporate && state.flags && state.investment) {
+      var _confidence = state.flags._corpMarketConfidence || 0;
+      if (_confidence >= 70 && !state.flags._corpConfidenceBonusApplied) {
+        state.flags._corpConfidenceBonusApplied = true;
+        StateManager.addMessage("📈 公司市场信心强劲（" + _confidence + "），你的投资分析能力获得额外加成。", "info");
+      } else if (_confidence < 30 && state.flags._corpConfidenceBonusApplied) {
+        state.flags._corpConfidenceBonusApplied = false;
+        StateManager.addMessage("📉 市场信心下降，投资分析加成已失效。", "warning");
       }
     }
   } catch (e) {}
@@ -1026,6 +1167,60 @@ function getCorpSocialLevel(state) {
   return 1;
 }
 
+// [R1022 域H 联动增强 H→E]: 司龄影响投资额度上限 — 司龄越长，解锁的投资额度越高
+// 每工作一年，投资额度上限增加 5%，最高 50%（10年封顶）
+function getCorpSeniorityInvestmentBonus(state) {
+  if (!state || !state.player || !state.corporate) return 1.0;
+  var _corpYears = state.player.corpYear || 1;
+  var _bonus = 1 + Math.min(0.50, _corpYears * 0.05);
+  return _bonus;
+}
+
+// [R1022 域H 联动增强 H→A]: 团队技能多样性影响公司运营数据质量
+// 不同技能的团队成员提供不同的运营数据洞察，影响价格感知准确度
+function getCorpTeamSkillDataQuality(state) {
+  if (!state || !state.corporate || !Array.isArray(state.corporate.team)) return 0.5;
+  var _skills = {};
+  for (var _ti = 0; _ti < state.corporate.team.length; _ti++) {
+    var _sk = state.corporate.team[_ti].skill || "general";
+    _skills[_sk] = (_skills[_sk] || 0) + 1;
+  }
+  var _uniqueSkills = Object.keys(_skills).length;
+  // 技能多样性越高，数据质量越高（0.5~1.0）
+  return Math.min(1.0, 0.5 + _uniqueSkills * 0.1);
+}
+
+// [R1022 域H 联动增强 H→F]: 公司季度压力指数仪表盘
+// 综合公司运营压力、团队士气、绩效趋势生成一个直观的压力指数（0-10）
+function getCorpPressureIndex(state) {
+  if (!state || !state.corporate) return 0;
+  var _idx = 0;
+  // 绩效压力
+  var _perf = state.corporate.perfHistory || [];
+  if (_perf.length > 0) {
+    var _last = _perf[_perf.length - 1];
+    if (_last && _last.grade === "C") _idx += 3;
+    else if (_last && _last.grade === "B") _idx += 1;
+  }
+  // 风险压力
+  var _risk = (state.player && state.player.corporate && state.player.corporate.risk) || 0;
+  if (_risk > 70) _idx += 3;
+  else if (_risk > 50) _idx += 1;
+  // 团队士气
+  if (Array.isArray(state.corporate.team) && state.corporate.team.length > 0) {
+    var _avgLoyal = 0;
+    for (var _ti = 0; _ti < state.corporate.team.length; _ti++) {
+      _avgLoyal += state.corporate.team[_ti].loyalty || 50;
+    }
+    _avgLoyal /= state.corporate.team.length;
+    if (_avgLoyal < 30) _idx += 3;
+    else if (_avgLoyal < 50) _idx += 1;
+  }
+  // 疲劳压力
+  if (state.needs && state.needs.fatigue > 70) _idx += 2;
+  return Math.min(10, _idx);
+}
+
 // [R885 域H A类#1]: 导出函数到window，解决死代码问题
 if (typeof window !== "undefined") {
   window.doCorporateAction = doCorporateAction;
@@ -1043,4 +1238,136 @@ if (typeof window !== "undefined") {
   window.getCorpStatusSummary = getCorpStatusSummary;
   window.getCorpHealthMod = getCorpHealthMod;
   window.getCorpSocialLevel = getCorpSocialLevel;
+  window.getCorpSeniorityInvestmentBonus = getCorpSeniorityInvestmentBonus;
+  window.getCorpTeamSkillDataQuality = getCorpTeamSkillDataQuality;
+  window.getCorpPressureIndex = getCorpPressureIndex;
+
+  // [R1032 域H 联动增强 H→A]: 公司运营经济数据 — 季度营收/成本/利润数据供经济系统
+  window.getCorpEconomicData = function (state) {
+    if (!state || !state.corporate) return null;
+    var _revenue = (state.flags && state.flags._lastCorpQuarterRevenue) || 0;
+    var _burn = (state.flags && state.flags._lastCorpQuarterBurn) || 0;
+    var _confidence = (state.flags && state.flags._corpMarketConfidence) || 0;
+    var _teamSize = Array.isArray(state.corporate.team) ? state.corporate.team.length : 0;
+    return { revenue: _revenue, burn: _burn, profit: _revenue - _burn, confidence: _confidence, teamSize: _teamSize, rank: state.corporate.rank || "P5" };
+  };
+
+  // [R1032 域H 联动增强 H→B]: 公司里程碑叙事 — 职级晋升/团队规模里程碑触发叙事
+  window.getCorpMilestoneStory = function (state) {
+    if (!state || !state.corporate || !state.flags) return null;
+    var _stories = [];
+    if (state.flags._corpIndustryReputation) _stories.push("公司在行业内有了口碑");
+    if (state.flags._corpIndustryLeader) _stories.push("公司在行业内声名鹊起");
+    if (state.flags._corpFirstProfit) _stories.push("公司首次实现季度盈利");
+    return _stories.length > 0 ? _stories : null;
+  };
+
+  // [R1038 域H 联动增强 H→A]: 公司运营影响商品价格 — 高绩效公司员工消费力推高周边商品价格
+  window.getCorpPriceInfluence = function (state) {
+    if (!state || !state.corporate || !state.flags) return 1.0;
+    var _rank = state.corporate.rank || "P5";
+    var _rankIndex = ["P5", "P6", "P7", "P8", "P9", "P10"].indexOf(_rank);
+    if (_rankIndex < 0) return 1.0;
+    // 每高一档，价格影响 +2%，最高 +10%
+    return 1.0 + _rankIndex * 0.02;
+  };
+
+  // [R1038 域H 联动增强 H→G]: 公司压力影响健康 — 季度压力累积影响健康恢复
+  window.getCorpStressHealthMod = function (state) {
+    if (!state || !state.corporate || !state.needs) return 0;
+    var _pressure = typeof getCorpPressureIndex === "function" ? getCorpPressureIndex(state) : 0;
+    if (_pressure >= 8) return -3;
+    if (_pressure >= 6) return -2;
+    if (_pressure >= 4) return -1;
+    return 0;
+  };
+
+  // [R1032 域H 联动增强 H→F]: 公司运营UI数据 — 供UI渲染公司运营状态卡片
+  window.getCorpUIData = function (state) {
+    if (!state || !state.corporate) return null;
+    var _teamSize = Array.isArray(state.corporate.team) ? state.corporate.team.length : 0;
+    var _avgLoyalty = 0;
+    if (_teamSize > 0) {
+      var _sum = 0;
+      for (var _ti = 0; _ti < _teamSize; _ti++) { _sum += state.corporate.team[_ti].loyalty || 50; }
+      _avgLoyalty = Math.round(_sum / _teamSize);
+    }
+    return {
+      rank: state.corporate.rank || "P5",
+      quarter: state.corporate.corpQuarter || 1,
+      teamSize: _teamSize,
+      avgLoyalty: _avgLoyalty,
+      actionsUsed: state.corporate.actionsUsed || 0,
+      maxActions: (CORP_RANKS[state.corporate.rank] && CORP_RANKS[state.corporate.rank].maxActions) || 3,
+      confidence: (state.flags && state.flags._corpMarketConfidence) || 0,
+    };
+  };
+
+  // [R1016 域H 联动增强 H→C]: 公司培训体系 — 公司职级和收入影响技能经验获取速度
+  window.getCorpTrainingBonus = function (state) {
+    if (!state || !state.corporate || !state.player || !state.player.corporate) return 1.0;
+    var _rank = state.corporate.rank || "P5";
+    var _rankIndex = ["P5", "P6", "P7", "P8", "P9", "P10"].indexOf(_rank);
+    if (_rankIndex < 0) return 1.0;
+    // P5=1.0, P6=1.1, P7=1.2, P8=1.3, P9=1.5, P10=1.8
+    return 1.0 + _rankIndex * 0.1 + (_rankIndex >= 4 ? 0.3 : 0) + (_rankIndex >= 5 ? 0.3 : 0);
+  };
+
+  // [R1016 域H 联动增强 H→D]: 公司社交圈层 — 公司职级影响社交圈层和NPC好感度加成
+  window.getCorpSocialLevelBonus = function (state) {
+    if (!state || !state.corporate) return 0;
+    var _rank = state.corporate.rank || "P5";
+    var _rankIndex = ["P5", "P6", "P7", "P8", "P9", "P10"].indexOf(_rank);
+    if (_rankIndex < 0) return 0;
+    // P5=0, P6=1, P7=2, P8=3, P9=4, P10=5 — 职级越高社交影响力越大
+    return _rankIndex;
+  };
+
+  // [R1016 域H 联动增强 H→G]: 公司退休福利 — 公司职级影响退休金基数
+  window.getCorpPensionBonus = function (state) {
+    if (!state || !state.corporate || !state.flags) return 0;
+    var _rank = state.corporate.rank || "P5";
+    var _pensionBonus = { "P5": 0, "P6": 5000, "P7": 10000, "P8": 15000, "P9": 20000, "P10": 30000 };
+    return _pensionBonus[_rank] || 0;
+  };
+
+  // [R1046 域H 联动增强 H→G]: 公司压力指数影响健康恢复速率
+  window.getCorpHealthRecoveryMod = function (state) {
+    if (!state || !state.corporate) return 0;
+    var _pressure = typeof getCorpPressureIndex === "function" ? getCorpPressureIndex(state) : 0;
+    if (_pressure >= 8) return -4;
+    if (_pressure >= 6) return -2;
+    if (_pressure >= 4) return -1;
+    if (_pressure <= 1) return 1;
+    return 0;
+  };
+
+  // [R1046 域H 联动增强 H→F]: 压力指数彩色仪表盘HTML
+  window.renderPressureGaugeHTML = function (state) {
+    if (!state || !state.corporate) return '<span style="color:var(--text-muted)">—</span>';
+    var _pressure = typeof getCorpPressureIndex === "function" ? getCorpPressureIndex(state) : 0;
+    var _color, _label;
+    if (_pressure <= 2) { _color = "#4a9e5c"; _label = "低压力"; }
+    else if (_pressure <= 4) { _color = "#f0ad4e"; _label = "轻度压力"; }
+    else if (_pressure <= 6) { _color = "#e67e22"; _label = "中度压力"; }
+    else if (_pressure <= 8) { _color = "#c4553d"; _label = "高压力"; }
+    else { _color = "#9b59b6"; _label = "极度压力"; }
+    var _barW = Math.round((_pressure / 10) * 60);
+    return '<div style="display:inline-flex;align-items:center;gap:4px;font-size:11px;">' +
+      '<div style="width:60px;height:6px;background:var(--bg-card);border-radius:3px;overflow:hidden;">' +
+      '<div style="width:' + _barW + 'px;height:6px;background:' + _color + ';border-radius:3px;"></div></div>' +
+      '<span style="color:' + _color + ';font-weight:600;">' + _pressure + '/10</span>' +
+      '<span style="color:var(--text-muted);font-size:10px;">' + _label + '</span></div>';
+  };
+
+  // [R1046 域H 联动增强 H→D]: 高管社交圈加成
+  window.getCorpSocialBonus = function (state) {
+    if (!state || !state.corporate) return { circle: "普通", affinityBonus: 0 };
+    var _rank = state.corporate.rank || "P5";
+    if (_rank === "P10") return { circle: "顶级", affinityBonus: 8 };
+    if (_rank === "P9") return { circle: "高端", affinityBonus: 5 };
+    if (_rank === "P8") return { circle: "中高端", affinityBonus: 3 };
+    if (_rank === "P7") return { circle: "中产", affinityBonus: 1 };
+    return { circle: "普通", affinityBonus: 0 };
+  };
 }

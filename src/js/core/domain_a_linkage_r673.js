@@ -150,7 +150,7 @@
       }
     },
     {
-      id: "a673_corp_cost_optimize", phase: "corp", _isChainEvent: false, icon: "🏭",
+      id: "a673_corp_cost_optimize", phase: "corporate", _isChainEvent: false, icon: "🏭",
       title: "公司成本优化",
       story: "你多年交易经验让你对公司采购成本格外敏感——{desc}",
       triggers: { minDay: 150, interval: 200, maxRepeats: 2, excludeFlags: ["_a673CorpCostDone"] },

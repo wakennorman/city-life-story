@@ -40,11 +40,11 @@ var SPRING_FESTIVAL_EVENTS = [
         hint: "花路费但心情大好",
         cost: 300,
         effect: function (st) {
-          if (st.resources.cash < 300)
+          if ((st.resources.cash || 0) < 300)
             return { ok: false, msg: "钱不够买票！" };
-          st.resources.cash -= 300;
+          st.resources.cash = Math.max(0, (st.resources.cash || 0) - 300);
           st.needs.happiness = Math.min(100, st.needs.happiness + 20);
-          st.player.fame = Math.min(100, st.player.fame + 2);
+          st.player.fame = Math.min(100, (st.player.fame || 0) + 2);
           st.needs.fatigue = Math.max(0, st.needs.fatigue - 10);
           st.flags._springFestivalHome = true;
           st.flags._springFestivalAchieveHome = true; // 成就：除夕团圆
@@ -76,7 +76,7 @@ var SPRING_FESTIVAL_EVENTS = [
           st.resources.cash -= 50;
           st.needs.fatigue = Math.min(100, st.needs.fatigue + 15);
           st.needs.happiness = Math.min(100, st.needs.happiness + 5);
-          st.player.mental = Math.max(0, st.player.mental - 3);
+          st.player.mental = Math.max(0, (st.player.mental || 50) - 3);
           return {
             ok: true,
             msg: "去网吧通宵打游戏，暂时忘了烦恼。但明天肯定很累...",
@@ -123,7 +123,7 @@ var SPRING_FESTIVAL_EVENTS = [
             const红包 = Random.int(150, 249);
             st.resources.cash += 红包;
             st.needs.happiness = Math.min(100, st.needs.happiness + 10);
-            st.player.fame = Math.min(100, st.player.fame + 2);
+            st.player.fame = Math.min(100, (st.player.fame || 0) + 2);
             st.flags._springFestivalAchieveRedPacket = true; // 成就：红包达人
             return {
               ok: true,
@@ -324,7 +324,7 @@ var SPRING_FESTIVAL_EVENTS = [
             };
           } else {
             st.needs.happiness = Math.min(100, st.needs.happiness + 5);
-            st.player.mental = Math.min(100, st.player.mental + 2);
+            st.player.mental = Math.min(100, (st.player.mental || 50) + 2);
             return {
               ok: true,
               msg: "拜了财神，心里踏实了不少。虽然没捡到钱，但心情好了。",
@@ -376,7 +376,7 @@ var SPRING_FESTIVAL_EVENTS = [
           st.resources.cash -= 25;
           st.needs.hunger = Math.min(100, st.needs.hunger + 40);
           st.needs.happiness = Math.min(100, st.needs.happiness + 10);
-          st.player.fame = Math.min(100, st.player.fame + 1);
+          st.player.fame = Math.min(100, (st.player.fame || 0) + 1);
           rel.affinity = Math.min(100, rel.affinity + 3);
           st.flags._newYearChefMeal = true;
           return {
@@ -496,7 +496,7 @@ var SPRING_FESTIVAL_EVENTS = [
           // 有机会清理一些负面flag
           if (st.flags._hadMentalCrisis) {
             st.flags._mentalRecoveryDone = true;
-            st.player.mental = Math.min(100, st.player.mental + 5);
+            st.player.mental = Math.min(100, (st.player.mental || 50) + 5);
           }
           st.needs.happiness = Math.min(100, st.needs.happiness + 5);
           return {
@@ -544,7 +544,7 @@ var SPRING_FESTIVAL_EVENTS = [
           );
           st.resources.debt = Math.max(0, (st.resources.debt || 0) - 还);
           st.needs.happiness = Math.min(100, st.needs.happiness + 8);
-          st.player.mental = Math.min(100, st.player.mental + 3);
+          st.player.mental = Math.min(100, (st.player.mental || 50) + 3);
           st.flags._springFestivalAchievePayDebt = true; // 成就：送穷神
           return {
             ok: true,
@@ -1396,4 +1396,27 @@ if (typeof window !== "undefined") {
   if (typeof getFestivalWorkMod !== "undefined") {
     window.getFestivalWorkMod = getFestivalWorkMod;
   }
+
+  // [R1050 域B 联动增强 B→A]: 节日经济数据 — 节日价格修正数据供经济系统
+  window.getFestivalEconomicData = function (state) {
+    if (!state || !state.player) return null;
+    var _fest = typeof getCurrentFestival === "function" ? getCurrentFestival(state.player.day) : null;
+    return { active: !!_fest, name: _fest ? _fest.name : null, id: _fest ? _fest.id : null };
+  };
+
+  // [R1050 域B 联动增强 B→D]: 节日社交数据 — 节日数据供社交系统
+  window.getFestivalSocialData = function (state) {
+    if (!state || !state.player) return null;
+    var _day = state.player.day || 0;
+    var _fest = typeof getCurrentFestival === "function" ? getCurrentFestival(_day) : null;
+    return { active: !!_fest, name: _fest ? _fest.name : null };
+  };
+
+  // [R1050 域B 联动增强 B→F]: 节日UI数据 — 节日数据供UI渲染
+  window.getFestivalUIData = function (state) {
+    if (!state || !state.player) return null;
+    var _day = state.player.day || 0;
+    var _fest = typeof getCurrentFestival === "function" ? getCurrentFestival(_day) : null;
+    return { active: !!_fest, name: _fest ? _fest.name : null, icon: _fest ? _fest.icon : null };
+  };
 }

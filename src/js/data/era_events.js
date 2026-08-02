@@ -103,7 +103,7 @@ const ERA_EVENTS = [
           st.flags._eraEvent_180 = true;
           st.flags.trendJobUnlocked = true;
           if (!st.needs) st.needs = {};
-          _guardNeedsEra(st).needs.fatigue = Math.min(100, (_guardNeedsEra(st).needs.fatigue || 0) + 15);
+          _guardNeedsEra(st).fatigue = Math.min(100, (_guardNeedsEra(st).fatigue || 0) + 15);
           StateManager.addMessage(
             "🔥 你进入了风口行业！日薪涨到¥300，但累得够呛。风口不是谁都能抓住的。",
             "success",
@@ -233,7 +233,7 @@ const ERA_EVENTS = [
         apply: function (st) {
           st.flags._eraEvent_365 = true;
           if (!st.needs) st.needs = {};
-          _guardNeedsEra(st).needs.happiness = Math.min(100, (_guardNeedsEra(st).needs.happiness || 0) + 10);
+          _guardNeedsEra(st).happiness = Math.min(100, (_guardNeedsEra(st).happiness || 0) + 10);
           st.flags.reflectorBadge = true;
           StateManager.addMessage(
             "📝 你写下了一年的感悟。虽然辛苦，但你发现自己成长了很多。心情+10。",
@@ -249,7 +249,7 @@ const ERA_EVENTS = [
           st.flags._eraEvent_365 = true;
           st.resources.cash = Math.max(0, (st.resources.cash || 0) - 100);
           if (!st.needs) st.needs = {};
-          _guardNeedsEra(st).needs.happiness = Math.min(100, (_guardNeedsEra(st).needs.happiness || 0) + 15);
+          _guardNeedsEra(st).happiness = Math.min(100, (_guardNeedsEra(st).happiness || 0) + 15);
           StateManager.addMessage(
             "🎉 你请自己吃了一顿大餐。一年了，值得庆祝。心情+15。",
             "success",
@@ -351,7 +351,7 @@ const ERA_EVENTS = [
           st.flags._eraEvent_540 = true;
           st.resources.cash = Math.max(0, (st.resources.cash || 0) - 150);
           if (!st.needs) st.needs = {};
-          _guardNeedsEra(st).needs.happiness = Math.min(100, (_guardNeedsEra(st).needs.happiness || 0) + 10);
+          _guardNeedsEra(st).happiness = Math.min(100, (_guardNeedsEra(st).happiness || 0) + 10);
           StateManager.addMessage(
             "✨ 你体验了高端消费。虽然贵，但感觉不错。心情+10。",
             "success",
@@ -484,7 +484,7 @@ const ERA_EVENTS = [
         apply: function (st) {
           st.flags._eraEvent_900 = true;
           if (!st.needs) st.needs = {};
-          _guardNeedsEra(st).needs.happiness = Math.min(100, (_guardNeedsEra(st).needs.happiness || 0) + 15);
+          _guardNeedsEra(st).happiness = Math.min(100, (_guardNeedsEra(st).happiness || 0) + 15);
           if (!st.player) st.player = {};
           st.player.morality = Math.min(100, (st.player.morality || 0) + 5);
           StateManager.addMessage(
@@ -499,7 +499,7 @@ const ERA_EVENTS = [
         apply: function (st) {
           st.flags._eraEvent_900 = true;
           if (!st.needs) st.needs = {};
-          _guardNeedsEra(st).needs.happiness = Math.min(100, (_guardNeedsEra(st).needs.happiness || 0) + 10);
+          _guardNeedsEra(st).happiness = Math.min(100, (_guardNeedsEra(st).happiness || 0) + 10);
           StateManager.addMessage(
             "🏠 你决定回家看看。三年的城市生活，让你更珍惜家乡。心情+10。",
             "info",

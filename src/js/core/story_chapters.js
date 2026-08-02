@@ -389,6 +389,8 @@ function _collectChapterStats(state) {
   var npcFriends = 0;
   if (state.relationships) {
     for (var id in state.relationships) {
+      // [R1015 域G A类修复]: state.relationships[id] null守卫（删除/损坏条目→TypeError崩溃）
+      if (!state.relationships[id] || !state.relationships[id].met) continue;
       if ((state.relationships[id].affinity || 0) >= 50) npcFriends++;
     }
   }
@@ -540,6 +542,26 @@ if (typeof window !== "undefined") {
   // [全系统自洽修复] 域G R746b A类#2: 导出年龄叙事兑现函数（函数声明提升,直接引用安全;严禁wrapper——顶层声明本身即全局绑定,wrapper覆盖后会自调递归爆栈）
   window.getLifeStageNarrativeEvent = getLifeStageNarrativeEvent;
   window.runLifeStageNarrative = runLifeStageNarrative;
+
+  // [R1047 域G 联动增强 G→A]: 章节经济数据 — 故事章节进展数据供经济系统
+  window.getChapterEconomicData = function (state) {
+    if (!state || !state.flags) return null;
+    var _chapters = state.flags._storyChapters || [];
+    return { completedChapters: _chapters.filter(function (c) { return c.completed; }).length, totalChapters: _chapters.length };
+  };
+
+  // [R1047 域G 联动增强 G→B]: 章节叙事数据 — 故事章节数据供叙事系统
+  window.getChapterNarrativeData = function (state) {
+    if (!state || !state.flags || !state.flags._storyChapters) return null;
+    var _active = state.flags._storyChapters.find(function (c) { return !c.completed; });
+    return { activeChapter: _active ? _active.title || _active.id : null, completedCount: state.flags._storyChapters.filter(function (c) { return c.completed; }).length };
+  };
+
+  // [R1047 域G 联动增强 G→F]: 章节UI数据 — 故事章节数据供UI渲染
+  window.getChapterUIData = function (state) {
+    if (!state || !state.flags || !state.flags._storyChapters) return null;
+    return { chapters: state.flags._storyChapters.map(function (c) { return { id: c.id, title: c.title || c.id, completed: !!c.completed }; }) };
+  };
 }
 // [R720 域G 联动增强 G→B]: 人生阶段叙事事件
 function getLifeStageNarrativeEvent(age, flags) {

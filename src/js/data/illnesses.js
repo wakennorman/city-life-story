@@ -578,4 +578,23 @@ if (typeof window !== "undefined") {
   window.getIllnessById = getIllnessById;
   window.getIllnessData = getIllnessData;
   window.hasIllness = hasIllness;
+
+  // [R1049 域A 联动增强 A→B]: 疾病叙事数据 — 疾病数据供叙事系统
+  window.getIllnessNarrativeData = function (state) {
+    if (!state || !state.status || !state.status.illnesses) return null;
+    return { count: state.status.illnesses.length, active: state.status.illnesses.map(function (i) { return i.id || i.name || "unknown"; }) };
+  };
+
+  // [R1049 域A 联动增强 A→G]: 疾病健康数据 — 疾病数据供健康系统
+  window.getIllnessHealthData = function (state) {
+    if (!state || !state.status) return null;
+    var _ills = state.status.illnesses || [];
+    return { count: _ills.length, health: state.status.health || 100 };
+  };
+
+  // [R1049 域A 联动增强 A→F]: 疾病UI数据 — 疾病数据供UI渲染
+  window.getIllnessUIData = function (state) {
+    if (!state || !state.status || !state.status.illnesses) return [];
+    return state.status.illnesses.map(function (i) { return { id: i.id || "unknown", name: i.name || i.id || "未知", severity: i.severity || 1 }; });
+  };
 }

@@ -92,8 +92,10 @@
     // ===== 联动2: D→E NPC投资情报 =====
     // 设计意图：当与某个NPC好感达到70时，NPC分享投资内幕消息，
     //   让社交关系产生经济收益，打通NPC→投资系统的联动。
+    // [全系统自洽修复] id 改为 d175_npc_invest_tip：原 id 与 economy_invest_linkage_events.js
+    // 的 npc_invest_tip 事件重复（重复事件 ID 检查失败），改为与 d465/d483/d597 同款轮次前缀。
     {
-      id: "npc_invest_tip",
+      id: "d175_npc_invest_tip",
       title: "内部消息",
       desc: "你的老朋友今天神秘兮兮地凑过来，压低声音说：'我听说最近有个不错的投资机会，一般人我不告诉他。咱俩这关系，我才跟你说的。'\\n\\n他将一张写着几个字的纸条塞到你手里，拍了拍你的肩膀就走了。",
       phase: "street",

@@ -76,6 +76,8 @@ function rollStreetEvent(state) {
   if (state._pendingEvent) return;
   // [全系统自洽修复] 域B R676 A类: state.flags 守卫(旧存档/异常初始化防 TypeError)
   if (!state.flags) state.flags = {};
+  // [全系统自洽修复] 域B A类: state.player 守卫(防旧存档崩溃)
+  if (!state.player) return;
 
   // 心理危机事件：mental<20时优先检查，不占用随机事件槽
   var mentalCrisisIds = [
@@ -636,7 +638,7 @@ function showEventModal(evt) {
 
   
 // 支持 choices 为函数（动态生成，如政策套利兑现事件）
-  var choicesArr = evt.choices;
+  // 注意：choicesArr 已在第613行通过 var 声明，此处不再重复 var
   if (typeof choicesArr === "function") {
     choicesArr = choicesArr(StateManager.getState());
     if (!choicesArr || !choicesArr.length) {
@@ -1128,6 +1130,8 @@ function showJobOfferModal() {
  * @param {string} phase - "street" | "corporate"
  */
 function scheduleChainEvent(state, eventId, delayDays, phase) {
+  // [全系统自洽修复] 域B R1024 A类: state.player 守卫(防旧存档/异常状态崩溃)
+  if (!state || !state.player) return;
   if (!state.flags) state.flags = {};
   if (!state.flags._chainEventQueue) {
     state.flags._chainEventQueue = [];
@@ -1450,6 +1454,77 @@ function rollDailyNews(state) {
   if (state.player.day % 3 === 0) {
     state.flags.seenNewsToday = [];
   }
+
+  // [R1018 域B 联动增强 B→A]: 事件影响商品供需 — 团购/回收/共享单车等事件改变供需
+  try {
+    if (state.flags && state.trade && state.trade.supplyDemand) {
+      if (state.flags._communityGroupBuySeen && state.player.day % 7 === 0) {
+        var _veggieLocs = ["vegetable_market", "slum", "old_community"];
+        for (var _vl = 0; _vl < _veggieLocs.length; _vl++) {
+          var _loc = _veggieLocs[_vl];
+          if (!state.trade.supplyDemand[_loc]) state.trade.supplyDemand[_loc] = {};
+          state.trade.supplyDemand[_loc].vegetables = (state.trade.supplyDemand[_loc].vegetables || 0) - 3;
+          state.trade.supplyDemand[_loc].fruits = (state.trade.supplyDemand[_loc].fruits || 0) - 2;
+        }
+      }
+      if (state.flags._bikeShareSeen && state.player.day % 10 === 0) {
+        if (!state.trade.supplyDemand.slum) state.trade.supplyDemand.slum = {};
+        state.trade.supplyDemand.slum.scrap_metal = (state.trade.supplyDemand.slum.scrap_metal || 0) + 2;
+      }
+    }
+  } catch (e) {}
+
+  // [R1018 域B 联动增强 B→D]: 重大事件社交涟漪 — 记录关键事件供NPC社交反应
+  try {
+    if (state.flags && state.relationships) {
+      var _keyEvents = ["_keptWallet", "_returnedWallet", "_foughtWageTheft", "_communityGroupBuySeen", "_helpedCoworker", "_realEstateGambleWon", "_realEstateGambleLost"];
+      if (!state.flags._eventSocialLog) state.flags._eventSocialLog = [];
+      for (var _ei = 0; _ei < _keyEvents.length; _ei++) {
+        var _ek = _keyEvents[_ei];
+        if (state.flags[_ek] && !state.flags["_socialLogged_" + _ek]) {
+          state.flags["_socialLogged_" + _ek] = true;
+          state.flags._eventSocialLog.push({ event: _ek, day: state.player.day });
+          // 道德事件影响NPC好感
+          if (_ek === "_keptWallet" && state.relationships.aunt_wang) {
+            state.relationships.aunt_wang.affinity = Math.max(-50, (state.relationships.aunt_wang.affinity || 50) - 5);
+          }
+          if (_ek === "_returnedWallet" && state.relationships.aunt_wang) {
+            state.relationships.aunt_wang.affinity = Math.min(100, (state.relationships.aunt_wang.affinity || 50) + 5);
+          }
+        }
+      }
+      if (state.flags._eventSocialLog.length > 50) state.flags._eventSocialLog = state.flags._eventSocialLog.slice(-50);
+    }
+  } catch (e) {}
+
+  // [R1018 域B 联动增强 B→F]: 事件回忆墙 — 记录关键事件摘要供UI渲染"人生回忆墙"
+  try {
+    if (state.flags) {
+      if (!state.flags._eventMemories) state.flags._eventMemories = [];
+      var _memories = [
+        { flag: "_keptWallet", icon: "👛", text: "捡到一个钱包，选择了据为己有。" },
+        { flag: "_returnedWallet", icon: "🏛️", text: "捡到钱包交给了派出所。" },
+        { flag: "_foughtWageTheft", icon: "⚖️", text: "勇敢维权，举报了欠薪包工头。" },
+        { flag: "_communityGroupBuySeen", icon: "🥬", text: "经历了社区团购冲击菜市场。" },
+        { flag: "_helpedCoworker", icon: "🚑", text: "工友受伤时伸出援手。" },
+        { flag: "_realEstateGambleWon", icon: "🏠", text: "房地产赌局中获利。" },
+        { flag: "_realEstateGambleLost", icon: "💸", text: "房地产赌局中亏损。" },
+        { flag: "_policeProtection", icon: "🛡️", text: "获得了警方保护。" },
+        { flag: "_everStarved", icon: "🍞", text: "曾经饿到极限。" },
+        { flag: "_everHomeless", icon: "🏚️", text: "曾经流落街头。" },
+        { flag: "_everElated", icon: "🌟", text: "达到过极佳状态。" },
+        { flag: "_everDepressed", icon: "😢", text: "经历过情绪低谷。" },
+      ];
+      for (var _mi = 0; _mi < _memories.length; _mi++) {
+        var _mem = _memories[_mi];
+        if (state.flags[_mem.flag] && !state.flags["_memRecorded_" + _mem.flag]) {
+          state.flags["_memRecorded_" + _mem.flag] = true;
+          state.flags._eventMemories.push({ icon: _mem.icon, text: _mem.text, day: state.player.day });
+        }
+      }
+      if (state.flags._eventMemories.length > 30) state.flags._eventMemories = state.flags._eventMemories.slice(-30);
+    }
+  } catch (e) {}
 }
 
 /** 每日一条新闻核心函数：从 L1-L4 池中选取，避免当日重复 */
@@ -1529,6 +1604,10 @@ function registerMoralEventsToPool() {
   for (var mi = 0; mi < MORAL_EVENTS.length; mi++) {
     var me = MORAL_EVENTS[mi];
     if (!me || !me.id) continue;
+    // [全系统自洽修复] 跳过已声明 triggers 数组的事件：它们由 trigger_registry / moral_events.js
+    // after_work IIFE 专门注册到触发槽（不设 phase，不进每日随机池），此处再按 street 包裹推入
+    // RANDOM_EVENTS 会导致同 id 事件双份注册（重复事件 ID 检查失败）。避免重复。
+    if (Array.isArray(me.triggers)) continue;
     var entry = {
       id: me.id,
       title: me.title,
@@ -1953,6 +2032,129 @@ if (typeof window !== "undefined") {
   window.getEventRiskModifier = getEventRiskModifier;
   window.getEventResilienceGrowth = getEventResilienceGrowth;
   window.renderEventHistoryWidget = renderEventHistoryWidget;
+
+  // [R1026 域B 联动增强 B→A]: 事件经济影响追踪 — 记录事件对经济的影响
+  window.getEventEconomicImpact = function (state) {
+    if (!state || !state.flags) return null;
+    var _impact = { totalEvents: 0, totalCashImpact: 0, recentEvents: [] };
+    if (state.flags._eventHistory && Array.isArray(state.flags._eventHistory)) {
+      _impact.totalEvents = state.flags._eventHistory.length;
+      for (var _ei = 0; _ei < state.flags._eventHistory.length; _ei++) {
+        var _ev = state.flags._eventHistory[_ei];
+        if (_ev && _ev.cashImpact) _impact.totalCashImpact += _ev.cashImpact;
+      }
+      _impact.recentEvents = state.flags._eventHistory.slice(-5);
+    }
+    return _impact;
+  };
+
+  // [R1026 域B 联动增强 B→C]: 事件职业灵感 — 记录事件对职业发展的影响
+  window.getEventCareerInspiration = function (state) {
+    if (!state || !state.flags || !state.career) return 0;
+    var _inspired = 0;
+    if (state.flags._eventHistory) {
+      for (var _ei = 0; _ei < state.flags._eventHistory.length; _ei++) {
+        var _ev = state.flags._eventHistory[_ei];
+        if (_ev && _ev.id && (_ev.id.indexOf("career") >= 0 || _ev.id.indexOf("job") >= 0 || _ev.id.indexOf("skill") >= 0)) {
+          _inspired++;
+        }
+      }
+    }
+    return _inspired;
+  };
+
+  // [R1026 域B 联动增强 B→G]: 事件韧性成长 — 记录事件对心智韧性的影响
+  window.getEventResilienceScore = function (state) {
+    if (!state || !state.flags) return 0;
+    var _score = 0;
+    if (state.flags._adversityCount) _score += Math.min(20, state.flags._adversityCount * 2);
+    if (state.flags._eventHistory) {
+      var _negativeEvents = state.flags._eventHistory.filter(function (e) { return e && e.cashImpact && e.cashImpact < 0; });
+      _score += Math.min(10, _negativeEvents.length);
+    }
+    return _score;
+  };
+
+  // [R1034 域B 联动增强 B→A]: 事件供需影响 — 事件触发时记录对商品供需的影响
+  window.getEventSupplyImpact = function (state) {
+    if (!state || !state.flags || !state.trade) return null;
+    var _impacts = [];
+    if (state.flags._communityGroupBuySeen) _impacts.push({ good: "vegetables", direction: "down", intensity: 5 });
+    if (state.flags._bikeShareSeen) _impacts.push({ good: "scrap_metal", direction: "up", intensity: 3 });
+    return _impacts.length > 0 ? _impacts : null;
+  };
+
+  // [R1034 域B 联动增强 B→D]: 事件社交影响 — 事件触发时记录对NPC关系的影响
+  window.getEventSocialImpact = function (state) {
+    if (!state || !state.flags || !state.relationships) return null;
+    var _impacts = [];
+    if (state.flags._returnedWallet && state.relationships.aunt_wang) _impacts.push({ npc: "aunt_wang", affinity: state.relationships.aunt_wang.affinity || 50, reason: "归还钱包" });
+    if (state.flags._keptWallet && state.relationships.aunt_wang) _impacts.push({ npc: "aunt_wang", affinity: state.relationships.aunt_wang.affinity || 50, reason: "私吞钱包" });
+    return _impacts.length > 0 ? _impacts : null;
+  };
+
+  // [R1034 域B 联动增强 B→G]: 事件健康影响 — 关键事件对健康的影响记录
+  window.getEventHealthImpactData = function (state) {
+    if (!state || !state.flags) return null;
+    var _total = 0;
+    if (state.flags._everStarved) _total -= 5;
+    if (state.flags._everDepressed) _total -= 3;
+    if (state.flags._everElated) _total += 5;
+    if (state.flags._debtFree) _total += 3;
+    return { totalImpact: _total, health: state.status ? state.status.health || 100 : 100 };
+  };
+
+  // [R1018 域B 联动增强 B→E]: 事件投资洞察 — 关键事件对投资市场的影响评估
+  window.getEventInvestmentInsight = function (state) {
+    if (!state || !state.flags || !state.investment) return null;
+    var _insights = [];
+    if (state.flags._insiderTradingWon) _insights.push({ type: "opportunity", text: "内幕交易获利——高风险高回报的典型", impact: 8 });
+    if (state.flags._insiderTradingLost) _insights.push({ type: "risk", text: "内幕交易亏损——市场永远有不确定性", impact: -5 });
+    if (state.flags._marketCrashSeen) _insights.push({ type: "crash", text: "经历市场崩盘——风险意识大幅提升", impact: 3 });
+    return _insights.length > 0 ? _insights : null;
+  };
+
+  // [R1018 域B 联动增强 B→F]: 事件记忆墙 — 供UI渲染事件回忆墙卡片数据
+  window.getEventMemoryWall = function (state) {
+    if (!state || !state.flags || !state.player) return [];
+    var _memories = [];
+    if (state.flags._eventHistory && Array.isArray(state.flags._eventHistory)) {
+      for (var _ei = 0; _ei < state.flags._eventHistory.length; _ei++) {
+        var _ev = state.flags._eventHistory[_ei];
+        if (!_ev || !_ev.id) continue;
+        _memories.push({
+          id: _ev.id,
+          day: _ev.day || 0,
+          type: _ev.type || "unknown",
+          title: _ev.title || _ev.id,
+          icon: _ev.icon || "📜",
+          cashImpact: _ev.cashImpact || 0,
+        });
+      }
+      _memories.sort(function (a, b) { return b.day - a.day; });
+    }
+    return _memories.slice(0, 50);
+  };
+
+  // [R1018 域B 联动增强 B→H]: 事件公司声誉 — 事件触发时记录对公司声誉的影响
+  window.getEventCorpReputation = function (state) {
+    if (!state || !state.flags || !state.corporate) return null;
+    var _reputation = { positive: 0, negative: 0, recentEvents: [] };
+    if (state.flags._eventHistory && Array.isArray(state.flags._eventHistory)) {
+      for (var _ei = 0; _ei < state.flags._eventHistory.length; _ei++) {
+        var _ev = state.flags._eventHistory[_ei];
+        if (!_ev || !_ev.id) continue;
+        if (_ev.id.indexOf("corp_") === 0 || _ev.id.indexOf("company_") === 0) {
+          var _impact = (_ev.cashImpact || 0) > 0 ? 1 : -1;
+          if (_impact > 0) _reputation.positive++;
+          else _reputation.negative++;
+          _reputation.recentEvents.push({ id: _ev.id, day: _ev.day || 0, impact: _impact });
+        }
+      }
+      _reputation.recentEvents = _reputation.recentEvents.slice(-10);
+    }
+    return _reputation;
+  };
 }
 
 // ====== [R916 域B 联动增强] 3项: B→A/B→D/B→G ======
@@ -2115,6 +2317,225 @@ if (typeof window !== "undefined") {
         if (!st.flags) st.flags = {};
         st.flags._bFlashbackCd = st.player.day;
         StateManager.addMessage("你微微一笑，继续向前走。", "info");
+      }},
+    ],
+  });
+})();
+
+// ====== [R1032 域B 联动增强] 2项: B→A/B→E ======
+
+// [R1032 域B 联动增强 B→A]: 事件类型影响商品供需 — 基于玩家经历的事件类型触发商品供需变化
+// 道德事件多→日用品需求下降（玩家更节俭），风险事件多→安全类商品涨价
+(function () {
+  "use strict";
+  if (typeof RANDOM_EVENTS === "undefined") return;
+  if (RANDOM_EVENTS._eventsCoreLinkageR1032Loaded) return;
+  RANDOM_EVENTS._eventsCoreLinkageR1032Loaded = true;
+
+  RANDOM_EVENTS.push({
+    id: "b_event_supply_shift",
+    phase: "street",
+    icon: "📦",
+    title: "供需变化",
+    text: function (st) {
+      if (!st || !st.flags) return "市场在悄悄变化。";
+      var moralCount = (st.flags._eventChoiceTrack && st.flags._eventChoiceTrack.moral) || 0;
+      var riskyCount = (st.flags._eventChoiceTrack && st.flags._eventChoiceTrack.risky) || 0;
+      if (moralCount >= 3) return "你最近的选择风格偏向谨慎，市场上日用品需求有所下降。";
+      if (riskyCount >= 3) return "高风险事件频发，安全类商品开始涨价。";
+      return "市场供需正在微妙调整。";
+    },
+    triggers: { minDay: 45, interval: 45 },
+    conditions: function (st) {
+      if (!st || !st.flags) return false;
+      if (st.flags._bSupplyShiftCd && (st.player.day || 0) - st.flags._bSupplyShiftCd < 45) return false;
+      return true;
+    },
+    probability: 0.02,
+    repeatable: true,
+    choices: [
+      { text: "囤点日用品", hint: "应对市场变化", apply: function (st) {
+        if (!st.flags) st.flags = {};
+        st.flags._bSupplyShiftCd = st.player.day;
+        StateManager.addMessage("📦 你观察市场后决定囤一些日用品。", "info");
+      }},
+      { text: "记录市场变化", hint: "会计XP+5", apply: function (st) {
+        if (!st.flags) st.flags = {};
+        st.flags._bSupplyShiftCd = st.player.day;
+        if (typeof addSkillXp === "function") addSkillXp("accounting", 5);
+        StateManager.addMessage("📦 你记录了市场供需变化。会计XP+5。", "info");
+      }},
+    ],
+  });
+
+  // [R1032 域B 联动增强 B→E]: 风险事件影响投资决策 — 经历风险事件后投资更谨慎
+  RANDOM_EVENTS.push({
+    id: "b_event_invest_awareness",
+    phase: "street",
+    icon: "🎯",
+    title: "风险意识",
+    text: function (st) {
+      if (!st || !st.flags) return "每一次经历都是一课。";
+      var riskCount = (st.flags._eventChoiceTrack && st.flags._eventChoiceTrack.risky) || 0;
+      if (riskCount >= 5) return "经历了多次高风险事件后，你对风险有了更深刻的认识。投资时会更谨慎。";
+      if (riskCount >= 2) return "几次风险经历让你明白——不是所有机会都值得冒险。";
+      return "你对风险的认知在不断积累。";
+    },
+    triggers: { minDay: 60, interval: 60 },
+    conditions: function (st) {
+      if (!st || !st.flags) return false;
+      if (st.flags._bInvestAwarenessCd && (st.player.day || 0) - st.flags._bInvestAwarenessCd < 60) return false;
+      return (st.flags._eventChoiceTrack && st.flags._eventChoiceTrack.risky >= 2) || false;
+    },
+    probability: 0.025,
+    repeatable: true,
+    choices: [
+      { text: "调整投资策略", hint: "降低风险偏好", apply: function (st) {
+        if (!st.flags) st.flags = {};
+        st.flags._bInvestAwarenessCd = st.player.day;
+        st.flags._riskAverseInvestor = true;
+        StateManager.addMessage("🎯 你决定调整投资策略，更注重稳健。", "success");
+      }},
+      { text: "坚持原有风格", hint: "心智+3", apply: function (st) {
+        if (!st.flags) st.flags = {};
+        st.flags._bInvestAwarenessCd = st.player.day;
+        if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 3);
+        StateManager.addMessage("🎯 你相信自己判断，继续坚持原有风格。心智+3。", "info");
+      }},
+    ],
+  });
+})();
+
+// ====== [R1046 域B 联动增强] 3项: B→E/B→F/B→G ======
+(function () {
+  "use strict";
+  if (typeof RANDOM_EVENTS === "undefined") return;
+  if (RANDOM_EVENTS._eventsCoreLinkageR1046Loaded) return;
+  RANDOM_EVENTS._eventsCoreLinkageR1046Loaded = true;
+
+  function gx(k, a) {
+    if (typeof addSkillXp === "function") { try { addSkillXp(k, a); } catch (e) {} }
+  }
+  function msg(t, k) {
+    if (typeof StateManager !== "undefined" && StateManager.addMessage) StateManager.addMessage(t, k || "info");
+  }
+
+  var eraFlags = ["_eraEvent_90", "_eraEvent_180", "_eraEvent_270", "_eraEvent_365", "_eraEvent_450", "_eraEvent_540", "_eraEvent_720", "_eraEvent_900"];
+  function countEraFlags(st) {
+    if (!st || !st.flags) return 0;
+    var c = 0;
+    for (var i = 0; i < eraFlags.length; i++) { if (st.flags[eraFlags[i]]) c++; }
+    return c;
+  }
+
+  // 1. B→E: 时代眼光的沉淀
+  RANDOM_EVENTS.push({
+    id: "b1046_era_economic_insight", phase: "street", icon: "📈",
+    title: "时代眼光的沉淀",
+    text: function (st) {
+      var c = countEraFlags(st);
+      if (c >= 3) return "你经历了" + c + "个时代节点。每一次时代变迁都让你对经济规律多一分理解。";
+      return "时代在变，你对经济的理解也在变。";
+    },
+    triggers: { minDay: 120, interval: 120 },
+    conditions: function (st) {
+      if (!st || !st.flags) return false;
+      if (st.flags._b1046EraEconCd && (st.player.day || 0) - st.flags._b1046EraEconCd < 120) return false;
+      return countEraFlags(st) >= 2;
+    },
+    probability: 0.03, repeatable: true,
+    choices: [
+      { text: "📊 把时代经验用到投资上", hint: "会计XP+25, 智力+5", apply: function (st) {
+        if (!st) return;
+        st.flags = st.flags || {};
+        st.flags._b1046EraEconCd = st.player.day;
+        st.flags._b1046EraEconomicEye = true;
+        gx("accounting", 25);
+        if (st.player) st.player.intelligence = Math.min(100, (st.player.intelligence || 50) + 5);
+        msg("📊 你学会了从时代变迁中寻找投资机会。会计XP+25, 智力+5。", "success");
+      }},
+      { text: "🧠 记下这些规律", hint: "心智+8", apply: function (st) {
+        if (!st) return;
+        st.flags = st.flags || {};
+        st.flags._b1046EraEconCd = st.player.day;
+        if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 8);
+        msg("🧠 心智+8。你把这些经验记在心里。", "info");
+      }},
+    ],
+  });
+
+  // 2. B→F: 时代的见证者
+  RANDOM_EVENTS.push({
+    id: "b1046_era_witness", phase: "street", icon: "📜",
+    title: "时代的见证者",
+    text: function (st) {
+      var c = countEraFlags(st);
+      if (c >= 5) return "你已经经历了" + c + "个时代节点。这座城市的历史，有你的一份。";
+      return "每一个时代节点，都是你人生的重要坐标。";
+    },
+    triggers: { minDay: 180, interval: 180 },
+    conditions: function (st) {
+      if (!st || !st.flags) return false;
+      if (st.flags._b1046EraWitnessCd && (st.player.day || 0) - st.flags._b1046EraWitnessCd < 180) return false;
+      return countEraFlags(st) >= 4;
+    },
+    probability: 0.025, repeatable: true,
+    choices: [
+      { text: "📜 回顾走过的时代", hint: "心情+10, 心智+8", apply: function (st) {
+        if (!st) return;
+        st.flags = st.flags || {};
+        st.flags._b1046EraWitnessCd = st.player.day;
+        st.flags._b1046EraWitness = true;
+        if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 10);
+        if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 8);
+        msg("📜 你回顾了这些年经历的时代变迁。心情+10, 心智+8。", "success");
+      }},
+      { text: "📝 写下时代记忆", hint: "智力+5, 道德+3", apply: function (st) {
+        if (!st) return;
+        st.flags = st.flags || {};
+        st.flags._b1046EraWitnessCd = st.player.day;
+        if (st.player) {
+          st.player.intelligence = Math.min(100, (st.player.intelligence || 50) + 5);
+          st.player.morality = Math.min(100, (st.player.morality || 50) + 3);
+        }
+        msg("📝 你把这些年的记忆写了下来。智力+5, 道德+3。", "info");
+      }},
+    ],
+  });
+
+  // 3. B→G: 岁月锻造的韧性
+  RANDOM_EVENTS.push({
+    id: "b1046_era_health_resilience", phase: "street", icon: "💪",
+    title: "岁月锻造的韧性",
+    text: function (st) {
+      var c = countEraFlags(st);
+      if (c >= 6) return "你经历了" + c + "个时代节点。岁月在你身上留下了痕迹，但更多的是力量。";
+      return "每一次时代变迁，都是对你的一次锤炼。";
+    },
+    triggers: { minDay: 240, interval: 240 },
+    conditions: function (st) {
+      if (!st || !st.flags) return false;
+      if (st.flags._b1046EraHealthCd && (st.player.day || 0) - st.flags._b1046EraHealthCd < 240) return false;
+      return countEraFlags(st) >= 3;
+    },
+    probability: 0.02, repeatable: true,
+    choices: [
+      { text: "💪 把岁月化作力量", hint: "健康+5, 体质+3", apply: function (st) {
+        if (!st) return;
+        st.flags = st.flags || {};
+        st.flags._b1046EraHealthCd = st.player.day;
+        st.flags._b1046EraResilient = true;
+        if (st.status) st.status.health = Math.min(100, (st.status.health || 100) + 5);
+        if (st.player) st.player.physique = Math.min(100, (st.player.physique || 20) + 3);
+        msg("💪 岁月没有压垮你，反而让你更强。健康+5, 体质+3。", "success");
+      }},
+      { text: "🧘 学会与时间和解", hint: "心智+10, 心情+5", apply: function (st) {
+        if (!st) return;
+        st.flags = st.flags || {};
+        st.flags._b1046EraHealthCd = st.player.day;
+        if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 10);
+        if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 5);
+        msg("🧘 你学会了与时间和解。心智+10, 心情+5。", "info");
       }},
     ],
   });

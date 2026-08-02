@@ -283,6 +283,57 @@ const EconomySystem = (function () {
       }
     }
 
+    // [R1017 域A 联动增强 A→B]: 市场情绪叙事 — 经济周期/税收/通胀综合触发市场情绪文本
+    if (state.flags && state.player && state.player.day % 15 === 0) {
+      if (!state.flags._marketSentimentLog) state.flags._marketSentimentLog = [];
+      var _sentiment = "neutral";
+      if (wealthTax > 1000 && Math.abs(state.flags._cumulativeInflation || 0) > 0.15) {
+        _sentiment = "bearish";
+      } else if (wealthTax < 100 && (state.flags._cumulativeInflation || 0) < 0.05) {
+        _sentiment = "bullish";
+      }
+      state.flags._marketSentimentLog.push({ day: state.player.day, sentiment: _sentiment });
+      if (state.flags._marketSentimentLog.length > 20) state.flags._marketSentimentLog.shift();
+      // 仅在情绪变化时通知
+      var _prevSentiment = state.flags._prevMarketSentiment;
+      if (_prevSentiment !== _sentiment && _sentiment !== "neutral" && typeof StateManager !== "undefined") {
+        state.flags._prevMarketSentiment = _sentiment;
+        StateManager.addMessage(
+          _sentiment === "bullish" ? "📈 市场情绪向好，物价稳定，正是投资的好时机。" : "📉 市场情绪偏空，高通胀高税负让商人们谨慎观望。",
+          "info"
+        );
+      }
+    }
+
+    // [R1017 域A 联动增强 A→G]: 经济压力影响睡眠质量 — 高通胀/高负债/低收入降低疲劳恢复
+    if (state.needs && state.flags && state.player) {
+      var _sleepDebtPenalty = 0;
+      if (state.resources && (state.resources.bankDebt || 0) > 50000) _sleepDebtPenalty += 1;
+      if (Math.abs(state.flags._cumulativeInflation || 0) > 0.15) _sleepDebtPenalty += 1;
+      if (wealthTax > 500) _sleepDebtPenalty += 1;
+      if (_sleepDebtPenalty > 0) {
+        state.flags._sleepQualityPenalty = Math.min(5, _sleepDebtPenalty);
+      } else {
+        state.flags._sleepQualityPenalty = 0;
+      }
+    }
+
+    // [R1017 域A 联动增强 A→F]: 经济指标仪表盘 — 汇总关键经济指标供UI渲染
+    if (state.flags) {
+      state.flags._econDashboard = {
+        day: state.player ? state.player.day : 0,
+        inflation: Math.round((state.flags._cumulativeInflation || 0) * 100) / 100,
+        wealthTax: wealthTax,
+        totalAssets: totalAssets,
+        loanRate: loanRate,
+        saturationPenalty: Math.round(saturationPenalty * 100) / 100,
+        incomeMult: incomeMult,
+        activeTaxTier: (getActiveTaxTier(totalAssets) || {}).label || "无",
+        marketSentiment: state.flags._prevMarketSentiment || "neutral",
+        sleepPenalty: state.flags._sleepQualityPenalty || 0,
+      };
+    }
+
     const effectiveCash = Math.max(0, cash - wealthTax);
 
     return {
@@ -310,6 +361,39 @@ const EconomySystem = (function () {
     DIFFICULTY_INCOME_CURVE,
     getDifficultyIncomeMultiplier,
     dailyEconomicSettlement,
+    // [R1033 域A 联动增强 A→B]: 经济周期叙事 — 返回当前经济周期状态
+    getEconomicCycleState: function (state) {
+      if (!state || !state.flags) return "normal";
+      var _inf = state.flags._cumulativeInflation || 0;
+      var _confidence = state.flags._corpMarketConfidence || 0;
+      if (_inf > 0.15 && _confidence < 30) return "recession";
+      if (_inf < 0.05 && _confidence > 60) return "boom";
+      return "normal";
+    },
+    // [R1033 域A 联动增强 A→C]: 技能市场需求指数 — 经济周期影响技能需求
+    getSkillDemandIndex: function (state, skillId) {
+      if (!state || !state.flags) return 1.0;
+      var _cycle = this.getEconomicCycleState(state);
+      if (_cycle === "boom") return 1.2;
+      if (_cycle === "recession") return 0.8;
+      return 1.0;
+    },
+    // [R1033 域A 联动增强 A→F]: 经济健康度评分 — 综合评分供UI展示
+    getEconomicHealthScore: function (state) {
+      if (!state || !state.flags || !state.resources) return 50;
+      var _inf = Math.abs(state.flags._cumulativeInflation || 0);
+      var _tax = state.flags._econDashboard ? state.flags._econDashboard.wealthTax || 0 : 0;
+      var _cash = state.resources.cash || 0;
+      var _score = 50;
+      if (_inf < 0.05) _score += 10;
+      else if (_inf > 0.2) _score -= 15;
+      else if (_inf > 0.1) _score -= 5;
+      if (_tax < 100) _score += 5;
+      else if (_tax > 500) _score -= 10;
+      if (_cash > 100000) _score += 10;
+      else if (_cash > 10000) _score += 5;
+      return Math.max(0, Math.min(100, _score));
+    },
   };
 })();
 

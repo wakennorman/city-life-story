@@ -340,8 +340,11 @@
     },
 
     // ===== ⑤ E→G：巨额投资亏损→经济焦虑心理事件=====
+    // [全系统自洽修复] id 改 econ_investment_loss_anxiety：原 id 与 cross_system_events.js
+    // 的 investment_loss_anxiety（熊市阴影）事件重复（重复事件 ID 检查失败），
+    // 本文件已有 econ_* 前缀惯例（econ_career_invest_unlock_*/econ_portfolio_drawdown_*）。
     {
-      id: "investment_loss_anxiety",
+      id: "econ_investment_loss_anxiety",
       phase: "street",
       icon: "📉",
       title: "账户绿到让你睡不着",

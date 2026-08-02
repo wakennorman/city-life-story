@@ -59,7 +59,9 @@
       repeatable: false,
     },
     {
-      id: "ui_social_presence",
+      // [全系统自洽修复] id 改 f263_ui_social_presence：原 id 与 ui_linkage_events.js
+      // 的 ui_social_presence 事件重复（重复事件 ID 检查失败），按 R263 轮次前缀区分。
+      id: "f263_ui_social_presence",
       phase: "street",
       _isChainEvent: false,
       icon: "👔",

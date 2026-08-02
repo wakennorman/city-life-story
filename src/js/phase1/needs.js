@@ -45,6 +45,10 @@ function checkNeedsThresholds(state) {
   // [全系统自洽修复] 域G R240 A类修复: state.needs + state.status 守卫（旧存档缺失→崩溃/NaN）
   if (!state.needs) state.needs = { hunger: 50, fatigue: 30, hygiene: 60, happiness: 50 };
   if (!state.status) state.status = { health: 80, illnesses: [] };
+  // [全系统自洽修复] 域G A类: state.player 守卫(防旧存档崩溃)
+  if (!state.player) return;
+  // [R1015 域G A类修复]: state.flags 守卫（旧存档/损坏状态→TypeError崩溃）
+  if (!state.flags) state.flags = {};
   const n = state.needs;
   const msgs = [];
   // v3.2 新手保护：前30天需求惩罚减半
@@ -146,6 +150,8 @@ function determineEmotionalState(state) {
   if (!state.needs) state.needs = { hunger: 50, fatigue: 30, hygiene: 60, happiness: 50 };
   if (!state.status) state.status = { health: 80, illnesses: [] };
   if (typeof state.status.health !== "number" || !isFinite(state.status.health)) state.status.health = 80;
+  // [R1015 域G A类修复]: state.flags 守卫（旧存档/损坏状态→TypeError崩溃）
+  if (!state.flags) state.flags = {};
   // 使用有效属性（受状态交叉影响后的真实值）
   var effective =
     typeof getEffectiveStats === "function"

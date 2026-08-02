@@ -258,6 +258,9 @@ function applyStatusInteractions(state) {
  * 返回: null(正常) | 'skip_day'(跳过当日剩余时间) | 'forced_rest'(强制休息) | 'game_over'(死亡结局)
  */
 function checkExtremeConditions(state) {
+  // [R1015 域G A类修复]: state.needs/state.status 守卫（旧存档/异常状态→TypeError崩溃管线）
+  if (!state.needs) state.needs = { hunger: 50, fatigue: 30, hygiene: 60, happiness: 50 };
+  if (!state.status) state.status = { health: 80, illnesses: [] };
   var n = state.needs,
     st = state.status;
 
@@ -412,4 +415,23 @@ if (typeof window !== "undefined") {
   window.checkExtremeConditions = checkExtremeConditions;
   window.getWorkComprehensiveModifier = getWorkComprehensiveModifier;
   window.getStatusSummary = getStatusSummary;
+
+  // [R1052 域D 联动增强 D→A]: 状态经济数据 — 状态影响数据供经济系统
+  window.getStatusEconomicData = function (state) {
+    if (!state || !state.status) return null;
+    return { health: state.status.health || 100, sick: !!state.status.sick, injured: !!state.status.injured };
+  };
+
+  // [R1052 域D 联动增强 D→E]: 状态投资数据 — 状态影响投资决策
+  window.getStatusInvestData = function (state) {
+    if (!state || !state.status || !state.player) return null;
+    var _emo = typeof getEmotionName === "function" ? getEmotionName(state) : "平稳";
+    return { emotion: _emo, mental: state.player.mental || 50 };
+  };
+
+  // [R1052 域D 联动增强 D→F]: 状态UI数据 — 状态数据供UI渲染
+  window.getStatusUIData = function (state) {
+    if (!state || !state.status) return null;
+    return { health: state.status.health || 100, emotionalState: state.status.emotionalState || "stable" };
+  };
 }

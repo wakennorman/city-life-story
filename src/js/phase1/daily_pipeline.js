@@ -19,6 +19,10 @@ const DAILY_PIPELINE = [
   {
     name: "day_increment",
     fn: function (state) {
+      // [R1015 域G A类修复]: state.flags 守卫（旧存档/损坏状态→TypeError崩溃管线）
+      if (!state.flags) state.flags = {};
+      // [全系统自洽修复] 域G R1037 A类: state.player 守卫(防旧存档/异常状态崩溃管线)
+      if (!state.player) { state.player = { day: 1, actionPoints: 100, maxActionPoints: 100, timeSlot: "morning" }; return; }
       state.player.day++;
       state.player.actionPoints = state.player.maxActionPoints;
       state.player.timeSlot = "morning";
@@ -37,6 +41,8 @@ const DAILY_PIPELINE = [
   {
     name: "progressive_unlock",
     fn: function (state) {
+      // [R1015 域G A类修复]: state.flags 守卫
+      if (!state.flags) state.flags = {};
       var day = state.player.day;
       var hints = state.flags._unlockedHints;
       if (!hints) { state.flags._unlockedHints = hints = ["physique","intelligence","agility","mental","charm","morality","hunger","fatigue","hygiene","happiness","fame","cash","dailyGoal"]; }
@@ -182,6 +188,11 @@ const DAILY_PIPELINE = [
       var house = getCurrentHousing(state);
       var recovery = house.fatigueRecovery;
       var penalty = state._fatigueRecoveryPenalty || 1.0;
+      // [全系统自洽修复] 域A R1031 A类#1: 接入经济压力睡眠质量惩罚（原 economy_v3.1.js 写入 _sleepQualityPenalty 但从未消费→死数据）
+      var _econSleepPenalty = (state.flags && state.flags._sleepQualityPenalty) || 0;
+      if (_econSleepPenalty > 0) {
+        penalty *= Math.max(0.5, 1.0 - _econSleepPenalty * 0.1); // 每点惩罚打9折，最多5折
+      }
       // 命名疾病的疲劳恢复倍率叠加（失眠症等）
       if (typeof getIllnessAttrDebuffs === "function") {
         var ad = getIllnessAttrDebuffs(state);
@@ -366,6 +377,7 @@ const DAILY_PIPELINE = [
       }
       // 露宿天数追踪（成就用）
       if ((state.housing.tier || 0) === 0) {
+        if (!state.flags) state.flags = {};
         state.flags._everHomeless = true;
         state.flags._homelessDays = (state.flags._homelessDays || 0) + 1;
       }
@@ -532,6 +544,7 @@ const DAILY_PIPELINE = [
     name: "wealth_milestone_happiness",
     fn: function (state) {
       if (!state.resources || !state.needs) return;
+      if (!state.flags) state.flags = {};
       var _netWorth = (state.resources.cash || 0) + (state.resources.bankBalance || 0);
       var _milestone = 0;
       if (_netWorth >= 500000) _milestone = 500000;
@@ -656,6 +669,7 @@ const DAILY_PIPELINE = [
   {
     name: "snapshot",
     fn: function (state) {
+      if (!state.flags) state.flags = {};
       // 1. 总资产快照
       if (!state.flags._cashHistory) state.flags._cashHistory = [];
       var totalAsset =
@@ -989,6 +1003,7 @@ const DAILY_PIPELINE = [
     fn: function (state) {
       if (!state.skillBranches || typeof getUnlockedTalentNodes !== "function")
         return;
+      if (!state.flags) state.flags = {};
       if (!state.flags._checkedTalentNodes)
         state.flags._checkedTalentNodes = {};
       for (var sk in state.skills) {
@@ -1455,6 +1470,64 @@ const DAILY_PIPELINE = [
     },
   },
 
+  // [R1015 域G 联动增强 G→B]: 生活智慧叙事 — 每10岁里程碑触发人生感悟
+  {
+    name: "life_wisdom_narrative",
+    fn: function (state) {
+      if (!state.flags) state.flags = {};
+      if (!state.player) return;
+      var _age = state.player.age || 0;
+      var _wisdomMilestones = [30, 40, 50, 60];
+      for (var _wi = 0; _wi < _wisdomMilestones.length; _wi++) {
+        var _wm = _wisdomMilestones[_wi];
+        if (_age === _wm && !state.flags["_lifeWisdom_" + _wm]) {
+          state.flags["_lifeWisdom_" + _wm] = true;
+          if (typeof StateManager !== "undefined") {
+            var _wisdomMsgs = {
+              30: "🧠 " + _age + "岁——你开始明白，活着不是为了赶路，而是为了感受路。这座城市教会了你第一课：万事开头难，然后是中间难，最后是更难。但你还站着。",
+              40: "📖 " + _age + "岁——四十不惑。你终于明白，有些事努力了未必有结果，但不努力一定没有。你开始接受自己的平凡，却依然在努力。",
+              50: "🍵 " + _age + "岁——半百之年，你学会了与生活和解。年轻时的锋芒磨成了圆润，不是软弱，是智慧。你开始真正理解父辈当年的选择。",
+              60: "🌅 " + _age + "岁——花甲之年，回首望去，这一路走来有笑有泪。这座城市见证了你的青春、奋斗、迷茫和释然。你终于可以说：这一生，值了。",
+            };
+            StateManager.addMessage(_wisdomMsgs[_wm], "event");
+          }
+          break;
+        }
+      }
+    },
+  },
+
+  // [R1015 域G 联动增强 G→E]: 年龄风险偏好 — 年龄越大投资风格越稳健
+  {
+    name: "age_investment_risk_preference",
+    fn: function (state) {
+      if (!state.flags) state.flags = {};
+      if (!state.player || !state.investment) return;
+      var _age = state.player.age || 0;
+      if (_age < 25) return; // 25岁前不影响
+      // 每10岁降低风险偏好：25→0.9, 35→0.75, 45→0.6, 55→0.5, 65+→0.4
+      var _riskMult = 1.0;
+      if (_age >= 65) _riskMult = 0.4;
+      else if (_age >= 55) _riskMult = 0.5;
+      else if (_age >= 45) _riskMult = 0.6;
+      else if (_age >= 35) _riskMult = 0.75;
+      else if (_age >= 25) _riskMult = 0.9;
+      state.flags._ageRiskMult = _riskMult;
+      // 在年龄转折点发送提示
+      var _riskFlags = [25, 35, 45, 55, 65];
+      for (var _ri = 0; _ri < _riskFlags.length; _ri++) {
+        var _rf = _riskFlags[_ri];
+        if (_age === _rf && !state.flags["_ageRiskFlag_" + _rf]) {
+          state.flags["_ageRiskFlag_" + _rf] = true;
+          if (typeof StateManager !== "undefined") {
+            StateManager.addMessage("📊 " + _age + "岁，你的投资风格开始偏向稳健。保本比博收益更重要。", "info");
+          }
+          break;
+        }
+      }
+    },
+  },
+
   // === 训练次数重置 ===
   {
     name: "reset_training",
@@ -1573,6 +1646,7 @@ const DAILY_PIPELINE = [
   {
     name: "npc_birthday",
     fn: function (state) {
+      if (!state.flags) state.flags = {};
       if (typeof NPCS === "undefined") return;
       var dayOfYear = ((state.player.day - 1) % 365) + 1;
       for (var i = 0; i < NPCS.length; i++) {
@@ -2382,6 +2456,78 @@ const DAILY_PIPELINE = [
       }
     },
   },
+
+  // [R1023 域G 联动增强 G→A]: 生活成本感知 — 每日记录生活成本指数
+  {
+    name: "daily_cost_of_living_track",
+    fn: function (state) {
+      if (!state.flags) state.flags = {};
+      if (!state.player || !state.resources) return;
+      var _dailyCost = (state.housing && state.housing.tier ? state.housing.tier * 10 : 0) + 20;
+      if (state.career && state.career.currentJob) _dailyCost += 10;
+      if (state.needs) {
+        if ((state.needs.hunger || 50) < 30) _dailyCost += 5;
+        if ((state.needs.hygiene || 50) < 30) _dailyCost += 3;
+      }
+      if (!state.flags._costOfLivingHistory) state.flags._costOfLivingHistory = [];
+      state.flags._costOfLivingHistory.push({ day: state.player.day, cost: _dailyCost });
+      if (state.flags._costOfLivingHistory.length > 30) state.flags._costOfLivingHistory.shift();
+    },
+  },
+
+  // [R1023 域G 联动增强 G→B]: 人生里程碑 — 每365天触发人生阶段叙事
+  {
+    name: "life_milestone_narrative",
+    fn: function (state) {
+      if (!state.flags) state.flags = {};
+      if (!state.player) return;
+      var _day = state.player.day || 0;
+      if (_day > 0 && _day % 365 === 0) {
+        var _years = Math.floor(_day / 365);
+        if (!state.flags["_yearNarrative_" + _years]) {
+          state.flags["_yearNarrative_" + _years] = true;
+          if (typeof StateManager !== "undefined") {
+            var _yearMsgs = {
+              1: "📖 来这座城市整整一年了。365个日夜，从陌生到熟悉，这座城市留下了你的足迹。",
+              2: "📖 两年了。你不再是那个初来乍到的异乡人，这里有了你的故事。",
+              3: "📖 三年时光，这座城市见证了你的成长。有些路，走着走着就宽了。",
+              5: "📖 五年了！这座城市已经成为你生命的一部分。",
+              10: "📖 十年！这座城市见证了你的青春、奋斗和蜕变。",
+            };
+            StateManager.addMessage(_yearMsgs[_years] || "📖 " + _years + "年了，你依然在这座城市里书写着自己的故事。", "event");
+          }
+        }
+      }
+    },
+  },
+
+  // [R1023 域G 联动增强 G→D]: 社交智慧 — 年龄增长提升社交效率
+  {
+    name: "age_social_wisdom",
+    fn: function (state) {
+      if (!state.flags) state.flags = {};
+      if (!state.player) return;
+      var _age = state.player.age || 0;
+      if (_age < 25) return;
+      var _socialWisdom = 0;
+      if (_age >= 55) _socialWisdom = 3;
+      else if (_age >= 40) _socialWisdom = 2;
+      else if (_age >= 25) _socialWisdom = 1;
+      state.flags._ageSocialWisdom = _socialWisdom;
+      var _wisdomThresholds = [25, 40, 55];
+      for (var _wi = 0; _wi < _wisdomThresholds.length; _wi++) {
+        var _wt = _wisdomThresholds[_wi];
+        if (_age === _wt && !state.flags["_socialWisdomFlag_" + _wt]) {
+          state.flags["_socialWisdomFlag_" + _wt] = true;
+          if (typeof StateManager !== "undefined") {
+            var _wisdomMsgs = { 25: "🧠 25岁，你开始懂得人情世故。社交中多了一份从容。", 40: "🧠 40不惑，你越来越擅长处理复杂的人际关系。", 55: "🧠 年过半百，你一眼就能看透人心。社交对你来说游刃有余。" };
+            StateManager.addMessage(_wisdomMsgs[_wt], "info");
+          }
+          break;
+        }
+      }
+    },
+  },
 ];
 
 /** 生成每日一句话总结 */
@@ -2509,6 +2655,8 @@ function generateDailySummary(state, startCash, startHealth, startHappiness) {
  * MiniMax 友好：新增步骤只需 push 一个 {name, fn} 对象。
  */
 function runDailyPipeline(state) {
+  // [R1015 域G A类修复]: state.flags 守卫（旧存档/损坏状态→TypeError崩溃管线）
+  if (!state.flags) state.flags = {};
   // 记录日始状态用于今日总结
   // v3.2 修复: _dayStartCash 在 day_increment 步骤中设置（正确捕获日初现金）
   // 此处仅记录健康/心情日始值（这些在管线中不变化）
@@ -2780,6 +2928,36 @@ function getSocialEfficiencyByAge(age) {
   return 0.7;                 // 老年社交有限
 }
 
+// [R1015 域G 联动增强 G→F]: 人生阶段摘要数据 — 供UI渲染人生阶段摘要卡片
+function getLifeStageSummary(state) {
+  if (!state || !state.player) return null;
+  var _age = state.player.age || 20;
+  var _stage = getLifeStageLabel(_age);
+  var _day = state.player.day || 0;
+  var _health = state.status ? state.status.health || 0 : 0;
+  var _cash = state.resources ? state.resources.cash || 0 : 0;
+  var _job = state.player.job || "无业";
+  var _jobName = (typeof getJobById === "function" && _job !== "unemployed" && _job !== "none") ? (getJobById(_job) ? getJobById(_job).name : _job) : "无业";
+  var _wisdom = state.flags ? Object.keys(state.flags).filter(function(k) { return k.indexOf("_lifeWisdom_") === 0; }).length : 0;
+  var _summary = {
+    age: _age,
+    stage: _stage,
+    day: _day,
+    health: _health,
+    cash: _cash,
+    job: _jobName,
+    wisdomCount: _wisdom,
+    // 阶段描述
+    stageDesc: _stage === "少年" ? "青春正当时，未来无限可能。" :
+                _stage === "青年" ? "奋斗的年纪，每一滴汗水都在浇灌未来。" :
+                _stage === "壮年" ? "人生的黄金期，责任与机遇并存。" :
+                _stage === "中年" ? "阅历丰富，心态渐稳，是时候审视人生方向。" :
+                _stage === "中老年" ? "半生已过，学会珍惜当下，规划晚年。" :
+                "历经沧桑，豁达从容，享受生活。",
+  };
+  return _summary;
+}
+
 // [R816 域G 联动增强 G→H]: 年龄阶段影响创业成功率 — 不同年龄创业成功率不同
 function getStartupAgeModifier(age) {
   if (!age) return 1.0;
@@ -2799,7 +2977,7 @@ function getCareerChangeCost(age) {
   return 1.5;
 }
 
-// ====== [R913/R929 域G]: 导出函数到window ======
+// ====== [R913/R929 域G]: 导出函数到window（管线上方） ======
 if (typeof window !== "undefined") {
   window.runDailyPipeline = runDailyPipeline;
   window.endDay = endDay;
@@ -2814,6 +2992,122 @@ if (typeof window !== "undefined") {
   window.getSocialEfficiencyByAge = getSocialEfficiencyByAge;
   window.getStartupAgeModifier = getStartupAgeModifier;
   window.getCareerChangeCost = getCareerChangeCost;
+  window.getLifeStageSummary = getLifeStageSummary; // [R1015 域G 联动增强 G→F]
+
+  // [R1031 域G 联动增强 G→A]: 年龄消费指数
+  window.getAgeCostIndex = function (state) {
+    if (!state || !state.player) return 1.0;
+    var _age = state.player.age || 20;
+    if (_age < 25) return 0.8;
+    if (_age < 40) return 1.0;
+    if (_age < 55) return 1.15;
+    return 0.9;
+  };
+
+  // [R1031 域G 联动增强 G→B]: 年龄叙事
+  window.getAgeNarrative = function (age) {
+    if (!age) return "";
+    if (age < 18) return "少年不识愁滋味。";
+    if (age < 25) return "青春正当时，未来无限可能。";
+    if (age < 35) return "而立之年，责任与梦想并存。";
+    if (age < 45) return "不惑之年，内心渐渐安定。";
+    if (age < 55) return "知天命之年，愈发珍惜当下。";
+    if (age < 65) return "耳顺之年，世事洞明皆学问。";
+    return "从心所欲，不逾矩。";
+  };
+
+  // [R1031 域G 联动增强 G→F]: 生命阶段高亮数据
+  window.getLifeStageHighlight = function (state) {
+    if (!state || !state.player) return null;
+    var _age = state.player.age || 20;
+    var _stage = getLifeStageLabel(_age);
+    var _h = { physique: 0, intelligence: 0, social: 0, health: 0 };
+    if (_age < 25) { _h.physique = 10; _h.social = 10; }
+    else if (_age < 40) { _h.intelligence = 10; _h.social = 5; }
+    else if (_age < 55) { _h.intelligence = 5; _h.health = -5; }
+    else { _h.health = -10; _h.social = -5; }
+    return { stage: _stage, age: _age, highlights: _h };
+  };
+
+  // [R1037 域G 联动增强 G→B]: 生命周期里程碑叙事 — 每10岁触发人生阶段叙事
+  window.getLifeChapterNarrative = function (state) {
+    if (!state || !state.player || !state.flags) return null;
+    var _age = state.player.age || 20;
+    var _chapters = [
+      { age: 18, icon: "🎓", text: "18岁，你成年了。世界在你面前展开。" },
+      { age: 20, icon: "🎯", text: "二十不惑，你开始认真思考自己想要什么。" },
+      { age: 25, icon: "🚀", text: "25岁，精力最旺盛的年纪，是时候全力冲刺了。" },
+      { age: 30, icon: "🏠", text: "三十而立，肩膀上有了更多责任。" },
+      { age: 40, icon: "🧠", text: "四十不惑，你越来越清楚什么才是重要的。" },
+      { age: 50, icon: "🌅", text: "五十知天命，你学会了与生活和解。" },
+      { age: 60, icon: "🏡", text: "六十耳顺，人生下半场，慢下来享受生活。" },
+    ];
+    for (var _ci = 0; _ci < _chapters.length; _ci++) {
+      var _ch = _chapters[_ci];
+      if (_age === _ch.age && !state.flags['_lifeChapter_' + _ch.age]) {
+        state.flags['_lifeChapter_' + _ch.age] = true;
+        return { icon: _ch.icon, text: _ch.text, age: _ch.age };
+      }
+    }
+    return null;
+  };
+
+  // [R1037 域G 联动增强 G→E]: 生命阶段影响投资策略偏好 — 年龄影响风险偏好
+  window.getAgeInvestmentProfile = function (state) {
+    if (!state || !state.player) return { riskTolerance: "balanced", label: "均衡型" };
+    var _age = state.player.age || 20;
+    if (_age < 25) return { riskTolerance: "aggressive", label: "进取型", reason: "年轻就是资本，可以承受高风险" };
+    if (_age < 35) return { riskTolerance: "growth", label: "成长型", reason: "事业上升期，适度进取" };
+    if (_age < 50) return { riskTolerance: "balanced", label: "均衡型", reason: "中年稳健，平衡风险与收益" };
+    return { riskTolerance: "conservative", label: "保守型", reason: "保本为重，稳健投资" };
+  };
+
+  // [R1015 域G 联动增强 G→H]: 年龄阶段管理效率 — 不同年龄影响公司管理效果
+  window.getAgeManagementModifier = function (state) {
+    if (!state || !state.player) return { innovation: 1.0, management: 1.0, stability: 1.0 };
+    var _age = state.player.age || 20;
+    if (_age < 25) return { innovation: 1.05, management: 0.95, stability: 0.9 };
+    if (_age < 35) return { innovation: 1.03, management: 1.05, stability: 1.0 };
+    if (_age < 45) return { innovation: 1.0, management: 1.1, stability: 1.05 };
+    if (_age < 55) return { innovation: 0.95, management: 1.08, stability: 1.1 };
+    return { innovation: 0.9, management: 1.0, stability: 1.15 };
+  };
+
+  // [R1015 域G 联动增强 G→C]: 生命阶段技能效率 — 不同年龄学习/应用/传授技能效率不同
+  window.getAgeSkillEfficiency = function (state) {
+    if (!state || !state.player) return { learnRate: 1.0, applyRate: 1.0, teachRate: 1.0 };
+    var _age = state.player.age || 20;
+    if (_age < 25) return { learnRate: 1.15, applyRate: 0.9, teachRate: 0.7 };
+    if (_age < 35) return { learnRate: 1.1, applyRate: 1.05, teachRate: 0.85 };
+    if (_age < 45) return { learnRate: 0.95, applyRate: 1.1, teachRate: 1.0 };
+    if (_age < 55) return { learnRate: 0.85, applyRate: 1.0, teachRate: 1.15 };
+    return { learnRate: 0.7, applyRate: 0.9, teachRate: 1.3 };
+  };
+
+  // [R1015 域G 联动增强 G→F]: 生命周期分析仪表盘数据 — 供UI渲染年龄系统影响总览
+  window.getLifecycleDashboardData = function (state) {
+    if (!state || !state.player) return null;
+    var _age = state.player.age || 20;
+    var _day = state.player.day || 0;
+    var _stage = getLifeStageLabel(_age);
+    var _socialEff = getSocialEfficiencyByAge(_age);
+    var _mgmtMod = window.getAgeManagementModifier(state);
+    var _skillEff = window.getAgeSkillEfficiency(state);
+    var _investProfile = window.getAgeInvestmentProfile(state);
+    return {
+      age: _age, day: _day, stage: _stage,
+      socialEfficiency: _socialEff,
+      management: _mgmtMod,
+      skillEfficiency: _skillEff,
+      investmentProfile: _investProfile,
+      summary: _stage === "少年" ? "学习能力最强，适合技能积累。" :
+               _stage === "青年" ? "社交活跃，创新力强，适合创业和社交。" :
+               _stage === "壮年" ? "职业黄金期，管理效率高，适合职场发展。" :
+               _stage === "中年" ? "经验丰富，适合传授技能和稳健投资。" :
+               _stage === "中老年" ? "保守稳健，适合传承和顾问角色。" :
+               "阅历深厚，适合战略指导和资本运作。",
+    };
+  };
 }
 
 // ====== [R921 域G 联动增强] 2项: G→B/G→E ======
@@ -3000,4 +3294,120 @@ if (typeof window !== "undefined") {
   window.getSocialEfficiencyByAge = getSocialEfficiencyByAge;
   window.getStartupAgeModifier = getStartupAgeModifier;
   window.getCareerChangeCost = getCareerChangeCost;
+  window.getLifeStageSummary = getLifeStageSummary; // [R1015 域G 联动增强 G→F]
+
+  // [R1031 域G 联动增强 G→A]: 年龄消费指数
+  window.getAgeCostIndex = function (state) {
+    if (!state || !state.player) return 1.0;
+    var _age = state.player.age || 20;
+    if (_age < 25) return 0.8;
+    if (_age < 40) return 1.0;
+    if (_age < 55) return 1.15;
+    return 0.9;
+  };
+
+  // [R1031 域G 联动增强 G→B]: 年龄叙事
+  window.getAgeNarrative = function (age) {
+    if (!age) return "";
+    if (age < 18) return "少年不识愁滋味。";
+    if (age < 25) return "青春正当时，未来无限可能。";
+    if (age < 35) return "而立之年，责任与梦想并存。";
+    if (age < 45) return "不惑之年，内心渐渐安定。";
+    if (age < 55) return "知天命之年，愈发珍惜当下。";
+    if (age < 65) return "耳顺之年，世事洞明皆学问。";
+    return "从心所欲，不逾矩。";
+  };
+
+  // [R1031 域G 联动增强 G→F]: 生命阶段高亮数据
+  window.getLifeStageHighlight = function (state) {
+    if (!state || !state.player) return null;
+    var _age = state.player.age || 20;
+    var _stage = getLifeStageLabel(_age);
+    var _h = { physique: 0, intelligence: 0, social: 0, health: 0 };
+    if (_age < 25) { _h.physique = 10; _h.social = 10; }
+    else if (_age < 40) { _h.intelligence = 10; _h.social = 5; }
+    else if (_age < 55) { _h.intelligence = 5; _h.health = -5; }
+    else { _h.health = -10; _h.social = -5; }
+    return { stage: _stage, age: _age, highlights: _h };
+  };
+
+  // [R1037 域G 联动增强 G→B]: 生命周期里程碑叙事 — 每10岁触发人生阶段叙事
+  window.getLifeChapterNarrative = function (state) {
+    if (!state || !state.player || !state.flags) return null;
+    var _age = state.player.age || 20;
+    var _chapters = [
+      { age: 18, icon: "🎓", text: "18岁，你成年了。世界在你面前展开。" },
+      { age: 20, icon: "🎯", text: "二十不惑，你开始认真思考自己想要什么。" },
+      { age: 25, icon: "🚀", text: "25岁，精力最旺盛的年纪，是时候全力冲刺了。" },
+      { age: 30, icon: "🏠", text: "三十而立，肩膀上有了更多责任。" },
+      { age: 40, icon: "🧠", text: "四十不惑，你越来越清楚什么才是重要的。" },
+      { age: 50, icon: "🌅", text: "五十知天命，你学会了与生活和解。" },
+      { age: 60, icon: "🏡", text: "六十耳顺，人生下半场，慢下来享受生活。" },
+    ];
+    for (var _ci = 0; _ci < _chapters.length; _ci++) {
+      var _ch = _chapters[_ci];
+      if (_age === _ch.age && !state.flags['_lifeChapter_' + _ch.age]) {
+        state.flags['_lifeChapter_' + _ch.age] = true;
+        return { icon: _ch.icon, text: _ch.text, age: _ch.age };
+      }
+    }
+    return null;
+  };
+
+  // [R1037 域G 联动增强 G→E]: 生命阶段影响投资策略偏好 — 年龄影响风险偏好
+  window.getAgeInvestmentProfile = function (state) {
+    if (!state || !state.player) return { riskTolerance: "balanced", label: "均衡型" };
+    var _age = state.player.age || 20;
+    if (_age < 25) return { riskTolerance: "aggressive", label: "进取型", reason: "年轻就是资本，可以承受高风险" };
+    if (_age < 35) return { riskTolerance: "growth", label: "成长型", reason: "事业上升期，适度进取" };
+    if (_age < 50) return { riskTolerance: "balanced", label: "均衡型", reason: "中年稳健，平衡风险与收益" };
+    return { riskTolerance: "conservative", label: "保守型", reason: "保本为重，稳健投资" };
+  };
+
+  // [R1015 域G 联动增强 G→H]: 年龄阶段管理效率 — 不同年龄影响公司管理效果
+  window.getAgeManagementModifier = function (state) {
+    if (!state || !state.player) return { innovation: 1.0, management: 1.0, stability: 1.0 };
+    var _age = state.player.age || 20;
+    if (_age < 25) return { innovation: 1.05, management: 0.95, stability: 0.9 };
+    if (_age < 35) return { innovation: 1.03, management: 1.05, stability: 1.0 };
+    if (_age < 45) return { innovation: 1.0, management: 1.1, stability: 1.05 };
+    if (_age < 55) return { innovation: 0.95, management: 1.08, stability: 1.1 };
+    return { innovation: 0.9, management: 1.0, stability: 1.15 };
+  };
+
+  // [R1015 域G 联动增强 G→C]: 生命阶段技能效率 — 不同年龄学习/应用/传授技能效率不同
+  window.getAgeSkillEfficiency = function (state) {
+    if (!state || !state.player) return { learnRate: 1.0, applyRate: 1.0, teachRate: 1.0 };
+    var _age = state.player.age || 20;
+    if (_age < 25) return { learnRate: 1.15, applyRate: 0.9, teachRate: 0.7 };
+    if (_age < 35) return { learnRate: 1.1, applyRate: 1.05, teachRate: 0.85 };
+    if (_age < 45) return { learnRate: 0.95, applyRate: 1.1, teachRate: 1.0 };
+    if (_age < 55) return { learnRate: 0.85, applyRate: 1.0, teachRate: 1.15 };
+    return { learnRate: 0.7, applyRate: 0.9, teachRate: 1.3 };
+  };
+
+  // [R1015 域G 联动增强 G→F]: 生命周期分析仪表盘数据 — 供UI渲染年龄系统影响总览
+  window.getLifecycleDashboardData = function (state) {
+    if (!state || !state.player) return null;
+    var _age = state.player.age || 20;
+    var _day = state.player.day || 0;
+    var _stage = getLifeStageLabel(_age);
+    var _socialEff = getSocialEfficiencyByAge(_age);
+    var _mgmtMod = window.getAgeManagementModifier(state);
+    var _skillEff = window.getAgeSkillEfficiency(state);
+    var _investProfile = window.getAgeInvestmentProfile(state);
+    return {
+      age: _age, day: _day, stage: _stage,
+      socialEfficiency: _socialEff,
+      management: _mgmtMod,
+      skillEfficiency: _skillEff,
+      investmentProfile: _investProfile,
+      summary: _stage === "少年" ? "学习能力最强，适合技能积累。" :
+               _stage === "青年" ? "社交活跃，创新力强，适合创业和社交。" :
+               _stage === "壮年" ? "职业黄金期，管理效率高，适合职场发展。" :
+               _stage === "中年" ? "经验丰富，适合传授技能和稳健投资。" :
+               _stage === "中老年" ? "保守稳健，适合传承和顾问角色。" :
+               "阅历深厚，适合战略指导和资本运作。",
+    };
+  };
 }

@@ -1106,6 +1106,8 @@ const CAR_TYPES = [
 function initInvestment(state) {
   var inv = state.investment;
   if (!inv) return;
+  // [全系统自洽修复] 域E R1035 A类: inv.stockMarket 守卫(旧存档可能缺失→TypeError)
+  if (!inv.stockMarket) inv.stockMarket = {};
   var initialized = false;
   for (var i = 0; i < INV_STOCKS.length; i++) {
     var s = INV_STOCKS[i];
@@ -1659,6 +1661,72 @@ function tickInvestmentDaily(state) {
       }
     }
   } catch (e) {}
+
+  // [R1021 域E 联动增强 E→B]: 投资故事叙事 — 持仓满30天触发投资心得叙事
+  try {
+    if (state.investment && state.flags && state.player) {
+      var _holdings = state.investment.stockHoldings || [];
+      var _longestHold = 0;
+      for (var _hiB = 0; _hiB < _holdings.length; _hiB++) {
+        var _hB = _holdings[_hiB];
+        if (_hB && _hB.buyDay && state.player.day) {
+          var _holdDays = state.player.day - _hB.buyDay;
+          if (_holdDays > _longestHold) _longestHold = _holdDays;
+        }
+      }
+      if (_longestHold >= 30 && !state.flags._investStory1m && typeof StateManager !== "undefined") {
+        state.flags._investStory1m = true;
+        StateManager.addMessage("📖 持有一只股票超过一个月了，你开始理解「长期持有」的含义——不是不动，而是相信时间的力量。", "info");
+      }
+      if (_longestHold >= 180 && !state.flags._investStory6m && typeof StateManager !== "undefined") {
+        state.flags._investStory6m = true;
+        StateManager.addMessage("📖 半年持仓，你经历了涨跌起伏。投资教会你的不是如何赚钱，而是如何管理自己的情绪。", "event");
+      }
+    }
+  } catch (e) {}
+
+  // [R1021 域E 联动增强 E→C]: 技能投资回报 — 投资经验提升会计/管理技能XP
+  try {
+    if (state.investment && state.skills && state.flags) {
+      var _dailyPL = 0;
+      var _smEC = state.investment.stockMarket || {};
+      for (var _hiEC = 0; _hiEC < (state.investment.stockHoldings || []).length; _hiEC++) {
+        var _hEC = state.investment.stockHoldings[_hiEC];
+        var _mEC = _smEC[_hEC.symbol];
+        if (_mEC && _mEC.history && _mEC.history.length >= 2 && _hEC.shares) {
+          _dailyPL += (_mEC.history[_mEC.history.length - 1].price - _mEC.history[_mEC.history.length - 2].price) * _hEC.shares;
+        }
+      }
+      if (Math.abs(_dailyPL) > 500 && !state.flags._invSkillXpToday && typeof addSkillXp === "function") {
+        state.flags._invSkillXpToday = true;
+        addSkillXp("accounting", 2);
+        addSkillXp("management", 1);
+      }
+    }
+  } catch (e) {}
+
+  // [R1021 域E 联动增强 E→D]: 投资者社交圈 — 投资额度影响社交地位标签
+  try {
+    if (state.investment && state.flags) {
+      var _totalInvVal = 0;
+      for (var _hiD = 0; _hiD < (state.investment.stockHoldings || []).length; _hiD++) {
+        var _hD = state.investment.stockHoldings[_hiD];
+        var _mD = (state.investment.stockMarket || {})[_hD.symbol];
+        if (_mD && _mD.price && _hD.shares) _totalInvVal += _mD.price * _hD.shares;
+      }
+      var _invLabel = "none";
+      if (_totalInvVal >= 500000) _invLabel = "elite";
+      else if (_totalInvVal >= 100000) _invLabel = "advanced";
+      else if (_totalInvVal >= 10000) _invLabel = "intermediate";
+      if (_invLabel !== "none" && state.flags._investorLabel !== _invLabel) {
+        state.flags._investorLabel = _invLabel;
+        if (typeof StateManager !== "undefined" && state.player && state.player.day % 7 === 0) {
+          var _labelMsgs = { intermediate: "📊 你的投资规模已超过¥1万，在朋友圈里算是入门投资者了。", advanced: "📊 投资规模突破¥10万，熟人中已经开始有人向你请教投资经验。", elite: "📊 投资规模突破¥50万，你已经是圈子里的「投资达人」了。社交圈层悄然提升。" };
+          StateManager.addMessage(_labelMsgs[_invLabel], "info");
+        }
+      }
+    }
+  } catch (e) {}
 }
 
 function checkInvestmentMilestones(state, inv) {
@@ -2042,6 +2110,8 @@ function sellInvStock(symbol, shares) {
 }
 
 function buyBtc(amount) {
+  var state = typeof StateManager !== "undefined" ? StateManager.getState() : null;
+  if (!state) return;
   var inv = state.investment;
   // [全系统自洽修复] 域E 修复:buyBtc 与 sellBtc/buyInvStock 存在不对称守卫缺口——
   //   ① 缺 `if(!inv)return`：旧存档 state.investment 未初始化时 `inv.btcPrice` 直接抛 TypeError 使买币崩溃(兄弟函数均已守卫)；
@@ -2082,6 +2152,8 @@ function buyBtc(amount) {
 }
 
 function sellBtc(amount) {
+  var state = typeof StateManager !== "undefined" ? StateManager.getState() : null;
+  if (!state) return;
   var inv = state.investment;
   // [全系统自洽修复] 域E 修复:buyBtc 有 isNaN(cost) 守卫而 sellBtc 缺——
   //   btcPrice/btcHoldings 为 undefined(旧存档) 时 `undefined < amount` 为 false 不拦截，
@@ -2127,6 +2199,8 @@ function sellBtc(amount) {
 }
 
 function buyProperty(propId) {
+  var state = typeof StateManager !== "undefined" ? StateManager.getState() : null;
+  if (!state) return;
   var inv = state.investment;
   var prop = PROPERTIES.find(function (p) {
     return p.id === propId;
@@ -2171,6 +2245,8 @@ function buyProperty(propId) {
 }
 
 function sellProperty(propId) {
+  var state = typeof StateManager !== "undefined" ? StateManager.getState() : null;
+  if (!state) return;
   var inv = state.investment;
   // [全系统自洽修复] 域E 修复:旧存档缺 properties 时读 .length 抛 TypeError。
   if (!inv || !Array.isArray(inv.properties)) return;
@@ -2217,6 +2293,8 @@ function sellProperty(propId) {
 }
 
 function buyCar(carId) {
+  var state = typeof StateManager !== "undefined" ? StateManager.getState() : null;
+  if (!state) return;
   var inv = state.investment;
   var car = CAR_TYPES.find(function (c) {
     return c.id === carId;
@@ -3176,6 +3254,8 @@ function calculateDailyPL(state) {
   var inv = state.investment;
   var dailyPL = { stocks: 0, crypto: 0, precious: 0, futures: 0, total: 0 };
   var holdings = inv.stockHoldings || [];
+  // [全系统自洽修复] 域E A类: inv.stockMarket 可能未初始化(旧存档)→TypeError
+  if (!inv.stockMarket) return dailyPL;
   for (var i = 0; i < holdings.length; i++) {
     var h = holdings[i];
     var m = inv.stockMarket[h.symbol];
@@ -5326,6 +5406,63 @@ if (typeof window !== "undefined") {
   window.checkInvestmentMilestones = checkInvestmentMilestones;
   window.getInvestmentAssetSnapshot = getInvestmentAssetSnapshot;
   window.getInvestmentSummary = getInvestmentSummary;
+
+  // [R1029 域E 联动增强 E→A]: 投资市场数据 — 返回市场波动/趋势数据供经济系统
+  window.getInvestmentMarketData = function (state) {
+    if (!state || !state.investment || !state.investment.stockMarket) return null;
+    var _stocks = state.investment.stockMarket;
+    var _totalChange = 0, _count = 0, _upCount = 0, _downCount = 0;
+    for (var _sym in _stocks) {
+      if (_stocks[_sym] && _stocks[_sym].history && _stocks[_sym].history.length >= 2) {
+        var _h = _stocks[_sym].history;
+        var _change = (_h[_h.length - 1].price - _h[_h.length - 2].price) / _h[_h.length - 2].price;
+        _totalChange += _change;
+        _count++;
+        if (_change > 0) _upCount++;
+        else if (_change < 0) _downCount++;
+      }
+    }
+    return {
+      marketAvgChange: _count > 0 ? _totalChange / _count : 0,
+      upCount: _upCount, downCount: _downCount,
+      totalCount: _count,
+      mood: state.investment._marketMood || "neutral",
+    };
+  };
+
+  // [R1029 域E 联动增强 E→C]: 投资技能成长 — 投资活动促进会计/管理技能提升
+  window.getInvestmentSkillGrowth = function (state) {
+    if (!state || !state.investment || !state.skills) return null;
+    var _totalInvested = 0;
+    var _holdings = state.investment.stockHoldings || [];
+    for (var _hi = 0; _hi < _holdings.length; _hi++) {
+      if (_holdings[_hi].shares) _totalInvested += _holdings[_hi].shares;
+    }
+    var _accountingBonus = Math.min(10, Math.floor(_totalInvested / 100));
+    var _managementBonus = Math.min(5, Math.floor(_totalInvested / 200));
+    return { accountingBonus: _accountingBonus, managementBonus: _managementBonus, totalInvested: _totalInvested };
+  };
+
+  // [R1029 域E 联动增强 E→F]: 投资组合可视化 — 供UI渲染投资组合分布
+  window.getInvestmentPortfolioVisual = function (state) {
+    if (!state || !state.investment) return null;
+    var _holdings = state.investment.stockHoldings || [];
+    var _categories = {};
+    for (var _hi = 0; _hi < _holdings.length; _hi++) {
+      var _h = _holdings[_hi];
+      var _m = (state.investment.stockMarket || {})[_h.symbol];
+      if (_m && _m.price && _h.shares) {
+        var _val = _m.price * _h.shares;
+        var _cat = _m.industry || "其他";
+        _categories[_cat] = (_categories[_cat] || 0) + _val;
+      }
+    }
+    return {
+      categories: _categories,
+      totalValue: Object.values(_categories).reduce(function (a, b) { return a + b; }, 0),
+      holdingCount: _holdings.length,
+    };
+  };
 }
 
 // ====== [R911 域E 联动增强] 3项: E→B投资里程碑叙事 / E→G财富健康加成 / E→F投资组合可视数据 ======
@@ -5458,6 +5595,91 @@ if (typeof window !== "undefined") {
       return data;
     };
   }
+})();
+
+// ====== [R1035 域E 联动增强] 2项: E→B/E→C ======
+(function () {
+  "use strict";
+  if (typeof RANDOM_EVENTS === "undefined") return;
+  if (RANDOM_EVENTS._investLinkageR1035Loaded) return;
+  RANDOM_EVENTS._investLinkageR1035Loaded = true;
+
+  // [R1035 域E 联动增强 E→B]: 投资启蒙叙事 — 首次投资后触发叙事，引导玩家进入投资世界
+  RANDOM_EVENTS.push({
+    id: "e_invest_first_step",
+    phase: "street",
+    icon: "🎯",
+    title: "投资第一步",
+    text: function (st) {
+      if (!st || !st.investment) return "投资是改变命运的开始。";
+      var stocks = st.investment.stockHoldings || [];
+      if (stocks.length >= 3) return "你已经持有了" + stocks.length + "只股票。从新手到老手，每一步都算数。";
+      if (stocks.length >= 1) return "你迈出了投资的第一步。市场有风险，但不入虎穴焉得虎子。";
+      return "投资的大门在等着你。";
+    },
+    triggers: { minDay: 15, interval: 60 },
+    conditions: function (st) {
+      if (!st || !st.investment || !st.flags) return false;
+      if (st.flags._eInvestFirstStepCd && (st.player.day || 0) - st.flags._eInvestFirstStepCd < 60) return false;
+      var stocks = st.investment.stockHoldings || [];
+      return stocks.length >= 1;
+    },
+    probability: 0.03,
+    repeatable: true,
+    choices: [
+      { text: "学习投资知识", hint: "会计XP+10", apply: function (st) {
+        if (!st.flags) st.flags = {};
+        st.flags._eInvestFirstStepCd = st.player.day;
+        if (typeof addSkillXp === "function") addSkillXp("accounting", 10);
+        StateManager.addMessage("你开始系统学习投资知识。会计XP+10。", "success");
+      }},
+      { text: "记录第一笔交易", hint: "心智+3", apply: function (st) {
+        if (!st.flags) st.flags = {};
+        st.flags._eInvestFirstStepCd = st.player.day;
+        if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 3);
+        StateManager.addMessage("你记录了第一笔交易。心智+3。", "info");
+      }},
+    ],
+  });
+
+  // [R1035 域E 联动增强 E→C]: 投资回报影响职业信心 — 盈利提升职业绩效，亏损降低
+  RANDOM_EVENTS.push({
+    id: "e_invest_career_confidence",
+    phase: "street",
+    icon: "💼",
+    title: "投资与职业",
+    text: function (st) {
+      if (!st || !st.investment || !st.career || !st.career.currentJob) return "投资和职业是人生的两条腿。";
+      var totalPL = st.investment._totalInvestmentProfit || 0;
+      if (totalPL >= 50000) return "投资上的成功让你在职场上也更加自信。";
+      if (totalPL <= -20000) return "最近的亏损让你在工作中也有些分心。";
+      return "投资和职业都在稳步前行。";
+    },
+    triggers: { minDay: 30, interval: 60 },
+    conditions: function (st) {
+      if (!st || !st.investment || !st.flags || !st.career || !st.career.currentJob) return false;
+      if (st.flags._eInvestCareerCd && (st.player.day || 0) - st.flags._eInvestCareerCd < 60) return false;
+      return true;
+    },
+    probability: 0.02,
+    repeatable: true,
+    choices: [
+      { text: "把投资经验用到工作上", hint: "绩效+5", apply: function (st) {
+        if (!st.flags) st.flags = {};
+        st.flags._eInvestCareerCd = st.player.day;
+        if (st.career && st.career.currentJob) {
+          st.career.currentJob.performance = Math.min(100, (st.career.currentJob.performance || 50) + 5);
+        }
+        StateManager.addMessage("你把投资中学到的风险管理用到了工作上。绩效+5。", "success");
+      }},
+      { text: "专注本职工作", hint: "心智+5", apply: function (st) {
+        if (!st.flags) st.flags = {};
+        st.flags._eInvestCareerCd = st.player.day;
+        if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 5);
+        StateManager.addMessage("你决定先把本职工作做好。心智+5。", "info");
+      }},
+    ],
+  });
 })();
 
 // ====== [R919 域E 联动增强] 2项: E→B/E→D ======

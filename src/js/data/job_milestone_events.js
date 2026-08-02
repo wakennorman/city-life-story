@@ -1087,6 +1087,25 @@ function checkJobMilestoneEvent(jobId, newTier, state) {
 if (typeof window !== "undefined") {
   window.JOB_MILESTONE_EVENTS = JOB_MILESTONE_EVENTS;
   window.checkJobMilestoneEvent = checkJobMilestoneEvent;
+
+  // [R1051 域C 联动增强 C→A]: 里程碑经济数据 — 工作里程碑进度数据供经济系统
+  window.getMilestoneEconomicData = function (state) {
+    if (!state || !state.career || !state.career.currentJob) return null;
+    return { workDays: state.career.currentJob.workDays || 0, salary: state.career.currentJob.salary || 0 };
+  };
+
+  // [R1051 域C 联动增强 C→E]: 里程碑投资数据 — 工作里程碑影响投资额度
+  window.getMilestoneInvestData = function (state) {
+    if (!state || !state.career || !state.career.currentJob) return null;
+    var _days = state.career.currentJob.workDays || 0;
+    return { workDays: _days, investBonus: Math.min(50000, Math.floor(_days / 30) * 5000) };
+  };
+
+  // [R1051 域C 联动增强 C→F]: 里程碑UI数据 — 工作里程碑数据供UI渲染
+  window.getMilestoneUIData = function (state) {
+    if (!state || !state.career || !state.career.currentJob) return null;
+    return { workDays: state.career.currentJob.workDays || 0, jobName: state.career.currentJob.levelName || "未知" };
+  };
 }
 // [R459] 域C
 // [R571] 域C

@@ -111,11 +111,11 @@ function getTeamProductivity(state) {
 
   // [自洽修复] 域H A类#15: 用 Math.max(0, ...) 替代 Math.max(1, ...)，负 loyalty 贡献 0 而非 1
   const totalProductivity = state.corporate.team.reduce(
-    (s, m) => s + Math.max(0, (typeof m.productivity === "number" && isFinite(m.productivity)) ? m.productivity : 0),
+    (s, m) => s + Math.max(0, (m && typeof m.productivity === "number" && isFinite(m.productivity)) ? m.productivity : 0),
     0,
   );
   const avgLoyalty =
-    state.corporate.team.reduce((s, m) => s + Math.max(0, (typeof m.loyalty === "number" && isFinite(m.loyalty)) ? m.loyalty : 0), 0) /
+    state.corporate.team.reduce((s, m) => s + Math.max(0, (m && typeof m.loyalty === "number" && isFinite(m.loyalty)) ? m.loyalty : 0), 0) /
     state.corporate.team.length;
   const sizeBonus = Math.min(1.5, 1 + state.corporate.team.length * 0.05);
 
@@ -149,4 +149,35 @@ if (typeof window !== "undefined") {
   window.hireTeamMember = hireTeamMember;
   window.fireTeamMember = fireTeamMember;
   window.getTeamProductivity = getTeamProductivity;
+
+  // [R1040 域H 联动增强 H→A]: 团队经济数据 — 团队薪资/成本数据供经济系统
+  window.getTeamEconomicData = function (state) {
+    if (!state || !state.corporate || !Array.isArray(state.corporate.team)) return null;
+    var _totalSalary = 0;
+    for (var _ti = 0; _ti < state.corporate.team.length; _ti++) {
+      _totalSalary += state.corporate.team[_ti].salary || 0;
+    }
+    return { teamSize: state.corporate.team.length, totalSalary: _totalSalary, avgSalary: state.corporate.team.length > 0 ? Math.round(_totalSalary / state.corporate.team.length) : 0 };
+  };
+
+  // [R1040 域H 联动增强 H→B]: 团队叙事数据 — 团队规模/士气数据供叙事系统
+  window.getTeamNarrativeData = function (state) {
+    if (!state || !state.corporate || !Array.isArray(state.corporate.team)) return null;
+    var _avgLoyalty = 0;
+    var _team = state.corporate.team;
+    if (_team.length > 0) {
+      var _sum = 0;
+      for (var _ti = 0; _ti < _team.length; _ti++) { _sum += _team[_ti].loyalty || 50; }
+      _avgLoyalty = Math.round(_sum / _team.length);
+    }
+    return { teamSize: _team.length, avgLoyalty: _avgLoyalty, morale: _avgLoyalty >= 60 ? "high" : _avgLoyalty >= 40 ? "medium" : "low" };
+  };
+
+  // [R1040 域H 联动增强 H→F]: 团队UI数据 — 团队数据供UI渲染
+  window.getTeamUIData = function (state) {
+    if (!state || !state.corporate || !Array.isArray(state.corporate.team)) return null;
+    var _team = state.corporate.team;
+    var _members = _team.map(function (m) { return { name: m.name, role: m.role, salary: m.salary || 0, loyalty: m.loyalty || 50, productivity: m.productivity || 5 }; });
+    return { teamSize: _team.length, members: _members };
+  };
 }

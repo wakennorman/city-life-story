@@ -74,7 +74,7 @@
       },
       choices: [
         { text: "💼 继续深耕职场", next: null },
-        { text: "📊 查看创业条件", next: null, handler: function (st) {
+        { text: "📊 查看创业条件", next: null, apply: function (st) {
           if (typeof showStartupRegisterModal === "function") {
             showStartupRegisterModal();
           } else {
@@ -123,7 +123,7 @@
           "先熟悉工作环境，和同事建立良好关系，为长远发展打基础。";
       },
       choices: [
-        { text: "📈 查看晋升条件", next: null, handler: function (st) {
+        { text: "📈 查看晋升条件", next: null, apply: function (st) {
           if (st.career && st.career.currentJob) {
             var nextLevel = typeof getNextCareerLevel === "function" ? getNextCareerLevel(st.career.currentJob.path, st.career.currentJob.levelId) : null;
             if (nextLevel) {
@@ -182,7 +182,7 @@
           "随着你的职业发展，你的社交圈也会越来越广。";
       },
       choices: [
-        { text: "🤝 维护关系", next: null, handler: function (st) {
+        { text: "🤝 维护关系", next: null, apply: function (st) {
           if (st.needs) {
             st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 3);
           }

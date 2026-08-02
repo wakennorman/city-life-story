@@ -4271,4 +4271,19 @@ function renderInvestmentWidget(state) {
 if (typeof window !== "undefined") {
   window.wikiNavigate = wikiNavigate;
   window.renderWikiTab = renderWikiTab;
+
+  // [R1046 域F 联动增强 F→A]: 百科经济数据 — 经济机制百科条目数据
+  window.getWikiEconomicSection = function () {
+    return { id: "economy", name: "经济系统", sections: ["wealth_tax", "loan_rate", "market_saturation"] };
+  };
+
+  // [R1046 域F 联动增强 F→B]: 百科叙事数据 — 事件机制百科条目数据
+  window.getWikiNarrativeSection = function () {
+    return { id: "events", name: "事件系统", sections: ["random_events", "chain_events", "moral_events"] };
+  };
+
+  // [R1046 域F 联动增强 F→E]: 百科投资数据 — 投资机制百科条目数据
+  window.getWikiInvestSection = function () {
+    return { id: "investment", name: "投资系统", sections: ["stocks", "real_estate", "portfolio"] };
+  };
 }

@@ -3321,7 +3321,7 @@ function getAvailableActions(state) {
           desc: `有人认出你（名气${fame}），主动来搭话聊天，心情好极了。(每天一次)`,
           apCost: 5,
           handler: () => {
-            state.needs.happiness = Math.min(100, state.needs.happiness + 20);
+            state.needs.happiness = Math.min(100, (state.needs.happiness || 0) + 20);
             state.player.mental = Math.min(100, (state.player.mental || 0) + 2);
             state.player.fame = Math.min(100, (state.player.fame || 0) + 2);
             state.flags._fameVipUsedToday = state.flags._fameVipUsedToday || {};
@@ -3385,7 +3385,7 @@ function getAvailableActions(state) {
               100,
               (state.status.health || 100) + healAmt,
             );
-            state.needs.happiness = Math.min(100, state.needs.happiness + 10);
+            state.needs.happiness = Math.min(100, (state.needs.happiness || 0) + 10);
             state.flags._fameVipUsedToday = state.flags._fameVipUsedToday || {};
             state.flags._fameVipUsedToday.hospitalVip = true;
             consumeAP(10);
@@ -3513,8 +3513,8 @@ function getAvailableActions(state) {
         const isNewbie = state.player.day <= 10;
         const baseRecovery = isNewbie ? 22 : 18;
         const recovery = baseRecovery + Random.int(0, 11);
-        state.needs.fatigue = Math.max(0, state.needs.fatigue - recovery);
-        state.needs.happiness = Math.min(100, state.needs.happiness + 5);
+        state.needs.fatigue = Math.max(0, (state.needs.fatigue || 0) - recovery);
+        state.needs.happiness = Math.min(100, (state.needs.happiness || 0) + 5);
         StateManager.addMessage(`😴 你休息了一会，疲劳-${recovery}。`, "info");
         consumeAP(15);
       },
@@ -4057,9 +4057,14 @@ function getAvailableActions(state) {
           if (typeof getHistoryModifiers === "function") {
             _histNpcBonus = getHistoryModifiers(state).npcAffinityBonus || 0;
           }
-          const affinityGain =
-            (isBirthday ? 10 + Random.int(0, 4) : 5 + Random.int(0, 4)) +
-            _histNpcBonus;
+          // [R1053 域G 联动增强 G→D]: 健康状态影响NPC互动效果
+          var _healthSocialMod = typeof getHealthSocialModifier === "function"
+            ? getHealthSocialModifier(state)
+            : 1.0;
+          const affinityGain = Math.round(
+            ((isBirthday ? 10 + Random.int(0, 4) : 5 + Random.int(0, 4)) +
+            _histNpcBonus) * _healthSocialMod
+          );
           r.affinity = Math.min(100, r.affinity + affinityGain);
           // 节日专属台词（P1.8）：节日期间65%概率触发
           var festLine = null;
@@ -4818,21 +4823,21 @@ function doStreetJob(job) {
       }
     }
     if (fatigueAmount > 0)
-      state.needs.fatigue = Math.min(100, state.needs.fatigue + fatigueAmount);
+      state.needs.fatigue = Math.min(100, (state.needs.fatigue || 0) + fatigueAmount);
     else if (job.effects.fatigue)
       state.needs.fatigue = Math.min(
         100,
-        state.needs.fatigue + job.effects.fatigue,
+        (state.needs.fatigue || 0) + job.effects.fatigue,
       );
     if (job.effects.hygiene)
       state.needs.hygiene = Math.max(
         0,
-        Math.min(100, state.needs.hygiene + job.effects.hygiene),
+        Math.min(100, (state.needs.hygiene || 0) + job.effects.hygiene),
       );
     if (job.effects.happiness)
       state.needs.happiness = Math.max(
         0,
-        Math.min(100, state.needs.happiness + job.effects.happiness),
+        Math.min(100, (state.needs.happiness || 0) + job.effects.happiness),
       );
     if (job.effects.mental)
       state.player.mental = Math.max(
@@ -5791,4 +5796,45 @@ if (typeof window !== "undefined") {
   window.showWelcome = showWelcome;
   // [全系统自洽修复] 域H 修复:getAvailableActions 定义在本文件,原导出误写在 actions.js(加载序在前)致 ReferenceError → 移至定义所在文件真实导出
   window.getAvailableActions = getAvailableActions;
+
+  // [R1039 域G 联动增强 G→A]: 游戏状态摘要 — 核心状态数据供经济系统
+  window.getGameStateSummary = function (state) {
+    if (!state || !state.player) return null;
+    return {
+      day: state.player.day || 0,
+      age: state.player.age || 0,
+      phase: state.player.phase || "street",
+      cash: state.resources ? state.resources.cash || 0 : 0,
+      health: state.status ? state.status.health || 100 : 100,
+      totalEarned: state.resources ? state.resources.totalEarned || 0 : 0,
+    };
+  };
+
+  // [R1039 域G 联动增强 G→B]: 游戏叙事数据 — 生命阶段/关键事件数据供叙事系统
+  window.getGameNarrativeData = function (state) {
+    if (!state || !state.player || !state.flags) return null;
+    var _narratives = [];
+    if (state.player.age >= 60) _narratives.push("花甲之年");
+    else if (state.player.age >= 50) _narratives.push("知天命");
+    else if (state.player.age >= 40) _narratives.push("不惑之年");
+    else if (state.player.age >= 30) _narratives.push("而立之年");
+    if (state.flags._everHomeless) _narratives.push("曾露宿街头");
+    if (state.flags._debtFree) _narratives.push("还清债务");
+    return _narratives;
+  };
+
+  // [R1039 域G 联动增强 G→F]: 游戏UI数据 — 核心状态数据供UI渲染
+  window.getGameUIData = function (state) {
+    if (!state || !state.player) return null;
+    return {
+      phase: state.player.phase || "street",
+      day: state.player.day || 0,
+      age: state.player.age || 0,
+      ap: state.player.actionPoints || 0,
+      maxAp: state.player.maxActionPoints || 100,
+      timeSlot: state.player.timeSlot || "morning",
+      cash: state.resources ? state.resources.cash || 0 : 0,
+      health: state.status ? state.status.health || 100 : 100,
+    };
+  };
 }

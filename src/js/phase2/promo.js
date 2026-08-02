@@ -201,4 +201,27 @@ if (typeof window !== "undefined") {
   window.applyPromotion = applyPromotion;
   window.gradeMeetsMin = gradeMeetsMin;
   window.getPromotionProgress = getPromotionProgress;
+
+  // [R1048 域H 联动增强 H→A]: 晋升经济数据 — 晋升职级/薪资数据供经济系统
+  window.getPromotionEconomicData = function (state) {
+    if (!state || !state.corporate) return null;
+    return { rank: state.corporate.rank || "P5", level: state.corporate.level || 1 };
+  };
+
+  // [R1048 域H 联动增强 H→B]: 晋升叙事数据 — 晋升里程碑数据供叙事系统
+  window.getPromotionNarrativeData = function (state) {
+    if (!state || !state.flags) return null;
+    var _total = state.flags._totalPromotions || 0;
+    var _milestones = [];
+    if (_total >= 1) _milestones.push("首次晋升");
+    if (_total >= 3) _milestones.push("多次晋升");
+    if (_total >= 5) _milestones.push("晋升达人");
+    return { totalPromotions: _total, milestones: _milestones };
+  };
+
+  // [R1048 域H 联动增强 H→F]: 晋升UI数据 — 晋升数据供UI渲染
+  window.getPromotionUIData = function (state) {
+    if (!state || !state.corporate || !state.player || !state.player.corporate) return null;
+    return { rank: state.corporate.rank || "P5", kpi: state.player.corporate.kpi || 0, ability: state.player.corporate.ability || 0 };
+  };
 }

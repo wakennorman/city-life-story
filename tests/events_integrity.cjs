@@ -133,8 +133,12 @@ var VALID_PHASES = { street: true, corporate: true };
     if (e.trigger !== undefined && typeof e.trigger !== "function") {
       fail("事件 '" + e.id + "' 的 trigger 类型非法: " + typeof e.trigger);
     }
-    if (e.triggers !== undefined && !Array.isArray(e.triggers)) {
-      fail("事件 '" + e.id + "' 的 triggers 存在但非数组: " + typeof e.triggers);
+    if (
+      e.triggers !== undefined &&
+      !Array.isArray(e.triggers) &&
+      (typeof e.triggers !== "object" || e.triggers === null)
+    ) {
+      fail("事件 '" + e.id + "' 的 triggers 类型非法（须为数组=TriggerRegistry槽 或 对象=evaluateTriggers条件）: " + typeof e.triggers);
     }
   }
 })();

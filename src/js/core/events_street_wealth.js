@@ -27,7 +27,7 @@
           apply: function (st) {
             st.flags._wageThiefRevenge = true;
             st.flags._policeProtection = true;
-            st.player.mental = Math.min(100, st.player.mental + 3);
+            st.player.mental = Math.min(100, (st.player.mental || 50) + 3);
             StateManager.addMessage(
               "🚔 你去派出所把情况说明，警察记了案，并联系了劳动局。对方收到警告后消停了。心智+3，获得法律保护光环。",
               "success",
@@ -39,7 +39,7 @@
           hint: "借助媒体保护自己",
           apply: function (st) {
             st.flags._wageThiefRevenge = true;
-            st.player.fame = Math.min(100, st.player.fame + 15);
+            st.player.fame = Math.min(100, (st.player.fame || 0) + 15);
             st.needs.happiness = Math.min(100, st.needs.happiness + 10);
             StateManager.addMessage(
               "📱 你联系了做劳工报道的记者，把跟踪的事说了。记者写了篇稿子，包工头彻底缩了。名气+15，维权故事传出去了。",
@@ -53,7 +53,7 @@
           apply: function (st) {
             st.flags._wageThiefRevenge = true;
             st.needs.happiness = Math.max(0, st.needs.happiness - 12);
-            st.player.mental = Math.max(0, st.player.mental - 2);
+            st.player.mental = Math.max(0, (st.player.mental || 50) - 2);
             StateManager.addMessage(
               "😶 你假装没注意，但心里一直悬着。这种感觉持续了好几天，越来越难受。心情-12，心智-2。",
               "warning",
@@ -88,7 +88,7 @@
             st.flags._hasBusinessLicense = true;
             var cost = 50;
             st.resources.cash = Math.max(0, (st.resources.cash || 0) - cost);
-            st.player.fame = Math.min(100, st.player.fame + 10);
+            st.player.fame = Math.min(100, (st.player.fame || 0) + 10);
             StateManager.addMessage(
               "📋 花了¥" +
                 cost +
@@ -133,7 +133,7 @@
             var bonus = Random.int(400, 699);
             st.resources.cash = (st.resources.cash || 0) + bonus; // [全系统自洽修复] 域B A类:cash NaN守卫
             st.resources.totalEarned += bonus;
-            st.player.intelligence = Math.min(100, st.player.intelligence + 2);
+            st.player.intelligence = Math.min(100, (st.player.intelligence || 0) + 2);
             StateManager.addMessage(
               "✅ 面试顺利，当天就入职了！对方预付了¥" +
                 bonus +
@@ -177,8 +177,8 @@
           apply: function (st) {
             st.flags._laborNetworkGrown = true;
             st.flags._laborOrganizer = true;
-            st.player.fame = Math.min(100, st.player.fame + 20);
-            st.player.mental = Math.min(100, st.player.mental + 3);
+            st.player.fame = Math.min(100, (st.player.fame || 0) + 20);
+            st.player.mental = Math.min(100, (st.player.mental || 50) + 3);
             st.needs.happiness = Math.min(100, st.needs.happiness + 15);
             StateManager.addMessage(
               "📣 你接受了这个身份。大家开始每天轮流通报各处的工资行情和坑人老板。名气+20，心智+3，心情+15。",
@@ -191,7 +191,7 @@
           hint: "谦让，但名气仍受益",
           apply: function (st) {
             st.flags._laborNetworkGrown = true;
-            st.player.fame = Math.min(100, st.player.fame + 8);
+            st.player.fame = Math.min(100, (st.player.fame || 0) + 8);
             StateManager.addMessage(
               "😅 你摆摆手，但大家还是把你当主心骨。名气+8。",
               "info",
@@ -214,7 +214,7 @@
       },
       conditions: function (st) {
         if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后不再触发街头叙事事件
-        return (st.player.mental || 0) < 20 && (st.housing.tier || 0) >= 1;
+        return (st.player && st.player.mental || 0) < 20 && (st.housing && st.housing.tier || 0) >= 1;
       },
       choices: [
         {
@@ -252,7 +252,7 @@
             st.flags._hadMentalCrisis = true;
             st.flags._toughMindset = true;
             st.player.mental = Math.min(100, (st.player.mental || 0) + 3);
-            st.player.physique = Math.min(100, st.player.physique + 2);
+            st.player.physique = Math.min(100, (st.player.physique || 0) + 2);
             StateManager.addMessage(
               "😤 你握紧拳头，告诉自己：「今天不是最难的一天。」第二天你照常出门了。心智+3，体质+2（意志力磨练）。",
               "warning",
@@ -325,7 +325,7 @@
             st.flags._mentalRecoveryDone = true;
             st.needs.happiness = Math.min(100, st.needs.happiness + 20);
             st.player.mental = Math.min(100, (st.player.mental || 0) + 10);
-            st.player.fame = Math.min(100, st.player.fame + 3);
+            st.player.fame = Math.min(100, (st.player.fame || 0) + 3);
             StateManager.addMessage(
               "🌤️ 你深吸一口气，告诉自己：「我他妈真的在这座城市活下来了。」心情+20，心智+10，名气+3（自信光环）。",
               "success",
@@ -409,7 +409,7 @@
           apply: function (st) {
             st.flags._factoryFireSeen = true;
             st.flags._factoryFireHero = true;
-            st.player.fame = Math.min(100, st.player.fame + 10);
+            st.player.fame = Math.min(100, (st.player.fame || 0) + 10);
             st.player.physique = Math.min(100, st.player.physique + 2);
             st.status.health = Math.max(0, st.status.health - 15);
             StateManager.addMessage(
@@ -423,7 +423,7 @@
           hint: "理智应对，稳妥至上",
           apply: function (st) {
             st.flags._factoryFireSeen = true;
-            st.player.fame = Math.min(100, st.player.fame + 3);
+            st.player.fame = Math.min(100, (st.player.fame || 0) + 3);
             StateManager.addMessage(
               "📞 你拨了119，然后大喊让人群散开。消防车5分钟后来了。理性，安全。你没有冲进去，但事后没有人说你做错了。名气+3。",
               "info",
@@ -522,7 +522,7 @@
           apply: function (st) {
             st.flags._helpedElderlyLost = true;
             st.needs.happiness = Math.min(100, st.needs.happiness + 15);
-            st.player.fame = Math.min(100, st.player.fame + 5);
+            st.player.fame = Math.min(100, (st.player.fame || 0) + 5);
             StateManager.addMessage(
               "🚶 你陪他走了二十多分钟，到了目的地——是他儿子家。儿子开门一看，「爸，你怎么一个人出来了！」转头谢谢你，非要留你吃饭，你推开了。但那一路他讲的故事，你记了很久。心情+15，名气+5。",
               "success",
@@ -895,7 +895,7 @@
             st.flags._propertyRightsGroup = true;
             st.flags._propertyCollapseDay = st.player.day;
             st.resources.cash = Math.max(0, (st.resources.cash || 0) - 500); // [全系统自洽修复] 域B A类:cash NaN守卫
-            st.player.fame = Math.min(100, st.player.fame + 5);
+            st.player.fame = Math.min(100, (st.player.fame || 0) + 5);
             st.player.mental = Math.max(0, st.player.mental - 3);
             StateManager.addMessage(
               "✊ 加入了业主维权团，交了¥500组织费，开始每周去工地讨说法。名气+5，路很长…",
@@ -941,8 +941,8 @@
             st.flags._propertyRightsResolved = true;
             st.resources.cash = (st.resources.cash || 0) + 800; // [全系统自洽修复] 域B A类:cash NaN守卫
             st.resources.totalEarned += 800;
-            st.player.fame = Math.min(100, st.player.fame + 8);
-            st.player.mental = Math.min(100, st.player.mental + 8);
+            st.player.fame = Math.min(100, (st.player.fame || 0) + 8);
+            st.player.mental = Math.min(100, (st.player.mental || 50) + 8);
             st.needs.happiness = Math.min(100, st.needs.happiness + 15);
             StateManager.addMessage(
               "✊ 维权成功！获得赔偿¥800，房子续建中，预计延期2年交付。名气+8，心里终于松了口气。",
@@ -968,7 +968,7 @@
             var proceeds = Math.round(total * 0.72) + 800;
             st.resources.cash = (st.resources.cash || 0) + proceeds; // [全系统自洽修复] 域B A类:cash NaN守卫
             st.resources.totalEarned += proceeds;
-            st.player.fame = Math.min(100, st.player.fame + 5);
+            st.player.fame = Math.min(100, (st.player.fame || 0) + 5);
             StateManager.addMessage(
               "💰 拿了¥800赔偿，再以72折转让房产，共到手¥" +
                 proceeds.toLocaleString() +
@@ -1179,7 +1179,7 @@
                 );
               }
             }
-            st.player.mental = Math.min(100, st.player.mental + 5);
+            st.player.mental = Math.min(100, (st.player.mental || 50) + 5);
             StateManager.addMessage(
               "🏛️ 政府托底了。房产账面贬值25%，但终究没烂尾。等2年吧，也许还能涨回来。",
               "info",
@@ -1241,7 +1241,7 @@
             st.flags._teaStoreCash = 80000;
             st.resources.cash = Math.max(0, (st.resources.cash || 0) - scaleAmount(80000, st.resources && st.resources.totalEarned)); // [全系统自洽修复] 域B A类:cash NaN守卫
             st.player.fame = Math.min(100, (st.player.fame || 0) + 4);
-            st.player.mental = Math.min(100, st.player.mental + 3);
+            st.player.mental = Math.min(100, (st.player.mental || 50) + 3);
             StateManager.addMessage(
               "🏪 签约接手老李茶饮，¥80,000打了水漂——啊不，是投了下去。门口挂上你的名字，从今天起就是小老板了。名气+4，心智+3。",
               "event",
@@ -1364,7 +1364,7 @@
             var proceeds = Math.round(80000 * 0.45);
             st.resources.cash = (st.resources.cash || 0) + proceeds; // [全系统自洽修复] 域B A类:cash NaN守卫
             st.resources.totalEarned += proceeds;
-            st.player.mental = Math.min(100, st.player.mental + 4);
+            st.player.mental = Math.min(100, (st.player.mental || 50) + 4);
             st.player.intelligence = Math.min(
               100,
               (st.player.intelligence || 10) + 3,
@@ -1386,7 +1386,7 @@
           apply: function (st) {
             st.flags._acquisitionSwallowSeen = true;
             st.flags._teaStoreUnderdog = true;
-            st.player.mental = Math.min(100, st.player.mental + 8);
+            st.player.mental = Math.min(100, (st.player.mental || 50) + 8);
             st.player.fame = Math.min(100, (st.player.fame || 0) + 6);
             st.needs.happiness = Math.max(0, st.needs.happiness - 5);
             StateManager.addMessage(
@@ -1458,7 +1458,7 @@
           apply: function (st) {
             st.flags._disruptionSeen = true;
             st.flags._disruptionHolding = st.player.day;
-            st.player.mental = Math.min(100, st.player.mental + 3);
+            st.player.mental = Math.min(100, (st.player.mental || 50) + 3);
             StateManager.addMessage(
               "💪 嗤之以鼻——你这行的老门道不是几个 90 后看几集网课就能颠覆的。心智+3，但接下来一段时间收入可能会受冲击。",
               "info",
@@ -1510,7 +1510,7 @@
               (st.player.intelligence || 10) + 5,
             );
             st.player.agility = Math.min(100, (st.player.agility || 10) + 3);
-            st.player.mental = Math.min(100, st.player.mental + 5);
+            st.player.mental = Math.min(100, (st.player.mental || 50) + 5);
             if (st.skills && st.skills.coding) {
               st.skills.coding.exp = (st.skills.coding.exp || 0) + 30;
             }
@@ -1589,7 +1589,7 @@
               st.resources.cash = (st.resources.cash || 0) + 1800; // [全系统自洽修复] 域B A类:cash NaN守卫
               st.resources.totalEarned += 1800;
               st.player.physique = Math.max(0, (st.player.physique || 10) - 2);
-              st.player.mental = Math.min(100, st.player.mental + 3);
+              st.player.mental = Math.min(100, (st.player.mental || 50) + 3);
               msg =
                 "📊 两线作战的回报：累计副业收入¥1,800入账，体质-2（这阵子真累），心智+3（你扛过来了）。结论是不够极致，但没掉队。";
             } else if (st.flags._disruptionHolding) {
@@ -2190,7 +2190,7 @@
           hint: "长期持有，等待反弹",
           apply: function (st) {
             st.flags._fateMoverSeen = true;
-            st.player.mental = Math.min(100, st.player.mental + 3);
+            st.player.mental = Math.min(100, (st.player.mental || 50) + 3);
             StateManager.addMessage(
               "🧘 你关掉了交易软件。好公司总会回来——你告诉自己。心智+3。",
               "info",

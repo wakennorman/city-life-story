@@ -156,7 +156,7 @@
   var milestone_fatigue_warning = {
     id: 'milestone_fatigue_warning',
     title: '身体的提醒',
-    phase: 'any',
+    phase: 'street',
     repeatable: false,
     priority: 70,
     conditions: function (st) {

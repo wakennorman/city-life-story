@@ -2251,4 +2251,25 @@ if (typeof window !== 'undefined') {
   if (typeof rollDailyNews !== "undefined") {
     window.rollDailyNews = rollDailyNews;
   }
+
+  // [R1042 域B 联动增强 B→A]: 新闻经济影响 — 活跃新闻数据供经济系统
+  window.getNewsEconomicData = function (state) {
+    if (!state || !state.activeNews) return { count: 0 };
+    return { count: state.activeNews.length || 0 };
+  };
+
+  // [R1042 域B 联动增强 B→D]: 新闻社交话题 — 新闻话题供社交系统
+  window.getNewsSocialTopic = function (state) {
+    if (!state || !state.activeNews || !state.activeNews.length) return null;
+    var _n = state.activeNews[0];
+    return { headline: _n.headline || _n.title || "", level: _n.level || "L4" };
+  };
+
+  // [R1042 域B 联动增强 B→F]: 新闻UI数据 — 活跃新闻供UI渲染
+  window.getNewsUIData = function (state) {
+    if (!state || !state.activeNews) return [];
+    return state.activeNews.slice(0, 3).map(function (n) {
+      return { headline: n.headline || n.title || "", level: n.level || "L4" };
+    });
+  };
 }

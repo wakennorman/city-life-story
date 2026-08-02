@@ -656,4 +656,31 @@ if (typeof window !== "undefined") {
   window.adjustPriceAfterTrade = adjustPriceAfterTrade;
   window.buyWholesale = buyWholesale;
   window.quickSell = quickSell;
+
+  // [R1041 域A 联动增强 A→B]: 交易叙事数据 — 交易利润/里程碑数据供叙事系统
+  window.getTradeNarrativeData = function (state) {
+    if (!state || !state.trade) return null;
+    var _totalProfit = state.trade.totalProfit || 0;
+    var _milestones = [];
+    if (_totalProfit >= 50000) _milestones.push("交易利润突破¥50,000");
+    else if (_totalProfit >= 5000) _milestones.push("交易利润突破¥5,000");
+    else if (_totalProfit >= 500) _milestones.push("首次交易获利");
+    return { totalProfit: _totalProfit, milestones: _milestones };
+  };
+
+  // [R1041 域A 联动增强 A→C]: 交易技能经验 — 交易活动提供销售技能经验
+  window.getTradeSkillXP = function (state) {
+    if (!state || !state.trade) return 0;
+    return Math.min(20, Math.floor((state.trade.totalProfit || 0) / 1000));
+  };
+
+  // [R1041 域A 联动增强 A→F]: 交易UI数据 — 交易数据供UI渲染
+  window.getTradeUIData = function (state) {
+    if (!state || !state.trade) return null;
+    return {
+      totalProfit: state.trade.totalProfit || 0,
+      totalTrades: (state.trade.totalBuys || 0) + (state.trade.totalSells || 0),
+      currentLocation: state.trade.currentLocation || "unknown",
+    };
+  };
 }

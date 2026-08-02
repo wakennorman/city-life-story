@@ -2633,7 +2633,8 @@ function careerSocialAction(action, colleagueId) {
 /** 业绩主动行动（做项目/加班/冲刺KPI） */
 function careerWorkAction(type) {
   var state = StateManager.getState();
-  if (!state.career || !state.career.currentJob) return;
+  // [全系统自洽修复] 域C R1025 A类: state.player 守卫(防旧存档/异常状态崩溃)
+  if (!state || !state.career || !state.career.currentJob || !state.player) return;
   var job = state.career.currentJob;
   var p = state.player;
   var cap = ensureCareerCapital(state);
@@ -2698,7 +2699,8 @@ function careerWorkAction(type) {
 /** 调休减压（每月1次，需在职≥20天） */
 function careerTakeBreak() {
   var state = StateManager.getState();
-  if (!state.career || !state.career.currentJob) return;
+  // [全系统自洽修复] 域C R1025 A类: state.player 守卫
+  if (!state || !state.career || !state.career.currentJob || !state.player) return;
   var job = state.career.currentJob;
   var p = state.player;
   var cap = ensureCareerCapital(state);
@@ -2786,6 +2788,8 @@ function careerTakePaidLeave() {
  * 设计参考：BitLife 主动换工作 / 现实中国职场跳槽年均涨薪20-30%
  */
 function generateJobOffers(state) {
+  // [全系统自洽修复] 域C A类: state.player 守卫(防旧存档崩溃)
+  if (!state || !state.player) return [];
   if (!state.career || !state.career.currentJob) return [];
   var job = state.career.currentJob;
   var path = CAREER_PATHS[job.path];
@@ -2848,9 +2852,10 @@ function generateJobOffers(state) {
       var p2 = CAREER_PATHS[pick2];
       var idx2 = Math.min(p2.levels.length - 1, Math.max(0, curIdx + 1));
       if (p2.levels[idx2] && !(pick2 === pick1 && idx2 === idx1)) {
+        // [全系统自洽修复] 域C A类: p2.levels[idx2].salary 可能undefined→NaN传播
         var cross2Salary = Math.max(
           Math.round((job.salary || 5000) * 0.95),
-          Math.round(p2.levels[idx2].salary * 1.2),
+          Math.round((p2.levels[idx2].salary || 0) * 1.2),
         );
         offers.push({
           id: "hop_cross2",
@@ -3438,6 +3443,10 @@ function applyCareerJob(pathId, levelId) {
 function applyCareerPromotion(pathId, levelId) {
   var state = StateManager.getState();
   var path = CAREER_PATHS[pathId];
+  if (!path) {
+    StateManager.addMessage("⚠️ 该职业路径不存在", "warning");
+    return;
+  }
   var level = path.levels.find(function (l) {
     return l.id === levelId;
   });
@@ -5457,6 +5466,45 @@ function showCareerPathPreviewModal(pathKey) {
   });
 }
 
+// [R1019 域C 联动增强 C→G]: 职业倦怠健康损耗 — 长期高压工作累积健康损伤
+function getCareerHealthBurnout(state) {
+  if (!state || !state.careerCapital) return 0;
+  var _burnout = state.careerCapital.burnout || 0;
+  if (_burnout < 60) return 0;
+  return Math.floor((_burnout - 60) / 20); // 60→0, 80→1, 100→2
+}
+
+// [R1019 域C 联动增强 C→E]: 技能投资回报 — 高技能等级提高投资额度上限
+function getSkillInvestmentLimit(state) {
+  if (!state || !state.skills) return 0;
+  var _accounting = state.skills.accounting ? state.skills.accounting.level || 0 : 0;
+  var _management = state.skills.management ? state.skills.management.level || 0 : 0;
+  var _coding = state.skills.coding ? state.skills.coding.level || 0 : 0;
+  var _bestSkill = Math.max(_accounting, _management, _coding);
+  // 每10级技能增加¥5000投资额度，上限¥500000
+  return Math.min(500000, Math.floor(_bestSkill / 10) * 5000);
+}
+
+// [R1019 域C 联动增强 C→D]: 技能社交圈层 — 技能等级影响社交圈层质量
+function getSkillSocialLevel(state) {
+  if (!state || !state.skills) return 0;
+  var _totalSkillLevel = 0;
+  var _count = 0;
+  for (var _sk in state.skills) {
+    if (state.skills[_sk] && state.skills[_sk].level) {
+      _totalSkillLevel += state.skills[_sk].level;
+      _count++;
+    }
+  }
+  if (_count === 0) return 0;
+  var _avg = Math.round(_totalSkillLevel / _count);
+  // 平均技能等级 → 社交圈层等级
+  if (_avg >= 60) return 3;  // 精英圈层
+  if (_avg >= 40) return 2;  // 专业圈层
+  if (_avg >= 20) return 1;  // 入门圈层
+  return 0;                    // 基础圈层
+}
+
 // ====== 百科注册 ======
 if (typeof window !== "undefined") {
   window.ensureCareerCapital = ensureCareerCapital;
@@ -5497,6 +5545,53 @@ if (typeof window !== "undefined") {
   window.clampCareerCapital = clampCareerCapital;
   window.showCareerNavModal = showCareerNavModal;
   window.showLocationNavModal = showLocationNavModal;
+
+  // [R1019 域C 联动增强 C→A]: 职业路径技能市场价值 — 不同职业影响技能市场供需
+  window.getCareerSkillMarketValue = function (state) {
+    if (!state || !state.career || !state.career.currentJob) return null;
+    var _job = state.career.currentJob;
+    var _path = _job.path || "unknown";
+    var _techSkills = { tech: 1.2, finance: 1.1, sales: 1.0, operations: 1.0, design: 1.05, legal: 1.1 };
+    var _mod = _techSkills[_path] || 1.0;
+    return { path: _path, skillMarketModifier: _mod, description: _path + "路径的技能市场需求系数为×" + _mod.toFixed(2) };
+  };
+
+  // [R1019 域C 联动增强 C→B]: 职业里程碑叙事 — 晋升/转岗/满周年触发职业叙事
+  window.getCareerMilestoneNarrative = function (state) {
+    if (!state || !state.flags || !state.career || !state.player) return null;
+    var _day = state.player.day || 0;
+    var _milestones = [];
+    if (state.flags._totalPromotions && state.flags._totalPromotions >= 1) _milestones.push("晋升了" + state.flags._totalPromotions + "次");
+    if (state.flags._careerPathLevel && state.flags._careerPathLevel >= 3) _milestones.push("达到了高级职位");
+    if (state.career.currentJob && (state.career.currentJob.workDays || 0) >= 365) _milestones.push("同一份工作干满一年");
+    return _milestones.length > 0 ? { milestones: _milestones, count: _milestones.length } : null;
+  };
+
+  // [R1019 域C 联动增强 C→F]: 职业进展可视化数据 — 职业路径进度数据供UI渲染
+  window.getCareerProgressVisualData = function (state) {
+    if (!state || !state.career || !state.career.currentJob) return null;
+    var _job = state.career.currentJob;
+    var _path = _job.path || "unknown";
+    var _pathDef = CAREER_PATHS[_path];
+    if (!_pathDef || !Array.isArray(_pathDef.levels)) return null;
+    var _currentLevelIdx = -1;
+    for (var _li = 0; _li < _pathDef.levels.length; _li++) {
+      if (_pathDef.levels[_li].id === _job.levelId) { _currentLevelIdx = _li; break; }
+    }
+    var _totalLevels = _pathDef.levels.length;
+    var _currentLevel = _currentLevelIdx >= 0 ? _currentLevelIdx + 1 : 0;
+    var _progress = _totalLevels > 0 ? Math.round((_currentLevel / _totalLevels) * 100) : 0;
+    return {
+      pathName: _pathDef.name,
+      pathIcon: _pathDef.icon,
+      currentLevel: _currentLevel,
+      totalLevels: _totalLevels,
+      progress: _progress,
+      currentTitle: _job.levelName || _pathDef.levels[_currentLevelIdx] ? _pathDef.levels[_currentLevelIdx].name : "未知",
+      remainingLevels: _totalLevels - _currentLevel,
+    };
+  };
+
   /** 子Tab快速切换（供inline onclick使用） */
   window.switchCareerSubTab = function (subTab) {
     try {
@@ -6662,5 +6757,91 @@ function getCareerPathVisualData(state) {
 
   if (typeof window !== "undefined") {
     window.getCareerPathProgressPercent = getCareerPathProgressPercent;
+  window.getCareerHealthBurnout = getCareerHealthBurnout; // [R1019 域C 联动增强 C→G]
+  window.getSkillInvestmentLimit = getSkillInvestmentLimit; // [R1019 域C 联动增强 C→E]
+  window.getSkillSocialLevel = getSkillSocialLevel; // [R1019 域C 联动增强 C→D]
+
+  // [R1027 域C 联动增强 C→A]: 职业市场洞察 — 当前职业路径的市场薪酬数据
+  window.getCareerMarketInsightData = function (state) {
+    if (!state || !state.career || !state.career.currentJob) return null;
+    var _job = state.career.currentJob;
+    var _path = CAREER_PATHS[_job.path];
+    if (!_path) return null;
+    var _currentLevel = _path.levels.find(function (l) { return l.id === _job.levelId; });
+    var _nextLevel = null;
+    if (_currentLevel) {
+      var _idx = _path.levels.indexOf(_currentLevel);
+      if (_idx >= 0 && _idx < _path.levels.length - 1) _nextLevel = _path.levels[_idx + 1];
+    }
+    return {
+      path: _path.name,
+      current: _currentLevel ? { name: _currentLevel.name, salary: _currentLevel.salary } : null,
+      next: _nextLevel ? { name: _nextLevel.name, salary: _nextLevel.salary, salaryDiff: _nextLevel.salary - (_currentLevel ? _currentLevel.salary : 0) } : null,
+      workDays: _job.workDays || 0,
+    };
+  };
+
+  // [R1027 域C 联动增强 C→E]: 职业收入投资建议 — 基于月薪返回建议投资比例
+  window.getCareerInvestAdvice = function (state) {
+    if (!state || !state.career || !state.career.currentJob) return null;
+    var _salary = state.career.currentJob.salary || 0;
+    var _ratio = 0;
+    if (_salary >= 50000) _ratio = 0.4;
+    else if (_salary >= 20000) _ratio = 0.3;
+    else if (_salary >= 10000) _ratio = 0.2;
+    else if (_salary >= 5000) _ratio = 0.1;
+    return { monthlySalary: _salary, suggestedInvestRatio: _ratio, suggestedAmount: Math.round(_salary * _ratio) };
+  };
+
+  // [R1027 域C 联动增强 C→F]: 职业路径进度数据 — 供UI渲染职业发展进度条
+  window.getCareerProgressUIData = function (state) {
+    if (!state || !state.career || !state.career.currentJob) return null;
+    var _job = state.career.currentJob;
+    var _path = CAREER_PATHS[_job.path];
+    if (!_path) return null;
+    var _currentIdx = -1;
+    for (var _i = 0; _i < _path.levels.length; _i++) {
+      if (_path.levels[_i].id === _job.levelId) { _currentIdx = _i; break; }
+    }
+    return {
+      pathName: _path.name,
+      pathIcon: _path.icon,
+      currentLevel: _currentIdx + 1,
+      totalLevels: _path.levels.length,
+      progress: _currentIdx >= 0 ? Math.round(((_currentIdx + 1) / _path.levels.length) * 100) : 0,
+      currentSalary: _job.salary || 0,
+      workDays: _job.workDays || 0,
+    };
+  };
+
+  // [R1035 域C 联动增强 C→A]: 技能市场报酬 — 技能等级对应市场报酬系数
+  window.getSkillMarketPay = function (state) {
+    if (!state || !state.skills) return 1.0;
+    var _topSkill = 0;
+    for (var _sk in state.skills) {
+      if (state.skills[_sk] && state.skills[_sk].level) _topSkill = Math.max(_topSkill, state.skills[_sk].level);
+    }
+    return 1 + _topSkill * 0.005;
+  };
+
+  // [R1035 域C 联动增强 C→E]: 职业投资额度 — 职级/薪资对应建议投资额度
+  window.getCareerInvestLimit = function (state) {
+    if (!state || !state.career || !state.career.currentJob) return 0;
+    var _salary = state.career.currentJob.salary || 0;
+    return Math.round(_salary * 3);
+  };
+
+  // [R1035 域C 联动增强 C→F]: 职业进度可视化 — 供UI渲染职业发展进度条
+  window.getCareerProgressBar = function (state) {
+    if (!state || !state.career || !state.career.currentJob) return null;
+    var _job = state.career.currentJob;
+    var _path = CAREER_PATHS[_job.path];
+    if (!_path) return null;
+    var _curIdx = -1;
+    for (var _i = 0; _i < _path.levels.length; _i++) {
+      if (_path.levels[_i].id === _job.levelId) { _curIdx = _i; break; }
+    }
+    return { current: _curIdx + 1, total: _path.levels.length, pct: _curIdx >= 0 ? Math.round((_curIdx + 1) / _path.levels.length * 100) : 0 };
+  };
   }
 })();

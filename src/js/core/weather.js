@@ -631,6 +631,8 @@ function getNetWeatherHealthImpact(state) {
 /** 每日结算天气对属性影响（在 daily_pipeline 中调用） */
 function applyWeatherDailyEffects(state) {
   if (!state.weather) return;
+  // [R1015 域G A类修复]: state.needs 守卫（旧存档/异常状态→TypeError崩溃管线）
+  if (!state.needs) state.needs = { hunger: 50, fatigue: 30, hygiene: 60, happiness: 50 };
   var wDef =
     WEATHER_TYPES.find(function (w) {
       return w.id === state.weather.current;

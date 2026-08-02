@@ -5396,6 +5396,8 @@
         return true;
       };
     }
+    // [全系统自洽修复] 标记已注册，防止下方"遗漏条目"循环(5663行)把本批对象重复推入
+    CROSS_EVENTS[i]._registered = true;
     RANDOM_EVENTS.push(CROSS_EVENTS[i]);
   }
 

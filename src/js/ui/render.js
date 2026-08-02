@@ -4680,7 +4680,8 @@ function renderCorpTab(state, parent) {
     parent.innerHTML = '<p style="color:var(--text-muted);text-align:center;padding:40px;">🔒 公司数据加载中...</p>';
     return;
   }
-  if (state.player.phase !== "corporate") {
+  // [全系统自洽修复] 域F R1036 A类: state.player 守卫(防旧存档/异常状态崩溃)
+  if (!state.player || state.player.phase !== "corporate") {
     parent.innerHTML =
       '<p style="color:var(--text-muted);text-align:center;padding:40px;">🔒 进入职场后解锁</p>';
     return;
@@ -7196,4 +7197,159 @@ if (typeof window !== "undefined") {
     return prices.map(function (p, i) { return { day: i + 1, price: p }; });
   };
   window.renderInvestmentWidget = renderInvestmentWidget;
+
+  // [R1022 域F 联动增强 F→A]: 价格波动提醒 — 在UI中展示价格波动提醒
+  window.getPriceAlertData = function (state) {
+    if (!state || !state.trade || !state.trade.goodsPrices) return [];
+    var _alerts = [];
+    var _loc = state.trade.currentLocation;
+    if (!_loc || !state.trade.goodsPrices[_loc]) return [];
+    var _goods = state.trade.goodsPrices[_loc];
+    for (var _gid in _goods) {
+      if (_goods.hasOwnProperty(_gid)) {
+        var _price = _goods[_gid];
+        if (typeof _price !== "number" || !isFinite(_price)) continue;
+        var _base = (typeof GOODS !== "undefined" && GOODS[_gid]) ? GOODS[_gid].basePrice : 0;
+        if (_base > 0) {
+          var _ratio = _price / _base;
+          if (_ratio > 1.5) _alerts.push({ goodId: _gid, level: "high", ratio: _ratio });
+          else if (_ratio < 0.6) _alerts.push({ goodId: _gid, level: "low", ratio: _ratio });
+        }
+      }
+    }
+    _alerts.sort(function (a, b) { return Math.abs(b.ratio - 1) - Math.abs(a.ratio - 1); });
+    return _alerts.slice(0, 5);
+  };
+
+  // [R1022 域F 联动增强 F→B]: 年度回忆 — 在UI中展示年度回忆数据
+  window.getYearlyMemories = function (state) {
+    if (!state || !state.flags) return [];
+    var _memories = [];
+    if (state.flags._eventMemories && Array.isArray(state.flags._eventMemories)) {
+      _memories = state.flags._eventMemories.slice(-10);
+    }
+    return _memories;
+  };
+
+  // [R1022 域F 联动增强 F→E]: 财富仪表盘 — 在UI中展示财富仪表盘数据
+  window.getWealthDashboardData = function (state) {
+    if (!state || !state.resources) return null;
+    var _cash = state.resources.cash || 0;
+    var _bank = state.resources.bankBalance || 0;
+    var _debt = (state.resources.villageDebt || 0) + (state.resources.fineDebt || 0) + (state.resources.bankDebt || 0);
+    var _totalEarned = state.resources.totalEarned || 0;
+    var _investValue = 0;
+    if (state.investment && state.investment.stockHoldings) {
+      for (var _hi = 0; _hi < state.investment.stockHoldings.length; _hi++) {
+        var _h = state.investment.stockHoldings[_hi];
+        var _m = (state.investment.stockMarket || {})[_h.symbol];
+        if (_m && _m.price && _h.shares) _investValue += _m.price * _h.shares;
+      }
+    }
+    return {
+      cash: _cash,
+      bank: _bank,
+      debt: _debt,
+      totalEarned: _totalEarned,
+      investValue: _investValue,
+      netWorth: _cash + _bank + _investValue - _debt,
+      day: state.player ? state.player.day : 0,
+    };
+  };
+
+  // [R1030 域F 联动增强 F→A]: 市场行情UI数据 — 供UI渲染市场行情摘要
+  window.getMarketSummaryUI = function (state) {
+    if (!state || !state.trade || !state.trade.goodsPrices) return null;
+    var _loc = state.trade.currentLocation;
+    if (!_loc || !state.trade.goodsPrices[_loc]) return null;
+    var _prices = state.trade.goodsPrices[_loc];
+    var _cheapest = null, _mostExpensive = null;
+    for (var _gid in _prices) {
+      if (_prices.hasOwnProperty(_gid)) {
+        var _price = _prices[_gid];
+        if (typeof _price !== "number" || !isFinite(_price)) continue;
+        var _good = typeof getGoodById === "function" ? getGoodById(_gid) : null;
+        if (!_good || !_good.basePrice) continue;
+        if (!_cheapest || _price / _good.basePrice < _cheapest.ratio) _cheapest = { good: _good.name, price: _price, ratio: _price / _good.basePrice };
+        if (!_mostExpensive || _price / _good.basePrice > _mostExpensive.ratio) _mostExpensive = { good: _good.name, price: _price, ratio: _price / _good.basePrice };
+      }
+    }
+    return { cheapest: _cheapest, mostExpensive: _mostExpensive, location: _loc };
+  };
+
+  // [R1030 域F 联动增强 F→B]: 人生记忆卡 — 供UI渲染人生记忆卡片
+  window.getLifeMemoryCards = function (state) {
+    if (!state || !state.flags) return [];
+    var _cards = [];
+    if (state.flags._everStarved) _cards.push({ icon: "🍞", title: "饥饿记忆", desc: "曾经饿到极限，懂得了食物的珍贵。" });
+    if (state.flags._everHomeless) _cards.push({ icon: "🏚️", title: "露宿记忆", desc: "曾经流落街头，那段日子让你更坚强。" });
+    if (state.flags._everElated) _cards.push({ icon: "🌟", title: "巅峰时刻", desc: "体验过人生的高光时刻。" });
+    if (state.flags._everDepressed) _cards.push({ icon: "😢", title: "低谷记忆", desc: "经历过情绪的低谷，但从未放弃。" });
+    if (state.flags._debtFree) _cards.push({ icon: "✅", title: "无债一身轻", desc: "还清了所有债务，真正的自由。" });
+    if (state.flags._streakMaster) _cards.push({ icon: "👑", title: "劳动模范", desc: "连续工作100天，毅力非凡。" });
+    return _cards;
+  };
+
+  // [R1030 域F 联动增强 F→E]: 资产分布数据 — 供UI渲染资产分布图表
+  window.getAssetDistribution = function (state) {
+    if (!state || !state.resources) return null;
+    var _cash = state.resources.cash || 0;
+    var _bank = state.resources.bankBalance || 0;
+    var _invest = 0;
+    if (state.investment && state.investment.stockHoldings) {
+      for (var _hi = 0; _hi < state.investment.stockHoldings.length; _hi++) {
+        var _h = state.investment.stockHoldings[_hi];
+        var _m = (state.investment.stockMarket || {})[_h.symbol];
+        if (_m && _m.price && _h.shares) _invest += _m.price * _h.shares;
+      }
+    }
+    var _total = _cash + _bank + _invest;
+    return {
+      cash: { value: _cash, ratio: _total > 0 ? _cash / _total : 0 },
+      bank: { value: _bank, ratio: _total > 0 ? _bank / _total : 0 },
+      invest: { value: _invest, ratio: _total > 0 ? _invest / _total : 0 },
+      total: _total,
+    };
+  };
+
+  // [R1036 域F 联动增强 F→A]: 价格周期UI — 返回当前市场价格周期阶段
+  window.getPriceCyclePhase = function (state) {
+    if (!state || !state.flags) return { phase: "stable", text: "📊 价格平稳", color: "var(--text-muted)" };
+    var _inf = state.flags._cumulativeInflation || 0;
+    var _events = (state.trade && state.trade.marketEvents) || [];
+    if (_inf > 0.25 && _events.length >= 2) return { phase: "boom", text: "📈 价格过热", color: "var(--danger)" };
+    if (_inf > 0.1) return { phase: "rising", text: "📊 价格上行", color: "var(--warning)" };
+    if (_inf < -0.15) return { phase: "recession", text: "📉 价格低迷", color: "#9c27b0" };
+    if (_inf < -0.05) return { phase: "cooling", text: "🌡️ 价格降温", color: "var(--info)" };
+    return { phase: "stable", text: "📊 价格平稳", color: "var(--text-muted)" };
+  };
+
+  // [R1036 域F 联动增强 F→E]: 财富里程碑UI — 返回玩家财富里程碑数据
+  window.getWealthMilestoneUI = function (state) {
+    if (!state || !state.resources) return null;
+    var _totalEarned = state.resources.totalEarned || 0;
+    var _milestones = [
+      { target: 1000, label: "第一桶金", icon: "🪙" },
+      { target: 10000, label: "万元户", icon: "💰" },
+      { target: 50000, label: "小有积蓄", icon: "💎" },
+      { target: 100000, label: "六位数", icon: "🏆" },
+      { target: 500000, label: "半百达人", icon: "🌟" },
+      { target: 1000000, label: "百万富翁", icon: "👑" },
+    ];
+    var _current = null, _next = null;
+    for (var _mi = 0; _mi < _milestones.length; _mi++) {
+      if (_totalEarned >= _milestones[_mi].target) {
+        _current = _milestones[_mi];
+      } else {
+        _next = _milestones[_mi];
+        break;
+      }
+    }
+    return {
+      totalEarned: _totalEarned,
+      currentMilestone: _current,
+      nextMilestone: _next,
+      progress: _next ? Math.round((_totalEarned / _next.target) * 100) : 100,
+    };
+  };
 }
