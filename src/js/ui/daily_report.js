@@ -469,15 +469,32 @@ function buildReportHTML(txs, state, reconcileInfo) {
   bodyHtml += "</div>";
 
   if (reconcileInfo) {
-    // 调试信息：仅 console 记录，不展示给玩家
+    // 调试信息：仅 console 记录，不展示给玩家。
+    //
+    // [文案修正 · 2026-09-17] 原文案结尾是「— 已自动修正。」，**这句话是错的**：
+    //   reconcileTransactions() 只返回一个信息对象（daily_report.js:150），
+    //   本分支也只做 console.log，**全程没有任何修正动作**，现金与账本都保持原样。
+    //   这句话会让人误以为系统已经兜住了偏差，从而不必去补记账 —— 属于掩盖问题。
+    //
+    // 该偏差的真实含义：本日现金变动中，有一部分没有对应的账本条目，
+    //   即「玩家余额变了，但『今日收支明细』里找不到这笔」。
+    //
+    // 已定位的主要来源（2026-09-17 用 scripts/diag-cash-reconcile.cjs 探明）：
+    //   · MC 夹具 tests/headless_runner.cjs 的三个策略直接改现金
+    //     （吃饭 ¥10 / 洗澡 ¥5 / 兜底打工 +¥15~35），共 7 处，均未记账。
+    //     —— 这是**夹具的简化**，不影响真实玩家。
+    //   · 引擎侧存在结构性缺口：全库约 1822 处直接改 resources.cash，
+    //     但 addDailyTransaction 只有 90 个调用点 → 绝大多数现金变动不入账。
+    //     —— 这是**真实缺陷**，会让「今日收支明细」加不出余额变化。
+    // 详见 docs/完善评估报告 第 34 节。
     console.log(
-      "[daily_report] 现金流水偏差 ¥" +
+      "[daily_report] 现金流水未入账 ¥" +
         reconcileInfo.amount +
-        "（跟踪:" +
+        "（账本合计:" +
         reconcileInfo.trackedDelta +
-        " 实际:" +
+        " 实际变化:" +
         reconcileInfo.actualDelta +
-        "）— 已自动修正。",
+        "）— 仅告警，未做修正。",
     );
   }
 
