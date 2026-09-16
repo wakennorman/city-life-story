@@ -1,0 +1,27 @@
+#!/bin/sh
+# ──────────────────────────────────────────────────────────────────────────────
+# Git post-commit hook · 提交成功后同步「最后已知 HEAD」记录
+#
+# [2026-09-17 纳入版本控制]
+# 本文件原只存在于 .git/hooks/ 下，不受版本控制。现移入 .githooks/ 并
+# 配合 `git config core.hooksPath .githooks` 使其成为仓库的一部分。
+#
+# [为什么需要这个 hook]
+# .claude/sync-check.sh 在会话启动时通过比较 .claude/last_known_head 与
+# 当前 HEAD 来判断"是否需要检查同步"。
+#
+# 若**没有** post-commit 来更新该记录，则 HEAD 一经前进（**哪怕是本窗口
+# 自己的正常提交**），记录立刻落后 —— 于是每次提交后都会触发一次
+# "检测到 HEAD 不一致"的检查。这类必然发生的误报会让人对告警脱敏。
+#
+# 有了本 hook 后：正常的本窗口提交会同步更新记录，检查只在**确实有外部
+# 提交**时才触发。
+# ──────────────────────────────────────────────────────────────────────────────
+
+RECORD_FILE=".claude/last_known_head"
+
+if [ -f "$RECORD_FILE" ]; then
+    git rev-parse HEAD > "$RECORD_FILE" 2>/dev/null
+fi
+
+exit 0
