@@ -642,7 +642,10 @@ function registerStartup(state, name, industry, description) {
     competitiveIntelligence: 0, // 竞争情报等级 0-100
     // ====== P1-10: 危机事件系统 ======
     activeCrisisEvents: [], // 活跃危机事件 [{id, crisisType, name, severity, urgency, remainingDays, effects, startedDay, resolved}]
-    pendingCrisisEvent: null, // 待处理危机 {id, event, deadline}
+    // [重复键清理 · 2026-09-17] 原此处还有一行 `pendingCrisisEvent: null`，
+    //   与本对象第 601 行的同名键**值完全相同**（都是 null），属冗余重复。
+    //   JS 后者覆盖前者，因值一致无行为差异；删除只为消除 ESLint
+    //   `no-dupe-keys` 错误（该错误会让 CI quality-gate 在第一步就中断）。
     crisisEventHistory: [], // 危机历史 [{id, crisisType, name, severity, response, success, cost, outcome, startedDay, resolvedDay}]
     crisisResilienceLevel: 0, // 危机韧性等级 0-100
     crisisPreparationLevel: 0, // 危机准备度 0-100

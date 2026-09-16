@@ -325,7 +325,10 @@ const ILLNESSES = {
     desc: "过劳综合症未愈+年龄增长，猝死风险极高。每日有2%概率直接死亡。必须强制休息7天以上。",
     isEvolution: true,
     evolvesFrom: ["overwork"],
-    isCritical: true,
+    // [重复键清理 · 2026-09-17] 原此处还有一行 `isCritical: true`，
+    //   与本对象开头的同名键**值完全相同**（都是 true），属冗余重复。
+    //   JS 后者覆盖前者，但因值一致，无行为差异；删除只为消除 ESLint
+    //   `no-dupe-keys` 错误（该错误会让 CI quality-gate 在第一步就中断）。
   },
 
   // 职业病：颈椎病
@@ -541,7 +544,8 @@ const ILLNESSES = {
     desc: "脂肪肝长期未愈演化成肝癌。健康急剧下降，食欲严重丧失。手术是唯一可能根治的手段，费用极高。",
     isEvolution: true,
     evolvesFrom: ["liver_cirrhosis"], // [全系统自洽修复] 域A A类#3: fatty_liver→liver_cirrhosis 正确演化链: 脂肪肝→肝硬化→肝癌
-    isCritical: true,
+    // [重复键清理 · 2026-09-17] 原此处还有一行 `isCritical: true`，
+    //   与本对象开头的同名键**值完全相同**，属冗余重复。删除原因同上。
   },
 };
 
