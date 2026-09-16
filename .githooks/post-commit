@@ -20,8 +20,31 @@
 
 RECORD_FILE=".claude/last_known_head"
 
-if [ -f "$RECORD_FILE" ]; then
-    git rev-parse HEAD > "$RECORD_FILE" 2>/dev/null
+if [ ! -f "$RECORD_FILE" ]; then
+    exit 0
 fi
+
+# ★ 这里必须写**提交后**的 HEAD。
+#
+# git post-commit 是"提交完成后"的钩子，此时：
+#   HEAD                = 刚产生的新提交（正确值）
+#   GIT_INDEX_FILE      = 仍然指向"提交前"的临时索引，其中是**父提交**的树
+#   git rev-parse HEAD  = 新提交 ✅ （它读 HEAD 引用，不读索引）
+#   git rev-parse :0    = 提交前的树
+#
+# 关键点：新提交刚刚生成，工作树与索引都还是"提交前"的样子，
+# 若此处改用 `git stash` / `git add` 之类会触碰索引的命令，就会污染提交后状态。
+# 因此这里只做一件事：把新 HEAD 写入记录文件。保持最小副作用。
+#
+# 实际踩到的坑（2026-09-17）：钩子生效后 `.claude/last_known_head` 永久处于
+# "已修改未提交"状态 —— 因为它在每次提交后都会被钩子改写，而提交动作本身
+# 无法把这一改动带上。这会让 `sync-check.sh` 的安全性检查 1（工作树干净？）
+# **永远判定为"脏"**，从而**永久跳过自动同步**，脚本等于失效。
+#
+# 处理方式（三选一，本项目采用第一种）：
+#   ① 把 .claude/last_known_head 加入 .gitignore，由钩子本地维护；
+#   ② 记录文件改放在 .git/ 下（不属于工作树，天然不受 status 影响）；
+#   ③ 不再跟踪该文件，改由 sync-check.sh 自行判断。
+git rev-parse HEAD > "$RECORD_FILE" 2>/dev/null
 
 exit 0

@@ -14,3 +14,8 @@ node_modules/
 dist/app.min.*
 __pycache__/
 nul
+
+# 本地同步基线：由 .githooks/post-commit 在每次提交后自动改写
+# 纳入版本控制会导致「每次提交后工作树永久为脏」，进而使
+# .claude/sync-check.sh 的安全性检查永久跳过自动同步，故忽略之。
+.claude/last_known_head
