@@ -15173,6 +15173,148 @@ const NEWS_L1_L4 = [
 //  三、新闻传导引擎
 // ============================================================
 
+// ============================================================
+//  三之二、新闻商品价格效果（限时 + 不可叠加）
+// ============================================================
+//
+// [P0-6 修复 · 2026-09-15] 为什么需要这一段：
+//
+// src/js/data/news.js 里 53 条新闻有 46 条带 effects，其中 19 条带
+// `effects.priceMod`（如 scrap_metal×2、fruits×0.4，14 个是极端值），
+// 且 46 条都带 `effects.duration`（说明**这些效果本就是限时的**）。
+//
+// 但 registerNewsEventsToPool()（events_core.js）把 NEWS_EVENTS 转成
+// RANDOM_EVENTS 条目时**整个丢掉了 effects**，而消费方读的是
+// `evt.newsEffects.priceMod` → 永远 undefined → 价格效果全部静默失效。
+//
+// 为什么不能只补一行 `newsEffects: ne.effects`：
+// 原消费方是 `price *= mul` 且**不处理 duration、不做还原**，而
+// NEWS_EVENTS 的 dailyChance 全是 undefined（转换时统一按 0.03/天），
+// 300 天里同一事件可触发约 9 次 → 价格按 ×2 连乘 9 次 = ×512，
+// **会直接摧毁经济**。
+//
+// 所以这里实现「限时 + 不可叠加」：
+//   · 生效时记下 { exp, mods }，到期按同一个乘数**精确除回去**；
+//   · 同一种商品同时只允许一条新闻效果生效（跳过，不叠加）
+//     → 价格永远被限制在单条新闻自己的乘数范围内，不可能失控。
+
+/** 取某商品当前是否已被生效中的新闻价格效果占用 */
+function _isGoodsPriceLocked(state, goodsId) {
+  var list = state.flags && state.flags._newsPriceMods;
+  if (!list || !list.length) return false;
+  for (var i = 0; i < list.length; i++) {
+    if (list[i] && list[i].mods && list[i].mods[goodsId] !== undefined) {
+      return true;
+    }
+  }
+  return false;
+}
+
+/**
+ * 施加新闻的商品价格效果（由事件选项被选中时调用）。
+ * @returns {number} 实际生效的商品条目数
+ */
+function applyNewsPriceMods(state, effects, day) {
+  if (!state || !effects || !effects.priceMod) return 0;
+  if (!state.trade || !state.trade.goodsPrices) return 0;
+  if (!state.flags) state.flags = {};
+
+  var duration = Number(effects.duration);
+  if (!isFinite(duration) || duration <= 0) duration = 5; // 缺省 5 天（与数据里的常见值一致）
+
+  var applied = {};
+  var count = 0;
+  for (var goodsId in effects.priceMod) {
+    if (!effects.priceMod.hasOwnProperty(goodsId)) continue;
+    var mul = Number(effects.priceMod[goodsId]);
+    if (!isFinite(mul) || mul <= 0 || mul === 1) continue;
+    // 不可叠加：该商品已有生效中的新闻效果则跳过（防止连乘失控）
+    if (_isGoodsPriceLocked(state, goodsId)) continue;
+
+    var touched = false;
+    for (var locKey in state.trade.goodsPrices) {
+      if (!state.trade.goodsPrices.hasOwnProperty(locKey)) continue;
+      var shelf = state.trade.goodsPrices[locKey];
+      if (!shelf || shelf[goodsId] === undefined) continue;
+      var cur = Number(shelf[goodsId]);
+      if (!isFinite(cur) || cur <= 0) continue;
+      shelf[goodsId] = Math.round(cur * mul * 100) / 100;
+      touched = true;
+    }
+    if (touched) {
+      applied[goodsId] = mul;
+      count++;
+    }
+  }
+
+  if (count > 0) {
+    if (!state.flags._newsPriceMods) state.flags._newsPriceMods = [];
+    state.flags._newsPriceMods.push({ exp: day + duration, mods: applied });
+  }
+  return count;
+}
+
+/**
+ * 到期还原新闻的商品价格效果。由 daily_pipeline 的 news 步骤每日调用。
+ * @returns {number} 本次还原的商品条目数
+ */
+function expireNewsPriceMods(state) {
+  if (!state || !state.flags || !state.flags._newsPriceMods) return 0;
+  if (!state.trade || !state.trade.goodsPrices) return 0;
+
+  var list = state.flags._newsPriceMods;
+  var today = (state.player && state.player.day) || 0;
+  var kept = [];
+  var restored = 0;
+
+  for (var i = 0; i < list.length; i++) {
+    var entry = list[i];
+    if (!entry || !entry.mods) continue;
+    if (entry.exp > today) {
+      kept.push(entry);
+      continue;
+    }
+    // 按同一个乘数精确除回去
+    for (var goodsId in entry.mods) {
+      if (!entry.mods.hasOwnProperty(goodsId)) continue;
+      var mul = Number(entry.mods[goodsId]);
+      if (!isFinite(mul) || mul <= 0) continue;
+      for (var locKey in state.trade.goodsPrices) {
+        if (!state.trade.goodsPrices.hasOwnProperty(locKey)) continue;
+        var shelf = state.trade.goodsPrices[locKey];
+        if (!shelf || shelf[goodsId] === undefined) continue;
+        var cur = Number(shelf[goodsId]);
+        if (!isFinite(cur) || cur <= 0) continue;
+        shelf[goodsId] = Math.round((cur / mul) * 100) / 100;
+        restored++;
+      }
+    }
+  }
+
+  state.flags._newsPriceMods = kept;
+  return restored;
+}
+
+/**
+ * 新闻事件被投递时施加其商品价格效果（供 queueRandomEvent 调用）。
+ *
+ * 为什么落点在这里而不是"选项被点击时"：
+ * registerNewsEventsToPool() 生成的新闻条目 **choices 为空数组**
+ * （NEWS_EVENTS 只有 {id, headline, effects, type, followUp}，没有 choices），
+ * 而 showEventModal 的选项点击回调（events_core.js:755）只对渲染出来的
+ * `.event-choice` 按钮绑定 —— 没有按钮就永远不触发。
+ * 所以放在"事件被投递"这一刻：新闻发生了，价格就该动。
+ *
+ * @returns {number} 实际生效的商品条目数
+ */
+function applyNewsPriceModsForEvent(state, evt) {
+  if (!state || !evt) return 0;
+  if (evt._converted !== "news") return 0;
+  if (!evt.newsEffects) return 0;
+  var day = (state.player && state.player.day) || 0;
+  return applyNewsPriceMods(state, evt.newsEffects, day);
+}
+
 /**
  * 检查是否需要触发新闻传导链。
  * 在 rollDailyNews 调用后由 daily_pipeline 调用。
@@ -15180,13 +15322,28 @@ const NEWS_L1_L4 = [
 function checkNewsConduit(state) {
   if (!state.activeNews || state.activeNews.length === 0) return;
 
+  // [跨局污染修复 · 2026-09-15]
+  // 原实现把「已检查」标记写在新闻对象自身：`n._conduitChecked = true`。
+  // 但 state.activeNews 里存的是**共享新闻池 NEWS_L1_L4 的对象引用**
+  // （见 events_core.js 的 _rollOneDailyNews），于是这个标记被永久写到池上：
+  //   · 浏览器里不刷新页面重开一局（二周目）时，上一局的标记仍在
+  //     → 这些新闻被判为「已检查」→ 整条传导链被跳过；
+  //   · 传导链内含 Random.chance() → 少消耗随机数 → PRNG 错位 → 整局轨迹全变。
+  // 测试侧表现为 Monte Carlo 跑分不可复现。
+  // 修法：标记改存到 state 上（按新闻 id），不再落到共享池对象。
+  var checked = state.flags._conduitCheckedIds;
+  if (!checked) checked = state.flags._conduitCheckedIds = {};
+
   // 获取今日新增的高层新闻（L1/L2/L3）
   var todayNews = state.activeNews.filter(function (n) {
-    if (!n._conduitChecked) {
-      n._conduitChecked = true;
-      return true;
-    }
-    return false;
+    if (!n || !n.id) return false;
+    // 注意：applyPendingConduitNews 推入的「传导链产物」自带 _conduitChecked: true，
+    // 它们是传导结果而非新闻源，按原语义不应被再次检查。此判断必须保留，
+    // 否则传导产物会被当成新新闻源重复检查 → 多排期传导链 → 随机数消耗变化。
+    if (n._conduitChecked) return false;
+    if (checked[n.id]) return false;
+    checked[n.id] = true;
+    return true;
   });
 
   for (var i = 0; i < todayNews.length; i++) {

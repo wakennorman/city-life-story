@@ -130,6 +130,7 @@ var WEIBO_HOT_TOPICS = [
 // ====== 刷新微博热搜（联动新闻系统+话题池）======
 function refreshWeiboHotlist(state) {
   ensureSocialNetworkState(state);
+  if (!state.player) return; // [全系统自洽修复] 域D 修复: state.player守卫(防管线/旧存档崩溃)
   var categories = ["娱乐", "社会", "体育", "科技", "财经", "时尚"];
   var hotlist = [];
 
@@ -193,6 +194,7 @@ function refreshWeiboHotlist(state) {
 // ====== NPC发布动态 ======
 function npcPostFeed(state, npcId, content, type) {
   ensureSocialNetworkState(state);
+  if (!state.player) return null; // [全系统自洽修复] 域D 修复: state.player守卫(防管线/旧存档崩溃)
   var feed = {
     npcId: npcId,
     content: content,

@@ -556,6 +556,8 @@ function renderStockCard(stock, state) {
   const market = state.corporate.stockMarket[stock.symbol];
   if (!market) return "";
   const price = market.price;
+  // [R1053 域E A类修复] state.corporate.stocks 数组守卫（旧存档/未初始化时 .find 抛 TypeError）
+  if (!Array.isArray(state.corporate.stocks)) state.corporate.stocks = [];
   const holding = state.corporate.stocks.find((s) => s.symbol === stock.symbol);
   const shares = holding ? holding.shares : 0;
 
@@ -651,6 +653,7 @@ function showStockTradeModal() {
   }
 
   // 持仓概览
+  if (!Array.isArray(state.corporate.stocks)) state.corporate.stocks = [];
   const totalStockValue = state.corporate.stocks.reduce((sum, s) => {
     const m = state.corporate.stockMarket[s.symbol];
     return sum + (m ? m.price * s.shares : 0);

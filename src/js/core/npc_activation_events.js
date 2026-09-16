@@ -260,7 +260,7 @@
           if (!st.relationships.xiaochen) st.relationships.xiaochen = { affinity: 0, met: true };
           st.relationships.xiaochen.met = true;
           st.relationships.xiaochen.affinity = Math.min(100, (st.relationships.xiaochen.affinity || 0) + 10);
-          if (st.resources) st.resources.cash += 30;
+          if (st.resources) st.resources.cash = (st.resources.cash || 0) + 30; // [全系统自洽修复] 域D 修复: cash NaN守卫
           if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 3);
           if (st.flags) st.flags._xiaochenMetDay = st.player.day;
           if (typeof StateManager !== "undefined" && StateManager.addMessage)

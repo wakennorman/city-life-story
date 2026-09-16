@@ -962,5 +962,11 @@ function addDailyTransaction(state, type, category, amount, description) {
     category: category,
     amount: Math.round(amount),
     description: description,
+    // [账本字段补全 · 2026-09-16] 补上 day。
+    // 原实现只写 4 个字段，而 `finance.js:57` 的「最近 7 天」聚合是按 `tx.day` 分组的
+    // → 所有条目的 day 都是 undefined → 分组塌成 1 个桶 → "7 天"实际只有 1 天。
+    // 这里补上 day 只是让字段语义正确（账本每天被 daily_report 清空，所以仍是 1 天），
+    // **不改变任何计算结果**；要让 7 天聚合真正生效，得另建滚动日志（见报告第二十四节）。
+    day: state.player ? state.player.day : 0,
   });
 }

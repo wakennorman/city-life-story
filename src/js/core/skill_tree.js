@@ -970,6 +970,7 @@ function canChooseBranch(skillKey, state) {
  * 选择技能分支（消耗 15AP + ¥200）
  */
 function chooseSkillBranch(skillKey, branchId, state) {
+  if (!state || !state.player) return false;
   var check = canChooseBranch(skillKey, state);
   if (!check.allowed) {
     StateManager.addMessage("⚠️ " + check.reason, "warning");
@@ -1014,6 +1015,7 @@ function chooseSkillBranch(skillKey, branchId, state) {
  * 切换技能分支（消耗 30AP + ¥500，保留天赋节点状态但清除旧分支节点）
  */
 function switchSkillBranch(skillKey, newBranchId, state) {
+  if (!state || !state.player) return false;
   if (!state.skillBranches || !state.skillBranches[skillKey]) {
     return chooseSkillBranch(skillKey, newBranchId, state);
   }
@@ -1051,6 +1053,7 @@ function switchSkillBranch(skillKey, newBranchId, state) {
  * 检查是否能激活天赋节点
  */
 function canActivateTalentNode(skillKey, nodeId, state) {
+  if (!state || !state.player) return { allowed: false, reason: "无效状态" };
   var branchId = state.skillBranches && state.skillBranches[skillKey];
   if (!branchId) {
     return { allowed: false, reason: "请先选择发展方向" };
@@ -1066,7 +1069,7 @@ function canActivateTalentNode(skillKey, nodeId, state) {
     return { allowed: false, reason: "该天赋节点已激活" };
   }
 
-  var skill = state.skills[skillKey];
+  var skill = state.skills && state.skills[skillKey];
   if (!skill || skill.level < node.requireLevel) {
     return {
       allowed: false,
@@ -1114,6 +1117,7 @@ function canActivateTalentNode(skillKey, nodeId, state) {
  * 激活天赋节点
  */
 function activateTalentNode(skillKey, nodeId, state) {
+  if (!state || !state.player) return false;
   var check = canActivateTalentNode(skillKey, nodeId, state);
   if (!check.allowed) {
     StateManager.addMessage("⚠️ " + check.reason, "warning");
@@ -1125,6 +1129,7 @@ function activateTalentNode(skillKey, nodeId, state) {
   var nodeKey = skillKey + "_" + branchId + "_" + nodeId;
 
   state.player.actionPoints -= node.apCost;
+  state.resources = state.resources || {};
   state.resources.cash = Math.max(0, (state.resources.cash || 0) - (node.cashCost || 0));
   // [全系统自洽修复] 域C R677 A类: talentNodes 守卫(旧存档激活天赋时崩溃)
   if (!state.talentNodes) state.talentNodes = {};

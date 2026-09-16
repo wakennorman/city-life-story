@@ -1904,6 +1904,14 @@ function getRandomNewsEvent(state) {
 }
 
 /** 应用新闻效果 */
+// [账本覆盖补齐 · 第八轮 · 2026-09-16] 账本 description 是给日报逐条展示用的，
+// 新闻 headline 最长可到 30+ 字，直接拼进去会把明细行撑爆，这里截断到 14 字。
+function _newsShortTitle(news) {
+  if (!news || !news.headline) return "";
+  var h = String(news.headline);
+  return "：" + (h.length > 14 ? h.slice(0, 14) + "…" : h);
+}
+
 function applyNewsEffect(news, state) {
   var effects = news.effects;
 
@@ -1942,12 +1950,28 @@ function applyNewsEffect(news, state) {
   }
 
   // 现金
+  // [账本覆盖补齐 · 第八轮 · 2026-09-16] 这里是**全游戏新闻现金的唯一咽喉点**
+  // （rollDailyNews / applyPendingConduitNews / 情报新闻都汇到 applyNewsEffect）。
+  // 实测 `news` 步骤是最大的单笔漏账来源：1 局 trader×40 天里 +61,976 全部来自此处的
+  // cashBonus，而它原本一条账都不记 → 日报「今日收支明细」加不出余额变化。
   if (effects.cashBonus) {
     state.resources.cash = (state.resources.cash || 0) + effects.cashBonus;
     state.resources.totalEarned = (state.resources.totalEarned || 0) + (effects.cashBonus || 0);
+    if (typeof addDailyTransaction === "function") {
+      addDailyTransaction(state, "income", "news_income", effects.cashBonus,
+        "新闻红利" + _newsShortTitle(news));
+    }
   }
   if (effects.cashLoss) {
-    state.resources.cash = Math.max(0, (state.resources.cash || 0) - effects.cashLoss);
+    var _cashBeforeLoss = state.resources.cash || 0;
+    state.resources.cash = Math.max(0, _cashBeforeLoss - effects.cashLoss);
+    // 记**实扣额**：`Math.max(0, …)` 会让现金不足时的实扣少于应扣，
+    // 记账必须跟着实际变化走，否则对账反而更不准。
+    var _cashLost = _cashBeforeLoss - state.resources.cash;
+    if (_cashLost > 0 && typeof addDailyTransaction === "function") {
+      addDailyTransaction(state, "expense", "news_expense", _cashLost,
+        "新闻损失" + _newsShortTitle(news));
+    }
   }
 
   // 需求

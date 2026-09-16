@@ -838,8 +838,13 @@ function tickFamilyDaily(state) {
     }
 
     // 月度收入
+    // [账本覆盖补齐 · 第八轮 · 2026-09-16] 探针实测 family_daily 是第二大漏账源
+    // （1 局 trader×40 天 −87,000 全部来自本函数），原本一条账都不记。
     state.resources.cash = (state.resources.cash || 0) + spouse.income;
     state.resources.totalEarned = (state.resources.totalEarned || 0) + spouse.income;
+    if (spouse.income > 0 && typeof addDailyTransaction === "function") {
+      addDailyTransaction(state, "income", "family_income", spouse.income, "配偶收入");
+    }
   }
 
   // 月度家庭支出
@@ -853,6 +858,10 @@ function tickFamilyDaily(state) {
 
     if ((state.resources.cash || 0) >= totalMonthly) {
       state.resources.cash = Math.max(0, (state.resources.cash || 0) - totalMonthly);
+      // [账本覆盖补齐 · 第八轮 · 2026-09-16] 同段注释：家庭月支出原本也不上账本。
+      if (typeof addDailyTransaction === "function") {
+        addDailyTransaction(state, "expense", "family_expense", totalMonthly, "家庭月支出");
+      }
       StateManager.addMessage(
         `📊 本月家庭支出¥${totalMonthly.toLocaleString()}`,
         "hint",

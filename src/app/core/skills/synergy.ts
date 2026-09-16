@@ -172,6 +172,11 @@ export function checkSkillSynergies(state: SynergyState): SynergyResult {
         desc: syn.desc,
         effects: syn.effects as SynergyEffects,
       };
+      // [域C A类#3 对齐 vanilla] TRIPLE 连携同样置 _synergy_<id> 标记（与 DUAL 一致）。
+      // 原逻辑只在 DUAL 分支置位，导致 driving_logistics_accounting→long_haul_driver、
+      // repair_electrician_coding→smart_home_tech 的 requiredFlag 永不被满足 → 死工作。
+      // 旧存档 state.flags 可能未初始化，需兜底。
+      if (state.flags) state.flags["_synergy_" + id] = true;
       collectUnlocks(results, syn.effects as SynergyEffects);
     }
   }

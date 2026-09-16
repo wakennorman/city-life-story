@@ -1439,6 +1439,12 @@ function addDailyTransaction(state, type, category, amount, description) {
     category: category,
     amount: Math.round(amount),
     description: description,
+    // [账本字段补全 · 2026-09-16] 补上 day。
+    // 原实现只写 4 个字段，而 `finance.js:57` 的「最近 7 天」聚合是按 `tx.day` 分组的
+    // → 所有条目的 day 都是 undefined → 分组塌成 1 个桶 → "7 天"实际只有 1 天。
+    // 这里补上 day 只是让字段语义正确（账本每天被 daily_report 清空，所以仍是 1 天），
+    // **不改变任何计算结果**；要让 7 天聚合真正生效，得另建滚动日志（见报告第二十四节）。
+    day: state.player ? state.player.day : 0,
   });
 }
 
@@ -4246,6 +4252,18 @@ if (typeof window !== "undefined") {
       for (var t = 0; t < event.triggers.length; t++) {
         var slot = event.triggers[t];
         if (TRIGGER_REGISTRY[slot]) {
+          // [修复 · 2026-09-15] 幂等：同一事件在同一槽只注册一次。
+          // 背景：loadAllTriggers() 会扫两遍（RANDOM_EVENTS + MORAL_EVENTS），
+          // 而 MORAL_EVENTS 已被 registerMoralEventsToPool() 并入 RANDOM_EVENTS
+          // → 同一事件注册两次 → 权重翻倍 → 加权随机会偏向它。
+          var _dup = false;
+          for (var d = 0; d < TRIGGER_REGISTRY[slot].length; d++) {
+            if (TRIGGER_REGISTRY[slot][d].event.id === event.id) {
+              _dup = true;
+              break;
+            }
+          }
+          if (_dup) continue;
           TRIGGER_REGISTRY[slot].push({
             event: event,
             weight: event.triggerWeight || 1,
@@ -4271,9 +4289,38 @@ if (typeof window !== "undefined") {
    *   原 loadAllTriggers 只扫 RANDOM_EVENTS，导致 after_work/after_trade 等槽位始终为空。
    */
   function loadAllTriggers() {
-    if (!window.RANDOM_EVENTS) return;
-    for (var i = 0; i < window.RANDOM_EVENTS.length; i++) {
-      registerTriggeredEvent(window.RANDOM_EVENTS[i]);
+    // [修复 · 2026-09-15] 原来第一行是 `if (!window.RANDOM_EVENTS) return;` ——
+    // 而 RANDOM_EVENTS 是 events_core.js 的**顶层 const**（`const RANDOM_EVENTS = []`）。
+    // 顶层 const/let **不会**成为 window 的属性（浏览器 / 无头环境 / 打包产物都一样），
+    // 于是 loadAllTriggers() 每次都**直接早退**，一个事件都没注册过：
+    //   · 12 个触发槽全部为空
+    //   · main.js 的 after_work 槽、travel.js 的 after_travel 槽两条链路全断
+    //   · 5 个约定式 triggers 事件永久不可达
+    //   · daily_pipeline 里 6 个 trigger_slot_* 步骤每天空跑（永远 return null）
+    // 实证：dist/app.js 里 7 处 window.RANDOM_EVENTS **全是读、无一处赋值**。
+    // 修法：优先读顶层引用（与 queueRandomEvent / domain_e_linkage_r470.js 等
+    // 既有代码一致），window 仅作兜底；try/catch 防 const 的 TDZ。
+    var _pool = null;
+    try {
+      if (typeof RANDOM_EVENTS !== "undefined" && Array.isArray(RANDOM_EVENTS)) {
+        _pool = RANDOM_EVENTS;
+      }
+    } catch (e) {
+      /* RANDOM_EVENTS 处于 TDZ：此时尚未初始化，静默跳过 */
+    }
+    if (!_pool) {
+      try {
+        if (typeof window !== "undefined" && Array.isArray(window.RANDOM_EVENTS)) {
+          _pool = window.RANDOM_EVENTS;
+        }
+      } catch (e2) {
+        /* 忽略 */
+      }
+    }
+    if (!_pool) return;
+
+    for (var i = 0; i < _pool.length; i++) {
+      registerTriggeredEvent(_pool[i]);
     }
     // [全系统自洽修复] 域B A类#1: 扫描 MORAL_EVENTS 中声明 triggers 数组的事件
     if (typeof MORAL_EVENTS !== "undefined" && Array.isArray(MORAL_EVENTS)) {
@@ -4491,37 +4538,60 @@ function rollStreetEvent(state) {
   // [全系统自洽修复] 域B A类: state.player 守卫(防旧存档崩溃)
   if (!state.player) return;
 
-  // 心理危机事件：mental<20时优先检查，不占用随机事件槽
-  var mentalCrisisIds = [
-    "mental_breakdown_edge",
-    "mental_therapy_chance",
-    "mental_recovery_milestone",
-  ];
-  for (var mci = 0; mci < mentalCrisisIds.length; mci++) {
-    var mce = RANDOM_EVENTS.find(function (e) {
-      return e.id === mentalCrisisIds[mci];
-    });
-    if (mce && eTriggersMatch(mce, state)) {
-      state._pendingEvent = mce;
-      state.flags._todayMentalEvent = true;
-      return;
-    }
-  }
+  // [内容饿死修复 · 2026-09-15] 强制通道命中后会让位给随机池。
+  //
+  // 问题：下面「心理危机 / 村长债务」两段注释都写着**不占用随机事件槽**，
+  // 但实现是 `state._pendingEvent = X; return;`，而 `_pendingEvent` 是**单槽**、
+  // 且函数开头有 `if (state._pendingEvent) return;` —— 于是强制事件实际上
+  // **独占了当天唯一的名额**，注释意图完全落空。
+  //
+  // 实测（seed=20260915，玩家状态正常，400 天）：
+  //   · 事件槽被占用 398 次，其中 `mental_therapy_chance` 独占 **375 次（94%）**
+  //   · 来自 4276 事件随机池的投递 **0 次**
+  //     （queueRandomEvent 全程只被调用 **1 次**）
+  //   → 只要玩家心智长期低于阈值，整个随机事件池等于不存在。
+  //
+  // 修法：强制通道命中时记一个「次日让位」标记；次日跳过这两段检查，
+  // 直接走后面的随机池。危机仍会持续出现（隔天一次），只是不再独占每一天。
+  // 链式事件队列**不参与让位**——它是剧情主线，优先级必须保持最高。
+  var _yieldToPool = state.flags._yieldEventSlotToPool === true;
+  state.flags._yieldEventSlotToPool = false;
 
-  // 村长债务追讨事件：债务未还时优先触发，不占用随机事件槽
-  var debtEventIds = [
-    "village_chief_warning",
-    "village_chief_pressure",
-    "village_chief_final",
-  ];
-  for (var dci = 0; dci < debtEventIds.length; dci++) {
-    var dce = RANDOM_EVENTS.find(function (e) {
-      return e.id === debtEventIds[dci];
-    });
-    if (dce && eTriggersMatch(dce, state)) {
-      state._pendingEvent = dce;
-      state.flags._todayDebtEvent = true;
-      return;
+  if (!_yieldToPool) {
+    // 心理危机事件：mental<20时优先检查，不占用随机事件槽
+    var mentalCrisisIds = [
+      "mental_breakdown_edge",
+      "mental_therapy_chance",
+      "mental_recovery_milestone",
+    ];
+    for (var mci = 0; mci < mentalCrisisIds.length; mci++) {
+      var mce = RANDOM_EVENTS.find(function (e) {
+        return e.id === mentalCrisisIds[mci];
+      });
+      if (mce && eTriggersMatch(mce, state)) {
+        state._pendingEvent = mce;
+        state.flags._todayMentalEvent = true;
+        state.flags._yieldEventSlotToPool = true; // 次日让位给随机池
+        return;
+      }
+    }
+
+    // 村长债务追讨事件：债务未还时优先触发，不占用随机事件槽
+    var debtEventIds = [
+      "village_chief_warning",
+      "village_chief_pressure",
+      "village_chief_final",
+    ];
+    for (var dci = 0; dci < debtEventIds.length; dci++) {
+      var dce = RANDOM_EVENTS.find(function (e) {
+        return e.id === debtEventIds[dci];
+      });
+      if (dce && eTriggersMatch(dce, state)) {
+        state._pendingEvent = dce;
+        state.flags._todayDebtEvent = true;
+        state.flags._yieldEventSlotToPool = true; // 次日让位给随机池
+        return;
+      }
     }
   }
 
@@ -4965,6 +5035,19 @@ function queueRandomEvent(state, phase) {
   // 使用唯一事件ID替代引用比较，避免引用失效导致事件卡住
   state._pendingEvent = evt;
   state._pendingEventId = evt.id;
+
+  // [P0-6 修复 · 2026-09-15] 新闻事件投递时施加其商品价格效果（限时 + 不可叠加）。
+  // 为什么在这里而不是"选项被点击时"：转换来的新闻条目 choices 是空数组
+  // （NEWS_EVENTS 无 choices 字段），showEventModal 只给渲染出的 .event-choice
+  // 按钮绑点击回调 —— 没有按钮就永远不触发，价格效果会静默失效。
+  try {
+    if (typeof applyNewsPriceModsForEvent === "function") {
+      applyNewsPriceModsForEvent(state, evt);
+    }
+  } catch (e) {
+    // 静默：新闻价格影响不影响主流程
+  }
+
   // 触发延迟到 render 阶段弹（避免在 tick 内部阻塞）
   setTimeout(() => {
     const s = StateManager.getState();
@@ -5333,24 +5416,13 @@ function showEventModal(evt) {
       }
 
       // [全系统自洽修复] 域B 联动增强#3 B→A: 新闻事件短期影响商品价格
-      try {
-        if (evt._converted === "news" && evt.newsEffects && evt.newsEffects.priceMod && state.trade) {
-          for (var _pmId in evt.newsEffects.priceMod) {
-            if (evt.newsEffects.priceMod.hasOwnProperty(_pmId)) {
-              // 在所有地点应用价格修正
-              for (var _locKey in state.trade.goodsPrices) {
-                if (state.trade.goodsPrices.hasOwnProperty(_locKey) && state.trade.goodsPrices[_locKey][_pmId]) {
-                  state.trade.goodsPrices[_locKey][_pmId] = Math.round(
-                    state.trade.goodsPrices[_locKey][_pmId] * evt.newsEffects.priceMod[_pmId] * 100
-                  ) / 100;
-                }
-              }
-            }
-          }
-        }
-      } catch (e) {
-        // 静默：新闻价格影响不影响主流程
-      }
+      // [P0-6 修复 · 2026-09-15] 此处原为价格效果的施加点，但它是**选项点击回调**，
+      // 而转换来的新闻条目 choices 为空（NEWS_EVENTS 无 choices 字段）→
+      // showEventModal 不渲染任何 .event-choice 按钮 → 这个回调永远不会执行，
+      // 属于死代码。施加点已前移到 queueRandomEvent 的「事件投递」时刻
+      // （见本文件上方 applyNewsPriceModsForEvent 调用），到期还原在
+      // daily_pipeline 的 news 步骤（expireNewsPriceMods）。
+      // 此处仅保留事件类型统计，不再处理价格。
       if (typeof state.resources.cash !== "number" || !isFinite(state.resources.cash)) state.resources.cash = 0;
       state.resources.cash = Math.max(0, state.resources.cash || 0);
       // [域B R417 联动增强] B→A: 事件类型统计 — 累计moral/risk/news等事件计数，供经济系统感知
@@ -5975,13 +6047,25 @@ function _rollOneDailyNews(state) {
 
   if (!news) return;
 
-  news._appliedDay = state.player.day;
-  state.activeNews.push(news);
+  // [跨局污染修复 · 2026-09-16] 原实现 `news._appliedDay = state.player.day` 直接写在
+  // **共享新闻池对象**上 —— `getRandomNewsByLevel` / `getRandomNewsEvent` 返回的都是
+  // NEWS_L1_L4 里的**引用**（`Random.fromArray(candidates)`），而 `state.activeNews.push(news)`
+  // 存的又是同一个引用。后果：
+  //   ① 池对象被永久污染：同一进程里开第二局时，`_appliedDay` 还留着上一局的天数；
+  //   ② 残留的 `_appliedDay` 会让 news_event_bridge / investment 的到期判定
+  //      (`state.player.day - _appliedDay > duration`) 读到旧天数 → 新闻效果被误判"已过期"
+  //      而静默失效（少走加成分支）。
+  // 与第十二节修过的 `_conduitChecked` 同类（当时只修了后者，本处是残留）。
+  // 改法：push 一份浅拷贝，`_appliedDay` 写在副本上 —— 与 news.js:2121 的
+  // intelNewsEntry、news_system.js:29510 的既有写法一致。effects 等字段保持共享引用。
+  var appliedNews = Object.assign({}, news);
+  appliedNews._appliedDay = state.player.day;
+  state.activeNews.push(appliedNews);
   seen.push(news.id);
   state.flags.seenNewsToday = seen;
-  applyNewsEffect(news, state);
+  applyNewsEffect(appliedNews, state);
   StateManager.addMessage("📰 " + news.headline, "event");
-  showNewsBriefingModal(news, state);
+  showNewsBriefingModal(appliedNews, state);
 }
 
 /** 每日结束时的清理 */
@@ -6060,6 +6144,13 @@ function registerNewsEventsToPool() {
       phase: "street",
       probability: ne.dailyChance || 0.03,
       _converted: "news",
+      // [P0-6 修复 · 2026-09-15] 原实现丢掉了 ne.effects，导致下游读取
+      // 新闻条目上 `newsEffects` 的价格字段时永远是 undefined，
+      // 19 条带价格效果的新闻全部静默失效。
+      // 注意：effects 里除 priceMod 外还有 investmentEffect / duration，
+      // 前者由 news_investment_bridge.js 从 state.activeNews 直接读取（不受影响），
+      // 后者由 applyNewsPriceMods 用来定时还原。
+      newsEffects: ne.effects,
       choices: Array.isArray(ne.choices) ? ne.choices.map(function(c) {
         return { text: c.text, apply: c.immediate || function(){} };
       }) : [],
@@ -6948,6 +7039,153 @@ if (typeof window !== "undefined") {
         if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 10);
         if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 5);
         msg("🧘 你学会了与时间和解。心智+10, 心情+5。", "info");
+      }},
+    ],
+  });
+})();
+
+// ====== [R1047 域C 联动增强] 3项: C→E/C→F/C→G ======
+(function () {
+  "use strict";
+  if (typeof RANDOM_EVENTS === "undefined") return;
+  if (RANDOM_EVENTS._eventsCoreLinkageR1047Loaded) return;
+  RANDOM_EVENTS._eventsCoreLinkageR1047Loaded = true;
+
+  function gx(k, a) {
+    if (typeof addSkillXp === "function") { try { addSkillXp(k, a); } catch (e) {} }
+  }
+  function msg(t, k) {
+    if (typeof StateManager !== "undefined" && StateManager.addMessage) StateManager.addMessage(t, k || "info");
+  }
+
+  // 1. C→E: 技能变现 — 技能≥40时触发投资/副业机会
+  RANDOM_EVENTS.push({
+    id: "c1047_skill_monetization", phase: "street", icon: "💡",
+    title: "技能变现的契机",
+    text: function (st) {
+      if (!st || !st.skills) return "你的技能就是你的资产。";
+      var topSkill = 0, topName = "";
+      for (var k in st.skills) {
+        var lv = (st.skills[k] && st.skills[k].level) || 0;
+        if (lv > topSkill) { topSkill = lv; topName = k; }
+      }
+      if (topSkill >= 40) return "你的" + topName + "技能已经达到了专业水平。有人愿意为你的技能付费。";
+      return "不断学习，你的技能终将变成财富。";
+    },
+    triggers: { minDay: 60, interval: 60 },
+    conditions: function (st) {
+      if (!st || !st.flags) return false;
+      if (st.flags._c1047SkillMoneyCd && (st.player.day || 0) - st.flags._c1047SkillMoneyCd < 60) return false;
+      if (!st.skills) return false;
+      for (var k in st.skills) {
+        if ((st.skills[k] && st.skills[k].level || 0) >= 40) return true;
+      }
+      return false;
+    },
+    probability: 0.03, repeatable: true,
+    choices: [
+      { text: "💰 接个私单变现", hint: "现金+800, 技能XP+20", apply: function (st) {
+        if (!st) return;
+        st.flags = st.flags || {};
+        st.flags._c1047SkillMoneyCd = st.player.day;
+        st.flags._c1047Monetized = true;
+        st.resources = st.resources || {};
+        st.resources.cash = (st.resources.cash || 0) + 800;
+        gx("sales", 20);
+        msg("💡 你接了个私单，赚了¥800。技能XP+20。", "success");
+      }},
+      { text: "📚 继续深造", hint: "主技能XP+30, 心智+5", apply: function (st) {
+        if (!st) return;
+        st.flags = st.flags || {};
+        st.flags._c1047SkillMoneyCd = st.player.day;
+        if (st.skills) {
+          for (var k in st.skills) {
+            var lv = (st.skills[k] && st.skills[k].level) || 0;
+            if (lv >= 40) { gx(k, 30); break; }
+          }
+        }
+        if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 5);
+        msg("📚 你决定先提升自己。技能XP+30, 心智+5。", "info");
+      }},
+    ],
+  });
+
+  // 2. C→F: 职业规划 — 职业路径清晰时获得职业发展洞察
+  RANDOM_EVENTS.push({
+    id: "c1047_career_planning", phase: "street", icon: "🗺️",
+    title: "职业规划的时刻",
+    text: function (st) {
+      if (!st || !st.career) return "你的职业道路需要规划。";
+      if (st.career.currentJob) return "你在" + (st.career.currentJob.levelName || "当前岗位") + "已经积累了" + (st.career.currentJob.workDays || 0) + "天经验。是时候想想下一步了。";
+      return "没有固定的工作，但你的技能就是你的底气。";
+    },
+    triggers: { minDay: 90, interval: 90 },
+    conditions: function (st) {
+      if (!st || !st.flags) return false;
+      if (st.flags._c1047CareerPlanCd && (st.player.day || 0) - st.flags._c1047CareerPlanCd < 90) return false;
+      return !!(st.career && st.career.currentJob && (st.career.currentJob.workDays || 0) >= 30);
+    },
+    probability: 0.025, repeatable: true,
+    choices: [
+      { text: "🎯 制定晋升计划", hint: "管理XP+25, 心智+5", apply: function (st) {
+        if (!st) return;
+        st.flags = st.flags || {};
+        st.flags._c1047CareerPlanCd = st.player.day;
+        st.flags._c1047HasCareerPlan = true;
+        gx("management", 25);
+        if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 5);
+        msg("🎯 你制定了清晰的职业发展计划。管理XP+25, 心智+5。", "success");
+      }},
+      { text: "📝 更新简历", hint: "智力+5", apply: function (st) {
+        if (!st) return;
+        st.flags = st.flags || {};
+        st.flags._c1047CareerPlanCd = st.player.day;
+        st.flags._c1047ResumeReady = true;
+        if (st.player) st.player.intelligence = Math.min(100, (st.player.intelligence || 50) + 5);
+        msg("📝 你更新了简历，随时准备抓住更好的机会。智力+5。", "info");
+      }},
+    ],
+  });
+
+  // 3. C→G: 职业成长的生命回响
+  RANDOM_EVENTS.push({
+    id: "c1047_career_life_echo", phase: "street", icon: "🌟",
+    title: "职业生涯的回响",
+    text: function (st) {
+      if (!st || !st.career) return "你的职业生涯正在书写中。";
+      var promoCount = (st.flags && st.flags._careerPromotionCount) || 0;
+      var pathCount = (st.career.pathHistory && st.career.pathHistory.length) || 0;
+      if (promoCount >= 3) return "你经历了" + promoCount + "次晋升，职业生涯蒸蒸日上。这不仅改变了你的收入，也改变了你的气质。";
+      if (pathCount >= 2) return "你尝试过" + pathCount + "种不同的职业道路。每一次转型都让你更全面。";
+      return "每一步职业经历都在塑造你的人格。";
+    },
+    triggers: { minDay: 120, interval: 120 },
+    conditions: function (st) {
+      if (!st || !st.flags) return false;
+      if (st.flags._c1047CareerEchoCd && (st.player.day || 0) - st.flags._c1047CareerEchoCd < 120) return false;
+      var promoCount = (st.flags._careerPromotionCount || 0);
+      var pathCount = (st.career && st.career.pathHistory && st.career.pathHistory.length) || 0;
+      return promoCount >= 2 || pathCount >= 2;
+    },
+    probability: 0.02, repeatable: true,
+    choices: [
+      { text: "🌟 回顾职业成长", hint: "健康+3, 心智+8, 心情+5", apply: function (st) {
+        if (!st) return;
+        st.flags = st.flags || {};
+        st.flags._c1047CareerEchoCd = st.player.day;
+        st.flags._c1047CareerProud = true;
+        if (st.status) st.status.health = Math.min(100, (st.status.health || 100) + 3);
+        if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 8);
+        if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 5);
+        msg("🌟 你回顾了自己的职业成长，感到自豪。健康+3, 心智+8, 心情+5。", "success");
+      }},
+      { text: "🏆 设定下一个目标", hint: "智力+5, 管理XP+15", apply: function (st) {
+        if (!st) return;
+        st.flags = st.flags || {};
+        st.flags._c1047CareerEchoCd = st.player.day;
+        if (st.player) st.player.intelligence = Math.min(100, (st.player.intelligence || 50) + 5);
+        gx("management", 15);
+        msg("🏆 你设定了新的职业目标。智力+5, 管理XP+15。", "info");
       }},
     ],
   });
@@ -98066,6 +98304,7 @@ var WEIBO_HOT_TOPICS = [
 // ====== 刷新微博热搜（联动新闻系统+话题池）======
 function refreshWeiboHotlist(state) {
   ensureSocialNetworkState(state);
+  if (!state.player) return; // [全系统自洽修复] 域D 修复: state.player守卫(防管线/旧存档崩溃)
   var categories = ["娱乐", "社会", "体育", "科技", "财经", "时尚"];
   var hotlist = [];
 
@@ -98129,6 +98368,7 @@ function refreshWeiboHotlist(state) {
 // ====== NPC发布动态 ======
 function npcPostFeed(state, npcId, content, type) {
   ensureSocialNetworkState(state);
+  if (!state.player) return null; // [全系统自洽修复] 域D 修复: state.player守卫(防管线/旧存档崩溃)
   var feed = {
     npcId: npcId,
     content: content,
@@ -117970,7 +118210,7 @@ if (typeof window !== "undefined") {
           if (!st.relationships.xiaochen) st.relationships.xiaochen = { affinity: 0, met: true };
           st.relationships.xiaochen.met = true;
           st.relationships.xiaochen.affinity = Math.min(100, (st.relationships.xiaochen.affinity || 0) + 10);
-          if (st.resources) st.resources.cash += 30;
+          if (st.resources) st.resources.cash = (st.resources.cash || 0) + 30; // [全系统自洽修复] 域D 修复: cash NaN守卫
           if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 3);
           if (st.flags) st.flags._xiaochenMetDay = st.player.day;
           if (typeof StateManager !== "undefined" && StateManager.addMessage)
@@ -130897,7 +131137,13 @@ function tickTravel(state) {
     state.travel.daysRemaining = 0;
     if (state.flags) state.flags._travelDecisionShown = false;
     // === v3.23: 触发槽 — after_travel ===
-    if (typeof window.TriggerRegistry !== "undefined") {
+    // [修复 · 2026-09-15] 加 `!state._pendingEvent` 守卫。
+    // 原实现无条件调用 triggerRandom 并直接 showEventModal，而 showEventModal
+    // 在"已有弹窗"时会 early-return 且**什么都不做** —— 事件没显示，
+    // 但 triggerRandom 内部已经 setCooldown(30) 了 → 冷却被白烧，
+    // 下次旅行（可能几十天后）这个事件也不会再来。
+    // 加守卫后槽被占用时连掷都不掷，冷却保留。
+    if (typeof window.TriggerRegistry !== "undefined" && !state._pendingEvent) {
       try {
         var afterTravelEvent = window.TriggerRegistry.triggerRandom(
           "after_travel",
@@ -149351,6 +149597,148 @@ const NEWS_L1_L4 = [
 //  三、新闻传导引擎
 // ============================================================
 
+// ============================================================
+//  三之二、新闻商品价格效果（限时 + 不可叠加）
+// ============================================================
+//
+// [P0-6 修复 · 2026-09-15] 为什么需要这一段：
+//
+// src/js/data/news.js 里 53 条新闻有 46 条带 effects，其中 19 条带
+// `effects.priceMod`（如 scrap_metal×2、fruits×0.4，14 个是极端值），
+// 且 46 条都带 `effects.duration`（说明**这些效果本就是限时的**）。
+//
+// 但 registerNewsEventsToPool()（events_core.js）把 NEWS_EVENTS 转成
+// RANDOM_EVENTS 条目时**整个丢掉了 effects**，而消费方读的是
+// `evt.newsEffects.priceMod` → 永远 undefined → 价格效果全部静默失效。
+//
+// 为什么不能只补一行 `newsEffects: ne.effects`：
+// 原消费方是 `price *= mul` 且**不处理 duration、不做还原**，而
+// NEWS_EVENTS 的 dailyChance 全是 undefined（转换时统一按 0.03/天），
+// 300 天里同一事件可触发约 9 次 → 价格按 ×2 连乘 9 次 = ×512，
+// **会直接摧毁经济**。
+//
+// 所以这里实现「限时 + 不可叠加」：
+//   · 生效时记下 { exp, mods }，到期按同一个乘数**精确除回去**；
+//   · 同一种商品同时只允许一条新闻效果生效（跳过，不叠加）
+//     → 价格永远被限制在单条新闻自己的乘数范围内，不可能失控。
+
+/** 取某商品当前是否已被生效中的新闻价格效果占用 */
+function _isGoodsPriceLocked(state, goodsId) {
+  var list = state.flags && state.flags._newsPriceMods;
+  if (!list || !list.length) return false;
+  for (var i = 0; i < list.length; i++) {
+    if (list[i] && list[i].mods && list[i].mods[goodsId] !== undefined) {
+      return true;
+    }
+  }
+  return false;
+}
+
+/**
+ * 施加新闻的商品价格效果（由事件选项被选中时调用）。
+ * @returns {number} 实际生效的商品条目数
+ */
+function applyNewsPriceMods(state, effects, day) {
+  if (!state || !effects || !effects.priceMod) return 0;
+  if (!state.trade || !state.trade.goodsPrices) return 0;
+  if (!state.flags) state.flags = {};
+
+  var duration = Number(effects.duration);
+  if (!isFinite(duration) || duration <= 0) duration = 5; // 缺省 5 天（与数据里的常见值一致）
+
+  var applied = {};
+  var count = 0;
+  for (var goodsId in effects.priceMod) {
+    if (!effects.priceMod.hasOwnProperty(goodsId)) continue;
+    var mul = Number(effects.priceMod[goodsId]);
+    if (!isFinite(mul) || mul <= 0 || mul === 1) continue;
+    // 不可叠加：该商品已有生效中的新闻效果则跳过（防止连乘失控）
+    if (_isGoodsPriceLocked(state, goodsId)) continue;
+
+    var touched = false;
+    for (var locKey in state.trade.goodsPrices) {
+      if (!state.trade.goodsPrices.hasOwnProperty(locKey)) continue;
+      var shelf = state.trade.goodsPrices[locKey];
+      if (!shelf || shelf[goodsId] === undefined) continue;
+      var cur = Number(shelf[goodsId]);
+      if (!isFinite(cur) || cur <= 0) continue;
+      shelf[goodsId] = Math.round(cur * mul * 100) / 100;
+      touched = true;
+    }
+    if (touched) {
+      applied[goodsId] = mul;
+      count++;
+    }
+  }
+
+  if (count > 0) {
+    if (!state.flags._newsPriceMods) state.flags._newsPriceMods = [];
+    state.flags._newsPriceMods.push({ exp: day + duration, mods: applied });
+  }
+  return count;
+}
+
+/**
+ * 到期还原新闻的商品价格效果。由 daily_pipeline 的 news 步骤每日调用。
+ * @returns {number} 本次还原的商品条目数
+ */
+function expireNewsPriceMods(state) {
+  if (!state || !state.flags || !state.flags._newsPriceMods) return 0;
+  if (!state.trade || !state.trade.goodsPrices) return 0;
+
+  var list = state.flags._newsPriceMods;
+  var today = (state.player && state.player.day) || 0;
+  var kept = [];
+  var restored = 0;
+
+  for (var i = 0; i < list.length; i++) {
+    var entry = list[i];
+    if (!entry || !entry.mods) continue;
+    if (entry.exp > today) {
+      kept.push(entry);
+      continue;
+    }
+    // 按同一个乘数精确除回去
+    for (var goodsId in entry.mods) {
+      if (!entry.mods.hasOwnProperty(goodsId)) continue;
+      var mul = Number(entry.mods[goodsId]);
+      if (!isFinite(mul) || mul <= 0) continue;
+      for (var locKey in state.trade.goodsPrices) {
+        if (!state.trade.goodsPrices.hasOwnProperty(locKey)) continue;
+        var shelf = state.trade.goodsPrices[locKey];
+        if (!shelf || shelf[goodsId] === undefined) continue;
+        var cur = Number(shelf[goodsId]);
+        if (!isFinite(cur) || cur <= 0) continue;
+        shelf[goodsId] = Math.round((cur / mul) * 100) / 100;
+        restored++;
+      }
+    }
+  }
+
+  state.flags._newsPriceMods = kept;
+  return restored;
+}
+
+/**
+ * 新闻事件被投递时施加其商品价格效果（供 queueRandomEvent 调用）。
+ *
+ * 为什么落点在这里而不是"选项被点击时"：
+ * registerNewsEventsToPool() 生成的新闻条目 **choices 为空数组**
+ * （NEWS_EVENTS 只有 {id, headline, effects, type, followUp}，没有 choices），
+ * 而 showEventModal 的选项点击回调（events_core.js:755）只对渲染出来的
+ * `.event-choice` 按钮绑定 —— 没有按钮就永远不触发。
+ * 所以放在"事件被投递"这一刻：新闻发生了，价格就该动。
+ *
+ * @returns {number} 实际生效的商品条目数
+ */
+function applyNewsPriceModsForEvent(state, evt) {
+  if (!state || !evt) return 0;
+  if (evt._converted !== "news") return 0;
+  if (!evt.newsEffects) return 0;
+  var day = (state.player && state.player.day) || 0;
+  return applyNewsPriceMods(state, evt.newsEffects, day);
+}
+
 /**
  * 检查是否需要触发新闻传导链。
  * 在 rollDailyNews 调用后由 daily_pipeline 调用。
@@ -149358,13 +149746,28 @@ const NEWS_L1_L4 = [
 function checkNewsConduit(state) {
   if (!state.activeNews || state.activeNews.length === 0) return;
 
+  // [跨局污染修复 · 2026-09-15]
+  // 原实现把「已检查」标记写在新闻对象自身：`n._conduitChecked = true`。
+  // 但 state.activeNews 里存的是**共享新闻池 NEWS_L1_L4 的对象引用**
+  // （见 events_core.js 的 _rollOneDailyNews），于是这个标记被永久写到池上：
+  //   · 浏览器里不刷新页面重开一局（二周目）时，上一局的标记仍在
+  //     → 这些新闻被判为「已检查」→ 整条传导链被跳过；
+  //   · 传导链内含 Random.chance() → 少消耗随机数 → PRNG 错位 → 整局轨迹全变。
+  // 测试侧表现为 Monte Carlo 跑分不可复现。
+  // 修法：标记改存到 state 上（按新闻 id），不再落到共享池对象。
+  var checked = state.flags._conduitCheckedIds;
+  if (!checked) checked = state.flags._conduitCheckedIds = {};
+
   // 获取今日新增的高层新闻（L1/L2/L3）
   var todayNews = state.activeNews.filter(function (n) {
-    if (!n._conduitChecked) {
-      n._conduitChecked = true;
-      return true;
-    }
-    return false;
+    if (!n || !n.id) return false;
+    // 注意：applyPendingConduitNews 推入的「传导链产物」自带 _conduitChecked: true，
+    // 它们是传导结果而非新闻源，按原语义不应被再次检查。此判断必须保留，
+    // 否则传导产物会被当成新新闻源重复检查 → 多排期传导链 → 随机数消耗变化。
+    if (n._conduitChecked) return false;
+    if (checked[n.id]) return false;
+    checked[n.id] = true;
+    return true;
   });
 
   for (var i = 0; i < todayNews.length; i++) {
@@ -176059,6 +176462,7 @@ function canChooseBranch(skillKey, state) {
  * 选择技能分支（消耗 15AP + ¥200）
  */
 function chooseSkillBranch(skillKey, branchId, state) {
+  if (!state || !state.player) return false;
   var check = canChooseBranch(skillKey, state);
   if (!check.allowed) {
     StateManager.addMessage("⚠️ " + check.reason, "warning");
@@ -176103,6 +176507,7 @@ function chooseSkillBranch(skillKey, branchId, state) {
  * 切换技能分支（消耗 30AP + ¥500，保留天赋节点状态但清除旧分支节点）
  */
 function switchSkillBranch(skillKey, newBranchId, state) {
+  if (!state || !state.player) return false;
   if (!state.skillBranches || !state.skillBranches[skillKey]) {
     return chooseSkillBranch(skillKey, newBranchId, state);
   }
@@ -176140,6 +176545,7 @@ function switchSkillBranch(skillKey, newBranchId, state) {
  * 检查是否能激活天赋节点
  */
 function canActivateTalentNode(skillKey, nodeId, state) {
+  if (!state || !state.player) return { allowed: false, reason: "无效状态" };
   var branchId = state.skillBranches && state.skillBranches[skillKey];
   if (!branchId) {
     return { allowed: false, reason: "请先选择发展方向" };
@@ -176155,7 +176561,7 @@ function canActivateTalentNode(skillKey, nodeId, state) {
     return { allowed: false, reason: "该天赋节点已激活" };
   }
 
-  var skill = state.skills[skillKey];
+  var skill = state.skills && state.skills[skillKey];
   if (!skill || skill.level < node.requireLevel) {
     return {
       allowed: false,
@@ -176203,6 +176609,7 @@ function canActivateTalentNode(skillKey, nodeId, state) {
  * 激活天赋节点
  */
 function activateTalentNode(skillKey, nodeId, state) {
+  if (!state || !state.player) return false;
   var check = canActivateTalentNode(skillKey, nodeId, state);
   if (!check.allowed) {
     StateManager.addMessage("⚠️ " + check.reason, "warning");
@@ -176214,6 +176621,7 @@ function activateTalentNode(skillKey, nodeId, state) {
   var nodeKey = skillKey + "_" + branchId + "_" + nodeId;
 
   state.player.actionPoints -= node.apCost;
+  state.resources = state.resources || {};
   state.resources.cash = Math.max(0, (state.resources.cash || 0) - (node.cashCost || 0));
   // [全系统自洽修复] 域C R677 A类: talentNodes 守卫(旧存档激活天赋时崩溃)
   if (!state.talentNodes) state.talentNodes = {};
@@ -177602,6 +178010,10 @@ const SKILL_SYNERGY_TRIPLE = {
       employeeEfficiencyBonus: 0.3,
       // 品牌等级提升速度+50%
       brandGrowthBonus: 0.5,
+      // [域C 缺口修复] 每日被动收入+¥200
+      // daily_pipeline.skill_synergy_income 的 passiveKeys 明确列出该键，
+      // 但数据表从未提供 → 消费分支恒为死代码。此处补齐（原 TS 端口 synergyData.ts 已有）。
+      passiveRestaurantIncome: 200,
     },
     desc: "集烹饪、销售、管理于一身，可以打造自己的餐饮品牌，实现财务自由。",
   },
@@ -177625,6 +178037,8 @@ const SKILL_SYNERGY_TRIPLE = {
       promoSpeedBonus: 0.5,
       // 团队规模+5
       teamSizeBonus: 5,
+      // [域C 缺口修复] 每日被动收入+¥300（股票期权）
+      passiveStockIncome: 300,
     },
     desc: "技术、英语、管理全精通，可以成为技术高管，实现财富自由。",
   },
@@ -177644,6 +178058,8 @@ const SKILL_SYNERGY_TRIPLE = {
       comprehensiveRepairBonus: 0.5,
       // 装备维修损耗-50%
       repairWearReduction: 0.5,
+      // [域C 缺口修复] 每日被动收入+¥100（智能家居项目）
+      passiveSmartHomeIncome: 100,
     },
     desc: "机械、电路、编程全都会，可以接智能家居项目，收入翻倍。",
   },
@@ -177663,6 +178079,8 @@ const SKILL_SYNERGY_TRIPLE = {
       logisticsIncomeBonus: 0.5,
       // 车队规模+3
       fleetSizeBonus: 3,
+      // [域C 缺口修复] 每日被动收入+¥250
+      passiveLogisticsIncome: 250,
     },
     desc: "会开车、会算账、会管理，可以开物流公司，实现财务自由。",
   },
@@ -177726,7 +178144,18 @@ const SKILL_SYNERGY_THEME = {
  */
 function checkSkillSynergies(state) {
   if (!state || !state.skills) {
-    return { dual: {}, triple: {}, theme: {}, effects: {} };
+    // [形状对齐] 早退分支返回与正常分支完全一致的形状。
+    // 原实现只返回 {dual,triple,theme,effects}，调用方若直接
+    // `results.unlockedJobs.push(...)` 会在旧存档/未初始化态下抛错。
+    return {
+      dual: {},
+      triple: {},
+      theme: {},
+      effects: {},
+      unlockedJobs: [],
+      unlockedBusinesses: [],
+      unlockedActions: [],
+    };
   }
 
   var results = {
@@ -189998,6 +190427,14 @@ function getRandomNewsEvent(state) {
 }
 
 /** 应用新闻效果 */
+// [账本覆盖补齐 · 第八轮 · 2026-09-16] 账本 description 是给日报逐条展示用的，
+// 新闻 headline 最长可到 30+ 字，直接拼进去会把明细行撑爆，这里截断到 14 字。
+function _newsShortTitle(news) {
+  if (!news || !news.headline) return "";
+  var h = String(news.headline);
+  return "：" + (h.length > 14 ? h.slice(0, 14) + "…" : h);
+}
+
 function applyNewsEffect(news, state) {
   var effects = news.effects;
 
@@ -190036,12 +190473,28 @@ function applyNewsEffect(news, state) {
   }
 
   // 现金
+  // [账本覆盖补齐 · 第八轮 · 2026-09-16] 这里是**全游戏新闻现金的唯一咽喉点**
+  // （rollDailyNews / applyPendingConduitNews / 情报新闻都汇到 applyNewsEffect）。
+  // 实测 `news` 步骤是最大的单笔漏账来源：1 局 trader×40 天里 +61,976 全部来自此处的
+  // cashBonus，而它原本一条账都不记 → 日报「今日收支明细」加不出余额变化。
   if (effects.cashBonus) {
     state.resources.cash = (state.resources.cash || 0) + effects.cashBonus;
     state.resources.totalEarned = (state.resources.totalEarned || 0) + (effects.cashBonus || 0);
+    if (typeof addDailyTransaction === "function") {
+      addDailyTransaction(state, "income", "news_income", effects.cashBonus,
+        "新闻红利" + _newsShortTitle(news));
+    }
   }
   if (effects.cashLoss) {
-    state.resources.cash = Math.max(0, (state.resources.cash || 0) - effects.cashLoss);
+    var _cashBeforeLoss = state.resources.cash || 0;
+    state.resources.cash = Math.max(0, _cashBeforeLoss - effects.cashLoss);
+    // 记**实扣额**：`Math.max(0, …)` 会让现金不足时的实扣少于应扣，
+    // 记账必须跟着实际变化走，否则对账反而更不准。
+    var _cashLost = _cashBeforeLoss - state.resources.cash;
+    if (_cashLost > 0 && typeof addDailyTransaction === "function") {
+      addDailyTransaction(state, "expense", "news_expense", _cashLost,
+        "新闻损失" + _newsShortTitle(news));
+    }
   }
 
   // 需求
@@ -191919,6 +192372,7 @@ var NPCS = [
         id: "xiaomeiModelJob",
         desc: "介绍高端兼职，解锁商业区模特工作",
         effect: function (st) {
+          if (!st.flags) st.flags = {}; // [全系统自洽修复] 域D 修复: st.flags守卫(防旧存档/异常状态致TypeError)
           if (st.flags.xiaomeiModelJob) return;
           st.flags.xiaomeiModelJob = true;
           StateManager.addMessage(
@@ -193864,6 +194318,7 @@ var NPCS = [
         id: "zhaojieCityInfo",
         desc: "提前获知城市改造信息，避免房租暴涨",
         effect: function (st) {
+          if (!st.flags) st.flags = {}; // [全系统自洽修复] 域D 修复: st.flags守卫(防旧存档/异常状态致TypeError)
           if (st.flags.zhaojieCityInfo) return;
           st.flags.zhaojieCityInfo = true;
           StateManager.addMessage(
@@ -194078,6 +194533,7 @@ var NPCS = [
         id: "chenGeInfoBonus",
         desc: "获取独家情报，触发隐藏事件",
         effect: function (st) {
+          if (!st.flags) st.flags = {}; // [全系统自洽修复] 域D 修复: st.flags守卫(防旧存档/异常状态致TypeError)
           if (st.flags.chenGeInfoBonus) return;
           st.flags.chenGeInfoBonus = true;
           StateManager.addMessage(
@@ -194282,6 +194738,7 @@ var NPCS = [
         id: "ajie_30",
         desc: "阿杰还你一部分钱（¥100）",
         effect: function (st) {
+          if (!st.flags) st.flags = {}; // [全系统自洽修复] 域D 修复: st.flags守卫(防旧存档/异常状态致TypeError)
           if (st.flags.ajiePaid) return;
           st.resources.cash = (st.resources.cash || 0) + 100;
           st.flags.ajiePaid = true;
@@ -194296,6 +194753,7 @@ var NPCS = [
         id: "ajie_60",
         desc: "阿杰还你全部欠款（¥300）并介绍工作",
         effect: function (st) {
+          if (!st.flags) st.flags = {}; // [全系统自洽修复] 域D 修复: st.flags守卫(防旧存档/异常状态致TypeError)
           if (st.flags.ajiePaidFull) return;
           st.resources.cash = (st.resources.cash || 0) + 300;
           st.flags.ajiePaidFull = true;
@@ -194311,6 +194769,7 @@ var NPCS = [
         id: "ajie_80",
         desc: "阿杰彻底还钱+成为固定联系人",
         effect: function (st) {
+          if (!st.flags) st.flags = {}; // [全系统自洽修复] 域D 修复: st.flags守卫(防旧存档/异常状态致TypeError)
           if (st.flags.ajieTrusted) return;
           st.flags.ajieTrusted = true;
           st.flags.ajieReferred = true;
@@ -194449,6 +194908,7 @@ var NPCS = [
         id: "old_ma_30",
         desc: "老马教你砌墙技巧(维修XP+10)",
         effect: function (st) {
+          if (!st.flags) st.flags = {}; // [全系统自洽修复] 域D 修复: st.flags守卫(防旧存档/异常状态致TypeError)
           if (st.flags.oldMaSkillBonus) return;
           // [全系统自洽修复] 域C R243: addSkillXp("physique")不是真实技能键→映射到repair(砌墙是手艺活)
           if (typeof addSkillXp === "function") addSkillXp("repair", 10);
@@ -209916,6 +210376,7 @@ function checkExtremeConditions(state) {
   // [R1015 域G A类修复]: state.needs/state.status 守卫（旧存档/异常状态→TypeError崩溃管线）
   if (!state.needs) state.needs = { hunger: 50, fatigue: 30, hygiene: 60, happiness: 50 };
   if (!state.status) state.status = { health: 80, illnesses: [] };
+  if (!state.resources) state.resources = { cash: 0, bankBalance: 0, bankDebt: 0, villageDebt: 0, fineDebt: 0, debt: 0 }; // [全系统自洽修复] 域D 修复: state.resources守卫(防极端状态/旧存档致TypeError)
   var n = state.needs,
     st = state.status;
 
@@ -209954,6 +210415,12 @@ function checkExtremeConditions(state) {
     // [自洽修复] 域D A类: 补 cash ||0 守卫
     if ((state.resources.cash || 0) >= 500) {
       state.resources.cash = (state.resources.cash || 0) - 500;
+      // [账本覆盖补齐 · 第八轮 · 2026-09-16] 急救费原本不上账本。
+      // 实测它是残差里第二大来源（7 局 ×300 天里 extreme_check 有 14 次 −500，
+      // 对账残差里对应 13 条「跟踪只有 rent、实际多扣 500」的记录）。
+      if (typeof addDailyTransaction === "function") {
+        addDailyTransaction(state, "expense", "healthcare", 500, "病危急救费");
+      }
       st.health = Math.min(50, st.health + 20);
       StateManager.addMessage(
         "🏥 你病危被好心人送进医院，花了¥500急救费用...需要好好休养。",
@@ -216707,9 +217174,20 @@ const DAILY_PIPELINE = [
       state.player.day++;
       state.player.actionPoints = state.player.maxActionPoints;
       state.player.timeSlot = "morning";
-      // v3.2 修复: 在日递增时记录现金作为日初值（正确基准）
-      // 注意: 新游戏第1日需要在 startNewGame 等初始化函数中额外设置
-      state.flags._dayStartCash = state.resources.cash || 0;
+      // [窗口语义拆分 · 第八轮 · 2026-09-16] 原来这里写的是 `_dayStartCash`，
+      // 但它的位置**不是**日初：本步骤是管线第 0 步，此刻玩家当天的行动
+      // （打工/购物/命运抉择）都已经花过钱了 → 它其实是「管线起点现金」。
+      // 而 `_dayStartCash` 另有真正的日初语义：`daily_report` 步结尾会把它设成
+      // 「账本清空那一刻的现金」，也就是**下一天的日初**。两者被同一个字段名混用，
+      // 导致：
+      //   · 玩家可见的「今日总结」现金变化只统计了管线，漏掉玩家自己赚/花的钱；
+      //   · 对账 `reconcileTransactions` 拿它当基准，于是实际比较的是
+      //     「管线内现金变化」vs「整日账本」，两个窗口错位（残差就来自这里）。
+      // 拆成两个字段后，对账窗口变成显式的「管线口径」，日终总结拿到真正的日初值。
+      // 注意：**不要**把 `_dayStartCash` 挪到这里来「对齐窗口」——实测那样会让
+      // 对账告警从 487 条涨到 12,850 条（8 局 ×300 天，76.5% 的天数），
+      // 因为玩家行动侧只有约 4% 的现金改动进了账本（见报告第二十四节）。
+      state.flags._pipelineStartCash = state.resources.cash || 0;
       // [全系统自洽修复] 域E 修复: 每日现金NaN防御（防止旧存档/投资异常导致现金永久损坏）
       if (isNaN(state.resources.cash) || !isFinite(state.resources.cash)) {
         state.resources.cash = 0;
@@ -217478,9 +217956,17 @@ const DAILY_PIPELINE = [
     fn: function (state) {
       if (typeof EconomySystem !== "undefined" && EconomySystem.dailyEconomicSettlement) {
         var result = EconomySystem.dailyEconomicSettlement(state);
-        if (result && result.wealthTax > 0) {
-          state.resources.cash = Math.max(0, (state.resources.cash || 0) - result.wealthTax);
-        }
+          if (result && result.wealthTax > 0) {
+            // [账本覆盖补齐 · 2026-09-16] 原实现扣了税但不上账本 → 玩家日报里看不到「税金」。
+            // 注意必须记**实扣额**：Math.max(0, ...) 在现金不足时会让实扣少于应扣，
+            // 记成应扣额反而会造出一条新的对账偏差。
+            var _taxBefore = state.resources.cash || 0;
+            state.resources.cash = Math.max(0, _taxBefore - result.wealthTax);
+            var _taxPaid = _taxBefore - state.resources.cash;
+            if (_taxPaid > 0 && typeof addDailyTransaction === "function") {
+              addDailyTransaction(state, "expense", "tax", _taxPaid, "财富税");
+            }
+          }
       }
     },
   },
@@ -217892,6 +218378,13 @@ const DAILY_PIPELINE = [
       if (typeof applyPendingConduitNews === "function") {
         applyPendingConduitNews(state);
       }
+      // [P0-6 修复 · 2026-09-15] 新闻商品价格效果到期还原。
+      // 新闻的 effects.priceMod 是限时的（数据里都带 duration），
+      // 生效时在 applyNewsPriceMods 里记了 { exp, mods }，这里每日扫一遍把到期的除回去。
+      // 不还原的话价格会随新闻重复触发而连乘失控。
+      if (typeof expireNewsPriceMods === "function") {
+        expireNewsPriceMods(state);
+      }
     },
   },
 
@@ -217918,6 +218411,11 @@ const DAILY_PIPELINE = [
       // 每日副业固定收益
       var earn = Random.int(60, 120);
       state.resources.cash = (state.resources.cash || 0) + earn;
+      // [账本覆盖补齐 · 2026-09-16] 副业收益是每天发生的稳定现金流，
+      // 之前完全不上账本 → 玩家日报里看不到副业赚了多少（报告第二十四节）。
+      if (typeof addDailyTransaction === "function") {
+        addDailyTransaction(state, "income", "side_skill", earn, "副业收益");
+      }
       // 倦怠累积
       state.needs.fatigue = Math.min(100, (state.needs.fatigue || 0) + 2);
       // 每5天提醒一次（避免消息刷屏）
@@ -218048,8 +218546,12 @@ const DAILY_PIPELINE = [
       // 连续5天 → 小奖金
       if (streak >= 5 && !ms[5]) {
         ms[5] = true;
-        var bonus5 = 200;
-        state.resources.cash = (state.resources.cash || 0) + bonus5;
+          var bonus5 = 200;
+          state.resources.cash = (state.resources.cash || 0) + bonus5;
+          // [账本覆盖补齐 · 2026-09-16] 全勤奖是「整笔进账」，最容易被玩家误认为 bug（报告第二十四节）
+          if (typeof addDailyTransaction === "function") {
+            addDailyTransaction(state, "income", "streak_bonus", bonus5, "连续工作5天奖金");
+          }
         StateManager.addMessage(
           "🎉 连续工作5天！全勤奖金 ¥" + bonus5 + "！",
           "success",
@@ -218058,8 +218560,11 @@ const DAILY_PIPELINE = [
       // 连续10天 → 额外奖金 + 心情奖励
       if (streak >= 10 && !ms[10]) {
         ms[10] = true;
-        var bonus10 = 500;
-        state.resources.cash = (state.resources.cash || 0) + bonus10;
+          var bonus10 = 500;
+          state.resources.cash = (state.resources.cash || 0) + bonus10;
+          if (typeof addDailyTransaction === "function") {
+            addDailyTransaction(state, "income", "streak_bonus", bonus10, "连续工作10天奖金");
+          }
         state.needs.happiness = Math.min(
           100,
           (state.needs.happiness || 50) + 5,
@@ -218072,8 +218577,11 @@ const DAILY_PIPELINE = [
       // 连续30天 → 大额奖金
       if (streak >= 30 && !ms[30]) {
         ms[30] = true;
-        var bonus30 = 2000;
-        state.resources.cash = (state.resources.cash || 0) + bonus30;
+          var bonus30 = 2000;
+          state.resources.cash = (state.resources.cash || 0) + bonus30;
+          if (typeof addDailyTransaction === "function") {
+            addDailyTransaction(state, "income", "streak_bonus", bonus30, "连续工作30天奖金");
+          }
         StateManager.addMessage(
           "💪 连续工作30天！毅力可嘉！全勤大奖 ¥" + bonus30 + "！",
           "success",
@@ -218082,8 +218590,11 @@ const DAILY_PIPELINE = [
       // 连续100天 → 里程碑奖金 + 永久称号
       if (streak >= 100 && !ms[100]) {
         ms[100] = true;
-        var bonus100 = 10000;
-        state.resources.cash = (state.resources.cash || 0) + bonus100;
+          var bonus100 = 10000;
+          state.resources.cash = (state.resources.cash || 0) + bonus100;
+          if (typeof addDailyTransaction === "function") {
+            addDailyTransaction(state, "income", "streak_bonus", bonus100, "连续工作100天大奖");
+          }
         state.flags._streakMaster = true; // 永久称号标记
         StateManager.addMessage(
           "👑 连续工作100天！你是真正的劳动模范！终身成就奖 ¥" +
@@ -218725,8 +219236,11 @@ const DAILY_PIPELINE = [
         state.flags._pendingGaokaoBonus &&
         day >= state.flags._pendingGaokaoBonus
       ) {
-        state.flags._pendingGaokaoBonus = 0;
-        state.resources.cash = (state.resources.cash || 0) + 24000;
+          state.flags._pendingGaokaoBonus = 0;
+          state.resources.cash = (state.resources.cash || 0) + 24000;
+          if (typeof addDailyTransaction === "function") {
+            addDailyTransaction(state, "income", "career_bonus", 24000, "家教里程碑奖金");
+          }
         if (typeof StateManager !== "undefined") {
           StateManager.addMessage(
             "🎓 家教学员的家长打来了尾款！高考辅导费¥24000到账！",
@@ -218736,8 +219250,11 @@ const DAILY_PIPELINE = [
       }
       // 摆摊30天还款
       if (state.flags._loanToLaoGuan && day >= state.flags._loanToLaoGuan) {
-        state.flags._loanToLaoGuan = 0;
-        state.resources.cash = (state.resources.cash || 0) + 1000;
+          state.flags._loanToLaoGuan = 0;
+          state.resources.cash = (state.resources.cash || 0) + 1000;
+          if (typeof addDailyTransaction === "function") {
+            addDailyTransaction(state, "income", "career_bonus", 1000, "摆摊借款回收");
+          }
         if (typeof StateManager !== "undefined") {
           StateManager.addMessage(
             "💰 老关把当初借的¥800还了，还多给了¥200利息！",
@@ -218766,8 +219283,11 @@ const DAILY_PIPELINE = [
       ) {
         state.flags._careerLegacyDueDay = 0;
         var _legacySuccess = Random.chance(0.6);
-        if (_legacySuccess) {
-          state.resources.cash = (state.resources.cash || 0) + 100000;
+          if (_legacySuccess) {
+            state.resources.cash = (state.resources.cash || 0) + 100000;
+            if (typeof addDailyTransaction === "function") {
+              addDailyTransaction(state, "income", "career_bonus", 100000, "职业传承收益");
+            }
           state.player.fame = Math.min(100, (state.player.fame || 0) + 20);
           if (typeof StateManager !== "undefined") {
             StateManager.addMessage(
@@ -218787,8 +219307,11 @@ const DAILY_PIPELINE = [
       // [全系统自洽修复] 域C R677b A类#1: 技能大师培训班被动收入每日兑现(career_dev.js hint承诺¥150/天,全库零读取→就此接线)
       if (state.flags._skillMasterTrainer) {
         var _trainRate = state.flags._trainerScaleUp ? 250 : 150;
-        state.resources.cash = (state.resources.cash || 0) + _trainRate;
-        state.flags._trainerIncomeTotal = (state.flags._trainerIncomeTotal || 0) + _trainRate;
+          state.resources.cash = (state.resources.cash || 0) + _trainRate;
+          state.flags._trainerIncomeTotal = (state.flags._trainerIncomeTotal || 0) + _trainRate;
+          if (typeof addDailyTransaction === "function") {
+            addDailyTransaction(state, "income", "training_income", _trainRate, "技能大师培训班分红");
+          }
         if (day % 7 === 0 && typeof StateManager !== "undefined") {
           StateManager.addMessage(
             "👑 培训班本周运转良好，学费收入约¥" + _trainRate + "/天（累计¥" + state.flags._trainerIncomeTotal + "）。",
@@ -218802,12 +219325,18 @@ const DAILY_PIPELINE = [
           var _pBase = state.flags._pensionBase;
           if (!isFinite(_pBase) || _pBase <= 0) _pBase = 5000;
           var _pension = Math.round(Math.min(_pBase, 50000) * 0.6); // 替代率60%,基数封顶5万防极端值
-          state.resources.cash = (state.resources.cash || 0) + _pension;
-          state.flags._pensionTotal = (state.flags._pensionTotal || 0) + _pension;
+            state.resources.cash = (state.resources.cash || 0) + _pension;
+            state.flags._pensionTotal = (state.flags._pensionTotal || 0) + _pension;
+            if (typeof addDailyTransaction === "function") {
+              addDailyTransaction(state, "income", "pension", _pension, "退休养老金");
+            }
           var _pMsg = "🏖️ 本月养老金到账 ¥" + _pension.toLocaleString();
           if (state.flags._retirementType === "advisor") {
             var _advFee = Math.round(_pension * 0.5); // 返聘顾问费
             state.resources.cash += _advFee;
+            if (typeof addDailyTransaction === "function") {
+              addDailyTransaction(state, "income", "advisor_fee", _advFee, "返聘顾问费");
+            }
             _pMsg += "，返聘顾问费 ¥" + _advFee.toLocaleString();
           }
           if (typeof StateManager !== "undefined") {
@@ -218822,9 +219351,12 @@ const DAILY_PIPELINE = [
         day % 30 === 0
       ) {
         var _cwPay = state.flags._mcnEmployee ? 6000 : 2000; // MCN月薪优先(买断后独家,保底不叠加)
-        if (isFinite(_cwPay) && _cwPay > 0) {
-          state.resources.cash = (state.resources.cash || 0) + _cwPay;
-          state.flags._contentSalaryTotal = (state.flags._contentSalaryTotal || 0) + _cwPay;
+          if (isFinite(_cwPay) && _cwPay > 0) {
+            state.resources.cash = (state.resources.cash || 0) + _cwPay;
+            state.flags._contentSalaryTotal = (state.flags._contentSalaryTotal || 0) + _cwPay;
+            if (typeof addDailyTransaction === "function") {
+              addDailyTransaction(state, "income", "content_salary", _cwPay, "内容平台稿酬");
+            }
           if (typeof StateManager !== "undefined") {
             StateManager.addMessage(
               (state.flags._mcnEmployee
@@ -219339,8 +219871,9 @@ function runDailyPipeline(state) {
   // [R1015 域G A类修复]: state.flags 守卫（旧存档/损坏状态→TypeError崩溃管线）
   if (!state.flags) state.flags = {};
   // 记录日始状态用于今日总结
-  // v3.2 修复: _dayStartCash 在 day_increment 步骤中设置（正确捕获日初现金）
-  // 此处仅记录健康/心情日始值（这些在管线中不变化）
+  // [窗口语义拆分 · 第八轮 · 2026-09-16] `_dayStartCash` 由 daily_report 步在
+  // 清空账本时写入（= 真正的下一天日初），`_pipelineStartCash` 由 day_increment 步写入
+  // （= 管线起点，供对账用）。此处仅记录健康/心情日始值（这些在管线中不变化）。
   state.flags._dayStartHealth = (state.status && state.status.health) || 100;
   state.flags._dayStartHappiness = (state.needs && state.needs.happiness) || 0;
 
@@ -221508,14 +222041,18 @@ function calcFinalPrice(state, locKey, goodId) {
     var sMod = good.seasonal[state.weather.season];
     if (isFinite(sMod) && sMod > 0) price *= sMod;
   }
-  // [全系统自洽修复] 域A R1045 A类#2: state 守卫 — 防止极端情况下 state 为 null/undefined 时抛 TypeError
-  var rl = state && state.relationships
-    ? Object.keys(state.relationships).filter(function (k) {
-        return state.relationships[k] && state.relationships[k].met;
-      }).length
-    : 0;
-  var npcP = Math.min(10, Math.floor(rl / 2) * 0.5);
-  if (npcP > 0) price *= 1 - npcP / 100; // [全系统自洽修复] 域A A类#1: NPC关系定价方向反转（原为+导致认识越多NPC物价越高，应折扣而非加价）
+  // [全系统自洽修复] 域D 联动增强(D→A): 消费 getNpcTradeDiscount（基于好感质量的折扣，原为纯数量计数）
+  var _npcDisc = 1.0;
+  if (typeof window.getNpcTradeDiscount === "function") {
+    _npcDisc = window.getNpcTradeDiscount(state);
+  } else if (state && state.relationships) {
+    // 兜底：按结识数量近似折扣
+    var rl = Object.keys(state.relationships).filter(function (k) {
+      return state.relationships[k] && state.relationships[k].met;
+    }).length;
+    _npcDisc = 1 - Math.min(0.08, rl * 0.005);
+  }
+  if (isFinite(_npcDisc) && _npcDisc < 1.0) price *= _npcDisc;
   // v3.1: 难度物价乘数（休闲档-10%，地狱档+30%）
   if (typeof getDifficultyMultiplier === "function") {
     var priceMult = getDifficultyMultiplier(state, "price");
@@ -226847,6 +227384,8 @@ function renderStockCard(stock, state) {
   const market = state.corporate.stockMarket[stock.symbol];
   if (!market) return "";
   const price = market.price;
+  // [R1053 域E A类修复] state.corporate.stocks 数组守卫（旧存档/未初始化时 .find 抛 TypeError）
+  if (!Array.isArray(state.corporate.stocks)) state.corporate.stocks = [];
   const holding = state.corporate.stocks.find((s) => s.symbol === stock.symbol);
   const shares = holding ? holding.shares : 0;
 
@@ -226942,6 +227481,7 @@ function showStockTradeModal() {
   }
 
   // 持仓概览
+  if (!Array.isArray(state.corporate.stocks)) state.corporate.stocks = [];
   const totalStockValue = state.corporate.stocks.reduce((sum, s) => {
     const m = state.corporate.stockMarket[s.symbol];
     return sum + (m ? m.price * s.shares : 0);
@@ -230008,6 +230548,40 @@ function tickInvestmentDaily(state) {
     // 静默：经济焦虑不影响主流程
   }
 
+  // ================================================================
+  // [R927 域E 联动增强 E→B]: 投资回撤叙事 — 组合回撤>15%时触发投资故事消息
+  //  每日限一次，帮助玩家理解回撤是投资的一部分
+  // ================================================================
+  try {
+    var _peakB = inv._portfolioPeak || 0;
+    var _curPvB = 0;
+    var _smB = inv.stockMarket || {};
+    var _hB = inv.stockHoldings || [];
+    for (var _hiB = 0; _hiB < _hB.length; _hiB++) {
+      var _hB2 = _hB[_hiB];
+      var _mB = _smB[_hB2.symbol];
+      if (_mB && isFinite(_mB.price) && isFinite(_hB2.shares)) _curPvB += _mB.price * _hB2.shares;
+    }
+    var _pB = inv.properties || [];
+    for (var _piB = 0; _piB < _pB.length; _piB++) {
+      _curPvB += _pB[_piB].currentPrice || _pB[_piB].buyPrice || 0;
+    }
+    if ((inv.btcHoldings || 0) > 0) _curPvB += (inv.btcPrice || 0) * inv.btcHoldings;
+    if (_peakB > 0 && _curPvB > 0) {
+      var _ddB = (_peakB - _curPvB) / _peakB;
+      if (_ddB > 0.15 && !state.flags._investDrawdownNarrativeDay || state.flags._investDrawdownNarrativeDay < state.player.day) {
+        state.flags._investDrawdownNarrativeDay = state.player.day;
+        if (_ddB > 0.3) {
+          StateManager.addMessage("📉 投资组合回撤超过30%！你开始反思自己的投资策略——「市场永远是对的，错的只能是自己的判断。」", "warning");
+        } else if (_ddB > 0.2) {
+          StateManager.addMessage("📉 投资组合回撤超过20%。你想起那句话——「别人恐惧我贪婪」，但手还是有点抖。", "warning");
+        } else {
+          StateManager.addMessage("📉 投资组合回撤超过15%。你告诉自己这是正常波动，但心里还是有点不踏实。", "info");
+        }
+      }
+    }
+  } catch (e) { /* 静默 */ }
+
   // [全系统自洽修复] 域E R246 联动增强(E→G): 组合创新高时心情提升
   try {
     var _peakH = inv._portfolioPeak || 0;
@@ -230354,6 +230928,43 @@ function checkInvestmentMilestones(state, inv) {
           state.flags._investSocialPerception10k = true;
           if (typeof StateManager !== "undefined") {
             StateManager.addMessage("💬 你的投资眼光在朋友圈里传开了，熟人开始向你请教理财建议。", "info");
+          }
+        }
+      }
+    } catch (e) { /* 静默 */ }
+
+    // [R927 域E 联动增强 E→G]: 组合健康检查 — 极端集中持仓(>80%单一资产)时健康负面影响
+    try {
+      if (state.flags && state.status) {
+        var _totalAssets = 0;
+        var _stockVal = 0, _propVal = 0, _cryptoVal = 0, _carVal = 0;
+        var _hEC = inv.stockHoldings || [];
+        for (var _hiEC = 0; _hiEC < _hEC.length; _hiEC++) {
+          var _hEC2 = _hEC[_hiEC];
+          var _mEC = inv.stockMarket && inv.stockMarket[_hEC2.symbol];
+          if (_mEC && _hEC2.shares) _stockVal += _mEC.price * _hEC2.shares;
+        }
+        var _pEC = inv.properties || [];
+        for (var _piEC = 0; _piEC < _pEC.length; _piEC++) {
+          _propVal += _pEC[_piEC].currentPrice || _pEC[_piEC].buyPrice || 0;
+        }
+        if ((inv.btcHoldings || 0) > 0) _cryptoVal += (inv.btcPrice || 0) * inv.btcHoldings;
+        _totalAssets = _stockVal + _propVal + _cryptoVal;
+        if (_totalAssets > 50000) {
+          var _maxRatio = Math.max(_stockVal, _propVal, _cryptoVal) / _totalAssets;
+          if (_maxRatio > 0.8 && !state.flags._portfolioConcentrationWarning) {
+            state.flags._portfolioConcentrationWarning = true;
+            state.status.health = Math.max(0, (state.status.health || 100) - 2);
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("⚠️ 你的投资组合过于集中（单一资产占比>80%）。财务风险极高，建议分散投资。健康-2。", "warning");
+            }
+          }
+          if (_maxRatio > 0.95 && !state.flags._portfolioConcentrationExtreme) {
+            state.flags._portfolioConcentrationExtreme = true;
+            state.status.health = Math.max(0, (state.status.health || 100) - 3);
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("🚨 你的投资几乎全部押注在单一资产上！这不是投资，是赌博。请立即分散风险。健康-3。", "danger");
+            }
           }
         }
       }
@@ -232057,6 +232668,32 @@ function renderInvestmentTab(state, parent) {
     "¥" +
     Math.round(totalPL).toLocaleString() +
     '</span> <span style="font-size:11px;color:var(--text-muted);cursor:pointer;" onclick="showInvestmentAnalysisModal()" title="查看投资分析工具">📊 分析</span>' +
+    // [R927 域E 联动增强 E→F]: 市场情绪看板 — 显示当前市场情绪指数和投资建议
+    (function() {
+      try {
+        var _inv = state.investment;
+        if (!_inv) return '';
+        var _mood = _inv._marketMood || 'neutral';
+        var _moodIcon = _mood === 'bullish' ? '🐂' : _mood === 'bearish' ? '🐻' : '➡️';
+        var _moodLabel = _mood === 'bullish' ? '牛市' : _mood === 'bearish' ? '熊市' : '中性';
+        var _moodColor = _mood === 'bullish' ? 'var(--danger)' : _mood === 'bearish' ? 'var(--success)' : 'var(--text-muted)';
+        // 计算日收益/亏损
+        var _dailyPL = 0;
+        var _sm = _inv.stockMarket || {};
+        var _holdings = _inv.stockHoldings || [];
+        for (var _hi = 0; _hi < _holdings.length; _hi++) {
+          var _h = _holdings[_hi];
+          var _m = _sm[_h.symbol];
+          if (_m && _m.history && _m.history.length >= 2 && _h.shares) {
+            _dailyPL += (_m.history[_m.history.length - 1].price - _m.history[_m.history.length - 2].price) * _h.shares;
+          }
+        }
+        var _dailyPLColor = _dailyPL >= 0 ? 'var(--danger)' : 'var(--success)';
+        var _dailyPLSign = _dailyPL >= 0 ? '+' : '';
+        return '<span style="font-size:11px;color:' + _moodColor + ';margin-left:8px;">' + _moodIcon + ' ' + _moodLabel + '</span>' +
+          '<span style="font-size:10px;color:' + _dailyPLColor + ';margin-left:6px;">今日 ' + _dailyPLSign + '¥' + Math.round(Math.abs(_dailyPL)).toLocaleString() + '</span>';
+      } catch (e) { return ''; }
+    })() +
     // [全系统自洽修复] 域F R390 联动增强(F→E): 投资组合风险仪表盘
     (function() {
       var _inv = state.investment;
@@ -234089,7 +234726,7 @@ if (typeof window !== "undefined") {
       if (!state || !state.investment) return null;
       var inv = state.investment;
       var data = { totalValue: 0, stocks: [], btc: null, properties: [], allocation: {}, dailyPL: 0 };
-      if (inv.stockHoldings) for (var i = 0; i < inv.stockHoldings.length; i++) { var h = inv.stockHoldings[i]; var m = inv.stockMarket && inv.stockMarket[h.symbol]; var price = m ? m.price : 0; var value = price * h.shares; data.totalValue += value; data.stocks.push({ symbol: h.symbol, shares: h.shares, price: price, value: value, buyPrice: h.buyPrice || 0 }); }
+      if (inv.stockHoldings) for (var i = 0; i < inv.stockHoldings.length; i++) { var h = inv.stockHoldings[i]; var m = inv.stockMarket && inv.stockMarket[h.symbol]; var price = m ? m.price : 0; var value = price * h.shares; data.totalValue += value; data.stocks.push({ symbol: h.symbol, shares: h.shares, price: price, value: value, buyPrice: (isFinite(h.avgPrice) ? h.avgPrice : 0) || 0 }); }
       if (inv.btcHoldings && inv.btcHoldings > 0) { var btcVal = (inv.btcPrice || 0) * inv.btcHoldings; data.totalValue += btcVal; data.btc = { holdings: inv.btcHoldings, price: inv.btcPrice || 0, value: btcVal }; }
       if (inv.properties) for (var pi = 0; pi < inv.properties.length; pi++) { var p = inv.properties[pi]; var pVal = p.currentPrice || p.buyPrice || 0; data.totalValue += pVal; data.properties.push({ id: p.id, name: p.name || '房产', value: pVal, buyPrice: p.buyPrice || 0 }); }
       if (data.totalValue > 0) { var stockVal = data.stocks.reduce(function(a, b) { return a + b.value; }, 0); var propVal = data.properties.reduce(function(a, b) { return a + b.value; }, 0); var btcVal = data.btc ? data.btc.value : 0; data.allocation = { '股票': Math.round((stockVal / data.totalValue) * 100), '房产': Math.round((propVal / data.totalValue) * 100), '虚拟币': Math.round((btcVal / data.totalValue) * 100), '现金': Math.max(0, 100 - Math.round((stockVal + propVal + btcVal) / data.totalValue * 100)) }; }
@@ -234205,7 +234842,9 @@ if (typeof window !== "undefined") {
         for (var i = 0; i < stocks.length; i++) {
           var h = stocks[i];
           var m = inv.stockMarket && inv.stockMarket[h.symbol];
-          if (m && h.buyPrice) totalPL += (m.price - h.buyPrice) * h.shares;
+          // [R927 域E A类#1修复] h.buyPrice 字段不存在(持仓用 avgPrice)→导致收益计算恒为NaN,事件文本永远"市场整体平稳"
+          var _buyPx = isFinite(h.avgPrice) ? h.avgPrice : 0;
+          if (m && _buyPx > 0) totalPL += (m.price - _buyPx) * h.shares;
         }
         if (totalPL > 0) return "你的投资组合目前盈利中。市场趋势对你有利。";
         if (totalPL < 0) return "你的投资组合目前亏损。市场波动是正常的。";
@@ -234922,12 +235561,37 @@ window.getPropertyCount = function (state) {
 // _esc 转义函数由 render.js 全局提供
 
 // ====== 行业定义 ======
+// [R1019 域A A类修复·第四轮] `industryMod` 语义倒置修正。
+//
+// 原实现（`startup.js:2546`）：
+//     const industryMod = STARTUP_INDUSTRIES[industry]?.avgBurnRate / 50000 || 1;
+// 把「行业平均**年**烧钱额」直接当成了**收入乘数** —— 一个字段被赋予两种完全
+// 不相干的含义：
+//     · 成本语义：`avgBurnRate` → `company.burnRate` → `monthsOfRunway`（startup.js:557/735/2670）
+//     · 收入语义：`avgBurnRate / 50000` → `industryMod`（startup.js:2546）
+// 更严重的是，作为「成本」的那一面**从未真正收取** —— 实测（scripts/probe-post-launch.cjs）
+// 日支出只有 ¥258，而 finance 的 avgBurnRate 折算下来是 **¥411/天**，
+// tech 是 ¥329/天。也就是说：
+//     · 声称烧钱多的行业（finance/healthcare）→ 收入反而高；
+//     · 声称烧钱少的行业（manufacturing/consumer）→ 收入反而低；
+//     · 但两者的**实际支出完全一样**（都是同一套租金/研发/营销/水电公式）。
+// 结果「重资产的制造业收入最低、高杠杆的金融收入最高」这一排序虽与行业叙事
+// 方向一致（金融确实更赚钱），但其**成因**是编造的 —— 玩家看到的数字不对应
+// 任何真实的经营差异。
+//
+// 修正：拆成两个**各自单一含义**的字段 ——
+//     · `revenueMultiplier`：显式的行业收入系数（原 `avgBurnRate / 50000` 的等价数值，
+//       收入曲线**零变化**，6 行业盈利结论不变）；
+//     · `avgBurnRate`：保留但其语义澄清为「行业平均年烧钱额」，仍用于 runway 展示。
+// 后续若要「真正收取行业性成本」（方案 D 的完整形态），应新增独立的成本项，
+// 而不是继续借用这个字段。
 const STARTUP_INDUSTRIES = {
   tech: {
     name: "科技",
     icon: "💻",
     baseValuation: 1400000,
-    avgBurnRate: 120000,
+    avgBurnRate: 120000, // 行业平均年烧钱额（用于 runway 展示）
+    revenueMultiplier: 2.4, // 行业收入系数（原 avgBurnRate/50000 = 2.40）
     keySkills: ["coding", "english"],
     desc: "互联网/软件/AI，高增长高波动",
   },
@@ -234936,6 +235600,7 @@ const STARTUP_INDUSTRIES = {
     icon: "🛍️",
     baseValuation: 700000,
     avgBurnRate: 80000,
+    revenueMultiplier: 1.6, // 原 80000/50000 = 1.60
     keySkills: ["sales", "cooking"],
     desc: "零售/餐饮/品牌，稳定但增长慢",
   },
@@ -234944,6 +235609,7 @@ const STARTUP_INDUSTRIES = {
     icon: "💳",
     baseValuation: 2100000,
     avgBurnRate: 150000,
+    revenueMultiplier: 3.0, // 原 150000/50000 = 3.00
     keySkills: ["accounting", "management"],
     desc: "支付/理财/保险科技，政策敏感",
   },
@@ -234952,6 +235618,7 @@ const STARTUP_INDUSTRIES = {
     icon: "🏥",
     baseValuation: 1750000,
     avgBurnRate: 130000,
+    revenueMultiplier: 2.6, // 原 130000/50000 = 2.60
     keySkills: ["management"],
     desc: "医疗/医药/健康服务，监管严格",
   },
@@ -234960,6 +235627,7 @@ const STARTUP_INDUSTRIES = {
     icon: "📚",
     baseValuation: 560000,
     avgBurnRate: 110000,
+    revenueMultiplier: 2.2, // 原 110000/50000 = 2.20
     keySkills: ["english", "management"],
     desc: "培训/在线教育/内容，受政策影响大",
   },
@@ -234968,6 +235636,7 @@ const STARTUP_INDUSTRIES = {
     icon: "🏭",
     baseValuation: 1050000,
     avgBurnRate: 70000,
+    revenueMultiplier: 1.4, // 原 70000/50000 = 1.40
     keySkills: ["repair", "electrician"],
     desc: "硬件/智能设备/新材料，重资产",
   },
@@ -237583,7 +238252,17 @@ function registerStartup(state, name, industry, description) {
     expenses: 0,
     cashReserve: minCash, // 剩余启动资金
     burnRate: STARTUP_INDUSTRIES[industry].avgBurnRate,
-    monthsOfRunway: 3, // 初始3个月 runway
+    // [R1019 域A A类修复] 原为硬编码 `monthsOfRunway: 3`（注释"初始3个月 runway"），
+    //   与真实值相差 **14~30 倍**：真实 runway = cashReserve / (burnRate/30)
+    //   = 15000 / (70000~150000/30) = **3.0 ~ 6.4 天**（按行业）。
+    //   该字段喂给 UI（showCompanyDashboard 显示"Runway N月"并据此配色）
+    //   与董事会压力判定（_calculateBoardPressureLevel 的 `monthsOfRunway < 3`），
+    //   即玩家会看到"还有 3 个月"而实际三天多就破产，压力系统也永不触发。
+    //   改为按真实值计算，与 tickStartup 内第 4 步（L2600）的口径保持一致。
+    monthsOfRunway:
+      STARTUP_INDUSTRIES[industry].avgBurnRate > 0
+        ? minCash / (STARTUP_INDUSTRIES[industry].avgBurnRate / 30)
+        : 999,
     employees: [],
     reputation: 30,
     technologyScore: 20,
@@ -237984,7 +238663,15 @@ function developProduct(state, productId, effort) {
   );
 
   // 消耗公司现金（研发成本）
-  const devCost = 1000 * effort;
+  // [R1019 域A A类修复] 原为 `1000 * effort`，但**注册资金只有 ¥15,000**，
+  //   而攒满 100 进度需 19~31 次开发 → 研发总成本 ¥38,000~93,000
+  //   （effort=2 时 19 次 × ¥2,000 = ¥38,462），**缺口 2.5x 起**。
+  //   加上每日固定支出 ¥405，玩家注册后 37 天内必然破产，
+  //   且**数学上不可能活到第一个产品上线**（详见报告第二十八节）。
+  //   单价改为 ¥200/effort 后：19 次 × ¥400 = ¥7,692，
+  //   加同期租金 ¥3,462 ≈ ¥11,154 → 余量 26%，玩家终于"有机会做成"。
+  //   ⚠️ 改动只为让创业**可达**，不改变"产品做出来才有收入"的核心循环。
+  const devCost = 200 * effort;
   // [全系统自洽修复] 域E A类#8: developProduct cashReserve NaN防护
   company.cashReserve = Math.max(0, (company.cashReserve || 0) - devCost);
   company.expenses += devCost;
@@ -238777,14 +239464,16 @@ function _addBoardMemberAfterFunding(state, roundId, investorType) {
 /** 计算季度KPI完成率 */
 function _calculateQuarterlyKPIScore(state, company) {
   const quarter = Math.floor((state.player.day - company.foundedDay) / 90) + 1;
+  // [R927 域E A类#2修复] company.fundingRounds 可能未定义(旧存档/数据异常)→加 Array.isArray 守卫防崩溃
+  var _fundingRounds = Array.isArray(company.fundingRounds) ? company.fundingRounds : [];
   const fundingRound =
     company.phase === "seed"
       ? "seed"
-      : company.fundingRounds.length >= 3
+      : _fundingRounds.length >= 3
         ? "C"
-        : company.fundingRounds.length >= 2
+        : _fundingRounds.length >= 2
           ? "B"
-          : company.fundingRounds.length >= 1
+          : _fundingRounds.length >= 1
             ? "A"
             : "seed";
 
@@ -239497,12 +240186,38 @@ function tickStartup(state, tickType) {
   // 时间倍率：daily=1, quarterly=90（天）
   const timeMult = tickType === "daily" ? 1 : 90;
   // 每日基础参数
-  const DAILY_BASE_REVENUE = 180; // ~¥180/天/产品 → ~¥16,200/季度
+  // [R1019 域A A类修复·第三轮] DAILY_BASE_REVENUE 180 → 480。
+  //   原值 180 下，即使「分数打满 + 最好的行业」也难以覆盖 ¥258~318/天 的支出；
+  //   更严重的是**六个行业里有两个（制造业/消费业）在任何分数下都无盈利解**
+  //   （双满值时制造业 −¥66/天、消费业 −¥30/天，见报告 31.4）。
+  //   配合「收入改取平均」（见下方 scoreMod）与「营销 120→60」，标定到 480：
+  //     · 最弱的制造业在现实分数（tech54/market30）下毛利 **+¥25/天**（薄但为正）
+  //     · 最强的金融科技 +¥347/天
+  //   既保证「6 个行业全部可盈利」，又保留了「行业难度梯度」
+  //   （制造业最薄、金融科技最厚 —— 与 avgBurnRate 的叙事方向一致）。
+  const DAILY_BASE_REVENUE = 480; // ~¥480/天/产品
   const DAILY_SALARY_DIV = 30; // 月薪÷30 = 日薪
   const DAILY_RENT_BASE = 180; // ~¥180/天 → ~¥5,400/季度
   const DAILY_RENT_PER_EMP = 33; // ~¥33/天/人 → ~¥1,000/季度
-  const DAILY_RD = 180; // ~¥180/天/产品 → ~¥16,200/季度
-  const DAILY_MARKETING_BASE = 120; // ~¥120/天 → ~¥3,600/季度
+  // [R1019 域A A类修复·第二轮] 原为 180。第一轮只把「一次性研发成本」从 1000/effort
+  //   降到 200/effort，漏掉了这个**每日**研发管理费 —— 它按「开发中的产品数」每天照收，
+  //   单人公司做第一个产品时 = ¥180/天，比租金还高，是真正的烧钱主项。
+  //   实测（scripts/probe-startup-survival.cjs，tech/effort=2）：
+  //     注册¥15,000，日支出实测 ¥443（租金180 + 研发180 + 水电50 + 舍入），
+  //     叠加每次开发 ¥400 → 第 18 天破产于进度 96%，**差一点仍然做不出来**。
+  //     穷举 effort=1/2/3 三档全部失败（effort=1 反而单位进度成本最低：¥52/点 vs ¥82.6/¥102.7）。
+  //   语义修正：把「研发管理费」定位为**团队管理开销**，而非「产品存在税」。
+  //     单人公司没有管理开销 → 取 ¥60/天（下一档 D 方案，最小改动版）。
+  //     实测改后：effort=1 时第 27 天完成 104% 进度，余 ¥879（余量 5.9%）。
+  //   ⚠️ 注意：这只是「活到产品上线」，上线后日收入 ~¥8.6 vs 日支出 ¥405 仍亏损，
+  //     属第二个问题（首产品收入微薄），未在本轮处理。
+  const DAILY_RD = 60; // ~¥60/天/产品 → ~¥5,400/季度（原 180）
+  // [R1019 域A A类修复·第三轮] DAILY_MARKETING_BASE 120 → 60。
+  //   上线后它是**最大的单项固定支出**（占 ¥258 支出的 47%），
+  //   且产品已上线时"每天固定烧 ¥120 营销"语义上也偏重 ——
+  //   营销更应随收入缩放（下方 DAILY_MARKETING_RATIO 那一项就是这个作用）。
+  //   减半后 + 收入侧修复，六行业才全部扭亏为盈。
+  const DAILY_MARKETING_BASE = 60; // ~¥60/天 → ~¥5,400/季度（原 120）
   const DAILY_MARKETING_RATIO = 0.05 / 90; // 日营收比例
   const DAILY_LOYALTY_DECAY_BAD = 0.12; // ~3.6/季度
   const DAILY_LOYALTY_DECAY_GOOD = 0.02; // ~0.6/季度
@@ -239525,8 +240240,20 @@ function tickStartup(state, tickType) {
       var _market = (typeof product.marketScore === "number" && isFinite(product.marketScore)) ? product.marketScore : 50;
       const techMod = _tech / 100;
       const marketMod = _market / 100;
+      // [R1019 域A A类修复·第四轮] industryMod 语义倒置修正 —— 详见 startup_data.js
+      //   头部注释。原为 `avgBurnRate / 50000`：把「行业平均年烧钱额」直接当收入
+      //   乘数，一个字段兼两种含义，且作为成本的那一面从未真正收取（实测日支出
+      //   恒为 ¥258，而 finance 的 avgBurnRate 折合 ¥411/天）。
+      //   改为读取显式的 `revenueMultiplier` 字段 —— 数值与原表达式**完全等价**，
+      //   收入曲线零变化（6 行业盈利结论不变），但语义单一、可读、可独立调整。
+      //   兜底保留 `/ 50000` 算式，兼容旧存档/外部注入的行业表。
+      var _industryDef = STARTUP_INDUSTRIES[company.industry];
       const industryMod =
-        STARTUP_INDUSTRIES[company.industry]?.avgBurnRate / 50000 || 1;
+        (_industryDef &&
+          (typeof _industryDef.revenueMultiplier === "number"
+            ? _industryDef.revenueMultiplier
+            : _industryDef.avgBurnRate / 50000)) ||
+        1;
       const growthMod = 1 + (company.revenue > 0 ? DAILY_GROWTH_BONUS : 0);
 
       // 行业热度联动：sectorHeat 偏离 1.0 的每 10% 转化 ±5% 收入调整
@@ -239540,10 +240267,22 @@ function tickStartup(state, tickType) {
       }
       var heatMod = 1 + (sectorHeat - 1.0) * 0.5; // 50% 传导系数
 
+      // [R1019 域A A类修复·第三轮] 收入公式：乘法 → 取平均。
+      //   原为 `techMod * marketMod`（乘法），导致两门分数**互相拖累**：
+      //     技术型创始人（techScore 54 / marketScore 30）→ 0.54 × 0.30 = **0.162**
+      //     即「产品再好，只要不会卖，收入砍到 16%」。
+      //   实测（scripts/probe-post-launch.cjs）：日收入 ¥70 vs 日支出 ¥318，
+      //     **要打平需 marketScore 从 30 涨到 100（满值）** —— 数学上不可能；
+      //     且穷举四条逃逸路线（招销售/营销投放/多产品/融资）**全部堵死**。
+      //   改为取平均 `(techMod + marketMod) / 2`：
+      //     技术型 (0.54+0.30)/2 = **0.42**（原 0.162）→ 收入 ×2.6。
+      //   语义：产品的技术含量与市场表现**各占一半贡献**，而非"缺一即废"。
+      //   这也是常见游戏数值做法 —— 乘法用于"乘法加成叠加"，平均用于"双维度评分"。
+      const scoreMod = (techMod + marketMod) / 2;
+
       product.revenue = Math.round(
         baseRevenue *
-          techMod *
-          marketMod *
+          scoreMod *
           industryMod *
           growthMod *
           heatMod *
@@ -239554,6 +240293,17 @@ function tickStartup(state, tickType) {
   }
 
   // 2. 支出计算
+  // [R1019 域A A类修复] 「产品上线前」判定 —— 用于免除此阶段不合理的支出。
+  //   公司刚注册时 products=[]，既无产品可营销、也无产品可摊研发管理费，
+  //   但原实现照收 营销¥120 + 水电¥50 + 合规¥30 + 杂项¥25 = ¥225/天，
+  //   叠加该阶段本就高昂的研发成本（见 devCost 处注释），
+  //   使玩家「注册后 37 天内必然破产、数学上做不出第一个产品」。
+  //   语义修正：没有已上线产品的公司，不收营销/合规/杂项
+  //   （租金与水电保留 —— 场地是实打实租着的；员工工资同理保留）。
+  const _hasLaunchedProduct =
+    Array.isArray(company.products) &&
+    company.products.some((p) => p.status === "launched");
+  const _preLaunch = !_hasLaunchedProduct;
   let totalExpenses = 0;
   // 员工工资（日薪 × 天数）
   for (const emp of company.employees) {
@@ -239581,10 +240331,11 @@ function tickStartup(state, tickType) {
     (Array.isArray(company.products) ? company.products.filter((p) => p.status === "developing") : []).length *
     Math.round(DAILY_RD * timeMult);
   totalExpenses += rAndD;
-  // 营销
-  const marketing =
-    Math.round(DAILY_MARKETING_BASE * timeMult) +
-    Math.round(company.revenue * DAILY_MARKETING_RATIO * timeMult);
+  // 营销（R1019：产品上线前无物可销 → 不收）
+  const marketing = _preLaunch
+    ? 0
+    : Math.round(DAILY_MARKETING_BASE * timeMult) +
+      Math.round(company.revenue * DAILY_MARKETING_RATIO * timeMult);
   totalExpenses += marketing;
 
   // ====== 新增运营成本（使创业更难更真实）=======
@@ -239592,16 +240343,20 @@ function tickStartup(state, tickType) {
   // (recession×1.15 / boom×0.9 / normal×1.0，daily_pipeline economy_v3_tick 每日维护)
   const corpCostMod = (state.flags && state.flags._corpCostMod) || 1;
 
-  // 水电网络费 ~¥50/天
+  // 水电网络费 ~¥50/天（场地在使用，照收）
   const utilities = Math.round(50 * timeMult * corpCostMod);
   totalExpenses += utilities;
 
   // 法律合规费 ~¥30/天（工商年检、商标、许可证等）
-  const legalCompliance = Math.round(30 * timeMult * corpCostMod);
+  // R1019：产品上线前无经营行为，不收
+  const legalCompliance = _preLaunch
+    ? 0
+    : Math.round(30 * timeMult * corpCostMod);
   totalExpenses += legalCompliance;
 
   // 杂项（办公耗材、茶水、清洁等）~¥25/天
-  const miscOps = Math.round(25 * timeMult * corpCostMod);
+  // R1019：产品上线前无办公消耗，不收
+  const miscOps = _preLaunch ? 0 : Math.round(25 * timeMult * corpCostMod);
   totalExpenses += miscOps;
 
   // 社保公积金（每个员工额外40%用工成本，随经济周期同向波动）
@@ -253882,8 +254637,13 @@ function tickFamilyDaily(state) {
     }
 
     // 月度收入
+    // [账本覆盖补齐 · 第八轮 · 2026-09-16] 探针实测 family_daily 是第二大漏账源
+    // （1 局 trader×40 天 −87,000 全部来自本函数），原本一条账都不记。
     state.resources.cash = (state.resources.cash || 0) + spouse.income;
     state.resources.totalEarned = (state.resources.totalEarned || 0) + spouse.income;
+    if (spouse.income > 0 && typeof addDailyTransaction === "function") {
+      addDailyTransaction(state, "income", "family_income", spouse.income, "配偶收入");
+    }
   }
 
   // 月度家庭支出
@@ -253897,6 +254657,10 @@ function tickFamilyDaily(state) {
 
     if ((state.resources.cash || 0) >= totalMonthly) {
       state.resources.cash = Math.max(0, (state.resources.cash || 0) - totalMonthly);
+      // [账本覆盖补齐 · 第八轮 · 2026-09-16] 同段注释：家庭月支出原本也不上账本。
+      if (typeof addDailyTransaction === "function") {
+        addDailyTransaction(state, "expense", "family_expense", totalMonthly, "家庭月支出");
+      }
       StateManager.addMessage(
         `📊 本月家庭支出¥${totalMonthly.toLocaleString()}`,
         "hint",
@@ -298957,6 +299721,16 @@ if (typeof window !== "undefined") {
       }
     }
 
+    // [全系统自洽修复] 域F 联动增强: F→E 闲置现金投资建议 — 现金>5000且无紧迫债务时建议存款或投资
+    if ((r.cash || 0) >= 5000 && (r.villageDebt || 0) === 0 && (r.fineDebt || 0) === 0) {
+      out.push({
+        w: 42,
+        icon: "🏦",
+        text: "现金较充裕，考虑存款或投资",
+        hint: "口袋¥" + ((r.cash || 0) + (r.bankBalance || 0)).toLocaleString() + "，让钱生钱",
+      });
+    }
+
     return out;
   }
 
@@ -299390,10 +300164,12 @@ function checkVictoryPaths(state) {
     return;
   }
 
-  // ⭐ 城市名人：名气 >= 100 持续 10 天
-  if (state.player.fame >= 100) {
-    state.status.fameDays = (state.status.fameDays || 0) + 1;
-    if (state.status.fameDays >= 10) {
+  // [全系统自洽修复] 域F 修复: state.player 和 state.status 守卫
+  var _pFame = (state.player || {}).fame || 0;
+  var _statusFameDays = state.status || {};
+  if (_pFame >= 100) {
+    _statusFameDays.fameDays = (_statusFameDays.fameDays || 0) + 1;
+    if (_statusFameDays.fameDays >= 10) {
       triggerVictory(
         state,
         "celebrity",
@@ -299403,11 +300179,12 @@ function checkVictoryPaths(state) {
       return;
     }
   } else {
-    state.status.fameDays = 0;
+    _statusFameDays.fameDays = 0;
   }
 
+  // [全系统自洽修复] 域F 修复: state.skills 守卫
   // 🎓 技能大师：全部10项技能达到80级
-  const skillValues = Object.values(state.skills);
+  const skillValues = Object.values(state.skills || {});
   if (
     skillValues.length >= 10 &&
     skillValues.every(function (s) {
@@ -299454,8 +300231,9 @@ function checkVictoryPaths(state) {
     return;
   }
 
+  // [全系统自洽修复] 域F 修复: state.player 守卫
   // 🎓 学术大师（博士+多项研究成果）
-  if (state.player.education >= 3 && (state.player.research || 0) >= 3) {
+  if (((state.player || {}).education || 0) >= 3 && ((state.player || {}).research || 0) >= 3) {
     triggerVictory(
       state,
       "academic_master",
@@ -299505,9 +300283,10 @@ function checkVictoryPaths(state) {
     }
   }
 
+  // [全系统自洽修复] 域F 修复: state.skills 守卫
   // 🛠️ 匠人一生（单项技能满级+证书>=5+同职业>=15年）
   var _vcHasMasterSkill = false;
-  for (var _vcSk in state.skills) {
+  for (var _vcSk in (state.skills || {})) {
     if (state.skills[_vcSk] && state.skills[_vcSk].level >= 100) {
       _vcHasMasterSkill = true;
       break;
@@ -299528,8 +300307,9 @@ function checkVictoryPaths(state) {
     return;
   }
 
+  // [全系统自洽修复] 域F 修复: state.player 守卫
   // 🏚️ 流浪终老（暗结局：35岁后+无房+赤贫+失业）
-  var _vcAgeYear = state.player.day / 365;
+  var _vcAgeYear = ((state.player || {}).day || 0) / 365;
   if (
     _vcAgeYear >= 35 &&
     (!state.housing || state.housing.tier === 0) &&
@@ -299592,8 +300372,9 @@ function checkVictoryPaths(state) {
     return;
   }
 
+  // [全系统自洽修复] 域F 修复: state.player 守卫
   // 🏢 职场巅峰（保留原有逻辑）
-  if (state.player.phase === "corporate" && state.corporate && state.corporate.rank === "P10") { // [全系统自洽修复] 域F A类: state.corporate 守卫
+  if ((state.player || {}).phase === "corporate" && state.corporate && state.corporate.rank === "P10") {
     triggerVictory(
       state,
       "p10",
@@ -304004,6 +304785,21 @@ var CATEGORY_LABELS = {
   gift: "礼物",
   loan: "贷款",
   insurance: "保险",
+  // [账本覆盖补齐 · 2026-09-16] 管线里这几条高频现金流原本完全不上账本，
+  // 导致日报「今日收支明细」在 37% 的天数里加不出余额变化（报告第二十四节）。
+  side_skill: "副业",
+  training_income: "培训",
+  pension: "养老金",
+  advisor_fee: "顾问费",
+  content_salary: "稿酬",
+  streak_bonus: "全勤奖",
+  career_bonus: "职业奖金",
+  // [账本覆盖补齐 · 第八轮 · 2026-09-16] 用逐步骤现金追踪实测出**最大的两处**漏账：
+  //   news 步骤 +61,976（`applyNewsEffect` 的 cashBonus）
+  //   family_daily 步骤 −87,000（`tickFamilyDaily` 的配偶月收入/家庭月支出）
+  // 这两处是「其余 96% 未覆盖现金改动」里的主因，补上后告警才真正下降。
+  news_income: "新闻红利",
+  family_income: "家庭收入",
   // 支出
   food: "饮食",
   rent: "房租",
@@ -304018,6 +304814,9 @@ var CATEGORY_LABELS = {
   fine: "罚款",
   entertainment: "娱乐",
   misc: "其他",
+  tax: "税金",
+  news_expense: "新闻损失",
+  family_expense: "家庭支出",
 };
 
 var CATEGORY_ICONS = {
@@ -304036,6 +304835,17 @@ var CATEGORY_ICONS = {
   gift: "🎁",
   loan: "📝",
   insurance: "🛡️",
+  // [账本覆盖补齐 · 2026-09-16] 见 CATEGORY_LABELS 同段注释
+  side_skill: "🧰",
+  training_income: "🎓",
+  pension: "🏖️",
+  advisor_fee: "🧑‍🏫",
+  content_salary: "✍️",
+  streak_bonus: "🎉",
+  career_bonus: "🏅",
+  // [账本覆盖补齐 · 第八轮 · 2026-09-16] 见 CATEGORY_LABELS 同段注释
+  news_income: "📰",
+  family_income: "👨‍👩‍👧",
   // 支出
   food: "🍔",
   rent: "🏠",
@@ -304050,6 +304860,9 @@ var CATEGORY_ICONS = {
   fine: "⚠️",
   entertainment: "🎵",
   misc: "💬",
+  tax: "🧾",
+  news_expense: "📰",
+  family_expense: "🏠",
 };
 
 /** 获取分类的中文标签 */
@@ -304078,7 +304891,14 @@ function reconcileTransactions(state) {
     trackedDelta += txs[i].type === "income" ? txs[i].amount : -txs[i].amount;
   }
 
-  var startCash = state.flags._dayStartCash || 0;
+  // [窗口语义拆分 · 第八轮 · 2026-09-16] 对账基准用「管线起点现金」。
+  // 原因见 `daily_pipeline.js` 的 day_increment 步骤：管线第 0 步捕获的那个值
+  // 才是本函数比较窗口的起点（此刻账本里还剩着当天玩家行动写下的条目），
+  // 而 `_dayStartCash` 已被日终总结占用为「真正的日初」。
+  var startCash =
+    state.flags._pipelineStartCash !== undefined
+      ? state.flags._pipelineStartCash
+      : state.flags._dayStartCash || 0;
   var actualDelta = ((state.resources && state.resources.cash) || 0) - startCash;
   var discrepancy = Math.round((actualDelta - trackedDelta) * 100) / 100;
 
@@ -306198,8 +307018,8 @@ function renderSocialNetworkTab(state, parent) {
   // 危机永不激活(触发器全库零调用)→发朋友圈永久不可达→粉丝恒0→网红经济/NPC动态全线死链。移出危机块。
   // 附带修复: 原 visibility='朋友' 非法枚举(合法:'public'/'friends'/'private')且非public不涨粉→双重锁死，改'public'。
   html += '<div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap;">';
-  html += '<button class="btn btn-sm" onclick="var _s=StateManager.getState();var _r=window.postToMoments(_s,(typeof pickMomentText===\'function\'?pickMomentText(_s):\'今天天气不错\'),null,\'public\');if(_r&&!_r.ok&&typeof StateManager!==\'undefined\')StateManager.addMessage(_r.message||\'发布失败\',\'warning\');renderAll();">📝 发朋友圈(20AP)</button>';
-  html += '<button class="btn btn-sm" onclick="window.refreshWeiboHotlist(StateManager.getState());renderAll();">🔄 刷新热搜</button>';
+  html += '<button class="btn btn-sm" onclick="var _s=StateManager.getState();var _r=window.postToMoments(_s,(typeof pickMomentText===\'function\'?pickMomentText(_s):\'今天天气不错\'),null,\'public\');if(_r&&!_r.ok&&typeof StateManager!==\'undefined\')StateManager.addMessage(_r.message||\'发布失败\',\'warning\');if(typeof renderAll===\'function\')renderAll();">📝 发朋友圈(20AP)</button>';
+  html += '<button class="btn btn-sm" onclick="window.refreshWeiboHotlist(StateManager.getState());if(typeof renderAll===\'function\')renderAll();">🔄 刷新热搜</button>';
   html += '</div>';
   if (sn.舆论危机 && sn.舆论危机.active) {
     html +=
@@ -405838,7 +406658,19 @@ function doStreetJob(job) {
   gainRepFromWork(state, job);
 
   // v3.6: 约定式触发槽（after_work 时机）
-  if (window.TriggerRegistry && state.player && state.player.day >= 7) {
+  // [修复 · 2026-09-15] 加 `!state._pendingEvent` 守卫。原来没有守卫 → 槽已占用时
+  // 会把已排队的事件**静默覆盖掉**（实测 300 天、作答率 0.5 时丢 14 次）。
+  // 更要紧的是：`triggerRandom` 内部是**先 setCooldown 再 return**，
+  // 所以"投不出去"也会白白烧掉 25~40 天冷却 → 这个事件下次也不会再来。
+  // 加了守卫后，槽被占用时**连掷都不掷**，冷却不消耗，下次槽空时还能正常出场。
+  // 注：节日/人生决策/路线事件**不加**这个守卫——它们写槽前已先打"已触发"flag，
+  // 跳过写入等于永久丢失；它们的覆盖属于有意的优先级设计。
+  if (
+    window.TriggerRegistry &&
+    state.player &&
+    state.player.day >= 7 &&
+    !state._pendingEvent
+  ) {
     try {
       var workEvent = window.TriggerRegistry.triggerRandom("after_work", state);
       if (workEvent) {

@@ -88,7 +88,16 @@
 
 ### P0-4 首跑已发现的存量疑点（转 P1 修复项，不阻塞框架）
 
-- **`TriggerRegistry.loadAll()` 读 `window.RANDOM_EVENTS`**（`trigger_registry.js:167`），而 `RANDOM_EVENTS` 是顶层 `const`，浏览器中**不挂 `window`**。`main.js:5171` 的初始化 IIFE 也走 `window.TriggerRegistry.loadAll()`。若 `RANDOM_EVENTS` 未被显式桥接到 `window`，约定式 `triggers` 事件将**全部注册失败**（正是 P0-4 要抓的"静默失效"类）。→ 建议 P1 核实并加一行 `window.RANDOM_EVENTS = RANDOM_EVENTS` 桥接或改读顶层引用。events_integrity 已内置桥接后再断言以避免误报。
+- ~~**`TriggerRegistry.loadAll()` 读 `window.RANDOM_EVENTS`**（`trigger_registry.js:167`），而 `RANDOM_EVENTS` 是顶层 `const`，浏览器中**不挂 `window`**。`main.js:5171` 的初始化 IIFE 也走 `window.TriggerRegistry.loadAll()`。若 `RANDOM_EVENTS` 未被显式桥接到 `window`，约定式 `triggers` 事件将**全部注册失败**（正是 P0-4 要抓的"静默失效"类）。→ 建议 P1 核实并加一行 `window.RANDOM_EVENTS = RANDOM_EVENTS` 桥接或改读顶层引用。events_integrity 已内置桥接后再断言以避免误报。~~ → **✅ 已核实并修复（2026-09-15）**
+  - **核实结论：疑点成立，且影响比预估更大。** 实测 `window.RANDOM_EVENTS === undefined`（`globalThis` 同样），`dist/app.js` 里 7 处 `window.RANDOM_EVENTS` **全是读、无一处赋值** → 生产环境同样断裂。后果：
+    - 12 个触发槽**全部为空**（修复前实测）
+    - `main.js` 的 `after_work` 槽、`travel.js` 的 `after_travel` 槽**两条链路全断**
+    - 5 个约定式 `triggers` 事件（`after_work_find_coin` / `after_work_rain_shelter` / `after_work_fellow_story` / `travel_perspective_shift` / `travel_new_friend`）**永久不可达**
+    - `daily_pipeline.js` 里 6 个 `trigger_slot_*` 步骤每天空跑（永远 `return null`）
+  - **修法**：改读顶层引用（`typeof RANDOM_EVENTS !== "undefined"` 优先，`window` 仅兜底，try/catch 防 const TDZ），**未采用** `window.RANDOM_EVENTS = RANDOM_EVENTS` 桥接——桥接会掩盖同类问题，而 `domain_e_linkage_r470.js:159` 已有正确的「先试顶层、再退 window」写法可循。
+  - **附带修**：`loadAllTriggers` 会扫两遍（`RANDOM_EVENTS` + `MORAL_EVENTS`，后者已被并入前者）→ 同一事件注册两次 → **权重翻倍**。`registerTriggeredEvent` 现在按 id 幂等。
+  - **同时修掉了掩盖它的门禁**：`tests/events_integrity.cjs` 原有一段「桥接」`window.RANDOM_EVENTS = RE`，理由是"无头环境下 window 可能不指向真实全局"——**这个理由本身是错的**（顶层 `const` 在任何环境都不挂 window），那段桥接把真 bug 掩盖成了绿灯。现已删除，并把断言从「注册总数 > 0」加强为「逐槽：注册数 == 声明数」。
+  - **回归网**：`tests/triggerRegistry.test.cjs`（16 项断言，已挂入 `test:unit`）。
 
 ## P1 落地路线（近期）
 

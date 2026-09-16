@@ -1187,6 +1187,7 @@ var NPCS = [
         id: "xiaomeiModelJob",
         desc: "介绍高端兼职，解锁商业区模特工作",
         effect: function (st) {
+          if (!st.flags) st.flags = {}; // [全系统自洽修复] 域D 修复: st.flags守卫(防旧存档/异常状态致TypeError)
           if (st.flags.xiaomeiModelJob) return;
           st.flags.xiaomeiModelJob = true;
           StateManager.addMessage(
@@ -3132,6 +3133,7 @@ var NPCS = [
         id: "zhaojieCityInfo",
         desc: "提前获知城市改造信息，避免房租暴涨",
         effect: function (st) {
+          if (!st.flags) st.flags = {}; // [全系统自洽修复] 域D 修复: st.flags守卫(防旧存档/异常状态致TypeError)
           if (st.flags.zhaojieCityInfo) return;
           st.flags.zhaojieCityInfo = true;
           StateManager.addMessage(
@@ -3346,6 +3348,7 @@ var NPCS = [
         id: "chenGeInfoBonus",
         desc: "获取独家情报，触发隐藏事件",
         effect: function (st) {
+          if (!st.flags) st.flags = {}; // [全系统自洽修复] 域D 修复: st.flags守卫(防旧存档/异常状态致TypeError)
           if (st.flags.chenGeInfoBonus) return;
           st.flags.chenGeInfoBonus = true;
           StateManager.addMessage(
@@ -3550,6 +3553,7 @@ var NPCS = [
         id: "ajie_30",
         desc: "阿杰还你一部分钱（¥100）",
         effect: function (st) {
+          if (!st.flags) st.flags = {}; // [全系统自洽修复] 域D 修复: st.flags守卫(防旧存档/异常状态致TypeError)
           if (st.flags.ajiePaid) return;
           st.resources.cash = (st.resources.cash || 0) + 100;
           st.flags.ajiePaid = true;
@@ -3564,6 +3568,7 @@ var NPCS = [
         id: "ajie_60",
         desc: "阿杰还你全部欠款（¥300）并介绍工作",
         effect: function (st) {
+          if (!st.flags) st.flags = {}; // [全系统自洽修复] 域D 修复: st.flags守卫(防旧存档/异常状态致TypeError)
           if (st.flags.ajiePaidFull) return;
           st.resources.cash = (st.resources.cash || 0) + 300;
           st.flags.ajiePaidFull = true;
@@ -3579,6 +3584,7 @@ var NPCS = [
         id: "ajie_80",
         desc: "阿杰彻底还钱+成为固定联系人",
         effect: function (st) {
+          if (!st.flags) st.flags = {}; // [全系统自洽修复] 域D 修复: st.flags守卫(防旧存档/异常状态致TypeError)
           if (st.flags.ajieTrusted) return;
           st.flags.ajieTrusted = true;
           st.flags.ajieReferred = true;
@@ -3717,6 +3723,7 @@ var NPCS = [
         id: "old_ma_30",
         desc: "老马教你砌墙技巧(维修XP+10)",
         effect: function (st) {
+          if (!st.flags) st.flags = {}; // [全系统自洽修复] 域D 修复: st.flags守卫(防旧存档/异常状态致TypeError)
           if (st.flags.oldMaSkillBonus) return;
           // [全系统自洽修复] 域C R243: addSkillXp("physique")不是真实技能键→映射到repair(砌墙是手艺活)
           if (typeof addSkillXp === "function") addSkillXp("repair", 10);

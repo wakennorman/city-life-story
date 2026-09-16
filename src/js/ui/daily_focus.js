@@ -316,6 +316,16 @@
       }
     }
 
+    // [全系统自洽修复] 域F 联动增强: F→E 闲置现金投资建议 — 现金>5000且无紧迫债务时建议存款或投资
+    if ((r.cash || 0) >= 5000 && (r.villageDebt || 0) === 0 && (r.fineDebt || 0) === 0) {
+      out.push({
+        w: 42,
+        icon: "🏦",
+        text: "现金较充裕，考虑存款或投资",
+        hint: "口袋¥" + ((r.cash || 0) + (r.bankBalance || 0)).toLocaleString() + "，让钱生钱",
+      });
+    }
+
     return out;
   }
 

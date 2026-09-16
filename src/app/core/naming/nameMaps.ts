@@ -39,6 +39,12 @@ const SKILL_NAMES: Record<string, string> = {
   accounting: "会计",
   electrician: "电工",
   welding: "焊接",
+  // [同步 · 2026-09-15] 补齐 JS 运行时后来新增的两项。
+  // 来源：src/js/core/skill_tree.js:1308-1309（域C 修复：缺失导致
+  // career_dev 推荐分支 UI 显示 "medicine"/"social" 而非中文）。
+  // 不补的话本端口与运行时不一致，naming.canonical 比对会漏判。
+  medicine: "医学",
+  social: "社交",
 };
 
 const STAT_NAMES: Record<string, string> = {

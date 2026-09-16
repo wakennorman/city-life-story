@@ -1506,6 +1506,40 @@ function tickInvestmentDaily(state) {
     // 静默：经济焦虑不影响主流程
   }
 
+  // ================================================================
+  // [R927 域E 联动增强 E→B]: 投资回撤叙事 — 组合回撤>15%时触发投资故事消息
+  //  每日限一次，帮助玩家理解回撤是投资的一部分
+  // ================================================================
+  try {
+    var _peakB = inv._portfolioPeak || 0;
+    var _curPvB = 0;
+    var _smB = inv.stockMarket || {};
+    var _hB = inv.stockHoldings || [];
+    for (var _hiB = 0; _hiB < _hB.length; _hiB++) {
+      var _hB2 = _hB[_hiB];
+      var _mB = _smB[_hB2.symbol];
+      if (_mB && isFinite(_mB.price) && isFinite(_hB2.shares)) _curPvB += _mB.price * _hB2.shares;
+    }
+    var _pB = inv.properties || [];
+    for (var _piB = 0; _piB < _pB.length; _piB++) {
+      _curPvB += _pB[_piB].currentPrice || _pB[_piB].buyPrice || 0;
+    }
+    if ((inv.btcHoldings || 0) > 0) _curPvB += (inv.btcPrice || 0) * inv.btcHoldings;
+    if (_peakB > 0 && _curPvB > 0) {
+      var _ddB = (_peakB - _curPvB) / _peakB;
+      if (_ddB > 0.15 && !state.flags._investDrawdownNarrativeDay || state.flags._investDrawdownNarrativeDay < state.player.day) {
+        state.flags._investDrawdownNarrativeDay = state.player.day;
+        if (_ddB > 0.3) {
+          StateManager.addMessage("📉 投资组合回撤超过30%！你开始反思自己的投资策略——「市场永远是对的，错的只能是自己的判断。」", "warning");
+        } else if (_ddB > 0.2) {
+          StateManager.addMessage("📉 投资组合回撤超过20%。你想起那句话——「别人恐惧我贪婪」，但手还是有点抖。", "warning");
+        } else {
+          StateManager.addMessage("📉 投资组合回撤超过15%。你告诉自己这是正常波动，但心里还是有点不踏实。", "info");
+        }
+      }
+    }
+  } catch (e) { /* 静默 */ }
+
   // [全系统自洽修复] 域E R246 联动增强(E→G): 组合创新高时心情提升
   try {
     var _peakH = inv._portfolioPeak || 0;
@@ -1852,6 +1886,43 @@ function checkInvestmentMilestones(state, inv) {
           state.flags._investSocialPerception10k = true;
           if (typeof StateManager !== "undefined") {
             StateManager.addMessage("💬 你的投资眼光在朋友圈里传开了，熟人开始向你请教理财建议。", "info");
+          }
+        }
+      }
+    } catch (e) { /* 静默 */ }
+
+    // [R927 域E 联动增强 E→G]: 组合健康检查 — 极端集中持仓(>80%单一资产)时健康负面影响
+    try {
+      if (state.flags && state.status) {
+        var _totalAssets = 0;
+        var _stockVal = 0, _propVal = 0, _cryptoVal = 0, _carVal = 0;
+        var _hEC = inv.stockHoldings || [];
+        for (var _hiEC = 0; _hiEC < _hEC.length; _hiEC++) {
+          var _hEC2 = _hEC[_hiEC];
+          var _mEC = inv.stockMarket && inv.stockMarket[_hEC2.symbol];
+          if (_mEC && _hEC2.shares) _stockVal += _mEC.price * _hEC2.shares;
+        }
+        var _pEC = inv.properties || [];
+        for (var _piEC = 0; _piEC < _pEC.length; _piEC++) {
+          _propVal += _pEC[_piEC].currentPrice || _pEC[_piEC].buyPrice || 0;
+        }
+        if ((inv.btcHoldings || 0) > 0) _cryptoVal += (inv.btcPrice || 0) * inv.btcHoldings;
+        _totalAssets = _stockVal + _propVal + _cryptoVal;
+        if (_totalAssets > 50000) {
+          var _maxRatio = Math.max(_stockVal, _propVal, _cryptoVal) / _totalAssets;
+          if (_maxRatio > 0.8 && !state.flags._portfolioConcentrationWarning) {
+            state.flags._portfolioConcentrationWarning = true;
+            state.status.health = Math.max(0, (state.status.health || 100) - 2);
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("⚠️ 你的投资组合过于集中（单一资产占比>80%）。财务风险极高，建议分散投资。健康-2。", "warning");
+            }
+          }
+          if (_maxRatio > 0.95 && !state.flags._portfolioConcentrationExtreme) {
+            state.flags._portfolioConcentrationExtreme = true;
+            state.status.health = Math.max(0, (state.status.health || 100) - 3);
+            if (typeof StateManager !== "undefined") {
+              StateManager.addMessage("🚨 你的投资几乎全部押注在单一资产上！这不是投资，是赌博。请立即分散风险。健康-3。", "danger");
+            }
           }
         }
       }
@@ -3555,6 +3626,32 @@ function renderInvestmentTab(state, parent) {
     "¥" +
     Math.round(totalPL).toLocaleString() +
     '</span> <span style="font-size:11px;color:var(--text-muted);cursor:pointer;" onclick="showInvestmentAnalysisModal()" title="查看投资分析工具">📊 分析</span>' +
+    // [R927 域E 联动增强 E→F]: 市场情绪看板 — 显示当前市场情绪指数和投资建议
+    (function() {
+      try {
+        var _inv = state.investment;
+        if (!_inv) return '';
+        var _mood = _inv._marketMood || 'neutral';
+        var _moodIcon = _mood === 'bullish' ? '🐂' : _mood === 'bearish' ? '🐻' : '➡️';
+        var _moodLabel = _mood === 'bullish' ? '牛市' : _mood === 'bearish' ? '熊市' : '中性';
+        var _moodColor = _mood === 'bullish' ? 'var(--danger)' : _mood === 'bearish' ? 'var(--success)' : 'var(--text-muted)';
+        // 计算日收益/亏损
+        var _dailyPL = 0;
+        var _sm = _inv.stockMarket || {};
+        var _holdings = _inv.stockHoldings || [];
+        for (var _hi = 0; _hi < _holdings.length; _hi++) {
+          var _h = _holdings[_hi];
+          var _m = _sm[_h.symbol];
+          if (_m && _m.history && _m.history.length >= 2 && _h.shares) {
+            _dailyPL += (_m.history[_m.history.length - 1].price - _m.history[_m.history.length - 2].price) * _h.shares;
+          }
+        }
+        var _dailyPLColor = _dailyPL >= 0 ? 'var(--danger)' : 'var(--success)';
+        var _dailyPLSign = _dailyPL >= 0 ? '+' : '';
+        return '<span style="font-size:11px;color:' + _moodColor + ';margin-left:8px;">' + _moodIcon + ' ' + _moodLabel + '</span>' +
+          '<span style="font-size:10px;color:' + _dailyPLColor + ';margin-left:6px;">今日 ' + _dailyPLSign + '¥' + Math.round(Math.abs(_dailyPL)).toLocaleString() + '</span>';
+      } catch (e) { return ''; }
+    })() +
     // [全系统自洽修复] 域F R390 联动增强(F→E): 投资组合风险仪表盘
     (function() {
       var _inv = state.investment;
@@ -5587,7 +5684,7 @@ if (typeof window !== "undefined") {
       if (!state || !state.investment) return null;
       var inv = state.investment;
       var data = { totalValue: 0, stocks: [], btc: null, properties: [], allocation: {}, dailyPL: 0 };
-      if (inv.stockHoldings) for (var i = 0; i < inv.stockHoldings.length; i++) { var h = inv.stockHoldings[i]; var m = inv.stockMarket && inv.stockMarket[h.symbol]; var price = m ? m.price : 0; var value = price * h.shares; data.totalValue += value; data.stocks.push({ symbol: h.symbol, shares: h.shares, price: price, value: value, buyPrice: h.buyPrice || 0 }); }
+      if (inv.stockHoldings) for (var i = 0; i < inv.stockHoldings.length; i++) { var h = inv.stockHoldings[i]; var m = inv.stockMarket && inv.stockMarket[h.symbol]; var price = m ? m.price : 0; var value = price * h.shares; data.totalValue += value; data.stocks.push({ symbol: h.symbol, shares: h.shares, price: price, value: value, buyPrice: (isFinite(h.avgPrice) ? h.avgPrice : 0) || 0 }); }
       if (inv.btcHoldings && inv.btcHoldings > 0) { var btcVal = (inv.btcPrice || 0) * inv.btcHoldings; data.totalValue += btcVal; data.btc = { holdings: inv.btcHoldings, price: inv.btcPrice || 0, value: btcVal }; }
       if (inv.properties) for (var pi = 0; pi < inv.properties.length; pi++) { var p = inv.properties[pi]; var pVal = p.currentPrice || p.buyPrice || 0; data.totalValue += pVal; data.properties.push({ id: p.id, name: p.name || '房产', value: pVal, buyPrice: p.buyPrice || 0 }); }
       if (data.totalValue > 0) { var stockVal = data.stocks.reduce(function(a, b) { return a + b.value; }, 0); var propVal = data.properties.reduce(function(a, b) { return a + b.value; }, 0); var btcVal = data.btc ? data.btc.value : 0; data.allocation = { '股票': Math.round((stockVal / data.totalValue) * 100), '房产': Math.round((propVal / data.totalValue) * 100), '虚拟币': Math.round((btcVal / data.totalValue) * 100), '现金': Math.max(0, 100 - Math.round((stockVal + propVal + btcVal) / data.totalValue * 100)) }; }
@@ -5703,7 +5800,9 @@ if (typeof window !== "undefined") {
         for (var i = 0; i < stocks.length; i++) {
           var h = stocks[i];
           var m = inv.stockMarket && inv.stockMarket[h.symbol];
-          if (m && h.buyPrice) totalPL += (m.price - h.buyPrice) * h.shares;
+          // [R927 域E A类#1修复] h.buyPrice 字段不存在(持仓用 avgPrice)→导致收益计算恒为NaN,事件文本永远"市场整体平稳"
+          var _buyPx = isFinite(h.avgPrice) ? h.avgPrice : 0;
+          if (m && _buyPx > 0) totalPL += (m.price - _buyPx) * h.shares;
         }
         if (totalPL > 0) return "你的投资组合目前盈利中。市场趋势对你有利。";
         if (totalPL < 0) return "你的投资组合目前亏损。市场波动是正常的。";

@@ -79,37 +79,60 @@ function rollStreetEvent(state) {
   // [全系统自洽修复] 域B A类: state.player 守卫(防旧存档崩溃)
   if (!state.player) return;
 
-  // 心理危机事件：mental<20时优先检查，不占用随机事件槽
-  var mentalCrisisIds = [
-    "mental_breakdown_edge",
-    "mental_therapy_chance",
-    "mental_recovery_milestone",
-  ];
-  for (var mci = 0; mci < mentalCrisisIds.length; mci++) {
-    var mce = RANDOM_EVENTS.find(function (e) {
-      return e.id === mentalCrisisIds[mci];
-    });
-    if (mce && eTriggersMatch(mce, state)) {
-      state._pendingEvent = mce;
-      state.flags._todayMentalEvent = true;
-      return;
-    }
-  }
+  // [内容饿死修复 · 2026-09-15] 强制通道命中后会让位给随机池。
+  //
+  // 问题：下面「心理危机 / 村长债务」两段注释都写着**不占用随机事件槽**，
+  // 但实现是 `state._pendingEvent = X; return;`，而 `_pendingEvent` 是**单槽**、
+  // 且函数开头有 `if (state._pendingEvent) return;` —— 于是强制事件实际上
+  // **独占了当天唯一的名额**，注释意图完全落空。
+  //
+  // 实测（seed=20260915，玩家状态正常，400 天）：
+  //   · 事件槽被占用 398 次，其中 `mental_therapy_chance` 独占 **375 次（94%）**
+  //   · 来自 4276 事件随机池的投递 **0 次**
+  //     （queueRandomEvent 全程只被调用 **1 次**）
+  //   → 只要玩家心智长期低于阈值，整个随机事件池等于不存在。
+  //
+  // 修法：强制通道命中时记一个「次日让位」标记；次日跳过这两段检查，
+  // 直接走后面的随机池。危机仍会持续出现（隔天一次），只是不再独占每一天。
+  // 链式事件队列**不参与让位**——它是剧情主线，优先级必须保持最高。
+  var _yieldToPool = state.flags._yieldEventSlotToPool === true;
+  state.flags._yieldEventSlotToPool = false;
 
-  // 村长债务追讨事件：债务未还时优先触发，不占用随机事件槽
-  var debtEventIds = [
-    "village_chief_warning",
-    "village_chief_pressure",
-    "village_chief_final",
-  ];
-  for (var dci = 0; dci < debtEventIds.length; dci++) {
-    var dce = RANDOM_EVENTS.find(function (e) {
-      return e.id === debtEventIds[dci];
-    });
-    if (dce && eTriggersMatch(dce, state)) {
-      state._pendingEvent = dce;
-      state.flags._todayDebtEvent = true;
-      return;
+  if (!_yieldToPool) {
+    // 心理危机事件：mental<20时优先检查，不占用随机事件槽
+    var mentalCrisisIds = [
+      "mental_breakdown_edge",
+      "mental_therapy_chance",
+      "mental_recovery_milestone",
+    ];
+    for (var mci = 0; mci < mentalCrisisIds.length; mci++) {
+      var mce = RANDOM_EVENTS.find(function (e) {
+        return e.id === mentalCrisisIds[mci];
+      });
+      if (mce && eTriggersMatch(mce, state)) {
+        state._pendingEvent = mce;
+        state.flags._todayMentalEvent = true;
+        state.flags._yieldEventSlotToPool = true; // 次日让位给随机池
+        return;
+      }
+    }
+
+    // 村长债务追讨事件：债务未还时优先触发，不占用随机事件槽
+    var debtEventIds = [
+      "village_chief_warning",
+      "village_chief_pressure",
+      "village_chief_final",
+    ];
+    for (var dci = 0; dci < debtEventIds.length; dci++) {
+      var dce = RANDOM_EVENTS.find(function (e) {
+        return e.id === debtEventIds[dci];
+      });
+      if (dce && eTriggersMatch(dce, state)) {
+        state._pendingEvent = dce;
+        state.flags._todayDebtEvent = true;
+        state.flags._yieldEventSlotToPool = true; // 次日让位给随机池
+        return;
+      }
     }
   }
 
@@ -553,6 +576,19 @@ function queueRandomEvent(state, phase) {
   // 使用唯一事件ID替代引用比较，避免引用失效导致事件卡住
   state._pendingEvent = evt;
   state._pendingEventId = evt.id;
+
+  // [P0-6 修复 · 2026-09-15] 新闻事件投递时施加其商品价格效果（限时 + 不可叠加）。
+  // 为什么在这里而不是"选项被点击时"：转换来的新闻条目 choices 是空数组
+  // （NEWS_EVENTS 无 choices 字段），showEventModal 只给渲染出的 .event-choice
+  // 按钮绑点击回调 —— 没有按钮就永远不触发，价格效果会静默失效。
+  try {
+    if (typeof applyNewsPriceModsForEvent === "function") {
+      applyNewsPriceModsForEvent(state, evt);
+    }
+  } catch (e) {
+    // 静默：新闻价格影响不影响主流程
+  }
+
   // 触发延迟到 render 阶段弹（避免在 tick 内部阻塞）
   setTimeout(() => {
     const s = StateManager.getState();
@@ -921,24 +957,13 @@ function showEventModal(evt) {
       }
 
       // [全系统自洽修复] 域B 联动增强#3 B→A: 新闻事件短期影响商品价格
-      try {
-        if (evt._converted === "news" && evt.newsEffects && evt.newsEffects.priceMod && state.trade) {
-          for (var _pmId in evt.newsEffects.priceMod) {
-            if (evt.newsEffects.priceMod.hasOwnProperty(_pmId)) {
-              // 在所有地点应用价格修正
-              for (var _locKey in state.trade.goodsPrices) {
-                if (state.trade.goodsPrices.hasOwnProperty(_locKey) && state.trade.goodsPrices[_locKey][_pmId]) {
-                  state.trade.goodsPrices[_locKey][_pmId] = Math.round(
-                    state.trade.goodsPrices[_locKey][_pmId] * evt.newsEffects.priceMod[_pmId] * 100
-                  ) / 100;
-                }
-              }
-            }
-          }
-        }
-      } catch (e) {
-        // 静默：新闻价格影响不影响主流程
-      }
+      // [P0-6 修复 · 2026-09-15] 此处原为价格效果的施加点，但它是**选项点击回调**，
+      // 而转换来的新闻条目 choices 为空（NEWS_EVENTS 无 choices 字段）→
+      // showEventModal 不渲染任何 .event-choice 按钮 → 这个回调永远不会执行，
+      // 属于死代码。施加点已前移到 queueRandomEvent 的「事件投递」时刻
+      // （见本文件上方 applyNewsPriceModsForEvent 调用），到期还原在
+      // daily_pipeline 的 news 步骤（expireNewsPriceMods）。
+      // 此处仅保留事件类型统计，不再处理价格。
       if (typeof state.resources.cash !== "number" || !isFinite(state.resources.cash)) state.resources.cash = 0;
       state.resources.cash = Math.max(0, state.resources.cash || 0);
       // [域B R417 联动增强] B→A: 事件类型统计 — 累计moral/risk/news等事件计数，供经济系统感知
@@ -1563,13 +1588,25 @@ function _rollOneDailyNews(state) {
 
   if (!news) return;
 
-  news._appliedDay = state.player.day;
-  state.activeNews.push(news);
+  // [跨局污染修复 · 2026-09-16] 原实现 `news._appliedDay = state.player.day` 直接写在
+  // **共享新闻池对象**上 —— `getRandomNewsByLevel` / `getRandomNewsEvent` 返回的都是
+  // NEWS_L1_L4 里的**引用**（`Random.fromArray(candidates)`），而 `state.activeNews.push(news)`
+  // 存的又是同一个引用。后果：
+  //   ① 池对象被永久污染：同一进程里开第二局时，`_appliedDay` 还留着上一局的天数；
+  //   ② 残留的 `_appliedDay` 会让 news_event_bridge / investment 的到期判定
+  //      (`state.player.day - _appliedDay > duration`) 读到旧天数 → 新闻效果被误判"已过期"
+  //      而静默失效（少走加成分支）。
+  // 与第十二节修过的 `_conduitChecked` 同类（当时只修了后者，本处是残留）。
+  // 改法：push 一份浅拷贝，`_appliedDay` 写在副本上 —— 与 news.js:2121 的
+  // intelNewsEntry、news_system.js:29510 的既有写法一致。effects 等字段保持共享引用。
+  var appliedNews = Object.assign({}, news);
+  appliedNews._appliedDay = state.player.day;
+  state.activeNews.push(appliedNews);
   seen.push(news.id);
   state.flags.seenNewsToday = seen;
-  applyNewsEffect(news, state);
+  applyNewsEffect(appliedNews, state);
   StateManager.addMessage("📰 " + news.headline, "event");
-  showNewsBriefingModal(news, state);
+  showNewsBriefingModal(appliedNews, state);
 }
 
 /** 每日结束时的清理 */
@@ -1648,6 +1685,13 @@ function registerNewsEventsToPool() {
       phase: "street",
       probability: ne.dailyChance || 0.03,
       _converted: "news",
+      // [P0-6 修复 · 2026-09-15] 原实现丢掉了 ne.effects，导致下游读取
+      // 新闻条目上 `newsEffects` 的价格字段时永远是 undefined，
+      // 19 条带价格效果的新闻全部静默失效。
+      // 注意：effects 里除 priceMod 外还有 investmentEffect / duration，
+      // 前者由 news_investment_bridge.js 从 state.activeNews 直接读取（不受影响），
+      // 后者由 applyNewsPriceMods 用来定时还原。
+      newsEffects: ne.effects,
       choices: Array.isArray(ne.choices) ? ne.choices.map(function(c) {
         return { text: c.text, apply: c.immediate || function(){} };
       }) : [],
@@ -2536,6 +2580,153 @@ if (typeof window !== "undefined") {
         if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 10);
         if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 5);
         msg("🧘 你学会了与时间和解。心智+10, 心情+5。", "info");
+      }},
+    ],
+  });
+})();
+
+// ====== [R1047 域C 联动增强] 3项: C→E/C→F/C→G ======
+(function () {
+  "use strict";
+  if (typeof RANDOM_EVENTS === "undefined") return;
+  if (RANDOM_EVENTS._eventsCoreLinkageR1047Loaded) return;
+  RANDOM_EVENTS._eventsCoreLinkageR1047Loaded = true;
+
+  function gx(k, a) {
+    if (typeof addSkillXp === "function") { try { addSkillXp(k, a); } catch (e) {} }
+  }
+  function msg(t, k) {
+    if (typeof StateManager !== "undefined" && StateManager.addMessage) StateManager.addMessage(t, k || "info");
+  }
+
+  // 1. C→E: 技能变现 — 技能≥40时触发投资/副业机会
+  RANDOM_EVENTS.push({
+    id: "c1047_skill_monetization", phase: "street", icon: "💡",
+    title: "技能变现的契机",
+    text: function (st) {
+      if (!st || !st.skills) return "你的技能就是你的资产。";
+      var topSkill = 0, topName = "";
+      for (var k in st.skills) {
+        var lv = (st.skills[k] && st.skills[k].level) || 0;
+        if (lv > topSkill) { topSkill = lv; topName = k; }
+      }
+      if (topSkill >= 40) return "你的" + topName + "技能已经达到了专业水平。有人愿意为你的技能付费。";
+      return "不断学习，你的技能终将变成财富。";
+    },
+    triggers: { minDay: 60, interval: 60 },
+    conditions: function (st) {
+      if (!st || !st.flags) return false;
+      if (st.flags._c1047SkillMoneyCd && (st.player.day || 0) - st.flags._c1047SkillMoneyCd < 60) return false;
+      if (!st.skills) return false;
+      for (var k in st.skills) {
+        if ((st.skills[k] && st.skills[k].level || 0) >= 40) return true;
+      }
+      return false;
+    },
+    probability: 0.03, repeatable: true,
+    choices: [
+      { text: "💰 接个私单变现", hint: "现金+800, 技能XP+20", apply: function (st) {
+        if (!st) return;
+        st.flags = st.flags || {};
+        st.flags._c1047SkillMoneyCd = st.player.day;
+        st.flags._c1047Monetized = true;
+        st.resources = st.resources || {};
+        st.resources.cash = (st.resources.cash || 0) + 800;
+        gx("sales", 20);
+        msg("💡 你接了个私单，赚了¥800。技能XP+20。", "success");
+      }},
+      { text: "📚 继续深造", hint: "主技能XP+30, 心智+5", apply: function (st) {
+        if (!st) return;
+        st.flags = st.flags || {};
+        st.flags._c1047SkillMoneyCd = st.player.day;
+        if (st.skills) {
+          for (var k in st.skills) {
+            var lv = (st.skills[k] && st.skills[k].level) || 0;
+            if (lv >= 40) { gx(k, 30); break; }
+          }
+        }
+        if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 5);
+        msg("📚 你决定先提升自己。技能XP+30, 心智+5。", "info");
+      }},
+    ],
+  });
+
+  // 2. C→F: 职业规划 — 职业路径清晰时获得职业发展洞察
+  RANDOM_EVENTS.push({
+    id: "c1047_career_planning", phase: "street", icon: "🗺️",
+    title: "职业规划的时刻",
+    text: function (st) {
+      if (!st || !st.career) return "你的职业道路需要规划。";
+      if (st.career.currentJob) return "你在" + (st.career.currentJob.levelName || "当前岗位") + "已经积累了" + (st.career.currentJob.workDays || 0) + "天经验。是时候想想下一步了。";
+      return "没有固定的工作，但你的技能就是你的底气。";
+    },
+    triggers: { minDay: 90, interval: 90 },
+    conditions: function (st) {
+      if (!st || !st.flags) return false;
+      if (st.flags._c1047CareerPlanCd && (st.player.day || 0) - st.flags._c1047CareerPlanCd < 90) return false;
+      return !!(st.career && st.career.currentJob && (st.career.currentJob.workDays || 0) >= 30);
+    },
+    probability: 0.025, repeatable: true,
+    choices: [
+      { text: "🎯 制定晋升计划", hint: "管理XP+25, 心智+5", apply: function (st) {
+        if (!st) return;
+        st.flags = st.flags || {};
+        st.flags._c1047CareerPlanCd = st.player.day;
+        st.flags._c1047HasCareerPlan = true;
+        gx("management", 25);
+        if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 5);
+        msg("🎯 你制定了清晰的职业发展计划。管理XP+25, 心智+5。", "success");
+      }},
+      { text: "📝 更新简历", hint: "智力+5", apply: function (st) {
+        if (!st) return;
+        st.flags = st.flags || {};
+        st.flags._c1047CareerPlanCd = st.player.day;
+        st.flags._c1047ResumeReady = true;
+        if (st.player) st.player.intelligence = Math.min(100, (st.player.intelligence || 50) + 5);
+        msg("📝 你更新了简历，随时准备抓住更好的机会。智力+5。", "info");
+      }},
+    ],
+  });
+
+  // 3. C→G: 职业成长的生命回响
+  RANDOM_EVENTS.push({
+    id: "c1047_career_life_echo", phase: "street", icon: "🌟",
+    title: "职业生涯的回响",
+    text: function (st) {
+      if (!st || !st.career) return "你的职业生涯正在书写中。";
+      var promoCount = (st.flags && st.flags._careerPromotionCount) || 0;
+      var pathCount = (st.career.pathHistory && st.career.pathHistory.length) || 0;
+      if (promoCount >= 3) return "你经历了" + promoCount + "次晋升，职业生涯蒸蒸日上。这不仅改变了你的收入，也改变了你的气质。";
+      if (pathCount >= 2) return "你尝试过" + pathCount + "种不同的职业道路。每一次转型都让你更全面。";
+      return "每一步职业经历都在塑造你的人格。";
+    },
+    triggers: { minDay: 120, interval: 120 },
+    conditions: function (st) {
+      if (!st || !st.flags) return false;
+      if (st.flags._c1047CareerEchoCd && (st.player.day || 0) - st.flags._c1047CareerEchoCd < 120) return false;
+      var promoCount = (st.flags._careerPromotionCount || 0);
+      var pathCount = (st.career && st.career.pathHistory && st.career.pathHistory.length) || 0;
+      return promoCount >= 2 || pathCount >= 2;
+    },
+    probability: 0.02, repeatable: true,
+    choices: [
+      { text: "🌟 回顾职业成长", hint: "健康+3, 心智+8, 心情+5", apply: function (st) {
+        if (!st) return;
+        st.flags = st.flags || {};
+        st.flags._c1047CareerEchoCd = st.player.day;
+        st.flags._c1047CareerProud = true;
+        if (st.status) st.status.health = Math.min(100, (st.status.health || 100) + 3);
+        if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 8);
+        if (st.needs) st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 5);
+        msg("🌟 你回顾了自己的职业成长，感到自豪。健康+3, 心智+8, 心情+5。", "success");
+      }},
+      { text: "🏆 设定下一个目标", hint: "智力+5, 管理XP+15", apply: function (st) {
+        if (!st) return;
+        st.flags = st.flags || {};
+        st.flags._c1047CareerEchoCd = st.player.day;
+        if (st.player) st.player.intelligence = Math.min(100, (st.player.intelligence || 50) + 5);
+        gx("management", 15);
+        msg("🏆 你设定了新的职业目标。智力+5, 管理XP+15。", "info");
       }},
     ],
   });

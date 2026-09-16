@@ -141,6 +141,18 @@
       for (var t = 0; t < event.triggers.length; t++) {
         var slot = event.triggers[t];
         if (TRIGGER_REGISTRY[slot]) {
+          // [修复 · 2026-09-15] 幂等：同一事件在同一槽只注册一次。
+          // 背景：loadAllTriggers() 会扫两遍（RANDOM_EVENTS + MORAL_EVENTS），
+          // 而 MORAL_EVENTS 已被 registerMoralEventsToPool() 并入 RANDOM_EVENTS
+          // → 同一事件注册两次 → 权重翻倍 → 加权随机会偏向它。
+          var _dup = false;
+          for (var d = 0; d < TRIGGER_REGISTRY[slot].length; d++) {
+            if (TRIGGER_REGISTRY[slot][d].event.id === event.id) {
+              _dup = true;
+              break;
+            }
+          }
+          if (_dup) continue;
           TRIGGER_REGISTRY[slot].push({
             event: event,
             weight: event.triggerWeight || 1,
@@ -166,9 +178,38 @@
    *   原 loadAllTriggers 只扫 RANDOM_EVENTS，导致 after_work/after_trade 等槽位始终为空。
    */
   function loadAllTriggers() {
-    if (!window.RANDOM_EVENTS) return;
-    for (var i = 0; i < window.RANDOM_EVENTS.length; i++) {
-      registerTriggeredEvent(window.RANDOM_EVENTS[i]);
+    // [修复 · 2026-09-15] 原来第一行是 `if (!window.RANDOM_EVENTS) return;` ——
+    // 而 RANDOM_EVENTS 是 events_core.js 的**顶层 const**（`const RANDOM_EVENTS = []`）。
+    // 顶层 const/let **不会**成为 window 的属性（浏览器 / 无头环境 / 打包产物都一样），
+    // 于是 loadAllTriggers() 每次都**直接早退**，一个事件都没注册过：
+    //   · 12 个触发槽全部为空
+    //   · main.js 的 after_work 槽、travel.js 的 after_travel 槽两条链路全断
+    //   · 5 个约定式 triggers 事件永久不可达
+    //   · daily_pipeline 里 6 个 trigger_slot_* 步骤每天空跑（永远 return null）
+    // 实证：dist/app.js 里 7 处 window.RANDOM_EVENTS **全是读、无一处赋值**。
+    // 修法：优先读顶层引用（与 queueRandomEvent / domain_e_linkage_r470.js 等
+    // 既有代码一致），window 仅作兜底；try/catch 防 const 的 TDZ。
+    var _pool = null;
+    try {
+      if (typeof RANDOM_EVENTS !== "undefined" && Array.isArray(RANDOM_EVENTS)) {
+        _pool = RANDOM_EVENTS;
+      }
+    } catch (e) {
+      /* RANDOM_EVENTS 处于 TDZ：此时尚未初始化，静默跳过 */
+    }
+    if (!_pool) {
+      try {
+        if (typeof window !== "undefined" && Array.isArray(window.RANDOM_EVENTS)) {
+          _pool = window.RANDOM_EVENTS;
+        }
+      } catch (e2) {
+        /* 忽略 */
+      }
+    }
+    if (!_pool) return;
+
+    for (var i = 0; i < _pool.length; i++) {
+      registerTriggeredEvent(_pool[i]);
     }
     // [全系统自洽修复] 域B A类#1: 扫描 MORAL_EVENTS 中声明 triggers 数组的事件
     if (typeof MORAL_EVENTS !== "undefined" && Array.isArray(MORAL_EVENTS)) {

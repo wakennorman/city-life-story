@@ -51,10 +51,9 @@ export const SKILL_SYNERGY_DUAL: Record<string, SynergyEffectsDef & { id: string
     effects: {
       // 编程类工作收入+40%
       coding: { incomeMultiplier: 1.4 },
-      freelance_writing: { incomeMultiplier: 1.3 },
+      // [域C A类#2 对齐 vanilla] 死引用 freelance_writing → instrument_repair（真实 work）
+      instrument_repair: { incomeMultiplier: 1.3 },
       content_writing: { incomeMultiplier: 1.3 },
-      // 解锁国际外包工作
-      unlockJobs: ["remote_dev"],
       // 学习XP+20%
       codingXpBonus: 0.2,
       englishXpBonus: 0.2,
@@ -74,10 +73,8 @@ export const SKILL_SYNERGY_DUAL: Record<string, SynergyEffectsDef & { id: string
     effects: {
       // 维修类工作收入+35%
       instrument_repair: { incomeMultiplier: 1.35 },
-      electronics_repair: { incomeMultiplier: 1.35 },
+      // [域C A类#3 对齐 vanilla] 死引用 electronics_repair 已移除
       factory_electrician: { incomeMultiplier: 1.3 },
-      // 解锁综合维修工作
-      unlockJobs: ["master_repairman"],
       // 装备维修损耗-30%
       repairWearReduction: 0.3,
     },
@@ -96,9 +93,7 @@ export const SKILL_SYNERGY_DUAL: Record<string, SynergyEffectsDef & { id: string
     effects: {
       // 销售类工作收入+30%
       shop_assistant: { incomeMultiplier: 1.3 },
-      promoter: { incomeMultiplier: 1.3 },
-      // 解锁团队销售管理
-      unlockJobs: ["sales_team_lead"],
+      // [域C A类#4 对齐 vanilla] 死引用 promoter 已移除
       // 团队规模+2
       teamSizeBonus: 2,
       // 人缘成长+15%
@@ -119,10 +114,8 @@ export const SKILL_SYNERGY_DUAL: Record<string, SynergyEffectsDef & { id: string
     effects: {
       // 货运/配送收入+40%
       truck_assistant: { incomeMultiplier: 1.4 },
-      warehouse_logistics: { incomeMultiplier: 1.3 },
+      // [域C A类#5 对齐 vanilla] 死引用 warehouse_logistics（未实装）已移除
       wholesale_delivery: { incomeMultiplier: 1.35 },
-      // 解锁长途运输工作
-      unlockJobs: ["long_haul_driver"],
       // 旅行AP-3（效率更高）
       travelApReduction: 3,
     },
@@ -165,8 +158,6 @@ export const SKILL_SYNERGY_DUAL: Record<string, SynergyEffectsDef & { id: string
       abilityFlatBonus: 15,
       // 向上管理+20
       upwardMgmtBonus: 20,
-      // 解锁外企管理岗位
-      unlockJobs: ["foreign_company_staff"],
       // 晋升速度+25%
       promoSpeedBonus: 0.25,
     },
@@ -187,8 +178,6 @@ export const SKILL_SYNERGY_DUAL: Record<string, SynergyEffectsDef & { id: string
       investmentIncomeBonus: 0.3,
       // 股票交易手续费-50%
       tradingFeeReduction: 0.5,
-      // 实装连携解锁工作
-      unlockJobs: ["finance_analyst"],
       // 每日被动收入+¥50（来自投资）
       passiveInvestmentIncome: 50,
     },
@@ -211,9 +200,7 @@ export const SKILL_SYNERGY_TRIPLE: Record<string, SynergyEffectsDef & { id: stri
     effects: {
       // 所有餐饮相关收入+50%
       restaurantIncomeBonus: 0.5,
-      // 解锁连锁餐厅
-      unlockBusinesses: [], // restaurant_chain 待实现
-      // 每日被动收入+¥200
+      // 每日被动收入+¥200（由 daily_pipeline.skill_synergy_income 消费）
       passiveRestaurantIncome: 200,
       // 员工效率+30%
       employeeEfficiencyBonus: 0.3,
@@ -238,13 +225,11 @@ export const SKILL_SYNERGY_TRIPLE: Record<string, SynergyEffectsDef & { id: stri
       abilityFlatBonus: 25,
       // 向上管理+30
       upwardMgmtBonus: 30,
-      // 解锁CTO岗位
-      unlockJobs: [], // cto/tech_director — 属于职场路径，需 corporate 阶段
       // 晋升速度+50%
       promoSpeedBonus: 0.5,
       // 团队规模+5
       teamSizeBonus: 5,
-      // 每日被动收入+¥300（来自股票期权）
+      // 每日被动收入+¥300（来自股票期权，由 daily_pipeline.skill_synergy_income 消费）
       passiveStockIncome: 300,
     },
     desc: "技术、英语、管理全精通，可以成为技术高管，实现财富自由。",
@@ -263,11 +248,9 @@ export const SKILL_SYNERGY_TRIPLE: Record<string, SynergyEffectsDef & { id: stri
     effects: {
       // 维修类工作收入+50%
       comprehensiveRepairBonus: 0.5,
-      // 解锁智能家居安装工作
-      unlockJobs: ["smart_home_tech"],
       // 装备维修损耗-50%
       repairWearReduction: 0.5,
-      // 每日被动收入+¥100（来自智能家居项目）
+      // 每日被动收入+¥100（来自智能家居项目，由 daily_pipeline.skill_synergy_income 消费）
       passiveSmartHomeIncome: 100,
     },
     desc: "机械、电路、编程全都会，可以接智能家居项目，收入翻倍。",
@@ -286,9 +269,7 @@ export const SKILL_SYNERGY_TRIPLE: Record<string, SynergyEffectsDef & { id: stri
     effects: {
       // 货运/配送收入+50%
       logisticsIncomeBonus: 0.5,
-      // 解锁物流公司
-      unlockBusinesses: [], // logistics_company 待实现
-      // 每日被动收入+¥250
+      // 每日被动收入+¥250（由 daily_pipeline.skill_synergy_income 消费）
       passiveLogisticsIncome: 250,
       // 车队规模+3
       fleetSizeBonus: 3,
@@ -311,7 +292,6 @@ export const SKILL_SYNERGY_THEME: Record<string, { id: string; name: string; ico
     effects: {
       techIncomeBonus: 0.15,
       techXpBonus: 0.1,
-      unlockJobs: [], // tech_consultant 待实现
     },
     desc: "技术相关技能多，成为技术顾问，收入翻倍。",
   },
@@ -328,7 +308,6 @@ export const SKILL_SYNERGY_THEME: Record<string, { id: string; name: string; ico
     effects: {
       businessIncomeBonus: 0.15,
       businessXpBonus: 0.1,
-      unlockJobs: [], // business_consultant 待实现
     },
     desc: "商业相关技能多，成为商业顾问，收入翻倍。",
   },
@@ -345,7 +324,6 @@ export const SKILL_SYNERGY_THEME: Record<string, { id: string; name: string; ico
     effects: {
       serviceIncomeBonus: 0.15,
       serviceXpBonus: 0.1,
-      unlockJobs: [], // personal_assistant 待实现
     },
     desc: "生活服务技能多，成为私人助理，收入翻倍。",
   },

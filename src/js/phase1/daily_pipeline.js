@@ -26,9 +26,20 @@ const DAILY_PIPELINE = [
       state.player.day++;
       state.player.actionPoints = state.player.maxActionPoints;
       state.player.timeSlot = "morning";
-      // v3.2 修复: 在日递增时记录现金作为日初值（正确基准）
-      // 注意: 新游戏第1日需要在 startNewGame 等初始化函数中额外设置
-      state.flags._dayStartCash = state.resources.cash || 0;
+      // [窗口语义拆分 · 第八轮 · 2026-09-16] 原来这里写的是 `_dayStartCash`，
+      // 但它的位置**不是**日初：本步骤是管线第 0 步，此刻玩家当天的行动
+      // （打工/购物/命运抉择）都已经花过钱了 → 它其实是「管线起点现金」。
+      // 而 `_dayStartCash` 另有真正的日初语义：`daily_report` 步结尾会把它设成
+      // 「账本清空那一刻的现金」，也就是**下一天的日初**。两者被同一个字段名混用，
+      // 导致：
+      //   · 玩家可见的「今日总结」现金变化只统计了管线，漏掉玩家自己赚/花的钱；
+      //   · 对账 `reconcileTransactions` 拿它当基准，于是实际比较的是
+      //     「管线内现金变化」vs「整日账本」，两个窗口错位（残差就来自这里）。
+      // 拆成两个字段后，对账窗口变成显式的「管线口径」，日终总结拿到真正的日初值。
+      // 注意：**不要**把 `_dayStartCash` 挪到这里来「对齐窗口」——实测那样会让
+      // 对账告警从 487 条涨到 12,850 条（8 局 ×300 天，76.5% 的天数），
+      // 因为玩家行动侧只有约 4% 的现金改动进了账本（见报告第二十四节）。
+      state.flags._pipelineStartCash = state.resources.cash || 0;
       // [全系统自洽修复] 域E 修复: 每日现金NaN防御（防止旧存档/投资异常导致现金永久损坏）
       if (isNaN(state.resources.cash) || !isFinite(state.resources.cash)) {
         state.resources.cash = 0;
@@ -797,9 +808,17 @@ const DAILY_PIPELINE = [
     fn: function (state) {
       if (typeof EconomySystem !== "undefined" && EconomySystem.dailyEconomicSettlement) {
         var result = EconomySystem.dailyEconomicSettlement(state);
-        if (result && result.wealthTax > 0) {
-          state.resources.cash = Math.max(0, (state.resources.cash || 0) - result.wealthTax);
-        }
+          if (result && result.wealthTax > 0) {
+            // [账本覆盖补齐 · 2026-09-16] 原实现扣了税但不上账本 → 玩家日报里看不到「税金」。
+            // 注意必须记**实扣额**：Math.max(0, ...) 在现金不足时会让实扣少于应扣，
+            // 记成应扣额反而会造出一条新的对账偏差。
+            var _taxBefore = state.resources.cash || 0;
+            state.resources.cash = Math.max(0, _taxBefore - result.wealthTax);
+            var _taxPaid = _taxBefore - state.resources.cash;
+            if (_taxPaid > 0 && typeof addDailyTransaction === "function") {
+              addDailyTransaction(state, "expense", "tax", _taxPaid, "财富税");
+            }
+          }
       }
     },
   },
@@ -1211,6 +1230,13 @@ const DAILY_PIPELINE = [
       if (typeof applyPendingConduitNews === "function") {
         applyPendingConduitNews(state);
       }
+      // [P0-6 修复 · 2026-09-15] 新闻商品价格效果到期还原。
+      // 新闻的 effects.priceMod 是限时的（数据里都带 duration），
+      // 生效时在 applyNewsPriceMods 里记了 { exp, mods }，这里每日扫一遍把到期的除回去。
+      // 不还原的话价格会随新闻重复触发而连乘失控。
+      if (typeof expireNewsPriceMods === "function") {
+        expireNewsPriceMods(state);
+      }
     },
   },
 
@@ -1237,6 +1263,11 @@ const DAILY_PIPELINE = [
       // 每日副业固定收益
       var earn = Random.int(60, 120);
       state.resources.cash = (state.resources.cash || 0) + earn;
+      // [账本覆盖补齐 · 2026-09-16] 副业收益是每天发生的稳定现金流，
+      // 之前完全不上账本 → 玩家日报里看不到副业赚了多少（报告第二十四节）。
+      if (typeof addDailyTransaction === "function") {
+        addDailyTransaction(state, "income", "side_skill", earn, "副业收益");
+      }
       // 倦怠累积
       state.needs.fatigue = Math.min(100, (state.needs.fatigue || 0) + 2);
       // 每5天提醒一次（避免消息刷屏）
@@ -1367,8 +1398,12 @@ const DAILY_PIPELINE = [
       // 连续5天 → 小奖金
       if (streak >= 5 && !ms[5]) {
         ms[5] = true;
-        var bonus5 = 200;
-        state.resources.cash = (state.resources.cash || 0) + bonus5;
+          var bonus5 = 200;
+          state.resources.cash = (state.resources.cash || 0) + bonus5;
+          // [账本覆盖补齐 · 2026-09-16] 全勤奖是「整笔进账」，最容易被玩家误认为 bug（报告第二十四节）
+          if (typeof addDailyTransaction === "function") {
+            addDailyTransaction(state, "income", "streak_bonus", bonus5, "连续工作5天奖金");
+          }
         StateManager.addMessage(
           "🎉 连续工作5天！全勤奖金 ¥" + bonus5 + "！",
           "success",
@@ -1377,8 +1412,11 @@ const DAILY_PIPELINE = [
       // 连续10天 → 额外奖金 + 心情奖励
       if (streak >= 10 && !ms[10]) {
         ms[10] = true;
-        var bonus10 = 500;
-        state.resources.cash = (state.resources.cash || 0) + bonus10;
+          var bonus10 = 500;
+          state.resources.cash = (state.resources.cash || 0) + bonus10;
+          if (typeof addDailyTransaction === "function") {
+            addDailyTransaction(state, "income", "streak_bonus", bonus10, "连续工作10天奖金");
+          }
         state.needs.happiness = Math.min(
           100,
           (state.needs.happiness || 50) + 5,
@@ -1391,8 +1429,11 @@ const DAILY_PIPELINE = [
       // 连续30天 → 大额奖金
       if (streak >= 30 && !ms[30]) {
         ms[30] = true;
-        var bonus30 = 2000;
-        state.resources.cash = (state.resources.cash || 0) + bonus30;
+          var bonus30 = 2000;
+          state.resources.cash = (state.resources.cash || 0) + bonus30;
+          if (typeof addDailyTransaction === "function") {
+            addDailyTransaction(state, "income", "streak_bonus", bonus30, "连续工作30天奖金");
+          }
         StateManager.addMessage(
           "💪 连续工作30天！毅力可嘉！全勤大奖 ¥" + bonus30 + "！",
           "success",
@@ -1401,8 +1442,11 @@ const DAILY_PIPELINE = [
       // 连续100天 → 里程碑奖金 + 永久称号
       if (streak >= 100 && !ms[100]) {
         ms[100] = true;
-        var bonus100 = 10000;
-        state.resources.cash = (state.resources.cash || 0) + bonus100;
+          var bonus100 = 10000;
+          state.resources.cash = (state.resources.cash || 0) + bonus100;
+          if (typeof addDailyTransaction === "function") {
+            addDailyTransaction(state, "income", "streak_bonus", bonus100, "连续工作100天大奖");
+          }
         state.flags._streakMaster = true; // 永久称号标记
         StateManager.addMessage(
           "👑 连续工作100天！你是真正的劳动模范！终身成就奖 ¥" +
@@ -2044,8 +2088,11 @@ const DAILY_PIPELINE = [
         state.flags._pendingGaokaoBonus &&
         day >= state.flags._pendingGaokaoBonus
       ) {
-        state.flags._pendingGaokaoBonus = 0;
-        state.resources.cash = (state.resources.cash || 0) + 24000;
+          state.flags._pendingGaokaoBonus = 0;
+          state.resources.cash = (state.resources.cash || 0) + 24000;
+          if (typeof addDailyTransaction === "function") {
+            addDailyTransaction(state, "income", "career_bonus", 24000, "家教里程碑奖金");
+          }
         if (typeof StateManager !== "undefined") {
           StateManager.addMessage(
             "🎓 家教学员的家长打来了尾款！高考辅导费¥24000到账！",
@@ -2055,8 +2102,11 @@ const DAILY_PIPELINE = [
       }
       // 摆摊30天还款
       if (state.flags._loanToLaoGuan && day >= state.flags._loanToLaoGuan) {
-        state.flags._loanToLaoGuan = 0;
-        state.resources.cash = (state.resources.cash || 0) + 1000;
+          state.flags._loanToLaoGuan = 0;
+          state.resources.cash = (state.resources.cash || 0) + 1000;
+          if (typeof addDailyTransaction === "function") {
+            addDailyTransaction(state, "income", "career_bonus", 1000, "摆摊借款回收");
+          }
         if (typeof StateManager !== "undefined") {
           StateManager.addMessage(
             "💰 老关把当初借的¥800还了，还多给了¥200利息！",
@@ -2085,8 +2135,11 @@ const DAILY_PIPELINE = [
       ) {
         state.flags._careerLegacyDueDay = 0;
         var _legacySuccess = Random.chance(0.6);
-        if (_legacySuccess) {
-          state.resources.cash = (state.resources.cash || 0) + 100000;
+          if (_legacySuccess) {
+            state.resources.cash = (state.resources.cash || 0) + 100000;
+            if (typeof addDailyTransaction === "function") {
+              addDailyTransaction(state, "income", "career_bonus", 100000, "职业传承收益");
+            }
           state.player.fame = Math.min(100, (state.player.fame || 0) + 20);
           if (typeof StateManager !== "undefined") {
             StateManager.addMessage(
@@ -2106,8 +2159,11 @@ const DAILY_PIPELINE = [
       // [全系统自洽修复] 域C R677b A类#1: 技能大师培训班被动收入每日兑现(career_dev.js hint承诺¥150/天,全库零读取→就此接线)
       if (state.flags._skillMasterTrainer) {
         var _trainRate = state.flags._trainerScaleUp ? 250 : 150;
-        state.resources.cash = (state.resources.cash || 0) + _trainRate;
-        state.flags._trainerIncomeTotal = (state.flags._trainerIncomeTotal || 0) + _trainRate;
+          state.resources.cash = (state.resources.cash || 0) + _trainRate;
+          state.flags._trainerIncomeTotal = (state.flags._trainerIncomeTotal || 0) + _trainRate;
+          if (typeof addDailyTransaction === "function") {
+            addDailyTransaction(state, "income", "training_income", _trainRate, "技能大师培训班分红");
+          }
         if (day % 7 === 0 && typeof StateManager !== "undefined") {
           StateManager.addMessage(
             "👑 培训班本周运转良好，学费收入约¥" + _trainRate + "/天（累计¥" + state.flags._trainerIncomeTotal + "）。",
@@ -2121,12 +2177,18 @@ const DAILY_PIPELINE = [
           var _pBase = state.flags._pensionBase;
           if (!isFinite(_pBase) || _pBase <= 0) _pBase = 5000;
           var _pension = Math.round(Math.min(_pBase, 50000) * 0.6); // 替代率60%,基数封顶5万防极端值
-          state.resources.cash = (state.resources.cash || 0) + _pension;
-          state.flags._pensionTotal = (state.flags._pensionTotal || 0) + _pension;
+            state.resources.cash = (state.resources.cash || 0) + _pension;
+            state.flags._pensionTotal = (state.flags._pensionTotal || 0) + _pension;
+            if (typeof addDailyTransaction === "function") {
+              addDailyTransaction(state, "income", "pension", _pension, "退休养老金");
+            }
           var _pMsg = "🏖️ 本月养老金到账 ¥" + _pension.toLocaleString();
           if (state.flags._retirementType === "advisor") {
             var _advFee = Math.round(_pension * 0.5); // 返聘顾问费
             state.resources.cash += _advFee;
+            if (typeof addDailyTransaction === "function") {
+              addDailyTransaction(state, "income", "advisor_fee", _advFee, "返聘顾问费");
+            }
             _pMsg += "，返聘顾问费 ¥" + _advFee.toLocaleString();
           }
           if (typeof StateManager !== "undefined") {
@@ -2141,9 +2203,12 @@ const DAILY_PIPELINE = [
         day % 30 === 0
       ) {
         var _cwPay = state.flags._mcnEmployee ? 6000 : 2000; // MCN月薪优先(买断后独家,保底不叠加)
-        if (isFinite(_cwPay) && _cwPay > 0) {
-          state.resources.cash = (state.resources.cash || 0) + _cwPay;
-          state.flags._contentSalaryTotal = (state.flags._contentSalaryTotal || 0) + _cwPay;
+          if (isFinite(_cwPay) && _cwPay > 0) {
+            state.resources.cash = (state.resources.cash || 0) + _cwPay;
+            state.flags._contentSalaryTotal = (state.flags._contentSalaryTotal || 0) + _cwPay;
+            if (typeof addDailyTransaction === "function") {
+              addDailyTransaction(state, "income", "content_salary", _cwPay, "内容平台稿酬");
+            }
           if (typeof StateManager !== "undefined") {
             StateManager.addMessage(
               (state.flags._mcnEmployee
@@ -2658,8 +2723,9 @@ function runDailyPipeline(state) {
   // [R1015 域G A类修复]: state.flags 守卫（旧存档/损坏状态→TypeError崩溃管线）
   if (!state.flags) state.flags = {};
   // 记录日始状态用于今日总结
-  // v3.2 修复: _dayStartCash 在 day_increment 步骤中设置（正确捕获日初现金）
-  // 此处仅记录健康/心情日始值（这些在管线中不变化）
+  // [窗口语义拆分 · 第八轮 · 2026-09-16] `_dayStartCash` 由 daily_report 步在
+  // 清空账本时写入（= 真正的下一天日初），`_pipelineStartCash` 由 day_increment 步写入
+  // （= 管线起点，供对账用）。此处仅记录健康/心情日始值（这些在管线中不变化）。
   state.flags._dayStartHealth = (state.status && state.status.health) || 100;
   state.flags._dayStartHappiness = (state.needs && state.needs.happiness) || 0;
 

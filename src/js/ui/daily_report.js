@@ -27,6 +27,21 @@ var CATEGORY_LABELS = {
   gift: "礼物",
   loan: "贷款",
   insurance: "保险",
+  // [账本覆盖补齐 · 2026-09-16] 管线里这几条高频现金流原本完全不上账本，
+  // 导致日报「今日收支明细」在 37% 的天数里加不出余额变化（报告第二十四节）。
+  side_skill: "副业",
+  training_income: "培训",
+  pension: "养老金",
+  advisor_fee: "顾问费",
+  content_salary: "稿酬",
+  streak_bonus: "全勤奖",
+  career_bonus: "职业奖金",
+  // [账本覆盖补齐 · 第八轮 · 2026-09-16] 用逐步骤现金追踪实测出**最大的两处**漏账：
+  //   news 步骤 +61,976（`applyNewsEffect` 的 cashBonus）
+  //   family_daily 步骤 −87,000（`tickFamilyDaily` 的配偶月收入/家庭月支出）
+  // 这两处是「其余 96% 未覆盖现金改动」里的主因，补上后告警才真正下降。
+  news_income: "新闻红利",
+  family_income: "家庭收入",
   // 支出
   food: "饮食",
   rent: "房租",
@@ -41,6 +56,9 @@ var CATEGORY_LABELS = {
   fine: "罚款",
   entertainment: "娱乐",
   misc: "其他",
+  tax: "税金",
+  news_expense: "新闻损失",
+  family_expense: "家庭支出",
 };
 
 var CATEGORY_ICONS = {
@@ -59,6 +77,17 @@ var CATEGORY_ICONS = {
   gift: "🎁",
   loan: "📝",
   insurance: "🛡️",
+  // [账本覆盖补齐 · 2026-09-16] 见 CATEGORY_LABELS 同段注释
+  side_skill: "🧰",
+  training_income: "🎓",
+  pension: "🏖️",
+  advisor_fee: "🧑‍🏫",
+  content_salary: "✍️",
+  streak_bonus: "🎉",
+  career_bonus: "🏅",
+  // [账本覆盖补齐 · 第八轮 · 2026-09-16] 见 CATEGORY_LABELS 同段注释
+  news_income: "📰",
+  family_income: "👨‍👩‍👧",
   // 支出
   food: "🍔",
   rent: "🏠",
@@ -73,6 +102,9 @@ var CATEGORY_ICONS = {
   fine: "⚠️",
   entertainment: "🎵",
   misc: "💬",
+  tax: "🧾",
+  news_expense: "📰",
+  family_expense: "🏠",
 };
 
 /** 获取分类的中文标签 */
@@ -101,7 +133,14 @@ function reconcileTransactions(state) {
     trackedDelta += txs[i].type === "income" ? txs[i].amount : -txs[i].amount;
   }
 
-  var startCash = state.flags._dayStartCash || 0;
+  // [窗口语义拆分 · 第八轮 · 2026-09-16] 对账基准用「管线起点现金」。
+  // 原因见 `daily_pipeline.js` 的 day_increment 步骤：管线第 0 步捕获的那个值
+  // 才是本函数比较窗口的起点（此刻账本里还剩着当天玩家行动写下的条目），
+  // 而 `_dayStartCash` 已被日终总结占用为「真正的日初」。
+  var startCash =
+    state.flags._pipelineStartCash !== undefined
+      ? state.flags._pipelineStartCash
+      : state.flags._dayStartCash || 0;
   var actualDelta = ((state.resources && state.resources.cash) || 0) - startCash;
   var discrepancy = Math.round((actualDelta - trackedDelta) * 100) / 100;
 

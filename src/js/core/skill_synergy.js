@@ -198,6 +198,10 @@ const SKILL_SYNERGY_TRIPLE = {
       employeeEfficiencyBonus: 0.3,
       // 品牌等级提升速度+50%
       brandGrowthBonus: 0.5,
+      // [域C 缺口修复] 每日被动收入+¥200
+      // daily_pipeline.skill_synergy_income 的 passiveKeys 明确列出该键，
+      // 但数据表从未提供 → 消费分支恒为死代码。此处补齐（原 TS 端口 synergyData.ts 已有）。
+      passiveRestaurantIncome: 200,
     },
     desc: "集烹饪、销售、管理于一身，可以打造自己的餐饮品牌，实现财务自由。",
   },
@@ -221,6 +225,8 @@ const SKILL_SYNERGY_TRIPLE = {
       promoSpeedBonus: 0.5,
       // 团队规模+5
       teamSizeBonus: 5,
+      // [域C 缺口修复] 每日被动收入+¥300（股票期权）
+      passiveStockIncome: 300,
     },
     desc: "技术、英语、管理全精通，可以成为技术高管，实现财富自由。",
   },
@@ -240,6 +246,8 @@ const SKILL_SYNERGY_TRIPLE = {
       comprehensiveRepairBonus: 0.5,
       // 装备维修损耗-50%
       repairWearReduction: 0.5,
+      // [域C 缺口修复] 每日被动收入+¥100（智能家居项目）
+      passiveSmartHomeIncome: 100,
     },
     desc: "机械、电路、编程全都会，可以接智能家居项目，收入翻倍。",
   },
@@ -259,6 +267,8 @@ const SKILL_SYNERGY_TRIPLE = {
       logisticsIncomeBonus: 0.5,
       // 车队规模+3
       fleetSizeBonus: 3,
+      // [域C 缺口修复] 每日被动收入+¥250
+      passiveLogisticsIncome: 250,
     },
     desc: "会开车、会算账、会管理，可以开物流公司，实现财务自由。",
   },
@@ -322,7 +332,18 @@ const SKILL_SYNERGY_THEME = {
  */
 function checkSkillSynergies(state) {
   if (!state || !state.skills) {
-    return { dual: {}, triple: {}, theme: {}, effects: {} };
+    // [形状对齐] 早退分支返回与正常分支完全一致的形状。
+    // 原实现只返回 {dual,triple,theme,effects}，调用方若直接
+    // `results.unlockedJobs.push(...)` 会在旧存档/未初始化态下抛错。
+    return {
+      dual: {},
+      triple: {},
+      theme: {},
+      effects: {},
+      unlockedJobs: [],
+      unlockedBusinesses: [],
+      unlockedActions: [],
+    };
   }
 
   var results = {

@@ -261,6 +261,7 @@ function checkExtremeConditions(state) {
   // [R1015 域G A类修复]: state.needs/state.status 守卫（旧存档/异常状态→TypeError崩溃管线）
   if (!state.needs) state.needs = { hunger: 50, fatigue: 30, hygiene: 60, happiness: 50 };
   if (!state.status) state.status = { health: 80, illnesses: [] };
+  if (!state.resources) state.resources = { cash: 0, bankBalance: 0, bankDebt: 0, villageDebt: 0, fineDebt: 0, debt: 0 }; // [全系统自洽修复] 域D 修复: state.resources守卫(防极端状态/旧存档致TypeError)
   var n = state.needs,
     st = state.status;
 
@@ -299,6 +300,12 @@ function checkExtremeConditions(state) {
     // [自洽修复] 域D A类: 补 cash ||0 守卫
     if ((state.resources.cash || 0) >= 500) {
       state.resources.cash = (state.resources.cash || 0) - 500;
+      // [账本覆盖补齐 · 第八轮 · 2026-09-16] 急救费原本不上账本。
+      // 实测它是残差里第二大来源（7 局 ×300 天里 extreme_check 有 14 次 −500，
+      // 对账残差里对应 13 条「跟踪只有 rent、实际多扣 500」的记录）。
+      if (typeof addDailyTransaction === "function") {
+        addDailyTransaction(state, "expense", "healthcare", 500, "病危急救费");
+      }
       st.health = Math.min(50, st.health + 20);
       StateManager.addMessage(
         "🏥 你病危被好心人送进医院，花了¥500急救费用...需要好好休养。",

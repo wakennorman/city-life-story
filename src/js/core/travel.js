@@ -590,7 +590,13 @@ function tickTravel(state) {
     state.travel.daysRemaining = 0;
     if (state.flags) state.flags._travelDecisionShown = false;
     // === v3.23: 触发槽 — after_travel ===
-    if (typeof window.TriggerRegistry !== "undefined") {
+    // [修复 · 2026-09-15] 加 `!state._pendingEvent` 守卫。
+    // 原实现无条件调用 triggerRandom 并直接 showEventModal，而 showEventModal
+    // 在"已有弹窗"时会 early-return 且**什么都不做** —— 事件没显示，
+    // 但 triggerRandom 内部已经 setCooldown(30) 了 → 冷却被白烧，
+    // 下次旅行（可能几十天后）这个事件也不会再来。
+    // 加守卫后槽被占用时连掷都不掷，冷却保留。
+    if (typeof window.TriggerRegistry !== "undefined" && !state._pendingEvent) {
       try {
         var afterTravelEvent = window.TriggerRegistry.triggerRandom(
           "after_travel",

@@ -14,12 +14,37 @@
 // _esc 转义函数由 render.js 全局提供
 
 // ====== 行业定义 ======
+// [R1019 域A A类修复·第四轮] `industryMod` 语义倒置修正。
+//
+// 原实现（`startup.js:2546`）：
+//     const industryMod = STARTUP_INDUSTRIES[industry]?.avgBurnRate / 50000 || 1;
+// 把「行业平均**年**烧钱额」直接当成了**收入乘数** —— 一个字段被赋予两种完全
+// 不相干的含义：
+//     · 成本语义：`avgBurnRate` → `company.burnRate` → `monthsOfRunway`（startup.js:557/735/2670）
+//     · 收入语义：`avgBurnRate / 50000` → `industryMod`（startup.js:2546）
+// 更严重的是，作为「成本」的那一面**从未真正收取** —— 实测（scripts/probe-post-launch.cjs）
+// 日支出只有 ¥258，而 finance 的 avgBurnRate 折算下来是 **¥411/天**，
+// tech 是 ¥329/天。也就是说：
+//     · 声称烧钱多的行业（finance/healthcare）→ 收入反而高；
+//     · 声称烧钱少的行业（manufacturing/consumer）→ 收入反而低；
+//     · 但两者的**实际支出完全一样**（都是同一套租金/研发/营销/水电公式）。
+// 结果「重资产的制造业收入最低、高杠杆的金融收入最高」这一排序虽与行业叙事
+// 方向一致（金融确实更赚钱），但其**成因**是编造的 —— 玩家看到的数字不对应
+// 任何真实的经营差异。
+//
+// 修正：拆成两个**各自单一含义**的字段 ——
+//     · `revenueMultiplier`：显式的行业收入系数（原 `avgBurnRate / 50000` 的等价数值，
+//       收入曲线**零变化**，6 行业盈利结论不变）；
+//     · `avgBurnRate`：保留但其语义澄清为「行业平均年烧钱额」，仍用于 runway 展示。
+// 后续若要「真正收取行业性成本」（方案 D 的完整形态），应新增独立的成本项，
+// 而不是继续借用这个字段。
 const STARTUP_INDUSTRIES = {
   tech: {
     name: "科技",
     icon: "💻",
     baseValuation: 1400000,
-    avgBurnRate: 120000,
+    avgBurnRate: 120000, // 行业平均年烧钱额（用于 runway 展示）
+    revenueMultiplier: 2.4, // 行业收入系数（原 avgBurnRate/50000 = 2.40）
     keySkills: ["coding", "english"],
     desc: "互联网/软件/AI，高增长高波动",
   },
@@ -28,6 +53,7 @@ const STARTUP_INDUSTRIES = {
     icon: "🛍️",
     baseValuation: 700000,
     avgBurnRate: 80000,
+    revenueMultiplier: 1.6, // 原 80000/50000 = 1.60
     keySkills: ["sales", "cooking"],
     desc: "零售/餐饮/品牌，稳定但增长慢",
   },
@@ -36,6 +62,7 @@ const STARTUP_INDUSTRIES = {
     icon: "💳",
     baseValuation: 2100000,
     avgBurnRate: 150000,
+    revenueMultiplier: 3.0, // 原 150000/50000 = 3.00
     keySkills: ["accounting", "management"],
     desc: "支付/理财/保险科技，政策敏感",
   },
@@ -44,6 +71,7 @@ const STARTUP_INDUSTRIES = {
     icon: "🏥",
     baseValuation: 1750000,
     avgBurnRate: 130000,
+    revenueMultiplier: 2.6, // 原 130000/50000 = 2.60
     keySkills: ["management"],
     desc: "医疗/医药/健康服务，监管严格",
   },
@@ -52,6 +80,7 @@ const STARTUP_INDUSTRIES = {
     icon: "📚",
     baseValuation: 560000,
     avgBurnRate: 110000,
+    revenueMultiplier: 2.2, // 原 110000/50000 = 2.20
     keySkills: ["english", "management"],
     desc: "培训/在线教育/内容，受政策影响大",
   },
@@ -60,6 +89,7 @@ const STARTUP_INDUSTRIES = {
     icon: "🏭",
     baseValuation: 1050000,
     avgBurnRate: 70000,
+    revenueMultiplier: 1.4, // 原 70000/50000 = 1.40
     keySkills: ["repair", "electrician"],
     desc: "硬件/智能设备/新材料，重资产",
   },

@@ -24,10 +24,12 @@ function checkVictoryPaths(state) {
     return;
   }
 
-  // ⭐ 城市名人：名气 >= 100 持续 10 天
-  if (state.player.fame >= 100) {
-    state.status.fameDays = (state.status.fameDays || 0) + 1;
-    if (state.status.fameDays >= 10) {
+  // [全系统自洽修复] 域F 修复: state.player 和 state.status 守卫
+  var _pFame = (state.player || {}).fame || 0;
+  var _statusFameDays = state.status || {};
+  if (_pFame >= 100) {
+    _statusFameDays.fameDays = (_statusFameDays.fameDays || 0) + 1;
+    if (_statusFameDays.fameDays >= 10) {
       triggerVictory(
         state,
         "celebrity",
@@ -37,11 +39,12 @@ function checkVictoryPaths(state) {
       return;
     }
   } else {
-    state.status.fameDays = 0;
+    _statusFameDays.fameDays = 0;
   }
 
+  // [全系统自洽修复] 域F 修复: state.skills 守卫
   // 🎓 技能大师：全部10项技能达到80级
-  const skillValues = Object.values(state.skills);
+  const skillValues = Object.values(state.skills || {});
   if (
     skillValues.length >= 10 &&
     skillValues.every(function (s) {
@@ -88,8 +91,9 @@ function checkVictoryPaths(state) {
     return;
   }
 
+  // [全系统自洽修复] 域F 修复: state.player 守卫
   // 🎓 学术大师（博士+多项研究成果）
-  if (state.player.education >= 3 && (state.player.research || 0) >= 3) {
+  if (((state.player || {}).education || 0) >= 3 && ((state.player || {}).research || 0) >= 3) {
     triggerVictory(
       state,
       "academic_master",
@@ -139,9 +143,10 @@ function checkVictoryPaths(state) {
     }
   }
 
+  // [全系统自洽修复] 域F 修复: state.skills 守卫
   // 🛠️ 匠人一生（单项技能满级+证书>=5+同职业>=15年）
   var _vcHasMasterSkill = false;
-  for (var _vcSk in state.skills) {
+  for (var _vcSk in (state.skills || {})) {
     if (state.skills[_vcSk] && state.skills[_vcSk].level >= 100) {
       _vcHasMasterSkill = true;
       break;
@@ -162,8 +167,9 @@ function checkVictoryPaths(state) {
     return;
   }
 
+  // [全系统自洽修复] 域F 修复: state.player 守卫
   // 🏚️ 流浪终老（暗结局：35岁后+无房+赤贫+失业）
-  var _vcAgeYear = state.player.day / 365;
+  var _vcAgeYear = ((state.player || {}).day || 0) / 365;
   if (
     _vcAgeYear >= 35 &&
     (!state.housing || state.housing.tier === 0) &&
@@ -226,8 +232,9 @@ function checkVictoryPaths(state) {
     return;
   }
 
+  // [全系统自洽修复] 域F 修复: state.player 守卫
   // 🏢 职场巅峰（保留原有逻辑）
-  if (state.player.phase === "corporate" && state.corporate && state.corporate.rank === "P10") { // [全系统自洽修复] 域F A类: state.corporate 守卫
+  if ((state.player || {}).phase === "corporate" && state.corporate && state.corporate.rank === "P10") {
     triggerVictory(
       state,
       "p10",

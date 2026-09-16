@@ -5217,7 +5217,19 @@ function doStreetJob(job) {
   gainRepFromWork(state, job);
 
   // v3.6: 约定式触发槽（after_work 时机）
-  if (window.TriggerRegistry && state.player && state.player.day >= 7) {
+  // [修复 · 2026-09-15] 加 `!state._pendingEvent` 守卫。原来没有守卫 → 槽已占用时
+  // 会把已排队的事件**静默覆盖掉**（实测 300 天、作答率 0.5 时丢 14 次）。
+  // 更要紧的是：`triggerRandom` 内部是**先 setCooldown 再 return**，
+  // 所以"投不出去"也会白白烧掉 25~40 天冷却 → 这个事件下次也不会再来。
+  // 加了守卫后，槽被占用时**连掷都不掷**，冷却不消耗，下次槽空时还能正常出场。
+  // 注：节日/人生决策/路线事件**不加**这个守卫——它们写槽前已先打"已触发"flag，
+  // 跳过写入等于永久丢失；它们的覆盖属于有意的优先级设计。
+  if (
+    window.TriggerRegistry &&
+    state.player &&
+    state.player.day >= 7 &&
+    !state._pendingEvent
+  ) {
     try {
       var workEvent = window.TriggerRegistry.triggerRandom("after_work", state);
       if (workEvent) {

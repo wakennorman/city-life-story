@@ -555,7 +555,17 @@ function registerStartup(state, name, industry, description) {
     expenses: 0,
     cashReserve: minCash, // 剩余启动资金
     burnRate: STARTUP_INDUSTRIES[industry].avgBurnRate,
-    monthsOfRunway: 3, // 初始3个月 runway
+    // [R1019 域A A类修复] 原为硬编码 `monthsOfRunway: 3`（注释"初始3个月 runway"），
+    //   与真实值相差 **14~30 倍**：真实 runway = cashReserve / (burnRate/30)
+    //   = 15000 / (70000~150000/30) = **3.0 ~ 6.4 天**（按行业）。
+    //   该字段喂给 UI（showCompanyDashboard 显示"Runway N月"并据此配色）
+    //   与董事会压力判定（_calculateBoardPressureLevel 的 `monthsOfRunway < 3`），
+    //   即玩家会看到"还有 3 个月"而实际三天多就破产，压力系统也永不触发。
+    //   改为按真实值计算，与 tickStartup 内第 4 步（L2600）的口径保持一致。
+    monthsOfRunway:
+      STARTUP_INDUSTRIES[industry].avgBurnRate > 0
+        ? minCash / (STARTUP_INDUSTRIES[industry].avgBurnRate / 30)
+        : 999,
     employees: [],
     reputation: 30,
     technologyScore: 20,
@@ -956,7 +966,15 @@ function developProduct(state, productId, effort) {
   );
 
   // 消耗公司现金（研发成本）
-  const devCost = 1000 * effort;
+  // [R1019 域A A类修复] 原为 `1000 * effort`，但**注册资金只有 ¥15,000**，
+  //   而攒满 100 进度需 19~31 次开发 → 研发总成本 ¥38,000~93,000
+  //   （effort=2 时 19 次 × ¥2,000 = ¥38,462），**缺口 2.5x 起**。
+  //   加上每日固定支出 ¥405，玩家注册后 37 天内必然破产，
+  //   且**数学上不可能活到第一个产品上线**（详见报告第二十八节）。
+  //   单价改为 ¥200/effort 后：19 次 × ¥400 = ¥7,692，
+  //   加同期租金 ¥3,462 ≈ ¥11,154 → 余量 26%，玩家终于"有机会做成"。
+  //   ⚠️ 改动只为让创业**可达**，不改变"产品做出来才有收入"的核心循环。
+  const devCost = 200 * effort;
   // [全系统自洽修复] 域E A类#8: developProduct cashReserve NaN防护
   company.cashReserve = Math.max(0, (company.cashReserve || 0) - devCost);
   company.expenses += devCost;
@@ -1749,14 +1767,16 @@ function _addBoardMemberAfterFunding(state, roundId, investorType) {
 /** 计算季度KPI完成率 */
 function _calculateQuarterlyKPIScore(state, company) {
   const quarter = Math.floor((state.player.day - company.foundedDay) / 90) + 1;
+  // [R927 域E A类#2修复] company.fundingRounds 可能未定义(旧存档/数据异常)→加 Array.isArray 守卫防崩溃
+  var _fundingRounds = Array.isArray(company.fundingRounds) ? company.fundingRounds : [];
   const fundingRound =
     company.phase === "seed"
       ? "seed"
-      : company.fundingRounds.length >= 3
+      : _fundingRounds.length >= 3
         ? "C"
-        : company.fundingRounds.length >= 2
+        : _fundingRounds.length >= 2
           ? "B"
-          : company.fundingRounds.length >= 1
+          : _fundingRounds.length >= 1
             ? "A"
             : "seed";
 
@@ -2469,12 +2489,38 @@ function tickStartup(state, tickType) {
   // 时间倍率：daily=1, quarterly=90（天）
   const timeMult = tickType === "daily" ? 1 : 90;
   // 每日基础参数
-  const DAILY_BASE_REVENUE = 180; // ~¥180/天/产品 → ~¥16,200/季度
+  // [R1019 域A A类修复·第三轮] DAILY_BASE_REVENUE 180 → 480。
+  //   原值 180 下，即使「分数打满 + 最好的行业」也难以覆盖 ¥258~318/天 的支出；
+  //   更严重的是**六个行业里有两个（制造业/消费业）在任何分数下都无盈利解**
+  //   （双满值时制造业 −¥66/天、消费业 −¥30/天，见报告 31.4）。
+  //   配合「收入改取平均」（见下方 scoreMod）与「营销 120→60」，标定到 480：
+  //     · 最弱的制造业在现实分数（tech54/market30）下毛利 **+¥25/天**（薄但为正）
+  //     · 最强的金融科技 +¥347/天
+  //   既保证「6 个行业全部可盈利」，又保留了「行业难度梯度」
+  //   （制造业最薄、金融科技最厚 —— 与 avgBurnRate 的叙事方向一致）。
+  const DAILY_BASE_REVENUE = 480; // ~¥480/天/产品
   const DAILY_SALARY_DIV = 30; // 月薪÷30 = 日薪
   const DAILY_RENT_BASE = 180; // ~¥180/天 → ~¥5,400/季度
   const DAILY_RENT_PER_EMP = 33; // ~¥33/天/人 → ~¥1,000/季度
-  const DAILY_RD = 180; // ~¥180/天/产品 → ~¥16,200/季度
-  const DAILY_MARKETING_BASE = 120; // ~¥120/天 → ~¥3,600/季度
+  // [R1019 域A A类修复·第二轮] 原为 180。第一轮只把「一次性研发成本」从 1000/effort
+  //   降到 200/effort，漏掉了这个**每日**研发管理费 —— 它按「开发中的产品数」每天照收，
+  //   单人公司做第一个产品时 = ¥180/天，比租金还高，是真正的烧钱主项。
+  //   实测（scripts/probe-startup-survival.cjs，tech/effort=2）：
+  //     注册¥15,000，日支出实测 ¥443（租金180 + 研发180 + 水电50 + 舍入），
+  //     叠加每次开发 ¥400 → 第 18 天破产于进度 96%，**差一点仍然做不出来**。
+  //     穷举 effort=1/2/3 三档全部失败（effort=1 反而单位进度成本最低：¥52/点 vs ¥82.6/¥102.7）。
+  //   语义修正：把「研发管理费」定位为**团队管理开销**，而非「产品存在税」。
+  //     单人公司没有管理开销 → 取 ¥60/天（下一档 D 方案，最小改动版）。
+  //     实测改后：effort=1 时第 27 天完成 104% 进度，余 ¥879（余量 5.9%）。
+  //   ⚠️ 注意：这只是「活到产品上线」，上线后日收入 ~¥8.6 vs 日支出 ¥405 仍亏损，
+  //     属第二个问题（首产品收入微薄），未在本轮处理。
+  const DAILY_RD = 60; // ~¥60/天/产品 → ~¥5,400/季度（原 180）
+  // [R1019 域A A类修复·第三轮] DAILY_MARKETING_BASE 120 → 60。
+  //   上线后它是**最大的单项固定支出**（占 ¥258 支出的 47%），
+  //   且产品已上线时"每天固定烧 ¥120 营销"语义上也偏重 ——
+  //   营销更应随收入缩放（下方 DAILY_MARKETING_RATIO 那一项就是这个作用）。
+  //   减半后 + 收入侧修复，六行业才全部扭亏为盈。
+  const DAILY_MARKETING_BASE = 60; // ~¥60/天 → ~¥5,400/季度（原 120）
   const DAILY_MARKETING_RATIO = 0.05 / 90; // 日营收比例
   const DAILY_LOYALTY_DECAY_BAD = 0.12; // ~3.6/季度
   const DAILY_LOYALTY_DECAY_GOOD = 0.02; // ~0.6/季度
@@ -2497,8 +2543,20 @@ function tickStartup(state, tickType) {
       var _market = (typeof product.marketScore === "number" && isFinite(product.marketScore)) ? product.marketScore : 50;
       const techMod = _tech / 100;
       const marketMod = _market / 100;
+      // [R1019 域A A类修复·第四轮] industryMod 语义倒置修正 —— 详见 startup_data.js
+      //   头部注释。原为 `avgBurnRate / 50000`：把「行业平均年烧钱额」直接当收入
+      //   乘数，一个字段兼两种含义，且作为成本的那一面从未真正收取（实测日支出
+      //   恒为 ¥258，而 finance 的 avgBurnRate 折合 ¥411/天）。
+      //   改为读取显式的 `revenueMultiplier` 字段 —— 数值与原表达式**完全等价**，
+      //   收入曲线零变化（6 行业盈利结论不变），但语义单一、可读、可独立调整。
+      //   兜底保留 `/ 50000` 算式，兼容旧存档/外部注入的行业表。
+      var _industryDef = STARTUP_INDUSTRIES[company.industry];
       const industryMod =
-        STARTUP_INDUSTRIES[company.industry]?.avgBurnRate / 50000 || 1;
+        (_industryDef &&
+          (typeof _industryDef.revenueMultiplier === "number"
+            ? _industryDef.revenueMultiplier
+            : _industryDef.avgBurnRate / 50000)) ||
+        1;
       const growthMod = 1 + (company.revenue > 0 ? DAILY_GROWTH_BONUS : 0);
 
       // 行业热度联动：sectorHeat 偏离 1.0 的每 10% 转化 ±5% 收入调整
@@ -2512,10 +2570,22 @@ function tickStartup(state, tickType) {
       }
       var heatMod = 1 + (sectorHeat - 1.0) * 0.5; // 50% 传导系数
 
+      // [R1019 域A A类修复·第三轮] 收入公式：乘法 → 取平均。
+      //   原为 `techMod * marketMod`（乘法），导致两门分数**互相拖累**：
+      //     技术型创始人（techScore 54 / marketScore 30）→ 0.54 × 0.30 = **0.162**
+      //     即「产品再好，只要不会卖，收入砍到 16%」。
+      //   实测（scripts/probe-post-launch.cjs）：日收入 ¥70 vs 日支出 ¥318，
+      //     **要打平需 marketScore 从 30 涨到 100（满值）** —— 数学上不可能；
+      //     且穷举四条逃逸路线（招销售/营销投放/多产品/融资）**全部堵死**。
+      //   改为取平均 `(techMod + marketMod) / 2`：
+      //     技术型 (0.54+0.30)/2 = **0.42**（原 0.162）→ 收入 ×2.6。
+      //   语义：产品的技术含量与市场表现**各占一半贡献**，而非"缺一即废"。
+      //   这也是常见游戏数值做法 —— 乘法用于"乘法加成叠加"，平均用于"双维度评分"。
+      const scoreMod = (techMod + marketMod) / 2;
+
       product.revenue = Math.round(
         baseRevenue *
-          techMod *
-          marketMod *
+          scoreMod *
           industryMod *
           growthMod *
           heatMod *
@@ -2526,6 +2596,17 @@ function tickStartup(state, tickType) {
   }
 
   // 2. 支出计算
+  // [R1019 域A A类修复] 「产品上线前」判定 —— 用于免除此阶段不合理的支出。
+  //   公司刚注册时 products=[]，既无产品可营销、也无产品可摊研发管理费，
+  //   但原实现照收 营销¥120 + 水电¥50 + 合规¥30 + 杂项¥25 = ¥225/天，
+  //   叠加该阶段本就高昂的研发成本（见 devCost 处注释），
+  //   使玩家「注册后 37 天内必然破产、数学上做不出第一个产品」。
+  //   语义修正：没有已上线产品的公司，不收营销/合规/杂项
+  //   （租金与水电保留 —— 场地是实打实租着的；员工工资同理保留）。
+  const _hasLaunchedProduct =
+    Array.isArray(company.products) &&
+    company.products.some((p) => p.status === "launched");
+  const _preLaunch = !_hasLaunchedProduct;
   let totalExpenses = 0;
   // 员工工资（日薪 × 天数）
   for (const emp of company.employees) {
@@ -2553,10 +2634,11 @@ function tickStartup(state, tickType) {
     (Array.isArray(company.products) ? company.products.filter((p) => p.status === "developing") : []).length *
     Math.round(DAILY_RD * timeMult);
   totalExpenses += rAndD;
-  // 营销
-  const marketing =
-    Math.round(DAILY_MARKETING_BASE * timeMult) +
-    Math.round(company.revenue * DAILY_MARKETING_RATIO * timeMult);
+  // 营销（R1019：产品上线前无物可销 → 不收）
+  const marketing = _preLaunch
+    ? 0
+    : Math.round(DAILY_MARKETING_BASE * timeMult) +
+      Math.round(company.revenue * DAILY_MARKETING_RATIO * timeMult);
   totalExpenses += marketing;
 
   // ====== 新增运营成本（使创业更难更真实）=======
@@ -2564,16 +2646,20 @@ function tickStartup(state, tickType) {
   // (recession×1.15 / boom×0.9 / normal×1.0，daily_pipeline economy_v3_tick 每日维护)
   const corpCostMod = (state.flags && state.flags._corpCostMod) || 1;
 
-  // 水电网络费 ~¥50/天
+  // 水电网络费 ~¥50/天（场地在使用，照收）
   const utilities = Math.round(50 * timeMult * corpCostMod);
   totalExpenses += utilities;
 
   // 法律合规费 ~¥30/天（工商年检、商标、许可证等）
-  const legalCompliance = Math.round(30 * timeMult * corpCostMod);
+  // R1019：产品上线前无经营行为，不收
+  const legalCompliance = _preLaunch
+    ? 0
+    : Math.round(30 * timeMult * corpCostMod);
   totalExpenses += legalCompliance;
 
   // 杂项（办公耗材、茶水、清洁等）~¥25/天
-  const miscOps = Math.round(25 * timeMult * corpCostMod);
+  // R1019：产品上线前无办公消耗，不收
+  const miscOps = _preLaunch ? 0 : Math.round(25 * timeMult * corpCostMod);
   totalExpenses += miscOps;
 
   // 社保公积金（每个员工额外40%用工成本，随经济周期同向波动）

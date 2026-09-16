@@ -553,14 +553,18 @@ function calcFinalPrice(state, locKey, goodId) {
     var sMod = good.seasonal[state.weather.season];
     if (isFinite(sMod) && sMod > 0) price *= sMod;
   }
-  // [全系统自洽修复] 域A R1045 A类#2: state 守卫 — 防止极端情况下 state 为 null/undefined 时抛 TypeError
-  var rl = state && state.relationships
-    ? Object.keys(state.relationships).filter(function (k) {
-        return state.relationships[k] && state.relationships[k].met;
-      }).length
-    : 0;
-  var npcP = Math.min(10, Math.floor(rl / 2) * 0.5);
-  if (npcP > 0) price *= 1 - npcP / 100; // [全系统自洽修复] 域A A类#1: NPC关系定价方向反转（原为+导致认识越多NPC物价越高，应折扣而非加价）
+  // [全系统自洽修复] 域D 联动增强(D→A): 消费 getNpcTradeDiscount（基于好感质量的折扣，原为纯数量计数）
+  var _npcDisc = 1.0;
+  if (typeof window.getNpcTradeDiscount === "function") {
+    _npcDisc = window.getNpcTradeDiscount(state);
+  } else if (state && state.relationships) {
+    // 兜底：按结识数量近似折扣
+    var rl = Object.keys(state.relationships).filter(function (k) {
+      return state.relationships[k] && state.relationships[k].met;
+    }).length;
+    _npcDisc = 1 - Math.min(0.08, rl * 0.005);
+  }
+  if (isFinite(_npcDisc) && _npcDisc < 1.0) price *= _npcDisc;
   // v3.1: 难度物价乘数（休闲档-10%，地狱档+30%）
   if (typeof getDifficultyMultiplier === "function") {
     var priceMult = getDifficultyMultiplier(state, "price");

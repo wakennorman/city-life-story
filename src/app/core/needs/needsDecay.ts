@@ -38,17 +38,54 @@ export function getNeedsDecayMultiplier(
 }
 
 /**
- * 计算衰减后的 needs（1:1 复刻 vanilla applyNeedsDecay 16-27 行）
- * - 饥饱 -13*mul、卫生 -7*mul、心情 -4*mul，各自钳制 [0,100]
+ * 社交支持心情缓冲（1:1 复刻 vanilla applyNeedsDecay 26-35 行）
+ *
+ * [同步 · 2026-09-15] 原端口缺失这一段，导致 happiness 衰减与运行时不一致：
+ *   vanilla 后加了「高好感 NPC 减轻心情衰减」（域D→G 联动增强），
+ *   且 happiness 衰减有 `Math.max(1, ...)` 最低 1 点下限。
+ *   本端口当时只写了 `-Math.round(4 * decayMul)`，两者都缺。
+ *   实测偏差：decayMul=0.1 时 vanilla 掉 1 点、端口掉 0 点（36 项比对失败）。
+ *
+ * 规则：每有一个「已见过 且 好感 ≥50」的 NPC，减 0.5 点衰减，最多减 2 点。
+ */
+export interface RelationshipLike {
+  met?: boolean;
+  affinity?: number;
+}
+
+export function computeSocialSupportBonus(
+  relationships?: Record<string, RelationshipLike | undefined>,
+): number {
+  let support = 0;
+  if (relationships) {
+    for (const key in relationships) {
+      const r = relationships[key];
+      if (r && r.met && (r.affinity || 0) >= 50) support++;
+    }
+  }
+  return Math.min(2, support * 0.5); // 每个高好感 NPC 减 0.5 衰减，最多 -2
+}
+
+/**
+ * 计算衰减后的 needs（1:1 复刻 vanilla applyNeedsDecay 16-39 行）
+ * - 饥饱 -13*mul、卫生 -7*mul，各自钳制 [0,100]
+ * - 心情 -(max(1, 4*mul - socialBonus))，钳制 [0,100]
+ *   → 注意 `Math.max(1, ...)` 是最低 1 点下限；`Math.round` 包在最外层
  * - 不改输入，返回新对象（fatigue 由 endDay 睡眠单独处理，不含在内）
+ *
+ * @param socialBonus 由 computeSocialSupportBonus(state.relationships) 得到；默认 0
  */
 export function computeNeedsDecay(
   needs: NeedsState,
   decayMul: number,
+  socialBonus: number = 0,
 ): NeedsState {
   return {
     hunger: Math.max(0, Math.min(100, (needs.hunger || 0) - Math.round(13 * decayMul))),
     hygiene: Math.max(0, Math.min(100, (needs.hygiene || 0) - Math.round(7 * decayMul))),
-    happiness: Math.max(0, Math.min(100, (needs.happiness || 0) - Math.round(4 * decayMul))),
+    happiness: Math.max(
+      0,
+      Math.min(100, (needs.happiness || 0) - Math.round(Math.max(1, 4 * decayMul - socialBonus))),
+    ),
   };
 }
