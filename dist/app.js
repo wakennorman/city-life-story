@@ -135554,7 +135554,7 @@ const NEWS_L1_L4 = [
       jobPenalty: ["manual_labor_construction", "premium_engineering"],
       jobMultiplier: 0.7,
       jobBonus: ["bank_security", "cafeteria_worker"],
-      jobMultiplier: 1.1,
+      jobBonusMultiplier: 1.1,
       duration: 5,
     },
     conduit: { targetLevel: "L4", delayRange: [1, 2], chance: 0.4 },
@@ -135903,7 +135903,7 @@ const NEWS_L1_L4 = [
       jobPenalty: ["delivery_rider", "taxi_driver"],
       jobMultiplier: 0.7,
       jobBonus: ["busking", "street_vending_food"],
-      jobMultiplier: 1.3,
+      jobBonusMultiplier: 1.3,
       duration: 3,
     },
     conduit: { targetLevel: "L4", delayRange: [1, 1], chance: 0.35 },
@@ -137083,7 +137083,7 @@ const NEWS_L1_L4 = [
       jobPenalty: ["content_writing", "junior_analyst", "web_designer"],
       jobMultiplier: 0.8,
       jobBonus: ["server_ops", "network_monitor"],
-      jobMultiplier: 1.25,
+      jobBonusMultiplier: 1.25,
       investmentEffect: [
         { industry: "科技", mul: 1.15 },
         { symbols: ["NVDA"], mul: 1.25 },
@@ -138838,7 +138838,7 @@ const NEWS_L1_L4 = [
       jobPenalty: ["taxi_driver", "truck_assistant"],
       jobMultiplier: 0.8,
       jobBonus: ["courier_gig"],
-      jobMultiplier: 1.2,
+      jobBonusMultiplier: 1.2,
       priceMod: { water: 1.15, instant_noodles: 1.1 },
       fatiguePenalty: 12,
       duration: 3,
@@ -140111,7 +140111,7 @@ const NEWS_L1_L4 = [
       ],
       jobMultiplier: 0.65,
       jobBonus: ["server_ops", "network_monitor", "web_designer"],
-      jobMultiplier: 1.15,
+      jobBonusMultiplier: 1.15,
       investmentEffect: [{ industry: "科技", mul: 1.25 }],
       duration: 14,
     },
@@ -140768,7 +140768,7 @@ const NEWS_L1_L4 = [
       jobPenalty: ["street_vending_food", "busking"],
       jobMultiplier: 0.7,
       jobBonus: ["server_ops", "network_monitor"],
-      jobMultiplier: 1.2,
+      jobBonusMultiplier: 1.2,
       duration: 12,
     },
     conduit: { targetLevel: "L3", delayRange: [1, 2], chance: 0.45 },
@@ -140808,7 +140808,7 @@ const NEWS_L1_L4 = [
       jobPenalty: ["delivery_rider", "courier_gig"],
       jobMultiplier: 0.75,
       jobBonus: ["server_ops"],
-      jobMultiplier: 1.2,
+      jobBonusMultiplier: 1.2,
       investmentEffect: [{ industry: "科技", mul: 1.15 }],
       duration: 12,
     },
@@ -141136,7 +141136,7 @@ const NEWS_L1_L4 = [
       jobPenalty: ["factory_work_assembly", "steel_worker"],
       jobMultiplier: 0.7,
       jobBonus: ["network_monitor", "server_ops"],
-      jobMultiplier: 1.3,
+      jobBonusMultiplier: 1.3,
       investmentEffect: [
         { industry: "科技", mul: 1.25 },
         { symbols: ["NVDA"], mul: 1.3 },
@@ -141629,7 +141629,7 @@ const NEWS_L1_L4 = [
       jobPenalty: ["manual_labor_construction"],
       jobMultiplier: 0.6,
       jobBonus: ["premium_engineering"],
-      jobMultiplier: 1.3,
+      jobBonusMultiplier: 1.3,
       investmentEffect: [
         { industry: "制造", mul: 1.1 },
         { symbols: ["COPPER"], mul: 0.85 },
@@ -141691,7 +141691,7 @@ const NEWS_L1_L4 = [
       jobPenalty: ["delivery_rider", "courier_gig"],
       jobMultiplier: 0.5,
       jobBonus: ["network_monitor", "server_ops"],
-      jobMultiplier: 1.3,
+      jobBonusMultiplier: 1.3,
       investmentEffect: [
         { industry: "科技", mul: 1.2 },
         { industry: "消费", mul: 0.88 },
@@ -142304,7 +142304,7 @@ const NEWS_L1_L4 = [
       jobPenalty: ["truck_assistant", "delivery_rider"],
       jobMultiplier: 0.5,
       jobBonus: ["network_monitor", "server_ops"],
-      jobMultiplier: 1.3,
+      jobBonusMultiplier: 1.3,
       investmentEffect: [
         { industry: "科技", mul: 1.2 },
         { industry: "消费", mul: 0.85 },
@@ -143209,7 +143209,7 @@ const NEWS_L1_L4 = [
       jobBonus: ["delivery_rider", "courier_gig"],
       jobMultiplier: 1.05,
       jobPenalty: ["street_vending_food"],
-      jobMultiplier: 0.9,
+      jobBonusMultiplier: 0.9,
       duration: 7,
     },
     conduit: { targetLevel: "L3", delayRange: [1, 2], chance: 0.5 },
@@ -143455,7 +143455,7 @@ const NEWS_L1_L4 = [
       jobPenalty: ["delivery_rider", "courier_gig", "taxi_driver"],
       jobMultiplier: 0.88,
       jobBonus: ["tutoring"],
-      jobMultiplier: 1.12,
+      jobBonusMultiplier: 1.12,
       duration: 4,
     },
     conduit: { targetLevel: "L4", delayRange: [1, 1], chance: 0.5 },
@@ -143988,7 +143988,7 @@ const NEWS_L1_L4 = [
       jobBonus: ["premium_engineering", "factory_electrician"],
       jobMultiplier: 1.1,
       jobPenalty: ["factory_work_assembly"],
-      jobMultiplier: 0.85,
+      jobBonusMultiplier: 0.85,
       duration: 1,
     },
   },
@@ -144113,7 +144113,7 @@ const NEWS_L1_L4 = [
       jobPenalty: ["manual_labor_construction"],
       jobMultiplier: 0.8,
       jobBonus: ["premium_engineering"],
-      jobMultiplier: 1.2,
+      jobBonusMultiplier: 1.2,
       duration: 12,
     },
     conduit: { targetLevel: "L2", delayRange: [2, 5], chance: 0.45 },
@@ -144523,7 +144523,7 @@ const NEWS_L1_L4 = [
       jobPenalty: ["restaurant_assistant", "cafeteria_worker"],
       jobMultiplier: 0.6,
       jobBonus: ["premium_engineering", "network_monitor"],
-      jobMultiplier: 1.2,
+      jobBonusMultiplier: 1.2,
       investmentEffect: [
         { industry: "科技", mul: 1.2 },
         { industry: "消费", mul: 0.85 },
@@ -145088,7 +145088,7 @@ const NEWS_L1_L4 = [
       jobPenalty: ["taxi_driver"],
       jobMultiplier: 0.3,
       jobBonus: ["network_monitor", "server_ops"],
-      jobMultiplier: 1.3,
+      jobBonusMultiplier: 1.3,
       investmentEffect: [
         { industry: "科技", mul: 1.3 },
         { industry: "消费", mul: 0.8 },
@@ -145436,7 +145436,7 @@ const NEWS_L1_L4 = [
       jobPenalty: ["bank_security"],
       jobMultiplier: 0.6,
       jobBonus: ["network_monitor", "server_ops"],
-      jobMultiplier: 1.2,
+      jobBonusMultiplier: 1.2,
       investmentEffect: [
         { industry: "科技", mul: 1.15 },
         { symbols: ["NVDA"], mul: 1.12 },
@@ -145797,7 +145797,7 @@ const NEWS_L1_L4 = [
       jobPenalty: ["manual_labor_construction"],
       jobMultiplier: 0.75,
       jobBonus: ["premium_engineering", "factory_electrician"],
-      jobMultiplier: 1.2,
+      jobBonusMultiplier: 1.2,
       investmentEffect: [
         { industry: "制造", mul: 1.15 },
         { symbols: ["COPPER"], mul: 1.1 },
@@ -145882,7 +145882,7 @@ const NEWS_L1_L4 = [
       jobPenalty: ["manual_labor_construction"],
       jobMultiplier: 0.5,
       jobBonus: ["premium_engineering"],
-      jobMultiplier: 1.2,
+      jobBonusMultiplier: 1.2,
       duration: 12,
     },
     conduit: { targetLevel: "L2", delayRange: [2, 5], chance: 0.5 },
@@ -146086,7 +146086,7 @@ const NEWS_L1_L4 = [
       jobPenalty: ["wholesale_sorting", "truck_assistant"],
       jobMultiplier: 0.6,
       jobBonus: ["network_monitor", "premium_engineering"],
-      jobMultiplier: 1.2,
+      jobBonusMultiplier: 1.2,
       priceMod: { vegetables: 0.6, rice: 0.65 },
       duration: 12,
     },
@@ -146116,7 +146116,7 @@ const NEWS_L1_L4 = [
       jobPenalty: ["restaurant_assistant", "cafeteria_worker"],
       jobMultiplier: 0.5,
       jobBonus: ["premium_engineering", "network_monitor"],
-      jobMultiplier: 1.2,
+      jobBonusMultiplier: 1.2,
       investmentEffect: [
         { industry: "科技", mul: 1.2 },
         { industry: "消费", mul: 0.85 },
@@ -146198,7 +146198,7 @@ const NEWS_L1_L4 = [
       jobPenalty: ["manual_labor_construction"],
       jobMultiplier: 0.7,
       jobBonus: ["premium_engineering", "network_monitor"],
-      jobMultiplier: 1.2,
+      jobBonusMultiplier: 1.2,
       investmentEffect: [
         { industry: "制造", mul: 1.1 },
         { symbols: ["COPPER"], mul: 1.05 },
@@ -146450,7 +146450,7 @@ const NEWS_L1_L4 = [
       jobPenalty: ["wholesale_sorting", "truck_assistant"],
       jobMultiplier: 0.5,
       jobBonus: ["network_monitor", "premium_engineering"],
-      jobMultiplier: 1.2,
+      jobBonusMultiplier: 1.2,
       priceMod: { rice: 0.6, vegetables: 0.55 },
       duration: 12,
     },
@@ -146482,7 +146482,7 @@ const NEWS_L1_L4 = [
       jobPenalty: ["bank_security"],
       jobMultiplier: 0.7,
       jobBonus: ["network_monitor", "server_ops"],
-      jobMultiplier: 1.2,
+      jobBonusMultiplier: 1.2,
       investmentEffect: [
         { industry: "科技", mul: 1.15 },
         { symbols: ["NVDA"], mul: 1.12 },
@@ -146532,7 +146532,7 @@ const NEWS_L1_L4 = [
       jobPenalty: ["tutoring"],
       jobMultiplier: 0.5,
       jobBonus: ["network_monitor", "server_ops"],
-      jobMultiplier: 1.2,
+      jobBonusMultiplier: 1.2,
       investmentEffect: [
         { industry: "科技", mul: 1.2 },
         { symbols: ["NVDA"], mul: 1.18 },
@@ -146823,7 +146823,7 @@ const NEWS_L1_L4 = [
       jobPenalty: ["web_designer"],
       jobMultiplier: 0.7,
       jobBonus: ["premium_engineering", "network_monitor"],
-      jobMultiplier: 1.2,
+      jobBonusMultiplier: 1.2,
       investmentEffect: [
         { industry: "科技", mul: 1.2 },
         { symbols: ["NVDA"], mul: 1.18 },
@@ -146872,7 +146872,7 @@ const NEWS_L1_L4 = [
       jobPenalty: ["waste_recycling"],
       jobMultiplier: 0.6,
       jobBonus: ["network_monitor", "premium_engineering"],
-      jobMultiplier: 1.2,
+      jobBonusMultiplier: 1.2,
       investmentEffect: [
         { industry: "科技", mul: 1.15 },
         { symbols: ["NVDA"], mul: 1.12 },
@@ -146904,7 +146904,7 @@ const NEWS_L1_L4 = [
       jobPenalty: ["restaurant_assistant", "cafeteria_worker"],
       jobMultiplier: 0.4,
       jobBonus: ["premium_engineering", "network_monitor"],
-      jobMultiplier: 1.2,
+      jobBonusMultiplier: 1.2,
       investmentEffect: [
         { industry: "科技", mul: 1.2 },
         { industry: "消费", mul: 0.8 },
@@ -147141,7 +147141,7 @@ const NEWS_L1_L4 = [
       jobPenalty: ["taxi_driver", "restaurant_assistant"],
       jobMultiplier: 0.7,
       jobBonus: ["network_monitor", "server_ops"],
-      jobMultiplier: 1.2,
+      jobBonusMultiplier: 1.2,
       investmentEffect: [
         { industry: "科技", mul: 1.2 },
         { symbols: ["NVDA"], mul: 1.18 },
@@ -147159,7 +147159,7 @@ const NEWS_L1_L4 = [
       jobPenalty: ["steel_worker", "manual_labor_construction"],
       jobMultiplier: 0.5,
       jobBonus: ["premium_engineering", "network_monitor"],
-      jobMultiplier: 1.3,
+      jobBonusMultiplier: 1.3,
       priceMod: { scrap_metal: 0.7 },
       duration: 12,
     },
@@ -147190,7 +147190,7 @@ const NEWS_L1_L4 = [
       jobPenalty: ["bank_security"],
       jobMultiplier: 0.5,
       jobBonus: ["network_monitor", "premium_engineering"],
-      jobMultiplier: 1.2,
+      jobBonusMultiplier: 1.2,
       investmentEffect: [
         { industry: "科技", mul: 1.15 },
         { symbols: ["NVDA"], mul: 1.12 },
@@ -147486,7 +147486,7 @@ const NEWS_L1_L4 = [
       jobPenalty: ["hospital_companion"],
       jobMultiplier: 0.6,
       jobBonus: ["premium_engineering", "network_monitor"],
-      jobMultiplier: 1.2,
+      jobBonusMultiplier: 1.2,
       investmentEffect: [
         { industry: "医药", mul: 1.15 },
         { industry: "科技", mul: 1.2 },
@@ -147551,7 +147551,7 @@ const NEWS_L1_L4 = [
       jobPenalty: ["manual_labor_construction", "steel_worker"],
       jobMultiplier: 0.4,
       jobBonus: ["premium_engineering", "network_monitor"],
-      jobMultiplier: 1.3,
+      jobBonusMultiplier: 1.3,
       investmentEffect: [
         { industry: "制造", mul: 1.2 },
         { symbols: ["COPPER"], mul: 1.1 },
@@ -147600,7 +147600,7 @@ const NEWS_L1_L4 = [
       jobPenalty: ["content_writing"],
       jobMultiplier: 0.5,
       jobBonus: ["network_monitor", "server_ops"],
-      jobMultiplier: 1.2,
+      jobBonusMultiplier: 1.2,
       investmentEffect: [
         { industry: "科技", mul: 1.15 },
         { industry: "消费", mul: 0.9 },
@@ -147632,7 +147632,7 @@ const NEWS_L1_L4 = [
       jobPenalty: ["delivery_rider", "courier_gig"],
       jobMultiplier: 0.3,
       jobBonus: ["network_monitor", "premium_engineering"],
-      jobMultiplier: 1.2,
+      jobBonusMultiplier: 1.2,
       investmentEffect: [
         { industry: "科技", mul: 1.2 },
         { industry: "消费", mul: 0.85 },
@@ -147897,7 +147897,7 @@ const NEWS_L1_L4 = [
       jobPenalty: ["wholesale_sorting", "truck_assistant"],
       jobMultiplier: 0.4,
       jobBonus: ["network_monitor", "premium_engineering"],
-      jobMultiplier: 1.2,
+      jobBonusMultiplier: 1.2,
       priceMod: { rice: 0.5, vegetables: 0.5 },
       duration: 12,
     },
@@ -147928,7 +147928,7 @@ const NEWS_L1_L4 = [
       jobPenalty: ["hospital_companion"],
       jobMultiplier: 0.6,
       jobBonus: ["premium_engineering", "network_monitor"],
-      jobMultiplier: 1.2,
+      jobBonusMultiplier: 1.2,
       investmentEffect: [
         { industry: "医药", mul: 1.15 },
         { industry: "科技", mul: 1.1 },
@@ -147950,7 +147950,7 @@ const NEWS_L1_L4 = [
       jobPenalty: ["steel_worker"],
       jobMultiplier: 0.8,
       jobBonus: ["factory_electrician", "premium_engineering"],
-      jobMultiplier: 1.2,
+      jobBonusMultiplier: 1.2,
       duration: 14,
     },
     conduit: { targetLevel: "L2", delayRange: [2, 5], chance: 0.5 },
@@ -147964,7 +147964,7 @@ const NEWS_L1_L4 = [
       jobPenalty: ["bank_security"],
       jobMultiplier: 0.5,
       jobBonus: ["network_monitor", "server_ops"],
-      jobMultiplier: 1.2,
+      jobBonusMultiplier: 1.2,
       investmentEffect: [
         { industry: "科技", mul: 1.15 },
         { symbols: ["NVDA"], mul: 1.12 },
@@ -148217,7 +148217,7 @@ const NEWS_L1_L4 = [
       jobPenalty: ["restaurant_assistant", "cafeteria_worker"],
       jobMultiplier: 0.5,
       jobBonus: ["premium_engineering", "network_monitor"],
-      jobMultiplier: 1.2,
+      jobBonusMultiplier: 1.2,
       investmentEffect: [
         { industry: "科技", mul: 1.15 },
         { industry: "消费", mul: 0.85 },
@@ -148249,7 +148249,7 @@ const NEWS_L1_L4 = [
       jobPenalty: ["waste_recycling"],
       jobMultiplier: 0.5,
       jobBonus: ["network_monitor", "premium_engineering"],
-      jobMultiplier: 1.2,
+      jobBonusMultiplier: 1.2,
       investmentEffect: [
         { industry: "科技", mul: 1.15 },
         { symbols: ["NVDA"], mul: 1.12 },
@@ -148595,7 +148595,7 @@ const NEWS_L1_L4 = [
       jobPenalty: ["delivery_rider", "courier_gig"],
       jobMultiplier: 0.3,
       jobBonus: ["network_monitor", "premium_engineering"],
-      jobMultiplier: 1.2,
+      jobBonusMultiplier: 1.2,
       investmentEffect: [
         { industry: "科技", mul: 1.2 },
         { industry: "消费", mul: 0.85 },
@@ -148618,7 +148618,7 @@ const NEWS_L1_L4 = [
       jobPenalty: ["manual_labor_construction"],
       jobMultiplier: 0.8,
       jobBonus: ["premium_engineering"],
-      jobMultiplier: 1.2,
+      jobBonusMultiplier: 1.2,
       duration: 12,
     },
     conduit: { targetLevel: "L2", delayRange: [2, 5], chance: 0.45 },
@@ -148632,7 +148632,7 @@ const NEWS_L1_L4 = [
       jobPenalty: ["hospital_companion"],
       jobMultiplier: 0.6,
       jobBonus: ["premium_engineering", "network_monitor"],
-      jobMultiplier: 1.2,
+      jobBonusMultiplier: 1.2,
       investmentEffect: [
         { industry: "医药", mul: 1.15 },
         { industry: "科技", mul: 1.1 },
@@ -148665,7 +148665,7 @@ const NEWS_L1_L4 = [
       jobPenalty: ["bank_security"],
       jobMultiplier: 0.5,
       jobBonus: ["network_monitor", "server_ops"],
-      jobMultiplier: 1.2,
+      jobBonusMultiplier: 1.2,
       investmentEffect: [
         { industry: "科技", mul: 1.15 },
         { symbols: ["NVDA"], mul: 1.12 },
@@ -148950,7 +148950,7 @@ const NEWS_L1_L4 = [
       jobPenalty: ["waste_recycling"],
       jobMultiplier: 0.5,
       jobBonus: ["premium_engineering", "network_monitor"],
-      jobMultiplier: 1.2,
+      jobBonusMultiplier: 1.2,
       priceMod: { scrap_plastic: 1.2, scrap_metal: 1.15 },
       duration: 10,
     },
@@ -148981,7 +148981,7 @@ const NEWS_L1_L4 = [
       jobPenalty: ["hospital_companion"],
       jobMultiplier: 0.6,
       jobBonus: ["premium_engineering", "network_monitor"],
-      jobMultiplier: 1.2,
+      jobBonusMultiplier: 1.2,
       investmentEffect: [
         { industry: "医药", mul: 1.15 },
         { industry: "科技", mul: 1.1 },
@@ -149015,7 +149015,7 @@ const NEWS_L1_L4 = [
       jobPenalty: ["document_translator", "foreign_trade_assistant"],
       jobMultiplier: 0.4,
       jobBonus: ["network_monitor", "server_ops"],
-      jobMultiplier: 1.2,
+      jobBonusMultiplier: 1.2,
       investmentEffect: [{ industry: "科技", mul: 1.2 }],
       duration: 10,
     },
@@ -149247,7 +149247,7 @@ const NEWS_L1_L4 = [
       jobPenalty: ["delivery_rider", "courier_gig"],
       jobMultiplier: 0.3,
       jobBonus: ["network_monitor", "premium_engineering"],
-      jobMultiplier: 1.2,
+      jobBonusMultiplier: 1.2,
       investmentEffect: [
         { industry: "科技", mul: 1.2 },
         { industry: "消费", mul: 0.85 },
@@ -149281,7 +149281,7 @@ const NEWS_L1_L4 = [
       jobPenalty: ["restaurant_assistant", "cafeteria_worker"],
       jobMultiplier: 0.5,
       jobBonus: ["premium_engineering", "network_monitor"],
-      jobMultiplier: 1.2,
+      jobBonusMultiplier: 1.2,
       investmentEffect: [
         { industry: "科技", mul: 1.15 },
         { industry: "消费", mul: 0.85 },
@@ -149299,7 +149299,7 @@ const NEWS_L1_L4 = [
       jobPenalty: ["hospital_companion"],
       jobMultiplier: 0.6,
       jobBonus: ["premium_engineering", "network_monitor"],
-      jobMultiplier: 1.2,
+      jobBonusMultiplier: 1.2,
       investmentEffect: [
         { industry: "医药", mul: 1.15 },
         { industry: "科技", mul: 1.1 },
@@ -149349,7 +149349,7 @@ const NEWS_L1_L4 = [
       jobPenalty: ["bank_security"],
       jobMultiplier: 0.5,
       jobBonus: ["network_monitor", "server_ops"],
-      jobMultiplier: 1.2,
+      jobBonusMultiplier: 1.2,
       investmentEffect: [
         { industry: "科技", mul: 1.15 },
         { symbols: ["NVDA"], mul: 1.12 },
@@ -150335,7 +150335,7 @@ function applyPendingConduitNews(state) {
               jobBonus: ["web_designer", "server_ops", "network_monitor"],
               jobMultiplier: 1.3,
               jobPenalty: ["factory_work_assembly", "steel_worker"],
-              jobMultiplier: 0.85,
+              jobBonusMultiplier: 0.85,
               investmentEffect: [{ industry: "科技", mul: 1.15 }],
               duration: 12,
             },
@@ -151119,7 +151119,7 @@ function applyPendingConduitNews(state) {
               jobPenalty: ["taxi_driver", "truck_assistant"],
               jobMultiplier: 0.6,
               jobBonus: ["delivery_rider"],
-              jobMultiplier: 1.2,
+              jobBonusMultiplier: 1.2,
               priceMod: { water: 1.1, instant_noodles: 1.15, vegetables: 1.2 },
               duration: 7,
             },
@@ -151547,7 +151547,7 @@ function applyPendingConduitNews(state) {
               jobPenalty: ["delivery_rider", "courier_gig"],
               jobMultiplier: 0.85,
               jobBonus: ["truck_assistant"],
-              jobMultiplier: 1.1,
+              jobBonusMultiplier: 1.1,
               duration: 14,
             },
             conduit: { targetLevel: "L3", delayRange: [1, 3], chance: 0.35 },
@@ -151573,7 +151573,7 @@ function applyPendingConduitNews(state) {
               ],
               jobMultiplier: 0.5,
               jobBonus: ["bank_security", "shop_assistant"],
-              jobMultiplier: 1.1,
+              jobBonusMultiplier: 1.1,
               duration: 10,
             },
             conduit: { targetLevel: "L3", delayRange: [1, 2], chance: 0.45 },
@@ -151843,7 +151843,7 @@ function applyPendingConduitNews(state) {
               ],
               jobMultiplier: 0.65,
               jobBonus: ["server_ops", "network_monitor"],
-              jobMultiplier: 1.15,
+              jobBonusMultiplier: 1.15,
               investmentEffect: [{ industry: "科技", mul: 1.2 }],
               duration: 10,
             },
@@ -151874,7 +151874,7 @@ function applyPendingConduitNews(state) {
               jobPenalty: ["training_assistant", "tutoring"],
               jobMultiplier: 0.6,
               jobBonus: ["content_writing", "web_designer"],
-              jobMultiplier: 1.1,
+              jobBonusMultiplier: 1.1,
               duration: 14,
             },
             conduit: { targetLevel: "L3", delayRange: [1, 3], chance: 0.4 },
@@ -152209,7 +152209,7 @@ function applyPendingConduitNews(state) {
               jobPenalty: ["truck_assistant", "taxi_driver"],
               jobMultiplier: 0.5,
               jobBonus: ["server_ops", "network_monitor"],
-              jobMultiplier: 1.2,
+              jobBonusMultiplier: 1.2,
               investmentEffect: [{ industry: "科技", mul: 1.25 }],
               duration: 12,
             },
@@ -153207,7 +153207,7 @@ function applyPendingConduitNews(state) {
               jobPenalty: ["server_ops", "network_monitor", "web_designer"],
               jobMultiplier: 0.7,
               jobBonus: ["instrument_repair", "phone_modding"],
-              jobMultiplier: 1.15,
+              jobBonusMultiplier: 1.15,
               investmentEffect: [{ industry: "科技", mul: 0.85 }],
               duration: 8,
             },
@@ -154127,7 +154127,7 @@ function applyPendingConduitNews(state) {
               jobPenalty: ["taxi_driver"],
               jobMultiplier: 0.4,
               jobBonus: ["server_ops", "network_monitor"],
-              jobMultiplier: 1.2,
+              jobBonusMultiplier: 1.2,
               investmentEffect: [
                 { industry: "科技", mul: 1.25 },
                 { industry: "消费", mul: 0.85 },
@@ -155651,7 +155651,7 @@ function applyPendingConduitNews(state) {
               jobPenalty: ["manual_labor_construction", "truck_assistant"],
               jobMultiplier: 0.7,
               jobBonus: ["server_ops", "network_monitor"],
-              jobMultiplier: 1.2,
+              jobBonusMultiplier: 1.2,
               investmentEffect: [{ industry: "消费", mul: 1.15 }],
               duration: 12,
             },
@@ -157170,7 +157170,7 @@ function applyPendingConduitNews(state) {
               jobPenalty: ["delivery_rider", "courier_gig"],
               jobMultiplier: 0.5,
               jobBonus: ["server_ops", "network_monitor"],
-              jobMultiplier: 1.2,
+              jobBonusMultiplier: 1.2,
               investmentEffect: [{ industry: "科技", mul: 1.25 }],
               duration: 14,
             },
@@ -159914,7 +159914,7 @@ function applyPendingConduitNews(state) {
               jobPenalty: ["manual_labor_construction", "truck_assistant"],
               jobMultiplier: 0.5,
               jobBonus: ["server_ops", "network_monitor"],
-              jobMultiplier: 1.2,
+              jobBonusMultiplier: 1.2,
               investmentEffect: [
                 { industry: "科技", mul: 1.25 },
                 { industry: "消费", mul: 1.1 },
@@ -162234,7 +162234,7 @@ function applyPendingConduitNews(state) {
               jobPenalty: ["delivery_rider", "courier_gig"],
               jobMultiplier: 0.5,
               jobBonus: ["server_ops", "network_monitor"],
-              jobMultiplier: 1.2,
+              jobBonusMultiplier: 1.2,
               investmentEffect: [{ industry: "科技", mul: 1.25 }],
               duration: 14,
             },
@@ -163383,7 +163383,7 @@ function applyPendingConduitNews(state) {
               jobBonus: ["courier_gig", "delivery_rider"],
               jobMultiplier: 1.3,
               jobPenalty: ["truck_assistant"],
-              jobMultiplier: 0.5,
+              jobBonusMultiplier: 0.5,
               investmentEffect: [{ industry: "科技", mul: 1.2 }],
               duration: 12,
             },
@@ -197400,7 +197400,10 @@ const ILLNESSES = {
     desc: "过劳综合症未愈+年龄增长，猝死风险极高。每日有2%概率直接死亡。必须强制休息7天以上。",
     isEvolution: true,
     evolvesFrom: ["overwork"],
-    isCritical: true,
+    // [重复键清理 · 2026-09-17] 原此处还有一行 `isCritical: true`，
+    //   与本对象开头的同名键**值完全相同**（都是 true），属冗余重复。
+    //   JS 后者覆盖前者，但因值一致，无行为差异；删除只为消除 ESLint
+    //   `no-dupe-keys` 错误（该错误会让 CI quality-gate 在第一步就中断）。
   },
 
   // 职业病：颈椎病
@@ -197616,7 +197619,8 @@ const ILLNESSES = {
     desc: "脂肪肝长期未愈演化成肝癌。健康急剧下降，食欲严重丧失。手术是唯一可能根治的手段，费用极高。",
     isEvolution: true,
     evolvesFrom: ["liver_cirrhosis"], // [全系统自洽修复] 域A A类#3: fatty_liver→liver_cirrhosis 正确演化链: 脂肪肝→肝硬化→肝癌
-    isCritical: true,
+    // [重复键清理 · 2026-09-17] 原此处还有一行 `isCritical: true`，
+    //   与本对象开头的同名键**值完全相同**，属冗余重复。删除原因同上。
   },
 };
 
@@ -238339,7 +238343,10 @@ function registerStartup(state, name, industry, description) {
     competitiveIntelligence: 0, // 竞争情报等级 0-100
     // ====== P1-10: 危机事件系统 ======
     activeCrisisEvents: [], // 活跃危机事件 [{id, crisisType, name, severity, urgency, remainingDays, effects, startedDay, resolved}]
-    pendingCrisisEvent: null, // 待处理危机 {id, event, deadline}
+    // [重复键清理 · 2026-09-17] 原此处还有一行 `pendingCrisisEvent: null`，
+    //   与本对象第 601 行的同名键**值完全相同**（都是 null），属冗余重复。
+    //   JS 后者覆盖前者，因值一致无行为差异；删除只为消除 ESLint
+    //   `no-dupe-keys` 错误（该错误会让 CI quality-gate 在第一步就中断）。
     crisisEventHistory: [], // 危机历史 [{id, crisisType, name, severity, response, success, cost, outcome, startedDay, resolvedDay}]
     crisisResilienceLevel: 0, // 危机韧性等级 0-100
     crisisPreparationLevel: 0, // 危机准备度 0-100
@@ -305227,15 +305234,32 @@ function buildReportHTML(txs, state, reconcileInfo) {
   bodyHtml += "</div>";
 
   if (reconcileInfo) {
-    // 调试信息：仅 console 记录，不展示给玩家
+    // 调试信息：仅 console 记录，不展示给玩家。
+    //
+    // [文案修正 · 2026-09-17] 原文案结尾是「— 已自动修正。」，**这句话是错的**：
+    //   reconcileTransactions() 只返回一个信息对象（daily_report.js:150），
+    //   本分支也只做 console.log，**全程没有任何修正动作**，现金与账本都保持原样。
+    //   这句话会让人误以为系统已经兜住了偏差，从而不必去补记账 —— 属于掩盖问题。
+    //
+    // 该偏差的真实含义：本日现金变动中，有一部分没有对应的账本条目，
+    //   即「玩家余额变了，但『今日收支明细』里找不到这笔」。
+    //
+    // 已定位的主要来源（2026-09-17 用 scripts/diag-cash-reconcile.cjs 探明）：
+    //   · MC 夹具 tests/headless_runner.cjs 的三个策略直接改现金
+    //     （吃饭 ¥10 / 洗澡 ¥5 / 兜底打工 +¥15~35），共 7 处，均未记账。
+    //     —— 这是**夹具的简化**，不影响真实玩家。
+    //   · 引擎侧存在结构性缺口：全库约 1822 处直接改 resources.cash，
+    //     但 addDailyTransaction 只有 90 个调用点 → 绝大多数现金变动不入账。
+    //     —— 这是**真实缺陷**，会让「今日收支明细」加不出余额变化。
+    // 详见 docs/完善评估报告 第 34 节。
     console.log(
-      "[daily_report] 现金流水偏差 ¥" +
+      "[daily_report] 现金流水未入账 ¥" +
         reconcileInfo.amount +
-        "（跟踪:" +
+        "（账本合计:" +
         reconcileInfo.trackedDelta +
-        " 实际:" +
+        " 实际变化:" +
         reconcileInfo.actualDelta +
-        "）— 已自动修正。",
+        "）— 仅告警，未做修正。",
     );
   }
 
