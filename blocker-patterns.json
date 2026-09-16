@@ -1,0 +1,541 @@
+{
+  "source": "reachability-report.json",
+  "analyzed": 2676,
+  "verdicts": {
+    "BLOCK_CONDITIONS": 2090,
+    "BLOCK_TRIGGERS": 548,
+    "DEAD_FLAG": 38
+  },
+  "phases": {
+    "street": 2091,
+    "corporate": 585
+  },
+  "sharedConditionGroups": [
+    {
+      "count": 7,
+      "ids": [
+        "startup_declaration",
+        "ev_quarter_social_spillover",
+        "company_economic_dashboard_v2",
+        "company_finance_v2",
+        "social_company_v2",
+        "ui_company_dashboard_v5",
+        "investment_company_v4"
+      ],
+      "snippet": "function (st) { if (st.gameOver) return false; return !!(st.startup && st.startup.company); }"
+    },
+    {
+      "count": 6,
+      "ids": [
+        "ui_investment_tracker",
+        "ui_investment_tracker_v2",
+        "ui_investment_tracker_v3",
+        "data_investment_intelligence",
+        "investment_dashboard",
+        "investment_dashboard_ui"
+      ],
+      "snippet": "function (st) { if (st.gameOver) return false; if (!st.investment) return false; var inv = st.investment; var types = 0; if (inv.stockHoldings && inv.stockHoldings.length > 0) types++; if ((inv.btcHoldings || 0) > 0) types++; if (inv.proper"
+    },
+    {
+      "count": 4,
+      "ids": [
+        "stall_location_war",
+        "temple_economy",
+        "near_expiry_wholesale",
+        "street_vendor_crackdown"
+      ],
+      "snippet": "function (st) { if (!st || !st.player || !st.player.workTypeCounts || !st.player.workTypeCounts.stall || st.player.workTypeCounts.stall < 1) return false; return true; }"
+    },
+    {
+      "count": 4,
+      "ids": [
+        "domain_e_wealth_quality",
+        "domain_f_status_alert_reminder",
+        "domain_g_weather_advice",
+        "domain_h_founder_advice"
+      ],
+      "snippet": "function () { return false; }"
+    },
+    {
+      "count": 4,
+      "ids": [
+        "ui_career_pathfinder",
+        "ui_career_path_explorer",
+        "ui_career_compass",
+        "ui_career_path_v3"
+      ],
+      "snippet": "function (st) { if (st.gameOver) return false; var job = st.career && st.career.currentJob; return job && job.path ? true : false; }"
+    },
+    {
+      "count": 3,
+      "ids": [
+        "corp_complaint",
+        "corp_blame_game",
+        "corp_promotion_bribe"
+      ],
+      "snippet": "function (st) { if (!st.corporate || !st.corporate.active) return false; return true; }"
+    },
+    {
+      "count": 3,
+      "ids": [
+        "career_event_v4",
+        "career_data_v4",
+        "career_event_v5"
+      ],
+      "snippet": "function (st) { if (st.gameOver) return false; var job = st.career && st.career.currentJob; return !!(job && job.path && (job.workDays || 0) >= 60); }"
+    },
+    {
+      "count": 3,
+      "ids": [
+        "ui_life_command_center",
+        "ui_data_hub",
+        "life_data_comprehensive"
+      ],
+      "snippet": "function (st) { if (st.gameOver) return false; return st.player && st.player.day >= 500; }"
+    },
+    {
+      "count": 3,
+      "ids": [
+        "data_skill_optimization",
+        "data_skill_mastery_v2",
+        "data_career_optimization"
+      ],
+      "snippet": "function (st) { if (st.gameOver) return false; if (!st.skills || !st.career || !st.career.currentJob) return false; var topSkill = \"\", topLv = 0; for (var k in st.skills) { var lv = (st.skills[k] && st.skills[k].level) || 0; if (lv > topLv)"
+    },
+    {
+      "count": 3,
+      "ids": [
+        "career_max_level_celebration",
+        "career_mentor_request",
+        "career_legacy_project"
+      ],
+      "snippet": "function (st) { var career = st.career || {}; var currentJob = career.currentJob; if (!currentJob || !currentJob.path || !currentJob.levelId) return false; var pathId = currentJob.path; var levelId = currentJob.levelId; var pData = CAREER_P"
+    },
+    {
+      "count": 2,
+      "ids": [
+        "fake_goods",
+        "street_talent_scout"
+      ],
+      "snippet": "function (st) { if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后不再触发街头叙事事件 var hasStall = (st.employment && st.employment.currentJob && [ \"food_stall\", \"street_vending_food\", \"street_vending_goods\", ].includes(st.employment.currentJo"
+    },
+    {
+      "count": 2,
+      "ids": [
+        "viral_harassment",
+        "delivery_price_war"
+      ],
+      "snippet": "function (st) { var isDelivery = (st.sideHustle && st.sideHustle.type === \"driving\") || (st.career && st.career.currentJob && st.career.currentJob.path === \"logistics\"); return isDelivery; }"
+    },
+    {
+      "count": 2,
+      "ids": [
+        "career_crossroads",
+        "ui_career_milestone_display"
+      ],
+      "snippet": "function (st) { if (st.gameOver) return false; var job = st.career && st.career.currentJob; if (!job || !job.path) return false; return (job.workDays || 0) >= 180; }"
+    },
+    {
+      "count": 2,
+      "ids": [
+        "event_data_pattern",
+        "event_life_milestone_marker"
+      ],
+      "snippet": "function (st) { if (st.gameOver) return false; var history = (st.flags && st.flags._eventHistory) || []; return history.length >= 25; }"
+    },
+    {
+      "count": 2,
+      "ids": [
+        "event_economic_narrative",
+        "ui_finance_command"
+      ],
+      "snippet": "function (st) { if (st.gameOver) return false; if (!st.resources) return false; var total = (st.resources.cash || 0) + (st.resources.bankBalance || 0); return total >= 30000; }"
+    },
+    {
+      "count": 2,
+      "ids": [
+        "event_life_reflection",
+        "ui_event_timeline"
+      ],
+      "snippet": "function (st) { if (st.gameOver) return false; var history = (st.flags && st.flags._eventHistory) || []; return history.length >= 50; }"
+    },
+    {
+      "count": 2,
+      "ids": [
+        "event_data_v3",
+        "ui_event_journal_v3"
+      ],
+      "snippet": "function (st) { if (st.gameOver) return false; var history = (st.flags && st.flags._eventHistory) || []; return history.length >= 140; }"
+    },
+    {
+      "count": 2,
+      "ids": [
+        "event_company_milestone_v3",
+        "ui_company_dashboard_v4"
+      ],
+      "snippet": "function (st) { if (st.gameOver) return false; if (!st.startup || !st.startup.company) return false; return (st.startup.company.revenue || 0) >= 200000; }"
+    },
+    {
+      "count": 2,
+      "ids": [
+        "career_layoff",
+        "c626_career_colleague_circle"
+      ],
+      "snippet": "function (st) { return st.career && st.career.currentJob; }"
+    },
+    {
+      "count": 2,
+      "ids": [
+        "brother_huang_coding_gig",
+        "brother_huang_coding_project"
+      ],
+      "snippet": "function (st) { var rel = st.relationships && st.relationships[\"brother_huang\"]; // 检查 brother_huang 关系 if (!rel || !rel.met) return false; // 检查 已结识 if (typeof rel.affinity !== \"number\" || rel.affinity < 25) return false; // 检查 好感>=25 var "
+    },
+    {
+      "count": 2,
+      "ids": [
+        "med_outbreak_volunteer",
+        "med_colleague_credit_steal"
+      ],
+      "snippet": "function (st) { return _path(st, \"medical\") && _workDays(st) > 365; }"
+    },
+    {
+      "count": 2,
+      "ids": [
+        "civil_petition_handling",
+        "civil_overnight_report"
+      ],
+      "snippet": "function (st) { return _path(st, \"civil\") && _workDays(st) > 90; }"
+    },
+    {
+      "count": 2,
+      "ids": [
+        "civil_anti_corruption_check",
+        "civil_face_project"
+      ],
+      "snippet": "function (st) { return _path(st, \"civil\") && _workDays(st) > 365; }"
+    },
+    {
+      "count": 2,
+      "ids": [
+        "tech_colleague_pip",
+        "tech_side_project_viral"
+      ],
+      "snippet": "function (st) { return _path(st, \"tech\") && _workDays(st) > 365; }"
+    },
+    {
+      "count": 2,
+      "ids": [
+        "pi_bianzhi_exam",
+        "pi_assessment_year_end"
+      ],
+      "snippet": "function (st) { return _path(st, \"public_institution\") && _workDays(st) > 180; }"
+    },
+    {
+      "count": 2,
+      "ids": [
+        "econ_career_invest_unlock_street",
+        "econ_career_invest_unlock_corporate"
+      ],
+      "snippet": "function careerUnlockCond(st) { if (!st || !st.player || !st.resources) return false; if (st.flags && st.flags._careerInvestUnlocked) return false; // 一次性 if (netWorthR27(st) >= 200000) return true; // [PLACEHOLDER] 净值门槛 // 职场期：职级达 P6 及以上（中"
+    },
+    {
+      "count": 2,
+      "ids": [
+        "econ_portfolio_drawdown_street",
+        "econ_portfolio_drawdown_corporate"
+      ],
+      "snippet": "function drawdownCond(st) { if (!st || !st.player) return false; if (!isInvestorR27(st)) return false; var inv = st.investment || {}; var cur = portfolioValueR27(st); if (!(cur > 0)) return false; // 峰值追踪（每日更新，幂等）：创新高当天不触发，等回撤 if (!(inv._po"
+    },
+    {
+      "count": 2,
+      "ids": [
+        "career_life_chapter",
+        "life_career_chapter"
+      ],
+      "snippet": "function (st) { if (st.gameOver) return false; var job = st.career && st.career.currentJob; if (!job || !job.path) return false; return (job.workDays || 0) >= 365; }"
+    },
+    {
+      "count": 2,
+      "ids": [
+        "skill_market_analysis",
+        "market_knowledge_xp"
+      ],
+      "snippet": "function (st) { if (st.gameOver) return false; if (!st.skills || !st.stats || !st.stats.actionFreq) return false; var totalTrades = (st.stats.actionFreq.buyGood || 0) + (st.stats.actionFreq.sellGood || 0); if (totalTrades < 20) return false"
+    },
+    {
+      "count": 2,
+      "ids": [
+        "career_event_resilience",
+        "life_career_milestone_event"
+      ],
+      "snippet": "function (st) { if (st.gameOver) return false; var job = st.career && st.career.currentJob; if (!job || !job.path) return false; return (job.workDays || 0) >= 200; }"
+    },
+    {
+      "count": 2,
+      "ids": [
+        "career_social_network",
+        "career_social_v2"
+      ],
+      "snippet": "function (st) { if (st.gameOver) return false; if (!st.relationships || !st.career || !st.career.currentJob) return false; var metNpcs = 0; for (var id in st.relationships) { if (st.relationships[id] && st.relationships[id].met && (st.relat"
+    },
+    {
+      "count": 2,
+      "ids": [
+        "career_narrative_v2",
+        "life_career_milestone_v3"
+      ],
+      "snippet": "function (st) { if (st.gameOver) return false; var job = st.career && st.career.currentJob; if (!job || !job.path) return false; return (job.workDays || 0) >= 400; }"
+    },
+    {
+      "count": 2,
+      "ids": [
+        "career_data_v3",
+        "life_career_v2"
+      ],
+      "snippet": "function (st) { if (st.gameOver) return false; var job = st.career && st.career.currentJob; if (!job || !job.path) return false; return (job.workDays || 0) >= 500; }"
+    },
+    {
+      "count": 2,
+      "ids": [
+        "career_event_v2",
+        "life_career_milestone_v4"
+      ],
+      "snippet": "function (st) { if (st.gameOver) return false; var job = st.career && st.career.currentJob; if (!job || !job.path) return false; return (job.workDays || 0) >= 450; }"
+    },
+    {
+      "count": 2,
+      "ids": [
+        "career_social_v3",
+        "ui_career_path_v4"
+      ],
+      "snippet": "function (st) { if (st.gameOver) return false; var job = st.career && st.career.currentJob; return !!(job && job.path); }"
+    },
+    {
+      "count": 2,
+      "ids": [
+        "company_brand_wall",
+        "company_social_impact_v2"
+      ],
+      "snippet": "function (st) { if (st.gameOver) return false; if (!st.startup || !st.startup.company) return false; return (st.startup.company.reputation || 0) >= 30; }"
+    },
+    {
+      "count": 2,
+      "ids": [
+        "company_legacy_narrative",
+        "company_sustainability"
+      ],
+      "snippet": "function (st) { if (st.gameOver) return false; if (!st.startup || !st.startup.company) return false; return (st.startup.company.valuation || 0) >= 500000; }"
+    },
+    {
+      "count": 2,
+      "ids": [
+        "company_founder_legacy",
+        "company_history_book"
+      ],
+      "snippet": "function (st) { if (st.gameOver) return false; if (!st.startup || !st.startup.company) return false; return (st.startup.company.valuation || 0) >= 1000000; }"
+    },
+    {
+      "count": 2,
+      "ids": [
+        "company_ui_dashboard",
+        "company_narrative_v2"
+      ],
+      "snippet": "function (st) { if (st.gameOver) return false; if (!st.startup || !st.startup.company) return false; return (st.startup.company.employees && st.startup.company.employees.length) >= 2; }"
+    },
+    {
+      "count": 2,
+      "ids": [
+        "company_social_v3",
+        "life_company_milestone_v3"
+      ],
+      "snippet": "function (st) { if (st.gameOver) return false; return !!(st.startup && st.startup.company && (st.startup.company.reputation || 0) >= 20); }"
+    }
+  ],
+  "topPaths": {
+    "flags": 1970,
+    "gameOver": 1754,
+    "player.day": 1259,
+    "player": 1162,
+    "player.phase": 435,
+    "skills": 427,
+    "relationships": 376,
+    "investment": 233,
+    "resources.cash": 233,
+    "resources": 231,
+    "startup": 211,
+    "startup.company": 201,
+    "career": 193,
+    "career.currentJob": 182,
+    "status": 176,
+    "corporate": 167,
+    "resources.bankBalance": 158,
+    "needs": 158,
+    "trade": 114,
+    "status.health": 111,
+    "stats": 85,
+    "corporate.company": 81,
+    "employment": 75,
+    "player.age": 75,
+    "trade.currentLocation": 74,
+    "employment.currentJob": 71,
+    "weather.current": 68,
+    "flags._eventHistory": 67,
+    "sideHustle": 61,
+    "investment.stockHoldings": 59,
+    "weather": 53,
+    "skills.management": 53,
+    "reputation": 52,
+    "stats.actionFreq": 48,
+    "sideHustle.type": 47,
+    "needs.fatigue": 44,
+    "corporate.active": 42,
+    "needs.happiness": 41,
+    "skills.cooking": 39,
+    "_eraState": 39,
+    "skills.accounting": 39,
+    "sideHustle.active": 37,
+    "investment.tradeLog": 37,
+    "skills.coding": 35,
+    "skills.repair": 34,
+    "skills.sales": 33,
+    "talentNodes": 33,
+    "player.morality": 30,
+    "housing.tier": 26,
+    "skills.english": 25,
+    "investment._totalInvestmentProfit": 24,
+    "skills.driving": 23,
+    "flags._eventCount": 23,
+    "player.corporate": 22,
+    "skills.electrician": 22,
+    "skills.welding": 22,
+    "housing": 21,
+    "relationships.sister_zhang": 19,
+    "flags._cumulativeInflation": 19,
+    "player.fame": 18
+  },
+  "topFlags": {
+    "_eventHistory": 67,
+    "_eventCount": 23,
+    "_cumulativeInflation": 19,
+    "_habits": 14,
+    "_priceVolatilityCount": 12,
+    "_negativeEventStreak": 8,
+    "_crisis35Path": 7,
+    "_lifeMilestones": 5,
+    "_healthCrisisSeen": 4,
+    "_everSick": 4,
+    "_currentUnlockSynergyId": 4,
+    "_workStreak": 4,
+    "_careerPromotionCount": 3,
+    "_helpedCoworker": 3,
+    "_libraryDiscovered": 3,
+    "_npcAgingDone": 3,
+    "_economicEventCount": 3,
+    "_eventEconomicImpact": 2,
+    "_refusedFakeGoods": 2,
+    "_foughtWageTheft": 2,
+    "_returnedFoundMoney": 2,
+    "_debtPressureGiven": 2,
+    "_propertyCollapseDay": 2,
+    "_jobStreaks": 2,
+    "_reBoughtHouse": 2,
+    "_evFrenzySeen": 2,
+    "_moralEchoSeen": 2,
+    "_bankRepLoanSeen": 2,
+    "_bossLiMgmtSeen": 2,
+    "_talentManageSeen": 2,
+    "_careerInvestUnlocked": 2,
+    "_econLastDrawdownValue": 2,
+    "_econPeakDrawdownDay": 2,
+    "_justUnlockedDual": 2,
+    "_justUnlockedTriple": 2,
+    "_weatherSurvivalMemoryDone": 2,
+    "_totalPromotions": 2,
+    "_milestone5kDone": 2,
+    "_prevSavingsCheck": 2,
+    "_skillMilestones": 2,
+    "_dataInvestorMindset": 2,
+    "_careerMaxLevelCelebrated": 2,
+    "_eventsExperienced": 2,
+    "_majorChoiceCount": 2,
+    "_careerLegacyDueDay": 2,
+    "_skillMasterTrainer": 2,
+    "_promotionCount": 2,
+    "_pensionTotal": 2,
+    "_bEventRippleCd": 1,
+    "_bSocialBondCd": 1,
+    "_bInvestAwarenessCd": 1,
+    "_eventChoiceTrack": 1,
+    "_c1047SkillMoneyCd": 1,
+    "_c1047CareerPlanCd": 1,
+    "_c1047CareerEchoCd": 1,
+    "_milestone30": 1,
+    "_milestone60": 1,
+    "_milestone90": 1,
+    "_keptWallet": 1,
+    "_oldLiuAdvance": 1
+  },
+  "topThresholds": {
+    "10": 147,
+    "12": 53,
+    "14": 40,
+    "15": 175,
+    "16": 30,
+    "18": 25,
+    "20": 196,
+    "25": 101,
+    "28": 15,
+    "30": 266,
+    "35": 61,
+    "40": 151,
+    "45": 39,
+    "50": 125,
+    "55": 28,
+    "60": 207,
+    "65": 15,
+    "70": 59,
+    "75": 13,
+    "80": 52,
+    "85": 11,
+    "90": 85,
+    "95": 11,
+    "100": 80,
+    "120": 52,
+    "150": 38,
+    "180": 54,
+    "200": 57,
+    "250": 30,
+    "300": 46,
+    "350": 18,
+    "365": 36,
+    "400": 64,
+    "450": 26,
+    "500": 71,
+    "550": 19,
+    "600": 44,
+    "650": 14,
+    "700": 22,
+    "800": 20,
+    "900": 14,
+    "1000": 19,
+    "2000": 13,
+    "3000": 10,
+    "5000": 29,
+    "10000": 34,
+    "15000": 11,
+    "20000": 29,
+    "30000": 23,
+    "50000": 57,
+    "80000": 17,
+    "100000": 40,
+    "120000": 10,
+    "150000": 16,
+    "200000": 27,
+    "300000": 10,
+    "500000": 23,
+    "1000000": 16,
+    "2000000": 12,
+    "10000000": 9
+  }
+}

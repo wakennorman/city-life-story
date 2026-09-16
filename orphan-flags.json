@@ -1,0 +1,6212 @@
+[
+  {
+    "flag": "_resumeReady",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_hasFan",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_investmentCareerPrimed",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_careerNarrativeSeen",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_skillMasterHasApprentice",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_skillMasterStartupBonus",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_skillMasterBookPublished",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_skillSynergyHintShown",
+    "writes": 2,
+    "occurrences": 2
+  },
+  {
+    "flag": "_medVolunteerHonor",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_passedMedLicense",
+    "writes": 2,
+    "occurrences": 2
+  },
+  {
+    "flag": "_hasBianzhi",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_seniorIncomeTier",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_seniorInvestReady",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_startupInvestorMindset",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_foggyMarketNoted",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_knowsRentalKickback",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_walletConfessed",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_oldZhouWeatherTipNoted",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_factoryRepairMan",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_wangRentalDiscounted",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_zhangReferral",
+    "writes": 2,
+    "occurrences": 2
+  },
+  {
+    "flag": "_techParkLead",
+    "writes": 2,
+    "occurrences": 2
+  },
+  {
+    "flag": "_checkupFoundIssue",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_scrapIncomeBonus",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_nightShiftJob",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_zhangIntroduced",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_regularClient",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_zhouWholesaleChannelKnown",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_comboCookingMgmt",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_comboRepairSales",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_logisticsJobReferral",
+    "writes": 2,
+    "occurrences": 2
+  },
+  {
+    "flag": "_oldManTip",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_burnoutHardWorkDay",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_techparkInspiration",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_techparkInterview",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_neighborMet",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_debterAngry",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_zhangTrainingPending",
+    "writes": 2,
+    "occurrences": 2
+  },
+  {
+    "flag": "_siteSafetyImproved",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_libraryMentorContact",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_groupBuyInformed",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_quantContact",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_skippedLibrary",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_gamblerMode",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_remoteWorkUnlocked",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_remoteWorkDeferred",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_nightMarketInfo",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_talentDepartureBlessing",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_talentDepartureRetained",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_talentDepartureLeft",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "walletOwnerMet",
+    "writes": 2,
+    "occurrences": 2
+  },
+  {
+    "flag": "elderSonIntro",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_elderWageBonus",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_oldStreetBonus",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "daigouPartnership",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "selfMediaMonetized",
+    "writes": 2,
+    "occurrences": 2
+  },
+  {
+    "flag": "tutorInstitutionPartner",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "bubbleRecognizer",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "pivotSuccess",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "smallBizDifferentiated",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "chainStorePartner",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "startupMentorBonus",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "deliveryBanRecovered",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_deliveryBanAppealing",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_deliveryAppealDay",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "startupEpiphanyDone",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "communityAdvisor",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "moralWalletConfessed",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_fixedDeliveryRoute",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_secretInfoFrom",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_knowsRentalMarket",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_knowsScrapPrice",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_knowsLaborMarket",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_npcGeneralSecret",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_starvedForFuture",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_reputationReferralActive",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_skillMasterOfferSalary",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_skillMasterOfferSkill",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_selfEmployedFrom",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_selfEmployedPending",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_extraClients",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_debtHarassmentActive",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_debtHarassmentStart",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_gigPrivateOrders",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_hasJobOpportunity",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_medicalDebtInstallment",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_midlifeRetraining",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_deliveryRegularContact",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_deliveryHrInterview",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_deliveryHrPending",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "zhaojieRentInfo",
+    "writes": 2,
+    "occurrences": 2
+  },
+  {
+    "flag": "_npcTempJobReferral",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_npcTempJobDay",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_priceWarningDay",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_scrapPriceAlert",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_scrapAlertDay",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_freeCourseLink",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_courseLinkDay",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_locationHintDay",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_rainCanvasDay",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_rainWholesaleBought",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_rainWholesaleDay",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_fameConnectionBonus",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_triedReachingOut",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_eduGraduationPhoto",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_eduGraduationJobHunt",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_eduGraduationHome",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_impressedHr",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_whiteCollarEntry",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_sideHustlePartner",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_auntieLinOnlineClass",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_skillSynergyPair",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "chenScamWarning",
+    "writes": 2,
+    "occurrences": 2
+  },
+  {
+    "flag": "_huangDeliveryBonus",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_chenBankJobLead",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_windyJobLead",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_skillMasterySideJob",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_skillMasteryKeptCard",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_xiaoliBrandDeal",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_xiaoliBrandTrial",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_bankVipInvested",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_bankVipDay",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_bankVipLoanKnown",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_regularCreditDay",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_regularShopTip",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_restaurantPartner",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_boughtFakeMedicine",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_hasCheapMedicine",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_hasScoutContact",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "repLongTermGig",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "indieDevLaunched",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "oldZhouMingChannel",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "oldZhouMingIntro",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_skillMilestoneSkill",
+    "writes": 3,
+    "occurrences": 3
+  },
+  {
+    "flag": "_monthlySkilledGig",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_wantOwnShop",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_muscleMemoryNotes",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_zhaojieShopDeal",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_chenGeContact",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_ajiePartnership",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_oldzhouContactsGiven",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_repairShopPartner",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_springJobFairApplied",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_veteranReferral",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_secretChannelUnlocked",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_secretChannelKnown",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_veteranRecognized",
+    "writes": 3,
+    "occurrences": 3
+  },
+  {
+    "flag": "_veteranNetwork",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_deepBondResource",
+    "writes": 2,
+    "occurrences": 2
+  },
+  {
+    "flag": "_extendedNetwork",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_multiSkillProject",
+    "writes": 3,
+    "occurrences": 3
+  },
+  {
+    "flag": "_wealth500kInvestor",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_wealth500kHomeBuyer",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_wealth1mFinanciallyPlanned",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_eduMentorEnrolled",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_targeting100m",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_forcedRestDays",
+    "writes": 2,
+    "occurrences": 2
+  },
+  {
+    "flag": "_recoveryContractorContact",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_recoveryRunningHabit",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_recoveryDietHabit",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_recoverySleepHabit",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_recoveryHerbalAdvice",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_winterWorkerBadge",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_reviewHonest",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_reviewAmbitious",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_sideWithChen",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_sideWithWang",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_stayNeutral",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_needBuyNewGear",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_educationJobOffer",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_educationOfferDeferred",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_moralNetworkUnlocked",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_millionAmbition",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_tripleSkillContact",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_debtFreeExperience",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_firstBucketInvestor",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_bossChenCooperation",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_cityJournalWritten",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_shelterVisited",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_volunteerSocial",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_subsidyActive",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_subsidyEndDay",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_freeTrainingSeen",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_promisedHome",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_ignoredParentsCall",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_apprenticePaidOff",
+    "writes": 2,
+    "occurrences": 2
+  },
+  {
+    "flag": "_travelFriendAdded",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_auntZhangPartnership",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_ajieReferred",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_streetReferralActive",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_springPlanBuff",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_phdNegotiateBonus",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_homeboundAfterPhd",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_mgmtCrisisResolved",
+    "writes": 2,
+    "occurrences": 2
+  },
+  {
+    "flag": "_mgmtCrisisHiddenRisk",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_dryGoodsInvest",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_dryGoodsDay",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_gaveUmbrella",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_helpedElderTaxi",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_wroteClarity",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_wangChenSupply",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_dataTaxAware",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_dataDiversifyMindset",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_a1001TrendJudge",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_a1001LifeQuality",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_a1001Settle",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_a1001InvBegin",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_a1001Waiter",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_a1009MarketEye",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_a1009SaveRate",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_a1009Moonlight",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_a1009InvUrge",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_a1009Safe",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_healthCostAware",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_traderNetwork",
+    "writes": 2,
+    "occurrences": 2
+  },
+  {
+    "flag": "_supplyChainSavvy",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_marketSenseUnlocked",
+    "writes": 2,
+    "occurrences": 2
+  },
+  {
+    "flag": "_healthBaselineKeeper",
+    "writes": 2,
+    "occurrences": 2
+  },
+  {
+    "flag": "_budgetClarityKeeper",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_certReputationSeen",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_certCareerLeverage",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_healthAwareness",
+    "writes": 2,
+    "occurrences": 2
+  },
+  {
+    "flag": "_skillNeighborBond",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_dataReviewCredibility",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_priceComparisonTool",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_priceAlertSystem",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_dataDrivenNarrative",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_dataDrivenHealth",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_dataDrivenPrediction",
+    "writes": 2,
+    "occurrences": 2
+  },
+  {
+    "flag": "_dataDrivenInvestment",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_eventCausalAnalysisV3",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_eventCausalAnalysisV5",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_lifeDataDashboardV2",
+    "writes": 2,
+    "occurrences": 2
+  },
+  {
+    "flag": "_dataSelfAwareness",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_dataVisualizationAware",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_healthDataManagement",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_growthDataAwareness",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_socialDataAwareness",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_marketDataDriven",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_skillValueAwareness",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_dataDrivenInvestor",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_corpSupplyChainOptimized",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_taxAvoidanceMindset",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_bankVipUnlocked",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_a775LastInflationCheck",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_a775HighInflationWarning",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_a775LastCycleCheck",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_a775LastInflationForInvest",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_a788PriceAvg",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_a788PriceMax",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_a788PriceMin",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_a788SkillMarketValue",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_a788TopSkillLevel",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_a788FairPriceScore",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_a788FairInflation",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_a804DebtToAssetRatio",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_a816DebtToAssetRatio",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_a826DebtToAssetRatio",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_a830DebtToAssetRatio",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_a832DebtToAssetRatio",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_a838DebtToAssetRatio",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_a840DebtToAssetRatio",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_a846DebtToAssetRatio",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_a848DebtToAssetRatio",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_a854DebtToAssetRatio",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_a856DebtToAssetRatio",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_a862DebtToAssetRatio",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_a863DebtToAssetRatio",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_a870DebtToAssetRatio",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_a871DebtToAssetRatio",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_a879DebtToAssetRatio",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_a887DebtToAssetRatio",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_a895DebtToAssetRatio",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_a903DebtToAssetRatio",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_a915PriceObserver",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_a915FinanceHealthAwareness",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_a915SkillMarketInsight",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_tradeIntelUnlocked",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_a923InflationAware",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_a923FinanceHealthPlan",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_a923CompoundSkillAwareness",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_a932MarketWatcher",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_a932Thrifty",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_a932Consumerist",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_a932InvestorAwake",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_a932Conservative",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_a969Rational",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_a969Follower",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_a969AntiInflation",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_a969Consumer",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_a969Investor",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_a969Conservative2",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_a977InfoDiscerner",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_a977BlindFollower",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_a977Thrifty2",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_a977Spender",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_a977InvAwake2",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_a977Conservative3",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_a985MarketFeeler",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_a985Follower2",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_a985PressureFighter",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_a985LayFlat",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_a985Conservative4",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_a993MarketRhythm",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_a993EconFighter",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_a993Drift",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_a993InvStart",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_a993Watcher",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_b1016bStoryShared",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_b1021EconEye",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_b1021RiskAssessor",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_b1021CatalystUnlocked",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_b1010StormGrown",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_b1010MoneyWise",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_investAwakening",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_startupAnniversarySeen",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_revMilestone100k",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_investLesson_loss",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_investLesson_win",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_investLesson_neutral",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_budgetSense",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_memoryWallKeeper",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_savingsDiscipline",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_lifeJournalKeeper",
+    "writes": 3,
+    "occurrences": 3
+  },
+  {
+    "flag": "_careerExploration",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_eventTimelineUI",
+    "writes": 2,
+    "occurrences": 2
+  },
+  {
+    "flag": "_lifeMilestoneKeeper",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_eventPatternAnalysis",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_eventEconomicPattern",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_eventDatabaseV2",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_eventCausalAnalysisV4",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_eventDatabaseV3",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_eventDatabaseV4",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_eventDatabaseV5",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_careerInsightFromEvents",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_moneyManagementAware",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_lifeTimelineAware",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_corpStoryBook",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_eventEconWisdom",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_eventDrivenInvestor",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_b692StoryBook",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_storyCorpSeedRecorded",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_b777LastSocialRipple",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_b777NarrativeResilience",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_b789EconLessonCash",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_b789EconLessonDebt",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_b789EconLessonNet",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_b789CareerSparkJob",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_b789CareerSparkDay",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_b789CorpStoryValuation",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_b789CorpStoryStage",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_b916EventAnalyst",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_b916TrueFriendship",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_b916LifeReflector",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_b924EventLearner",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_b924FriendshipValuer",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_b924GratefulPerson",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_b938Resilient",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_b938FinWise",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_b938MoneyMachine",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_b938CodingLearner",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_b946GrowFromFailure",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_b946EmergencyFund",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_b946CarpeDiem",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_b946CareerChanger",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_b946Stability",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_b954Tenacious",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_b954FinMaster",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_b954Content",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_b954TalentSeeker",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_b962Phoenix",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_b962CycleMaster",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_b962TalentAwake",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_c1003WorkMeaning",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_c1003Grinder",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_c1003CompoundGrowth",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_c1003SkillBridge",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_c1011HealthInvest",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_c1011Grinder2",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_c1011DoorOpen",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_c1025SkillMarketEye",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_c1025SkillInvestor",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_careerMentorMindset",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_skillTrainingMotivated",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_careerPush",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_careerBalance",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_careerInvestEdge",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_burnoutRestDays",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_careerTaleSeen",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_careerJournalKeeper",
+    "writes": 2,
+    "occurrences": 2
+  },
+  {
+    "flag": "_synergyAwareness",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_craftReviewHabit",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_skillDashboard",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_skillAchievementWall",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_careerDataDriven",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_skillDrivenMarketAnalysis",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_careerDataVisualization",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_careerDataDashboard",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_careerInvestmentConfidence",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_careerDataPanelV2",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_careerDataPanelV3",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_investmentInsightActive",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_investmentInsightDay",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_workLifeBalanceAchieved",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_careerDataAwareness",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_skillPlanMade",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_hasStartupIntent",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_skillInvestmentPlan",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_careerDashboardAnalyzed",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_careerNewGoalSet",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_skillDrivenVenturePlan",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_c677bScaleDeclined",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_legacyRetroWritten",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_trainerReputation",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_dataConsultant",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_c707DiscountChannel",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_c707ToughItOut",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_c768Analyst",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_c779LastJobNetwork",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_c779TopSkillValue",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_c779TopSkillName",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_c779LastWorkFatigue",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_c779HighFatigueWarning",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_c790ColleagueJob",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_c790ColleagueDay",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_c790CareerPath",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_c865AvgSkillLevel",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_c873AvgSkillLevel",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_c881AvgSkillLevel",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_c889AvgSkillLevel",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_c897AvgSkillLevel",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_c905AvgSkillLevel",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_c909SkillMarketExpert",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_c909AvgSkillLevel",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_c909CareerInvestor",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_c909HealthFirst",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_c909BurnoutRisk",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_c917SkillForesight",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_c917AvgSkillLevel",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_c917SkillCapitalizer",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_c917WorkLifeBalance",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_c917RiskyPlayer",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_c925SkillPlanner",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_c925AvgSkillLevel",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_c925SkillInvestmentSystem",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_c925MandatoryRest",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_c925UltimateRiskTaker",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_c955HealthFirst",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_c955WorkHard",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_c955SkillInvestor",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_c955GoodEnough",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_c955Networker",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_c955OldFriends",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_c971Rest",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_c971Workaholic2",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_c971SkillMonetize",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_c971Content2",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_c971SkillCircle",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_c971OldFriends2",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_c979DeStress",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_c979Gritter",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_c979SkillInvestor2",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_c979CircleUpgrade",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_c987RestWell",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_c987Overworker",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_c987SkillDeep",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_c987HighNetwork",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_c995LifeBalance",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_c995Chaser",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_c995TribeJoin",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_d900bHiredPr",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_d900bToughedOut",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_d900bAdDealIncome",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_d900bAdRefused",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_d1012OldFriend",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_d1012InvestSense",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_d1012Healed2",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_d1012Alone2",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_d1013ToughAlone",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_d1026SocialInvestIntel",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_westCityIntel",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_npcInvestTipUsed",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_npcInvestTipSaved",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_npcBudgetSense",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_socialDataAnalysis",
+    "writes": 2,
+    "occurrences": 2
+  },
+  {
+    "flag": "_socialCapitalSystemV2",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_npcInvestmentIntelV2",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_socialCapitalDashboardV2",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_socialInvestmentIntelDay",
+    "writes": 2,
+    "occurrences": 2
+  },
+  {
+    "flag": "_socialCircleAware",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_socialNetworkInsight",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_friendJobReferral",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_socialCapitalAwareness",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_newFriendIntroduced",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_d678ReachOut",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_d782SocialCapitalScore",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_d782SocialNetworkSize",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_d782InvestSocialCircle",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_d782SocialHealthFriends",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_d799SocialCapitalValue",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_d825SocialCapitalValue",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_d828SocialNetworkSize",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_d828HighAffinityCount",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_d828InvestmentHint",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_d835SocialNetworkSize",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_d835HighAffinityCount",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_d835InvestmentHint",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_d843SocialNetworkSize",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_d843HighAffinityCount",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_d843InvestmentHint",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_d851SocialNetworkSize",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_d851HighAffinityCount",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_d851InvestmentHint",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_d859SocialNetworkSize",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_d859HighAffinityCount",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_d859InvestmentHint",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_d866SocialNetworkSize",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_d866HighAffinityCount",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_d866InvestmentHint",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_d874SocialNetworkSize",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_d874HighAffinityCount",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_d874InvestmentHint",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_d882SocialNetworkSize",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_d882HighAffinityCount",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_d882InvestmentHint",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_d890SocialNetworkSize",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_d890HighAffinityCount",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_d890InvestmentHint",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_d898SocialNetworkSize",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_d898HighAffinityCount",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_d898InvestmentHint",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_d906SocialNetworkSize",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_d906HighAffinityCount",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_d906InvestmentHint",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_d910SocialCapitalAwareness",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_d910SocialInvestor",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_d910SocialHealing",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_d918SocialCapitalizer",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_d918SocialInfoInvestor",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_d918SocialSupport",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_d940TreasureFriendship",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_d940SocialIntel",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_d940FriendCared",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_d940ToughItOut",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_d948Nostalgic",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_d948BizPartner",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_d948HealedByFriend",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_d948RejectHelp",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_d956OldFriendship",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_d956InvestSense",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_d956Healed",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_d956Alone",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_d964TreasureFriends",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_d964InvestMindset",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_d964FriendHeal",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_d964RejectCare",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_e1005InvGrowth",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_e1005KnowledgeValue",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_e1005InvPeer",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_marketEnduranceMindset",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_investmentMentorMindset",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_financialSafetyNet",
+    "writes": 2,
+    "occurrences": 2
+  },
+  {
+    "flag": "_investmentJournalKeeper",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_investmentDashboardUI",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_investmentTimeLimit",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_investmentMilestone500k",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_investmentDataDrivenV2",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_investmentPortfolioOptimized",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_investmentReviewHabit",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_investmentCircleJoined",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_financialFreedomPlan",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_investmentCareerMindset",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_investmentDashboardBuilt",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_investorNetworkJoined",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_e621BrokerContact",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_e621TradeDiscipline",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_investClubMember",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_diversifiedInvestor",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_focusedInvestor",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_macroEconAnalyst",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_e783LastPortfolioValue",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_e783InvestorSocialTier",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_e792AdvisorConsulted",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_e792LastReviewValue",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_e792LastReviewDay",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_e822PortfolioHealth",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_e826DebtToAssetRatio",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_e834DebtToAssetRatio",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_e836DebtToAssetRatio",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_e842DebtToAssetRatio",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_e844DebtToAssetRatio",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_e850DebtToAssetRatio",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_e852DebtToAssetRatio",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_e858DebtToAssetRatio",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_e860DebtToAssetRatio",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_e866DebtToAssetRatio",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_e867TradeWinRate",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_e867DebtToAssetRatio",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_e875TradeWinRate",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_e875DebtToAssetRatio",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_e883TradeWinRate",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_e883DebtToAssetRatio",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_e891TradeWinRate",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_e891DebtToAssetRatio",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_e899TradeWinRate",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_e899DebtToAssetRatio",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_e907TradeWinRate",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_e907DebtToAssetRatio",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_e911DataDrivenInvestor",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_e911StoryTeller",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_e911HealthWealthBalance",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_e911WorkOverHealth",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_e927InvestDecisionSystem",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_e927InvestSharer",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_e927LifeGoalRedefine",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_e927NeverSatisfied",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_investmentMindset",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_e973InvWisdom",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_e973InvLearner",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_e973InvCircle",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_e981InvJourney",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_e981KnowledgeInvestor",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_e981InvClub",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_e989InvLesson",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_e989LearnCurve",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_e989InvCircle2",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_e997InvDiscipline",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_e997SkillTreeInv",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_e997InvTribe",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_f1014CycleMaster",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_f1014MemoryPath",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_f1014KeepGoing",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_f1028PriceEye",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_certConfidence",
+    "writes": 2,
+    "occurrences": 2
+  },
+  {
+    "flag": "_dailyRitualKeeper",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_messageVisualEnhancement",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_statusAlertsCount",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_statusAlertsDangerCount",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_npcVisitables",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_npcVisitableCount",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_npcDecayingCount",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_npcTotalMet",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_lifeRhythmKeeper",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_socialRelationshipMap",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_healthDashboard",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_marketIntelligence",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_careerMilestoneWall",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_healthTracker",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_financeDashboard",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_socialNetworkMapUI",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_lifeDashboardV2",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_careerPathExplorerV2",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_dataHubV2",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_investmentTrackerV2",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_socialNetworkMapV2",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_careerCompass",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_financeCommandCenter",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_lifeCommandCenterV2",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_investmentTrackerV3",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_socialNetworkMapV3",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_careerPathfinderV3",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_npcRelationshipWebV2",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_journalHabit",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_dataDrivenMindset",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_lifePlanningDone",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_cityMemoryJournal",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_investmentTrackerOptimized",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_careerRoadmapMade",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_socialNetworkVisualized",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_healthTrackingActive",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_lifeReviewHabit",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_corpHealthDashboard",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_skillRoadmapPlan",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_portfolioSnapshotTaken",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_portfolioRebalanced",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_f747bPeakStyle",
+    "writes": 2,
+    "occurrences": 2
+  },
+  {
+    "flag": "_f747bGatherStyle",
+    "writes": 2,
+    "occurrences": 2
+  },
+  {
+    "flag": "_f747bStreakUsed",
+    "writes": 2,
+    "occurrences": 2
+  },
+  {
+    "flag": "_f784LastDataSnapshot",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_f784LastFinanceSnapshot",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_f868SaveRatio",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_f876SaveRatio",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_f884SaveRatio",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_f892SaveRatio",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_f900SaveRatio",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_f908SaveRatio",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_f912DataVizAwareness",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_f912MemoryCurator",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_f912FinanceDashboard",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_f920DataLife",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_f920MemoryKeeper",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_f920FinanceVisualizer",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_f928DataVizOptimizer",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_f928MemoryOrganizer",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_f928FreedomPlanner",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_f934DataVizMaster",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_f934LifeChronicler",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_f934FinanceSteward",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_f942PricePredictor",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_f942AchievementCollector",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_f942FinFreedomPlan",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_f942Saver",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_f950SmartShopper",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_f950LifeAuthor",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_f950MillionairePlan",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_f950Saver2",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_f958PriceMapper",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_f958TimelineKeeper",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_f958FinFree",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_f958Saver3",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_g1007InnerPeace",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_g1007OnWay",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_g1007CirclePure",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_g1007SoloEnjoy",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_budgetAware",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_seasonNarrativeTriggered",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_weatherWorkBonus",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_weatherRestDay",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_weatherIndoorWork",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_dataDrivenDecision",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_financialMilestone100k",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_lifeDataVisualization",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_wealthNarrative",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_careerChapterNarrative",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_annualReflectionKeeper",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_weatherReader",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_neighborGoodwill",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_careerOriginPride",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_wealthMilestone500k",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_comprehensiveDataHub",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_wealthMilestone1M",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_wealthMilestone2M",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_dashboardCustomized",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_lifeReflectionDone",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_wealthMilestoneFlag",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_careerMilestoneFlag",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_socialMilestoneFlag",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_lifeDataAwareness",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_communityRooted",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_careerMarathonWisdom",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_founderRetrospected",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_g631EmergencyFund",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_lifeGoalSet",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_lifeStageDataTracked",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_lifecycleSavingsPlan",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_lifeQualityTracked",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_g728HealthChecked",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_g728AgeSocialBonus",
+    "writes": 3,
+    "occurrences": 3
+  },
+  {
+    "flag": "_g728AgeSkillBonus",
+    "writes": 3,
+    "occurrences": 3
+  },
+  {
+    "flag": "_g746bPensionStyle",
+    "writes": 2,
+    "occurrences": 2
+  },
+  {
+    "flag": "_756Writer",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_g770HealthChecked",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_g770HealthPlanner",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_g770SocialReflect",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_g770AgeSocialBonus",
+    "writes": 3,
+    "occurrences": 3
+  },
+  {
+    "flag": "_g770Networker",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_g770SkillAnalyst",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_g770AgeSkillBonus",
+    "writes": 3,
+    "occurrences": 3
+  },
+  {
+    "flag": "_g770SkillFocused",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_g786LifeStageCorp",
+    "writes": 3,
+    "occurrences": 3
+  },
+  {
+    "flag": "_g786WealthLevel",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_g786TotalAssets",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_g786SkillCount",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_g786AvgSkillLevel",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_g786MaxSkillLevel",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_g786SkillStrategy",
+    "writes": 3,
+    "occurrences": 3
+  },
+  {
+    "flag": "_g830QualityScore",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_g838QualityScore",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_g846QualityScore",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_g854QualityScore",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_g869QualityScore",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_g877QualityScore",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_g885QualityScore",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_g893QualityScore",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_g901QualityScore",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_g909QualityScore",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_g913LifeDataAwareness",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_g913SocialMaturity",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_g913LifeSecondHalf",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_g913MoneyAboveAll",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_g967DataAware",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_g967LifePlanner",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_g967SocialMature",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_g967Lonely",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_g975LifeRecorder",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_g975ChapterReview",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_g975TrueFriends",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_g975Lonely2",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_g983LifeRecorder",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_g983LifeWisdom",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_g983QualitySocial",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_g983Solo",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_g991DataLegacy",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_g991LifeReflect",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_g991SocialWise",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_g991SoloWise",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_g999LifeAccount",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_g999MeaningFound",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_g999Thinker",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_g999DeepSocial",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_g999Introspect",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_h1017bStressManaged",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_h1017bStressIgnored",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_h1017bPersonalLedger",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_execLifestyleInflation",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_founderHealthAwareness",
+    "writes": 2,
+    "occurrences": 2
+  },
+  {
+    "flag": "_companyCultureManual",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_companyDataDashboard",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_founderWellnessDay",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_leadershipInsight",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_dataDrivenCompany",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_corpMgmtSynergy",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_corpLegendWritten",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_corpFinanceOptimized",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_h690Pro",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_h771SocialCircleTier",
+    "writes": 3,
+    "occurrences": 3
+  },
+  {
+    "flag": "_h771LastHealthCheck",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_h787TeamSize",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_h787LastTeamEvent",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_h787LastRevenue",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_h787LastBurnRate",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_h787CorpHealthScore",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_h787LastHealthCheck",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_h914DataDrivenEnterprise",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_h914CompanyStoryTeller",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_h914FounderHealthAwareness",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_h914OverworkedFounder",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_h922DataAssetManager",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_h922BrandBuilder",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_h922FounderHealthPlan",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_h922OverworkedFounder2",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_h931DataDriven",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_h931EntrepreneurStar",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_h931ProductFocus",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_h931HealthFirst",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_h931Workaholic",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_h936DataAssetOperator",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_h936Phoenix",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_h936Pragmatist",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_h936HealthAwake",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_h936RecklessFounder",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_h944DataStrategist",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_h944IndustryLeader",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_h944ProductDeep",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_h944LifeBalance",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_h944Overworked3",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_h952DataDriven",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_h952LegacyWriter",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_h952HealthAwake2",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_h952Workaholic2",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_h960Mentor",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_h960WellnessPlan",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_h960Grinder",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_hasCorpEquity",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_equityGrantDay",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_equityTalkActive",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_lastNegativeEventDay",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_riskAverseInvestor",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_b1046EraEconomicEye",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_b1046EraResilient",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_c1047Monetized",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_c1047HasCareerPlan",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_c1047ResumeReady",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_c1047CareerProud",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_insiderTradingRefused",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_founderExited",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_founderRebelled",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_founderQuitInRage",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_founderReclaimed",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_founderDeclinedBuyback",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_fateJobHunting",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_insiderConfessed",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_insiderRecord",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_insiderDenied",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_careerJobHunting",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_siegeObserved",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_siegeKpiMode",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_siegeJobHunting",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_shortedOwnCompany",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_shortDay",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_shortReported",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_officeFactionJoined",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_officeFactionNeutral",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_officeFactionEvidence",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_blameGameHonest",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_blameGameTookIt",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_blameGameNeutral",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_promotionGiftGiven",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_promotionNoGift",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_promotionReported",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_layoffChoseOldZhao",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_layoffChoseXiaoLin",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_layoffLetThemDecide",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_shoppingFestDeal",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_shoppingStockDay",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_p2pInvested",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_p2pDebtDay",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_p2pWatched",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_p2pHelped",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_sharingJobUnlocked",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_layoffGearDay",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_layoffCheapGear",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_layoffAskedForReferral",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_nightMarketDecline",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_techWLBFactor",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_chinaDelistBought",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_chinaDelistDay",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_hkListJobChance",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_demolitionDay",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_demolitionSupply",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_unfinishedInvestigated",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_consultedAgent",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_realEstateStockBought",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_realEstateStockDay",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_elevatorMovingBiz",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_schoolDistrictBought",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_schoolDistrictDay",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_considerRelocate",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_stockBoomInvested",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_stockBoomDay",
+    "writes": 2,
+    "occurrences": 2
+  },
+  {
+    "flag": "_stockBoomHalfInvested",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_cryptoBought",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_cryptoDay",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_retailWsbBet",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_retailWsbDay",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_retailShortSide",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_retailShortDay",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_quantFundBought",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_quantFundDay",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_rateCutInvestMode",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_usdHeldDay",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_importGoodsStock",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_tradeJobChance",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_trustDebtBought",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_trustDebtDay",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_pandemicVolunteer",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_pandemicProfiteer",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_chipFabJob",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_chipStockBought",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_chipStockDay",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_premadeStock",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_learnedNoodle",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_lowPriceRoute",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_premiumRoute",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_garmentJobApplied",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_sheinFlipping",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_clearanceStock",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_stallShelf",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_evChargingJob",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_evChargingStockDay",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_legalStallPermit",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_guerrillaVendor",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_minWageRaised",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_rentWillIncrease",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_wageNegotiation",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_paySocialSecurity",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_wantFormalJob",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_noSocialSecurity",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_triedShortVideo",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_shortVideoWentViral",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_influencerSupply",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_studyingCivilExam",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_examRentalBiz",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_scamWhistleblower",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_scamSalesman",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_lastBatonWise",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_sunkCostStopped",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_sunkCostBailed",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_grayLegitBiz",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_grayRetired",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_grayHelpedOthers",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_rollbackBoughtHouse",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_rollbackSaved",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_rollbackDay",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_rollbackStartedBiz",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_rollbackBurned",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_roommateNegotiated",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_mentorLearning",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_referredFriend",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_volunteerDone",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "hasPet",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_realEstateGambleRefused",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_everReturnedPhone",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_everHelpedElderly",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_milestone30Path",
+    "writes": 3,
+    "occurrences": 3
+  },
+  {
+    "flag": "_cityResident",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_reportedFakeSeller",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_walletJobAccepted",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_factoryrepairJob",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_forwardLooking",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_calledHome",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_toughMindset",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_gaveFoodToChild",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_factoryFireHero",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_savedCoworkerDoc",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_toldCoworkerDoc",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_keptLotteryMoney",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_waitedForLotteryOwner",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_hasLostPropertyCollapse",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_subsidyWarWatched",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_subsidyWarLeft",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_exRiderVendor",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_riderRightsAppealing",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_acquisitionTeaPassed",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_starbucksDominant",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_businessLessonLearned",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_teaStoreUnderdog",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_disruptionExited",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_earlyAdopter",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_arbitrageTechparkSkipped",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_fateBoomSafe",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_rePassed",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_reBoughtProperty",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_rePropertyDay",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_reStartedBusiness",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_reSaved",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_reCoalitionAccepted",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_reLawyered",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_startupPassed",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_startupExitedEarly",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_grayRefused",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_grayQuit",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_grayLied",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_eduShorted",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_eduPanicSold",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_eduIgnored",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_eduMovedOn",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_eduStudyRoom",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_eduMiddleman",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_evPanicSold",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_evBoughtDip",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_evHeld",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_evQuit",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_goldWatched",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_goldSold",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_goldDiamondHands",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_mortgagePenalty",
+    "writes": 2,
+    "occurrences": 2
+  },
+  {
+    "flag": "_creditDamaged",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_corpMotherSurgeryDelay",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_familyInCity",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_familyStayedHometown",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_springFestivalHome",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_newYearChefMeal",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_laborDayParticipated",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_midAutumnParticipated",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_nationalDayParticipated",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_shoppingFestParticipated",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_midAutumnGift",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_fateShieldReady",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_heritageFamilyRecipe",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_heritageFateDice",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_inheritanceCashBonus",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_inheritanceCashBase",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_inheritanceDebtCollection",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_inheritanceDebtNote",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_criminalRecord",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_inheritanceCriminalRecord",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_inheritanceArrestNote",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_hasInheritance",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_inheritanceFromDay",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_inheritanceSummary",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_auditFlagged",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_joblessMotivation",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_lifeDec_firstDeal",
+    "writes": 5,
+    "occurrences": 5
+  },
+  {
+    "flag": "_lifeDec_settle",
+    "writes": 3,
+    "occurrences": 3
+  },
+  {
+    "flag": "_corporateEntry",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_lifeDec_opportunity",
+    "writes": 4,
+    "occurrences": 4
+  },
+  {
+    "flag": "_lifeDec_warmth",
+    "writes": 3,
+    "occurrences": 3
+  },
+  {
+    "flag": "_lifeDec_halfYear",
+    "writes": 2,
+    "occurrences": 2
+  },
+  {
+    "flag": "_lifeDec_oneYear",
+    "writes": 3,
+    "occurrences": 3
+  },
+  {
+    "flag": "_constructionWhistleblower",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_constructionExposed",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_fluVolunteer",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_fluProfiteer",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_rentHalfIncrease",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_rentFullIncrease",
+    "writes": 2,
+    "occurrences": 2
+  },
+  {
+    "flag": "_lookingForNewHome",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_learnedCodingFromLayoff",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_codingInterestPiqued",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_helpedVendorGetCartBack",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_donatedToVendor",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_ecomSubcontractor",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_gaveCoatToHomeless",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_boughtFoodForHomeless",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_helpedFriendFindWork",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_startedHustleWithFriend",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_auntieLinMetDay",
+    "writes": 2,
+    "occurrences": 2
+  },
+  {
+    "flag": "_chenGeMetDay",
+    "writes": 2,
+    "occurrences": 2
+  },
+  {
+    "flag": "_ajieMetDay",
+    "writes": 2,
+    "occurrences": 2
+  },
+  {
+    "flag": "_xiaochenMetDay",
+    "writes": 2,
+    "occurrences": 2
+  },
+  {
+    "flag": "_masterZhaoMetDay",
+    "writes": 2,
+    "occurrences": 2
+  },
+  {
+    "flag": "_xiaoliMetDay",
+    "writes": 2,
+    "occurrences": 2
+  },
+  {
+    "flag": "_drWangMetDay",
+    "writes": 2,
+    "occurrences": 2
+  },
+  {
+    "flag": "_zhaojieMetDay",
+    "writes": 2,
+    "occurrences": 2
+  },
+  {
+    "flag": "_chefChenMetDay",
+    "writes": 2,
+    "occurrences": 2
+  },
+  {
+    "flag": "_npcPriceDiscountActive",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_wholesaleTipActive",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_npcIntroducedJob",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_socialInvestmentAwareness",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_npcMentorId",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_npcMentorXpBonus",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_startedExercise",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_hint_first_hot_sector_name",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_healthCheckAlertIgnoredDay",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_currentStoryChapter",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_dailyGoalSet",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_liGuruInviteDeclined",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_zhaojieJumpPrepared",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_zhaojieJumpPassed",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_oldzhouSelfManage",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_careerSurvivedLayoff",
+    "writes": 3,
+    "occurrences": 3
+  },
+  {
+    "flag": "_lieflatAtPeace",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_abandonedCompany",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_startupRenewed",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_quitEntrepreneurship",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_enterCorporateReady",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_frugalMindset",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_synergyDualEventShown",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_synergyTripleEventShown",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_oldZhouTricycle",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_chefChenRecipe",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_hasSocialSupport",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_careerReferral",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_investRebalanced",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_lessonDiversification",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_passiveFree",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_reinvestFlag",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_pragmaticCoping",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_chapterEchoRegret",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_emergencyMindset",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_investInSelf",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_expandHustle",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_longTermStartupDiscount",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_startupNarrativeReady",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_gratitudeUnspoken",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_seasonTransitionMsg",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "preciousConsumerBadge",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "industryIntel",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "reflectorBadge",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "careerInspiration",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_wasteRecyclingContract",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_constructionCertPath",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_factoryReskilling",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_vendingLoyalty",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_laoGuanFriend",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_tutoringReputation",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_gaokaoTutoring",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_buskingVenue",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "moralPushedCar",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_friendCheatWarned",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_scrapeLeftNote",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_scrapeCheckCamera",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_neighborRefused",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_neighborHasIOU",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_goodSleepDay",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_npcFavor_aunt_wang",
+    "writes": 2,
+    "occurrences": 2
+  },
+  {
+    "flag": "_npcDeepTask_aunt_wang",
+    "writes": 2,
+    "occurrences": 2
+  },
+  {
+    "flag": "_xiaoWeiRecipe",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "bossLiLoan",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_npcFavor_boss_li",
+    "writes": 2,
+    "occurrences": 2
+  },
+  {
+    "flag": "_npcDeepTask_boss_li",
+    "writes": 2,
+    "occurrences": 2
+  },
+  {
+    "flag": "_npcFavor_sister_zhang",
+    "writes": 2,
+    "occurrences": 2
+  },
+  {
+    "flag": "_npcDeepTask_sister_zhang",
+    "writes": 2,
+    "occurrences": 2
+  },
+  {
+    "flag": "zhangDeepReferred",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_npcFavor_old_zhou",
+    "writes": 2,
+    "occurrences": 2
+  },
+  {
+    "flag": "_npcDeepTask_old_zhou",
+    "writes": 3,
+    "occurrences": 3
+  },
+  {
+    "flag": "oldZhouBetterDeal",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_npcFavor_xiao_mei",
+    "writes": 2,
+    "occurrences": 2
+  },
+  {
+    "flag": "_npcDeepTask_xiao_mei",
+    "writes": 2,
+    "occurrences": 2
+  },
+  {
+    "flag": "xiaoMeiSupport",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_npcFavor_chef_chen",
+    "writes": 2,
+    "occurrences": 2
+  },
+  {
+    "flag": "_npcDeepTask_chef_chen",
+    "writes": 3,
+    "occurrences": 3
+  },
+  {
+    "flag": "chefChenWillOpen",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "chenSideJob",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "chenBankInfo",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_npcFavor_uncle_chen_bank",
+    "writes": 2,
+    "occurrences": 2
+  },
+  {
+    "flag": "_npcDeepTask_uncle_chen_bank",
+    "writes": 2,
+    "occurrences": 2
+  },
+  {
+    "flag": "wuBeautyClients",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "wuBeautyShop",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_npcFavor_sister_wu",
+    "writes": 2,
+    "occurrences": 2
+  },
+  {
+    "flag": "_npcDeepTask_sister_wu",
+    "writes": 3,
+    "occurrences": 3
+  },
+  {
+    "flag": "huangStationManager",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_npcFavor_brother_huang",
+    "writes": 2,
+    "occurrences": 2
+  },
+  {
+    "flag": "_npcDeepTask_brother_huang",
+    "writes": 3,
+    "occurrences": 3
+  },
+  {
+    "flag": "xiaochenNightDelivery",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "xiaochenDispatcher",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_npcFavor_xiaochen",
+    "writes": 2,
+    "occurrences": 2
+  },
+  {
+    "flag": "_npcDeepTask_xiaochen",
+    "writes": 3,
+    "occurrences": 3
+  },
+  {
+    "flag": "linVegTips",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "linVegStand",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_npcFavor_auntie_lin",
+    "writes": 2,
+    "occurrences": 2
+  },
+  {
+    "flag": "_npcDeepTask_auntie_lin",
+    "writes": 3,
+    "occurrences": 3
+  },
+  {
+    "flag": "zhaoFreeRepair",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "zhaoApprentice",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_npcFavor_master_zhao",
+    "writes": 2,
+    "occurrences": 2
+  },
+  {
+    "flag": "_npcDeepTask_master_zhao",
+    "writes": 3,
+    "occurrences": 3
+  },
+  {
+    "flag": "xiaoliAssistant",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "xiaoliOwnAccount",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_npcFavor_xiaoli",
+    "writes": 2,
+    "occurrences": 2
+  },
+  {
+    "flag": "_npcDeepTask_xiaoli",
+    "writes": 3,
+    "occurrences": 3
+  },
+  {
+    "flag": "wangPriority",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_npcFavor_dr_wang",
+    "writes": 2,
+    "occurrences": 2
+  },
+  {
+    "flag": "_npcDeepTask_dr_wang",
+    "writes": 2,
+    "occurrences": 2
+  },
+  {
+    "flag": "zhaojiePriorityViewing",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_npcFavor_zhaojie",
+    "writes": 2,
+    "occurrences": 2
+  },
+  {
+    "flag": "_npcDeepTask_zhaojie",
+    "writes": 3,
+    "occurrences": 3
+  },
+  {
+    "flag": "zhaojieWillOpenStore",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_npcFavor_chen_ge",
+    "writes": 2,
+    "occurrences": 2
+  },
+  {
+    "flag": "_npcDeepTask_chen_ge",
+    "writes": 2,
+    "occurrences": 2
+  },
+  {
+    "flag": "chenGeSearchingAjie",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_npcFavor_ajie",
+    "writes": 2,
+    "occurrences": 2
+  },
+  {
+    "flag": "ajieGivenExtension",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_npcDeepTask_ajie",
+    "writes": 3,
+    "occurrences": 3
+  },
+  {
+    "flag": "ajieMovedOn",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "tutorAgencyOffer",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "rideCaught",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "mediaAppeal",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "gaveUpSelfMedia",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_sandboxChallenge",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_divinationResult",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_divinationExpireDay",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_divinationBuff",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_ageRiskMult",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_ageSocialWisdom",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_springJobSearch",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_autumnGroceries",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_zhangLogisticsJob",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_zhangOfferPending",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_hasMedicalDebt",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_reportedScam",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_corpSummary",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_lastQuarterRevenue",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_portfolioDiversity",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_portfolioTotalValue",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_portfolioRiskRating",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_mcReturnedHome",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "forceRest",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "ceoReplaced",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "boardCrisisResolved",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_hasSkillApprentice",
+    "writes": 1,
+    "occurrences": 1
+  },
+  {
+    "flag": "_skillMasterVisitorDone",
+    "writes": 3,
+    "occurrences": 3
+  },
+  {
+    "flag": "_memoirSummary",
+    "writes": 1,
+    "occurrences": 1
+  }
+]
