@@ -33,5 +33,14 @@ jobs:
       - name: Event integrity + smoke
         run: npm test
 
+      # 可复现性门禁：同种子跑两次必须逐字节一致。
+      # 背景：2026-09-15 之前本项目 MC 跑分不可复现 —— checkNewsConduit 把
+      # 「已检查」标记写回共享新闻池 NEWS_L1_L4 的对象上，跨局残留使下一局跳过
+      # 新闻传导链、少消耗随机数、PRNG 错位，同种子两局全盘分叉。
+      # 这一步用最小规模（2 局 × 200 天）守住底线：一旦再出现跨局状态残留，
+      # 两次输出立刻分叉，CI 直接红。
+      - name: Reproducibility gate (MC baseline self-check)
+        run: node scripts/run-baseline.cjs --trials 2 --days 200 --seed 20260915 --check-only
+
       - name: Unit tests (core logic)
         run: npm run test:unit

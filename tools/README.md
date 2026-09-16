@@ -38,3 +38,31 @@
 - 多策略对比：跑 N 局不同行动策略，对比资产曲线。
 - 自动事件选择：拦截 `showModal` 时按策略选按钮 callback（而非 noop）。
 - 与 `audit_connections.js` / `audit_events.js` 联动，输出事件覆盖率报告。
+
+> **状态更新**：上述 TODO 已在 Node 侧的 `tests/monte_carlo.cjs` 落地（智能行动模拟 / 6 策略对比 / 自动事件选择），
+> 本浏览器端脚本保留作为「真实 DOM 环境下的轻量验收」用途。
+
+## mem_probe.cjs — 无头运行器内存 / 泄漏诊断工具集
+
+**背景**：`tests/monte_carlo.cjs` 曾在大参数（`20 局 × 500 天`）下 OOM。
+定位过程发现真凶是 `headless_runner.cjs` 的 **DOM 存根单例跨局累积**
+（`document.body.children` 只 push 不清理，每局约 +120 个元素）。
+本工具把当时的 5 个一次性探针固化为可复用子命令。
+
+### 用法
+
+```bash
+node --expose-gc tools/mem_probe.cjs <子命令> [--trials N] [--days N] [--strategy <名>]
+```
+
+| 子命令 | 作用 | 典型判读 |
+|--------|------|----------|
+| `gc`   | 强制 GC 后采样堆增长 | gc 后仍线性增长 = **真泄漏**；增长消失 = 仅堆压力 |
+| `ref`  | WeakRef 检验旧局 state 是否被回收 | 有存活 = 存在引用持有者；全回收 = 泄漏在运行器侧 |
+| `deep` | 递归扫描 state 容器增长 Top 25 | 定位无上限容器（如 `_newsPopupSeen` / `rumorHistory`） |
+| `dom`  | 两阶段对照 body.children 累积 | A 阶段升 / B 阶段稳 = `resetDom()` 生效 |
+| `save` | 存档 JSON 体积 + 无上限容器计数 | 存档 9 倍膨胀类问题的量化 |
+| `all`  | 依次跑 `gc` / `ref` / `dom` | 常规体检 |
+
+**注意**：`gc` / `ref` / `dom` 的判定依赖 `--expose-gc`，不加则结论不可用（工具会提示）。
+`deep` / `save` 为单局长跑，观察同一 state 内的累积，不需要 GC。
