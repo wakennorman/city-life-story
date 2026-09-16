@@ -59,33 +59,52 @@ const decaySpecs = [
 
 const needVals = [0, 50, 100];
 
-for (const [label, raw] of decaySpecs) {
-  const getFn = raw === "NO_INJECT" ? undefined : (s, k) => raw;
-  const vanillaCtx = loadVanilla(getFn);
-  const sampleState = { needs: { hunger: 50, hygiene: 50, happiness: 50 } };
-  const tsMul = TS.getNeedsDecayMultiplier(sampleState, getFn);
+// [新增 · 2026-09-15] 关系维度：vanilla 的 happiness 衰减受「社交支持」影响
+//   （每个「已见过 且 好感 ≥50」的 NPC 减 0.5 点衰减，最多 -2）
+// 原测试的样本状态**不含 relationships**，所以这条分支从未被比对过——
+// 端口漏掉整段逻辑也没被发现。现在把它纳入。
+const relSpecs = [
+  ["no-relationships", undefined],
+  ["1 high-affinity", { npcA: { met: true, affinity: 60 } }],
+  ["2 high-affinity", { npcA: { met: true, affinity: 60 }, npcB: { met: true, affinity: 80 } }],
+  ["4 high-affinity(封顶-2)", {
+    npcA: { met: true, affinity: 60 }, npcB: { met: true, affinity: 80 },
+    npcC: { met: true, affinity: 50 }, npcD: { met: true, affinity: 95 },
+  }],
+  ["affinity 49(门槛下)", { npcA: { met: true, affinity: 49 } }],
+  ["met=false(不算)", { npcA: { met: false, affinity: 90 } }],
+];
 
-  for (const h of needVals) {
-    for (const hy of needVals) {
-      for (const hp of needVals) {
-        const needs = { hunger: h, hygiene: hy, happiness: hp };
-        // vanilla: clone, mutate
-        const vState = { needs: { ...needs } };
-        vanillaCtx.applyNeedsDecay(vState);
-        const vRes = vState.needs;
-        // TS: pure compute
-        const tRes = TS.computeNeedsDecay(needs, tsMul);
-        const ok =
-          vRes.hunger === tRes.hunger &&
-          vRes.hygiene === tRes.hygiene &&
-          vRes.happiness === tRes.happiness;
-        if (ok) pass++;
-        else {
-          fail++;
-          if (fails.length < 10) {
-            fails.push(
-              `[${label}] needs=${JSON.stringify(needs)} vanilla=${JSON.stringify(vRes)} ts=${JSON.stringify(tRes)}`,
-            );
+for (const [relLabel, relationships] of relSpecs) {
+  for (const [label, raw] of decaySpecs) {
+    const getFn = raw === "NO_INJECT" ? undefined : (s, k) => raw;
+    const vanillaCtx = loadVanilla(getFn);
+    const sampleState = { needs: { hunger: 50, hygiene: 50, happiness: 50 }, relationships };
+    const tsMul = TS.getNeedsDecayMultiplier(sampleState, getFn);
+    const tsSocial = TS.computeSocialSupportBonus(relationships);
+
+    for (const h of needVals) {
+      for (const hy of needVals) {
+        for (const hp of needVals) {
+          const needs = { hunger: h, hygiene: hy, happiness: hp };
+          // vanilla: clone, mutate（relationships 也要带上，否则社交加成路径不生效）
+          const vState = { needs: { ...needs }, relationships };
+          vanillaCtx.applyNeedsDecay(vState);
+          const vRes = vState.needs;
+          // TS: pure compute
+          const tRes = TS.computeNeedsDecay(needs, tsMul, tsSocial);
+          const ok =
+            vRes.hunger === tRes.hunger &&
+            vRes.hygiene === tRes.hygiene &&
+            vRes.happiness === tRes.happiness;
+          if (ok) pass++;
+          else {
+            fail++;
+            if (fails.length < 10) {
+              fails.push(
+                `[${label} / ${relLabel}] needs=${JSON.stringify(needs)} vanilla=${JSON.stringify(vRes)} ts=${JSON.stringify(tRes)}`,
+              );
+            }
           }
         }
       }

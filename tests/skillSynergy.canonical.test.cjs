@@ -91,6 +91,38 @@ eq(norm(T.SKILL_SYNERGY_DUAL), norm(ctx.SKILL_SYNERGY_DUAL), "数据 DUAL 一致
 eq(norm(T.SKILL_SYNERGY_TRIPLE), norm(ctx.SKILL_SYNERGY_TRIPLE), "数据 TRIPLE 一致");
 eq(norm(T.SKILL_SYNERGY_THEME), norm(ctx.SKILL_SYNERGY_THEME), "数据 THEME 一致");
 
+// ---- 契约：消费端 daily_pipeline 列出的 passive 键，必须都有生产者 ----
+// daily_pipeline.skill_synergy_income 用一份硬编码键名清单做**动态**取值
+// （effects[pk]），静态引用检索（grep/AST）发现不了"生产者缺失"，消费分支
+// 会静默恒假 —— 实测 2026-09-15 前 4/5 个键无生产者。此处显式守护。
+const pipelineSrc = fs.readFileSync(
+  path.join(ROOT, "src/js/phase1/daily_pipeline.js"),
+  "utf8",
+);
+const pkMatch = pipelineSrc.match(/var\s+passiveKeys\s*=\s*\[([^\]]+)\]/);
+if (pkMatch) {
+  const consumerKeys = pkMatch[1]
+    .split(",")
+    .map((s) => s.trim().replace(/^["']|["']$/g, ""))
+    .filter(Boolean);
+  const produced = new Set();
+  for (const table of [
+    ctx.SKILL_SYNERGY_DUAL,
+    ctx.SKILL_SYNERGY_TRIPLE,
+    ctx.SKILL_SYNERGY_THEME,
+  ]) {
+    for (const id in table) {
+      const eff = (table[id] && table[id].effects) || {};
+      for (const k in eff) if (k.indexOf("passive") === 0) produced.add(k);
+    }
+  }
+  for (const k of consumerKeys) {
+    eq(produced.has(k), true, `被动收入契约: 消费端要求 ${k} 必须有生产者`);
+  }
+} else {
+  eq("passiveKeys 未解析到", "ok", "被动收入契约: daily_pipeline.js 解析失败");
+}
+
 // ---- 静态确定性用例（手工核对触发路径）----
 function mkSkills(map) {
   // map: { skill: level } -> 随机形态由调用方决定；此处固定为 {level:N}
@@ -179,7 +211,7 @@ try {
 } catch (_) {}
 console.log(
   `skillSynergy canonical: ${pass} passed, ${fail} failed ` +
-    `(数据表3 + 静态${staticCases.length * 2 + 4} + 随机${SEEDS}×${1 + 1 + JOB_IDS.length} 断言)`,
+    `(数据表3 + 被动收入契约5 + 静态${staticCases.length * 2 + 4} + 随机${SEEDS}×${1 + 1 + JOB_IDS.length} 断言)`,
 );
 if (fail > 0) {
   console.log("\n失败用例:\n" + fails.slice(0, 20).join("\n"));

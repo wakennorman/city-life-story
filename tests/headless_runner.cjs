@@ -328,6 +328,16 @@
       _clearElements: function () {
         elementMap = {};
       },
+      // [内存治理] DOM 存根是 init() 时创建一次的全局单例，body/head 的 children
+      // 会被 UI 函数 appendChild 持续追加且永不清理。长跑（多局 × 多天）下
+      // children 单调增长，且这些元素上的闭包会把每局的 state 一并留住
+      // → 旧局 state 无法回收 → 堆线性增长 → MC 大参数直接 OOM。
+      // 每次模拟开局前调用本方法清空，可让旧局对象正常回收。
+      _resetDom: function () {
+        if (doc.body && doc.body.children) doc.body.children.length = 0;
+        if (doc.head && doc.head.children) doc.head.children.length = 0;
+        elementMap = {};
+      },
     };
     doc.body.ownerDocument = doc;
     doc.head.ownerDocument = doc;
@@ -900,6 +910,29 @@
     if (options.seed !== undefined) {
       if (typeof Random !== "undefined" && Random.setSeed) {
         Random.setSeed(options.seed);
+
+        // [确定性补丁] src/js/core/random.js:67 明文约定「游戏中所有随机判定必须
+        // 通过 Random.* API，禁止使用裸 Math.random()」，但全库实际有 49 处裸调用
+        // （random.js 内部 4 处为兜底，其余 45 处违规），tests/ 内另有 8 处。
+        // 这些裸调用绕过了 Random 的种子化 PRNG，导致**同种子跑两次结果不同**：
+        //   实测 seed=12345 / balanced / 200 天，三次跑出
+        //   模拟天数 107/131/118，现金 2773/3632/2676，已结识NPC 8/0/0。
+        // 后果：所有 Monte Carlo / 覆盖率跑分不可复现，历史数字无法互相比较。
+        //
+        // 这里把 Math.random 也接到同一个 PRNG，使整个模拟可复现。
+        // 这是**测试侧**修复，不改 src/js，也不改变游戏的真实随机语义。
+        // 防递归：resetSeed() 后 _useSeed 变 false，此时回退到原生 Math.random。
+        if (Random._useSeed && !Math.random.__headlessSeeded) {
+          var _origRandom = Math.random;
+          var _seededRandom = function () {
+            if (Random._useSeed && Random._seed !== null) {
+              return Random.float(0, 1);
+            }
+            return _origRandom();
+          };
+          _seededRandom.__headlessSeeded = true;
+          Math.random = _seededRandom;
+        }
       }
     }
 
@@ -910,8 +943,16 @@
       return null;
     }
 
-    // 确保 StateManager 已初始化（headless 模式下无 UI 调用 newGame/importState）
-    if (typeof StateManager !== "undefined" && StateManager._state === null) {
+    // 确保 StateManager 指向**本次新建的** state。
+    //
+    // [跨局污染修复] 原实现是 `if (StateManager._state === null) StateManager._state = state;`
+    // 于是只有第一次 createState 生效，第二次起 StateManager._state 仍指向第一局的 state。
+    // 后果：所有经由 StateManager 的读写（StateManager.addMessage / getState 等）都落在
+    // 旧 state 上 → ① 第 2 局起消息不再累积（实测 messageLog 260→0）
+    //        ② 各局之间互相污染，同种子跑两次结果不同
+    // 这是"模拟不可复现"的根因之一。改为每次都重新指向。
+    // 若调用方确实想保留原引用，可传 options.keepStateManagerRef = true。
+    if (typeof StateManager !== "undefined" && !options.keepStateManagerRef) {
       StateManager._state = state;
     }
 
@@ -1238,11 +1279,76 @@
     };
   }
 
+  // ====== 重置 DOM 存根（跨局调用，防止 children 累积导致 OOM） ======
+  /**
+   * 清空 document.body / document.head 的子节点与 elementMap。
+   * 模拟「新开一局」——浏览器里会整页重载，headless 下必须显式重置，
+   * 否则每局的 UI 元素都会挂到同一个 body 上永不释放。
+   */
+  function resetDom() {
+    if (
+      typeof document !== "undefined" &&
+      document &&
+      typeof document._resetDom === "function"
+    ) {
+      document._resetDom();
+      return true;
+    }
+    return false;
+  }
+
+  // ====== 重置共享全局状态（跨局调用，隔离游戏侧模块级单例泄漏） ======
+  /**
+   * 浏览器里「重开一局」= 整页重载，所有模块级全局随页面一起销毁。
+   * headless 下不会重载，于是游戏侧的模块级单例会跨局残留，
+   * 让同种子的两局跑出不同结果（MC 因此不可复现）。
+   *
+   * 本方法把这些残留显式清掉，使夹具行为对齐「整页重载」。
+   * 注意：这是**夹具侧兜底**，游戏侧的真 bug 仍需修（见 docs 报告）。
+   *
+   * 已确认的两类残留：
+   *   [1] 共享新闻池 NEWS_L1_L4 被就地写入 _appliedDay / _conduitChecked。
+   *       残留后下一局 checkNewsConduit 会跳过传导链 → 少消耗随机数
+   *       → PRNG 错位 → 全盘分叉。
+   *       NEWS_L1_L4 是顶层 const，不挂到 globalThis，必须在同一 vm
+   *       上下文里用裸标识符访问。
+   *   [2] localStorage 里的回忆录 / 自动存档跨局累积（影响终局摘要）。
+   *
+   * @returns {{newsFields:number, storage:boolean}}
+   */
+  function resetSharedState() {
+    var report = { newsFields: 0, storage: false };
+    try {
+      var vm = require("vm");
+      report.newsFields = vm.runInThisContext(
+        "(function(){var n=0;" +
+          "if(typeof NEWS_L1_L4==='undefined')return n;" +
+          "for(var i=0;i<NEWS_L1_L4.length;i++){var x=NEWS_L1_L4[i];" +
+          "if(x._appliedDay!==undefined){delete x._appliedDay;n++;}" +
+          "if(x._conduitChecked!==undefined){delete x._conduitChecked;n++;}}" +
+          "return n;})()"
+      );
+    } catch (e) {
+      /* 该池不存在时静默跳过 */
+    }
+    try {
+      if (typeof localStorage !== "undefined" && localStorage && localStorage.clear) {
+        localStorage.clear();
+        report.storage = true;
+      }
+    } catch (e) {
+      /* ignore */
+    }
+    return report;
+  }
+
   // ====== 导出 ======
   var runner = {
     init: init,
     createState: createState,
     advanceDay: advanceDay,
+    resetDom: resetDom,
+    resetSharedState: resetSharedState,
     getStrategy: getStrategy,
     findBestAvailableJob: findBestAvailableJob,
     findHighestPayJob: findHighestPayJob,

@@ -85,6 +85,22 @@ var VALID_PHASES = { street: true, corporate: true };
 
 // ── 断言 3：可施效不变式 ──────────────────────────────────────────
 // 事件本体或其某个 choice 至少要有一个施效字段，否则玩家操作后无任何效果。
+//
+// 两类「零效果」必须分开报，否则会把真实缺陷伪装成「待人工确认的纯展示事件」：
+//   A) 原生事件（无 _converted）：确实可能是有意为之的纯展示事件 → 软警告
+//   B) 转换事件（有 _converted）：载荷在转换时被丢弃 → 硬性质缺陷，必须点名根因
+//
+// [已修复 · 2026-09-15] 原案例：registerNewsEventsToPool() 只拷贝 id/title/story/
+// phase/probability/_converted/choices/conditions，未拷贝 effects/newsEffects；
+// 而消费方（原 events_core.js:925，在选项点击回调里）读取 evt.newsEffects.priceMod
+// → 该分支永远不成立，46 个宏观新闻事件触发后零效果。
+// 修复内容（见 docs/完善评估报告-2026-09-15.md 第十五节）：
+//   ① 转换器补 `newsEffects: ne.effects`
+//   ② 消费点从「选项点击回调」搬到「投递时」（queueRandomEvent 内），
+//      因为新闻条目 choices 为空、根本没有按钮可点
+//   ③ 新增 expireNewsPriceMods() 到期还原 + 不可叠加，避免 ×2 连乘摧毁经济
+// 因此 hasEffect() 现在也必须认识 `newsEffects`，否则修复完成后
+// 这个断言会一直报 46 条假警告。
 (function checkApplicability() {
   function hasEffect(obj) {
     if (!obj || typeof obj !== "object") return false;
@@ -93,10 +109,14 @@ var VALID_PHASES = { street: true, corporate: true };
       typeof obj.immediate === "function" ||
       typeof obj.effect === "function" ||
       typeof obj.effects === "object" ||
+      // [2026-09-15] 转换来的新闻条目把载荷放在 newsEffects 上（投递时施加）
+      typeof obj.newsEffects === "object" ||
       typeof obj.flags === "object" ||
       typeof obj.outcome === "function"
     );
   }
+  var displayOnly = [];
+  var convertedGroups = {}; // _converted 来源 -> id 列表
   for (var i = 0; i < RE.length; i++) {
     var e = RE[i];
     if (!e || !e.id) continue;
@@ -109,12 +129,39 @@ var VALID_PHASES = { street: true, corporate: true };
         break;
       }
     }
-    // 纯叙事事件（无 choices）允许仅靠事件级 apply；有 choices 则要求至少一个可施效
     if (choices.length === 0 && !eventEffect) {
-      warn("事件 '" + e.id + "' 无 choices 且无事件级施效字段（可能是纯展示，请人工确认）");
+      if (e._converted) {
+        var src = String(e._converted);
+        if (!convertedGroups[src]) convertedGroups[src] = [];
+        convertedGroups[src].push(e.id);
+      } else {
+        displayOnly.push(e.id);
+      }
     } else if (choices.length > 0 && !anyChoiceEffect && !eventEffect) {
       fail("事件 '" + e.id + "' 的所有 choice 均无 apply/effect/flags——玩家选择后无任何效果");
     }
+  }
+
+  // B 类：转换载荷丢失 —— 单独报，附根因与消费方位置，避免与「纯展示」混为一谈
+  Object.keys(convertedGroups).forEach(function (src) {
+    var ids = convertedGroups[src];
+    warn(
+      "【转换载荷丢失】" +
+        ids.length +
+        " 个 _converted:\"" +
+        src +
+        "\" 事件无 choices 也无事件级施效字段——转换器 register" +
+        (src === "news" ? "News" : src === "moral" ? "Moral" : "Xxx") +
+        "EventsToPool() 未拷贝 effects/newsEffects 载荷，消费方读取的字段恒为 undefined，事件触发但零效果。ids: " +
+        ids.join(", "),
+    );
+  });
+
+  // A 类：原生纯展示事件 —— 保持软警告
+  for (var d = 0; d < displayOnly.length; d++) {
+    warn(
+      "事件 '" + displayOnly[d] + "' 无 choices 且无事件级施效字段（可能是纯展示，请人工确认）",
+    );
   }
 })();
 
@@ -144,18 +191,25 @@ var VALID_PHASES = { street: true, corporate: true };
 })();
 
 // ── 断言 5：TriggerRegistry 活跃槽注册数 > 0 ──────────────────────
-// 检出「读错字段导致某槽 0 注册」的静默失效。注意 loadAll 读 window.RANDOM_EVENTS，
-// 无头环境下 window 可能不指向真实全局——先桥接再断言，避免误报。
+// 检出「读错字段导致某槽 0 注册」的静默失效。
+//
+// [更正 · 2026-09-15] 这里原本有一段「桥接」：
+//     if (typeof window !== "undefined" && !window.RANDOM_EVENTS && Array.isArray(RE))
+//       window.RANDOM_EVENTS = RE;
+// 理由是「无头环境下 window 可能不指向真实全局，先桥接避免误报」——
+// **这个理由本身是错的**：RANDOM_EVENTS 是 events_core.js 的顶层 const，
+// 顶层 const/let 在任何环境（浏览器 / 无头 / 打包产物）都**不会**成为 window 的属性。
+// 所以 `window.RANDOM_EVENTS` 在生产里同样是 undefined，loadAll 一直在早退。
+// 那段桥接不但没有「避免误报」，反而**把一个真 bug 掩盖成了绿灯**。
+// 现在源码已改成优先读顶层引用（trigger_registry.js:loadAllTriggers），
+// 因此桥接已删除——本断言从此走真实路径，任何人回退修复都会被它抓住。
 (function checkTriggerRegistry() {
   var TR = typeof TriggerRegistry !== "undefined" ? TriggerRegistry : globalThis.TriggerRegistry;
   if (!TR || typeof TR.loadAll !== "function") {
     warn("TriggerRegistry 不可用，跳过槽注册检查");
     return;
   }
-  // 桥接：确保 loadAll 能看到事件池（复现浏览器语义前提下的健壮性）
-  if (typeof window !== "undefined" && !window.RANDOM_EVENTS && Array.isArray(RE)) {
-    window.RANDOM_EVENTS = RE;
-  }
+  // 刻意**不**做任何桥接：loadAll 必须能在「只有顶层 const」的前提下自己找到事件池
   try {
     TR.loadAll();
   } catch (e) {
@@ -199,6 +253,32 @@ var VALID_PHASES = { street: true, corporate: true };
           " 个约定式事件，槽注册总数 " +
           totalRegistered,
       );
+    }
+
+    // ── 断言 5b（加强 · 2026-09-15）：有声明者的槽必须非空，且不得重复注册 ──
+    // 只查「总数 > 0」是不够的：曾经 after_work 声明了 3 个事件却注册 0 个，
+    // 而只要有任何一个槽非空，旧断言就会放过。逐槽核对。
+    var declared = {};
+    for (var e2 = 0; e2 < RE.length; e2++) {
+      var ev2 = RE[e2];
+      if (ev2 && Array.isArray(ev2.triggers)) {
+        for (var t2 = 0; t2 < ev2.triggers.length; t2++) {
+          var sl2 = ev2.triggers[t2];
+          if (!declared[sl2]) declared[sl2] = {};
+          declared[sl2][ev2.id] = true; // 用 id 去重：同一事件即使被扫两遍也只算一次
+        }
+      }
+    }
+    for (var sl3 in declared) {
+      var want = Object.keys(declared[sl3]).length;
+      var got = TR.getEventsForSlot(sl3).length;
+      if (got === 0) {
+        fail("槽 '" + sl3 + "' 有 " + want + " 个事件声明了它，但注册数为 0（注册链断裂）");
+      } else if (got > want) {
+        fail("槽 '" + sl3 + "' 注册数 " + got + " > 声明数 " + want + "（疑似重复注册→权重翻倍）");
+      } else if (got < want) {
+        fail("槽 '" + sl3 + "' 注册数 " + got + " < 声明数 " + want + "（部分事件未注册）");
+      }
     }
   }
 })();
