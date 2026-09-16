@@ -1,20 +1,30 @@
 # ──────────────────────────────────────────────────────────────────────────────
-# 全系统优化循环 · 手动触发 (workflow_dispatch)
+# 全系统优化循环 · 状态提示
 #
-# 用法：GitHub → Actions → "Loop Optimization" → "Run workflow" → Run
-# 运行后自动: checkout → 读取薄弱域 → 通知 Claude 执行优化 → commit + push
+# 用途：读取 .claude/loop-domain-state.json，把上一轮/下一轮方向显示在
+#       Actions 的 Summary 里，作为「该开新轮了」的提示入口。
 #
-# 注意: cron 自动触发(每10分钟)对无 agent 的 repo 意义有限 —
-#       因为真正的优化代码需要 Claude Code CLI 来写。
-#       本文件保留 dispatch 入口供你随时启动新一轮。
+# 触发：本工作流**只做状态展示**，不修改仓库、不提交、不推送。
+#       真正的优化代码需要 Claude Code CLI 来写，故保留 workflow_dispatch
+#       供手动查看；同时挂上 push 触发器，使每次推送都顺带校验本文件
+#       仍然可解析、可运行（避免像 2026-07-25 ~ 09-16 那样长期静默损坏）。
+#
+# [历史] 2026-07-25 引入时以 `run: |` 内联 Python，顶格行 `import json`
+#        提前终止了 YAML 块标量，导致文件解析失败、jobs:0、每次 push
+#        都产生一条 0 秒红色 ❌。且原脚本引用的 currentRound/currentDomain
+#        等字段在状态文件中并不存在，运行时亦必然崩溃（双重损坏）。
+#        2026-09-16 抽出为 .claude/scripts/read-loop-state.py 并修复。
 # ──────────────────────────────────────────────────────────────────────────────
 name: 🔁 Loop Optimization · 全系统优化
 
 on:
   workflow_dispatch:           # 手动触发（推荐）
+  push:
+    branches: [main]           # 顺带校验本文件健康度
 
+# 纯只读工作流，仅需读取仓库内容
 permissions:
-  contents: write
+  contents: read
 
 jobs:
   notify-loop:
@@ -29,18 +39,7 @@ jobs:
 
       - name: Read loop state
         run: |
-          python -c "
-import json
-with open('.claude/loop-domain-state.json', 'r') as f:
-    st = json.load(f)
-r = st.get('currentRound', '?')
-d = st.get('currentDomain', '?')
-h = st.get('lastDomain', '?')
-print(f'Next round: R{int(r)+1} → Domain {d}')
-print(f'Last run: Domain {h}, round {st.get(\"lastRound\", \"?\")}')
-message = f'🔄 Loop optimization ready: next round is R{int(r)+1}, domain \"{st.get(\"domainLabels\", {}).get(d, d)}\".'
-print(f'MESSAGE={message}')
-"
+          python3 .claude/scripts/read-loop-state.py
 
       - name: Summary
         run: |
