@@ -1,14 +1,34 @@
 # ──────────────────────────────────────────────────────────────────────────────
 # GitHub Pages 自动部署
-# 触发条件：push 到 main 分支
-# 流程：python build.py → dist/index.html → gh-pages 分支 → Pages 自动生效
+#
+# 触发条件：quality-gate 工作流在 main 分支完成后
+# 流程：检查门禁结论 → 通过则 python build.py → dist/index.html → Pages 生效
+#
+# [2026-09-17 改为门禁驱动]
+# 旧版直接以 `push: branches:[main]` 触发，与 quality-gate **完全独立**。
+# 后果：2026-08-16 那次 quality-gate 失败（67 处 no-dupe-keys），
+# 但 deploy 照常成功 —— **带病上线**，门禁在物理上无法阻止任何东西。
+#
+# 现改为 `workflow_run` 触发，即**只在 quality-gate 成功后才部署**。
+# 由于本仓库 Pages 配置为 build_type=workflow（已通过 API 确认），
+# 站点不由分支内容自动构建，因此"不部署"就等于"保持上一版正常版本在线"，
+# 这正是我们想要的：坏代码不会上线，好版本继续服务。
+#
+# 注意：`needs` 无法跨工作流引用 job，这是 GitHub 的固有限制，
+# 故用 workflow_run 事件 + conclusion 判断实现等效的门禁效果。
+#
+# ⚠️ 生效前提：workflow_run 只在**工作流文件已存在于默认分支**时才触发。
+#    因此本文件需先合入 main 才会开始按新逻辑运行。首次合入的那次 push
+#    仍由旧配置（push 触发）部署 —— 属可接受的过渡行为。
 # ──────────────────────────────────────────────────────────────────────────────
 name: 🚀 Deploy to GitHub Pages
 
 on:
-  push:
+  workflow_run:
+    workflows: ["quality-gate"]
+    types: [completed]
     branches: [main]
-  workflow_dispatch: # 允许手动触发
+  workflow_dispatch: # 手动触发（紧急重部署用，绕过门禁判断）
 
 # GitHub Pages 权限
 permissions:
@@ -22,13 +42,66 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  # ── 构建 ──────────────────────────────────────────────────────────────────
+  # ── 0. 门禁结论判定 ───────────────────────────────────────────────────────
+  # 单独设一个轻量 job 做判断，而非把 `if` 挂在 build 上。
+  #
+  # 原因：若把 `if` 直接挂在 build 上，门禁失败时 build/deploy 都被 skip，
+  # 整个 run 会呈现为"全跳过"状态 —— 语义含糊，且不同 GitHub 版本对
+  # "全部 job 被跳过"的结论处理不够明确（可能显示为 skipped 或 failure），
+  # 容易再次制造红色噪声。
+  #
+  # 改为显式判定后：本 job 永远会运行且永远成功（结论写在输出与
+  # Summary 里），后续 job 用它的输出决定是否构建。
+  # 于是「门禁失败 → 不部署」表现为一次**正常完成的判断**，
+  # 而不是一次失败 —— 语义准确，也不再产生噪声。
+  check-gate:
+    runs-on: ubuntu-latest
+    outputs:
+      should_deploy: ${{ steps.decide.outputs.should_deploy }}
+    steps:
+      - name: Decide whether to deploy
+        id: decide
+        run: |
+          CONCLUSION="${{ github.event.workflow_run.conclusion }}"
+          EVENT="${{ github.event_name }}"
+
+          if [ "$EVENT" = "workflow_dispatch" ]; then
+            echo "触发方式: 手动（紧急通道，跳过门禁判定）"
+            echo "should_deploy=true" >> $GITHUB_OUTPUT
+            echo "## 🚀 手动部署" >> $GITHUB_STEP_SUMMARY
+            echo "由 workflow_dispatch 手动触发，跳过门禁判定。" >> $GITHUB_STEP_SUMMARY
+            exit 0
+          fi
+
+          echo "quality-gate 结论: $CONCLUSION"
+
+          if [ "$CONCLUSION" = "success" ]; then
+            echo "should_deploy=true" >> $GITHUB_OUTPUT
+            echo "## ✅ 门禁通过，开始部署" >> $GITHUB_STEP_SUMMARY
+            echo "quality-gate 结论为 success，继续构建与部署。" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "should_deploy=false" >> $GITHUB_OUTPUT
+            echo "## ⛔ 门禁未通过，跳过部署" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "quality-gate 结论为 \`$CONCLUSION\`，本次**不部署**。" >> $GITHUB_STEP_SUMMARY
+            echo "站点保持上一版正常版本在线（Pages 为 workflow 构建模式，不会自动回退重建）。" >> $GITHUB_STEP_SUMMARY
+          fi
+
+  # ── 1. 构建 ──────────────────────────────────────────────────────────────
   build:
+    needs: check-gate
+    if: needs.check-gate.outputs.should_deploy == 'true'
     runs-on: ubuntu-latest
 
     steps:
       - name: 📥 Checkout
         uses: actions/checkout@v4
+        with:
+          # workflow_run 触发时，默认检出的是 main 的最新提交，
+          # 而非触发本次运行的那个提交。显式指定 head_sha 以保证
+          # 「部署的正是被门禁验证过的那一版」。
+          # （workflow_dispatch 触发时该字段为空，回退到 github.sha）
+          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
 
       - name: 🐍 Setup Python
         uses: actions/setup-python@v5
@@ -43,7 +116,7 @@ jobs:
         with:
           path: dist # 单文件 dist/index.html
 
-  # ── 部署 ──────────────────────────────────────────────────────────────────
+  # ── 2. 部署 ──────────────────────────────────────────────────────────────
   deploy:
     needs: build
     runs-on: ubuntu-latest

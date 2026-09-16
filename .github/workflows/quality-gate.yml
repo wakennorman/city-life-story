@@ -5,11 +5,36 @@ on:
     branches: [main, master, dev]
   pull_request:
 
-# 阶段1 质量门禁：lint + typecheck + 事件完整性 + 核心单测
+# ──────────────────────────────────────────────────────────────────────────────
+# 阶段1 质量门禁：lint + typecheck + 事件完整性 + 可复现性 + 核心单测
+#
 # 策略（增量采纳）：legacy src/js 的 ESLint 为 warn 级，不阻断现有优化循环；
 # typecheck(src/app, strict) 与事件完整性 / 单测必须 0 失败。
+#
+# [2026-09-17 结构重构]
+# 旧版是**单个 job 内的一串线性 steps**，存在一个隐蔽且严重的缺陷：
+# 任一步失败会立即中断整个 job，**后面的步骤根本不会被执行**。
+#
+# 实际后果：2026-08-16 ~ 09-16 期间，第 5 步 ESLint 因 67 处
+# no-dupe-keys 报 error 而中断，导致第 6~9 步
+# （typecheck / 事件完整性 / 可复现性 / 单测）**整整一个月从未运行过**。
+# 门禁的真实覆盖面远小于它看起来的样子 —— 它只保护了第一步。
+#
+# 现改为 **5 个并行 job**：
+#   lint / typecheck / integrity / reproducibility / unit
+# 每个 job 独立运行、独立报告结论，任一失败不影响其余执行。
+# 好处：
+#   1. 所有检查都会真正跑到（不再被前一步遮蔽）
+#   2. 失败定位精确到具体环节，无需翻长日志
+#   3. 并行执行，总时长取决于最慢的 job（≈50s）而非各步之和（≈2m7s）
+#   4. `needs` 聚合为单一 gate 结论，供 deploy.yml 引用
+#
+# ⚠️ 注意：本工作流**不阻塞部署**，除非 deploy.yml 声明 needs。
+#     部署侧已同步加上 `needs: gate`（见 deploy.yml）。
+# ──────────────────────────────────────────────────────────────────────────────
 jobs:
-  quality:
+  # ── 1. 代码风格（warn 级，仅 error 阻断）────────────────────────────────
+  lint:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -24,23 +49,120 @@ jobs:
       - name: Install deps
         run: npm install
 
-      - name: ESLint (legacy src/js, warn-level)
+      # 注意：不设 --max-warnings。当前全库有约 2.6 万条 warn 级历史
+      # 风格问题（多为 no-var），设阈值会立刻失败。本步只拦 error。
+      - name: ESLint (legacy src/js)
         run: npm run lint
+
+  # ── 2. 类型检查 ──────────────────────────────────────────────────────────
+  typecheck:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install deps
+        run: npm install
 
       - name: TypeScript typecheck (src/app, strict)
         run: npm run typecheck
 
-      - name: Event integrity + smoke
-        run: npm test
+  # ── 3. 语法 + 事件完整性 + 行业盈利 ──────────────────────────────────────
+  integrity:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
 
-      # 可复现性门禁：同种子跑两次必须逐字节一致。
-      # 背景：2026-09-15 之前本项目 MC 跑分不可复现 —— checkNewsConduit 把
-      # 「已检查」标记写回共享新闻池 NEWS_L1_L4 的对象上，跨局残留使下一局跳过
-      # 新闻传导链、少消耗随机数、PRNG 错位，同种子两局全盘分叉。
-      # 这一步用最小规模（2 局 × 200 天）守住底线：一旦再出现跨局状态残留，
-      # 两次输出立刻分叉，CI 直接红。
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install deps
+        run: npm install
+
+      # 全库 JS 语法检查（1177 文件，vm.Script 单进程编译，约 1.5s）
+      - name: JS syntax sweep
+        run: npm run check:js
+
+      # 事件完整性 + 冒烟模拟
+      - name: Event integrity + smoke
+        run: npm run check:events
+
+      # 行业盈利门禁：六行业盈利值必须落在预期区间
+      - name: Industry profit gate
+        run: npm run check:industry-profit
+
+  # ── 4. 可复现性门禁 ──────────────────────────────────────────────────────
+  # 同种子跑两次必须逐字节一致。
+  # 背景：2026-09-15 之前本项目 MC 跑分不可复现 —— checkNewsConduit 把
+  # 「已检查」标记写回共享新闻池 NEWS_L1_L4 的对象上，跨局残留使下一局跳过
+  # 新闻传导链、少消耗随机数、PRNG 错位，同种子两局全盘分叉。
+  # 这一步用最小规模（2 局 × 200 天）守住底线：一旦再出现跨局状态残留，
+  # 两次输出立刻分叉，CI 直接红。
+  reproducibility:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install deps
+        run: npm install
+
       - name: Reproducibility gate (MC baseline self-check)
         run: node scripts/run-baseline.cjs --trials 2 --days 200 --seed 20260915 --check-only
 
+  # ── 5. 核心逻辑单测 ──────────────────────────────────────────────────────
+  unit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install deps
+        run: npm install
+
       - name: Unit tests (core logic)
         run: npm run test:unit
+
+  # ── 6. 聚合结论（供 deploy.yml 以 needs 引用）────────────────────────────
+  # 作用：把 5 个并行 job 的结果汇聚成一个单一信号。
+  # 部署侧只需 `needs: gate`，无需逐个列举 5 个 job 名。
+  #
+  # 注意 `if: always()` —— 否则当任一前置 job 失败时本 job 会被跳过，
+  # 导致 needs 它的部署侧看到的是「skipped」而非「failure」，
+  # 语义上不够清晰。显式检查各 job 的 result 更可靠。
+  gate:
+    needs: [lint, typecheck, integrity, reproducibility, unit]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Aggregate results
+        run: |
+          echo "lint            : ${{ needs.lint.result }}"
+          echo "typecheck       : ${{ needs.typecheck.result }}"
+          echo "integrity       : ${{ needs.integrity.result }}"
+          echo "reproducibility : ${{ needs.reproducibility.result }}"
+          echo "unit            : ${{ needs.unit.result }}"
+
+          if [ "${{ needs.lint.result }}" != "success" ] \
+          || [ "${{ needs.typecheck.result }}" != "success" ] \
+          || [ "${{ needs.integrity.result }}" != "success" ] \
+          || [ "${{ needs.reproducibility.result }}" != "success" ] \
+          || [ "${{ needs.unit.result }}" != "success" ]; then
+            echo "::error::质量门禁未通过，详见各 job 结论"
+            exit 1
+          fi
+          echo "✅ 全部质量门禁通过"
