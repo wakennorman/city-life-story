@@ -582,6 +582,20 @@
     return picked;
   }
 
+  // ─── 统一读取口（供跨域事件消费）────────────────────────────────
+  // [全系统自洽修复 · 报告第 54 节] 域F 事件读的是 state.dailyQuest.quests，
+  // 而该路径全库零写入（幻影容器）。真实容器是 state.flags._dailyQuests
+  // （generateDailyQuests 写入）。契约对齐：读取方只需 quests.length >= 1，
+  // 与键名无关 → 直接指向真实容器。
+  // 注意：缓存按天失效，避免把昨天的目标当成今天的。
+  function getDailyQuests(state) {
+    if (!state || !state.flags) return [];
+    var stored = state.flags._dailyQuests;
+    if (!stored || !stored.quests || !stored.quests.length) return [];
+    if (state.player && stored.day !== state.player.day) return [];
+    return stored.quests;
+  }
+
   // ─── 渲染：今日目标卡 ──────────────────────────────────────────
   function renderDailyQuestCard(state, parent) {
     if (!state || !state.player) return;
@@ -868,6 +882,7 @@
   // ─── 全局挂载 ─────────────────────────────────────────────────
   if (typeof window !== "undefined") {
     window.generateDailyQuests = generateDailyQuests;
+    window.getDailyQuests = getDailyQuests;
     window.renderDailyQuestCard = renderDailyQuestCard;
     window.renderLifeArcStrip = renderLifeArcStrip;
   }

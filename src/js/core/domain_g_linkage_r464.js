@@ -89,8 +89,10 @@
       triggers: { minDay: 50, interval: 80, maxRepeats: 4, excludeFlags: ["_g464MilestoneCooldown"] },
       conditions: function (st) {
         if (st.gameOver) return false;
-        if (!st.lifeNodes || !st.lifeNodes.completed) return false;
-        return st.lifeNodes.completed.length >= 1 && (st.flags && !st.flags._g464MilestoneCooldown);
+        // [全系统自洽修复 · 报告第 54 节] 原读 state.lifeNodes.completed（幻影路径，全库零写入），
+        // 改数真实的人生节点 flag（state.flags._lifeNode_*_done）。
+        var _n = (typeof countLifeNodes === "function") ? countLifeNodes(st) : 0;
+        return _n >= 1 && (st.flags && !st.flags._g464MilestoneCooldown);
       },
       choices: [
         { text: "📖 写下感悟", hint: "心智+3,心情+3", apply: function (st) {
@@ -108,7 +110,7 @@
       ],
       text: function (st) {
         if (!st) return null;
-        var completed = st.lifeNodes && st.lifeNodes.completed ? st.lifeNodes.completed.length : 0;
+        var completed = (typeof countLifeNodes === "function") ? countLifeNodes(st) : 0;
         return "你回顾了自己的人生轨迹——已经经历了" + completed + "个人生节点。每一个节点都是一次选择，每一次选择都塑造了现在的你。";
       }
     }

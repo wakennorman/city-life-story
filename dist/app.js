@@ -40509,33 +40509,75 @@ function getStoryChapterChecklist(state) {
   });
   return items.slice(0, 3);
 }
+
+// ====== 章节真实进度的统一读取口 ======
+// [全系统自洽修复 · 报告第 54 节]
+// 真实来源：state.flags[STORY_CHAPTERS[i].flag]（_triggerChapter 写入，如 _ch1Done/_ch3Done）。
+// 反例（本轮发现）：R1047 新增的三个 helper（getChapterEconomicData /
+// getChapterNarrativeData / getChapterUIData）读的是 state.flags._storyChapters，
+// 而该容器**全库零写入** → 三个 helper 恒返回 null / 0，且全库零消费者。
+// 本函数把「当前章节」的语义收敛到一处，供上述 helper 与跨域事件共用。
+function getActiveChapterInfo(state) {
+  if (!state || !state.flags || !state.player) return null;
+  if (typeof getStoryChapterProgress !== "function") return null;
+  var p = getStoryChapterProgress(state) || {};
+  var total = p.total || 0;
+  var active = null;
+  if (p.nextChapter && p.nextChapter.title) {
+    // 尚有待完成章节 → 当前所处章节即「下一个待完成」
+    active = p.nextChapter.title;
+  } else if (total > 0) {
+    // 三章已全部完成 → 定格在最后一章（尾声）
+    active = STORY_CHAPTERS[total - 1].title || STORY_CHAPTERS[total - 1].id;
+  }
+  return {
+    completedCount: p.current || 0,
+    totalChapters: total,
+    activeChapter: active,
+    allCompleted: !p.nextChapter,
+    nextChapter: p.nextChapter || null,
+    lifeRoute: p.lifeRoute || null,
+  };
+}
+
 if (typeof window !== "undefined") {
   window.STORY_CHAPTERS = STORY_CHAPTERS;
   window.checkStoryChapter = checkStoryChapter;
   window.getStoryChapterProgress = getStoryChapterProgress;
   window.getStoryChapterChecklist = getStoryChapterChecklist;
+  window.getActiveChapterInfo = getActiveChapterInfo;
   // [全系统自洽修复] 域G R746b A类#2: 导出年龄叙事兑现函数（函数声明提升,直接引用安全;严禁wrapper——顶层声明本身即全局绑定,wrapper覆盖后会自调递归爆栈）
   window.getLifeStageNarrativeEvent = getLifeStageNarrativeEvent;
   window.runLifeStageNarrative = runLifeStageNarrative;
 
   // [R1047 域G 联动增强 G→A]: 章节经济数据 — 故事章节进展数据供经济系统
+  // [全系统自洽修复 · 报告第 54 节] 原读零写入容器 state.flags._storyChapters（恒返回 0），
+  // 改读 getActiveChapterInfo 的真实进度。
   window.getChapterEconomicData = function (state) {
-    if (!state || !state.flags) return null;
-    var _chapters = state.flags._storyChapters || [];
-    return { completedChapters: _chapters.filter(function (c) { return c.completed; }).length, totalChapters: _chapters.length };
+    var _c = getActiveChapterInfo(state);
+    if (!_c) return null;
+    return { completedChapters: _c.completedCount, totalChapters: _c.totalChapters };
   };
 
   // [R1047 域G 联动增强 G→B]: 章节叙事数据 — 故事章节数据供叙事系统
+  // [全系统自洽修复 · 报告第 54 节] 同上：原读零写入容器（恒返回 null）。
   window.getChapterNarrativeData = function (state) {
-    if (!state || !state.flags || !state.flags._storyChapters) return null;
-    var _active = state.flags._storyChapters.find(function (c) { return !c.completed; });
-    return { activeChapter: _active ? _active.title || _active.id : null, completedCount: state.flags._storyChapters.filter(function (c) { return c.completed; }).length };
+    var _c = getActiveChapterInfo(state);
+    if (!_c) return null;
+    return { activeChapter: _c.activeChapter, completedCount: _c.completedCount };
   };
 
   // [R1047 域G 联动增强 G→F]: 章节UI数据 — 故事章节数据供UI渲染
+  // [全系统自洽修复 · 报告第 54 节] 同上：原读零写入容器（恒返回 null）。
   window.getChapterUIData = function (state) {
-    if (!state || !state.flags || !state.flags._storyChapters) return null;
-    return { chapters: state.flags._storyChapters.map(function (c) { return { id: c.id, title: c.title || c.id, completed: !!c.completed }; }) };
+    if (!state || !state.flags) return null;
+    var total = STORY_CHAPTERS.length;
+    var out = [];
+    for (var i = 0; i < total; i++) {
+      var c = STORY_CHAPTERS[i];
+      out.push({ id: c.id, title: c.title || c.id, completed: !!state.flags[c.flag] });
+    }
+    return { chapters: out };
   };
 }
 // [R720 域G 联动增强 G→B]: 人生阶段叙事事件
@@ -102419,7 +102461,8 @@ if (typeof window !== "undefined") {
       conditions: function (st) {
         if (st.gameOver) return false;
         if (!st.skillBranches || !st.relationships) return false;
-        var branchCount = Object.keys(st.skillBranches).length;
+        // [报告第 53 节] 用 countChosenBranches 排除 _lastChosen 等下划线元数据键
+        var branchCount = typeof countChosenBranches === "function" ? countChosenBranches(st) : Object.keys(st.skillBranches).length;
         if (branchCount < 1) return false;
         var metNpcs = 0;
         for (var id in st.relationships) {
@@ -108089,7 +108132,8 @@ if (typeof window !== "undefined") {
         var desc = "技能发展正在稳步前进";
         var insight = "选择合适的分支方向,能让技能发挥最大价值";
         if (typeof SKILL_BRANCHES !== "undefined" && st.skillBranches) {
-          var chosen = Object.keys(st.skillBranches).length;
+          // [报告第 53 节] 用 countChosenBranches 排除 _lastChosen 等下划线元数据键
+          var chosen = typeof countChosenBranches === "function" ? countChosenBranches(st) : Object.keys(st.skillBranches).length;
           var total = Object.keys(SKILL_BRANCHES).length;
           if (chosen > 0) {
             desc = "你已在" + total + "个技能领域中选择了" + chosen + "个发展方向";
@@ -132297,10 +132341,26 @@ function checkCrossSystemEvents(state) {
   processLinkageRules(state);
 }
 
+// ====== 人生节点计数（统一读取口）======
+// [全系统自洽修复 · 报告第 54 节] 域G 事件读的是 state.lifeNodes.completed（幻影路径，
+// 全库零写入）。人生节点的真实存储是 state.flags._lifeNode_*_done 一组布尔 flag
+// （本文件 LINKAGE_RULES 与本文件 85/107/130/147/162 行定义）。
+// 契约对齐：读取方只需「已完成节点数 >= 1」→ 数一下带该前缀且为真的 flag 即可。
+function countLifeNodes(state) {
+  if (!state || !state.flags) return 0;
+  var n = 0;
+  for (var k in state.flags) {
+    if (!Object.prototype.hasOwnProperty.call(state.flags, k)) continue;
+    if (k.indexOf("_lifeNode_") === 0 && k.slice(-5) === "_done" && state.flags[k]) n++;
+  }
+  return n;
+}
+
 // ====== 全局挂载 ======
 if (typeof window !== "undefined") {
   window.LINKAGE_RULES = LINKAGE_RULES;
   window.processLinkageRules = processLinkageRules;
+  window.countLifeNodes = countLifeNodes;
   window.checkLifeNodeMedicalEvents = checkLifeNodeMedicalEvents;
   window.checkLifeNodeNarrativeFeedback = checkLifeNodeNarrativeFeedback;
   window.checkTravelMedicalEvents = checkTravelMedicalEvents;
@@ -176571,6 +176631,16 @@ function chooseSkillBranch(skillKey, branchId, state) {
   state.resources.cash = Math.max(0, (state.resources.cash || 0) - 200);
   if (!state.skillBranches) state.skillBranches = {}; // [全系统自洽修复] 域C A类: skillBranches 守卫
   state.skillBranches[skillKey] = branchId;
+  // [全系统自洽修复 · 报告第 53 节] 记录「最近选择的分支」供跨域事件消费
+  //   · domain_c_linkage_r364/r370/r374/r376 读 _lastChosen（值 = 分支 ID）
+  //   · domain_c_linkage_r173 读 _lastChosenForJob + _lastChosenDay
+  //     （语义：选分支后满 30 天 → 触发"分支职业机会"事件）
+  //   这三个键此前**全库零写入** → 8 个事件永不触发。
+  //   ★ 它们是元数据，不参与「已选分支数」统计 ——
+  //     countChosenBranches() 会过滤掉下划线开头的键（见本文件）。
+  state.skillBranches._lastChosen = branchId;
+  state.skillBranches._lastChosenForJob = branchId;
+  state.skillBranches._lastChosenDay = state.player.day;
 
   StateManager.addMessage(
     "🎯 确定了" +
@@ -176613,6 +176683,11 @@ function switchSkillBranch(skillKey, newBranchId, state) {
   state.player.actionPoints -= 30;
   state.resources.cash = Math.max(0, (state.resources.cash || 0) - 500);
   state.skillBranches[skillKey] = newBranchId;
+  // [全系统自洽修复 · 报告第 53 节] 换分支同样刷新「最近选择」三键
+  //   （否则 _lastChosen 会停留在旧分支，让下游事件读到已弃用的分支 ID）
+  state.skillBranches._lastChosen = newBranchId;
+  state.skillBranches._lastChosenForJob = newBranchId;
+  state.skillBranches._lastChosenDay = state.player.day;
 
   StateManager.addMessage(
     "🔄 重新选择了" +
@@ -176929,6 +177004,37 @@ function getSkillTreeVisualData(state) {
   return data;
 }
 
+/**
+ * [全系统自洽修复 · 报告第 53 节] 统计「已选分支数」
+ *
+ * 【为什么需要这个函数】
+ *   state.skillBranches 是 `{ 技能名: 分支ID }` 的动态字典，但同容器里还挂着
+ *   以下划线开头的**元数据键**：
+ *     _lastChosen / _lastChosenForJob / _lastChosenDay
+ *   （由 chooseSkillBranch / switchSkillBranch 写入，供跨域事件消费）
+ *
+ *   原先三处统计直接写 `Object.keys(state.skillBranches).length`，
+ *   在补上元数据键之后会把它们也算成"选过的分支" → 计数虚高 1~3，
+ *   使 `>= N` 门槛提前达成。
+ *
+ * 【实现】只统计不以 `_` 开头的键。
+ *   用 for...in + hasOwnProperty 而非 Object.keys().filter()，避免额外数组分配
+ *   （此函数在事件 conditions 里被频繁调用）。
+ *
+ * @param {Object} state
+ * @returns {number} 已选分支数（不含元数据键）
+ */
+function countChosenBranches(state) {
+  if (!state || !state.skillBranches) return 0;
+  var n = 0;
+  for (var k in state.skillBranches) {
+    if (!Object.prototype.hasOwnProperty.call(state.skillBranches, k)) continue;
+    if (k.charAt(0) === "_") continue;   // 跳过 _lastChosen 等元数据键
+    n++;
+  }
+  return n;
+}
+
 // [R724 第三轮 域C 联动增强 C→A]: 技能市场价值指数
 function getSkillMarketIndex(skillId) {
   if (!skillId) return 0;
@@ -176941,6 +177047,8 @@ if (typeof window !== "undefined") {
   window.getAvailableBranches = getAvailableBranches;
   window.getTalentNodeDef = getTalentNodeDef;
   window.canChooseBranch = canChooseBranch;
+  // [报告第 53 节] 已选分支数（排除 _lastChosen 等下划线元数据键）
+  window.countChosenBranches = countChosenBranches;
   window.switchSkillBranch = switchSkillBranch;
   window.canActivateTalentNode = canActivateTalentNode;
   window.getJobBurnout = getJobBurnout;
@@ -262823,8 +262931,10 @@ if (typeof window !== "undefined") {
       triggers: { minDay: 20, interval: 30, maxRepeats: 6, excludeFlags: ["_f471QuestCooldown"] },
       conditions: function (st) {
         if (st.gameOver) return false;
-        if (!st.dailyQuest || !st.dailyQuest.quests) return false;
-        return st.dailyQuest.quests.length >= 1 && (st.flags && !st.flags._f471QuestCooldown);
+        // [全系统自洽修复 · 报告第 54 节] 原读 state.dailyQuest.quests（全库零写入的幻影路径），
+        // 改读真实容器 state.flags._dailyQuests（daily_quest.js 写入）的统一读取口。
+        var _dq = (typeof getDailyQuests === "function") ? getDailyQuests(st) : [];
+        return _dq.length >= 1 && (st.flags && !st.flags._f471QuestCooldown);
       },
       choices: [
         { text: "🎯 优先完成最难的目标", hint: "心智+3,全技能XP+1", apply: function (st) {
@@ -262843,8 +262953,8 @@ if (typeof window !== "undefined") {
       ],
       text: function (st) {
         if (!st) return null;
-        var n = st.dailyQuest && st.dailyQuest.quests ? st.dailyQuest.quests.length : 0;
-        return "你看了看今天的目标清单——" + n + "个待完成的目标在等着你。先做哪个？";
+        var _dq = (typeof getDailyQuests === "function") ? getDailyQuests(st) : [];
+        return "你看了看今天的目标清单——" + _dq.length + "个待完成的目标在等着你。先做哪个？";
       }
     }
   ];
@@ -263184,8 +263294,10 @@ if (typeof window !== "undefined") {
       triggers: { minDay: 20, interval: 30, maxRepeats: 6, excludeFlags: ["_f485QuestCooldown"] },
       conditions: function (st) {
         if (st.gameOver) return false;
-        if (!st.dailyQuest || !st.dailyQuest.quests) return false;
-        return st.dailyQuest.quests.length >= 1 && (st.flags && !st.flags._f485QuestCooldown);
+        // [全系统自洽修复 · 报告第 54 节] 原读 state.dailyQuest.quests（全库零写入的幻影路径），
+        // 改读真实容器 state.flags._dailyQuests（daily_quest.js 写入）的统一读取口。
+        var _dq = (typeof getDailyQuests === "function") ? getDailyQuests(st) : [];
+        return _dq.length >= 1 && (st.flags && !st.flags._f485QuestCooldown);
       },
       choices: [
         { text: "🎯 优先完成", hint: "心智+3,全技能XP+1", apply: function (st) {
@@ -263204,8 +263316,8 @@ if (typeof window !== "undefined") {
       ],
       text: function (st) {
         if (!st) return null;
-        var n = st.dailyQuest && st.dailyQuest.quests ? st.dailyQuest.quests.length : 0;
-        return "你查看了今天的任务面板——" + n + "个待完成的目标在等着你。先做哪个？";
+        var _dq = (typeof getDailyQuests === "function") ? getDailyQuests(st) : [];
+        return "你查看了今天的任务面板——" + _dq.length + "个待完成的目标在等着你。先做哪个？";
       }
     }
   ];
@@ -264559,8 +264671,10 @@ if (typeof window !== "undefined") {
       triggers: { minDay: 100, interval: 150, maxRepeats: 3, excludeFlags: ["_b483ChapterCooldown"] },
       conditions: function (st) {
         if (st.gameOver) return false;
-        if (!st.storyChapters || !st.storyChapters.current) return false;
-        return (st.flags && !st.flags._b483ChapterCooldown);
+        // [全系统自洽修复 · 报告第 54 节] 原读 state.storyChapters.current（幻影路径，全库零写入），
+        // 改读章节真实进度的统一读取口（来源 state.flags[STORY_CHAPTERS[i].flag]）。
+        var _c = (st.flags && typeof getActiveChapterInfo === "function") ? getActiveChapterInfo(st) : null;
+        return !!(_c && _c.completedCount >= 1) && (st.flags && !st.flags._b483ChapterCooldown);
       },
       choices: [
         { text: "📖 回顾章节", hint: "心智+4,心情+3", apply: function (st) {
@@ -264579,7 +264693,8 @@ if (typeof window !== "undefined") {
       ],
       text: function (st) {
         if (!st) return null;
-        var chapter = st.storyChapters && st.storyChapters.current ? st.storyChapters.current : "生存";
+        var _c = (st.flags && typeof getActiveChapterInfo === "function") ? getActiveChapterInfo(st) : null;
+        var chapter = (_c && _c.activeChapter) ? _c.activeChapter : "生存";
         return "你回顾了自己的人生——当前章节是「" + chapter + "」。你走到哪了？下一章写什么？";
       }
     }
@@ -269256,8 +269371,10 @@ if (typeof window !== "undefined") {
       triggers: { minDay: 50, interval: 80, maxRepeats: 4, excludeFlags: ["_g464MilestoneCooldown"] },
       conditions: function (st) {
         if (st.gameOver) return false;
-        if (!st.lifeNodes || !st.lifeNodes.completed) return false;
-        return st.lifeNodes.completed.length >= 1 && (st.flags && !st.flags._g464MilestoneCooldown);
+        // [全系统自洽修复 · 报告第 54 节] 原读 state.lifeNodes.completed（幻影路径，全库零写入），
+        // 改数真实的人生节点 flag（state.flags._lifeNode_*_done）。
+        var _n = (typeof countLifeNodes === "function") ? countLifeNodes(st) : 0;
+        return _n >= 1 && (st.flags && !st.flags._g464MilestoneCooldown);
       },
       choices: [
         { text: "📖 写下感悟", hint: "心智+3,心情+3", apply: function (st) {
@@ -269275,7 +269392,7 @@ if (typeof window !== "undefined") {
       ],
       text: function (st) {
         if (!st) return null;
-        var completed = st.lifeNodes && st.lifeNodes.completed ? st.lifeNodes.completed.length : 0;
+        var completed = (typeof countLifeNodes === "function") ? countLifeNodes(st) : 0;
         return "你回顾了自己的人生轨迹——已经经历了" + completed + "个人生节点。每一个节点都是一次选择，每一次选择都塑造了现在的你。";
       }
     }
@@ -269317,8 +269434,11 @@ if (typeof window !== "undefined") {
       triggers: { minDay: 60, interval: 100, maxRepeats: 3, excludeFlags: ["_g472RibbonUiCooldown"] },
       conditions: function (st) {
         if (st.gameOver) return false;
-        if (!st.lifeRibbons || !st.lifeRibbons.earned) return false;
-        return st.lifeRibbons.earned.length >= 1 && (st.flags && !st.flags._g472RibbonUiCooldown);
+        // [全系统自洽修复 · 报告第 54 节] 原读 state.lifeRibbons.earned（幻影路径，全库零写入）。
+        // 缎带真实存储在 localStorage "__lifeRibbons"（life_ribbon.js recordRibbon 写入，
+        // modal.js:256 / victory.js:289 在结算时调用）。
+        var _n = (typeof getEarnedRibbons === "function") ? getEarnedRibbons().length : 0;
+        return _n >= 1 && (st.flags && !st.flags._g472RibbonUiCooldown);
       },
       choices: [
         { text: "📊 分析缎带模式", hint: "智力+2,心智+2", apply: function (st) {
@@ -269336,7 +269456,7 @@ if (typeof window !== "undefined") {
       ],
       text: function (st) {
         if (!st) return null;
-        var n = st.lifeRibbons && st.lifeRibbons.earned ? st.lifeRibbons.earned.length : 0;
+        var n = (typeof getEarnedRibbons === "function") ? getEarnedRibbons().length : 0;
         return "你看了看自己的人生缎带——已经获得了" + n + "条缎带。每一条都是你人生故事的注脚。";
       }
     },
@@ -298197,7 +298317,9 @@ var DYNAMIC_HINTS = [
     trigger: function (st) {
       return (
         st.skillBranches &&
-        Object.keys(st.skillBranches).length > 0 &&
+        // [报告第 53 节] 排除 _lastChosen 等下划线元数据键（当前 >0 判断不受影响，
+        //   但保持与 r260/r416 同一口径，避免日后把门槛改成 >=N 时出错）
+        (typeof countChosenBranches === "function" ? countChosenBranches(st) : Object.keys(st.skillBranches).length) > 0 &&
         !st.flags._hint_first_skill_tree
       );
     },
@@ -314904,6 +315026,20 @@ if (typeof window !== "undefined") {
     return picked;
   }
 
+  // ─── 统一读取口（供跨域事件消费）────────────────────────────────
+  // [全系统自洽修复 · 报告第 54 节] 域F 事件读的是 state.dailyQuest.quests，
+  // 而该路径全库零写入（幻影容器）。真实容器是 state.flags._dailyQuests
+  // （generateDailyQuests 写入）。契约对齐：读取方只需 quests.length >= 1，
+  // 与键名无关 → 直接指向真实容器。
+  // 注意：缓存按天失效，避免把昨天的目标当成今天的。
+  function getDailyQuests(state) {
+    if (!state || !state.flags) return [];
+    var stored = state.flags._dailyQuests;
+    if (!stored || !stored.quests || !stored.quests.length) return [];
+    if (state.player && stored.day !== state.player.day) return [];
+    return stored.quests;
+  }
+
   // ─── 渲染：今日目标卡 ──────────────────────────────────────────
   function renderDailyQuestCard(state, parent) {
     if (!state || !state.player) return;
@@ -315190,6 +315326,7 @@ if (typeof window !== "undefined") {
   // ─── 全局挂载 ─────────────────────────────────────────────────
   if (typeof window !== "undefined") {
     window.generateDailyQuests = generateDailyQuests;
+    window.getDailyQuests = getDailyQuests;
     window.renderDailyQuestCard = renderDailyQuestCard;
     window.renderLifeArcStrip = renderLifeArcStrip;
   }

@@ -23,7 +23,8 @@
       conditions: function (st) {
         if (st.gameOver) return false;
         if (!st.skillBranches || !st.relationships) return false;
-        var branchCount = Object.keys(st.skillBranches).length;
+        // [报告第 53 节] 用 countChosenBranches 排除 _lastChosen 等下划线元数据键
+        var branchCount = typeof countChosenBranches === "function" ? countChosenBranches(st) : Object.keys(st.skillBranches).length;
         if (branchCount < 1) return false;
         var metNpcs = 0;
         for (var id in st.relationships) {

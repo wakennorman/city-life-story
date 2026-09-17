@@ -534,33 +534,75 @@ function getStoryChapterChecklist(state) {
   });
   return items.slice(0, 3);
 }
+
+// ====== 章节真实进度的统一读取口 ======
+// [全系统自洽修复 · 报告第 54 节]
+// 真实来源：state.flags[STORY_CHAPTERS[i].flag]（_triggerChapter 写入，如 _ch1Done/_ch3Done）。
+// 反例（本轮发现）：R1047 新增的三个 helper（getChapterEconomicData /
+// getChapterNarrativeData / getChapterUIData）读的是 state.flags._storyChapters，
+// 而该容器**全库零写入** → 三个 helper 恒返回 null / 0，且全库零消费者。
+// 本函数把「当前章节」的语义收敛到一处，供上述 helper 与跨域事件共用。
+function getActiveChapterInfo(state) {
+  if (!state || !state.flags || !state.player) return null;
+  if (typeof getStoryChapterProgress !== "function") return null;
+  var p = getStoryChapterProgress(state) || {};
+  var total = p.total || 0;
+  var active = null;
+  if (p.nextChapter && p.nextChapter.title) {
+    // 尚有待完成章节 → 当前所处章节即「下一个待完成」
+    active = p.nextChapter.title;
+  } else if (total > 0) {
+    // 三章已全部完成 → 定格在最后一章（尾声）
+    active = STORY_CHAPTERS[total - 1].title || STORY_CHAPTERS[total - 1].id;
+  }
+  return {
+    completedCount: p.current || 0,
+    totalChapters: total,
+    activeChapter: active,
+    allCompleted: !p.nextChapter,
+    nextChapter: p.nextChapter || null,
+    lifeRoute: p.lifeRoute || null,
+  };
+}
+
 if (typeof window !== "undefined") {
   window.STORY_CHAPTERS = STORY_CHAPTERS;
   window.checkStoryChapter = checkStoryChapter;
   window.getStoryChapterProgress = getStoryChapterProgress;
   window.getStoryChapterChecklist = getStoryChapterChecklist;
+  window.getActiveChapterInfo = getActiveChapterInfo;
   // [全系统自洽修复] 域G R746b A类#2: 导出年龄叙事兑现函数（函数声明提升,直接引用安全;严禁wrapper——顶层声明本身即全局绑定,wrapper覆盖后会自调递归爆栈）
   window.getLifeStageNarrativeEvent = getLifeStageNarrativeEvent;
   window.runLifeStageNarrative = runLifeStageNarrative;
 
   // [R1047 域G 联动增强 G→A]: 章节经济数据 — 故事章节进展数据供经济系统
+  // [全系统自洽修复 · 报告第 54 节] 原读零写入容器 state.flags._storyChapters（恒返回 0），
+  // 改读 getActiveChapterInfo 的真实进度。
   window.getChapterEconomicData = function (state) {
-    if (!state || !state.flags) return null;
-    var _chapters = state.flags._storyChapters || [];
-    return { completedChapters: _chapters.filter(function (c) { return c.completed; }).length, totalChapters: _chapters.length };
+    var _c = getActiveChapterInfo(state);
+    if (!_c) return null;
+    return { completedChapters: _c.completedCount, totalChapters: _c.totalChapters };
   };
 
   // [R1047 域G 联动增强 G→B]: 章节叙事数据 — 故事章节数据供叙事系统
+  // [全系统自洽修复 · 报告第 54 节] 同上：原读零写入容器（恒返回 null）。
   window.getChapterNarrativeData = function (state) {
-    if (!state || !state.flags || !state.flags._storyChapters) return null;
-    var _active = state.flags._storyChapters.find(function (c) { return !c.completed; });
-    return { activeChapter: _active ? _active.title || _active.id : null, completedCount: state.flags._storyChapters.filter(function (c) { return c.completed; }).length };
+    var _c = getActiveChapterInfo(state);
+    if (!_c) return null;
+    return { activeChapter: _c.activeChapter, completedCount: _c.completedCount };
   };
 
   // [R1047 域G 联动增强 G→F]: 章节UI数据 — 故事章节数据供UI渲染
+  // [全系统自洽修复 · 报告第 54 节] 同上：原读零写入容器（恒返回 null）。
   window.getChapterUIData = function (state) {
-    if (!state || !state.flags || !state.flags._storyChapters) return null;
-    return { chapters: state.flags._storyChapters.map(function (c) { return { id: c.id, title: c.title || c.id, completed: !!c.completed }; }) };
+    if (!state || !state.flags) return null;
+    var total = STORY_CHAPTERS.length;
+    var out = [];
+    for (var i = 0; i < total; i++) {
+      var c = STORY_CHAPTERS[i];
+      out.push({ id: c.id, title: c.title || c.id, completed: !!state.flags[c.flag] });
+    }
+    return { chapters: out };
   };
 }
 // [R720 域G 联动增强 G→B]: 人生阶段叙事事件

@@ -84,8 +84,10 @@
       triggers: { minDay: 20, interval: 30, maxRepeats: 6, excludeFlags: ["_f485QuestCooldown"] },
       conditions: function (st) {
         if (st.gameOver) return false;
-        if (!st.dailyQuest || !st.dailyQuest.quests) return false;
-        return st.dailyQuest.quests.length >= 1 && (st.flags && !st.flags._f485QuestCooldown);
+        // [全系统自洽修复 · 报告第 54 节] 原读 state.dailyQuest.quests（全库零写入的幻影路径），
+        // 改读真实容器 state.flags._dailyQuests（daily_quest.js 写入）的统一读取口。
+        var _dq = (typeof getDailyQuests === "function") ? getDailyQuests(st) : [];
+        return _dq.length >= 1 && (st.flags && !st.flags._f485QuestCooldown);
       },
       choices: [
         { text: "🎯 优先完成", hint: "心智+3,全技能XP+1", apply: function (st) {
@@ -104,8 +106,8 @@
       ],
       text: function (st) {
         if (!st) return null;
-        var n = st.dailyQuest && st.dailyQuest.quests ? st.dailyQuest.quests.length : 0;
-        return "你查看了今天的任务面板——" + n + "个待完成的目标在等着你。先做哪个？";
+        var _dq = (typeof getDailyQuests === "function") ? getDailyQuests(st) : [];
+        return "你查看了今天的任务面板——" + _dq.length + "个待完成的目标在等着你。先做哪个？";
       }
     }
   ];

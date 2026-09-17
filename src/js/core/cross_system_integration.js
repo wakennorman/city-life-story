@@ -410,10 +410,26 @@ function checkCrossSystemEvents(state) {
   processLinkageRules(state);
 }
 
+// ====== 人生节点计数（统一读取口）======
+// [全系统自洽修复 · 报告第 54 节] 域G 事件读的是 state.lifeNodes.completed（幻影路径，
+// 全库零写入）。人生节点的真实存储是 state.flags._lifeNode_*_done 一组布尔 flag
+// （本文件 LINKAGE_RULES 与本文件 85/107/130/147/162 行定义）。
+// 契约对齐：读取方只需「已完成节点数 >= 1」→ 数一下带该前缀且为真的 flag 即可。
+function countLifeNodes(state) {
+  if (!state || !state.flags) return 0;
+  var n = 0;
+  for (var k in state.flags) {
+    if (!Object.prototype.hasOwnProperty.call(state.flags, k)) continue;
+    if (k.indexOf("_lifeNode_") === 0 && k.slice(-5) === "_done" && state.flags[k]) n++;
+  }
+  return n;
+}
+
 // ====== 全局挂载 ======
 if (typeof window !== "undefined") {
   window.LINKAGE_RULES = LINKAGE_RULES;
   window.processLinkageRules = processLinkageRules;
+  window.countLifeNodes = countLifeNodes;
   window.checkLifeNodeMedicalEvents = checkLifeNodeMedicalEvents;
   window.checkLifeNodeNarrativeFeedback = checkLifeNodeNarrativeFeedback;
   window.checkTravelMedicalEvents = checkTravelMedicalEvents;

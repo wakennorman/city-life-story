@@ -79,8 +79,10 @@
       triggers: { minDay: 100, interval: 150, maxRepeats: 3, excludeFlags: ["_b483ChapterCooldown"] },
       conditions: function (st) {
         if (st.gameOver) return false;
-        if (!st.storyChapters || !st.storyChapters.current) return false;
-        return (st.flags && !st.flags._b483ChapterCooldown);
+        // [全系统自洽修复 · 报告第 54 节] 原读 state.storyChapters.current（幻影路径，全库零写入），
+        // 改读章节真实进度的统一读取口（来源 state.flags[STORY_CHAPTERS[i].flag]）。
+        var _c = (st.flags && typeof getActiveChapterInfo === "function") ? getActiveChapterInfo(st) : null;
+        return !!(_c && _c.completedCount >= 1) && (st.flags && !st.flags._b483ChapterCooldown);
       },
       choices: [
         { text: "📖 回顾章节", hint: "心智+4,心情+3", apply: function (st) {
@@ -99,7 +101,8 @@
       ],
       text: function (st) {
         if (!st) return null;
-        var chapter = st.storyChapters && st.storyChapters.current ? st.storyChapters.current : "生存";
+        var _c = (st.flags && typeof getActiveChapterInfo === "function") ? getActiveChapterInfo(st) : null;
+        var chapter = (_c && _c.activeChapter) ? _c.activeChapter : "生存";
         return "你回顾了自己的人生——当前章节是「" + chapter + "」。你走到哪了？下一章写什么？";
       }
     }

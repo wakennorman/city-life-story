@@ -997,6 +997,16 @@ function chooseSkillBranch(skillKey, branchId, state) {
   state.resources.cash = Math.max(0, (state.resources.cash || 0) - 200);
   if (!state.skillBranches) state.skillBranches = {}; // [全系统自洽修复] 域C A类: skillBranches 守卫
   state.skillBranches[skillKey] = branchId;
+  // [全系统自洽修复 · 报告第 53 节] 记录「最近选择的分支」供跨域事件消费
+  //   · domain_c_linkage_r364/r370/r374/r376 读 _lastChosen（值 = 分支 ID）
+  //   · domain_c_linkage_r173 读 _lastChosenForJob + _lastChosenDay
+  //     （语义：选分支后满 30 天 → 触发"分支职业机会"事件）
+  //   这三个键此前**全库零写入** → 8 个事件永不触发。
+  //   ★ 它们是元数据，不参与「已选分支数」统计 ——
+  //     countChosenBranches() 会过滤掉下划线开头的键（见本文件）。
+  state.skillBranches._lastChosen = branchId;
+  state.skillBranches._lastChosenForJob = branchId;
+  state.skillBranches._lastChosenDay = state.player.day;
 
   StateManager.addMessage(
     "🎯 确定了" +
@@ -1039,6 +1049,11 @@ function switchSkillBranch(skillKey, newBranchId, state) {
   state.player.actionPoints -= 30;
   state.resources.cash = Math.max(0, (state.resources.cash || 0) - 500);
   state.skillBranches[skillKey] = newBranchId;
+  // [全系统自洽修复 · 报告第 53 节] 换分支同样刷新「最近选择」三键
+  //   （否则 _lastChosen 会停留在旧分支，让下游事件读到已弃用的分支 ID）
+  state.skillBranches._lastChosen = newBranchId;
+  state.skillBranches._lastChosenForJob = newBranchId;
+  state.skillBranches._lastChosenDay = state.player.day;
 
   StateManager.addMessage(
     "🔄 重新选择了" +
@@ -1355,6 +1370,37 @@ function getSkillTreeVisualData(state) {
   return data;
 }
 
+/**
+ * [全系统自洽修复 · 报告第 53 节] 统计「已选分支数」
+ *
+ * 【为什么需要这个函数】
+ *   state.skillBranches 是 `{ 技能名: 分支ID }` 的动态字典，但同容器里还挂着
+ *   以下划线开头的**元数据键**：
+ *     _lastChosen / _lastChosenForJob / _lastChosenDay
+ *   （由 chooseSkillBranch / switchSkillBranch 写入，供跨域事件消费）
+ *
+ *   原先三处统计直接写 `Object.keys(state.skillBranches).length`，
+ *   在补上元数据键之后会把它们也算成"选过的分支" → 计数虚高 1~3，
+ *   使 `>= N` 门槛提前达成。
+ *
+ * 【实现】只统计不以 `_` 开头的键。
+ *   用 for...in + hasOwnProperty 而非 Object.keys().filter()，避免额外数组分配
+ *   （此函数在事件 conditions 里被频繁调用）。
+ *
+ * @param {Object} state
+ * @returns {number} 已选分支数（不含元数据键）
+ */
+function countChosenBranches(state) {
+  if (!state || !state.skillBranches) return 0;
+  var n = 0;
+  for (var k in state.skillBranches) {
+    if (!Object.prototype.hasOwnProperty.call(state.skillBranches, k)) continue;
+    if (k.charAt(0) === "_") continue;   // 跳过 _lastChosen 等元数据键
+    n++;
+  }
+  return n;
+}
+
 // [R724 第三轮 域C 联动增强 C→A]: 技能市场价值指数
 function getSkillMarketIndex(skillId) {
   if (!skillId) return 0;
@@ -1367,6 +1413,8 @@ if (typeof window !== "undefined") {
   window.getAvailableBranches = getAvailableBranches;
   window.getTalentNodeDef = getTalentNodeDef;
   window.canChooseBranch = canChooseBranch;
+  // [报告第 53 节] 已选分支数（排除 _lastChosen 等下划线元数据键）
+  window.countChosenBranches = countChosenBranches;
   window.switchSkillBranch = switchSkillBranch;
   window.canActivateTalentNode = canActivateTalentNode;
   window.getJobBurnout = getJobBurnout;

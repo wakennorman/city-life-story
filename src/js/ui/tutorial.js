@@ -1762,7 +1762,9 @@ var DYNAMIC_HINTS = [
     trigger: function (st) {
       return (
         st.skillBranches &&
-        Object.keys(st.skillBranches).length > 0 &&
+        // [报告第 53 节] 排除 _lastChosen 等下划线元数据键（当前 >0 判断不受影响，
+        //   但保持与 r260/r416 同一口径，避免日后把门槛改成 >=N 时出错）
+        (typeof countChosenBranches === "function" ? countChosenBranches(st) : Object.keys(st.skillBranches).length) > 0 &&
         !st.flags._hint_first_skill_tree
       );
     },

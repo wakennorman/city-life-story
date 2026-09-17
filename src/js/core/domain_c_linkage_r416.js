@@ -67,7 +67,8 @@
         var desc = "技能发展正在稳步前进";
         var insight = "选择合适的分支方向,能让技能发挥最大价值";
         if (typeof SKILL_BRANCHES !== "undefined" && st.skillBranches) {
-          var chosen = Object.keys(st.skillBranches).length;
+          // [报告第 53 节] 用 countChosenBranches 排除 _lastChosen 等下划线元数据键
+          var chosen = typeof countChosenBranches === "function" ? countChosenBranches(st) : Object.keys(st.skillBranches).length;
           var total = Object.keys(SKILL_BRANCHES).length;
           if (chosen > 0) {
             desc = "你已在" + total + "个技能领域中选择了" + chosen + "个发展方向";

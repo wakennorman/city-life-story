@@ -21,8 +21,11 @@
       triggers: { minDay: 60, interval: 100, maxRepeats: 3, excludeFlags: ["_g472RibbonUiCooldown"] },
       conditions: function (st) {
         if (st.gameOver) return false;
-        if (!st.lifeRibbons || !st.lifeRibbons.earned) return false;
-        return st.lifeRibbons.earned.length >= 1 && (st.flags && !st.flags._g472RibbonUiCooldown);
+        // [全系统自洽修复 · 报告第 54 节] 原读 state.lifeRibbons.earned（幻影路径，全库零写入）。
+        // 缎带真实存储在 localStorage "__lifeRibbons"（life_ribbon.js recordRibbon 写入，
+        // modal.js:256 / victory.js:289 在结算时调用）。
+        var _n = (typeof getEarnedRibbons === "function") ? getEarnedRibbons().length : 0;
+        return _n >= 1 && (st.flags && !st.flags._g472RibbonUiCooldown);
       },
       choices: [
         { text: "📊 分析缎带模式", hint: "智力+2,心智+2", apply: function (st) {
@@ -40,7 +43,7 @@
       ],
       text: function (st) {
         if (!st) return null;
-        var n = st.lifeRibbons && st.lifeRibbons.earned ? st.lifeRibbons.earned.length : 0;
+        var n = (typeof getEarnedRibbons === "function") ? getEarnedRibbons().length : 0;
         return "你看了看自己的人生缎带——已经获得了" + n + "条缎带。每一条都是你人生故事的注脚。";
       }
     },
