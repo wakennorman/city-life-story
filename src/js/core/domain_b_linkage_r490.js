@@ -21,8 +21,8 @@
       triggers: { minDay: 40, interval: 60, maxRepeats: 5, excludeFlags: ["_b490WallCooldown"] },
       conditions: function (st) {
         if (st.gameOver) return false;
-        if (!st.stats || !st.stats.eventHistory) return false;
-        return Object.keys(st.stats.eventHistory).length >= 3 && (st.flags && !st.flags._b490WallCooldown);
+        if ((typeof getEventsTriggered === "function" ? getEventsTriggered(st) : 0) < 1) return false;
+        return (typeof getEventsTriggered === "function" ? getEventsTriggered(st) : 0) >= 3 && (st.flags && !st.flags._b490WallCooldown);
       },
       choices: [
         { text: "📖 回顾历程", hint: "心智+3,心情+3", apply: function (st) {
@@ -39,7 +39,7 @@
       ],
       text: function (st) {
         if (!st) return null;
-        var count = st.stats && st.stats.eventHistory ? Object.keys(st.stats.eventHistory).length : 0;
+        var count = (typeof getEventsTriggered === "function") ? getEventsTriggered(st) : 0;
         return "你制作了事件记忆墙——已经经历了" + count + "种不同的事件。每一个都是你人生故事的素材。";
       }
     },
@@ -50,8 +50,8 @@
       triggers: { minDay: 80, interval: 100, maxRepeats: 3, excludeFlags: ["_b490NarrEvolveCooldown"] },
       conditions: function (st) {
         if (st.gameOver) return false;
-        if (!st.stats || !st.stats.eventHistory) return false;
-        return Object.keys(st.stats.eventHistory).length >= 6 && (st.flags && !st.flags._b490NarrEvolveCooldown);
+        if ((typeof getEventsTriggered === "function" ? getEventsTriggered(st) : 0) < 1) return false;
+        return (typeof getEventsTriggered === "function" ? getEventsTriggered(st) : 0) >= 6 && (st.flags && !st.flags._b490NarrEvolveCooldown);
       },
       choices: [
         { text: "📊 分析演变", hint: "智力+3,心智+2", apply: function (st) {

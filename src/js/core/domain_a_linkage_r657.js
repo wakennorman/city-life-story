@@ -55,7 +55,7 @@
       text: function (st) {
         if (!st) return null;
         var day = (st.player && st.player.day) || 0;
-        var totalEarned = (st.stats && st.stats.totalEarned) || 0;
+        var totalEarned = (st.stats && st.resources.totalEarned) || 0;
         return "你开始用数据来书写自己的人生篇章——" + day + "天,赚了¥" + totalEarned + "。'用数据书写人生篇章。'";
       }
     },

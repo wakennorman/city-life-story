@@ -53,7 +53,7 @@
         if (!st || !st.player || st.gameOver) return false;
         if (st.flags && st.flags._e941SkillInvestCd) return false;
         if (!st.investment) return false;
-        return ((st.investment.totalProfit || 0) + (st.investment.totalStockProfit || 0)) >= 1500 && st.player.day >= 35;
+        return (st.investment._totalInvestmentProfit || 0) >= 1500 && st.player.day >= 35;
       },
       probability: 0.04, repeatable: true,
       choices: [
@@ -81,7 +81,7 @@
         if (!st || !st.player || st.gameOver) return false;
         if (st.flags && st.flags._e941SocialCd) return false;
         if (!st.relationships || !st.investment) return false;
-        return ((st.investment.totalProfit || 0) + (st.investment.totalStockProfit || 0)) >= 4000 && st.player.day >= 55;
+        return (st.investment._totalInvestmentProfit || 0) >= 4000 && st.player.day >= 55;
       },
       probability: 0.04, repeatable: true,
       choices: [

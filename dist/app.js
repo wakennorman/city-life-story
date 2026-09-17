@@ -264373,8 +264373,8 @@ if (typeof window !== "undefined") {
       triggers: { minDay: 45, interval: 80, maxRepeats: 4, excludeFlags: ["_b461DataPatternCooldown"] },
       conditions: function (st) {
         if (st.gameOver) return false;
-        if (!st.stats || !st.stats.eventHistory) return false;
-        return Object.keys(st.stats.eventHistory).length >= 3 && (st.flags && !st.flags._b461DataPatternCooldown);
+        if ((typeof getEventsTriggered === "function" ? getEventsTriggered(st) : 0) < 1) return false;
+        return (typeof getEventsTriggered === "function" ? getEventsTriggered(st) : 0) >= 3 && (st.flags && !st.flags._b461DataPatternCooldown);
       },
       choices: [
         { text: "📈 分析高频事件", hint: "智力+2,心智+2", apply: function (st) {
@@ -264390,7 +264390,7 @@ if (typeof window !== "undefined") {
       ],
       text: function (st) {
         if (!st) return null;
-        var count = st.stats && st.stats.eventHistory ? Object.keys(st.stats.eventHistory).length : 0;
+        var count = (typeof getEventsTriggered === "function") ? getEventsTriggered(st) : 0;
         return "你回顾了这段时间的经历——已经触发过" + count + "种不同的事件。每一种经历都在塑造你的人生轨迹。";
       }
     },
@@ -264401,7 +264401,7 @@ if (typeof window !== "undefined") {
       triggers: { minDay: 60, interval: 100, maxRepeats: 3, excludeFlags: ["_b461FriendshipCooldown"] },
       conditions: function (st) {
         if (st.gameOver) return false;
-        if (!st.stats || !st.stats.eventHistory) return false;
+        if ((typeof getEventsTriggered === "function" ? getEventsTriggered(st) : 0) < 1) return false;
         return !!firstMetNpc(st) && (st.flags && !st.flags._b461FriendshipCooldown);
       },
       choices: [
@@ -264494,8 +264494,8 @@ if (typeof window !== "undefined") {
       triggers: { minDay: 50, interval: 90, maxRepeats: 3, excludeFlags: ["_b469CatalystCooldown"] },
       conditions: function (st) {
         if (st.gameOver) return false;
-        if (!st.stats || !st.stats.eventHistory) return false;
-        return Object.keys(st.stats.eventHistory).length >= 5 && (st.flags && !st.flags._b469CatalystCooldown);
+        if ((typeof getEventsTriggered === "function" ? getEventsTriggered(st) : 0) < 1) return false;
+        return (typeof getEventsTriggered === "function" ? getEventsTriggered(st) : 0) >= 5 && (st.flags && !st.flags._b469CatalystCooldown);
       },
       choices: [
         { text: "🎯 深耕新方向", hint: "最高技能XP+6,心智+2", apply: function (st) {
@@ -264525,8 +264525,8 @@ if (typeof window !== "undefined") {
       triggers: { minDay: 70, interval: 100, maxRepeats: 3, excludeFlags: ["_b469ImpactCooldown"] },
       conditions: function (st) {
         if (st.gameOver) return false;
-        if (!st.stats || !st.stats.eventHistory) return false;
-        return Object.keys(st.stats.eventHistory).length >= 4 && (st.flags && !st.flags._b469ImpactCooldown);
+        if ((typeof getEventsTriggered === "function" ? getEventsTriggered(st) : 0) < 1) return false;
+        return (typeof getEventsTriggered === "function" ? getEventsTriggered(st) : 0) >= 4 && (st.flags && !st.flags._b469ImpactCooldown);
       },
       choices: [
         { text: "📖 写进回忆录", hint: "心智+4,心情+3", apply: function (st) {
@@ -264553,8 +264553,8 @@ if (typeof window !== "undefined") {
       triggers: { minDay: 90, interval: 120, maxRepeats: 2, excludeFlags: ["_b469WebCooldown"] },
       conditions: function (st) {
         if (st.gameOver) return false;
-        if (!st.stats || !st.stats.eventHistory) return false;
-        return Object.keys(st.stats.eventHistory).length >= 8 && (st.flags && !st.flags._b469WebCooldown);
+        if ((typeof getEventsTriggered === "function" ? getEventsTriggered(st) : 0) < 1) return false;
+        return (typeof getEventsTriggered === "function" ? getEventsTriggered(st) : 0) >= 8 && (st.flags && !st.flags._b469WebCooldown);
       },
       choices: [
         { text: "🔗 寻找关联", hint: "智力+3,心智+2", apply: function (st) {
@@ -264571,7 +264571,7 @@ if (typeof window !== "undefined") {
       ],
       text: function (st) {
         if (!st) return null;
-        var count = st.stats && st.stats.eventHistory ? Object.keys(st.stats.eventHistory).length : 0;
+        var count = (typeof getEventsTriggered === "function") ? getEventsTriggered(st) : 0;
         return "你发现" + count + "个不同事件之间有着微妙的联系——看似孤立的故事，实际上编织成了一张人生的网。";
       }
     }
@@ -264613,8 +264613,8 @@ if (typeof window !== "undefined") {
       triggers: { minDay: 40, interval: 60, maxRepeats: 5, excludeFlags: ["_b483MemoryUiCooldown"] },
       conditions: function (st) {
         if (st.gameOver) return false;
-        if (!st.stats || !st.stats.eventHistory) return false;
-        return Object.keys(st.stats.eventHistory).length >= 3 && (st.flags && !st.flags._b483MemoryUiCooldown);
+        if ((typeof getEventsTriggered === "function" ? getEventsTriggered(st) : 0) < 1) return false;
+        return (typeof getEventsTriggered === "function" ? getEventsTriggered(st) : 0) >= 3 && (st.flags && !st.flags._b483MemoryUiCooldown);
       },
       choices: [
         { text: "📖 制作记忆墙", hint: "心智+3,心情+3", apply: function (st) {
@@ -264631,7 +264631,7 @@ if (typeof window !== "undefined") {
       ],
       text: function (st) {
         if (!st) return null;
-        var count = st.stats && st.stats.eventHistory ? Object.keys(st.stats.eventHistory).length : 0;
+        var count = (typeof getEventsTriggered === "function") ? getEventsTriggered(st) : 0;
         return "你回顾了自己经历过的" + count + "种事件——每一个都是你人生故事的素材。";
       }
     },
@@ -264642,8 +264642,8 @@ if (typeof window !== "undefined") {
       triggers: { minDay: 80, interval: 120, maxRepeats: 3, excludeFlags: ["_b483StoryWebCooldown"] },
       conditions: function (st) {
         if (st.gameOver) return false;
-        if (!st.stats || !st.stats.eventHistory) return false;
-        return Object.keys(st.stats.eventHistory).length >= 8 && (st.flags && !st.flags._b483StoryWebCooldown);
+        if ((typeof getEventsTriggered === "function" ? getEventsTriggered(st) : 0) < 1) return false;
+        return (typeof getEventsTriggered === "function" ? getEventsTriggered(st) : 0) >= 8 && (st.flags && !st.flags._b483StoryWebCooldown);
       },
       choices: [
         { text: "🔗 寻找关联", hint: "智力+3,心智+2", apply: function (st) {
@@ -264660,7 +264660,7 @@ if (typeof window !== "undefined") {
       ],
       text: function (st) {
         if (!st) return null;
-        var count = st.stats && st.stats.eventHistory ? Object.keys(st.stats.eventHistory).length : 0;
+        var count = (typeof getEventsTriggered === "function") ? getEventsTriggered(st) : 0;
         return "你发现" + count + "个不同事件之间有着微妙的联系——看似孤立的故事，实际上编织成了一张人生的网。";
       }
     },
@@ -264864,8 +264864,8 @@ if (typeof window !== "undefined") {
       triggers: { minDay: 40, interval: 60, maxRepeats: 5, excludeFlags: ["_b490WallCooldown"] },
       conditions: function (st) {
         if (st.gameOver) return false;
-        if (!st.stats || !st.stats.eventHistory) return false;
-        return Object.keys(st.stats.eventHistory).length >= 3 && (st.flags && !st.flags._b490WallCooldown);
+        if ((typeof getEventsTriggered === "function" ? getEventsTriggered(st) : 0) < 1) return false;
+        return (typeof getEventsTriggered === "function" ? getEventsTriggered(st) : 0) >= 3 && (st.flags && !st.flags._b490WallCooldown);
       },
       choices: [
         { text: "📖 回顾历程", hint: "心智+3,心情+3", apply: function (st) {
@@ -264882,7 +264882,7 @@ if (typeof window !== "undefined") {
       ],
       text: function (st) {
         if (!st) return null;
-        var count = st.stats && st.stats.eventHistory ? Object.keys(st.stats.eventHistory).length : 0;
+        var count = (typeof getEventsTriggered === "function") ? getEventsTriggered(st) : 0;
         return "你制作了事件记忆墙——已经经历了" + count + "种不同的事件。每一个都是你人生故事的素材。";
       }
     },
@@ -264893,8 +264893,8 @@ if (typeof window !== "undefined") {
       triggers: { minDay: 80, interval: 100, maxRepeats: 3, excludeFlags: ["_b490NarrEvolveCooldown"] },
       conditions: function (st) {
         if (st.gameOver) return false;
-        if (!st.stats || !st.stats.eventHistory) return false;
-        return Object.keys(st.stats.eventHistory).length >= 6 && (st.flags && !st.flags._b490NarrEvolveCooldown);
+        if ((typeof getEventsTriggered === "function" ? getEventsTriggered(st) : 0) < 1) return false;
+        return (typeof getEventsTriggered === "function" ? getEventsTriggered(st) : 0) >= 6 && (st.flags && !st.flags._b490NarrEvolveCooldown);
       },
       choices: [
         { text: "📊 分析演变", hint: "智力+3,心智+2", apply: function (st) {
@@ -317224,7 +317224,7 @@ if (typeof window !== "undefined") {
       conditions: function (st) {
         if (st.gameOver) return false;
         if (!st.flags || st.flags._g647CareerDone) return false;
-        return st.stats && (st.stats.totalEarned || 0) >= 80000;
+        return st.stats && (st.resources.totalEarned || 0) >= 80000;
       },
       choices: [
         { text: "📊 复盘职业", hint: "管理XP+5,智力+3", apply: function (st) {
@@ -317242,7 +317242,7 @@ if (typeof window !== "undefined") {
       ],
       text: function (st) {
         if (!st) return null;
-        var totalEarned = (st.stats && st.stats.totalEarned) || 0;
+        var totalEarned = (st.stats && st.resources.totalEarned) || 0;
         return "你开始用生命周期的视角来看待职业发展——累计赚取¥" + totalEarned + "。'职业发展如人生,有起有落,关键在于持续成长。'";
       }
     }
@@ -322401,7 +322401,7 @@ if (typeof window !== "undefined") {
       text: function (st) {
         if (!st) return null;
         var day = (st.player && st.player.day) || 0;
-        var totalEarned = (st.stats && st.stats.totalEarned) || 0;
+        var totalEarned = (st.stats && st.resources.totalEarned) || 0;
         return "你开始用数据来理解自己的城市生活——" + day + "天,赚了¥" + totalEarned + "。'数字背后,是一个真实的人生故事。'";
       }
     },
@@ -322534,7 +322534,7 @@ if (typeof window !== "undefined") {
       text: function (st) {
         if (!st) return null;
         var day = (st.player && st.player.day) || 0;
-        var totalEarned = (st.stats && st.stats.totalEarned) || 0;
+        var totalEarned = (st.stats && st.resources.totalEarned) || 0;
         return "你开始用数据全面认识自己——" + day + "天,赚了¥" + totalEarned + ",认识" + metNpcsR641(st).length + "位朋友。'量化自我,是成长的第一步。'";
       }
     },
@@ -322667,7 +322667,7 @@ if (typeof window !== "undefined") {
       text: function (st) {
         if (!st) return null;
         var day = (st.player && st.player.day) || 0;
-        var totalEarned = (st.stats && st.stats.totalEarned) || 0;
+        var totalEarned = (st.stats && st.resources.totalEarned) || 0;
         return "你开始用数据来讲述自己的人生故事——" + day + "天,赚了¥" + totalEarned + "。'数据是事实,故事是意义。'";
       }
     },
@@ -322974,7 +322974,7 @@ if (typeof window !== "undefined") {
       text: function (st) {
         if (!st) return null;
         var day = (st.player && st.player.day) || 0;
-        var totalEarned = (st.stats && st.stats.totalEarned) || 0;
+        var totalEarned = (st.stats && st.resources.totalEarned) || 0;
         return "你开始用数据来书写自己的人生篇章——" + day + "天,赚了¥" + totalEarned + "。'用数据书写人生篇章。'";
       }
     },
@@ -336810,7 +336810,7 @@ if (typeof window !== "undefined") {
       conditions: function (st) {
         if (st.gameOver) return false;
         if (!st.flags || st.flags._c643WealthDone) return false;
-        return st.stats && (st.stats.totalEarned || 0) >= 100000;
+        return st.stats && (st.resources.totalEarned || 0) >= 100000;
       },
       choices: [
         { text: "💰 奖励自己", hint: "心情+8,现金-2000", apply: function (st) {
@@ -336828,7 +336828,7 @@ if (typeof window !== "undefined") {
       ],
       text: function (st) {
         if (!st) return null;
-        var totalEarned = (st.stats && st.stats.totalEarned) || 0;
+        var totalEarned = (st.stats && st.resources.totalEarned) || 0;
         return "你的职业发展达到了一个新的高度——累计赚取¥" + totalEarned + "。'事业有成,是对努力最好的回报。'";
       }
     },
@@ -337074,7 +337074,7 @@ if (typeof window !== "undefined") {
       conditions: function (st) {
         if (st.gameOver) return false;
         if (!st.flags || st.flags._c653WealthDone) return false;
-        return st.stats && (st.stats.totalEarned || 0) >= 150000;
+        return st.stats && (st.resources.totalEarned || 0) >= 150000;
       },
       choices: [
         { text: "💰 奖励自己", hint: "心情+8,现金-3000", apply: function (st) {
@@ -337092,7 +337092,7 @@ if (typeof window !== "undefined") {
       ],
       text: function (st) {
         if (!st) return null;
-        var totalEarned = (st.stats && st.stats.totalEarned) || 0;
+        var totalEarned = (st.stats && st.resources.totalEarned) || 0;
         return "你的职业发展达到了一个新的高度——累计赚取¥" + totalEarned + "。'事业有成,是对努力最好的回报。'";
       }
     },
@@ -363562,7 +363562,7 @@ for(var i=0;i<E.length;i++){var exists=false;for(var j=0;j<RANDOM_EVENTS.length;
       text: function (st) {
         if (!st) return null;
         var day = (st.player && st.player.day) || 0;
-        var totalEarned = (st.stats && st.stats.totalEarned) || 0;
+        var totalEarned = (st.stats && st.resources.totalEarned) || 0;
         return "你开始用数据仪表盘来管理自己的生活——" + day + "天,赚了¥" + totalEarned + "。'一屏看全数据,决策更清晰。'";
       }
     },
@@ -364067,7 +364067,7 @@ for(var i=0;i<E.length;i++){var exists=false;for(var j=0;j<RANDOM_EVENTS.length;
       text: function (st) {
         if (!st) return null;
         var day = (st.player && st.player.day) || 0;
-        var totalEarned = (st.stats && st.stats.totalEarned) || 0;
+        var totalEarned = (st.stats && st.resources.totalEarned) || 0;
         return "你开始用数据仪表盘来管理自己的生活——" + day + "天,赚了¥" + totalEarned + "。'一屏看全数据,决策更清晰。'";
       }
     },
@@ -365848,7 +365848,7 @@ for(var i=0;i<E.length;i++){var exists=false;for(var j=0;j<RANDOM_EVENTS.length;
         if (st.flags && st.flags._e933SkillMotivationCd) return false;
         if (!st.investment) return false;
         // 需要投资盈利
-        var _totalProfit = (st.investment.totalProfit || 0) + (st.investment.totalStockProfit || 0);
+        var _totalProfit = (st.investment._totalInvestmentProfit || 0);
         return _totalProfit >= 2000 && st.player.day >= 40;
       },
       probability: 0.04,
@@ -365903,7 +365903,7 @@ for(var i=0;i<E.length;i++){var exists=false;for(var j=0;j<RANDOM_EVENTS.length;
         if (st.flags && st.flags._e933InvestorSocialCd) return false;
         if (!st.relationships || !st.investment) return false;
         // 需要投资总盈利≥¥5000
-        var _totalProfit2 = (st.investment.totalProfit || 0) + (st.investment.totalStockProfit || 0);
+        var _totalProfit2 = (st.investment._totalInvestmentProfit || 0);
         return _totalProfit2 >= 5000 && st.player.day >= 60;
       },
       probability: 0.04,
@@ -366019,7 +366019,7 @@ for(var i=0;i<E.length;i++){var exists=false;for(var j=0;j<RANDOM_EVENTS.length;
         if (!st || !st.player || st.gameOver) return false;
         if (st.flags && st.flags._e941SkillInvestCd) return false;
         if (!st.investment) return false;
-        return ((st.investment.totalProfit || 0) + (st.investment.totalStockProfit || 0)) >= 1500 && st.player.day >= 35;
+        return (st.investment._totalInvestmentProfit || 0) >= 1500 && st.player.day >= 35;
       },
       probability: 0.04, repeatable: true,
       choices: [
@@ -366047,7 +366047,7 @@ for(var i=0;i<E.length;i++){var exists=false;for(var j=0;j<RANDOM_EVENTS.length;
         if (!st || !st.player || st.gameOver) return false;
         if (st.flags && st.flags._e941SocialCd) return false;
         if (!st.relationships || !st.investment) return false;
-        return ((st.investment.totalProfit || 0) + (st.investment.totalStockProfit || 0)) >= 4000 && st.player.day >= 55;
+        return (st.investment._totalInvestmentProfit || 0) >= 4000 && st.player.day >= 55;
       },
       probability: 0.04, repeatable: true,
       choices: [
@@ -366096,7 +366096,7 @@ choices:[
 {id:"e949_skill_invest_v1",phase:"street",icon:"📚",title:"盈利了，投资自己",
 story:"投资赚了钱，你开始思考怎么用这笔钱创造更大的价值。",
 triggers:{minDay:30,interval:80,maxRepeats:4,excludeFlags:["_e949SkillInvestCd"]},
-conditions:function(st){if(!st||!st.player||st.gameOver)return false;if(st.flags&&st.flags._e949SkillInvestCd)return false;if(!st.investment)return false;return((st.investment.totalProfit||0)+(st.investment.totalStockProfit||0))>=1000&&st.player.day>=30;},
+conditions:function(st){if(!st||!st.player||st.gameOver)return false;if(st.flags&&st.flags._e949SkillInvestCd)return false;if(!st.investment)return false;return(st.investment._totalInvestmentProfit||0)>=1000&&st.player.day>=30;},
 probability:0.04,repeatable:true,
 choices:[
 {text:"📚 投资自己学技能",hint:"智力+8,管理XP+10,置_e949SelfInvestor",apply:function(st){if(!st)return;st.flags=st.flags||{};st.flags._e949SkillInvestCd=true;st.flags._e949SelfInvestor=true;if(st.player)st.player.intelligence=Math.min(100,(st.player.intelligence||50)+8);gx("management",10);if(typeof StateManager!=="undefined")StateManager.addMessage("📚 投资自己学技能——智力+8,管理XP+10。","success");}},
@@ -366105,7 +366105,7 @@ choices:[
 {id:"e949_social_circle_v1",phase:"street",icon:"🤝",title:"投资成功，朋友圈扩大",
 story:"你的投资眼光在朋友圈里传开了，连以前不太熟的人都来请教。",
 triggers:{minDay:50,interval:100,maxRepeats:3,excludeFlags:["_e949SocialCd"]},
-conditions:function(st){if(!st||!st.player||st.gameOver)return false;if(st.flags&&st.flags._e949SocialCd)return false;if(!st.relationships||!st.investment)return false;return((st.investment.totalProfit||0)+(st.investment.totalStockProfit||0))>=3000&&st.player.day>=50;},
+conditions:function(st){if(!st||!st.player||st.gameOver)return false;if(st.flags&&st.flags._e949SocialCd)return false;if(!st.relationships||!st.investment)return false;return(st.investment._totalInvestmentProfit||0)>=3000&&st.player.day>=50;},
 probability:0.04,repeatable:true,
 choices:[
 {text:"🤝 分享投资心得",hint:"魅力+6,好感+3,置_e949Social",apply:function(st){if(!st)return;st.flags=st.flags||{};st.flags._e949SocialCd=true;st.flags._e949Social=true;if(st.player)st.player.charm=Math.min(100,(st.player.charm||50)+6);if(st.relationships&&typeof applyAffinityChange==="function"){var _ids=[];for(var _id in st.relationships){if(st.relationships[_id]&&st.relationships[_id].met)_ids.push(_id)}if(_ids.length>0){var _p=typeof Random!=="undefined"?Random.int(0,_ids.length-1):0;applyAffinityChange(st,_ids[_p],3,"投资心得")}}if(typeof StateManager!=="undefined")StateManager.addMessage("🤝 分享了投资心得——魅力+6。","success");}},
@@ -366131,7 +366131,7 @@ choices:[
 {id:"e957_skill_invest_v1",phase:"street",icon:"📚",title:"盈利了，投资自己",
 story:"投资赚了钱，你思考怎么用这笔钱创造更大的价值。",
 triggers:{minDay:25,interval:70,maxRepeats:4,excludeFlags:["_e957SkillInvestCd"]},
-conditions:function(st){if(!st||!st.player||st.gameOver)return false;if(st.flags&&st.flags._e957SkillInvestCd)return false;if(!st.investment)return false;return((st.investment.totalProfit||0)+(st.investment.totalStockProfit||0))>=800&&st.player.day>=25;},
+conditions:function(st){if(!st||!st.player||st.gameOver)return false;if(st.flags&&st.flags._e957SkillInvestCd)return false;if(!st.investment)return false;return(st.investment._totalInvestmentProfit||0)>=800&&st.player.day>=25;},
 probability:0.04,repeatable:true,
 choices:[
 {text:"📚 投资自己学技能",hint:"智力+6,管理XP+8,置_e957SelfInvestor",apply:function(st){if(!st)return;st.flags=st.flags||{};st.flags._e957SkillInvestCd=true;st.flags._e957SelfInvestor=true;if(st.player)st.player.intelligence=Math.min(100,(st.player.intelligence||50)+6);gx("management",8);if(typeof StateManager!=="undefined")StateManager.addMessage("📚 投资自己学技能——智力+6,管理XP+8。","success");}},
@@ -366140,7 +366140,7 @@ choices:[
 {id:"e957_social_circle_v1",phase:"street",icon:"🤝",title:"投资成功，朋友圈扩大",
 story:"你的投资眼光在朋友圈里传开了，连以前不太熟的人都来请教。",
 triggers:{minDay:45,interval:90,maxRepeats:3,excludeFlags:["_e957SocialCd"]},
-conditions:function(st){if(!st||!st.player||st.gameOver)return false;if(st.flags&&st.flags._e957SocialCd)return false;if(!st.relationships||!st.investment)return false;return((st.investment.totalProfit||0)+(st.investment.totalStockProfit||0))>=2500&&st.player.day>=45;},
+conditions:function(st){if(!st||!st.player||st.gameOver)return false;if(st.flags&&st.flags._e957SocialCd)return false;if(!st.relationships||!st.investment)return false;return(st.investment._totalInvestmentProfit||0)>=2500&&st.player.day>=45;},
 probability:0.04,repeatable:true,
 choices:[
 {text:"🤝 分享投资心得",hint:"魅力+5,好感+3,置_e957Social",apply:function(st){if(!st)return;st.flags=st.flags||{};st.flags._e957SocialCd=true;st.flags._e957Social=true;if(st.player)st.player.charm=Math.min(100,(st.player.charm||50)+5);if(st.relationships&&typeof applyAffinityChange==="function"){var _ids=[];for(var _id in st.relationships){if(st.relationships[_id]&&st.relationships[_id].met)_ids.push(_id)}if(_ids.length>0){var _p=typeof Random!=="undefined"?Random.int(0,_ids.length-1):0;applyAffinityChange(st,_ids[_p],3,"投资心得")}}if(typeof StateManager!=="undefined")StateManager.addMessage("🤝 分享了投资心得——魅力+5。","success");}},
@@ -366166,7 +366166,7 @@ choices:[
 {id:"e965_skill_invest_v1",phase:"street",icon:"📚",title:"盈利了，投资自己",
 story:"投资赚了钱，你思考怎么用这笔钱创造更大的价值。",
 triggers:{minDay:20,interval:60,maxRepeats:4,excludeFlags:["_e965SkillInvestCd"]},
-conditions:function(st){if(!st||!st.player||st.gameOver)return false;if(st.flags&&st.flags._e965SkillInvestCd)return false;if(!st.investment)return false;return((st.investment.totalProfit||0)+(st.investment.totalStockProfit||0))>=500&&st.player.day>=20;},
+conditions:function(st){if(!st||!st.player||st.gameOver)return false;if(st.flags&&st.flags._e965SkillInvestCd)return false;if(!st.investment)return false;return(st.investment._totalInvestmentProfit||0)>=500&&st.player.day>=20;},
 probability:0.04,repeatable:true,
 choices:[
 {text:"📚 投资自己学技能",hint:"智力+4,管理XP+6,置_e965SelfInvestor",apply:function(st){if(!st)return;st.flags=st.flags||{};st.flags._e965SkillInvestCd=true;st.flags._e965SelfInvestor=true;if(st.player)st.player.intelligence=Math.min(100,(st.player.intelligence||50)+4);gx("management",6);if(typeof StateManager!=="undefined")StateManager.addMessage("📚 投资自己学技能——智力+4,管理XP+6。","success");}},
@@ -366175,7 +366175,7 @@ choices:[
 {id:"e965_social_circle_v1",phase:"street",icon:"🤝",title:"投资成功，朋友圈扩大",
 story:"你的投资眼光在朋友圈里传开了，连以前不太熟的人都来请教。",
 triggers:{minDay:40,interval:80,maxRepeats:3,excludeFlags:["_e965SocialCd"]},
-conditions:function(st){if(!st||!st.player||st.gameOver)return false;if(st.flags&&st.flags._e965SocialCd)return false;if(!st.relationships||!st.investment)return false;return((st.investment.totalProfit||0)+(st.investment.totalStockProfit||0))>=2000&&st.player.day>=40;},
+conditions:function(st){if(!st||!st.player||st.gameOver)return false;if(st.flags&&st.flags._e965SocialCd)return false;if(!st.relationships||!st.investment)return false;return(st.investment._totalInvestmentProfit||0)>=2000&&st.player.day>=40;},
 probability:0.04,repeatable:true,
 choices:[
 {text:"🤝 分享投资心得",hint:"魅力+4,好感+3,置_e965Social",apply:function(st){if(!st)return;st.flags=st.flags||{};st.flags._e965SocialCd=true;st.flags._e965Social=true;if(st.player)st.player.charm=Math.min(100,(st.player.charm||50)+4);if(st.relationships&&typeof applyAffinityChange==="function"){var _ids=[];for(var _id in st.relationships){if(st.relationships[_id]&&st.relationships[_id].met)_ids.push(_id)}if(_ids.length>0){var _p=typeof Random!=="undefined"?Random.int(0,_ids.length-1):0;applyAffinityChange(st,_ids[_p],3,"投资心得")}}if(typeof StateManager!=="undefined")StateManager.addMessage("🤝 分享了投资心得——魅力+4。","success");}},
@@ -366362,7 +366362,7 @@ choices:[
 {id:"e1013_skill_invest_v1",phase:"street",icon:"📚",title:"盈利了，投资自己",
 story:"投资赚了钱，你思考怎么用这笔钱创造更大的价值。",
 triggers:{minDay:15,interval:40,maxRepeats:4,excludeFlags:["_e1013SkillInvestCd"]},
-conditions:function(st){if(!st||!st.player||st.gameOver)return false;if(st.flags&&st.flags._e1013SkillInvestCd)return false;if(!st.investment)return false;return((st.investment.totalProfit||0)+(st.investment.totalStockProfit||0))>=200&&st.player.day>=15;},
+conditions:function(st){if(!st||!st.player||st.gameOver)return false;if(st.flags&&st.flags._e1013SkillInvestCd)return false;if(!st.investment)return false;return(st.investment._totalInvestmentProfit||0)>=200&&st.player.day>=15;},
 probability:0.04,repeatable:true,
 choices:[
 {text:"📚 投资自己学技能",hint:"智力+2,管理XP+3,置_e1013SelfInvestor",apply:function(st){if(!st)return;st.flags=st.flags||{};st.flags._e1013SkillInvestCd=true;st.flags._e1013SelfInvestor=true;if(st.player)st.player.intelligence=Math.min(100,(st.player.intelligence||50)+2);gx("management",3);if(typeof StateManager!=="undefined")StateManager.addMessage("📚 投资自己学技能——智力+2,管理XP+3。","success");}},
@@ -366371,7 +366371,7 @@ choices:[
 {id:"e1013_social_circle_v1",phase:"street",icon:"🤝",title:"投资成功，朋友圈扩大",
 story:"你的投资眼光在朋友圈里传开了，连以前不太熟的人都来请教。",
 triggers:{minDay:25,interval:60,maxRepeats:3,excludeFlags:["_e1013SocialCd"]},
-conditions:function(st){if(!st||!st.player||st.gameOver)return false;if(st.flags&&st.flags._e1013SocialCd)return false;if(!st.relationships||!st.investment)return false;return((st.investment.totalProfit||0)+(st.investment.totalStockProfit||0))>=1000&&st.player.day>=25;},
+conditions:function(st){if(!st||!st.player||st.gameOver)return false;if(st.flags&&st.flags._e1013SocialCd)return false;if(!st.relationships||!st.investment)return false;return(st.investment._totalInvestmentProfit||0)>=1000&&st.player.day>=25;},
 probability:0.04,repeatable:true,
 choices:[
 {text:"🤝 分享投资心得",hint:"魅力+2,好感+2,置_e1013Social",apply:function(st){if(!st)return;st.flags=st.flags||{};st.flags._e1013SocialCd=true;st.flags._e1013Social=true;if(st.player)st.player.charm=Math.min(100,(st.player.charm||50)+2);if(st.relationships&&typeof applyAffinityChange==="function"){var _ids=[];for(var _id in st.relationships){if(st.relationships[_id]&&st.relationships[_id].met)_ids.push(_id)}if(_ids.length>0){var _p=typeof Random!=="undefined"?Random.int(0,_ids.length-1):0;applyAffinityChange(st,_ids[_p],2,"投资心得")}}if(typeof StateManager!=="undefined")StateManager.addMessage("🤝 分享了投资心得——魅力+2。","success");}},
@@ -370211,7 +370211,7 @@ for(var i=0;i<E.length;i++){var exists=false;for(var j=0;j<RANDOM_EVENTS.length;
       conditions: function (st) {
         if (st.gameOver) return false;
         if (!st.flags || st.flags._g653CareerDone) return false;
-        return st.stats && (st.stats.totalEarned || 0) >= 100000;
+        return st.stats && (st.resources.totalEarned || 0) >= 100000;
       },
       choices: [
         { text: "📊 复盘职业", hint: "管理XP+6,智力+4", apply: function (st) {
@@ -370229,7 +370229,7 @@ for(var i=0;i<E.length;i++){var exists=false;for(var j=0;j<RANDOM_EVENTS.length;
       ],
       text: function (st) {
         if (!st) return null;
-        var totalEarned = (st.stats && st.stats.totalEarned) || 0;
+        var totalEarned = (st.stats && st.resources.totalEarned) || 0;
         return "你开始用生命周期的视角来看待职业发展——累计赚取¥" + totalEarned + "。'职业发展如人生,有起有落,关键在于持续成长。'";
       }
     }

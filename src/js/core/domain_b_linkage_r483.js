@@ -21,8 +21,8 @@
       triggers: { minDay: 40, interval: 60, maxRepeats: 5, excludeFlags: ["_b483MemoryUiCooldown"] },
       conditions: function (st) {
         if (st.gameOver) return false;
-        if (!st.stats || !st.stats.eventHistory) return false;
-        return Object.keys(st.stats.eventHistory).length >= 3 && (st.flags && !st.flags._b483MemoryUiCooldown);
+        if ((typeof getEventsTriggered === "function" ? getEventsTriggered(st) : 0) < 1) return false;
+        return (typeof getEventsTriggered === "function" ? getEventsTriggered(st) : 0) >= 3 && (st.flags && !st.flags._b483MemoryUiCooldown);
       },
       choices: [
         { text: "📖 制作记忆墙", hint: "心智+3,心情+3", apply: function (st) {
@@ -39,7 +39,7 @@
       ],
       text: function (st) {
         if (!st) return null;
-        var count = st.stats && st.stats.eventHistory ? Object.keys(st.stats.eventHistory).length : 0;
+        var count = (typeof getEventsTriggered === "function") ? getEventsTriggered(st) : 0;
         return "你回顾了自己经历过的" + count + "种事件——每一个都是你人生故事的素材。";
       }
     },
@@ -50,8 +50,8 @@
       triggers: { minDay: 80, interval: 120, maxRepeats: 3, excludeFlags: ["_b483StoryWebCooldown"] },
       conditions: function (st) {
         if (st.gameOver) return false;
-        if (!st.stats || !st.stats.eventHistory) return false;
-        return Object.keys(st.stats.eventHistory).length >= 8 && (st.flags && !st.flags._b483StoryWebCooldown);
+        if ((typeof getEventsTriggered === "function" ? getEventsTriggered(st) : 0) < 1) return false;
+        return (typeof getEventsTriggered === "function" ? getEventsTriggered(st) : 0) >= 8 && (st.flags && !st.flags._b483StoryWebCooldown);
       },
       choices: [
         { text: "🔗 寻找关联", hint: "智力+3,心智+2", apply: function (st) {
@@ -68,7 +68,7 @@
       ],
       text: function (st) {
         if (!st) return null;
-        var count = st.stats && st.stats.eventHistory ? Object.keys(st.stats.eventHistory).length : 0;
+        var count = (typeof getEventsTriggered === "function") ? getEventsTriggered(st) : 0;
         return "你发现" + count + "个不同事件之间有着微妙的联系——看似孤立的故事，实际上编织成了一张人生的网。";
       }
     },

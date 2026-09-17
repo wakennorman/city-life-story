@@ -21,8 +21,8 @@
       triggers: { minDay: 50, interval: 90, maxRepeats: 3, excludeFlags: ["_b469CatalystCooldown"] },
       conditions: function (st) {
         if (st.gameOver) return false;
-        if (!st.stats || !st.stats.eventHistory) return false;
-        return Object.keys(st.stats.eventHistory).length >= 5 && (st.flags && !st.flags._b469CatalystCooldown);
+        if ((typeof getEventsTriggered === "function" ? getEventsTriggered(st) : 0) < 1) return false;
+        return (typeof getEventsTriggered === "function" ? getEventsTriggered(st) : 0) >= 5 && (st.flags && !st.flags._b469CatalystCooldown);
       },
       choices: [
         { text: "🎯 深耕新方向", hint: "最高技能XP+6,心智+2", apply: function (st) {
@@ -52,8 +52,8 @@
       triggers: { minDay: 70, interval: 100, maxRepeats: 3, excludeFlags: ["_b469ImpactCooldown"] },
       conditions: function (st) {
         if (st.gameOver) return false;
-        if (!st.stats || !st.stats.eventHistory) return false;
-        return Object.keys(st.stats.eventHistory).length >= 4 && (st.flags && !st.flags._b469ImpactCooldown);
+        if ((typeof getEventsTriggered === "function" ? getEventsTriggered(st) : 0) < 1) return false;
+        return (typeof getEventsTriggered === "function" ? getEventsTriggered(st) : 0) >= 4 && (st.flags && !st.flags._b469ImpactCooldown);
       },
       choices: [
         { text: "📖 写进回忆录", hint: "心智+4,心情+3", apply: function (st) {
@@ -80,8 +80,8 @@
       triggers: { minDay: 90, interval: 120, maxRepeats: 2, excludeFlags: ["_b469WebCooldown"] },
       conditions: function (st) {
         if (st.gameOver) return false;
-        if (!st.stats || !st.stats.eventHistory) return false;
-        return Object.keys(st.stats.eventHistory).length >= 8 && (st.flags && !st.flags._b469WebCooldown);
+        if ((typeof getEventsTriggered === "function" ? getEventsTriggered(st) : 0) < 1) return false;
+        return (typeof getEventsTriggered === "function" ? getEventsTriggered(st) : 0) >= 8 && (st.flags && !st.flags._b469WebCooldown);
       },
       choices: [
         { text: "🔗 寻找关联", hint: "智力+3,心智+2", apply: function (st) {
@@ -98,7 +98,7 @@
       ],
       text: function (st) {
         if (!st) return null;
-        var count = st.stats && st.stats.eventHistory ? Object.keys(st.stats.eventHistory).length : 0;
+        var count = (typeof getEventsTriggered === "function") ? getEventsTriggered(st) : 0;
         return "你发现" + count + "个不同事件之间有着微妙的联系——看似孤立的故事，实际上编织成了一张人生的网。";
       }
     }

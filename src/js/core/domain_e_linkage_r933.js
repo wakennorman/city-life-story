@@ -97,7 +97,7 @@
         if (st.flags && st.flags._e933SkillMotivationCd) return false;
         if (!st.investment) return false;
         // 需要投资盈利
-        var _totalProfit = (st.investment.totalProfit || 0) + (st.investment.totalStockProfit || 0);
+        var _totalProfit = (st.investment._totalInvestmentProfit || 0);
         return _totalProfit >= 2000 && st.player.day >= 40;
       },
       probability: 0.04,
@@ -152,7 +152,7 @@
         if (st.flags && st.flags._e933InvestorSocialCd) return false;
         if (!st.relationships || !st.investment) return false;
         // 需要投资总盈利≥¥5000
-        var _totalProfit2 = (st.investment.totalProfit || 0) + (st.investment.totalStockProfit || 0);
+        var _totalProfit2 = (st.investment._totalInvestmentProfit || 0);
         return _totalProfit2 >= 5000 && st.player.day >= 60;
       },
       probability: 0.04,

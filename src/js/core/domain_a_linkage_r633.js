@@ -55,7 +55,7 @@
       text: function (st) {
         if (!st) return null;
         var day = (st.player && st.player.day) || 0;
-        var totalEarned = (st.stats && st.stats.totalEarned) || 0;
+        var totalEarned = (st.stats && st.resources.totalEarned) || 0;
         return "你开始用数据来理解自己的城市生活——" + day + "天,赚了¥" + totalEarned + "。'数字背后,是一个真实的人生故事。'";
       }
     },

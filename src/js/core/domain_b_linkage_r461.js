@@ -32,8 +32,8 @@
       triggers: { minDay: 45, interval: 80, maxRepeats: 4, excludeFlags: ["_b461DataPatternCooldown"] },
       conditions: function (st) {
         if (st.gameOver) return false;
-        if (!st.stats || !st.stats.eventHistory) return false;
-        return Object.keys(st.stats.eventHistory).length >= 3 && (st.flags && !st.flags._b461DataPatternCooldown);
+        if ((typeof getEventsTriggered === "function" ? getEventsTriggered(st) : 0) < 1) return false;
+        return (typeof getEventsTriggered === "function" ? getEventsTriggered(st) : 0) >= 3 && (st.flags && !st.flags._b461DataPatternCooldown);
       },
       choices: [
         { text: "📈 分析高频事件", hint: "智力+2,心智+2", apply: function (st) {
@@ -49,7 +49,7 @@
       ],
       text: function (st) {
         if (!st) return null;
-        var count = st.stats && st.stats.eventHistory ? Object.keys(st.stats.eventHistory).length : 0;
+        var count = (typeof getEventsTriggered === "function") ? getEventsTriggered(st) : 0;
         return "你回顾了这段时间的经历——已经触发过" + count + "种不同的事件。每一种经历都在塑造你的人生轨迹。";
       }
     },
@@ -60,7 +60,7 @@
       triggers: { minDay: 60, interval: 100, maxRepeats: 3, excludeFlags: ["_b461FriendshipCooldown"] },
       conditions: function (st) {
         if (st.gameOver) return false;
-        if (!st.stats || !st.stats.eventHistory) return false;
+        if ((typeof getEventsTriggered === "function" ? getEventsTriggered(st) : 0) < 1) return false;
         return !!firstMetNpc(st) && (st.flags && !st.flags._b461FriendshipCooldown);
       },
       choices: [

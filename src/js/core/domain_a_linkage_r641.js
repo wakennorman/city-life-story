@@ -55,7 +55,7 @@
       text: function (st) {
         if (!st) return null;
         var day = (st.player && st.player.day) || 0;
-        var totalEarned = (st.stats && st.stats.totalEarned) || 0;
+        var totalEarned = (st.stats && st.resources.totalEarned) || 0;
         return "你开始用数据全面认识自己——" + day + "天,赚了¥" + totalEarned + ",认识" + metNpcsR641(st).length + "位朋友。'量化自我,是成长的第一步。'";
       }
     },

@@ -33,7 +33,7 @@
       conditions: function (st) {
         if (st.gameOver) return false;
         if (!st.flags || st.flags._c643WealthDone) return false;
-        return st.stats && (st.stats.totalEarned || 0) >= 100000;
+        return st.stats && (st.resources.totalEarned || 0) >= 100000;
       },
       choices: [
         { text: "💰 奖励自己", hint: "心情+8,现金-2000", apply: function (st) {
@@ -51,7 +51,7 @@
       ],
       text: function (st) {
         if (!st) return null;
-        var totalEarned = (st.stats && st.stats.totalEarned) || 0;
+        var totalEarned = (st.stats && st.resources.totalEarned) || 0;
         return "你的职业发展达到了一个新的高度——累计赚取¥" + totalEarned + "。'事业有成,是对努力最好的回报。'";
       }
     },

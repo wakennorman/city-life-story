@@ -103,7 +103,7 @@
       conditions: function (st) {
         if (st.gameOver) return false;
         if (!st.flags || st.flags._g647CareerDone) return false;
-        return st.stats && (st.stats.totalEarned || 0) >= 80000;
+        return st.stats && (st.resources.totalEarned || 0) >= 80000;
       },
       choices: [
         { text: "📊 复盘职业", hint: "管理XP+5,智力+3", apply: function (st) {
@@ -121,7 +121,7 @@
       ],
       text: function (st) {
         if (!st) return null;
-        var totalEarned = (st.stats && st.stats.totalEarned) || 0;
+        var totalEarned = (st.stats && st.resources.totalEarned) || 0;
         return "你开始用生命周期的视角来看待职业发展——累计赚取¥" + totalEarned + "。'职业发展如人生,有起有落,关键在于持续成长。'";
       }
     }
