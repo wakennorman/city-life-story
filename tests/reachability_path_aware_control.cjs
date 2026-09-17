@@ -106,6 +106,18 @@ const POSITIVE = [
       "（那是 company_spawner 生成的**市场公司池**，语义完全不同）——" +
       "正确目标是单数的 startup.company，与同链的 st.corporate.company 对齐。",
   },
+  {
+    // [报告第 59 节] 7 个 C→G「职业倦怠→健康」阶梯事件（c798/c813/c824/c840/c848/c856/c864）
+    //   的 conditions 都读这个路径 → 恒 0 → 7 个事件全死。
+    //   ★ 父容器有 20 处「整体赋值」，但**全部是 `x = x || {}` 幂等守卫**，无一处写 burnout
+    //     —— 这正是判据把「整体赋值」当作写入信号的假阳性形态（人工逐条确认后才排除）。
+    //   ★ 运行时决定性证据：`st.player.corporate` 是**职场 7 维属性容器**
+    //     （state.js:36，schema 恒存在）→ 三元表达式**恒取第一支**，
+    //     作者写的 `needs.fatigue` 回退支**永远不可达**（死代码）。
+    path: "state.player.corporate.burnout",
+    why: "全库零写入。真实容器是 state.careerCapital.burnout" +
+      "（career_dev.js:703 ensureCareerCapital 懒初始化，0-100，clampCareerCapital 夹紧）。",
+  },
 ];
 
 for (const c of POSITIVE) {
@@ -173,6 +185,13 @@ const NEGATIVE = [
     kind: "直接写入（本节新增）",
     path: "state.employment.completedShifts",
     site: "main.js:4764  doStreetJob() 每次上工 completedShifts[job.id]++",
+  },
+  {
+    // [报告第 59 节] 果实 G8 改指向后由死转活 —— 同时验证判据跟得上修复。
+    //   注意父容器 careerCapital 是**懒初始化**（不在 schema），判据靠「有写入点」判活。
+    kind: "直接写入（本节新增）",
+    path: "state.careerCapital.burnout",
+    site: "core/domain_c_linkage_r371.js:79（scoped）+ career_path_events.js 等 cap.burnout 写入（别名）",
   },
 ];
 

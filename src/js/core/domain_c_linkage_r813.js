@@ -153,7 +153,11 @@
       conditions: function (st) {
         if (!st || !st.player || st.gameOver) return false;
         if (st.flags && st.flags._c813CareerHealthDone) return false;
-        var _burnout = st.player.corporate ? (st.player.corporate.burnout || 0) : (st.needs ? st.needs.fatigue : 0);
+        // [报告第 59 节] 原读 `st.player.corporate.burnout` —— 全库零写入（恒 0）：
+        //   `player.corporate` 是职场 7 维属性容器（state.js:36，恒存在）→ 三元恒取第一支，
+        //   `needs.fatigue` 支**永远不可达**。真实容器 `state.careerCapital.burnout`
+        //   （career_dev.js:703 ensureCareerCapital 懒初始化，0-100，clampCareerCapital 夹紧）。
+        var _burnout = (st.careerCapital && st.careerCapital.burnout) || 0;
         return _burnout >= 50;
       },
       probability: 0.07,

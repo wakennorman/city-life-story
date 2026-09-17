@@ -347654,7 +347654,11 @@ for(var i=0;i<E.length;i++){var exists=false;for(var j=0;j<RANDOM_EVENTS.length;
         if (!st || !st.player || st.gameOver) return false;
         if (st.flags && st.flags._c798BurnoutHealthDone) return false;
         // 倦怠≥60且健康<50
-        var _burnout = st.player.corporate ? (st.player.corporate.burnout || 0) : (st.needs ? st.needs.fatigue : 0);
+        // [报告第 59 节] 原读 `st.player.corporate.burnout` —— 全库零写入（恒 0）：
+        //   `player.corporate` 是职场 7 维属性容器（state.js:36，恒存在）→ 三元恒取第一支，
+        //   `needs.fatigue` 支**永远不可达**。真实容器 `state.careerCapital.burnout`
+        //   （career_dev.js:703 ensureCareerCapital 懒初始化，0-100，clampCareerCapital 夹紧）。
+        var _burnout = (st.careerCapital && st.careerCapital.burnout) || 0;
         var _health = st.status ? st.status.health : 100;
         return _burnout >= 60 && _health < 50;
       },
@@ -348051,7 +348055,11 @@ for(var i=0;i<E.length;i++){var exists=false;for(var j=0;j<RANDOM_EVENTS.length;
       conditions: function (st) {
         if (!st || !st.player || st.gameOver) return false;
         if (st.flags && st.flags._c813CareerHealthDone) return false;
-        var _burnout = st.player.corporate ? (st.player.corporate.burnout || 0) : (st.needs ? st.needs.fatigue : 0);
+        // [报告第 59 节] 原读 `st.player.corporate.burnout` —— 全库零写入（恒 0）：
+        //   `player.corporate` 是职场 7 维属性容器（state.js:36，恒存在）→ 三元恒取第一支，
+        //   `needs.fatigue` 支**永远不可达**。真实容器 `state.careerCapital.burnout`
+        //   （career_dev.js:703 ensureCareerCapital 懒初始化，0-100，clampCareerCapital 夹紧）。
+        var _burnout = (st.careerCapital && st.careerCapital.burnout) || 0;
         return _burnout >= 50;
       },
       probability: 0.07,
@@ -348613,7 +348621,11 @@ for(var i=0;i<E.length;i++){var exists=false;for(var j=0;j<RANDOM_EVENTS.length;
       conditions: function (st) {
         if (!st || !st.player || st.gameOver) return false;
         if (st.flags && st.flags._c824CareerHealthDone) return false;
-        var _burnout = st.player.corporate ? (st.player.corporate.burnout || 0) : (st.needs ? st.needs.fatigue : 0);
+        // [报告第 59 节] 原读 `st.player.corporate.burnout` —— 全库零写入（恒 0）：
+        //   `player.corporate` 是职场 7 维属性容器（state.js:36，恒存在）→ 三元恒取第一支，
+        //   `needs.fatigue` 支**永远不可达**。真实容器 `state.careerCapital.burnout`
+        //   （career_dev.js:703 ensureCareerCapital 懒初始化，0-100，clampCareerCapital 夹紧）。
+        var _burnout = (st.careerCapital && st.careerCapital.burnout) || 0;
         if (_burnout < 60) return false;
         var _health = st.status ? st.status.health : 100;
         return _health < 50;
@@ -349142,7 +349154,11 @@ for(var i=0;i<E.length;i++){var exists=false;for(var j=0;j<RANDOM_EVENTS.length;
       conditions: function (st) {
         if (!st || !st.player || st.gameOver) return false;
         if (st.flags && st.flags._c840CareerHealthDone) return false;
-        var _burnout = st.player.corporate ? (st.player.corporate.burnout || 0) : (st.needs ? st.needs.fatigue : 0);
+        // [报告第 59 节] 原读 `st.player.corporate.burnout` —— 全库零写入（恒 0）：
+        //   `player.corporate` 是职场 7 维属性容器（state.js:36，恒存在）→ 三元恒取第一支，
+        //   `needs.fatigue` 支**永远不可达**。真实容器 `state.careerCapital.burnout`
+        //   （career_dev.js:703 ensureCareerCapital 懒初始化，0-100，clampCareerCapital 夹紧）。
+        var _burnout = (st.careerCapital && st.careerCapital.burnout) || 0;
         if (_burnout < 70) return false;
         var _health = st.status ? st.status.health : 100;
         return _health < 45;
@@ -349412,7 +349428,11 @@ for(var i=0;i<E.length;i++){var exists=false;for(var j=0;j<RANDOM_EVENTS.length;
       conditions: function (st) {
         if (!st || !st.player || st.gameOver) return false;
         if (st.flags && st.flags._c848CareerHealthDone) return false;
-        var _burnout = st.player.corporate ? (st.player.corporate.burnout || 0) : (st.needs ? st.needs.fatigue : 0);
+        // [报告第 59 节] 原读 `st.player.corporate.burnout` —— 全库零写入（恒 0）：
+        //   `player.corporate` 是职场 7 维属性容器（state.js:36，恒存在）→ 三元恒取第一支，
+        //   `needs.fatigue` 支**永远不可达**。真实容器 `state.careerCapital.burnout`
+        //   （career_dev.js:703 ensureCareerCapital 懒初始化，0-100，clampCareerCapital 夹紧）。
+        var _burnout = (st.careerCapital && st.careerCapital.burnout) || 0;
         if (_burnout < 75) return false;
         var _health = st.status ? st.status.health : 100;
         return _health < 40;
@@ -349682,7 +349702,11 @@ for(var i=0;i<E.length;i++){var exists=false;for(var j=0;j<RANDOM_EVENTS.length;
       conditions: function (st) {
         if (!st || !st.player || st.gameOver) return false;
         if (st.flags && st.flags._c856CareerHealthDone) return false;
-        var _burnout = st.player.corporate ? (st.player.corporate.burnout || 0) : (st.needs ? st.needs.fatigue : 0);
+        // [报告第 59 节] 原读 `st.player.corporate.burnout` —— 全库零写入（恒 0）：
+        //   `player.corporate` 是职场 7 维属性容器（state.js:36，恒存在）→ 三元恒取第一支，
+        //   `needs.fatigue` 支**永远不可达**。真实容器 `state.careerCapital.burnout`
+        //   （career_dev.js:703 ensureCareerCapital 懒初始化，0-100，clampCareerCapital 夹紧）。
+        var _burnout = (st.careerCapital && st.careerCapital.burnout) || 0;
         if (_burnout < 80) return false;
         var _health = st.status ? st.status.health : 100;
         return _health < 35;
@@ -349887,7 +349911,11 @@ for(var i=0;i<E.length;i++){var exists=false;for(var j=0;j<RANDOM_EVENTS.length;
       conditions: function (st) {
         if (!st || !st.player || st.gameOver) return false;
         if (st.flags && st.flags._c864CareerHealthDone) return false;
-        var _burnout = st.player.corporate ? (st.player.corporate.burnout || 0) : (st.needs ? st.needs.fatigue : 0);
+        // [报告第 59 节] 原读 `st.player.corporate.burnout` —— 全库零写入（恒 0）：
+        //   `player.corporate` 是职场 7 维属性容器（state.js:36，恒存在）→ 三元恒取第一支，
+        //   `needs.fatigue` 支**永远不可达**。真实容器 `state.careerCapital.burnout`
+        //   （career_dev.js:703 ensureCareerCapital 懒初始化，0-100，clampCareerCapital 夹紧）。
+        var _burnout = (st.careerCapital && st.careerCapital.burnout) || 0;
         if (_burnout < 80) return false;
         var _health = st.status ? st.status.health : 100;
         return _health < 30;
