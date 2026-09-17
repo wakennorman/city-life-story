@@ -65,6 +65,18 @@ Microsoft/
 # 纳入版本控制会导致「每次提交后工作树永久为脏」，
 # 进而使 .claude/sync-check.sh 的安全性检查永久跳过自动同步，故忽略之。
 .claude/last_known_head
+# ★ 用通配覆盖其备份（曾漏掉 last_known_head.bak，它同样只是本地环境状态）
+.claude/last_known_head.*
+
+# ── 备份/临时文件 ────────────────────────────────────────────────────────────
+# [2026-09-17] 曾跟踪 3 个 .bak：last_known_head.bak、test-snippet.js.bak、
+# memory/MEMORY.md.bak-2026-07-15。三者均已从工作树与索引删除
+# （内容保留在 git 历史中，可随时恢复）。备份文件不应长期入库：
+# 它们要么是环境状态（见上），要么已被新版取代，留着只会让 status 变噪。
+*.bak
+*.bak-*
+*.orig
+*.tmp
 
 # ── 一次性清理残留（幽灵目录树，见报告第 39 节）──────────────────────────────
 # 形如 "•/d/Claude Code+DeepSeekV4/city-life-story/*.md" 的错误目录，
