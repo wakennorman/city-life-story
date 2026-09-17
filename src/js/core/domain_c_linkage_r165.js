@@ -53,9 +53,14 @@
   }
 
   // 检查是否连续工作超过N天
+  // [报告第 61 节] 果实 G14：原读 st.flags._consecutiveWorkDays —— 该字段**全库零写入**
+  //   （仅此处 1 处读取），恒为 0 → 下方 `consecutiveWorkDaysR165(st) < 30` 恒真 →
+  //   `career_longevity_reflection`（日复一日的意义）从未触发过。
+  //   真实容器是 state.flags._workStreak —— main.js:5250-5261 与
+  //   ui/career_dev.js:3659-3667 两处「连续工作天数追踪」维护它，语义逐字吻合。
   function consecutiveWorkDaysR165(st) {
     if (!st || !st.flags) return 0;
-    return st.flags._consecutiveWorkDays || 0;
+    return st.flags._workStreak || 0;
   }
 
   // ---- 联动事件 ----

@@ -142,6 +142,29 @@ const POSITIVE = [
     why: "全库零写入、不在 schema。buyInvStock() 把「贵金属」与股票/虚拟币/期货/基金" +
       "一视同仁地写入 stockHoldings（investment.js:1947 的分类注释），故无需独立容器。",
   },
+  {
+    // [报告第 61 节] 果实 G15 的对照面：career.currentJob 的真实结构
+    //   （ui/career_dev.js:3375-3383）是 { path, levelId, levelName, salary,
+    //    workDays, startDay, performance } —— **没有 id 键**。
+    path: "state.career.currentJob.id",
+    why: "全库零写入。真实容器是 currentJob.levelId" +
+      "（career_dev.js:2943/3492 写入）。r172 的正则后缀集精确命中 54 个 level id 中的 16 个。",
+  },
+  {
+    // [报告第 61 节] 果实 G13 的对照面。
+    //   ★ 特别值得留档：它不是「死事件」而是「门槛退化为重言式」——
+    //     `player.day - (startedDay || 0)` 在字段缺失时等于 player.day，
+    //     而外层已要求 player.day >= 40~60 > 门槛 15~30 → 第一支恒真。
+    //     故这里断言的是「字段判死」，与「事件是否触发」是两件事。
+    path: "state.career.currentJob.startedDay",
+    why: "全库零写入。真实容器是 currentJob.startDay（career_dev.js:2947/3380 写入）。",
+  },
+  {
+    // [报告第 61 节] 果实 G14 的对照面。
+    path: "state.flags._consecutiveWorkDays",
+    why: "全库零写入。真实容器是 flags._workStreak" +
+      "（main.js:5253-5258 街头工作 / career_dev.js:3668-3673 上班族，两处「连续工作天数追踪」）。",
+  },
 ];
 
 for (const c of POSITIVE) {
@@ -236,6 +259,26 @@ const NEGATIVE = [
     kind: "直接写入（同一父容器）",
     path: "state.investment.stockMarket",
     site: "core/company_spawner.js:429/608 + core/enterprise_fate.js:2307（state.investment.stockMarket[sym] = …）",
+  },
+  {
+    // [报告第 61 节] 果实 G13/G15 改指向的真实容器 —— 判据必须判活，
+    //   否则「修复读的容器被判死」这一自相矛盾状态无法被测试发现。
+    //   ★ currentJob 不在 state.js schema 里（懒初始化于 career_dev.js:3365），
+    //     判据靠「有写入点」判活 —— 与 careerCapital 同形。
+    kind: "直接写入（本节新增）",
+    path: "state.career.currentJob.startDay",
+    site: "ui/career_dev.js:2947（跳槽 job.startDay = player.day）+ :3380（入职字面量）",
+  },
+  {
+    kind: "直接写入（本节新增）",
+    path: "state.career.currentJob.levelId",
+    site: "ui/career_dev.js:2943（跳槽）+ :3492（晋升 state.career.currentJob.levelId = levelId）",
+  },
+  {
+    // [报告第 61 节] 果实 G14 改指向的真实容器。
+    kind: "直接写入（本节新增）",
+    path: "state.flags._workStreak",
+    site: "main.js:5253-5258（街头工作）+ ui/career_dev.js:3668-3673（上班族），两处「连续工作天数追踪」",
   },
 ];
 

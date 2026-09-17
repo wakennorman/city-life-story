@@ -30243,7 +30243,14 @@ if (typeof window !== "undefined") {
         if (!st || !st.player) return false;
         if (st.gameOver) return false; // gameOver 闸门
         if (!st.career || !st.career.currentJob) return false;
-        var id = st.career.currentJob.id || "";
+        // [报告第 61 节] 果实 G15：原读 st.career.currentJob.id —— currentJob **没有 id 键**
+        //   （真实结构见 ui/career_dev.js:3375-3383，是 levelId）→ id 恒 "" →
+        //   下面的正则永不匹配 → 本事件从未触发过。
+        //   判据：正则后缀集 {senior,lead,manager,principal,director,headteacher}
+        //   精确命中 CAREER_PATHS 的 54 个 level id 中的 16 个（tech_senior/tech_lead/
+        //   fin_manager/des_director/...），**不命中任何 path id** → 目标容器是 levelId 无疑。
+        //   同款修复先例：core/career_path_events.js:667「currentJob.id→levelId」。
+        var id = st.career.currentJob.levelId || "";
         // 仅高职级(senior/lead/manager/principal/director/headteacher)触发
         if (!/_(senior|lead|manager|principal|director|headteacher)$/.test(id)) return false;
         // 心智已临界则不再叠加压力(防御)
@@ -51203,7 +51210,11 @@ function runLifeStageNarrative(state) {
       if (!st.career || !st.career.currentJob) return false;
       if (st.player.day < 20) return false;
       // 检查是否有足够的行动频次
-      var jobId = st.career.currentJob.id || "";
+      // [报告第 61 节] 果实 G15：currentJob.id → currentJob.levelId（该容器无 id 键）。
+      //   ★ 但**没有观测效果** —— 下一行的 st.stats.actionFreq 本身是零写入死字段
+      //     （第 57.9 节已定性：族 E 是苦工，需内容决策），freq 恒 0 → 事件仍死。
+      //     改这里只为「指针正确」+ 防止未来 actionFreq 接线后静默失配（同第 58.4 节 G7）。
+      var jobId = st.career.currentJob.levelId || "";
       var freq = st.stats.actionFreq[jobId] || 0;
       if (freq < 30) return false;
       // 60天冷却
@@ -51237,7 +51248,12 @@ function runLifeStageNarrative(state) {
           s.flags._skillBreakthroughDay = s.player.day;
           s.player.mental = Math.min(100, (s.player.mental || 0) + 3);
           // 根据当前工作提升关联技能
-          var jobId = s.career.currentJob.id || "";
+          // [报告第 61 节] 果实 G15：同上，id → levelId。
+          //   ⚠️ skillMap 的键是 **STREET_JOBS 的 id**（62 个，如 waste_recycling/courier_gig），
+          //      而 currentJob 存的是**职业路径等级**（tech_junior/fin_manager）——
+          //      两套 id 体系不同，levelId 查 skillMap 会落到默认值 "repair"。
+          //      这是「同一事件混用两套 id 体系」的遗留问题，与 actionFreq 一并立项第 62 节。
+          var jobId = s.career.currentJob.levelId || "";
           var skillMap = {
             waste_recycling: "repair",
             old_zhou_recycling: "repair",
@@ -117573,9 +117589,14 @@ if (typeof window !== "undefined") {
   }
 
   // 检查是否连续工作超过N天
+  // [报告第 61 节] 果实 G14：原读 st.flags._consecutiveWorkDays —— 该字段**全库零写入**
+  //   （仅此处 1 处读取），恒为 0 → 下方 `consecutiveWorkDaysR165(st) < 30` 恒真 →
+  //   `career_longevity_reflection`（日复一日的意义）从未触发过。
+  //   真实容器是 state.flags._workStreak —— main.js:5250-5261 与
+  //   ui/career_dev.js:3659-3667 两处「连续工作天数追踪」维护它，语义逐字吻合。
   function consecutiveWorkDaysR165(st) {
     if (!st || !st.flags) return 0;
-    return st.flags._consecutiveWorkDays || 0;
+    return st.flags._workStreak || 0;
   }
 
   // ---- 联动事件 ----
@@ -309150,8 +309171,12 @@ function renderCareerJobs(state, parent) {
   try {
     if (state.player && state.player.day) {
       var _consecutiveWork = 0;
-      if (state.flags && state.flags._consecutiveWorkDays) {
-        _consecutiveWork = state.flags._consecutiveWorkDays;
+      // [报告第 61 节] 果实 G14：原读 state.flags._consecutiveWorkDays —— 零写入死字段，
+      //   恒 undefined → _consecutiveWork 恒 0 → 下面 `>= 7` 恒 false → **倦怠预警从未显示过**。
+      //   真实容器是 state.flags._workStreak（连续工作天数），由本文件 3659-3667 与
+      //   main.js:5250-5261 两处「连续工作天数追踪」维护。
+      if (state.flags && state.flags._workStreak) {
+        _consecutiveWork = state.flags._workStreak;
       }
       if (_consecutiveWork >= 7 && state.status) {
         html += '<div class="section" style="margin-top:8px;"><div style="font-size:11px;padding:6px 10px;background:rgba(255,152,0,0.08);border:1px solid rgba(255,152,0,0.2);border-radius:6px;color:var(--warning);">';
@@ -309904,8 +309929,12 @@ function renderCareerOverview(state, parent) {
   try {
     if (state.player && state.player.day) {
       var _consecutiveWork = 0;
-      if (state.flags && state.flags._consecutiveWorkDays) {
-        _consecutiveWork = state.flags._consecutiveWorkDays;
+      // [报告第 61 节] 果实 G14：原读 state.flags._consecutiveWorkDays —— 零写入死字段，
+      //   恒 undefined → _consecutiveWork 恒 0 → 下面 `>= 7` 恒 false → **倦怠预警从未显示过**。
+      //   真实容器是 state.flags._workStreak（连续工作天数），由本文件 3659-3667 与
+      //   main.js:5250-5261 两处「连续工作天数追踪」维护。
+      if (state.flags && state.flags._workStreak) {
+        _consecutiveWork = state.flags._workStreak;
       }
       if (_consecutiveWork >= 7 && state.status) {
         html += '<div class="section" style="margin-top:8px;"><div style="font-size:11px;padding:6px 10px;background:rgba(255,152,0,0.08);border:1px solid rgba(255,152,0,0.2);border-radius:6px;color:var(--warning);">';
@@ -353022,9 +353051,18 @@ for(var i=0;i<E.length;i++){var exists=false;for(var j=0;j<RANDOM_EVENTS.length;
         if (st.flags && st.flags._c931CareerSocialCd) return false;
         if (!st.career || !st.career.currentJob) return false;
         // 需要在当前岗位工作≥30天
-        var _daysInJob = st.player.day - (st.career.currentJob.startedDay || 0);
+        // [报告第 61 节] 果实 G13：原读 st.career.currentJob.startedDay ——
+        //   currentJob 的真实结构（ui/career_dev.js:3375-3383）是
+        //   { path, levelId, levelName, salary, workDays, startDay, performance }
+        //   —— **有 startDay，没有 startedDay** → 恒 undefined → _daysInJob 恒等于 player.day
+        //   → 这个门槛**从未拦下过任何一次触发**（第 59 节 G6a 同形）。
+        var _daysInJob = st.player.day - (st.career.currentJob.startDay || 0);
         // 或累计工作天数≥120天
-        var _totalWorkDays = (st.flags._consecutiveWorkDays || 0) + (st.career.totalWorkDays || 0);
+        // [报告第 61 节] 果实 G14：_consecutiveWorkDays → _workStreak（真实容器）。
+        //   ⚠️ 同行的 st.career.totalWorkDays 仍是死字段（0 写入）—— 它属
+        //      「累计工作天数家族」（另有 player./stats./flags._totalWorkDays 三个同义死名），
+        //      需要先定容器，已立项第 62 节。此处**不半修**，保留原样并标记。
+        var _totalWorkDays = (st.flags._workStreak || 0) + (st.career.totalWorkDays || 0);
         return (_daysInJob >= 30 || _totalWorkDays >= 120) && st.player.day >= 60;
       },
       probability: 0.04,
@@ -353179,7 +353217,8 @@ for(var i=0;i<E.length;i++){var exists=false;for(var j=0;j<RANDOM_EVENTS.length;
         if (!st || !st.player || st.gameOver) return false;
         if (st.flags && st.flags._c939CareerSocialCd) return false;
         if (!st.career || !st.career.currentJob) return false;
-        var _daysInJob = st.player.day - (st.career.currentJob.startedDay || 0);
+        // [报告第 61 节] 果实 G13：startedDay → startDay（currentJob 无 startedDay 键）
+        var _daysInJob = st.player.day - (st.career.currentJob.startDay || 0);
         return (_daysInJob >= 25 || (st.career.totalWorkDays || 0) >= 100) && st.player.day >= 50;
       },
       probability: 0.04, repeatable: true,
@@ -353235,7 +353274,7 @@ choices:[
 {id:"c947_social_circle_v1",phase:"street",icon:"👥",title:"职业人脉",
 story:"你在职场上的发展让你接触到了更多优秀的人。社交圈在不知不觉中扩大。",
 triggers:{minDay:45,interval:100,maxRepeats:4,excludeFlags:["_c947SocialCd"]},
-conditions:function(st){if(!st||!st.player||st.gameOver)return false;if(st.flags&&st.flags._c947SocialCd)return false;if(!st.career||!st.career.currentJob)return false;var _d=st.player.day-(st.career.currentJob.startedDay||0);return(_d>=20||(st.career.totalWorkDays||0)>=80)&&st.player.day>=45;},
+conditions:function(st){if(!st||!st.player||st.gameOver)return false;if(st.flags&&st.flags._c947SocialCd)return false;if(!st.career||!st.career.currentJob)return false;var _d=st.player.day-(st.career.currentJob.startDay||0);return(_d>=20||(st.career.totalWorkDays||0)>=80)&&st.player.day>=45;},
 probability:0.04,repeatable:true,
 choices:[
 {text:"👥 拓展人脉",hint:"魅力+6,管理XP+10,置_c947Network",apply:function(st){if(!st)return;st.flags=st.flags||{};st.flags._c947SocialCd=true;st.flags._c947Network=true;if(st.player)st.player.charm=Math.min(100,(st.player.charm||50)+6);gx("management",10);if(typeof StateManager!=="undefined")StateManager.addMessage("👥 拓展了人脉——魅力+6,管理XP+10。","success");}},
@@ -353270,7 +353309,7 @@ choices:[
 {id:"c963_social_circle_v1",phase:"street",icon:"👥",title:"职业人脉",
 story:"你在职场上的发展让你接触到了更多优秀的人。社交圈在不知不觉中扩大。",
 triggers:{minDay:40,interval:90,maxRepeats:4,excludeFlags:["_c963SocialCd"]},
-conditions:function(st){if(!st||!st.player||st.gameOver)return false;if(st.flags&&st.flags._c963SocialCd)return false;if(!st.career||!st.career.currentJob)return false;var _d=st.player.day-(st.career.currentJob.startedDay||0);return(_d>=15||(st.career.totalWorkDays||0)>=60)&&st.player.day>=40;},
+conditions:function(st){if(!st||!st.player||st.gameOver)return false;if(st.flags&&st.flags._c963SocialCd)return false;if(!st.career||!st.career.currentJob)return false;var _d=st.player.day-(st.career.currentJob.startDay||0);return(_d>=15||(st.career.totalWorkDays||0)>=60)&&st.player.day>=40;},
 probability:0.04,repeatable:true,
 choices:[
 {text:"👥 拓展人脉",hint:"魅力+4,管理XP+6,置_c963Network",apply:function(st){if(!st)return;st.flags=st.flags||{};st.flags._c963SocialCd=true;st.flags._c963Network=true;if(st.player)st.player.charm=Math.min(100,(st.player.charm||50)+4);gx("management",6);if(typeof StateManager!=="undefined")StateManager.addMessage("👥 拓展了人脉——魅力+4,管理XP+6。","success");}},

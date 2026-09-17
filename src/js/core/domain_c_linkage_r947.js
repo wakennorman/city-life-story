@@ -22,7 +22,7 @@ choices:[
 {id:"c947_social_circle_v1",phase:"street",icon:"👥",title:"职业人脉",
 story:"你在职场上的发展让你接触到了更多优秀的人。社交圈在不知不觉中扩大。",
 triggers:{minDay:45,interval:100,maxRepeats:4,excludeFlags:["_c947SocialCd"]},
-conditions:function(st){if(!st||!st.player||st.gameOver)return false;if(st.flags&&st.flags._c947SocialCd)return false;if(!st.career||!st.career.currentJob)return false;var _d=st.player.day-(st.career.currentJob.startedDay||0);return(_d>=20||(st.career.totalWorkDays||0)>=80)&&st.player.day>=45;},
+conditions:function(st){if(!st||!st.player||st.gameOver)return false;if(st.flags&&st.flags._c947SocialCd)return false;if(!st.career||!st.career.currentJob)return false;var _d=st.player.day-(st.career.currentJob.startDay||0);return(_d>=20||(st.career.totalWorkDays||0)>=80)&&st.player.day>=45;},
 probability:0.04,repeatable:true,
 choices:[
 {text:"👥 拓展人脉",hint:"魅力+6,管理XP+10,置_c947Network",apply:function(st){if(!st)return;st.flags=st.flags||{};st.flags._c947SocialCd=true;st.flags._c947Network=true;if(st.player)st.player.charm=Math.min(100,(st.player.charm||50)+6);gx("management",10);if(typeof StateManager!=="undefined")StateManager.addMessage("👥 拓展了人脉——魅力+6,管理XP+10。","success");}},

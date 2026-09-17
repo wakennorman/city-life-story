@@ -163,9 +163,18 @@
         if (st.flags && st.flags._c931CareerSocialCd) return false;
         if (!st.career || !st.career.currentJob) return false;
         // 需要在当前岗位工作≥30天
-        var _daysInJob = st.player.day - (st.career.currentJob.startedDay || 0);
+        // [报告第 61 节] 果实 G13：原读 st.career.currentJob.startedDay ——
+        //   currentJob 的真实结构（ui/career_dev.js:3375-3383）是
+        //   { path, levelId, levelName, salary, workDays, startDay, performance }
+        //   —— **有 startDay，没有 startedDay** → 恒 undefined → _daysInJob 恒等于 player.day
+        //   → 这个门槛**从未拦下过任何一次触发**（第 59 节 G6a 同形）。
+        var _daysInJob = st.player.day - (st.career.currentJob.startDay || 0);
         // 或累计工作天数≥120天
-        var _totalWorkDays = (st.flags._consecutiveWorkDays || 0) + (st.career.totalWorkDays || 0);
+        // [报告第 61 节] 果实 G14：_consecutiveWorkDays → _workStreak（真实容器）。
+        //   ⚠️ 同行的 st.career.totalWorkDays 仍是死字段（0 写入）—— 它属
+        //      「累计工作天数家族」（另有 player./stats./flags._totalWorkDays 三个同义死名），
+        //      需要先定容器，已立项第 62 节。此处**不半修**，保留原样并标记。
+        var _totalWorkDays = (st.flags._workStreak || 0) + (st.career.totalWorkDays || 0);
         return (_daysInJob >= 30 || _totalWorkDays >= 120) && st.player.day >= 60;
       },
       probability: 0.04,

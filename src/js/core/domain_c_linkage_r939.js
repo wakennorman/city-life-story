@@ -92,7 +92,8 @@
         if (!st || !st.player || st.gameOver) return false;
         if (st.flags && st.flags._c939CareerSocialCd) return false;
         if (!st.career || !st.career.currentJob) return false;
-        var _daysInJob = st.player.day - (st.career.currentJob.startedDay || 0);
+        // [报告第 61 节] 果实 G13：startedDay → startDay（currentJob 无 startedDay 键）
+        var _daysInJob = st.player.day - (st.career.currentJob.startDay || 0);
         return (_daysInJob >= 25 || (st.career.totalWorkDays || 0) >= 100) && st.player.day >= 50;
       },
       probability: 0.04, repeatable: true,

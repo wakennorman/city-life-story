@@ -3203,7 +3203,11 @@
       if (!st.career || !st.career.currentJob) return false;
       if (st.player.day < 20) return false;
       // 检查是否有足够的行动频次
-      var jobId = st.career.currentJob.id || "";
+      // [报告第 61 节] 果实 G15：currentJob.id → currentJob.levelId（该容器无 id 键）。
+      //   ★ 但**没有观测效果** —— 下一行的 st.stats.actionFreq 本身是零写入死字段
+      //     （第 57.9 节已定性：族 E 是苦工，需内容决策），freq 恒 0 → 事件仍死。
+      //     改这里只为「指针正确」+ 防止未来 actionFreq 接线后静默失配（同第 58.4 节 G7）。
+      var jobId = st.career.currentJob.levelId || "";
       var freq = st.stats.actionFreq[jobId] || 0;
       if (freq < 30) return false;
       // 60天冷却
@@ -3237,7 +3241,12 @@
           s.flags._skillBreakthroughDay = s.player.day;
           s.player.mental = Math.min(100, (s.player.mental || 0) + 3);
           // 根据当前工作提升关联技能
-          var jobId = s.career.currentJob.id || "";
+          // [报告第 61 节] 果实 G15：同上，id → levelId。
+          //   ⚠️ skillMap 的键是 **STREET_JOBS 的 id**（62 个，如 waste_recycling/courier_gig），
+          //      而 currentJob 存的是**职业路径等级**（tech_junior/fin_manager）——
+          //      两套 id 体系不同，levelId 查 skillMap 会落到默认值 "repair"。
+          //      这是「同一事件混用两套 id 体系」的遗留问题，与 actionFreq 一并立项第 62 节。
+          var jobId = s.career.currentJob.levelId || "";
           var skillMap = {
             waste_recycling: "repair",
             old_zhou_recycling: "repair",

@@ -1627,8 +1627,12 @@ function renderCareerJobs(state, parent) {
   try {
     if (state.player && state.player.day) {
       var _consecutiveWork = 0;
-      if (state.flags && state.flags._consecutiveWorkDays) {
-        _consecutiveWork = state.flags._consecutiveWorkDays;
+      // [报告第 61 节] 果实 G14：原读 state.flags._consecutiveWorkDays —— 零写入死字段，
+      //   恒 undefined → _consecutiveWork 恒 0 → 下面 `>= 7` 恒 false → **倦怠预警从未显示过**。
+      //   真实容器是 state.flags._workStreak（连续工作天数），由本文件 3659-3667 与
+      //   main.js:5250-5261 两处「连续工作天数追踪」维护。
+      if (state.flags && state.flags._workStreak) {
+        _consecutiveWork = state.flags._workStreak;
       }
       if (_consecutiveWork >= 7 && state.status) {
         html += '<div class="section" style="margin-top:8px;"><div style="font-size:11px;padding:6px 10px;background:rgba(255,152,0,0.08);border:1px solid rgba(255,152,0,0.2);border-radius:6px;color:var(--warning);">';
@@ -2381,8 +2385,12 @@ function renderCareerOverview(state, parent) {
   try {
     if (state.player && state.player.day) {
       var _consecutiveWork = 0;
-      if (state.flags && state.flags._consecutiveWorkDays) {
-        _consecutiveWork = state.flags._consecutiveWorkDays;
+      // [报告第 61 节] 果实 G14：原读 state.flags._consecutiveWorkDays —— 零写入死字段，
+      //   恒 undefined → _consecutiveWork 恒 0 → 下面 `>= 7` 恒 false → **倦怠预警从未显示过**。
+      //   真实容器是 state.flags._workStreak（连续工作天数），由本文件 3659-3667 与
+      //   main.js:5250-5261 两处「连续工作天数追踪」维护。
+      if (state.flags && state.flags._workStreak) {
+        _consecutiveWork = state.flags._workStreak;
       }
       if (_consecutiveWork >= 7 && state.status) {
         html += '<div class="section" style="margin-top:8px;"><div style="font-size:11px;padding:6px 10px;background:rgba(255,152,0,0.08);border:1px solid rgba(255,152,0,0.2);border-radius:6px;color:var(--warning);">';

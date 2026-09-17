@@ -36,7 +36,14 @@
         if (!st || !st.player) return false;
         if (st.gameOver) return false; // gameOver 闸门
         if (!st.career || !st.career.currentJob) return false;
-        var id = st.career.currentJob.id || "";
+        // [报告第 61 节] 果实 G15：原读 st.career.currentJob.id —— currentJob **没有 id 键**
+        //   （真实结构见 ui/career_dev.js:3375-3383，是 levelId）→ id 恒 "" →
+        //   下面的正则永不匹配 → 本事件从未触发过。
+        //   判据：正则后缀集 {senior,lead,manager,principal,director,headteacher}
+        //   精确命中 CAREER_PATHS 的 54 个 level id 中的 16 个（tech_senior/tech_lead/
+        //   fin_manager/des_director/...），**不命中任何 path id** → 目标容器是 levelId 无疑。
+        //   同款修复先例：core/career_path_events.js:667「currentJob.id→levelId」。
+        var id = st.career.currentJob.levelId || "";
         // 仅高职级(senior/lead/manager/principal/director/headteacher)触发
         if (!/_(senior|lead|manager|principal|director|headteacher)$/.test(id)) return false;
         // 心智已临界则不再叠加压力(防御)
