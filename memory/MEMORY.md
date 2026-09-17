@@ -1,35 +1,71 @@
-- [v3.1 NG+ 继承增强](v3.1-ng-plus-inheritance.md) — 继承摘要弹窗可视化 + 35岁路径/道德分/NPC巅峰好感展示 + 加成消费断链修复
-- [Career Milestone Events v3.22](career-milestone-events-v3.22.md) — 9个街头工作×3阶段里程碑叙事事件 + 带薪年假机制
-- [Review Improve v3.1](review-improve-v3.1.md) — 审查改进 v3.1 SOP（继承 v3.0 + 全剧本适配/峰终定律/留存机制）
-- [Location-Aware Action Category Ordering](location-aware-action-category-ordering.md) — 16个地点按功能优先级的行动分类重排系统
-- [Achievement System Audit 2026-07-03](achievement-system-audit-2026-07-03.md) — 成就系统全面审计：首日触发/逻辑错误/flag挂钩/技术债务
-- [Mobile Tab Debug Lesson 2026-07-04](mobile-tab-debug-lesson-2026-07-04.md) — 缺失`</aside>`导致移动端Tab栏消失的调试教训
-- [File Splitting v3.13](file-splitting-v3-13.md) — P1 超大文件按主题拆分（events_street×3 + startup×2 + render×3）
-- [Write vs Edit Lesson 2026-07-04](write-vs-edit-lesson-2026-07-04.md) — 误用 Write 覆盖整个文件导致 switchTab 丢失的教训
-- [P0/P1 Fix 2026-07-04](p0-p1-fix-2026-07-04.md) — v3.13e 全面修复：6项Bug+经济平衡调参
-- [v3.5 事件3条+天气内联](mobile-ui-v3.5-weather-log.md) — 事件记录默认3条+天气内联显示+预报交替闪烁
-- [v3.7 交易/事件/弹窗修复](v3.7-trade-event-modal-fix.md) — 交易系统全面优化（undefined/卖推荐单一/单一路径）+ 暴雨事件语境 + 移动端弹窗居中
-- [navigation-system-v1](navigation-system-v1.md) — 全游戏统一导航系统 (navigation.js)
-- [convention-over-configuration-methodology](convention-over-configuration-methodology.md) — 约定式自动归类核心方法论
-- [v3.24-daily-report-peak-end-rule](v3.24-daily-report-peak-end-rule.md) — v3.24 日终报告峰终定律增强：今日高光+明日展望+留存钩子
-- [v3.25-work-streak-system](v3.25-work-streak-system.md) — v3.25 连续工作系统：劳动节奏+禀赋效应+留存闭环
-- [Crossroads Card System v3.1](crossroads-card-system-v3.1.md) — 命运抉择卡机制设计 + 蒙特卡洛平衡验证（safe 68-72% / bold 12-56% 存活，依赖生活方式）
-- [tab-system-optimization-v3.31](tab-system-optimization-v3.31.md) — Tab切换系统全面优化（子Tab内容积累/社交返回/装备导航/全局审计）
-- [nav-button-binding-fix-v3.32](nav-button-binding-fix-v3.32.md) — 导航死按钮修复 + 交通AP按距离×方式动态计算
-- [commute-system-merge-v3.33](commute-system-merge-v3.33.md) — 通勤方式合并（快速出行+交通方式→通勤方式+步行）
-- [agnes-api-claude-code-integration](agnes-api-claude-code-integration.md) — Agnes API + Claude Code 踩坑记录：claude.exe 不认 env var，必须用 --settings JSON + bare 模式
-- [CoC 全量分析及实施计划](coc-full-analysis-plan.md) — 约定式自动归类(CoC)全面审计：22个已落地系统 + 10个待实施领域(P0/P1/P2) + P0全3项已完成(成就触发/节日事件/联动规则)
-- [v3.5x-news-depth-rework](v3.5x-news-depth-rework.md) — 新闻系统深度影响链条全面修复（6大传导断层+8个叙事事件，2026-07-09，commit 65b06fc4）
-- [v3.52-cooking-npc-events-bak-cleanup](v3.52-cooking-npc-events-bak-cleanup.md) — 3个烹饪×NPC联动事件（cooking技能/林阿姨/陈师傅）+ 清理2个废弃bak文件（2026-07-09，commit d7e98f0d）
-- [v3.60-loop-sixth-round](v3.60-loop-sixth-round.md) — /loop 第6轮：15个options→choices P0修复 + 3个联动事件（多技能协同/银行VIP/熟客经济）
-- [v3.61-loop-seventh-round](v3.61-loop-seventh-round.md) — /loop 第7轮：corporate死代码修复 + 4个地点事件（工业区/医院/娱乐城/菜市场） + market引用清理
-- [v3.62-loop-eighth-round](v3.62-loop-eighth-round.md) — /loop 第8轮：填补最后3个零事件地点（郊区/政府办事大厅/培训中心） → 16个地点全部拥有事件覆盖
-- [v3.63-opening-news-deep-link](v3.63-opening-news-deep-link.md) — 开局新闻深度联动修复：新闻note实际生效/投资联动/AI新闻影响/选择面板/news_driven_events ID兼容（2026-07-09）
-- [v3.63b-multi-scenario-audit](v3.63b-multi-scenario-audit.md) — 多剧本适配审查：全剧本系统审计，修复getNextGoals 2个遗漏（midlife_crisis/fresh_grad）
-- [v3.20 叙事触发一致性审查+联动事件扩充](v3.20-narrative-trigger-consistency-audit.md) — 7个事件文件250+事件A类审查（0缺陷已修复）+ 4个新联动事件：修理铺合作/饥饿热汤/雨中同行/借债困境（2026-07-09，commit b15dc467）
-- [中文外显规则](chinese-only-display-rule.md) — 游戏外显内容只能是中文，英文需隐藏到代码中（2026-07-10）
-- [双图标禁止规则](double-icon-rule.md) — 行动/按钮不能同时有 name 中的 emoji 和 icon 字段（2026-07-10）
-- [v3.76 事件叙事-触发自洽性审查 R120](v3.76-narrative-trigger-consistency-r120.md) — 系统性审查5个事件文件250+事件，修复A类4个：bike_share_boom/live_stream_rush/shopping_fest/consumption_down（文本暗示特定职业经历但缺少conditions检查）（2026-07-10，commit 477d2237）
-- [R120 联动事件扩充](v3.77-linkage-events-r120.md) — 新增5个空白区联动事件：老手特遇(veteran_client)/专业技能视角(repair_expert_eye)/NPC暗线(old_zhou_secret_channel)/天气×位置(rain_market_vs_park)/饥饿积累(hunger_accumulation)（2026-07-10，commit ca9be7af）
-- [v3.118 域E 联动增强 R27](../.claude/domain-optimization-round-27.md) — 域E(经济/投资)第二轮：A类0项 + 联动增强2项（econ_career_invest_unlock E→C 私募跟投圈层 / econ_portfolio_drawdown E→B 组合峰值回撤损失厌恶叙事）（2026-07-15，本地commit，未push）
-- [仓库结构重构 2026-07-15](repo-structure-2026-07-15.md) — 双仓库分离(根→claude-config.git/master，子模块→city-life-story.git/**main**)；🚨铁律:子模块origin≠根origin，游戏推main/配置推master，绝不让子模块远程指回claude-config
+# MEMORY — 城市浮生记 8域轮换优化循环（压缩版 2026-07-31 v4）
+
+## 提交纪律
+- 开轮先 `git log` 重算 recency（**loop-state 常严重滞后，勿信**）；轮号被占则 **b 后缀避让**；并行在途改动不碰。
+- 提交前 `git rev-parse HEAD > .claude/last_known_head`（同窗口每笔提交前都重同步）。改源后必 `python build.py`（约 3 分钟，dist 须比 src 新）。只 add 本轮文件；绝不 `-A`/`--amend`/force。push 前 `git pull --rebase origin main`，冲突即中止。
+- 竞态窗口建议 `git commit -- <本轮路径>`，否则会吸入并行刚 staged 的文件。
+- pre-commit 报 dist 过期（并行 touch src）→`git diff HEAD --stat` 核内容一致后 touch dist 重试，勿盲目重 build。
+- 新 linkage 必挂 `src/index.html` `<script>`（漏挂=悬空，build 静默剔除）。push 前双向核对 `git show HEAD:src/index.html | grep <文件>` + `git show HEAD:dist/app.js | grep -c <事件前缀>`。
+- ⚠️ **window 导出严禁 wrapper**：经典脚本顶层函数声明本身即全局绑定，`window.f=function(){return f(...)}` 会无限递归爆栈。一律 `window.f = f`。
+- push 常因本地代理 3067 未起（TLS）失败；本地 ahead 属正常，任一窗口网络恢复后 push 即闭合。
+
+## 验证
+- **语法体检（R1016b 起纳入例行）**：单进程 `vm.Script` 全量扫 `src/js/**/*.js`（1151 文件约 2 秒）。逐文件 spawn `node --check` >3min 不可用。
+- **导出裸引用体检（R1017b 起纳入例行）**：`node .claude/_export_audit_r1017b.cjs` 扫全库 `window.X = X;` 中本文件未定义的标识符。语法正确但顶层求值抛 ReferenceError → **中断该文件此行之后全部顶层代码**（R1017b career_dev.js 一处吃掉 1172 行 + 16 个导出）。误报只有 `window.X = true;` 与形参名。同源快检：MC harness 头部 `[HEADLESS] LOAD ERROR` 与 `加载: xxms, 错误: N`，N 必须为 0。
+- MC：`node --max-old-space-size=8192 tests/monte_carlo.cjs --trials 10 --days 500`（OOM 回退 6x400）。判过：0 TypeError/ReferenceError/NaN/Infinity + 前 7 天死亡率 0%。存活率 <80%（trader60/social70/corporate50）、grinder 500d 可低至 0% 均为既有 RNG 严苛度，非崩溃。**"全策略 0% 存活 + 耗时 <1s" = 硬崩溃** → harness catch 打 e.stack 定位。
+- 开轮例行 `grep -cE '^t' src/index.html` 清扫杂散 t 字符（并行挂载模板会产病）。
+
+## 竞态形态
+- 本窗口角色 =「权威 bookkeeping + MC 验证 + 深审 A 类 + 联动」。代码常在写完 3 分钟内被并行 `git add -A` 扫走（多半 IDENTICAL）→ 四项核验（源/挂载/dist/A类修复 grep）通过即闭合，勿重做。
+- 并行会 `reset --hard` 冲掉未提交落盘改动 → 改完关键文件立即 `git status` 核验。
+- 悬空双形态：提交源+挂载不重建 dist（悬空 dist）/ 提交 dist+挂载漏 add 源（反向孤儿）→ 本窗口负责闭合。
+- CLAUDE.md 为 CRLF 且被并行持续重写 → Python 字节级替换保留换行；无法干净暂存则跳过迭代表，权威在 round doc + loop-state。旧 stash（27+ 条）勿 pop。
+
+## 事件系统（四套，全局 bundle 非 import）
+- `moral_events.js`：`condition`（单数）。`news.js`：NEWS_EVENTS，effects 的 job id/symbol 必须真实存在。
+- `events_core.js`：RANDOM_EVENTS；**无 `phase` 字段 = 死事件**，linkage 必须显式 `phase:"street"/"corporate"`；门控 `conditions`（函数）。唯一事件入库单点 `recordEventToHistory()`。
+- `startup_events.js`（在 **src/js/data/** 非 core）：只认 `conditions:`（复数）；容器 `state.startup.company`；effect 走 STARTUP_FIELD_MAP 白名单 = {cashReserve,reputation,marketScore,technologyScore,revenue}。
+- 严禁重建已删旧文件；`subsidy` 为故意删除勿还原。
+- 价格刷新唯一单点：`src/js/phase1/trade.js` → `updateAllPrices(state)`（daily_pipeline 每 3 天调用）。
+
+## state.js 真实字段（写条件前必核）
+- 幸福 `needs.happiness`；心智 `player.mental`；健康 `status.health`；饥饿 `needs.hunger`；现金 `resources.cash`；存款 `resources.bankBalance`；流水 `flags._dailyTransactions`；证书 `state.certificates`。**死字段黑名单**：player.happiness / needs.health / player.health / certs。
+- `player.corporate.upward` 惰性(||50)；`corporate.team/jobOffer/company/colleagues` 顶层真实；`player.fame` 真实。
+- skills 真实键：cooking/repair/coding/english/driving/sales/management/accounting/electrician/welding/medicine/social（无 writing/design/agility/trade）。`addSkillXp(假键)` 静默丢弃。
+- reputation 顶层按地点 key；relationships 可 undefined；xiaoli/auntie_lin/master_zhao 无档案 → firstMetNpc 遍历。
+- investment：industry ∈ WORLD_SECTORS{科技,新能源,消费,金融,房地产,医药}；公司股价 `corporate.stockMarket[sym].price`；`inv.portfolio` 由 investment.js 每日 tick 单点维护（R738b）。
+- personalGrowth：`health.{physical{score},mental{score,stress,anxiety,depression},metabolic}` + learning + image；读分一律 `_pgHealthScoreR649b` 双形态安全读。
+- 域H company：morale(惰性)/burnRate/cashReserve/monthsOfRunway/boardMembers[]/shareholderTrust/shareholderSatisfaction/revenue/valuation/boardPressureLevel/mediaRelations/sentimentScore/crisisLevel。
+
+## 域铁律
+- **D**：引用 NPC 须 `rel && rel.met`；好感一律 `applyAffinityChange(state,npcId,change,reason)`；显名 `getNpcDisplayName`。
+- **C**：职业线唯一入口 `CAREER_PATHS`(ui/career_dev.js)；jobs.js `requiredFlag:"_synergy_<id>"` 须精确匹配 skill_synergy 真实 id。
+- **E**：持仓写入前 `Array.isArray` 守卫；除数 `isFinite` + >0。
+- **G/H**：daily_pipeline 无 slot 注册 → 包装全局函数接线；UI 安全区(100dvh/safe-area)勿回退。
+- 模糊指令先 grep 确认存在；用户「无关」= 停手。
+
+## A类净尽结论（勿重复审）
+最近深审轮：**A=R903b · B=R1016b · C=R792b · D=R900b · E=R819b · F=R826b · G=R894b · H=R1017b**。
+下轮最陈旧：**E(R819b) > F(R826b) > C(R792b)**。
+
+- 域A(R903b)：CERTIFICATES 18 证 effects 已逐项对账，driver_license.agility / bicycle.fatigue_reduction / warm_coat.comfort 三处死数据已接入 daily_pipeline。construction_safety.injuryReduction 硬编码 0.5 已兑现，非死数据勿修。dental/vision score 不存在（误报已清）。
+- 域B(R1016b)：详见下方"近况"。story 占位符泄漏三层已全闭合（R455 text()优先 / R722b tooltip 剥离 / R785b story 兜底剥离），勿重复审。
+- 域C(R792b)：假技能键全库活代码=0；synergy requiredFlag 8 处全匹配；CAREER_PATHS 无缺 job id；`_jobMultipliers` 在 main.js 有真实消费方。
+- 域D(R900b)：social_network.js 全链已通（发朋友圈按钮解锁+visibility 改 public / triggerPublicOpinionCrisis 接线 / npcPostFeed 接线）。visibility 合法枚举仅 'public'/'friends'/'private'。affinityRewards 引擎只认数组格式。
+- 域F：`pg.psychology` 为 personal_growth.js 真实活结构（render.js 读它正确）；navigation.js:761 programmer 为 JSDoc 示例勿改。
+- 误报勿修：webapp_runtime_bridge getPlayerHealth 主路径正确；establishMentorship/takeMentee 平行实现；setStopLoss 有调用方。C类不修：items.js skillStudy 无应用器；finance.js hasStreetStall 无 writer；并行 r715/r721 id 前缀误用。
+- 残余 B类：`pg.psychology` 与 `health.mental` 双心理系统数据层不互通（render.js 读前者，events part2-8 读后者）。
+- 死字段黑名单全库 grep=0 即诚实报 A类=0（R712b 域H 先例）。
+
+## 零消费素材账
+- 域A/E：trade 剩 lastPriceUpdate/_firstTradeDone（低价值）。_portfolioMilestone 全档已消费。propertyPhaseStartDay / _propertyPolicyTightness / stopLossOrders 待接叙事。
+- 域B：R1016b 后清零，剩 `_b722bPatternCd`（冷却 flag，低价值）。
+- 域C：job_milestone 写-only 剩 _buskingVenue/_constructionCertPath/_factoryReskilling/_gaokaoTutoring/_laoGuanFriend/_tutoringReputation/_vendingLoyalty/_wasteRecyclingContract（均有即时收益，非 A 类）。
+- 域H：company.efficiency 事件层薄弱；写-only 待读 _h698Sleep/_h698Focus/_h712bSprintPlan/_h712bDelegated。R1017b 后 _corpPerfStockBoost/_corpPerfStockDrag/_acceptedVCFunding 已闭环，TEAM_MEMBERS.salary/.skill 已接入定价与季度结算。
+
+## 近况
+- **R1017b 域H(07-31)**：A类 4 项均为「写-only/读-only 断链」型死数据。①`_corpPerfStockBoost/_corpPerfStockDrag` corp_ops.js 写-only → stock.js `updateStockPrices` 消费+清除，配 `_employerStockSymbolR1017b()` 三级映射（全名精确→名称前缀互含→行业板块兜底）。②`_acceptedVCFunding` events_corp.js 读但全库零写入 → startup.js `fundingRounds.push` 后补写。③招聘价写死 ¥10,000 忽略 TEAM_MEMBERS.salary（3.5 倍差价无解释）→ 新增 `getTeamHireCost()`=max(8000, salary*0.6)，corp_ui.js 同步真实价+展示专长。④TEAM_MEMBERS[].skill 全库零消费 → corp_ops.js endQuarter 按专长差异化结算（coding/politics/endurance/learning/general，每专长每季一次防叠加）。联动 3（founder_stress_checkup H→G 首消费 _founderStressLevel / quarter_ledger_review H→E 首消费 7 个季度快照 flag / headhunter_pricing H→C）。**外加 3 项跨域全站型 A 类**（MC harness `LOAD ERROR` 暴露，加载错误 3→0）：career_dev.js:5488 `window.getSkillHealthBonus = getSkillHealthBonus`（全库无此函数）抛 ReferenceError **吃掉该文件后 1172 行 + 16 个 window 导出**（showCareerNavModal/switchCareerSubTab 等）；festivals.js:1395 getFestivalWorkMod 同型；actions.js:342 getAvailableActions **导出误位**（真实定义在 main.js，加载序在后）→ 全部 typeof 守卫 + main.js 补真实导出。news.js 两处跨文件裸引用预防性加固（B类）。**审计法沉淀**：`.claude/_h_audit.cjs` flags 写-only/读-only 双向对账 + company.<field> 有读无写对账；`.claude/_export_audit_r1017b.cjs` 导出裸引用全库扫描。
+- **R1016b 域B(07-31)**：史上最大范围 A 类。①**全库 22 个已挂载 linkage 文件 SyntaxError**（三形态：`story":"` 键名残缺引号 24 处 / r932 字符串内嵌未转义双引号 / `catch(e){return""})()` 缺函数体闭合 `}` 6 处）→ 整 IIFE 永不执行 + 阻断全站 build，跨 A/B/C/D/E/F/G/H 八域，已全修，全库语法错误归零。②**6 个计数器全库零写入方门控 35 事件**（_priceVolatilityCount 30 / _priceEventCount 2 / _eventsExperienced 2 / _economicEventCount 1 / _managementEventCount 1 / _majorChoiceCount 1）→ 在 trade.js `updateAllPrices` 与 events_core.js `recordEventToHistory`+选项结算点两处单点补写。③r840/r848 域A 悬空 6 事件补挂载。联动 3（b1016b_volatility_veteran B→A / b1016b_decision_weight B→G / b1016b_story_teller B→D）。
+- R894b 域G：retire_advisor 漏设 _pensionBase（inline 优先兜底被 _inlineApplied 跳过）/ 空 skills.reduce 无初始值 / 杂散 t 字符 54 处 / 14 脚本双挂载去重。
+- R792b 域C：job_milestone 承诺零兑现 4 处 → daily_pipeline 月度兑现。**承诺零兑现审计法**：grep 里程碑事件写入 flag → 全库读取扫描 → desc/hint 承诺 vs apply 实效逐项对照。
+- R757b 域D：新 NPC 好感承诺零兑现 2 处。R738b 域E：investment.portfolio 零写入致 ≈20 死事件 → tick 单点维护复活。
