@@ -1,0 +1,123 @@
+# ──────────────────────────────────────────────────────────────────────────────
+# 城市浮生记 · 行尾符与二进制文件规则
+#
+# [2026-09-17 新增]
+#
+# ── 一、建立本文件前先做的量化（权威数据源：git ls-files --eol）──────────────
+#
+# 仓库共 1751 个跟踪文件，实际行尾画像：
+#
+#   i/lf    w/lf      1574 个   ← 主体（90%）。索引与工作树都是 LF，一致
+#   i/-text w/-text    106 个   ← 二进制，已被 git 正确识别
+#   i/crlf  w/crlf      52 个   ← 少数 CRLF（package.json、finance.js、
+#                                  dist/app.js、6 个 .claude/*.md 等）
+#   i/mixed w/mixed     16 个   ← ⚠️ 文件内 CRLF/LF 混用
+#   i/none  w/none       2 个   ← 空文件
+#   i/lf    w/crlf       1 个   ← ⚠️ 索引与工作树不一致
+#
+# 结论：本仓库**从未有过行尾规范**，文件各行其是。本文件的价值不在于
+# "消除某个巨大噪声"（见下方勘误），而在于**给未来立规矩**，并把现有
+# 的 16 个 mixed + 52 个 CRLF 逐步收敛。
+#
+# ── 二、★ 勘误：一个被误读到极致的测量结果 ───────────────────────────────────
+#
+# 本文件初稿曾写着「若用 eol=lf 会导致 1751 个文件被判已修改」。这是错的。
+#
+# 错误来源：当时用 `git add --renormalize --dry-run . | wc -l` 作为度量，
+#   得到 1751（恰好等于跟踪文件总数）便断定"全仓库都会变脏"。
+#
+# 真实语义：`--renormalize` 的输出列出的是「将被重新加入索引的文件」，
+#   并**不区分内容是否真的改变**。它列出全部 1751 个文件，是因为它们
+#   都会被重新过一遍索引，而不是因为它们都会变。
+#
+# 决定性反证：抽查 apple-touch-icon.png，其在 --dry-run 列表中出现，
+#   但索引 hash 与工作树 hash 完全一致（6d563074…），根本没变。
+#
+# 正确测量：把本文件移走 / 放回，各跑一次 `git status --porcelain`，
+#   两次结果都是 2 个变更（.gitignore 与 memory/MEMORY.md，即有意修改），
+#   与本文件是否存在无关。→ 本文件对现有工作树**零噪声**。
+#
+# ★ 元教训：不要用「会被处理的文件数」冒充「会被改变的文件数」。
+#   度量工具本身若经过被测对象（如 hash-object 会应用 .gitattributes
+#   过滤器），其输出就不能用来评估该对象的影响。
+#
+# ── 三、关于 eol 的取舍 ──────────────────────────────────────────────────────
+#
+# 采用 `* text=auto`（不写死 eol），理由：
+#   · 仓库主体本就是 LF（1574 个），无需强制就已经是 LF；
+#   · 少量 CRLF（52 个）属于历史遗留，强制改写会把它们并入无关提交；
+#   · text=auto 让 git 按内容判断，将来新文件统一以 LF 入库。
+# 需要强制行尾的类别，在下方单独用 eol= 显式声明（.bat / .sh）。
+# ──────────────────────────────────────────────────────────────────────────────
+
+# ── 默认：按内容自动判断是否文本；仓库内统一 LF 存储 ──────────────────────────
+* text=auto
+
+# ── 明确声明为文本（参与行尾归一化）──────────────────────────────────────────
+*.js    text
+*.cjs   text
+*.mjs   text
+*.ts    text
+*.tsx   text
+*.jsx   text
+*.json  text
+*.css   text
+*.html  text
+*.htm   text
+*.md    text
+*.txt   text
+*.log   text
+*.py    text
+*.yml   text
+*.yaml  text
+*.svg   text
+*.map   text
+
+# ── 二进制：禁止任何转换 ─────────────────────────────────────────────────────
+# -text 表示"不是文本"：不做行尾转换、不尝试合并、diff 只报大小变化。
+# 这既保护文件不被损坏，也让 diff 输出干净。
+*.png   -text
+*.jpg   -text
+*.jpeg  -text
+*.gif   -text
+*.webp  -text
+*.ico   -text
+*.bmp   -text
+*.mp3   -text
+*.wav   -text
+*.ogg   -text
+*.m4a   -text
+*.mp4   -text
+*.webm  -text
+*.zip   -text
+*.gz    -text
+*.7z    -text
+*.pdf   -text
+*.woff  -text
+*.woff2 -text
+*.ttf   -text
+*.otf   -text
+*.eot   -text
+*.xlsx  -text
+*.docx  -text
+*.pptx  -text
+
+# ── Windows 脚本：强制 CRLF 检出 ─────────────────────────────────────────────
+# .bat 的多行语句与 goto 标签对 LF 容忍度差，工作树保留 CRLF。
+*.bat   text eol=crlf
+*.cmd   text eol=crlf
+*.ps1   text eol=crlf
+
+# ── Shell 脚本：强制 LF 检出 ────────────────────────────────────────────────
+# 关键：CRLF 会让 shebang 变成 "#!/bin/sh\r"，在类 Unix 环境报
+# "bad interpreter" 而无法执行。本仓库的 .githooks/ 与 .claude/ 下
+# 有多个 shell 脚本，必须保证 LF。
+*.sh    text eol=lf
+*.bash  text eol=lf
+
+# ── 大体积产物：不做 diff ────────────────────────────────────────────────────
+# dist/app.js 约 17MB，参与 diff 会拖慢每一次 git 操作。
+# 注意：**保持 text 属性**（不写 -text），因为项目的提交纪律要求
+# 核对 dist 内容（"四项核验"之一），故仍需可读、可 grep。
+dist/app.js     -diff
+dist/app.min.js -diff
