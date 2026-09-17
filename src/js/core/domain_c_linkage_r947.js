@@ -7,7 +7,7 @@ triggers:{minDay:20,interval:70,maxRepeats:5,excludeFlags:["_c947HealthCd"]},
 conditions:function(st){if(!st||!st.player||st.gameOver)return false;if(st.flags&&st.flags._c947HealthCd)return false;var _f=(st.needs&&st.needs.fatigue)||0;var _j=st.career&&st.career.currentJob;return(_f>=55||(st.flags._workStreak||0)>=3)&&_j&&st.player.day>=20;},
 probability:0.04,repeatable:true,
 choices:[
-{text:"🏥 调整作息",hint:"疲劳-15,健康+5,置_c947Health",apply:function(st){if(!st)return;st.flags=st.flags||{};st.flags._c947HealthCd=true;st.flags._c947Health=true;if(st.needs)st.needs.fatigue=Math.max(0,(st.needs.fatigue||0)-15);if(st.player)st.player.health=Math.min(100,(st.player.health||50)+5);if(typeof StateManager!=="undefined")StateManager.addMessage("🏥 调整了作息——疲劳-15,健康+5。","success");}},
+{text:"🏥 调整作息",hint:"疲劳-15,健康+5,置_c947Health",apply:function(st){if(!st)return;st.flags=st.flags||{};st.flags._c947HealthCd=true;st.flags._c947Health=true;if(st.needs)st.needs.fatigue=Math.max(0,(st.needs.fatigue||0)-15);if(st.status)st.status.health=Math.min(100,(st.status.health||70)+5);if(typeof StateManager!=="undefined")StateManager.addMessage("🏥 调整了作息——疲劳-15,健康+5。","success");}},
 {text:"💪 再坚持",hint:"心智+5",apply:function(st){if(!st)return;st.flags=st.flags||{};st.flags._c947HealthCd=true;if(st.player)st.player.mental=Math.min(100,(st.player.mental||50)+5);if(typeof StateManager!=="undefined")StateManager.addMessage("💪 再坚持。心智+5。","info");}}
 ]},
 {id:"c947_skill_invest_v1",phase:"street",icon:"📈",title:"技能驱动投资",

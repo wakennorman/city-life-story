@@ -61,7 +61,9 @@
               st.needs.fatigue = Math.max(0, (st.needs.fatigue || 0) - 20);
               st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 5);
             }
-            if (st.player) st.player.health = Math.min(100, (st.player.health || 50) + 5);
+            // [A类修复 · 2026-09-17] st.player.health 死字段→st.status.health（健康真实路径，state.player 无 health 键，原写法静默失效导致"健康+5"零兑现）
+            if (!st.status) st.status = {};
+            st.status.health = Math.min(100, (st.status.health || 70) + 5);
             if (typeof StateManager !== "undefined") {
               StateManager.addMessage("🏥 你决定休息一天，身体感觉好多了——疲劳-20, 健康+5。", "success");
             }

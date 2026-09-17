@@ -25,7 +25,7 @@ triggers:{minDay:35,interval:60,maxRepeats:5,excludeFlags:["_h1000FounderHealthC
 conditions:function(st){if(!st||!st.player||st.gameOver)return false;if(st.flags&&st.flags._h1000FounderHealthCd)return false;if(!st.corporate||!st.corporate.active)return false;return st.player.day>=35;},
 probability:0.04,repeatable:true,
 choices:[
-{text:"🏥 关注健康管理",hint:"健康+2,疲劳-4,置_h1000HealthWise",apply:function(st){if(!st)return;st.flags=st.flags||{};st.flags._h1000FounderHealthCd=true;st.flags._h1000HealthWise=true;if(st.player)st.player.health=Math.min(100,(st.player.health||50)+2);if(st.needs)st.needs.fatigue=Math.max(0,(st.needs.fatigue||0)-4);if(typeof StateManager!=="undefined")StateManager.addMessage("🏥 关注了健康管理——健康+2,疲劳-4。","success");}},
+{text:"🏥 关注健康管理",hint:"健康+2,疲劳-4,置_h1000HealthWise",apply:function(st){if(!st)return;st.flags=st.flags||{};st.flags._h1000FounderHealthCd=true;st.flags._h1000HealthWise=true;if(st.status)st.status.health=Math.min(100,(st.status.health||70)+2);if(st.needs)st.needs.fatigue=Math.max(0,(st.needs.fatigue||0)-4);if(typeof StateManager!=="undefined")StateManager.addMessage("🏥 关注了健康管理——健康+2,疲劳-4。","success");}},
 {text:"💪 再拼一拼",hint:"心智+3",apply:function(st){if(!st)return;st.flags=st.flags||{};st.flags._h1000FounderHealthCd=true;if(st.player)st.player.mental=Math.min(100,(st.player.mental||50)+3);if(typeof StateManager!=="undefined")StateManager.addMessage("💪 再拼一拼。心智+3。","info");}}
 ]}
 ];

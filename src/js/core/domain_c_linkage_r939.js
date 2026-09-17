@@ -40,7 +40,9 @@
           if (!st) return; st.flags = st.flags || {};
           st.flags._c939HealthCd = true; st.flags._c939HealthBalance = true;
           if (st.needs) st.needs.fatigue = Math.max(0, (st.needs.fatigue || 0) - 18);
-          if (st.player) st.player.health = Math.min(100, (st.player.health || 50) + 5);
+          // [A类修复 · 2026-09-17] st.player.health 死字段→st.status.health（健康真实路径）
+          if (!st.status) st.status = {};
+          st.status.health = Math.min(100, (st.status.health || 70) + 5);
           if (typeof StateManager !== "undefined") StateManager.addMessage("🏥 你调整了作息，身体舒服多了——疲劳-18,健康+5。", "success");
         }},
         { text: "💪 再坚持一下", hint: "心智+5", apply: function (st) {
