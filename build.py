@@ -130,12 +130,20 @@ def main():
         print(f"  📦 _headers")
 
     # 写入 index.html（瘦壳，只含内联 CSS + boot 脚本 + defer app.js）
-    with open(OUTPUT_FILE, 'w', encoding='utf-8') as f:
+    #
+    # ★ newline='\n' 不可省略：Python 文本模式默认做平台换行转换，
+    #   在 Windows 上会把 \n 写成 \r\n，而 Linux CI 上仍是 \n。
+    #   结果是同一个 src/ 在不同平台产出**不同字节**的 dist/——
+    #   本地 216554 字节（2534 个 CRLF）对线上 214020 字节（2534 个 LF），
+    #   内容逐字相同、仅行尾不同（用 diff --strip-trailing-cr 验证为 0 差异）。
+    #   这会污染提交历史：任何 Windows 侧跑完 build 后 dist/ 都显示为已修改。
+    #   显式指定 newline 后，产物跨平台逐字节一致。
+    with open(OUTPUT_FILE, 'w', encoding='utf-8', newline='\n') as f:
         f.write(html)
 
-    # 写入外部 JS bundle（app.js）
+    # 写入外部 JS bundle（app.js）—— newline 理由同上
     app_js_path = os.path.join(DIST_DIR, 'app.js')
-    with open(app_js_path, 'w', encoding='utf-8') as f:
+    with open(app_js_path, 'w', encoding='utf-8', newline='\n') as f:
         f.write(bundle_code)
     raw_kb = os.path.getsize(app_js_path) / 1024
 
