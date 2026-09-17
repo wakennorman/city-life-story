@@ -15,7 +15,7 @@
     "check:industry-profit": "node scripts/probe-industry-profit.cjs --quiet",
     "check:dangling": "node scripts/audit-dangling-refs.mjs",
     "check:recency": "node scripts/audit-domain-recency.mjs",
-    "test": "npm run check:js && npm run check:events && npm run check:reachability && npm run check:industry-profit && npm run check:dangling",
+    "test": "npm run check:js && npm run check:events && npm run check:reachability && npm run check:reachability-control && npm run check:industry-profit && npm run check:dangling",
     "verify:deploy": "node scripts/verify-deploy.mjs",
     "build:legacy": "python build.py",
     "deploy": "npm run build:legacy && npm run verify:deploy && netlify deploy --dir=dist --prod",
@@ -26,7 +26,8 @@
     "lint": "eslint \"src/js/**/*.js\"",
     "lint:fix": "eslint \"src/js/**/*.js\" --fix",
     "test:unit": "node tests/finance.test.cjs && node tests/finance.canonical.test.cjs && node tests/newsPriceMods.test.cjs && node tests/newsPoolPurity.test.cjs && node tests/eventSlotStarvation.test.cjs && node tests/triggerRegistry.test.cjs && node tests/rngHygiene.test.cjs && node tests/difficulty.canonical.test.cjs && node tests/skillBonuses.canonical.test.cjs && node tests/naming.canonical.test.cjs && node tests/branchBonuses.canonical.test.cjs && node tests/fatigueReduction.canonical.test.cjs && node tests/workModifier.canonical.test.cjs && node tests/statusInteractions.canonical.test.cjs && node tests/emotionMeta.canonical.test.cjs && node tests/reputation.canonical.test.cjs && node tests/illnessNeedsImpact.canonical.test.cjs && node tests/needsDecay.canonical.test.cjs && node tests/investmentAssetLookup.canonical.test.cjs && node tests/travelHops.canonical.test.cjs && node tests/travelApCost.canonical.test.cjs && node tests/sortUtils.canonical.test.cjs && node tests/skillSynergy.canonical.test.cjs",
-    "check:reachability": "node tests/events_reachability.cjs"
+    "check:reachability": "node tests/events_reachability.cjs",
+    "check:reachability-control": "node tests/reachability_negative_control.cjs"
   },
   "devDependencies": {
     "esbuild": "^0.28.1",

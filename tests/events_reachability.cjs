@@ -198,6 +198,18 @@ function loadSrcText() {
 }
 
 // 查某路径是否有写入点（覆盖四种形态）
+//
+// 【坑⑤ · 2026-09-17 · 报告第 52 节】字符类里排除 `.` = 排除全部真实写入
+//   初版形态 1 用 `(?:^|[^.\w$])` 作前导边界，本意是"跳过 obj.x 这种属性访问"。
+//   但**真实写入恰恰就是属性访问形态**：`inv._totalInvestmentProfit = ...`
+//   字段前一个字符就是 `.` → 全部真实写入被前导边界挡掉。
+//   → 把有写入的活字段（_totalInvestmentProfit / portfolio 等）系统性判成死字段。
+//   修复：字符类去掉 `.`，改为 `(?:^|[^\w$])`；并补上复合赋值 `+= -= *=` 与 `++/--`。
+//   定稿正则经 19 条正反例验证（见 .tmp-probe/write-site-fix2.cjs 思路）：
+//     ✓ 排除 `=== == => >= <=`、纯读取、函数调用
+//     ✓ 命中 `x = 1` / `o.x = 1` / `o.x += 1` / `o.x++` / `{ x: 0 }`
+//     ~ 已知残留：`||=` 漏判（偏保守，判为死）、`x: () => 1` 误判（偏保守，判为活）
+//   两个残留方向都朝「判为活」倾斜 —— 门禁宁可漏报不可误报，符合预期姿态。
 function hasWriteSite(pathStr) {
   var text = loadSrcText();
   var segs = pathStr.split(".");
@@ -207,8 +219,10 @@ function hasWriteSite(pathStr) {
   if (!key || !/^[A-Za-z_$][\w$]*$/.test(key)) return true; // 非法键名不判
   var k = key.replace(/\$/g, "\\$");
 
-  // 形态 1：赋值 / 对象字面量 key / 默认参数（排除 == === =>）
-  if (new RegExp("(?:^|[^.\\w$])" + k + "\\s*(?:=(?![=>])|:\\s*(?![=]))", "m").test(text)) return true;
+  // 形态 1：赋值 / 复合赋值 / 自增自减 / 对象字面量 key
+  //   `[-+*/%&|^]?=` 覆盖 = += -= *= /= %= &= |= ^=；
+  //   `(?!=|>)` 排除 == === =>；`:\s*(?![=])` 排除 `x: () =>`（但允许 `{x: 0}`）
+  if (new RegExp("(?:^|[^\\w$])" + k + "\\s*(?:[-+*/%&|^]?=(?!=|>)|\\+\\+|--|:\\s*(?![=]))", "m").test(text)) return true;
   // 形态 2：数组/集合方法
   if (new RegExp(k + "\\s*\\.\\s*(?:push|unshift|splice|set|add)\\s*\\(", "m").test(text)) return true;
   // 形态 3：Object.assign
@@ -366,10 +380,20 @@ for (var a2 = 0; a2 < absentPaths.length; a2++) {
   else regressions.push(pp);
 }
 
-// 基线中已修复的条目（本次未再出现）
-var fixedInBaseline = [];
+// 基线中「本次未再命中」的条目。
+//
+// 【措辞坑 · 2026-09-17 · 报告第 52.5 节】
+//   初版把这类条目叫「已修复」并打印 `✓ 已修复: xxx`。这是**误导性**的：
+//   "不再命中"有三种可能，其中只有第一种是真修复 —
+//     ① 有人补了写入点（真修复）
+//     ② 门禁判据被修正，之前的命中是假阳性（代码一行没动）
+//     ③ 事件被删除/改名（路径不再被引用）
+//   第 52 节实测：一次性消掉 23 条，**全部属于②**。
+//   继续叫「已修复」会把"我的尺子修好了"写进历史，让后人误以为问题已解决。
+//   → 改叫「不再命中」，并要求人工确认属于哪一种。
+var noLongerHit = [];
 for (var bp in baselineData.paths) {
-  if (absentPaths.indexOf(bp) === -1) fixedInBaseline.push(bp);
+  if (absentPaths.indexOf(bp) === -1) noLongerHit.push(bp);
 }
 
 for (var r2 = 0; r2 < regressions.length; r2++) {
@@ -387,13 +411,14 @@ function report() {
     "[reachability] 死路径 " + absentPaths.length + " 条（存量 " + known.length +
       " / 新增 " + regressions.length + "）",
   );
-  if (fixedInBaseline.length > 0) {
+  if (noLongerHit.length > 0) {
     console.log(
-      "[reachability] 基线中已有 " + fixedInBaseline.length +
-        " 条不再出现（已修复），建议从 reachability_baseline.json 移除：",
+      "[reachability] 基线中已有 " + noLongerHit.length +
+        " 条本次未再命中 —— 请人工确认属于哪种（勿直接当成已修复）：",
     );
-    for (var fi = 0; fi < Math.min(fixedInBaseline.length, 10); fi++) {
-      console.log("  ✓ 已修复: " + fixedInBaseline[fi]);
+    for (var fi = 0; fi < Math.min(noLongerHit.length, 10); fi++) {
+      console.log("  ? 未命中: " + noLongerHit[fi] +
+        "   [需确认: 补了写入点 / 判据修正 / 事件已删除]");
     }
   }
   if (PRINT_ALL) {
