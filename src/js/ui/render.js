@@ -2458,6 +2458,13 @@ function createActionCard(action, state) {
       }
       if (action.handler) {
         action.handler();
+        // [全系统自洽修复 · 报告第 53 节] 动作使用记账
+        //   → 写 stats.actionFirstUse（复活 isActionNew / ✨新 徽章）
+        //   → 写 stats.visits（复活 4 处"去过几个地点"的事件门槛）
+        //   必须在 renderAll() 之前：让"新"徽章在同一次渲染中即可反映。
+        if (typeof ActionSort !== "undefined" && ActionSort.recordActionUse) {
+          ActionSort.recordActionUse(state, action);
+        }
         renderAll();
       } else {
         // [约定式自动归类] 幽灵按钮检测：正常卡牌无 handler = 幽灵按钮

@@ -2019,6 +2019,32 @@ function getEventStatsSummary(state) {
   };
 }
 
+// [全系统自洽修复 · 报告第 53 节] 累计事件触发数 — 统一读取口
+//
+// 【为什么需要这个函数】
+// 14 个事件的 conditions 读 `st.stats.eventsTriggered`，但该字段全库零写入方
+// → 恒 undefined → 14 个事件永不触发（报告第 53.3-A 节）。
+//
+// 【正解】改用 `state.flags._eventsExperienced`（events_core.js 下方
+//   recordEventToHistory 内累计）。它是**事件弹窗展示时刻** +1，
+//   即"事件触发"的精确语义；且不受 _eventHistory 50/100/200 条截断影响。
+//
+// 【实测验证】手工调用 queueRandomEvent × 20 次：
+//     _eventsExperienced = 20   ← 随投递增长 ✓
+//     eventCounts 求和   = 0    ← 需玩家选择后才 +1（语义不同，勿混用）
+//     _eventHistory.len  = 20   ← 有截断
+//
+// 【为什么不直接读 eventCounts 求和】eventCounts 在**选项点击回调**里 +1，
+//   统计的是"被选择的事件数"；eventsTriggered 的语义是"被触发的事件数"。
+//   事件弹出但玩家未选择时，两者会分叉。
+//
+// 统一走此函数的好处：若日后口径调整（如需排除链式事件），只改一处。
+function getEventsTriggered(state) {
+  if (!state || !state.flags) return 0;
+  var v = state.flags._eventsExperienced;
+  return typeof v === "number" && isFinite(v) ? v : 0;
+}
+
 // [R811 域B 联动增强 B→A]: 事件经济影响追踪 — 记录事件对现金/资源的影响统计
 function trackEventEconomicImpact(state, evtId, cashChange) {
   if (!state || !state.flags || !evtId) return;
@@ -2072,6 +2098,8 @@ if (typeof window !== "undefined") {
   window.rollCorporateEvent = rollCorporateEvent;
   window.queueRandomEvent = queueRandomEvent;
   window.getEventStatsSummary = getEventStatsSummary;
+  // [报告第 53 节] 累计事件触发数统一读取口（替代死字段 stats.eventsTriggered）
+  window.getEventsTriggered = getEventsTriggered;
   window.getEventSocialSpread = getEventSocialSpread;
   window.getEventRiskModifier = getEventRiskModifier;
   window.getEventResilienceGrowth = getEventResilienceGrowth;

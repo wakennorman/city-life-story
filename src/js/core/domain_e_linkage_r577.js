@@ -80,7 +80,7 @@
       conditions: function (st) {
         if (st.gameOver) return false;
         if (!st.flags || st.flags._e577InvestStoryCooldown) return false;
-        return st.stats && st.stats.eventsTriggered >= 10;
+        return (typeof getEventsTriggered === "function" ? getEventsTriggered(st) : 0) >= 10;
       },
       choices: [
         { text: "📝 记录下来", hint: "会计XP+5,心智+2", apply: function (st) {

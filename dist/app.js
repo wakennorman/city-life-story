@@ -2035,6 +2035,56 @@ function addDailyTransaction(state, type, category, amount, description) {
   }
 
   /**
+   * [全系统自洽修复 · 报告第 53 节] 记录一次动作使用
+   *
+   * 【为什么需要】
+   *   stats.actionFirstUse / stats.visits 在 state.js 的 schema 里声明为 {}，
+   *   但全库**零写入方** → 永远为空字典：
+   *     · isActionNew / getActionNewBoost 读 actionFirstUse → 恒 undefined
+   *       → "新动作排序置顶"从未生效、UI 的 ✨新 徽章从未出现
+   *     · 4 处事件 conditions 读 stats.visits（数"去过的地点数"）→ 恒 0
+   *
+   * 【为什么写在这里】
+   *   consumeAP(cost) 的签名里**没有 actionId**（main.js:5458），
+   *   只知道消耗多少 AP，不知道是哪个动作。
+   *   唯一能同时拿到 action 对象与 state 的地方，是动作卡片的点击回调。
+   *
+   * 【键对齐】
+   *   isActionNew(action.id) / getActionNewBoost(a.id) 都用「动作 id」作键，
+   *   与此处写入的 action.id 完全一致 → 写入即被消费。
+   *
+   * 【visits 的键】
+   *   读取方只数「值 > 0 的键的个数」（不关心键名），
+   *   故直接用 trade.currentLocation 作键即可。
+   *
+   * 【注意】此处刻意**不写** stats.actionFreq ——
+   *   它的读取方用的是与动作 id 不同的命名空间（读取 courier_gig，
+   *   而实际动作 id 是 job_courier_gig），写入会造成"看起来修好了其实还是空的"。
+   *   详见报告第 53.3-D 节。
+   *
+   * @param {Object} state
+   * @param {Object} action - 动作对象（需含 id）
+   */
+  function recordActionUse(state, action) {
+    if (!state || !action || !action.id) return;
+    if (!state.stats) state.stats = {};
+    var day = (state.player && state.player.day) || 0;
+
+    // 1) 首次使用日 → 复活 isActionNew / getActionNewBoost / UI"✨新"徽章
+    if (!state.stats.actionFirstUse) state.stats.actionFirstUse = {};
+    if (typeof state.stats.actionFirstUse[action.id] === "undefined") {
+      state.stats.actionFirstUse[action.id] = day;
+    }
+
+    // 2) 地点造访 → 复活 4 处 visits 读取（只数键个数，键名无关）
+    var loc = state.trade && state.trade.currentLocation;
+    if (loc) {
+      if (!state.stats.visits) state.stats.visits = {};
+      state.stats.visits[loc] = (state.stats.visits[loc] || 0) + 1;
+    }
+  }
+
+  /**
    * 多层排序主函数
    * @param {Array} actions - 行动数组
    * @param {Object} state - 游戏状态（用于读取频次和新行动状态）
@@ -2254,6 +2304,8 @@ function addDailyTransaction(state, type, category, amount, description) {
     getActionPriority: getActionPriority,
     isActionNew: isActionNew,
     getActionNewBoost: getActionNewBoost,
+    // [报告第 53 节] 动作使用记账（写 actionFirstUse / visits）
+    recordActionUse: recordActionUse,
     sortActions: sortActions,
     groupActionsByCategory: groupActionsByCategory,
     getLocationCategories: getLocationCategories,
@@ -6478,6 +6530,32 @@ function getEventStatsSummary(state) {
   };
 }
 
+// [全系统自洽修复 · 报告第 53 节] 累计事件触发数 — 统一读取口
+//
+// 【为什么需要这个函数】
+// 14 个事件的 conditions 读 `st.stats.eventsTriggered`，但该字段全库零写入方
+// → 恒 undefined → 14 个事件永不触发（报告第 53.3-A 节）。
+//
+// 【正解】改用 `state.flags._eventsExperienced`（events_core.js 下方
+//   recordEventToHistory 内累计）。它是**事件弹窗展示时刻** +1，
+//   即"事件触发"的精确语义；且不受 _eventHistory 50/100/200 条截断影响。
+//
+// 【实测验证】手工调用 queueRandomEvent × 20 次：
+//     _eventsExperienced = 20   ← 随投递增长 ✓
+//     eventCounts 求和   = 0    ← 需玩家选择后才 +1（语义不同，勿混用）
+//     _eventHistory.len  = 20   ← 有截断
+//
+// 【为什么不直接读 eventCounts 求和】eventCounts 在**选项点击回调**里 +1，
+//   统计的是"被选择的事件数"；eventsTriggered 的语义是"被触发的事件数"。
+//   事件弹出但玩家未选择时，两者会分叉。
+//
+// 统一走此函数的好处：若日后口径调整（如需排除链式事件），只改一处。
+function getEventsTriggered(state) {
+  if (!state || !state.flags) return 0;
+  var v = state.flags._eventsExperienced;
+  return typeof v === "number" && isFinite(v) ? v : 0;
+}
+
 // [R811 域B 联动增强 B→A]: 事件经济影响追踪 — 记录事件对现金/资源的影响统计
 function trackEventEconomicImpact(state, evtId, cashChange) {
   if (!state || !state.flags || !evtId) return;
@@ -6531,6 +6609,8 @@ if (typeof window !== "undefined") {
   window.rollCorporateEvent = rollCorporateEvent;
   window.queueRandomEvent = queueRandomEvent;
   window.getEventStatsSummary = getEventStatsSummary;
+  // [报告第 53 节] 累计事件触发数统一读取口（替代死字段 stats.eventsTriggered）
+  window.getEventsTriggered = getEventsTriggered;
   window.getEventSocialSpread = getEventSocialSpread;
   window.getEventRiskModifier = getEventRiskModifier;
   window.getEventResilienceGrowth = getEventResilienceGrowth;
@@ -287709,6 +287789,13 @@ function createActionCard(action, state) {
       }
       if (action.handler) {
         action.handler();
+        // [全系统自洽修复 · 报告第 53 节] 动作使用记账
+        //   → 写 stats.actionFirstUse（复活 isActionNew / ✨新 徽章）
+        //   → 写 stats.visits（复活 4 处"去过几个地点"的事件门槛）
+        //   必须在 renderAll() 之前：让"新"徽章在同一次渲染中即可反映。
+        if (typeof ActionSort !== "undefined" && ActionSort.recordActionUse) {
+          ActionSort.recordActionUse(state, action);
+        }
         renderAll();
       } else {
         // [约定式自动归类] 幽灵按钮检测：正常卡牌无 handler = 幽灵按钮
@@ -299004,6 +299091,12 @@ function _doNavigate(state, target, options) {
           if (allActions[i].id === target.actionId && !allActions[i].disabled) {
             if (typeof allActions[i].handler === "function") {
               allActions[i].handler();
+              // [全系统自洽修复 · 报告第 53 节] 动作使用记账（同 render.js 的卡片点击路径）
+              //   快捷执行路径也必须记账，否则从这条路径用的动作不计入
+              //   actionFirstUse / visits，会造成"同一个动作有时算有时不算"。
+              if (typeof ActionSort !== "undefined" && ActionSort.recordActionUse) {
+                ActionSort.recordActionUse(state, allActions[i]);
+              }
               if (typeof renderAll === "function") renderAll();
             }
             break;
@@ -329843,7 +329936,7 @@ if (typeof window !== "undefined") {
         if (st.gameOver) return false;
         if (!st.flags || st.flags._b529CareerInspCooldown) return false;
         // 需要至少经历过一些事件
-        return st.stats && st.stats.eventsTriggered >= 5;
+        return (typeof getEventsTriggered === "function" ? getEventsTriggered(st) : 0) >= 5;
       },
       choices: [
         { text: "🎯 投入学习", hint: "随机技能XP+5", apply: function (st) {
@@ -329932,7 +330025,7 @@ if (typeof window !== "undefined") {
       conditions: function (st) {
         if (st.gameOver) return false;
         if (!st.flags || st.flags._b534StoryWealthCooldown) return false;
-        return st.stats && st.stats.eventsTriggered >= 10;
+        return (typeof getEventsTriggered === "function" ? getEventsTriggered(st) : 0) >= 10;
       },
       choices: [
         { text: "📝 写成书", hint: "智力+3,现金+1000", apply: function (st) {
@@ -329961,7 +330054,7 @@ if (typeof window !== "undefined") {
       conditions: function (st) {
         if (st.gameOver) return false;
         if (!st.flags || st.flags._b534LifeChapterCooldown) return false;
-        return st.stats && st.stats.eventsTriggered >= 15;
+        return (typeof getEventsTriggered === "function" ? getEventsTriggered(st) : 0) >= 15;
       },
       choices: [
         { text: "🎉 庆祝成长", hint: "心情+8", apply: function (st) {
@@ -329988,7 +330081,7 @@ if (typeof window !== "undefined") {
       conditions: function (st) {
         if (st.gameOver) return false;
         if (!st.flags || st.flags._b534CareerTaleCooldown) return false;
-        return st.stats && st.stats.eventsTriggered >= 8;
+        return (typeof getEventsTriggered === "function" ? getEventsTriggered(st) : 0) >= 8;
       },
       choices: [
         { text: "💼 应用到工作", hint: "管理XP+5", apply: function (st) {
@@ -330048,7 +330141,7 @@ if (typeof window !== "undefined") {
       conditions: function (st) {
         if (st.gameOver) return false;
         if (!st.flags || st.flags._b544LifeMilestoneCooldown) return false;
-        return st.stats && st.stats.eventsTriggered >= 12;
+        return (typeof getEventsTriggered === "function" ? getEventsTriggered(st) : 0) >= 12;
       },
       choices: [
         { text: "🎉 庆祝成长", hint: "心情+8", apply: function (st) {
@@ -330075,7 +330168,7 @@ if (typeof window !== "undefined") {
       conditions: function (st) {
         if (st.gameOver) return false;
         if (!st.flags || st.flags._b544CareerCatalystCooldown) return false;
-        return st.stats && st.stats.eventsTriggered >= 8;
+        return (typeof getEventsTriggered === "function" ? getEventsTriggered(st) : 0) >= 8;
       },
       choices: [
         { text: "💼 应用到工作", hint: "管理XP+5", apply: function (st) {
@@ -330103,7 +330196,7 @@ if (typeof window !== "undefined") {
       conditions: function (st) {
         if (st.gameOver) return false;
         if (!st.flags || st.flags._b544EconRippleCooldown) return false;
-        return st.stats && st.stats.eventsTriggered >= 6;
+        return (typeof getEventsTriggered === "function" ? getEventsTriggered(st) : 0) >= 6;
       },
       choices: [
         { text: "📈 抓住机会", hint: "现金+800", apply: function (st) {
@@ -340606,7 +340699,7 @@ for(var i=0;i<E.length;i++){var exists=false;for(var j=0;j<RANDOM_EVENTS.length;
       conditions: function (st) {
         if (st.gameOver) return false;
         if (!st.flags || st.flags._c550CareerStoryCooldown) return false;
-        return st.stats && st.stats.eventsTriggered >= 10;
+        return (typeof getEventsTriggered === "function" ? getEventsTriggered(st) : 0) >= 10;
       },
       choices: [
         { text: "📝 记录下来", hint: "管理XP+5,心智+2", apply: function (st) {
@@ -340857,7 +340950,7 @@ for(var i=0;i<E.length;i++){var exists=false;for(var j=0;j<RANDOM_EVENTS.length;
       conditions: function (st) {
         if (st.gameOver) return false;
         if (!st.flags || st.flags._c585CareerStoryCooldown) return false;
-        return st.stats && st.stats.eventsTriggered >= 10;
+        return (typeof getEventsTriggered === "function" ? getEventsTriggered(st) : 0) >= 10;
       },
       choices: [
         { text: "📝 记录下来", hint: "管理XP+5,心智+2", apply: function (st) {
@@ -341106,7 +341199,7 @@ for(var i=0;i<E.length;i++){var exists=false;for(var j=0;j<RANDOM_EVENTS.length;
       conditions: function (st) {
         if (st.gameOver) return false;
         if (!st.flags || st.flags._c595CareerStoryCooldown) return false;
-        return st.stats && st.stats.eventsTriggered >= 10;
+        return (typeof getEventsTriggered === "function" ? getEventsTriggered(st) : 0) >= 10;
       },
       choices: [
         { text: "📝 记录下来", hint: "管理XP+5,心智+2", apply: function (st) {
@@ -356206,7 +356299,7 @@ for(var i=0;i<E.length;i++){var exists=false;for(var j=0;j<RANDOM_EVENTS.length;
       conditions: function (st) {
         if (st.gameOver) return false;
         if (!st.flags || st.flags._e570InvestStoryCooldown) return false;
-        return st.stats && st.stats.eventsTriggered >= 10;
+        return (typeof getEventsTriggered === "function" ? getEventsTriggered(st) : 0) >= 10;
       },
       choices: [
         { text: "📝 记录下来", hint: "会计XP+5,心智+2", apply: function (st) {
@@ -356323,7 +356416,7 @@ for(var i=0;i<E.length;i++){var exists=false;for(var j=0;j<RANDOM_EVENTS.length;
       conditions: function (st) {
         if (st.gameOver) return false;
         if (!st.flags || st.flags._e577InvestStoryCooldown) return false;
-        return st.stats && st.stats.eventsTriggered >= 10;
+        return (typeof getEventsTriggered === "function" ? getEventsTriggered(st) : 0) >= 10;
       },
       choices: [
         { text: "📝 记录下来", hint: "会计XP+5,心智+2", apply: function (st) {
@@ -356574,7 +356667,7 @@ for(var i=0;i<E.length;i++){var exists=false;for(var j=0;j<RANDOM_EVENTS.length;
       conditions: function (st) {
         if (st.gameOver) return false;
         if (!st.flags || st.flags._e588InvestStoryCooldown) return false;
-        return st.stats && st.stats.eventsTriggered >= 10;
+        return (typeof getEventsTriggered === "function" ? getEventsTriggered(st) : 0) >= 10;
       },
       choices: [
         { text: "📝 记录下来", hint: "会计XP+5,心智+2", apply: function (st) {
@@ -356834,7 +356927,7 @@ for(var i=0;i<E.length;i++){var exists=false;for(var j=0;j<RANDOM_EVENTS.length;
       conditions: function (st) {
         if (st.gameOver) return false;
         if (!st.flags || st.flags._e597InvestStoryCooldown) return false;
-        return st.stats && st.stats.eventsTriggered >= 10;
+        return (typeof getEventsTriggered === "function" ? getEventsTriggered(st) : 0) >= 10;
       },
       choices: [
         { text: "📝 记录下来", hint: "会计XP+5,心智+2", apply: function (st) {

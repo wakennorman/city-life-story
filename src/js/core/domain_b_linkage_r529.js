@@ -55,7 +55,7 @@
         if (st.gameOver) return false;
         if (!st.flags || st.flags._b529CareerInspCooldown) return false;
         // 需要至少经历过一些事件
-        return st.stats && st.stats.eventsTriggered >= 5;
+        return (typeof getEventsTriggered === "function" ? getEventsTriggered(st) : 0) >= 5;
       },
       choices: [
         { text: "🎯 投入学习", hint: "随机技能XP+5", apply: function (st) {

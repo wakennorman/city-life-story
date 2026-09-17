@@ -23,7 +23,7 @@
       conditions: function (st) {
         if (st.gameOver) return false;
         if (!st.flags || st.flags._b534StoryWealthCooldown) return false;
-        return st.stats && st.stats.eventsTriggered >= 10;
+        return (typeof getEventsTriggered === "function" ? getEventsTriggered(st) : 0) >= 10;
       },
       choices: [
         { text: "📝 写成书", hint: "智力+3,现金+1000", apply: function (st) {
@@ -52,7 +52,7 @@
       conditions: function (st) {
         if (st.gameOver) return false;
         if (!st.flags || st.flags._b534LifeChapterCooldown) return false;
-        return st.stats && st.stats.eventsTriggered >= 15;
+        return (typeof getEventsTriggered === "function" ? getEventsTriggered(st) : 0) >= 15;
       },
       choices: [
         { text: "🎉 庆祝成长", hint: "心情+8", apply: function (st) {
@@ -79,7 +79,7 @@
       conditions: function (st) {
         if (st.gameOver) return false;
         if (!st.flags || st.flags._b534CareerTaleCooldown) return false;
-        return st.stats && st.stats.eventsTriggered >= 8;
+        return (typeof getEventsTriggered === "function" ? getEventsTriggered(st) : 0) >= 8;
       },
       choices: [
         { text: "💼 应用到工作", hint: "管理XP+5", apply: function (st) {

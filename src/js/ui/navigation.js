@@ -580,6 +580,12 @@ function _doNavigate(state, target, options) {
           if (allActions[i].id === target.actionId && !allActions[i].disabled) {
             if (typeof allActions[i].handler === "function") {
               allActions[i].handler();
+              // [全系统自洽修复 · 报告第 53 节] 动作使用记账（同 render.js 的卡片点击路径）
+              //   快捷执行路径也必须记账，否则从这条路径用的动作不计入
+              //   actionFirstUse / visits，会造成"同一个动作有时算有时不算"。
+              if (typeof ActionSort !== "undefined" && ActionSort.recordActionUse) {
+                ActionSort.recordActionUse(state, allActions[i]);
+              }
               if (typeof renderAll === "function") renderAll();
             }
             break;

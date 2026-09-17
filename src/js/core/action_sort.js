@@ -583,6 +583,56 @@
   }
 
   /**
+   * [全系统自洽修复 · 报告第 53 节] 记录一次动作使用
+   *
+   * 【为什么需要】
+   *   stats.actionFirstUse / stats.visits 在 state.js 的 schema 里声明为 {}，
+   *   但全库**零写入方** → 永远为空字典：
+   *     · isActionNew / getActionNewBoost 读 actionFirstUse → 恒 undefined
+   *       → "新动作排序置顶"从未生效、UI 的 ✨新 徽章从未出现
+   *     · 4 处事件 conditions 读 stats.visits（数"去过的地点数"）→ 恒 0
+   *
+   * 【为什么写在这里】
+   *   consumeAP(cost) 的签名里**没有 actionId**（main.js:5458），
+   *   只知道消耗多少 AP，不知道是哪个动作。
+   *   唯一能同时拿到 action 对象与 state 的地方，是动作卡片的点击回调。
+   *
+   * 【键对齐】
+   *   isActionNew(action.id) / getActionNewBoost(a.id) 都用「动作 id」作键，
+   *   与此处写入的 action.id 完全一致 → 写入即被消费。
+   *
+   * 【visits 的键】
+   *   读取方只数「值 > 0 的键的个数」（不关心键名），
+   *   故直接用 trade.currentLocation 作键即可。
+   *
+   * 【注意】此处刻意**不写** stats.actionFreq ——
+   *   它的读取方用的是与动作 id 不同的命名空间（读取 courier_gig，
+   *   而实际动作 id 是 job_courier_gig），写入会造成"看起来修好了其实还是空的"。
+   *   详见报告第 53.3-D 节。
+   *
+   * @param {Object} state
+   * @param {Object} action - 动作对象（需含 id）
+   */
+  function recordActionUse(state, action) {
+    if (!state || !action || !action.id) return;
+    if (!state.stats) state.stats = {};
+    var day = (state.player && state.player.day) || 0;
+
+    // 1) 首次使用日 → 复活 isActionNew / getActionNewBoost / UI"✨新"徽章
+    if (!state.stats.actionFirstUse) state.stats.actionFirstUse = {};
+    if (typeof state.stats.actionFirstUse[action.id] === "undefined") {
+      state.stats.actionFirstUse[action.id] = day;
+    }
+
+    // 2) 地点造访 → 复活 4 处 visits 读取（只数键个数，键名无关）
+    var loc = state.trade && state.trade.currentLocation;
+    if (loc) {
+      if (!state.stats.visits) state.stats.visits = {};
+      state.stats.visits[loc] = (state.stats.visits[loc] || 0) + 1;
+    }
+  }
+
+  /**
    * 多层排序主函数
    * @param {Array} actions - 行动数组
    * @param {Object} state - 游戏状态（用于读取频次和新行动状态）
@@ -802,6 +852,8 @@
     getActionPriority: getActionPriority,
     isActionNew: isActionNew,
     getActionNewBoost: getActionNewBoost,
+    // [报告第 53 节] 动作使用记账（写 actionFirstUse / visits）
+    recordActionUse: recordActionUse,
     sortActions: sortActions,
     groupActionsByCategory: groupActionsByCategory,
     getLocationCategories: getLocationCategories,

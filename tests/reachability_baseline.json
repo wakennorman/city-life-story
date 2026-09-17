@@ -4,11 +4,15 @@
   "_history": [
     "第 51 节：初版 47 条。",
     "第 52 节：修复 hasWriteSite 判据 bug —— 字符类 [^.\\w$] 误排除 `.`，导致所有「.字段名 = ...」形态的真实写入点被漏判。47 → 24 条。",
-    "        被消掉的 23 条中引用量最高的三条（state._eraState 46 个事件、state.investment._totalInvestmentProfit 24 个、state.investment.portfolio 10 个）均为判据假阳性，代码一行未改。"
+    "        被消掉的 23 条中引用量最高的三条（state._eraState 46 个事件、state.investment._totalInvestmentProfit 24 个、state.investment.portfolio 10 个）均为判据假阳性，代码一行未改。",
+    "第 53 节：实施果实组修复，24 → 22 条。移除的两条为**真修复**（非判据变更）：",
+    "        · state.stats.eventsTriggered —— 14 处 conditions 改指向 getEventsTriggered()（读 flags._eventsExperienced）。",
+    "          实测：_eventsExperienced=0 时 0/14 通过；=20 时 14/14 通过。",
+    "        · state.stats.visits —— 新增 ActionSort.recordActionUse() 在动作点击回调写入（render.js + navigation.js 两处调用点）。",
+    "          实测：造访 4 个地点后 locCount=4，满足 >=4 门槛。"
   ],
   "_verifyRule": "确认某条是「真死」时必须用两种独立方法交叉验证（见 .tmp-probe/dead-recheck.cjs 的 AST 粗扫法），并附阳性对照（已知活字段不得被报）。单一方法得不出否定性结论 —— 报告第 52.6 节。",
   "paths": {
-    "state.stats.eventsTriggered": 1,
     "state.investment.totalStockProfit": 1,
     "state.stats.actionFreq.exercise": 1,
     "state.player.workTypeCounts": 1,
@@ -17,7 +21,6 @@
     "state.trade.priceIndex": 1,
     "state.investment.dailyInvIncome": 1,
     "state.investment.tradeHistory": 1,
-    "state.stats.visits": 1,
     "state.dailyHistory": 1,
     "state.dailyQuest": 1,
     "state.investment.portfolioHistory": 1,
