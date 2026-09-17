@@ -47,6 +47,7 @@ def bundle_js(html):
     行内 <script>（错误边界 / boot）无 src 属性，不被匹配，保持内联。
     """
     chunks = []      # 串接后的 JS 片段
+    js_files = []    # 待语法检查的文件（收集后再批量检查，见下）
     state = {'first': True}
 
     def replace_js(match):
@@ -59,18 +60,8 @@ def bundle_js(html):
         if not os.path.exists(path):
             # 缺失文件：保持原标签（与旧行为一致，暴露问题）
             return match.group(0)
-        # JS语法检查（保留原有构建期门禁）
-        try:
-            subprocess.run(
-                ['node', '--check', path],
-                capture_output=True, text=True, check=True
-            )
-        except subprocess.CalledProcessError as e:
-            err_msg = e.stderr.strip() if e.stderr else '语法错误'
-            # 避免GBK终端炸emoji
-            print('\n[JS语法错误] %s' % path)
-            print(err_msg)
-            sys.exit(1)
+        # 仅收集，暂不检查 —— 见下方「批量语法检查」说明
+        js_files.append(path)
         js = read_file(path)
         # 文件间用 \n;\n 分隔防 ASI 粘连；注释标出源路径便于线上排错
         chunks.append('\n;\n// ==== %s ====\n%s' % (src, js))
@@ -81,6 +72,59 @@ def bundle_js(html):
 
     new_html = re.sub(r'<script\s+src="([^"]+)"[^>]*></script>', replace_js, html)
     bundle_code = ''.join(chunks)
+
+    # ── 批量语法检查（原为逐个 spawn，见报告第 41 节）────────────────────────
+    #
+    # 【旧实现】在 replace_js 回调里对每个文件执行：
+    #       subprocess.run(['node', '--check', path], ...)
+    #   在 1174 个被引用文件的规模下，进程启动开销成为绝对瓶颈：
+    #       单次 spawn 平均 344ms × 1174 ≈ **405 秒**
+    #   而构建本身的全部工作（读 1177 文件 + 拼接 + 写出 16MB）实测仅 0.63 秒。
+    #   即：构建耗时的 99.8% 花在进程启动上，而非构建。
+    #
+    #   这与 scripts/check-js-syntax.mjs 修掉的是同一个问题
+    #   （1177 文件 255s → 1.5s，见报告第 37 节）。当时只修了 CI 那一份。
+    #
+    # 【新实现】把文件列表交给 scripts/check-js-batch.mjs，
+    #   单个 node 进程内用 vm.Script 逐个编译（只编译、不执行，
+    #   与 `node --check` 语义等价）：1174 文件 ≈ **1.1 秒**。
+    #
+    # 【为何不直接复用 check-js-syntax.mjs】
+    #   那个脚本固定扫描 src/js/**（1177 个），而 build 只应检查**被
+    #   src/index.html 实际引用**的文件（1174 个）。src/js 下有 3 个文件
+    #   未被任何 <script src> 引用（app_bridge/webapp_runtime_bridge.js、
+    #   core/gate_registry.js、phase1/weather.js，属已知悬空文件），
+    #   全量扫描会把它们纳入，超出 build 的职责。故此处传显式列表。
+    #
+    # 【语义等价性验证】见报告第 41 节：构造样例（3 错 + 1 对）两方案判定
+    #   逐一致；60 个真实文件采样 + 全量 1174 个，两方案结论一致（0 失败）。
+    if js_files:
+        checker = os.path.join('scripts', 'check-js-batch.mjs')
+        if os.path.exists(checker):
+            proc = subprocess.run(
+                ['node', checker],
+                input='\n'.join(js_files),
+                capture_output=True, text=True, encoding='utf-8',
+            )
+            if proc.returncode != 0:
+                # 避免 GBK 终端炸 emoji
+                print('\n[JS语法错误] 检查未通过：')
+                print(proc.stderr.strip() if proc.stderr else proc.stdout.strip())
+                sys.exit(1)
+        else:
+            # 兜底：批量检查脚本缺失时，回退到逐个检查（慢但可用）
+            print('⚠️  未找到 %s，回退到逐个语法检查（较慢）' % checker)
+            for path in js_files:
+                try:
+                    subprocess.run(
+                        ['node', '--check', path],
+                        capture_output=True, text=True, check=True,
+                    )
+                except subprocess.CalledProcessError as e:
+                    print('\n[JS语法错误] %s' % path)
+                    print(e.stderr.strip() if e.stderr else '语法错误')
+                    sys.exit(1)
+
     return new_html, bundle_code
 
 def main():
