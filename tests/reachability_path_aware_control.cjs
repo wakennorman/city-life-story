@@ -73,10 +73,15 @@ const POSITIVE = [
     why: "company 字面量（startup.js:537-749）无 team 键；37 处引用全为读取。" +
       "真实容器是 company.employees（startup.js:1480 push）。",
   },
-  {
-    path: "state.investment.totalInvested",
-    why: "全库零写入；真实容器 _totalInvested 本身也是死的。",
-  },
+  // ★ [报告第 60 节] 此处原有一条阳性：`state.investment.totalInvested`
+  //   （why: "全库零写入；真实容器 _totalInvested 本身也是死的。"）
+  //   果实 G9 补写入端后它由死转活 → **移到 NEGATIVE**（见下方「直接写入（本节新增）」）。
+  //   保留这段文字是为了留下「旧结论被推翻」的记录（第 57.7 节同形）：
+  //   对照组不只是防回归，它还会**强制修复被显式承认** ——
+  //   没有对照组时，G9 的修复只会让门禁「安静地变绿」。
+  //   注：与它同族的 `investment._totalInvested`（getInvestmentStory 的 ROI 分子）
+  //   仍是死字段，但那个函数**全库零调用者**，修它没有可观测效果（G7 教训），
+  //   故本节不动它，只立项（见报告 60.9）。
   {
     // [报告第 57 节] 原为 state.trade.totalTrades / totalBuys —— 本节已补写入端
     //   （investment.js:2004/2176 + state.js:940-942），故从阳性移到阴性。
@@ -117,6 +122,25 @@ const POSITIVE = [
     path: "state.player.corporate.burnout",
     why: "全库零写入。真实容器是 state.careerCapital.burnout" +
       "（career_dev.js:703 ensureCareerCapital 懒初始化，0-100，clampCareerCapital 夹紧）。",
+  },
+  {
+    // [报告第 60 节] 果实 G9 的对照面：两个死名字合并为一个真实字段后，
+    //   被丢弃的那个必须仍然判死 —— 防止有人把旧名字加回来。
+    path: "state.investment.totalStockInvested",
+    why: "全库零写入；与 totalInvested **恒成对出现**，是同一概念的另一种拼法" +
+      "（tradeLog 就是股票交易账本）。6 个「投资里程碑」阶梯事件的消费点已统一改指 totalInvested。",
+  },
+  {
+    // [报告第 60 节] 果实 G10：r678.investLevel() 读它 → combined 恒 0 → 3 个 e678 事件全死。
+    path: "state.investment._totalProfit",
+    why: "全库零写入。真实容器是 _totalInvestmentProfit" +
+      "（investment.js:2155/2265 每笔卖出结算时累计，别名写入）。",
+  },
+  {
+    // [报告第 60 节] 幻影容器 —— 贵金属并不单独存放。
+    path: "state.investment.preciousHoldings",
+    why: "全库零写入、不在 schema。buyInvStock() 把「贵金属」与股票/虚拟币/期货/基金" +
+      "一视同仁地写入 stockHoldings（investment.js:1947 的分类注释），故无需独立容器。",
   },
 ];
 
@@ -192,6 +216,26 @@ const NEGATIVE = [
     kind: "直接写入（本节新增）",
     path: "state.careerCapital.burnout",
     site: "core/domain_c_linkage_r371.js:79（scoped）+ career_path_events.js 等 cap.burnout 写入（别名）",
+  },
+  {
+    // [报告第 60 节] 果实 G9 补写入端后由死转活 —— 同时验证判据跟得上修复。
+    //   字段同时进了 createDefaultState().investment（门禁①据此判活）。
+    kind: "直接写入（本节新增）",
+    path: "state.investment.totalInvested",
+    site: "phase2/investment.js:2002（buyInvStock 与 tradeLog.push 同步累加 cost）" +
+      " + core/state.js 加载时按 tradeLog 重算（②b 一致性修复）",
+  },
+  {
+    // [报告第 60 节] G10/G11/G12 三处修复读取的真实容器 —— 判据必须判活，
+    //   否则「修复读的容器被判死」这一自相矛盾状态无法被测试发现。
+    kind: "数组方法（同一父容器）",
+    path: "state.investment.stockHoldings",
+    site: "phase2/investment.js:1981 push / events_street_wealth.js:2175 filter",
+  },
+  {
+    kind: "直接写入（同一父容器）",
+    path: "state.investment.stockMarket",
+    site: "core/company_spawner.js:429/608 + core/enterprise_fate.js:2307（state.investment.stockMarket[sym] = …）",
   },
 ];
 
@@ -329,7 +373,7 @@ for (const [label, rel] of _judgeSources) {
 console.log("[path-aware-control] 路径感知写入判据 · 阴性对照");
 console.log("[path-aware-control] 阳性 " + POSITIVE.length +
   " / 阴性 " + NEGATIVE.length + " / 核心 3 / 一致性 " + NEGATIVE.length +
-  " / 输入层 6，共 " + results.length + " 条断言");
+  " / 输入层 10，共 " + results.length + " 条断言");
 console.log("");
 
 for (const r of results) {

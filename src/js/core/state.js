@@ -222,6 +222,19 @@ function createDefaultState() {
       tradeLog: [], // [{ day, symbol, type: "buy"|"sell", price, quantity, total, pl, unitLabel }]
       stockMarket: {},
       stockHoldings: [],
+      // [报告第 60 节] 累计投资额（Σ tradeLog 中 type==="buy" 的 total）—— 单调递增，不因卖出回落。
+      //   此前**同一概念有三个名字、三个全库零写入**：
+      //     · investment.totalInvested        ← 6 处消费（e933/e941/e949/e957/e965/e1013 的 (A+B)>=N）
+      //     · investment.totalStockInvested   ← 与上一个**恒成对出现**，是同一概念的另一种拼法
+      //     · investment._totalInvested       ← getInvestmentStory() 的 ROI 分子
+      //   三者皆死 → 6 个「投资里程碑」阶梯事件（¥500/1500/2000/2500/3000/5000）恒不满足。
+      //   本字段取**累计**语义而非「当前持仓成本」，依据有二：
+      //     ① 事件文案写「不知不觉已经有了不少交易」「投资路上的里程碑」——里程碑是单调的；
+      //     ② 同轴兄弟事件用 _totalInvestmentProfit（累计盈亏，同样单调），两轴语义对称。
+      //   写入端两处（互为校验）：investment.js buyInvStock() 与 importState 的「②b 一致性修复」。
+      //   注：只统计 tradeLog（股票/虚拟币/贵金属/期货/基金均经此记账），
+      //       房产与车不在 tradeLog 中，故不计入。
+      totalInvested: 0,
       btcPrice: 200000,
       btcHoldings: 0,
       btcHistory: [],
@@ -931,15 +944,24 @@ class GameStateManager {
       if (!s.trade) s.trade = {};
       var _tl = s.investment.tradeLog;
       var _tb = 0,
-        _ts = 0;
+        _ts = 0,
+        _ti0 = 0; // [报告第 60 节] 累计买入额
       for (var _ti = 0; _ti < _tl.length; _ti++) {
         var _t = _tl[_ti];
-        if (_t && _t.type === "buy") _tb++;
-        else if (_t && _t.type === "sell") _ts++;
+        if (_t && _t.type === "buy") {
+          _tb++;
+          _ti0 += _t.total || 0;
+        } else if (_t && _t.type === "sell") _ts++;
       }
       s.trade.totalTrades = _tl.length;
       s.trade.totalBuys = _tb;
       s.trade.totalSells = _ts;
+      // [报告第 60 节] 累计投资额 —— 与上面三个计数同源、同一次遍历完成。
+      //   消费点：domain_e_linkage_r933/r941/r949/r957/r965/r1013 的
+      //   「投资里程碑」阶梯（阈值 ¥500/1500/2000/2500/3000/5000）。
+      //   此处按 tradeLog 无条件重算，理由与交易计数相同：tradeLog 只 push 不截断，
+      //   是「事实源 + 可重算账本」；旧存档补齐、增量写入漏写时自愈。
+      s.investment.totalInvested = _ti0;
     }
     // ③ 盖版本戳 + 记录最近游玩时间
     s.version = SAVE_VERSION;

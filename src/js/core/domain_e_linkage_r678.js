@@ -21,15 +21,21 @@
     if (st.investment.stockHoldings) {
       for (var i = 0; i < st.investment.stockHoldings.length; i++) {
         var h = st.investment.stockHoldings[i];
-        total += (h.shares || 0) * (h.currentPrice || h.buyPrice || 0);
+        // [报告第 60 节] 原读 h.currentPrice || h.buyPrice —— 股票持仓两个字段都没有
+        //   （currentPrice 是房产/车的字段，buyPrice 也是）→ 恒 0 → 组合市值恒显示 ¥0。
+        //   改用与 investment 家族同源的实时价（inv.stockMarket[sym].price），缺失回退成本价。
+        var _mkt = (st.investment.stockMarket || {})[h.symbol] || {};
+        total += (h.shares || 0) * (_mkt.price || h.avgPrice || 0);
       }
     }
     if (st.investment.btcHoldings) {
       total += (st.investment.btcHoldings || 0) * (st.investment.btcPrice || 0);
     }
-    if (st.investment.preciousHoldings) {
-      total += st.investment.preciousHoldings || 0;
-    }
+    // [报告第 60 节] 原读 st.investment.preciousHoldings —— 该容器全库零写入、
+    //   不在 schema，是幻影容器。贵金属并不单独存放：buyInvStock() 把「贵金属」
+    //   与股票/虚拟币/期货/基金一视同仁地写入 stockHoldings（见 investment.js:1947
+    //   的分类注释），故上面那一轮 stockHoldings 循环**已经计入**贵金属。
+    //   此处直接删除死分支 —— 保留它只会让读者以为还有一份独立的贵金属资产。
     return total;
   }
 
@@ -39,10 +45,14 @@
     var totalInvested = 0;
     if (st.investment.stockHoldings) {
       for (var i = 0; i < st.investment.stockHoldings.length; i++) {
-        totalInvested += (st.investment.stockHoldings[i].shares || 0) * (st.investment.stockHoldings[i].buyPrice || 0);
+        // [报告第 60 节] buyPrice → avgPrice（股票持仓的成本字段名是 avgPrice，
+        //   由 investment.js:1984 / insider_trading_events.js:83 写入）。
+        totalInvested += (st.investment.stockHoldings[i].shares || 0) * (st.investment.stockHoldings[i].avgPrice || 0);
       }
     }
-    var totalProfit = st.investment._totalProfit || 0;
+    // [报告第 60 节] _totalProfit 零写入 → 改读活字段 _totalInvestmentProfit
+    //   （investment.js:2155/2265 每笔卖出结算时累计）。
+    var totalProfit = st.investment._totalInvestmentProfit || 0;
     var combined = totalInvested + totalProfit;
     if (combined >= 500000) return 5;
     if (combined >= 100000) return 4;

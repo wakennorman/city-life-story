@@ -25,7 +25,8 @@
         if (!st || !st.player || st.gameOver) return false;
         if (st.flags && st.flags._e941InvestStoryCd) return false;
         if (!st.investment) return false;
-        return ((st.investment.totalInvested || 0) + (st.investment.totalStockInvested || 0)) >= 3000 && st.player.day >= 45;
+        // [报告第 60 节] 同 r933：两个死名字合并为 investment.totalInvested。
+        return (st.investment.totalInvested || 0) >= 3000 && st.player.day >= 45;
       },
       probability: 0.04, repeatable: true,
       choices: [

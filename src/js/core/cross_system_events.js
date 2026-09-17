@@ -5774,14 +5774,18 @@
       var holdings = inv && inv.stockHoldings ? inv.stockHoldings : [];
       for (var i = 0; i < holdings.length; i++) {
         var h = holdings[i];
-        if (!h || !h.avgPrice || !h.qty) continue;
+        // [报告第 60 节] h.qty → h.shares：股票持仓的股数字段是 shares，
+        //   qty 是背包物品的字段。原判据恒 false → continue → totalLoss 恒 0。
+        //   这是一次「修了一半」的既有修复：上一轮已把数据源从死字段改为
+        //   实时浮亏，却漏改了这个字段名 → 事件仍然从未触发过。
+        if (!h || !h.avgPrice || !h.shares) continue;
         var cur =
           (inv.stockMarket &&
             inv.stockMarket[h.symbol] &&
             inv.stockMarket[h.symbol].price) ||
           0;
         if (!isFinite(cur)) continue;
-        if (cur < h.avgPrice) totalLoss += (h.avgPrice - cur) * h.qty;
+        if (cur < h.avgPrice) totalLoss += (h.avgPrice - cur) * h.shares;
       }
       if (totalLoss < 10000) return false;
       return true;

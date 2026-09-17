@@ -4,7 +4,7 @@ var E=[
 {id:"e949_invest_story_v1",phase:"street",icon:"💰",title:"投资路上的故事",
 story:"你翻看投资记录，每一笔交易背后都有一个故事。",
 triggers:{minDay:40,interval:90,maxRepeats:4,excludeFlags:["_e949InvestStoryCd"]},
-conditions:function(st){if(!st||!st.player||st.gameOver)return false;if(st.flags&&st.flags._e949InvestStoryCd)return false;if(!st.investment)return false;return((st.investment.totalInvested||0)+(st.investment.totalStockInvested||0))>=2500&&st.player.day>=40;},
+conditions:function(st){if(!st||!st.player||st.gameOver)return false;if(st.flags&&st.flags._e949InvestStoryCd)return false;if(!st.investment)return false;return(st.investment.totalInvested||0)>=2500&&st.player.day>=40;},
 probability:0.04,repeatable:true,
 choices:[
 {text:"💰 回顾投资历程",hint:"心智+10,会计XP+12,置_e949Investor",apply:function(st){if(!st)return;st.flags=st.flags||{};st.flags._e949InvestStoryCd=true;st.flags._e949Investor=true;if(st.player)st.player.mental=Math.min(100,(st.player.mental||50)+10);gx("accounting",12);if(typeof StateManager!=="undefined")StateManager.addMessage("💰 回顾了投资历程——心智+10,会计XP+12。","success");}},

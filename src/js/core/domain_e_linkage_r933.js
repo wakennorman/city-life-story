@@ -42,7 +42,9 @@
         if (st.flags && st.flags._e933InvestStoryCd) return false;
         if (!st.investment) return false;
         // 需要有投资记录
-        var _totalInv = (st.investment.totalInvested || 0) + (st.investment.totalStockInvested || 0);
+        // [报告第 60 节] 原读 totalInvested + totalStockInvested —— 两个字段全库零写入，
+        //   且是**同一概念的两种拼法**（tradeLog 就是股票交易账本）。统一为单一真实字段。
+        var _totalInv = st.investment.totalInvested || 0;
         return _totalInv >= 5000 && st.player.day >= 50;
       },
       probability: 0.04,

@@ -1994,6 +1994,12 @@ function buyInvStock(symbol, shares) {
     total: cost,
     unitLabel: def?.unit || "股",
   });
+  // [报告第 60 节] 累计投资额 —— 果实 G9 的写入端（与 importState 的 ②b 重算互为校验）
+  //   此前 investment.totalInvested / totalStockInvested 两个字段全库零写入，
+  //   6 个「投资里程碑」阶梯事件（¥500/1500/2000/2500/3000/5000）恒不满足 → 从未触发。
+  //   这里与 tradeLog.push 同步累加 cost，保证「账本」与「汇总」永不脱节。
+  //   语义为**累计**（卖出不回冲）—— 依据见 createDefaultState().investment 处注释。
+  inv.totalInvested = (inv.totalInvested || 0) + cost;
   // [报告第 57 节] 累计交易笔数 —— 果实 G3 的写入端
   //   此前 state.trade.totalTrades/totalBuys/totalSells 三个字段全库零写入，
   //   约 20 处消费点恒读 undefined：6 个 (totalTrades >= N) 门槛恒 false、

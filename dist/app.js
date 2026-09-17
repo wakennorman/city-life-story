@@ -699,6 +699,19 @@ function createDefaultState() {
       tradeLog: [], // [{ day, symbol, type: "buy"|"sell", price, quantity, total, pl, unitLabel }]
       stockMarket: {},
       stockHoldings: [],
+      // [报告第 60 节] 累计投资额（Σ tradeLog 中 type==="buy" 的 total）—— 单调递增，不因卖出回落。
+      //   此前**同一概念有三个名字、三个全库零写入**：
+      //     · investment.totalInvested        ← 6 处消费（e933/e941/e949/e957/e965/e1013 的 (A+B)>=N）
+      //     · investment.totalStockInvested   ← 与上一个**恒成对出现**，是同一概念的另一种拼法
+      //     · investment._totalInvested       ← getInvestmentStory() 的 ROI 分子
+      //   三者皆死 → 6 个「投资里程碑」阶梯事件（¥500/1500/2000/2500/3000/5000）恒不满足。
+      //   本字段取**累计**语义而非「当前持仓成本」，依据有二：
+      //     ① 事件文案写「不知不觉已经有了不少交易」「投资路上的里程碑」——里程碑是单调的；
+      //     ② 同轴兄弟事件用 _totalInvestmentProfit（累计盈亏，同样单调），两轴语义对称。
+      //   写入端两处（互为校验）：investment.js buyInvStock() 与 importState 的「②b 一致性修复」。
+      //   注：只统计 tradeLog（股票/虚拟币/贵金属/期货/基金均经此记账），
+      //       房产与车不在 tradeLog 中，故不计入。
+      totalInvested: 0,
       btcPrice: 200000,
       btcHoldings: 0,
       btcHistory: [],
@@ -1408,15 +1421,24 @@ class GameStateManager {
       if (!s.trade) s.trade = {};
       var _tl = s.investment.tradeLog;
       var _tb = 0,
-        _ts = 0;
+        _ts = 0,
+        _ti0 = 0; // [报告第 60 节] 累计买入额
       for (var _ti = 0; _ti < _tl.length; _ti++) {
         var _t = _tl[_ti];
-        if (_t && _t.type === "buy") _tb++;
-        else if (_t && _t.type === "sell") _ts++;
+        if (_t && _t.type === "buy") {
+          _tb++;
+          _ti0 += _t.total || 0;
+        } else if (_t && _t.type === "sell") _ts++;
       }
       s.trade.totalTrades = _tl.length;
       s.trade.totalBuys = _tb;
       s.trade.totalSells = _ts;
+      // [报告第 60 节] 累计投资额 —— 与上面三个计数同源、同一次遍历完成。
+      //   消费点：domain_e_linkage_r933/r941/r949/r957/r965/r1013 的
+      //   「投资里程碑」阶梯（阈值 ¥500/1500/2000/2500/3000/5000）。
+      //   此处按 tradeLog 无条件重算，理由与交易计数相同：tradeLog 只 push 不截断，
+      //   是「事实源 + 可重算账本」；旧存档补齐、增量写入漏写时自愈。
+      s.investment.totalInvested = _ti0;
     }
     // ③ 盖版本戳 + 记录最近游玩时间
     s.version = SAVE_VERSION;
@@ -46973,14 +46995,18 @@ function runLifeStageNarrative(state) {
       var holdings = inv && inv.stockHoldings ? inv.stockHoldings : [];
       for (var i = 0; i < holdings.length; i++) {
         var h = holdings[i];
-        if (!h || !h.avgPrice || !h.qty) continue;
+        // [报告第 60 节] h.qty → h.shares：股票持仓的股数字段是 shares，
+        //   qty 是背包物品的字段。原判据恒 false → continue → totalLoss 恒 0。
+        //   这是一次「修了一半」的既有修复：上一轮已把数据源从死字段改为
+        //   实时浮亏，却漏改了这个字段名 → 事件仍然从未触发过。
+        if (!h || !h.avgPrice || !h.shares) continue;
         var cur =
           (inv.stockMarket &&
             inv.stockMarket[h.symbol] &&
             inv.stockMarket[h.symbol].price) ||
           0;
         if (!isFinite(cur)) continue;
-        if (cur < h.avgPrice) totalLoss += (h.avgPrice - cur) * h.qty;
+        if (cur < h.avgPrice) totalLoss += (h.avgPrice - cur) * h.shares;
       }
       if (totalLoss < 10000) return false;
       return true;
@@ -231297,6 +231323,12 @@ function buyInvStock(symbol, shares) {
     total: cost,
     unitLabel: def?.unit || "股",
   });
+  // [报告第 60 节] 累计投资额 —— 果实 G9 的写入端（与 importState 的 ②b 重算互为校验）
+  //   此前 investment.totalInvested / totalStockInvested 两个字段全库零写入，
+  //   6 个「投资里程碑」阶梯事件（¥500/1500/2000/2500/3000/5000）恒不满足 → 从未触发。
+  //   这里与 tradeLog.push 同步累加 cost，保证「账本」与「汇总」永不脱节。
+  //   语义为**累计**（卖出不回冲）—— 依据见 createDefaultState().investment 处注释。
+  inv.totalInvested = (inv.totalInvested || 0) + cost;
   // [报告第 57 节] 累计交易笔数 —— 果实 G3 的写入端
   //   此前 state.trade.totalTrades/totalBuys/totalSells 三个字段全库零写入，
   //   约 20 处消费点恒读 undefined：6 个 (totalTrades >= N) 门槛恒 false、
@@ -355775,15 +355807,21 @@ for(var i=0;i<E.length;i++){var exists=false;for(var j=0;j<RANDOM_EVENTS.length;
     if (st.investment.stockHoldings) {
       for (var i = 0; i < st.investment.stockHoldings.length; i++) {
         var h = st.investment.stockHoldings[i];
-        total += (h.shares || 0) * (h.currentPrice || h.buyPrice || 0);
+        // [报告第 60 节] 原读 h.currentPrice || h.buyPrice —— 股票持仓两个字段都没有
+        //   （currentPrice 是房产/车的字段，buyPrice 也是）→ 恒 0 → 组合市值恒显示 ¥0。
+        //   改用与 investment 家族同源的实时价（inv.stockMarket[sym].price），缺失回退成本价。
+        var _mkt = (st.investment.stockMarket || {})[h.symbol] || {};
+        total += (h.shares || 0) * (_mkt.price || h.avgPrice || 0);
       }
     }
     if (st.investment.btcHoldings) {
       total += (st.investment.btcHoldings || 0) * (st.investment.btcPrice || 0);
     }
-    if (st.investment.preciousHoldings) {
-      total += st.investment.preciousHoldings || 0;
-    }
+    // [报告第 60 节] 原读 st.investment.preciousHoldings —— 该容器全库零写入、
+    //   不在 schema，是幻影容器。贵金属并不单独存放：buyInvStock() 把「贵金属」
+    //   与股票/虚拟币/期货/基金一视同仁地写入 stockHoldings（见 investment.js:1947
+    //   的分类注释），故上面那一轮 stockHoldings 循环**已经计入**贵金属。
+    //   此处直接删除死分支 —— 保留它只会让读者以为还有一份独立的贵金属资产。
     return total;
   }
 
@@ -355793,10 +355831,14 @@ for(var i=0;i<E.length;i++){var exists=false;for(var j=0;j<RANDOM_EVENTS.length;
     var totalInvested = 0;
     if (st.investment.stockHoldings) {
       for (var i = 0; i < st.investment.stockHoldings.length; i++) {
-        totalInvested += (st.investment.stockHoldings[i].shares || 0) * (st.investment.stockHoldings[i].buyPrice || 0);
+        // [报告第 60 节] buyPrice → avgPrice（股票持仓的成本字段名是 avgPrice，
+        //   由 investment.js:1984 / insider_trading_events.js:83 写入）。
+        totalInvested += (st.investment.stockHoldings[i].shares || 0) * (st.investment.stockHoldings[i].avgPrice || 0);
       }
     }
-    var totalProfit = st.investment._totalProfit || 0;
+    // [报告第 60 节] _totalProfit 零写入 → 改读活字段 _totalInvestmentProfit
+    //   （investment.js:2155/2265 每笔卖出结算时累计）。
+    var totalProfit = st.investment._totalInvestmentProfit || 0;
     var combined = totalInvested + totalProfit;
     if (combined >= 500000) return 5;
     if (combined >= 100000) return 4;
@@ -365948,7 +365990,9 @@ for(var i=0;i<E.length;i++){var exists=false;for(var j=0;j<RANDOM_EVENTS.length;
         if (st.flags && st.flags._e933InvestStoryCd) return false;
         if (!st.investment) return false;
         // 需要有投资记录
-        var _totalInv = (st.investment.totalInvested || 0) + (st.investment.totalStockInvested || 0);
+        // [报告第 60 节] 原读 totalInvested + totalStockInvested —— 两个字段全库零写入，
+        //   且是**同一概念的两种拼法**（tradeLog 就是股票交易账本）。统一为单一真实字段。
+        var _totalInv = st.investment.totalInvested || 0;
         return _totalInv >= 5000 && st.player.day >= 50;
       },
       probability: 0.04,
@@ -366146,7 +366190,8 @@ for(var i=0;i<E.length;i++){var exists=false;for(var j=0;j<RANDOM_EVENTS.length;
         if (!st || !st.player || st.gameOver) return false;
         if (st.flags && st.flags._e941InvestStoryCd) return false;
         if (!st.investment) return false;
-        return ((st.investment.totalInvested || 0) + (st.investment.totalStockInvested || 0)) >= 3000 && st.player.day >= 45;
+        // [报告第 60 节] 同 r933：两个死名字合并为 investment.totalInvested。
+        return (st.investment.totalInvested || 0) >= 3000 && st.player.day >= 45;
       },
       probability: 0.04, repeatable: true,
       choices: [
@@ -366242,7 +366287,7 @@ var E=[
 {id:"e949_invest_story_v1",phase:"street",icon:"💰",title:"投资路上的故事",
 story:"你翻看投资记录，每一笔交易背后都有一个故事。",
 triggers:{minDay:40,interval:90,maxRepeats:4,excludeFlags:["_e949InvestStoryCd"]},
-conditions:function(st){if(!st||!st.player||st.gameOver)return false;if(st.flags&&st.flags._e949InvestStoryCd)return false;if(!st.investment)return false;return((st.investment.totalInvested||0)+(st.investment.totalStockInvested||0))>=2500&&st.player.day>=40;},
+conditions:function(st){if(!st||!st.player||st.gameOver)return false;if(st.flags&&st.flags._e949InvestStoryCd)return false;if(!st.investment)return false;return(st.investment.totalInvested||0)>=2500&&st.player.day>=40;},
 probability:0.04,repeatable:true,
 choices:[
 {text:"💰 回顾投资历程",hint:"心智+10,会计XP+12,置_e949Investor",apply:function(st){if(!st)return;st.flags=st.flags||{};st.flags._e949InvestStoryCd=true;st.flags._e949Investor=true;if(st.player)st.player.mental=Math.min(100,(st.player.mental||50)+10);gx("accounting",12);if(typeof StateManager!=="undefined")StateManager.addMessage("💰 回顾了投资历程——心智+10,会计XP+12。","success");}},
@@ -366277,7 +366322,7 @@ var E=[
 {id:"e957_invest_story_v1",phase:"street",icon:"💰",title:"投资路上的故事",
 story:"你翻看投资记录，每一笔交易背后都有一个故事。",
 triggers:{minDay:35,interval:80,maxRepeats:4,excludeFlags:["_e957InvestStoryCd"]},
-conditions:function(st){if(!st||!st.player||st.gameOver)return false;if(st.flags&&st.flags._e957InvestStoryCd)return false;if(!st.investment)return false;return((st.investment.totalInvested||0)+(st.investment.totalStockInvested||0))>=2000&&st.player.day>=35;},
+conditions:function(st){if(!st||!st.player||st.gameOver)return false;if(st.flags&&st.flags._e957InvestStoryCd)return false;if(!st.investment)return false;return(st.investment.totalInvested||0)>=2000&&st.player.day>=35;},
 probability:0.04,repeatable:true,
 choices:[
 {text:"💰 回顾投资历程",hint:"心智+8,会计XP+10,置_e957Investor",apply:function(st){if(!st)return;st.flags=st.flags||{};st.flags._e957InvestStoryCd=true;st.flags._e957Investor=true;if(st.player)st.player.mental=Math.min(100,(st.player.mental||50)+8);gx("accounting",10);if(typeof StateManager!=="undefined")StateManager.addMessage("💰 回顾了投资历程——心智+8,会计XP+10。","success");}},
@@ -366312,7 +366357,7 @@ var E=[
 {id:"e965_invest_story_v1",phase:"street",icon:"💰",title:"投资路上的故事",
 story:"你翻看投资记录，每一笔交易背后都有一个故事。",
 triggers:{minDay:30,interval:70,maxRepeats:4,excludeFlags:["_e965InvestStoryCd"]},
-conditions:function(st){if(!st||!st.player||st.gameOver)return false;if(st.flags&&st.flags._e965InvestStoryCd)return false;if(!st.investment)return false;return((st.investment.totalInvested||0)+(st.investment.totalStockInvested||0))>=1500&&st.player.day>=30;},
+conditions:function(st){if(!st||!st.player||st.gameOver)return false;if(st.flags&&st.flags._e965InvestStoryCd)return false;if(!st.investment)return false;return(st.investment.totalInvested||0)>=1500&&st.player.day>=30;},
 probability:0.04,repeatable:true,
 choices:[
 {text:"💰 回顾投资历程",hint:"心智+6,会计XP+8,置_e965Investor",apply:function(st){if(!st)return;st.flags=st.flags||{};st.flags._e965InvestStoryCd=true;st.flags._e965Investor=true;if(st.player)st.player.mental=Math.min(100,(st.player.mental||50)+6);gx("accounting",8);if(typeof StateManager!=="undefined")StateManager.addMessage("💰 回顾了投资历程——心智+6,会计XP+8。","success");}},
@@ -366508,7 +366553,7 @@ var E=[
 {id:"e1013_invest_story_v1",phase:"street",icon:"💰",title:"投资路上的故事",
 story:"你翻看投资记录，每一笔交易背后都有一个故事。",
 triggers:{minDay:20,interval:50,maxRepeats:4,excludeFlags:["_e1013InvestStoryCd"]},
-conditions:function(st){if(!st||!st.player||st.gameOver)return false;if(st.flags&&st.flags._e1013InvestStoryCd)return false;if(!st.investment)return false;return((st.investment.totalInvested||0)+(st.investment.totalStockInvested||0))>=500&&st.player.day>=20;},
+conditions:function(st){if(!st||!st.player||st.gameOver)return false;if(st.flags&&st.flags._e1013InvestStoryCd)return false;if(!st.investment)return false;return(st.investment.totalInvested||0)>=500&&st.player.day>=20;},
 probability:0.04,repeatable:true,
 choices:[
 {text:"💰 回顾投资历程",hint:"心智+3,会计XP+3,置_e1013Investor",apply:function(st){if(!st)return;st.flags=st.flags||{};st.flags._e1013InvestStoryCd=true;st.flags._e1013Investor=true;if(st.player)st.player.mental=Math.min(100,(st.player.mental||50)+3);gx("accounting",3);if(typeof StateManager!=="undefined")StateManager.addMessage("💰 回顾了投资历程——心智+3,会计XP+3。","success");}},
@@ -393289,14 +393334,14 @@ function gx(k,a){if(typeof addSkillXp==="function"){try{addSkillXp(k,a)}catch(e)
 var E=[
 // E→B: 投资故事叙事 — 牛市中的"股神"幻觉
 {id:"e1014_bull_market_illusion",phase:"street",icon:"📈",title:"牛市的诱惑",story:"最近股市一路飘红，你身边的朋友都在讨论股票。茶余饭后，到处都是「这次不一样」的论调。你的账户也浮盈了不少。",
-conditions:function(st){if(!st||!st.player||st.gameOver)return false;if(st.flags&&st.flags._e1014BullDone)return false;if(!st.investment)return false;var _inv=st.investment;var _totalPL=0;if(_inv.stockHoldings){for(var _i=0;_i<_inv.stockHoldings.length;_i++){var _h=_inv.stockHoldings[_i];var _m=_inv.stockMarket&&_inv.stockMarket[_h.symbol];if(_m&&_h.buyPrice&&_h.shares)_totalPL+=(_m.price-_h.buyPrice)*_h.shares}}return _totalPL>10000&&st.player.day>=200},
+conditions:function(st){if(!st||!st.player||st.gameOver)return false;if(st.flags&&st.flags._e1014BullDone)return false;if(!st.investment)return false;var _inv=st.investment;var _totalPL=0;if(_inv.stockHoldings){for(var _i=0;_i<_inv.stockHoldings.length;_i++){var _h=_inv.stockHoldings[_i];var _m=_inv.stockMarket&&_inv.stockMarket[_h.symbol];if(_m&&_h.avgPrice&&_h.shares)_totalPL+=(_m.price-_h.avgPrice)*_h.shares}}return _totalPL>10000&&st.player.day>=200},
 probability:0.06,repeatable:false,
 choices:[{text:"📈 落袋为安，先卖一半",hint:"现金+5000,智力+8,置_e1014TakeProfit",apply:function(st){if(!st)return;st.flags=st.flags||{};st.flags._e1014BullDone=true;st.flags._e1014TakeProfit=true;st.resources=st.resources||{};st.resources.cash=(st.resources.cash||0)+5000;if(st.player)st.player.intelligence=Math.min(100,(st.player.intelligence||50)+8);if(typeof StateManager!=="undefined")StateManager.addMessage("📈 现金+5000,智力+8。落袋为安，你卖出了一半仓位锁定利润。","success")}},
 {text:"🔥 牛市不言顶，继续持有",hint:"智力+5,置_e1014HoldThrough",apply:function(st){if(!st)return;st.flags=st.flags||{};st.flags._e1014BullDone=true;st.flags._e1014HoldThrough=true;if(st.player)st.player.intelligence=Math.min(100,(st.player.intelligence||50)+5);if(typeof StateManager!=="undefined")StateManager.addMessage("🔥 智力+5。你决定继续持有，相信还能涨。","info")}}]},
 
 // E→G: 财富健康 — 投资亏损导致失眠/健康下降
 {id:"e1014_loss_insomnia",phase:"street",icon:"😰",title:"亏损的代价",story:"你盯着账户里的数字，比昨天又少了一截。躺在床上翻来覆去睡不着，脑子里全是K线图。",
-conditions:function(st){if(!st||!st.player||st.gameOver)return false;if(st.flags&&st.flags._e1014InsomniaDone)return false;if(!st.investment)return false;var _inv=st.investment;var _totalLoss=0;if(_inv.stockHoldings){for(var _i=0;_i<_inv.stockHoldings.length;_i++){var _h=_inv.stockHoldings[_i];var _m=_inv.stockMarket&&_inv.stockMarket[_h.symbol];if(_m&&_h.buyPrice&&_h.shares)_totalLoss+=(_h.buyPrice-_m.price)*_h.shares}}return _totalLoss>5000&&st.player.day>=150},
+conditions:function(st){if(!st||!st.player||st.gameOver)return false;if(st.flags&&st.flags._e1014InsomniaDone)return false;if(!st.investment)return false;var _inv=st.investment;var _totalLoss=0;if(_inv.stockHoldings){for(var _i=0;_i<_inv.stockHoldings.length;_i++){var _h=_inv.stockHoldings[_i];var _m=_inv.stockMarket&&_inv.stockMarket[_h.symbol];if(_m&&_h.avgPrice&&_h.shares)_totalLoss+=(_h.avgPrice-_m.price)*_h.shares}}return _totalLoss>5000&&st.player.day>=150},
 probability:0.08,repeatable:false,
 choices:[{text:"😰 关掉软件，去睡觉",hint:"健康+15,疲劳-10,置_e1014SleepWell",apply:function(st){if(!st)return;st.flags=st.flags||{};st.flags._e1014InsomniaDone=true;st.flags._e1014SleepWell=true;if(!st.status)st.status={};st.status.health=Math.min(100,(st.status.health||50)+15);if(st.needs)st.needs.fatigue=Math.max(0,(st.needs.fatigue||0)-10);if(typeof StateManager!=="undefined")StateManager.addMessage("😰 健康+15,疲劳-10。你关掉手机，深呼吸，告诉自己明天会更好。","success")}},
 {text:"📱 继续盯盘，睡不着",hint:"健康-10,疲劳+10,智力+3,置_e1014NightTrade",apply:function(st){if(!st)return;st.flags=st.flags||{};st.flags._e1014InsomniaDone=true;st.flags._e1014NightTrade=true;if(!st.status)st.status={};st.status.health=Math.max(0,(st.status.health||50)-10);if(st.needs)st.needs.fatigue=Math.min(100,(st.needs.fatigue||0)+10);if(st.player)st.player.intelligence=Math.min(100,(st.player.intelligence||50)+3);if(typeof StateManager!=="undefined")StateManager.addMessage("📱 健康-10,疲劳+10,智力+3。你研究了半夜的K线图，眼睛都快瞎了。","warning")}}]},
