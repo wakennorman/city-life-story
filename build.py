@@ -48,6 +48,7 @@ def bundle_js(html):
     """
     chunks = []      # 串接后的 JS 片段
     js_files = []    # 待语法检查的文件（收集后再批量检查，见下）
+    missing = []     # 被 <script src> 引用但磁盘上不存在的文件（见下方硬失败）
     state = {'first': True}
 
     def replace_js(match):
@@ -58,7 +59,23 @@ def bundle_js(html):
         src = src_match.group(1)
         path = os.path.join(SRC_DIR, src)
         if not os.path.exists(path):
-            # 缺失文件：保持原标签（与旧行为一致，暴露问题）
+            # 缺失文件：**收集起来，构建结束时硬失败**（见 bundle_js 末尾）。
+            #
+            # ★ 此前这里是「保持原标签后静默返回」，注释写着"暴露问题"，
+            #   但实际后果恰恰相反 —— 它是**隐瞒**问题：
+            #     · 构建照常成功，打印 "Build complete"
+            #     · 产物里少了一段代码，其中注册的事件永不发火
+            #     · 只有浏览器打开时才会有 404，CI 完全看不到
+            #
+            #   真实事故（.claude/domain-optimization-round-393.md）：
+            #     src/index.html:587 引用 domain_b_linkage_r389.js（不存在，
+            #     真实文件是 r389b.js）→ build.py 静默跳过 →
+            #     R389 域B 联动事件从 bundle 中被剔除、永不发火。
+            #     该问题由人工审查发现，而非任何门禁。
+            #
+            #   保持原标签的行为予以保留（使 404 在浏览器中可见），
+            #   但同时记录到 missing 列表，让构建**立即失败**。
+            missing.append(src)
             return match.group(0)
         # 仅收集，暂不检查 —— 见下方「批量语法检查」说明
         js_files.append(path)
@@ -124,6 +141,30 @@ def bundle_js(html):
                     print('\n[JS语法错误] %s' % path)
                     print(e.stderr.strip() if e.stderr else '语法错误')
                     sys.exit(1)
+
+    # ── 悬空引用硬失败 ──────────────────────────────────────────────────────
+    #
+    # 这是本函数唯一一处「不产出即可宣布失败」的检查，因为缺失是**结构性**的：
+    # 少一个文件，其后所有注册的事件都不会进入 bundle，而构建看起来完全正常。
+    #
+    # 历史上这类故障至少发生 8 次（R196 / R393 / R397 / R411 / R418 / R431 /
+    # R554 / R590），其中 R393 造成「R389 域B 联动事件从 bundle 中被剔除、
+    # 永不发火」，且是靠人工审查发现的。
+    #
+    # 门禁 scripts/audit-dangling-refs.mjs 也能拦（在 CI 中运行），
+    # 但那是**事后**；此处是**构建当场**失败，反馈更早、定位更准。
+    if missing:
+        print('\n[悬空引用] 以下文件被 <script src> 引用，但磁盘上不存在：')
+        for src in missing:
+            print('    ✗ %s   (期望路径: %s)' % (src, os.path.join(SRC_DIR, src)))
+        print('\n  这些引用已保留在产物 HTML 中（浏览器打开会 404 可见），')
+        print('  但它们对应的代码**不会**进入 dist/app.js —— 其中的事件注册')
+        print('  将全部失效，且构建过程不会察觉。')
+        print('\n  处置：')
+        print('    · 若文件应为其他名字 → 修正 src/index.html 的引用')
+        print('    · 若文件被误删       → 从 git 历史恢复')
+        print('    · 若引用应被删除     → 删掉该 <script> 标签')
+        sys.exit(1)
 
     return new_html, bundle_code
 
