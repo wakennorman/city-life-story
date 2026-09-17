@@ -19,3 +19,8 @@ nul
 # 纳入版本控制会导致「每次提交后工作树永久为脏」，进而使
 # .claude/sync-check.sh 的安全性检查永久跳过自动同步，故忽略之。
 .claude/last_known_head
+
+# 一次性清理残留（幽灵目录树，见报告第39节）
+# 形如 "•/d/Claude Code+DeepSeekV4/city-life-story/*.md" 的错误目录
+//
+.ghost-backup/
