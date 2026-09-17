@@ -14,6 +14,7 @@
     "check:events": "node tests/events_integrity.cjs && node tests/smoke_sim.cjs",
     "check:industry-profit": "node scripts/probe-industry-profit.cjs --quiet",
     "check:dangling": "node scripts/audit-dangling-refs.mjs",
+    "check:recency": "node scripts/audit-domain-recency.mjs",
     "test": "npm run check:js && npm run check:events && npm run check:industry-profit && npm run check:dangling",
     "verify:deploy": "node scripts/verify-deploy.mjs",
     "build:legacy": "python build.py",
