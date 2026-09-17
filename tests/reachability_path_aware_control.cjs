@@ -271,6 +271,41 @@ check("输入层·真实数据：剥注释后 st.needs.health 归零",
   _strippedHits, 0,
   "真实字段是 st.status.health —— 该候选此前是纯注释假候选");
 
+// ── E6~E7：源码守卫 —— 判据**必须真的调用** stripComments ────────────────
+//
+// 【为什么必须有这两条】上面的 E1~E5 只验证 `stripComments` **本身**正确。
+// 它们**不验证判据是否调用了它**。
+//
+// 于是一个完全隐蔽的回归是可能发生的：
+//   有人重构 events_reachability.cjs，把 `extractReadPaths(stripComments(src))`
+//   改回 `extractReadPaths(src)` —— E1~E5 **全部继续通过**，
+//   因为 `stripComments` 函数还在、还正确，只是**没人调用它了**。
+//
+// 这正是纪律 5 的「源码守卫」要防的形态：
+// **行为守卫防逻辑回退，源码守卫防"代码在但调用点被删"。**
+//
+// 守卫必须**剥注释后再匹配**（纪律 5 的教训）—— 否则本文件自己的说明注释
+// 里就写着 `extractReadPaths(stripComments(`，会把自己匹配上，形成恒真断言。
+const fsx = require("fs");
+const pathx = require("path");
+const _judgeSources = [
+  ["硬门禁", "events_reachability.cjs"],
+  ["信息层", "reachability_same_name_crosstalk.cjs"],
+];
+for (const [label, rel] of _judgeSources) {
+  const src = stripComments(
+    fsx.readFileSync(pathx.join(__dirname, rel), "utf8"),
+  );
+  const hasCall = /extractReadPaths\s*\(\s*stripComments\s*\(/.test(src);
+  const bareCall = /extractReadPaths\s*\(\s*(?!stripComments)/.test(src);
+  check("输入层·源码守卫：" + label + " 必须调用 extractReadPaths(stripComments(…))",
+    hasCall, true,
+    rel + " —— 删掉这处调用后 E1~E5 仍会全绿，只有本守卫能发现");
+  check("输入层·源码守卫：" + label + " 不得有未剥注释的裸调用",
+    bareCall, false,
+    rel + " 中不得出现 extractReadPaths( 后面直接跟非 stripComments 的实参");
+}
+
 // ── 输出 ────────────────────────────────────────────────────────────────
 console.log("[path-aware-control] 路径感知写入判据 · 阴性对照");
 console.log("[path-aware-control] 阳性 " + POSITIVE.length +
