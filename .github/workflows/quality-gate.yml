@@ -97,6 +97,15 @@ jobs:
       - name: Industry profit gate
         run: npm run check:industry-profit
 
+      # 悬空引用门禁：index.html 引用的脚本必须都存在，且产物必须包含全部引用。
+      # 背景：2026-07 曾多次发生「并行窗口 git add -A 把他人在途编辑的
+      # index.html（含新挂载行）扫入自己的提交，而对应 .js 仍 untracked」
+      # → main 上出现悬空引用 → 线上 404 → 依赖它的功能静默失效。
+      # 这类故障不会让构建失败（build.py 只读能读到的文件），
+      # 故必须单独立一道门禁。
+      - name: Dangling reference gate
+        run: npm run check:dangling
+
   # ── 4. 可复现性门禁 ──────────────────────────────────────────────────────
   # 同种子跑两次必须逐字节一致。
   # 背景：2026-09-15 之前本项目 MC 跑分不可复现 —— checkNewsConduit 把
