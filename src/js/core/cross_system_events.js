@@ -922,16 +922,21 @@
       // [conditions→triggers] 部分迁移：phase+weather+day 移入 triggers，employment 检查保留
       triggers: { phase: "street", weather: "heatwave", minDay: 30 },
       conditions: function (st) {
+        // [报告第 57 节] 果实 G1：改读 employment.completedShifts
+        //   （main.js:4764 doStreetJob 每次上工写入 completedShifts[job.id]）。
+        //   原读 employment.currentJob.id —— 该容器**全库零写入**（仅 main.js:4762
+        //   初始化为 null），故本事件此前恒 false（无任何 OR 兜底分支）。
+        //   ⚠️ 为什么不直接补写 employment.currentJob：它 129 处读取里约 100 处是
+        //   「!currentJob → return false（注释写着"检查已就业"）」型门槛，
+        //   补写会一次性放开近百个就业类事件。见报告第 57.4 节。
+        var _cs = st.employment && st.employment.completedShifts;
         var isOutdoor =
-          st.employment &&
-          st.employment.currentJob &&
-          [
-            "manual_labor_construction",
-            "waste_recycling",
-            "old_zhou_recycling",
-            "street_vending_food",
-            "sister_zhang_vending",
-          ].includes(st.employment.currentJob.id);
+          _cs &&
+          (_cs["manual_labor_construction"] > 0 ||
+            _cs["waste_recycling"] > 0 ||
+            _cs["old_zhou_recycling"] > 0 ||
+            _cs["street_vending_food"] > 0 ||
+            _cs["sister_zhang_vending"] > 0);
         return isOutdoor;
       },
       probability: 0.1,
@@ -1193,8 +1198,8 @@
           st.relationships.sister_zhang &&
           st.relationships.sister_zhang.met &&
           st.employment &&
-          st.employment.currentJob &&
-          st.employment.currentJob.id === "factory_work_assembly" &&
+          st.employment.completedShifts &&
+          (st.employment.completedShifts["factory_work_assembly"] || 0) > 0 &&
           ((st.skills.repair && st.skills.repair.level >= 20) ||
             (st.skills.electrician && st.skills.electrician.level >= 20)) &&
           st.player.day >= 40

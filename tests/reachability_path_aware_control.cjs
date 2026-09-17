@@ -67,16 +67,21 @@ const POSITIVE = [
       "真实容器是 company.employees（startup.js:1480 push）。",
   },
   {
-    path: "state.trade.totalTrades",
-    why: "全库零写入（叶子键名 totalTrades 亦为 0 处）。",
-  },
-  {
     path: "state.investment.totalInvested",
     why: "全库零写入；真实容器 _totalInvested 本身也是死的。",
   },
   {
-    path: "state.trade.totalBuys",
-    why: "全库零写入。",
+    // [报告第 57 节] 原为 state.trade.totalTrades / totalBuys —— 本节已补写入端
+    //   （investment.js:2004/2176 + state.js:940-942），故从阳性移到阴性。
+    //   换入的两个新阳性都是**双方法交叉验证过**的真死路径。
+    path: "state.employment.currentJob.id",
+    why: "父容器 employment.currentJob 全库零写入（仅 main.js:4762 初始化为 null），" +
+      "129 处读取全为死读。叶子键名 'id' 有大量写入（DOM container.id 等）→ 正是盲区七的形态。",
+  },
+  {
+    path: "state.stats.actionFreq.buyGood",
+    why: "叶子键名 'buyGood' 的\"写入\"是 window.buyGood = function（phase1/pricing.js:771、" +
+      "phase1/trade.js:649）—— 那是全局函数定义，不是 state.stats.actionFreq 的键。",
   },
 ];
 
@@ -124,6 +129,27 @@ const NEGATIVE = [
     kind: "数组方法（别名）",
     path: "state.startup.company.employees",
     site: "phase2/startup.js:1480  company.employees.push(employee)",
+  },
+  {
+    // [报告第 57 节] 果实 G3 补写入端后由死转活 —— 同时验证判据跟得上修复。
+    kind: "直接写入（本节新增）",
+    path: "state.trade.totalTrades",
+    site: "phase2/investment.js:2004（买）/:2176（卖）+ core/state.js:940 加载时按 tradeLog 重算",
+  },
+  {
+    kind: "直接写入（本节新增）",
+    path: "state.trade.totalBuys",
+    site: "phase2/investment.js:2005 + core/state.js:941",
+  },
+  {
+    kind: "直接写入（本节新增）",
+    path: "state.trade.totalSells",
+    site: "phase2/investment.js:2177 + core/state.js:942",
+  },
+  {
+    kind: "直接写入（本节新增）",
+    path: "state.employment.completedShifts",
+    site: "main.js:4764  doStreetJob() 每次上工 completedShifts[job.id]++",
   },
 ];
 

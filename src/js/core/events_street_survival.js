@@ -1340,8 +1340,8 @@
         if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后不再触发街头叙事事件
         var hasConstruction =
           (st.employment &&
-            st.employment.currentJob &&
-            st.employment.currentJob.id === "manual_labor_construction") ||
+            st.employment.completedShifts &&
+            (st.employment.completedShifts["manual_labor_construction"] || 0) > 0) ||
           (st.trade && st.trade.currentLocation === "construction") ||
           (st.stats &&
             st.stats.actionFreq &&
@@ -1411,12 +1411,10 @@
         if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后不再触发街头叙事事件
         var hasStall =
           (st.employment &&
-            st.employment.currentJob &&
-            [
-              "food_stall",
-              "street_vending_food",
-              "street_vending_goods",
-            ].includes(st.employment.currentJob.id)) ||
+            st.employment.completedShifts &&
+            (st.employment.completedShifts["food_stall"] > 0 ||
+              st.employment.completedShifts["street_vending_food"] > 0 ||
+              st.employment.completedShifts["street_vending_goods"] > 0)) ||
           (st.sideHustle && st.sideHustle.type === "stall") ||
           (st.stats &&
             st.stats.actionFreq &&
@@ -1705,12 +1703,10 @@
         if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后不再触发街头叙事事件
         var hasStall =
           (st.employment &&
-            st.employment.currentJob &&
-            [
-              "food_stall",
-              "street_vending_food",
-              "street_vending_goods",
-            ].includes(st.employment.currentJob.id)) ||
+            st.employment.completedShifts &&
+            (st.employment.completedShifts["food_stall"] > 0 ||
+              st.employment.completedShifts["street_vending_food"] > 0 ||
+              st.employment.completedShifts["street_vending_goods"] > 0)) ||
           (st.sideHustle && st.sideHustle.type === "stall") ||
           (st.stats &&
             st.stats.actionFreq &&
@@ -1986,12 +1982,10 @@
           (st.weather.current === "rainy" || st.weather.current === "stormy");
         var hasStall =
           (st.employment &&
-            st.employment.currentJob &&
-            [
-              "food_stall",
-              "street_vending_food",
-              "street_vending_goods",
-            ].includes(st.employment.currentJob.id)) ||
+            st.employment.completedShifts &&
+            (st.employment.completedShifts["food_stall"] > 0 ||
+              st.employment.completedShifts["street_vending_food"] > 0 ||
+              st.employment.completedShifts["street_vending_goods"] > 0)) ||
           (st.sideHustle && st.sideHustle.type === "stall") ||
           (st.stats &&
             st.stats.actionFreq &&
@@ -2125,12 +2119,10 @@
             st.trade.currentLocation !== "home") ||
           (st.sideHustle && st.sideHustle.active) ||
           (st.employment &&
-            st.employment.currentJob &&
-            [
-              "food_stall",
-              "street_vending_food",
-              "street_vending_goods",
-            ].includes(st.employment.currentJob.id));
+            st.employment.completedShifts &&
+            (st.employment.completedShifts["food_stall"] > 0 ||
+              st.employment.completedShifts["street_vending_food"] > 0 ||
+              st.employment.completedShifts["street_vending_goods"] > 0));
         return st.player.phase === "street" && hasTrade;
       },
       choices: [

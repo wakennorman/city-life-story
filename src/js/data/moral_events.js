@@ -213,12 +213,10 @@ s.status.health = Math.max(0, s.status.health - 2);
       // [自洽修复] 叙事"摆摊时"需检查玩家确实在摆摊（职业/副业/行动频次），避免随机弹出与场景不符
       var hasStall =
         (s.employment &&
-          s.employment.currentJob &&
-          [
-            "food_stall",
-            "street_vending_food",
-            "street_vending_goods",
-          ].includes(s.employment.currentJob.id)) ||
+          s.employment.completedShifts &&
+          (s.employment.completedShifts["food_stall"] > 0 ||
+            s.employment.completedShifts["street_vending_food"] > 0 ||
+            s.employment.completedShifts["street_vending_goods"] > 0)) ||
         (s.sideHustle && s.sideHustle.type === "stall") ||
         (s.stats &&
           s.stats.actionFreq &&

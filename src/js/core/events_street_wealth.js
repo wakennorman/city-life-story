@@ -3166,8 +3166,8 @@
         if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后不再触发街头叙事事件
         var hasTutoring =
           (st.employment &&
-            st.employment.currentJob &&
-            st.employment.currentJob.id === "tutoring") ||
+            st.employment.completedShifts &&
+            (st.employment.completedShifts["tutoring"] || 0) > 0) ||
           (st.sideHustle && st.sideHustle.type === "tutoring") ||
           (st.stats &&
             st.stats.actionFreq &&

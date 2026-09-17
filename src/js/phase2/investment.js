@@ -1994,6 +1994,15 @@ function buyInvStock(symbol, shares) {
     total: cost,
     unitLabel: def?.unit || "股",
   });
+  // [报告第 57 节] 累计交易笔数 —— 果实 G3 的写入端
+  //   此前 state.trade.totalTrades/totalBuys/totalSells 三个字段全库零写入，
+  //   约 20 处消费点恒读 undefined：6 个 (totalTrades >= N) 门槛恒 false、
+  //   5 处文案恒显示"你已完成0笔交易"、4 处买卖计数恒 0。
+  //   这里与 tradeLog.push 同步递增，保证两者永不脱节。
+  if (state.trade) {
+    state.trade.totalTrades = (state.trade.totalTrades || 0) + 1;
+    state.trade.totalBuys = (state.trade.totalBuys || 0) + 1;
+  }
   // 追踪交易频次（用于排序）
   if (state.stats) {
     if (!state.stats.investFreq) state.stats.investFreq = {};
@@ -2162,6 +2171,11 @@ function sellInvStock(symbol, shares) {
     pl: pl,
     unitLabel: def?.unit || "股",
   });
+  // [报告第 57 节] 累计交易笔数 —— 果实 G3 的写入端（卖出口径）
+  if (state.trade) {
+    state.trade.totalTrades = (state.trade.totalTrades || 0) + 1;
+    state.trade.totalSells = (state.trade.totalSells || 0) + 1;
+  }
   // 追踪卖出频次（用于排序）
   if (state.stats) {
     if (!state.stats.investFreq) state.stats.investFreq = {};

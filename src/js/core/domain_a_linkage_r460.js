@@ -14,6 +14,23 @@
   if (RANDOM_EVENTS._domainALinkageR460Loaded) return;
   RANDOM_EVENTS._domainALinkageR460Loaded = true;
 
+  // ====== [报告第 57 节] 果实 G2：visitedLocations 的真实容器 ======
+  // 【问题】本文件 3 处读 st.trade.visitedLocations，而该字段**全库零写入**
+  //   （幻影字段）→ 两个 conditions 恒 false（两个事件从未触发过），
+  //   一处文案恒显示"你跑遍了0个地点"。
+  // 【真实容器】st.flags._visitedLocations —— main.js:3475-3477 的旅行 handler
+  //   写入的**去重地点数组**，与 _visitedAllLocations 成就同源。
+  //   名字（visitedLocations vs _visitedLocations）与 .length 语义（数组长度）
+  //   都与原读法一致 → 属"契约已存在、只是指向错了"的果实。
+  // 【为什么不用 st.stats.visits】它是 4 个兄弟事件（r258/r267/r277/r280）在用的
+  //   "去过的地点数"容器（action_sort.js:631 写入），但语义是"**用过动作**的地点"，
+  //   含起始地点 slum；而本事件文案是"你**跑遍**了N个地点"，旅行语义更贴切。
+  //   两个容器都活着，此处取名字与语义都更贴近的那个。见报告第 57.5 节。
+  function visitedLocationCountA460(st) {
+    if (!st || !st.flags || !Array.isArray(st.flags._visitedLocations)) return 0;
+    return st.flags._visitedLocations.length;
+  }
+
   var EVENTS = [
     {
       id: "a460_price_forecast", phase: "street", _isChainEvent: false, icon: "📉",
@@ -22,7 +39,7 @@
       triggers: { minDay: 30, interval: 60, maxRepeats: 5, excludeFlags: ["_a460ForecastCooldown"] },
       conditions: function (st) {
         if (st.gameOver) return false;
-        if (!st.trade || !st.trade.visitedLocations || st.trade.visitedLocations.length < 2) return false;
+        if (visitedLocationCountA460(st) < 2) return false;
         return (st.flags && !st.flags._a460ForecastCooldown);
       },
       choices: [
@@ -40,7 +57,7 @@
       ],
       text: function (st) {
         if (!st) return null;
-        var visited = st.trade && st.trade.visitedLocations ? st.trade.visitedLocations.length : 0;
+        var visited = visitedLocationCountA460(st);
         return "你跑遍了" + visited + "个地点，记录了每种商品的价格。数据在手，你开始看出一些规律——什么时候买、在哪里卖，都有讲究。";
       }
     },
@@ -51,7 +68,7 @@
       triggers: { minDay: 50, interval: 90, maxRepeats: 3, excludeFlags: ["_a460ArbitrageCooldown"] },
       conditions: function (st) {
         if (st.gameOver) return false;
-        if (!st.trade || !st.trade.visitedLocations || st.trade.visitedLocations.length < 2) return false;
+        if (visitedLocationCountA460(st) < 2) return false;
         if ((st.resources && st.resources.cash || 0) < 500) return false;
         return (st.flags && !st.flags._a460ArbitrageCooldown);
       },

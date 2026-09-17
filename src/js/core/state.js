@@ -160,6 +160,17 @@ function createDefaultState() {
     trade: {
       currentLocation: "slum",
       totalProfit: 0,
+      // [报告第 57 节] 累计交易笔数 —— 两个写入端（互为校验）：
+      //   ① investment.js:1988/2155 每笔成交同步递增（会话内即时可见）
+      //   ② importState 的「②b 一致性修复」每次加载按 investment.tradeLog 重算
+      //      （旧存档补齐 + 两侧漏写自愈；tradeLog 只 push 不截断，故可重算）
+      //   此前这三个字段**不在 schema 且全库零写入**，约 20 处消费点恒读 undefined：
+      //     · domain_f_linkage_r966/r974/r982/r990/r998/r1006 的 (totalTrades >= N) 门槛恒 false
+      //     · domain_a_linkage_r833/r841/r849/r857/r865 的文案恒显示"你已完成0笔交易"
+      //     · domain_a_linkage_r164/r171、domain_b_linkage_r172、npc_linkage_r167 的买卖计数恒 0
+      totalTrades: 0,
+      totalBuys: 0,
+      totalSells: 0,
       goodsPrices: {}, // { locationKey: { goodId: price } }
       priceTrends: {},
       lastPriceUpdate: 0,
@@ -713,6 +724,14 @@ var SAVE_MIGRATIONS = [
       if (!s.stats.investFreq) s.stats.investFreq = {};
       // v1.7 → v1.8 迁移：交易情报系统
       if (!s.trade) s.trade = {};
+      // [报告第 57 节] 交易计数回填 —— **已移出迁移步**，见 importState 的「②b 一致性修复」。
+      //   留此注释是为了防止后来者"顺手补回来"：
+      //   ① SAVE_MIGRATIONS 的每一步只在「存档版本 < 该步 to」时执行，而线上现行版本
+      //      已是 2.0.0 → to:"2.0.0" 这一步对现行存档**完全跳过**；
+      //   ② 即便执行到，deepMergeDefaults 已把新字段按默认值回填成 number 0，
+      //      `typeof x !== "number"` 型守卫也会直接失效。
+      //   本段第一版两条都中了 → 回填是 100% 死代码（语法正确、注释完整、零效果）。
+      //   详见报告第 57.6 节。
       if (!s.trade.visitedToday) s.trade.visitedToday = {};
       if (typeof s.trade._visitedDay === "undefined") s.trade._visitedDay = null;
       if (!s.trade.priceMemory) s.trade.priceMemory = [];
@@ -897,6 +916,30 @@ class GameStateManager {
           );
         }
       }
+    }
+    // ②b [报告第 57 节] 一致性修复：交易计数 ← investment.tradeLog
+    //   【为什么不在 SAVE_MIGRATIONS 里】迁移步只在「存档版本 < 该步 to」时执行；
+    //     线上现行版本已是 2.0.0 → to:"2.0.0" 那一步对现行存档**完全跳过**。
+    //     把回填写进迁移步 = 对当前玩家永远不生效（本段第一版就是死代码）。
+    //   【为什么可以无条件重算】investment.tradeLog 是**只 push、不截断**的追加日志
+    //     （全库仅 investment.js:1988/2155 两处写入），所以它同时是「事实源」与
+    //     「可重算的账本」。开销 O(n)，n = 累计成交笔数（n 很小）。
+    //   【效果】旧存档（无这三个字段）被补齐；会话内 investment.js 的增量写入
+    //     与本重算互为校验 —— 两侧任何一侧漏写，下次加载即暴露。
+    //   字段定义与消费点清单见 createDefaultState().trade 处注释。
+    if (s.investment && Array.isArray(s.investment.tradeLog)) {
+      if (!s.trade) s.trade = {};
+      var _tl = s.investment.tradeLog;
+      var _tb = 0,
+        _ts = 0;
+      for (var _ti = 0; _ti < _tl.length; _ti++) {
+        var _t = _tl[_ti];
+        if (_t && _t.type === "buy") _tb++;
+        else if (_t && _t.type === "sell") _ts++;
+      }
+      s.trade.totalTrades = _tl.length;
+      s.trade.totalBuys = _tb;
+      s.trade.totalSells = _ts;
     }
     // ③ 盖版本戳 + 记录最近游玩时间
     s.version = SAVE_VERSION;

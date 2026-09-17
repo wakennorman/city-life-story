@@ -25,6 +25,52 @@
     return total;
   }
 
+  // [报告第 57 节] 果实 G4：c675_career_dashboard_v2 的「当前街头工作」
+  //
+  // 【原条件的两处独立缺陷】
+  //   原写法：`st.employment && st.employment.currentJob && (st.employment.completedShifts || {})`
+  //     ① 末项 `(x || {})` 是**恒真项** —— 空对象也是 truthy，
+  //        所以整条条件实际退化成 `employment && employment.currentJob`；
+  //     ② `employment.currentJob` 全库零写入（仅 main.js:4762 初始化为 null），
+  //        于是 `&& currentJob` 恒 false → **该事件从未触发过**（死事件）。
+  //   同时 text() 读 `currentJob.id` / `currentJob.name`，同样恒 undefined
+  //   → 即便触发也只会显示"未知累计0天"。
+  //
+  // 【真实容器】employment.completedShifts（main.js:4764 doStreetJob 每次上工
+  //   写入 completedShifts[job.id]）+ STREET_JOBS（id → 中文名）。
+  //   这里把「当前街头工作」定义为**累计上工天数最多的那一份**：
+  //   这是仅用现存容器就能得到的、与"回顾成长轨迹"语义最贴近的量。
+  //   无任何上工记录 → 返回 null → 不触发。
+  //
+  // 【为什么不直接补写 employment.currentJob】它的 129 处读取里约 100 处是
+  //   「!currentJob → return false（注释写着"检查已就业"）」型门槛，补写会
+  //   一次性放开近百个就业类事件。见报告第 57.4 节。
+  function topStreetJobC675(st) {
+    var cs = st && st.employment && st.employment.completedShifts;
+    if (!cs) return null;
+    var bestId = null;
+    var bestDays = 0;
+    for (var id in cs) {
+      if (!Object.prototype.hasOwnProperty.call(cs, id)) continue;
+      var d = cs[id];
+      if (typeof d === "number" && d > bestDays) {
+        bestDays = d;
+        bestId = id;
+      }
+    }
+    if (!bestId) return null;
+    var name = bestId;
+    if (typeof STREET_JOBS !== "undefined" && Array.isArray(STREET_JOBS)) {
+      for (var i = 0; i < STREET_JOBS.length; i++) {
+        if (STREET_JOBS[i] && STREET_JOBS[i].id === bestId) {
+          name = STREET_JOBS[i].name || bestId;
+          break;
+        }
+      }
+    }
+    return { id: bestId, name: name, days: bestDays };
+  }
+
   // 辅助：获取最高技能等级
   function maxSkillLevel(st) {
     if (!st || !st.skills) return 0;
@@ -78,7 +124,9 @@
       conditions: function (st) {
         if (st.gameOver) return false;
         if (!st.flags || st.flags._c675DashCooldown) return false;
-        return st.employment && st.employment.currentJob && (st.employment.completedShifts || {});
+        // [报告第 57 节] 果实 G4：原为 `employment && currentJob && (completedShifts || {})`
+        //   —— 末项恒真 + currentJob 零写入 → 事件从未触发。改读真实容器。
+        return !!topStreetJobC675(st);
       },
       choices: [
         { text: "📊 分析成长轨迹", hint: "管理XP+6,智力+3", apply: function (st) {
@@ -98,9 +146,10 @@
       ],
       text: function (st) {
         if (!st) return null;
-        var job = st.employment && st.employment.currentJob;
-        var shifts = job ? (st.employment.completedShifts[job.id] || 0) : 0;
-        return "回顾你的职业数据,一条清晰的成长轨迹浮现——'" + (job ? job.name : "未知") + "累计" + shifts + "天,数据会说话。'";
+        // [报告第 57 节] 果实 G4：改读真实容器（原读 currentJob.id/.name，恒 undefined）
+        var job = topStreetJobC675(st);
+        if (!job) return null;
+        return "回顾你的职业数据,一条清晰的成长轨迹浮现——'" + job.name + "累计" + job.days + "天,数据会说话。'";
       }
     },
     {

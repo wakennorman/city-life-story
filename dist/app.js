@@ -637,6 +637,17 @@ function createDefaultState() {
     trade: {
       currentLocation: "slum",
       totalProfit: 0,
+      // [报告第 57 节] 累计交易笔数 —— 两个写入端（互为校验）：
+      //   ① investment.js:1988/2155 每笔成交同步递增（会话内即时可见）
+      //   ② importState 的「②b 一致性修复」每次加载按 investment.tradeLog 重算
+      //      （旧存档补齐 + 两侧漏写自愈；tradeLog 只 push 不截断，故可重算）
+      //   此前这三个字段**不在 schema 且全库零写入**，约 20 处消费点恒读 undefined：
+      //     · domain_f_linkage_r966/r974/r982/r990/r998/r1006 的 (totalTrades >= N) 门槛恒 false
+      //     · domain_a_linkage_r833/r841/r849/r857/r865 的文案恒显示"你已完成0笔交易"
+      //     · domain_a_linkage_r164/r171、domain_b_linkage_r172、npc_linkage_r167 的买卖计数恒 0
+      totalTrades: 0,
+      totalBuys: 0,
+      totalSells: 0,
       goodsPrices: {}, // { locationKey: { goodId: price } }
       priceTrends: {},
       lastPriceUpdate: 0,
@@ -1190,6 +1201,14 @@ var SAVE_MIGRATIONS = [
       if (!s.stats.investFreq) s.stats.investFreq = {};
       // v1.7 → v1.8 迁移：交易情报系统
       if (!s.trade) s.trade = {};
+      // [报告第 57 节] 交易计数回填 —— **已移出迁移步**，见 importState 的「②b 一致性修复」。
+      //   留此注释是为了防止后来者"顺手补回来"：
+      //   ① SAVE_MIGRATIONS 的每一步只在「存档版本 < 该步 to」时执行，而线上现行版本
+      //      已是 2.0.0 → to:"2.0.0" 这一步对现行存档**完全跳过**；
+      //   ② 即便执行到，deepMergeDefaults 已把新字段按默认值回填成 number 0，
+      //      `typeof x !== "number"` 型守卫也会直接失效。
+      //   本段第一版两条都中了 → 回填是 100% 死代码（语法正确、注释完整、零效果）。
+      //   详见报告第 57.6 节。
       if (!s.trade.visitedToday) s.trade.visitedToday = {};
       if (typeof s.trade._visitedDay === "undefined") s.trade._visitedDay = null;
       if (!s.trade.priceMemory) s.trade.priceMemory = [];
@@ -1374,6 +1393,30 @@ class GameStateManager {
           );
         }
       }
+    }
+    // ②b [报告第 57 节] 一致性修复：交易计数 ← investment.tradeLog
+    //   【为什么不在 SAVE_MIGRATIONS 里】迁移步只在「存档版本 < 该步 to」时执行；
+    //     线上现行版本已是 2.0.0 → to:"2.0.0" 那一步对现行存档**完全跳过**。
+    //     把回填写进迁移步 = 对当前玩家永远不生效（本段第一版就是死代码）。
+    //   【为什么可以无条件重算】investment.tradeLog 是**只 push、不截断**的追加日志
+    //     （全库仅 investment.js:1988/2155 两处写入），所以它同时是「事实源」与
+    //     「可重算的账本」。开销 O(n)，n = 累计成交笔数（n 很小）。
+    //   【效果】旧存档（无这三个字段）被补齐；会话内 investment.js 的增量写入
+    //     与本重算互为校验 —— 两侧任何一侧漏写，下次加载即暴露。
+    //   字段定义与消费点清单见 createDefaultState().trade 处注释。
+    if (s.investment && Array.isArray(s.investment.tradeLog)) {
+      if (!s.trade) s.trade = {};
+      var _tl = s.investment.tradeLog;
+      var _tb = 0,
+        _ts = 0;
+      for (var _ti = 0; _ti < _tl.length; _ti++) {
+        var _t = _tl[_ti];
+        if (_t && _t.type === "buy") _tb++;
+        else if (_t && _t.type === "sell") _ts++;
+      }
+      s.trade.totalTrades = _tl.length;
+      s.trade.totalBuys = _tb;
+      s.trade.totalSells = _ts;
     }
     // ③ 盖版本戳 + 记录最近游玩时间
     s.version = SAVE_VERSION;
@@ -8615,8 +8658,8 @@ if (typeof window !== "undefined") {
         if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后不再触发街头叙事事件
         var hasConstruction =
           (st.employment &&
-            st.employment.currentJob &&
-            st.employment.currentJob.id === "manual_labor_construction") ||
+            st.employment.completedShifts &&
+            (st.employment.completedShifts["manual_labor_construction"] || 0) > 0) ||
           (st.trade && st.trade.currentLocation === "construction") ||
           (st.stats &&
             st.stats.actionFreq &&
@@ -8686,12 +8729,10 @@ if (typeof window !== "undefined") {
         if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后不再触发街头叙事事件
         var hasStall =
           (st.employment &&
-            st.employment.currentJob &&
-            [
-              "food_stall",
-              "street_vending_food",
-              "street_vending_goods",
-            ].includes(st.employment.currentJob.id)) ||
+            st.employment.completedShifts &&
+            (st.employment.completedShifts["food_stall"] > 0 ||
+              st.employment.completedShifts["street_vending_food"] > 0 ||
+              st.employment.completedShifts["street_vending_goods"] > 0)) ||
           (st.sideHustle && st.sideHustle.type === "stall") ||
           (st.stats &&
             st.stats.actionFreq &&
@@ -8980,12 +9021,10 @@ if (typeof window !== "undefined") {
         if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后不再触发街头叙事事件
         var hasStall =
           (st.employment &&
-            st.employment.currentJob &&
-            [
-              "food_stall",
-              "street_vending_food",
-              "street_vending_goods",
-            ].includes(st.employment.currentJob.id)) ||
+            st.employment.completedShifts &&
+            (st.employment.completedShifts["food_stall"] > 0 ||
+              st.employment.completedShifts["street_vending_food"] > 0 ||
+              st.employment.completedShifts["street_vending_goods"] > 0)) ||
           (st.sideHustle && st.sideHustle.type === "stall") ||
           (st.stats &&
             st.stats.actionFreq &&
@@ -9261,12 +9300,10 @@ if (typeof window !== "undefined") {
           (st.weather.current === "rainy" || st.weather.current === "stormy");
         var hasStall =
           (st.employment &&
-            st.employment.currentJob &&
-            [
-              "food_stall",
-              "street_vending_food",
-              "street_vending_goods",
-            ].includes(st.employment.currentJob.id)) ||
+            st.employment.completedShifts &&
+            (st.employment.completedShifts["food_stall"] > 0 ||
+              st.employment.completedShifts["street_vending_food"] > 0 ||
+              st.employment.completedShifts["street_vending_goods"] > 0)) ||
           (st.sideHustle && st.sideHustle.type === "stall") ||
           (st.stats &&
             st.stats.actionFreq &&
@@ -9400,12 +9437,10 @@ if (typeof window !== "undefined") {
             st.trade.currentLocation !== "home") ||
           (st.sideHustle && st.sideHustle.active) ||
           (st.employment &&
-            st.employment.currentJob &&
-            [
-              "food_stall",
-              "street_vending_food",
-              "street_vending_goods",
-            ].includes(st.employment.currentJob.id));
+            st.employment.completedShifts &&
+            (st.employment.completedShifts["food_stall"] > 0 ||
+              st.employment.completedShifts["street_vending_food"] > 0 ||
+              st.employment.completedShifts["street_vending_goods"] > 0));
         return st.player.phase === "street" && hasTrade;
       },
       choices: [
@@ -14350,8 +14385,8 @@ if (typeof window !== "undefined") {
         if (st.gameOver) return false; // [Layer4-L4A] 玩家死亡/破产后不再触发街头叙事事件
         var hasTutoring =
           (st.employment &&
-            st.employment.currentJob &&
-            st.employment.currentJob.id === "tutoring") ||
+            st.employment.completedShifts &&
+            (st.employment.completedShifts["tutoring"] || 0) > 0) ||
           (st.sideHustle && st.sideHustle.type === "tutoring") ||
           (st.stats &&
             st.stats.actionFreq &&
@@ -26934,6 +26969,23 @@ if (typeof window !== "undefined") {
   if (RANDOM_EVENTS._domainALinkageR460Loaded) return;
   RANDOM_EVENTS._domainALinkageR460Loaded = true;
 
+  // ====== [报告第 57 节] 果实 G2：visitedLocations 的真实容器 ======
+  // 【问题】本文件 3 处读 st.trade.visitedLocations，而该字段**全库零写入**
+  //   （幻影字段）→ 两个 conditions 恒 false（两个事件从未触发过），
+  //   一处文案恒显示"你跑遍了0个地点"。
+  // 【真实容器】st.flags._visitedLocations —— main.js:3475-3477 的旅行 handler
+  //   写入的**去重地点数组**，与 _visitedAllLocations 成就同源。
+  //   名字（visitedLocations vs _visitedLocations）与 .length 语义（数组长度）
+  //   都与原读法一致 → 属"契约已存在、只是指向错了"的果实。
+  // 【为什么不用 st.stats.visits】它是 4 个兄弟事件（r258/r267/r277/r280）在用的
+  //   "去过的地点数"容器（action_sort.js:631 写入），但语义是"**用过动作**的地点"，
+  //   含起始地点 slum；而本事件文案是"你**跑遍**了N个地点"，旅行语义更贴切。
+  //   两个容器都活着，此处取名字与语义都更贴近的那个。见报告第 57.5 节。
+  function visitedLocationCountA460(st) {
+    if (!st || !st.flags || !Array.isArray(st.flags._visitedLocations)) return 0;
+    return st.flags._visitedLocations.length;
+  }
+
   var EVENTS = [
     {
       id: "a460_price_forecast", phase: "street", _isChainEvent: false, icon: "📉",
@@ -26942,7 +26994,7 @@ if (typeof window !== "undefined") {
       triggers: { minDay: 30, interval: 60, maxRepeats: 5, excludeFlags: ["_a460ForecastCooldown"] },
       conditions: function (st) {
         if (st.gameOver) return false;
-        if (!st.trade || !st.trade.visitedLocations || st.trade.visitedLocations.length < 2) return false;
+        if (visitedLocationCountA460(st) < 2) return false;
         return (st.flags && !st.flags._a460ForecastCooldown);
       },
       choices: [
@@ -26960,7 +27012,7 @@ if (typeof window !== "undefined") {
       ],
       text: function (st) {
         if (!st) return null;
-        var visited = st.trade && st.trade.visitedLocations ? st.trade.visitedLocations.length : 0;
+        var visited = visitedLocationCountA460(st);
         return "你跑遍了" + visited + "个地点，记录了每种商品的价格。数据在手，你开始看出一些规律——什么时候买、在哪里卖，都有讲究。";
       }
     },
@@ -26971,7 +27023,7 @@ if (typeof window !== "undefined") {
       triggers: { minDay: 50, interval: 90, maxRepeats: 3, excludeFlags: ["_a460ArbitrageCooldown"] },
       conditions: function (st) {
         if (st.gameOver) return false;
-        if (!st.trade || !st.trade.visitedLocations || st.trade.visitedLocations.length < 2) return false;
+        if (visitedLocationCountA460(st) < 2) return false;
         if ((st.resources && st.resources.cash || 0) < 500) return false;
         return (st.flags && !st.flags._a460ArbitrageCooldown);
       },
@@ -42065,16 +42117,21 @@ function runLifeStageNarrative(state) {
       // [conditions→triggers] 部分迁移：phase+weather+day 移入 triggers，employment 检查保留
       triggers: { phase: "street", weather: "heatwave", minDay: 30 },
       conditions: function (st) {
+        // [报告第 57 节] 果实 G1：改读 employment.completedShifts
+        //   （main.js:4764 doStreetJob 每次上工写入 completedShifts[job.id]）。
+        //   原读 employment.currentJob.id —— 该容器**全库零写入**（仅 main.js:4762
+        //   初始化为 null），故本事件此前恒 false（无任何 OR 兜底分支）。
+        //   ⚠️ 为什么不直接补写 employment.currentJob：它 129 处读取里约 100 处是
+        //   「!currentJob → return false（注释写着"检查已就业"）」型门槛，
+        //   补写会一次性放开近百个就业类事件。见报告第 57.4 节。
+        var _cs = st.employment && st.employment.completedShifts;
         var isOutdoor =
-          st.employment &&
-          st.employment.currentJob &&
-          [
-            "manual_labor_construction",
-            "waste_recycling",
-            "old_zhou_recycling",
-            "street_vending_food",
-            "sister_zhang_vending",
-          ].includes(st.employment.currentJob.id);
+          _cs &&
+          (_cs["manual_labor_construction"] > 0 ||
+            _cs["waste_recycling"] > 0 ||
+            _cs["old_zhou_recycling"] > 0 ||
+            _cs["street_vending_food"] > 0 ||
+            _cs["sister_zhang_vending"] > 0);
         return isOutdoor;
       },
       probability: 0.1,
@@ -42336,8 +42393,8 @@ function runLifeStageNarrative(state) {
           st.relationships.sister_zhang &&
           st.relationships.sister_zhang.met &&
           st.employment &&
-          st.employment.currentJob &&
-          st.employment.currentJob.id === "factory_work_assembly" &&
+          st.employment.completedShifts &&
+          (st.employment.completedShifts["factory_work_assembly"] || 0) > 0 &&
           ((st.skills.repair && st.skills.repair.level >= 20) ||
             (st.skills.electrician && st.skills.electrician.level >= 20)) &&
           st.player.day >= 40
@@ -200927,12 +200984,10 @@ s.status.health = Math.max(0, s.status.health - 2);
       // [自洽修复] 叙事"摆摊时"需检查玩家确实在摆摊（职业/副业/行动频次），避免随机弹出与场景不符
       var hasStall =
         (s.employment &&
-          s.employment.currentJob &&
-          [
-            "food_stall",
-            "street_vending_food",
-            "street_vending_goods",
-          ].includes(s.employment.currentJob.id)) ||
+          s.employment.completedShifts &&
+          (s.employment.completedShifts["food_stall"] > 0 ||
+            s.employment.completedShifts["street_vending_food"] > 0 ||
+            s.employment.completedShifts["street_vending_goods"] > 0)) ||
         (s.sideHustle && s.sideHustle.type === "stall") ||
         (s.stats &&
           s.stats.actionFreq &&
@@ -231231,6 +231286,15 @@ function buyInvStock(symbol, shares) {
     total: cost,
     unitLabel: def?.unit || "股",
   });
+  // [报告第 57 节] 累计交易笔数 —— 果实 G3 的写入端
+  //   此前 state.trade.totalTrades/totalBuys/totalSells 三个字段全库零写入，
+  //   约 20 处消费点恒读 undefined：6 个 (totalTrades >= N) 门槛恒 false、
+  //   5 处文案恒显示"你已完成0笔交易"、4 处买卖计数恒 0。
+  //   这里与 tradeLog.push 同步递增，保证两者永不脱节。
+  if (state.trade) {
+    state.trade.totalTrades = (state.trade.totalTrades || 0) + 1;
+    state.trade.totalBuys = (state.trade.totalBuys || 0) + 1;
+  }
   // 追踪交易频次（用于排序）
   if (state.stats) {
     if (!state.stats.investFreq) state.stats.investFreq = {};
@@ -231399,6 +231463,11 @@ function sellInvStock(symbol, shares) {
     pl: pl,
     unitLabel: def?.unit || "股",
   });
+  // [报告第 57 节] 累计交易笔数 —— 果实 G3 的写入端（卖出口径）
+  if (state.trade) {
+    state.trade.totalTrades = (state.trade.totalTrades || 0) + 1;
+    state.trade.totalSells = (state.trade.totalSells || 0) + 1;
+  }
   // 追踪卖出频次（用于排序）
   if (state.stats) {
     if (!state.stats.investFreq) state.stats.investFreq = {};
@@ -337600,6 +337669,52 @@ if (typeof window !== "undefined") {
     return total;
   }
 
+  // [报告第 57 节] 果实 G4：c675_career_dashboard_v2 的「当前街头工作」
+  //
+  // 【原条件的两处独立缺陷】
+  //   原写法：`st.employment && st.employment.currentJob && (st.employment.completedShifts || {})`
+  //     ① 末项 `(x || {})` 是**恒真项** —— 空对象也是 truthy，
+  //        所以整条条件实际退化成 `employment && employment.currentJob`；
+  //     ② `employment.currentJob` 全库零写入（仅 main.js:4762 初始化为 null），
+  //        于是 `&& currentJob` 恒 false → **该事件从未触发过**（死事件）。
+  //   同时 text() 读 `currentJob.id` / `currentJob.name`，同样恒 undefined
+  //   → 即便触发也只会显示"未知累计0天"。
+  //
+  // 【真实容器】employment.completedShifts（main.js:4764 doStreetJob 每次上工
+  //   写入 completedShifts[job.id]）+ STREET_JOBS（id → 中文名）。
+  //   这里把「当前街头工作」定义为**累计上工天数最多的那一份**：
+  //   这是仅用现存容器就能得到的、与"回顾成长轨迹"语义最贴近的量。
+  //   无任何上工记录 → 返回 null → 不触发。
+  //
+  // 【为什么不直接补写 employment.currentJob】它的 129 处读取里约 100 处是
+  //   「!currentJob → return false（注释写着"检查已就业"）」型门槛，补写会
+  //   一次性放开近百个就业类事件。见报告第 57.4 节。
+  function topStreetJobC675(st) {
+    var cs = st && st.employment && st.employment.completedShifts;
+    if (!cs) return null;
+    var bestId = null;
+    var bestDays = 0;
+    for (var id in cs) {
+      if (!Object.prototype.hasOwnProperty.call(cs, id)) continue;
+      var d = cs[id];
+      if (typeof d === "number" && d > bestDays) {
+        bestDays = d;
+        bestId = id;
+      }
+    }
+    if (!bestId) return null;
+    var name = bestId;
+    if (typeof STREET_JOBS !== "undefined" && Array.isArray(STREET_JOBS)) {
+      for (var i = 0; i < STREET_JOBS.length; i++) {
+        if (STREET_JOBS[i] && STREET_JOBS[i].id === bestId) {
+          name = STREET_JOBS[i].name || bestId;
+          break;
+        }
+      }
+    }
+    return { id: bestId, name: name, days: bestDays };
+  }
+
   // 辅助：获取最高技能等级
   function maxSkillLevel(st) {
     if (!st || !st.skills) return 0;
@@ -337653,7 +337768,9 @@ if (typeof window !== "undefined") {
       conditions: function (st) {
         if (st.gameOver) return false;
         if (!st.flags || st.flags._c675DashCooldown) return false;
-        return st.employment && st.employment.currentJob && (st.employment.completedShifts || {});
+        // [报告第 57 节] 果实 G4：原为 `employment && currentJob && (completedShifts || {})`
+        //   —— 末项恒真 + currentJob 零写入 → 事件从未触发。改读真实容器。
+        return !!topStreetJobC675(st);
       },
       choices: [
         { text: "📊 分析成长轨迹", hint: "管理XP+6,智力+3", apply: function (st) {
@@ -337673,9 +337790,10 @@ if (typeof window !== "undefined") {
       ],
       text: function (st) {
         if (!st) return null;
-        var job = st.employment && st.employment.currentJob;
-        var shifts = job ? (st.employment.completedShifts[job.id] || 0) : 0;
-        return "回顾你的职业数据,一条清晰的成长轨迹浮现——'" + (job ? job.name : "未知") + "累计" + shifts + "天,数据会说话。'";
+        // [报告第 57 节] 果实 G4：改读真实容器（原读 currentJob.id/.name，恒 undefined）
+        var job = topStreetJobC675(st);
+        if (!job) return null;
+        return "回顾你的职业数据,一条清晰的成长轨迹浮现——'" + job.name + "累计" + job.days + "天,数据会说话。'";
       }
     },
     {
