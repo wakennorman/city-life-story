@@ -102,7 +102,9 @@
             st.flags._c707NetworkCd = true;
             st.flags._c707WellConnected = true;
             if (st.player) {
-              st.player.charisma = Math.min(100, (st.player.charisma || 50) + 3);
+              // [A类修复 · 2026-09-17] st.player.charisma 死字段→st.player.charm（魅力真实字段，
+              // state.player 无 charisma 键；提示本就写"魅力+3"，原写法静默失效）
+              st.player.charm = Math.min(100, (st.player.charm || 20) + 3);
               st.player.fame = Math.min(100, (st.player.fame || 0) + 5);
             }
             if (typeof addSkillXp === "function") { try { addSkillXp("social", 8); } catch(e) {} }

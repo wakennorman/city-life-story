@@ -56,14 +56,14 @@
         return (st.flags && !st.flags._a460ArbitrageCooldown);
       },
       choices: [
-        { text: "💨 快进快出", hint: "现金+300~800,风险+5", apply: function (st) {
+        { text: "💨 快进快出", hint: "现金+300~800", apply: function (st) {
           if (!st) return; st.flags = st.flags || {}; st.flags._a460ArbitrageCooldown = true;
           var profit = typeof Random !== "undefined" ? Random.int(300, 800) : 500;
           if (st.resources) st.resources.cash = (st.resources.cash || 0) + profit;
-          if (st.player) st.player.risk = Math.min(100, (st.player.risk || 0) + 5);
+          // [A类修复 · 2026-09-17] 删除 st.player.risk 死字段写入（"投资风险"无归宿，见第 49 节）
           if (typeof StateManager !== "undefined") StateManager.addMessage("💨 你快进快出赚了一笔——'天下武功，唯快不破。' 现金+" + profit + "。", "success");
         }},
-        { text: "🐢 稳健倒货", hint: "现金+150~400,无风险", apply: function (st) {
+        { text: "🐢 稳健倒货", hint: "现金+150~400", apply: function (st) {
           if (!st) return; st.flags = st.flags || {}; st.flags._a460ArbitrageCooldown = true;
           var profit = typeof Random !== "undefined" ? Random.int(150, 400) : 250;
           if (st.resources) st.resources.cash = (st.resources.cash || 0) + profit;

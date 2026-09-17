@@ -197,7 +197,9 @@
             st.flags._b706Stronger = true;
             if (st.player) {
               st.player.mental = Math.min(100, (st.player.mental || 50) + 4);
-              st.player.strength = Math.min(100, (st.player.strength || 50) + 4);
+              // [A类修复 · 2026-09-17] st.player.strength 死字段→st.player.physique（体质真实字段，
+              // state.player 无 strength 键；提示本就写"体质+4"，原写法静默失效）
+              st.player.physique = Math.min(100, (st.player.physique || 22) + 4);
             }
             if (typeof StateManager !== "undefined") {
               StateManager.addMessage("💪 那些杀不死你的，终将使你更强大。体质+4，心智+4。", "success");

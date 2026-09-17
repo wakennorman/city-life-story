@@ -113,11 +113,11 @@
         return hasHigh && (st.flags && !st.flags._d465InvestCooldown);
       },
       choices: [
-        { text: "💰 跟着投一点", hint: "现金+200~600,风险+5", apply: function (st) {
+        { text: "💰 跟着投一点", hint: "现金+200~600", apply: function (st) {
           if (!st) return; st.flags = st.flags || {}; st.flags._d465InvestCooldown = true;
           var profit = typeof Random !== "undefined" ? Random.int(200, 600) : 400;
           if (st.resources) st.resources.cash = (st.resources.cash || 0) + profit;
-          if (st.player) st.player.risk = Math.min(100, (st.player.risk || 0) + 5);
+          // [A类修复 · 2026-09-17] 删除 st.player.risk 死字段写入（"投资风险"无归宿，见第 49 节）
           if (typeof StateManager !== "undefined") StateManager.addMessage("💰 你跟着投了一点——'跟着懂行人走，不会太差。' 现金+" + profit + "。", "success");
         }},
         { text: "🧐 自己分析", hint: "会计XP+3,智力+1", apply: function (st) {

@@ -95,7 +95,7 @@
         { text: "🔄 跳槽", hint: "现金+1000,风险+5", apply: function (st) {
           if (!st) return; st.flags = st.flags || {}; st.flags._c480CrossroadCooldown = true;
           if (st.resources) st.resources.cash = (st.resources.cash || 0) + 1000;
-          if (st.player) st.player.risk = Math.min(100, (st.player.risk || 0) + 5);
+          if (st.player) { st.player.corporate = st.player.corporate || {}; st.player.corporate.risk = Math.min(100, (st.player.corporate.risk || 0) + 5); }
           if (typeof StateManager !== "undefined") StateManager.addMessage("🔄 你决定跳槽——'树挪死，人挪活。' 现金+1000,风险+5。", "success");
         }},
         { text: "💪 坚守", hint: "心智+5,业绩+10", apply: function (st) {

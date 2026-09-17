@@ -61,10 +61,14 @@
           if (typeof addSkillXp === "function") { try { addSkillXp("accounting", 2); } catch(e) {} }
           if (typeof StateManager !== "undefined") StateManager.addMessage("📊 你分析了投资分布——'不要把所有鸡蛋放在一个篮子里。' 智力+2,会计XP+2。", "success");
         }},
-        { text: "🎯 再平衡", hint: "心智+3,风险-3", apply: function (st) {
+        { text: "🎯 再平衡", hint: "心智+3", apply: function (st) {
           if (!st) return; st.flags = st.flags || {}; st.flags._f485InvestCooldown = true;
-          if (st.player) { st.player.mental = Math.min(100, (st.player.mental || 50) + 3); st.player.risk = Math.max(0, (st.player.risk || 0) - 3); }
-          if (typeof StateManager !== "undefined") StateManager.addMessage("🎯 你决定再平衡——'纪律胜于预测。' 心智+3,风险-3。", "success");
+          // [A类修复 · 2026-09-17] 删除 st.player.risk 死字段写入："投资风险"在 state 中无归宿
+          // （status.risk/st.risk 均不存在，player.corporate.risk 是职场语义），
+          // 原写法只写不读、且 Math.max(0,(undefined||0)-3)=0 连字面变化都没有。
+          // 提示同步降级为只列真实生效效果。
+          if (st.player) { st.player.mental = Math.min(100, (st.player.mental || 50) + 3); }
+          if (typeof StateManager !== "undefined") StateManager.addMessage("🎯 你决定再平衡——'纪律胜于预测。' 心智+3。", "success");
         }}
       ],
       text: function (st) {

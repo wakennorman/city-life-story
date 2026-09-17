@@ -25953,7 +25953,7 @@ if (typeof window !== "undefined") {
       probability: 0.04,
       choices: [
         { text: "\uD83D\uDDA4 \u4E3B\u52A8\u8BF7\u7F28\u53BB\u5730\u63A8", hint: "\u53D1\u6325\u8857\u5934\u7ECF\u9A8C", apply: function (st) { st.flags._streetEchoSeen=true; var c=(st.player&&st.player.corporate)?st.player.corporate:{}; c.kpi=Math.min(150,(c.kpi||0)+8); c.popularity=Math.min(100,(c.popularity||0)+6); if(st.skills&&st.skills.sales) st.skills.sales.xp=(st.skills.sales.xp||0)+Random.int(15,25); st.resources.cash=(st.resources.cash||0)+Random.int(500,1500); st.needs.fatigue=Math.min(100,(st.needs.fatigue||0)+15); st.needs.happiness=Math.min(100,(st.needs.happiness||0)+8); StateManager.addMessage("\uD83D\uDDA4 \u4F60\u5728\u6279\u53D1\u5E02\u573A\u7EC3\u5C31\u7684\u561F\u76AE\u5B50\u548C\u8138\u76AE\u5B50\u6D3E\u4E0A\u5927\u7528\u573A\u4E86\uFF01\u7B7E\u4E863\u5355\uFF0CKPI+8\uFF0C\u73B0\u91D1+\u00A51000\u3002\u540C\u4E8B\u4EEC\u7528\u65B0\u773C\u5149\u770B\u4F60\u3002","success"); }},
-        { text: "\uD83E\uDD1D \u6559\u540C\u4E8B\u4E00\u4E9B\u8857\u5934\u65B9\u6CD5", hint: "\u5206\u4EAB\u7ECF\u9A8C", apply: function (st) { st.flags._streetEchoSeen=true; var c=(st.player&&st.player.corporate)?st.player.corporate:{}; c.popularity=Math.min(100,(c.popularity||0)+8); c.upwardMgmt=Math.min(100,(c.upwardMgmt||0)+4); st.player.social=Math.min(100,(st.player.social||0)+2); st.needs.happiness=Math.min(100,(st.needs.happiness||0)+5); StateManager.addMessage("\uD83E\uDD1D \u4F60\u628A\u6446\u5730\u65F6\u7684\u5FC3\u5F97\u6574\u7406\u4E86\u4E00\u4E0B\u6559\u7ED9\u540C\u4E8B\u3002\u5927\u5BB6\u542C\u5B8C\u76F4\u547C\u5185\u884C\uFF0C\u4F60\u7B2C\u4E00\u6B21\u89C9\u5F97\u300C\u8BFB\u8FC7\u7684\u90A3\u4E9B\u82E6\u6CA1\u767D\u5403\u300D\u3002","success"); }},
+        { text: "\uD83E\uDD1D \u6559\u540C\u4E8B\u4E00\u4E9B\u8857\u5934\u65B9\u6CD5", hint: "\u5206\u4EAB\u7ECF\u9A8C", apply: function (st) { st.flags._streetEchoSeen=true; var c=(st.player&&st.player.corporate)?st.player.corporate:{}; c.popularity=Math.min(100,(c.popularity||0)+8); c.upwardMgmt=Math.min(100,(c.upwardMgmt||0)+4); st.player.charm=Math.min(100,(st.player.charm||20)+2); st.needs.happiness=Math.min(100,(st.needs.happiness||0)+5); StateManager.addMessage("\uD83E\uDD1D \u4F60\u628A\u6446\u5730\u65F6\u7684\u5FC3\u5F97\u6574\u7406\u4E86\u4E00\u4E0B\u6559\u7ED9\u540C\u4E8B\u3002\u5927\u5BB6\u542C\u5B8C\u76F4\u547C\u5185\u884C\uFF0C\u4F60\u7B2C\u4E00\u6B21\u89C9\u5F97\u300C\u8BFB\u8FC7\u7684\u90A3\u4E9B\u82E6\u6CA1\u767D\u5403\u300D\u3002","success"); }},
         { text: "\uD83D\uDE45 \u8BA9\u5927\u5B66\u751F\u81EA\u5DF1\u641E\u5B9A", hint: "\u5404\u5FD9\u5404\u7684", apply: function (st) { st.flags._streetEchoSeen=true; st.needs.fatigue=Math.min(100,(st.needs.fatigue||0)+5); StateManager.addMessage("\uD83D\uDE45 \u4F60\u51B3\u5B9A\u4E0D\u53C2\u4E0E\u3002\u5404\u6709\u5404\u4EBA\u7684\u96BE\u5904\uFF0C\u4F60\u53C8\u4E0D\u662F\u96F7\u950B\u3002\u4F46\u4E8B\u540E\u60F3\u60F3\uFF0C\u4E5F\u8BB8\u5E2E\u4E00\u628A\u4E5F\u80FD\u8D60\u70B9\u4EBA\u8109\u3002","info"); }}
       ],
     },
@@ -26896,14 +26896,14 @@ if (typeof window !== "undefined") {
         return (st.flags && !st.flags._a460ArbitrageCooldown);
       },
       choices: [
-        { text: "💨 快进快出", hint: "现金+300~800,风险+5", apply: function (st) {
+        { text: "💨 快进快出", hint: "现金+300~800", apply: function (st) {
           if (!st) return; st.flags = st.flags || {}; st.flags._a460ArbitrageCooldown = true;
           var profit = typeof Random !== "undefined" ? Random.int(300, 800) : 500;
           if (st.resources) st.resources.cash = (st.resources.cash || 0) + profit;
-          if (st.player) st.player.risk = Math.min(100, (st.player.risk || 0) + 5);
+          // [A类修复 · 2026-09-17] 删除 st.player.risk 死字段写入（"投资风险"无归宿，见第 49 节）
           if (typeof StateManager !== "undefined") StateManager.addMessage("💨 你快进快出赚了一笔——'天下武功，唯快不破。' 现金+" + profit + "。", "success");
         }},
-        { text: "🐢 稳健倒货", hint: "现金+150~400,无风险", apply: function (st) {
+        { text: "🐢 稳健倒货", hint: "现金+150~400", apply: function (st) {
           if (!st) return; st.flags = st.flags || {}; st.flags._a460ArbitrageCooldown = true;
           var profit = typeof Random !== "undefined" ? Random.int(150, 400) : 250;
           if (st.resources) st.resources.cash = (st.resources.cash || 0) + profit;
@@ -27236,11 +27236,11 @@ if (typeof window !== "undefined") {
         return (st.flags && !st.flags._a482MarketBridgeCooldown);
       },
       choices: [
-        { text: "📊 跟随市场", hint: "现金+200~500,风险+3", apply: function (st) {
+        { text: "📊 跟随市场", hint: "现金+200~500", apply: function (st) {
           if (!st) return; st.flags = st.flags || {}; st.flags._a482MarketBridgeCooldown = true;
           var profit = typeof Random !== "undefined" ? Random.int(200, 500) : 350;
           if (st.resources) st.resources.cash = (st.resources.cash || 0) + profit;
-          if (st.player) st.player.risk = Math.min(100, (st.player.risk || 0) + 3);
+          // [A类修复 · 2026-09-17] 删除 st.player.risk 死字段写入（"投资风险"无归宿，见第 49 节）
           if (typeof StateManager !== "undefined") StateManager.addMessage("📊 你跟随了市场信号——'市场永远是对的。' 现金+" + profit + "。", "success");
         }},
         { text: "🧘 独立判断", hint: "智力+3,心智+2", apply: function (st) {
@@ -101751,8 +101751,10 @@ if (typeof window !== "undefined") {
             st.flags._skillR191GigSeen = true;
             if (st.resources)
               st.resources.cash = (st.resources.cash || 0) + 1200; // [PLACEHOLDER] 私活报酬
-            if (st.player)
-              st.player.fatigue = Math.min(100, (st.player.fatigue || 0) + 20); // [PLACEHOLDER]
+            // [A类修复 · 2026-09-17] st.player.fatigue 死字段→st.needs.fatigue（疲劳真实字段，
+            // state.player 无 fatigue 键；原写法静默失效，"连夜出发人是散了架"的疲劳从未生效）
+            if (st.needs)
+              st.needs.fatigue = Math.min(100, (st.needs.fatigue || 0) + 20); // [PLACEHOLDER]
             if (typeof addSkillXp === "function") addSkillXp("driving", 5); // [PLACEHOLDER] 真实技能键
             if (typeof StateManager !== "undefined")
               StateManager.addMessage(
@@ -109005,7 +109007,7 @@ if (typeof window !== "undefined") {
         { text: "🔄 跳槽", hint: "现金+1000,风险+5", apply: function (st) {
           if (!st) return; st.flags = st.flags || {}; st.flags._c480CrossroadCooldown = true;
           if (st.resources) st.resources.cash = (st.resources.cash || 0) + 1000;
-          if (st.player) st.player.risk = Math.min(100, (st.player.risk || 0) + 5);
+          if (st.player) { st.player.corporate = st.player.corporate || {}; st.player.corporate.risk = Math.min(100, (st.player.corporate.risk || 0) + 5); }
           if (typeof StateManager !== "undefined") StateManager.addMessage("🔄 你决定跳槽——'树挪死，人挪活。' 现金+1000,风险+5。", "success");
         }},
         { text: "💪 坚守", hint: "心智+5,业绩+10", apply: function (st) {
@@ -123422,11 +123424,11 @@ if (typeof window !== "undefined") {
         return hasHigh && (st.flags && !st.flags._d465InvestCooldown);
       },
       choices: [
-        { text: "💰 跟着投一点", hint: "现金+200~600,风险+5", apply: function (st) {
+        { text: "💰 跟着投一点", hint: "现金+200~600", apply: function (st) {
           if (!st) return; st.flags = st.flags || {}; st.flags._d465InvestCooldown = true;
           var profit = typeof Random !== "undefined" ? Random.int(200, 600) : 400;
           if (st.resources) st.resources.cash = (st.resources.cash || 0) + profit;
-          if (st.player) st.player.risk = Math.min(100, (st.player.risk || 0) + 5);
+          // [A类修复 · 2026-09-17] 删除 st.player.risk 死字段写入（"投资风险"无归宿，见第 49 节）
           if (typeof StateManager !== "undefined") StateManager.addMessage("💰 你跟着投了一点——'跟着懂行人走，不会太差。' 现金+" + profit + "。", "success");
         }},
         { text: "🧐 自己分析", hint: "会计XP+3,智力+1", apply: function (st) {
@@ -210926,7 +210928,10 @@ function tickIllnessDecay(state) {
           "💔 " + ill.name + "导致猝死！你的心脏停止了跳动。",
           "danger",
         );
-        state.player.alive = false;
+        // [A类修复 · 2026-09-17] state.player.alive 死字段：state.player 无 alive 键、
+        // 且全域 0 处读取（真正的死亡判定走 status.health<=0 → critical.js checkLoseConditions）。
+        // 改记到 state.flags（项目惯例，与 flags.gameOver 同族），保留"已猝死"语义供后续读取。
+        if (state.flags) state.flags.diedFromIllness = inst.id || ill.name;
         state.status.health = 0;
         // 游戏结束处理由外部接管
         continue;
@@ -263076,10 +263081,14 @@ if (typeof window !== "undefined") {
           if (typeof addSkillXp === "function") { try { addSkillXp("accounting", 2); } catch(e) {} }
           if (typeof StateManager !== "undefined") StateManager.addMessage("📊 你分析了投资分布——'不要把所有鸡蛋放在一个篮子里。' 智力+2,会计XP+2。", "success");
         }},
-        { text: "🎯 再平衡", hint: "心智+3,风险-3", apply: function (st) {
+        { text: "🎯 再平衡", hint: "心智+3", apply: function (st) {
           if (!st) return; st.flags = st.flags || {}; st.flags._f485InvestCooldown = true;
-          if (st.player) { st.player.mental = Math.min(100, (st.player.mental || 50) + 3); st.player.risk = Math.max(0, (st.player.risk || 0) - 3); }
-          if (typeof StateManager !== "undefined") StateManager.addMessage("🎯 你决定再平衡——'纪律胜于预测。' 心智+3,风险-3。", "success");
+          // [A类修复 · 2026-09-17] 删除 st.player.risk 死字段写入："投资风险"在 state 中无归宿
+          // （status.risk/st.risk 均不存在，player.corporate.risk 是职场语义），
+          // 原写法只写不读、且 Math.max(0,(undefined||0)-3)=0 连字面变化都没有。
+          // 提示同步降级为只列真实生效效果。
+          if (st.player) { st.player.mental = Math.min(100, (st.player.mental || 50) + 3); }
+          if (typeof StateManager !== "undefined") StateManager.addMessage("🎯 你决定再平衡——'纪律胜于预测。' 心智+3。", "success");
         }}
       ],
       text: function (st) {
@@ -269263,11 +269272,11 @@ if (typeof window !== "undefined") {
         return (st.flags && !st.flags._g472PhaseBizCooldown);
       },
       choices: [
-        { text: "🚀 大胆扩张", hint: "公司资金+8000,风险+10", apply: function (st) {
+        { text: "🚀 大胆扩张", hint: "公司资金+8000", apply: function (st) {
           if (!st) return; st.flags = st.flags || {}; st.flags._g472PhaseBizCooldown = true;
           if (st.corporate && st.corporate.company) st.corporate.company.funds = (st.corporate.company.funds || 0) + 8000;
-          if (st.player) st.player.risk = Math.min(100, (st.player.risk || 0) + 10);
-          if (typeof StateManager !== "undefined") StateManager.addMessage("🚀 你决定大胆扩张——'年纪正好，时不我待。' 公司资金+8000,风险+10。", "success");
+          // [A类修复 · 2026-09-17] 删除 st.player.risk 死字段写入（"公司经营风险"无归宿，见第 49 节）
+          if (typeof StateManager !== "undefined") StateManager.addMessage("🚀 你决定大胆扩张——'年纪正好，时不我待。' 公司资金+8000。", "success");
         }},
         { text: "🧘 稳健经营", hint: "心智+4,管理XP+3", apply: function (st) {
           if (!st) return; st.flags = st.flags || {}; st.flags._g472PhaseBizCooldown = true;
@@ -280421,11 +280430,11 @@ if (typeof window !== "undefined") {
           if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 2);
           if (typeof StateManager !== "undefined") StateManager.addMessage("😌 你选择了知足常乐——'赚多赚少，心态最重要。' 心情+5,心智+2。", "success");
         }},
-        { text: "🔥 越战越勇", hint: "现金+500,风险+3", apply: function (st) {
+        { text: "🔥 越战越勇", hint: "现金+500", apply: function (st) {
           if (!st) return; st.flags = st.flags || {}; st.flags._e462StoryCooldown = true;
           if (st.resources) st.resources.cash = (st.resources.cash || 0) + 500;
-          if (st.player) st.player.risk = Math.min(100, (st.player.risk || 0) + 3);
-          if (typeof StateManager !== "undefined") StateManager.addMessage("🔥 你决定越战越勇——'投资如逆水行舟，不进则退。' 现金+500,风险+3。", "success");
+          // [A类修复 · 2026-09-17] 删除 st.player.risk 死字段写入（"投资风险"无归宿，见第 49 节）
+          if (typeof StateManager !== "undefined") StateManager.addMessage("🔥 你决定越战越勇——'投资如逆水行舟，不进则退。' 现金+500。", "success");
         }}
       ],
       text: function (st) {
@@ -280804,10 +280813,11 @@ if (typeof window !== "undefined") {
           if (st.player) st.player.intelligence = Math.min(100, (st.player.intelligence || 50) + 1);
           if (typeof StateManager !== "undefined") StateManager.addMessage("📊 你分析了投资走势——'趋势是你的朋友。' 会计XP+3,智力+1。", "success");
         }},
-        { text: "🎯 调整策略", hint: "心智+3,风险-3", apply: function (st) {
+        { text: "🎯 调整策略", hint: "心智+3", apply: function (st) {
           if (!st) return; st.flags = st.flags || {}; st.flags._e484TrackerCooldown = true;
-          if (st.player) { st.player.mental = Math.min(100, (st.player.mental || 50) + 3); st.player.risk = Math.max(0, (st.player.risk || 0) - 3); }
-          if (typeof StateManager !== "undefined") StateManager.addMessage("🎯 你调整了投资策略——'灵活应变。' 心智+3,风险-3。", "success");
+          // [A类修复 · 2026-09-17] 删除 st.player.risk 死字段写入（"投资风险"无归宿，见第 49 节）
+          if (st.player) { st.player.mental = Math.min(100, (st.player.mental || 50) + 3); }
+          if (typeof StateManager !== "undefined") StateManager.addMessage("🎯 你调整了投资策略——'灵活应变。' 心智+3。", "success");
         }}
       ],
       text: function (st) {
@@ -280832,11 +280842,11 @@ if (typeof window !== "undefined") {
           if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 4);
           if (typeof StateManager !== "undefined") StateManager.addMessage("📖 你写下了投资日记——'记录是最好的复盘。' 心智+4。", "success");
         }},
-        { text: "🎯 制定纪律", hint: "管理XP+3,风险-5", apply: function (st) {
+        { text: "🎯 制定纪律", hint: "管理XP+3", apply: function (st) {
           if (!st) return; st.flags = st.flags || {}; st.flags._e484JournalCooldown = true;
           if (typeof addSkillXp === "function") { try { addSkillXp("management", 3); } catch(e) {} }
-          if (st.player) st.player.risk = Math.max(0, (st.player.risk || 0) - 5);
-          if (typeof StateManager !== "undefined") StateManager.addMessage("🎯 你制定了投资纪律——'纪律胜于直觉。' 管理XP+3,风险-5。", "success");
+          // [A类修复 · 2026-09-17] 删除 st.player.risk 死字段写入（"投资风险"无归宿，见第 49 节）
+          if (typeof StateManager !== "undefined") StateManager.addMessage("🎯 你制定了投资纪律——'纪律胜于直觉。' 管理XP+3。", "success");
         }}
       ],
       text: function (st) {
@@ -280862,10 +280872,11 @@ if (typeof window !== "undefined") {
           if (typeof addSkillXp === "function") { try { addSkillXp("accounting", 2); } catch(e) {} }
           if (typeof StateManager !== "undefined") StateManager.addMessage("📖 你深入了解了加密货币——'了解你投资的东西。' 智力+3,会计XP+2。", "success");
         }},
-        { text: "🧘 谨慎观望", hint: "心智+3,风险-3", apply: function (st) {
+        { text: "🧘 谨慎观望", hint: "心智+3", apply: function (st) {
           if (!st) return; st.flags = st.flags || {}; st.flags._e484CryptoCooldown = true;
-          if (st.player) { st.player.mental = Math.min(100, (st.player.mental || 50) + 3); st.player.risk = Math.max(0, (st.player.risk || 0) - 3); }
-          if (typeof StateManager !== "undefined") StateManager.addMessage("🧘 你选择谨慎观望——'不懂不投。' 心智+3,风险-3。", "success");
+          // [A类修复 · 2026-09-17] 删除 st.player.risk 死字段写入（"投资风险"无归宿，见第 49 节）
+          if (st.player) { st.player.mental = Math.min(100, (st.player.mental || 50) + 3); }
+          if (typeof StateManager !== "undefined") StateManager.addMessage("🧘 你选择谨慎观望——'不懂不投。' 心智+3。", "success");
         }}
       ],
       text: function (st) {
@@ -327470,7 +327481,9 @@ if (typeof window !== "undefined") {
             st.flags._b706Stronger = true;
             if (st.player) {
               st.player.mental = Math.min(100, (st.player.mental || 50) + 4);
-              st.player.strength = Math.min(100, (st.player.strength || 50) + 4);
+              // [A类修复 · 2026-09-17] st.player.strength 死字段→st.player.physique（体质真实字段，
+              // state.player 无 strength 键；提示本就写"体质+4"，原写法静默失效）
+              st.player.physique = Math.min(100, (st.player.physique || 22) + 4);
             }
             if (typeof StateManager !== "undefined") {
               StateManager.addMessage("💪 那些杀不死你的，终将使你更强大。体质+4，心智+4。", "success");
@@ -342157,7 +342170,9 @@ for(var i=0;i<E.length;i++){var exists=false;for(var j=0;j<RANDOM_EVENTS.length;
             st.flags._c707NetworkCd = true;
             st.flags._c707WellConnected = true;
             if (st.player) {
-              st.player.charisma = Math.min(100, (st.player.charisma || 50) + 3);
+              // [A类修复 · 2026-09-17] st.player.charisma 死字段→st.player.charm（魅力真实字段，
+              // state.player 无 charisma 键；提示本就写"魅力+3"，原写法静默失效）
+              st.player.charm = Math.min(100, (st.player.charm || 20) + 3);
               st.player.fame = Math.min(100, (st.player.fame || 0) + 5);
             }
             if (typeof addSkillXp === "function") { try { addSkillXp("social", 8); } catch(e) {} }

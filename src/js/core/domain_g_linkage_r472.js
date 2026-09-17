@@ -56,11 +56,11 @@
         return (st.flags && !st.flags._g472PhaseBizCooldown);
       },
       choices: [
-        { text: "🚀 大胆扩张", hint: "公司资金+8000,风险+10", apply: function (st) {
+        { text: "🚀 大胆扩张", hint: "公司资金+8000", apply: function (st) {
           if (!st) return; st.flags = st.flags || {}; st.flags._g472PhaseBizCooldown = true;
           if (st.corporate && st.corporate.company) st.corporate.company.funds = (st.corporate.company.funds || 0) + 8000;
-          if (st.player) st.player.risk = Math.min(100, (st.player.risk || 0) + 10);
-          if (typeof StateManager !== "undefined") StateManager.addMessage("🚀 你决定大胆扩张——'年纪正好，时不我待。' 公司资金+8000,风险+10。", "success");
+          // [A类修复 · 2026-09-17] 删除 st.player.risk 死字段写入（"公司经营风险"无归宿，见第 49 节）
+          if (typeof StateManager !== "undefined") StateManager.addMessage("🚀 你决定大胆扩张——'年纪正好，时不我待。' 公司资金+8000。", "success");
         }},
         { text: "🧘 稳健经营", hint: "心智+4,管理XP+3", apply: function (st) {
           if (!st) return; st.flags = st.flags || {}; st.flags._g472PhaseBizCooldown = true;

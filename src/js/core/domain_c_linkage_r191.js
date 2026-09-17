@@ -65,8 +65,10 @@
             st.flags._skillR191GigSeen = true;
             if (st.resources)
               st.resources.cash = (st.resources.cash || 0) + 1200; // [PLACEHOLDER] 私活报酬
-            if (st.player)
-              st.player.fatigue = Math.min(100, (st.player.fatigue || 0) + 20); // [PLACEHOLDER]
+            // [A类修复 · 2026-09-17] st.player.fatigue 死字段→st.needs.fatigue（疲劳真实字段，
+            // state.player 无 fatigue 键；原写法静默失效，"连夜出发人是散了架"的疲劳从未生效）
+            if (st.needs)
+              st.needs.fatigue = Math.min(100, (st.needs.fatigue || 0) + 20); // [PLACEHOLDER]
             if (typeof addSkillXp === "function") addSkillXp("driving", 5); // [PLACEHOLDER] 真实技能键
             if (typeof StateManager !== "undefined")
               StateManager.addMessage(

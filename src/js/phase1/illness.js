@@ -360,7 +360,10 @@ function tickIllnessDecay(state) {
           "💔 " + ill.name + "导致猝死！你的心脏停止了跳动。",
           "danger",
         );
-        state.player.alive = false;
+        // [A类修复 · 2026-09-17] state.player.alive 死字段：state.player 无 alive 键、
+        // 且全域 0 处读取（真正的死亡判定走 status.health<=0 → critical.js checkLoseConditions）。
+        // 改记到 state.flags（项目惯例，与 flags.gameOver 同族），保留"已猝死"语义供后续读取。
+        if (state.flags) state.flags.diedFromIllness = inst.id || ill.name;
         state.status.health = 0;
         // 游戏结束处理由外部接管
         continue;

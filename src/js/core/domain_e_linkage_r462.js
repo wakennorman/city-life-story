@@ -67,11 +67,11 @@
           if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 2);
           if (typeof StateManager !== "undefined") StateManager.addMessage("😌 你选择了知足常乐——'赚多赚少，心态最重要。' 心情+5,心智+2。", "success");
         }},
-        { text: "🔥 越战越勇", hint: "现金+500,风险+3", apply: function (st) {
+        { text: "🔥 越战越勇", hint: "现金+500", apply: function (st) {
           if (!st) return; st.flags = st.flags || {}; st.flags._e462StoryCooldown = true;
           if (st.resources) st.resources.cash = (st.resources.cash || 0) + 500;
-          if (st.player) st.player.risk = Math.min(100, (st.player.risk || 0) + 3);
-          if (typeof StateManager !== "undefined") StateManager.addMessage("🔥 你决定越战越勇——'投资如逆水行舟，不进则退。' 现金+500,风险+3。", "success");
+          // [A类修复 · 2026-09-17] 删除 st.player.risk 死字段写入（"投资风险"无归宿，见第 49 节）
+          if (typeof StateManager !== "undefined") StateManager.addMessage("🔥 你决定越战越勇——'投资如逆水行舟，不进则退。' 现金+500。", "success");
         }}
       ],
       text: function (st) {

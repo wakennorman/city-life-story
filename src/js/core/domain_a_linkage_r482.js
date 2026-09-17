@@ -25,11 +25,11 @@
         return (st.flags && !st.flags._a482MarketBridgeCooldown);
       },
       choices: [
-        { text: "📊 跟随市场", hint: "现金+200~500,风险+3", apply: function (st) {
+        { text: "📊 跟随市场", hint: "现金+200~500", apply: function (st) {
           if (!st) return; st.flags = st.flags || {}; st.flags._a482MarketBridgeCooldown = true;
           var profit = typeof Random !== "undefined" ? Random.int(200, 500) : 350;
           if (st.resources) st.resources.cash = (st.resources.cash || 0) + profit;
-          if (st.player) st.player.risk = Math.min(100, (st.player.risk || 0) + 3);
+          // [A类修复 · 2026-09-17] 删除 st.player.risk 死字段写入（"投资风险"无归宿，见第 49 节）
           if (typeof StateManager !== "undefined") StateManager.addMessage("📊 你跟随了市场信号——'市场永远是对的。' 现金+" + profit + "。", "success");
         }},
         { text: "🧘 独立判断", hint: "智力+3,心智+2", apply: function (st) {
