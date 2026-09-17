@@ -252,4 +252,77 @@ function createIndex(srcRoot) {
   };
 }
 
-module.exports = { createIndex, parentVariants, escapeRe, DEFAULT_SRC_ROOT };
+/**
+ * 剥掉 JS 源码里的注释 —— 报告第 58 节
+ * ============================================================================
+ *
+ * 【为什么判据必须剥注释】
+ *   `events_reachability.cjs` 与 `reachability_same_name_crosstalk.cjs` 都用
+ *   `e.conditions.toString()` 拿函数源码、再用正则提取 `st.x.y` 路径。
+ *   **`Function.prototype.toString()` 会原样保留函数体内的注释。**
+ *
+ *   于是「解释性注释里提到的旧字段名」会被当成**真实读取点**：
+ *
+ *     conditions: function (st) {
+ *       // 原读 st.startup.companies（已废弃）
+ *       return !!(st.startup && st.startup.company);   // ← 真正在跑的代码
+ *     }
+ *
+ *   提取器会同时得到 `state.startup.companies`（来自注释）与
+ *   `state.startup.company`（来自代码）→ **凭空多出一条候选**。
+ *
+ *   实测：第 58 节给 3 个文件加了「原读 xxx」的注释后，候选数**纹丝不动**
+ *   —— 因为删掉的真引用与注释里的假引用**恰好抵消**。
+ *   这是一个"改对了但仪表没动"的标本：**如果不剥注释，
+ *   你越认真地写注释解释旧字段，清单就越长。**
+ *
+ * 【与「纪律 5：源码守卫要剥注释」同源】那次是守卫正则被自己的注释骗到，
+ *   这次是**提取器**被自己的注释骗到。同一类错误的两个出口。
+ *
+ * 【为什么放在这个 lib 里】两处判据必须用同一份实现（纪律 7：单一事实来源），
+ *   否则修了一处、另一处继续产出假候选。
+ */
+function stripComments(src) {
+  return String(src)
+    .replace(/\/\*[\s\S]*?\*\//g, "") // 块注释
+    .replace(/(^|[^:])\/\/[^\n]*/g, "$1"); // 行注释（`[^:]` 避开 http:// 之类）
+}
+
+/**
+ * 从事件 conditions 的函数源码里提取 `st.x.y` / `state.x.y` 读取路径 —— 报告第 58 节
+ * ============================================================================
+ *
+ * 【为什么要收进 lib】
+ *   原先 `events_reachability.cjs` 与 `reachability_same_name_crosstalk.cjs`
+ *   **各持一份完全相同的实现**（一份用 var、一份用 const，逻辑逐字一致）。
+ *   后果：第 58 节修「必须剥注释」时得改两遍，而**任何一处漏改都会继续产出假候选**。
+ *   这正是纪律 7（单一事实来源）要防的形态 —— 两份会漂移的清单。
+ *
+ * 【调用方必须自己剥注释】本函数**不自动剥**，以免调用方误以为已经安全。
+ *   正确用法：`extractReadPaths(stripComments(fn.toString()))`
+ *   —— 若直接传 `fn.toString()`，函数体内的注释会被当成真实读取点。
+ *
+ * 【为什么只取 3 级、遇 `[` 即停】与门禁原实现保持一致：
+ *   `st.relationships[id].affinity` 属动态键，跳过；多取层级会产出无意义的深路径。
+ */
+function extractReadPaths(fnSrc) {
+  var out = {};
+  var re = /\b(?:st|state)\s*\.\s*([A-Za-z_$][\w$]*)(?:\s*\.\s*([A-Za-z_$][\w$]*))?(?:\s*\.\s*([A-Za-z_$][\w$]*))?/g;
+  var m;
+  while ((m = re.exec(fnSrc))) {
+    var p = "state." + m[1];
+    if (m[2]) p += "." + m[2];
+    if (m[3]) p += "." + m[3];
+    out[p] = true;
+  }
+  return Object.keys(out);
+}
+
+module.exports = {
+  createIndex,
+  parentVariants,
+  escapeRe,
+  stripComments,
+  extractReadPaths,
+  DEFAULT_SRC_ROOT,
+};

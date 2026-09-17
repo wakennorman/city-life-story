@@ -29,7 +29,8 @@
     "check:reachability": "node tests/events_reachability.cjs",
     "check:reachability-control": "node tests/reachability_negative_control.cjs",
     "check:path-aware-control": "node tests/reachability_path_aware_control.cjs",
-    "check:crosstalk": "node tests/reachability_same_name_crosstalk.cjs"
+    "check:crosstalk": "node tests/reachability_same_name_crosstalk.cjs",
+    "crosstalk:summary": "node tests/reachability_same_name_crosstalk.cjs --summary"
   },
   "devDependencies": {
     "esbuild": "^0.28.1",

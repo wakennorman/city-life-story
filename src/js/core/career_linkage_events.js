@@ -218,9 +218,16 @@
       conditions: function (st) {
         if (!st || !st.player) return false;
         if (st.flags && st.flags._careerEnterpriseReadyDone) return false;
+        // [报告第 58 节 · 果实 G5] `st.startup.companies` 全库零写入（不在 schema），
+        //   是**幻影容器**。真实容器是 `st.startup.company`（单数）：
+        //     · 写入：phase2/startup.js:749  state.startup.company = company;
+        //     · 复位：startup.js:6819 / domain_b_linkage_r174_part2.js:105 = null
+        //   ⚠️ 不要误改为 `state.enterpriseFate.companies` —— 那是**市场公司池**
+        //      （company_spawner 生成 NPC 公司），语义完全不同。
+        //   本行的语义与同链上一支 `st.corporate.company` 对齐：**玩家自己的公司**。
         var hasCo =
           (st.corporate && st.corporate.company) ||
-          (st.startup && st.startup.companies && st.startup.companies.length);
+          (st.startup && st.startup.company);
         if (!hasCo) return false;
         if (topSkillLevelC(st) < 30) return false; // [PLACEHOLDER] 技能兑现门槛
         return true;

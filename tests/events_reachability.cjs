@@ -42,6 +42,9 @@
 const runner = require("./headless_runner.cjs");
 const fs = require("fs");
 const path = require("path");
+// [报告第 58 节] 与 reachability_same_name_crosstalk.cjs 共用同一份剥注释实现
+//   （纪律 7：单一事实来源 —— 修一处、两处同时生效，避免判据漂移）。
+const { stripComments, extractReadPaths } = require("./lib/path_aware_write.cjs");
 const SRC_ROOT = path.join(__dirname, "..", "src", "js");
 var srcCache = null;
 
@@ -243,19 +246,11 @@ function parentIsLazy(pathStr) {
 }
 // 只检查**条件判断**用的路径，即 `st.x.y` / `state.x.y` 形式。
 // 允许带下标动态访问（st.relationships[id]）——那属于动态键，跳过。
-function extractReadPaths(fnSrc) {
-  var out = {};
-  // 匹配 st.a.b / state.a.b（最多 3 级；遇 [ 即停）
-  var re = /\b(?:st|state)\s*\.\s*([A-Za-z_$][\w$]*)(?:\s*\.\s*([A-Za-z_$][\w$]*))?(?:\s*\.\s*([A-Za-z_$][\w$]*))?/g;
-  var m;
-  while ((m = re.exec(fnSrc))) {
-    var p = "state." + m[1];
-    if (m[2]) p += "." + m[2];
-    if (m[3]) p += "." + m[3];
-    out[p] = true;
-  }
-  return Object.keys(out);
-}
+//
+// [报告第 58 节] `extractReadPaths` 已收进 `tests/lib/path_aware_write.cjs`。
+//   原先是本文件与 `reachability_same_name_crosstalk.cjs` 各持一份逐字相同的
+//   实现（一份 var、一份 const）—— 两份会漂移的清单。
+//   调用方**必须**自己配 `stripComments`（见下方调用处注释）。
 
 var absentRefs = {}; // path -> [eventId]
 (function checkSchemaRefs() {
@@ -264,7 +259,9 @@ var absentRefs = {}; // path -> [eventId]
     if (!e || typeof e.conditions !== "function") continue;
     if (!VALID_PHASES[e.phase]) continue;
 
-    var paths = extractReadPaths(e.conditions.toString());
+    // [报告第 58 节] 必须先剥注释 —— `toString()` 原样保留函数体内注释，
+    //   注释里引用的「旧字段名」会被当成真实读取点 → 虚增死路径清单。
+    var paths = extractReadPaths(stripComments(e.conditions.toString()));
     for (var j = 0; j < paths.length; j++) {
       var p = paths[j];
       var lastSeg = p.substring(p.lastIndexOf(".") + 1);

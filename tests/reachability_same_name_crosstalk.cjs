@@ -26,10 +26,15 @@
  * 用法：
  *   node tests/reachability_same_name_crosstalk.cjs
  *   node tests/reachability_same_name_crosstalk.cjs --json
+ *   node tests/reachability_same_name_crosstalk.cjs --summary   # 紧凑 Markdown，供 CI 摘要
+ *
+ * 【为什么提供 --summary】CI 里若用 grep 过滤 headless 的 `[C Rxxx]` 注册日志，
+ * 就等于在 workflow yaml 里重写一份"什么是噪声"的定义 —— 那是第二份会腐烂的
+ * 清单。输出格式属于脚本职责，故由脚本提供，CI 只负责 `>> $GITHUB_STEP_SUMMARY`。
  */
 
 const path = require("path");
-const { createIndex } = require("./lib/path_aware_write.cjs");
+const { createIndex, stripComments, extractReadPaths } = require("./lib/path_aware_write.cjs");
 
 // 与门禁同口径的忽略清单（保持同步；不同步会产出假候选）
 const IGNORED_LAST_SEG = {
@@ -59,8 +64,9 @@ const idx = createIndex();
 // 会污染 JSON 输出。在 require headless **之前**就把 console.log 静音，
 // 最后再用原函数输出 JSON。
 const AS_JSON = process.argv.slice(2).indexOf("--json") !== -1;
+const AS_SUMMARY = process.argv.slice(2).indexOf("--summary") !== -1;
 const _realLog = console.log;
-if (AS_JSON) console.log = function () {};
+if (AS_JSON || AS_SUMMARY) console.log = function () {};
 
 // ── 载入 headless 引擎，取 schema 与事件表（与门禁同源）──────────────────
 const runner = require("./headless_runner.cjs");
@@ -90,18 +96,10 @@ if (!RE) {
 
 const VALID_PHASES = { street: true, corporate: true };
 
-function extractReadPaths(fnSrc) {
-  const out = {};
-  const re = /\b(?:st|state)\s*\.\s*([A-Za-z_$][\w$]*)(?:\s*\.\s*([A-Za-z_$][\w$]*))?(?:\s*\.\s*([A-Za-z_$][\w$]*))?/g;
-  let m;
-  while ((m = re.exec(fnSrc))) {
-    let p = "state." + m[1];
-    if (m[2]) p += "." + m[2];
-    if (m[3]) p += "." + m[3];
-    out[p] = true;
-  }
-  return Object.keys(out);
-}
+// [报告第 58 节] `extractReadPaths` 已收进 `tests/lib/path_aware_write.cjs` ——
+//   原先是本文件与 `events_reachability.cjs` **各持一份逐字相同的实现**，
+//   导致「必须剥注释」这个修复要改两遍，漏一处就继续产出假候选。
+//   现由 lib 提供单一事实来源，本文件只负责在调用处配 `stripComments`。
 
 // 门禁口径的"全局写入点"（只取叶子键名）—— 复现门禁的判定
 function globalLeafHasWrite(key) {
@@ -124,7 +122,11 @@ for (const e of RE) {
   if (!e || typeof e.conditions !== "function") continue;
   if (!VALID_PHASES[e.phase]) continue;
 
-  for (const p of extractReadPaths(e.conditions.toString())) {
+  // [报告第 58 节] 必须**先剥注释**再提取路径 —— `toString()` 会原样保留函数体内
+  //   的注释，而注释里常引用「旧字段名长什么样」，会被当成真实读取点 → 凭空多出候选。
+  //   实测：加注释解释旧字段后，候选数纹丝不动（删掉的真引用与注释里的假引用抵消）。
+  //   见 `tests/lib/path_aware_write.cjs` 的 stripComments 说明。
+  for (const p of extractReadPaths(stripComments(e.conditions.toString()))) {
     const lastSeg = p.substring(p.lastIndexOf(".") + 1);
     if (IGNORED_LAST_SEG[lastSeg]) continue;
     if (schemaKeys[p]) continue;                  // ① 完整路径在 schema → 活
@@ -175,6 +177,49 @@ if (AS_JSON) {
     excluded: { alias: excluded.alias.size, literal: excluded.literal.size, knownAlive: excluded.knownAlive.size },
     rows,
   }, null, 2));
+  process.exit(0);
+}
+
+// ── --summary：紧凑 Markdown，供 CI 的 $GITHUB_STEP_SUMMARY 消费 ──────────
+// 【为什么放在脚本里而不是 CI 的 yaml 里】
+//   CI 里若用 grep 过滤 headless 的 `[C Rxxx]` 注册日志，就等于在 yaml 里
+//   **重写一份"什么是噪声"的定义** —— 那是第二份会腐烂的清单（纪律 7）。
+//   输出格式是脚本的职责，由脚本提供 `--summary` 是单一事实来源。
+if (AS_SUMMARY) {
+  const hard = rows.filter((r) => r.bulkAssign === 0);
+  const soft = rows.filter((r) => r.bulkAssign > 0);
+  const L = [];
+  L.push("### 🔍 同名串扰候选（信息层，**不阻断构建**）");
+  L.push("");
+  L.push("门禁判活、路径感知判死 —— 即「死字段被同名活字段洗白」的漏报规模。");
+  L.push("第 56 节已定性：这是**写进注释的显式权衡**（宁可漏报不可误报），");
+  L.push("故本清单**只暴露、不判死**，用于对抗「漏报让人以为做完了」这一无信号风险。");
+  L.push("");
+  L.push("| 指标 | 值 |");
+  L.push("|---|---:|");
+  L.push("| 候选总数 | **" + rows.length + "** |");
+  L.push("| ✓ 父容器无整体赋值（高度疑似真死） | " + hard.length + " |");
+  L.push("| ⚠ 父容器有整体赋值（必须人工确认） | " + soft.length + " |");
+  L.push("| 降噪排除：别名写入 | " + excluded.alias.size + " |");
+  L.push("| 降噪排除：整体赋值+字面量键 | " + excluded.literal.size + " |");
+  L.push("| 降噪排除：白名单（已确认活） | " + excluded.knownAlive.size + " |");
+  L.push("");
+  L.push("<details><summary>逐条清单（按事件引用数降序）</summary>");
+  L.push("");
+  L.push("| 路径 | 事件引用 | 串扰来源（叶子键名写入处） | 判定 |");
+  L.push("|---|---:|---:|---|");
+  for (const r of rows) {
+    L.push(
+      "| `" + r.path + "` | " + r.events + " | " + r.crosstalkCount + " | " +
+      (r.bulkAssign === 0 ? "疑似真死" : "人工确认") + " |"
+    );
+  }
+  L.push("");
+  L.push("</details>");
+  L.push("");
+  L.push("> 人工确认流程：① 看父容器的整体赋值，若字面量/构造体里**没有**这个 key → 真死；");
+  L.push("> ② 真死 → 找真实容器，改消费点（或补写入点）；③ 真活 → 加进 `KNOWN_ALIVE` 并写明确认依据。");
+  _realLog(L.join("\n"));
   process.exit(0);
 }
 

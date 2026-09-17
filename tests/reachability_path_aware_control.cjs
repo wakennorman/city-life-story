@@ -18,12 +18,19 @@
  * 【对照样本全部取自真实数据，不自己造】（第 52 节纪律）
  * 每个用例都标注了真实写入点的文件:行号，可人工复核。
  *
+ * 【第 58 节新增 E 段：判据的**输入层**】
+ *   上面 A~D 段守的是「判据算得对不对」，E 段守的是「喂给判据的东西干不干净」。
+ *   两个判据都用 `conditions.toString()` 取源码 —— 而它**保留函数体内注释**，
+ *   于是修复说明注释里的旧字段名会被当成真实读取点。
+ *   真实案例：`state.needs.health` 在全库**只出现在注释里**，
+ *   却作为候选在 35 / 34 / 29 三份清单里连续存在了三轮。
+ *
  * 【退出码】任一断言失败 → exit 1（接入 npm test）
  *
  * 用法：node tests/reachability_path_aware_control.cjs
  */
 
-const { createIndex } = require("./lib/path_aware_write.cjs");
+const { createIndex, stripComments, extractReadPaths } = require("./lib/path_aware_write.cjs");
 
 const idx = createIndex();
 let failed = 0;
@@ -82,6 +89,22 @@ const POSITIVE = [
     path: "state.stats.actionFreq.buyGood",
     why: "叶子键名 'buyGood' 的\"写入\"是 window.buyGood = function（phase1/pricing.js:771、" +
       "phase1/trade.js:649）—— 那是全局函数定义，不是 state.stats.actionFreq 的键。",
+  },
+  {
+    // [报告第 58 节] 两者均为幻影容器，消费者已改指向真实容器：
+    //   startup.team      → startup.company.employees（r870:72 / r826:204）
+    //   startup.companies → startup.company          （career_linkage_events.js:230）
+    //   加入阳性的目的：**防止有人把旧名字再加回来**。
+    path: "state.startup.team",
+    why: "不在 startup schema、全库零写入。两个消费者（r870 当数组用 .length、" +
+      "r826 当对象用 .members.length）契约互斥，但语义都是「团队人数」→ 已统一改读 " +
+      "startup.company.employees。",
+  },
+  {
+    path: "state.startup.companies",
+    why: "不在 startup schema、全库零写入。⚠️ 真实容器不是 state.enterpriseFate.companies" +
+      "（那是 company_spawner 生成的**市场公司池**，语义完全不同）——" +
+      "正确目标是单数的 startup.company，与同链的 st.corporate.company 对齐。",
   },
 ];
 
@@ -195,11 +218,64 @@ for (const c of NEGATIVE) {
     "命中方式=" + v.how + "，命中 " + v.sites.length + " 处");
 }
 
+// ══════════════════════════════════════════════════════════════════════════
+// E. 判据的**输入层**：必须剥注释 —— 报告第 58 节
+//
+//   背景：两个判据都用 `e.conditions.toString()` 拿函数源码再提取路径，
+//   而 `Function.prototype.toString()` **原样保留函数体内的注释**。
+//   于是「修复说明注释」里写的旧字段名会被当成真实读取点：
+//
+//     conditions: function (st) {
+//       // [自洽修复] st.needs.health 不存在 → 改为 st.status.health
+//       return st.status.health < 50;          // ← 真正在跑的代码
+//     }
+//
+//   → 提取器同时得到 `state.needs.health`（注释）与 `state.status.health`（代码）
+//   → 凭空多出一条候选。**注释写得越认真，清单越长。**
+//
+//   真实数据佐证：`st.needs.health` 在**全库每一次出现都是注释**
+//   （events_street_survival.js:246 / events_corp.js:417 / cross_system_events_part2.js:497,509 /
+//     domain_h_linkage_r170.js:39 / r188.js:144,157,178 / investment.js:1494 …），
+//   真实字段早已改成 st.status.health。它是**纯注释假候选**。
+// ══════════════════════════════════════════════════════════════════════════
+
+// E1~E3：剥注释本体
+const _blockComment = "var a = 1; /* st.fake.path */ var b = 2;";
+check("输入层·剥块注释", extractReadPaths(stripComments(_blockComment)).length, 0,
+  "块注释里的 st.fake.path 不应被提取");
+
+const _lineComment = "var a = 1; // st.fake.path\nvar b = 2;";
+check("输入层·剥行注释", extractReadPaths(stripComments(_lineComment)).length, 0,
+  "行注释里的 st.fake.path 不应被提取");
+
+const _urlGuard = 'var u = "https://example.com/x"; // st.fake.path';
+check("输入层·URL 不被误当行注释起点",
+  stripComments(_urlGuard).indexOf("https://example.com/x") >= 0, true,
+  "`[^:]` 保护：`://` 后的内容不得被吞掉");
+
+// E4：反向验证 —— 不剥注释时**确实会**提取到（证明 E1~E3 不是恒真断言）
+check("输入层·未剥注释时确实会误提取（反向验证）",
+  extractReadPaths(_lineComment).indexOf("state.fake.path") >= 0, true,
+  "若不剥注释会得到 state.fake.path → 证明剥注释是真的在起作用，而非断言恒真");
+
+// E5：真实数据 —— 全库 st.needs.health 只出现在注释里
+let _rawHits = 0;
+let _strippedHits = 0;
+for (const f of idx.files) {
+  _rawHits += (f.text.match(/st\.needs\.health/g) || []).length;
+  _strippedHits += (stripComments(f.text).match(/st\.needs\.health/g) || []).length;
+}
+check("输入层·真实数据：未剥注释时能看到 st.needs.health（" + _rawHits + " 处）",
+  _rawHits > 0, true, "全库 " + _rawHits + " 处，全部位于修复说明注释中");
+check("输入层·真实数据：剥注释后 st.needs.health 归零",
+  _strippedHits, 0,
+  "真实字段是 st.status.health —— 该候选此前是纯注释假候选");
+
 // ── 输出 ────────────────────────────────────────────────────────────────
 console.log("[path-aware-control] 路径感知写入判据 · 阴性对照");
 console.log("[path-aware-control] 阳性 " + POSITIVE.length +
   " / 阴性 " + NEGATIVE.length + " / 核心 3 / 一致性 " + NEGATIVE.length +
-  "，共 " + results.length + " 条断言");
+  " / 输入层 6，共 " + results.length + " 条断言");
 console.log("");
 
 for (const r of results) {

@@ -106,6 +106,22 @@ jobs:
       - name: Dangling reference gate
         run: npm run check:dangling
 
+      # ── 信息层：同名串扰候选清单（**不阻断构建**，只写入 job 摘要）───────
+      # 背景：门禁盲区七（同名串扰）使「死字段被同名活字段洗白」→ 死路径
+      # 清单**虚低**。第 56 节已把该盲区定性为「写进注释的显式权衡」
+      # （宁可漏报不可误报），因此**不改硬失败判据**（零回归），
+      # 只把候选清单暴露出来。
+      #
+      # 为什么值得单独接一道：**漏报的危害是「让人以为做完了」**，
+      # 它不产生任何异常信号（报错比不报更难发现）。唯一对抗手段是持续可见。
+      #
+      # `continue-on-error: true` 是**有意为之**的双保险：脚本本身恒定 exit 0，
+      # 此声明确保即便脚本因环境问题崩溃，也绝不阻断门禁 ——
+      # 信息层一旦能阻断构建，它就不再是信息层。
+      - name: Same-name crosstalk candidates (informational)
+        continue-on-error: true
+        run: npm run crosstalk:summary >> "$GITHUB_STEP_SUMMARY"
+
   # ── 4. 可复现性门禁 ──────────────────────────────────────────────────────
   # 同种子跑两次必须逐字节一致。
   # 背景：2026-09-15 之前本项目 MC 跑分不可复现 —— checkNewsConduit 把

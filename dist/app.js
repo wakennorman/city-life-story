@@ -4310,11 +4310,15 @@ if (typeof window !== "undefined") {
       return state.employment && !state.employment.currentJob;
     },
     has_company: function (state) {
-      return (
-        state.startup &&
-        state.startup.companies &&
-        state.startup.companies.length > 0
-      );
+      // [报告第 58 节 · 果实 G5 同源] 原读 `state.startup.companies`（零写入、不在 schema）。
+      //   真实容器 `state.startup.company`（单数，startup.js:749 写入 / :6819 复位）。
+      //
+      // ⚠️ 本模板当前**不可达**：`checkEventTrigger` 只在事件声明了 `template:` 字段时
+      //    才查 TRIGGER_TEMPLATES（trigger_registry.js:251），而全库**没有任何事件**
+      //    声明 `template:` → 21 个模板全部不可达（见报告第 58 节立项）。
+      //    此处修正是**防止未来接线时静默失配**，不是"修好了一个功能"。
+      //    改完之后本函数依然不会被调用 —— 不要误以为观测到了什么变化。
+      return !!(state.startup && state.startup.company);
     },
     night_phase: function (state) {
       return state.player && state.player.timeSlot === "night";
@@ -116751,9 +116755,16 @@ if (typeof window !== "undefined") {
       conditions: function (st) {
         if (!st || !st.player) return false;
         if (st.flags && st.flags._careerEnterpriseReadyDone) return false;
+        // [报告第 58 节 · 果实 G5] `st.startup.companies` 全库零写入（不在 schema），
+        //   是**幻影容器**。真实容器是 `st.startup.company`（单数）：
+        //     · 写入：phase2/startup.js:749  state.startup.company = company;
+        //     · 复位：startup.js:6819 / domain_b_linkage_r174_part2.js:105 = null
+        //   ⚠️ 不要误改为 `state.enterpriseFate.companies` —— 那是**市场公司池**
+        //      （company_spawner 生成 NPC 公司），语义完全不同。
+        //   本行的语义与同链上一支 `st.corporate.company` 对齐：**玩家自己的公司**。
         var hasCo =
           (st.corporate && st.corporate.company) ||
-          (st.startup && st.startup.companies && st.startup.companies.length);
+          (st.startup && st.startup.company);
         if (!hasCo) return false;
         if (topSkillLevelC(st) < 30) return false; // [PLACEHOLDER] 技能兑现门槛
         return true;
@@ -381967,7 +381978,14 @@ for(var i=0;i<E.length;i++){var exists=false;for(var j=0;j<RANDOM_EVENTS.length;
         // 需有至少3个好感≥40的已结识NPC(人脉广度证明)
         if (trustedNpcCount(st, 40) < 3) return false;
         // 公司员工未满(真实招聘需求)
-        var _teamSize = (st.startup && st.startup.team) ? st.startup.team.length : 0;
+        // [报告第 58 节 · 果实 G6] `st.startup.team` 全库零写入（不在 schema）→ 恒 0。
+        //   真实容器 `st.startup.company.employees`（startup.js:1480 push / :1531 splice）。
+        //   注意：另一消费者 domain_f_linkage_r826.js:204 把它当 `{members:[]}` 用，
+        //   两种形态**互斥** —— 但两者要的都是「团队人数」，故统一改读 employees.length。
+        var _teamSize =
+          st.startup && st.startup.company && st.startup.company.employees
+            ? st.startup.company.employees.length
+            : 0;
         if (_teamSize >= 5) return false;
         return true;
       },
@@ -395275,7 +395293,11 @@ for(var i=0;i<E.length;i++){var exists=false;for(var j=0;j<RANDOM_EVENTS.length;
           if (st.startup.company.morale !== undefined) _morale = Math.round(st.startup.company.morale);
         } catch (e) {}
         try {
-          if (st.startup.team && st.startup.team.members) _teamSize = st.startup.team.members.length;
+          // [报告第 58 节 · 果实 G6] 原读 `st.startup.team.members.length`（零写入 → 恒 0）。
+          //   改读真实容器 `startup.company.employees`；本函数上一行已读
+          //   `startup.company.morale`，此处与之同容器，语义自洽。
+          if (st.startup.company && st.startup.company.employees)
+            _teamSize = st.startup.company.employees.length;
         } catch (e) {}
         return "公司活力面板: 士气" + _morale + "分, 团队" + _teamSize + "人—─每一个数字都反映着你经营的成果。";
       },

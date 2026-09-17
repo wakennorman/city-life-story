@@ -201,7 +201,11 @@
           if (st.startup.company.morale !== undefined) _morale = Math.round(st.startup.company.morale);
         } catch (e) {}
         try {
-          if (st.startup.team && st.startup.team.members) _teamSize = st.startup.team.members.length;
+          // [报告第 58 节 · 果实 G6] 原读 `st.startup.team.members.length`（零写入 → 恒 0）。
+          //   改读真实容器 `startup.company.employees`；本函数上一行已读
+          //   `startup.company.morale`，此处与之同容器，语义自洽。
+          if (st.startup.company && st.startup.company.employees)
+            _teamSize = st.startup.company.employees.length;
         } catch (e) {}
         return "公司活力面板: 士气" + _morale + "分, 团队" + _teamSize + "人—─每一个数字都反映着你经营的成果。";
       },

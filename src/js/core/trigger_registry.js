@@ -104,11 +104,15 @@
       return state.employment && !state.employment.currentJob;
     },
     has_company: function (state) {
-      return (
-        state.startup &&
-        state.startup.companies &&
-        state.startup.companies.length > 0
-      );
+      // [报告第 58 节 · 果实 G5 同源] 原读 `state.startup.companies`（零写入、不在 schema）。
+      //   真实容器 `state.startup.company`（单数，startup.js:749 写入 / :6819 复位）。
+      //
+      // ⚠️ 本模板当前**不可达**：`checkEventTrigger` 只在事件声明了 `template:` 字段时
+      //    才查 TRIGGER_TEMPLATES（trigger_registry.js:251），而全库**没有任何事件**
+      //    声明 `template:` → 21 个模板全部不可达（见报告第 58 节立项）。
+      //    此处修正是**防止未来接线时静默失配**，不是"修好了一个功能"。
+      //    改完之后本函数依然不会被调用 —— 不要误以为观测到了什么变化。
+      return !!(state.startup && state.startup.company);
     },
     night_phase: function (state) {
       return state.player && state.player.timeSlot === "night";

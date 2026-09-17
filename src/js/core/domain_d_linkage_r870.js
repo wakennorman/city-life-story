@@ -69,7 +69,14 @@
         // 需有至少3个好感≥40的已结识NPC(人脉广度证明)
         if (trustedNpcCount(st, 40) < 3) return false;
         // 公司员工未满(真实招聘需求)
-        var _teamSize = (st.startup && st.startup.team) ? st.startup.team.length : 0;
+        // [报告第 58 节 · 果实 G6] `st.startup.team` 全库零写入（不在 schema）→ 恒 0。
+        //   真实容器 `st.startup.company.employees`（startup.js:1480 push / :1531 splice）。
+        //   注意：另一消费者 domain_f_linkage_r826.js:204 把它当 `{members:[]}` 用，
+        //   两种形态**互斥** —— 但两者要的都是「团队人数」，故统一改读 employees.length。
+        var _teamSize =
+          st.startup && st.startup.company && st.startup.company.employees
+            ? st.startup.company.employees.length
+            : 0;
         if (_teamSize >= 5) return false;
         return true;
       },
