@@ -37,7 +37,7 @@
         // 需要设定了公司文化
         if (!st.startup.company.culture) return false;
         // 需要至少3个团队规模
-        if (!st.startup.company.team || st.startup.company.team.length < 3) return false;
+        if (!st.startup.company.employees || st.startup.company.employees.length < 3) return false;
         return true;
       },
       choices: [
@@ -157,7 +157,7 @@
         var milestone = (company.valuation || 0) >= 100000 ||
                         (company.reputation || 0) >= 50 ||
                         (company.revenue || 0) >= 50000 ||
-                        (company.team && company.team.length >= 5);
+                        (company.employees && company.employees.length >= 5);
         return milestone;
       },
       choices: [

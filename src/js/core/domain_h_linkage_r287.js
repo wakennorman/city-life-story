@@ -118,10 +118,10 @@
           apply: function (st) {
             if (!st.flags) st.flags = {};
             st.flags._companyEconFeedbackSeen = true;
-            if (st.startup && st.startup.company && st.startup.company.team) {
-              for (var i = 0; i < st.startup.company.team.length; i++) {
-                if (st.startup.company.team[i]) {
-                  st.startup.company.team[i].loyalty = Math.min(100, (st.startup.company.team[i].loyalty || 50) + 6);
+            if (st.startup && st.startup.company && st.startup.company.employees) {
+              for (var i = 0; i < st.startup.company.employees.length; i++) {
+                if (st.startup.company.employees[i]) {
+                  st.startup.company.employees[i].loyalty = Math.min(100, (st.startup.company.employees[i].loyalty || 50) + 6);
                 }
               }
             }

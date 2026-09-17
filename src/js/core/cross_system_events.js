@@ -6579,7 +6579,7 @@
       // [全系统自洽修复] 域B R244: 原事件无 conditions 门控(任何 corporate 阶段 day≥60 都会触发)→补 startup.company+team 守卫
       conditions: function (st) {
         if (st.gameOver) return false;
-        return !!(st.startup && st.startup.company && st.startup.company.team && st.startup.company.team.length > 0);
+        return !!(st.startup && st.startup.company && st.startup.company.employees && st.startup.company.employees.length > 0);
       },
       choices: [
         {
@@ -6601,12 +6601,10 @@
             st.flags._talentDepartureRetained = true;
             if (st.resources) st.resources.cash = (st.resources.cash || 0) - 3000;
             if (st.player) _guardNeedsB(st).happiness = Math.min(100, (_guardNeedsB(st).happiness || 0) + 5);
-            if (st.startup && st.startup.company && st.startup.company.team) {
-              for (var i = 0; i < st.startup.company.team.length; i++) {
-                if (st.startup.company.team[i] && st.startup.company.team[i].morale) {
-                  st.startup.company.team[i].morale = Math.min(100, st.startup.company.team[i].morale + 5);
-                }
-              }
+            // [报告第 56 节] 原读 startup.company.team（零写入，恒 undefined）→ 恒不执行。
+            //   改为公司级士气 company.morale —— 真实写入点见 domain_b_linkage_r659.js:40。
+            if (st.startup && st.startup.company) {
+              st.startup.company.morale = Math.min(100, (st.startup.company.morale || 50) + 5);
             }
             StateManager.addMessage("🤝 你给小李涨了20%的工资。他犹豫了一下，点了点头。现金-3000，团队士气+5。", "success");
           },

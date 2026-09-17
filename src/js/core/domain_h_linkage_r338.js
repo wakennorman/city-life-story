@@ -66,7 +66,7 @@
       conditions: function (st) {
         if (st.gameOver) return false;
         if (!st.startup || !st.startup.company) return false;
-        return st.startup.company.team && st.startup.company.team.length >= 8;
+        return st.startup.company.employees && st.startup.company.employees.length >= 8;
       },
       choices: [
         {
@@ -76,10 +76,10 @@
             if (!st.flags) st.flags = {};
             st.flags._companyLeadershipV3Seen = true;
             if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 12);
-            if (st.startup && st.startup.company && st.startup.company.team) {
-              for (var i = 0; i < st.startup.company.team.length; i++) {
-                if (st.startup.company.team[i]) {
-                  st.startup.company.team[i].loyalty = Math.min(100, (st.startup.company.team[i].loyalty || 50) + 12);
+            if (st.startup && st.startup.company && st.startup.company.employees) {
+              for (var i = 0; i < st.startup.company.employees.length; i++) {
+                if (st.startup.company.employees[i]) {
+                  st.startup.company.employees[i].loyalty = Math.min(100, (st.startup.company.employees[i].loyalty || 50) + 12);
                 }
               }
             }

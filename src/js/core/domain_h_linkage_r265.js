@@ -24,7 +24,7 @@
         if (st.gameOver) return false;
         if (!st.startup || !st.startup.company) return false;
         if (!st.startup.company.culture) return false;
-        return st.startup.company.team && st.startup.company.team.length >= 4;
+        return st.startup.company.employees && st.startup.company.employees.length >= 4;
       },
       choices: [
         {
@@ -67,7 +67,7 @@
       conditions: function (st) {
         if (st.gameOver) return false;
         if (!st.startup || !st.startup.company) return false;
-        if (!st.startup.company.team || st.startup.company.team.length < 3) return false;
+        if (!st.startup.company.employees || st.startup.company.employees.length < 3) return false;
         var highSkill = false;
         if (st.skills) {
           for (var k in st.skills) {
