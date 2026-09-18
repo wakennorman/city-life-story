@@ -220,10 +220,11 @@ function applyDailyWear(state) {
     "steel_worker",
     "premium_engineering",
   ];
+  // [报告第 63 节] 原写法把**整个对象**传进 `indexOf` 与「工作 id 字符串数组」比对
+  //   —— 即使容器活了也**恒为 -1**（对象 !== 字符串）。这是与"幻影容器"叠加的
+  //   **类型错配**：修好容器不会修好它。改读 live 的 `flags._lastStreetJobId`。
   var isHighRisk =
-    state.employment &&
-    state.employment.currentJob &&
-    highRiskJobs.indexOf(state.employment.currentJob) >= 0;
+    highRiskJobs.indexOf((state.flags && state.flags._lastStreetJobId) || "") >= 0;
 
   // 检查天气
   var harshWeather = false;

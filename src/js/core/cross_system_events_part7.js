@@ -1220,7 +1220,7 @@
 
       if (typeof man !== "number" || man < 15) return false; // 检查 management>=15
 
-      if (!st.employment || !st.employment.currentJob) return false; // 检查 已有工作
+      if (!hasMainJob(st)) return false; // 检查 已有工作
 
       if (st.player.phase !== "street") return false; // 检查 街头阶段
 
@@ -1369,7 +1369,7 @@
       if (!(st.talentNodes && st.talentNodes["management_crew_lead"]))
         return false; // 检查 天赋节点
 
-      if (!st.employment || !st.employment.currentJob) return false; // 检查 有职业
+      if (!hasMainJob(st)) return false; // 检查 有职业
 
       if (typeof st.needs.happiness !== "number" || st.needs.happiness >= 55)
         return false; // 检查 幸福偏低
@@ -1513,7 +1513,7 @@
     conditions: function (st) {
       if (!(st.talentNodes && st.talentNodes["sales_management"])) return false; // 检查 天赋节点
 
-      if (!st.employment || !st.employment.currentJob) return false; // 检查 有职业
+      if (!hasMainJob(st)) return false; // 检查 有职业
 
       if (st.player.phase !== "street") return false; // 检查 街头阶段
 
@@ -1659,7 +1659,7 @@
 
       if (typeof wel !== "number" || wel < 20) return false; // 检查 welding>=20
 
-      if (!st.employment || !st.employment.currentJob) return false; // 检查 已有工作
+      if (!hasMainJob(st)) return false; // 检查 已有工作
 
       if (st.player.phase !== "street") return false; // 检查 街头阶段
 
@@ -1741,7 +1741,7 @@
 
       if (typeof w !== "number" || w < 10) return false; // 检查 welding>=10
 
-      if (!st.employment || !st.employment.currentJob) return false; // 检查 有职业
+      if (!hasMainJob(st)) return false; // 检查 有职业
 
       if (st.player.phase !== "street") return false; // 检查 街头阶段
 
@@ -2192,7 +2192,7 @@
 
       if (typeof rep !== "number" || rep < 15) return false; // 检查 repair>=15
 
-      if (!st.employment || !st.employment.currentJob) return false; // 检查 有职业
+      if (!hasMainJob(st)) return false; // 检查 有职业
 
       if (st.player.phase !== "street") return false; // 检查 街头阶段
 
@@ -2466,7 +2466,7 @@
 
       if (typeof w !== "number" || w < 15) return false; // 检查 welding>=15
 
-      if (!st.employment || !st.employment.currentJob) return false; // 检查 有职业
+      if (!hasMainJob(st)) return false; // 检查 有职业
 
       if (st.player.phase !== "street") return false; // 检查 街头阶段
 

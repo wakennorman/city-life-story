@@ -542,7 +542,9 @@ function applySectorFeedback(state) {
   // 但影响力微弱到不会破坏平衡——一个行业要持续升温，
   // 仍需外部新闻/事件的配合。
   if (params.playerWealthLevel >= 4 || params.playerFameLevel >= 4) {
-    var job = state.employment && state.employment.currentJob;
+    // [报告第 63 节] 改指真实容器。
+    //   ⚠️ 本块仍然不可达：`getJobSector` **全库无定义**（`typeof` 守卫恒 false）。
+    var job = getCurrentStreetJob(state) || (state.career && state.career.currentJob);
     if (job && typeof getJobSector === "function") {
       var sector = getJobSector(job);
       if (sector && WORLD_SECTORS.indexOf(sector) >= 0) {

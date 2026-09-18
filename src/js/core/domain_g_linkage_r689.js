@@ -26,7 +26,7 @@
       conditions: function (st) {
         if (st.gameOver) return false;
         if (st.flags && st.flags._g689PivotCd) return false;
-        return st.employment && st.employment.currentJob && st.player && st.player.day >= 180;
+        return hasMainJob(st) && st.player && st.player.day >= 180;
       },
       choices: [
         {

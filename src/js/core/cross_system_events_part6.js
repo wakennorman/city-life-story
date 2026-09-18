@@ -900,7 +900,7 @@
       )
         return false; // 检查 焊接>=15
 
-      if (!(st.employment && st.employment.currentJob)) return false; // 检查 有主业
+      if (!hasMainJob(st)) return false; // 检查 有主业
 
       if (st.flags && st.flags._r113WeldJob) return false; // 检查 未触发过
 
@@ -1107,7 +1107,7 @@
       if (((st.skills.english && st.skills.english.level) || 0) < 10)
         return false; // 检查 英语>=10
 
-      if (!(st.employment && st.employment.currentJob)) return false; // 检查 有主业
+      if (!hasMainJob(st)) return false; // 检查 有主业
 
       if (st.flags && st.flags._r114SalesEng) return false; // 检查 未触发过
 
@@ -1176,7 +1176,7 @@
       if (!st.reputation || (st.reputation.bank || 0) < 30) return false; // 检查 银行声望>=30
 
       if (
-        !(st.employment && st.employment.currentJob) &&
+        !hasMainJob(st) &&
         !(st.sideHustle && st.sideHustle.active)
       )
         return false; // 检查 有收入来源
@@ -1610,7 +1610,7 @@
     conditions: function (st) {
       if (!st.weather || st.weather.current !== "heatwave") return false; // 检查 热浪
 
-      if (!(st.employment && st.employment.currentJob)) return false; // 检查 有主业
+      if (!hasMainJob(st)) return false; // 检查 有主业
 
       if (st.flags && st.flags._r96HeatJob) return false; // 检查 未触发过
 
@@ -1753,7 +1753,7 @@
       if (!st.talentNodes || Object.keys(st.talentNodes).length === 0)
         return false; // 检查 已激活天赋
 
-      if (!(st.employment && st.employment.currentJob)) return false; // 检查 有主业
+      if (!hasMainJob(st)) return false; // 检查 有主业
 
       if (
         !st.skills ||
@@ -1959,7 +1959,7 @@
     conditions: function (st) {
       if (!st.weather || st.weather.current !== "stormy") return false; // 检查 暴风雨
 
-      if (!(st.employment && st.employment.currentJob)) return false; // 检查 有主业
+      if (!hasMainJob(st)) return false; // 检查 有主业
 
       if (st.flags && st.flags._r97StormJob) return false; // 检查 未触发过
 
@@ -2177,7 +2177,7 @@
 
       if (st._eraState.stageId !== "decline") return false; // 检查 衰退期
 
-      if (!(st.employment && st.employment.currentJob)) return false; // 检查 有主业
+      if (!hasMainJob(st)) return false; // 检查 有主业
 
       if (st.flags && st.flags._r98EraDec) return false; // 检查 未触发过
 
@@ -2618,7 +2618,7 @@
       )
         return false; // 检查 英语>=20
 
-      if (!(st.employment && st.employment.currentJob)) return false; // 检查 有主业
+      if (!hasMainJob(st)) return false; // 检查 有主业
 
       if (st.flags && st.flags._r99EngJob) return false; // 检查 未触发过
 
@@ -2904,7 +2904,7 @@
 
       if (typeof mg !== "number" || mg < 15) return false; // 检查 management>=15
 
-      if (!st.employment || !st.employment.currentJob) return false; // 检查 有职业
+      if (!hasMainJob(st)) return false; // 检查 有职业
 
       var rel = st.relationships && st.relationships["boss_li"]; // 检查 boss_li 关系
 
@@ -3131,7 +3131,7 @@
       if (typeof st.player.morality !== "number" || st.player.morality < 70)
         return false; // 检查 高道德
 
-      if (!st.employment || !st.employment.currentJob) return false; // 检查 有职业
+      if (!hasMainJob(st)) return false; // 检查 有职业
 
       var rel = st.relationships && st.relationships["boss_li"]; // 检查 boss_li 关系
 
@@ -3298,7 +3298,7 @@
       if (typeof st.player.morality !== "number" || st.player.morality >= 40)
         return false; // 检查 低道德
 
-      if (!st.employment || !st.employment.currentJob) return false; // 检查 有职业
+      if (!hasMainJob(st)) return false; // 检查 有职业
 
       if (st.player.phase !== "street") return false; // 检查 街头阶段
 
@@ -4271,7 +4271,7 @@
 
       if (st.needs.hygiene >= 20) return false; // 检查 卫生<20
 
-      if (!(st.employment && st.employment.currentJob)) return false; // 检查 有主业
+      if (!hasMainJob(st)) return false; // 检查 有主业
 
       if (st.flags && st.flags._r116HygieneJob) return false; // 检查 未触发过
 
@@ -4339,7 +4339,7 @@
       if (((st.skills.management && st.skills.management.level) || 0) < 15)
         return false; // 检查 管理>=15
 
-      if (!(st.employment && st.employment.currentJob)) return false; // 检查 有主业
+      if (!hasMainJob(st)) return false; // 检查 有主业
 
       if (st.flags && st.flags._r116TalentMgmt) return false; // 检查 未触发过
 
@@ -4640,7 +4640,7 @@
       if (((st.skills.coding && st.skills.coding.level) || 0) < 10)
         return false; // 检查 编程>=10
 
-      if (!(st.employment && st.employment.currentJob)) return false; // 检查 有主业
+      if (!hasMainJob(st)) return false; // 检查 有主业
 
       if (st.flags && st.flags._r118FreqCoding) return false; // 检查 未触发过
 

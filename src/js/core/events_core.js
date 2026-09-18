@@ -458,11 +458,14 @@ function evaluateTriggers(triggers, state) {
   // 就业状态过滤（v3.99d 约定式）
   // "any"=有工作, "none"=无工作, 字符串=具体路径ID
   if (triggers.employment !== undefined) {
-    var hasJob = !!(state.employment && state.employment.currentJob);
+    var hasJob = hasMainJob(state);
+    // [报告第 63 节] `triggers.employment` 的字符串形态（=具体路径 ID）读的是
+    //   `currentJob.path` —— `path` 是 **career.currentJob** 的字段
+    //   （career_dev.js:3383 写入），街头工作定义里没有。故改指 career。
     var jobPath =
-      state.employment &&
-      state.employment.currentJob &&
-      state.employment.currentJob.path;
+      state.career &&
+      state.career.currentJob &&
+      state.career.currentJob.path;
     if (triggers.employment === "any" && !hasJob) return false;
     if (triggers.employment === "none" && hasJob) return false;
     if (triggers.employment !== "any" && triggers.employment !== "none") {

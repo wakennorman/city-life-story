@@ -189,7 +189,7 @@ const LIFE_NODES = {
           st.flags._retirementType = "wealthy";
           st.flags._retired = true;
           // [全系统自洽修复] 域G A类修复: 行内 effect 使用 st.employment 替代 st.career（R177 修复了 switch-case 兜底但 inline effect 优先级更高）
-          var _empJob = (st.employment && st.employment.currentJob) ? st.employment.currentJob : null;
+          var _empJob = (st.career && st.career.currentJob) ? st.career.currentJob : null;
           st.flags._pensionBase = _empJob ? (_empJob.salary || 5000) : 5000;
           // [全系统自洽修复] 域G R520 P1: st.needs 守卫
           if (!st.needs) st.needs = { hunger: 50, fatigue: 30, hygiene: 60, happiness: 50 };
@@ -208,7 +208,7 @@ const LIFE_NODES = {
           // applyNodeChoice 中 inline effect 优先、switch兜底被跳过(_inlineApplied)，
           // 导致"返聘做顾问"路径 _retired=true 但养老金+顾问费(daily_pipeline:2014块要求
           // _retired&&_pensionBase 双真)永不发放=纯惩罚陷阱→与兜底路径对齐补基数
-          var _advEmpJob = (st.employment && st.employment.currentJob) ? st.employment.currentJob : null;
+          var _advEmpJob = (st.career && st.career.currentJob) ? st.career.currentJob : null;
           st.flags._pensionBase = _advEmpJob ? (_advEmpJob.salary || 5000) : 5000;
           var skillXp = Math.min(
             500,
@@ -546,7 +546,7 @@ function applyNodeChoice(state, nodeId, choiceKey) {
     case "retire_wealthy":
       state.flags._retirementType = "wealthy";
       state.flags._retired = true;
-      var _empJob = (state.employment && state.employment.currentJob) ? state.employment.currentJob : null;
+      var _empJob = (state.career && state.career.currentJob) ? state.career.currentJob : null;
       state.flags._pensionBase = _empJob ? (_empJob.salary || 5000) : 5000;
       // [全系统自洽修复] 域G A类修复: state.needs 守卫(防止旧存档崩溃)
       if (state.needs) state.needs.happiness = Math.min(100, (state.needs.happiness || 50) + 20);
@@ -555,7 +555,7 @@ function applyNodeChoice(state, nodeId, choiceKey) {
       state.flags._retirementType = "advisor";
       state.flags._retired = true;
       // 退休金基数字段对齐（兜底路径，inline effect 优先）
-      var _advJob = (state.employment && state.employment.currentJob) ? state.employment.currentJob : null;
+      var _advJob = (state.career && state.career.currentJob) ? state.career.currentJob : null;
       state.flags._pensionBase = _advJob ? (_advJob.salary || 5000) : 5000;
       state.resources.cash = (state.resources.cash || 0) + 2000;
       break;

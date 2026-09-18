@@ -577,7 +577,7 @@
       if (st.player && st.player.day < 15) return false;
       // 曾经有过工作，但现在失业了
       var hadJob = st.flags && st.flags._everHadJob;
-      var currentlyJobless = !st.employment || !st.employment.currentJob;
+      var currentlyJobless = !hasMainJob(st);
       return hadJob && currentlyJobless;
     },
     apply: function (st) {

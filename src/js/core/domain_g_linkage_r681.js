@@ -149,7 +149,7 @@
       conditions: function (st) {
         if (st.gameOver) return false;
         if (st.flags && st.flags._g681CareerCd) return false;
-        return st.employment && st.employment.currentJob && st.player && st.player.day >= 180;
+        return hasMainJob(st) && st.player && st.player.day >= 180;
       },
       choices: [
         {
@@ -184,7 +184,7 @@
       ],
       text: function (st) {
         if (!st) return null;
-        var job = st.employment && st.employment.currentJob && st.employment.currentJob.title;
+        var job = jobDisplayName(st);
         return "做" + (job ? job : "这份工作") + "已经半年多了——'是该继续深耕,还是看看别的机会?'";
       }
     }

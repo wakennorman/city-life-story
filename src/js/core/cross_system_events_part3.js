@@ -2738,7 +2738,7 @@
 
       if (typeof man !== "number" || man < 15) return false; // 检查 management>=15
 
-      if (!st.employment || !st.employment.currentJob) return false; // 检查 有职业
+      if (!hasMainJob(st)) return false; // 检查 有职业
 
       if (st.player.phase !== "street") return false; // 检查 街头阶段
 

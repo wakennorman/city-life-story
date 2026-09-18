@@ -26,7 +26,7 @@
 
       if (typeof eng !== "number" || eng < 20) return false; // 检查 english>=20
 
-      if (!st.employment || !st.employment.currentJob) return false; // 检查 已就业
+      if (!hasMainJob(st)) return false; // 检查 已就业
 
       if (st.player.phase !== "street") return false; // 检查 街头阶段
 
@@ -1056,7 +1056,7 @@
 
       if (!hasWeld) return false; // 检查 天赋已点亮
 
-      if (!(st.employment && st.employment.currentJob)) return false; // 检查 有主业
+      if (!hasMainJob(st)) return false; // 检查 有主业
 
       if (st.flags && st.flags._r86WeldJob) return false; // 检查 未触发过
 
@@ -1076,16 +1076,13 @@
         apply: function (st) {
           st.resources.cash = (st.resources.cash || 0) + 150;
 
-          if (
-            st.employment &&
-            st.employment.currentJob &&
-            st.employment.currentJob.reputation !== undefined
-          )
-            st.employment.currentJob.reputation = Math.min(
-              100,
-
-              (st.employment.currentJob.reputation || 0) + 5,
-            );
+          // [报告第 63 节] 原块是**恒不执行的守卫型 no-op**：
+          //   `currentJob` 恒 null → 第一层条件即假 → `reputation` 从未被读写。
+          //   而 `reputation` 这个键**两个真实容器都没有**
+          //   （career.currentJob 无；街头工作定义无）→ 即使容器活了，`!== undefined`
+          //   仍为假，块依旧不执行。属"幻影容器里的幻影子字段"。
+          //   删除不改变任何行为；若要恢复"工头记功"语义，须**先建消费端**
+          //   （晋升/报酬加成），届时再补容器 —— 不先建写入口（第 63 节纪律）。
 
           st.flags._r86WeldJob = true;
 
@@ -1213,7 +1210,7 @@
     conditions: function (st) {
       if ((st.needs.fatigue || 0) < 70) return false; // 检查 疲劳>=70
 
-      if (!(st.employment && st.employment.currentJob)) return false; // 检查 有主业
+      if (!hasMainJob(st)) return false; // 检查 有主业
 
       if (st.flags && st.flags._r87FatCareer) return false; // 检查 未触发过
 
@@ -1597,7 +1594,7 @@
 
       if (total < 40) return false; // 检查 累计>=40
 
-      if (!(st.employment && st.employment.currentJob)) return false; // 检查 有主业
+      if (!hasMainJob(st)) return false; // 检查 有主业
 
       if (st.flags && st.flags._r89AfCareer) return false; // 检查 未触发过
 
@@ -2423,7 +2420,7 @@
 
       if (w !== "typhoon" && w !== "stormy") return false; // 检查 台风/风暴
 
-      if (!(st.employment && st.employment.currentJob)) return false; // 检查 有主业
+      if (!hasMainJob(st)) return false; // 检查 有主业
 
       if (st.flags && st.flags._r92TyJob) return false; // 检查 未触发过
 
@@ -2648,7 +2645,7 @@
 
       if (!hasMgmt) return false; // 检查 天赋已点亮
 
-      if (!(st.employment && st.employment.currentJob)) return false; // 检查 有主业
+      if (!hasMainJob(st)) return false; // 检查 有主业
 
       if (st.flags && st.flags._r93MgmtJob) return false; // 检查 未触发过
 
@@ -3598,7 +3595,7 @@
       if (!st.talentNodes || Object.keys(st.talentNodes).length === 0)
         return false; // 检查 已激活天赋
 
-      if (!(st.employment && st.employment.currentJob)) return false; // 检查 有主业
+      if (!hasMainJob(st)) return false; // 检查 有主业
 
       if (
         !st.skills ||
@@ -3742,7 +3739,7 @@
       )
         return false; // 检查 管理>=15
 
-      if (!(st.employment && st.employment.currentJob)) return false; // 检查 有主业
+      if (!hasMainJob(st)) return false; // 检查 有主业
 
       if (st.flags && st.flags._r102Mgmt) return false; // 检查 未触发过
 
@@ -4687,7 +4684,7 @@
       if (!st.talentNodes || Object.keys(st.talentNodes).length === 0)
         return false; // 检查 已激活天赋
 
-      if (!(st.employment && st.employment.currentJob)) return false; // 检查 有主业
+      if (!hasMainJob(st)) return false; // 检查 有主业
 
       if (
         !st.skills ||
@@ -4979,7 +4976,7 @@
     conditions: function (st) {
       if (!st.weather || st.weather.current !== "heatwave") return false; // 检查 热浪
 
-      if (!(st.employment && st.employment.currentJob)) return false; // 检查 有主业
+      if (!hasMainJob(st)) return false; // 检查 有主业
 
       if (st.flags && st.flags._r106Heat) return false; // 检查 未触发过
 

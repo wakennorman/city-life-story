@@ -32,7 +32,7 @@
       title: "职业叙事", story: "你的职业变化正在书写故事——每一步,都值得记录。",
       triggers: { minDay: 250, interval: 300, maxRepeats: 3, excludeFlags: ["_c828NarrCd"] },
       conditions: function (st) { if (!st || st.gameOver) return false; if (st.flags && st.flags._c828NarrCd) return false; return st.player && st.player.day >= 250 && st.employment; },
-      text: function (st) { if (!st) return null; var j = "无"; if (st.employment && st.employment.currentJob) j = st.employment.currentJob.name || "在职"; return "当前职业" + j + "——'这就是你的职业故事。'"; },
+      text: function (st) { if (!st) return null; var j = jobDisplayName(st) || "无"; return "当前职业" + j + "——'这就是你的职业故事。'"; },
       choices: [
         { text: "📜 记录历程", hint: "心智+20,置_c828Chronicler",
           apply: function (st) { if (!st) return; st.flags = st.flags || {}; st.flags._c828NarrCd = true; st.flags._c828Chronicler = true; if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 20); if (typeof StateManager !== "undefined") { StateManager.addMessage("📖 '每一步都值得记录。' 心智+20。", "success"); } }

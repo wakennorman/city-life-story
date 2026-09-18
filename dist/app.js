@@ -4326,10 +4326,10 @@ if (typeof window !== "undefined") {
       return state.relationships && Object.keys(state.relationships).length > 0;
     },
     has_job: function (state) {
-      return state.employment && state.employment.currentJob;
+      return hasMainJob(state);
     },
     unemployed: function (state) {
-      return state.employment && !state.employment.currentJob;
+      return !hasMainJob(state);
     },
     has_company: function (state) {
       // [报告第 58 节 · 果实 G5 同源] 原读 `state.startup.companies`（零写入、不在 schema）。
@@ -5038,11 +5038,14 @@ function evaluateTriggers(triggers, state) {
   // 就业状态过滤（v3.99d 约定式）
   // "any"=有工作, "none"=无工作, 字符串=具体路径ID
   if (triggers.employment !== undefined) {
-    var hasJob = !!(state.employment && state.employment.currentJob);
+    var hasJob = hasMainJob(state);
+    // [报告第 63 节] `triggers.employment` 的字符串形态（=具体路径 ID）读的是
+    //   `currentJob.path` —— `path` 是 **career.currentJob** 的字段
+    //   （career_dev.js:3383 写入），街头工作定义里没有。故改指 career。
     var jobPath =
-      state.employment &&
-      state.employment.currentJob &&
-      state.employment.currentJob.path;
+      state.career &&
+      state.career.currentJob &&
+      state.career.currentJob.path;
     if (triggers.employment === "any" && !hasJob) return false;
     if (triggers.employment === "none" && hasJob) return false;
     if (triggers.employment !== "any" && triggers.employment !== "none") {
@@ -37797,10 +37800,11 @@ function applyDailyWear(state) {
     "steel_worker",
     "premium_engineering",
   ];
+  // [报告第 63 节] 原写法把**整个对象**传进 `indexOf` 与「工作 id 字符串数组」比对
+  //   —— 即使容器活了也**恒为 -1**（对象 !== 字符串）。这是与"幻影容器"叠加的
+  //   **类型错配**：修好容器不会修好它。改读 live 的 `flags._lastStreetJobId`。
   var isHighRisk =
-    state.employment &&
-    state.employment.currentJob &&
-    highRiskJobs.indexOf(state.employment.currentJob) >= 0;
+    highRiskJobs.indexOf((state.flags && state.flags._lastStreetJobId) || "") >= 0;
 
   // 检查天气
   var harshWeather = false;
@@ -41251,6 +41255,62 @@ function runLifeStageNarrative(state) {
     return st.needs;
   }
 
+  // [报告第 63 节] 街头工作「当日工钱」解析器。
+  //
+  // 背景：本文件 3 处选项回调写的是 `st.employment.currentJob.payCalc(st)`，
+  //   而 `employment.currentJob` **全库零写入、恒为 null**（见报告第 63 节）。
+  //   第 57 节把 heatwave_outdoor_worker 的 conditions 改读 completedShifts 之后，
+  //   该事件**由恒 false 变成可达** —— 于是那两处解引用从「永不执行」变成
+  //   **玩家一点选项就抛 `TypeError: Cannot read properties of null`**。
+  //   （模式 6「死代码复活后被激活的下一个 bug」的又一例。）
+  //
+  // 语义切分（第 63 节的核心结论）：`employment.currentJob` 被三个不同概念混用 ——
+  //   ① 布尔「是否已就业」   ② 「正在做哪份街头工作」   ③ 「工作对象（有 payCalc）」
+  //   本 helper 只负责 ③ 中"街头工作"这一支：真实容器是
+  //   `employment.completedShifts`（main.js:4764 doStreetJob 每次上工写入）
+  //   + `getJobById(id)`（data/jobs.js:1116 的街头工作定义，含 payCalc）。
+  //   ⚠️ 不用 `career.currentJob` —— 那是**职业路径**岗位
+  //   （{path, levelId, levelName, salary, …}），**没有 payCalc**，语义不同。
+  //
+  // 返回 0 表示"确实无法解析"；调用方需自行决定是否给兜底。
+  //   实测：conditions 已保证 5 个 id 至少一个 completedShifts>0，
+  //   且 5 个 id 全部存在于 STREET_JOBS（62 个）→ 正常路径必然解析成功。
+  var _OUTDOOR_JOB_IDS_B = [
+    "manual_labor_construction",
+    "waste_recycling",
+    "old_zhou_recycling",
+    "street_vending_food",
+    "sister_zhang_vending",
+  ];
+  function _outdoorJobPayB(st) {
+    // [报告第 63 节] 收敛到单一事实来源：优先用 live 的 `flags._lastStreetJobId`
+    //   （main.js:5263 每次 doStreetJob 写入），失败再回退到「上工次数最多的那份」。
+    var job = typeof getCurrentStreetJob === "function" ? getCurrentStreetJob(st) : null;
+    if (!job) {
+      var cs = st && st.employment && st.employment.completedShifts;
+      if (!cs) return 0;
+      var best = null;
+      var bestN = 0;
+      for (var i = 0; i < _OUTDOOR_JOB_IDS_B.length; i++) {
+        var n = cs[_OUTDOOR_JOB_IDS_B[i]] || 0;
+        if (n > bestN) {
+          bestN = n;
+          best = _OUTDOOR_JOB_IDS_B[i];
+        }
+      }
+      if (!best) return 0;
+      job = typeof getJobById === "function" ? getJobById(best) : null;
+    }
+    if (!job || typeof job.payCalc !== "function") return 0;
+    var pay = 0;
+    try {
+      pay = job.payCalc(st);
+    } catch (e) {
+      return 0;
+    }
+    return isFinite(pay) && pay > 0 ? Math.floor(pay) : 0;
+  }
+
 
   var CROSS_EVENTS = [
     // === NPC关系联动事件 ===
@@ -42178,7 +42238,9 @@ function runLifeStageNarrative(state) {
               st.resources.cash = Math.max(0, (st.resources.cash || 0) - 15);
               st.status.health = Math.min(100, (st.status.health || 0) + 3);
               _guardNeedsB(st).fatigue = Math.min(100, (_guardNeedsB(st).fatigue || 0) + 5);
-              var pay = st.employment.currentJob.payCalc(st);
+              // [报告第 63 节] 原 `st.employment.currentJob.payCalc(st)` —— currentJob 恒 null，
+              //   本事件在第 57 节复活后**点此选项必崩**（实测 TypeError）。改走街头工作解析器。
+              var pay = _outdoorJobPayB(st);
               st.resources.cash = (st.resources.cash || 0) + Math.floor(pay * 0.8);
               st.resources.totalEarned =
                 (st.resources.totalEarned || 0) + Math.floor(pay * 0.8);
@@ -42200,7 +42262,8 @@ function runLifeStageNarrative(state) {
           text: "🌳 找阴凉处躲一躲，下午再去",
           hint: "收入×0.6，但健康+5",
           apply: function (st) {
-            var pay = st.employment.currentJob.payCalc(st);
+            // [报告第 63 节] 同 choices[0]：currentJob 恒 null → 改走街头工作解析器。
+            var pay = _outdoorJobPayB(st);
             st.resources.cash = (st.resources.cash || 0) + Math.floor(pay * 0.6);
             st.resources.totalEarned =
               (st.resources.totalEarned || 0) + Math.floor(pay * 0.6);
@@ -42350,9 +42413,11 @@ function runLifeStageNarrative(state) {
           text: "💪 接私活，风险高但钱多",
           hint: "收入×2，但疲劳+20，可能受伤",
           apply: function (st) {
-            var pay = st.employment.currentJob
-              ? st.employment.currentJob.payCalc(st)
-              : 100;
+            // [报告第 63 节] 原 `st.employment.currentJob ? ….payCalc(st) : 100` ——
+            //   currentJob 恒 null → **真分支永远不可达**，实际恒用兜底值 100
+            //   （第 61 节标本 ⑨ 的镜像：那里是"回退支不可达"，这里是"真分支不可达"）。
+            //   改为：先按街头工作解析真实工钱，解析不到才用 100 兜底。
+            var pay = _outdoorJobPayB(st) || 100;
             var bonus = Math.floor(pay * 1.5);
             st.resources.cash = (st.resources.cash || 0) + bonus;
             st.resources.totalEarned = (st.resources.totalEarned || 0) + bonus;
@@ -58087,7 +58152,7 @@ function runLifeStageNarrative(state) {
         st.certificates.length > 0;
       // 检查还没有稳定工作（employment.currentJob === null 或 day < 30）
       var lookingForWork =
-        !st.employment || !st.employment.currentJob || st.player.day < 30;
+        !hasMainJob(st) || st.player.day < 30;
       return (
         st.player.phase === "street" &&
         hasCert &&
@@ -62430,7 +62495,7 @@ function runLifeStageNarrative(state) {
 
       if (typeof man !== "number" || man < 15) return false; // 检查 management>=15
 
-      if (!st.employment || !st.employment.currentJob) return false; // 检查 有职业
+      if (!hasMainJob(st)) return false; // 检查 有职业
 
       if (st.player.phase !== "street") return false; // 检查 街头阶段
 
@@ -66457,7 +66522,7 @@ function runLifeStageNarrative(state) {
 
       if (typeof sl !== "number" || sl < 15) return false; // 检查 sales>=15
 
-      if (!st.employment || !st.employment.currentJob) return false; // 检查 有职业
+      if (!hasMainJob(st)) return false; // 检查 有职业
 
       var rel = st.relationships && st.relationships["boss_li"]; // 检查 boss_li 关系
 
@@ -67695,7 +67760,7 @@ function runLifeStageNarrative(state) {
 
       if (typeof mgmt !== "number" || mgmt < 15) return false; // 检查 management>=15
 
-      if (!st.employment || !st.employment.currentJob) return false; // 检查 在职
+      if (!hasMainJob(st)) return false; // 检查 在职
 
       if (st.player.day < 18) return false; // 检查 中后期
 
@@ -68102,7 +68167,7 @@ function runLifeStageNarrative(state) {
       if (!st.talentNodes || Object.keys(st.talentNodes).length === 0)
         return false; // 检查 已激活天赋
 
-      if (!st.employment || !st.employment.currentJob) return false; // 检查 在职
+      if (!hasMainJob(st)) return false; // 检查 在职
 
       if (st.player.phase !== "corporate") return false; // 检查 职场阶段
 
@@ -69030,7 +69095,7 @@ function runLifeStageNarrative(state) {
 
       if (typeof mgmt !== "number" || mgmt < 15) return false; // 检查 management>=15
 
-      if (!st.employment || !st.employment.currentJob) return false; // 检查 在职
+      if (!hasMainJob(st)) return false; // 检查 在职
 
       if (st.player.phase !== "corporate") return false; // 检查 职场阶段
 
@@ -69753,7 +69818,7 @@ function runLifeStageNarrative(state) {
 
       if (st.weather && st.weather.current !== "stormy") return false; // 检查 暴雨
 
-      if (!st.employment || !st.employment.currentJob) return false; // 检查 已就业
+      if (!hasMainJob(st)) return false; // 检查 已就业
 
       if (st.player.phase !== "street") return false; // 检查 街头阶段
 
@@ -69977,7 +70042,7 @@ function runLifeStageNarrative(state) {
     conditions: function (st) {
       if (!st.talentNodes || !st.talentNodes["sales_management"]) return false; // 检查 天赋节点
 
-      if (!st.employment || !st.employment.currentJob) return false; // 检查 已就业
+      if (!hasMainJob(st)) return false; // 检查 已就业
 
       if (st.player.phase !== "street") return false; // 检查 街头阶段
 
@@ -70376,7 +70441,7 @@ function runLifeStageNarrative(state) {
 
       if (typeof fat !== "number" || fat <= 70) return false; // 检查 疲劳>70
 
-      if (!st.employment || !st.employment.currentJob) return false; // 检查 已就业
+      if (!hasMainJob(st)) return false; // 检查 已就业
 
       if (st.player.phase !== "street") return false; // 检查 街头阶段
 
@@ -70707,7 +70772,7 @@ function runLifeStageNarrative(state) {
 
       if (typeof wel !== "number" || wel < 15) return false; // 检查 welding>=15
 
-      if (!st.employment || !st.employment.currentJob) return false; // 检查 已就业
+      if (!hasMainJob(st)) return false; // 检查 已就业
 
       if (st.player.phase !== "street") return false; // 检查 街头阶段
 
@@ -70939,7 +71004,7 @@ function runLifeStageNarrative(state) {
 
       if (!rel || !rel.met) return false; // 检查 已结识
 
-      if (!st.employment || !st.employment.currentJob) return false; // 检查 已就业
+      if (!hasMainJob(st)) return false; // 检查 已就业
 
       if (st.player.phase !== "street") return false; // 检查 街头阶段
 
@@ -71349,7 +71414,7 @@ function runLifeStageNarrative(state) {
 
       if (typeof eng !== "number" || eng < 20) return false; // 检查 english>=20
 
-      if (!st.employment || !st.employment.currentJob) return false; // 检查 已就业
+      if (!hasMainJob(st)) return false; // 检查 已就业
 
       if (st.player.phase !== "street") return false; // 检查 街头阶段
 
@@ -72379,7 +72444,7 @@ function runLifeStageNarrative(state) {
 
       if (!hasWeld) return false; // 检查 天赋已点亮
 
-      if (!(st.employment && st.employment.currentJob)) return false; // 检查 有主业
+      if (!hasMainJob(st)) return false; // 检查 有主业
 
       if (st.flags && st.flags._r86WeldJob) return false; // 检查 未触发过
 
@@ -72399,16 +72464,13 @@ function runLifeStageNarrative(state) {
         apply: function (st) {
           st.resources.cash = (st.resources.cash || 0) + 150;
 
-          if (
-            st.employment &&
-            st.employment.currentJob &&
-            st.employment.currentJob.reputation !== undefined
-          )
-            st.employment.currentJob.reputation = Math.min(
-              100,
-
-              (st.employment.currentJob.reputation || 0) + 5,
-            );
+          // [报告第 63 节] 原块是**恒不执行的守卫型 no-op**：
+          //   `currentJob` 恒 null → 第一层条件即假 → `reputation` 从未被读写。
+          //   而 `reputation` 这个键**两个真实容器都没有**
+          //   （career.currentJob 无；街头工作定义无）→ 即使容器活了，`!== undefined`
+          //   仍为假，块依旧不执行。属"幻影容器里的幻影子字段"。
+          //   删除不改变任何行为；若要恢复"工头记功"语义，须**先建消费端**
+          //   （晋升/报酬加成），届时再补容器 —— 不先建写入口（第 63 节纪律）。
 
           st.flags._r86WeldJob = true;
 
@@ -72536,7 +72598,7 @@ function runLifeStageNarrative(state) {
     conditions: function (st) {
       if ((st.needs.fatigue || 0) < 70) return false; // 检查 疲劳>=70
 
-      if (!(st.employment && st.employment.currentJob)) return false; // 检查 有主业
+      if (!hasMainJob(st)) return false; // 检查 有主业
 
       if (st.flags && st.flags._r87FatCareer) return false; // 检查 未触发过
 
@@ -72920,7 +72982,7 @@ function runLifeStageNarrative(state) {
 
       if (total < 40) return false; // 检查 累计>=40
 
-      if (!(st.employment && st.employment.currentJob)) return false; // 检查 有主业
+      if (!hasMainJob(st)) return false; // 检查 有主业
 
       if (st.flags && st.flags._r89AfCareer) return false; // 检查 未触发过
 
@@ -73746,7 +73808,7 @@ function runLifeStageNarrative(state) {
 
       if (w !== "typhoon" && w !== "stormy") return false; // 检查 台风/风暴
 
-      if (!(st.employment && st.employment.currentJob)) return false; // 检查 有主业
+      if (!hasMainJob(st)) return false; // 检查 有主业
 
       if (st.flags && st.flags._r92TyJob) return false; // 检查 未触发过
 
@@ -73971,7 +74033,7 @@ function runLifeStageNarrative(state) {
 
       if (!hasMgmt) return false; // 检查 天赋已点亮
 
-      if (!(st.employment && st.employment.currentJob)) return false; // 检查 有主业
+      if (!hasMainJob(st)) return false; // 检查 有主业
 
       if (st.flags && st.flags._r93MgmtJob) return false; // 检查 未触发过
 
@@ -74921,7 +74983,7 @@ function runLifeStageNarrative(state) {
       if (!st.talentNodes || Object.keys(st.talentNodes).length === 0)
         return false; // 检查 已激活天赋
 
-      if (!(st.employment && st.employment.currentJob)) return false; // 检查 有主业
+      if (!hasMainJob(st)) return false; // 检查 有主业
 
       if (
         !st.skills ||
@@ -75065,7 +75127,7 @@ function runLifeStageNarrative(state) {
       )
         return false; // 检查 管理>=15
 
-      if (!(st.employment && st.employment.currentJob)) return false; // 检查 有主业
+      if (!hasMainJob(st)) return false; // 检查 有主业
 
       if (st.flags && st.flags._r102Mgmt) return false; // 检查 未触发过
 
@@ -76010,7 +76072,7 @@ function runLifeStageNarrative(state) {
       if (!st.talentNodes || Object.keys(st.talentNodes).length === 0)
         return false; // 检查 已激活天赋
 
-      if (!(st.employment && st.employment.currentJob)) return false; // 检查 有主业
+      if (!hasMainJob(st)) return false; // 检查 有主业
 
       if (
         !st.skills ||
@@ -76302,7 +76364,7 @@ function runLifeStageNarrative(state) {
     conditions: function (st) {
       if (!st.weather || st.weather.current !== "heatwave") return false; // 检查 热浪
 
-      if (!(st.employment && st.employment.currentJob)) return false; // 检查 有主业
+      if (!hasMainJob(st)) return false; // 检查 有主业
 
       if (st.flags && st.flags._r106Heat) return false; // 检查 未触发过
 
@@ -78006,7 +78068,7 @@ function runLifeStageNarrative(state) {
       )
         return false; // 检查 焊接>=15
 
-      if (!(st.employment && st.employment.currentJob)) return false; // 检查 有主业
+      if (!hasMainJob(st)) return false; // 检查 有主业
 
       if (st.flags && st.flags._r113WeldJob) return false; // 检查 未触发过
 
@@ -78213,7 +78275,7 @@ function runLifeStageNarrative(state) {
       if (((st.skills.english && st.skills.english.level) || 0) < 10)
         return false; // 检查 英语>=10
 
-      if (!(st.employment && st.employment.currentJob)) return false; // 检查 有主业
+      if (!hasMainJob(st)) return false; // 检查 有主业
 
       if (st.flags && st.flags._r114SalesEng) return false; // 检查 未触发过
 
@@ -78282,7 +78344,7 @@ function runLifeStageNarrative(state) {
       if (!st.reputation || (st.reputation.bank || 0) < 30) return false; // 检查 银行声望>=30
 
       if (
-        !(st.employment && st.employment.currentJob) &&
+        !hasMainJob(st) &&
         !(st.sideHustle && st.sideHustle.active)
       )
         return false; // 检查 有收入来源
@@ -78716,7 +78778,7 @@ function runLifeStageNarrative(state) {
     conditions: function (st) {
       if (!st.weather || st.weather.current !== "heatwave") return false; // 检查 热浪
 
-      if (!(st.employment && st.employment.currentJob)) return false; // 检查 有主业
+      if (!hasMainJob(st)) return false; // 检查 有主业
 
       if (st.flags && st.flags._r96HeatJob) return false; // 检查 未触发过
 
@@ -78859,7 +78921,7 @@ function runLifeStageNarrative(state) {
       if (!st.talentNodes || Object.keys(st.talentNodes).length === 0)
         return false; // 检查 已激活天赋
 
-      if (!(st.employment && st.employment.currentJob)) return false; // 检查 有主业
+      if (!hasMainJob(st)) return false; // 检查 有主业
 
       if (
         !st.skills ||
@@ -79065,7 +79127,7 @@ function runLifeStageNarrative(state) {
     conditions: function (st) {
       if (!st.weather || st.weather.current !== "stormy") return false; // 检查 暴风雨
 
-      if (!(st.employment && st.employment.currentJob)) return false; // 检查 有主业
+      if (!hasMainJob(st)) return false; // 检查 有主业
 
       if (st.flags && st.flags._r97StormJob) return false; // 检查 未触发过
 
@@ -79283,7 +79345,7 @@ function runLifeStageNarrative(state) {
 
       if (st._eraState.stageId !== "decline") return false; // 检查 衰退期
 
-      if (!(st.employment && st.employment.currentJob)) return false; // 检查 有主业
+      if (!hasMainJob(st)) return false; // 检查 有主业
 
       if (st.flags && st.flags._r98EraDec) return false; // 检查 未触发过
 
@@ -79724,7 +79786,7 @@ function runLifeStageNarrative(state) {
       )
         return false; // 检查 英语>=20
 
-      if (!(st.employment && st.employment.currentJob)) return false; // 检查 有主业
+      if (!hasMainJob(st)) return false; // 检查 有主业
 
       if (st.flags && st.flags._r99EngJob) return false; // 检查 未触发过
 
@@ -80010,7 +80072,7 @@ function runLifeStageNarrative(state) {
 
       if (typeof mg !== "number" || mg < 15) return false; // 检查 management>=15
 
-      if (!st.employment || !st.employment.currentJob) return false; // 检查 有职业
+      if (!hasMainJob(st)) return false; // 检查 有职业
 
       var rel = st.relationships && st.relationships["boss_li"]; // 检查 boss_li 关系
 
@@ -80237,7 +80299,7 @@ function runLifeStageNarrative(state) {
       if (typeof st.player.morality !== "number" || st.player.morality < 70)
         return false; // 检查 高道德
 
-      if (!st.employment || !st.employment.currentJob) return false; // 检查 有职业
+      if (!hasMainJob(st)) return false; // 检查 有职业
 
       var rel = st.relationships && st.relationships["boss_li"]; // 检查 boss_li 关系
 
@@ -80404,7 +80466,7 @@ function runLifeStageNarrative(state) {
       if (typeof st.player.morality !== "number" || st.player.morality >= 40)
         return false; // 检查 低道德
 
-      if (!st.employment || !st.employment.currentJob) return false; // 检查 有职业
+      if (!hasMainJob(st)) return false; // 检查 有职业
 
       if (st.player.phase !== "street") return false; // 检查 街头阶段
 
@@ -81377,7 +81439,7 @@ function runLifeStageNarrative(state) {
 
       if (st.needs.hygiene >= 20) return false; // 检查 卫生<20
 
-      if (!(st.employment && st.employment.currentJob)) return false; // 检查 有主业
+      if (!hasMainJob(st)) return false; // 检查 有主业
 
       if (st.flags && st.flags._r116HygieneJob) return false; // 检查 未触发过
 
@@ -81445,7 +81507,7 @@ function runLifeStageNarrative(state) {
       if (((st.skills.management && st.skills.management.level) || 0) < 15)
         return false; // 检查 管理>=15
 
-      if (!(st.employment && st.employment.currentJob)) return false; // 检查 有主业
+      if (!hasMainJob(st)) return false; // 检查 有主业
 
       if (st.flags && st.flags._r116TalentMgmt) return false; // 检查 未触发过
 
@@ -81746,7 +81808,7 @@ function runLifeStageNarrative(state) {
       if (((st.skills.coding && st.skills.coding.level) || 0) < 10)
         return false; // 检查 编程>=10
 
-      if (!(st.employment && st.employment.currentJob)) return false; // 检查 有主业
+      if (!hasMainJob(st)) return false; // 检查 有主业
 
       if (st.flags && st.flags._r118FreqCoding) return false; // 检查 未触发过
 
@@ -84093,7 +84155,7 @@ function runLifeStageNarrative(state) {
 
       if (typeof man !== "number" || man < 15) return false; // 检查 management>=15
 
-      if (!st.employment || !st.employment.currentJob) return false; // 检查 已有工作
+      if (!hasMainJob(st)) return false; // 检查 已有工作
 
       if (st.player.phase !== "street") return false; // 检查 街头阶段
 
@@ -84242,7 +84304,7 @@ function runLifeStageNarrative(state) {
       if (!(st.talentNodes && st.talentNodes["management_crew_lead"]))
         return false; // 检查 天赋节点
 
-      if (!st.employment || !st.employment.currentJob) return false; // 检查 有职业
+      if (!hasMainJob(st)) return false; // 检查 有职业
 
       if (typeof st.needs.happiness !== "number" || st.needs.happiness >= 55)
         return false; // 检查 幸福偏低
@@ -84386,7 +84448,7 @@ function runLifeStageNarrative(state) {
     conditions: function (st) {
       if (!(st.talentNodes && st.talentNodes["sales_management"])) return false; // 检查 天赋节点
 
-      if (!st.employment || !st.employment.currentJob) return false; // 检查 有职业
+      if (!hasMainJob(st)) return false; // 检查 有职业
 
       if (st.player.phase !== "street") return false; // 检查 街头阶段
 
@@ -84532,7 +84594,7 @@ function runLifeStageNarrative(state) {
 
       if (typeof wel !== "number" || wel < 20) return false; // 检查 welding>=20
 
-      if (!st.employment || !st.employment.currentJob) return false; // 检查 已有工作
+      if (!hasMainJob(st)) return false; // 检查 已有工作
 
       if (st.player.phase !== "street") return false; // 检查 街头阶段
 
@@ -84614,7 +84676,7 @@ function runLifeStageNarrative(state) {
 
       if (typeof w !== "number" || w < 10) return false; // 检查 welding>=10
 
-      if (!st.employment || !st.employment.currentJob) return false; // 检查 有职业
+      if (!hasMainJob(st)) return false; // 检查 有职业
 
       if (st.player.phase !== "street") return false; // 检查 街头阶段
 
@@ -85065,7 +85127,7 @@ function runLifeStageNarrative(state) {
 
       if (typeof rep !== "number" || rep < 15) return false; // 检查 repair>=15
 
-      if (!st.employment || !st.employment.currentJob) return false; // 检查 有职业
+      if (!hasMainJob(st)) return false; // 检查 有职业
 
       if (st.player.phase !== "street") return false; // 检查 街头阶段
 
@@ -85339,7 +85401,7 @@ function runLifeStageNarrative(state) {
 
       if (typeof w !== "number" || w < 15) return false; // 检查 welding>=15
 
-      if (!st.employment || !st.employment.currentJob) return false; // 检查 有职业
+      if (!hasMainJob(st)) return false; // 检查 有职业
 
       if (st.player.phase !== "street") return false; // 检查 街头阶段
 
@@ -88753,7 +88815,7 @@ function runLifeStageNarrative(state) {
     conditions: function (st) {
       if (st.flags._corpYearReviewDone) return false;
       if (!st.player || st.player.phase !== "corporate") return false;
-      if (!st.employment || !st.employment.currentJob) return false;
+      if (!hasMainJob(st)) return false;
       var day = st.player.day || 0;
       var dayOfYear = ((day - 1) % 365) + 1;
       if (dayOfYear < 300) return false;
@@ -88835,7 +88897,7 @@ function runLifeStageNarrative(state) {
       if (!st.relationships || !st.relationships.boss_li || !st.relationships.boss_li.met) return false; // [Layer3] 叙事涉及陈经理/李总
       if (st.flags._corpOfficePoliticsDone) return false;
       if (!st.player || st.player.phase !== "corporate") return false;
-      if (!st.employment || !st.employment.currentJob) return false;
+      if (!hasMainJob(st)) return false;
       var tenure = st.employment.tenureDays || 0;
       if (tenure < 30) return false;
       return true;
@@ -89085,7 +89147,7 @@ function runLifeStageNarrative(state) {
     conditions: function (st) {
       // [自洽修复] 学历≥本科(1) + 未在职 + 天数适中
       if ((st.player.education || 0) < 1) return false;
-      if (st.employment && st.employment.currentJob) return false;
+      if (hasMainJob(st)) return false;
       if (st.flags && st.flags._educationDoorOpened) return false;
       if (st.player.day < 30 || st.player.day > 300) return false;
       if (st.player.phase !== "street") return false;
@@ -91324,7 +91386,7 @@ function runLifeStageNarrative(state) {
       "加班到十点，老板李总把信封推到你面前：「这个月账上有点‘灵活空间’，你懂的。签了字，有你一份。」\n\n你看着那叠钞票，想起刚入职时立过的规矩。",
     conditions: function (st) {
       // 检查 必须已就业（才能遇到老板贿赂场景）
-      if (!st.employment || !st.employment.currentJob) return false;
+      if (!hasMainJob(st)) return false;
       // 检查 必须已认识老板李总
       var rel = st.relationships && st.relationships.boss_li;
       if (!rel || !rel.met) return false;
@@ -91620,7 +91682,7 @@ function runLifeStageNarrative(state) {
       var sk = st.skills && st.skills.management;
       if (!sk || sk.level < 40) return false;
       // 检查 必须已就业（职场场景）
-      if (!st.employment || !st.employment.currentJob) return false;
+      if (!hasMainJob(st)) return false;
       // 检查 游戏进程
       if (st.player.day < 40) return false;
       // 检查 一次性
@@ -93918,7 +93980,7 @@ function runLifeStageNarrative(state) {
         var highSkill = Object.keys(skills).filter(function (k) {
           return skills[k] && (skills[k].level || 0) >= 20;
         });
-        var hasJob = !!(st.employment && st.employment.currentJob);
+        var hasJob = hasMainJob(st);
         return (
           st.player.day >= 30 &&
           hasJob &&
@@ -111539,7 +111601,7 @@ if (typeof window !== "undefined") {
       if (st.player && st.player.day < 15) return false;
       // 曾经有过工作，但现在失业了
       var hadJob = st.flags && st.flags._everHadJob;
-      var currentlyJobless = !st.employment || !st.employment.currentJob;
+      var currentlyJobless = !hasMainJob(st);
       return hadJob && currentlyJobless;
     },
     apply: function (st) {
@@ -117200,8 +117262,7 @@ if (typeof window !== "undefined") {
       if ((st.player.day || 0) < 60) return false;
       // 有一份稳定工作（employment 或 career 任一存在即视为在职）
       var employed =
-        (st.employment && st.employment.currentJob) ||
-        (st.career && st.career.currentJob);
+        hasMainJob(st);
       if (!employed) return false;
       return true;
     },
@@ -129650,7 +129711,7 @@ const LIFE_NODES = {
           st.flags._retirementType = "wealthy";
           st.flags._retired = true;
           // [全系统自洽修复] 域G A类修复: 行内 effect 使用 st.employment 替代 st.career（R177 修复了 switch-case 兜底但 inline effect 优先级更高）
-          var _empJob = (st.employment && st.employment.currentJob) ? st.employment.currentJob : null;
+          var _empJob = (st.career && st.career.currentJob) ? st.career.currentJob : null;
           st.flags._pensionBase = _empJob ? (_empJob.salary || 5000) : 5000;
           // [全系统自洽修复] 域G R520 P1: st.needs 守卫
           if (!st.needs) st.needs = { hunger: 50, fatigue: 30, hygiene: 60, happiness: 50 };
@@ -129669,7 +129730,7 @@ const LIFE_NODES = {
           // applyNodeChoice 中 inline effect 优先、switch兜底被跳过(_inlineApplied)，
           // 导致"返聘做顾问"路径 _retired=true 但养老金+顾问费(daily_pipeline:2014块要求
           // _retired&&_pensionBase 双真)永不发放=纯惩罚陷阱→与兜底路径对齐补基数
-          var _advEmpJob = (st.employment && st.employment.currentJob) ? st.employment.currentJob : null;
+          var _advEmpJob = (st.career && st.career.currentJob) ? st.career.currentJob : null;
           st.flags._pensionBase = _advEmpJob ? (_advEmpJob.salary || 5000) : 5000;
           var skillXp = Math.min(
             500,
@@ -130007,7 +130068,7 @@ function applyNodeChoice(state, nodeId, choiceKey) {
     case "retire_wealthy":
       state.flags._retirementType = "wealthy";
       state.flags._retired = true;
-      var _empJob = (state.employment && state.employment.currentJob) ? state.employment.currentJob : null;
+      var _empJob = (state.career && state.career.currentJob) ? state.career.currentJob : null;
       state.flags._pensionBase = _empJob ? (_empJob.salary || 5000) : 5000;
       // [全系统自洽修复] 域G A类修复: state.needs 守卫(防止旧存档崩溃)
       if (state.needs) state.needs.happiness = Math.min(100, (state.needs.happiness || 50) + 20);
@@ -130016,7 +130077,7 @@ function applyNodeChoice(state, nodeId, choiceKey) {
       state.flags._retirementType = "advisor";
       state.flags._retired = true;
       // 退休金基数字段对齐（兜底路径，inline effect 优先）
-      var _advJob = (state.employment && state.employment.currentJob) ? state.employment.currentJob : null;
+      var _advJob = (state.career && state.career.currentJob) ? state.career.currentJob : null;
       state.flags._pensionBase = _advJob ? (_advJob.salary || 5000) : 5000;
       state.resources.cash = (state.resources.cash || 0) + 2000;
       break;
@@ -165030,7 +165091,9 @@ function applySectorFeedback(state) {
   // 但影响力微弱到不会破坏平衡——一个行业要持续升温，
   // 仍需外部新闻/事件的配合。
   if (params.playerWealthLevel >= 4 || params.playerFameLevel >= 4) {
-    var job = state.employment && state.employment.currentJob;
+    // [报告第 63 节] 改指真实容器。
+    //   ⚠️ 本块仍然不可达：`getJobSector` **全库无定义**（`typeof` 守卫恒 false）。
+    var job = getCurrentStreetJob(state) || (state.career && state.career.currentJob);
     if (job && typeof getJobSector === "function") {
       var sector = getJobSector(job);
       if (sector && WORLD_SECTORS.indexOf(sector) >= 0) {
@@ -186909,6 +186972,92 @@ const STREET_JOBS = [
 /** 根据 ID 获取工作定义 */
 function getJobById(jobId) {
   return STREET_JOBS.find((j) => j.id === jobId) || null;
+}
+
+// ============================================================================
+// [报告第 63 节 · 果实 G22] 「有主业」——单一事实来源
+// ============================================================================
+//
+// 【问题】`state.employment.currentJob` 全库 **0 写入 / 104 处代码读取**
+//   （`main.js:4762` 的 `doStreetJob` 主动写 `currentJob: null` 且从不回填）。
+//   于是 `!st.employment.currentJob` 恒为 `true` → **49 个事件被自己的门控判死**。
+//
+// 【为什么不能"补一个写入端"】`employment` 容器有三个槽位
+//   `{ currentJob, jobStartDay, completedShifts }`，其中只有 `completedShifts` 是活的
+//   （43 处消费）。`currentJob` / `jobStartDay` 从建库起就无人写。
+//   补写入端会**一次性放开近百个门槛**（第 57.2-A 已证），且叙事上无法自洽
+//   （街头零工与职业路径岗位是两个不同的东西）。
+//
+// 【语义切分（本节核心结论）】`employment.currentJob` 被当作**两个**概念的替身：
+//   ① 街头线「最近在打零工」  → 真实容器 `flags._lastWorkDay`
+//      （`main.js:5260` 每次 `doStreetJob` 写入；`daily_pipeline.js:1389`
+//        在"本日未上工"时复位为 0 → 它天然就是「工作记录未中断」）
+//   ② 职业线「有一份职业路径岗位」→ 真实容器 `career.currentJob`
+//      （6 处写入 / 536 处读取，形状 `{path, levelId, levelName, salary,
+//        workDays, startDay, performance}`）
+//
+// 【与既有惯例对齐】`career_linkage_events.js:619` 早已手写过同一判据：
+//   `// 有一份稳定工作（employment 或 career 任一存在即视为在职）`
+//   本 helper 就是把该定义收敛成**单一事实来源**（纪律 7），
+//   并顺带让 `trigger_registry.js` 的 `has_job` / `unemployed` 模板复用同一判据
+//   （报告第 58 节立项的「语义去重」）。
+//
+// 【⚠️ 不用 `employment.completedShifts` 的原因】它是"曾经上过工"的**永久**记录
+//   （首次上工后永不清零）→ 用它会让"第 1 天打过一次零工、第 300 天已失业"的玩家
+//   依然被判为"有主业"。`flags._lastWorkDay` 才是游戏自己的"在职"定义。
+//
+// 【上游已保证的边界】事件引擎在 `events_core.js:499` 按
+//   `e.phase === state.player.phase` 严格过滤，故 street 事件不会在 corporate 阶段触发，
+//   本判据的"联合"语义不会造成跨阶段叙事矛盾。
+
+/**
+ * 玩家是否「有主业」——街头零工或职业路径岗位，任一即为真。
+ * @param {object} st 游戏状态
+ * @returns {boolean}
+ */
+function hasMainJob(st) {
+  if (!st) return false;
+  // ① 职业路径岗位（corporate 线）
+  if (st.career && st.career.currentJob) return true;
+  // ② 街头线：工作记录未中断（daily_pipeline 会在空档日复位为 0）
+  if (st.flags && (st.flags._lastWorkDay || 0) > 0) return true;
+  return false;
+}
+
+/**
+ * 当前正在从事的**街头工作定义对象**（含 name / payCalc / risk 等）。
+ * 真实容器：`flags._lastStreetJobId`（main.js:5263 写入）+ `getJobById`。
+ * 无街头工作时返回 null —— 调用方必须自行判空。
+ * @param {object} st 游戏状态
+ * @returns {object|null}
+ */
+function getCurrentStreetJob(st) {
+  var id = st && st.flags && st.flags._lastStreetJobId;
+  if (!id) return null;
+  return typeof getJobById === "function" ? getJobById(id) : null;
+}
+
+/**
+ * 当前岗位的**显示名**（街头工作 → 职业路径岗位 → null）。
+ * 替代原先散落在 14 个文件里的 `employment.currentJob.name` / `.title` ——
+ * 那两个键在**任何真实容器里都不存在**（街头工作是 `name`，职业岗位是 `levelName`）。
+ * @param {object} st 游戏状态
+ * @returns {string|null}
+ */
+function jobDisplayName(st) {
+  if (!st) return null;
+  var cj = st.career && st.career.currentJob;
+  if (cj) return cj.levelName || cj.levelId || null;
+  var sj = getCurrentStreetJob(st);
+  if (sj) return sj.name || null;
+  return null;
+}
+
+// [报告第 63 节] 导出到 window —— 与 getJobById 同一惯例。
+if (typeof window !== "undefined") {
+  window.hasMainJob = hasMainJob;
+  window.getCurrentStreetJob = getCurrentStreetJob;
+  window.jobDisplayName = jobDisplayName;
 }
 
 // P1-2 CLS 命名空间注册
@@ -337155,7 +337304,7 @@ if (typeof window !== "undefined") {
       conditions: function (st) {
         if (st.gameOver) return false;
         if (!st.flags || st.flags._c645MasteryDone) return false;
-        return st.employment && st.employment.currentJob && st.investment && (st.investment.stockHoldings || st.investment.btcHoldings);
+        return hasMainJob(st) && st.investment && (st.investment.stockHoldings || st.investment.btcHoldings);
       },
       choices: [
         { text: "💰 加大投资", hint: "会计XP+5,现金+2000", apply: function (st) {
@@ -337691,7 +337840,7 @@ if (typeof window !== "undefined") {
       conditions: function (st) {
         if (st.gameOver) return false;
         if (!st.flags || st.flags._c655MasteryDone) return false;
-        return st.employment && st.employment.currentJob && st.investment && (st.investment.stockHoldings || st.investment.btcHoldings);
+        return hasMainJob(st) && st.investment && (st.investment.stockHoldings || st.investment.btcHoldings);
       },
       choices: [
         { text: "💰 加大投资", hint: "会计XP+6,现金+3000", apply: function (st) {
@@ -338392,7 +338541,7 @@ if (typeof window !== "undefined") {
         if (!st.investment) return false;
         var hasInv = (st.investment.stockHoldings && st.investment.stockHoldings.length > 0) ||
                       (st.investment.btcHoldings && st.investment.btcHoldings > 0);
-        return hasInv && st.employment && st.employment.currentJob && st.player && st.player.day >= 100;
+        return hasInv && hasMainJob(st) && st.player && st.player.day >= 100;
       },
       choices: [
         {
@@ -338427,7 +338576,7 @@ if (typeof window !== "undefined") {
       ],
       text: function (st) {
         if (!st) return null;
-        return "做" + (st.employment && st.employment.currentJob && st.employment.currentJob.title ? st.employment.currentJob.title : "这行") + "多年,你对相关行业的投资有了天然优势——'这就是认知变现。'";
+        return "做" + (jobDisplayName(st) || "这行") + "多年,你对相关行业的投资有了天然优势——'这就是认知变现。'";
       }
     },
     {
@@ -338441,7 +338590,7 @@ if (typeof window !== "undefined") {
       conditions: function (st) {
         if (st.gameOver) return false;
         if (st.flags && st.flags._c685LifeCd) return false;
-        return st.employment && st.employment.currentJob && st.player && st.player.day >= 150;
+        return hasMainJob(st) && st.player && st.player.day >= 150;
       },
       choices: [
         {
@@ -338580,7 +338729,7 @@ if (typeof window !== "undefined") {
         if (!st.investment) return false;
         var hasInv = (st.investment.stockHoldings && st.investment.stockHoldings.length > 0) ||
                       (st.investment.btcHoldings && st.investment.btcHoldings > 0);
-        return hasInv && st.employment && st.employment.currentJob && st.player && st.player.day >= 100;
+        return hasInv && hasMainJob(st) && st.player && st.player.day >= 100;
       },
       choices: [
         {
@@ -338615,7 +338764,7 @@ if (typeof window !== "undefined") {
       ],
       text: function (st) {
         if (!st) return null;
-        return "做" + (st.employment && st.employment.currentJob && st.employment.currentJob.title ? st.employment.currentJob.title : "这行") + "多年,你考虑把职业经验转化为投资优势——'懂行的人投资,看得更准。'";
+        return "做" + (jobDisplayName(st) || "这行") + "多年,你考虑把职业经验转化为投资优势——'懂行的人投资,看得更准。'";
       }
     },
     {
@@ -338629,7 +338778,7 @@ if (typeof window !== "undefined") {
       conditions: function (st) {
         if (st.gameOver) return false;
         if (st.flags && st.flags._c693AnnivCd) return false;
-        return st.employment && st.employment.currentJob && st.player && st.player.day >= 180;
+        return hasMainJob(st) && st.player && st.player.day >= 180;
       },
       choices: [
         {
@@ -338766,7 +338915,7 @@ if (typeof window !== "undefined") {
       conditions: function (st) {
         if (st.gameOver) return false;
         if (st.flags && st.flags._c701BridgeCd) return false;
-        return st.employment && st.employment.currentJob && st.player && st.player.day >= 80;
+        return hasMainJob(st) && st.player && st.player.day >= 80;
       },
       choices: [
         {
@@ -343040,7 +343189,7 @@ for(var i=0;i<E.length;i++){var exists=false;for(var j=0;j<RANDOM_EVENTS.length;
       text: function (st) {
         if (!st) return null;
         var jobName = "无";
-        if (st.employment && st.employment.currentJob) jobName = st.employment.currentJob.name || "在职";
+        var _jdName = jobDisplayName(st); if (_jdName) jobName = _jdName;
         return "当前职业" + jobName + "——'这就是你的职业故事。'";
       }
     },
@@ -343202,7 +343351,7 @@ for(var i=0;i<E.length;i++){var exists=false;for(var j=0;j<RANDOM_EVENTS.length;
       text: function (st) {
         if (!st) return null;
         var jobName = "无";
-        if (st.employment && st.employment.currentJob) jobName = st.employment.currentJob.name || "在职";
+        var _jdName = jobDisplayName(st); if (_jdName) jobName = _jdName;
         return "当前职业" + jobName + "——'这就是你的职业故事。'";
       }
     },
@@ -343570,7 +343719,7 @@ for(var i=0;i<E.length;i++){var exists=false;for(var j=0;j<RANDOM_EVENTS.length;
       text: function (st) {
         if (!st) return null;
         var jobName = "无";
-        if (st.employment && st.employment.currentJob) jobName = st.employment.currentJob.name || "在职";
+        var _jdName = jobDisplayName(st); if (_jdName) jobName = _jdName;
         return "当前职业" + jobName + "——'这就是你的职业故事。'";
       }
     },
@@ -343732,7 +343881,7 @@ for(var i=0;i<E.length;i++){var exists=false;for(var j=0;j<RANDOM_EVENTS.length;
       text: function (st) {
         if (!st) return null;
         var jobName = "无";
-        if (st.employment && st.employment.currentJob) jobName = st.employment.currentJob.name || "在职";
+        var _jdName = jobDisplayName(st); if (_jdName) jobName = _jdName;
         return "当前职业" + jobName + "——'这就是你的职业故事。'";
       }
     },
@@ -343894,7 +344043,7 @@ for(var i=0;i<E.length;i++){var exists=false;for(var j=0;j<RANDOM_EVENTS.length;
       text: function (st) {
         if (!st) return null;
         var jobName = "无";
-        if (st.employment && st.employment.currentJob) jobName = st.employment.currentJob.name || "在职";
+        var _jdName = jobDisplayName(st); if (_jdName) jobName = _jdName;
         return "当前职业" + jobName + "——'这就是你的职业故事。'";
       }
     },
@@ -344056,7 +344205,7 @@ for(var i=0;i<E.length;i++){var exists=false;for(var j=0;j<RANDOM_EVENTS.length;
       text: function (st) {
         if (!st) return null;
         var jobName = "无";
-        if (st.employment && st.employment.currentJob) jobName = st.employment.currentJob.name || "在职";
+        var _jdName = jobDisplayName(st); if (_jdName) jobName = _jdName;
         return "当前职业" + jobName + "——'这就是你的职业故事。'";
       }
     },
@@ -344231,8 +344380,8 @@ for(var i=0;i<E.length;i++){var exists=false;for(var j=0;j<RANDOM_EVENTS.length;
       text: function (st) {
         if (!st) return null;
         var jobName = "无";
-        if (st.employment && st.employment.currentJob) jobName = st.employment.currentJob.name || "在职";
-        var jobDays = (st.employment && st.employment.currentJob && st.employment.currentJob.workDays) || 0;
+        var _jdName = jobDisplayName(st); if (_jdName) jobName = _jdName;
+        var jobDays = (st.career && st.career.currentJob && st.career.currentJob.workDays) || 0;
         return "当前职业" + jobName + "，已工作" + jobDays + "天——'这就是你的职业故事。'";
       }
     },
@@ -344457,7 +344606,7 @@ for(var i=0;i<E.length;i++){var exists=false;for(var j=0;j<RANDOM_EVENTS.length;
       text: function (st) {
         if (!st) return null;
         var jobName = "无";
-        if (st.employment && st.employment.currentJob) jobName = st.employment.currentJob.name || "在职";
+        var _jdName = jobDisplayName(st); if (_jdName) jobName = _jdName;
         return "当前职业" + jobName + "——'这就是你的职业故事。'";
       }
     },
@@ -347609,7 +347758,7 @@ for(var i=0;i<E.length;i++){var exists=false;for(var j=0;j<RANDOM_EVENTS.length;
       title: "职业日志", story: "你的职业变化正在书写故事——每一步,都值得记录。",
       triggers: { minDay: 140, interval: 180, maxRepeats: 3, excludeFlags: ["_c859LogCd"] },
       conditions: function (st) { if (!st || st.gameOver) return false; if (st.flags && st.flags._c859LogCd) return false; return st.player && st.player.day >= 140 && st.employment; },
-      text: function (st) { if (!st) return null; var j = "无"; if (st.employment && st.employment.currentJob) j = st.employment.currentJob.name || "在职"; return "当前职业" + j + "——'这就是你的职业故事。'"; },
+      text: function (st) { if (!st) return null; var j = jobDisplayName(st) || "无"; return "当前职业" + j + "——'这就是你的职业故事。'"; },
       choices: [
         { text: "📜 记录", hint: "心智+20,置_c859Chronicler", apply: function (st) { if (!st) return; st.flags = st.flags || {}; st.flags._c859LogCd = true; st.flags._c859Chronicler = true; if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 20); if (typeof StateManager !== "undefined") { StateManager.addMessage("📖 '每一步都值得记录。' 心智+20。", "success"); } } },
         { text: "🚀 展望", hint: "智力+18,魅力+15,置_c859Visionary", apply: function (st) { if (!st) return; st.flags = st.flags || {}; st.flags._c859LogCd = true; st.flags._c859Visionary = true; if (st.player) { st.player.intelligence = Math.min(100, (st.player.intelligence || 50) + 18); st.player.charm = Math.min(100, (st.player.charm || 50) + 15); } if (typeof StateManager !== "undefined") { StateManager.addMessage("🚀 '职业生涯需要远见。' 智力+18,魅力+15。", "info"); } } }
@@ -348506,7 +348655,7 @@ for(var i=0;i<E.length;i++){var exists=false;for(var j=0;j<RANDOM_EVENTS.length;
       text: function (st) {
         if (!st) return null;
         var jobName = "无";
-        if (st.employment && st.employment.currentJob) jobName = st.employment.currentJob.name || "在职";
+        var _jdName = jobDisplayName(st); if (_jdName) jobName = _jdName;
         return "当前职业" + jobName + "——'这就是你的职业故事。'";
       },
       choices: [
@@ -348838,7 +348987,7 @@ for(var i=0;i<E.length;i++){var exists=false;for(var j=0;j<RANDOM_EVENTS.length;
       title: "职业叙事", story: "你的职业变化正在书写故事——每一步,都值得记录。",
       triggers: { minDay: 250, interval: 300, maxRepeats: 3, excludeFlags: ["_c828NarrCd"] },
       conditions: function (st) { if (!st || st.gameOver) return false; if (st.flags && st.flags._c828NarrCd) return false; return st.player && st.player.day >= 250 && st.employment; },
-      text: function (st) { if (!st) return null; var j = "无"; if (st.employment && st.employment.currentJob) j = st.employment.currentJob.name || "在职"; return "当前职业" + j + "——'这就是你的职业故事。'"; },
+      text: function (st) { if (!st) return null; var j = jobDisplayName(st) || "无"; return "当前职业" + j + "——'这就是你的职业故事。'"; },
       choices: [
         { text: "📜 记录历程", hint: "心智+20,置_c828Chronicler",
           apply: function (st) { if (!st) return; st.flags = st.flags || {}; st.flags._c828NarrCd = true; st.flags._c828Chronicler = true; if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 20); if (typeof StateManager !== "undefined") { StateManager.addMessage("📖 '每一步都值得记录。' 心智+20。", "success"); } }
@@ -349097,7 +349246,7 @@ for(var i=0;i<E.length;i++){var exists=false;for(var j=0;j<RANDOM_EVENTS.length;
       title: "职业故事", story: "你的职业变化正在书写故事——每一步,都值得记录。",
       triggers: { minDay: 200, interval: 250, maxRepeats: 3, excludeFlags: ["_c835TaleCd"] },
       conditions: function (st) { if (!st || st.gameOver) return false; if (st.flags && st.flags._c835TaleCd) return false; return st.player && st.player.day >= 200 && st.employment; },
-      text: function (st) { if (!st) return null; var j = "无"; if (st.employment && st.employment.currentJob) j = st.employment.currentJob.name || "在职"; return "当前职业" + j + "——'这就是你的职业故事。'"; },
+      text: function (st) { if (!st) return null; var j = jobDisplayName(st) || "无"; return "当前职业" + j + "——'这就是你的职业故事。'"; },
       choices: [
         { text: "📜 记录历程", hint: "心智+20,置_c835Chronicler",
           apply: function (st) { if (!st) return; st.flags = st.flags || {}; st.flags._c835TaleCd = true; st.flags._c835Chronicler = true; if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 20); if (typeof StateManager !== "undefined") { StateManager.addMessage("📖 '每一步都值得记录。' 心智+20。", "success"); } }
@@ -349371,7 +349520,7 @@ for(var i=0;i<E.length;i++){var exists=false;for(var j=0;j<RANDOM_EVENTS.length;
       title: "职业记忆", story: "你的职业变化正在书写故事——每一步,都值得记录。",
       triggers: { minDay: 180, interval: 220, maxRepeats: 3, excludeFlags: ["_c843MemoCd"] },
       conditions: function (st) { if (!st || st.gameOver) return false; if (st.flags && st.flags._c843MemoCd) return false; return st.player && st.player.day >= 180 && st.employment; },
-      text: function (st) { if (!st) return null; var j = "无"; if (st.employment && st.employment.currentJob) j = st.employment.currentJob.name || "在职"; return "当前职业" + j + "——'这就是你的职业故事。'"; },
+      text: function (st) { if (!st) return null; var j = jobDisplayName(st) || "无"; return "当前职业" + j + "——'这就是你的职业故事。'"; },
       choices: [
         { text: "📜 记录", hint: "心智+20,置_c843Chronicler",
           apply: function (st) { if (!st) return; st.flags = st.flags || {}; st.flags._c843MemoCd = true; st.flags._c843Chronicler = true; if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 20); if (typeof StateManager !== "undefined") { StateManager.addMessage("📖 '每一步都值得记录。' 心智+20。", "success"); } }
@@ -349645,7 +349794,7 @@ for(var i=0;i<E.length;i++){var exists=false;for(var j=0;j<RANDOM_EVENTS.length;
       title: "职业笔记", story: "你的职业变化正在书写故事——每一步,都值得记录。",
       triggers: { minDay: 160, interval: 200, maxRepeats: 3, excludeFlags: ["_c851NoteCd"] },
       conditions: function (st) { if (!st || st.gameOver) return false; if (st.flags && st.flags._c851NoteCd) return false; return st.player && st.player.day >= 160 && st.employment; },
-      text: function (st) { if (!st) return null; var j = "无"; if (st.employment && st.employment.currentJob) j = st.employment.currentJob.name || "在职"; return "当前职业" + j + "——'这就是你的职业故事。'"; },
+      text: function (st) { if (!st) return null; var j = jobDisplayName(st) || "无"; return "当前职业" + j + "——'这就是你的职业故事。'"; },
       choices: [
         { text: "📜 记录", hint: "心智+20,置_c851Chronicler",
           apply: function (st) { if (!st) return; st.flags = st.flags || {}; st.flags._c851NoteCd = true; st.flags._c851Chronicler = true; if (st.player) st.player.mental = Math.min(100, (st.player.mental || 50) + 20); if (typeof StateManager !== "undefined") { StateManager.addMessage("📖 '每一步都值得记录。' 心智+20。", "success"); } }
@@ -355987,7 +356136,7 @@ for(var i=0;i<E.length;i++){var exists=false;for(var j=0;j<RANDOM_EVENTS.length;
         if (st.gameOver) return false;
         if (!st.flags || st.flags._e678CareerBoostCooldown) return false;
         var il = investLevel(st);
-        return il >= 2 && (st.employment && st.employment.currentJob);
+        return il >= 2 && hasMainJob(st);
       },
       choices: [
         { text: "📚 投资自己", hint: "各技能XP+5,智力+3", apply: function (st) {
@@ -358133,7 +358282,7 @@ for(var i=0;i<E.length;i++){var exists=false;for(var j=0;j<RANDOM_EVENTS.length;
         if (st.gameOver) return false;
         if (st.flags && st.flags._e679ConfCd) return false;
         if (!hasInvestment(st)) return false;
-        return st.employment && st.employment.currentJob && st.player && st.player.day >= 100;
+        return hasMainJob(st) && st.player && st.player.day >= 100;
       },
       choices: [
         {
@@ -365931,7 +366080,7 @@ for(var i=0;i<E.length;i++){var exists=false;for(var j=0;j<RANDOM_EVENTS.length;
       conditions: function (st) {
         if (st.gameOver) return false;
         if (st.flags && st.flags._f680MilestoneCd) return false;
-        return st.employment && st.employment.currentJob && st.player && st.player.day >= 90;
+        return hasMainJob(st) && st.player && st.player.day >= 90;
       },
       choices: [
         {
@@ -365966,7 +366115,7 @@ for(var i=0;i<E.length;i++){var exists=false;for(var j=0;j<RANDOM_EVENTS.length;
       ],
       text: function (st) {
         if (!st) return null;
-        var job = st.employment && st.employment.currentJob && st.employment.currentJob.title;
+        var job = jobDisplayName(st);
         return "回想这一路——" + (job ? "从做" + job + "开始" : "从最低处开始") + ",每一步都算数。'是时候停下来,看看自己走了多远。'";
       }
     },
@@ -368471,7 +368620,7 @@ for(var i=0;i<E.length;i++){var exists=false;for(var j=0;j<RANDOM_EVENTS.length;
       conditions: function (st) {
         if (!st || st.gameOver) return false;
         if (st.flags && st.flags._f711CareerCd) return false;
-        return st.player && st.player.day >= 120 && ((st.corporate && st.corporate.rank) || (st.employment && st.employment.currentJob));
+        return st.player && st.player.day >= 120 && ((st.corporate && st.corporate.rank) || hasMainJob(st));
       },
       choices: [
         {
@@ -368505,7 +368654,7 @@ for(var i=0;i<E.length;i++){var exists=false;for(var j=0;j<RANDOM_EVENTS.length;
         if (!st) return null;
         var rank = "无";
         if (st.corporate && st.corporate.rank) rank = st.corporate.rank;
-        else if (st.employment && st.employment.currentJob) rank = st.employment.currentJob.name || "在职";
+        else if (jobDisplayName(st)) rank = jobDisplayName(st);
         return "当前职级" + rank + "——'职业生涯,需要仪式感。'";
       }
     }
@@ -372661,7 +372810,7 @@ for(var i=0;i<E.length;i++){var exists=false;for(var j=0;j<RANDOM_EVENTS.length;
       conditions: function (st) {
         if (st.gameOver) return false;
         if (st.flags && st.flags._g681CareerCd) return false;
-        return st.employment && st.employment.currentJob && st.player && st.player.day >= 180;
+        return hasMainJob(st) && st.player && st.player.day >= 180;
       },
       choices: [
         {
@@ -372696,7 +372845,7 @@ for(var i=0;i<E.length;i++){var exists=false;for(var j=0;j<RANDOM_EVENTS.length;
       ],
       text: function (st) {
         if (!st) return null;
-        var job = st.employment && st.employment.currentJob && st.employment.currentJob.title;
+        var job = jobDisplayName(st);
         return "做" + (job ? job : "这份工作") + "已经半年多了——'是该继续深耕,还是看看别的机会?'";
       }
     }
@@ -372737,7 +372886,7 @@ for(var i=0;i<E.length;i++){var exists=false;for(var j=0;j<RANDOM_EVENTS.length;
       conditions: function (st) {
         if (st.gameOver) return false;
         if (st.flags && st.flags._g689PivotCd) return false;
-        return st.employment && st.employment.currentJob && st.player && st.player.day >= 180;
+        return hasMainJob(st) && st.player && st.player.day >= 180;
       },
       choices: [
         {
@@ -395354,7 +395503,7 @@ for(var i=0;i<E.length;i++){var exists=false;for(var j=0;j<RANDOM_EVENTS.length;
       conditions: function (st) {
         if (!st || !st.player || st.gameOver) return false;
         if (st.flags && st.flags._f826CareerWallDone) return false;
-        if (!st.employment || !st.employment.currentJob) return false;
+        if (!hasMainJob(st)) return false;
         return st.player.day >= 90;
       },
       text: function (st) {
@@ -395362,10 +395511,21 @@ for(var i=0;i<E.length;i++){var exists=false;for(var j=0;j<RANDOM_EVENTS.length;
         var d = st.player && st.player.day ? st.player.day : 0;
         var jobTitle = "打工人";
         try {
-          if (st.employment && st.employment.currentJob && st.employment.currentJob.path && typeof CAREER_PATHS !== "undefined") {
-            var path = CAREER_PATHS[st.employment.currentJob.path];
-            if (path && path.levels && path.levels[st.employment.currentJob.level]) {
-              jobTitle = path.levels[st.employment.currentJob.level].name || path.name || jobTitle;
+          // [报告第 63 节] 原读 `employment.currentJob.path` / `.level`（幻影容器 + 幻影键）。
+          //   真实容器 career.currentJob 有 `path`，但没有 `level` —— `CAREER_PATHS[p].levels`
+          //   是**数组**（按等级序号索引），而 career 存的是字符串 `levelId`。
+          //   故须用 findIndex 把 levelId 映射回序号（原写法即使容器活了也会取错等级）。
+          var _cj826 = st.career && st.career.currentJob;
+          if (_cj826 && _cj826.path && typeof CAREER_PATHS !== "undefined") {
+            var path = CAREER_PATHS[_cj826.path];
+            var _li826 = -1;
+            if (path && path.levels) {
+              for (var _k826 = 0; _k826 < path.levels.length; _k826++) {
+                if (path.levels[_k826] && path.levels[_k826].id === _cj826.levelId) { _li826 = _k826; break; }
+              }
+            }
+            if (_li826 >= 0) {
+              jobTitle = path.levels[_li826].name || path.name || jobTitle;
             }
           }
         } catch (e) {}

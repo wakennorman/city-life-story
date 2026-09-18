@@ -618,8 +618,7 @@
       if ((st.player.day || 0) < 60) return false;
       // 有一份稳定工作（employment 或 career 任一存在即视为在职）
       var employed =
-        (st.employment && st.employment.currentJob) ||
-        (st.career && st.career.currentJob);
+        hasMainJob(st);
       if (!employed) return false;
       return true;
     },

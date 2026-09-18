@@ -936,7 +936,7 @@
 
       if (typeof sl !== "number" || sl < 15) return false; // 检查 sales>=15
 
-      if (!st.employment || !st.employment.currentJob) return false; // 检查 有职业
+      if (!hasMainJob(st)) return false; // 检查 有职业
 
       var rel = st.relationships && st.relationships["boss_li"]; // 检查 boss_li 关系
 
@@ -2174,7 +2174,7 @@
 
       if (typeof mgmt !== "number" || mgmt < 15) return false; // 检查 management>=15
 
-      if (!st.employment || !st.employment.currentJob) return false; // 检查 在职
+      if (!hasMainJob(st)) return false; // 检查 在职
 
       if (st.player.day < 18) return false; // 检查 中后期
 
@@ -2581,7 +2581,7 @@
       if (!st.talentNodes || Object.keys(st.talentNodes).length === 0)
         return false; // 检查 已激活天赋
 
-      if (!st.employment || !st.employment.currentJob) return false; // 检查 在职
+      if (!hasMainJob(st)) return false; // 检查 在职
 
       if (st.player.phase !== "corporate") return false; // 检查 职场阶段
 
@@ -3509,7 +3509,7 @@
 
       if (typeof mgmt !== "number" || mgmt < 15) return false; // 检查 management>=15
 
-      if (!st.employment || !st.employment.currentJob) return false; // 检查 在职
+      if (!hasMainJob(st)) return false; // 检查 在职
 
       if (st.player.phase !== "corporate") return false; // 检查 职场阶段
 
@@ -4232,7 +4232,7 @@
 
       if (st.weather && st.weather.current !== "stormy") return false; // 检查 暴雨
 
-      if (!st.employment || !st.employment.currentJob) return false; // 检查 已就业
+      if (!hasMainJob(st)) return false; // 检查 已就业
 
       if (st.player.phase !== "street") return false; // 检查 街头阶段
 
@@ -4456,7 +4456,7 @@
     conditions: function (st) {
       if (!st.talentNodes || !st.talentNodes["sales_management"]) return false; // 检查 天赋节点
 
-      if (!st.employment || !st.employment.currentJob) return false; // 检查 已就业
+      if (!hasMainJob(st)) return false; // 检查 已就业
 
       if (st.player.phase !== "street") return false; // 检查 街头阶段
 
@@ -4855,7 +4855,7 @@
 
       if (typeof fat !== "number" || fat <= 70) return false; // 检查 疲劳>70
 
-      if (!st.employment || !st.employment.currentJob) return false; // 检查 已就业
+      if (!hasMainJob(st)) return false; // 检查 已就业
 
       if (st.player.phase !== "street") return false; // 检查 街头阶段
 
@@ -5186,7 +5186,7 @@
 
       if (typeof wel !== "number" || wel < 15) return false; // 检查 welding>=15
 
-      if (!st.employment || !st.employment.currentJob) return false; // 检查 已就业
+      if (!hasMainJob(st)) return false; // 检查 已就业
 
       if (st.player.phase !== "street") return false; // 检查 街头阶段
 
@@ -5418,7 +5418,7 @@
 
       if (!rel || !rel.met) return false; // 检查 已结识
 
-      if (!st.employment || !st.employment.currentJob) return false; // 检查 已就业
+      if (!hasMainJob(st)) return false; // 检查 已就业
 
       if (st.player.phase !== "street") return false; // 检查 街头阶段
 

@@ -79,7 +79,7 @@
       conditions: function (st) {
         if (st.gameOver) return false;
         if (st.flags && st.flags._f680MilestoneCd) return false;
-        return st.employment && st.employment.currentJob && st.player && st.player.day >= 90;
+        return hasMainJob(st) && st.player && st.player.day >= 90;
       },
       choices: [
         {
@@ -114,7 +114,7 @@
       ],
       text: function (st) {
         if (!st) return null;
-        var job = st.employment && st.employment.currentJob && st.employment.currentJob.title;
+        var job = jobDisplayName(st);
         return "回想这一路——" + (job ? "从做" + job + "开始" : "从最低处开始") + ",每一步都算数。'是时候停下来,看看自己走了多远。'";
       }
     },

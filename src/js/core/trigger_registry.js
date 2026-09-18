@@ -98,10 +98,10 @@
       return state.relationships && Object.keys(state.relationships).length > 0;
     },
     has_job: function (state) {
-      return state.employment && state.employment.currentJob;
+      return hasMainJob(state);
     },
     unemployed: function (state) {
-      return state.employment && !state.employment.currentJob;
+      return !hasMainJob(state);
     },
     has_company: function (state) {
       // [报告第 58 节 · 果实 G5 同源] 原读 `state.startup.companies`（零写入、不在 schema）。

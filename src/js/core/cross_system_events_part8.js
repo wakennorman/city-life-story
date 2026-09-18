@@ -101,7 +101,7 @@
     conditions: function (st) {
       if (st.flags._corpYearReviewDone) return false;
       if (!st.player || st.player.phase !== "corporate") return false;
-      if (!st.employment || !st.employment.currentJob) return false;
+      if (!hasMainJob(st)) return false;
       var day = st.player.day || 0;
       var dayOfYear = ((day - 1) % 365) + 1;
       if (dayOfYear < 300) return false;
@@ -183,7 +183,7 @@
       if (!st.relationships || !st.relationships.boss_li || !st.relationships.boss_li.met) return false; // [Layer3] 叙事涉及陈经理/李总
       if (st.flags._corpOfficePoliticsDone) return false;
       if (!st.player || st.player.phase !== "corporate") return false;
-      if (!st.employment || !st.employment.currentJob) return false;
+      if (!hasMainJob(st)) return false;
       var tenure = st.employment.tenureDays || 0;
       if (tenure < 30) return false;
       return true;
@@ -433,7 +433,7 @@
     conditions: function (st) {
       // [自洽修复] 学历≥本科(1) + 未在职 + 天数适中
       if ((st.player.education || 0) < 1) return false;
-      if (st.employment && st.employment.currentJob) return false;
+      if (hasMainJob(st)) return false;
       if (st.flags && st.flags._educationDoorOpened) return false;
       if (st.player.day < 30 || st.player.day > 300) return false;
       if (st.player.phase !== "street") return false;
@@ -2672,7 +2672,7 @@
       "加班到十点，老板李总把信封推到你面前：「这个月账上有点‘灵活空间’，你懂的。签了字，有你一份。」\n\n你看着那叠钞票，想起刚入职时立过的规矩。",
     conditions: function (st) {
       // 检查 必须已就业（才能遇到老板贿赂场景）
-      if (!st.employment || !st.employment.currentJob) return false;
+      if (!hasMainJob(st)) return false;
       // 检查 必须已认识老板李总
       var rel = st.relationships && st.relationships.boss_li;
       if (!rel || !rel.met) return false;
@@ -2968,7 +2968,7 @@
       var sk = st.skills && st.skills.management;
       if (!sk || sk.level < 40) return false;
       // 检查 必须已就业（职场场景）
-      if (!st.employment || !st.employment.currentJob) return false;
+      if (!hasMainJob(st)) return false;
       // 检查 游戏进程
       if (st.player.day < 40) return false;
       // 检查 一次性
@@ -5266,7 +5266,7 @@
         var highSkill = Object.keys(skills).filter(function (k) {
           return skills[k] && (skills[k].level || 0) >= 20;
         });
-        var hasJob = !!(st.employment && st.employment.currentJob);
+        var hasJob = hasMainJob(st);
         return (
           st.player.day >= 30 &&
           hasJob &&

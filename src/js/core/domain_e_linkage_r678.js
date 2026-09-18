@@ -72,7 +72,7 @@
         if (st.gameOver) return false;
         if (!st.flags || st.flags._e678CareerBoostCooldown) return false;
         var il = investLevel(st);
-        return il >= 2 && (st.employment && st.employment.currentJob);
+        return il >= 2 && hasMainJob(st);
       },
       choices: [
         { text: "📚 投资自己", hint: "各技能XP+5,智力+3", apply: function (st) {

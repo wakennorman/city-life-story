@@ -4239,7 +4239,7 @@
         st.certificates.length > 0;
       // 检查还没有稳定工作（employment.currentJob === null 或 day < 30）
       var lookingForWork =
-        !st.employment || !st.employment.currentJob || st.player.day < 30;
+        !hasMainJob(st) || st.player.day < 30;
       return (
         st.player.phase === "street" &&
         hasCert &&

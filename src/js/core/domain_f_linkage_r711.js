@@ -124,7 +124,7 @@
       conditions: function (st) {
         if (!st || st.gameOver) return false;
         if (st.flags && st.flags._f711CareerCd) return false;
-        return st.player && st.player.day >= 120 && ((st.corporate && st.corporate.rank) || (st.employment && st.employment.currentJob));
+        return st.player && st.player.day >= 120 && ((st.corporate && st.corporate.rank) || hasMainJob(st));
       },
       choices: [
         {
@@ -158,7 +158,7 @@
         if (!st) return null;
         var rank = "无";
         if (st.corporate && st.corporate.rank) rank = st.corporate.rank;
-        else if (st.employment && st.employment.currentJob) rank = st.employment.currentJob.name || "在职";
+        else if (jobDisplayName(st)) rank = jobDisplayName(st);
         return "当前职级" + rank + "——'职业生涯,需要仪式感。'";
       }
     }

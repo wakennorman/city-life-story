@@ -113,8 +113,8 @@
       text: function (st) {
         if (!st) return null;
         var jobName = "无";
-        if (st.employment && st.employment.currentJob) jobName = st.employment.currentJob.name || "在职";
-        var jobDays = (st.employment && st.employment.currentJob && st.employment.currentJob.workDays) || 0;
+        var _jdName = jobDisplayName(st); if (_jdName) jobName = _jdName;
+        var jobDays = (st.career && st.career.currentJob && st.career.currentJob.workDays) || 0;
         return "当前职业" + jobName + "，已工作" + jobDays + "天——'这就是你的职业故事。'";
       }
     },

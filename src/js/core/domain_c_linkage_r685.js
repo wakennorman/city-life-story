@@ -90,7 +90,7 @@
         if (!st.investment) return false;
         var hasInv = (st.investment.stockHoldings && st.investment.stockHoldings.length > 0) ||
                       (st.investment.btcHoldings && st.investment.btcHoldings > 0);
-        return hasInv && st.employment && st.employment.currentJob && st.player && st.player.day >= 100;
+        return hasInv && hasMainJob(st) && st.player && st.player.day >= 100;
       },
       choices: [
         {
@@ -125,7 +125,7 @@
       ],
       text: function (st) {
         if (!st) return null;
-        return "做" + (st.employment && st.employment.currentJob && st.employment.currentJob.title ? st.employment.currentJob.title : "这行") + "多年,你对相关行业的投资有了天然优势——'这就是认知变现。'";
+        return "做" + (jobDisplayName(st) || "这行") + "多年,你对相关行业的投资有了天然优势——'这就是认知变现。'";
       }
     },
     {
@@ -139,7 +139,7 @@
       conditions: function (st) {
         if (st.gameOver) return false;
         if (st.flags && st.flags._c685LifeCd) return false;
-        return st.employment && st.employment.currentJob && st.player && st.player.day >= 150;
+        return hasMainJob(st) && st.player && st.player.day >= 150;
       },
       choices: [
         {

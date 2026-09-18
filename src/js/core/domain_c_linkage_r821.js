@@ -69,7 +69,7 @@
       text: function (st) {
         if (!st) return null;
         var jobName = "无";
-        if (st.employment && st.employment.currentJob) jobName = st.employment.currentJob.name || "在职";
+        var _jdName = jobDisplayName(st); if (_jdName) jobName = _jdName;
         return "当前职业" + jobName + "——'这就是你的职业故事。'";
       },
       choices: [

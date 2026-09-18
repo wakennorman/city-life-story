@@ -53,7 +53,7 @@
         if (st.gameOver) return false;
         if (st.flags && st.flags._e679ConfCd) return false;
         if (!hasInvestment(st)) return false;
-        return st.employment && st.employment.currentJob && st.player && st.player.day >= 100;
+        return hasMainJob(st) && st.player && st.player.day >= 100;
       },
       choices: [
         {

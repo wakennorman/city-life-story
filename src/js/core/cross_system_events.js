@@ -23,6 +23,62 @@
     return st.needs;
   }
 
+  // [报告第 63 节] 街头工作「当日工钱」解析器。
+  //
+  // 背景：本文件 3 处选项回调写的是 `st.employment.currentJob.payCalc(st)`，
+  //   而 `employment.currentJob` **全库零写入、恒为 null**（见报告第 63 节）。
+  //   第 57 节把 heatwave_outdoor_worker 的 conditions 改读 completedShifts 之后，
+  //   该事件**由恒 false 变成可达** —— 于是那两处解引用从「永不执行」变成
+  //   **玩家一点选项就抛 `TypeError: Cannot read properties of null`**。
+  //   （模式 6「死代码复活后被激活的下一个 bug」的又一例。）
+  //
+  // 语义切分（第 63 节的核心结论）：`employment.currentJob` 被三个不同概念混用 ——
+  //   ① 布尔「是否已就业」   ② 「正在做哪份街头工作」   ③ 「工作对象（有 payCalc）」
+  //   本 helper 只负责 ③ 中"街头工作"这一支：真实容器是
+  //   `employment.completedShifts`（main.js:4764 doStreetJob 每次上工写入）
+  //   + `getJobById(id)`（data/jobs.js:1116 的街头工作定义，含 payCalc）。
+  //   ⚠️ 不用 `career.currentJob` —— 那是**职业路径**岗位
+  //   （{path, levelId, levelName, salary, …}），**没有 payCalc**，语义不同。
+  //
+  // 返回 0 表示"确实无法解析"；调用方需自行决定是否给兜底。
+  //   实测：conditions 已保证 5 个 id 至少一个 completedShifts>0，
+  //   且 5 个 id 全部存在于 STREET_JOBS（62 个）→ 正常路径必然解析成功。
+  var _OUTDOOR_JOB_IDS_B = [
+    "manual_labor_construction",
+    "waste_recycling",
+    "old_zhou_recycling",
+    "street_vending_food",
+    "sister_zhang_vending",
+  ];
+  function _outdoorJobPayB(st) {
+    // [报告第 63 节] 收敛到单一事实来源：优先用 live 的 `flags._lastStreetJobId`
+    //   （main.js:5263 每次 doStreetJob 写入），失败再回退到「上工次数最多的那份」。
+    var job = typeof getCurrentStreetJob === "function" ? getCurrentStreetJob(st) : null;
+    if (!job) {
+      var cs = st && st.employment && st.employment.completedShifts;
+      if (!cs) return 0;
+      var best = null;
+      var bestN = 0;
+      for (var i = 0; i < _OUTDOOR_JOB_IDS_B.length; i++) {
+        var n = cs[_OUTDOOR_JOB_IDS_B[i]] || 0;
+        if (n > bestN) {
+          bestN = n;
+          best = _OUTDOOR_JOB_IDS_B[i];
+        }
+      }
+      if (!best) return 0;
+      job = typeof getJobById === "function" ? getJobById(best) : null;
+    }
+    if (!job || typeof job.payCalc !== "function") return 0;
+    var pay = 0;
+    try {
+      pay = job.payCalc(st);
+    } catch (e) {
+      return 0;
+    }
+    return isFinite(pay) && pay > 0 ? Math.floor(pay) : 0;
+  }
+
 
   var CROSS_EVENTS = [
     // === NPC关系联动事件 ===
@@ -950,7 +1006,9 @@
               st.resources.cash = Math.max(0, (st.resources.cash || 0) - 15);
               st.status.health = Math.min(100, (st.status.health || 0) + 3);
               _guardNeedsB(st).fatigue = Math.min(100, (_guardNeedsB(st).fatigue || 0) + 5);
-              var pay = st.employment.currentJob.payCalc(st);
+              // [报告第 63 节] 原 `st.employment.currentJob.payCalc(st)` —— currentJob 恒 null，
+              //   本事件在第 57 节复活后**点此选项必崩**（实测 TypeError）。改走街头工作解析器。
+              var pay = _outdoorJobPayB(st);
               st.resources.cash = (st.resources.cash || 0) + Math.floor(pay * 0.8);
               st.resources.totalEarned =
                 (st.resources.totalEarned || 0) + Math.floor(pay * 0.8);
@@ -972,7 +1030,8 @@
           text: "🌳 找阴凉处躲一躲，下午再去",
           hint: "收入×0.6，但健康+5",
           apply: function (st) {
-            var pay = st.employment.currentJob.payCalc(st);
+            // [报告第 63 节] 同 choices[0]：currentJob 恒 null → 改走街头工作解析器。
+            var pay = _outdoorJobPayB(st);
             st.resources.cash = (st.resources.cash || 0) + Math.floor(pay * 0.6);
             st.resources.totalEarned =
               (st.resources.totalEarned || 0) + Math.floor(pay * 0.6);
@@ -1122,9 +1181,11 @@
           text: "💪 接私活，风险高但钱多",
           hint: "收入×2，但疲劳+20，可能受伤",
           apply: function (st) {
-            var pay = st.employment.currentJob
-              ? st.employment.currentJob.payCalc(st)
-              : 100;
+            // [报告第 63 节] 原 `st.employment.currentJob ? ….payCalc(st) : 100` ——
+            //   currentJob 恒 null → **真分支永远不可达**，实际恒用兜底值 100
+            //   （第 61 节标本 ⑨ 的镜像：那里是"回退支不可达"，这里是"真分支不可达"）。
+            //   改为：先按街头工作解析真实工钱，解析不到才用 100 兜底。
+            var pay = _outdoorJobPayB(st) || 100;
             var bonus = Math.floor(pay * 1.5);
             st.resources.cash = (st.resources.cash || 0) + bonus;
             st.resources.totalEarned = (st.resources.totalEarned || 0) + bonus;

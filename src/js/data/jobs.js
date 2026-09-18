@@ -1117,6 +1117,92 @@ function getJobById(jobId) {
   return STREET_JOBS.find((j) => j.id === jobId) || null;
 }
 
+// ============================================================================
+// [报告第 63 节 · 果实 G22] 「有主业」——单一事实来源
+// ============================================================================
+//
+// 【问题】`state.employment.currentJob` 全库 **0 写入 / 104 处代码读取**
+//   （`main.js:4762` 的 `doStreetJob` 主动写 `currentJob: null` 且从不回填）。
+//   于是 `!st.employment.currentJob` 恒为 `true` → **49 个事件被自己的门控判死**。
+//
+// 【为什么不能"补一个写入端"】`employment` 容器有三个槽位
+//   `{ currentJob, jobStartDay, completedShifts }`，其中只有 `completedShifts` 是活的
+//   （43 处消费）。`currentJob` / `jobStartDay` 从建库起就无人写。
+//   补写入端会**一次性放开近百个门槛**（第 57.2-A 已证），且叙事上无法自洽
+//   （街头零工与职业路径岗位是两个不同的东西）。
+//
+// 【语义切分（本节核心结论）】`employment.currentJob` 被当作**两个**概念的替身：
+//   ① 街头线「最近在打零工」  → 真实容器 `flags._lastWorkDay`
+//      （`main.js:5260` 每次 `doStreetJob` 写入；`daily_pipeline.js:1389`
+//        在"本日未上工"时复位为 0 → 它天然就是「工作记录未中断」）
+//   ② 职业线「有一份职业路径岗位」→ 真实容器 `career.currentJob`
+//      （6 处写入 / 536 处读取，形状 `{path, levelId, levelName, salary,
+//        workDays, startDay, performance}`）
+//
+// 【与既有惯例对齐】`career_linkage_events.js:619` 早已手写过同一判据：
+//   `// 有一份稳定工作（employment 或 career 任一存在即视为在职）`
+//   本 helper 就是把该定义收敛成**单一事实来源**（纪律 7），
+//   并顺带让 `trigger_registry.js` 的 `has_job` / `unemployed` 模板复用同一判据
+//   （报告第 58 节立项的「语义去重」）。
+//
+// 【⚠️ 不用 `employment.completedShifts` 的原因】它是"曾经上过工"的**永久**记录
+//   （首次上工后永不清零）→ 用它会让"第 1 天打过一次零工、第 300 天已失业"的玩家
+//   依然被判为"有主业"。`flags._lastWorkDay` 才是游戏自己的"在职"定义。
+//
+// 【上游已保证的边界】事件引擎在 `events_core.js:499` 按
+//   `e.phase === state.player.phase` 严格过滤，故 street 事件不会在 corporate 阶段触发，
+//   本判据的"联合"语义不会造成跨阶段叙事矛盾。
+
+/**
+ * 玩家是否「有主业」——街头零工或职业路径岗位，任一即为真。
+ * @param {object} st 游戏状态
+ * @returns {boolean}
+ */
+function hasMainJob(st) {
+  if (!st) return false;
+  // ① 职业路径岗位（corporate 线）
+  if (st.career && st.career.currentJob) return true;
+  // ② 街头线：工作记录未中断（daily_pipeline 会在空档日复位为 0）
+  if (st.flags && (st.flags._lastWorkDay || 0) > 0) return true;
+  return false;
+}
+
+/**
+ * 当前正在从事的**街头工作定义对象**（含 name / payCalc / risk 等）。
+ * 真实容器：`flags._lastStreetJobId`（main.js:5263 写入）+ `getJobById`。
+ * 无街头工作时返回 null —— 调用方必须自行判空。
+ * @param {object} st 游戏状态
+ * @returns {object|null}
+ */
+function getCurrentStreetJob(st) {
+  var id = st && st.flags && st.flags._lastStreetJobId;
+  if (!id) return null;
+  return typeof getJobById === "function" ? getJobById(id) : null;
+}
+
+/**
+ * 当前岗位的**显示名**（街头工作 → 职业路径岗位 → null）。
+ * 替代原先散落在 14 个文件里的 `employment.currentJob.name` / `.title` ——
+ * 那两个键在**任何真实容器里都不存在**（街头工作是 `name`，职业岗位是 `levelName`）。
+ * @param {object} st 游戏状态
+ * @returns {string|null}
+ */
+function jobDisplayName(st) {
+  if (!st) return null;
+  var cj = st.career && st.career.currentJob;
+  if (cj) return cj.levelName || cj.levelId || null;
+  var sj = getCurrentStreetJob(st);
+  if (sj) return sj.name || null;
+  return null;
+}
+
+// [报告第 63 节] 导出到 window —— 与 getJobById 同一惯例。
+if (typeof window !== "undefined") {
+  window.hasMainJob = hasMainJob;
+  window.getCurrentStreetJob = getCurrentStreetJob;
+  window.jobDisplayName = jobDisplayName;
+}
+
 // P1-2 CLS 命名空间注册
 if (typeof window.CLS !== 'undefined' && window.CLS.data) window.CLS.data.STREET_JOBS = STREET_JOBS;
 

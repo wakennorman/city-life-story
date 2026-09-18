@@ -49,7 +49,7 @@
       conditions: function (st) {
         if (!st || !st.player || st.gameOver) return false;
         if (st.flags && st.flags._f826CareerWallDone) return false;
-        if (!st.employment || !st.employment.currentJob) return false;
+        if (!hasMainJob(st)) return false;
         return st.player.day >= 90;
       },
       text: function (st) {
@@ -57,10 +57,21 @@
         var d = st.player && st.player.day ? st.player.day : 0;
         var jobTitle = "打工人";
         try {
-          if (st.employment && st.employment.currentJob && st.employment.currentJob.path && typeof CAREER_PATHS !== "undefined") {
-            var path = CAREER_PATHS[st.employment.currentJob.path];
-            if (path && path.levels && path.levels[st.employment.currentJob.level]) {
-              jobTitle = path.levels[st.employment.currentJob.level].name || path.name || jobTitle;
+          // [报告第 63 节] 原读 `employment.currentJob.path` / `.level`（幻影容器 + 幻影键）。
+          //   真实容器 career.currentJob 有 `path`，但没有 `level` —— `CAREER_PATHS[p].levels`
+          //   是**数组**（按等级序号索引），而 career 存的是字符串 `levelId`。
+          //   故须用 findIndex 把 levelId 映射回序号（原写法即使容器活了也会取错等级）。
+          var _cj826 = st.career && st.career.currentJob;
+          if (_cj826 && _cj826.path && typeof CAREER_PATHS !== "undefined") {
+            var path = CAREER_PATHS[_cj826.path];
+            var _li826 = -1;
+            if (path && path.levels) {
+              for (var _k826 = 0; _k826 < path.levels.length; _k826++) {
+                if (path.levels[_k826] && path.levels[_k826].id === _cj826.levelId) { _li826 = _k826; break; }
+              }
+            }
+            if (_li826 >= 0) {
+              jobTitle = path.levels[_li826].name || path.name || jobTitle;
             }
           }
         } catch (e) {}

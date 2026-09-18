@@ -33,7 +33,7 @@
       conditions: function (st) {
         if (st.gameOver) return false;
         if (!st.flags || st.flags._c655MasteryDone) return false;
-        return st.employment && st.employment.currentJob && st.investment && (st.investment.stockHoldings || st.investment.btcHoldings);
+        return hasMainJob(st) && st.investment && (st.investment.stockHoldings || st.investment.btcHoldings);
       },
       choices: [
         { text: "💰 加大投资", hint: "会计XP+6,现金+3000", apply: function (st) {
