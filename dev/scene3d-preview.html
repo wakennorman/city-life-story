@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>scene3d 预览</title>
+<style>
+  html, body { margin: 0; height: 100%; background: #d9d4c8; }
+  #wrap { display: flex; flex-direction: column; height: 100%; }
+  #status {
+    flex: 0 0 auto; padding: 8px 14px;
+    font: 500 13px/1.4 system-ui, -apple-system, "Segoe UI", sans-serif;
+    color: #4a3f30; background: #f6f2e8; border-bottom: 1px solid #cfc7b6;
+  }
+  #app { flex: 1 1 auto; position: relative; min-height: 0; }
+</style>
+</head>
+<body>
+<div id="wrap">
+  <div id="status">加载中…</div>
+  <div id="app"></div>
+</div>
+<script src="./scene3d-preview.js"></script>
+</body>
+</html>

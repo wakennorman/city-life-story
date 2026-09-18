@@ -22,6 +22,9 @@
     />
     <meta name="apple-mobile-web-app-title" content="城市浮生记" />
     <link rel="stylesheet" href="css/style.css" />
+    <!-- 3D 场景样式独立成文件：style.css 末尾存在未闭合的 @media(≤600px) 块，
+         追加到该文件末尾的规则会被吞掉。摘除本行即回退纯 2D。 -->
+    <link rel="stylesheet" href="css/scene3d.css" />
     <style>
       /* 内联关键样式（防止FOUC） */
       body {
@@ -2492,6 +2495,9 @@
     <!-- v3.3 W2-T3: Scenario Start Chains (剧本专属开局事件链) -->
 <script src="js/core/domain_f_linkage_r892.js"></script>
     <script src="js/data/scenario_start_chains.js"></script>
+    <!-- 3D 场景：核心包（three.js，由 scripts/build-scene3d-bundle.cjs 生成）+ 运行时桥接 -->
+    <script src="js/scene3d.bundle.js"></script>
+    <script src="js/scene3d_bridge.js"></script>
     <!-- Boot: 显示欢迎界面（所有脚本加载完毕后执行） -->
     <script>
       function toggleSidebar() {

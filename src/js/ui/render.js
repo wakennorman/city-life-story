@@ -270,6 +270,15 @@ function renderLocation(state) {
 
   // 天气面板（天气深化系统）
   renderWeatherPanel(state);
+
+  // 3D 场景同步（可选模块：未加载 / WebGL 不可用时静默跳过，不影响 2D 主流程）
+  if (typeof Scene3DBridge !== "undefined" && Scene3DBridge.sync) {
+    try {
+      Scene3DBridge.sync();
+    } catch (e) {
+      console.warn("[scene3d] 同步失败（已忽略）:", e && e.message);
+    }
+  }
 }
 
 
