@@ -2684,11 +2684,17 @@ body {
     max-width: 92vw;
   }
 }
-    180deg,
-    rgba(74, 158, 92, 0.06),
-    var(--bg-secondary)
-  );
-}
+
+/* [已清理] 此处原有一段孤立残片：
+     180deg,
+     rgba(74, 158, 92, 0.06),
+     var(--bg-secondary)
+   );
+   }
+   它是一条被错误编辑切断的 linear-gradient 声明的尾部，浮在规则之外。
+   浏览器把它当解析错误忽略，其中多余的 `}` 恰好抵消了下方 @media 漏掉的 `}`，
+   导致全文件花括号计数"平衡"，任何静态检查都发现不了吞并问题。
+   若确需为历史书弹窗补回绿调渐变背景，单独提出，勿以残片形式恢复。 */
 
 .company-history-modal .modal-box::-webkit-scrollbar {
   width: 6px;
@@ -5676,6 +5682,11 @@ body {
   .world-news-loading-sub {
     font-size: 12px;
   }
+}
+/* ↑ 补回漏掉的闭合括号：该 @media 原本只包容 5 条加载面板规则，
+   漏 `}` 导致后面 78 条规则（引导面板 .gb-*、行动卡 :hover/:active、
+   NPC 关系卡、快捷旅行、交通按钮…）被一路吞到文件末尾，桌面端全部失效。
+   证据：scripts/diag-css-mediaswallow.cjs */
 
 /* ── 引导面板 Guidance Bar（三格横排，常驻不折叠）──────── */
 .guidance-bar { margin-bottom: 10px; }
