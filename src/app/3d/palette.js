@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import {
-  tileWallTex, concreteTex, roofTex, glassTex, brickTex, metalPanelTex,
+  surfaceMat, tileWallTex, concreteTex, roofTex, glassTex, brickTex, metalPanelTex,
   curtainWallTex, asphaltTex, paverTex, grassTex, stoneTex, woodTex,
 } from './materials.js';
 
@@ -14,14 +14,22 @@ import {
 
 let P = null;
 
-const std = (o) => new THREE.MeshStandardMaterial(o);
+/* ★ [2026-09-18 P1-1] 全部改用 surfaceMat() 而不是裸 new MeshStandardMaterial。
+    原因：法线贴图挂在**纹理的 userData.surface** 上（materials.js::toTexture 登记），
+    只有 surfaceMat() 会去读它并挂到材质。
+    原来这里写 `std({ map: tex(...), roughness })` —— 结果就是
+    materials.js 里辛辛苦苦生成的高度图**一张都没被用上**。
+    这正是项目反复出现的「静默失效」：代码全对，就是没效果。 */
+const surf = surfaceMat;
 
 export function buildPalette() {
+  /* 地面类纹理按**地面尺度**(4.5m/格，见 world.js::tileMat)生成，
+     立面类按 TILE_M(2.4m/格)生成。两者混用会让砖的真实大小差近一倍。 */
   const tex = {
     glass: glassTex(),
     asphalt: asphaltTex(),
     paver: paverTex(),
-    grass: grassTex(),
+    grass: grassTex({ metersPerRepeat: 3.0 }),   // world.js 显式传 3.0
     stone: stoneTex(),
     wood: woodTex(),
     roof: roofTex(),
@@ -37,36 +45,40 @@ export function buildPalette() {
          白瓷砖 0.42~0.48（上釉）· 红砖 0.94~0.95（粗糙）· 水泥 0.92~0.93 · 石材 0.70~0.75
      ★ [P0-2] 幕墙 metalness 0.42/0.40 → **0**：
        玻璃不是金属，靠**低 roughness + envMapIntensity** 出反射。
-       用 metalness 做玻璃是常见误区 —— 它会削掉漫反射，把玻璃变暗变死。 */
+       用 metalness 做玻璃是常见误区 —— 它会削掉漫反射，把玻璃变暗变死。
+     ★ [P1-1] 现在每条都有法线贴图兜底，roughness 相近的材质靠**凹凸**也能分开了。 */
   const wallFor = (tier) => {
     if (tier <= 1) {
       return [
-        std({ map: tileWallTex({ base: '#c2bfb4' }), roughness: 0.45 }),
-        std({ map: tileWallTex({ base: '#b6b3a7', tile: 19 }), roughness: 0.48 }),
-        std({ map: brickTex({ base: '#7d5644' }), roughness: 0.94 }),
-        std({ map: concreteTex({ base: '#8a8880', wet: 0.2 }), roughness: 0.93 }),
+        surf(tileWallTex({ base: '#c2bfb4' }), { roughness: 0.45 }),
+        surf(tileWallTex({ base: '#b6b3a7', tileHMM: 380 }), { roughness: 0.48 }),
+        surf(brickTex({ base: '#7d5644' }), { roughness: 0.94 }),
+        surf(concreteTex({ base: '#8a8880', wet: 0.2 }), { roughness: 0.93 }),
       ];
     }
     if (tier === 2) {
       return [
-        std({ map: tileWallTex({ base: '#cbc9c0', tile: 26, water: 8 }), roughness: 0.42 }),
-        std({ map: concreteTex({ base: '#9a978e', wet: 0.1, crack: 10 }), roughness: 0.92 }),
-        std({ map: brickTex({ base: '#8a6a56', rowH: 18 }), roughness: 0.95 }),
-        std({ map: tileWallTex({ base: '#b8b6ac', tile: 30, water: 6 }), roughness: 0.46 }),
+        surf(tileWallTex({ base: '#cbc9c0', water: 8 }), { roughness: 0.42 }),
+        surf(concreteTex({ base: '#9a978e', wet: 0.1, crack: 10 }), { roughness: 0.92 }),
+        surf(brickTex({ base: '#8a6a56', rowHMM: 140 }), { roughness: 0.95 }),
+        surf(tileWallTex({ base: '#b8b6ac', tileWMM: 250, water: 6 }), { roughness: 0.46 }),
       ];
     }
     return [
-      std({ map: stoneTex({ base: '#a8a49b' }), roughness: 0.70 }),
-      std({ map: curtainWallTex({ base: '#424e58' }), roughness: 0.30, envMapIntensity: 1.4 }),
-      std({ map: stoneTex({ base: '#9c9a92' }), roughness: 0.75 }),
-      std({ map: curtainWallTex({ base: '#4a5258', cell: 36 }), roughness: 0.32, envMapIntensity: 1.4 }),
+      surf(stoneTex({ base: '#a8a49b' }), { roughness: 0.70 }),
+      surf(curtainWallTex({ base: '#424e58' }), { roughness: 0.30, envMapIntensity: 1.4 }),
+      surf(stoneTex({ base: '#9c9a92', slabMM: 1000 }), { roughness: 0.75 }),
+      surf(curtainWallTex({ base: '#4a5258', cellMM: 1500 }), { roughness: 0.32, envMapIntensity: 1.4 }),
     ];
   };
 
+  /* 院内地面。★ [静默失效修复] 三档原来全是 512 的水泥（tier3 是铺装），
+     而 world.js 的很多地块走的是 tier 默认值 → 富裕区院子还是脏水泥。
+     现在按档拉开：tier1 巷弄水泥 / tier2 干净水泥 / tier3 石材铺装。 */
   const groundFor = (tier) => {
-    if (tier <= 1) return std({ map: concreteTex({ base: '#6c6f66', wet: 0.4, crack: 22 }), roughness: 0.95 });
-    if (tier === 2) return std({ map: concreteTex({ base: '#7d7f76', wet: 0.28, crack: 14 }), roughness: 0.93 });
-    return std({ map: tex.paver.clone(), roughness: 0.86 });
+    if (tier <= 1) return surf(concreteTex({ base: '#6c6f66', wet: 0.4, crack: 22 }), { roughness: 0.95 });
+    if (tier === 2) return surf(concreteTex({ base: '#7d7f76', wet: 0.28, crack: 14 }), { roughness: 0.93 });
+    return surf(stoneTex({ base: '#a8a49b', slabMM: 1200 }), { roughness: 0.74 });
   };
 
   /* ★ [2026-09-18 美术 P0-2 + P1-2] metalness / roughness 重做，依据 3D_ART_SPEC.md §6.2。
@@ -86,31 +98,32 @@ export function buildPalette() {
     tex,
     tiers: {},
     common: {
-      metal: std({ color: 0x4e514c, roughness: 0.45, metalness: 0.90 }),
-      metalLight: std({ color: 0x8d918a, roughness: 0.42, metalness: 0.85 }),
-      dark: std({ color: 0x2c2f31, roughness: 0.8 }),
-      rubber: std({ color: 0x1e2022, roughness: 0.95 }),
-      wood: std({ map: tex.wood, roughness: 0.75 }),
-      stone: std({ map: tex.stone, roughness: 0.72 }),
-      asphalt: std({ map: tex.asphalt, roughness: 0.90 }),
-      paver: std({ map: tex.paver, roughness: 0.86 }),
-      grass: std({ map: tex.grass, roughness: 0.99 }),
-      glassPane: std({ map: tex.glass, roughness: 0.10, envMapIntensity: 1.5 }),
-      curtain: std({ map: curtainWallTex(), roughness: 0.30, envMapIntensity: 1.4 }),
-      panel: std({ map: metalPanelTex({ base: '#6d7370' }), roughness: 0.72 }),
-      panelBlue: std({ map: metalPanelTex({ base: '#4e5a63', period: 18 }), roughness: 0.70 }),
-      panelRust: std({ map: metalPanelTex({ base: '#6a5a4c', period: 16 }), roughness: 0.84 }),
+      metal: new THREE.MeshStandardMaterial({ color: 0x4e514c, roughness: 0.45, metalness: 0.90 }),
+      metalLight: new THREE.MeshStandardMaterial({ color: 0x8d918a, roughness: 0.42, metalness: 0.85 }),
+      dark: new THREE.MeshStandardMaterial({ color: 0x2c2f31, roughness: 0.8 }),
+      rubber: new THREE.MeshStandardMaterial({ color: 0x1e2022, roughness: 0.95 }),
+      wood: surf(tex.wood, { roughness: 0.75 }),
+      stone: surf(tex.stone, { roughness: 0.72 }),
+      asphalt: surf(tex.asphalt, { roughness: 0.90 }),
+      paver: surf(tex.paver, { roughness: 0.86 }),
+      grass: surf(tex.grass, { roughness: 0.99 }),
+      glassPane: surf(tex.glass, { roughness: 0.10, envMapIntensity: 1.5 }),
+      curtain: surf(curtainWallTex(), { roughness: 0.30, envMapIntensity: 1.4 }),
+      panel: surf(metalPanelTex({ base: '#6d7370' }), { roughness: 0.72 }),
+      panelBlue: surf(metalPanelTex({ base: '#4e5a63', ribMM: 180 }), { roughness: 0.70 }),
+      panelRust: surf(metalPanelTex({ base: '#6a5a4c', ribMM: 160 }), { roughness: 0.84 }),
       /* [2026-09-18 美术修复] 路缘石专用 —— kit.js::curb() 写的是
          `P.common.trim || P.common.metalLight`，但 P.common 里**从来没有 trim 这个键**
          （trim 只存在于 P.tiers[t].trim，见本文件下方）。
          于是所有路缘石永远**静默回退**到冷灰金属材质，tier1 本该是暖灰 0x9a9186。
          不报错、不崩溃、就是不对 —— 典型的静默失效。此处补上，与 tier1 的 trim 同色。 */
-      trim: std({ color: 0x9a9186, roughness: 0.90 }),
-      tarp: std({ color: 0x3f4a44, roughness: 0.96, side: THREE.DoubleSide }),
+      trim: new THREE.MeshStandardMaterial({ color: 0x9a9186, roughness: 0.90 }),
+      tarp: new THREE.MeshStandardMaterial({ color: 0x3f4a44, roughness: 0.96, side: THREE.DoubleSide }),
       /* 巷弄路面：比沥青浅、比院内地面脏，带油渍 —— 城中村的巷子不是柏油马路 */
-      laneSurf: std({ map: concreteTex({ base: '#75786f', wet: 0.5, crack: 26 }), roughness: 0.97 }),
+      laneSurf: surf(concreteTex({ base: '#75786f', wet: 0.5, crack: 26 }), { roughness: 0.97 }),
       signRed: null,   // 由招牌纹理按需生成
-      cloth: [0x5b6b7a, 0x8a8078, 0x6d5f66, 0x7a8a72, 0x9a9a92].map(c => std({ color: c, roughness: 0.95, side: THREE.DoubleSide })),
+      cloth: [0x5b6b7a, 0x8a8078, 0x6d5f66, 0x7a8a72, 0x9a9a92].map(
+        c => new THREE.MeshStandardMaterial({ color: c, roughness: 0.95, side: THREE.DoubleSide })),
     },
   };
 
@@ -120,18 +133,18 @@ export function buildPalette() {
       walls,
       wall: walls[0],
       ground: groundFor(tier),
-      roof: std({ map: roofTex(), roughness: 0.93 }),
+      roof: surf(roofTex(), { roughness: 0.93 }),
       /* 点缀色：招牌底、雨棚、栏杆、围挡 —— 各档的"精气神"差别在这 */
       /* accent 是招牌底 / 雨棚 / 栏杆 / 围挡 —— 都属非金属。
          tier3 原来带的 metalness 0.25 是典型的"半金属"取值，已归 0（理由见 common 段）。 */
-      accent: tier <= 1 ? std({ color: 0x8a3a30, roughness: 0.85 })
-        : tier === 2 ? std({ color: 0x6a6f6b, roughness: 0.8 })
-          : std({ color: 0x37414a, roughness: 0.62, envMapIntensity: 1.2 }),
-      trim: tier <= 1 ? std({ color: 0x9a9186, roughness: 0.9 })
-        : tier === 2 ? std({ color: 0xa8a69c, roughness: 0.88 })
-          : std({ color: 0xb0b3ad, roughness: 0.7 }),
-      awning: tier <= 1 ? std({ color: 0x4a4438, roughness: 0.95, side: THREE.DoubleSide })
-        : std({ color: 0x555b58, roughness: 0.92, side: THREE.DoubleSide }),
+      accent: tier <= 1 ? new THREE.MeshStandardMaterial({ color: 0x8a3a30, roughness: 0.85 })
+        : tier === 2 ? new THREE.MeshStandardMaterial({ color: 0x6a6f6b, roughness: 0.8 })
+          : new THREE.MeshStandardMaterial({ color: 0x37414a, roughness: 0.62, envMapIntensity: 1.2 }),
+      trim: tier <= 1 ? new THREE.MeshStandardMaterial({ color: 0x9a9186, roughness: 0.9 })
+        : tier === 2 ? new THREE.MeshStandardMaterial({ color: 0xa8a69c, roughness: 0.88 })
+          : new THREE.MeshStandardMaterial({ color: 0xb0b3ad, roughness: 0.7 }),
+      awning: tier <= 1 ? new THREE.MeshStandardMaterial({ color: 0x4a4438, roughness: 0.95, side: THREE.DoubleSide })
+        : new THREE.MeshStandardMaterial({ color: 0x555b58, roughness: 0.92, side: THREE.DoubleSide }),
     };
   }
 
@@ -139,14 +152,20 @@ export function buildPalette() {
      three 的 repeat 是"整张平面重复多少次"，所以同一张纹理贴到 190m 底板
      和 12m 小地块上，密度差 16 倍 —— 小地块会变成密密麻麻的细格。
      正确做法是每个地面平面按自己的尺寸生成材质，见 world.js 的 tileMat()。
-     这里只做单位化基准。 */
-  for (const t of [1, 2, 3]) {
-    P.tiers[t].ground.map.repeat.set(1, 1);
-    P.tiers[t].ground.map.needsUpdate = true;
-  }
-  P.common.asphalt.map.repeat.set(1, 1);
-  P.common.laneSurf.map.repeat.set(1, 1);
-  P.common.paver.map.repeat.set(1, 1);
+     这里只做单位化基准。
+
+     ★ [P3-1] 原来这里只重置了 map.repeat，**normalMap 没重置**。
+       而 fitRepeat()/tileMat() 克隆时会给 normalMap 设 repeat ——
+       共用原型 NormalMap 会导致"最后一块地决定所有地的凹凸密度"。
+       所有会被外部克隆的材质，map 与 normalMap 必须成对重置。 */
+  const unit = (m) => {
+    if (m.map) { m.map.repeat.set(1, 1); m.map.needsUpdate = true; }
+    if (m.normalMap) { m.normalMap.repeat.set(1, 1); m.normalMap.needsUpdate = true; }
+  };
+  for (const t of [1, 2, 3]) unit(P.tiers[t].ground);
+  unit(P.common.asphalt);
+  unit(P.common.laneSurf);
+  unit(P.common.paver);
 
   return P;
 }

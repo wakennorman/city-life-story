@@ -1,5 +1,8 @@
 import * as THREE from 'three';
-import { signTex, makeWindow, makeACUnit, metalPanelTex, concreteTex, roofTex } from './materials.js';
+import {
+  signTex, makeWindow, makeACUnit, metalPanelTex, concreteTex, roofTex,
+  fitRepeat, surfaceMat as surf, TILE_M,
+} from './materials.js';
 import { palette, tierOf } from './palette.js';
 
 /* ══ 建筑与道具工具箱 ═══════════════════════════════════════════════════════
@@ -13,6 +16,88 @@ const rnd = (a, b) => a + Math.random() * (b - a);
 const rndInt = (a, b) => Math.floor(rnd(a, b + 1));
 const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
 const chance = (p) => Math.random() < p;
+
+/* ── P3-3 几何倒角 ──────────────────────────────────────────────────────
+   ★ 为什么需要：真实建筑的转角**没有一个是 90° 的硬边**。
+     施工必然留倒角/压条，阳光扫过时那条 2~3cm 的窄面会形成一道高光细线。
+     人眼靠这道线判断"这是实体，不是贴图"—— 3D_ART_SPEC.md §8.2 的原话是
+     "倒角是打破 90° 硬边的唯一低成本手段"。
+
+   实现要点（这里踩过坑）：
+   ① **不能用 Box(d+2t, w+2t, d+2t) 包一圈** —— 那样棱条会横穿墙面，
+      在墙上留下一条 2cm 的凸棱，近看极假。
+   ② 正确做法是**只覆盖竖棱**：每根棱柱截面 2t × 2t，放在角点，
+      在 x/z 方向各外扩 t，于是它只包住"角"，不碰面。
+   ③ 单元尺寸必须**随建筑尺寸自适应**，所以按 (w+h+d) 做一个台阶函数。
+      用小尺寸时 1 个盒 vs 3 个盒的差距 —— 23 个地点的总盒数要控住。 */
+
+/** 2~3cm 倒角条的实际尺寸（米）。§8.2 指定 0.02~0.03。 */
+const CHAMFER = 0.025;
+
+/** 建筑竖向倒角的截面尺寸：随建筑体量自适应。
+    ★ 关键：**0.02 是下限，不是目标**。
+      一根 2cm 的柱子在 20m 外只占 1~2 像素，直接掉进 mipmap 里消失；
+      而 AO/法线都补不回来 —— 所以大楼要用大一点的倒角，才读得出来。
+      实测：4m 以下的小楼 0.02（近看才有）+ 1 个角，
+            8~18m 0.025 + 2 个角，18m 以上 0.03 + 4 个角（上限，控成本）。 */
+function bevelSize(w, h, d) {
+  const s = Math.max(w, d) + h;
+  if (s < 8) return 0.02;
+  if (s < 26) return 0.025;
+  return 0.03;
+}
+
+/**
+ * 给一个矩形建筑体量加**竖向压边**（四角倒角）。
+ * @param {THREE.Group} g      目标组（棱柱直接加进去）
+ * @param {number} w,d,h       体量尺寸（米）
+ * @param {number} yBase       底标高（局部坐标）
+ * @param {THREE.Material} mat 压边材质（一般用 tier 的 trim/浅色石材）
+ * @param {number} maxCorners  最多做几个角（默认 2，见上）
+ * @returns {number} 实际加了几根 —— 给验证脚本读数用
+ */
+function addVerticalChamfers(g, w, d, h, yBase, mat, maxCorners = 2) {
+  const t = bevelSize(w, h, d);
+  const corners = [
+    [w / 2 + t / 2, d / 2 + t / 2],
+    [-w / 2 - t / 2, d / 2 + t / 2],
+    [w / 2 + t / 2, -d / 2 - t / 2],
+    [-w / 2 - t / 2, -d / 2 - t / 2],
+  ].slice(0, Math.max(1, Math.min(4, maxCorners)));
+
+  /* 棱柱几何**共享**（同一个建筑里尺寸相同），只有位置不同。
+     23 个地点 × 每栋 2~4 根 = 几十个盒 —— 共享几何 + 共享材质后，
+     draw call 会由 three 的合批处理，成本可忽略。 */
+  const geo = new THREE.BoxGeometry(t, h, t);
+  for (const [x, z] of corners) {
+    const m = new THREE.Mesh(geo, mat);
+    m.position.set(x, yBase + h / 2, z);
+    m.castShadow = true;
+    g.add(m);
+  }
+  g.userData.chamfers = (g.userData.chamfers || 0) + corners.length;
+  return corners.length;
+}
+
+/** 给外露的窗/门洞口加一圈 2cm 压边。
+    ★ 注意：**窗框的压边不在这里** —— 那是 makeWindow() 的事（四边 2.2cm 细条，
+      已实现在 materials.js，因为窗是复用构件、压边必须跟着窗一起生成）。
+      这里只补"洞口"级别的压边：门洞、卷帘门洞口、大窗带的外框。
+
+    只有**最外圈**需要 —— 中间被别的洞口挤住的那条边看不见。 */
+function addSill(g, w, h, x, y, z, ry, mat) {
+  const t = 0.02;
+  const geo = new THREE.BoxGeometry(w + t * 2, t, 0.05);
+  for (const dy of [h / 2 + t / 2, -h / 2 - t / 2]) {
+    const m = new THREE.Mesh(geo, mat);
+    m.position.set(x, y + dy, z);
+    if (ry) m.rotation.y = ry;
+    m.userData.bevel = 'opening-sill';
+    g.add(m);
+  }
+  g.userData.sills = (g.userData.sills || 0) + 2;
+  return 2;
+}
 
 let P = null;
 export function initKit(pal) { P = pal; }
@@ -64,14 +149,18 @@ export function lowRise({ w, d, floors, floorH = 2.9, tier = 1, windows = true }
   const wallMat = pick(T.walls);
 
   const geo = new THREE.BoxGeometry(w, h, d);
-  const mat = wallMat.clone();
-  mat.map = wallMat.map.clone();
-  mat.map.needsUpdate = true;
-  mat.map.repeat.set(w / 3.2, h / 3.2);
+  /* ★ [P3-1] 原来手写 `mat.map = wallMat.map.clone(); mat.map.repeat.set(w/3.2, h/3.2)`。
+     两个问题：① 密度 3.2m 比真实砖格大 1/3；② **只克隆了 map，normalMap 共用**
+     → 凹凸密度在所有楼上都一样（表现为"近看纹理全糊"），而且不报错。
+     fitRepeat() 成对克隆并统一走 TILE_M。 */
+  const mat = fitRepeat(wallMat, w, h);
   const body = new THREE.Mesh(geo, mat);
   body.position.y = h / 2;
   body.castShadow = true; body.receiveShadow = true;
   g.add(body);
+
+  // ★ [P3-3] 竖向压边：城中村自建房的四角是砖砌抹灰的硬角，加一道压边就有实体感
+  addVerticalChamfers(g, w, d, h, 0, T.trim, 2);
 
   if (windows) {
     const cols = Math.max(2, Math.round(w / 2.6));
@@ -135,7 +224,7 @@ export function lowRise({ w, d, floors, floorH = 2.9, tier = 1, windows = true }
   }
   if (chance(0.5)) {
     const shed = new THREE.Mesh(new THREE.BoxGeometry(rnd(2, 3.4), 0.12, rnd(1.6, 2.6)),
-      new THREE.MeshStandardMaterial({ map: roofTex(), roughness: 0.9 }));
+      surf(roofTex(), { roughness: 0.9 }));
     shed.position.set(rnd(-w / 4, w / 4), h + 0.9, rnd(-d / 4, d / 4));
     shed.rotation.z = rnd(-0.1, 0.1);
     shed.castShadow = true;
@@ -152,14 +241,14 @@ export function slabBlock({ w, d, floors, floorH = 2.85, tier = 2, balcony = tru
   const h = floors * floorH;
   const wallMat = pick(T.walls);
 
-  const mat = wallMat.clone();
-  mat.map = wallMat.map.clone();
-  mat.map.needsUpdate = true;
-  mat.map.repeat.set(w / 3.4, h / 3.4);
+  const mat = fitRepeat(wallMat, w, h);
   const body = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), mat);
   body.position.y = h / 2;
   body.castShadow = true; body.receiveShadow = true;
   g.add(body);
+
+  // ★ [P3-3] 板楼体量长 → 四个角都做压边（长边的角最容易被看到）
+  addVerticalChamfers(g, w, d, h, 0, T.trim, 4);
 
   const n = units || Math.max(2, Math.round(w / 3.6));
   const unitW = w / n;
@@ -206,6 +295,8 @@ export function slabBlock({ w, d, floors, floorH = 2.85, tier = 2, balcony = tru
     const door = new THREE.Mesh(new THREE.BoxGeometry(1.1, 2.1, 0.1), doorMat);
     door.position.set(cx, 1.05, d / 2 + 0.06);
     g.add(door);
+    // ★ [P3-3] 单元门洞压边
+    addSill(g, 1.1, 2.1, cx, 1.05, d / 2 + 0.07, 0, T.trim);
     if (chance(0.6)) {
       const plate = new THREE.Mesh(new THREE.PlaneGeometry(0.42, 0.3),
         labelMat(`${rndInt(1, 9)}栋`, { bg: '#c8c4b8', fg: '#3a3a36', w: 256, h: 180, font: '700 96px "Microsoft YaHei",sans-serif' }));
@@ -228,15 +319,18 @@ export function tower({ w, d, floors, floorH = 3.4, tier = 3, podium = true, cro
   const T = tierOf(tier);
   const g = new THREE.Group();
   const h = floors * floorH;
-  const curtain = P.common.curtain.clone();
-  curtain.map = curtain.map.clone();
-  curtain.map.needsUpdate = true;
-  curtain.map.repeat.set(w / 4.2, h / 4.2);
+  /* ★ [P3-1] 幕墙原来 4.2m/格 —— 而 curtainWallTex 按 1200mm 分格画，
+     一乘就是「一格玻璃 4.2m × 每格 4 块」→ 单块玻璃 1.05m，勉强；
+     但整片幕墙的框线密度明显偏稀。统一走 fitRepeat + TILE_M。 */
+  const curtain = fitRepeat(P.common.curtain, w, h);
 
   const body = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), curtain);
   body.position.y = h / 2;
   body.castShadow = true; body.receiveShadow = true;
   g.add(body);
+
+  // ★ [P3-3] 塔楼四角竖向压边 —— 大楼的角线是最抢眼的"实体感"信号
+  addVerticalChamfers(g, w, d, h, 0, T.trim, 4);
 
   // 楼层横向分隔线：给高楼"层"的尺度感
   const bandMat = T.trim;
@@ -250,12 +344,14 @@ export function tower({ w, d, floors, floorH = 3.4, tier = 3, podium = true, cro
   if (podium) {
     const ph = 4.6, pw = w + 3.2, pd = d + 3.2;
     const podMat = tier >= 3
-      ? new THREE.MeshStandardMaterial({ map: concreteTex({ base: '#9c9a92', wet: 0 }), roughness: 0.66 })
+      ? surf(concreteTex({ base: '#9c9a92', wet: 0 }), { roughness: 0.66 })
       : T.wall;
     const pod = new THREE.Mesh(new THREE.BoxGeometry(pw, ph, pd), podMat);
     pod.position.y = ph / 2;
     pod.castShadow = true; pod.receiveShadow = true;
     g.add(pod);
+    // ★ [P3-3] 裙楼的角也要压边（裙楼比塔楼大一圈，它的角才是贴着人的那个）
+    addVerticalChamfers(g, pw, pd, ph, 0, T.trim, 4);
     // 裙楼玻璃
     for (const side of [1, -1]) {
       const gl = new THREE.Mesh(new THREE.PlaneGeometry(pw * 0.86, 2.6), P.common.glassPane);
@@ -295,6 +391,11 @@ export function shopUnit({ width = 5, sign = '小卖部', tier = 2, height = 3.4
   frame.castShadow = true; frame.receiveShadow = true;
   g.add(frame);
 
+  /* ★ [P3-3] 铺面的外框压边 —— 沿街商铺是"人贴着脸看"的尺度，
+     门框/雨棚边这类 2cm 细条在这个距离上是**真能看清**的，
+     所以这里用 4 根全做（跟大楼不同：大楼的角 2cm 会掉进 mipmap）。 */
+  addVerticalChamfers(g, width, 0.3, height, 0, T.trim, 4);
+
   // 卷帘门 / 玻璃门
   if (open) {
     const pane = new THREE.Mesh(new THREE.PlaneGeometry(width * 0.74, height * 0.7), P.common.glassPane);
@@ -303,11 +404,15 @@ export function shopUnit({ width = 5, sign = '小卖部', tier = 2, height = 3.4
     const doorFrame = new THREE.Mesh(new THREE.BoxGeometry(width * 0.78, 0.12, 0.08), P.common.metalLight);
     doorFrame.position.set(width * 0.39, height * 0.36, 0.04);
     g.add(doorFrame);
+    // ★ [P3-3] 门洞上下压边
+    addSill(g, width * 0.74, height * 0.7, 0, height * 0.36, 0.03, 0, T.trim);
   } else {
     const shutter = new THREE.Mesh(new THREE.BoxGeometry(width * 0.78, height * 0.72, 0.1),
-      new THREE.MeshStandardMaterial({ map: metalPanelTex({ base: '#6b6f6a', period: 9 }), roughness: 0.86 }));
+      surf(metalPanelTex({ base: '#6b6f6a', ribMM: 75 }), { roughness: 0.86 }));
     shutter.position.set(0, height * 0.37, 0.02);
     g.add(shutter);
+    // ★ [P3-3] 卷帘门洞口压边（卷帘门框是最典型的"包边"结构）
+    addSill(g, width * 0.78, height * 0.72, 0, height * 0.37, 0.03, 0, T.trim);
   }
 
   // 雨棚
@@ -334,15 +439,15 @@ export function shopUnit({ width = 5, sign = '小卖部', tier = 2, height = 3.4
 export function shed({ w, d, h = 6.5, tier = 2, sawtooth = true, doors = 2, panel = null }) {
   const g = new THREE.Group();
   const mat = panel || (tier <= 1 ? P.common.panelRust : P.common.panel);
-  const m = mat.clone();
-  m.map = mat.map.clone();
-  m.map.needsUpdate = true;
-  m.map.repeat.set(w / 4, h / 4);
+  const m = fitRepeat(mat, w, h);
 
   const body = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), m);
   body.position.y = h / 2;
   body.castShadow = true; body.receiveShadow = true;
   g.add(body);
+
+  // ★ [P3-3] 厂房的角（钢结构必有角钢包边）
+  addVerticalChamfers(g, w, d, h, 0, P.common.metalLight, 4);
 
   // 锯齿屋顶（老厂房典型）
   if (sawtooth) {
@@ -371,9 +476,11 @@ export function shed({ w, d, h = 6.5, tier = 2, sawtooth = true, doors = 2, pane
     const dw = Math.min(4.2, w / (doors + 0.6));
     const x = doors === 1 ? 0 : -w / 2 + (i + 0.5) * (w / doors);
     const door = new THREE.Mesh(new THREE.BoxGeometry(dw, h * 0.62, 0.16),
-      new THREE.MeshStandardMaterial({ map: metalPanelTex({ base: '#7a7f78', period: 11 }), roughness: 0.84 }));
+      surf(metalPanelTex({ base: '#7a7f78', ribMM: 90 }), { roughness: 0.84 }));
     door.position.set(x, h * 0.31, d / 2 + 0.09);
     g.add(door);
+    // ★ [P3-3] 厂房大门洞口的包边（工业门必有门套）
+    addSill(g, dw, h * 0.62, x, h * 0.31, d / 2 + 0.11, 0, P.common.metalLight);
   }
 
   // 墙面通风管 / 配电箱
@@ -399,17 +506,17 @@ export function hall({ w, d, h = 11, tier = 2, steps = true, columns = true, roo
   const g = new THREE.Group();
   const wallMat = tier >= 3
     ? P.common.stone
-    : new THREE.MeshStandardMaterial({ map: concreteTex({ base: tier <= 1 ? '#8f8c84' : '#a5a29a', wet: 0.1, crack: 8 }), roughness: 0.9 });
+    : surf(concreteTex({ base: tier <= 1 ? '#8f8c84' : '#a5a29a', wet: 0.1, crack: 8 }), { roughness: 0.9 });
 
-  const wm = wallMat.clone();
-  wm.map = wallMat.map.clone();
-  wm.map.needsUpdate = true;
-  wm.map.repeat.set(w / 4.5, h / 4.5);
+  const wm = fitRepeat(wallMat, w, h);
 
   const body = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), wm);
   body.position.y = h / 2;
   body.castShadow = true; body.receiveShadow = true;
   g.add(body);
+
+  // ★ [P3-3] 机构大楼的角柱 —— 政务/银行建筑的转角本来就有石材角柱，正好对上
+  addVerticalChamfers(g, w, d, h, 0, P.common.stone, 4);
 
   // 竖向窗带（官方建筑的秩序感）
   const cols = Math.max(3, Math.round(w / 2.4));
@@ -476,14 +583,14 @@ export function teachingBlock({ w, d, floors = 4, floorH = 3.6, tier = 2, corrid
   const h = floors * floorH;
 
   const wallMat = pick(T.walls);
-  const mat = wallMat.clone();
-  mat.map = wallMat.map.clone();
-  mat.map.needsUpdate = true;
-  mat.map.repeat.set(w / 3.6, h / 3.6);
+  const mat = fitRepeat(wallMat, w, h);
   const body = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), mat);
   body.position.y = h / 2;
   body.castShadow = true; body.receiveShadow = true;
   g.add(body);
+
+  // ★ [P3-3] 教学楼的角
+  addVerticalChamfers(g, w, d, h, 0, T.trim, 4);
 
   const cols = Math.max(4, Math.round(w / 3.0));
   for (let f = 1; f <= floors; f++) {
@@ -584,7 +691,15 @@ export function stall({ w = 2.4, d = 1.2, tier = 2, colors = null, goods = true,
 /** 集装箱 */
 export function container({ w = 6, d = 2.4, h = 2.6, color = 0x3f5a6a }) {
   const g = new THREE.Group();
-  const m = new THREE.MeshStandardMaterial({ map: metalPanelTex({ base: '#3f5a6a', period: 12 }), roughness: 0.82, metalness: 0.24 });
+  /* ★ [P1-1 顺带修复] 原来传的是 `period: 12` —— 而 metalPanelTex 的参数名
+     早已是 `ribMM`。多传的参数被静默忽略 → 所有集装箱的波纹肋距都退回默认
+     150mm，跟"12"这个意图完全无关。这就是本项目第 4 类缺陷
+     「参数改名但调用方没跟」的标准样本：不报错、不崩、就是不对。
+     另外 metalness 0.24 属 P0-2 点名的"半金属"最差值，集装箱是**涂漆钢**，
+     漆面是非金属，归 0 才对（真金属感靠 IBL 反射，不靠 metalness）。 */
+  const m = surf(metalPanelTex({ base: '#3f5a6a', ribMM: 120 }), {
+    roughness: 0.82, metalness: 0,
+  });
   m.color = new THREE.Color(color);
   const body = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), m);
   body.position.y = h / 2;
@@ -656,11 +771,12 @@ export function fenceWall({ len, h = 2.4, tier = 2, kind = 'brick' }) {
   const g = new THREE.Group();
   let mat;
   if (kind === 'hoarding') {
-    mat = new THREE.MeshStandardMaterial({ map: metalPanelTex({ base: '#4d6a78', period: 20 }), roughness: 0.85, metalness: 0.15 });
+    // ★ 同 container：period → ribMM；metalness 0.15（半金属）→ 0
+    mat = surf(metalPanelTex({ base: '#4d6a78', ribMM: 200 }), { roughness: 0.85, metalness: 0 });
   } else if (kind === 'railing') {
     mat = null;
   } else {
-    mat = new THREE.MeshStandardMaterial({ map: concreteTex({ base: tier <= 1 ? '#84827a' : '#9a9890', wet: 0.15, crack: 10 }), roughness: 0.94 });
+    mat = surf(concreteTex({ base: tier <= 1 ? '#84827a' : '#9a9890', wet: 0.15, crack: 10 }), { roughness: 0.94 });
   }
 
   if (kind === 'railing') {
@@ -715,7 +831,7 @@ export function billboard({ w = 3.6, h = 2.2, y = 2.6, text = '招工', bg = '#3
 export function pole({ h = 9, arms = 3 } = {}) {
   const g = new THREE.Group();
   const p = new THREE.Mesh(new THREE.CylinderGeometry(0.15, 0.19, h, 10),
-    new THREE.MeshStandardMaterial({ map: concreteTex({ base: '#8b8a80', wet: 0, crack: 8 }), roughness: 0.95 }));
+    surf(concreteTex({ base: '#8b8a80', wet: 0, crack: 8 }), { roughness: 0.95 }));
   p.position.y = h / 2;
   p.castShadow = true;
   g.add(p);
@@ -928,7 +1044,7 @@ export function car({ color = 0x3a4148, kind = 'sedan' } = {}) {
     const cab = new THREE.Mesh(new THREE.BoxGeometry(2.2, 2.0, 2.4), bodyMat);
     cab.position.set(0, 1.5, 2.6); cab.castShadow = true; g.add(cab);
     const box = new THREE.Mesh(new THREE.BoxGeometry(2.5, 2.6, 5.4),
-      new THREE.MeshStandardMaterial({ map: metalPanelTex({ base: '#7a7f78', period: 14 }), roughness: 0.82 }));
+      surf(metalPanelTex({ base: '#7a7f78', ribMM: 110 }), { roughness: 0.82 }));
     box.position.set(0, 1.9, -1.6); box.castShadow = true; g.add(box);
     const wheelGeo = new THREE.CylinderGeometry(0.62, 0.62, 0.4, 12);
     for (const x of [-1.2, 1.2]) for (const z of [3.0, -1.0, -3.4]) {
@@ -957,7 +1073,7 @@ export function twoWheeler({ kind = 'scooter', color = 0x2f3a44 } = {}) {
   const wheelGeo = new THREE.CylinderGeometry(kind === 'bike' ? 0.34 : 0.27, kind === 'bike' ? 0.34 : 0.27, kind === 'bike' ? 0.05 : 0.1, 14);
   if (kind === 'tricycle') {
     const bed = new THREE.Mesh(new THREE.BoxGeometry(1.3, 0.5, 2.0),
-      new THREE.MeshStandardMaterial({ map: metalPanelTex({ base: '#6a5a4a' }), roughness: 0.88 }));
+      surf(metalPanelTex({ base: '#6a5a4a' }), { roughness: 0.88 }));
     bed.position.set(0, 0.62, -0.9); bed.castShadow = true; g.add(bed);
     const head = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.7, 0.9), new THREE.MeshStandardMaterial({ color, roughness: 0.6, metalness: 0.3 }));
     head.position.set(0, 0.75, 1.0); g.add(head);
@@ -1193,11 +1309,11 @@ export function groundPlane({ size = 140, tier = 2, mat = null }) {
 /** 路面：铺一条沥青路（沿 z 轴）。mat 可换成水泥/铺装等 */
 export function road({ len = 140, w = 12, x = 0, z = 0, mat = null }) {
   const base = mat || P.common.asphalt;
-  const m = base.clone();
-  m.map = base.map.clone();
-  m.map.needsUpdate = true;
-  // 3.4m 一个 tile：和地面底板保持同一尺度，否则两块地看起来不是同一个世界
-  m.map.repeat.set(w / 3.4, len / 3.4);
+  /* ★ [P3-1] 原来写死 3.4m/格 —— 而沥青纹理按 GROUND_TILE_M(4.5) 画骨料，
+     3.4 会让骨料偏粗。这里统一走 fitRepeat，tile 取纹理自带的尺度。 */
+  const tileM = (base.map && base.map.userData && base.map.userData.surface)
+    ? base.map.userData.surface.metersPerRepeat : TILE_M;
+  const m = fitRepeat(base, w, len, tileM);
   const p = new THREE.Mesh(new THREE.PlaneGeometry(w, len), m);
   p.rotation.x = -Math.PI / 2;
   p.position.set(x, 0.012, z);
@@ -1207,10 +1323,13 @@ export function road({ len = 140, w = 12, x = 0, z = 0, mat = null }) {
 
 /** 人行道（一侧铺装带） */
 export function sidewalk({ len = 140, w = 3.4, x = 0, z = 0 }) {
-  const m = P.common.paver.clone();
-  m.map = P.common.paver.map.clone();
-  m.map.needsUpdate = true;
-  m.map.repeat.set(w / 1.8, len / 1.8);
+  /* ★ [P3-1] 原来是 1.8m/格 —— 一张铺装纹理里画的是 **4 行 300mm 方砖**，
+     1.8m 一格 → 实际显示出来一块方砖只有 112mm，是真人行道砖的 1/2.7。
+     这就是"地面像贴纸"的直接来源。改用纹理自带的 GROUND_TILE_M。 */
+  const tileM = (P.common.paver.map && P.common.paver.map.userData
+    && P.common.paver.map.userData.surface)
+    ? P.common.paver.map.userData.surface.metersPerRepeat : TILE_M;
+  const m = fitRepeat(P.common.paver, w, len, tileM);
   const p = new THREE.Mesh(new THREE.PlaneGeometry(w, len), m);
   p.rotation.x = -Math.PI / 2;
   p.position.set(x, 0.02, z);
