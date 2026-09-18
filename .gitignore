@@ -114,3 +114,15 @@ Microsoft/
 /dev/_3dtest/shots/
 /dev/_3dtest/shots-ingame/
 /dev/_3dtest/shots-shell/
+
+# dev/ 下其余截图产物（同样每次跑脚本重新生成）
+#   shots/         —— scripts/shot-scene3d.cjs 逐地点截图
+#   shots-game/    —— scripts/shot-scene3d-game.cjs 正式游戏内截图
+#   shots-canvas/  —— 纯 canvas 直出（无 HUD）对照
+#   shots-mini/    —— 侧栏缩略景对照
+#   gb/            —— scripts/shot-guidance-bar.cjs 的 before/after 对比图
+/dev/shots/
+/dev/shots-game/
+/dev/shots-canvas/
+/dev/shots-mini/
+/dev/gb/

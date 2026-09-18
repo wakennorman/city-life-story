@@ -80,6 +80,9 @@ export function create3DShell(opts = {}) {
           hud.setTop(s);
           hud.setNeeds(s.needs, s.status);
           if (s.ap) hud.setAP(s.ap.cur, s.ap.max);
+          /* 时段照明：上午/下午/傍晚/夜间 四个 slot 跟着走，阳光/雾/曝光都追平。
+             inZOI 拟真的核心就是「动态时间」而非 materia。 */
+          if (s.slot && view) view.setTimeSlot(s.slot);
         }
       }
       if (readActions) {
@@ -179,6 +182,7 @@ export function create3DShell(opts = {}) {
         vitals: hud.el.querySelectorAll(".s3h-vital").length,
         promptVisible: !hud.el.querySelector('[data-f="prompt"]').hidden,
         view: view ? view.view : null,
+        timeSlot: view ? view.timeSlot : null,
         tris: view ? view.stats.triangles : 0,
         calls: view ? view.stats.calls : 0,
       };

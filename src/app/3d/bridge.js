@@ -38,6 +38,26 @@ const TONE = {
   exposure: 1.3,
 };
 
+/** 时段预设 —— 恒稳要求往 inZOI 的「夕阳-暖在地」拟真方向靠。
+   光有冷暖对比就不会变成灰色块。预设按 HUD 的四个时段定：
+   上午=晨光暖偏白，下午=下午更暖，傍晚=夕阳橙偏冷天，夜间=月色冷偏暗。
+   数值对齐 inZOI 的评估：要求暖阳光 + 冷环境双温对比。 */
+const SLOT_PRESETS = {
+  上午: { sunColor: 0xf4e8cc, sunPos: [20, 24, -12], sunIntensity: 2.20,
+         hemSky: 0x7d8d96, hemGround: 0x42443c, hemIntensity: 1.4,
+         fogColor: 0x555c55, ambColor: 0x515861, ambIntensity: 0.85, exposure: 1.30, skyColor: 0x59615a },
+  下午: { sunColor: 0xf6d8a8, sunPos: [-16, 20, 14], sunIntensity: 2.25,
+         hemSky: 0x85a0b0, hemGround: 0x444a46, hemIntensity: 1.45,
+         fogColor: 0x575e58, ambColor: 0x546070, ambIntensity: 0.80, exposure: 1.26, skyColor: 0x5a6258 },
+  傍晚: { sunColor: 0xd67f3f, sunPos: [-26, 10, 20], sunIntensity: 2.40,
+         hemSky: 0x8b9fc0, hemGround: 0x4a4a3c, hemIntensity: 1.20,
+         fogColor: 0x6d6d62, ambColor: 0x6b7a94, ambIntensity: 0.60, exposure: 1.18, skyColor: 0x6b6d6a },
+  夜间: { sunColor: 0x8ac0e8, sunPos: [0, 40, 0], sunIntensity: 0.30,
+         hemSky: 0x304050, hemGround: 0x2a3030, hemIntensity: 0.70,
+         fogColor: 0x393f44, ambColor: 0x243648, ambIntensity: 0.45, exposure: 0.90, skyColor: 0x2a3036 },
+};
+const DEFAULT_SLOT = "上午";
+
 /** 默认机位（IsoCamera 构造值）。双击回正时回到这里。 */
 const DEFAULT_YAW = 0.38;
 const DEFAULT_PITCH = 0.76;
@@ -101,7 +121,33 @@ export function createGame3D(opts) {
   scene.add(sun);
   scene.add(sun.target);
 
-  scene.add(new THREE.AmbientLight(TONE.ambient.color, TONE.ambient.intensity));
+  const ambLight = new THREE.AmbientLight(TONE.ambient.color, TONE.ambient.intensity);
+  scene.add(ambLight);
+
+  /* ── 时段照明（拟真，恒稳点名要 inZOI 的夕阳/暮色那一挂）────────────
+     每换一个时段，只调整光的参数，不动场景。哪天把这个函数放回一个
+     光学编辑器里（即「locate 光照」到某个 slot，并曝光/雾同时追平）
+     一律从这里读环境。 */
+  let currentSlot = DEFAULT_SLOT;
+  function applyTimeSlot(slot) {
+    if (!slot) return;
+    const preset = SLOT_PRESETS[slot];
+    if (!preset) return;
+    currentSlot = slot;
+    sun.color.set(preset.sunColor);
+    sun.position.set(...preset.sunPos);
+    sun.intensity = preset.sunIntensity;
+    ambLight.color.set(preset.ambColor);
+    ambLight.intensity = preset.ambIntensity;
+    hemi.color.set(preset.hemSky);
+    hemi.groundColor.set(preset.hemGround);
+    hemi.intensity = preset.hemIntensity;
+    scene.fog.color.set(preset.fogColor);
+    scene.background = new THREE.Color(preset.skyColor);
+    renderer.toneMappingExposure = preset.exposure;
+  }
+  /* 第一次一定要把时段照明跑一遍，否则后面 setTimeSlot 出来的时候默认值可能不一致 */
+  applyTimeSlot(DEFAULT_SLOT);
 
   initMaterials();
   buildPalette();
@@ -406,6 +452,10 @@ export function createGame3D(opts) {
     resetView() { cam.yaw = DEFAULT_YAW; cam.pitch = DEFAULT_PITCH; cam.apply(cam.cur); },
     /** 只读当前机位，供 UI 显示或测试断言 */
     get view() { return { yaw: cam.yaw, pitch: cam.pitch, dist: cam.dist }; },
+    /** 时段照明（上午/下午/傍晚/夜间）。HUD 切 slot 时调，光照跟着走。 */
+    setTimeSlot(slot) { applyTimeSlot(slot); },
+    /** 只读当前时段（验证脚本用） */
+    get timeSlot() { return currentSlot; },
     /* ── 只读状态 ── */
     get locationId() { return currentId; },
     get hotspot() { return focused; },

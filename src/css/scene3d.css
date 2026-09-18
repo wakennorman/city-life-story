@@ -354,6 +354,25 @@
 }
 .s3h-vital[data-tone="bad"] .s3h-vital-num { color: var(--s3h-bad); font-weight: 600; }
 
+/* 心态（派生生命线）—— 比需求行大一档，最上面单独突出。
+   这是《大多数》的组织方式：心态 = 综合生理值，真正的生命线。 */
+.s3h-mental .s3h-vital-bar {
+  height: 7px;
+  border-radius: 4px;
+  background: rgba(232, 228, 216, 0.18);
+}
+.s3h-mental .s3h-vital-icon { font-size: 13px; }
+
+/* 疲劳系数 —— 由 needs.fatigue 派生的单行小字（不独立成条）。
+   以后把疲劳当「影响恢复速度的系数」用，不再和 AP 抬杠。 */
+.s3h-fatigue {
+  font-size: 10px;
+  color: #8f8a79;
+  padding-top: 1px;
+  letter-spacing: 0.02em;
+  display: none;
+}
+
 /* ── 行动力：压在左下，显眼但不挡路 ─────────────────────────────────────── */
 .s3h-ap {
   position: absolute;

@@ -615,6 +615,53 @@ function queueRandomEvent(state, phase) {
  * ========================================================= */
 
 /**
+ * 拆分事件标题里的「图标」与「标题文字」。
+ *
+ * 背景：事件对象的 icon 有两种写法 ——
+ *   ① 独立 icon 字段（RANDOM_EVENTS 一侧多为此种）
+ *   ② 把 emoji 直接写在 title 开头（data/moral_events.js 的 102 条 title 里
+ *      只有 1 条带独立 icon 字段，其余 101 条全靠 title 首字符承载图标）
+ *
+ * 弹框原来原样渲染 evt.icon（不取兜底值），遇到第 ② 种就字面输出 "undefined"，
+ * 变成「undefined 🚲 路边一辆没锁的共享单车」。这个问题一直存在，
+ * 只是这类事件此前从没被触发过；§57/§60/§61 那几轮审计把大量从未触发的事件
+ * 接回触发链后，就一起冒出来了。
+ *
+ * 这里在渲染层把 title 头部的 emoji 提到图标位，并且不修改 evt.title 本身
+ * —— 标题还被子标题、tooltip、日报等其它消费者读取，动数据会波及它们。
+ */
+function splitEventIcon(evt) {
+  var title = (evt && evt.title) || "";
+  if (evt && evt.icon) return { icon: evt.icon, title: title };
+  if (!title) return { icon: "📜", title: title };
+
+  var cp = title.codePointAt(0);
+  if (cp == null) return { icon: "📜", title: title };
+
+  // 常见图标码位区段：主 emoji 面 / 杂项符号 / 装饰符 / 箭头 / 区域指示符
+  var isIcon =
+    (cp >= 0x1f000 && cp <= 0x1faff) ||
+    (cp >= 0x2600 && cp <= 0x27bf) ||
+    (cp >= 0x2190 && cp <= 0x21ff) ||
+    (cp >= 0x2b00 && cp <= 0x2bff);
+  if (!isIcon) return { icon: "📜", title: title };
+
+  var i = cp > 0xffff ? 2 : 1;
+  // 连带吃掉后面的变体选择符(U+FE0F)与零宽连接符(U+200D)序列，
+  // 否则会把"👨‍👩‍👧"这类组合 emoji 拆散
+  while (i < title.length) {
+    var c = title.charCodeAt(i);
+    if (c === 0xfe0f || c === 0x200d) { i++; continue; }
+    if (c >= 0xd800 && c <= 0xdbff) { i += 2; continue; }
+    break;
+  }
+  return {
+    icon: title.slice(0, i),
+    title: title.slice(i).replace(/^[\s\u3000]+/, ""),
+  };
+}
+
+/**
  * 渲染并展示一个事件模态框
  * @param {Object} evt - 事件对象
  */
@@ -760,13 +807,15 @@ function showEventModal(evt) {
 
   const overlay = document.createElement("div");
   overlay.className = "modal-overlay event-modal " + springFestClass;
+  // 图标可能藏在 title 开头（见 splitEventIcon 注释），先拆出来再渲染
+  const _evtHead = splitEventIcon(evt);
   overlay.innerHTML = `
     <div class="modal-box event-box ${springFestClass}">
       ${springFestDecorHtml}
       ${springFestProgressHtml}
       <div class="event-header">
-        <div class="event-icon" title="${evt.title}">${evt.icon}</div>
-        <h2 class="event-title" title="${evt.story ? evt.story.replace(/<[^>]*>/g, '').replace(/\s*(——|—|-)?\s*\{[a-zA-Z]+\}/g, '').substring(0, 100) : ''}">${evt.title}</h2><!-- [全系统自洽修复] 域B R722b B类: tooltip取story原文致全库782处{desc}类占位符悬停泄漏,渲染层单点剥离 -->
+        <div class="event-icon" title="${evt.title}">${_evtHead.icon}</div>
+        <h2 class="event-title" title="${evt.story ? evt.story.replace(/<[^>]*>/g, '').replace(/\s*(——|—|-)?\s*\{[a-zA-Z]+\}/g, '').substring(0, 100) : ''}">${_evtHead.title}</h2><!-- [全系统自洽修复] 域B R722b B类: tooltip取story原文致全库782处{desc}类占位符悬停泄漏,渲染层单点剥离 -->
         ${evt.weather ? '<span class="event-tag weather-tag" style="font-size:10px;padding:1px 6px;border-radius:3px;background:rgba(90,138,180,0.15);color:var(--info);margin-left:8px;">🌤️ 天气</span>' : ""}
         ${evt.sector ? '<span class="event-tag sector-tag" style="font-size:10px;padding:1px 6px;border-radius:3px;background:rgba(74,158,92,0.15);color:var(--success);margin-left:4px;">🏭 ' + evt.sector + '</span>' : ""}
       </div>

@@ -7,7 +7,13 @@
  * 与 scripts/lib/serve.cjs 的区别：
  *   serve.cjs 是给**验证脚本**用的，跑完就 close()；
  *   本脚本是给人用的，起完一直挂着，Ctrl+C 才停。
- *   两者共用同一套 MIME/目录穿越防护逻辑，这里直接复用它。
+ *
+ * ★ 本次修的两处真实故障（恒稳报 404）：
+ *   1. 路径解析要做**污染容错**。聊天窗口里自动链接会把中文全角括号 `）`
+ *      吞进 URL，于是服务器收到 "dev/_3dtest/shell.html）" 而 404。
+ *      现在：多次解码 → 找不到就逐次裁掉末尾的非路径字符再重试。
+ *   2. "/" 现在是个真正的首页（三个入口的可点列表）。
+ *      告知用户路径变短 = 更难被链接器弄坏。
  *
  * ★ 服务根必须是**项目根**。dev/_3dtest/shell.html 里引用的是
  *   /src/css/scene3d.css（绝对路径），根指到 dev/_3dtest 就会 404，
@@ -40,22 +46,105 @@ const MIME = {
 };
 
 const PAGES = [
-  ["3D-first 外壳（开局就是 3D + HUD）", "/dev/_3dtest/shell.html"],
-  ["3D 场景画廊（29 地点逐个看）", "/dev/scene3d-gallery.html"],
-  ["正式游戏（dist 构建产物）", "/dist/index.html"],
+  { label: "3D-first 外壳（开局就是 3D + HUD）", path: "/dev/_3dtest/shell.html", tip: "目标形态" },
+  { label: "3D 场景画廊（29 地点逐个看）", path: "/dev/scene3d-gallery.html", tip: "看逐个地点" },
+  { label: "正式游戏（dist 构建产物）", path: "/dist/index.html", tip: "当前线上同款" },
 ];
 
+/* ── 路径解析：先做污染容错 ─────────────────────────────────────────────── */
+
+function resolveFile(rawUrl) {
+  // 只要 query 前的路径部分；然后能接受多次百分号编码（全角括号常带来二层编码）
+  let rel = rawUrl.split("?")[0].split("#")[0];
+  for (let i = 0; i < 3; i++) {
+    try {
+      const d = decodeURIComponent(rel);
+      if (d === rel) break;
+      rel = d;
+    } catch { break; }
+  }
+  rel = rel.replace(/\\/g, "/").replace(/>/g, "").replace(/^[\/]+/, "");
+
+  // 空路径 → 首页
+  if (!rel) return null;
+
+  // 先按原样试（保留合法的中文文件名）
+  let candidate = rel;
+  for (let trim = 0; trim <= 12; trim++) {
+    const fp = path.resolve(ROOT, candidate);
+    if (fp === ROOT || fp.startsWith(ROOT + path.sep)) {
+      try {
+        if (fs.existsSync(fp) && fs.statSync(fp).isFile()) return fp;
+      } catch { /* fall through */ }
+    }
+    // 找不到就裁掉末尾的一段非路径可用字符（全角括号/乱字符/截断的百分号等），重试
+    const m = candidate.match(/[^0-9A-Za-z._\-\/~!$&'()+,;=@%]+$/);
+    if (!m || m.index === 0) break;
+    candidate = candidate.slice(0, m.index);
+  }
+  return null;
+}
+
+function indexHtml() {
+  const cards = PAGES.map((p) => {
+    const abs = path.join(ROOT, p.path);
+    const exists = fs.existsSync(abs);
+    return `<a class="card ${exists ? "" : "ghostify"}" href="${p.path}">
+      <div class="t">${p.label}</div>
+      <div class="path">${p.path}</div>
+      <div class="tip">${p.tip}${exists ? "" : " · ⚠ 文件不存在，需先构建"}</div>
+    </a>`;
+  }).join("");
+  return `<!DOCTYPE html><html lang="zh-CN"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>城市浮生记 · 本地预览</title>
+<style>
+  body { margin: 0; min-height: 100vh; background: #15171b; color: #e8e4d8;
+         font-family: "PingFang SC", "Microsoft YaHei", sans-serif;
+         display: flex; align-items: center; justify-content: center; }
+  main { width: min(640px, 92vw); padding: 40px 0; }
+  h1 { font-size: 20px; font-weight: 600; letter-spacing: .05em; margin: 0 0 4px; }
+  .sub { color: #9aa091; font-size: 12px; margin-bottom: 28px; }
+  .card { display: block; text-decoration: none; color: inherit;
+          border: 1px solid #2e3236; border-radius: 12px; padding: 14px 18px;
+          margin-bottom: 10px; transition: border-color .15s, background .15s; }
+  .card:hover { border-color: #d8b45a; background: #1b1e22; }
+  .t { font-size: 14px; font-weight: 600; }
+  .path { font-family: Consolas, monospace; font-size: 11px; color: #7d8489; margin: 2px 0; }
+  .tip { font-size: 11px; color: #d8b45a; }
+  .ghostify { opacity: .45; }
+  .foot { margin-top: 26px; font-size: 11px; color: #666c6f; }
+  code { background: #23262b; padding: 2px 7px; border-radius: 5px; }
+  kbd { background: #23262b; padding: 1px 6px; border-radius: 4px;
+        border: 1px solid #3a3f45; font-size: 10px; }
+</style></head><body><main>
+  <h1>城市浮生记 · 本地预览</h1>
+  <div class="sub">双击 <code>start-3d-shell.bat</code> 可随时重启本服务</div>
+  ${cards}
+  <div class="foot">3D 页内：<kbd>WASD</kbd> 走动 · <kbd>按住左键拖动</kbd> 转视角 · <kbd>E</kbd> 交互 · <kbd>Tab</kbd> 行动 · <kbd>M</kbd> 去处</div>
+</main></body></html>`;
+}
+
 const srv = http.createServer((req, res) => {
-  const rel = decodeURIComponent(req.url.split("?")[0]).replace(/^\/+/, "") || "index.html";
-  const fp = path.resolve(ROOT, rel);
-  if (fp !== ROOT && !fp.startsWith(ROOT + path.sep)) {
-    res.writeHead(403).end("forbidden");
+  const rawPath = req.url.split("?")[0].split("#")[0];
+
+  // 首页
+  if (!rawPath || rawPath === "/") {
+    res.writeHead(200, { "Content-Type": "text/html; charset=utf-8", "Cache-Control": "no-store" });
+    res.end(indexHtml());
+    return;
+  }
+
+  const fp = resolveFile(req.url);
+  if (!fp) {
+    // 目录穿越或不存在 → 404（兜底指回顾首页）
+    res.writeHead(404, { "Content-Type": "text/plain; charset=utf-8" });
+    res.end("404 — 没这个页面。回首页看有哪些入口：http://127.0.0.1:" + PORT + "/");
     return;
   }
   fs.readFile(fp, (err, buf) => {
     if (err) {
-      res.writeHead(404, { "Content-Type": "text/plain; charset=utf-8" });
-      res.end("404 not found: " + rel);
+      res.writeHead(500).end("read error: " + fp);
       return;
     }
     res.writeHead(200, {
@@ -80,10 +169,12 @@ srv.listen(PORT, "127.0.0.1", () => {
   console.log("");
   console.log("  城市浮生记 · 本地预览已启动");
   console.log("  " + "─".repeat(56));
-  for (const [label, p] of PAGES) {
-    const exists = fs.existsSync(path.join(ROOT, p));
-    console.log(`  ${exists ? "  " : "!!"} ${label}`);
-    console.log(`      http://127.0.0.1:${PORT}${p}${exists ? "" : "   ← 文件不存在，需先构建"}`);
+  console.log(`  ★ 直接访问首页（三个入口都在里面）：`);
+  console.log(`      http://127.0.0.1:${PORT}/`);
+  console.log("  " + "─".repeat(56));
+  for (const p of PAGES) {
+    const exists = fs.existsSync(path.join(ROOT, p.path));
+    console.log(`  ${exists ? "  " : "!!"} ${p.label}${exists ? "" : "  ← 文件不存在"}`);
   }
   console.log("  " + "─".repeat(56));
   console.log("  按 Ctrl+C 停止");

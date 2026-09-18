@@ -1199,21 +1199,51 @@ function renderCareerJobs(state, parent) {
       '<div style="font-size:9px;color:var(--text-muted);margin:4px 0 2px;">📈 提升业绩/资源</div>';
     html +=
       '<div style="display:flex;flex-wrap:wrap;gap:4px;" data-scroll-anchor="career-actions">';
+    // [数据诚实] 副标题必须与 careerWorkAction 的实际实现一致：
+    // 做项目 业绩+8/资源+2/倦怠+3/AP3；加班 业绩+5/加班费/倦怠+5/健康-2/AP2；
+    // 冲刺KPI 业绩+12/资源+5/声誉+3/倦怠+6/AP4。原文案漏报倦怠与副作用。
     html +=
-      '<button class="btn btn-sm" style="min-height:44px;font-size:11px;" title="业绩+8, 行业资源+2, 消耗AP3" onclick="careerWorkAction(\'project\')">💼 做项目<span style="font-size:9px;display:block;color:var(--text-muted);">AP3 · 业绩+8</span></button>';
+      '<button class="btn btn-sm" style="min-height:44px;font-size:11px;" title="业绩+8, 行业资源+2, 倦怠+3, 消耗AP3" onclick="careerWorkAction(\'project\')">💼 做项目<span style="font-size:9px;display:block;color:var(--text-muted);">AP3 · 业绩+8 · 倦怠+3</span></button>';
     html +=
-      '<button class="btn btn-sm" style="min-height:44px;font-size:11px;" title="业绩+3, 消耗AP2" onclick="careerWorkAction(\'overtime\')">🌙 加班<span style="font-size:9px;display:block;color:var(--text-muted);">AP2 · 业绩+3</span></button>';
+      '<button class="btn btn-sm" style="min-height:44px;font-size:11px;" title="业绩+5, 加班费, 倦怠+5, 健康-2, 消耗AP2" onclick="careerWorkAction(\'overtime\')">🌙 加班<span style="font-size:9px;display:block;color:var(--text-muted);">AP2 · 业绩+5 · 倦怠+5</span></button>';
     html +=
-      '<button class="btn btn-sm" style="min-height:44px;font-size:11px;" title="业绩+12, 消耗AP4" onclick="careerWorkAction(\'kpi\')">🎯 冲刺KPI<span style="font-size:9px;display:block;color:var(--text-muted);">AP4 · 业绩+12</span></button>';
+      '<button class="btn btn-sm" style="min-height:44px;font-size:11px;" title="业绩+12, 行业资源+5, 声誉+3, 倦怠+6, 消耗AP4" onclick="careerWorkAction(\'kpi\')">🎯 冲刺KPI<span style="font-size:9px;display:block;color:var(--text-muted);">AP4 · 业绩+12 · 倦怠+6</span></button>';
     html += "</div>";
     // 休息组
     html +=
       '<div style="font-size:9px;color:var(--text-muted);margin:8px 0 2px;">😴 缓解倦怠/恢复状态</div>';
     html += '<div style="display:flex;flex-wrap:wrap;gap:4px;">';
-    html +=
-      '<button class="btn btn-sm" style="min-height:44px;font-size:11px;" title="消耗AP1, 倦怠-8, 心情+5" onclick="careerTakeBreak()">😴 调休<span style="font-size:9px;display:block;color:var(--text-muted);">AP1 · 倦怠-8</span></button>';
+    // [门槛透明化] 原来调休按钮恒为可点，门槛（在职≥20天 / 每30天1次 / AP≥1）藏在
+    // careerTakeBreak() 内部 early-return，点了只弹一条容易被忽略的消息
+    // —— 玩家据此记为「点击调休没反应」。改为按门槛渲染：
+    // 不满足就 disabled，并把原因直接写在按钮上。
+    // [数据诚实] 原副标题「倦怠-8」与实现不符（实际 -25），一并修正。
     // [全系统自洽修复] 域C R391: state.career.currentJob 无守卫→无工作时TypeError
     var _cj = state.career && state.career.currentJob;
+    var _breakDays = _cj ? _cj.workDays || 0 : 0;
+    var _lastBreak =
+      _cj && _cj._lastBreakDay != null ? _cj._lastBreakDay : -999;
+    var _breakCooldownLeft =
+      _lastBreak > 0 ? Math.max(0, 30 - (p.day - _lastBreak)) : 0;
+    if (!_cj) {
+      html +=
+        '<button class="btn btn-sm" style="min-height:44px;font-size:11px;opacity:0.5;" disabled title="需先入职">😴 调休<span style="font-size:9px;display:block;color:var(--text-muted);">未在职</span></button>';
+    } else if (_breakDays < 20) {
+      html +=
+        '<button class="btn btn-sm" style="min-height:44px;font-size:11px;opacity:0.5;" disabled title="调休需在职≥20天（当前 ' +
+        _breakDays +
+        ' 天）">😴 调休<span style="font-size:9px;display:block;color:var(--text-muted);">需在职20天</span></button>';
+    } else if (_breakCooldownLeft > 0) {
+      html +=
+        '<button class="btn btn-sm" style="min-height:44px;font-size:11px;opacity:0.5;" disabled title="调休每30天1次（上次第' +
+        _lastBreak +
+        '天）">😴 调休<span style="font-size:9px;display:block;color:var(--text-muted);">还需' +
+        _breakCooldownLeft +
+        "天</span></button>";
+    } else {
+      html +=
+        '<button class="btn btn-sm" style="min-height:44px;font-size:11px;" title="消耗AP1, 倦怠-25, 心情+5, 业绩-2" onclick="careerTakeBreak()">😴 调休<span style="font-size:9px;display:block;color:var(--text-muted);">AP1 · 倦怠-25</span></button>';
+    }
     var _onLeaveCooldown =
       _cj && (_cj._lastPaidLeaveDay || 0) > 0 &&
       state.player.day - (_cj._lastPaidLeaveDay || 0) < 180;
@@ -1243,22 +1273,54 @@ function renderCareerJobs(state, parent) {
         '<div style="font-size:10px;color:var(--text-muted);margin-bottom:4px;">客户线索或声誉打开新机会（接受后30天冷却）</div>';
       for (var oi = 0; oi < jobOffers.length; oi++) {
         var of = jobOffers[oi];
+        // [门槛透明化] generateJobOffers 只按「职级/跨行」挑目标，**从不校验玩家是否达标**，
+        // 于是列表里会挂着「薪资诱人但必然被拒」的 offer：
+        // 点「接受offer」→ applyJobhop 内部 checkCareerPromotion 失败 → 只弹一条警告，
+        // 玩家看到的是一个永远点不动的按钮。这里先自查门槛，不达标的直接禁用并写明缺什么。
+        var _ofPath = CAREER_PATHS[of.path];
+        var _ofLevel = null;
+        if (_ofPath) {
+          for (var _li = 0; _li < _ofPath.levels.length; _li++) {
+            if (_ofPath.levels[_li].id === of.levelId) {
+              _ofLevel = _ofPath.levels[_li];
+              break;
+            }
+          }
+        }
+        var _ofOk =
+          !!_ofLevel &&
+          typeof checkCareerPromotion === "function" &&
+          checkCareerPromotion(state, of.path, _ofLevel);
         html +=
-          '<div class="card" style="padding:10px;margin:4px 0;font-size:11px;border:2px solid var(--border);border-radius:8px;">';
+          '<div class="card" style="padding:10px;margin:4px 0;font-size:11px;border:2px solid ' +
+          (_ofOk ? "var(--border)" : "rgba(255,183,77,0.35)") +
+          ';border-radius:8px;">';
         html +=
           "<div><strong>" +
           of.levelName +
           "</strong> · 月薪¥" +
           of.salary.toLocaleString() +
+          (_ofOk ? "" : ' <span style="font-size:9px;color:var(--warning);">⚠️ 未达标</span>') +
           "</div>";
         html +=
           '<div style="font-size:10px;color:var(--text-muted);margin:2px 0 6px;">' +
           of.desc +
           "</div>";
-        html +=
-          '<button class="btn btn-xs" style="min-height:44px;font-size:11px;padding:4px 10px;" onclick="applyJobhop(\'' +
-          of.id +
-          "')\">接受offer</button>";
+        if (_ofOk) {
+          html +=
+            '<button class="btn btn-xs" style="min-height:44px;font-size:11px;padding:4px 10px;" onclick="applyJobhop(\'' +
+            of.id +
+            "')\">接受offer</button>";
+        } else {
+          html +=
+            '<div style="font-size:10px;color:var(--warning);margin-bottom:4px;">' +
+            (_ofLevel && typeof renderPromotionReqs === "function"
+              ? renderPromotionReqs(state, of.path, _ofLevel)
+              : "不满足该职位门槛") +
+            "</div>";
+          html +=
+            '<button class="btn btn-xs" style="min-height:44px;font-size:11px;padding:4px 10px;opacity:0.5;" disabled title="不满足该职位门槛，先按上面的条件提升">接受offer</button>';
+        }
         html += "</div>";
       }
       html += "</div>";
@@ -3184,11 +3246,13 @@ function checkCareerPromotionDetailed(state, pathId, level) {
   var career = state.career || {};
   var workDays = career.currentJob ? career.currentJob.workDays || 0 : 0;
   if (level.reqWorkDays) {
+    // [数据诚实] 原来标签写死「年」（180天→「≥0年」）、当前值写死「个月」（25天→「0个月」），
+    // 数值被单位抹平成 0。改用 _fmtCareerDays 按量级选单位。
     results.push({
-      label: "在职≥" + Math.floor(level.reqWorkDays / 365) + "年",
+      label: "在职≥" + _fmtCareerDays(level.reqWorkDays),
       ok: workDays >= level.reqWorkDays,
-      current: Math.floor(workDays / 30) + "个月",
-      required: Math.floor(level.reqWorkDays / 365) + "年",
+      current: _fmtCareerDays(workDays),
+      required: _fmtCareerDays(level.reqWorkDays),
     });
   }
 
@@ -3260,6 +3324,24 @@ function _allMet(results) {
     if (!results[i].ok) return false;
   }
   return true;
+}
+
+/**
+ * [数据诚实] 在职天数的人类可读格式。
+ *
+ * 原来两处都写死「年」：`Math.floor(reqWorkDays/365) + "年"`。
+ * 快递员的 reqWorkDays=180 → Math.floor(180/365)=0 → 界面显示「在职≥0年」，
+ * 而当前值写死「个月」：在职 25 天 → Math.floor(25/30)=0 → 「0个月」。
+ * 一键读起来就是「在职≥0年 ✘ 0个月」这种无意义文案（玩家的真实进度被抹平）。
+ * 这里按量级选单位，保证任何非零值都不会塌成 0。
+ */
+function _fmtCareerDays(d) {
+  var n = Number(d);
+  if (!isFinite(n) || n <= 0) return "0天";
+  if (n < 30) return Math.round(n) + "天";
+  if (n < 365) return Math.round(n / 30) + "个月"; // 180 → 6个月
+  var y = n / 365;
+  return (Math.abs(y - Math.round(y)) < 1e-9 ? Math.round(y) : y.toFixed(1)) + "年";
 }
 
 function getCareerPerformanceRequirement(level) {
@@ -5416,7 +5498,7 @@ function showCareerPathPreviewModal(pathKey) {
       }
     }
     if (lv.reqWorkDays)
-      reqParts.push("≥" + Math.floor(lv.reqWorkDays / 365) + "年");
+      reqParts.push("在职≥" + _fmtCareerDays(lv.reqWorkDays));
     if (lv.reqEducation) reqParts.push("大专+");
     if (lv.reqSocial) reqParts.push("人脉≥" + Math.floor(lv.reqSocial / 20));
     if (reqParts.length > 0) {

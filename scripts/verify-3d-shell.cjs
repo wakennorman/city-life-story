@@ -141,7 +141,20 @@ async function main() {
   check("R 键回到默认机位", Math.abs(v2.yaw - 0.38) < 0.02 && Math.abs(v2.pitch - 0.76) < 0.02,
     `yaw ${v2.yaw.toFixed(3)} / pitch ${v2.pitch.toFixed(3)}`);
 
-  console.log("\n⑤ 点击行动 → 状态变化");
+  console.log("\n⑤ 时段照明跟随（拟真,inZOI 的夕阳-暖在地那一挂）");
+  const slot0 = await page.evaluate(() => window.__shell.debug.timeSlot);
+  await page.keyboard.press("Space");
+  await sleep(600);
+  const slot1 = await page.evaluate(() => window.__shell.debug.timeSlot);
+  await page.keyboard.press("Space");
+  await page.keyboard.press("Space");
+  await sleep(900);
+  const slot2 = await page.evaluate(() => window.__shell.debug.timeSlot);
+  check("时段照明跟随 slot 变化", slot0 !== slot1 && slot1 !== slot2,
+    `${slot0} → ${slot1} → ${slot2}`);
+  await page.screenshot({ path: path.join(OUT, "4-time-dusk.png") });
+
+  console.log("\n⑥ 点击行动 → 状态变化");
   const before = await page.evaluate(() => document.querySelector('[data-f="apText"]').textContent);
   const clicked = await page.evaluate(() => {
     const b = [...document.querySelectorAll('.s3h-act')].find((x) => !x.classList.contains('is-off'));
@@ -155,7 +168,7 @@ async function main() {
   check("点击行动有真实反馈（AP 下降）", !!clicked && before !== after,
     `${clicked}：AP ${before} → ${after}`);
 
-  console.log("\n⑥ 去处列表 + 切换地点");
+  console.log("\n⑦ 去处列表 + 切换地点");
   await page.keyboard.press("KeyM");
   await sleep(500);
   const mapOpen = await page.evaluate(() => !document.querySelector('[data-f="map"]').hidden);

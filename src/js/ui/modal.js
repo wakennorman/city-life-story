@@ -35,13 +35,68 @@ function showModal() {
   return showModalImpl(args[0] || {});
 }
 
+// ====== 弹窗队列 ======
+// [系统性修复] 原实现在「DOM 里已有 .modal-overlay」时直接 `return` 丢弃新弹窗，
+// 而下面的按钮处理器是「先跑 callback、后移除 overlay」的顺序 ——
+// 于是任何「在弹窗里点按钮 → 打开另一个弹窗」的流程，新弹窗必然在旧 overlay
+// 仍存在时发起 → 被静默吞掉 → 玩家观察到的是彻底的「点击没反应」
+// （不报错、不留消息、不改状态，因为新弹窗连构造都没开始）。
+// 已复现的受害者：饥饿临界提示框点「🍳 在家做饭」→ 食谱选择弹窗被吞。
+// 改为排队：当前弹窗关闭后自动补显示。既保住「不挤掉每日结算弹窗」的原意，
+// 又不丢任何一个弹窗。
+var _modalQueue = [];
+var _MODAL_QUEUE_MAX = 8;
+var _MODAL_QUEUE_TTL = 10000; // 入队超过 10s 视为过期，避免陈旧弹窗突然弹出
+var _modalQueueObserver = null;
+
+function _ensureModalQueueObserver() {
+  if (_modalQueueObserver) return;
+  if (typeof MutationObserver !== "function" || !document.body) return;
+  _modalQueueObserver = new MutationObserver(function (muts) {
+    for (var i = 0; i < muts.length; i++) {
+      var removed = muts[i].removedNodes;
+      for (var j = 0; j < removed.length; j++) {
+        var n = removed[j];
+        if (n && n.classList && n.classList.contains("modal-overlay")) {
+          setTimeout(_flushModalQueue, 0);
+          return;
+        }
+      }
+    }
+  });
+  _modalQueueObserver.observe(document.body, { childList: true });
+}
+
+function _flushModalQueue() {
+  if (!_modalQueue.length) return;
+  if (document.querySelector(".modal-overlay")) return; // 仍有弹窗在显示，继续等
+  var now = Date.now();
+  while (_modalQueue.length) {
+    var next = _modalQueue.shift();
+    if (next && now - (next._queuedAt || 0) > _MODAL_QUEUE_TTL) continue; // 过期丢弃
+    try {
+      showModalImpl(next);
+    } catch (e) {
+      console.error("[modal] 队列弹窗渲染失败:", e);
+    }
+    return;
+  }
+}
+
 // ====== 模态对话框实现 ======
 function showModalImpl({ title, body, buttons = [] }) {
   title = title || "提示";
   body = body || "";
-  // 如果已有弹窗，不覆盖（防止每日结算被新弹窗挤掉）
+  // 如果已有弹窗，入队等待（原来是直接丢弃 → 表现为「点击没反应」）
   const existingOverlay = document.querySelector(".modal-overlay");
+  _ensureModalQueueObserver();
   if (existingOverlay) {
+    var dup = _modalQueue.some(function (q) {
+      return q && q.title === title && q.body === body;
+    });
+    if (!dup && _modalQueue.length < _MODAL_QUEUE_MAX) {
+      _modalQueue.push({ title: title, body: body, buttons: buttons, _queuedAt: Date.now() });
+    }
     return;
   }
 

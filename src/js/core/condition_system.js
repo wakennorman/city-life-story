@@ -141,13 +141,35 @@
    * @param {Array} [options.buttons] - 按钮数组
    */
   function showModal(results, options) {
-    if (typeof showModal !== "function") return;
     options = options || {};
     var title =
       options.title || (allMet(results) ? "✅ 条件检查" : "❌ 条件不足");
+
+    // [P0 修复] 原代码在此处写的是 `if (typeof showModal !== "function") return;`，
+    // 并在函数末尾写 `showModal({...})` —— 两处都解析到这个**函数自身**：
+    // 本文件被 IIFE 包裹，函数声明 `showModal` 在 IIFE 作用域内遮蔽了
+    // modal.js 的全局 window.showModal，函数名在自身作用域内恒为 function，
+    // 于是守卫恒假、调用变成无限自递归 → RangeError: Maximum call stack size
+    // exceeded。表现为玩家点击「⚠️ 条件不足，点击查看详情」毫无反应。
+    // 真弹窗必须显式走 window.showModal。
+    var _modalFn =
+      typeof window !== "undefined" && typeof window.showModal === "function"
+        ? window.showModal
+        : null;
     var met = metCount(results);
     var total = results.length;
     var allOk = allMet(results);
+
+    // 弹窗组件未加载（极早期调用）：降级为一行消息，**绝不静默**
+    if (!_modalFn) {
+      if (typeof StateManager !== "undefined" && StateManager.addMessage) {
+        StateManager.addMessage(
+          (allOk ? "✅ 条件检查：" : "❌ 条件不足：") + title,
+          allOk ? "success" : "warning",
+        );
+      }
+      return;
+    }
 
     var body = '<div class="cond-modal-body">';
 
@@ -193,7 +215,8 @@
 
     body += "</div>";
 
-    showModal({
+    // [P0 修复] 这里原来写 `showModal({...})` —— 递归调用自身。改走 window.showModal。
+    _modalFn({
       title: title,
       body: body,
       buttons: options.buttons || [

@@ -16,12 +16,19 @@
  */
 
 /* 需求条：id 与 state.needs / state.status 的字段名严格一一对应。
-   字段名是核对 src/js/core/state.js:92-107 得来的，不要凭命名习惯猜。 */
+   字段名是核对 src/js/core/state.js:92-107 得来的，不要凭命名习惯猜。
+
+   ★ 命名按恒稳要求改接《大多数》的词汇（"复制它的这几个状态值"）：
+     饱腹(温饱) / 卫生 / 情绪 / 健康。
+   ★ 疲劳不再单独成条 —— 改为**派生量**：由 needs.fatigue 与其他需求
+     一起喂进下方的心态(mental) 派生公式；疲劳本身只作为 AP 恢复量
+     与情绪恢复速度的**系数**显示成一行小字。
+     这是《大多数》的组织方式：一条「心态」生命线 + 生理值。
+   心态(mental) = 加权平均(上述需求 + 100−疲劳)。  */
 const NEED_SPEC = [
-  { key: "hunger", label: "饱腹", icon: "🍚", invert: false },
-  { key: "fatigue", label: "疲劳", icon: "😴", invert: true },
+  { key: "hunger", label: "温饱", icon: "🍚", invert: false },
   { key: "hygiene", label: "卫生", icon: "🚿", invert: false },
-  { key: "happiness", label: "心情", icon: "🙂", invert: false },
+  { key: "happiness", label: "情绪", icon: "🙂", invert: false },
   { key: "health", label: "健康", icon: "❤️", invert: false, from: "status" },
 ];
 
@@ -109,22 +116,42 @@ export function createHUD(opts = {}) {
   };
 
   /* ── 状态条 ─────────────────────────────────────────────────────────── */
-  f.vitals.innerHTML = NEED_SPEC.map((s) => `
+  /* 最顶一行是派生出来的「心态」（《大多数》的生命线），
+     下面才是逐条的生理需求。 */
+  f.vitals.innerHTML = `
+    <div class="s3h-vital s3h-mental" data-k="mental" title="心态（派生：综合生理值 + 睡眠）">
+      <span class="s3h-vital-icon">🧭</span>
+      <span class="s3h-vital-bar"><i></i></span>
+      <span class="s3h-vital-num">—</span>
+    </div>` + NEED_SPEC.map((s) => `
     <div class="s3h-vital" data-k="${s.key}" title="${s.label}">
       <span class="s3h-vital-icon">${s.icon}</span>
       <span class="s3h-vital-bar"><i></i></span>
       <span class="s3h-vital-num">0</span>
-    </div>`).join("");
+    </div>`).join("") + `
+    <div class="s3h-fatigue" data-f="fatigue"></div>`;
+
+  const wrapRow = (row) => {
+    row._fill = row.querySelector(".s3h-vital-bar i");
+    row._num = row.querySelector(".s3h-vital-num");
+    row._track = row.querySelector(".s3h-vital-bar");
+    return row;
+  };
+
+  const clamp01 = (x) => Math.max(0, Math.min(100, x));
+  const applyRow = (row, v, invert) => {
+    row._fill.style.width = v + "%";
+    row._fill.dataset.tone = toneOf(v, invert);
+    row._num.textContent = Math.round(v);
+    row.dataset.tone = toneOf(v, invert);
+  };
 
   const vitalEls = NEED_SPEC.map((s) => ({
     spec: s,
-    row: f.vitals.querySelector(`[data-k="${s.key}"]`),
+    row: wrapRow(f.vitals.querySelector(`[data-k="${s.key}"]`)),
   }));
-  vitalEls.forEach(({ row }) => {
-    row._fill = row.querySelector("i");
-    row._num = row.querySelector(".s3h-vital-num");
-    row._track = row.querySelector(".s3h-vital-bar");
-  });
+  const mentalRow = wrapRow(f.vitals.querySelector(`[data-k="mental"]`));
+  const fatigueRow = f.vitals.querySelector('[data-f="fatigue"]');
 
   let trayOpen = false;
   let mapOpen = false;
@@ -147,18 +174,40 @@ export function createHUD(opts = {}) {
       }
     },
 
-    /** 需求条。needs 传 state.needs，status 传 state.status（健康在里面） */
+    /** 需求条。needs 传 state.needs，status 传 state.status（健康在里面）
+        顺带派生「心态」与「疲劳系数」。 */
     setNeeds(needs, status) {
+      const nums = [];
+      let fatigueRaw = null;
       for (const { spec, row } of vitalEls) {
         const src = spec.from === "status" ? status : needs;
         if (!src) continue;
         const raw = src[spec.key];
-        if (typeof raw !== "number") continue;
-        const v = Math.max(0, Math.min(100, raw));
-        row._fill.style.width = v + "%";
-        row._fill.dataset.tone = toneOf(v, spec.invert);
-        row._num.textContent = Math.round(v);
-        row.dataset.tone = toneOf(v, spec.invert);
+        if (typeof raw === "number") {
+          const v = clamp01(raw);
+          applyRow(row, v, spec.invert);
+          nums.push(v);
+        }
+      }
+
+      /* 疲劳：不单独成条，只以「疲劳系数」文本派生，并喂进下面的心态公式。
+         旧设计里睡意 = 独立需求条，充满之后在 AP 里抬杠；
+         现在它只有「影响恢复速度」这一条作用，因果跟《大多数》一样自洽。 */
+      if (needs && typeof needs.fatigue === "number") fatigueRaw = needs.fatigue;
+      if (fatigueRaw != null) {
+        const v = clamp01(fatigueRaw);
+        fatigueRow.textContent = `疲劳系数 ${Math.round(v)} · 影响恢复速度`;
+        fatigueRow.style.display = "block";
+        nums.push(100 - v);
+      } else {
+        fatigueRow.style.display = "none";
+      }
+
+      /* 心态（派生生命线）= 现有需求与 (100−疲劳) 的平均。
+         《大多数》就是这么算的：心态不是一项独立数值，而是综合生理值。 */
+      if (nums.length) {
+        const mental = Math.round(nums.reduce((a, b) => a + b, 0) / nums.length);
+        applyRow(mentalRow, mental, false);
       }
     },
 
