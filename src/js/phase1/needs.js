@@ -2,10 +2,23 @@
  * 需求系统 — 饥饱/疲劳/卫生/心情衰减 + 情绪状态判定 + 伤病效果
  */
 
+/** 需求默认值 —— 集中一处。守卫补键与新建 state 都走它，
+    避免「补了守卫忘了补新键」（新增需求时最容易漏的一处）。 */
+function _needsDefaults() {
+  return {
+    hunger: 50,
+    fatigue: 30,
+    hygiene: 60,
+    happiness: 50,
+    clothing: 45,
+    foodSatisfaction: 30,
+  };
+}
+
 /** 每日需求衰减 (v3.2 蒙特卡洛平衡：饥饱衰减从18→13，防止开局饿死) */
 function applyNeedsDecay(state) {
   // [全系统自洽修复] 域G R240 A类修复: state.needs 守卫（旧存档缺失→TypeError崩溃管线）
-  if (!state.needs) state.needs = { hunger: 50, fatigue: 30, hygiene: 60, happiness: 50 };
+  if (!state.needs) state.needs = _needsDefaults();
   const n = state.needs;
   // v3.1: 接入难度乘数 — 休闲档衰减慢，困难/地狱档衰减快
   var decayMul =
@@ -37,13 +50,77 @@ function applyNeedsDecay(state) {
     0,
     Math.min(100, (n.happiness || 0) - Math.round(Math.max(1, 4 * decayMul - _socialBonus))),
   );
+
+  /* [状态体系 · 2026-09-18] 《大多数》式新增两个生理需求。
+     ★ 老存档没有这两个键：用 `== null ? 默认值 : 值`，**不能用 `|| 0`** ——
+       上面三个字段用 `|| 0` 是因为它们自始存在；新字段若也这么写，
+       老存档玩家一进游戏就是 0，直接触发阈值惩罚（凭空挨罚）。
+     ★ 为什么不做成「扣健康」：见 checkNeedsThresholds 里的说明。 */
+  if (n.clothing == null) n.clothing = 45;
+  if (n.foodSatisfaction == null) n.foodSatisfaction = 30;
+  n.clothing = Math.max(0, Math.min(100, n.clothing - Math.round(3 * decayMul)));
+  n.foodSatisfaction = Math.max(0, Math.min(100, n.foodSatisfaction - Math.round(5 * decayMul)));
+
   // fatigue 在 endDay 中通过睡眠恢复单独处理
+}
+
+/** 疲劳系数（派生量）
+ *
+ *  《大多数》不把疲劳做成一条会跟行动力打架的独立条，而是作为
+ *  「影响恢复速度的系数」使用。这里给出统一读数，供 HUD 与
+ *  AP 恢复量 / 情绪恢复速度消费。返回 0~100，越大越累。
+ *
+ *  为什么不落盘：它由睡眠推导，落盘就会和睡眠结算产生两个事实来源。
+ */
+function getFatigueFactor(state) {
+  var f = state && state.needs ? state.needs.fatigue : 0;
+  if (typeof f !== "number" || !isFinite(f)) return 0;
+  return Math.max(0, Math.min(100, f));
+}
+
+/** 心态（生命线）—— 由各生理需求与「100 − 疲劳」等权平均派生
+ *
+ *  《大多数》的组织方式：**一条心态生命线 + 若干生理需求**。
+ *  意义在于：玩家一眼看到整体状态；任一项极低都会把心态拉下来，
+ *  于是「该去解决什么」自己浮现出来，不需要额外堆提示系统。
+ *
+ *  不落盘（纯派生），因此不需要存档兼容，也不会与任何写入端产生双事实源。
+ *
+ *  ★ 命名：刻意叫 mindset 而**不是** mental ——
+ *    state.player.mental 已经存在，那是**属性「心智」**
+ *    （v3.0 起 UI 显示为"能力"，与 physique / intelligence / agility 并列，
+ *     见 state.js:30 与 cooking.js 的 effects 分支）。
+ *    两者含义完全不同：那个是能力值，这个是生命线。
+ *    若叫 computeMental，维护者会以为它在算 player.mental。
+ */
+function computeMindset(state) {
+  var n = state && state.needs;
+  if (!n) return 100;
+  var parts = [];
+  var push = function (v) {
+    if (typeof v === "number" && isFinite(v)) parts.push(Math.max(0, Math.min(100, v)));
+  };
+  push(n.hunger);
+  push(n.hygiene);
+  push(n.clothing);
+  push(n.foodSatisfaction);
+  push(n.happiness);
+  push(100 - getFatigueFactor(state)); // 疲劳反向：越累，这一项越低
+  if (!parts.length) return 100;
+  var sum = 0;
+  for (var i = 0; i < parts.length; i++) sum += parts[i];
+  return Math.round(sum / parts.length);
 }
 
 /** 检查需求阈值并施加惩罚 (v3.2 蒙特卡洛平衡：降低阈值惩罚，前30天减半) */
 function checkNeedsThresholds(state) {
   // [全系统自洽修复] 域G R240 A类修复: state.needs + state.status 守卫（旧存档缺失→崩溃/NaN）
-  if (!state.needs) state.needs = { hunger: 50, fatigue: 30, hygiene: 60, happiness: 50 };
+  if (!state.needs) state.needs = _needsDefaults();
+  /* 老存档：needs 对象在、但缺新键 —— 必须补上。
+     否则下面 `n.clothing < 20` 是 `undefined < 20` → false，
+     新需求的惩罚会**静默失效**（不报错、不崩溃，就是不生效）。 */
+  if (state.needs.clothing == null) state.needs.clothing = 45;
+  if (state.needs.foodSatisfaction == null) state.needs.foodSatisfaction = 30;
   if (!state.status) state.status = { health: 80, illnesses: [] };
   // [全系统自洽修复] 域G A类: state.player 守卫(防旧存档崩溃)
   if (!state.player) return;
@@ -87,6 +164,19 @@ function checkNeedsThresholds(state) {
 
   if (n.happiness < 10) {
     msgs.push("😢 心情极度低落，做什么都提不起劲。");
+  }
+
+  /* [状态体系 · 2026-09-18] 两个新需求的阈值 —— 都走「扣情绪」而不是「扣健康」。
+     这是《大多数》的因果链：衣着不体面、饮食没满足这类缺失，
+     先伤情绪，再由情绪拖累心态（生命线），而不是直接掉血。
+     好处是「洗衣服」「下馆子」有了非数值的动机，而不是单纯的回血道具。 */
+  if (n.clothing < 20) {
+    n.happiness = Math.max(0, n.happiness - Math.round(1 * combinedMul));
+    msgs.push("👕 衣服又脏又旧，走到哪儿都觉得不自在。");
+  }
+  if (n.foodSatisfaction < 20) {
+    n.happiness = Math.max(0, n.happiness - Math.round(1 * combinedMul));
+    msgs.push("🍜 天天凑合吃，嘴里没味，心里也没劲。");
   }
 
   for (const msg of msgs) {

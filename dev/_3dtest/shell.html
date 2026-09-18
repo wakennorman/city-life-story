@@ -61,9 +61,14 @@
     return out;
   }
 
-  /* ── mock 状态：数值取自游戏默认开局（src/js/core/state.js 的黑暗开局）── */
+  /* ── mock 状态：数值取自游戏默认开局（src/js/core/state.js 的黑暗开局）──
+     ★ 字段要与 state.js 的 needs 保持同步：新增需求时两边都要加，
+       否则 HUD 上那一条会空着 —— 不报错、不崩溃，只是不显示，最容易漏。 */
   let day = 1, slot = '上午';
-  const needs = { hunger: 25, fatigue: 50, hygiene: 30, happiness: 20 };
+  const needs = {
+    hunger: 25, fatigue: 50, hygiene: 30, happiness: 20,
+    clothing: 45, foodSatisfaction: 30,
+  };
   const status = { health: 70 };
   let ap = 100, cash = 300;
   const SLOTS = ['上午', '下午', '傍晚', '夜间'];
@@ -139,7 +144,12 @@
   window.__shell = shell;
   // 诊断计数：验证脚本据此判断回调到底有没有被触发（比"看状态变没变"更直接）
   window.__calls = { action: 0, travel: 0 };
-  window.__peek = () => ({ action: window.__calls.action, travel: window.__calls.travel, ap, curId });
+  /* needs/status 一并暴露：验证脚本要拿它算「心态」的期望值来比对 HUD 显示值。
+     不暴露的话，验证脚本只能把 mock 数值硬编码一份 —— 那就是又一份会漂移的定义。 */
+  window.__peek = () => ({
+    action: window.__calls.action, travel: window.__calls.travel,
+    ap, curId, needs, status,
+  });
 })();
 </script>
 </body>

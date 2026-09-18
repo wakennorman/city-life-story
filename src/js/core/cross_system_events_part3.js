@@ -1013,13 +1013,22 @@
       },
       {
         text: "🧺 顺便洗衣",
-        hint: "卫生+ 更强",
+        hint: "卫生+ 衣物整洁+ 更强",
         apply: function (st) {
           st.needs.hygiene = Math.min(100, (st.needs.hygiene || 0) + 80);
+          /* [状态体系 · 2026-09-18] 洗衣改善的是「衣物整洁」，不是「卫生」——
+             卫生是身体，衣物整洁是衣服，两者是分开的需求。
+             原文案说「连人带衣服都洗干净了」却只加 hygiene，
+             于是新加的 clothing 需求**没有任何改善途径**（只掉不涨，比不加还糟）。
+             守卫用 `== null ? 默认值 : 值`：老存档没有这个键。 */
+          st.needs.clothing = Math.min(
+            100,
+            (st.needs.clothing == null ? 45 : st.needs.clothing) + 45,
+          );
           st.needs.happiness = Math.min(100, (st.needs.happiness || 0) + 5);
           st.resources.cash = Math.max(0, st.resources.cash - 30);
           StateManager.addMessage(
-            "你连人带衣服都洗干净了，卫生+80、心情+5，花了¥30。",
+            "你连人带衣服都洗干净了，卫生+80、衣物整洁+45、心情+5，花了¥30。",
             "info",
           );
         },

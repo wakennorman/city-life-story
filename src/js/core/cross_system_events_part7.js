@@ -5442,14 +5442,20 @@
     choices: [
       {
         text: "🧥 买件外套御寒",
-        hint: "花¥50，健康+5",
+        hint: "花¥50，健康+5 衣物整洁+",
         cost: 50,
         apply: function (st) {
           st.resources.cash = Math.max(0, (st.resources.cash || 0) - 50); // [全系统自洽修复] 域B 修复:cost扣款缺失
           st.flags._springChillSeen = true;
           st.status.health = Math.min(100, (st.status.health || 50) + 5);
+          /* [状态体系 · 2026-09-18] 买了新衣服，衣物整洁当然要涨 ——
+             原来这里只加健康，于是「衣物整洁」这条需求只有衰减、没有回升途径。 */
+          st.needs.clothing = Math.min(
+            100,
+            (st.needs.clothing == null ? 45 : st.needs.clothing) + 35,
+          );
           StateManager.addMessage(
-            "🌬️ 你在路边摊花¥50买了件外套套上。虽然不太好看，但暖和多了。健康+5。",
+            "🌬️ 你在路边摊花¥50买了件外套套上。虽然不太好看，但暖和多了。健康+5、衣物整洁+35。",
             "success",
           );
         },
@@ -5461,11 +5467,15 @@
         apply: function (st) {
           st.resources.cash = Math.max(0, (st.resources.cash || 0) - 15); // [全系统自洽修复] 域B 修复:cost扣款缺失
           st.flags._springChillSeen = true;
-          st.needs.hunger = Math.max(0, (st.needs.hunger || 50) - 15);
+          /* [符号修正 · 2026-09-18] 原来写 `hunger - 15` —— 但 hunger 是**饱腹度**
+             （state.js:94「饥饱见底」= 值低即饿；衰减也是每日 -13）。
+             减 15 等于「喝完热汤更饿」，与同一项里的 hint「饱腹+」自相矛盾。
+             文案原本也写着「饱腹-15」，一并改正。 */
+          st.needs.hunger = Math.min(100, (st.needs.hunger == null ? 50 : st.needs.hunger) + 15);
           st.needs.happiness = Math.min(100, (st.needs.happiness || 50) + 5);
           st.status.health = Math.min(100, (st.status.health || 50) + 2);
           StateManager.addMessage(
-            "🌬️ 一碗热腾腾的胡辣汤下肚，整个人活过来了。饱腹-15，心情+5，健康+2。",
+            "🌬️ 一碗热腾腾的胡辣汤下肚，整个人活过来了。饱腹+15，心情+5，健康+2。",
             "success",
           );
         },

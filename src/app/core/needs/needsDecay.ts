@@ -13,6 +13,11 @@ export interface NeedsState {
   hygiene?: number;
   happiness?: number;
   fatigue?: number;
+  /** [状态体系 · 2026-09-18] 按《大多数》新增的两个生理需求。
+   *  与「饱腹」区分：饱腹是"吃了多少"，食物满足感是"吃得好不好"。
+   *  与「卫生」区分：卫生是身体，衣物整洁是衣着。 */
+  clothing?: number;
+  foodSatisfaction?: number;
   [key: string]: number | undefined;
 }
 
@@ -71,6 +76,10 @@ export function computeSocialSupportBonus(
  * - 饥饱 -13*mul、卫生 -7*mul，各自钳制 [0,100]
  * - 心情 -(max(1, 4*mul - socialBonus))，钳制 [0,100]
  *   → 注意 `Math.max(1, ...)` 是最低 1 点下限；`Math.round` 包在最外层
+ * - [2026-09-18] 衣物整洁 -3*mul、食物满足感 -5*mul，钳制 [0,100]
+ *   → 这两个键老存档没有，缺失时取默认值（45 / 30），**不是 0**。
+ *     vanilla 用 `== null ? 默认值 : 值`，这里用 `??`，语义一致；
+ *     若写成 `|| 0` 会让老存档玩家一进游戏就 0 分并凭空挨罚。
  * - 不改输入，返回新对象（fatigue 由 endDay 睡眠单独处理，不含在内）
  *
  * @param socialBonus 由 computeSocialSupportBonus(state.relationships) 得到；默认 0
@@ -86,6 +95,11 @@ export function computeNeedsDecay(
     happiness: Math.max(
       0,
       Math.min(100, (needs.happiness || 0) - Math.round(Math.max(1, 4 * decayMul - socialBonus))),
+    ),
+    clothing: Math.max(0, Math.min(100, (needs.clothing ?? 45) - Math.round(3 * decayMul))),
+    foodSatisfaction: Math.max(
+      0,
+      Math.min(100, (needs.foodSatisfaction ?? 30) - Math.round(5 * decayMul)),
     ),
   };
 }

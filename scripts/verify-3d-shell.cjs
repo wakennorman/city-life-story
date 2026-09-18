@@ -100,12 +100,34 @@ async function main() {
     ap: document.querySelector('[data-f="apText"]').textContent,
     vitals: document.querySelectorAll('.s3h-vital').length,
     vitalNums: [...document.querySelectorAll('.s3h-vital-num')].map((e) => e.textContent),
+    mentalNum: (document.querySelector('.s3h-mindset .s3h-vital-num') || {}).textContent || '',
+    needKeys: [...document.querySelectorAll('.s3h-vital')].map((e) => e.dataset.k),
   }));
   check("顶栏有日期/时段/地点/现金", !!hud.day && !!hud.loc && !!hud.cash,
     `${hud.day} ${hud.slot} · ${hud.loc} · ${hud.cash}`);
   check("行动力条有数值", /\d+\s*\/\s*\d+/.test(hud.ap), hud.ap);
-  check("需求条 5 条且已填数", hud.vitals === 5 && hud.vitalNums.every((n) => n !== ""),
+  /* 7 条 = 心态（派生生命线）+ 5 个生理需求 + 健康。
+     对照《大多数》的状态体系，构成见 src/app/3d/hud.js 的 NEED_SPEC 注释。 */
+  check("状态条 7 条且已填数", hud.vitals === 7 && hud.vitalNums.every((n) => n !== ""),
     `${hud.vitals} 条：${hud.vitalNums.join(" / ")}`);
+  check("状态条字段齐全（心态 + 5 生理需求 + 健康）",
+    ["mindset", "hunger", "hygiene", "clothing", "foodSatisfaction", "happiness", "health"]
+      .every((k) => hud.needKeys.includes(k)),
+    hud.needKeys.join(" / "));
+
+  /* ★ 心态值不变式 —— 这条断言是为一次真实事故加的：
+       hud.js 的回退公式曾经把 health 也算进平均，于是预览页显示 39、
+       真实游戏里 computeMental 给 33，两个数字各自都对不上对方。
+       当时的断言只查条数，完全没抓到 —— 「公式写两遍必然漂移」这句话
+       写在注释里是拦不住的，必须变成可回归的断言。
+     期望值用页面自己暴露的 needs 现算（不硬编码），避免引入第三份定义。 */
+  const peekNeeds = await page.evaluate(() => window.__peek().needs);
+  const expectMental = Math.round(
+    (peekNeeds.hunger + peekNeeds.hygiene + peekNeeds.clothing +
+      peekNeeds.foodSatisfaction + peekNeeds.happiness + (100 - peekNeeds.fatigue)) / 6,
+  );
+  check("心态 = 派生值（字段集不含 health）", Number(hud.mentalNum) === expectMental,
+    `显示 ${hud.mentalNum}，期望 ${expectMental}`);
 
   // 展开行动托盘
   await page.keyboard.press("Tab");

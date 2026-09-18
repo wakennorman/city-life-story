@@ -759,6 +759,20 @@ function cookRecipe(state, recipeId) {
     );
     effectsApplied.hunger = recipe.hungerRestore;
   }
+  /* [状态体系 · 2026-09-18] 食物满足感 —— 这顿饭「好不好吃」，
+     与 hungerRestore（「吃没吃饱」）是两件事。
+     按菜品等级给：Lv.1 家常 +8 / Lv.2 +15 / Lv.3 +22 / Lv.4+ +30。
+     这样「凑合煮碗白米饭」和「认真做一桌菜」在满足感上就分开了 ——
+     否则新增的 foodSatisfaction 只会每天 -5，没有任何回升途径。
+     守卫用 `== null ? 默认值 : 值`：老存档没有这个键。 */
+  var _fsTable = [8, 15, 22, 30];
+  var _fsLv = Math.min(_fsTable.length - 1, Math.max(0, (recipe.level || 1) - 1));
+  var _fsGain = _fsTable[_fsLv];
+  state.needs.foodSatisfaction = Math.min(
+    100,
+    (state.needs.foodSatisfaction == null ? 30 : state.needs.foodSatisfaction) + _fsGain,
+  );
+  effectsApplied.foodSatisfaction = _fsGain;
   if (recipe.effects) {
     for (var key in recipe.effects) {
       if (recipe.effects.hasOwnProperty(key)) {

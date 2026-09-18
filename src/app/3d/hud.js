@@ -15,19 +15,28 @@
  * 全部 class 前缀 `s3h-`（scene3d-HUD），样式在 src/css/scene3d.css。
  */
 
-/* 需求条：id 与 state.needs / state.status 的字段名严格一一对应。
-   字段名是核对 src/js/core/state.js:92-107 得来的，不要凭命名习惯猜。
+/* 需求条：key 与 state.needs / state.status 的字段名严格一一对应。
+   字段名是核对 src/js/core/state.js 得来的，不要凭命名习惯猜。
+   ★ 显示名（label）与字段名是两回事：显示名按恒稳要求改接《大多数》的词汇，
+     字段名保持不动 —— 3700+ 事件读的是字段名，改名会波及全局。
 
-   ★ 命名按恒稳要求改接《大多数》的词汇（"复制它的这几个状态值"）：
-     饱腹(温饱) / 卫生 / 情绪 / 健康。
-   ★ 疲劳不再单独成条 —— 改为**派生量**：由 needs.fatigue 与其他需求
-     一起喂进下方的心态(mental) 派生公式；疲劳本身只作为 AP 恢复量
-     与情绪恢复速度的**系数**显示成一行小字。
-     这是《大多数》的组织方式：一条「心态」生命线 + 生理值。
-   心态(mental) = 加权平均(上述需求 + 100−疲劳)。  */
+   ★ 《大多数》的组织方式：**一条「心态」生命线 + 若干生理需求**。
+     生理需求（恒稳给的清单）：
+       饱腹 / 卫生 / 衣物整洁 / 食物满足感 / 情绪
+     外加「健康」—— 我们的游戏里它是独立底线（伤病直接扣），
+     不像上面几条只影响情绪，所以单列。
+   ★ 疲劳**不单独成条** —— 它是派生量，只作为「影响恢复速度的系数」
+     显示成一行小字，并参与心态公式。理由见 shell.js 顶注：
+     原双轨设计会出现「刚睡醒却提示快撑不住了」（AP 回满而 fatigue 归零被判 100%）。
+   ★ 下面几组不是重复项，别合并：
+       饱腹 vs 食物满足感 —— 「吃了多少」 vs 「吃得好不好」
+       卫生 vs 衣物整洁     —— 身体 vs 衣着
+     所以路边摊能填饱肚子但不涨满足感；洗澡也不解决衣服脏。 */
 const NEED_SPEC = [
-  { key: "hunger", label: "温饱", icon: "🍚", invert: false },
+  { key: "hunger", label: "饱腹", icon: "🍚", invert: false },
   { key: "hygiene", label: "卫生", icon: "🚿", invert: false },
+  { key: "clothing", label: "衣物整洁", icon: "👕", invert: false },
+  { key: "foodSatisfaction", label: "食物满足感", icon: "🍜", invert: false },
   { key: "happiness", label: "情绪", icon: "🙂", invert: false },
   { key: "health", label: "健康", icon: "❤️", invert: false, from: "status" },
 ];
@@ -38,6 +47,61 @@ function toneOf(value, invert) {
   if (v >= 55) return "ok";
   if (v >= 25) return "warn";
   return "bad";
+}
+
+/** 心态取值：优先问逻辑层的权威实现，取不到才用等价回退
+ *
+ *  ★ 为什么优先问逻辑层：公式写两遍必然漂移，而漂移后**HUD 显示与游戏判定会对不上**
+ *    ——玩家看到心态 60，事件判定却按 48 走，这种分歧极难查（不报错、不崩溃）。
+ *    权威实现在 src/js/phase1/needs.js::computeMindset。
+ *
+ *  ★ 为什么还要回退：3D 内核要能在「没有游戏逻辑层」的预览页里单独跑
+ *    （dev/_3dtest/shell.html 只加载 bundle + mock 状态）。
+ *    回退公式与 computeMindset 必须保持一致 —— 改一边就要改另一边。
+ *
+ *  两种访问方式都试：裸标识符与 globalThis。3D 内核和游戏逻辑层是两个
+ *  独立打包产物，只能靠全局名通信（同项目的既有写法见 needs.js 对
+ *  getDifficultyMultiplier 的 typeof 检查）。
+ */
+function mentalOf(needs, status) {
+  /* ── 优先用逻辑层的权威实现 ── */
+  let fn = null;
+  try {
+    if (typeof computeMindset === "function") fn = computeMindset;
+  } catch { /* 未定义，走 globalThis */ }
+  if (!fn) {
+    const g = typeof globalThis !== "undefined" ? globalThis : null;
+    if (g && typeof g.computeMindset === "function") fn = g.computeMindset;
+  }
+  if (fn && needs) {
+    try {
+      const v = fn({ needs, status });
+      if (typeof v === "number" && isFinite(v)) return Math.max(0, Math.min(100, v));
+    } catch { /* 落到回退 */ }
+  }
+
+  /* ── 回退：字段集必须与 computeMindset 严格一致 —— 注意**不含 health** ──
+     ★ 这里曾经写成「把 HUD 上所有条求平均」，于是把 health 也算了进去：
+       预览页显示心态 39，真实游戏里却是 33，两个数字各自都对不上对方。
+     ★ 那次错误正是上面这段注释警告的「公式写两遍必然漂移」，而它**当场就发生了**
+       —— 而且验证脚本没抓到（它只查条数，不查数值语义）。
+       所以现在 verify-3d-shell.cjs 里加了一条「心态值必须等于按字段集算出的期望值」，
+       把这条不变式变成可回归的断言，而不是靠注释提醒。
+     ★ 结论：改这里就必须改 phase1/needs.js::computeMindset，反之亦然。 */
+  if (!needs) return null;
+  const parts = [];
+  const push = (v) => {
+    if (typeof v === "number" && isFinite(v)) parts.push(Math.max(0, Math.min(100, v)));
+  };
+  push(needs.hunger);
+  push(needs.hygiene);
+  push(needs.clothing);
+  push(needs.foodSatisfaction);
+  push(needs.happiness);
+  const f = typeof needs.fatigue === "number" && isFinite(needs.fatigue) ? needs.fatigue : 0;
+  push(100 - Math.max(0, Math.min(100, f))); // 疲劳反向
+  if (!parts.length) return null;
+  return Math.round(parts.reduce((a, b) => a + b, 0) / parts.length);
 }
 
 export function createHUD(opts = {}) {
@@ -119,7 +183,7 @@ export function createHUD(opts = {}) {
   /* 最顶一行是派生出来的「心态」（《大多数》的生命线），
      下面才是逐条的生理需求。 */
   f.vitals.innerHTML = `
-    <div class="s3h-vital s3h-mental" data-k="mental" title="心态（派生：综合生理值 + 睡眠）">
+    <div class="s3h-vital s3h-mindset" data-k="mindset" title="心态（派生：综合生理值 + 睡眠）">
       <span class="s3h-vital-icon">🧭</span>
       <span class="s3h-vital-bar"><i></i></span>
       <span class="s3h-vital-num">—</span>
@@ -150,7 +214,7 @@ export function createHUD(opts = {}) {
     spec: s,
     row: wrapRow(f.vitals.querySelector(`[data-k="${s.key}"]`)),
   }));
-  const mentalRow = wrapRow(f.vitals.querySelector(`[data-k="mental"]`));
+  const mentalRow = wrapRow(f.vitals.querySelector(`[data-k="mindset"]`));
   const fatigueRow = f.vitals.querySelector('[data-f="fatigue"]');
 
   let trayOpen = false;
@@ -177,38 +241,32 @@ export function createHUD(opts = {}) {
     /** 需求条。needs 传 state.needs，status 传 state.status（健康在里面）
         顺带派生「心态」与「疲劳系数」。 */
     setNeeds(needs, status) {
-      const nums = [];
-      let fatigueRaw = null;
       for (const { spec, row } of vitalEls) {
         const src = spec.from === "status" ? status : needs;
         if (!src) continue;
         const raw = src[spec.key];
-        if (typeof raw === "number") {
-          const v = clamp01(raw);
-          applyRow(row, v, spec.invert);
-          nums.push(v);
-        }
+        if (typeof raw === "number") applyRow(row, clamp01(raw), spec.invert);
       }
 
-      /* 疲劳：不单独成条，只以「疲劳系数」文本派生，并喂进下面的心态公式。
+      /* 疲劳：不单独成条，只以「疲劳系数」文本派生。
          旧设计里睡意 = 独立需求条，充满之后在 AP 里抬杠；
-         现在它只有「影响恢复速度」这一条作用，因果跟《大多数》一样自洽。 */
-      if (needs && typeof needs.fatigue === "number") fatigueRaw = needs.fatigue;
+         现在它只有「影响恢复速度」这一条作用，因果跟《大多数》一样自洽。
+         （它同时参与下面的心态公式，但那是 mentalOf 内部的事 ——
+           这里刻意不再收集一份"参与心态的字段清单"，
+           那种清单每多一份，就多一个会漂移的地方。） */
+      const fatigueRaw = needs && typeof needs.fatigue === "number" ? needs.fatigue : null;
       if (fatigueRaw != null) {
-        const v = clamp01(fatigueRaw);
-        fatigueRow.textContent = `疲劳系数 ${Math.round(v)} · 影响恢复速度`;
+        fatigueRow.textContent = `疲劳系数 ${Math.round(clamp01(fatigueRaw))} · 影响恢复速度`;
         fatigueRow.style.display = "block";
-        nums.push(100 - v);
       } else {
         fatigueRow.style.display = "none";
       }
 
-      /* 心态（派生生命线）= 现有需求与 (100−疲劳) 的平均。
-         《大多数》就是这么算的：心态不是一项独立数值，而是综合生理值。 */
-      if (nums.length) {
-        const mental = Math.round(nums.reduce((a, b) => a + b, 0) / nums.length);
-        applyRow(mentalRow, mental, false);
-      }
+      /* 心态（派生生命线）——《大多数》的组织方式：它不是一项独立数值，
+         而是综合生理值。玩家一眼看到整体状态；任一项极低都会把它拉下来，
+         于是「该去解决什么」自己浮现出来，不需要额外堆提示系统。 */
+      const mental = mentalOf(needs, status);
+      if (mental != null) applyRow(mentalRow, mental, false);
     },
 
     setAP(cur, max) {
