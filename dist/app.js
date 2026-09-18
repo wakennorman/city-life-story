@@ -415010,6 +415010,8 @@ void main() {
   var appPrevDisplay = ""; // 它的原 display，退出时原样还回去
   var lastMsgLen = -1;     // messageLog 长度游标，用来只播"新增的消息"
   var pending = false;     // 刷新合并标志（见 scheduleFirst）
+  var changeHooked = false;// onChange 是否已订阅（该 API 没有退订，只能订阅一次）
+  var hooksInstalled = false;// F3 / 自动启动是否已装（见 installHooks 的环境守卫）
 
   var SLOT_CN = { morning: "上午", afternoon: "下午", evening: "傍晚" };
 
@@ -415228,10 +415230,20 @@ void main() {
     if (typeof S3.create3DShell !== "function") return null;
     if (!getState()) return null;   // 逻辑层还没 newGame/loadGame
 
+    /* 让位：**只接管当前可见的 #app**。
+       若它本来就是隐藏的（欢迎页 / 开场世界新闻还没走完），就别碰它。
+       ★ 为什么：`appPrevDisplay` 记的是"挂载那一刻的值"，卸载时原样写回。
+         如果那一刻恰好是 "none"（实测会发生 —— startNewGame() 里的
+         `#app.style.display = ""` 是在 startWithWorldNewsIntro 的回调
+         `_enterClassicGame` 里做的，函数返回时它仍是 none），
+         那么"原样恢复"就等于把一个本该隐藏的界面留在 none 上，
+         看起来像卸载失败。让位不是"让隐藏的东西变可见"。 */
     appEl = document.getElementById("app");
-    if (appEl) {
+    if (appEl && appEl.style.display !== "none") {
       appPrevDisplay = appEl.style.display || "";
       appEl.style.display = "none";
+    } else {
+      appEl = null;
     }
 
     firstHost = document.createElement("div");
@@ -415265,13 +415277,20 @@ void main() {
 
     /* 订阅逻辑层的状态变更。
        ★ StateManager.onChange 没有对应的 off（state.js:990 只 push 不提供退订），
-         所以卸载后这个回调仍然挂着。用 firstShell 做守卫让它变成空转 ——
-         这是唯一可行的做法，不是偷懒。 */
-    try {
-      if (window.StateManager && typeof window.StateManager.onChange === "function") {
-        window.StateManager.onChange(function () { if (firstShell) scheduleFirst(); });
-      }
-    } catch (e) { /* 订阅失败不影响已挂载的界面 */ }
+         所以：
+           ① 用一个模块级标志保证**只订阅一次** —— 否则挂载/卸载来回几次
+              就会堆起同样数量的监听器，每次 update 都被调用 N 遍。
+              （这一点由 verify-3d-first.cjs 的「重挂」步骤暴露出来：
+               那条步骤本来只是为了构造 #app 可见的前置条件。）
+           ② 回调里用 firstShell 做守卫，卸载后变成空转。 */
+    if (!changeHooked) {
+      try {
+        if (window.StateManager && typeof window.StateManager.onChange === "function") {
+          window.StateManager.onChange(function () { if (firstShell) scheduleFirst(); });
+          changeHooked = true;
+        }
+      } catch (e) { /* 订阅失败不影响已挂载的界面 */ }
+    }
 
     /* 一次性提示：玩家得知道怎么回去 */
     firstShell.notify("3D 模式 · 按 F3 返回原界面", "ok");
@@ -415310,20 +415329,37 @@ void main() {
     })();
   }
 
-  /* 运行时切换（F3）。用捕获阶段 + 阻止默认，避免被 2D 界面或浏览器的
-     "查找"快捷键（部分浏览器 F3 = 再次查找）吃掉。 */
-  window.addEventListener("keydown", function (e) {
-    if (e.key !== "F3") return;
-    if (!available()) return;
-    e.preventDefault();
-    toggleFirst();
-  }, true);
+  /* 运行时钩子：F3 切换 + 自动启动。
+   *
+   * ★ 整块必须有环境守卫 —— 本文件会被 tests/*.cjs 在 **Node** 里加载，
+   *   那里只有一个 mock 的 window 对象，没有 addEventListener。
+   *   没有守卫时的表现是 `TypeError: window.addEventListener is not a function`，
+   *   而它会**把整个事件完整性门禁打红** —— 一个纯前端快捷键把后端测试打挂，
+   *   排查方向会被完全带偏（实测：npm test 报的是"脚本加载错误"）。
+   *   本文件其余部分本来就没有顶层副作用（全是函数定义），这一块也保持同样纪律：
+   *   所有 DOM/全局副作用都收在 installHooks() 里，且先验环境。 */
+  function installHooks() {
+    if (typeof window === "undefined" || typeof window.addEventListener !== "function") return;
+    if (hooksInstalled) return;
+    hooksInstalled = true;
 
-  if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", function () { setTimeout(autoStartFirst, 0); });
-  } else {
-    setTimeout(autoStartFirst, 0);
+    /* F3 运行时切换。用捕获阶段 + 阻止默认，避免被 2D 界面或浏览器的
+       "查找"快捷键（部分浏览器 F3 = 再次查找）吃掉。 */
+    window.addEventListener("keydown", function (e) {
+      if (e.key !== "F3") return;
+      if (!available()) return;
+      e.preventDefault();
+      toggleFirst();
+    }, true);
+
+    if (typeof document === "undefined" || typeof document.addEventListener !== "function") return;
+    if (document.readyState === "loading") {
+      document.addEventListener("DOMContentLoaded", function () { setTimeout(autoStartFirst, 0); });
+    } else {
+      setTimeout(autoStartFirst, 0);
+    }
   }
+  installHooks();
 
   /* ─────────── 生命周期 ─────────── */
 

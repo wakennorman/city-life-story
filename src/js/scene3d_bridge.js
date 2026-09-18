@@ -3,6 +3,14 @@
  *
  * 职责：把 src/app/3d 的 3D 能力接到现有游戏上，不改动任何既有逻辑。
  *
+ * ── 两个形态 ──────────────────────────────────────────────────────────────
+ *  A. **2D-first（mini + overlay）** —— 2D 界面是主体，侧栏挂一块缩略景，
+ *     点开一个可走动的全屏浮层。见 `mountMini` / `openOverlay`。
+ *  B. **3D-first（first）** —— 3D 铺满视口、状态与行动浮在其上，原 2D 界面
+ *     整体让位。见 `mountFirst` 一节。由 `?mode=3d` / `#3d` 启动，F3 切换。
+ *  两者共用同一份数据接入（getState / getAvailableActions / handler），
+ *  不存在"第二套玩法逻辑"。
+ *
  * 设计要点：
  *   1. **零重复逻辑** —— 3D 场景的几何与热点位置来自 gamedata（数据桥从游戏本体抽取），
  *      但点击执行**必须**走 getAvailableActions(state) 返回的真实行动对象，
@@ -289,6 +297,389 @@
     overlayOpen = false;
   }
 
+  /* ═══════════════ 3D-first 形态：3D 铺满视口，HUD 浮层，接真实游戏 ═══════════════
+   *
+   * ── 与上面 mini / overlay 的关系 ──
+   * 上面那两个是「2D 是主体、3D 是附属」：侧栏一块缩略景 + 点开一个浮层。
+   * 这一节把关系倒过来：**3D 是主体**，原 2D 界面整体让位（display:none），
+   * 状态与行动浮在 3D 之上。逻辑层**一行不改**，全部读写都走既有全局：
+   *
+   *   读 state   → StateManager.getState()          （只读）
+   *   读行动     → getAvailableActions(state)       （与 2D 行动卡片同一份）
+   *   执行       → action.handler()                 （与点击卡片同一条路径）
+   *   换地点     → invokeAction("travel_" + key)    （同城移动本就是一条行动）
+   *   消息回显   → state.messageLog 增量            （只读）
+   *
+   * ── 为什么一律走 invokeAction，绝不自己算 ──
+   * 同城移动在逻辑层里就是一条行动（main.js:3455 `travel_<key>`），它的 handler
+   * 内部做了四件事：按路况/技能/天气扣 AP、记 `_visitedLocations` 成就、写消息
+   * 日志、触发到达时的 NPC 遭遇。自己实现一份必然漏掉后三件，AP 口径也会漂移。
+   * **能复用的入口就绝不重写** —— 这条在 3D 层尤其重要，因为漏掉的都是
+   * 不报错、不崩溃、只是"那个功能再也不触发"的东西。
+   *
+   * ── 可摘除 ──
+   * 只在 URL 带 `?mode=3d` / `#3d` 时自动启动，运行时按 F3 切换。
+   * 不启动时本节的代码一行也不执行。
+   */
+
+  var FIRST_ID = "scene3d-first";
+  var firstShell = null;   // create3DShell 句柄
+  var firstHost = null;    // 全屏宿主（含退出按钮）
+  var appEl = null;        // 被让位的原 2D 根（#app）
+  var appPrevDisplay = ""; // 它的原 display，退出时原样还回去
+  var lastMsgLen = -1;     // messageLog 长度游标，用来只播"新增的消息"
+  var pending = false;     // 刷新合并标志（见 scheduleFirst）
+  var changeHooked = false;// onChange 是否已订阅（该 API 没有退订，只能订阅一次）
+  var hooksInstalled = false;// F3 / 自动启动是否已装（见 installHooks 的环境守卫）
+
+  var SLOT_CN = { morning: "上午", afternoon: "下午", evening: "傍晚" };
+
+  /**
+   * 时段：逻辑层只有三档（main.js:5490 按 AP 百分比派生），3D 照明有四档。
+   * 把「AP 见底」映射成夜间 —— 语义自洽：天黑了，该回住处睡了，
+   * 而 AP 归零本来也正是 endDay 的触发条件。
+   */
+  function slotOf(st) {
+    var p = (st && st.player) || {};
+    var ts = p.timeSlot;
+    if (ts === "morning" || ts === "afternoon") return SLOT_CN[ts];
+    var ap = typeof p.actionPoints === "number" ? p.actionPoints : 0;
+    return ap > 0 ? "傍晚" : "夜间";
+  }
+
+  /** 天气：借逻辑层的 WEATHER_TYPES 表，拿不到就退回 id 原文（不编造中文名） */
+  function weatherLabel(st) {
+    var id = st && st.weather && st.weather.current;
+    if (!id) return "";
+    var list = null;
+    try { if (typeof WEATHER_TYPES !== "undefined") list = WEATHER_TYPES; } catch (e) { /* TDZ/未定义 */ }
+    if (!list && window.WEATHER_TYPES) list = window.WEATHER_TYPES;
+    if (list) {
+      for (var i = 0; i < list.length; i++) {
+        if (list[i] && list[i].id === id) {
+          return (list[i].icon ? list[i].icon + " " : "") + (list[i].name || id);
+        }
+      }
+    }
+    return id;
+  }
+
+  /**
+   * 地点元信息。优先问逻辑层（LOCATIONS 里有 type / wealthTier 等 3D 用不到的字段，
+   * 但**名字与图标必须与 2D 界面逐字一致**），拿不到才退回 3D 自己的 gamedata。
+   */
+  function locMeta(id) {
+    var l = null;
+    try { if (typeof getLocation === "function") l = getLocation(id); } catch (e) { /* 未定义 */ }
+    if (!l) {
+      var c = core();
+      l = c && c.gamedata && c.gamedata.locations ? c.gamedata.locations[id] : null;
+    }
+    return l || { id: id, name: id, icon: "📍", desc: "" };
+  }
+
+  /**
+   * 债务合计 —— 口径必须与游戏 header 逐字一致（render_core.js:348-351）。
+   * ★ 那里用的是 villageDebt / fineDebt / bankDebt 三项，
+   *   **不含 `resources.debt`**（那个字段默认 0，全库没有权威消费点）。
+   *   若这里"顺手"把 debt 也加上，玩家会看到一个从没在别处出现过的数字。
+   */
+  function debtOf(st) {
+    var r = (st && st.resources) || {};
+    return (r.villageDebt || 0) + (r.fineDebt || 0) + (r.bankDebt || 0);
+  }
+
+  /** readHUD：外壳的 HUD 数据源。返回 null 表示"现在还没有状态可显示" */
+  function readHUD() {
+    var st = getState();
+    if (!st || !st.player) return null;
+    var locId = (st.trade && st.trade.currentLocation) || null;
+    var lm = locId ? locMeta(locId) : null;
+    return {
+      day: st.player.day || 1,
+      slot: slotOf(st),
+      weather: weatherLabel(st),
+      cash: (st.resources && st.resources.cash) || 0,
+      debt: debtOf(st),
+      /* ★ locId 交给外壳当权威：玩家点「前往 公园」走的是逻辑层的行动，
+         外壳的 travel() 根本没参与。外壳据此比对并换场景（见 shell.js 注释）。 */
+      locId: locId,
+      locIcon: lm ? lm.icon : "📍",
+      locName: lm ? lm.name : "",
+      needs: st.needs,
+      status: st.status,
+      ap: {
+        cur: typeof st.player.actionPoints === "number" ? st.player.actionPoints : 0,
+        max: typeof st.player.maxActionPoints === "number" && st.player.maxActionPoints > 0
+          ? st.player.maxActionPoints : 100,
+      },
+    };
+  }
+
+  /** 行动分类 → HUD 上的小标签 */
+  var CAT_CN = {
+    work: "工作", service: "服务", trade: "买卖", other: "出行",
+    crime: "违法", social: "社交", study: "学习", rest: "休息",
+  };
+
+  function clip(s, n) {
+    if (typeof s !== "string") return "";
+    var t = s.replace(/\s+/g, " ").trim();
+    return t.length > n ? t.slice(0, n - 1) + "…" : t;
+  }
+
+  /**
+   * readActions：直接把 getAvailableActions 的结果投影成 HUD 条目。
+   *
+   * ★ `action.disabled` 是**字符串或 null**（不是布尔）—— 它既当标志又当理由。
+   *   写成 `disabled: a.disabled` 会把字符串塞进 DOM 的 disabled 属性判断，
+   *   虽然 `!!"理由"` 恰好为真，但 `reason` 就丢了，玩家只看到灰掉却不知道为什么。
+   */
+  function readActions() {
+    var raw = rawActions();
+    if (!raw) return [];
+    var out = [];
+    for (var i = 0; i < raw.length; i++) {
+      var a = raw[i];
+      if (!a || !a.id) continue;
+      var why = typeof a.disabled === "string" ? a.disabled : (a.reqFail || "");
+      var desc = clip(a.desc, 44);
+      if (a.payEstimate) desc = "收益 ¥" + a.payEstimate + (desc ? " · " + desc : "");
+      out.push({
+        id: a.id,
+        icon: a.icon || "•",
+        name: a.name || a.id,
+        desc: desc,
+        cost: a.apCost ? "AP" + a.apCost : (a.costEstimate ? "¥" + a.costEstimate : ""),
+        kind: CAT_CN[a.category] || (a.category || "行动"),
+        disabled: !!a.disabled,
+        reason: clip(why, 30),
+      });
+    }
+    return out;
+  }
+
+  /**
+   * readLocations：地图面板的"去哪里"。
+   * 只列**可达**地点 —— 这与逻辑层 `travel_<key>` 行动的集合是同一个，
+   * 所以地图上点得动的每一个，`invokeAction` 都必然找得到（不会点了没反应）。
+   */
+  function readLocations() {
+    var cur = currentLocId();
+    var keys = null;
+    try { if (typeof getReachableLocations === "function") keys = getReachableLocations(cur); } catch (e) { /* 未定义 */ }
+    if (!keys || !keys.length) {
+      var c = core();
+      keys = c && c.gamedata ? Object.keys(c.gamedata.locations) : [];
+    }
+    var out = [];
+    for (var i = 0; i < keys.length; i++) {
+      var m = locMeta(keys[i]);
+      out.push({ id: keys[i], name: m.name, icon: m.icon, desc: m.desc });
+    }
+    return out;
+  }
+
+  /* ── 执行：一切交互都收敛到 invokeAction ── */
+
+  function onAction(item) {
+    var r = invokeAction(item.id);
+    if (!r.ok) return { ok: false, reason: r.reason };
+    /* handler 内部**不一定**走 StateManager.update（不少地方直接改 state.xxx），
+       所以不能只靠 onChange 订阅。外壳拿到 {ok:true} 后会自己 refresh 一次。 */
+    return { ok: true };
+  }
+
+  function onTravel(id) {
+    if (!id) return { ok: false, reason: "没有这个地点" };
+    if (id === currentLocId()) return { ok: false, reason: "你已经在这里了" };
+    /* 走逻辑层的 `travel_<key>` 行动，而不是直接写 trade.currentLocation ——
+       理由见本节开头：AP 扣除、成就记录、NPC 遭遇都只在那条行动里。 */
+    var r = invokeAction("travel_" + id);
+    return r.ok ? { ok: true } : { ok: false, reason: r.reason || "去不了那里" };
+  }
+
+  function kindOfMsg(t) {
+    if (t === "warning" || t === "warn") return "warn";
+    if (t === "error" || t === "danger" || t === "bad") return "bad";
+    return "ok";
+  }
+
+  /**
+   * 刷新合并。StateManager 的 update() 每调一次就 notify 一次，而一次玩家操作
+   * 内部可能连着 update 十几个字段 —— 不合并就会把行动托盘整个重建十几遍。
+   */
+  function scheduleFirst() {
+    if (pending) return;
+    pending = true;
+    setTimeout(function () { pending = false; refreshFirst(); }, 0);
+  }
+
+  /**
+   * 刷新 HUD，并把逻辑层新写的消息浮上来。
+   *
+   * ★ 为什么必须回显 messageLog：游戏的反馈**全部**是 `StateManager.addMessage`
+   *   写的（"🚶 你来到了公园"、"⚠️ 行动力不足"）。3D-first 把 2D 界面藏起来后，
+   *   消息栏也跟着没了 —— 玩家点了行动，钱扣了、AP 少了，却看不到任何解释。
+   *   这不是崩溃，是"游戏突然不说话了"，比崩溃更难意识到是缺陷。
+   *   这里只读不写，逻辑层不需要为 3D 做任何配合。
+   */
+  function refreshFirst() {
+    if (!firstShell) return;
+    var st = getState();
+    if (st && st.messageLog) {
+      var n = st.messageLog.length;
+      /* messageLog 超过 500 条会 slice(-300)（state.js:910），长度**会变小**。
+         所以只在变长时播，变小说明被裁剪了，静默重置游标即可。 */
+      if (lastMsgLen >= 0 && n > lastMsgLen) {
+        var m = st.messageLog[n - 1];
+        if (m && m.text) firstShell.notify(m.text, kindOfMsg(m.type));
+      }
+      lastMsgLen = n;
+    }
+    firstShell.refresh();
+  }
+
+  /* ── 挂载 / 卸载 ── */
+
+  function mountFirst() {
+    if (firstShell) return firstShell;
+    if (!available()) return null;
+    var S3 = core();
+    if (typeof S3.create3DShell !== "function") return null;
+    if (!getState()) return null;   // 逻辑层还没 newGame/loadGame
+
+    /* 让位：**只接管当前可见的 #app**。
+       若它本来就是隐藏的（欢迎页 / 开场世界新闻还没走完），就别碰它。
+       ★ 为什么：`appPrevDisplay` 记的是"挂载那一刻的值"，卸载时原样写回。
+         如果那一刻恰好是 "none"（实测会发生 —— startNewGame() 里的
+         `#app.style.display = ""` 是在 startWithWorldNewsIntro 的回调
+         `_enterClassicGame` 里做的，函数返回时它仍是 none），
+         那么"原样恢复"就等于把一个本该隐藏的界面留在 none 上，
+         看起来像卸载失败。让位不是"让隐藏的东西变可见"。 */
+    appEl = document.getElementById("app");
+    if (appEl && appEl.style.display !== "none") {
+      appPrevDisplay = appEl.style.display || "";
+      appEl.style.display = "none";
+    } else {
+      appEl = null;
+    }
+
+    firstHost = document.createElement("div");
+    firstHost.id = FIRST_ID;
+    firstHost.className = "s3-first";
+
+    var exit = document.createElement("button");
+    exit.type = "button";
+    exit.className = "s3-first-exit";
+    exit.textContent = "✕ 退出 3D";
+    exit.title = "回到原界面（快捷键 F3）";
+    exit.addEventListener("click", unmountFirst);
+    firstHost.appendChild(exit);
+
+    document.body.appendChild(firstHost);
+
+    firstShell = S3.create3DShell({
+      container: firstHost,
+      data: S3.gamedata,
+      readHUD: readHUD,
+      readActions: readActions,
+      readLocations: readLocations,
+      onAction: onAction,
+      onTravel: onTravel,
+    });
+    firstShell.start();
+
+    var cur = currentLocId();
+    if (cur) firstShell.loadLocation(cur);
+    lastMsgLen = (getState().messageLog || []).length;
+
+    /* 订阅逻辑层的状态变更。
+       ★ StateManager.onChange 没有对应的 off（state.js:990 只 push 不提供退订），
+         所以：
+           ① 用一个模块级标志保证**只订阅一次** —— 否则挂载/卸载来回几次
+              就会堆起同样数量的监听器，每次 update 都被调用 N 遍。
+              （这一点由 verify-3d-first.cjs 的「重挂」步骤暴露出来：
+               那条步骤本来只是为了构造 #app 可见的前置条件。）
+           ② 回调里用 firstShell 做守卫，卸载后变成空转。 */
+    if (!changeHooked) {
+      try {
+        if (window.StateManager && typeof window.StateManager.onChange === "function") {
+          window.StateManager.onChange(function () { if (firstShell) scheduleFirst(); });
+          changeHooked = true;
+        }
+      } catch (e) { /* 订阅失败不影响已挂载的界面 */ }
+    }
+
+    /* 一次性提示：玩家得知道怎么回去 */
+    firstShell.notify("3D 模式 · 按 F3 返回原界面", "ok");
+    return firstShell;
+  }
+
+  function unmountFirst() {
+    if (firstShell) { firstShell.dispose(); firstShell = null; }
+    if (firstHost) { firstHost.remove(); firstHost = null; }
+    if (appEl) { appEl.style.display = appPrevDisplay; appEl = null; }
+    appPrevDisplay = "";
+    lastMsgLen = -1;
+    pending = false;
+  }
+
+  function toggleFirst() {
+    if (firstShell) { unmountFirst(); return false; }
+    return !!mountFirst();
+  }
+
+  /** 启动开关：只在显式要求时进 3D。默认行为（不带参数）一个字都不改。 */
+  function autoStartFirst() {
+    if (!available()) return;
+    var q = window.location.search || "";
+    var h = window.location.hash || "";
+    if (!(/[?&]mode=3d(&|$)/.test(q) || h === "#3d" || h === "#3d-first")) return;
+    /* 等逻辑层把 state 建起来（脚本是 defer，init 在 DOMContentLoaded 之后）。
+       轮询而不是"等一帧" —— 建 state 之前 getState() 是**抛异常**的（state.js:843），
+       早一步调用会拿到 null，晚一步则白等。 */
+    var tries = 0;
+    (function attempt() {
+      tries++;
+      var st = getState();
+      if (st && st.player && st.trade && st.trade.currentLocation) { mountFirst(); return; }
+      if (tries < 50) setTimeout(attempt, 100);
+    })();
+  }
+
+  /* 运行时钩子：F3 切换 + 自动启动。
+   *
+   * ★ 整块必须有环境守卫 —— 本文件会被 tests/*.cjs 在 **Node** 里加载，
+   *   那里只有一个 mock 的 window 对象，没有 addEventListener。
+   *   没有守卫时的表现是 `TypeError: window.addEventListener is not a function`，
+   *   而它会**把整个事件完整性门禁打红** —— 一个纯前端快捷键把后端测试打挂，
+   *   排查方向会被完全带偏（实测：npm test 报的是"脚本加载错误"）。
+   *   本文件其余部分本来就没有顶层副作用（全是函数定义），这一块也保持同样纪律：
+   *   所有 DOM/全局副作用都收在 installHooks() 里，且先验环境。 */
+  function installHooks() {
+    if (typeof window === "undefined" || typeof window.addEventListener !== "function") return;
+    if (hooksInstalled) return;
+    hooksInstalled = true;
+
+    /* F3 运行时切换。用捕获阶段 + 阻止默认，避免被 2D 界面或浏览器的
+       "查找"快捷键（部分浏览器 F3 = 再次查找）吃掉。 */
+    window.addEventListener("keydown", function (e) {
+      if (e.key !== "F3") return;
+      if (!available()) return;
+      e.preventDefault();
+      toggleFirst();
+    }, true);
+
+    if (typeof document === "undefined" || typeof document.addEventListener !== "function") return;
+    if (document.readyState === "loading") {
+      document.addEventListener("DOMContentLoaded", function () { setTimeout(autoStartFirst, 0); });
+    } else {
+      setTimeout(autoStartFirst, 0);
+    }
+  }
+  installHooks();
+
   /* ─────────── 生命周期 ─────────── */
 
   /** 由 renderLocation 调用；同一地点重复调用不会重建场景 */
@@ -302,6 +693,7 @@
   }
 
   function disposeAll() {
+    unmountFirst();   // 3D-first 形态也要跟着卸（否则 #app 会一直是 display:none）
     if (mini) { mini.dispose(); mini = null; }
     if (overlay3d) { overlay3d.dispose(); overlay3d = null; }
     if (overlayEl) { overlayEl.remove(); overlayEl = null; }
@@ -311,12 +703,21 @@
   }
 
   window.Scene3DBridge = {
-    version: "0.2.0",
+    version: "0.3.0",
     available: available,
     sync: sync,
     open: openOverlay,
     close: closeOverlay,
     dispose: disposeAll,
+    /* 3D-first 形态（3D 铺满视口 + HUD，接真实游戏） */
+    first: {
+      mount: mountFirst,
+      unmount: unmountFirst,
+      toggle: toggleFirst,
+      get active() { return !!firstShell; },
+      get shell() { return firstShell; },
+      get debug() { return firstShell ? firstShell.debug : null; },
+    },
     /* 调试用 —— 3D 层与游戏逻辑的接缝最容易出问题，都留个窥视口 */
     toGameActionId: toGameActionId,
     invokeAction: invokeAction,

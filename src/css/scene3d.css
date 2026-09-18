@@ -627,3 +627,52 @@
   .s3h-tray { transition: none; }
 }
 
+/* ══════════════════════════════════════════════════════════════════════════
+   3D-first 形态 —— 3D 铺满视口，原 2D 界面整体让位
+   见 src/js/scene3d_bridge.js 的「3D-first 形态」一节。
+   ══════════════════════════════════════════════════════════════════════════ */
+
+/* 宿主铺满整个视口。z-index 低于游戏的收益飘字（.earn-float 是 9999）——
+   那个飘字是正面反馈，让它盖在 3D 上是想要的效果。 */
+.s3-first {
+  position: fixed;
+  inset: 0;
+  z-index: 9000;
+  background: #59615a;
+  overflow: hidden;
+}
+
+/* 退出按钮：放在右侧需求条（.s3h-vitals 从 top:96px 起）之上的空档里，
+   不挤顶栏（顶栏右侧是现金/欠款）、不压行动托盘（右下）。 */
+.s3-first-exit {
+  position: absolute;
+  top: 64px;
+  right: 14px;
+  z-index: 10;
+  padding: 6px 10px;
+  font: inherit;
+  font-size: 11px;
+  line-height: 1;
+  color: #e8e4d8;
+  background: rgba(16, 19, 17, 0.55);
+  border: 1px solid rgba(232, 228, 216, 0.18);
+  border-radius: 7px;
+  cursor: pointer;
+  backdrop-filter: blur(3px);
+  transition: background 0.14s ease, border-color 0.14s ease;
+}
+.s3-first-exit:hover {
+  background: rgba(216, 180, 90, 0.18);
+  border-color: rgba(216, 180, 90, 0.4);
+}
+
+/* 窄屏：需求条整体上移到 top:84px，退出按钮跟着挪，避免叠在一起 */
+@media (max-width: 720px) {
+  .s3-first-exit { top: 52px; right: 8px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .s3-first-exit { transition: none; }
+}
+
+

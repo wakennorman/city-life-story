@@ -13,6 +13,13 @@
  * 用法：
  *   node scripts/build-3d-bundle.cjs              # 产出 src/js/scene3d.bundle.js
  *   node scripts/build-3d-bundle.cjs --out X.js   # 产出到指定路径（验证用）
+ *   node scripts/build-3d-bundle.cjs --entry P.js # 换入口（隔离验证用，见下）
+ *
+ * ★ --entry 的用途：多 Agent 并行时，别人可能正在改 src/app/3d 下的**别的文件**
+ *   （比如 materials.js），此时从默认入口构建会把别人的半成品一起打进来，
+ *   于是自己的改动无法独立验证。--entry 可指向一棵隔离的源码树
+ *   （复制 src/app/3d → .tmp-probe/xxx，只把别人的文件回退到 HEAD），
+ *   从而把自己的改动与别人的进行中状态解耦。
  *
  * 产物：src/js/scene3d.bundle.js（会被 build.py 自动内联进 dist/app.js）
  */
@@ -22,7 +29,10 @@ const path = require("path");
 const esbuild = require("esbuild");
 
 const ROOT = path.resolve(__dirname, "..");
-const ENTRY = path.join(ROOT, "src/app/3d/index.js");
+const entryArgIdx = process.argv.indexOf("--entry");
+const ENTRY = entryArgIdx > -1
+  ? path.resolve(ROOT, process.argv[entryArgIdx + 1])
+  : path.join(ROOT, "src/app/3d/index.js");
 
 const outArgIdx = process.argv.indexOf("--out");
 const OUT = outArgIdx > -1

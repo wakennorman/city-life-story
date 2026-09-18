@@ -77,6 +77,21 @@ export function create3DShell(opts = {}) {
       if (readHUD) {
         const s = readHUD();
         if (s) {
+          /* ★ 谁决定「当前在哪」：readHUD 返回的 locId 是权威。
+             ── 为什么不能只靠 shell.travel() ──
+             接真实游戏后，换地点是**逻辑层**的事：点「前往 公园」执行的是
+             `travel_公园` 行动，它内部改 state.trade.currentLocation。
+             外壳的 travel() 根本没被调用（HUD 行动托盘走的是 onAction）。
+             若这里不比对，玩家会在顶栏看到「公园」，而 3D 场景仍是旧地点
+             —— 画面与文字各说各话，且不报错、不崩溃，最难查的一类。
+             所以场景切换只有这一个入口，travel() 也交给它。 */
+          if (s.locId && s.locId !== currentId && view) {
+            if (view.loadLocation(s.locId)) {
+              currentId = s.locId;
+              // 可达地点随所在地变化，地图列表要跟着重刷
+              if (readLocations) hud.setLocations(readLocations() || [], travel);
+            }
+          }
           hud.setTop(s);
           hud.setNeeds(s.needs, s.status);
           if (s.ap) hud.setAP(s.ap.cur, s.ap.max);
@@ -111,7 +126,10 @@ export function create3DShell(opts = {}) {
     if (!id || id === currentId) return;
     const r = onTravel?.(id);
     if (r && r.ok === false) { hud.notify(r.reason || "去不了那里", "warn"); return; }
-    loadLocation(id);
+    /* 场景由 refresh 统一决定（见那里的注释）。只有当 readHUD 不提供权威
+       locId 时（预览页 / 独立使用外壳），才由外壳自己切。 */
+    const s = readHUD ? readHUD() : null;
+    if (!s || !s.locId) loadLocation(id);
     refresh();
     hud.notify("已到达：" + (pickLoc(id)?.name || id), "ok");
   }
@@ -187,6 +205,12 @@ export function create3DShell(opts = {}) {
         calls: view ? view.stats.calls : 0,
         lampAnchors: view ? view.stats.lampAnchors : 0,
         lamps: view ? view.stats.lamps : 0,
+        /* 渲染管线的可观测读数。放这里而不是让验证脚本去翻内部对象：
+           管线类缺陷（顺序错、pass 没加、Bloom 白天还开着）都不产生报错，
+           只有把"链是什么样"直接暴露出来才断言得了。 */
+        postFx: view ? view.stats.postFx : null,
+        sun: view ? view.stats.sun : null,
+        cameraDepth: view ? { near: view.camera.near, far: view.camera.far } : null,
       };
     },
   };

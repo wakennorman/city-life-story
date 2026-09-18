@@ -27,6 +27,14 @@ import { buildPalette, palette } from './palette.js';
 import { buildLocation } from './world.js';
 import { mergeStatics, countScene } from './merge.js';
 import { Player, IsoCamera } from './player.js';
+/* 后处理（three/addons → examples/jsm，见 three 的 exports 映射）。
+   顺序在下面 POST 注释里说明，改顺序会让画面全错。 */
+import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
+import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
+import { GTAOPass } from 'three/addons/postprocessing/GTAOPass.js';
+import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
+import { ShaderPass } from 'three/addons/postprocessing/ShaderPass.js';
+import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
 
 /** 晦暗调常量 —— 作为初始值；实际值由 SLOT_PRESETS 按时段覆盖 */
 const TONE = {
@@ -52,9 +60,37 @@ const TONE = {
         远处会"变黑"而不是"变淡"。
 
    env 字段是给 IBL 用的天空/地面色（详见 buildSkyEnv）。 */
+/* ★ [2026-09-18 主光方向修正] sunPos 现在**真的**决定光向，所以必须按"打光好看"标定。
+ *
+ *   背景：这个字段原先只被 buildSkyEnv 用来画天空里的太阳盘（只影响 IBL 反射分布），
+ *   真正的方向光位置被 loop() 每帧覆盖成「玩家 + (16,22,-14)」——
+ *   于是四个时段的**实际光向完全相同**，而天空却按各自 sunPos 画太阳。
+ *   修好机制之后，这些从未参与过打光的方位值立刻决定画面，实测：
+ *     · 傍晚整体亮度 61.81 → 50.37（−18.5%），且暖调几乎消失
+ *     · 夜间 25.16 → 21.28（−15.4%）
+ *   原因不是"值错了"，而是**它们从没被按打光调过**：
+ *   预设里的 [-26,10,20] 相对默认等轴测机位（yaw 0.38，相机位于玩家 +x+z 侧）
+ *   是**顺光位**——它照亮的是背对镜头的那几面，正面全是暗的。
+ *
+ *   标定规则（三次实测后定下来的，前两次都调坏了）：
+ *     1. **地面受光只取决于高度角**。等轴测俯视下街面占画面约一半，
+ *        街面法线朝上 → 照度 ∝ sin(高度角)。所以"低斜阳"在这种机位下
+ *        不是"好看的长影"，而是"整个街面发黑"。高度角因此守在 35°~49°。
+ *     2. **方位角不要动** —— 这条是踩坑踩出来的。等轴测视角只能看到两组朝向的墙，
+ *        把光挪到 −x−z 侧会让**两面墙同时落进阴影**，画面反而更冷更暗：
+ *        实测下午整体亮度 99.97 → 81.69（−18%）、暖调全失（墙只剩冷天光）。
+ *        所以四个时段统一沿用修复前 loop() 里那个方位（+x−z 侧），
+ *        与"修复前实际在用的方向"一致 → 观感不倒退。
+ *     3. 于是四段之间**只差高度角与颜色**：晨 46.8° / 午 48.4° / 暮 35.7° / 夜 48.9°。
+ *        ★ 这样"晨午几乎一样"是**已知且有意**的：修复前它们本来就完全一样，
+ *          现在机制是活的，后续想拉开差异只需改 sunPos —— 改了就真的生效。
+ *
+ *   实测（整体亮度，与修复前对比）：上午 +1.2% · 下午 ~0% · 傍晚 −19%（地面照度 0.81×，
+ *   "黄昏本来就该更暗"）· 夜间 ~0%（后处理再 +9% 的 Bloom 补回一部分）。 */
 const SLOT_PRESETS = {
   上午: {
-    sunColor: 0xf4e8cc, sunPos: [20, 24, -12], sunIntensity: 2.60,
+    /* 高度角 46.8°（修复前写死的是 46.0°）→ 白天观感几乎不变。 */
+    sunColor: 0xf4e8cc, sunPos: [20, 26, -14], sunIntensity: 2.60,
     hemSky: 0x9db4c8, hemGround: 0x5a5346, hemIntensity: 0.65,
     fogColor: 0x93a2ab, fogDensity: 0.0075,
     ambColor: 0x3a4450, ambIntensity: 0.15,
@@ -62,7 +98,9 @@ const SLOT_PRESETS = {
     env: { zenith: 0x6f8fa8, horizon: 0x93a2ab, ground: 0x4a453c, groundHorizon: 0x7a7568, intensity: 1.0 },
   },
   下午: {
-    sunColor: 0xf6d8a8, sunPos: [-16, 20, 14], sunIntensity: 2.65,
+    /* 高度角 48.4°，方位同上午。想要"下午的光从另一边来"，
+       请连同 world.js 的布局一起调 —— 单独挪光会让可见的两面墙同时入影。 */
+    sunColor: 0xf6d8a8, sunPos: [18, 25, -13], sunIntensity: 2.65,
     hemSky: 0xa8bcc8, hemGround: 0x5c5344, hemIntensity: 0.70,
     fogColor: 0x9aa3a0, fogDensity: 0.0075,
     ambColor: 0x40484e, ambIntensity: 0.14,
@@ -70,7 +108,11 @@ const SLOT_PRESETS = {
     env: { zenith: 0x7a9ab0, horizon: 0xa8a898, ground: 0x4a4238, groundHorizon: 0x8a8070, intensity: 1.0 },
   },
   傍晚: {
-    sunColor: 0xd67f3f, sunPos: [-26, 10, 20], sunIntensity: 2.80,
+    /* 高度角 35.7° 的"黄金时刻"。
+       预设原本是 17°（几乎贴地）—— 那是按"天空里的太阳盘"挑的，从没参与过打光；
+       一旦真的打光，17° 会让街面照度只剩 0.4×，整个画面发黑。
+       35.7° 仍有约 1.4 倍物高的长影与暖色，但街面还看得见。 */
+    sunColor: 0xd67f3f, sunPos: [17, 15, -12], sunIntensity: 3.00,
     hemSky: 0x8b9fc0, hemGround: 0x4a4a3c, hemIntensity: 0.55,
     fogColor: 0x8a7a72, fogDensity: 0.0090,
     ambColor: 0x4a4a58, ambIntensity: 0.12,
@@ -78,7 +120,11 @@ const SLOT_PRESETS = {
     env: { zenith: 0x4a5a78, horizon: 0xd88a50, ground: 0x3a3630, groundHorizon: 0x8a6a4a, intensity: 0.9 },
   },
   夜间: {
-    sunColor: 0x8ac0e8, sunPos: [-18, 26, 14], sunIntensity: 0.38,
+    /* 高度角 48.9°（修复前是 46.0°），强度保持 0.38 —— **不需要补偿**。
+       ★ 教训：中间有一版把强度从 0.38 提到 0.52 想"补回夜间变暗"，那是错的：
+         变暗的真正来源是高度角（以及方位造成的阴影），用强度去补
+         只会把墙照成白天。改对高度角之后，强度回到原值，夜间亮度也就回到原值。 */
+    sunColor: 0x8ac0e8, sunPos: [15, 22, -12], sunIntensity: 0.38,
     hemSky: 0x1e2a3a, hemGround: 0x101216, hemIntensity: 0.35,
     fogColor: 0x1c2430, fogDensity: 0.0110,
     ambColor: 0x1a2433, ambIntensity: 0.09,
@@ -160,6 +206,94 @@ function buildSkyEnv(renderer, slotName, preset) {
   return rt.texture;
 }
 
+/* ── 后处理参数（3D_ART_SPEC.md P1-3 / P2-1 / P3-2）───────────────────────
+ *
+ * ★ 顺序固定，不可调换：
+ *     RenderPass → GTAOPass → UnrealBloomPass(仅夜间) → Grade → OutputPass
+ *
+ *   为什么 AO 与 Bloom 必须在 OutputPass 之前：
+ *     RenderPass 渲染到 render target 时，three **不会**应用色调映射
+ *     （WebGLPrograms 里 `toneMapping: renderTarget === null ? renderer.toneMapping : NoToneMapping`），
+ *     所以缓冲里是**线性 HDR**。AO 是线性空间的光照遮蔽、Bloom 的 threshold
+ *     也是对着 HDR 亮度判的 —— 两者都必须在线性空间做，否则阈值含义全变。
+ *     OutputPass 放最后，统一做 ACES 色调映射 + sRGB 传输（它读 renderer 上的设置）。
+ *
+ * ★ 一个差点照抄进代码的错误：
+ *   GTAOPass 官方示例写 `output = GTAOPass.OUTPUT.Denoise`，那是**调试用法**。
+ *   查 GTAOPass.render() 的 switch 可见，Denoise 分支只是
+ *   `copyMaterial.tDiffuse = pdRenderTarget.texture` 直接写进缓冲 ——
+ *   **场景颜色被整个丢掉**，画面会变成一张灰白 AO 图。
+ *   生产要用 OUTPUT.Default(=0)：先拷场景色，再按 blendIntensity 叠 AO。
+ */
+const AO_SCALE = 0.5;          // AO 半分辨率：GTAO 有两次全场景预渲染，全分辨率太贵
+const AO_BLEND = 0.70;         // AO 混合强度。1.0 = 全量，城市场景会明显发脏
+const BLOOM_STRENGTH = 0.35;   // 报告区间 0.25~0.45
+const BLOOM_RADIUS = 0.40;
+const BLOOM_THRESHOLD = 0.85;  // 只让「比白还亮」的东西溢出（路灯灯头、月光边缘）
+const VIGNETTE = 0.06;         // 暗角：角落衰减 6%（报告区间 3~8%）
+const ABERRATION = 0.5;        // 色散：画面角落约 0.5px，中心为 0
+const GRAIN = 0.015;           // 胶片颗粒：±0.0075，约 1.5%（报告区间 1~2%）
+
+/** 镜头缺陷 pass —— 暗角 + 横向色散 + 胶片颗粒，一次全屏 pass 解决。
+ *  三项都很轻：这是「让画面像镜头拍的」而不是「让画面有特效」。
+ *
+ *  ★ GLSL 注释一律用 ASCII。着色器源码里的非 ASCII 字节在部分 ANGLE/驱动上
+ *    会被拒绝编译，而失败表现是"pass 静默不生效"甚至整块黑屏 —— 又是那种
+ *    不产生明确信号的失效。所以中文解释留在 JS 侧，不进 shader 字符串。 */
+const GradeShader = {
+  name: 'GradeShader',
+  uniforms: {
+    tDiffuse: { value: null },
+    uTime: { value: 0 },
+    uResolution: { value: new THREE.Vector2(1, 1) },
+    uVignette: { value: VIGNETTE },
+    uAberration: { value: ABERRATION },
+    uGrain: { value: GRAIN },
+  },
+  vertexShader: [
+    'varying vec2 vUv;',
+    'void main() {',
+    '  vUv = uv;',
+    '  gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);',
+    '}',
+  ].join('\n'),
+  /* 三项的语义：
+       · 色散 —— 偏移量 ∝ r2（中心 0 / 四角 0.5），画面正中完全没有。
+         除以分辨率是为了让 uAberration 的单位是**像素**，
+         否则同一组参数在 1440p 与 720p 上会呈现成两个不同的效果。
+       · 暗角 —— 角落衰减量恰好等于 uVignette，中心为 0；
+         pow(...,1.5) 让衰减集中在外圈，不压中间主体。
+       · 颗粒 —— 加在**线性空间**（本 pass 在 tonemapping 之前），
+         于是暗部比亮部明显，这正是胶片的行为，不需要额外补偿。 */
+  fragmentShader: [
+    'uniform sampler2D tDiffuse;',
+    'uniform float uTime, uVignette, uAberration, uGrain;',
+    'uniform vec2 uResolution;',
+    'varying vec2 vUv;',
+    '',
+    'float hash(vec2 p) {',
+    '  return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453123);',
+    '}',
+    '',
+    'void main() {',
+    '  vec2 d = vUv - 0.5;',
+    '  float r2 = dot(d, d);',
+    '',
+    '  float k = uAberration * r2 * 2.0 / max(uResolution.x, 1.0);',
+    '  vec3 col;',
+    '  col.r = texture2D(tDiffuse, vUv + d * k).r;',
+    '  col.g = texture2D(tDiffuse, vUv).g;',
+    '  col.b = texture2D(tDiffuse, vUv - d * k).b;',
+    '',
+    '  col *= 1.0 - uVignette * pow(r2 * 2.0, 1.5);',
+    '',
+    '  col += (hash(vUv * uResolution + fract(uTime) * 137.0) - 0.5) * uGrain;',
+    '',
+    '  gl_FragColor = vec4(col, 1.0);',
+    '}',
+  ].join('\n'),
+};
+
 const DEFAULT_SLOT = "上午";
 
 /** 默认机位（IsoCamera 构造值）。双击回正时回到这里。 */
@@ -197,11 +331,47 @@ export function createGame3D(opts) {
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
   renderer.toneMappingExposure = TONE.exposure;
   renderer.shadowMap.enabled = true;
-  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  /* ★ 不要再写 PCFSoftShadowMap —— 它在 r186 已被移除。
+     写它会命中 WebGLShadowMap.render() 开头的一个降级分支：
+       warn('WebGLShadowMap: PCFSoftShadowMap has been removed. Using PCFShadowMap instead.')
+       this.type = PCFShadowMap;
+     即「代码说自己是软阴影、实际拿到硬 PCF」，而这条 warn 在门禁里**完全不可见**
+     （verify-3d-shell.cjs 只收 console.error，warn 不收）。
+     软化阴影现在靠 shadow.radius —— 查 shadowmap_pars_fragment.glsl 可见
+     PCF 分支确实使用 shadowRadius（`float radius = shadowRadius * texelSize.x`）。 */
+  renderer.shadowMap.type = THREE.PCFShadowMap;
+  /* 每帧只更新一次阴影贴图。
+     后处理链会让 renderer.render() 在一帧里被调用两次
+     （RenderPass 一次 + GTAOPass 的法线预渲染一次），autoUpdate=true 时
+     阴影贴图会跟着重算两遍 —— 2048² 的 shadow map 白白多画一遍。
+     改成手动：loop 里每帧置一次 needsUpdate，由第一次 render 消费掉
+     （WebGLShadowMap.render 末尾会把它复位）。 */
+  renderer.shadowMap.autoUpdate = false;
+  /* ★ renderer.info 默认在**每次** renderer.render() 时自动清零。
+     接上后处理链之后，一帧里有多次 renderer.render：
+       RenderPass 一次 + GTAOPass 的法线预渲染一次 + 每个全屏 pass 各一次。
+     于是 info.render.triangles 只剩**最后一个全屏 pass** 的数字 ——
+     实测从 5860 掉到 1，而画面完全正常、没有任何报错。
+     这正是本项目模式 14~17 的那句话：「度量与想度量的东西不是同一个东西」；
+     既有断言 `tris > 1000` 会立刻假失败（它是对的，是读数变了）。
+     改成手动清零（每帧开头 reset 一次），读数即**整帧合计** ——
+     既修好断言，也让这个数字更有意义（把后处理开销算进去）。 */
+  renderer.info.autoReset = false;
   renderer.domElement.style.display = 'block';
   renderer.domElement.style.width = '100%';
   renderer.domElement.style.height = '100%';
   container.appendChild(renderer.domElement);
+
+  /* 后处理对象：**先声明、后创建**。
+     applyTimeSlot 在相机创建之前就会被调用一次（初始化跑默认时段），
+     而它要引用 bloomPass 来同步「夜间才开辉光」——
+     把声明放到 composer 创建处（相机之后）会直接踩 TDZ。
+     （这个顺序坑在"时段切换 = 换光照 + 换夜间光源"那次已经踩过一次，
+       注释里写着原因，这里同样遵守。） */
+  let composer = null;
+  let gtaoPass = null;
+  let bloomPass = null;
+  let gradePass = null;
 
   /* ── 场景与晦暗调光照 ───────────────────────────────────────────────── */
   const scene = new THREE.Scene();
@@ -222,8 +392,24 @@ export function createGame3D(opts) {
   sun.shadow.camera.top = S; sun.shadow.camera.bottom = -S;
   sun.shadow.bias = -0.0009;
   sun.shadow.normalBias = 0.022;
+  /* 阴影边缘软化（P2-3）。PCF 分支按 shadowRadius 扩采样半径：
+     0 = 硬边（锯齿明显），2~4 = 边缘有过渡但不糊。
+     城市场景全是方盒子，硬边会显得像"贴上去的"，3 是性价比点。 */
+  sun.shadow.radius = 3;
   scene.add(sun);
   scene.add(sun.target);
+
+  /* ★ 主光方向必须随时段走 —— 这是修一个真实的"修了一半"：
+     原先 loop() 每帧写死 sun.position = 玩家 + (16,22,-14)，
+     于是 applyTimeSlot 里 sun.position.set(...preset.sunPos) **每帧被覆盖**，
+     SLOT_PRESETS 的 sunPos（傍晚的 [-26,10,20] 低角度夕阳）从来没生效过。
+     只有 buildSkyEnv 用了它 —— 于是「天空是夕阳、影子却是正午」，
+     而且因为不报错、画面也不黑，这个 bug 一直没被发现。
+     现在改成：**时段只决定方向，位置 = 玩家 + 方向 × 距离**。 */
+  const sunDir = new THREE.Vector3(TONE.sun.pos[0], TONE.sun.pos[1], TONE.sun.pos[2]).normalize();
+  /* 34 恰好落在 shadow.camera 的 near 1 / far 110 中段，且大于默认 frustum 的一半，
+     保证 ±40m 的阴影相机能把玩家周围罩满。 */
+  const SUN_DIST = 34;
 
   const ambLight = new THREE.AmbientLight(TONE.ambient.color, TONE.ambient.intensity);
   scene.add(ambLight);
@@ -240,6 +426,9 @@ export function createGame3D(opts) {
     currentSlot = slot;
     sun.color.set(preset.sunColor);
     sun.position.set(...preset.sunPos);
+    /* 时段只决定**方向**。loop 每帧会用 sunDir × SUN_DIST 重算位置，
+       所以上面那行 set 只是让"还没进 loop 时"的方向也是对的。 */
+    sunDir.set(preset.sunPos[0], preset.sunPos[1], preset.sunPos[2]).normalize();
     sun.intensity = preset.sunIntensity;
     ambLight.color.set(preset.ambColor);
     ambLight.intensity = preset.ambIntensity;
@@ -258,6 +447,13 @@ export function createGame3D(opts) {
       scene.environment = envTex;
       scene.environmentIntensity = preset.env ? preset.env.intensity : 1.0;
     }
+
+    /* 辉光只在夜间开。
+       ★ 白天开着会让整个画面发灰 —— 阈值以上的亮部被整体抬亮，
+         而白天到处都是"比阈值亮"的地方，等于给全屏加了一层柔光罩。
+       ★ 这里用 if 守卫而不是直接赋值：applyTimeSlot 在相机之前就会被调用一次
+         （初始化跑默认时段），那时 bloomPass 还是 null。 */
+    if (bloomPass) bloomPass.enabled = (slot === "夜间");
   }
   /* 第一次一定要把时段照明跑一遍，否则后面 setTimeSlot 出来的时候默认值可能不一致 */
   applyTimeSlot(DEFAULT_SLOT);
@@ -267,8 +463,55 @@ export function createGame3D(opts) {
 
   /* ── 角色 / 相机 ────────────────────────────────────────────────────── */
   const player = new Player(scene, [], new THREE.Vector3(0, 0, 10));
-  const camera = new THREE.PerspectiveCamera(46, 1, 0.1, 400);
+  /* ★ 相机深度（P2-4）：near 0.1 → 0.5、far 400 → 250。
+     · near 抬高是为了**深度精度**：0.1 与 250 的比值 2500:1，深度缓冲在远处
+       几乎全是同一个值（z-fighting / 远处的 AO 与阴影会抖）。0.5 与 250 是 500:1。
+       等轴测相机离玩家约 18~32，抬到 0.5 完全不会切到角色。
+     · far 压到 250 是因为雾：白天雾密度 0.0075 → 约 133m 外已完全被雾吃掉，
+       再远的几何画了也看不见。这一刀同时也帮 GTAOPass 省了远处像素。 */
+  const camera = new THREE.PerspectiveCamera(46, 1, 0.5, 250);
   const cam = new IsoCamera(camera, player.pos, []);
+
+  /* ── 后处理链（P1-3 / P2-1 / P3-2）────────────────────────────────────
+   * 顺序见文件顶部 POST 常量注释：AO 与 Bloom 必须在线性空间（OutputPass 之前）。
+   * mini 缩略景（侧栏 ~230px）不跑后处理：GTAO 有两次全场景预渲染，
+   * 在那个尺寸上纯属浪费，而且 229px 宽的画面上根本看不出 AO。
+   */
+  const wantsPostFx = wantsKeyboard;
+  /* 已加入 composer 的 pass 清单 —— 用于把「真实链顺序」暴露给验证脚本。
+     ★ 不用 pass.constructor.name：esbuild minify 会把类名改掉（GTAOPass → vs），
+       那种断言会在"构建方式变了"的时候假失败。 */
+  const postPasses = [];
+  function addPost(kind, pass) {
+    composer.addPass(pass);
+    postPasses.push({ kind, pass });
+    return pass;
+  }
+  if (wantsPostFx) {
+    composer = new EffectComposer(renderer);
+    addPost('render', new RenderPass(scene, camera));
+
+    gtaoPass = addPost('gtao', new GTAOPass(scene, camera, 1, 1));
+    /* ★ OUTPUT.Default 而不是官方示例里的 Denoise —— 见文件顶部注释，
+       Denoise 只输出 AO 图本身，会把场景颜色整个丢掉。 */
+    gtaoPass.output = GTAOPass.OUTPUT.Default;
+    gtaoPass.blendIntensity = AO_BLEND;
+
+    bloomPass = addPost('bloom', new UnrealBloomPass(
+      new THREE.Vector2(1, 1), BLOOM_STRENGTH, BLOOM_RADIUS, BLOOM_THRESHOLD));
+    bloomPass.enabled = false;
+
+    gradePass = addPost('grade', new ShaderPass(GradeShader));
+    /* 色调映射统一由 OutputPass 做。ShaderPass 用的是 ShaderMaterial，
+       渲染到屏幕时 three 会往里注入 tone mapping —— 显式关掉，避免双重映射。
+       （当前 grade 不是最后一个 pass，本来就不会被注入；这行是防止将来
+       有人把 OutputPass 拿掉时的静默变亮。） */
+    gradePass.material.toneMapped = false;
+
+    addPost('output', new OutputPass());
+
+    bloomPass.enabled = (currentSlot === "夜间");
+  }
 
   let world = null;
   let currentId = null;
@@ -286,6 +529,20 @@ export function createGame3D(opts) {
     camera.aspect = w / h;
     camera.updateProjectionMatrix();
     renderer.setSize(w, h, false);
+    if (composer) {
+      composer.setSize(w, h);
+      /* ★ composer.setSize 会把**每一个** pass 的尺寸都设成全分辨率
+         （EffectComposer.setSize 里对 passes 逐个调用 pass.setSize），
+         所以半分辨率的 AO 必须在它**之后**重新压回去。
+         顺序反了不会报错，只是 AO 悄悄变回全分辨率、帧率掉一截。 */
+      const pr = renderer.getPixelRatio();
+      gtaoPass.setSize(
+        Math.max(1, Math.floor(w * pr * AO_SCALE)),
+        Math.max(1, Math.floor(h * pr * AO_SCALE)),
+      );
+      /* 色散按像素给量，必须知道真实像素宽度（含 devicePixelRatio） */
+      gradePass.uniforms.uResolution.value.set(w * pr, h * pr);
+    }
   }
   const ro = typeof ResizeObserver !== 'undefined'
     ? new ResizeObserver(() => resize())
@@ -555,13 +812,26 @@ export function createGame3D(opts) {
     const dt = Math.min(0.05, (now - last) / 1000);
     last = now;
 
+    /* 整帧合计的计数器：手动清零，让下面所有 render 累加在一起
+       （见 renderer.info.autoReset 的注释）。 */
+    renderer.info.reset();
+
     player.update(dt, keys, cam.yaw);
     cam.update(dt, player.pos);
 
-    // 主光跟随角色，保证阴影贴图始终覆盖视野中心
-    sun.position.set(player.pos.x + 16, 22, player.pos.z - 14);
-    sun.target.position.copy(player.pos);
+    /* 主光跟随角色：**时段只决定方向，位置 = 玩家 + 方向 × 距离**。
+       这样 ±40m 的阴影 frustum 始终罩住视野中心（跟人走），
+       同时夕阳的低角度不会被写死成正午 —— 见 sunDir 的注释。 */
+    sun.position.set(
+      player.pos.x + sunDir.x * SUN_DIST,
+      sunDir.y * SUN_DIST,
+      player.pos.z + sunDir.z * SUN_DIST,
+    );
+    sun.target.position.set(player.pos.x, 0, player.pos.z);
     sun.target.updateMatrixWorld();
+
+    // 颗粒要动起来才是"胶片"而不是"脏屏幕"
+    if (gradePass) gradePass.uniforms.uTime.value = now * 0.001;
 
     // 最近热点变化 → 通知外部（游戏据此显示"按 E"提示）
     const near = nearestHotspot();
@@ -586,7 +856,11 @@ export function createGame3D(opts) {
       }
     }
 
-    renderer.render(scene, camera);
+    /* 阴影贴图每帧只算一次：手动置 needsUpdate，由下面第一次 renderer.render
+       消费掉；GTAO 的法线预渲染那次就不会再算一遍（见 renderer.shadowMap.autoUpdate）。 */
+    renderer.shadowMap.needsUpdate = true;
+    if (composer) composer.render();
+    else renderer.render(scene, camera);
     frames++;
     const elapsed = (now - fpsT0) / 1000;
     if (elapsed >= 0.5) {
@@ -629,6 +903,15 @@ export function createGame3D(opts) {
     }
     renderer.dispose();
     renderer.domElement.remove();
+    /* EffectComposer.dispose() 只释放它自己的两个缓冲与 copyPass，
+       不碰各 pass 自己的 render target / material —— 必须逐个释放，
+       否则反复开关 3D 视图会持续泄漏显存（而且不报错）。 */
+    gtaoPass?.dispose();
+    bloomPass?.dispose();
+    gradePass?.dispose();
+    composer?.dispose();
+    composer = null; gtaoPass = null; bloomPass = null; gradePass = null;
+    postPasses.length = 0;
   }
 
   return {
@@ -668,6 +951,41 @@ export function createGame3D(opts) {
         lampAnchors: lampAnchors.length,
         lamps: nightLights.length,
         lampScan,
+        /* ★ 后处理链的可观测读数。
+           为什么必须暴露：AO/Bloom 这类效果的失败方式是**没有信号**的 ——
+           参数写错、顺序错了、pass 没被加进去，画面只是"不太一样"，
+           而断言如果只查"没报错"就什么都抓不到。
+           order 是 pass 真正被 addPass 的顺序（= composer 的渲染顺序）；
+           shape 是问对象本身"你是不是那个 pass"，不依赖我给它的标签，
+           也不依赖 constructor.name（minify 会改掉类名）。 */
+        postFx: composer ? {
+          order: postPasses.map((p) => p.kind),
+          count: composer.passes.length,
+          aoScale: AO_SCALE,
+          bloomEnabled: !!(bloomPass && bloomPass.enabled),
+          /* AO 缓冲的真实尺寸 —— 与 renderer 的绘制缓冲对比即可证明是半分辨率 */
+          aoSize: gtaoPass ? [gtaoPass.width, gtaoPass.height] : null,
+          canvasSize: [renderer.domElement.width, renderer.domElement.height],
+          shape: {
+            gtao: !!(gtaoPass && gtaoPass.gtaoMaterial),
+            bloom: !!(bloomPass && bloomPass.renderTargetBright),
+            grade: !!(gradePass && gradePass.uniforms && gradePass.uniforms.uVignette),
+            output: composer.passes.some((p) => p && '_toneMapping' in p),
+          },
+        } : null,
+        /* 阴影跟随的读数（P2-3）。dir 让"时段有没有真的改变光向"可断言 ——
+           原先那个 bug 正是「时段改了、光向没改」，而画面看不出异常。 */
+        sun: {
+          dir: [
+            Number(sunDir.x.toFixed(4)),
+            Number(sunDir.y.toFixed(4)),
+            Number(sunDir.z.toFixed(4)),
+          ],
+          dist: SUN_DIST,
+          radius: sun.shadow.radius,
+          autoUpdate: renderer.shadowMap.autoUpdate,
+          type: renderer.shadowMap.type,
+        },
       };
     },
     /** 测试钩子：直接瞬移（软渲染下逐个热点巡检太慢，必须能跳） */
@@ -690,7 +1008,7 @@ function unavailableHandle() {
     interact: noop, interactHotspot: noop, zoom: noop, teleport: noop, key: noop,
     resetView: noop, view: { yaw: 0, pitch: 0, dist: 0 },
     locationId: null, hotspot: null, hotspots: [], playerPos: { x: 0, z: 0 },
-    stats: { fps: 0, calls: 0, triangles: 0, build: null },
+    stats: { fps: 0, calls: 0, triangles: 0, build: null, postFx: null, sun: null },
     scene: null, camera: null,
   };
 }
