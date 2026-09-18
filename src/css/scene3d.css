@@ -16,6 +16,42 @@
    摘除方式：删除本文件 + index.html 中的 3D 两个 <script> 标签即回到纯 2D。
    ────────────────────────────────────────────────────────────────────────────── */
 
+/* ══ 触控尺寸契约（2026-09-18） ═══════════════════════════════════════════════
+   style.css 在 `@media (max-width: 768px)` 里有一条**全局**规则
+   `button, [role="button"], input, select, textarea { min-height: 44px }`
+   （Apple HIG 触控目标 ≥44px）。它是为 2D 主界面写的，但会伸进 3D 浮层，
+   把本层「按按钮自然高度排版」的地方一起顶坏 —— 实测（scripts/verify-3d-mobile.cjs）：
+
+     · .s3-first-exit            自然 25px → 44px
+         → 底边压住 .s3h-vitals 顶边，重叠 73×12px
+     · .s3h-tray-toggle          自然 20px → 44px
+         → 被收起态 `.s3h-tray { max-height: 38px; overflow: hidden }` 裁掉约 24px
+     · .scene3d-overlay__close   26×26 → 26×44（被拉成长条）
+
+   更隐蔽的是**两条断点不一致**：HIG 挂在 768，本层布局挂在 720。
+   于是 721~768px（含 iPad 竖屏）成了空档 —— 按钮已经变高、布局还是桌面值，
+   同一处重叠又出现一次。宽度扫描实测：
+     360~720 : 按钮 44px / exit top 52 / 需求条 top 84  → 重叠 12px
+     721~768 : 按钮 44px / exit top 64 / 需求条 top 96  → 重叠 12px
+     769+    : 按钮 25px                                → 不重叠
+
+   处置：本层**显式声明**自己的触控尺寸（不再依赖外部全局规则），
+   布局按 44px 排；本层断点统一到 768，与 HIG 对齐。
+   判据落在 scripts/verify-3d-mobile.cjs 的断言⑤（指定元素对不得重叠）。
+   ── 详见 docs/完善评估报告-2026-09-15.md 第 64 节 ── */
+.s3-first,
+.s3h,
+.scene3d-overlay {
+  --s3h-tap: 44px;      /* 触控目标边长；与 style.css 的 HIG 规则同值 */
+  /* 行动力条与行动托盘是**同一条底边上的左右邻居**：托盘的左边界必须由
+     行动力条的右边界推导，不允许两边各写一个宽度 ——
+     原先窄屏写 `.s3h-tray { width: min(300px, 66vw) }`，390px 下算出左边界 124.6，
+     而行动力条右边界 138 → 必然压 13px（实测 13px / 小屏 24px）。 */
+  --s3h-ap-left: 16px;
+  --s3h-ap-w: 168px;
+  --s3h-gap: 8px;
+}
+
 .scene3d-mini {
   position: relative;
   width: 100%;
@@ -182,8 +218,8 @@
 }
 .scene3d-overlay__toast[hidden] { display: none; }
 
-/* 窄屏：面板铺满 */
-@media (max-width: 720px) {
+/* 窄屏：面板铺满。断点 768 与 style.css 的 HIG 断点一致（见文件头契约）。 */
+@media (max-width: 768px) {
   .scene3d-overlay {
     padding: 0;
   }
@@ -192,6 +228,12 @@
     height: 100%;
     border-radius: 0;
     border: none;
+  }
+  /* 26×26 的关闭按钮会被 HIG 规则顶成 26×44（被拉长条）——
+     这里改成 44×44 的正方形，既是合法触控目标也不会变形。 */
+  .scene3d-overlay__close {
+    width: var(--s3h-tap);
+    height: var(--s3h-tap);
   }
   .scene3d-overlay__hint {
     display: none;
@@ -376,8 +418,8 @@
 /* ── 行动力：压在左下，显眼但不挡路 ─────────────────────────────────────── */
 .s3h-ap {
   position: absolute;
-  left: 16px; bottom: 20px;
-  width: 168px;
+  left: var(--s3h-ap-left); bottom: 20px;
+  width: var(--s3h-ap-w);
   padding: 8px 11px;
   border-radius: 10px;
   background: rgba(16, 19, 17, 0.5);
@@ -611,11 +653,24 @@
 }
 
 /* ── 窄屏：允许 HUD 收缩，别把 3D 挤没了 ────────────────────────────────── */
-@media (max-width: 720px) {
-  .s3h-vitals { top: 84px; right: 8px; padding: 7px 8px; }
+/* ★ 断点 768 必须与 style.css 的 HIG 断点一致 —— 否则 721~768px 出现
+   「按钮已被顶到 44px、本层布局还在用桌面值」的空档。见文件头「触控尺寸契约」。 */
+@media (max-width: 768px) {
+  /* 行动力条收窄；托盘**填满它右侧的剩余空间**，而不是猜一个 66vw */
+  .s3-first,
+  .s3h { --s3h-ap-left: 8px; --s3h-ap-w: 130px; }
+  .s3h-ap { bottom: 16px; }
+  .s3h-tray {
+    left: calc(var(--s3h-ap-left) + var(--s3h-ap-w) + var(--s3h-gap));
+    right: 8px;
+    bottom: 16px;
+    width: auto;
+  }
+  /* 收起态托盘要放得下 44px 的触控按钮（头部上下 padding 各 9px），否则被裁 */
+  .s3h-tray-toggle { min-height: var(--s3h-tap); }
+  .s3h-tray:not(.is-open) { max-height: calc(var(--s3h-tap) + 18px); }
+  .s3h-vitals { right: 8px; padding: 7px 8px; }
   .s3h-vital-bar { width: 42px; }
-  .s3h-tray { right: 8px; bottom: 16px; width: min(300px, 66vw); }
-  .s3h-ap { left: 8px; bottom: 16px; width: 130px; }
   .s3h-keys { display: none; }
   .s3h-place { font-size: 13px; }
 }
@@ -643,7 +698,8 @@
 }
 
 /* 退出按钮：放在右侧需求条（.s3h-vitals 从 top:96px 起）之上的空档里，
-   不挤顶栏（顶栏右侧是现金/欠款）、不压行动托盘（右下）。 */
+   不挤顶栏（顶栏右侧是现金/欠款）、不压行动托盘（右下）。
+   窄屏下需求条的 top 由本按钮的高度推导 —— 见下方 @media。 */
 .s3-first-exit {
   position: absolute;
   top: 64px;
@@ -666,9 +722,14 @@
   border-color: rgba(216, 180, 90, 0.4);
 }
 
-/* 窄屏：需求条整体上移到 top:84px，退出按钮跟着挪，避免叠在一起 */
-@media (max-width: 720px) {
-  .s3-first-exit { top: 52px; right: 8px; }
+/* 窄屏：退出按钮落在顶栏与需求条之间的空档里。
+   ★ 这里**显式声明**按钮高度，不再依赖 style.css 的窄屏 HIG 规则 ——
+     本层原先假设它是自然高 25px（52+25=77 < 84，刚好不撞）；一旦被外部规则
+     顶到 44px，52+44=96 就压住 top:84 的需求条（实测重叠 73×12px）。
+     现在把「按钮高度」与「需求条的 top」写成一条推导关系，不再各写各的。 */
+@media (max-width: 768px) {
+  .s3-first-exit { top: 52px; right: 8px; min-height: var(--s3h-tap); }
+  .s3h-vitals { top: calc(52px + var(--s3h-tap) + 10px); }
 }
 
 @media (prefers-reduced-motion: reduce) {

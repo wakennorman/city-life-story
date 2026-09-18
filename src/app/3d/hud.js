@@ -370,6 +370,13 @@ export function createHUD(opts = {}) {
   f.mapClose.addEventListener("click", () => api.toggleMap(false));
   f.map.addEventListener("click", (e) => { if (e.target === f.map) api.toggleMap(false); });
 
+  /* ★ 首屏必须把托盘文案与状态对齐。
+     原先 HTML 里把按钮写死成「收起」，而 `trayOpen` 初始是 false（收起态）——
+     于是首屏文案与状态**相反**：玩家读到"收起"，点下去却是展开。
+     文案本来就该由状态推出（toggleTray 里就是这么写的），
+     所以这里调一次而不是去改那个写死的字符串 —— 少一个需要同步的地方。 */
+  api.toggleTray(false);
+
   return api;
 }
 

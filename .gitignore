@@ -110,6 +110,8 @@ Microsoft/
 #   shots-shell/    —— scripts/verify-3d-shell.cjs 拍的 3D-first 外壳截图
 #   shots-first/    —— scripts/verify-3d-first.cjs 拍的真实游戏 ?mode=3d 截图
 #                     （slum 出生点 / 游戏内 / 退出后对照）
+#   shots-mobile/   —— scripts/verify-3d-mobile.cjs 拍的移动端 4 档视口截图
+#   hud-geometry/   —— scripts/verify-3d-hud-geometry.cjs 的宽度扫描最小复现页
 # ★ 新增产物目录时记得同步加到这里，否则每次跑验证都会多出几条未跟踪文件，
 #   把真正需要关注的变更淹没掉。
 /dev/_3dtest/bundle-probe.js
@@ -117,6 +119,8 @@ Microsoft/
 /dev/_3dtest/shots-ingame/
 /dev/_3dtest/shots-shell/
 /dev/_3dtest/shots-first/
+/dev/_3dtest/shots-mobile/
+/dev/_3dtest/hud-geometry/
 
 # dev/ 下其余截图产物（同样每次跑脚本重新生成）
 #   shots/         —— scripts/shot-scene3d.cjs 逐地点截图
