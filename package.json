@@ -17,6 +17,8 @@
     "check:recency": "node scripts/audit-domain-recency.mjs",
     "test": "npm run check:js && npm run check:events && npm run test:ui && npm run check:reachability && npm run check:reachability-control && npm run check:path-aware-control && npm run check:industry-profit && npm run check:dangling",
     "verify:deploy": "node scripts/verify-deploy.mjs",
+    "verify:dev-entries": "node scripts/verify-dev-entries.cjs",
+    "verify:3d-shell": "node scripts/verify-3d-shell.cjs",
     "build:legacy": "python build.py",
     "deploy": "npm run build:legacy && npm run verify:deploy && netlify deploy --dir=dist --prod",
     "deploy:dry": "npm run build:legacy && npm run verify:deploy && netlify deploy --dir=dist",
