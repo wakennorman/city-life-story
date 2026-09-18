@@ -185,6 +185,8 @@ export function create3DShell(opts = {}) {
         timeSlot: view ? view.timeSlot : null,
         tris: view ? view.stats.triangles : 0,
         calls: view ? view.stats.calls : 0,
+        lampAnchors: view ? view.stats.lampAnchors : 0,
+        lamps: view ? view.stats.lamps : 0,
       };
     },
   };

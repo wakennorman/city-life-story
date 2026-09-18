@@ -534,6 +534,22 @@ function propsFor(ctx, kind, rows) {
     ctx.place(b, x, z, rnd(0, Math.PI * 2));
   }
 
+  /* —— 通用：路灯 ——
+     ★ [2026-09-18 美术 P0-3] 这一段原来只写在 `avenue` 分支里，
+       于是**城中村（lane）根本没有路灯** —— 而夜间照明全靠它。
+       症状极具迷惑性：夜间一片黑，但逐行看代码都正常 ——
+       灯杆、灯头、灯罩、夜间点光源的代码全对，只是那段代码从不执行。
+       （诊断路径：先加"灯锚点计数"读数 → 看到「遍历 5800 个对象 / 0 个锚点」，
+        才把范围从"灯太弱"缩小到"压根没有灯"。）
+     ★ 灯杆自带 userData.lampHead 锚点，bridge.js 靠它生成夜间点光源。 */
+  for (let z = -S / 2 + 6; z < S / 2; z += 16) {
+    for (const side of [-1, 1]) {
+      if (Math.abs(z - ctx.spawnZ) < 3) continue;
+      const l = K.streetLamp({ h: 7.4, tier });
+      ctx.place(l, side * (half - 0.5), z, side > 0 ? Math.PI : 0, {});
+    }
+  }
+
   if (kind === 'lane') {
     // 沿巷店铺门脸
     const names = SHOP_NAMES[spec.id] || SHOP_NAMES.default;
@@ -633,14 +649,6 @@ function propsFor(ctx, kind, rows) {
         u.rotation.y = r.x > 0 ? -Math.PI / 2 : Math.PI / 2;
         ctx.addRaw(u);
         ctx.lot(Math.sign(r.x) * (Math.abs(r.x) - r.d / 2 - 2.1), zz, 0, 'shop');
-      }
-    }
-    // 路灯：沿人行道等距
-    for (let z = -S / 2 + 6; z < S / 2; z += 16) {
-      for (const side of [-1, 1]) {
-        if (Math.abs(z - ctx.spawnZ) < 3) continue;
-        const l = K.streetLamp({ h: 7.4, tier });
-        ctx.place(l, side * (half - 0.5), z, side > 0 ? Math.PI : 0, {});
       }
     }
     // 广告牌

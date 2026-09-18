@@ -174,6 +174,18 @@ async function main() {
   const slot2 = await page.evaluate(() => window.__shell.debug.timeSlot);
   check("时段照明跟随 slot 变化", slot0 !== slot1 && slot1 !== slot2,
     `${slot0} → ${slot1} → ${slot2}`);
+
+  /* ★ 夜间路灯 —— P0-3 的核心：夜间靠**人工光源**而不是靠环境光。
+     这条断言存在的意义是分清两种失败：「没找到灯锚点」与「找到了但太弱」——
+     两者的修法完全不同（前者查 collectLamps/mergeStatics，后者调 intensity）。
+     没有这个读数时，夜间太暗只能靠猜。 */
+  const nightDbg = await page.evaluate(() => ({
+    d: window.__shell.debug,
+    scan: window.__shell.view3d ? window.__shell.view3d.stats.lampScan : null,
+  }));
+  check("夜间路灯已点亮（灯锚点已收集 + 光源已生成）",
+    nightDbg.d.lampAnchors > 0 && nightDbg.d.lamps > 0,
+    `灯锚点 ${nightDbg.d.lampAnchors} 个 · 点亮 ${nightDbg.d.lamps} 盏 · 遍历统计 ${JSON.stringify(nightDbg.scan)}`);
   await page.screenshot({ path: path.join(OUT, "4-time-dusk.png") });
 
   console.log("\n⑥ 点击行动 → 状态变化");

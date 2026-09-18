@@ -733,8 +733,11 @@ export function wire(a, b, sag = 0.9) {
   const mid = new THREE.Vector3().addVectors(a, b).multiplyScalar(0.5);
   mid.y -= sag;
   const curve = new THREE.CatmullRomCurve3([a, mid, b]);
-  const geo = new THREE.TubeGeometry(curve, 20, 0.028, 5, false);
-  return new THREE.Mesh(geo, new THREE.MeshStandardMaterial({ color: 0x24262a, roughness: 0.95 }));
+  /* [2026-09-18 美术] 半径 0.028 → 0.022、色 0x24262a → 0x3a3f45。
+     原色近乎纯黑、又粗，在浅色天空下会变成一条横穿画面的黑杠（曾被误判为渲染 bug）。
+     真实电线的逆光剪影确实偏暗，但不该是纯黑 —— 有 IBL 之后给一点环境反射即可。 */
+  const geo = new THREE.TubeGeometry(curve, 20, 0.022, 5, false);
+  return new THREE.Mesh(geo, new THREE.MeshStandardMaterial({ color: 0x3a3f45, roughness: 0.85 }));
 }
 
 /** 路灯 */
@@ -751,7 +754,20 @@ export function streetLamp({ h = 7, tier = 2 } = {}) {
     new THREE.MeshBasicMaterial({ color: tier >= 3 ? 0xfff0c8 : 0xe8d8a8, transparent: true, opacity: 0.5 }));
   bulb.rotation.x = Math.PI / 2;
   bulb.position.set(1.4, h - 0.33, 0);
+  /* 标记 noMerge：mergeStatics 会合并静态网格并把原 Mesh 从树上摘掉，
+     而夜间要**动态调整**这盏灯罩的透明度/颜色（见 bridge.js::applyNightLights）。
+     被合并掉的话材质引用还在、但已经不在渲染树里，改了也看不见。
+     代价是每盏灯多一个 draw call —— 路灯总数有限，可接受。 */
+  bulb.userData.noMerge = true;
   g.add(bulb);
+
+  /* ★ [2026-09-18 美术 P0-3] 给夜间点光源留一个"锚点"。
+     为什么要在这里打标记、而不是让 bridge.js 自己遍历找灯头：
+     灯头位置依赖 h（灯杆高度），只有本函数知道；bridge 遍历场景时
+     只能拿到网格的世界坐标，没法区分"这根杆的灯头在哪"。
+     所以把**相对灯杆原点的偏移**存进 userData，由 bridge 换算世界坐标。 */
+  g.userData.lampHead = { x: 1.4, y: h - 0.35, z: 0 };
+  g.userData.lampBulb = bulb; // 夜间要把它调亮（白天只是个淡淡的罩子）
   return g;
 }
 

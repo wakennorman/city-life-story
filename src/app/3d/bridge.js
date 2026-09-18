@@ -28,34 +28,138 @@ import { buildLocation } from './world.js';
 import { mergeStatics, countScene } from './merge.js';
 import { Player, IsoCamera } from './player.js';
 
-/** 晦暗调常量 —— 与 experiments/3d/src/main.js 保持一致，勿随意调整 */
+/** 晦暗调常量 —— 作为初始值；实际值由 SLOT_PRESETS 按时段覆盖 */
 const TONE = {
-  sky: 0x59615a,
-  fog: { color: 0x555c55, density: 0.0155 },
-  hemi: { sky: 0x7d8d96, ground: 0x42443c, intensity: 1.5 },
-  sun: { color: 0xd8caa8, intensity: 2.15, pos: [16, 20, -14], shadowSize: 2048, frustum: 40 },
-  ambient: { color: 0x515861, intensity: 0.9 },
-  exposure: 1.3,
+  sky: 0x8fa3b0,
+  fog: { color: 0x93a2ab, density: 0.0075 },
+  hemi: { sky: 0x9db4c8, ground: 0x5a5346, intensity: 0.65 },
+  sun: { color: 0xd8caa8, intensity: 2.60, pos: [16, 20, -14], shadowSize: 2048, frustum: 40 },
+  ambient: { color: 0x3a4450, intensity: 0.15 },
+  exposure: 1.10,
 };
 
 /** 时段预设 —— 恒稳要求往 inZOI 的「夕阳-暖在地」拟真方向靠。
    光有冷暖对比就不会变成灰色块。预设按 HUD 的四个时段定：
    上午=晨光暖偏白，下午=下午更暖，傍晚=夕阳橙偏冷天，夜间=月色冷偏暗。
-   数值对齐 inZOI 的评估：要求暖阳光 + 冷环境双温对比。 */
+
+   ★ [2026-09-18 美术 P0 重做] 依据 `3D_ART_SPEC.md` §6.1 的数值表。三处关键变化：
+     1. **补光职责从 hemi/ambient 转移到 IBL**（见 buildSkyEnv）。
+        无方向的平光是立体感的头号杀手 —— hemi 1.4→0.65、ambient 0.85→0.15。
+     2. **exposure 从 1.30 回落到 1.05~1.10**：加了 IBL 后整体亮度上升，
+        不回调就会过曝。曝光不再承担"调明暗"的职责。
+     3. **雾密度 0.0155 → 0.0075（白天）/ 0.011（夜间）**，且
+        **雾色必须等于天空地平线色**（大气透视）—— 原来夜间 fog 0x393f44 太暗，
+        远处会"变黑"而不是"变淡"。
+
+   env 字段是给 IBL 用的天空/地面色（详见 buildSkyEnv）。 */
 const SLOT_PRESETS = {
-  上午: { sunColor: 0xf4e8cc, sunPos: [20, 24, -12], sunIntensity: 2.20,
-         hemSky: 0x7d8d96, hemGround: 0x42443c, hemIntensity: 1.4,
-         fogColor: 0x555c55, ambColor: 0x515861, ambIntensity: 0.85, exposure: 1.30, skyColor: 0x59615a },
-  下午: { sunColor: 0xf6d8a8, sunPos: [-16, 20, 14], sunIntensity: 2.25,
-         hemSky: 0x85a0b0, hemGround: 0x444a46, hemIntensity: 1.45,
-         fogColor: 0x575e58, ambColor: 0x546070, ambIntensity: 0.80, exposure: 1.26, skyColor: 0x5a6258 },
-  傍晚: { sunColor: 0xd67f3f, sunPos: [-26, 10, 20], sunIntensity: 2.40,
-         hemSky: 0x8b9fc0, hemGround: 0x4a4a3c, hemIntensity: 1.20,
-         fogColor: 0x6d6d62, ambColor: 0x6b7a94, ambIntensity: 0.60, exposure: 1.18, skyColor: 0x6b6d6a },
-  夜间: { sunColor: 0x8ac0e8, sunPos: [0, 40, 0], sunIntensity: 0.30,
-         hemSky: 0x304050, hemGround: 0x2a3030, hemIntensity: 0.70,
-         fogColor: 0x393f44, ambColor: 0x243648, ambIntensity: 0.45, exposure: 0.90, skyColor: 0x2a3036 },
+  上午: {
+    sunColor: 0xf4e8cc, sunPos: [20, 24, -12], sunIntensity: 2.60,
+    hemSky: 0x9db4c8, hemGround: 0x5a5346, hemIntensity: 0.65,
+    fogColor: 0x93a2ab, fogDensity: 0.0075,
+    ambColor: 0x3a4450, ambIntensity: 0.15,
+    exposure: 1.10, skyColor: 0x8fa3b0,
+    env: { zenith: 0x6f8fa8, horizon: 0x93a2ab, ground: 0x4a453c, groundHorizon: 0x7a7568, intensity: 1.0 },
+  },
+  下午: {
+    sunColor: 0xf6d8a8, sunPos: [-16, 20, 14], sunIntensity: 2.65,
+    hemSky: 0xa8bcc8, hemGround: 0x5c5344, hemIntensity: 0.70,
+    fogColor: 0x9aa3a0, fogDensity: 0.0075,
+    ambColor: 0x40484e, ambIntensity: 0.14,
+    exposure: 1.08, skyColor: 0x97a5aa,
+    env: { zenith: 0x7a9ab0, horizon: 0xa8a898, ground: 0x4a4238, groundHorizon: 0x8a8070, intensity: 1.0 },
+  },
+  傍晚: {
+    sunColor: 0xd67f3f, sunPos: [-26, 10, 20], sunIntensity: 2.80,
+    hemSky: 0x8b9fc0, hemGround: 0x4a4a3c, hemIntensity: 0.55,
+    fogColor: 0x8a7a72, fogDensity: 0.0090,
+    ambColor: 0x4a4a58, ambIntensity: 0.12,
+    exposure: 1.05, skyColor: 0x8a7f80,
+    env: { zenith: 0x4a5a78, horizon: 0xd88a50, ground: 0x3a3630, groundHorizon: 0x8a6a4a, intensity: 0.9 },
+  },
+  夜间: {
+    sunColor: 0x8ac0e8, sunPos: [-18, 26, 14], sunIntensity: 0.38,
+    hemSky: 0x1e2a3a, hemGround: 0x101216, hemIntensity: 0.35,
+    fogColor: 0x1c2430, fogDensity: 0.0110,
+    ambColor: 0x1a2433, ambIntensity: 0.09,
+    exposure: 1.05, skyColor: 0x1a222e,
+    env: { zenith: 0x0e1620, horizon: 0x1c2430, ground: 0x0a0c10, groundHorizon: 0x141a22, intensity: 0.5 },
+  },
 };
+/* ── IBL（环境贴图）────────────────────────────────────────────────────────
+ *
+ * ★ 为什么这是美术 P0 的第一项（依据 3D_ART_SPEC.md 的实测体检）：
+ *   palette.js 里有 10 处 metalness 0.18~0.6，但**全项目没有任何环境贴图**
+ *   （grep 不到 scene.environment / envMap / PMREM）。
+ *   没有环境贴图时，metalness > 0 会**削掉漫反射**、换成一个无处可反射的镜面
+ *   → 表面直接变暗变死。**这才是"整体偏灰暗"的真正根因 —— 不是光照参数。**
+ *
+ * ★ 做法：自己搭一张 equirect 天空图（Canvas 画渐变 + 太阳盘），
+ *   交给 PMREMGenerator 烘成环境贴图。比 three 官方的 RoomEnvironment
+ *   更贴合户外城市，而且能跟时段联动。
+ *
+ * ★ 缓存：PMREM 生成约几十毫秒，四个时段各烘一次就够，不必每次切时段重烘。
+ */
+const _envCache = new Map();
+
+function hexCss(hex) {
+  return "#" + (hex & 0xffffff).toString(16).padStart(6, "0");
+}
+
+function buildSkyEnv(renderer, slotName, preset) {
+  const cached = _envCache.get(slotName);
+  if (cached) return cached;
+  const e = preset.env;
+  if (!e) return null;
+
+  const W = 256;
+  const H = 128;
+  const cv = document.createElement("canvas");
+  cv.width = W;
+  cv.height = H;
+  const ctx = cv.getContext("2d");
+
+  // 上半：天空（天顶 → 地平线）
+  const gSky = ctx.createLinearGradient(0, 0, 0, H * 0.5);
+  gSky.addColorStop(0, hexCss(e.zenith));
+  gSky.addColorStop(1, hexCss(e.horizon));
+  ctx.fillStyle = gSky;
+  ctx.fillRect(0, 0, W, H * 0.5);
+
+  // 下半：地面反射（地平线 → 天底）。地面色偏暖，模拟地面反光。
+  const gGround = ctx.createLinearGradient(0, H * 0.5, 0, H);
+  gGround.addColorStop(0, hexCss(e.groundHorizon));
+  gGround.addColorStop(1, hexCss(e.ground));
+  ctx.fillStyle = gGround;
+  ctx.fillRect(0, H * 0.5, W, H * 0.5);
+
+  /* 太阳/月亮光斑 —— 给 IBL 一个**方向性**高光。
+     没有它，环境光完全无方向，金属表面会像塑料一样没有明暗变化。
+     位置按 sunPos 的方位角与高度角折算到 equirect 坐标上。 */
+  const sunAzimuth = Math.atan2(preset.sunPos[2], preset.sunPos[0]);
+  const sx = (sunAzimuth / (Math.PI * 2) + 0.5) * W;
+  const sy = H * 0.5 - (preset.sunPos[1] / 40) * H * 0.42;
+  const sunCss = hexCss(preset.sunColor);
+  const glow = ctx.createRadialGradient(sx, sy, 0, sx, sy, W * 0.16);
+  glow.addColorStop(0, sunCss);
+  glow.addColorStop(0.35, sunCss + "80"); // 8 位 hex 带 alpha
+  glow.addColorStop(1, "rgba(0,0,0,0)");
+  ctx.fillStyle = glow;
+  ctx.fillRect(0, 0, W, H);
+
+  const tex = new THREE.CanvasTexture(cv);
+  tex.mapping = THREE.EquirectangularReflectionMapping;
+  tex.colorSpace = THREE.SRGBColorSpace;
+
+  const pmrem = new THREE.PMREMGenerator(renderer);
+  const rt = pmrem.fromEquirectangular(tex);
+  pmrem.dispose();
+  tex.dispose();
+
+  _envCache.set(slotName, rt.texture);
+  return rt.texture;
+}
+
 const DEFAULT_SLOT = "上午";
 
 /** 默认机位（IsoCamera 构造值）。双击回正时回到这里。 */
@@ -143,8 +247,17 @@ export function createGame3D(opts) {
     hemi.groundColor.set(preset.hemGround);
     hemi.intensity = preset.hemIntensity;
     scene.fog.color.set(preset.fogColor);
+    scene.fog.density = preset.fogDensity; // ← 雾密度改为按时段（原来全局一个值）
     scene.background = new THREE.Color(preset.skyColor);
     renderer.toneMappingExposure = preset.exposure;
+
+    /* IBL —— 见 buildSkyEnv 的注释。这一步是「整体偏灰暗」的解药：
+       没有它，所有 metalness>0 的材质都在拿一个无处可反射的镜面换掉漫反射。 */
+    const envTex = buildSkyEnv(renderer, slot, preset);
+    if (envTex) {
+      scene.environment = envTex;
+      scene.environmentIntensity = preset.env ? preset.env.intensity : 1.0;
+    }
   }
   /* 第一次一定要把时段照明跑一遍，否则后面 setTimeSlot 出来的时候默认值可能不一致 */
   applyTimeSlot(DEFAULT_SLOT);
@@ -287,6 +400,76 @@ export function createGame3D(opts) {
     scene.remove(w.group);
   }
 
+  /* ── 夜间人工光源 ─────────────────────────────────────────────────────────
+   *
+   * ★ 为什么必须做（3D_ART_SPEC.md P0-3）：夜间的正确做法**不是「把曝光调低」**，
+   *   而是「低主光 + 局部光源 + 自发光」。只降曝光的结果是一片黑 —— 已实测：
+   *   exposure 0.90 时夜间近乎全黑，什么都看不见。
+   *   夜间真正的「亮」来自路灯，而不是来自环境光。
+   *
+   * ★ 为什么要从场景里收集灯位：光源要跟着**时段**开关，
+   *   而 world.js 只负责构建静态几何（构建期并不知道当前时段）。
+   *   kit.streetLamp() 因此在灯杆 group 上留了 userData.lampHead 锚点。
+   *
+   * ★ 为什么要限量：PointLight 每个都要参与逐片元着色，29 个地点的路灯全开
+   *   会明显拖帧。只取离镜头最近的 MAX_NIGHT_LIGHTS 个 —— 视野内够用即可。
+   */
+  const MAX_NIGHT_LIGHTS = 14;
+  let lampAnchors = [];
+  let nightLights = [];
+  let lampScan = { total: 0, groups: 0, meshes: 0 };
+
+  function collectLamps(root) {
+    lampAnchors = [];
+    lampScan = { total: 0, groups: 0, meshes: 0 };
+    if (!root) return;
+    root.updateMatrixWorld(true);
+    const v = new THREE.Vector3();
+    root.traverse((o) => {
+      lampScan.total++;
+      if (o.isGroup) lampScan.groups++;
+      if (o.isMesh) lampScan.meshes++;
+      const a = o.userData && o.userData.lampHead;
+      if (!a) return;
+      v.set(a.x, a.y, a.z);
+      o.localToWorld(v);
+      lampAnchors.push({ x: v.x, y: v.y, z: v.z, bulb: o.userData.lampBulb || null });
+    });
+  }
+
+  function applyNightLights(on, focus) {
+    for (const l of nightLights) scene.remove(l);
+    nightLights = [];
+
+    // 灯罩微光：夜间调亮、偏暖；白天压回「淡淡的罩子」
+    for (const a of lampAnchors) {
+      if (a.bulb && a.bulb.material) {
+        a.bulb.material.opacity = on ? 0.95 : 0.5;
+        a.bulb.material.color.set(on ? 0xffc98a : 0xe8d8a8);
+      }
+    }
+    if (!on || !lampAnchors.length) return;
+
+    const list = lampAnchors.slice();
+    if (focus) {
+      const d2 = (p) => (p.x - focus.x) * (p.x - focus.x) + (p.z - focus.z) * (p.z - focus.z);
+      list.sort((p, q) => d2(p) - d2(q));
+    }
+    /* intensity 24 / distance 18 / decay 2。
+       ★ 第一版用的是 40 / 22，实测**过亮** —— 12 盏灯同时照，累积照度把整个
+         画面染成暖橙，夜晚的冷调对比全没了，看起来像室内暖光而不像夜街。
+       ★ 报告给的区间是 25~60（那是"单盏灯"的量级）；这里的场景一盏挨一盏，
+         必须按**同时可见的盏数**折算。调到 24 之后冷（月光/天空）暖（路灯）才分得开。
+       ★ 数值依据 3D_ART_SPEC.md §6.1：r155 起光照按 SI 单位，点光源 intensity
+         不能与方向光直接比较 —— 要的是"局部光池"而不是"照亮全场"。 */
+    for (const a of list.slice(0, MAX_NIGHT_LIGHTS)) {
+      const pl = new THREE.PointLight(0xffb066, 24, 18, 2);
+      pl.position.set(a.x, a.y, a.z);
+      scene.add(pl);
+      nightLights.push(pl);
+    }
+  }
+
   function loadLocation(id) {
     if (!data.locations[id]) {
       opts.onError?.(new Error(`未知地点: ${id}`));
@@ -296,8 +479,17 @@ export function createGame3D(opts) {
     disposeWorld(world);
 
     world = buildLocation(scene, data, id);
+
+    /* ★ collectLamps 必须跑在 mergeStatics **之前**。
+       mergeStatics 会把静态 Mesh 烘焙合并、并从树上摘掉原对象；
+       灯锚点所在的 group 一旦被清空就再也找不到。
+       （这正是第一版夜间路灯 0 盏的原因 —— 顺序反了，而它不报错，只是"不亮"。） */
+    collectLamps(world.group);
+
     const mergeStat = mergeStatics(world.group);
     const counts = countScene(world.group);
+
+    applyNightLights(currentSlot === "夜间", cam.cur);
 
     player.setWorld({ colliders: world.colliders, spawn: world.spawn, bounds: world.bounds });
     cam.setWorld({ colliders: world.blockers, target: world.spawn, ...world.camera });
@@ -453,7 +645,10 @@ export function createGame3D(opts) {
     /** 只读当前机位，供 UI 显示或测试断言 */
     get view() { return { yaw: cam.yaw, pitch: cam.pitch, dist: cam.dist }; },
     /** 时段照明（上午/下午/傍晚/夜间）。HUD 切 slot 时调，光照跟着走。 */
-    setTimeSlot(slot) { applyTimeSlot(slot); },
+    /* 时段切换 = 换光照 + 换夜间人工光源。
+       为什么灯光不放在 applyTimeSlot 里：那个函数在相机创建**之前**就被调用过一次
+       （初始化跑默认时段），在那里引用 cam 会踩 TDZ。放在接口层就没有这个时序问题。 */
+    setTimeSlot(slot) { applyTimeSlot(slot); applyNightLights(slot === "夜间", cam.cur); },
     /** 只读当前时段（验证脚本用） */
     get timeSlot() { return currentSlot; },
     /* ── 只读状态 ── */
@@ -467,6 +662,12 @@ export function createGame3D(opts) {
         calls: renderer.info.render.calls,
         triangles: renderer.info.render.triangles,
         build: lastBuild,
+        /* ★ 夜间灯光的可观测性 —— 加这两个数是因为夜间"还是太暗"时，
+           必须先分清是「没找到灯锚点」还是「灯找到了但太弱」。
+           没有这个读数就只能靠猜（而这两者的修法完全不同）。 */
+        lampAnchors: lampAnchors.length,
+        lamps: nightLights.length,
+        lampScan,
       };
     },
     /** 测试钩子：直接瞬移（软渲染下逐个热点巡检太慢，必须能跳） */
