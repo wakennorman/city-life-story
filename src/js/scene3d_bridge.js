@@ -331,6 +331,8 @@
   var pending = false;     // 刷新合并标志（见 scheduleFirst）
   var changeHooked = false;// onChange 是否已订阅（该 API 没有退订，只能订阅一次）
   var hooksInstalled = false;// F3 / 自动启动是否已装（见 installHooks 的环境守卫）
+  var autoStartPending = false;// 「等玩家开始游戏」是否还挂着（见 autoStartFirst）
+  var pollTicks = 0;       // 兜底轮询计数，只用来降频，**不作为放弃条件**
 
   var SLOT_CN = { morning: "上午", afternoon: "下午", evening: "傍晚" };
 
@@ -594,22 +596,7 @@
     if (cur) firstShell.loadLocation(cur);
     lastMsgLen = (getState().messageLog || []).length;
 
-    /* 订阅逻辑层的状态变更。
-       ★ StateManager.onChange 没有对应的 off（state.js:990 只 push 不提供退订），
-         所以：
-           ① 用一个模块级标志保证**只订阅一次** —— 否则挂载/卸载来回几次
-              就会堆起同样数量的监听器，每次 update 都被调用 N 遍。
-              （这一点由 verify-3d-first.cjs 的「重挂」步骤暴露出来：
-               那条步骤本来只是为了构造 #app 可见的前置条件。）
-           ② 回调里用 firstShell 做守卫，卸载后变成空转。 */
-    if (!changeHooked) {
-      try {
-        if (window.StateManager && typeof window.StateManager.onChange === "function") {
-          window.StateManager.onChange(function () { if (firstShell) scheduleFirst(); });
-          changeHooked = true;
-        }
-      } catch (e) { /* 订阅失败不影响已挂载的界面 */ }
-    }
+    ensureChangeHook();
 
     /* 一次性提示：玩家得知道怎么回去 */
     firstShell.notify("3D 模式 · 按 F3 返回原界面", "ok");
@@ -630,22 +617,91 @@
     return !!mountFirst();
   }
 
+  /** 是否被显式要求进 3D（默认行为不带参数时一个字都不改） */
+  function wantsFirst() {
+    if (typeof window === "undefined" || !window.location) return false;
+    var q = window.location.search || "";
+    var h = window.location.hash || "";
+    return /[?&]mode=3d(&|$)/.test(q) || h === "#3d" || h === "#3d-first";
+  }
+
+  /**
+   * 订阅逻辑层的状态变更。
+   *
+   * ★ StateManager.onChange 没有对应的 off（state.js:990 只 push 不提供退订），
+   *   所以用一个模块级标志保证**只订阅一次** —— 否则挂载/卸载来回几次就会堆起
+   *   同样数量的监听器，每次 update 都被调用 N 遍。
+   *   （这一点由 verify-3d-first.cjs 的「重挂」步骤暴露出来：
+   *    那条步骤本来只是为了构造 #app 可见的前置条件。）
+   *
+   * ★ 这个订阅**必须在挂载之前就可能装上** —— 见 autoStartFirst 的说明。
+   *   所以它从 mountFirst 里抽出来，成为独立函数，两个调用点都能用。
+   */
+  function ensureChangeHook() {
+    if (changeHooked) return;
+    if (typeof window === "undefined") return;
+    try {
+      if (window.StateManager && typeof window.StateManager.onChange === "function") {
+        window.StateManager.onChange(function () {
+          if (firstShell) { scheduleFirst(); return; }
+          /* 还没挂载，但玩家可能刚刚开始了游戏 —— 这正是 autoStart 要等的那一刻 */
+          if (autoStartPending) tryAutoStart();
+        });
+        changeHooked = true;
+      }
+    } catch (e) { /* 订阅失败不影响已挂载的界面 */ }
+  }
+
+  /** 逻辑层的 state 是否已经可用（建 state 之前 getState() 会**抛异常**，state.js:843） */
+  function stateReady() {
+    var st = getState();
+    return !!(st && st.player && st.trade && st.trade.currentLocation);
+  }
+
+  /** 条件一满足就挂载；返回是否已挂上 */
+  function tryAutoStart() {
+    if (firstShell) { autoStartPending = false; return true; }
+    if (!stateReady()) return false;
+    autoStartPending = false;
+    return !!mountFirst();
+  }
+
+  /**
+   * 兜底轮询 —— 只在 onChange 那条路走不通时才需要。
+   *
+   * ★★ 这里**没有放弃上限**，这是本函数唯一重要的一点。
+   *
+   * 旧实现是 `tries < 50 → setTimeout(attempt, 100)`，即 **5 秒预算**，
+   * 超时后**静默返回**，`?mode=3d` 从此永久失效。
+   * 而真实游戏的流程是：**页面先停在欢迎页，StateManager 里没有 state**，
+   * 玩家看完介绍、想清楚名字、点「开始新游戏」—— 这远超 5 秒。
+   *
+   * 于是线上实测的表现是：点开 `?mode=3d` 链接 → 点开始新游戏 → **什么都没有**，
+   * 也不报错、也不提示。玩家只会以为"这个链接坏了"。
+   *
+   * 本地 verify-3d-first.cjs 之所以一直是绿的，是因为它**自己**在 5 秒内调了
+   * `startNewGame()` 造前置条件 —— 典型的「验证脚本喂给被测对象的状态，
+   * 不是它将来要面对的状态」（本项目模式 16）。
+   *
+   * 所以：把"玩家还没开始游戏"当成**正常的等待**，而不是"永远不会发生"。
+   * 轮询前 5 秒密（100ms，覆盖"立刻就开局"的常见情形），之后降到 1s
+   * —— 一次 getState() 的代价可以忽略，而误判的代价是功能永久消失。
+   */
+  function pollForState() {
+    if (!autoStartPending) return;
+    ensureChangeHook();          // StateManager 可能比我们晚挂上
+    if (tryAutoStart()) return;
+    pollTicks++;
+    setTimeout(pollForState, pollTicks < 50 ? 100 : 1000);
+  }
+
   /** 启动开关：只在显式要求时进 3D。默认行为（不带参数）一个字都不改。 */
   function autoStartFirst() {
     if (!available()) return;
-    var q = window.location.search || "";
-    var h = window.location.hash || "";
-    if (!(/[?&]mode=3d(&|$)/.test(q) || h === "#3d" || h === "#3d-first")) return;
-    /* 等逻辑层把 state 建起来（脚本是 defer，init 在 DOMContentLoaded 之后）。
-       轮询而不是"等一帧" —— 建 state 之前 getState() 是**抛异常**的（state.js:843），
-       早一步调用会拿到 null，晚一步则白等。 */
-    var tries = 0;
-    (function attempt() {
-      tries++;
-      var st = getState();
-      if (st && st.player && st.trade && st.trade.currentLocation) { mountFirst(); return; }
-      if (tries < 50) setTimeout(attempt, 100);
-    })();
+    if (!wantsFirst()) return;
+    autoStartPending = true;
+    ensureChangeHook();   // 玩家「开始新游戏 / 读档」那一刻必然触发 update → notify
+    pollForState();       // 兜底：onChange 若不可用（StateManager 尚未挂载等）
   }
 
   /* 运行时钩子：F3 切换 + 自动启动。
