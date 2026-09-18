@@ -55,8 +55,25 @@ function measure() {
   return {
     exit: R(".s3-first-exit"), vitals: R(".s3h-vitals"),
     ap: R(".s3h-ap"), tray: R(".s3h-tray"),
+    keys: R(".s3h-keys"),
     toggleH: tgr ? Math.round(tgr.height) : null,
-    toggleCut: (tr && tgr) ? Math.round(Math.max(0, tgr.bottom - tr.bottom)) : null,
+    /* ★ 量的必须是「托盘里有没有元素被托盘裁掉」，不是「收起按钮有没有被裁」。
+       原先只量 toggle —— 而真正被裁的是 `.s3h-tray-head`（收起态写死
+       `max-height: 38px`，而头部自然高 41px）→ 底部 padding 被切 4px；
+       toggle 恰好完整可见 → `toggleCut` 恒 0，14 档全报"—"。
+       盲区形状与 `verify-3d-mobile.cjs` 的断言⑩**完全一样**：
+       **只查一个写死的元素，而缺陷在它的邻居身上。** */
+    contentCut: (() => {
+      if (!tray || !tr) return null;
+      let worst = 0, who = null;
+      for (const el of tray.querySelectorAll("*")) {
+        const r = el.getBoundingClientRect();
+        if (r.width < 1 || r.height < 1) continue;
+        const c = Math.max(0, r.bottom - tr.bottom) + Math.max(0, tr.top - r.top);
+        if (c > worst) { worst = c; who = "." + String(el.className || "").split(" ")[0]; }
+      }
+      return worst > 1 ? { px: Math.round(worst), who } : null;
+    })(),
     mounted: !!(window.Scene3DBridge && window.Scene3DBridge.first && window.Scene3DBridge.first.active),
   };
 }
@@ -108,7 +125,7 @@ async function main() {
   let bad = 0;
   const rows = [];
   try {
-    console.log("\n  宽度  挂载  退出高  退出底  需求条顶  纵向重叠 | 行动力右  托盘左  横向重叠 | 收起钮高  被裁");
+    console.log("\n  宽度  挂载  退出高  退出底  需求条顶  纵向重叠 | 行动力右  托盘左  横向重叠 | 收起钮高  内容被裁");
     for (const w of WIDTHS) {
       const d = await runWidth(browser, w);
       const vOv = d.exit && d.vitals ? Math.max(0, Math.round(d.exit.bottom - d.vitals.top)) : 0;
@@ -120,7 +137,14 @@ async function main() {
       if (!d.mounted) fails.push("未挂载");
       if (vOv > 0) fails.push(`退出按钮压住需求条 ${vOv}px`);
       if (hOv > 0) fails.push(`行动力条压住托盘 ${hOv}px`);
-      if (d.toggleCut) fails.push(`收起按钮被裁 ${d.toggleCut}px`);
+      if (d.contentCut) fails.push(`托盘内容被裁 ${d.contentCut.px}px(${d.contentCut.who})`);
+      /* 贴底浮层的两个邻居：按键条（居中）与托盘（右下）。原先各写各的底边 →
+         恒定重叠 1px。窄屏按键条 display:none，R() 会返回 null → 自然跳过。 */
+      if (d.tray && d.keys) {
+        const kx = Math.min(d.tray.right, d.keys.right) - Math.max(d.tray.left, d.keys.left);
+        const ky = Math.min(d.tray.bottom, d.keys.bottom) - Math.max(d.tray.top, d.keys.top);
+        if (kx > 0 && ky > 0) fails.push(`托盘压住按键条 ${Math.round(kx)}×${Math.round(ky)}px`);
+      }
       if (tapBad) fails.push("触控目标 <44px");
       if (fails.length) bad++;
       rows.push({ w, fails });
@@ -134,7 +158,7 @@ async function main() {
         + `${String(d.tray ? Math.round(d.tray.left) : "-").padStart(6)}  `
         + `${(hOv ? "★ " + hOv + "px" : "—").padStart(8)} | `
         + `${String(d.toggleH === null ? "-" : d.toggleH).padStart(8)}  `
-        + `${(d.toggleCut ? "★ " + d.toggleCut + "px" : "—").padStart(4)}`
+        + `${(d.contentCut ? "★ " + d.contentCut.px + "px" : "—").padStart(4)}`
         + (fails.length ? `   ← ${fails.join(" ; ")}` : ""));
     }
   } finally {

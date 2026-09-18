@@ -50,6 +50,15 @@
   --s3h-ap-left: 16px;
   --s3h-ap-w: 168px;
   --s3h-gap: 8px;
+  /* 收起态托盘的高度 = 头部的自然高度（上下 padding 18 + 内容 23）。
+     头部与收起态**必须同源**：原先头部自然高 41px，而收起态写死 `max-height: 38px`
+     → 头部底部 padding 被切掉 4px。实测这**所有非窄屏档位都有**（不是横屏特有），
+     只是当时只有横屏这一档 >768，就误记成了"仅横屏"。
+     裁掉的确实只是 padding、内容完整 —— 但"被祖先裁掉"这件事不该靠肉眼判断。 */
+  --s3h-tray-head: 41px;
+  /* 按键条占的底部带（高 18 + 距底 4）。托盘底边不得落进这条带里 ——
+     两者都是"贴底浮层"，原先各写各的（托盘 20 / 按键条 4+18=22）→ 恒定重叠 1px。 */
+  --s3h-keys-band: 22px;
 }
 
 .scene3d-mini {
@@ -474,7 +483,7 @@
 /* ── 行动托盘：默认收起成一条，展开才占地方 ─────────────────────────────── */
 .s3h-tray {
   position: absolute;
-  right: 14px; bottom: 20px;
+  right: 14px; bottom: var(--s3h-keys-band);
   width: 300px;
   max-height: 46vh;
   display: flex; flex-direction: column;
@@ -487,10 +496,19 @@
   transition: max-height 0.22s ease;
 }
 .s3h-tray:not(.is-open) .s3h-tray-body { display: none; }
-.s3h-tray:not(.is-open) { max-height: 38px; }
+.s3h-tray:not(.is-open) { max-height: var(--s3h-tray-head); }
 .s3h-tray-head {
   display: flex; align-items: center; justify-content: space-between;
   padding: 9px 12px;
+  /* ★ 高度与收起态**同源**：头部撑到多高，收起态就允许多高 —— 不再有"谁切谁"。
+     ★ 为什么必须显式写 min-height：头部是 flex 子项，**默认 `min-height: auto`**
+       意味着"不收缩到内容以下"—— 所以头部坚持 41px，而收起态只给 38px，
+       底部 3~4px 就被 `.s3h-tray { overflow: hidden }` 切掉。
+       写成 `min-height: var(--s3h-tray-head)` 之后，头部与收起态用**同一个数**，
+       切无可切。（反向可证伪：摘掉这行 + 把变量改回 38px，
+       ⑩-b 立刻变红 `被 .s3h-tray 切 上0/下4px`。） */
+  min-height: var(--s3h-tray-head);
+  box-sizing: border-box;
   cursor: pointer;
 }
 .s3h-tray-title { font-size: 12px; color: #cfc9b8; letter-spacing: 0.03em; }
@@ -658,7 +676,11 @@
 @media (max-width: 768px) {
   /* 行动力条收窄；托盘**填满它右侧的剩余空间**，而不是猜一个 66vw */
   .s3-first,
-  .s3h { --s3h-ap-left: 8px; --s3h-ap-w: 130px; }
+  .s3h {
+    --s3h-ap-left: 8px; --s3h-ap-w: 130px;
+    /* 窄屏按钮被 HIG 规则顶到 44px（本层显式声明同值）→ 头部 = 18 + 44 = 62 */
+    --s3h-tray-head: calc(var(--s3h-tap) + 18px);
+  }
   .s3h-ap { bottom: 16px; }
   .s3h-tray {
     left: calc(var(--s3h-ap-left) + var(--s3h-ap-w) + var(--s3h-gap));
@@ -666,9 +688,10 @@
     bottom: 16px;
     width: auto;
   }
-  /* 收起态托盘要放得下 44px 的触控按钮（头部上下 padding 各 9px），否则被裁 */
+  /* 收起态托盘要放得下 44px 的触控按钮（头部上下 padding 各 9px），否则被裁。
+     —— 现在不再需要单独写：`.s3h-tray:not(.is-open)` 用的就是
+     `--s3h-tray-head`，上面那行覆盖了变量，两边自动同源。 */
   .s3h-tray-toggle { min-height: var(--s3h-tap); }
-  .s3h-tray:not(.is-open) { max-height: calc(var(--s3h-tap) + 18px); }
   .s3h-vitals { right: 8px; padding: 7px 8px; }
   .s3h-vital-bar { width: 42px; }
   .s3h-keys { display: none; }

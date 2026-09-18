@@ -76,6 +76,10 @@ const MUST_NOT_OVERLAP = [
   [".s3h-ap", ".s3h-tray", "行动力条 与 行动托盘（都在左下/右下，最易撞）"],
   [".s3-first-exit", ".s3h-vitals", "退出按钮 与 需求条"],
   [".s3-first-exit", ".s3h-top", "退出按钮 与 顶栏"],
+  /* 两者都是"贴底浮层"：按键条居中、托盘右下，原先各写各的底边
+     （托盘 bottom:20 / 按键条 bottom:4+高18=22）→ **恒定重叠 1px**，
+     与视口尺寸无关，桌面同样有（当时误记成"仅横屏"）。已改为由按键条占的带推导。 */
+  [".s3h-tray", ".s3h-keys", "行动托盘 与 按键条（都贴底，原先恒定重叠 1px）"],
 ];
 
 let pass = 0, fail = 0;
@@ -116,11 +120,21 @@ function measure() {
       if (ox > 0 && oy > 0) ov.push({ a: a.cls, b: b.cls, ox: Math.round(ox), oy: Math.round(oy) });
     }
   }
-  /* ★ 被祖先 overflow 裁掉多少。
-     为什么必须单独量这一项：被裁的元素**尺寸是对的、位置是对的、也不与谁重叠**，
-     它只是"下半截看不见"—— 上面所有断言都会放它过去。
-     （实测：.s3h-tray-toggle 被 HIG 规则顶到 44px，而收起态托盘 max-height:38px
-       + overflow:hidden，按钮下半截约 24px 被切掉。） */
+  /* ★ 被祖先 overflow 裁掉多少 —— 必须分**两层**看：
+       ① 盒子被切（可能只切 padding）—— 观感问题，不是缺陷
+       ② **内容被切**（子元素也跟着出去了）—— 真缺陷，"下半截看不见"
+
+     ★ 为什么要分两层（这是本仪器自己的一个盲区，实测踩到）：
+       原先只检查 `.s3h-tray-toggle` 有没有被裁 → 报"无裁切"。
+       但真正被裁的是 `.s3h-tray-head`（收起态写死 max-height:38px，
+       而头部自然高 41px）→ 底部 padding 被切 4px。
+       被查的那个元素恰好完整可见，于是**断言一直绿**。
+       判据换成"内容有没有被切"之后，两类都能覆盖：
+       子元素被切 ⇒ 父元素进 badCut；只切 padding ⇒ 只进报告。 */
+  const clipAmt = (el, lim) => {
+    const r = el.getBoundingClientRect();
+    return { top: Math.max(0, lim.top - r.top), bottom: Math.max(0, r.bottom - lim.bottom) };
+  };
   const clipped = [];
   for (const el of els) {
     const r = el.getBoundingClientRect();
@@ -136,14 +150,24 @@ function measure() {
       p = p.parentElement;
     }
     if (!lim) continue;
-    const cutBottom = Math.max(0, r.bottom - lim.bottom);
-    const cutTop = Math.max(0, lim.top - r.top);
-    if (cutBottom + cutTop > 1) {
-      clipped.push({
-        cls: "." + String(el.className || "").split(" ")[0], by: lim.cls,
-        cutTop: Math.round(cutTop), cutBottom: Math.round(cutBottom),
-      });
+    const cut = clipAmt(el, lim);
+    if (cut.top + cut.bottom <= 1) continue;
+    /* 它的后代有没有跟着被切 —— 有 = 真的切到了内容 */
+    const contentCut = [];
+    for (const d of el.querySelectorAll("*")) {
+      const dr = d.getBoundingClientRect();
+      if (dr.width < 1 || dr.height < 1) continue;
+      const dc = clipAmt(d, lim);
+      if (dc.top + dc.bottom > 1) {
+        contentCut.push("." + String(d.className || "").split(" ")[0]
+          + ` 上${Math.round(dc.top)}/下${Math.round(dc.bottom)}`);
+      }
     }
+    clipped.push({
+      cls: "." + String(el.className || "").split(" ")[0], by: lim.cls,
+      cutTop: Math.round(cut.top), cutBottom: Math.round(cut.bottom),
+      contentCut,
+    });
   }
   const de = document.documentElement;
   const host = document.getElementById("scene3d-first");
@@ -312,16 +336,32 @@ async function runDevice(browser, dev) {
 
   /* ── B3. 被祖先 overflow 裁切 ──
      这一类失效在上面所有断言里都是"通过"的：尺寸对、位置对、不重叠，
-     只是下半截看不见。必须单独量。 */
-  const cutTray = m.clipped.filter((c) => c.cls === ".s3h-tray-toggle");
-  check(`⑩ [${dev.name}] 托盘内元素不被裁切`, cutTray.length === 0,
-    cutTray.length
-      ? cutTray.map((c) => `${c.cls} 被 ${c.by} 切掉 上${c.cutTop}/下${c.cutBottom}px`).join(" | ")
-      : "无裁切");
-  if (m.clipped.length) {
-    console.log("  ℹ️  被裁切（仅报告）：" +
-      m.clipped.map((c) => `${c.cls}←${c.by} 上${c.cutTop}/下${c.cutBottom}`).join(" / "));
-  }
+     只是下半截看不见。必须单独量。
+     ★ 断言落在「**内容**有没有被切」上，不是「盒子有没有被切」：
+       盒子被切但子元素全在（只切了 padding）不是缺陷；子元素也被切才是真缺陷。
+       原先只查一个写死的元素（`.s3h-tray-toggle`），而真正被切的是它的邻居
+       `.s3h-tray-head` → 断言恒绿、报告说"无裁切"，实际有 4px 被切。 */
+  const badCut = m.clipped.filter((c) => c.contentCut.length > 0);
+  const padOnly = m.clipped.filter((c) => c.contentCut.length === 0);
+  check(`⑩ [${dev.name}] 被裁元素的内容完整可见`, badCut.length === 0,
+    badCut.length
+      ? badCut.map((c) => `${c.cls} 被 ${c.by} 切 上${c.cutTop}/下${c.cutBottom}，**内容也被切**：${c.contentCut.join(" , ")}`).join(" | ")
+      : (padOnly.length
+        ? `${padOnly.length} 处只切到 padding（内容完整）：` +
+          padOnly.map((c) => `${c.cls} 上${c.cutTop}/下${c.cutBottom}`).join(" / ")
+        : "无裁切"));
+
+  /* ⑩-b：收起态托盘的头部**整体**不被裁 —— 只切 padding 也不算通过。
+     ★ 为什么要单独一条：切 padding 不影响可用性，所以 ⑩ 会放它过去
+       （⑩ 的判据是"内容完整可见"，而内容确实完整）。
+       但它正是"两个本该同源的数字各写各的"这个味道的复发点：
+       头部高度由内容撑（41px），收起态写死 38px → 差 3px 就靠切 padding 抹平。
+       本层现在用 `--s3h-tray-head` 让两者同源，这条断言就是那个契约的守卫。 */
+  const headCut = m.clipped.filter((c) => c.cls === ".s3h-tray-head");
+  check(`⑩-b [${dev.name}] 收起态托盘头部不被祖先裁切`, headCut.length === 0,
+    headCut.length
+      ? headCut.map((c) => `${c.cls} 被 ${c.by} 切 上${c.cutTop}/下${c.cutBottom}px`).join(" | ")
+      : "头部完整（高度与收起态同源）");
 
   /* ── C. 报告所有重叠（不断言 —— 有些是设计意图） ── */
   if (m.overlaps.length) {
