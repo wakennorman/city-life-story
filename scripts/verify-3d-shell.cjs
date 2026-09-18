@@ -423,6 +423,36 @@ async function main() {
   check("单帧 draw call 仍在护栏内（倒角没把成本抬爆）",
     dc > 0 && dc < 400, `${dc} 次（基线 ≈240，护栏 400）`);
 
+  /* ★ 颜色密度与凹凸密度必须成对 —— 这是从"已知偏差"升级来的正式断言。
+     起因：世界地面走 world.js::tileMat()，它**只克隆 map**，于是材质克隆后
+     共享同一个 normalMap，颜色 repeat 是 40×40 而凹凸停在 1×1。
+     表现：地面颜色是细砖、凹凸却是整面糊的 —— 不报错、不崩、只是不对。
+     当时 world.js 不在任何一方的改动清单里，只能记为"已知偏差"。
+     现已用 materials.js::syncNormalRepeat() 收口，所以这条断言必须立起来：
+     任何"只克隆一半"的写法都会让它变红，而不是悄悄退化。
+     判定用**容差**：三处不同代码路径（fitRepeat / tileMat / 手工克隆）
+     算出的浮点值不应有肉眼级差异，但也没必要按位相等。 */
+  const rep = await page.evaluate(() => {
+    const seen = new Set(), bad = [], pairs = [];
+    const root = window.__shell.view3d && window.__shell.view3d.scene;
+    if (root) root.traverse((o) => {
+      const mats = o.material ? (Array.isArray(o.material) ? o.material : [o.material]) : [];
+      for (const m of mats) {
+        if (!m || !m.normalMap || !m.map || seen.has(m.uuid)) continue;
+        seen.add(m.uuid);
+        const dr = Math.abs(m.map.repeat.x - m.normalMap.repeat.x);
+        const dc2 = Math.abs(m.map.repeat.y - m.normalMap.repeat.y);
+        pairs.push([+m.map.repeat.x.toFixed(2), +m.normalMap.repeat.x.toFixed(2)]);
+        if (dr > 0.01 || dc2 > 0.01) bad.push(`${m.map.repeat.x.toFixed(1)} vs ${m.normalMap.repeat.x.toFixed(1)}`);
+      }
+    });
+    return { n: pairs.length, bad: bad.slice(0, 5) };
+  });
+  check("颜色密度与凹凸密度成对（没有「只克隆一半」的材质）",
+    rep.n > 0 && rep.bad.length === 0,
+    rep.bad.length ? `${rep.bad.length} 个不一致：${rep.bad.join(' / ')}`
+      : `${rep.n} 个带法线的材质，map.repeat 与 normalMap.repeat 全部一致`);
+
   await page.screenshot({ path: path.join(OUT, "5-materials-geometry.png") });
 
   console.log("\n=== 页面报错 ===");

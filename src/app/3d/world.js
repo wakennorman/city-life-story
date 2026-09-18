@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { palette, tierOf } from './palette.js';
+import { syncNormalRepeat } from './materials.js';
 import * as K from './kit.js';
 
 /* ══ 场地布局引擎 ═══════════════════════════════════════════════════════════
@@ -74,12 +75,34 @@ function xr(a, b) { return a + (b - a) * 0.5; }
 /** 按平面尺寸生成地面材质。
  *  three 的 repeat 是"整张平面重复几次"，所以必须逐平面算：
  *  同一张纹理贴到 190m 底板与 12m 地块，密度差 16 倍。
- *  tile 是"一个纹理格代表多少米"。 */
-function tileMat(base, w, l, tile = 4.5) {
+ *  tile 是"一个纹理格代表多少米"。
+ *
+ *  ★ [2026-09-18 Agent B 补齐] 原来这里**只克隆了 map**：
+ *      const m = base.clone();
+ *      m.map = base.map.clone();
+ *      m.map.repeat.set(w/tile, l/tile);   // ← normalMap 没动
+ *    加了法线贴图（P1-1）之后，材质克隆会**共享**同一个 normalMap，
+ *    它的 repeat 停在 1×1，而颜色 repeat 是 40×40 ——
+ *    表现是"地面颜色是细砖、凹凸是整面糊的"，**不报错**。
+ *    验证脚本把这个读数暴露为 repeatMismatch=1，但当时 world.js
+ *    不在任何一方的改动清单里，所以一直挂着（已记为已知偏差）。
+ *    现用 materials.js 提供的 syncNormalRepeat() 收口 —— 它同时
+ *    把 tile 口径改为**读纹理自己声明的 metersPerRepeat**，
+ *    这样"图案按什么尺度画"与"按什么尺度铺"永远一致，
+ *    不会再出现 300mm 铺装砖被按 4.5m 铺开而显示成 562mm 的事。 */
+function tileMat(base, w, l, tile = null) {
   const m = base.clone();
-  m.map = base.map.clone();
-  m.map.needsUpdate = true;
-  m.map.repeat.set(Math.max(1, w / tile), Math.max(1, l / tile));
+  if (base.map) {
+    m.map = base.map.clone();
+    m.map.needsUpdate = true;
+    /* tile 未显式指定时，取纹理自己声明的一格多少米（materials.js::toTexture
+       登记在 userData.surface 上）。拿不到才退回默认 4.5。 */
+    const declared = base.map.userData && base.map.userData.surface
+      ? base.map.userData.surface.metersPerRepeat : null;
+    const t = tile || declared || 4.5;
+    m.map.repeat.set(Math.max(1, w / t), Math.max(1, l / t));
+  }
+  syncNormalRepeat(m);   // ★ 凹凸密度必须跟着颜色走
   return m;
 }
 
@@ -152,8 +175,11 @@ function groundFor(ctx, kind) {
     group.add(pv);
     for (let i = 0; i < 5; i++) {
       const lw = rnd(9, 18), ll = rnd(12, 22);
+      /* 不再显式传 3.0 —— grassTex 已按 GRASS_TILE_M=3.0 画好图案，
+         tileMat 会读它自己声明的 metersPerRepeat。
+         两边都写一遍 = 两份定义，改一处忘另一处就是下一个静默失效。 */
       const lawn = new THREE.Mesh(new THREE.PlaneGeometry(lw, ll),
-        tileMat(palette().common.grass, lw, ll, 3.0));
+        tileMat(palette().common.grass, lw, ll));
       lawn.rotation.x = -Math.PI / 2;
       lawn.position.set(rnd(-22, 22), 0.018, rnd(-S / 2 + 8, S / 2 - 8));
       lawn.receiveShadow = true;

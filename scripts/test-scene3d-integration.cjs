@@ -115,6 +115,27 @@ async function main() {
   check("Scene3DBridge 可用", gameState.bridgeAvailable);
 
   console.log("\n③ 侧栏微缩景");
+  /* ★ [2026-09-18 修偶发] 原来这里是**直接读 DOM**，靠 enterGame 末尾的
+     sleep(1600) 兜底。但 3D 侧栏微缩景是**异步挂载**的：
+       renderLocation() → Scene3DBridge.sync() → mountMini() → ensureMiniHost()
+     而 ensureMiniHost() 在 `#location-desc` 还没进 DOM 时**直接返回 null**
+     （见 scene3d_bridge.js:146 `if (!anchor || !anchor.parentNode) return null;`）。
+     于是机器负载高/首次渲染慢时，1600ms 不够 → ③ 四条一起变红
+     （宿主没建、canvas 没有、三角面 0、地点 null），紧接着 ④ 因为
+     `page.click("#scene3d-mini")` 找不到元素**直接抛异常终止整个测试**。
+     这就是"首跑挂了、重跑就好"的根因 —— 不是功能坏，是**等待方式错**。
+
+     正确做法：等"宿主出现"这个**条件**，而不是等一个**时长**。
+     用 waitForSelector 拿到 DOM 就绪，再用 waitForFunction 等
+     Scene3DBridge 报告出三角面（DOM 有了不等于 WebGL 已经画出第一帧）。
+     超时给足 20s —— 修复的目标是消除偶发，不是把偶发窗口往后挪。 */
+  const miniReady = await page.waitForFunction(() => {
+    const host = document.getElementById("scene3d-mini");
+    if (!host || !host.querySelector("canvas")) return false;
+    const st = window.Scene3DBridge && window.Scene3DBridge.debugMiniStats();
+    return !!(st && st.triangles > 500);
+  }, { timeout: 20000, polling: 250 }).then(() => true).catch(() => false);
+
   const mini = await page.evaluate(() => {
     const host = document.getElementById("scene3d-mini");
     const canvas = host && host.querySelector("canvas");
@@ -129,13 +150,23 @@ async function main() {
       calls: stats ? stats.calls : 0,
     };
   });
-  check("微缩景宿主已创建", mini.exists, mini.exists ? `${mini.w}x${mini.h}px` : "");
+  check("微缩景宿主已创建", mini.exists, mini.exists ? `${mini.w}x${mini.h}px` : "20s 内未出现");
   check("微缩景内已渲染 canvas", mini.hasCanvas && mini.h > 20);
   check("微缩景已渲染三角面", mini.tris > 500, `${mini.tris} 三角面 / ${mini.calls} draw calls`);
   check("微缩景跟随当前地点", mini.loc === gameState.loc, `${mini.loc} vs 游戏 ${gameState.loc}`);
 
   console.log("\n④ 全屏全景");
-  await page.click("#scene3d-mini");
+  /* ★ [2026-09-18 修偶发] `page.click("#scene3d-mini")` 在元素缺失时会**抛异常**，
+     直接终止整个测试 —— 上面 ⑤⑥⑦⑧⑨ 全部不跑，报告只显示前半截的失败。
+     这让"一条断言坏了"伪装成"整个 3D 层崩了"，排查方向被带偏。
+     改成"找不到就记一条失败、带着原因继续跑"：测试的价值在于一次跑完
+     把所有问题都列出来，而不是第一个问题就掀桌。 */
+  const miniClickable = await page.$("#scene3d-mini");
+  if (miniClickable) {
+    await miniClickable.click();
+  } else {
+    check("微缩景可点击（打开全景）", false, "#scene3d-mini 不存在，跳过 ④ 的后续断言");
+  }
   await sleep(1400);
   const ov = await page.evaluate(() => {
     const el = document.getElementById("scene3d-overlay");
@@ -220,9 +251,18 @@ async function main() {
 
   if (pick.enabled) {
     const tp = await page.evaluate((t) => window.Scene3DBridge.debugTeleportToHotspot(t.kind, t.id), pick.enabled);
-    await sleep(700);
+    /* ★ [2026-09-18 修偶发] 原来是 sleep(700) 后直接读 debugFocused()。
+       但"聚焦"不是瞬移的同步结果 —— 它是**玩家每帧跑的距离判定**
+       （走到热点半径内才 setHotspot）。sleep(700) 是按帧率拍的，
+       机器一慢就还没跑到判定帧，于是"未聚焦"。
+       改成等条件：轮询到真的聚焦为止，最多 5s。
+       这条同时覆盖了下面"按 E 执行行动"—— 没有聚焦就按 E 必然无事发生，
+       两条断言是**同一个根因**，修一处即可。 */
+    const focused = await page.waitForFunction(() => !!window.Scene3DBridge.debugFocused(),
+      { timeout: 5000, polling: 100 }).then(() => true).catch(() => false);
     const fc = await page.evaluate(() => window.Scene3DBridge.debugFocused());
-    check("瞬移到热点后已聚焦", !!fc, fc ? `${fc.kind}:${fc.id}` : "未聚焦");
+    check("瞬移到热点后已聚焦", focused && !!fc,
+      fc ? `${fc.kind}:${fc.id}` : "5s 内未进入热点半径");
     await page.keyboard.press("KeyE");
     await sleep(1000);
     const after = await page.evaluate(() => {
@@ -265,7 +305,9 @@ async function main() {
     return !!el && el.classList.contains("is-open");
   });
   if (!stillOpen) {
-    await page.click("#scene3d-mini");
+    // 同 ④：元素缺失时不要掀桌，记一条失败继续跑
+    const mc = await page.$("#scene3d-mini");
+    if (mc) { await mc.click(); } else { check("可重新打开全景", false, "#scene3d-mini 不存在"); }
     await sleep(1400);
   }
 
