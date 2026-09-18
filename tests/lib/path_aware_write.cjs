@@ -126,10 +126,27 @@ function createIndex(srcRoot) {
     return hits;
   }
 
-  // ── ①b 别名写入近似：`var X = ...parent...; X.key = ...` ──────────────
+  // ── ①b 别名写入近似：`var X = parent; X.key = ...` ────────────────────
   //
   // 局限（**方向是"判活"，偏保守，符合"宁可漏报不可误报"姿态**）：
   //   - 不做作用域分析 → 不同文件的同名局部变量可能造成假阴性（漏判为活）
+  //
+  // ★ [报告第 62 节] 修掉两个**过配**（都朝"判活"方向，即**漏报型**）：
+  //   ① 前缀过配：别名声明只要求 RHS **包含** parent。
+  //      `var inv = (state && state.investment) || {};` 里第一个 `state` 后面是空格
+  //      → `inv` 被当成 `state` 的别名 → `inv.stockMarket = …` 被算成
+  //      **`state.stockMarket` 的写入点**（而 state.stockMarket 全库零写入）。
+  //      → 修：**若 RHS 里出现 parent 的更深路径（`state.` + 标识符），
+  //        则它是"更深那个容器"的别名，不是 parent 的别名。**
+  //        （不能改成"RHS 必须以 parent 结尾"——那会连 `var cap = _cap(st);`
+  //          这种合法别名一起误杀；只有"更深路径"才是判定依据。）
+  //   ② 后缀过配：别名引用前用 `\b`，于是 `state.flags.gameOver = true` 里的
+  //      `flags.gameOver` 作为**后缀**匹配到别名 `flags`
+  //      → 被算成 `state.gameOver` 的写入点。
+  //      → 修：别名引用前不能是 `.`（用 `(?:^|[^.\w$])` 代替 `\b`）。
+  //
+  //   两个都是同一句话的两种写法：**"边界"必须是真边界，不能只是词边界。**
+  //   它们让判据把「**另一个字段**的写入」记到本字段头上 —— 不是"近似"，是错配。
   function approximateAliasWrites(parent, key) {
     const hits = [];
     const k = escapeRe(key);
@@ -138,20 +155,41 @@ function createIndex(srcRoot) {
     const keyPool = null;
 
     for (const v of parentVariants(parent)) {
-      const reAlias = new RegExp("(?:var|let|const)\\s+([A-Za-z_$][\\w$]*)\\s*=\\s*[^;]*\\b" + v + "\\b", "g");
+      // 别名声明：捕获左侧名字 + 右侧表达式（到 `;` 或行尾）
+      const reDecl = new RegExp("(?:var|let|const)\\s+([A-Za-z_$][\\w$]*)\\s*=\\s*([^;]*)", "g");
+      // 「RHS 里出现了 parent 的更深路径」——形如 `state.investment`（parent = state）
+      const reDeeper = new RegExp("\\b" + v + "\\s*\\.\\s*[A-Za-z_$]");
+      // 「RHS 引用了 parent 这个 token」（后随不能是标识符字符）
+      const reRef = new RegExp("\\b" + v + "(?![\\w$])");
       const names = new Set();
       for (const x of pool) {
         let m;
-        reAlias.lastIndex = 0;
-        while ((m = reAlias.exec(x.text))) names.add(m[1]);
+        reDecl.lastIndex = 0;
+        while ((m = reDecl.exec(x.text))) {
+          const rhs = m[2].replace(/\/\/.*$/, "");
+          if (!reRef.test(rhs)) continue;
+          // ★ 过配 ① 修复：**若 RHS 里出现 parent 的更深路径，则它是"更深那个容器"的别名，
+          //   不是 parent 的别名。** 例如 `var inv = state.investment || {};` 里的 `inv`
+          //   会被记到 `state` 头上 → `inv.stockMarket = …` 被误算成 `state.stockMarket` 的写入。
+          //   注意不能用「RHS 必须以 parent 结尾」——那会连 `var cap = _cap(st);`（合法别名）
+          //   一起误杀；只有"更深路径"才是判定依据。
+          if (reDeeper.test(rhs)) continue;
+          names.add(m[1]);
+        }
       }
       if (names.size === 0) continue;
 
       const kp = keyPool || linesWith(key);
       for (const a of names) {
         const ak = escapeRe(a);
-        const reW = new RegExp("\\b" + ak + "\\s*\\.\\s*" + k + "\\s*(?:\\[[^\\]]*\\])?\\s*(?:[-+*/%&|^]?=(?!=|>)|\\+\\+|--)");
-        const reW2 = new RegExp("\\b" + ak + "\\s*\\.\\s*" + k + "\\s*\\.\\s*(?:push|unshift|splice|set|add)\\s*\\(");
+        // ★ 过配 ② 修复：别名引用前不能是 `.`（否则匹配到更长路径的后缀）
+        const pre = "(?:^|[^.\\w$])";
+        const reW = new RegExp(
+          pre + ak + "\\s*\\.\\s*" + k + "\\s*(?:\\[[^\\]]*\\])?\\s*(?:[-+*/%&|^]?=(?!=|>)|\\+\\+|--)"
+        );
+        const reW2 = new RegExp(
+          pre + ak + "\\s*\\.\\s*" + k + "\\s*\\.\\s*(?:push|unshift|splice|set|add)\\s*\\("
+        );
         for (const x of kp) {
           if (reW.test(x.text) || reW2.test(x.text)) hits.push(Object.assign({ alias: a }, trim(x)));
         }

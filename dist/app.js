@@ -102782,7 +102782,10 @@ if (typeof window !== "undefined") {
         if (st.gameOver) return false;
         if (!st.skills || !st.investment) return false;
         if (countHighSkillsC272(st, 50) < 1) return false;
-        var totalInv = (st.investment.cash || 0) + (st.investment.bankBalance || 0);
+        // [报告第 62 节] 原读 st.investment.cash / st.investment.bankBalance ——
+        //   两者全库零写入（幻影容器）。真实容器是 st.resources.cash /
+        //   st.resources.bankBalance（现金 1864 处写入 / 存款 35 处写入）。
+        var totalInv = ((st.resources && st.resources.cash) || 0) + ((st.resources && st.resources.bankBalance) || 0);
         if (st.investment.stockHoldings) {
           for (var i = 0; i < st.investment.stockHoldings.length; i++) {
             totalInv += (st.investment.stockHoldings[i].shares || 0) * (st.investment.stockHoldings[i].avgPrice || 0);
@@ -276810,10 +276813,16 @@ if (typeof window !== "undefined") {
   function calcTotalInvValueE269(st) {
     if (!st || !st.investment) return 0;
     var inv = st.investment;
-    var total = (inv.cash || 0) + (inv.bankBalance || 0);
+    // [报告第 62 节 G21] 原读 inv.cash / inv.bankBalance —— 两者全库零写入
+    //   （幻影容器，同 G16）。真实容器是 st.resources.cash / st.resources.bankBalance。
+    var total = ((st.resources && st.resources.cash) || 0) + ((st.resources && st.resources.bankBalance) || 0);
     if (inv.stockHoldings) {
       for (var i = 0; i < inv.stockHoldings.length; i++) {
-        total += (inv.stockHoldings[i].shares || 0) * (inv.stockHoldings[i].currentPrice || inv.stockHoldings[i].avgPrice || 0);
+        // [报告第 62 节 G21] stockHoldings 元素无 currentPrice 键 → 原式恒按成本价计
+        //   （市值 = 成本、浮盈永远 0，同 G20）。现价取行情容器，缺失回退成本价。
+        var _h21 = inv.stockHoldings[i];
+        var _m21 = inv.stockMarket && inv.stockMarket[_h21.symbol];
+        total += (_h21.shares || 0) * ((_m21 && _m21.price) || _h21.avgPrice || 0);
       }
     }
     total += (inv.btcHoldings || 0) * (inv.btcPrice || 0);
@@ -276995,10 +277004,16 @@ if (typeof window !== "undefined") {
   function calcTotalInvValueE276(st) {
     if (!st || !st.investment) return 0;
     var inv = st.investment;
-    var total = (inv.cash || 0) + (inv.bankBalance || 0);
+    // [报告第 62 节 G21] 原读 inv.cash / inv.bankBalance —— 两者全库零写入
+    //   （幻影容器，同 G16）。真实容器是 st.resources.cash / st.resources.bankBalance。
+    var total = ((st.resources && st.resources.cash) || 0) + ((st.resources && st.resources.bankBalance) || 0);
     if (inv.stockHoldings) {
       for (var i = 0; i < inv.stockHoldings.length; i++) {
-        total += (inv.stockHoldings[i].shares || 0) * (inv.stockHoldings[i].currentPrice || inv.stockHoldings[i].avgPrice || 0);
+        // [报告第 62 节 G21] stockHoldings 元素无 currentPrice 键 → 原式恒按成本价计
+        //   （市值 = 成本、浮盈永远 0，同 G20）。现价取行情容器，缺失回退成本价。
+        var _h21 = inv.stockHoldings[i];
+        var _m21 = inv.stockMarket && inv.stockMarket[_h21.symbol];
+        total += (_h21.shares || 0) * ((_m21 && _m21.price) || _h21.avgPrice || 0);
       }
     }
     total += (inv.btcHoldings || 0) * (inv.btcPrice || 0);
@@ -277177,10 +277192,16 @@ if (typeof window !== "undefined") {
   function calcTotalInvValueE284(st) {
     if (!st || !st.investment) return 0;
     var inv = st.investment;
-    var total = (inv.cash || 0) + (inv.bankBalance || 0);
+    // [报告第 62 节 G21] 原读 inv.cash / inv.bankBalance —— 两者全库零写入
+    //   （幻影容器，同 G16）。真实容器是 st.resources.cash / st.resources.bankBalance。
+    var total = ((st.resources && st.resources.cash) || 0) + ((st.resources && st.resources.bankBalance) || 0);
     if (inv.stockHoldings) {
       for (var i = 0; i < inv.stockHoldings.length; i++) {
-        total += (inv.stockHoldings[i].shares || 0) * (inv.stockHoldings[i].currentPrice || inv.stockHoldings[i].avgPrice || 0);
+        // [报告第 62 节 G21] stockHoldings 元素无 currentPrice 键 → 原式恒按成本价计
+        //   （市值 = 成本、浮盈永远 0，同 G20）。现价取行情容器，缺失回退成本价。
+        var _h21 = inv.stockHoldings[i];
+        var _m21 = inv.stockMarket && inv.stockMarket[_h21.symbol];
+        total += (_h21.shares || 0) * ((_m21 && _m21.price) || _h21.avgPrice || 0);
       }
     }
     total += (inv.btcHoldings || 0) * (inv.btcPrice || 0);
@@ -277356,10 +277377,16 @@ if (typeof window !== "undefined") {
   function calcTotalInvValueE292(st) {
     if (!st || !st.investment) return 0;
     var inv = st.investment;
-    var total = (inv.cash || 0) + (inv.bankBalance || 0);
+    // [报告第 62 节 G21] 原读 inv.cash / inv.bankBalance —— 两者全库零写入
+    //   （幻影容器，同 G16）。真实容器是 st.resources.cash / st.resources.bankBalance。
+    var total = ((st.resources && st.resources.cash) || 0) + ((st.resources && st.resources.bankBalance) || 0);
     if (inv.stockHoldings) {
       for (var i = 0; i < inv.stockHoldings.length; i++) {
-        total += (inv.stockHoldings[i].shares || 0) * (inv.stockHoldings[i].currentPrice || inv.stockHoldings[i].avgPrice || 0);
+        // [报告第 62 节 G21] stockHoldings 元素无 currentPrice 键 → 原式恒按成本价计
+        //   （市值 = 成本、浮盈永远 0，同 G20）。现价取行情容器，缺失回退成本价。
+        var _h21 = inv.stockHoldings[i];
+        var _m21 = inv.stockMarket && inv.stockMarket[_h21.symbol];
+        total += (_h21.shares || 0) * ((_m21 && _m21.price) || _h21.avgPrice || 0);
       }
     }
     total += (inv.btcHoldings || 0) * (inv.btcPrice || 0);
@@ -277526,10 +277553,16 @@ if (typeof window !== "undefined") {
   function calcTotalInvValueE300(st) {
     if (!st || !st.investment) return 0;
     var inv = st.investment;
-    var total = (inv.cash || 0) + (inv.bankBalance || 0);
+    // [报告第 62 节 G21] 原读 inv.cash / inv.bankBalance —— 两者全库零写入
+    //   （幻影容器，同 G16）。真实容器是 st.resources.cash / st.resources.bankBalance。
+    var total = ((st.resources && st.resources.cash) || 0) + ((st.resources && st.resources.bankBalance) || 0);
     if (inv.stockHoldings) {
       for (var i = 0; i < inv.stockHoldings.length; i++) {
-        total += (inv.stockHoldings[i].shares || 0) * (inv.stockHoldings[i].currentPrice || inv.stockHoldings[i].avgPrice || 0);
+        // [报告第 62 节 G21] stockHoldings 元素无 currentPrice 键 → 原式恒按成本价计
+        //   （市值 = 成本、浮盈永远 0，同 G20）。现价取行情容器，缺失回退成本价。
+        var _h21 = inv.stockHoldings[i];
+        var _m21 = inv.stockMarket && inv.stockMarket[_h21.symbol];
+        total += (_h21.shares || 0) * ((_m21 && _m21.price) || _h21.avgPrice || 0);
       }
     }
     total += (inv.btcHoldings || 0) * (inv.btcPrice || 0);
@@ -277708,10 +277741,16 @@ if (typeof window !== "undefined") {
   function calcTotalInvValueE309(st) {
     if (!st || !st.investment) return 0;
     var inv = st.investment;
-    var total = (inv.cash || 0) + (inv.bankBalance || 0);
+    // [报告第 62 节 G21] 原读 inv.cash / inv.bankBalance —— 两者全库零写入
+    //   （幻影容器，同 G16）。真实容器是 st.resources.cash / st.resources.bankBalance。
+    var total = ((st.resources && st.resources.cash) || 0) + ((st.resources && st.resources.bankBalance) || 0);
     if (inv.stockHoldings) {
       for (var i = 0; i < inv.stockHoldings.length; i++) {
-        total += (inv.stockHoldings[i].shares || 0) * (inv.stockHoldings[i].currentPrice || inv.stockHoldings[i].avgPrice || 0);
+        // [报告第 62 节 G21] stockHoldings 元素无 currentPrice 键 → 原式恒按成本价计
+        //   （市值 = 成本、浮盈永远 0，同 G20）。现价取行情容器，缺失回退成本价。
+        var _h21 = inv.stockHoldings[i];
+        var _m21 = inv.stockMarket && inv.stockMarket[_h21.symbol];
+        total += (_h21.shares || 0) * ((_m21 && _m21.price) || _h21.avgPrice || 0);
       }
     }
     total += (inv.btcHoldings || 0) * (inv.btcPrice || 0);
@@ -277883,10 +277922,16 @@ if (typeof window !== "undefined") {
   function calcTotalInvValueE317(st) {
     if (!st || !st.investment) return 0;
     var inv = st.investment;
-    var total = (inv.cash || 0) + (inv.bankBalance || 0);
+    // [报告第 62 节 G21] 原读 inv.cash / inv.bankBalance —— 两者全库零写入
+    //   （幻影容器，同 G16）。真实容器是 st.resources.cash / st.resources.bankBalance。
+    var total = ((st.resources && st.resources.cash) || 0) + ((st.resources && st.resources.bankBalance) || 0);
     if (inv.stockHoldings) {
       for (var i = 0; i < inv.stockHoldings.length; i++) {
-        total += (inv.stockHoldings[i].shares || 0) * (inv.stockHoldings[i].currentPrice || inv.stockHoldings[i].avgPrice || 0);
+        // [报告第 62 节 G21] stockHoldings 元素无 currentPrice 键 → 原式恒按成本价计
+        //   （市值 = 成本、浮盈永远 0，同 G20）。现价取行情容器，缺失回退成本价。
+        var _h21 = inv.stockHoldings[i];
+        var _m21 = inv.stockMarket && inv.stockMarket[_h21.symbol];
+        total += (_h21.shares || 0) * ((_m21 && _m21.price) || _h21.avgPrice || 0);
       }
     }
     total += (inv.btcHoldings || 0) * (inv.btcPrice || 0);
@@ -278064,10 +278109,16 @@ if (typeof window !== "undefined") {
   function calcTotalInvValueE326(st) {
     if (!st || !st.investment) return 0;
     var inv = st.investment;
-    var total = (inv.cash || 0) + (inv.bankBalance || 0);
+    // [报告第 62 节 G21] 原读 inv.cash / inv.bankBalance —— 两者全库零写入
+    //   （幻影容器，同 G16）。真实容器是 st.resources.cash / st.resources.bankBalance。
+    var total = ((st.resources && st.resources.cash) || 0) + ((st.resources && st.resources.bankBalance) || 0);
     if (inv.stockHoldings) {
       for (var i = 0; i < inv.stockHoldings.length; i++) {
-        total += (inv.stockHoldings[i].shares || 0) * (inv.stockHoldings[i].currentPrice || inv.stockHoldings[i].avgPrice || 0);
+        // [报告第 62 节 G21] stockHoldings 元素无 currentPrice 键 → 原式恒按成本价计
+        //   （市值 = 成本、浮盈永远 0，同 G20）。现价取行情容器，缺失回退成本价。
+        var _h21 = inv.stockHoldings[i];
+        var _m21 = inv.stockMarket && inv.stockMarket[_h21.symbol];
+        total += (_h21.shares || 0) * ((_m21 && _m21.price) || _h21.avgPrice || 0);
       }
     }
     total += (inv.btcHoldings || 0) * (inv.btcPrice || 0);
@@ -278234,10 +278285,16 @@ if (typeof window !== "undefined") {
   function calcTotalInvValueE335(st) {
     if (!st || !st.investment) return 0;
     var inv = st.investment;
-    var total = (inv.cash || 0) + (inv.bankBalance || 0);
+    // [报告第 62 节 G21] 原读 inv.cash / inv.bankBalance —— 两者全库零写入
+    //   （幻影容器，同 G16）。真实容器是 st.resources.cash / st.resources.bankBalance。
+    var total = ((st.resources && st.resources.cash) || 0) + ((st.resources && st.resources.bankBalance) || 0);
     if (inv.stockHoldings) {
       for (var i = 0; i < inv.stockHoldings.length; i++) {
-        total += (inv.stockHoldings[i].shares || 0) * (inv.stockHoldings[i].currentPrice || inv.stockHoldings[i].avgPrice || 0);
+        // [报告第 62 节 G21] stockHoldings 元素无 currentPrice 键 → 原式恒按成本价计
+        //   （市值 = 成本、浮盈永远 0，同 G20）。现价取行情容器，缺失回退成本价。
+        var _h21 = inv.stockHoldings[i];
+        var _m21 = inv.stockMarket && inv.stockMarket[_h21.symbol];
+        total += (_h21.shares || 0) * ((_m21 && _m21.price) || _h21.avgPrice || 0);
       }
     }
     total += (inv.btcHoldings || 0) * (inv.btcPrice || 0);
@@ -278415,10 +278472,16 @@ if (typeof window !== "undefined") {
   function calcTotalInvValueE343(st) {
     if (!st || !st.investment) return 0;
     var inv = st.investment;
-    var total = (inv.cash || 0) + (inv.bankBalance || 0);
+    // [报告第 62 节 G21] 原读 inv.cash / inv.bankBalance —— 两者全库零写入
+    //   （幻影容器，同 G16）。真实容器是 st.resources.cash / st.resources.bankBalance。
+    var total = ((st.resources && st.resources.cash) || 0) + ((st.resources && st.resources.bankBalance) || 0);
     if (inv.stockHoldings) {
       for (var i = 0; i < inv.stockHoldings.length; i++) {
-        total += (inv.stockHoldings[i].shares || 0) * (inv.stockHoldings[i].currentPrice || inv.stockHoldings[i].avgPrice || 0);
+        // [报告第 62 节 G21] stockHoldings 元素无 currentPrice 键 → 原式恒按成本价计
+        //   （市值 = 成本、浮盈永远 0，同 G20）。现价取行情容器，缺失回退成本价。
+        var _h21 = inv.stockHoldings[i];
+        var _m21 = inv.stockMarket && inv.stockMarket[_h21.symbol];
+        total += (_h21.shares || 0) * ((_m21 && _m21.price) || _h21.avgPrice || 0);
       }
     }
     total += (inv.btcHoldings || 0) * (inv.btcPrice || 0);
@@ -278590,10 +278653,16 @@ if (typeof window !== "undefined") {
   function calcTotalInvValueE351(st) {
     if (!st || !st.investment) return 0;
     var inv = st.investment;
-    var total = (inv.cash || 0) + (inv.bankBalance || 0);
+    // [报告第 62 节 G21] 原读 inv.cash / inv.bankBalance —— 两者全库零写入
+    //   （幻影容器，同 G16）。真实容器是 st.resources.cash / st.resources.bankBalance。
+    var total = ((st.resources && st.resources.cash) || 0) + ((st.resources && st.resources.bankBalance) || 0);
     if (inv.stockHoldings) {
       for (var i = 0; i < inv.stockHoldings.length; i++) {
-        total += (inv.stockHoldings[i].shares || 0) * (inv.stockHoldings[i].currentPrice || inv.stockHoldings[i].avgPrice || 0);
+        // [报告第 62 节 G21] stockHoldings 元素无 currentPrice 键 → 原式恒按成本价计
+        //   （市值 = 成本、浮盈永远 0，同 G20）。现价取行情容器，缺失回退成本价。
+        var _h21 = inv.stockHoldings[i];
+        var _m21 = inv.stockMarket && inv.stockMarket[_h21.symbol];
+        total += (_h21.shares || 0) * ((_m21 && _m21.price) || _h21.avgPrice || 0);
       }
     }
     total += (inv.btcHoldings || 0) * (inv.btcPrice || 0);
@@ -355026,8 +355095,12 @@ for(var i=0;i<E.length;i++){var exists=false;for(var j=0;j<RANDOM_EVENTS.length;
       id: "e661_investment_story", phase: "street", _isChainEvent: false, icon: "📖",
       title: "投资故事", triggers: { minDay: 15 },
       story: function(st) {
-        var sm = st.stockMarket || {}; var count = 0, pl = 0, cost = 0;
-        for (var k in sm) { var s = sm[k]; if (s && s.shares > 0) { count++; cost += (s.shares||0)*(s.avgPrice||0); pl += ((s.currentPrice||0)-(s.avgPrice||0))*(s.shares||0); } }
+        // [报告第 62 节] 原读 st.stockMarket（幻影容器，全库零写入）。
+        //   真实持仓 = st.investment.stockHoldings（{symbol, shares, avgPrice}），
+        //   现价 = st.investment.stockMarket[symbol].price（与第 60 节 r1014 范式一致）。
+        var _inv = st.investment || {}; var _hs = _inv.stockHoldings || [];
+        var count = 0, pl = 0, cost = 0;
+        for (var _i = 0; _i < _hs.length; _i++) { var _h = _hs[_i]; if (!_h || !(_h.shares > 0)) continue; var _m = _inv.stockMarket && _inv.stockMarket[_h.symbol]; var _px = (_m && _m.price) || _h.avgPrice || 0; count++; cost += (_h.shares||0)*(_h.avgPrice||0); pl += (_px-(_h.avgPrice||0))*(_h.shares||0); }
         if (count === 0) return "你还没有投资经历。每一笔投资背后都有一个故事，等你去书写。";
         var pct = cost > 0 ? Math.round(pl/cost*100) : 0;
         return "你持有" + count + "只股票，投入¥" + cost.toLocaleString() + "，当前" + (pl>=0?"盈利":"亏损") + "¥" + Math.abs(pl).toLocaleString() + "(" + (pl>=0?"+":"") + pct + "%)。" + (pl>=0?"投资需要眼光，更需要耐心。":"市场波动是常态，长期持有才是王道。");
@@ -355036,7 +355109,10 @@ for(var i=0;i<E.length;i++){var exists=false;for(var j=0;j<RANDOM_EVENTS.length;
         { text: "📈 查看持仓", apply: function(st) { if (typeof showStockTab === "function") showStockTab(); else StateManager.addMessage("📈 前往投资Tab", "info"); }},
         { text: "📝 记录心得", apply: function(st) { st.flags=st.flags||{}; st.flags._e661_story=(st.flags._e661_story||0)+1; StateManager.addMessage("📝 记录了投资心得", "info"); }},
       ],
-      conditions: function(st) { var sm=st.stockMarket; if(!sm) return false; for(var k in sm){if(sm[k]&&sm[k].shares>0) return true} return false; },
+      // [报告第 62 节] 原读 st.stockMarket（幻影容器）→ 改读真实持仓数组。
+      //   注意**不能**机械改成 investment.stockMarket：它是行情字典（60 键恒存在），
+      //   Object.keys(...).length > 0 恒 true，会把「恒 false」翻成「恒 true」。
+      conditions: function(st) { var _hs=(st.investment&&st.investment.stockHoldings)||[]; for(var _i=0;_i<_hs.length;_i++){if(_hs[_i]&&_hs[_i].shares>0) return true} return false; },
       weight: 1,
     },
     {
@@ -355045,7 +355121,8 @@ for(var i=0;i<E.length;i++){var exists=false;for(var j=0;j<RANDOM_EVENTS.length;
       story: function(st) {
         var npcs = metNpcsR661(st); if (npcs.length === 0) return "你还没有投资圈的朋友。";
         var high = 0; for (var i=0;i<npcs.length;i++) { if (npcs[i].affinity >= 40) high++; }
-        var sm = st.stockMarket || {}; var hasStock = false; for (var k in sm) { if (sm[k] && sm[k].shares > 0) { hasStock = true; break; } }
+        // [报告第 62 节] 同 e661_investment_story：改读 stockHoldings。
+        var _hs = (st.investment && st.investment.stockHoldings) || []; var hasStock = false; for (var _i = 0; _i < _hs.length; _i++) { if (_hs[_i] && _hs[_i].shares > 0) { hasStock = true; break; } }
         if (high >= 2 && hasStock) return "你有" + high + "位关系不错的朋友也关注投资。" + "你们偶尔交流投资心得，分享市场信息，互相提醒风险。";
         return "你认识" + npcs.length + "位朋友，但能聊投资的还不多。";
       },
@@ -355062,9 +355139,13 @@ for(var i=0;i<E.length;i++){var exists=false;for(var j=0;j<RANDOM_EVENTS.length;
       story: function(st) {
         var cash = st.resources && st.resources.cash || 0;
         var bank = st.resources && st.resources.bankBalance || 0;
-        var sm = st.stockMarket || {}; var stockVal = 0;
-        for (var k in sm) { var s = sm[k]; if (s && s.shares > 0) stockVal += (s.shares||0)*(s.currentPrice||0); }
-        var inv = (st.investment && st.investment.totalValue) || 0;
+        // [报告第 62 节] 原读 st.stockMarket（幻影容器）+ investment.totalValue（幻影容器）。
+        //   totalValue 项**删除**而非改指向：基金/理财经 buyInvStock() 一视同仁写入
+        //   stockHoldings（investment.js:1947 分类注释），已在 stockVal 中计入 ——
+        //   保留只会让总资产重复计算。与第 60 节 preciousHoldings 同处置。
+        var _inv = st.investment || {}; var _hs = _inv.stockHoldings || []; var stockVal = 0;
+        for (var _i = 0; _i < _hs.length; _i++) { var _h = _hs[_i]; if (!_h || !(_h.shares > 0)) continue; var _m = _inv.stockMarket && _inv.stockMarket[_h.symbol]; stockVal += (_h.shares||0)*((_m && _m.price) || _h.avgPrice || 0); }
+        var inv = 0;
         var total = cash + bank + stockVal + inv;
         if (total === 0) return "你还没有资产。开始攒钱吧，每一分钱都是未来的种子。";
         return "总资产 ¥" + total.toLocaleString() + "<br>现金¥" + cash.toLocaleString() + " 存款¥" + bank.toLocaleString() + (stockVal>0?"<br>股票¥" + stockVal.toLocaleString():"") + (inv>0?"<br>理财¥" + inv.toLocaleString():"");
@@ -355270,7 +355351,13 @@ for(var i=0;i<E.length;i++){var exists=false;for(var j=0;j<RANDOM_EVENTS.length;
           if (h && (h.shares || 0) > 0) {
             stockCount++;
             totalInvested += (h.shares || 0) * (h.avgPrice || 0);
-            totalPl += ((h.currentPrice || h.avgPrice || 0) - (h.avgPrice || 0)) * (h.shares || 0);
+            // [报告第 62 节] 原用 h.currentPrice —— stockHoldings 元素是
+            //   {symbol, shares, avgPrice}，**没有 currentPrice 键** → `|| h.avgPrice`
+            //   兜底 → (avgPrice - avgPrice) * shares = **恒 0**，浮盈永远显示 0。
+            //   ★ 上一行的注释（[R637b A类修复]）宣称已改，但只改了容器、漏改了字段名
+            //     —— 这是「修了一半的修复」的第二个标本（第一个见第 60 节 G12）。
+            var _m = st.investment.stockMarket && st.investment.stockMarket[h.symbol];
+            totalPl += (((_m && _m.price) || h.avgPrice || 0) - (h.avgPrice || 0)) * (h.shares || 0);
           }
         }
         if (stockCount === 0) {
@@ -355380,11 +355467,14 @@ for(var i=0;i<E.length;i++){var exists=false;for(var j=0;j<RANDOM_EVENTS.length;
         for (var i = 0; i < holdings.length; i++) {
           var h = holdings[i];
           if (h && (h.shares || 0) > 0) {
-            passiveIncome += (h.shares || 0) * (h.currentPrice || h.avgPrice || 0) * 0.002; // 估算股息
+            // [报告第 62 节] 同 e637_invest_data_diary：currentPrice → 行情容器。
+            var _m = st.investment.stockMarket && st.investment.stockMarket[h.symbol];
+            passiveIncome += (h.shares || 0) * (((_m && _m.price) || h.avgPrice || 0)) * 0.002; // 估算股息
           }
         }
-        var investVal = (st.investment && st.investment.totalValue) || 0;
-        passiveIncome += investVal * 0.005;
+        // [报告第 62 节] 原 `investment.totalValue`（幻影容器）+ `investVal * 0.005`
+        //   → **删除**：基金/理财已在上面 stockHoldings 循环中计入被动收入，
+        //   再加一次是重复计算（同 r661/r623/r628 的处置）。
 
         if (totalWealth >= 50000 && passiveIncome >= 50) {
           return "你的总资产¥" + totalWealth.toLocaleString() + "，日均收入¥" + dailyIncome + "，" +
@@ -357675,25 +357765,29 @@ for(var i=0;i<E.length;i++){var exists=false;for(var j=0;j<RANDOM_EVENTS.length;
       title: "投资组合月报",
       triggers: { minDay: 15 },
       text: function (st) {
-        var stocks = st.stockMarket || {};
+        // [报告第 62 节] 原读 st.stockMarket（幻影容器）→ 真实持仓 st.investment.stockHoldings；
+        //   现价 = st.investment.stockMarket[symbol].price。
+        //   investTotal 项**删除**：基金/理财已在 stockHoldings 中（同 r661 注释）。
+        var _inv = st.investment || {};
+        var _hs = _inv.stockHoldings || [];
         var stockCount = 0;
         var totalValue = 0;
         var totalCost = 0;
-        for (var sym in stocks) {
-          var s = stocks[sym];
-          if (s && s.shares > 0) {
-            stockCount++;
-            totalValue += (s.shares || 0) * (s.currentPrice || 0);
-            totalCost += (s.shares || 0) * (s.avgPrice || 0);
-          }
+        for (var _i = 0; _i < _hs.length; _i++) {
+          var _h = _hs[_i];
+          if (!_h || !(_h.shares > 0)) continue;
+          var _m = _inv.stockMarket && _inv.stockMarket[_h.symbol];
+          stockCount++;
+          totalValue += (_h.shares || 0) * ((_m && _m.price) || _h.avgPrice || 0);
+          totalCost += (_h.shares || 0) * (_h.avgPrice || 0);
         }
-        var investTotal = (st.investment && st.investment.totalValue) || 0;
-        var totalPortfolio = totalValue + investTotal;
+        var investTotal = 0;
+        var totalPortfolio = totalValue;
         var cash = st.resources && st.resources.cash || 0;
         var bank = st.resources && st.resources.bankBalance || 0;
         var totalAssets = totalPortfolio + cash + bank;
 
-        if (stockCount === 0 && investTotal === 0) {
+        if (stockCount === 0) {
           return "你目前还没有任何投资。把闲钱放在银行虽然安全，但跑不赢通胀。" +
             "建议从学习投资知识开始，逐步建立自己的投资组合。";
         }
@@ -357705,7 +357799,7 @@ for(var i=0;i<E.length;i++){var exists=false;for(var j=0;j<RANDOM_EVENTS.length;
         return "【投资组合月报】" + plIcon + "<br>" +
           "持有股票 " + stockCount + " 只，市值 ¥" + totalValue.toLocaleString() +
           (totalCost > 0 ? "（成本 ¥" + totalCost.toLocaleString() + "，<span style=\"color:" + plColor + "\">" + (pl >= 0 ? "+" : "") + pl + "元/" + plPct + "%</span>）" : "") + "<br>" +
-          (investTotal > 0 ? "基金/理财 ¥" + investTotal.toLocaleString() + "<br>" : "") +
+          // [报告第 62 节] 原「基金/理财 ¥X」行已删除：该数据已在持仓市值中计入。
           "总资产 ¥" + totalAssets.toLocaleString() + "（含现金¥" + cash.toLocaleString() + "）<br>" +
           (totalAssets >= 100000 ? "🎉 资产已过10万，继续坚持！" :
            totalAssets >= 50000 ? "💪 资产稳步增长，保持节奏。" :
@@ -357721,8 +357815,13 @@ for(var i=0;i<E.length;i++){var exists=false;for(var j=0;j<RANDOM_EVENTS.length;
           StateManager.addMessage("💰 总资产 ¥" + ((st.resources && (st.resources.cash || 0) + (st.resources.bankBalance || 0)) || 0).toLocaleString(), "info");
         }},
       ],
+      // [报告第 62 节] 原读 st.stockMarket（幻影容器）→ 改读真实持仓数组。
       conditions: function (st) {
-        return (st.stockMarket && Object.keys(st.stockMarket).length > 0) || (st.investment && st.investment.totalValue > 0);
+        var _hs = (st.investment && st.investment.stockHoldings) || [];
+        for (var _i = 0; _i < _hs.length; _i++) {
+          if (_hs[_i] && _hs[_i].shares > 0) return true;
+        }
+        return false;
       },
       weight: 1,
     },
@@ -357744,12 +357843,11 @@ for(var i=0;i<E.length;i++){var exists=false;for(var j=0;j<RANDOM_EVENTS.length;
         for (var i = 0; i < npcs.length; i++) {
           if (npcs[i].affinity >= 40) highAff++;
         }
+        // [报告第 62 节] 原读 st.stockMarket（幻影容器）→ 改读真实持仓数组。
         var hasStock = false;
-        var sm = st.stockMarket;
-        if (sm) {
-          for (var sym in sm) {
-            if (sm[sym] && sm[sym].shares > 0) { hasStock = true; break; }
-          }
+        var _hs = (st.investment && st.investment.stockHoldings) || [];
+        for (var _i = 0; _i < _hs.length; _i++) {
+          if (_hs[_i] && _hs[_i].shares > 0) { hasStock = true; break; }
         }
         if (highAff >= 2 && hasStock) {
           return "最近市场不太平静，你身边有" + highAff + "位关系不错的朋友也在关注。" +
@@ -365403,25 +365501,28 @@ for(var i=0;i<E.length;i++){var exists=false;for(var j=0;j<RANDOM_EVENTS.length;
       title: "投资组合概览",
       triggers: { minDay: 10 },
       text: function (st) {
-        var stocks = st.stockMarket || {};
-        var holdings = st.investment || {};
+        // [报告第 62 节] 原读 st.stockMarket（幻影容器，全库零写入）。
+        //   真实持仓 = st.investment.stockHoldings（{symbol, shares, avgPrice}）；
+        //   现价 = st.investment.stockMarket[symbol].price。
+        //   investmentTotal 项**删除**：基金/理财已在 stockHoldings 中（同 r661 注释）。
+        var _inv = st.investment || {};
+        var _hs = _inv.stockHoldings || [];
         var stockCount = 0;
         var totalValue = 0;
-        for (var sym in stocks) {
-          if (stocks[sym] && stocks[sym].shares > 0) {
-            stockCount++;
-            totalValue += (stocks[sym].shares || 0) * (stocks[sym].currentPrice || 0);
-          }
+        for (var _i = 0; _i < _hs.length; _i++) {
+          var _h = _hs[_i];
+          if (!_h || !(_h.shares > 0)) continue;
+          var _m = _inv.stockMarket && _inv.stockMarket[_h.symbol];
+          stockCount++;
+          totalValue += (_h.shares || 0) * ((_m && _m.price) || _h.avgPrice || 0);
         }
-        var investmentTotal = (st.investment && st.investment.totalValue) || 0;
-        var totalPortfolio = totalValue + investmentTotal;
+        var totalPortfolio = totalValue;
 
         if (totalPortfolio <= 0) {
           return "你目前没有持有任何投资标的。可以考虑从股票或基金开始，让钱为你工作。";
         }
         return "你的投资组合总市值约 ¥" + totalPortfolio.toLocaleString() + "。<br>" +
-          "持有 " + stockCount + " 只股票" +
-          (investmentTotal > 0 ? "，投资基金/理财 ¥" + investmentTotal.toLocaleString() : "") + "。<br>" +
+          "持有 " + stockCount + " 只标的（含股票/基金/理财）" + "。<br>" +
           (totalPortfolio >= 100000 ? "资产配置已初具规模，建议定期复盘调整比例。" :
            totalPortfolio >= 10000 ? "投资组合正在成长，建议关注分散风险。" :
            "小额投资是好的开始，持续积累才能看到复利的力量。");
@@ -365438,15 +365539,15 @@ for(var i=0;i<E.length;i++){var exists=false;for(var j=0;j<RANDOM_EVENTS.length;
           StateManager.addMessage("💹 前往「投资」Tab查看基金/理财详情", "info");
         }},
       ],
+      // [报告第 62 节] 原读 st.stockMarket（幻影容器）→ 改读真实持仓数组。
+      //   ★ 不可机械改成 investment.stockMarket：那是行情字典（60 键恒存在），
+      //   Object.keys(...).length > 0 恒 true → 会把「恒 false」翻成「恒 true」。
       conditions: function (st) {
-        var hasStocks = false;
-        var sm = st.stockMarket;
-        if (sm) {
-          for (var sym in sm) {
-            if (sm[sym] && sm[sym].shares > 0) { hasStocks = true; break; }
-          }
+        var _hs = (st.investment && st.investment.stockHoldings) || [];
+        for (var _i = 0; _i < _hs.length; _i++) {
+          if (_hs[_i] && _hs[_i].shares > 0) return true;
         }
-        return hasStocks || (st.investment && st.investment.totalValue > 0);
+        return false;
       },
       weight: 1,
     },

@@ -26,8 +26,12 @@
       id: "e661_investment_story", phase: "street", _isChainEvent: false, icon: "📖",
       title: "投资故事", triggers: { minDay: 15 },
       story: function(st) {
-        var sm = st.stockMarket || {}; var count = 0, pl = 0, cost = 0;
-        for (var k in sm) { var s = sm[k]; if (s && s.shares > 0) { count++; cost += (s.shares||0)*(s.avgPrice||0); pl += ((s.currentPrice||0)-(s.avgPrice||0))*(s.shares||0); } }
+        // [报告第 62 节] 原读 st.stockMarket（幻影容器，全库零写入）。
+        //   真实持仓 = st.investment.stockHoldings（{symbol, shares, avgPrice}），
+        //   现价 = st.investment.stockMarket[symbol].price（与第 60 节 r1014 范式一致）。
+        var _inv = st.investment || {}; var _hs = _inv.stockHoldings || [];
+        var count = 0, pl = 0, cost = 0;
+        for (var _i = 0; _i < _hs.length; _i++) { var _h = _hs[_i]; if (!_h || !(_h.shares > 0)) continue; var _m = _inv.stockMarket && _inv.stockMarket[_h.symbol]; var _px = (_m && _m.price) || _h.avgPrice || 0; count++; cost += (_h.shares||0)*(_h.avgPrice||0); pl += (_px-(_h.avgPrice||0))*(_h.shares||0); }
         if (count === 0) return "你还没有投资经历。每一笔投资背后都有一个故事，等你去书写。";
         var pct = cost > 0 ? Math.round(pl/cost*100) : 0;
         return "你持有" + count + "只股票，投入¥" + cost.toLocaleString() + "，当前" + (pl>=0?"盈利":"亏损") + "¥" + Math.abs(pl).toLocaleString() + "(" + (pl>=0?"+":"") + pct + "%)。" + (pl>=0?"投资需要眼光，更需要耐心。":"市场波动是常态，长期持有才是王道。");
@@ -36,7 +40,10 @@
         { text: "📈 查看持仓", apply: function(st) { if (typeof showStockTab === "function") showStockTab(); else StateManager.addMessage("📈 前往投资Tab", "info"); }},
         { text: "📝 记录心得", apply: function(st) { st.flags=st.flags||{}; st.flags._e661_story=(st.flags._e661_story||0)+1; StateManager.addMessage("📝 记录了投资心得", "info"); }},
       ],
-      conditions: function(st) { var sm=st.stockMarket; if(!sm) return false; for(var k in sm){if(sm[k]&&sm[k].shares>0) return true} return false; },
+      // [报告第 62 节] 原读 st.stockMarket（幻影容器）→ 改读真实持仓数组。
+      //   注意**不能**机械改成 investment.stockMarket：它是行情字典（60 键恒存在），
+      //   Object.keys(...).length > 0 恒 true，会把「恒 false」翻成「恒 true」。
+      conditions: function(st) { var _hs=(st.investment&&st.investment.stockHoldings)||[]; for(var _i=0;_i<_hs.length;_i++){if(_hs[_i]&&_hs[_i].shares>0) return true} return false; },
       weight: 1,
     },
     {
@@ -45,7 +52,8 @@
       story: function(st) {
         var npcs = metNpcsR661(st); if (npcs.length === 0) return "你还没有投资圈的朋友。";
         var high = 0; for (var i=0;i<npcs.length;i++) { if (npcs[i].affinity >= 40) high++; }
-        var sm = st.stockMarket || {}; var hasStock = false; for (var k in sm) { if (sm[k] && sm[k].shares > 0) { hasStock = true; break; } }
+        // [报告第 62 节] 同 e661_investment_story：改读 stockHoldings。
+        var _hs = (st.investment && st.investment.stockHoldings) || []; var hasStock = false; for (var _i = 0; _i < _hs.length; _i++) { if (_hs[_i] && _hs[_i].shares > 0) { hasStock = true; break; } }
         if (high >= 2 && hasStock) return "你有" + high + "位关系不错的朋友也关注投资。" + "你们偶尔交流投资心得，分享市场信息，互相提醒风险。";
         return "你认识" + npcs.length + "位朋友，但能聊投资的还不多。";
       },
@@ -62,9 +70,13 @@
       story: function(st) {
         var cash = st.resources && st.resources.cash || 0;
         var bank = st.resources && st.resources.bankBalance || 0;
-        var sm = st.stockMarket || {}; var stockVal = 0;
-        for (var k in sm) { var s = sm[k]; if (s && s.shares > 0) stockVal += (s.shares||0)*(s.currentPrice||0); }
-        var inv = (st.investment && st.investment.totalValue) || 0;
+        // [报告第 62 节] 原读 st.stockMarket（幻影容器）+ investment.totalValue（幻影容器）。
+        //   totalValue 项**删除**而非改指向：基金/理财经 buyInvStock() 一视同仁写入
+        //   stockHoldings（investment.js:1947 分类注释），已在 stockVal 中计入 ——
+        //   保留只会让总资产重复计算。与第 60 节 preciousHoldings 同处置。
+        var _inv = st.investment || {}; var _hs = _inv.stockHoldings || []; var stockVal = 0;
+        for (var _i = 0; _i < _hs.length; _i++) { var _h = _hs[_i]; if (!_h || !(_h.shares > 0)) continue; var _m = _inv.stockMarket && _inv.stockMarket[_h.symbol]; stockVal += (_h.shares||0)*((_m && _m.price) || _h.avgPrice || 0); }
+        var inv = 0;
         var total = cash + bank + stockVal + inv;
         if (total === 0) return "你还没有资产。开始攒钱吧，每一分钱都是未来的种子。";
         return "总资产 ¥" + total.toLocaleString() + "<br>现金¥" + cash.toLocaleString() + " 存款¥" + bank.toLocaleString() + (stockVal>0?"<br>股票¥" + stockVal.toLocaleString():"") + (inv>0?"<br>理财¥" + inv.toLocaleString():"");

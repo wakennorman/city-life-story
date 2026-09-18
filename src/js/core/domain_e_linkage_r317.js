@@ -14,10 +14,16 @@
   function calcTotalInvValueE317(st) {
     if (!st || !st.investment) return 0;
     var inv = st.investment;
-    var total = (inv.cash || 0) + (inv.bankBalance || 0);
+    // [报告第 62 节 G21] 原读 inv.cash / inv.bankBalance —— 两者全库零写入
+    //   （幻影容器，同 G16）。真实容器是 st.resources.cash / st.resources.bankBalance。
+    var total = ((st.resources && st.resources.cash) || 0) + ((st.resources && st.resources.bankBalance) || 0);
     if (inv.stockHoldings) {
       for (var i = 0; i < inv.stockHoldings.length; i++) {
-        total += (inv.stockHoldings[i].shares || 0) * (inv.stockHoldings[i].currentPrice || inv.stockHoldings[i].avgPrice || 0);
+        // [报告第 62 节 G21] stockHoldings 元素无 currentPrice 键 → 原式恒按成本价计
+        //   （市值 = 成本、浮盈永远 0，同 G20）。现价取行情容器，缺失回退成本价。
+        var _h21 = inv.stockHoldings[i];
+        var _m21 = inv.stockMarket && inv.stockMarket[_h21.symbol];
+        total += (_h21.shares || 0) * ((_m21 && _m21.price) || _h21.avgPrice || 0);
       }
     }
     total += (inv.btcHoldings || 0) * (inv.btcPrice || 0);

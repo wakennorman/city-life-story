@@ -46,7 +46,13 @@
           if (h && (h.shares || 0) > 0) {
             stockCount++;
             totalInvested += (h.shares || 0) * (h.avgPrice || 0);
-            totalPl += ((h.currentPrice || h.avgPrice || 0) - (h.avgPrice || 0)) * (h.shares || 0);
+            // [报告第 62 节] 原用 h.currentPrice —— stockHoldings 元素是
+            //   {symbol, shares, avgPrice}，**没有 currentPrice 键** → `|| h.avgPrice`
+            //   兜底 → (avgPrice - avgPrice) * shares = **恒 0**，浮盈永远显示 0。
+            //   ★ 上一行的注释（[R637b A类修复]）宣称已改，但只改了容器、漏改了字段名
+            //     —— 这是「修了一半的修复」的第二个标本（第一个见第 60 节 G12）。
+            var _m = st.investment.stockMarket && st.investment.stockMarket[h.symbol];
+            totalPl += (((_m && _m.price) || h.avgPrice || 0) - (h.avgPrice || 0)) * (h.shares || 0);
           }
         }
         if (stockCount === 0) {
@@ -156,11 +162,14 @@
         for (var i = 0; i < holdings.length; i++) {
           var h = holdings[i];
           if (h && (h.shares || 0) > 0) {
-            passiveIncome += (h.shares || 0) * (h.currentPrice || h.avgPrice || 0) * 0.002; // 估算股息
+            // [报告第 62 节] 同 e637_invest_data_diary：currentPrice → 行情容器。
+            var _m = st.investment.stockMarket && st.investment.stockMarket[h.symbol];
+            passiveIncome += (h.shares || 0) * (((_m && _m.price) || h.avgPrice || 0)) * 0.002; // 估算股息
           }
         }
-        var investVal = (st.investment && st.investment.totalValue) || 0;
-        passiveIncome += investVal * 0.005;
+        // [报告第 62 节] 原 `investment.totalValue`（幻影容器）+ `investVal * 0.005`
+        //   → **删除**：基金/理财已在上面 stockHoldings 循环中计入被动收入，
+        //   再加一次是重复计算（同 r661/r623/r628 的处置）。
 
         if (totalWealth >= 50000 && passiveIncome >= 50) {
           return "你的总资产¥" + totalWealth.toLocaleString() + "，日均收入¥" + dailyIncome + "，" +

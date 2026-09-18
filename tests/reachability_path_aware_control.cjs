@@ -165,6 +165,45 @@ const POSITIVE = [
     why: "全库零写入。真实容器是 flags._workStreak" +
       "（main.js:5253-5258 街头工作 / career_dev.js:3668-3673 上班族，两处「连续工作天数追踪」）。",
   },
+  {
+    // [报告第 62 节] ★★ 这一条特别值得留档：它**曾被判据的别名过配洗白**。
+    //   `var inv = state.investment;` 里的 `state` 命中了旧规则的 `\bstate\b`
+    //   → `inv` 被注册成 `state` 的别名 → `inv.stockMarket = …`（那是
+    //     state.investment.stockMarket）被算成 **state.stockMarket 的写入点**。
+    //   本节修掉别名前后缀过配后，它才第一次被判死。
+    path: "state.stockMarket",
+    why: "全库零写入（顶层）。真实容器是 state.investment.stockMarket" +
+      "（company_spawner.js:429/608 + enterprise_fate.js:2307）。" +
+      "★ 15 处引用读的是顶层幻影容器，而持仓数据的真实容器是数组 state.investment.stockHoldings。",
+  },
+  {
+    // [报告第 62 节] 果实 G17 的对照面：`investment.totalValue`（「理财总额」）
+    path: "state.investment.totalValue",
+    why: "全库零写入。基金/理财并不是独立容器 —— buyInvStock() 把「基金」与股票/虚拟币/" +
+      "贵金属/期货一视同仁写入 stockHoldings（INV_STOCKS 的 category 含「基金」4 个）。",
+  },
+  {
+    // [报告第 62 节] 果实 G16 的对照面：把 resources.cash 写成了 investment.cash
+    //   （G16~G20 编号 = 修复文件顺序：r272 / r628 / r661 / r623 / r637）
+    path: "state.investment.cash",
+    why: "全库零写入。真实容器是 state.resources.cash（1864 处写入）。",
+  },
+  {
+    // [报告第 62 节] 果实 G16 的对照面：同上
+    path: "state.investment.bankBalance",
+    why: "全库零写入。真实容器是 state.resources.bankBalance（35 处写入）。",
+  },
+  {
+    // [报告第 62 节] ★ 判据修复**暴露出来的真阳性**（此前被别名过配洗白）。
+    //   旧规则把 `var company = st.corporate && st.corporate.company;`（6 处）
+    //   注册成 `state.corporate` 的别名 → `company.employees.push(…)`
+    //   （那是 state.startup.company.employees，startup.js:1480）被算成
+    //   **state.corporate.employees 的写入点**。
+    //   4 处整体赋值全是 `if (!state.corporate) state.corporate = {}` 幂等守卫（第 59 节标本 ⑦）。
+    path: "state.corporate.employees",
+    why: "全库零写入。4 处 `state.corporate = state.corporate || {}` 均为幂等守卫，不携带写入信息。" +
+      "★ 它是判据修复后**新增**的唯一一条候选（候选 24 → 25 → 22 中的那个 +1）。",
+  },
 ];
 
 for (const c of POSITIVE) {
@@ -279,6 +318,18 @@ const NEGATIVE = [
     kind: "直接写入（本节新增）",
     path: "state.flags._workStreak",
     site: "main.js:5253-5258（街头工作）+ ui/career_dev.js:3668-3673（上班族），两处「连续工作天数追踪」",
+  },
+  {
+    // [报告第 62 节] 果实 G16 改指向的真实容器 —— 判据必须判活，
+    //   否则「修复读的容器被判死」这一自相矛盾状态无法被测试发现。
+    kind: "直接写入（本节新增）",
+    path: "state.resources.cash",
+    site: "app_bridge/webapp_runtime_bridge.js:210 等 1864 处（state.resources.cash += / -= …）",
+  },
+  {
+    kind: "直接写入（本节新增）",
+    path: "state.resources.bankBalance",
+    site: "core/career_linkage_events.js:634/675 + cross_system_events_part1.js:3070 等 35 处",
   },
 ];
 

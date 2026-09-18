@@ -81,25 +81,28 @@
       title: "投资组合概览",
       triggers: { minDay: 10 },
       text: function (st) {
-        var stocks = st.stockMarket || {};
-        var holdings = st.investment || {};
+        // [报告第 62 节] 原读 st.stockMarket（幻影容器，全库零写入）。
+        //   真实持仓 = st.investment.stockHoldings（{symbol, shares, avgPrice}）；
+        //   现价 = st.investment.stockMarket[symbol].price。
+        //   investmentTotal 项**删除**：基金/理财已在 stockHoldings 中（同 r661 注释）。
+        var _inv = st.investment || {};
+        var _hs = _inv.stockHoldings || [];
         var stockCount = 0;
         var totalValue = 0;
-        for (var sym in stocks) {
-          if (stocks[sym] && stocks[sym].shares > 0) {
-            stockCount++;
-            totalValue += (stocks[sym].shares || 0) * (stocks[sym].currentPrice || 0);
-          }
+        for (var _i = 0; _i < _hs.length; _i++) {
+          var _h = _hs[_i];
+          if (!_h || !(_h.shares > 0)) continue;
+          var _m = _inv.stockMarket && _inv.stockMarket[_h.symbol];
+          stockCount++;
+          totalValue += (_h.shares || 0) * ((_m && _m.price) || _h.avgPrice || 0);
         }
-        var investmentTotal = (st.investment && st.investment.totalValue) || 0;
-        var totalPortfolio = totalValue + investmentTotal;
+        var totalPortfolio = totalValue;
 
         if (totalPortfolio <= 0) {
           return "你目前没有持有任何投资标的。可以考虑从股票或基金开始，让钱为你工作。";
         }
         return "你的投资组合总市值约 ¥" + totalPortfolio.toLocaleString() + "。<br>" +
-          "持有 " + stockCount + " 只股票" +
-          (investmentTotal > 0 ? "，投资基金/理财 ¥" + investmentTotal.toLocaleString() : "") + "。<br>" +
+          "持有 " + stockCount + " 只标的（含股票/基金/理财）" + "。<br>" +
           (totalPortfolio >= 100000 ? "资产配置已初具规模，建议定期复盘调整比例。" :
            totalPortfolio >= 10000 ? "投资组合正在成长，建议关注分散风险。" :
            "小额投资是好的开始，持续积累才能看到复利的力量。");
@@ -116,15 +119,15 @@
           StateManager.addMessage("💹 前往「投资」Tab查看基金/理财详情", "info");
         }},
       ],
+      // [报告第 62 节] 原读 st.stockMarket（幻影容器）→ 改读真实持仓数组。
+      //   ★ 不可机械改成 investment.stockMarket：那是行情字典（60 键恒存在），
+      //   Object.keys(...).length > 0 恒 true → 会把「恒 false」翻成「恒 true」。
       conditions: function (st) {
-        var hasStocks = false;
-        var sm = st.stockMarket;
-        if (sm) {
-          for (var sym in sm) {
-            if (sm[sym] && sm[sym].shares > 0) { hasStocks = true; break; }
-          }
+        var _hs = (st.investment && st.investment.stockHoldings) || [];
+        for (var _i = 0; _i < _hs.length; _i++) {
+          if (_hs[_i] && _hs[_i].shares > 0) return true;
         }
-        return hasStocks || (st.investment && st.investment.totalValue > 0);
+        return false;
       },
       weight: 1,
     },

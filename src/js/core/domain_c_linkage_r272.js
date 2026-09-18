@@ -76,7 +76,10 @@
         if (st.gameOver) return false;
         if (!st.skills || !st.investment) return false;
         if (countHighSkillsC272(st, 50) < 1) return false;
-        var totalInv = (st.investment.cash || 0) + (st.investment.bankBalance || 0);
+        // [报告第 62 节] 原读 st.investment.cash / st.investment.bankBalance ——
+        //   两者全库零写入（幻影容器）。真实容器是 st.resources.cash /
+        //   st.resources.bankBalance（现金 1864 处写入 / 存款 35 处写入）。
+        var totalInv = ((st.resources && st.resources.cash) || 0) + ((st.resources && st.resources.bankBalance) || 0);
         if (st.investment.stockHoldings) {
           for (var i = 0; i < st.investment.stockHoldings.length; i++) {
             totalInv += (st.investment.stockHoldings[i].shares || 0) * (st.investment.stockHoldings[i].avgPrice || 0);

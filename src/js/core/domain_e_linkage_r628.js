@@ -36,25 +36,29 @@
       title: "投资组合月报",
       triggers: { minDay: 15 },
       text: function (st) {
-        var stocks = st.stockMarket || {};
+        // [报告第 62 节] 原读 st.stockMarket（幻影容器）→ 真实持仓 st.investment.stockHoldings；
+        //   现价 = st.investment.stockMarket[symbol].price。
+        //   investTotal 项**删除**：基金/理财已在 stockHoldings 中（同 r661 注释）。
+        var _inv = st.investment || {};
+        var _hs = _inv.stockHoldings || [];
         var stockCount = 0;
         var totalValue = 0;
         var totalCost = 0;
-        for (var sym in stocks) {
-          var s = stocks[sym];
-          if (s && s.shares > 0) {
-            stockCount++;
-            totalValue += (s.shares || 0) * (s.currentPrice || 0);
-            totalCost += (s.shares || 0) * (s.avgPrice || 0);
-          }
+        for (var _i = 0; _i < _hs.length; _i++) {
+          var _h = _hs[_i];
+          if (!_h || !(_h.shares > 0)) continue;
+          var _m = _inv.stockMarket && _inv.stockMarket[_h.symbol];
+          stockCount++;
+          totalValue += (_h.shares || 0) * ((_m && _m.price) || _h.avgPrice || 0);
+          totalCost += (_h.shares || 0) * (_h.avgPrice || 0);
         }
-        var investTotal = (st.investment && st.investment.totalValue) || 0;
-        var totalPortfolio = totalValue + investTotal;
+        var investTotal = 0;
+        var totalPortfolio = totalValue;
         var cash = st.resources && st.resources.cash || 0;
         var bank = st.resources && st.resources.bankBalance || 0;
         var totalAssets = totalPortfolio + cash + bank;
 
-        if (stockCount === 0 && investTotal === 0) {
+        if (stockCount === 0) {
           return "你目前还没有任何投资。把闲钱放在银行虽然安全，但跑不赢通胀。" +
             "建议从学习投资知识开始，逐步建立自己的投资组合。";
         }
@@ -66,7 +70,7 @@
         return "【投资组合月报】" + plIcon + "<br>" +
           "持有股票 " + stockCount + " 只，市值 ¥" + totalValue.toLocaleString() +
           (totalCost > 0 ? "（成本 ¥" + totalCost.toLocaleString() + "，<span style=\"color:" + plColor + "\">" + (pl >= 0 ? "+" : "") + pl + "元/" + plPct + "%</span>）" : "") + "<br>" +
-          (investTotal > 0 ? "基金/理财 ¥" + investTotal.toLocaleString() + "<br>" : "") +
+          // [报告第 62 节] 原「基金/理财 ¥X」行已删除：该数据已在持仓市值中计入。
           "总资产 ¥" + totalAssets.toLocaleString() + "（含现金¥" + cash.toLocaleString() + "）<br>" +
           (totalAssets >= 100000 ? "🎉 资产已过10万，继续坚持！" :
            totalAssets >= 50000 ? "💪 资产稳步增长，保持节奏。" :
@@ -82,8 +86,13 @@
           StateManager.addMessage("💰 总资产 ¥" + ((st.resources && (st.resources.cash || 0) + (st.resources.bankBalance || 0)) || 0).toLocaleString(), "info");
         }},
       ],
+      // [报告第 62 节] 原读 st.stockMarket（幻影容器）→ 改读真实持仓数组。
       conditions: function (st) {
-        return (st.stockMarket && Object.keys(st.stockMarket).length > 0) || (st.investment && st.investment.totalValue > 0);
+        var _hs = (st.investment && st.investment.stockHoldings) || [];
+        for (var _i = 0; _i < _hs.length; _i++) {
+          if (_hs[_i] && _hs[_i].shares > 0) return true;
+        }
+        return false;
       },
       weight: 1,
     },
@@ -105,12 +114,11 @@
         for (var i = 0; i < npcs.length; i++) {
           if (npcs[i].affinity >= 40) highAff++;
         }
+        // [报告第 62 节] 原读 st.stockMarket（幻影容器）→ 改读真实持仓数组。
         var hasStock = false;
-        var sm = st.stockMarket;
-        if (sm) {
-          for (var sym in sm) {
-            if (sm[sym] && sm[sym].shares > 0) { hasStock = true; break; }
-          }
+        var _hs = (st.investment && st.investment.stockHoldings) || [];
+        for (var _i = 0; _i < _hs.length; _i++) {
+          if (_hs[_i] && _hs[_i].shares > 0) { hasStock = true; break; }
         }
         if (highAff >= 2 && hasStock) {
           return "最近市场不太平静，你身边有" + highAff + "位关系不错的朋友也在关注。" +
