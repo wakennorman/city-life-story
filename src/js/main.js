@@ -4460,6 +4460,14 @@ function getAvailableActions(state) {
     addExtraActions(state, actions);
   }
 
+  // --- 注入小游戏行动（对标《大多数》：象棋残局等）---
+  // 与 addExtraActions 并列：小游戏行动的 handler 内部开交互界面，
+  // 3D 场景点热点 → invokeAction → 找到这里注册的行动 → 调 handler，
+  // 所以 3D 与 2D 两端自动都能玩到，不需要写任何 3D 代码。
+  if (typeof addMinigameActions === "function") {
+    addMinigameActions(state, actions);
+  }
+
   return actions;
 }
 

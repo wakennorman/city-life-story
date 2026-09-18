@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-18T07:19:43.319Z",
+  "generatedAt": "2026-09-18T15:40:46.097Z",
   "source": "src/js/data/{locations,location_flavor,jobs,amenities,actions,goods}.js + src/js/phase1/actions_extra.js + src/js/core/illegal_actions.js",
   "count": 29,
   "categoryLabels": {
@@ -3205,7 +3205,16 @@
       ],
       "jobs": [],
       "amenities": [],
-      "actions": [],
+      "actions": [
+        {
+          "id": "suburb_rest",
+          "name": "郊区静养",
+          "icon": "🌆",
+          "desc": "躲开城里的喧嚣，在郊区安静待一天。房租低、空气好，适合养病，也适合想清楚一些事。",
+          "apCost": 30,
+          "payEstimate": null
+        }
+      ],
       "actionsExtra": [],
       "illegal": [],
       "buy": [],
@@ -3380,7 +3389,16 @@
       "flavor": [],
       "jobs": [],
       "amenities": [],
-      "actions": [],
+      "actions": [
+        {
+          "id": "gov_benefits_apply",
+          "name": "申请低保",
+          "icon": "🏛️",
+          "desc": "在政务服务窗口咨询并申请最低生活保障。收入越低越容易通过，是走投无路时的最后一道网。",
+          "apCost": 15,
+          "payEstimate": "0~800"
+        }
+      ],
       "actionsExtra": [],
       "illegal": [],
       "buy": [],
@@ -3403,7 +3421,16 @@
       "flavor": [],
       "jobs": [],
       "amenities": [],
-      "actions": [],
+      "actions": [
+        {
+          "id": "court_labor_arbitration",
+          "name": "申请劳动仲裁",
+          "icon": "⚖️",
+          "desc": "被拖欠工资、违法辞退时，到法院立案窗口申请劳动仲裁。免费、不用律师也能办，但要等结果。",
+          "apCost": 20,
+          "payEstimate": "0~3000"
+        }
+      ],
       "actionsExtra": [],
       "illegal": [],
       "buy": [],
@@ -3438,7 +3465,16 @@
       "flavor": [],
       "jobs": [],
       "amenities": [],
-      "actions": [],
+      "actions": [
+        {
+          "id": "job_market_resume",
+          "name": "投简历",
+          "icon": "📄",
+          "desc": "在人才市场的招聘信息栏前，把简历投给还在招人的摊位。比打零工体面，但要等回音。",
+          "apCost": 10,
+          "payEstimate": null
+        }
+      ],
       "actionsExtra": [],
       "illegal": [],
       "buy": [],
@@ -4020,7 +4056,16 @@
       "flavor": [],
       "jobs": [],
       "amenities": [],
-      "actions": [],
+      "actions": [
+        {
+          "id": "flea_market_haggle",
+          "name": "淘货砍价",
+          "icon": "🏴",
+          "desc": "在二手市场的地摊之间转悠，凭眼力捡漏、凭嘴皮子砍价。看走眼就亏，看准了就赚。",
+          "apCost": 15,
+          "payEstimate": "0~420"
+        }
+      ],
       "actionsExtra": [],
       "illegal": [],
       "buy": [],
@@ -4079,7 +4124,16 @@
       "flavor": [],
       "jobs": [],
       "amenities": [],
-      "actions": [],
+      "actions": [
+        {
+          "id": "veg_market_bargain",
+          "name": "赶早市买菜",
+          "icon": "🥬",
+          "desc": "天没亮就去菜市场，跟摊主讨价还价买最新鲜也最便宜的菜。自己做饭比吃外卖省得多。",
+          "apCost": 10,
+          "payEstimate": null
+        }
+      ],
       "actionsExtra": [],
       "illegal": [],
       "buy": [
