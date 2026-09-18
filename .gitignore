@@ -107,6 +107,10 @@ Microsoft/
 #                     （缺失时 scripts/verify-3d-bundle.cjs 会自动现打一个）
 #   shots/          —— 逐地点截图
 #   shots-ingame/   —— scripts/shot-3d-ingame.cjs 拍的真实游戏内截图
+#   shots-shell/    —— scripts/verify-3d-shell.cjs 拍的 3D-first 外壳截图
+# ★ 新增产物目录时记得同步加到这里，否则每次跑验证都会多出几条未跟踪文件，
+#   把真正需要关注的变更淹没掉。
 /dev/_3dtest/bundle-probe.js
 /dev/_3dtest/shots/
 /dev/_3dtest/shots-ingame/
+/dev/_3dtest/shots-shell/

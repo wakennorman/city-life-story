@@ -90,6 +90,14 @@ body {
   color: var(--text-primary);
   background: var(--bg-primary);
   -webkit-font-smoothing: antialiased;
+
+  /* ★ 禁止伪加粗 —— 这条是治「中文又粗又糊」的根治手段。
+     中文正文字体只有 400/700 两档。若某处写了 800/900（或 700 但字体没带
+     Bold），浏览器默认会用「合成加粗」来交差：把字形向外描边扩张。西文还好，
+     汉字笔画本来就密，一扩张就互相粘连，结果就是你看到的那种又粗又糊。
+     font-synthesis-weight: none 让浏览器放弃合成，直接用最接近的真实字重
+     （如 700→700、800→700），粗细层级仍然分得开，但不会糊。 */
+  font-synthesis-weight: none;
 }
 
 /* ====== Scrollbar ====== */
@@ -379,9 +387,16 @@ body {
   box-shadow: 0 0 6px rgba(196, 85, 61, 0.25);
   border: 1px solid rgba(196, 85, 61, 0.3);
 }
+/* ★ 警告态用 700 而非 800/900 —— 别改回去。
+   理由：中文正文字体（Microsoft YaHei / PingFang SC）只提供 Regular(400)
+   与 Bold(700) 两档。请求 800/900 时浏览器会「伪加粗」——把字形向外描边
+   扩张来冒充更重的字重，笔画密集的汉字会互相粘连，看上去又粗又糊。
+   而这段 CSS 只在数值**偏低**时生效（正是"疲劳 100% 快撑不住了"那类提示），
+   所以用户最容易注意到糊字的地方恰好就是这里。
+   700 是真实存在的字重，强调效果保留，糊字消失。 */
 .stat-row.stat-warn .stat-value {
   color: var(--danger) !important;
-  font-weight: 800 !important;
+  font-weight: 700 !important;
 }
 
 /* 侧栏严重警告：闪烁 */
@@ -391,7 +406,7 @@ body {
 }
 .stat-row.stat-severe .stat-value {
   color: var(--danger) !important;
-  font-weight: 900 !important;
+  font-weight: 700 !important;
 }
 @keyframes stat-warn-glow {
   0%, 100% { box-shadow: 0 0 6px rgba(196, 85, 61, 0.25); }
@@ -5366,7 +5381,7 @@ body {
 }
 .world-news-title {
   font-size: 22px;
-  font-weight: 800;
+  font-weight: 700; /* 同 .stat-value：中文无 800 档，800 只会被伪加粗成糊字 */
   color: var(--text-primary);
   letter-spacing: 1px;
   font-family: var(--font-sans);

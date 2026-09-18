@@ -204,3 +204,407 @@
     transition: none;
   }
 }
+
+/* ══════════════════════════════════════════════════════════════════════════════
+   3D-first 外壳 + HUD（src/app/3d/shell.js + hud.js）
+
+   设计取向：3D 是主视图，UI 浮在上面且**尽量不占视野**。
+   配色取自 3D 场景自身的色：日落主光偏暖（#d8caa8）、天空偏冷灰绿（#59615a）。
+   所以 HUD 底色用冷灰绿半透明、强调色用暖琥珀 —— 与场景同源，不打架。
+
+   关键约束：`.s3h` 整体 pointer-events:none，只有真正可点的控件恢复 auto。
+   否则 HUD 会挡掉画布的拖拽转视角，手感直接废掉。
+   ══════════════════════════════════════════════════════════════════════════════ */
+
+.s3s3d {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: #59615a;
+}
+.s3s3d-stage {
+  position: absolute;
+  inset: 0;
+}
+.s3s3d-stage canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  cursor: grab;
+}
+.s3s3d-stage canvas.is-dragging,
+.s3s3d-stage.is-dragging canvas {
+  cursor: grabbing;
+}
+
+.s3h {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  font-family: inherit;
+  color: #e8e4d8;
+  --s3h-ok: #7fc08a;
+  --s3h-warn: #d8a95a;
+  --s3h-bad: #d4776a;
+  --s3h-amber: #d8b45a;
+  user-select: none;
+
+  /* HUD 是「深色底 + 浅色字」，两个渲染坑必须一起关掉，否则字会显粗、发虚：
+     ① 次像素抗锯齿（subpixel AA）在深底浅字上会把字形边缘染上彩色并加厚，
+        看着像糊了一层；antialiased 改走灰度抗锯齿，边缘回归干净。
+     ② 中文没有 800/900 字重，任何 ≥800 的声明都会被浏览器「合成加粗」
+        （向外描边扩张），汉字笔画密，一扩张就粘成一团。这里全局禁止合成，
+        让字重回落到真实存在的档位。 */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  font-synthesis-weight: none;
+}
+
+/* ★ 必须显式处理 [hidden]。
+   本节里给 .s3h-prompt / .s3h-map 等写了 display:flex，而 flex 会**覆盖**浏览器
+   对 [hidden] 的默认 display:none —— 于是"隐藏"的全屏遮罩仍在命中测试里，
+   把画布上的拖拽转视角、以及所有点击全部吃掉，且不报任何错。
+   这个坑排查了很久：表现是"拖拽没反应 / 点按钮没反应"，
+   实际元凶是一个看不见的层。详见 memory/ 里本次记录。 */
+.s3h-prompt[hidden],
+.s3h-map[hidden],
+.s3h-debt[hidden] {
+  display: none;
+}
+
+/* ── 顶栏：时间 / 地点 / 钱 ─────────────────────────────────────────────── */
+.s3h-top {
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 10px 16px;
+  background: linear-gradient(180deg, rgba(16, 19, 17, 0.62), rgba(16, 19, 17, 0));
+  font-size: 13px;
+}
+.s3h-clock { flex: 0 0 auto; display: flex; align-items: baseline; gap: 6px; }
+.s3h-day { font-weight: 600; letter-spacing: 0.02em; }
+.s3h-sep { opacity: 0.4; }
+.s3h-slot { color: #cfc9b8; }
+.s3h-weather { color: #b9c2c8; }
+
+.s3h-place {
+  flex: 1 1 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: #f0ecdf;
+  text-shadow: 0 1px 6px rgba(0, 0, 0, 0.55);
+}
+.s3h-place-name { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+.s3h-purse { flex: 0 0 auto; display: flex; align-items: baseline; gap: 10px; }
+.s3h-cash {
+  font-variant-numeric: tabular-nums;
+  font-size: 15px;
+  font-weight: 600;
+  color: #e8d9a8;
+}
+.s3h-debt { font-size: 12px; color: var(--s3h-bad); }
+
+/* ── 右侧需求条 ────────────────────────────────────────────────────────── */
+.s3h-vitals {
+  position: absolute;
+  right: 14px;
+  top: 96px;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  padding: 10px 11px;
+  border-radius: 10px;
+  background: rgba(16, 19, 17, 0.5);
+  border: 1px solid rgba(232, 228, 216, 0.1);
+  backdrop-filter: blur(3px);
+  opacity: 0.9;
+  transition: opacity 0.2s ease;
+}
+.s3h-vitals:hover { opacity: 1; }
+.s3h-vital { display: flex; align-items: center; gap: 7px; font-size: 11px; }
+.s3h-vital-icon { width: 15px; text-align: center; }
+.s3h-vital-bar {
+  position: relative;
+  width: 58px; height: 5px;
+  border-radius: 3px;
+  background: rgba(232, 228, 216, 0.14);
+  overflow: hidden;
+}
+.s3h-vital-bar > i {
+  display: block; height: 100%; width: 0;
+  border-radius: 3px;
+  transition: width 0.35s ease;
+}
+.s3h-vital-bar > i[data-tone="ok"] { background: var(--s3h-ok); }
+.s3h-vital-bar > i[data-tone="warn"] { background: var(--s3h-warn); }
+.s3h-vital-bar > i[data-tone="bad"] { background: var(--s3h-bad); }
+.s3h-vital-num {
+  width: 20px; text-align: right;
+  font-variant-numeric: tabular-nums;
+  color: #bdb7a6;
+}
+.s3h-vital[data-tone="bad"] .s3h-vital-num { color: var(--s3h-bad); font-weight: 600; }
+
+/* ── 行动力：压在左下，显眼但不挡路 ─────────────────────────────────────── */
+.s3h-ap {
+  position: absolute;
+  left: 16px; bottom: 20px;
+  width: 168px;
+  padding: 8px 11px;
+  border-radius: 10px;
+  background: rgba(16, 19, 17, 0.5);
+  border: 1px solid rgba(232, 228, 216, 0.1);
+  backdrop-filter: blur(3px);
+}
+.s3h-ap-head {
+  display: flex; justify-content: space-between;
+  font-size: 11px; color: #bdb7a6; margin-bottom: 5px;
+}
+.s3h-ap-head [data-f="apText"] { font-variant-numeric: tabular-nums; }
+.s3h-ap-track {
+  height: 6px; border-radius: 3px;
+  background: rgba(232, 228, 216, 0.14);
+  overflow: hidden;
+}
+.s3h-ap-track > i {
+  display: block; height: 100%; width: 0;
+  background: var(--s3h-amber);
+  transition: width 0.35s ease;
+}
+.s3h-ap-track > i[data-tone="bad"] { background: var(--s3h-bad); }
+
+/* ── E 交互提示：屏幕中下，出现时轻微上浮 ───────────────────────────────── */
+.s3h-prompt {
+  position: absolute;
+  left: 50%; bottom: 92px;
+  transform: translateX(-50%);
+  display: flex; align-items: center; gap: 9px;
+  padding: 8px 18px;
+  border-radius: 999px;
+  background: rgba(16, 19, 17, 0.82);
+  border: 1px solid rgba(216, 180, 90, 0.45);
+  font-size: 14px;
+  white-space: nowrap;
+  box-shadow: 0 6px 22px rgba(0, 0, 0, 0.45);
+  animation: s3h-rise 0.16s ease-out;
+}
+.s3h-prompt kbd {
+  display: inline-block; min-width: 19px; text-align: center;
+  padding: 1px 6px; font-size: 11px;
+  background: rgba(230, 226, 214, 0.16);
+  border: 1px solid rgba(230, 226, 214, 0.3);
+  border-radius: 4px;
+}
+.s3h-prompt em { font-style: normal; font-size: 12px; color: var(--s3h-warn); }
+@keyframes s3h-rise {
+  from { opacity: 0; transform: translate(-50%, 6px); }
+  to   { opacity: 1; transform: translate(-50%, 0); }
+}
+
+/* ── 行动托盘：默认收起成一条，展开才占地方 ─────────────────────────────── */
+.s3h-tray {
+  position: absolute;
+  right: 14px; bottom: 20px;
+  width: 300px;
+  max-height: 46vh;
+  display: flex; flex-direction: column;
+  border-radius: 10px;
+  background: rgba(16, 19, 17, 0.62);
+  border: 1px solid rgba(232, 228, 216, 0.12);
+  backdrop-filter: blur(4px);
+  pointer-events: auto;
+  overflow: hidden;
+  transition: max-height 0.22s ease;
+}
+.s3h-tray:not(.is-open) .s3h-tray-body { display: none; }
+.s3h-tray:not(.is-open) { max-height: 38px; }
+.s3h-tray-head {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 9px 12px;
+  cursor: pointer;
+}
+.s3h-tray-title { font-size: 12px; color: #cfc9b8; letter-spacing: 0.03em; }
+.s3h-tray-toggle {
+  font: inherit; font-size: 11px;
+  padding: 2px 9px;
+  color: #d8d2c0;
+  background: rgba(232, 228, 216, 0.1);
+  border: 1px solid rgba(232, 228, 216, 0.18);
+  border-radius: 5px;
+  cursor: pointer;
+}
+.s3h-tray-toggle:hover { background: rgba(232, 228, 216, 0.18); }
+.s3h-tray-body { overflow-y: auto; padding: 0 8px 8px; }
+
+.s3h-act {
+  display: flex; align-items: center; gap: 9px;
+  width: 100%;
+  padding: 8px 9px;
+  margin-bottom: 4px;
+  text-align: left;
+  font: inherit; font-size: 12px;
+  color: #e8e4d8;
+  background: rgba(232, 228, 216, 0.05);
+  border: 1px solid transparent;
+  border-radius: 7px;
+  cursor: pointer;
+  transition: background 0.14s ease, border-color 0.14s ease;
+}
+.s3h-act:hover:not(.is-off) {
+  background: rgba(216, 180, 90, 0.14);
+  border-color: rgba(216, 180, 90, 0.38);
+}
+.s3h-act.is-off { opacity: 0.42; cursor: not-allowed; }
+.s3h-act-icon { flex: 0 0 auto; width: 18px; text-align: center; }
+.s3h-act-main { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
+.s3h-act-name { font-weight: 600; }
+.s3h-act-desc {
+  font-size: 11px; color: #a9a394;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.s3h-act-reason { font-size: 11px; color: var(--s3h-warn); }
+.s3h-chip {
+  flex: 0 0 auto;
+  font-size: 10px; padding: 1px 6px;
+  color: #c9c3b2;
+  background: rgba(232, 228, 216, 0.1);
+  border-radius: 4px;
+}
+.s3h-cost {
+  flex: 0 0 auto;
+  font-size: 11px; font-variant-numeric: tabular-nums;
+  color: #e8d9a8;
+}
+.s3h-empty { padding: 12px 10px; font-size: 12px; color: #a9a394; text-align: center; }
+
+/* ── 按键说明：最底部一条，压暗到几乎不打扰 ─────────────────────────────── */
+.s3h-keys {
+  position: absolute;
+  left: 50%; bottom: 4px;
+  transform: translateX(-50%);
+  font-size: 11px;
+  color: rgba(232, 228, 216, 0.5);
+  white-space: nowrap;
+}
+.s3h-keys kbd {
+  padding: 0 4px;
+  border: 1px solid rgba(232, 228, 216, 0.25);
+  border-radius: 3px;
+}
+.s3h-keys b { color: rgba(232, 228, 216, 0.75); font-weight: 600; }
+
+/* ── 反馈条 ────────────────────────────────────────────────────────────── */
+.s3h-toast-wrap {
+  position: absolute;
+  left: 50%; top: 62px;
+  transform: translateX(-50%);
+  display: flex; flex-direction: column; gap: 6px; align-items: center;
+}
+.s3h-toast {
+  padding: 7px 16px;
+  border-radius: 8px;
+  font-size: 13px;
+  background: rgba(16, 19, 17, 0.88);
+  border: 1px solid rgba(216, 180, 90, 0.4);
+  box-shadow: 0 8px 26px rgba(0, 0, 0, 0.5);
+  transition: opacity 0.5s ease, transform 0.5s ease;
+}
+.s3h-toast.is-warn { border-color: rgba(216, 169, 90, 0.55); }
+.s3h-toast.is-bad  { border-color: rgba(212, 119, 106, 0.6); color: #f0c8c0; }
+.s3h-toast.is-out { opacity: 0; transform: translateY(-8px); }
+
+/* ── 去处选择（M） ─────────────────────────────────────────────────────── */
+.s3h-map {
+  position: absolute;
+  inset: 0;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(12, 15, 13, 0.6);
+  backdrop-filter: blur(2px);
+  pointer-events: auto;
+}
+.s3h-map-panel {
+  width: min(640px, 88%);
+  max-height: 76%;
+  display: flex; flex-direction: column;
+  border-radius: 12px;
+  background: rgba(22, 26, 23, 0.96);
+  border: 1px solid rgba(232, 228, 216, 0.14);
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.55);
+  overflow: hidden;
+}
+.s3h-map-head {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 12px 16px;
+  font-size: 14px; font-weight: 600;
+  border-bottom: 1px solid rgba(232, 228, 216, 0.1);
+}
+.s3h-map-close {
+  width: 24px; height: 24px;
+  font: inherit; font-size: 12px; line-height: 1;
+  color: #bdb7a6;
+  background: transparent;
+  border: 1px solid rgba(232, 228, 216, 0.18);
+  border-radius: 5px;
+  cursor: pointer;
+}
+.s3h-map-search {
+  margin: 10px 16px 6px;
+  padding: 7px 11px;
+  font: inherit; font-size: 13px;
+  color: #e8e4d8;
+  background: rgba(232, 228, 216, 0.07);
+  border: 1px solid rgba(232, 228, 216, 0.16);
+  border-radius: 7px;
+  outline: none;
+}
+.s3h-map-search:focus { border-color: rgba(216, 180, 90, 0.5); }
+.s3h-map-list {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 6px;
+  padding: 8px 16px 16px;
+}
+.s3h-loc {
+  display: flex; align-items: center; gap: 7px;
+  padding: 9px 11px;
+  font: inherit; font-size: 12.5px;
+  text-align: left;
+  color: #e8e4d8;
+  background: rgba(232, 228, 216, 0.05);
+  border: 1px solid transparent;
+  border-radius: 7px;
+  cursor: pointer;
+}
+.s3h-loc:hover {
+  background: rgba(216, 180, 90, 0.14);
+  border-color: rgba(216, 180, 90, 0.38);
+}
+
+/* ── 窄屏：允许 HUD 收缩，别把 3D 挤没了 ────────────────────────────────── */
+@media (max-width: 720px) {
+  .s3h-vitals { top: 84px; right: 8px; padding: 7px 8px; }
+  .s3h-vital-bar { width: 42px; }
+  .s3h-tray { right: 8px; bottom: 16px; width: min(300px, 66vw); }
+  .s3h-ap { left: 8px; bottom: 16px; width: 130px; }
+  .s3h-keys { display: none; }
+  .s3h-place { font-size: 13px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .s3h-prompt { animation: none; }
+  .s3h-vital-bar > i,
+  .s3h-ap-track > i,
+  .s3h-tray { transition: none; }
+}
+

@@ -16,7 +16,9 @@ const fs = require("fs");
 const path = require("path");
 const { ensureServer, closeServer } = require("./lib/serve.cjs");
 
-const DIR = path.resolve(__dirname, "..", "dev", "_3dtest", "shots-ingame");
+const DIR = process.argv[2]
+  ? path.resolve(process.argv[2])
+  : path.resolve(__dirname, "..", "dev", "_3dtest", "shots-ingame");
 const PORT = 8961;
 
 (async () => {

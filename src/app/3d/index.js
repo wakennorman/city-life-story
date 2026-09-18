@@ -10,8 +10,10 @@
  */
 
 import { createGame3D } from './bridge.js';
+import { create3DShell } from './shell.js';
+import { createHUD } from './hud.js';
 import gamedata from './gamedata.json';
 
-export { createGame3D, gamedata };
+export { createGame3D, create3DShell, createHUD, gamedata };
 export { buildLocation, SPECS, LAYOUT_KIND } from './world.js';
 export { palette } from './palette.js';

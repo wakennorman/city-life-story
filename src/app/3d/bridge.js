@@ -38,6 +38,10 @@ const TONE = {
   exposure: 1.3,
 };
 
+/** 默认机位（IsoCamera 构造值）。双击回正时回到这里。 */
+const DEFAULT_YAW = 0.38;
+const DEFAULT_PITCH = 0.76;
+
 /**
  * @param {object} opts
  * @param {HTMLElement} opts.container  承载 canvas 的容器
@@ -154,6 +158,80 @@ export function createGame3D(opts) {
     window.addEventListener('keydown', onKeyDown);
     window.addEventListener('keyup', onKeyUp);
     window.addEventListener('blur', onBlur);
+  }
+
+  /* ── 鼠标/触摸拖拽转视角 ────────────────────────────────────────────────
+     原型的相机是"固定视角"（《大多数》的取向：方位永远一致，不迷失）。
+     但固定视角在 3D 里会让人失去"我在看一个三维空间"的实感 ——
+     所以补上自由旋转，同时保留一个"回正"入口（双击）。
+     实现要点：
+       · 用 Pointer Events 统一鼠标/触摸/笔，一套代码通吃。
+       · setPointerCapture：拖到窗口外也不会丢事件（否则手感会"断"）。
+       · 拖拽阈值 4px 内不旋转 —— 否则"想点交互点"会顺手把视角拧歪。
+       · pitch 夹在 0.25~1.35 rad：再小会穿到地平线下，再大变成垂直俯视。
+     ─────────────────────────────────────────────────────────────────────── */
+  const DRAG_THRESHOLD = 4;
+  const PITCH_MIN = 0.25, PITCH_MAX = 1.35;
+  let dragging = false, dragId = null, dragMoved = 0;
+  let lastX = 0, lastY = 0;
+  let tapCandidate = null;   // 未超过阈值就松手 → 视为"点击"，用于点选交互点
+
+  function onPointerDown(e) {
+    if (e.button !== 0 && e.pointerType === 'mouse') return;
+    dragging = true; dragId = e.pointerId; dragMoved = 0;
+    lastX = e.clientX; lastY = e.clientY;
+    tapCandidate = { x: e.clientX, y: e.clientY };
+    container.setPointerCapture?.(e.pointerId);
+    container.classList.add('is-dragging');
+  }
+  function onPointerMove(e) {
+    if (!dragging || e.pointerId !== dragId) return;
+    const dx = e.clientX - lastX, dy = e.clientY - lastY;
+    dragMoved += Math.abs(dx) + Math.abs(dy);
+    lastX = e.clientX; lastY = e.clientY;
+    if (dragMoved < DRAG_THRESHOLD) return;
+    tapCandidate = null;
+    cam.yaw -= dx * 0.006;
+    cam.pitch = Math.max(PITCH_MIN, Math.min(PITCH_MAX, cam.pitch + dy * 0.004));
+  }
+  function onPointerUp(e) {
+    if (e.pointerId !== dragId) return;
+    dragging = false; dragId = null;
+    container.releasePointerCapture?.(e.pointerId);
+    container.classList.remove('is-dragging');
+    if (tapCandidate) {
+      // 未拖动 → 当作点击：射线选中附近的交互点并触发（点选也能交互，不必非得走过去）
+      const hit = pickHotspotAt(tapCandidate.x, tapCandidate.y);
+      tapCandidate = null;
+      if (hit) { focused = hit; opts.onInteract?.(hit); }
+    }
+  }
+  function onDblClick() { cam.yaw = DEFAULT_YAW; cam.pitch = DEFAULT_PITCH; }
+
+  if (wantsKeyboard) {
+    container.addEventListener('pointerdown', onPointerDown);
+    container.addEventListener('pointermove', onPointerMove);
+    container.addEventListener('pointerup', onPointerUp);
+    container.addEventListener('pointercancel', onPointerUp);
+    container.addEventListener('dblclick', onDblClick);
+  }
+
+  /** 屏幕坐标 → 最近的交互点（屏幕空间距离阈值，省掉一条射线求交） */
+  const _v = new THREE.Vector3();
+  function pickHotspotAt(clientX, clientY) {
+    if (!world) return null;
+    const r = container.getBoundingClientRect();
+    const px = clientX - r.left, py = clientY - r.top;
+    let best = null, bestD = 46;   // 46px 命中半径：手感上"差不多点到了"就行
+    for (const h of world.hotspots) {
+      _v.set(h.x, 1.4, h.z).project(camera);
+      if (_v.z > 1) continue;      // 在相机背后
+      const sx = (_v.x * 0.5 + 0.5) * r.width;
+      const sy = (-_v.y * 0.5 + 0.5) * r.height;
+      const d = Math.hypot(sx - px, sy - py);
+      if (d < bestD) { bestD = d; best = h; }
+    }
+    return best;
   }
 
   /* ── 地点加载 ───────────────────────────────────────────────────────── */
@@ -304,6 +382,12 @@ export function createGame3D(opts) {
       window.removeEventListener('keydown', onKeyDown);
       window.removeEventListener('keyup', onKeyUp);
       window.removeEventListener('blur', onBlur);
+      container.removeEventListener('pointerdown', onPointerDown);
+      container.removeEventListener('pointermove', onPointerMove);
+      container.removeEventListener('pointerup', onPointerUp);
+      container.removeEventListener('pointercancel', onPointerUp);
+      container.removeEventListener('dblclick', onDblClick);
+      container.classList.remove('is-dragging');
     }
     renderer.dispose();
     renderer.domElement.remove();
@@ -318,6 +402,10 @@ export function createGame3D(opts) {
     interact,
     interactHotspot,
     zoom: (d) => cam.zoom(d),
+    /** 视角回正（默认机位）。双击画布也会触发。 */
+    resetView() { cam.yaw = DEFAULT_YAW; cam.pitch = DEFAULT_PITCH; cam.apply(cam.cur); },
+    /** 只读当前机位，供 UI 显示或测试断言 */
+    get view() { return { yaw: cam.yaw, pitch: cam.pitch, dist: cam.dist }; },
     /* ── 只读状态 ── */
     get locationId() { return currentId; },
     get hotspot() { return focused; },
@@ -349,6 +437,7 @@ function unavailableHandle() {
   return {
     loadLocation: () => null, start: noop, stop: noop, dispose: noop, resize: noop,
     interact: noop, interactHotspot: noop, zoom: noop, teleport: noop, key: noop,
+    resetView: noop, view: { yaw: 0, pitch: 0, dist: 0 },
     locationId: null, hotspot: null, hotspots: [], playerPos: { x: 0, z: 0 },
     stats: { fps: 0, calls: 0, triangles: 0, build: null },
     scene: null, camera: null,

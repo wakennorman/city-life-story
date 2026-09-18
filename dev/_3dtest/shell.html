@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>城市浮生记 · 3D-first 外壳预览</title>
+<style>
+  html, body { margin: 0; height: 100%; overflow: hidden; background: #59615a;
+    font-family: "PingFang SC", "Microsoft YaHei", "Noto Sans CJK SC", sans-serif; }
+  #host { position: fixed; inset: 0; }
+</style>
+<link rel="stylesheet" href="/src/css/scene3d.css" />
+</head>
+<body>
+<div id="host"></div>
+<script src="./bundle-probe.js"></script>
+<script>
+/* 3D-first 外壳预览
+   目的：把"开局就是 3D + HUD"的目标形态做成可看的实物，便于在投入改造前先确认方向。
+   状态是 mock，但**行动列表取自真实 gamedata**（29 地点的 jobs/amenities/actions/…），
+   所以 HUD 上出现的名字、图标、成本都是游戏里真实存在的东西，不是编的。 */
+(function () {
+  const S3 = window.Scene3D;
+  const host = document.getElementById('host');
+  const g = S3.gamedata;
+
+  /* ── 与运行时桥接一致的：热点 kind → 展示用的行动条目 ── */
+  const KIND_CN = {
+    work: '工作', service: '服务', extra: '行动',
+    risk: '违法', trade: '买卖', action: '行动', look: '看看',
+  };
+
+  function actionsOf(locId) {
+    const loc = g.locations[locId];
+    if (!loc) return [];
+    const out = [];
+    for (const j of loc.jobs || []) {
+      const pay = j.payHint ? `¥${Math.round(j.payHint.min)}–${Math.round(j.payHint.max)}` : '';
+      out.push({ id: 'job_' + j.id, icon: j.icon || '💼', name: j.name,
+        desc: (j.desc || '').slice(0, 40), cost: pay, kind: KIND_CN.work });
+    }
+    for (const a of loc.amenities || []) {
+      out.push({ id: 'amenity_' + a.id, icon: a.icon || '🏪', name: a.name,
+        desc: (a.desc || '').slice(0, 40), cost: a.cost ? `¥${a.cost}` : '', kind: KIND_CN.service });
+    }
+    for (const a of (loc.actionsExtra || []).concat(loc.actions || [])) {
+      out.push({ id: a.id, icon: a.icon || '•', name: a.name,
+        desc: (a.desc || '').slice(0, 40), cost: a.apCost ? `AP${a.apCost}` : '', kind: KIND_CN.extra });
+    }
+    for (const a of loc.illegal || []) {
+      const rg = a.rewardRange;
+      out.push({ id: a.id, icon: a.icon || '⚠️', name: a.name,
+        desc: (a.desc || '').slice(0, 40), cost: rg ? `¥${rg[0]}–${rg[1]}` : '', kind: KIND_CN.risk });
+    }
+    if ((loc.buy || []).length || (loc.sell || []).length) {
+      out.push({ id: locId + '_trade', icon: '🧺', name: '摆摊买卖',
+        desc: '低买高卖，看行情', cost: '', kind: KIND_CN.trade });
+    }
+    if (!out.length) out.push({ id: locId + '_look', icon: '👀', name: '四处看看',
+      desc: '这里暂时没有可做的事', cost: '', kind: KIND_CN.look, disabled: true, reason: '此地暂无内容' });
+    return out;
+  }
+
+  /* ── mock 状态：数值取自游戏默认开局（src/js/core/state.js 的黑暗开局）── */
+  let day = 1, slot = '上午';
+  const needs = { hunger: 25, fatigue: 50, hygiene: 30, happiness: 20 };
+  const status = { health: 70 };
+  let ap = 100, cash = 300;
+  const SLOTS = ['上午', '下午', '傍晚', '夜间'];
+
+  const locList = Object.values(g.locations).map((l) => ({
+    id: l.id, name: l.name, icon: l.icon, desc: l.desc,
+  }));
+
+  let curId = 'slum';
+
+  const shell = S3.create3DShell({
+    container: host,
+    data: g,
+
+    readHUD() {
+      // 地点直接问外壳（travel 后它自己会更新），不要另存一份 state 再手动同步 ——
+      // 两份状态必然不同步，这里就踩过一次。
+      const id = shell.locationId || curId;
+      const loc = g.locations[id] || {};
+      return {
+        day, slot, weather: '🌤 多云',
+        cash, debt: 0,
+        locIcon: loc.icon, locName: loc.name,
+        needs, status,
+        ap: { cur: ap, max: 100 },
+      };
+    },
+
+    // ★ 必须问外壳（shell.locationId），不能用本地 curId —— travel 之后
+    //   外壳已经切了地点，本地 curId 不会跟着变，行动托盘就会停留在旧地点的
+    //   行动上（点下去执行的是别处的事）。这个 bug 在 13 项验证里没被抓到，
+    //   因为那条断言只查了地点名，没查行动列表。readHUD 早先也踩过同一个坑。
+    readActions: () => actionsOf(shell.locationId || curId),
+    readLocations: () => locList,
+
+    onAction(item) {
+      if (window.__calls) window.__calls.action++;
+      // 预览里不接真实游戏逻辑，只演示"点下去会有反馈"这条链路
+      if (item.kind === KIND_CN.look) return { ok: false, reason: item.reason || '此时做不了' };
+      const cost = 12;
+      ap = Math.max(0, ap - cost);
+      if (slot !== '夜间' && Math.random() < 0.4) slot = SLOTS[(SLOTS.indexOf(slot) + 1) % SLOTS.length];
+      if (item.kind === KIND_CN.work) cash += 45;
+      if (item.kind === KIND_CN.service) cash = Math.max(0, cash - 20);
+      needs.hunger = Math.max(0, needs.hunger - 3);
+      needs.fatigue = Math.min(100, needs.fatigue + 5);
+      needs.happiness = Math.min(100, needs.happiness + 6);
+      setTimeout(() => shell.refresh(), 0);
+      return { ok: true, message: `已执行：${item.name}（预览不接真实结算）` };
+    },
+
+    onTravel(id) {
+      if (window.__calls) window.__calls.travel++;
+      return { ok: true };
+    },
+  });
+
+  shell.start();
+  shell.loadLocation(curId);
+
+  /* 演示：按空格推进一个时段，让 HUD 的时间/需求动起来 */
+  window.addEventListener('keydown', (e) => {
+    if (e.code === 'Space') {
+      e.preventDefault();
+      slot = SLOTS[(SLOTS.indexOf(slot) + 1) % SLOTS.length];
+      if (slot === '上午') { day++; ap = 100; needs.fatigue = Math.max(0, needs.fatigue - 30); }
+      needs.hunger = Math.max(0, needs.hunger - 8);
+      shell.refresh();
+    }
+  });
+
+  window.__shellReady = true;
+  window.__shell = shell;
+  // 诊断计数：验证脚本据此判断回调到底有没有被触发（比"看状态变没变"更直接）
+  window.__calls = { action: 0, travel: 0 };
+  window.__peek = () => ({ action: window.__calls.action, travel: window.__calls.travel, ap, curId });
+})();
+</script>
+</body>
+</html>
