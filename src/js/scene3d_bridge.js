@@ -1,20 +1,27 @@
 /**
- * scene3d 运行时桥接（旧管线侧）
+ * 3D 场景层 · 运行时桥接（旧管线侧）
  *
- * 职责：把 src/app/scene3d 的 3D 能力接到现有游戏上，不改动任何既有逻辑。
+ * 职责：把 src/app/3d 的 3D 能力接到现有游戏上，不改动任何既有逻辑。
  *
  * 设计要点：
- *   1. **零重复逻辑** —— 热点不自己判条件，直接用 getAvailableActions(state)
- *      返回的行动对象，点击调它的 handler()。可用性、AP、条件判断全部复用原实现。
+ *   1. **零重复逻辑** —— 3D 场景的几何与热点位置来自 gamedata（数据桥从游戏本体抽取），
+ *      但点击执行**必须**走 getAvailableActions(state) 返回的真实行动对象，
+ *      调它的 handler()。可用性、AP、条件、扣费全部复用原实现，3D 层不判任何条件。
  *   2. **完全可摘除** —— 全部行为挂在 window.Scene3DBridge 上，删掉本文件与
  *      两个 script 标签即回到纯 2D，不动一行既有代码。
  *   3. **惰性** —— 首次进入游戏才建 WebGL 上下文；离开地点视图即销毁。
  *
+ * 热点 id → 游戏行动 id 的映射（2026-09-18 逐一核对源码得出）：
+ *   work    gamedata jobs[].id        → "job_"     + id      (main.js:2544)
+ *   service gamedata amenities[].id   → "amenity_" + id      (actions_extra.js:1803)
+ *   extra   gamedata actionsExtra[].id→ id 原样              (actions.js:291)
+ *   risk    gamedata illegal[].id     → id 原样              (illegal_actions.js:275)
+ *   trade   "<loc>_trade"             → "item_shop_" + loc   (main.js:2842)
+ *   look    "<loc>_look"              → 无对应行动（纯环境，只展示）
+ *
  * 依赖（均为旧运行时已有的全局）：
- *   window.Scene3D          ← src/js/scene3d.bundle.js
- *   window.LOCATIONS        ← js/data/locations.js
- *   window.getAvailableActions / getJobById ← js/main.js / js/data/jobs.js
- *   window.StateManager     ← 状态管理
+ *   window.Scene3D          ← src/js/scene3d.bundle.js（含内联 gamedata）
+ *   window.getAvailableActions / StateManager ← js/main.js
  */
 
 (function () {
@@ -23,9 +30,10 @@
   var MINI_ID = "scene3d-mini";
   var OVERLAY_ID = "scene3d-overlay";
 
-  var mini = null; // 侧栏微缩景句柄
+  var mini = null;          // 侧栏微缩景句柄
   var miniHost = null;
-  var overlayHandle = null;
+  var overlay3d = null;     // 全屏全景句柄
+  var overlayEl = null;
   var lastLocId = null;
   var overlayOpen = false;
 
@@ -34,10 +42,11 @@
   }
 
   function available() {
-    return !!(core() && core().createScene3D);
+    var c = core();
+    return !!(c && typeof c.createGame3D === "function" && c.gamedata && c.gamedata.locations);
   }
 
-  /* ─────────── 数据接入 ─────────── */
+  /* ─────────── 游戏数据接入 ─────────── */
 
   function getState() {
     if (
@@ -58,80 +67,68 @@
     return st && st.trade ? st.trade.currentLocation : null;
   }
 
-  function getLoc(id) {
-    if (!id) return null;
-    // 优先命名空间；locations.js 顶层是 const，不会挂到 window 上
-    var bag =
-      (window.CLS && window.CLS.data && window.CLS.data.LOCATIONS) ||
-      (typeof LOCATIONS !== "undefined" ? LOCATIONS : null) ||
-      window.LOCATIONS ||
-      null;
-    if (!bag) return null;
-    return (bag[id] || (window.LOCATIONS && window.LOCATIONS[id])) || null;
+  function locName(id) {
+    var c = core();
+    var loc = c && c.gamedata && c.gamedata.locations[id];
+    return loc ? (loc.icon ? loc.icon + " " + loc.name : loc.name) : id;
+  }
+
+  function rawActions() {
+    var st = getState();
+    if (!st || typeof window.getAvailableActions !== "function") return null;
+    try {
+      return window.getAvailableActions(st);
+    } catch (e) {
+      return null;
+    }
+  }
+
+  /** 按 id 找行动对象（不判可用性，供状态展示） */
+  function findAction(actionId) {
+    var raw = rawActions();
+    if (!raw) return null;
+    for (var i = 0; i < raw.length; i++) {
+      if (raw[i] && raw[i].id === actionId) return raw[i];
+    }
+    return null;
   }
 
   /**
-   * 取当前地点可执行的行动。
-   * 直接复用主游戏的 getAvailableActions —— 不复制任何条件判断。
-   * 返回 { enabled: [...], disabledIds: [...] }
+   * 触发行动 —— 走原 action.handler()，与点击行动卡片完全同一条路径。
+   * @returns {{ok:boolean, reason?:string}}
    */
-  function currentActions() {
-    var st = getState();
-    if (!st || typeof window.getAvailableActions !== "function") {
-      return { list: [], disabled: [] };
+  function invokeAction(actionId) {
+    var a = findAction(actionId);
+    if (!a) return { ok: false, reason: "当前阶段/地点下没有这个行动" };
+    if (typeof a.handler !== "function") return { ok: false, reason: "该行动没有可执行处理器" };
+    if (a.disabled) {
+      return { ok: false, reason: typeof a.reqFail === "string" && a.reqFail ? a.reqFail : "条件不满足" };
     }
-    var raw;
     try {
-      raw = window.getAvailableActions(st);
+      a.handler();
+      return { ok: true };
     } catch (e) {
-      return { list: [], disabled: [] };
+      return { ok: false, reason: "执行出错：" + (e && e.message ? e.message : e) };
     }
-    var list = [];
-    var disabled = [];
-    for (var i = 0; i < raw.length; i++) {
-      var a = raw[i];
-      if (!a || !a.id) continue;
-      // 「地点不符」的行动原 UI 也会剔除，这里保持一致
-      if (
-        a.disabled &&
-        typeof a.reqFail === "string" &&
-        a.reqFail.indexOf("地点不符") === 0
-      ) {
-        continue;
-      }
-      // 存储/住房等常驻面板行动不放进 3D 热点，避免喧宾夺主
-      if (
-        a.id.indexOf("housing_") === 0 ||
-        a.id.indexOf("storage_") === 0 ||
-        a.id.indexOf("travel_") === 0
-      ) {
-        continue;
-      }
-      list.push({ id: a.id, name: a.name, apCost: a.apCost || 0 });
-      if (a.disabled) disabled.push(a.id);
-    }
-    return { list: list, disabled: disabled };
   }
 
-  /** 触发行动 —— 走原 action.handler()，与点击按钮完全同一条路径 */
-  function invokeAction(actionId) {
-    var st = getState();
-    if (!st || typeof window.getAvailableActions !== "function") return false;
-    var raw;
-    try {
-      raw = window.getAvailableActions(st);
-    } catch (e) {
-      return false;
+  /**
+   * 热点 → 游戏行动 id。
+   * 返回 null 表示该热点在游戏里没有对应的可执行行动（如 look 类环境点）。
+   */
+  function toGameActionId(h) {
+    if (!h || !h.id) return null;
+    switch (h.kind) {
+      case "work":    return "job_" + h.id;
+      case "service": return "amenity_" + h.id;
+      case "extra":   return h.id;
+      case "risk":    return h.id;
+      case "action":  return h.id;
+      case "trade":   return h.id.slice(0, -"_trade".length) === currentLocId()
+        ? "item_shop_" + currentLocId()
+        : null;
+      default:        return null; // look / 未知
     }
-    for (var i = 0; i < raw.length; i++) {
-      var a = raw[i];
-      if (a && a.id === actionId && typeof a.handler === "function") {
-        if (a.disabled) return false;
-        a.handler();
-        return true;
-      }
-    }
-    return false;
   }
 
   /* ─────────── 侧栏微缩景 ─────────── */
@@ -146,7 +143,7 @@
     miniHost.className = "scene3d-mini";
     miniHost.setAttribute("role", "button");
     miniHost.setAttribute("tabindex", "0");
-    miniHost.title = "点击查看 3D 全景与可执行行动";
+    miniHost.title = "点击进入 3D 全景（可走动探索）";
     anchor.parentNode.insertBefore(miniHost, anchor.nextSibling);
 
     miniHost.addEventListener("click", openOverlay);
@@ -163,89 +160,132 @@
     if (!available()) return;
     var host = ensureMiniHost();
     if (!host) return;
-    var loc = getLoc(locId);
-    if (!loc) return;
+    if (!core().gamedata.locations[locId]) return;
 
     try {
       if (!mini) {
-        mini = core().createScene3D({
+        mini = core().createGame3D({
           container: host,
-          hotspots: false, // 250px 宽度放不下热点
+          data: core().gamedata,
+          mode: "mini", // 不接管键盘：否则在游戏里打字会驱动缩略景里的小人
         });
+        mini.start();
       }
-      mini.show(loc);
+      mini.loadLocation(locId);
+      host.style.display = "";
     } catch (e) {
       // 3D 失败不影响 2D 主流程
       host.style.display = "none";
     }
   }
 
-  /* ─────────── 全屏全景（带热点） ─────────── */
+  /* ─────────── 全屏全景（可走动 + 热点交互） ─────────── */
 
   function buildOverlay() {
-    var el = document.createElement("div");
-    el.id = OVERLAY_ID;
-    el.className = "scene3d-overlay";
-    el.innerHTML =
+    overlayEl = document.createElement("div");
+    overlayEl.id = OVERLAY_ID;
+    overlayEl.className = "scene3d-overlay";
+    overlayEl.innerHTML =
       '<div class="scene3d-overlay__panel">' +
       '<div class="scene3d-overlay__bar">' +
       '<span class="scene3d-overlay__title"></span>' +
-      '<span class="scene3d-overlay__hint">拖拽旋转 · 滚轮缩放 · 双击复位</span>' +
+      '<span class="scene3d-overlay__hint">WASD 走动 · Shift 跑 · 靠近亮点按 E 交互 · 滚轮缩放</span>' +
       '<button type="button" class="scene3d-overlay__close" aria-label="关闭">✕</button>' +
       "</div>" +
-      '<div class="scene3d-overlay__stage"></div>' +
+      '<div class="scene3d-overlay__stage">' +
+      '<div class="scene3d-overlay__prompt" hidden></div>' +
+      '<div class="scene3d-overlay__toast" hidden></div>' +
+      "</div>" +
       "</div>";
-    document.body.appendChild(el);
+    document.body.appendChild(overlayEl);
 
-    el.querySelector(".scene3d-overlay__close").addEventListener("click", closeOverlay);
-    el.addEventListener("click", function (e) {
-      if (e.target === el) closeOverlay();
+    overlayEl.querySelector(".scene3d-overlay__close").addEventListener("click", closeOverlay);
+    overlayEl.addEventListener("click", function (e) {
+      if (e.target === overlayEl) closeOverlay();
     });
     document.addEventListener("keydown", onEsc);
-    return el;
+    return overlayEl;
   }
 
   function onEsc(e) {
     if (e.key === "Escape" && overlayOpen) closeOverlay();
   }
 
+  function setPrompt(h) {
+    if (!overlayEl) return;
+    var el = overlayEl.querySelector(".scene3d-overlay__prompt");
+    if (!el) return;
+    if (!h) { el.hidden = true; return; }
+    var actionId = toGameActionId(h);
+    var a = actionId ? findAction(actionId) : null;
+    var suffix = "";
+    if (actionId && a && a.disabled) {
+      suffix = ' <span class="scene3d-overlay__deny">· ' +
+        (typeof a.reqFail === "string" && a.reqFail ? a.reqFail : "条件不满足") + "</span>";
+    } else if (actionId && !a) {
+      suffix = ' <span class="scene3d-overlay__deny">· 当前不可执行</span>';
+    } else if (!actionId) {
+      suffix = ' <span class="scene3d-overlay__deny">· 无对应行动</span>';
+    }
+    el.innerHTML = "<kbd>E</kbd> " + (h.icon || "") + " " + (h.label || "") + suffix;
+    el.hidden = false;
+  }
+
+  var toastTimer = 0;
+  function toast(msg) {
+    if (!overlayEl) return;
+    var el = overlayEl.querySelector(".scene3d-overlay__toast");
+    if (!el) return;
+    el.textContent = msg;
+    el.hidden = false;
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function () { el.hidden = true; }, 2600);
+  }
+
   function openOverlay() {
     if (!available()) return;
     var locId = currentLocId();
-    var loc = getLoc(locId);
-    if (!loc) return;
+    if (!locId || !core().gamedata.locations[locId]) return;
 
-    var el = document.getElementById(OVERLAY_ID) || buildOverlay();
-    el.querySelector(".scene3d-overlay__title").textContent =
-      loc.icon ? loc.icon + " " + loc.name : loc.name;
-
+    var el = overlayEl || buildOverlay();
+    el.querySelector(".scene3d-overlay__title").textContent = locName(locId);
     var stage = el.querySelector(".scene3d-overlay__stage");
-    var acts = currentActions();
 
-    if (!overlayHandle) {
-      overlayHandle = core().createScene3D({
-        container: stage,
-        hotspots: true,
-        onAction: function (actionId) {
-          var ok = invokeAction(actionId);
-          if (ok) closeOverlay();
-          // handler 内部会触发重渲染；失败则不关闭，让玩家看到状态未变
-        },
-      });
+    try {
+      if (!overlay3d) {
+        overlay3d = core().createGame3D({
+          container: stage,
+          data: core().gamedata,
+          mode: "full",
+          onInteract: function (h) {
+            var actionId = toGameActionId(h);
+            if (!actionId) { toast("这里只是看看，没有可执行的事"); return; }
+            var r = invokeAction(actionId);
+            if (r.ok) {
+              closeOverlay(); // handler 内部已触发重渲染
+            } else {
+              toast("⚠️ " + (h.label || "该行动") + "：" + r.reason);
+            }
+          },
+          onFocus: setPrompt,
+          onError: function (e) { toast("3D 不可用：" + e.message); },
+        });
+        overlay3d.start();
+      }
+      overlay3d.loadLocation(locId);
+    } catch (e) {
+      toast("3D 初始化失败：" + (e && e.message ? e.message : e));
+      return;
     }
-    overlayHandle.show(loc, acts.list);
-    if (acts.disabled.length) overlayHandle.setDisabledActions(acts.disabled);
 
     el.classList.add("is-open");
     overlayOpen = true;
-    setTimeout(function () {
-      if (overlayHandle) overlayHandle.resize();
-    }, 60);
+    setPrompt(null);
+    setTimeout(function () { if (overlay3d) overlay3d.resize(); }, 60);
   }
 
   function closeOverlay() {
-    var el = document.getElementById(OVERLAY_ID);
-    if (el) el.classList.remove("is-open");
+    if (overlayEl) overlayEl.classList.remove("is-open");
     overlayOpen = false;
   }
 
@@ -262,35 +302,45 @@
   }
 
   function disposeAll() {
-    if (mini) {
-      mini.dispose();
-      mini = null;
-    }
-    if (overlayHandle) {
-      overlayHandle.dispose();
-      overlayHandle = null;
-    }
-    var el = document.getElementById(OVERLAY_ID);
-    if (el) el.remove();
+    if (mini) { mini.dispose(); mini = null; }
+    if (overlay3d) { overlay3d.dispose(); overlay3d = null; }
+    if (overlayEl) { overlayEl.remove(); overlayEl = null; }
     document.removeEventListener("keydown", onEsc);
     lastLocId = null;
     overlayOpen = false;
   }
 
   window.Scene3DBridge = {
-    version: "0.1.0",
+    version: "0.2.0",
     available: available,
     sync: sync,
     open: openOverlay,
     close: closeOverlay,
     dispose: disposeAll,
-    /** 供调试：取当前场景描述 */
-    debugSpec: function () {
-      return overlayHandle ? overlayHandle.spec : mini ? mini.spec : null;
+    /* 调试用 —— 3D 层与游戏逻辑的接缝最容易出问题，都留个窥视口 */
+    toGameActionId: toGameActionId,
+    invokeAction: invokeAction,
+    debugMiniStats: function () { return mini ? mini.stats : null; },
+    debugOverlayStats: function () { return overlay3d ? overlay3d.stats : null; },
+    debugMiniLoc: function () { return mini ? mini.locationId : null; },
+    debugOverlayLoc: function () { return overlay3d ? overlay3d.locationId : null; },
+    debugOverlayPos: function () { return overlay3d ? overlay3d.playerPos : null; },
+    debugFocused: function () {
+      if (!overlay3d || !overlay3d.hotspot) return null;
+      return { kind: overlay3d.hotspot.kind, id: overlay3d.hotspot.id, label: overlay3d.hotspot.label };
     },
-    /** 供调试：专取侧栏微缩景的场景（区别于全景） */
-    debugMiniSpec: function () {
-      return mini ? mini.spec : null;
+    /** 把全景角色瞬移到某热点旁（测试用：绕开"走过去"的不确定性，专测交互链路） */
+    debugTeleportToHotspot: function (kind, id) {
+      if (!overlay3d) return null;
+      var hit = null;
+      for (var i = 0; i < overlay3d.hotspots.length; i++) {
+        var h = overlay3d.hotspots[i];
+        if (h.kind === kind && (id == null || h.id === id)) { hit = h; break; }
+      }
+      if (!hit) return null;
+      overlay3d.teleport(hit.x, hit.z + 2.4);
+      return { kind: hit.kind, id: hit.id, label: hit.label, actionId: toGameActionId(hit) };
     },
+    debugHotspots: function () { return overlay3d ? overlay3d.hotspots.map(function (h) { return h.kind + ":" + h.id; }) : []; },
   };
 })();

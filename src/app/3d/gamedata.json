@@ -1,0 +1,4105 @@
+{
+  "generatedAt": "2026-09-18T07:19:43.319Z",
+  "source": "src/js/data/{locations,location_flavor,jobs,amenities,actions,goods}.js + src/js/phase1/actions_extra.js + src/js/core/illegal_actions.js",
+  "count": 29,
+  "categoryLabels": {
+    "daily": "日用",
+    "food": "食品",
+    "luxury": "奢侈",
+    "clothing": "服装",
+    "electronics": "电子",
+    "scrap": "废品"
+  },
+  "locations": {
+    "slum": {
+      "id": "slum",
+      "name": "城中村",
+      "icon": "🏘️",
+      "desc": "鱼龙混杂的城中村，房租便宜，机会也多。",
+      "type": "residential",
+      "wealthTier": 1,
+      "footfall": 0.6,
+      "specialties": [
+        "scrap_metal",
+        "scrap_paper",
+        "scrap_plastic"
+      ],
+      "specialtyLabels": [
+        "废金属",
+        "废纸板",
+        "废塑料"
+      ],
+      "priceMod": {
+        "water": 0.9,
+        "snacks": 0.85,
+        "noodles": 0.8,
+        "scrap_metal": 1.6,
+        "scrap_paper": 1.5,
+        "scrap_plastic": 1.5,
+        "daily_use": 0.7
+      },
+      "priceModList": [
+        {
+          "key": "water",
+          "value": 0.9,
+          "label": "瓶装水"
+        },
+        {
+          "key": "snacks",
+          "value": 0.85,
+          "label": "零食"
+        },
+        {
+          "key": "noodles",
+          "value": 0.8,
+          "label": "面条"
+        },
+        {
+          "key": "scrap_metal",
+          "value": 1.6,
+          "label": "废金属"
+        },
+        {
+          "key": "scrap_paper",
+          "value": 1.5,
+          "label": "废纸板"
+        },
+        {
+          "key": "scrap_plastic",
+          "value": 1.5,
+          "label": "废塑料"
+        },
+        {
+          "key": "daily_use",
+          "value": 0.7,
+          "label": "日用品"
+        }
+      ],
+      "dailyProbability": 0.4,
+      "flavor": [
+        "🐱 一只花猫从巷道里蹿出来，在你脚边蹭了蹭，咕噜噜地叫着。",
+        "👴 隔壁老李家传来咿咿呀呀的粤语歌声，是那首《月亮代表我的心》。",
+        "👶 楼道里有孩子在追逐打闹，脚步声噔噔作响，大人在远处喊\"慢点跑\"。",
+        "🍜 谁家飘出炒菜香，是葱炒鸡蛋的味道，让人突然觉得有些饿。",
+        "📱 斜对面阿姨对着手机大声视频通话，方言地道，笑声传出去很远。",
+        "🚲 楼道口停了一排共享单车，有两辆已经歪倒成了一堆，没人管。",
+        "☔ 屋顶漏出一道细流，房东说上周修，但已经说了好几周了。",
+        "🌃 夜里有人在走廊抽烟，橙红的烟头在黑暗里一明一灭。"
+      ],
+      "jobs": [
+        {
+          "id": "waste_recycling",
+          "name": "废品回收",
+          "icon": "♻️",
+          "desc": "走街串巷收废纸板、废金属、废塑料，转手卖给回收站。脏活累活但门槛最低。",
+          "startupCost": 0,
+          "risk": {
+            "injury": 0.01,
+            "illness": 0.005
+          },
+          "payHint": {
+            "min": 20,
+            "max": 55,
+            "text": "payCalc(state) {\n      // v3.53 修复：下限从¥20提升到¥25，避免\"升级住房→入不敷出\"死锁\n      const base = Random.float(25, 55);\n      const multi = 1 + (state.skills.sales && state.skills.sales.level || 0) * 0.005;\n      // v3.8 P1修复：zhouScrap"
+          }
+        },
+        {
+          "id": "old_zhou_recycling",
+          "name": "老周介绍·正规回收站",
+          "icon": "♻️",
+          "desc": "老周引荐你去了城西正规废品回收站，分类更细、称重公道、收入翻倍。",
+          "startupCost": 0,
+          "risk": {
+            "injury": 0.02
+          },
+          "payHint": {
+            "min": 30,
+            "max": 55,
+            "text": "payCalc(state) {\n      return Math.floor(\n        55 +\n          state.player.physique * 0.6 +\n          (state.skills.sales && state.skills.sales.level || 0) * 0.5 +\n          Random.float(0, 30),\n      );\n    }"
+          }
+        }
+      ],
+      "amenities": [
+        {
+          "id": "slum_canteen",
+          "name": "城中村小食堂",
+          "icon": "🍚",
+          "type": "food",
+          "tier": 1,
+          "cost": 6,
+          "ap": 5,
+          "desc": "6块钱管饱，油大盐重，凑合一顿。",
+          "primary": {
+            "hunger": 30
+          },
+          "junkFood": true,
+          "lateNight": false
+        },
+        {
+          "id": "slum_publicbath",
+          "name": "城中村公共澡堂",
+          "icon": "🛁",
+          "type": "bath",
+          "tier": 1,
+          "cost": 8,
+          "ap": 8,
+          "desc": "热水管够，人多点，但便宜。",
+          "primary": {
+            "hygiene": 35
+          },
+          "junkFood": false,
+          "lateNight": false
+        },
+        {
+          "id": "slum_chesssquare",
+          "name": "城中村棋牌摊",
+          "icon": "♟️",
+          "type": "fun",
+          "tier": 1,
+          "cost": 5,
+          "ap": 10,
+          "desc": "和大爷下两盘象棋，赢了请烟，输了听吹牛。",
+          "primary": {
+            "happiness": 20
+          },
+          "junkFood": false,
+          "lateNight": false
+        },
+        {
+          "id": "slum_napshop",
+          "name": "城中村钟点房",
+          "icon": "🛏️",
+          "type": "rest",
+          "tier": 1,
+          "cost": 10,
+          "ap": 12,
+          "desc": "5块钱一小时，简陋但能躺平。",
+          "primary": {
+            "fatigue": -28
+          },
+          "junkFood": false,
+          "lateNight": false
+        }
+      ],
+      "actions": [],
+      "actionsExtra": [
+        {
+          "id": "internet_bar",
+          "name": "网吧上网",
+          "desc": "花 5 块在网吧上 2 小时网，可以查资料、刷视频、玩游戏。",
+          "icon": "💻",
+          "apCost": 20,
+          "payEstimate": "智力+0.3, 随机技能XP",
+          "costEstimate": 5,
+          "hint": "去城中村、商业区或科技园附近的网吧"
+        },
+        {
+          "id": "salon_chat",
+          "name": "路边理发店聊天",
+          "desc": "花 10 块剪个头发，顺便听听老板吹牛。需要敏捷≥18才能帮上忙。",
+          "icon": "💈",
+          "apCost": 20,
+          "payEstimate": "心情+10",
+          "costEstimate": 10,
+          "hint": "去城中村或商业区的理发店"
+        }
+      ],
+      "illegal": [
+        {
+          "id": "illegal_steal_battery",
+          "name": "偷电瓶",
+          "icon": "🔋",
+          "desc": "凌晨潜入小区车棚偷电动车电瓶。来钱快，但被保安或警察抓住就完蛋。",
+          "apCost": 6,
+          "rewardRange": [
+            80,
+            180
+          ],
+          "catchProb": 0.4,
+          "moralityDelta": -15,
+          "penalty": {
+            "jailDays": 2,
+            "fine": 800
+          }
+        }
+      ],
+      "buy": [
+        {
+          "id": "scrap_paper",
+          "name": "废纸板",
+          "unit": "斤",
+          "price": 1.2,
+          "category": "scrap"
+        },
+        {
+          "id": "water",
+          "name": "瓶装水",
+          "unit": "瓶",
+          "price": 1.4,
+          "category": "daily"
+        },
+        {
+          "id": "lettuce",
+          "name": "生菜",
+          "unit": "斤",
+          "price": 2,
+          "category": "food"
+        },
+        {
+          "id": "corn",
+          "name": "玉米",
+          "unit": "根",
+          "price": 2,
+          "category": "food"
+        },
+        {
+          "id": "onion",
+          "name": "洋葱",
+          "unit": "斤",
+          "price": 2,
+          "category": "food"
+        },
+        {
+          "id": "garlic",
+          "name": "大蒜",
+          "unit": "斤",
+          "price": 2,
+          "category": "food"
+        },
+        {
+          "id": "scrap_plastic",
+          "name": "废塑料",
+          "unit": "斤",
+          "price": 2.3,
+          "category": "scrap"
+        },
+        {
+          "id": "vegetables",
+          "name": "蔬菜",
+          "unit": "斤",
+          "price": 3,
+          "category": "food"
+        },
+        {
+          "id": "tofu",
+          "name": "豆腐",
+          "unit": "块",
+          "price": 3,
+          "category": "food"
+        },
+        {
+          "id": "ginger",
+          "name": "生姜",
+          "unit": "斤",
+          "price": 3,
+          "category": "food"
+        },
+        {
+          "id": "instant_noodles",
+          "name": "方便面",
+          "unit": "袋",
+          "price": 4,
+          "category": "food"
+        },
+        {
+          "id": "scrap_metal",
+          "name": "废金属",
+          "unit": "斤",
+          "price": 4,
+          "category": "scrap"
+        },
+        {
+          "id": "fruits",
+          "name": "水果",
+          "unit": "斤",
+          "price": 6,
+          "category": "food"
+        },
+        {
+          "id": "daily_use",
+          "name": "日用品",
+          "unit": "件",
+          "price": 7,
+          "category": "daily"
+        },
+        {
+          "id": "second_hand_book",
+          "name": "二手书",
+          "unit": "本",
+          "price": 15,
+          "category": "books"
+        },
+        {
+          "id": "clothing",
+          "name": "二手衣物",
+          "unit": "件",
+          "price": 25,
+          "category": "clothing"
+        }
+      ],
+      "sell": [
+        {
+          "id": "cold_medicine",
+          "name": "感冒药",
+          "unit": "盒",
+          "price": 20,
+          "category": "medicine"
+        }
+      ],
+      "vendingNote": "本地居民为主，消费力弱"
+    },
+    "wholesaleMarket": {
+      "id": "wholesaleMarket",
+      "name": "批发市场",
+      "icon": "🏪",
+      "desc": "各种商品批发的集散地，进货的天堂。",
+      "type": "commercial",
+      "wealthTier": 2,
+      "footfall": 0.9,
+      "specialties": [],
+      "specialtyLabels": [],
+      "priceMod": {
+        "water": 0.8,
+        "snacks": 0.78,
+        "noodles": 0.75,
+        "cigarettes": 0.85,
+        "beer": 0.82,
+        "clothing": 0.8,
+        "electronics": 0.8,
+        "fruits": 0.75,
+        "vegetables": 0.75
+      },
+      "priceModList": [
+        {
+          "key": "water",
+          "value": 0.8,
+          "label": "瓶装水"
+        },
+        {
+          "key": "snacks",
+          "value": 0.78,
+          "label": "零食"
+        },
+        {
+          "key": "noodles",
+          "value": 0.75,
+          "label": "面条"
+        },
+        {
+          "key": "cigarettes",
+          "value": 0.85,
+          "label": "香烟"
+        },
+        {
+          "key": "beer",
+          "value": 0.82,
+          "label": "啤酒"
+        },
+        {
+          "key": "clothing",
+          "value": 0.8,
+          "label": "二手衣物"
+        },
+        {
+          "key": "electronics",
+          "value": 0.8,
+          "label": "小电子产品"
+        },
+        {
+          "key": "fruits",
+          "value": 0.75,
+          "label": "水果"
+        },
+        {
+          "key": "vegetables",
+          "value": 0.75,
+          "label": "蔬菜"
+        }
+      ],
+      "dailyProbability": 1,
+      "flavor": [
+        "🔊 广播喇叭正在播报今日行情：'生姜价格上浮两成！赶紧进货！'",
+        "🤝 两个批发商在货堆前激烈讨价还价，嗓门大得整条街都能听见。",
+        "🚛 一辆满载货物的大卡车正在倒车，工人们四散躲避，指挥声此起彼伏。",
+        "📦 地上散落着被踩扁的纸箱，一个清洁工费力地把它们叠起来。",
+        "👃 各种气味混在一起：水果香、海鲜腥、纸箱霉味……早已分不清哪个是哪个。",
+        "💼 一个外省口音的中年男人正在向摊主批量询价，手里拿着个小本子记着。",
+        "🌅 最早的一批摊主天不亮就来了，现在正疲惫地端着保温杯小口喝茶。"
+      ],
+      "jobs": [
+        {
+          "id": "wholesale_delivery",
+          "name": "批发配送",
+          "icon": "🚚",
+          "desc": "帮批发商送货上门。需要会开车，体力好，收入稳定。",
+          "startupCost": 0,
+          "risk": {
+            "injury": 0.02
+          },
+          "payHint": {
+            "min": 50,
+            "max": 90,
+            "text": "payCalc(state) {\n        const drivingBonus = state.skills.driving?.level || 0;\n        return Math.floor(Random.float(50, 90) * (1 + drivingBonus * 0.02));\n      }"
+          }
+        },
+        {
+          "id": "wholesale_sorting",
+          "name": "货物分拣",
+          "icon": "📦",
+          "desc": "在批发市场仓库分拣货物。重复劳动但轻松，适合休息养病。",
+          "startupCost": 0,
+          "risk": {
+            "injury": 0.03
+          },
+          "payHint": {
+            "min": 40,
+            "max": 70,
+            "text": "payCalc(state) {\n        return Math.floor(Random.float(40, 70));\n      }"
+          }
+        }
+      ],
+      "amenities": [
+        {
+          "id": "wholesale_noodle",
+          "name": "批发市场面馆",
+          "icon": "🍜",
+          "type": "food",
+          "tier": 2,
+          "cost": 14,
+          "ap": 5,
+          "desc": "老板娘的牛肉面，分量足，性价比尚可。",
+          "primary": {
+            "hunger": 45,
+            "happiness": 3
+          },
+          "junkFood": false,
+          "lateNight": false
+        }
+      ],
+      "actions": [
+        {
+          "id": "wholesale_flip",
+          "name": "批发市场倒货",
+          "icon": "🔄",
+          "desc": "在批发市场寻找低价商品，就地转卖给其他摊位。需要口才和眼力。",
+          "apCost": 20,
+          "payEstimate": "100~300"
+        }
+      ],
+      "actionsExtra": [],
+      "illegal": [
+        {
+          "id": "illegal_blackmarket",
+          "name": "📦 黑市倒卖",
+          "icon": "📦",
+          "desc": "倒卖来路不明的货物（赃物/走私品）。利润高，但抓到就是 2 天拘留+重罚。",
+          "apCost": 8,
+          "rewardRange": [
+            150,
+            350
+          ],
+          "catchProb": 0.45,
+          "moralityDelta": -20,
+          "penalty": {
+            "jailDays": 3,
+            "fine": 1500
+          }
+        },
+        {
+          "id": "illegal_fake_docs",
+          "name": "📜 倒卖假证",
+          "icon": "📜",
+          "desc": "在批发市场找人做假身份证/毕业证。市场需求大，但警察盯得紧。",
+          "apCost": 6,
+          "rewardRange": [
+            150,
+            400
+          ],
+          "catchProb": 0.35,
+          "moralityDelta": -14,
+          "penalty": {
+            "jailDays": 1,
+            "fine": 600
+          }
+        }
+      ],
+      "buy": [
+        {
+          "id": "water",
+          "name": "瓶装水",
+          "unit": "瓶",
+          "price": 1.2,
+          "category": "daily"
+        },
+        {
+          "id": "lettuce",
+          "name": "生菜",
+          "unit": "斤",
+          "price": 2,
+          "category": "food"
+        },
+        {
+          "id": "corn",
+          "name": "玉米",
+          "unit": "根",
+          "price": 2,
+          "category": "food"
+        },
+        {
+          "id": "onion",
+          "name": "洋葱",
+          "unit": "斤",
+          "price": 2,
+          "category": "food"
+        },
+        {
+          "id": "garlic",
+          "name": "大蒜",
+          "unit": "斤",
+          "price": 2,
+          "category": "food"
+        },
+        {
+          "id": "vinegar",
+          "name": "醋",
+          "unit": "瓶",
+          "price": 2,
+          "category": "food"
+        },
+        {
+          "id": "starch",
+          "name": "淀粉",
+          "unit": "袋",
+          "price": 2,
+          "category": "food"
+        },
+        {
+          "id": "vegetables",
+          "name": "蔬菜",
+          "unit": "斤",
+          "price": 2.3,
+          "category": "food"
+        },
+        {
+          "id": "pen",
+          "name": "笔",
+          "unit": "支",
+          "price": 3,
+          "category": "stationery"
+        },
+        {
+          "id": "tofu",
+          "name": "豆腐",
+          "unit": "块",
+          "price": 3,
+          "category": "food"
+        },
+        {
+          "id": "ginger",
+          "name": "生姜",
+          "unit": "斤",
+          "price": 3,
+          "category": "food"
+        },
+        {
+          "id": "beer",
+          "name": "啤酒",
+          "unit": "瓶",
+          "price": 3.3,
+          "category": "food"
+        },
+        {
+          "id": "snacks",
+          "name": "零食",
+          "unit": "包",
+          "price": 3.9,
+          "category": "food"
+        },
+        {
+          "id": "instant_noodles",
+          "name": "方便面",
+          "unit": "袋",
+          "price": 4,
+          "category": "food"
+        },
+        {
+          "id": "mushroom",
+          "name": "蘑菇",
+          "unit": "斤",
+          "price": 4,
+          "category": "food"
+        },
+        {
+          "id": "fruits",
+          "name": "水果",
+          "unit": "斤",
+          "price": 4.5,
+          "category": "food"
+        },
+        {
+          "id": "carnation",
+          "name": "康乃馨",
+          "unit": "支",
+          "price": 5,
+          "category": "flowers"
+        },
+        {
+          "id": "bamboo_shoot",
+          "name": "竹笋",
+          "unit": "斤",
+          "price": 5,
+          "category": "food"
+        },
+        {
+          "id": "daily_use",
+          "name": "日用品",
+          "unit": "件",
+          "price": 10,
+          "category": "daily"
+        },
+        {
+          "id": "rose",
+          "name": "玫瑰花",
+          "unit": "支",
+          "price": 10,
+          "category": "flowers"
+        },
+        {
+          "id": "painkiller",
+          "name": "止痛药",
+          "unit": "盒",
+          "price": 10,
+          "category": "medicine"
+        },
+        {
+          "id": "notebook_item",
+          "name": "笔记本",
+          "unit": "本",
+          "price": 10,
+          "category": "stationery"
+        },
+        {
+          "id": "cigarettes",
+          "name": "香烟",
+          "unit": "包",
+          "price": 12.8,
+          "category": "luxury"
+        },
+        {
+          "id": "second_hand_book",
+          "name": "二手书",
+          "unit": "本",
+          "price": 15,
+          "category": "books"
+        },
+        {
+          "id": "clothing",
+          "name": "二手衣物",
+          "unit": "件",
+          "price": 20,
+          "category": "clothing"
+        },
+        {
+          "id": "cold_medicine",
+          "name": "感冒药",
+          "unit": "盒",
+          "price": 20,
+          "category": "medicine"
+        },
+        {
+          "id": "shrimp",
+          "name": "虾",
+          "unit": "斤",
+          "price": 20,
+          "category": "food"
+        },
+        {
+          "id": "duck",
+          "name": "鸭子",
+          "unit": "只",
+          "price": 22,
+          "category": "food"
+        },
+        {
+          "id": "electronics",
+          "name": "小电子产品",
+          "unit": "个",
+          "price": 64,
+          "category": "electronics"
+        }
+      ],
+      "sell": [
+        {
+          "id": "scrap_metal",
+          "name": "废金属",
+          "unit": "斤",
+          "price": 2.5,
+          "category": "scrap"
+        },
+        {
+          "id": "scrap_plastic",
+          "name": "废塑料",
+          "unit": "斤",
+          "price": 1.5,
+          "category": "scrap"
+        },
+        {
+          "id": "scrap_paper",
+          "name": "废纸板",
+          "unit": "斤",
+          "price": 0.8,
+          "category": "scrap"
+        }
+      ],
+      "vendingNote": "批发商多，但也有零散买家"
+    },
+    "construction": {
+      "id": "construction",
+      "name": "建筑工地",
+      "icon": "🏗️",
+      "desc": "尘土飞扬的建筑工地，到处是钢筋水泥。",
+      "type": "industrial",
+      "wealthTier": 1,
+      "footfall": 0.5,
+      "specialties": [
+        "water",
+        "beer",
+        "cigarettes",
+        "instant_noodles"
+      ],
+      "specialtyLabels": [
+        "瓶装水",
+        "啤酒",
+        "香烟",
+        "方便面"
+      ],
+      "priceMod": {},
+      "priceModList": [],
+      "dailyProbability": 0.3,
+      "flavor": [
+        "🔨 远处传来叮叮当当的敲击声，混着电钻的嗡嗡，工人们已经开工了。",
+        "💬 两个工人蹲在角落玩手机，用家乡话聊着老家的收成，偶尔哈哈大笑。",
+        "😤 安全帽下是一张被太阳晒得黝黑的脸，汗水顺着额头淌下来，没人在乎。",
+        "🎵 工地广播正在播放《再回首》，老歌的旋律在尘土和钢筋间飘荡。",
+        "🧱 一摞砖被吊机缓缓吊上高空，在风中轻轻晃动，像是城市的骨头。",
+        "🌿 工地围栏缝隙里长出了几根杂草，挤在钢筋水泥里倔强地活着。",
+        "🍱 午饭时间，工人们端着饭盒聚在树荫下，有说有笑，像是一天里最放松的时刻。",
+        "🌙 傍晚收工，工人们从脚手架上一个个爬下来，沉默着往宿舍方向走。"
+      ],
+      "jobs": [
+        {
+          "id": "manual_labor_construction",
+          "name": "建筑工地苦力",
+          "icon": "🧱",
+          "desc": "在工地搬砖、扛水泥、推砂石。纯体力活，工资日结不拖欠。",
+          "startupCost": 0,
+          "risk": {
+            "injury": 0.03,
+            "illness": 0.02
+          },
+          "payHint": {
+            "min": 30,
+            "max": 65,
+            "text": "payCalc(state) {\n      const weldBonus =\n        typeof getConstructionBonus === \"function\"\n          ? getConstructionBonus((state.skills.welding && state.skills.welding.level || 0))\n          : 0;\n      const bossBonus"
+          }
+        },
+        {
+          "id": "premium_engineering",
+          "name": "正规工程队（李工头推荐）",
+          "icon": "🏗️",
+          "desc": "李工头介绍的正规建筑公司，工资两倍、有工伤险，活儿也相对规范。",
+          "startupCost": 0,
+          "risk": {
+            "injury": 0.015
+          },
+          "payHint": {
+            "min": 60,
+            "max": 220,
+            "text": "payCalc(state) {\n      const weldBonus =\n        typeof getConstructionBonus === \"function\"\n          ? getConstructionBonus((state.skills.welding && state.skills.welding.level || 0))\n          : 0;\n      return Math.flo"
+          }
+        },
+        {
+          "id": "steel_worker",
+          "name": "钢结构工人",
+          "icon": "🏗️",
+          "desc": "在建筑工地做钢结构焊接和安装。高空作业，收入高但风险也高。",
+          "startupCost": 0,
+          "risk": {
+            "injury": 0.12
+          },
+          "payHint": {
+            "min": 55,
+            "max": 120,
+            "text": "payCalc(state) {\n        var base =\n          120 + ((state.skills.welding && state.skills.welding.level || 0)) * 2.5 + Random.float(0, 55);\n        return Math.floor(\n          base *\n            (typeof getBranchJobBon"
+          }
+        }
+      ],
+      "amenities": [
+        {
+          "id": "construction_lunchbox",
+          "name": "工地盒饭",
+          "icon": "🥡",
+          "type": "food",
+          "tier": 1,
+          "cost": 10,
+          "ap": 5,
+          "desc": "工地附近的盒饭车，肉沫白菜配米饭。",
+          "primary": {
+            "hunger": 32
+          },
+          "junkFood": true,
+          "lateNight": false
+        }
+      ],
+      "actions": [
+        {
+          "id": "scrapyard_picking",
+          "name": "废品站淘货",
+          "icon": "🔩",
+          "desc": "在工地附近的废品站翻找，运气好能发现值钱物件。了解行情的人更容易捡到宝。",
+          "apCost": 20,
+          "payEstimate": "50~300"
+        }
+      ],
+      "actionsExtra": [],
+      "illegal": [],
+      "buy": [
+        {
+          "id": "scrap_metal",
+          "name": "废金属",
+          "unit": "斤",
+          "price": 2.5,
+          "category": "scrap"
+        }
+      ],
+      "sell": [
+        {
+          "id": "cigarettes",
+          "name": "香烟",
+          "unit": "包",
+          "price": 15,
+          "category": "luxury"
+        },
+        {
+          "id": "painkiller",
+          "name": "止痛药",
+          "unit": "盒",
+          "price": 10,
+          "category": "medicine"
+        },
+        {
+          "id": "instant_noodles",
+          "name": "方便面",
+          "unit": "袋",
+          "price": 4,
+          "category": "food"
+        },
+        {
+          "id": "beer",
+          "name": "啤酒",
+          "unit": "瓶",
+          "price": 4,
+          "category": "food"
+        },
+        {
+          "id": "water",
+          "name": "瓶装水",
+          "unit": "瓶",
+          "price": 1.5,
+          "category": "daily"
+        }
+      ],
+      "vendingNote": "工人偶尔消费，管理严格"
+    },
+    "factoryZone": {
+      "id": "factoryZone",
+      "name": "工业区",
+      "icon": "🏭",
+      "desc": "工厂聚集的工业区，机器轰鸣声不绝于耳。",
+      "type": "industrial",
+      "wealthTier": 2,
+      "footfall": 1,
+      "specialties": [
+        "beer",
+        "cigarettes",
+        "water",
+        "instant_noodles"
+      ],
+      "specialtyLabels": [
+        "啤酒",
+        "香烟",
+        "瓶装水",
+        "方便面"
+      ],
+      "priceMod": {
+        "water": 1.1,
+        "snacks": 1,
+        "noodles": 1,
+        "cigarettes": 1.2,
+        "beer": 1.2
+      },
+      "priceModList": [
+        {
+          "key": "water",
+          "value": 1.1,
+          "label": "瓶装水"
+        },
+        {
+          "key": "snacks",
+          "value": 1,
+          "label": "零食"
+        },
+        {
+          "key": "noodles",
+          "value": 1,
+          "label": "面条"
+        },
+        {
+          "key": "cigarettes",
+          "value": 1.2,
+          "label": "香烟"
+        },
+        {
+          "key": "beer",
+          "value": 1.2,
+          "label": "啤酒"
+        }
+      ],
+      "dailyProbability": 0.5,
+      "flavor": [
+        "🏭 厂房里机器轰鸣，振动能透过地面一直传到脚底，习惯了就好。",
+        "👷 换班的工人们列队而出，统一的工服，脸上有种说不清的疲惫感。",
+        "⚠️ 厂门口贴着新的招工告示：'月薪4500，包食宿，有意者面谈'。",
+        "🌫️ 排气管道里冒出白色蒸汽，遮住了半片天空，工人们早就不抬头看了。",
+        "🚌 厂区通勤班车停在路边，等着上下班的工人，车窗上有人用手指画了个圈。",
+        "🍚 厂区角落的小食堂刚开饭，盒饭比外面便宜一半，大家排队端着往里走。",
+        "📻 某家小工厂门口摆了台收音机，正播报着省城的新闻，但没有人在听。"
+      ],
+      "jobs": [
+        {
+          "id": "factory_work_assembly",
+          "name": "工厂流水线",
+          "icon": "🏭",
+          "desc": "在电子厂做装配工。机械重复手不停，但收入稳定包吃住。",
+          "startupCost": 0,
+          "risk": {
+            "injury": 0.03,
+            "illness": 0.02
+          },
+          "payHint": {
+            "min": 15,
+            "max": 80,
+            "text": "payCalc(state) {\n      const elecBonus =\n        typeof getFactoryBonus === \"function\"\n          ? getFactoryBonus((state.skills.electrician && state.skills.electrician.level || 0))\n          : 0;\n      // v3.8 P1修复：zhan"
+          }
+        },
+        {
+          "id": "factory_overtime",
+          "name": "工厂加班",
+          "icon": "⏰",
+          "desc": "工业区工厂招临时加班工。工资高但疲劳增加快，适合短期冲刺。",
+          "startupCost": 0,
+          "risk": {
+            "injury": 0.05,
+            "illness": 0.02
+          },
+          "payHint": {
+            "min": 40,
+            "max": 120,
+            "text": "payCalc(state) {\n      return Math.floor(\n        120 + state.player.physique * 0.4 + Random.float(0, 40),\n      );\n    }"
+          }
+        },
+        {
+          "id": "long_haul_driver",
+          "name": "长途司机",
+          "icon": "🚛",
+          "desc": "跑长途货运，跨省运输。需要长途运输连携激活。",
+          "startupCost": 0,
+          "risk": {
+            "injury": 0.03
+          },
+          "payHint": {
+            "min": 150,
+            "max": 250,
+            "text": "function(s) { return Math.floor(250 + (s.skills.driving?.level || 0) * 2.5 + (s.skills.accounting?.level || 0) * 1.5 + Random.float(0, 150)); }"
+          }
+        },
+        {
+          "id": "truck_assistant",
+          "name": "跟车助理",
+          "icon": "🚚",
+          "desc": "跟货车跑运输，负责装卸货和单据交接。体力活但收入稳定。",
+          "startupCost": 0,
+          "risk": {
+            "injury": 0.05
+          },
+          "payHint": {
+            "min": 35,
+            "max": 80,
+            "text": "payCalc(state) {\n        var base =\n          80 + ((state.skills.driving && state.skills.driving.level || 0)) * 1.0 + Random.float(0, 35);\n        return Math.floor(\n          base *\n            (typeof getBranchJobBonu"
+          }
+        },
+        {
+          "id": "factory_electrician",
+          "name": "工厂电工",
+          "icon": "⚡",
+          "desc": "在工厂负责电气设备维护和检修。技术硬、责任大、工资高。",
+          "startupCost": 0,
+          "risk": {
+            "injury": 0.06
+          },
+          "payHint": {
+            "min": 45,
+            "max": 100,
+            "text": "payCalc(state) {\n        var base =\n          100 +\n          ((state.skills.electrician && state.skills.electrician.level || 0)) * 2.0 +\n          Random.float(0, 45);\n        return Math.floor(\n          base *\n       "
+          }
+        }
+      ],
+      "amenities": [
+        {
+          "id": "factory_canteen",
+          "name": "工厂食堂",
+          "icon": "🍱",
+          "type": "food",
+          "tier": 2,
+          "cost": 12,
+          "ap": 5,
+          "desc": "三菜一汤，标配饭量，吃饱不浪费。",
+          "primary": {
+            "hunger": 42,
+            "happiness": 2
+          },
+          "junkFood": false,
+          "lateNight": false
+        },
+        {
+          "id": "factory_shower",
+          "name": "工厂浴室",
+          "icon": "🚿",
+          "type": "bath",
+          "tier": 2,
+          "cost": 8,
+          "ap": 6,
+          "desc": "下班后顺路冲个澡，工人福利。",
+          "primary": {
+            "hygiene": 40
+          },
+          "junkFood": false,
+          "lateNight": false
+        },
+        {
+          "id": "factory_karaoke",
+          "name": "工业区KTV",
+          "icon": "🎤",
+          "type": "fun",
+          "tier": 2,
+          "cost": 25,
+          "ap": 15,
+          "desc": "工人大哥的下班嗨歌局，酒过三巡情绪高涨。",
+          "primary": {
+            "happiness": 35,
+            "fatigue": 5,
+            "hunger": -8
+          },
+          "junkFood": false,
+          "lateNight": true
+        }
+      ],
+      "actions": [
+        {
+          "id": "factory_parttime",
+          "name": "工厂兼职",
+          "icon": "🏭",
+          "desc": "在工业区的工厂做临时工，体力活但收入稳定。需要一定的体力基础。",
+          "apCost": 25,
+          "payEstimate": "80~120"
+        }
+      ],
+      "actionsExtra": [],
+      "illegal": [],
+      "buy": [
+        {
+          "id": "water",
+          "name": "瓶装水",
+          "unit": "瓶",
+          "price": 1.7,
+          "category": "daily"
+        },
+        {
+          "id": "beer",
+          "name": "啤酒",
+          "unit": "瓶",
+          "price": 4.8,
+          "category": "food"
+        }
+      ],
+      "sell": [
+        {
+          "id": "cold_medicine",
+          "name": "感冒药",
+          "unit": "盒",
+          "price": 20,
+          "category": "medicine"
+        },
+        {
+          "id": "cigarettes",
+          "name": "香烟",
+          "unit": "包",
+          "price": 18,
+          "category": "luxury"
+        },
+        {
+          "id": "painkiller",
+          "name": "止痛药",
+          "unit": "盒",
+          "price": 10,
+          "category": "medicine"
+        },
+        {
+          "id": "beer",
+          "name": "啤酒",
+          "unit": "瓶",
+          "price": 4.8,
+          "category": "food"
+        },
+        {
+          "id": "instant_noodles",
+          "name": "方便面",
+          "unit": "袋",
+          "price": 4,
+          "category": "food"
+        },
+        {
+          "id": "scrap_metal",
+          "name": "废金属",
+          "unit": "斤",
+          "price": 2.5,
+          "category": "scrap"
+        },
+        {
+          "id": "scrap_plastic",
+          "name": "废塑料",
+          "unit": "斤",
+          "price": 1.5,
+          "category": "scrap"
+        },
+        {
+          "id": "scrap_paper",
+          "name": "废纸板",
+          "unit": "斤",
+          "price": 0.8,
+          "category": "scrap"
+        }
+      ],
+      "vendingNote": "午休工人是主力消费群体"
+    },
+    "school": {
+      "id": "school",
+      "name": "大学城",
+      "icon": "🎓",
+      "desc": "高校云集的大学城，年轻人多，机会特殊。",
+      "type": "institutional",
+      "wealthTier": 2,
+      "footfall": 1.2,
+      "specialties": [
+        "fruits",
+        "vegetables",
+        "snacks"
+      ],
+      "specialtyLabels": [
+        "水果",
+        "蔬菜",
+        "零食"
+      ],
+      "priceMod": {
+        "water": 0.8,
+        "snacks": 0.9,
+        "noodles": 0.9,
+        "fruits": 1,
+        "vegetables": 1
+      },
+      "priceModList": [
+        {
+          "key": "water",
+          "value": 0.8,
+          "label": "瓶装水"
+        },
+        {
+          "key": "snacks",
+          "value": 0.9,
+          "label": "零食"
+        },
+        {
+          "key": "noodles",
+          "value": 0.9,
+          "label": "面条"
+        },
+        {
+          "key": "fruits",
+          "value": 1,
+          "label": "水果"
+        },
+        {
+          "key": "vegetables",
+          "value": 1,
+          "label": "蔬菜"
+        }
+      ],
+      "dailyProbability": 0.5,
+      "flavor": [
+        "📚 几个大学生背着双肩包走过，讨论的是某个大厂的秋招笔试题，你听懂了一半。",
+        "🎸 操场那边传来吉他声，一个男生对着空气弹唱，音调有点跑。",
+        "💻 图书馆门口，几个学生靠着墙刷手机，偶尔把屏幕转给旁边的人看。",
+        "🌸 校园里的玉兰花开了，粉白相间，和旁边灰色的教学楼形成奇怪的对比。",
+        "📋 公告栏上贴满了讲座通知、兼职信息和失物招领，密密麻麻没有空隙。",
+        "🌙 傍晚的校园里，情侣们沿着湖边漫步，低声说话，好像整个世界是他们的。",
+        "☕ 校门口奶茶店门口排了长队，新出的草莓季限定款正是热门打卡对象。"
+      ],
+      "jobs": [
+        {
+          "id": "xiao_mei_tutoring",
+          "name": "小美推荐·精英家教",
+          "icon": "🎓",
+          "desc": "小美把你的联系方式推荐给了她导师开的补习机构，时薪比普通家教高出一大截。",
+          "startupCost": 0,
+          "risk": {},
+          "payHint": {
+            "min": 45,
+            "max": 100,
+            "text": "payCalc(state) {\n      return Math.floor(\n        100 +\n          state.player.intelligence * 0.8 +\n          (state.skills.english && state.skills.english.level || 0) * 0.6 +\n          Random.float(0, 45),\n      );\n    "
+          }
+        },
+        {
+          "id": "tutoring",
+          "name": "家教辅导",
+          "icon": "📚",
+          "desc": "给中小学生辅导功课。智力要求不高，但需要耐心和责任心。",
+          "startupCost": 0,
+          "risk": {},
+          "payHint": {
+            "min": 30,
+            "max": 40,
+            "text": "payCalc(state) {\n      return Math.floor(\n        40 + state.player.intelligence * 0.3 + Random.float(0, 30),\n      );\n    }"
+          }
+        },
+        {
+          "id": "document_translator",
+          "name": "文档翻译",
+          "icon": "📝",
+          "desc": "接翻译公司的文档翻译单子。自由职业，在家也能做，时间灵活。",
+          "startupCost": 0,
+          "risk": {},
+          "payHint": {
+            "min": 40,
+            "max": 80,
+            "text": "payCalc(state) {\n        var base =\n          80 + ((state.skills.english && state.skills.english.level || 0)) * 2.0 + Random.float(0, 40);\n        return Math.floor(\n          base *\n            (typeof getBranchJobBonu"
+          }
+        }
+      ],
+      "amenities": [
+        {
+          "id": "school_takeout",
+          "name": "大学城外卖",
+          "icon": "🍱",
+          "type": "food",
+          "tier": 2,
+          "cost": 18,
+          "ap": 5,
+          "desc": "学生街的小炒，年轻人最爱。",
+          "primary": {
+            "hunger": 40,
+            "happiness": 5
+          },
+          "junkFood": false,
+          "lateNight": false
+        },
+        {
+          "id": "school_shower",
+          "name": "大学城澡堂",
+          "icon": "🚿",
+          "type": "bath",
+          "tier": 2,
+          "cost": 10,
+          "ap": 6,
+          "desc": "学校配套澡堂，干净整洁。",
+          "primary": {
+            "hygiene": 42,
+            "happiness": 2
+          },
+          "junkFood": false,
+          "lateNight": false
+        },
+        {
+          "id": "school_arcade",
+          "name": "大学城游戏厅",
+          "icon": "🕹️",
+          "type": "fun",
+          "tier": 2,
+          "cost": 18,
+          "ap": 12,
+          "desc": "拳皇、街霸、跳舞机，年轻人的解压圣地。",
+          "primary": {
+            "happiness": 30,
+            "fatigue": 5
+          },
+          "junkFood": false,
+          "lateNight": true
+        },
+        {
+          "id": "school_studyroom",
+          "name": "大学城自习室小憩",
+          "icon": "📚",
+          "type": "rest",
+          "tier": 2,
+          "cost": 5,
+          "ap": 10,
+          "desc": "趴在书桌上眯一会，醒来还能学一会。",
+          "primary": {
+            "fatigue": -22,
+            "happiness": 2
+          },
+          "junkFood": false,
+          "lateNight": false
+        }
+      ],
+      "actions": [
+        {
+          "id": "night_school_study",
+          "name": "夜校自习",
+          "icon": "📚",
+          "desc": "在大学城找个自习室学习，效率比在住处高得多。需要交电费。",
+          "apCost": 25,
+          "payEstimate": null
+        }
+      ],
+      "actionsExtra": [
+        {
+          "id": "self_study",
+          "name": "图书馆自习",
+          "desc": "去图书馆（商业区旁）安静看书。",
+          "icon": "📖",
+          "apCost": 20,
+          "payEstimate": "技能XP+30",
+          "costEstimate": null,
+          "hint": "去大学城、培训中心或图书馆自习"
+        },
+        {
+          "id": "night_school",
+          "name": "上夜校",
+          "desc": "晚上上夜校，提升智力+相关技能。需要 ¥50 学费，智力≥25。",
+          "icon": "🌃",
+          "apCost": 20,
+          "payEstimate": "智力+1, 技能+",
+          "costEstimate": 50,
+          "hint": "去大学城或培训中心报名夜校"
+        }
+      ],
+      "illegal": [
+        {
+          "id": "illegal_exam_proxy",
+          "name": "✍️ 代考",
+          "icon": "✍️",
+          "desc": "替人参加考试，一科几百块。被发现就是开除+记过。",
+          "apCost": 8,
+          "rewardRange": [
+            200,
+            500
+          ],
+          "catchProb": 0.3,
+          "moralityDelta": -16,
+          "penalty": {
+            "jailDays": 1,
+            "fine": 700
+          }
+        }
+      ],
+      "buy": [
+        {
+          "id": "scrap_paper",
+          "name": "废纸板",
+          "unit": "斤",
+          "price": 0.8,
+          "category": "scrap"
+        },
+        {
+          "id": "pen",
+          "name": "笔",
+          "unit": "支",
+          "price": 3,
+          "category": "stationery"
+        },
+        {
+          "id": "snacks",
+          "name": "零食",
+          "unit": "包",
+          "price": 4.5,
+          "category": "food"
+        },
+        {
+          "id": "fruits",
+          "name": "水果",
+          "unit": "斤",
+          "price": 6,
+          "category": "food"
+        },
+        {
+          "id": "notebook_item",
+          "name": "笔记本",
+          "unit": "本",
+          "price": 10,
+          "category": "stationery"
+        },
+        {
+          "id": "second_hand_book",
+          "name": "二手书",
+          "unit": "本",
+          "price": 15,
+          "category": "books"
+        }
+      ],
+      "sell": [
+        {
+          "id": "electronics",
+          "name": "小电子产品",
+          "unit": "个",
+          "price": 80,
+          "category": "electronics"
+        },
+        {
+          "id": "vitamins_item",
+          "name": "维生素",
+          "unit": "瓶",
+          "price": 20,
+          "category": "medicine"
+        },
+        {
+          "id": "notebook_item",
+          "name": "笔记本",
+          "unit": "本",
+          "price": 10,
+          "category": "stationery"
+        },
+        {
+          "id": "snacks",
+          "name": "零食",
+          "unit": "包",
+          "price": 4.5,
+          "category": "food"
+        },
+        {
+          "id": "pen",
+          "name": "笔",
+          "unit": "支",
+          "price": 3,
+          "category": "stationery"
+        },
+        {
+          "id": "corn",
+          "name": "玉米",
+          "unit": "根",
+          "price": 2,
+          "category": "food"
+        }
+      ],
+      "vendingNote": "学生零食消费旺盛，均价稍低"
+    },
+    "commercialDist": {
+      "id": "commercialDist",
+      "name": "商业区",
+      "icon": "🏬",
+      "desc": "繁华的商业地段，人来人往，商机无限。",
+      "type": "commercial",
+      "wealthTier": 3,
+      "footfall": 1.8,
+      "specialties": [
+        "clothing",
+        "electronics",
+        "beer",
+        "cigarettes",
+        "fruits"
+      ],
+      "specialtyLabels": [
+        "二手衣物",
+        "小电子产品",
+        "啤酒",
+        "香烟",
+        "水果"
+      ],
+      "priceMod": {
+        "water": 1.1,
+        "snacks": 1.15,
+        "noodles": 1.1,
+        "cigarettes": 1.15,
+        "beer": 1.2,
+        "clothing": 1.15,
+        "electronics": 1.15,
+        "fruits": 1.18,
+        "vegetables": 1.15
+      },
+      "priceModList": [
+        {
+          "key": "water",
+          "value": 1.1,
+          "label": "瓶装水"
+        },
+        {
+          "key": "snacks",
+          "value": 1.15,
+          "label": "零食"
+        },
+        {
+          "key": "noodles",
+          "value": 1.1,
+          "label": "面条"
+        },
+        {
+          "key": "cigarettes",
+          "value": 1.15,
+          "label": "香烟"
+        },
+        {
+          "key": "beer",
+          "value": 1.2,
+          "label": "啤酒"
+        },
+        {
+          "key": "clothing",
+          "value": 1.15,
+          "label": "二手衣物"
+        },
+        {
+          "key": "electronics",
+          "value": 1.15,
+          "label": "小电子产品"
+        },
+        {
+          "key": "fruits",
+          "value": 1.18,
+          "label": "水果"
+        },
+        {
+          "key": "vegetables",
+          "value": 1.15,
+          "label": "蔬菜"
+        }
+      ],
+      "dailyProbability": 0.6,
+      "flavor": [
+        "🛍️ 商场橱窗里展示着最新款手机，标价让你默默收回了目光。",
+        "🎤 路边有人正在表演街头魔术，围观者发出阵阵惊呼，帽子里已经有了不少硬币。",
+        "📣 两家服装店在隔壁打价格战，各自的促销音乐互相干扰，嘈杂到听不清。",
+        "😎 几个穿着时髦的年轻人站在路口自拍，摆着各种姿势，没人注意你的存在。",
+        "👩‍💼 一个穿职业装的女士边打电话边快步穿过人群，脚步不停，眼神锐利。",
+        "🎉 某家新店正在开业，门口贴着'全场五折三天'的红色条幅，人声鼎沸。",
+        "🌂 下午三点，阳光晒得路面发烫，遮阳伞和墨镜成了人手一件的标配。"
+      ],
+      "jobs": [
+        {
+          "id": "street_vending_food",
+          "name": "摆摊卖小吃",
+          "icon": "🍢",
+          "desc": "在街边支个小摊卖烤串、煎饼果子。客流量越大，手艺越好，赚得越多。",
+          "startupCost": 50,
+          "risk": {},
+          "payHint": {
+            "min": 10,
+            "max": 80,
+            "text": "payCalc(state) {\n      const skillBonus = (state.skills.cooking && state.skills.cooking.level || 0) * 0.8;\n      const base = Random.float(45 + skillBonus, 80 + skillBonus);\n      const footfall =\n        typeof getVendi"
+          }
+        },
+        {
+          "id": "sister_zhang_vending",
+          "name": "张姐介绍·黄金摊位",
+          "icon": "🏪",
+          "desc": "张姐帮你弄到了商业区步行街口的好摊位，客流量大，生意兴隆。",
+          "startupCost": 0,
+          "risk": {},
+          "payHint": {
+            "min": 35,
+            "max": 80,
+            "text": "payCalc(state) {\n      var footfall =\n        typeof getVendingFootfallMod === \"function\"\n          ? getVendingFootfallMod((state.trade && state.trade.currentLocation), state)\n          : 1.0;\n      return Math.floor(\n "
+          }
+        },
+        {
+          "id": "delivery_rider",
+          "name": "外卖骑手",
+          "icon": "🛵",
+          "desc": "平台众包骑手，接单送餐。多劳多得，风里来雨里去。",
+          "startupCost": 0,
+          "risk": {
+            "injury": 0.07
+          },
+          "payHint": {
+            "min": 10,
+            "max": 730,
+            "text": "payCalc(state) {\n      var base = 50 + state.player.agility * 0.7 + Random.float(0, 50);\n      // [全系统自洽修复] 域D R730b 修复:好感奖励承诺零兑现(huangPriorityOrders配送+10%/huangEbike+15%/xiaochenDeliveryTips+10%写后全库零读取)\n      var f = st"
+          }
+        },
+        {
+          "id": "restaurant_assistant",
+          "name": "帮陈师傅打下手",
+          "icon": "🍳",
+          "desc": "在陈师傅餐厅打下手，学做菜的同时赚点辛苦钱。",
+          "startupCost": 0,
+          "risk": {},
+          "payHint": {
+            "min": 30,
+            "max": 50,
+            "text": "payCalc(state) {\n      const cookBonus =\n        typeof getCookingDiscount === \"function\"\n          ? Math.floor((state.skills.cooking && state.skills.cooking.level || 0) * 0.5)\n          : 0;\n      return Math.floor(50 "
+          }
+        },
+        {
+          "id": "logistics_driver",
+          "name": "物流专职司机",
+          "icon": "🚛",
+          "desc": "老李给你安排的专职司机活，开物流车跑固定路线。稳定，不用看天气吃饭，比跑外卖强多了。",
+          "startupCost": 0,
+          "risk": {
+            "injury": 0.02
+          },
+          "payHint": {
+            "min": 80,
+            "max": 120,
+            "text": "payCalc(state) {\n      return Math.floor(120 + (state.skills.driving?.level || 0) * 2 + state.player.agility * 0.3 + Random.float(0, 80));\n    }"
+          }
+        },
+        {
+          "id": "food_truck_owner",
+          "name": "移动餐车",
+          "icon": "🚚",
+          "desc": "开餐车卖小吃。烹饪+销售双技能加持，生意红火。需要餐饮创业连携激活。",
+          "startupCost": 0,
+          "risk": {
+            "illness": 0.01
+          },
+          "payHint": {
+            "min": 100,
+            "max": 200,
+            "text": "function(s) { return Math.floor(200 + (s.skills.cooking?.level || 0) * 2 + (s.skills.sales?.level || 0) * 1.5 + Random.float(0, 100)); }"
+          }
+        },
+        {
+          "id": "master_repairman",
+          "name": "全能维修",
+          "icon": "🔧",
+          "desc": "家电维修、电路检修无所不能。需要综合维修连携激活。",
+          "startupCost": 0,
+          "risk": {
+            "injury": 0.02
+          },
+          "payHint": {
+            "min": 100,
+            "max": 250,
+            "text": "function(s) { return Math.floor(250 + (s.skills.repair?.level || 0) * 2.5 + (s.skills.electrician?.level || 0) * 2 + Random.float(0, 100)); }"
+          }
+        },
+        {
+          "id": "sales_team_lead",
+          "name": "销售主管",
+          "icon": "👥",
+          "desc": "带领小团队做地推和客户拓展。需要团队销售连携激活。",
+          "startupCost": 0,
+          "risk": {},
+          "payHint": {
+            "min": 150,
+            "max": 300,
+            "text": "function(s) { return Math.floor(300 + (s.skills.sales?.level || 0) * 2.5 + (s.skills.management?.level || 0) * 2 + Random.float(0, 150)); }"
+          }
+        },
+        {
+          "id": "smart_home_tech",
+          "name": "智能家居技术员",
+          "icon": "🏡",
+          "desc": "安装调试智能家居系统。需要智能家居专家连携激活。",
+          "startupCost": 0,
+          "risk": {
+            "injury": 0.01
+          },
+          "payHint": {
+            "min": 200,
+            "max": 400,
+            "text": "function(s) { return Math.floor(400 + (s.skills.repair?.level || 0) * 2.5 + (s.skills.electrician?.level || 0) * 2 + (s.skills.coding?.level || 0) * 2 + Random.float(0, 200)); }"
+          }
+        },
+        {
+          "id": "cafeteria_worker",
+          "name": "食堂帮厨",
+          "icon": "🥘",
+          "desc": "在企事业单位食堂帮厨，切菜配菜打饭。稳定轻松，比街边摊环境好。",
+          "startupCost": 0,
+          "risk": {},
+          "payHint": {
+            "min": 35,
+            "max": 70,
+            "text": "payCalc(state) {\n        var base =\n          70 + ((state.skills.cooking && state.skills.cooking.level || 0)) * 1.0 + Random.float(0, 35);\n        var branchBonus = 1.25;\n        if (typeof getBranchJobBonus === \"functi"
+          }
+        },
+        {
+          "id": "phone_modding",
+          "name": "手机改装",
+          "icon": "📱",
+          "desc": "帮客户改装手机——换壳、扩容、改色。年轻客户多，利润不错。",
+          "startupCost": 0,
+          "risk": {},
+          "payHint": {
+            "min": 40,
+            "max": 80,
+            "text": "payCalc(state) {\n        var base =\n          80 + ((state.skills.repair && state.skills.repair.level || 0)) * 1.8 + Random.float(0, 40);\n        return Math.floor(\n          base *\n            (typeof getBranchJobBonus "
+          }
+        },
+        {
+          "id": "foreign_trade_assistant",
+          "name": "外贸助理",
+          "icon": "📦",
+          "desc": "在外贸公司协助处理订单、邮件往来。英语好是核心竞争力。",
+          "startupCost": 0,
+          "risk": {},
+          "payHint": {
+            "min": 40,
+            "max": 90,
+            "text": "payCalc(state) {\n        var base =\n          90 + ((state.skills.english && state.skills.english.level || 0)) * 1.5 + Random.float(0, 40);\n        return Math.floor(\n          base *\n            (typeof getBranchJobBonu"
+          }
+        },
+        {
+          "id": "taxi_driver",
+          "name": "出租车司机",
+          "icon": "🚕",
+          "desc": "开出租拉客，多劳多得。驾龄越长路线越熟，赚得越多。",
+          "startupCost": 0,
+          "risk": {
+            "injury": 0.03
+          },
+          "payHint": {
+            "min": 45,
+            "max": 70,
+            "text": "payCalc(state) {\n        var base =\n          70 + ((state.skills.driving && state.skills.driving.level || 0)) * 1.2 + Random.float(0, 45);\n        return Math.floor(\n          base *\n            (typeof getBranchJobBonu"
+          }
+        },
+        {
+          "id": "shop_assistant",
+          "name": "导购员",
+          "icon": "🏪",
+          "desc": "在商场门店做导购，底薪加提成。销售技巧越好收入越高。",
+          "startupCost": 0,
+          "risk": {},
+          "payHint": {
+            "min": 35,
+            "max": 55,
+            "text": "payCalc(state) {\n        var base =\n          55 + ((state.skills.sales && state.skills.sales.level || 0)) * 1.5 + Random.float(0, 35);\n        return Math.floor(\n          base *\n            (typeof getBranchJobBonus =="
+          }
+        },
+        {
+          "id": "procurement_clerk",
+          "name": "采购员",
+          "icon": "📋",
+          "desc": "为公司采购物资，谈价格比质量。嘴皮子和眼力见都要好。",
+          "startupCost": 0,
+          "risk": {},
+          "payHint": {
+            "min": 40,
+            "max": 75,
+            "text": "payCalc(state) {\n        var base =\n          75 + ((state.skills.sales && state.skills.sales.level || 0)) * 1.8 + Random.float(0, 40);\n        return Math.floor(\n          base *\n            (typeof getBranchJobBonus =="
+          }
+        },
+        {
+          "id": "courier_gig",
+          "name": "跑腿零工",
+          "icon": "🚶",
+          "desc": "帮人取快递、送文件、买咖啡，啥急活都接。灵活自由，多劳多得。",
+          "startupCost": 0,
+          "risk": {
+            "injury": 0.01
+          },
+          "payHint": {
+            "min": 35,
+            "max": 35,
+            "text": "payCalc(state) {\n        var base = 35 + state.player.agility * 0.3 + Random.float(0, 35);\n        // 有配送类技能收入更高\n        if (state.skills.driving && state.skills.driving.level > 0)\n          base *= 1.15;\n        if (sta"
+          }
+        }
+      ],
+      "amenities": [
+        {
+          "id": "commercial_restaurant",
+          "name": "商业区中餐馆",
+          "icon": "🍽️",
+          "type": "food",
+          "tier": 3,
+          "cost": 35,
+          "ap": 8,
+          "desc": "荤素搭配，营养均衡，吃完精神百倍。",
+          "primary": {
+            "hunger": 65,
+            "happiness": 10
+          },
+          "junkFood": false,
+          "lateNight": false
+        },
+        {
+          "id": "commercial_spa",
+          "name": "商业区高级SPA",
+          "icon": "🧖",
+          "type": "bath",
+          "tier": 3,
+          "cost": 50,
+          "ap": 12,
+          "desc": "精油按摩+蒸桑拿，身心都得到净化。",
+          "primary": {
+            "hygiene": 60,
+            "fatigue": -25,
+            "happiness": 12
+          },
+          "junkFood": false,
+          "lateNight": false
+        },
+        {
+          "id": "commercial_cinema",
+          "name": "商业区电影院",
+          "icon": "🎬",
+          "type": "fun",
+          "tier": 3,
+          "cost": 45,
+          "ap": 12,
+          "desc": "IMAX 大片，爆米花配可乐，沉浸2小时不想出来。",
+          "primary": {
+            "happiness": 45,
+            "fatigue": -10
+          },
+          "junkFood": false,
+          "lateNight": false
+        },
+        {
+          "id": "commercial_bar",
+          "name": "商业区酒吧",
+          "icon": "🍸",
+          "type": "fun",
+          "tier": 3,
+          "cost": 70,
+          "ap": 18,
+          "desc": "鸡尾酒、小食拼盘、霓虹灯光，但喝多明天难受。",
+          "primary": {
+            "happiness": 50,
+            "fatigue": 10,
+            "hunger": -10
+          },
+          "junkFood": true,
+          "lateNight": true
+        }
+      ],
+      "actions": [
+        {
+          "id": "flyer_distribution",
+          "name": "商业区发传单",
+          "icon": "📄",
+          "desc": "在商业区帮商家发传单，收入稳定但枯燥。",
+          "apCost": 20,
+          "payEstimate": "60~80"
+        }
+      ],
+      "actionsExtra": [
+        {
+          "id": "internet_bar",
+          "name": "网吧上网",
+          "desc": "花 5 块在网吧上 2 小时网，可以查资料、刷视频、玩游戏。",
+          "icon": "💻",
+          "apCost": 20,
+          "payEstimate": "智力+0.3, 随机技能XP",
+          "costEstimate": 5,
+          "hint": "去城中村、商业区或科技园附近的网吧"
+        },
+        {
+          "id": "salon_chat",
+          "name": "路边理发店聊天",
+          "desc": "花 10 块剪个头发，顺便听听老板吹牛。需要敏捷≥18才能帮上忙。",
+          "icon": "💈",
+          "apCost": 20,
+          "payEstimate": "心情+10",
+          "costEstimate": 10,
+          "hint": "去城中村或商业区的理发店"
+        },
+        {
+          "id": "gym",
+          "name": "办健身卡锻炼",
+          "desc": "去健身房办月卡，提升体质和敏捷。",
+          "icon": "🏋️",
+          "apCost": 20,
+          "payEstimate": "体质+1, 敏捷+0.5",
+          "costEstimate": 200,
+          "hint": "去公园、商业区或娱乐城附近的健身场所"
+        },
+        {
+          "id": "pharmacy",
+          "name": "买药/买营养品",
+          "desc": "去药房买维生素、补品等。需要 ¥30~80。",
+          "icon": "💊",
+          "apCost": 20,
+          "payEstimate": "健康+5",
+          "costEstimate": 30,
+          "hint": "去医院或商业区药房"
+        },
+        {
+          "id": "supermarket",
+          "name": "去超市采购",
+          "desc": "去超市买点吃的用的。需要 ¥30~60。",
+          "icon": "🛒",
+          "apCost": 20,
+          "payEstimate": "饥饱+30, 卫生+",
+          "costEstimate": 30,
+          "hint": "去商业区超市"
+        },
+        {
+          "id": "clothing",
+          "name": "买件新衣服",
+          "desc": "去服装店买件像样的衣服，提升卫生/心情/名气。",
+          "icon": "👕",
+          "apCost": 20,
+          "payEstimate": "卫生+10, 名气+",
+          "costEstimate": 80,
+          "hint": "去商业区服装店"
+        }
+      ],
+      "illegal": [
+        {
+          "id": "illegal_pickpocket",
+          "name": "🤏 扒窃",
+          "icon": "🤏",
+          "desc": "在商业区人潮中摸手机钱包。技术活，但被人赃并获就是拘留+罚款。",
+          "apCost": 4,
+          "rewardRange": [
+            40,
+            120
+          ],
+          "catchProb": 0.3,
+          "moralityDelta": -12,
+          "penalty": {
+            "jailDays": 1,
+            "fine": 300
+          }
+        },
+        {
+          "id": "illegal_shop_theft",
+          "name": "🏪 盗窃店铺",
+          "icon": "🏪",
+          "desc": "趁店员不注意顺走货架上的值钱商品。商业区机会多，但监控也多。",
+          "apCost": 6,
+          "rewardRange": [
+            100,
+            300
+          ],
+          "catchProb": 0.45,
+          "moralityDelta": -18,
+          "penalty": {
+            "jailDays": 2,
+            "fine": 1000
+          }
+        },
+        {
+          "id": "illegal_scam",
+          "name": "🎭 碰瓷",
+          "icon": "🎭",
+          "desc": "在马路上故意被车蹭倒，讹司机赔偿。风险高，但成功来钱快。",
+          "apCost": 5,
+          "rewardRange": [
+            50,
+            180
+          ],
+          "catchProb": 0.5,
+          "moralityDelta": -15,
+          "penalty": {
+            "jailDays": 2,
+            "fine": 800
+          }
+        }
+      ],
+      "buy": [
+        {
+          "id": "scrap_plastic",
+          "name": "废塑料",
+          "unit": "斤",
+          "price": 1.5,
+          "category": "scrap"
+        },
+        {
+          "id": "vitamins_item",
+          "name": "维生素",
+          "unit": "瓶",
+          "price": 20,
+          "category": "medicine"
+        }
+      ],
+      "sell": [
+        {
+          "id": "electronics",
+          "name": "小电子产品",
+          "unit": "个",
+          "price": 92,
+          "category": "electronics"
+        },
+        {
+          "id": "clothing",
+          "name": "二手衣物",
+          "unit": "件",
+          "price": 28.7,
+          "category": "clothing"
+        },
+        {
+          "id": "duck",
+          "name": "鸭子",
+          "unit": "只",
+          "price": 22,
+          "category": "food"
+        },
+        {
+          "id": "cold_medicine",
+          "name": "感冒药",
+          "unit": "盒",
+          "price": 20,
+          "category": "medicine"
+        },
+        {
+          "id": "vitamins_item",
+          "name": "维生素",
+          "unit": "瓶",
+          "price": 20,
+          "category": "medicine"
+        },
+        {
+          "id": "shrimp",
+          "name": "虾",
+          "unit": "斤",
+          "price": 20,
+          "category": "food"
+        },
+        {
+          "id": "cigarettes",
+          "name": "香烟",
+          "unit": "包",
+          "price": 17.3,
+          "category": "luxury"
+        },
+        {
+          "id": "second_hand_book",
+          "name": "二手书",
+          "unit": "本",
+          "price": 15,
+          "category": "books"
+        },
+        {
+          "id": "daily_use",
+          "name": "日用品",
+          "unit": "件",
+          "price": 10,
+          "category": "daily"
+        },
+        {
+          "id": "rose",
+          "name": "玫瑰花",
+          "unit": "支",
+          "price": 10,
+          "category": "flowers"
+        },
+        {
+          "id": "painkiller",
+          "name": "止痛药",
+          "unit": "盒",
+          "price": 10,
+          "category": "medicine"
+        },
+        {
+          "id": "fruits",
+          "name": "水果",
+          "unit": "斤",
+          "price": 7.1,
+          "category": "food"
+        },
+        {
+          "id": "snacks",
+          "name": "零食",
+          "unit": "包",
+          "price": 5.8,
+          "category": "food"
+        },
+        {
+          "id": "carnation",
+          "name": "康乃馨",
+          "unit": "支",
+          "price": 5,
+          "category": "flowers"
+        },
+        {
+          "id": "bamboo_shoot",
+          "name": "竹笋",
+          "unit": "斤",
+          "price": 5,
+          "category": "food"
+        },
+        {
+          "id": "beer",
+          "name": "啤酒",
+          "unit": "瓶",
+          "price": 4.8,
+          "category": "food"
+        },
+        {
+          "id": "instant_noodles",
+          "name": "方便面",
+          "unit": "袋",
+          "price": 4,
+          "category": "food"
+        },
+        {
+          "id": "mushroom",
+          "name": "蘑菇",
+          "unit": "斤",
+          "price": 4,
+          "category": "food"
+        },
+        {
+          "id": "vegetables",
+          "name": "蔬菜",
+          "unit": "斤",
+          "price": 3.4,
+          "category": "food"
+        },
+        {
+          "id": "pen",
+          "name": "笔",
+          "unit": "支",
+          "price": 3,
+          "category": "stationery"
+        },
+        {
+          "id": "tofu",
+          "name": "豆腐",
+          "unit": "块",
+          "price": 3,
+          "category": "food"
+        },
+        {
+          "id": "ginger",
+          "name": "生姜",
+          "unit": "斤",
+          "price": 3,
+          "category": "food"
+        },
+        {
+          "id": "lettuce",
+          "name": "生菜",
+          "unit": "斤",
+          "price": 2,
+          "category": "food"
+        },
+        {
+          "id": "corn",
+          "name": "玉米",
+          "unit": "根",
+          "price": 2,
+          "category": "food"
+        },
+        {
+          "id": "onion",
+          "name": "洋葱",
+          "unit": "斤",
+          "price": 2,
+          "category": "food"
+        },
+        {
+          "id": "garlic",
+          "name": "大蒜",
+          "unit": "斤",
+          "price": 2,
+          "category": "food"
+        },
+        {
+          "id": "vinegar",
+          "name": "醋",
+          "unit": "瓶",
+          "price": 2,
+          "category": "food"
+        },
+        {
+          "id": "starch",
+          "name": "淀粉",
+          "unit": "袋",
+          "price": 2,
+          "category": "food"
+        },
+        {
+          "id": "water",
+          "name": "瓶装水",
+          "unit": "瓶",
+          "price": 1.7,
+          "category": "daily"
+        }
+      ],
+      "vendingNote": "主商圈，客流量最大，但城管也多"
+    },
+    "techPark": {
+      "id": "techPark",
+      "name": "科技园",
+      "icon": "💻",
+      "desc": "互联网大厂的聚集地，高楼林立，精英云集。",
+      "type": "corporate",
+      "wealthTier": 3,
+      "footfall": 0.7,
+      "specialties": [
+        "electronics",
+        "daily_use",
+        "snacks"
+      ],
+      "specialtyLabels": [
+        "小电子产品",
+        "日用品",
+        "零食"
+      ],
+      "priceMod": {},
+      "priceModList": [],
+      "dailyProbability": 0.4,
+      "flavor": [
+        "💻 几个穿格子衫的程序员坐在户外，盯着笔记本屏幕敲代码，耳机挂在脖子上。",
+        "☕ 园区咖啡馆里坐满了人，讨论的全是'融资''估值''赛道'……你插不上话。",
+        "🚗 停车场里一溜儿新能源车，不少还贴着大厂内部泊位贴纸。",
+        "📊 大楼入口大屏滚动着季度KPI和公司目标，路过的员工都没什么表情。",
+        "👓 一个戴眼镜的年轻人等外卖，手机不停地刷工作群消息，嘴角抿得很紧。",
+        "🎯 招聘广告牌写着'改变世界，从这里开始'，下方小字标注：'大小周，年终双薪'。",
+        "🌃 深夜还有几栋楼亮着灯，某个格子间里有人对着屏幕皱眉，连夜赶项目。"
+      ],
+      "jobs": [
+        {
+          "id": "content_writing",
+          "name": "内容创作者",
+          "icon": "✍️",
+          "desc": "给平台和公众号写文章、做内容。要有文字功底和英语能力，本科以上学历优先。",
+          "startupCost": 0,
+          "risk": {},
+          "payHint": {
+            "min": 50,
+            "max": 85,
+            "text": "payCalc(state) {\n      const engBonus = state.skills.english\n        ? (state.skills.english && state.skills.english.level || 0) * 0.8\n        : 0;\n      const intBonus = state.player.intelligence * 0.7;\n      return Mat"
+          }
+        },
+        {
+          "id": "junior_analyst",
+          "name": "初级数据分析师",
+          "icon": "📊",
+          "desc": "用Excel/表格做市场数据分析，输出报告。高学历高智力才能胜任，但薪资也是街头最高档。",
+          "startupCost": 0,
+          "risk": {},
+          "payHint": {
+            "min": 60,
+            "max": 130,
+            "text": "payCalc(state) {\n      return Math.floor(\n        130 + state.player.intelligence * 1.2 + Random.float(0, 60),\n      );\n    }"
+          }
+        },
+        {
+          "id": "remote_dev",
+          "name": "远程开发",
+          "icon": "💻",
+          "desc": "接海外远程编程项目。需要国际外包连携激活。",
+          "startupCost": 0,
+          "risk": {},
+          "payHint": {
+            "min": 200,
+            "max": 300,
+            "text": "function(s) { return Math.floor(300 + (s.skills.coding?.level || 0) * 3 + (s.skills.english?.level || 0) * 2 + Random.float(0, 200)); }"
+          }
+        },
+        {
+          "id": "foreign_company_staff",
+          "name": "外企职员",
+          "icon": "🏢",
+          "desc": "在外资企业做行政/协调工作。需要外企晋升连携激活。",
+          "startupCost": 0,
+          "risk": {},
+          "payHint": {
+            "min": 200,
+            "max": 400,
+            "text": "function(s) { return Math.floor(400 + (s.skills.english?.level || 0) * 3 + (s.skills.management?.level || 0) * 2 + Random.float(0, 200)); }"
+          }
+        },
+        {
+          "id": "finance_analyst",
+          "name": "财务分析师",
+          "icon": "📊",
+          "desc": "为企业提供财务分析服务。需要财务自由连携激活。",
+          "startupCost": 0,
+          "risk": {},
+          "payHint": {
+            "min": 150,
+            "max": 350,
+            "text": "function(s) { return Math.floor(350 + (s.skills.accounting?.level || 0) * 3 + (s.skills.management?.level || 0) * 2 + Random.float(0, 150)); }"
+          }
+        },
+        {
+          "id": "instrument_repair",
+          "name": "仪器仪表维修",
+          "icon": "🔬",
+          "desc": "维修精密测量仪器、实验室设备。技术含量高，收入可观。",
+          "startupCost": 0,
+          "risk": {},
+          "payHint": {
+            "min": 50,
+            "max": 100,
+            "text": "payCalc(state) {\n        var base =\n          100 + ((state.skills.repair && state.skills.repair.level || 0)) * 2.5 + Random.float(0, 50);\n        var branchBonus =\n          typeof getBranchJobBonus === \"function\"\n     "
+          }
+        },
+        {
+          "id": "web_designer",
+          "name": "网页设计师",
+          "icon": "🎨",
+          "desc": "帮小公司做网页设计制作。学了前端正好用上，按项目计酬。",
+          "startupCost": 0,
+          "risk": {},
+          "payHint": {
+            "min": 55,
+            "max": 110,
+            "text": "payCalc(state) {\n        var base =\n          110 + ((state.skills.coding && state.skills.coding.level || 0)) * 2.0 + Random.float(0, 55);\n        return Math.floor(\n          base *\n            (typeof getBranchJobBonus"
+          }
+        },
+        {
+          "id": "server_ops",
+          "name": "服务器运维",
+          "icon": "⚙️",
+          "desc": "维护公司服务器、数据库。夜班少，工作稳定，是技术岗的敲门砖。",
+          "startupCost": 0,
+          "risk": {},
+          "payHint": {
+            "min": 50,
+            "max": 130,
+            "text": "payCalc(state) {\n        var base =\n          130 + ((state.skills.coding && state.skills.coding.level || 0)) * 2.5 + Random.float(0, 50);\n        return Math.floor(\n          base *\n            (typeof getBranchJobBonus"
+          }
+        },
+        {
+          "id": "network_monitor",
+          "name": "网络安全监控",
+          "icon": "🔒",
+          "desc": "监控公司网络安全状况，排查异常流量。责任重大，薪资丰厚。",
+          "startupCost": 0,
+          "risk": {},
+          "payHint": {
+            "min": 45,
+            "max": 120,
+            "text": "payCalc(state) {\n        var base =\n          120 + ((state.skills.coding && state.skills.coding.level || 0)) * 2.2 + Random.float(0, 45);\n        return Math.floor(\n          base *\n            (typeof getBranchJobBonus"
+          }
+        },
+        {
+          "id": "project_coordinator",
+          "name": "项目协调员",
+          "icon": "📊",
+          "desc": "协调团队内部工作进度，做会议记录和任务追踪。管理入门岗。",
+          "startupCost": 0,
+          "risk": {},
+          "payHint": {
+            "min": 35,
+            "max": 85,
+            "text": "payCalc(state) {\n        var base =\n          85 + ((state.skills.management && state.skills.management.level || 0)) * 1.5 + Random.float(0, 35);\n        return Math.floor(\n          base *\n            (typeof getBranchJ"
+          }
+        },
+        {
+          "id": "audit_assistant",
+          "name": "审计助理",
+          "icon": "🔍",
+          "desc": "协助注册会计师做账目审计，核对票据和凭证。严谨细致是核心要求。",
+          "startupCost": 0,
+          "risk": {},
+          "payHint": {
+            "min": 40,
+            "max": 95,
+            "text": "payCalc(state) {\n        var base =\n          95 + ((state.skills.accounting && state.skills.accounting.level || 0)) * 2.0 + Random.float(0, 40);\n        return Math.floor(\n          base *\n            (typeof getBranchJ"
+          }
+        }
+      ],
+      "amenities": [
+        {
+          "id": "techpark_brunch",
+          "name": "科技园轻食",
+          "icon": "🥗",
+          "type": "food",
+          "tier": 3,
+          "cost": 35,
+          "ap": 8,
+          "desc": "藜麦三文鱼沙拉，互联网精英的标配午餐。",
+          "primary": {
+            "hunger": 60,
+            "happiness": 8
+          },
+          "junkFood": false,
+          "lateNight": false
+        },
+        {
+          "id": "techpark_gymshower",
+          "name": "科技园健身房淋浴",
+          "icon": "🚿",
+          "type": "bath",
+          "tier": 3,
+          "cost": 20,
+          "ap": 8,
+          "desc": "刷一下健身卡顺便淋浴，互联网人省时之选。",
+          "primary": {
+            "hygiene": 50,
+            "fatigue": -10
+          },
+          "junkFood": false,
+          "lateNight": false
+        },
+        {
+          "id": "techpark_napcapsule",
+          "name": "科技园午睡舱",
+          "icon": "🛌",
+          "type": "rest",
+          "tier": 3,
+          "cost": 20,
+          "ap": 8,
+          "desc": "高科技睡眠舱，30分钟顶3小时。",
+          "primary": {
+            "fatigue": -40,
+            "happiness": 5
+          },
+          "junkFood": false,
+          "lateNight": false
+        }
+      ],
+      "actions": [
+        {
+          "id": "techpark_networking",
+          "name": "科技园找机会",
+          "icon": "💡",
+          "desc": "在科技园里观察和接触创业公司的人，可能找到工作或创业机会。需要脑子灵活。",
+          "apCost": 20,
+          "payEstimate": "0~∞"
+        }
+      ],
+      "actionsExtra": [
+        {
+          "id": "internet_bar",
+          "name": "网吧上网",
+          "desc": "花 5 块在网吧上 2 小时网，可以查资料、刷视频、玩游戏。",
+          "icon": "💻",
+          "apCost": 20,
+          "payEstimate": "智力+0.3, 随机技能XP",
+          "costEstimate": 5,
+          "hint": "去城中村、商业区或科技园附近的网吧"
+        }
+      ],
+      "illegal": [],
+      "buy": [
+        {
+          "id": "electronics",
+          "name": "小电子产品",
+          "unit": "个",
+          "price": 80,
+          "category": "electronics"
+        }
+      ],
+      "sell": [
+        {
+          "id": "electronics",
+          "name": "小电子产品",
+          "unit": "个",
+          "price": 80,
+          "category": "electronics"
+        },
+        {
+          "id": "clothing",
+          "name": "二手衣物",
+          "unit": "件",
+          "price": 25,
+          "category": "clothing"
+        },
+        {
+          "id": "vitamins_item",
+          "name": "维生素",
+          "unit": "瓶",
+          "price": 20,
+          "category": "medicine"
+        },
+        {
+          "id": "shrimp",
+          "name": "虾",
+          "unit": "斤",
+          "price": 20,
+          "category": "food"
+        },
+        {
+          "id": "second_hand_book",
+          "name": "二手书",
+          "unit": "本",
+          "price": 15,
+          "category": "books"
+        },
+        {
+          "id": "daily_use",
+          "name": "日用品",
+          "unit": "件",
+          "price": 10,
+          "category": "daily"
+        },
+        {
+          "id": "rose",
+          "name": "玫瑰花",
+          "unit": "支",
+          "price": 10,
+          "category": "flowers"
+        },
+        {
+          "id": "notebook_item",
+          "name": "笔记本",
+          "unit": "本",
+          "price": 10,
+          "category": "stationery"
+        },
+        {
+          "id": "fruits",
+          "name": "水果",
+          "unit": "斤",
+          "price": 6,
+          "category": "food"
+        },
+        {
+          "id": "pen",
+          "name": "笔",
+          "unit": "支",
+          "price": 3,
+          "category": "stationery"
+        }
+      ],
+      "vendingNote": "白领消费力强但习惯点外卖"
+    },
+    "hospital": {
+      "id": "hospital",
+      "name": "医院",
+      "icon": "🏥",
+      "desc": "看病治疗的地方。健康是革命的本钱。",
+      "type": "service",
+      "wealthTier": 2,
+      "footfall": 0.8,
+      "specialties": [
+        "fruits",
+        "water",
+        "snacks"
+      ],
+      "specialtyLabels": [
+        "水果",
+        "瓶装水",
+        "零食"
+      ],
+      "priceMod": {},
+      "priceModList": [],
+      "dailyProbability": 0.3,
+      "flavor": [
+        "🏥 急诊室外有人焦急地来回踱步，手机夹在肩膀和耳朵之间，边走边说。",
+        "👴 挂号大厅里老人排了长队，有人抱着病历本，有人盯着叫号屏幕发呆。",
+        "💊 药房窗口贴着收费价格单，一串长长的数字，让人叹了口气。",
+        "🌹 走廊里有人端着一束百合花，脸上带着疲惫的笑，应该是来探病的家属。",
+        "😢 候诊区的孩子哭了起来，旁边的父母轻声安抚，说'一会儿就好了'。",
+        "🍱 护士换班时抱着保温饭盒穿过走廊，脚步匆忙，没时间喘息。",
+        "📋 门诊室外的椅子上，有人低着头翻看检查报告，眼神里有种说不清的凝重。"
+      ],
+      "jobs": [
+        {
+          "id": "hospital_companion",
+          "name": "陪诊服务",
+          "icon": "🏥",
+          "desc": "帮老人/行动不便者去医院陪诊挂号、取药。需要耐心和细心，收入稳定。",
+          "startupCost": 0,
+          "risk": {
+            "illness": 0.02
+          },
+          "payHint": {
+            "min": 80,
+            "max": 80,
+            "text": "payCalc(state) {\n      return Math.floor(80 + state.player.mental * 0.3 + Random.float(0, 80));\n    }"
+          }
+        }
+      ],
+      "amenities": [],
+      "actions": [
+        {
+          "id": "hospital_donate",
+          "name": "医院献血",
+          "icon": "🩸",
+          "desc": "去医院献血，既能帮助他人又能赚营养补贴。要求身体健康。",
+          "apCost": 15,
+          "payEstimate": "200"
+        }
+      ],
+      "actionsExtra": [
+        {
+          "id": "pharmacy",
+          "name": "买药/买营养品",
+          "desc": "去药房买维生素、补品等。需要 ¥30~80。",
+          "icon": "💊",
+          "apCost": 20,
+          "payEstimate": "健康+5",
+          "costEstimate": 30,
+          "hint": "去医院或商业区药房"
+        }
+      ],
+      "illegal": [],
+      "buy": [
+        {
+          "id": "painkiller",
+          "name": "止痛药",
+          "unit": "盒",
+          "price": 10,
+          "category": "medicine"
+        },
+        {
+          "id": "cold_medicine",
+          "name": "感冒药",
+          "unit": "盒",
+          "price": 20,
+          "category": "medicine"
+        },
+        {
+          "id": "vitamins_item",
+          "name": "维生素",
+          "unit": "瓶",
+          "price": 20,
+          "category": "medicine"
+        }
+      ],
+      "sell": [
+        {
+          "id": "shrimp",
+          "name": "虾",
+          "unit": "斤",
+          "price": 20,
+          "category": "food"
+        },
+        {
+          "id": "cigarettes",
+          "name": "香烟",
+          "unit": "包",
+          "price": 15,
+          "category": "luxury"
+        },
+        {
+          "id": "daily_use",
+          "name": "日用品",
+          "unit": "件",
+          "price": 10,
+          "category": "daily"
+        },
+        {
+          "id": "fruits",
+          "name": "水果",
+          "unit": "斤",
+          "price": 6,
+          "category": "food"
+        },
+        {
+          "id": "carnation",
+          "name": "康乃馨",
+          "unit": "支",
+          "price": 5,
+          "category": "flowers"
+        },
+        {
+          "id": "mushroom",
+          "name": "蘑菇",
+          "unit": "斤",
+          "price": 4,
+          "category": "food"
+        },
+        {
+          "id": "vegetables",
+          "name": "蔬菜",
+          "unit": "斤",
+          "price": 3,
+          "category": "food"
+        },
+        {
+          "id": "tofu",
+          "name": "豆腐",
+          "unit": "块",
+          "price": 3,
+          "category": "food"
+        },
+        {
+          "id": "ginger",
+          "name": "生姜",
+          "unit": "斤",
+          "price": 3,
+          "category": "food"
+        }
+      ],
+      "vendingNote": "探病家属是主要客群"
+    },
+    "bank": {
+      "id": "bank",
+      "name": "银行",
+      "icon": "🏦",
+      "desc": "存取款、办理贷款。",
+      "type": "service",
+      "wealthTier": 2,
+      "footfall": 0.4,
+      "specialties": [],
+      "specialtyLabels": [],
+      "priceMod": {},
+      "priceModList": [],
+      "dailyProbability": 0.2,
+      "flavor": [
+        "🔢 取号机叫到了87号，你手里拿着148号，慢慢等吧。",
+        "💼 西装笔挺的理财顾问正向一位中年女士推销基金，语气轻柔，措辞笃定。",
+        "🏦 存款利率告示牌上的数字已经很久没有变动了，旁边的人看了一眼就走了。",
+        "😴 等待区里有一位大爷睡着了，脑袋垂在胸前，手里的号码单差点掉落。",
+        "📱 ATM机前有人忘了密码，反复重试，后面排队的人耐心地等，没人催。",
+        "🔒 保险柜展示窗里摆着金条模型，亮闪闪的，吸引了很多人停下来看。",
+        "❄️ 银行里的空调开得很足，比外面凉快多了，有个流浪汉悄悄坐在角落蹭凉气。"
+      ],
+      "jobs": [
+        {
+          "id": "bank_security",
+          "name": "银行保安",
+          "icon": "👮",
+          "desc": "在银行大厅维持秩序，站一天挺累的，但胜在稳定。偶尔能遇上运钞车押运的额外任务。",
+          "startupCost": 0,
+          "risk": {},
+          "payHint": {
+            "min": 60,
+            "max": 90,
+            "text": "function (state) {\n      return Math.floor(Random.float(60, 90));\n    }"
+          }
+        }
+      ],
+      "amenities": [],
+      "actions": [],
+      "actionsExtra": [],
+      "illegal": [],
+      "buy": [],
+      "sell": [],
+      "vendingNote": "人流稀少，不适合摆摊"
+    },
+    "park": {
+      "id": "park",
+      "name": "公园",
+      "icon": "🌳",
+      "desc": "城市中的绿洲，可以放松身心。",
+      "type": "recreation",
+      "wealthTier": 2,
+      "footfall": 1,
+      "specialties": [
+        "snacks",
+        "water",
+        "fruits"
+      ],
+      "specialtyLabels": [
+        "零食",
+        "瓶装水",
+        "水果"
+      ],
+      "priceMod": {},
+      "priceModList": [],
+      "dailyProbability": 0.5,
+      "flavor": [
+        "🌳 老人们在树荫下打太极拳，动作舒缓而专注，像是慢放的录像。",
+        "🦆 湖边有人在喂鸭子，孩子兴奋地蹲下去，鸭子却拍着翅膀跑开了。",
+        "📻 广场舞队伍正在热身，音乐混着笑声飘过来，自成一个小世界。",
+        "🏃 一个中年男人慢跑经过，汗水浸透了后背，表情却很放松，脚步均匀。",
+        "🌺 公园里的月季花开了，有人凑近拿手机拍，比比划划寻找最好的角度。",
+        "⛸️ 溜冰场传来轮滑的声音，几个孩子扶着栏杆慢慢滑，互相对视着笑。",
+        "🌅 傍晚的阳光把树影拉得很长，坐在长椅上什么都不做也是一种奢侈。",
+        "🕊️ 一群鸽子聚在广场上觅食，有人扔了把瓜子，鸽子们扑腾着扑过去。"
+      ],
+      "jobs": [
+        {
+          "id": "busking",
+          "name": "街头表演",
+          "icon": "🎸",
+          "desc": "在天桥或广场表演才艺。脸皮要厚，观众打赏全看心情。",
+          "startupCost": 0,
+          "risk": {},
+          "payHint": {
+            "min": 18,
+            "max": 42,
+            "text": "payCalc(state) {\n        return Math.floor(\n          18 +\n            (state.player.mental || 0) * 0.2 +\n            (state.player.fame || 0) * 0.3 +\n            (typeof Random !== \"undefined\" && Random.float ? Random.f"
+          }
+        }
+      ],
+      "amenities": [
+        {
+          "id": "park_streetfood",
+          "name": "公园小吃摊",
+          "icon": "🌭",
+          "type": "food",
+          "tier": 2,
+          "cost": 12,
+          "ap": 5,
+          "desc": "烤串、烤肠、煎饼果子，夜市的诱惑。",
+          "primary": {
+            "hunger": 35,
+            "happiness": 4
+          },
+          "junkFood": true,
+          "lateNight": false
+        },
+        {
+          "id": "park_chat",
+          "name": "公园闲坐",
+          "icon": "🪑",
+          "type": "fun",
+          "tier": 1,
+          "cost": 0,
+          "ap": 8,
+          "desc": "晒晒太阳，看老人下棋，心情慢慢好起来。",
+          "primary": {
+            "happiness": 18,
+            "fatigue": -5
+          },
+          "junkFood": false,
+          "lateNight": false
+        },
+        {
+          "id": "park_nap",
+          "name": "公园长椅小憩",
+          "icon": "😴",
+          "type": "rest",
+          "tier": 1,
+          "cost": 0,
+          "ap": 10,
+          "desc": "找张长椅躺一会，蚊子可能多点。",
+          "primary": {
+            "fatigue": -20
+          },
+          "junkFood": false,
+          "lateNight": false
+        }
+      ],
+      "actions": [
+        {
+          "id": "park_exercise",
+          "name": "公园晨练",
+          "icon": "🏃",
+          "desc": "在公园晨练，免费又健康，还能放松身心。",
+          "apCost": 15,
+          "payEstimate": "0"
+        }
+      ],
+      "actionsExtra": [
+        {
+          "id": "gym",
+          "name": "办健身卡锻炼",
+          "desc": "去健身房办月卡，提升体质和敏捷。",
+          "icon": "🏋️",
+          "apCost": 20,
+          "payEstimate": "体质+1, 敏捷+0.5",
+          "costEstimate": 200,
+          "hint": "去公园、商业区或娱乐城附近的健身场所"
+        }
+      ],
+      "illegal": [],
+      "buy": [],
+      "sell": [
+        {
+          "id": "snacks",
+          "name": "零食",
+          "unit": "包",
+          "price": 5,
+          "category": "food"
+        },
+        {
+          "id": "water",
+          "name": "瓶装水",
+          "unit": "瓶",
+          "price": 1.5,
+          "category": "daily"
+        }
+      ],
+      "vendingNote": "周末家庭聚集，工作日冷清"
+    },
+    "community_center": {
+      "id": "community_center",
+      "name": "社区中心",
+      "icon": "🏛️",
+      "desc": "街道办下属的社区服务中心,提供免费讲座、职业咨询和邻里互助活动。",
+      "type": "public",
+      "wealthTier": 2,
+      "footfall": 0.5,
+      "specialties": [
+        "second_hand_book",
+        "pen",
+        "notebook_item"
+      ],
+      "specialtyLabels": [
+        "二手书",
+        "笔",
+        "笔记本"
+      ],
+      "priceMod": {
+        "water": 0.8,
+        "snacks": 0.9,
+        "daily_use": 0.85
+      },
+      "priceModList": [
+        {
+          "key": "water",
+          "value": 0.8,
+          "label": "瓶装水"
+        },
+        {
+          "key": "snacks",
+          "value": 0.9,
+          "label": "零食"
+        },
+        {
+          "key": "daily_use",
+          "value": 0.85,
+          "label": "日用品"
+        }
+      ],
+      "dailyProbability": 0.3,
+      "flavor": [],
+      "jobs": [
+        {
+          "id": "community_volunteer",
+          "name": "社区志愿者",
+          "icon": "🤝",
+          "desc": "在社区中心帮忙组织活动、服务居民。不赚钱但积人脉、长心智。",
+          "startupCost": 0,
+          "risk": {},
+          "payHint": {
+            "min": 20,
+            "max": 20,
+            "text": "payCalc(state) { return Math.floor(Random.float(0, 20)); }"
+          }
+        },
+        {
+          "id": "career_counselor_assistant",
+          "name": "职业咨询助理",
+          "icon": "📋",
+          "desc": "协助老陈做职业咨询,整理资料。需要一定的心智和社交能力。",
+          "startupCost": 0,
+          "risk": {},
+          "payHint": {
+            "min": 30,
+            "max": 30,
+            "text": "payCalc(state) { return Math.floor(30 + state.player.mental * 0.3 + Random.float(0, 30)); }"
+          }
+        }
+      ],
+      "amenities": [],
+      "actions": [],
+      "actionsExtra": [],
+      "illegal": [],
+      "buy": [],
+      "sell": [],
+      "vendingNote": "公共服务为主,少量便民摊位"
+    },
+    "night_market": {
+      "id": "night_market",
+      "name": "夜市",
+      "icon": "🏮",
+      "desc": "傍晚开始热闹的夜市,各种小吃摊位、杂货地摊,烟火气十足。",
+      "type": "commercial",
+      "wealthTier": 2,
+      "footfall": 0.95,
+      "specialties": [
+        "snacks",
+        "water",
+        "beer",
+        "clothing"
+      ],
+      "specialtyLabels": [
+        "零食",
+        "瓶装水",
+        "啤酒",
+        "二手衣物"
+      ],
+      "priceMod": {
+        "snacks": 0.9,
+        "water": 0.85,
+        "beer": 0.8,
+        "clothing": 1.1
+      },
+      "priceModList": [
+        {
+          "key": "snacks",
+          "value": 0.9,
+          "label": "零食"
+        },
+        {
+          "key": "water",
+          "value": 0.85,
+          "label": "瓶装水"
+        },
+        {
+          "key": "beer",
+          "value": 0.8,
+          "label": "啤酒"
+        },
+        {
+          "key": "clothing",
+          "value": 1.1,
+          "label": "二手衣物"
+        }
+      ],
+      "dailyProbability": 0.7,
+      "flavor": [],
+      "jobs": [
+        {
+          "id": "night_market_vendor",
+          "name": "夜市摆摊",
+          "icon": "🏮",
+          "desc": "在夜市支个摊卖小吃或杂货。客流量大,赚钱快,但竞争激烈。",
+          "startupCost": 0,
+          "risk": {
+            "illness": 0.01
+          },
+          "payHint": {
+            "min": 60,
+            "max": 120,
+            "text": "payCalc(state) {\n        const base = Random.float(60, 120);\n        const cookBonus = (state.skills.cooking && state.skills.cooking.level) ? state.skills.cooking.level * 0.8 : 0;\n        const salesBonus = (state.skills"
+          }
+        },
+        {
+          "id": "night_market_helper",
+          "name": "夜市帮工",
+          "icon": "🍢",
+          "desc": "帮小薇或其他摊主打下手。学手艺、攒经验,收入稳定。",
+          "startupCost": 0,
+          "risk": {},
+          "payHint": {
+            "min": 25,
+            "max": 50,
+            "text": "payCalc(state) {\n        return Math.floor(50 + ((state.skills.cooking && state.skills.cooking.level) || 0) * 0.6 + Random.float(0, 25));\n      }"
+          }
+        }
+      ],
+      "amenities": [],
+      "actions": [],
+      "actionsExtra": [],
+      "illegal": [],
+      "buy": [],
+      "sell": [],
+      "vendingNote": "人流量大,消费意愿强,但竞争也激烈"
+    },
+    "trainingCenter": {
+      "id": "trainingCenter",
+      "name": "培训中心",
+      "icon": "📚",
+      "desc": "学习技能、考取证书的地方。投资自己。",
+      "type": "education",
+      "wealthTier": 2,
+      "footfall": 0.7,
+      "specialties": [
+        "daily_use",
+        "snacks",
+        "water"
+      ],
+      "specialtyLabels": [
+        "日用品",
+        "零食",
+        "瓶装水"
+      ],
+      "priceMod": {},
+      "priceModList": [],
+      "dailyProbability": 0.3,
+      "flavor": [
+        "📖 走廊里有人在背电工规范，念念有词，来回踱步，背完一页换一页。",
+        "🎓 布告栏上贴满了职业资格考试的广告，每一张都许诺'高薪就业，前途无量'。",
+        "✏️ 自习室里，学员们低着头做练习题，偶尔叹气翻页，偶尔提笔认真填写。",
+        "👨‍🏫 教室里传出讲师的声音：'这道题考试必考！大家划重点！翻过去别睡着！'",
+        "☕ 门口的小卖部咖啡卖得不错，下午三点最容易犯困，买一杯提提神。",
+        "📱 课间休息时，大家纷纷刷手机，有人在查招聘信息，有人在看直播。",
+        "🌙 晚班学员下课已经快九点了，还要坐末班公交回家，眼睛里有一种说不清的疲惫。"
+      ],
+      "jobs": [
+        {
+          "id": "training_assistant",
+          "name": "培训助理",
+          "icon": "📋",
+          "desc": "协助培训老师管理班级、准备教材。需要耐心和组织能力。",
+          "startupCost": 0,
+          "risk": {},
+          "payHint": {
+            "min": 40,
+            "max": 40,
+            "text": "payCalc(state) {\n      return Math.floor(40 + state.player.mental * 0.2 + Random.float(0, 40));\n    }"
+          }
+        }
+      ],
+      "amenities": [],
+      "actions": [
+        {
+          "id": "library_study",
+          "name": "图书馆啃书",
+          "icon": "📖",
+          "desc": "在培训中心的图书馆看书，各种技能书都有，对提升技能很有帮助。只需交茶水费。",
+          "apCost": 20,
+          "payEstimate": null
+        }
+      ],
+      "actionsExtra": [
+        {
+          "id": "self_study",
+          "name": "图书馆自习",
+          "desc": "去图书馆（商业区旁）安静看书。",
+          "icon": "📖",
+          "apCost": 20,
+          "payEstimate": "技能XP+30",
+          "costEstimate": null,
+          "hint": "去大学城、培训中心或图书馆自习"
+        },
+        {
+          "id": "night_school",
+          "name": "上夜校",
+          "desc": "晚上上夜校，提升智力+相关技能。需要 ¥50 学费，智力≥25。",
+          "icon": "🌃",
+          "apCost": 20,
+          "payEstimate": "智力+1, 技能+",
+          "costEstimate": 50,
+          "hint": "去大学城或培训中心报名夜校"
+        }
+      ],
+      "illegal": [],
+      "buy": [],
+      "sell": [],
+      "vendingNote": "学员课间小消费"
+    },
+    "suburb": {
+      "id": "suburb",
+      "name": "郊区",
+      "icon": "🌆",
+      "desc": "城市边缘的郊区，安静但交通不便。房租便宜，适合养病/休息。",
+      "type": "residential",
+      "wealthTier": 2,
+      "footfall": 0.4,
+      "specialties": [
+        "vegetables",
+        "fruits"
+      ],
+      "specialtyLabels": [
+        "蔬菜",
+        "水果"
+      ],
+      "priceMod": {
+        "water": 0.85,
+        "vegetables": 0.8,
+        "fruits": 0.85
+      },
+      "priceModList": [
+        {
+          "key": "water",
+          "value": 0.85,
+          "label": "瓶装水"
+        },
+        {
+          "key": "vegetables",
+          "value": 0.8,
+          "label": "蔬菜"
+        },
+        {
+          "key": "fruits",
+          "value": 0.85,
+          "label": "水果"
+        }
+      ],
+      "dailyProbability": 0.3,
+      "flavor": [
+        "🌾 郊区的田埂上，几个老人正在收割最后一茬水稻，镰刀在阳光下闪着光。",
+        "🚌 末班公交车慢悠悠地开过来，车上只有三四个乘客，司机打着哈欠。",
+        "🐕 一只土狗趴在路边晒太阳，看到有人经过就懒洋洋地抬一下眼皮。",
+        "🏡 一栋自建小楼正在装修，电钻声从清晨响到傍晚，邻居们早已习以为常。",
+        "🌅 傍晚时分，郊区的天空格外开阔，晚霞把整片天空染成橘红色。",
+        "🚲 一条乡间小路旁停着几辆自行车，骑车的人正在路边小卖部买冰棍。",
+        "🌙 郊区的夜晚格外安静，偶尔能听到远处火车的汽笛声，悠长而遥远。"
+      ],
+      "jobs": [],
+      "amenities": [],
+      "actions": [],
+      "actionsExtra": [],
+      "illegal": [],
+      "buy": [],
+      "sell": [],
+      "vendingNote": "客流量少，适合长期居住不适合摆摊"
+    },
+    "luxury_community": {
+      "id": "luxury_community",
+      "name": "高档小区",
+      "icon": "🏘️",
+      "desc": "高档封闭式小区，有物业和保安。普通摆摊进不去，但可以提供上门服务。",
+      "type": "residential",
+      "wealthTier": 3,
+      "footfall": 0.3,
+      "specialties": [
+        "cigarettes",
+        "electronics"
+      ],
+      "specialtyLabels": [
+        "香烟",
+        "小电子产品"
+      ],
+      "priceMod": {
+        "clothing": 1.3,
+        "electronics": 1.2,
+        "cigarettes": 1.4
+      },
+      "priceModList": [
+        {
+          "key": "clothing",
+          "value": 1.3,
+          "label": "二手衣物"
+        },
+        {
+          "key": "electronics",
+          "value": 1.2,
+          "label": "小电子产品"
+        },
+        {
+          "key": "cigarettes",
+          "value": 1.4,
+          "label": "香烟"
+        }
+      ],
+      "dailyProbability": 0.2,
+      "flavor": [],
+      "jobs": [
+        {
+          "id": "premium_housekeeper",
+          "name": "高档家政",
+          "icon": "🧹",
+          "desc": "在高档小区做家政服务。环境好、收入高，但需要细致耐心。",
+          "startupCost": 0,
+          "risk": {},
+          "payHint": {
+            "min": 16,
+            "max": 80,
+            "text": "payCalc(state) {\n        // [域A 修复] hygiene 真实路径为 state.needs.hygiene (非 state.player.hygiene)，\n        // 原写法恒为 undefined → ||0 吸收 → 清洁度加成永远为 0。\n        // [全系统自洽修复] 域A A类#16: state.needs 守卫\n        var hygiene = state "
+          }
+        },
+        {
+          "id": "chauffeur",
+          "name": "私人司机",
+          "icon": "🚗",
+          "desc": "给富人当专职司机。需要驾驶技术好、穿着得体、守时。",
+          "startupCost": 0,
+          "risk": {
+            "injury": 0.01
+          },
+          "payHint": {
+            "min": 30,
+            "max": 90,
+            "text": "payCalc(state) {\n        var base =\n          90 + (state.skills.driving?.level || 0) * 1.2 + Random.float(0, 30);\n        return Math.floor(base);\n      }"
+          }
+        }
+      ],
+      "amenities": [],
+      "actions": [],
+      "actionsExtra": [],
+      "illegal": [],
+      "buy": [],
+      "sell": [],
+      "vendingNote": "门禁严格，需要预约才能进入"
+    },
+    "old_community": {
+      "id": "old_community",
+      "name": "老旧小区",
+      "icon": "🏘️",
+      "desc": "90年代建的老小区，设施陈旧但生活便利。居民多为本地老住户。",
+      "type": "residential",
+      "wealthTier": 2,
+      "footfall": 0.7,
+      "specialties": [
+        "daily_use",
+        "vegetables"
+      ],
+      "specialtyLabels": [
+        "日用品",
+        "蔬菜"
+      ],
+      "priceMod": {
+        "daily_use": 0.9,
+        "vegetables": 0.85
+      },
+      "priceModList": [
+        {
+          "key": "daily_use",
+          "value": 0.9,
+          "label": "日用品"
+        },
+        {
+          "key": "vegetables",
+          "value": 0.85,
+          "label": "蔬菜"
+        }
+      ],
+      "dailyProbability": 0.4,
+      "flavor": [],
+      "jobs": [
+        {
+          "id": "cleaning_service",
+          "name": "清洁工",
+          "icon": "🧹",
+          "desc": "在老小区做清洁，楼道扫地、清运垃圾。辛苦但稳定。",
+          "startupCost": 0,
+          "risk": {
+            "injury": 0.02
+          },
+          "payHint": {
+            "min": 20,
+            "max": 40,
+            "text": "payCalc(state) {\n        return Math.floor(\n          40 + state.player.physique * 0.2 + Random.float(0, 20),\n        );\n      }"
+          }
+        },
+        {
+          "id": "repair_service",
+          "name": "维修工",
+          "icon": "🔧",
+          "desc": "帮小区居民修水管、通马桶、换灯泡。手艺活，邻里街坊都找你。",
+          "startupCost": 0,
+          "risk": {
+            "injury": 0.03
+          },
+          "payHint": {
+            "min": 40,
+            "max": 50,
+            "text": "payCalc(state) {\n        var base =\n          50 + (state.skills.repair?.level || 0) * 1.5 + Random.float(0, 40);\n        return Math.floor(base);\n      }"
+          }
+        }
+      ],
+      "amenities": [],
+      "actions": [],
+      "actionsExtra": [],
+      "illegal": [],
+      "buy": [],
+      "sell": [],
+      "vendingNote": "老年居民多，消费习惯保守"
+    },
+    "gov_office": {
+      "id": "gov_office",
+      "name": "政府办事大厅",
+      "icon": "🏛️",
+      "desc": "办理各种证件/业务的地方。办证/贷款/社保都在这里。",
+      "type": "service",
+      "wealthTier": 2,
+      "footfall": 0.5,
+      "specialties": [],
+      "specialtyLabels": [],
+      "priceMod": {},
+      "priceModList": [],
+      "dailyProbability": 0.2,
+      "flavor": [],
+      "jobs": [],
+      "amenities": [],
+      "actions": [],
+      "actionsExtra": [],
+      "illegal": [],
+      "buy": [],
+      "sell": [],
+      "vendingNote": "人流稀少，不适合摆摊"
+    },
+    "court": {
+      "id": "court",
+      "name": "法院",
+      "icon": "⚖️",
+      "desc": "打官司的地方。可以起诉欠债不还、劳动纠纷等。",
+      "type": "service",
+      "wealthTier": 2,
+      "footfall": 0.3,
+      "specialties": [],
+      "specialtyLabels": [],
+      "priceMod": {},
+      "priceModList": [],
+      "dailyProbability": 0.1,
+      "flavor": [],
+      "jobs": [],
+      "amenities": [],
+      "actions": [],
+      "actionsExtra": [],
+      "illegal": [],
+      "buy": [],
+      "sell": [],
+      "vendingNote": "严肃场所，不适合摆摊"
+    },
+    "job_market": {
+      "id": "job_market",
+      "name": "人才市场",
+      "icon": "🏢",
+      "desc": "找工作、招聘的地方。每周有招聘会，可以投简历。",
+      "type": "service",
+      "wealthTier": 2,
+      "footfall": 0.8,
+      "specialties": [
+        "daily_use"
+      ],
+      "specialtyLabels": [
+        "日用品"
+      ],
+      "priceMod": {
+        "daily_use": 0.9
+      },
+      "priceModList": [
+        {
+          "key": "daily_use",
+          "value": 0.9,
+          "label": "日用品"
+        }
+      ],
+      "dailyProbability": 0.3,
+      "flavor": [],
+      "jobs": [],
+      "amenities": [],
+      "actions": [],
+      "actionsExtra": [],
+      "illegal": [],
+      "buy": [],
+      "sell": [],
+      "vendingNote": "求职者多，但消费力弱"
+    },
+    "entertainment": {
+      "id": "entertainment",
+      "name": "娱乐城",
+      "icon": "🎮",
+      "desc": "电影院/KTV/游戏厅聚集地。放松娱乐，消耗现金。",
+      "type": "recreation",
+      "wealthTier": 3,
+      "footfall": 1.5,
+      "specialties": [
+        "snacks",
+        "beer",
+        "electronics"
+      ],
+      "specialtyLabels": [
+        "零食",
+        "啤酒",
+        "小电子产品"
+      ],
+      "priceMod": {
+        "snacks": 1.2,
+        "beer": 1.3,
+        "electronics": 1.1
+      },
+      "priceModList": [
+        {
+          "key": "snacks",
+          "value": 1.2,
+          "label": "零食"
+        },
+        {
+          "key": "beer",
+          "value": 1.3,
+          "label": "啤酒"
+        },
+        {
+          "key": "electronics",
+          "value": 1.1,
+          "label": "小电子产品"
+        }
+      ],
+      "dailyProbability": 0.6,
+      "flavor": [],
+      "jobs": [],
+      "amenities": [],
+      "actions": [],
+      "actionsExtra": [
+        {
+          "id": "gym",
+          "name": "办健身卡锻炼",
+          "desc": "去健身房办月卡，提升体质和敏捷。",
+          "icon": "🏋️",
+          "apCost": 20,
+          "payEstimate": "体质+1, 敏捷+0.5",
+          "costEstimate": 200,
+          "hint": "去公园、商业区或娱乐城附近的健身场所"
+        },
+        {
+          "id": "movie",
+          "name": "看场电影",
+          "desc": "去影院看场电影放松一下。",
+          "icon": "🎬",
+          "apCost": 20,
+          "payEstimate": "心情+18",
+          "costEstimate": 35,
+          "hint": "去娱乐城的影院"
+        },
+        {
+          "id": "ktv",
+          "name": "KTV 唱歌",
+          "desc": "约朋友去 KTV 吼两小时。",
+          "icon": "🎤",
+          "apCost": 20,
+          "payEstimate": "心情+25, 人缘+",
+          "costEstimate": 80,
+          "hint": "去娱乐城的 KTV"
+        }
+      ],
+      "illegal": [
+        {
+          "id": "illegal_foot_massage",
+          "name": "🦶 洗脚城灰服务",
+          "icon": "🦶",
+          "desc": "去洗脚城点'特殊服务'。心情大涨，但有被扫黄抓+染病风险。",
+          "apCost": 4,
+          "rewardRange": [
+            25,
+            40
+          ],
+          "catchProb": 0.25,
+          "moralityDelta": -10,
+          "penalty": {
+            "jailDays": 0,
+            "fine": 500,
+            "diseaseProb": 0.35
+          }
+        }
+      ],
+      "buy": [],
+      "sell": [],
+      "vendingNote": "年轻人多，消费力强"
+    },
+    "temple": {
+      "id": "temple",
+      "name": "寺庙",
+      "icon": "⛩️",
+      "desc": "城市中的古老寺庙。祈福/冥想/心灵慰藉。",
+      "type": "recreation",
+      "wealthTier": 2,
+      "footfall": 0.6,
+      "specialties": [
+        "fruits",
+        "water"
+      ],
+      "specialtyLabels": [
+        "水果",
+        "瓶装水"
+      ],
+      "priceMod": {
+        "fruits": 1.1,
+        "water": 1.05
+      },
+      "priceModList": [
+        {
+          "key": "fruits",
+          "value": 1.1,
+          "label": "水果"
+        },
+        {
+          "key": "water",
+          "value": 1.05,
+          "label": "瓶装水"
+        }
+      ],
+      "dailyProbability": 0.3,
+      "flavor": [],
+      "jobs": [],
+      "amenities": [],
+      "actions": [
+        {
+          "id": "temple_meditate_extra",
+          "name": "寺庙静心",
+          "icon": "🧘",
+          "desc": "在寺庙里打坐冥想，净化心灵。烧点香火，求个心安。",
+          "apCost": 15,
+          "payEstimate": null
+        }
+      ],
+      "actionsExtra": [],
+      "illegal": [],
+      "buy": [],
+      "sell": [],
+      "vendingNote": "香客多，不适合摆摊"
+    },
+    "library": {
+      "id": "library",
+      "name": "图书馆",
+      "icon": "📖",
+      "desc": "免费的公共图书馆，藏书丰富环境安静。适合自学技能、查找资料、消磨时光。",
+      "type": "education",
+      "wealthTier": 2,
+      "footfall": 0.5,
+      "specialties": [],
+      "specialtyLabels": [],
+      "priceMod": {},
+      "priceModList": [],
+      "dailyProbability": 0.2,
+      "flavor": [
+        "📚 自习区坐满了人，有人戴着耳机看书，有人在草稿纸上写写画画。",
+        "📖 一位老人坐在角落里看报纸，报纸已经泛黄，边角卷了起来。",
+        "🌿 窗边的绿植长得很好，阳光透过玻璃照在上面，叶片泛着绿光。",
+        "📋 公告栏上贴着读书会通知，'本周六晚七点，共读《活着》'。",
+        "☕ 阅览区有人小声打电话，被管理员提醒后赶紧挂了，脸红着道歉。",
+        "🌙 闭馆音乐响起，学生们陆续起身收拾书包，有人打了个大大的哈欠。",
+        "📖 一个小女孩踮着脚够书架上的绘本，旁边的妈妈帮她拿下来，轻声读给她听。"
+      ],
+      "jobs": [],
+      "amenities": [],
+      "actions": [],
+      "actionsExtra": [
+        {
+          "id": "self_study",
+          "name": "图书馆自习",
+          "desc": "去图书馆（商业区旁）安静看书。",
+          "icon": "📖",
+          "apCost": 20,
+          "payEstimate": "技能XP+30",
+          "costEstimate": null,
+          "hint": "去大学城、培训中心或图书馆自习"
+        },
+        {
+          "id": "borrow_books",
+          "name": "借书自学",
+          "desc": "从图书馆借专业书籍回家学习。可以指定一门技能专精提升，效率比泛读高。",
+          "icon": "📚",
+          "apCost": 15,
+          "payEstimate": "指定技能XP+40",
+          "costEstimate": null,
+          "hint": "在图书馆借书自学"
+        },
+        {
+          "id": "reading_club",
+          "name": "参加读书会",
+          "desc": "参加图书馆周末读书会，与人交流读书心得。兼顾社交和学习，还能认识新朋友。",
+          "icon": "👥",
+          "apCost": 20,
+          "payEstimate": "社交+技能+心情",
+          "costEstimate": null,
+          "hint": "在图书馆参加读书会"
+        }
+      ],
+      "illegal": [],
+      "buy": [],
+      "sell": [],
+      "vendingNote": "安静场所，禁止摆摊"
+    },
+    "gym": {
+      "id": "gym",
+      "name": "体育馆",
+      "icon": "🏋️",
+      "desc": "可以健身/打球/游泳的地方。增强体质的好去处。",
+      "type": "recreation",
+      "wealthTier": 2,
+      "footfall": 0.8,
+      "specialties": [
+        "vitamins_item",
+        "snacks"
+      ],
+      "specialtyLabels": [
+        "维生素",
+        "零食"
+      ],
+      "priceMod": {
+        "snacks": 1.1,
+        "vitamins_item": 1.1
+      },
+      "priceModList": [
+        {
+          "key": "snacks",
+          "value": 1.1,
+          "label": "零食"
+        },
+        {
+          "key": "vitamins_item",
+          "value": 1.1,
+          "label": "维生素"
+        }
+      ],
+      "dailyProbability": 0.4,
+      "flavor": [],
+      "jobs": [
+        {
+          "id": "gym_coach",
+          "name": "健身教练",
+          "icon": "💪",
+          "desc": "在体育馆做私人教练。需要好身材+专业指导能力。",
+          "startupCost": 0,
+          "risk": {
+            "injury": 0.02
+          },
+          "payHint": {
+            "min": 30,
+            "max": 70,
+            "text": "payCalc(state) {\n        var base =\n          70 +\n          state.player.physique * 0.5 +\n          (state.player.fame || 0) * 0.2 +\n          Random.float(0, 30);\n        return Math.floor(base);\n      }"
+          }
+        }
+      ],
+      "amenities": [],
+      "actions": [],
+      "actionsExtra": [],
+      "illegal": [],
+      "buy": [],
+      "sell": [],
+      "vendingNote": "运动人群多，消费力中等"
+    },
+    "internet_cafe": {
+      "id": "internet_cafe",
+      "name": "网吧",
+      "icon": "🖥️",
+      "desc": "上网/打游戏的地方。可以接线上任务，也可以消磨时间。",
+      "type": "recreation",
+      "wealthTier": 2,
+      "footfall": 0.7,
+      "specialties": [
+        "snacks",
+        "beer"
+      ],
+      "specialtyLabels": [
+        "零食",
+        "啤酒"
+      ],
+      "priceMod": {
+        "snacks": 1,
+        "beer": 1
+      },
+      "priceModList": [
+        {
+          "key": "snacks",
+          "value": 1,
+          "label": "零食"
+        },
+        {
+          "key": "beer",
+          "value": 1,
+          "label": "啤酒"
+        }
+      ],
+      "dailyProbability": 0.5,
+      "flavor": [],
+      "jobs": [
+        {
+          "id": "data_entry",
+          "name": "数据录入",
+          "icon": "⌨️",
+          "desc": "在网吧接线上数据录入任务，打字快就赚得多。",
+          "startupCost": 0,
+          "risk": {},
+          "payHint": {
+            "min": 25,
+            "max": 30,
+            "text": "payCalc(state) {\n        var base = 30 + state.player.intelligence * 0.5 + Random.float(0, 25);\n        return Math.floor(base);\n      }"
+          }
+        }
+      ],
+      "amenities": [],
+      "actions": [],
+      "actionsExtra": [],
+      "illegal": [],
+      "buy": [],
+      "sell": [],
+      "vendingNote": "年轻人多，零食饮料消费旺盛"
+    },
+    "logistics_park": {
+      "id": "logistics_park",
+      "name": "物流园区",
+      "icon": "🚚",
+      "desc": "快递/物流集散中心。工作机会多，但环境嘈杂。",
+      "type": "industrial",
+      "wealthTier": 2,
+      "footfall": 1,
+      "specialties": [
+        "instant_noodles",
+        "daily_use"
+      ],
+      "specialtyLabels": [
+        "方便面",
+        "日用品"
+      ],
+      "priceMod": {
+        "instant_noodles": 0.9,
+        "daily_use": 0.85
+      },
+      "priceModList": [
+        {
+          "key": "instant_noodles",
+          "value": 0.9,
+          "label": "方便面"
+        },
+        {
+          "key": "daily_use",
+          "value": 0.85,
+          "label": "日用品"
+        }
+      ],
+      "dailyProbability": 0.5,
+      "flavor": [],
+      "jobs": [
+        {
+          "id": "package_delivery",
+          "name": "快递配送",
+          "icon": "📦",
+          "desc": "在物流园接单送快递，跑得勤就赚得多。有电动车更高效。",
+          "startupCost": 0,
+          "risk": {
+            "injury": 0.03
+          },
+          "payHint": {
+            "min": 35,
+            "max": 730,
+            "text": "payCalc(state) {\n        var base =\n          55 +\n          state.player.agility * 0.3 +\n          (state.skills.driving?.level || 0) * 0.8 +\n          Random.float(0, 35);\n        // [全系统自洽修复] 域D R730b 修复:配送类好感奖励同样作用于快"
+          }
+        },
+        {
+          "id": "warehouse_worker",
+          "name": "仓库管理员",
+          "icon": "📋",
+          "desc": "在物流园仓库做管理，货物入库出库登记。稳定但枯燥。",
+          "startupCost": 0,
+          "risk": {
+            "injury": 0.01
+          },
+          "payHint": {
+            "min": 25,
+            "max": 50,
+            "text": "payCalc(state) {\n        return Math.floor(\n          50 + state.player.intelligence * 0.2 + Random.float(0, 25),\n        );\n      }"
+          }
+        },
+        {
+          "id": "logistics_sorting",
+          "name": "物流分拣",
+          "icon": "📦",
+          "desc": "在物流园流水线分拣包裹。不需要技术，体力活计件算钱。",
+          "startupCost": 0,
+          "risk": {
+            "injury": 0.02
+          },
+          "payHint": {
+            "min": 25,
+            "max": 35,
+            "text": "payCalc(state) {\n        return Math.floor(\n          35 + state.player.agility * 0.2 + Random.float(0, 25),\n        );\n      }"
+          }
+        }
+      ],
+      "amenities": [],
+      "actions": [],
+      "actionsExtra": [],
+      "illegal": [],
+      "buy": [],
+      "sell": [],
+      "vendingNote": "快递员和司机是主力消费群体"
+    },
+    "auto_city": {
+      "id": "auto_city",
+      "name": "汽车城",
+      "icon": "🚗",
+      "desc": "4S店和二手车市场聚集地。可以买车/修车/找工作。",
+      "type": "commercial",
+      "wealthTier": 3,
+      "footfall": 0.6,
+      "specialties": [
+        "electronics",
+        "cigarettes"
+      ],
+      "specialtyLabels": [
+        "小电子产品",
+        "香烟"
+      ],
+      "priceMod": {
+        "electronics": 1.1
+      },
+      "priceModList": [
+        {
+          "key": "electronics",
+          "value": 1.1,
+          "label": "小电子产品"
+        }
+      ],
+      "dailyProbability": 0.3,
+      "flavor": [],
+      "jobs": [
+        {
+          "id": "auto_repair",
+          "name": "汽车维修",
+          "icon": "🔧",
+          "desc": "在4S店或汽修厂修车。技术活，车子越修越值钱。",
+          "startupCost": 0,
+          "risk": {
+            "injury": 0.04
+          },
+          "payHint": {
+            "min": 50,
+            "max": 70,
+            "text": "payCalc(state) {\n        var base =\n          70 + (state.skills.repair?.level || 0) * 2.0 + Random.float(0, 50);\n        return Math.floor(base);\n      }"
+          }
+        },
+        {
+          "id": "car_sales",
+          "name": "汽车销售",
+          "icon": "🚗",
+          "desc": "在4S店卖车。口才好+懂车，提成高但压力大。",
+          "startupCost": 0,
+          "risk": {},
+          "payHint": {
+            "min": 45,
+            "max": 80,
+            "text": "payCalc(state) {\n        var base =\n          45 +\n          (state.skills.sales?.level || 0) * 2.5 +\n          (state.player.fame || 0) * 0.3 +\n          Random.float(0, 80);\n        return Math.floor(base);\n      }"
+          }
+        }
+      ],
+      "amenities": [],
+      "actions": [],
+      "actionsExtra": [],
+      "illegal": [],
+      "buy": [],
+      "sell": [],
+      "vendingNote": "看车人多，但买车人少"
+    },
+    "flower_bird_market": {
+      "id": "flower_bird_market",
+      "name": "花鸟市场",
+      "icon": "🌸",
+      "desc": "卖花/宠物/观赏鱼的地方。喜欢动植物的天堂。",
+      "type": "recreation",
+      "wealthTier": 2,
+      "footfall": 0.5,
+      "specialties": [
+        "carnation",
+        "rose"
+      ],
+      "specialtyLabels": [
+        "康乃馨",
+        "玫瑰花"
+      ],
+      "priceMod": {},
+      "priceModList": [],
+      "dailyProbability": 0.3,
+      "flavor": [],
+      "jobs": [
+        {
+          "id": "pet_sitter",
+          "name": "宠物护理",
+          "icon": "🐾",
+          "desc": "在花鸟市场帮人照看宠物，洗澡剪毛遛狗。喜欢动物的人会开心。",
+          "startupCost": 0,
+          "risk": {
+            "injury": 0.01
+          },
+          "payHint": {
+            "min": 30,
+            "max": 40,
+            "text": "payCalc(state) {\n        return Math.floor(40 + state.player.mental * 0.3 + Random.float(0, 30));\n      }"
+          }
+        }
+      ],
+      "amenities": [],
+      "actions": [],
+      "actionsExtra": [],
+      "illegal": [],
+      "buy": [],
+      "sell": [],
+      "vendingNote": "爱好者多，消费力中等"
+    },
+    "flea_market": {
+      "id": "flea_market",
+      "name": "二手市场",
+      "icon": "🏴",
+      "desc": "淘二手货的地方。可以低价买入高价卖出，考验眼光。",
+      "type": "commercial",
+      "wealthTier": 2,
+      "footfall": 0.8,
+      "specialties": [
+        "clothing",
+        "electronics",
+        "second_hand_book"
+      ],
+      "specialtyLabels": [
+        "二手衣物",
+        "小电子产品",
+        "二手书"
+      ],
+      "priceMod": {
+        "clothing": 0.7,
+        "electronics": 0.75,
+        "second_hand_book": 0.6
+      },
+      "priceModList": [
+        {
+          "key": "clothing",
+          "value": 0.7,
+          "label": "二手衣物"
+        },
+        {
+          "key": "electronics",
+          "value": 0.75,
+          "label": "小电子产品"
+        },
+        {
+          "key": "second_hand_book",
+          "value": 0.6,
+          "label": "二手书"
+        }
+      ],
+      "dailyProbability": 0.5,
+      "flavor": [],
+      "jobs": [],
+      "amenities": [],
+      "actions": [],
+      "actionsExtra": [],
+      "illegal": [],
+      "buy": [],
+      "sell": [],
+      "vendingNote": "淘货人多，消费力参差不齐"
+    },
+    "vegetable_market": {
+      "id": "vegetable_market",
+      "name": "菜市场",
+      "icon": "",
+      "desc": "买菜的地方。新鲜食材最便宜，但环境嘈杂。讨价还价的唇枪舌剑此起彼伏。",
+      "type": "commercial",
+      "wealthTier": 2,
+      "footfall": 1.2,
+      "specialties": [
+        "vegetables",
+        "fruits",
+        "pork",
+        "fish"
+      ],
+      "specialtyLabels": [
+        "蔬菜",
+        "水果",
+        "猪肉",
+        "鱼"
+      ],
+      "priceMod": {
+        "vegetables": 0.7,
+        "fruits": 0.75,
+        "pork": 0.85,
+        "fish": 0.8
+      },
+      "priceModList": [
+        {
+          "key": "vegetables",
+          "value": 0.7,
+          "label": "蔬菜"
+        },
+        {
+          "key": "fruits",
+          "value": 0.75,
+          "label": "水果"
+        },
+        {
+          "key": "pork",
+          "value": 0.85,
+          "label": "猪肉"
+        },
+        {
+          "key": "fish",
+          "value": 0.8,
+          "label": "鱼"
+        }
+      ],
+      "dailyProbability": 0.8,
+      "flavor": [],
+      "jobs": [],
+      "amenities": [],
+      "actions": [],
+      "actionsExtra": [],
+      "illegal": [],
+      "buy": [
+        {
+          "id": "vegetables",
+          "name": "蔬菜",
+          "unit": "斤",
+          "price": 2.1,
+          "category": "food"
+        },
+        {
+          "id": "fruits",
+          "name": "水果",
+          "unit": "斤",
+          "price": 4.5,
+          "category": "food"
+        }
+      ],
+      "sell": [],
+      "vendingNote": "买菜人多，但消费力有限"
+    }
+  }
+}

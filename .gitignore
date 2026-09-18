@@ -99,3 +99,12 @@ Microsoft/
 #     grep -n "^/$" .gitignore | tail -1 | od -An -tx1   → 应为 2f ef 80 a2 2f 0a
 //
 .ghost-backup/
+
+# ── 3D 场景层 · 验证产物 ──────────────────────────────────────────────────────
+# dev/_3dtest/ 是 3D 内核（src/app/3d/）的隔离验证页，本身要入库（index.html 是 harness），
+# 但以下两项是每次跑脚本都会重新生成的产物，不该进版本库：
+#   bundle-probe.js —— scripts/build-3d-bundle.cjs --out 的产物（700KB IIFE）
+#                     （缺失时 scripts/verify-3d-bundle.cjs 会自动现打一个）
+#   shots/          —— 逐地点截图
+/dev/_3dtest/bundle-probe.js
+/dev/_3dtest/shots/

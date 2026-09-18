@@ -1,14 +1,17 @@
 /* ──────────────────────────────────────────────────────────────────────────────
-   scene3d · 3D 场景桥接样式（2026-09-18 新增）
+   scene3d · 3D 场景桥接样式（2026-09-18 新增 / 同日随内核迁移更新）
 
    侧栏微缩景（.scene3d-mini）+ 全屏全景（.scene3d-overlay）。
    配色沿用游戏既有的暖色体系，与 3D 场景的晦暗色调形成对比。
-   热点样式由 src/app/scene3d/index.ts 运行时注入，不在此处重复定义。
+
+   热点不需要 CSS：新内核（src/app/3d/kit.js 的 hotspot()）把交互点做成
+   3D 精灵与地面光圈，由 WebGL 渲染，不是 DOM 浮层。
 
    为什么单独成文件（而不是追加进 style.css）：
-     style.css 中存在一个未闭合的 @media (max-width: 600px) 块（第 5669 行起，
-     `@media` 里最后一个规则后缺少 `}`）。任何追加到文件末尾的规则都会被
-     这个媒体查询吞掉，只在 ≤600px 视口生效。独立文件可完全规避。
+     style.css 曾有一个未闭合的 @media (max-width: 600px) 块，任何追加到
+     文件末尾的规则都会被它吞掉。该缺陷已修复（见 scripts/check-css-structure.mjs
+     与 memory/css-brace-cancellation-trap.md），但独立成文件的做法保留 ——
+     3D 层本就该能整块摘除。
 
    摘除方式：删除本文件 + index.html 中的 3D 两个 <script> 标签即回到纯 2D。
    ────────────────────────────────────────────────────────────────────────────── */
@@ -123,7 +126,61 @@
   flex: 1 1 auto;
   position: relative;
   min-height: 0;
+  background: #10130f; /* 与 3D 场景底色一致，避免加载瞬间闪白 */
 }
+
+/* 靠近交互点时的「按 E」提示 */
+.scene3d-overlay__prompt {
+  position: absolute;
+  left: 50%;
+  bottom: 26px;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 16px;
+  border-radius: 999px;
+  background: rgba(16, 19, 17, 0.86);
+  border: 1px solid rgba(216, 180, 90, 0.45);
+  color: #e6e2d6;
+  font-size: 13px;
+  line-height: 1.4;
+  white-space: nowrap;
+  pointer-events: none;
+  box-shadow: 0 6px 22px rgba(0, 0, 0, 0.45);
+}
+.scene3d-overlay__prompt[hidden] { display: none; }
+.scene3d-overlay__prompt kbd {
+  display: inline-block;
+  min-width: 19px;
+  text-align: center;
+  padding: 1px 6px;
+  font: inherit;
+  font-size: 11px;
+  background: rgba(230, 226, 214, 0.14);
+  border: 1px solid rgba(230, 226, 214, 0.28);
+  border-radius: 4px;
+}
+/* 不可执行的原因（条件不足 / 当前阶段没有这个行动） */
+.scene3d-overlay__deny { color: #d8a15a; }
+
+/* 执行结果反馈 */
+.scene3d-overlay__toast {
+  position: absolute;
+  left: 50%;
+  top: 18px;
+  transform: translateX(-50%);
+  max-width: min(560px, 90%);
+  padding: 8px 16px;
+  border-radius: 8px;
+  background: rgba(16, 19, 17, 0.9);
+  border: 1px solid rgba(216, 180, 90, 0.4);
+  color: #efe9dc;
+  font-size: 13px;
+  line-height: 1.5;
+  box-shadow: 0 8px 26px rgba(0, 0, 0, 0.5);
+}
+.scene3d-overlay__toast[hidden] { display: none; }
 
 /* 窄屏：面板铺满 */
 @media (max-width: 720px) {
