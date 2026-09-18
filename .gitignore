@@ -106,5 +106,7 @@ Microsoft/
 #   bundle-probe.js —— scripts/build-3d-bundle.cjs --out 的产物（700KB IIFE）
 #                     （缺失时 scripts/verify-3d-bundle.cjs 会自动现打一个）
 #   shots/          —— 逐地点截图
+#   shots-ingame/   —— scripts/shot-3d-ingame.cjs 拍的真实游戏内截图
 /dev/_3dtest/bundle-probe.js
 /dev/_3dtest/shots/
+/dev/_3dtest/shots-ingame/
