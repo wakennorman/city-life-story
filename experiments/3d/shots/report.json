@@ -1,0 +1,556 @@
+{
+ "rows": [
+  {
+   "id": "slum",
+   "loc": "slum",
+   "moved": 1.7,
+   "colliders": 61,
+   "hotspots": 5,
+   "fps": 4,
+   "calls": 64,
+   "tris": 77938,
+   "build": {
+    "id": "slum",
+    "ms": 1376,
+    "before": 5329,
+    "after": 111,
+    "buckets": 25,
+    "tris": 76520,
+    "spawnBlocked": 0
+   }
+  },
+  {
+   "id": "old_community",
+   "loc": "old_community",
+   "moved": 1.7,
+   "colliders": 46,
+   "hotspots": 2,
+   "fps": 4,
+   "calls": 45,
+   "tris": 37794,
+   "build": {
+    "id": "old_community",
+    "ms": 602,
+    "before": 2926,
+    "after": 58,
+    "buckets": 23,
+    "tris": 35594,
+    "spawnBlocked": 0
+   }
+  },
+  {
+   "id": "luxury_community",
+   "loc": "luxury_community",
+   "moved": 1.55,
+   "colliders": 48,
+   "hotspots": 2,
+   "fps": 4,
+   "calls": 32,
+   "tris": 12450,
+   "build": {
+    "id": "luxury_community",
+    "ms": 62,
+    "before": 442,
+    "after": 34,
+    "buckets": 15,
+    "tris": 10162,
+    "spawnBlocked": 0
+   }
+  },
+  {
+   "id": "suburb",
+   "loc": "suburb",
+   "moved": 1.24,
+   "colliders": 64,
+   "hotspots": 1,
+   "fps": 4,
+   "calls": 66,
+   "tris": 63628,
+   "build": {
+    "id": "suburb",
+    "ms": 975,
+    "before": 4160,
+    "after": 111,
+    "buckets": 28,
+    "tris": 62348,
+    "spawnBlocked": 0
+   }
+  },
+  {
+   "id": "commercialDist",
+   "loc": "commercialDist",
+   "moved": 1.55,
+   "colliders": 35,
+   "hotspots": 5,
+   "fps": 4,
+   "calls": 65,
+   "tris": 34266,
+   "build": {
+    "id": "commercialDist",
+    "ms": 822,
+    "before": 2817,
+    "after": 82,
+    "buckets": 26,
+    "tris": 32056,
+    "spawnBlocked": 0
+   }
+  },
+  {
+   "id": "night_market",
+   "loc": "night_market",
+   "moved": 1.4,
+   "colliders": 78,
+   "hotspots": 2,
+   "fps": 3,
+   "calls": 81,
+   "tris": 69160,
+   "build": {
+    "id": "night_market",
+    "ms": 783,
+    "before": 4280,
+    "after": 125,
+    "buckets": 40,
+    "tris": 67780,
+    "spawnBlocked": 0
+   }
+  },
+  {
+   "id": "vegetable_market",
+   "loc": "vegetable_market",
+   "moved": 1.55,
+   "colliders": 72,
+   "hotspots": 1,
+   "fps": 4,
+   "calls": 50,
+   "tris": 17424,
+   "build": {
+    "id": "vegetable_market",
+    "ms": 902,
+    "before": 757,
+    "after": 62,
+    "buckets": 31,
+    "tris": 15264,
+    "spawnBlocked": 0
+   }
+  },
+  {
+   "id": "flea_market",
+   "loc": "flea_market",
+   "moved": 1.4,
+   "colliders": 53,
+   "hotspots": 1,
+   "fps": 4,
+   "calls": 66,
+   "tris": 51174,
+   "build": {
+    "id": "flea_market",
+    "ms": 996,
+    "before": 3374,
+    "after": 91,
+    "buckets": 27,
+    "tris": 49434,
+    "spawnBlocked": 0
+   }
+  },
+  {
+   "id": "wholesaleMarket",
+   "loc": "wholesaleMarket",
+   "moved": 1.96,
+   "colliders": 34,
+   "hotspots": 5,
+   "fps": 5,
+   "calls": 37,
+   "tris": 6972,
+   "build": {
+    "id": "wholesaleMarket",
+    "ms": 871,
+    "before": 215,
+    "after": 66,
+    "buckets": 12,
+    "tris": 5090,
+    "spawnBlocked": 0
+   }
+  },
+  {
+   "id": "flower_bird_market",
+   "loc": "flower_bird_market",
+   "moved": 1.4,
+   "colliders": 54,
+   "hotspots": 1,
+   "fps": 4,
+   "calls": 65,
+   "tris": 50892,
+   "build": {
+    "id": "flower_bird_market",
+    "ms": 618,
+    "before": 3289,
+    "after": 103,
+    "buckets": 23,
+    "tris": 49340,
+    "spawnBlocked": 0
+   }
+  },
+  {
+   "id": "auto_city",
+   "loc": "auto_city",
+   "moved": 1.55,
+   "colliders": 33,
+   "hotspots": 2,
+   "fps": 4,
+   "calls": 55,
+   "tris": 39810,
+   "build": {
+    "id": "auto_city",
+    "ms": 714,
+    "before": 3365,
+    "after": 81,
+    "buckets": 25,
+    "tris": 37748,
+    "spawnBlocked": 0
+   }
+  },
+  {
+   "id": "entertainment",
+   "loc": "entertainment",
+   "moved": 1.55,
+   "colliders": 34,
+   "hotspots": 4,
+   "fps": 4,
+   "calls": 64,
+   "tris": 32732,
+   "build": {
+    "id": "entertainment",
+    "ms": 1031,
+    "before": 2683,
+    "after": 88,
+    "buckets": 24,
+    "tris": 30608,
+    "spawnBlocked": 0
+   }
+  },
+  {
+   "id": "bank",
+   "loc": "bank",
+   "moved": 1.55,
+   "colliders": 31,
+   "hotspots": 1,
+   "fps": 4,
+   "calls": 57,
+   "tris": 48896,
+   "build": {
+    "id": "bank",
+    "ms": 401,
+    "before": 4224,
+    "after": 76,
+    "buckets": 23,
+    "tris": 46838,
+    "spawnBlocked": 0
+   }
+  },
+  {
+   "id": "trainingCenter",
+   "loc": "trainingCenter",
+   "moved": 1.86,
+   "colliders": 44,
+   "hotspots": 4,
+   "fps": 4,
+   "calls": 42,
+   "tris": 10400,
+   "build": {
+    "id": "trainingCenter",
+    "ms": 807,
+    "before": 337,
+    "after": 41,
+    "buckets": 18,
+    "tris": 8144,
+    "spawnBlocked": 0
+   }
+  },
+  {
+   "id": "school",
+   "loc": "school",
+   "moved": 1.7,
+   "colliders": 39,
+   "hotspots": 5,
+   "fps": 4,
+   "calls": 44,
+   "tris": 9746,
+   "build": {
+    "id": "school",
+    "ms": 809,
+    "before": 589,
+    "after": 44,
+    "buckets": 22,
+    "tris": 8266,
+    "spawnBlocked": 0
+   }
+  },
+  {
+   "id": "library",
+   "loc": "library",
+   "moved": 1.55,
+   "colliders": 38,
+   "hotspots": 3,
+   "fps": 4,
+   "calls": 55,
+   "tris": 16662,
+   "build": {
+    "id": "library",
+    "ms": 374,
+    "before": 856,
+    "after": 59,
+    "buckets": 28,
+    "tris": 14362,
+    "spawnBlocked": 0
+   }
+  },
+  {
+   "id": "gym",
+   "loc": "gym",
+   "moved": 1.66,
+   "colliders": 37,
+   "hotspots": 1,
+   "fps": 4,
+   "calls": 40,
+   "tris": 10456,
+   "build": {
+    "id": "gym",
+    "ms": 613,
+    "before": 441,
+    "after": 44,
+    "buckets": 24,
+    "tris": 8284,
+    "spawnBlocked": 0
+   }
+  },
+  {
+   "id": "factoryZone",
+   "loc": "factoryZone",
+   "moved": 2.02,
+   "colliders": 34,
+   "hotspots": 5,
+   "fps": 5,
+   "calls": 47,
+   "tris": 7110,
+   "build": {
+    "id": "factoryZone",
+    "ms": 699,
+    "before": 210,
+    "after": 64,
+    "buckets": 11,
+    "tris": 5114,
+    "spawnBlocked": 0
+   }
+  },
+  {
+   "id": "logistics_park",
+   "loc": "logistics_park",
+   "moved": 2.02,
+   "colliders": 34,
+   "hotspots": 3,
+   "fps": 5,
+   "calls": 42,
+   "tris": 6928,
+   "build": {
+    "id": "logistics_park",
+    "ms": 527,
+    "before": 212,
+    "after": 62,
+    "buckets": 11,
+    "tris": 4958,
+    "spawnBlocked": 0
+   }
+  },
+  {
+   "id": "construction",
+   "loc": "construction",
+   "moved": 1.71,
+   "colliders": 29,
+   "hotspots": 5,
+   "fps": 5,
+   "calls": 56,
+   "tris": 9690,
+   "build": {
+    "id": "construction",
+    "ms": 614,
+    "before": 365,
+    "after": 55,
+    "buckets": 15,
+    "tris": 7774,
+    "spawnBlocked": 0
+   }
+  },
+  {
+   "id": "hospital",
+   "loc": "hospital",
+   "moved": 1.83,
+   "colliders": 47,
+   "hotspots": 4,
+   "fps": 4,
+   "calls": 61,
+   "tris": 10616,
+   "build": {
+    "id": "hospital",
+    "ms": 480,
+    "before": 283,
+    "after": 45,
+    "buckets": 14,
+    "tris": 8438,
+    "spawnBlocked": 0
+   }
+  },
+  {
+   "id": "gov_office",
+   "loc": "gov_office",
+   "moved": 1.7,
+   "colliders": 43,
+   "hotspots": 1,
+   "fps": 4,
+   "calls": 73,
+   "tris": 19302,
+   "build": {
+    "id": "gov_office",
+    "ms": 759,
+    "before": 980,
+    "after": 61,
+    "buckets": 27,
+    "tris": 17184,
+    "spawnBlocked": 0
+   }
+  },
+  {
+   "id": "court",
+   "loc": "court",
+   "moved": 1.7,
+   "colliders": 43,
+   "hotspots": 1,
+   "fps": 4,
+   "calls": 75,
+   "tris": 22190,
+   "build": {
+    "id": "court",
+    "ms": 514,
+    "before": 1172,
+    "after": 49,
+    "buckets": 27,
+    "tris": 19904,
+    "spawnBlocked": 0
+   }
+  },
+  {
+   "id": "job_market",
+   "loc": "job_market",
+   "moved": 1.71,
+   "colliders": 38,
+   "hotspots": 1,
+   "fps": 4,
+   "calls": 49,
+   "tris": 19562,
+   "build": {
+    "id": "job_market",
+    "ms": 424,
+    "before": 1123,
+    "after": 58,
+    "buckets": 26,
+    "tris": 17328,
+    "spawnBlocked": 0
+   }
+  },
+  {
+   "id": "community_center",
+   "loc": "community_center",
+   "moved": 1.55,
+   "colliders": 38,
+   "hotspots": 2,
+   "fps": 4,
+   "calls": 51,
+   "tris": 17660,
+   "build": {
+    "id": "community_center",
+    "ms": 609,
+    "before": 1003,
+    "after": 55,
+    "buckets": 28,
+    "tris": 15386,
+    "spawnBlocked": 0
+   }
+  },
+  {
+   "id": "techPark",
+   "loc": "techPark",
+   "moved": 1.51,
+   "colliders": 45,
+   "hotspots": 5,
+   "fps": 4,
+   "calls": 57,
+   "tris": 12756,
+   "build": {
+    "id": "techPark",
+    "ms": 356,
+    "before": 340,
+    "after": 51,
+    "buckets": 25,
+    "tris": 10508,
+    "spawnBlocked": 0
+   }
+  },
+  {
+   "id": "park",
+   "loc": "park",
+   "moved": 1.55,
+   "colliders": 40,
+   "hotspots": 5,
+   "fps": 4,
+   "calls": 55,
+   "tris": 18672,
+   "build": {
+    "id": "park",
+    "ms": 1001,
+    "before": 974,
+    "after": 57,
+    "buckets": 27,
+    "tris": 16714,
+    "spawnBlocked": 0
+   }
+  },
+  {
+   "id": "temple",
+   "loc": "temple",
+   "moved": 1.7,
+   "colliders": 37,
+   "hotspots": 1,
+   "fps": 4,
+   "calls": 43,
+   "tris": 11246,
+   "build": {
+    "id": "temple",
+    "ms": 631,
+    "before": 361,
+    "after": 42,
+    "buckets": 24,
+    "tris": 8918,
+    "spawnBlocked": 0
+   }
+  },
+  {
+   "id": "internet_cafe",
+   "loc": "internet_cafe",
+   "moved": 1.4,
+   "colliders": 49,
+   "hotspots": 1,
+   "fps": 4,
+   "calls": 71,
+   "tris": 49218,
+   "build": {
+    "id": "internet_cafe",
+    "ms": 958,
+    "before": 3280,
+    "after": 86,
+    "buckets": 26,
+    "tris": 47266,
+    "spawnBlocked": 0
+   }
+  }
+ ],
+ "errors": []
+}
