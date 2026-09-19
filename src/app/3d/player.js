@@ -165,6 +165,16 @@ export class IsoCamera {
     this.pitch = 0.76;             // ~44° 俯角：能同时看到路面和建筑立面
     this.dist = 18.0;
     this.minH = 5.5;               // 水平最小距离，保证角色不被贴脸
+    /* ★ 视线高度偏移（相对目标点）。默认 0.9m = 玩家胸口 —— 等轴测下这个
+       偏移让"人"落在画面下三分之一、路面占大头，是正确的跟随构图。
+       面部特写（facecam.js）会把它临时压到 0：镜头必须**正对头心**，
+       留着 0.9m 的偏移会变成"仰着头拍下巴"。 */
+    this.lookY = 0.9;
+    /* ★ 遮挡回避总开关。默认开（跟随视角必须不穿墙）。
+       面部特写会临时关掉 —— 见 facecam.js 顶注里"0.7m 余量"那段：
+       回避分支写的是 `Math.max(minH, best - 0.7)`，对 0.59m 的肖像机位
+       等于强行拉到 0.35m，头会被画面裁掉一半，而且**不报错、只是脸没了**。 */
+    this.avoid = true;
     this.cur = new THREE.Vector3().copy(target);
     this.apply(this.cur);
   }
@@ -206,20 +216,24 @@ export class IsoCamera {
     const cp = Math.cos(this.pitch), sp = Math.sin(this.pitch);
     const nx = Math.sin(this.yaw), nz = Math.cos(this.yaw);
     const hFull = this.dist * cp;
-    let h = Math.min(hFull, this.clearance(p.x, p.z, nx, nz, hFull));
 
-    // 落点复检：反复收缩直到相机脱离所有建筑
-    for (let i = 0; i < 10; i++) {
-      const pen = this.penetration(p.x + nx * h, p.z + nz * h);
-      if (pen <= 0) break;
-      const next = h - (pen + 0.5);
-      if (next <= this.minH) { h = this.minH; break; }
-      h = next;
+    let h = hFull;
+    if (this.avoid) {
+      h = Math.min(hFull, this.clearance(p.x, p.z, nx, nz, hFull));
+
+      // 落点复检：反复收缩直到相机脱离所有建筑
+      for (let i = 0; i < 10; i++) {
+        const pen = this.penetration(p.x + nx * h, p.z + nz * h);
+        if (pen <= 0) break;
+        const next = h - (pen + 0.5);
+        if (next <= this.minH) { h = this.minH; break; }
+        h = next;
+      }
     }
 
     const dist = h / Math.max(cp, 0.15);
     this.camera.position.set(p.x + nx * h, p.y + dist * sp, p.z + nz * h);
-    this.camera.lookAt(p.x, p.y + 0.9, p.z);
+    this.camera.lookAt(p.x, p.y + this.lookY, p.z);
   }
 
   update(dt, target) {

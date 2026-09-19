@@ -4110,6 +4110,20 @@ function getAvailableActions(state) {
             `💬${bdTag} ${npc.name}：${line} (好感+${affinityGain})${_skillBonus}`,
             isBirthday ? "success" : "info",
           );
+          /* 《大多数》式立绘对话（2026-09-19 恒稳定案）：
+             3D 模型通用、靠对话框立绘区分人 —— 17 个 NPC 的立绘
+             （npc.avatar，src/images/avatars/*.png）早就生成好了，
+             这里是它们第一次真正被画出来。加载失败由 npc_dialog 降级
+             成程序化 canvas 立绘，绝不空白。消息流记录保留不变。 */
+          if (typeof showNpcTalk === "function") {
+            showNpcTalk({
+              npc: npc,
+              line: line + _skillBonus,
+              affinity: r.affinity,
+              gain: affinityGain,
+              tag: isBirthday ? "🎂" : "",
+            });
+          }
           state.needs.happiness = Math.min(
             100,
             state.needs.happiness + (isBirthday ? 8 : 3),

@@ -1,4 +1,18 @@
 import * as THREE from 'three';
+/* ★ [2026-09-19] 外部真实扫描贴图（Poly Haven CC0）。本文件是**程序化**贴图，
+   两者并存：真实贴图优先、程序化作兜底。只在这里读它的读数与绑定接口 ——
+   依赖是单向的（materials → textures），textures 不反向依赖本文件。 */
+import { bindTexture, texMeters } from './textures.js';
+
+/** 材质上所有**带 repeat 的贴图槽位**。
+    ★ 单一真源：fitRepeat() 与任何"成对克隆"的地方都遍历它。
+      历史事故：只克隆 map 不克隆 normalMap → 颜色密度与凹凸密度差十几倍，
+      表现为"远处还行、走近纹理全乱"，不报错。后来加了 roughnessMap（arm），
+      同一个坑会再踩一次 —— 所以改成名单驱动。 */
+const TEXTURE_SLOTS = ['map', 'normalMap', 'roughnessMap', 'metalnessMap', 'aoMap', 'emissiveMap', 'bumpMap', 'displacementMap'];
+
+/** 导出给 palette.js / 验证脚本用 —— 名单必须只有一份（单一真源）。 */
+export { TEXTURE_SLOTS };
 
 /* ── Canvas 程序化纹理 ─────────────────────────────────────────────────────
    全部在运行时生成，无外部图片依赖。这样 29 个地点可以参数化扩展，
@@ -181,7 +195,12 @@ function blotch(ctx, w, h, count, color, maxR = 26) {
    不放在这里 —— 同一个高度图可能被多处复用，缓存才成立。 */
 const SOBEL_STRENGTH = 1.9;
 
-function normalFromHeight(hc) {
+/* ★ 2026-09-19 导出：面部法线贴图（actors.js::faceNormal）要复用同一份实现。
+   复制一份 Sobel 到 actors.js 的代价不是"多十几行"，而是**两处的强度、
+   v 轴方向约定会各自漂移** —— 那正是本项目反复踩的"同一件事两份定义"。
+   （调用方拿到后需要自己改 wrapS/T 为 ClampToEdge：这里是给**可平铺**的
+     墙面/地面用的，脸只画一圈、不能环绕。） */
+export function normalFromHeight(hc) {
   const w = hc.width, h = hc.height;
   const src = hc.getContext('2d').getImageData(0, 0, w, h).data;
 
@@ -283,18 +302,38 @@ export function surfaceMat(tex, opts = {}) {
  */
 export function fitRepeat(base, wM, hM, tileM = TILE_M) {
   const mat = base.clone();
-  const rx = Math.max(1e-4, wM / tileM);
-  const ry = Math.max(1e-4, hM / tileM);
-  if (base.map) {
-    mat.map = base.map.clone();
-    mat.map.needsUpdate = true;
-    mat.map.repeat.set(rx, ry);
+
+  /* ★ [2026-09-19] 真实贴图优先：贴了扫描贴图的材质，一格**必须**换成
+       贴图的真实米数。扫描贴图是按真实尺寸扫的（Poly Haven 的 dimensions），
+       继续按程序化的 TILE_M 铺，砖在屏上就大了或小了几成 ——
+       而人眼正是靠"砖有多大"判断尺度的（见文件头 P3-1）。
+
+       ★ 这里**刻意不看加载状态**（`texReady`）：尺度必须在建世界时就定死。
+         若改成"加载好了才用真实米数"，贴图到位的那一瞬间整条街的砖会突然
+         缩放一下 —— 比一直用错尺寸更显眼，而且截图取证时会对不上。
+         代价：贴图**加载失败**时，程序化内容会按真实米数铺（略偏小）。
+         那个代价可以接受：失败路径下画面本来就已经退化了。 */
+  const bind = base.userData && base.userData.texBind;
+  const tm = bind ? (texMeters(bind.as) || tileM) : tileM;
+  const rx = Math.max(1e-4, wM / tm);
+  const ry = Math.max(1e-4, hM / tm);
+
+  /* ★ 克隆必须**遍历全部贴图槽位**，不能只克隆 map 与 normalMap。
+       本函数原来的注释已经记过一次同类事故（只克隆 map 导致法线密度差十几倍），
+       现在槽位又多了一个 roughnessMap（真实贴图的 arm）——
+       漏掉它，颜色密度与粗糙度密度就会不一致，表现是"有的地方反光糊成一片"，
+       而且不报错。所以这里改成按名单遍历，新增槽位不用再改这个函数。 */
+  for (const slot of TEXTURE_SLOTS) {
+    if (!base[slot]) continue;
+    mat[slot] = base[slot].clone();
+    mat[slot].needsUpdate = true;
+    mat[slot].repeat.set(rx, ry);
   }
-  if (base.normalMap) {
-    mat.normalMap = base.normalMap.clone();
-    mat.normalMap.needsUpdate = true;
-    mat.normalMap.repeat.set(rx, ry);   // ★ 必须与 map 一致
-  }
+
+  /* ★ 克隆体也要继承绑定。否则热替换只换到基准材质，
+       真正贴在墙上的克隆体还停在程序化贴图上 ——
+       正是本项目最典型的"改了但没效果"。 */
+  if (bind) bindTexture(mat, bind.as);
   return mat;
 }
 
@@ -315,9 +354,17 @@ export function fitRepeat(base, wM, hM, tileM = TILE_M) {
  *     只是地面法线退化 —— 已在验证脚本里作为**已知偏差**单独记录。）
  */
 export function syncNormalRepeat(mat) {
-  if (mat && mat.map && mat.normalMap) {
-    mat.normalMap.repeat.copy(mat.map.repeat);
-    mat.normalMap.needsUpdate = true;
+  /* ★ [2026-09-19] 从"只管 normalMap"改成**遍历全部贴图槽位**。
+     原来只同步 map 与 normalMap，而真实扫描贴图引入了第三个槽位
+     roughnessMap（arm）—— 漏掉它，颜色密度与粗糙度密度就会不一致，
+     表现是"有些区域反光糊成一片"，而且不报错。
+     改成名单驱动之后，以后再新增槽位不用回来改这个函数。 */
+  if (mat && mat.map) {
+    for (const slot of TEXTURE_SLOTS) {
+      if (slot === 'map' || !mat[slot]) continue;
+      mat[slot].repeat.copy(mat.map.repeat);
+      mat[slot].needsUpdate = true;
+    }
   }
   return mat;
 }

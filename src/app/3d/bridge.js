@@ -30,6 +30,9 @@ import { createAssetLoader, polyHavenGroup, listPolyHaven, listHdri, SRC } from 
 import { mergeStatics, countScene } from './merge.js';
 import { Player, IsoCamera } from './player.js';
 import { ActorSystem } from './actors.js';
+/* 面部特写相机（2026-09-19）。它**不自己算相机位置**，只接管 IsoCamera 的
+   几个参数后交给它的 apply() 去摆 —— 理由见 facecam.js 顶注。 */
+import { createFaceCam } from './facecam.js';
 /* 后处理（three/addons → examples/jsm，见 three 的 exports 映射）。
    顺序在下面 POST 注释里说明，改顺序会让画面全错。 */
 import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
@@ -632,6 +635,55 @@ export function createGame3D(opts) {
        再远的几何画了也看不见。这一刀同时也帮 GTAOPass 省了远处像素。 */
   const camera = new THREE.PerspectiveCamera(46, 1, 0.5, 250);
   const cam = new IsoCamera(camera, player.pos, []);
+
+  /* ── 面部特写（2026-09-19）─────────────────────────────────────────────
+     恒稳要"面部特写"。默认机位 dist≈18m，头只有约 13px、眼睛约 2px ——
+     在那个距离上"脸做得对不对"根本无法评判，所以**先有能站在脸前的机位，
+     才谈得上改脸**（取景参数怎么算出来的见 facecam.js 顶注）。
+
+     ★ 它怎么接进主循环：主循环只多一行 `faceCam.update(dt)`，跑在
+       `cam.update(dt, player.pos)` **之后**。faceCam 在静止态直接 return，
+       一个字节都不碰相机 —— 也就是说"没在特写"这条路径与加它之前完全一致，
+       跟随视角不会有任何变化（这是"加功能不许动既有行为"的最小代价方案）。
+     ★ 玩家模型在特写时隐藏：和 NPC 面对面交谈时玩家就站在离 NPC 脸 0.6m 处，
+       而那正是肖像机位所在，不隐藏会看到玩家颅骨内侧。 */
+  const faceCam = createFaceCam({
+    camera,
+    cam,
+    getPlayer: () => player.pos,
+    setHidden: (hide) => { player.mesh.visible = !hide; },
+  });
+
+  /**
+   * 玩家附近最近的可交谈对象（摊主 / 命名 NPC / 行人）。
+   *
+   * ★ 评分里给**行人罚 12m**：摊主与命名 NPC 有锚点、只做小动作，
+   *   而行人是过路的 —— 推到脸前之后他会继续往前走，一秒后镜头里就只剩
+   *   半张脸贴边（实测）。所以"能看的脸"优先给站着的人。
+   *   ★ 但**不能直接排除行人**：巷子里可能十几米内一个摊主都没有，
+   *   那样按 F 会没反应，读起来像功能坏了。罚分是"优先"而不是"禁止"。
+   *   ★ 移动目标本身是可拍的 —— facecam 每帧重解头心（见 _refresh），
+   *   所以锁定行人时镜头会跟着他走，只是构图不如站着的人稳。
+   */
+  function nearestHuman(maxD = 14) {
+    let best = null, bestScore = Infinity;
+    for (const a of actors.actors) {
+      if (a.kind !== 'ped' && a.kind !== 'keeper' && a.kind !== 'npc') continue;
+      const d = Math.hypot(a.obj.position.x - player.pos.x, a.obj.position.z - player.pos.z);
+      if (d > maxD) continue;
+      const score = d + (a.kind === 'ped' ? 12 : 0);
+      if (score < bestScore) { bestScore = score; best = a; }
+    }
+    return best;
+  }
+
+  /** F 键：在"最近的人的脸部特写"与"跟随视角"之间切换。 */
+  function toggleFace() {
+    if (faceCam.active) { faceCam.release(); return true; }
+    const a = nearestHuman();
+    if (!a) { notify('附近没有人可以看', { kind: 'warn' }); return false; }
+    return faceCam.focus(a);
+  }
 
   /* ── 后处理链（P1-3 / P2-1 / P3-2）────────────────────────────────────
    * 顺序见文件顶部 POST 常量注释：AO 与 Bloom 必须在线性空间（OutputPass 之前）。

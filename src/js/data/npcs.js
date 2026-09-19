@@ -624,7 +624,7 @@ var NPCS = [
     name: "张姐",
     role: "中介",
     monthlyIncome: 12000,
-    avatar: "images/avatars/zijie.png",
+    avatar: "images/avatars/zhangjie.png",
     location: "commercialDist",
     // v3.4 C3D-T1: NPC 每日活动日程
     schedule: {

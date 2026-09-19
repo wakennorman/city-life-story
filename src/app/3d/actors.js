@@ -14,6 +14,11 @@ import {
   topMat, sleeveMat, pantsMat, skinMat, hairMat, carBodyMat, furMat,
   remapCarUV, TOP_KINDS,
 } from './charskin.js';
+/* ★ 面部法线贴图复用 materials.js 的 Sobel 实现（2026-09-19）。
+   为什么不去复制那二十行：法线有两个极易各自漂移的约定 ——
+   强度系数与 v 轴方向（flipY 与 dH/dv 的符号）。复制一份等于埋两个坑，
+   而且症状都是"光照看着有点怪"，几乎不可能归因。 */
+import { normalFromHeight } from './materials.js';
 
 /* ══ 动态角色系统：NPC · 人流 · 车流 · 动物 ═══════════════════════════════════
    2026-09-19 新建。此前场景里**只有玩家一个活物** —— 街道是静止的布景。
@@ -80,9 +85,13 @@ const G = {
 };
 function geomInit() {
   if (G.head) return;
-  /* 分段数从 14×10 提到 20×14：脸改成贴图之后，头球的**轮廓**也要跟得上 ——
-     14 段的球在近景下是明显的多面体，贴一张精致的脸反而更露怯。 */
-  G.head = new THREE.SphereGeometry(0.105, 20, 14);
+  /* 分段数：14×10 → 20×14 → **28×20**（2026-09-19 第二次提，为面部特写）。
+     判据是"特写下的轮廓"而不是"远景够不够用"：
+     面部特写（facecam.js）会站到脸前 0.59m，此时头占屏幕约 550px，
+     20 段（每段 18°）的球在轮廓上会出现肉眼可见的直棱 ——
+     而它和"贴图糊"是完全不同的两种丑，不要混为一谈去调贴图。
+     28×20 ≈ 560 四边形/头；头几何是**模块级共享**的，全街人头共用一份。 */
+  G.head = new THREE.SphereGeometry(0.105, 28, 20);
   /* ★★ 躯干必须带 thetaStart = π（2026-09-19 加上，改之前先读这段）。
      CylinderGeometry 默认 thetaStart = 0 → u = 0 落在 **+Z**，也就是正面。
      而 u = 0 同时是画布接缝（u=1 与 u=0 是同一条线）——
@@ -115,11 +124,51 @@ function geomInit() {
      让帽子只包**颅顶 + 两侧 + 后脑**，正面那条脸的弧段留空。
      缺口 = phi ∈ (π/2 ± 0.85)，而脸的绘制区是 u∈(0.125,0.375)
      → phi∈(0.785, 2.356)，完全落在缺口里，不会有一根头发丝压到眼上。 */
+  /* ★★ 头发帽半径 0.112 → **0.1071**（= 头半径 × 1.02），球心同时从 1.605
+     下移到头心 1.60（2026-09-19，为面部特写）。
+     原来那版是"另一个更大的球"：球心高 5mm、半径大 7mm，于是发际线边缘
+     在额头上凸出一圈 5mm 的硬檐 —— 远景看不出，特写下读起来是**贝雷帽/泳帽**，
+     而不是头发。现在改成"贴着颅骨均匀 2mm 厚的外壳"：
+     全周凸出量一致，边缘是一条 2mm 的台阶，那才是头发的厚度。
+     实测余量：最宽处凸出 2.0mm、帽檐处 2.2mm；
+     深度缓冲在 18m 处的分辨率约 0.04mm → 不会 z-fighting（余量是它的 50 倍）。
+     ★ 正面缺口（phi）逻辑不变，仍然完整包住脸所在的 phi 区间，见下面那条注释。 */
   G.hairCap = new THREE.SphereGeometry(
-    0.112, 18, 10,
+    /* ★ 2026-09-19 18,10 → 30,16：下面要做发际线倾斜变形（见后注），
+       低段数的水平圆被斜切后下缘呈锯齿状（特写一眼可见）。
+       共享几何只加顶点不加 draw call，30×16=480 四边形可忽略。 */
+    0.1071, 30, 16,
     Math.PI / 2 + 0.85, Math.PI * 2 - 1.7,   // phi：正面留缺口
     0, Math.PI * 0.62,                        // theta：颅顶包到 1.948 rad
   );
+  /* ★★ 2026-09-19 侧脸取证（dev/_3dtest/shots-face/face-profile.png）：
+     thetaLength 的下缘是一条**水平圆**，正面缺口又左右对称，
+     侧面看就是"一只碗扣在球上"—— 发际线是一条齐平的硬切线，
+     正面看不出来，侧面一眼就是"平顶帽"。
+     真实发际线是**前高后低**：额头露到发际、后脑包到发根、鬓角压在耳前。
+     修法：对帽壳顶点做一次性倾斜变形（在**共享几何**上做，buildHuman 不用改）：
+       y += K_FRONT·(z/R)   —— 额前(+Z)抬、后脑(−Z)降，前后差 4.8cm；
+       y -= K_SIDE·(x/R)²   —— 两侧(鬓角)再压低约 1cm，边缘成斜椭圆。
+   ★★ 2026-09-19 第二刀（线框取证 _diag-wire-side.png 实锤）：上面的竖直位移
+     **不能整壳生效** —— 在靠近极点处，"竖直"几乎就是"径向向内"，
+     壳顶被压进头球里 → 头皮从头发顶上戳出来，皮肤盖过头顶；
+     戳穿线两侧曲面近乎共面 → 深度摩尔纹，肉眼是**锯齿状发际线**。
+     修法：位移乘纬度权重 w = ((R−y)/(R−y_rim))³，极点 w=0（同心不动），
+     帽缘 w=1（全额倾斜）。取立方让中纬度的径向侵入 < 1mm（壳间隙 2mm 的一半），
+     实算 60° 纬度侵入约 0.6mm，远小于 2mm 余量，不会戳穿。
+     computeVertexNormals 必须重算，否则帽壳侧面会有错误的平滑光照。 */
+  {
+    const hp = G.hairCap.attributes.position;
+    const HR = 0.1071, K_FRONT = 0.024, K_SIDE = 0.011;
+    const Y_RIM = HR * Math.cos(Math.PI * 0.62);          // 帽缘的 y（≈ -0.0394）
+    for (let i = 0; i < hp.count; i++) {
+      const hx = hp.getX(i), hy = hp.getY(i), hz = hp.getZ(i);
+      const w = Math.min(1, Math.max(0, (HR - hy) / (HR - Y_RIM)));
+      hp.setY(i, hy + (K_FRONT * (hz / HR) - K_SIDE * (hx / HR) * (hx / HR)) * w * w * w);
+    }
+    hp.needsUpdate = true;
+    G.hairCap.computeVertexNormals();
+  }
   G.carBody = new THREE.BoxGeometry(1.78, 0.62, 4.05);
   /* ★ 车身六面重映射到一张图集（车门缝 / 门把手 / 腰线 / 裙边 / 格栅 / 车牌）。
      BoxGeometry 六个面的 uv 默认全是 0..1 —— 不重映射的话六个面只能贴同一张图，
@@ -195,21 +244,41 @@ function matInit() {
    ★ 皮肤色走材质 color、贴图只画**明暗与五官**（底色为纯白）：
      4 张脸型 × 5 种肤色若都烘进贴图 = 20 张；底色留白 + color 相乘
      只需 4 张 —— 省 5 倍显存，画面完全一样。 */
-const FACE_W = 512, FACE_H = 256;
+/* ── 贴图分辨率：设计空间 × 超采样 ────────────────────────────────────────
+   ★★ 2026-09-19 从「在 512×256 上直接写坐标」改成
+      「512×256 **设计空间** × 2 倍超采样」。这是为了面部特写
+      （facecam.js 会站到脸前 0.59m，此时头占屏幕约 550px）。
+
+   ── 为什么不干脆把 30 多个像素常量手动乘 2 ──────────────────────────────
+   eyew / browTh / lineWidth / 各个半径…漏乘任何一个的症状是
+   "某条线比别的粗一倍"——**不报错，只在特写下看得出来**，是最难归因的一类。
+   改成 ctx.scale(FACE_SS) 之后，**所有坐标与线宽继续留在设计空间**，
+   要 4 倍超采样只需改 FACE_SS 一个数，一个字面量都不用碰。
+
+   ── 为什么超采样真的有用（而不是"存一张大图给自己看"）──────────────────
+   五官全是矢量绘制（arc / quadraticCurveTo / ellipse），分辨率越高光栅化越细。
+   512 宽时脸只占 128px，贴到直径 0.21m 的头上、再放大到 550px 屏幕
+   = 把 128px 的图拉 4.3 倍。2 倍超采样后是 256px 拉 2.1 倍 —— 直接少一半的糊。
+   ★ 它同时是**法线贴图**的基础：Sobel 是在这张画布上按像素算梯度的，
+     分辨率越高，眉骨/鼻梁/唇的起伏越连续（不会出现"阶梯状高光"）。 */
+const FACE_DES_W = 512, FACE_DES_H = 256;   // 设计空间：所有绘制坐标按这个写
+const FACE_SS = 2;                          // 超采样倍率
+const FACE_W = FACE_DES_W * FACE_SS, FACE_H = FACE_DES_H * FACE_SS;
 const HEAD_R = 0.105, HEAD_CY = 1.60;
 const _faceCache = [];
+const _faceNormalCache = [];
 const clamp1 = (v) => Math.max(-1, Math.min(1, v));
 
-/** 世界 y（头心为原点，米）→ 贴图画布行号 */
+/** 世界 y（头心为原点，米）→ 贴图**设计空间**画布行号 */
 function faceY(worldY) {
-  return (Math.acos(clamp1((worldY - HEAD_CY) / HEAD_R)) / Math.PI) * FACE_H;
+  return (Math.acos(clamp1((worldY - HEAD_CY) / HEAD_R)) / Math.PI) * FACE_DES_H;
 }
-/** 世界 x（头心为原点，米）+ 该点高度 → 贴图画布列号（仅对前半球有效） */
+/** 世界 x（头心为原点，米）+ 该点高度 → 贴图**设计空间**画布列号（仅对前半球有效） */
 function faceX(worldX, worldY) {
   const theta = Math.acos(clamp1((worldY - HEAD_CY) / HEAD_R));
   const sinT = Math.max(1e-6, Math.sin(theta));
   const phi = Math.acos(clamp1(-worldX / (HEAD_R * sinT)));
-  return (phi / (Math.PI * 2)) * FACE_W;
+  return (phi / (Math.PI * 2)) * FACE_DES_W;
 }
 
 /**
@@ -223,8 +292,13 @@ function faceTexture(variant) {
   const c = document.createElement('canvas');
   c.width = FACE_W; c.height = FACE_H;
   const g = c.getContext('2d');
+  /* 铺白底：这一笔在**真像素**坐标里做，先把整张画布刷白。 */
   g.fillStyle = '#ffffff';
   g.fillRect(0, 0, FACE_W, FACE_H);
+  /* ★★ 之后所有绘制坐标与线宽一律是**设计空间**（512×256），
+     由这一行统一放大到真实画布。改分辨率只改 FACE_SS ——
+     不要为了"多画点细节"往下面塞乘了倍率的字面量（见上面那段顶注）。 */
+  g.scale(FACE_SS, FACE_SS);
 
   const EX = 0.040;                       // 瞳距的一半（世界米）
   const Y_EYE = 1.622, Y_BROW = 1.652, Y_NOSE = 1.587, Y_MOUTH = 1.556;
@@ -256,26 +330,73 @@ function faceTexture(variant) {
     g.stroke();
   }
 
-  /* ③ 眼睛：深色杏仁形（不画眼白 —— 5m 外眼白只会把眼睛"洗淡"）。
+  /* ③ 眼睛：深色杏仁形（不画整片眼白 —— 5m 外眼白只会把眼睛"洗淡"）。
+        ★ 2026-09-19 补出巩膜/虹膜/瞳孔的层次：远景一个深色椭圆就够，
+        但特写（0.59m）下"一个深色椭圆"读不出是眼睛。
+        做法仍是**明度分层、不画轮廓线** —— 轮廓线会变成"画上去的眼睛"，
+        明度差才会被当成体积（与④鼻子同一条纪律）。
         再点一个极小的浅色高光，只在近景（取证截图/贴脸）看得出来。 */
   for (const s of [-1, 1]) {
     const cx = faceX(s * EX, Y_EYE), cy = faceY(Y_EYE);
+    /* ① 巩膜：只在**外眼角**留一小片，且 alpha 很低。
+          为什么不做整片白：10m 外那片白会把眼睛整体提亮，
+          人眼会把它读成"反光"而不是"眼白"，比不画更糟。 */
+    g.fillStyle = 'rgba(246,242,236,0.50)';
+    g.beginPath();
+    g.ellipse(cx + s * eyeW * 0.40, cy + 0.6, eyeW * 0.44, eyeH * 0.60, 0, 0, Math.PI * 2);
+    g.fill();
+    /* ② 虹膜：原来的深色杏仁形，保留（远景靠它读数） */
     g.fillStyle = '#332c28';
     g.beginPath(); g.ellipse(cx, cy, eyeW, eyeH, 0, 0, Math.PI * 2); g.fill();
-    g.fillStyle = 'rgba(255,255,255,0.72)';
-    g.beginPath(); g.arc(cx + s * -2.5, cy - 2.4, 1.7, 0, Math.PI * 2); g.fill();
-    /* 上眼睑压一条略深的线，眼睛才有"睁开"的形。 */
+    /* ③ 虹膜中环 + 瞳孔：两层同心椭圆就是"眼睛里有东西"的全部信息量，
+          再多画就脏。 */
+    g.fillStyle = 'rgba(96,74,54,0.80)';
+    g.beginPath(); g.ellipse(cx, cy + 0.4, eyeW * 0.60, eyeH * 0.70, 0, 0, Math.PI * 2); g.fill();
+    g.fillStyle = '#17130f';
+    g.beginPath(); g.ellipse(cx, cy + 0.3, eyeW * 0.28, eyeH * 0.46, 0, 0, Math.PI * 2); g.fill();
+    /* ④ 角膜高光：偏虹膜**上内侧**（镜像于鼻梁，像环形补光 —— 双眼一致地亮，
+          不会一只眼朝左一只朝右，那种不对称在特写下极其刺眼）。 */
+    g.fillStyle = 'rgba(255,255,255,0.80)';
+    g.beginPath(); g.arc(cx + s * -2.5, cy - 2.4, 1.6, 0, Math.PI * 2); g.fill();
+    /* ⑤ 上眼睑压一条略深的线，眼睛才有"睁开"的形；
+          再补一道更淡的双眼皮线 —— 它只在特写看得见，
+          但正是它把"眼睛"和"两颗纽扣"分开。 */
     g.strokeStyle = 'rgba(46,38,34,0.85)';
     g.lineWidth = 2.2;
     g.beginPath();
     g.moveTo(cx - eyeW, cy - 1);
     g.quadraticCurveTo(cx, cy - eyeH - 3.2, cx + eyeW, cy - 1);
     g.stroke();
+    g.strokeStyle = 'rgba(58,46,40,0.38)';
+    g.lineWidth = 1.4;
+    g.beginPath();
+    g.moveTo(cx - eyeW * 0.90, cy - eyeH - 2.4);
+    g.quadraticCurveTo(cx, cy - eyeH * 2.0 - 3.4, cx + eyeW * 0.90, cy - eyeH - 1.8);
+    g.stroke();
   }
 
   /* ④ 鼻子：只用**暗部**表达（鼻梁两侧 + 鼻头 + 鼻孔）。
-        不画轮廓线 —— 线会变成"画上去的鼻子"，暗部才会被当成体积。 */
+        不画轮廓线 —— 线会变成"画上去的鼻子"，暗部才会被当成体积。
+        ★ 2026-09-19 先铺两笔**高光**（鼻梁一条窄带 + 鼻头一点）：
+        它们的作用不是"画一根鼻梁"，而是让贴图自带"光从斜上方来"的信息。
+        特写时鼻子的前后关系全靠这组"高光→暗部"的对比，纯暗部只会发闷。 */
   const ny = faceY(Y_NOSE);
+  /* ★ 高光必须是**渐变**，不能让椭圆有硬边 ——
+     第一版用的是实心椭圆（alpha 0.28 / 0.34），特写下鼻头出现一个明显的
+     浅色圆斑，读起来就是"贴了一张圆纸片上去"。这条纪律对整张贴图都成立：
+     硬边高光 = 画上去的，渐变高光 = 光。 */
+  const bpx = faceX(0, 1.618), bpy = faceY(1.618);
+  const bg = g.createRadialGradient(bpx, bpy, 1, bpx, bpy, 12);
+  bg.addColorStop(0, 'rgba(255,252,246,0.22)');
+  bg.addColorStop(1, 'rgba(255,252,246,0)');
+  g.fillStyle = bg;
+  g.beginPath(); g.arc(bpx, bpy, 12, 0, Math.PI * 2); g.fill();
+  const tpx = faceX(0, Y_NOSE), tpy = ny - 1.5;
+  const tg = g.createRadialGradient(tpx, tpy, 1, tpx, tpy, 7);
+  tg.addColorStop(0, 'rgba(255,252,246,0.26)');
+  tg.addColorStop(1, 'rgba(255,252,246,0)');
+  g.fillStyle = tg;
+  g.beginPath(); g.arc(tpx, tpy, 7, 0, Math.PI * 2); g.fill();
   g.fillStyle = 'rgba(120,96,80,0.30)';
   g.beginPath();
   g.ellipse(faceX(0, Y_NOSE), ny + 4, 11, 9, 0, 0, Math.PI * 2);
@@ -287,10 +408,26 @@ function faceTexture(variant) {
     g.fill();
   }
 
-  /* ⑤ 嘴：一条带弧度的唇线。variant 3 上扬（笑），variant 2 嘴角下压。 */
+  /* ⑤ 嘴：一条带弧度的唇线。variant 3 上扬（笑），variant 2 嘴角下压。
+        ★ 2026-09-19 先铺两片低对比的**唇体**（上唇暗、下唇亮），再压唇线。
+        只有唇线的话，特写下嘴是"一根飘在脸上的线" —— 唇线管"形状"，
+        唇体才管"厚度"。 */
   const my = faceY(Y_MOUTH);
   const mw = [20, 22, 17, 21][v];
   const curve = [2, 1, 5, -4][v];
+  g.lineCap = 'round';
+  g.strokeStyle = 'rgba(146,92,84,0.30)';
+  g.lineWidth = 7;
+  g.beginPath();
+  g.moveTo(faceX(-0.019, Y_MOUTH), my - 2.4);
+  g.quadraticCurveTo(faceX(0, Y_MOUTH), my + curve - 3.4, faceX(0.019, Y_MOUTH), my - 2.4);
+  g.stroke();
+  g.strokeStyle = 'rgba(212,136,124,0.32)';
+  g.lineWidth = 8;
+  g.beginPath();
+  g.moveTo(faceX(-0.018, Y_MOUTH), my + 5.0);
+  g.quadraticCurveTo(faceX(0, Y_MOUTH), my + curve + 5.6, faceX(0.018, Y_MOUTH), my + 5.0);
+  g.stroke();
   g.strokeStyle = '#8a5a52';
   g.lineWidth = 3.4;
   g.beginPath();
@@ -298,30 +435,207 @@ function faceTexture(variant) {
   g.quadraticCurveTo(faceX(0, Y_MOUTH), my + curve, faceX(0.021, Y_MOUTH), my);
   g.stroke();
   /* 下唇上的一道浅高光：让嘴有厚度，不然只是根线。 */
-  g.strokeStyle = 'rgba(255,255,255,0.34)';
-  g.lineWidth = 1.6;
+  g.strokeStyle = 'rgba(255,255,255,0.38)';
+  g.lineWidth = 1.8;
   g.beginPath();
-  g.moveTo(faceX(-0.017, Y_MOUTH), my + 3.4);
-  g.quadraticCurveTo(faceX(0, Y_MOUTH), my + curve + 3.4, faceX(0.017, Y_MOUTH), my + 3.4);
+  g.moveTo(faceX(-0.017, Y_MOUTH), my + 3.6);
+  g.quadraticCurveTo(faceX(0, Y_MOUTH), my + curve + 3.6, faceX(0.017, Y_MOUTH), my + 3.6);
   g.stroke();
   void mw;
 
   /* ⑥ 整体一点极淡的上下渐变：额头略亮、下颌略暗 ——
         纯粹为了打破"平面贴纸"感，强度低到说不出哪里变了但看得出不对。 */
-  const grad = g.createLinearGradient(0, 0, 0, FACE_H);
+  const grad = g.createLinearGradient(0, 0, 0, FACE_DES_H);
   grad.addColorStop(0, 'rgba(255,255,255,0)');
   grad.addColorStop(0.75, 'rgba(150,120,100,0.10)');
   grad.addColorStop(1, 'rgba(120,95,80,0.16)');
   g.fillStyle = grad;
-  g.fillRect(0, 0, FACE_W, FACE_H);
+  g.fillRect(0, 0, FACE_DES_W, FACE_DES_H);
+
+  /* ⑦ 颧骨暗部：给"脸"两个正面以外的侧面。
+        强度低到远景完全看不出，但特写下没有它，脸就是一张贴在球上的纸。 */
+  for (const s of [-1, 1]) {
+    const cx = faceX(s * 0.072, 1.585), cy = faceY(1.585);
+    const cg = g.createRadialGradient(cx, cy, 2, cx, cy, 26);
+    cg.addColorStop(0, 'rgba(158,124,102,0.17)');
+    cg.addColorStop(1, 'rgba(158,124,102,0)');
+    g.fillStyle = cg;
+    g.beginPath(); g.arc(cx, cy, 26, 0, Math.PI * 2); g.fill();
+  }
+
+  /* ⑧ 肤质颗粒 —— **唯一一层在真像素坐标里画的**，所以先还原变换。
+        为什么必须回真像素：设计空间里 1px 的颗粒会被放大成 2px 的"麻点"，
+        读起来像噪点故障，而不是皮肤。
+        ★ 深浅各半：全画暗点会读成"脏"（这是程序化肤质最典型的失败方式），
+          有明有暗才会被当成纹理。alpha ≤0.06，远景自然消失。 */
+  g.setTransform(1, 0, 0, 1, 0, 0);
+  const bx0 = faceX(-0.10, 1.60) * FACE_SS, bx1 = faceX(0.10, 1.60) * FACE_SS;
+  const by0 = faceY(1.70) * FACE_SS, by1 = faceY(1.50) * FACE_SS;
+  /* 固定种子：同一脸型每次生成必须**逐像素一致**。
+     否则取证截图无法与基线比对（本项目对"同地点同结果"有硬要求）。 */
+  let gs = 0x2545f491 + v * 7919;
+  const grnd = () => { gs = (gs * 1103515245 + 12345) & 0x7fffffff; return gs / 0x7fffffff; };
+  for (let i = 0; i < 2600; i++) {
+    const px = bx0 + grnd() * (bx1 - bx0);
+    const py = by0 + grnd() * (by1 - by0);
+    g.fillStyle = grnd() < 0.5 ? 'rgba(118,94,76,0.060)' : 'rgba(255,252,246,0.055)';
+    g.beginPath(); g.arc(px, py, 0.6 + grnd() * 0.9, 0, Math.PI * 2); g.fill();
+  }
 
   const tex = new THREE.CanvasTexture(c);
   tex.colorSpace = THREE.SRGBColorSpace;
   /* 脸只画一遍（u 只绕一圈），不需要重复采样；夹边比重复安全。 */
   tex.wrapS = THREE.ClampToEdgeWrapping;
   tex.wrapT = THREE.ClampToEdgeWrapping;
+  /* 各向异性 8：斜着看人（街道尽头）时贴图不会糊成一片。
+     这是"脸在运动/侧视下还认得出"的唯一手段。 */
+  tex.anisotropy = 8;
+  tex.name = 'face' + v;
   _faceCache[v] = tex;
   return tex;
+}
+
+/* ── 面部法线贴图 ─────────────────────────────────────────────────────────
+   ★★ 为什么必须要有（2026-09-19，为面部特写）：
+     头是一个**球**。球面上没有眉骨、没有鼻梁、没有颧骨 ——
+     于是"脸"只能靠贴图的明暗来假装。远景够用，特写立刻露馅：
+     光扫过时整张脸是均匀曲率，五官不产生任何自己的明暗。
+     法线贴图让这些结构在**光照**层面真的存在 ——
+     这正是"低模 + 法线"这套工业做法成立的根本原因。
+
+   ── 高度场必须独立画一遍，不能拿面贴图的明暗当高度 ──────────────────────
+   那样做的后果很具体：眼窝是暗的 → 变成凹坑（对），
+   但睫毛与唇线也是暗的 → 也变成沟槽，
+   于是脸上爬满假的凹陷，而且**看上去"有细节"**，最难发现。
+   所以这里只画真正有厚度的东西：
+     眉弓（凸）· 眼球（凸）· 鼻梁与鼻头（凸）· 鼻孔（凹）·
+     唇缝（凹）· 下唇（凸）· 颧骨（微凸）· 下颌（微凸）
+   凸 = 亮、凹 = 暗，都画在同一张 128 中性灰上。
+
+   ── 分辨率刻意**不**超采样 ──────────────────────────────────────────────
+   法线是低频平滑场，超采样只增加 Sobel 的耗时（1024×512 是 512×256 的 4 倍），
+   不会增加可见信息。所以这张画布用设计空间尺寸。
+   ──────────────────────────────────────────────────────────────────────── */
+function faceNormal(variant) {
+  const v = ((variant | 0) % 4 + 4) % 4;
+  if (_faceNormalCache[v]) return _faceNormalCache[v];
+
+  const c = document.createElement('canvas');
+  c.width = FACE_DES_W; c.height = FACE_DES_H;
+  const g = c.getContext('2d');
+  g.fillStyle = 'rgb(128,128,128)';
+  g.fillRect(0, 0, FACE_DES_W, FACE_DES_H);
+  g.lineCap = 'round';
+
+  const EX = 0.040, Y_EYE = 1.622, Y_BROW = 1.652, Y_NOSE = 1.587, Y_MOUTH = 1.556;
+  const eyeW = [13, 15, 11, 14][v];
+  const eyeH = [7.5, 6.5, 8.5, 7][v];
+  const curve = [2, 1, 5, -4][v];
+  const h = (val, alpha = 1) => `rgba(${val},${val},${val},${alpha})`;
+
+  /* 眉弓：整张脸上投影最强的结构 —— 有了它，眼睛才"在阴影里" */
+  g.strokeStyle = h(180);
+  g.lineWidth = 7;
+  for (const s of [-1, 1]) {
+    const x0 = faceX(s * 0.012, Y_BROW), x1 = faceX(s * 0.072, Y_BROW);
+    const y0 = faceY(Y_BROW), y1 = faceY(Y_BROW) - 2.5;
+    g.beginPath();
+    g.moveTo(x0, y0);
+    g.quadraticCurveTo((x0 + x1) / 2, Math.min(y0, y1) - 3.5, x1, y1 + 2);
+    g.stroke();
+  }
+
+  /* 眼球微凸 + 眼睑沟（睑板与眼球之间那道浅沟，是"眼"成形的关键） */
+  for (const s of [-1, 1]) {
+    const cx = faceX(s * EX, Y_EYE), cy = faceY(Y_EYE);
+    g.fillStyle = h(158);
+    g.beginPath(); g.ellipse(cx, cy, eyeW * 0.9, eyeH * 1.05, 0, 0, Math.PI * 2); g.fill();
+    g.strokeStyle = h(112, 0.85);
+    g.lineWidth = 2.2;
+    g.beginPath();
+    g.moveTo(cx - eyeW, cy - 1);
+    g.quadraticCurveTo(cx, cy - eyeH - 3.2, cx + eyeW, cy - 1);
+    g.stroke();
+  }
+
+  /* 鼻梁（窄带）→ 鼻头（隆起）→ 鼻孔（凹点） */
+  const ny = faceY(Y_NOSE);
+  g.fillStyle = h(172);
+  g.beginPath(); g.ellipse(faceX(0, 1.615), faceY(1.615), 5.0, 26, 0, 0, Math.PI * 2); g.fill();
+  g.fillStyle = h(186);
+  g.beginPath(); g.ellipse(faceX(0, Y_NOSE), ny - 1, 8.5, 6.0, 0, 0, Math.PI * 2); g.fill();
+  g.fillStyle = h(74);
+  for (const s of [-1, 1]) {
+    g.beginPath();
+    g.ellipse(faceX(s * 0.0138, 1.573), faceY(1.573), 2.4, 2.0, 0, 0, Math.PI * 2);
+    g.fill();
+  }
+
+  /* 唇：唇缝凹 + 下唇凸。鼻与唇是"正面识别人脸"的两个最强锚点。 */
+  const my = faceY(Y_MOUTH);
+  g.strokeStyle = h(86);
+  g.lineWidth = 2.6;
+  g.beginPath();
+  g.moveTo(faceX(-0.021, Y_MOUTH), my);
+  g.quadraticCurveTo(faceX(0, Y_MOUTH), my + curve, faceX(0.021, Y_MOUTH), my);
+  g.stroke();
+  g.strokeStyle = h(166, 0.9);
+  g.lineWidth = 6;
+  g.beginPath();
+  g.moveTo(faceX(-0.018, Y_MOUTH), my + 5.5);
+  g.quadraticCurveTo(faceX(0, Y_MOUTH), my + curve + 6.1, faceX(0.018, Y_MOUTH), my + 5.5);
+  g.stroke();
+
+  /* 颧骨与下颌：柔和的微凸。
+     必须用径向渐变 —— 硬边椭圆会变成"两块贴上去的骨头"。 */
+  for (const s of [-1, 1]) {
+    const cx = faceX(s * 0.070, 1.588), cy = faceY(1.588);
+    const rg = g.createRadialGradient(cx, cy, 1, cx, cy, 30);
+    rg.addColorStop(0, h(148));
+    rg.addColorStop(1, h(128, 0));
+    g.fillStyle = rg;
+    g.beginPath(); g.arc(cx, cy, 30, 0, Math.PI * 2); g.fill();
+  }
+  const jx = faceX(0, 1.523), jy = faceY(1.523);
+  const jg = g.createRadialGradient(jx, jy, 2, jx, jy, 30);
+  jg.addColorStop(0, h(152));
+  jg.addColorStop(1, h(128, 0));
+  g.fillStyle = jg;
+  g.beginPath(); g.arc(jx, jy, 30, 0, Math.PI * 2); g.fill();
+
+  const t = normalFromHeight(c);
+  /* ★ 必须改掉 normalFromHeight 的 RepeatWrapping —— 那是给**可平铺**的
+     墙面/地面用的。脸只绕一圈（u 从 0 到 1 就是绕头一周），
+     环绕采样会让后脑勺的法线去前额借数据。虽然看不见，
+     但"看不见"不等于"没发生"，而这类脏数据以后会在别处咬人。 */
+  t.wrapS = THREE.ClampToEdgeWrapping;
+  t.wrapT = THREE.ClampToEdgeWrapping;
+  t.anisotropy = 8;
+  t.name = 'faceNormal' + v;
+  _faceNormalCache[v] = t;
+  return t;
+}
+
+/* ── 面部资源读数 ─────────────────────────────────────────────────────────
+   ★ 存在的理由与 materials.js 的 `__matDebug` 完全一样：
+     本项目的历史教训是"**静默失效是常态**" ——
+     贴图生成了但没挂上、法线挂了但方向错、分辨率被改回 512，
+     三种情况都**不报错**，只是"脸不太对"。
+     所以宁可多留几个可观测计数，也不要靠盯着截图猜。 */
+export function faceDebug() {
+  return {
+    variants: _faceCache.length,          // 已生成的脸型数（应为 4）
+    normalVariants: _faceNormalCache.length,
+    texW: FACE_W, texH: FACE_H,
+    desW: FACE_DES_W, desH: FACE_DES_H,
+    ss: FACE_SS,
+    /* 脸在贴图上占多少像素宽 —— "特写下够不够清晰"唯一的**可算**判据。
+       ★ 别用"看起来清不清楚"：那是结论，不是判据。
+         脸只占 u∈(0.125,0.375)，故宽度 = 0.25 × texW。 */
+    facePxW: Math.round(FACE_W * 0.25),
+    headR: HEAD_R,
+    headY: HEAD_CY,
+  };
 }
 
 /* 人类可选外观 —— 皮肤/发色/上衣/裤子。给角色多样性，避免"一排复制人"。 */
@@ -411,9 +725,19 @@ export function buildHuman(rng, scale = 1) {
   const skin = skinMat(SKIN[skinIdx]);
   /* 头的材质单列一份并挂脸贴图。同一材质不能既贴脸又给脖子/手用
      （那会让脖子也长出一张脸）。 */
+  /* ★ rng 的调用序列**一位都不能挪**，所以脸型只抽一次，
+     map 与法线贴图共用它 —— 抽两次会让后面所有外观（背包、帽子、
+     上衣款式）整体错位一位，verify-actors / rngHygiene 的
+     "同地点同结果"断言会莫名其妙变红（见下面 TOP_KINDS 那段警告）。 */
+  const faceV = (rng() * 4) | 0;
   const faceMat = new THREE.MeshStandardMaterial({
-    map: faceTexture((rng() * 4) | 0), color: SKIN[skinIdx], roughness: 0.72,
+    map: faceTexture(faceV), color: SKIN[skinIdx], roughness: 0.72,
   });
+  /* 面部法线贴图（见 faceNormal 顶注）：4 种脸型各一张、**模块级缓存**。
+     normalScale 压到 0.55 —— 拉满会变成"浮雕面具"，
+     而我们要的是"光照下脸有结构"，不是"脸上刻着五官"。 */
+  faceMat.normalMap = faceNormal(faceV);
+  faceMat.normalScale = new THREE.Vector2(0.55, 0.55);
   const hairM = hairMat(HAIR[(rng() * HAIR.length) | 0]);
   /* ★ rng 的调用序列**一位都不能挪**（理由见 charskin::TOP_KINDS 顶注）：
      上衣款式由颜色索引推出来，不额外抽一次随机 ——
@@ -444,11 +768,24 @@ export function buildHuman(rng, scale = 1) {
   add(G.torso, top, 0, 1.16, 0);
   add(G.neck, skin, 0, 1.475, 0);
   /* 头：材质自带脸贴图（眉/眼/鼻/唇都在里面，见 faceTexture）。
-     面朝 +Z —— 与 _updPed 的 rotation.y 约定一致。 */
+     面朝 +Z —— 与 _updPed 的 rotation.y 约定一致。
+     ★ 头部轻微椭圆化（2026-09-19，为面部特写）：正球在 0.59m 处就是一颗
+       "保龄球"，而颅型是第一眼认人的轮廓。x 收 4%、y 拉 5%、z 收 2% ——
+       变形量小到远景看不出来，特写下"对了一截"。
+     ★ 为什么可以只缩放网格、不动几何：faceX / faceY 是把**世界坐标反解成
+       球面 uv** 的，网格缩放后特征点整体位移约 1~2mm
+       （特写下约 4px / 558px，且左右对称 —— 只是脸略窄），可忽略；
+       而改几何顶点会破坏那张反解表的正确性 —— 那才是真的会贴歪，且不报错。
+     ★ 头发帽必须用**同一组倍率**：它是独立网格（球心 1.605 / 半径 0.112），
+       只缩放头会让头从帽檐里穿出来，而这种穿帮**只在特写看得见**。 */
+  const HEAD_SHAPE = [0.96, 1.05, 0.98];
   const head = add(G.head, faceMat, 0, HEAD_CY, 0);
-  /* 头发帽：正面有缺口（见 geomInit 的注释），不会再盖住脸。 */
-  add(G.hairCap, hairM, 0, 1.605, 0);
-  void head;
+  head.scale.set(HEAD_SHAPE[0], HEAD_SHAPE[1], HEAD_SHAPE[2]);
+  /* 头发帽：正面有缺口（见 geomInit 的注释），不会再盖住脸。
+     ★ y 必须与头**同心**（1.60）而不是 1.605 —— 见 geomInit 里发际线那条：
+       球心差 5mm 就是"头发"和"帽子"的区别。 */
+  const hairCap = add(G.hairCap, hairM, 0, HEAD_CY, 0);
+  hairCap.scale.set(HEAD_SHAPE[0], HEAD_SHAPE[1], HEAD_SHAPE[2]);
 
   const legs = [], arms = [];
   /* ★ 手掌必须挂在**手臂**下、脚掌必须挂在**腿**下（局部坐标），不能挂在组根上。
@@ -492,6 +829,13 @@ export function buildHuman(rng, scale = 1) {
 
   g.scale.setScalar(scale);
   g.userData.limbs = { legs, arms };
+  /* ★ 头心与半径交给"取景"用（facecam.js::headOf 读它）。
+     为什么必须由人形自己声明、而不是在相机里写死 1.60 / 0.105：
+     那是"人形长什么样"的知识，归这里；相机里再写一份就是**同一件事两份定义**
+     —— 以后调身高比例时镜头会悄悄拍偏，而且不报错。
+     ★ y 仍取 HEAD_CY：缩放是绕网格自身原点做的，头心不随缩放移动。
+       r 取**纵向**半径：取景公式按垂直 FOV 算，画面高度方向才是有效半径。 */
+  g.userData.head = { y: HEAD_CY, r: HEAD_R * HEAD_SHAPE[1] };
   return g;
 }
 
@@ -2243,4 +2587,4 @@ export class ActorSystem {
    ★ faceTexture 也导出：脸的**方位**（脸是不是长在 +Z）无法靠数网格判断，
    只能把贴图本身取出来看。验证脚本用它在 node 侧比对人脸中心像素。
    （任务系统各导出见上方 `export const TASK_SLOT` / `export class Task` 等处。） */
-export { KIND as ACTOR_KIND, buildCar, buildBike, buildDog, buildCat, buildBird, faceTexture, faceX, faceY, nameSprite };
+export { KIND as ACTOR_KIND, buildCar, buildBike, buildDog, buildCat, buildBird, faceTexture, faceNormal, faceX, faceY, nameSprite };

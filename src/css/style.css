@@ -6262,3 +6262,158 @@ body {
     box-shadow: none !important;
   }
 }
+
+/* ══════════════════════════════════════════════════════════════════════════
+   NPC 立绘对话框（2026-09-19）—— 复刻《大多数》的人物区分方法
+   ──────────────────────────────────────────────────────────────────────────
+   3D 模型通用，立绘辨识：对话时底部横条 + 左侧半身立绘（从框上缘探出）
+   + 右侧名牌/台词/按钮。资产是 src/images/avatars/*.png（npc.avatar），
+   加载失败由 npc_dialog.js 降级成程序化 canvas 立绘（.npc-talk-fallback）。
+   类名带 `-modal` → 3D-first 模式下被 scene3d.css 的 [class*="-modal"]
+   皮肤兜底自动接管 z-index/pointer-events，2D 模式不受影响。 */
+#npcTalkRoot {
+  position: relative;
+  z-index: 9600;
+}
+
+.npc-talk-modal {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: none;
+  justify-content: center;
+  pointer-events: none; /* 台词区自身开 auto，遮不住游戏画面上半部 */
+}
+
+.npc-talk-modal.is-open {
+  display: flex;
+  animation: npcTalkRise 0.22s ease-out;
+}
+
+@keyframes npcTalkRise {
+  from { transform: translateY(24px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+.npc-talk-stage {
+  position: relative;
+  display: flex;
+  align-items: flex-end;
+  width: min(720px, 94vw);
+  pointer-events: auto;
+}
+
+/* 立绘：半身像，允许高出对话框（探出感）。加载失败的 canvas 同样式。 */
+.npc-talk-portrait-wrap {
+  flex: 0 0 auto;
+  align-self: flex-end;
+  margin-right: -34px;
+  margin-bottom: 18px;
+  z-index: 2;
+  filter: drop-shadow(0 6px 18px rgba(0, 0, 0, 0.45));
+}
+
+.npc-talk-portrait {
+  display: block;
+  width: 172px;
+  height: 212px;
+  object-fit: cover;
+  object-position: top center;
+  border-radius: 10px;
+  border: 2px solid rgba(232, 228, 216, 0.35);
+  background: #1c211e;
+}
+
+/* 台词面板：名牌 + 台词 + 按钮 */
+.npc-talk-panel {
+  flex: 1 1 auto;
+  min-width: 0;
+  background: rgba(16, 19, 17, 0.92);
+  border: 1px solid rgba(232, 228, 216, 0.22);
+  border-radius: 12px;
+  /* 左内边距必须吃掉立绘的 -34px 叠压量（实测压住名字的第一个字），
+     再留 18px 呼吸 —— 否则名牌从立绘底下钻出来。 */
+  padding: 14px 16px 12px 52px;
+  backdrop-filter: blur(4px);
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.5);
+}
+
+.npc-talk-nameplate {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 6px;
+}
+
+.npc-talk-name {
+  font-size: 15px;
+  font-weight: 700;
+  color: #f0d898;
+}
+
+.npc-talk-role {
+  font-size: 11px;
+  color: rgba(232, 228, 216, 0.62);
+}
+
+.npc-talk-affinity {
+  font-size: 11px;
+  color: #9ad29a;
+}
+
+.npc-talk-line {
+  font-size: 13.5px;
+  line-height: 1.75;
+  color: #e8e4d8;
+  max-height: 9.5em;
+  overflow-y: auto;
+}
+
+.npc-talk-line.is-fresh {
+  animation: npcTalkText 0.28s ease-out;
+}
+
+@keyframes npcTalkText {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.npc-talk-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.npc-talk-btn {
+  padding: 6px 16px;
+  font-size: 12.5px;
+  border-radius: 8px;
+  border: 1px solid rgba(232, 228, 216, 0.3);
+  background: rgba(232, 228, 216, 0.08);
+  color: #e8e4d8;
+  cursor: pointer;
+}
+
+.npc-talk-btn:hover {
+  border-color: rgba(240, 216, 152, 0.55);
+  background: rgba(240, 216, 152, 0.12);
+}
+
+.npc-talk-btn.is-primary {
+  background: rgba(240, 216, 152, 0.16);
+  border-color: rgba(240, 216, 152, 0.5);
+  color: #f0d898;
+}
+
+@media (max-width: 560px) {
+  .npc-talk-portrait { width: 120px; height: 150px; }
+  .npc-talk-portrait-wrap { margin-right: -22px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .npc-talk-modal.is-open,
+  .npc-talk-line.is-fresh { animation: none; }
+}
