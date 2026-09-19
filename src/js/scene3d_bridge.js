@@ -44,9 +44,12 @@
   var overlayEl = null;
   var lastLocId = null;
   var overlayOpen = false;
-  /* 3D 挂载期间被"让位"隐藏的界面：{el, prev} 数组（见 mountFirst）。
+  /* 3D 挂载期间被"让位"的界面：{el, prev, kind} 数组（见 mountFirst）。
+     kind: "hidden" → 整块 display:none + inert（欢迎屏）
+           "class"  → 加 .s3-yield 类，保持可显示（#app，为了让弹层能浮出）
      记原值是为了卸载时逐个还原 —— 不能统一置 "". */
   var yieldEls = [];
+  var appElDisplayPrev = "";
 
   function core() {
     return window.Scene3D || null;
@@ -554,44 +557,70 @@
     if (typeof S3.create3DShell !== "function") return null;
     if (!getState()) return null;   // 逻辑层还没 newGame/loadGame
 
-    /* ── 让位：把「开始游戏之前」的那一整套界面收起来 ──────────────────────
+    /* ── 让位：分成两类，处理方式**不同** ──────────────────────────────────
      *
-     * 要收的不只是 `#app`，而是 **5 个 body 级界面**：
-     *   #app  #welcome-screen  #mode-select-screen
+     * 【A 类】开始游戏之前的界面（4 张欢迎屏）—— 直接 display:none
+     *   #welcome-screen  #mode-select-screen
      *   #scenario-select-screen  #sandbox-screen
      *
-     * ★ 2026-09-19 修「3D 模式下按 Tab，焦点跑到原网页」。
-     *   真凶是后面那 4 张**欢迎屏**：它们是 body 的直接子元素，
-     *   **不在 `#app` 内部**，所以 `#app` 的 display:none 完全管不到。
-     *   实测 3D 模式下它们仍然可见，里面 20+ 个按钮
-     *   （「开始新游戏」「传承商店」「帮助」…）全都留在 tab 顺序里。
-     *   玩家按 Tab，焦点就在这些**看不见的**按钮上游走 ——
-     *   "快捷键一半不灵"就是这么来的。
+     *   ★ 2026-09-19 修「3D 模式下按 Tab，焦点跑到原网页」。
+     *   真凶是这 4 张屏：它们是 body 的直接子元素，**不在 `#app` 内部**，
+     *   所以 `#app` 的 display:none 完全管不到。实测 3D 模式下它们仍可见，
+     *   里面 20+ 个按钮（「开始新游戏」「传承商店」「帮助」…）
+     *   全都留在 tab 顺序里 —— 玩家按 Tab，焦点就在这些**看不见的**
+     *   按钮上游走。
+     *   设 `inert` 双保险：2D 逻辑随时可能把这些屏重新显示出来
+     *   （readHUD 那条 onChange 链上就有）。
      *
-     * 为什么每项都记 `prev` 而不是统一置 none：
-     *   卸载时要还原成**各自原本的样子**（有的原本就是 none）。
-     *   一次性覆盖能省几行，代价是 F3 切回 2D 后界面错乱。
+     * 【B 类】`#app` —— **不能整块 display:none**（这是"完全 3D"的关键）
      *
-     * 为什么还要设 `inert`：
-     *   光隐藏不够 —— 2D 逻辑随时可能把这些屏**重新显示**出来
-     *   （readHUD 那条 onChange 链上就有）。`inert` 保证在 3D 活着期间
-     *   它们永远不参与交互与聚焦，即使被谁显示了。 */
+     *   原实现把 `#app` 一起藏了，代价是**整个游戏主界面消失**：
+     *   header / sidebar / main（行动·城市·我·事业·百科 五个 tab）
+     *   全部不可见，只剩 3D 的 HUD。实测 `#main` 高度从 852px 掉到 0。
+     *   玩家在 3D 里点「商店」→ 弹窗虽然能浮出来（挂 body、z=10000），
+     *   但**所有依赖 #app 内部结构的功能都拿不到容器**。
+     *
+     *   改成**加一个 CSS 类 `.s3-yield`**（见 scene3d.css）：
+     *     · 隐藏主视图（header/sidebar/main 都 display:none）
+     *     · **但 `#app` 自身保持可见**（不设 display、不设 inert）
+     *   这样：
+     *     · 主界面让位给 3D —— 视觉上就是"完全 3D"
+     *     · 而挂进 `#app` 内部的弹层/浮层仍能正常显示（它们是 position:fixed
+     *       的，父级 display:none 会把它们一起藏掉，这就是原方案的根本问题）
+     *     · 也**不能设 inert**：inert 会让 #app 内所有弹窗变成不可交互。
+     *
+     *   用一个类而不是内联样式，是为了让"让位长什么样"这件事集中在 CSS 里 ——
+     *   以后要调（比如想让侧栏留一条窄边）只改一处。 */
     yieldEls = [];
-    var YIELD_IDS = ["app", "welcome-screen", "mode-select-screen", "scenario-select-screen", "sandbox-screen"];
-    for (var yi = 0; yi < YIELD_IDS.length; yi++) {
-      var el = document.getElementById(YIELD_IDS[yi]);
-      if (!el) continue;
-      yieldEls.push({ el: el, prev: el.style.display || "" });
-      el.style.display = "none";
-      try { el.inert = true; } catch (e) { /* 老浏览器会忽略 inert */ }
+    /* A 类：整块隐藏 + inert */
+    var YIELD_HIDDEN = ["welcome-screen", "mode-select-screen", "scenario-select-screen", "sandbox-screen"];
+    for (var yi = 0; yi < YIELD_HIDDEN.length; yi++) {
+      var he = document.getElementById(YIELD_HIDDEN[yi]);
+      if (!he) continue;
+      yieldEls.push({ el: he, prev: he.style.display || "", kind: "hidden" });
+      he.style.display = "none";
+      try { he.inert = true; } catch (e) { /* 老浏览器会忽略 inert */ }
     }
-
-    /* 兼容 unmountFirst 里的旧引用（它按 appEl / appPrevDisplay 还原） */
-    appEl = null; appPrevDisplay = "";
-    for (var yk = 0; yk < yieldEls.length; yk++) {
-      if (yieldEls[yk].el.id === "app") { appEl = yieldEls[yk].el; appPrevDisplay = yieldEls[yk].prev; break; }
+    /* B 类：#app 加类让位（保持可显示、可交互，只藏主视图） */
+    appEl = document.getElementById("app");
+    if (appEl) {
+      appElDisplayPrev = appEl.style.display || "";
+      yieldEls.push({ el: appEl, prev: appElDisplayPrev, kind: "class" });
+      appEl.classList.add("s3-yield");
     }
+    appPrevDisplay = appElDisplayPrev;
 
+    /* body 级状态类 —— 供 CSS 把**游戏弹层**抬到 3D 之上。
+     *
+     * ★ 为什么必须是 body 级：游戏的弹窗全部 `document.body.appendChild`
+     *   （main.js:852 / ui/modal.js:208,1529,1711 / events_core.js:839 /
+     *    actions_extra.js:1993 / critical.js:1217 / daily_report.js:1329 /
+     *    companyHistory.js:226 / world_news_intro.js:2976,3124 —— 共 11 处），
+     *   **不在 `#app` 内部**。所以 `#app.s3-yield .modal-overlay` 这类
+     *   selector 一个都匹配不上（我第一版就这么写的，规则全部落空，
+     *   测出来弹窗 z 仍是 1000、被 3D 的 9000 盖住）。
+     *   挂在 body 上才能覆盖到所有弹层。 */
+    if (document.body) document.body.classList.add("s3-first-mode");
 
     firstHost = document.createElement("div");
     firstHost.id = FIRST_ID;
@@ -635,16 +664,22 @@
     if (firstShell) { firstShell.dispose(); firstShell = null; }
     if (firstHost) { firstHost.remove(); firstHost = null; }
 
-    /* 还原让位的那 5 个界面：**逐个恢复各自的原值**，并解除 inert。
-       顺序无所谓，但必须全部走到 —— 漏掉任何一个，
-       F3 切回 2D 后就会有一块界面"看起来是空的"（其实是 display:none）。*/
+    /* 还原让位的界面，按 kind 分两种处理：
+         hidden → 写回原 display + 解除 inert
+         class  → 摘掉 .s3-yield（不碰 display，它本来就没被改过） */
     for (var i = 0; i < yieldEls.length; i++) {
       var rec = yieldEls[i];
       if (!rec || !rec.el) continue;
-      rec.el.style.display = rec.prev;
-      try { rec.el.inert = false; } catch (e) { /* 老浏览器忽略 */ }
+      if (rec.kind === "class") {
+        rec.el.classList.remove("s3-yield");
+      } else {
+        rec.el.style.display = rec.prev;
+        try { rec.el.inert = false; } catch (e) { /* 老浏览器忽略 */ }
+      }
     }
     yieldEls = [];
+
+    if (document.body) document.body.classList.remove("s3-first-mode");
 
     appEl = null;
     appPrevDisplay = "";

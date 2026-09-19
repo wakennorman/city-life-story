@@ -720,6 +720,100 @@
   overflow: hidden;
 }
 
+/* ══════════════════════════════════════════════════════════════════════════
+   `#app` 的让位（3D 模式下由 scene3d_bridge.js 加上 .s3-yield）
+   ══════════════════════════════════════════════════════════════════════════
+
+   ★ 为什么是"加个类"而不是"整块 display:none"（这是"完全 3D"的关键）：
+
+   原方案把整个 `#app` 藏掉，代价是**游戏主界面全没了** ——
+   header / sidebar / main（行动·城市·我·事业·百科 五个 tab）一起消失，
+   实测 `#main` 高度从 852px 掉到 0，玩家在 3D 里点「商店」什么也看不到。
+
+   而 `#app` **不能整块藏**的原因是：它内部挂着一批 `position:fixed` 的
+   弹层/浮层。父级一旦 `display:none`，**所有后代都会被一起藏掉**，
+   不管它们的 position 是什么。于是"3D 模式下打开任何面板都是空的"。
+
+   所以让位拆成两步：
+     ① 隐藏主视图（下面这三条）—— 视觉上就是"完全 3D"
+     ② `#app` 自身保持可见 —— 弹层得以正常浮出，盖在 3D 之上
+
+   与之配套：让位时**不能给 `#app` 设 inert**（会把弹窗变成不可交互）。
+   欢迎屏那 4 张倒是要设 inert，它们没有弹层需求。
+   ────────────────────────────────────────────────────────────────────────── */
+#app.s3-yield > #header,
+#app.s3-yield > #sidebar,
+#app.s3-yield > #main {
+  display: none;
+}
+
+/* `#app` 是 CSS Grid（header/sidebar/main 三区）。主视图藏掉后
+   grid 还是按 `1fr` 撑满，会留下一层不透明的底 —— 3D 就看不见了。
+   置成透明 + pointer-events:none：既不挡 3D 的操作，
+   又让内部的弹层（fixed 定位，不受这里影响）照常工作。 */
+#app.s3-yield {
+  background: transparent;
+  pointer-events: none;
+}
+
+/* 但弹层自己要能接收点击 —— 上面的 pointer-events:none 会**继承**，
+   必须显式打开。用 !important 是**必要的**：
+   游戏里 `.modal-overlay` 等类没有设 pointer-events，继承到的是 none，
+   而我们要覆盖的是"继承来"的值 —— 这类覆盖只能靠 !important。 */
+#app.s3-yield .modal-overlay,
+#app.s3-yield .modal-box,
+#app.s3-yield [class*="-modal"],
+#app.s3-yield [class*="-overlay"],
+#app.s3-yield [class*="-panel"],
+#app.s3-yield .earn-float,
+#app.s3-yield [id$="-modal"],
+#app.s3-yield [id^="modal-"] {
+  pointer-events: auto !important;
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   把游戏弹层抬到 3D 之上
+   ══════════════════════════════════════════════════════════════════════════
+
+   ★ 2026-09-19 实测发现：`.modal-overlay` 的 z-index 是 **1000**，
+     而 3D 宿主 `.s3-first` 是 **9000** —— **游戏弹窗会被 3D 盖住**。
+     这个缺陷之前一直没暴露，是因为 `#app` 整块被 display:none，
+     玩家连弹窗都看不见（连"被盖住"都看不出来）。
+
+   ★★ 另一个必须先说清的事实：**这些弹窗不在 `#app` 里**。
+     游戏的弹窗实现（main.js / ui/modal.js / events_core.js 等 9 处）
+     统统是 `document.body.appendChild(overlay)` —— 挂在 **body** 上。
+     所以 selector 不能写成 `#app.s3-yield .modal-overlay`
+     （我第一版就是这么写的，规则全部落空，测出来 z 还是 1000）。
+     正确做法是挂一个 **body 级的状态类**，由 JS 在 3D 挂载时加上。
+
+   层级分配（都要高于 3D 的 9000）：
+     · 3D 宿主              9000
+     · 游戏弹层           ≥ 9500
+     · 收益飘字（正面反馈） 9999  ← 保持最上，不动它
+
+   只在 `body.s3-first-mode` 下生效 —— 2D 模式不受任何影响。 */
+body.s3-first-mode .modal-overlay,
+body.s3-first-mode .event-overlay,
+body.s3-first-mode .tutorial-overlay,
+body.s3-first-mode [class*="-modal"]:not(.s3h),
+body.s3-first-mode [id$="-modal"]:not([id^="scene3d"]) {
+  z-index: 9500 !important;
+  /* pointer-events：这些弹层在 `#app` 让位后可能继承到 none。
+     显式复位成 auto，保证关掉弹窗、点确定这类操作可用。 */
+  pointer-events: auto !important;
+}
+
+/* 弹窗内部的按钮/输入也要能点 —— 有些实现只在上层容器开了 auto，
+   子元素仍是继承值。这里是**兜底**，不覆盖已经显式设过的。 */
+body.s3-first-mode .modal-box,
+body.s3-first-mode .modal-overlay button,
+body.s3-first-mode .modal-overlay input,
+body.s3-first-mode .modal-overlay select,
+body.s3-first-mode .modal-overlay textarea {
+  pointer-events: auto !important;
+}
+
 /* 退出按钮：放在右侧需求条（.s3h-vitals 从 top:96px 起）之上的空档里，
    不挤顶栏（顶栏右侧是现金/欠款）、不压行动托盘（右下）。
    窄屏下需求条的 top 由本按钮的高度推导 —— 见下方 @media。 */

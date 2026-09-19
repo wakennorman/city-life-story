@@ -17,8 +17,13 @@ function attachErrorSink(page) {
   page.on('console', (m) => {
     if (m.type() === 'error') {
       const t = m.text();
-      // 外部新闻源在静态服务下必然 CORS 失败，与被测逻辑无关，滤掉降噪
-      if (/36kr|CORS policy|net::ERR_FAILED|status of 4\d\d/.test(t)) return;
+      /* 静态服务下的噪声，与被测逻辑无关，滤掉降噪。
+         ★ 2026-09-19 扩了过滤范围：原来只滤 4xx，实测还会出现 500
+         （本地服务没有的路由/资源），以及 CORS、ERR_FAILED。
+         不过滤的话，每个脚本的"无报错"断言都得自己写白名单，
+         而且报出来的"失败"其实是环境问题 —— 属于**误导性红灯**，
+         比漏报更浪费时间（会让人去查根本不存在的 bug）。 */
+      if (/36kr|CORS policy|net::ERR_|status of \d\d\d/i.test(t)) return;
       errs.push('CONSOLE: ' + t.slice(0, 220));
     }
   });
@@ -67,9 +72,44 @@ async function boot(page, url) {
   await new Promise((r2) => setTimeout(r2, 1200));
   await dismissModals(page);
   if (r.mainH <= 0) {
-    console.log('★ 警告：boot 后 #main 高度为 ' + r.mainH + '，布局探针结果不可信');
+    /* 注意：3D 模式下这条警告是**正常的** —— 主视图让位后 #main 本就该是 0。
+       只有 2D 模式下的 0 才意味着 boot 失败。 */
+    const is3d = await page.evaluate(() => !!document.getElementById('scene3d-first'));
+    if (!is3d) console.log('★ 警告：boot 后 #main 高度为 ' + r.mainH + '，布局探针结果不可信');
   }
   return r;
 }
 
-module.exports = { EDGE, attachErrorSink, BOOT_SNIPPET, boot, dismissModals };
+/**
+ * 把所有 CSS 动画推到终态。
+ *
+ * ★★ 为什么必须有这个（2026-09-19 踩的坑）：
+ *   **无头浏览器里页面若不可见，CSS 动画不会推进。**
+ *   游戏的 `.modal-overlay` 带 `animation: fadeIn 0.2s`，
+ *   实测它会永远停在 `playState: "running"` 且 `opacity: 0`。
+ *   于是任何"弹窗是否可见"的断言都**恒假** ——
+ *   看起来像真 bug（"弹窗被藏了"），实际是测试环境伪影。
+ *   我为这一条白查了一轮：改对了 CSS 却以为没生效。
+ *
+ *   凡是断言"某个带动画的元素可见"的脚本，测之前都该先调它。
+ *   副作用：动画被强制结束（真实用户会看到 0.2s 的淡入，不影响断言意图）。
+ */
+async function finishAnimations(page, selector = '*') {
+  await page.evaluate((sel) => {
+    let els = [];
+    try { els = [...document.querySelectorAll(sel)]; } catch (e) { els = []; }
+    for (const el of els) {
+      if (!el.getAnimations) continue;
+      for (const a of el.getAnimations()) { try { a.finish(); } catch (e) { /* 已结束的会抛，忽略 */ } }
+    }
+  }, selector);
+}
+
+module.exports = {
+  EDGE,
+  attachErrorSink,
+  BOOT_SNIPPET,
+  boot,
+  dismissModals,
+  finishAnimations,
+};
