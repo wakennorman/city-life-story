@@ -128,6 +128,64 @@ const PROBE = 'dev/_3dtest/bundle-probe.js';
   console.log(`     摆位：${staged.n} 个 · 相机高 ${staged.camY}m · 水平距离 ${staged.dist}m`);
   await shot('3-cast-lineup-x2.png');
 
+  /* ── ③b 五官近景：单个放大 4 倍 ──
+     ★ 这张是回答"人物连脸都没有吗"的唯一有效证据。
+       默认机位（dist 16~18）下人只有约 105px、眼睛约 2px —— 什么几何都看不出来。
+       x4 之后 1.72m→6.9m 高，眼睛约 60px，五官是否真的存在一眼可判。
+       注意：它证明的是"几何精度"，不是"游戏内观感"。 */
+  await page.evaluate(() => {
+    const S = window.Scene3D;
+    const sc = window.__shell.view3d.scene;
+    for (const o of window.__staged || []) o.parent && o.parent.remove(o);
+    let seed = 7;
+    const rng = () => { seed = (seed * 1103515245 + 12345) & 0x7fffffff; return seed / 0x7fffffff; };
+    const C = window.__shell.view3d.cameraPos, P = window.__shell.view3d.playerPos;
+    let fx = P.x - C.x, fz = P.z - C.z;
+    const fl = Math.hypot(fx, fz) || 1; fx /= fl; fz /= fl;
+    const rx = fz, rz = -fx;
+    const bx = C.x + fx * fl * 0.8, bz = C.z + fz * fl * 0.8;
+    const made = [];
+    const put = (obj, lateral) => {
+      const x = bx + rx * lateral, z = bz + rz * lateral;
+      obj.position.set(x, 0, z);
+      obj.rotation.y = Math.atan2(C.x - x, C.z - z);
+      sc.add(obj); made.push(obj);
+    };
+    /* 三个不同随机外观的人（肤色/发色/上衣/裤子各异），x4 看清五官。 */
+    put(S.buildHuman(rng, 4.0), -3.2);
+    put(S.buildHuman(rng, 4.0), 0);
+    put(S.buildHuman(rng, 4.0), 3.2);
+    window.__staged = made;
+  });
+  await shot('3b-face-closeup-x4.png');
+
+  /* ── ③c 动物近景：狗/猫/鸟放大看清形态（尾/耳/翅）── */
+  await page.evaluate(() => {
+    const S = window.Scene3D;
+    const sc = window.__shell.view3d.scene;
+    for (const o of window.__staged || []) o.parent && o.parent.remove(o);
+    let seed = 31;
+    const rng = () => { seed = (seed * 1103515245 + 12345) & 0x7fffffff; return seed / 0x7fffffff; };
+    const C = window.__shell.view3d.cameraPos, P = window.__shell.view3d.playerPos;
+    let fx = P.x - C.x, fz = P.z - C.z;
+    const fl = Math.hypot(fx, fz) || 1; fx /= fl; fz /= fl;
+    const rx = fz, rz = -fx;
+    const bx = C.x + fx * fl * 0.82, bz = C.z + fz * fl * 0.82;
+    const made = [];
+    const put = (obj, lateral, y) => {
+      const x = bx + rx * lateral, z = bz + rz * lateral;
+      obj.position.set(x, y || 0, z);
+      obj.rotation.y = Math.atan2(C.x - x, C.z - z);
+      if (obj.scale) obj.scale.multiplyScalar(4);
+      sc.add(obj); made.push(obj);
+    };
+    put(S.buildDog(rng), -2.6, 0.9);
+    put(S.buildCat(rng), 1.6, 0.9);
+    put(S.buildBird(rng), 4.4, 2.6);
+    window.__staged = made;
+  });
+  await shot('3c-animals-closeup-x4.png');
+
   /* ── ④ 3D 场景内提醒（网页浮条已换成场景 sprite）── */
   await page.evaluate(() => {
     const v = window.__shell.view3d;
