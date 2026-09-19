@@ -731,6 +731,9 @@
       "js/data/startup_competition.js",
       "js/data/scenario_start_chains.js",
       "js/data/locations.js",
+      // 出行方式规则（单一事实源）：依赖 locations.js 的 getLocationHops，
+      // 必须排在其后。与 src/index.html 的挂载顺序保持一致。
+      "js/data/travel_rules.js",
       "js/data/location_flavor.js",
       "js/data/jobs.js",
       "js/data/goods.js",

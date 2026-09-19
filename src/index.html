@@ -1067,6 +1067,9 @@
 
     <!-- Data -->
     <script src="js/data/locations.js"></script>
+    <!-- 出行方式规则（单一事实源）：依赖 locations.js 的 getLocationHops，
+         必须在它之后加载。2D 地图 / 3D 地图 / 测试共用此文件。 -->
+    <script src="js/data/travel_rules.js"></script>
     <script src="js/data/location_flavor.js"></script>
     <script src="js/data/jobs.js"></script>
     <script src="js/data/goods.js"></script>
@@ -1480,6 +1483,7 @@
     <script src="js/ui/render.js"></script>
     <script src="js/ui/corp_ui.js"></script>
     <script src="js/ui/modal.js"></script>
+    <script src="js/ui/npc_dialog.js"></script>
     <script src="js/ui/heritage_store.js"></script>
     <script src="js/ui/tutorial.js"></script>
     <script src="js/ui/navigation.js"></script>

@@ -2517,17 +2517,10 @@ function renderMapTab(state, parent) {
   // 可达地点列表（用于地图节点点击和交通方式计算）
   const reachableList = Array.from(reachable).filter((k) => k !== locKey);
 
-  // 地铁沿线大站定义（用于交通方式计算）
-  const METRO_STATIONS = [
-    "techPark",
-    "commercialDist",
-    "hospital",
-    "school",
-    "trainingCenter",
-    "entertainment",
-    "slum",
-    "wholesaleMarket",
-  ];
+  // 出行方式规则见 `js/data/travel_rules.js`（单一事实源）。
+  // 2026-09-19：原先这里有一份局部 METRO_STATIONS（8 站，漏了 bank），
+  // 与点击回调里的判定各写一遍 → 出现「地图显示能去、点下去却弹不在地铁沿线」。
+  // 现已下沉为共享数据，2D 地图 / 3D 地图 / 测试读同一份。
 
   // 城市地图 — 使用 CSS Grid 布局，按地理关系排列
   const mapWrap = document.createElement("div");
@@ -2623,7 +2616,16 @@ function renderMapTab(state, parent) {
         : "";
     const isCurrent = key === locKey;
     const isReachable = reachable.has(key);
-    const canTravel = isReachable && !isCurrent;
+    // 可达性 = 「在旅行图里可达」**且**「当前出行方式真能到达」。
+    // 2026-09-19 修：原实现只判前者，于是切到地铁后地图仍给所有邻点显示
+    // "🚇 点击前往"，点下去才被回调拦下（说能到、点却没反应）。
+    // 现在用与点击回调**同一个** resolveTransit() 预判，两处口径必然一致。
+    const _probe =
+      typeof resolveTransit === "function"
+        ? resolveTransit((state.player && state.player.transitMode) || "walk", locKey, key, state)
+        : { ok: true, reason: null };
+    const modeBlocked = isReachable && !isCurrent && !_probe.ok;
+    const canTravel = isReachable && !isCurrent && _probe.ok;
 
     const node = document.createElement("div");
     node.className = "map-node";
@@ -2633,7 +2635,7 @@ function renderMapTab(state, parent) {
       transform:translate(-50%,-50%);
       padding:8px 12px;
       background:${isCurrent ? "linear-gradient(135deg, rgba(0,180,216,0.3), var(--bg-card))" : "var(--bg-card)"};
-      border:2px solid ${isCurrent ? "var(--accent)" : isReachable ? "var(--border-light)" : "rgba(255,255,255,0.06)"};
+      border:2px solid ${isCurrent ? "var(--accent)" : canTravel ? "var(--border-light)" : modeBlocked ? "rgba(255,180,80,0.35)" : "rgba(255,255,255,0.06)"};
       border-radius:8px;
       cursor:${canTravel ? "pointer" : isCurrent ? "default" : "not-allowed"};
       z-index:2;
@@ -2650,6 +2652,7 @@ function renderMapTab(state, parent) {
       <div style="font-size:9px;color:var(--text-muted);margin-bottom:3px;">${mapLoc.type === "commercial" ? "🛒商业" : mapLoc.type === "industrial" ? "🏭工业" : mapLoc.type === "residential" ? "🏘️居住" : mapLoc.type === "service" ? "🏥服务" : mapLoc.type === "education" ? "📚教育" : mapLoc.type === "corporate" ? "🏢职场" : mapLoc.type === "recreation" ? "🌳休闲" : mapLoc.type === "institutional" ? "🏫机构" : ""}</div>
       <div style="display:flex;flex-wrap:wrap;gap:2px;justify-content:center;" class="map-node-badges">${badgeStr}</div>
       ${canTravel ? '<div class="map-node-action" style="font-size:9px;color:var(--accent);margin-top:4px;">' + (state.player && state.player.transitMode === "walk" ? "🚶" : state.player && state.player.transitMode === "bike" ? "🚲" : state.player && state.player.transitMode === "metro" ? "🚇" : state.player && state.player.transitMode === "taxi" ? "🚕" : state.player && state.player.transitMode === "car" ? "🚗" : "👆") + ' 点击前往</div>' : ""}
+      ${modeBlocked ? '<div class="map-node-action" style="font-size:9px;color:#e8a33d;margin-top:4px;">' + ((_probe.icon || "⛔") + " 去不了") + '</div>' : ""}
       ${!isReachable && !isCurrent ? '<div class="map-node-action" style="font-size:9px;color:var(--text-muted);margin-top:2px;">🔒 未探索</div>' : ""}
     `;
 
@@ -2667,44 +2670,54 @@ function renderMapTab(state, parent) {
       node.addEventListener("click", () => {
         const dest = getLocation(key);
         const mode = (state.player && state.player.transitMode) || "walk";
-        const hops = typeof getLocationHops === "function" ? getLocationHops(locKey, key) : 1;
-        var ap = 15, price = 0, modeName = "🚶 步行", canReach = true;
-        if (mode === "walk") {
-          ap = Math.max(6, 6 + hops * 4);
-          price = 0;
-          modeName = "🚶 步行";
-        } else if (mode === "bike") {
-          ap = 6; price = 3;
-          modeName = "🚲 共享单车";
-        } else if (mode === "metro") {
-          if (METRO_STATIONS.indexOf(key) < 0) { canReach = false; }
-          else { ap = 5; price = 4; modeName = "🚇 地铁"; }
-        } else if (mode === "taxi") {
-          ap = 3; price = 10 + (typeof Random !== "undefined" && Random.int ? Random.int(0, 30) : 15);
-          modeName = "🚕 打车";
-        } else if (mode === "car") {
-          if (!hasCar) {
-            StateManager.addMessage("🚗 你还没有车，无法自驾出行。可以去汽车城看看。", "warning");
-            return;
-          }
-          ap = 2; price = 5;
-          modeName = "🚗 自驾";
-        }
-        if (!canReach) {
-          StateManager.addMessage("🚇 " + (dest ? dest.name : key) + "不在地铁沿线，请选择其他出行方式。", "warning");
+        // 2026-09-19 重构：出行规则全部下沉到 `js/data/travel_rules.js`，
+        // 这里只负责「调一次、拿结果、按结果办事」。原先的 if-else 长链
+        // 与节点渲染期的预判各写一遍，是口径分叉与「说能到、点不动」的根因。
+        const r =
+          typeof resolveTransit === "function"
+            ? resolveTransit(mode, locKey, key, state)
+            : null;
+        if (!r) {
+          StateManager.addMessage("出行系统不可用，请刷新页面。", "warning");
           return;
         }
-        if ((state.resources.cash || 0) < price) {
-          StateManager.addMessage("💸 " + modeName + "需要¥" + price + "，你现金不够。", "warning");
+        if (!r.ok) {
+          // 用统一下沉规则给出的理由，不再各处硬编码文案
+          StateManager.addMessage((r.icon || "⚠️") + " " + r.reason, "warning");
           return;
         }
-        state.resources.cash = (state.resources.cash || 0) - price; // [全系统自洽修复] 域F A类: cash NaN守卫
+        // 交通费结算走唯一入口 payTransitFee（扣现金 + 写账本），
+        // 修「钱扣了但日报看不到」的账实不符。
+        const pay =
+          typeof payTransitFee === "function"
+            ? payTransitFee(state, r.price, r.modeName, dest ? dest.name : key)
+            : { ok: true, paid: r.price, reason: null };
+        if (!pay.ok) {
+          StateManager.addMessage("💸 " + pay.reason, "warning");
+          return;
+        }
         StateManager.update("trade.currentLocation", key);
+        // 地点访问追踪（成就用）—— 与逻辑层 travel_<key> 行动保持一致，
+        // 避免 2D 地图绕开行动时漏记足迹。
+        if (state.flags) {
+          state.flags._visitedLocations = state.flags._visitedLocations || [];
+          if (state.flags._visitedLocations.indexOf(key) === -1) {
+            state.flags._visitedLocations.push(key);
+            if (
+              typeof LOCATIONS !== "undefined" &&
+              Object.keys(LOCATIONS).every(function (l) {
+                return state.flags._visitedLocations.indexOf(l) !== -1;
+              })
+            ) {
+              state.flags._visitedAllLocations = true;
+            }
+          }
+        }
         StateManager.addMessage(
-          modeName + " 你来到了" + (dest ? dest.name : key) + costStr({ap: ap, cash: price}),
+          r.modeName + " 你来到了" + (dest ? dest.name : key) + costStr({ ap: r.ap, cash: r.price }),
           "info",
         );
-        if (typeof consumeAP === "function") consumeAP(ap);
+        if (typeof consumeAP === "function") consumeAP(r.ap);
         renderAll();
       });
     }
@@ -2720,18 +2733,32 @@ function renderMapTab(state, parent) {
     "display:flex;flex-direction:column;gap:2px;padding:8px 0 4px;";
   const curMode = (state.player && state.player.transitMode) || "walk";
   var hasCar = state.investment && state.investment.cars && state.investment.cars.length > 0;
-  const TRANSIT_MODES = [
-    { mode: "walk", label: "🚶 步行", desc: "免费" },
-    { mode: "bike", label: "🚲 单车", desc: "¥3" },
-    { mode: "metro", label: "🚇 地铁", desc: "¥4" },
-    { mode: "taxi", label: "🚕 打车", desc: "¥10-40" },
-    { mode: "car", label: "🚗 自驾", desc: hasCar ? "¥5" : "🔒 需购车" },
-  ];
+  // 出行方式列表读统一下沉数据（`js/data/travel_rules.js`）。
+  // ⚠️ 局部变量名不能叫 TRANSIT_MODES —— 那会**遮蔽**全局的同名对象表
+  //    （下沉文件导出的 TRANSIT_MODES 是 { mode: {...} } 映射），
+  //    导致本文件里所有对它的引用都静默取到数组。故命名为 transitModeList。
+  const transitModeList =
+    typeof TRANSIT_MODE_ORDER !== "undefined" && typeof TRANSIT_MODES !== "undefined"
+      ? TRANSIT_MODE_ORDER.map(function (m) {
+          var d = TRANSIT_MODES[m];
+          return {
+            mode: d.mode,
+            label: d.label,
+            desc: d.requiresCar && !hasCar ? "🔒 需购车" : d.priceText,
+          };
+        })
+      : [
+          { mode: "walk", label: "🚶 步行", desc: "免费" },
+          { mode: "bike", label: "🚲 单车", desc: "¥3" },
+          { mode: "metro", label: "🚇 地铁", desc: "¥4" },
+          { mode: "taxi", label: "🚕 打车", desc: "¥10-40" },
+          { mode: "car", label: "🚗 自驾", desc: hasCar ? "¥5" : "🔒 需购车" },
+        ];
 
   // 按钮行
   var btnRow = document.createElement("div");
   btnRow.style.cssText = "display:flex;gap:4px;flex-wrap:wrap;";
-  TRANSIT_MODES.forEach(function(tm) {
+  transitModeList.forEach(function(tm) {
     var btn = document.createElement("button");
     btn.className = "transit-bar-btn";
     btn.dataset.mode = tm.mode;
@@ -2766,13 +2793,25 @@ function renderMapTab(state, parent) {
   transitBar.appendChild(btnRow);
 
   // 当前模式提示（单独一行，避免换行不一致）
-  var modeHints = {
-    walk: "💡 步行到达，按距离消耗6~26AP，免费",
-    bike: "💡 共享单车，2跳内可达，消耗6AP，费用¥3",
-    metro: "💡 地铁，仅限沿线站点，消耗5AP，费用¥4",
-    taxi: "💡 打车直达，消耗3AP，按距离计费¥10-40",
-    car: hasCar ? "💡 自驾直达，消耗2AP，油费¥5" : "💡 自驾需先购车，解锁后消耗2AP，油费¥5",
-  };
+  // 当前模式提示：文案同样来自下沉数据，避免"改了一处漏一处"。
+  // ⚠️ 自驾的 hint 依赖 hasCar 动态改写（下沉表里是"已购车"口径）。
+  var modeHints = {};
+  if (typeof TRANSIT_MODES !== "undefined") {
+    Object.keys(TRANSIT_MODES).forEach(function (m) {
+      modeHints[m] = TRANSIT_MODES[m].hint;
+    });
+  } else {
+    modeHints = {
+      walk: "💡 步行到达，按距离消耗6~26AP，免费",
+      bike: "💡 共享单车，2跳内可达，消耗6AP，费用¥3",
+      metro: "💡 地铁，仅限沿线站点，消耗5AP，费用¥4",
+      taxi: "💡 打车直达，消耗3AP，按距离计费¥10-40",
+      car: "💡 自驾直达，消耗2AP，油费¥5",
+    };
+  }
+  if (!hasCar) {
+    modeHints.car = "💡 自驾需先购车，解锁后消耗2AP，油费¥5";
+  }
   var hint = document.createElement("div");
   hint.style.cssText = "font-size:10px;color:var(--text-muted);";
   hint.textContent = modeHints[curMode] || "💡 选择出行方式";

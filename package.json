@@ -25,6 +25,8 @@
     "verify:polyhaven-glb": "node scripts/verify-glb-pack.cjs",
     "shot:3d-assets": "node scripts/shot-3d-assets.cjs",
     "shot:actors": "node scripts/shot-actors.cjs",
+    "verify:face": "node scripts/verify-face.cjs",
+    "verify:npc-dialog": "node scripts/verify-npc-dialog.cjs",
     "shot:ai-placement": "node scripts/shot-ai-placement.cjs",
     "shot:polyhaven-placement": "node scripts/shot-polyhaven-placement.cjs",
     "pack:polyhaven-glb": "node scripts/pack-polyhaven-glb.cjs",
@@ -52,7 +54,7 @@
     "lint": "eslint \"src/js/**/*.js\"",
     "lint:fix": "eslint \"src/js/**/*.js\" --fix",
     "preview": "npx -y -p vite@8.1.0 vite preview --host 127.0.0.1",
-    "test": "npm run check:js && npm run check:events && npm run test:ui && npm run test:status && npm run test:location-rules && npm run check:reachability && npm run check:reachability-control && npm run check:path-aware-control && npm run check:industry-profit && npm run check:dangling",
+    "test": "npm run check:js && npm run check:events && npm run test:ui && npm run test:status && npm run test:location-rules && npm run check:reachability && npm run check:reachability-control && npm run check:path-aware-control && npm run check:industry-profit && npm run check:dangling && npm run test:travel-rules",
     "test:status": "node tests/statusSystem.canonical.test.cjs",
     "test:ui": "node tests/uiModalIntegrity.test.cjs",
     "test:location-rules": "node tests/locationActionRules.test.cjs",
@@ -60,7 +62,8 @@
     "typecheck": "npx -y -p typescript@6.0.3 tsc --noEmit",
     "verify:ai-viewer": "node scripts/verify-ai-viewer.cjs",
     "serve:viewer": "node scripts/serve-viewer.cjs",
-    "check:cash-reconcile": "node scripts/diag-cash-reconcile.cjs"
+    "check:cash-reconcile": "node scripts/diag-cash-reconcile.cjs",
+    "test:travel-rules": "node tests/travelRules.test.cjs"
   },
   "devDependencies": {
     "@types/three": "^0.186.0",
