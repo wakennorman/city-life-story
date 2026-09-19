@@ -17,6 +17,17 @@ const puppeteer = require("puppeteer");
 
 const SRC_ROOT = path.join(process.cwd(), "src");
 const PORT = 8891;
+/* 可选：--url <地址> 直接诊断**线上/任意地址**，不再起本地服务。
+   线上与本地是两套发布面（线上由 CI 的 python build.py 重建），
+   「我这边好的、你那边还是旧版」这类分歧必须能分别验。 */
+const PROXY_ARG = (() => {
+  const i = process.argv.indexOf("--proxy");
+  return i >= 0 ? process.argv[i + 1] : null;
+})();
+const URL_ARG = (() => {
+  const i = process.argv.indexOf("--url");
+  return i >= 0 ? process.argv[i + 1] : null;
+})();
 const MIME = {
   ".html": "text/html; charset=utf-8", ".js": "text/javascript; charset=utf-8",
   ".css": "text/css; charset=utf-8", ".json": "application/json",
@@ -37,13 +48,17 @@ const server = http.createServer((req, res) => {
 });
 
 (async () => {
-  await new Promise((r) => server.listen(PORT, "127.0.0.1", r));
-  console.log(`· 服务 src/ → http://127.0.0.1:${PORT}/  （与恒稳的 8888 同形）`);
+  if (!URL_ARG) {
+    await new Promise((r) => server.listen(PORT, "127.0.0.1", r));
+    console.log(`· 服务 src/ → http://127.0.0.1:${PORT}/  （与恒稳的 8888 同形）`);
+  }
 
   const browser = await puppeteer.launch({
     executablePath: "C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe",
     headless: "new",
-    args: ["--no-sandbox"],
+    /* 可选 --proxy <url>：访问线上站时本机直连 github.io 会超时，
+       需显式走 Karing（127.0.0.1:3067）。 */
+    args: PROXY_ARG ? ["--no-sandbox", `--proxy-server=${PROXY_ARG}`] : ["--no-sandbox"],
   });
   const page = await browser.newPage();
   await page.setViewport({ width: 1440, height: 900 });
@@ -54,8 +69,17 @@ const server = http.createServer((req, res) => {
   page.on("requestfailed", (r) => failed.push(`${r.url()} → ${r.failure() && r.failure().errorText}`));
 
   /* 用 domcontentloaded：本页会持续发外部行情/新闻请求，networkidle2 可能永远不满足 */
-  await page.goto(`http://127.0.0.1:${PORT}/`, { waitUntil: "domcontentloaded", timeout: 60000 });
-  await new Promise((r) => setTimeout(r, 6000));
+  const target = URL_ARG || `http://127.0.0.1:${PORT}/`;
+  console.log(`· 目标：${target}`);
+  /* 线上 dist 的 app.js 有十几 MB，DOMContentLoaded 会被它挡住 →
+     远端目标改用 "commit"（拿到底层响应即返回）再固定等一会儿。 */
+  if (URL_ARG) {
+    await page.goto(target, { waitUntil: "commit", timeout: 120000 });
+    await new Promise((r) => setTimeout(r, 30000));
+  } else {
+    await page.goto(target, { waitUntil: "domcontentloaded", timeout: 60000 });
+    await new Promise((r) => setTimeout(r, 7000));
+  }
 
   const d = await page.evaluate(() => {
     const S3 = window.Scene3D;
@@ -116,5 +140,5 @@ const server = http.createServer((req, res) => {
   console.log("\n📸 " + out);
 
   await browser.close();
-  server.close();
+  if (server.listening) server.close();
 })();
