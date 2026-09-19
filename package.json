@@ -33,6 +33,7 @@
     "shot:polyhaven-placement": "node scripts/shot-polyhaven-placement.cjs",
     "pack:polyhaven-glb": "node scripts/pack-polyhaven-glb.cjs",
     "gen:polyhaven-manifest": "node scripts/gen-polyhaven-manifest.cjs",
+    "gen:asset-ledger": "node scripts/gen-asset-ledger.cjs",
     "fetch:polyhaven": "node scripts/fetch-polyhaven.cjs",
     "ab:attribution": "node scripts/ab-attribution.cjs",
     "baseline": "node scripts/run-baseline.cjs",

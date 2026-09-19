@@ -49,6 +49,74 @@ function check(name, ok, detail) {
   else { fail++; failures.push(name); console.log(`  ❌ ${name}${detail ? '  — ' + detail : ''}`); }
 }
 
+/* ══ ⓪ 磁盘层：资产在盘 + 台账自洽 ═══════════════════════════════════════════
+ *
+ * ★ 为什么这一节必须存在，且必须**排在浏览器之前**（2026-09-19 补）
+ *
+ *   本脚本原先只测"运行时载入对不对"，于是漏掉了一整类失效：
+ *   **资产根本不在仓库里**。而它的症状恰恰是"看起来一切正常"——
+ *   `gen-polyhaven-manifest.cjs` 是**扫描目录**生成清单的，目录空 → 清单空 →
+ *   `python build.py` 成功 → 页面能开 → **只是满城没有卷帘门和电线杆，不报错**。
+ *   实测过的状态：13 个 GLB（79MB）+ 4 个 HDRI（5.8MB）长期只在某台机器磁盘上，
+ *   git 里一个都没有（2026-09-19 已补齐入库）。
+ *
+ *   为什么排在浏览器之前：这一节**不需要浏览器**，几毫秒就能给结论。
+ *   台账过期这种问题，不该让人等 30 秒的 SwiftShader 跑完才知道。
+ *
+ *   为什么不从被测对象读期望值：断言里写死的 13 / 4 来自
+ *   `fetch-polyhaven.cjs` 的下载清单。从被测系统读期望值再跟它自己比，
+ *   永远绿（本项目 §62 标本⑪ 的老坑）。
+ */
+const PH_ROOT = path.join(ROOT, 'src/assets/polyhaven');
+const PH_MODELS = path.join(PH_ROOT, 'models');
+const PH_HDRI = path.join(PH_ROOT, 'hdri');
+
+function checkAssetsOnDisk() {
+  console.log('⓪ 磁盘层：资产在盘 + 台账自洽（不依赖浏览器，先跑）');
+
+  /* ① 台账与磁盘逐条自洽（bytes + md5）。
+        走生成器的 --check —— 复用它，避免"门禁自己重算一遍 md5"产生第二套真相。 */
+  let ledgerOk = true, ledgerOut = '';
+  try {
+    execFileSync(process.execPath, [path.join(__dirname, 'gen-asset-ledger.cjs'), '--check'],
+      { cwd: ROOT, stdio: 'pipe' });
+  } catch (e) {
+    ledgerOk = false;
+    ledgerOut = (String(e.stdout || '') + String(e.stderr || '')).trim().split('\n').slice(-4).join(' / ');
+  }
+  check('资产台账与磁盘自洽（逐条 md5）', ledgerOk, ledgerOut || '全部一致');
+
+  /* ② 盘上真的有那么多个。这一条与 ① 互补：
+        台账可能"自洽"却只记了 3 个（如果生成器被改坏了），
+        所以数量要跟**写死的期望值**比，不跟台账比。 */
+  const nModels = fs.existsSync(PH_MODELS)
+    ? fs.readdirSync(PH_MODELS).filter((d) => fs.statSync(path.join(PH_MODELS, d)).isDirectory()).length : 0;
+  const nHdri = fs.existsSync(PH_HDRI)
+    ? fs.readdirSync(PH_HDRI).filter((f) => /\.hdr$/i.test(f)).length : 0;
+  check('13 个模型目录在盘', nModels === 13, `实际 ${nModels}`);
+  check('4 个 HDRI 在盘', nHdri === 4, `实际 ${nHdri}`);
+
+  /* ③ 每个模型目录里真的有单文件 .glb（打包真的发生过）。
+        抓"只剩 .gltf/.bin 没打包"或"打包到一半"这类中间态。 */
+  const missing = [];
+  if (fs.existsSync(PH_MODELS)) {
+    for (const d of fs.readdirSync(PH_MODELS)) {
+      if (!fs.statSync(path.join(PH_MODELS, d)).isDirectory()) continue;
+      if (!fs.existsSync(path.join(PH_MODELS, d, d + '.glb'))) missing.push(d);
+    }
+  }
+  check('每个模型目录都有同名单文件 .glb', missing.length === 0, missing.join(', ') || '13/13');
+
+  /* ④ 台账条目数 == 盘上资产数（抓"台账漏登记"）。
+        反过来"台账多登记"由 ① 的 --check 覆盖（会报「已消失」）。 */
+  let nLedger = -1;
+  try {
+    nLedger = JSON.parse(fs.readFileSync(path.join(PH_ROOT, 'assets-ledger.json'), 'utf8')).assets.length;
+  } catch (_) { /* 台账缺失/坏掉 → ① 已报红，这里只记 -1 */ }
+  check('台账条目数 == 盘上资产数', nLedger === nModels + nHdri, `台账 ${nLedger} · 盘上 ${nModels + nHdri}`);
+  console.log('');
+}
+
 const MIME = {
   '.html': 'text/html', '.js': 'text/javascript', '.json': 'application/json',
   '.gltf': 'model/gltf+json', '.bin': 'application/octet-stream',
@@ -56,6 +124,11 @@ const MIME = {
 };
 
 (async () => {
+  console.log('Poly Haven 资产接入验证\n');
+
+  /* ⓪ 磁盘层先跑：不需要浏览器，几毫秒出结论 —— 台账过期不该让人等 SwiftShader。 */
+  checkAssetsOnDisk();
+
   rebuild();
 
   const server = http.createServer((req, res) => {
@@ -72,8 +145,6 @@ const MIME = {
   const errs = attachErrorSink(page);
 
   try {
-    console.log('Poly Haven 资产接入验证\n');
-
     await page.goto(`http://127.0.0.1:${PORT}${DOC}`, { waitUntil: 'load', timeout: 60000 });
     await page.waitForFunction(() => !!window.Scene3D, { timeout: 60000 });
     await page.waitForFunction(() => window.__assetProbe && window.__assetProbe.ready, { timeout: 60000 }).catch(() => {});

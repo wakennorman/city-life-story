@@ -46,6 +46,7 @@
 
 const path = require('path');
 const fs = require('fs');
+const { execFileSync } = require('child_process');
 
 const ROOT = path.resolve(__dirname, '..');
 const MODELS = path.join(ROOT, 'src', 'assets', 'polyhaven', 'models');
@@ -222,6 +223,17 @@ function main() {
 
   console.log(`\n完成：成功 ${ok} · 跳过 ${skip} · 失败 ${fail}`);
   if (fail) process.exit(1);
+
+  /* ★ 打完包必须**回写资产台账** —— 这就是当初漏掉的那一步（2026-09-19 补）。
+     原始 `.gltf` / `.bin` 在打包时已被删除，若不回写台账，留下的是
+     "md5 指向不存在文件"的死台账：实测 13/13 条全部对不上，且 4 个 HDRI
+     没有条目 → **仓库里有 64 个资产，却没有任何东西能自证它们没被改坏**。
+     这里直接调生成器而不是自己算一遍 md5 —— 保证「只有一套真相」，
+     否则打包脚本和门禁各算各的，迟早分叉。 */
+  if (!verifyOnly) {
+    console.log('\n回写资产台账…');
+    execFileSync(process.execPath, [path.join(__dirname, 'gen-asset-ledger.cjs')], { cwd: ROOT, stdio: 'inherit' });
+  }
 }
 
 main();

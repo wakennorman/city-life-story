@@ -1,0 +1,134 @@
+{
+  "_generated": "scripts/gen-asset-ledger.cjs —— 请勿手改",
+  "_why": "记录**仓库里实际存在**的资产（后打包形态）。manifest.json 是下载台账，记的是原始 .gltf/.bin（打包成 .glb 后已删除），因此它**无法**校验现有资产；本文件才是自洽的那一份。三者分工见 gen-asset-ledger.cjs 头注。",
+  "source": "Poly Haven",
+  "license": "CC0 1.0 (Public Domain)",
+  "licenseUrl": "https://polyhaven.com/license",
+  "base": "src/assets/polyhaven/",
+  "counts": {
+    "models": 13,
+    "hdri": 4,
+    "total": 17
+  },
+  "assets": [
+    {
+      "kind": "model",
+      "as": "apartments-facade",
+      "path": "models/apartments-facade/apartments-facade.glb",
+      "bytes": 16373260,
+      "md5": "2f44538561937264b3cd59e8b0c21f59"
+    },
+    {
+      "kind": "model",
+      "as": "chainlink-fence",
+      "path": "models/chainlink-fence/chainlink-fence.glb",
+      "bytes": 7274880,
+      "md5": "d97d0775e8c8d2dc3b8cf8f43bc7d949"
+    },
+    {
+      "kind": "model",
+      "as": "electricity-poles",
+      "path": "models/electricity-poles/electricity-poles.glb",
+      "bytes": 12361288,
+      "md5": "a7e513de49311bf569a1a5d79e728865"
+    },
+    {
+      "kind": "model",
+      "as": "factory-facade",
+      "path": "models/factory-facade/factory-facade.glb",
+      "bytes": 18088416,
+      "md5": "b0c1bc140c2b8cdc2e297bdead8a2c4a"
+    },
+    {
+      "kind": "model",
+      "as": "fire-escape",
+      "path": "models/fire-escape/fire-escape.glb",
+      "bytes": 4800780,
+      "md5": "67fbc94bd97590b9f2640da7ea1c3f58"
+    },
+    {
+      "kind": "model",
+      "as": "fire-hydrant",
+      "path": "models/fire-hydrant/fire-hydrant.glb",
+      "bytes": 5512956,
+      "md5": "da594e517c709a20c74fc8316fb3d5d1"
+    },
+    {
+      "kind": "model",
+      "as": "metal-gutter",
+      "path": "models/metal-gutter/metal-gutter.glb",
+      "bytes": 2205076,
+      "md5": "05b33726a6a30ec05005f08330450ed8"
+    },
+    {
+      "kind": "model",
+      "as": "road-barrier",
+      "path": "models/road-barrier/road-barrier.glb",
+      "bytes": 3749748,
+      "md5": "df34e327631fbc26e8e14378299bf17e"
+    },
+    {
+      "kind": "model",
+      "as": "road-barrier-2",
+      "path": "models/road-barrier-2/road-barrier-2.glb",
+      "bytes": 2927048,
+      "md5": "474b87bf901ed21b4df3b6a16579cd00"
+    },
+    {
+      "kind": "model",
+      "as": "rollershutter-door",
+      "path": "models/rollershutter-door/rollershutter-door.glb",
+      "bytes": 2340916,
+      "md5": "a6b0b9e2bc738a317119cf1606af5509"
+    },
+    {
+      "kind": "model",
+      "as": "rollershutter-window-1",
+      "path": "models/rollershutter-window-1/rollershutter-window-1.glb",
+      "bytes": 2234320,
+      "md5": "218e8cbbd13443325645b77d74b02b81"
+    },
+    {
+      "kind": "model",
+      "as": "rollershutter-window-2",
+      "path": "models/rollershutter-window-2/rollershutter-window-2.glb",
+      "bytes": 2122992,
+      "md5": "97a0eb1cd2f18b38786d0084b43a7195"
+    },
+    {
+      "kind": "model",
+      "as": "rollershutter-window-3",
+      "path": "models/rollershutter-window-3/rollershutter-window-3.glb",
+      "bytes": 2281548,
+      "md5": "f6cea296ca53e4d9450132116000fcca"
+    },
+    {
+      "kind": "hdri",
+      "as": "day-clearsky",
+      "path": "hdri/day-clearsky.hdr",
+      "bytes": 1173154,
+      "md5": "995d68b1656f26452572645c0ffe898b"
+    },
+    {
+      "kind": "hdri",
+      "as": "day-cloudy",
+      "path": "hdri/day-cloudy.hdr",
+      "bytes": 1663265,
+      "md5": "a7ae402182415a76ef9102ea7bd81c13"
+    },
+    {
+      "kind": "hdri",
+      "as": "dusk",
+      "path": "hdri/dusk.hdr",
+      "bytes": 1440400,
+      "md5": "a5ec4d30fc3421c214a17b208fb66d5f"
+    },
+    {
+      "kind": "hdri",
+      "as": "night",
+      "path": "hdri/night.hdr",
+      "bytes": 1745132,
+      "md5": "4a760813214ec4d97da8e1739bb616a5"
+    }
+  ]
+}
